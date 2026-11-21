@@ -2055,7 +2055,7 @@ diff --git a/dist/bin/init-local.js b/dist/bin/init-local.js
 diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 --- a/dist/src/utils/handle-import.js
 +++ b/dist/src/utils/handle-import.js
-@@ -1,3 +1,54 @@
+@@ -1,3 +1,59 @@
  "use strict";
  Object.defineProperty(exports, "__esModule", { value: true });
  exports.handleImport = handleImport;
@@ -2064,15 +2064,20 @@ diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 +async function loadSemioGraphAuthorizersV1() {
 +    const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto'), url = require('node:url');
 +    const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex'), stable = (left, right) => ['dev', 'ino', 'size', 'mtimeNs', 'ctimeNs'].every(key => left[key] === right[key]);
-+    const read = (root, relative) => {
++    const read = (root, relative, maximumBytes = 16777216n, hashOnly = false) => {
 +        if (!relative || path.isAbsolute(relative) || /[\\\0]/u.test(relative) || relative.split('/').some(part => !part || part === '.' || part === '..')) throw Error('Immutable authorizer relative file required');
 +        let current = root; const ancestry = [];
 +        for (const part of ['', ...relative.split('/').slice(0, -1)]) { if (part) current = path.join(current, part); const status = fs.lstatSync(current, { bigint: true }); if (!status.isDirectory() || status.isSymbolicLink()) throw Error('Immutable authorizer no-follow directory required'); ancestry.push([current, status]); }
 +        const file = path.join(root, relative), before = fs.lstatSync(file, { bigint: true });
-+        if (!before.isFile() || before.isSymbolicLink() || before.size > 16777216n) throw Error('Immutable authorizer regular bounded file required');
-+        const bytes = fs.readFileSync(file), after = fs.lstatSync(file, { bigint: true }); if (!stable(before, after)) throw Error('Immutable authorizer file changed');
++        if (!before.isFile() || before.isSymbolicLink() || before.size > maximumBytes) throw Error('Immutable authorizer regular bounded file required');
++        let bytes, sha256;
++        if (hashOnly) {
++            const hash = crypto.createHash('sha256'), size = Number(before.size), chunk = Buffer.allocUnsafe(Math.min(size, 65536)), fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0) | (fs.constants.O_NONBLOCK ?? 0));
++            try { if (!stable(before, fs.fstatSync(fd, { bigint: true }))) throw Error('Immutable authorizer descriptor changed'); for (let offset = 0; offset < size;) { const count = fs.readSync(fd, chunk, 0, Math.min(chunk.length, size - offset), offset); if (!count) throw Error('Immutable authorizer file changed'); hash.update(chunk.subarray(0, count)); offset += count; } if (!stable(before, fs.fstatSync(fd, { bigint: true }))) throw Error('Immutable authorizer descriptor changed'); sha256 = hash.digest('hex'); } finally { fs.closeSync(fd); }
++        } else bytes = fs.readFileSync(file);
++        const after = fs.lstatSync(file, { bigint: true }); if (!stable(before, after)) throw Error('Immutable authorizer file changed');
 +        for (const [directory, status] of ancestry) { const current = fs.lstatSync(directory, { bigint: true }); if (!current.isDirectory() || current.isSymbolicLink() || current.dev !== status.dev || current.ino !== status.ino) throw Error('Immutable authorizer ancestry changed'); }
-+        return { file, bytes, status: before };
++        return { file, bytes, sha256, status: before };
 +    };
 +    const inspect = () => {
 +        let directory = fs.realpathSync(__dirname), sdk;
@@ -2093,7 +2098,7 @@ diff --git a/dist/src/utils/handle-import.js b/dist/src/utils/handle-import.js
 +                let previousResolution; for (const row of manifest.resolutions) { if (!row || Object.keys(row).sort().join(',') !== 'path,specifier' || typeof row.specifier !== 'string' || !row.specifier || row.specifier.length > 256 || /[\\\0%?#]/u.test(row.specifier) || row.specifier.split('/').some(part => !part || part === '.' || part === '..' || part === 'node_modules') || typeof row.path !== 'string' || !sourcePaths.has(row.path) || previousResolution && Buffer.compare(Buffer.from(previousResolution), Buffer.from(row.specifier)) >= 0) throw Error('Closed original source resolution required'); previousResolution = row.specifier; }
 +                const output = authorizers.outputs[0];
 +                if (Object.keys(output).sort().join(',') !== 'path,sha256' || output.path !== authorizers.entry || !/^[a-f0-9]{64}$/u.test(output.sha256)) throw Error('Immutable authorizer output required');
-+                const bundle = read(directory, output.path); if (digest(bundle.bytes) !== output.sha256) throw Error('Immutable authorizer body changed');
++                const bundle = read(directory, output.path, 33554432n, true); if (bundle.sha256 !== output.sha256) throw Error('Immutable authorizer body changed');
 +                const after = read(directory, '.semio-nx-tooling.json'); if (!stable(receipt.status, after.status) || digest(receipt.bytes) !== digest(after.bytes)) throw Error('Immutable toolchain marker changed');
 +                return { toolingIdentity: marker.digest, entry: bundle.file, authority: authorizers.sourceSha256, markerSha256: digest(receipt.bytes), outputSha256: output.sha256 };
 +            }

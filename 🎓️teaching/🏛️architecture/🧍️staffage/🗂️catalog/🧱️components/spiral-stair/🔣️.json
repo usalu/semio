@@ -27111,7 +27111,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "steel-bright",
-          "areaM2": 1.1917,
+          "areaM2": 2.592,
           "characteristicLengthM": 0.0424,
           "geometry": "cylinder",
           "skyViewFactor": 0.9,

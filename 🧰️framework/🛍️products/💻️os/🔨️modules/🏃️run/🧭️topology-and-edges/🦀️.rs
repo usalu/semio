@@ -46,8 +46,8 @@ pub(super) fn topological_order(graph: &Workflow) -> Result<Vec<String>, RunErro
 //#region 🔖️EdgeValidation
 /// ✅️ Full connect-time edge validation, called by both `plan` (the `--dry` path never opens a
 /// single node) and `run`: every edge's endpoints must resolve to real ports; the producer's
-/// `MediaType` must be `media_types_compatible` with the consumer's (typed rejection, no more
-/// stringly `artifact_kind` equality); a negotiated `contract.conversion` must have a registered
+/// `MediaType` must be `media_types_compatible` with the consumer's; the stored contract must
+/// match that negotiation, and its conversion must have a registered
 /// converter (fail-closed — an edge nobody can actually run is worse than one caught here at plan
 /// time); and every input port's `required`/`multiplicity` constraint must hold across the WHOLE
 /// node, not just one edge (so it's checked in a second pass once every edge's incoming count is known).
@@ -61,12 +61,19 @@ pub(super) async fn validate_edge_kinds(graph: &Workflow) -> Result<(), RunError
         let source_port = source_node.outputs.iter().find(|port| port.id == edge.source_port_id).ok_or_else(|| RunError::UnknownPort { edge_id: edge.id.clone(), node_id: edge.source_node_id.clone(), port_id: edge.source_port_id.clone() })?;
         let target_port = target_node.inputs.iter().find(|port| port.id == edge.target_port_id).ok_or_else(|| RunError::UnknownPort { edge_id: edge.id.clone(), node_id: edge.target_node_id.clone(), port_id: edge.target_port_id.clone() })?;
 
-        if matches!(media_types_compatible(&source_port.spec.media_type, &target_port.spec.media_type).await, MediaCompat::Reject) {
-            return Err(RunError::Incompatible { edge_id: edge.id.clone(), produced: source_port.spec.media_type, accepted: target_port.spec.media_type });
+        let produced = source_port.spec.media_type;
+        let accepted = target_port.spec.media_type;
+        let conversion = match media_types_compatible(&produced, &accepted).await {
+            MediaCompat::Direct => None,
+            MediaCompat::Convert { from, to } => Some((from, to)),
+            MediaCompat::Reject => return Err(RunError::Incompatible { edge_id: edge.id.clone(), produced, accepted }),
+        };
+        if edge.contract.media_type != accepted || edge.contract.conversion != conversion {
+            return Err(RunError::InvalidMediaContract { edge_id: edge.id.clone(), expected_type: accepted, expected_conversion: conversion });
         }
 
-        if let Some((from, to)) = edge.contract.conversion {
-            if !media_converter_registered(edge.contract.media_type.class, from, to) {
+        if let Some((from, to)) = conversion {
+            if !media_converter_registered(accepted.class, from, to) {
                 return Err(RunError::UnregisteredConversion { edge_id: edge.id.clone(), from, to });
             }
         }
@@ -77,7 +84,7 @@ pub(super) async fn validate_edge_kinds(graph: &Workflow) -> Result<(), RunError
     for node in &graph.nodes {
         for port in &node.inputs {
             let count = incoming_count.get(&(node.id.as_str(), port.id.as_str())).copied().unwrap_or(0);
-            if port.spec.required && count == 0 {
+            if port.spec.required && count == 0 && port.spec.id != "artifact:in" {
                 return Err(RunError::MissingRequiredInput { node_id: node.id.clone(), port_id: port.id.clone() });
             }
             if matches!(port.spec.multiplicity, PortMultiplicity::One) && count > 1 {

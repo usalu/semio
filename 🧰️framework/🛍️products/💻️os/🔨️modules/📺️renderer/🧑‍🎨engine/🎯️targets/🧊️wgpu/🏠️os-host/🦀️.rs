@@ -119,6 +119,7 @@ struct AssetDecodeOwner {
     generation: semio_framework_job::Generation,
     cancel: Option<semio_framework_job::CancelToken>,
     authority: Option<semio_framework_job_payload::JobPayloadAuthority>,
+    bootstrap: semio_framework_value::AuthoringWallet,
     cancel_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_job::CancelToken>>,
     sequence: u64,
     closing: bool,
@@ -126,12 +127,41 @@ struct AssetDecodeOwner {
 
 impl AssetDecodeOwner {
     fn new() -> Self {
-        Self { operation: semio_framework_trace::allocate_operation_id(), generation: semio_framework_job::Generation(1), cancel: None, authority: None, cancel_close: None, sequence: 0, closing: false }
+        Self { operation: semio_framework_trace::allocate_operation_id(), generation: semio_framework_job::Generation(1), cancel: None, authority: None, bootstrap: semio_framework_value::AuthoringWallet::new(ASSET_DECODE_TURN_GRANT, u128::from(semio_framework_job::MAINTENANCE_LANE_FUEL)), cancel_close: None, sequence: 0, closing: false }
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.cancel.is_none() && self.authority.is_none() && self.cancel_close.is_none()
     }
+}
+
+fn settle_asset_decode_admission<T>(
+    wallet: &mut semio_framework_value::AuthoringWallet,
+    output: &mut Option<T>,
+    turn: semio_framework_value::RetainedWorkOutcome<Option<(T, semio_framework_value::RetainedCloneProgress)>>,
+    actual: Option<usize>,
+) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    let (primary, effects) = match turn.result {
+        Ok(Some((owner, effects))) => {
+            *output = Some(owner);
+            (None, effects)
+        }
+        Ok(None) => (None, Default::default()),
+        Err(error) => {
+            let effects = error.retained_progress();
+            (Some(error), effects)
+        }
+    };
+    let mut receipt_refusal = wallet.post(effects).err();
+    let mut work_refusal = wallet.charge_work(turn.work).err();
+    let context_refusal = actual.filter(|actual| *actual != effects.retained_capacity_bytes).map(|_| semio_framework_value::ValueError::invariant("asset decode payload allocation differs from its receipt"));
+    if let Some(primary) = primary.or_else(|| receipt_refusal.take()).or_else(|| work_refusal.take()) {
+        return Err(semio_framework_job::OriginalTurnFailure { effects, primary: primary.into(), receipt_refusal, context_refusal, work_refusal });
+    }
+    if let Some(primary) = context_refusal {
+        return Err(semio_framework_job::OriginalTurnFailure { effects, primary: primary.into(), receipt_refusal: None, context_refusal: None, work_refusal: None });
+    }
+    Ok(output.is_some())
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -366,7 +396,7 @@ impl ComponentSurfaceCloseOwner {
                 self.phase = ComponentSurfaceClosePhase::Cpu;
             }
             ComponentSurfaceClosePhase::Cpu => {
-                if self.cpu_present && !runtime.close_engine_surface_step(engine_token, cx, retained) {
+                if self.cpu_present && !runtime.close_engine_surface_step(engine_token, cx) {
                     return false;
                 }
                 self.phase = ComponentSurfaceClosePhase::Gpu;
@@ -484,7 +514,7 @@ impl PairedEngineSurfaceClose {
                     self.faulted = true;
                     return false;
                 };
-                if self.cpu_present && !runtime.close_engine_surface_step(token, cx, retained) {
+                if self.cpu_present && !runtime.close_engine_surface_step(token, cx) {
                     return false;
                 }
                 self.phase = PairedEngineSurfaceClosePhase::Gpu;
@@ -583,12 +613,13 @@ impl OsHost {
             return Ok(None);
         }
         if owner.cancel.is_none() {
-            let Some((cancel, _)) = semio_framework_job::CancelToken::admit_root(ASSET_DECODE_TURN_GRANT)? else { return Ok(None) };
-            owner.cancel = Some(cancel);
+            let turn = semio_framework_job::CancelToken::admit_root(owner.bootstrap.remaining());
+            if !settle_asset_decode_admission(&mut owner.bootstrap, &mut owner.cancel, turn, None)? { return Ok(None); }
         }
         if owner.authority.is_none() {
-            let Some((authority, _)) = semio_framework_job_payload::JobPayloadAuthority::admit(owner.operation, owner.generation, ASSET_DECODE_TURN_GRANT)? else { return Ok(None) };
-            owner.authority = Some(authority);
+            let mut actual = None;
+            let turn = semio_framework_job_payload::JobPayloadAuthority::admit(owner.operation, owner.generation, owner.bootstrap.remaining(), &mut actual);
+            if !settle_asset_decode_admission(&mut owner.bootstrap, &mut owner.authority, turn, actual)? { return Ok(None); }
         }
         self.run_asset_decode_turn(run)
     }
@@ -620,7 +651,7 @@ impl OsHost {
         if let Some(authority) = owner.authority.as_mut() {
             if !authority.terminal_is_empty() {
                 let demand = authority.retirement_demands();
-                let _ = semio_framework_job::close_original_retained_step(cx, demand, |step| authority.close_step(step))?;
+                let _ = semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(authority.close_step(effect)))?;
                 return Ok(false);
             }
             if !funded {
@@ -649,8 +680,9 @@ impl OsHost {
         }
         if let Some(close) = owner.cancel_close.as_mut() {
             if !close.terminal_is_empty() {
-                let demand = close.selected_demand(grant.maximum_copy_bytes)?;
-                let _ = semio_framework_job::close_original_retained_step(cx, demand, |step| close.step(step))?;
+                let body = grant.maximum_copy_bytes;
+                let demand = close.selected_demand(body)?;
+                let _ = semio_framework_job::close_original_effect_step(cx, demand, |effect| close.step(body, effect))?;
                 return Ok(false);
             }
             if !funded {
@@ -772,7 +804,7 @@ impl OsHost {
 
 impl OsHostRetirementState {
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
-        if let Some(owner)=self.original_snapshot_close.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.original_snapshot_close=None;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+        if let Some(owner)=self.original_snapshot_close.as_mut(){if !owner.terminal_is_empty(){let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;let _=semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;return Ok(false)}let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.original_snapshot_close=None;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
         if self.original_snapshot.is_some(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let source=self.original_snapshot.take().unwrap();match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>self.original_snapshot_close=Some(owner),Err((original,source))=>{self.original_snapshot=Some(source);return Err(original.into())}}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
         if let Some(presenter)=self.presenter.as_mut(){if !presenter.close_original_media_step(cx)?{return Ok(false)}}
         if let Some(surface_resize) = self.surface_resize.as_mut() {
@@ -810,7 +842,7 @@ impl OsHostRetirementState {
             return Ok(false);
         }
         if let Some(raster_uploads) = self.raster_uploads.as_mut() {
-            if !raster_uploads.close_step() {
+            if !cx.with_original_retirement(|cx| raster_uploads.close_step(cx))? {
                 return Ok(false);
             }
             if !raster_uploads.terminal_is_empty() {
@@ -833,7 +865,7 @@ impl OsHostRetirementState {
             if !presenter.close_cursor_wake_step() {
                 return Ok(false);
             }
-            if !matches!(presenter.close_frame_owners_step(), Ok(true)) {
+            if !presenter.close_frame_owners_step(cx)? {
                 return Ok(false);
             }
         }
@@ -854,7 +886,7 @@ impl OsHostRetirementState {
             }
         }
         if let Some(presenter) = self.presenter.as_mut() {
-            if !matches!(presenter.close_world_owners_step(), Ok(true)) {
+            if !presenter.close_world_owners_step(cx)? {
                 return Ok(false);
             }
             if !presenter.world_owners_terminal_is_empty() || !presenter.engine_surfaces_terminal_is_empty() {

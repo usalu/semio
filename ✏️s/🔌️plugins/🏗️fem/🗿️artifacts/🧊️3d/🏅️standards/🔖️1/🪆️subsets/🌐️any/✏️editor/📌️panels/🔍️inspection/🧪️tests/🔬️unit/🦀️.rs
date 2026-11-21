@@ -73,7 +73,7 @@ use semio_plugin::ViewModel;
 /// 🎬️ The bundled `demo` fixture — the only built-in document carrying solids, supports and both
 /// load cases, so every law over `n20_l1`/`sol1`/`s_00`/`l2` is stated over it.
 fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
 }
 
 /// 🌲️ The document the app actually boots on (`concrete-forest`) — frames and member UDLs only.
@@ -153,6 +153,28 @@ async fn a_node_section_carries_a_number_input_bound_to_patch_node_3d() {
     assert!(bindings.contains("\"x\""), "the binding names the field it patches: {bindings}");
     let row = node_at(&tree, "fem3d-play-inspection.node.x").unwrap_or_else(|| panic!("{json}"));
     assert_eq!(row["component"]["type"].as_str(), Some("treeItem"), "the input sits inside its labelled tree row: {row}");
+}
+
+#[test]
+fn selected_entity_controls_carry_localized_accessible_names() {
+    let doc = demo();
+    for (locale, names) in [
+        (Locale::En, ["X", "Axis", "Poisson Ratio", "Self Weight"]),
+        (Locale::De, ["X", "Achse", "Querdehnzahl", "Eigengewicht"]),
+    ] {
+        let view = ViewModel::new(locale, Terminology::Native);
+        for ((id, key), label) in [
+            ("n20_l1", "node.x.input"),
+            ("sol1", "solid.axis.select"),
+            ("concrete", "material.nu.slider"),
+            ("dead", "load-case.self-weight.toggle"),
+        ].into_iter().zip(names) {
+            let tree: serde_json::Value = serde_json::from_str(&panel(&doc, &[id], &view)).expect("inspector projection");
+            let key = format!("fem3d-play-inspection.{key}");
+            let control = node_at(&tree, &key).unwrap_or_else(|| panic!("missing {key}"));
+            assert_eq!(control["accessibility"]["label"].as_str(), Some(label), "{id} {key}");
+        }
+    }
 }
 
 #[semio_framework_async_macros::async_test]

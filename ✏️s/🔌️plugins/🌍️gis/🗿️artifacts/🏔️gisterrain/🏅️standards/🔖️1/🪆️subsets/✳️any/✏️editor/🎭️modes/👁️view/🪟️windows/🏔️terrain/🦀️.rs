@@ -1,15 +1,6 @@
-//! 🏔️ GIS 3D play app — the terrain window (view mode): the World3d viewport over the DEM patch.
-//!
-//! ⛰️ Reuses the existing `World3d` viewport/renderer rather than a bespoke one; deliberately
-//! read-mostly for this first pass — exaggeration and the `map:in` overlay layer are the only
-//! editable/undoable document state (see `crate`).
+//! 🏔️ GIS Terrain editor window using the shared World3d viewport.
 
-/// ⚠️ Fixed opportunistically (was a pre-existing, ticket-predating unresolved `crate::modules`
-/// import — see `💡️inferences/🦀️.rs`'s identical fix for the full story). Real home:
-/// `crate::schema`'s `🔖️TerrainDescriptor` region.
-use crate::schema::terrain_descriptor::{TerrainDescriptorJson};
-use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json};
-use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
+use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json, fixture_descriptor};
 use crate::GisTerrainSnapshot;
 use semio_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_plugin::scene_surface;
@@ -21,8 +12,6 @@ use semio_plugin::UiAssemblyResult;
 use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowOptions;
 use semio_plugin::World3dScene;
-use semio_framework_surface::terrain::projection;
-use serde_json::{json, Value};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
@@ -31,12 +20,19 @@ pub mod config;
 pub const GIS3D_PLAY_WINDOW_MAIN: &str = "gis3d-main";
 pub const GIS3D_PLAY_BODY_COMPOSITE: &str = "gis3d.play.composite";
 const GIS3D_PLAY_SURFACE: &str = "gis3d.play.composite";
+
+pub const UTILITIES: [(&str, &str, &str, &str); 4] = [
+    ("select", "Select", "Auswählen", "mouse-pointer"),
+    ("terrainRaise", "Raise Terrain", "Gelände anheben", "arrow-up"),
+    ("terrainLower", "Lower Terrain", "Gelände absenken", "arrow-down"),
+    ("terrainSmooth", "Smooth Terrain", "Gelände glätten", "paintbrush"),
+];
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
-        initial_utility_id: None,
+        initial_utility_id: Some(UTILITIES[0].0.into()),
         id: GIS3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Terrain", "Gelände"),
         body_key: GIS3D_PLAY_BODY_COMPOSITE.into(),
@@ -56,38 +52,31 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 📍️ GIS pins are emitted as plain `World3d` instances with no matching `meshesJson` entry —
-/// `WorldInstancesLayer`'s existing missing-mesh fallback renders a small colored box, so
-/// selection/hover/context-menu all work for free without any new scene-schema surface.
-fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
-    let instances: Vec<Value> = descriptor
-        .positions
-        .iter()
-        .map(|position| {
-            let (x, y) = projection::lonlat_to_local_meters(position.lon, position.lat, descriptor.project_origin.lon, descriptor.project_origin.lat);
-            json!({
-                "id": position.id,
-                "meshId": "pin",
-                "position": [x, y, 50.0],
-                "color": "#ff3355",
-                "label": position.label,
-            })
-        })
-        .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
-}
-
-pub fn render(document: &GisTerrainSnapshot, cfg: config::GisTerrainWindowConfig) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &GisTerrainSnapshot, cfg: config::GisTerrainWindowConfig, view: &semio_plugin::ViewModel) -> UiAssemblyResult<BuiltNode> {
     let descriptor = fixture_descriptor(document);
+    let Some(terrain_json) = build_terrain_scene_json(document, &descriptor) else {
+        return crate::schema::terrain_descriptor::scene::terrain_source_required(view);
+    };
+    let settings = cfg.brush.unwrap_or_default();
+    let camera = cfg.scene_camera(&descriptor, document);
     let mut scene = World3dScene::base(
-        cfg.camera_json,
+        camera,
         "[]".into(),
-        instances_json(&descriptor),
+        "[]".into(),
         world3d_selection_json("rectangle", &[], None),
     );
     scene.domain_id = Some("features".into());
     scene.domain_granularity_id = Some("pin".into());
-    scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
+    scene.terrain_json = Some(terrain_json);
+    let utility = view.active_utility_id.as_deref().filter(|id| UTILITIES.iter().any(|entry| entry.0 == *id)).unwrap_or(UTILITIES[0].0);
+    let interaction = match settings.action(utility) {
+        Some(brush) => semio_framework_pack_json::json!({
+            "activeUtility": utility,
+            "terrainBrush": semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&brush))
+        }),
+        None => semio_framework_pack_json::json!({"activeUtility": utility}),
+    };
+    scene.interaction_json = Some(interaction.to_string());
     scene_surface(GIS3D_PLAY_SURFACE, ContractSurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render

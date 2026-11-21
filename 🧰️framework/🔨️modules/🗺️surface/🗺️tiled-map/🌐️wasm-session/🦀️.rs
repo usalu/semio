@@ -1,4 +1,4 @@
-//! 🌐️ Browser `MapSession` bridge: a wasm-bindgen wrapper around [`super::MapHost`] plus its GPU session.
+//! 🌐️ Browser `MapSession` bridge: a wasm-bindgen wrapper around [`super::MapHost`] and its canvas presentation.
 //!
 //! Compiled only for `wasm32` browser targets (not `wasm32-wasip2`); every item keeps its own `cfg` gate.
 
@@ -21,20 +21,61 @@ use web_sys::HtmlCanvasElement;
 struct MapSessionInner {
     host: MapHost,
     gpu: gpu_session::CanvasGpuSession,
+    canvas_2d: Option<canvas_2d_session::Canvas2dSession>,
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl MapSessionInner {
-    fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
-        self.host.set_size(lw, lh, dpr);
-        self.gpu.resize_surface(pw, ph);
+    fn renderer_ready(&self) -> bool {
+        self.gpu.gpu_ready() || self.canvas_2d.is_some()
     }
 
-    fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
-        self.host.prepare_visible_tiles();
-        let scene = self.host.build_render_scene();
-        self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
+    fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
+        self.host.set_size(lw, lh, dpr);
+        if let Some(canvas) = &self.canvas_2d {
+            canvas.resize_surface(pw, ph);
+        } else {
+            self.gpu.resize_surface(pw, ph);
+        }
     }
+
+    fn attach_canvas_2d(&mut self, canvas: HtmlCanvasElement, lw: u32, lh: u32, dpr: f64) -> Result<(), JsValue> {
+        let session = canvas_2d_session::Canvas2dSession::new(canvas.clone())?;
+        canvas.set_attribute("data-map-renderer", "canvas2d")?;
+        self.gpu.detach();
+        self.canvas_2d = Some(session);
+        self.set_size(lw, lh, dpr);
+        Ok(())
+    }
+
+    fn set_size(&mut self, lw: u32, lh: u32, dpr: f64) {
+        let (lw, lh, dpr) = (lw.max(1), lh.max(1), dpr.max(1.0));
+        let (pw, ph) = physical_size(lw, lh, dpr);
+        self.set_logical_size(lw, lh, dpr, pw, ph);
+    }
+
+    fn render_frame(&mut self) -> Result<(), JsValue> {
+        self.host.prepare_visible_tiles();
+        let clear = canvas_content::CanvasContent::clear_color(&self.host);
+        if let Some(canvas) = &mut self.canvas_2d {
+            let scene = self.host.build_vector_scene();
+            return canvas.render_frame(&scene, clear, self.host.viewport.dpr);
+        }
+        let scene = self.host.build_render_scene();
+        self.gpu.render_frame(&scene, clear)
+    }
+}
+
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+fn physical_size(width: u32, height: u32, dpr: f64) -> (u32, u32) {
+    ((f64::from(width) * dpr).round() as u32, (f64::from(height) * dpr).round() as u32)
+}
+
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+fn browser_has_webgpu() -> bool {
+    js_sys::Reflect::get(&js_sys::global(), &JsValue::from_str("navigator"))
+        .and_then(|navigator| js_sys::Reflect::get(&navigator, &JsValue::from_str("gpu")))
+        .is_ok_and(|gpu| !gpu.is_null() && !gpu.is_undefined())
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
@@ -48,46 +89,53 @@ pub struct MapSession {
 impl MapSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
+        Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: gpu_session::CanvasGpuSession::default(), canvas_2d: None })) }
     }
 
-    #[wasm_bindgen(js_name = gpuReady)]
-    pub fn gpu_ready(&self) -> bool {
-        self.state.borrow().gpu.gpu_ready()
+    #[wasm_bindgen(js_name = rendererReady)]
+    pub fn renderer_ready(&self) -> bool {
+        self.state.borrow().renderer_ready()
     }
 
     #[wasm_bindgen(js_name = attachCanvas)]
     pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
         let inner = self.state.clone();
-        if inner.borrow().gpu.gpu_ready() {
+        if inner.borrow().renderer_ready() {
             return future_to_promise(async move { Err(JsValue::from_str("canvas surface already attached")) });
         }
         let lw = logical_w.max(1);
         let lh = logical_h.max(1);
         let dpr = dpr.max(1.0);
-        let pw = ((lw as f64 * dpr).round() as u32).max(1);
-        let ph = ((lh as f64 * dpr).round() as u32).max(1);
-        let canvas = canvas.clone();
+        let (pw, ph) = physical_size(lw, lh, dpr);
         future_to_promise(async move {
-            let admission = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
-            let mut g = inner.borrow_mut();
-            if g.gpu.gpu_ready() {
+            let admission = if browser_has_webgpu() {
+                gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.ok()
+            } else {
+                None
+            };
+            let mut state = inner.borrow_mut();
+            if state.renderer_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
             }
-            g.set_logical_size(lw, lh, dpr, pw, ph);
-            g.gpu.finish_attach(admission);
+            if let Some(admission) = admission {
+                canvas.set_attribute("data-map-renderer", "webgpu")?;
+                state.gpu.finish_attach(admission);
+                state.set_logical_size(lw, lh, dpr, pw, ph);
+            } else {
+                state.attach_canvas_2d(canvas, lw, lh, dpr)?;
+            }
             Ok(JsValue::UNDEFINED)
         })
     }
 
+    #[wasm_bindgen(js_name = attachCanvas2d)]
+    pub fn attach_canvas_2d(&mut self, canvas: HtmlCanvasElement, width: u32, height: u32, dpr: f64) -> Result<(), JsValue> {
+        self.state.borrow_mut().attach_canvas_2d(canvas, width, height, dpr)
+    }
+
     #[wasm_bindgen(js_name = setSize)]
     pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
-        let lw = width.max(1);
-        let lh = height.max(1);
-        let dpr = dpr.max(1.0);
-        let pw = ((lw as f64 * dpr).round() as u32).max(1);
-        let ph = ((lh as f64 * dpr).round() as u32).max(1);
-        self.state.borrow_mut().set_logical_size(lw, lh, dpr, pw, ph);
+        self.state.borrow_mut().set_size(width, height, dpr);
     }
 
     #[wasm_bindgen(js_name = fitWorldCamera)]
@@ -288,7 +336,7 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = renderFrame)]
     pub fn render_frame(&mut self) -> Result<(), JsValue> {
-        self.state.borrow_mut().render_frame_gpu()
+        self.state.borrow_mut().render_frame()
     }
 }
 // #endregion 🔖️WasmSession

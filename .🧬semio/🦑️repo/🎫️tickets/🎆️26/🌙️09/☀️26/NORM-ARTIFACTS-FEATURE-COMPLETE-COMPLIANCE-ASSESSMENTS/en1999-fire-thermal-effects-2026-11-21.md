@@ -1,0 +1,5 @@
+# EN 1999 aluminium fire thermal effects
+
+The fire report now computes free thermal elongation from the EN 1999-1-2:2007 thermal-strain polynomial inside its published temperature domain. The check reports the free change in member length and separately flags sustained exposure requiring explicit transient-creep modelling. The length change is a free displacement input. A restrained member requires a structural calculation with its supports and connections. [EN 1999-1-2:2007 §§3.3.1.1 and 4.3.3](https://www.phd.eng.br/wp-content/uploads/2014/11/en.1999.1.2.2007.pdf) · [EN 1999-1-2:2023 publication](https://www.iteh.asia/catalog/standards/cen/35bd6212-387c-42fe-9efe-f4ec229e0e2e/en-1999-1-2-2023)
+
+The independent SQLite calculation matched the production Rust polynomial and threshold logic on 14 language-neutral scenarios, including excluded temperature endpoints and values immediately across the duration and temperature thresholds. The constitutive creep model and structural restraint analysis remain open.

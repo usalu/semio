@@ -64,13 +64,20 @@ fn source(width:u32,height:u32)->(RasterSnapshot,ConfigFixture,MaskFromSelection
 }
 fn grant(demand:RetirementDemand)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(32768),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)}}
 fn close(work:&mut MaskSelectionWork) {
+    let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
     for turn in 0..100_000 {
-        if work.terminal_is_empty(){return;}
-        let quoted=grant(work.close_demands(32768).unwrap());
-        let empty=work.close_step(RetainedCloneGrant::default());assert_eq!(empty.work,0);assert_eq!(empty.result.unwrap().progress(),Default::default());
-        let step=work.close_step(quoted).result.unwrap();assert!(step.progress().fits(quoted));assert!(turn<99_999);
+        if work.terminal_is_empty(){break;}
+        let demand=work.close_demands(32768).unwrap();
+        let quoted=grant(demand);
+        caller.turn(quoted,|cx|{
+            let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|work.close_step(32768,effect))?;
+            assert!(step.progress().fits(quoted));
+            Ok(())
+        }).unwrap();
+        assert!(turn<99_999);
     }
     assert!(work.terminal_is_empty());
+    caller.finish();
 }
 fn finish(command:&MaskFromSelection,document:&RasterSnapshot,config:&RasterConfig)->semio_plugin::Emit<semio_s_artifact_raster_raster_mutations::RasterMutation,RasterConfigMutation> {
     let quoted=grant(MaskSelectionWork::begin_demands(command,document,config).unwrap());

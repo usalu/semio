@@ -98,3 +98,62 @@ Final check line (`volumes-check.ts --product`): `FAIL: 6 measurement(s) over 2 
 - Three body-share areas stay red (section 5). The 1:100 helmet thermal is the closed shell with its base, honest for a merged single surface but counting the base disc.
 - Front and plan of 1:500 and 1:100/1:200 band outlines are compromises for the print profile (section 3).
 - Not run: the staffage test suites; fixtures that embed this asset may need regenerating after the rig and 2D change.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts (ticket folder): `r5_worker_carrying_box_body50.py`, `r5_worker_carrying_box_s50.py` … `_s500.py` (round-3 modules carried over and reshaped where named below), `r5-worker-carrying-box-model.py`, `r5-worker-carrying-box-roots.py` (round-3 roots with two fixes), `r5-worker-carrying-box-draw2d.ts` (2D redraw), `r5-worker-carrying-box-ship.sh` (roots → volumes → redraw → roots → volumes → validate the candidate; `--apply` writes the catalog only when VALID, splices, runs the product check and the full validation); shared with the courier: `r5-courier-with-hand-truck-measure.ts`, `-ends.ts`, `-render.sh`. Output: `🗑️generated/r5-worker-carrying-box/` (`before/`, `after/`, `check.txt`, `measure.txt`).
+
+### Reference
+
+The round-3 table above stands (stocky man 1.741 m, 84 kg, ANSUR II means, EN 397 hard hat, ISO 20471 vest, EN ISO 20345 boots, FEFCO 0201 carton); added: bideltoid breadth 0.51 m (ANSUR II male mean 0.513) plus 6 mm shirt, and the shoulder slope from the neck base to the acromion of about 18-20 degrees.
+
+### Model against reference (1:50 body, rest pose; `measure.txt`)
+
+| quantity | model | reference | deviation |
+|---|---|---|---|
+| hip / knee / ankle joint (shod) | 0.941 / 0.521 / 0.096 | 0.935-0.953 / 0.526 / 0.098 | in range / -1.0 % / -2 % |
+| shoulder joint / C7 / vertex | 1.454 / 1.528 / 1.771 | 1.454 / 1.528 / 1.771 | 0 |
+| upper arm (joint to joint) / forearm / gloved hand length | 0.314 / 0.273 / 0.190 | 0.324 (Winter 0.186 H; de Leva 0.282) / 0.269 (de Leva 1996, male of exactly 1.741 m) / 0.193 (ANSUR II hand length) | between the two sources / +1.6 / -1.6 % |
+| elbow / wrist joint height (barefoot) | 1.110 (0.638 H) / 0.837 (0.481 H) | 0.63 H / 0.485 H | +1.3 / -0.8 % |
+| head chin to vertex | 0.232 | 0.232 | 0 |
+| bideltoid over the shirt | 0.511 | 0.51-0.525 | in range |
+| shirt chest breadth x depth | 0.340 x 0.259 | 0.342 x 0.267 | -0.6 / -3.0 % |
+| vest waist breadth x depth | 0.355 x 0.283 | 0.354 x 0.274 | +0.3 / +3.3 % (vest pocket fill) |
+| hip over the seat | 0.378 | 0.373 | +1.3 % |
+| trousered thigh girth (mid) / calf girth | 0.582 / 0.436 | 0.58 / 0.43 | +0.3 / +1.4 % |
+| shirt upper arm girth | 0.339 | 0.35 | -3.1 % |
+| hard hat over everything | 1.815 | 1.81-1.82 | in range |
+| carton | 0.30 x 0.30 x 0.40 | FEFCO 0201 0.30 x 0.30 x 0.40 | 0 |
+
+Segment lengths follow de Leva 1996, whose reference male is 1.741 m tall like this worker (the mass data belong to the same segments); Winter's 0.146 H forearm (0.254 m) uses another landmark, and the joint heights it implies are met within 1.3 %.
+
+### Grades (body / thermal / structure)
+
+| scale | before (catalog) | after |
+|---|---|---|
+| 1:50 | B / B+ (z-fighting yoke shells) / A- | A- / A- / A- |
+| 1:100 | B- (brace flaps off the vest) / B+ / B+ | A- / B+ / B+ |
+| 1:200 | B / B+ / B | B+ / B+ / B |
+| 1:500 | B- (helmet read as a cap, square trunk) / B / B | B+ / B / B |
+| poses 1:50 | squat, lift, set-down B+; chest carry C+ (upper arms horizontal) | squat, lift, set-down A-; chest carry B (elbows lower, still hooked from above) |
+
+### Changes
+
+- Shoulders: the shirt yoke now falls from the neck base (half breadth 0.074 at 1.534) to the acromion (0.198 at 1.44) over seven rows instead of a flat plateau at 1.48-1.50; collar raised to sit round the neck (1.505-1.556); sleeve caps start 40 mm above the joint as a dome (12 x 16 mm top) inside the yoke, deltoid 0.066 wide with its lateral bulge, so the bideltoid breadth is 0.511 m; the same at 1:100, 1:200 (four rows) and 1:500 (three rows, cap 34 mm above).
+- Trunk sections: vest, vest hem, seat and bands from exponent 2.5-2.6 to 2.35 (no box corners); the braces are traced on the vest with the same exponent; at 1:100 bands and braces now follow the 1:100 vest itself (they followed the 1:50 rows and stood off the vest as flaps).
+- 1:500: hard hat a dome of six rows with the forward brim (was a flat-topped cap), trunk with the shoulder slope, collar ring narrowed under the helmet.
+- Thermal 1:50: the torso-clothing yoke shell lies 1.5 mm outside the vest's shirt layer (the two regions shared one surface and z-fought in the thermal view).
+- Roots: `r5-worker-carrying-box-roots.py` fixes a round-3 script defect that would have broken the squat (re-run on the catalog it set torso -66 and thigh 72 without the -38 pelvis tilt: trunk folded 104 degrees); the chest carry solves the elbows towards (-0.2, -0.7, 0.9) (down and out) instead of (0, -0.5, 1) (sideways).
+- 2D (E1): every scale and view retraced from the new bodies by `r5-worker-carrying-box-draw2d.ts`; collar lines at the new collar.
+
+### Checks
+
+`r3-validate.ts humans/worker-carrying-box --volumes`: schema 0, validateAsset 0 (print clean at every band and range end), checkVolumes 6. `volumes-check.ts --product`: every rule ok except `volumes-thermal-coverage` helmet (+53 % / +181 %), leg-clothing (+43 % / +42 %) and shoes (+143 % / +119 %) at 1:50 / 1:100: the same three physiological shares as in round 3 (C18; listed in `area-review.md`). Gloves pass at +29 % (1:50).
+
+### Remaining
+
+- The three area lines (area reviewer, C27).
+- Chest carry: hands hooked into the hand holes from above force the elbows out (B); a carry with the palms under the carton would need a different grip anchor.
+- Garments rigid per bone, no cloth folds; the vest hem shows a seam crease at the lumbar bend in the squat.
+- Rig: no neck bone (the head bone runs from C7 to the vertex); the cervical curve is in the structure list only.
+- Opened: before and after sheets at 1:50 (body, thermal cut), 1:100 and 1:500 three-quarter views, the squat and chest carry candidates, 2D 1:50; the other after sheets were rendered (`after/`) and checked by the validator.

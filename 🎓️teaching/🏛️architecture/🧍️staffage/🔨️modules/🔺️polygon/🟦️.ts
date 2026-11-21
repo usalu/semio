@@ -66,8 +66,7 @@ function onEdge(ring: readonly Point[], p: Point): { readonly dx: number; readon
   return undefined;
 }
 
-function chainPieces(kept: readonly { readonly from: Point; readonly to: Point }[]): { readonly rings: Point[][]; readonly closed: boolean } {
-  const cell = 1e-7;
+function chainPieces(kept: readonly { readonly from: Point; readonly to: Point }[], cell = 1e-7): { readonly rings: Point[][]; readonly closed: boolean } {
   const grid = new Map<string, number[]>();
   const nodes: Point[] = [];
   const nodeOf = (p: Point): number => {
@@ -256,7 +255,7 @@ function slabUnion(polygons: readonly (readonly Point[])[]): { readonly rings: P
     for (const [lo, hi] of minus(right, left)) pieces.push({ from: { x: slab.x0, y: hi }, to: { x: slab.x0, y: lo } });
     if (k === slabs.length - 1) for (const [lo, hi] of ends(slab, slab.x1)) pieces.push({ from: { x: slab.x1, y: lo }, to: { x: slab.x1, y: hi } });
   });
-  const chained = chainPieces(pieces);
+  const chained = chainPieces(pieces, 1e-9);
   return { rings: chained.closed ? dropCollinear(chained.rings) : [], area: total };
 }
 

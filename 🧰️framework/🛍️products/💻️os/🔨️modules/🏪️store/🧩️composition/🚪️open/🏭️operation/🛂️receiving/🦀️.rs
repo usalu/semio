@@ -136,8 +136,8 @@ const MEMBER_STEP_WORK:u64=64;
 const MEMBER_BIRTH_WORK:u64=1;
 /// 🪙️ Runs one closure inside one original work action on the decoder's own recipient; `None` means the quote was not admitted and nothing ran.
 fn with_native_effect<T>(receipt:&mut Option<NativeForwardedDecodeReceipt>,recipient:&mut NativeDecodeRetirementRecipient,allocation:&mut MemberHistoryAllocation,maximum:usize,cx:&mut StepContext<'_>,closing:bool,grant:RetainedCloneGrant,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->T)->Result<Option<(T,u64,u64)>,OriginalTurnFailure>{
- let work=cx.fuel_remaining().min(MEMBER_STEP_WORK);if work==0{return Ok(None)}
- let(opened,observed)=with_original_control(receipt,recipient,allocation,maximum,cx,closing,|control|control.with_effect(grant,work,|control,effect|{let output=run(control,effect);(output,effect.performed_work())}))?;
+ let work=cx.fuel_remaining().saturating_sub(semio_framework_value::ORIGINAL_INVOCATION_WORK).min(MEMBER_STEP_WORK);if work==0{return Ok(None)}
+ let(opened,observed)=with_original_control(receipt,recipient,allocation,maximum,cx,closing,|control|control.with_effect_reported(grant,work,run))?;
  Ok(opened?.map(|(output,performed)|(output,u64::try_from(performed).unwrap_or(u64::MAX),observed)))
 }
 /// 🚦️ A pending poll settles as a no-progress step carrying only its newly performed work.
@@ -181,7 +181,7 @@ impl MemberHistoryReceiving {
   if let Some(active)=self.active.as_ref(){return semio_os_store_read::artifact_retirement_box_demands(active,body)}
   if self.fault.is_some(){return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.fault)}
   if self.inner_fault.is_some(){return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.inner_fault)}
-  if !self.closing&&self.recipient.has_owner(){return Ok(RetirementDemand{copy_bytes:self.recipient.next_copy_byte_demand()?,capacity_bytes:self.recipient.next_capacity_byte_demand(body)?,release_bytes:self.recipient.next_release_byte_demand()?,depth:self.recipient.next_depth_demand()?})}
+  if !self.closing&&self.recipient.has_pending_close(){return Ok(RetirementDemand{copy_bytes:self.recipient.next_copy_byte_demand()?,capacity_bytes:self.recipient.next_capacity_byte_demand(body)?,release_bytes:self.recipient.next_release_byte_demand()?,depth:self.recipient.next_depth_demand()?})}
   if self.decoder.as_ref().is_some_and(|owner|owner.terminal_is_empty()){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<RetainedHistorySourceDecode>>(),depth:1,..Default::default()})}
   if self.decoder.is_some(){return Ok(RetirementDemand{depth:if self.closing{self.demand.depth.max(2)}else{self.demand.depth.max(1)},..self.demand})}
   if self.partial.is_some(){return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.partial)}
@@ -259,7 +259,7 @@ impl MemberHistoryReceiving {
   if self.admitted&&self.native_custody_empty()&&!self.allocation.has_source(){if cx.fuel_remaining()==0{return Ok(RetainedHistorySourceStep::Blocked)}self.closed=true;let(raw,progress)=metadata(RetainedHistorySourceStep::Ready,std::mem::size_of::<bool>());let fuel=cx.fuel_remaining();return self.accept(receive(cx,grant,fuel,raw,Some((grant,progress)),0,history_progress))}
   if self.failure_storage_needed(){self.refill_failure_storage(cx,grant,false)?;return Ok(RetainedHistorySourceStep::Progress)}
   let finish_storage=self.admitted&&self.decoder.is_none()&&!self.recipient.terminal_is_empty();
-  if self.recipient.has_owner()||finish_storage{self.close_recipient(cx,grant,false)?;return Ok(RetainedHistorySourceStep::Progress)}
+  if self.recipient.has_pending_close()||finish_storage{self.close_recipient(cx,grant,false)?;return Ok(RetainedHistorySourceStep::Progress)}
   let fuel=cx.fuel_remaining();let decoder=&mut self.decoder;let admitted=&mut self.admitted;let ledger_demand=&mut self.demand;let range=self.range;let limits=self.limits;
   let Some(((turn,issued),performed,observed))=with_native_effect(&mut self.receipt,&mut self.recipient,&mut self.allocation,self.maximum,cx,false,grant,|control,effect|{
    let mut own_receipt=None;

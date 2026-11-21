@@ -29,7 +29,13 @@ impl GuestRuntimes{
   let Some(state)=owner.as_mut()else{return Ok(true)};let Self::Owned(_)=self else{return Err(refused("Host startup cleanup requires its same original phased backend").into())};if let Some(startup)=state.owner.as_mut(){if !startup.close_step(owned_compiled(compiled).map_err(|_|refused("Host startup has no original Owned artifact"))?,cx)?{return Ok(false)}}if !retirement_metadata(cx,size_of::<RuntimeActorId>())?{return Ok(false)}state.owner.take();owner.take();Ok(true)
  }
  pub fn close_original_instance_step(&self,instance:&mut GuestInstance,compiled:&CompiledHandle,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if matches!(instance.state,GuestInstanceState::Closed){return Ok(true)}let Self::Owned(runtime)=self else{return Err(refused("Host instance cleanup requires its original phased backend").into())};let compiled=owned_compiled(compiled).map_err(|_|refused("Host cleanup has no original Owned artifact"))?;let GuestInstanceState::Owned(state)=&instance.state else{return Err(refused("Host cleanup has no actual Owned instance").into())};runtime.validate_original_actor_retirement(state,compiled,cx)?;if !retirement_metadata(cx,size_of::<GuestInstanceState>())?{return Ok(false)}let GuestInstanceState::Owned(state)=std::mem::replace(&mut instance.state,GuestInstanceState::Closed)else{unreachable!()};let mut owner=Some(state);let result=runtime.close_original_actor_step(&mut owner,compiled,cx);if let Some(state)=owner{instance.state=GuestInstanceState::Owned(state);}result
+  if matches!(instance.state,GuestInstanceState::Closed){return Ok(true)}
+  let Self::Owned(runtime)=self else{return Err(refused("Host instance cleanup requires its original phased backend").into())};
+  let compiled=owned_compiled(compiled).map_err(|_|refused("Host cleanup has no original Owned artifact"))?;
+  let GuestInstanceState::Owned(state)=&mut instance.state else{return Err(refused("Host cleanup has no actual Owned instance").into())};
+  if !runtime.advance_original_actor_close_step(state,compiled,cx)?{return Ok(false)}
+  instance.state=GuestInstanceState::Closed;
+  Ok(true)
  }
 }
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}

@@ -9,6 +9,11 @@
     "hoveredId": "image-b"
   },
   "viewport": { "width": 320, "height": 240 },
+  "wheel": {
+    "event": { "bubbles": true, "cancelable": true, "clientX": 100, "clientY": 50, "deltaY": -120 },
+    "action": "setCamera",
+    "camera": { "x": -8, "y": -4, "zoom": 1.08 }
+  },
   "document": {
     "schema": "ink.document",
     "id": "note-domain-fixture",
@@ -69,7 +74,27 @@
     { "id": "blocks", "granularityId": "" },
     { "id": "blocks", "granularityId": "block", "extra": true }
   ],
+  "blockPointer": {
+    "renderedTarget": "text-a",
+    "selectedGroup": ["text-a", "image-b"],
+    "down": { "x": 40, "y": 40 },
+    "move": { "x": 64, "y": 56 },
+    "drawUtility": "pencil",
+    "drawPhases": ["stream", "commit"],
+    "moveUtility": "selectDirect",
+    "moveSemantic": { "kind": "drag", "ids": ["text-a", "image-b"], "dx": 24, "dy": 16 }
+  },
+  "resizePointer": {
+    "handle": "se",
+    "down": { "x": 120, "y": 80 },
+    "moves": [{ "x": 130, "y": 86 }, { "x": 150, "y": 100 }],
+    "committedSize": [130, 80]
+  },
   "forbiddenActions": ["setHover", "setSelection"],
+  "hoverSequence": {
+    "inputs": ["pointer-hover", "pointer-hover", "pointer-background", "pointer-background", "pointer-leave", "pointer-hover", "pointer-hover", "pointer-leave"],
+    "published": ["pointer-hover", "pointer-background", "pointer-hover", "pointer-leave"]
+  },
   "cases": [
     {
       "id": "pointer-hover",

@@ -56,7 +56,7 @@ pub use semio_framework_value_native_shared_slots::NativeSharedSlots;
 
 #[path="🔄️map/🦀️.rs"]
 pub mod mapped;
-pub use mapped::{NativeReceiveMap,NativeMappedReceiver,NativeReceiveTryMap,NativeTryMappedReceiver};
+pub use mapped::{NativeMapValidation,NativeReceiveMap,NativeMappedReceiver,NativeReceiveTryMap,NativeTryMappedReceiver};
 
 
 

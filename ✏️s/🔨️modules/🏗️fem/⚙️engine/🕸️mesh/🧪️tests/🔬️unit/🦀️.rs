@@ -4,11 +4,30 @@ use semio_framework_job_payload::RetainedPayloadBuilder;
 
 #[test]
 fn mounted_house_raft_mesh_reaches_completion_across_owner_pages() {
+    check_mounted_house_footprint(None);
+}
+
+#[test]
+fn mounted_house_wall_admits_each_opening_before_its_points_and_retires() {
+    check_mounted_house_footprint(Some("westWall"));
+}
+
+fn check_mounted_house_footprint(footprint: Option<&str>) {
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🕸️mounted-footprint.json")).unwrap();
-    let outer: Vec<[f64; 2]> = serde_json::from_value(law["outer"].clone()).unwrap();
+    let shape = footprint.map_or(&law, |name| &law[name]);
+    let outer: Vec<[f64; 2]> = serde_json::from_value(shape["outer"].clone()).unwrap();
+    let holes: Vec<Vec<[f64; 2]>> = shape.get("holes").map_or_else(Vec::new, |holes| serde_json::from_value(holes.clone()).unwrap());
     let mut domain = MountedPlanarDomain::new();
     while !domain.admit_outer_one(outer.len()).unwrap() {}
     for point in outer { domain.push_outer(point).unwrap(); }
+    while !domain.admit_hole_one(holes.len()).unwrap() {}
+    for (index, hole) in holes.iter().enumerate() {
+        assert!(matches!(domain.admit_hole_point_one(index, hole.len()), Err(MountedDomainFault::InvalidHole { index: refused }) if refused == index));
+        assert_eq!(domain.push_hole_point(index, hole[0]), Err(hole[0]));
+        assert_eq!(domain.begin_hole().unwrap(), index);
+        while !domain.admit_hole_point_one(index, hole.len()).unwrap() {}
+        for &point in hole { domain.push_hole_point(index, point).unwrap(); }
+    }
     let options = MeshOpts { max_edge: law["maximumEdge"].as_f64().unwrap(), min_angle_deg: law["minimumAngleDegrees"].as_f64().unwrap() };
     let operation = mesh_operation();
     let mut job = MeshJob::new_mounted_bounded(domain, options, operation, law["maximumPoints"].as_u64().unwrap() as usize, law["maximumTriangles"].as_u64().unwrap() as usize);
@@ -17,14 +36,18 @@ fn mounted_house_raft_mesh_reaches_completion_across_owner_pages() {
         match step_mounted_mesh(&mut caller, &mut job) {
             Seen::Complete { .. } => {
                 let (points, triangles) = job.completed_counts().expect("mounted geometry available");
-                assert_eq!(points, law["expected"]["points"].as_u64().unwrap() as usize);
-                assert_eq!(triangles, law["expected"]["triangles"].as_u64().unwrap() as usize);
+                assert_eq!(points, shape["expected"]["points"].as_u64().unwrap() as usize);
+                assert_eq!(triangles, shape["expected"]["triangles"].as_u64().unwrap() as usize);
                 let area = (0..triangles).map(|i| {
                     let triangle = job.completed_triangle(i).unwrap();
                     shoelace_area(&triangle.map(|vertex| job.completed_point(vertex as usize).unwrap()))
                 }).sum::<f64>();
-                assert!((area - law["expected"]["area"].as_f64().unwrap()).abs() < 1e-10);
-                close_mesh_job(&mut job);
+                assert!((area - shape["expected"]["area"].as_f64().unwrap()).abs() < 1e-10);
+                for _ in 0..10_000 {
+                    if job.terminal_is_empty() { break; }
+                    caller.bare_turn(TEST_GRANT, |cx| cx.with_original_retirement(|cx| InteractiveJob::close_step(&mut job, cx))).unwrap();
+                }
+                assert!(job.terminal_is_empty());
                 caller.retire_exact();
                 return;
             }

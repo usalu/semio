@@ -201,3 +201,27 @@ fn every_gumball_refusal_code_has_a_localized_notice() {
     let kind = semio_framework::fault_notice_text(&notices, "generation3d.gumball.kind-unavailable", Fault::from(GumballRefusal::KindUnavailable("brep.mesh.box".into())).params.as_deref(), Terminology::Native, Locale::De);
     assert_eq!(kind.as_deref(), Some("Die Knotenart brep.mesh.box ist hier nicht verfügbar."));
 }
+
+#[test]
+fn gumball_resolves_authored_output_channels_and_refuses_input_addresses() {
+    let ports: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🔌️graph-ports/🔣️.json")).unwrap();
+    for case in ports["cases"].as_array().unwrap() {
+        let handle = case["target"].as_str().unwrap();
+        let widget = case["widget"].as_str().unwrap();
+        let channel = case["channel"].as_str().unwrap();
+        let input = case["input"].as_bool().unwrap();
+        for id in [Some(handle), case["instance"].as_str()].into_iter().flatten() {
+            let address = gumball_output_address(id, || false);
+            if input {
+                assert_eq!(address.unwrap_err(), GumballRefusal::NoShapeOutput);
+            } else {
+                let address = address.unwrap().unwrap();
+                assert_eq!(address.widget, widget);
+                assert_eq!(address.channel, channel);
+            }
+        }
+    }
+    assert!(gumball_output_address("a@b", || true).unwrap().is_none());
+    let address = gumball_output_address("a@b@solid#0", || true).unwrap().unwrap();
+    assert_eq!((address.widget, address.channel.as_ref()), ("a@b", "solid"));
+}

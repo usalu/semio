@@ -69,6 +69,7 @@ describe("OverviewCard", () => {
     expect(chip.className).not.toContain("max-w-[12rem]");
     const stack = region.querySelector('[data-slot="quiz-card-stack"]');
     expect(stack?.hasAttribute("data-overview-card-stack")).toBe(true);
+    expect(stack?.getAttribute("data-shared-border-hover")).toBe("silhouette");
     expect(stack?.getAttribute("data-level")).toBe("dialog");
     expect(stack?.hasAttribute("data-active")).toBe(false);
     expect(region.querySelector('[data-slot="quiz-card-content"]')?.textContent).toContain("passive-house roof");
@@ -120,6 +121,7 @@ describe("OverviewCard", () => {
     expect(screen.queryByRole("heading")).toBeNull();
     expect(button.querySelector('[data-slot="play-pane-card-open-chip"]')?.textContent?.trim()).toBe("Open");
     expect(button.querySelector("[data-overview-card-paint]")?.className.split(" ")).not.toContain("-translate-y-0.5");
+    expect(button.querySelector("[data-overview-card-paint]")?.className.split(" ")).not.toContain("group-hover:-translate-y-0.5");
     fireEvent.click(button);
     expect(onClick).toHaveBeenCalledTimes(1);
     rerender(

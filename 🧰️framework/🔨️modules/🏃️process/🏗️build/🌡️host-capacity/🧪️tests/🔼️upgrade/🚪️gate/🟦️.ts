@@ -81,21 +81,59 @@ test("Cancelling the wait withdraws the request, keeps the small grant and says 
  const directory=fresh(),big=holdBig(directory),lines:string[]=[];
  await sleep(40);
  const full=sized(newHostCapacityIdV1(),9000);
- await withHostCapacityV1(options(directory,quietOf(full),{upgrade:full,write:line=>lines.push(line)}),async handle=>{
+ try{await withHostCapacityV1(options(directory,quietOf(full),{upgrade:full,write:line=>lines.push(line)}),async handle=>{
   const controller=new AbortController(),waiting=requestHostCapacityUpgradeV1(environmentOf(directory,handle),control(controller.signal));
-  await sleep(400);
-  expect((await grants(directory)).waiters.some(row=>row.upgrade===true)).toBe(true);
+  const appears=AbortSignal.timeout(3000);
+  while(!(await grants(directory)).waiters.some(row=>row.upgrade===true))await sleep(20,undefined,{signal:appears});
   controller.abort(Error("stop upgrading"));
   await expect(waiting).rejects.toThrow("stop upgrading");
-  await sleep(400);
+  const disappears=AbortSignal.timeout(3000);
+  while((await grants(directory)).waiters.some(row=>row.upgrade===true))await sleep(20,undefined,{signal:disappears});
   const status=await grants(directory);
   expect(status.waiters.filter(row=>row.upgrade===true)).toEqual([]);expect(existsSync(hostUpgradePathV1(directory,handle.id))).toBe(false);
   expect(status.grants.find(row=>row.id===handle.id)).toMatchObject({quiet:true,reservedMegabytes:500});
- });
+ });}finally{big.release();await big.done;}
  expect(lines.some(line=>/^\[capacity\] run: the request to grow the reservation was withdrawn after \d+s; the run keeps its 500 MB/u.test(line))).toBe(true);
- big.release();await big.done;
  expect(readdirSync(join(directory,"grants"))).toEqual([]);expect(readdirSync(join(directory,"queue"))).toEqual([]);
 },30000);
+
+test("A peer publication ends a quiet upgrade without growing, and a failed restore can ask again",async()=>{
+ const directory=fresh(),big=holdBig(directory);
+ await sleep(40);
+ const full=sized(newHostCapacityIdV1(),9000);
+ try{
+  await withHostCapacityV1(options(directory,quietOf(full),{upgrade:full}),async handle=>{
+   const environment=environmentOf(directory,handle),marker=hostUpgradePathV1(directory,handle.id),bounded=()=>control(AbortSignal.timeout(3500));
+   const reused=await requestHostCapacityUpgradeV1(environment,bounded(),{pollMilliseconds:20,reuse:async()=>(await grants(directory)).waiters.some(row=>row.request.id===handle.id&&row.upgrade===true)});
+   expect(reused).toBe("reused");
+   expect(existsSync(marker)).toBe(false);
+   expect((await grants(directory)).grants.find(row=>row.id===handle.id)).toMatchObject({quiet:true,reservedMegabytes:500});
+
+   const resumed=requestHostCapacityUpgradeV1(environment,bounded(),{pollMilliseconds:20});
+   expect(existsSync(marker)).toBe(true);
+   big.release();
+   expect(await resumed).toBe("upgraded");
+   expect((await grants(directory)).grants.find(row=>row.id===handle.id)!.reservedMegabytes).toBe(9000);
+  });
+ }finally{big.release();await big.done;}
+},10000);
+
+test("A cancelled peer check preserves another in-process upgrade asker",async()=>{
+ const directory=fresh(),big=holdBig(directory);
+ await sleep(40);
+ const full=sized(newHostCapacityIdV1(),9000);
+ try{
+  await withHostCapacityV1(options(directory,quietOf(full),{upgrade:full}),async handle=>{
+   const environment=environmentOf(directory,handle),marker=hostUpgradePathV1(directory,handle.id),stop=new AbortController();
+   const other=requestHostCapacityUpgradeV1(environment,control(AbortSignal.timeout(3500)),{pollMilliseconds:20});
+   const cancelled=requestHostCapacityUpgradeV1(environment,control(stop.signal),{reuse:async()=>{stop.abort(Error("aborted after checking a peer"));return true;}});
+   await expect(cancelled).rejects.toThrow("aborted after checking a peer");
+   expect(existsSync(marker)).toBe(true);
+   big.release();
+   expect(await other).toBe("upgraded");
+  });
+ }finally{big.release();await big.done;}
+},10000);
 
 test("A run that asks for work on a full grant only records that it executed, and a quiet run that never asks and stays within its quiet reservation is learned as quiet with the full jobs",async()=>{
  const directory=fresh(),learned:HostRunV1[]=[];

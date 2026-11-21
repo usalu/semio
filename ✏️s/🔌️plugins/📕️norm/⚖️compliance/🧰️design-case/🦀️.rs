@@ -262,6 +262,9 @@ pub trait CaseCatalogue {
     fn entries() -> Vec<CaseEntry>;
     fn vocabulary() -> &'static [InputSpec];
     fn evaluate(entry: &CaseEntry, annex: AnnexChoice, case: &DesignCase) -> Vec<CheckResult>;
+    fn new_document_case(entry: &CaseEntry, id: &str) -> DesignCase where Self: Sized {
+        seed::<Self>(entry, id)
+    }
 }
 /// 🔎 The catalogue entry with `id`.
 pub fn entry<C: CaseCatalogue>(id: &str) -> Option<CaseEntry> { C::entries().into_iter().find(|entry| entry.id == id) }

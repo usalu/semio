@@ -1,6 +1,7 @@
 """Run actual chamfer and prism geometry on the neutral authored box selections."""
 from pathlib import Path
 import json
+import os
 import subprocess
 from tempfile import TemporaryDirectory
 
@@ -17,7 +18,7 @@ frame="\n".join(l.replace(", value_derive::ToValue, value_derive::FromValue","")
 prism=(brep/"🛠️operations/🗜️prism-boundary/🦀️.rs").read_text()
 prism=prism[prism.index("pub const MAX_PRISM_CORNERS:"):prism.index("    pub fn surface(")]+'}\n'
 chamfer=(brep/"⚙️engine/🧠️native-registry/🏗️solid-transaction/🧰️box-edge-chamfer/🦀️.rs").read_text()
-chamfer=chamfer[chamfer.index("pub fn box_edge_chamfer("):]
+chamfer=chamfer[chamfer.index("pub fn box_edge_chamfer("):].replace("pub(super) fn chamfer_placed","fn chamfer_placed")
 draft=(brep/"⚙️engine/🧠️native-registry/🏗️solid-transaction/📐️box-face-draft/🦀️.rs").read_text()
 draft=draft[draft.index("pub(super) fn box_face_draft("):].replace("pub(super) fn","fn")
 
@@ -127,9 +128,11 @@ for row in fixtures["retainedBoxFaceDraft"]:
  args.extend(str(row[k]) for k in ["area","volume"])
  body+="check_draft("+",".join(args)+");\n"
 body+="}\n"
-with TemporaryDirectory(dir=Path(__file__).parent/"🗑️generated") as work:
+generated=Path(__file__).parent/"🗑️generated"
+generated.mkdir(exist_ok=True)
+with TemporaryDirectory(dir=generated) as work:
  p=Path(work)/"chamfer.rs"
  p.write_text(vector+'\n'+frame+'\n'+box+'\n'+preamble+prism+chamfer+draft+body)
- out=p.with_suffix("")
- subprocess.run(["rustc","-Awarnings","--edition=2024","--test",str(p),"-o",str(out)],check=True)
- subprocess.run([str(out)],check=True)
+ out=p.with_suffix(".exe" if os.name=="nt" else "")
+ subprocess.run(["repo","tools","exec","--light","rustup","--","run","nightly-2026-07-20","rustc","-Awarnings","--edition=2024","--test",str(p),"-o",str(out)],check=True)
+ subprocess.run(["repo","tools","exec","--light","rustup","--","run","nightly-2026-07-20",str(out)],check=True)

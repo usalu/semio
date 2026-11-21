@@ -505,5 +505,65 @@
     ],
     "received": true,
     "expected": "received"
+  },
+  {
+    "name": "fresh component browser iteration",
+    "argv": [
+      "components",
+      "iterate",
+      "raster"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh component descriptor",
+    "argv": [
+      "components",
+      "describe",
+      "raster"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh component profile independence",
+    "argv": [
+      "components",
+      "profile-independence",
+      "raster"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "unknown component operation",
+    "argv": [
+      "components",
+      "unknown",
+      "raster"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "component help grants nothing",
+    "argv": [
+      "components",
+      "iterate",
+      "--help"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "received component keeps its original authority",
+    "argv": [
+      "components",
+      "iterate",
+      "raster"
+    ],
+    "received": true,
+    "expected": "received"
   }
 ]

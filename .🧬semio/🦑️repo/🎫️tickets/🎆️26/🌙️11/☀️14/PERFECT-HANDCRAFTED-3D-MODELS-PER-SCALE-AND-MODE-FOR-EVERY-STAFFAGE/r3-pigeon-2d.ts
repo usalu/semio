@@ -32,6 +32,13 @@ const wing = (n: "near" | "far"): Row[] => {
     { id: `${n}-shoulder`, bone: `humerus-${b}`, solids: [`${n}-shoulder`], region: "plumage-wings", tone: n === "near" ? 0.6 : 0.5, z: [4.8 + k, 1.3, 3.6], bands: 3 },
   ];
 };
+const wing200 = (n: "near" | "far"): Row => {
+  const b = n === "near" ? "n" : "f";
+  return { id: `${n}-wing`, bone: `forearm-${b}`, solids: [`${n}-coverts`, `${n}-shoulder`, `${n}-primaries`], region: "plumage-wings", tone: n === "near" ? 0.6 : 0.5, z: [n === "near" ? 4.7 : 1.6, 1.2, 3.5], bands: 6, ...(n === "far" ? { views: ["front", "plan"] as View[] } : {}) };
+};
+/** 🔵️ 1:200 head seen from ahead and from above: the half widths of the 1:200 head loft (with the bill) along the head axis, revolved about the head bone, so the front and the plan show the round head in every pitch of the head (pecking from ahead shows its length, not a foreshortened sliver). */
+const HEAD_200_RADII: readonly [number, number][] = [[-0.0205, 0.0074], [-0.015, 0.0136], [-0.006, 0.0163], [0.006, 0.0164], [0.018, 0.0154], [0.027, 0.0128], [0.033, 0.008], [0.041, 0.0048], [0.05, 0.0032], [0.0545, 0.0014]];
+const RANGES: Record<number, { minDenominator: number; maxDenominator: number }> = { 50: { minDenominator: 20, maxDenominator: 55 }, 100: { minDenominator: 55, maxDenominator: 150 }, 200: { minDenominator: 150, maxDenominator: 350 } };
 const tails: Row[] = [
   { id: "far-tail", bone: "tail-f", solids: ["far-tail"], region: "plumage-tail", tone: 0.55, z: [1, 0.5, 0.8] },
   { id: "tail", bone: "tail", solids: ["tail"], region: "plumage-tail", tone: 0.66, z: [2.8, 0.6, 1] },
@@ -43,18 +50,18 @@ const face: Row[] = [
   { id: "beak", bone: "head", solids: ["beak"], region: "beak", tone: 0.3, z: [4.1, 4.1, 4.1] },
   { id: "cere", bone: "head", solids: ["cere"], region: "cere", tone: 0.9, z: [4.2, 4.2, 4.2] },
   { id: "eye", bone: "head", solids: ["eye"], region: "eye", tone: 0.04, z: [5, 4.3, 4.3], role: "detail" },
-  { id: "eye-f", bone: "head", solids: ["eye-f"], region: "eye", tone: 0.04, z: [5, 4.3, 4.3], role: "detail", views: ["front", "plan"] },
+  { id: "eye-f", bone: "head", solids: ["eye-f"], region: "eye", tone: 0.04, z: [5, 4.3, 4.3], role: "detail", views: ["front"] },
 ];
 const ROWS: Record<number, Row[]> = {
   50: [...leg("far", ["toes", "toe-inner", "toe-outer", "hallux"]), ...wing("far"), ...tails, { id: "body", bone: "trunk", solids: ["body", "undertail"], region: "plumage-body", tone: 0.72, z: [3, 3, 3] }, ...necks, ...face, ...wing("near"), ...leg("near", ["toes", "toe-inner", "toe-outer", "hallux"])],
-  100: [...leg("far", ["toes", "toe-spread"]), ...wing("far"), ...tails, { id: "body", bone: "trunk", solids: ["body"], region: "plumage-body", tone: 0.72, z: [3, 3, 3] }, ...necks, ...face, ...wing("near"), ...leg("near", ["toes", "toe-spread"])],
+  100: [...leg("far", ["toes", "toe-spread"]), ...wing("far"), ...tails, { id: "body", bone: "trunk", solids: ["body"], region: "plumage-body", tone: 0.72, z: [3, 3, 3] }, ...necks, { id: "head", bone: "head", solids: ["head", "eye", "eye-f"], region: ["plumage-neck-head", "eye"], tone: 0.72, z: [4, 4, 4] }, ...face.filter((r) => r.id !== "head" && !r.id.startsWith("eye")), ...wing("near"), ...leg("near", ["toes", "toe-spread"])],
   200: [
-    ...wing("far"),
+    wing200("far"),
     ...tails,
     { id: "body", bone: "trunk", solids: ["body"], region: "plumage-body", tone: 0.72, z: [3, 3, 3] },
     { id: "neck", bone: "neck-2", solids: ["neck"], region: "plumage-neck-head", tone: 0.72, z: [3.3, 3.3, 3.7] },
     { id: "head", bone: "head", solids: ["head"], region: ["plumage-neck-head", "beak", "cere", "eye"], tone: 0.72, z: [4, 4, 4] },
-    ...wing("near"),
+    wing200("near"),
   ],
 };
 
@@ -166,7 +173,7 @@ for (const scale of [50, 100, 200]) {
         const cv = (lo + hi) / 2;
         const [ex, ez] = [projectWorld("plan", [1, 0, 0]), projectWorld("plan", [0, 0, 1])];
         if (Math.abs(ex.x - 1) > 1e-9 || Math.abs(Math.abs(ez.y) - 1) > 1e-9) throw new Error("plan frame is not (x, z)");
-        copies.push({ id: row.id, bone: row.bone, role: "body", z: row.z[vi], filled: true, tone: row.tone, region: row.region, kind: "poly", points: ring.map((q) => [r5((q.x - o[0] - cv * v[0]) / u[0]), r5(q.y / ez.y - o[2])]), closed: true, solid: { kind: "extruded", sweep: "v", z0: r5(cv - 0.001), z1: r5(cv + 0.001) } });
+        copies.push({ id: row.id, bone: row.bone, role: "body", z: row.z[vi], filled: true, tone: row.tone, ...(Array.isArray(row.region) ? { regions: row.region } : { region: row.region }), kind: "poly", points: ring.map((q) => [r5((q.x - o[0] - cv * v[0]) / u[0]), r5(q.y / ez.y - o[2])]), closed: true, solid: { kind: "extruded", sweep: "v", z0: r5(scale === 200 ? lo : cv - 0.001), z1: r5(scale === 200 ? hi : cv + 0.001) } });
         continue;
       }
       if (swept(row.bone) && view === "front") {
@@ -203,7 +210,7 @@ for (const scale of [50, 100, 200]) {
           cells.set(whole.cells.subarray(a * whole.width, b * whole.width), a * whole.width);
           const ring = contours(cells, whole.width, whole.height, whole.box, whole.cell).filter((r) => area(r) > 0).sort((p, q) => area(q) - area(p))[0]!;
           const [y0, y1] = [whole.box.minY + a * whole.cell, whole.box.minY + b * whole.cell];
-          bandJobs.push({ row: row.id, meta: { id: k === 0 ? row.id : `${row.id}-${k + 1}`, bone: row.bone, role: "body", z: 0, filled: true, tone: row.tone, region: row.region }, target: inset(simplifyRing(ring, f / 10), f / 30), span: spanOf(row.bone, row.solids, y0, y1) });
+          bandJobs.push({ row: row.id, meta: { id: k === 0 ? row.id : `${row.id}-${k + 1}`, bone: row.bone, role: "body", z: 0, filled: true, tone: row.tone, ...(Array.isArray(row.region) ? { regions: row.region } : { region: row.region }) }, target: inset(simplifyRing(ring, f / 10), f / 30), span: spanOf(row.bone, row.solids, y0, y1) });
         }
       }
       inverse(asset, scale, "elevation", bandJobs).forEach((q, k) => banded.push({ row: bandJobs[k]!.row, shape: { ...bandJobs[k]!.meta, kind: "poly", points: q.points.map((p) => [r5(p.x), r5(p.y)]), closed: true, solid: { kind: "extruded", sweep: "w", z0: bandJobs[k]!.span[0], z1: bandJobs[k]!.span[1], zTip: [bandJobs[k]!.span[2], bandJobs[k]!.span[3]] } } }));
@@ -215,11 +222,16 @@ for (const scale of [50, 100, 200]) {
       return { ...j.meta, kind: "poly", points: solved[k]!.points.map((p) => [r5(p.x), r5(p.y)]), closed: j.closed, ...(j.span === undefined ? {} : { solid: { kind: "extruded", sweep: "w", z0: j.span[0], z1: j.span[1], zTip: [j.span[2], j.span[3]] } }) };
     });
     shapes.push(...(copies as typeof shapes));
+    if (scale === 200 && view !== "elevation") {
+      const k = shapes.findIndex((q) => q.id === "head");
+      shapes[k] = { ...shapes[k]!, points: [...HEAD_200_RADII.map(([a]) => [a, 0]).reverse(), ...HEAD_200_RADII], closed: true, solid: { kind: "revolved", axisBone: "head", axis: "u", axisX: 0, axisZ: 0, mirror: true } } as (typeof shapes)[number];
+    }
     shapes.sort((a, b) => a.z - b.z);
     rep.geometry[view] = shapes;
     console.log(`1:${scale} ${view}: ${shapes.length} shapes, ${shapes.reduce((n, s) => n + s.points.length, 0)} points`);
   });
   rep.decisions = { ...rep.decisions, ...REPRESENTATION_DECISIONS[scale] };
+  rep.validRange = RANGES[scale];
   out.representations[String(scale)] = rep;
   if (scale === 50) {
     let [x0, x1, y1, z0, z1] = [Infinity, -Infinity, -Infinity, Infinity, -Infinity];

@@ -2,6 +2,7 @@
  *
  * The neutral frame (right-handed, +Y up, +Z ahead, metres, radians, quaternions `[x, y, z, w]`, column-major matrices) is the glTF frame, so geometry and transforms are written unchanged.
  * Nodes carry TRS, meshes `triangles`/`lines` primitives with POSITION, NORMAL, COLOR_0, JOINTS_0, WEIGHTS_0, skins their inverse bind matrices, materials PBR metallic-roughness with `KHR_materials_unlit`,
+ * Large repeated rigid parts share encoded attribute accessors across material batches and scenes. Each primitive retains the material and contiguous solid ranges of its source triangles or lines.
  * A skinned mesh node is a scene root (glTF ignores its parents' transforms for skinning) and keeps its source parent in `extras.parent`.
  * A primitive's solid provenance (`solids`: id, first index, index count) is written to the glTF primitive's `extras.solids` unchanged.
  * `variants` become `KHR_materials_variants`, animations node TRS channels plus material colour channels through `KHR_animation_pointer`; mechanism joints, tags, titles in both languages and clip metadata live in `extras`.
@@ -18,6 +19,7 @@ import { selectScene } from "../../🎞️scenes/🟦️.ts";
 import { Pace } from "../../⏱️operation/🟦️.ts";
 import { BufferBuilder, BufferTarget, ComponentType, packGlb } from "./🧱️buffer/🟦️.ts";
 import type { ElementType } from "./🧱️buffer/🟦️.ts";
+import { partitionRigidParts } from "./🧱️parts/🟦️.ts";
 import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 
 export type { PoseSelector } from "../../🦴️mechanism/🟦️.ts";
@@ -224,9 +226,10 @@ export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: 
   }
   step(0.02);
 
-  const totalPrimitives = document.meshes.reduce((n, mesh) => n + mesh.primitives.length, 0);
+  const meshes = partitionRigidParts(document.meshes, pace);
+  const totalPrimitives = meshes.reduce((n, mesh) => n + mesh.primitives.length, 0);
   let done = 0;
-  const gltfMeshes = document.meshes.map((mesh) => ({
+  const gltfMeshes = meshes.map((mesh) => ({
     name: mesh.id,
     primitives: mesh.primitives.map((primitive, p) => {
       step(0.02 + (0.68 * done++) / Math.max(1, totalPrimitives));
@@ -273,7 +276,7 @@ export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: 
   if (options.variants && document.variants.length > 0) {
     used.add("KHR_materials_variants");
     extensions.KHR_materials_variants = { variants: document.variants.map((variant) => ({ name: variant.id, extras: { title: title(variant.title) } })) };
-    document.meshes.forEach((mesh, m) =>
+    meshes.forEach((mesh, m) =>
       mesh.primitives.forEach((primitive, p) => {
         pace.tick(document.variants.length);
         const byTarget = new Map<number, number[]>();

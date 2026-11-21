@@ -111,3 +111,7 @@ LOOK_SECTION
 ## 6. Still imperfect
 
 IMPERFECT_SECTION
+
+The crown retains its wind joints, stem leaders and off-centre sprays at the three coarser scales. Nine coarse crown masses now follow their actual foliage sleeves and outer hanging sprays. The bark leaders appear in all three 1:500 drawings. The revised branch, mass, silhouette, source and twelve paper-band checks passed. Independent readback of all twelve GLB scenes measured 8,275,732 bytes.
+
+The 1:100 elevation now clips the original fine spray strokes to the actual posed foliage on the matching branch. The native 95th-percentile hard-edge distance improved from 33.75 mm to 7.50 mm against a 30 mm limit. The new projection overlap is 0.99773. The three 1:100 paper samples, source semantics and twelve-scene readback passed.

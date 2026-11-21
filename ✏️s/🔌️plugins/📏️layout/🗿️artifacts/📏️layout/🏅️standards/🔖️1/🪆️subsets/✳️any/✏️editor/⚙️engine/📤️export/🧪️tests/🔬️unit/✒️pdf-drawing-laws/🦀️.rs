@@ -3,7 +3,7 @@ use protocol::{ColdMutation as _,ColdMutationDiff as _,ColdDiffAlgebra as _};
 fn original_pdf_fixture(name:&str)->serde_json::Value{let laws:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../📖️drawing-read/🧪️pdf.json")).unwrap();laws["cases"].as_array().unwrap().iter().find(|row|row["name"]==name).unwrap().clone()}
 fn original_pdf_snapshot(placed:bool)->semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot{
  let mut snapshot=semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();let transport:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../../🧬️schema/🧬️mutations/🖊️set-page-background-drawing/🧪️tests/🔣️transport.json")).unwrap();snapshot.background_drawing=Some(semio_framework_pack_json::from_json_str(&transport["cases"][0]["input"]["SetPageBackgroundDrawing"]["drawing"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
- if placed{snapshot.links[0].artifact_kind="s.draw.drawing".into();snapshot.links[0].artifact_ref="plan-1".into();}else{snapshot.pages[0].width=100.0;snapshot.pages[0].height=50.0;}snapshot
+ if placed{snapshot.links[0].artifact_kind="s.draw.drawing".into();snapshot.links[0].artifact_ref=snapshot.background_drawing.as_ref().unwrap().handle.target.artifact_id.clone();}else{snapshot.pages[0].width=100.0;snapshot.pages[0].height=50.0;}snapshot
 }
 fn original_pdf_content(row:&serde_json::Value)->semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot{semio_framework_pack_json::from_json_str(&row["content"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn with_original_pdf_source<T>(actual:semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,body:impl FnOnce(&semio_framework_io_ports::ChildAdmissionRead<'_>)->T)->T{
@@ -18,9 +18,35 @@ fn original_drawing_pdf(snapshot:&semio_s_artifact_layout_layout_model::snapshot
 }
 
 fn original_drawing_canvas(snapshot:&semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot,actual:semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot)->(Vec<String>,usize,String){
- use semio_framework_value::retirement::{RetireOwned,RetirementStep};use semio_s_artifact_layout_layout_engine::scene::drawing_planning::{DrawingSourceAddress,DrawingPlacement,composition::{DrawingCompositionState,DrawingCompositionTurn,canvas}};
- with_original_pdf_source(actual,|read|{let mut state=DrawingCompositionState::new();state.begin(DrawingSourceAddress::Document,DrawingPlacement::Content,semio_s_artifact_layout_layout_model::LayoutBounds{x:0.0,y:0.0,width:snapshot.pages[0].width,height:snapshot.pages[0].height,rotation:0.0}).unwrap();let grant=semio_framework_io_ports::VectorSceneGrant{maximum_source_items:4096,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128};let mut paths=Vec::new();let mut glyphs=0;let mut text=String::new();
-  for _ in 0..1000000{if !state.has_active(){break}match state.advance(snapshot,read,grant).unwrap(){DrawingCompositionTurn::Path{index}=>paths.push(canvas::path_end(state.path(index).unwrap().info.paint).unwrap().as_str().to_owned()),DrawingCompositionTurn::Glyph{label,glyph,..}=>{glyphs+=1;let cluster=state.glyph_cluster(label,glyph).unwrap();if cluster.first_glyph{text.push_str(cluster.text);}},_=>{}}}assert!(!state.has_active());let mut stack=vec![state.retirement()];for _ in 0..1000000{let Some(cursor)=stack.last_mut()else{break};match cursor.close_step(LAYOUT_EXPORT_FIXTURE_TURN){RetirementStep::Complete=>{assert!(cursor.terminal_is_empty());stack.pop();},RetirementStep::Child(child)|RetirementStep::ChildProgress(child,_)=>stack.push(child),RetirementStep::Failure(error)=>panic!("{error}"),RetirementStep::BudgetExhausted=>panic!("original composition close grant"),_=>{}}}assert!(stack.is_empty());(paths,glyphs,text)})
+ use semio_framework_value::{RetainedCloneProgress, retirement::controlled::ControlledRetirement};use semio_s_artifact_layout_layout_engine::scene::drawing_planning::{DrawingSourceAddress,DrawingPlacement,composition::{DrawingCompositionState,DrawingCompositionTurn,canvas}};
+ with_original_pdf_source(actual,|read|{let mut state=DrawingCompositionState::new();state.begin(DrawingSourceAddress::Document,DrawingPlacement::Content,semio_s_artifact_layout_layout_model::LayoutBounds{x:0.0,y:0.0,width:snapshot.pages[0].width,height:snapshot.pages[0].height,rotation:0.0}).unwrap();let op=operation();let mut caller=layout_export_fixture_caller(op,op.generation);let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:64};let mut paths=Vec::new();let mut glyphs=0;let mut text=String::new();
+  for _ in 0..1000000{if !state.has_active(){break}let turn=caller.turn(grant, |cx| {
+      let Some((turn, work)) = cx.with_original_source_effect(grant, |_, effect| state.advance(snapshot, read, effect))? else {
+          return Ok(Ok(DrawingCompositionTurn::Progress));
+      };
+      cx.consume_work(work);
+      let p = state.last_receipt();
+      cx.consume_retained(RetainedCloneProgress {
+          copied_items: p.source_items,
+          copied_bytes: p.copied_bytes,
+          retained_capacity_bytes: p.retained_capacity_bytes,
+          released_bytes: p.released_bytes,
+      })?;
+      Ok(turn)
+  }).unwrap();
+  match turn.unwrap(){DrawingCompositionTurn::Path{index}=>paths.push(canvas::path_end(state.path(index).unwrap().info.paint).unwrap().as_str().to_owned()),DrawingCompositionTurn::Glyph{label,glyph,..}=>{glyphs+=1;let cluster=state.glyph_cluster(label,glyph).unwrap();if cluster.first_glyph{text.push_str(cluster.text);}},_=>{}}}assert!(!state.has_active());let mut owner=ControlledRetirement::new(state).unwrap_or_else(|_|panic!("original composition retirement"));
+  let body=4096;
+  for _ in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET {
+      if owner.terminal_is_empty() { break; }
+      caller.turn(grant, |cx| {
+          let demand=owner.selected_demand(body)?;
+          semio_framework_job::close_original_effect_step(cx, demand, |effect| owner.step(body, effect))?;
+          Ok(())
+      }).unwrap();
+  }
+  assert!(owner.terminal_is_empty());
+  caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);
+  (paths,glyphs,text)})
 }
 #[test]fn pdf_export_prints_the_background_drawing(){let snapshot=original_pdf_snapshot(false);let bytes=original_drawing_pdf(&snapshot,original_pdf_content(&original_pdf_fixture("background"))).unwrap();assert_pdf_structure(&bytes);assert!(pdf_has_operation(&bytes,"m",&[0.0,50.0])&&pdf_has_operation(&bytes,"l",&[100.0,0.0])&&pdf_has_operation(&bytes,"S",&[]));}
 #[test]fn pdf_export_prints_a_styled_plan_stroke(){let snapshot=original_pdf_snapshot(false);let row=original_pdf_fixture("stroke");let(canvas,_,_)=original_drawing_canvas(&snapshot,original_pdf_content(&row));assert!(canvas.iter().any(|row|row.contains("[1,0,0,0.5]")&&row.contains("\"width\":2")));let bytes=original_drawing_pdf(&snapshot,original_pdf_content(&row)).unwrap();assert_pdf_structure(&bytes);assert!(pdf_has_operation(&bytes,"RG",&[1.0,0.0,0.0])&&pdf_has_operation(&bytes,"w",&[2.0]));}

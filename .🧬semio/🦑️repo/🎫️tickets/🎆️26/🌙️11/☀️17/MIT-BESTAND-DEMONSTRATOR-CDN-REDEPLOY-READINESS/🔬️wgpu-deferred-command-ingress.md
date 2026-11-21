@@ -1,0 +1,9 @@
+# WGPU command page continuation
+
+The generic public shard call issues one event per worker crossing and places a command page on the last crossing. Before the coordinated fix, it disabled its early UI-patch cut whenever a command page was present. If two answers carried patch pages, merging failed before the caller could accept their individual receipts. The deferred count now represents a suffix still owned by the exact shard activation. A positive count on the direct submission proves that the last crossing and its command page were never sent.
+
+WGPU accepts the first reply and all native UI acknowledgment replies before offering the same page. A positive direct deferred count or explicit ingress backpressure keeps the same page index and shares the existing offer limit. Only explicit page acceptance advances that index. A transport rejection leaves the command failed because the caller cannot establish whether the worker consumed the page. Retries and command settlement use the route’s exact activation. The worker transport posts without transferring the page buffer.
+
+The WGPU drive keeps the direct response’s deferred count through its native UI acknowledgment replies and settles positive counts even if effects, patches and actor status are quiet. The next direct zero or absent count ends that obligation. The host retains no copy of the deferred event suffix.
+
+Four focused tests ran the production WGPU driver and drive with controlled worker boundaries and the real typed-operation decoder. The language-neutral turns cover repeated cuts, explicit refusal, exact page identity, quiet deferred work, terminal zero and absent counts, a transport refusal, and activation revocation. SQLite independently counted accepted direct responses and acknowledgment replies. No site or module build was started.

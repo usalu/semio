@@ -77,6 +77,7 @@ pub fn create_puzzle5d_app() -> semio_plugin::AppDefinition {
     Editor::builder(Puzzle5dPlayApp::DIALECT)
             .document(["semio", "puzzle", "5d"])
             .artifact_kind(crate::artifact_kind())
+            .io(<Puzzle5dPlayApp as semio_plugin::ArtifactEditor>::io().expect("Puzzle 5D editor declares its media ports"))
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", [LocalizedLabel::native("Designing with Existing Stock", "Entwerfen mit Bestand"), LocalizedLabel::data("puzzle"), LocalizedLabel::data("5d")])

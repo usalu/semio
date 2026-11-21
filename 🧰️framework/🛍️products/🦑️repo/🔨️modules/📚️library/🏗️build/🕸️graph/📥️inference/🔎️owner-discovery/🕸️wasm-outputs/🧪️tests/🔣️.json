@@ -85,6 +85,11 @@
   ],
   "inventory": [
     {
+      "name": "@semio-tech/puzzle-plugin",
+      "root": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+      "manifest": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/📋️project.json"
+    },
+    {
       "name": "@semio-tech/framework-actor-rs",
       "root": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json"
@@ -108,7 +113,12 @@
       "name": "semio-framework-os-flow-browser-package",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json"
+    },
+    {
+      "name": "@semio-tech/trinity-jack-lsp",
+      "root": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust/📋️project.json"
     }
   ],
-  "moduleCount": 10
+  "moduleCount": 14
 }

@@ -155,7 +155,7 @@ impl<I:#tree::NativeValueSource+?Sized>#native::native_decoding::NativeReceiver<
  fn advance_nested(&mut self,input:#value::retained_clone::RetainedCloneRef<'_,I>,control:&mut #value::NativeDecodeControl<'_>,witness:#native::native_decoding::owned::OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:#value::RetainedCloneGrant)->#value::RetainedWorkPoll<#value::RetainedCloneStep,#native::native_decoding::NativeReceivingFailure>{
   use #value::RetainedWorkPoll::Complete;
   let(d,q,action)=match self.state.plan(input,body,maximum){Ok(plan)=>plan,Err(error)=>return Complete(#value::RetainedWorkOutcome{result:Err(error.into()),work:0})};
-  if q==0||q>maximum||!#value::retained_clone::retained_clone_grant_admits(grant,d){return Complete(#value::RetainedWorkOutcome{result:Ok(#value::RetainedCloneStep::Progress(Default::default())),work:0})}
+  if (q==0&&action!=3)||q>maximum||!#value::retained_clone::retained_clone_grant_admits(grant,d){return Complete(#value::RetainedWorkOutcome{result:Ok(#value::RetainedCloneStep::Progress(Default::default())),work:0})}
   if action==3{return self.state.matcher.as_mut().expect("selected retained matcher").advance_nested(input,control,witness,body,maximum,grant)}
   if action==14{return match self.state.field{#(#nested_steps,)*_=>Complete(#value::RetainedWorkOutcome{result:Err(#tree::invalid().into()),work:0})}}
   Complete(#value::RetainedWorkOutcome{result:Err(#tree::invalid().into()),work:0})}

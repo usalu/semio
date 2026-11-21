@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { evaluate } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+import { restFrames } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🦴️rig/🟦️.ts";
 import { Canvas, type RGB } from "./volumes-raster.ts";
 import { GENERATED, entryOf, loadSource, localGeometry, merged, qualityOfAsset, resolveList, type CatalogEntry, type Json, type ListName, type ScaleMeshes, type SolidMesh, type V3 } from "./volumes-lib.ts";
 
@@ -67,20 +68,46 @@ export function rigAt(asset: Json, scale: number, query: Query): Rig {
 
 export const queryOf = (asset: Json, pose: string | undefined, clip: string | undefined, t: string | undefined): Query => (clip !== undefined ? { kind: "clip", clip, timeS: Number(t ?? 0) } : { kind: "pose", pose: pose ?? asset.presentation.defaultPose });
 
-/** 🧊️ Solids tessellated through the shared cache and carried to the world by the given bone frames. */
-export function meshesIn(asset: Json, frames: Record<string, Frame>, solids: readonly Json[]): SolidMesh[] {
-  const q = qualityOfAsset(asset);
+/** 🧊️ Solids tessellated through the shared cache and carried to the world by the given bone frames, at the product's quality of 1:`scale` (what the viewer and the 3D exports show at that scale) or, without a scale, at the reference quality of the catalog validator. */
+export function meshesIn(asset: Json, frames: Record<string, Frame>, solids: readonly Json[], scale?: number): SolidMesh[] {
+  const q = qualityOfAsset(asset, scale);
   return solids.map((solid) => {
     const f = frames[solid.bone];
     if (f === undefined) throw new Error(`solid "${solid.id}" is bound to unknown bone "${solid.bone}"`);
     const g = localGeometry(solid, q);
     const world = new Float64Array(g.positions.length);
+    const blend = weightsOf(asset, frames, solid);
     for (let i = 0; i < g.positions.length; i += 3) {
       const [a, b, c] = [g.positions[i]!, g.positions[i + 1]!, g.positions[i + 2]!];
-      for (let k = 0; k < 3; k++) world[i + k] = f.o[k]! + a * f.u[k]! + b * f.v[k]! + c * f.w[k]!;
+      if (blend === null) {
+        for (let k = 0; k < 3; k++) world[i + k] = f.o[k]! + a * f.u[k]! + b * f.v[k]! + c * f.w[k]!;
+        continue;
+      }
+      const r = blend.rest;
+      const p: V3 = [r.o[0]! + a * r.u[0]! + b * r.v[0]! + c * r.w[0]!, r.o[1]! + a * r.u[1]! + b * r.v[1]! + c * r.w[1]!, r.o[2]! + a * r.u[2]! + b * r.v[2]! + c * r.w[2]!];
+      for (const { rest, now, weight } of blend.joints) {
+        const d = [p[0] - rest.o[0]!, p[1] - rest.o[1]!, p[2] - rest.o[2]!];
+        const [x, y, z] = [d[0]! * rest.u[0]! + d[1]! * rest.u[1]! + d[2]! * rest.u[2]!, d[0]! * rest.v[0]! + d[1]! * rest.v[1]! + d[2]! * rest.v[2]!, d[0]! * rest.w[0]! + d[1]! * rest.w[1]! + d[2]! * rest.w[2]!];
+        for (let k = 0; k < 3; k++) world[i + k] += weight * (now.o[k]! + x * now.u[k]! + y * now.v[k]! + z * now.w[k]!);
+      }
     }
     return { id: solid.id, role: solid.role, world, indices: g.indices };
   });
+}
+
+const RESTS = new WeakMap<object, Record<string, Frame>>();
+
+/** 🕸️ The linear blend of a solid with `weights`, as the product's mesh does it: the solid is placed in the rest frame of its bone, and every point goes to the sum over its weighted bones of that bone's posed frame applied to the point in the bone's rest frame (weights normalised, at most four); null for a rigid solid. */
+function weightsOf(asset: Json, frames: Record<string, Frame>, solid: Json): { rest: Frame; joints: { rest: Frame; now: Frame; weight: number }[] } | null {
+  const live = ((solid.weights ?? []) as { bone: string; weight: number }[]).filter((w) => w.weight > 0).slice(0, 4);
+  if (live.length === 0) return null;
+  let rest = RESTS.get(asset.rig);
+  if (rest === undefined) {
+    rest = Object.fromEntries(Object.entries(restFrames(asset.rig)).map(([id, solved]) => [id, solved.frame as Frame]));
+    RESTS.set(asset.rig, rest);
+  }
+  const total = live.reduce((sum, w) => sum + w.weight, 0);
+  return { rest: rest[solid.bone]!, joints: live.map((w) => ({ rest: rest![w.bone]!, now: frames[w.bone]!, weight: w.weight / total })) };
 }
 
 /** 📚️ The three lists of one authored scale as world meshes in the given frames; a list that does not tessellate is reported in `errors` and left empty. */
@@ -94,7 +121,7 @@ export function listsIn(asset: Json, scale: number, frames: Record<string, Frame
     const kept: Json[] = [];
     for (const s of solids[list]) {
       try {
-        out.push(meshesIn(asset, frames, [s])[0]!);
+        out.push(meshesIn(asset, frames, [s], scale)[0]!);
         kept.push(s);
       } catch (error) {
         errors.push(`${list}/${s.id}: ${(error as Error).message}`);
@@ -141,12 +168,13 @@ export function* pointsOf(meshes: readonly SolidMesh[]): Generator<[number, numb
 
 const CREASE_COS = Math.cos((48 * Math.PI) / 180);
 
-/** 🪡️ Corner normals of a mesh: vertices welded by position, the averaged normal where the faces meet smoothly and the face normal at a crease. */
+/** 🪡️ Corner normals of a mesh: vertices welded by position; each corner averages (area-weighted) only the faces at its vertex that meet its own face within the crease angle, so a flat cap stays flat beside a fillet and a crease stays sharp. */
 export function cornerNormals(mesh: SolidMesh): Float32Array {
   const w = mesh.world;
   const tris = mesh.indices.length / 3;
   const face = new Float32Array(tris * 3);
-  const sums = new Map<string, [number, number, number]>();
+  const raw = new Float32Array(tris * 3);
+  const around = new Map<string, number[]>();
   const keys: string[] = new Array(w.length / 3);
   for (let i = 0; i < w.length / 3; i++) keys[i] = `${Math.round(w[i * 3]! * 2e4)},${Math.round(w[i * 3 + 1]! * 2e4)},${Math.round(w[i * 3 + 2]! * 2e4)}`;
   for (let t = 0; t < tris; t++) {
@@ -155,27 +183,35 @@ export function cornerNormals(mesh: SolidMesh): Float32Array {
     const [vx, vy, vz] = [w[c]! - w[a]!, w[c + 1]! - w[a + 1]!, w[c + 2]! - w[a + 2]!];
     const n: [number, number, number] = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
     for (const corner of [a, b, c]) {
-      const s = sums.get(keys[corner / 3]!) ?? sums.set(keys[corner / 3]!, [0, 0, 0]).get(keys[corner / 3]!)!;
-      s[0] += n[0];
-      s[1] += n[1];
-      s[2] += n[2];
+      const key = keys[corner / 3]!;
+      (around.get(key) ?? around.set(key, []).get(key)!).push(t);
     }
     const l = Math.hypot(...n) || 1;
+    raw[t * 3] = n[0];
+    raw[t * 3 + 1] = n[1];
+    raw[t * 3 + 2] = n[2];
     face[t * 3] = n[0] / l;
     face[t * 3 + 1] = n[1] / l;
     face[t * 3 + 2] = n[2] / l;
   }
   const out = new Float32Array(tris * 9);
   for (let t = 0; t < tris; t++) for (let k = 0; k < 3; k++) {
-    const s = sums.get(keys[mesh.indices[t * 3 + k]!]!)!;
-    const l = Math.hypot(...s) || 1;
-    const smooth = (s[0] * face[t * 3]! + s[1] * face[t * 3 + 1]! + s[2] * face[t * 3 + 2]!) / l >= CREASE_COS;
-    for (let q = 0; q < 3; q++) out[t * 9 + k * 3 + q] = smooth ? s[q]! / l : face[t * 3 + q]!;
+    const s = [0, 0, 0];
+    for (const f of around.get(keys[mesh.indices[t * 3 + k]!]!)!) {
+      if (face[f * 3]! * face[t * 3]! + face[f * 3 + 1]! * face[t * 3 + 1]! + face[f * 3 + 2]! * face[t * 3 + 2]! < CREASE_COS) continue;
+      s[0] += raw[f * 3]!;
+      s[1] += raw[f * 3 + 1]!;
+      s[2] += raw[f * 3 + 2]!;
+    }
+    const l = Math.hypot(s[0]!, s[1]!, s[2]!);
+    for (let q = 0; q < 3; q++) out[t * 9 + k * 3 + q] = l > 0 ? s[q]! / l : face[t * 3 + q]!;
   }
   return out;
 }
 
 export type Item = { mesh: SolidMesh; color: RGB };
+/** 🎚️ Depth tie (m): a surface within this distance behind the stored one still wins, so coincident faces of neighbouring solids resolve to the later one instead of a float-noise moiré. */
+const TIE_M = 1e-5;
 const normalCache = new WeakMap<SolidMesh, Float32Array>();
 
 /** 🖌️ A deferred orthographic panel: triangles go into depth, normal, albedo and solid-id buffers at `aa` times the size; `shade` lights them (two-sided, light from the upper left of the viewer) and draws outlines at depth steps, seams between solids and creases; `canvas` returns the downsampled picture. */
@@ -236,7 +272,7 @@ export class Panel {
           if (l0 < -1e-6 || l1 < -1e-6 || l2 < -1e-6) continue;
           const d = l0 * sd[a]! + l1 * sd[b]! + l2 * sd[c]!;
           const i = y * this.W + x;
-          if (d > clipDepth || d <= this.depth[i]!) continue;
+          if (d > clipDepth || d < this.depth[i]! - TIE_M) continue;
           this.depth[i] = d;
           this.solid[i] = id;
           for (let q = 0; q < 3; q++) {

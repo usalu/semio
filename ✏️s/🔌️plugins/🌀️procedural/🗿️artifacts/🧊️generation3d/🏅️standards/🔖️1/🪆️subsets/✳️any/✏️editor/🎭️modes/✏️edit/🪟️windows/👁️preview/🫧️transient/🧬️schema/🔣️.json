@@ -6,7 +6,25 @@
   "additionalProperties": false,
   "properties": {
     "previewEvalText": {
-      "anyOf": [{ "type": "string" }, { "type": "null" }],
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "ephemeral-local-window"
+    },
+    "generationId": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-state": "ephemeral-local-window"
     }
   }

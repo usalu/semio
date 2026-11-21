@@ -1,0 +1,7 @@
+# Fleet Readiness and Graph at 10:56 UTC
+
+Fresh m05 workspace progress moved from 58210 source observations and 3 owner checks at 10:46 to 58564 and 5; its latest retained samples rose 58562 to 58564. The m11 retry advanced from 48860 observations and 1 owner to 291237 and 381. Both remain running and not Ready.
+
+The other fresh workers also remain running and not Ready. Since 10:46 m02 advanced from 291 to 318 taken; m07 from 5104 to 5728 owner checks; m10 from 8936 to 9526 checks; and m12 from 140 to 156 taken. m08 has moved to owner reading, but its retained current log does not establish a change in that counter. The m01, m03, m04 and m06 readiness publications are stale, and m09 has no readiness receipt. These do not establish current host state.
+
+The existing coordinator reader 19453 has a current heartbeat and is waiting to grow its 4096 MB reservation to 14336 MB. At the latest read it had waited 1567 seconds, with 2577 MB spare above the 4096 MB floor and active grants for process3d-editor, graph-plan and infinite-world-host ahead of sufficient capacity. The generation 260 pointer still has no manifest and states closure-missing; the graph sidecar continues to report no sealed generation to upload. The supported next action is to let admitted work and the existing capacity queue proceed and then inspect the sealed receipt. No remote host was touched and no duplicate reader was started.

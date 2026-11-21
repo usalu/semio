@@ -4,5 +4,6 @@
     { "id": "examples-retained", "examplesPresent": true }
   ],
   "examplePaths": ["🧪️tests/🧫️fixtures/✏️editor-catalog/🔣️.json", "🧪️tests/🧫️fixtures/🏠️home-io-surface/🔣️.json"],
-  "expectedExampleWrites": 0
+  "expectedExampleWrites": 0,
+  "builder": { "type": "semio_plugin::PluginBuilder", "labelState": "semio_plugin::NeedsLabel", "method": "new" }
 }

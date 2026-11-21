@@ -72,3 +72,37 @@ Not changed (checked against the reference): rig (one bone, y 2.33 = underside 2
 ## 6. Still imperfect (stated plainly)
 
 (in progress)
+
+## Round 5 handcraft
+
+Agent C03, 2026-11-21. The round-3 construction (sections 1 to 3 above) is in the catalog; sections 4 to 6 of round 3 were never filled in, this section replaces them. Scripts: `r5-tied-canopy-roots.py` (1:100 plan panes), `r5_c03_lib.py` (candidate, validation, splice in the file's layout), `r5-c03-sheets.sh`.
+
+### Model against reference (1:50)
+
+| quantity | model | reference | deviation |
+|---|---|---|---|
+| IPE 160 h / b / t_f / t_w | 160 / 82 / 7.4 / 5 mm (web at the 7.5 mm floor) | EN 10365 | 0 % (web +50 %, feature floor, hidden) |
+| beam length, underside height | 5.5 m, 2.25 m | asset dimensions | 0 % |
+| strut | CHS 60.3, 4.527 m between pins | EN 10219-2 | 0 % |
+| pins, gussets | 24 mm pins, 15 mm gussets, fork heads 2 x 10 mm cheeks | tube-strut catalogues | 0 % |
+| glass | 2 x 8 + 0.76 PVB = 16.8 mm on 8 mm EPDM | DIN 18008-2 | 0 % |
+| pane joints | 20 mm EPDM | 10 to 20 mm | within |
+| end plate bolts | edge 27 / 22 mm | ≥ 1.2 d0 = 22 mm (EN 1993-1-8) | within |
+| mass | 86.78 kg = 15.8 kg/m x 5.5 m | EN 10365 | 0 % |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- |
+| 1:100 | A- / A- / A-, but the product refused to draw the scale (`PRINT unsuitable`: 0.1 mm white sliver between plan panes 1 and 2), catalog INVALID | A- / A- / A-, drawn, VALID |
+| 1:200 | B+ / B+ / B+ | B+ / B+ / B+ |
+| 1:500 | B+ / B+ / B+ | B+ / B+ / B+ |
+
+Opened: `r3-sheet` body, structure and cut thermal at every scale, the poses `self-weight`, `snow-load`, `wind-uplift` and clip `wind-gust` t 2 at 1:50, `r3-2d` at every scale (`🗑️generated/r5-tied-canopy/before`) and the 1:100 2D after the fix (`🗑️generated/r5-tied-canopy/after`). The poses move nothing visible (one rigid bone, loads only); strut, gussets, fork heads and anchor plates stay seated.
+
+Root change: 1:100 plan `glass-0` to `glass-3` extended by half a joint (10 mm) towards their neighbours so that they meet on the joint centre lines under the drawn 20 mm EPDM joint strips (`joint-0` to `joint-2`, z above the glass); the notched `glass-2` keeps its notch. Validated as a candidate (`r3-validate.ts --file`), then spliced (only `representations`).
+
+Check: `r3-validate.ts components/tied-canopy` VALID (schema 0, validateAsset 0, print suitable at every scale); `volumes-check.ts --product` PASS.
+
+Still imperfect: the glass lies flat (0 degrees) while overhead glazing is normally laid with 2 to 3 degrees of fall for drainage; a fall changes the rig angle, anchors and every 2D view and is left as an open point. The model is one beam with its 1.0 m glass strip, a bay of a longer canopy, so the panes bear on one line with 0.5 m edge overhangs. The 1:200 and 1:500 strut is a slender rod and the nodes are lugs at the feature floor.

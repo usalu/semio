@@ -15,6 +15,7 @@ import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Icon, type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️.tsx";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { Ribbon, type RibbonRow } from "../🎀️Ribbon/🟦️.tsx";
+import { chipGapReadsAsSliver } from "../🃏️CardStack/bands.ts";
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { type FlowBlock, FlowProvider, useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useLabel, useControlInlineText } from "../🏷️Label/🟦️.tsx";
@@ -535,6 +536,48 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
     const activeButton = bar.querySelector<HTMLElement>(`[data-slot="${tabSlot}-tab-button"][data-active="true"]`);
     activeButton?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [resolvedActiveId, tabIdsKey, tabSlot]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar || !fullWidth || variant !== "panel") return;
+    let extended: HTMLElement[] = [];
+    const reset = () => {
+      for (const element of extended) {
+        element.style.removeProperty("flex-basis");
+        element.style.removeProperty("flex-grow");
+        element.style.removeProperty("max-width");
+      }
+      extended = [];
+    };
+    const fit = () => {
+      reset();
+      const item = bar.lastElementChild as HTMLElement | null;
+      const last = item?.matches("button[data-tab-id]") ? item : item?.querySelector<HTMLElement>(":scope > button[data-tab-id]");
+      if (!item || !last || bar.scrollWidth > bar.clientWidth || !chipGapReadsAsSliver(bar.getBoundingClientRect().right - item.getBoundingClientRect().right)) return;
+      extended = item === last ? [last] : [item, last];
+      const widths = extended.map(element => element.offsetWidth);
+      extended.forEach((element, index) => {
+        element.style.flexBasis = `${widths[index]}px`;
+        element.style.flexGrow = "1";
+        element.style.maxWidth = "none";
+      });
+    };
+    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(fit);
+    const observe = () => {
+      resize?.disconnect();
+      resize?.observe(bar);
+      for (const child of bar.children) resize?.observe(child);
+      fit();
+    };
+    const mutations = new MutationObserver(observe);
+    mutations.observe(bar, { childList: true, characterData: true, subtree: true });
+    observe();
+    return () => {
+      mutations.disconnect();
+      resize?.disconnect();
+      reset();
+    };
+  }, [fullWidth, tabIdsKey, variant]);
 
   const parentPathKey = parentPath.join("/");
   const setRowRef = reactHostPort.useCallback(

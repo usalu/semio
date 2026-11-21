@@ -1,6 +1,6 @@
 use semio_renderer_wgpu_contracts::{AdmittedSurfaceMap, RasterUploadRefusal};
 use semio_renderer_wgpu_scene_canvas2d::{canvas_apply_blend_mode, canvas_gradient_color_at, canvas_layer_should_render, draw_checkerboard, push_linear_gradient_fill, push_radial_gradient_fill, queue_canvas_image_upload, queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_canvas_shape_fill};
-use semio_renderer_wgpu_scene_state::{CanvasFillJson, CanvasGradientStopJson, CanvasLayer, PENDING_RASTER_CLOSE_OWNER, PENDING_RASTER_STATE, PendingRasterQueue, PendingRasterQueueToken, PendingRasterUploadCursor, PendingRasterUploadStep, RASTER_UPLOADS_PER_SURFACE_CAPACITY, Viewport, begin_pending_raster_authority_close};
+use semio_renderer_wgpu_scene_state::{CanvasFillJson, CanvasGradientStopJson, CanvasLayer, PENDING_RASTER_CLOSE_OWNER, PENDING_RASTER_STATE, PendingRasterQueue, PendingRasterQueueToken, PendingRasterUploadCursor, PendingRasterUploadStep, RASTER_FIXTURE_GRANT, RASTER_UPLOADS_PER_SURFACE_CAPACITY, Viewport, begin_pending_raster_authority_close, pending_raster_fixture_caller};
 use semio_renderer_wgpu_scene_tables::{Paint2dFlatLayer, paint2d_navigator_fit_viewport, paint2d_navigator_overlay_rect};
 use semio_ui_prepared::{PreparedRasterProducer, PreparedRasterReservation};
 use semio_ui_theme::geometry::Rect;
@@ -11,25 +11,27 @@ fn pending_raster_len(surface_id: &str) -> usize {
 }
 
 fn clear_pending_rasters(surface_id: &str) {
+    let mut caller = pending_raster_fixture_caller();
     PENDING_RASTER_STATE.with(|cell| {
         if let Some(surface) = cell.borrow_mut().get_mut(surface_id) {
-            surface.queue.close_all();
+            surface.queue.close_all(RASTER_FIXTURE_GRANT);
             if let Some(reservation) = surface.admission.take() {
                 let mut rejected = reservation.reject("test admission retirement", Vec::new());
-                while !rejected.close_step() {}
+                while !rejected.terminal_is_empty() { rejected.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
             }
             if let Some(mut retiring) = surface.retiring.take() {
-                while !retiring.close_step() {}
+                while !retiring.terminal_is_empty() { retiring.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
             }
             if let Some(mut rejected) = surface.rejected.take() {
-                while !rejected.close_step() {}
+                while !rejected.terminal_is_empty() { rejected.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
             }
-            while surface.retire_refusal_step() {}
+            while caller.refreshed_turn(RASTER_FIXTURE_GRANT, |cx| surface.retire_refusal_step(cx)).unwrap() {}
             if let Some(mut producer) = surface.closing.take() {
-                while !producer.close_step() {}
+                while !producer.terminal_is_empty() { producer.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
             }
         }
     });
+    caller.retire(RASTER_FIXTURE_GRANT);
 }
 
 fn reset_pending_raster_authority() {
@@ -54,13 +56,13 @@ fn pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner() {
     let mut overflow = queue.push_back(overflow).expect_err("ring cap plus one returns exact producer");
     assert_eq!(overflow.source_generation(), overflow_generation);
     overflow.begin_close();
-    while !overflow.close_step() {}
+    while !overflow.terminal_is_empty() { overflow.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
     for expected in generations {
         let token = queue.checkout_front().expect("FIFO checkout token");
         let mut producer = queue.take_checked_out(token).expect("FIFO producer owner");
         assert_eq!(producer.source_generation(), expected);
         producer.begin_close();
-        while !producer.close_step() {}
+        while !producer.terminal_is_empty() { producer.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
     }
     assert_eq!(queue.len(), 0);
 }
@@ -71,15 +73,16 @@ fn pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner() {
 /// asserts belongs to nobody (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY wave 2–6 integration).
 #[test]
 fn checked_out_drop_hands_back_exact_fifo_owner_and_rejects_aba() {
+    let mut caller = pending_raster_fixture_caller();
     let mut authority = begin_pending_raster_authority_close();
-    while !authority.close_step() {}
+    while !caller.refreshed_turn(RASTER_FIXTURE_GRANT, |cx| authority.close_step(cx)).unwrap() {}
     reset_pending_raster_authority();
     let surface_id = "raster-checkout-handback";
     let data_url = tiny_png_data_url(1, 2, 3);
     assert!(queue_canvas_image_upload(surface_id, "layer", &data_url).is_some());
     let mut cursor = PendingRasterUploadCursor::default();
     let checked = loop {
-        match cursor.step() {
+        match caller.refreshed_turn(RASTER_FIXTURE_GRANT, |cx| cursor.step(cx)).unwrap() {
             PendingRasterUploadStep::Pending => {}
             PendingRasterUploadStep::Upload(checked) => break checked,
             _ => panic!("exact checkout"),
@@ -91,7 +94,7 @@ fn checked_out_drop_hands_back_exact_fifo_owner_and_rejects_aba() {
     drop(checked);
     let mut second = PendingRasterUploadCursor::default();
     let checked = loop {
-        match second.step() {
+        match caller.refreshed_turn(RASTER_FIXTURE_GRANT, |cx| second.step(cx)).unwrap() {
             PendingRasterUploadStep::Pending => {}
             PendingRasterUploadStep::Upload(checked) => break checked,
             _ => panic!("returned checkout"),
@@ -100,7 +103,8 @@ fn checked_out_drop_hands_back_exact_fifo_owner_and_rejects_aba() {
     let mut producer = checked.take().unwrap_or_else(|_| panic!("same owner remains in FIFO"));
     assert_eq!(producer.source_generation(), generation);
     producer.begin_close();
-    while !producer.close_step() {}
+    while !producer.terminal_is_empty() { producer.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
+    caller.retire(RASTER_FIXTURE_GRANT);
 }
 
 /// 🧯️ Saturates the raster ledger FROM WHEREVER IT IS rather than demanding all 256 slots: the
@@ -139,7 +143,7 @@ fn admission_saturation_runs_no_hash_dimension_or_pixel_materialization() {
     assert!(!decode_called.get());
     for reservation in reservations {
         let mut rejected = reservation.reject("test slot retirement", Vec::new());
-        while !rejected.close_step() {}
+        while !rejected.terminal_is_empty() { rejected.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
     }
     clear_pending_rasters("raster-predecode-saturation");
 }
@@ -148,8 +152,9 @@ fn admission_saturation_runs_no_hash_dimension_or_pixel_materialization() {
 /// on the same surface, and the frame's upload cursor retires it without faulting the frame.
 #[test]
 fn an_undecodable_source_is_a_typed_refusal_that_never_blocks_the_next_image() {
+    let mut caller = pending_raster_fixture_caller();
     let mut authority = begin_pending_raster_authority_close();
-    while !authority.close_step() {}
+    while !caller.refreshed_turn(RASTER_FIXTURE_GRANT, |cx| authority.close_step(cx)).unwrap() {}
     reset_pending_raster_authority();
     let surface_id = "raster-undecodable-source";
     let refused = queue_canvas_image_upload_sized(surface_id, "broken", "data:image/png;base64,AAAA").0;
@@ -158,12 +163,12 @@ fn an_undecodable_source_is_a_typed_refusal_that_never_blocks_the_next_image() {
     let mut cursor = PendingRasterUploadCursor::default();
     let mut uploads = 0;
     for _ in 0..65_536 {
-        match cursor.step() {
+        match caller.refreshed_turn(RASTER_FIXTURE_GRANT, |cx| cursor.step(cx)).unwrap() {
             PendingRasterUploadStep::Pending => {}
             PendingRasterUploadStep::Upload(checked) => {
                 let mut producer = checked.take().unwrap_or_else(|_| panic!("the valid image uploads"));
                 producer.begin_close();
-                while !producer.close_step() {}
+                while !producer.terminal_is_empty() { producer.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
                 uploads += 1;
             }
             PendingRasterUploadStep::Complete => break,
@@ -171,6 +176,7 @@ fn an_undecodable_source_is_a_typed_refusal_that_never_blocks_the_next_image() {
         }
     }
     assert_eq!(uploads, 1, "exactly the valid image uploads");
+    caller.retire(RASTER_FIXTURE_GRANT);
     assert!(PENDING_RASTER_STATE.with(|cell| cell.borrow().get(surface_id).is_some_and(|surface| surface.refused.iter().all(Option::is_none))), "the refusal retired within the pass");
 }
 
@@ -180,13 +186,15 @@ fn realm_close_retires_pending_rasters_before_terminal_and_allows_clean_reopen_f
     let data_url = tiny_png_data_url(7, 8, 9);
     assert!(queue_canvas_image_upload(surface_id, "layer", &data_url).is_some());
     let mut close = begin_pending_raster_authority_close();
+    let mut caller = pending_raster_fixture_caller();
     let mut turns = 0usize;
-    while !close.close_step() {
+    while !caller.refreshed_turn(RASTER_FIXTURE_GRANT, |cx| close.close_step(cx)).unwrap() {
         turns += 1;
         assert!(turns < 200_000);
     }
     assert!(turns > 1, "realm close advances one retained owner per grant");
     assert!(close.terminal_is_empty());
+    caller.retire(RASTER_FIXTURE_GRANT);
     reset_pending_raster_authority();
 }
 

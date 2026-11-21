@@ -46,7 +46,10 @@ export type LoftSection = { readonly at: Vec3; readonly rx: number; readonly ry:
 /** 🧵️ Superelliptic sections lofted in order of travel; the skin is always oriented outward whatever the order, the bends and the handedness of a section rotation. */
 export type LoftSolid = SolidBase & { readonly kind: "loft"; readonly sections: readonly LoftSection[]; readonly capStart: boolean; readonly capEnd: boolean };
 /** 🧊️ Procedural declarative geometry in the node-local frame. */
-export type Solid = BoxSolid | EllipsoidSolid | CapsuleSolid | RevolveSolid | ExtrudeSolid | LoftSolid;
+/** 🪨️ A closed triangular shell indexed into unique local vertices, wound outward. */
+export type PolyhedronSolid = SolidBase & { readonly kind: "polyhedron"; readonly vertices: readonly Vec3[]; readonly triangles: readonly (readonly [number, number, number])[] };
+
+export type Solid = BoxSolid | EllipsoidSolid | CapsuleSolid | RevolveSolid | ExtrudeSolid | LoftSolid | PolyhedronSolid;
 /** 🧬️ Provenance range: the solid `id` and the index range `[first, first + count)` of the primitive it produced. */
 export type PrimitiveSolid = { readonly id: Slug; readonly first: number; readonly count: number };
 /** 🔺️ Triangle or line geometry; `joints`/`weights` carry four influences per vertex (skin joint index), `colors` are rgba; `solids` (optional) says which solid produced which contiguous index range, in solid order, covering all indices. */

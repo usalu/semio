@@ -296,10 +296,10 @@ async fn created_part_board_and_world_edits_reopen_with_history() {
         let mut reopened = Box::new(app_with_registry());
         if form == "text" {
             let saved = original.document_text().await.expect("save text");
-            semio_plugin::app::artifact_app_laws::load_document_text(&mut *reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("reopen text");
+            semio_plugin::app::artifact_app_laws::load_document_text(&mut reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("reopen text");
         } else {
             let saved = original.document_pack().await.expect("save pack");
-            semio_plugin::app::artifact_app_laws::load_document(&mut *reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("reopen pack");
+            semio_plugin::app::artifact_app_laws::load_document(&mut reopened.0, &saved, &mut semio_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("reopen pack");
         }
         assert_eq!(projection_of(&reopened), edited, "{form} reopened both edits");
         dispatch(&mut reopened, "undo", None, None).expect("undo world edit");
@@ -326,7 +326,7 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
     let work = Puzzle5dSetActiveExampleWork::default();
     for example_id in ["", "concrete-forest", "nakagin", "capsule-dream"] {
         let command = Puzzle5dCommand::try_from_action("setActiveExample", Some(semio_framework_pack_json::json!({ "exampleId": example_id })), None).expect("registered example command");
-        let extent = semio_plugin::retained_command::ArtifactCommandWork::extent(&work, &command, &snapshot, &interaction, None);
+        let extent = semio_plugin::retained_command::ArtifactCommandWork::<EditorApp<Puzzle5dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None);
         assert!(extent.is_some(), "setActiveExample {example_id} must declare an extent — `None` is the opaque capacity fault this slice replaced with a notice");
         assert!(extent.is_some_and(|extent| extent <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), "setActiveExample {example_id} must stay inside the fixed work ceiling");
     }

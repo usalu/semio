@@ -108,3 +108,63 @@ Final check line: `FAIL: 6 measurement(s) over 2 rule line(s) (21.7 s)`. Silhoue
 - Hands and the spoon bowl are prisms and a scaled revolve in 2D, exact in the default pose only for the hand outline.
 - Six area measurements stay red (section 5). The knee joint stays 12 mm low against Winter (de Leva shank kept).
 - Not run: the staffage test suites and exports; fixtures that embed this asset may need regenerating after the rig and 2D change.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-person-cooking-forms.ts`, `-s50.ts`, `-th50.ts`, `-st50.ts`, `-coarse.ts`, `-build.ts` (copies of the round-3 scripts, edited section by section), `r5-person-cooking-run.sh`, `-commit.sh`, `-sheet.ts` (`--no-wall` hides the base unit for close-ups), `r5-person-cooking-texts.json`; shared helpers `r5-measure.ts`, `r5-extent.ts`, `r5-print-probe.ts`. Catalog backup before this round: `🗑️generated/r5-person-cooking/catalog-before-r5.json`; renders `🗑️generated/r5-person-cooking/{before,after}/`. The round-4 catalog differed from the source only in four closed zone-ring profiles; the catalog was taken as the start.
+
+### Reference table (modelled to)
+
+Unchanged from section 1 above: woman 1.69 m barefoot, 58 kg, canvas sneakers (24 mm heel, 16 mm ball); Winter 2009, de Leva 1996, ANSUR II female; DIN EN 1116 base unit, 580 x 510 hob, 22 cm pot, 0.30 m beech spoon. Added for this round: short cropped hair 8 to 12 mm over the crown, 2 to 4 mm at the temples, running out to the skin at the hairline; folded hood of a fleece sweatshirt 20 to 30 mm on the upper back; canvas-shoe toe spring 8 to 10 mm.
+
+### Model against reference (1:50, `r5-measure.ts`, pose standing-by, barefoot heights)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| hip joint | 0.52 to 0.53 H = 0.879 to 0.896 | 0.882 (0.522 H) | in range |
+| knee | 0.285 H = 0.482 | 0.469 (0.277 H) | -2.7 % |
+| ankle | 0.039 H = 0.066 | 0.066 | 0 |
+| shoulder joint | 0.818 H = 1.382 | 1.382 (0.817 H) | 0 |
+| elbow | 0.63 H = 1.065 | 1.070 (0.633 H) | +0.5 % |
+| wrist | 0.485 H = 0.820 | 0.839 (0.496 H) | +2.3 % (arm hangs forward with the spoon) |
+| head chin to vertex | 0.216 (ANSUR II female) | 0.216 | 0 |
+| upper arm / forearm / hand | 0.314 / 0.247 / 0.183 | 0.314 / 0.247 / 0.180 | 0 / 0 / -1.6 % |
+| thigh / shank | 0.414 / 0.416 (0.245 / 0.246 H) | 0.413 / 0.404 | -0.2 / -2.9 % |
+| shoulder joint spacing | 0.365 biacromial - 2 x 0.025 = 0.315 | 0.310 | -1.6 % |
+| hip joint spacing | 0.16 to 0.18 | 0.175 | in range |
+| sweatshirt breadth | 0.27 nude + ease = 0.35 to 0.40 | 0.392 | in range |
+| thigh depth (jeans) | 0.18 to 0.19 | 0.189 | in range |
+
+### Grades (before -> after; lists body / thermal / structure)
+
+- 1:50: B / A- / A- -> A- / A- / A-
+- 1:100: B / B+ / B+ -> A- / A- / B+
+- 1:200: B / B+ / B+ -> B+ / B+ / B+
+- 1:500: B- / B / B -> B+ / B / B
+- Poses at 1:50 (tasting, standing-by) and clip stirring at 1.0 s: closed and natural.
+
+### What I saw before and changed
+
+- Hair: read as a helmet (a 14 mm cap with a forward brim over the forehead and a hard edge standing off the skull at the nape). New 11 stations (1:50) and new rows at 1:100 / 1:200 / 1:500: 10 to 12 mm over the crown, 2 to 4 mm at the temples, running out to the skin at the hairline, tapering into the nape.
+- Hood: a 4 to 5 cm hump on the back. New rows 22 to 29 mm proud of the sweatshirt (1:50, 1:100, 1:200); at 1:500 merged into the back.
+- Shoulders: square sleeve heads above a boxy shoulder slice (exponents 2.55 to 2.6). Shoulder slices 2.0 to 2.4 and wider at the slope, sleeve heads start 2 cm above the joint inside the trunk at all scales; at 1:500 a shoulder slice was added (the trunk was a faceted four-slice box) and the sleeve starts at the joint.
+- Sneakers: the forefoot outsole was a flat extruded plate and the upper sat on the sole with a waist. Toe outsole is now a loft with toe spring (20 mm at the ball, 9 mm lift at the tip), upper and toe cap seated 8 to 15 mm into the sole.
+- Seat and hem: seat narrowed (0.176 -> 0.17 half-width at the hips) and the hem rib widened so they no longer z-fight; same at 1:100 to 1:500.
+- 1:100: the sweatshirt loft is densified (the trunk showed facets).
+- Structure: scapular spine and clavicle ends pulled inside the narrower shoulder (9.4 mm outside the front silhouette).
+- Print suitability (the catalog was INVALID under the new PRINT check: the sweatshirt at 1:1000 in the standing-by elevation showed as a sliver between the hanging right arm and the back): 1:500 sleeves slimmed to 80 to 84 mm depth, the sweatshirt back at 1:500 deepened by 8 to 9 mm (the hood merged into it), elbow overlap lengthened. Now VALID.
+- 2D of all scales and views redrawn from the bodies by `r3-person-cooking-draw2d.ts` (ruling E1); rig, poses, clips and dimensions unchanged.
+- Decision 1:50 rewritten (en, de) for shoulders, hood and soles.
+
+### Checks
+
+`r3-validate.ts humans/person-cooking --volumes`: schema 0, validateAsset 0, checkVolumes 6. `volumes-check.ts --product`: FAIL 6 measurements over 2 rule lines, only `volumes-thermal-coverage` areas at 1:50 / 1:100: `jeans` 0.735 against 0.5452 (+35 %), `sneakers` 0.166 / 0.152 against 0.1005 (+65 % / +51 %), `spoon` 0.013 against 0.026 (-50 %) — filed in `author-requests.md` and `area-review.md` (2026-11-20, C18 / C16 factor 2, not applied). Every other rule green at every scale.
+
+### Remaining
+
+- Areas above (area reviewers).
+- Knee 2.7 % and shank 2.9 % short of Winter's shares (de Leva shank kept), within 3 %.
+- Short crop still has a defined edge above the ears and at the nape (a real cut line, 2 to 4 mm); no cloth folds beyond hem, cuffs, two forearm folds and the hood; elbows and knees are overlaps of two rigid lofts with a seam line.
+- 1:200 and 1:500: shoulders and trunk remain visibly faceted from the back (five to six slices by design of the coarse scale).
+
+Both handle contours remain legible at 1:150, the upper endpoint of the 1:100 drawing. All three checked denominators passed.

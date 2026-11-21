@@ -1,6 +1,8 @@
 /** 🔱️ Contract: the warm pass splits the owners into stable lanes, settles them in short-lived children that write durable rows, skips what an earlier try already made durable, keeps the parent flat and stays inside the planned memory.
  * @see ../🟨️.mjs */
 import{expect,test}from"bun:test";
+import{Database}from"bun:sqlite";
+import ordering from"./🧫️fixtures/🔢️warm-order.json" with {type:"json"};
 import{spawn}from"node:child_process";
 import{appendFileSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync}from"node:fs";
 import{availableParallelism,tmpdir}from"node:os";
@@ -29,6 +31,29 @@ test("the lanes are stable whatever the order, cover every owner once and spread
  const load=first.map(lane=>lane.reduce((sum,name)=>sum+owners.find(owner=>owner.name===name)!.cost,0)),mean=load.reduce((a,b)=>a+b,0)/load.length;
  expect(Math.max(...load)).toBeLessThanOrEqual(mean*1.15);
  expect(first.map(lane=>lane.filter(name=>owners.find(owner=>owner.name===name)!.cost===900).length).every(count=>Math.abs(count-owners.filter(owner=>owner.cost===900).length/7)<=1)).toBe(true);
+});
+
+test("large warm rosters score each owner key once and preserve the independent lane plan",()=>{
+ const db=new Database(":memory:"),rows=names(ordering.owners).map((name,index)=>({
+  name,
+  key:index%ordering.repeatKeyEvery===0?"repeated-key":name,
+  cost:index%ordering.heavyEvery===0?ordering.heavyCost:index%ordering.mediumEvery===0?ordering.mediumCost:ordering.baseCost,
+ }));
+ let reads=0;
+ const owners=rows.map(({name,key,cost})=>({name,cost,get key(){reads++;return key;}}));
+ try{
+  const ranked=rows.map(row=>[row.name,row.cost,new Bun.CryptoHasher("sha1").update(row.key).digest("hex").slice(0,8)]);
+  const sorted=db.query(`select json_extract(value,'$[0]') as name, json_extract(value,'$[1]') as cost
+   from json_each(?1) order by cost desc, json_extract(value,'$[2]'), name`).all(JSON.stringify(ranked)) as {name:string;cost:number}[];
+  const expected=Array.from({length:ordering.lanes},()=>({load:0,names:[] as string[]}));
+  for(const owner of sorted){
+   const lowest=expected.reduce((first,lane)=>lane.load<first.load?lane:first);
+   lowest.names.unshift(owner.name);
+   lowest.load+=owner.cost+1;
+  }
+  expect(planWarmLanesV1(owners,ordering.lanes)).toEqual(expected.map(lane=>lane.names));
+  expect(reads).toBeLessThanOrEqual(ordering.owners);
+ }finally{db.close();}
 });
 
 test("parts: a row is durable once written, a torn last line, an old row and an absent record never count, rows are held as strings only",()=>{

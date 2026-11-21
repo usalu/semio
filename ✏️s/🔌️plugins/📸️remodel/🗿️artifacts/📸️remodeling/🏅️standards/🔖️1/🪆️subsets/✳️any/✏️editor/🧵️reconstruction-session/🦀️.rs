@@ -15,10 +15,10 @@ use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::imag
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::EngineObservation;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::EngineStage;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::EngineStatus;
-use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::FrameAcceptance;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::{FrameAcceptance, FrameCapture};
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::ReconstructionEngine;
 use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::TerminalGeoPreparation;
-use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::build_engine_params;
+use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::{build_engine_params, stream_intrinsics};
 use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::camera_pose_preview;
 use semio_s_artifact_remodel_remodeling_geo::editor::remodeling::engine::geo as remodeling_geo;
 use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::watertight_snapshot;

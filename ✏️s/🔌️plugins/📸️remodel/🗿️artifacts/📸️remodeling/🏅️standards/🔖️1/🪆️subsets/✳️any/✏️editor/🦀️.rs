@@ -109,6 +109,9 @@ use retained_commands::*;
 #[path = "🎛️artifact-editor/🦀️.rs"]
 mod artifact_editor;
 
+#[path = "🎞️mesh-export/🦀️.rs"]
+mod mesh_export;
+
 #[path = "📜️manifest/🦀️.rs"]
 mod manifest;
 pub use manifest::*;

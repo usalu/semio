@@ -7,11 +7,26 @@ semio_framework_value::artifact_retire_leaf!(LayoutExportWorkTurn);
 pub(super) fn require_original_drawing_read<'a,T>(source:Option<DrawingSourceAddress>,read:Option<&'a T>)->Result<Option<&'a T>,ValueError>{if source.is_some()&&read.is_none(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Layout export requires the original qualified Drawing child read"))}Ok(read)}
 impl LayoutExportJob{
  /// 🧭️ Returns only the active numeric address; lookup, qualification and source custody belong to the actual outer owner.
- pub fn required_drawing_source(&self)->Option<DrawingSourceAddress>{if self.closing||self.stage!=ExportStage::Plan||!self.drawing.as_ref().is_some_and(DrawingCompositionState::has_active){None}else{self.drawing_source}}
+ pub fn required_drawing_source(&self)->Option<DrawingSourceAddress>{
+  if self.closing{return None;}
+  if self.stage==ExportStage::Plan&&self.drawing.as_ref().is_some_and(DrawingCompositionState::has_active){return self.drawing_source;}
+  if self.stage==ExportStage::Encode{return self.required_step_drawing();}
+  None
+ }
+ pub(super) fn required_step_drawing(&self)->Option<DrawingSourceAddress>{
+  self.interchange_session.as_ref()?.required_step_drawing(&self.request.as_ref()?.snapshot)
+ }
  /// ♻️ Original parent and child custody may close after every retained Drawing consumer and retirement has returned.
  pub fn drawing_consumers_terminal_is_empty(&self)->bool{self.drawing.is_none()&&self.drawing_retirement.is_none()}
  /// 📏️ Quotes the last selected original plan event and the same work milestone metadata.
- pub fn original_work_demand(&self)->Result<RetirementDemand,ValueError>{let own=RetirementDemand{copy_bytes:size_of::<u64>()*2+if self.restore_target.is_some(){size_of::<Option<LayoutExportCheckpoint>>()}else{0},depth:1,..Default::default()};let child=match self.stage{ExportStage::Plan=>self.plan_work_demand,ExportStage::BeginEncode|ExportStage::Encode=>self.output_work_demand(false)?,ExportStage::Base64=>self.output_work_demand(true)?,_=>Default::default()};Ok(RetirementDemand{copy_bytes:own.copy_bytes.checked_add(child.copy_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Layout export original work quote overflow"))?,depth:own.depth.max(child.depth),..child})}
+ pub fn original_work_demand(&self)->Result<RetirementDemand,ValueError>{
+  let step_read=if self.stage==ExportStage::Encode&&self.required_step_drawing().is_some(){
+   size_of::<semio_framework_io_ports::VectorGraphAdvance<'static>>()*2+size_of::<semio_framework_io_ports::ChildAdmissionSource<'static>>()
+  }else{0};
+  let own=RetirementDemand{copy_bytes:size_of::<u64>()*2+if self.restore_target.is_some(){size_of::<Option<LayoutExportCheckpoint>>()}else{0},depth:1,..Default::default()};
+  let child=match self.stage{ExportStage::Plan=>self.plan_work_demand,ExportStage::BeginEncode|ExportStage::Encode=>self.output_work_demand(false)?,ExportStage::Base64=>self.output_work_demand(true)?,_=>Default::default()};
+  Ok(RetirementDemand{copy_bytes:own.copy_bytes.checked_add(child.copy_bytes).and_then(|bytes|bytes.checked_add(step_read)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Layout export original work quote overflow"))?,depth:own.depth.max(child.depth),..child})
+ }
  /// 🧵️ Advances one actual unit and its original milestone without minting a second owner's publications.
  pub fn advance_original_work(&mut self,context:&mut StepContext<'_>,read:Option<&ChildAdmissionRead<'_>>)->Result<LayoutExportWorkTurn,semio_framework_job::OriginalTurnFailure>{
   if self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Layout export original work is closing").into())}

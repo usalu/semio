@@ -3,7 +3,7 @@ use semio_framework_value_native_decoding::*;
 #[path="../../../🎟️work/🧪️tests/eff.rs"]
 mod eff;
 fn post(bank:&mut RetainedCloneGrant,fuel:&mut u64,p:RetainedCloneProgress,work:u128){let work=u64::try_from(work).unwrap();assert!(p.fits(*bank));assert!(work<=1);bank.maximum_items-=p.copied_items;bank.maximum_copy_bytes-=p.copied_bytes;bank.maximum_capacity_bytes-=p.retained_capacity_bytes;bank.maximum_release_bytes-=p.released_bytes;*fuel=fuel.checked_sub(work).unwrap();}
-fn close<T:retirement::RetireOwned>(value:T,bank:&mut RetainedCloneGrant,fuel:&mut u64){let mut owner=retirement::controlled::ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();for _ in 0..100000{if owner.terminal_is_empty(){return}let mut actual=None;let(p,heap)=eff::observed(RetainedCloneGrant{maximum_items:1,..*bank},*fuel,&mut actual,|effect|eff::settled(owner.step(effect)).result.unwrap().progress());assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(bank,fuel,p,owner.last_turn_work());}panic!("native backing cleanup exhausted finite turns")}
+fn close<T:retirement::RetireOwned>(value:T,bank:&mut RetainedCloneGrant,fuel:&mut u64){let mut owner=retirement::controlled::ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();for _ in 0..100000{if owner.terminal_is_empty(){return}let mut actual=None;let(p,heap)=eff::observed(RetainedCloneGrant{maximum_items:1,..*bank},*fuel,&mut actual,|effect|eff::close_step(&mut owner,effect).result.unwrap().progress());assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));post(bank,fuel,p,owner.last_turn_work());}panic!("native backing cleanup exhausted finite turns")}
 struct WorkLoan(u64);
 impl OriginalWorkRecipient for WorkLoan{type Context<'turn,'source>=() where 'source:'turn;fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}fn source_turn<'turn,'source>(&self,_:&())->Option<OriginalSourceTurnIdentity>where 'source:'turn{None}fn settle_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}fn recover_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}fn admits<'reply,'turn,'source>(&mut self,_:&mut (),quote:OriginalWorkQuote<'reply>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'reply>where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|n|n<=self.0.min(1))))}}
 struct Construction{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,refuse:bool}
@@ -27,3 +27,43 @@ fn original_backing_work_rejects_false_actual_before_commit(){
 }
 
 #[test]fn empty_and_zero_sized_backing_have_no_allocation_event(){let row:serde_json::Value=serde_json::from_str(include_str!("../📐️.json")).unwrap();let stock=&row["stock"];let mut bank=RetainedCloneGrant{maximum_items:stock["items"].as_u64().unwrap()as usize,maximum_copy_bytes:stock["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:stock["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:stock["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:stock["depth"].as_u64().unwrap()as usize};let mut fuel=stock["fuel"].as_u64().unwrap();let mut events=0;let port=|_:NativeAllocationEvent|{events+=1;Ok(())};let mut authority=NativeAllocationAuthority::new(eff::Port(port));let mut observe=|_|true;authority.with_send_loan(&mut (),|loan|{let mut control=NativeDecodeControl::new_forwarded(bank.maximum_capacity_bytes,&mut observe,loan);let mut frame=NativeReceivingEffect::default();let mut empty=None;let turn=funded_turn(&mut control,&mut rig(fuel,bank),|control|control.admit_vec::<u64>(&mut empty,0,bank,&mut frame));let progress=turn.result.unwrap().progress();assert_eq!(turn.work,1);assert_eq!(progress.retained_capacity_bytes,0);post(&mut bank,&mut fuel,progress,turn.work);let mut zst=None;let turn=funded_turn(&mut control,&mut rig(fuel,bank),|control|control.admit_vec::<()>(&mut zst,7,bank,&mut frame));let progress=turn.result.unwrap().progress();assert_eq!(turn.work,1);assert_eq!(progress.retained_capacity_bytes,0);post(&mut bank,&mut fuel,progress,turn.work);assert_eq!(control.owned_bytes(),0);drop(control);close(empty.take().unwrap(),&mut bank,&mut fuel);close(zst.take().unwrap(),&mut bank,&mut fuel);}).unwrap();assert!(authority.into_port().is_ok());assert_eq!(events,0);}
+
+#[test]
+fn allocation_checkpoint_refusal_returns_unperformed_work_once() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../📐️.json")).unwrap();
+    let case = fixture["outcomeCases"].as_array().unwrap().iter().find(|case| case["event"] == "cancel").unwrap();
+    let bytes = usize::try_from(case["bytes"].as_u64().unwrap()).unwrap();
+    let demand = RetirementDemand { capacity_bytes: bytes, depth: 1, ..Default::default() };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: bytes, maximum_depth: 1, ..Default::default() };
+    let calls = std::cell::Cell::new(0);
+    let mut observe = |_| {
+        calls.set(calls.get() + 1);
+        calls.get() == 1
+    };
+    let mut control = NativeDecodeControl::new(bytes, &mut observe);
+    let Rig { mut work, mut authority } = rig(1, grant);
+    let mut frame = NativeReceivingEffect::<ValueError>::default();
+    let poll = work.with_loan(&mut (), |work| {
+        authority.with_loan(&mut (), |construction| {
+            control.with_construction_recipient(construction, |control| {
+                control.with_work_recipient(work, |control| {
+                    let poll = control.receive_effect(demand, 1, &mut frame, |_, _| {
+                        panic!("cancellation must precede the allocation producer")
+                    })?;
+                    assert!(!control.has_pending_work());
+                    Ok::<_, ValueError>(poll)
+                })
+            })
+        }).unwrap()
+    }).unwrap().unwrap();
+    let NativeReceivingEffectPoll::Complete(turn) = poll else { panic!("refused allocation did not settle") };
+    let error = turn.result.unwrap_err();
+    let allocation = error.receiving.native_allocation.as_ref().unwrap();
+    assert_eq!(allocation.primary.as_ref().unwrap().kind, ValueRefusalKind::Canceled);
+    assert_eq!(allocation.actual.is_some(), case["born"].as_bool().unwrap());
+    assert_eq!(turn.work, u128::from(fixture["deniedWork"].as_u64().unwrap()));
+    assert_eq!(calls.get(), 2);
+    assert_eq!(control.owned_bytes(), 0);
+    assert_eq!(authority.inspect(|recipient| recipient.submitted), Default::default());
+    assert!(frame.has_no_retained_custody());
+}

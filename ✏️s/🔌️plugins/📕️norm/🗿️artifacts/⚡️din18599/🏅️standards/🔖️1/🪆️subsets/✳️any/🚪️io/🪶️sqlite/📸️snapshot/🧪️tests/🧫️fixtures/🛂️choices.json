@@ -26,7 +26,9 @@
   "useClass": [
     "Residential",
     "Office",
-    "School"
+    "School",
+    "ResidentialUpToTwoDwellings",
+    "ResidentialMultifamily"
   ],
   "method": [
     "DetailedMonthly",
@@ -48,13 +50,22 @@
     "Roof",
     "Floor",
     "Door",
-    "Window"
+    "Window",
+    "CurtainWall",
+    "RoofGlazing",
+    "RoofDome",
+    "GlazedDoor",
+    "GroundSlabPerimeter",
+    "GroundSlabInterior",
+    "RoofWindow",
+    "RooflightStrip"
   ],
   "adjacency": [
     "Outdoor",
     "Ground",
     "Unheated",
-    "Heated"
+    "Heated",
+    "UnheatedAttic"
   ],
   "validUnsigned32": [
     0,

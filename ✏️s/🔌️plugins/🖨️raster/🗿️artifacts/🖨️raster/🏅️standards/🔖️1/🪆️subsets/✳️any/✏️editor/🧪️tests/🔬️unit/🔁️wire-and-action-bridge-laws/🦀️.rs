@@ -37,6 +37,8 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::SetFilterAmount(semio_s_artifact_raster_raster_editor::commands::set_filter_amount::SetFilterAmount { value: 1.25 }),
         RasterCommand::SetImageGrid(semio_s_artifact_raster_raster_editor::commands::set_image_grid::SetImageGrid { field: "width".into(), value: "32".into() }),
         RasterCommand::SelectPixels(semio_s_artifact_raster_raster_editor::commands::select_pixels::SelectPixels {layer_id:"l1".into(),target:"pixels".into(),expected_image_key:None,width:8,height:8,method:"rectangle".into(),mode:"replace".into(),path:"[[0,0],[4,4]]".into()}),
+        RasterCommand::ImportPng(semio_s_artifact_raster_raster_editor::commands::import_png::ImportPng {}),
+        RasterCommand::ImportPngFile(semio_s_artifact_raster_raster_editor::commands::import_png::file::ImportPngFile { payload: "data:image/png;base64,iVBORw0KGgo=".into() }),
     ]
 }
 
@@ -45,13 +47,13 @@ fn every_command() -> Vec<RasterCommand> {
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape, ToolJobFactory};
     use std::collections::BTreeSet;
-    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 23);
-    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 33);
-    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 23);
+    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 24);
+    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 35);
+    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 24);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
-    let retained: BTreeSet<&str> = RASTER_RETAINED_TOOL_IDS.iter().copied().chain(RASTER_PIXEL_EDIT_TOOL_IDS.iter().copied()).chain(RASTER_LAYER_BAKE_TOOL_IDS.iter().copied()).chain(["exportPng","selectPixels","maskFromSelection"]).collect();
+    let retained: BTreeSet<&str> = RASTER_RETAINED_TOOL_IDS.iter().copied().chain(RASTER_PIXEL_EDIT_TOOL_IDS.iter().copied()).chain(RASTER_LAYER_BAKE_TOOL_IDS.iter().copied()).chain(["exportPng","selectPixels","maskFromSelection","importPngFile"]).collect();
     let pixels=RasterPixelEditJobFactory::new(RASTER_PLAY_CONTROLLER_ID).execution_contract();assert_eq!(pixels.shape,ToolExecutionShape::Resumable);assert_eq!(pixels,raster_pixel_edit_contract());assert_eq!(RasterPixelEditJobFactory::PUBLICATION_CONTRACTS.len(),5);for id in RASTER_PIXEL_EDIT_TOOL_IDS{assert!(!RASTER_RETAINED_TOOL_IDS.contains(id));let lanes=if *id=="paintStroke"{&[ArtifactToolPublicationLane::Artifact,ArtifactToolPublicationLane::WindowTransient][..]}else{&[ArtifactToolPublicationLane::Artifact][..]};assert!(RasterPixelEditJobFactory::PUBLICATION_CONTRACTS.iter().any(|contract|contract.tool_id==*id&&contract.lanes==lanes));}
     let bake_fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️commands/🥞️flatten-layers/🧪️tests/execution.json")).unwrap();let bake=RasterLayerBakeJobFactory::new(RASTER_PLAY_CONTROLLER_ID).execution_contract();
     assert_eq!(bake.shape,ToolExecutionShape::Resumable);assert_eq!(bake.max_raw_wire_bytes,bake_fixture["maximumRawBytes"].as_u64().unwrap() as usize);assert_eq!(bake.max_work_units_per_step,bake_fixture["maximumWorkUnitsPerStep"].as_u64().unwrap());assert_eq!(bake.max_output_bytes,bake_fixture["maximumOutputBytes"].as_u64().unwrap() as usize);
@@ -73,6 +75,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
         let contract = RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
         let expected: &[ArtifactToolPublicationLane] = match *tool_id {
             "paintStroke" => &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient],
+            "importPng" => &[ArtifactToolPublicationLane::HostOnly],
             id if artifact_lane.contains(id) => &[ArtifactToolPublicationLane::Artifact],
             _ => &[ArtifactToolPublicationLane::Config],
         };
@@ -121,16 +124,14 @@ async fn every_command_round_trips_through_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_wire_keywords_are_unique_across_every_row() {
     let commands = every_command();
-    assert_eq!(commands.len(), 33, "every RasterCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 35, "every RasterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
     assert_eq!(keywords.len(), commands.len(), "every row's wire keyword must be distinct");
 }
 
-/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — what a
-/// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
-/// keyword at all and no longer parses).
+/// ⚖️ The first token is the row’s declared DSL keyword.
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
     let expectations: Vec<(&str, RasterCommand)> = every_command()
@@ -138,6 +139,8 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         .map(|command| {
             let keyword: &'static str = match &command {
                 RasterCommand::ExportPng(_) => "export-png",
+                RasterCommand::ImportPng(_) => "import-png",
+                RasterCommand::ImportPngFile(_) => "import-png-file",
                 RasterCommand::PaintStroke(_) => "paint-stroke",
                 RasterCommand::FillRegion(_) => "fill-region",
                 RasterCommand::ApplyFilter(_) => "apply-filter",
@@ -180,19 +183,7 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
     }
 }
 
-/// ⚖️ The rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to exact
-/// bytes so an ACCIDENTAL row reorder is caught. Baseline rebased once, deliberately, by the
-/// `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL` ticket: dropping the two leading `setSnapshot`/
-/// `setActiveExample` rows (whole-document replace is no longer expressible as a mutation)
-/// shifted every later row's binary ordinal down by two — `set-layer-visible` 4→2 (`0104`→`0102`).
-/// `setActiveExample` returned in `26/09/05/RASTER-PLUGIN-END-TO-END` as an ordered mutation batch
-/// rather than a snapshot swap, APPENDED as the last row, so no earlier ordinal moved.
-/// Rebased again by `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`: the `set-selection`/
-/// `set-hover`/`select-all` rows (the only other `Option`-carrying case, `set-hover`) are deleted
-/// outright — layer selection/hover is the framework-owned `"layers"` interaction domain now.
-/// `set-layer-visible`'s ordinal is unaffected (it sits before the deleted rows). Greenfield repo,
-/// no persisted wire data to migrate. Any FURTHER drift here is a real format break, not a
-/// fixture mismatch.
+/// ⚖️ Optional-field rows pin their declared text and binary ordinals.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_declared_wire_bytes() {
     let cases: [(RasterCommand, &str, &str); 1] = [(RasterCommand::SetLayerVisible(semio_s_artifact_raster_raster_editor::commands::set_layer_visible::SetLayerVisible { layer_id: "l1".into(), visible: None }), "set-layer-visible set-layer-visible layer-id=l1", "010201026c3101000600")];
@@ -212,10 +203,7 @@ async fn command_ids_are_unique_across_every_row() {
 }
 
 //#region 🔖️ActionBridge
-/// 🌉️ Every command row the shells reach by action id must decode through `command_from_action`
-/// (camelCase host keys → the payloads' own snake_case `FromValue` names) and its `command_id` must
-/// round-trip — the boundary that was missing before the 2026-09-16 boot wave of ticket
-/// 26/09/05/RASTER-PLUGIN-END-TO-END (every shell action was refused as "not framework-reserved").
+/// 🌉️ Shell action IDs and camelCase payloads round-trip through the editor bridge.
 #[test]
 fn command_from_action_round_trips_every_command_id() {
     for command in every_command() {

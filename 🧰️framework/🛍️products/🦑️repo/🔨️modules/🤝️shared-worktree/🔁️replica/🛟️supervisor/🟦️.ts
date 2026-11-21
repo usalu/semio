@@ -204,7 +204,14 @@ async function child(args:readonly string[],root:string,module:string,context:Co
  delete process.env.SEMIO_FLEET_BOOT_RELOAD_TOKEN;
  const limits=bootLimitsV1(environment),base=environment.SEMIO_FLEET_BOOT_BASE??root,source=environment.SEMIO_FLEET_BOOT_SOURCE??"worktree",worktree=resolve(base)===resolve(root);
  const dog=startWatchdog(root,base,source,limits);
- let ready=false,reload=false;
+ let ready=false,reload=false,progressExit:ReturnType<typeof setTimeout>|undefined;
+ const owned=globalThis as unknown as Record<symbol,unknown>,progress=Symbol.for("semio.fleet.gitProgressRestart"),parent=process.ppid;
+ const armProgressExit=():boolean=>{
+  if(!ready||context.signal.aborted||progressExit!==undefined||process.ppid!==parent||!alive(parent))return false;
+  progressExit=setTimeout(()=>process.exit(1),limits.graceMs);
+  return true;
+ };
+ if(typeof token==="string"&&/^[a-f0-9]{32}$/u.test(token))owned[progress]=armProgressExit;
  const write:Sink=line=>{
   const started=line.startsWith("{\"version\":1,\"event\":\"started\""),waiting=!started&&line.startsWith("{\"version\":1,\"event\":\"blocked\"")&&line.includes("worktree-access-denied");
   if(started){ready=true;dog.phase("run");}
@@ -213,7 +220,9 @@ async function child(args:readonly string[],root:string,module:string,context:Co
   context.write(line);
  };
  const fallback=worktree?undefined:JSON.stringify({guard:"code-fallback",source,reason:(environment.SEMIO_FLEET_BOOT_REASON??"").slice(0,512)});
- const result=await attempt(args,root,module,base,{...context,write,environment:fallback===undefined?environment:{...environment,SEMIO_FLEET_CODE_FALLBACK:fallback}},{worktree,force:environment.SEMIO_FLEET_BOOT_FORCE==="1",phase:dog.phase,watch:worktree?undefined:module});
+ const result=await attempt(args,root,module,base,{...context,write,environment:fallback===undefined?environment:{...environment,SEMIO_FLEET_CODE_FALLBACK:fallback}},{worktree,force:environment.SEMIO_FLEET_BOOT_FORCE==="1",phase:dog.phase,watch:worktree?undefined:module}).finally(()=>{
+  clearTimeout(progressExit);if(owned[progress]===armProgressExit)delete owned[progress];
+ });
  if(result.ran){
   if(result.code===0&&ready&&reload&&!context.signal.aborted&&typeof token==="string"&&/^[a-f0-9]{32}$/u.test(token)){
    try{writeAtomic(join(bootDirectory(root),"ready.json"),JSON.stringify({pid:process.pid,waiting:false,reloadToken:token}));}

@@ -8,7 +8,6 @@
 
 use serde::Deserialize;
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use semio_ui_declaration::layout::ActionDescriptor;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::Rgba;
@@ -30,7 +29,7 @@ const IDENTITY_MAP: ModelToLayer = ModelToLayer { scale: [1.0, 1.0], offset: [0.
 /// 🧿️ The `gumball` record of a `meta:gumball` layer.
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct GumballMeta {
+pub struct GumballMeta {
     pub active: bool,
     #[serde(default)]
     pub live_dispatch: bool,
@@ -85,7 +84,7 @@ pub(crate) fn handle_at(meta: &GumballMeta, view: &GumballView, x: f64, y: f64) 
 
 /// 🚦️ Where a dispatch sits in a streamed gesture; absent = a one-shot.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum GumballPhase {
+pub enum GumballPhase {
     Stream,
     Commit,
     Abort(&'static str),
@@ -93,7 +92,7 @@ pub(crate) enum GumballPhase {
 
 /// 📤️ One gumball dispatch: the verb, the pinned ids, the pose delta (absent for an abort) and the phase.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct GumballDispatch {
+pub struct GumballDispatch {
     pub verb: &'static str,
     pub ids: Vec<String>,
     pub motion: Option<GumballMotion>,

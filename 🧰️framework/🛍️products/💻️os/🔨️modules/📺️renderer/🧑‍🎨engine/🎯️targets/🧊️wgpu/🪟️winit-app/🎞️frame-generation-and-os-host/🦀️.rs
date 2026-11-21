@@ -335,6 +335,12 @@ impl OsHost {
             self.scheduler.request_deadline(now + semio_renderer_wgpu_host_plumbing::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
         }
 
+
+        #[cfg(not(target_arch = "wasm32"))]
+        if semio_renderer_wgpu_host_base::take_retained_image_raster_frame_request() {
+            self.scheduler.request_deadline(now + 1.0 / 60.0, InvalidationReason::RESOURCE_READY);
+        }
+
         RedrawOutcome { cursor, ime }
     }
 }

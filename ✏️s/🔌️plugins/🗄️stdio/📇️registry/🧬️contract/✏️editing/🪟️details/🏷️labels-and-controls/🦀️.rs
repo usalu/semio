@@ -260,6 +260,10 @@ pub(super) fn read_only_value(id: &str, value: SnapshotDetailValue) -> UiAssembl
         SnapshotDetailValue::Array => "[]".to_string(),
         SnapshotDetailValue::Object => "{}".to_string(),
     };
+    if UiText::try_from_str(&value).is_some() {
+        return ui_contract::text(label(&value)?).try_id(id).map_err(|_| error("ui.snapshot-details.read-only-id"))?
+            .try_build().map_err(|_| error("ui.snapshot-details.read-only-value"));
+    }
     readonly_long_text(id, value)
 }
 

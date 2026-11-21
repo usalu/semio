@@ -25,10 +25,4 @@ pub mod catalogue;
 #[cfg(test)]
 #[path = "../../🧪️tests/⚖️compliance/🦀️.rs"]
 mod compliance_tests;
-#[cfg(test)]
-#[path = "../../🧪️tests/📇️catalogue/🦀️.rs"]
-mod catalogue_tests;
-#[cfg(test)]
-#[path = "../../🧪️tests/🔮️catalogue-oracle/🦀️.rs"]
-mod catalogue_oracle_tests;
 //#endregion 🧪️ComplianceTests

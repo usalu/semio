@@ -1,0 +1,2 @@
+# 🎯️ Direct set-root / SetRoot payload.
+input SetRootInput { value: String }

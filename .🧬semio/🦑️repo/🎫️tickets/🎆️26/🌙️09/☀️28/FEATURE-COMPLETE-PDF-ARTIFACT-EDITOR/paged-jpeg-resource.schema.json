@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PDF 1.7 Baseline DCT Resource Admission",
+  "description": "Observation returned only after exact original octet ownership, header admission, baseline entropy validation, and digest completion. The native encoded owner is passed separately to persistent graph custody.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["width", "height", "components", "colorTransform", "byteLength", "reference"],
+  "properties": {
+    "width": {"type": "integer", "minimum": 1, "maximum": 65535},
+    "height": {"type": "integer", "minimum": 1, "maximum": 65535},
+    "components": {"enum": [1, 3]},
+    "colorTransform": {"enum": [null, 0, 1]},
+    "byteLength": {"type": "integer", "minimum": 4, "maximum": 4194304},
+    "reference": {"type": "string", "pattern": "^pdf:s[.]stdio[.]jpeg:sha256:[0-9a-f]{64}$"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"components": {"const": 1}}},
+      "then": {"properties": {"colorTransform": {"const": null}}},
+      "else": {"properties": {"colorTransform": {"enum": [0, 1]}}}
+    }
+  ]
+}

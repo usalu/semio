@@ -289,7 +289,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     };
 
     if args.dry {
-        let report = plan(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records).await?;
+        let report = plan(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &snapshot.output_bindings, &prior_node_records).await?;
         println!("recompute: {:?}", report.recomputed);
         println!("clean:     {:?}", report.clean);
         return Ok(());
@@ -322,7 +322,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     })).await
     .map_err(|error| error.to_string())?;
 
-    let run_result = runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink).await;
+    let run_result = runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &snapshot.output_bindings, &prior_node_records, &mut cache, &mut sink).await;
     let (io_router_plugins, io_router_keys) = runner.into_host().io_router_stats().await;
     eprintln!("[os run] io-router: {io_router_plugins} plugins / {io_router_keys} keys");
     eprintln!("[os run] merge-policy: {:?}", args.policy);

@@ -232,6 +232,34 @@ export function registerActivationLeaseTests(kit: ShardClientSettlementTestKit):
       await retireFixtureInstance(worker, close);
       client.dispose(actorId);
     });
+    it("cuts a command page batch before its final crossing and accepts the retried page once", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: equal } = await import("fast-deep-equal");
+      const row = JSON.parse(readFileSync(new URL("../🪪️activation/🧪️tests/🧫️fixtures/📑️page-cut.json", testSource.url), "utf8"));
+      const { client, workers } = harness(1);
+      const worker = workers[0]!;
+      const lease = await activate(client, worker, "page-cut");
+      const page = kit.createShardCommandIngressPages({ owner: 1n, generation: 1n, commandIndex: 0, commandCount: 1, instance: 1, seq: 1n, command: Uint8Array.from(row.command) })[0]!;
+      const events = row.events.map((n: number) => ({ kind: "message", payload: { n } }));
+      const crossings = () => worker.sent.filter((message) => (message as OutboundMessage).kind === "turn") as Extract<OutboundMessage, {kind: "turn"}>[];
+      const deliver = async () => {
+        await flushAdmission();
+        const last = crossings().at(-1)!;
+        worker.deliver({ kind: "result", requestId: last.requestId, ok: true, value: { uiPatches: [{surface: "fixture"}], status: "idle" } });
+        await flushAdmission();
+      };
+      const first = lease.turn(events, BUDGET, page);
+      await deliver();
+      expect(crossings()).toHaveLength(1);
+      const initial = await first as { deferredEvents: number };
+      const second = lease.turn([], BUDGET, page);
+      await deliver();
+      const final = await second as { deferredEvents: number };
+      expect(equal([initial.deferredEvents, final.deferredEvents], row.deferred)).toBe(true);
+      expect(equal(crossings().map((item) => [(item.events[0]!.payload as { n: number }).n, item.commandPage === page]), row.crossed)).toBe(true);
+      client.dispose("page-cut");
+    });
+
     it("cuts a batch at the first patch-producing event and crosses the rest, in order, on the next crossings", async () => {
       const row = await fixture();
       const { client, workers } = harness(1);

@@ -21,7 +21,54 @@ fn failed_complete_header_retains_actual_writes_and_cannot_mint_a_loan(){let(cop
 fn malformed_header_remains_in_paid_source_custody(){let(copy,capacity,work)=OriginalEscrowPublisher::birth_demand();let mut publisher=OriginalEscrowPublisher::admit(grant(copy,capacity),work).result.unwrap().0.unwrap();let mut table=OriginalReturnEscrowTable::empty();let maximum=OriginalEscrowPublisher::core_wire_reserve(144).unwrap();publisher.publish(101,1,202,&mut table,144,grant(maximum.copy_bytes,0),maximum.work).unwrap().unwrap();let begin=OriginalEscrowPublisher::header_begin_demand();assert!(!publisher.begin_header(144,grant(begin.copy_bytes-1,0),begin.work).unwrap());assert!(publisher.begin_header(144,grant(begin.copy_bytes,0),begin.work).unwrap());assert!(publisher.with_preparing_header(|_,header|{header.write(b"SAC3").unwrap();header.write(&[0;140]).unwrap();Ok::<(),ValueError>(())}).unwrap());let written=publisher.header_write_demand().unwrap();assert_eq!(written.work,6);assert_eq!(written.copy_bytes,144+std::mem::size_of::<usize>()+std::mem::size_of::<u64>()+std::mem::size_of::<bool>()+std::mem::size_of::<u8>());let loan=OriginalEscrowPublisher::header_loan_demand();let mut slot=OriginalEscrowHeaderLoanCell::empty();assert!(publisher.finish_header(&mut slot,grant(loan.copy_bytes,0),loan.work).is_err());assert!(slot.loan().is_none());assert!(!publisher.terminal_is_empty());assert!(publisher.abort_preparing_header(grant(begin.copy_bytes,0),begin.work).unwrap());assert!(!publisher.terminal_is_empty());}
 #[cfg(target_pointer_width="32")]
 #[test]
-fn handback_is_exact_funded_and_acknowledged_only_in_the_next_publication(){let(copy,capacity,work)=OriginalEscrowPublisher::birth_demand();let mut publisher=OriginalEscrowPublisher::admit(grant(copy,capacity),work).result.unwrap().0.unwrap();let mut table=OriginalReturnEscrowTable::empty();let maximum=OriginalEscrowPublisher::core_wire_reserve(144).unwrap();publisher.publish(101,1,202,&mut table,144,grant(maximum.copy_bytes,0),maximum.work).unwrap().unwrap();let begin=OriginalEscrowPublisher::header_begin_demand();assert!(publisher.begin_header(144,grant(begin.copy_bytes,0),begin.work).unwrap());assert!(publisher.with_preparing_header(|capsule,header|{header.write(b"SAC3").unwrap();header.write(&[0;132]).unwrap();header.write(&(capsule.as_ptr()as u32).to_le_bytes()).unwrap();header.write(&(capsule.len()as u32).to_le_bytes()).unwrap();Ok::<(),ValueError>(())}).unwrap());let demand=OriginalEscrowPublisher::header_loan_demand();let mut slot=OriginalEscrowHeaderLoanCell::empty();assert!(publisher.finish_header(&mut slot,grant(demand.copy_bytes,0),demand.work).unwrap());let backing=publisher.preborn_header_address();assert!(slot.owns_backing_pointer(backing)&&slot.owns_backing_pointer(backing+183));assert!(!slot.owns_backing_pointer(backing+184));slot.prepare_exposure(&publisher).unwrap().commit();let loan=slot.loan_mut().take().unwrap();assert!(slot.owns_backing_pointer(backing+1));let(pointer,length)=publisher.with_frozen_header(|header|(header.as_ptr()as usize,header.len())).unwrap();let loan=match loan.hand_back(pointer+1,length){Err(loan)=>loan,Ok(_)=>panic!("foreign pointer returned the loan")};let witness=match loan.hand_back(pointer,length){Ok(witness)=>witness,Err(_)=>panic!("exact pointer failed")};let ack=OriginalEscrowPublisher::handback_demand();let mut accepted=None;assert!(!publisher.accept_header_handback(&witness,&mut accepted,&mut table,grant(ack.copy_bytes-1,0),ack.work).unwrap());assert!(!publisher.terminal_is_empty());assert!(publisher.accept_header_handback(&witness,&mut accepted,&mut table,grant(ack.copy_bytes,0),ack.work).unwrap());assert!(witness.matches_acceptance(accepted.as_ref().unwrap()));assert!(publisher.terminal_is_empty());publisher.publish(101,1,202,&mut table,144,grant(maximum.copy_bytes,0),maximum.work).unwrap().unwrap();let bytes=publisher.borrowed().unwrap();assert_eq!(u64::from_le_bytes(bytes[32..40].try_into().unwrap()),2);assert_eq!(u64::from_le_bytes(bytes[40..48].try_into().unwrap()),1);}
+fn handback_is_exact_funded_and_acknowledged_only_in_the_next_publication(){
+ for length in [144,200]{
+  let(copy,capacity,work)=OriginalEscrowPublisher::birth_demand();
+  let mut publisher=OriginalEscrowPublisher::admit(grant(copy,capacity),work).result.unwrap().0.unwrap();
+  let mut table=OriginalReturnEscrowTable::empty();
+  let backing=publisher.preborn_header_address();
+  let mut permit=None;
+  assert!(table.reserve_guard(OriginalReturnEscrowIdentity{source:101,source_birth:1,recipient:202,destination:backing as u64,extent:length as u64,serial:1,origin_epoch:4},&mut permit).unwrap());
+  let maximum=OriginalEscrowPublisher::core_wire_reserve(length).unwrap();
+  publisher.publish(101,1,202,&mut table,length,grant(maximum.copy_bytes,0),maximum.work).unwrap().unwrap();
+  let begin=OriginalEscrowPublisher::header_begin_demand();
+  assert!(publisher.begin_header(length,grant(begin.copy_bytes,0),begin.work).unwrap());
+  assert!(publisher.with_preparing_header(|capsule,header|{
+   if length==200{header.write(&[83,66,84,49,1,0,200,0]).unwrap();}
+   header.write(b"SAC3").unwrap();
+   header.write(&[0;132]).unwrap();
+   header.write(&(capsule.as_ptr()as u32).to_le_bytes()).unwrap();
+   header.write(&(capsule.len()as u32).to_le_bytes()).unwrap();
+   if length==200{header.write(&[0;48]).unwrap();}
+   Ok::<(),ValueError>(())
+  }).unwrap());
+  let demand=OriginalEscrowPublisher::header_loan_demand();
+  let mut slot=OriginalEscrowHeaderLoanCell::empty();
+  assert!(publisher.finish_header(&mut slot,grant(demand.copy_bytes,0),demand.work).unwrap());
+  assert!(slot.owns_backing_pointer(backing)&&slot.owns_backing_pointer(backing+199));
+  assert!(!slot.owns_backing_pointer(backing+200));
+  slot.prepare_exposure(&publisher).unwrap().commit();
+  let loan=slot.loan_mut().take().unwrap();
+  let(pointer,actual_length)=publisher.with_frozen_header(|header|(header.as_ptr()as usize,header.len())).unwrap();
+  assert_eq!(actual_length,length);
+  assert!(table.begin_guard_check(&mut permit,pointer+1).is_err());
+  let loan=match loan.hand_back(pointer+1,length){Err(loan)=>loan,Ok(_)=>panic!("foreign pointer returned the loan")};
+  table.begin_guard_check(&mut permit,pointer).unwrap();
+  let witness=match loan.hand_back(pointer,length){Ok(witness)=>witness,Err(_)=>panic!("exact pointer failed")};
+  let ack=OriginalEscrowPublisher::handback_demand();
+  let mut accepted=None;
+  assert!(!publisher.accept_header_handback(&witness,&mut accepted,&mut table,grant(ack.copy_bytes-1,0),ack.work).unwrap());
+  assert!(!publisher.terminal_is_empty());
+  assert!(publisher.accept_header_handback(&witness,&mut accepted,&mut table,grant(ack.copy_bytes,0),ack.work).unwrap());
+  assert!(witness.matches_acceptance(accepted.as_ref().unwrap()));
+  assert!(publisher.terminal_is_empty());
+  table.finish_guard(&mut permit).unwrap();
+  publisher.publish(101,1,202,&mut table,length,grant(maximum.copy_bytes,0),maximum.work).unwrap().unwrap();
+  let bytes=publisher.borrowed().unwrap();
+  assert_eq!(u64::from_le_bytes(bytes[32..40].try_into().unwrap()),2);
+  assert_eq!(u64::from_le_bytes(bytes[40..48].try_into().unwrap()),1);
+ }
+}
 #[test]
 fn foreign_source_and_missing_actor_epoch_never_publish_or_borrow(){let(copy,capacity,work)=OriginalEscrowPublisher::birth_demand();let mut publisher=OriginalEscrowPublisher::admit(grant(copy,capacity),work).result.unwrap().0.unwrap();let mut table=OriginalReturnEscrowTable::empty();let row=OriginalReturnEscrowIdentity{source:101,source_birth:1,recipient:202,destination:303,extent:48,serial:1,origin_epoch:0};table.reserve(row,OriginalReturnEscrowAmounts{items:1,copy_bytes:8,work:1,release_bytes:0,capacity_bytes:0}).unwrap();let demand=OriginalEscrowPublisher::core_wire_reserve(144).unwrap();assert!(publisher.publish(999,1,202,&mut table,144,grant(demand.copy_bytes,0),demand.work).is_err());assert!(publisher.publish(101,1,202,&mut table,144,grant(demand.copy_bytes,0),demand.work).is_err());assert_eq!(publisher.publication(),0);assert!(publisher.terminal_is_empty());table.borrow_snapshot(table.revision()).unwrap();}
 #[test]

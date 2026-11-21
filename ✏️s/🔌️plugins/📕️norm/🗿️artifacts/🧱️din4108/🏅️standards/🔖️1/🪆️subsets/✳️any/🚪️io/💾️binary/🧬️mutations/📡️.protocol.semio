@@ -96,3 +96,17 @@ record change-layer-application-type tag=41
 field payload bytes
 record change-layer-compressive-class tag=42
 field payload bytes
+record insert-case tag=43
+field payload bytes
+record remove-case tag=44
+field payload bytes
+record change-case-number tag=45
+field payload bytes
+record change-case-text tag=46
+field payload bytes
+record change-case-label-en tag=47
+field payload bytes
+record change-case-label-de tag=48
+field payload bytes
+record change-case-entry-id tag=49
+field payload bytes

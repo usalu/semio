@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/✍️edit-table-cell",
+  "semanticKind": "edit-table-cell",
+  "displayName": "Edit Table Cell",
+  "emoji": "✍️",
+  "aggregateVariant": "EditTableCell",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "edit-table-cell",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

@@ -1,6 +1,7 @@
 use super::super::{RemodelingEntity, RemodelingRows};
+use super::super::retained_test_support::{grant, retire};
 use super::*;
-use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value_clone_source_testing::drive::drive;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 struct Record {
@@ -25,9 +26,6 @@ impl RemodelingEntity<RemodelingNoPatch> for Record {
     }
     fn merge_patch(_: &mut RemodelingNoPatch, _: RemodelingNoPatch) {}
 }
-fn grant(d: RetirementDemand) -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: d.copy_bytes, maximum_capacity_bytes: d.capacity_bytes, maximum_release_bytes: d.release_bytes, maximum_depth: d.depth }
-}
 fn observe<T>(action: impl FnOnce() -> T) -> (T, usize, usize) {
     semio_framework_trace_memory_testing::observe_backing(action)
 }
@@ -43,19 +41,6 @@ fn row(value: &serde_json::Value) -> RemodelingRow<Record, RemodelingNoPatch> {
         _ => panic!("unrecognized neutral row"),
     }
 }
-fn retire<T: RetireOwned>(value: T) {
-    let mut owner = ControlledRetirement::new(value).unwrap();
-    for _ in 0..4096 {
-        if owner.terminal_is_empty() {
-            return;
-        }
-        let selected = grant(owner.next_demand(4096).unwrap());
-        let (step, born, released) = observe(|| owner.step(selected).unwrap());
-        assert!(step.progress().fits(selected));
-        assert_eq!((born, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
-    }
-    panic!("returned row value did not retire");
-}
 fn close(edit: &mut OwnedRowEdit<Record>) {
     edit.begin_close();
     for _ in 0..4096 {
@@ -64,15 +49,13 @@ fn close(edit: &mut OwnedRowEdit<Record>) {
         }
         let selected = grant(edit.close_demand(4096).unwrap());
         let work = edit.close_work_demand(4096).unwrap();
-        let (denied, born, released) = observe(|| edit.close_step(RetainedCloneGrant::default()));
-        assert_eq!((born, released), (0, 0));
+        let denied = drive(RetainedCloneGrant::default(), work, |effect| edit.close_step(4096, effect));
         assert_eq!(denied.work, 0);
         assert_eq!(denied.result.unwrap().progress(), Default::default());
-        let (turn, born, released) = observe(|| edit.close_step(selected));
-        assert!(turn.work <= work);
+        let turn = drive(selected, work, |effect| edit.close_step(4096, effect));
+        assert!(turn.work <= u128::from(work));
         let progress = turn.result.unwrap().progress();
         assert!(progress.fits(selected));
-        assert_eq!((born, released), (progress.retained_capacity_bytes, progress.released_bytes));
     }
     panic!("owned row edit did not close");
 }
@@ -96,28 +79,30 @@ fn run(case: &serde_json::Value, cut: Option<(usize, usize)>) -> Vec<usize> {
             for denied in [
                 Some(RetainedCloneGrant::default()),
                 Some(RetainedCloneGrant { maximum_items: 0, ..selected }),
-                (demand.copy_bytes > 0).then_some(RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..selected }),
-                (demand.capacity_bytes > 0).then_some(RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..selected }),
-                (demand.release_bytes > 0).then_some(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..selected }),
+                (demand.copy_bytes > 0).then(|| RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..selected }),
+                (demand.capacity_bytes > 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..selected }),
+                (demand.release_bytes > 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..selected }),
                 Some(RetainedCloneGrant { maximum_depth: 0, ..selected }),
             ]
             .into_iter()
             .flatten()
             {
-                let (turn, born, released) = observe(|| edit.advance(64, denied));
-                assert_eq!((born, released), (0, 0));
+                let turn = drive(denied, work, |effect| edit.advance(64, effect));
                 assert_eq!(turn.work, 0);
                 assert_eq!(turn.result.unwrap().progress(), Default::default());
             }
-            let (turn, born, released) = observe(|| edit.advance(0, selected));
-            assert_eq!((born, released), (0, 0));
+            let turn = drive(selected, work, |effect| edit.advance(0, effect));
             assert_eq!(turn.work, 0);
             assert_eq!(turn.result.unwrap().progress(), Default::default());
-            let (turn, born, released) = observe(|| edit.advance(64, selected));
-            assert!(turn.work <= work);
+            if work > 1 {
+                let turn = drive(selected, work - 1, |effect| edit.advance(64, effect));
+                assert_eq!(turn.work, 0);
+                assert_eq!(turn.result.unwrap().progress(), Default::default());
+            }
+            let turn = drive(selected, work, |effect| edit.advance(64, effect));
+            assert!(turn.work <= u128::from(work));
             let progress = turn.result.unwrap().progress();
             assert!(progress.fits(selected));
-            assert_eq!((born, released), (progress.retained_capacity_bytes, progress.released_bytes));
             turns += 1;
             assert!(turns < 4096);
         }

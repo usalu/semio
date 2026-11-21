@@ -30,7 +30,20 @@ fn home_config_holds_no_directory_projection() {
 fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     use std::io::Write as _;
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
+    use semio_framework_value::RetainedWorkPoll;
     use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation as _;
+    let mut bank = semio_framework_test_original_snapshot_owners::original_bank();
+    let mut close = |preparation: &mut HomeConfigPreparation, grant: RetainedCloneGrant| {
+        let (poll, _) = bank.run(grant, 1 << 20, |effect| preparation.close_step(effect));
+        let admitted = bank.take_admitted();
+        match poll {
+            RetainedWorkPoll::Complete(outcome) => {
+                assert!(outcome.work == 0 || admitted == Some(true));
+                outcome.result.expect("funded original owner close")
+            }
+            RetainedWorkPoll::Pending { .. } => panic!("original owner close still holds a pending turn"),
+        }
+    };
     let mut preparation = HomeConfigPreparation {
         owners: store::OneItemOwners::detached(
             HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-a".into() }),
@@ -40,14 +53,20 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
         serialized_bytes: None,
         checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
         cancelled: false,
+        last_work: 0,
     };
     let page = semio_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
     let production = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: page, maximum_capacity_bytes: page, maximum_release_bytes: page, maximum_depth: 8 };
     preparation.cancel();
-    assert!(matches!(preparation.advance(production).expect("cancelled step"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked));
-    assert!(matches!(preparation.close_step(production).expect("close before begin_close"), RetainedCloneStep::Progress(progress) if progress == Default::default()));
+    let mut callback = |_| true;
+    let mut receiving = protocol::NativeDecodeControl::new(page, &mut callback);
+    assert!(matches!(preparation.advance(page, production, &mut receiving).expect("cancelled step"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked));
+    assert_eq!(preparation.last_turn_work(), 0);
+    assert!(!preparation.has_pending_receiving_recovery());
+    assert!(preparation.pending_receiving_demand().is_none());
+    assert!(matches!(close(&mut preparation, production.retained_grant()), RetainedCloneStep::Progress(progress) if progress == Default::default()));
     preparation.begin_close();
-    assert!(matches!(preparation.close_step(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..production }).expect("zero-item close"), RetainedCloneStep::Progress(progress) if progress == Default::default()));
+    assert!(matches!(close(&mut preparation, RetainedCloneGrant { maximum_items: 0, ..production.retained_grant() }), RetainedCloneStep::Progress(progress) if progress == Default::default()));
     let mut turns = 0;
     while !preparation.terminal_is_empty() {
         let demand = (
@@ -57,12 +76,12 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
             preparation.next_close_depth_demand().expect("depth demand"),
         );
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.0.max(page), maximum_capacity_bytes: demand.1, maximum_release_bytes: demand.2, maximum_depth: demand.3.max(1) };
-        let step = preparation.close_step(store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(grant)).expect("one owner per fully granted turn");
+        let step = close(&mut preparation, grant);
         assert!(step.progress().fits(grant));
         turns += 1;
         assert!(turns < 64, "the close ladder terminates");
     }
-    assert!(matches!(preparation.close_step(production).expect("terminal close"), RetainedCloneStep::Complete(_)));
+    assert!(matches!(close(&mut preparation, production.retained_grant()), RetainedCloneStep::Complete(_)));
     let mut counter = HomeConfigByteCounter { bytes: 0 };
     let maximum = vec![0; HOME_CONFIG_STEP_BYTES];
     assert_eq!(counter.write(&maximum).expect("maximum serialized envelope"), HOME_CONFIG_STEP_BYTES);

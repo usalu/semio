@@ -129,7 +129,7 @@ const attachedImages=(below:string):readonly Readonly<{path:string;device:string
 
 /** 📖️ The phase of the graph read in a progress line: `Reading the project graph slice (12 s): taken 3 of 40.` */
 export function sliceLabPhaseV1(line:string|undefined):Readonly<{phase:string;done:number;total:number}>|undefined{
- const match=/Reading the project graph slice \(\d+ s\): ([a-z -]+?) (\d+) of (\d+)/iu.exec(line??"");
+ const match=/Reading the project graph slice \(\d+ s\): ([a-z -]+?)(?: \(pass [1-9][0-9]*\))? (\d+) of (\d+)/iu.exec(line??"");
  return match===null?undefined:{phase:match[1]!.trim(),done:Number(match[2]),total:Number(match[3])};
 }
 

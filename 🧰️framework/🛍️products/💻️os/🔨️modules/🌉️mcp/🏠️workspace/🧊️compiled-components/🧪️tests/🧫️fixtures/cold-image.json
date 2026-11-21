@@ -1,0 +1,12 @@
+{
+  "pluginId": "prepared-cold-fixture",
+  "cratePath": "fixtures/prepared-cold",
+  "patches": [
+    {"from": "004280888080200b", "to": "0042c0808080200b"},
+    {"from": "0041c00041dd003a000041010b", "to": "0041c00041b2003a000041010b"},
+    {"from": "01004180080b023235", "to": "010041c0000b023235"}
+  ],
+  "startChannel": [17, 53],
+  "preparedChannel": [50, 53],
+  "outcomes": ["altered-image-refused", "cold-image-attached"]
+}

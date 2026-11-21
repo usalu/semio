@@ -98,6 +98,11 @@ semio_ui_locale::app_labels! {
         catalogue_brep_mesh_set_shading: native_en "Set Mesh Shading", native_de "Mesh-Schattierung einstellen", reuse_en "Set Mesh Shading", reuse_de "Mesh-Schattierung einstellen";
         catalogue_brep_mesh_extrude: native_en "Extrude Mesh Faces", native_de "Mesh-Flächen extrudieren", reuse_en "Extrude Mesh Faces", reuse_de "Mesh-Flächen extrudieren";
         catalogue_brep_mesh_fill_holes: native_en "Fill Mesh Holes", native_de "Mesh-Löcher schließen", reuse_en "Fill Mesh Holes", reuse_de "Mesh-Löcher schließen";
+        catalogue_brep_mesh_bridge: native_en "Bridge Mesh Boundary Loops", native_de "Mesh-Randschleifen verbinden", reuse_en "Bridge Mesh Boundary Loops", reuse_de "Mesh-Randschleifen verbinden";
+        catalogue_brep_mesh_intersect: native_en "Intersect Convex Meshes", native_de "Konvexe Netze schneiden", reuse_en "Intersect Convex Meshes", reuse_de "Konvexe Netze schneiden";
+        catalogue_brep_mesh_difference: native_en "Subtract Convex Mesh", native_de "Konvexes Netz abziehen", reuse_en "Subtract Convex Mesh", reuse_de "Konvexes Netz abziehen";
+        catalogue_brep_mesh_union: native_en "Union Convex Meshes", native_de "Konvexe Netze vereinigen", reuse_en "Union Convex Meshes", reuse_de "Konvexe Netze vereinigen";
+        catalogue_brep_mesh_extrude_boundary: native_en "Extrude Mesh Boundary Edges", native_de "Mesh-Randkanten extrudieren", reuse_en "Extrude Mesh Boundary Edges", reuse_de "Mesh-Randkanten extrudieren";
         catalogue_brep_mesh_flip: native_en "Flip Mesh Faces", native_de "Mesh-Flächen umdrehen", reuse_en "Flip Mesh Faces", reuse_de "Mesh-Flächen umdrehen";
         catalogue_brep_mesh_from_brep: native_en "Mesh from B-Rep", native_de "Mesh aus BRep", reuse_en "Mesh from B-Rep", reuse_de "Mesh aus BRep";
         catalogue_brep_mesh_inset: native_en "Inset Mesh Faces", native_de "Mesh-Flächen einrücken", reuse_en "Inset Mesh Faces", reuse_de "Mesh-Flächen einrücken";
@@ -510,6 +515,11 @@ pub fn generation3d_catalogue_name<'a>(labels: &'a Generation3dLabels, id: &str,
         "brep.mesh.setShading" => labels.catalogue_brep_mesh_set_shading.as_str(),
         "brep.mesh.extrude" => labels.catalogue_brep_mesh_extrude.as_str(),
         "brep.mesh.fillHoles" => labels.catalogue_brep_mesh_fill_holes.as_str(),
+        "brep.mesh.bridge" => labels.catalogue_brep_mesh_bridge.as_str(),
+        "brep.mesh.intersect" => labels.catalogue_brep_mesh_intersect.as_str(),
+        "brep.mesh.difference" => labels.catalogue_brep_mesh_difference.as_str(),
+        "brep.mesh.union" => labels.catalogue_brep_mesh_union.as_str(),
+        "brep.mesh.extrudeBoundary" => labels.catalogue_brep_mesh_extrude_boundary.as_str(),
         "brep.mesh.flip" => labels.catalogue_brep_mesh_flip.as_str(),
         "brep.mesh.fromBrep" => labels.catalogue_brep_mesh_from_brep.as_str(),
         "brep.mesh.inset" => labels.catalogue_brep_mesh_inset.as_str(),

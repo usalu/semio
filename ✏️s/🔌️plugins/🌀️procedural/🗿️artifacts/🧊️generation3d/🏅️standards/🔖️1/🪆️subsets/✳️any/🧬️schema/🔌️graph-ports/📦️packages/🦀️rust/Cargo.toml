@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-graph-ports"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Directional graph port, instance and interaction addresses for Procedural Generation3d."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

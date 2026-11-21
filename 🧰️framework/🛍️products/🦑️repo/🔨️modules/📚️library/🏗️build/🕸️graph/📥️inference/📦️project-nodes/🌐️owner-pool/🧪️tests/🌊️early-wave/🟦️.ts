@@ -1,5 +1,6 @@
 import{afterAll,expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
+import Ajv from"ajv";
 import{mkdtempSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
@@ -9,11 +10,13 @@ import{createProjectFleetPortV1,type ProjectRecordInfoV1}from"../../../../../../
 import{graphFleetClientV1,graphRefusalOfV1}from"../../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import{graphFleetSettingsV1}from"../../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
 import{remoteCacheFetchV1}from"../../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
-import{OWNER_POOL_POLICY_V1 as P,ownerPoolAcceptsRevisionV1,ownerPoolIdV1,ownerPoolRepublishV1,ownerPoolWhyIdleV1,publishOwnerPoolV1,readOwnerPoolPointerV1,type OwnerPoolManifestV1,type OwnerPoolUnitV1}from"../../🟦️.ts";
+import{OWNER_POOL_POLICY_V1 as P,ownerPoolAcceptsRevisionV1,ownerPoolIdV1,ownerPoolRepublishV1,ownerPoolWhyIdleV1,publishOwnerPoolV1,readOwnerPoolPointerV1,type OwnerPoolManifestV1,type OwnerPoolPublishRefusalV1,type OwnerPoolUnitV1}from"../../🟦️.ts";
 import{createOwnerPoolPublisherV1}from"../../📣️publisher/🟦️.ts";
 import{createOwnerPoolStatusV1}from"../../📊️status/🟦️.ts";
 import{runOwnerPoolV1}from"../../🏃️runner/🟨️.mjs";
 import fixture from"./🔣️.json"with{type:"json"};
+import breakerCases from"./🌐️breaker.json"with{type:"json"};
+import breakerSchema from"./🌐️breaker.schema.json"with{type:"json"};
 
 const scratch:string[]=[];
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
@@ -136,4 +139,56 @@ test("a transient first offer is retried during discovery after one cooldown",as
    }
   }
  }finally{db.close();await server.stop();}
+});
+
+test("optional HEAD does not block an accepted manifest from publishing its pointer",async()=>{
+ const database=new Database(":memory:");
+ try{for(const row of breakerCases){
+  const directory=temp(row.id),manifest=manifestOf(unitsOf(1),row.id,"a".repeat(64),{fixture:true}),refusals:OwnerPoolPublishRefusalV1[]=[],methods:string[]=[];
+  let headTimedOut=false;
+  const client=graphFleetClientV1({endpoint:"https://fixture.invalid",instance:"test",token:"fixture",upload:true,stateDirectory:directory},{fetch:(async(input,init)=>{
+   const kind=new URL(String(input)).pathname.split("/")[2],method=init?.method;
+   methods.push(method+" "+kind);
+   if(method==="HEAD"&&row.headTimeout&&!headTimedOut){headTimedOut=true;throw new DOMException("advisory deadline","TimeoutError");}
+   if(method==="PUT"&&kind===row.requiredTimeout)throw new DOMException("required deadline","TimeoutError");
+   return new Response(null,{status:method==="PUT"?200:404});
+  }) as typeof fetch});
+  const stored=await publishOwnerPoolV1({client,owner:"fixture",manifest,onRefused:refusal=>refusals.push(refusal)});
+  const expected=database.query("select ?1 is null as stored, ?1 is null as usable, ?1 is null as pointerRead, case when ?1 is null then null else 'no-answer' end as refusal").get(row.requiredTimeout) as {stored:number;usable:number;pointerRead:number;refusal:string|null};
+  expect({stored,usable:client.usable(),pointerRead:methods.includes("GET ac"),refusal:refusals[0]?.code??null},row.id).toEqual({stored:Boolean(expected.stored),usable:Boolean(expected.usable),pointerRead:Boolean(expected.pointerRead),refusal:expected.refusal});
+  expect(methods.filter(method=>method==="PUT ac")).toHaveLength(row.requiredTimeout==="cas"?0:row.requiredTimeout==="ac"?1:2);
+  if(row.headTimeout)expect(headTimedOut).toBe(true);
+  if(row.requiredTimeout!==null)expect(refusals).toMatchObject([{stage:"manifest",code:"no-answer",status:null,transient:true}]);
+ }}finally{database.close();}
+});
+
+test("manifest timeout log identifies the required write and its effective deadline",async()=>{
+ expect(new Ajv({strict:true}).validate(breakerSchema,breakerCases)).toBe(true);
+ const database=new Database(":memory:"),privateText="fixture-private-token";
+ try{for(const row of breakerCases){
+  const directory=temp("provenance-"+row.id),lines:string[]=[],prefix="owner pool refusal ";
+  let failedBytes:number|undefined,headTimedOut=false;
+  const environment={SEMIO_REMOTE_CACHE_ENDPOINT:"https://fixture.invalid",SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:privateText,SEMIO_REMOTE_CACHE_INSTANCE:"main"};
+  const client=graphFleetClientV1({endpoint:environment.SEMIO_REMOTE_CACHE_ENDPOINT,instance:"main",token:privateText,upload:true,stateDirectory:directory},{fetch:(async(input,init)=>{
+   const kind=new URL(String(input)).pathname.split("/")[2],method=init?.method;
+   if(method==="HEAD"&&row.headTimeout&&!headTimedOut){headTimedOut=true;throw new DOMException(privateText,"TimeoutError");}
+   if(method==="PUT"&&kind===row.requiredTimeout&&failedBytes===undefined){
+    const body=init?.body;
+    if(!ArrayBuffer.isView(body))throw Error("Encoded upload body required");
+    failedBytes=body.byteLength;
+    throw new DOMException(privateText,"TimeoutError");
+   }
+   return new Response(null,{status:method==="PUT"?200:404});
+  }) as typeof fetch});
+  const units=unitsOf(1),publisher=createOwnerPoolPublisherV1({workspaceRoot:directory,environment,identity:row.id,globals:{projectAuthority:"a",registryDigest:"b",commandRevision:"c",late:false},session:()=>({fixture:true}),units:()=>units,say:line=>lines.push(line),publish:input=>publishOwnerPoolV1({...input,client})});
+  expect(await publisher.ask(units,true)).toBe(row.requiredTimeout===null);
+  const refusals=lines.filter(line=>line.startsWith(prefix));
+  if(row.requiredTimeout===null){expect(headTimedOut).toBe(true);expect(refusals).toEqual([]);continue;}
+  expect(failedBytes).toBeGreaterThan(0);
+  expect(refusals).toHaveLength(1);
+  const timeout=database.query(`select case ?1 when 'cas' then 'cas-put' else 'action-result-put' end request,
+   case ?1 when 'cas' then 20000+(?2*1000+2097151)/2097152 else 6000 end deadlineMilliseconds`).get(row.requiredTimeout,failedBytes!);
+  expect(JSON.parse(refusals[0]!.slice(prefix.length))).toEqual({wave:expect.stringMatching(/^[a-f0-9]{12}$/u),stage:"manifest",code:"no-answer",status:null,transient:true,timeout});
+  expect(lines.join("\n")).not.toContain(privateText);
+ }}finally{database.close();}
 });

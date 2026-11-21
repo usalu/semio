@@ -206,10 +206,12 @@ fn item_controls(
         let key = key.ok_or_else(|| error("ui.snapshot-details.rename-without-key"))?;
         controls.push(rename_control(id, path, key, labels, controller_id, publication_revision));
     }
-    if capabilities.edit {
-        if let Some(value) = value {
-            controls.push(scalar_control(id, path, value, template, enum_values, allows_untyped_creation, labels, controller_id, publication_revision));
-        }
+    if let Some(value) = value {
+        controls.push(if capabilities.edit {
+            scalar_control(id, path, value, template, enum_values, allows_untyped_creation, labels, controller_id, publication_revision)
+        } else {
+            read_only_value(&format!("{id}-read-only"), value)
+        });
     }
     if capabilities.reorder {
         let (index, length) = array_index.ok_or_else(|| error("ui.snapshot-details.reorder-without-index"))?;
@@ -257,11 +259,14 @@ fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
     let path_pointer = pointer(path);
     let is_collection = matches!(value, SnapshotDetailValue::Array | SnapshotDetailValue::Object);
     let scalar = (!is_collection).then(|| value.clone());
-    let template = provider.creation_template(path, false);
-    let enum_values = provider.enum_values(path);
-    let allows_untyped_creation = provider.allows_untyped_creation(path);
     let capabilities = provider.item_capabilities(path);
-    let controls = if path_is_bindable(&path_pointer) {
+    let (template, enum_values, allows_untyped_creation) = if capabilities.edit {
+        (provider.creation_template(path, false), provider.enum_values(path), provider.allows_untyped_creation(path))
+    } else {
+        (None, Vec::new(), false)
+    };
+    let immutable = !(capabilities.edit || capabilities.rename || capabilities.remove || capabilities.reorder);
+    let controls = if path_is_bindable(&path_pointer) || immutable {
         item_controls(&id, &path_pointer, key, array_index, scalar, template, &enum_values, allows_untyped_creation, capabilities, labels, controller_id, publication_revision)?
     } else {
         text_draft(&format!("{id}-source-fallback"), provider.source().ok_or_else(|| error("ui.snapshot-details.unbindable-path-without-source"))?, None, labels, publication_revision)?
@@ -273,7 +278,7 @@ fn detail_node<P: SnapshotDetailsProvider + ?Sized>(
         builder = builder.description(UiText::clipped(&description));
     }
     if is_collection {
-        if path_is_bindable(&path_pointer) {
+        if capabilities.edit && path_is_bindable(&path_pointer) {
             builder = builder.try_child(collection_controls(provider, path, &value, &id, labels, controller_id, windows, publication_revision)?).map_err(|_| error("ui.snapshot-details.collection-controls"))?;
         }
         let count = provider.child_count(path);
@@ -359,9 +364,9 @@ fn render_snapshot_details_provider_at_revision<P: SnapshotDetailsProvider + ?Si
     }
     let value = provider.value(&[]).ok_or_else(|| error("ui.snapshot-details.root-value"))?;
     let fields = if matches!(value, SnapshotDetailValue::Object | SnapshotDetailValue::Array) {
-        let controls = provider.variant_count(&[], locale) > 0
+        let controls = provider.item_capabilities(&[]).edit && (provider.variant_count(&[], locale) > 0
             || (provider.allows_collection_insert(&[])
-                && (provider.missing_property_count(&[]) > 0 || (collection_insert_path(provider, &[], &value).is_some() && (provider.allows_untyped_creation(&[]) || provider.creation_template(&[], true).is_some()))));
+                && (provider.missing_property_count(&[]) > 0 || (collection_insert_path(provider, &[], &value).is_some() && (provider.allows_untyped_creation(&[]) || provider.creation_template(&[], true).is_some())))));
         let count = provider.child_count(&[]);
         tree_window_indexed_section(windows, ROOT_SECTION_ID, label(labels.details)?, true, count + usize::from(controls), |index| {
             if controls && index == 0 {

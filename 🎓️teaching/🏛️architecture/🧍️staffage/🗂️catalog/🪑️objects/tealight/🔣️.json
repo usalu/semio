@@ -1192,24 +1192,28 @@
                   0.0
                 ],
                 [
+                  0.0006,
+                  0.0019
+                ],
+                [
                   0.002,
-                  0.003
+                  0.0032
                 ],
                 [
                   0.007,
                   0.004
                 ],
                 [
-                  0.013,
-                  0.003
+                  0.015,
+                  0.0023
                 ],
                 [
                   0.022,
                   0.0
                 ],
                 [
-                  0.013,
-                  -0.003
+                  0.015,
+                  -0.0023
                 ],
                 [
                   0.007,
@@ -1217,7 +1221,11 @@
                 ],
                 [
                   0.002,
-                  -0.003
+                  -0.0032
+                ],
+                [
+                  0.0006,
+                  -0.0019
                 ]
               ],
               "closed": true
@@ -1274,7 +1282,11 @@
                   0.0185
                 ],
                 [
-                  0.003,
+                  0.0019,
+                  0.0191
+                ],
+                [
+                  0.0032,
                   0.0205
                 ],
                 [
@@ -1282,24 +1294,28 @@
                   0.0255
                 ],
                 [
-                  0.003,
-                  0.0315
+                  0.0023,
+                  0.0335
                 ],
                 [
                   0.0,
                   0.0405
                 ],
                 [
-                  -0.003,
-                  0.0315
+                  -0.0023,
+                  0.0335
                 ],
                 [
                   -0.004,
                   0.0255
                 ],
                 [
-                  -0.003,
+                  -0.0032,
                   0.0205
+                ],
+                [
+                  -0.0019,
+                  0.0191
                 ]
               ],
               "closed": true
@@ -2684,7 +2700,7 @@
             "material": "flame",
             "role": "body",
             "tone": 0.9,
-            "profile": [[0.0, 0.0], [0.002, 0.003], [0.007, 0.004], [0.013, 0.003], [0.019, 0.0011], [0.022, 0.0]],
+            "profile": [[0.0, 0.0], [0.0006, 0.0019], [0.002, 0.0032], [0.0045, 0.0039], [0.007, 0.004], [0.011, 0.0034], [0.015, 0.0023], [0.0185, 0.0012], [0.022, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           }
@@ -2729,7 +2745,7 @@
             "material": "flame",
             "role": "detail",
             "tone": 0.97,
-            "profile": [[0.0223, 0.0], [0.016, 0.0023], [0.016, 0.00205], [0.022, 0.0]],
+            "profile": [[0.0223, 0.0], [0.016, 0.00225], [0.016, 0.00199], [0.0185, 0.0012], [0.022, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0],
             "region": "flame",
@@ -2820,8 +2836,8 @@
         ],
         "decisions": [
           {
-            "en": "Body 1:200, three masses: the cup with its wax fill as one solid cone of 36 to 38 mm with the wax level sunk 1.5 mm inside the rim (C30: the cavity is below the feature), the wax surface with the wick as a cone of 7 mm on the wick bone, as the plan draws it (a 0.3 mm sheet, flagged texture), and the flame as one drop of 8 mm by 22 mm on flame-body; the separate tongue, the sustainer, embossing and radii are gone. The model keeps the true size of the candle: it is 0.19 mm on paper and is not thickened.",
-            "de": "Körper 1:200, drei Massen: das Schälchen mit seiner Wachsfüllung als ein voller Kegel von 36 auf 38 mm mit dem 1,5 mm im Rand abgesenkten Wachsspiegel (C30: der Hohlraum liegt unter dem Merkmal), die Wachsoberfläche mit dem Docht als Kegel von 7 mm am Dochtknochen, wie ihn die Draufsicht zeichnet (eine Schicht von 0,3 mm, Kennzeichen texture), und die Flamme als ein Tropfen von 8 mm mal 22 mm am Knochen flame-body; die eigene Zunge, der Dochthalter, Prägung und Radien entfallen. Das Modell behält die wahre Grösse der Kerze: sie misst 0,19 mm auf dem Papier und wird nicht verdickt."
+            "en": "Body 1:200, three masses: the cup with its wax fill as one solid cone of 36 to 38 mm with the wax level sunk 1.5 mm inside the rim (C30: the cavity is below the feature), the wax surface with the wick as a cone of 7 mm on the wick bone, as the plan draws it (a 0.3 mm sheet, flagged texture), and the flame as one rounded drop of 8 mm by 22 mm (nine stations, blunt foot on the wick, pointed tip) on flame-body; the separate tongue, the sustainer, embossing and radii are gone. The model keeps the true size of the candle: it is 0.19 mm on paper and is not thickened.",
+            "de": "Körper 1:200, drei Massen: das Schälchen mit seiner Wachsfüllung als ein voller Kegel von 36 auf 38 mm mit dem 1,5 mm im Rand abgesenkten Wachsspiegel (C30: der Hohlraum liegt unter dem Merkmal), die Wachsoberfläche mit dem Docht als Kegel von 7 mm am Dochtknochen, wie ihn die Draufsicht zeichnet (eine Schicht von 0,3 mm, Kennzeichen texture), und die Flamme als ein gerundeter Tropfen von 8 mm mal 22 mm (neun Stationen, stumpfer Fuss am Docht, spitze Spitze) am Knochen flame-body; die eigene Zunge, der Dochthalter, Prägung und Radien entfallen. Das Modell behält die wahre Grösse der Kerze: sie misst 0,19 mm auf dem Papier und wird nicht verdickt."
           },
           {
             "en": "Thermal 1:200: the cup cone and the wax surface by reference (wax: top face only), the wick as its own 2 mm pin over the cone, the flame drop, and a cone cap on its upper 6 mm as the emitter outlet; only the total area is compared at this scale.",
@@ -2866,7 +2882,7 @@
             "material": "flame",
             "role": "body",
             "tone": 0.9,
-            "profile": [[0.0, 0.0], [0.0015, 0.0028], [0.007, 0.004], [0.022, 0.0]],
+            "profile": [[0.0, 0.0], [0.001, 0.0026], [0.0035, 0.0038], [0.007, 0.004], [0.014, 0.0026], [0.022, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           }
@@ -2911,7 +2927,7 @@
             "material": "flame",
             "role": "detail",
             "tone": 0.97,
-            "profile": [[0.0223, 0.0], [0.014, 0.0024], [0.014, 0.00213], [0.022, 0.0]],
+            "profile": [[0.0223, 0.0], [0.014, 0.00287], [0.014, 0.0026], [0.022, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0],
             "region": "flame",
@@ -3006,8 +3022,8 @@
         ],
         "decisions": [
           {
-            "en": "Body 1:500, digital only (the candle is 0.08 mm on paper, the 2D representation is unavailable): the cup with its wax as one solid cone of 36 to 38 mm with a sunk top, the wax surface with a wick cone that reaches the flame, and the flame as one four-station drop of 8 mm by 22 mm, all in true size. The model is already minimal.",
-            "de": "Körper 1:500, nur digital (die Kerze misst 0,08 mm auf dem Papier, die 2D-Darstellung ist nicht verfügbar): das Schälchen mit seinem Wachs als ein voller Kegel von 36 auf 38 mm mit abgesenkter Oberseite, die Wachsoberfläche mit einem Dochtkegel, der die Flamme erreicht, und die Flamme als ein Tropfen von 8 mm mal 22 mm mit vier Stationen, alles in wahrer Grösse. Das Modell ist bereits minimal."
+            "en": "Body 1:500, digital only (the candle is 0.08 mm on paper, the 2D representation is unavailable): the cup with its wax as one solid cone of 36 to 38 mm with a sunk top, the wax surface with a wick cone that reaches the flame, and the flame as one six-station drop of 8 mm by 22 mm with a rounded foot and a pointed tip, all in true size. The model is already minimal.",
+            "de": "Körper 1:500, nur digital (die Kerze misst 0,08 mm auf dem Papier, die 2D-Darstellung ist nicht verfügbar): das Schälchen mit seinem Wachs als ein voller Kegel von 36 auf 38 mm mit abgesenkter Oberseite, die Wachsoberfläche mit einem Dochtkegel, der die Flamme erreicht, und die Flamme als ein Tropfen von 8 mm mal 22 mm mit sechs Stationen, gerundetem Fuss und spitzer Spitze, alles in wahrer Grösse. Das Modell ist bereits minimal."
           },
           {
             "en": "Thermal 1:500: the cup cone and the wax surface by reference (wax: top face only), the wick as a cone, the flame drop and its outlet cap; only the total area is compared at this scale.",

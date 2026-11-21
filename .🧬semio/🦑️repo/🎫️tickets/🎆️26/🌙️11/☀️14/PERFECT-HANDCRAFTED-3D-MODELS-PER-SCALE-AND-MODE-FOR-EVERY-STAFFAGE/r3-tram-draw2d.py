@@ -186,7 +186,7 @@ def elevation(scale, sid):
     if sid == 'pan-joint-tip':
         return E(1.9, 0, 0.02)
     if sid == 'pan-head':
-        c = {50: (-0.17, 0.17, 0.011, 0.025), 100: (-0.17, 0.17, 0.012, 0.025), 200: (-0.18, 0.18, 0.01, 0.0175), 500: (-0.0075, 0.0075, 0.02, 0.03)}[scale]
+        c = {50: (-0.17, 0.17, 0.011, 0.025), 100: (-0.17, 0.17, 0.012, 0.025), 200: (-0.18, 0.18, 0.01, 0.0225), 500: (-0.0075, 0.0075, 0.02, 0.03)}[scale]
         return {"kind": "capsule", "x0": c[0], "y0": c[2], "x1": c[1], "y1": c[2], "r0": c[3], "r1": c[3]}
     if sid == 'pan-base':
         if scale == 50:
@@ -289,7 +289,7 @@ def plan(scale, sid):
 
 
 PAN_SPANS = {'pan-lower': 0.042, 'pan-upper': 0.04, 'pan-head': 0.55}
-PAN_R = {50: (0.042, 0.02, 0.025), 100: (0.042, 0.02, 0.025), 200: (0.04, 0.02, 0.0175), 500: (0.035, 0.02, 0.03)}
+PAN_R = {50: (0.042, 0.02, 0.025), 100: (0.042, 0.02, 0.025), 200: (0.04, 0.02, 0.0225), 500: (0.035, 0.03, 0.03)}
 
 
 def pan_capsule(scale, s, view):
@@ -302,7 +302,7 @@ def pan_capsule(scale, s, view):
         g.update({"x0": 0, "y0": 0, "x1": 1.9, "y1": 0, "r0": r, "r1": r})
     span = 0.8 if s["id"] == 'pan-head' and scale == 500 else 0.845 if s["id"] == 'pan-head' and view == 'plan' else PAN_SPANS[s["id"]]
     if s["id"] == 'pan-upper' and scale == 500:
-        span = 0.02
+        span = 0.03
     if "solid" in g:
         g["solid"] = dict(g["solid"], z0=-n(span), z1=n(span))
     return g
@@ -324,7 +324,7 @@ def new_shapes(scale, view):
         for bt, xb in (('f', BOGIE_F), ('r', BOGIE_R)):
             bone = f'bogie-{bt}'
             if scale == 500:
-                out.append(dict(R(-1.12, 0.10, 1.12, 0.32, 0.04), id=f'bogie-frame-{bt}', bone=bone, role='body', filled=True, z=3.5, tone=0.35, region='traction-motors', material='steel-wheel'))
+                out.append(dict(R(-1.12, -0.20, 1.12, 0.30, 0.04), id=f'bogie-frame-{bt}', bone=bone, role='body', filled=True, z=3.5, tone=0.35, region='traction-motors', material='steel-wheel'))
                 continue
             w = 0.05 if scale == 50 else 0.06
             top = 0.51 if scale == 50 else 0.49

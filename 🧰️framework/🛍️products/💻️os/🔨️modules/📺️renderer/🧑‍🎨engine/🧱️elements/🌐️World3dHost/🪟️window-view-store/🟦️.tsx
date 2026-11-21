@@ -20,6 +20,7 @@ import { worldProjectionSpecIconId, WorldProjectionKindSwitch, type WorldCameraS
 import { type WorldParsedCameraState } from "../🔭️scene-schema/🟦️.ts";
 import { worldRayFromNdc } from "../🎯️marquee-and-bridges/🟦️.tsx";
 import { world3dHandleDragParameterV1, type WorldVec3 } from "../🧲️handle-drag/🟦️.ts";
+import { undeclaredActionDiagnostic, type WindowKindActionDeclaration } from "../../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
 
 
 //#region 🔖️World3dHost
@@ -138,6 +139,14 @@ export class World3dWindowViewRegistryV1 {
 
 /** 🐚️ The current shell session's live world viewport owner. */
 export const World3dWindowViewStoreContext = createContext<World3dWindowViewStoreV1 | null>(null);
+
+/** 📷️ Whether the mounted program accepts the optional host camera pose publication. */
+export const World3dCameraSyncContext = createContext(true);
+
+/** 📜️ Reads the same exact camera action declaration admitted by the shell input funnel. */
+export function allowsWorld3dCameraSync(app: { readonly id: string; readonly windowKinds: readonly WindowKindActionDeclaration[]; readonly actions?: readonly { readonly id: string }[] }): boolean {
+  return undeclaredActionDiagnostic(app.id, "setCamera", app.windowKinds, null, app.actions) === null;
+}
 
 /** 🪟️ One-shot initial camera pose, keyed by window instance id, consumed by {@link World3dHost} on
  * mount and then discarded — the side-channel a Display "Windows" drag-and-drop template uses to seed a

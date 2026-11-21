@@ -30,7 +30,12 @@ impl LayoutRenderWork{
      self.flow_demand = Some(self.owners.text.flow_projection_demand(snapshot).map_err(|error| error.to_string())?);
  }
  let mut prefix=Vec::new();let bg=if blueprint{[0.97,0.97,0.98,1.0]}else{[1.0,1.0,1.0,1.0]};prefix.push(host_layer("layout.page-bg",&rect_segments(0.0,0.0,list.page_width as f64,list.page_height as f64),Some(bg),None));if blueprint{for guide in &list.guides{let points=if guide.rect.height<=0.0{line_segments(guide.rect.x,guide.rect.y,guide.rect.x+guide.rect.width,guide.rect.y)}else{rect_segments(guide.rect.x,guide.rect.y,guide.rect.width,guide.rect.height)};prefix.push(host_layer(format!("layout.guide.{}",guide.kind),&points,None,Some((guide_stroke_color(&guide.kind),1.0,None))));}}let prefix=serde_json::to_string(&prefix).map_err(|e|e.to_string())?;let end=prefix.len()-1;self.push(prefix,0,end)?;let mut overlay=Vec::new();if blueprint&&!transient.drop_preview.kind.is_empty()&&transient.drop_preview.kind!="page"{let drop=&transient.drop_preview;overlay.push(host_layer("layout.drop-preview",&rect_segments(drop.x,drop.y,LAYOUT_DROP_PREVIEW_WIDTH,LAYOUT_DROP_PREVIEW_HEIGHT),Some(drop_preview_fill(&drop.kind)),Some(([0.1,0.45,0.95,0.85],2.0,None))));}overlay.extend(gumball_layers(snapshot,config,interaction,blueprint,self.owners.preview.as_ref()));if !overlay.is_empty(){self.owners.overlay=serde_json::to_string(&overlay).map_err(|e|e.to_string())?;}self.owners.list=Some(list);self.phase=1;Ok(())}
- fn push(&mut self,value:String,start:usize,end:usize)->Result<(),String>{self.bytes=self.bytes.checked_add(end-start).ok_or("layout-render-byte-overflow")?;self.owners.chunks.try_push(Chunk{value,start,end}).map_err(|_|"layout-render-chunk-reservation")}
+ fn push(&mut self, value: String, start: usize, end: usize) -> Result<(), String> {
+    let bytes = self.bytes.checked_add(end - start).ok_or("layout-render-byte-overflow")?;
+    self.owners.chunks.try_push(Chunk { value, start, end }).map_err(|_| "layout-render-chunk-reservation")?;
+    self.bytes = bytes;
+    Ok(())
+ }
  fn fragment(&mut self,value:String)->Result<(),String>{let end=value.len();self.push(value,0,end)}
  fn piece_ref(list:&DisplayList,key:Key)->StackPiece<'_>{match key.bucket{0=>StackPiece::Stroke(&list.strokes[key.index]),1=>StackPiece::Rect(&list.rects[key.index]),2=>StackPiece::Image(&list.images[key.index]),3=>StackPiece::FrameStroke(&list.frame_strokes[key.index]),_=>StackPiece::Text(&list.text_runs[key.index])}}
  fn step(&mut self,snapshot:&LayoutSnapshot,paragraph:Option<LayoutParagraphTurn>)->Result<(),String>{if snapshot as*const LayoutSnapshot as usize!=self.source{return Err("layout-render-original-source-changed".into());}match self.phase{

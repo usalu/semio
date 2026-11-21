@@ -37,6 +37,15 @@ pub use semio_renderer_wgpu_contracts::ProgramFault;
 mod wasm_program_exchange_child;
 #[cfg(not(target_arch="wasm32"))]
 use wasm_program_exchange_child::wasm_program_exchange;
+#[cfg(not(target_arch = "wasm32"))]
+use wasm_program_exchange_child::native_save;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_save::{NATIVE_DOCUMENT_FILE_MAXIMUM, NativeMediaDeclaration, NativeSaveOutcome};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎞️original-media/🦀️.rs"]
+mod native_original_media;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_original_media::NativeOriginalMediaRequest;
 
 #[path = "🌉️program-bridge-entry/🦀️.rs"]
 mod program_bridge_entry;

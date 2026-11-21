@@ -6,7 +6,7 @@ extern crate infinite_canvas as infinite_world;
 use semio_renderer_wgpu_shell_input::{PointerCapture, PointerHitOwner};
 use semio_renderer_wgpu_shell_prefs::dispatch_refusal_discards_input_draft;
 use semio_renderer_wgpu_shell_state::ShellState;
-use infinite_world::world::{WorldInteractionIntent, enqueue_world3d_event, world3d_hover_is_published};
+use infinite_world::world::{WorldInteractionIntent, enqueue_world3d_event, world3d_hover_clear_is_owed};
 use semio_framework_job::RetainedCloneProgress;
 use semio_renderer_wgpu_host_base::{app_now_ms, frame_latency, log_debug};
 use semio_renderer_wgpu_host_plumbing::input_wire;

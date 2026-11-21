@@ -51,7 +51,7 @@ export class ShardExactActivations {
         if (activation.returned !== null) throw new Error("actor-return.already-owned");
         const owner = activation.instance;
         // 🚦️ A reactor turn admits exactly ONE event, so a host batch (typed-operation acknowledgements, coalesced UI events) crosses as one crossing per event, in order, and the answers are merged into the one result this API returns.
-        // ✂️ The cut is dynamic: a patch page and its receipt cannot be merged with another answer's, so the first answer that carries ui patches or a receipt ends this call, and the events not yet crossed go back to the FRONT of this actor's queue (`deferredEvents`) for the next crossing, in order. The call then answers `more-work` so every drain loop comes back for them. A command page rides the last crossing, so a batch with one is never cut.
+        // ✂️ The cut is dynamic: a patch page and its receipt cannot be merged with another answer's, so the first answer that carries ui patches or a receipt ends this call, and the events not yet crossed go back to the FRONT of this actor's queue (`deferredEvents`) for the next crossing, in order. The call then answers `more-work` so every drain loop comes back for them. A command page rides only the last crossing. When a cut leaves events pending, the caller still owns the page and offers it again.
         const deferred = deferredEvents.get(activation) ?? [];
         deferredEvents.delete(activation);
         const batch: readonly ShardEventEnvelope[] = deferred.length > 0 ? [...deferred, ...events] : events;
@@ -64,7 +64,7 @@ export class ShardExactActivations {
           answers.push(answer);
           if (index < slices.length - 1) {
             assertActive();
-            if (commandPage === undefined && carriesUiPatches(answer)) {
+            if (carriesUiPatches(answer)) {
               deferredEvents.set(activation, batch.slice(index + 1));
               postponed = true;
               break;

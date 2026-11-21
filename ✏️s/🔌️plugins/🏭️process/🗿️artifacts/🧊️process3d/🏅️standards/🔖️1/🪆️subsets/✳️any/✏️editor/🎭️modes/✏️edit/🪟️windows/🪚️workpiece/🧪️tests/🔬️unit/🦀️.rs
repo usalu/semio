@@ -30,6 +30,28 @@ async fn render_world_scene_contains_processed_mesh() {
     assert!(node.contains("processed"), "expected the processed mesh id in scene json: {node}");
 }
 
+#[semio_framework_async_macros::async_test]
+async fn renderer_camera_gesture_republishes_the_pose_without_resetting_the_field_of_view() {
+    use semio_s_artifact_process_process3d_commands::camera::set_camera::SetCamera;
+    use semio_s_artifact_process_process3d_editor::Process3dCommand;
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/camera-gesture.json")).unwrap();
+    assert!(SetCamera::from_viewport(&semio_framework::DslValue::from(&fixture["malformedCamera"])).is_none());
+    let fov = fixture["retainedFieldOfView"].as_f64().unwrap();
+    let mut app = context::app();
+    context::settled_dispatch(&mut app, Process3dCommand::SetCamera(SetCamera { position: [3.0, -3.0, 2.0], target: [0.0; 3], fov: Some(fov) }));
+    let before = app.snapshot().unwrap();
+    let args = semio_framework::DslValue::from(&fixture["args"]);
+    let (_, receipt) = context::settled_action(&mut app, "setCamera", Some(&args));
+    assert!(!context::published_a_document_mutation(&receipt));
+    assert_eq!(app.snapshot().unwrap(), before);
+    let projection = context::render(&mut app, PROCESS_3D_PLAY_BODY_MAIN);
+    let world = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_plugin::World3dScene>(&projection).expect("published workpiece scene");
+    let camera: serde_json::Value = serde_json::from_str(&world.camera_json).unwrap();
+    assert_eq!(camera["position"], fixture["args"]["camera"]["position"]);
+    assert_eq!(camera["target"], fixture["args"]["camera"]["target"]);
+    assert_eq!(camera["fov"].as_f64(), Some(fov));
+}
+
 /// 🪚️ The default timber document must reach the workpiece window as its replayed kernel mesh.
 #[semio_framework_async_macros::async_test]
 async fn render_world_scene_replays_the_timber_beam_instead_of_the_fallback_box() {
@@ -135,4 +157,96 @@ async fn workpiece_surface_replays_the_cursor_through_empty_and_restored_geometr
     *component = WorkingSolid::Box { width: dimension("restore", "invalidWidth"), depth: 1.0, height: 1.0 };
     assert!(ProcessPreviewReplay::default().evaluate(&scene, Some(4)).is_err());
     assert!(semio_s_artifact_process_process3d_io::export_process3d_model(&scene, Some(4), "glb").is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn workpiece_hover_is_local_and_click_commits_at_the_preview_center() {
+    use semio_plugin::artifact_app_laws::{decode_fixture_scene_with_lanes, dispatch_fixture_action, fixture_identity, meta};
+    use semio_plugin::{ActionMeta, ArtifactEditor, Effect, PluginApp, ViewModel, World3dScene};
+    use semio_s_artifact_process_process3d_editor::Process3dPlayApp;
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/workpiece-placement.json")).unwrap();
+    let args = |value: &serde_json::Value| semio_framework_pack_json::from_json_str::<semio_framework::DslValue>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    for invalid in fixture["invalid"].as_array().unwrap() {
+        for verb in ["worldPointerMove", "worldPointerDown"] {
+            assert!(Process3dPlayApp::command_from_action(verb, &mut Some(args(invalid)), &mut None).is_err());
+        }
+    }
+    let action = |app: &mut context::Process3dApp, view: &ViewModel, verb: &str, values: serde_json::Value| {
+        let metadata = ActionMeta { view_state: Some(std::sync::Arc::new(view.clone())), ..meta("local") };
+        let admitted = semio_framework_async::poll::resolve_ready(dispatch_fixture_action(&mut app.0, verb, Some(args(&values)), &metadata, &mut fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("dispatch workpiece gesture");
+        let result = semio_framework_async::poll::resolve_ready(semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx())).expect("settle reserved action");
+        let receipt = context::settle(app);
+        let effects = result.requested_effects.into_iter().chain(receipt.effects.iter().cloned()).filter_map(|effect| match effect {
+            Effect::SetActiveUtility { window_id, utility_id } => Some((window_id, utility_id)),
+            _ => None,
+        }).collect::<Vec<_>>();
+        (receipt, effects)
+    };
+    let render = |app: &mut context::Process3dApp, view: &ViewModel| {
+        let tree = context::render_with_view(app, PROCESS_3D_PLAY_BODY_MAIN, view);
+        decode_fixture_scene_with_lanes::<World3dScene>(&tree).expect("workpiece scene")
+    };
+    let mut application = context::app();
+    let before = application.snapshot().expect("published snapshot").step_payloads.len();
+    let mut view = context::main_window_view();
+    let mut second = view.clone();
+    let sibling_id = fixture["windows"]["sibling"].as_str().unwrap();
+    let primary_id = view.window_id.clone().unwrap();
+    second.window_id = Some(sibling_id.into());
+    let sibling = semio_plugin::ViewWindowInstance { id: sibling_id.into(), window_kind_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into() };
+    view.window_instances.push(sibling.clone());
+    second.window_instances.push(sibling);
+    let stock = render(&mut application, &view);
+    for case in fixture["cases"].as_array().unwrap() {
+        let utility = case["utility"].as_str().unwrap();
+        view.active_utility_id = Some(utility.into());
+        second.active_utility_id = Some(utility.into());
+        let (receipt, effects) = action(&mut application, &view, "worldPointerMove", serde_json::json!({ "pane": "", "position": case["position"] }));
+        assert!(effects.is_empty());
+        assert!(!context::published_a_document_mutation(&receipt));
+        assert_eq!(application.snapshot().expect("published snapshot").step_payloads.len(), before);
+        let hovered = render(&mut application, &view);
+        assert_eq!(hovered.meshes_json, stock.meshes_json);
+        assert_eq!(hovered.instances_json, stock.instances_json);
+        assert!(render(&mut application, &second).engagement_preview_json.is_none());
+        let items: Vec<serde_json::Value> = serde_json::from_str(hovered.engagement_preview_json.as_deref().expect("visible wireframe")).unwrap();
+        assert_eq!(items.len() as u64, case["segments"].as_u64().unwrap());
+        for item in &items {
+            assert_eq!(item["kind"], "segment");
+            assert_eq!(item["role"], utility);
+        }
+        for axis in 0..3 {
+            let (min, max) = items.iter().flat_map(|item| [item["from"][axis].as_f64().unwrap(), item["to"][axis].as_f64().unwrap()]).fold((f64::INFINITY, f64::NEG_INFINITY), |(min, max), coordinate| (min.min(coordinate), max.max(coordinate)));
+            assert!(((min + max) / 2.0 - case["position"][axis].as_f64().unwrap()).abs() < 1e-9);
+            assert!((max - min - case["dimensions"][axis].as_f64().unwrap()).abs() < 1e-9);
+        }
+        let primary_preview = hovered.engagement_preview_json;
+        action(&mut application, &second, "engagementInput", serde_json::json!({ "value": utility }));
+        let (_, effects) = action(&mut application, &second, "engagementSubmit", serde_json::json!({ "windowId": primary_id }));
+        assert_eq!(effects, vec![(sibling_id.to_owned(), utility.to_owned())]);
+        action(&mut application, &second, "worldPointerMove", serde_json::json!({ "position": case["position"] }));
+        assert!(render(&mut application, &second).engagement_preview_json.is_some());
+        let (_, effects) = action(&mut application, &second, "engagementAbort", serde_json::json!({ "windowId": primary_id }));
+        assert_eq!(effects, vec![(sibling_id.to_owned(), "select".to_owned())]);
+        assert!(render(&mut application, &second).engagement_preview_json.is_none());
+        assert_eq!(render(&mut application, &view).engagement_preview_json, primary_preview);
+    }
+    view.active_utility_id = Some("cut".into());
+    second.active_utility_id = Some("cut".into());
+    let position = &fixture["place"];
+    action(&mut application, &view, "worldPointerMove", serde_json::json!({ "position": fixture["cases"][0]["position"] }));
+    let primary_preview = render(&mut application, &view).engagement_preview_json;
+    assert!(primary_preview.is_some());
+    action(&mut application, &second, "worldPointerMove", serde_json::json!({ "position": position }));
+    assert!(render(&mut application, &second).engagement_preview_json.is_some());
+    let (receipt, effects) = action(&mut application, &second, "worldPointerDown", serde_json::json!({ "position": position, "windowId": primary_id }));
+    assert!(context::published_a_document_mutation(&receipt));
+    assert_eq!(effects, vec![(sibling_id.to_owned(), "select".to_owned())]);
+    let snapshot = application.snapshot().expect("published snapshot");
+    assert_eq!(snapshot.step_payloads.len(), before + 1);
+    let semio_s_artifact_process_process3d_model::snapshot::ProcessMeasure::Cut { pose, .. } = &snapshot.step_payloads.last().unwrap().measure else { panic!("cut placement") };
+    assert_eq!(serde_json::json!(pose.position), *position);
+    assert!(render(&mut application, &second).engagement_preview_json.is_none());
+    assert_eq!(render(&mut application, &view).engagement_preview_json, primary_preview);
 }

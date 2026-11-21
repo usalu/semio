@@ -272,6 +272,10 @@ impl LayoutExportProofs {
         }
     }
 }
+pub(super) fn layout_bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+    LayoutRetainedProofs::bounded_first_step_tool_proofs().into_iter()
+        .chain(LayoutExportProofs::bounded_first_step_tool_proofs()).collect()
+}
 //#endregion 🧾️ProofCatalogs
 //#endregion 🧵️RetainedCommands
 

@@ -1,6 +1,12 @@
 /** 🔭️ Contract and law: the looks of a take pass are farm jobs. Owners go to the farm in batches (one batch of each lane in turn), at most as many batches run at once as children are ready and every ready child is used, an owner that asks first moves its batch to the front, an answer is used once and not after `freshMilliseconds`, a farm that is gone answers undefined and a farm that failed names the owner. The parent that only dispatches and adopts stays responsive: 200 owners over 4 children keep its event loop under 200 ms late and its CPU under 50 ms per owner.
  * @see ../🟨️.mjs */
 import{expect,test}from"bun:test";
+import{Database}from"bun:sqlite";
+import{existsSync,mkdirSync,mkdtempSync,rmSync,writeFileSync}from"node:fs";
+import{join}from"node:path";
+import{fileURLToPath}from"node:url";
+import{createFarmV1}from"../../🏊️project-farm/🏊️pool/🟨️.mjs";
+import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
 import{LOOK_POLICY_V1,createLookQueueV1,lookBatchSizeV1,lookBatchesV1,lookQueuedTextV1}from"../🟨️.mjs";
 
 const names=(prefix:string,count:number)=>Array.from({length:count},(_,at)=>prefix+at);
@@ -13,6 +19,7 @@ const farmOf=(width:number,milliseconds=15,answer?:(job:any)=>any)=>{
  }};
 };
 const jobOf=(name:string)=>({name});
+const until=async(check:()=>boolean)=>{const end=Date.now()+10000;while(!check()){if(Date.now()>=end)throw Error("Look fixture did not reach the expected state");await Bun.sleep(10);}};
 
 test("a batch holds enough owners to feed every child several times and never more than the declared maximum",()=>{
  expect(lookBatchSizeV1(4775,9)).toBe(LOOK_POLICY_V1.maximumOwnersPerJob);
@@ -87,3 +94,80 @@ test("a farm that is gone answers undefined, a failed job and a failed owner nam
  await expect(partial.ask("b")).rejects.toThrow("b: entry stale");
  await expect(partial.ask("c")).rejects.toThrow("c: the child gave no answer");
 });
+
+
+test("cancelling an owner waiter keeps the native singleton look for its next observer",async()=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(artifacts===undefined)throw Error("Owned test artifacts directory required");
+ mkdirSync(artifacts,{recursive:true});
+ const directory=mkdtempSync(join(artifacts,"look-")),entry=fileURLToPath(new URL("../../🏊️project-farm/👷️worker/🟨️.mjs",import.meta.url));
+ const pool=createFarmV1({entry,service:new URL("./🧫️fixtures/🟨️.mjs",import.meta.url).href,session:{},workers:1,megabytes:1536,accept:identity=>identity==="look-gate",footprintOf:()=>0});
+ const farm={width:()=>1,observe:async(job:object)=>(await pool.run(job)).reply as {looks:readonly object[]}|undefined};
+ const queue=createLookQueueV1({farm,jobOf:name=>({name,blocked:true}),shared:{directory,verdict:fixture.verdict},refuse});
+ const stop=new AbortController(),reason=new Error(fixture.cancelReason),counts:number[]=[];
+ const release=()=>writeFileSync(join(directory,"release"),"release");
+
+ try{
+  await expect(queue.ask(fixture.owner,AbortSignal.abort(reason))).rejects.toBe(reason);
+  expect(pool.stats().jobs).toBe(0);
+  queue.start([[fixture.owner]]);
+  const first=queue.ask(fixture.owner,stop.signal).then(()=>undefined,error=>error);
+  await until(()=>existsSync(join(directory,fixture.owner+".started")));
+  stop.abort(reason);
+  expect(await Promise.race([first,Bun.sleep(500).then(()=>null)])).toBe(reason);
+  expect(existsSync(join(directory,fixture.owner+".done"))).toBe(false);
+  counts.push(pool.stats().jobs);
+  release();
+  await until(()=>queue.stats().held===1&&queue.stats().running===0);
+  expect(await queue.ask(fixture.owner)).toMatchObject({name:fixture.owner,verdict:fixture.verdict});
+  counts.push(pool.stats().jobs);
+  expect(await queue.ask(fixture.owner)).toMatchObject({name:fixture.owner,verdict:fixture.verdict});
+  counts.push(pool.stats().jobs);
+  const sqlite=new Database(":memory:");
+  try{
+   const expected=sqlite.query(`SELECT 1 + count(*) FILTER (WHERE value='consumed')
+    OVER (ORDER BY cast(key AS integer) ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS jobs
+    FROM json_each(?) ORDER BY cast(key AS integer)`).all(JSON.stringify(fixture.outcomes)) as {jobs:number}[];
+   expect(counts).toEqual(fixture.expectedJobs);
+   expect(counts).toEqual(expected.map(row=>row.jobs));
+  }finally{sqlite.close();}
+ }finally{release();await pool.close();rmSync(directory,{recursive:true,force:true});}
+},30000);
+
+
+for(const mode of fixture.cutoff.modes)test(`a bulk take ${mode} stops speculative native looks and preserves exact requests`,async()=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(artifacts===undefined)throw Error("Owned test artifacts directory required");
+ mkdirSync(artifacts,{recursive:true});
+ const directory=mkdtempSync(join(artifacts,"look-")),entry=fileURLToPath(new URL("../../🏊️project-farm/👷️worker/🟨️.mjs",import.meta.url));
+ const pool=createFarmV1({entry,service:new URL("./🧫️fixtures/🟨️.mjs",import.meta.url).href,session:{},workers:1,megabytes:1536,accept:identity=>identity==="look-gate",footprintOf:()=>0});
+ const dispatched:string[]=[],farm={width:()=>1,observe:async(job:{owners:{name:string}[]})=>{dispatched.push(job.owners[0]!.name);return (await pool.run(job)).reply as {looks:readonly object[]}|undefined;}};
+ const [running,unasked,needed]=fixture.cutoff.jobs.map(job=>job.owner);
+ const queue=createLookQueueV1({farm:farm as never,jobOf:name=>({name,blocked:name!==needed,gate:name+".release"}),shared:{directory,verdict:fixture.verdict},refuse}),stop=new AbortController();
+ const marker=(name:string,suffix:string)=>join(directory,name+"."+suffix);
+ const release=(name:string)=>writeFileSync(marker(name,"release"),"release");
+ try{
+  queue.start([[running!,unasked!,needed!]],()=>true,stop.signal);
+  await until(()=>existsSync(marker(running!,"started")));
+  if(mode==="deadline")await new Promise<void>(resolve=>setTimeout(()=>{stop.abort();resolve();},1));
+  else stop.abort();
+  release(running!);
+  await until(()=>queue.stats().held===1);
+  expect(existsSync(marker(unasked!,"started"))).toBe(false);
+  expect(dispatched).toEqual([running]);
+  expect((await queue.ask(needed!))?.name).toBe(needed);
+  expect((await queue.ask(running!))?.name).toBe(running);
+  expect(existsSync(marker(unasked!,"started"))).toBe(false);
+  release(unasked!);
+  expect((await queue.ask(unasked!))?.name).toBe(unasked);
+
+  const sqlite=new Database(":memory:");
+  try{
+   const order=sqlite.query(`SELECT json_extract(value,'$.owner') AS name FROM json_each(?)
+    WHERE json_extract(value,'$.at')<? OR json_extract(value,'$.requested')
+    ORDER BY json_extract(value,'$.at')`).all(JSON.stringify(fixture.cutoff.jobs),fixture.cutoff.stopAt) as {name:string}[];
+   expect(dispatched).toEqual(fixture.cutoff.expectedOrder);
+   expect(dispatched).toEqual(order.map(row=>row.name));
+  }finally{sqlite.close();}
+ }finally{stop.abort();release(running!);release(unasked!);await pool.close();rmSync(directory,{recursive:true,force:true});}
+},30000);

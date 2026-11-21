@@ -13,7 +13,7 @@ pub struct DecodedStreamData {
 /// 🫙️ Scans the stream declaration and retains decoded bytes until every filter validates.
 #[must_use]
 pub struct PdfDecodedStreamCursor {
-    fields: [Option<usize>; 4],
+    fields: [Option<usize>; 5],
     position: usize,
     parameters: [Option<u32>; 5],
     parameter_position: usize,
@@ -37,7 +37,7 @@ impl PdfDecodedStreamCursor {
     /// 🌱️ Creates a stream plan before visiting the caller-owned dictionary or source.
     pub fn new(maximum_inflated: usize, maximum_output: usize) -> Self {
         Self {
-            fields: [None; 4], position: 0, parameters: [None; 5], parameter_position: 0,
+            fields: [None; 5], position: 0, parameters: [None; 5], parameter_position: 0,
             stage: 0, stages: None, checked_stages: 0, decoder: None, filters: Vec::new(), input: None,
             next_input: None, consumed: 0, maximum_inflated, maximum_output,
             finishing_stage: false, complete: false, cancelled: false, closing: false,
@@ -52,6 +52,12 @@ impl PdfDecodedStreamCursor {
 
     fn is_last_stage(&self) -> bool {
         self.stages.is_some_and(|stages| self.stage + 1 >= stages)
+    }
+
+    /// 🎚️ Quotes only the fresh history unit of the currently decoding filter.
+    pub fn next_reserves_history(&self) -> bool {
+        !self.cancelled && !self.closing && !self.complete && !self.finishing_stage
+            && self.decoder.as_ref().is_some_and(PdfStreamDataCursor::next_reserves_history)
     }
 
     /// ▶️ Drives dictionary planning and the ordered filter stages over the stable borrowed body.
@@ -91,7 +97,7 @@ impl PdfDecodedStreamCursor {
 
     fn plan_one(&mut self, dict: &[PdfDictEntry], allocation: usize, receipt: &mut StreamDataReceipt) -> Result<StreamDataStatus, ValueError> {
         if let Some(entry) = dict.get(self.position) {
-            if let Some(slot) = ["Filter", "F", "DecodeParms", "DP"].iter().position(|&key| key == entry.key) {
+            if let Some(slot) = ["Filter", "F", "DecodeParms", "DP", "Subtype"].iter().position(|&key| key == entry.key) {
                 self.fields[slot].get_or_insert(self.position);
             }
             self.position += 1;
@@ -111,7 +117,10 @@ impl PdfDecodedStreamCursor {
             return Ok(StreamDataStatus::More);
         };
         if self.checked_stages < stages {
-            planned_filter(declaration, self.checked_stages)?;
+            if matches!(planned_filter(declaration, self.checked_stages)?, PlannedFilter::Dct)
+                && (stages != 1 || value(4, 4).and_then(PdfObject::as_name) != Some("Image")) {
+                return Err(unsupported());
+            }
             self.checked_stages += 1;
             return Ok(StreamDataStatus::More);
         }
@@ -124,17 +133,33 @@ impl PdfDecodedStreamCursor {
         }
         let filter = planned_filter(declaration, self.stage)?;
         let maximum_output = if self.is_last_stage() { self.maximum_output } else { self.maximum_inflated };
+        let parameter = match value(2, 3) {
+            Some(PdfObject::Array(parameters)) => parameters.get(self.stage),
+            parameter if self.stage == 0 => parameter,
+            _ => None,
+        };
         let (decoder, filter) = match filter {
             PlannedFilter::Identity => (PdfStreamDataCursor::identity(maximum_output), None),
             PlannedFilter::AsciiHex => (PdfStreamDataCursor::ascii_hex(maximum_output), Some(PdfStreamFilter::AsciiHex)),
             PlannedFilter::Ascii85 => (PdfStreamDataCursor::ascii85(maximum_output), Some(PdfStreamFilter::Ascii85)),
             PlannedFilter::RunLength => (PdfStreamDataCursor::run_length(maximum_output), Some(PdfStreamFilter::RunLength)),
-            PlannedFilter::Flate | PlannedFilter::Lzw => {
-                let parameter = match value(2, 3) {
-                    Some(PdfObject::Array(parameters)) => parameters.get(self.stage),
-                    parameter if self.stage == 0 => parameter,
-                    _ => None,
+            PlannedFilter::Dct => {
+                if matches!(value(2, 3), Some(PdfObject::Array(parameters)) if parameters.len() != 1) { return Err(unsupported()); }
+                let color_transform = match parameter {
+                    None | Some(PdfObject::Null) => None,
+                    Some(PdfObject::Dict(entries)) if entries.is_empty() => None,
+                    Some(PdfObject::Dict(entries)) if entries.len() == 1 && entries[0].key == "ColorTransform" => {
+                        Some(match entries[0].value.as_i64() {
+                            Some(0) => 0,
+                            Some(1) => 1,
+                            _ => return Err(unsupported()),
+                        })
+                    }
+                    _ => return Err(unsupported()),
                 };
+                (PdfStreamDataCursor::identity(maximum_output), Some(PdfStreamFilter::Dct { color_transform }))
+            }
+            PlannedFilter::Flate | PlannedFilter::Lzw => {
                 if let Some(PdfObject::Dict(parameters)) = parameter {
                     if let Some(entry) = parameters.get(self.parameter_position) {
                         if let Some(slot) = ["Predictor", "Columns", "Colors", "BitsPerComponent", "EarlyChange"].iter().position(|&key| key == entry.key) {
@@ -255,7 +280,7 @@ fn invariant(reason: &'static str) -> ValueError {
     ValueError::literal(ValueRefusalKind::InvariantViolated, reason)
 }
 
-enum PlannedFilter { Identity, AsciiHex, Ascii85, RunLength, Flate, Lzw }
+enum PlannedFilter { Identity, AsciiHex, Ascii85, RunLength, Flate, Lzw, Dct }
 
 fn planned_filter(declaration: Option<&PdfObject>, stage: usize) -> Result<PlannedFilter, ValueError> {
     use PlannedFilter as Filter;
@@ -272,6 +297,7 @@ fn planned_filter(declaration: Option<&PdfObject>, stage: usize) -> Result<Plann
         "RunLengthDecode" | "RL" => Ok(Filter::RunLength),
         "FlateDecode" | "Fl" => Ok(Filter::Flate),
         "LZWDecode" | "LZW" => Ok(Filter::Lzw),
+        "DCTDecode" | "DCT" => Ok(Filter::Dct),
         _ => Err(unsupported()),
     }
 }

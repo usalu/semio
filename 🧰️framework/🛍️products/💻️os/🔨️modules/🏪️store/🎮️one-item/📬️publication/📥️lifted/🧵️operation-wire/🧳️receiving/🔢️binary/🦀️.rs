@@ -40,7 +40,7 @@ impl<M:OpBinaryReceiving+Sync> OriginalBinaryReceiving<M>{
    Phase::Take=>RetirementDemand{depth:1,..Default::default()},
    Phase::CloseCursor=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("original binary cursor is absent"))?;if cursor.terminal_is_empty(){close_header::<Option<M::Receiving>>()}else{cursor.close_demands(body)?}},
    Phase::Authority=>header::<FactoryOwnedSourceAuthority<M>>(),
-   Phase::TypedSource=>{let admission=self.typed_admission.as_ref().ok_or_else(||invalid("original binary typed source admission is absent"))?;if admission.phase()=="ready"{header::<Option<RetainedCloneSource<FactoryOwnedSourceAuthority<M>>>>()}else if admission.phase()=="projectionStart"{admission.owned_projection_demand()?}else{admission.next_demand()?}},
+   Phase::TypedSource=>{let admission=self.typed_admission.as_ref().ok_or_else(||invalid("original binary typed source admission is absent"))?;if admission.phase()=="ready"{admission.take_output_demand()}else if admission.phase()=="projectionStart"{admission.owned_projection_demand()?}else{admission.next_demand()?}},
    Phase::TypedProjection=>retained_alias_demand(self.typed_ref()?)?,
    Phase::Ready=>header::<Option<RetainedOwnedProjection<M>>>(),
   })
@@ -50,12 +50,30 @@ impl<M:OpBinaryReceiving+Sync> OriginalBinaryReceiving<M>{
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original binary receiving changed its decoder ledger"));}
   if self.closing{return Err(invalid("original binary receiving closes through its close step"));}
   let d=self.demands(body)?;if maximum_work_units==0||!retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
+  if self.phase==Phase::Receive && self.cursor.as_ref().ok_or_else(||invalid("original binary cursor is absent"))?.step_work_demand(self.source()?,body)?>maximum_work_units{return Ok(RetainedCloneStep::Progress(Default::default()));}
   control.checkpoint()?;
   let child=RetainedCloneGrant{maximum_items:1,..g};
   let mut p=if self.phase==Phase::Receive{
-   let wire=self.wire.as_ref().ok_or_else(||invalid("original binary wire is absent"))?.borrow()?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("original binary cursor is absent"))?;let turn=cursor.step(wire.get(),control,body,g);*work=turn.work;let p=turn.result.map_err(refused)?;if cursor.is_ready(){self.phase=Phase::Take;}p
+   let wire=self.wire.as_ref().ok_or_else(||invalid("original binary wire is absent"))?.borrow()?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("original binary cursor is absent"))?;let turn=cursor.step(wire.get(),control,body,g);*work=turn.work;let p=turn.result.map_err(refused)?;if cursor.is_ready(){self.phase=Phase::Take;}else if p==RetainedCloneProgress::default()&&*work==0{return Ok(RetainedCloneStep::Progress(p));}p
   }else{
-   let phase=self.phase;let quote=match phase{Phase::Admit|Phase::TypedSource|Phase::TypedProjection=>maximum_work_units,_=>1};
+   let phase=self.phase;
+   let quote=match phase{
+    Phase::Admit|Phase::TypedProjection=>maximum_work_units,
+    Phase::TypedSource=>{
+     let admission=self.typed_admission.as_ref().ok_or_else(||invalid("original binary typed source admission is absent"))?;
+     match admission.phase(){
+      "ready"=>admission.take_output_work_demand().max(1),
+      "projectionStart"=>1,
+      _=>admission.advance_work_demand()?,
+     }
+    },
+    Phase::CloseCursor=>{
+     let cursor=self.cursor.as_ref().ok_or_else(||invalid("original binary cursor is absent"))?;
+     if cursor.terminal_is_empty(){1}else{cursor.close_work_demand(body)?.max(1)}
+    },
+    _=>1,
+   };
+   if quote>maximum_work_units{return Ok(RetainedCloneStep::Progress(Default::default()))}
    let Some((result,spent))=control.with_allocated_effect(d,quote,|_,effect|{
     let result=self.advance_local(phase,d,child,effect);
     let progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};

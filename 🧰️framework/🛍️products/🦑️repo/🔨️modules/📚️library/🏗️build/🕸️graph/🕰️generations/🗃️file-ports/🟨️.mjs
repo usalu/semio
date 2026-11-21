@@ -20,7 +20,14 @@ export function createNodeFilePortV1(){
    const rows=await Promise.all(names.map(async name=>{try{const status=await lstat(join(directory,name));return status.isFile()?{name,modifiedMs:status.mtimeMs}:undefined;}catch(error){if(error?.code==="ENOENT")return undefined;throw error;}}));
    return rows.filter(Boolean);
   },
-  async remove(path){await rm(path,{force:true});},
+  async remove(path,{singleLink=false,signal}={}){
+   if(singleLink){
+    let status;try{status=await lstat(path);}catch(error){if(error?.code==="ENOENT")return;throw error;}
+    if(!status.isFile()||status.nlink!==1)return;
+   }
+   signal?.throwIfAborted();
+   await rm(path,{force:true});
+  },
  });
 }
 

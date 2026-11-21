@@ -10,6 +10,21 @@ const TEXTS = schema.definitions.Texts.const;
 const LOOKUP_FAULT_KEYS_V1 = Object.keys(schema.definitions.LookupFaultCounts.properties);
 const takeDelayV1 = (milliseconds, signal) => delay(milliseconds, undefined, { signal }).catch(error => { if (!signal?.aborted) throw error; });
 
+/** 🪢️ Waits for another lane's look under the observer's cancellation, without taking custody of that look. */
+export async function joinTakeLookV1(running, signal) {
+  signal.throwIfAborted();
+  let abort;
+  try {
+    return await new Promise((resolve, reject) => {
+      abort = () => reject(signal.reason);
+      signal.addEventListener("abort", abort, { once: true });
+      running.then(resolve, reject);
+    });
+  } finally {
+    signal.removeEventListener("abort", abort);
+  }
+}
+
 /** ⏱️ The pause before look number `round` (0 is the first) at the cache for records that other machines may have stored meanwhile: it starts at `pollFirstMilliseconds` and grows by `pollGrowthPercent` percent per look up to `pollMaximumMilliseconds`, in integer arithmetic, so every language computes the same numbers.
  * @see ./🧪️tests/🐍️.py */
 export function takePollWaitV1(round, policy = TAKE_POLICY_V1) {

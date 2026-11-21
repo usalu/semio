@@ -229,8 +229,11 @@ impl CatalogIndex {
     }
 }
 
-/// 🔁 Writes identity + sheet into the mandatory 100 record fields.
+/// 🔁 Writes the native title projection for sheets that use it.
 pub fn sync_titles_into_records(product: &mut CatalogueProduct) {
+    if product.sheet.0 == 22 {
+        return;
+    }
     let de = text_in(&product.title, "de");
     let en = text_in(&product.title, "en");
     let fields = vec!["700".into(), "de".into(), de, "en".into(), en];

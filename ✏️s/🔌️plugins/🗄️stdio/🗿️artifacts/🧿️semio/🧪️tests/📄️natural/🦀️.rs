@@ -79,8 +79,8 @@ fn nineteen_populated_editor_native_roundtrips_and_cross_subset_refusals() {
 }
 
 fn check_examples<E:ArtifactEditor>(subset:&str,input:E::Snapshot,fixture:&Value,examples_fixture:&Value,schema_of:fn(&E::Snapshot)->&str)
-where E::Snapshot:semio_framework_pack::snapshot::ArtifactDsl+PartialEq+std::fmt::Debug+Default+ToValue{
-    use semio_framework_pack::snapshot::{ArtifactDsl,ArtifactPack};
+where E::Snapshot:pack::snapshot::ArtifactDsl+PartialEq+std::fmt::Debug+Default+ToValue{
+    use pack::snapshot::{ArtifactDsl,ArtifactPack};
     let row=examples_fixture["rows"].as_array().unwrap().iter().find(|row|row["subset"]==subset).unwrap();
     let canonical=input.print_dsl();
     let canonical_pack=input.encode_pack();
@@ -253,7 +253,7 @@ fn typed_example_table(){
 /// 📰️ The complete authored article preserves every run and mark through the current native file codec.
 #[test]
 fn typed_article_natural_file_preserves_all_authored_runs_and_marks(){
- use semio_framework_pack::snapshot::ArtifactDsl;
+ use pack::snapshot::ArtifactDsl;
  type E=semio_s_artifact_stdio_semio_text::editor::SemioTextEditor;
  type Snapshot=semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
  let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");

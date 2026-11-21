@@ -111,3 +111,55 @@ Final check line: `FAIL: 2 measurement(s) over 2 rule line(s)`, both `areaDeviat
 - `representations[*].decisions` texts and the reference id `ossur-cheetah-xtreme` (class data for J blades) still carry the old wording; the summary and the bone titles say C-shaped.
 - Structure solids of bone use material `skin` (the asset has no bone material).
 - `🗑️generated/r3-runner-with-blade-prosthesis/` (candidate document, geometry, check output) was deleted at the end; `r3-runner-deploy.sh` rebuilds it.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-runner-with-blade-prosthesis-body50.ts` (1:50 body, round-5 sections; `smooth` Catmull-Rom centre line through the hand-stated blade knots), `r5-runner-with-blade-prosthesis-coarse.ts` (1:100, 1:200, 1:500 bodies), edit records `r5-runner-with-blade-prosthesis-edit50.py`, `-editcoarse.py`, `-girths.py`, measurement `r5-girth.py`, renders `r5-sheets.sh`. `r3-runner-figure.ts` and `r3-runner-lists.ts` now import the r5 body files; the rest of the round-3 pipeline (`r3-runner-all.sh`, `r3-runner-deploy.sh`) is unchanged and was used to redraw the 2D (ruling E1), validate and splice.
+
+### Reference and model (1:50, standing-ready for heights, sections for girths; H = 1.80 m)
+
+| quantity | reference | model | dev. |
+|---|---|---|---|
+| hip joint height | 0.52 H = 0.936 | 0.9335 | -0.3 % |
+| knee joint height | 0.285 H = 0.513 | 0.4985 | -2.8 % (rig kept; within 3 %) |
+| shoulder joint height | 0.818 H = 1.472 | 1.470 | -0.1 % |
+| elbow / wrist height | 0.63 H = 1.134 / 0.485 H = 0.873 | 1.143 / 0.890 | +0.8 % / +1.9 % |
+| head height chin-vertex | H/7.5 = 0.240 | 0.245 | +2 % |
+| upper arm / forearm / hand | 0.33 / 0.26 / 0.19 (Winter) | 0.33 / 0.26 / 0.19 | 0 |
+| shoulder joint spacing / bideltoid | 0.36 / 0.465 (ANSUR II, lean) | 0.36 / 0.472 | 0 / +1.5 % |
+| waist breadth x depth | 0.28 x 0.20 | 0.280 x 0.200 | 0 |
+| chest breadth x depth | 0.324 x 0.234 | 0.328 x 0.238 | +1.2 % / +1.7 % |
+| hip breadth (shorts) | 0.336 | 0.336 | 0 |
+| neck girth | 0.37 | 0.373 | +0.8 % |
+| thigh girth top / mid / above knee | 0.56 / 0.50 / 0.38 | 0.550 / 0.494 / 0.371 | -1.8 / -1.2 / -2.4 % |
+| calf / ankle girth | 0.37 / 0.22 | 0.374 / 0.217 | +1.1 / -1.4 % |
+| upper arm / forearm / wrist girth | 0.28 / 0.25 / 0.16 | 0.276 / 0.251 / 0.158 | -1.4 / +0.4 / -1.3 % |
+| blade | C blade 62 mm wide, 11 to 6 mm, toe 0.14 m ahead (Össur Flex-Run class) | unchanged dimensions | 0 |
+
+Before round 5 the trunk was a straight rectangle (waist 0.284 = chest 0.324 = shoulder line 0.33 m, waist depth 0.198 m), so the figure had no V and the arms stood out of square shoulders; mid-thigh girth 0.48 m.
+
+### Grades (before -> after; body / thermal / structure)
+
+- 1:50: B- / B+ / B+ -> A- / A- / A-. 1:100: B / B+ / B -> B+ / A- / B+. 1:200: B / B / B -> B+ / B+ / B+. 1:500: C+ / B- / B- -> B / B / B.
+- Poses opened at 1:50 after the change: blade-push-off (default, six views and two large three-quarter views), standing-ready, hands-on-hips, run-cycle t = 0.3 s (also rendered: left-forefoot-strike, blade-midstance, flight). 2D opened: 1:50 line and solid. Opened also: 1:50 thermal cut, 1:500 body, 1:50 structure (before).
+
+### Changes
+
+- Trunk (all scales): V-shaped stations from the waist (0.28 x 0.20) over lower ribs, chest (0.328 x 0.238, pectoral front and scapular back stated in the section centres) and the armpit to a 0.376 m shoulder line that slopes as the trapezius into the neck base; the singlet covers the shoulder tops and the deltoid shows below it.
+- Arms: deltoid cap (0.112 m at the shoulder joint) narrowing to its insertion, biceps belly in front, wide elbow, forearm flattened to an upright wrist.
+- Legs: quadriceps forward, vastus medialis above the knee, medial calf head lower and fuller than the lateral; shorts top under the singlet hem and shorts hems 4 mm proud of the thigh (the round-3 hems lay within 0.5 mm of the skin and showed as ragged seams); gluteal masses lowered so they no longer pierce the singlet; liner cuff 3 mm proud of the thigh.
+- Blade: the C centre line is a Catmull-Rom curve through the round-3 knots (three points per span), so the C is smooth instead of faceted.
+- Neck girth to 0.37 m.
+- 2D of all scales redrawn from the new bodies by `r3-runner-draw2d.ts` (front width now 0.54 m = dimensions).
+
+### Checks
+
+- `r3-validate.ts humans/runner-with-blade-prosthesis --catalog-only`: `VALID ... schema 0, validateAsset 0`.
+- `--volumes` (and `volumes-check.ts --product`): 4 thermal-coverage measurements red, all area data, none a model defect: `arm-skin` 0.343 against 0.2309 (+48 %, 1:50; +47 % 1:100; already +46 % on the round-3 model), `leg-skin` 0.469 against 0.3552 (+32 %; on the reference thigh girths), `socket` 0.057 against 0.0959 (-41 %; the validator counts only the carbon shell layer, not the exposed liner cuff; already -41 % on the round-3 model with today's validator). Filed: `area-review.md` (C27 re-division proposal) and `tool-requests.md` (outer area of a layered region).
+- Spliced with `r3-runner-deploy.sh` (members, `volumes-insert.py`, manifest row).
+
+### Remaining
+
+- Superellipse lofts: no separate pectoral or scapular masses, no cloth folds; elbows show a small seam between arm and forearm lofts in strong flexion; fists are capsule fingers.
+- 1:500 reads faceted because of the product's coarse tessellation at that scale (silhouette and proportions are right).
+- Knee 2.8 % below 0.285 H (rig kept to avoid re-solving the clip; within the 3 % bar).

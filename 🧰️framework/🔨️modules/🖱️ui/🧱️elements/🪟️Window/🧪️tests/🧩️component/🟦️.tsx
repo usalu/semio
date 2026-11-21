@@ -155,8 +155,9 @@ describe("Window chrome focus indicator", () => {
     expect(uiCss).not.toMatch(/\[data-window-silhouette-chip\][^{]*:focus-visible[^{]*\{[^}]*inset 0 0 0 var\(--stroke-default\) var\(--active-base\)/u);
     expect(uiCss).toMatch(/\[data-window-silhouette-chip\] :is\([^)]*\):focus-visible\s*\{\s*outline: none;\s*box-shadow: none;/u);
   });
-  it("doubles the focus line weight where the window already paints the accent", () => {
-    expect(uiCss).toMatch(/\[data-shared-border-state="focus"\]\[data-focus-on-accent\]\s*\{\s*stroke-width: calc\(var\(--stroke-hairline\) \* 2\);/u);
+  it("recolours the same hairline where the window already paints the accent", () => {
+    expect(uiCss).toMatch(/\[data-shared-border-state="focus"\]\[data-focus-on-accent\]\s*\{\s*stroke: var\(--border-emphasized-color\);/u);
+    expect(uiCss).not.toMatch(/\[data-focus-on-accent\]\s*\{[^}]*stroke-width:/u);
     expect(uiCss).toMatch(/:not\(\[role="tabpanel"\], \[data-window-silhouette\], \[data-slot="window"\]\) > :is\([^)]*\):focus-visible\s*\{\s*text-decoration: underline;/u);
   });
 });

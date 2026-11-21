@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["stepsPerYield", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "stepsPerYield": { "const": 32 },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "maximumSteps", "observedSteps", "yields", "ending"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "maximumSteps": { "$ref": "#/$defs/step" },
+          "cancelBeforeStep": { "$ref": "#/$defs/step" },
+          "expiresAfterStep": { "$ref": "#/$defs/step" },
+          "completeAt": { "$ref": "#/$defs/step" },
+          "deliverAt": { "$ref": "#/$defs/step" },
+          "observedSteps": { "type": "integer", "minimum": 0 },
+          "yields": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+          "ending": { "enum": ["pending", "delivered", "cancelled", "deadline", "complete"] }
+        }
+      }
+    }
+  },
+  "$defs": { "step": { "type": "integer", "minimum": 1 } }
+}

@@ -187,8 +187,8 @@ async fn semantic_kinds_cover_every_variant() {
 
 #[test]
 fn a_radiator_attribute_edit_is_one_mutation_that_rewrites_the_native_record() {
-    use semio_s_artifact_norm_vdi3805_model::{attributes_from_records, conforming_blatt_3_dataset, SheetAttributes};
-    let base = conforming_blatt_3_dataset();
+    use semio_s_artifact_norm_vdi3805_model::{attributes_from_records, conforming_radiator_dataset, SheetAttributes};
+    let base = conforming_radiator_dataset();
     let edit = semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "catalog.products[id=RAD-600].configuration.attributes.lengthM".into(), value: semio_framework_value::DslValue::float(0.8) };
     let steps = resolve_edit(&base, &edit).expect("resolves");
     let [step] = steps.as_slice() else { panic!("one mutation") };
@@ -205,8 +205,8 @@ fn a_radiator_attribute_edit_is_one_mutation_that_rewrites_the_native_record() {
 
 #[test]
 fn a_configuration_edit_leaves_a_diverged_record_alone() {
-    use semio_s_artifact_norm_vdi3805_model::{conforming_blatt_3_dataset, SheetAttributes};
-    let mut base = conforming_blatt_3_dataset();
+    use semio_s_artifact_norm_vdi3805_model::{conforming_radiator_dataset, SheetAttributes};
+    let mut base = conforming_radiator_dataset();
     base.catalog.products[0].records.iter_mut().filter(|r| r.family.0 == "210").for_each(|r| r.fields[2] = "123456".into());
     let SheetAttributes::Radiator(mut attributes) = base.catalog.products[0].configuration.attributes.clone() else { panic!("radiator") };
     attributes.length_m = 0.8;

@@ -266,6 +266,9 @@ pub(super) fn check_edition_profiles(document: &Vdi3805Snapshot) -> Vec<CheckRes
             continue;
         };
         let keys = sheet_mandatory_keys(sheet, *profile);
+        if keys.is_empty() {
+            continue;
+        }
         let kv = record_kv(&product.records);
         let missing: Vec<_> = keys
             .iter()

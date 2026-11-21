@@ -1,5 +1,6 @@
 import {spawn} from "node:child_process";
 import {createHash,randomBytes} from "node:crypto";
+import {constants} from "node:fs";
 import {copyFile,lstat,mkdir,open,readdir,readFile,readlink,rename,rm,stat,symlink,unlink,writeFile} from "node:fs/promises";
 import {devNull} from "node:os";
 import {delimiter,dirname,isAbsolute,join,relative,resolve} from "node:path";
@@ -7,7 +8,10 @@ import {type FleetManifestEntryV1} from "../📒️journal/🟦️.ts";
 import {absoluteUnitsV1,caseDependentIgnoresV1,foldNameV1,linkRefusalV1,pathBudgetV1,refusePathV1} from "../🚧️boundary/🟦️.ts";
 
 /** 🌿 The git state of a worktree as the replica shares it: whether a root `.git` and a usable `git` exist, the symbolic ref of `HEAD` (`null` when detached), the commit `HEAD` names (`null` when unborn) and the tree of the current stage (`null` when it cannot be written, e.g. with unmerged entries). */
-export type GitStateV1=Readonly<{present:boolean;head:string|null;commit:string|null;indexTree:string|null}>;
+export type GitStateV1=Readonly<{present:boolean;head:string|null;commit:string|null;indexTree:string|null;observation?:GitStageObservationV1}>;
+
+/** 🔎️ The reason an observed Git stage cannot establish an exact checkpoint. */
+export type GitStageObservationV1="index-changed"|"index-missing"|"locked-snapshot-failed"|"write-tree-failed"|"ref-changed"|"observation-failed";
 
 /** 🪟 The working-tree view as a git GUI shows it: the counts of entries with a staged change, a modified, a deleted and an untracked file, the `lines` (`XY<space>path`, sorted bytewise, everything that is not purely staged), the sha256 `digest` over the lines joined by `\n` and the `stage` (`X<space>path` of every entry with a staged change, the input of an incremental update). */
 export type GitViewV1=Readonly<{staged:number;modified:number;deleted:number;untracked:number;digest:string;lines:readonly string[];stage:readonly string[]}>;
@@ -25,6 +29,7 @@ export type IndexHostV1=Readonly<{
  each(visit:(path:string,entry:FleetManifestEntryV1)=>void):void;
  held(visit:(path:string,entry:FleetManifestEntryV1)=>void):void;
  pending():ReadonlyMap<string,FleetManifestEntryV1>;
+ prepareStageInputs?(oids:readonly string[],paths:readonly string[],signal?:AbortSignal):Promise<boolean>;
  emit(events:readonly Readonly<{operation:"link"|"delete";path:string;target?:string}>[]):Promise<readonly string[]|undefined>;
  settle(paths:readonly string[]):void;
  enqueue(paths:readonly string[]):void;
@@ -37,7 +42,7 @@ export type StageReasonV1="waiting-for-base"|"objects-missing"|"unmerged"|"write
 /** 🩻 Whether stage sharing works on this machine (`shared`), waits for something that will arrive (`waiting`) or needs attention (`degraded`), with the reason; read from `.cache/f/git-index.json`, which the running replica keeps. */
 export type StageHealthV1=Readonly<{state:"shared"|"waiting"|"degraded";reason:StageReasonV1|null}>;
 
-/** 📒 What a publish of the stage did. */
+/** 📒 What a publish of the stage did. When `waiting` is true the stage may be retried without another index edit. */
 export type IndexPublishV1=Readonly<{published:number;base:boolean;waiting:boolean}>;
 
 /** 🧩 What an apply of remote stage registers did. */
@@ -56,6 +61,9 @@ export const INDEX_PREFIX_V1=".cache/f/index/";
 export const indexRealmV1=(path:string):boolean=>path===INDEX_BASE_V1||path.startsWith(INDEX_PREFIX_V1);
 
 const GIT_PROBE_MILLISECONDS=10_000,GIT_RUN_MILLISECONDS=600_000,BATCH_LIMIT=5000,SHA1_EMPTY="4b825dc642cb6eb9a060e54bf8d69288fbee4904",SHA256_EMPTY="6ef19b41225c5369f1c104d45d8d85efa9b057b53b14b4b9b939dd74decc5321",NEGATIVE_MILLISECONDS=2000,RETRY_MILLISECONDS=1000,MAX_RETRY_MILLISECONDS=30_000,STALE_LOCK_MILLISECONDS=600_000;
+/** ⏱️ Delays the next Git stage retry by one second after the first failed attempt, doubling up to thirty seconds. */
+export const gitStageRetryDelayV1=(attempts:number):number=>Math.min(MAX_RETRY_MILLISECONDS,RETRY_MILLISECONDS*2**Math.max(0,attempts-1));
+
 const windows=process.platform==="win32";
 const token=():string=>randomBytes(6).toString("hex");
 const zeros=(length:number):string=>"0".repeat(length);
@@ -220,34 +228,77 @@ export const indexSignatureV1=signatureOf;
 const stamps=new Map<string,Readonly<{stamp:string;state:GitStateV1;at:number}>>(),stampRefreshMilliseconds=300_000;
 const statStamp=async(file:string):Promise<string>=>{const info=await stat(file,{bigint:true}).catch(()=>undefined);return info===undefined?"-":`${info.ino}:${info.size}:${info.mtimeNs}`;};
 
-async function refStamp(worktree:string):Promise<string>{
+async function refStamp(worktree:string):Promise<{refs:string;index:string}>{
  const root=join(worktree,".git"),head=await readFile(join(root,"HEAD"),"utf8").catch(()=>""),ref=/^ref: (.+)\n?$/u.exec(head)?.[1];
- return [head,ref===undefined?"":await statStamp(join(root,...ref.split("/"))),await statStamp(join(root,"packed-refs")),await signatureOf(worktree)].join("|");
+ return {refs:[head,ref===undefined?"":await statStamp(join(root,...ref.split("/"))),await statStamp(join(root,"packed-refs"))].join("|"),index:await signatureOf(worktree)};
 }
 
-/** 🩺 Reads the git state: `present` is false without `git` or a root `.git`; never throws. The stage tree is cached against the stat signature of `.git/index`, so repeated calls cost no process while the stage does not move. */
-export async function gitStateV1(worktree:string,signal?:AbortSignal):Promise<GitStateV1>{
+const stampKey=(stamp:Awaited<ReturnType<typeof refStamp>>):string=>stamp.refs+"|"+stamp.index;
+
+type IndexSnapshotOptionsV1=Readonly<{
+ signal?:AbortSignal;
+ requireLock?:boolean;
+ allowAbsent?:boolean;
+ observeTree?:typeof writeTreeV1;
+ note?:(reason:GitStageObservationV1)=>void;
+}>;
+
+/** 🔏 Certifies a stable on-disk index through a private copy without taking its writer lock. */
+async function readIndexTreeSnapshotV1(worktree:string,signature:string,{signal,requireLock=true,allowAbsent=false,observeTree=writeTreeV1,note}:IndexSnapshotOptionsV1={}):Promise<string|null>{
+ const source=join(worktree,".git","index"),hasLock=()=>lstat(source+".lock").then(info=>info.isFile(),()=>false);
+ const failed=async()=>{if(note)note(await hasLock()?"locked-snapshot-failed":"write-tree-failed");return null;};
+ if(abortedV1(signal))return null;
+ if(signature===""&&(!allowAbsent||!await lstat(source).then(()=>false,(error:NodeJS.ErrnoException)=>error.code==="ENOENT"))){note?.("index-missing");return null;}
+ if(requireLock&&!await hasLock()){note?.("write-tree-failed");return null;}
+ if(await signatureOf(worktree)!==signature){note?.("index-changed");return null;}
+ const cached=trees.get(worktree);if(signature!==""&&cached?.signature===signature)return cached.tree;
+ const directory=join(worktree,".cache","f","tmp"),index=join(directory,`index-observe-${token()}`);
+ try{
+  await mkdir(directory,{recursive:true});
+  if(signature!=="")await copyFile(source,index,constants.COPYFILE_FICLONE);
+  if(await signatureOf(worktree)!==signature){note?.("index-changed");return null;}
+  const tree=await observeTree(worktree,{index,signal});
+  if(abortedV1(signal))return null;
+  if(await signatureOf(worktree)!==signature){note?.("index-changed");return null;}
+  if(tree===null)return await failed();
+  if(signature!=="")trees.set(worktree,{signature,tree});
+  return tree;
+ }catch{return await failed();}
+ finally{
+  await rm(index,{force:true}).catch(()=>{});
+  await rm(index+".lock",{force:true}).catch(()=>{});
+ }
+}
+
+/** 🩺 Reads a Git stage tied to the same HEAD and published index, using a private index for native tree construction. */
+export async function gitStateV1(worktree:string,signal?:AbortSignal,observeTree:typeof writeTreeV1=writeTreeV1):Promise<GitStateV1>{
  const absent:GitStateV1={present:false,head:null,commit:null,indexTree:null};
  try{
   if(!await gitPresentV1(worktree,signal))return absent;
-  const stamp=await refStamp(worktree),known=stamps.get(worktree);
-  if(known!==undefined&&known.stamp===stamp&&Date.now()-known.at<stampRefreshMilliseconds)return known.state;
-  const state=await readGitState(worktree,signal);
-  if(signal?.aborted!==true&&await refStamp(worktree)===stamp)stamps.set(worktree,{stamp,state,at:Date.now()});
-  return state;
- }catch{return absent;}
-}
-
-async function readGitState(worktree:string,signal?:AbortSignal):Promise<GitStateV1>{
- const absent:GitStateV1={present:false,head:null,commit:null,indexTree:null};
- try{
-  const head=text(await git(worktree,["symbolic-ref","-q","HEAD"],{signal})),commit=text(await git(worktree,["rev-parse","-q","--verify","HEAD^{commit}"],{signal}));
-  const signature=await signatureOf(worktree),cached=trees.get(worktree);
-  let indexTree:string|null;
-  if(cached!==undefined&&cached.signature===signature)indexTree=cached.tree;
-  else{indexTree=await writeTreeV1(worktree,{signal});trees.set(worktree,{signature:await signatureOf(worktree),tree:indexTree});}
-  return {present:true,head:head===""?null:head,commit:commit!==null&&oidPattern.test(commit)?commit:null,indexTree};
- }catch{return absent;}
+  const before=await refStamp(worktree),known=stamps.get(worktree);
+  if(known!==undefined&&known.stamp===stampKey(before)&&Date.now()-known.at<stampRefreshMilliseconds)return known.state;
+  let reason:GitStageObservationV1="observation-failed";
+  const signature=before.index,cached=trees.get(worktree),snapshot=(allowAbsent=false)=>readIndexTreeSnapshotV1(worktree,signature,
+   {signal,requireLock:false,allowAbsent,observeTree,note:why=>{reason=why;}});
+  const [headResult,commitResult,observed]=await Promise.all([
+   git(worktree,["symbolic-ref","-q","HEAD"],{signal}),
+   git(worktree,["rev-parse","-q","--verify","HEAD^{commit}"],{signal}),
+   signature===""?null:cached?.signature===signature?cached.tree:snapshot(),
+  ]),head=text(headResult),commit=text(commitResult);
+  const state={present:true,head:head===""?null:head,commit:commit!==null&&oidPattern.test(commit)?commit:null};
+  const unborn=signature===""&&head!==null&&head!==""&&commitResult?.code===1&&
+   (await git(worktree,["rev-parse","-q","--verify","HEAD"],{signal}))?.code===1;
+  if(signature===""&&!unborn)reason="index-missing";
+  const indexTree=unborn?await snapshot(true):observed;
+  if(indexTree===null)return {...state,indexTree:null,observation:reason};
+  const after=await refStamp(worktree);
+  if(after.index!==signature)return {...state,indexTree:null,observation:"index-changed"};
+  if(after.refs!==before.refs)return {...state,head:null,commit:null,indexTree:null,observation:"ref-changed"};
+  if(abortedV1(signal))return {...state,indexTree:null,observation:"observation-failed"};
+  const exact={...state,indexTree};
+  stamps.set(worktree,{stamp:stampKey(after),state:exact,at:Date.now()});
+  return exact;
+ }catch{return {...absent,observation:"observation-failed"};}
 }
 /** 🪟 Reads the records of `git status --porcelain=v1 -z --untracked-files=all` (an entry is `XY path`, a rename or copy is followed by a second field with the old path, which is skipped). `staged` counts entries whose index column is a change, `deleted` those deleted in the worktree, `modified` the other worktree changes and `untracked` the `??` entries. `lines` holds every entry that is not purely staged, with NFC paths, sorted by the UTF-8 bytes. */
 export function parseGitViewV1(porcelain:string,extra:Readonly<{deleted?:readonly string[];untracked?:readonly string[]}>={}):GitViewV1{
@@ -516,13 +567,16 @@ export async function gitGuardsV1(worktree:string,options:Readonly<{signal?:Abor
  }catch{return null;}
 }
 
-const trees=new Map<string,Readonly<{signature:string;tree:string|null}>>();
+const trees=new Map<string,Readonly<{signature:string;tree:string}>>();
 
 type StageRecordV1=Readonly<{version:1;state:StageHealthV1["state"];reason:StageReasonV1|null;since:number;applying:Readonly<{base:boolean;paths:readonly string[]}>|null}>;
 type Known=Readonly<{tree:string|null;baseHlc:string|null}>;
 const stageFile=(worktree:string):string=>join(worktree,".cache","f","git-index.json");
 const lostDirectory=(worktree:string):string=>join(worktree,".cache","f","lost");
-const memory=new Map<string,Known>(),records=new Map<string,StageRecordV1>(),retries=new Map<string,Readonly<{until:number;attempts:number}>>();
+type LooseRetry=Readonly<{path:string;objects:Map<string,string>}> & {stamp?:string};
+type StageApplyRetry=Readonly<{baseHlc:string;registers:ReadonlyMap<string,string>;loose:ReadonlyMap<string,LooseRetry>}>;
+type StageRetry=Readonly<{until:number;attempts:number;apply?:StageApplyRetry}>;
+const memory=new Map<string,Known>(),records=new Map<string,StageRecordV1>(),retries=new Map<string,StageRetry>();
 const reasons:readonly string[]=["waiting-for-base","objects-missing","unmerged","write-tree-failed","git-failed","index-busy","index-lock-stale","backup-failed"];
 const idle:StageRecordV1={version:1,state:"shared",reason:null,since:0,applying:null};
 
@@ -641,6 +695,66 @@ type Register=readonly [string,FleetManifestEntryV1];
 /** 🏛️ Whether a register belongs to the stage of the fleet: the base and every entry the archivist (`IndexHostV1.archivist`, the group server) wrote. An entry of any other machine is void: the stage a person made on a member is not a fleet concept, the archivist's stage wins on every machine. */
 const archived=(host:IndexHostV1,path:string,entry:FleetManifestEntryV1):boolean=>path===INDEX_BASE_V1||entry.hlc.slice(21)===host.archivist;
 
+/** 🧲️ Names the loose objects that can satisfy pending incremental stage registers before other Git objects are copied. */
+export function stageObjectsForApplyV1(host:IndexHostV1,pending:ReadonlyMap<string,FleetManifestEntryV1>):ReadonlySet<string>|undefined{
+ if(pending.size===0||pending.has(INDEX_BASE_V1))return;
+ const base=host.base();
+ if(base===undefined||treeOf(base)===undefined)return;
+ const objects=new Set<string>();
+ let incremental=false;
+ for(const [path,entry] of pending){
+  const change=authorStageChange(host,base.hlc,path,entry);
+  if(change===undefined)continue;
+  incremental=true;
+  if(change.mode!=="000000"&&change.mode!=="160000")objects.add(".git/objects/"+change.oid.slice(0,2)+"/"+change.oid.slice(2));
+ }
+ if(incremental)return objects;
+}
+
+const authorStageChange=(host:IndexHostV1,baseHlc:string,path:string,entry:FleetManifestEntryV1):GitChangeV1|undefined=>
+ path.startsWith(INDEX_PREFIX_V1)&&entry.hlc>baseHlc&&archived(host,path,entry)?changeOf(path,entry):undefined;
+
+function stageApplyRetry(host:IndexHostV1,baseHlc:string,pending:ReadonlyMap<string,FleetManifestEntryV1>,missing:Iterable<string>):StageApplyRetry{
+ const registers=new Map<string,string>(),loose=new Map<string,LooseRetry>(),previous=retries.get(host.worktree)?.apply;
+ for(const [path,entry] of pending)if(authorStageChange(host,baseHlc,path,entry)!==undefined)registers.set(path,entry.hlc);
+ for(const oid of missing){
+  const prefix=oid.slice(0,2),name=oid.slice(2);
+  let group=loose.get(prefix);
+  if(group===undefined){group={path:join(host.worktree,".git","objects",prefix),objects:new Map()};loose.set(prefix,group);}
+  group.objects.set(name,previous?.loose.get(prefix)?.objects.get(name)??"-");
+ }
+ return {baseHlc,registers,loose};
+}
+
+/** 🛎️ Rechecks only Git prerequisites that can make deferred member stage work ready. An unchanged loose-object directory needs no per-object checks. */
+async function stageApplyWaiting(host:IndexHostV1,pending:ReadonlyMap<string,FleetManifestEntryV1>,signal?:AbortSignal):Promise<boolean>{
+ const retry=retries.get(host.worktree);
+ if(retry===undefined||host.now()>=retry.until)return false;
+ const waiting=retry.apply;
+ if(waiting===undefined)return true;
+ if(host.base()?.hlc!==waiting.baseHlc)return false;
+ let matches=0;
+ for(const [path,entry] of pending){
+  if(waiting.registers.get(path)===entry.hlc)matches++;
+  else if(authorStageChange(host,waiting.baseHlc,path,entry)!==undefined)return false;
+ }
+ if(matches!==waiting.registers.size)return false;
+ let arrived=false;
+ for(const group of waiting.loose.values()){
+  signal?.throwIfAborted();
+  const stamp=await statStamp(group.path);
+  if(stamp===group.stamp)continue;
+  for(const [name,before] of group.objects){
+   signal?.throwIfAborted();
+   const after=stamp==="-"?"-":await statStamp(join(group.path,name));
+   if(after!=="-"&&before!==after)arrived=true;
+   group.objects.set(name,after);
+  }
+  group.stamp=stamp;
+ }
+ return !arrived;
+}
+
 const registersOf=(host:IndexHostV1,visit:(each:(path:string,entry:FleetManifestEntryV1)=>void)=>void):Register[]=>{const found:Register[]=[];visit((path,entry)=>{if(archived(host,path,entry))found.push([path,entry]);});return found;};
 
 async function foldAll(host:IndexHostV1,signal?:AbortSignal):Promise<string|null>{
@@ -706,7 +820,7 @@ async function voidedBy(host:IndexHostV1,local:string,signal?:AbortSignal):Promi
  return voided;
 }
 
-async function backoff(host:IndexHostV1,reason:StageReasonV1):Promise<void>{
+async function backoff(host:IndexHostV1,reason:StageReasonV1,apply?:StageApplyRetry):Promise<void>{
  const {worktree}=host,attempts=(retries.get(worktree)?.attempts??0)+1,age=reason==="index-busy"?await lockAge(worktree):undefined,stale=age!==undefined&&age>STALE_LOCK_MILLISECONDS;
  if(stale&&!host.server){
   await rm(join(worktree,".git","index.lock"),{force:true}).catch(()=>{});
@@ -714,7 +828,7 @@ async function backoff(host:IndexHostV1,reason:StageReasonV1):Promise<void>{
   host.say({event:"repaired",stage:"git",reason:"index-lock-stale",seconds:Math.floor(age/1000)});
   return;
  }
- retries.set(worktree,{attempts,until:host.now()+Math.min(MAX_RETRY_MILLISECONDS,RETRY_MILLISECONDS*2**(attempts-1))});
+ retries.set(worktree,{attempts,until:host.now()+gitStageRetryDelayV1(attempts),apply});
  if(reason!=="backup-failed")await setHealth(host,stale?"degraded":"waiting",stale?"index-lock-stale":reason,age===undefined?undefined:Math.floor(age/1000));
 }
 
@@ -733,8 +847,10 @@ async function stageMissingV1(worktree:string,index:string,signal?:AbortSignal):
  return missing===null?null:[...missing];
 }
 
-/** 🧱 Builds the stage of `tree` on a temporary index file (`GIT_INDEX_FILE`) from a copy of the machine's own index, so that the stat data of every entry that already holds the right object survives (`git read-tree -m <tree>` with one tree keeps the stat data of matching entries; an index that cannot be read starts empty and every entry is checked against the file by `update-index --refresh`, the files that are not there being ignored), and tells whether the tree written back from the new index is exactly `tree` (`false` when the tree or one of its objects has not arrived). The worktree is never touched. */
-async function buildStage(host:IndexHostV1,tree:string,work:string,signal?:AbortSignal):Promise<boolean>{
+type StageAdoptionFailure=Readonly<{reason:StageReasonV1;missing?:readonly string[]}>;
+
+/** 🧱 Builds the stage of `tree` on a temporary index file (`GIT_INDEX_FILE`) from a copy of the machine's own index, so that the stat data of every entry that already holds the right object survives (`git read-tree -m <tree>` with one tree keeps the stat data of matching entries; an index that cannot be read starts empty and every entry is checked against the file by `update-index --refresh`, the files that are not there being ignored), and reports missing objects if the new index cannot reproduce `tree`. The worktree is never touched. */
+async function buildStage(host:IndexHostV1,tree:string,work:string,signal?:AbortSignal):Promise<StageAdoptionFailure|null>{
  const {worktree}=host,index=join(worktree,".git","index");
  let built=false;
  if(await lstat(index).then(info=>info.isFile(),()=>false)){
@@ -743,32 +859,36 @@ async function buildStage(host:IndexHostV1,tree:string,work:string,signal?:Abort
   built=merged!==null&&merged.code===0;
   if(!built)await rm(work,{force:true});
  }
- if(!built&&!await readTreeV1(worktree,tree,{index:work,signal}))return false;
+ if(!built&&!await readTreeV1(worktree,tree,{index:work,signal}))return {reason:"objects-missing"};
  await git(worktree,["update-index","-q","--refresh","--ignore-missing"],{index:work,signal});
  const absent=await stageMissingV1(worktree,work,signal);
- return absent!==null&&absent.length===0&&await writeTreeV1(worktree,{index:work,signal})===tree;
+ if(absent!==null&&absent.length>0)return {reason:"objects-missing",missing:absent};
+ return absent!==null&&await writeTreeV1(worktree,{index:work,signal})===tree?null:{reason:"objects-missing"};
 }
 
 /** 🪞 Replaces the stage of this machine by `tree`, the stage of the archivist: the new index is built beside the old one (`buildStage`, the old file is only read), the old index file is copied once to `.cache/f/lost/index-*` (the newest three are kept) with an `overwritten` event, and the new file is written into `.git/index.lock`, taken with exclusive creation like git itself does, and renamed over `.git/index`, so a concurrent git sees either the old or the new stage and never a half one. The worktree is never touched. Returns `null` on success, else the reason the stage still waits: `index-busy` (git holds `index.lock`), `objects-missing` (the tree or an object of it has not arrived), `backup-failed` or `git-failed`. */
-async function adoptStage(host:IndexHostV1,tree:string,local:string|null,signal?:AbortSignal):Promise<StageReasonV1|null>{
+async function adoptStage(host:IndexHostV1,tree:string,local:string|null,signal?:AbortSignal):Promise<StageAdoptionFailure|null>{
  const {worktree}=host,index=join(worktree,".git","index"),lock=`${index}.lock`;
  let handle:Awaited<ReturnType<typeof open>>|undefined;
- try{handle=await open(lock,"wx");}catch(error){return (error as NodeJS.ErrnoException).code==="EEXIST"?"index-busy":"git-failed";}
+ try{handle=await open(lock,"wx");}catch(error){return {reason:(error as NodeJS.ErrnoException).code==="EEXIST"?"index-busy":"git-failed"};}
  const directory=join(worktree,".cache","f","tmp"),work=join(directory,`index-adopt-${token()}`);
  let placed=false;
  try{
   await mkdir(directory,{recursive:true});
-  if(!await buildStage(host,tree,work,signal))return "objects-missing";
+  const failure=await buildStage(host,tree,work,signal);
+  if(failure!==null)return failure;
+  if(!host.server&&abortedV1(signal))return {reason:"git-failed"};
   if(await lstat(index).then(info=>info.isFile(),()=>false)){
    const differing=local===null?0:(await diffTreeV1(worktree,local,tree,signal))?.length??0;
-   if(!await keepStage(host,differing))return "backup-failed";
+   if(!await keepStage(host,differing))return {reason:"backup-failed"};
   }
   await handle.writeFile(await readFile(work));
   await handle.sync();
   await handle.close();handle=undefined;
+  if(!host.server&&abortedV1(signal))return {reason:"git-failed"};
   await rename(lock,index);placed=true;
   return null;
- }catch{return "git-failed";}
+ }catch{return {reason:"git-failed"};}
  finally{
   if(handle!==undefined)await handle.close().catch(()=>{});
   await rm(work,{force:true});await rm(`${work}.lock`,{force:true});
@@ -783,7 +903,7 @@ async function restoreStage(host:IndexHostV1,none:IndexPublishV1,signal?:AbortSi
  if(known===null||target===null){await setHealth(host,"waiting","objects-missing");return {...none,waiting:true};}
  if(target===await emptyTreeV1(host.worktree,signal))return none;
  const failed=await adoptStage(host,target,null,signal);
- if(failed!==null){await backoff(host,failed);return {...none,waiting:true};}
+ if(failed!==null){await backoff(host,failed.reason);return {...none,waiting:true};}
  memory.set(host.worktree,{tree:target,baseHlc:host.base()!.hlc});signatures.set(host.worktree,await signatureOf(host.worktree));
  retries.delete(host.worktree);
  host.say({event:"repaired",stage:"git",reason:"index-missing"});
@@ -801,12 +921,16 @@ async function followStage(host:IndexHostV1,before:string,pending:ReadonlyMap<st
  const known=await knownOf(host,signal);
  if(known===null){await setHealth(host,"waiting","objects-missing");return {...none,waiting:true};}
  if(known.tree===null)return {...none,waiting:true};
- const due=retries.get(worktree);
- if(due!==undefined&&host.now()<due.until)return {...none,waiting:true};
- const local=before===""?null:await writeTreeV1(worktree,{signal}),settled=await signatureOf(worktree);
+ if(await stageApplyWaiting(host,pending,signal))return {...none,waiting:true};
+ const local=before===""?null:await readIndexTreeSnapshotV1(worktree,before,{signal,requireLock:false}),settled=await signatureOf(worktree);
+ if(abortedV1(signal)||settled!==before)return {...none,waiting:true};
  if(local!==null&&local===known.tree){signatures.set(worktree,settled);retries.delete(worktree);await clearHealth(host,STAGE_OWNED);return none;}
  const failed=await adoptStage(host,known.tree,local,signal);
- if(failed!==null){await backoff(host,failed);return {...none,waiting:true};}
+ if(failed!==null){
+  const retry=failed.reason==="objects-missing"?stageApplyRetry(host,base.hlc,pending,failed.missing??[]):undefined;
+  await backoff(host,failed.reason,retry);
+  return {...none,waiting:true};
+ }
  memory.set(worktree,{...known,tree:known.tree});signatures.set(worktree,await signatureOf(worktree));
  retries.delete(worktree);
  await clearHealth(host,STAGE_OWNED);
@@ -814,26 +938,52 @@ async function followStage(host:IndexHostV1,before:string,pending:ReadonlyMap<st
  return none;
 }
 
-/** 📤 The publish step. Only the archivist (the group server, `host.server`) publishes; a member follows (`followStage`). The archivist's stage tree is compared with the tree of the registers this machine has published (`held`, folded as `verifyIndexV1` folds; kept in memory afterwards), and every differing path becomes one entry register in batches of 5000 (`diff-tree -r -z`), however many there are. The tree itself is published as the base (`tree <oid>`) when the machine has no base yet, on an explicit rebase request (which lists the registers it voids), and whenever a changed path cannot be an entry (a path the entry policy cannot represent, or an unsafe link): the base carries the whole tree, so the stage of every machine can equal the archivist's stage exactly. A semantic no-op (a `git status` that only refreshes stat data) leaves the tree equal and publishes nothing; so does an unchanged `.git/index` stat signature without any process. A stage that cannot be written (unmerged entries, a failing git) is never published and is reported as degraded; a missing `.git/index` is restored from the registers. After a crash during an apply, the paths that apply was writing are not re-published as local edits. */
-export async function publishIndexV1(host:IndexHostV1,signal?:AbortSignal):Promise<IndexPublishV1>{
- const none:IndexPublishV1={published:0,base:false,waiting:false},{worktree}=host;
- if(!await gitPresentV1(worktree,signal))return none;
- const before=await signatureOf(worktree),asked=await rebaseRequestedV1(worktree),pending=host.pending();
+/** 📤 The publish step. Only the archivist (the group server, `host.server`) publishes; a member follows (`followStage`). The archivist's stage tree is compared with the tree of the registers this machine has published (`held`, folded as `verifyIndexV1` folds; kept in memory afterwards), and every differing path becomes one entry register in batches of 5000 (`diff-tree -r -z`), however many there are. The tree itself is published as the base (`tree <oid>`) when the machine has no base yet, on an explicit rebase request (which lists the registers it voids), and whenever a changed path cannot be an entry (a path the entry policy cannot represent, or an unsafe link): the base carries the whole tree, so the stage of every machine can equal the archivist's stage exactly. A semantic no-op (a `git status` that only refreshes stat data) leaves the tree equal and publishes nothing; so does an unchanged `.git/index` stat signature without any process. A stage that cannot be written (unmerged entries, a failing git) is never published and is reported as degraded; a missing `.git/index` is restored from the registers. After a crash during an apply, the paths that apply was writing are not re-published as local edits. With `prepareObjects`, only incremental changes on the archivist can publish. Before emitting them, the callback must accept the distinct object IDs referenced by the entry events, excluding gitlinks. A refused batch can retry the same index signature. */
+export async function publishIndexV1(host:IndexHostV1,signal?:AbortSignal,prepareObjects?:(oids:readonly string[],paths:readonly string[])=>Promise<boolean>):Promise<IndexPublishV1>{
+ const none:IndexPublishV1={published:0,base:false,waiting:false},waiting:IndexPublishV1={...none,waiting:true},{worktree}=host;
+ if(prepareObjects!==undefined&&!host.server||!await gitPresentV1(worktree,signal))return none;
+ const before=await signatureOf(worktree),asked=await rebaseRequestedV1(worktree);
  if(asked&&!host.server){await rm(rebaseRequest(worktree),{force:true});host.say({event:"skipped",stage:"git",reason:"archivist-only"});}
  const forced=asked&&host.server;
  if(!forced&&before!==""&&signatures.get(worktree)===before)return none;
+ if(prepareObjects!==undefined&&(before===""||forced||treeOf(host.base())===undefined))return waiting;
+ const pending=host.pending();
  let marker=(await readRecord(worktree)).applying;
  if(marker!==null&&pending.size===0){await mark(worktree,null);marker=null;}
- if(marker?.base===true&&!forced)return {...none,waiting:true};
+ if(marker?.base===true&&!forced)return waiting;
  if(!host.server)return followStage(host,before,pending,signal);
  if(before==="")return forced?none:restoreStage(host,none,signal);
- const local=await writeTreeV1(worktree,{signal});
- if(local===null){await setHealth(host,"degraded",await unmergedV1(worktree,signal)>0?"unmerged":"write-tree-failed");return none;}
+ const incremental=!forced&&treeOf(host.base())!==undefined,cached=incremental?trees.get(worktree):undefined;
+ const locked=incremental&&cached?.signature!==before&&await lstat(join(worktree,".git","index.lock")).then(info=>info.isFile(),()=>false);
+ const observed=cached?.signature===before?cached.tree:locked?await readIndexTreeSnapshotV1(worktree,before,{signal}):undefined;
+ let local=observed===undefined?await writeTreeV1(worktree,{signal}):observed,settled=await signatureOf(worktree);
+ if(observed===undefined&&local===null&&incremental&&settled===before)local=await readIndexTreeSnapshotV1(worktree,before,{signal});
+ if((observed!==undefined&&settled!==before)||abortedV1(signal))return waiting;
+ if(local===null){
+  const conflicted=await unmergedV1(worktree,signal)>0;
+  await setHealth(host,"degraded",conflicted?"unmerged":"write-tree-failed");
+  return conflicted?none:waiting;
+ }
  await clearHealth(host,["unmerged","write-tree-failed","git-failed"]);
- const settled=await signatureOf(worktree),base=host.base();
+ if(settled===before)trees.set(worktree,{signature:settled,tree:local});
+ const base=host.base();
+ let recertified=false;
+ const current=async()=>{
+  if(abortedV1(signal))return false;
+  const actual=await signatureOf(worktree);
+  if(abortedV1(signal))return false;
+  if(actual===settled)return true;
+  if(!incremental||recertified)return false;
+  recertified=true;
+  if(await readIndexTreeSnapshotV1(worktree,actual,{signal,requireLock:false})!==local||abortedV1(signal))return false;
+  settled=actual;return true;
+ };
  const publishBase=async(reason:"genesis"|"rebase"|"unrepresentable"):Promise<IndexPublishV1>=>{
-  const voided=reason==="rebase"?await voidedBy(host,local,signal):[],hlcs=await host.emit([{operation:"link",path:INDEX_BASE_V1,target:`tree ${local}`}]);
-  if(hlcs===undefined)return none;
+  if(prepareObjects!==undefined)return waiting;
+  const voided=reason==="rebase"?await voidedBy(host,local,signal):[];
+  if(!await current())return waiting;
+  const hlcs=await host.emit([{operation:"link",path:INDEX_BASE_V1,target:`tree ${local}`}]);
+  if(hlcs===undefined)return waiting;
   memory.set(worktree,{tree:local,baseHlc:hlcs[0]!});signatures.set(worktree,settled);
   if(forced)await rm(rebaseRequest(worktree),{force:true});
   const lost=voided.length>0?await keepVoided(host,voided):undefined;
@@ -842,48 +992,76 @@ export async function publishIndexV1(host:IndexHostV1,signal?:AbortSignal):Promi
  };
  if(forced||base===undefined||treeOf(base)===undefined)return publishBase(forced?"rebase":"genesis");
  const known=await knownOf(host,signal);
- if(known===null){await setHealth(host,"waiting","objects-missing");return {...none,waiting:true};}
- if(known.tree===null)return {...none,waiting:true};
+ if(known===null){await setHealth(host,"waiting","objects-missing");return waiting;}
+ if(known.tree===null)return waiting;
  if(known.tree===local){signatures.set(worktree,settled);return none;}
  const changes=await diffTreeV1(worktree,known.tree,local,signal);
- if(changes===null){memory.delete(worktree);await setHealth(host,"degraded","git-failed");return none;}
+ if(changes===null){memory.delete(worktree);await setHealth(host,"degraded","git-failed");return waiting;}
  const skip=new Set(marker?.paths??[]),events:Readonly<{operation:"link"|"delete";path:string;target?:string}>[]=[],unsafe=new Set(await unsafeLinksV1(worktree,changes.filter(change=>change.mode==="120000"&&!skip.has(change.path)),signal));
+ const prepare=prepareObjects??(host.prepareStageInputs===undefined?undefined:(oids:readonly string[],paths:readonly string[])=>host.prepareStageInputs!(oids,paths,signal));
+ const objects=prepare===undefined?undefined:new Set<string>();
  let withheld=0;
  for(const change of changes){
   if(skip.has(change.path))continue;
-  if(!representable(change.path)){withheld++;host.say({event:"skipped",stage:"git",path:change.path,reason:"unrepresentable"});continue;}
-  if(unsafe.has(change.path)){withheld++;host.say({event:"skipped",stage:"git",path:change.path,reason:"unsafe-link"});continue;}
+  const reason=!representable(change.path)?"unrepresentable":unsafe.has(change.path)?"unsafe-link":undefined;
+  if(reason!==undefined){
+   if(prepareObjects!==undefined)return waiting;
+   withheld++;host.say({event:"skipped",stage:"git",path:change.path,reason});continue;
+  }
   events.push(change.mode==="000000"?{operation:"delete",path:entryPath(change)}:{operation:"link",path:entryPath(change),target:`${change.mode} ${change.oid}`});
+  if(change.mode!=="000000"&&change.mode!=="160000")objects?.add(change.oid);
  }
  if(withheld>0)return publishBase("unrepresentable");
+ if(events.length>0&&prepare!==undefined){
+  if(signal?.aborted===true)return waiting;
+  if(!await prepare([...objects!],events.map(event=>event.path.slice(INDEX_PREFIX_V1.length)))){
+   await setHealth(host,"waiting","objects-missing");
+   return waiting;
+  }
+  if(!await current())return waiting;
+ }
  for(let from=0;from<events.length;from+=BATCH_LIMIT){
-  if(signal?.aborted===true||await host.emit(events.slice(from,from+BATCH_LIMIT))===undefined){memory.delete(worktree);return none;}
+  if(!await current()||await host.emit(events.slice(from,from+BATCH_LIMIT))===undefined){memory.delete(worktree);return waiting;}
  }
  memory.set(worktree,{...known,tree:local});signatures.set(worktree,settled);
- if(events.length>0)host.say({event:"published",stage:"git",count:events.length});
+ if(events.length>0){
+  if(prepare!==undefined)await clearHealth(host,["objects-missing"]);
+  host.say({event:"published",stage:"git",count:events.length});
+ }
  return {published:events.length,base:false,waiting:false};
 }
 
-/** 📥 The apply step: publishes (the archivist) or follows (a member) first, so an unpublished stage is never attributed to the remote, then applies the queued registers of the archivist (entries of any other machine are void): a new base replaces the stage (the delta from the last known tree when the stage still equals it, so stat data survives; otherwise the stage has no proof of its origin and is replaced by the fold of all registers through `adoptStage`, which keeps the old index file under `.cache/f/lost/index-*` with an `overwritten` event that reports the number of replaced entries) and is overlaid by every entry newer than it; plain entries go into one `update-index --index-info` batch, and the stat data of the entries it wrote is refreshed against the member's own files (`update-index --refresh --ignore-missing`). Entries older than the base are void. A member replaces a stage with unmerged entries too; the archivist's own stage with unmerged entries is never reset and the items stay queued. A missing object or a held `index.lock` leaves the items queued; retries back off from one second to 30 seconds and the state is recorded (`index-lock-stale` after ten minutes). The paths being written are recorded before the write and cleared after the registers are settled. */
-export async function applyIndexV1(host:IndexHostV1,signal?:AbortSignal):Promise<IndexApplyV1>{
- const {worktree}=host,pending=host.pending();
- if(pending.size===0)return {applied:0,queued:0};
- if(!await gitPresentV1(worktree,signal))return {applied:0,queued:pending.size};
+/** 📥 The apply step: publishes (the archivist) or follows (a member) first, so an unpublished stage is never attributed to the remote, then applies the queued registers of the archivist (entries of any other machine are void): a new base replaces the stage (the delta from the last known tree when the stage still equals it, so stat data survives; otherwise the stage has no proof of its origin and is replaced by the fold of all registers through `adoptStage`, which keeps the old index file under `.cache/f/lost/index-*` with an `overwritten` event that reports the number of replaced entries) and is overlaid by every entry newer than it; plain entries go into one `update-index --index-info` batch. Git fills their local stat cache when a later command refreshes the index. Entries older than the base are void. A member replaces a stage with unmerged entries too; the archivist's own stage with unmerged entries is never reset and the items stay queued. A missing object or a held `index.lock` leaves the items queued; retries back off from one second to 30 seconds and the state is recorded (`index-lock-stale` after ten minutes). A member waiting for missing objects retries earlier when pending author registers change or an exact loose prerequisite appears. If a member cannot reconstruct its held history, it adopts the complete current fold through the writer lock and keeps its prior index. The paths being written are recorded before the write and cleared after the registers are settled. */
+export async function applyIndexV1(host:IndexHostV1,signal?:AbortSignal,hydrateStageObjects?:()=>Promise<void>):Promise<IndexApplyV1>{
+ const {worktree}=host,pending=host.pending(),unchecked={applied:0,queued:pending.size};
+ if(pending.size===0)return unchecked;
+ if(!host.server&&(abortedV1(signal)||await stageApplyWaiting(host,pending,signal)))return unchecked;
+ if(!await gitPresentV1(worktree,signal))return unchecked;
  await publishIndexV1(host,signal);
  const base=host.base(),baseTree=treeOf(base);
- if(base===undefined||baseTree===undefined)return {applied:0,queued:pending.size};
- const due=retries.get(worktree);
- if(due!==undefined&&host.now()<due.until)return {applied:0,queued:pending.size};
- const later=async(reason:StageReasonV1):Promise<IndexApplyV1>=>{await backoff(host,reason);return {applied:0,queued:pending.size};};
- const known=await knownOf(host,signal);
- if(known===null)return later("objects-missing");
- const present=await signatureOf(worktree)!=="";
+ if(base===undefined||baseTree===undefined)return unchecked;
+ if(host.server&&await stageApplyWaiting(host,pending,signal))return unchecked;
+ const later=async(reason:StageReasonV1,missing:Iterable<string>=[],remaining=pending):Promise<IndexApplyV1>=>{
+  const apply=!host.server&&reason==="objects-missing"?stageApplyRetry(host,base.hlc,remaining,missing):undefined;
+  await backoff(host,reason,apply);
+  return unchecked;
+ };
+ const hydrate=async():Promise<boolean>=>{
+  const load=hydrateStageObjects;
+  if(load===undefined||abortedV1(signal))return false;
+  hydrateStageObjects=undefined;
+  await load();
+  return !abortedV1(signal);
+ };
+ let known=await knownOf(host,signal);
+ if(host.server&&known===null&&await hydrate())known=await knownOf(host,signal);
+ if(host.server&&known===null)return later("objects-missing");
+ const recovering=known===null,present=!recovering&&await signatureOf(worktree)!=="";
  if(present&&host.server&&await unmergedV1(worktree,signal)>0)return later("unmerged");
- const baseChange=known.baseHlc!==base.hlc,candidates=new Map<string,GitChangeV1>(),paths:string[]=[],voided:string[]=[];
+ const baseChange=known?.baseHlc!==base.hlc,candidates=new Map<string,GitChangeV1>(),paths:string[]=[],voided:string[]=[];
  const consider=(path:string,entry:FleetManifestEntryV1):void=>{
   if(path===INDEX_BASE_V1)return;
-  if(entry.hlc<=base.hlc||!archived(host,path,entry)){voided.push(path);return;}
-  const change=changeOf(path,entry);
+  const change=authorStageChange(host,base.hlc,path,entry);
   if(change===undefined){voided.push(path);return;}
   candidates.set(path,change);
  };
@@ -892,56 +1070,83 @@ export async function applyIndexV1(host:IndexHostV1,signal?:AbortSignal):Promise
  const wanted=new Set<string>();
  if(baseChange)wanted.add(baseTree);
  for(const change of candidates.values())if(change.mode!=="000000"&&change.mode!=="160000")wanted.add(change.oid);
- const missing=await missingObjectsV1(worktree,[...wanted],signal);
- if(missing===null||baseChange&&missing.has(baseTree))return later("objects-missing");
+ let missing=await missingObjectsV1(worktree,[...wanted],signal);
+ if(missing!==null&&missing.size>0&&await hydrate())missing=await missingObjectsV1(worktree,[...missing],signal);
+ if(recovering&&abortedV1(signal))return unchecked;
+ if(missing===null||baseChange&&missing.has(baseTree)||recovering&&missing.size>0)return later("objects-missing",missing??[]);
  const ready:GitChangeV1[]=[],stalled:string[]=[];
  for(const [path,change] of candidates){
   if(change.mode!=="000000"&&change.mode!=="160000"&&missing.has(change.oid)){stalled.push(path);continue;}
   ready.push(change);paths.push(path);
  }
- let ok=true,whole=false;
+ let ok=true,adopted:string|null=null;
  await mark(worktree,{base:baseChange,paths:ready.map(change=>change.path)});
  if(baseChange){
   const local=present?await writeTreeV1(worktree,{signal}):null;
   if(present&&local===null&&host.server){await mark(worktree,null);return later("write-tree-failed");}
-  if(known.tree!==null&&local===known.tree){
+  if(known?.tree!=null&&local===known.tree){
    const delta=await diffTreeV1(worktree,known.tree,baseTree,signal);
    const gone=delta===null?null:await missingObjectsV1(worktree,delta.filter(change=>change.mode!=="000000"&&change.mode!=="160000").map(change=>change.oid),signal);
-   if(gone===null||gone.size>0){await mark(worktree,null);return later("objects-missing");}
+   if(gone===null||gone.size>0){await mark(worktree,null);return later("objects-missing",gone??[]);}
    ok=delta!==null&&await updateIndexV1(worktree,delta,{signal,hash:baseTree.length});
   }else{
-   const target=await foldAll(host,signal);
-   if(target===null){await mark(worktree,null);return later("objects-missing");}
-   const failed=await adoptStage(host,target,local,signal);
-   if(failed!==null){await mark(worktree,null);return later(failed);}
-   whole=true;
+   const fold=async():Promise<IndexFold>=>recovering?foldIndex(worktree,baseTree,ready,signal,true):{tree:await foldAll(host,signal)};
+   let folded=await fold();
+   if(folded.missing?.length&&await hydrate())folded=await fold();
+   if(recovering&&abortedV1(signal)){await mark(worktree,null);return unchecked;}
+   const target=folded.tree;
+   if(target===null){await mark(worktree,null);return later("objects-missing",folded.missing);}
+   let failed=await adoptStage(host,target,local,signal);
+   if(recovering&&failed?.missing?.length&&await hydrate())failed=await adoptStage(host,target,local,signal);
+   if(failed!==null){
+    await mark(worktree,null);
+    return recovering&&abortedV1(signal)?unchecked:later(failed.reason,failed.missing);
+   }
+   adopted=target;
   }
  }
- if(ok&&!whole)ok=await updateIndexV1(worktree,ready,{signal,hash:baseTree.length});
+ if(ok&&adopted===null)ok=await updateIndexV1(worktree,ready,{signal,hash:baseTree.length});
  if(!ok)return later(await lockAge(worktree)===undefined?"git-failed":"index-busy");
- if(!whole&&(ready.length>0||baseChange))await git(worktree,["update-index","-q","--refresh","--ignore-missing"],{signal});
- if(baseChange)await normaliseGitConfigV1(worktree,undefined,signal);
- const tree=await writeTreeV1(worktree,{signal});
+ if(baseChange&&(!recovering||pending.has(INDEX_BASE_V1)))await normaliseGitConfigV1(worktree,undefined,signal);
+ const tree=recovering?adopted:await writeTreeV1(worktree,{signal});
  if(tree===null)memory.delete(worktree);
- else{memory.set(worktree,{tree,baseHlc:base.hlc});signatures.set(worktree,await signatureOf(worktree));}
- const settled=[...paths,...voided.filter(path=>pending.has(path)),...(pending.has(INDEX_BASE_V1)?[INDEX_BASE_V1]:[])];
+ else{
+  memory.set(worktree,{tree,baseHlc:base.hlc});
+  if(recovering)signatures.delete(worktree);
+  else signatures.set(worktree,await signatureOf(worktree));
+ }
+ const settled=[...(recovering?paths.filter(path=>pending.has(path)):paths),...voided.filter(path=>pending.has(path)),...(pending.has(INDEX_BASE_V1)?[INDEX_BASE_V1]:[])];
  host.settle(settled);
  await mark(worktree,null);
- if(stalled.length>0){host.enqueue(stalled);await later("objects-missing");}
+ if(stalled.length>0){host.enqueue(stalled);await later("objects-missing",missing,host.pending());}
  else{retries.delete(worktree);await clearHealth(host,["objects-missing","index-busy","index-lock-stale","git-failed","backup-failed","waiting-for-base","unmerged","write-tree-failed"]);}
  if(ready.length>0||baseChange)host.say({event:"applied",stage:"git",count:ready.length+(baseChange?1:0)});
  return {applied:settled.length,queued:stalled.length};
 }
 
-/** 🧮 Folds the base tree and the entries newer than it in a temporary index (`GIT_INDEX_FILE`) and returns the resulting tree; `null` when a step fails or an object is missing. */
-export async function foldIndexV1(worktree:string,baseTree:string,entries:readonly GitChangeV1[],signal?:AbortSignal):Promise<string|null>{
+type IndexFold=Readonly<{tree:string|null;missing?:readonly string[]}>;
+
+/** 🌲 Reports missing tree objects when Git cannot read a base into an index. */
+async function missingBaseTrees(worktree:string,base:string,signal?:AbortSignal):Promise<readonly string[]|undefined>{
+ const listing=await git(worktree,["rev-list","--objects","--no-object-names","--missing=print","--filter=blob:none",base],{signal});
+ if(listing?.code!==0)return;
+ return listing.out.toString("utf8").split("\n").filter(line=>line.startsWith("?")).map(line=>line.slice(1)).filter(oid=>oidPattern.test(oid));
+}
+
+async function foldIndex(worktree:string,baseTree:string,entries:readonly GitChangeV1[],signal?:AbortSignal,diagnose=false):Promise<IndexFold>{
  const directory=join(worktree,".cache","f","tmp"),index=join(directory,`index-${token()}`);
  await mkdir(directory,{recursive:true});
  try{
-  if(!await readTreeV1(worktree,baseTree,{index,signal}))return null;
-  if(!await updateIndexV1(worktree,entries,{index,signal,hash:baseTree.length}))return null;
-  return await writeTreeV1(worktree,{index,signal});
+  if(!await readTreeV1(worktree,baseTree,{index,signal}))return {tree:null,missing:diagnose?await missingBaseTrees(worktree,baseTree,signal):undefined};
+  if(!await updateIndexV1(worktree,entries,{index,signal,hash:baseTree.length}))return {tree:null};
+  const tree=await writeTreeV1(worktree,{index,signal});
+  return {tree,missing:tree===null&&diagnose?await stageMissingV1(worktree,index,signal)??undefined:undefined};
  }finally{await rm(index,{force:true});await rm(`${index}.lock`,{force:true});}
+}
+
+/** 🧮 Folds the base tree and the entries newer than it in a temporary index (`GIT_INDEX_FILE`) and returns the resulting tree; `null` when a step fails or an object is missing. */
+export async function foldIndexV1(worktree:string,baseTree:string,entries:readonly GitChangeV1[],signal?:AbortSignal):Promise<string|null>{
+ return (await foldIndex(worktree,baseTree,entries,signal)).tree;
 }
 
 /** 🧮 Folds a base register and the entry registers into one tree: only entries with an hlc greater than the base's count, the rest are void; `null` when the base is no tree register or a git step fails. */
@@ -1148,9 +1353,9 @@ export async function linearizeRefV1(worktree:string,ref:string,local:string,inc
 export type GitBrokenV1="head-unreadable"|"config-unreadable"|"head-unresolvable"|"tip-missing"|"index-missing";
 
 /** 🚑 Looks at the root `.git` of a worktree with plumbing only and names the first thing that keeps `HEAD` from resolving to a readable commit; `null` when the repository is sound or there is no root `.git` directory at all. Never throws, writes nothing and does not use the cached verdicts of `gitStateV1`. */
-export async function gitBrokenV1(worktree:string,signal?:AbortSignal):Promise<GitBrokenV1|null>{
+export async function gitBrokenV1(worktree:string,signal?:AbortSignal,metadata:<T>(read:()=>Promise<T>)=>Promise<T>=read=>read()):Promise<GitBrokenV1|null>{
  try{
-  const root=await lstat(join(worktree,".git")).catch(()=>undefined);
+  const root=await metadata(()=>lstat(join(worktree,".git")).catch(()=>undefined));
   if(root===undefined||!root.isDirectory())return null;
   const head=await readFile(join(worktree,".git","HEAD"),"utf8").catch(()=>"");
   if(head.trim()==="")return "head-unreadable";
@@ -1159,7 +1364,7 @@ export async function gitBrokenV1(worktree:string,signal?:AbortSignal):Promise<G
   const tip=text(await git(worktree,["rev-parse","-q","--verify","HEAD"],{signal}));
   if(tip===null||!oidPattern.test(tip))return "head-unresolvable";
   if((await git(worktree,["cat-file","-e",`${tip}^{commit}`],{signal}))?.code!==0)return "tip-missing";
-  if(await lstat(join(worktree,".git","index")).then(()=>false,()=>true))return "index-missing";
+  if(await metadata(()=>lstat(join(worktree,".git","index")).then(()=>false,()=>true)))return "index-missing";
   return null;
  }catch{return null;}
 }

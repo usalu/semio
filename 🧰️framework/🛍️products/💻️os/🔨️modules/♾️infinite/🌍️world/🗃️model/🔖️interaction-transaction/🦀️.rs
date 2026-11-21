@@ -447,9 +447,18 @@ impl WorldInteractionIntentQueue {
         self.slots[usize::from(self.head)].as_ref()
     }
 
-    /// 🚪️ Whether a [`WorldInteractionPhase::PointerLeave`] is already waiting to be answered.
-    pub fn holds_pointer_leave(&self) -> bool {
-        self.slots.iter().flatten().any(|intent| intent.phase == WorldInteractionPhase::PointerLeave)
+    /// 🛷️ Whether primary contact is waiting in the pointer queue ahead of gesture recognition.
+    pub fn primary_press_pending(&self) -> bool {
+        (0..usize::from(self.len))
+            .filter_map(|offset| self.slots[(usize::from(self.head) + offset) % WORLD_INTERACTION_INTENT_CAPACITY].as_ref())
+            .any(|intent| intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down)
+    }
+
+    /// 🚪️ The last queued pointer move or leave, in publication order.
+    pub fn latest_hover_boundary(&self) -> Option<WorldInteractionPhase> {
+        (0..usize::from(self.len)).rev()
+            .filter_map(|offset| self.slots[(usize::from(self.head) + offset) % WORLD_INTERACTION_INTENT_CAPACITY].as_ref())
+            .find_map(|intent| matches!(intent.phase, WorldInteractionPhase::PointerMove | WorldInteractionPhase::PointerLeave).then_some(intent.phase))
     }
 
     /// 🫧 Folds a fresh pointer MOVE onto the one already waiting at the tail, answering the
@@ -469,13 +478,16 @@ impl WorldInteractionIntentQueue {
     /// point, and the newest point is the one React would have raycast), and the `down`/button/
     /// modifier state must MATCH — a change in any of them is a different gesture and starts a new
     /// intent. The FRONT is never folded into: it may already be half-stepped by a live cursor.
-    pub fn coalesce_tail_pointer_move(&mut self, intent: &WorldInteractionIntent) -> Option<u64> {
-        if self.closing || intent.phase != WorldInteractionPhase::PointerMove || self.len < 2 {
+    pub fn coalesce_tail_pointer_move(&mut self, intent: &WorldInteractionIntent, allow_head: bool) -> Option<u64> {
+        if self.closing || intent.phase != WorldInteractionPhase::PointerMove || self.len == 0 || self.len == 1 && !allow_head {
             return None;
         }
         let index = (usize::from(self.head) + usize::from(self.len) - 1) % WORLD_INTERACTION_INTENT_CAPACITY;
         let tail = self.slots[index].as_mut()?;
         if tail.phase != WorldInteractionPhase::PointerMove || tail.down != intent.down || tail.button != intent.button || tail.shift != intent.shift || tail.ctrl != intent.ctrl || tail.alt != intent.alt || tail.meta != intent.meta {
+            return None;
+        }
+        if tail.down && tail.button == 0 && (tail.dx * intent.dx < 0.0 || tail.dy * intent.dy < 0.0) {
             return None;
         }
         tail.x = intent.x;
@@ -529,6 +541,9 @@ pub enum WorldFlatActionKind {
     VortexSelect,
     VortexHover,
     SurfacePlace,
+    TerrainEdit,
+    EngagementPointerDown,
+    EngagementPointerMove,
     Select,
     Hover,
     Camera,
@@ -557,6 +572,48 @@ pub struct WorldFlatAction {
     pub numbers: [f64; 10],
 }
 
+pub const WORLD_TERRAIN_STROKE_CAPACITY: usize = 64;
+
+/// 🏔️ Ordered authored raster samples retained with the source identity while the stroke is private.
+pub struct WorldTerrainStroke {
+    samples: Vec<[u32; 2]>,
+    stamps: usize,
+    revision: u64,
+    brush_digest: u64,
+}
+
+impl WorldTerrainStroke {
+    pub fn new(first: [u32; 2], revision: u64, brush_digest: u64) -> Self {
+        let mut samples = Vec::with_capacity(WORLD_TERRAIN_STROKE_CAPACITY);
+        samples.push(first);
+        Self { samples, stamps: 1, revision, brush_digest }
+    }
+
+    pub fn is_current(&self, revision: u64, brush_digest: u64) -> bool {
+        self.revision == revision && self.brush_digest == brush_digest
+    }
+
+    pub fn samples(&self) -> &[[u32; 2]] {
+        &self.samples
+    }
+
+    /// 🎯 Retains spaced hits, including the exact release cell, within the expanded brush budget.
+    pub fn sample(&mut self, next: [u32; 2], radius: u32, released: bool) -> bool {
+        let [column, row] = self.samples[self.samples.len() - 1];
+        let distance = column.abs_diff(next[0]).max(row.abs_diff(next[1]));
+        let spacing = radius.div_ceil(2).max(1);
+        if distance == 0 || !released && distance < spacing {
+            return true;
+        }
+        self.stamps += distance.div_ceil(spacing) as usize;
+        if self.stamps > WORLD_TERRAIN_STROKE_CAPACITY {
+            return false;
+        }
+        self.samples.push(next);
+        true
+    }
+}
+
 pub struct WorldInteractionPlan {
     pub revision: u64,
     pub generation: u64,
@@ -566,6 +623,7 @@ pub struct WorldInteractionPlan {
     pub action_len: u16,
     pub cursor: u16,
     pub faulted: bool,
+    pub terrain_stroke: Option<WorldTerrainStroke>,
 }
 
 pub const TRANSLATE_SELECTION_ACTION_ID: &str = "translateSelection";
@@ -576,7 +634,7 @@ pub const SCALE_SELECTION_ACTION_ID: &str = "scaleSelection";
 
 impl WorldInteractionPlan {
     pub fn new(revision: u64, generation: u64) -> Self {
-        Self { revision, generation, bytes: Box::new([0; WORLD_INTERACTION_BYTE_CAPACITY]), byte_len: 0, actions: Box::new([None; WORLD_INTERACTION_ITEM_CAPACITY]), action_len: 0, cursor: 0, faulted: false }
+        Self { revision, generation, bytes: Box::new([0; WORLD_INTERACTION_BYTE_CAPACITY]), byte_len: 0, actions: Box::new([None; WORLD_INTERACTION_ITEM_CAPACITY]), action_len: 0, cursor: 0, faulted: false, terrain_stroke: None }
     }
 
     pub fn push_string(&mut self, value: &str) -> Option<WorldInteractionSpan> {
@@ -633,7 +691,7 @@ impl WorldInteractionPlan {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.cursor == self.action_len && self.byte_len == 0
+        self.cursor == self.action_len && self.byte_len == 0 && self.terrain_stroke.is_none()
     }
 
     pub fn close_step(&mut self) -> bool {
@@ -643,6 +701,7 @@ impl WorldInteractionPlan {
             return false;
         }
         self.byte_len = 0;
+        self.terrain_stroke = None;
         true
     }
 }

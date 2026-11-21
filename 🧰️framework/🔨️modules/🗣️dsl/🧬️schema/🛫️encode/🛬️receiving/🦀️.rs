@@ -30,26 +30,5 @@ impl FieldProjectionSource for OriginalReceivingPrimary{
 }
 
 #[cfg(test)]
-mod tests{
- use super::*;
- fn progress(value:&serde_json::Value)->RetainedCloneProgress{RetainedCloneProgress{copied_items:value["copiedItems"].as_u64().unwrap()as usize,copied_bytes:value["copiedBytes"].as_u64().unwrap()as usize,retained_capacity_bytes:value["retainedCapacityBytes"].as_u64().unwrap()as usize,released_bytes:value["releasedBytes"].as_u64().unwrap()as usize}}
- fn json(source:&impl FieldProjectionSource,path:&mut Vec<usize>)->serde_json::Value{match source.projection_view(path).unwrap(){V::IntrinsicObject(length)=>{let mut object=serde_json::Map::new();for index in 0..length{let key=source.projection_key(path,index).unwrap().to_owned();path.push(index);let value=json(source,path);path.pop();object.insert(key,value);}object.into()},V::IntrinsicText(value)=>value.into(),V::IntrinsicNumber(Number::UInt(value))=>value.into(),V::IntrinsicNull=>serde_json::Value::Null,_=>panic!("unexpected receiving fixture node")}}
- #[test]
- fn defining_receiving_projection_matches_neutral_causes_and_borrows_original_messages(){
-  let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["receivingWire"]["primary"]["original"];
-  let cause=|name:&str|{let value=&row[name];ValueError::new(semio_framework_value::ValueRefusalKind::from_wire(value["kind"].as_str().unwrap()).unwrap(),value["message"].as_str().unwrap()).with_retained_progress(progress(&value["retainedProgress"]))};
-  let source=OriginalReceivingPrimary::from_fields(Some(cause("primary")),Some(cause("quoteRefusal")),Some(cause("allocationRefusal")),None,None,None,None,None,None,progress(&row["retainedProgress"]));
-  assert_eq!(json(&source,&mut Vec::new()),*row);
-  let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{for(index,value)in[&source.primary,&source.quote_refusal,&source.allocation_refusal].iter().enumerate(){assert!(matches!(source.projection_view(&[index,1]).unwrap(),V::IntrinsicText(message)if message.as_ptr()==value.as_ref().unwrap().message.as_ptr()));}assert!(source.projection_view(&[99]).is_err());});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- }
- #[test]
- fn defining_receiving_projection_preserves_nested_allocation_and_receipt(){
-  let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::repo_text!("🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["receivingComposite"];let cause=|value:&serde_json::Value|ValueError::new(semio_framework_value::ValueRefusalKind::from_wire(value["kind"].as_str().unwrap()).unwrap(),value["message"].as_str().unwrap()).with_retained_progress(progress(&value["retainedProgress"]));let allocation=&row["allocationFailure"];let post=cause(&allocation["forwardedPost"]);let receipt=cause(&row["receiptRefusal"]);let pointers=(post.message.as_ptr(),receipt.message.as_ptr());let source=OriginalReceivingPrimary::from_fields(None,None,None,None,None,None,Some(semio_framework_value_native_owned::NativeAllocationFailure{forwarded_post:Some(post),progress:semio_framework_value_native_owned::NativeAllocationProgress{admitted_bytes:allocation["progress"]["admittedBytes"].as_u64().unwrap()as usize,actual_capacity_bytes:None,prior_admitted_bytes:None,requested_bytes:None,maximum_bytes:None},..Default::default()}),None,Some(receipt),progress(&row["retainedProgress"]));assert_eq!(json(&source,&mut Vec::new()),*row);assert_eq!(source.allocation_failure.as_ref().unwrap().forwarded_post.as_ref().unwrap().message.as_ptr(),pointers.0);assert_eq!(source.receipt_refusal.as_ref().unwrap().message.as_ptr(),pointers.1);
- }
-
- #[test]
- fn defining_receiving_projection_rejects_partial_allocation_request(){
-  let source=OriginalReceivingPrimary::from_fields(None,None,None,None,None,None,Some(semio_framework_value_native_owned::NativeAllocationFailure{progress:semio_framework_value_native_owned::NativeAllocationProgress{prior_admitted_bytes:Some(1),..Default::default()},..Default::default()}),None,None,Default::default());assert!(matches!(source.projection_view(&[]),Err(error) if error.kind==semio_framework_value::ValueRefusalKind::InvariantViolated));
- }
-
-}
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

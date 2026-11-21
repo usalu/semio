@@ -14,7 +14,13 @@ pub struct OwnedActorStartupCall{pub result:Result<OwnedActorStartupStatus,Origi
 pub struct OwnedActorStartup{host:Option<semio_plugin_interpreter_imports::OriginalHostState>,artifact:ManuallyDrop<Option<Arc<OwnedSemioArtifact>>>,opening:ManuallyDrop<Option<CoreInstanceOpening>>,phase:Phase,channel:Option<u32>,witness:usize,final_source:ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>}
 impl OwnedRuntime{
  pub fn begin_actor_startup(&self,compiled:&OwnedCompiledGuest,cx:&mut StepContext<'_>)->Result<Option<OwnedActorStartup>,OriginalTurnFailure>{
-  if !std::ptr::fn_addr_eq(self.original_clock,cx.clock_source()){return Err(refused("Owned startup requires its original embedding clock").into())}if cx.is_cancelled()||!metadata(cx,size_of::<OwnedActorStartup>())?{return Ok(None)}let Some(opening)=CoreInstanceOpening::begin(compiled.artifact.original_actor_module(),cx)?else{return Ok(None)};let host=semio_plugin_interpreter_imports::OriginalHostState::new(cx)?;Ok(Some(OwnedActorStartup{host:Some(host),artifact:ManuallyDrop::new(Some(Arc::clone(&compiled.artifact))),opening:ManuallyDrop::new(Some(opening)),phase:Phase::Resources,channel:None,witness:Arc::as_ptr(&compiled.artifact)as usize,final_source:ManuallyDrop::new(None)}))
+  if !std::ptr::fn_addr_eq(self.original_clock,cx.clock_source()){return Err(refused("Owned startup requires its original embedding clock").into())}
+  if cx.is_cancelled()||!metadata(cx,size_of::<OwnedActorStartup>())?{return Ok(None)}
+  let module=compiled.artifact.original_actor_module();
+  let opening=CoreInstanceOpening::begin_actor(module,compiled.actor_preparation.as_deref(),Some(&self.input_retirement),cx)?;
+  let Some(opening)=opening else{return Ok(None)};
+  let host=semio_plugin_interpreter_imports::OriginalHostState::new(cx)?;
+  Ok(Some(OwnedActorStartup{host:Some(host),artifact:ManuallyDrop::new(Some(Arc::clone(&compiled.artifact))),opening:ManuallyDrop::new(Some(opening)),phase:Phase::Resources,channel:None,witness:Arc::as_ptr(&compiled.artifact)as usize,final_source:ManuallyDrop::new(None)}))
  }
 
  pub fn take_actor_startup_step(&self,owner:&mut Option<OwnedActorStartup>,compiled:&OwnedCompiledGuest,input:semio_framework_actor::RetainedTurnInput,cx:&mut StepContext<'_>)->Result<Option<OwnedGuestInstance>,OriginalTurnFailure>{
@@ -22,11 +28,18 @@ impl OwnedRuntime{
   if state.final_source.is_none(){let parent=cx.original_source_parent()?;parent.admit_loan(&mut *state.final_source,cx)?;return Ok(None)}state.final_source.as_ref().unwrap().validate_context(cx)?;if !metadata(cx,size_of::<OwnedGuestInstance>())?{return Ok(None)}let instance_id=self.next_instance_id.fetch_update(std::sync::atomic::Ordering::AcqRel,std::sync::atomic::Ordering::Acquire,|value|value.checked_add(1)).map_err(|_|refused("Owned startup instance identity allocator exhausted"))?;let original_input=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;let mut state=owner.take().unwrap();let original_core=state.opening.take();let original_source=state.final_source.take();let artifact=state.artifact.take().unwrap();Ok(Some(OwnedGuestInstance{original_job_clock:cx.original_clock_binding().map(|binding|(binding,cx.clock_source())),artifact,actor:None,original_core:ManuallyDrop::new(original_core),original_source:ManuallyDrop::new(original_source),original_startup_input:Some(original_input),original_call:None,original_unit:None,original_host:state.host.take(),pending:None,original_receipt:None,poisoned:false,diagnostics:Vec::new(),context:0,next_resource:1,instance_id}))
  }
  pub fn close_original_actor_step(&self,owner:&mut Option<OwnedGuestInstance>,compiled:&OwnedCompiledGuest,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let Some(state)=owner.as_mut()else{return Ok(true)};self.validate_original_actor_retirement(state,compiled,cx)?;
+  let Some(state)=owner.as_mut()else{return Ok(true)};
+  if !self.advance_original_actor_close_step(state,compiled,cx)?{return Ok(false)}
+  owner.take();
+  Ok(true)
+ }
+ /// 📍️ Closes native instance custody in place and returns readiness to release its spent inline owner.
+ pub fn advance_original_actor_close_step(&self,state:&mut OwnedGuestInstance,compiled:&OwnedCompiledGuest,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  self.validate_original_actor_retirement(state,compiled,cx)?;
   if state.original_unit.is_some(){self.close_owned_original_unit_call_step(state,cx)?;return Ok(false)}
   if state.original_call.is_some(){self.close_original_call_step(state,cx)?;return Ok(false)}
   if let Some(host)=state.original_host.as_mut(){if !host.close_step(cx)?{return Ok(false)}if !retirement_metadata(cx,size_of::<semio_plugin_interpreter_imports::OriginalHostState>())?{return Ok(false)}state.original_host.take();return Ok(false)}
-  if let Some(core)=state.original_core.as_mut(){if !core.terminal_is_empty(){core.close_step(compiled.artifact.original_actor_module(),cx)?;return Ok(false)}}if !retirement_metadata(cx,size_of::<OwnedGuestInstance>())?{return Ok(false)}let parent=cx.original_source_parent()?;state.original_source.as_mut().unwrap().close_step(parent,cx)?;if !state.original_source.as_ref().unwrap().terminal_is_empty(){return Ok(false)}state.original_source.take();state.original_core.take();drop(owner.take());Ok(true)
+  if let Some(core)=state.original_core.as_mut(){if !core.terminal_is_empty(){core.close_step(compiled.artifact.original_actor_module(),cx)?;return Ok(false)}}if !retirement_metadata(cx,size_of::<OwnedGuestInstance>())?{return Ok(false)}let parent=cx.original_source_parent()?;state.original_source.as_mut().unwrap().close_step(parent,cx)?;if !state.original_source.as_ref().unwrap().terminal_is_empty(){return Ok(false)}state.original_source.take();state.original_core.take();Ok(true)
  }
  pub fn validate_original_actor_retirement(&self,state:&OwnedGuestInstance,compiled:&OwnedCompiledGuest,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !Arc::ptr_eq(&state.artifact,&compiled.artifact){return Err(refused("Owned instance close requires its retained compiled artifact witness").into())}state.original_source.as_ref().ok_or_else(||refused("Owned instance close requires its actual retained original source"))?.validate_retirement_context(cx)?;if cx.original_source_epoch().is_none_or(|epoch|state.original_startup_input.is_none_or(|input|epoch<input.epoch)){return Err(refused("Owned instance close cannot precede its actual final transfer input").into())}if state.actor.is_some()||state.pending.is_some()||state.original_receipt.is_some()||!state.diagnostics.is_empty(){return Err(refused("Owned instance close must first return its actual operation and diagnostic owners").into())}Ok(())}
 }
@@ -38,11 +51,34 @@ impl OwnedActorStartup{
  pub fn original_resources(&self)->Option<&CoreInstance>{self.ready().then(||self.opening.as_ref()?.resources()).flatten()}
  pub fn observed_channel(&self)->Option<u32>{self.channel}
  pub fn advance_step(&mut self,compiled:&OwnedCompiledGuest,cx:&mut StepContext<'_>,execution:Option<OriginalGuestExecutionBudget>)->Result<OwnedActorStartupCall,OriginalTurnFailure>{
-  self.validate(compiled)?;if self.phase==Phase::Closing{return Err(refused("Owned startup cannot resume while its original owner closes").into())}if execution.is_some()!=self.requires_execution(){return Err(refused("Owned startup execution authorization must match its actual VM phase").into())}let requires_execution=self.requires_execution();let module=compiled.artifact.original_actor_module();let opening=self.opening.as_mut().ok_or_else(||refused("Owned startup resources are absent"))?;opening.validate_original_context(module,cx)?;
+  self.validate(compiled)?;if self.phase==Phase::Closing{return Err(refused("Owned startup cannot resume while its original owner closes").into())}if execution.is_some()!=self.requires_execution(){return Err(refused("Owned startup execution authorization must match its actual VM phase").into())}let module=compiled.artifact.original_actor_module();let opening=self.opening.as_mut().ok_or_else(||refused("Owned startup resources are absent"))?;opening.validate_original_context(module,cx)?;
   if matches!(self.phase,Phase::StartDriving|Phase::ChannelDriving)&&(opening.original_host_call_pending()||self.host.as_ref().is_some_and(|host|host.reply_pending())){let host=self.host.as_mut().ok_or_else(||refused("Owned startup has no retained original import owner"))?;semio_plugin_interpreter_imports::advance(host,opening,module,None,cx)?;return Ok(OwnedActorStartupCall{result:Ok(OwnedActorStartupStatus::Pending),execution:None})}
-  if requires_execution{let call=opening.advance_scalar(module,execution.unwrap(),cx)?;let result=match call.result{Ok(CoreOriginalInvocationStatus::Complete)=>{self.phase=if self.phase==Phase::StartDriving{Phase::StartClosing}else{Phase::ChannelParsing};Ok(OwnedActorStartupStatus::Pending)},Ok(CoreOriginalInvocationStatus::Host)=>Ok(OwnedActorStartupStatus::Pending),Ok(CoreOriginalInvocationStatus::Pending)=>Ok(OwnedActorStartupStatus::Pending),Ok(CoreOriginalInvocationStatus::Cancelled)=>Ok(OwnedActorStartupStatus::Cancelled),Ok(CoreOriginalInvocationStatus::Deadline)=>Ok(OwnedActorStartupStatus::Deadline),Err(failure)=>Err(failure)};return Ok(OwnedActorStartupCall{result,execution:Some(call.execution)})}
+  if let Some(issued) = execution {
+   let mut input = semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;
+   input.grant = cx.retained_grant();
+   let execution = OriginalGuestExecutionBudget { input, fuel: issued.fuel, deadline_us: issued.deadline_us.min(cx.deadline_us()) };
+   execution.validate_narrowing(issued)?;
+   let call = opening.advance_scalar(module, execution, cx)?;
+   let result = match call.result {
+    Ok(CoreOriginalInvocationStatus::Complete) => {
+     self.phase = if self.phase == Phase::StartDriving { Phase::StartClosing } else { Phase::ChannelParsing };
+     Ok(OwnedActorStartupStatus::Pending)
+    }
+    Ok(CoreOriginalInvocationStatus::Host | CoreOriginalInvocationStatus::Pending) => Ok(OwnedActorStartupStatus::Pending),
+    Ok(CoreOriginalInvocationStatus::Cancelled) => Ok(OwnedActorStartupStatus::Cancelled),
+    Ok(CoreOriginalInvocationStatus::Deadline) => Ok(OwnedActorStartupStatus::Deadline),
+    Err(failure) => Err(failure),
+   };
+   return Ok(OwnedActorStartupCall { result, execution: Some(call.execution) });
+  }
   let status=if cx.is_cancelled(){OwnedActorStartupStatus::Cancelled}else if cx.deadline_exceeded(){OwnedActorStartupStatus::Deadline}else{match self.phase{
-   Phase::Resources=>{if opening.advance(module,cx)?{self.phase=Phase::StartOpening}OwnedActorStartupStatus::Pending},
+   Phase::Resources=>{
+    match compiled.actor_preparation.as_deref(){
+     Some(prepared)=>{if opening.advance_prepared(module,prepared,cx)?{self.phase=Phase::ChannelOpening;}}
+     None=>{if opening.advance(module,cx)?{self.phase=Phase::StartOpening;}}
+    }
+    OwnedActorStartupStatus::Pending
+   },
    Phase::StartOpening=>{if let Some(function)=module.original_start_function(){if opening.begin_function_step(module,function,&[],cx)?{self.phase=Phase::StartDriving}}else{self.phase=Phase::ChannelOpening}OwnedActorStartupStatus::Pending},
    Phase::StartClosing=>{if opening.close_invocation_step(module,cx)?{self.phase=Phase::ChannelOpening}OwnedActorStartupStatus::Pending},
    Phase::ChannelOpening=>{let function=match module.export(OwnedSemioExport::ChannelVersion.core_name()){Some(ExportKind::Function(function))=>*function,_=>return Err(refused("Owned startup requires its declared channel export").into())};if opening.begin_function_step(module,function,&[],cx)?{self.phase=Phase::ChannelDriving}OwnedActorStartupStatus::Pending},

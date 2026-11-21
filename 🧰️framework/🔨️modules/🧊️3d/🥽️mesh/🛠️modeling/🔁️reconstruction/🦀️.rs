@@ -6,6 +6,17 @@ use semio_framework_3d_mesh_contract::{MeshPolygonSoup as Soup,MeshSourceVertex 
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
 #[path = "🧺️snapshot/🦀️.rs"]
 mod snapshot_preparation;
+#[path = "🎨️refined-surface/🦀️.rs"]
+mod refined_surface;
+#[path="🔗️combine/🦀️.rs"]
+mod combine;
+pub use combine::PolygonCombine;
+#[path="⚗️authored-intersection/🦀️.rs"]
+mod authored_intersection;
+pub use authored_intersection::MeshAuthoredIntersection;
+#[path="📏️boundary-sweep/🦀️.rs"]
+mod boundary_sweep;
+pub use boundary_sweep::MeshBoundarySweep;
 
 pub struct MeshImportJob {
     grid: Option<semio_framework_mesh_engine::ParametricMeshGrid>,
@@ -20,6 +31,7 @@ pub struct MeshImportJob {
     positions:Vec<f32>,
     indices:Vec<u32>,
     normals:Vec<f32>,
+    uvs:Vec<f32>,
     unique:HistoryFoldIndex<[u32;3],u32>,
     remap:Vec<u32>,
     soup:Soup,
@@ -32,7 +44,7 @@ pub struct MeshImportJob {
 }
 
 impl MeshImportJob {
-    pub fn phase(&self)->&'static str {if self.phase>=254{return if self.phase==255{"done"}else{"failed"};} ["mesh-import-vertices","mesh-import-corners","mesh-import-reconstruct","mesh-import-normals","mesh-primitive-vertices","mesh-primitive-faces","mesh-primitive-level","mesh-primitive-midpoints","mesh-primitive-release","mesh-primitive-radius","mesh-source-capture","mesh-source-assets","mesh-grid-vertices","mesh-grid-faces","mesh-source-surface"][self.phase as usize] }
+    pub fn phase(&self)->&'static str {if self.phase>=254{return if self.phase==255{"done"}else{"failed"};} ["mesh-import-vertices","mesh-import-corners","mesh-import-reconstruct","mesh-import-normals","mesh-primitive-vertices","mesh-primitive-faces","mesh-primitive-level","mesh-primitive-midpoints","mesh-primitive-release","mesh-primitive-radius","mesh-source-capture","mesh-source-assets","mesh-grid-vertices","mesh-grid-faces","mesh-source-surface","mesh-import-uvs"][self.phase as usize] }
     fn advance_owned(&mut self)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             12 => {
@@ -63,10 +75,26 @@ impl MeshImportJob {
                 if self.cursor==self.indices.len() {self.build=Some(MeshTopologyBuild::unreferenced(std::mem::take(&mut self.soup)));self.phase=2;}
                 else {let index=self.indices[self.cursor] as usize;let id=*self.remap.get(index).ok_or(MeshKernelError::InvalidHandle)?;self.corners.push(id);self.cursor+=1;if self.corners.len()==3 {self.soup.faces.push(std::mem::take(&mut self.corners));}}
             }
-            2=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {if self.normals.is_empty() && self.polygon.is_none() {return Ok(Some(mesh));}self.mesh=Some(mesh);self.cursor=0;self.phase=if self.polygon.is_some() {11}else {3};}}
+            2=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {if self.normals.is_empty() && self.uvs.is_empty() && self.polygon.is_none() {return Ok(Some(mesh));}self.mesh=Some(mesh);self.cursor=0;self.phase=if self.polygon.is_some() {11}else if self.normals.is_empty() {15}else {3};}}
             3=>{
-                if self.cursor==self.indices.len() {let mut mesh=self.mesh.take().unwrap();mesh.attributes.insert("normal".into(),MeshAttribute { indices:None,domain:MeshAttributeDomain::Corner,semantic:MeshAttributeSemantic::Normal,interpolation:MeshAttributeInterpolation::Linear,values:std::mem::take(&mut self.corner_normals)});return Ok(Some(mesh));}
+                if self.cursor==self.indices.len() {
+                    self.mesh.as_mut().unwrap().attributes.insert("normal".into(),MeshAttribute { indices:None,domain:MeshAttributeDomain::Corner,semantic:MeshAttributeSemantic::Normal,interpolation:MeshAttributeInterpolation::Linear,values:std::mem::take(&mut self.corner_normals)});
+                    if self.uvs.is_empty() { return Ok(self.mesh.take()); }
+                    self.cursor=0;
+                    self.phase=15;
+                    return Ok(None);
+                }
                 let index=self.indices[self.cursor] as usize*3;let normal=[0,1,2].map(|axis|self.normals[index+axis]);if normal==[0.0;3] {return Err(MeshKernelError::InvalidInput("imported mesh normal cannot be zero".into()));}self.corner_normals.push(semio_framework_value::DslValue::Array(normal.into_iter().map(|x|semio_framework_value::DslValue::float(x as f64)).collect()));self.cursor+=1;
+            }
+            15=>{
+                let Some(&index) = self.indices.get(self.cursor) else { return Ok(self.mesh.take()); };
+                let start = index as usize * 2;
+                let uv = [self.uvs[start], self.uvs[start + 1]];
+                if uv.iter().any(|value| !value.is_finite()) {
+                    return Err(MeshKernelError::InvalidInput("imported mesh UV must be finite".into()));
+                }
+                self.mesh.as_mut().unwrap().halfedges[self.cursor].uv = uv;
+                self.cursor += 1;
             }
             4=>{
                 let (kind,[a,b,c],parameter)=self.primitive.unwrap();let count=match kind {0=>8,1=>4,2=>parameter as usize*2,3=>parameter as usize+1,_=>12};
@@ -188,8 +216,21 @@ impl Default for Coplanar {
 }
 
 impl Coplanar {
-    fn phase(&self)->&'static str {match self.phase {0=>"snapshot",1=>"coplanar-incidence",2=>"coplanar-candidates",3|4=>"coplanar-normal",5=>"coplanar-distance",6=>"coplanar-shared-edges",7=>"coplanar-splice",8|9=>"coplanar-remove-edges",10=>"coplanar-insert-edges",11=>"coplanar-release-candidate",12=>"coplanar-cleanup-incidence",13=>"coplanar-cleanup-classify",14=>"coplanar-cleanup-corners",17|18=>"coplanar-source-corners",22=>"coplanar-channel-policy",23=>"dissolve-selection",24=>"dissolve-vertex-provenance",25=>"dissolve-face-metadata",26=>"dissolve-star-selection",27=>"dissolve-star-incidence",28=>"dissolve-star-normal",29=>"dissolve-star-plane",30=>"dissolve-star-boundary",31=>"dissolve-star-next",32=>"dissolve-star-loop",33=>"dissolve-star-release",34=>"dissolve-star-contributors",19=>"coplanar-face-contributors",20=>"coplanar-channel-boundary",21=>"coplanar-attributes",_=>"coplanar-reconstruct"}}
+    fn phase(&self)->&'static str {match self.phase {0=>"snapshot",1=>"coplanar-incidence",2=>"coplanar-candidates",3|4=>"coplanar-normal",5=>"coplanar-distance",6=>"coplanar-shared-edges",7=>"coplanar-splice",8|9=>"coplanar-remove-edges",10=>"coplanar-insert-edges",11=>"coplanar-release-candidate",12=>"coplanar-cleanup-incidence",13=>"coplanar-cleanup-classify",14=>"coplanar-cleanup-corners",17|18=>"coplanar-source-corners",22=>"coplanar-channel-policy",23=>"dissolve-selection",24=>"dissolve-vertex-provenance",25=>"coplanar-source-projection",35=>"coplanar-surface",26=>"dissolve-star-selection",27=>"dissolve-star-incidence",28=>"dissolve-star-normal",29=>"dissolve-star-plane",30=>"dissolve-star-boundary",31=>"dissolve-star-next",32=>"dissolve-star-loop",33=>"dissolve-star-release",34=>"dissolve-star-contributors",19=>"coplanar-face-contributors",20=>"coplanar-channel-boundary",21=>"coplanar-attributes",_=>"coplanar-reconstruct"}}
     fn reject(&mut self)->MeshResult<()> {if self.explicit.is_some() || self.vertex_input.is_some() {return Err(MeshKernelError::InvalidInput("selected dissolution cannot preserve the boundary contract".into()));}self.cursor=0;self.phase=11;Ok(())}
+    fn same_boundary_normals(source:&HalfedgeMesh,vertices:[u32;3])->bool {
+        let [first,middle,last]=vertices.map(|vertex|source.vertices[vertex as usize].normal);
+        first==middle&&middle==last
+    }
+    fn incompatible_raw_surface(&self,source:&HalfedgeMesh)->bool {
+        let first=self.face_sources[self.a][0] as usize;
+        let second=self.face_sources[self.b][0] as usize;
+        if source.faces[first].smooth!=source.faces[second].smooth {return true;}
+        let a=&self.corner_sources[self.a];
+        let b=&self.corner_sources[self.b];
+        let uv=|corner:u32|source.halfedges[corner as usize].uv;
+        uv(a[self.ai])!=uv(b[(self.bi+1)%b.len()])||uv(b[self.bi])!=uv(a[(self.ai+1)%a.len()])
+    }
     fn advance(&mut self,snapshot:&mut MeshSourceSnapshot)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{if snapshot.complete() {self.cursor=0;self.phase=22;}},
@@ -228,7 +269,7 @@ impl Coplanar {
                 else {let face=&snapshot.soup.faces[self.face];if face.is_empty() {self.face+=1;}else {let id=face[self.cursor];let pair=(face[(self.cursor+face.len()-1)%face.len()],face[(self.cursor+1)%face.len()]);self.neighbors.entry(id).and_modify(|value|{if *value!=Some(pair) {*value=None;}}).or_insert_with(||Some(pair));self.cursor+=1;if self.cursor==face.len() {self.face+=1;self.cursor=0;}}}
             },
             13=>{
-                if let Some((id,Some((prev,next))))=self.neighbors.pop_first() {if !self.preserve_corners && prev!=next && prev!=id && next!=id {let pos=|id:u32|Vec3(snapshot.soup.positions[id as usize]);let a=pos(id).sub(pos(prev));let b=pos(next).sub(pos(id));if a.length()>=1e-9 && b.length()>=1e-9 && a.normalize().dot(b.normalize())>1.0-1e-4 {self.removable.insert(id);}}}
+                if let Some((id,Some((prev,next))))=self.neighbors.pop_first() {if !self.preserve_corners && prev!=next && prev!=id && next!=id && Self::same_boundary_normals(&snapshot.source,[prev,id,next]) {let pos=|id:u32|Vec3(snapshot.soup.positions[id as usize]);let a=pos(id).sub(pos(prev));let b=pos(next).sub(pos(id));if a.length()>=1e-9 && b.length()>=1e-9 && a.normalize().dot(b.normalize())>1.0-1e-4 {self.removable.insert(id);}}}
                 else if self.neighbors.is_empty() {self.soup.positions=std::mem::take(&mut snapshot.soup.positions);self.phase=14;}
             },
             14=>{
@@ -236,13 +277,13 @@ impl Coplanar {
                 else {let face=&snapshot.soup.faces[self.face];if face.is_empty() {self.face+=1;}else {let id=face[self.cursor];if !self.removable.contains(&id) {self.corners.push(id);self.output_corners.push(Some(self.corner_sources[self.face][self.cursor]));self.output_edges.push(Some(self.edge_sources[self.face][self.cursor]));}self.cursor+=1;if self.cursor==face.len() {if self.corners.len()>=3 {self.soup.faces.push(std::mem::take(&mut self.corners));self.output_faces.push(std::mem::take(&mut self.face_sources[self.face]));}else {self.corners.clear();}self.face+=1;self.cursor=0;}}}
             },
             15=>{if self.incidence.pop_first().is_none() && self.removable.pop_first().is_none() && self.source_corners.pop_first().is_none() {self.phase=16;}},
-            16=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {let mut attributes=MeshSourceRemap::new(mesh,None,None,None,None);attributes.data.corner_sources=Some(std::mem::take(&mut self.output_corners));attributes.data.edge_sources=Some(std::mem::take(&mut self.output_edges));attributes.data.generated_faces=Some(std::mem::take(&mut self.output_faces));self.attributes=Some(attributes);self.cursor=0;self.phase=if self.explicit.is_some() || self.vertex_input.is_some() {24}else {25};}},
-            17=>{if self.cursor==snapshot.source.halfedge_count() {self.cursor=0;self.face=0;self.phase=18;}else {let edge=&snapshot.source.halfedges[self.cursor];self.source_corners.insert((edge.face.unwrap(),edge.vertex),self.cursor as u32);self.cursor+=1;}},
+            16=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {let mut attributes=MeshSourceRemap::new(mesh,None,None,None,None);attributes.data.corner_sources=Some(std::mem::take(&mut self.output_corners));attributes.data.edge_sources=Some(std::mem::take(&mut self.output_edges));attributes.data.generated_faces=Some(std::mem::take(&mut self.output_faces));self.attributes=Some(attributes);self.cursor=0;self.phase=24;}},
+            17=>{if self.cursor==snapshot.source.halfedge_count() {self.cursor=0;self.face=0;self.phase=18;}else {let edge=&snapshot.source.halfedges[self.cursor];self.preserve_corners|=edge.uv!=[0.0;2];self.source_corners.insert((edge.face.unwrap(),edge.vertex),self.cursor as u32);self.cursor+=1;}},
             18=>{if self.face==snapshot.soup.faces.len() {self.face=0;self.cursor=0;self.phase=if self.vertex_input.is_some() {26}else {1};}else {let face=&snapshot.soup.faces[self.face];if self.cursor==0 {self.face_sources.push(vec![self.face as u32]);self.corner_sources.push(Vec::new());self.edge_sources.push(Vec::new());}let corner=self.source_corners[&(self.face as u32,face[self.cursor])];let edge=if snapshot.source.faces[self.face].flipped {self.source_corners[&(self.face as u32,face[(self.cursor+1)%face.len()])]}else {corner};self.corner_sources[self.face].push(corner);self.edge_sources[self.face].push(edge);self.cursor+=1;if self.cursor==face.len() {self.face+=1;self.cursor=0;}}},
             19=>{if let Some(face)=self.face_sources[self.remove].pop() {self.face_sources[self.keep].push(face);}else {self.phase=10;}},
             20=>{
                 let a=self.edge_sources[self.a][self.ai];let b=self.edge_sources[self.b][self.bi];
-                if snapshot.source.uv_seams.contains(&a) || snapshot.source.uv_seams.contains(&b) {self.reject()?;return Ok(None);}
+                if snapshot.source.uv_seams.contains(&a) || snapshot.source.uv_seams.contains(&b) || self.incompatible_raw_surface(&snapshot.source) {self.reject()?;return Ok(None);}
                 if self.attribute_name.is_none() {self.attribute_name=snapshot.source.attributes.first_key_value().map(|(name,_)|name.clone());}
                 let Some(name)=self.attribute_name.as_ref() else {self.phase=if self.vertex_input.is_some() {30}else {7};return Ok(None);};let attribute=&snapshot.source.attributes[name];
                 if attribute.domain==MeshAttributeDomain::Corner {
@@ -257,14 +298,32 @@ impl Coplanar {
             22=>{self.preserve_corners|=!snapshot.source.uv_seams.is_empty();if self.attribute_name.is_none() {self.attribute_name=snapshot.source.attributes.first_key_value().map(|(name,_)|name.clone());}if let Some(name)=self.attribute_name.as_ref() {self.preserve_corners|=matches!(snapshot.source.attributes[name].domain,MeshAttributeDomain::Corner|MeshAttributeDomain::Edge);self.attribute_name=snapshot.source.attributes.range((std::ops::Bound::Excluded(name.clone()),std::ops::Bound::Unbounded)).next().map(|(name,_)|name.clone());if self.attribute_name.is_none() {self.phase=17;}}else {self.phase=17;}},
             23=>{if let Some(vertices)=&self.vertex_input {if self.cursor==vertices.len() {self.cursor=0;self.phase=0;}else {let id=vertices[self.cursor];snapshot.source.vertex_position(id)?;self.selected_vertices.insert(id.0);self.cursor+=1;}}else {let edges=self.explicit.as_ref().unwrap();if self.cursor==edges.len() {self.cursor=0;self.phase=0;}else {let (a,b)=snapshot.source.edge_endpoints(edges[self.cursor])?;self.pending.insert((a.0.min(b.0),a.0.max(b.0)));self.cursor+=1;}}},
             24=>{let origins=&self.build.as_ref().unwrap().origin_vertices;if self.cursor==origins.len() {self.attributes.as_mut().unwrap().data.vertices=Some(std::mem::take(&mut self.output_vertices));self.cursor=0;self.phase=25;}else {self.output_vertices.push(origins[self.cursor]);self.cursor+=1;}},
-            25=>{let attributes=self.attributes.as_mut().unwrap();if self.cursor==attributes.data.mesh.face_count() {self.phase=21;}else {let face=attributes.data.generated_faces.as_ref().unwrap()[self.cursor][0];attributes.data.mesh.faces[self.cursor].smooth=snapshot.source.faces[face as usize].smooth;self.cursor+=1;}},
+            25=>{self.attributes.as_mut().unwrap().retain_exact_surface(HistoryFoldIndex::new());self.phase=35;},
+            35=>{self.phase=21;},
             26=>{if let Some(vertex)=self.selected_vertices.pop_first() {self.star_vertex=vertex;self.star_incident.clear();self.face=0;self.cursor=0;self.phase=27;}else {self.face=0;self.cursor=0;self.phase=12;}},
             27=>{if self.face==snapshot.soup.faces.len() {let face=*self.star_incident.first().ok_or(MeshKernelError::DegenerateOperation)?;self.star_origin=Vec3(snapshot.soup.positions[snapshot.soup.faces[face][0]as usize]);self.star_extent=0.0;self.normal=MeshPolygonNormal::default();self.normal.origin=self.star_origin;self.cursor=0;self.phase=28;}else {let face=&snapshot.soup.faces[self.face];if face.is_empty() {self.face+=1;self.cursor=0;}else if face[self.cursor]==self.star_vertex {self.star_incident.push(self.face);self.face+=1;self.cursor=0;}else {self.cursor+=1;if self.cursor==face.len() {self.face+=1;self.cursor=0;}}}},
             28=>{let face=&snapshot.soup.faces[self.star_incident[0]];let a=Vec3(snapshot.soup.positions[face[self.cursor]as usize]);let b=Vec3(snapshot.soup.positions[face[(self.cursor+1)%face.len()]as usize]);self.normal.add(a,b);self.star_extent=self.star_extent.max(a.sub(self.star_origin).length());self.cursor+=1;if self.cursor==face.len() {self.na=self.normal.value();if self.na.length()==0.0 {return Err(MeshKernelError::DegenerateOperation);}self.face=0;self.cursor=0;self.phase=29;}},
             29=>{if self.face==self.star_incident.len() {self.face=0;self.cursor=0;self.phase=30;}else {let face=&snapshot.soup.faces[self.star_incident[self.face]];let point=Vec3(snapshot.soup.positions[face[self.cursor]as usize]);if point.sub(self.star_origin).dot(self.na).abs()>self.star_extent*1e-5 {return Err(MeshKernelError::InvalidInput("vertex dissolution requires a planar star".into()));}self.cursor+=1;if self.cursor==face.len() {self.face+=1;self.cursor=0;}}},
             30=>{if self.face==self.star_incident.len() {self.phase=31;}else {let id=self.star_incident[self.face];let face=&snapshot.soup.faces[id];let index=self.cursor;let (a,b)=(face[index],face[(index+1)%face.len()]);self.cursor+=1;if self.cursor==face.len() {self.face+=1;self.cursor=0;}if let Some((other,corner))=self.star_edges.remove(&(b,a)) {self.a=other;self.ai=corner;self.b=id;self.bi=index;self.attribute_name=None;self.endpoint=0;self.phase=20;}else if self.star_edges.insert((a,b),(id,index)).is_some() {return Err(MeshKernelError::NonManifold);}}},
             31=>{if let Some(((a,b),(face,corner)))=self.star_edges.pop_first() {if self.star_next.insert(a,(b,face,corner)).is_some() {return Err(MeshKernelError::NonManifold);}}else {self.star_start=*self.star_next.first_key_value().ok_or(MeshKernelError::DegenerateOperation)?.0;self.star_probe=self.star_start;self.phase=32;}},
-            32=>{let (next,face,corner)=self.star_next.remove(&self.star_probe).ok_or(MeshKernelError::NonManifold)?;if self.star_probe!=self.star_vertex {self.corners.push(self.star_probe);self.spliced_corners.push(self.corner_sources[face][corner]);self.spliced_edges.push(self.edge_sources[face][corner]);}else if snapshot.source.attributes.values().any(|attribute|attribute.domain==MeshAttributeDomain::Edge) || snapshot.source.uv_seams.contains(&self.edge_sources[face][corner]) {return Err(MeshKernelError::InvalidInput("boundary vertex dissolution cannot preserve an authored removed edge".into()));}self.star_probe=next;if next==self.star_start {if !self.star_next.is_empty() || self.corners.len()<3 {return Err(MeshKernelError::NonManifold);}self.keep=self.star_incident[0];self.face=0;self.cursor=0;self.phase=34;}},
+            32=>{
+                let (next,face,corner)=self.star_next.remove(&self.star_probe).ok_or(MeshKernelError::NonManifold)?;
+                let edge=self.edge_sources[face][corner];
+                if (self.star_probe==self.star_vertex || next==self.star_vertex)
+                    && (snapshot.source.is_uv_seam(EdgeId(edge)) || snapshot.source.attributes.values().any(|attribute|attribute.domain==MeshAttributeDomain::Edge)) {
+                    return Err(MeshKernelError::InvalidInput("boundary vertex dissolution cannot preserve an authored removed edge".into()));
+                }
+                if self.star_probe!=self.star_vertex {
+                    self.corners.push(self.star_probe);
+                    self.spliced_corners.push(self.corner_sources[face][corner]);
+                    self.spliced_edges.push(edge);
+                }
+                self.star_probe=next;
+                if next==self.star_start {
+                    if !self.star_next.is_empty() || self.corners.len()<3 {return Err(MeshKernelError::NonManifold);}
+                    self.keep=self.star_incident[0];self.face=0;self.cursor=0;self.phase=34;
+                }
+            },
             34=>{if self.face==self.star_incident.len() {self.face=0;self.phase=33;}else {let id=self.star_incident[self.face];if let Some(face)=self.face_sources[id].pop() {self.star_contributors.push(face);}else {self.face+=1;}}},
             33=>{if self.face==self.star_incident.len() {snapshot.soup.faces[self.keep]=std::mem::take(&mut self.corners);self.corner_sources[self.keep]=std::mem::take(&mut self.spliced_corners);self.edge_sources[self.keep]=std::mem::take(&mut self.spliced_edges);self.face_sources[self.keep]=std::mem::take(&mut self.star_contributors);self.phase=26;}else {let id=self.star_incident[self.face];if snapshot.soup.faces[id].pop().is_some() {self.corner_sources[id].pop();self.edge_sources[id].pop();}else {self.face+=1;}}},
             _=>unreachable!(),
@@ -285,7 +344,7 @@ impl MeshMergeJob {
     fn configured(source:HalfedgeMesh,coplanar:Option<Coplanar>,input:Vec<VertexId>,mode:WeldMode,threshold:f32,quantized:bool)->Self {
         Self {snapshot:MeshSourceSnapshot::new(source),coplanar,input,selected:Vec::new(),seen:HistoryFoldSet::new(),mode,threshold,roots:Vec::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),unique:HistoryFoldIndex::new(),center:[0.0;3],cursor:0,i:1,j:0,a:0,b:0,face:0,corner:0,build:None,phase:if quantized {1}else {0},quantized,grid:HistoryFoldIndex::new(),contributors:Vec::new(),source_corners:HistoryFoldIndex::new(),corner_origins:Vec::new(),edge_origins:Vec::new(),output_corners:Vec::new(),output_edges:Vec::new(),output_faces:Vec::new(),attributes:None,removed:0}
     }
-    pub fn phase(&self)->&'static str {if self.phase>=254{return if self.phase==255{"done"}else{"failed"};}if let Some(work)=&self.coplanar {return work.phase();}match self.phase {0=>"merge-selection",1=>"snapshot",2..=4=>"merge-pairs",5..=7=>"merge-remap",8..=10=>"merge-corners",11=>"merge-reconstruct",12=>"merge-source-corners",13=>"merge-contributors",14=>"weld-grid",15=>"merge-vertex-provenance",16=>"merge-face-metadata",_=>"merge-attributes"}}
+    pub fn phase(&self)->&'static str {if self.phase>=254{return if self.phase==255{"done"}else{"failed"};}if let Some(work)=&self.coplanar {return work.phase();}if self.surface_frontier().is_some() {return "weld-surface";}match self.phase {0=>"merge-selection",1=>"snapshot",2..=4=>"merge-pairs",5..=7=>"merge-remap",8..=10=>"merge-corners",11=>"merge-reconstruct",12=>"merge-source-corners",13=>"merge-contributors",14=>"weld-grid",15=>"merge-vertex-provenance",_=>"merge-attributes"}}
     fn next_pair(&mut self) {self.j+=1;if self.j==self.i {self.i+=1;self.j=0;}self.phase=2;}
     fn advance_owned(&mut self)->MeshResult<Option<HalfedgeMesh>> {
         if let Some(work)=&mut self.coplanar {return work.advance(&mut self.snapshot);}
@@ -318,9 +377,22 @@ impl MeshMergeJob {
                     let id=if let Some(id)=self.grid.get(&key) {*id}else {let id=self.soup.positions.len()as u32;self.grid.insert(key,id);self.soup.positions.push(point);self.contributors.push(Vec::new());id};self.remap.push(id);self.contributors[id as usize].push(self.cursor as u32);self.cursor+=1;
                 }
             },
-            15=>{let origins=&self.build.as_ref().unwrap().origin_vertices;if self.cursor==origins.len() {self.cursor=0;self.phase=16;}else {let origin=origins[self.cursor];let attributes=self.attributes.as_mut().unwrap();let group=&attributes.data.vertex_contributors.as_ref().unwrap()[origin as usize];attributes.data.generated_vertices.as_mut().unwrap().push(if group.len()==1 {SourceVertex::Original(group[0])}else {SourceVertex::Contributors(origin)});self.cursor+=1;}},
-            16=>{let attributes=self.attributes.as_mut().unwrap();if self.cursor==attributes.data.mesh.face_count() {self.phase=17;}else {let original=attributes.data.faces.as_ref().unwrap()[self.cursor];attributes.data.mesh.faces[self.cursor].smooth=self.snapshot.source.faces[original as usize].smooth;self.cursor+=1;}},
-            17=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
+            15=>{
+                let origins=&self.build.as_ref().unwrap().origin_vertices;
+                let attributes=self.attributes.as_mut().unwrap();
+                if self.cursor==origins.len() {
+                    if !self.quantized {attributes.data.vertices=Some(self.build.as_mut().unwrap().take_origin_vertices()?);}
+                    attributes.retain_exact_surface(std::mem::take(&mut self.source_corners));
+                    self.phase=16;
+                }else {
+                    let origin=origins[self.cursor];
+                    let group=&attributes.data.vertex_contributors.as_ref().unwrap()[origin as usize];
+                    let provenance=if group.len()==1 {SourceVertex::Original(group[0])}else {SourceVertex::Contributors(origin)};
+                    attributes.data.generated_vertices.as_mut().unwrap().push(provenance);
+                    self.cursor+=1;
+                }
+            },
+            16=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
             _=>unreachable!(),
         }
         Ok(None)
@@ -407,12 +479,20 @@ pub struct MeshSourceRemap {
     indices:Vec<u32>,
     normal_values:Vec<semio_framework_value::DslValue>,
     normal_samples:HistoryFoldIndex<(u32,bool),u32>,
+    surface_blend:Option<refined_surface::SurfaceBlend>,
+    surface_center_uv:Option<(u32,u32,[f32;2])>,
+    exact_surface:bool,
+    expanded_surface:Option<(usize,bool)>,
+    partitioned_surface:bool,
+    reoriented_surface:bool,
+    cap_begin:Option<usize>,
+    cap_chart:Option<(usize,refined_surface::CapChart)>,
     cursor:usize,
     phase:u8,
 }
 
 impl MeshSourceRemap {
-    pub fn new(mesh:HalfedgeMesh,vertices:Option<Vec<u32>>,faces:Option<Vec<u32>>,mirrored_faces:Option<Vec<bool>>,normal_axis:Option<usize>)->Self {Self {data:MeshSourceRemapData {vertex_contributors:None,corner_faces:None,generated_vertices:None,generated_faces:None,corner_sources:None,edge_sources:None,edge_source_keys:None,mesh,vertices,faces,mirrored_faces,normal_axis},face_values_base:0,influence:None,influence_face:0,influence_vertex:0,weight_cursor:0,weight_next:0,weight_start:0,sum:[0.0;16],width:0,total:0.0,best:None,constant:None,equality:None,numeric_samples:HistoryFoldIndex::new(),corners:HistoryFoldIndex::new(),name:None,indices:Vec::new(),normal_values:Vec::new(),normal_samples:HistoryFoldIndex::new(),cursor:0,phase:0}}
+    pub fn new(mesh:HalfedgeMesh,vertices:Option<Vec<u32>>,faces:Option<Vec<u32>>,mirrored_faces:Option<Vec<bool>>,normal_axis:Option<usize>)->Self {Self {data:MeshSourceRemapData {vertex_contributors:None,corner_faces:None,generated_vertices:None,generated_faces:None,corner_sources:None,edge_sources:None,edge_source_keys:None,mesh,vertices,faces,mirrored_faces,normal_axis},face_values_base:0,influence:None,influence_face:0,influence_vertex:0,weight_cursor:0,weight_next:0,weight_start:0,sum:[0.0;16],width:0,total:0.0,best:None,constant:None,equality:None,numeric_samples:HistoryFoldIndex::new(),corners:HistoryFoldIndex::new(),name:None,indices:Vec::new(),normal_values:Vec::new(),normal_samples:HistoryFoldIndex::new(),surface_blend:None,surface_center_uv:None,exact_surface:false,expanded_surface:None,partitioned_surface:false,reoriented_surface:false,cap_begin:None,cap_chart:None,cursor:0,phase:0}}
     fn advance_owned(&mut self,source:&mut HalfedgeMesh)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{
@@ -422,7 +502,7 @@ impl MeshSourceRemap {
                 if source.attributes.is_empty() {self.cursor=0;self.phase=7;return Ok(None);}
                 if self.name.is_none() {self.name=source.attributes.first_key_value().map(|(name,_)|name.clone());}
                 let attribute=&source.attributes[self.name.as_ref().unwrap()];
-                let reflect=attribute.semantic==MeshAttributeSemantic::Normal && self.data.normal_axis.is_some();
+                let reflect=attribute.semantic==MeshAttributeSemantic::Normal && (self.data.normal_axis.is_some()||(self.reoriented_surface&&self.data.mirrored_faces.is_some()));
                 let domain=if reflect && attribute.domain==MeshAttributeDomain::Vertex {MeshAttributeDomain::Corner}else {attribute.domain};
                 let count=match domain {MeshAttributeDomain::Vertex=>self.data.mesh.vertex_count(),MeshAttributeDomain::Face=>self.data.mesh.face_count(),_=>self.data.mesh.halfedge_count()};
                 if self.cursor==count {
@@ -470,7 +550,7 @@ impl MeshSourceRemap {
                     let source_face=|face|self.data.faces.as_ref().map_or(face,|faces|faces[face as usize]);
                     let (id,mirrored)=match domain {
                         MeshAttributeDomain::Vertex=>(source_vertex(self.cursor as u32),false),
-                        MeshAttributeDomain::Face=>(self.data.generated_faces.as_ref().map_or_else(||source_face(self.cursor as u32),|faces|faces[self.cursor][0]),false),
+                        MeshAttributeDomain::Face=>(self.data.generated_faces.as_ref().map_or_else(||source_face(self.cursor as u32),|faces|faces[self.cursor][0]),self.reoriented_surface&&self.data.mirrored_faces.as_ref().is_some_and(|faces|faces[self.cursor])),
                         _=>{let overrides=if domain==MeshAttributeDomain::Edge {&self.data.edge_sources}else {&self.data.corner_sources};
                             if let Some(original)=overrides.as_ref().and_then(|sources|sources[self.cursor]) {let index=attribute.indices.as_ref().map_or(original,|indices|indices[original as usize]);self.indices.push(index);self.cursor+=1;return Ok(None);}
                             let edge=&self.data.mesh.halfedges[self.cursor];let face=edge.face.unwrap();let vertex=source_vertex(edge.vertex);let original_face=source_face(face);let mut corner=self.corners[&(original_face,vertex)];
@@ -480,7 +560,7 @@ impl MeshSourceRemap {
                     };
                     let original=attribute.indices.as_ref().map_or(id,|indices|indices[id as usize]);
                     let index=if reflect {
-                        if let Some(index)=self.normal_samples.get(&(original,mirrored)) {*index}else {let tuple=attribute.values[original as usize].as_array().unwrap();let axis=self.data.normal_axis.unwrap();let normal=semio_framework_value::DslValue::Array(tuple.iter().enumerate().map(|(coordinate,value)|semio_framework_value::DslValue::float(value.as_f64().unwrap()*if mirrored && coordinate==axis {-1.0}else {1.0})).collect());let index=self.normal_values.len() as u32;self.normal_values.push(normal);self.normal_samples.insert((original,mirrored),index);index}
+                        if let Some(index)=self.normal_samples.get(&(original,mirrored)) {*index}else {let tuple=attribute.values[original as usize].as_array().unwrap();let axis=self.data.normal_axis;let normal=semio_framework_value::DslValue::Array(tuple.iter().enumerate().map(|(coordinate,value)|semio_framework_value::DslValue::float(value.as_f64().unwrap()*if mirrored&&axis.is_none_or(|axis|axis==coordinate) {-1.0}else {1.0})).collect());let index=self.normal_values.len() as u32;self.normal_values.push(normal);self.normal_samples.insert((original,mirrored),index);index}
                     }else {original};
                     self.indices.push(index);self.cursor+=1;
                 }
@@ -524,7 +604,7 @@ impl MeshSourceRemap {
             }
             4=>{let attribute=&source.attributes[self.name.as_ref().unwrap()];if let Some(equal)=self.equality.as_mut().unwrap().step(&attribute.values)? {self.equality=None;if !equal {return Err(MeshKernelError::InvalidInput(format!("constant mesh attribute '{}' has conflicting source values",self.name.as_ref().unwrap())));}self.phase=3;}},
             7=>{
-                if source.uv_seams.is_empty() || self.cursor==self.data.mesh.halfedge_count() {self.phase=2;return Ok(None);}
+                if self.exact_surface || self.partitioned_surface || self.expanded_surface.is_some() || self.data.normal_axis.is_some() || source.uv_seams.is_empty() || self.cursor==self.data.mesh.halfedge_count() {self.phase=2;return Ok(None);}
                 if let Some(keys)=&self.data.edge_source_keys {let original=*self.corners.get(&keys[self.cursor]).ok_or(MeshKernelError::InvalidHandle)?;if source.uv_seams.contains(&original) || source.halfedges[original as usize].twin.is_some_and(|twin|source.uv_seams.contains(&twin)) {self.data.mesh.uv_seams.insert(self.cursor as u32);}self.cursor+=1;return Ok(None);}
                 if let Some(original)=self.data.edge_sources.as_ref().and_then(|sources|sources[self.cursor]) {if source.uv_seams.contains(&original) || source.halfedges[original as usize].twin.is_some_and(|twin|source.uv_seams.contains(&twin)) {self.data.mesh.uv_seams.insert(self.cursor as u32);}self.cursor+=1;return Ok(None);}
                 let edge=&self.data.mesh.halfedges[self.cursor];let face=self.data.corner_faces.as_ref().map_or_else(||self.data.faces.as_ref().map_or(edge.face.unwrap(),|faces|faces[edge.face.unwrap() as usize]),|faces|faces[self.cursor]);
@@ -734,8 +814,8 @@ impl MeshTopologyBuild {
 }
 
 impl semio_framework_value::retirement::RetireOwned for MeshImportJob {
-    type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<semio_framework_mesh_engine::PolygonMeshSource>,Vec<Vec<u32>>,HistoryFoldIndex<(u32,u32),u32>,Vec<u32>,Vec<f32>,Vec<u32>,Vec<f32>,HistoryFoldIndex<[u32;3],u32>,Vec<u32>,Soup,Vec<u32>,Vec<semio_framework_value::DslValue>,Option<HalfedgeMesh>,Option<MeshTopologyBuild>);
-    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.polygon,self.primitive_faces,self.midpoints,self.mids,self.positions,self.indices,self.normals,self.unique,self.remap,self.soup,self.corners,self.corner_normals,self.mesh,self.build)}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<semio_framework_mesh_engine::PolygonMeshSource>,Vec<Vec<u32>>,HistoryFoldIndex<(u32,u32),u32>,Vec<u32>,Vec<f32>,Vec<u32>,Vec<f32>,Vec<f32>,HistoryFoldIndex<[u32;3],u32>,Vec<u32>,Soup,Vec<u32>,Vec<semio_framework_value::DslValue>,Option<HalfedgeMesh>,Option<MeshTopologyBuild>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.polygon,self.primitive_faces,self.midpoints,self.mids,self.positions,self.indices,self.normals,self.uvs,self.unique,self.remap,self.soup,self.corners,self.corner_normals,self.mesh,self.build)}
     fn controlled_retirement_supported()->bool {true}
 }
 
@@ -812,10 +892,13 @@ pub enum MeshPrimitiveKind {Box=0,Plane=1,Cylinder=2,Cone=3,IcoSphere=4}
 
 impl MeshImportJob {
     pub fn indexed(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>)->MeshResult<(Self,MeshModelingProgress)>{
-        if !positions.len().is_multiple_of(3)||!indices.len().is_multiple_of(3)||!normals.is_empty()&&normals.len()!=positions.len(){return Err(MeshKernelError::InvalidInput("invalid indexed triangulation buffers".into()));}
-        if indices.len()/3>100_000||positions.len().saturating_add(indices.len()).saturating_add(normals.len()).saturating_mul(4)>64_000_000{return Err(MeshKernelError::InvalidInput("indexed triangulation exceeds mesh capacity".into()));}
+        Self::indexed_surface(positions, indices, normals, Vec::new())
+    }
+    pub fn indexed_surface(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>,uvs:Vec<f32>)->MeshResult<(Self,MeshModelingProgress)>{
+        if !positions.len().is_multiple_of(3)||!indices.len().is_multiple_of(3)||!normals.is_empty()&&normals.len()!=positions.len()||!uvs.is_empty()&&uvs.len()!=positions.len()/3*2{return Err(MeshKernelError::InvalidInput("invalid indexed triangulation buffers".into()));}
+        if indices.len()/3>100_000||positions.len().saturating_add(indices.len()).saturating_add(normals.len()).saturating_add(uvs.len()).saturating_mul(4)>64_000_000{return Err(MeshKernelError::InvalidInput("indexed triangulation exceeds mesh capacity".into()));}
         let total=positions.len().saturating_add(indices.len().saturating_mul(16)).saturating_add(1);
-        let work=Self {grid:None,polygon:None,primitive:None,primitive_faces:Vec::new(),midpoints:HistoryFoldIndex::new(),mids:Vec::new(),generation:0,face:0,part:0,positions,indices,normals,unique:HistoryFoldIndex::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),corner_normals:Vec::new(),mesh:None,cursor:0,build:None,phase:0};
+        let work=Self {grid:None,polygon:None,primitive:None,primitive_faces:Vec::new(),midpoints:HistoryFoldIndex::new(),mids:Vec::new(),generation:0,face:0,part:0,positions,indices,normals,uvs,unique:HistoryFoldIndex::new(),remap:Vec::new(),soup:Soup::default(),corners:Vec::new(),corner_normals:Vec::new(),mesh:None,cursor:0,build:None,phase:0};
         Ok((work,MeshModelingProgress {units_done:0,units_total:total,phase:"mesh-import-vertices"}))
     }
     pub fn parametric(grid: semio_framework_mesh_engine::ParametricMeshGrid) -> MeshResult<(Self, MeshModelingProgress)> {
@@ -864,9 +947,31 @@ impl MeshSourceRemap {
 mod tests;
 
 impl MeshMergeJob {
-    pub fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
+    fn surface_frontier(&self)->Option<&MeshSourceRemap> {
+        if let Some(work)=self.coplanar.as_ref().filter(|work|work.phase==35) {
+            return work.attributes.as_ref().filter(|work|work.retaining_refined_surface());
+        }
+        (self.phase==16).then_some(())?;
+        self.attributes.as_ref().filter(|work|work.retaining_refined_surface())
+    }
+
+    /// 📏️ Quotes a merge surface record from its exact source corner or representative vertex.
+    pub fn retained_surface_demand(&self,copy:usize)->Result<Option<semio_framework_value::RetirementDemand>,semio_framework_value::ValueError> {
+        let Some(work)=self.surface_frontier() else {return Ok(None);};
+        work.refined_surface_demand(&self.snapshot.source,copy)
+    }
+
+    pub fn advance(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
         if self.phase>=254{return Err(MeshKernelError::InvalidInput("reconstruction owner already terminal".into()));}
-        let result=self.advance_owned();match &result {Ok(Some(_))=>self.phase=255,Err(_)=>self.phase=254,_=>{}}result
+        let result=if self.surface_frontier().is_some() {
+            let attributes=match &mut self.coplanar {
+                Some(work)=>work.attributes.as_mut().unwrap(),
+                None=>self.attributes.as_mut().unwrap(),
+            };
+            attributes.step_refined_surface(&self.snapshot.source,grant,receipt).map(|()|None)
+        }else {self.advance_owned()};
+        match &result {Ok(Some(_))=>self.phase=255,Err(_)=>self.phase=254,_=>{}}
+        result
     }
 }
 

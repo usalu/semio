@@ -32,17 +32,70 @@
     {
       "id": "cancelled",
       "mode": "wait",
-      "accepted": false
+      "accepted": false,
+      "compilerRuns": 1,
+      "graphCaptures": 3
     },
     {
       "id": "nonzero",
       "mode": "fail",
-      "accepted": false
+      "accepted": false,
+      "compilerRuns": 1,
+      "graphCaptures": 4,
+      "expectedFailure": "Cargo artifact build failed"
+    },
+    {
+      "id": "nonzero after source edit",
+      "mode": "source-edit",
+      "accepted": true,
+      "compilerRuns": 2,
+      "replacementSource": "fn main() { let value = 2; }\n"
+    },
+    {
+      "id": "success after source edit during compilation",
+      "mode": "successful-source-edit",
+      "accepted": true,
+      "compilerRuns": 2,
+      "consumerRuns": 1,
+      "staleArtifact": "0061736d01000000ffeeddcc",
+      "replacementSource": "fn main() { let value = 3; }\n"
+    },
+    {
+      "id": "successful observation output after lock edit",
+      "mode": "successful-source-edit",
+      "accepted": true,
+      "compilerRuns": 2,
+      "consumerRuns": 1,
+      "observationOutput": true,
+      "retainCompilationBytes": 4194304,
+      "staleArtifact": "0061736d01000000ffeeddcc",
+      "replacementLock": "version=3\n[[package]]\nname=\"fixture\"\nversion=\"0.1.0\"\n"
+    },
+    {
+      "id": "retained compiler bytes after consumed source edit",
+      "mode": "verified-source-edit",
+      "accepted": true,
+      "compilerRuns": 1,
+      "consumerRuns": 1,
+      "retainCompilationBytes": 4194304,
+      "consumedSource": "fn main() {}\n",
+      "replacementSource": "fn main() { let value = 5; }\n"
+    },
+    {
+      "id": "retained compiler bytes after edit before announcement",
+      "mode": "verified-source-edit-before-announcement",
+      "accepted": true,
+      "compilerRuns": 1,
+      "consumerRuns": 1,
+      "retainCompilationBytes": 4194304,
+      "consumedSource": "fn main() {}\n",
+      "replacementSource": "fn main() { let value = 7; }\n"
     },
     {
       "id": "empty",
       "mode": "empty",
-      "accepted": false
+      "accepted": false,
+      "graphCaptures": 3
     }
   ],
   "cargo": {

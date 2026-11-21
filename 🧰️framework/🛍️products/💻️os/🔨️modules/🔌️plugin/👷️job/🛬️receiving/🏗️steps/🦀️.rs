@@ -84,8 +84,8 @@ pub fn receiver_close<I:Sync+'static,T:NativeReceive<I>,A:RetireOwned+Sync>(rece
   (Ok(None),None)=>RetainedWorkPoll::Pending{work},
  }
 }
-/// 🪙️ The work one receiving scope is quoted: half of the turn's fuel, the framework's own unquoted scope rule, so the held scope never starves the turn that drives it.
-pub fn receiving_units(fuel:u64)->u64{fuel.div_ceil(2)}
+/// 🪙️ Uses the framework’s bounded default Work quote with the plugin’s exact physical demand.
+pub fn receiving_units(fuel:u64)->u64{semio_framework_job::unquoted_receiving_work(fuel)}
 /// 🔀️ The smallest demand that funds both of two alternative steps of one turn.
 pub fn widened(a:RetirementDemand,b:RetirementDemand)->RetirementDemand{RetirementDemand{copy_bytes:a.copy_bytes.max(b.copy_bytes),capacity_bytes:a.capacity_bytes.max(b.capacity_bytes),release_bytes:a.release_bytes.max(b.release_bytes),depth:a.depth.max(b.depth)}}
 /// 📐️ The wallet every test caller of this crate is born with. Its capacity, release and depth are not the bound under test: the bound is each turn's grant, derived from the owner's own quote by [`step_grant`].

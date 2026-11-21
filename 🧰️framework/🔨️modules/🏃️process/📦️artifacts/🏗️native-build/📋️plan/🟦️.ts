@@ -9,6 +9,9 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export type CargoArtifactPlanFactsV1=Readonly<{version:1;root:string;platform:"linux"|"darwin"|"win32";mode:"prototype"|"release";product:string;compiler:string;toolchain:string;configuration:string;source:string}>;
 const chunk=262144;
 const digest=(value:string):string=>createHash("sha256").update(value).digest("hex");
+const factFields=schema.required as readonly (keyof CargoArtifactPlanFactsV1)[];
+const differencePolicy=schema.definitions.DifferencePolicy.const;
+const label=(value:string|undefined):string|null=>value===undefined?null:value.length>differencePolicy.maximumLabelUnits?value.slice(0,differencePolicy.maximumLabelUnits-1)+"…":value;
 
 /** 🔤️ Uses the actual received root verbatim; path normalization belongs to its authenticated owner. */
 export function cargoArtifactPlanCanonicalV1(input:unknown):string{
@@ -17,6 +20,57 @@ export function cargoArtifactPlanCanonicalV1(input:unknown):string{
 }
 /** 🏷️ A content key remains descriptive DATA until an owned acquisition supplies custody. */
 export function cargoArtifactPlanIdentityV1(value:unknown):string{return digest(cargoArtifactPlanCanonicalV1(value));}
+
+const planningFields=["planningDigest","compilationDigest","configurationDigest"] as const;
+type PlannedUnit=Readonly<Pick<CargoCompilationGraphV1["units"][number],"id"|typeof planningFields[number]>>;
+type DiagnosticGraph=Readonly<{roots:readonly string[];units:readonly (PlannedUnit&Readonly<Pick<CargoCompilationGraphV1["units"][number],"sourceInputs">>)[]}>;
+type PlanningGraph=Readonly<{workspaceRoot:string;roots:readonly string[];units:readonly PlannedUnit[]}>;
+
+/** 🧭️ Finds Cargo planning drift before Source admission can fail against the replacement graph. */
+export function cargoArtifactPlanningDifferenceV1(baseline:PlanningGraph,current:PlanningGraph,check:()=>void){
+ check();
+ if(baseline.workspaceRoot!==current.workspaceRoot)return {category:"workspace-root",expectedRoot:label(baseline.workspaceRoot),observedRoot:label(current.workspaceRoot)};
+ for(let index=0;index<Math.max(baseline.roots.length,current.roots.length);index++){
+  check();
+  if(baseline.roots[index]!==current.roots[index])return {category:"graph-roots",index,expectedUnit:label(baseline.roots[index]),observedUnit:label(current.roots[index])};
+ }
+ for(let index=0;index<Math.max(baseline.units.length,current.units.length);index++){
+  check();
+  const left=baseline.units[index],right=current.units[index];
+  if(!left||!right||left.id!==right.id)return {category:"graph-units",index,expectedUnit:label(left?.id),observedUnit:label(right?.id)};
+  const changed=planningFields.find(key=>left[key]!==right[key]);
+  if(changed)return {category:"unit-metadata",unit:label(left.id),changed,expectedUnitDigest:left[changed],observedUnitDigest:right[changed]};
+ }
+ return null;
+}
+
+/** 🔎️ Identifies one difference using only previously admitted plan facts and graph rows. */
+export function cargoArtifactPlanDifferenceV1(expected:CargoArtifactPlanFactsV1,observed:CargoArtifactPlanFactsV1,baseline:DiagnosticGraph,current:DiagnosticGraph,check:()=>void){
+ const field=factFields.find(key=>expected[key]!==observed[key]);
+ if(field===undefined)return null;
+ const fact={field,expectedDigest:field==="source"||field==="configuration"?expected[field]:digest(String(expected[field])),observedDigest:field==="source"||field==="configuration"?observed[field]:digest(String(observed[field]))};
+ if(field!=="source")return {...fact,category:"plan-fact"};
+ let comparisons=0;
+ const allowed=()=>{check();return ++comparisons<=differencePolicy.maximumComparisons;};
+ for(let index=0;index<Math.max(baseline.roots.length,current.roots.length);index++){
+  if(!allowed())return {...fact,category:"graph-comparison-limit"};
+  if(baseline.roots[index]!==current.roots[index])return {...fact,category:"graph-roots",index,expectedUnit:label(baseline.roots[index]),observedUnit:label(current.roots[index])};
+ }
+ for(let index=0;index<Math.max(baseline.units.length,current.units.length);index++){
+  if(!allowed())return {...fact,category:"graph-comparison-limit"};
+  const left=baseline.units[index],right=current.units[index];
+  if(!left||!right||left.id!==right.id)return {...fact,category:"graph-units",index,expectedUnit:label(left?.id),observedUnit:label(right?.id)};
+  for(let input=0;input<Math.max(left.sourceInputs.length,right.sourceInputs.length);input++){
+   if(!allowed())return {...fact,category:"graph-comparison-limit"};
+   const before=left.sourceInputs[input],after=right.sourceInputs[input];
+   if(!before||!after||before.path!==after.path)return {...fact,category:"source-roster",unit:label(left.id),expectedPath:label(before?.path),observedPath:label(after?.path)};
+   if(before.digest!==after.digest||before.bytes!==after.bytes)return {...fact,category:"source-file",unit:label(left.id),path:label(before.path),expectedSha256:before.digest,observedSha256:after.digest,expectedBytes:before.bytes,observedBytes:after.bytes};
+  }
+  const changed=planningFields.find(key=>left[key]!==right[key]);
+  if(changed)return {...fact,category:"unit-metadata",unit:label(left.id),changed,expectedUnitDigest:left[changed],observedUnitDigest:right[changed]};
+ }
+ return {...fact,category:"graph-other"};
+}
 
 /** 🧬️ Streams the actual admitted graph under its original bounded control without cloning Source. */
 export async function captureCargoArtifactPlanFactsV1(graph:CargoCompilationGraphV1,recipe:CargoTargetRecipeV1,mode:"prototype"|"release",platform:CargoArtifactPlanFactsV1["platform"],control:ResourceLeaseControl,maximumBytes:number):Promise<CargoArtifactPlanFactsV1>{

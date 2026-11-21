@@ -74,8 +74,15 @@ impl FlowHost {
         set_hover_channel(&mut self.dag.viewport, &mut self.dag.graph, widget_id, port_id);
     }
 
+    /// 🧭️ Sets hover to the named channel on the requested side.
+    pub fn set_hover_channel_direction(&mut self, widget_id: Option<&str>, port_id: Option<&str>, direction: Option<semio_os_infinite::board::schema::dag_input::DagChannelDirection>) {
+        dag::set_hover_channel_direction(&self.dag.viewport, &mut self.dag.graph, widget_id, port_id, direction);
+    }
+
     /// 🔌️ Replaces admitted typed channel selection.
-    pub fn set_selected_channels(&mut self,channels:&[semio_os_infinite::board::schema::dag_input::DagChannelRef]){set_selected_channels(&mut self.dag.viewport, &mut self.dag.graph, channels);}
+    pub fn set_selected_channels(&mut self, channels: &[semio_os_infinite::board::schema::dag_input::DagChannelRef]) {
+        set_selected_channels(&mut self.dag.graph, channels);
+    }
 
     /// 🌫️ Widget ids with preview disabled.
     pub fn preview_off_widget_ids(&self) -> Vec<String> {

@@ -1,4 +1,6 @@
 use super::*;
+use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller, close_original_effect_step};
+use semio_ui_scene::SceneDoc;
 
 /// 📥️ A persistent snapshot that retires through its controlled owner when the law is done.
 struct Doc(Option<Fem2dSnapshot>);
@@ -21,9 +23,17 @@ impl Drop for Doc {
         let Some(snapshot) = self.0.take() else { return };
         let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(snapshot).ok().expect("controlled retirement admits the snapshot");
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 256 * 1048576, maximum_capacity_bytes: 256 * 1048576, maximum_release_bytes: 256 * 1048576, maximum_depth: 128 };
-        while !owner.terminal_is_empty() {
-            owner.step(grant).expect("funded retirement step");
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(1), Generation(1), grant, || Some(1), u64::MAX, 1_000_000);
+        caller.cancel().cancel_now();
+        for _ in 0..100_000 {
+            if owner.terminal_is_empty() { break; }
+            caller.turn(grant, |cx| {
+                let body = grant.maximum_copy_bytes;
+                close_original_effect_step(cx, owner.selected_demand(body)?, |effect| owner.step(body, effect))
+            }).expect("funded retirement step");
         }
+        assert!(owner.terminal_is_empty(), "fixture snapshot retired");
+        caller.retire(grant);
     }
 }
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_SELECT_DIRECT;
@@ -37,7 +47,28 @@ use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canv
 fn results_scene(doc: &Fem2dSnapshot, display: &ResultDisplay, window: &config::Fem2dResultsWindowConfig) -> Canvas2dScene {
     let node = render(doc, display, &Viewport2d::default(), window, &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
     let semio_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
-    semio_ui_scene::decode(props).expect("decode canvas scene")
+    assert_eq!(props.kind, semio_ui_contract::SurfaceKind::Canvas2d);
+    let mut scene: Canvas2dScene = semio_ui_scene::decode(props).expect("decode canvas scene spine");
+    for carrier in node.children.iter() {
+        let mut payload = String::new();
+        append_lane_text(carrier, &mut payload);
+        assert!(scene.merge_lane(carrier.key.as_str(), payload));
+    }
+    scene
+}
+
+fn append_lane_text(node: &BuiltNode, payload: &mut String) {
+    if let semio_ui_contract::Component::Text(text) = &node.component {
+        payload.push_str(&text.packed_payload());
+    }
+    for child in node.children.iter() {
+        append_lane_text(child, payload);
+    }
+}
+
+fn result_placeholder(node: &BuiltNode) -> &str {
+    let semio_ui_contract::Component::Text(props) = &node.component else { panic!("expected analysis placeholder") };
+    props.value.0.as_str()
 }
 
 fn demo() -> Doc {
@@ -46,17 +77,15 @@ fn demo() -> Doc {
 
 #[semio_framework_async_macros::async_test]
 async fn renders_fem2d_results_scene() {
-    let node = render(&demo(), &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
-    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection");
-    assert!(json.contains("canvas-2d"), "{json}");
+    let scene = results_scene(&demo(), &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &config::Fem2dResultsWindowConfig::default());
+    assert!(scene.layers_json.contains("deformed-"), "the Canvas2d surface draws the solved structure");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_surfaces_solver_error_without_panicking_2d() {
     let empty = Doc::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
     let node = render(&empty, &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("a refused analysis still admits a surface");
-    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection");
-    assert!(!json.is_empty(), "a document the solver refuses surfaces its message instead of panicking");
+    assert!(!result_placeholder(&node).is_empty(), "a document the solver refuses surfaces its message instead of panicking");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -64,8 +93,8 @@ async fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
     let doc = Doc::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
     let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
     let camera = Viewport2d::default();
-    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(render(&doc, &display, &camera, &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission"))).expect("fixture projection");
-    assert!(json.contains("No load case defined"), "{json}");
+    let node = render(&doc, &display, &camera, &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
+    assert_eq!(result_placeholder(&node), "No load case defined");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -78,7 +107,34 @@ async fn results_window_renders_contour_for_region() {
 #[semio_framework_async_macros::async_test]
 async fn results_window_renders_reaction_labels_2d() {
     let scene = results_scene(&demo(), &ResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: DisplayMode::Static }, &config::Fem2dResultsWindowConfig::default());
-    assert!(scene.layers_json.contains("reaction-"), "expected reaction-prefixed text label layers: {}", scene.layers_json);
+    let layers: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).expect("layers json");
+    assert!(layers.iter().any(|layer| layer["id"].as_str().is_some_and(|id| id.starts_with("reaction-"))));
+    for layer in layers.iter().filter(|layer| layer["text"].is_object()) {
+        assert_eq!(layer["text"]["fontFamily"], "Share Tech Mono", "{layer}");
+        assert_eq!(layer["fill"]["color"].as_array().map(Vec::len), Some(4), "{layer}");
+    }
+}
+
+#[test]
+fn mounted_reaction_labels_use_the_supported_dofs() {
+    let field = |node_id: &str, reaction| NodeLiveField { node_id: node_id.into(), displacement: [0.0; 2], residual: [0.0; 2], reaction, contour: 0.0, mode_shape: [0.0; 2] };
+    let fields = [field("p8", [100.0, 12000.0]), field("p8_l1", [100.0, 900.0])];
+    let layers = mounted_reaction_labels(&demo(), fields.iter(), 1.0);
+    let json = semio_framework_pack_json::to_string(&Value::Array(layers));
+    let layers: Vec<serde_json::Value> = serde_json::from_str(&json).expect("layers json");
+    assert_eq!(layers.len(), 1, "{json}");
+    assert_eq!(layers[0]["id"], "reaction-p8-Ty");
+    assert_eq!(layers[0]["text"]["content"], "Ty: 12000 N");
+}
+
+#[test]
+fn reaction_labels_distinguish_force_and_moment_units() {
+    let reactions = [("n1", Dof::Ty, 12.0), ("n1", Dof::Rz, -40.0)];
+    let layers = reaction_labels(&demo(), reactions.into_iter(), 1.0);
+    let json = semio_framework_pack_json::to_string(&Value::Array(layers));
+    let layers: Vec<serde_json::Value> = serde_json::from_str(&json).expect("layers json");
+    assert_eq!(layers[0]["text"]["content"], "Ty: 12 N");
+    assert_eq!(layers[1]["text"]["content"], "Rz: -40 N·m");
 }
 
 /// 📍️ LAW: multiple DOFs at one support node stack vertically instead of sharing one transform.
@@ -164,9 +220,7 @@ fn animated_scene(animation: FemResultsAnimation, mode: DisplayMode) -> Canvas2d
     let doc = demo();
     let window = config::Fem2dResultsWindowConfig { animation, ..config::Fem2dResultsWindowConfig::default() };
     let display = ResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode };
-    let node = render(&doc, &display, &Viewport2d::default(), &window, &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
-    let semio_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
-    semio_ui_scene::decode(props).expect("decode canvas scene")
+    results_scene(&doc, &display, &window)
 }
 
 /// 〰️ LAW: the phase actually moves the structure — a sine frame at quarter phase is a different
@@ -190,12 +244,30 @@ async fn results_window_default_animation_draws_the_full_deformation() {
     assert!(!still.layers_json.contains("playback-caption"), "a still window shows no transport read-out");
 }
 
+/// 📐️ Two retained triangles paint their shared edge once and omit edges without solved endpoints.
+#[test]
+fn mounted_region_deformation_uses_shared_edges_and_published_points() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧭️mounted-region-deformation.json")).unwrap();
+    let points: Vec<(String, (f64, f64), bool)> = serde_json::from_value(fixture["points"].clone()).unwrap();
+    let points = points.iter().map(|(id, position, published)| (id.as_str(), (*position, *published))).collect();
+    let triangles: Vec<[String; 3]> = serde_json::from_value(fixture["triangles"].clone()).unwrap();
+    let triangles = triangles.iter().map(|ids| ids.each_ref().map(String::as_str));
+    let layers = mounted_region_deformation_layers(triangles, &points);
+    let encoded = semio_framework_pack_json::to_string(&Value::Array(layers));
+    let decoded: Vec<serde_json::Value> = serde_json::from_str(&encoded).unwrap();
+    let edges: Vec<[[f64; 2]; 2]> = decoded.iter().map(|layer| serde_json::from_value(layer["points"].clone()).unwrap()).collect();
+    let expected: Vec<[[f64; 2]; 2]> = serde_json::from_value(fixture["edges"].clone()).unwrap();
+    assert_eq!(edges, expected);
+    assert!(decoded.iter().all(|layer| layer["color"] == "#f472b6"));
+}
+
 /// ⏯️ LAW: a running window carries its own phase/speed read-out.
 #[semio_framework_async_macros::async_test]
 async fn results_window_running_scene_carries_a_transport_caption() {
     let running = animated_scene(FemResultsAnimation { phase: 0.42, playing: true, ..FemResultsAnimation::default() }, DisplayMode::Static);
-    assert!(running.layers_json.contains("playback-caption"), "{}", running.layers_json);
-    assert!(running.layers_json.contains("phase 0.42"), "{}", running.layers_json);
+    let layers: Vec<serde_json::Value> = serde_json::from_str(&running.layers_json).expect("layers json");
+    let caption = layers.iter().find(|layer| layer["id"] == "playback-caption").expect("playback caption");
+    assert_eq!(caption["text"]["content"], "Phase 0.42 · ▶ 0.5 Hz");
 }
 
 /// 🎵️ LAW: the mode-shape views read the SAME waveform amplitude the static view does — half the
@@ -261,8 +333,7 @@ async fn no_load_case_fault_follows_the_requested_locale_2d() {
     let empty = Doc::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
     for labels in [&Fem2dLabels::NATIVE_EN, &Fem2dLabels::NATIVE_DE] {
         let node = render(&empty, &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, labels).expect("fixture surface admission");
-        let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("fixture projection");
-        assert!(json.contains(labels.no_load_case.as_str()), "fault names the missing case in the requested locale: {json}");
+        assert_eq!(result_placeholder(&node), labels.no_load_case.as_str());
     }
     assert_ne!(Fem2dLabels::NATIVE_EN.no_load_case.as_str(), Fem2dLabels::NATIVE_DE.no_load_case.as_str());
 }

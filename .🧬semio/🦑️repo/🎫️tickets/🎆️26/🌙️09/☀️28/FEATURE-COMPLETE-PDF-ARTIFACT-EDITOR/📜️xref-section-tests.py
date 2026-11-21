@@ -162,11 +162,15 @@ import_model(models/"🖋️content-operators/🦀️.rs","content-operators.rs"
 import_model(models/"🖼️xobjects/🦀️.rs","content-xobjects.rs")
 import_model(models/"🔤️font-model/🦀️.rs","font-model.rs")
 font_modules=base/"🔨️modules/🔤️fonts"
-font_codec=(font_modules/"🦀️.rs").read_text().rsplit("#[cfg(test)]", 1)[0]
+cff_pdf=Path(sys.argv[7]).resolve() if len(sys.argv) > 7 else None
+font_overlay=(generated/"cff-integration/🔨️modules/🔤️fonts") if cff_pdf else font_modules
+font_codec=(font_overlay/"🦀️.rs").read_text().rsplit("#[cfg(test)]", 1)[0]
+font_codec=font_codec.replace("✒️cff/🦀️.rs", (font_overlay/"✒️cff/🦀️.rs").resolve().as_posix())
 cmap=(font_modules/"🗺️cmap/🦀️.rs").resolve().as_posix()
 (out/"font-codec.rs").write_text(font_codec.replace("🗺️cmap/🦀️.rs", cmap))
 image_source=(base/"🔨️modules/🖼️images/🦀️.rs").read_text()
 geometry=image_source[image_source.index("pub fn packed_image_geometry"):]
+geometry=geometry.replace("    #[test]\n    fn controlled_xobject_replays_samples", "    #[cfg(controlled_xobject_harness)]\n    fn controlled_xobject_replays_samples")
 (out/"content-images.rs").write_text("use crate::standards::v1_7::subsets::base::io::error::{PResult,PdfEngineError};\n"+geometry)
 content=(base/"🔨️modules/🖋️content/🦀️.rs").resolve()
 content_contract=(base/"🔨️modules/🖋️content/🧪️tests/🔬️unit/🦀️.rs").resolve()
@@ -244,7 +248,15 @@ fn production_content_lexical_cursor_preserves_graphics_and_text_operator_roundt
 }
 '''.replace("@CONTENT@",content.as_posix()).replace("@CONTENT_CONTRACT@",content_contract.as_posix()).replace("@PAGE_CONTENT@",page_content.as_posix()).replace("@PAGE_CONTRACT@",(page_content.parent/"🧪️tests/🔬️unit/🦀️.rs").as_posix())
 for placeholder, domain in (("METRICS","📏️metrics"),("TABLES","🅰️tables"),("GLYPH_LIST","🔡️glyph-list"),("TRUETYPE","🔠️truetype")):
-    extra=extra.replace(f"@{placeholder}@", (font_modules/domain/"🦀️.rs").resolve().as_posix())
+    source_path = (font_modules/domain/"🦀️.rs").resolve()
+    if cff_pdf and placeholder == "TRUETYPE":
+        overlay = font_overlay/domain
+        sfnt = (overlay/"🦀️.rs").read_text()
+        sfnt = sfnt.replace("🧵️outline/🦀️.rs", (overlay/"🧵️outline/🦀️.rs").resolve().as_posix())
+        sfnt = sfnt.replace("🧪️tests/🔬️unit/🦀️.rs", (font_modules/domain/"🧪️tests/🔬️unit/🦀️.rs").resolve().as_posix())
+        source_path = (out/"truetype-cff.rs").resolve()
+        source_path.write_text(sfnt)
+    extra=extra.replace(f"@{placeholder}@", source_path.as_posix())
 
 if len(sys.argv) > 6:
     large_pdf=Path(sys.argv[6]).resolve().as_posix()
@@ -301,6 +313,48 @@ fn large_file_uses_retained_graph_and_real_page_program_parser() {
     while pages.close_step(grant).event.unwrap()!=page_tree::PageTreeEvent::Closed {}
 }
 '''.replace("@LARGE_PDF@",large_pdf)
+
+if cff_pdf:
+    extra = extra.replace("pub fn require_font_artifact_kind(_: &crate::font_model::PdfFontProgram) -> PResult<()> { unreachable!() }", "pub fn require_font_artifact_kind(_: &crate::font_model::PdfFontProgram) -> PResult<()> { Ok(()) }")
+    extra += r'''
+#[test]
+fn imported_opentype_codec_uses_declared_byte_codes_and_cubic_glyphs() {
+    use crate::{ArtifactRef, PdfObject, font_model::{PdfBaseEncoding, PdfFont, PdfFontKind, PdfFontProgram}, fonts::{FontCodec, truetype::TrueTypeOutlineSegment}, foreign_artifacts::PdfArtifactResourcePort, xref::{Resolver, build_xref}};
+    use crate::standards::v1_7::subsets::base::io::error::PResult;
+
+    struct AdmittedFont(PdfObject);
+    impl PdfArtifactResourcePort for AdmittedFont {
+        fn admit(&mut self, _: &str, _: PdfObject) -> PResult<ArtifactRef> { unreachable!() }
+        fn resolve(&self, _: &ArtifactRef) -> PResult<PdfObject> { Ok(self.0.clone()) }
+    }
+
+    let pdf = include_bytes!("@CFF_PDF@");
+    let mut source = Resolver::new(pdf, build_xref(pdf).unwrap().entries);
+    let program = AdmittedFont(source.resolve(7).unwrap());
+    let mut font = PdfFont::standard("F1", "LibertinusSerif-Regular");
+    let PdfFontKind::Type1 { encoding, first_char, widths, program: target, .. } = &mut font.kind else { unreachable!() };
+    encoding.base = Some(PdfBaseEncoding::WinAnsi);
+    *first_char = 65;
+    *widths = vec![500.0; 169];
+    *target = Some(PdfFontProgram::OpenType { reference: ArtifactRef });
+    let codec = FontCodec::new(&font, &program).unwrap();
+    let glyphs = codec.decode(b"AgR\xe9");
+    assert_eq!(codec.decode_text(b"AgR\xe9").as_deref(), Some("AgRé"));
+    assert_eq!(codec.encode("AgRé").as_deref(), Some(b"AgR\xe9".as_slice()));
+    let expected = codec.outline_program().unwrap();
+    let mut glyph_ids = Vec::new();
+    for (glyph, ch) in glyphs.into_iter().zip("AgRé".chars()) {
+        assert_eq!(glyph.width, 500.0);
+        let id = glyph.glyph_id.unwrap();
+        assert_eq!(Some(id), expected.glyph_for_char(ch));
+        glyph_ids.push(id);
+        assert!(codec.glyph_outline(id).unwrap().iter().any(|segment| matches!(segment, TrueTypeOutlineSegment::CubicTo { .. })));
+    }
+    glyph_ids.sort_unstable();
+    glyph_ids.dedup();
+    assert_eq!(glyph_ids.len(), 4);
+}
+'''.replace("@CFF_PDF@", cff_pdf.as_posix())
 
 testkit = (l.parents[1]/"🧬️schema/🧪️testkit/📦️packages/🦀️rust/🦀️.rs").read_text()
 index_contract = testkit.index("#[cfg(test)]\nmod xref_index_contracts {")

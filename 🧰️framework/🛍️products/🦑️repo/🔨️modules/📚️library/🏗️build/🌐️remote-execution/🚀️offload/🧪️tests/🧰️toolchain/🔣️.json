@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "commit": "0123456789abcdef0123456789abcdef01234567",
+  "cases": [
+    {
+      "name": "Windows MSVC uses rustc.exe",
+      "host": "x86_64-pc-windows-msvc",
+      "lineEnding": "\r\n",
+      "installed": "rustc.exe",
+      "targets": ["aarch64-pc-windows-msvc", "x86_64-pc-windows-msvc"],
+      "offers": true
+    },
+    {
+      "name": "Windows GNU uses rustc.exe",
+      "host": "x86_64-pc-windows-gnu",
+      "lineEnding": "\r\n",
+      "installed": "rustc.exe",
+      "targets": ["x86_64-pc-windows-gnu"],
+      "offers": true
+    },
+    {
+      "name": "POSIX uses rustc even with Windows target libraries",
+      "host": "aarch64-apple-darwin",
+      "lineEnding": "\n",
+      "installed": "rustc",
+      "targets": ["aarch64-apple-darwin", "x86_64-pc-windows-msvc"],
+      "offers": true
+    },
+    {
+      "name": "Windows without rustc.exe offers no compiler",
+      "host": "x86_64-pc-windows-msvc",
+      "lineEnding": "\r\n",
+      "installed": "rustc",
+      "targets": ["x86_64-pc-windows-msvc"],
+      "offers": false
+    }
+  ]
+}

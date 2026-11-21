@@ -491,7 +491,7 @@ function Paint2dCanvasSurface({
         panRef.current = null;
         marqueeRef.current = { tracking: false, active: false, start: point, points: [] };
         setMarqueeOverlay(null);
-        pickInteraction.onCanvasPointerLeave();
+        pickInteraction.onCanvasPointerCancel();
         for (const tracked of gestureRecognizer.pointers) event.currentTarget.setPointerCapture(tracked.pointerId);
         if (!isNavigator && session) {
           session.pointerCancelScreen();
@@ -619,7 +619,7 @@ function Paint2dCanvasSurface({
       panRef.current = null;
       marqueeRef.current = { tracking: false, active: false, start: { x: 0, y: 0 }, points: [] };
       setMarqueeOverlay(null);
-      pickInteraction.onCanvasPointerLeave();
+      pickInteraction.onCanvasPointerCancel();
       if (isNavigator || !session) return;
       session.pointerCancelScreen();
       session.renderFrame();

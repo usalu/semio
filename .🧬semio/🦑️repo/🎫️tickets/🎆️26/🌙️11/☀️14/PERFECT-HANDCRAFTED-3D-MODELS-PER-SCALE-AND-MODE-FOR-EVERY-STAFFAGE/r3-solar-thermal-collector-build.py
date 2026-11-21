@@ -366,8 +366,8 @@ def body500():
 def thermal500():
     return [
         {"id": "th-side-frame", "of": "side-frame", "region": "stand"},
-        box("th-housing", "housing", ALU, 0.4, [2.0, 0.0953, 1.0], [hu(1.0), 0.04765, 0], region="housing"),
-        box("th-glass", "glass", GLASS, 0.92, [2.0, 0.0032, 1.0], [0.995, 0, 0], region="glazing", layer="glazing-skin"),
+        box("th-housing", "housing", ALU, 0.4, [2.0, 0.0953, 1.0], [hu(1.0), 0.04765, 0], region="housing", sectionFaces=["+v"]),
+        box("th-glass", "glass", GLASS, 0.92, [2.0, 0.0032, 1.0], [0.995, 0, 0], region="glazing", layer="glazing-skin", sectionFaces=["-v"]),
         box("th-absorber", "absorber", COAT, 0.2, [1.88, 0.0005, 0.91], [0.94, 0, 0], region="absorber", layer="absorber-skin"),
         revolve("th-header-upper", "headers", CU, 0.4, [(0, 0.011), (0.997, 0.011)], [0.0, 0.0, 1.0], [0, 0, -0.4985], region="header-upper", slender=True),
         revolve("th-header-lower", "headers", CU, 0.4, [(0, 0.011), (0.997, 0.011)], [0.0, 0.0, 1.0], [1.91, 0, -0.4985], region="header-lower", slender=True),
@@ -781,6 +781,8 @@ def apply(asset):
             layer["title"] = text("Low-iron solar glass 3.2 mm", "Eisenarmes Solarglas 3,2 mm")
             layer["thicknessM"], layer["resistanceM2KW"], layer["heatCapacityJM2K"] = 0.0032, 0.0032, 6000
             region["heatCapacityJM2K"] = 6000
+    import runpy
+    runpy.run_path(os.path.join(T, "equipment-fine-ink.py"))["apply"](asset)
     references = [r for r in asset["provenance"]["references"] if r["id"] != REFERENCE["id"]]
     asset["provenance"]["references"] = references + [REFERENCE]
     asset["provenance"]["notes"] = NOTES

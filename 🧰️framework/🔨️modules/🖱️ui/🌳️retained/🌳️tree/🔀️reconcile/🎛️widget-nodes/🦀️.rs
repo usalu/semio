@@ -4,22 +4,28 @@ use super::*;
 
 // #region reconcile
 //#region 🌳️DocumentTreeReconcile
-/// ⌨️ Which trigger an `Input`'s value commits through — `InputProps`' own doc names the pair
-/// (`Trigger::Change`/`Trigger::Commit`), and `commit == "blur"` is what picks between them, exactly
-/// as React's `InputView` picks `commitOnBlur ? "commit" : "change"`. Resolving it HERE keeps the
-/// retained node's single `on_change` field the one descriptor `events`' commit authority
-/// dispatches, whichever trigger the guest actually bound.
+/// ⌨️ Resolves the input policy's trigger to the single retained action WGPU dispatches.
 fn input_commit_action(record: &UiNodeRecord, props: &ui_contract::InputProps, controller: &str) -> ActionDescriptor {
-    let trigger = if props.commit.as_ref().is_some_and(|value| value.as_str() == "blur") { ui_contract::Trigger::Commit } else { ui_contract::Trigger::Change };
+    let trigger = if matches!(props.commit.as_ref().map(|value| value.as_str()), Some("blur" | "blurDecimalQuad" | "blurRetained" | "blurRetainedBody")) { ui_contract::Trigger::Commit } else { ui_contract::Trigger::Change };
     record_action_or_inert(record, trigger, controller)
 }
 
-pub(super) fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
+pub(super) fn input_node(document: &UiDocumentTree, record: &UiNodeRecord, controller: &str) -> UiNode {
     let ui_contract::Component::Input(props) = &record.component else { return UiNode::Separator(UiSeparatorNode { presence: record_presence(record), menu: menu_ref(record) }) };
+    let published = if props.commit.as_ref().is_none_or(|commit| commit.as_str() != "blurRetainedBody") { Some(props.value.as_str().to_owned()) } else {
+        let key = props.value.as_str();
+        let bytes = key.strip_prefix("framework.input.value.").and_then(|key| key.split_once('.')).and_then(|(bytes, digest)| {
+            (digest.len() == 16 && digest.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                && (bytes.len() == 1 || !bytes.starts_with('0')) && bytes.bytes().all(|byte| byte.is_ascii_digit())).then(|| bytes.parse::<usize>().ok()).flatten()
+        });
+        bytes.and_then(|bytes| super::record_routing_and_actions::retained_text_body(document, record, key, bytes))
+    };
+    let mut presence = record_presence(record);
+    if published.is_none() { presence.state = UiState::Disabled; }
     UiNode::Input(UiInputNode {
         id: record.key.as_str().to_string(),
         input_kind: input_kind(props.kind),
-        value: props.value.as_str().to_string(),
+        value: published.unwrap_or_default(),
         placeholder: optional_contract_label(props.placeholder.as_ref()),
         accessibility_label: optional_contract_label(record.accessibility.label.as_ref()),
         commit: props.commit.as_ref().map(|value| value.as_str().to_string()),
@@ -35,7 +41,7 @@ pub(super) fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         on_submit: record_action(record, ui_contract::Trigger::Submit, controller),
         on_abort: record_action(record, ui_contract::Trigger::Abort, controller),
         on_repeat_last: record_action(record, ui_contract::Trigger::RepeatLast, controller),
-        presence: record_presence(record),
+        presence,
         menu: menu_ref(record),
     })
 }

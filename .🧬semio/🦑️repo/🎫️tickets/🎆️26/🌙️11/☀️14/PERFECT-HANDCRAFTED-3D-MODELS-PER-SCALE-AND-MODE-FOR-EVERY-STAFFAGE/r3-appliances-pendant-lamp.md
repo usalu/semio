@@ -223,3 +223,38 @@ Every other rule passes:
   - The M10 nipple and lock nut in the body: they are hidden inside the collar and lampholder; the structure list has them.
   - The pull-switch, the filament and its stem as solids, and the E27 thread and the textile weave: all are below the feature or hidden.
 - **Faces in contact.** The faces of the collar and lampholder that press on the dome are counted in the lampholder area as faces covered by another region (C29). I did not mark them as `sectionFaces`.
+
+## Round 5 handcraft
+
+Scripts: `r5-pendant-lamp-model.py` (keeps the hand-stated 1:50 to 1:200 lists of `r3-pendant-lamp-model.py`, states 1:500 anew), `r5-pendant-lamp-texts.json` (1:500 decisions), `r5-appliances-crop.ts` (close-up crops of tall sheets). Renders in `🗑️generated/r5-pendant-lamp/{before,after}/` (opened: body, structure and thermal cut at every scale, close-ups of shade, collar and rose at 1:50 and of the 1:500 body and structure, poses `dimmed`, `off`, clip `switch-on-warm-up` t 150, the 2D of 1:50, 1:100, 1:200 zoomed).
+
+### Reference and measurement (1:50)
+
+| Quantity | Reference | Source | Model | Deviation |
+|---|---|---|---|---|
+| Drop ceiling to bulb tip | 0.8 m | asset dimensions | 0.800 m | 0 % |
+| Ceiling rose | 90 to 110 x 20 to 30 mm | canopy sets (Hornbach/Bauhaus) | 100 x 24 mm | in range |
+| Cord | 6.5 to 7.5 mm | 3 x 0.75 mm² textile cord | 6.6 mm | in range |
+| Shade | 260 to 300 mm dome, 0.5 to 0.8 mm enamelled steel | product class, asset | 266 x 133 mm, 0.6 mm, 6 mm bead | 0 % to dims |
+| E27 lampholder | 35 to 40 x 55 to 70 mm | IEC 60238 | 40 x 65 mm | in range |
+| A60 bulb | 60 x 105 mm, E27 cap 27 mm | IEC 60064 / 60061-1 | 60 x 105 mm, cap 27 x 27 | 0 % |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | unchanged A- / A- / A- (re-opened) |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | A- / A- / B+ | unchanged |
+| 1:500 | C / C / C (the shade a straight cone, a witch hat, thermal shell a stepped different outline) | A- / A- / A- |
+| Poses/clips | A- | A- (light states, geometry closed) |
+
+### Changes
+
+- 1:500 authored anew: 100 mm rose with a rounded edge, true slender cord, the shade as the 1:50 Bezier dome at six stations as a 4 mm shell with its neck (a dome, not a cone), the A60 bulb inside on a 40 mm lampholder stub; thermal references the shade and has its own lampholder, bulb and plume patch; structure hook, cord, holder, shade shell, bulb cap, shade mass.
+- `volumes-check.ts --product` PASS, `r3-validate.ts --volumes` VALID; spliced.
+
+### Remaining
+
+- 1:50 collar is a plain turned sleeve (no knurl, no grub screw: below 7.5 mm).
+- Coarse shade shells show slight facets from the tessellation of their few profile stations.

@@ -13,7 +13,12 @@ pub(super) async fn arm_load_document_archive<PA: PluginApp>(
 ) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::LoadDocumentArchive { seq, archive } = command else { unreachable!("arm_load_document_archive is dispatched only for its own command") };
     let seq=*seq;
-    let admitted=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;Ok(instance.app.begin_document_archive_load(seq,archive,admission,cx)?)}).await?;
+    let admitted = with_instances_original_mut(runtime, |list| {
+        let mut instance = find_instance(list, instance_id)?;
+        let admitted = instance.app.begin_document_archive_load(seq, archive, admission, cx)?;
+        if admitted { instance.cell.pending_effects.retain(); }
+        Ok(admitted)
+    }).await?;
     if admitted{frames.push(protocol::AppFrame::Done{in_reply_to:seq});}Ok(admitted)
 }
 

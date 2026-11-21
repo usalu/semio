@@ -210,7 +210,8 @@
         "specificDemandKwhPersonA",
         "storageLossKwhA",
         "distributionLossKwhA",
-        "energyCarrier"
+        "energyCarrier",
+        "dwellingCount"
       ],
       "properties": {
         "specificDemandKwhPersonA": {
@@ -224,6 +225,11 @@
         },
         "energyCarrier": {
           "type": "string"
+        },
+        "dwellingCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },

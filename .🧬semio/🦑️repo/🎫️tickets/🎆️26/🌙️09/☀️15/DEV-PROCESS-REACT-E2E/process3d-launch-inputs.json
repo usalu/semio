@@ -1,0 +1,58 @@
+{
+  "projectRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+  "hostOwner": "🌎️hub/🧩️compositions/🏭️process",
+  "extensionRoots": [
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic",
+    "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood"
+  ],
+  "componentTargets": [
+    "semio-hub-process-component:component",
+    "semio-s-plugin-process-concrete-component:component",
+    "semio-s-plugin-process-metal-component:component",
+    "semio-s-plugin-process-robotic-component:component",
+    "semio-s-plugin-process-wood-component:component"
+  ],
+  "variant": "process3d",
+  "profiles": ["prototype", "release"],
+  "session": "@semio-tech/plugin-registry:session-process3d",
+  "catalog": "@semio-tech/s-dev-composition:generate",
+  "commonPrepare": ["@semio-tech/framework-plugin-web:support", "semio-os-infinite:fonts"],
+  "native": {
+    "command": "repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts run {variant} {profile}",
+    "renderer": "@semio-tech/framework-renderer-wgpu:native-build",
+    "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts",
+    "defaultPolicy": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🔣️.json",
+    "ownedPolicyVariant": "raster",
+    "ownedPolicy": "🌎️hub/🧩️compositions/🖨️raster/🎟️native-policy/🔣️.json",
+    "meshCatalog": "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json"
+  },
+  "react": {
+    "command": "repo ./📜️script.ts serve process3d react {profile}",
+    "contribution": "✏️s/🧑‍💻dev/🎭️variants/🏭️process/🧬️schema/🔣️.json",
+    "runtime": [
+      "✏️s/🧑‍💻dev/🎭️variants/🏭️process/🏗️builder/🌐️vite/🟦️.ts",
+      "✏️s/🧑‍💻dev/🎭️variants/🏭️process/🚀️entry/🟦️.ts"
+    ],
+    "prepare": [
+      "@semio-tech/framework-surface-rs:wasm",
+      "@semio-tech/framework-editor-rs:wasm",
+      "@semio-tech/framework-os-node-graph-rs:wasm"
+    ]
+  },
+  "wgpu": {
+    "command": "repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve process3d {profile} --port 6122",
+    "runtime": ["✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"],
+    "prepare": [
+      "@semio-tech/framework-renderer-wgpu:wasm",
+      "@semio-tech/framework-renderer-wgpu:generate-browser-boot",
+      "@semio-tech/framework-renderer-wgpu:generate-frame-worker",
+      "@semio-tech/framework-renderer-wgpu:generate-renderer-boot"
+    ]
+  },
+  "sourceRoles": {
+    "asGenerated": { "liveMatched": "compile", "activationMatched": "compile", "runtime": "compile" },
+    "candidate": { "liveMatched": "freshness", "activationMatched": "freshness", "runtime": "compile" }
+  }
+}

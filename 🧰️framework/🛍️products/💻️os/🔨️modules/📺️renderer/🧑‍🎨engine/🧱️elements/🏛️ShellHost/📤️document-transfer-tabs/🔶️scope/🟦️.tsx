@@ -1,11 +1,11 @@
 /** 🔶️ The scope phase of useDocumentTransferAndTabs. */
 import type { ProgramRetirementOwnerV1 } from "../../🚪️program-retirement/🟦️.ts";
-import { parseSurfaceAppId, type AppDefinition, type Severity } from "@semio-tech/framework";
+import { NATURAL_FILE_PORT_ID, parseSurfaceAppId, type AppDefinition, type Severity } from "@semio-tech/framework";
 import { decodePackValue } from "@semio-tech/framework/packs";
 import { decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
-import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, openNaturalFileOwnerV1, bytesOfDataUrlV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
-import { NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1, NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, shellSegmentedDownloadSinkFactory, requestFileOpen } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
+import { DOCUMENT_ARCHIVE_FILE_EXTENSION, DOCUMENT_ARCHIVE_MEDIA_TYPE, documentArchiveFileNameV1, beginDocumentTransferV1, naturalFileNameV1, naturalFileFormatV1, naturalMediaDescriptorMatchesV1, naturalFileMediaInputV1, openNaturalFileOwnerV1, bytesOfDataUrlV1, documentTransferNoticeTextV1, documentTransferNoticeCodeV1, type DocumentTransferNoticeV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, readBlobBytesBoundedV1, requestFileSelectionV1, downloadMediaExportBytes, shellSegmentedDownloadSinkFactory, requestFileOpen } from "../../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { buildSpacePanelState, parsePanelState, studioPanelFocusingSpawned } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { documentTransferTasksV1, type TaskManagerDocumentTransferV1 } from "../../../🧵️TaskManager/🟦️.tsx";
@@ -20,7 +20,7 @@ import { LOCAL_CATALOG_WRITE_DEADLINE_MS_V1, sameLocalDocumentArchiveV1 } from "
 import { awaitVerifiedReadbackV1 } from "../../🗂️local-catalog/💾️acknowledgment/🟦️.ts";
 import { readOwnedDocumentArchiveV1 } from "../../🗄️shell-uri-documents/🔸️open-document/🔏️archive-owner/🟦️.ts";
 import { encodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
-import { declaredMediaFileExportV1, downloadDeclaredMediaFileV1, type MediaFileExportActionIdV1 } from "../../../../🎬️media/📤️file/🟦️.ts";
+import { declaredMediaFileExportV1, declaredNaturalMediaFileExportV1, downloadDeclaredMediaFileV1, deliverNaturalMediaFileV1, type MediaFileExportActionIdV1 } from "../../../../🎬️media/📤️file/🟦️.ts";
 
 /** 🔷 Builds scope, localDocumentOwnerRegistry, hostMode, dispatch of useDocumentTransferAndTabs. */
 export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDriverSettings }) {
@@ -136,6 +136,7 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     }
     const task = trackDocumentTransfer(picked.name, owned.target.pluginId);
     let instanceId: number | null = null;
+    let published = false;
     try {
       if (!current()) throw new Error("archive-file.owner-retired");
       if (!load) throw new Error("document-backbone.archive-loader-unavailable");
@@ -143,14 +144,26 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       if (!current() || task.signal.aborted) throw task.signal.reason ?? new Error("archive-file.owner-retired");
       await load(instanceId, archive, task.signal, (status) => task.progress(status.completed, status.total > 0 ? status.total : null));
       if (!current() || task.signal.aborted) throw task.signal.reason ?? new Error("archive-file.owner-retired");
-      const program = spacePrograms.find((entry) => entry.pluginId === owned.target.pluginId && entry.appId === owned.target.app.id);
-      if (!focusSpawnedProgram({ pluginId: owned.target.pluginId, appId: owned.target.app.id, instanceId, label: program?.label, breadcrumb: program?.breadcrumb })) throw new Error("import.panel-unavailable");
+      if (hostMode) {
+        const program = spacePrograms.find((entry) => entry.pluginId === owned.target.pluginId && entry.appId === owned.target.app.id);
+        published = focusSpawnedProgram({ pluginId: owned.target.pluginId, appId: owned.target.app.id, instanceId, label: program?.label, breadcrumb: program?.breadcrumb });
+      } else {
+        await core.adoptPreparedPrimarySession(owned.target.app.id, {
+          handle: owned.handle, instanceId, current: () => current() && !task.signal.aborted,
+          retirement: {
+            signal: task.signal,
+            persist: (owner, signal) => persistProgramDocument(owner, { signal, progress: task.progress }),
+          },
+          onPublished: () => { published = true; },
+        });
+      }
+      if (!published) throw task.signal.reason ?? new Error("import.publication-unavailable");
       notifyDocumentTransfer("imported", picked.name, "info");
     } catch (error) {
-      if (instanceId !== null) await owned.handle.destroyApp(instanceId).catch((destroyError: unknown) => console.error(`[os-shell] imported instance ${instanceId} could not be closed`, destroyError));
       const notice: DocumentTransferNoticeV1 = task.signal.aborted ? "import-cancelled" : "import-failed";
       console.warn(`[os-shell] ${documentTransferNoticeCodeV1(notice)} ${picked.name}`, error);
       notifyDocumentTransfer(notice, picked.name, task.signal.aborted ? "info" : "error");
+      if (instanceId !== null && !published) await owned.handle.destroyApp(instanceId).catch((destroyError: unknown) => console.error(`[os-shell] imported instance ${instanceId} could not be closed`, destroyError));
     } finally {
       task.finish();
     }
@@ -242,28 +255,31 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
       if (readback === null) throw signal.reason ?? new Error("natural-file.archive-not-persisted");
     return { runtimeKey, entry, expected, heldArchive };
   };
+  const persistProgramDocument = async (owner: ProgramRetirementOwnerV1, task: Pick<ReturnType<typeof trackDocumentTransfer>, "signal" | "progress">): Promise<void> => {
+    const held = (): boolean => {
+      const host = core.sessionRef.current;
+      return core.loadedPluginsRef.current.some(entry => entry.handle === owner.handle) && host !== null && ((host.pluginId === owner.session.pluginId && host.instanceId === owner.session.instanceId && host.app.id === owner.session.app.id) || parsePanelState(host.viewState)?.spawnedApps.some(entry => entry.pluginId === owner.session.pluginId && entry.appId === owner.session.app.id && entry.instanceId === owner.session.instanceId) === true);
+    };
+    if (task.signal.aborted || !held()) throw task.signal.reason ?? new Error("program-retirement.owner-stale");
+    const entries = [...core.openDocumentSessionsRef.current.values()].filter(entry => entry.plugin === owner.handle && entry.session.instanceId === owner.session.instanceId && entry.session.app.id === owner.session.app.id);
+    if (entries.length === 0) {
+      const identity = await owner.handle.readAppDocumentIdentity(owner.session.instanceId);
+      if (task.signal.aborted || !held()) throw task.signal.reason ?? new Error("program-retirement.owner-stale");
+      if (identity.parent_document_id === null) return;
+      await keepOrReattachProgramDocument({ handle: owner.handle, app: owner.session.app }, owner.session.instanceId, owner.name, task, core.sessionRef.current, held);
+    } else {
+      const { runtimeKey, entry, expected, heldArchive } = await persistAttachedProgramDocument({ handle: owner.handle, target: owner.session }, task.signal);
+      const archive = await readOwnedDocumentArchiveV1(owner.handle, entry, runtimeKey, core.openDocumentSessionsRef.current);
+      if (task.signal.aborted || !held() || !heldArchive() || archive === null || !sameLocalDocumentArchiveV1(encodeDocumentArchiveBytes(archive), expected)) throw task.signal.reason ?? new Error("program-retirement.saved-revision-changed");
+    }
+  };
   core.persistProgramDocumentRef.current = async (owner: ProgramRetirementOwnerV1, signal: AbortSignal): Promise<void> => {
     if (!beginDocumentTransferV1(transferInFlightRef)) throw new Error("program-retirement.transfer-busy");
     const task = trackDocumentTransfer(owner.name, owner.handle.pluginId), cancel = (): void => task.cancel();
     signal.addEventListener("abort", cancel, { once: true });
     if (signal.aborted) cancel();
-    const held = (): boolean => {
-      const host = core.sessionRef.current;
-      return core.loadedPluginsRef.current.some(entry => entry.handle === owner.handle) && host !== null && ((host.pluginId === owner.session.pluginId && host.instanceId === owner.session.instanceId && host.app.id === owner.session.app.id) || parsePanelState(host.viewState)?.spawnedApps.some(entry => entry.pluginId === owner.session.pluginId && entry.appId === owner.session.app.id && entry.instanceId === owner.session.instanceId) === true);
-    };
     try {
-      if (task.signal.aborted || !held()) throw task.signal.reason ?? new Error("program-retirement.owner-stale");
-      const entries = [...core.openDocumentSessionsRef.current.values()].filter(entry => entry.plugin === owner.handle && entry.session.instanceId === owner.session.instanceId && entry.session.app.id === owner.session.app.id);
-      if (entries.length === 0) {
-        const identity = await owner.handle.readAppDocumentIdentity(owner.session.instanceId);
-        if (task.signal.aborted || !held()) throw task.signal.reason ?? new Error("program-retirement.owner-stale");
-        if (identity.parent_document_id === null) return;
-        await keepOrReattachProgramDocument({ handle: owner.handle, app: owner.session.app }, owner.session.instanceId, owner.name, task, core.sessionRef.current, held);
-      } else {
-        const { runtimeKey, entry, expected, heldArchive } = await persistAttachedProgramDocument({ handle: owner.handle, target: owner.session }, task.signal);
-        const archive = await readOwnedDocumentArchiveV1(owner.handle, entry, runtimeKey, core.openDocumentSessionsRef.current);
-        if (task.signal.aborted || !held() || !heldArchive() || archive === null || !sameLocalDocumentArchiveV1(encodeDocumentArchiveBytes(archive), expected)) throw task.signal.reason ?? new Error("program-retirement.saved-revision-changed");
-      }
+      await persistProgramDocument(owner, task);
     } finally {
       signal.removeEventListener("abort", cancel);
       task.finish();
@@ -297,10 +313,11 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
     const format = naturalFileFormatV1(owned.target.app);
     const exportMedia = owned.handle.exportAppMedia;
     const file = format === null ? "" : naturalFileNameV1(owned.target.app.id, format.extension, new Date());
+    const declaration = format === null ? null : declaredNaturalMediaFileExportV1(owned.target.app, format, file);
     if (!beginDocumentTransferV1(transferInFlightRef)) return notifyDocumentTransfer("transfer-busy", file, "info");
     const task = trackDocumentTransfer(file, owned.target.pluginId);
     try {
-      if (format === null || exportMedia === undefined) throw new Error("natural-file.exporter-unavailable");
+      if (format === null || (declaration === null && exportMedia === undefined)) throw new Error("natural-file.exporter-unavailable");
       if (task.signal.aborted) throw task.signal.reason;
       task.progress(0, 1);
       const sessions = () => [...core.openDocumentSessionsRef.current.entries()].filter(([, entry]) => entry.plugin === owned.handle && entry.session.instanceId === owned.target.instanceId && entry.session.app.id === owned.target.app.id);
@@ -314,13 +331,21 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
         await keepOrReattachProgramDocument({ handle: owned.handle, app: owned.target.app }, owned.target.instanceId, file, task, hostOwner, held);
       }
       const { runtimeKey, entry, expected, heldArchive } = await persistAttachedProgramDocument(owned, task.signal);
-      const artifact = await exportMedia(owned.target.instanceId, "artifact:native");
-      if (artifact === null || task.signal.aborted) throw task.signal.reason ?? new Error("natural-file.export-empty");
-      if (!heldArchive()) throw new Error("natural-file.export-owner-retired");
-      const exportedArchive = await readOwnedDocumentArchiveV1(owned.handle, entry, runtimeKey, core.openDocumentSessionsRef.current);
-      if (task.signal.aborted || !heldArchive() || exportedArchive === null || !sameLocalDocumentArchiveV1(encodeDocumentArchiveBytes(exportedArchive), expected)) throw task.signal.reason ?? new Error("natural-file.saved-revision-changed");
-      if (!naturalMediaDescriptorMatchesV1(decodePackValue(artifact.descriptor), format)) throw new Error("natural-file.export-descriptor-mismatch");
-      downloadMediaExportBytes(file, format.mediaType, artifact.data);
+      const verifyDelivery = async (): Promise<void> => {
+        if (!heldArchive()) throw new Error("natural-file.export-owner-retired");
+        const exportedArchive = await readOwnedDocumentArchiveV1(owned.handle, entry, runtimeKey, core.openDocumentSessionsRef.current);
+        if (task.signal.aborted || !heldArchive() || exportedArchive === null || !sameLocalDocumentArchiveV1(encodeDocumentArchiveBytes(exportedArchive), expected)) throw task.signal.reason ?? new Error("natural-file.saved-revision-changed");
+      };
+      await deliverNaturalMediaFileV1(declaration === null ? null : () =>
+        downloadDeclaredMediaFileV1({ instanceId: owned.target.instanceId, declaration, port: owned.handle, signal: task.signal, current: heldArchive, progress: task.progress, sinkFactory: shellSegmentedDownloadSinkFactory, beforeDelivery: verifyDelivery }),
+      verifyDelivery, async () => {
+        if (exportMedia === undefined) throw new Error("natural-file.exporter-unavailable");
+        const artifact = await exportMedia(owned.target.instanceId, NATURAL_FILE_PORT_ID);
+        if (artifact === null || task.signal.aborted) throw task.signal.reason ?? new Error("natural-file.export-empty");
+        await verifyDelivery();
+        if (!naturalMediaDescriptorMatchesV1(decodePackValue(artifact.descriptor), format)) throw new Error("natural-file.export-descriptor-mismatch");
+        downloadMediaExportBytes(file, format.mediaType, artifact.data);
+      });
       task.progress(1, 1);
       notifyDocumentTransfer("file-saved", file, "info");
     } catch (error) {
@@ -422,12 +447,15 @@ export function buildScopeState({ core }: { readonly core: ShellCoreAfterThemeDr
         const format = naturalFileFormatV1(owner.app);
         const importMedia = owner.handle.importAppMedia;
         if (format === null || importMedia === undefined) throw new Error("natural-file.importer-unavailable");
-      if (task.signal.aborted) throw task.signal.reason;
-        const bytes = await readBlobBytesBoundedV1(picked, { signal: task.signal, maximumBytes: NATURAL_FILE_BROWSER_MAXIMUM_BYTES_V1, chunkBytes: NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, progress: task.progress });
+        task.signal.throwIfAborted();
+        const input = naturalFileMediaInputV1(format.formatKind);
+        const bytes = await readBlobBytesBoundedV1(picked, {
+          signal: task.signal, maximumBytes: input.maximumBytes, chunkBytes: NATURAL_FILE_BROWSER_READ_CHUNK_BYTES_V1, progress: task.progress,
+        });
         return openNaturalFileOwnerV1({
           signal: task.signal,
           create: () => owner.handle.createApp(owner.app.id),
-          importBytes: (freshInstanceId) => importMedia(freshInstanceId, "artifact:native", { portId: "artifact:native", kindId: format.formatKind, wire: { kind: "binary", format_kind: format.formatKind } }, bytes),
+          importBytes: (freshInstanceId) => importMedia(freshInstanceId, input.port, input.descriptor, bytes, task.signal),
           retire: (freshInstanceId) => owner.handle.destroyApp(freshInstanceId),
         });
       },

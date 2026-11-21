@@ -38,18 +38,37 @@
     }
     return out;
   };
-  const coverage = (segs, a, b, horizontal, tol) => {
+  const coverage = (segs, a, b, horizontal, tol, gapTolerance = 0.75) => {
     const line = horizontal ? a.y : a.x, lo = Math.min(horizontal ? a.x : a.y, horizontal ? b.x : b.y), hi = Math.max(horizontal ? a.x : a.y, horizontal ? b.x : b.y);
     const spans = segs.filter(s => horizontal ? Math.abs(s.from.y - s.to.y) < 0.01 && Math.abs(s.from.y - line) <= tol : Math.abs(s.from.x - s.to.x) < 0.01 && Math.abs(s.from.x - line) <= tol)
       .map(s => [Math.min(horizontal ? s.from.x : s.from.y, horizontal ? s.to.x : s.to.y), Math.max(horizontal ? s.from.x : s.from.y, horizontal ? s.to.x : s.to.y), s]).sort((p, q) => p[0] - q[0]);
     const gaps = []; let at = lo + tol;
     for (const [s, e] of spans) {
       if (e < lo || s > hi) continue;
-      if (s > at + 0.75) gaps.push([at, s]);
+      if (s > at + gapTolerance) gaps.push([at, s]);
       at = Math.max(at, e);
     }
-    if (at < hi - tol - 0.75) gaps.push([at, hi]);
+    if (at < hi - tol - gapTolerance) gaps.push([at, hi]);
     return { gaps, spans: spans.map(x => x[2]) };
+  };
+  const sidesOf = ({ left, top, right, bottom }) => ({
+    top: [{ x: left, y: top }, { x: right, y: top }, true],
+    bottom: [{ x: left, y: bottom }, { x: right, y: bottom }, true],
+    left: [{ x: left, y: top }, { x: left, y: bottom }, false],
+    right: [{ x: right, y: top }, { x: right, y: bottom }, false],
+  });
+  /** 🪟 A snapped chip may move by its one-pixel inset, two-pixel snap and subpixel edge alignment. Verify the joins at the actual painted corners. */
+  const closesSnappedChip = (segments, measured) => {
+    const bounds = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity };
+    for (const { from, to } of segments) {
+      bounds.left = Math.min(bounds.left, from.x, to.x);
+      bounds.top = Math.min(bounds.top, from.y, to.y);
+      bounds.right = Math.max(bounds.right, from.x, to.x);
+      bounds.bottom = Math.max(bounds.bottom, from.y, to.y);
+    }
+    return bounds.right > bounds.left && bounds.bottom > bounds.top &&
+      Object.keys(bounds).every(side => Math.abs(bounds[side] - measured[side]) <= 3.75) &&
+      Object.values(sidesOf(bounds)).every(([a, b, h]) => coverage(segments, a, b, h, 0.02, 0.02).gaps.length === 0);
   };
   const cssLines = el => {
     const cs = getComputedStyle(el), sides = ['Top', 'Right', 'Bottom', 'Left'].map(s => cs[`border${s}Width`] !== '0px' && cs[`border${s}Style`] !== 'none' ? cs[`border${s}Color`] : null);
@@ -81,10 +100,11 @@
         const own = stated.filter(s => [s.from, s.to].every(p => p.x >= r.left - tol && p.x <= r.right + tol && p.y >= r.top - tol && p.y <= r.bottom + tol));
         if (!own.length) { result.issues.push('no stated outline on its box'); }
         else {
-          const sides = { top: [{ x: r.left, y: r.top }, { x: r.right, y: r.top }, true], bottom: [{ x: r.left, y: r.bottom }, { x: r.right, y: r.bottom }, true], left: [{ x: r.left, y: r.top }, { x: r.left, y: r.bottom }, false], right: [{ x: r.right, y: r.top }, { x: r.right, y: r.bottom }, false] };
           const ownState = own.reduce((w, s) => priority[s.state] > priority[w] ? s.state : w, 'normal');
+          const strong = stated.filter(s => priority[s.state] >= priority[ownState]);
+          const chip = box.hasAttribute('data-window-silhouette-chip');
+          const sides = chip && closesSnappedChip(own.filter(s => s.state === ownState), r) ? {} : sidesOf(r);
           for (const [side, [a, b, h]] of Object.entries(sides)) {
-            const strong = stated.filter(s => priority[s.state] >= priority[ownState]);
             const { gaps } = coverage(strong, a, b, h, tol);
             if (gaps.length) result.issues.push(`${side} open ${gaps.map(g => g.map(v => v.toFixed(1)).join('–')).join(', ')}`);
           }

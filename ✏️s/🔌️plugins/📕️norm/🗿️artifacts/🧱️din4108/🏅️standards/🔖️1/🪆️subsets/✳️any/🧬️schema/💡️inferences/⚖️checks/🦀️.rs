@@ -20,6 +20,9 @@ pub use resistance_helpers::*;
 #[path = "🧱️part-2-minimum-insulation/🦀️.rs"]
 pub mod part_2;
 
+#[path = "📚️design-cases/🦀️.rs"]
+pub mod design_cases;
+
 #[path = "💧️part-3-moisture-protection/🦀️.rs"]
 pub mod part_3;
 

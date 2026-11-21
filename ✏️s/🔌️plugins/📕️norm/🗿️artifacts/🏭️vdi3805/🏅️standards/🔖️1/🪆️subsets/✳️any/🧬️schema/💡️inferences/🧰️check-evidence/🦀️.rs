@@ -34,26 +34,21 @@ pub(super) fn is_operative(status: SchemaStatus) -> bool {
 pub(super) fn sheet_mandatory_keys(sheet: u16, profile: EditionProfileChoice) -> &'static [&'static str] {
     let current = match sheet {
         2 => &["dn", "kvs", "pressure_class", "connection_type", "authority_min", "authority_max"][..],
-        3 => &["standard_output_w", "n", "length_m", "height_m", "depth_m", "connection_type"][..],
-        4 => &["dn", "pressure_class", "connection_type", "outer_diameter_m", "wall_thickness_m"][..],
-        5 => &["dn_suction", "dn_discharge", "nominal_flow_m3_s", "nominal_head_m", "motor_power_w", "hydraulic_efficiency"][..],
-        6 => &["nominal_heat_output_w", "fuel_type", "flow_temp_max_c", "return_temp_min_c"][..],
-        7 => &["dn", "pressure_class", "connection_type", "volume_m3"][..],
-        8 | 10 | 14 | 18 | 33 | 36 | 37 | 40 | 42 | 100 => &["product_group", "type_code", "dn", "pressure_class"][..],
-        9 | 11 | 28 | 32 | 34 | 35 | 38 | 41 | 43 | 44 | 45 | 50 | 51 | 52 | 54 | 55 | 99 => {
+        6 => &["standard_output_w", "n", "length_m", "height_m", "depth_m", "connection_type"][..],
+        4 => &["dn_suction", "dn_discharge", "nominal_flow_m3_s", "nominal_head_m", "motor_power_w", "hydraulic_efficiency"][..],
+        3 => &["nominal_heat_output_w", "fuel_type", "flow_temp_max_c", "return_temp_min_c"][..],
+        14 | 18 | 33 | 36 | 37 | 40 | 42 => &["product_group", "type_code", "dn", "pressure_class"][..],
+        11 | 28 | 32 | 34 | 35 | 38 | 41 | 43 | 44 | 45 | 50 | 51 | 52 | 54 | 55 | 99 => {
             &["product_group", "type_code", "dn"][..]
         }
-        16 | 17 => &["product_group", "type_code", "airflow_m3_s", "pressure_drop_pa"][..],
-        19 => &["product_group", "type_code", "airflow_m3_s", "filter_class"][..],
-        20 | 21 | 22 | 23 | 24 | 26 | 27 | 29 => &["product_group", "type_code", "airflow_m3_s"][..],
-        53 => &["product_group", "type_code", "dn", "nominal_heat_output_w", "cop"][..],
-        60..=66 => &["dn", "pressure_class", "connection_type", "axial_force_n"][..],
+        17 => &["product_group", "type_code", "airflow_m3_s", "pressure_drop_pa"][..],
+        20 | 21 | 23 | 24 | 26 | 27 => &["product_group", "type_code", "airflow_m3_s"][..],
+        5 | 7 | 8 | 9 | 10 | 16 | 19 | 22 | 29 | 53 | 60..=66 | 100 => &[],
         _ => &["product_group", "type_code"][..],
     };
     let legacy = match sheet {
-        8 | 10 | 14 | 18 | 33 | 36 | 37 | 40 | 42 | 53 | 100 => &["product_group", "dn"][..],
-        4 | 7 | 60..=66 => &["dn", "connection_type"][..],
-        16 | 17 | 19 => &["product_group", "type_code"][..],
+        14 | 18 | 33 | 36 | 37 | 40 | 42 => &["product_group", "dn"][..],
+        17 => &["product_group", "type_code"][..],
         _ => current,
     };
     match profile {
@@ -63,39 +58,17 @@ pub(super) fn sheet_mandatory_keys(sheet: u16, profile: EditionProfileChoice) ->
 }
 
 /// 📏 Blatt-sourced numeric domains (VDI 3805 Part 1 §5 field ranges + product-sheet tables).
-/// Citations: DN series DIN EN ISO 6708 / Blatt tables; airflow/pressure VDI 3805-16/19 §4; COP VDI 3805-53 §4.2.
+/// 📘 DN series and numerical ranges used by the catalogue checks.
 pub(super) fn sheet_numeric_bounds(sheet: u16) -> &'static [(&'static str, f64, f64)] {
     const BOUNDS_AIR: &[(&str, f64, f64)] = &[
-        ("airflow_m3_s", SHEET_NUMERIC_BOUNDS_19_AIRFLOW.0, SHEET_NUMERIC_BOUNDS_19_AIRFLOW.1),
+        ("airflow_m3_s", SHEET_NUMERIC_BOUNDS_AIRFLOW.0, SHEET_NUMERIC_BOUNDS_AIRFLOW.1),
         ("pressure_drop_pa", SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA.0, SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA.1),
     ];
-    const BOUNDS_53: &[(&str, f64, f64)] = &[
-        ("dn", SHEET_NUMERIC_BOUNDS_53_DN.0, SHEET_NUMERIC_BOUNDS_53_DN.1),
-        ("nominal_heat_output_w", SHEET_NUMERIC_BOUNDS_53_HEAT_W.0, SHEET_NUMERIC_BOUNDS_53_HEAT_W.1),
-        ("cop", SHEET_NUMERIC_BOUNDS_53_COP.0, SHEET_NUMERIC_BOUNDS_53_COP.1),
-    ];
     const BOUNDS_DN: &[(&str, f64, f64)] = &[("dn", SHEET_NUMERIC_BOUNDS_DN.0, SHEET_NUMERIC_BOUNDS_DN.1)];
-    const BOUNDS_4: &[(&str, f64, f64)] = &[
-        ("dn", SHEET_NUMERIC_BOUNDS_DN_PIPE.0, SHEET_NUMERIC_BOUNDS_DN_PIPE.1),
-        ("outer_diameter_m", SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M.0, SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M.1),
-        ("wall_thickness_m", SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M.0, SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M.1),
-    ];
-    const BOUNDS_7: &[(&str, f64, f64)] = &[
-        ("dn", SHEET_NUMERIC_BOUNDS_DN.0, SHEET_NUMERIC_BOUNDS_DN.1),
-        ("volume_m3", SHEET_NUMERIC_BOUNDS_VOLUME_M3.0, SHEET_NUMERIC_BOUNDS_VOLUME_M3.1),
-    ];
-    const BOUNDS_60: &[(&str, f64, f64)] = &[
-        ("dn", SHEET_NUMERIC_BOUNDS_DN.0, SHEET_NUMERIC_BOUNDS_DN.1),
-        ("axial_force_n", SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N.0, SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N.1),
-    ];
     match sheet {
-        4 => BOUNDS_4,
-        7 => BOUNDS_7,
-        8 | 10 | 14 | 18 | 33 | 36 | 37 | 40 | 42 | 100 => BOUNDS_DN,
-        9 | 11 | 28 | 32 | 34 | 35 | 38 | 41 | 43 | 44 | 45 | 50 | 51 | 52 | 54 | 55 | 99 => BOUNDS_DN,
-        16 | 17 | 19 | 20 | 21 | 22 | 23 | 24 | 26 | 27 | 29 => BOUNDS_AIR,
-        53 => BOUNDS_53,
-        60..=66 => BOUNDS_60,
+        14 | 18 | 33 | 36 | 37 | 40 | 42 => BOUNDS_DN,
+        11 | 28 | 32 | 34 | 35 | 38 | 41 | 43 | 44 | 45 | 50 | 51 | 52 | 54 | 55 | 99 => BOUNDS_DN,
+        17 | 20 | 21 | 23 | 24 | 26 | 27 => BOUNDS_AIR,
         _ => &[],
     }
 }
@@ -106,11 +79,10 @@ pub(super) const CONNECTION_ID_CODES: &[&str] = &["in", "out", "drain", "vent", 
 /// 💧 VDI 3805-1 §5.2 — connection medium codes.
 pub(super) const CONNECTION_MEDIUM_CODES: &[&str] = &["water", "air", "glycol", "steam", "refrigerant"];
 
-pub(super) fn code_list_for_key(sheet: u16, key: &str) -> Option<&'static [&'static str]> {
+pub(super) fn code_list_for_key(key: &str) -> Option<&'static [&'static str]> {
     match key {
         "connection_type" => Some(CONNECTION_TYPE_CODES),
         "pressure_class" => Some(PRESSURE_CLASS_CODES),
-        "filter_class" if sheet == 19 => Some(FILTER_CLASS_CODES),
         "type_code" => Some(TYPE_CODE_CODES),
         "fuel_type" => Some(&["gas", "oil", "electric", "biomass", "district"]),
         _ => None,

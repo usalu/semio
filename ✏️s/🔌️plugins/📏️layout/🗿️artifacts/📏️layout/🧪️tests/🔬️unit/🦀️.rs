@@ -1,7 +1,6 @@
-use semio_s_artifact_layout_layout_model::{Frame, LAYOUT_DOCUMENT_SCHEMA, LayoutBounds, LayoutRect, artifact_kind, background_drawing_child_handle};
+use semio_s_artifact_layout_layout_model::{Frame, LAYOUT_DOCUMENT_SCHEMA, LayoutBounds, LayoutRect, artifact_kind};
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_io_ports::testkit::{bind, scene_content};
 
 fn rect_frame(id: &str, visible: Option<bool>) -> Frame {
     Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
@@ -48,7 +47,6 @@ async fn artifact_kind_uses_the_fixture_schema() {
 
 #[test]
 fn layout_document_contract_json_text_pack_projection_and_identity() {
-    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
     let source = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(source).expect("language-neutral Layout document fixture");
     let document_json = serde_json::to_string(&fixture["document"]).expect("Layout document JSON");
@@ -57,11 +55,16 @@ fn layout_document_contract_json_text_pack_projection_and_identity() {
     assert_eq!(canonical, fixture["document"], "native JSON codec must preserve the exact Layout document");
 
     let child = snapshot.background_drawing.as_ref().expect("background drawing child");
-    assert_eq!(child.handle.child_id, child.handle.target.artifact_id);
-    assert_eq!(child.handle.target.dialect.artifact_kind, "s.stdio.semio");
-    assert_eq!(child.handle.target.dialect.standard, "v1");
-    assert_eq!(child.handle.target.dialect.subset, "drawing");
-    assert_eq!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Layout child projection").len(), 1);
+    assert_eq!(child.handle.child_id, "background-member-canonical-fixture");
+    assert_eq!(child.handle.target.artifact_id, "background-drawing-canonical-fixture");
+    assert_eq!(child.handle.target.dialect.artifact_kind, "s.draw.drawing");
+    assert_eq!(child.handle.target.dialect.standard, "1");
+    assert_eq!(child.handle.target.dialect.subset, "*");
+    let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).expect("canonical Layout child projection");
+    assert_eq!(projection.len(), 1);
+    let (_, member) = projection.get(0).expect("projected Drawing reference");
+    assert_eq!(member.child_id, child.handle.child_id);
+    assert_eq!(member.artifact_id, child.handle.target.artifact_id);
 
     let artifact = semio_s_artifact_layout_layout_model::LayoutArtifact::from_snapshot(snapshot.clone());
     assert_eq!(artifact.to_snapshot(), snapshot, "artifact/snapshot projection must preserve every Layout document field");
@@ -81,21 +84,11 @@ fn layout_document_contract_json_text_pack_projection_and_identity() {
     foreign_grid["grid"].as_object_mut().expect("Layout grid object").insert("foreign".into(), serde_json::Value::Bool(true));
     assert!(semio_framework_pack_json::from_json_str::<LayoutSnapshot>(&serde_json::to_string(&foreign_grid).expect("foreign grid JSON"), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 
-    let mut wrong_identity = snapshot.clone();
-    wrong_identity.background_drawing.as_mut().expect("background drawing child").handle.target.artifact_id = "wrong".into();
-    assert!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&wrong_identity).is_err(), "child projection must reject mismatched child identity");
-}
+    let mut wrong_dialect = snapshot.clone();
+    wrong_dialect.background_drawing.as_mut().expect("background drawing child").handle.target.dialect.artifact_kind = "s.stdio.semio".into();
+    assert!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&wrong_dialect).is_err());
 
-
-#[semio_framework_async_macros::async_test]
-async fn background_drawing_identity_depends_only_on_canonical_content() {
-    let content = scene_content(&Default::default());
-    let dwg = background_drawing_child_handle("dwg", &content);
-    let svg = background_drawing_child_handle("svg", &content);
-    assert_eq!(dwg.handle.child_id, svg.handle.child_id);
-    assert_eq!(dwg.handle.child_id, dwg.handle.target.artifact_id);
-    assert_eq!(dwg.handle.target.dialect.artifact_kind, "s.stdio.semio");
-    assert_eq!(dwg.handle.target.dialect.standard, "v1");
-    assert_eq!(dwg.handle.target.dialect.subset, "drawing");
-    assert_eq!(dwg.content, content);
+    let mut inline_child = fixture["document"].clone();
+    inline_child["backgroundDrawing"]["content"] = serde_json::json!({});
+    assert!(semio_framework_pack_json::from_json_str::<LayoutSnapshot>(&inline_child.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
 }

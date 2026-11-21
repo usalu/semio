@@ -5,7 +5,9 @@
  * enough to hit and takes its guess, and the categories keep their descriptions to themselves.
  * @see ../../🎭️e2e/🎚️config/🟦️.ts — the `phone` project that holds this phone
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive */
-import { PAR, activeOverview, answerRun, answerTask, boxOf, card, enter, expect, expectFeedback, goHome, handle, openTask, playQuiz, quizOf, restingPage, screen, shownBest, shownTask, shownText, submitRun, swipeTo, taskOf, test, touchSwipe, unresolvedLabels, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { PAR, activeOverview, answerRun, answerTask, authorPreview, boxOf, card, enter, expect, expectFeedback, goHome, handle, openTask, openTaskById, playQuiz, quizOf, restingPage, screen, shownBest, shownTask, shownText, submitRun, swipeTo, taskOf, test, touchAssignClassification, touchSwipe, unresolvedLabels, type Device } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+
+import phone from "./🔣️.json" with { type: "json" };
 
 /** ↔️ How many pixels the document is wider than the screen. */
 async function overflow(device: Device): Promise<number> {
@@ -113,7 +115,8 @@ test("a hard run on a phone: every guess field lies within the screen, is tall e
       const box = await boxOf(field);
       expect(box.x, "a guess field starts on the screen").toBeGreaterThanOrEqual(0);
       expect(box.x + box.width, "a guess field ends on the screen").toBeLessThanOrEqual(375);
-      expect(box.height, "a guess field is at least 24 px tall").toBeGreaterThanOrEqual(24);
+      expect(box.height, "a guess field is at least 44 px tall").toBeGreaterThanOrEqual(44);
+      await expect(field).toHaveCSS("font-size", "16px");
     }
     const task = taskOf(quiz, await shownTask(learner));
     if (task.kind === "classification") for (const category of task.categories!) if (category.description !== undefined) expect(await shownText(learner)).not.toContain(category.description.en);
@@ -127,4 +130,88 @@ test("a hard run on a phone: every guess field lies within the screen, is tall e
   expect(await overflow(learner)).toBeLessThanOrEqual(0);
   expect(await sideways(learner)).toBe(0);
   expect(await unresolvedLabels(learner)).toEqual([]);
+});
+
+test("a narrow phone can jump to course pages without loading hidden media or quiz crowds", async ({ device }) => {
+  const learner = await device("en");
+  const { page } = learner;
+  const crowdRequests: string[] = [];
+  const pdfRequests: string[] = [];
+  const pdfPath = new RegExp(phone.pdfPattern, "u");
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname === "/queries" && request.method() === "POST") {
+      const envelope = request.postDataJSON() as { readonly kind?: string; readonly arguments?: readonly number[] } | null;
+      if (envelope?.kind === "course.crowd") {
+        const query = JSON.parse(new TextDecoder().decode(new Uint8Array(envelope.arguments ?? []))) as { readonly quiz: string };
+        crowdRequests.push(query.quiz);
+      }
+    }
+    if (pdfPath.test(url.pathname)) pdfRequests.push(request.url());
+  });
+  await page.setViewportSize({ width: phone.width, height: phone.height });
+  await enter(learner, { kind: "anonymous" });
+  await authorPreview(learner);
+  const picker = page.getByRole("combobox", { name: "Open a course page" });
+  const jumpTo = async (destination: string) => {
+    await picker.selectOption(destination);
+    await picker.locator("..").getByRole("button").tap();
+  };
+  await expect(picker).toBeVisible();
+  await expect(page.locator("[data-course-grid]")).toHaveCount(phone.rootGrids);
+  expect(await overflow(learner)).toBeLessThanOrEqual(0);
+  const navbar = await boxOf(page.locator('[data-slot="navbar"]'));
+  expect(navbar.height).toBeGreaterThanOrEqual(phone.minimumTouchTarget);
+  expect((await boxOf(picker)).y).toBeGreaterThanOrEqual(navbar.y + navbar.height);
+  for (const control of await page.locator("[data-course-nav]").all()) {
+    const box = await boxOf(control);
+    expect(box.width).toBeGreaterThanOrEqual(phone.minimumTouchTarget);
+    expect(box.height).toBeGreaterThanOrEqual(phone.minimumTouchTarget);
+    expect(box.y).toBeGreaterThanOrEqual(navbar.y);
+    expect(box.y + box.height).toBeLessThanOrEqual(navbar.y + navbar.height);
+    await expect(control).toBeInViewport({ ratio: 1 });
+  }
+
+  await jumpTo("clips");
+  const clips = activeOverview(page);
+  const poster = card(page, phone.visibleClip).locator("img");
+  await expect(poster).toBeVisible();
+  await expect.poll(() => poster.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  await expect(clips.locator("[data-layered-overlay] [data-clip-poster] img")).toHaveCount(phone.maximumClipCardPosters);
+  await jumpTo(phone.directClip);
+  await expect(page.locator(`[data-page="clip:${phone.directClip}"] img`)).toBeVisible();
+  await page.locator('[data-course-nav="overview"]').tap();
+  await jumpTo("assignments");
+  await jumpTo(phone.assignment);
+  const assignment = page.locator(`[data-page="assignment:${phone.assignment}"]`);
+  await expect(assignment).toBeVisible();
+  await expect(assignment.locator("iframe")).toHaveCount(0);
+  await expect(assignment.getByRole("link", { name: "Open in new tab" })).toHaveAttribute("href", pdfPath);
+  await expect(assignment.getByRole("link", { name: "Download" })).toHaveAttribute("href", pdfPath);
+  expect(pdfRequests).toEqual([]);
+  expect(crowdRequests).toHaveLength(phone.idleCrowdRequests);
+  expect(await overflow(learner)).toBeLessThanOrEqual(0);
+
+  await page.setViewportSize(phone.landscape);
+  await expect(activeOverview(page)).toHaveAttribute("data-mode", "swipe");
+  await expect(picker).toBeVisible();
+  expect(await overflow(learner)).toBeLessThanOrEqual(0);
+
+  await page.locator('[data-course-nav="overview"]').tap();
+  await jumpTo("quizzes");
+  await jumpTo("energy");
+  await jumpTo("physics");
+  await expect(page.locator('[data-page="quiz:physics"]')).toBeVisible();
+  await expect.poll(() => [...new Set(crowdRequests)]).toEqual(["physics"]);
+});
+
+test("holding a dragged quiz item at the phone edge reaches and assigns a distant category", async ({ device }) => {
+  const learner = await device("en");
+  const { page } = learner;
+  await page.setViewportSize({ width: 375, height: 560 });
+  await enter(learner, { kind: "anonymous" });
+  const quiz = quizOf("physics");
+  await playQuiz(learner, quiz.id);
+  await openTaskById(learner, quiz.tasks.find((task) => task.kind === "classification")!.id);
+  await touchAssignClassification(page);
 });

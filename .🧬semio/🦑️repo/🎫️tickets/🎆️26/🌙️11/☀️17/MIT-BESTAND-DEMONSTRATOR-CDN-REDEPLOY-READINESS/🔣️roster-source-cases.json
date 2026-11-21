@@ -1,0 +1,66 @@
+[
+  {
+    "name": "exact-limit",
+    "leaves": 31,
+    "lines": 4000,
+    "bytes": 262144,
+    "refuses": []
+  },
+  {
+    "name": "too-many-files",
+    "leaves": 32,
+    "lines": 32,
+    "bytes": 1024,
+    "refuses": [
+      "files"
+    ]
+  },
+  {
+    "name": "too-many-bytes",
+    "leaves": 0,
+    "lines": 1,
+    "bytes": 262145,
+    "refuses": [
+      "bytes"
+    ]
+  },
+  {
+    "name": "too-many-lines",
+    "leaves": 0,
+    "lines": 4004,
+    "bytes": 100000,
+    "refuses": [
+      "lines"
+    ]
+  },
+  {
+    "name": "stricter-override",
+    "leaves": 1,
+    "lines": 3,
+    "bytes": 250,
+    "override": {
+      "maxSourceBytes": 150,
+      "maxSourceFiles": 1,
+      "maxActiveLines": 2
+    },
+    "refuses": [
+      "files",
+      "bytes",
+      "lines"
+    ]
+  },
+  {
+    "name": "looser-override",
+    "leaves": 0,
+    "lines": 4001,
+    "bytes": 100000,
+    "override": {
+      "maxSourceBytes": 999999,
+      "maxSourceFiles": 64,
+      "maxActiveLines": 8000
+    },
+    "refuses": [
+      "lines"
+    ]
+  }
+]

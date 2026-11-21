@@ -63,6 +63,7 @@ fn every_run_effects_row_starts_finalizes_or_leaves_the_run() {
                 _ => assert_eq!(args.get(TOOL_RUN_ARG_RUN_ID).and_then(semio_framework_value::DslValue::as_str), run.as_ref().map(|run| run.identity.id.run.to_string()).as_deref(), "{id}: finalize names the run"),
             }
         }
+        if let Some(run) = run { run.retire_cold(); }
         session.retire_cold();
     }
 }
@@ -96,6 +97,7 @@ fn replay_pending_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalR
             None => None,
         };
     }
+    if let Some(view) = view { view.retire_cold(); }
     starts
 }
 
@@ -155,6 +157,7 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
                     asked.push(if action == TOOL_RUN_FINALIZE_ACTION_ID { "toolRunFinalize" } else { "toolRunStart" });
                 }
             }
+            if let Some(complete) = complete { complete.retire_cold(); }
             assert_eq!(asked, if windows.is_empty() { Vec::new() } else { vec!["toolRunFinalize"] }, "{id}: a settled complete run is finalized exactly once, however often the host polls it");
             link.settled = has_settled.then_some((1, 0));
             link.restart_owed = false;
@@ -331,18 +334,20 @@ fn inspector_evaluation_wire_uses_actual_neuron_identity_and_context_authority()
 #[test]
 fn inspector_close_original_context_reports_one_debit_and_whole_paired_failure(){
  use semio_framework_job::{OperationId,Generation,OriginalJobFixtureCaller};use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
- let law=fixture();let row=&law["originalCloseReceipt"];let source=RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:4096,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:16};let mut caller=OriginalJobFixtureCaller::admit(OperationId(row["operation"].as_u64().unwrap()),Generation(row["generation"].as_u64().unwrap()),source,||Some(1),u64::MAX,64);for failed in [false,true]{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_depth:1,..Default::default()};let progress=RetainedCloneProgress{copied_items:row["progressItems"].as_u64().unwrap()as usize,copied_bytes:row[if failed{"overdrawCopy"}else{"copy"}].as_u64().unwrap()as usize,..Default::default()};let step=if failed{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview close semantic cause").with_retained_progress(progress))}else{Ok(semio_framework_value::RetainedCloneStep::Progress(progress))};let mut seen=RetainedCloneProgress::default();let result=caller.turn(grant,|cx|{let before=cx.retained_progress();let result=semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,depth:grant.maximum_depth,..Default::default()},|_|semio_framework_value::RetainedWorkOutcome{result:step,work:row["spent"].as_u64().unwrap()});let after=cx.retained_progress();seen=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};result});assert_eq!(seen,progress);if failed{let failure=result.unwrap_err();assert_eq!(failure.primary_value().unwrap().kind,ValueRefusalKind::InvariantViolated);assert!(failure.receipt_refusal.is_some());assert_eq!(failure.primary.retained_progress(),progress);drop(failure);}else{assert_eq!(result.unwrap().progress(),progress);}}caller.retire(source);
+ let law=fixture();let row=&law["originalCloseReceipt"];let source=RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:16};let mut caller=OriginalJobFixtureCaller::admit(OperationId(row["operation"].as_u64().unwrap()),Generation(row["generation"].as_u64().unwrap()),source,||Some(1),u64::MAX,64);for failed in [false,true]{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_depth:1,..Default::default()};let progress=RetainedCloneProgress{copied_items:row["progressItems"].as_u64().unwrap()as usize,copied_bytes:row[if failed{"overdrawCopy"}else{"copy"}].as_u64().unwrap()as usize,..Default::default()};let step=if failed{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview close semantic cause").with_retained_progress(progress))}else{Ok(semio_framework_value::RetainedCloneStep::Progress(progress))};let mut seen=RetainedCloneProgress::default();let result=caller.turn(grant,|cx|{let before=cx.retained_progress();let result=semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,depth:grant.maximum_depth,..Default::default()},|_|semio_framework_value::RetainedWorkOutcome{result:step,work:u128::from(row["spent"].as_u64().unwrap())});let after=cx.retained_progress();seen=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};result});assert_eq!(seen,progress);if failed{let failure=result.unwrap_err();assert_eq!(failure.primary_value().unwrap().kind,ValueRefusalKind::InvariantViolated);assert!(failure.receipt_refusal.is_some());assert_eq!(failure.primary.retained_progress(),progress);drop(failure);}else{assert_eq!(result.unwrap().progress(),progress);}}caller.retire(source);
 }
 
 
 #[test]
-fn hovered_graph_connections_identify_their_preview_sources() {
+fn hovered_graph_connections_identify_their_preview_endpoints() {
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json")).unwrap();
     let host = semio_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).unwrap();
     for case in law["expected"]["hoverSources"].as_array().unwrap() {
         let hovered = std::collections::BTreeSet::from([case["target"].as_str().unwrap().to_owned()]);
-        let sources = preview_hover_sources(&host, &hovered);
-        assert_eq!(serde_json::json!(sources), case["sources"]);
+        let endpoints = preview_wire_hover(&host, &PreviewGraphTargets::from_ids(&hovered));
+        assert_eq!(serde_json::json!(endpoints.ports), case["ports"]);
+        assert_eq!(serde_json::json!(endpoints.input_widgets), case["inputWidgets"]);
+        assert_eq!(serde_json::json!(endpoints.output_widgets), case["outputWidgets"]);
     }
     host.retire_cold();
 }
@@ -394,7 +399,7 @@ fn wireframe_synthesizes_missing_triangle_edges() {
     assert!(mesh_has_preview_geometry(&isolated));
     assert_eq!(isolated.positions, positions);
     assert_eq!(isolated.vertex_ids, vertex_ids);
-    assert_eq!(isolated.component_references.get("vertex"), Some(labels.as_slice()));
+    assert_eq!(isolated.component_references.get("vertex").map(Vec::as_slice), Some(labels.as_slice()));
 }
 
 
@@ -438,12 +443,63 @@ fn spatial_vector_arrows_have_a_visible_tip_for_every_axis() {
 #[test]
 fn scalar_readout_rows_preserve_graph_targets() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔢️value-readout.json")).unwrap();
-    let rows = preview_value_rows(&fixture["eval"].to_string());
+    let text = fixture["eval"].to_string();
+    let evaluation = PreviewEvaluation::from_json(&text);
+    let rows = preview_value_rows(&evaluation);
     let expected: Vec<(String, String)> = serde_json::from_value(fixture["rows"].clone()).unwrap();
-    for (id, _, target) in &rows {
-        assert_eq!(serde_json::from_str::<serde_json::Value>(target).unwrap(), serde_json::json!([{"granularity": "handle", "id": id}]));
+    assert_eq!(rows.into_iter().map(|row| (row.id.clone(), row.summary())).collect::<Vec<_>>(), expected);
+}
+
+
+#[test]
+fn preview_mesh_publication_requires_its_exact_session_and_resolved_source() {
+    use semio_framework_pack_json::{JsonMemberPolicy, parse};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/preview-mesh-cache.json")).unwrap();
+    let source = fixture["evaluation"].to_string();
+    let fallback = source.replace("solid-work", "solid-fallback");
+    let pack = |xyz: &serde_json::Value| semio_os_flow::FlowPreviewMesh {
+        tolerance: 0.05,
+        mesh: MeshData { positions: serde_json::from_value(xyz.clone()).unwrap(), ..Default::default() },
+    };
+    let mut sessions: BTreeMap<_, _> = fixture["sessions"].as_object().unwrap().iter().map(|(id, recipe)| {
+        let mut session = FlowEvalSession::new();
+        for (handle, xyz) in recipe["meshes"].as_object().unwrap() {
+            session.preview_mesh_by_handle.insert(handle.clone(), pack(xyz));
+        }
+        (id.clone(), session)
+    }).collect();
+    assert_ne!(sessions["first"].preview_mesh_cache_identity(), sessions["second"].preview_mesh_cache_identity());
+    assert_eq!(sessions["first"].preview_mesh_epoch(), sessions["second"].preview_mesh_epoch());
+    reset_preview_mesh_table();
+    let mut prior = None;
+    for step in fixture["steps"].as_array().unwrap() {
+        let session = sessions.get_mut(step["session"].as_str().unwrap()).unwrap();
+        if step.get("replace").is_some() {
+            session.preview_mesh_by_handle.insert("solid-work".into(), pack(&step["replace"]));
+        }
+        if step["fallback"].as_bool() == Some(true) {
+            session.preview_mesh_by_handle.remove(&"solid-work".to_owned());
+            session.converged_eval_json = fallback.clone();
+        }
+        let visible = if step["hidden"].as_bool() == Some(true) { vec![] } else { vec!["shape".into()] };
+        let source_policy = if step["current"].as_bool() == Some(true) { PreviewEvaluationSource::Current } else { PreviewEvaluationSource::WithFallback };
+        let evaluation = PreviewEvaluation::from_source(&source, source_policy);
+        let mode = step["mode"].as_str().unwrap_or("solid");
+        let tolerance = step["detail"].as_f64().unwrap_or(0.05);
+        let table = preview_mesh_table(&evaluation, &visible, Some(session), mode, tolerance).unwrap();
+        let meshes = parse(&table.meshes_json, JsonMemberPolicy::Reject).unwrap();
+        let position = meshes[0]["data"]["positions"][0].as_f64();
+        assert_eq!(position, step["position"].as_f64(), "{step}");
+        let conversions = step["conversions"].as_u64().unwrap();
+        if position.is_some() {
+            if let Some((count, previous)) = &prior {
+                assert_eq!(std::rc::Rc::ptr_eq(previous, &table), *count == conversions, "{step}");
+            }
+        }
+        prior = Some((conversions, table));
     }
-    assert_eq!(rows.into_iter().map(|(id, value, _)| (id, value)).collect::<Vec<_>>(), expected);
+    reset_preview_mesh_table();
+    for (_, session) in sessions { session.retire_cold(); }
 }
 
 #[test]
@@ -451,14 +507,14 @@ fn preview_mesh_sources_stay_channel_local_until_the_live_pack_arrives() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧭️mesh-provenance.json")).unwrap();
     let live = fixture["live"].as_str().unwrap();
     let previous = fixture["previous"].as_object().unwrap().iter().map(|(channel, handle)|
-        (channel.clone(), serde_json::json!({"handle":handle}))).collect::<serde_json::Map<_, _>>();
+        (channel.clone(), serde_json::json!({"$schema":"geometry","handle":handle,"kind":"solid"}))).collect::<serde_json::Map<_, _>>();
     let previous = serde_json::json!({"widget":{"out":previous}});
     for row in fixture["cases"].as_array().unwrap() {
         let mut session = FlowEvalSession::new();
         if row["advanced"].as_bool() == Some(true) {
             session.previous_converged_eval_json = previous.to_string();
             session.converged_eval_json = serde_json::json!({"widget":{"out":{
-                "a":{"handle":live},"b":{"handle":live}
+                "a":{"$schema":"geometry","handle":live,"kind":"solid"},"b":{"$schema":"geometry","handle":live,"kind":"solid"}
             }}}).to_string();
         } else {
             session.converged_eval_json = previous.to_string();
@@ -472,14 +528,67 @@ fn preview_mesh_sources_stay_channel_local_until_the_live_pack_arrives() {
         if row["diagnosed"].as_bool().unwrap() {
             session.preview_diagnostics_by_handle.insert(live.to_owned(), "[]".to_owned());
         }
-        let item = PreviewChannelItem { channel: row["channel"].as_str().unwrap().into(), index: 0, handle: live.into(), inline: None };
+        let channel = row["channel"].as_str().unwrap();
+        let current = serde_json::json!({"widget":{"out":{(channel):{"$schema":"geometry","handle":live,"kind":"solid"}}}}).to_string();
+        let evaluation = PreviewEvaluation::from_source(&current, PreviewEvaluationSource::Current);
+        let items = preview_channel_items_for_widget(evaluation.geometry().unwrap(), "widget");
+        let current_lookup = evaluation.mesh_lookup(&session);
+        assert_eq!(current_lookup.resolve("widget", &items[0]).as_ref().map(|(handle, _)| handle.as_ref()),
+            row["component"].as_bool().unwrap().then_some(live));
         let lookup = PreviewMeshLookup::new(&session);
-        let resolved = lookup.resolve("widget", &item);
+        let resolved = lookup.resolve("widget", &items[0]);
         assert_eq!(resolved.as_ref().map(|(handle, _)| handle.as_ref()), row["expected"].as_str());
         assert_eq!(resolved.as_ref().map(|(_, mesh)| f64::from(mesh.positions[0])), row["position"].as_f64());
         assert_eq!(resolved.as_ref().is_some_and(|(handle, _)| handle.as_ref() == live), row["component"].as_bool().unwrap());
         session.retire_cold();
     }
+}
+
+#[test]
+fn pending_preview_uses_the_same_nested_value_path_as_its_previous_mesh() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/preview-value-paths.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let mut session = FlowEvalSession::new();
+        let previous_side = row["previousSide"].as_str().unwrap_or("out");
+        let current_side = row["currentSide"].as_str().unwrap_or("out");
+        let mut previous_json = serde_json::json!({"widget":{(previous_side):{"body":row["previous"].clone()}}});
+        let previous = semio_framework_pack_json::parse(&previous_json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        if let Some(peer) = row.get("previousPeer") {
+            let peer_side = if previous_side == "in" { "out" } else { "in" };
+            previous_json["widget"][peer_side] = serde_json::json!({"body": peer});
+        }
+        session.converged_eval_json = previous_json.to_string();
+        for item in preview_channel_items_for_widget(&previous, "widget") {
+            session.preview_mesh_by_handle.insert(item.handle, semio_os_flow::FlowPreviewMesh {
+                tolerance: 0.05,
+                mesh: MeshData { positions: vec![0.0, 0.0, 0.0], ..Default::default() },
+            });
+        }
+        let current = serde_json::json!({"widget":{(current_side):{"body":row["current"].clone()}}}).to_string();
+        let current = semio_framework_pack_json::parse(&current, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let items = preview_channel_items_for_widget(&current, "widget");
+        assert_eq!(items.len(), row["expected"].as_object().unwrap().len());
+        let lookup = PreviewMeshLookup::new(&session);
+        for item in &items {
+            let expected = row["expected"].get(item.handle.as_str()).unwrap_or_else(|| panic!("{}: unexpected {}", row["name"], item.handle));
+            let found = lookup.resolve("widget", item).map(|(handle, _)| handle);
+            assert_eq!(found.as_deref(), expected.as_str(), "{}: {}", row["name"], item.handle);
+        }
+        session.retire_cold();
+    }
+}
+
+#[test]
+fn inline_preview_mesh_bodies_keep_their_evaluated_text() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/preview-value-paths.json")).unwrap();
+    let source = serde_json::json!({"widget":{"out":{"body":fixture["inlineMesh"].clone()}}}).to_string();
+    let eval = semio_framework_pack_json::parse(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let items = preview_channel_items_for_widget(&eval, "widget");
+    let item = &items[0];
+    let Some(PreviewInlineGeometry::Mesh { preview, data }) = item.inline.as_ref() else { panic!("inline mesh was not projected"); };
+    let value = eval.get("widget").unwrap().get("out").unwrap().get("body").unwrap();
+    assert!(std::ptr::eq(*preview, value.get("preview").unwrap().as_str().unwrap()));
+    assert!(std::ptr::eq(*data, value.get("data").unwrap().as_str().unwrap()));
 }
 
 #[test]
@@ -579,47 +688,4 @@ fn preview_tessellation_fault_settles_its_window_and_blocks_only_that_detail() {
     assert!(session.note_pending_tessellate(semio_os_flow::preview_tessellate_node_hash(handle, next.to_bits()), handle.into(), next));
     session.retire_cold();
     caller.retire(stock);
-}
-
-#[test]
-fn plane_channel_preview_has_an_on_plane_outline_and_anchored_normal() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧭️plane-marker.json")).unwrap();
-    let half_extent = fixture["halfExtent"].as_f64().unwrap();
-    let normal_length = fixture["normalLength"].as_f64().unwrap();
-    for row in fixture["cases"].as_array().unwrap() {
-        let origin: [f64; 3] = serde_json::from_value(row["origin"].clone()).unwrap();
-        let normal: [f64; 3] = serde_json::from_value(row["normal"].clone()).unwrap();
-        let [x,y,z] = origin;
-        let [nx,ny,nz] = normal;
-        let text = serde_json::json!({"widget":{"out":{"plane":{
-            "$schema":"plane","origin":{"$schema":"point","x":x,"y":y,"z":z},
-            "normal":{"$schema":"vector","x":nx,"y":ny,"z":nz}
-        }}}}).to_string();
-        let eval = semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let items = preview_channel_items_for_widget(&eval, "widget");
-        assert_eq!(items.len(), 1);
-        let item = &items[0];
-        assert_eq!(item.channel, "plane");
-        assert_eq!(item.inline, Some(PreviewInlineGeometry::Plane { origin, normal }));
-        let mesh = inline_preview_mesh(item.inline.as_ref().unwrap());
-        assert_eq!(mesh.is_some(), row["valid"].as_bool().unwrap());
-        let Some(mesh) = mesh else { continue };
-        assert_eq!(preview_mesh_role(item.inline.as_ref(), &mesh), "wire");
-        let norm = nx.hypot(ny).hypot(nz);
-        let offsets = |point: &[f32]| std::array::from_fn::<_, 3, _>(|axis| f64::from(point[axis]) - origin[axis]);
-        for segment in mesh.edge_positions[..24].chunks_exact(6) {
-            let start = offsets(&segment[..3]);
-            let end = offsets(&segment[3..]);
-            let distance = |offset: [f64; 3]| (0..3).map(|axis| offset[axis] * normal[axis] / norm).sum::<f64>();
-            assert!(distance(start).abs() < 1e-6);
-            assert!(distance(end).abs() < 1e-6);
-            let edge_length: f64 = (0..3).map(|axis| (start[axis] - end[axis]).powi(2)).sum::<f64>().sqrt();
-            assert!((edge_length - 2.0 * half_extent).abs() < 1e-6);
-        }
-        let base = offsets(&mesh.edge_positions[24..27]);
-        let tip = offsets(&mesh.edge_positions[27..30]);
-        assert!(base.into_iter().all(|offset| offset.abs() < 1e-6));
-        for axis in 0..3 { assert!((tip[axis] - normal_length * normal[axis] / norm).abs() < 1e-6); }
-        assert!(mesh_has_preview_geometry(&apply_show_mode_mesh(mesh, "points")));
-    }
 }

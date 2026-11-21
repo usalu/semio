@@ -1,0 +1,11 @@
+# Compiler dependency ownership in component provenance
+
+Attempt 38 linked the Note component in run wZfUlVc. The driver compiled 880 scheduler units and Cargo reported 878 artifact announcements. The linked WASM passed transpilation. The provenance check reported inconsistent consumed source versions for the retirement contract's arc custody source.
+
+The actual wasm and host retirement-contract dep-info files both reported the same 25,243-byte source with BLAKE3 `85c8873a23c93817e7216502b288592a97f46769d66090961da920545a1e284e`. Both compilers opened that version at 00:35. The live file changed at 00:51:04 to 25,273 bytes, confirmed by a later native build. The only other dep-info record naming the same canonical path was the top-level Cargo uplift's aggregate. The uplift had no checksums and caused the finished invocation to inspect the newer live file after receiving the older exact compiler evidence.
+
+The target WASM and the internal compiler artifact match byte for byte. Both are 128,078,957 bytes with SHA-256 `a9d8b094c308bab0afd28c20f87fb1a67b83cae1a77b176420900c80d41a957d`. The uplift's adjacent dep-info is 1,461,549 bytes and lists transitive sources. The compiler's matched dep-info is 792 bytes and identifies its own Note component entry with a resolved checksum. The receipt now uses the checksummed compiler records when they identify the target source. It retains each dependency's independently recorded inputs and keeps unchecked evidence for a unit when no compiler record identifies its target. The separate aggregate source-inventory API retains its existing behavior.
+
+The focused neutral fixture covers a Cargo uplift paired with a matching compiler record, a unit with no compiler checksums, multiple compiler records, and a checksum that belongs to a different target. The unit selection matches the Lodash partition oracle. The focused parser and ownership tests passed with 21 assertions. The full Note rerun is attempt 39.
+
+The full provenance receipt suite passed all 25 tests and 298 assertions. Its existing retry test now supplies the fixture's modification age through the production observer's test seam. The test asserts the configured retry backoff without depending on how recently the synthetic directory happened to be created.

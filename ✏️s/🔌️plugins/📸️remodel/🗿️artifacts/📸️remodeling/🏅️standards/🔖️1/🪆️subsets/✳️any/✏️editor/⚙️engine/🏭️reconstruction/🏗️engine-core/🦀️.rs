@@ -179,8 +179,8 @@ impl ReconstructionEngine {
     }
 
     /// ⏱️ Commits a frame after its gradient score was computed by the outer resumable ingestion cursor.
-    pub fn push_frame_with_sharpness(&mut self, index: u32, image: remodeling_image::ImageRgba8, timestamp_ms: f64, sharpness: f32) -> FrameAcceptance {
-        self.frame_source.accept_with_sharpness(index, image, timestamp_ms, true, sharpness)
+    pub fn push_frame_with_sharpness(&mut self, index: u32, image: remodeling_image::ImageRgba8, timestamp_ms: f64, sharpness: f32, capture: FrameCapture) -> FrameAcceptance {
+        self.frame_source.accept_with_sharpness(index, image, timestamp_ms, capture, true, sharpness)
     }
 
     /// 🎞️ Delegates to the internal [`FrameSource::push_video`].
@@ -192,6 +192,11 @@ impl ReconstructionEngine {
     /// 🔍️ The internal frame source, for inspecting accepted frames/counts without driving the pipeline.
     pub fn frame_source(&self) -> &FrameSource {
         &self.frame_source
+    }
+
+    /// 🧮️ Counts accepted frames before and after the working set takes ownership at start.
+    pub fn accepted_frame_count(&self) -> usize {
+        self.frames.len() + self.frame_source.accepted_count()
     }
 
     /// 🚦️ Current stage.
@@ -209,6 +214,7 @@ impl ReconstructionEngine {
         if self.frames.len() > 64 {
             return Err(format!("reconstruction admits at most 64 frames per interactive job, got {}", self.frames.len()));
         }
+        self.frames.sort_by(|a, b| a.timestamp_ms.total_cmp(&b.timestamp_ms).then(a.capture.stream.cmp(&b.capture.stream)).then(a.index.cmp(&b.index)));
         for frame in &self.frames {
             let pixels = frame.image.width as usize * frame.image.height as usize;
             if pixels > MAX_INTERACTIVE_IMAGE_PIXELS || frame.image.data.len() != pixels.saturating_mul(4) || frame.image.data.len() > MAX_INTERACTIVE_IMAGE_BYTES {

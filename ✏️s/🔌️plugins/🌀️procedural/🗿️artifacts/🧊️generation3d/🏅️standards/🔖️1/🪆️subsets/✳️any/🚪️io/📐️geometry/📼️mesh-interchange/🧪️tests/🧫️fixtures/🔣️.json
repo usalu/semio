@@ -105,6 +105,7 @@
    "kind": "mesh.interchange.exportJson",
    "inputs": {
     "mesh": {
+     "seams": [0],
      "positions": [
       [
        0,
@@ -192,7 +193,8 @@
      "lines": 1,
      "contains": [
       "vertices",
-      "faces"
+      "faces",
+      "\"kind\":\"seamEdge\",\"index\":0"
      ],
      "json": {
       "vertices": [

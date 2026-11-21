@@ -1,0 +1,11 @@
+{
+  "asset": "wheel-loader",
+  "scales": {"50":5,"100":3,"200":0,"500":0},
+  "clearOpeningM": [0.981,1.287],
+  "doorSealWidthM": 0.016,
+  "bladeSpanM": [0.60,0.64],
+  "bladeContactDepthM": 0.001,
+  "spindleDiameterM":0.040,
+  "armDiameterM":0.016,
+  "paintedCabAreaM2":10.4
+}

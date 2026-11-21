@@ -4,6 +4,7 @@ import deepEqual from "fast-deep-equal";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { sha256 as nobleSha256 } from "@noble/hashes/sha2.js";
 import throttle from "lodash/throttle";
+import partition from "lodash/partition";
 import pMap from "p-map";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
@@ -16,6 +17,7 @@ import {
   CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,
   CargoProvenanceStreamV1,
   cargoDepInfoChecksumsV1,
+  cargoCompilerDepInfoV1,
   cargoDepInfoResolvedChecksumsV1,
   cargoDepInfoResolvedSourcesV1,
   cargoDepInfoSourcesV1,
@@ -25,6 +27,7 @@ import {
   cargoUnitLeafV1,
   decodeCargoProvenanceV1,
   encodeCargoProvenanceV1,
+  type CargoDepInfoV1,
   type CargoProvenanceV1,
 } from "../🟦️.ts";
 import { progressDeadlinePolicyV1 } from "../../../../⏱️budget/🟦️.ts";
@@ -69,6 +72,63 @@ test("dep-info is kept as its parsed sources and rustc checksums, never as text"
   expect(cargoDepInfoResolvedChecksumsV1(parsed)).toEqual([{ path: resolve("/w/a.rs"), blake3: Buffer.from(blake3(bytes)).toString("hex"), length: bytes.length }]);
   expect(cargoDepInfoResolvedSourcesV1(parsed)).toEqual([resolve("/w/a.rs")]);
   expect(() => cargoDepInfoResolvedSourcesV1({ ...parsed, baseDirectory: null })).toThrow("no base directory");
+});
+
+test("checked rustc dep-info owns the unit sources when Cargo also reports an uplift", () => {
+  for (const row of fixture.compilerDepInfo) {
+    const depInfo: CargoDepInfoV1[] = row.candidates.map((candidate: { name: string; text: string }) => ({
+      path: resolve(candidate.name),
+      sha256: sha256(candidate.text),
+      baseDirectory: resolve("."),
+      sources: cargoDepInfoSourcesV1(candidate.text),
+      checksums: cargoDepInfoChecksumsV1(candidate.text),
+    }));
+    const [checked] = partition(depInfo, record => record.checksums.length > 0);
+    const ownsTarget = checked.some(record => record.checksums.some(checksum => checksum.path === row.targetSource));
+    const actual = cargoCompilerDepInfoV1(depInfo, resolve(row.targetSource));
+    expect(actual).toEqual(ownsTarget ? checked : depInfo);
+    expect(actual.flatMap(record => record.sources)).toEqual(row.expectedSources);
+  }
+});
+
+test("binary dep-info discovery accepts only a matching Rust executable and target checksum", async () => {
+  const spec = fixture.binaryDepInfoDiscovery;
+  const hash = (bytes: string) => Buffer.from(nobleSha256(Buffer.from(bytes))).toString("hex");
+  for (const row of spec.cases) {
+    const root = mkdtempSync(join(artifacts, "dep-")), build = join(root, "b");
+    const manifest = join(root, "Cargo.toml"), target = join(root, "main.rs"), transitive = join(root, "value.rs");
+    const binaries = join(root, "t", "release"), originals = join(build, "release", "build", spec.package, "unit", "out");
+    mkdirSync(binaries, { recursive: true });
+    mkdirSync(originals, { recursive: true });
+    const announced = join(binaries, row.announced), internal = join(originals, row.internal);
+    const uplift = join(binaries, spec.package + ".d"), compiler = join(originals, "sample_descriptor.d");
+    const internalBytes = row.sameBytes ? spec.announcedBytes : spec.lookalikeBytes;
+    const checksumSource = row.checksumSource === "target" ? target : transitive;
+    const checksumBytes = Buffer.from(row.checksumSource === "target" ? spec.targetBytes : spec.upliftBytes);
+    writeFileSync(manifest, `[package]\nname = "${spec.package}"\nversion = "0.1.0"\n`);
+    writeFileSync(target, spec.targetBytes);
+    writeFileSync(transitive, spec.upliftBytes);
+    writeFileSync(announced, spec.announcedBytes);
+    writeFileSync(internal, internalBytes);
+    writeFileSync(uplift, `${announced}: main.rs value.rs\n`);
+    writeFileSync(compiler, `${internal}: main.rs\n# checksum:blake3=${Buffer.from(blake3(checksumBytes)).toString("hex")} file_len:${checksumBytes.length} ${row.checksumSource === "target" ? "main.rs" : "value.rs"}\n`);
+    const independent = row.kind === "bin" && hash(spec.announcedBytes) === hash(internalBytes) && checksumSource === target;
+    expect(independent ? "compiler" : "uplift", row.name).toBe(row.expected);
+    const message = { reason: "compiler-artifact", package_id: `path+file:///fixture#${spec.package}@0.1.0`, manifest_path: manifest, target: { name: spec.package, kind: [row.kind], src_path: target }, filenames: [announced], executable: announced };
+    const session = new CargoProvenanceSessionV1(portProvenanceCustodyV1(physicalFor(root)));
+    try {
+      const invocation = { manifest, cwd: root, command: "cargo", args: ["build", "--profile", "release"], buildDirectory: build, builtAtMs: Date.now(), status: 0, cancelled: false, units: [{ message, evidence: { version: 1, kind: "discovery", paths: [], producer: null } }], buildScripts: [] };
+      const staged = await session.write(join(root, "receipt.json"), invocation, new Map(), join(root, "cargo-home"));
+      const unit = staged.units[0]!;
+      expect(unit.artifacts[0]?.sha256, row.name).toBe(hash(spec.announcedBytes));
+      expect(unit.depInfo.map(dep => dep.path), row.name).toEqual(independent ? [uplift, compiler] : [uplift]);
+      const selected = cargoCompilerDepInfoV1(unit.depInfo, target);
+      expect(selected.map(dep => dep.path), row.name).toEqual([independent ? compiler : uplift]);
+      expect(selected.flatMap(cargoDepInfoResolvedSourcesV1), row.name).toEqual(independent ? [target] : [target, transitive]);
+    } finally {
+      await session.discard();
+    }
+  }
 });
 
 test("decoded records share their interned inputs and witnesses instead of copying them", () => {
@@ -461,7 +521,7 @@ test("an observation that meets another process's edit is repeated from a fresh 
   await writeCompletedCargoInvocationProvenanceV1(receipt, invocation, new Map(), join(root, "cargo-home"), () => {
     const owner = physicalFor(root);
     return ++made > 1 ? owner : wrap(owner, { recheck: async () => { throw concurrentEditV1("roster", join(root, "src"), "Current directory changed before transfer", "snapshot"); } });
-  }, { ...quiet, sleep: async (milliseconds: number) => { sleeps.push(milliseconds); } });
+  }, { ...quiet, modifiedAgeMs: () => churnProtocolV1().quiet.windowMilliseconds, sleep: async (milliseconds: number) => { sleeps.push(milliseconds); } });
   expect(made).toBe(2);
   expect(sleeps).toEqual([churnProtocolV1().profiles.snapshot.backoffMs[0]!]);
   expect(decodeCargoProvenanceV1(readFileSync(receipt, "utf8")).units.length).toBe(invocation.units.length);

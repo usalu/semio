@@ -1,32 +1,20 @@
 //! 🧩️ Instances of the plugin artifact channel: instance discard, open and scoped open, the real exchange entry and the sequence counter. See [`super`].
 
 use super::*;
+use super::native_poll::{close_poll, open_poll, poll_turn};
 
 //#region 🔖️ArtifactChannel
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
-    /// ♻️ Retires the actual instance on its lifetime source and retains every refused owner.
+    /// ♻️ Returns the guest to the original Source that opened it.
     pub(super) fn discard_instance(&mut self, instance: u32) {
-        if !self.instances.contains_key(&instance){return}
-        self.closing_instances.insert(instance);
-        let deadline=std::time::Instant::now()+INSTANCE_OPEN_WALL_BUDGET;
-        loop{
-            let runtime=Arc::clone(&self.runtime);
-            let guest=self.instances.get_mut(&instance).expect("closing instance remains owned");
-            let mut closed=false;
-            let turn=self.host_driver.dispatch_admission_step(false,|_,cx|semio_plugin_host::GuestRelayAdmissionCall{result:runtime.close_original_instance_step(guest,&self.compiled,cx).map(|done|{closed=done;}),execution:None});
-            match turn{
-                Ok(true) if closed=>{
-                    self.instances.remove(&instance);
-                    self.closing_instances.remove(&instance);
-                    self.session_documents.remove(&instance);
-                    self.backbone_bindings.remove(&instance);
-                    return
-                }
-                Err(failure)=>{self.startup_failure=Some(failure);return}
-                _ if std::time::Instant::now()>=deadline=>return,
-                _=>std::thread::yield_now(),
-            }
+        if let Some(guest) = self.instances.get_mut(&instance) {
+            self.closing_instances.insert(instance);
+            if !close_poll(guest) { return; }
+            self.instances.remove(&instance);
+            self.closing_instances.remove(&instance);
+            self.session_documents.remove(&instance);
+            self.backbone_bindings.remove(&instance);
         }
     }
 
@@ -37,7 +25,7 @@ impl PluginArtifactChannel {
 
     /// 🎟️ Uses the actual caller scope and source-issued phased startup.
     pub(crate) fn ensure_instance_scoped(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
-        if self.closing_instances.contains(&instance){return Err(Self::not_wired("instance retirement","the actual previous instance and its original source remain retained"))}
+        if self.closing_instances.contains(&instance) { return Err(Self::not_wired("instance retirement", "previous instance retains its original Source")); }
         if self.instances.contains_key(&instance) {
             return Ok(());
         }
@@ -49,14 +37,11 @@ impl PluginArtifactChannel {
             .iter()
             .map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None })
             .collect();
-        let budget = headless_open_budget();
-        let mut guest = semio_framework_async::block_on(self.runtime.instantiate(&self.compiled, actor, &caps, &budget)).map_err(|error| match error {
-            semio_plugin_guest_contract::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
-            other => Self::not_wired("instantiate", other),
-        })?;
         let assets = find_repo_root()
             .map_err(|error| Fault { code: "package-assets.root".to_string(), message: error.to_string() })
             .and_then(|root| semio_plugin_host::package_assets::package_file_assets(&root, &self.descriptor.assets).map_err(|message| Fault { code: "package-assets.refused".to_string(), message }))?;
+        let origin = crate::compiled_components::native_instance_origin(self.compiled.package_hash).map_err(|error| Self::not_wired("guest poll origin", format!("{error:?}")))?;
+        let mut guest = self.issue_native_poll(actor, origin, scope)?;
         let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
@@ -67,43 +52,18 @@ impl PluginArtifactChannel {
             quotas: self.descriptor.quotas.clone(),
         }];
         let deadline = std::time::Instant::now() + INSTANCE_OPEN_WALL_BUDGET;
-        loop {
-            let mut events = std::mem::take(&mut owed);
-            match with_headless_identity(|identity| semio_framework_async::block_on(self.runtime.execute_turn(&mut guest, &mut events, headless_open_budget(), identity))) {
-                Ok(turn) => {
-                    if let Some(receipt) = turn.lifecycle_receipt {
-                        owed.push(semio_framework::kernel::Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt }));
-                    }
-                    if matches!(turn.status, semio_framework::kernel::TurnStatus::Idle) && owed.is_empty() {
-                        self.instances.insert(instance, guest);
-                        return Ok(());
-                    }
-                }
-                Err(error) if semio_plugin_host::retryable_lifecycle_turn(&error, &events) => {
-                    owed.splice(0..0, events);
-                }
-                Err(error @ (semio_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_plugin_guest_contract::TurnFault::FuelExhausted)) => {
-                    self.instances.insert(instance,guest);
-                    self.discard_instance(instance);
-                    return Err(Fault { code: "budget.exceeded".to_string(), message: format!("InstanceOpen exceeded one turn's ceiling ({error}); the guest never came up") });
-                }
-                Err(error) => {
-                    self.instances.insert(instance,guest);
-                    self.discard_instance(instance);
-                    return Err(Self::not_wired("InstanceOpen", error));
-                }
+        let opened = open_poll(&mut guest, scope, deadline).and_then(|()| {
+            loop {
+                let (receipt, idle) = poll_turn(&mut guest, &owed, scope, deadline, |turn| Ok((turn.lifecycle_receipt, matches!(turn.status, semio_framework::kernel::TurnStatus::Idle))))?;
+                owed.clear();
+                if let Some(receipt) = receipt { owed.push(semio_framework::kernel::Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt })); }
+                if idle && owed.is_empty() { return Ok(()); }
+                if std::time::Instant::now() >= deadline { return Err(Self::budget_fault("InstanceOpen")); }
             }
-            if let Err(cancelled) = scope.checkpoint() {
-                self.instances.insert(instance,guest);
-                self.discard_instance(instance);
-                return Err(cancelled);
-            }
-            if std::time::Instant::now() >= deadline {
-                self.instances.insert(instance,guest);
-                self.discard_instance(instance);
-                return Err(Self::budget_fault("InstanceOpen"));
-            }
-        }
+        });
+        self.instances.insert(instance, guest);
+        if opened.is_err() { self.discard_instance(instance); }
+        opened
     }
 
     /// 🔁️ Drives one `AppCommand` to its terminal frame. The command becomes a retained host batch [Design notes](README.md#source-notes-109).

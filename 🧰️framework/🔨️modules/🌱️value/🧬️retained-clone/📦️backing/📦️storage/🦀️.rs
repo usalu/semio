@@ -7,18 +7,29 @@ use semio_framework_value_retirement_contract::OriginalRetirementFailure;
 pub use semio_framework_value_native_storage::NativeSeedTemplate;
 fn invalid()->ValueError{ValueError::invariant("native projection backing changed its original ownership")}
 /// 🧳️ Keeps partial native seeds untyped and live cursors at their original allocated address.
-pub struct NativeProjectionBacking<C>{storage:NativeOwnedStorage<C>,closed:ManuallyDrop<Option<Box<C>>>,template:NativeSeedTemplate<C>,binding:Option<OriginalWorkBindingIdentity>}
+pub struct NativeProjectionBacking<C>{storage:NativeOwnedStorage<C>,closed:ManuallyDrop<Option<Box<C>>>,template:NativeSeedTemplate<C>,binding:Option<OriginalWorkBindingIdentity>,resident:bool}
 impl<C> NativeProjectionBacking<C>{
  /// 🌱️ Creates only vacant pointer metadata and a native seed descriptor.
- pub const fn new(template:NativeSeedTemplate<C>)->Self{Self{storage:NativeOwnedStorage::empty(),closed:ManuallyDrop::new(None),template,binding:None}}
+ pub const fn new(template:NativeSeedTemplate<C>)->Self{Self::with_residency(template,false)}
+ /// 🪴️ Seats a backing in a resident owner whose child authenticates any unresolved action.
+ pub const fn new_resident(template:NativeSeedTemplate<C>)->Self{Self::with_residency(template,true)}
+ const fn with_residency(template:NativeSeedTemplate<C>,resident:bool)->Self{Self{storage:NativeOwnedStorage::empty(),closed:ManuallyDrop::new(None),template,binding:None,resident}}
  pub fn initialized(&self)->bool{self.storage.initialized()}
  pub fn get(&self)->Option<&C>{self.storage.get()}
  pub fn get_mut(&mut self)->Option<&mut C>{self.storage.get_mut()}
  pub fn retained(&self)->Option<&C>{self.storage.get().or_else(||self.closed.as_deref())}
  fn binding_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<OriginalWorkBindingIdentity>>(),depth:1,..Default::default()}}
- pub fn validate_effect(&self,effect:&Effect<'_>)->Result<(),ValueError>{if self.binding.is_some_and(|binding|!binding.matches_source(effect)){Err(invalid())}else{Ok(())}}
- /// 🧷️ Authenticates the same genuine Work principal before a before-effect child Birth.
- pub fn validate_work_binding(&self,work:OriginalWorkBindingIdentity)->Result<(),ValueError>{if self.binding.is_some_and(|binding|binding.source_turn()!=work.source_turn()){Err(invalid())}else{Ok(())}}
+ pub fn validate_effect(&self,effect:&Effect<'_>)->Result<(),ValueError>{
+  let Some(binding)=self.binding else{return Ok(())};
+  if binding.matches_source(effect)||self.resident&&binding.admits_between_actions(effect,false){return Ok(())}
+  Err(ValueError::invariant("native projection backing received an effect from a different Source"))
+ }
+ /// 🧷️ Authenticates the original Source or a fresh genuine Work loan of a resident backing.
+ pub fn validate_work_binding(&self,work:OriginalWorkBindingIdentity)->Result<(),ValueError>{
+  let Some(binding)=self.binding else{return Ok(())};
+  if binding.source_turn()==work.source_turn()||self.resident&&work.source_turn().is_some(){return Ok(())}
+  Err(ValueError::invariant("native projection backing received a Work loan from a different Source"))
+ }
  fn funded(effect:&mut Effect<'_>,demand:RetirementDemand)->Result<bool,ValueError>{Ok(retained_clone_grant_admits(effect.grant(),demand)&&effect.remaining_work_units()?>=1)}
  fn local(turn:RetainedWorkPoll)->Result<RetainedWorkOutcome,ValueError>{match turn{RetainedWorkPoll::Complete(turn)=>Ok(turn),RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("closed native backing operation suspended"))}}
  /// 📏️ Quotes one actual binding, backing reservation or native seed part.
@@ -27,7 +38,13 @@ impl<C> NativeProjectionBacking<C>{
  fn birth_native(&mut self,effect:&mut Effect<'_>)->Result<Step,ValueError>{
   self.validate_effect(effect)?;let demand=self.birth_demand()?;if self.initialized(){return Ok(Step::Complete(Default::default()))}if !Self::funded(effect,demand)?{return Ok(Step::Progress(Default::default()))}
   if self.binding.is_none(){if !effect.performed(1)?{return Err(invalid())}self.binding=Some(OriginalWorkBindingIdentity::from_effect(effect));return Ok(Step::Progress(Progress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-  let turn=if !self.storage.reserved(){Self::local(self.storage.reserve_empty(effect))?}else{self.storage.initialize_template(self.template,effect)};turn.result
+  if !self.storage.reserved(){return Self::local(self.storage.reserve_empty(effect))?.result}
+  let seed=if self.resident&&effect.work_source_turn().is_some(){
+   self.storage.initialize_template_between_source_actions(self.template,effect)
+  }else{
+   self.storage.initialize_template(self.template,effect)
+  };
+  seed.result
  }
  /// 📥️ Records each resource-free native birth directly into its caller-owned reply.
  pub fn birth_into<'r>(&mut self,effect:&mut Effect<'_>,reply:Reply<'r,Step,ValueError>)->Result<Complete<'r,Step,ValueError>,ValueError>{self.validate_effect(effect)?;self.birth_demand()?;Ok(reply.complete(self.birth_native(effect)))}
@@ -43,7 +60,14 @@ impl<C> NativeProjectionBacking<C>{
   self.validate_effect(effect)?;let demand=self.release_demand(proof.as_ref())?;if self.terminal_is_empty(){return Ok(Step::Complete(Default::default()))}if !Self::funded(effect,demand)?{return Ok(Step::Progress(Default::default()))}
   if self.initialized(){return Self::local(self.storage.take_box_into(&mut self.closed,effect))?.result.map(|step|Step::Progress(step.progress()))}
   if self.closed.is_some(){let proof=proof.ok_or_else(invalid)?;if !proof.validates(self.closed.as_ref().ok_or_else(invalid)?){return Err(invalid())}if !effect.performed(1)?{return Err(invalid())}drop(self.closed.take());return Ok(Step::Progress(Progress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}
-  if !self.storage.terminal_is_empty(){return self.storage.release(effect).result.map(|step|Step::Progress(step.progress()))}
+  if !self.storage.terminal_is_empty(){
+   let turn=if self.resident&&effect.work_source_turn().is_some(){
+    self.storage.release_between_source_actions(effect)
+   }else{
+    self.storage.release(effect)
+   };
+   return turn.result.map(|step|Step::Progress(step.progress()))
+  }
   if !effect.performed(1)?{return Err(invalid())}self.binding=None;Ok(Step::Complete(Progress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
  }
  /// ♻️ Releases partial storage without a typed Drop and terminal cursors through their native witness.

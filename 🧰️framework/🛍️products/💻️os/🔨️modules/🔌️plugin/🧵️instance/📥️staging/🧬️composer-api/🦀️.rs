@@ -1,4 +1,4 @@
-//! 🧬 The composer API of the mounted artifact instance: the public readers and entry points that delegate to a component.
+//! 🧬 Public readers and delegated operations on the mounted instance.
 use semio_plugin_decl_app::ArtifactApp;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_plugin_document_media::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll};
@@ -42,13 +42,13 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.stores.test_document_revision()
     }
 
-    /// 🧪️ The original parent document identity every pending read must observe unchanged.
+    /// 🧪️ Parent identity required by pending reads.
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn fixture_original_document_identity(&self) -> &str {
         &self.stores.store.envelope().id
     }
 
-    /// 🧪️ The original render operation whose revision, generation and canonical base every pending read must carry.
+    /// 🧪️ Original revision, generation and base required by pending reads.
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn fixture_original_render_operation(&self) -> semio_plugin_decl_views::AppRenderOperationContext {
         self.tools.live_render_operation(&self.mounted_policy, &self.stores)
@@ -103,7 +103,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.ingest.begin_artifact_envelope_ingress(&mut self.stores, maximum_pages, maximum_bytes)
     }
 
-    /// 🔎️ Validates the live ingress slot and byte allowance before copying a page.
+    /// 🔎️ Checks ingress and byte allowance before a page copy.
     pub fn preflight_artifact_envelope_ingress_page(&self, handle: ArtifactEnvelopeDecodeOperationHandle, page_bytes: usize) -> Result<(), Fault> {
         self.ingest.preflight_artifact_envelope_ingress_page(&self.stores, handle, page_bytes)
     }
@@ -135,7 +135,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.ingest.cancel_artifact_envelope_load(handle)
     }
 
-    /// 📦️ Admits original fixed pages or returns them unchanged if the slot or domain catalog is absent.
+    /// 📦️ Returns the original pages unchanged if admission fails.
     pub fn submit_artifact_envelope_decode(
         &mut self,
         operation: OperationId,
@@ -155,7 +155,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.ingest.artifact_envelope_decode_worker_owners_are_terminal(handle)
     }
 
-    /// 📤️ Publishes after generation validation; backpressure retains the exact record and operation.
+    /// 📤️ Publishes a generation-checked record with retry on backpressure.
     pub fn try_publish_artifact_envelope_decode(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordTarget<A::Snapshot, A::Mutation>) -> Result<bool, Fault> {
         self.ingest.try_publish_artifact_envelope_decode(&mut self.stores, handle, target)
     }
@@ -169,7 +169,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.ingest.try_begin_artifact_store_replacement(&mut self.stores, &mut self.child_composition, handle, cx)
     }
 
-    /// 🌳️ Reserves the recursive member count after the parent initializer closes.
+    /// 🌳️ Reserves members after closing the parent initializer.
     pub fn try_begin_owned_document_members(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, expected: usize, expires_at_us: u64) -> Result<bool, Fault> {
         self.ingest.try_begin_owned_document_members(handle, expected, expires_at_us)
     }
@@ -202,7 +202,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.ingest.cancel_artifact_store_replacement(handle)
     }
 
-    /// 🎰️ Counts live typed-operation and segmented-output slots; zero proves all were released.
+    /// 🎰️ Counts live typed-operation and segmented-output slots.
     pub fn live_typed_operation_slots(&self) -> usize {
         self.media.live_typed_operation_slots(&self.pending, &self.tools)
     }
@@ -224,7 +224,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         self.child_composition.child_store(slot, child_id).await
     }
 
-    /// 🪴️ Registers the member and ownership edge before group dispatch; see [Self::open_child].
+    /// 🪴️ Registers member ownership before group dispatch.
     pub async fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, mut member: M, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), ChildMemberRegistrationError<M>> {
         self.child_composition.register_child(&mut self.stores, slot, child_id, dialect, member, identity).await
     }

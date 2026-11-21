@@ -69,6 +69,12 @@ pub trait HasBase: Sized {
         self
     }
 
+    /// 🔦️ Paints an externally highlighted row or group through its regular presence chrome.
+    fn highlighted(mut self, highlighted: bool) -> Self {
+        self.base_mut().style.highlighted = highlighted;
+        self
+    }
+
     /// 📋️ Attaches a resolved context menu.
     fn menu(mut self, menu: crate::MenuRef) -> Self {
         self.base_mut().menu = Some(menu);

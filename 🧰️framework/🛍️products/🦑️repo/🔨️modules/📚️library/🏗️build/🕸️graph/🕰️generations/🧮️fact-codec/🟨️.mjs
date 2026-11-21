@@ -334,7 +334,7 @@ export function transcodeFactIndexV1(bytes,{mapText,maximumBytes=bytes.length*2+
 }
 
 /**
- * 🪶️ Opens a binary fact index as a bounded view: the document stays one packed buffer, strings, facts, rows and class lists are decoded when they are read and live in bounded least recently used caches (`🧊️bounded`, sizes in the schema policy `view`), so the resident size is the document plus small offset tables whatever is read. Every bound the full decoder checks is checked here, including the well formed UTF-8 of every string. `owners` is a plain array; `rows` and `classes` are read only array views (`length`, index, iteration and the array methods work, nothing is stored when they are walked); `rowKindOf(id)` answers a kind without reading the row; `document` names the offset tables of the packed bytes for a streaming reader of the same layout (`../🌊️stream-patch`); `stats()` lists the caches.
+ * 🪶️ Opens a binary fact index as a bounded view: the document stays one packed buffer, strings, facts, rows and class lists are decoded when they are read and live in bounded least recently used caches (`🧊️bounded`, sizes in the schema policy `view`), alongside the packed document and typed tables. Every bound the full decoder checks is checked here, including the well formed UTF-8 of every string. `owners` is a plain array; `rows` and `classes` are read only array views (`length`, index, iteration and the array methods work, nothing is stored when they are walked); `rowKindOf(id)` answers a kind without reading the row; `document` names the offset tables of the packed bytes for a streaming reader of the same layout (`../🌊️stream-patch`); `stats().bytes` counts each distinct backing allocation of the packed document and retained typed tables once at opening, including the entire backing of a sliced input. Decoded JavaScript values, objects and runtime overhead are outside that total. `stats().caches` reports the separate cache budgets and usage.
  * [bounded caches](../../../🧊️bounded/🟨️.mjs)
  */
 export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>text,name}={}){
@@ -467,7 +467,9 @@ export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>tex
   deleteProperty(){return false;},
   defineProperty(){return false;},
  });
+ let backingBytes=0;
+ for(const backing of new Set([buffer,lcps,suffixAt,suffixLength,shorter,kindString,ownerString,factAt,rowKind,rowPath,rowFact,listAt,seen].map(view=>view.buffer)))backingBytes+=backing.byteLength;
  const caches=[texts,factCache,rowCache,classCache];
  const document=Object.freeze({classTyped:id=>({r:readTyped(listAt[id*2]),o:readTyped(listAt[id*2+1])}),buffer,stringCount,kinds,kindString,ownerString,factCount,factAt,factsEnd,rowCount,rowKind,rowPath,rowFact,classCount,suffixAt,suffixLength,lcps,textAt});
- return{version:1,owners,rows:view(rowCount,rowAt),classes:view(classCount,classAt),rowKindOf:id=>kinds[rowKind[id]],rowPathIdOf:id=>rowPath[id],textOf:id=>textAt(id,false),stringCount,document,rowsRead:()=>read,stats:()=>({bytes:buffer.length,caches:caches.map(cache=>cache.stats())}),drop:()=>{for(const cache of caches)cache.clear();}};
+ return{version:1,owners,rows:view(rowCount,rowAt),classes:view(classCount,classAt),rowKindOf:id=>kinds[rowKind[id]],rowPathIdOf:id=>rowPath[id],textOf:id=>textAt(id,false),stringCount,document,rowsRead:()=>read,stats:()=>({bytes:backingBytes,caches:caches.map(cache=>cache.stats())}),drop:()=>{for(const cache of caches)cache.clear();}};
 }

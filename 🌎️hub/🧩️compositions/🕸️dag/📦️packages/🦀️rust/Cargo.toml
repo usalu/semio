@@ -18,6 +18,7 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-s-artifact-dag-dag = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

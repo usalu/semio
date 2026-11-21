@@ -1,5 +1,7 @@
 //! 🔬️ Shape exchange: 1 test covering shape value import refuses dangling references without mutation.
-use super::*;
+use super::{Brep, BrepError};
+use semio_framework_3d_brep_representation::topology::history::LabelSource;
+use semio_framework_3d_brep_shape_value::ShapeRoot;
 use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, SolidId};
 
 

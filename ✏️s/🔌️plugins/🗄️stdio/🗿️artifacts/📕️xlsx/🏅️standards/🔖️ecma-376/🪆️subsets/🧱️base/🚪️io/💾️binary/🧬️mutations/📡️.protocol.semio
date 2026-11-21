@@ -2,38 +2,18 @@ dialect protocol
 protocol stdio.xlsx.mutations
 version 1
 schema stdio.xlsx
-start record
-framing record
+start document
+framing magic 0x8953504B0D0A1A0A
 
-# Real `XlsxMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
-# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
-# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
-header fixed 2
-field format u8
-field tag u8
-record insert-sheet tag=2
-field payload bytes
-record remove-sheet tag=3
-field payload bytes
-record rename-sheet tag=4
-field payload bytes
-record set-cell tag=5
-field payload bytes
-record remove-cell tag=6
-field payload bytes
-record insert-shared-string tag=7
-field payload bytes
-record remove-shared-string tag=8
-field payload bytes
-record set-shared-string tag=9
-field payload bytes
-record insert-cell tag=11
-field payload bytes
-record set-relationship tag=12
-field payload bytes
-record remove-relationship tag=13
-field payload bytes
-record set-content-type tag=14
-field payload bytes
-record remove-content-type tag=15
-field payload bytes
+# Semio Pack document v1. Field 1 (`value`) holds the internally tagged
+# XlsxMutation defined in the Base mutation schema. The Pack format defines
+# the segments, checksums, and footer.
+header fixed 32
+field version_major u16
+field version_minor u16
+field required_flags u32
+field optional_flags u32
+field header_crc32c u32
+field reserved fixed 8
+segment pack_segments bytes
+footer fixed 84

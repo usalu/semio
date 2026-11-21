@@ -82,3 +82,88 @@ fn a_relocate_commit_is_the_origin_plus_the_ground_travel_and_a_still_drag_commi
     let snapped = world3d_relocate_dispatch_args(&session, [3.4, -4.4, 5.0], true, 1.0).expect("a travelled drag commits");
     assert_eq!(snapped, [13.0, 16.0, 5.0], "the committed point is snapped exactly like a catalogue drop");
 }
+
+#[test]
+fn authored_engagement_projects_and_publishes_bounded_pointer_commands() {
+    use semio_os_infinite_world_bridge::sync_world3d_scene_selection;
+    use semio_os_infinite_world_components::{WorldCameraState, WorldGumballState, WorldSceneState, WorldSelectionState};
+    use semio_os_infinite_world_cursors::{plan_world3d_engagement_pointer, publish_world3d_engagement_pointer};
+    use semio_os_infinite_world_model::{WorldFlatActionKind, WorldInteractionIntent, WorldSessionState};
+    use semio_ui_theme::geometry::Rect;
+    use semio_ui_wgpu_input::{InputState, PointerModifiers};
+
+    let law = fixture()["engagement"].clone();
+    let surface = law["surfaceId"].as_str().unwrap();
+    let window = law["windowId"].as_str().unwrap();
+    let commands = law["commands"].as_array().unwrap();
+    let mut session = WorldSessionState::new(surface.into(), "controller".into());
+    session.window_instance_id = Some(window.into());
+    session.bounds = Rect::new(0.0, 0.0, 400.0, 400.0);
+    session.pick_bounds = session.bounds;
+    session.declared_action_ids = commands.iter().map(|row| row["action"].as_str().unwrap().into()).collect();
+    let camera = WorldCameraState::new();
+    let mut selection = WorldSelectionState::new();
+    let mut gumball = WorldGumballState::new();
+    let mut scene = WorldSceneState::new();
+    for case in law["selectionCases"].as_array().unwrap() {
+        sync_world3d_scene_selection(&mut session, &mut selection, &mut gumball, &mut scene, &case["wire"].to_string());
+        let active = case["active"].as_bool().unwrap();
+        assert_eq!(selection.engagement_session_active, active);
+        for command in commands {
+            let press = command["phase"] == "press";
+            let modifiers = PointerModifiers { shift: true, meta: true, ..Default::default() };
+            let intent = if press {
+                WorldInteractionIntent::pointer_button(200.0, 200.0, true, 0, &modifiers)
+            } else {
+                WorldInteractionIntent::pointer_move(200.0, 200.0, 0.0, 0.0, false, 0, &modifiers)
+            };
+            let plan = plan_world3d_engagement_pointer(&session, &camera, &intent).expect("declared engagement command");
+            let action = plan.actions[0].unwrap();
+            let kind = if press { WorldFlatActionKind::EngagementPointerDown } else { WorldFlatActionKind::EngagementPointerMove };
+            assert_eq!(action.kind, kind);
+            let mut input = InputState::default();
+            assert_eq!(publish_world3d_engagement_pointer(&session, &selection, &plan, action, &mut input).unwrap(), active);
+            let published = input.take_action_step().expect("bounded input authority");
+            assert_eq!(published.is_some(), active);
+            if let Some(published) = published {
+                let descriptor = published.into_descriptor().unwrap();
+                assert_eq!(descriptor.action, command["action"].as_str().unwrap());
+                let args = descriptor.args.unwrap();
+                for key in ["surfaceId", "windowId", "pane"] {
+                    assert_eq!(args.get(key).and_then(semio_framework::DslValue::as_str), law[key].as_str());
+                }
+                let point = args.get("position").and_then(semio_framework::DslValue::as_array).unwrap();
+                assert_eq!(point.len(), 3);
+                for (value, expected) in point.iter().zip(law["position"].as_array().unwrap()) {
+                    assert!((value.as_f64().unwrap() - expected.as_f64().unwrap()).abs() < 1e-5);
+                }
+                for key in ["shiftKey", "ctrlKey", "metaKey"] {
+                    assert_eq!(args.get(key).and_then(semio_framework::DslValue::as_bool), command["modifiers"][key].as_bool());
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn only_unstarted_engagement_hover_can_fold_into_the_queue_front() {
+    use semio_os_infinite_world_model::{WorldInteractionIntent, WorldInteractionIntentQueue};
+    use semio_ui_wgpu_input::PointerModifiers;
+
+    let sample = fixture()["engagement"]["queue"].clone();
+    let point = |key: &str| [sample[key][0].as_f64().unwrap() as f32, sample[key][1].as_f64().unwrap() as f32];
+    let [x, y] = point("first");
+    let [next_x, next_y] = point("latest");
+    let modifiers = PointerModifiers::default();
+    let mut first = WorldInteractionIntent::pointer_move(x, y, 0.0, 0.0, false, 0, &modifiers);
+    first.generation = sample["generation"].as_u64().unwrap();
+    let latest = WorldInteractionIntent::pointer_move(next_x, next_y, next_x - x, next_y - y, false, 0, &modifiers);
+    let mut queue = WorldInteractionIntentQueue::default();
+    queue.push(first).unwrap();
+    assert_eq!(queue.coalesce_tail_pointer_move(&latest, false), None);
+    assert_eq!(queue.coalesce_tail_pointer_move(&latest, true), Some(first.generation));
+    let front = queue.front().unwrap();
+    assert_eq!([front.x, front.y], [next_x, next_y]);
+    assert_eq!([front.dx, front.dy], [next_x - x, next_y - y]);
+    assert_eq!(queue.len, 1);
+}

@@ -9,7 +9,7 @@ import {createFrameDecoderV1,encodeFrameV1} from "../../📨️protocol/🟨️.
 import {mintCapabilityV1} from "../../📨️protocol/🔑️capability/🟨️.mjs";
 import {canonicalRootV1} from "../../📨️protocol/📍️endpoint/🟨️.mjs";
 import {hostEndpointsV1,workspaceIdV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
-import {HOST_POLICY_V1,renderBothV1,renderTextV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
+import {HOST_POLICY_V1,renderBothV1,renderTextV1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import waitSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
 import {ownedSliceReportSinkV1} from "../../../🧠️memory/📋️slice-report/🏷️owner/🟦️.ts";
@@ -19,7 +19,8 @@ export class HostUnavailableErrorV1 extends Error{
  constructor(reason,message,startup){super(message??(startup?["en","de"].map(language=>startupNoticeV1(startup,language)).join(" / "):"Host graph service unavailable ("+reason+")"));this.name="HostUnavailableErrorV1";this.reason=reason;if(startup)this.startup=startup;}
  notice(language){
   if(this.startup)return this.reason+": "+startupNoticeV1(this.startup,language);
-  return this.reason+(["lost","silent"].includes(this.reason)?this.message.replace(/^[^:]*\):/u,""):"");
+  if(this.planSilence)return this.reason+": "+planSilenceNoticeV1(this.planSilence,language);
+  return this.reason+(this.reason==="lost"?this.message.replace(/^[^:]*\):/u,""):"");
  }
 }
 
@@ -166,37 +167,55 @@ export async function connectHostV1({implementation,identify,environment=process
  }finally{owner?.close();}
 }
 
-/** 🔇 The failure of a request whose service sent no frame at all for `seconds`: a service that holds a request keeps it audible (progress, keepalive), so a silent one has lost it. */
-const silentErrorV1=(seconds,progressed)=>Object.assign(new HostUnavailableErrorV1("silent","Host graph service unavailable (silent): "+Object.values(renderBothV1("host-silent",{seconds})).join(" / ")),{progressed});
+const validatePlanAcceptance=validatorV1("Accepted"),validatePlanProgress=validatorV1("Progress");
 
-function exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,denialWaitMilliseconds=1000,ignorePids=[],silenceMilliseconds=HOST_POLICY_V1.planSilenceMilliseconds}){
+function planSilenceNoticeV1(diagnostic,language){
+ const selected=language==="de"?"de":"en",text=(key,fields)=>renderTextV1(key,fields,[selected])[selected];
+ return [text("host-silent",{seconds:diagnostic.limitMilliseconds/1000}),text("host-silent-"+diagnostic.stage),...(diagnostic.lastProgress===undefined?[]:[text("host-silent-progress",{phase:diagnostic.lastProgress})])].join(" ");
+}
+
+/** 🔇 Reports the last confirmed evidence for a silent plan on this connection. */
+const silentErrorV1=(diagnostic,progressed)=>Object.assign(new HostUnavailableErrorV1("silent","Host graph service unavailable (silent): "+["en","de"].map(language=>planSilenceNoticeV1(diagnostic,language)).join(" / ")),{progressed,planSilence:Object.freeze(diagnostic)});
+
+function exchange({socket,runtime,implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,denialWaitMilliseconds=1000,ignorePids=[],silenceMilliseconds=HOST_POLICY_V1.planSilenceMilliseconds,retainForRetry,onJobProgress}){
  return new Promise((resolve,reject)=>{
-  let finished=false,welcome,progressed=false,heardAt=Date.now(),watch;
-  const end=(settle,value)=>{if(finished)return;finished=true;clearInterval(watch);signal?.removeEventListener("abort",abort);socket.destroy();settle(value);};
-  if(silenceMilliseconds>0){watch=setInterval(()=>{if(Date.now()-heardAt>=silenceMilliseconds)end(reject,silentErrorV1(Math.round(silenceMilliseconds/1000),progressed));},Math.max(10,Math.min(5000,Math.floor(silenceMilliseconds/4))));watch.unref?.();}
+  let finished=false,welcome,accepted=false,jobProgressed=false,lastProgress,heardAt=Date.now(),watch;
+  const end=(settle,value,retain=false)=>{if(finished)return;finished=true;clearInterval(watch);signal?.removeEventListener("abort",abort);if(retain)retainForRetry(socket,runtime.endpoint,silenceMilliseconds);else socket.destroy();settle(value);};
+  if(silenceMilliseconds>0){watch=setInterval(()=>{if(Date.now()-heardAt>=silenceMilliseconds)end(reject,silentErrorV1({stage:welcome===undefined?"before-welcome":accepted?"after-acceptance":"before-acceptance",limitMilliseconds:silenceMilliseconds,lastProgress},lastProgress!==undefined),jobProgressed&&retainForRetry!==undefined);},Math.max(10,Math.min(5000,Math.floor(silenceMilliseconds/4))));watch.unref?.();}
   const abort=()=>{try{socket.write(encodeFrameV1({t:"cancel",id:frame.id}));}catch{}end(reject,signal.reason??new Error("aborted"));};
   let token;
   try{token=mintCapabilityV1(readFileSync(runtime.key),[{k:"scope",v:["query"]},{k:"notAfter",v:Date.now()+60000},{k:"worktree",v:workspace},{k:"agent",v:agent}]);}catch(error){end(reject,Object.assign(new HostUnavailableErrorV1("key"),{missing:error?.code==="ENOENT"}));return;}
   const decoder=createFrameDecoderV1({maximumFrameBytes:HOST_POLICY_V1.maximumFrameBytes,
    onFrame:message=>{
-     if(finished)return;
-    heardAt=Date.now();
-    if(message.t==="welcome"){welcome=message;if(!message.features?.includes("plan"))end(reject,new HostUnavailableErrorV1("protocol","service does not answer plan requests"));return;}
-     if(message.t==="slice-report"&&message.id===frame.id){sliceReport?.(message.report);return;}
-    if(message.t==="progress"){progressed=true;onProgress(message);return;}
-    if(message.t==="plan-reply"&&message.id===frame.id){end(resolve,{reply:message,welcome});return;}
-    if(message.t==="refused"){
+    if(finished||message===null||typeof message!=="object")return;
+    if(message.t==="welcome"){
+     if(welcome!==undefined)return;
+     if(message.v!==1||!Array.isArray(message.features)||!message.features.includes("plan")){end(reject,new HostUnavailableErrorV1("protocol","service does not answer plan requests"));return;}
+     welcome=message;heardAt=Date.now();return;
+    }
+    if(message.t==="refused"&&(message.id===undefined||message.id===frame.id)){
      if(message.retry==="fallback")end(reject,new HostUnavailableErrorV1(message.code));
      else end(reject,Object.assign(new PlanRefusedErrorV1(message),{servicePid:welcome?.service?.pid}));
+     return;
     }
+    if(welcome===undefined||message.id!==frame.id)return;
+    if(message.t==="accepted"&&validatePlanAcceptance(message).length===0){if(!accepted){accepted=true;heardAt=Date.now();}return;}
+    if(message.t==="slice-report"&&sliceReport!==undefined&&typeof message.report==="string"){accepted=true;heardAt=Date.now();sliceReport(message.report);return;}
+    if(message.t==="progress"&&validatePlanProgress(message).length===0){
+     accepted=true;heardAt=Date.now();lastProgress=message.phase;
+     if(["queued","load","plan","slice"].includes(message.phase)){jobProgressed=true;onJobProgress?.();}
+     onProgress(message);return;
+    }
+    if(message.t==="plan-reply")end(resolve,{reply:message,welcome});
    },
    onError:()=>end(reject,new HostUnavailableErrorV1("protocol")),
   });
   socket.on("data",chunk=>decoder.push(chunk));
-  const lost=()=>Object.assign(new HostUnavailableErrorV1("lost","Host graph service unavailable (lost): "+explainServiceLossV1(runtime.directory)),{progressed});
+  const lost=()=>Object.assign(new HostUnavailableErrorV1("lost","Host graph service unavailable (lost): "+explainServiceLossV1(runtime.directory)),{progressed:lastProgress!==undefined});
   const began=Date.now()-2000,lostOrDenied=async()=>{for(let waited=0;waited<=denialWaitMilliseconds;waited+=50){const refused=consentRefusalOfExitV1(runtime,began,ignorePids);if(refused)return refused;if(waited<denialWaitMilliseconds)await sleep(50);}return lost();};
-  socket.on("error",()=>{void lostOrDenied().then(error=>end(reject,error));});
-  socket.on("close",()=>{void lostOrDenied().then(error=>end(reject,error));});
+  const disconnected=()=>{if(!finished)void lostOrDenied().then(error=>end(reject,error));};
+  socket.on("error",disconnected);
+  socket.on("close",disconnected);
   if(signal?.aborted){abort();return;}
   signal?.addEventListener("abort",abort,{once:true});
   socket.write(encodeFrameV1({t:"hello",v:1,client:{name:"repo",pid:process.pid,lane:agent},languages,cap:token,implementation})+encodeFrameV1({...frame,cap:token}));
@@ -210,27 +229,43 @@ export const PLAN_KEY_WAIT_V1=Object.freeze({maximum:30,milliseconds:1000});
  * @see ../../🧪️tests/🚪️client/🗝️key/🟦️.ts */
 export function planKeyRetryV1(error,waited){return error?.reason==="key"&&error.missing===true&&waited<PLAN_KEY_WAIT_V1.maximum;}
 
-/** 🛰 Asks the host service for the plan of `targets` of the workspace at `root`; retries per lost connection (crash, restart); a connection lost after the service had begun to answer (progress frames seen) attaches to the replacement generation without using up an attempt, `reattachMaximum` times at most, and starts the service when none runs; a service that sends no frame at all for `silenceMilliseconds` (the declared `planSilenceMilliseconds`, 0 turns it off) has lost the request: it ends with the bilingual failure `silent` and is asked again like a lost connection.
+/** 🛰 Requests a plan and retries lost connections. Exact progress preserves an attempt up to `reattachMaximum`. After `silenceMilliseconds` without activity for this connection's plan, the request reports its last confirmed stage and retries like a lost connection. When a silent request received job progress, its connection stays open for at most one silence interval while the retry joins the existing job. Only the current connection may answer the request. Zero disables the silence timeout.
  * @see ../../🧪️tests/💓️keepalive/🟦️.ts */
 export async function requestPlanV1(options){
  const{root,implementation,targets,agent,priority=5,revision,parent,dirty,arguments:invocation,tool,graphPolicy,language,signal,onProgress=()=>{},environment=process.env,platform=process.platform,spawnService,attempts=3,deadlineMs,ignorePids,silenceMilliseconds,identify}=options;
  const canonical=canonicalRootV1(root),workspace=workspaceIdV1(canonical),languages=[language,...["en","de"].filter(other=>other!==language)],sliceReport=ownedSliceReportSinkV1(canonical,environment);
- let last,reattached=0,keyWaits=0;
- for(let attempt=0;attempt<attempts;attempt++){
-  signal?.throwIfAborted();
-  const{socket,runtime,implementation:connected}=await connectHostV1({implementation,...identify===undefined?{}:{identify},environment,platform,spawnService,signal,onProgress,languages,...ignorePids?{ignorePids}:{}});
-  const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty}:{}),...(invocation?{arguments:invocation}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{}),...sliceReport===undefined?{}:{sliceReport:true}};
-  try{
-   const{reply,welcome}=await exchange({socket,runtime,implementation:connected??implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,...silenceMilliseconds===undefined?{}:{silenceMilliseconds},...ignorePids?{ignorePids}:{}});
-   return{reply,welcome,runtime,plan:resolvePlanV1(reply,runtime)};
-  }catch(error){
-   if(!(error instanceof HostUnavailableErrorV1)||error.reason==="protocol"&&attempt===attempts-1)throw error;
-   last=error;
-   if(error.reason==="key"){if(!planKeyRetryV1(error,keyWaits))throw error;keyWaits++;attempt--;await new Promise(done=>setTimeout(done,PLAN_KEY_WAIT_V1.milliseconds));continue;}
-   if((error.reason==="lost"||error.reason==="silent")&&error.progressed===true&&reattached<HOST_POLICY_V1.reattachMaximum){reattached++;attempt--;}
+ const frame={t:"plan",id:1,workspace,root:canonical,targets:[...new Set(targets)],agent,priority,language,...(revision?{revision}:{}),...(parent?{parent}:{}),...(dirty?{dirty:{...dirty,paths:[...dirty.paths]}}:{}),...(invocation?{arguments:[...invocation]}:{}),...(tool?{tool}:{}),...(graphPolicy?{graphPolicy}:{}),...(deadlineMs?{deadlineMs}:{}),...sliceReport===undefined?{}:{sliceReport:true}};
+ let last,reattached=0,keyWaits=0,previous;
+ const releasePrevious=()=>previous?.release();
+ const retainForRetry=(socket,endpoint,milliseconds)=>{
+  releasePrevious();
+  const release=()=>{
+   clearTimeout(expiry);signal?.removeEventListener("abort",release);socket.off("close",release);socket.destroy();
+   if(previous?.release===release)previous=undefined;
+  };
+  const expiry=setTimeout(release,milliseconds);expiry.unref?.();
+  previous={endpoint,release};
+  socket.once("close",release);signal?.addEventListener("abort",release,{once:true});
+  if(signal?.aborted)release();
+ };
+ try{
+  for(let attempt=0;attempt<attempts;attempt++){
+   signal?.throwIfAborted();
+   const{socket,runtime,implementation:connected}=await connectHostV1({implementation,...identify===undefined?{}:{identify},environment,platform,spawnService,signal,onProgress,languages,...ignorePids?{ignorePids}:{}});
+   if(previous&&previous.endpoint!==runtime.endpoint)releasePrevious();
+   try{
+    const canRetry=attempt+1<attempts||reattached<HOST_POLICY_V1.reattachMaximum;
+    const{reply,welcome}=await exchange({socket,runtime,implementation:connected??implementation,frame,agent,workspace,languages,signal,onProgress,sliceReport,retainForRetry:canRetry?retainForRetry:undefined,onJobProgress:releasePrevious,...silenceMilliseconds===undefined?{}:{silenceMilliseconds},...ignorePids?{ignorePids}:{}});
+    return{reply,welcome,runtime,plan:resolvePlanV1(reply,runtime)};
+   }catch(error){
+    if(!(error instanceof HostUnavailableErrorV1)||error.reason==="protocol"&&attempt===attempts-1)throw error;
+    last=error;
+    if(error.reason==="key"){if(!planKeyRetryV1(error,keyWaits))throw error;keyWaits++;attempt--;await new Promise(done=>setTimeout(done,PLAN_KEY_WAIT_V1.milliseconds));continue;}
+    if((error.reason==="lost"||error.reason==="silent")&&error.progressed===true&&reattached<HOST_POLICY_V1.reattachMaximum){reattached++;attempt--;}
+   }
   }
- }
- throw last;
+  throw last;
+ }finally{releasePrevious();}
 }
 
 /** 📦 The plan of a reply: inline, or read and verified from the content-addressed spill the reference names. */

@@ -135,11 +135,20 @@ def evaluate(doc, status=None, values=None):
             alpha_c = 50.0 if doc["fireCurve"] == "hydrocarbon" else 25.0
             if doc["assumedHNet"] > 0:
                 rows["en1991.1-2.h-net"] = h_net(theta_k, alpha_c) / doc["assumedHNet"]
-        qfk = characteristic_fire_load(doc)
-        qfd = qfk * COMBUSTION * delta_q1(doc["fireCompartmentArea"])
-        if doc["assumedQfD"] > 0:
-            rows["en1991.1-2.fire-load"] = qfd / doc["assumedQfD"]
-    if mode == "parametric":
+    if mode in ("nominal", "parametric"):
+        key = "en1991.1-2.fire-load"
+        if de:
+            rows[key], status[key] = 0.0, "notApplicable"
+            if mode == "parametric":
+                temperature = "en1991.1-2.gas-temperature"
+                rows[temperature], status[temperature] = 0.0, "notApplicable"
+        elif doc["assumedQfD"] > 0:
+            qfk = characteristic_fire_load(doc)
+            qfd = qfk * COMBUSTION * delta_q1(doc["fireCompartmentArea"])
+            rows[key] = qfd / doc["assumedQfD"]
+            if rows[key] <= 1.0:
+                status[key] = "unverifiedBasis"
+    if mode == "parametric" and not de:
         qfk = characteristic_fire_load(doc)
         qfd = qfk * COMBUSTION * delta_q1(doc["fireCompartmentArea"])
         at, av, heq, o_geom = compartment(doc["fireCompartmentArea"], doc["fireCompartmentHeight"])
@@ -156,8 +165,6 @@ def evaluate(doc, status=None, values=None):
             rows["en1991.1-2.gas-temperature"] = required_k / doc["assumedGasTemperature"]
         if doc["assumedHNet"] > 0:
             rows["en1991.1-2.h-net"] = h_net(required_k, 35.0) / doc["assumedHNet"]
-        if doc["assumedQfD"] > 0:
-            rows["en1991.1-2.fire-load"] = qfd / doc["assumedQfD"]
     for element in doc.get("dynamicElements", []):
         h = element["height"]
         n1 = element["firstFrequency"] if element["firstFrequency"] > 0 else 46.0 / h
@@ -586,7 +593,7 @@ def self_check():
         "rotatingMachines": [{"id": "m", "mass": 500.0, "eccentricity": 0.002, "frequency": 25.0}],
     }
     state, numbers = {}, {}
-    evaluate({**collection_doc, "annex": "de", "floors": []}, state, numbers)
+    evaluate({**collection_doc, "annex": "de", "floors": [], "tMax": 37.0, "tMin": -24.0}, state, numbers)
     assert abs(numbers["en1991.3.hoist-release.h"] - (1.0 - 0.4 * 1.5)) < 1e-12 and state["en1991.3.hoist-release.h"] == "unverifiedBasis"
     assert state["en1991.3.hoist-test-static.h"] == "unverifiedBasis" and state["en1991.3.hoist-test-dynamic.h"] == "pass"
     assert abs(numbers["en1991.3.hoist-test-static.h"] - 110000.0) < 1e-9 and abs(numbers["en1991.3.hoist-test-dynamic.h"] - 125000.0) < 1e-9

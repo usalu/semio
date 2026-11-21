@@ -103,7 +103,8 @@ pub struct MediaStream {
 /// solver's math (`BrownConrady{k1,k2,k3,p1,p2}` / `FisheyeEquidistant{k1,k2,k3,k4}`), which doesn't
 /// serialize into a stable arg-form-editable shape — the document instead always carries a flat
 /// 5-slot `distortion` array plus a `model` label the plugin uses to decide which slots are live,
-/// matching the "pinhole|brownConrady|fisheye" UI select.
+/// matching the "pinhole|brownConrady|fisheye" UI select. The linear calibration is expressed in
+/// the pixel coordinates of the frames stored in the stream.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
@@ -117,7 +118,7 @@ pub struct CameraCalibration {
     pub cx: f64,
     pub cy: f64,
     pub skew: f64,
-    /// 🔢️ `[k1, k2, k3, p1, p2]`.
+    /// 🔢️ Brown–Conrady uses `[k1, k2, k3, p1, p2]`. Fisheye uses the first four slots as `[k1, k2, k3, k4]`.
     pub distortion: [f32; 5],
     pub rms_reprojection_px: Option<f32>,
     pub locked: bool,

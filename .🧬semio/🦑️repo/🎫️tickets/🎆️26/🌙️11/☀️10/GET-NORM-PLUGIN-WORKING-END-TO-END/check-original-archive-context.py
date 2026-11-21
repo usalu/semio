@@ -30,6 +30,12 @@ if "picker-archive" in sys.argv[2:]:
     stem += "-picker"
 if "retained-store" in sys.argv[2:]:
     stem += "-store"
+if "replacement-refusal" in sys.argv[2:]:
+    stem += "-refusal"
+if "repeat-archive" in sys.argv[2:]:
+    if family != "din4108":
+        raise ValueError("The captured repeated archive fixture is DIN 4108")
+    stem += "-repeat"
 source = work / (stem.replace("-", "_") + ".rs")
 source.write_text('''
 use semio_framework_actor_retained_context::OriginalActorContext;
@@ -372,7 +378,7 @@ mod replacement {
 
     #[cfg(archive_runtime_cleanup)]
     pub struct RuntimeArchive {
-        runtime: semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<VcsArtifactApp<EditorApp<PlayApp>>>,
+        runtime: semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<VcsArtifactApp<EditorApp<PlayApp>, <PlayApp as semio_plugin::ArtifactEditor>::Members>>,
         pack: DocumentArchivePack,
         admission: OriginalDocumentArchiveAdmission,
         cancellation: bool,
@@ -380,6 +386,10 @@ mod replacement {
         initial_generation: u64,
         last_state: Option<(DocumentArchiveLoadState, u64)>,
         last_phase: Option<String>,
+        operation: u64,
+        archive_index: usize,
+        #[cfg(archive_energy_member)]
+        distinct_replacement_seen: bool,
         #[cfg(archive_browser_commands)]
         commands: Option<(usize, semio_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand)>,
     }
@@ -412,7 +422,9 @@ mod replacement {
             );
             cell.maintenance_generation.store(cx.generation().0, std::sync::atomic::Ordering::Relaxed);
             runtime.instances.borrow_mut().insert_admitted(1, std::sync::Arc::new(cell));
-            Self { runtime, pack, admission, cancellation: false, admitted: false, initial_generation, last_state: None, last_phase: None,
+            Self { runtime, pack, admission, cancellation: false, admitted: false, initial_generation, last_state: None, last_phase: None, operation: OPERATION, archive_index: 0,
+                #[cfg(archive_energy_member)]
+                distinct_replacement_seen: false,
                 #[cfg(archive_browser_commands)]
                 commands: None }
         }
@@ -422,7 +434,8 @@ mod replacement {
             let isolate_command = self.commands.is_some() && std::env::args().any(|arg| arg == "command-only");
             #[cfg(not(archive_browser_commands))]
             let isolate_command = false;
-            if self.admitted && !isolate_command {
+            let direct_member_turn = turn >= 10_500 && std::env::args().any(|arg| arg == "direct-member-turn");
+            if self.admitted && !isolate_command && !direct_member_turn {
                 semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&self.runtime, cx)
                     .unwrap_or_else(|failure| panic!("runtime archive cleanup {turn}: {failure:?}"));
             }
@@ -469,7 +482,18 @@ mod replacement {
                         BROWSER_COMMANDS[*index].0, result.requested_effects, result.output);
                     let next = *index + 1;
                     if next == BROWSER_COMMANDS.len() { std::process::exit(0); }
-                    std::mem::forget(result);
+                    if std::env::args().any(|arg| arg == "settle-note") {
+                        let instances = self.runtime.instances.borrow();
+                        let cell = instances.get(1).unwrap();
+                        let mut instance = cell.background_instance().unwrap();
+                        let committed = resolve_ready(semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(
+                            &mut instance.app, result, cx,
+                        )).unwrap_or_else(|error| panic!("native reserved note job did not settle: {error:?}"));
+                        println!("mounted editor settled actual browser note job on turn {turn}: history committed {}", committed.history_patch.is_some());
+                        std::mem::forget(committed);
+                    } else {
+                        std::mem::forget(result);
+                    }
                     let next_owner = semio_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand::new(browser_command(BROWSER_COMMANDS[next].1));
                     std::mem::forget(std::mem::replace(owner, next_owner));
                     *index = next;
@@ -480,15 +504,39 @@ mod replacement {
             let cell = instances.get(1).unwrap();
             let mut guard = cell.background_instance().unwrap_or_else(|_| panic!("runtime app not available on turn {turn}"));
             let app = &mut guard.app;
+            if direct_member_turn {
+                let handle = app.ingest.document_archive_loads.get(self.operation).and_then(|archive| archive.replacement);
+                if let Some(job) = handle.and_then(|handle| app.ingest.store_replacement_jobs.get_mut(handle.operation.0))
+                    .filter(|job| job.state == ActiveArtifactStoreReplacementState::OpeningMembers)
+                {
+                    let before = cx.retained_progress();
+                    let work = cx.fuel_remaining();
+                    let grant = mounted_policy().maintenance;
+                    let step = cx.with_original_retirement(|cx| cx.with_replacement_current(job.replacement_identity(), |cx| {
+                        job.drive_member_open(cx, grant).map_err(Into::into)
+                    })).unwrap_or_else(|failure| panic!("direct member turn {turn}: {failure:?}"));
+                    let progress = original_lifecycle_delta(before, cx.retained_progress()).unwrap();
+                    if turn % 500 == 0 || job.state != ActiveArtifactStoreReplacementState::OpeningMembers {
+                        println!("[DEBUG] direct member {turn}: {step:?}, actual {progress:?}, work {}, stage {}", work - cx.fuel_remaining(), cx.stage());
+                    }
+                    if job.state != ActiveArtifactStoreReplacementState::OpeningMembers {
+                        std::process::exit(0);
+                    }
+                }
+            }
             if !self.cancellation {
                 self.cancellation = app.admit_cancellation_issuer(cx).unwrap();
                 return;
             }
             if !self.admitted {
-                self.admitted = app.begin_document_archive_load(OPERATION, &mut self.pack, &mut self.admission, cx).unwrap();
+                self.admitted = app.begin_document_archive_load(self.operation, &mut self.pack, &mut self.admission, cx).unwrap();
                 return;
             }
-            if let Some(archive) = app.ingest.document_archive_loads.get(OPERATION) {
+            if let Some(archive) = app.ingest.document_archive_loads.get(self.operation) {
+                #[cfg(archive_energy_member)]
+                if let Some(handle) = archive.replacement {
+                    self.distinct_replacement_seen |= (handle.operation, handle.generation) != (cx.operation(), cx.generation());
+                }
                 let replacement = archive.replacement.and_then(|handle| app.ingest.store_replacement_jobs.get(handle.operation.0))
                     .map(|job| {
                         let details = std::env::args().any(|value| value == "retained-store").then(|| {
@@ -496,15 +544,33 @@ mod replacement {
                             let store = job.retained_store.as_ref().map(|store| (store.close_owned_demands(copy), store.close_owned_store_terminal_is_empty(), store.factory_aliases_present()));
                             (job.retirement_demands(copy), store)
                         });
-                        (job.state, job.terminal_target, job.committed, details)
+                        (job.state, job.terminal_target, job.committed, details, &job.refusal)
                     });
                 let phase = format!("{:?}, {replacement:?}", archive.phase);
+                if turn % 500 == 0 && std::env::args().any(|arg| arg == "replacement-stock") {
+                    if let Some(job) = archive.replacement.and_then(|handle| app.ingest.store_replacement_jobs.get(handle.operation.0)) {
+                        let maintenance = mounted_policy().maintenance;
+                        let quote = job.member_open_demands(maintenance.maximum_copy_bytes);
+                        println!("[DEBUG] replacement stock {turn}: {:?}, open {}, quote {quote:?}; stock {:?}; spent {:?}; work {}", job.state,
+                            job.active_member_open.is_some(),
+                            cx.retained_grant(), cx.retained_progress(), cx.fuel_remaining());
+                        #[cfg(archive_energy_member)]
+                        if let Some(semio_s_artifact_stdio_semio::SemioMembersOpen::Table(open)) = job.active_member_open.as_ref() {
+                            use semio_os_kernel::os_store::MemberOpenOperation;
+                            println!("[DEBUG] climate table {turn}: {}/{} owners, snapshot {}, history {}, selected {}, dictionary {}, witness {}, retired {}, demand {:?}, last stage {}",
+                                open.owners.is_some(), open.owners.as_ref().is_some_and(|owners| owners.constructor_is_complete()),
+                                open.snapshot.is_some(), open.history.is_some(), open.selected.is_some(), open.dictionary.is_some(),
+                                open.witness.is_some(), open.terminal_is_empty(), open.retirement_demands(maintenance.maximum_copy_bytes),
+                                semio_plugin_reactor_app::LAST_MAINTENANCE_STAGE.load(std::sync::atomic::Ordering::Relaxed));
+                        }
+                    }
+                }
                 if self.last_phase.as_ref() != Some(&phase) || turn % 500 == 0 {
                     println!("[DEBUG] runtime archive {turn}: {phase}; claim {}", cx.last_claim_reason());
                     self.last_phase = Some(phase);
                 }
             }
-            let status = identity(cx, |identity, cx| resolve_ready(app.poll_document_archive_load(OPERATION, identity, cx))).unwrap();
+            let status = identity(cx, |identity, cx| resolve_ready(app.poll_document_archive_load(self.operation, identity, cx))).unwrap();
             let next = (status.state, status.completed);
             if self.last_state != Some(next) {
                 println!("runtime archive {turn}: {:?} {}/{}", status.state, status.completed, status.total);
@@ -512,9 +578,39 @@ mod replacement {
             }
             if status.state == DocumentArchiveLoadState::Ready {
                 assert!(app.stores.store.generation_now() > self.initial_generation);
-                app.acknowledge_document_archive_load(OPERATION).unwrap();
-                assert!(app.ingest.document_archive_loads.get(OPERATION).is_none());
+                #[cfg(archive_energy_member)]
+                {
+                    use semio_s_artifact_norm_din18599_model::{DIN18599_CLIMATE_TABLE_SLOT, din18599_climate_data_from_table};
+                    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+                    assert!(self.distinct_replacement_seen, "member replay exercised distinct source and replacement identities");
+                    let snapshot = app.stores.store.snapshot_ref();
+                    let table = app.child_composition.child_content_root
+                        .typed_read::<SemioTableSnapshot>(DIN18599_CLIMATE_TABLE_SLOT, &snapshot.climate_table.child_id)
+                        .expect("mounted archive installed its climate table");
+                    assert_eq!((table.columns.len(), table.rows.len()), (2, 12));
+                    assert_eq!(din18599_climate_data_from_table(&table), snapshot.climate);
+                }
+                app.acknowledge_document_archive_load(self.operation).unwrap();
+                assert!(app.ingest.document_archive_loads.get(self.operation).is_none());
                 println!("DISPLAY runtime archive installed and acknowledged on turn {turn}");
+                #[cfg(archive_repeat)]
+                {
+                    let remaining = [
+                        (2564, &include_bytes!("din4108-round-trip-2.pack")[..], &include_bytes!("din4108-round-trip-2.spr")[..]),
+                        (5486, &include_bytes!("din4108-round-trip-3.pack")[..], &include_bytes!("din4108-round-trip-3.spr")[..]),
+                    ];
+                    let Some((operation, pack, spr)) = remaining.get(self.archive_index).copied() else { std::process::exit(0); };
+                    self.archive_index += 1;
+                    self.operation = operation;
+                    self.pack = app.document_load_archive(&ArtifactPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() }).unwrap();
+                    self.admission = OriginalDocumentArchiveAdmission::empty();
+                    self.initial_generation = app.stores.store.generation_now();
+                    self.admitted = false;
+                    self.last_state = None;
+                    self.last_phase = None;
+                    println!("[DEBUG] runtime next archive {operation}, copy {}", cx.retained_grant().maximum_copy_bytes);
+                    return;
+                }
                 #[cfg(archive_browser_commands)]
                 {
                     self.commands = Some((0, semio_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand::new(browser_command(BROWSER_COMMANDS[0].1))));
@@ -668,6 +764,9 @@ mod initializer {
 }
 
 fn main() {
+    if std::env::args().any(|value| value == "runtime-diagnostics") {
+        semio_framework_job::set_runtime_diagnostics(true);
+    }
     let wire = std::env::args().any(|value| value == "wire");
     let reconcile = std::env::args().any(|value| value == "reconcile");
     let wrap = std::env::args().any(|value| value == "lifecycle");
@@ -692,7 +791,7 @@ fn main() {
         operation: 1, generation: 1, epoch: 1,
         work: OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: 3_600_000_000, fuel: if runtime_clock { 50_000_000 } else { 900_000_000 } },
         grant: RetainedCloneGrant {
-            maximum_items: 8_388_608, maximum_copy_bytes: 536_870_912,
+            maximum_items: 8_388_608, maximum_copy_bytes: std::env::args().find_map(|value| value.strip_prefix("original-copy=")?.parse::<usize>().ok()).unwrap_or(536_870_912),
             maximum_capacity_bytes: 536_870_912, maximum_release_bytes: 536_870_912, maximum_depth: 64,
         },
     };
@@ -733,7 +832,8 @@ fn main() {
     let mut reported_disagreement = false;
     let mut deferred = 0;
     let mut small_progress = 0;
-    let turn_limit = if member_maintenance() { 90_000 } else { 30_000 };
+    let turn_limit = std::env::args().find_map(|arg| arg.strip_prefix("turn-limit=")?.parse::<usize>().ok())
+        .unwrap_or(if member_maintenance() { 90_000 } else { 30_000 });
     for turn in 0..turn_limit {
         if runtime_clock && turn % 500 == 0 {
             println!("[DEBUG] actor stock {turn}: {} copy bytes, {} work units, time {} us", input.grant.maximum_copy_bytes, input.work.fuel, clock().unwrap());
@@ -979,14 +1079,19 @@ if "quoted-candidate" in sys.argv[2:]:
 if "runtime-cleanup" in sys.argv[2:]:
     args += ["--cfg=archive_runtime_cleanup", "-Clink-arg=-zstack-size=16777216"]
     crates += ["semio-plugin-reactor-lifecycle", "semio-plugin-runtime-instances"]
+if family == "din18599" and "replacement-stock" in sys.argv[2:]:
+    args += ["--cfg=archive_energy_member"]
+    crates += ["semio-plugin-reactor-app", "semio-s-artifact-stdio-semio", "semio-s-artifact-stdio-semio-table-model"]
 if "runtime-clock" in sys.argv[2:]:
     args += ["--cfg=archive_runtime_clock"]
+if "repeat-archive" in sys.argv[2:]:
+    args += ["--cfg=archive_repeat"]
 if "shell-note" in sys.argv[2:]:
     args += ["--cfg=archive_shell_note"]
     crates += ["semio-framework", "semio-plugin-decl-emission"]
 if "browser-commands" in sys.argv[2:]:
     args += ["--cfg=archive_browser_commands"]
-    crates += ["semio-framework", "semio-plugin-plugin-program", "semio-plugin-runtime-ops"]
+    crates += ["semio-framework", "semio-plugin-plugin-program", "semio-plugin-runtime-ops", "semio-plugin-instance-app"]
 if "quoted-registry" in sys.argv[2:]:
     args += ["--cfg=archive_registry_quote"]
     crates += ["semio-framework-value-snapshot-read"]

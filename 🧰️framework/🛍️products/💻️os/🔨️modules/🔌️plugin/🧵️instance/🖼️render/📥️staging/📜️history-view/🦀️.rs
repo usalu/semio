@@ -288,6 +288,36 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         })
     }
 
+    /// 🎞️ Prepares the media producer's document roots even when no surface has rendered them.
+    pub async fn prepare_reserved_media_cache(
+        &mut self,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if cx.is_cancelled() {
+            return Err(semio_framework_value::ValueError::literal(
+                semio_framework_value::ValueRefusalKind::Canceled,
+                "media import cancelled before preparing its document",
+            ).into());
+        }
+        if self.current_reserved_cache().is_some() {
+            return Ok(true);
+        }
+        if cx.should_yield() || cx.retained_grant().maximum_items == 0 {
+            return Ok(false);
+        }
+        if self.history.command_prune_requested() || self.history.pending_command_prune.is_some() {
+            let step = self.history.advance_command_prune_step(&mut *self.stores, cx.retained_grant(), false)?;
+            if let Some(progress) = step.progress().filter(|progress| *progress != Default::default()) {
+                cx.consume_retained(progress)?;
+                cx.consume_fuel(1);
+            }
+            return Ok(false);
+        }
+        self.refresh_cache().await?;
+        cx.consume_fuel(1);
+        Ok(self.current_reserved_cache().is_some())
+    }
+
     /// 🗂️ Refreshes the snapshot cache if the store advanced, the command log grew/folded, or
     /// the history filter changed since the last materialization. The key is recomputed a SECOND time
     /// after `backfill_command_log` — backfill itself may `push_log_entry` (bumping `log_generation`),

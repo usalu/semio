@@ -13,6 +13,8 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod blatt_16;
 #[path = "📄️blatt-19/🦀️.rs"]
 pub mod blatt_19;
+#[path = "📄️blatt-22/🦀️.rs"]
+pub mod blatt_22;
 #[path = "📄️blatt-3/🦀️.rs"]
 pub mod blatt_3;
 #[path = "📄️blatt-4/🦀️.rs"]

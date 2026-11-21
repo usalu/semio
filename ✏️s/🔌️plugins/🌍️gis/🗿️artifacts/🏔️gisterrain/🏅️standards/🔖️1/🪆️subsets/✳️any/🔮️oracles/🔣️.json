@@ -78,11 +78,18 @@
               "directoryName": "📥️imports"
             }
           ]
+        },
+        {
+          "mutationId": "replace-elevation-source",
+          "sourceMutationDirectoryName": "🏔️replace-elevation-source",
+          "mutationDirectoryName": "🏔️replace-elevation-source",
+          "scenarios": [{ "id": "authors-local-elevation-source", "directoryName": "🏔️authors" }]
         }
       ],
       "kinds": [
         "change-exaggeration",
-        "change-imported-features"
+        "change-imported-features",
+        "replace-elevation-source"
       ]
     }
   ],
@@ -133,6 +140,16 @@
               "capability": "gisterrain-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
             }
+          ]
+        },
+        {
+          "id": "replace-elevation-source",
+          "capability": "gisterrain-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": ["applied", "no-op", "rejected"],
+          "productionDispatch": { "operation": "replace-elevation-source", "bridgeVersion": 1, "variant": "ReplaceElevationSource" },
+          "oracleRequirements": [
+            { "capability": "gisterrain-1-mutate", "qualifyingKind": "verified-native-second-implementation" }
           ]
         }
       ]

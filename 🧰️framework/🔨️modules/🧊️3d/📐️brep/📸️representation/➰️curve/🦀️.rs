@@ -16,6 +16,11 @@ extern crate semio_framework_value_derive as value_derive;
 
 // #region 🔖️Submodules
 
+#[path = "📈️bounded-polynomial/🦀️.rs"]
+pub mod bounded_polynomial;
+#[path = "🧵️bounded-spline/🦀️.rs"]
+pub mod bounded_spline;
+
 #[path = "🎢️bezier/🦀️.rs"]
 pub mod bezier;
 #[path = "🪢️bspline/🦀️.rs"]

@@ -1,12 +1,13 @@
 import{mkdirSync,readFileSync,renameSync,rmSync,writeFileSync}from"node:fs";
 import{dirname}from"node:path";
 import type{GraphFleetClientV1}from"../../🛰️exchange/🟦️.ts";
-import{claimWantedV1,publishServedV1,readServeStateV1,wantedClaimKeyV1,wantedTextV1,type ServeStateV1,type WantedHeadroomV1,type WantedPolicyV1,type WantedRequestV1,wantedPolicyV1}from"../🟦️.ts";
+import{claimWantedV1,publishServedV1,readRegistryWatchRoundV1,readServeStateV1,wantedClaimKeyV1,wantedTextV1,type ReadWatchObservationV1,type ServeStateV1,type WantedHeadroomV1,type WantedPolicyV1,type WantedRequestV1,wantedPolicyV1}from"../🟦️.ts";
 import{clearSteeringV1,readPendingV1,readPriorityV1,writePriorityV1}from"../../../🕸️graph/🕰️generations/🧭️steering/🟨️.mjs";
 import{parseGraphWaveRowV1,type GraphWaveRowV1}from"../../../🕸️graph/📈️wave-row/🟨️.mjs";
 import{estimateOwnerCostV1,estimateRemainingMillisecondsV1,orderByCostV1,type OwnerCostTableV1}from"../💰️cost/🟦️.ts";
 import{publishOwnerCostsV1}from"../💰️cost/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+import parserSchema from"../../../🚀️bootstrap/📦️parsers/🧬️schema/🔣️.json"with{type:"json"};
 import{platformClassV1}from"../../🌍️platform-class/🟦️.ts";
 
 /** 🛠️ The numbers of the serving machine: round length, how long the worktree must be quiet before a background refresh (with a maximum age that overrides it), the stall limit and the maximum of one graph read, the pauses of a background refresh, the free memory a refresh needs, the smaller free memory a requested read needs (the read runs in waves that give way, so a 16 GB machine serves) and the physical memory a machine must have to serve at all (15000 MB: the 16 GB machines the fleet consists of). See `../🧬️schema/🔣️.json`. */
@@ -15,13 +16,14 @@ export type WantedServerPolicyV1=typeof wantedServerPolicyV1;
 export type WantedInferV1=Readonly<{ok:boolean;status:number;seconds:number;generation:number|null;detail:string}>;
 
 /** 🩺️ The verdict over one background graph read: it goes on while it makes progress and ends only when it does not. */
-export type GraphReadWatchV1=Readonly<{feed(text:string):void;verdict():"go"|"stalled"|"too-long";generation():number|null;silentMilliseconds():number;counters():Readonly<Record<string,readonly number[]>>}>;
+export type GraphReadWatchV1=Readonly<{feed(text:string):void;verdict(at?:number):"go"|"stalled"|"too-long";generation():number|null;observation():ReadWatchObservationV1;progressAt():number;silentMilliseconds():number;counters():Readonly<Record<string,readonly number[]>>}>;
 
-/** 🩺️ Watches one graph read for published generations, completed work and new observations within an active owner. Replayed work, running age, concurrency and waits do not renew the stall clock. The absolute read limit applies even when work keeps advancing. */
-export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerPolicyV1,now:()=>number=Date.now,onWave?:(row:GraphWaveRowV1)=>void,startedMs:number=now()):GraphReadWatchV1{
- const config=policy.readProgress,ledgerKey="owners:ledger",high=new Map<string,[number,number]>(),owners=new Map<string,number>();
+/** 🩺️ Watches one graph read for published generations, completed startup and inference work and new observations within an active owner. Replayed work, running age, concurrency and waits do not renew the stall clock. The absolute read limit applies even when work keeps advancing. */
+export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerPolicyV1,now:()=>number=Date.now,onWave?:(row:GraphWaveRowV1)=>void,startedMs:number=now(),observation?:ReadWatchObservationV1):GraphReadWatchV1{
+ const config=policy.readProgress,ledgerKey="owners:ledger",high=new Map<string,[number,number]>(observation?.phases.map(({name,done,total})=>[name,[done,total]])),owners=new Map<string,number>(observation?.owners.map(({name,rows})=>[name,rows]));
  const phasePattern=new RegExp(config.phasePattern,"u"),ownerPattern=new RegExp(config.ownerRowPattern,"u"),ledgers=config.ledgerPatterns.map(pattern=>new RegExp(pattern,"u")),generations=config.generationPatterns.map(pattern=>new RegExp(pattern,"u"));
- let progressAt=now(),newest=-1,pending="",dropping=false;
+ const dependencyCounters=new RegExp(config.dependencyCounterPattern,"u"),storeOwnership=new RegExp(config.storeOwnershipPattern,"u"),sourcePattern=new RegExp(config.sourcePattern,"u"),sourceBatch=parserSchema.definitions.ProgressProtocol.const.operationBatch,startupCommands=new Set<string>(config.startupCommands);
+ let progressAt=observation?.progressAt??now(),newest=observation?.generation??-1,registryRound=observation?.registryRound??0,pending="",dropping=false;
  const counted=(name:string,done:number,total:number):boolean=>{
   if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||done>total)return false;
   const known=high.get(name);
@@ -46,6 +48,15 @@ export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerP
   if(Number.isSafeInteger(value)&&value>newest){newest=value;progressAt=now();}
  };
  const observe=(line:string):void=>{
+  if(line.startsWith("[graph-repair] ")){
+   const round=readRegistryWatchRoundV1(line);
+   if(round!==undefined&&round===registryRound+1){
+    registryRound=round;
+    for(const key of high.keys())if(key===ledgerKey||startupCommands.has(key)||key.startsWith("build:graph-phase:"))high.delete(key);
+    owners.clear();
+   }
+   return;
+  }
   const wave=parseGraphWaveRowV1(line);
   if(wave){generation(wave.generation);try{onWave?.(wave);}catch{}return;}
   for(const pattern of generations){
@@ -59,14 +70,40 @@ export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerP
     return;
    }
   }
-  if(!line.startsWith('[script] {')||!line.includes('"resource":"build:graph-phase:'))return;
-  let resource:unknown;
-  try{resource=JSON.parse(line.slice("[script] ".length)).activity?.resource;}catch{return;}
+  if(!line.startsWith('[script] {')||!(/"resource":"(?:build:(?:graph-phase|parser-source):|dependencies:(?:workspace-edges|store-ownership|preservation-ownership):)|"stage":"complete"/u).test(line))return;
+  let row:{owner?:unknown;command?:unknown;stage?:unknown;activity?:{resource?:unknown;mode?:unknown;elapsedMs?:unknown}};
+  try{row=JSON.parse(line.slice("[script] ".length));}catch{return;}
+  if(row.owner==="repository:build"&&row.stage==="complete"&&row.activity===undefined&&typeof row.command==="string"&&startupCommands.has(row.command)){
+   if(counted(row.command,1,1))progressAt=now();
+   return;
+  }
+  const resource=row.activity?.resource;
   if(typeof resource!=="string"||resource.length>config.maximumResourceCharacters)return;
+  const ownership=storeOwnership.exec(resource)?.groups;
+  if(ownership!==undefined){
+   const done=Number(ownership.done),elapsed=row.activity?.elapsedMs;
+   if(row.owner==="repository:build"&&row.command==="repository:command"&&row.stage==="running"&&row.activity?.mode==="exclusive"&&typeof elapsed==="number"&&Number.isFinite(elapsed)&&elapsed>=0&&done%config.storeOwnershipBatch===0&&counted("dependencies:store-ownership",done,done))progressAt=now();
+   return;
+  }
+  const dependency=dependencyCounters.exec(resource)?.groups;
+  if(dependency!==undefined){
+   const done=Number(dependency.done),kind=dependency.kind;
+   if(kind==="preservation-ownership"&&done%config.storeOwnershipBatch!==0)return;
+   if(row.owner==="repository:build"&&row.command==="repository:command"&&row.stage==="running"&&row.activity?.mode==="exclusive"&&row.activity.elapsedMs===0&&counted("dependencies:"+kind,done,done))progressAt=now();
+   return;
+  }
+  const source=sourcePattern.exec(resource)?.groups;
+  if(source!==undefined){
+   const done=Number(source.done);
+   if(row.owner==="repository:build"&&row.command==="repository:command"&&row.stage==="running"&&row.activity?.mode==="shared"&&row.activity.elapsedMs===0&&done%sourceBatch===0&&counted("build:parser-source",done,done))progressAt=now();
+   return;
+  }
   const phase=phasePattern.exec(resource)?.groups;if(phase===undefined)return;
   const done=Number(phase.done),total=Number(phase.total);
   if(!Number.isSafeInteger(done)||!Number.isSafeInteger(total)||done>total)return;
-  const completed=counted("build:graph-phase:"+phase.phase,done,total),advanced=phase.phase==="inference"&&phase.owners!==undefined&&rowsMoved(phase.owners);
+  const name="build:graph-phase:"+phase.phase;
+  if(done<(high.get(name)?.[0]??0))return;
+  const completed=counted(name,done,total),advanced=phase.phase==="inference"&&phase.owners!==undefined&&rowsMoved(phase.owners);
   if(completed||advanced)progressAt=now();
  };
  return Object.freeze({
@@ -82,8 +119,10 @@ export function createGraphReadWatchV1(policy:WantedServerPolicyV1=wantedServerP
     pending="";dropping=false;start=end+1;
    }
   },
-  verdict():"go"|"stalled"|"too-long"{const at=now();return at-startedMs>=policy.inferMaximumMilliseconds?"too-long":at-progressAt>=policy.inferStallMilliseconds?"stalled":"go";},
+  verdict(at:number=now()):"go"|"stalled"|"too-long"{return at-startedMs>=policy.inferMaximumMilliseconds?"too-long":at-progressAt>=policy.inferStallMilliseconds?"stalled":"go";},
   generation:()=>newest<0?null:newest,
+  observation:()=>({progressAt,generation:newest<0?null:newest,...registryRound===0?{}:{registryRound},phases:[...high].map(([name,[done,total]])=>({name,done,total})),owners:[...owners].map(([name,rows])=>({name,rows}))}),
+  progressAt:()=>progressAt,
   silentMilliseconds:()=>now()-progressAt,
   counters:()=>Object.fromEntries([...high].map(([name,numbers])=>[name,[...numbers]])),
  });

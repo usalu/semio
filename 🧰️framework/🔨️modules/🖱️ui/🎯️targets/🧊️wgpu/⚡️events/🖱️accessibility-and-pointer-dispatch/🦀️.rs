@@ -243,12 +243,12 @@ impl EventRouter {
                 self.thumb_start = None;
                 self.tree_drag_handle_press = None;
                 self.update_stepper_hover_segment(tree, None, 0.0, 0.0);
-                commands.extend(self.update_hover(tree, None));
+                commands.extend(self.update_hover(tree, None, None));
                 let _ = self.set_row_reason(tree, None);
             }
             UiEvent::PointerLeave => {
                 self.update_stepper_hover_segment(tree, None, 0.0, 0.0);
-                commands.extend(self.update_hover(tree, None));
+                commands.extend(self.update_hover(tree, None, None));
                 let _ = self.set_row_reason(tree, None);
             }
             UiEvent::PointerMove { x, y, .. } => {
@@ -268,7 +268,7 @@ impl EventRouter {
                 }
                 let target = self.resolve_target(tree, root, *x, *y);
                 self.update_stepper_hover_segment(tree, target, *x, *y);
-                commands.extend(self.update_hover(tree, target));
+                commands.extend(self.update_hover(tree, target, Some((*x, *y))));
                 if let Some(id) = target {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
                         commands.push(cmd);
@@ -291,7 +291,7 @@ impl EventRouter {
                     .and_then(|overlay| tree.node(overlay.root).and_then(|node| node.state.select_popup).and_then(|popup| select::select_scroll_direction_at(popup, *x, *y)).map(|_| overlay.root));
                 let target = scroll_target.or_else(|| self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, *x, *y))).or_else(|| self.hit_test(tree, root, *x, *y));
                 self.update_stepper_hover_segment(tree, target, *x, *y);
-                commands.extend(self.update_hover(tree, target));
+                commands.extend(self.update_hover(tree, target, Some((*x, *y))));
                 if let Some(hint) = target.and_then(|row| self.pointer_row_action(tree, row, *x, *y).and_then(|index| Self::row_reason_hint(tree, row, index, true))) {
                     let _ = self.set_row_reason(tree, Some(hint));
                 }
@@ -438,7 +438,7 @@ impl EventRouter {
                     }
                 }
                 self.update_stepper_hover_segment(tree, target, *x, *y);
-                commands.extend(self.update_hover(tree, target));
+                commands.extend(self.update_hover(tree, target, Some((*x, *y))));
             }
             UiEvent::KeyDown { key, modifiers } => {
                 self.focus_visible = true;

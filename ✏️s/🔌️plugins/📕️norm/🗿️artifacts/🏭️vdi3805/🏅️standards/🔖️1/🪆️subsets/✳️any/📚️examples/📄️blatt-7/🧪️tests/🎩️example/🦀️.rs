@@ -6,7 +6,9 @@ async fn primary_asset_decodes_and_complies() {
     let text = semio_s_artifact_norm_vdi3805_examples::blatt_7::PRIMARY_TEXT;
     let decoded = decode_vdi3805_dsl(text).expect("blatt-7 dsl");
     assert_eq!(decoded.catalog.products[0].sheet.0, 7);
-    assert!(evaluate(&decoded).complies(), "blatt-7 must comply");
+    let report = evaluate(&decoded);
+    assert!(report.failing().next().is_none());
+    assert!(report.unverified().any(|check| check.id == "vdi3805.7.recordSchema.FAN-01"));
     let expected = conforming_blatt_dataset(7);
     assert_eq!(decoded.catalog.products[0].id, expected.catalog.products[0].id);
 }

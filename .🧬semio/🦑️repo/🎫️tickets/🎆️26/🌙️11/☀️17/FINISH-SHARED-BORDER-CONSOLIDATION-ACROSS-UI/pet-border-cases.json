@@ -1,0 +1,8 @@
+{
+  "width": "1px",
+  "ancestry": [
+    { "owner": ".card", "target": ".card button" },
+    { "owner": ".roster a", "target": ".roster a" }
+  ],
+  "active": ".roster a"
+}

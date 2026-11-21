@@ -7,6 +7,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type KeyboardEvent as ReactKeyboardEvent,
   type RefObject
 } from "../../⚛️react-port/🟦️.ts";
@@ -47,6 +48,7 @@ import {
   uiTextInputKey,
   uiTextInputKeyOf
 } from "@semio-tech/ui-contract/component";
+import { UI_DECIMAL_QUAD_COMMIT, UI_RETAINED_TEXT_BODY_COMMIT, UI_RETAINED_TEXT_COMMIT, retainedUiTextInput, uiDecimalQuad, uiInputCommitsOnBlur } from "@semio-tech/ui-contract/component";
 import { interpLabel } from "../🧷️interpreter-context/🟦️.ts";
 import { resolveControlIconNode, toUiValue, useContinuousTriggerLane } from "../⚡️action-dispatch/🟦️.tsx";
 import { controlDomId } from "../🪪️stable-dom-ids/🟦️.ts";
@@ -152,15 +154,20 @@ function usePickerRelease(enabled: boolean, lane: ContinuousGestureLane<UiValue>
 
 export function InputView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "input" }>;
-  const commitOnBlur = component.commit === "blur";
+  const commitOnBlur = uiInputCommitsOnBlur(component.commit);
+  const decimalQuad = component.kind === "text" && component.commit === UI_DECIMAL_QUAD_COMMIT;
+  const textForPublication = (text: string) => decimalQuad ? uiDecimalQuad(text) ?? text : text;
   const draftScope = inputDraftScope(record);
   const draftConflictLabel = useLabel("ui.host.inputDraftConflict");
   const draftDiscardLabel = useLabel("ui.host.inputDraftDiscard");
   const factor = component.kind === "number" ? (component.displayFactor ?? null) : null;
-  const value = context.controls.value(record) ?? component.value;
+  const mountedValue = useSyncExternalStore(context.controls.subscribe, () => context.controls.value(record), () => context.controls.value(record));
+  const lastValue = useRef("");
+  if (mountedValue !== undefined || component.commit !== UI_RETAINED_TEXT_BODY_COMMIT) lastValue.current = mountedValue ?? component.value;
+  const value = lastValue.current;
   const storedNumber = Number(value);
   const shownText = (stored: number): string => (factor == null ? (component.precision == null ? formatUiNumber(stored) : formatUiNumberFixed(stored, component.precision)) : uiNumberDisplayText(stored, factor, component.precision));
-  const published = factor != null && value.trim() !== "" && Number.isFinite(storedNumber) ? shownText(storedNumber) : value;
+  const published = factor != null && value.trim() !== "" && Number.isFinite(storedNumber) ? shownText(storedNumber) : textForPublication(value);
   const [refusal, setRefusal] = useState<{ readonly message: string | null } | null>(null);
   const lane = useContinuousTriggerLane(context, record);
   /** 🚧️ The stored number a typed text means, or the refusal it earns: unreadable text, or a value crossing a hard bound (the
@@ -181,13 +188,16 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
       const current = context.controls.read(record.id);
       if (!current || context.controls.disabled(current) || current.component.type !== "input" || inputDraftScope(current) !== draftScope) return null;
       const input = current.component;
-      return { target: JSON.stringify([draftScope, input.kind, input.displayFactor, input.precision]), value: factor != null && input.value.trim() !== "" && Number.isFinite(Number(input.value)) ? shownText(Number(input.value)) : input.value, revision: input.publicationRevision ?? "" };
+      if (decimalQuad !== (input.kind === "text" && input.commit === UI_DECIMAL_QUAD_COMMIT)) return null;
+      const value = context.controls.value(current) ?? input.value;
+      return { target: JSON.stringify([draftScope, input.kind, input.displayFactor, input.precision]), value: factor != null && value.trim() !== "" && Number.isFinite(Number(value)) ? shownText(Number(value)) : textForPublication(value), revision: input.publicationRevision ?? "" };
     };
     const send = () => {
       const current = context.controls.read(record.id);
       if (!active() || !read() || !current) throw new Error("Input command target changed");
       const number = component.kind === "number" ? typedNumber(raw) : null;
-      return dispatchTrigger(context, current, "commit", toUiValue(typeof number === "number" ? number : raw));
+      const input = typeof number === "number" ? toUiValue(number) : (component.commit === UI_RETAINED_TEXT_COMMIT || component.commit === UI_RETAINED_TEXT_BODY_COMMIT) ? retainedUiTextInput(raw) as UiValue : toUiValue(raw);
+      return dispatchTrigger(context, current, "commit", input);
     };
     return context.localDocumentOwner && component.publicationRevision != null
       ? inputCommitLaneV1(context.localDocumentOwner).submit({ read, send, active, expected: draftPublication(raw), subscribe: (listener) => { const publication = context.controls.subscribe(listener); const lifecycle = subscribeActive(listener); return () => { publication(); lifecycle(); }; } })
@@ -198,6 +208,14 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   const pickerRef = usePickerRelease(picker, lane);
   const committedByEnterRef = useRef<string | null>(null);
   const commitValue = (raw: string) => {
+    if (decimalQuad) {
+      const canonical = uiDecimalQuad(raw);
+      if (canonical === undefined) { setRefusal({ message: null }); return; }
+      setRefusal(null);
+      setDraft(canonical);
+      commitDraft(canonical);
+      return;
+    }
     const number = component.kind === "number" ? typedNumber(raw) : null;
     if (number !== null && typeof number !== "number") {
       setRefusal({ message: number.refused });
@@ -360,8 +378,8 @@ export function SelectView({ record, context }: { readonly record: UiNodeRecord;
 
 export function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
-  if (component.appearance === "checkbox") return <TreeCheckbox id={controlDomId(context, record)} checked={component.on} disabled={context.controls.disabled(record)} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
-  return <Toggle id={controlDomId(context, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={context.controls.disabled(record)} aria-label={record.accessibility.label ?? component.text ?? undefined} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+  if (component.appearance === "checkbox") return <TreeCheckbox id={controlDomId(context, record)} checked={component.on} disabled={context.controls.disabled(record)} ariaLabel={record.accessibility.label ?? component.text ?? undefined} ariaLabelledBy={context.field?.label} ariaDescribedBy={context.field?.describedBy} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
+  return <Toggle id={controlDomId(context, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={context.controls.disabled(record)} aria-label={record.accessibility.label ?? component.text ?? undefined} aria-labelledby={context.field?.label} aria-describedby={context.field?.describedBy} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
 export function SliderView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
@@ -372,6 +390,7 @@ export function SliderView({ record, context }: { readonly record: UiNodeRecord;
       id={controlDomId(context, record)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       aria-label={record.accessibility.label ?? undefined}
+      aria-labelledby={context.field?.label}
       aria-valuetext={uiAccessibilityValueV1(component).valueText ?? undefined}
       className="w-full min-w-0"
       disabled={context.controls.disabled(record)}
@@ -410,6 +429,7 @@ export function NumberStepperView({ record, context }: { readonly record: UiNode
     <Stepper
       id={controlDomId(context, record)}
       aria-label={record.accessibility.label ?? undefined}
+      aria-labelledby={context.field?.label}
       disabled={context.controls.disabled(record)}
       step={component.step}
       min={component.min ?? undefined}
@@ -465,7 +485,7 @@ export function IconSelectView({ record, context }: { readonly record: UiNodeRec
         </span>
       )}
       <IconSelector
-        aria-labelledby={label === null ? undefined : `${id}.label`}
+        aria-labelledby={label === null ? context.field?.label : `${id}.label`}
         classifyIconSelectorMode={component.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
         disabled={context.controls.disabled(record)}
         id={id}

@@ -36,9 +36,11 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             raster_operation_authority,
             world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority::new(),
             completions: Mutex::new(RuntimeCompletionQueue::new()),
+            #[cfg(not(target_arch = "wasm32"))]
+            original_recovery: Mutex::new(None),
             waker: Mutex::new(None),
             next_revision: AtomicU64::new(1),
-            applied_revisions: Mutex::new(std::collections::HashMap::new()),
+            applied_window_metrics_revision: AtomicU64::new(0),
             frame_inputs: Mutex::new(FrameBuildInputs::default()),
             retained_control_deadline_us: AtomicU64::new(u64::MAX),
             shell_clock_deadline_us: AtomicU64::new(u64::MAX),
@@ -203,6 +205,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             self.0.completions.lock().unwrap_or_else(std::sync::PoisonError::into_inner).return_checkout(index, completion, checkout);
             return original.map(|_| false);
         }
+        #[cfg(not(target_arch = "wasm32"))]
         if self.recover_original_frame_step(&mut *runtime, cx)? { return Ok(false); }
         if let Some(cursor) = runtime.pending_frame_deferred_mut().as_mut() {
             cursor.begin_close();

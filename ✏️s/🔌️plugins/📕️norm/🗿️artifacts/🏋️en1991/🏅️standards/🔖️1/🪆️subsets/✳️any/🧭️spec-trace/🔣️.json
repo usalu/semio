@@ -15,6 +15,7 @@
   "E12.01",
   "E12.02",
   "E12.03",
+  "E12.03.1",
   "E12.04",
   "E12.05",
   "E12.06",
@@ -273,8 +274,8 @@
     ]
    },
    "description": {
-    "en": "Parametric natural fire curve (3.3, Annex A), realised within the gas-temperature check",
-    "de": "Parametrische Naturbrandkurve (3.3, Anhang A), umgesetzt im Gastemperatur-Nachweis"
+    "en": "EN Annex A parametric fire method. The German National Annex uses Annex AA, which is open.",
+    "de": "Parametrischer Brand nach EN Anhang A. Der deutsche Nationale Anhang verwendet Anhang AA, der noch offen ist."
    }
   },
   {
@@ -288,8 +289,21 @@
     ]
    },
    "description": {
-    "en": "Fire load density (3.3.2, Annex E), realised as the fire-load check",
-    "de": "Brandlastdichte (3.3.2, Anhang E), umgesetzt als Brandlast-Nachweis"
+    "en": "EN Annex E fire-load check. Case E12.03 uses Germany’s distinct Table BB.1 or a survey and accepts the project BB.5 factor from E12.03.1.",
+    "de": "Brandlastnachweis nach EN Anhang E. Fall E12.03 verwendet für Deutschland Tabelle BB.1 oder eine Erhebung sowie den Projektbeiwert nach BB.5 aus E12.03.1."
+   }
+  },
+  {
+   "id": "E12.03.1",
+   "clause": "DIN EN 1991-1-2/NA:2015-09 BB.5",
+   "entity": "Fire compartment",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "E12.03.1"
+   },
+   "description": {
+    "en": "Derives the probabilities, reliability index and partial factors for classified and surveyed fire loads using Tables BB.3 to BB.5.",
+    "de": "Ermittelt Wahrscheinlichkeiten, Zuverlässigkeitsindex und Teilsicherheitsbeiwerte für klassifizierte und erhobene Brandlasten anhand der Tabellen BB.3 bis BB.5."
    }
   },
   {
@@ -297,14 +311,12 @@
    "clause": "EN 1991-1-2 Annex F",
    "entity": "",
    "realisation": {
-    "kind": "check",
-    "checks": [
-     "en1991.1-2.fire-load"
-    ]
+    "kind": "design-case",
+    "entry": "E12.04"
    },
    "description": {
-    "en": "Equivalent time of fire exposure t_e,d = q_f,d k_b w_f (Annex F), realised within the fire-load check",
-    "de": "Äquivalente Branddauer t_e,d = q_f,d k_b w_f (Anhang F), umgesetzt im Brandlast-Nachweis"
+    "en": "Equivalent duration under EN Annex F is a separate design case. The German National Annex excludes Annex F.",
+    "de": "Äquivalente Branddauer nach EN Anhang F ist ein separater Bemessungsfall. Der deutsche Nationale Anhang schließt Anhang F aus."
    }
   },
   {
@@ -1421,18 +1433,15 @@
   },
   {
    "id": "E2.18",
-   "clause": "6.7",
+   "clause": "6.6 (EN 1991-2:2003 + AC:2010)",
    "entity": "",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "Aerodynamic effects from passing trains (6.7): the spec line gives only 'p_k = +-0.3-2.? kPa [V]' and no distance or speed relation q_1k(d, v); inventing the method would read as normative, so no check, case or pressure-zone entity exists until the standard source is supplied. The catalogue id E2.18 now names exactly this item (rail traction and braking moved to E2.17, 6.5.3).",
-     "de": "Aerodynamische Wirkungen vorbeifahrender Züge (6.7): die Spezifikationszeile nennt nur 'p_k = +-0,3-2,? kPa [V]' und keine Abstands- oder Geschwindigkeitsbeziehung q_1k(d, v); ein erfundenes Verfahren läse sich als normativ, daher gibt es weder Nachweis, Fall noch Druckzonen-Entität, bis die Normquelle vorliegt. Die Katalogkennung E2.18 bezeichnet nun genau diese Position (Anfahren und Bremsen Eisenbahn liegt in E2.17, 6.5.3)."
-    }
+    "kind": "design-case",
+    "entry": "E2.18"
    },
    "description": {
-    "en": "Aerodynamic effects from passing trains are not modelled",
-    "de": "Aerodynamische Wirkungen vorbeifahrender Züge sind nicht modelliert"
+    "en": "Pressure and suction amplifications and reductions for §§6.6.1–6.6.6 in E2.18 and E2.18.1–E2.18.4. The designer supplies the basic values from Figures 6.22–6.24. Automatic curve evaluation and moving pressure-zone placement remain open.",
+    "de": "Erhöhungen und Abminderungen von Druck und Sog nach §§6.6.1–6.6.6 in E2.18 und E2.18.1–E2.18.4. Die Grundwerte aus den Bildern 6.22–6.24 sind einzugeben. Automatische Kurvenauswertung und Anordnung der wandernden Druckzonen sind noch offen."
    }
   },
   {
@@ -1473,34 +1482,28 @@
   },
   {
    "id": "E2.21",
-   "clause": "6.10",
+   "clause": "6.9 and Annex D (EN 1991-2:2003 + AC:2010)",
    "entity": "",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "Rail fatigue (standard train mix with LM71 and Phi) has no check or case entry in this artifact.",
-     "de": "Ermüdung der Eisenbahn (Standardzugmix mit LM71 und Phi) hat in diesem Artefakt weder Nachweis noch Katalogeintrag."
-    }
+    "kind": "design-case",
+    "entry": "E2.21"
    },
    "description": {
-    "en": "Rail fatigue with the standard train mix is not modelled",
-    "de": "Eisenbahn-Ermüdung mit dem Standardzugmix ist nicht modelliert"
+    "en": "Steel railway bridge fatigue range by D.6 using a supplied governing characteristic LM71 / SW/0 stress range and material factors. E2.21.1 covers the simplified real-train amplification D.1–D.5 and E2.21.3 presents Tables D.1–D.3. Track and axle positioning, project traffic mixes, resonance and structural fatigue damage assessment remain outside these cases.",
+    "de": "Schwingbreite für die Ermüdung von Stahl nach D.6 mit vorgegebener maßgebender charakteristischer Schwingbreite aus LM71 / SW/0 und Werkstoffbeiwerten. E2.21.1 setzt die vereinfachte dynamische Erhöhung nach D.1–D.5 um, E2.21.3 stellt Tabellen D.1–D.3 dar. Gleis- und Achspositionierung, projektspezifische Verkehrsmischungen, Resonanz und Ermüdungsschädigung des Tragwerks bleiben außerhalb dieser Fälle."
    }
   },
   {
    "id": "E2.22",
-   "clause": "Annex F",
+   "clause": "6.4.6.1.1 (EN 1991-2:2003 + AC:2010)",
    "entity": "",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "HSLM-A and HSLM-B axle sequences and the dynamic time integration are not modelled; the spec marks the values unverified and the integration is out of scope.",
-     "de": "Die Achsfolgen HSLM-A und HSLM-B und die dynamische Zeitintegration sind nicht modelliert; die Spezifikation kennzeichnet die Werte als ungeprüft und die Integration liegt außerhalb des Umfangs."
-    }
+    "kind": "design-case",
+    "entry": "E2.22"
    },
    "description": {
-    "en": "Dynamic analysis with HSLM-A and HSLM-B is not modelled",
-    "de": "Dynamische Berechnung mit HSLM-A und HSLM-B ist nicht modelliert"
+    "en": "HSLM-A universal trains A1 to A10 from Figure 6.12 and Table 6.3. E2.22.1 generates HSLM-B axle layouts from the labelled Figure 6.14 spans or supplied figure values. E2.22.2 selects the applicable load models under Table 6.4. Automatic HSLM-B selection between labels, Annex E critical-train selection and time integration remain open.",
+    "de": "HSLM-A-Universalzüge A1 bis A10 nach Bild 6.12 und Tabelle 6.3. E2.22.1 erzeugt HSLM-B-Achsfolgen aus den beschrifteten Stützweiten oder eingegebenen Werten nach Bild 6.14. E2.22.2 bestimmt die anzuwendenden Lastmodelle nach Tabelle 6.4. Die automatische HSLM-B-Auswahl zwischen beschrifteten Stützweiten, die Auswahl des maßgebenden Zugs nach Anhang E und die Zeitintegration sind noch offen."
    }
   },
   {
@@ -1581,23 +1584,20 @@
   },
   {
    "id": "E3.06",
-   "clause": "Annex B",
+   "clause": "Annex B / Table B.1 (EN 1991-3:2006)",
    "entity": "",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "Annex B dynamic factors of cranes have no check or case entry; the spec marks them unverified.",
-     "de": "Die dynamischen Beiwerte von Kranen nach Anhang B haben weder Nachweis noch Katalogeintrag; die Spezifikation kennzeichnet sie als ungeprüft."
-    }
+    "kind": "design-case",
+    "entry": "E3.06"
    },
    "description": {
-    "en": "Annex B dynamic factors of cranes are not modelled",
-    "de": "Dynamische Beiwerte von Kranen nach Anhang B sind nicht modelliert"
+    "en": "Recommended hoisting class HC and fatigue class S for each of the 28 crane-use categories in informative Table B.1.",
+    "de": "Empfohlene Hubklasse HC und Ermüdungsklasse S für alle 28 Kraneinsatzarten der informativen Tabelle B.1."
    }
   },
   {
    "id": "E3.07",
-   "clause": "5",
+   "clause": "3.5(3), equation 3.1 (EN 1991-3:2006)",
    "entity": "rotatingMachines",
    "realisation": {
     "kind": "check",
@@ -1606,8 +1606,8 @@
     ]
    },
    "description": {
-    "en": "Equivalent static force F_dyn = m e omega^2 of each rotating machine row (5, formula of the spec line, unverified)",
-    "de": "Statische Ersatzkraft F_dyn = m e omega^2 jeder Zeile einer rotierenden Maschine (5, Formel der Spezifikationszeile, ungeprüft)"
+    "en": "Rotor free force F_s = m e omega^2 of each rotating machine row. Equivalent static force with structural dynamic magnification is covered by §3.5(5)–(6) and remains open.",
+    "de": "Freie Rotorkraft F_s = m e omega^2 jeder rotierenden Maschine. Die statische Ersatzkraft mit dynamischer Vergrößerung des Tragwerks nach Abschnitt 3.5(5)–(6) ist noch umzusetzen."
    }
   },
   {
@@ -1692,18 +1692,15 @@
   },
   {
    "id": "E4.06",
-   "clause": "EN 1991-4 (clause not stated by the spec)",
+   "clause": "5.6.2 and C.10.2 (EN 1991-4:2006)",
    "entity": "",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "Thermal actions on silo walls (delta T) have no check or case entry in this artifact.",
-     "de": "Temperatureinwirkungen auf Silowände (Delta T) haben in diesem Artefakt weder Nachweis noch Katalogeintrag."
-    }
+    "kind": "design-case",
+    "entry": "E4.06"
    },
    "description": {
-    "en": "Thermal actions on silo walls are not modelled",
-    "de": "Temperatureinwirkungen auf Silowände sind nicht modelliert"
+    "en": "Additional circular silo wall pressure during relative cooling (5.101), using a supplied tested modulus or the C.10.2 density-based estimate. Hot filling, connected structures and restrained thermal deformation remain open.",
+    "de": "Zusätzlicher Wanddruck im Rundsilo bei relativer Abkühlung (5.101) mit geprüftem Modul oder dichtebasierter Abschätzung nach C.10.2. Heißbefüllung, angeschlossene Tragwerke und behinderte thermische Verformungen sind noch offen."
    }
   },
   {
@@ -1739,18 +1736,15 @@
   },
   {
    "id": "E4.09",
-   "clause": "Annex A, B, C",
+   "clause": "Annex B B.2.2 and B.2.9, §4.1 (EN 1991-4:2006)",
    "entity": "",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "Annex wind and pressure loads and the fatigue of silos have no check or case entry in this artifact.",
-     "de": "Anhang-Wind- und Druckbelastungen sowie die Ermüdung von Silos haben in diesem Artefakt weder Nachweis noch Katalogeintrag."
-    }
+    "kind": "design-case",
+    "entry": "E4.09"
    },
    "description": {
-    "en": "Silo wind, pressure annexes and fatigue are not modelled",
-    "de": "Silo-Wind, Druckanhänge und Ermüdung sind nicht modelliert"
+    "en": "Circular tank wind pressure using B.2.9 internal coefficients and a supplied local external coefficient. E4.09.1 covers specified operating and test pressure limits under B.2.2. Silo fatigue and full action combinations remain open.",
+    "de": "Winddruck am Rundtank mit Innendruckbeiwerten nach B.2.9 und vorgegebenem örtlichem Außendruckbeiwert. E4.09.1 bildet festgelegte Betriebs- und Prüfdruckgrenzen nach B.2.2 ab. Siloermüdung und vollständige Einwirkungskombinationen sind noch offen."
    }
   }
  ]

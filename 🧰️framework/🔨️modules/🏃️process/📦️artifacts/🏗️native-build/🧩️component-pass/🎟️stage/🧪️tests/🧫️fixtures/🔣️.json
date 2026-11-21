@@ -1,6 +1,9 @@
 {
   "version": 1,
   "cases": [
+    { "capacity": "parallel", "held": 2, "host": 3, "expected": 2 },
+    { "capacity": "parallel", "held": 1, "host": 3, "expected": 1 },
+    { "capacity": "parallel", "held": 0, "host": 3, "expected": null },
     {
       "capacity": "single",
       "held": 1,

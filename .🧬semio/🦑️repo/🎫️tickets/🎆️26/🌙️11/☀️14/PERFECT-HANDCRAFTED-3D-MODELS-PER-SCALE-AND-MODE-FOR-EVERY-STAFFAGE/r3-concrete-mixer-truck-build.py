@@ -41,6 +41,12 @@ for scale, (D, S) in SCALES.items():
     S.build(V)
     V.finish(scale)
 asset["volumes"] = {k: V.all.get(k, before["volumes"][k]) for k in ["50", "100", "200", "500"]}
+import runpy
+flights = runpy.run_path(os.path.join(T, "mixer-flights.py"))
+flights["update_volumes"](asset["volumes"])
+flights["update_rig"](asset)
+flights["update_text"](asset)
+flights["update_ink"](asset)
 os.makedirs(os.path.dirname(K.CANDIDATE), exist_ok=True)
 json.dump(doc, open(K.CANDIDATE, "w", encoding="utf8"), ensure_ascii=False)
 json.dump({"volumes": asset["volumes"]}, open(K.SOURCE, "w", encoding="utf8"), ensure_ascii=False, indent=1)

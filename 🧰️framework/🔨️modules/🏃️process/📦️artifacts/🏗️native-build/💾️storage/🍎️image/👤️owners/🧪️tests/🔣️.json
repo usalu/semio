@@ -4,6 +4,14 @@
     "image": "/fixture/fixed.dmg",
     "expected": ["image", "attach", "--nobrowse", "--mountOptions", "owners", "--mountPoint", "/fixture/m", "/fixture/fixed.dmg"]
   },
+  "hostingOwnership": {
+    "outerMiB": 128,
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 34603008,
+    "modeledInstruction": "hdiutil detach",
+    "externalInstruction": "Enable ownership on the hosting volume",
+    "disabledFlag": "noowners"
+  },
   "mountTable": [
     "/dev/disk3s1s1 on / (apfs, sealed, local, read-only, journaled)",
     "/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled, protect, root data)",

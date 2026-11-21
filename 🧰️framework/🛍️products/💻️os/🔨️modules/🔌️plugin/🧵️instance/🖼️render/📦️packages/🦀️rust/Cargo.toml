@@ -31,6 +31,7 @@ semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packa
 semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-plugin-decl-media = { path = "../../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
 semio-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust"}
 semio-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }

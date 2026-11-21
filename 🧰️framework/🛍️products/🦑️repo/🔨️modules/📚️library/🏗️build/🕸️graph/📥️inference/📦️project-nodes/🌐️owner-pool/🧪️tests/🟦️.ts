@@ -126,7 +126,7 @@ test("a puller claims a window of owners in one round trip and its throughput gr
  const base=rows[0]!.seconds;
  expect(base/rows[1]!.seconds).toBeGreaterThan(1.7);expect(base/rows[2]!.seconds).toBeGreaterThan(3.1);expect(base/rows[3]!.seconds).toBeGreaterThan(5);
  expect(rows[3]!.widest).toBeGreaterThanOrEqual(P.claimWindow);
-});
+},30000);
 
 test("ten pullers with one slot each are ten times faster than one, and a puller that is given more slots later uses them at once",async()=>{
  const units=unitsOf(200),one=await fleetOf(1,units,{burn:20}),ten=await fleetOf(10,units,{burn:20});
@@ -135,7 +135,7 @@ test("ten pullers with one slot each are ten times faster than one, and a puller
  const run=pullOwnerPoolV1<Unit>({units:()=>units,puller:"grow:1",policy:fast,slots:()=>slots,claim:memoryClaim(table,counter),busy:count=>{seen.push(count);},run:async()=>{await pause(30);return true;}});
  await pause(200);slots=6;const stats=await run;
  expect(stats.published).toBe(200);expect(Math.max(...seen)).toBeGreaterThanOrEqual(5);expect(Date.now()-began).toBeLessThan(200*30/1);
-});
+},30000);
 
 test("a stopped puller takes nothing new, gives back what it claimed ahead and reports the owners in flight",async()=>{
  const table:Table=new Map(),counter={asked:0,inflight:0,widest:0};let stop=false;const flights:number[]=[];

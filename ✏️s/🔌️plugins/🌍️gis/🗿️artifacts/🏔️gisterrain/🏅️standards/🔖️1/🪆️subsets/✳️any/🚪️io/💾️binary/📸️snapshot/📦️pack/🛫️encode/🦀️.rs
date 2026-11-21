@@ -1,11 +1,11 @@
-//! 🏔️ Controlled terrain emission through its actual three-field native record authority.
+//! 🏔️ Controlled terrain emission through the native record authority.
 use super::*;
 use semio_framework_dsl_record::DslField;
 
 pub fn producer()->semio_framework_dsl_record::RecordSpecProducer{Terrain::__dsl_spec_producer()}
 pub fn project(snapshot:&GisTerrainSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{
- control.begin_stage(3)?;
- let mut fields=semio_framework_dsl_record::native_encoding::EncodedRecord::new(3,control)?;
+ control.begin_stage(4)?;
+ let mut fields=semio_framework_dsl_record::native_encoding::EncodedRecord::new(4,control)?;
  fields.insert(0,control.scoped_stage(|control|{control.begin_stage(0)?;snapshot.exaggeration.to_value_controlled(control)})?)?;control.step()?;
  fields.insert(1,control.scoped_stage(|control|{control.begin_stage(0)?;match &snapshot.imported_map{Some(map)=>DslField::to_value_controlled(map,control),None=>Ok(semio_framework_dsl_record::FieldValue::Absent)}})?)?;control.step()?;
  let mesh=control.scoped_stage(|control|->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{if let Some(child)=&snapshot.mesh{
@@ -16,5 +16,7 @@ pub fn project(snapshot:&GisTerrainSnapshot,control:&mut semio_framework_value::
   }
   Ok(semio_framework_dsl_record::FieldValue::Record(owned.take()))
  }else{Ok(semio_framework_dsl_record::FieldValue::Absent)}})?;
- fields.insert(2,mesh)?;control.step()?;Ok(fields.take())
+ fields.insert(2,mesh)?;control.step()?;
+ fields.insert(3,control.scoped_stage(|control|{control.begin_stage(0)?;snapshot.elevation_source.to_value_controlled(control)})?)?;control.step()?;
+ Ok(fields.take())
 }

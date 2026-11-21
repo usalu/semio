@@ -137,3 +137,11 @@ The other rules also pass at every scale: bounds (width 0.0, height 13.5 mm at 1
 - **Tooling:**
   - `r3-sheet.ts` reads only the catalog, so I used a candidate-reading copy (`r3-playground-swing-sheet.ts`) before writing.
   - A closed-loop loft measures 0 mm long in `volumes-feature` (`sortedExtents` uses first-to-last section distance). That is why the links are split into two half lofts. Filed in `tool-requests.md` (2026-11-20 entry).
+
+## 21 November welded links
+
+Each of the four chains now has 38 full welded wire links modelled as continuous 8 mm hoops. The mating links alternate planes. The fine thermal model follows the steel surface. At the time of inspection, the presentation GLB had 8,236,188 bytes and all twelve scenes reloaded cleanly. The revised validator measures repeated, spatially disjoint links independently and reuses identical geometry across modes. The complete official 1:50 validation now passes at 705 MiB. Its separate thermal check passes at 367 MiB. All four current digital scales passed.
+
+After the exporter began sharing repeated rigid geometry, the same twelve verified scenes occupied 3,114,548 bytes.
+
+The two hanging chain outlines now retain a 0.20 mm paper stroke at 1:500. Both remain printable at the 1:1000 endpoint and the current document passed its nominal and range checks.

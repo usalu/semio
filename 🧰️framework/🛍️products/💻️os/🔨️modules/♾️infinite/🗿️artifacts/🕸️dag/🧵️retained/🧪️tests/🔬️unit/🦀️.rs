@@ -1,47 +1,242 @@
 //! 🧵️ Original neutral DAG owners conserve physical custody under independently admitted currencies.
 use super::*;
-use semio_framework_value::{retained_clone::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress}};
-use crate::sqlite_snapshot_tests::property_allocation::heap;
-use semio_os_infinite_directed_presentation::DagNodeKind;
-use semio_os_infinite_directed_presentation::IoPortSpec;
-use semio_os_infinite_directed_presentation::EdgeRouteStyle;
+use semio_framework_value_testing_allocator::observe_retirement_allocations;
+use semio_framework_value::{
+    ArtifactOwnedValueRetirementFactory, AuthoringWallet, ErasedSnapshotRetirement,
+    OriginalRetirementFailure, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll,
+    RetirementDemand, SnapshotRetirementFactory, close_factory_ticket, close_owner,
+    factory::FactoryProducerReply, factory_retire_snapshot, factory_ticket_demands,
+    retained_clone::{OriginalEffectReply, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep},
+    retirement::{RetireOwned, arc_custody::original::SharedOriginalStorage},
+};
+use semio_os_infinite_directed_presentation::{DagNodeKind, EdgeRouteStyle, IoPortSpec};
 
-fn close(owner:Box<dyn ErasedSnapshotRetirement>,copy:usize,born:usize,original:usize){
- let mut slot=Some(owner);let mut allocated=born;let mut released=0;
- for turn in 0..1_000_000{
-  let owner=slot.as_ref().unwrap();let work=copy.max(owner.next_copy_byte_demand().unwrap());
-  let(demand,a,b)=heap(||semio_framework_value::factory_ticket_demands(owner,work).unwrap());assert_eq!((a,b),(0,0));
-  let grant=Grant{maximum_items:1,maximum_copy_bytes:work,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-  if owner.terminal_is_empty()&&demand.release_bytes>0{let(step,a,b)=heap(||semio_framework_value::close_factory_ticket(&mut slot,Grant{maximum_release_bytes:demand.release_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),Progress::default());assert_eq!((a,b),(0,0));assert!(slot.is_some());}
-  let(step,a,b)=heap(||semio_framework_value::close_factory_ticket(&mut slot,grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(a,b));allocated+=a;released+=b;
-  if slot.is_none(){assert_eq!(released,original+allocated);let(step,a,b)=heap(||semio_framework_value::close_factory_ticket(&mut slot,Grant::default()).unwrap());assert!(matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)));assert_eq!((a,b),(0,0));return;}
- }
- panic!("DAG retirement never reached actual terminal emptiness");
+fn heap<R>(operation: impl FnOnce() -> R) -> (R, usize, usize) {
+    let (output, (allocated, released)) = observe_retirement_allocations(operation);
+    (output, allocated, released)
+}
+
+fn grant(demand: RetirementDemand) -> Grant {
+    Grant {
+        maximum_items: 1,
+        maximum_copy_bytes: demand.copy_bytes,
+        maximum_capacity_bytes: demand.capacity_bytes,
+        maximum_release_bytes: demand.release_bytes,
+        maximum_depth: demand.depth,
+    }
+}
+
+fn funded<R>(grant: Grant, work: u64, operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> R) -> (R, usize, usize) {
+    AuthoringWallet::new(grant, u128::from(work))
+        .run_invoked(grant, work, |effect| heap(|| operation(effect)))
+        .unwrap().expect("fixture work is admitted").output
+}
+
+fn settled<T, E>(poll: RetainedWorkPoll<T, E>) -> Result<T, E> {
+    match poll {
+        RetainedWorkPoll::Complete(turn) => turn.result,
+        RetainedWorkPoll::Pending { .. } => panic!("fixture owner did not settle synchronously"),
+    }
+}
+
+type Ticket = Box<dyn ErasedSnapshotRetirement>;
+type Birth = (Option<Ticket>, RetainedWorkOutcome<Progress, OriginalRetirementFailure>);
+
+fn owned_birth<T: RetireOwned>(factory: &OwnedValueRetirementFactory<T>, value: &mut Option<T>, grant: Grant, work: u64) -> (Birth, usize, usize) {
+    funded(grant, work, |effect| {
+        let (mut output, mut receipt, mut attempted) = (None, None, None);
+        let reply = FactoryProducerReply::borrow(&mut output, &mut receipt, &mut attempted).unwrap();
+        drop(factory.retire_owned(value, effect, reply));
+        (output, receipt.expect("stock owned factory records its actual reply"))
+    })
+}
+
+fn shared_storage(snapshot: DagSnapshot) -> (SharedOriginalStorage<DagSnapshot>, usize) {
+    let mut value = Some(snapshot);
+    let mut storage = None;
+    let offer = grant(SharedOriginalStorage::<DagSnapshot>::source_admission_demand().unwrap());
+    let work = SharedOriginalStorage::<DagSnapshot>::source_admission_work_demand();
+    let (turn, born, released) = funded(offer, work, |effect| SharedOriginalStorage::admit_from(&mut value, &mut storage, effect));
+    assert!(value.is_none());
+    assert_eq!((born, released), (turn.result.unwrap().progress().retained_capacity_bytes, 0));
+    (storage.unwrap(), born)
+}
+
+fn shared_ticket(storage: SharedOriginalStorage<DagSnapshot>) -> (Ticket, usize) {
+    let factory = SharedValueRetirementFactory::default();
+    let bytes = factory.retirement_birth_bytes(&storage);
+    let offer = grant(factory.retire_demands(&storage).unwrap());
+    let work = factory.retire_work_demand(&storage).unwrap();
+    let mut source = Some(storage);
+    let (turn, born, released) = funded(offer, work, |effect| factory_retire_snapshot(&factory, &mut source, effect));
+    let (ticket, receipt) = settled(turn).unwrap();
+    assert!(source.is_none());
+    assert_eq!((born, released), (bytes, 0));
+    assert_eq!(receipt.retained_capacity_bytes, bytes);
+    (ticket, born)
+}
+
+fn close(owner: Ticket, copy: usize, born: usize, original: usize) {
+    let mut slot = Some(owner);
+    let mut allocated = born;
+    let mut released = 0;
+    for _ in 0..1_000_000 {
+        let owner = slot.as_ref().unwrap();
+        let body = copy.max(owner.next_copy_byte_demand().unwrap());
+        let (demand, a, b) = heap(|| factory_ticket_demands(owner, body).unwrap());
+        assert_eq!((a, b), (0, 0));
+        let offer = grant(RetirementDemand { copy_bytes: body.max(demand.copy_bytes), ..demand });
+        let terminal = owner.terminal_is_empty();
+        let work = if terminal { 1 } else { owner.next_computational_work(body).unwrap() };
+        if terminal && demand.release_bytes > 0 {
+            let denied = Grant { maximum_release_bytes: demand.release_bytes - 1, ..offer };
+            let (turn, a, b) = funded(denied, work, |effect| close_factory_ticket(&mut slot, body, effect));
+            assert_eq!(settled(turn).unwrap().progress(), Progress::default());
+            assert_eq!((a, b), (0, 0));
+            assert!(slot.is_some());
+        }
+        let (turn, a, b) = funded(offer, work, |effect| close_factory_ticket(&mut slot, body, effect));
+        let receipt = settled(turn).unwrap().progress();
+        assert!(receipt.fits(offer));
+        assert_eq!((receipt.retained_capacity_bytes, receipt.released_bytes), (a, b));
+        allocated += a;
+        released += b;
+        if slot.is_none() {
+            assert_eq!(released, original + allocated);
+            let (turn, a, b) = funded(Grant::default(), 0, |effect| close_factory_ticket(&mut slot, 0, effect));
+            assert!(matches!(settled(turn).unwrap(), RetainedCloneStep::Complete(_)));
+            assert_eq!((a, b), (0, 0));
+            return;
+        }
+    }
+    panic!("DAG retirement never reached actual terminal emptiness");
 }
 
 #[test]
-fn neutral_fixture_retires_exact_mutation_shared_snapshot_and_final_snapshot_owners(){
- let source=include_str!("../../../🌿️vcs/🧪️tests/🧫️fixtures/🔣️mutations.json");let oracle:serde_json::Value=serde_json::from_str(source).unwrap();let parsed=semio_framework_pack_json::parse(source,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&parsed)).unwrap(),oracle);
- let laws:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
- for copy in laws["retirement"]["copyBytes"].as_array().unwrap(){let copy=copy.as_u64().unwrap()as usize;
-  let(snapshot,a,b)=heap(||crate::sqlite_snapshot_tests::full(0x8000000000000000));let original=a-b;let pointer=snapshot.nodes.as_ptr();let factory=DagOwnedSnapshotRetirementFactory;let bytes=factory.retirement_birth_bytes(&snapshot);let mut value=snapshot;
-  for grant in [Grant{maximum_items:0,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()},Grant{maximum_items:1,maximum_capacity_bytes:bytes-1,maximum_depth:1,..Default::default()},Grant{maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:0,..Default::default()}]{let(result,a,b)=heap(||factory.retire_owned(value,grant));let(_,returned)=result.err().unwrap();assert_eq!((a,b),(0,0));assert_eq!(returned.nodes.as_ptr(),pointer);value=returned;}
-  let(result,a,b)=heap(||factory.retire_owned(value,Grant{maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()}));let(owner,receipt)=result.unwrap();assert_eq!((a,b),(bytes,0));assert_eq!(receipt.retained_capacity_bytes,bytes);close(owner,copy,a,original);
-  let(shared,a,b)=heap(||Arc::new(crate::sqlite_snapshot_tests::full(0x8000000000000000)));let original=a-b;let factory=DagSnapshotRetirementFactory;let bytes=factory.retirement_birth_bytes(&shared);let(result,a,b)=heap(||factory.retire(shared,Grant{maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()}));let(owner,receipt)=result.unwrap();assert_eq!((a,b),(bytes,0));assert_eq!(receipt.retained_capacity_bytes,bytes);close(owner,copy,a,original);
-  let(observer,a,b)=heap(||Arc::new(crate::default_dag_document()));let original=a-b;let nodes=observer.nodes.as_ptr();let alias=Arc::clone(&observer);let factory=DagSnapshotRetirementFactory;let bytes=factory.retirement_birth_bytes(&alias);let(result,a,b)=heap(||factory.retire(alias,Grant{maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()}));let(mut owner,_)=result.unwrap();assert_eq!((a,b),(bytes,0));let born=a;
-  let demand=semio_framework_value::factory_ticket_demands(&owner,copy).unwrap();let grant=Grant{maximum_items:1,maximum_copy_bytes:copy.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,a,b)=heap(||owner.close_step(grant).unwrap());assert_eq!(step.progress(),Progress::default());assert_eq!((a,b),(0,0));assert!(!owner.terminal_is_empty());assert_eq!(Arc::strong_count(&observer),2);assert_eq!(observer.nodes.as_ptr(),nodes);let(_,a,b)=heap(||drop(observer));assert_eq!((a,b),(0,0));close(owner,copy,born,original);
-  for index in 0..laws["retirement"]["mutations"].as_u64().unwrap(){
-   let(mutation,a,b)=heap(||mutation(index));let original=a-b;let factory=DagMutationRetirementFactory;let bytes=factory.retirement_birth_bytes(&mutation);let(result,a,b)=heap(||factory.retire_owned(mutation,Grant{maximum_items:1,maximum_capacity_bytes:bytes,maximum_depth:1,..Default::default()}));let(owner,_)=result.unwrap();assert_eq!((a,b),(bytes,0));close(owner,copy,a,original);
-  }
- }
+fn neutral_fixture_retires_exact_mutation_shared_snapshot_and_final_snapshot_owners() {
+    let source = include_str!("../../../🌿️vcs/🧪️tests/🧫️fixtures/🔣️mutations.json");
+    let oracle: serde_json::Value = serde_json::from_str(source).unwrap();
+    let parsed = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&parsed)).unwrap(), oracle);
+    let laws: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
+
+    for copy in laws["retirement"]["copyBytes"].as_array().unwrap() {
+        let copy = copy.as_u64().unwrap() as usize;
+        let (snapshot, a, b) = heap(|| crate::sqlite_snapshot_tests::full(0x8000000000000000));
+        let original = a - b;
+        let pointer = snapshot.nodes.as_ptr();
+        let factory = OwnedValueRetirementFactory::default();
+        let bytes = factory.retirement_birth_bytes(&snapshot);
+        let offer = grant(factory.retire_owned_demands(&snapshot).unwrap());
+        let work = factory.retire_owned_work_demand(&snapshot).unwrap();
+        let mut value = Some(snapshot);
+        for denied in [
+            Grant { maximum_items: 0, ..offer },
+            Grant { maximum_capacity_bytes: bytes - 1, ..offer },
+            Grant { maximum_depth: 0, ..offer },
+        ] {
+            let ((ticket, receipt), a, b) = owned_birth(&factory, &mut value, denied, work);
+            assert!(ticket.is_none());
+            assert_eq!(receipt.result.unwrap(), Progress::default());
+            assert_eq!(receipt.work, 0);
+            assert_eq!((a, b), (0, 0));
+            assert_eq!(value.as_ref().unwrap().nodes.as_ptr(), pointer);
+        }
+        let ((ticket, receipt), a, b) = owned_birth(&factory, &mut value, offer, work);
+        assert!(value.is_none());
+        assert_eq!((a, b), (bytes, 0));
+        assert_eq!(receipt.result.unwrap().retained_capacity_bytes, bytes);
+        close(ticket.unwrap(), copy, a, original);
+
+        let (snapshot, a, b) = heap(|| crate::sqlite_snapshot_tests::full(0x8000000000000000));
+        let (shared, backing) = shared_storage(snapshot);
+        let (ticket, born) = shared_ticket(shared);
+        close(ticket, copy, born, a - b + backing);
+
+        let (snapshot, a, b) = heap(crate::default_dag_document);
+        let (mut observer, backing) = shared_storage(snapshot);
+        let original = a - b + backing;
+        let nodes = observer.get().nodes.as_ptr();
+        let mut alias = None;
+        let duplicate = grant(SharedOriginalStorage::<DagSnapshot>::duplicate_demand());
+        let work = observer.duplicate_work_demand().unwrap();
+        let (turn, a, b) = funded(duplicate, work, |effect| observer.duplicate_into(&mut alias, effect));
+        assert!(turn.result.unwrap().progress().fits(duplicate));
+        assert_eq!((a, b), (0, 0));
+        let (owner, born) = shared_ticket(alias.unwrap());
+        let body = copy.max(owner.next_copy_byte_demand().unwrap());
+        let demand = factory_ticket_demands(&owner, body).unwrap();
+        let work = owner.next_computational_work(body).unwrap();
+        let denied = Grant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant(demand) };
+        let mut slot = Some(owner);
+        let (turn, a, b) = funded(denied, work, |effect| close_factory_ticket(&mut slot, body, effect));
+        assert_eq!(settled(turn).unwrap().progress(), Progress::default());
+        assert_eq!((a, b), (0, 0));
+        assert!(!slot.as_ref().unwrap().terminal_is_empty());
+        assert_eq!(observer.aliases(), 2);
+        assert_eq!(observer.get().nodes.as_ptr(), nodes);
+        let offer = grant(observer.retire_into_demand().unwrap());
+        let work = observer.retire_work_demand().unwrap();
+        let mut elected = None;
+        let (receipt, a, b) = funded(offer, work, |effect| {
+            let mut receipt = None;
+            let reply = OriginalEffectReply::borrow(&mut receipt).unwrap();
+            drop(observer.retire_into::<ValueError>(&mut elected, effect, reply).unwrap());
+            receipt.expect("observer alias retires in its original reply").unwrap()
+        });
+        assert!(receipt.progress().fits(offer));
+        assert!(observer.terminal_is_empty());
+        assert!(elected.is_none());
+        assert_eq!((a, b), (0, 0));
+        close(slot.unwrap(), copy, born, original);
+
+        for index in 0..laws["retirement"]["mutations"].as_u64().unwrap() {
+            let (mutation, a, b) = heap(|| mutation(index));
+            let original = a - b;
+            let factory = OwnedValueRetirementFactory::default();
+            let bytes = factory.retirement_birth_bytes(&mutation);
+            let offer = grant(factory.retire_owned_demands(&mutation).unwrap());
+            let work = factory.retire_owned_work_demand(&mutation).unwrap();
+            let mut value = Some(mutation);
+            let ((ticket, receipt), a, b) = owned_birth(&factory, &mut value, offer, work);
+            assert!(value.is_none());
+            assert_eq!((a, b), (bytes, 0));
+            assert_eq!(receipt.result.unwrap().retained_capacity_bytes, bytes);
+            close(ticket.unwrap(), copy, a, original);
+        }
+    }
 }
 
 #[test]
-fn dag_opens_as_an_owned_member_through_its_own_pack_codec(){
- assert_eq!(std::any::type_name::<<crate::DagMemberStoreProducer as MemberStoreProducer<DagSnapshot,DagMutation>>::SnapshotOpen>(),std::any::type_name::<crate::os_store::OriginalRecordMemberSnapshotOpen<DagSnapshot>>());
- let snapshot=crate::default_dag_document();let encoded=pack::snapshot::ArtifactPack::encode_pack(&snapshot);let decoded=<DagSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&encoded).unwrap();assert_eq!(decoded.nodes,snapshot.nodes);assert!(<DagSnapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported());
- let(mut owner,born,released)=heap(||semio_framework_value::retirement::controlled::ControlledRetirement::new(decoded).unwrap());assert_eq!((born,released),(0,0));let grant=Grant{maximum_items:0,maximum_depth:1,..Default::default()};let(step,a,b)=heap(||owner.step(grant).unwrap());assert_eq!(step.progress(),Progress::default());assert_eq!((a,b),(0,0));
- for turn in 0..1_000_000{let copy=owner.next_copy_byte_demand().unwrap().max(7);let grant=Grant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy.max(owner.next_copy_byte_demand().unwrap())).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};owner.step(grant).unwrap();if owner.terminal_is_empty(){return;}assert!(turn<999_999);}
+fn dag_opens_as_an_owned_member_through_its_own_pack_codec() {
+    assert_eq!(
+        std::any::type_name::<<crate::DagMemberStoreProducer as MemberStoreProducer<DagSnapshot, DagMutation>>::SnapshotOpen>(),
+        std::any::type_name::<crate::os_store::OriginalRecordMemberSnapshotOpen<DagSnapshot>>(),
+    );
+    let snapshot = crate::default_dag_document();
+    let encoded = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <DagSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&encoded).unwrap();
+    assert_eq!(decoded.nodes, snapshot.nodes);
+    assert!(DagSnapshot::controlled_retirement_supported());
+    let (mut owner, born, released) = heap(|| semio_framework_value::retirement::controlled::ControlledRetirement::new(decoded).unwrap());
+    assert_eq!((born, released), (0, 0));
+
+    let denied = Grant { maximum_items: 0, maximum_depth: 1, ..Default::default() };
+    let work = owner.next_computational_work(0).unwrap();
+    let (turn, a, b) = funded(denied, work, |effect| close_owner(&mut owner, 0, effect));
+    assert_eq!(settled(turn).unwrap().progress(), Progress::default());
+    assert_eq!((a, b), (0, 0));
+
+    for _ in 0..1_000_000 {
+        let body = owner.next_copy_byte_demand().unwrap().max(7);
+        let demand = owner.next_demand(body).unwrap();
+        let work = owner.next_computational_work(body).unwrap();
+        let offer = grant(RetirementDemand { copy_bytes: body.max(demand.copy_bytes), ..demand });
+        let (turn, _, _) = funded(offer, work, |effect| close_owner(&mut owner, body, effect));
+        assert!(settled(turn).unwrap().progress().fits(offer));
+        if owner.terminal_is_empty() { return; }
+    }
+    panic!("owned Dag snapshot did not retire within the fixture turn limit");
 }
 
 fn mutation(index:u64)->DagMutation{

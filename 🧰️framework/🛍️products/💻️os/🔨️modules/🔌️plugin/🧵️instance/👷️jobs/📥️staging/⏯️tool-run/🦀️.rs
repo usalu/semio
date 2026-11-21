@@ -50,7 +50,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             instance_owner: self.instance_operation_owner.clone(),
             port: entry.port.clone(),
             host: self.live_runtime_instance_id.map(semio_plugin_reactor_tasks::tasks_extension_continuation::host_for_instance),
-            trace_keys: entry.trace_keys.clone(),
+            trace_keys: &entry.trace_keys,
             entity_marks: &entry.entity_marks,
             children: ChildContentView::clone(&child_composition.child_content_root),
             member_ops: entry.member.as_ref().map_or(&[], |member| member.ops.as_slice()),

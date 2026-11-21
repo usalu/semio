@@ -15,6 +15,8 @@
 
 // #region 🔖️Submodules
 
+#[path = "📦️convex-box/🦀️.rs"]
+pub mod convex_box;
 #[path = "➰️curve-curve/🦀️.rs"]
 pub mod curve_curve;
 #[path = "➿️curve-surface/🦀️.rs"]
@@ -27,25 +29,35 @@ pub mod surface_surface;
 // #endregion 🔖️Submodules
 
 // #region 🔖️Reexports
-pub use curve_curve::{intersect_curve_curve, intersect_line_line_unique, CurveCurveHit};
-pub use curve_surface::{intersect_curve_surface, intersect_line_plane_unique, CurveSurfaceHit};
+pub use curve_curve::{intersect_curve_curve, intersect_line_line_unique, intersect_original_curve_curve, CurveCurveHit};
+pub use curve_surface::{intersect_curve_surface, intersect_line_plane_unique, intersect_original_curve_plane, CurveSurfaceHit};
 
 /// ⚖️ Allocation-free refusal from the bounded linear intersection equations.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum LineIntersectionRefusal {
     InvalidTolerance,
+    InvalidRange,
+    InvalidSpline,
+    ContactCapacity,
     DegenerateDirection,
+    DegenerateConic,
     Infinite,
     NonFinite,
+    UnresolvedContact,
 }
 
 impl LineIntersectionRefusal {
     pub const fn message(self) -> &'static str {
         match self {
             Self::InvalidTolerance => "tolerance must be positive and finite",
+            Self::InvalidRange => "intersection trim must have finite ordered endpoints within the source domain",
+            Self::InvalidSpline => "plane intersection requires a continuous spline with finite knots and positive finite weights",
+            Self::ContactCapacity => "plane intersection has more than four distinct contacts",
             Self::DegenerateDirection => "zero-length line direction",
+            Self::DegenerateConic => "conic intersection requires finite radii larger than tolerance",
             Self::Infinite => "infinitely many intersections",
-            Self::NonFinite => "line intersection requires finite arithmetic",
+            Self::NonFinite => "intersection requires finite arithmetic",
+            Self::UnresolvedContact => "contact could not be isolated within the admitted precision",
         }
     }
 }

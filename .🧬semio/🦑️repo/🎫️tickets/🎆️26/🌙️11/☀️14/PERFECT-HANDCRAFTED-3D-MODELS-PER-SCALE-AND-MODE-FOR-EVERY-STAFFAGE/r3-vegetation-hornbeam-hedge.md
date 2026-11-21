@@ -197,3 +197,36 @@ All images are under `🗑️generated/r3-sheet/vegetation/` and `🗑️generat
 - **Point masses.** The block masses float as points between the leaders (centre-of-mass markers), as everywhere in the catalog.
 - **Root plate section.** The `root-plate` bone declares a solid section of d = 30 cm, but its member solid is a flat mat inside the mulch strip (at 1:500, six root balls), because structure must lie inside the body silhouette. The section is the soil–root idealisation, not a visible part.
 - **Core in 2D.** At 1:100 and 1:200 the hatched shaded cores are drawn over the faces in elevation (existing z order and convention of these scales). A strict true view would hide them.
+
+## Round 5 handcraft (2026-11-21)
+
+### Reference (modelled to)
+
+| quantity | reference | source | model 1:50 | deviation |
+|---|---|---|---|---|
+| clipped height | 1.8-1.9 m formal screen, summer flush 5-20 cm | RHS formal hedge guidance; Heckenschnitt practice | 1.838 m clipped, 1.87 m flush | within |
+| thickness at the widest | 0.6-0.7 m | practice | 0.70 m at 0.56 m | 0 % against `depthM` |
+| batter per face | 5-15 cm over the height | RHS | 3.5 degrees = 7 cm per face | within |
+| stems per plant, collar diameter | 2-3 stems, 3-6 cm at 10-15 years | Roloff, *Bäume Mitteleuropas* | 2 stems, 4.8-5.4 cm | within |
+| bare foot | 0.2-0.4 m | practice | 0.33-0.35 m | within |
+| planting | 2-5 plants per m | nursery tables | 2 per m (6 on 3 m) | low end, kept (rig) |
+
+### Grades (opened this round: 1:50 body, 1:500 body, 1:50 structure, 1:50 thermal cut, pose storm at 1:50)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B+ (clean battered section, fluted stems on a mulch strip; vertical plant seams read as upholstery channels, smooth leaf skin, cushion-like rounded underside) | A- | A- (two leaders per plant, laterals to the clipped faces, collar and block joints, support mat) |
+| 1:100 | B+ (as 1:50, not re-opened this round) | A- (round 3) | A- (round 3) |
+| 1:200 | B+ (round 3) | B+ | B+ |
+| 1:500 | B+ (six faceted clipped crowns on 80 mm legs; catalog state of 2026-11-20 04:03, 12 solids) | B+ | B (75 mm bars) |
+
+### Changes
+
+None to the model. The ticket source `volumes/vegetation/hornbeam-hedge.json` was stale against the catalog at 1:500 (7 against 12 body solids: a later catalog edit made the 1:500 crowns follow their six stools); it was set equal to the catalog volumes so that every tool shows what ships. Re-running `r3-hornbeam-hedge-model.ts` would revert that 1:500 state and must not be done without porting it first.
+
+### Remaining issues
+
+- Plant seams every 0.5 m (one leaf panel per block bone so the clips can bend each plant) read as upholstery channels in shaded views; a continuous clipped face would need one leaf solid on a non-animated bone and a re-authored 2D.
+- No leaf relief in 3D; the smooth skin is honest for a fresh cut only.
+- Wind poses lean the hedge along the row (planar rig), real wind pushes across it.
+- Grade A not reached; the brief's bar is not met for this asset.

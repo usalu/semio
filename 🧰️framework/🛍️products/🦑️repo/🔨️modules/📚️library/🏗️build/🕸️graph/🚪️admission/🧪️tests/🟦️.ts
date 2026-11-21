@@ -1,4 +1,5 @@
 import {readBuildGraphV1} from "../../🟦️.ts";
+import {buildGraphProjectInferenceOptionsV1} from "../../🧭️discovery/🟦️.ts";
 import graphSchema from "../../../🧬️schema/🔣️.json" with {type:"json"};
 import {selectBuildProjectsV1,selectBuildTasksV1,buildOptionsV1} from "./../../../🧭️selection/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -88,4 +89,26 @@ test("a task run that excludes its dependencies admits only its own owner, match
 test("the authored workspace registry has one identity per physical owner",async()=>{
  const registry=JSON.parse(await Bun.file(new URL("../../../../../../../../../📋️build-owners.json",import.meta.url)).text()),db=new Database(":memory:");
  try{db.exec("CREATE TABLE owner(name TEXT PRIMARY KEY,root TEXT UNIQUE,manifest TEXT UNIQUE)");for(const owner of registry.owners)db.query("INSERT INTO owner VALUES(?,?,?)").run(owner.name,owner.root,owner.manifest);expect(readBuildOwnerRegistryV1(registry).owners.length).toBe((db.query("SELECT COUNT(*) AS count FROM owner").get() as {count:number}).count);}finally{db.close();}
+});
+
+test("direct project inference retains native source observations and infers only admitted owners",async()=>{
+ const corpus=fixture.directTaskAdmission,registry=readBuildOwnerRegistryV1(corpus.registry),db=new Database(":memory:");
+ try{
+  const rows=db.query("SELECT value AS manifest,substr(value,1,instr(value,'/')-1) AS root FROM json_each(?) ORDER BY manifest").all(JSON.stringify(corpus.nativeManifests)) as {manifest:string;root:string}[];
+  for(const row of corpus.cases){
+   const selection=buildInvocationGraphSelectionV1(row.args);
+   const admitted=await closeBuildOwnerAdmissionV1(selection,registry,async owner=>({
+    project:{name:owner.name,targets:{build:{dependsOn:owner.name==="app"?["^build"]:[]}}},
+    files:[owner.manifest,...owner.name==="app"?corpus.nativeManifests:[]],
+    dependencies:owner.name==="app"?["lib"]:[],
+   }));
+   const options=buildGraphProjectInferenceOptionsV1(selection,registry,admitted);
+   expect(options.ownerAdmission,row.name).toBe(admitted);
+   expect(admitted.files.filter(path=>path.endsWith("/Cargo.toml")),row.name).toEqual(rows.map(({manifest})=>manifest));
+   const direct=selection.kind==="tasks"&&selection.excludeDependencies===true;
+   const roots=db.query("SELECT json_extract(owners.value,'$.root') AS root FROM json_each(?) AS owners JOIN json_each(?) AS selected ON selected.value=json_extract(owners.value,'$.name') ORDER BY root").all(JSON.stringify(corpus.registry.owners),JSON.stringify(row.owners)) as {root:string}[];
+   expect(options.ownerRoots&&[...options.ownerRoots].sort(),row.name).toEqual(direct?roots.map(({root})=>root):undefined);
+   expect(rows.filter(({root})=>options.ownerRoots&&!options.ownerRoots.has(root)).map(({manifest})=>manifest),row.name).toEqual(direct?["library/Cargo.toml"]:[]);
+  }
+ }finally{db.close();}
 });

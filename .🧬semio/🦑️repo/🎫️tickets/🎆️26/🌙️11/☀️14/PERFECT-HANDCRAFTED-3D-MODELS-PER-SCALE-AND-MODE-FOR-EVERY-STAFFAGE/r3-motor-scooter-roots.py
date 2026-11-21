@@ -91,7 +91,7 @@ ANCHORS = {
     "rider-seat": (0.3, -0.068, None),
 }
 
-AREAS = {"body-panels":3.25,"steer-assembly":.4,"headlamp":.069,"engine":.46,"exhaust-system":.26,"tyres":.79,"brake-disc":.129,"rims":.62}
+AREAS = {"body-panels":3.25,"steer-assembly":.4,"headlamp":.069,"engine":.46,"exhaust-system":.26,"tyres":.79,"brake-disc":.129,"rims":.6}
 
 RIM_REGION = {
     "id": "rims",
@@ -138,7 +138,7 @@ def symbol(sym):
     g = sym["geometry"]
     for s in g["elevation"]:
         if s["id"] == "elevation-body":
-            s["points"] = [[-0.95, 0.62], [-0.9, 0.7], [-0.15, 0.72], [-0.09, 0.3], [0.37, 0.3], [0.45, 0.55], [0.31, 0.94], [0.25, 0.94], [0.39, 0.5], [0.34, 0.18], [-0.16, 0.18], [-0.3, 0.39], [-0.8, 0.51]]
+            s["points"] = [[-0.95, 0.62], [-0.9, 0.7], [-0.15, 0.72], [-0.07, 0.56], [-0.02, 0.3], [0.37, 0.3], [0.45, 0.55], [0.31, 0.94], [0.25, 0.94], [0.39, 0.5], [0.34, 0.18], [-0.16, 0.18], [-0.3, 0.39], [-0.8, 0.51]]
         if s["id"] == "elevation-seat":
             s.update(x=-0.815, y=0.715, w=0.68, h=0.11)
         if s["id"] == "elevation-fork":

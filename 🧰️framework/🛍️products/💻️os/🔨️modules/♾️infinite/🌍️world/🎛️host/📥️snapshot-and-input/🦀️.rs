@@ -448,7 +448,7 @@ pub fn step_world3d_interaction(state: &mut World3dState, generation: u64, input
     let Some(mut authority) = state.authority.interaction_authority.take() else {
         return WorldInteractionAuthorityStep::Fault;
     };
-    let step = authority.step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.gumball, &mut state.interaction, &mut state.scene, generation, input, context);
+    let step = authority.step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.gumball, &mut state.interaction, &mut state.scene, &state.terrain, generation, input, context);
     state.authority.interaction_authority = Some(authority);
     step
 }
@@ -535,8 +535,11 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
         && state.scene.reference_pixels.is_empty()
         && state.scene.mesh_paint_textures.is_empty()
         && state.interaction.instance_interaction_ids.is_empty()
+        && state.interaction.component_unpickable_instance_ids.is_empty()
         && state.interaction.instance_interaction_granularity_ids.is_empty()
+        && state.interaction.instance_hover_targets.is_empty()
         && state.selection.local_hover_granularity_id.is_none()
+        && state.selection.local_hover_targets.is_none()
         && state.assets.asset_io.terminal_is_empty()
 }
 
@@ -555,7 +558,8 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
 pub fn world3d_cursor_work_pending(state: &World3dState) -> bool {
     state.scene.native_mesh_admission.is_some()
         || state.scene.placeholder_build.is_some()
-        || state.terrain.terrain_build.is_some() || state.terrain.terrain_pending.is_some()
+        || state.terrain.terrain_build.is_some() || state.terrain.terrain_pending.is_some() || state.terrain.terrain_style_pending()
+        || state.scene.dynamic_mesh_close.as_ref().is_some_and(|entry| entry.id.starts_with("terrain:"))
         || state.overlay.face_overlay_build.is_some()
         || state.bridge.scene_bridge.is_some()
         || state.bridge.snapshot_apply.is_some()

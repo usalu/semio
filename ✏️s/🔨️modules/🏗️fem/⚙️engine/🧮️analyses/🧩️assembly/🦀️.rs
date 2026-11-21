@@ -78,6 +78,10 @@ pub use element_build::*;
 mod csr_build_and_run;
 pub use csr_build_and_run::*;
 
+#[path = "🎼️secondary-matrix/🦀️.rs"]
+mod secondary_matrix;
+pub use secondary_matrix::SecondaryAssembly;
+
 // #region 🔖️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

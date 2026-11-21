@@ -19,7 +19,7 @@ import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator
 import { collectArtifactFiles } from "../🗂️files/🟦️.ts";
 import {runOwnedCommand} from "../../🎛️owned-execution/🟦️.ts";
 import { admitCargoSelectionV1, type AdmittedCargoSourceRosterV1, type CargoSourceBoundaryPolicyV1 } from "../🏗️native-build/📥️source/🎟️admission/🟦️.ts";
-import {watchCargoSourceDriftV1} from "../🏗️native-build/📥️source/👁️drift/🟦️.ts";
+import {publishCargoSourceDriftV1,watchCargoSourceDriftV1} from "../🏗️native-build/📥️source/👁️drift/🟦️.ts";
 import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1}from"../🏗️native-build/📥️inputs/🟦️.ts";
 
 export type WasmPackWebPkg = {
@@ -102,8 +102,11 @@ export function runWasmCargoCommandV1(run:WasmBuildExecutionPortV1["run"],comman
   if(options.signal!==options.control.signal)throw Error("Original WASM compiler signal required");
   const drift=new AbortController();
   return withRequestedIssuedResourceControlV1(options.control,0,async control=>{
+    let driftDiagnostic:Promise<void>|undefined;
     const stop=watchCargoSourceDriftV1(sources.inputs,sources.startedMs,mismatch=>{
-      if(!control.signal.aborted)drift.abort(concurrentEditV1("input",mismatch.path,"Running WASM Cargo Source differs from admission: "+JSON.stringify(mismatch),"build"));
+      if(control.signal.aborted)return;
+      driftDiagnostic=publishCargoSourceDriftV1(options.control,mismatch);
+      drift.abort(concurrentEditV1("input",mismatch.path,"Running WASM Cargo Source differs from admission: "+JSON.stringify(mismatch),"build"));
     });
     const stopOnAbort=()=>{void stop();};
     control.signal.addEventListener("abort",stopOnAbort,{once:true});
@@ -116,6 +119,7 @@ export function runWasmCargoCommandV1(run:WasmBuildExecutionPortV1["run"],comman
     }finally{
       control.signal.removeEventListener("abort",stopOnAbort);
       await stop();
+      await driftDiagnostic;
     }
   },drift.signal);
 }

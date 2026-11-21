@@ -1,4 +1,21 @@
-/** 🧺️ The verdict of a presence check shared by every look that asks at the same time: the looks of a take pass ask the same question (are the inventory records my record names stored?) thousands of times, each with a storage lease and a walk of the ancestry of the store. A caller that asks while a batch runs joins the next batch, so one lease answers all of them; a name found present stays answered for the validation round that asked, because the files of a round do not change and every record is content addressed. A batch that fails is asked again caller by caller, so only the caller whose names fail sees the failure. `run(names)` answers the set of names that are missing and throws for a refusal. */
+function bindBatchWithdrawal(callers) {
+  const signals = new Set(callers.map(caller => caller.signal));
+  if (signals.has(undefined)) return {};
+  if (signals.size === 1) return { signal: signals.values().next().value };
+  const controller = new AbortController();
+  const withdraw = event => {
+    const signal = event.target;
+    if (signals.delete(signal) && signals.size === 0) controller.abort(signal.reason);
+  };
+  for (const signal of signals) {
+    if (signal.aborted) signals.delete(signal);
+    else signal.addEventListener("abort", withdraw, { once: true });
+  }
+  if (signals.size === 0) controller.abort();
+  return { signal: controller.signal, close: () => { for (const signal of signals) signal.removeEventListener("abort", withdraw); } };
+}
+
+/** 🧺️ The verdict of a presence check shared by every look that asks at the same time: the looks of a take pass ask the same question (are the inventory records my record names stored?) thousands of times, each with a storage lease and a walk of the ancestry of the store. A caller that asks while a batch runs joins the next batch, so one lease answers them even when their withdrawal signals differ. Mixed withdrawal stops the shared operation after every observer has left; a name found present stays answered for the validation round that asked, because the files of a round do not change and every record is content addressed. A batch that fails is asked again caller by caller, so only the caller whose names fail sees the failure. `run(names)` answers the set of names that are missing and throws for a refusal. */
 export function createPresenceCoalescerV1({ run, maximumNames = 512, pause = () => new Promise(resolve => setImmediate(resolve)) }) {
   const waiting = [], rounds = new WeakMap(), stats = { asked: 0, remembered: 0, batches: 0, retried: 0, names: 0 };
   let draining = false;
@@ -10,23 +27,30 @@ export function createPresenceCoalescerV1({ run, maximumNames = 512, pause = () 
     try {
       await pause();
       while (waiting.length > 0) {
-        const callers = [], names = new Set(), signal = waiting[0].signal;
-        while (waiting.length > 0 && waiting[0].signal === signal && (callers.length === 0 || names.size + waiting[0].names.length <= maximumNames)) {
-          const caller = waiting.shift();
-          signal?.removeEventListener("abort", caller.withdraw);
+        const callers = [], names = new Set();
+        while (waiting.length > 0) {
+          const caller = waiting[0], unknown = caller.names.filter(name => !caller.known.has(name));
+          if (callers.length > 0 && names.size + unknown.length > maximumNames
+            && names.size + new Set(unknown.filter(name => !names.has(name))).size > maximumNames) break;
+          waiting.shift();
+          caller.signal?.removeEventListener("abort", caller.withdraw);
+          if (unknown.length === 0) { stats.remembered++; caller.resolve(true); continue; }
+          caller.names = unknown;
           callers.push(caller);
-          for (const name of caller.names) names.add(name);
+          for (const name of unknown) names.add(name);
         }
+        if (callers.length === 0) continue;
+        const { signal, close } = bindBatchWithdrawal(callers);
         stats.batches++; stats.names += names.size;
         try { settle(callers, await run([...names].sort(), signal)); }
         catch (error) {
           if (signal?.aborted) { for (const caller of callers) caller.reject(error); continue; }
           if (callers.length === 1) { callers[0].reject(error); continue; }
           for (const caller of callers) {
-            if (signal?.aborted) { caller.resolve(false); continue; }
-            stats.retried++; try { settle([caller], await run([...caller.names].sort(), signal)); } catch (single) { caller.reject(single); }
+            if (caller.signal?.aborted) { caller.resolve(false); continue; }
+            stats.retried++; try { settle([caller], await run([...caller.names].sort(), caller.signal)); } catch (single) { caller.reject(single); }
           }
-        }
+        } finally { close?.(); }
       }
     } finally { draining = false; if (waiting.length > 0) void drain(); }
   };

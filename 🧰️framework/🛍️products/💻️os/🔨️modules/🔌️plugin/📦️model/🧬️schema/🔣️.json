@@ -8,6 +8,25 @@
         "descriptorPack": "🛂️.descriptor.semio",
         "receipt": "🧾️receipt.json"
       }
+    },
+    "ActorPreparation": {
+      "const": {
+        "image": "📦️actor.semio",
+        "receipt": "🌱️actor.json",
+        "maximumBytes": 536870912,
+        "maximumReceiptBytes": 1024
+      }
+    },
+    "ActorPreparationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "componentSha256", "imageSha256", "imageBytes"],
+      "properties": {
+        "version": { "const": 1 },
+        "componentSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "imageSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "imageBytes": { "type": "integer", "minimum": 1, "maximum": 536870912 }
+      }
     }
   },
   "type": "object",

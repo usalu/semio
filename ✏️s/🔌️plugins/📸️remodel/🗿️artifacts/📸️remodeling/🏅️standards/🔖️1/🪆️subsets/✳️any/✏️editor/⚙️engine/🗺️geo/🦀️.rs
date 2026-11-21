@@ -865,8 +865,8 @@ pub fn reprojection_stats(recon: &Reconstruction, observations: &[(usize, usize,
         if ci >= recon.cameras.len() || pi >= recon.points.len() {
             continue;
         }
-        let (_, pose) = recon.cameras[ci];
-        let res = reprojection_residual(&recon.intrinsics, &pose, recon.points[pi], px);
+        let (frame, pose) = recon.cameras[ci];
+        let res = reprojection_residual(&recon.intrinsics[&frame], &pose, recon.points[pi], px);
         let sq = res[0] * res[0] + res[1] * res[1];
         per_camera_sq[ci] += sq;
         per_camera_n[ci] += 1;
@@ -915,7 +915,8 @@ pub fn camera_covariance_diagonals(recon: &Reconstruction, observations: &[(usiz
     if terms.is_empty() {
         return Vec::new();
     }
-    let problem = SfmBundleProblem { intrinsics: recon.intrinsics, num_cameras: recon.cameras.len(), num_points: recon.points.len(), terms, observations: obs_map, fixed_cameras: Vec::new() };
+    let intrinsics = recon.cameras.iter().map(|&(frame, _)| recon.intrinsics[&frame]).collect();
+    let problem = SfmBundleProblem { intrinsics, num_cameras: recon.cameras.len(), num_points: recon.points.len(), terms, observations: obs_map, fixed_cameras: Vec::new() };
     let a0: Vec<VecD> = recon.cameras.iter().map(|&(_, pose)| VecD::from_vec(pose.0.log().to_vec())).collect();
     let b0: Vec<VecD> = recon.points.iter().map(|&p| VecD::from_vec(p.to_vec())).collect();
     let cfg = LmConfig { max_iters: 1, ..LmConfig::default() };
@@ -944,8 +945,8 @@ pub fn estimate_per_point_sigma(recon: &Reconstruction, observations: &[(usize, 
         if ci >= recon.cameras.len() || pi >= recon.points.len() {
             continue;
         }
-        let (_, pose) = recon.cameras[ci];
-        let (_, jpoint, _) = reprojection_jacobians(&recon.intrinsics, &pose, recon.points[pi], px);
+        let (frame, pose) = recon.cameras[ci];
+        let (_, jpoint, _) = reprojection_jacobians(&recon.intrinsics[&frame], &pose, recon.points[pi], px);
         let gram = jpoint.transpose().matmul(&jpoint);
         for r in 0..3 {
             for c in 0..3 {

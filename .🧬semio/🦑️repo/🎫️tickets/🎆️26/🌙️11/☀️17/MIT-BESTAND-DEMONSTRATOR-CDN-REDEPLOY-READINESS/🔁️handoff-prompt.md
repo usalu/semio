@@ -2,6 +2,10 @@
 
 Continue the open ticket `2026/11/17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS` (folder `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS`). Follow `CLAUDE.md`. Read `🚀️redeploy-log.md` and every `🔬️*.md` note in the ticket first.
 
+## Live continuation on November 21, 08:32 PST
+
+The original Rust image is mounted at its canonical path and had 16 GiB available at this check. The holders are active release compilers. The roster supervisor (PID 51044 at this checkpoint) is managing both required JOBS=2 queue roots. Demonstrator wakSUm7 and Procedural w5PGoij are linking. Both linked-browser probes are armed. GIS wsl3Qi1 passed 11 stages with a certified optimized core. The latest full site result is 6/16, and the current published Generator predates the correction in w5PGoij. The release verdict and subsequent checkpoints are in 📋️readiness-report.md and 🚀️redeploy-log.md.
+
 ## Goal (unchanged)
 
 Get mit-bestand demonstrator ready to be redeployed on a CDN as fast as you can. It doesn't matter for this redeploy if it contains bugs, it just needs to run every app. At the same time parallelly the shared work fleet mechanism is being developed. If it doesn't work, just fallback to native tools. Under no means get stuck or hold your work. Use the main chat with GPT 6.2 Astra Medium for main plan coordination, use multiple GPT 6.2 Sol Medium agents for medium to high complexity task execution, use multiple GPT 6.1 Terra Medium agents for read-only exploration, audits and low complexity tasks. Finish the goal as fast as you can with all the resources you can get and make sure to never idle and always be saturated. When you find fundamental issues which are unrelated to the task fix them as well. Treat the goal completely end to end. There are other agents working on other logical parts, even if they work on the same files, don't stop and keep on to work in conjunction with them, just focus on your task.

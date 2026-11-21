@@ -16,7 +16,7 @@ import { overviewCardChipClass } from "@semio-tech/ui-react/chrome";
 import { transform } from "lightningcss";
 import { afterEach, describe, expect, it } from "vitest";
 import type { SheetClassificationTask } from "@semio-tech/course";
-import { BodyButton, CELL, CardLink, CardSection, ClassificationTaskView, CourseCard, ProblemNote, RowList, Segments, courseText } from "@semio-tech/course-react";
+import { BodyButton, CELL, CardLink, CardSection, ClassificationTaskView, CourseCard, GROUP, GuessField, ProblemNote, RowList, Segments, courseText } from "@semio-tech/course-react";
 import { quizStylesheet as stylesheet } from "@semio-tech/course-react/stylesheet";
 import { LoadFallback } from "../../🎯️targets/⚛️react/🔨️modules/📚️app/🛟️load-fallback/🟦️.tsx";
 import { readFileSync } from "node:fs";
@@ -110,6 +110,16 @@ describe("🧱️ shared borders", () => {
     expect(framed.hasAttribute("data-shared-border-wrap")).toBe(true);
   });
 
+  it("makes a numeric guess a cell of its task row, with a shared seam between the input and its units", () => {
+    const quantity = { label: { en: "Power", de: "Leistung" }, unit: "W", scale: "logarithmic" as const, prefixed: true, additive: true };
+    render(<div {...GROUP}><GuessField id="power" name="Power" quantity={quantity} value={undefined} onCommit={() => undefined} text={text} locale="en" /></div>);
+    const field = screen.getByRole("textbox", { name: "Power" });
+    const units = screen.getByRole("combobox", { name: "Unit for Power" });
+    const guess = field.closest(".course-guess")!;
+    expect(guess.hasAttribute("data-shared-border-cell")).toBe(true);
+    expect(cells(field.parentElement!)).toEqual([field, units]);
+  });
+
   it("gives a row button and a cell note no outline of their own", () => {
     render(
       <>
@@ -130,11 +140,11 @@ describe("🧱️ shared borders", () => {
 });
 
 describe("🔲️ controls outside a row are boxes of the compositor", () => {
-  it("makes a plain body button a framed box, a card link and a tile a borderless box, and a notice's details a borderless box", () => {
+  it("makes a plain body button a framed box, a tile a shared cell, and links and details borderless boxes", () => {
     render(
       <>
         <BodyButton onClick={() => undefined}>Plain</BodyButton>
-        <BodyButton tile onClick={() => undefined}>Tile</BodyButton>
+        <div {...GROUP} className="course-tiles"><BodyButton row onClick={() => undefined}>Tile</BodyButton></div>
         <CardLink href="#x">Link</CardLink>
         <ProblemNote problem={{ message: "Broken", detail: "why" }} text={text} />
       </>,
@@ -142,7 +152,10 @@ describe("🔲️ controls outside a row are boxes of the compositor", () => {
     const plain = screen.getByRole("button", { name: "Plain" });
     expect(plain.hasAttribute("data-shared-border-frame")).toBe(true);
     expect(plain.hasAttribute("data-shared-border-edges")).toBe(false);
-    for (const borderless of [screen.getByRole("button", { name: "Tile" }), screen.getByRole("link", { name: "Link" }), document.querySelector("summary")!]) {
+    const tile = screen.getByRole("button", { name: "Tile" });
+    expect(tile.hasAttribute("data-shared-border-cell")).toBe(true);
+    expect(tile.hasAttribute("data-shared-border-frame")).toBe(false);
+    for (const borderless of [screen.getByRole("link", { name: "Link" }), document.querySelector("summary")!]) {
       expect(borderless.hasAttribute("data-shared-border-frame")).toBe(true);
       expect(borderless.getAttribute("data-shared-border-edges")).toBe("");
     }
@@ -213,7 +226,7 @@ interface Selector {
   readonly name?: string;
 }
 interface Style {
-  readonly value: { readonly selectors?: readonly (readonly Selector[])[]; readonly declarations?: { readonly declarations: readonly { readonly property: string }[] } };
+  readonly value: { readonly selectors?: readonly (readonly Selector[])[]; readonly declarations?: { readonly declarations: readonly { readonly property: string; readonly value?: { readonly propertyId?: { readonly property: string } } }[] } };
 }
 
 describe("🎨️ the stylesheet and the shared borders", () => {
@@ -228,7 +241,7 @@ describe("🎨️ the stylesheet and the shared borders", () => {
           for (const selector of value.selectors ?? []) {
             const key = selector.map((part) => (part.type === "class" ? `.${part.name}` : part.type === "combinator" ? " " : "?")).join("");
             const set = declared.get(key) ?? new Set<string>();
-            for (const declaration of value.declarations?.declarations ?? []) set.add(declaration.property);
+            for (const declaration of value.declarations?.declarations ?? []) set.add(declaration.value?.propertyId?.property ?? declaration.property);
             declared.set(key, set);
           }
         },
@@ -274,16 +287,26 @@ describe("🎨️ the stylesheet and the shared borders", () => {
   it("uses the hairline for every divider of a table, never a heavier line", () => {
     expect(stylesheet).not.toMatch(/border-block-(?:end|start): var\(--stroke-default\)/u);
   });
+
+  it("uses one plot baseline for all score bins and leaves the controls' dividers to their groups", () => {
+    expect(declared.get(".course-histogram")).toContain("border-block-end");
+    expect(declared.get(".course-histogram .course-column")).toContain("border-block-end-width");
+    for (const [selector, properties] of declared) {
+      if (/^\.course-(?:page-picker|tiles)\b|(?:^| )\.course-guess$/u.test(selector)) expect([...properties].filter((property) => /^border(?:-block|-inline|$)/u.test(property)), selector).toEqual([]);
+    }
+  });
 });
 
 describe("🛟️ the load fallback and the quiz actions", () => {
   it("joins the two fallback buttons in one outline with one divider and no gap or frame of their own", () => {
     render(<LoadFallback failed onRetry={() => undefined} onReload={() => undefined} />);
     for (const button of screen.getAllByRole("button")) expect(button.className).not.toMatch(BORDERISH);
-    for (const group of document.querySelectorAll("section[lang] > span")) {
+    const groups = document.querySelectorAll('section[lang] > [data-shared-border-cells]');
+    expect(groups).toHaveLength(2);
+    for (const group of groups) {
       expect(group.className).not.toMatch(/\bgap-/u);
-      expect(group.className).toMatch(BORDER);
-      expect(group.className).toContain("[&>button:not(:last-child)]:border-e");
+      expect(group.getAttribute("data-shared-border-edges")).toBe("top right bottom left");
+      expect(cells(group)).toHaveLength(2);
     }
   });
 

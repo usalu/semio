@@ -2,6 +2,7 @@ import { playE2eInvocationPid } from "../../🔨️modules/🧩️runtime/🧪�
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** 🧪️ Proves the fresh release contract against the language-neutral fixture, independent argument parser and the dashboard registry declarations: one build invocation, no nested build invocation, every component produced by the release build driver in a cold generation. */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: { playFreshBuildEnvironment: () => Readonly<Record<string, string>>; playFreshBuildArgs: (resources: { cpus: number; memoryBytes: number }) => readonly string[]; playFreshParallel: (resources: { cpus: number; memoryBytes: number }) => number; PLAY_FRESH_BUILD_TARGET: string }): Promise<void> {
@@ -23,6 +24,29 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(pipeline.jobs.some((row: any) => row.id === "pages" || row.after.some((dependency: string) => !dependency.startsWith("job:")))).toBe(false);
       expect(pipeline.jobs.filter((row: any) => row.lane !== undefined).map((row: any) => row.id)).toEqual(fixture.release.laneJobs);
     });
+    it("plans the Stdio catalog definition as a source-only prerequisite for the Play release", async () => {
+      const project = JSON.parse(readFileSync(new URL("../../📋️project.json", import.meta.url), "utf8"));
+      const pipeline = project.targets[fixture.release.target].metadata.semio.release;
+      const { root, policies, ...job } = fixture.release.stdioCatalogJob;
+      const driver = "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass";
+      const driverSchema = JSON.parse(read(`${driver}/🧬️schema/🔣️.json`));
+      const validate = new (require("ajv"))({ strict: false }).compile({ $ref: "#/definitions/PipelineJobV1", definitions: driverSchema.definitions });
+      const declared = pipeline.jobs.filter((row: { id: string }) => row.id === job.id);
+      expect(declared).toEqual([fixture.release.stdioCatalogJob]);
+      expect(validate(declared[0])).toBe(true);
+      expect(policies).toEqual(["process"]);
+      const [{ nativeBuildPipelinePlanV1 }, { nativeBuildPrerequisiteOrderV1 }, { playRuntimeComponentIds }] = await Promise.all([
+        import(new URL("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts", repository).href),
+        import(new URL(`${driver}/📋️prerequisites/🟦️.ts`, repository).href),
+        import("../../🔨️modules/🧩️runtime/🟦️.ts"),
+      ]);
+      const workspace = fileURLToPath(repository);
+      const { plan } = nativeBuildPipelinePlanV1(workspace, pipeline, "release", new Set(playRuntimeComponentIds()));
+      expect(plan.jobs.filter((row: { id: string }) => row.id === job.id)).toEqual([{ ...job, cwd: resolve(workspace, root) }]);
+      expect(nativeBuildPrerequisiteOrderV1(plan.jobs)).toContain(job.id);
+      const packages = new Set(plan.passes.flatMap((pass: { packages: readonly { name: string }[] }) => pass.packages.map(row => row.name)));
+      expect(fixture.release.stdioCatalogConsumers.every((name: string) => packages.has(name))).toBe(true);
+    }, 90_000);
     it("refuses stale catalog owners in the release gate instead of rewriting the catalog during a build", () => {
       const ts = require("typescript");
       const text = readFileSync(new URL("../../🔨️modules/📦️site/🟦️.ts", import.meta.url), "utf8"), source = ts.createSourceFile("script.ts", text, ts.ScriptTarget.Latest, true);

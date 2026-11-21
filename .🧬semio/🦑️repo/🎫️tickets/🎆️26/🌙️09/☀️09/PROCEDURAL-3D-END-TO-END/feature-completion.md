@@ -213,3 +213,318 @@ The native exchange path now imports OBJ and binary or ASCII STL through the sha
 The preview failure ledger now settles routed faults, prevents repeated requests at the failed tolerance, and leaves other tolerances available. Native original-controller execution passed fault settlement and stale reply handling under one-item turns. The preview and hover SQLite fixtures passed 38 assertions across five tests. The cross-window hover reducer preserves another window’s or the inspector’s hover when it receives a delayed pointer leave.
 
 Certified Chamfer now supports any selected edge of the native axis-aligned box. OBJ and STL export now use the retained supported primitive and planar tessellation paths, with exact writer and round-trip witnesses. The composition tessellation fixtures have moved to the original reply and extension lanes. Linked Flow and browser verification, general trimmed intersections, and the remaining finishing and exchange coverage are still open.
+
+Draft now supports one selected native box face and a perpendicular principal-axis pull. The retained solid publication also uses the reserved face-label range so exact preview picks address the authored faces. The independent Three feature suite passed seven tests and 75 assertions. The full framework tessellation run preceded this face-label correction. The linked Flow attempt stopped at its disk gate with 5.22 GiB free against a 5.5 GiB minimum. Repository collection and removal of 112 MiB of superseded ticket output have been recorded. Retained STEP work continues. The registered Draft and current application routes still need linked or browser verification.
+
+## Nested preview, all hovered instances and exact exchange
+
+The preview fallback now uses the same evaluated channel side and structural value path, including nested lists and records. The old compact ordinal fails the inserted-sibling fixture. Both inline Mesh payloads borrow their existing evaluated strings. The SQLite fixtures passed ten assertions and the isolated actual Rust path passed three tests.
+
+Edit, generate and view now author every hovered graph instance in the scene selection projection. Hover changes no mesh or instance document. The full React World3d component suite passed 15 tests, including mounted paint for three instances across two channels, same-mesh sharing, an unrelated instance, local ray precedence, clear and geometry identity. The native draw path passed six fixture cases in an isolated Rust run and an independent Three.js instanced mesh oracle. The registered world-host suite remains pending.
+
+Retained STEP import certifies directly authored cuboids from the Open CASCADE fixtures. Exact STEP export preserves single-shell planar topology with inner bounds and curved-source refusal. Open CASCADE readback passed for a translated box, oblique prism and orthogonal union. The connected orthogonal material certificate now enables chained retained Fuse, Cut and Intersect. Retained Offset and Thicken preserve a circular opening within their certified planar sheet domains. Their linked Flow tests remain pending. The official Flow build cleared disk admission and is compiling its dependency closure.
+
+Composition evaluation fixtures now use the original typed receiver and the actual raw BRep and Math evaluator. Their three portable tests passed with 25 assertions. General BRep parity, remaining exchange breadth and current browser/native app verification remain open.
+
+The live shared Flow Cargo handle was polled and remains active. The repository lease ledger also reports an independent dependency-setup process holding the dependency image exclusively at rank 7 while requesting binding and generation leases at rank 5. The canonical mount path is under review. This process is separate from the live Flow compile.
+
+Inline spatial markers now omit points outside the renderer's Float32 range and preserve a visible origin marker when a vector's entire tip rounds to zero. The previous marker code failed three boundary cases. The corrected code and independent Three.js Float32 check each passed all 12 cases. See the preview marker report.
+
+Edit, generate and view now fit the camera from their typed, filtered position and edge buffers. The viewer caches those bounds with its geometry. Seven cases passed in both the isolated Rust implementation and Three.js. The linked window tests remain pending.
+
+The retained zero-pitch closed helical sweep now produces a native torus for one signed full turn. Signed sphere and ring-torus solid offsets preserve the original frame. STEP import and export now round-trip planar prisms and certified orthogonal shells in the isolated native check and Open CASCADE. See the closed helical sweep, smooth solid offset and retained STEP reports for the measured domains.
+
+Protected dependency setup now releases its exclusive image lease before retrying a busy JavaScript binding acquisition. Seven focused Bun tests and three independent SQLite cases passed. The already-running setup process remained in place. The Flow host session source closure exceeded admission during concurrent geometry changes. Consolidating duplicated field documentation reduced it to 259,214 bytes across 22 sources against the 262,144-byte limit. The official Flow suite still compiles, and the mounted procedural browser path remains unverified.
+
+The edit render now borrows the evaluated document text during projection. The live Flow build last reported 552 compile entries and had not reached test execution.
+
+The real Chromium World3d renderer painted three authored instances and preserved the unrelated one. A browser ray published the qualified graph-port hover address and overrode the authored paint locally. Pointer leave published an empty target list and cleared all marks. Geometry revision stayed fixed. See the Chromium hover report for the mounted renderer scope.
+
+Edit, generate and view now share one parsed evaluation across geometry, value rows and status. Seven native and SQLite neutral cases passed. Authored Generate form images now use the framework Image component with an accessible label and localized missing state. The native UI branch and PNG oracle each passed both locales.
+
+The linked Flow build exited 101 before testing. It had compiled Construction before a concurrent fillet change and later saw the new solid-transaction import of the fillet module. The module and all its current production forwards now exist. Host available space dropped to about 2.9 GiB. The official Rust cache reclaim operation completed with a skipped outcome and zero recovered bytes. A fresh linked suite still needs its disk gate to admit.
+
+New dedicated verification reports cover authored exact STEP cylinder import and export, native perforated extrusion and sweep, and GLB roundtrip of split corner UVs and normals. The official linked tests and complete app path remain pending.
+
+The registered image check now goes through the actual Generate window from authored Flow InputImage widgets and an existing selected generation. The direct UI-source witness independently checks authored description and field-label fallbacks. The current multi-edge fillet, funded GLB intake and typed generation-variable work are still in progress.
+
+The three preview modes now share the framework's expandable channel tree. The production projection and real Rust TreeWindows passed a late-array and nested-record witness without changing the graph port address. SQLite independently matched all three values. See the expandable preview channel values report.
+
+Retained BRep Fillet now accepts up to four certified parallel box edges. Retained Loft has an exact coaxial conical-frustum domain. Dense GLB scene traversal and geometry rows are caller funded. The large GLB witness verified 4,100 triangles, normal and UV transforms, and paid cancellation after 160 rows. Sparse accessors remain in progress. The repository dry run found no collectable cache entries in the chosen areas, so the linked suite remains below disk admission.
+
+Async Flow graph picks now await the current pointer result and the native hover write instead of reading the previous coordinates. A newer gesture or scene revision refuses stale work. Pointer cancellation releases the pick latch across graph and paint surfaces. Nineteen renderer tests and nine independent RxJS cases passed. The real Chromium World3d hover regression also passed after the probe waited for its backing dimensions. Native detail and micro channel-row hit coverage is still being implemented.
+
+Typed generation forms now submit text, numbers, booleans, points and vectors through original Flow ports. Indexed coordinate edits preserve their other axes, and incoming wires keep authority. The scoped native and AJV checks passed. BRep conic–plane queries and GLB sparse accessors have dedicated native and Three.js reports. The full linked suite and mounted app remain open.
+
+The viewport now orders object, component and vortex hover on one publication queue. Old queued hits are discarded on scene changes and unmount. Leaving clears the viewport's local mark after any already-issued hover write. The renderer suite passed 71 tests, the independent RxJS oracle passed eight cases, and Chromium verified the mounted viewport. Native detail and micro port rows now participate in DAG picking, with connector precedence preserved. The isolated Rust path and all eight Three.js cases passed. The linked native applications remain below disk admission.
+
+Retained GLB import now validates mixed BIN and inline Base64 buffers and URI-only files one quartet at a time. The focused native and Three.js witnesses passed. Funding the remaining wide metadata path is in progress. Original line–conic intersections and partial Revolve continue in their owning native crates.
+
+The framework now carries hover window ownership into procedural preview selection. An identical instance group from another window can take over while the viewport pointer stays still, and a delayed echo from the viewport's own window keeps the current ray. Native graph and viewport hover actions include their actual window ids. Native leaves release local paint and clear outstanding publication in pointer order. Chromium, 16 React tests, 13 independent RxJS assertions and scoped native checks passed. See the source-aware bidirectional hover report for coverage and remaining mounted checks.
+
+Retained BRep Revolve now covers exact signed partial circular profiles and meridional rectangles. Circle and ellipse contacts on intersecting planes pass independent Three.js witnesses and scoped native regressions. Retained Section covers spheres and certified cylinders, including cap-clear oblique sections and axial rectangular sections. Cap-crossing oblique cylinder sections remain in progress. Retained Mesh decimation now retires discarded buffers under caller funding and cancels without publishing partial geometry. The 64-component native witness released 3,518,711 bytes over 51,966 retirement turns, and Manifold independently matched its output. These cases have separate ticket reports. The latest free space reading was 2.81 GiB, below linked build admission.
+
+The editor Flow graph now consumes the same hover source as its preview, with schema round trips for omitted, panel and named window origins. Twenty-six graph tests, 12 independent RxJS assertions and nine native schema and reconciliation tests passed. Exact coplanar conic contacts now retain up to four points, and oblique cylinder Section now also keeps one or both cap chords with native elliptic trims. Dedicated reports cover their third-party and isolated native verification. The full native and canonical app runs remain open.
+
+Point and vector variables now publish markers under their original Flow output channels in all three preview modes. The native projection and 23 independent Three.js checks passed. Retained Mesh OBJ export now preserves independently indexed corner normals and explicit zero UVs. Coaxial through-cylinder Cut now publishes an annular solid, and bounded rational NURBS–plane contacts honor authored trims. Each has a focused report and an outstanding linked test under the same disk gate.
+
+The Generate viewport binds geometry and Values to the selected generation. Current generated evaluations leave Edit's convergence history intact, and render borrows the document topology. Four native transient tests, three scoped native policy tests and nine independent AJV and TypeScript tests passed. The linked evaluator and mounted Generate journey remain open. See the Generate preview ownership report.
+
+Retained OBJ import now preserves indexed corner UVs and normals, quotes buffer growth exactly and pauses on a short grant. Retained coaxial BRep Cut now covers blind and enclosed bores, and Fuse supports one or two annular shoulders. The original nearest ports now share bounded rational spline projection. Focused native and independent witnesses passed. The respective reports record the remaining linked coverage.
+
+Generate now uses a localized semantic form landmark with a scrollable viewport in both editors. Chromium verified labelled controls, short-pane navigation, and text, slider and toggle edits through the real shell intent bridge in English and German. The shared native builder compiled and its focused witness passed. See the [generation form viewport report](📓️generation-form-viewport.md) for remaining verification.
+
+Retained Section now covers bounded elliptic, parabolic and hyperbolic cone and frustum cuts. Retained curve measurement now covers rational spline length, trimmed elliptical edges, mixed wires and vertex-to-curve distance in both input orders. Retained Mesh Orient handles disconnected closed components independently, and Triangulate preserves raw corner UVs, authored normals, seams, shading flags and arbitrary vertex and face channels. The focused native and third-party checks passed. The detailed operation reports record the registered linked tests still pending storage admission.
+
+Retained Fields now associate visible labels with their actual controls, including noncanonical vector axes. The 120 editable-control tests, the staged form test, 42 Bun tests, Chromium in both locales and the focused WGPU projection witness passed. The [field association report](📓️retained-field-association.md) records the outstanding broader checks and the size of the remaining form publication gap.
+
+Exact apex cuts now produce cone triangles and frustum trapezoids through the retained polygon publisher. Vertex-to-surface and vertex-to-face Distance run in both port orders, including finite planar faces and holes. Mesh Subdivide now interpolates authored normals and UVs while carrying seams, face flags and generic attributes. Their native and independent third-party reports cover focused verification. The official linked runs remain pending storage admission.
+
+Closed spherical Shell now publishes a signed inward cavity and exact material volume. Mixed Section faces now support cancellable Closest Point and Distance over the original arcs and chords. Mesh Weld preserves authored UVs, hard normals and both sides of new seams. Focused native and third-party checks passed. Their linked Flow fixtures remain pending.
+
+The shared Generate renderer now seats whole fields on record-budgeted pages while retaining original question addresses and bindings. Its actual Rust planner and the independent partition agreed on all nine fixtures. See the [form page admission report](📓️generation-form-page-admission.md) for the still-open navigation and linked composition checks.
+
+Concentric and partially overlapping sphere Booleans now use exact retained boundaries and signed evaluation. Retained Area measures planar faces, including holes and mixed conic sections. Retained Mesh Decimate carries authored normals, shading and face-specific UVs through a collapse. The focused reports record native or metadata verification and independent geometry results. Native Decimate runtime and the official linked suites remain pending.
+
+The Generate form now publishes Previous and Next, a live page indicator and a separate field viewport. Navigation is local to the addressed window and bypasses artifact command dispatch. Chromium exercised both pages and an original question edit in both languages. All 136 related React tests and the focused native presenter and scheduler passed. The [navigation report](📓️generation-form-navigation.md) records the remaining linked composition and canonical WGPU checks.
+
+Retained sphere Cut now supports eccentric containment. Certified Box/Cylinder Booleans support radial containment with axial clipping, and native spherical measurements cover signed solid shapes and extracted faces. Retained Mesh Combine publishes two components with their matching indexed data and bounded retirement. The individual reports record scoped evidence and the remaining linked verification.
+
+The preview now opens complete text in the shared read-only editor. Long values load in UTF-8 pages with the original graph hover target. Two native checks, six independent UTF-8 checks, 22 React checks and a Chromium probe passed. The browser probe also verified fixes for scene option decoding, authored read-only behavior, embedded leading byte-order marks and retained window row counts. The canonical application and linked Generation3d suite remain gated. See the [channel text preview report](📓️complete-channel-text-preview.md).
+
+Retained BRep Intersect now covers side-clipped box and cylinder footprints and offset parallel-cylinder lenses, with exact circular trims and stable preview. Blind and enclosed cylindrical bores and authored spherical-face closest queries have focused native and independent witnesses. Mesh Combine carries authored materials and textures, Mirror carries authored corner and seam data, and Extrude and Inset preserve cap attributes while creating wall and border UV charts. Their individual reports describe the certified inputs and outstanding linked checks.
+
+Exact dictionary keys now open in localized Key and Value rows across the three preview modes. Three focused native checks, the independent UTF-8 oracle and Chromium passed, including long keys with identical summaries and different requested suffixes. Preview mesh history now resolves the recorded direction and nested path even when an older evaluation contains a same-named output. The focused Rust and SQLite checks passed. See the [dictionary key report](📓️channel-dictionary-keys.md) and the [geometry channel direction report](📓️geometry-channel-direction.md).
+
+Exact parallel-cylinder Fuse and through-notch Cut now have retained circular topology. Mesh Knife Cut and Loop Cut preserve authored surface channels, affine transforms preserve authored point normals, and component Rotate and Scale admit partially selected faces with authored directions. The individual reports document independent and native evidence plus the remaining linked verification.
+
+Edit, Generate and View now publish spatial inputs as well as outputs from preview-enabled widgets, with stable directional world instances, shared retained mesh buffers and tessellation demand. The focused paired Rust builders, eight SQLite-backed checks and twelve hover regression checks passed. The registered native preview evaluation build cleared source admission and began compiling. See the [two-direction spatial preview report](📓️two-direction-spatial-preview.md) for the open graph-address and mounted verification cases.
+
+Retained Sphere/Box now supports exact one-plane clipping and an opposed-plane spherical band. Converted NURBS cuboids can publish spline STEP edges and patches, and the independent STEP readback passed. Mesh Delete Faces and Merge Coplanar preserve the surviving authored surface channels. Their individual reports describe the exact invariants and linked verification still pending.
+
+Same-named graph inputs and outputs now have distinct hover addresses through the Flow canvas, outline, value tree and world preview. The focused Rust projection and browser adapter checks passed. The registered native rebuild is compiling dependencies, with canonical mounted hover checks still open. See the [directional graph port hover report](📓️directional-graph-port-hover.md).
+
+The BRep work also added exact eccentric cylindrical bores, analytic annular area and center of mass, and STEP round trips for certified spline cuboids. Mesh Orient and Flip now preserve authored surface channels while correcting winding. Individual reports separate native, independent and remaining linked verification.
+
+A hovered Flow wire now marks both directional endpoints in Edit, Generate and View. Whole-dictionary endpoints expand only the corresponding side, and inlet hover still follows the producer. The isolated native projection and SQLite tests passed. See the [wire hover report](📓️wire-hover-endpoints.md).
+
+Certified Sphere/Cylinder Booleans now include finite-cylinder separation, containment, exact cap and band intersections, and single-cap sphere cuts. Mesh Bevel preserves untouched authored attributes and builds cap charts. Scoped native and independent checks passed. See the [sphere and cylinder report](📓️sphere-cylinder-certified-booleans.md) and the [Mesh Bevel report](📓️mesh-bevel-authored-surface.md).
+
+Procedural overlap hover now publishes every authored address for identical viewport geometry, including exact inline meshes, points, vectors and planes. Chromium verified grouped hover, single selection, pointer exit, independent mesh reuse and alias revisions. The focused native builders, SQLite and React suites passed. The [grouped viewport report](📓️procedural-grouped-viewport-hover.md) records the remaining linked and canonical runs.
+
+The Mesh Orient ownership schema now matches the funded component traversal. Native tests verified the copy receipts and zero progress under a short grant. See the [ownership report](📓️mesh-orientation-owner-contract.md).
+
+Inspector connected rows now publish the actual inlet address and the viewport follows it upstream. Outputs and variable rows use canonical directional addresses, including reserved and empty output keys. The DOM oracle and related SQLite and adapter tests passed. See the [Inspector report](📓️inspector-directional-hover.md).
+
+Retained perpendicular Cylinder Split now produces two exactly capped solids and commits the pair atomically. Focused Rust and independent Manifold tests passed. See the [Cylinder Split report](📓️original-cylinder-plane-split.md).
+
+The [canonical boot readiness report](📓️canonical-procedural-boot-readiness.md) identifies the current React and browser WGPU owners. Both require fresh runtime activation for an end-to-end app check.
+
+Edit and Generate previews now offer the localized level-of-detail selector next to shading and sun. The same editor setting remains reachable from Flow. A focused native production-route witness and the independent detail checks passed. See the [preview detail report](📓️generate-preview-detail-control.md).
+
+Four native grouped-hover tests also passed against production WGPU world libraries. The focused run exercised picking and action publication without opening the canonical WGPU window. See the [native report](📓️native-grouped-hover.md).
+
+Orthogonal Boolean results now support exact point classification, including cavity walls and internal seams. Selected-vertex Weld now preserves authored surface data through compaction. Focused and independent tests passed. See the [classification report](📓️orthogonal-solid-point-classification.md) and the [selected Weld report](📓️mesh-selected-weld-authored-surface.md).
+
+Boundary vertex dissolve now refuses either adjacent authored seam before publishing. Native red/green verification and all 13 portable Mesh checks passed. See the [boundary seam report](📓️mesh-dissolve-boundary-seams.md).
+
+Graph addresses now round-trip authored widget and channel separators. DAG wire reconstruction preserves raw operands, and the active React Flow canvas carries input and output identity through picking, hover and selection. Five scoped native and six mounted React tests passed. See the [graph identity report](📓️procedural-graph-identity.md).
+
+Retained spherical and cylindrical Boolean results now support exact point classification against their trimmed boundaries. The scoped native and independent tests passed. See the [spherical report](📓️spherical-solid-point-classification.md) and [cylindrical report](📓️cylindrical-boolean-point-classification.md).
+
+Unwrap UV now updates the active authored channel while preserving secondary indexed UVs. Its ordinary preview releases replaced index storage with the correct grant. The Mesh Document closure also passes its existing source limits. See the [Unwrap report](📓️mesh-authored-uv-unwrap.md) and the [source boundary report](📓️mesh-document-source-boundary.md).
+
+The WGPU Flow projection now restores and publishes side-aware handles from its admitted scene. Focused native tests passed. The [WGPU Flow report](📓️wgpu-flow-directional-targets.md) records the pending linked canvas regression, and the [hover granularity audit](📓️graph-hover-granularity-audit.md) records the remaining node, wire and handle collision.
+
+Certified Box Chamfer now uses funded retained construction with cancellable progress and atomic publication. It preserves the Flow operator's triangular corner caps. Eight focused Rust tests and the independent Manifold oracle passed. See the [Chamfer report](📓️retained-all-edge-box-chamfer.md).
+
+The repaired preview test retry was released before admission because its memory request was holding smaller verification jobs. Bridge's focused native run and portable modeling checks then passed. The complete linked preview suite and canonical runtime mounts remain open.
+
+Bridge is now registered for two explicitly anchored, disjoint mesh boundary loops. Its retained job preserves authored rim data, adds wall charts, and refuses invalid selections atomically. The native and 17 portable checks passed. See the [Bridge report](📓️mesh-bridge-boundary-loops.md).
+
+Retained Fuse now covers radially contained, offset parallel cylinders with one or two projecting ends. Independent Manifold and 19 native source checks passed. See the [eccentric shoulder report](📓️eccentric-cylinder-shoulder-fuse.md).
+
+Generation3d now scopes node, wire and handle interaction identities so matching authored text cannot cross-highlight them. Focused native Edit/View, React and WebGL tests passed. See the [namespace report](📓️graph-interaction-namespaces.md). The Flow source witness separately passed five cases for directional native picks, hover and restore. See the [Flow report](📓️flow-native-directional-channel.md).
+
+The combined portable preview, graph, LOD and kernel oracle run passed 32 tests and 297 assertions. The paired focused Rust Edit/View projection ran four tests against the cached Pack JSON library. The source witness exercised the current directional mesh and inline identity builders.
+
+Bridge now aligns unequal boundary loops with triangles and quads while preserving authored rims. The focused native verification and 17 portable tests passed. See the [unequal Bridge report](📓️mesh-bridge-unequal-loops.md).
+
+Exact shared-axis rotated Box Intersect preserves authored surface planes. Classify accepts placed boxes and clipped prisms, and the Boolean set identities cover contained Fuse, fully covered Cut and disjoint or contact-only Cut. The 22 focused Rust tests and Manifold oracle passed. See the [intersection report](📓️rotated-shared-axis-box-intersection.md) and [set identity report](📓️rotated-box-classification-and-set-identities.md).
+
+Perpendicular retained Cone Split produces a tip cone and base frustum with a matching cut circle and signed publication order. Four focused Rust cases and 101 independent assertions passed. See the [Cone Split report](📓️retained-cone-plane-split.md).
+
+Bevel now supports an isolated locally convex edge on a concave closed mesh where every profile cut stays within its certified endpoint neighborhood. Two native tests and 18 portable tests passed. See the [local Bevel report](📓️mesh-bevel-concave-local-edge.md).
+
+Spatial preview now uses explicitly authored geometry, topology, point, vector, plane and mesh types. Nested typed geometry survives inside metadata, while incidental coordinates or handle-like text do not create instances. Five focused Rust and 43 portable checks passed. See the [typed spatial preview proof](📓️typed-spatial-preview-proof.md).
+
+Generation3d's typed catalogue now exposes retained Bridge and Combine using the same kernel jobs as Flow. Two focused native tests and the complete 58-test portable catalogue and mesh check passed. See the [schema Mesh report](📓️schema-mesh-bridge-and-combine.md).
+
+Polygon capture and JSON export now advance in funded steps and preserve authored winding, attributes, materials, textures and surface channels. The native export proof matched the prior encoding byte for byte. See the [capture report](📓️mesh-polygon-source-capture.md) and [JSON export report](📓️mesh-export-json-responsive.md).
+
+Component editing retains visible reference geometry and graph-originated input marks while ray and marquee selection stay on editable outputs. Chromium verified input paint and exact editable picks. The Flow canvas also restores every directional port in a grouped viewport hover. See the [component report](📓️component-preview-pickability-proof.md) and [Flow hover report](📓️grouped-flow-graph-hover.md).
+
+Retained all-edge Box Fillet now builds true cylindrical and spherical boundaries, with exact measures, funded preview, OBJ/STL and exact STEP round-trip. Open CASCADE independently opened all three STEP shells. See the [Fillet report](📓️retained-all-edge-box-fillet.md) and [STEP report](📓️retained-rounded-box-step.md).
+
+Shared-axis, equal-span rotated Cut and Fuse now publish exact connected, holed and disconnected results. A compound can publish up to four pieces atomically, sum exact measures and expose every child preview. See the [connected results report](📓️rotated-box-cut-and-fuse.md) and [compound report](📓️disconnected-rotated-box-publication.md).
+
+Boundary extrusion is registered in Flow and Generation3d with authored surface transfer and independent modeling checks. Convex Mesh Intersect has a funded two-source clipping stage with proof of contact and separation, exact topology and interpolation provenance. Authored reconstruction and widget wiring are in progress. See the [extrusion report](📓️mesh-extrude-boundary-chain.md) and [clipping report](📓️mesh-convex-intersection-clipping.md).
+
+Generate now keeps long Unicode answers editable through the shared Input control and renders retained image sources through the shared Image control. Chromium passed both paths, and image carriers count toward the existing page budget. See the [text report](📓️retained-generate-text-proof.md) and [image report](📓️retained-generate-image-sources.md).
+
+The canonical React dry run moved from waiting on the older graph leader into a fresh repository inventory. A shared cache reset reclaimed the earlier build lane. The app plan, toolchain-dependent linked suites and canonical React and WGPU mounts remain open.
+
+## Typed relay viewport preview
+
+The shared Edit, View and Generate census now visits typed Flow relays carrying geometry. The neutral fixture covers both directions, a scalar relay without world geometry, and the existing hidden export scope. Compact native checks passed five cases, and SQLite passed seven cases and 25 assertions. [Verification](📓️typed-relay-viewport-preview.md)
+
+## Typed mesh intersection and authored surface transfer
+
+The Generation3d catalogue and Flow expose closed convex mesh intersection with retained authored surface transfer, typed refusal for incompatible source channels, and a canonical empty result for contact. The paired typed mesh jobs yield on partial retained grant exhaustion. Current native owner checks passed three intersection geometries at three fuel sizes and cancellation during capture and production. Independent catalogue and mesh geometry checks passed 58 tests and 361 assertions. [Typed adapter](📓️typed-mesh-intersection.md) · [Native authored mesh and Flow](📓️mesh-convex-intersection-authored.md)
+
+## Hover for independently authored coincident previews
+
+Exact equal retained surfaces now publish the same hover group across different mesh handles at the identity pose, preserving mesh buffers and click targets. The grouped payload passed six compact native checks, independent SQLite comparison, and a mounted WebGL regression with distinct mesh IDs. [Verification](📓️independent-retained-preview-hover.md)
+
+## Typed Mesh Difference
+
+The Generation3d and Flow catalogues expose retained single-plane convex Difference, including oblique cuts, containment and contact. Multiple planes return a typed refusal. Three work-fuel settings and cancellation passed in the current native owners. Exact catalogue parity and independent geometry passed 58 tests and 371 assertions. [Typed adapter](📓️typed-mesh-difference.md) · [Authored mesh kernel](📓️mesh-convex-difference.md)
+
+## Exact long channel hover addresses
+
+Shared Values, Outline and Inspector use direct semantic target fields. The focus binding carries a 250-byte authored ID whose batch form exceeded the UI text limit. Existing renderer batch clears still take precedence. Real native UI arguments, SQLite and mounted React intent projection passed. [Verification](📓️direct-channel-hover-addresses.md)
+
+## Typed Mesh Union
+
+The closed convex Union operator supports containment, separated shells and complete opposing-face stitches, including face contact. Current compact native owners verified geometry and cancellation. The portable catalogue and geometry suites passed 58 tests and 381 assertions. [Verification](📓️typed-mesh-union.md)
+
+## Oversized Generate image resources and retained BRep coverage
+
+Both Generate forms mount exact image resources beyond the tree-window node limit. Chromium and the native upload proof verified 2,360,852 bytes, cancellation and all pixels through six bounded native tiles. Retained Classify supports certified frusta, torus sectors and annular solids. Exact Box Section supports oriented stock, clipped halves and convex prismatic Boolean results. [Image paging](📓️large-window-image-resource-proof.md) · [Classification](📓️retained-revolved-solid-classification.md) · [Box Section](📓️retained-oriented-box-section.md) · [Prism Section](📓️retained-convex-prism-section.md)
+
+## Spatial input hover and nonconvex mesh corners
+
+Literal Inspector coordinate groups use the same input-direction hover as connected rows. Real semantic Rust projection verified four coordinate groups and 12 edit actions, the complete React Interpreter passed 202 tests, and independent checks passed eight tests and 38 assertions. Typed Mesh Difference now accepts two intersecting tool faces, including a closed nonconvex corner result. The current retained mesh owner and job-context witness passed across three fuel sizes. Portable catalogue and geometry verification passed 58 tests and 383 assertions. [Spatial hover](📓️literal-spatial-input-hover.md) · [Corner Difference](📓️mesh-corner-difference.md)
+
+## Cylindrical Shell and axial Offset
+
+Retained BRep now shells finite cylinders with closed cavities, either end opening and both cap openings. Exact Offset Solid handles cylinders, cones and frusta in the authored frame. Native topology and independent geometry proofs passed. [Cylindrical Shell](📓️retained-cylindrical-shell.md) · [Axial Offset](📓️retained-axial-solid-offset.md)
+
+## Shared mesh publication, slab Difference and transformed edges
+
+Hover-only refreshes reuse one cached tessellated mesh publication across Edit, Generate and View. Exact session and resolved source identity prevent viewport leakage between sessions with matching local epochs. Seven compact native cases and 25 SQLite assertions passed. The typed Difference path also supports middle slabs with two separately closed residual shells. The current paired mesh suite passed three fuels and portable catalogue and geometry checks passed 58 tests and 387 assertions. Selective retained Box Fillet and Chamfer support rotated and reflected stock. [Cache](📓️shared-preview-mesh-publication.md) · [Slab Difference](📓️mesh-slab-difference.md) · [Selected Fillet](📓️retained-oriented-selected-fillet.md)
+
+## Mesh octants, through-tunnels and oriented chamfers
+
+Typed mesh Difference now covers certified three-plane octants and four-wall through-tunnels. The compact native suite completed all 23 selected geometry fixtures at three fuel sizes within its bounded work limit. Independent catalogue and geometry checks passed 58 tests and 393 assertions. Exact retained all-edge Chamfer now uses the box's rotated or reflected frame with the canonical 26-face topology. [Octants](📓️mesh-octant-difference.md) · [Tunnels](📓️mesh-tunnel-difference.md) · [Selected Chamfer](📓️retained-oriented-selected-chamfer.md) · [All-edge Chamfer](📓️retained-oriented-all-edge-chamfer.md)
+
+## Canonical runtime admission
+
+The actual React target now owns the graph inventory after stopping the diagnostic dry run. Direct dependency-excluded serve planning returned a graph-service key error. Managed Rust type checking remains active. [Runtime status](📓️canonical-procedural-run-status.md)
+
+## Blind pocket Difference and late cancellation
+
+The typed Mesh Difference path now covers five-face blind pockets with a closed stock result, a single opening and separate authored wall and floor channels. The portable catalogue and geometry suite passed 58 tests and 395 assertions. The current compact native suite passed 24 selected cases at three work fuels, early cancellation and cancellation during authored projection of both a through-tunnel and a blind pocket. [Blind pocket](📓️mesh-blind-pocket-difference.md)
+
+## Enclosed mesh cavities and oriented Box Shell
+
+Typed Mesh Difference can preserve the exact stock exterior and subtract a strictly enclosed cutter as a negative inner shell. A touching cutter follows the pocket path when its opening is certified. The current typed witness passed 25 geometry cases at three fuel levels and both early and late cancellation. Catalogue and independent geometry passed 58 tests and 397 assertions. Retained BRep Shell now supports rotated and reflected Box stock, all six face openings, through tunnels and closed cavities. [Enclosed mesh cavity](📓️mesh-enclosed-cavity-difference.md) · [Oriented Box Shell](📓️retained-oriented-box-shell.md)
+
+## Evaluated image channels
+
+Flow Values displays the evaluated Image channel through the shared Image control, with expandable metadata and independent semantic addresses for input and output. Mounted Chromium verified both addresses, the exact PNG bytes, and Blob retirement on collapse. Compact native and independent PNG checks covered the publisher and page reassembly. [Verification](📓️evaluated-channel-image-preview.md)
+
+## Bundled procedural examples
+
+The portable example suite passed all 33 tests and 622 assertions across nine bundled example files. Coverage includes wire extrusion, face sweep, analytic sphere, box and torus, rounded and shelled stock, the hexagonal column and mesh workbench. [Verification](📓️bundled-procedural-examples.md)
+
+## Different-frame Box Intersect
+
+Retained Box Intersect keeps a single oblique support through the existing ClippedBox and preserves all active authored planes on a general certified convex result. Compact native suites passed 48 tests. Manifold independently verified 18 tests and 168 assertions, including reflected and asymmetric overlaps. The registered Flow test covers swapped operands and cancellation. [Single support](📓️retained-skew-box-intersection.md) · [Multiple supports](📓️retained-multisupport-skew-box-intersection.md)
+
+## Exact Inspector values and editing
+
+Evaluated text uses the shared retained Text Editor pages, including selected Flow variable outputs. The Inspector preserves canonical integer spelling. Notes, unconnected text inputs and indexed collection text use the shared retained Input and existing mutation limit. Compact Rust and mounted Chromium verified exact text and address reconstruction, editing, cancellation and both locales. [Verification](📓️inspector-exact-nonspatial-values.md)
+
+## Partial-overlap Mesh Union and skew Box Cut
+
+Mesh Union now joins certified partial overlaps, preserving native authored charts and giving shared outward patches one owner. Compact Mesh and retained Flow verification passed. Independent Manifold and packaging passed 24 tests and 4,672 assertions, and the paired typed mesh witness passed at three fuel settings. Reflected and rotated Box Cut covers the exact one-plane complement and strictly enclosed skew cavities with an inward retained shell. Compact native BRep and Manifold checks passed. [Mesh Union](📓️mesh-partial-overlap-union.md) · [Box Cut](📓️retained-skew-box-difference.md)
+
+## Large directional hover
+
+Coincident viewport hover now carries every associated handle beyond the 4 KiB action threshold. The typed Flow browser adapter and compact native decoder support the complete 1,024-port roster. The shared highlight style projects incoming hover to Values and Inspector. Managed Preview and Mesh type checking passed on the earlier admitted source snapshot. Preview geometry laws have an independently registered linked test target under the source budget. [Verification](📓️oversized-directional-hover-verification.md)
+
+## Sewn skew Box recess
+
+Native BRep Cut now sews the two authored inward tool walls and exposed stock patches into one closed shell. Compact Rust and Manifold agree on the retained case. The independent Flow verification target covers exact native topology, preview, Measure and cancellation. [Verification](📓️retained-skew-box-recess.md)
+
+## Native planar Classify
+
+The retained Classify route now recognizes bounded closed planar shells, including the skew recess and enclosed cavity. Compact native verification and independent Manifold and Three.js checks agree on interior, exterior and Euclidean boundary tolerance. [Verification](📓️retained-planar-classification.md)
+
+## Separated skew Union and five-support Mesh Union
+
+Native BRep Union now publishes strictly separated skew boxes as two independently placed compound members. Mesh Union spans more than three crossing planes through exact anchored edge interpolation. The five-support case yields 28 live vertices, 48 edges and 22 exterior polygons. Compact native checks and independent Manifold measures passed. Mesh packaging preservation now checks the named Rust laws instead of counting assertions added in unrelated tests. [BRep compound](📓️retained-separated-skew-union.md) · [Mesh Union and packaging](📓️mesh-five-support-union.md)
+
+## Native Section of skew convex intersections
+
+Section now consumes the planar topology retained by skew convex Box Intersect and uses the existing bounded edge cursor. Compact Rust and independent Manifold checks agree on two cross-sections, including reflected stock. The linked BRep query check is queued. [Verification](📓️retained-skew-convex-section.md)
+
+Mesh Difference now preserves triangular through and blind openings, including exact reversed source ownership and authored UV projection. Native and independent Manifold checks passed. [Triangular Mesh Difference](📓️mesh-prismatic-difference.md)
+
+Mesh blind pockets now span coplanar stock faces while preserving their authored trim, material and UV ownership. The compact proof passed exact reimport, 29 Generation3d geometry fixtures and 11 retained Flow tests. [Coplanar pocket opening](📓️mesh-coplanar-pocket-opening.md)
+
+Section now publishes the original concave cut through the sewn skew Box recess, with signed winding for both plane normals. The compact Rust proof and Manifold's independent oracle pass. [Concave planar Section](📓️retained-concave-planar-section.md)
+
+The retained Distance query accepts rotated and reflected rectangular placements with certified edge separation, overlap and contact. The compact source proof passed all 40 cases and Manifold reproduced the gap in both orders. Section also supports planes that clear an enclosed planar cavity. [Placed Box Distance](📓️retained-oriented-box-distance.md)
+
+Mesh Difference now certifies a connected cutter-wall cycle for the six-wall tunnel and seven-support pocket. The compact proofs passed 31 Generation3d cases, 11 retained Flow tests, and the authored ownership and reimport checks. Convex Union reuses the funded exterior-plane step. [Many-wall Mesh Difference](📓️mesh-many-wall-difference.md)
+
+Mesh Difference now certifies nonprismatic recesses opening through two or three stock faces. The original native clipping suite rejects pinched exterior vertices and passes all seven tests. Authored projection, 33 paired Generation3d fixtures, 12 retained Flow tests and the independent Manifold and Three.js checks passed. [Nonprismatic Mesh recesses](📓️mesh-nonprismatic-recess.md)
+
+A three-support skew Cut now yields one exact closed BRep shell with 25 vertices, 38 edges and 15 faces. The retained source proof and registered Manifold metrics passed. [Three-support skew recess](📓️retained-three-support-skew-recess.md)
+
+- [Retained placed Box Union and pocket](📓️retained-placed-box-union-and-pocket.md) accepts overlapping skew and distinct-span original Boxes as one exact solid in both Union operand orders and publishes the certified five-support blind pocket for Cut. The compact native suite passed 44 tests and independent Manifold and Three fixtures passed 19 tests with 226 assertions. The managed Flow integration run remains in progress.
+
+- [Six-support skew pocket](📓️retained-six-support-skew-pocket.md) extends the exact BRep Cut arrangement to every authored tool plane. All 45 compact native cases and 20 independent Manifold and Three cases passed. The disconnected reflected-stock Cut still needs compound publication.
+
+- [Disconnected reflected-stock Cut](📓️retained-disconnected-skew-box-cut.md) now represents three exact original Box remnants, including the genus-one closed member. The compact native suite, independent Manifold and Three fixtures, and scoped whitespace checks passed. The Flow compound rollback, explode and shaded preview fixture awaits linked verification.
+
+- [Disconnected Mesh Difference](📓️mesh-disconnected-difference.md) accepts four diamond-separated corner solids and three skew reflected-stock remnants, preserving authored materials, UVs, and closed topology through both Generate3d and Flow. Eight registered Rust Clipping tests, the 16-test independent Clipping and packaging suite, the two authored facade proofs, and both scoped typed consumer suites passed.
+
+- [Linked Preview and Flow OBJ verification](📓️linked-preview-fixture-and-flow-obj.md) records the first real linked Preview test outcomes, the fixture corrections, and the repaired OBJ output-variant dispatch. Both managed retries remain in progress.
+
+- [Mesh Union of placed stock](📓️mesh-placed-union.md) accepts skew and distinct-span positive overlaps in both orders. The retained Flow and Generate3d witnesses passed with authored material, UV and color checks in the native facade.
+- [Retained planar center of mass](📓️retained-planar-centroid.md) integrates exact signed moments for the tilted pocket and the three disconnected reflected-stock solids. The original compact traversal and independent Manifold and Three fixture checks agree. Linked Flow verification remains pending.
+
+- [Retained planar compound classification](📓️retained-planar-compound-classification.md) quotes every member's original topology and distinguishes the retained interiors, the removed gap, and a closed boundary on the reflected-stock Cut. The 49 compact native checks and 20 independent oracle cases passed.
+
+- [Section at authored vertices and edges](📓️retained-section-at-authored-vertices-and-edges.md) preserves exact shared vertex and edge positions in the concave ring. Both normals passed the 51-test native source suite. The independent skew fixture suite passed 20 tests and 288 assertions.
+
+- [Section at a coincident interior pocket floor](📓️retained-section-at-authored-vertices-and-edges.md) now returns the exact area-16 rectangle and preserves the existing refusal for boundary-only contact. The 52-test native and 20-test independent suites passed.
+
+- [Retained planar solid and compound Closest Point](📓️retained-planar-solid-nearest.md) uses one original face cursor at a time. The compact native suite passed 53 tests, and the independent oracle agreed for retained material and for the removed gap.
+
+- [Section on a handled shell](📓️retained-section-on-handled-shell.md) accepts the exact genus-one Cut member, preserves previously supported divided edges, and agrees with the independent single-ring oracle.
+- [Retained planar Bounding Box](📓️retained-planar-bounding-box.md) accumulates exact world extrema across the three-member reflected Cut. The compact source suite passed 55 tests and Manifold independently reproduced all six coordinates.
+
+- [Mesh Booleans with a contained concave prism](📓️mesh-contained-concave-prism.md) certifies original caps and reciprocal walls, accepts rotated placement, and handles all three operations in both operand orders. The direct corner transfer preserves nonaffine UVs. Native Clipping, Flow, Generate3d, and independent Manifold checks passed.
+
+- [Transverse Mesh Booleans on a concave prism](📓️mesh-transverse-prism-booleans.md) preserves one partial Intersection and both surviving Difference pieces. The 10-test Clipping, 17-test Flow, 8-test Generate3d and independent Manifold checks passed.
+- [Retained rational plane nearest](📓️retained-rational-plane-nearest.md) recovers exact finite patch parameters for weighted interior, edge and corner cases. Native inverse and Three.js projection checks passed.
+
+- [Closest Point on derived analytic solids](📓️retained-derived-solid-nearest.md) covers eccentric sphere cavities with sphere or box exteriors, clipped spherical bands, and frustums. The 66-test compact BRep suite and independent Three.js oracle passed.
+
+## Latest managed and scoped verification
+
+- [Canonical procedural run status](📓️canonical-procedural-run-status.md) records automatic Flow registry preparation and the remaining canonical launch stages.
+- [Longitudinal prism Booleans](📓️mesh-longitudinal-prism-booleans.md) records the newly verified opposing-wall Intersect and Difference, including authored channel samples.
+- [Native Section voids](📓️retained-section-with-native-voids.md) records connected pockets, exact inner trims and cancellation.
+- [Spherical strip Section](📓️retained-spherical-strip-section.md) records full circles and clipped conic contours.
+
+- [Certified sphere distance](./📓️certified-sphere-distance.md) covers sphere pairs and sphere versus an oriented box through the existing retained query. The native dispatch witness and Three.js fixture pass.
+
+- [Exact WGPU hover browser proof](./📓️wgpu-exact-hover-browser-proof.md) covers the exact shell port and preview instance in both directions. The native projection and Zod oracle pass. The canonical browser journey is waiting for boot components.
+- [Canonical launch and compiler recovery](./📓️canonical-procedural-run-status.md) records the actual WGPU runtime publication, the React component retry, the native Preview compiler blocker, and the current launch probes.
+
+- [Disconnected planar BRep Section](./📓️disconnected-planar-section.md) separates exterior faces and their holes, with an atomic retained list publisher. Compact geometry and the independent Manifold cases pass. Registered Flow and full browser verification remain in progress.

@@ -1,0 +1,9 @@
+# Streamed graph environment rows
+
+Generation shaping previously read and parsed every captured row even when no selected owner prefix could claim a row by path. The same path also assembled environment row IDs in a JavaScript set and array before copying them into the row log list. When all owner stubs have the workspace root as their root, relative path ownership is decided by their base lists alone.
+
+The updated shape skips row-file reads when there is no owner prefix to match. It still compares every captured ID with the claimed owner IDs, keeps explicit environment rows, and separately interns captured tail rows. The existing bitmap-backed row log builder deduplicates the environment list in stable capture order. Implementation facts are appended in their original order. The normal prefix-matching path still reads its batches and preserves the existing garbage collection cadence.
+
+A native private fixture reproduced one unnecessary row-file read and then observed zero. Its SQLite oracle independently verifies selection, ordering, deduplication and the asymmetric rule that an explicit environment fact can also be an owner fact. The native shape, claim keys, row log and graph load suites passed 115 tests with 948 assertions, including sixty existing owner claim worlds.
+
+A local benchmark populated a real row log with 60,000 observations. It compared the original no-prefix loop and set operation with the current generation shape. Median operation time was 15.876 ms before and 3.491 ms after. The old loop issued 30 row-log reads and decoded 3,937,780 bytes per pass. The revised path issued zero reads. Every operation produced the same row count and ID digest. This measures shape in the no-prefix fixture and does not estimate full worker or graph-seal timing. No live graph process or pointer was changed.

@@ -1,70 +1,22 @@
 //! 📐️ Original solid pattern placements, separation proofs and multi-root rollback.
 
 use super::*;
-use semio_framework_3d_brep_vector::{Vec3, matrix::Affine3};
 
-const MAX_MEMBERS: usize = 4096;
+pub use semio_framework_3d_brep_representation::contract::SolidPatternRecipe;
+
 const CONTACT_TOLERANCE: f64 = 1e-6;
 
-#[derive(Clone, Copy)]
-enum Layout {
-    Grid { row: Vec3, column: Vec3, columns: usize },
-    Circular { axis: Vec3 },
+fn image(recipe:SolidPatternRecipe,primitive:SolidPrimitive,index:usize)->Result<SolidPrimitive,ValueError>{
+    if index == 0 { return Ok(primitive); }
+    let map=recipe.transform(index)?;
+    let image = primitive.affinely_transformed(&map).ok_or_else(|| unsupported("pattern instance has no certified primitive image"))?;
+    image.validate().map_err(|reason| ValueError::literal(ValueRefusalKind::InvalidValue, reason))?;
+    Ok(image)
 }
 
-/// 🧭️ A bounded procedural pattern in authored member order.
-#[derive(Clone, Copy)]
-pub struct SolidPatternRecipe {
-    layout: Layout,
-    count: usize,
-}
-
-impl SolidPatternRecipe {
-    /// 📏️ Translates by successive multiples of the supplied direction and spacing.
-    pub fn linear(direction: [f64; 3], spacing: f64, count: usize) -> Result<Self, ValueError> {
-        Self::grid(direction, [0.0; 3], spacing, 0.0, count, 1)
-    }
-
-    /// 🔄️ Rotates each successive instance around the supplied world axis.
-    pub fn circular(axis: [f64; 3], count: usize) -> Result<Self, ValueError> {
-        let norm = axis[0].hypot(axis[1]).hypot(axis[2]);
-        if !norm.is_finite() || norm <= Tol::DEFAULT.value() { return Err(invalid()); }
-        Self::checked(Layout::Circular { axis: Vec3::from_array(axis.map(|v| v / norm)) }, count.max(1))
-    }
-
-    /// ▦️ Translates in row-major order along two independent authored directions.
-    pub fn grid(x: [f64; 3], y: [f64; 3], sx: f64, sy: f64, nx: usize, ny: usize) -> Result<Self, ValueError> {
-        let row = Vec3::from_array(x) * sx;
-        let column = Vec3::from_array(y) * sy;
-        if !row.to_array().into_iter().chain(column.to_array()).all(f64::is_finite) { return Err(invalid()); }
-        let columns = ny.max(1);
-        Self::checked(Layout::Grid { row, column, columns }, nx.max(1).saturating_mul(columns))
-    }
-
-    fn checked(layout: Layout, count: usize) -> Result<Self, ValueError> {
-        if count > MAX_MEMBERS { return Err(invalid()); }
-        Ok(Self { layout, count })
-    }
-
-    fn image(self, primitive: SolidPrimitive, index: usize) -> Result<SolidPrimitive, ValueError> {
-        if index == 0 { return Ok(primitive); }
-        let map = match self.layout {
-            Layout::Grid { row, column, columns } => {
-                let offset = row * (index / columns) as f64 + column * (index % columns) as f64;
-                if !offset.to_array().into_iter().all(f64::is_finite) { return Err(invalid()); }
-                Affine3::translation(offset)
-            }
-            Layout::Circular { axis } => Affine3::rotation_axis_angle(axis, std::f64::consts::TAU * index as f64 / self.count as f64),
-        };
-        let image = primitive.affinely_transformed(&map).ok_or_else(|| unsupported("pattern instance has no certified primitive image"))?;
-        image.validate().map_err(|reason| ValueError::literal(ValueRefusalKind::InvalidValue, reason))?;
-        Ok(image)
-    }
-
-    fn bounds(self, primitive: SolidPrimitive, index: usize) -> Result<[Pnt3; 2], ValueError> {
-        let bounds = self.image(primitive, index)?.axis_aligned_bounds();
-        if bounds.into_iter().flat_map(Pnt3::to_array).all(f64::is_finite) { Ok(bounds) } else { Err(invalid()) }
-    }
+fn bounds(recipe:SolidPatternRecipe,primitive:SolidPrimitive,index:usize)->Result<[Pnt3;2],ValueError>{
+    let bounds=image(recipe,primitive,index)?.axis_aligned_bounds();
+    if bounds.into_iter().flat_map(Pnt3::to_array).all(f64::is_finite) { Ok(bounds) } else { Err(invalid()) }
 }
 
 fn separated([a, b]: [Pnt3; 2], [c, d]: [Pnt3; 2]) -> bool {
@@ -83,10 +35,42 @@ fn unsupported(message: &'static str) -> ValueError {
     ValueError::literal(ValueRefusalKind::UnsupportedOwner, message)
 }
 
+/// 🪪️ Binds a solid group's pending work to at most two original native sources.
+pub struct SolidGroupOwnership {
+    owner:usize,
+    revision:u64,
+    root:SolidId,
+    pattern_key:Option<[u8;64]>,
+    secondary:Option<SolidId>,
+}
+
+impl SolidGroupOwnership {
+    pub fn new(owner:usize,revision:u64,root:SolidId,pattern_key:Option<&str>,secondary:Option<SolidId>)->Result<Self,ValueError>{
+        let pattern_key=pattern_key.map(|key|key.as_bytes().try_into().map_err(|_|ValueError::invariant("invalid pattern source address"))).transpose()?;
+        Ok(Self{owner,revision,root,pattern_key,secondary})
+    }
+
+    pub fn owner(&self)->usize{self.owner}
+    pub fn root(&self)->SolidId{self.root}
+
+    pub fn depth(&self,owner:usize,revision:u64,mut read:impl FnMut(SolidId,Option<&str>)->Result<usize,ValueError>)->Result<usize,ValueError>{
+        if self.owner!=owner || self.revision!=revision {return Err(ValueError::invariant("original solid-group source changed"));}
+        let key=self.pattern_key.as_ref().map(|key|std::str::from_utf8(key).expect("source is a canonical digest"));
+        let depth=read(self.root,key)?;
+        if let Some(other)=self.secondary { Ok(depth.max(read(other,None)?)) } else { Ok(depth) }
+    }
+}
+
+enum GroupRecipe {
+    Pattern(SolidPatternRecipe,SolidPrimitive),
+    Disconnected(BoxPrismBatch),
+}
+
 /// 🏗️ Holds completed and partial solid journals until the compound root claims them together.
 pub struct UnpublishedSolidPattern {
-    recipe: SolidPatternRecipe,
-    primitive: SolidPrimitive,
+    recipe: GroupRecipe,
+    count: usize,
+    borrowed: usize,
     checked: usize,
     previous: usize,
     checking: Option<[Pnt3; 2]>,
@@ -98,37 +82,51 @@ pub struct UnpublishedSolidPattern {
 impl UnpublishedSolidPattern {
     /// 🎟️ Starts an allocation-free pattern and separation cursor.
     pub fn new(recipe: SolidPatternRecipe, primitive: SolidPrimitive) -> Self {
-        Self { recipe, primitive, checked: 0, previous: 0, checking: None, drafts: Vec::new(), members: Vec::new(), committed: false }
+        Self::group(GroupRecipe::Pattern(recipe,primitive),recipe.count(),1)
     }
 
-    pub fn ready(&self) -> bool { !self.committed && self.members.len() == self.recipe.count }
+    /// 🧩️ Starts one batch of independently closed certified material pieces.
+    pub fn disconnected(batch: BoxPrismBatch) -> Self {
+        let count=batch.count();
+        Self::group(GroupRecipe::Disconnected(batch),count,0)
+    }
+
+    fn group(recipe:GroupRecipe,count:usize,borrowed:usize)->Self {
+        Self { recipe, count, borrowed, checked: 0, previous: 0, checking: None, drafts: Vec::new(), members: Vec::new(), committed: false }
+    }
+
+    fn needs_proof(&self)->bool { self.borrowed!=0 && self.checked<self.count }
+    pub fn committed(&self)->bool { self.committed }
+    pub fn channel(&self)->&'static str{if self.borrowed==0 {"solid"} else {"compound"}}
+
+    pub fn ready(&self) -> bool { !self.committed && self.members.len() == self.count }
     pub fn draft_count(&self) -> usize { self.drafts.len() }
     pub fn terminal_is_empty(&self) -> bool { self.drafts.capacity() == 0 && self.members.capacity() == 0 }
 
     pub fn take_roots(&mut self) -> Vec<SolidId> { take(&mut self.members) }
     pub fn restore_roots(&mut self, members: Vec<SolidId>) { self.members = members; }
-    pub fn commit(&mut self) { self.committed = true; }
+    pub fn commit(&mut self) -> usize { self.committed = true; self.draft_count() }
 
     fn next_draft(&self) -> Option<&SolidPublication> {
-        (self.drafts.len() == self.members.len()).then(|| self.drafts.last()).flatten()
+        (self.drafts.len()+self.borrowed>self.members.len()).then(|| self.drafts.last()).flatten()
     }
 
     /// 📏️ Quotes one placement proof, arena action or retained backing reservation.
     pub fn demand(&self, body: &Body) -> Result<RetirementDemand, ValueError> {
         let mut demand = RetirementDemand { depth: 1, ..Default::default() };
-        if self.checked < self.recipe.count {
+        if self.needs_proof() {
             demand.copy_bytes = 4 * size_of::<Pnt3>();
         } else if self.members.capacity() == 0 {
-            demand.capacity_bytes = self.recipe.count * size_of::<SolidId>();
-        } else if self.members.is_empty() {
+            demand.capacity_bytes = self.count * size_of::<SolidId>();
+        } else if self.borrowed!=0 && self.members.is_empty() {
             demand.copy_bytes = size_of::<SolidId>();
-        } else if self.drafts.capacity() == 0 && self.recipe.count > 1 {
-            demand.capacity_bytes = (self.recipe.count - 1) * size_of::<SolidPublication>();
+        } else if self.drafts.capacity() == 0 && self.count > self.borrowed {
+            demand.capacity_bytes = (self.count - self.borrowed) * size_of::<SolidPublication>();
         } else if let Some(draft) = self.next_draft() {
             if !draft.topology_ready() { return draft.topology_demand(body); }
             demand.copy_bytes = size_of::<SolidId>();
         } else {
-            demand.copy_bytes = size_of::<SolidPrimitive>();
+            demand.copy_bytes = match &self.recipe {GroupRecipe::Disconnected(batch)=>batch.copy_bytes(),GroupRecipe::Pattern(..)=>size_of::<SolidPrimitive>()};
         }
         Ok(demand)
     }
@@ -145,22 +143,25 @@ impl UnpublishedSolidPattern {
         }
         if !effect.performed(1)? { return Ok(Progress::default()); }
         let mut progress = Progress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
-        if self.checked < self.recipe.count {
+        if self.needs_proof() {
             self.prove().map_err(|error| error.with_retained_progress(progress))?;
         } else if self.members.capacity() == 0 {
-            self.members.try_reserve_exact(self.recipe.count).map_err(|_| allocation().with_retained_progress(progress))?;
+            self.members.try_reserve_exact(self.count).map_err(|_| allocation().with_retained_progress(progress))?;
             progress.retained_capacity_bytes = self.members.capacity() * size_of::<SolidId>();
-        } else if self.members.is_empty() {
+        } else if self.borrowed!=0 && self.members.is_empty() {
             self.members.push(source);
         } else if self.drafts.capacity() == 0 {
-            self.drafts.try_reserve_exact(self.recipe.count - 1).map_err(|_| allocation().with_retained_progress(progress))?;
+            self.drafts.try_reserve_exact(self.count - self.borrowed).map_err(|_| allocation().with_retained_progress(progress))?;
             progress.retained_capacity_bytes = self.drafts.capacity() * size_of::<SolidPublication>();
         } else if let Some(draft) = self.next_draft() {
             let (root, _) = draft.product(owner).map_err(|error| error.with_retained_progress(progress))?;
             self.members.push(root);
         } else {
-            let primitive = self.recipe.image(self.primitive, self.members.len()).map_err(|error| error.with_retained_progress(progress))?;
-            self.drafts.push(SolidPublication::begin(owner, SolidBoundary::Analytic(primitive), &mut body.labels, handle)
+            let boundary=match &self.recipe {
+                GroupRecipe::Pattern(recipe,primitive)=>image(*recipe,*primitive,self.members.len()).map(SolidBoundary::Analytic),
+                GroupRecipe::Disconnected(batch)=>batch.member(self.members.len()).ok_or_else(||unsupported("Boolean component exceeds the exact solid domain")),
+            }.map_err(|error|error.with_retained_progress(progress))?;
+            self.drafts.push(SolidPublication::begin(owner, boundary, &mut body.labels, handle)
                 .map_err(|error| error.with_retained_progress(progress))?);
         }
         if !progress.fits(grant) {
@@ -170,8 +171,9 @@ impl UnpublishedSolidPattern {
     }
 
     fn prove(&mut self) -> Result<(), ValueError> {
+        let GroupRecipe::Pattern(recipe,primitive)=self.recipe else {unreachable!("batch needs no placement proof")};
         if let Some(candidate) = self.checking {
-            let previous = self.recipe.bounds(self.primitive, self.previous)?;
+            let previous = bounds(recipe,primitive, self.previous)?;
             if !separated(previous, candidate) { return Err(unsupported("pattern instance bounds overlap or touch")); }
             self.previous += 1;
             if self.previous == self.checked {
@@ -179,7 +181,7 @@ impl UnpublishedSolidPattern {
                 self.checking = None;
             }
         } else {
-            let bounds = self.recipe.bounds(self.primitive, self.checked)?;
+            let bounds = bounds(recipe,primitive, self.checked)?;
             if self.checked == 0 {
                 self.checked = 1;
             } else {

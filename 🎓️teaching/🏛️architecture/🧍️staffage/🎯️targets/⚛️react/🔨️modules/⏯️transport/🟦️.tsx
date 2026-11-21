@@ -42,7 +42,7 @@ export function Transport(props: { readonly clock: StaffageClock; readonly label
   return (
     <Column role="group" aria-label={label} onKeyDown={onKey} className={cn("bg-panel", className)}>
       <Bar>
-        <ButtonGroup>
+        <ButtonGroup below="never">
           <Button grouped variant="primary" icon={state.playing ? "pause" : "play"} onClick={() => clock.toggle()}>
             {t(state.playing ? "transport.pause" : "transport.play")}
           </Button>

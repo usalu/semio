@@ -111,31 +111,45 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
         self.close_demands(0).map(|demand| demand.depth).map_err(|error| self.native("jack-envelope.mutation-close-demand", error))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(empty));
-        }
-        if grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
-        let demand = self.close_demands(grant.maximum_copy_bytes).map_err(|error| self.native("jack-envelope.mutation-close-demand", error))?;
-        if !admit_demand(grant, demand, "jack mutation decode close exceeds admitted depth").map_err(|error| self.native("jack-envelope.mutation-close-depth", error))? {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
-        if let JackMutationDecodeState::Decode(authority) = &mut self.state {
-            authority.cancel();
-            self.state = JackMutationDecodeState::Closing;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JACK_OWNED_FIELD_BYTES, ..empty }));
-        }
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        let grant = effect.grant();
         if self.retirement.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| self.native("jack-envelope.mutation-retirement-fault", error));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect)
+                .map(|step| RetainedCloneStep::Progress(step.progress()))
+                .map_err(|error| self.native("jack-envelope.mutation-retirement-fault", store::os_store::snapshot_read::failure_value_error(error)));
         }
-        if self.value.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| self.native("jack-envelope.mutation-retirement-birth", error));
-        }
-        self.state = JackMutationDecodeState::Complete;
-        Ok(RetainedCloneStep::Complete(empty))
+        let result = (|| {
+            let empty = RetainedCloneProgress::default();
+            if self.terminal_is_empty() {
+                return Ok(RetainedCloneStep::Complete(empty));
+            }
+            if grant.maximum_items == 0 || effect.maximum_work_units() == 0 {
+                return Ok(RetainedCloneStep::Progress(empty));
+            }
+            let demand = self.close_demands(grant.maximum_copy_bytes).map_err(|error| self.native("jack-envelope.mutation-close-demand", error))?;
+            if !admit_demand(grant, demand, "jack mutation decode close exceeds admitted depth").map_err(|error| self.native("jack-envelope.mutation-close-depth", error))? {
+                return Ok(RetainedCloneStep::Progress(empty));
+            }
+            let work_diagnostic = self.diagnostic("jack-envelope.mutation-close-work", 0);
+            if let JackMutationDecodeState::Decode(authority) = &mut self.state {
+                if !effect.performed(1).map_err(|error| work_diagnostic.with_native(error))? {
+                    return Ok(RetainedCloneStep::Progress(empty));
+                }
+                authority.cancel();
+                self.state = JackMutationDecodeState::Closing;
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JACK_OWNED_FIELD_BYTES, ..empty }));
+            }
+            if self.value.is_some() {
+                return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect)
+                    .result.map_err(|error| self.native("jack-envelope.mutation-retirement-birth", error));
+            }
+            if !effect.performed(1).map_err(|error| self.native("jack-envelope.mutation-close-work", error))? {
+                return Ok(RetainedCloneStep::Progress(empty));
+            }
+            self.state = JackMutationDecodeState::Complete;
+            Ok(RetainedCloneStep::Complete(empty))
+        })();
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -180,16 +194,28 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        let empty = RetainedCloneProgress::default();
-        if self.terminal {
-            return Ok(RetainedCloneStep::Complete(empty));
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
-        self.terminal = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> store::os_store::owned_schema_decode::ArtifactEnvelopeClosePoll {
+        let grant = effect.grant();
+        let result = (|| {
+            let empty = RetainedCloneProgress::default();
+            if self.terminal {
+                return Ok(RetainedCloneStep::Complete(empty));
+            }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 || effect.maximum_work_units() == 0 {
+                return Ok(RetainedCloneStep::Progress(empty));
+            }
+            let paid = effect.performed(1).map_err(|error| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+                code: "jack-envelope.conflict-close-work", offset: 0, line: 0, column: 0,
+                path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT,
+                refusal_kind: error.kind, retained_progress: error.retained_progress(),
+            })?;
+            if !paid {
+                return Ok(RetainedCloneStep::Progress(empty));
+            }
+            self.terminal = true;
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
+        })();
+        semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() })
     }
 
     fn terminal_is_empty(&self) -> bool {

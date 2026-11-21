@@ -227,6 +227,15 @@ pub(crate) use rail_silo::{info_check, invalid};
 /// 🧯 Design fire load q_f,d of the chosen basis, or an invalid-input check on the field the basis needs (the occupancy class for the table, a positive q_f,k for the user value) and no invented fallback.
 fn fire_load_or_invalid(document: &En1991Snapshot, annex: semio_s_plugin_norm_compliance::AnnexChoice, report: &mut CheckReport) -> Option<f64> {
     use semio_s_artifact_norm_en1991_model::FireLoadBasis;
+    if annex == semio_s_plugin_norm_compliance::AnnexChoice::De {
+        report.push(CheckResult::assess("en1991.1-2.fire-load", "DIN EN 1991-1-2/NA",
+            ClauseId::new("DIN EN 1991-1-2/NA", "Annex BB", "BB.3"),
+            SubjectRef::new("", "assumedQfD", copy("Design fire load", "Bemessungsbrandlastdichte")),
+            copy("German Annex BB design fire load", "Bemessungsbrandlast nach deutschem Anhang BB"))
+            .annex(annex).not_applicable(copy("Use E12.03 with the project partial factor from E12.03.1.",
+                "Fall E12.03 mit dem projektspezifischen Teilsicherheitsbeiwert nach E12.03.1 verwenden.")).build());
+        return None;
+    }
     let qfd = part_1_2::design_fire_load_j_m2(document.fire_load_basis, document.fire_load_density_qf, annex, document.fire_occupancy, document.fire_compartment_area, 1.0);
     if qfd.is_none() {
         let clause = ClauseId::new("EN 1991-1-2", "Annex E", "E.1");
@@ -240,8 +249,6 @@ fn fire_load_or_invalid(document: &En1991Snapshot, annex: semio_s_plugin_norm_co
 
 /// 🧱️ Checks the self weight, imposed, fire and snow actions of the full actions check.
 fn check_imposed_and_fire_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_compliance::AnnexChoice, report: &mut CheckReport, scope: Scope<'_>) {
-    let storeys = document.storey_count;
-
     if document.floors.is_empty() {
         if scope.part("floors-none") { report.push(CheckResult::assess("en1991.1-1.imposed.none", "DIN EN 1991-1-1", ClauseId::new("EN 1991-1-1", "§6.3", "6.1"), SubjectRef::whole(copy("Floors", "Geschosse")), copy("Imposed floor loads", "Nutzlasten auf Decken")).not_applicable(copy("No floor areas defined.", "Keine Deckenflächen definiert.")).annex(annex).build()); }
     }
@@ -250,16 +257,29 @@ fn check_imposed_and_fire_actions(document: &En1991Snapshot, annex: semio_s_plug
             invalid(report, annex, format!("en1991.input.floors.{}.category", floor.id), "DIN EN 1991-1-1", ClauseId::new("EN 1991-1-1", "Table 6.1 / 6.2", "6.3.1"), &floor.id, format!("floors[id={}].category", floor.id), ("use category", "Nutzungskategorie"), &floor.category, part_1_1::categories(annex));
             continue;
         };
-        let required = kn_pa(q_kn) * part_1_1::alpha_a(&floor.category, floor.area, annex) * part_1_1::alpha_n(&floor.category, storeys, annex);
+        let (alpha_a, area_basis) = semio_s_plugin_norm_compliance::record_ndp_reads(|| part_1_1::alpha_a(&floor.category, floor.area, annex));
+        let required = kn_pa(q_kn) * alpha_a;
         let path = format!("floors[id={}].assumedQk", floor.id);
-        let alpha_a = part_1_1::alpha_a(&floor.category, floor.area, annex);
-        let alpha_n = part_1_1::alpha_n(&floor.category, storeys, annex);
         let remedy = if floor.assumed_qk + 1e-9 < required { Some(raise_pressure_remedy(&path, &floor.id, "imposed q_k", "Nutzlast q_k", floor.assumed_qk, required)) } else { None };
-        report.push(assess_covers(&format!("en1991.1-1.imposed.{}", floor.id), "DIN EN 1991-1-1", ClauseId::new("EN 1991-1-1", "Table 6.1 / Eq. 6.1–6.2", "6.3.1"), SubjectRef::new(&floor.id, &path, copy(&format!("Floor {}", floor.id), &format!("Decke {}", floor.id))), copy("Imposed characteristic load q_k (α_A·α_n)", "Charakteristische Nutzlast q_k (α_A·α_n)"), pressure(floor.assumed_qk), pressure(required), copy(&format!("Required q_k = {:.3} kN/m² (α_A={:.3}, α_n={:.3}, A={:.1} m², n={}) for {}; assumed {:.3} kN/m².", required / 1000.0, alpha_a, alpha_n, floor.area, storeys, floor.category, floor.assumed_qk / 1000.0), &format!("Erforderliches q_k = {:.3} kN/m² (α_A={:.3}, α_n={:.3}, A={:.1} m², n={}) für {}; angenommen {:.3} kN/m².", required / 1000.0, alpha_a, alpha_n, floor.area, storeys, floor.category, floor.assumed_qk / 1000.0)), annex, remedy));
+        let verify_floor = |id: &str, title, assumed, required, explanation, remedy| {
+            assess_covers_on(&format!("en1991.1-1.{id}.{}", floor.id), "DIN EN 1991-1-1",
+                ClauseId::new("EN 1991-1-1", "Table 6.1 / Eq. 6.1", "6.3.1"),
+                SubjectRef::new(&floor.id, &path, copy(&format!("Floor {}", floor.id), &format!("Decke {}", floor.id))),
+                title, assumed, required, explanation, annex, remedy, &area_basis)
+        };
+        let pressure_check = verify_floor("imposed", copy("Imposed characteristic floor load q_k", "Charakteristische Deckennutzlast q_k"),
+            pressure(floor.assumed_qk), pressure(required), copy(
+                &format!("Required q_k = {:.3} kN/m² for {}, with α_A = {:.3} on A = {:.1} m². Assumed {:.3} kN/m².", required / 1000.0, floor.category, alpha_a, floor.area, floor.assumed_qk / 1000.0),
+                &format!("Erforderliches q_k = {:.3} kN/m² für {}, mit α_A = {:.3} bei A = {:.1} m². Angenommen {:.3} kN/m².", required / 1000.0, floor.category, alpha_a, floor.area, floor.assumed_qk / 1000.0)), remedy);
         let assumed_f = floor.assumed_qk * floor.area;
         let required_f = required * floor.area;
-        let remedy_a = if floor.assumed_qk + 1e-9 < required { Some(raise_pressure_remedy(&path, &floor.id, "floor imposed q_k", "Deckennutzlast q_k", floor.assumed_qk, required)) } else { None };
-        report.push(assess_covers(&format!("en1991.1-1.floor-force.{}", floor.id), "DIN EN 1991-1-1", ClauseId::new("EN 1991-1-1", "§6.3.1", "6.3.1"), SubjectRef::new(&floor.id, &path, copy(&format!("Floor {}", floor.id), &format!("Decke {}", floor.id))), copy("Total imposed force q_k·A", "Gesamte Nutzlastkraft q_k·A"), force(assumed_f), force(required_f), copy(&format!("Required F = q_k·A = {:.1} kN on A={:.1} m²; assumed {:.1} kN.", required_f / 1000.0, floor.area, assumed_f / 1000.0), &format!("Erforderliches F = q_k·A = {:.1} kN auf A={:.1} m²; angenommen {:.1} kN.", required_f / 1000.0, floor.area, assumed_f / 1000.0)), annex, remedy_a));
+        let force_remedy = if floor.assumed_qk + 1e-9 < required { Some(raise_pressure_remedy(&path, &floor.id, "floor imposed q_k", "Deckennutzlast q_k", floor.assumed_qk, required)) } else { None };
+        let force_check = verify_floor("floor-force", copy("Total imposed force q_k·A", "Gesamte Nutzlastkraft q_k·A"),
+            force(assumed_f), force(required_f), copy(
+                &format!("Required F = q_k·A = {:.1} kN on A = {:.1} m². Assumed {:.1} kN.", required_f / 1000.0, floor.area, assumed_f / 1000.0),
+                &format!("Erforderliches F = q_k·A = {:.1} kN bei A = {:.1} m². Angenommen {:.1} kN.", required_f / 1000.0, floor.area, assumed_f / 1000.0)), force_remedy);
+        report.push(pressure_check);
+        report.push(force_check);
         let req_q = kn_n(big_q_kn);
         let path_q = format!("floors[id={}].assumedQkConcentrated", floor.id);
         let remedy_q = if floor.assumed_qk_concentrated + 1e-9 < req_q { Some(raise_force_remedy(&path_q, &floor.id, "concentrated Q_k", "Einzellast Q_k", floor.assumed_qk_concentrated, req_q)) } else { None };
@@ -328,7 +348,16 @@ fn check_fire_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_comp
             push_fire_load(document, annex, report, qfd, None);
         }
         semio_s_artifact_norm_en1991_model::FireMode::Parametric => {
-            let Some(qfd) = fire_load_or_invalid(document, annex, report) else {
+            let design_fire_load = fire_load_or_invalid(document, annex, report);
+            if annex == semio_s_plugin_norm_compliance::AnnexChoice::De {
+                report.push(CheckResult::assess("en1991.1-2.gas-temperature", "DIN EN 1991-1-2/NA",
+                    ClauseId::new("DIN EN 1991-1-2/NA", "Annex AA", "3.3.1"),
+                    SubjectRef::new("", "assumedGasTemperature", copy("Fire gas temperature", "Brandgastemperatur")),
+                    copy("German Annex AA compartment fire", "Brandabschnitt nach deutschem Anhang AA"))
+                    .annex(annex).not_applicable(copy("The project requires the Annex AA parametric fire model.",
+                        "Das Projekt erfordert das parametrische Brandmodell nach Anhang AA.")).build());
+            }
+            let Some(qfd) = design_fire_load else {
                 return;
             };
             let o_geom = part_1_2::compartment_opening_factor(document.fire_compartment_area, document.fire_compartment_height);

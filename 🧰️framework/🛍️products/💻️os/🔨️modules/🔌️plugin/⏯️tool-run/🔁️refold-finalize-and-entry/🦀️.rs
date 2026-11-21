@@ -8,6 +8,21 @@ use semio_os_kernel::DslValue;
 use std::collections::BTreeSet;
 use semio_framework_value::retirement::arc_custody::original::{SharedOriginalRelease, SharedOriginalStorage};
 
+/// 🗂️ Updates the mounted attempt keys and recent rows for one consumed trace operation.
+#[doc(hidden)]
+pub fn record_tool_run_trace_op(keys:&ToolRunTraceKeys,recent:&mut std::collections::VecDeque<u64>,op:ToolRunTraceOp){
+    match op{
+        ToolRunTraceOp::Upsert{key,..}=>{
+            keys.observe(key);
+            recent.retain(|existing|*existing!=key);
+            if recent.len()==TOOL_RUN_PANEL_TRACE_ROWS{recent.pop_front();}
+            recent.push_back(key);
+        }
+        ToolRunTraceOp::Clear=>recent.clear(),
+        ToolRunTraceOp::Retire{key}=>recent.retain(|existing|*existing!=key),
+    }
+}
+
 /// 🗑️ Cold disposal of one original alias: aliases only drop their count, the last owner returns its value.
 fn dispose_cold<T: Send + Sync + 'static>(storage: SharedOriginalStorage<T>) {
     if let SharedOriginalRelease::Original(mut owner) = storage.retire() {
@@ -334,18 +349,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             receipt.evicted = receipt.evicted.saturating_add(applied.evicted);
             receipt.capped |= applied.overflowed > 0;
             for op in &page.ops {
-                match op {
-                    ToolRunTraceOp::Upsert { key, .. } => {
-                        self.trace_keys.observe(*key);
-                        self.recent_trace.retain(|recent| recent != key);
-                        if self.recent_trace.len() == TOOL_RUN_PANEL_TRACE_ROWS {
-                            self.recent_trace.pop_front();
-                        }
-                        self.recent_trace.push_back(*key);
-                    }
-                    ToolRunTraceOp::Clear => self.recent_trace.clear(),
-                    ToolRunTraceOp::Retire { key } => self.recent_trace.retain(|recent| recent != key),
-                }
+                record_tool_run_trace_op(&self.trace_keys,&mut self.recent_trace,*op);
             }
         }
         if receipt.evicted > 0 {

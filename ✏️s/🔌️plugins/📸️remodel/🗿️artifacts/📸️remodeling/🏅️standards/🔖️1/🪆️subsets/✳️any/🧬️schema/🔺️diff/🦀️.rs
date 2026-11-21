@@ -647,6 +647,10 @@ pub use retained_apply::RemodelingApply;
 #[cfg(test)]
 #[path = "🧪️tests/⚙️retained-params/🦀️.rs"]
 mod retained_params_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod retained_test_support;
 //#endregion 🔖️Params
 
 //#region 🔖️Results
@@ -814,37 +818,49 @@ impl protocol::ColdMutationDiff<RemodelingSnapshot> for RemodelingDiff {
     }
 
     fn apply(&self, unpublished: &mut RemodelingSnapshot, _capability: ApplyCapability) -> MutationApplyResult<()> {
-        let base = &*unpublished;
-        let mut next = base.clone();
+        let streams = self.streams.as_ref().filter(|delta| !delta.is_empty())
+            .map(|delta| delta.apply_rows(&unpublished.streams).map_err(|error| error.under(["streams"]))).transpose()?;
+        let assets = self.assets.as_ref().filter(|delta| !delta.is_empty())
+            .map(|delta| delta.apply_rows(&asset_entries(&unpublished.assets)).map(asset_map).map_err(|error| error.under(["assets"]))).transpose()?;
+        let durable_artifacts = self.durable_artifacts.as_ref().filter(|delta| !delta.is_empty())
+            .map(|delta| delta.apply_rows(&unpublished.durable_artifacts).map_err(|error| error.under(["durableArtifacts"]))).transpose()?;
+        let cameras = self.calibration.as_ref().map(|delta| &delta.cameras).filter(|delta| !delta.is_empty())
+            .map(|delta| delta.apply_rows(&unpublished.calibration.cameras).map_err(|error| error.under(["calibration", "cameras"]))).transpose()?;
+        let rig = self.calibration.as_ref().map(|delta| &delta.rig).filter(|delta| !delta.is_empty())
+            .map(|delta| delta.apply_rows(&unpublished.calibration.rig).map_err(|error| error.under(["calibration", "rig"]))).transpose()?;
+        let gcps = self.gcps.as_ref().filter(|delta| !delta.is_empty())
+            .map(|delta| delta.apply_rows(&unpublished.gcps).map_err(|error| error.under(["gcps"]))).transpose()?;
+
         if let Some(schema) = &self.schema {
-            next.schema = schema.clone();
+            unpublished.schema = schema.clone();
         }
         if let Some(id) = &self.id {
-            next.id = id.clone();
+            unpublished.id = id.clone();
         }
-        if let Some(delta) = &self.streams {
-            next.streams = delta.apply_rows(&base.streams).map_err(|error| error.under(["streams"]))?;
+        if let Some(streams) = streams {
+            unpublished.streams = streams;
         }
-        if let Some(delta) = &self.assets {
-            next.assets = asset_map(delta.apply_rows(&asset_entries(&base.assets)).map_err(|error| error.under(["assets"]))?);
+        if let Some(assets) = assets {
+            unpublished.assets = assets;
         }
-        if let Some(delta) = &self.durable_artifacts {
-            next.durable_artifacts = delta.apply_rows(&base.durable_artifacts).map_err(|error| error.under(["durableArtifacts"]))?;
+        if let Some(durable_artifacts) = durable_artifacts {
+            unpublished.durable_artifacts = durable_artifacts;
         }
-        if let Some(delta) = &self.calibration {
-            next.calibration.cameras = delta.cameras.apply_rows(&base.calibration.cameras).map_err(|error| error.under(["calibration", "cameras"]))?;
-            next.calibration.rig = delta.rig.apply_rows(&base.calibration.rig).map_err(|error| error.under(["calibration", "rig"]))?;
+        if let Some(cameras) = cameras {
+            unpublished.calibration.cameras = cameras;
+        }
+        if let Some(rig) = rig {
+            unpublished.calibration.rig = rig;
         }
         if let Some(params) = &self.params {
-            params.apply_rows(&mut next.params);
+            params.apply_rows(&mut unpublished.params);
         }
-        if let Some(delta) = &self.gcps {
-            next.gcps = delta.apply_rows(&base.gcps).map_err(|error| error.under(["gcps"]))?;
+        if let Some(gcps) = gcps {
+            unpublished.gcps = gcps;
         }
         if let Some(results) = &self.results {
-            results.apply_rows(&mut next.results);
+            results.apply_rows(&mut unpublished.results);
         }
-        *unpublished = next;
         Ok(())
     }
 }

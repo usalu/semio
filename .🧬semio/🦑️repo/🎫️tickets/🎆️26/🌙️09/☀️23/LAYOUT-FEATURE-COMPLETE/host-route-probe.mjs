@@ -1,13 +1,28 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 const root = new URL(process.argv[2]);
 assert.ok(["http:", "https:"].includes(root.protocol));
 const seen = new Set(), assets = [];
 async function get(url) {
   const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(15000) });
   assert.equal(response.status, 200, `${url}: HTTP ${response.status}`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  assert.ok(bytes.length, `${url}: empty response`);
-  assets.push({ url: String(url), bytes: bytes.length, type: response.headers.get("content-type") });
+  const checksum = createHash("sha256");
+  let bytes, size;
+  if (url.pathname.endsWith(".wasm")) {
+    bytes = new Uint8Array(4);
+    size = 0;
+    for await (const chunk of response.body) {
+      checksum.update(chunk);
+      if (size < bytes.length) bytes.set(chunk.subarray(0, bytes.length - size), size);
+      size += chunk.length;
+    }
+  } else {
+    bytes = new Uint8Array(await response.arrayBuffer());
+    size = bytes.length;
+    checksum.update(bytes);
+  }
+  assert.ok(size, `${url}: empty response`);
+  assets.push({ url: String(url), bytes: size, sha256: checksum.digest("hex"), type: response.headers.get("content-type") });
   return { response, bytes };
 }
 const { response, bytes } = await get(root);
@@ -38,10 +53,16 @@ async function crawl(url, depth = 0) {
   }
   const text = new TextDecoder().decode(bytes);
   assert.ok(!/^\s*<!doctype html/i.test(text), `${url}: HTML fallback`);
-  const patterns = [/new URL\(\s*["']([^"']+\.(?:m?js|wasm))["']\s*,\s*import\.meta\.url/g, /(?:from\s*|import\s*\(|import\s*)["']([^"']+\.(?:m?js|wasm))["']/g];
+  const patterns = [
+    /new URL\(\s*["']([^"']+\.(?:m?js|wasm))["']\s*,\s*import\.meta\.url/g,
+    /(?:from\s*|import\s*\(|import\s*)["']([^"']+\.(?:m?js|wasm))["']/g,
+    /__semioVersionedComponentAssetUrl\(\s*["']([^"']+\.wasm)["']\s*\)/g,
+  ];
+  const version = url.searchParams.get("v");
   for (const pattern of patterns) for (const match of text.matchAll(pattern)) {
     if (!match[1].startsWith("./") && !match[1].startsWith("../")) continue;
     const child = new URL(match[1], url);
+    if (version) child.searchParams.set("v", version);
     assert.equal(child.origin, root.origin);
     await crawl(child, depth + 1);
   }

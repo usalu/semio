@@ -12,7 +12,7 @@ use semio_plugin_testing_laws::artifact_app_laws;
 #[cfg(test)]
 use semio_plugin_window_kits_rich::document_kit::{DocumentPage, DocumentView, DocumentWindowKit, EditableDocumentPage, EditableDocumentView};
 #[cfg(test)]
-use semio_plugin_window_kits::image_kit::{IMAGE_WINDOW_PAGED_NODE_KEY, IMAGE_WINDOW_PIXELS_LANE_KEY, ImageView, ImageWindowKit};
+use semio_plugin_window_kits::image_kit::{ImageView, ImageWindowKit};
 #[cfg(test)]
 use semio_plugin_window_kits::media_kit::{MEDIA_PLAYBACK_OUTPUT_PORT, MEDIA_TRANSPORT_EXTENSION_ID, MediaCapabilityStatus, MediaKind, MediaResource, MediaView, MediaWindowKit};
 #[cfg(test)]
@@ -611,16 +611,12 @@ pub fn requested(rows: u32) -> ViewModel {
 
         let node = ImageWindowKit::render(&view).expect("a composite beyond one UiText still assembles its window");
         assert_eq!(node.key.as_str(), ImageWindowKit::KIND_ID, "the window body key is unchanged by paging");
-        assert_eq!(node.children.len(), 2, "the paged window is the image node plus exactly one payload carrier");
-
-        let image_node = node.children.get(0).expect("image node");
-        assert_eq!(image_node.key.as_str(), IMAGE_WINDOW_PAGED_NODE_KEY);
-        let Component::Image(image) = &image_node.component else { panic!("expected Image") };
-        assert_eq!(image.src.as_str(), IMAGE_WINDOW_PIXELS_LANE_KEY, "the src names the lane the pixels ride in");
-        assert_eq!(image.alt.as_ref().map(|alt| alt.0.as_str()), Some("512x512"), "the accessible name survives paging");
-
-        let carrier = node.children.get(1).expect("payload carrier");
-        assert_eq!(carrier.key.as_str(), IMAGE_WINDOW_PIXELS_LANE_KEY);
+        assert_eq!(node.children.len(), 1, "the image owns one payload carrier");
+        let Component::Image(image) = &node.component else { panic!("expected Image") };
+        assert_eq!(image.source_body_bytes, Some(expected.len() as u32));
+        assert_eq!(image.alt.as_ref().map(|alt| alt.0.as_str()), Some("PNG 512x512 px"));
+        let carrier = node.children.get(0).expect("payload carrier");
+        assert_eq!(carrier.key.as_str(), image.src.as_str());
         assert!(carrier.children.len() > 1, "the composite really is paged: one packed leaf holds UI_TEXT_MAX_BYTES * (1 + UI_FIXED_LIST_ITEMS) bytes, this fixture needs several");
         assert_eq!(artifact_app_laws::built_carrier_text(carrier), expected, "the exact data URI reassembles out of the carrier's pages");
     }

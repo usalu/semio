@@ -1,6 +1,7 @@
 //! 🎬️ Present step inner: the long `AppPresenter::present_step_inner` that runs one presentation opportunity. See [`super`].
 
 use super::*;
+use super::retirement_and_present_steps::presentation_fault;
 
 //#region 📮️RuntimeMailbox
 impl AppPresenter {
@@ -21,22 +22,24 @@ impl AppPresenter {
     /// parity behaviour of React, which renders nothing until its loader resolves. It is
     /// still a residency-law breach on the build side, so it is reported on the transition
     /// rather than swallowed (`retain_ensured_world_draws`, `📓️w11a-…`).
-    pub(super) fn present_step_inner(&mut self,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<AppPresentStep, String> {
+    pub(super) fn present_step_inner(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<AppPresentStep, semio_framework_job::OriginalTurnFailure> {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let _ = RENDERER_IO_WAKE.swap(false, Ordering::AcqRel);
             let _ = pump_renderer_io_sessions(1);
         }
-        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
+        let remaining = cx.retained_grant();
+        let worker_grant = semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, ..remaining }.restricted_by(remaining);
+        cx.with_retained_loan(worker_grant, |cx| semio_framework_job_worker::pump_worker_job_retirements(1, cx))?;
         if self.pending.is_none() {
             if let Some(retirement) = self.retirement.as_mut() {
-                if retirement.step(&mut self.gpu, &self.gate)? {
+                if retirement.step(&mut self.gpu, &self.gate, cx)? {
                     self.retirement = None;
                 }
                 return Ok(AppPresentStep::Pending);
             }
             if let Some(fault) = self.retained_fault.take() {
-                return Err(fault);
+                return Err(presentation_fault(fault));
             }
             return Ok(AppPresentStep::Idle);
         }
@@ -57,7 +60,7 @@ impl AppPresenter {
         }
         match cursor.phase {
             AppPresentPhase::Aborted => {
-                if !self.engine.close_active_candidate_step(&mut self.gpu)? {
+                if !self.engine.close_active_candidate_step(&mut self.gpu).map_err(presentation_fault)? {
                     return Ok(AppPresentStep::Pending);
                 }
                 if let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() {
@@ -73,21 +76,21 @@ impl AppPresenter {
                     let Ok(mut runtime) = runtime.try_lock() else { return Ok(AppPresentStep::Pending) };
                     let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::Pending) };
                     if !interaction.shell.input.discard_presented_input_candidate(input_candidate) {
-                        return Err("aborted presentation lost its staged input witness".to_string());
+                        return Err(presentation_fault("aborted presentation lost its staged input witness".to_string()));
                     }
                     cursor.frame.input_candidate = None;
                 }
-                let Some(mut aborted) = self.pending.take() else { return Err("aborted presentation cursor was missing".to_string()) };
+                let Some(mut aborted) = self.pending.take() else { return Err(presentation_fault("aborted presentation cursor was missing".to_string())) };
                 let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
                 if retirement.completed_frame.is_some() {
                     self.pending = Some(aborted);
-                    return Err("aborted presentation retirement capacity exhausted".to_string());
+                    return Err(presentation_fault("aborted presentation retirement capacity exhausted".to_string()));
                 }
                 if let Some(witness) = aborted.raster_witness.take() {
                     if let Err(error) = self.raster_operation_authority.release(witness) {
                         aborted.raster_witness = Some(witness);
                         self.pending = Some(aborted);
-                        return Err(error.to_string());
+                        return Err(presentation_fault(error.to_string()));
                     }
                     retirement.raster = RasterCandidateRetirement::Abort(witness);
                 }
@@ -122,8 +125,8 @@ impl AppPresenter {
             }
             AppPresentPhase::Engine => {
                 if let Some(packet) = cursor.frame.engine_packets.get(cursor.engine) {
-                    let candidate = cursor.raster_witness.ok_or_else(|| "engine raster operation witness was missing".to_string())?;
-                    let expected = self.raster_operation_authority.current().ok_or_else(|| "engine raster operation authority was empty".to_string())?;
+                    let candidate = cursor.raster_witness.ok_or_else(|| presentation_fault("engine raster operation witness was missing"))?;
+                    let expected = self.raster_operation_authority.current().ok_or_else(|| presentation_fault("engine raster operation authority was empty"))?;
                     match self.engine.realize_step(&mut self.gpu, packet, candidate, expected) {
                         Ok(true) => cursor.engine += 1,
                         Ok(false) => return Ok(AppPresentStep::Pending),
@@ -142,58 +145,58 @@ impl AppPresenter {
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::BeginGpu => {
-                let packet = cursor.frame.packet.as_ref().ok_or_else(|| "prepared frame packet was transferred before admission".to_string())?;
+                let packet = cursor.frame.packet.as_ref().ok_or_else(|| presentation_fault("prepared frame packet was transferred before admission"))?;
                 let expected = self.presentation_authority.admitted();
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     let token = semio_ui_prepared::UiPresentToken::mint_for_current_thread();
                     if let Err(error) = self.gpu.begin_prepared(&token, &self.gate, packet, expected.scene_revision, expected.input_generation) {
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err(format!("prepared frame admission: {error}"));
+                        return Err(presentation_fault(format!("prepared frame admission: {error}")));
                     }
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
                     let Some(token) = self.offscreen_token.as_ref() else {
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err("browser presentation requires dedicated Worker authority".to_string());
+                        return Err(presentation_fault("browser presentation requires dedicated Worker authority".to_string()));
                     };
                     if let Err(error) = self.gpu.begin_prepared_offscreen(token, &self.gate, packet, expected.scene_revision, expected.input_generation) {
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err(format!("offscreen prepared frame admission: {error}"));
+                        return Err(presentation_fault(format!("offscreen prepared frame admission: {error}")));
                     }
                 }
                 let witness = match self.raster_operation_authority.begin(expected.scene_revision, expected.input_generation) {
                     Ok(witness) => witness,
                     Err(error) => {
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err(format!("raster operation admission: {error}"));
+                        return Err(presentation_fault(format!("raster operation admission: {error}")));
                     }
                 };
                 cursor.raster_witness = Some(witness);
                 if let Err(error) = self.gpu.begin_raster_ownership(witness) {
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err(format!("raster ownership admission: {error}"));
+                    return Err(presentation_fault(format!("raster ownership admission: {error}")));
                 }
                 cursor.phase = AppPresentPhase::Ownership;
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Ownership => {
-                let packet = cursor.frame.packet.as_ref().ok_or_else(|| "prepared frame packet was transferred before raster ownership publication".to_string())?;
-                let witness = cursor.raster_witness.ok_or_else(|| "raster operation witness was missing during ownership publication".to_string())?;
+                let packet = cursor.frame.packet.as_ref().ok_or_else(|| presentation_fault("prepared frame packet was transferred before raster ownership publication"))?;
+                let witness = cursor.raster_witness.ok_or_else(|| presentation_fault("raster operation witness was missing during ownership publication"))?;
                 cursor.raster_keep_steps = cursor.raster_keep_steps.saturating_add(1);
                 match packet.raster_keep_step(&mut cursor.raster_keep) {
                     semio_ui_prepared::PreparedRasterKeepStepV1::Pending => {}
                     semio_ui_prepared::PreparedRasterKeepStepV1::Key(key) => {
                         if let Err(error) = self.gpu.publish_raster_ownership(witness, key) {
                             cursor.phase = AppPresentPhase::Aborted;
-                            return Err(error);
+                            return Err(presentation_fault(error));
                         }
                     }
                     semio_ui_prepared::PreparedRasterKeepStepV1::Complete => {
                         if let Err(error) = self.gpu.seal_raster_ownership(witness) {
                             cursor.phase = AppPresentPhase::Aborted;
-                            return Err(error);
+                            return Err(presentation_fault(error));
                         }
                         cursor.phase = AppPresentPhase::Engine;
                     }
@@ -201,31 +204,31 @@ impl AppPresenter {
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Uploads => {
-                let packet = cursor.frame.packet.as_ref().ok_or_else(|| "prepared frame packet was transferred before upload".to_string())?;
+                let packet = cursor.frame.packet.as_ref().ok_or_else(|| presentation_fault("prepared frame packet was transferred before upload"))?;
                 if cursor.upload >= packet.uploads().len() {
                     cursor.phase = AppPresentPhase::Stage;
                     return Ok(AppPresentStep::Pending);
                 }
-                let candidate = cursor.raster_witness.ok_or_else(|| "prepared raster operation witness was missing".to_string())?;
-                let expected = self.raster_operation_authority.current().ok_or_else(|| "prepared raster operation authority was empty".to_string())?;
+                let candidate = cursor.raster_witness.ok_or_else(|| presentation_fault("prepared raster operation witness was missing"))?;
+                let expected = self.raster_operation_authority.current().ok_or_else(|| presentation_fault("prepared raster operation authority was empty"))?;
                 match self.gpu.apply_prepared_upload_step(packet, cursor.upload, candidate, expected) {
                     Ok(true) => cursor.upload += 1,
                     Ok(false) => {}
                     Err(error) => {
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err(error);
+                        return Err(presentation_fault(error));
                     }
                 }
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Stage => {
-                let Some(packet) = cursor.frame.packet.take() else { return Err("validated prepared frame packet was missing".to_string()) };
+                let Some(packet) = cursor.frame.packet.take() else { return Err(presentation_fault("validated prepared frame packet was missing".to_string())) };
                 cursor.witness = match self.gate.stage_presented(packet) {
                     Ok(witness) => Some(witness),
                     Err(packet) => {
                         cursor.frame.packet = Some(packet);
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err("prepared frame presenter witness was already occupied".to_string());
+                        return Err(presentation_fault("prepared frame presenter witness was already occupied".to_string()));
                     }
                 };
                 cursor.phase = AppPresentPhase::Render;
@@ -235,7 +238,7 @@ impl AppPresenter {
                 let Some(input_candidate) = cursor.frame.input_candidate else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame input candidate witness was missing before submit".to_string());
+                    return Err(presentation_fault("prepared frame input candidate witness was missing before submit".to_string()));
                 };
                 let runtime = self.runtime.clone();
                 let Ok(mut runtime) = runtime.try_lock() else {
@@ -262,7 +265,7 @@ impl AppPresenter {
                             cursor.frame.packet = self.gate.abort_pending();
                             cursor.witness = None;
                             cursor.phase = AppPresentPhase::Aborted;
-                            return Err("presenter interaction checkout had no return owner before submit".to_string());
+                            return Err(presentation_fault("presenter interaction checkout had no return owner before submit".to_string()));
                         }
                     }
                 }
@@ -296,20 +299,20 @@ impl AppPresenter {
                 let Some(witness) = cursor.witness.as_ref() else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame presenter witness was missing before submit".to_string());
+                    return Err(presentation_fault("prepared frame presenter witness was missing before submit".to_string()));
                 };
                 let Some(packet) = self.gate.pending_presented(witness) else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.witness = None;
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame presenter witness was stale before submit".to_string());
+                    return Err(presentation_fault("prepared frame presenter witness was stale before submit".to_string()));
                 };
-                let raster_witness = cursor.raster_witness.ok_or_else(|| "raster operation witness was missing before submit".to_string())?;
+                let raster_witness = cursor.raster_witness.ok_or_else(|| presentation_fault("raster operation witness was missing before submit"))?;
                 if !self.raster_operation_authority.matches(raster_witness) {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.witness = None;
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("raster operation authority was stale before submit".to_string());
+                    return Err(presentation_fault("raster operation authority was stale before submit".to_string()));
                 }
                 if cursor.gpu_cursor.is_none() {
                     match self.gpu.begin_prepared_present(packet, raster_witness) {
@@ -318,7 +321,7 @@ impl AppPresenter {
                             cursor.frame.packet = self.gate.abort_pending();
                             cursor.witness = None;
                             cursor.phase = AppPresentPhase::Aborted;
-                            return Err(format!("prepared frame submit admission: {error}"));
+                            return Err(presentation_fault(format!("prepared frame submit admission: {error}")));
                         }
                     }
                     return Ok(AppPresentStep::Pending);
@@ -338,7 +341,7 @@ impl AppPresenter {
                         cursor.frame.packet = self.gate.abort_pending();
                         cursor.witness = None;
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err(format!("prepared frame submit step: {error}"));
+                        return Err(presentation_fault(format!("prepared frame submit step: {error}")));
                     }
                 }
                 Ok(AppPresentStep::Pending)
@@ -359,18 +362,18 @@ impl AppPresenter {
                 let Some(witness) = cursor.witness.as_ref() else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame presenter witness was missing".to_string());
+                    return Err(presentation_fault("prepared frame presenter witness was missing".to_string()));
                 };
                 let Some(packet) = self.gate.pending_presented(&witness) else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame presenter witness was stale before acknowledgement".to_string());
+                    return Err(presentation_fault("prepared frame presenter witness was stale before acknowledgement".to_string()));
                 };
-                let raster_witness = cursor.raster_witness.ok_or_else(|| "raster operation witness was missing before acknowledgement".to_string())?;
+                let raster_witness = cursor.raster_witness.ok_or_else(|| presentation_fault("raster operation witness was missing before acknowledgement"))?;
                 if !self.raster_operation_authority.matches(raster_witness) || raster_witness.scene_revision != packet.scene_revision() || raster_witness.preview_generation != packet.preview_generation() {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("raster operation authority was stale before acknowledgement".to_string());
+                    return Err(presentation_fault("raster operation authority was stale before acknowledgement".to_string()));
                 }
                 let runtime = self.runtime.clone();
                 let Ok(mut runtime) = runtime.try_lock() else {
@@ -396,7 +399,7 @@ impl AppPresenter {
                         PresenterInteractionStep::Abandoned => {
                             cursor.frame.packet = self.gate.abort_pending();
                             cursor.phase = AppPresentPhase::Aborted;
-                            return Err("presenter interaction checkout had no return owner before acknowledgement".to_string());
+                            return Err(presentation_fault("presenter interaction checkout had no return owner before acknowledgement".to_string()));
                         }
                     }
                 }
@@ -404,12 +407,12 @@ impl AppPresenter {
                 let Some(input_candidate) = cursor.frame.input_candidate else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame input candidate witness was missing before acknowledgement".to_string());
+                    return Err(presentation_fault("prepared frame input candidate witness was missing before acknowledgement".to_string()));
                 };
                 if !interaction.shell.input.presented_input_candidate_matches(input_candidate) {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame input authority was stale before acknowledgement".to_string());
+                    return Err(presentation_fault("prepared frame input authority was stale before acknowledgement".to_string()));
                 }
                 let AppInteractionState { shell, input, .. } = interaction;
                 match shell.input.progress_presented_input_candidate(input, input_candidate) {
@@ -424,10 +427,10 @@ impl AppPresenter {
                     semio_renderer_wgpu_ui_engine::scene_interaction::PresentedInputCandidateProgress::Stale => {
                         cursor.frame.packet = self.gate.abort_pending();
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err("prepared frame input authority was stale before acknowledgement".to_string());
+                        return Err(presentation_fault("prepared frame input authority was stale before acknowledgement".to_string()));
                     }
                 }
-                if !semio_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(&mut shell).acknowledge_presented_input(input, input_candidate) {
+                if !semio_renderer_wgpu_shell_view_panels::PanelsViewCtx::of(shell).acknowledge_presented_input(input, input_candidate) {
                     return Ok(AppPresentStep::Pending);
                 }
                 cursor.has_animated_primitives = packet.has_animated_primitives();
@@ -436,16 +439,16 @@ impl AppPresenter {
                     cursor.shell_clock_deadline = AppInteractionState::wake_deadline(shell.surfaces.next_chrome_deadline(now_us as f64 / 1_000_000.0, app_now_ms(), &shell.chrome, &shell.tutorial), now_us as f64 / 1_000_000.0, app_now_ms());
                 }
                 cursor.frame.input_candidate = None;
-                let Some(witness) = cursor.witness.take() else { return Err("prepared frame presenter witness was lost during acknowledgement".to_string()) };
+                let Some(witness) = cursor.witness.take() else { return Err(presentation_fault("prepared frame presenter witness was lost during acknowledgement".to_string())) };
                 let mut replacement = match self.gate.acknowledge_presented(witness) {
                     Ok(replacement) => replacement,
                     Err(_) => {
                         cursor.phase = AppPresentPhase::Aborted;
-                        return Err("prepared frame presenter witness was stale or duplicated".to_string());
+                        return Err(presentation_fault("prepared frame presenter witness was stale or duplicated".to_string()));
                     }
                 };
                 drop(runtime);
-                self.raster_operation_authority.release(raster_witness).map_err(str::to_owned)?;
+                self.raster_operation_authority.release(raster_witness).map_err(presentation_fault)?;
                 cursor.raster_witness = None;
                 self.retirement = Some(AppPresentedRetirement::commit(replacement.take_previous(), raster_witness));
                 cursor.phase = AppPresentPhase::Media;
@@ -468,7 +471,7 @@ impl AppPresenter {
                     apply_window_cursor(window, cursor.frame.cursor, cursor.frame.theme_dark, &mut self.last_cursor);
                 }
                 let fullscreen = self.window.is_none().then_some(cursor.frame.fullscreen).flatten();
-                let Some(mut completed) = self.pending.take() else { return Err("completed presentation cursor was missing".to_string()) };
+                let Some(mut completed) = self.pending.take() else { return Err(presentation_fault("completed presentation cursor was missing".to_string())) };
                 let accepted_cursor = completed.frame.cursor;
                 let accepted_theme_dark = completed.frame.theme_dark;
                 let accepted_generation = completed.frame.generation;
@@ -480,7 +483,7 @@ impl AppPresenter {
                 if retirement.completed_frame.is_some() {
                     completed.frame.cursor_wake = cursor_wake;
                     self.pending = Some(completed);
-                    return Err("completed presentation retirement capacity exhausted".to_string());
+                    return Err(presentation_fault("completed presentation retirement capacity exhausted".to_string()));
                 }
                 let media_slots = std::mem::take(&mut completed.media_slots);
                 retirement.completed_frame = Some(completed.frame);

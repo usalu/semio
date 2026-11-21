@@ -65,6 +65,7 @@ semio-framework-action-bus = { path = "../../../../../../../🔨️modules/🎯�
 semio-os-store-engine-replay = { path = "../../../../🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin-app-builder = { path = "../../../🏗️builder/🧩️app/📦️packages/🦀️rust" }
 semio-plugin-document-media = { path = "../../../🗃️document/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

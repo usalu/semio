@@ -26,7 +26,7 @@
       "references": [
         {
           "id": "en-14080",
-          "citation": "EN 14080:2013 Timber structures, glued laminated timber, Table 5: GL24h E0,mean = 11.6 GPa, mean density 420 kg/m3."
+          "citation": "EN 14080:2013 Timber structures, glued laminated timber, Table 5: GL24h E0,mean = 11.5 GPa, mean density 420 kg/m3."
         },
         {
           "id": "en-1991-1-1",
@@ -94,7 +94,7 @@
         "emissivity": 0.9,
         "solarAbsorptivity": 0.6,
         "densityKgM3": 420,
-        "elasticModulusPa": 11600000000,
+        "elasticModulusPa": 11500000000,
         "source": "literature",
         "reference": "en-14080",
         "conductivityWmK": 0.13,
@@ -2708,8 +2708,8 @@
       ],
       "assumptions": [
         {
-          "en": "Simply supported beam, pin left and roller right; E0,mean = 11.6 GPa, section 160 x 600 mm, uniform self-weight from density 420 kg/m3.",
-          "de": "Frei aufliegender Balken, Festlager links und Rollenlager rechts; E0,mean = 11,6 GPa, Querschnitt 160 x 600 mm, gleichmäßiges Eigengewicht aus Dichte 420 kg/m3."
+          "en": "Simply supported beam, pin left and roller right; E0,mean = 11.5 GPa (EN 14080 Table 5), section 160 x 600 mm, uniform self-weight from density 420 kg/m3.",
+          "de": "Frei aufliegender Balken, Festlager links und Rollenlager rechts; E0,mean = 11,5 GPa (EN 14080 Tabelle 5), Querschnitt 160 x 600 mm, gleichmäßiges Eigengewicht aus Dichte 420 kg/m3."
         },
         {
           "en": "Shear and axial deformation are neglected in the deflection.",
@@ -3231,87 +3231,87 @@
         "thermal": [
           {
             "id": "th-side-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.6, 0.036],
-            "transform": {
-              "translation": [4.0, 0.0, 0.062]
-            },
+            "profile": [[0.3, 0.08], [0.27, 0.044], [-0.27, 0.044], [-0.3, 0.08]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-sides",
-            "sectionFaces": ["-w", "-v", "+v"]
+            "sectionFaces": ["-w", "+v", "-v"]
           },
           {
             "id": "th-side-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.6, 0.036],
-            "transform": {
-              "translation": [4.0, 0.0, -0.062]
-            },
+            "profile": [[0.3, -0.08], [0.27, -0.044], [-0.27, -0.044], [-0.3, -0.08]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-sides",
-            "sectionFaces": ["+w", "-v", "+v"]
+            "sectionFaces": ["+w", "+v", "-v"]
           },
           {
             "id": "th-top",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.036, 0.16],
-            "transform": {
-              "translation": [4.0, 0.282, 0.0]
-            },
+            "profile": [[0.3, 0.08], [0.3, -0.08], [0.264, -0.0368], [0.264, 0.0368]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-top",
-            "sectionFaces": ["-v", "-w", "+w"]
+            "sectionFaces": ["-v"]
           },
           {
             "id": "th-soffit-bearing-left",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [0.12, 0.036, 0.16],
-            "transform": {
-              "translation": [0.06, -0.282, 0.0]
-            },
+            "profile": [[-0.3, 0.08], [-0.3, -0.08], [-0.264, -0.0368], [-0.264, 0.0368]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 0.12,
             "region": "beam-soffit",
-            "sectionFaces": ["+v", "-w", "+w"]
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-soffit-span",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [7.76, 0.036, 0.16],
-            "transform": {
-              "translation": [4.0, -0.282, 0.0]
-            },
+            "profile": [[-0.3, 0.08], [-0.3, -0.08], [-0.264, -0.0368], [-0.264, 0.0368]],
+            "plane": "yz",
+            "from": 0.12,
+            "to": 7.88,
             "region": "beam-soffit",
-            "sectionFaces": ["+v", "-w", "+w"]
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-soffit-bearing-right",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [0.12, 0.036, 0.16],
-            "transform": {
-              "translation": [7.94, -0.282, 0.0]
-            },
+            "profile": [[-0.3, 0.08], [-0.3, -0.08], [-0.264, -0.0368], [-0.264, 0.0368]],
+            "plane": "yz",
+            "from": 7.88,
+            "to": 8.0,
             "region": "beam-soffit",
-            "sectionFaces": ["+v", "-w", "+w"]
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-bearing-plate-left",
@@ -3375,9 +3375,9 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.1, 0.03, 0.16],
+            "size": [0.1, 0.0075, 0.16],
             "transform": {
-              "translation": [0.0, 0.285, 0.0]
+              "translation": [0.0, 0.30375, 0.0]
             },
             "member": "load-carrier",
             "part": "joint"
@@ -3389,12 +3389,12 @@
             "de": "Körper: der Balken, wie er hergestellt wird: jede der fünfzehn Lamellen zu 40 mm ist eine Folge gesägter Bretter (40 Körper), verbunden durch die 25 Keilzinkenstöße des Aufbaus, ein oder zwei je Lamelle, versetzt und aus dem mittleren Drittel der unteren Zuglamelle gehalten; jeder Stoß ist ein Profil mit zwei Zinken von 20 mm Länge und 20 mm Teilung über die volle Breite von 160 mm, genau das Zeichen der Seitenansicht, sodass die Brettfugen des Modells die gezeichneten Stöße sind. Die Lamellen wechseln im Ton, jedes Brett ist um eine Nuance verschieden, wie gesägte Bretter. Unter den rechtwinklig gesägten Enden liegen die beiden Stahllagerplatten 120 x 20 x 160 mm. Die Kantenfasen von wenigen Millimetern liegen unter der kleinsten Einzelheit von 7,5 mm und sind nicht modelliert."
           },
           {
-            "en": "Thermal: the timber faces are skins of the effective storage depth of 36 mm (24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0.036 m): both sides over the full height, the top over the full width, and the soffit split into the free span and the two 120 mm bearing contacts where it sits on the steel; the bearing plates are referenced from the body. Side and flat skins share the 36 mm arris prisms; the faces against the core and the overlap are section faces, so each region counts its own outer face.",
-            "de": "Thermisch: die Holzflächen sind Schalen der wirksamen Speichertiefe von 36 mm (24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0,036 m): beide Seiten über die volle Höhe, die Oberseite über die volle Breite und die Unterseite geteilt in das freie Feld und die beiden 120-mm-Auflagerkontakte, wo sie auf dem Stahl liegt; die Lagerplatten sind aus dem Körper referenziert. Seiten- und Flachschalen teilen sich die 36-mm-Kantenprismen; die Flächen zum Kern und die Überlappung sind Schnittflächen, sodass jede Region ihre eigene Außenfläche zählt."
+            "en": "Thermal: the timber faces are skins of the effective storage depth of 36 mm (24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0.036 m): both sides over the full height, the top over the full width, and the soffit split into the free span and the two 120 mm bearing contacts where it sits on the steel; neighbouring skins meet on a mitre along each arris, so no volume belongs to two regions; the faces against the core and the mitres are section faces, so each region counts its own outer face; the bearing plates are referenced from the body.",
+            "de": "Thermisch: die Holzflächen sind Schalen der wirksamen Speichertiefe von 36 mm (24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0,036 m): beide Seiten über die volle Höhe, die Oberseite über die volle Breite und die Unterseite geteilt in das freie Feld und die beiden 120-mm-Auflagerkontakte, wo sie auf dem Stahl liegt; benachbarte Schalen treffen sich an jeder Kante auf Gehrung, sodass kein Volumen zwei Regionen gehört; die Flächen zum Kern und die Gehrungen sind Schnittflächen, sodass jede Region ihre eigene Außenfläche zählt; die Lagerplatten sind aus dem Körper referenziert."
           },
           {
-            "en": "Structure: the member is the real 160 x 600 mm GL24h section over the full 8 m (the glued lamellae act as one section); the pin bearing is a 10 mm steel pad with a 10 mm knife edge under the left plate centre, the roller bearing a 20 mm steel roller across the width under the right plate centre, both standing on the ground at their anchors 7.88 m apart; the slider of the moving load is a 100 mm load shoe flush with the top face. The self-weight is distributed uniformly along the member, so no concentrated mass is modelled.",
-            "de": "Tragwerk: das Glied ist der echte Querschnitt GL24h 160 x 600 mm über die vollen 8 m (die verleimten Lamellen wirken als ein Querschnitt); das Festlager ist eine 10-mm-Stahlplatte mit 10-mm-Schneide unter der Mitte der linken Platte, das Rollenlager eine 20-mm-Stahlrolle über die Breite unter der Mitte der rechten Platte, beide stehen am Boden an ihren Ankern im Abstand von 7,88 m; der Schlitten der wandernden Last ist ein 100-mm-Lastschuh bündig mit der Oberseite. Das Eigengewicht ist gleichmäßig über das Glied verteilt, daher ist keine Einzelmasse modelliert."
+            "en": "Structure: the member is the real 160 x 600 mm GL24h section over the full 8 m (the glued lamellae act as one section); the pin bearing is a 10 mm steel pad with a 10 mm knife edge under the left plate centre, the roller bearing a 20 mm steel roller across the width under the right plate centre, both standing on the ground at their anchors 7.88 m apart; the slider of the moving load is a 100 x 160 x 7.5 mm steel load plate on the top face, where the point load enters the beam. The self-weight is distributed uniformly along the member, so no concentrated mass is modelled.",
+            "de": "Tragwerk: das Glied ist der echte Querschnitt GL24h 160 x 600 mm über die vollen 8 m (die verleimten Lamellen wirken als ein Querschnitt); das Festlager ist eine 10-mm-Stahlplatte mit 10-mm-Schneide unter der Mitte der linken Platte, das Rollenlager eine 20-mm-Stahlrolle über die Breite unter der Mitte der rechten Platte, beide stehen am Boden an ihren Ankern im Abstand von 7,88 m; der Schlitten der wandernden Last ist eine Stahllastplatte 100 x 160 x 7,5 mm auf der Oberseite, wo die Einzellast in den Balken eintritt. Das Eigengewicht ist gleichmäßig über das Glied verteilt, daher ist keine Einzelmasse modelliert."
           }
         ]
       },
@@ -3610,59 +3610,59 @@
         "thermal": [
           {
             "id": "th-side-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.6, 0.036],
-            "transform": {
-              "translation": [4.0, 0.0, 0.062]
-            },
+            "profile": [[0.3, 0.08], [0.27, 0.044], [-0.27, 0.044], [-0.3, 0.08]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-sides",
-            "sectionFaces": ["-w", "-v", "+v"]
+            "sectionFaces": ["-w", "+v", "-v"]
           },
           {
             "id": "th-side-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.6, 0.036],
-            "transform": {
-              "translation": [4.0, 0.0, -0.062]
-            },
+            "profile": [[0.3, -0.08], [0.27, -0.044], [-0.27, -0.044], [-0.3, -0.08]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-sides",
-            "sectionFaces": ["+w", "-v", "+v"]
+            "sectionFaces": ["+w", "+v", "-v"]
           },
           {
             "id": "th-top",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.036, 0.16],
-            "transform": {
-              "translation": [4.0, 0.282, 0.0]
-            },
+            "profile": [[0.3, 0.08], [0.3, -0.08], [0.264, -0.0368], [0.264, 0.0368]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-top",
-            "sectionFaces": ["-v", "-w", "+w"]
+            "sectionFaces": ["-v"]
           },
           {
             "id": "th-soffit",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "beam",
             "material": "glulam",
             "role": "body",
             "tone": 0.6,
-            "size": [8.0, 0.036, 0.16],
-            "transform": {
-              "translation": [4.0, -0.282, 0.0]
-            },
+            "profile": [[-0.3, 0.08], [-0.3, -0.08], [-0.264, -0.0368], [-0.264, 0.0368]],
+            "plane": "yz",
+            "from": 0.0,
+            "to": 8.0,
             "region": "beam-soffit",
-            "sectionFaces": ["+v", "-w", "+w"]
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-bearing-plate-left",
@@ -3726,9 +3726,9 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.1, 0.03, 0.16],
+            "size": [0.1, 0.015, 0.16],
             "transform": {
-              "translation": [0.0, 0.285, 0.0]
+              "translation": [0.0, 0.3055, 0.0]
             },
             "member": "load-carrier",
             "part": "joint"
@@ -3740,12 +3740,12 @@
             "de": "Körper: die fünfzehn Lamellen über die volle Länge, wie die Lamellenschraffur der Zeichnung sie zeigt; die Brettstöße sind zusammengefasst, weil die Zeichnung 1:100 keine Keilzinken zeigt. Die Platten sind in ihren wahren 20 mm modelliert; die Zeichnung verstärkt sie für den Druck auf 25 mm, ein Unterschied unter der kleinsten Einzelheit von 15 mm."
           },
           {
-            "en": "Thermal: the four faces as 36 mm storage skins, the soffit now one skin (the bearing contacts of 1:50 merged); the plates are referenced from the body.",
-            "de": "Thermisch: die vier Flächen als 36-mm-Speicherschalen, die Unterseite jetzt eine Schale (die Auflagerkontakte von 1:50 zusammengefasst); die Platten sind aus dem Körper referenziert."
+            "en": "Thermal: the four faces as 36 mm storage skins meeting on mitres along the arrises, the soffit now one skin (the bearing contacts of 1:50 merged); the plates are referenced from the body.",
+            "de": "Thermisch: die vier Flächen als 36-mm-Speicherschalen, die sich an den Kanten auf Gehrung treffen, die Unterseite jetzt eine Schale (die Auflagerkontakte von 1:50 zusammengefasst); die Platten sind aus dem Körper referenziert."
           },
           {
-            "en": "Structure: the true member section; the pin is a plain 120 mm steel wedge of the plate height with its edge under the beam, the roller a 20 mm roller across the width; the load shoe stays as the slider of the moving load.",
-            "de": "Tragwerk: der wahre Gliedquerschnitt; das Festlager ist ein einfacher 120-mm-Stahlkeil in Plattenhöhe mit der Schneide unter dem Balken, das Rollenlager eine 20-mm-Rolle über die Breite; der Lastschuh bleibt als Schlitten der wandernden Last."
+            "en": "Structure: the true member section; the pin is a plain 120 mm steel wedge of the plate height with its edge under the beam, the roller a 20 mm roller across the width; the slider of the moving load is the load plate on the top face, 15 mm thick (one smallest feature).",
+            "de": "Tragwerk: der wahre Gliedquerschnitt; das Festlager ist ein einfacher 120-mm-Stahlkeil in Plattenhöhe mit der Schneide unter dem Balken, das Rollenlager eine 20-mm-Rolle über die Breite; der Schlitten der wandernden Last ist die Lastplatte auf der Oberseite, 15 mm dick (eine kleinste Einzelheit)."
           }
         ]
       },

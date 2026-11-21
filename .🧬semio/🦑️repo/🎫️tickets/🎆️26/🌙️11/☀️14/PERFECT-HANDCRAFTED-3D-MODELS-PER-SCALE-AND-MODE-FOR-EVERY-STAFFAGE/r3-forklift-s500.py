@@ -73,16 +73,17 @@ def build(S, K):
     S.ref("m-frame-front", "frame-front", "chassis", "member")
     S.ref("m-post-front", "post-front", "chassis", "member")
     S.ref("m-post-rear", "post-rear", "chassis", "member")
+    S.box("roof-rail", "chassis", (-1.50, -0.235), (2.165, 2.24), (0.4625, 0.5375), STEEL, 0.3, member="chassis", part="member", mirror=True, **st)
     S.box("mass-chassis", "chassis", (-0.76, -0.64), (0.66, 0.78), (-0.06, 0.06), STEEL, 0.5, member="chassis", part="mass", **st)
-    S.ref("m-cw-block", "cw-block", "counterweight", "member")
+    S.box("cw-beam", "counterweight", (-1.86, -1.40), (0.45, 0.525), (-0.50, 0.50), IRON, 0.35, member="counterweight", part="member", **st)
     S.box("mass-counterweight", "counterweight", (-1.86, -1.74), (0.66, 0.78), (-0.06, 0.06), IRON, 0.3, member="counterweight", part="mass", **st)
     S.box("battery-tray", "battery", (-1.071, -0.36), (0.15, 0.225), (-0.514, 0.514), BAT, 0.4, member="battery", part="member", **st)
     S.box("mass-battery", "battery", (-0.7755, -0.6555), (0.482, 0.602), (-0.06, 0.06), BAT, 0.4, member="battery", part="mass", **st)
     S.cyl("drive-axle", "axle-f", (0.0, K.RF, -0.43), (0.0, K.RF, 0.43), 0.09, STEEL, 0.4, member="axle-f", part="member", **st)
     S.ref("m-steer-axle", "steer-axle", "axle-r", "member")
-    for s in ("l", "r"):
-        S.ref(f"m-tyre-f-{s}", f"tyre-f-{s}", "wheel-f", "member")
-        S.ref(f"m-tyre-r-{s}", f"tyre-r-{s}", "wheel-r", "member")
+    for s, side in (("l", 1), ("r", -1)):
+        S.cyl(f"hub-f-{s}", "wheel-f", (0.0, K.RF, side * (K.ZF - 0.0375)), (0.0, K.RF, side * (K.ZF + 0.0375)), 0.15, STEEL, 0.4, member="wheel-f", part="member", **st)
+        S.cyl(f"hub-r-{s}", "wheel-r", (-K.WB, K.RR, side * (K.ZR - 0.0375)), (-K.WB, K.RR, side * (K.ZR + 0.0375)), 0.12, STEEL, 0.4, member="wheel-r", part="member", **st)
     for anchor, bone, x, z in (("contact-f-l", "axle-f", 0.0, K.ZF), ("contact-f-r", "axle-f", 0.0, -K.ZF), ("contact-r-l", "axle-r", -K.WB, K.ZR), ("contact-r-r", "axle-r", -K.WB, -K.ZR)):
         S.box(f"pad-{anchor[8:]}", bone, (x - 0.0375, x + 0.0375), (0.0, 0.075), (z - 0.075, z + 0.075), RUBBER, 0.2, member=bone, part="support", anchor=anchor, **st)
     S.ref("m-tilt-barrel", "tilt-barrel", "tilt-cyl", "member")
@@ -95,13 +96,13 @@ def build(S, K):
     S.ref("m-tine-r", "tine-r", "forks", "member")
     S.box("pallet-base", "pallet-x", (K.PALLET_X, K.PALLET_X + 1.2), (0.0, 0.075), (-0.4, -0.3), WOOD, 0.55, member="pallet-x", part="member", **st)
     S.box("pallet-column", "pallet-y", (K.PALLET_X + 0.5275, K.PALLET_X + 0.6725), (0.0, 0.144), (-0.0725, 0.0725), WOOD, 0.55, member="pallet-y", part="member", **st)
-    S.ref("m-pallet", "pallet", "pallet", "member")
+    S.box("pallet-stringer", "pallet", (K.PALLET_X, K.PALLET_X + 1.2), (0.069, 0.144), (-0.0375, 0.0375), WOOD, 0.55, member="pallet", part="member", **st)
     return S
 
 
 DECISIONS = [
     text("1:500 draws and models the EFG 425 as a few masses at 75 mm while keeping every real proportion: the frame sides are 75 mm side-profile plates with the front wheel arch, closed by the hood, the floor pan and the kick panel around the battery (a hidden thermal solid), fenders and the under-floor frame are blocks, cowl, seat and backrest are blocks; the guard is four 75 mm posts under a 75 mm roof slab in place of the roof grid; the counterweight is its loft over one lower casting with the rear wheel arch and the axle housing; tyres are discs; the mast is two 75 mm rails per stage and the inner head, the carriage is one plate and the barred load backrest a 75 mm frame with its centre bar, the forks 75 mm L profiles, the pallet one block under the goods.",
          "1:500 zeichnet und modelliert den EFG 425 als wenige Massen bei 75 mm und behält alle realen Proportionen: die Rahmenseiten sind 75 mm dicke Seitenprofilbleche mit dem vorderen Radlauf, geschlossen von Haube, Bodenwanne und Fußblech um die Batterie (ein verdeckter Wärmekörper), Kotflügel und Unterbodenrahmen sind Blöcke, Armaturenhaube, Sitz und Lehne sind Blöcke; das Schutzdach sind vier 75-mm-Pfosten unter einer 75-mm-Dachplatte anstelle des Dachgitters; das Gegengewicht ist sein Loft über einem unteren Gussteil mit dem hinteren Radlauf und dem Achsgehäuse; Reifen sind Scheiben; der Mast sind zwei 75-mm-Schienen je Stufe und der Innenmastkopf, der Gabelträger ist eine Platte und das vergitterte Lastschutzgitter ein 75-mm-Rahmen mit Mittelstab, die Gabeln 75-mm-L-Profile, die Palette ein Block unter dem Ladegut."),
-    text("Thickened to the 75 mm feature: guard posts (60 mm), fork blades (40 mm, so the blade top lies at 75 mm instead of 60 mm), tilt rods (45 mm), rails (64 to 70 mm wide). Dropped: steering wheel and column, armrest, lamps, coupling, chains, lift cylinders, pallet openings, straps. Structure: frame side plates (they are the frame members at this scale), floor pan and under-floor frame, guard posts, counterweight, axles, tyres, tilt cylinders, rails and inner head, carriage, forks, pallet; four 75 mm contact pads and three masses.",
-         "Auf das Kleinstmaß 75 mm verdickt: Schutzdachpfosten (60 mm), Gabelblätter (40 mm, die Blattoberkante liegt daher bei 75 statt 60 mm), Kolbenstangen der Neigezylinder (45 mm), Schienen (64 bis 70 mm breit). Weggelassen: Lenkrad und Säule, Armlehne, Leuchten, Kupplung, Ketten, Hubzylinder, Palettenöffnungen, Umreifung. Tragwerk: Rahmenseitenbleche (bei diesem Maßstab sind sie die Rahmenträger), Bodenwanne und Unterbodenrahmen, Schutzdachpfosten, Gegengewicht, Achsen, Reifen, Neigezylinder, Schienen und Innenmastkopf, Gabelträger, Gabeln, Palette; vier 75-mm-Aufstandsplatten und drei Massen."),
+    text("Thickened to the 75 mm feature: guard posts (60 mm), fork blades (40 mm, so the blade top lies at 75 mm instead of 60 mm), tilt rods (45 mm), rails (64 to 70 mm wide). Dropped: steering wheel and column, armrest, lamps, coupling, chains, lift cylinders, pallet openings, straps. Structure: frame side plates (they are the frame members at this scale), floor pan and under-floor frame, guard posts with the two roof rails, the counterweight beam that carries the steer axle, axles, wheel hubs, tilt cylinders, rails and inner head, carriage, forks, the pallet base, block and centre stringer (the load path, not the masses of the body); four 75 mm contact pads and three masses.",
+         "Auf das Kleinstmaß 75 mm verdickt: Schutzdachpfosten (60 mm), Gabelblätter (40 mm, die Blattoberkante liegt daher bei 75 statt 60 mm), Kolbenstangen der Neigezylinder (45 mm), Schienen (64 bis 70 mm breit). Weggelassen: Lenkrad und Säule, Armlehne, Leuchten, Kupplung, Ketten, Hubzylinder, Palettenöffnungen, Umreifung. Tragwerk: Rahmenseitenbleche (bei diesem Maßstab sind sie die Rahmenträger), Bodenwanne und Unterbodenrahmen, Schutzdachpfosten mit den zwei Dachlängsträgern, der Gegengewichtsträger, der die Lenkachse trägt, Achsen, Radnaben, Neigezylinder, Schienen und Innenmastkopf, Gabelträger, Gabeln, Palettenfuß, -klotz und Mittellängsbrett (der Kraftfluss, nicht die Massen des Körpers); vier 75-mm-Aufstandsplatten und drei Massen."),
 ]

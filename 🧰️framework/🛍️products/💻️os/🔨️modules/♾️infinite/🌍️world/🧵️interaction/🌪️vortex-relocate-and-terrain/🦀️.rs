@@ -1,6 +1,7 @@
 //! 🌪️ World3d vortex arrows, relocate drag, catalogue drop preview, environment helpers, terrain sync and placeholder mesh steps.
 
 use super::*;
+use semio_os_infinite_world_bridge::{srgb_byte_to_linear, world_units_per_pixel};
 
 /// 🌀️ Selects the vortex pointer lane for brush tools and vertex selection on a vortex scene.
 pub fn world3d_vortex_pointer_mode(utility: &str, granularity: &str, has_vortices: bool) -> bool {
@@ -209,22 +210,6 @@ pub(super) fn update_dragged_instance_position(scene_state: &mut WorldSceneState
             }
         }
     }
-}
-
-/// 🎯️ Intersects the camera ray through a shell client point with the world Z=0 ground plane.
-pub fn world3d_ground_plane_pick(session_state: &WorldSessionState, camera_state: &WorldCameraState, x: f32, y: f32, plane_z: f32) -> Option<[f32; 3]> {
-    let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
-    let camera = camera_state.orbit.to_camera();
-    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
-    if dir.z.abs() < 1e-5 {
-        return None;
-    }
-    let t = (plane_z - origin.z) / dir.z;
-    if t < 0.0 {
-        return None;
-    }
-    let hit = origin.add(dir.scale(t));
-    Some([hit.x, hit.y, hit.z])
 }
 
 /// 📏️ `GUMBALL_TRANSFORM_EPSILON` (`🌐️World3dHost/🟦️.tsx:2496`) — a drag that lands within this of
@@ -484,7 +469,13 @@ pub fn step_world3d_terrain(session_state: &mut WorldSessionState, interaction_s
         }
     }
     let Some(mut cursor)=terrain_state.terrain_build.take() else{return result};
-    if !terrain_state.terrain_visible_tiles.contains(&(cursor.z,cursor.x,cursor.y)) || scene_state.dynamic_blocked_mesh.is_some() || scene_state.dynamic_mesh_close.is_some() {cursor.faulted=Some(WorldDynamicFault::StaleToken);}
+    if terrain_state.terrain_style_pending() || cursor.terrain_revision != terrain_state.terrain_revision || !terrain_state.terrain_visible_tiles.contains(&(cursor.z,cursor.x,cursor.y)) {
+        cursor.faulted = Some(WorldDynamicFault::Canceled);
+    } else if scene_state.dynamic_blocked_mesh.is_some() || scene_state.dynamic_mesh_close.is_some() {
+        terrain_state.terrain_build = Some(cursor);
+        result.step = WorldTerrainMeshPublicationStep::Pending;
+        return result;
+    }
     match cursor.step(terrain_state.terrain_revision,terrain_state.terrain_revision,grant,context) {
         Ok((step,progress))=>{
             result.ownership=progress;
@@ -497,6 +488,7 @@ pub fn step_world3d_terrain(session_state: &mut WorldSessionState, interaction_s
                     terrain_state.terrain_build=Some(cursor);result.step=WorldTerrainMeshPublicationStep::Pending;
                 }
                 WorldTerrainMeshStep::Complete(tile)=>{terrain_state.terrain_built_tiles.insert(tile);result.step=WorldTerrainMeshPublicationStep::Complete;}
+                WorldTerrainMeshStep::Fault(WorldDynamicFault::Canceled)=>{}
                 WorldTerrainMeshStep::Fault(fault)=>{mark_world_dynamic_fault(session_state, authority_state, scene_state,fault);result.step=WorldTerrainMeshPublicationStep::Fault(fault);}
             }
         }
@@ -511,12 +503,15 @@ pub fn step_world3d_terrain(session_state: &mut WorldSessionState, interaction_s
 /// mesh per tile whose elevation data is already available. Returns the tiles to draw this frame
 /// plus the mesh keys the caller must evict from the GPU.
 pub fn sync_terrain_state(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState, terrain_state: &mut WorldTerrainState, assets_state: &mut WorldAssetsState, camera: &Camera3d) -> (Vec<TerrainTileDraw>, Vec<String>) {
-    let Some(style) = terrain_state.terrain_style.clone() else {
+    let Some((tile_url_template, min_zoom, max_zoom)) = terrain_state.tile_source() else {
         return (Vec::new(), Vec::new());
     };
+    let tile_url_template = tile_url_template.to_owned();
     let camera_json = json!({
         "position": [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
         "target": [camera.target.x as f64, camera.target.y as f64, camera.target.z as f64],
+        "minZoom": min_zoom,
+        "maxZoom": max_zoom,
     })
     .to_string();
     let visible_json = terrain_state.terrain_session.visible_terrain_tiles_json(&camera_json);
@@ -526,24 +521,25 @@ pub fn sync_terrain_state(session_state: &mut WorldSessionState, authority_state
     let stale: Vec<(u32, u32, u32)> = terrain_state.terrain_visible_tiles.iter().copied().filter(|key| !visible_set.contains(key)).collect();
     let mut evicted_mesh_keys = Vec::new();
     for (z, x, y) in stale {
-        terrain_state.terrain_session.evict_terrain_tile(z, x, y);
-        terrain_state.terrain_built_tiles.remove(&(z, x, y));
         let mesh_key = terrain_tile_mesh_key(&session_state.surface_id, z, x, y);
-        if !retire_world_mesh(scene_state, &mesh_key) {
-            return (Vec::new(), evicted_mesh_keys);
+        if scene_state.meshes.contains_key(&mesh_key) && !retire_world_mesh(scene_state, &mesh_key) {
+            continue;
         }
+        terrain_state.forget_tile((z, x, y));
+        terrain_state.terrain_visible_tiles.remove(&(z, x, y));
         evicted_mesh_keys.push(mesh_key);
     }
     terrain_state.pending_terrain_tile_urls.retain(|_, tile| visible_set.contains(tile));
-    terrain_state.terrain_visible_tiles = visible_set.clone();
+    terrain_state.terrain_tile_misses.retain(|tile| visible_set.contains(tile));
+    terrain_state.terrain_visible_tiles.extend(visible_set);
 
     let mut tile_draws = Vec::new();
-    for (z, x, y) in visible_set {
+    for TerrainVisibleTileRow { z, x, y } in visible_rows {
         if !terrain_family_visible(terrain_state, (z, x, y)) {
-            let mesh_json = terrain_state.terrain_session.terrain_tile_mesh_json(z, x, y);
-            if mesh_json == "null" {
-                reserve_terrain_tile_fetch(session_state, terrain_state, assets_state, &style.tile_url_template, (z, x, y));
+            if !terrain_state.terrain_session.has_elevation_tile(z, x, y) {
+                reserve_terrain_tile_fetch(session_state, terrain_state, assets_state, &tile_url_template, (z, x, y));
             } else if terrain_state.terrain_build.is_none() && terrain_state.terrain_pending.is_none() && scene_state.dynamic_mesh_close.is_none() && scene_state.dynamic_blocked_mesh.is_none() && session_state.snapshot_fault.is_none() {
+                let mesh_json = terrain_state.terrain_session.terrain_tile_mesh_json(z, x, y);
                 if let Ok(mesh_payload) = serde_json::from_str::<TerrainTileMeshPayload>(&mesh_json) {
                     let next = scene_state.placeholder_generation.checked_add(1);
                     if let Some(next) = next {
@@ -561,7 +557,7 @@ pub fn sync_terrain_state(session_state: &mut WorldSessionState, authority_state
             continue;
         }
         let mesh_version = live_world3d_mesh_version(scene_state, &mesh_key);
-        tile_draws.push(TerrainTileDraw { mesh_key, mesh_version });
+        tile_draws.push(TerrainTileDraw { tile: (z, x, y), mesh_key, mesh_version });
     }
     (tile_draws, evicted_mesh_keys)
 }
@@ -569,16 +565,26 @@ pub fn sync_terrain_state(session_state: &mut WorldSessionState, authority_state
 /// 🏔️ Per-frame terrain sync entry point used by `render_world_3d` — see `sync_terrain_state` for
 /// the (unit-testable) tile-visibility/meshing/fetch-admission logic this wraps with GPU upload and
 /// eviction calls.
-pub fn sync_terrain(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState, terrain_state: &mut WorldTerrainState, assets_state: &mut WorldAssetsState, gpu: &mut World3dBuildContext, camera: &Camera3d) -> Vec<SceneDraw3d> {
+pub fn sync_terrain(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, scene_state: &mut WorldSceneState, terrain_state: &mut WorldTerrainState, assets_state: &mut WorldAssetsState, gpu: &mut World3dBuildContext, camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) -> Vec<SceneDraw3d> {
     let (tile_draws, evicted_mesh_keys) = sync_terrain_state(session_state, authority_state, scene_state, terrain_state, assets_state, camera);
     for key in evicted_mesh_keys {
         gpu.evict_mesh(&key);
     }
+    let mut overlay_build_available = true;
     tile_draws
         .into_iter()
         .filter_map(|tile| {
             let mesh = scene_state.meshes.get(&tile.mesh_key)?;
             gpu.ensure_mesh(&tile.mesh_key, tile.mesh_version, *mesh);
+            if gpu.has_mesh_request(&tile.mesh_key, tile.mesh_version) {
+                let needs_build = terrain_state.overlay_tile_needs_build(tile.tile);
+                if needs_build && !overlay_build_available {
+                    gpu.request_cursor_wake();
+                } else {
+                    overlay_build_available &= !needs_build;
+                    append_terrain_overlay_lines(terrain_state, tile.tile, camera, viewport, lines);
+                }
+            }
             Some(SceneDraw3d {
                 mesh_key: tile.mesh_key.clone(),
                 mesh_version: tile.mesh_version,
@@ -587,6 +593,29 @@ pub fn sync_terrain(session_state: &mut WorldSessionState, authority_state: &mut
             })
         })
         .collect()
+}
+
+/// 📍 Appends depth-tested geographic overlay lines for a resident terrain tile.
+pub fn append_terrain_overlay_lines(terrain: &mut WorldTerrainState, tile: (u32, u32, u32), camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
+    let Some(overlays) = terrain.tile_overlays(tile) else { return };
+    let color = |[r, g, b]: [u8; 3]| [srgb_byte_to_linear(r), srgb_byte_to_linear(g), srgb_byte_to_linear(b), 1.0];
+    let bias = (40_075_200.0 / (1_u64 << tile.0) as f32 * 0.0002).clamp(0.1, 20.0);
+    for (paths, color) in [(&overlays.regions, color([0x4f, 0xd4, 0xe8])), (&overlays.routes, color([0xf7, 0xf4, 0xe8]))] {
+        lines.extend(paths.iter().flat_map(|path| path.segments.iter().flatten()).map(|[x, y, z]| LineVertex3d { position: [*x, *y, z + bias], color }));
+    }
+    let forward = camera.target.sub(camera.position).normalize();
+    let right = forward.cross(camera.up);
+    let right = if right.length() > 1e-6 { right.normalize() } else { Vec3::new(1.0, 0.0, 0.0) };
+    let up = right.cross(forward);
+    let color = color([0xf8, 0xd9, 0x4e]);
+    for marker in &overlays.positions {
+        let [x, y, z] = marker.point;
+        let tip = Vec3::new(x, y, z + bias);
+        let pixel = world_units_per_pixel(camera, viewport, tip.sub(camera.position).dot(forward));
+        let shoulder = tip.add(up.scale(7.0 * pixel));
+        let points = [tip, shoulder.add(right.scale(4.0 * pixel)), tip.add(up.scale(12.0 * pixel)), shoulder.sub(right.scale(4.0 * pixel)), tip];
+        lines.extend(points.windows(2).flatten().map(|point| LineVertex3d { position: point.to_array(), color }));
+    }
 }
 //#endregion Terrain
 

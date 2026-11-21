@@ -164,9 +164,8 @@ export function documentArchiveLoadReplyV1(frames: readonly AppFrameValue[], seq
 
 //#endregion 🗃️DocumentArchiveLoadHost
 
-/** ⏳️ Resolves on the next macrotask — where a document-archive load waits between polls, so the page's timers, input
- * and rendering (the Tasks window's Cancel) run while the guest works; a microtask-only re-poll starved them. */
+/** ⏳️ Lets archive maintenance run between progress requests and gives the page time to handle input and cancellation. */
 export function nextArchivePollTurnV1(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+  return new Promise((resolve) => setTimeout(resolve, 32));
 }
 //#endregion 🔖️AppChannelClient

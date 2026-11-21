@@ -144,7 +144,7 @@ fn radiator_diagram(document: &Vdi3805Snapshot, report: &CheckReport, product: &
     let (lo, hi) = DELTA_T_RANGE_K;
     let dt: Vec<f64> = (0..SAMPLES).map(|i| lo + (hi - lo) * i as f64 / (SAMPLES - 1) as f64).collect();
     let phi: Vec<f64> = dt.iter().map(|t| radiator_output_w(a.standard_output_w, a.heat_exponent_n, *t)).collect();
-    let check = format!("vdi3805.3.phi.{}", product.id);
+    let check = format!("vdi3805.6.phi.{}", product.id);
     Some(Diagram2d {
         id: format!("output:{}", product.id),
         title: loc(&format!("Heat output of {} over the excess temperature", product.id), &format!("Wärmeleistung von {} über der Übertemperatur", product.id)),

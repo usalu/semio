@@ -108,3 +108,20 @@ Unavailable, as the representation.
 - Emitter anchors and directions are unchanged: the 2D plumes still leave in the paper plane, while the real air flows along the wheel axis. That is a limit of the face-on elevation.
 - Rotor mass 14 kg and the silica-gel bulk density of 700 kg/m3 do not agree (0.049 m3 would be 34 kg); I left both.
 - `r3-sheet.ts` shades the far caps of concave extrudes unevenly (logged in `tool-requests.md`).
+
+## Round 5 handcraft
+
+No geometry change. Every scale and list rendered and opened (body 1:50 to 1:500, structure at every scale, thermal cut at every scale, poses `off`, `slow`, `rated` and clip `spin` t 100 at 1:50, 2D 1:50 to 1:200). Reference as in section 1 (rotor 550 x 200 mm, casing 0.62 x 0.22 m, 12 rev/h, 90 degree sector); measured 1:50 extents agree to 0 % (bounds check 0 mm at every scale).
+
+| scale | before = after (body / thermal / structure) |
+|---|---|
+| 1:50 | A- / A- / A- |
+| 1:100 | A- / A- / A- |
+| 1:200 | A- / A- / A- |
+| 1:500 (model only) | B+ / B+ / A- (the 30 mm beams and V frame read right; the casing ring is faceted by the coarse tessellation, and 1:500 is close to 1:200 in content) |
+
+`volumes-check.ts machinery/sorption-wheel --product`: PASS.
+
+Remaining: casing only 10 mm deeper than the rotor per face (no cited cassette envelope to change `depthM`); seal lips and bolts below the feature.
+
+The paired foot outlines now use a 0.20 mm pen in the 1:100 print representation. The drawing passed five checks from 1:55 to 1:150.

@@ -7,7 +7,7 @@
  * @see ../🔗️contracts/🟦️.ts — `Affine`, `Point`
  * @see https://www.w3.org/TR/css-transforms-1/#mathematical-description — the matrix convention
  */
-import type { Bone, BoneOffset, Rig, Slug } from "../../🧬️schema/🟦️.ts";
+import type { Bone, BoneOffset, RadialFold, Rig, Slug } from "../../🧬️schema/🟦️.ts";
 import type { Affine, Point } from "../🔗️contracts/🟦️.ts";
 import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
@@ -73,9 +73,10 @@ export function clamp(value: number, min?: number, max?: number): number {
   return max === undefined ? low : Math.min(low, max);
 }
 
-/** 🔩️ The offset a joint actually realises: revolute clamps `angleDeg` to `minDeg..maxDeg` and `abductionDeg` to ±180° and `twistDeg` to `twistMinDeg..twistMaxDeg` (default ±180°, whole turns where the joint says so); prismatic projects (`dx`, `dy`) on `axisDeg`, clamps to `minM..maxM` and returns the axis components; fixed realises nothing. */
+/** 🔩️ The offset a joint actually realises: revolute clamps `angleDeg` to `minDeg..maxDeg` and `abductionDeg` to ±180° and `twistDeg` to `twistMinDeg..twistMaxDeg` (default ±180°, whole turns where the joint says so); a continuous shaft passes through its longitudinal rotation alone; prismatic projects (`dx`, `dy`) on `axisDeg`, clamps to `minM..maxM` and returns the axis components; fixed realises nothing. */
 export function effectiveOffset(bone: Bone, offset: BoneOffset | undefined): { readonly angleDeg: number; readonly abductionDeg: number; readonly twistDeg: number; readonly dx: number; readonly dy: number } {
   const joint = bone.joint;
+  if (joint.type === "revolute" && joint.continuousTwist) return { angleDeg: 0, abductionDeg: 0, twistDeg: offset?.twistDeg ?? 0, dx: 0, dy: 0 };
   if (joint.type === "revolute") return { angleDeg: clamp(offset?.angleDeg ?? 0, joint.minDeg, joint.maxDeg), abductionDeg: clamp(offset?.abductionDeg ?? 0, -180, 180), twistDeg: clamp(offset?.twistDeg ?? 0, joint.twistMinDeg ?? -180, joint.twistMaxDeg ?? 180), dx: 0, dy: 0 };
   if (joint.type === "prismatic") {
     const { sin, cos } = sinCosDeg(joint.axisDeg ?? 0);
@@ -141,6 +142,41 @@ export type SolvedFrame = { readonly affine: Affine; readonly frame: Frame3; rea
 
 const combine = (a: Vec3, s: number, b: Vec3, t: number): Vec3 => [a[0] * s + b[0] * t, a[1] * s + b[1] * t, a[2] * s + b[2] * t];
 
+const vectorDot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const vectorCross = (a: Vec3, b: Vec3): Vec3 => [a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]];
+const unitVector = (v: Vec3): Vec3 => {
+  const length = portable.hypot(...v);
+  return [v[0] / length, v[1] / length, v[2] / length];
+};
+
+/** 🪭 Intersect the angular cones about the two seam rays to locate each shared crease of an inextensible radial fold. */
+function placeRadialFold(fold: RadialFold, frames: Record<Slug, SolvedFrame>, bones: ReadonlyMap<Slug, Bone>): void {
+  const left = frames[fold.left]!.frame, right = frames[fold.right]!.frame;
+  const cross = vectorCross(left.u, right.u);
+  const sine = portable.hypot(...cross);
+  const sweep = portable.atan2(sine, vectorDot(left.u, right.u));
+  const normal = sine < 1e-10 ? left.v : unitVector(cross);
+  const tangent = vectorCross(normal, left.u);
+  const count = fold.facets.length;
+  const projected = Math.min(1, sinCosDeg(fold.cutAngleDeg / count).cos / portable.cos(sweep / count));
+  const raised = Math.sqrt(Math.max(0, 1 - projected * projected));
+  const direction = (index: number): Vec3 => {
+    const angle = sweep * index / count;
+    const flat = combine(left.u, portable.cos(angle), tangent, portable.sin(angle));
+    return index % 2 === 0 ? flat : combine(flat, projected, normal, raised);
+  };
+  let u = direction(0);
+  for (let i = 0; i < count; i++) {
+    const next = direction(i + 1);
+    const v = unitVector(vectorCross(u, next));
+    const w = vectorCross(u, v);
+    const id = fold.facets[i]!;
+    const { o } = frames[id]!.frame;
+    frames[id] = { frame: { u, v, w, o }, affine: [u[0], u[1], v[0], v[1], o[0], o[1]], originZ: o[2], tipZ: o[2] + u[2] * bones.get(id)!.lengthM, affected: true };
+    u = next;
+  }
+}
+
 function chain(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { readonly x: number; readonly y: number; readonly angleDeg: number }): Record<Slug, SolvedFrame> {
   const { sin: rs, cos: rc } = sinCosDeg(root.angleDeg);
   const base: Frame3 = { o: [root.x, root.y, 0], u: [rc, rs, 0], v: [-rs, rc, 0], w: [0, 0, 1] };
@@ -155,12 +191,16 @@ function chain(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { re
     const { sin: ts, cos: tc } = sinCosDeg(bone.angleDeg + effective.angleDeg);
     const u1 = combine(parent.u, tc, parent.v, ts);
     const v1 = combine(parent.u, -ts, parent.v, tc);
-    const { sin: ps, cos: pc } = sinCosDeg(effective.abductionDeg);
+    const { sin: ps, cos: pc } = sinCosDeg((bone.abductionDeg ?? 0) + effective.abductionDeg);
     const u2 = combine(u1, pc, parent.w, ps);
     const w2 = combine(u1, -ps, parent.w, pc);
     const { sin: ws, cos: wc } = sinCosDeg(effective.twistDeg);
     const frame: Frame3 = { o: origin, u: u2, v: combine(v1, wc, w2, -ws), w: combine(v1, ws, w2, wc) };
-    result[bone.id] = { affine: [frame.u[0], frame.u[1], frame.v[0], frame.v[1], origin[0], origin[1]], frame, originZ: origin[2], tipZ: origin[2] + frame.u[2] * bone.lengthM, affected: (parentSolved?.affected ?? false) || effective.abductionDeg !== 0 || effective.twistDeg !== 0 };
+    result[bone.id] = { affine: [frame.u[0], frame.u[1], frame.v[0], frame.v[1], origin[0], origin[1]], frame, originZ: origin[2], tipZ: origin[2] + frame.u[2] * bone.lengthM, affected: (parentSolved?.affected ?? false) || (bone.abductionDeg ?? 0) + effective.abductionDeg !== 0 || effective.twistDeg !== 0 };
+  }
+  if (rig.radialFolds?.length) {
+    const bones = new Map(rig.bones.map(bone => [bone.id, bone]));
+    for (const fold of rig.radialFolds) placeRadialFold(fold, result, bones);
   }
   return result;
 }
@@ -177,9 +217,9 @@ function chain(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { re
 export function solveFrames(rig: Rig, offsets: Readonly<Record<Slug, BoneOffset>>, root: { readonly x: number; readonly y: number; readonly angleDeg: number }): Record<Slug, SolvedFrame> | null {
   const moved = parentFirstOrder(rig).some((bone) => {
     const e = effectiveOffset(bone, offsets[bone.id]);
-    return e.abductionDeg !== 0 || e.twistDeg !== 0;
+    return (bone.abductionDeg ?? 0) + e.abductionDeg !== 0 || e.twistDeg !== 0;
   });
-  return moved ? chain(rig, offsets, root) : null;
+  return moved || rig.radialFolds?.length ? chain(rig, offsets, root) : null;
 }
 
 /** 🧊️ The three-dimensional chain of every rig, spread or not: the reference of the single front and plan placement. */

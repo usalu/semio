@@ -139,7 +139,7 @@
      "transform": {
       "translation": [
        -1.0,
-       1.79625,
+       1.80375,
        0.0
       ]
      }
@@ -11095,7 +11095,7 @@
      "size": [
       0.12,
       0.15,
-      1.46
+      1.42
      ],
      "transform": {
       "translation": [
@@ -11115,7 +11115,7 @@
      "size": [
       0.12,
       0.15,
-      1.46
+      1.42
      ],
      "transform": {
       "translation": [
@@ -18088,23 +18088,61 @@
     },
     {
      "id": "joint-counter-heel",
-     "kind": "box",
+     "kind": "revolve",
      "bone": "counter-jib",
      "material": "steel-s355",
      "role": "body",
      "tone": 0.4,
-     "size": [
-      0.1638,
-      0.1638,
-      1.4037
-     ],
-     "transform": {
-      "translation": [
-       0.885,
-       0.64,
-       0.0
+     "profile": [
+      [
+       0,
+       0.036
+      ],
+      [
+       0.12,
+       0.036
       ]
-     },
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.795,
+      0.64,
+      0.64
+     ],
+     "member": "counter-jib",
+     "part": "joint"
+    },
+    {
+     "id": "joint-counter-heel-right",
+     "kind": "revolve",
+     "bone": "counter-jib",
+     "material": "steel-s355",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0,
+       0.036
+      ],
+      [
+       0.12,
+       0.036
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.795,
+      0.64,
+      -0.64
+     ],
      "member": "counter-jib",
      "part": "joint"
     },
@@ -18497,7 +18535,7 @@
      "transform": {
       "translation": [
        -1.0,
-       1.7925,
+       1.8075,
        0.0
       ]
      }
@@ -28660,7 +28698,7 @@
      "size": [
       0.12,
       0.15,
-      1.46
+      1.42
      ],
      "transform": {
       "translation": [
@@ -28680,7 +28718,7 @@
      "size": [
       0.12,
       0.15,
-      1.46
+      1.42
      ],
      "transform": {
       "translation": [
@@ -34729,23 +34767,61 @@
     },
     {
      "id": "joint-counter-heel",
-     "kind": "box",
+     "kind": "revolve",
      "bone": "counter-jib",
      "material": "steel-s355",
      "role": "body",
      "tone": 0.4,
-     "size": [
-      0.1675,
-      0.1675,
-      1.4075
-     ],
-     "transform": {
-      "translation": [
-       0.885,
-       0.64,
-       0.0
+     "profile": [
+      [
+       0,
+       0.036
+      ],
+      [
+       0.12,
+       0.036
       ]
-     },
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.795,
+      0.64,
+      0.64
+     ],
+     "member": "counter-jib",
+     "part": "joint"
+    },
+    {
+     "id": "joint-counter-heel-right",
+     "kind": "revolve",
+     "bone": "counter-jib",
+     "material": "steel-s355",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0,
+       0.036
+      ],
+      [
+       0.12,
+       0.036
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.795,
+      0.64,
+      -0.64
+     ],
      "member": "counter-jib",
      "part": "joint"
     },
@@ -35138,7 +35214,7 @@
      "transform": {
       "translation": [
        -1.0,
-       1.785,
+       1.815,
        0.0
       ]
      }
@@ -44260,7 +44336,7 @@
      "size": [
       0.12,
       0.15,
-      1.46
+      1.42
      ],
      "transform": {
       "translation": [
@@ -44280,7 +44356,7 @@
      "size": [
       0.12,
       0.15,
-      1.46
+      1.42
      ],
      "transform": {
       "translation": [
@@ -49102,23 +49178,61 @@
     },
     {
      "id": "joint-counter-heel",
-     "kind": "box",
+     "kind": "revolve",
      "bone": "counter-jib",
      "material": "steel-s355",
      "role": "body",
      "tone": 0.4,
-     "size": [
-      0.175,
-      0.175,
-      1.415
-     ],
-     "transform": {
-      "translation": [
-       0.885,
-       0.64,
-       0.0
+     "profile": [
+      [
+       0,
+       0.036
+      ],
+      [
+       0.12,
+       0.036
       ]
-     },
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.795,
+      0.64,
+      0.64
+     ],
+     "member": "counter-jib",
+     "part": "joint"
+    },
+    {
+     "id": "joint-counter-heel-right",
+     "kind": "revolve",
+     "bone": "counter-jib",
+     "material": "steel-s355",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0,
+       0.036
+      ],
+      [
+       0.12,
+       0.036
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.795,
+      0.64,
+      -0.64
+     ],
      "member": "counter-jib",
      "part": "joint"
     },

@@ -6,6 +6,7 @@
 import { TreeStatusAnnouncement } from "./📢️status-announcement/🟦️.tsx";
 import {
   useCallback,
+  Fragment,
   useEffect,
   useMemo,
   useRef,
@@ -57,8 +58,9 @@ import {
   UnknownComponentView
 } from "../🔤️display-views/🟦️.tsx";
 import { OrdinaryControlView } from "../🎛️control-port/🟦️.tsx";
-import { documentControlContext } from "../🎛️control-port/🟦️.ts";
-import { UiContainerFrame } from "../🎛️control-port/container.tsx";
+import { documentControlContext, type UiControlContext } from "../🎛️control-port/🟦️.ts";
+import { UiContainerFrame, type UiContainerFrameProps } from "../🎛️control-port/container.tsx";
+import { fieldControlAssociation } from "../🎛️control-port/label-target.ts";
 import {
   collectTreeItemControls,
   collectTreeItems,
@@ -107,21 +109,50 @@ function childIsFramed(state: UiDocumentState, record: UiNodeRecord): boolean {
   return component.type === "table" || FRAMED_CONTROL_TYPES.has(component.type) || containerIsRow(state, record);
 }
 
-function ContainerView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+type RecordViewProps = { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext };
+
+function SingleControlField({ store, context, frame, childId, field }: Omit<RecordViewProps, "record"> & {
+  readonly frame: Omit<UiContainerFrameProps, "children">;
+  readonly childId: UiNodeId;
+  readonly field: Extract<Component, { type: "container" }>;
+}) {
+  const child = useUiNode(store, childId);
+  const relation = child ? fieldControlAssociation(documentControlContext(context), field, frame.id, child) : undefined;
+  const content = child && child.component.type !== "separator" ? <Fragment key={child.key || child.id}>{renderComponent(store, child, context, relation?.context)}</Fragment> : null;
+  return <UiContainerFrame {...frame} controlId={relation?.target ?? null}>{content && child && !childIsFramed(store.getState(), child) ? <SharedBorderRowCell>{content}</SharedBorderRowCell> : content}</UiContainerFrame>;
+}
+
+function hoverPreviewHandlers(context: UiInterpreterContext, record: UiNodeRecord) {
+  const binding = (record.bindings ?? []).find(item => item.trigger === "hoverPreview");
+  return {
+    onPointerEnter: binding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
+    onPointerLeave: binding?.action.name === "interactionHover" ? () => dispatchTrigger(context, record, "hoverPreview", { targets: "[]" }) : undefined,
+  };
+}
+
+function ContainerView({ store, record, context }: RecordViewProps) {
   const presence = usePresenceOverlayEntry(record.key);
   const childIds = record.children ?? [];
   const state = store.getState();
-  const keys = uiChildReactKeys(state, childIds);
   const row = containerIsRow(state, record);
+  const activate = (record.bindings ?? []).some(binding => binding.trigger === "activate");
+  const frame: Omit<UiContainerFrameProps, "children"> = {
+    record, id: nodeDomId(store, record, context.domScope), row, selected: presence.selected, hovered: record.style.highlighted || presence.hovered || presence.previewed,
+    ...hoverPreviewHandlers(context, record),
+    onActivate: activate ? event => { event.stopPropagation(); dispatchTrigger(context, record, "activate"); } : undefined,
+  };
+  if (record.component.type === "container" && record.component.role === "field" && childIds.length === 1) {
+    return <SingleControlField store={store} context={context} frame={frame} field={record.component} childId={childIds[0]!} />;
+  }
+  const keys = uiChildReactKeys(state, childIds);
   const children = childIds.map((id, index) => {
     const view = <UiNodeView key={keys[index]} store={store} id={id} context={context} />;
     if (!row) return view;
     const child = state.nodes.get(id);
     if (child === undefined || child.component.type === "separator") return null;
-    return childIsFramed(state, child) ? view : <SharedBorderRowCell key={keys[index]}>{view}</SharedBorderRowCell>;
+    return child.layout.kind === "scroll" || childIsFramed(state, child) ? view : <SharedBorderRowCell key={keys[index]}>{view}</SharedBorderRowCell>;
   });
-  const activate = (record.bindings ?? []).some(binding => binding.trigger === "activate");
-  return <UiContainerFrame record={record} id={nodeDomId(store, record, context.domScope)} selected={presence.selected} hovered={presence.hovered} row={row} onActivate={activate ? event => { event.stopPropagation(); dispatchTrigger(context, record, "activate"); } : undefined}>{children}</UiContainerFrame>;
+  return <UiContainerFrame {...frame}>{children}</UiContainerFrame>;
 }
 
 //#region Tree
@@ -139,18 +170,19 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
   registerTreeWalkRow(walk, windowPath ?? record.key, domId);
   const presence = overlay.byKey.get(record.key) ?? {};
   const activateBinding = rowActivationBinding(record);
-  const hoverBinding = (record.bindings ?? []).find((b) => b.trigger === "hoverPreview");
   const childItems = collectTreeItems(state, record.children ?? []);
   const contentRecords: UiNodeRecord[] = [];
   const controlRecords = collectTreeItemControls(state, record.children ?? []).filter(child => {
     const contained = child.component.type === "container" ? child.children : undefined;
     const visual = contained?.some(id => state.nodes.get(id)?.component.type === "surface");
     const prose = contained !== undefined && contained.length > 1 && contained.every(id => state.nodes.get(id)?.component.type === "text");
-    const content = child.component.type === "surface" || visual || prose;
+    const content = child.component.type === "surface" || child.component.type === "image" || visual || prose;
     if (content) contentRecords.push(child);
     return !content;
   });
   const activatableControl = activateBinding ? undefined : controlRecords.find((child) => !child.disabled && (child.bindings ?? []).some((b) => b.trigger === "activate") && treeRowStandsForControl(child, props.label));
+  const hover = hoverPreviewHandlers(context, record);
+  const content = contentRecords.length ? <>{renderTreeItemControls(store, contentRecords, { ...context, domScope: domId })}</> : undefined;
   const granularity = typeof props.granularity === "string" && props.granularity.length > 0 ? props.granularity : undefined;
   if (granularity && walk?.pick) walk.pickTargets?.set(domId, { key: record.key, granularity });
   const pickClick = !activateBinding && granularity && walk?.pick ? (event: ReactMouseEvent, activation: TreeDataActivationContext) => dispatchTreePick(context, walk, record.key, granularity, event, activation) : undefined;
@@ -165,18 +197,18 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
     defaultOpen: props.defaultOpen ?? (contentRecords.length > 0 || undefined),
     isSelected: props.selected === true || Boolean(presence.selected) || leftoverItemSelectedV1(record.key, leftoverIds),
-    isHighlighted: presence.hovered === true || presence.previewed === true ? true : undefined,
+    isHighlighted: record.style.highlighted || presence.hovered || presence.previewed || undefined,
     loading: record.activity === "loading",
     waiting: record.activity === "waiting",
     isHidden: props.dimmed ?? undefined,
     draggable: props.draggable ?? undefined,
     dragData: props.dragData ? (Object.fromEntries(Object.entries(props.dragData).filter((entry): entry is [string, string] => entry[1] !== undefined)) as Record<string, string>) : undefined,
     control: controlRecords.length > 0 && controlRecords.length !== (activatableControl ? 1 : 0) ? <>{renderTreeItemControls(store, controlRecords.filter((child) => child !== activatableControl), { ...context, domScope: domId })}</> : undefined,
-    content: contentRecords.length > 0 ? <>{renderTreeItemControls(store, contentRecords, { ...context, domScope: domId })}</> : undefined,
+    content: content && hover.onPointerEnter ? <div {...hover}>{content}</div> : content,
+    windowContentRows: props.window && contentRecords.length > 0 ? contentRecords.length : undefined,
     items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(store, state, child, context, overlay, leftoverIds, walk, windowPath ?? parentWindowPath, rowAdmission)) : undefined,
     onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : (pickClick ?? (activatableControl ? () => dispatchTrigger(context, activatableControl, "activate") : undefined)),
-    onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
-    onPointerLeave: hoverBinding?.action.name === "interactionHover" ? () => dispatchTrigger(context, record, "hoverPreview", {targets: "[]"}) : undefined,
+    ...hover,
     actions: rowTreeActions(record, props, context, rowAdmission),
   };
 }
@@ -495,7 +527,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
 
 /** 🌳️ Renders one record's component, recursing into children via {@link UiNodeView} — never reads a
  * child's own record directly, only its id, so a child's change never re-renders this switch. */
-function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: UiInterpreterContext): ReactNode {
+function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: UiInterpreterContext, controls?: UiControlContext): ReactNode {
   const busyShell = interpretUiNodeBusyShell(record);
   if (busyShell) return busyShell;
   switch (record.component.type) {
@@ -511,7 +543,7 @@ function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: 
     case "numberStepper":
     case "ring":
     case "iconSelect":
-      return <OrdinaryControlView record={record} context={documentControlContext(context)} />;
+      return <OrdinaryControlView record={record} context={controls ?? documentControlContext(context)} />;
     case "separator":
       return <hr className={cn("border-0", borderNormalTopClass)} data-ui-node-id={record.id} data-ui-node-key={record.key} />;
     case "keyValueList":
@@ -524,7 +556,7 @@ function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: 
     case "treeItem":
       return <ContainerView store={store} record={record} context={context} />;
     case "image":
-      return <ImageView record={record} />;
+      return <ImageView record={record} store={store} />;
     case "surface":
       return <SurfaceView record={record} context={context} />;
     case "extension":

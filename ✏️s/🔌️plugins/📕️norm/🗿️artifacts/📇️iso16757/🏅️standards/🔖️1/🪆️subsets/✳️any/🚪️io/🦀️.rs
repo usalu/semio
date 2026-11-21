@@ -69,6 +69,12 @@ pub mod io {
         Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(catalogue))))
     }
 
+    /// 🏛️ Exports the catalogue as an IFC4 type library.
+    pub fn catalogue_to_ifc4(catalogue: &semio_s_artifact_norm_iso16757_model::part_1::Catalogue) -> Result<String, NormError> {
+        semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_5::export_ifc_step(catalogue)
+            .map_err(|error| NormError::InvalidValue { field: "catalogue".into(), reason: error.messages().0 })
+    }
+
     pub fn catalogue_from_json(json: &str) -> Result<semio_s_artifact_norm_iso16757_model::part_1::Catalogue, NormError> {
         semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| NormError::InvalidValue { field: "catalogue".into(), reason: e.to_string() })
     }

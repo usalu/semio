@@ -5,6 +5,57 @@ use semio_framework_value_retirement::{OriginalRetirementFailure,retirement::Ret
 use semio_framework_value_clone_source_testing::FixtureSourceBirth;
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
+
+#[test]
+fn resident_native_backing_cancels_each_partial_seed_across_fresh_sources() {
+    use semio_framework_value_snapshot_projection::{NativeProjectionBacking, NativeSeedTemplate};
+    use std::mem::MaybeUninit;
+
+    type Header = [u8; 3072];
+    unsafe fn seed(target: *mut MaybeUninit<Header>, offset: usize, bytes: usize) {
+        unsafe { target.cast::<u8>().add(offset).write_bytes(7, bytes) };
+    }
+
+    let law: serde_json::Value = serde_json::from_str(include_str!("law.json")).unwrap();
+    let template = unsafe { NativeSeedTemplate::new(seed) };
+    let complete = template.part_count() + 2;
+    let cuts = law["cancellationCuts"].as_array().unwrap().iter().map(|cut| cut.as_u64().unwrap() as usize);
+    for cut in cuts.take_while(|&cut| cut < complete) {
+        let mut owner = NativeProjectionBacking::new_resident(template);
+        let mut previous = None;
+        let mut retained = 0;
+        for action in 0..law["maximumTurns"].as_u64().unwrap() as usize {
+            let birth = action < cut;
+            if !birth && owner.terminal_is_empty() { break; }
+            let demand = if birth { owner.birth_demand() } else { owner.release_demand(None) }.unwrap();
+            let grant = grant(demand);
+            let mut bank = EffectBank::new(Wallet::new(grant, 1));
+            let mut reply = None;
+            let ((poll, marker), heap) = observe(|| bank.run_with_source(grant, 1, |effect, witness| {
+                let actual = Some(witness.identity());
+                assert_ne!(actual, previous);
+                previous = actual;
+                let before = effect.performed_work();
+                let reply = OriginalEffectReply::borrow(&mut reply).unwrap();
+                let result = if birth { owner.birth_into(effect, reply) } else { owner.release_into(None, effect, reply) };
+                RetainedWorkPoll::Complete(RetainedWorkOutcome { result: result.map(drop), work: effect.performed_work() - before })
+            }));
+            let RetainedWorkPoll::Complete(outcome) = poll else { panic!("native backing action must settle in its turn") };
+            outcome.result.unwrap();
+            let progress = reply.take().unwrap().unwrap().progress();
+            assert_eq!(heap, (progress.retained_capacity_bytes, progress.released_bytes));
+            if let Some(marker) = marker { assert_eq!(marker, heap.0); }
+            assert_eq!(bank.take_admitted(), Some(true));
+            bank.post(progress, grant, heap);
+            retained += heap.0;
+            retained -= heap.1;
+            assert!(!owner.initialized());
+        }
+        assert!(owner.terminal_is_empty());
+        assert_eq!(retained, 0);
+    }
+}
+
 #[derive(Clone,Copy,Debug)]struct Root(u64);
 impl RetireOwned for Root{type RetirementCursor=<u64 as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{self.0.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::RetirementCursor>())}fn controlled_retirement_supported()->bool{true}}
 impl RetainedClone for Root{type Cursor=ImmutableRootCloneCursor<Self>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}

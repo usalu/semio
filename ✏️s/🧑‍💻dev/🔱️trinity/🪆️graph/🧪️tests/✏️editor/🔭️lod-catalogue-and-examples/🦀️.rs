@@ -1,6 +1,7 @@
 //! 🔭️ Level of detail, the catalogue, the inspection panel, example loading, deletion, export and ports of the editor laws. See [`super`].
 
 use super::*;
+use semio_plugin::{ContextMenuRequest, WindowMeasure};
 
 #[semio_framework_async_macros::async_test]
 async fn graph_scene_has_lod_json() {
@@ -29,7 +30,7 @@ async fn set_lod_mode_reflects_in_window_measures() {
     let mut app = new_app().await;
     let view = ViewModel { window_instances: vec![semio_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: "trinity-jack-graph".into() }], ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let addressed = view.for_window_instance("jack-graph-main").unwrap();
-    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("lod");
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_plugin::ActionMeta { view_state: Some(addressed.into()), ..meta("local") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("lod");
     let receipt = settle(&mut app,cx).await;
     assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Fault));
     let measures = app.window_measures(&view).await;

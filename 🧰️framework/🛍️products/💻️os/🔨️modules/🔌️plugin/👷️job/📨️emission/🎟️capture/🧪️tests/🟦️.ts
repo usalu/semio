@@ -19,3 +19,17 @@ test("owned emitted lanes move as one source without changing their values",()=>
  expect(db.query("SELECT count(*) AS owners FROM accepted").get()).toEqual({owners:1});
  db.exec("DELETE FROM accepted");expect(db.query("SELECT count(*) AS owners FROM accepted").get()).toEqual({owners:0});db.close();
 });
+
+test("mounted handoff keeps the capture retirement bound to its original decoder", () => {
+  const db = new Database(":memory:");
+  db.exec("CREATE TABLE capture (decoder TEXT PRIMARY KEY); INSERT INTO capture VALUES ('original')");
+  db.exec("CREATE TABLE mounted (input TEXT PRIMARY KEY); INSERT INTO mounted VALUES ('emission')");
+  const retire = db.query("DELETE FROM capture WHERE decoder = ?");
+  const pendingAfterHandoff = db.query("SELECT decoder FROM capture").get() !== null;
+  const foreignDecoderAccepted = retire.run("foreign").changes > 0;
+  retire.run("original");
+  const terminalAfterOwnerClose = db.query("SELECT decoder FROM capture").get() === null;
+  expect({ foreignDecoderAccepted, pendingAfterHandoff, terminalAfterOwnerClose }).toEqual(law.mountedHeader.captureRetirement);
+  expect(db.query("SELECT input FROM mounted").get()).toEqual({ input: "emission" });
+  db.close();
+});

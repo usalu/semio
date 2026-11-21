@@ -141,7 +141,7 @@ fn align_to_priors_recovers_planted_similarity() {
         let pose = CameraPose(Se3 { r: So3::exp([0.1 * f64::from(i), 0.05, 0.0]), t: [rng.next_f64() * 2.0, rng.next_f64() * 2.0, rng.next_f64() * 2.0] });
         cameras.push((i as usize, pose));
     }
-    let recon = Reconstruction { cameras: cameras.clone(), points: Vec::new(), point_track_ids: Vec::new(), intrinsics: intr };
+    let recon = Reconstruction { cameras: cameras.clone(), points: Vec::new(), point_track_ids: Vec::new(), intrinsics: cameras.iter().map(|&(frame, _)| (frame, intr)).collect() };
 
     let truth = Sim3 { s: 3.5, r: So3::exp([0.2, -0.3, 0.1]), t: [10.0, -5.0, 2.0] };
     let gps_priors: Vec<(usize, [f64; 3])> = cameras.iter().map(|&(f, pose)| (f, truth.act(camera_center(&pose)))).collect();

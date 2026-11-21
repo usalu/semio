@@ -352,13 +352,19 @@ fn run_genesis_crossings(snapshot: &BitmapSnapshot, grant: &serde_json::Value) -
     use semio_framework_job::JobOutcomeBorrow;
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(1), snapshot.seed);
     let mut job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None }).expect("the genesis job admits");
-    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::new(operation.operation, operation.generation);
     let fuel = grant["fuel"].as_u64().expect("law fuel");
+    let mut driver = semio_s_plugin_wfc_engine_oracle::step_context::TestJobDriver::with_work_stock(operation.operation, operation.generation, fuel);
     let started = std::time::Instant::now();
     let mut crossings = 0usize;
     let completed = loop {
         crossings += 1;
-        assert!(crossings <= 5_000_000, "the genesis solve did not settle within five million crossings");
+        if crossings > 5_000_000 {
+            let stage = job.stage;
+            let progress = job.progress();
+            let work = driver.turn(|context| Ok(context.original_source_fuel_remaining())).expect("live original fixture Source");
+            driver.close(&mut job);
+            panic!("the genesis solve stayed in {stage:?} at {progress:?} with {work} original work units remaining");
+        }
         let settled = driver.step(&mut job, fuel, |outcome| match outcome {
             Some(JobOutcomeBorrow::Complete { .. }) => Some(true),
             Some(JobOutcomeBorrow::Fault { .. }) | Some(JobOutcomeBorrow::Cancelled { .. }) => Some(false),

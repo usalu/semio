@@ -6,6 +6,7 @@
     "gridVisible": true,
     "gridSpacing": 32.0
   },
+  "disposerBirth": { "copyBytes": 0, "releaseBytes": 0, "depth": 1 },
   "windows": [
     {
       "id": "note-composite-a",

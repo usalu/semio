@@ -123,6 +123,7 @@
       "observationRowsHoldAsyncV1",
       "observationRowsHoldV1",
       "observationsHold",
+      "observationsHoldWithinRoundV1",
       "observeDependencies",
       "observeDetachedSyncV1",
       "observeDetachedV1",

@@ -1,0 +1,40 @@
+{
+  "widgets": [
+    {
+      "id": "origin",
+      "name": "Origin",
+      "schema": "point",
+      "channel": "Origin",
+      "coords": [
+        1,
+        2,
+        3
+      ],
+      "role": "point"
+    },
+    {
+      "id": "axis",
+      "name": "Axis",
+      "schema": "vector",
+      "channel": "Axis",
+      "coords": [
+        -2,
+        0,
+        0
+      ],
+      "role": "vector"
+    },
+    {
+      "id": "amount",
+      "name": "Amount",
+      "schema": "number",
+      "channel": "Amount",
+      "value": 17
+    }
+  ],
+  "hover": "axis@Axis",
+  "expected": [
+    "origin@Origin#0",
+    "axis@Axis#0"
+  ]
+}

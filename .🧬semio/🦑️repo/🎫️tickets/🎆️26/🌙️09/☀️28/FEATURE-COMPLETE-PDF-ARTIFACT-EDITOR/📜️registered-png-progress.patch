@@ -1,0 +1,28 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🦀️.rs
+@@ -243,3 +243,10 @@
+ 
+-    fn render_with_request_context(
++    fn operation_progress_scope() -> semio_plugin::kernel::UiDirtyScope {
++        semio_plugin::kernel::UiDirtyScope::Partial {
++            window_bodies: vec![crate::editor::page::INSPECTOR_BODY_KEY.into()], panel_bodies: Vec::new(),
++            utilities: false, tools: false, engagements: false, measures: false, labels: false,
++        }
++    }
++
++    fn render_with_request_context(
+         _owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
+@@ -262,3 +269,12 @@
+             let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);
+-            return crate::editor::page::render_inspector(doc.snapshot, selected, "s.stdio.pdf@1.7/*#editor", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);
++            let controller = "s.stdio.pdf@1.7/*#editor";
++            let revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
++            let mut inspector = crate::editor::page::render_inspector(doc.snapshot, selected, controller, revision, view_state.locale)?;
++            if !doc.operations().is_empty() {
++                let progress = semio_plugin::app::operation_progress::operation_progress_controls(doc.operations(), controller, view_state.locale)?;
++                for child in std::iter::once(progress).chain(std::mem::take(&mut inspector.children)) {
++                    inspector.children.try_push(child).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "PDF operation progress children"))?;
++                }
++            }
++            return Ok(built_to_component_tree(inspector));
+         }

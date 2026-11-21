@@ -515,6 +515,7 @@ name = "semio-framework-graph-manifest"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
@@ -1261,6 +1262,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
  "semio-framework-replication-error",
@@ -3268,6 +3270,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",

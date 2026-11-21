@@ -273,6 +273,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/📡️wire/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🔗️causal/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🔗️causal/🧮️backbone/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🔗️causal/🧮️backbone/🧩️atomic-group/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🚪️io/📥️bootstrap/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts",
@@ -1630,7 +1631,7 @@
         "^production"
       ],
       "outputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/native-{options.env.SEMIO_BUILD_MODE}"
+        "{projectRoot}/.🧾️store/native-build.json"
       ],
       "options": {
         "command": "repo \"../../🏗️compiler/🦀️native/📜️script.ts\" build",

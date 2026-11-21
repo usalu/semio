@@ -1,0 +1,13 @@
+# GIS Terrain overlay editing
+
+The GIS Terrain editor exposes Add Position, Move Position, Edit Route or Region, Remove Map Feature, and Clear Map Features in its normal Terrain actions. Add Position accepts longitude and latitude in WGS84, an optional name, and an optional elevation in meters. It checks the view's Web Mercator coordinate extent and rejects a feature ID already present in any collection. Move Position applies new coordinates while preserving its name, elevation and other properties. Remove Map Feature uses one ID across positions, routes and regions. Clear Map Features clears all three collections and retains the source properties.
+
+Edit Route or Region creates, replaces or appends vertices by feature ID. A bounded staged field accepts up to 512 bytes of `[[longitude, latitude], …]` and append extends shapes across multiple edits. Existing labels, arbitrary intrinsic values and region holes survive edits. The optional name changes the display name. A route needs two distinct vertices and a region needs three. A repeated closing region vertex is optional. The edit accepts country-scale WGS84 features regardless of the local raster's extent.
+
+Each changed overlay publishes a `ChangeImportedFeatures` artifact mutation through the existing retained command and Store. Undo and redo restore complete intrinsic map revisions. Overlay edits preserve the authored elevation raster and independent mesh reference. Adding the first marker creates the optional map. Removing an absent ID and clearing an empty map are no-ops.
+
+An independent JavaScript reducer and Ajv validated eleven transitions and eight invalid or duplicate inputs from the shared JSON fixture. They verified that out-of-grid features, route segments, the closed ring normalization, moved point elevation and region holes survive the expected edits. The mounted Rust test additionally verifies original registered dispatch, the artifact publication lane, and exact history with the elevation grid preserved.
+
+Repository Cargo session 90739 remains active with no captured compiler errors. Its latest compile frontier passed the OS kernel and entered `semio-ui-scene-world3d`. It has yet to compile the GIS editor or report mounted test results. The command logs to `🗑️generated/registered-overlay-edits.log` and selects `overlay_edit` in `semio-s-artifact-gis-gisterrain-editor`.
+
+An independent manifest check compared the registered command enum against the round-trip test vocabulary and publication fixture. All fifteen wire commands were covered, including fourteen commands in the common retained factory and the separate raw file callback.

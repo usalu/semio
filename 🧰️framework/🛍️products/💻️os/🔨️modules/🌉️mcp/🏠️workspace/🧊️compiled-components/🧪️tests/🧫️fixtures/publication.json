@@ -1,0 +1,10 @@
+{
+  "steps": [
+    {"runtime": "unrelated", "cancel": "never", "result": "local", "shared": false, "prepared": true},
+    {"runtime": "shared", "cancel": "before-publication", "result": "cancelled", "shared": false, "prepared": true},
+    {"runtime": "shared", "cancel": "never", "result": "owner", "shared": true, "prepared": true},
+    {"runtime": "shared", "cancel": "at-cache-check", "result": "cancelled", "shared": true, "prepared": false},
+    {"runtime": "unrelated", "cancel": "never", "result": "local", "shared": true, "prepared": true},
+    {"runtime": "shared", "cancel": "never", "result": "owner", "shared": true, "prepared": false}
+  ]
+}

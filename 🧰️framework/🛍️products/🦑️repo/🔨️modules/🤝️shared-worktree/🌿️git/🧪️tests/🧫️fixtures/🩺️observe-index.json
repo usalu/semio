@@ -1,0 +1,14 @@
+[
+  {
+    "layout": "full",
+    "copy": true
+  },
+  {
+    "layout": "split",
+    "copy": true
+  },
+  {
+    "layout": "sparse",
+    "copy": true
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "failure": "registration",
+    "expected": {
+      "id": "waiter",
+      "records": [
+        "waiting",
+        "running"
+      ],
+      "custody": [
+        true
+      ],
+      "reclaims": 1,
+      "reported": true
+    }
+  },
+  {
+    "failure": "claim",
+    "expected": {
+      "id": "waiter",
+      "records": [
+        "waiting",
+        "running"
+      ],
+      "custody": [
+        true
+      ],
+      "reclaims": 1,
+      "reported": true
+    }
+  }
+]

@@ -4,7 +4,20 @@
 // #region 🔖️Part3
 use crate::*;
 
-/// 🌫️ Saturation vapour pressure [Pa] at `t_c` °C: Magnus form over water at and above 0 °C and over ice below (EN ISO 13788 Eq. 4 and 5, used by DIN 4108-3:2018, see <https://www.iso.org/standard/51615.html>); constants `unverified` against the DIN text.
+#[path = "📊️annex-a-period/🦀️.rs"]
+mod annex_a_period;
+pub use annex_a_period::*;
+
+#[path = "📏️material-limits/🦀️.rs"]
+pub mod material_limits;
+
+#[path = "📇️catalogue/🦀️.rs"]
+pub mod catalogue;
+
+#[path = "📐️construction-cases/🦀️.rs"]
+pub mod construction_cases;
+
+/// 🌫️ Saturation vapour pressure [Pa] at `t_c` °C: Magnus form over water at and above 0 °C and over ice below (DIN 4108-3:2024-03 C.15 and C.16).
 pub fn saturation_vapor_pressure_pa(t_c: f64) -> f64 {
     if t_c >= 0.0 {
         610.5 * (17.269 * t_c / (237.3 + t_c)).exp()
@@ -13,13 +26,13 @@ pub fn saturation_vapor_pressure_pa(t_c: f64) -> f64 {
     }
 }
 
-/// 💨 Vapour diffusion coefficient of still air δ0 [kg/(m·s·Pa)] (EN ISO 13788; `unverified` against DIN 4108-3:2018).
+/// 💨 Vapour diffusion coefficient of still air δ0 [kg/(m·s·Pa)] (DIN 4108-3:2024-03 C.8–C.11).
 pub const DELTA_0_KG_M_S_PA: f64 = 2.0e-10;
 
 /// 🛡️ Smallest equivalent air layer thickness [m] used as a divisor when a condensation plane lies on a boundary.
 pub const GLASER_SD_FLOOR_M: f64 = 1.0e-3;
 
-/// 🌦️ One climate period of the Glaser method (DIN 4108-3:2018 Annex A): interior and exterior air state and the duration.
+/// 🌦️ Temperature, relative humidity and duration for a specified vapour-pressure profile.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GlaserPeriod {
     pub t_int_c: f64,
@@ -29,11 +42,8 @@ pub struct GlaserPeriod {
     pub hours: f64,
 }
 
-/// ❄️ DIN 4108-3:2018 Annex A condensation period: interior 20 °C / 50 %, exterior −5 °C / 80 %, 90 days (`unverified` duration).
+/// ❄️ DIN 4108-3:2024-03 Annex A condensation-period air conditions over 90 days.
 pub const GLASER_WINTER: GlaserPeriod = GlaserPeriod { t_int_c: 20.0, rh_int: 0.50, t_ext_c: -5.0, rh_ext: 0.80, hours: 2160.0 };
-
-/// ☀️ DIN 4108-3:2018 Annex A evaporation period: 12 °C / 70 % on both sides, 90 days (`unverified` duration).
-pub const GLASER_SUMMER: GlaserPeriod = GlaserPeriod { t_int_c: 12.0, rh_int: 0.70, t_ext_c: 12.0, rh_ext: 0.70, hours: 2160.0 };
 
 /// 💨 Vapour diffusion resistance Z = s_d/δ0 [m²·s·Pa/kg] of an equivalent air layer thickness `sd_m`.
 pub fn vapour_diffusion_resistance_z(sd_m: f64) -> f64 {
@@ -106,12 +116,25 @@ fn piecewise_pressures(sd: &[f64], p_int: f64, p_ext: f64, p_sat: &[f64], planes
 
 /// 📈️ The Glaser profile of a stack under `period`: interface temperatures, saturation pressures and the vapour pressure with condensation planes added one by one at the interface of largest excess (EN ISO 13788 Glaser iteration).
 pub fn vapour_profile(layers: &[LayerDocument], r_si: f64, r_se: f64, period: GlaserPeriod) -> VapourProfile {
-    let temps = interface_temperatures_c(layers, r_si, r_se, period.t_int_c, period.t_ext_c);
     let p_int = period.rh_int * saturation_vapor_pressure_pa(period.t_int_c);
     let p_ext = period.rh_ext * saturation_vapor_pressure_pa(period.t_ext_c);
+    profile_with_boundary(layers, r_si, r_se, period, p_int, p_ext, layers.iter().map(sd_m))
+}
+
+fn profile_with_boundary(
+    layers: &[LayerDocument],
+    r_si: f64,
+    r_se: f64,
+    period: GlaserPeriod,
+    p_int: f64,
+    p_ext: f64,
+    layer_sd: impl IntoIterator<Item = f64>,
+) -> VapourProfile {
+    let temps = interface_temperatures_c(layers, r_si, r_se, period.t_int_c, period.t_ext_c);
     let mut sd = vec![0.0];
-    for layer in layers {
-        sd.push(sd.last().copied().unwrap_or(0.0) + sd_m(layer));
+    for thickness in layer_sd {
+        let cumulative = sd.last().copied().unwrap_or(0.0);
+        sd.push(cumulative + thickness);
     }
     let t_c: Vec<f64> = (0..=layers.len()).map(|i| temps[(i + 1).min(temps.len() - 1)]).collect();
     let p_sat_pa: Vec<f64> = t_c.iter().map(|t| saturation_vapor_pressure_pa(*t)).collect();
@@ -179,109 +202,103 @@ pub fn glaser_evaporated_mass_kg_m2(layers: &[LayerDocument], r_si: f64, r_se: f
         .sum()
 }
 
-/// ✅️ DIN 4108-3 drying reserve: the evaporable mass of the evaporation period must cover the condensed mass of the condensation period, both under the Annex A climate.
-pub fn check_drying_reserve(element: &EnvelopeElement) -> CheckResult {
-    let subject = SubjectRef::new(&element.id, entity_path("elements", &element.id), loc(&format!("Element {}", element.id), &format!("Bauteil {}", element.id)));
-    let title = loc("Glaser drying reserve", "Glaser-Trocknungsreserve");
-    let id = format!("din4108-3.drying.{}", element.id);
-    let clause = ClauseId::new("DIN 4108-3", "§4", "4.3");
-    if element.kind == "window" || element.kind == "door" || element.layers.is_empty() {
-        return CheckResult::assess(id, "DIN 4108-3", clause, subject, title).not_applicable(loc("No opaque stack for Glaser analysis.", "Kein opaker Aufbau für Glaser-Verfahren.")).annex(AnnexChoice::De).build();
+/// ✅️ DIN 4108-3 period balance screening for the recorded envelope element.
+pub fn check_period_balance(element: &EnvelopeElement, usage: &str, basis: catalogue::PeriodBasis) -> [CheckResult; 2] {
+    use semio_s_plugin_norm_compliance::CheckStatus;
+    let subject = SubjectRef::new(&element.id, entity_path("elements", &element.id), loc("Envelope element", "Hüllbauteil"));
+    let condensed = CheckResult::assess(
+        format!("din4108-3.glaser.{}", element.id), "DIN 4108-3:2024-03",
+        ClauseId::new("DIN 4108-3", "5.2.2", "A.2.5"),
+        subject.clone(), loc("Annex A condensation screening", "Tauwasser-Vorprüfung nach Anhang A"),
+    ).annex(AnnexChoice::De);
+    let drying = CheckResult::assess(
+        format!("din4108-3.drying.{}", element.id), "DIN 4108-3:2024-03",
+        ClauseId::new("DIN 4108-3", "5.2.2", "A.2.6"),
+        subject, loc("Annex A drying capacity", "Verdunstungspotenzial nach Anhang A"),
+    ).annex(AnnexChoice::De);
+    if element.layers.is_empty() || matches!(element.kind.as_str(), "window" | "door") {
+        let reason = loc("The element has no opaque layer stack.", "Für das Bauteil liegt kein opaker Schichtenaufbau vor.");
+        return [condensed.not_applicable(reason.clone()).build(), drying.not_applicable(reason).build()];
     }
-    let (r_si, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
-    let condensed = glaser_condensed_mass_kg_m2(&element.layers, r_si, r_se, GLASER_WINTER);
-    if condensed <= 0.0 {
-        return CheckResult::assess(id, "DIN 4108-3", clause, subject, title).not_applicable(loc("No condensation in the condensation period, no drying required.", "Kein Tauwasserausfall in der Tauperiode, keine Trocknung erforderlich.")).annex(AnnexChoice::De).build();
+    if (usage != "residential" && basis.site_scope != Some(true))
+        || element.adjacent != "exterior"
+        || !matches!(element.kind.as_str(), "wall" | "roof")
+    {
+        let reason = loc(
+            "Verify the room use and exposure for the period method under §5.2.1. Ground-contact elements require Annex D.",
+            "Raumnutzung und Bauteilrandbedingungen für das Periodenverfahren nach 5.2.1 prüfen. Erdberührte Bauteile erfordern Anhang D.",
+        );
+        return [condensed.not_applicable(reason.clone()).build(), drying.not_applicable(reason).build()];
     }
-    let evaporated = glaser_evaporated_mass_kg_m2(&element.layers, r_si, r_se, GLASER_WINTER, GLASER_SUMMER);
-    let mut builder = CheckResult::assess(id, "DIN 4108-3", clause, subject.clone(), title)
-        .utilization(Quantity::new(QuantityKind::Mass, condensed), Quantity::new(QuantityKind::Mass, evaporated.max(1e-9)))
-        .annex(AnnexChoice::De)
-        .explanation(loc(
-            &format!("Condensed {condensed:.3} kg/m² in the condensation period, evaporable {evaporated:.3} kg/m² in the evaporation period."),
-            &format!("Tauwasser {condensed:.3} kg/m² in der Tauperiode, verdunstbar {evaporated:.3} kg/m² in der Verdunstungsperiode."),
-        ))
-        .status(if condensed <= evaporated { semio_s_plugin_norm_compliance::CheckStatus::Pass } else { semio_s_plugin_norm_compliance::CheckStatus::Fail });
-    if condensed > evaporated {
-        let layer = &element.layers[0];
-        let mu_req = layer.mu * (condensed / evaporated.max(1e-9)).max(1.2);
-        builder = builder.remedy(Remedy::at_least(
-            SubjectRef::new(&element.id, layer_field_path(&element.id, &layer.id, "mu"), loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id))),
-            Quantity::new(QuantityKind::Dimensionless, layer.mu),
-            Quantity::new(QuantityKind::Dimensionless, mu_req),
-            loc(
-                &format!("Raise the vapour resistance of the interior layer '{}' to mu >= {mu_req:.1} so that less water condenses than can dry out.", layer.id),
-                &format!("Dampfdiffusionswiderstand der inneren Schicht '{}' auf mu >= {mu_req:.1} erhöhen, damit weniger Tauwasser anfällt, als austrocknen kann.", layer.id),
-            ),
-        ));
+    if basis.site_scope == Some(false) {
+        let reason = loc(
+            "The recorded site elevation or room conditions exclude the Annex A period method. Use Annex D.",
+            "Erfasste Standorthöhe oder Raumzustand schließen das Periodenverfahren aus. Anhang D anwenden.",
+        );
+        return [condensed.not_applicable(reason.clone()).build(), drying.not_applicable(reason).build()];
     }
-    builder.build()
-}
-
-/// ✅️ DIN 4108-3 Glaser / periodic condensation check under the Annex A climate (condensation period 20 °C/50 % to −5 °C/80 %, evaporation period 12 °C/70 % on both sides).
-pub fn check_glaser(element: &EnvelopeElement) -> CheckResult {
-    let subject = SubjectRef::new(
-        &element.id,
-        entity_path("elements", &element.id),
-        loc(&format!("Element {}", element.id), &format!("Bauteil {}", element.id)),
-    );
-    let title = loc("Glaser condensation mass", "Glaser-Kondensatmenge");
-    let id = format!("din4108-3.glaser.{}", element.id);
-    let clause = ClauseId::new("DIN 4108-3", "§4", "4.3");
-    if element.kind == "window" || element.kind == "door" || element.layers.is_empty() {
-        return CheckResult::assess(id, "DIN 4108-3", clause, subject, title)
-            .not_applicable(loc("No opaque stack for Glaser analysis.", "Kein opaker Aufbau für Glaser-Verfahren."))
-            .annex(AnnexChoice::De)
-            .build();
+    let roof = element.kind == "roof";
+    let exposure = if roof { basis.roof_exposure.unwrap_or(AnnexADryingExposure::ShadedOrLightRoof) } else { AnnexADryingExposure::WallOrAtticCeiling };
+    let basis_confirmed = basis.site_scope == Some(true) && (!roof || basis.roof_exposure.is_some());
+    let Some(balance) = annex_a_period_balance(&element.layers, exposure) else {
+        let reason = loc(
+            "Enter finite positive thicknesses, thermal conductivities and vapour resistance values for the layers.",
+            "Endliche positive Schichtdicken, Wärmeleitfähigkeiten und Dampfdiffusionswiderstände eingeben.",
+        );
+        return [
+            condensed.status(CheckStatus::UnverifiedBasis).explanation(reason.clone()).build(),
+            drying.status(CheckStatus::UnverifiedBasis).explanation(reason).build(),
+        ];
+    };
+    let mass = balance.condensed_kg_m2;
+    let capacity = balance.evaporation_capacity_kg_m2;
+    let wet_interfaces = balance.planes.iter().filter(|plane| plane.condensed_kg_m2 > 0.0).count();
+    let mass_limits = material_limits::condensate_limits(mass, basis.materials);
+    let condensation_status = match (mass_limits.complies, basis_confirmed) {
+        (Some(true), true) => CheckStatus::Pass,
+        (Some(false), true) => CheckStatus::Fail,
+        (Some(_), false) if mass == 0.0 => CheckStatus::Info,
+        _ => CheckStatus::UnverifiedBasis,
+    };
+    let limit = mass_limits.mass_limit_kg_m2;
+    let mut explanation = format!("Calculated winter condensate {mass:.3} kg/m² at {wet_interfaces} interfaces. The mass limit is {limit:.1} kg/m².");
+    let mut explanation_de = format!("Berechnetes Wintertauwasser {mass:.3} kg/m² an {wet_interfaces} Schichtgrenzen. Der Grenzwert beträgt {limit:.1} kg/m².");
+    if mass > 0.0 {
+        match basis.materials {
+            Some(materials) => {
+                let damage = if materials.materials_resist_damage { "verified" } else { "damage or loss of function identified" };
+                let damage_de = if materials.materials_resist_damage { "nachgewiesen" } else { "Schaden oder Funktionsverlust festgestellt" };
+                explanation.push_str(&format!(" Material durability: {damage}. Timber moisture increase {:.2}% (limit 5%), non-exempt wood products {:.2}% (limit 3%).", materials.timber_increase_pp, materials.wood_product_increase_pp));
+                explanation_de.push_str(&format!(" Baustoffbeständigkeit: {damage_de}. Feuchtezunahme Holz {:.2} % (Grenze 5 %), nicht ausgenommene Holzwerkstoffe {:.2} % (Grenze 3 %).", materials.timber_increase_pp, materials.wood_product_increase_pp));
+            }
+            None => {
+                explanation.push_str(" Record capillary absorption, material durability and moisture increases under §5.2.2.");
+                explanation_de.push_str(" Kapillare Wasseraufnahme, Baustoffbeständigkeit und Feuchtezunahmen nach 5.2.2 erfassen.");
+            }
+        }
     }
-    let (r_si, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
-    let (winter, summer) = (GLASER_WINTER, GLASER_SUMMER);
-    let condensed = glaser_condensed_mass_kg_m2(&element.layers, r_si, r_se, winter);
-    let evaporated = glaser_evaporated_mass_kg_m2(&element.layers, r_si, r_se, winter, summer);
-    let wood = element.layers.iter().any(|l| l.material_id.contains("wood") || l.material_id.contains("timber") || l.material_id.contains("softwood"));
-    let mass = part_2::surface_mass_kg_m2(&element.layers);
-    let limit = if wood || (mass > 0.0 && mass <= 100.0) { GLASER_MASS_LIMIT_WOOD } else { GLASER_MASS_LIMIT };
-    let dries = condensed <= evaporated;
-    let sd_total: f64 = element.layers.iter().map(sd_m).sum();
-    let mut builder = CheckResult::assess(id, "DIN 4108-3", clause, subject, title)
-        .utilization(Quantity::new(QuantityKind::Mass, condensed), Quantity::new(QuantityKind::Mass, limit))
-        .annex(AnnexChoice::De)
-        .explanation(loc(
-            &format!(
-                "Annex A climate, condensation period {:.0}°C/{:.0}% to {:.0}°C/{:.0}% for {:.0} h, evaporation period {:.0}°C/{:.0}% for {:.0} h: condensate {condensed:.3} kg/m² (limit {limit}), evaporable {evaporated:.3} kg/m², dries={dries}, sd={sd_total:.3} m.",
-                winter.t_int_c, winter.rh_int * 100.0, winter.t_ext_c, winter.rh_ext * 100.0, winter.hours, summer.t_ext_c, summer.rh_ext * 100.0, summer.hours
-            ),
-            &format!(
-                "Klima nach Anhang A, Tauperiode {:.0}°C/{:.0}% bis {:.0}°C/{:.0}% für {:.0} h, Verdunstungsperiode {:.0}°C/{:.0}% für {:.0} h: Tauwasser {condensed:.3} kg/m² (Grenze {limit}), verdunstbar {evaporated:.3} kg/m², trocknet={dries}, sd={sd_total:.3} m.",
-                winter.t_int_c, winter.rh_int * 100.0, winter.t_ext_c, winter.rh_ext * 100.0, winter.hours, summer.t_ext_c, summer.rh_ext * 100.0, summer.hours
-            ),
-        ));
-    builder = builder.status(if condensed > limit || !dries { semio_s_plugin_norm_compliance::CheckStatus::Fail } else { semio_s_plugin_norm_compliance::CheckStatus::Pass });
-    if condensed > limit || !dries {
-        let layer = &element.layers[0];
-        let sd_req = (layer.mu * layer.thickness_m * (condensed / limit).max(1.2)).max(layer.mu * layer.thickness_m);
-        let mu_req = if layer.thickness_m > 0.0 { sd_req / layer.thickness_m } else { layer.mu };
-        builder = builder.remedy(Remedy::at_least(
-            SubjectRef::new(
-                &element.id,
-                layer_field_path(&element.id, &layer.id, "mu"),
-                loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id)),
-            ),
-            Quantity::new(QuantityKind::Dimensionless, layer.mu),
-            Quantity::new(QuantityKind::Dimensionless, mu_req),
-            loc(
-                &format!(
-                    "Raise vapour resistance of interior layer '{}' (μ from {:.1} to ≥ {:.1}, sd ≥ {:.2} m) or add a vapour barrier.",
-                    layer.id, layer.mu, mu_req, sd_req
-                ),
-                &format!(
-                    "Dampfdurchlasswiderstand der inneren Schicht '{}' erhöhen (μ von {:.1} auf ≥ {:.1}, sd ≥ {:.2} m) oder Dampfbremse ergänzen.",
-                    layer.id, layer.mu, mu_req, sd_req
-                ),
-            ),
-        ));
+    if !basis_confirmed {
+        explanation.push_str(" Verify the site and room conditions and record roof exposure when applicable.");
+        explanation_de.push_str(" Standort und Raumzustand prüfen und beim Dach die Randbedingung erfassen.");
     }
-    builder.build()
+    let condensed = condensed.utilization(Quantity::new(QuantityKind::Mass, mass), Quantity::new(QuantityKind::Mass, limit))
+        .status(condensation_status).explanation(loc(&explanation, &explanation_de));
+    let drying = if mass <= 0.0 {
+        drying.not_applicable(loc("The modelled winter period produces no condensate.", "Die modellierte Tauperiode ergibt keinen Tauwasserausfall."))
+    } else {
+        let status = match (capacity >= mass, basis_confirmed) {
+            (true, true) => CheckStatus::Pass,
+            (true, false) => CheckStatus::Info,
+            (false, true) => CheckStatus::Fail,
+            (false, false) => CheckStatus::UnverifiedBasis,
+        };
+        drying.utilization(Quantity::new(QuantityKind::Mass, mass), Quantity::new(QuantityKind::Mass, capacity.max(1e-9)))
+            .status(status).explanation(loc(
+                &format!("Potential evaporation {capacity:.3} kg/m² at {} Pa interface saturation, compared with {mass:.3} kg/m² condensed. The standard gives dark unshaded roofs a separate summer pressure.", exposure.pressure_pa()),
+                &format!("Verdunstungspotenzial {capacity:.3} kg/m² bei {} Pa Sättigungsdampfdruck gegenüber {mass:.3} kg/m² Tauwasser. Für unverschattete dunkle Dächer gilt ein eigener Sommerwert.", exposure.pressure_pa()),
+            ))
+    };
+    [condensed.build(), drying.build()]
 }
 // #endregion 🔖️Part3
 //#endregion 🔖️ComplianceHelpers

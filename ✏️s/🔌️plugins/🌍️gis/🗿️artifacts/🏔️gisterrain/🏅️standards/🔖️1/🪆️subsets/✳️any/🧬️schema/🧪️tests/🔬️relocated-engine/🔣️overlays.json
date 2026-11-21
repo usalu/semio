@@ -1,0 +1,46 @@
+{
+  "scenery": {
+    "projectOrigin": { "lon": 5.5818, "lat": 50.603 },
+    "positions": [{ "id": "demo", "lon": 5.5818, "lat": 50.603 }]
+  },
+  "imported": {
+    "positions": [
+      { "id": "station", "lon": 10.0, "lat": 47.0, "alt": 0.0, "label": "Station" },
+      { "id": "summit", "lon": 10.02, "lat": 47.02, "name": "Summit" },
+      { "id": "invalid", "lon": 181, "lat": 47 },
+      { "id": "outside-tile-range", "lon": 0, "lat": 86 }
+    ],
+    "routes": [
+      { "id": "walk", "points": [[10.0, 47.0, 800], [10.02, 47.02]] },
+      { "id": "invalid", "points": [[10.0, 47.0], [false, 47], [10.02, 47.02]] }
+    ],
+    "regions": [
+      {
+        "id": "reserve",
+        "label": "Reserve",
+        "ring": [[10.0, 47.0], [10.02, 47.0], [10.02, 47.02], [10.0, 47.02], [10.0, 47.0]],
+        "holes": [[[10.005, 47.005], [10.01, 47.005], [10.01, 47.01]]]
+      }
+    ]
+  },
+  "origin": [10.01, 47.01],
+  "overlays": {
+    "positions": [
+      { "id": "station", "name": "Station", "coordinates": [10.0, 47.0], "elevation": 0.0 },
+      { "id": "summit", "name": "Summit", "coordinates": [10.02, 47.02] }
+    ],
+    "routes": [
+      { "id": "walk", "name": "walk", "coordinates": [[10.0, 47.0], [10.02, 47.02]] }
+    ],
+    "regions": [
+      {
+        "id": "reserve",
+        "name": "Reserve",
+        "rings": [
+          [[10.0, 47.0], [10.02, 47.0], [10.02, 47.02], [10.0, 47.02]],
+          [[10.005, 47.005], [10.01, 47.005], [10.01, 47.01]]
+        ]
+      }
+    ]
+  }
+}

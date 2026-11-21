@@ -22,3 +22,11 @@ The repository source closure reader reported the following counts on macOS.
 | B-Rep engine tests | Test | 13 | 2,131 | 172,394 |
 
 The engine test closure has 125 active lines, six files and 24,561 bytes of headroom. Scoped Git whitespace checks passed. The new paths are under 256 bytes and all relocated fixture references resolve. Process3d compilation is being verified by the parent task.
+
+## Native registry follow-up
+
+Editor run 4897 reported an unresolved `predicates::ray_event` import during compilation and a 4,058-line native registry closure during the subsequent source-admission diagnostic. In the current checkout the vector crate publicly exposes its `predicates` module and `ray_event` accepts the three points its analysis callers supply. The matching source files were updated nine milliseconds apart at 16:46:58 UTC during the prior build. Their current declarations resolve at the source level. This is consistent with a build having started from earlier vector inputs.
+
+The production source-closure reader independently reproduced 4,058 active lines in the current native registry. The pure polygon and helix wire recipe now lives in the existing solid-topology crate. It keeps the original sampling, tolerance and admission computations. The registry retains the original recipe reexports and owns label reservations, staged topology and publication. The peer polygon and conic face publication changes were preserved.
+
+The source-closure reader and scoped diff check passed. Native registry now has 24 files, 3,964 active lines and 218,766 bytes. Solid topology has five files, 940 active lines and 47,957 bytes. The already running editor Cargo check owns compilation verification.

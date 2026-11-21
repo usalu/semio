@@ -1,0 +1,9 @@
+{
+  "prefix": "64-byte-slices-must-handle-the-entire-member-name-before-deciding-identity",
+  "objects": [
+    {"suffixes": ["a", "b", "c"], "accept": true},
+    {"suffixes": ["a", "b", "a"], "accept": false},
+    {"suffixes": ["", ""], "accept": false},
+    {"suffixes": ["long", ""], "accept": true}
+  ]
+}

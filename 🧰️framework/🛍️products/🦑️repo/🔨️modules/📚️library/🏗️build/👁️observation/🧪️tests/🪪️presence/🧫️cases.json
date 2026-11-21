@@ -8,6 +8,11 @@
       "outcome": "reuse"
     },
     {
+      "id": "settled-ancestry-replacement",
+      "fault": "settled-ancestry-replacement",
+      "outcome": "reuse"
+    },
+    {
       "id": "only-exact-leaf-miss",
       "fault": "exact-leaf-absent",
       "outcome": "recompute"

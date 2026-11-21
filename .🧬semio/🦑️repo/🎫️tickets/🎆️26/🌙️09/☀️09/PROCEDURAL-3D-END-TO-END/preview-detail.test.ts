@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
+import { JSDOM } from "jsdom";
 
 const fixture = await Bun.file("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️preview/🧪️tests/🧫️fixtures/🔁️replacement.json").json();
 
@@ -58,3 +59,36 @@ test("a failed detail settles only its original request and leaves other toleran
   expect(cache.run("INSERT OR IGNORE INTO requests VALUES (?, ?, 'pending')", [law.handle, row.nextTolerance]).changes).toBe(1);
   cache.close();
 });
+
+const modeFixture = await Bun.file("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎛️generate-mode-interactions.json").json();
+const detail = modeFixture.previewDetail;
+
+for (const language of ["en", "de"]) {
+  test(`editor preview detail in ${language}`, () => {
+    const browser = new JSDOM("<label></label><select></select>");
+    try {
+      const { document, Event, Option } = browser.window;
+      const select = document.querySelector("select")!;
+      select.id = detail.id;
+      const label = document.querySelector("label")!;
+      label.htmlFor = detail.id;
+      label.textContent = detail[language];
+      for (const preset of detail.presets) select.add(new Option(preset[language], preset.value));
+      select.value = detail.default;
+      expect(select.labels?.[0].textContent).toBe(detail[language]);
+      expect([...select.options].map(option => option.value)).toEqual(detail.presets.map(preset => preset.value));
+      expect(select.selectedOptions[0].textContent).toBe(detail.presets.find(preset => preset.value === detail.default)[language]);
+      const actions: { action: string; args: { value: string } }[] = [];
+      select.addEventListener("change", () => actions.push({ action: detail.action, args: { value: select.value } }));
+      for (const preset of detail.presets) {
+        select.value = preset.value;
+        select.dispatchEvent(new Event("change"));
+      }
+      expect(actions).toEqual(detail.presets.map(preset => ({ action: detail.action, args: { value: preset.value } })));
+      expect(modeFixture.windows.filter(window => modeFixture.previewParity.includes(window.id)).every(window => window.actions.includes(detail.action))).toBe(true);
+      expect(detail.presets.map(preset => preset.tolerance)).toEqual([0.15, 0.05, 0.02]);
+    } finally {
+      browser.window.close();
+    }
+  });
+}

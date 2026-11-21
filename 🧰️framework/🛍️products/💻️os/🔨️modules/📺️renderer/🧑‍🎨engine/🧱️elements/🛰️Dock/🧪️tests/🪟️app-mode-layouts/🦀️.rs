@@ -150,7 +150,7 @@ fn fixture_app(app: &FixtureApp) -> AppDefinition {
         named_layouts: app.named_layouts.iter().map(|named| NamedLayout { id: named.id.clone(), label: named.id.clone(), icon_id: None, layout: named.layout.clone(), origin: "builtin".into(), group_path: None }).collect(),
         default_layout: app.default_layout.clone(),
         terminologies: vec![],
-        terminology_breadcrumbs: HashMap::new(),
+        terminology_breadcrumbs: Default::default(),
         introduction: None,
         tutorials: Vec::new(),
         dialogs: Vec::new(),

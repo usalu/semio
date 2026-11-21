@@ -1,0 +1,187 @@
+{
+  "candidates": [
+    {
+      "widget": "source",
+      "channel": "surface",
+      "input": false,
+      "id": "source@surface"
+    },
+    {
+      "widget": "source",
+      "channel": "surface",
+      "input": true,
+      "id": "source@!isurface"
+    },
+    {
+      "widget": "source",
+      "channel": "extra",
+      "input": false,
+      "id": "source@extra"
+    },
+    {
+      "widget": "sink",
+      "channel": "surface",
+      "input": true,
+      "id": "sink@!isurface"
+    },
+    {
+      "widget": "sink",
+      "channel": "surface",
+      "input": false,
+      "id": "sink@surface"
+    },
+    {
+      "widget": "sink",
+      "channel": "#雪",
+      "input": true,
+      "id": "sink@!i%23雪"
+    },
+    {
+      "widget": "free",
+      "channel": "plane",
+      "input": true,
+      "id": "free@!iplane"
+    },
+    {
+      "widget": "free",
+      "channel": "plane",
+      "input": false,
+      "id": "free@plane"
+    },
+    {
+      "widget": "dictionary",
+      "channel": "",
+      "input": false,
+      "id": "dictionary@!o"
+    },
+    {
+      "widget": "dictionary",
+      "channel": "alpha",
+      "input": false,
+      "id": "dictionary@alpha"
+    },
+    {
+      "widget": "dictionary",
+      "channel": "beta",
+      "input": false,
+      "id": "dictionary@beta"
+    },
+    {
+      "widget": "dictionary",
+      "channel": "alpha",
+      "input": true,
+      "id": "dictionary@!ialpha"
+    }
+  ],
+  "wires": [
+    {
+      "id": "wire",
+      "from": "source",
+      "fromPort": "surface",
+      "fromId": "source@surface",
+      "to": "sink",
+      "toPort": "surface",
+      "toId": "sink@!isurface"
+    },
+    {
+      "id": "bundle",
+      "from": "dictionary",
+      "fromPort": "",
+      "fromId": "dictionary@!o",
+      "to": "sink",
+      "toPort": "#雪",
+      "toId": "sink@!i%23雪"
+    }
+  ],
+  "cases": [
+    {
+      "name": "world group",
+      "graph": [
+        "h:source@surface",
+        "h:free@!iplane"
+      ],
+      "expected": [
+        "source@surface",
+        "free@!iplane"
+      ]
+    },
+    {
+      "name": "connected inlet",
+      "graph": [
+        "h:sink@!isurface"
+      ],
+      "expected": [
+        "source@surface",
+        "sink@!isurface"
+      ]
+    },
+    {
+      "name": "ordinary edge",
+      "graph": [
+        "e:wire"
+      ],
+      "expected": [
+        "source@surface",
+        "sink@!isurface"
+      ]
+    },
+    {
+      "name": "whole source edge",
+      "graph": [
+        "e:bundle"
+      ],
+      "expected": [
+        "sink@!i%23雪",
+        "dictionary@!o",
+        "dictionary@alpha",
+        "dictionary@beta"
+      ]
+    },
+    {
+      "name": "whole source inlet",
+      "graph": [
+        "h:sink@!i%23雪"
+      ],
+      "expected": [
+        "sink@!i%23雪",
+        "dictionary@!o",
+        "dictionary@alpha",
+        "dictionary@beta"
+      ]
+    },
+    {
+      "name": "node",
+      "graph": [
+        "n:source"
+      ],
+      "expected": [
+        "source@surface",
+        "source@!isurface",
+        "source@extra"
+      ]
+    },
+    {
+      "name": "component",
+      "graph": [],
+      "component": "free@plane",
+      "expected": [
+        "free@plane"
+      ]
+    },
+    {
+      "name": "graph takes precedence",
+      "graph": [
+        "h:free@!iplane"
+      ],
+      "component": "free@plane",
+      "expected": [
+        "free@!iplane"
+      ]
+    },
+    {
+      "name": "clear",
+      "graph": [],
+      "expected": []
+    }
+  ]
+}

@@ -77,3 +77,42 @@ Final check line: `volumes-check.ts objects/storage-crate-stack --product`: PASS
 - Nesting step kept at 0.08 m (data sheet ratio gives 0.084 m); the 1:500 wall is 2 mm instead of 3 mm so that the 75 mm ledges and 80 mm channels still nest.
 - Underside floor ribs and moulded labels are not modelled (not visible in any drawn view).
 - Plan corners of the extruded `solid` shapes would be square; the plan rims are therefore drawn as plain rounded rectangles.
+
+## Round 5 handcraft (2026-11-21)
+
+Renders under `🗑️generated/r5-storage-crate-stack/before/` (every scale body, thermal cut, structure, 2D; poses high, half, low; clip unload-stack 2 s), all opened. No change was needed.
+
+### Model against reference (default pose `high`, `r5-o02-measure.ts`)
+
+| quantity | reference (Rotom 69751, Transoplast 9567.720.765) | model 1:50 / 1:100 / 1:200 / 1:500 | deviation |
+|---|---|---|---|
+| crate outer size at the rim | 600 x 400 x 300 mm | 600 x 400, 5 crates to 1.500 m at every scale | 0 % |
+| stack height (5 turned crates) | 5 x 300 = 1.50 m | 1.500 m | 0 % |
+| nesting step | 84 mm (72 % ratio) | 80 mm (low pose 0.62 m) | -4.8 % (kept, round 3: 4 mm is below the 1:50 feature; within the data-sheet spread of the class) |
+| hand holes | 120 x 35 mm under the rim in the end walls | 120 x 35 mm, open | 0 % |
+| wall | 2.5 to 3.5 mm with draft | 3 mm, draft 4.4 / 2.8 degrees | inside the range |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | unchanged |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | A- / A- / A- | unchanged |
+| 1:500 | A- / A- / A- (tubs with collar, ledges and channels, no hand holes) | unchanged |
+
+Poses: high (turned crates on the ledges), half and low (nested, even play) and the unload clip (crate 4 lifted 20 mm and turning with crate 5) are closed and natural. Catalog VALID with volumes (schema 0, validateAsset 0, checkVolumes 0).
+
+### Remaining
+
+As section 6 (uniform taper of the kernel gives two draft angles, nesting step 80 instead of 84 mm, structure is the moulded shell by necessity, thermal envelope area under review in `area-review.md`). The cut thermal sheets look jagged in the three-quarter panel because the cut plane runs through the channel pillars of turned crates; the solids are clean.
+
+### Moulded sections and load transfer, 21 November
+
+All five crates retain an 8 mm floor 12 mm above the foot, a 14 mm foot ring, 3 mm tapered side walls, a 38 mm rim skirt, an 8 mm flange and three 68 mm bearing ledges. The twelve upper-crate joints carry the load at the feet. The earlier coarse model had put the load on four blocks in the middle of the empty crates. The longitudinal section now cuts through the walls and floor in both the stacked and nested positions.
+
+A Three.js fixture measured all twenty floor, foot and rim sections and sixty ledges. The structural model references the moulded foot on every crate at all scales. All twelve GLB scenes reloaded at 1,377,440 bytes total. Each of the four scales passed its measured volume checks after the two coarser elevation drawings recovered their foot contours. The exposed thermal region still represents the documented outer wall exchange. An audit of exchange with air inside open crates is recorded in area-review.md.
+
+## Intermediate paper scales, 21 November
+
+The fine drawing's four upper feet left visible features of 0.183732 mm at 1:66 where the office-laser minimum is 0.20 mm. The elevation now gives all five foot rings a 0.20 mm contour in the 1:50 drawing. Their modelled 14 mm height, 520 × 320 mm bearing footprint, attachment and positions remain as measured. A fresh check at 1:66 passed. Thirteen evenly spaced denominators in each of four authored ranges also passed, for 52 complete measurements over the high, half and low poses in elevation, front and plan. The complete volume data carried the same SHA-256 before and after the drawing edit, `d32688ecbf52f2dcc578140c4f3adc34f924597660cdc0fa5d488803dc29ef61`. The separate Three.js reader measured the twenty floor, foot and rim sections and sixty stacking ledges. `crate-paper.py` records one revision-tagged result per drawing and denominator.

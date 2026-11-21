@@ -1,7 +1,7 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the DIN 4108 editor: which value-tree path raises which concrete kind.
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
-use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
 
 use crate::Din4108Mutation;
 
@@ -10,6 +10,11 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
     set_field_arguments: &[],
     move_item: &[],
     set_field: &[
+        SetFieldRule { path: "cases[].labelEn", kind: "change-case-label-en", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].labelDe", kind: "change-case-label-de", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].entryId", kind: "change-case-entry-id", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].numbers[].value", kind: "change-case-number", selectors: &[SelectorKey::Id("caseId"), SelectorKey::Id("key")], value: "value" },
+        SetFieldRule { path: "cases[].texts[].value", kind: "change-case-text", selectors: &[SelectorKey::Id("caseId"), SelectorKey::Id("key")], value: "value" },
         SetFieldRule { path: "elements[].adjacent", kind: "change-element-adjacent", selectors: &[SelectorKey::Id("elementId")], value: "newAdjacent" },
         SetFieldRule { path: "thermalBridges[].lengthM", kind: "change-thermal-bridge-length", selectors: &[SelectorKey::Id("bridgeId")], value: "newLengthM" },
         SetFieldRule { path: "zones[].windows[].gValue", kind: "change-zone-window-g-value", selectors: &[SelectorKey::Id("zoneId"), SelectorKey::Id("windowId")], value: "newGValue" },
@@ -44,6 +49,7 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "elements[].layers[].materialId", kind: "change-layer-material-id", selectors: &[SelectorKey::Id("elementId"), SelectorKey::Index("index")], value: "newMaterialId" },
     ],
     insert_item: &[
+        InsertItemRule { path: "cases", kind: "insert-case", selectors: &[], index: "index", item: "case" },
         InsertItemRule { path: "elements[].layers", kind: "insert-layer", selectors: &[SelectorKey::Id("elementId")], index: "index", item: "layer" },
         InsertItemRule { path: "zones", kind: "insert-zone", selectors: &[], index: "index", item: "zone" },
         InsertItemRule { path: "thermalBridges", kind: "insert-thermal-bridge", selectors: &[], index: "index", item: "bridge" },
@@ -59,7 +65,11 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
     ],
 };
 
+pub const ID_REMOVALS: &[IdRemoval] = &[
+    IdRemoval { path: "cases", kind: "remove-case", selectors: &[], id: "id" },
+];
+
 /// 🧭️ Resolves every edit of the DIN 4108 editor through the typed [`EDIT_RULES`]: one leaf kind per edit, no whole-row fallback.
 pub fn resolve(document: &Din4108Snapshot, edit: &NormEdit) -> Result<Vec<Din4108Mutation>, String> {
-    EDIT_RULES.resolve(document, edit)
+    EDIT_RULES.resolve_with_id_removals(ID_REMOVALS, document, edit)
 }

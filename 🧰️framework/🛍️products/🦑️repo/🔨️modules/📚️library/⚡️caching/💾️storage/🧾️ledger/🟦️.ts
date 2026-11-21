@@ -12,8 +12,8 @@ export type CacheLanguageV1="en"|"de";
 export type CacheRootIdV1=keyof typeof policy.roots;
 /** 🗝️ Enumerates every schema-closed root for validation and physical accounting. */
 export const CACHE_ROOT_IDS_V1:readonly CacheRootIdV1[]=Object.freeze(Object.keys(policy.roots) as CacheRootIdV1[]);
-/** 🧑‍🔧️ Names who keeps an area within its budget when the generic collector must not. */
-export type CacheOwnerV1="image"|"control"|"cargo"|"nx"|"nx-tooling"|"bazel"|"test-evidence"|"dashboard"|"graph"|"remote-cache"|"remote-execution";
+/** 🧑‍🔧️ Names the owner responsible for an area outside generic collection. */
+export type CacheOwnerV1="image"|"control"|"fleet"|"cargo"|"nx"|"nx-tooling"|"bazel"|"semio"|"test-evidence"|"dashboard"|"graph"|"remote-cache"|"remote-execution";
 type Bilingual=Readonly<Record<CacheLanguageV1,string>>;
 /** 💰️ One declared budget: explicit bytes, a share of the partition, or whatever its siblings leave. */
 export type CacheBudgetV1=Readonly<{bytes:number}>|Readonly<{basisPoints:number}>|Readonly<{remainder:true}>;
@@ -227,7 +227,7 @@ export function formatCacheReportV1(language:CacheLanguageV1,report:CacheReportV
  const text=(key:string,variables:Readonly<Record<string,string|number>>={})=>cacheTextV1(language,key,variables),lines=[text("status.title",{root:report.workspace}),"",text("status.partitions")];
  const unit=(row:Measured,plain=false)=>(row.usedBytes===null?"?":formatCacheBytesV1(row.usedBytes)+(row.partial?text("note.partial"):""))+(plain?"":provenance(text,row,report.generatedAtMs));
  for(const row of report.partitions){
-  const note=(row.kind==="control"||row.owner==="image"?"":text("note.managed",{owner:row.owner}))+(row.recreate&&row.envelopeBytes!==null&&row.declaredBytes!==null&&row.envelopeBytes!==row.declaredBytes?text("note.recreate",{actual:formatCacheBytesV1(row.envelopeBytes),declared:formatCacheBytesV1(row.declaredBytes)}):"");
+  const note=(row.owner==="control"||row.owner==="image"?"":text("note.managed",{owner:row.owner}))+(row.recreate&&row.envelopeBytes!==null&&row.declaredBytes!==null&&row.envelopeBytes!==row.declaredBytes?text("note.recreate",{actual:formatCacheBytesV1(row.envelopeBytes),declared:formatCacheBytesV1(row.declaredBytes)}):"");
   lines.push("  "+(row.budgetBytes===null?text("row.unbudgeted",{id:row.id,used:unit(row),note}):row.usedBytes===null?text("row.partitionUnmeasured",{id:row.id,state:text("state."+row.state),used:unit(row,row.state==="detached"||row.state==="absent"),budget:formatCacheBytesV1(row.budgetBytes),note}):text("row.partition",{id:row.id,state:text("state."+row.state),used:unit(row),budget:formatCacheBytesV1(row.budgetBytes),percent:percent(row.usedBytes,row.budgetBytes),note})));
  }
  const nested=report.areas.filter(row=>row.partition!==null);
@@ -276,6 +276,20 @@ export const CACHE_SIZE_FILE_V1=schema.$defs.runtime.const.sizeLedgerFile;
 export function readCacheSizeLedgerV1(value:unknown):CacheSizeLedgerV1{
  if(validateJsonSchemaSubset({$defs:schema.$defs,$ref:"#/$defs/sizeLedger"},value).length)return{version:1,records:{}};
  return value as CacheSizeLedgerV1;
+}
+
+/** 💽️ Charges remembered sizes only for the cache homes that the current ledger recognizes. */
+export function cacheSizeChargeV1(ledger:CacheLedgerV1,sizes:CacheSizeLedgerV1):number{
+ const known=new Set([...ledger.areas.map(row=>row.id),...ledger.retirements.map(row=>"retired:"+row.root+":"+row.directory)]);
+ let bytes=0;
+ for(const [key,record] of Object.entries(sizes.records)){
+  if(known.has(key)){bytes+=record.usedBytes;continue;}
+  const root=CACHE_ROOT_IDS_V1.find(id=>key.startsWith("undeclared:"+id+":"));
+  if(root===undefined)continue;
+  const path=key.slice("undeclared:".length+root.length+1);
+  if(segments(path).every(part=>part!==""&&part!=="."&&part!=="..")&&classifyCachePathV1(ledger,root,path).kind==="undeclared")bytes+=record.usedBytes;
+ }
+ return bytes;
 }
 
 /** ⚡️ The capacity a measured need demands: every part at its cap, plus headroom, plus the floor that must stay free. */

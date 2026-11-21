@@ -1,5 +1,5 @@
-/** 📏️ Feature edges of resolved meshes: boundary and non-manifold edges plus edges whose adjacent face normals differ by more than the angle, found on position-welded vertices so smooth seams never show.
- * One `lines` primitive per source triangle primitive is appended to its mesh, with the source material unless a material (or a function of the source primitive that names one) is given, and with joints and weights copied for skinned sources.
+/** 📏️ Feature edges of resolved meshes: boundary and non-manifold edges plus edges whose adjacent face normals differ by more than the angle, found on vertices welded by position and skin binding so smooth seams never show.
+ * One `lines` primitive per source triangle primitive is appended to its mesh, with the source material unless a material (or a function of the source primitive that names one) is given, and with the joints and weights of skinned sources. With `shareVertices` the line indices refer directly to their triangle vertex arrays.
  * A source primitive with `solids` gives its lines `solids` too: an edge belongs to the solid of the first triangle that uses it (an edge shared by two solids is kept once, under the earlier one); solids without edges get no range.
  * @see ../🧬️schema/🟦️.ts */
 import type { Mesh, ModelDocument, Operation, Primitive, PrimitiveSolid, Slug } from "../🧬️schema/🟦️.ts";
@@ -11,7 +11,7 @@ import { selectScene } from "../🎞️scenes/🟦️.ts";
 const QUANTUM = 1e8;
 
 /** 🔆️ Adds feature `lines` primitives; the input is not modified. With `options.scene` only that scene's meshes are processed and the result is that single-scene document (`selectScene`). Rejects with `CancelledError` when cancelled: checked between meshes, between primitives and every few thousand vertices, triangles and edges inside one primitive. */
-export async function featureEdges(source: ModelDocument, angleRad: number, options: { readonly material?: Slug | ((source: Primitive) => Slug); readonly scene?: Slug } = {}, operation: Operation = silentOperation): Promise<ModelDocument> {
+export async function featureEdges(source: ModelDocument, angleRad: number, options: { readonly material?: Slug | ((source: Primitive) => Slug); readonly scene?: Slug; readonly shareVertices?: boolean } = {}, operation: Operation = silentOperation): Promise<ModelDocument> {
   const document = options.scene === undefined ? source : selectScene(source, options.scene);
   const pace = new Pace(operation);
   const meshes: Mesh[] = [];
@@ -27,7 +27,7 @@ export async function featureEdges(source: ModelDocument, angleRad: number, opti
       }
       pace.check();
       if (primitive.mode !== "triangles") continue;
-      const line = linesOf(primitive, angleRad, options.material, pace);
+      const line = linesOf(primitive, angleRad, options.material, options.shareVertices === true, pace);
       if (line) lines.push(line);
     }
     meshes.push(lines.length ? { ...mesh, primitives: [...mesh.primitives, ...lines] } : mesh);
@@ -36,13 +36,24 @@ export async function featureEdges(source: ModelDocument, angleRad: number, opti
   return { ...document, meshes };
 }
 
-function linesOf(primitive: Primitive, angleRad: number, material: Slug | ((source: Primitive) => Slug) | undefined, pace: Pace): Primitive | null {
+function bindingKey(joints: readonly number[], weights: readonly number[], start: number): string {
+  if (weights[start] === 1 && weights[start + 1] === 0 && weights[start + 2] === 0 && weights[start + 3] === 0) return `/${joints[start]}:1`;
+  const active = new Map<number, number>();
+  for (let i = start; i < start + 4; i++) {
+    const weight = weights[i]!;
+    if (weight !== 0) active.set(joints[i]!, (active.get(joints[i]!) ?? 0) + weight);
+  }
+  return `/${[...active].sort(([a], [b]) => a - b).map(([joint, weight]) => `${joint}:${weight}`).join(",")}`;
+}
+
+function linesOf(primitive: Primitive, angleRad: number, material: Slug | ((source: Primitive) => Slug) | undefined, shareVertices: boolean, pace: Pace): Primitive | null {
   const p = primitive.positions;
   const welded = new Map<string, number>();
   const group: number[] = [];
   for (let i = 0; i < p.length / 3; i++) {
     pace.tick();
-    const key = `${Math.round(p[i * 3]! * QUANTUM)},${Math.round(p[i * 3 + 1]! * QUANTUM)},${Math.round(p[i * 3 + 2]! * QUANTUM)}`;
+    const binding = primitive.joints && primitive.weights ? bindingKey(primitive.joints, primitive.weights, i * 4) : "";
+    const key = `${Math.round(p[i * 3]! * QUANTUM)},${Math.round(p[i * 3 + 1]! * QUANTUM)},${Math.round(p[i * 3 + 2]! * QUANTUM)}${binding}`;
     if (!welded.has(key)) welded.set(key, i);
     group.push(welded.get(key)!);
   }
@@ -77,6 +88,10 @@ function linesOf(primitive: Primitive, angleRad: number, material: Slug | ((sour
       if (last && last.id === id) solids[solids.length - 1] = { id, first: last.first, count: last.count + 2 };
       else solids.push({ id, first: indices.length, count: 2 });
     }
+    if (shareVertices) {
+      indices.push(e.a, e.b);
+      continue;
+    }
     for (const v of [e.a, e.b]) {
       indices.push(positions.length / 3);
       positions.push(p[v * 3]!, p[v * 3 + 1]!, p[v * 3 + 2]!);
@@ -87,5 +102,10 @@ function linesOf(primitive: Primitive, angleRad: number, material: Slug | ((sour
     }
   }
   if (indices.length === 0) return null;
-  return { mode: "lines", material: typeof material === "function" ? material(primitive) : (material ?? primitive.material), positions, indices, ...(primitive.joints ? { joints, weights } : {}), ...(ranges.length > 0 ? { solids } : {}) };
+  return {
+    mode: "lines", material: typeof material === "function" ? material(primitive) : (material ?? primitive.material),
+    positions: shareVertices ? primitive.positions : positions, indices,
+    ...(primitive.joints && primitive.weights ? { joints: shareVertices ? primitive.joints : joints, weights: shareVertices ? primitive.weights : weights } : {}),
+    ...(ranges.length > 0 ? { solids } : {}),
+  };
 }

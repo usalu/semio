@@ -1,0 +1,13 @@
+{
+  "mutationValue": 17,
+  "turnLimit": 4096,
+  "deniedItems": 0,
+  "pendingAfterClose": false,
+  "faultAfterClose": false,
+  "routes": [
+    {"page": true, "closing": true, "funded": true, "next": "page"},
+    {"page": false, "closing": true, "funded": false, "next": "wait"},
+    {"page": false, "closing": true, "funded": true, "next": "close"},
+    {"page": false, "closing": false, "funded": true, "next": "publish"}
+  ]
+}

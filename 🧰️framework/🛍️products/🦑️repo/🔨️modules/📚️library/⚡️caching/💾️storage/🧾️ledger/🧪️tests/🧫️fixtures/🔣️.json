@@ -1,6 +1,29 @@
 {
   "version": 1,
   "now": 4000000000,
+  "fleetState": {
+    "area": "fleet-state",
+    "owner": "fleet",
+    "home": "f",
+    "agedNeighbor": "f-old",
+    "homes": [
+      {"name": "f", "ageMs": 691200000, "files": ["identity.json", "state.ckp", "state.wal", "graph/cursor.json", "ready/custody.json"]},
+      {"name": "f-old", "ageMs": 691200000, "files": ["generated"]},
+      {"name": "f-new", "ageMs": 86400000, "files": ["generated"]}
+    ]
+  },
+  "fleetMachineUse": {
+    "bootstrapBytes": 12582912,
+    "fleetBytes": 3580506112,
+    "collectionArea": "boot-recovery",
+    "ageMs": 345600000,
+    "units": ["old-a", "old-b"]
+  },
+  "coldFleetSizes": [
+    {"id": "no size ledger", "obsoleteBytes": null, "partialBytes": null},
+    {"id": "obsolete alias only", "obsoleteBytes": 3400609792, "partialBytes": null},
+    {"id": "partial current record", "obsoleteBytes": null, "partialBytes": 1}
+  ],
   "corpusSha256": "df51076701b5935b8a603ac451c3ab8b05df9dc9c9a15d1456573f637ddce024",
   "plans": [
     {

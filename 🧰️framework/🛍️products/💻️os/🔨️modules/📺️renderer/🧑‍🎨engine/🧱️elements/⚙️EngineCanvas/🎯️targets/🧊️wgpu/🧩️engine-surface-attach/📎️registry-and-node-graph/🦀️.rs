@@ -1,6 +1,8 @@
 //! 📎️ Registry and node graph: the surface kind detail and registration, the attached surface registry, the node graph engine helpers and the node graph engine sync. See [`super`].
 
 use super::*;
+use flow::infinite::board::schema::dag_input::{DagChannelRef, DagSelectionDomains};
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::FlowPortAddresses;
 
 //#region 🧩️EngineSurfaceAttach
 /// 🧩️ The per-kind payload one attached surface projects into the shell's own bespoke pointer state
@@ -45,7 +47,7 @@ pub struct EngineSurfaceRegistration {
     pub created: bool,
 }
 
-struct AttachedSurfaceRegistry {
+pub(super) struct AttachedSurfaceRegistry {
     pub(in super::super) slots: Box<[Option<EngineSurfaceRegistration>; ENGINE_SURFACE_CAPACITY]>,
     pub(in super::super) len: usize,
     pub(in super::super) faulted: bool,
@@ -132,9 +134,9 @@ fn node_graph_lod_from_json(engine: &mut NodeGraphEngine, lod_json: &str) {
     let forced = value.get("forcedLabel").or_else(|| value.get("lod")).and_then(Value::as_str);
     match engine {
         NodeGraphEngine::Flow(host) => {
-            host.style.set_automatic_lod(automatic);
+            host.set_automatic_lod(automatic);
             if let Some(label) = forced {
-                host.style.set_forced_draw_lod_label(label);
+                host.set_forced_draw_lod_label(label);
             }
         }
         NodeGraphEngine::Dag(host) => {
@@ -146,22 +148,23 @@ fn node_graph_lod_from_json(engine: &mut NodeGraphEngine, lod_json: &str) {
     }
 }
 
-type GraphHover<'a> = (&'a str, &'a str, &'a str);
+type GraphHover<'a> = (&'a str, Option<&'a str>, &'a str);
 
-fn node_graph_current_hover(dag: &flow::dag::DagHost) -> Option<GraphHover<'_>> {
-    if let Some(edge) = dag.graph.hovered_edge_id() { return Some(("", "", edge)); }
+fn node_graph_current_hover<'a>(dag: &'a flow::dag::DagHost, ports: Option<&'a FlowPortAddresses>) -> Option<GraphHover<'a>> {
+    if let Some(edge) = dag.graph.hovered_edge_id() { return Some(("", None, edge)); }
     if let Some(channel) = dag.graph.engine.hover.and_then(|id| dag.graph.channel_view(id)) {
-        return Some((channel.widget_id, channel.port, ""));
+        let port = ports.and_then(|ports| ports.semantic(channel.widget_id, channel.port, channel.direction)).unwrap_or(channel.port);
+        return Some((channel.widget_id, Some(port), ""));
     }
-    hovered_node_id_ref(&dag.viewport, &dag.graph).map(|node| (node, "", ""))
+    hovered_node_id_ref(&dag.viewport, &dag.graph).map(|node| (node, None, ""))
 }
 
-fn copy_node_graph_hover(dag: &flow::dag::DagHost) -> Option<(String, String, String)> {
-    node_graph_current_hover(dag).map(|(node, port, edge)| (node.to_owned(), port.to_owned(), edge.to_owned()))
+fn copy_node_graph_hover(dag: &flow::dag::DagHost, ports: Option<&FlowPortAddresses>) -> Option<(String, Option<String>, String)> {
+    node_graph_current_hover(dag, ports).map(|(node, port, edge)| (node.to_owned(), port.map(str::to_owned), edge.to_owned()))
 }
 
-fn node_graph_hover_view(mark: &(String, String, String)) -> GraphHover<'_> {
-    (&mark.0, &mark.1, &mark.2)
+fn node_graph_hover_view(mark: &(String, Option<String>, String)) -> GraphHover<'_> {
+    (&mark.0, mark.1.as_deref(), &mark.2)
 }
 
 fn node_graph_scene_hover_update<'a>(
@@ -172,13 +175,56 @@ fn node_graph_scene_hover_update<'a>(
 ) -> Option<Option<GraphHover<'a>>> {
     if previous == incoming { return None; }
     match incoming {
-        Some(mark) if Some(mark) != live => Some(Some(mark).filter(|mark| *mark != ("", "", ""))),
+        Some(mark) if Some(mark) != live => Some(Some(mark).filter(|mark| *mark != ("", None, ""))),
         None if scene_owns_hover => Some(None),
         _ => None,
     }
 }
 
-fn node_graph_apply_hover(engine: &mut NodeGraphEngine, hover: Option<GraphHover<'_>>) {
+fn reconcile_node_graph_hover<'a>(
+    cache: &mut NodeGraphSyncCache,
+    hover: Option<&'a semio_ui_declaration::ui::NodeGraphHover>,
+    live: Option<GraphHover<'_>>,
+) -> Option<Option<GraphHover<'a>>> {
+    let incoming = hover.map(|hover| {
+        if let Some(edge) = hover.edge_id.as_deref().filter(|id| !id.is_empty()) {
+            ("", None, edge)
+        } else if let Some(node) = hover.node_id.as_deref().filter(|id| !id.is_empty()) {
+            (node, hover.port_id.as_deref(), "")
+        } else {
+            ("", None, "")
+        }
+    });
+    let previous = cache.hover.as_ref().map(node_graph_hover_view);
+    let source = hover.and_then(|mark| mark.hover_source_window_id.as_ref())
+        .map(|window| window.as_deref().and_then(|id| EngineSurfaceId::try_from_str(id).ok()));
+    let own_source = source.flatten().is_some_and(|id| Some(id) == cache.window_id);
+    let foreign = source.is_some() && !own_source;
+    let withheld = own_source && cache.local_owns_hover;
+    let port_ids = hover.map(|mark| mark.port_ids.as_slice()).unwrap_or_default();
+    let companions_changed = cache.hover_port_ids.as_slice() != port_ids;
+    let hover_changed = previous != incoming || cache.hover_source_window_id != source || companions_changed;
+    let update = if !hover_changed || withheld {
+        None
+    } else if foreign || (companions_changed && incoming.is_some()) {
+        incoming.map(|mark| Some(mark).filter(|mark| *mark != ("", None, "")))
+    } else {
+        node_graph_scene_hover_update(previous, incoming, live, cache.scene_owns_hover)
+    };
+    if hover_changed {
+        if !withheld {
+            cache.scene_owns_hover = update.flatten().is_some()
+                || (update.is_none() && incoming.is_some() && cache.scene_owns_hover);
+            if update.is_some() { cache.local_owns_hover = false; }
+        }
+        cache.hover_source_window_id = source;
+        if companions_changed { cache.hover_port_ids = port_ids.to_vec(); }
+        cache.hover = incoming.map(|(node, port, edge)| (node.to_owned(), port.map(str::to_owned), edge.to_owned()));
+    }
+    update
+}
+
+fn node_graph_apply_hover(engine: &mut NodeGraphEngine, ports: &FlowPortAddresses, hover: Option<GraphHover<'_>>) {
     let (node, port, edge) = hover.unwrap_or_default();
     if !edge.is_empty() {
         match engine {
@@ -188,22 +234,50 @@ fn node_graph_apply_hover(engine: &mut NodeGraphEngine, hover: Option<GraphHover
         return;
     }
     let node_id = (!node.is_empty()).then_some(node);
-    let port_id = (!port.is_empty()).then_some(port);
     match engine {
-        NodeGraphEngine::Flow(host) => match port_id {
-            Some(port) => host.set_hover_channel(node_id, Some(port)),
+        NodeGraphEngine::Flow(host) => match port {
+            Some(port) => match ports.raw(node, port) {
+                Some((port, direction)) => host.set_hover_channel_direction(node_id, Some(port), Some(direction)),
+                None => host.set_hover_channel(node_id, Some(port)),
+            },
             None => host.set_hover(node_id),
         },
-        NodeGraphEngine::Dag(host) => match port_id {
+        NodeGraphEngine::Dag(host) => match port {
             Some(port) => set_hover_channel(&mut host.dag.viewport, &mut host.dag.graph, node_id, Some(port)),
             None => host.dag.graph.set_hover(node_id),
         },
     }
 }
 
-/// 🖼️ Whether this graph offers the engine something to frame — either measured content bounds or an
-/// empty graph, which has nothing to wait for. An opening camera decided against neither is a
-/// decision taken too early.
+/// 🎯️ Restores scene selection by its declared graph granularity.
+fn node_graph_apply_selection(engine: &mut NodeGraphEngine, ports: &FlowPortAddresses, granularity: &str, selection: &[String]) {
+    let domains = match granularity {
+        "edge" => DagSelectionDomains { edges: selection.to_vec(), ..Default::default() },
+        "handle" if matches!(engine, NodeGraphEngine::Dag(_)) => DagSelectionDomains { handles: selection.to_vec(), ..Default::default() },
+        "handle" => DagSelectionDomains::default(),
+        _ => DagSelectionDomains { nodes: selection.to_vec(), ..Default::default() },
+    };
+    match engine {
+        NodeGraphEngine::Flow(host) => {
+            host.set_selection_domains(&domains);
+            if granularity == "handle" {
+                let channels: Vec<_> = selection.iter().filter_map(|id| {
+                    let (widget, port) = id.rsplit_once('@')?;
+                    let (port, direction) = ports.raw(widget, port)?;
+                    Some(DagChannelRef { widget_id: widget.to_owned(), port: port.to_owned(), direction })
+                }).collect();
+                host.set_selected_channels(&channels);
+            }
+            host.resync_interaction_projection();
+        }
+        NodeGraphEngine::Dag(host) => {
+            host.dag.graph.set_selection_domains(&domains);
+            host.resync_interaction_projection();
+        }
+    }
+}
+
+/// 🖼️ Whether this graph offers the engine something to frame.
 fn node_graph_frames_content(dag: &flow::dag::DagHost) -> bool {
     dag.graph.content_world_bounds().is_some() || dag.graph.host_snapshot.nodes.is_empty()
 }
@@ -232,21 +306,24 @@ pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut N
     let mut changed = false;
     let mut snapshot_changed = false;
     let mut original_hover = None;
+    let mut flow_ports_changed = false;
     if cache.interaction_domain.as_deref() != graph.interaction_domain.as_ref() {
         cache.interaction_domain = graph.interaction_domain.clone().map(Arc::new);
         changed = true;
     }
     if let NodeGraphEngine::Flow(host) = engine {
+        flow_ports_changed = cache.flow_ports.sync(&graph.nodes);
+        changed |= flow_ports_changed;
         let operator_ids: Vec<String> = graph.operators.iter().map(|record| record.id.clone()).collect();
         if !operator_ids.is_empty() && cache.operator_ids.as_ref() != Some(&operator_ids) {
-            original_hover = Some(copy_node_graph_hover(&host.dag));
+            original_hover = Some(copy_node_graph_hover(&host.dag, Some(&cache.flow_ports)));
             host.set_neuron_kind_infos(&graph.operators);
             cache.operator_ids = Some(operator_ids);
             changed = true;
         }
         if cache.snapshot_json.as_deref() != graph.host_snapshot_json.as_deref() {
             if let Some(snapshot) = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()) {
-                original_hover.get_or_insert_with(|| copy_node_graph_hover(&host.dag));
+                original_hover.get_or_insert_with(|| copy_node_graph_hover(&host.dag, Some(&cache.flow_ports)));
                 host.resync_host_snapshot_from_scene(snapshot);
             }
             cache.snapshot_json = graph.host_snapshot_json.clone();
@@ -258,7 +335,7 @@ pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut N
         let payload = serde_json::to_vec(graph).unwrap_or_default();
         if cache.scene_pack.as_deref() != Some(payload.as_slice()) {
             if let Ok(json) = std::str::from_utf8(&payload) {
-                original_hover = Some(copy_node_graph_hover(&host.dag));
+                original_hover = Some(copy_node_graph_hover(&host.dag, None));
                 let _ = host.sync_from_scene_json(json);
             }
             cache.scene_pack = Some(payload);
@@ -266,38 +343,45 @@ pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut N
             changed = true;
         }
     }
-    if cache.selection.as_ref() != Some(&graph.selection) {
-        match engine {
-            NodeGraphEngine::Flow(host) => host.set_selection(&graph.selection),
-            NodeGraphEngine::Dag(host) => host.dag.graph.set_selection(&graph.selection),
-        }
+    let granularity = match graph.selection_granularity.as_deref() {
+        Some("edge") => "edge",
+        Some("handle") => "handle",
+        _ => "node",
+    };
+    if cache.selection.as_ref() != Some(&graph.selection) || cache.selection_granularity != Some(granularity) || ((flow_ports_changed || snapshot_changed) && granularity != "node") {
+        node_graph_apply_selection(engine, &cache.flow_ports, granularity, &graph.selection);
         cache.selection = Some(graph.selection.clone());
+        cache.selection_granularity = Some(granularity);
         changed = true;
     }
-    let incoming = graph.hover.as_ref().map(|hover| {
-        if let Some(edge) = hover.edge_id.as_deref().filter(|id| !id.is_empty()) {
-            ("", "", edge)
-        } else if let Some(node) = hover.node_id.as_deref().filter(|id| !id.is_empty()) {
-            (node, hover.port_id.as_deref().unwrap_or_default(), "")
-        } else {
-            ("", "", "")
+    if cache.lod_json.as_deref() != graph.lod_json.as_deref() {
+        if let Some(json) = graph.lod_json.as_deref() {
+            node_graph_lod_from_json(engine, json);
         }
-    });
-    let previous = cache.hover.as_ref().map(node_graph_hover_view);
-    let current = node_graph_current_hover(match &*engine {
-        NodeGraphEngine::Flow(host) => &host.dag,
-        NodeGraphEngine::Dag(host) => &host.dag,
-    });
-    let preserved = original_hover.as_ref().map(|mark| mark.as_ref().map(node_graph_hover_view));
-    let update = node_graph_scene_hover_update(previous, incoming, preserved.unwrap_or(current), cache.scene_owns_hover);
-    if previous != incoming {
-        cache.scene_owns_hover = update.flatten().is_some()
-            || (update.is_none() && incoming.is_some() && cache.scene_owns_hover);
-        cache.hover = incoming.map(|(node, port, edge)| (node.to_owned(), port.to_owned(), edge.to_owned()));
-    }
-    if let Some(desired) = update.or(preserved).filter(|desired| *desired != current) {
-        node_graph_apply_hover(engine, desired);
+        cache.lod_json = graph.lod_json.clone();
         changed = true;
+    }
+    let current = match &*engine {
+        NodeGraphEngine::Flow(host) => copy_node_graph_hover(&host.dag, Some(&cache.flow_ports)),
+        NodeGraphEngine::Dag(host) => copy_node_graph_hover(&host.dag, None),
+    };
+    let current = current.as_ref().map(node_graph_hover_view);
+    let preserved = original_hover.as_ref().map(|mark| mark.as_ref().map(node_graph_hover_view));
+    let update = reconcile_node_graph_hover(cache, graph.hover.as_ref(), preserved.unwrap_or(current));
+    if let Some(desired) = update.or(preserved).filter(|desired| update.is_some() || *desired != current) {
+        node_graph_apply_hover(engine, &cache.flow_ports, desired);
+        changed = true;
+    }
+    if cache.scene_owns_hover && (update.is_some() || preserved.is_some() || flow_ports_changed) {
+        if let NodeGraphEngine::Flow(host) = engine {
+            let ports: Vec<DagChannelRef> = cache.hover_port_ids.iter().filter_map(|id| {
+                let (widget, code) = id.rsplit_once('@')?;
+                let (port, direction) = cache.flow_ports.raw(widget, code)?;
+                Some(DagChannelRef { widget_id: widget.to_owned(), port: port.to_owned(), direction })
+            }).collect();
+            host.dag.graph.set_hover_ports(&ports);
+            changed = true;
+        }
     }
     if cache.preview_off_json.as_deref() != graph.preview_off_json.as_deref() {
         if let Some(json) = graph.preview_off_json.as_deref() {
@@ -313,13 +397,6 @@ pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut N
         cache.preview_off_json = graph.preview_off_json.clone();
         changed = true;
     }
-    if cache.lod_json.as_deref() != graph.lod_json.as_deref() {
-        if let Some(json) = graph.lod_json.as_deref() {
-            node_graph_lod_from_json(engine, json);
-        }
-        cache.lod_json = graph.lod_json.clone();
-        changed = true;
-    }
     if cache.viewport.as_ref() != graph.viewport.as_ref() {
         let first = cache.viewport.is_none();
         let mut decided = true;
@@ -329,7 +406,7 @@ pub(super) fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut N
                     host.adopt_camera_or_fit(viewport.x, viewport.y, viewport.zoom);
                     decided = node_graph_frames_content(&host.dag);
                 }
-                NodeGraphEngine::Flow(host) => board_set_camera(&mut host.scene, &mut host.outbox, viewport.x, viewport.y, viewport.zoom),
+                NodeGraphEngine::Flow(host) => host.set_camera(viewport.x, viewport.y, viewport.zoom),
                 NodeGraphEngine::Dag(host) if first => {
                     adopt_camera_or_fit(&mut host.dag.viewport, &mut host.dag.graph, viewport.x, viewport.y, viewport.zoom);
                     decided = node_graph_frames_content(&host.dag);

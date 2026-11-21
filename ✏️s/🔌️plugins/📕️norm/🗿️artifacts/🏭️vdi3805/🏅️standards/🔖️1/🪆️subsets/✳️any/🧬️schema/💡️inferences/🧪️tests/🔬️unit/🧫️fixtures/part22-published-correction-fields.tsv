@@ -1,0 +1,55 @@
+date	family	case	invalid	fields
+202512	110	type-6-202512		110	6
+202601	110	type-6-202601		110	6
+202512	110	type-7-202512	2	110	7
+202601	110	type-7-202601		110	7
+202512	110	type-8-202512	2	110	8
+202601	110	type-8-202601	2	110	8
+202512	110	type-99-202512	2	110	99
+202601	110	type-99-202601	2	110	99
+202512	110	type-100-202512		110	100
+202601	110	type-100-202601		110	100
+202601	110	type-999-202601		110	999
+202601	110	type-1000-202601	2	110	1000
+202601	110	type-0-202601	2	110	0
+202512	400	construction-2-202512		400	2
+202512	400	construction-3-202512	2	400	3
+202601	400	construction-3-202601		400	3
+202601	400	construction-4-202601		400	4
+202601	400	construction-5-202601	2	400	5
+202601	400	construction-0-202601	2	400	0
+202601	110	type-index-missing	2	110
+202601	110	type-family-mismatch	1	400	7
+202601	710.09	performance-reference		710.09	1	1	20	35	-10	1	
+202112	710.09	performance-before-temperature-expansion		710.09	1	1	35	40	-10	2	
+202601	710.09	performance-modulating-load		710.09	1	2	20	35	-10		0.65
+202601	710.09	performance-invalid-temperatures	4,5,6	710.09	1	2	NA	NaN	-inf	1	0.7
+202601	710.09	performance-invalid-step	7	710.09	1	2	20	35	-10	0	0.7
+202601	710.09	performance-invalid-mode	3	710.09	1	3	20	35	-10	1	
+202601	710.09	performance-extra-field	9	710.09	1	1	20	35	-10	1		other
+202601	710.09	performance-missing-fields	7,8	710.09	1	1	20	35	-10
+202601	710.09	performance-invalid-index	2	710.09	2147483648	1	20	35	-10	1	
+201910	710.10	erp-label-9-201910		710.10	1					9	unpublished fields remain
+201910	710.10	erp-label-10-201910	7	710.10	1					10	unpublished fields remain
+201911	710.10	erp-label-10-201911		710.10	1					10	unpublished fields remain
+202601	710.10	erp-label-11-202601	7	710.10	1					11	unpublished fields remain
+202601	710.10	erp-class-missing	7	710.10	1				
+202601	700	technical-2026		700	1																		0														675	.675	1	A2L	F-gas	0	4		6	37.5
+202512	700	technical-before-2026		700	1																		0														675	.675	1	A2	F-gas	0	4	
+202512	700	technical-future-refrigerant-code	37	700	1																		0														675	.675	1	A2L	F-gas	0	4	
+202512	700	technical-future-noise-fields	42,43	700	1																		0														675	.675	1	A2	F-gas	0	4		1	39
+202601	700	technical-noise-code-outside-range	42	700	1																		0														675	.675	1	A2	F-gas	0	4		7	
+202601	700	technical-invalid-noise-format	43	700	1																		0														675	.675	1	A2	F-gas	0	4			low
+202601	700	technical-invalid-global-warming-formats	34,35	700	1																		0														NaN	not known	1	A2	F-gas	0	4			
+202601	700	technical-invalid-hermetic	36	700	1																		0														675	.675	0	A2	F-gas	0	4			
+202601	700	technical-invalid-soft-starter	39	700	1																		0														675	.675	1	A2	F-gas	2	4			
+202601	700	technical-invalid-refrigerant-class	37	700	1																		0														675	.675	1	B2L	F-gas	0	4			
+202601	700	technical-unknown-compressor	40	700	1																		0														675	.675	1	A2	F-gas	0	8			
+202601	700	technical-other-needs-name	41	700	1																		0														675	.675	1	A2	F-gas	0	99			
+202601	700	technical-other-with-name		700	1																		0														675	.675	1	A2	F-gas	0	99	Other compressor		
+202601	700	technical-invalid-index	2	700	100000																		0														675	.675	1	A2	F-gas	0	4			
+202601	700	technical-cooling-not-permitted	21	700	1																		0	10													675	.675	1	A2	F-gas	0	4			
+202601	700	technical-cooling-permitted		700	1																		1	10													675	.675	1	A2	F-gas	0	4			
+202601	700	technical-cooling-format	21	700	1																		2	cool													675	.675	1	A2	F-gas	0	4			
+202601	700	technical-2026-missing-new-fields	42,43	700	1																		0														675	.675	1	A2	F-gas	0	4	
+202512	700	technical-old-invalid-refrigerant-class	37	700	1																		0														675	.675	1	B2L	F-gas	0	4	

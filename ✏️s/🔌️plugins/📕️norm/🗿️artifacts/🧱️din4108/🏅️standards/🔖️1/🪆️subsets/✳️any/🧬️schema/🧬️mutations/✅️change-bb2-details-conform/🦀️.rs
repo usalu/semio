@@ -38,8 +38,31 @@ impl<Op> protocol::ColdMutationKind<Din4108Snapshot, Op> for ChangeBb2DetailsCon
 }
 
 //#region 🪢️Mounts
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
-#[path = "↩️inverse/🦀️.rs"]
-pub mod inverse;
+pub mod diff {
+    //! 🔺️ `change-bb2-details-conform` diff.
+
+    use crate::change_bb2_details_conform::ChangeBb2DetailsConform;
+    use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+
+    pub fn diff(payload: &ChangeBb2DetailsConform, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+        if base.bb2_details_conform == payload.new_bb2_details_conform {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "bb2_details_conform already has this value.");
+        }
+        protocol::MutationOutcome::new(Din4108Diff { bb2_details_conform: Some(payload.new_bb2_details_conform), ..Default::default() })
+    }
+}
+pub mod inverse {
+    //! ↩️ `change-bb2-details-conform` inverse.
+
+    use crate::change_bb2_details_conform::ChangeBb2DetailsConform;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+
+    pub fn inverse<Op>(_payload: &ChangeBb2DetailsConform, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_bb2_details_conform::ChangeBb2DetailsConform> {
+        Ok((|| {
+        vec![Op::from(ChangeBb2DetailsConform { new_bb2_details_conform: base.bb2_details_conform })]
+
+        })())
+    }
+}
 //#endregion 🪢️Mounts

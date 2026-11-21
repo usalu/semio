@@ -1,5 +1,16 @@
 //! 🛠️ Small runtime helpers the instance family names: turn grants, render section, addressed view, internal fault.
 
+/// 📬️ Decodes a resumed task's exact operation wire with the registered lane's native codec.
+pub fn decode_task_emission_lane<T: ::protocol::OpBinary>(bytes: &[u8]) -> Result<Vec<T>, Fault> {
+    let op_bytes_list = protocol::decode_ops_vec(bytes).map_err(|error| semio_framework::FaultFrom::into_fault(error))?;
+    let mut decoded = Vec::with_capacity(op_bytes_list.len());
+    for op_bytes in op_bytes_list.iter() {
+        decoded.push(<T as ::protocol::OpBinary>::decode_op(op_bytes).map_err(|error| semio_framework::FaultFrom::into_fault(error))?);
+    }
+    Ok(decoded)
+}
+
+
 use semio_plugin_decl_app::ArtifactApp;
 use std::sync::atomic::AtomicU64;
 use semio_ui_runtime::ComponentTree;

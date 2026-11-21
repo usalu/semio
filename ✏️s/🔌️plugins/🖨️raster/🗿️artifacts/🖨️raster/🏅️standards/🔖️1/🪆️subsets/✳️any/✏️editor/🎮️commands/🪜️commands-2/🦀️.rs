@@ -30,6 +30,8 @@ pub mod commands {
     pub mod duplicate_layer;
     #[path = "../📤️export-png/🦀️.rs"]
     pub mod export_png;
+    #[path = "../📥️import-png/🦀️.rs"]
+    pub mod import_png;
     #[path = "../🚚️move-layer/🦀️.rs"]
     pub mod move_layer;
     #[path = "../🩹️patch-layer/🦀️.rs"]

@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generation Closure Repair",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "directory": "cr",
+        "reason": "closure-missing",
+        "maximumPointerBytes": 16384,
+        "maximumReceiptBytes": 262144,
+        "maximumManifestBytes": 8388608,
+        "maximumFragments": 8192,
+        "maximumFragmentBytes": 16777216,
+        "maximumPackedBytes": 67108864,
+        "maximumExpandedBytes": 536870912,
+        "maximumReferences": 24576,
+        "maximumLinks": 98304,
+        "maximumMissing": 768,
+        "maximumAffectedOwners": 1024
+      }
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "key"
+      ],
+      "properties": {
+        "namespace": {
+          "enum": [
+            "build-input-closures",
+            "build-lock-closures"
+          ]
+        },
+        "key": {
+          "$ref": "#/definitions/Digest"
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "generation",
+        "parent",
+        "identity",
+        "implementation",
+        "missing",
+        "owners"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "parent": {
+          "$ref": "#/definitions/Digest"
+        },
+        "identity": {
+          "$ref": "#/definitions/Digest"
+        },
+        "implementation": {
+          "$ref": "#/definitions/Digest"
+        },
+        "missing": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 768,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Reference"
+          }
+        },
+        "owners": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        }
+      }
+    }
+  }
+}

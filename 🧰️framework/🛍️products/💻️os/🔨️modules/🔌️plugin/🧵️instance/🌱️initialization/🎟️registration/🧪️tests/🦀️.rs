@@ -24,15 +24,16 @@ fn recorded_turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJo
     assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes),"native mounted owner receipt {progress:?} at {} {label}, failure={:?}",std::panic::Location::caller(),result.as_ref().err());
     (result.unwrap(),progress)
 }
-fn cancellation_boundary_reached(boundary:Option<&str>,progress:RetainedCloneProgress)->bool{
- let cursor=semio_plugin_instance_construction::OriginalArtifactInstanceAdmission::<App,NoMembers>::INITIALIZATION_CURSOR_BYTES;
- let(copy,capacity)=match boundary{
- Some("final-allocation-before-service-initialization")=>(None,semio_plugin_instance_construction::OriginalArtifactInstanceAdmission::<App,NoMembers>::birth_demands().capacity_bytes),
- Some("after-child-service-backing")=>(Some(semio_plugin_instance_app::ChildComposition::<NoMembers>::initial_copy_bytes()+cursor),semio_plugin_instance_app::ChildComposition::<NoMembers>::birth_demands().unwrap().capacity_bytes),
- Some("after-tool-service-backing")=>{let demand=semio_plugin_instance_app::ToolOperations::<App>::initial_field_demands(semio_plugin_instance_app::ToolOperations::<App>::EFFECT_OUTBOX_FIELD,0,POLICY.preparation.maximum_copy_bytes-cursor,true).unwrap();(Some(demand.copy_bytes+cursor),demand.capacity_bytes)},
- Some("during-large-absent-field")=>(Some(POLICY.preparation.maximum_copy_bytes),0),
- None=>return false,Some(_)=>panic!("unknown neutral native cancellation boundary"),
- };progress.retained_capacity_bytes==capacity&&copy.is_none_or(|bytes|progress.copied_bytes==bytes)}
+fn cancellation_boundary_reached(boundary:Option<&str>,position:Option<(u8,usize,usize)>)->bool{
+ match boundary{
+  Some("final-allocation-before-service-initialization")=>position==Some((0,0,0)),
+  Some("after-child-service-backing")=>position==Some((17,0,0)),
+  Some("after-tool-service-backing")=>position==Some((18,semio_plugin_instance_app::ToolOperations::<App>::EFFECT_OUTBOX_FIELD+1,0)),
+  Some("during-large-absent-field")=>position.is_some_and(|(phase,field,offset)|phase==19&&field==0&&offset>0),
+  None=>false,
+  Some(_)=>panic!("unknown neutral native cancellation boundary"),
+ }
+}
 fn observe_post_capture_maintenance(
     mut app: Recipient,
     caller: &mut OriginalJobFixtureCaller,
@@ -133,9 +134,36 @@ fn exercise_original_native_window(cancel_at:Option<&str>) -> (Option<(String,St
  let((definition,registration,mut caller),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(declare);
  let initial=heap.requested_bytes-heap.released_bytes;
  let mut decoder=OriginalJobDecodeOwner::empty();let mut factory_birth=OriginalStoreBirth::default();let mut construction:Option<Box<dyn semio_plugin_reactor_app::OriginalPluginAppConstruction<Recipient>>>=None;let mut app:Option<Recipient>=None;let(mut born,mut released)=(0,0);let mut last_progress=(0,RetainedCloneProgress::default());
- for index in 0..1048576{let grant=if cancel_at==Some("during-large-absent-field")&&construction.is_some(){POLICY.preparation}else{RetainedCloneGrant{maximum_copy_bytes:1<<20,..POLICY.preparation}};let(_,p)=turn(&mut caller,&mut decoder,grant,|cx|{if let Some(construction)=construction.as_mut(){let source=definition.original_source().unwrap();construction.advance(OriginalPluginAppSource{definition:&source,definition_source:definition.original_source().unwrap(),registration:registration.as_ref(),actor:"native-window-actor",instance_id:77,policy:POLICY},cx,&mut app)?;}else{(factory.begin)(cx,&mut factory_birth,&mut construction)?;}Ok(())});born+=p.retained_capacity_bytes;released+=p.released_bytes;if p.copied_items>0||p.retained_capacity_bytes>0||p.released_bytes>0{last_progress=(index,p);}if app.is_some()||cancellation_boundary_reached(cancel_at,p){break}assert!(index<1048575,"actual declared native App opening stalled: construction={} born={} released={} last_progress={:?}",construction.is_some(),born,released,last_progress);}
- if cancel_at==Some("during-large-absent-field"){let cursor=semio_plugin_instance_construction::OriginalArtifactInstanceAdmission::<App,NoMembers>::INITIALIZATION_CURSOR_BYTES;for bytes in [0,cursor-1,cursor]{let grant=RetainedCloneGrant{maximum_copy_bytes:bytes,..POLICY.preparation};let(_,progress)=turn(&mut caller,&mut decoder,grant,|cx|{let source=definition.original_source().unwrap();construction.as_mut().unwrap().advance(OriginalPluginAppSource{definition:&source,definition_source:definition.original_source().unwrap(),registration:registration.as_ref(),actor:"native-window-actor",instance_id:77,policy:POLICY},cx,&mut app)?;Ok(())});assert_eq!(progress,RetainedCloneProgress::default(),"zero/subexact/cursor-only copy grants cannot advance an unfinished absent field");assert!(app.is_none());}}
- assert_eq!(app.is_none(),cancel_at.is_some());
+ for index in 0..1048576{
+  let grant=if cancel_at==Some("during-large-absent-field")&&construction.as_ref().and_then(|owner|owner.assembly_position()).is_some_and(|(phase,_,_)|phase>=19){POLICY.preparation}else{RetainedCloneGrant{maximum_copy_bytes:1<<20,..POLICY.preparation}};
+  let(_,p)=turn(&mut caller,&mut decoder,grant,|cx|{
+   if let Some(construction)=construction.as_mut(){let source=definition.original_source().unwrap();construction.advance(OriginalPluginAppSource{definition:&source,definition_source:definition.original_source().unwrap(),registration:registration.as_ref(),actor:"native-window-actor",instance_id:77,policy:POLICY},cx,&mut app)?;}
+   else{(factory.begin)(cx,&mut factory_birth,&mut construction)?;}
+   Ok(())
+  });
+  born+=p.retained_capacity_bytes;released+=p.released_bytes;
+  if p.copied_items>0||p.retained_capacity_bytes>0||p.released_bytes>0{last_progress=(index,p);}
+  let position=construction.as_ref().and_then(|owner|owner.assembly_position());
+  if app.is_some()||cancellation_boundary_reached(cancel_at,position){break}
+  assert!(index<1048575,"actual declared native App opening stalled: assembly {position:?} construction={} born={} released={} last_progress={:?}",construction.is_some(),born,released,last_progress);
+ }
+ if cancel_at==Some("during-large-absent-field"){
+  let owner=construction.as_mut().unwrap();
+  let partial=owner.assembly_position();
+  assert!(cancellation_boundary_reached(cancel_at,partial));
+  let cursor=semio_plugin_instance_construction::OriginalArtifactInstanceAdmission::<App,NoMembers>::INITIALIZATION_CURSOR_BYTES;
+  for bytes in [0,cursor-1,cursor]{
+   let grant=RetainedCloneGrant{maximum_copy_bytes:bytes,..POLICY.preparation};
+   let(_,p)=turn(&mut caller,&mut decoder,grant,|cx|{
+    let source=definition.original_source().unwrap();owner.advance(OriginalPluginAppSource{definition:&source,definition_source:definition.original_source().unwrap(),registration:registration.as_ref(),actor:"native-window-actor",instance_id:77,policy:POLICY},cx,&mut app)?;
+    Ok(())
+   });
+   born+=p.retained_capacity_bytes;released+=p.released_bytes;
+   assert_eq!(owner.assembly_position(),partial,"zero/subexact/cursor-only copy grants cannot advance an unfinished absent field");
+   assert!(app.is_none());
+  }
+ }
+ assert_eq!(app.is_none(),cancel_at.is_some(),"native Window publication at cancellation boundary {cancel_at:?}, last progress {last_progress:?}");
  let identity=app.as_ref().map(|app|{
   let delegate=semio_plugin_reactor_app::PluginAppDelegate::delegate_ref(app);
   assert_eq!(delegate.snapshot_ref().zoom,1.25);
@@ -157,6 +185,18 @@ fn exercise_original_native_window(cancel_at:Option<&str>) -> (Option<(String,St
 #[test]
 fn actual_native_window_app_opens_and_closes_with_its_original_registered_sources() {
     let law: serde_json::Value = serde_json::from_str(include_str!("🪪️identity.json")).unwrap();
+    type Admission=semio_plugin_instance_construction::OriginalArtifactInstanceAdmission<App,NoMembers>;
+    let cancellation:serde_json::Value=serde_json::from_str(include_str!("🛑️cancellation.json")).unwrap();
+    let actual_body=cancellation["remainingCloseCopyBytes"].as_u64().unwrap() as usize;
+    let last_phase=cancellation["lastAssemblyPhase"].as_u64().unwrap() as u8;
+    let mut oversized=Vec::new();
+    for phase in 0..=last_phase {
+        for field in 0..Admission::initialization_fields_at(phase) {
+            let demand=Admission::initialization_demand_at(phase,field,0,actual_body,false).unwrap();
+            if demand.copy_bytes>actual_body { oversized.push((phase,field,demand.copy_bytes)); }
+        }
+    }
+    assert!(oversized.is_empty(),"cancellation assembly fields exceed {actual_body} copy bytes (phase, field, extent): {oversized:?}");
     let first = exercise_original_native_window(None).0.unwrap();
     let second = exercise_original_native_window(None).0.unwrap();
     let actual = serde_json::json!({
@@ -166,6 +206,5 @@ fn actual_native_window_app_opens_and_closes_with_its_original_registered_source
         "secondLength": second.0.len()
     });
     assert_eq!(actual, law["expected"]);
-    let cancellation:serde_json::Value=serde_json::from_str(include_str!("🛑️cancellation.json")).unwrap();
     for case in cancellation["cases"].as_array().unwrap(){let cancelled=exercise_original_native_window(Some(case["cancelAt"].as_str().unwrap()));assert_eq!(serde_json::json!({"published":cancelled.0.is_some(),"balanced":cancelled.1}),case["expected"]);}
 }

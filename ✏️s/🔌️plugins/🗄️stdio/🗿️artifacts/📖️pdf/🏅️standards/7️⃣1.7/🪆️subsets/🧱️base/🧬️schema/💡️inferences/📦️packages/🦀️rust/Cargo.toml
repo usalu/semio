@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pixels = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-lexer = { path = "../../../../🔨️modules/🔤️lexer/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-2d = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }

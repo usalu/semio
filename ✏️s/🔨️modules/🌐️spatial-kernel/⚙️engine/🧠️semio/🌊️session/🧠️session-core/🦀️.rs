@@ -1,7 +1,7 @@
 //! 🧠️ Session core: the shell allocator, `Session`, its capture and retirement state, and the geometry port.
 
 use super::*;
-use semio_framework_3d_brep_engine::{AnalyticPublication, ConicFacePublication, PolygonFacePublication, PolygonWirePublication, PolygonWireRecipe, PrismDraft, SolidPrimitive, SolidPublication, VertexPublication};
+use semio_framework_3d_brep_engine::{AnalyticPublication, ConicFacePublication, PolygonFacePublication, PolygonSectionSet, PolygonWirePublication, PolygonWireRecipe, PrismDraft, SECTION_FACE_LIMIT, SolidPrimitive, SolidPublication, VertexPublication};
 use semio_framework_value::{RetainedCloneGrant, RetirementDemand};
 use semio_framework_3d_brep_engine::{CompoundPublication, TopologyAlias, TopologyList, TopologySelection};
 use semio_framework_3d_brep_engine::{SolidPatternPublication, SolidPatternRecipe};
@@ -14,25 +14,32 @@ trait GeometryPublication {
     fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)>;
 }
 
-impl GeometryPublication for AnalyticPublication {
-    fn handle(&self) -> &str { self.handle() }
-    fn demand(&self, kernel: &Brep, copy: usize) -> Result<RetirementDemand, ValueError> { kernel.analytic_publication_demand(self, copy) }
-    fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> { kernel.reserve_analytic_publication(self, grant) }
-    fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> { kernel.publish_analytic_geometry(self, key, grant) }
+macro_rules! geometry_publication {
+    ($($publication:ty => $demand:ident, $reserve:ident, $publish:ident;)+) => {
+        $(impl GeometryPublication for $publication {
+            fn handle(&self) -> &str { self.handle() }
+            fn demand(&self, kernel: &Brep, copy: usize) -> Result<RetirementDemand, ValueError> {
+                kernel.$demand(self, copy)
+            }
+            fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+                kernel.$reserve(self, grant)
+            }
+            fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> {
+                kernel.$publish(self, key, grant)
+            }
+        })+
+    };
 }
 
-impl GeometryPublication for CompoundPublication {
-    fn handle(&self)->&str{self.handle()}
-    fn demand(&self,kernel:&Brep,copy:usize)->Result<RetirementDemand,ValueError>{kernel.compound_publication_demand(self,copy)}
-    fn reserve(&self,kernel:&mut Brep,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{kernel.reserve_compound_publication(self,grant)}
-    fn publish(&mut self,kernel:&mut Brep,key:String,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,String)>{kernel.publish_compound(self,key,grant)}
-}
-
-impl GeometryPublication for SolidPatternPublication {
-    fn handle(&self) -> &str { self.handle() }
-    fn demand(&self, kernel: &Brep, copy: usize) -> Result<RetirementDemand, ValueError> { kernel.solid_pattern_publication_demand(self, copy) }
-    fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> { kernel.reserve_solid_pattern(self, grant) }
-    fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> { kernel.publish_solid_pattern(self, key, grant) }
+geometry_publication! {
+    AnalyticPublication => analytic_publication_demand, reserve_analytic_publication, publish_analytic_geometry;
+    CompoundPublication => compound_publication_demand, reserve_compound_publication, publish_compound;
+    SolidPatternPublication => solid_pattern_publication_demand, reserve_solid_pattern, publish_solid_pattern;
+    SolidPublication => solid_primitive_demand, reserve_solid_primitive, publish_solid_primitive;
+    PolygonFacePublication => polygon_face_demand, reserve_polygon_face, publish_polygon_face;
+    VertexPublication => vertex_publication_demand, reserve_vertex_publication, publish_vertex;
+    PolygonWirePublication => polygon_wire_demand, reserve_polygon_wire, publish_polygon_wire;
+    ConicFacePublication => conic_face_demand, reserve_conic_face, publish_conic_face;
 }
 
 impl GeometryPublication for MeshPublication {
@@ -41,42 +48,6 @@ impl GeometryPublication for MeshPublication {
     fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> { kernel.reserve_mesh_publication(self, grant) }
     fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> { kernel.publish_mesh(self, key, grant) }
 }
-
-impl GeometryPublication for SolidPublication {
-    fn handle(&self) -> &str { self.handle() }
-    fn demand(&self, kernel: &Brep, copy: usize) -> Result<RetirementDemand, ValueError> { kernel.solid_primitive_demand(self, copy) }
-    fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> { kernel.reserve_solid_primitive(self, grant) }
-    fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> { kernel.publish_solid_primitive(self, key, grant) }
-}
-
-impl GeometryPublication for PolygonFacePublication {
-    fn handle(&self) -> &str { self.handle() }
-    fn demand(&self, kernel: &Brep, copy: usize) -> Result<RetirementDemand, ValueError> { kernel.polygon_face_demand(self, copy) }
-    fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> { kernel.reserve_polygon_face(self, grant) }
-    fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> { kernel.publish_polygon_face(self, key, grant) }
-}
-
-impl GeometryPublication for VertexPublication {
-    fn handle(&self) -> &str { self.handle() }
-    fn demand(&self, kernel: &Brep, copy: usize) -> Result<RetirementDemand, ValueError> { kernel.vertex_publication_demand(self, copy) }
-    fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> { kernel.reserve_vertex_publication(self, grant) }
-    fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> { kernel.publish_vertex(self, key, grant) }
-}
-
-impl GeometryPublication for PolygonWirePublication {
-    fn handle(&self) -> &str { self.handle() }
-    fn demand(&self, kernel: &Brep, copy: usize) -> Result<RetirementDemand, ValueError> { kernel.polygon_wire_demand(self, copy) }
-    fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> { kernel.reserve_polygon_wire(self, grant) }
-    fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> { kernel.publish_polygon_wire(self, key, grant) }
-}
-
-impl GeometryPublication for ConicFacePublication {
-    fn handle(&self) -> &str { self.handle() }
-    fn demand(&self, kernel: &Brep, copy: usize) -> Result<RetirementDemand, ValueError> { kernel.conic_face_demand(self, copy) }
-    fn reserve(&self, kernel: &mut Brep, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> { kernel.reserve_conic_face(self, grant) }
-    fn publish(&mut self, kernel: &mut Brep, key: String, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, String)> { kernel.publish_conic_face(self, key, grant) }
-}
-
 
 /// 🌉️ Dispatches one `BrepKernel` method by name over `os_pack::json` args (see `handle_result`
 /// and friends above for the response shapes); the sole bridge every `SemioBrepKernel` TS method
@@ -423,7 +394,7 @@ pub fn step_boolean_preparation(&self, a: &str, b: &str, preparation: &mut semio
 
 /// ⚖️ Admits an exact certified Boolean result without copying any live session rows.
 pub fn plan_certified_boolean(&self, a: &str, b: &str, first: &semio_framework_3d_brep_engine::BooleanOperand,
-    operation: semio_framework_3d_brep_engine::BooleanOperation) -> Result<SolidPublication, ValueError> {
+    operation: semio_framework_3d_brep_engine::BooleanOperation) -> Result<semio_framework_3d_brep_engine::CertifiedBooleanResult<SolidPatternPublication>, ValueError> {
     if self.is_closed() { return Err(ownership_busy()); }
     self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_certified_boolean(a, b, first, operation)
 }
@@ -435,8 +406,9 @@ pub fn plan_certified_solid_transform(&self, source: &str, transform: semio_fram
 }
 
 /// ✂️ Captures one certified box and plane for a retained section.
-pub fn plan_box_section(&self, source: &str, origin: Vec3, normal: Vec3) -> Result<semio_framework_3d_brep_engine::BoxSectionDraft, ValueError> {
-    self.with_original_geometry_query(|kernel| kernel.plan_box_section(source, origin, normal))
+pub fn plan_section(&self,source:&str,origin:Vec3,normal:Vec3)->Result<semio_framework_3d_brep_engine::SectionPlan,ValueError>{
+    if self.is_closed(){return Err(ownership_busy());}
+    self.kernel().try_lock().map_err(|_|ownership_busy())?.plan_section(source,origin,normal)
 }
 
 /// 🎟️ Quotes original native reads for the analytic bounding interval.
@@ -453,6 +425,22 @@ pub fn plan_analytic_bounds(&self, handle: &str) -> Result<semio_framework_3d_br
 /// 🎟️ Quotes the original certified solid lookup and arena read.
 pub fn certified_solid_depth(&self, handle: &str) -> Result<usize, ValueError> {
     self.with_original_geometry_query(|kernel| kernel.certified_solid_depth(handle))
+}
+
+/// 📐 Borrows one live certified solid and its original native topology under the session lock.
+pub fn with_original_certified_solid<T>(&self, handle: &str, read: impl FnOnce(
+    &semio_framework_3d_brep_representation::topology::Body,
+    semio_framework_3d_brep_representation::arena::SolidId, u64, usize,
+) -> Result<T, ValueError>) -> Result<T, ValueError> {
+    use semio_framework_3d_brep_representation::topology::EntityRef;
+    self.with_original_geometry_query(|kernel| {
+        if let Some(EntityRef::Solid(id)) = kernel.preview_validation_root(handle, 0)? {
+            if kernel.original_validation_is_certified(handle)? {
+                return read(kernel.representation(), id, kernel.preview_validation_revision(), kernel.certified_solid_depth(handle)?);
+            }
+        }
+        Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original exchange requires a certified solid"))
+    })
 }
 
 /// 🧊️ Borrows the exact box certificate and captures its fixed world-space interval.
@@ -475,9 +463,21 @@ pub fn original_solid_classification(&self, handle: &str, point: Vec3) -> Result
     self.with_original_geometry_query(|kernel| kernel.original_solid_classification(handle, point))
 }
 
-/// 📏️ Computes exact separation of two original certified boxes.
-pub fn original_box_distance(&self, a: &str, b: &str) -> Result<f64, ValueError> {
-    self.with_original_geometry_query(|kernel| kernel.original_box_distance(a, b))
+/// 🧭️ Opens the retained distance cursor for an original vertex and planar face pair.
+pub fn plan_face_distance(&self, a: &str, b: &str) -> Result<Option<(semio_framework_3d_brep_engine::PlanarClosestJob, bool)>, ValueError> {
+    self.with_original_geometry_query(|kernel| kernel.plan_face_distance(a, b))
+}
+
+/// 📏️ Computes original vertex–curve and certified box distances.
+pub fn original_measure_distance(&self, a: &str, b: &str) -> Result<f64, ValueError> {
+    self.with_original_geometry_query(|kernel| kernel.original_measure_distance(a, b))
+}
+
+/// 🪜️ Quotes the source rows for a retained measurement in one session read.
+pub fn original_measure_source_depth(&self, sources: &[&str]) -> Result<usize, ValueError> {
+    self.with_original_geometry_query(|kernel| sources.iter().try_fold(1, |depth, source| {
+        Ok(depth.max(kernel.original_measure_source_depth(source)?))
+    }))
 }
 
 /// 🥞️ Quotes the paired original Loft section roots.
@@ -520,24 +520,24 @@ pub fn finish_point_hull(&self, draft: &mut semio_framework_3d_brep_engine::Hull
 }
 
 /// 🐚️ Captures a certified box and positive thickness in the original session.
-pub fn plan_box_shell(&self, handle: &str, thickness: f64) -> Result<semio_framework_3d_brep_engine::BoxShellDraft, ValueError> {
-    self.with_original_geometry_query(|kernel| kernel.plan_box_shell(handle, thickness))
+pub fn plan_shell(&self, handle: &str, thickness: f64) -> Result<semio_framework_3d_brep_engine::ShellDraft, ValueError> {
+    self.with_original_geometry_query(|kernel| kernel.plan_shell(handle, thickness))
 }
 
 /// 🎟️ Quotes one original selection before adding a shell opening.
-pub fn box_shell_face_depth(&self, draft: &semio_framework_3d_brep_engine::BoxShellDraft, handle: &str) -> Result<usize, ValueError> {
-    self.with_original_geometry_query(|kernel| kernel.box_shell_face_depth(draft, handle))
+pub fn shell_face_depth(&self, draft: &semio_framework_3d_brep_engine::ShellDraft, handle: &str) -> Result<usize, ValueError> {
+    self.with_original_geometry_query(|kernel| kernel.shell_face_depth(draft, handle))
 }
 
 /// 🪟️ Admits a selected original box face without creating topology.
-pub fn add_box_shell_face(&self, draft: &mut semio_framework_3d_brep_engine::BoxShellDraft, handle: &str) -> Result<(), ValueError> {
-    self.with_original_geometry_query(|kernel| kernel.add_box_shell_face(draft, handle))
+pub fn add_shell_face(&self, draft: &mut semio_framework_3d_brep_engine::ShellDraft, handle: &str) -> Result<(), ValueError> {
+    self.with_original_geometry_query(|kernel| kernel.add_shell_face(draft, handle))
 }
 
 /// 🪚️ Stages the exact closed boundary from the selected box opening sides.
-pub fn finish_box_shell(&self, draft: &semio_framework_3d_brep_engine::BoxShellDraft, handle: &str) -> Result<SolidPublication, ValueError> {
+pub fn finish_shell(&self, draft: &semio_framework_3d_brep_engine::ShellDraft, handle: &str) -> Result<SolidPublication, ValueError> {
     if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.finish_box_shell(draft, handle)
+    self.kernel().try_lock().map_err(|_| ownership_busy())?.finish_shell(draft, handle)
 }
 
 /// ↔️ Stages a signed sharp box offset through the original solid publisher.
@@ -602,7 +602,7 @@ pub fn planar_closest_demand(&self, handle: &str, job: &semio_framework_3d_brep_
 }
 
 /// ⏱️ Projects through one granted original planar face cursor step.
-pub fn step_planar_closest(&self, handle: &str, job: &mut semio_framework_3d_brep_engine::PlanarClosestJob, effect: &mut RetainedAllocationEffect<'_>) -> Result<(Option<Vec3>, RetainedCloneProgress), ValueError> {
+pub fn step_planar_closest(&self, handle: &str, job: &mut semio_framework_3d_brep_engine::PlanarClosestJob, effect: &mut RetainedAllocationEffect<'_>) -> Result<(Option<semio_framework_3d_brep_engine::PlanarClosestOutput>, RetainedCloneProgress), ValueError> {
     self.with_original_geometry_query(|kernel| kernel.step_planar_closest(handle, job, effect))
 }
 
@@ -650,10 +650,14 @@ pub fn original_analytic_area(&self, handle: &str) -> Result<Option<f64>,ValueEr
 }
 
 /// ⚖️ Reads exact center of mass from a live constructor-certified solid.
-pub fn original_primitive_center_of_mass(&self, handle: &str) -> Result<Vec3,ValueError> {
+pub fn original_center_of_mass(&self, handle: &str) -> Result<Vec3,ValueError> {
     self.with_original_geometry_query(|kernel| {
-        let point = kernel.live_solid_primitive(handle).ok_or_else(|| ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original center of mass requires a constructor-certified solid"))?.center_of_mass();
-        Ok([point.x,point.y,point.z])
+        let point = kernel.live_curved_solid_properties(handle).map(|(_, center)| center)
+            .or_else(|| kernel.live_solid_primitive(handle).map(|primitive| primitive.center_of_mass()))
+            .ok_or_else(|| ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original center of mass requires a constructor-certified solid"))?;
+        let center = point.to_array();
+        if center.into_iter().all(f64::is_finite) { Ok(center) }
+        else { Err(ValueError::literal(ValueRefusalKind::InvalidValue, "certified center of mass exceeds finite range")) }
     })
 }
 
@@ -661,6 +665,16 @@ pub fn original_primitive_center_of_mass(&self, handle: &str) -> Result<Vec3,Val
 pub fn plan_planar_measure(&self, handle: &str, measure_area: bool) -> Result<semio_framework_3d_brep_engine::PlanarMeasureJob, ValueError> {
     if self.is_closed() { return Err(ownership_busy()); }
     self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_planar_measure(handle,measure_area)
+}
+
+/// ⚖️ Starts exact retained center-of-mass integration for a planar solid or compound.
+pub fn plan_planar_center_of_mass(&self,handle:&str)->Result<semio_framework_3d_brep_engine::PlanarMeasureJob,ValueError>{
+    self.with_original_geometry_query(|kernel|kernel.plan_planar_center_of_mass(handle))
+}
+
+/// 📦️ Opens the retained cursor for an exact planar axis range.
+pub fn plan_planar_bounds(&self,handle:&str)->Result<semio_framework_3d_brep_engine::PlanarMeasureJob,ValueError>{
+    self.with_original_geometry_query(|kernel|kernel.plan_planar_bounds(handle))
 }
 
 /// 📐️ Quotes one original polygon-volume integration.
@@ -779,6 +793,29 @@ pub fn close_mesh_publication(&self, plan: &mut MeshPublication, effect: &mut Re
     self.kernel().try_lock().map_err(|_| ownership_busy())?.close_mesh_publication(plan, effect)
 }
 
+/// 🗃️ Stages an exact orthogonal cell arrangement.
+pub fn plan_orthogonal_cells(&self, axes: [[f64;4];3], cells: u32) -> Result<SolidPublication, ValueError> {
+    if self.is_closed() { return Err(ownership_busy()); }
+    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_orthogonal_cells(axes,cells)
+}
+/// 📥️ Stages one exact solid boundary from a funded exchange cursor.
+pub fn plan_exchange_boundary(&self, boundary: semio_framework_3d_brep_engine::SolidExchangeBoundary) -> Result<SolidPublication, ValueError> {
+    if self.is_closed() { return Err(ownership_busy()); }
+    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_exchange_boundary(boundary)
+}
+
+/// 〰️ Plans exact NURBS storage for a certified original cuboid.
+pub fn plan_nurbs_cuboid(&self, source: &str) -> Result<SolidPublication, ValueError> {
+    if self.is_closed() { return Err(ownership_busy()); }
+    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_nurbs_cuboid(source)
+}
+
+/// 📥️ Opens an independent spline cuboid from its certified exchange geometry.
+pub fn plan_nurbs_cuboid_primitive(&self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> {
+    if self.is_closed() { return Err(ownership_busy()); }
+    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_nurbs_cuboid_primitive(primitive)
+}
+
 /// 📦️ Plans an unpublished original analytic solid without scanning session handles.
 pub fn plan_solid_primitive(&self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> {
     if self.is_closed() { return Err(ownership_busy()); }
@@ -824,6 +861,12 @@ pub fn plan_circular_revolution(&self, handle: &str, origin: Vec3, direction: Ve
     -> Result<SolidPublication, ValueError> {
     if self.is_closed() { return Err(ownership_busy()); }
     self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_circular_revolution(handle, origin, direction, angle)
+}
+
+/// 🌀️ Starts the exact closed circular specialization of a helical sweep.
+pub fn plan_closed_helical_sweep(&self, handle:&str, origin:Vec3, direction:Vec3, parameters:[f64;3]) -> Result<SolidPublication,ValueError> {
+    if self.is_closed(){return Err(ownership_busy());}
+    self.kernel().try_lock().map_err(|_|ownership_busy())?.plan_closed_helical_sweep(handle,origin,direction,parameters)
 }
 
 /// 🧱️ Starts the exact cylinder or prism for the original planar face thickness.
@@ -911,10 +954,16 @@ pub fn close_conic_face(&self, face: &mut ConicFacePublication, effect: &mut Ret
     self.kernel().try_lock().map_err(|_| ownership_busy())?.close_conic_face(face, effect)
 }
 
-/// ✂️ Plans the unique intersection of two live supporting lines.
-pub fn plan_original_line_line(&self, a: &str, b: &str, tolerance: f64) -> Result<VertexPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_original_line_line(a, b, tolerance)
+/// ✂️ Resolves each bounded original curve intersection under the live session lock.
+pub fn original_curve_curve_contacts(&self, a: &str, b: &str, tolerance: f64) -> Result<[Option<Vec3>; 4], ValueError> {
+    self.with_original_geometry_query(|kernel| kernel.original_curve_curve_contacts(a, b, tolerance))
+}
+
+/// 🪜️ Quotes both registered original curve or edge sources before their contact event.
+pub fn original_intersection_curve_source_depth(&self, sources: &[&str]) -> Result<usize, ValueError> {
+    self.with_original_geometry_query(|kernel| sources.iter().try_fold(1, |depth, source| {
+        Ok(depth.max(kernel.original_intersection_curve_source_depth(source)?))
+    }))
 }
 
 /// 📐️ Quotes one exact source face or halfedge for cuboid sewing.
@@ -938,10 +987,9 @@ pub fn step_cuboid_sew(&self, draft: &mut semio_framework_3d_brep_engine::Cuboid
     Ok(None)
 }
 
-/// 🪟️ Plans the unique intersection of a live supporting line and analytic plane.
-pub fn plan_original_line_plane(&self, curve: &str, surface: &str, tolerance: f64) -> Result<VertexPublication, ValueError> {
-    if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_original_line_plane(curve, surface, tolerance)
+/// 🪟️ Resolves each bounded line or conic contact with a live analytic plane.
+pub fn original_curve_plane_contacts(&self,curve:&str,surface:&str,tolerance:f64)->Result<[Option<Vec3>;4],ValueError>{
+    self.with_original_geometry_query(|kernel|kernel.original_curve_plane_contacts(curve,surface,tolerance))
 }
 
 /// 🌐️ Plans the exact continuous intersection of two original analytic supports.
@@ -951,13 +999,13 @@ pub fn plan_original_surface_intersection(&self, a: &str, b: &str, tolerance: f6
 }
 
 /// 🪚️ Plans one exact finishing prism from a selected box member.
-pub fn plan_box_finish(&self, shape: &str, member: &str, finish: semio_framework_3d_brep_engine::BoxFinish) -> Result<SolidPublication, ValueError> {
+pub fn plan_box_finish(&self, shape: &str, member: &[&str], finish: semio_framework_3d_brep_engine::BoxFinish) -> Result<SolidPublication, ValueError> {
     if self.is_closed() { return Err(ownership_busy()); }
     self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_box_finish(shape,member,finish)
 }
 
 /// 📏️ Quotes the borrowed box and member paths.
-pub fn box_finish_depth(&self, shape: &str, member: &str) -> Result<usize, ValueError> {
+pub fn box_finish_depth(&self, shape: &str, member: &[&str]) -> Result<usize, ValueError> {
     self.with_original_geometry_query(|kernel| kernel.box_finish_depth(shape,member))
 }
 
@@ -1242,44 +1290,68 @@ fn step_geometry_publication(
     Ok((true, receipt))
 }
 
-/// 🪓️ Admits two unpublished boxes in signed plane order.
-pub fn plan_box_split(&self, source: &str, origin: [f64; 3], normal: [f64; 3]) -> Result<[SolidPublication; 2], ValueError> {
+/// 🪓️ Admits two unpublished solids in signed plane order.
+pub fn plan_plane_split(&self, source: &str, origin: [f64; 3], normal: [f64; 3]) -> Result<[SolidPublication; 2], ValueError> {
     if self.is_closed() { return Err(ownership_busy()); }
-    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_box_split(source, origin, normal)
+    self.kernel().try_lock().map_err(|_| ownership_busy())?.plan_plane_split(source, origin, normal)
 }
 
 pub fn solid_pair_demand(&self, pair: &[SolidPublication; 2], staged: [bool; 2], copy: usize) -> Result<RetirementDemand, ValueError> {
-    if let Some(next) = staged.iter().position(|staged| !staged) {
-        return self.geometry_publication_demand(&pair[next], false, copy);
-    }
-    let claims = self.state.claims.try_lock().map_err(|_| ownership_busy())?;
-    let own = claims.get(&self.state.authority).ok_or_else(ownership_busy)?;
-    let mut demand = self.kernel().try_lock().map_err(|_| ownership_busy())?.solid_pair_demand()?;
-    for solid in pair { demand.depth = demand.depth.max(own.handles.next_contains_depth_demand(solid.handle())?); }
-    Ok(demand)
+    if let Some(i) = staged.iter().position(|staged| !staged) { return self.geometry_publication_demand(&pair[i], false, copy); }
+    self.geometry_batch_demand(pair.iter().map(SolidPublication::handle))
 }
 
 /// 🤝️ Stages claims independently, then commits both certified roots under the same locks.
 pub fn step_solid_pair(&self, pair: &mut [SolidPublication; 2], live: &mut [String; 2], claim: &mut [String; 2], staged: &mut [bool; 2], effect: &mut RetainedAllocationEffect<'_>) -> Result<(bool, RetainedCloneProgress), ValueError> {
-    if let Some(next) = staged.iter().position(|staged| !staged) {
-        return self.step_geometry_publication(&mut pair[next], &mut live[next], &mut claim[next], &mut staged[next], effect);
-    }
+    if let Some(i) = staged.iter().position(|staged| !staged) { return self.step_geometry_publication(&mut pair[i], &mut live[i], &mut claim[i], &mut staged[i], effect); }
+    self.step_geometry_batch(pair, live, staged, 2, |pair, i| pair[i].handle(), Brep::publish_solid_pair, effect)
+}
+
+pub fn polygon_section_demand(&self, section: &PolygonSectionSet, staged: [bool; SECTION_FACE_LIMIT], copy: usize) -> Result<RetirementDemand, ValueError> {
+    let count = section.count();
+    if let Some(i) = staged[..count].iter().position(|staged| !staged) { return self.geometry_publication_demand(&section.face(i).0, false, copy); }
+    self.geometry_batch_demand((0..count).map(|i| section.face(i).0.handle()))
+}
+
+/// 🪷️ Stages the private Section claims and commits the complete face list.
+pub fn step_polygon_section(&self, section: &mut PolygonSectionSet, live: &mut [String; SECTION_FACE_LIMIT], claim: &mut [String; SECTION_FACE_LIMIT], staged: &mut [bool; SECTION_FACE_LIMIT], effect: &mut RetainedAllocationEffect<'_>) -> Result<(bool, RetainedCloneProgress), ValueError> {
+    let count = section.count();
+    if let Some(i) = staged[..count].iter().position(|staged| !staged) { return self.step_geometry_publication(&mut section.face_mut(i).0, &mut live[i], &mut claim[i], &mut staged[i], effect); }
+    self.step_geometry_batch(section, live, staged, count, |section, i| section.face(i).0.handle(), Brep::publish_polygon_section, effect)
+}
+
+fn geometry_batch_demand<'a>(&self, handles: impl ExactSizeIterator<Item = &'a str>) -> Result<RetirementDemand, ValueError> {
+    let claims = self.state.claims.try_lock().map_err(|_| ownership_busy())?;
+    let own = claims.get(&self.state.authority).ok_or_else(ownership_busy)?;
+    let mut demand = self.kernel().try_lock().map_err(|_| ownership_busy())?.geometry_batch_demand(handles.len())?;
+    for key in handles { demand.depth = demand.depth.max(own.handles.next_contains_depth_demand(key)?); }
+    Ok(demand)
+}
+
+fn step_geometry_batch<T, const N: usize>(
+    &self, batch: &mut T, keys: &mut [String; N], staged: &mut [bool; N], count: usize,
+    handle: fn(&T, usize) -> &str, publish: fn(&mut Brep, &mut T, &mut [String; N], RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError>,
+    effect: &mut RetainedAllocationEffect<'_>,
+) -> Result<(bool, RetainedCloneProgress), ValueError> {
     if self.is_closed() { return Err(ownership_busy()); }
     let mut claims = self.state.claims.try_lock().map_err(|_| ownership_busy())?;
     let mut kernel = self.kernel().try_lock().map_err(|_| ownership_busy())?;
     let own = claims.get_mut(&self.state.authority).ok_or_else(ownership_busy)?;
-    let mut demand = kernel.solid_pair_demand()?;
-    for solid in pair.iter() {
-        demand.depth = demand.depth.max(own.handles.next_contains_depth_demand(solid.handle())?);
-        if own.handles.get(solid.handle()) != Some(&false) { return Err(ValueError::invariant("split claims changed before commit")); }
+    let mut demand = kernel.geometry_batch_demand(count)?;
+    for i in 0..count {
+        let key = handle(batch, i);
+        demand.depth = demand.depth.max(own.handles.next_contains_depth_demand(key)?);
+        if own.handles.get(key) != Some(&false) { return Err(ValueError::invariant("original geometry batch claims changed before commit")); }
     }
     let grant = effect.grant();
     if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok((false, Default::default())); }
-    if let Some(receipt) = kernel.reserve_solid_pair(effect)? { return Ok((false, receipt)); }
+    if let Some(receipt) = kernel.reserve_geometry_batch(count, effect)? { return Ok((false, receipt)); }
     if effect.remaining_work_units()? == 0 || !effect.performed(1)? { return Ok((false, Default::default())); }
-    let receipt = kernel.publish_solid_pair(pair, live, grant)?;
-    for solid in pair { *own.handles.get_mut(solid.handle()).expect("admitted split claim") = true; }
-    *staged = [false; 2];
+    let receipt = publish(&mut kernel, batch, keys, grant)?;
+    for (i, staged) in staged.iter_mut().enumerate().take(count) {
+        *own.handles.get_mut(handle(batch, i)).expect("admitted geometry batch claim") = true;
+        *staged = false;
+    }
     self.claims_changed();
     Ok((true, receipt))
 }

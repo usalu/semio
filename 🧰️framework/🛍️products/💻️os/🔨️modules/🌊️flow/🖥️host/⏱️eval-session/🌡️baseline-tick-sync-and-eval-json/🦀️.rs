@@ -6,14 +6,14 @@ use neural_engine::ColdRetire;
 impl FlowEvalSession {
     /// 📥️ Retains the same admitted original Host across evaluation and publication turns.
     pub fn retain_tick_host(&mut self,host:FlowHost,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,FlowHost)>{
-        if self.closing||self.state.pending_host.is_some()||self.state.retiring_host.is_some(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original tick Host custody is occupied"),host))}
+        if self.closing||self.state.host.is_some(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original tick Host custody is occupied"),host))}
         if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original tick Host intake requires an admitted item"),host))}
         if grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"original tick Host intake requires source depth"),host))}
-        self.state.pending_host=Some(host);self.state.pending_host_cancelled=false;Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+        self.state.host=Some(SessionHostOwner::Evaluating(host));self.state.pending_host_cancelled=false;Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
     }
 
     /// 🔎️ Borrows the exact original Host retained by the current tick.
-    pub fn tick_host(&self)->Option<&FlowHost>{self.state.pending_host.as_ref()}
+    pub fn tick_host(&self)->Option<&FlowHost>{self.state.host.as_ref().and_then(SessionHostOwner::evaluating)}
 
     pub fn install_baseline_into(&self,host:&mut FlowHost,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
         match host.install_eval_baseline(self.previous_snapshot.clone(),self.previous_channels.clone(),self.state.flow_extension_generation,grant){
@@ -61,12 +61,12 @@ impl FlowEvalSession {
     pub fn tick_evaluation_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<FlowEvaluationStep,neural::OperatorWorkFailure>{
         self.state.tick_display_progress=Default::default();if cx.is_cancelled()||cx.should_yield(){return Ok(FlowEvaluationStep::Working)}let grant=cx.retained_grant();let demand=self.next_tick_evaluation_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(FlowEvaluationStep::Working)}
         if self.state.tick_evaluation_ready!=0{let Some((result,performed))=cx.with_original_effect(grant,|_,effect|self.tick_display_step(effect))?else{return Ok(FlowEvaluationStep::Working)};let progress=self.state.tick_display_progress;cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));return match result{Ok(step)=>{cx.consume_retained(progress).map_err(semio_framework_job::OriginalTurnFailure::from)?;Ok(step)},Err(error)=>Err(semio_framework_job::OriginalTurnFailure::debit_original(error.with_retained_progress(progress),cx).into())}}
-        let host=self.state.pending_host.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation tick Host was not admitted"))?;
+        let host=self.state.host.as_mut().and_then(SessionHostOwner::evaluating_mut).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation tick Host was not admitted"))?;
         let step=host.evaluate_step(cx);self.state.tick_display_progress=host.evaluation_step_progress();if matches!(step,Ok(FlowEvaluationStep::Complete)){self.state.tick_evaluation_ready=1;return Ok(FlowEvaluationStep::Working)}step
     }
     pub fn tick_evaluation_step_progress(&self)->RetainedCloneProgress{self.state.tick_display_progress}
     pub fn next_tick_evaluation_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
-        let host=self.state.pending_host.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation tick Host was not admitted"))?;
+        let host=self.state.host.as_ref().and_then(SessionHostOwner::evaluating).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation tick Host was not admitted"))?;
         if self.state.tick_evaluation_ready==0{return host.next_evaluation_demands(copy)}
         if !self.state.retirement.terminal_is_empty(){return self.state.retirement.demands(copy)}
         self.state.pending_tick_display.as_ref().map_or(Ok(RetirementDemand{depth:1,..Default::default()}),|owner|owner.demands(&host.last_eval_json,copy))
@@ -76,8 +76,8 @@ impl FlowEvalSession {
         if !self.state.retirement.terminal_is_empty(){let poll=self.state.retirement.step(grant.maximum_copy_bytes,effect);self.state.tick_display_progress=self.state.retirement.step_progress();if let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll{turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;}return Ok(FlowEvaluationStep::Working)}
         if self.state.tick_evaluation_ready==2{self.state.tick_evaluation_ready=0;self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(FlowEvaluationStep::Complete)}
         if self.state.pending_tick_display.as_ref().is_some_and(SessionLivePublication::published){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original session cursor handoff requires depth"))}let original=self.state.pending_tick_display.take().unwrap();self.state.retirement.root=Some(ControlledRetirement::new(SessionCollectionOwner::LivePublication(original)).unwrap_or_else(|_|unreachable!("original session publication declares full retirement")));self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};self.state.tick_evaluation_ready=2;return Ok(FlowEvaluationStep::Working)}
-        if self.state.pending_tick_display.is_none(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original session display intake requires depth"))}let text=&self.state.pending_host.as_ref().unwrap().last_eval_json;self.state.pending_tick_display=Some(SessionLivePublication::new(text));self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(FlowEvaluationStep::Working)}
-        if !self.state.pending_tick_display.as_ref().unwrap().ready(){let state=&mut *self.state;let host=state.pending_host.as_ref().unwrap();let result=state.pending_tick_display.as_mut().unwrap().step(&host.last_eval_json,effect);match result{Ok(progress)=>state.tick_display_progress=progress,Err(error)=>{state.tick_display_progress=error.retained_progress();return Err(error)}}return Ok(FlowEvaluationStep::Working)}
+        if self.state.pending_tick_display.is_none(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original session display intake requires depth"))}let text=&self.state.host.as_ref().and_then(SessionHostOwner::evaluating).unwrap().last_eval_json;self.state.pending_tick_display=Some(SessionLivePublication::new(text));self.state.tick_display_progress=RetainedCloneProgress{copied_items:1,..Default::default()};return Ok(FlowEvaluationStep::Working)}
+        if !self.state.pending_tick_display.as_ref().unwrap().ready(){let state=&mut *self.state;let host=state.host.as_ref().and_then(SessionHostOwner::evaluating).unwrap();let result=state.pending_tick_display.as_mut().unwrap().step(&host.last_eval_json,effect);match result{Ok(progress)=>state.tick_display_progress=progress,Err(error)=>{state.tick_display_progress=error.retained_progress();return Err(error)}}return Ok(FlowEvaluationStep::Working)}
         self.state.retirement.preflight(grant)?;
         let mut shared=self.state.pending_tick_display.as_mut().unwrap().take_shared();
         match self.publish_eval_json(&mut shared,effect){Ok(Some(progress))=>self.state.tick_display_progress=progress,other=>{if let Some(shared)=shared{self.state.pending_tick_display.as_mut().unwrap().restore_shared(shared);}other?;return Ok(FlowEvaluationStep::Working)}}
@@ -104,7 +104,37 @@ impl FlowEvalSession {
     /// — `None` for a walk that opens its own turn, `Some` for one running inline inside a fold's
     /// turn, which then shares that turn's single deadline (see [`flow_eval_tick_budget`]).
     pub fn tick_cold(&mut self, host: &mut FlowHost, turn_started_us: Option<u64>) -> bool {
-        let remaining = host.evaluate_cold_step(flow_eval_tick_budget(turn_started_us),&|hash|!self.has_evaluation_progress(hash)).expect("cold evaluation diagnostics require completed publication");
+        self.tick_cold_with_seeds(host, turn_started_us, |_| {})
+    }
+
+    /// 🌱️ Ticks with generation seeds in the same snapshot comparison and cached evaluation.
+    pub fn tick_cold_with_seeds(
+        &mut self,
+        host: &mut FlowHost,
+        turn_started_us: Option<u64>,
+        project: impl FnOnce(&mut std::collections::HashMap<String, neural_engine::Dictionary>),
+    ) -> bool {
+        self.tick_cold_preview_with_seeds(host, turn_started_us, true, project)
+    }
+
+    /// 🧬️ Evaluates a window's current inputs without updating the shared edit-preview convergence.
+    pub fn tick_cold_current_with_seeds(
+        &mut self,
+        host: &mut FlowHost,
+        turn_started_us: Option<u64>,
+        project: impl FnOnce(&mut std::collections::HashMap<String, neural_engine::Dictionary>),
+    ) -> bool {
+        self.tick_cold_preview_with_seeds(host, turn_started_us, false, project)
+    }
+
+    fn tick_cold_preview_with_seeds(
+        &mut self,
+        host: &mut FlowHost,
+        turn_started_us: Option<u64>,
+        keep_convergence: bool,
+        project: impl FnOnce(&mut std::collections::HashMap<String, neural_engine::Dictionary>),
+    ) -> bool {
+        let remaining = host.evaluate_cold_step_with_seeds(flow_eval_tick_budget(turn_started_us), &|hash| !self.has_evaluation_progress(hash), project).expect("cold evaluation diagnostics require completed publication");
         while !host.baseline_publication_terminal_is_empty(){let demand=host.next_baseline_publication_demands(4096).expect("cold baseline demand");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};crate::cold_effect(grant,|effect|host.baseline_publication_step(effect)).expect("cold baseline publication turn").expect("cold baseline publication quote").expect("cold baseline publication");}
         let state = &mut *self.state;
         if let Some(previous) = state.eval_json.replace(SharedOwner::from_cold(host.last_eval_json.clone())) { retire_session_collection_cold(SessionCollectionOwner::SourceLease(previous)); }
@@ -113,7 +143,7 @@ impl FlowEvalSession {
             while !self.state.retirement.terminal_is_empty(){let d=self.state.retirement.demands(4096).expect("cold session retirement demand");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(d.copy_bytes),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let retirement=&mut self.state.retirement;crate::cold_effect(grant,|effect|retirement.step(grant.maximum_copy_bytes,effect)).expect("cold session retirement turn");}
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};crate::cold_effect(grant,|effect|self.capture_baseline_from(host,effect)).expect("cold session baseline turn").expect("cold session baseline quote").expect("cold session baseline admission");
         }
-        self.repaint(host, remaining.is_empty());
+        self.repaint(host, remaining.is_empty(), keep_convergence);
         self.tick_scheduled = !remaining.is_empty();
         self.tick_scheduled
     }
@@ -124,11 +154,11 @@ impl FlowEvalSession {
     /// 🪟️ The fallback is filtered through the host's CURRENT widget roster, so switching example
     /// replaces the graph instead of painting the previous example's leftovers over the new one: a
     /// node id the document no longer carries is not a node whose answer is merely late.
-    fn repaint(&mut self, host: &FlowHost, converged: bool) {
-        let painted = if converged { self.eval_json().to_owned() } else { merge_unanswered_eval_entries(self.eval_json(), &self.converged_eval_json, &host.host_snapshot) };
+    fn repaint(&mut self, host: &FlowHost, converged: bool, keep_convergence: bool) {
+        let painted = if converged || !keep_convergence { self.eval_json().to_owned() } else { merge_unanswered_eval_entries(self.eval_json(), &self.converged_eval_json, &host.host_snapshot) };
         let state = &mut *self.state;
         std::mem::replace(&mut state.painted_eval_json, painted).retire_cold();
-        if converged {
+        if converged && keep_convergence {
             let converged_text = state.eval_json.as_ref().map_or_else(String::new, |text| text.as_str().to_owned());
             self.install_converged_eval(converged_text).retire_cold();
         }
@@ -213,7 +243,7 @@ impl FlowEvalSession {
 
     /// 🪙️ Borrows the pending Host publication demand without creating an evaluation owner.
     pub fn next_tick_publication_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
-        self.state.pending_host.as_ref().map_or(Ok(Default::default()),|host|host.next_baseline_publication_demands(copy))
+        self.state.host.as_ref().and_then(SessionHostOwner::evaluating).map_or(Ok(Default::default()),|host|host.next_baseline_publication_demands(copy))
     }
 
     pub fn next_tick_publication_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_tick_publication_demands(0)?.copy_bytes)}
@@ -222,19 +252,20 @@ impl FlowEvalSession {
     pub fn next_tick_publication_depth_demand(&self)->Result<usize,ValueError>{Ok(self.next_tick_publication_demands(0)?.depth)}
 
     /// 🎟️ Advances only the exact pending original Host publication under the incoming grant.
-    pub fn tick_publication_step_progress(&self)->RetainedCloneProgress{self.state.pending_host.as_ref().map_or(Default::default(),FlowHost::baseline_publication_step_progress)}
+    pub fn tick_publication_step_progress(&self)->RetainedCloneProgress{self.state.host.as_ref().and_then(SessionHostOwner::evaluating).map_or(Default::default(),FlowHost::baseline_publication_step_progress)}
 
     pub fn tick_publication_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
         let grant=effect.grant();
-        let Some(host)=self.state.pending_host.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
+        let Some(host)=self.state.host.as_mut().and_then(SessionHostOwner::evaluating_mut)else{return Ok(RetainedCloneStep::Complete(Default::default()))};
         let step=host.baseline_publication_step(effect)?;
         semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,host.baseline_publication_terminal_is_empty(),"Flow original retained tick publication")
     }
 
     /// 🔗️ Captures the original retained tick's completed shared baseline, preserving refusal custody.
     pub fn capture_tick_baseline_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
-        let Some(host)=self.state.pending_host.take()else{return Ok(Some(Default::default()))};
-        let result=self.capture_baseline_from(&host,effect);self.state.pending_host=Some(host);result
+        if self.tick_host().is_none(){return Ok(Some(Default::default()))}
+        let Some(SessionHostOwner::Evaluating(host))=self.state.host.take()else{unreachable!()};
+        let result=self.capture_baseline_from(&host,effect);self.state.host=Some(SessionHostOwner::Evaluating(host));result
     }
 
     /// 🎟️ Publishes one preborn immutable evaluation after admitting the original reset owners.
@@ -247,7 +278,7 @@ impl FlowEvalSession {
         let mut original=Some(SessionCollectionOwner::Reset(SessionResetSources::take(&mut self.state,false)));
         let turn=self.state.retirement.admit(&mut original,effect);
         let result=match turn.result{
-            Ok(Some(progress))=>{self.state.eval_json=eval_json.take();self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok(Some(progress))},
+            Ok(Some(progress))=>{self.state.eval_json=eval_json.take();self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.tick_host().is_some();Ok(Some(progress))},
             result=>{let Some(SessionCollectionOwner::Reset(original))=original else{unreachable!("original session reset returned a different source family")};original.restore(&mut self.state);result.map(|_|None)},
         };RetainedWorkOutcome{result,work:turn.work}
     }
@@ -264,4 +295,27 @@ impl FlowEvalSession{
  pub fn clear_reply_progress_original(&mut self,hash:u64,slot:&mut usize,displaced:&mut Option<(u64,PreviewEvalProgress)>,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,RetainedCloneProgress)>{
   let mut work=0;let result=(||{if self.closing||displaced.is_some(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original reply progress close slot is occupied"))}let d=self.reply_progress_clear_demands(*slot)?;if g.maximum_items==0||g.maximum_copy_bytes<d.copy_bytes||g.maximum_depth<d.depth{return Ok((false,Default::default()))}work=1;let progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};if *slot>=self.state.eval_progress_by_hash.slot_count(){return Ok((true,progress))}let matched=self.state.eval_progress_by_hash.slot_entry(*slot).is_some_and(|(key,_)|*key==hash);if matched{*displaced=self.state.eval_progress_by_hash.extract_slot_if(*slot,|_,_|false);}*slot+=1;Ok((matched||*slot==self.state.eval_progress_by_hash.slot_count(),progress))})();semio_framework_value::RetainedWorkOutcome{result,work}
  }
+}
+
+#[cfg(test)]
+mod preview_convergence_tests {
+    use super::*;
+
+    #[test]
+    fn current_only_paint_keeps_edit_convergence() {
+        let host = FlowHost::from_host_snapshot(FlowHostSnapshot::default());
+        let mut session = FlowEvalSession::new();
+        session.state.converged_eval_json = r#"{"edit":{"out":{}}}"#.into();
+        session.state.previous_converged_eval_json = r#"{"older-edit":{"out":{}}}"#.into();
+        let current = r#"{"generated":{"out":{}}}"#;
+        session.state.eval_json = Some(SharedOwner::from_cold(current.into()));
+        session.repaint(&host, false, false);
+        assert_eq!(session.painted_eval_json(), current);
+        session.repaint(&host, true, false);
+        assert_eq!(session.painted_eval_json(), current);
+        assert_eq!(session.converged_eval_json(), r#"{"edit":{"out":{}}}"#);
+        assert_eq!(session.previous_converged_eval_json(), r#"{"older-edit":{"out":{}}}"#);
+        host.retire_cold();
+        session.retire_cold();
+    }
 }

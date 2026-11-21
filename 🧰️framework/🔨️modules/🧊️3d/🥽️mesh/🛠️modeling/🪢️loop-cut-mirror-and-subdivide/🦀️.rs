@@ -35,10 +35,10 @@ pub(super) struct LoopCut {
 
 impl LoopCut {
     pub(super) fn key(a:u32,b:u32)->(u32,u32) { (a.min(b),a.max(b)) }
-    pub(super) fn phase(&self)->&'static str { ["snapshot","loop-cut-incidence","loop-cut-selection","loop-cut-propagate","loop-cut-admission","loop-cut-vertices","loop-cut-grid","loop-cut-reconstruct","loop-cut-source-vertices","loop-cut-source-remap","loop-cut-attributes"][self.phase as usize] }
+    pub(super) fn phase(&self)->&'static str { ["snapshot","loop-cut-incidence","loop-cut-selection","loop-cut-propagate","loop-cut-admission","loop-cut-vertices","loop-cut-grid","loop-cut-reconstruct","loop-cut-source-vertices","loop-cut-source-remap","loop-cut-surface","loop-cut-attributes"][self.phase as usize] }
     pub(super) fn dimensions(&self,face:&[u32])->(usize,usize) { (if self.marked.contains(&Self::key(face[0],face[1])) { self.cuts+1 } else { 1 },if self.marked.contains(&Self::key(face[1],face[2])) { self.cuts+1 } else { 1 }) }
     fn on_edge(&self,a:u32,b:u32,step:usize,segments:usize)->u32 { if step==0 { a } else if step==segments { b } else { self.cut_vertices[&Self::key(a,b)][if a<b { step-1 } else { segments-step-1 }] } }
-    pub(super) fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
+    pub(super) fn advance(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{if self.snapshot.complete() {self.cursor=0;self.phase=8;}}
             1=>{
@@ -87,8 +87,13 @@ impl LoopCut {
             }
             7=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {self.attributes=Some(SourceAttributeRemap::new(mesh,None,Some(std::mem::take(&mut self.source_faces)),None,None));self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices=Some(Vec::new());self.cursor=0;self.phase=9;}},
             8=>{if self.cursor==self.snapshot.source.vertex_count() {self.cursor=0;self.phase=1;}else {self.vertex_sources.push(SourceVertex::Original(self.cursor as u32));self.cursor+=1;}},
-            9=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.cursor==origins.len() {self.phase=10;}else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.vertex_sources[origins[self.cursor] as usize].clone());self.cursor+=1;}},
-            10=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
+            9=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.cursor==origins.len() {self.attributes.as_mut().unwrap().retain_partitioned_surface();self.phase=10;}else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.vertex_sources[origins[self.cursor] as usize].clone());self.cursor+=1;}},
+            10=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {attributes.step_refined_surface(&self.snapshot.source,grant,receipt)?;}
+                else {self.phase=11;}
+            },
+            11=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
             _=>unreachable!(),
         }
         Ok(None)
@@ -148,14 +153,14 @@ pub(super) struct Subdivide {
 }
 
 impl Subdivide {
-    pub(super) fn phase(&self) -> &'static str { ["subdivide-selection","snapshot","subdivide-convexity","subdivide-triangulate","subdivide-corners","subdivide-reconstruct","subdivide-source-vertices","subdivide-source-remap","subdivide-attributes"][self.phase as usize] }
+    pub(super) fn phase(&self) -> &'static str { if self.phase==8 && self.attributes.as_ref().is_some_and(|attributes|attributes.retaining_refined_surface()) {return if self.delete_selected {"delete-faces-surface"}else if self.triangulate_only {"triangulate-surface"}else {"subdivide-surface"};} ["subdivide-selection","snapshot","subdivide-convexity","subdivide-triangulate","subdivide-corners","subdivide-reconstruct","subdivide-source-vertices","subdivide-source-remap","subdivide-attributes"][self.phase as usize] }
     fn admit(&mut self,vertices:usize,faces:usize,corners:usize)->MeshResult<()> {
         if self.soup.positions.len().saturating_add(vertices)>100_000 || self.soup.faces.len().saturating_add(faces)>100_000 || self.emitted_corners.saturating_add(corners)>600_000 { return Err(MeshKernelError::InvalidInput("subdivision exceeds mesh capacity".into())); }
         self.emitted_corners+=corners;Ok(())
     }
     fn next_face(&mut self) { self.face += 1; self.corner = 0; self.emitting = false; self.center = Vec3::ZERO; self.convex = true; }
     pub(super) fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,tessellation_progress:&mut RetainedCloneProgress) -> MeshResult<Option<HalfedgeMesh>> {
-        if self.tessellation_retirement.is_some(){if close_tessellation_handoff(&mut self.tessellation_retirement,effect,tessellation_progress)?{self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.phase=4;}return Ok(None);}
+        if self.tessellation_retirement.is_some(){if close_modeling_handoff(&mut self.tessellation_retirement,effect,tessellation_progress)?{self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.phase=4;}return Ok(None);}
         match self.phase {
             0 => {
                 if self.cursor==self.input.len() {if self.delete_selected && self.selected.len()==self.snapshot.source.face_count() {return Err(MeshKernelError::InvalidInput("deletion would leave an empty mesh".into()));}self.phase = 1;}
@@ -206,8 +211,19 @@ impl Subdivide {
             }
             5=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {self.attributes=Some(SourceAttributeRemap::new(mesh,None,Some(std::mem::take(&mut self.source_faces)),None,None));self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices=Some(Vec::new());self.cursor=0;self.phase=7;}},
             6=>{if self.cursor==self.snapshot.source.vertex_count() {self.cursor=0;self.phase=2;}else {self.vertex_sources.push(SourceVertex::Original(self.cursor as u32));self.cursor+=1;}},
-            7=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.cursor==origins.len() {self.phase=8;}else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.vertex_sources[origins[self.cursor] as usize].clone());self.cursor+=1;}},
-            8=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
+            7=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.cursor==origins.len() {
+                let attributes=self.attributes.as_mut().unwrap();
+                if self.delete_selected {attributes.retain_partitioned_surface();}else {attributes.retain_refined_surface();}
+                self.phase=8;
+            }else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.vertex_sources[origins[self.cursor] as usize].clone());self.cursor+=1;}},
+            8=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {
+                    attributes.step_refined_surface(&self.snapshot.source,effect.grant(),tessellation_progress)?;
+                }else {
+                    return attributes.advance(&mut self.snapshot.source);
+                }
+            }
             _ => unreachable!(),
         }
         Ok(None)
@@ -215,8 +231,8 @@ impl Subdivide {
 }
 
 impl Mirror {
-    pub(super) fn phase(&self) -> &'static str { ["snapshot","mirror-side","mirror-vertices","mirror-corners","mirror-reconstruct","mirror-vertex-provenance","mirror-attributes"][self.phase as usize] }
-    pub(super) fn advance(&mut self) -> MeshResult<Option<HalfedgeMesh>> {
+    pub(super) fn phase(&self) -> &'static str { ["snapshot","mirror-side","mirror-vertices","mirror-corners","mirror-reconstruct","mirror-vertex-provenance","mirror-surface","mirror-attributes"][self.phase as usize] }
+    pub(super) fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,receipt:&mut RetainedCloneProgress) -> MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0 => { if self.snapshot.complete() { self.phase = 1; } }
             1 => {
@@ -252,8 +268,13 @@ impl Mirror {
                 }
             }
             4=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {self.attributes=Some(SourceAttributeRemap::new(mesh,None,Some(std::mem::take(&mut self.source_faces)),Some(std::mem::take(&mut self.mirrored_faces)),Some(self.axis)));self.vertex=0;self.phase=5;}},
-            5=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.vertex==origins.len() {self.attributes.as_mut().unwrap().configuration_mut()?.vertices=Some(std::mem::take(&mut self.attribute_vertices));self.phase=6;}else {self.attribute_vertices.push(self.source_vertices[origins[self.vertex] as usize]);self.vertex+=1;}},
-            6=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
+            5=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.vertex==origins.len() {let attributes=self.attributes.as_mut().unwrap();attributes.configuration_mut()?.vertices=Some(std::mem::take(&mut self.attribute_vertices));attributes.retain_refined_surface();self.phase=6;}else {self.attribute_vertices.push(self.source_vertices[origins[self.vertex] as usize]);self.vertex+=1;}},
+            6=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {attributes.step_refined_surface(&self.snapshot.source,effect.grant(),receipt)?;}
+                else {self.phase=7;}
+            },
+            7=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
             _ => unreachable!(),
         }
         Ok(None)

@@ -152,6 +152,7 @@ pub mod standards {
                             pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::remove_table_column::diff;
                             pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::remove_table_column::inverse;
                         }
+                        pub use semio_s_artifact_note_note_insert_table_row::standards::v1::subsets::table::schema::mutations::edit_table_cell;
                     }
                 }
             }

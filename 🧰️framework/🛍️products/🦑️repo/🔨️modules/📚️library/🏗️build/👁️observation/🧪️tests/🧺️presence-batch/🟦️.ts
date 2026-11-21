@@ -5,6 +5,7 @@ import{readFileSync}from"node:fs";
 import ts from"typescript";
 import{createPresenceCoalescerV1}from"../../📥️reuse/🧺️coalesce/🟨️.mjs";
 import withdrawal from"./withdrawal.json"with{type:"json"};
+import coalescing from"./coalescing.json"with{type:"json"};
 import Ajv from"ajv";
 import timingCorpus from"./timing.json"with{type:"json"};
 import timingSchema from"../../📥️reuse/🧬️schema/🔣️.json"with{type:"json"};
@@ -42,7 +43,7 @@ test("a name found present is remembered for its round only, a missing name is a
 
 test("a refusal reaches only the caller whose names caused it",async()=>{
  const bad=pool[7]!,coalescer=createPresenceCoalescerV1({run:async names=>{if(names.includes(bad))throw Error("refused "+bad);return new Set();}}),round={};
- const rows=await Promise.allSettled([coalescer.ask([pool[1]!],round),coalescer.ask([bad,pool[2]!],round),coalescer.ask([pool[3]!],round)]);
+ const rows=await Promise.allSettled([[pool[1]!],[bad,pool[2]!],[pool[3]!]].map(names=>coalescer.ask(names,round,new AbortController().signal)));
  expect(rows.map(row=>row.status)).toEqual(["fulfilled","rejected","fulfilled"]);
  expect((rows[1] as PromiseRejectedResult).reason.message).toContain("refused");
  expect(coalescer.stats().retried).toBe(3);
@@ -82,6 +83,86 @@ test("withdrawing a presence look drains a started batch and preserves a differe
    expect(signals.at(-1),row.phase).toBe(remaining.signal);
   }
  }finally{db.close();}
+});
+
+test("one presence boundary serves independently cancellable looks",async()=>{
+ const db=new Database(":memory:"),calls:string[][]=[],closing=new AbortController(),remaining=new AbortController(),round={};
+ let entered!:()=>void,release!:()=>void,group:AbortSignal|undefined;
+ const started=new Promise<void>(resolve=>{entered=resolve;}),held=new Promise<void>(resolve=>{release=resolve;});
+ const coalescer=createPresenceCoalescerV1({run:async(names,signal)=>{
+  calls.push([...names]);if(calls.length===1){group=signal;entered();await held;}
+  return new Set();
+ }});
+ const first=coalescer.ask(coalescing.mixed[0]!,round,closing.signal);
+ const second=coalescer.ask(coalescing.mixed[1]!,round,remaining.signal);
+ try{
+  await started;
+  closing.abort();
+  expect(group?.aborted).toBe(false);
+  release();
+  expect(await Promise.all([first,second])).toEqual([false,true]);
+  const oracle=db.query(`select count(distinct name.value) as names from
+   json_each(?1) caller, json_each(caller.value) name`).get(JSON.stringify(coalescing.mixed)) as {names:number};
+  expect(calls).toHaveLength(1);
+  expect(calls[0]).toHaveLength(oracle.names);
+ }finally{release();await Promise.allSettled([first,second]);db.close();}
+});
+
+test("overlapping presence questions share the batch when their distinct names fit",async()=>{
+ const db=new Database(":memory:"),calls:string[][]=[],round={};
+ const expected=db.query(`select distinct name.value as name from
+   json_each(?1) caller, json_each(caller.value) name order by name`)
+  .all(JSON.stringify(coalescing.mixed)) as {name:string}[];
+ const coalescer=createPresenceCoalescerV1({maximumNames:expected.length,run:async names=>{
+  calls.push([...names]);
+  return new Set();
+ }});
+ try{
+  expect(await Promise.all(coalescing.mixed.map(names=>coalescer.ask(names,round)))).toEqual([true,true]);
+  expect(calls).toEqual([expected.map(row=>row.name)]);
+ }finally{db.close();}
+});
+
+test("the next queued presence batch reuses names established by its own validation round",async()=>{
+ const db=new Database(":memory:"),calls:string[][]=[],round={};
+ let entered!:()=>void,release!:()=>void;
+ const started=new Promise<void>(resolve=>{entered=resolve;}),held=new Promise<void>(resolve=>{release=resolve;});
+ const coalescer=createPresenceCoalescerV1({run:async names=>{calls.push([...names]);if(calls.length===1){entered();await held;}return new Set();}});
+ const first=coalescer.ask(coalescing.queued[0]!,round);
+ let next:Promise<boolean>|undefined;
+ try{
+  await started;
+  next=coalescer.ask(coalescing.queued[1]!,round);
+  release();
+  expect(await Promise.all([first,next])).toEqual([true,true]);
+  const oracle=db.query(`select value as name from json_each(?1)
+   except select value as name from json_each(?2) order by name`)
+   .all(JSON.stringify(coalescing.queued[1]),JSON.stringify(coalescing.queued[0])) as {name:string}[];
+  expect(calls).toEqual([coalescing.queued[0],oracle.map(row=>row.name)]);
+ }finally{release();await Promise.allSettled([first,next]);db.close();}
+});
+
+test("when every mixed look withdraws, a subsequent batch can still finish",async()=>{
+ const controllers=coalescing.mixed.map(()=>new AbortController()),round={};
+ let entered!:()=>void,release!:()=>void,group:AbortSignal|undefined,calls=0;
+ const started=new Promise<void>(resolve=>{entered=resolve;}),held=new Promise<void>(resolve=>{release=resolve;});
+ const coalescer=createPresenceCoalescerV1({run:async(_names,signal)=>{
+  if(++calls===1){group=signal;entered();await held;}
+  return new Set();
+ }});
+ const pending=coalescing.mixed.map((names,index)=>coalescer.ask(names,round,controllers[index]!.signal));
+ try{
+  await started;
+  controllers[0]!.abort();
+  expect(group?.aborted).toBe(false);
+  controllers[1]!.abort();
+  expect(group?.aborted).toBe(true);
+  const later=coalescer.ask(coalescing.queued[0]!,round);
+  release();
+  expect(await Promise.all(pending)).toEqual([false,false]);
+  expect(await later).toBe(true);
+  expect(calls).toBe(2);
+ }finally{release();await Promise.allSettled(pending);}
 });
 
 test("the actual check runs the names of a batch under one storage consumer with its guards",()=>{

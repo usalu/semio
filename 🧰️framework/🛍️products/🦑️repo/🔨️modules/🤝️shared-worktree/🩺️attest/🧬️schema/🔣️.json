@@ -413,14 +413,32 @@
     "code": {"$ref": "#/definitions/Sha256"}
    }
   },
+  "GitComparisonCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "left", "right", "known", "compared"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "left": {"$ref": "#/definitions/GitCheckpoint"},
+    "right": {"$ref": "#/definitions/GitCheckpoint"},
+    "known": {"type": "boolean"},
+    "compared": {"type": "array", "items": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["field", "same"],
+     "properties": {"field": {"enum": ["head.commit", "indexTree"]}, "same": {"type": "boolean"}}
+    }}
+   }
+  },
   "Fixture": {
    "type": "object",
    "additionalProperties": false,
-   "required": ["agreements", "bucketing", "code", "digests", "verdicts", "version", "views"],
+   "required": ["agreements", "bucketing", "code", "digests", "gitComparisons", "verdicts", "version", "views"],
    "properties": {
     "version": {"const": 1},
     "bucketing": {"$ref": "#/definitions/Bucketing"},
     "agreements": {"type": "array", "items": {"$ref": "#/definitions/AgreementCase"}},
+    "gitComparisons": {"type": "array", "items": {"$ref": "#/definitions/GitComparisonCase"}},
     "digests": {"type": "array", "items": {"$ref": "#/definitions/DigestCase"}},
     "code": {"type": "array", "items": {"$ref": "#/definitions/CodeCase"}},
     "views": {"type": "array", "items": {"$ref": "#/definitions/ViewCase"}},

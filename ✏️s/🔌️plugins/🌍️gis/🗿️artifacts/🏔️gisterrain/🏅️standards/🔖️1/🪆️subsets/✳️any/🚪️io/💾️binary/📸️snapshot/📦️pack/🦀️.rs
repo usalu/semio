@@ -1,22 +1,27 @@
-//! 🏔️ Three handwritten native fields retain exact IEEE state and all five child identity strings.
-use crate::standards::v1::subsets::any::schema::snapshot::GisTerrainSnapshot;
+//! 🏔️ Native terrain record retaining authored elevation, exact IEEE state and child identity.
+use crate::standards::v1::subsets::any::schema::snapshot::{ElevationSource, GisTerrainSnapshot};
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct Child{child_id:String,artifact_id:String,artifact_kind:String,standard:String,subset:String}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-pub struct Terrain{exaggeration:f64,imported_map:Option<crate::schema::imported_map::ImportedMap>,mesh:Option<Child>}
+pub struct Terrain{exaggeration:f64,imported_map:Option<crate::schema::imported_map::ImportedMap>,mesh:Option<Child>,elevation_source:Option<ElevationSource>}
 #[path="🛫️encode/🦀️.rs"]mod controlled_output;
 pub fn producer()->semio_framework_dsl_record::RecordSpecProducer{Terrain::__dsl_spec_producer()}
 pub fn encode_record_controlled(snapshot:&GisTerrainSnapshot,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{controlled_output::project(snapshot,c)}
 impl Terrain{
- pub fn from_snapshot(value:&GisTerrainSnapshot)->Self{Self{exaggeration:value.exaggeration,imported_map:value.imported_map.clone(),mesh:value.mesh.as_ref().map(|c|Child{child_id:c.child_id.clone(),artifact_id:c.target.artifact_id.clone(),artifact_kind:c.target.dialect.artifact_kind.clone(),standard:c.target.dialect.standard.clone(),subset:c.target.dialect.subset.clone()})}}
- pub fn into_snapshot(self)->GisTerrainSnapshot{GisTerrainSnapshot{exaggeration:self.exaggeration,imported_map:self.imported_map,mesh:self.mesh.map(|c|store::os_store::artifact_child::ArtifactChild::new(c.child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id:c.artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:c.artifact_kind,standard:c.standard,subset:c.subset}}))}}
+ pub fn from_snapshot(value:&GisTerrainSnapshot)->Self{Self{exaggeration:value.exaggeration,imported_map:value.imported_map.clone(),mesh:value.mesh.as_ref().map(|c|Child{child_id:c.child_id.clone(),artifact_id:c.target.artifact_id.clone(),artifact_kind:c.target.dialect.artifact_kind.clone(),standard:c.target.dialect.standard.clone(),subset:c.target.dialect.subset.clone()}),elevation_source:value.elevation_source.clone()}}
+ pub fn into_snapshot(self)->Result<GisTerrainSnapshot,semio_framework_value::ValueError>{
+  if let Some(source) = &self.elevation_source {
+   source.validate()?;
+  }
+  Ok(GisTerrainSnapshot{exaggeration:self.exaggeration,imported_map:self.imported_map,mesh:self.mesh.map(|c|store::os_store::artifact_child::ArtifactChild::new(c.child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id:c.artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:c.artifact_kind,standard:c.standard,subset:c.subset}})),elevation_source:self.elevation_source})
+ }
 }
 
 impl pack::snapshot::ArtifactPack for GisTerrainSnapshot{
  
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Terrain::__dsl_spec())}
  fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let inner=store::pack_rt::encode_document(&Terrain::__dsl_spec(),&Terrain::from_snapshot(self).__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e| store::PackError::from(e.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "terrain native binary identity differs")))}let(record,_)=store::pack_rt::decode_document(&inner,&Terrain::__dsl_spec(),options)?;let snapshot=Terrain::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.into_snapshot();if let Some(map)=&snapshot.imported_map{map.validate().map_err(|detail| store::PackError::Refusal(store::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack", offset: 0, detail }))?;}Ok(snapshot)}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "terrain native binary identity differs")))}let(record,_)=store::pack_rt::decode_document(&inner,&Terrain::__dsl_spec(),options)?;let snapshot=Terrain::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.into_snapshot().map_err(store::PackError::from)?;if let Some(map)=&snapshot.imported_map{map.validate().map_err(|detail| store::PackError::Refusal(store::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack", offset: 0, detail }))?;}Ok(snapshot)}
 }
 impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GisTerrainSnapshot {
     fn reference_snapshot_codec()->Option<::semio_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
@@ -24,4 +29,4 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GisTe
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
 
-pub fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize,maximum_value_bytes:usize)->Result<GisTerrainSnapshot,semio_framework_value::ValueError>{control.checkpoint()?;crate::standards::v1::subsets::any::schema::snapshot::row_admission::native(source,maximum_rows,||control.checkpoint())?;crate::standards::v1::subsets::any::schema::snapshot::value_admission::native(source,maximum_value_bytes,control)?;let snapshot=Terrain::__dsl_from_record_controlled(source,control)?.into_snapshot();if let Some(map)=&snapshot.imported_map{map.validate().map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error))?;}Ok(snapshot)}
+pub fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize,maximum_value_bytes:usize)->Result<GisTerrainSnapshot,semio_framework_value::ValueError>{control.checkpoint()?;crate::standards::v1::subsets::any::schema::snapshot::row_admission::native(source,maximum_rows,||control.checkpoint())?;crate::standards::v1::subsets::any::schema::snapshot::value_admission::native(source,maximum_value_bytes,control)?;let snapshot=Terrain::__dsl_from_record_controlled(source,control)?.into_snapshot()?;if let Some(map)=&snapshot.imported_map{map.validate().map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error))?;}Ok(snapshot)}

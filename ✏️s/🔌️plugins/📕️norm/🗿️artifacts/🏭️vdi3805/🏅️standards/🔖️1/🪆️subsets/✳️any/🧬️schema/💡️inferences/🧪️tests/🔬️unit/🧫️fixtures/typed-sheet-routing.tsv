@@ -1,0 +1,10 @@
+sheet	kind	flow_key	input_m3_s	expected_m3_s
+2	valve	q	0.0025	
+3	generator	q	0.0025	
+4	pump	q	0.0025	0.0025
+4	pump	q	1.25	1.25
+4	pump	nominal_flow_m3_s	2.5	2.5
+5	generic	q	0.0025	
+6	radiator	q	0.0025	
+16	generic	q	0.0025	
+29	generic	q	0.0025	

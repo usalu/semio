@@ -35,6 +35,7 @@ export interface FlowWasmSession {
   previewOffWidgetIds(): FlowTask<unknown>;
   renderCanvas(canvas: HTMLCanvasElement): FlowTask<unknown>;
   selectedWidgetIds(): FlowTask<unknown>;
+  selectedChannelsJson(): FlowTask<unknown>;
   selectionDomainsJson(): FlowTask<unknown>;
   selectionPreviewCrossing(): FlowTask<unknown>;
   selectionPreviewMethod(): FlowTask<unknown>;
@@ -56,8 +57,10 @@ export interface FlowWasmSession {
   setGhostWidget(args: { readonly descriptorJson: string; readonly worldX: number; readonly worldY: number }): FlowTask<unknown>;
   setHover(widgetId?: string | null): FlowTask<unknown>;
   setHover(args: { readonly widgetId?: string | null; readonly edgeId?: string | null }): FlowTask<unknown>;
-  setHoverChannel(widgetId?: string | null, port?: string | null): FlowTask<unknown>;
-  setHoverChannel(args: { readonly widgetId?: string | null; readonly port?: string | null }): FlowTask<unknown>;
+  setHoverChannel(widgetId?: string | null, port?: string | null, direction?: "in" | "out" | null, portsJson?: string | null): FlowTask<unknown>;
+  setHoverChannel(args: { readonly widgetId?: string | null; readonly port?: string | null; readonly direction?: "in" | "out" | null; readonly portsJson?: string | null }): FlowTask<unknown>;
+  setSelectedChannels(json: string): FlowTask<unknown>;
+  setSelectedChannels(args: { readonly json: string }): FlowTask<unknown>;
   setNeuronKindInfosJson(json: string): FlowTask<unknown>;
   setNeuronKindInfosJson(args: { readonly json: string }): FlowTask<unknown>;
   setNodeStatuses(json: string): FlowTask<unknown>;

@@ -13,8 +13,9 @@ use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use crate::edit_rules::{resolve, EDIT_RULES};
+pub use crate::edit_rules::{resolve, EDIT_RULES, ID_REMOVALS};
 
+use semio_s_artifact_norm_din4108_mut_building::{insert_case, remove_case, change_case_number, change_case_text, change_case_label_en, change_case_label_de, change_case_entry_id};
 use semio_s_artifact_norm_din4108_mut_building::change_climate_zone;
 use semio_s_artifact_norm_din4108_mut_building::change_usage;
 use semio_s_artifact_norm_din4108_mut_building::change_t_int_c;
@@ -107,9 +108,23 @@ pub enum Din4108Mutation {
     ChangeZoneWindowInclinationDeg(change_zone_window_inclination_deg::ChangeZoneWindowInclinationDeg),
     ChangeLayerApplicationType(change_layer_application_type::ChangeLayerApplicationType),
     ChangeLayerCompressiveClass(change_layer_compressive_class::ChangeLayerCompressiveClass),
+    InsertCase(insert_case::InsertCase),
+    RemoveCase(remove_case::RemoveCase),
+    ChangeCaseNumber(change_case_number::ChangeCaseNumber),
+    ChangeCaseText(change_case_text::ChangeCaseText),
+    ChangeCaseLabelEn(change_case_label_en::ChangeCaseLabelEn),
+    ChangeCaseLabelDe(change_case_label_de::ChangeCaseLabelDe),
+    ChangeCaseEntryId(change_case_entry_id::ChangeCaseEntryId),
 }
 
 pub const KINDS: &[&str] = &[
+    "insert-case",
+    "remove-case",
+    "change-case-number",
+    "change-case-text",
+    "change-case-label-en",
+    "change-case-label-de",
+    "change-case-entry-id",
     "change-climate-zone",
     "change-usage",
     "change-t-int-c",

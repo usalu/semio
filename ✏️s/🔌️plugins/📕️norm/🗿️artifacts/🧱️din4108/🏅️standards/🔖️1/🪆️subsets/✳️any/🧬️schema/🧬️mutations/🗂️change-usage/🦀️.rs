@@ -38,8 +38,31 @@ impl<Op> protocol::ColdMutationKind<Din4108Snapshot, Op> for ChangeUsage where O
 }
 
 //#region 🪢️Mounts
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
-#[path = "↩️inverse/🦀️.rs"]
-pub mod inverse;
+pub mod diff {
+    //! 🔺️ `change-usage` diff.
+
+    use crate::change_usage::ChangeUsage;
+    use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+
+    pub fn diff(payload: &ChangeUsage, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+        if base.usage == payload.new_usage {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "usage already has this value.");
+        }
+        protocol::MutationOutcome::new(Din4108Diff { usage: Some(payload.new_usage.clone()), ..Default::default() })
+    }
+}
+pub mod inverse {
+    //! ↩️ `change-usage` inverse.
+
+    use crate::change_usage::ChangeUsage;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+
+    pub fn inverse<Op>(_payload: &ChangeUsage, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_usage::ChangeUsage> {
+        Ok((|| {
+        vec![Op::from(ChangeUsage { new_usage: base.usage.clone() })]
+
+        })())
+    }
+}
 //#endregion 🪢️Mounts

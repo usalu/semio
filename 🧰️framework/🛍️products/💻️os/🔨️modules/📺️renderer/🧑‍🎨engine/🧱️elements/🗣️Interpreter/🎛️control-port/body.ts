@@ -1,3 +1,4 @@
+import { uiInputCommitsOnBlur } from "@semio-tech/ui-contract/component";
 /** 🧩️ Bounded staged body positions borrow admitted records without copying their graph. */
 import type { UiNodeRecord } from "../../../../../../../../🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts";
 import { STAGED_FORM_BODY_LIMITS } from "@semio-tech/framework/manifest/staging";
@@ -14,5 +15,5 @@ export function stagedBodyNode(record: UiNodeRecord, slot: StagedBodySlot): bool
   if (children.length !== 0) return false;
   if (component.type === "text") return record.bindings.length === 0;
   if (record.bindings.length !== 1) return false;
-  return component.type === "input" && ["text", "longText"].includes(component.kind) && component.commit !== "blur" || component.type === "select" && Array.isArray(component.items) && component.items.length <= 32 || component.type === "button";
+  return component.type === "input" && ["text", "longText"].includes(component.kind) && !uiInputCommitsOnBlur(component.commit) || component.type === "select" && Array.isArray(component.items) && component.items.length <= 32 || component.type === "button";
 }

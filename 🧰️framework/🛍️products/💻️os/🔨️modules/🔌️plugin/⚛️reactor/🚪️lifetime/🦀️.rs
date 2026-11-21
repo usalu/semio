@@ -4,6 +4,7 @@ use std::mem::ManuallyDrop;
 #[path="../🏃️runtime/🎞️command/📥️custody/🎟️source/🦀️.rs"]
 mod command_source;
 pub use command_source::OriginalCommandOrigin;
+pub use semio_plugin_decl_media::original_media::runtime as raw_media;
 pub use semio_framework_actor::retained_context::OriginalActorReturnSlot;
 
 /// 🔗️ Process-local descendant identity; its captured weak app lease keeps the allocation address reserved.
@@ -435,13 +436,49 @@ impl<PA: semio_plugin_reactor_app::PluginApp> GuestLifetimeOwner for NativeLifet
 pub struct NativeLifetimeSlot<PA: semio_plugin_reactor_app::PluginApp> {
     pub cell: NativeCell<PA>,
     pub command_origin:OriginalCommandOrigin,
+    pub raw_media: raw_media::OriginalMediaAdmission,
     pub native_created: bool,
     pub pending_creation: ManuallyDrop<Option<crate::life_cleanup_pumps::PendingNativeCreation<PA>>>,
     pub patch_sequence: u64,
 }
 impl<PA:semio_plugin_reactor_app::PluginApp> NativeLifetimeSlot<PA>{
+    /// 🧷️ Installs one paid picker into the exact native allocation before its effect becomes visible.
+    pub fn admit_original_media(
+        &mut self, key: NativeCloseKey, offered: &mut Option<raw_media::RawMediaIntent>,
+        current: semio_plugin_decl_media::original_media::OriginalMediaLoan<'_>,
+        format_closed: bool,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let Some(intent) = offered.as_ref() else { return Ok(false); };
+        if intent.loan() != current || intent.kind() != semio_framework::kernel::ORIGINAL_MEDIA_COMMAND_KIND {
+            return Err(crate::life_reactor_close::reactor_close_fault("original picker changed before runtime admission").into());
+        }
+        if key.instance() != current.instance_id || !self.admit_command_origin(key, cx)? { return Ok(false); }
+        if self.raw_media.picker.issued_loan() == Some(current) {
+            return Err(crate::life_reactor_close::reactor_close_fault("original picker was already issued").into());
+        }
+        if !self.raw_media.terminal_is_empty() {
+            if !format_closed || self.raw_media.picker.receipt_waiting() {
+                self.raw_media.picker.request_supersession(cx)?;
+                return Ok(false);
+            }
+            if !self.raw_media.close(cx)? { return Ok(false); }
+        }
+        self.raw_media.admit_issued(offered, current, cx)
+    }
+
+    /// 🪪 Admits one command Source only under the exact current native allocation and lifetime.
+    pub fn admit_command_origin(
+        &mut self, key: NativeCloseKey, cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if !self.cell.is_live() || self.cell.owner().map(NativeLifetimeOwner::key) != Some(key) {
+            return Ok(false);
+        }
+        self.command_origin.admit_step(cx)
+    }
+
  /// 📮️ The actual instance and every close peer prove retirement before their Source alias can return.
- pub fn close_command_origin<P:ClosePeers+?Sized>(&mut self,peers:&P,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.command_origin.terminal_is_empty(){return Ok(true)}if !matches!(self.cell.phase,Phase::Closing|Phase::Retired){return Ok(false)}let Some(owner)=self.cell.owner()else{return Ok(false)};if !owner.terminal_is_empty(peers)?{return Ok(false)}cx.with_original_retirement(|cx|self.command_origin.return_step(cx))}
+ pub fn close_command_origin<P:ClosePeers+?Sized>(&mut self,peers:&P,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.command_origin.terminal_is_empty(){return Ok(true)}if !matches!(self.cell.phase,Phase::Closing|Phase::Retired){return Ok(false)}let Some(owner)=self.cell.owner()else{return Ok(false)};if !owner.terminal_is_empty(peers)?{return Ok(false)}self.command_origin.validate(cx)?;if !self.raw_media.close(cx)?{return Ok(false)}cx.with_original_retirement(|cx|self.command_origin.return_step(cx))}
 }
 
 /// 🗃️ Fixed allocation-bound ownership belongs to the typed runtime, never a copied thread-local key.
@@ -450,11 +487,12 @@ pub struct NativeLifecycleRegistry<PA: semio_plugin_reactor_app::PluginApp> {
     pub slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots<Box<NativeLifetimeSlot<PA>>>,
     pub serial: GuestLifecycleSerial,
     pub cursor: usize,
+    raw_media_cursor: usize,
 }
 
 impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
     pub fn new() -> Self {
-        Self { slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots::unallocated(), serial: GuestLifecycleSerial::new(0), cursor: 0 }
+        Self { slots: semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots::unallocated(), serial: GuestLifecycleSerial::new(0), cursor: 0, raw_media_cursor: 0 }
     }
     pub fn index(instance: u32) -> usize {
         instance as usize % semio_plugin_reactor_tasks::tasks_fixed_slots::PLUGIN_REACTOR_INSTANCE_SLOTS
@@ -471,7 +509,7 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
             return Err("lifecycle backing unavailable");
         }
         let cell = NativeCell::admit(open, self.serial.next()?)?;
-        self.slots.insert_admitted(index, Box::new(NativeLifetimeSlot { cell, command_origin:OriginalCommandOrigin::empty(), native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 }));
+        self.slots.insert_admitted(index, Box::new(NativeLifetimeSlot { cell, command_origin:OriginalCommandOrigin::empty(), raw_media:raw_media::OriginalMediaAdmission::empty(), native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 }));
         Ok(true)
     }
     pub fn get(&self, instance: u32) -> Option<&NativeLifetimeSlot<PA>> {
@@ -488,6 +526,22 @@ impl<PA: semio_plugin_reactor_app::PluginApp> NativeLifecycleRegistry<PA> {
         drop(self.slots.take(Self::index(instance)));
         Ok(())
     }
+    /// 🧭️ Round-robins pending raw command receipts without spinning while waiting for a host page.
+    pub fn next_raw_media_poll(&mut self, closing: &[u32]) -> Option<u32> {
+        let count = self.slots.values.len();
+        if count == 0 { return None; }
+        for offset in 0..count {
+            let index = (self.raw_media_cursor + offset) % count;
+            let Some(slot) = self.slots.get(index) else { continue; };
+            let instance = slot.cell.lifetime().instance_id;
+            if slot.cell.is_live() && slot.raw_media.picker.receipt_due() && !closing.contains(&instance) {
+                self.raw_media_cursor = (index + 1) % count;
+                return Some(instance);
+            }
+        }
+        None
+    }
+
     pub fn pending_opening(&self)->Option<u32>{self.slots.iter().find(|slot|!slot.native_created&&slot.pending_creation.is_some()).map(|slot|slot.cell.lifetime().instance_id)}
     pub fn next_patch_receipt(&mut self, instance: u32) -> Option<semio_framework::kernel::ActorUiPatchReceipt> {
         let slot = self.get_mut(instance).filter(|slot| slot.cell.is_live())?;

@@ -50,7 +50,7 @@ function axial(): Json[] {
   const acet = el("acetabulum-l", "pelvis", [0.026, 0.026, 0.012], pa("pelvis", 0, 0, RIG.hipZ + 0.012));
   out.push(ilium, mirrored(ilium, toRight), pubis, mirrored(pubis, toRight), ischium, mirrored(ischium, toRight), acet, mirrored(acet, toRight));
   out.push(el("cranium", "head", [0.074, 0.088, 0.068], pa("head", 0.072, -0.004, 0)));
-  out.push(lo("facial-skeleton", "head", [sa("head", 0.06, 0.06, 0, 0.058, 0.03, 2.2), sa("head", 0.025, 0.07, 0, 0.06, 0.026, 2.2), sa("head", -0.005, 0.072, 0, 0.042, 0.02, 2)]));
+  out.push(el("facial-skeleton", "head", [0.042, 0.03, 0.05], pa("head", 0.024, 0.058, 0)));
   out.push({ ...tube(B("mandible", "head"), [[0.015, -0.006, 0.05], [-0.025, -0.004, 0.047], [-0.045, 0.035, 0.037], [-0.058, 0.08, 0.0], [-0.045, 0.035, -0.037], [-0.025, -0.004, -0.047], [0.015, -0.006, -0.05]].map(([a, f, l]) => pa("head", a, f, l)), [0.0075, 0.0085, 0.0085, 0.0105, 0.0085, 0.0085, 0.0075]), member: "head", part: "member" });
   out.push(el("nasal-bone", "head", [0.012, 0.006, 0.006], pa("head", 0.035, 0.094, 0)));
   out.push(bar("cervical-spine", "neck", [[-0.005, 0.0, 0], [0.03, 0.002, 0], [0.065, 0.004, 0], [0.098, 0.002, 0]].map(([a, f, l]) => pa("neck", a, f, l)), [0.012, 0.0115, 0.0115, 0.012]));

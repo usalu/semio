@@ -56,6 +56,7 @@
     "table": { "x": 40, "y": 145, "replacement": "y" }
   },
   "expected": {
+    "formattingPointer": { "editorOwnsFocus": true, "committedEvents": 0 },
     "textEvent": {
       "operation": "updateBlock",
       "blockId": "text-a",

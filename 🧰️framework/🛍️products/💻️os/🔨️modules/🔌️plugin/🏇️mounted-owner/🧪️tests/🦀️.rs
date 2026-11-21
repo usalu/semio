@@ -291,7 +291,7 @@ fn original_mounted_lifecycle_adopts_same_caller_receipt_once() {
         let policy = MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
         let mut turn = MountedOwnerTurnV1::admit(7, identity, MountedOwnerPhaseV1::Maintenance, policy, &mut context).unwrap().unwrap();
         let debit = vector["debit"].as_str().unwrap();
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| turn.advance_lifecycle(|original, incoming| {
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| turn.advance_lifecycle(|_, progress| semio_framework_value::RetainedCloneStep::Progress(progress), |original, incoming| {
             assert_eq!((original.operation(), original.generation()), (identity.operation, identity.generation));
             assert_eq!(incoming, grant);
             if debit == "child" || debit == "partial" {
@@ -348,21 +348,38 @@ fn redeemed_returns_keep_their_original_funding_inside_mounted_lifecycle() {
         let fresh = context_receipt(&law["fresh"]);
         let reserved = context_receipt(&law["reserved"]);
         let total = fresh.checked_add(reserved).unwrap();
-        let identity = MountedOwnerIdentityV1 { instance_id: 7, operation: OperationId(99), generation: Generation(1) };
-        CLOCK.with(|clock| clock.set(Some(1)));
-        let mut sequence = 0;
-        let mut posted = RetainedCloneProgress::default();
-        let mut cx = StepContext::new(identity.operation, identity.generation, StepBudget::new(10, 100, grant), CancelToken::root_now(), now_us, &mut sequence, &mut posted);
-        let policy = MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
-        let mut turn = MountedOwnerTurnV1::admit(7, identity, MountedOwnerPhaseV1::Maintenance, policy, &mut cx).unwrap().unwrap();
-        turn.advance_lifecycle(|cx, _| -> Result<_, ValueError> {
-            cx.consume_retained(fresh)?;
-            cx.consume_fuel(1);
-            cx.receive_original_reserved_return(reserved, 1)?;
-            Ok(semio_framework_value::RetainedCloneStep::Progress(total))
-        }).unwrap();
-        assert_eq!(turn.progress(), total);
-        assert_eq!(turn.grant(), law["remaining"].grant().unwrap());
+        let incorrect = RetainedCloneProgress { copied_bytes: fresh.copied_bytes - 1, ..fresh };
+        for (reported, phase_allowed, accepted) in [
+            (total, true, true),
+            (fresh, true, true),
+            (incorrect, true, false),
+            (fresh, false, false),
+        ] {
+            let identity = MountedOwnerIdentityV1 { instance_id: 7, operation: OperationId(99), generation: Generation(1) };
+            CLOCK.with(|clock| clock.set(Some(1)));
+            let mut sequence = 0;
+            let mut posted = RetainedCloneProgress::default();
+            let mut cx = StepContext::new(identity.operation, identity.generation, StepBudget::new(10, 100, grant), CancelToken::root_now(), now_us, &mut sequence, &mut posted);
+            let mut policy = MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
+            if !phase_allowed {
+                policy.close.maximum_copy_bytes = fresh.copied_bytes - 1;
+            }
+            let mut turn = MountedOwnerTurnV1::admit(7, identity, MountedOwnerPhaseV1::Close, policy, &mut cx).unwrap().unwrap();
+            let result = turn.advance_lifecycle(|_, progress| semio_framework_value::RetainedCloneStep::Progress(progress), |cx, _| -> Result<_, ValueError> {
+                cx.consume_retained(fresh)?;
+                cx.consume_fuel(1);
+                cx.receive_original_reserved_return(reserved, 1)?;
+                Ok(semio_framework_value::RetainedCloneStep::Progress(reported))
+            });
+            assert_eq!(result.is_ok(), accepted);
+            assert_eq!(turn.progress(), total);
+            assert_eq!(turn.context().retained_progress(), total);
+            assert_eq!(turn.context().reserved_return_progress(), reserved);
+            if accepted {
+                assert_eq!(result.unwrap().progress(), total);
+                assert_eq!(turn.grant(), law["remaining"].grant().unwrap());
+            }
+        }
     }
 }
 

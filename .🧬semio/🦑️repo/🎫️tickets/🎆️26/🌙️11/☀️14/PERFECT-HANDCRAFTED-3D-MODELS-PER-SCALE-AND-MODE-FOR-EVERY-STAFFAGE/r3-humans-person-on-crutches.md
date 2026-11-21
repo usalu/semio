@@ -67,3 +67,51 @@ Scripts (in `T`): `r3-person-on-crutches-roots.ts` (rig, anchors, poses, clips),
 - `volumes-thermal-coverage` 1:50 / 1:100: the declared `shorts` (0.197), `boot` (0.224) and `sneaker` (0.0697) areas are skin shares, not the surfaces of loose sports shorts, a walker boot and a sneaker; C18 forbids me to change them and I did not shrink the garments. Request in `T/author-requests.md` (dated 2026-11-19).
 - The face at 1:50 is simplified (eyes as flat lenses under the brows); at 7.5 mm feature an eye of 30 mm cannot carry more.
 - The seam between upper and lower sleeve lofts at the elbow shows as a jagged grey seam line in the shaded sheets (two lofts overlapping; closed in every pose by design).
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: the round-3 scripts extended in place (`-roots.ts` now also states shank, foot, toe, heel and ball anchors and the 1:500 band; `-parts.ts` exports `ANKLE_H`, `FOOT_PITCH`, `SHANK_L`; `-s50.ts`, `-coarse.ts`), `r3-person-on-crutches-run.sh` and `-write.py` to rebuild, validate and write; `r5-person-on-crutches-probe.ts` for the joint table.
+
+### Reference (male, 24, H = 1.805 m barefoot, Winter 2009 shares, sneaker heel stack 25 mm)
+
+| quantity | reference | model before | model after | after vs ref |
+|---|---|---|---|---|
+| ankle joint, shod | 0.039 H + 0.025 = 0.095 m | 0.083 (-13 %) | 0.095 | 0 % |
+| knee joint, shod | 0.285 H + 0.025 = 0.539 m | 0.530 | 0.530 | -1.7 % |
+| hip joint, shod | 0.530 H + 0.025 = 0.982 m | 0.974 | 0.974 | -0.8 % |
+| thigh / shank | 0.245 / 0.246 H = 0.442 / 0.444 m | 0.4459 / 0.4477 | 0.4459 / 0.4357 | +0.9 / -1.9 % |
+| upper arm / forearm / hand | 0.186 / 0.146 / 0.108 H = 0.336 / 0.264 / 0.195 m | 0.3385 / 0.2657 / 0.1966 | same | +0.8 / +0.8 / +0.8 % |
+| C7 | 0.86 H + 0.025 = 1.577 m | 1.559 | 1.559 | -1.1 % |
+| crutch handle to tip | 0.90 m (handle at wrist crease) | 0.90 | 0.90 | 0 % |
+| foot (ankle to ball contact) | 0.149 m ahead | 0.149 | 0.149 | 0 % |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure | 2D |
+|---|---|---|---|---|
+| 1:50 | A- -> A- | A- -> A- | A- -> A- | A- -> A- |
+| 1:100 | B+ -> B+ | B+ -> B+ | A- -> A- | A- -> A- |
+| 1:200 | B+ -> B+ | B+ -> B+ | B+ -> B+ | B+ -> B+ |
+| 1:500 | B -> B | B -> B | B -> B | B+ -> B+ |
+
+### Changes
+
+- Root: ankle joint 83 -> 95 mm above the sole plane with knee and hip kept, by a 12 mm shorter shank (0.4477 -> 0.4357 m, within 2 % of 0.246 H) and a steeper foot bone (0.1708 -> 0.1769 m, 60.9 -> 57.5 degrees; toe level; heel anchor (-0.0258, -0.129), ball anchor at the bone tip); every pose and clip key re-solved by the choreography of `r3-person-on-crutches-roots.ts` (tips and stance foot planted); 1:500 `validRange.maxDenominator` 1000 -> 750 (hands and hair fall below the 0.2 mm laser feature beyond, a pre-existing PRINT finding).
+- 1:50 body: the bare shank starts with the knee section of the thigh (no step at the knee), the forearm sleeve with the upper-sleeve section (no step at the elbow); shank, sock, boot shaft, boot struts and straps, tibia, fibula, malleolus and talus restated for the new shank and ankle at every scale.
+- 2D: all 12 drawings redrawn by `r3-person-on-crutches-draw2d.ts` (E1).
+
+### Seen (opened)
+
+1:50 body before (six views, three-quarter from two turns) and after (six views: straight right leg on the sneaker with the ankle inside the collar, no step at knee or elbow, cuff arm from the handle to the cuff); 1:50 `body-swing` after (closed at hip, knee and ankle, tips planted, boot clear); 1:500 body after (rods to the ground, hands as balls at the grips, legs in thigh and shank masses); 1:50 and 1:500 structure before; 2D 1:50 after (clean line and solid drawings, 1.82 m). Not opened after the change: structure and thermal sheets of every scale (only shank, foot and talus members moved), 2D 1:100 to 1:500 (validated, silhouettes green).
+
+### Check
+
+`r3-validate.ts humans/person-on-crutches --catalog-only`: VALID. `volumes-check.ts --product`: every rule green except `volumes-thermal-coverage` 1:50 / 1:100 `shorts`, `boot`, `sneaker` (C18 skin shares against garment and device surfaces; listed in `area-review.md`).
+
+### Remaining (not A, with reason)
+
+- The hoodie torso and sleeves are loose tubes without folds; the hair reads as a cap at 1:50.
+- 1:100 to 1:500 were not remodelled beyond the leg; they stay B+ / B massings (at 1:500 the hands are balls beside the rods and the knee shows a step between thigh and shank masses).
+- Areas `shorts`, `boot`, `sneaker` wait for the area reviewers.
+
+Each crutch now has nested 22 mm and 19 mm aluminium tubes, a 19.4 mm bore in the upper tube, 148 mm overlap, seven transverse 8 mm bores through the lower tube, and a 7.6 mm stainless locking pin. The pins and the bored shafts participate in both the structural and thermal models. Both sides passed closed-manifold and independent Three.js ray tests at all four scales. The thermal model assigns approximately 0.094 m² to the bore walls of both crutches and 0.16 m² to direct room exposure. The boot straps remain distinct at 1:150. The twelve-scene export occupies 7,616,604 bytes.

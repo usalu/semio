@@ -31,7 +31,7 @@ async fn applies_to_committed_after() {
     apply_gis_terrain_mutation(&mut snapshot, &mutation()).expect("change-imported-features applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-imported-features/imports-harbor-position-descriptor: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.mesh, base.mesh, "parent scalar edits preserve owned mesh identity");
-    assert!(snapshot.mesh.is_some(), "change-imported-features/imports-harbor-position-descriptor: the terrain always owns a mesh child — the slot is never emptied by an edit");
+    assert!(snapshot.mesh.is_some(), "the map change retains the fixture's explicit mesh reference");
 }
 
 /// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.

@@ -1,4 +1,5 @@
 import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
+import {Database} from "bun:sqlite";
 import {appendFileSync,realpathSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,truncateSync,utimesSync,writeFileSync,copyFileSync,cpSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join,relative} from "node:path";
@@ -8,6 +9,8 @@ import {listCodeSnapshotsV1,readHealthV1,restartJitterMillisecondsV1,sealCodeV1}
 import {runReplicaCommandV1} from "../⌨️command/🟦️.ts";
 import {closeReplicaV1,compactV1,followOnceV1,foldStoreV1,homedOriginsV1,joinV1,openReplicaV1,OriginTakenV1,publishOnceV1,relayOnceV1,ReplicaBusyV1,ClockAheadV1,runV1,seedV1,snapshotV1,statusV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
 import {writeAttestationV1,attestPathV1} from "../../🩺️attest/🟦️.ts";
+import {writeHintV1} from "../../🎣️tiers/🟦️.ts";
+import outboundTail from "./🧫️fixtures/outbound-tail.json" with {type:"json"};
 import fixture from "../../🩺️attest/🧪️tests/🧫️fixtures/🔣️.json" with {type:"json"};
 
 setDefaultTimeout(120_000);
@@ -177,6 +180,50 @@ test("a recurring failure stays visible in the attestation and the health file w
  const report=await statusV1(who.options);
  expect(report.health?.failures.some(item=>item.kind==="round")).toBe(true);
  await stop(who);
+});
+
+test("the daemon still follows the peer journal while its own outbound journal repeatedly fails",async()=>{
+ const vector=outboundTail,{store,who:source}=await seeded(vector.source);
+ let replica:ReplicaV1|undefined;
+ const receiver=runner(vector.receiver,store,{scanSeconds:3600,walkSeconds:3600,sweepMilliseconds:3_600_000,watch:false,opened:value=>{replica=value;}});
+ const root=receiver.options.worktree,origin=(name:string)=>join(store,"v1","origins",name);
+ const file=(path:string)=>join(root,path),segments=join(origin(vector.receiver),"segments");
+ await joinV1(receiver.options);
+ const peer=await openReplicaV1(source.options);
+ try{
+  start(receiver);
+  await until(()=>receiver.events.some(event=>event.event==="started"));
+  put(source.options.worktree,vector.baseline.path,vector.baseline.text);
+  expect((await publishOnceV1(peer,undefined,[vector.baseline.path])).published).toBe(1);
+  await until(()=>existsSync(file(vector.baseline.path)));
+  expect(readFileSync(file(vector.baseline.path),"utf8")).toBe(vector.baseline.text);
+
+  rmSync(segments,{recursive:true,force:true});
+  writeFileSync(segments,vector.blockedJournal);
+  put(root,vector.outbound.path,vector.outbound.text);
+  await writeHintV1(root,[vector.outbound.path]);
+  const failures=()=>replica?.failures.summary().find(row=>row.kind==="round")?.count??0;
+  await until(()=>failures()>=1);
+  put(source.options.worktree,vector.inbound.path,vector.inbound.text);
+  expect((await publishOnceV1(peer,undefined,[vector.inbound.path])).published).toBe(1);
+  await until(()=>failures()>=vector.minimumFailures);
+  expect(receiver.events.some(event=>event.event==="error"&&event.message?.includes("segments"))).toBe(true);
+  expect(readFileSync(segments,"utf8")).toBe(vector.blockedJournal);
+  expect(await readHeadV1(store,vector.receiver)).toBeUndefined();
+  expect(readFileSync(file(vector.outbound.path),"utf8")).toBe(vector.outbound.text);
+
+  const journal=readFileSync(join(origin(vector.source),"segments","000000000000.jsonl"),"utf8").trim().split("\n");
+  const sqlite=new Database(":memory:");
+  try{
+   const expected=sqlite.query(`select json_extract(value, '$.sha256') as sha256, json_extract(value, '$.bytes') as bytes
+    from json_each(?) where json_extract(value, '$.path') = ? and json_extract(value, '$.operation') = 'put'
+    order by json_extract(value, '$.hlc') desc limit 1`).get(`[${journal.join(",")}]`,vector.inbound.path);
+   const inbound=existsSync(file(vector.inbound.path))?readFileSync(file(vector.inbound.path)):null;
+   expect(expected).not.toBeNull();
+   expect(inbound&&{sha256:Bun.CryptoHasher.hash("sha256",inbound,"hex"),bytes:inbound.byteLength}).toEqual(expected);
+   expect(inbound?.toString("utf8")).toBe(vector.inbound.text);
+  }finally{sqlite.close();}
+ }finally{try{await stop(receiver);}finally{await closeReplicaV1(peer);}}
 });
 
 test("a state checkpoint that a power loss tore is reported, rebuilt from the store and never republishes the tree",async()=>{

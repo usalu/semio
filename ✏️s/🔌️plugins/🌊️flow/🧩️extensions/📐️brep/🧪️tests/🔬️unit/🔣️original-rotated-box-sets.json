@@ -1,0 +1,217 @@
+{
+  "stock": [
+    4,
+    3,
+    2.5
+  ],
+  "cases": [
+    {
+      "name": "side notch",
+      "translation": [
+        3,
+        0.85,
+        0
+      ],
+      "tool": [
+        2,
+        1.4,
+        2.5
+      ],
+      "angleDegrees": 27,
+      "operations": {
+        "difference": {
+          "volume": 24.823520817018384,
+          "area": 61.82564508329675,
+          "components": 1,
+          "holes": 0
+        },
+        "union": {
+          "volume": 31.823520817018384,
+          "area": 62.63570456049214,
+          "components": 1,
+          "holes": 0
+        },
+        "intersection": {
+          "volume": 5.176479182981614,
+          "area": 18.96429543950786,
+          "components": 1,
+          "holes": 0
+        }
+      }
+    },
+    {
+      "name": "through hole",
+      "translation": [
+        1.7,
+        1.1,
+        0
+      ],
+      "tool": [
+        1.1,
+        0.9,
+        2.5
+      ],
+      "angleDegrees": 31,
+      "operations": {
+        "difference": {
+          "volume": 27.525,
+          "area": 67.02,
+          "components": 1,
+          "holes": 1
+        },
+        "union": {
+          "volume": 30,
+          "area": 59,
+          "components": 1,
+          "holes": 0
+        },
+        "intersection": {
+          "volume": 2.4750000000000005,
+          "area": 11.980000000000002,
+          "components": 1,
+          "holes": 0
+        }
+      }
+    },
+    {
+      "name": "two material islands",
+      "translation": [
+        2.6,
+        -1.2,
+        0
+      ],
+      "tool": [
+        1.15,
+        5.2,
+        2.5
+      ],
+      "angleDegrees": 19,
+      "operations": {
+        "difference": {
+          "volume": 20.878021624764965,
+          "area": 61.48540860078868,
+          "components": 2,
+          "holes": 0,
+          "pieces": [
+            [
+              8.350655793880687,
+              27.679783606591705
+            ],
+            [
+              12.52736583088428,
+              33.805624994196975
+            ]
+          ]
+        },
+        "union": {
+          "volume": 35.828021624764965,
+          "area": 73.46678816518855,
+          "components": 1,
+          "holes": 0
+        },
+        "intersection": {
+          "volume": 9.121978375235033,
+          "area": 29.24321183481144,
+          "components": 1,
+          "holes": 0
+        }
+      }
+    },
+    {
+      "name": "four material islands",
+      "translation": [
+        2,
+        -0.9,
+        0
+      ],
+      "tool": [
+        3.4,
+        3.4,
+        2.5
+      ],
+      "angleDegrees": 45,
+      "operations": {
+        "difference": {
+          "volume": 6.004379693978569,
+          "area": 42.21771731755596,
+          "components": 4,
+          "holes": 0,
+          "pieces": [
+            [
+              1.489689846989284,
+              10.50977136225197
+            ],
+            [
+              1.4896898469892843,
+              10.50977136225197
+            ],
+            [
+              1.5125000000000002,
+              10.599087296526012
+            ],
+            [
+              1.5125000000000002,
+              10.599087296526012
+            ]
+          ]
+        },
+        "union": {
+          "volume": 34.90437969397856,
+          "area": 68.34276795143928,
+          "components": 1,
+          "holes": 0
+        },
+        "intersection": {
+          "volume": 23.99562030602143,
+          "area": 47.7772320485607,
+          "components": 1,
+          "holes": 0
+        }
+      }
+    },
+    {
+      "name": "separated stocks",
+      "translation": [
+        7,
+        0.85,
+        0
+      ],
+      "tool": [
+        2,
+        1.4,
+        2.5
+      ],
+      "angleDegrees": 27,
+      "operations": {
+        "difference": {
+          "volume": 30,
+          "area": 59,
+          "components": 1,
+          "holes": 0
+        },
+        "union": {
+          "volume": 37,
+          "area": 81.6,
+          "components": 2,
+          "holes": 0,
+          "pieces": [
+            [
+              7,
+              22.6
+            ],
+            [
+              30,
+              59
+            ]
+          ]
+        },
+        "intersection": {
+          "volume": 0,
+          "area": 0,
+          "components": 0,
+          "holes": 0
+        }
+      }
+    }
+  ]
+}

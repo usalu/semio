@@ -1,0 +1,7 @@
+# Mesh Difference Across Multiple Stock Faces
+
+The retained Difference kernel publishes nonprismatic recesses from convex inputs when the exact partitions prove one closed exterior. Stock fragments keep their original face ownership and the cut faces keep their reversed cutter ownership. The publisher checks one connected cutter patch, one simple opening rim, reciprocal directed edge incidence, positive signed volume and Euler characteristic two. It also verifies that every exterior vertex has one face fan and that all live vertices belong to one component.
+
+The three-plane case has 20 vertices, 34 edges and 16 faces and opens through three stock faces. Its area is 26 and volume is 6. The four-plane case has 24 vertices, 41 edges and 19 faces and opens through two stock faces. Its area is 26 and volume is 7. Manifold independently confirmed the volumes, areas and genus. Three.js confirmed exactly which stock-face samples are removed from the result.
+
+The production Clipping owner passed all seven Rust tests, including a pinched vertex with two closed fans. The one-item authored projection kept separate materials and UV charts and reimported closed geometry. The paired Generation3d proof passed all 33 cases at fuels 1, 7 and 1,024 and both cancellation laws. The retained Flow proof passed all 12 tests. Source budgets passed. Multiple residual components outside the existing slab case, general multiple openings, and nonconvex operands still need additional topology work.

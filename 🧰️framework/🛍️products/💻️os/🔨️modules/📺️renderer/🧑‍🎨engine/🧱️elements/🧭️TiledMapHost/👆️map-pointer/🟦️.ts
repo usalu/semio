@@ -6,10 +6,14 @@ import { openSurfaceContextMenu } from "../../🗣️Interpreter/🖱️surface-
 import { getTiledMapCameraLimits, MAP_MARQUEE_THRESHOLD_PX, mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, mapLayerIdsFlat, parseMapHoveredFeature, parseMapLayerIds } from "../📐️map-parsing/🟦️.ts";
 import type { MapCore2 } from "../🎞️map-render-effects/🟦️.ts";
 
+const TOUCH_PAN_THRESHOLD_PX = 6;
+
+type TouchContact = { start: SelectionMarqueePoint; position: SelectionMarqueePoint; panning: boolean };
+
 // #region TiledMapHost
 /** 👆️ Wires the canvas pointer gestures, marquee selection, hover and context menu. */
 export function useMapPointer(core: MapCore2) {
-  const { canvasRef, clientToLocal, dispatch, mapTiledContextMenu, mirrorSessionCameraToReact, node, overlayIndex, panningRef, queryFeatureHits, queryHitFeature, rendererRef, requestContextMenu, scene, selectionMethod, setContextMenu, setMarqueeOverlay, shellContextMenuFallback, shellScope, userAdjustedCameraRef } = core;
+  const { canvasRef, clientToLocal, dispatch, mapTiledContextMenu, mirrorSessionCameraToReact, node, overlayIndex, panningRef, queryFeatureHits, queryHitFeature, renderAttempt, rendererRef, rendererUnavailable, requestContextMenu, scene, selectionMethod, setContextMenu, setMarqueeOverlay, shellContextMenuFallback, shellScope, userAdjustedCameraRef } = core;
   const pointer = useRef({
     leftDown: false,
     middleDown: false,
@@ -45,29 +49,93 @@ export function useMapPointer(core: MapCore2) {
   );
 
   const [gestureRecognizer] = useState(() => new GestureRecognizer());
+  const touchContact = useRef<TouchContact | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !scene) return undefined;
-    /** 🤏️ The second contact hands the map to the shared recognizer's pinch: the first finger's
-     * marquee/pan is dropped, every capture released, and tiles are polled continuously until the last
-     * finger lifts. */
-    const yieldToPinch = (): void => {
-      resetMarquee();
-      if (pointer.current.middleDown) rendererRef.current?.endContinuousInteraction("pan");
+    if (rendererUnavailable) {
+      for (const contact of gestureRecognizer.pointers) gestureRecognizer.up(contact.pointerId);
+      touchContact.current = null;
       pointer.current.leftDown = false;
       pointer.current.middleDown = false;
-      panningRef.current = false;
-      for (const tracked of gestureRecognizer.pointers) if (canvas.hasPointerCapture?.(tracked.pointerId)) canvas.releasePointerCapture(tracked.pointerId);
+      pointer.current.marqueeTracking = false;
+      pointer.current.marqueeActive = false;
+      return undefined;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas || !scene) return undefined;
+    const beginPan = (start: SelectionMarqueePoint): void => {
+      panningRef.current = true;
       userAdjustedCameraRef.current = true;
-      rendererRef.current?.beginContinuousInteraction("pinch");
+      rendererRef.current?.session.pointerDownScreen(start.x, start.y, 1);
+      rendererRef.current?.beginContinuousInteraction("pan");
+    };
+    const endTouchPan = (contact: TouchContact): void => {
+      rendererRef.current?.session.pointerUpScreen(contact.position.x, contact.position.y);
+      rendererRef.current?.endContinuousInteraction("pan");
+    };
+    const moveTouch = (contact: TouchContact, point: SelectionMarqueePoint): void => {
+      if (!contact.panning) {
+        if (Math.hypot(point.x - contact.start.x, point.y - contact.start.y) < TOUCH_PAN_THRESHOLD_PX) return;
+        contact.panning = true;
+        beginPan(contact.start);
+      }
+      if (point.x === contact.position.x && point.y === contact.position.y) return;
+      contact.position = point;
+      const renderer = rendererRef.current;
+      if (!renderer) return;
+      renderer.session.pointerMoveScreen(point.x, point.y);
+      const camera = renderer.readCameraFromSession();
+      if (camera) renderer.camera = camera;
+      renderer.scheduleRefreshTiles();
+    };
+    const finishTouch = (event: PointerEvent): void => {
+      if (!gestureRecognizer.pointers.some(({ pointerId }) => pointerId === event.pointerId)) return;
+      event.stopPropagation();
+      const verdict = gestureRecognizer.up(event.pointerId);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      if (verdict.kind === "pinchEnd") {
+        panningRef.current = false;
+        rendererRef.current?.endContinuousInteraction("pinch");
+        mirrorSessionCameraToReact();
+        rendererRef.current?.scheduleRefreshTiles();
+        return;
+      }
+      const contact = touchContact.current;
+      if (!contact) return;
+      touchContact.current = null;
+      const point = event.type === "pointerup" ? clientToLocal(event.clientX, event.clientY) : null;
+      if (point) moveTouch(contact, point);
+      if (contact.panning) {
+        endTouchPan(contact);
+        panningRef.current = false;
+        mirrorSessionCameraToReact();
+        rendererRef.current?.scheduleRefreshTiles();
+      } else if (point) {
+        const hit = queryHitFeature(point);
+        emitFeatureSelection(hit ? [hit.id] : [], marqueeModeFromModifiers(event, shellScope?.selection.get()), "pick");
+      }
     };
     const onPointerDown = (event: PointerEvent): void => {
       event.stopPropagation();
       const point = clientToLocal(event.clientX, event.clientY);
-      const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: point.x, y: point.y });
-      if (verdict.kind === "pinchBegin") yieldToPinch();
-      if (verdict.kind !== "single") return;
+      if (event.pointerType === "touch") {
+        if (pointer.current.leftDown || pointer.current.middleDown) return;
+        event.preventDefault();
+        const verdict = gestureRecognizer.down({ pointerId: event.pointerId, ...point });
+        canvas.setPointerCapture?.(event.pointerId);
+        if (verdict.kind === "single") {
+          touchContact.current = { start: point, position: point, panning: false };
+        } else if (verdict.kind === "pinchBegin") {
+          const contact = touchContact.current;
+          if (contact?.panning) endTouchPan(contact);
+          touchContact.current = null;
+          panningRef.current = true;
+          userAdjustedCameraRef.current = true;
+          rendererRef.current?.beginContinuousInteraction("pinch");
+        }
+        return;
+      }
+      if (gestureRecognizer.pointers.length > 0) return;
       if (event.button === 0) {
         pointer.current.leftDown = true;
         pointer.current.marqueeTracking = true;
@@ -80,27 +148,29 @@ export function useMapPointer(core: MapCore2) {
       if (event.button === 1) {
         event.preventDefault();
         pointer.current.middleDown = true;
-        panningRef.current = true;
-        userAdjustedCameraRef.current = true;
         canvas.setPointerCapture?.(event.pointerId);
-        rendererRef.current?.session.pointerDownScreen(point.x, point.y, 1);
-        rendererRef.current?.beginContinuousInteraction("pan");
+        beginPan(point);
       }
     };
     const onPointerMove = (event: PointerEvent): void => {
       const point = clientToLocal(event.clientX, event.clientY);
-      const verdict = gestureRecognizer.move({ pointerId: event.pointerId, x: point.x, y: point.y });
-      if (verdict.kind === "pinch") {
+      if (event.pointerType === "touch") {
+        if (!gestureRecognizer.pointers.some(({ pointerId }) => pointerId === event.pointerId)) return;
         event.stopPropagation();
-        const renderer = rendererRef.current;
-        const camera = renderer?.readCameraFromSession();
-        if (!renderer || !camera) return;
-        const rect = canvas.getBoundingClientRect();
-        renderer.applyCameraToSession(applyPinchToCamera(camera, verdict.step, { w: rect.width, h: rect.height }, getTiledMapCameraLimits(renderer.session)));
-        renderer.scheduleRefreshTiles();
+        const verdict = gestureRecognizer.move({ pointerId: event.pointerId, ...point });
+        if (verdict.kind === "pinch") {
+          const renderer = rendererRef.current;
+          const camera = renderer?.readCameraFromSession();
+          if (!renderer || !camera) return;
+          const rect = canvas.getBoundingClientRect();
+          renderer.applyCameraToSession(applyPinchToCamera(camera, verdict.step, { w: rect.width, h: rect.height }, getTiledMapCameraLimits(renderer.session)));
+          renderer.scheduleRefreshTiles();
+        } else if (verdict.kind === "single" && touchContact.current) {
+          moveTouch(touchContact.current, point);
+        }
         return;
       }
-      if (verdict.kind !== "single") return;
+      if (gestureRecognizer.pointers.length > 0) return;
       if (pointer.current.middleDown) {
         event.stopPropagation();
         rendererRef.current?.session.pointerMoveScreen(point.x, point.y);
@@ -135,16 +205,10 @@ export function useMapPointer(core: MapCore2) {
       const rect = screenRectFromPoints(points);
       setMarqueeOverlay(method === "lasso" ? { coverage, shape: "polygon", points } : { coverage, shape: "rect", rect: rect ?? { x: 0, y: 0, width: 0, height: 0 } });
     };
-    const endPinch = (): void => {
-      rendererRef.current?.endContinuousInteraction("pinch");
-      mirrorSessionCameraToReact();
-      rendererRef.current?.scheduleRefreshTiles();
-    };
     const onPointerUp = (event: PointerEvent): void => {
+      if (event.pointerType === "touch") return finishTouch(event);
+      if (gestureRecognizer.pointers.length > 0) return;
       event.stopPropagation();
-      const verdict = gestureRecognizer.up(event.pointerId);
-      if (verdict.kind === "pinchEnd") endPinch();
-      if (verdict.kind !== "single") return;
       const point = clientToLocal(event.clientX, event.clientY);
       if (event.button === 1 && pointer.current.middleDown) {
         pointer.current.middleDown = false;
@@ -178,9 +242,8 @@ export function useMapPointer(core: MapCore2) {
       resetMarquee();
     };
     const onPointerCancel = (event: PointerEvent): void => {
-      const verdict = gestureRecognizer.up(event.pointerId);
-      if (verdict.kind === "pinchEnd") endPinch();
-      if (verdict.kind !== "single") return;
+      if (event.pointerType === "touch") return finishTouch(event);
+      if (gestureRecognizer.pointers.length > 0) return;
       const point = clientToLocal(event.clientX, event.clientY);
       rendererRef.current?.session.pointerUpScreen(point.x, point.y);
       pointer.current.leftDown = false;
@@ -218,15 +281,17 @@ export function useMapPointer(core: MapCore2) {
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerCancel);
+    canvas.addEventListener("lostpointercapture", finishTouch);
     canvas.addEventListener("contextmenu", onContextMenu);
     return () => {
       canvas.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerCancel);
+      canvas.removeEventListener("lostpointercapture", finishTouch);
       canvas.removeEventListener("contextmenu", onContextMenu);
     };
-  }, [clientToLocal, dispatch, emitFeatureSelection, gestureRecognizer, mapTiledContextMenu, mirrorSessionCameraToReact, overlayIndex, queryFeatureHits, queryHitFeature, requestContextMenu, resetMarquee, scene, selectionMethod, shellContextMenuFallback]);
+  }, [clientToLocal, dispatch, emitFeatureSelection, gestureRecognizer, mapTiledContextMenu, mirrorSessionCameraToReact, overlayIndex, queryFeatureHits, queryHitFeature, renderAttempt, rendererUnavailable, requestContextMenu, resetMarquee, scene, selectionMethod, shellContextMenuFallback]);
 }
 
 export type MapCore3 = MapCore2 & ReturnType<typeof useMapPointer>;

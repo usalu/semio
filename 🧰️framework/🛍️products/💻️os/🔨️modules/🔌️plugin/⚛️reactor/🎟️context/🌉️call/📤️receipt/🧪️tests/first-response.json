@@ -1,1 +1,56 @@
-{"version":1,"items":{"core":21,"birthAndHome":5,"regularClaims":4,"claim":3,"preissue":2,"prepared":1,"exposure":6,"guard":32,"failureCapture":3},"work":{"core":2948,"birthAndHome":5,"regularClaims":4,"claim":3,"preissue":2,"prepared":1,"exposure":6,"guard":64,"failureCapture":3},"required":{"items":91,"work":3050},"cases":[{"items":32,"work":4096,"accepted":false},{"items":90,"work":3050,"accepted":false},{"items":91,"work":3049,"accepted":false},{"items":91,"work":3050,"accepted":true},{"items":128,"work":4096,"accepted":true}]}
+{
+  "version": 1,
+  "items": {
+    "core": 21,
+    "birthAndHome": 5,
+    "regularClaims": 4,
+    "claim": 3,
+    "preissue": 2,
+    "prepared": 1,
+    "exposure": 6,
+    "guard": 32,
+    "failureCapture": 5
+  },
+  "work": {
+    "core": 3140,
+    "birthAndHome": 47,
+    "regularClaims": 4,
+    "claim": 3,
+    "preissue": 2,
+    "prepared": 1,
+    "exposure": 6,
+    "guard": 64,
+    "failureCapture": 5
+  },
+  "required": {
+    "items": 93,
+    "work": 3286
+  },
+  "cases": [
+    {
+      "items": 32,
+      "work": 4096,
+      "accepted": false
+    },
+    {
+      "items": 92,
+      "work": 3286,
+      "accepted": false
+    },
+    {
+      "items": 93,
+      "work": 3285,
+      "accepted": false
+    },
+    {
+      "items": 93,
+      "work": 3286,
+      "accepted": true
+    },
+    {
+      "items": 128,
+      "work": 4096,
+      "accepted": true
+    }
+  ]
+}

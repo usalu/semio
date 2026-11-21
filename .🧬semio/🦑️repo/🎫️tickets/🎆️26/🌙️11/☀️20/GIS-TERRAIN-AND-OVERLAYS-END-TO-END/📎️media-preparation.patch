@@ -1,0 +1,114 @@
+*** Begin Patch
+*** Update File: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🧱️components/🦀️.rs
+@@
+     pub reserved_mount_construction:semio_framework_job::OriginalConstructionAdmission,
+     pub media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
+-    pub media_export_preparation:ManuallyDrop<Option<MediaExportPreparation<A>>>,
++    pub media_export_preparation:ManuallyDrop<Option<Box<MediaExportPreparation<A>>>>,
+     pub media_download_preparation:ManuallyDrop<Option<semio_plugin_document_media::media_export::MediaDownloadPreparation>>,
+     pub media_closures: ArtifactFixedRegistry<ActiveMediaExport>,
+@@
+         unsafe{
+             match field{
+-                0=>return initialize_absent_field_at(addr_of_mut!((*target).media_export_preparation).cast::<Option<MediaExportPreparation<A>>>(),offset,count),
++                0=>return initialize_absent_field_at(addr_of_mut!((*target).media_export_preparation).cast::<Option<Box<MediaExportPreparation<A>>>>(),offset,count),
+                 1=>return initialize_absent_field_at(addr_of_mut!((*target).media_download_preparation).cast::<Option<semio_plugin_document_media::media_export::MediaDownloadPreparation>>(),offset,count),
+                 7.. => return Self::initialize_empty_field_at(target,field-7,offset,count),
+*** Update File: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🖼️render/🦀️.rs
+@@
+             if let Some(owner)=original.snapshot_retention.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.retirement_demands(body)}}
+             if !original.snapshot_source.terminal_is_empty(){return original.snapshot_source.retirement_demands(body)}
+-            return Ok(RetirementDemand{copy_bytes:size_of::<MediaExportPreparation<A>>(),depth:1,..Default::default()})
++            return Ok(MediaExportPreparation::<A>::carrier_release_demand())
+         }
+         if let Some(owner)=self.media_submission_refusal_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&*self.media_submission_refusal_retirement),depth:1,..Default::default()})}else{owner.selected_demand(body)}}
+@@
+                 else if let Some(owner)=original.snapshot_retention.as_mut(){if owner.terminal_is_empty(){original.snapshot_retention.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}else{return owner.close_step(cx,grant).map(|step|(PluginLifecycleStep::Progress(step.progress().unwrap_or_default()),false)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)}}
+                 else if !original.snapshot_source.terminal_is_empty(){return original.snapshot_source.close_step(cx).map(|step|(PluginLifecycleStep::Progress(step.progress()),false)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)}
+-                else{self.media_export_preparation.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<MediaExportPreparation<A>>(),..Default::default()})};
++                else{
++                    let release=MediaExportPreparation::<A>::carrier_release_demand();
++                    self.media_export_preparation.take();
++                    RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:release.copy_bytes,released_bytes:release.release_bytes,..Default::default()})
++                };
+                 return Ok((PluginLifecycleStep::Progress(step.progress()),false))
+             }
+@@
+         if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
+         if self.media_export_preparation.is_none(){
+-            if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<size_of::<MediaExportPreparation<A>>(){return Ok(false)}
++            let capacity=size_of::<MediaExportPreparation<A>>();
++            let progress=RetainedCloneProgress {
++                copied_items:1,
++                copied_bytes:capacity+size_of::<Option<Box<MediaExportPreparation<A>>>>(),
++                retained_capacity_bytes:capacity,
++                ..Default::default()
++            };
++            if grant.maximum_depth==0||!progress.fits(grant){return Ok(false)}
+             let Some(slot)=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot|self.media_exports.slot_is_vacant(*slot)&&self.media_closures.slot_is_vacant(*slot)&&self.snapshot_retirements.slot_is_vacant(*slot))else{return Ok(false)};
+             let revision=stores.store.content_revision_now();let operation_id=semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64,slot as u64);let key=ToolOperationKey{app_instance_id,document:ArtifactDocumentAuthority(app_instance_id),operation_id,base_revision:semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),generation:semio_framework_job::Generation(stores.store.generation_now())};
+-            *self.media_export_preparation=Some(MediaExportPreparation{construction:Default::default(),original_read:ManuallyDrop::new(None),original_read_close:ManuallyDrop::new(None),original_children:ManuallyDrop::new(None),original_children_close:ManuallyDrop::new(None),child_root_identity:children.root.as_ref().map(|root|std::sync::Arc::as_ptr(root)as usize),checkpoint:checkpoint_id.map(|_|super::native_checkpoint_export::NativeCheckpointExportSource::empty()),checkpoint_identity,canonical_revision:revision,metadata:ManuallyDrop::new(Some(std::array::from_fn(|_|Vec::new()))),metadata_stage:0,metadata_close:ManuallyDrop::new(None),request_close:ManuallyDrop::new(None),parts:ManuallyDrop::new(None),parts_close:ManuallyDrop::new(None),handle:ManuallyDrop::new(None),handle_close:ManuallyDrop::new(None),operation:None,body_ready:false,operation_bound:false,assembled:false,published:false,snapshot_source:semio_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource::empty(),snapshot:ManuallyDrop::new(None),snapshot_lease:ManuallyDrop::new(None),snapshot_retention:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),source_identity,port_identity,key,lease:None,retirement:None,completion:None,completion_close:None,credit:None,credit_close:None,chunks:None,chunks_close:None});
+-            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<MediaExportPreparation<A>>(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)
+-        }
+-        let original=self.media_export_preparation.as_mut().unwrap();if original.retirement.is_some(){return Ok(false)}
++            *self.media_export_preparation=Some(Box::new(MediaExportPreparation{construction:Default::default(),original_read:ManuallyDrop::new(None),original_read_close:ManuallyDrop::new(None),original_children:ManuallyDrop::new(None),original_children_close:ManuallyDrop::new(None),child_root_identity:children.root.as_ref().map(|root|std::sync::Arc::as_ptr(root)as usize),checkpoint:checkpoint_id.map(|_|super::native_checkpoint_export::NativeCheckpointExportSource::empty()),checkpoint_identity,canonical_revision:revision,metadata:ManuallyDrop::new(Some(std::array::from_fn(|_|Vec::new()))),metadata_stage:0,metadata_close:ManuallyDrop::new(None),request_close:ManuallyDrop::new(None),parts:ManuallyDrop::new(None),parts_close:ManuallyDrop::new(None),handle:ManuallyDrop::new(None),handle_close:ManuallyDrop::new(None),operation:None,body_ready:false,operation_bound:false,assembled:false,published:false,snapshot_source:semio_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource::empty(),snapshot:ManuallyDrop::new(None),snapshot_lease:ManuallyDrop::new(None),snapshot_retention:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),source_identity,port_identity,key,lease:None,retirement:None,completion:None,completion_close:None,credit:None,credit_close:None,chunks:None,chunks_close:None}));
++            cx.consume_retained(progress)?;cx.consume_fuel(1);return Ok(false)
++        }
++        let original=self.media_export_preparation.as_deref_mut().unwrap();if original.retirement.is_some(){return Ok(false)}
+         if original.child_root_identity!=children.root.as_ref().map(|root|std::sync::Arc::as_ptr(root)as usize){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media preparation requires its exact original child-content root").into())}
+ 
+@@
+             if original.handle.is_some(){let _=ArtifactMediaExportHandle::receive_original(&mut original.handle,receiver,cx)?;return Ok(false)}
+             if receiver.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"published media lost its retained receiving handle").into())}
+-            let bytes=size_of::<MediaExportPreparation<A>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
++            let release=MediaExportPreparation::<A>::carrier_release_demand();
++            let progress=RetainedCloneProgress{copied_items:1,copied_bytes:release.copy_bytes,released_bytes:release.release_bytes,..Default::default()};
++            if grant.maximum_depth==0||!progress.fits(grant){return Ok(false)}
+             self.media_export_preparation.take();
+-            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(true)
++            cx.consume_retained(progress)?;cx.consume_fuel(1);return Ok(true)
+         }
+         if stores.store.content_revision_now()!=original.canonical_revision||stores.store.generation_now()!=original.key.generation.0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media preparation requires its exact captured canonical revision and generation").into())}
+*** Update File: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🧵️instance-root/🦀️.rs
+@@
+ 
+ impl<A:ArtifactApp> MediaExportPreparation<A>{
++ pub(crate) fn carrier_release_demand()->RetirementDemand{
++  RetirementDemand{copy_bytes:size_of::<Option<Box<Self>>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}
++ }
++
+  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+   use semio_framework_job::InteractiveJob;
+*** Update File: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧩️mounted/🦀️.rs
+@@
+     let grant = app.1.cx().original_turn_ceiling().0;
+     semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut *app.0, port, app.1.cx(), grant).await.unwrap_or_else(|failure| {
+-        let progress = app.0.media.media_export_preparation.as_ref().map(|preparation| (
++        let progress = app.0.media.media_export_preparation.as_deref().map(|preparation| (
+             std::mem::size_of_val(preparation),
+             preparation.snapshot_source.ready(), preparation.snapshot.is_some(),
+@@
+         panic!("submit Terrain media {port}: {failure:?}, preparation {progress:?}, remaining grant {:?}", app.1.cx().retained_grant())
+     })
++}
++
++#[semio_framework_async_macros::async_test]
++async fn interrupted_media_export_preparation_retires_under_mounted_policy() {
++    use semio_plugin::{MountedOwnerPolicyV1, PluginApp};
++    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, ensure_fixture_cancellation_issuer};
++
++    let mut app = app().await;
++    app.renew_turn();
++    ensure_fixture_cancellation_issuer(&mut *app.0, app.1.cx()).expect("birth Terrain media issuer");
++    app.renew_turn();
++    let mut receiver = None;
++    assert!(!app.0.submit_media_export("scene:out", &mut receiver, app.1.cx()).await.expect("start preparing a scene export"));
++    assert!(receiver.is_none());
++    assert!(app.0.media.media_export_preparation.is_some());
++
++    app.renew_turn();
++    close_registered_fixture_app(&mut *app.0, MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("retire interrupted preparation under mounted close credit");
++    assert!(app.0.close_terminal_is_empty());
+ }
+ 
+*** End Patch

@@ -75,6 +75,22 @@ pub fn evaluate_tick(
     turn_started_us: Option<u64>,
     effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
 ) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
+    evaluate_tick_with_seeds(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, PreviewEvaluationSource::WithFallback, turn_started_us, effect, |_| {})
+}
+
+/// 🌱️ Evaluates a generated instance with source values projected into this tick's seed map.
+pub fn evaluate_tick_with_seeds(
+    window_id: &str,
+    window_kind_id: &str,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    tolerance: f64,
+    session: &mut FlowEvalSession,
+    retained_eval: Option<&str>,
+    source: PreviewEvaluationSource,
+    turn_started_us: Option<u64>,
+    effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
+    project: impl FnOnce(&mut std::collections::HashMap<String, semio_framework_artifact_flow_flow::neural::Dictionary>),
+) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
     let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
     let retained_grant = effect.grant();
     session.begin_window_tick(window_id, retained_grant)?;
@@ -86,7 +102,10 @@ pub fn evaluate_tick(
             return Err(error);
         }
     };
-    let more = session.tick_cold(&mut host, turn_started_us);
+    let more = match source {
+        PreviewEvaluationSource::WithFallback => session.tick_cold_with_seeds(&mut host, turn_started_us, project),
+        PreviewEvaluationSource::Current => session.tick_cold_current_with_seeds(&mut host, turn_started_us, project),
+    };
     let pending_extension_evals = host.take_pending_extension_evals();
     semio_s_artifact_procedural_3d_model::close_host(host)?;
     let mut extension_invocations = Vec::new();
@@ -96,7 +115,7 @@ pub fn evaluate_tick(
         extension_invocations.push(evaluate_invocation(pending, resume, dependency_json, window_id, window_kind_id));
     }
     if extension_invocations.is_empty() && !more {
-        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance, effect)?);
+        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance, source, effect)?);
     }
     session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()), retained_grant)?;
     if !extension_invocations.is_empty() {
@@ -104,7 +123,7 @@ pub fn evaluate_tick(
     } else if more && !may_rearm(host_snapshot) {
         session.abandon_window_tick(window_id, retained_grant)?;
     }
-    let publication = preview_eval_publication_for(session, host_snapshot, retained_eval);
+    let publication = preview_eval_publication_for(session, host_snapshot, retained_eval, source);
     if let (Some(started_us), Some(finished_us)) = (started_us, started_us.and_then(|_| semio_framework_job::default_now_us())) {
         semio_os_flow::record_flow_eval_step(finished_us.saturating_sub(started_us));
     }

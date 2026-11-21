@@ -2,6 +2,9 @@
 
 #![allow(async_fn_in_trait)]
 
+#[path = "🧯️annex-bb-reliability/🦀️.rs"]
+pub mod annex_bb_reliability;
+
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use semio_s_plugin_norm_compliance::{CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 
@@ -272,13 +275,23 @@ pub mod part_1_1 {
         psi_factors(category, AnnexChoice::En).0
     }
 
-    /// 📐 Area reduction α_A: DE `0.7 ≤ 0.5 + 10/√A ≤ 1.0` for C–E (repo NA value); EN Eq. (6.1) `5/7 ψ₀ + A₀/A ≤ 1.0` for A–D with a floor of 0.6 for C and D.
+    /// 📐 Area factor for secondary members, EN Eq. (6.1) or national Eqs. (6.1a DE) and (6.1b DE).
     pub fn alpha_a(category: &str, area_m2: f64, annex: AnnexChoice) -> f64 {
         let c = category.trim().to_ascii_uppercase();
         let first = c.chars().next();
         let a = area_m2.max(1.0);
         match annex {
-            AnnexChoice::De => if matches!(first, Some('C' | 'D' | 'E')) { (ndp_number("ndp.en1991.alpha-a.de-c0", annex) + ndp_number("ndp.en1991.alpha-a.de-c1", annex) / a.sqrt()).clamp(ndp_number("ndp.en1991.alpha-a.de-min", annex), ndp_number("ndp.en1991.alpha-a.de-max", annex)) } else { 1.0 },
+            AnnexChoice::De => {
+                let base = match first {
+                    Some('A' | 'B') => "ndp.en1991.alpha-a.de-base-abz",
+                    Some('Z') if c == "Z" => "ndp.en1991.alpha-a.de-base-abz",
+                    Some('C' | 'D') => "ndp.en1991.alpha-a.de-base-c-e11",
+                    Some('E') if c == "E1.1" => "ndp.en1991.alpha-a.de-base-c-e11",
+                    _ => return 1.0,
+                };
+                (ndp_number(base, annex) + ndp_number("ndp.en1991.alpha-a.de-area", annex) / a)
+                    .min(ndp_number("ndp.en1991.alpha-a.de-max", annex))
+            }
             AnnexChoice::En => match first {
                 Some('A' | 'B') => (5.0 / 7.0 * psi_0(&c) + ndp_number("ndp.en1991.alpha-a.en-a0", annex) / a).min(1.0),
                 Some('C' | 'D') => (5.0 / 7.0 * psi_0(&c) + ndp_number("ndp.en1991.alpha-a.en-a0", annex) / a).clamp(ndp_number("ndp.en1991.alpha-a.en-min-cd", annex), 1.0),
@@ -287,12 +300,21 @@ pub mod part_1_1 {
         }
     }
 
-    /// 🏬 Storey reduction α_n = (2 + (n−2)ψ₀)/n for n > 2 storeys, categories A–D (EN 1991-1-1 Eq. 6.2).
-    pub fn alpha_n(category: &str, storey_count: u8, _annex: AnnexChoice) -> f64 {
+    /// 🏬 Storey factor for vertical members with more than two floors of the same use category.
+    pub fn alpha_n(category: &str, storey_count: u8, annex: AnnexChoice) -> f64 {
         let c = category.trim().to_ascii_uppercase();
-        if !matches!(c.chars().next(), Some('A' | 'B' | 'C' | 'D')) || storey_count <= 2 { return 1.0; }
-        let n = storey_count as f64;
-        ((2.0 + (n - 2.0) * psi_0(&c)) / n).min(1.0)
+        let common_category = matches!(c.chars().next(), Some('A' | 'B' | 'C' | 'D'));
+        if storey_count <= 2 {
+            return 1.0;
+        }
+        let n = f64::from(storey_count);
+        match annex {
+            AnnexChoice::De if common_category || c == "Z" => {
+                ndp_number("ndp.en1991.alpha-n.de-base", annex) + ndp_number("ndp.en1991.alpha-n.de-storeys", annex) / n
+            }
+            AnnexChoice::En if common_category => ((2.0 + (n - 2.0) * psi_0(&c)) / n).min(1.0),
+            _ => 1.0,
+        }
     }
 
     /// 🏢 Reduced imposed q_k (Pa), `None` for an unknown category.
@@ -381,7 +403,13 @@ pub mod part_1_3 {
     /// 🥅 Snow guard force F_s = s·b·sin α (N/m).
     pub fn snow_guard_force_n_m(s_pa: f64, b_m: f64, alpha_deg: f64) -> f64 { s_pa * b_m * alpha_deg.to_radians().sin() }
     /// 📆 Return-period factor s_n/s_k (EN 1991-1-3 Eq. D.1) for the coefficient of variation V and annual exceedance probability P.
-    pub fn return_period_factor(v: f64, p: f64) -> f64 { (1.0 - v * (0.45 + 0.78 * (-(1.0 - p).ln()).ln())) / (1.0 + 2.59 * v) }
+    pub fn return_period_factor(v: f64, p: f64) -> Option<f64> {
+        if !v.is_finite() || v < 0.0 || p <= 0.0 || !(p <= 0.20) {
+            return None;
+        }
+        let quantile = (-(-p).ln_1p()).ln() + 0.57722;
+        Some((1.0 - v * 6.0_f64.sqrt() / std::f64::consts::PI * quantile) / (1.0 + 2.5923 * v))
+    }
     /// 🏠 Shape coefficient of a roof area: pitched roofs μ₁(α), multi-span valleys μ₂(α), parapets and drift obstructions raise μ.
     pub fn shape_mu(roof_type: &str, pitch_deg: f64, has_parapet: bool, parapet_height: f64, drift_obstruction_height: f64, multi_span: bool, sk_pa: f64, annex: AnnexChoice) -> f64 {
         let mut mu = if roof_type.contains("cylind") { cylindrical_mu_3_cap() } else { mu_1(pitch_deg) };
@@ -772,7 +800,12 @@ pub mod part_1_2 {
     }
     /// 🧯 Characteristic fire load density q_f,k (J/m²) of a registry occupancy key (aliases accepted), the 80 % fractile of Table E.4; `None` for an unknown key.
     pub fn characteristic_fire_load_j_m2(annex: AnnexChoice, occupancy: &str) -> Option<f64> {
-        occupancy_row(annex, occupancy).map(|row| row.0 * 1.0e6)
+        let key = occupancy_key(occupancy)?;
+        let table = match annex {
+            AnnexChoice::En => "ndp.en1991.1-2.fire-load-fractile",
+            AnnexChoice::De => "ndp.en1991.1-2.fire-load-bb",
+        };
+        semio_s_plugin_norm_compliance::ndp_cell_opt(table, &[key], annex).map(|q| q * 1.0e6)
     }
     /// 🔖 Registry ids the design fire load rests on: the combustion factor m always, the occupancy row of Table E.4 only for the occupancy-table basis, so an unverified table never reports a compliant verdict.
     pub fn fire_load_ndp_ids(basis: FireLoadBasis, occupancy: semio_s_artifact_norm_en1991_model::FireOccupancy) -> Vec<String> {
@@ -782,14 +815,14 @@ pub mod part_1_2 {
         }
         ids
     }
-    /// ⚠️ 80 % fractile q_f,k (MJ/m²) of Table E.4 from the registry and δ_q2 by occupancy, `None` for an unknown occupancy.
+    /// ⚠️ EN Annex E occupancy data, in MJ/m², and the neutral project risk factor.
     pub fn occupancy_row(annex: AnnexChoice, occupancy: &str) -> Option<(f64, f64)> {
         let fractile = semio_s_plugin_norm_compliance::ndp_cell_opt("ndp.en1991.1-2.fire-load-fractile", &[occupancy_key(occupancy)?], annex)?;
         Some((fractile, 1.0))
     }
     /// 🏷️ Admissible occupancies of the fire load tables.
     pub const OCCUPANCIES: [&str; 11] = ["dwelling", "residential", "office", "hospital", "school", "hotel", "library", "shopping", "mall", "theatre", "transport"];
-    /// 🧯 Characteristic fire load density q_f,k (J/m²) of the chosen basis: the Table E.4 80 % fractile of the occupancy, or the user-specified value (which must be positive); `None` when the basis is not satisfiable.
+    /// 🧯 Characteristic fire load density in J/m² from the occupancy table for the selected annex or from a positive project value.
     pub fn characteristic_fire_load_for_basis_j_m2(basis: FireLoadBasis, user_qf_k_j_m2: f64, annex: AnnexChoice, occupancy: semio_s_artifact_norm_en1991_model::FireOccupancy) -> Option<f64> {
         match basis {
             FireLoadBasis::OccupancyTable => characteristic_fire_load_j_m2(annex, occupancy_name(occupancy)),
@@ -798,14 +831,20 @@ pub mod part_1_2 {
     }
     /// 🏭 Design fire load q_f,d = q_f,k·m·δ_q1·δ_q2·δ_n (J/m²), Eq. (E.1), with q_f,k of exactly the chosen basis (no maximum of the two); `None` when the basis is not satisfiable (unknown occupancy class for the table, non-positive user value).
     pub fn design_fire_load_j_m2(basis: FireLoadBasis, user_qf_k_j_m2: f64, annex: AnnexChoice, occupancy: semio_s_artifact_norm_en1991_model::FireOccupancy, area_m2: f64, delta_n: f64) -> Option<f64> {
+        if annex == AnnexChoice::De {
+            return None;
+        }
         let qf_k = characteristic_fire_load_for_basis_j_m2(basis, user_qf_k_j_m2, annex, occupancy)?;
         let dq2 = occupancy_row(annex, occupancy_name(occupancy)).map_or(1.0, |row| row.1);
         Some(qf_k * combustion_factor_m() * delta_q1(area_m2) * dq2 * delta_n)
     }
-    /// 📜 The source of q_f,k as text for explanations: the Table E.4 row with its value, or the user value.
+    /// 📜 The characteristic fire-load basis as a localized table reference or project value.
     pub fn fire_load_source(basis: FireLoadBasis, user_qf_k_j_m2: f64, annex: AnnexChoice, occupancy: semio_s_artifact_norm_en1991_model::FireOccupancy) -> Option<(String, String)> {
         let qf_k = characteristic_fire_load_for_basis_j_m2(basis, user_qf_k_j_m2, annex, occupancy)? / 1.0e6;
         Some(match basis {
+            FireLoadBasis::OccupancyTable if annex == AnnexChoice::De => (
+                format!("Table BB.1 row {}, 90 % quantile q_f,k = {qf_k:.0} MJ/m²", occupancy_name(occupancy)),
+                format!("Tabelle BB.1 Zeile {}, 90-%-Quantil q_f,k = {qf_k:.0} MJ/m²", occupancy_name(occupancy))),
             FireLoadBasis::OccupancyTable => (format!("Table E.4 row \"{}\", 80 % fractile q_f,k = {qf_k:.0} MJ/m²", occupancy_name(occupancy)), format!("Tabelle E.4 Zeile \"{}\", 80-%-Fraktile q_f,k = {qf_k:.0} MJ/m²", occupancy_name(occupancy))),
             FireLoadBasis::UserSpecified => (format!("user-specified q_f,k = {qf_k:.0} MJ/m²"), format!("vorgegebenes q_f,k = {qf_k:.0} MJ/m²")),
         })
@@ -1214,7 +1253,7 @@ pub mod part_3 {
     pub fn skew_factor(alpha_rad: f64) -> f64 { 0.3 * (1.0 - (-250.0 * alpha_rad).exp()) }
     /// 🛑 Buffer force H_B = φ₇ v₁ √(m_c S_B) (N).
     pub fn buffer_force_n(phi_7: f64, v_1: f64, mass_kg: f64, s_b_n_m: f64) -> f64 { phi_7 * v_1 * (mass_kg * s_b_n_m).sqrt() }
-    /// ⚙️ Equivalent static force F_dyn = m e ω² (N) of a rotating machine with unbalanced mass m (kg), eccentricity e (m) and rotation frequency f (Hz), ω = 2π f (EN 1991-3, 5, unverified spec line).
+    /// ⚙️ Rotor free force F_s = m e ω² (N) with ω = 2π f, according to EN 1991-3:2006 equation 3.1.
     pub fn machine_dynamic_force_n(mass_kg: f64, eccentricity_m: f64, frequency_hz: f64) -> f64 { let omega = 2.0 * std::f64::consts::PI * frequency_hz; mass_kg * eccentricity_m * omega * omega }
 }
 

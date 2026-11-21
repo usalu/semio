@@ -1,13 +1,19 @@
 import {afterAll,expect,test} from "bun:test";
 import Ajv from "ajv";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,statSync,symlinkSync,truncateSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {ReplicaBookV1} from "../../🔁️replica/🟦️.ts";
-import {DirectoryTableV1,ensureHintsV1,hintBytesLimitV1,hookBytesLimitV1,hookCommandV1,HotSetV1,hintsPathV1,LatencyV1,nextDelayV1,silentLatencyV1,TierClocksV1,normaliseHintPathV1,parseHintTextV1,parseHookInputV1,percentileV1,takeHintsV1,writeHintV1} from "../🟦️.ts";
+import {DirectoryTableV1,ensureHintsV1,hintBytesLimitV1,hookBytesLimitV1,hookCommandV1,HotSetV1,hintsPathV1,LatencyV1,nextDelayV1,silentLatencyV1,TierClocksV1,normaliseHintPathV1,parseHintTextV1,parseHookInputV1,percentileV1,readHintsV1,writeHintV1} from "../🟦️.ts";
+
+const readAndAcknowledge=async(root:string,limit?:number):Promise<string[]>=>{
+ const receipts=await readHintsV1(root,limit);
+ for(const receipt of receipts)await receipt.acknowledge();
+ return [...new Set(receipts.flatMap(receipt=>receipt.paths))];
+};
 
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),python=testPythonV1(),scratch:string[]=[],posixTest=process.platform==="win32"?test.skip:test;
 const temp=(label:string):string=>{const path=mkdtempSync(join(tmpdir(),`tiers-${label}-`));scratch.push(path);return path;};
@@ -30,7 +36,16 @@ for(const row of fixture.paths)test(`hint path vector: ${row.name}`,async()=>{
  expect(await normaliseHintPathV1(root,row.raw.replaceAll("{root}",root).replaceAll("{outside}",outside))).toBe(row.expect??undefined);
 });
 
-for(const row of fixture.hints)test(`hint text vector: ${row.name}`,()=>{expect(parseHintTextV1(row.text)).toEqual(row.expect);});
+for(const row of fixture.hints)test(`hint text and receipt vector: ${row.name}`,async()=>{
+ const root=temp("hint-vector"),directory=await ensureHintsV1(root),file=join(directory,"vector.hint");
+ writeFileSync(file,row.text);
+ expect(parseHintTextV1(row.text)).toEqual(row.expect);
+ const receipts=await readHintsV1(root);
+ expect(receipts.flatMap(receipt=>receipt.paths)).toEqual(row.expect);
+ expect(existsSync(file)).toBe(row.expect.length>0);
+ for(const receipt of receipts)await receipt.acknowledge();
+ expect(existsSync(file)).toBe(false);
+});
 for(const row of fixture.hooks)test(`hook payload vector: ${row.name}`,()=>{expect(parseHookInputV1(row.text)).toEqual(row.expect);});
 
 for(const row of fixture.percentiles)test(`percentile vector: ${row.name}`,()=>{
@@ -88,25 +103,116 @@ test("a hint file round-trips: the dot-named temp file is invisible, paths are n
  expect(first.endsWith(".hint")).toBe(true);expect(readdirSync(directory).sort()).toEqual([first,second].sort());
  expect(readFileSync(join(directory,first),"utf8")).toBe(["a/one.txt",join(root,"a","two.txt"),"../outside.txt",".cache/f/state.json"].join("\0"));
  writeFileSync(join(directory,".unfinished"),"half");
- expect(await takeHintsV1(root)).toEqual(["a/one.txt","a/two.txt","three.txt"]);
+ expect(await readAndAcknowledge(root)).toEqual(["a/one.txt","a/two.txt","three.txt"]);
  expect(readdirSync(directory)).toEqual([".unfinished"]);
- expect(await takeHintsV1(root)).toEqual([]);
+ expect(await readAndAcknowledge(root)).toEqual([]);
  const old=(Date.now()-120_000)/1000;
  utimesSync(join(directory,".unfinished"),old,old);
- await takeHintsV1(root);
+ await readAndAcknowledge(root);
  expect(readdirSync(directory)).toEqual([]);
 });
 
 test("a hint file above the size limit is removed unread, the take stops at the path limit, and a missing directory yields nothing",async()=>{
  const root=temp("limits");
- expect(await takeHintsV1(root)).toEqual([]);
+ expect(await readAndAcknowledge(root)).toEqual([]);
  const directory=await ensureHintsV1(root);
  writeFileSync(join(directory,"big.hint"),"x".repeat(hintBytesLimitV1+1));
  for(const name of ["a.txt","b.txt","c.txt"]){await writeHintV1(root,[name]);await Bun.sleep(3);}
- expect(await takeHintsV1(root,2)).toEqual(["a.txt","b.txt"]);
+ expect(await readAndAcknowledge(root,2)).toEqual(["a.txt","b.txt"]);
  expect(readdirSync(directory).filter(name=>name.endsWith(".hint")).sort()).toHaveLength(2);
- expect(await takeHintsV1(root)).toEqual(["c.txt"]);
+ expect(await readAndAcknowledge(root)).toEqual(["c.txt"]);
  expect(existsSync(join(directory,"big.hint"))).toBe(false);
+});
+
+test("hint receipts replay before acknowledgement and retain hints replaced or edited after observation",async()=>{
+ const root=temp("receipts"),directory=await ensureHintsV1(root);
+ const first=join(directory,"a.hint"),second=join(directory,"b.hint"),replacement=join(directory,".replacement");
+ writeFileSync(first,"same.ts\0one.ts");writeFileSync(second,"same.ts\0two.ts");
+ const [a,b]=await readHintsV1(root);
+ expect([a,b].map(({name,paths})=>({name,paths}))).toEqual([{name:"a.hint",paths:["same.ts","one.ts"]},{name:"b.hint",paths:["same.ts","two.ts"]}]);
+ expect((await readHintsV1(root)).map(receipt=>receipt.name)).toEqual([a.name,b.name]);
+ writeFileSync(replacement,"same.ts\0new.ts");renameSync(replacement,first);
+ writeFileSync(second,"same.ts\0six.ts");
+ expect(await a.acknowledge()).toBe(true);expect(await b.acknowledge()).toBe(true);
+ const current=await readHintsV1(root);
+ expect(current.flatMap(receipt=>receipt.paths)).toEqual(["same.ts","new.ts","same.ts","six.ts"]);
+ expect(await current[0].acknowledge()).toBe(true);expect(await current[0].acknowledge()).toBe(true);
+ expect((await readHintsV1(root)).map(receipt=>receipt.name)).toEqual([b.name]);
+});
+
+test("a receipt never splits a finished file and duplicate files consume the read budget",async()=>{
+ const root=temp("receipt-budget"),directory=await ensureHintsV1(root);
+ writeFileSync(join(directory,"a.hint"),"one.ts\0two.ts\0three.ts");
+ for(const name of ["b.hint","c.hint","d.hint"])writeFileSync(join(directory,name),"one.ts");
+ const [first]=await readHintsV1(root,2);
+ expect(first.paths).toEqual(["one.ts","two.ts","three.ts"]);
+ expect((await readHintsV1(root,2,Date.now(),new Map([[first.name,1]]))).map(receipt=>receipt.name)).toEqual(["b.hint","c.hint"]);
+ await first.acknowledge();
+ const files=await readHintsV1(root,2);
+ expect(files.map(receipt=>receipt.name)).toEqual(["b.hint","c.hint"]);
+ for(const receipt of files)await receipt.acknowledge();
+ expect((await readHintsV1(root,2)).map(receipt=>receipt.name)).toEqual(["d.hint"]);
+ for(let index=0;index<65;index++)writeFileSync(join(directory,`repeat-${index}.hint`),"one.ts");
+ const capped=await readHintsV1(root);
+ expect(capped).toHaveLength(64);
+ for(const receipt of capped)await receipt.acknowledge();
+ expect((await readHintsV1(root)).flatMap(receipt=>receipt.paths)).toEqual(["one.ts","one.ts"]);
+});
+
+test("finished directory entries do not exhaust the budget before a regular hint",async()=>{
+ const root=temp("hint-entry-type"),directory=await ensureHintsV1(root);
+ for(let index=0;index<65;index++)mkdirSync(join(directory,`a-${index}.hint`));
+ writeFileSync(join(directory,"z.hint"),"later.ts");
+ expect((await readHintsV1(root)).flatMap(receipt=>receipt.paths)).toEqual(["later.ts"]);
+ expect(readdirSync(directory)).toHaveLength(66);
+});
+
+posixTest("a hint cursor reaches later files across capped reads while inaccessible hints remain pending",async()=>{
+ if(process.getuid?.()===0)return;
+ const root=temp("hint-cursor"),directory=await ensureHintsV1(root),cursor:{after?:string}={};
+ for(let index=0;index<65;index++){
+  const file=join(directory,`a-${index.toString().padStart(2,"0")}.hint`);
+  writeFileSync(file,"earlier.ts");chmodSync(file,0o000);
+ }
+ writeFileSync(join(directory,"y.hint"),"later.ts");
+ writeFileSync(join(directory,"z.hint"),"one.ts\0two.ts\0three.ts");
+ expect(await readHintsV1(root,undefined,undefined,undefined,cursor)).toEqual([]);
+ expect(cursor.after).toBe("a-63.hint");
+ const [later]=await readHintsV1(root,3,undefined,undefined,cursor);
+ expect(later.paths).toEqual(["later.ts"]);
+ expect(cursor.after).toBe("y.hint");
+ expect(await later.acknowledge()).toBe(true);
+ const [whole]=await readHintsV1(root,1,undefined,undefined,cursor);
+ expect(whole.paths).toEqual(["one.ts","two.ts","three.ts"]);
+ expect(await whole.acknowledge()).toBe(true);
+ expect(readdirSync(directory)).toHaveLength(65);
+ chmodSync(join(directory,"a-00.hint"),0o600);
+ expect((await readHintsV1(root,1,undefined,undefined,cursor)).flatMap(receipt=>receipt.paths)).toEqual(["earlier.ts"]);
+});
+
+posixTest("a hint left outside the aggregate byte budget is read on the next pass",async()=>{
+ if(process.getuid?.()===0)return;
+ const root=temp("hint-byte-cursor"),directory=await ensureHintsV1(root),cursor:{after?:string}={};
+ const blocked=join(directory,"a.hook");
+ writeFileSync(blocked,"");truncateSync(blocked,hookBytesLimitV1);chmodSync(blocked,0o000);
+ writeFileSync(join(directory,"z.hint"),"later.ts");
+ expect(await readHintsV1(root,undefined,undefined,undefined,cursor)).toEqual([]);
+ expect(cursor.after).toBe("a.hook");
+ expect((await readHintsV1(root,undefined,undefined,undefined,cursor)).flatMap(receipt=>receipt.paths)).toEqual(["later.ts"]);
+ expect(existsSync(blocked)).toBe(true);
+});
+
+posixTest("an acknowledgement denied by directory permissions can be retried",async()=>{
+ if(process.getuid?.()===0)return;
+ const root=temp("hint-permission"),directory=await ensureHintsV1(root),name=await writeHintV1(root,["one.ts"]);
+ const [receipt]=await readHintsV1(root);
+ chmodSync(directory,0o555);
+ try{
+  expect(await receipt.acknowledge()).toBe(false);
+  expect(existsSync(join(directory,name))).toBe(true);
+ }finally{chmodSync(directory,0o1777);}
+ expect(await receipt.acknowledge()).toBe(true);
+ expect(existsSync(join(directory,name))).toBe(false);
 });
 
 posixTest("the drop directory is open to every local account and an absolute path through a symbolic link of the worktree is found",async()=>{
@@ -164,7 +270,7 @@ test("a hook payload file is parsed by the daemon side, even when the payload is
  writeFileSync(join(directory,"one.hook"),payload);
  writeFileSync(join(directory,"two.hook"),"{not json");
  writeFileSync(join(directory,"three.hook"),JSON.stringify({tool_input:{notebook_path:"n/b.ipynb"}}));
- expect((await takeHintsV1(root)).sort()).toEqual(["big/new.ts","n/b.ipynb"]);
+ expect((await readAndAcknowledge(root)).sort()).toEqual(["big/new.ts","n/b.ipynb"]);
  expect(readdirSync(directory)).toEqual([]);
  if(process.platform==="win32")return;
  const run=(input:string,project:string)=>Bun.spawnSync(["bash","-c",hookCommandV1],{stdin:Buffer.from(input),env:{...process.env,CLAUDE_PROJECT_DIR:project},stdout:"pipe",stderr:"pipe"});
@@ -172,10 +278,10 @@ test("a hook payload file is parsed by the daemon side, even when the payload is
  expect(first.exitCode).toBe(0);expect(first.stderr.toString()).toBe("");
  expect(readdirSync(directory).filter(name=>name.endsWith(".hook"))).toHaveLength(1);
  expect(readdirSync(directory).filter(name=>name.startsWith("."))).toEqual([]);
- expect(await takeHintsV1(root)).toEqual(["sh/a b.ts"]);
+ expect(await readAndAcknowledge(root)).toEqual(["sh/a b.ts"]);
  expect(run("anything",temp("nodir")).exitCode).toBe(0);
  expect(run("",root).exitCode).toBe(0);
- expect(await takeHintsV1(root)).toEqual([]);
+ expect(await readAndAcknowledge(root)).toEqual([]);
 });
 
 test("the checked-in project settings register the hook command of the tiers module for every file-writing tool",()=>{

@@ -2980,13 +2980,10 @@
               "z": 3.7,
               "filled": true,
               "tone": 0.3,
-              "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
-              "rx": 0.03,
-              "ry": 0.03,
+              "kind": "path",
               "region": "capillary",
-              "material": "stainless-steel"
+              "material": "stainless-steel",
+              "d": "M 0.03 0.0 L 0.029544 0.005209 L 0.028191 0.010261 L 0.025981 0.015 L 0.022981 0.019284 L 0.019284 0.022981 L 0.015 0.025981 L 0.010261 0.028191 L 0.005209 0.029544 L 0.0 0.03 L -0.005209 0.029544 L -0.010261 0.028191 L -0.015 0.025981 L -0.019284 0.022981 L -0.022981 0.019284 L -0.025981 0.015 L -0.028191 0.010261 L -0.029544 0.005209 L -0.03 0.0 L -0.029544 -0.005209 L -0.028191 -0.010261 L -0.025981 -0.015 L -0.022981 -0.019284 L -0.019284 -0.022981 L -0.015 -0.025981 L -0.010261 -0.028191 L -0.005209 -0.029544 L -0.0 -0.03 L 0.005209 -0.029544 L 0.010261 -0.028191 L 0.015 -0.025981 L 0.019284 -0.022981 L 0.022981 -0.019284 L 0.025981 -0.015 L 0.028191 -0.010261 L 0.029544 -0.005209 Z M 0.015 -0.0 L 0.014772 -0.002605 L 0.014095 -0.00513 L 0.01299 -0.0075 L 0.011491 -0.009642 L 0.009642 -0.011491 L 0.0075 -0.01299 L 0.00513 -0.014095 L 0.002605 -0.014772 L 0.0 -0.015 L -0.002605 -0.014772 L -0.00513 -0.014095 L -0.0075 -0.01299 L -0.009642 -0.011491 L -0.011491 -0.009642 L -0.01299 -0.0075 L -0.014095 -0.00513 L -0.014772 -0.002605 L -0.015 -0.0 L -0.014772 0.002605 L -0.014095 0.00513 L -0.01299 0.0075 L -0.011491 0.009642 L -0.009642 0.011491 L -0.0075 0.01299 L -0.00513 0.014095 L -0.002605 0.014772 L -0.0 0.015 L 0.002605 0.014772 L 0.00513 0.014095 L 0.0075 0.01299 L 0.009642 0.011491 L 0.011491 0.009642 L 0.01299 0.0075 L 0.014095 0.00513 L 0.014772 0.002605 Z"
             }
           ]
         },
@@ -3564,7 +3561,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "copper",
-          "areaM2": 0.0032,
+          "areaM2": 0.00215,
           "characteristicLengthM": 0.046,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -5675,7 +5672,7 @@
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.017, 0.0], [0.017, 0.029], [0.018, 0.03], [0.034, 0.03], [0.035, 0.029], [0.035, 0.0]],
+            "profile": [[0.017, 0.015], [0.017, 0.029], [0.018, 0.03], [0.034, 0.03], [0.035, 0.029], [0.035, 0.015], [0.017, 0.015]],
             "axis": [1.0, 0.0, 0.0],
             "origin": [0.0, 0.0, 0.0]
           },
@@ -5687,6 +5684,31 @@
             "role": "body",
             "tone": 0.1,
             "sections": [
+              {
+                "at": [0.0172, 0.0, 0.0],
+                "rx": 0.0008,
+                "ry": 0.0008
+              },
+              {
+                "at": [0.0182, 0.0, 0.006],
+                "rx": 0.0008,
+                "ry": 0.0008
+              },
+              {
+                "at": [0.0194, 0.0, 0.012],
+                "rx": 0.0008,
+                "ry": 0.0008
+              },
+              {
+                "at": [0.02, 0.0, 0.018],
+                "rx": 0.0008,
+                "ry": 0.0008
+              },
+              {
+                "at": [0.02, 0.0, 0.024],
+                "rx": 0.0008,
+                "ry": 0.0008
+              },
               {
                 "at": [0.02, 0.0, 0.029],
                 "rx": 0.0008,
@@ -5876,7 +5898,7 @@
             "bone": "body",
             "material": "brass",
             "role": "body",
-            "tone": 0.5,
+            "tone": 0.3,
             "radii": [0.009, 0.009, 0.009],
             "transform": {
               "translation": [0.0, 0.0, 0.0]
@@ -5935,7 +5957,7 @@
             "bone": "body",
             "material": "brass",
             "role": "body",
-            "tone": 0.2,
+            "tone": 0.3,
             "radii": [0.0075, 0.0075, 0.0075],
             "transform": {
               "translation": [0.0, -0.003, 0.0]
@@ -5946,12 +5968,16 @@
         ],
         "decisions": [
           {
-            "en": "Body: at 1:100 nothing under 15 mm survives as its own part. Liquid line and flare nut are one stepped column drawn 15 mm thick, the forging is a round barrel of 23 mm, stub, socket and pipe are one outlet bar of 15 mm, the spindle boss and cap one inclined stub, the element a plain disc with a central boss, the seven capillary turns one disc of 60 mm resting on that boss, bulb and suction line two plain bars; band, lock, screw, nib, flare and chamfers are gone. Only the lead of the capillary keeps its true 1.6 mm as a slender tube, because it is what ties the bulb to the valve.",
-            "de": "Körper: Bei 1:100 bleibt nichts unter 15 mm als eigenes Teil. Flüssigkeitsleitung und Bördelmutter sind eine gestufte, 15 mm dick gezeichnete Säule, das Schmiedeteil ist ein runder Zylinder von 23 mm, Stutzen, Muffe und Rohr sind ein Ausgangsstab von 15 mm, Spindelauge und Kappe ein geneigter Stumpf, das Element eine einfache Scheibe mit Mittelnabe, die sieben Kapillarwindungen eine Scheibe von 60 mm auf dieser Nabe, Fühler und Saugleitung zwei einfache Stäbe; Band, Schloss, Schraube, Füllnippel, Bördel und Fasen entfallen. Nur die Zuleitung der Kapillare behält als schlankes Rohr ihre echten 1,6 mm, weil sie den Fühler mit dem Ventil verbindet."
+            "en": "Body: at 1:100 nothing under 15 mm survives as its own part. Liquid line and flare nut are one stepped column drawn 15 mm thick, the forging is a round barrel of 23 mm, stub, socket and pipe are one outlet bar of 15 mm, the spindle boss and cap one inclined stub, the element a plain disc with a central boss, bulb and suction line two plain bars; band, lock, screw, nib, flare and chamfers are gone. Only the lead of the capillary keeps its true 1.6 mm as a slender tube, because it is what ties the bulb to the valve.",
+            "de": "Körper: Bei 1:100 bleibt nichts unter 15 mm als eigenes Teil. Flüssigkeitsleitung und Bördelmutter sind eine gestufte, 15 mm dick gezeichnete Säule, das Schmiedeteil ist ein runder Zylinder von 23 mm, Stutzen, Muffe und Rohr sind ein Ausgangsstab von 15 mm, Spindelauge und Kappe ein geneigter Stumpf, das Element eine einfache Scheibe mit Mittelnabe, Fühler und Saugleitung zwei einfache Stäbe; Band, Schloss, Schraube, Füllnippel, Bördel und Fasen entfallen. Nur die Zuleitung der Kapillare behält als schlankes Rohr ihre echten 1,6 mm, weil sie den Fühler mit dem Ventil verbindet."
           },
           {
-            "en": "Thermal: each region references its merged body mass; the capillary region is the coil disc and the lead.",
-            "de": "Thermik: Jede Region verweist auf ihre zusammengefasste Körpermasse; die Region Kapillare besteht aus der Windungsscheibe und der Zuleitung."
+            "en": "Body: the seven capillary turns are one ring band of 60 mm by 18 mm with a 30 mm opening, so the element and its nipple show through it as on the real valve; the ring hangs on the capillary, which rises from the nipple into the band (a slender 1.6 mm tube, as in 1:50) and leaves it as the lead to the bulb. The plan draws the same ring.",
+            "de": "Körper: Die sieben Kapillarwindungen sind ein Ringband von 60 mm mal 18 mm mit 30 mm Öffnung, sodass Element und Nippel wie am echten Ventil hindurch sichtbar sind; der Ring hängt an der Kapillare, die vom Nippel in das Band steigt (ein schlankes 1,6-mm-Rohr wie bei 1:50) und es als Zuleitung zum Fühler verlässt. Der Grundriss zeichnet denselben Ring."
+          },
+          {
+            "en": "Thermal: each region references its merged body mass; the capillary region is the coil ring and the lead.",
+            "de": "Thermik: Jede Region verweist auf ihre zusammengefasste Körpermasse; die Region Kapillare besteht aus der Windungsring und der Zuleitung."
           },
           {
             "en": "Structure: liquid line and valve body are one column of 15 mm; outlet bar, element disc, spindle stub and suction line bar are their own members; one joint marks the valve centre where the outlet and the spindle branch off; the pin and the two rollers sit in the three cut pipe ends; one mass stands for the whole 0.4 kg.",
@@ -5970,41 +5996,10 @@
             "material": "copper",
             "role": "body",
             "tone": 0.4,
-            "profile": [
-              [
-                0.022,
-                0.0
-              ],
-              [
-                0.022,
-                0.0075
-              ],
-              [
-                0.05,
-                0.0075
-              ],
-              [
-                0.068,
-                0.011
-              ],
-              [
-                0.07,
-                0.0
-              ]
-            ],
-            "axis": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              -0.093,
-              0.0
-            ],
-            "sectionFaces": [
-              "-v"
-            ]
+            "profile": [[0.022, 0.0], [0.022, 0.0075], [0.048, 0.0075], [0.052, 0.011], [0.066, 0.011], [0.07, 0.009], [0.07, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.093, 0.0],
+            "sectionFaces": ["-v"]
           },
           {
             "id": "body",
@@ -6013,38 +6008,9 @@
             "material": "brass",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.066,
-                0.0
-              ],
-              [
-                0.066,
-                0.0115
-              ],
-              [
-                0.106,
-                0.0115
-              ],
-              [
-                0.1085,
-                0.008
-              ],
-              [
-                0.1085,
-                0.0
-              ]
-            ],
-            "axis": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              -0.093,
-              0.0
-            ]
+            "profile": [[0.066, 0.0], [0.066, 0.0115], [0.105, 0.0115], [0.1085, 0.0075], [0.1085, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.093, 0.0]
           },
           {
             "id": "outlet",
@@ -6053,37 +6019,10 @@
             "material": "copper",
             "role": "body",
             "tone": 0.4,
-            "profile": [
-              [
-                0.008,
-                0.0
-              ],
-              [
-                0.008,
-                0.0075
-              ],
-              [
-                0.082,
-                0.0075
-              ],
-              [
-                0.082,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "sectionFaces": [
-              "+u"
-            ]
+            "profile": [[0.008, 0.0], [0.008, 0.0075], [0.082, 0.0075], [0.082, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["+u"]
           },
           {
             "id": "head",
@@ -6092,42 +6031,9 @@
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.55,
-            "profile": [
-              [
-                -0.0015,
-                0.0
-              ],
-              [
-                -0.0015,
-                0.008
-              ],
-              [
-                0.006,
-                0.021
-              ],
-              [
-                0.0105,
-                0.021
-              ],
-              [
-                0.0175,
-                0.005
-              ],
-              [
-                0.0175,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
+            "profile": [[-0.0015, 0.0], [-0.0015, 0.008], [0.005, 0.021], [0.011, 0.021], [0.0175, 0.005], [0.0175, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
           },
           {
             "id": "capillary-coil",
@@ -6136,42 +6042,9 @@
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [
-              [
-                0.017,
-                0.0
-              ],
-              [
-                0.017,
-                0.029
-              ],
-              [
-                0.018,
-                0.03
-              ],
-              [
-                0.034,
-                0.03
-              ],
-              [
-                0.035,
-                0.029
-              ],
-              [
-                0.035,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
+            "profile": [[0.015, 0.0], [0.015, 0.029], [0.016, 0.03], [0.034, 0.03], [0.035, 0.029], [0.035, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
           },
           {
             "id": "capillary",
@@ -6182,47 +6055,27 @@
             "tone": 0.1,
             "sections": [
               {
-                "at": [
-                  0.02,
-                  0.0,
-                  0.029
-                ],
+                "at": [0.02, 0.0, 0.029],
                 "rx": 0.0008,
                 "ry": 0.0008
               },
               {
-                "at": [
-                  0.012494,
-                  0.023904,
-                  0.02792
-                ],
+                "at": [0.012494, 0.023904, 0.02792],
                 "rx": 0.0008,
                 "ry": 0.0008
               },
               {
-                "at": [
-                  -0.002518,
-                  0.034632,
-                  0.02576
-                ],
+                "at": [-0.002518, 0.034632, 0.02576],
                 "rx": 0.0008,
                 "ry": 0.0008
               },
               {
-                "at": [
-                  -0.013777,
-                  0.048708,
-                  0.02414
-                ],
+                "at": [-0.013777, 0.048708, 0.02414],
                 "rx": 0.0008,
                 "ry": 0.0008
               },
               {
-                "at": [
-                  -0.01475,
-                  0.057,
-                  0.024
-                ],
+                "at": [-0.01475, 0.057, 0.024],
                 "rx": 0.0008,
                 "ry": 0.0008
               }
@@ -6238,38 +6091,9 @@
             "material": "brass",
             "role": "body",
             "tone": 0.3,
-            "profile": [
-              [
-                -0.006,
-                0.0
-              ],
-              [
-                -0.006,
-                0.0085
-              ],
-              [
-                0.0205,
-                0.0085
-              ],
-              [
-                0.022,
-                0.007
-              ],
-              [
-                0.022,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
+            "profile": [[-0.006, 0.0], [-0.006, 0.0085], [0.022, 0.0085], [0.022, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
           },
           {
             "id": "bulb",
@@ -6278,42 +6102,9 @@
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.0,
-                0.0
-              ],
-              [
-                0.0,
-                0.005
-              ],
-              [
-                0.003,
-                0.0075
-              ],
-              [
-                0.047,
-                0.0075
-              ],
-              [
-                0.05,
-                0.005
-              ],
-              [
-                0.05,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
+            "profile": [[0.0, 0.0], [0.0, 0.004], [0.0035, 0.0075], [0.0465, 0.0075], [0.05, 0.004], [0.05, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
           },
           {
             "id": "suction-line",
@@ -6322,38 +6113,10 @@
             "material": "copper",
             "role": "body",
             "tone": 0.4,
-            "profile": [
-              [
-                -0.007,
-                0.0
-              ],
-              [
-                -0.007,
-                0.008
-              ],
-              [
-                0.057,
-                0.008
-              ],
-              [
-                0.057,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.01525,
-              0.0
-            ],
-            "sectionFaces": [
-              "-u",
-              "+u"
-            ]
+            "profile": [[-0.007, 0.0], [-0.007, 0.008], [0.057, 0.008], [0.057, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.01525, 0.0],
+            "sectionFaces": ["-u", "+u"]
           }
         ],
         "thermal": [
@@ -6361,9 +6124,7 @@
             "id": "th-inlet",
             "of": "inlet",
             "region": "inlet",
-            "sectionFaces": [
-              "-v"
-            ]
+            "sectionFaces": ["-v"]
           },
           {
             "id": "th-body",
@@ -6374,9 +6135,7 @@
             "id": "th-outlet",
             "of": "outlet",
             "region": "outlet",
-            "sectionFaces": [
-              "+u"
-            ]
+            "sectionFaces": ["+u"]
           },
           {
             "id": "th-head",
@@ -6407,10 +6166,7 @@
             "id": "th-suction-line",
             "of": "suction-line",
             "region": "suction-line",
-            "sectionFaces": [
-              "-u",
-              "+u"
-            ]
+            "sectionFaces": ["-u", "+u"]
           }
         ],
         "structure": [
@@ -6421,34 +6177,9 @@
             "material": "brass",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.022,
-                0.0
-              ],
-              [
-                0.022,
-                0.0075
-              ],
-              [
-                0.108,
-                0.0075
-              ],
-              [
-                0.108,
-                0.0
-              ]
-            ],
-            "axis": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              -0.093,
-              0.0
-            ],
+            "profile": [[0.022, 0.0], [0.022, 0.0075], [0.108, 0.0075], [0.108, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.093, 0.0],
             "member": "body",
             "part": "member"
           },
@@ -6478,25 +6209,17 @@
           },
           {
             "id": "joint-body",
+            "kind": "ellipsoid",
             "bone": "body",
             "material": "brass",
             "role": "body",
-            "tone": 0.5,
-            "member": "body",
-            "part": "joint",
-            "kind": "box",
-            "size": [
-              0.018,
-              0.018,
-              0.018
-            ],
+            "tone": 0.3,
+            "radii": [0.01, 0.01, 0.01],
             "transform": {
-              "translation": [
-                0,
-                0,
-                0
-              ]
-            }
+              "translation": [0.0, 0.0, 0.0]
+            },
+            "member": "body",
+            "part": "joint"
           },
           {
             "id": "support-liquid-line",
@@ -6505,17 +6228,9 @@
             "material": "copper",
             "role": "body",
             "tone": 0.3,
-            "radii": [
-              0.0075,
-              0.0075,
-              0.0075
-            ],
+            "radii": [0.0075, 0.0075, 0.0075],
             "transform": {
-              "translation": [
-                0.0,
-                -0.0635,
-                0.0
-              ]
+              "translation": [0.0, -0.0635, 0.0]
             },
             "member": "body",
             "part": "support",
@@ -6528,17 +6243,9 @@
             "material": "copper",
             "role": "body",
             "tone": 0.3,
-            "radii": [
-              0.0075,
-              0.0075,
-              0.0075
-            ],
+            "radii": [0.0075, 0.0075, 0.0075],
             "transform": {
-              "translation": [
-                0.0745,
-                0.0,
-                0.0
-              ]
+              "translation": [0.0745, 0.0, 0.0]
             },
             "member": "body",
             "part": "support",
@@ -6551,17 +6258,9 @@
             "material": "copper",
             "role": "body",
             "tone": 0.3,
-            "radii": [
-              0.0075,
-              0.0075,
-              0.0075
-            ],
+            "radii": [0.0075, 0.0075, 0.0075],
             "transform": {
-              "translation": [
-                0.0495,
-                0.01525,
-                0.0
-              ]
+              "translation": [0.0495, 0.01525, 0.0]
             },
             "member": "bulb",
             "part": "support",
@@ -6573,18 +6272,10 @@
             "bone": "body",
             "material": "brass",
             "role": "body",
-            "tone": 0.2,
-            "radii": [
-              0.0075,
-              0.0075,
-              0.0075
-            ],
+            "tone": 0.3,
+            "radii": [0.008, 0.008, 0.008],
             "transform": {
-              "translation": [
-                0.0,
-                -0.003,
-                0.0
-              ]
+              "translation": [0.0, -0.003, 0.0]
             },
             "member": "body",
             "part": "mass"
@@ -6592,8 +6283,16 @@
         ],
         "decisions": [
           {
-            "en": "A five-station sensing line leaves the diaphragm and meets the bulb. The nut and cap share a tapered transition with the valve stem. The three pipe connections retain their bearing points.",
-            "de": "Eine Fühlerleitung aus fünf Querschnitten verbindet Membran und Fühler. Überwurf und Kappe gehen konisch in den Ventilschaft über. Die drei Rohranschlüsse behalten ihre Lagerpunkte."
+            "en": "Body, 1:200 (model only, 30 mm feature; the drawing is unavailable at this scale): the valve keeps the angle-valve silhouette of the Danfoss T 2 at its real size: the straight 3/8 in liquid line with the flare nut merged into one chamfered collar, the 23 mm forged barrel, the 15 mm outlet bar ending 54 mm beside the axis, the spindle stub inclined 30 degrees downwards, the 42 mm element as a lens with the coiled capillary as one closed 60 mm drum seated on its cap, the 1.6 mm lead in five stations, the 14.5 by 50 mm bulb as a round-ended rod lying on the 16 mm suction line.",
+            "de": "Körper, 1:200 (nur Modell, 30-mm-Merkmal; die Zeichnung ist bei diesem Maßstab nicht verfügbar): Das Ventil behält die Eckventil-Silhouette des Danfoss T 2 in echter Größe: die gerade 3/8-Zoll-Flüssigkeitsleitung mit der Bördelmutter als ein gefaster Bund, der 23-mm-Schmiedezylinder, der 15-mm-Ausgangsstab 54 mm neben der Achse endend, der um 30 Grad abwärts geneigte Spindelstumpf, das 42-mm-Element als Linse mit der aufgewickelten Kapillare als geschlossene 60-mm-Trommel auf seinem Deckel, die 1,6-mm-Zuleitung in fünf Stationen, der Fühler von 14,5 mal 50 mm als Stab mit runden Enden auf der 16-mm-Saugleitung."
+          },
+          {
+            "en": "Thermal: every region references its body mass; the capillary region is the drum and the lead; the cut pipe ends are section faces.",
+            "de": "Thermik: Jede Region verweist auf ihre Körpermasse; die Region Kapillare ist die Trommel mit der Zuleitung; die Rohrschnittenden sind Schnittflächen."
+          },
+          {
+            "en": "Structure: the liquid line and the body are one 15 mm column; the outlet, the element, the spindle housing and the suction line are their own members; one joint at the valve centre where outlet and spindle branch; a pin and two rollers in the cut pipe ends; one mass for the 0.4 kg.",
+            "de": "Tragwerk: Flüssigkeitsleitung und Körper sind eine 15-mm-Säule; Ausgang, Element, Spindelgehäuse und Saugleitung sind eigene Stäbe; ein Gelenk in der Ventilmitte, wo Ausgang und Spindel abzweigen; ein Festlager und zwei Rollenlager in den Rohrschnittenden; eine Masse für die 0,4 kg."
           }
         ]
       },
@@ -6608,37 +6307,10 @@
             "material": "copper",
             "role": "body",
             "tone": 0.4,
-            "profile": [
-              [
-                0.022,
-                0
-              ],
-              [
-                0.022,
-                0.0075
-              ],
-              [
-                0.07,
-                0.0105
-              ],
-              [
-                0.07,
-                0
-              ]
-            ],
-            "axis": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              -0.093,
-              0.0
-            ],
-            "sectionFaces": [
-              "-v"
-            ]
+            "profile": [[0.022, 0.0], [0.022, 0.008], [0.068, 0.008], [0.068, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.093, 0.0],
+            "sectionFaces": ["-v"]
           },
           {
             "id": "body",
@@ -6647,38 +6319,9 @@
             "material": "brass",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.066,
-                0.0
-              ],
-              [
-                0.066,
-                0.0115
-              ],
-              [
-                0.106,
-                0.0115
-              ],
-              [
-                0.1085,
-                0.008
-              ],
-              [
-                0.1085,
-                0.0
-              ]
-            ],
-            "axis": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              -0.093,
-              0.0
-            ]
+            "profile": [[0.066, 0.0], [0.066, 0.0115], [0.1085, 0.0115], [0.1085, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.093, 0.0]
           },
           {
             "id": "outlet",
@@ -6687,37 +6330,10 @@
             "material": "copper",
             "role": "body",
             "tone": 0.4,
-            "profile": [
-              [
-                0.008,
-                0.0
-              ],
-              [
-                0.008,
-                0.0075
-              ],
-              [
-                0.082,
-                0.0075
-              ],
-              [
-                0.082,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "sectionFaces": [
-              "+u"
-            ]
+            "profile": [[0.008, 0.0], [0.008, 0.0075], [0.082, 0.0075], [0.082, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["+u"]
           },
           {
             "id": "head",
@@ -6726,70 +6342,9 @@
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.55,
-            "profile": [
-              [
-                -0.0015,
-                0.0
-              ],
-              [
-                -0.0015,
-                0.008
-              ],
-              [
-                0.006,
-                0.021
-              ],
-              [
-                0.0105,
-                0.021
-              ],
-              [
-                0.0175,
-                0.005
-              ],
-              [
-                0.0175,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          {
-            "id": "capillary-coil",
-            "kind": "revolve",
-            "bone": "head",
-            "material": "stainless-steel",
-            "role": "body",
-            "tone": 0.3,
-            "profile": [
-              [
-                0.017,
-                0.03
-              ],
-              [
-                0.035,
-                0.03
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
+            "profile": [[-0.0015, 0.0], [-0.0015, 0.008], [0.005, 0.021], [0.011, 0.021], [0.015, 0.012], [0.015, 0.03], [0.035, 0.03], [0.035, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
           },
           {
             "id": "capillary",
@@ -6800,29 +6355,17 @@
             "tone": 0.1,
             "sections": [
               {
-                "at": [
-                  0.02,
-                  0.0,
-                  0.029
-                ],
+                "at": [0.02, 0.0, 0.029],
                 "rx": 0.0008,
                 "ry": 0.0008
               },
               {
-                "at": [
-                  -0.002518,
-                  0.034632,
-                  0.02576
-                ],
+                "at": [-0.002518, 0.034632, 0.02576],
                 "rx": 0.0008,
                 "ry": 0.0008
               },
               {
-                "at": [
-                  -0.01475,
-                  0.057,
-                  0.024
-                ],
+                "at": [-0.01475, 0.057, 0.024],
                 "rx": 0.0008,
                 "ry": 0.0008
               }
@@ -6832,40 +6375,26 @@
             "slender": true
           },
           {
+            "id": "stem",
+            "kind": "revolve",
+            "bone": "stem",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [[-0.006, 0.0], [-0.006, 0.0085], [0.022, 0.0085], [0.022, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
             "id": "bulb",
             "kind": "revolve",
             "bone": "bulb",
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.0,
-                0.0
-              ],
-              [
-                0.003,
-                0.0075
-              ],
-              [
-                0.047,
-                0.0075
-              ],
-              [
-                0.05,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
+            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.05, 0.0075], [0.05, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
           },
           {
             "id": "suction-line",
@@ -6874,38 +6403,10 @@
             "material": "copper",
             "role": "body",
             "tone": 0.4,
-            "profile": [
-              [
-                -0.007,
-                0.0
-              ],
-              [
-                -0.007,
-                0.008
-              ],
-              [
-                0.057,
-                0.008
-              ],
-              [
-                0.057,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.01525,
-              0.0
-            ],
-            "sectionFaces": [
-              "-u",
-              "+u"
-            ]
+            "profile": [[-0.007, 0.0], [-0.007, 0.008], [0.057, 0.008], [0.057, 0.0]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.0, 0.01525, 0.0],
+            "sectionFaces": ["-u", "+u"]
           }
         ],
         "thermal": [
@@ -6913,9 +6414,7 @@
             "id": "th-inlet",
             "of": "inlet",
             "region": "inlet",
-            "sectionFaces": [
-              "-v"
-            ]
+            "sectionFaces": ["-v"]
           },
           {
             "id": "th-body",
@@ -6926,19 +6425,12 @@
             "id": "th-outlet",
             "of": "outlet",
             "region": "outlet",
-            "sectionFaces": [
-              "+u"
-            ]
+            "sectionFaces": ["+u"]
           },
           {
             "id": "th-head",
             "of": "head",
             "region": "head"
-          },
-          {
-            "id": "th-capillary-coil",
-            "of": "capillary-coil",
-            "region": "capillary"
           },
           {
             "id": "th-capillary",
@@ -6947,44 +6439,8 @@
           },
           {
             "id": "th-stem",
-            "region": "body",
-            "kind": "revolve",
-            "bone": "stem",
-            "material": "brass",
-            "role": "body",
-            "tone": 0.3,
-            "profile": [
-              [
-                -0.006,
-                0.0
-              ],
-              [
-                -0.006,
-                0.0085
-              ],
-              [
-                0.0205,
-                0.0085
-              ],
-              [
-                0.022,
-                0.007
-              ],
-              [
-                0.022,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
+            "of": "stem",
+            "region": "body"
           },
           {
             "id": "th-bulb",
@@ -6995,10 +6451,7 @@
             "id": "th-suction-line",
             "of": "suction-line",
             "region": "suction-line",
-            "sectionFaces": [
-              "-u",
-              "+u"
-            ]
+            "sectionFaces": ["-u", "+u"]
           }
         ],
         "structure": [
@@ -7009,30 +6462,9 @@
             "material": "brass",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.022,
-                0.0075
-              ],
-              [
-                0.07,
-                0.0105
-              ],
-              [
-                0.108,
-                0.009
-              ]
-            ],
-            "axis": [
-              0.0,
-              1.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              -0.093,
-              0.0
-            ],
+            "profile": [[0.022, 0.0], [0.022, 0.008], [0.066, 0.008], [0.066, 0.0115], [0.108, 0.0115], [0.108, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.093, 0.0],
             "member": "body",
             "part": "member"
           },
@@ -7050,45 +6482,9 @@
           },
           {
             "id": "member-spindle-housing",
+            "of": "stem",
             "member": "stem",
-            "part": "member",
-            "kind": "revolve",
-            "bone": "stem",
-            "material": "brass",
-            "role": "body",
-            "tone": 0.3,
-            "profile": [
-              [
-                -0.006,
-                0.0
-              ],
-              [
-                -0.006,
-                0.0085
-              ],
-              [
-                0.0205,
-                0.0085
-              ],
-              [
-                0.022,
-                0.007
-              ],
-              [
-                0.022,
-                0.0
-              ]
-            ],
-            "axis": [
-              1.0,
-              0.0,
-              0.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ]
+            "part": "member"
           },
           {
             "id": "member-suction-line",
@@ -7103,17 +6499,9 @@
             "material": "copper",
             "role": "body",
             "tone": 0.3,
-            "radii": [
-              0.0075,
-              0.0075,
-              0.0075
-            ],
+            "radii": [0.008, 0.008, 0.008],
             "transform": {
-              "translation": [
-                0.0,
-                -0.0635,
-                0.0
-              ]
+              "translation": [0.0, -0.063, 0.0]
             },
             "member": "body",
             "part": "support",
@@ -7126,17 +6514,9 @@
             "material": "copper",
             "role": "body",
             "tone": 0.3,
-            "radii": [
-              0.0075,
-              0.0075,
-              0.0075
-            ],
+            "radii": [0.008, 0.008, 0.008],
             "transform": {
-              "translation": [
-                0.0745,
-                0.0,
-                0.0
-              ]
+              "translation": [0.074, 0.0, 0.0]
             },
             "member": "body",
             "part": "support",
@@ -7149,17 +6529,9 @@
             "material": "copper",
             "role": "body",
             "tone": 0.3,
-            "radii": [
-              0.0075,
-              0.0075,
-              0.0075
-            ],
+            "radii": [0.008, 0.008, 0.008],
             "transform": {
-              "translation": [
-                0.0495,
-                0.01525,
-                0.0
-              ]
+              "translation": [0.049, 0.01525, 0.0]
             },
             "member": "bulb",
             "part": "support",
@@ -7167,31 +6539,31 @@
           },
           {
             "id": "mass-valve",
+            "kind": "ellipsoid",
             "bone": "body",
             "material": "brass",
             "role": "body",
-            "tone": 0.2,
-            "member": "body",
-            "part": "mass",
-            "kind": "box",
-            "size": [
-              0.015,
-              0.015,
-              0.015
-            ],
+            "tone": 0.3,
+            "radii": [0.01, 0.01, 0.01],
             "transform": {
-              "translation": [
-                0,
-                -0.003,
-                0
-              ]
-            }
+              "translation": [0.0, -0.003, 0.0]
+            },
+            "member": "body",
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "The brass valve reads as a tee under the diaphragm. The capillary coil is one short drum with a three-station tail to the sensing bulb. The suction pipe stays parallel to the bulb.",
-            "de": "Der Messingkörper bildet ein T-Stück unter der Membran. Die Kapillarwicklung ist eine kurze Trommel mit dreiteiligem Übergang zum Fühler. Die Saugleitung verläuft parallel zum Fühler."
+            "en": "Body, 1:500 (model only, 75 mm feature; the drawing is unavailable at this scale): a tee of straight liquid line, forged barrel and outlet bar; element and coil are one turned head (the element lens under the coil drum); the inclined spindle stub stays because it makes the angle valve; bulb and suction line are plain rods joined to the head by the three-station capillary lead.",
+            "de": "Körper, 1:500 (nur Modell, 75-mm-Merkmal; die Zeichnung ist bei diesem Maßstab nicht verfügbar): ein T aus gerader Flüssigkeitsleitung, Schmiedezylinder und Ausgangsstab; Element und Wicklung sind ein gedrehter Kopf (die Elementlinse unter der Wicklungstrommel); der geneigte Spindelstumpf bleibt, weil er das Eckventil ausmacht; Fühler und Saugleitung sind einfache Stäbe, mit dem Kopf über die dreiteilige Kapillarzuleitung verbunden."
+          },
+          {
+            "en": "Thermal: every region references its body mass; the capillary region is the lead (the coil is merged into the head); the cut pipe ends are section faces.",
+            "de": "Thermik: Jede Region verweist auf ihre Körpermasse; die Region Kapillare ist die Zuleitung (die Wicklung ist im Kopf aufgegangen); die Rohrschnittenden sind Schnittflächen."
+          },
+          {
+            "en": "Structure: one column, the outlet, the element, the spindle housing and the suction line as members, a pin and two rollers in the cut pipe ends, one mass.",
+            "de": "Tragwerk: eine Säule, Ausgang, Element, Spindelgehäuse und Saugleitung als Stäbe, ein Festlager und zwei Rollenlager in den Rohrschnittenden, eine Masse."
           }
         ]
       }

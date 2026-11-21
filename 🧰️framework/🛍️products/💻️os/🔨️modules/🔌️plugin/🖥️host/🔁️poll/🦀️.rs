@@ -1,10 +1,11 @@
 //! 🔁️ Source-owned Poll transport over the real input, scalar and unique-output frontiers.
 use semio_framework_actor::{OriginalGuestExecutionBudget, OriginalGuestExecutionReceipt, OriginalJobBudget};
 use semio_framework_job::{OriginalCallerReturnPlace, OriginalNativeRetirement, OriginalSourceBinding, OriginalTurnFailure, StepContext};
-use semio_framework_job_native_decode::{OriginalNativeDecodeOutcome, OriginalNativeDecodePolicy};
+use semio_framework_job_native_decode::OriginalNativeDecodeOutcome;
+pub use semio_framework_job_native_decode::OriginalNativeDecodePolicy;
 use semio_framework_pack_json::{JsonReadLimits, JsonWriteSource};
 use semio_framework_pack_json_output_receiving::{OriginalJsonOutputClose, OriginalJsonOutputOutcome, OriginalJsonOutputSource};
-use semio_framework_value::{DslValue, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, ValueError, ValueRefusalKind, retirement::{RetireOwned, controlled::ControlledRetirement}};
+use semio_framework_value::{DslValue, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, ValueError, ValueRefusalKind, retirement::{RetireOwned, controlled::ControlledRetirement}};
 use semio_framework_value_native_owned::NativeReceive;
 use semio_plugin_guest_contract::{operation_authority::owned_result::{self, OwnedReturn}, original_actor_context::{OriginalActorFixedCall, OriginalActorFixedKind, OriginalActorFixedReceipt}};
 use semio_plugin_host_guest_runtime::{CompiledHandle, GuestInstance, GuestRuntimes, OriginalCoreValue, OwnedOriginalCallProgress, OwnedOriginalCallResult, OwnedOriginalCallStatus, OwnedSemioExport};
@@ -29,7 +30,7 @@ pub struct GuestPollGuestLoan { pub purpose: GuestPollGuestPurpose, pub header_b
 pub enum GuestPollFrozenKind { ActorFailure, Boot, CloseContext, Input, Poll, CloseOutput }
 
 /// 🧳 The actual input, guest result, decoder and captured value remain in one Source owner.
-pub struct GuestPoll<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> {
+pub struct GuestPoll<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving> {
     receiver:R,
     binding: Option<OriginalSourceBinding>,
     home_address: Option<usize>,
@@ -110,7 +111,7 @@ fn charge_frame(cx: &mut StepContext<'_>, bytes: usize) -> Result<bool, Original
     cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
 }
 
-impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> GuestPoll<T,R> {
+impl<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving> GuestPoll<T,R> {
     /// 🌱️ No guest allocation or decoder Source is admitted by construction.
     pub fn new(policy: OriginalNativeDecodePolicy, limits: JsonReadLimits,receiver:R) -> Self {
         Self { origin_binding:None,origin_address:None,decode_policy:policy,decode_limits:limits,receiver,binding: None, home_address: None, unit: GuestRelayUnitFlow::empty(), decoder: OriginalJsonOutputSource::new(policy, limits), captured: None, capture_close: None, outcome: None, settlement: None, return_place: OriginalCallerReturnPlace::empty(), scalar_progress: None, scalar_result: None,scalar_received:None, transport_failure: None, fixed: None, close_kind: None, budget: None, input_budget: None, raw_word: None, input_progress_pending: false, awaiting_input_budget: false, prepared: None, pointer: 0, length: 0, phase: Phase::Boot, scalar_started: false, failed: false, resident: false, output_captured: false, capsule: None, frozen: false,core_quiescent:false,actor_failure:None,failure_fetch:ActorFailureFetch::empty(),failure_plan:None,failure_budget:None,failure_received:None,failure_active:false,failure_begin_place:OriginalCallerReturnPlace::empty(),failure_born:None,failure_releasing:false,failure_pointer:0,failure_length:0,failure_recipient_accepted:None,failure_ack_frame:None,failure_ack_lower:None,failure_ack_host:None,failure_acknowledged:None, bootstrap_identity:None,bootstrap_returned:None,bootstrap_status:None,bootstrap_resume:None,journal_identity:None,header_returned:None }
@@ -125,7 +126,7 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
     /// 🧳️ Borrows the actual retained consumer only through this Source-validated producer.
     pub fn receiver_state_mut(&mut self,cx:&StepContext<'_>)->Result<&mut R,OriginalTurnFailure>{self.validate(cx)?;Ok(&mut self.receiver)}
     pub fn requires_execution(&self, runtime: &GuestRuntimes, instance: &GuestInstance) -> Result<bool, OriginalTurnFailure> {
-        if self.scalar_received.is_some(){return Ok(false)}
+        if self.return_place.is_admitted() || self.input_progress_pending || self.scalar_progress.is_some() || self.scalar_result.is_some() || self.scalar_received.is_some() || self.fixed.is_some() || self.raw_word.is_some() || self.transport_failure.is_some() || self.frozen || self.awaiting_input_budget || self.outcome.is_some() || self.settlement.is_some() { return Ok(false); }
         if self.failure_active{return runtime.original_scalar_requires_execution(instance)}match self.phase { Phase::Input => self.unit.requires_execution(runtime, instance), Phase::Boot | Phase::ReleaseBoot | Phase::ReleaseBootstrap | Phase::CloseContext | Phase::ReleaseContext | Phase::Poll | Phase::ReleaseHeader | Phase::ReleaseOutput | Phase::CloseOutput | Phase::CloseReceipt if self.scalar_started => runtime.original_scalar_requires_execution(instance), _ => Ok(false) }
     }
     /// 🧭️ Describes the purpose of the in-flight guest crossing; it never issues or renews a loan.
@@ -151,6 +152,7 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
         let epoch = cx.original_source_epoch().ok_or_else(|| invalid("Poll preparation requires its actual epoch"))?;
         if self.prepared == Some(epoch) { return Ok(true); }
         let retirement = cx.original_retirement_active();
+        if retirement && self.retire_interrupted_guest_step(runtime,instance,None,cx)? { return Ok(false); }
         let bytes=control_bytes()+if self.origin_binding.is_none(){std::mem::size_of_val(&self.origin_binding)+std::mem::size_of_val(&self.origin_address)}else{0};if !charge_metadata(cx,retirement,bytes)?{return Ok(false)}
         self.origin_binding.get_or_insert(OriginalSourceBinding::borrow(cx));let address=self as*const Self as usize;self.origin_address.get_or_insert(address);
         self.binding = Some(OriginalSourceBinding::borrow(cx));
@@ -163,7 +165,7 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
         Ok(true)
     }
     pub fn execution_receipt(&self) -> Option<OriginalGuestExecutionReceipt> {
-        if self.phase == Phase::Input&&!self.failure_active { self.unit.execution_receipt() } else { self.scalar_progress.as_ref().and_then(|progress| progress.execution) }
+        if self.input_progress_pending { self.unit.execution_receipt() } else { self.scalar_progress.as_ref().and_then(|progress| progress.execution) }
     }
     pub fn scalar_progress(&self) -> Option<&OwnedOriginalCallProgress> { self.scalar_progress.as_ref() }
     pub fn scalar_result(&self) -> Option<&OwnedOriginalCallResult> { self.scalar_result.as_ref() }
@@ -271,9 +273,14 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
         if self.return_place.is_admitted() { self.return_place.settle_return(cx)?; return Ok(false); }
         if let Some(settlement) = self.settlement.as_mut() {
             if !settlement.terminal_is_empty() {
-                let result = settlement.step(cx.retained_grant());
-                let work = settlement.last_turn_work();
-                semio_framework_job::receive_original_retained_work(cx, RetainedWorkOutcome { result, work })?;
+                let grant = cx.retained_grant();
+                if let Some((poll, _)) = cx.with_original_effect(grant, |_, effect| settlement.step(grant.maximum_copy_bytes, effect))? {
+                    let outcome = match poll {
+                        RetainedWorkPoll::Complete(outcome) => outcome,
+                        RetainedWorkPoll::Pending { work } => RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work },
+                    };
+                    semio_framework_job::receive_original_retained_work(cx, outcome)?;
+                }
                 return Ok(false);
             }
             if !charge_frame(cx,std::mem::size_of_val(&self.settlement))? { return Ok(false); }
@@ -294,6 +301,22 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
         Ok(true)
     }
 
+    fn retire_interrupted_guest_step(&mut self,runtime:&GuestRuntimes,instance:&GuestInstance,budget:Option<OriginalJobBudget>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        self.validate(cx)?;
+        if self.frozen||self.journal_identity.is_some()||self.bootstrap_identity.is_some(){return Ok(false)}
+        let abort=match self.phase{
+            Phase::Input=>self.input_budget.is_none()||self.unit.needs_admission_budget()||runtime.original_unit_must_abort(instance,cx)?||self.awaiting_input_budget&&budget.is_some_and(|loan|!loan.cancelled),
+            Phase::Boot|Phase::Poll if self.scalar_started=>runtime.original_scalar_must_abort(instance,cx)?,
+            _=>false,
+        };
+        if !abort{return Ok(false)}
+        if charge_frame(cx,size_of::<Phase>()+2*size_of::<bool>())?{
+            self.failed=true;
+            self.awaiting_input_budget=false;
+            self.phase=Phase::Fault;
+        }
+        Ok(true)
+    }
     /// 🧹️ Closing uses only already-owned work and explicit Infrastructure authority.
     pub fn advance_retirement_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,budget:Option<OriginalJobBudget>,execution:Option<OriginalGuestExecutionBudget>,cx:&mut StepContext<'_>)->Result<GuestPollStatus,OriginalTurnFailure>{if !cx.original_retirement_active(){return Err(invalid("Poll retirement requires its original cleanup context"))}self.advance_shared(runtime,instance,None,budget,execution,cx)}
     pub fn advance_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,input:&dyn JsonWriteSource,budget:Option<OriginalJobBudget>,execution:Option<OriginalGuestExecutionBudget>,cx:&mut StepContext<'_>)->Result<GuestPollStatus,OriginalTurnFailure>{self.advance_shared(runtime,instance,Some(input),budget,execution,cx)}
@@ -372,7 +395,9 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
         self.validate(cx)?;if !self.frozen{return Err(invalid("Poll receipt is not frozen"))}let call=view.actor_call()?;let expected=if self.phase==Phase::Input{self.input_budget}else{self.budget}.ok_or_else(||invalid("Poll receipt lost its issued guest scope"))?;if call.input!=expected.input{return Err(invalid("Poll receipt changed its issued guest input"))}if let Some(identity)=self.journal_identity{if identity!=view.identity()||self.fixed!=Some(call){return Err(invalid("Poll journaled receipt changed while held"))}return Ok(true)}
         let valid=matches!((self.phase,call.kind),(Phase::Boot,OriginalActorFixedKind::Admission{..})|(Phase::CloseContext,OriginalActorFixedKind::Close{..})|(Phase::CloseContext,OriginalActorFixedKind::QuiescentForCoreRetirement)|(Phase::Input,OriginalActorFixedKind::InputAdmission{..})|(Phase::Input,OriginalActorFixedKind::InputFailure{..})|(Phase::Poll,OriginalActorFixedKind::TurnOutput{..})|(Phase::CloseOutput,OriginalActorFixedKind::Close{..})|(_,OriginalActorFixedKind::Failure{..}));if !valid{return Err(invalid("Poll fixed receipt has another actual frontier"))}
         let bytes=std::mem::size_of_val(&self.fixed)+std::mem::size_of_val(&self.journal_identity)+std::mem::size_of_val(&self.close_kind)+std::mem::size_of_val(&self.capsule)+2*std::mem::size_of::<bool>();if !charge_frame(cx,bytes)?{return Ok(false)}
-        match call.kind{OriginalActorFixedKind::TurnOutput{ready,captured,pointer,length,..}=>{if self.output_captured&&!captured{return Err(invalid("Poll captured flag regressed before CloseOutput"))}self.output_captured=captured;if ready{self.capsule=Some((pointer,length));self.resident=true;}},OriginalActorFixedKind::QuiescentForCoreRetirement|OriginalActorFixedKind::Admission{..}|OriginalActorFixedKind::Close{..}=>self.close_kind=Some(call.kind),_=>{}}self.fixed=Some(call);self.journal_identity=Some(view.identity());Ok(true)
+        match call.kind{OriginalActorFixedKind::TurnOutput{ready,captured,pointer,length,..}=>{if self.output_captured&&!captured{return Err(invalid("Poll captured flag regressed before CloseOutput"))}self.output_captured=captured;if ready{self.capsule=Some((pointer,length));self.resident=true;}},OriginalActorFixedKind::QuiescentForCoreRetirement|OriginalActorFixedKind::Admission{..}|OriginalActorFixedKind::Close{..}=>self.close_kind=Some(call.kind),_=>{}}self.fixed=Some(call);self.journal_identity=Some(view.identity());
+        if self.phase==Phase::Boot&&std::env::var_os("RUST_BACKTRACE").is_some(){eprintln!("[DEBUG] Boot SRE1 settled: epoch {}, result {:?}, guest work {}",call.input.epoch,call.kind,call.work_units_spent);}
+        Ok(true)
     }
     /// ▶️ The frozen bytes stay immutable until the caller has observed their complete committed receipt.
     pub fn resume_journaled_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -382,7 +407,9 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
         let result=*self.scalar_received.as_ref().unwrap();let word=match result.value{Some(OriginalCoreValue::I64(word))=>word as u64,_=>return Err(invalid("Poll fixed receipt returned another scalar type"))};let(pointer,length)=match owned_result::decode(word)?{OwnedReturn::Bytes{pointer,length}=>(pointer,length),OwnedReturn::Refusal(_)=>return Err(invalid("journaled Poll receipt changed into an unframed refusal"))};let bytes=std::mem::size_of_val(&self.scalar_received)+std::mem::size_of_val(&self.scalar_result)+std::mem::size_of_val(&self.raw_word)+2*std::mem::size_of::<u32>()+std::mem::size_of::<Phase>()+2;if !charge_frame(cx,bytes)?{return Ok(false)}self.scalar_result=self.scalar_received.take();self.raw_word=Some(word);self.pointer=pointer;self.length=length;self.phase=match self.phase{Phase::CloseContext=>Phase::ReleaseContext,Phase::Boot=>Phase::ReleaseBoot,Phase::Poll=>Phase::ReleaseHeader,_=>Phase::CloseReceipt};self.scalar_started=false;self.frozen=false;Ok(true)
     }
     fn accept_bootstrap_step(&mut self,call:&semio_plugin_guest_contract::original_actor_context::OriginalActorBootstrapCall,identity:semio_plugin_host_guest_runtime::GuestBootstrapHeaderIdentity,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        self.validate(cx)?;if let Some(existing)=self.bootstrap_identity{if existing!=identity||self.bootstrap_status!=Some(call.status){return Err(invalid("Poll bootstrap changed its settled actual target"))}return Ok(true)}if !self.frozen||!matches!(self.phase,Phase::Boot|Phase::CloseContext)||self.budget!=Some(call.budget)||self.bootstrap_status.is_some()||self.bootstrap_returned.is_some(){return Err(invalid("Poll bootstrap lacks its exact frozen original admission"))}let bytes=std::mem::size_of_val(&self.bootstrap_identity)+std::mem::size_of_val(&self.bootstrap_status)+std::mem::size_of_val(&self.bootstrap_resume);if !charge_frame(cx,bytes)?{return Ok(false)}self.bootstrap_identity=Some(identity);self.bootstrap_status=Some(call.status);self.bootstrap_resume=Some(self.phase);Ok(true)
+        self.validate(cx)?;if let Some(existing)=self.bootstrap_identity{if existing!=identity||self.bootstrap_status!=Some(call.status){return Err(invalid("Poll bootstrap changed its settled actual target"))}return Ok(true)}if !self.frozen||!matches!(self.phase,Phase::Boot|Phase::CloseContext)||self.budget!=Some(call.budget)||self.bootstrap_status.is_some()||self.bootstrap_returned.is_some(){return Err(invalid("Poll bootstrap lacks its exact frozen original admission"))}let bytes=std::mem::size_of_val(&self.bootstrap_identity)+std::mem::size_of_val(&self.bootstrap_status)+std::mem::size_of_val(&self.bootstrap_resume);if !charge_frame(cx,bytes)?{return Ok(false)}self.bootstrap_identity=Some(identity);self.bootstrap_status=Some(call.status);self.bootstrap_resume=Some(self.phase);
+        if self.phase==Phase::Boot&&std::env::var_os("RUST_BACKTRACE").is_some(){eprintln!("[DEBUG] Boot SAB1 settled: epoch {}, phase {}, sequence {}, result {:?}",call.budget.input.epoch,call.phase,call.sequence,call.status);}
+        Ok(true)
     }
     fn resume_bootstrap_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate(cx)?;if !self.frozen||self.bootstrap_identity.is_none()||self.bootstrap_status.is_none()||!matches!(self.phase,Phase::Boot|Phase::CloseContext){return Err(invalid("Poll bootstrap continuation lacks its actual settled header"))}if self.scalar_progress.is_some(){return Ok(false)}if self.scalar_received.is_none(){runtime.take_original_scalar_into_step(instance,&mut self.scalar_received,cx)?;return Ok(false)}let result=*self.scalar_received.as_ref().unwrap();let word=match result.value{Some(OriginalCoreValue::I64(word))=>word as u64,_=>return Err(invalid("Poll bootstrap returned another scalar type"))};let(pointer,length)=match owned_result::decode(word)?{OwnedReturn::Bytes{pointer,length}if length==304=>(pointer,length),_=>return Err(invalid("Poll bootstrap changed its original SAB1 extent"))};let bytes=std::mem::size_of_val(&self.scalar_received)+std::mem::size_of_val(&self.scalar_result)+std::mem::size_of_val(&self.raw_word)+2*std::mem::size_of::<u32>()+std::mem::size_of::<Phase>()+2;if !charge_frame(cx,bytes)?{return Ok(false)}self.scalar_result=self.scalar_received.take();self.raw_word=Some(word);self.pointer=pointer;self.length=length;self.phase=Phase::ReleaseBootstrap;self.scalar_started=false;self.frozen=false;Ok(true)
@@ -402,7 +429,28 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
                     _=>return Err(invalid("Poll scalar export is out of phase"))
                 };let count=if export==OwnedSemioExport::Deallocate{2}else{OriginalJobBudget::SCALAR_ARGUMENT_COUNT};if runtime.begin_original_scalar_step(instance,export,&args[..count],cx)?{self.scalar_started=true;if export!=OwnedSemioExport::Deallocate{self.budget=budget}}return Ok(())
             }
-            let progress=runtime.advance_original_scalar_step(instance,execution,cx)?;let ready=matches!(&progress.result,Ok(OwnedOriginalCallStatus::Ready));let refused=progress.result.is_err()||matches!(&progress.result,Ok(OwnedOriginalCallStatus::Cancelled|OwnedOriginalCallStatus::Deadline));self.scalar_progress=Some(progress);if refused{self.failed=true;self.phase=Phase::Fault;return Ok(())}if !ready{return Ok(())}if matches!(self.phase,Phase::Boot|Phase::CloseContext|Phase::Poll|Phase::CloseOutput){self.frozen=true;return Ok(())}if self.journal_identity.is_some()||self.bootstrap_identity.is_some(){return Ok(())}runtime.take_original_scalar_into_step(instance,&mut self.scalar_received,cx)?;return Ok(())
+            let progress=runtime.advance_original_scalar_step(instance,execution,cx)?;
+            let ready=matches!(&progress.result,Ok(OwnedOriginalCallStatus::Ready));
+            let refused=progress.result.is_err()||matches!(&progress.result,Ok(OwnedOriginalCallStatus::Cancelled|OwnedOriginalCallStatus::Deadline));
+            self.scalar_progress=Some(progress);
+            if refused{self.failed=true;self.phase=Phase::Fault;return Ok(())}
+            if !ready{return Ok(())}
+            if matches!(self.phase,Phase::Boot|Phase::CloseContext|Phase::Poll|Phase::CloseOutput){
+                let framed=runtime.with_original_scalar_header(instance,cx,|_,_,_|Ok(()))
+                    .and_then(|ready|ready.then_some(()).ok_or_else(||invalid("Ready Poll scalar has no actual header")));
+                if let Err(error)=framed {
+                    if std::env::var_os("RUST_BACKTRACE").is_some(){
+                        eprintln!("[DEBUG] poll unframed scalar: {:?}, issued {:?}, actual clock {:?}, host deadline {}, work {}, retained {:?}",self.phase,self.budget,(cx.clock_source())(),cx.deadline_us(),cx.fuel_remaining(),cx.retained_grant());
+                    }
+                    self.failed=true;self.phase=Phase::Fault;
+                    return Err(error);
+                }
+                self.frozen=true;
+                return Ok(());
+            }
+            if self.journal_identity.is_some()||self.bootstrap_identity.is_some(){return Ok(())}
+            runtime.take_original_scalar_into_step(instance,&mut self.scalar_received,cx)?;
+            return Ok(());
         }
         let result=*self.scalar_received.as_ref().unwrap();if result.value.is_some(){return Err(invalid("Poll deallocator returned a value"))}
         let mut bytes=std::mem::size_of_val(&self.scalar_received)+std::mem::size_of_val(&self.scalar_result)+std::mem::size_of::<bool>()+std::mem::size_of::<Phase>();
@@ -469,7 +517,7 @@ impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Guest
         Ok(self.terminal_is_empty())
     }
 }
-impl<T: NativeReceive<DslValue> + RetireOwned+Send+'static,R:GuestPollFailureReceiving> NativeInstanceRetirement for GuestPoll<T,R> {
+impl<T: NativeReceive<DslValue> + RetireOwned+Send+Sync+'static,R:GuestPollFailureReceiving> NativeInstanceRetirement for GuestPoll<T,R> {
     fn close_step(&mut self, runtime: &GuestRuntimes, instance: &mut GuestInstance, _: &CompiledHandle, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         self.validate(cx)?;
         if self.terminal_is_empty() { return self.receiver.close_on_source(cx); }
@@ -489,7 +537,7 @@ impl<T: NativeReceive<DslValue> + RetireOwned+Send+'static,R:GuestPollFailureRec
     }
     fn terminal_is_empty(&self) -> bool { GuestPoll::terminal_is_empty(self)&&self.receiver.terminal_is_empty() }
 }
-impl<T: NativeReceive<DslValue> + RetireOwned,R:GuestPollFailureReceiving> Drop for GuestPoll<T,R> {
+impl<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving> Drop for GuestPoll<T,R> {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty()&&self.receiver.terminal_is_empty(), "Poll requires complete original Source retirement"); }
 }
 

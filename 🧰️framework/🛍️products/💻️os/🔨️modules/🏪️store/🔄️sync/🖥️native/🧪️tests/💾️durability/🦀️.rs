@@ -62,7 +62,12 @@ fn folder_pair_archive_order_matches_neutral_vectors() {
             if row[1] == "pair" { storage.write("a", "schema", row[2].as_bytes(), row[3].as_bytes()).await.unwrap(); }
             else {
                 let carrier = semio_os_spr::DocumentArchivePack { parent_pack: row[2].as_bytes().to_vec(), parent_spr: row[3].as_bytes().to_vec(), members: vec![semio_os_spr::OwnedDocumentMemberPackEntry { envelope_pack: row[4].as_bytes().to_vec(), ..Default::default() }] };
-                storage.write_archive("a", "schema", &semio_os_spr::encode_document_archive_bytes(&carrier).unwrap()).await.unwrap();
+                let archive = semio_os_spr::encode_document_archive_bytes(&carrier).unwrap();
+                assert!(!storage.create_archive_if_absent("a", "schema", &archive).await.unwrap());
+                assert!(storage.create_archive_if_absent("archive-only", "schema", &archive).await.unwrap());
+                assert!(!storage.create_archive_if_absent("archive-only", "schema", &archive).await.unwrap());
+                assert_eq!(storage.read("archive-only").await.unwrap(), Some((carrier.parent_pack, carrier.parent_spr)));
+                storage.write_archive("a", "schema", &archive).await.unwrap();
             }
             assert_eq!(storage.read("a").await.unwrap().unwrap().0, row[5].as_bytes());
             assert_eq!(storage.read_archive("a").await.unwrap().is_some(), row[6] == "1");

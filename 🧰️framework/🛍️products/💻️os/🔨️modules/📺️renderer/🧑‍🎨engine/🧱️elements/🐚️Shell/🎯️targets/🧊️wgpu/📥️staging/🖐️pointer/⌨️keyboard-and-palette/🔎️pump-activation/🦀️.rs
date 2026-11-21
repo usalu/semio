@@ -48,7 +48,7 @@ impl<'ctx> PointerCtx<'ctx> {
         let watched: Vec<String> = self.surfaces.world3d_states.keys().cloned().collect();
         self.settle.settle_pump.watches.retain(|surface_id, _| watched.contains(surface_id));
         for (host_id, status) in wedged {
-            let Some((controller_id, surface_id)) = self.surfaces.world3d_states.get(&host_id).map(|world| (world.controller_id.clone(), world.surface_id.clone())) else { continue };
+            let Some((controller_id, surface_id)) = self.surfaces.world3d_states.get(&host_id).map(|world| (world.session.controller_id.clone(), world.session.surface_id.clone())) else { continue };
             debug_log(&format!(
                 "[TRACE] wgpu-shell settle pump wedge {}",
                 serde_json::json!({ "host": host_id, "surface": surface_id, "phase": status.phase, "unitsDone": status.units_done, "unitsTotal": status.units_total, "inFlight": status.in_flight, "action": status.cancel_action, "steps": SHELL_SETTLE_STALL_STEPS })

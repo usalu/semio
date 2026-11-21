@@ -38,7 +38,9 @@ pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, in
     let pack = archive.as_mut().expect("parked media archive is resident");
     let admitted = with_instances_original_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        Ok(instance.app.begin_document_archive_load(operation, pack, admission, cx)?)
+        let admitted = instance.app.begin_document_archive_load(operation, pack, admission, cx)?;
+        if admitted { instance.cell.pending_effects.retain(); }
+        Ok(admitted)
     })
     .await?;
     Ok(if admitted { MediaImport::Loading(protocol::DocumentArchiveLoadStatus { operation, state: protocol::DocumentArchiveLoadState::Pending, completed: 0, total: 0, ahead: 0, fault: Vec::new() }) } else { MediaImport::Pending })

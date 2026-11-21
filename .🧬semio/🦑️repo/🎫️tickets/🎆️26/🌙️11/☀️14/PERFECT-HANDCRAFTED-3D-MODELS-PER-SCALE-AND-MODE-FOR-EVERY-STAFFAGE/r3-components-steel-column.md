@@ -75,3 +75,50 @@ None filed. Observation for the validator maintainer: `validateAsset` judges the
 - The anchors sit 25 mm from the flange face (the drawn layout); a socket does not fit there, a ring spanner does. Layout kept.
 - The weld is sharp wedges; the 3 mm washer step and the nut chamfer are not in the 2D (0.06 mm on paper).
 - 1:500 mass point is nearly hidden in the web.
+
+## Round 5 handcraft
+
+Agent C03, 2026-11-21. Scripts: `r5-steel-column-roots.py` (assembly mass, `--apply` writes only the two mass values and the centre of mass), `r5-steel-column-volumes.py` (round-3 solids with the corrected mass point), `r5_c03_lib.py`, `r5-c03-sheets.sh`.
+
+### Reference (modelled to)
+
+| quantity | reference | source |
+|---|---|---|
+| HEB 200 h / b / t_w / t_f / r | 200 / 200 / 9 / 15 / 18 mm | EN 10365 |
+| A, mass per metre | 78.1 cm², 61.3 kg/m | EN 10365 |
+| base plate, head plate | 300 x 260 x 20, 240 x 220 x 20 mm | asset drawing, practice |
+| anchors | M16, nut AF 24 x 14.8, washer 30 x 3 | ISO 4032, ISO 7089 |
+| gussets | 16 mm, 50 x 90 mm | asset drawing |
+| assembly mass | 181.43 shaft + 12.09 base + 8.13 head + 0.78 gussets + 0.53 anchor heads + 0.65 welds = 203.60 kg, centre at 1.462 m | own calculation (`r5-steel-column-roots.py`) |
+
+### Model against reference (1:50)
+
+| quantity | model | reference | deviation |
+|---|---|---|---|
+| section h / b / t_f / r | 200 / 200 / 15 / 18 mm | same | 0 % |
+| web | 9 mm (two 4.5 mm chamber halves) | 9 mm | 0 % |
+| shaft length, overall height | 2.96 m, 3.00 m | 2.96 m, 3.00 m | 0 % |
+| plates | 300 x 260 x 20, 240 x 220 x 20 | same | 0 % |
+| rig / `dimensions.massKg` | before 183.93 kg (bare shaft over 3.0 m), now 203.60 kg | 203.60 kg | before -9.7 %, now 0 % |
+| centre of mass | before 1.5 m, now 1.462 m | 1.462 m | before +2.6 %, now 0 % |
+| 1:100 plate thickness | 35 mm | 20 mm | +75 %: print floor of the drawing (0.2 mm minimum feature across the 1:75 to 1:150 band), 3D follows the drawing |
+| 1:200 / 1:500 flanges, plates | 30 / 50 mm, 75 / 75 mm | 15 / 20 mm | feature floor of the scale |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- (weld corner returns read as small pyramids; rig mass 9.7 % light) | A- / A- / A (mass true) |
+| 1:100 | A- / A- / A- | A- / A- / A- |
+| 1:200 | B+ / B+ / B+ | B+ / B+ / B+ |
+| 1:500 | B+ / B+ / B (mass point hidden in the 75 mm web) | B+ / B+ / B+ (mass sphere 95 mm, shows in both chambers) |
+
+Poses `axial-self-weight`, `eccentric-load`, `lateral-wind` and clip `eccentric-load-sweep` t 2 at 1:50 opened: rigid column, the load pad follows the carrier; nothing torn.
+
+Opened: `r3-sheet` body, structure and cut thermal at every scale, the three poses and the clip frame, `r3-2d` at 1:50 to 1:500 (`🗑️generated/r5-steel-column/before`), close-ups `detail.s50.body.r5base`, `detail.s50.body.r5head`, `detail.s50.structure.r5base`, `detail.s50.thermal.r5base`, `detail.s100/200/500.body.r5base`.
+
+Changes: rig `column.mass.kg` 183.93 -> 203.60, `comX` 1.5 -> 1.4618, `dimensions.massKg` 183.93 -> 203.60; mass solid at 1.4618 m at every scale, 1:500 mass radius 0.08 -> 0.095 m; structure decisions name the assembly mass.
+
+Check: `r3-validate.ts components/steel-column --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); `volumes-check.ts --product` PASS; spliced.
+
+Still imperfect: the welds are sharp wedges and the flange-tip weld returns read as small pyramids at close range; the 1:100 to 1:500 plates are thickened to the print and feature floors (stated in the decisions); the 1:500 shaft is an H at the 75 mm floor (chambers 50 mm), the smallest abstraction that still reads as a rolled section.

@@ -48,11 +48,11 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
 }
 //#endregion 🤖️AgentLaneLaws
 
-semio_plugin::history_edit_acceptance_law!("trinity", super::super::TrinityJackPlayApp, || semio_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("trinity", TrinityJackPlayApp<SemioJackComposition>, || semio_plugin::App { definition: create_trinity_jack_app(), examples: Vec::new() }, "../../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any");
 
-semio_plugin::composed_reload_law!("trinity", super::super::TrinityJackPlayApp, || semio_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::composed_reload_law!("trinity", TrinityJackPlayApp<SemioJackComposition>, || semio_plugin::App { definition: create_trinity_jack_app(), examples: Vec::new() }, "../../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any");
 
-semio_plugin::composed_child_history_law!("trinity", super::super::TrinityJackPlayApp, || semio_plugin::App { definition: super::super::create_trinity_jack_app(), examples: Vec::new() }, [("patchNodes", r#"{"nodeIds":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1"],"field":"name","value":"Renamed core"}"#)]);
+semio_plugin::composed_child_history_law!("trinity", TrinityJackPlayApp<SemioJackComposition>, || semio_plugin::App { definition: create_trinity_jack_app(), examples: Vec::new() }, [("patchNodes", r#"{"nodeIds":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1"],"field":"name","value":"Renamed core"}"#)]);
 
 /// 📦️ A real edited registered Jack document restores its exact parent, histories and rich member bytes.
 #[semio_framework_async_macros::async_test]
@@ -66,11 +66,15 @@ async fn foreign_carriers_restore_the_edited_registered_rich_document(){
  let original_bytes=store::channel::encode_document_archive_bytes(&original).unwrap();
  for format in 0..2{
   let decoded=super::super::archive_laws::round_trip(&original_bytes,format);assert_eq!(decoded,original_bytes);
-  let received=super::super::archive_laws::with_control(|control|store::channel::decode_document_archive_bytes_controlled(&decoded,&mut control.snapshot_decode().unwrap())).unwrap();assert_eq!(received,original);
+  let mut received = None;
+  super::super::archive_laws::with_control(|control| store::channel::decode_document_archive_bytes_controlled(&decoded, &mut received, &mut control.snapshot_decode().unwrap())).result.unwrap();
+  let received = received.unwrap();
+  assert_eq!(received, original);
   dispatch_rail(&mut app,"patchNodes",&[("nodeIds",&first),("field","name"),("value","Replaced after export")],cx).await.unwrap();
-  let operation=0x0000_0000_4a41_434b+format as u64;PluginApp::begin_document_archive_load(&mut app.app,operation,received).unwrap();
-  let mut ready=false;for _ in 0..4096{assert!(!cx.should_yield(),"restore remains under its original fixture caller");cx.consume_fuel(1);let status=PluginApp::poll_document_archive_load(&mut app.app,operation,&mut artifact_app_laws::fixture_identity(),cx).await.unwrap();match status.state{protocol::DocumentArchiveLoadState::Ready=>{ready=true;break},protocol::DocumentArchiveLoadState::Fault=>panic!("original archive restore refused: {:?}",status),protocol::DocumentArchiveLoadState::Cancelled=>panic!("original archive restore cancelled"),_=>{}}}
-  assert!(ready,"original archive reached terminal restore");PluginApp::acknowledge_document_archive_load(&mut app.app,operation).unwrap();assert_eq!(node_name(&app,&first).await,"Original rich archive");
+  let operation = 0x0000_0000_4a41_434b + format as u64;
+  artifact_app_laws::admit_document_archive_load(&mut app.app, operation, received, cx).unwrap();
+  artifact_app_laws::settle_document_archive_load(&mut app.app, operation, &mut artifact_app_laws::fixture_identity(), cx).await.unwrap();
+  assert_eq!(node_name(&app,&first).await,"Original rich archive");
   let restored=PluginApp::document_archive(&app.app).await.unwrap();assert_eq!(restored,original);super::super::archive_laws::retire(restored);super::super::archive_laws::retire(decoded);
  }
  super::super::archive_laws::retire(original_bytes);super::super::archive_laws::retire(original);app.close(cx);let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();

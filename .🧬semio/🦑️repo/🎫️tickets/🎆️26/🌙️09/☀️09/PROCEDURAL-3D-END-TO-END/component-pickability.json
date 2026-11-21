@@ -1,0 +1,58 @@
+{
+  "instances": [
+    {
+      "id": "shape@!iin#in-0",
+      "meshId": "surface",
+      "position": [
+        -3.15,
+        0,
+        0
+      ],
+      "interactionId": "h:shape@!iin",
+      "componentPickable": false
+    },
+    {
+      "id": "shape@solid#0",
+      "meshId": "surface",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "interactionId": "shape@solid#0"
+    },
+    {
+      "id": "shape@stale#0",
+      "meshId": "surface",
+      "position": [
+        0,
+        -0.45,
+        0.29
+      ],
+      "interactionId": "h:shape@stale",
+      "componentPickable": false
+    }
+  ],
+  "highlightedInput": "shape@!iin#in-0",
+  "editable": "shape@solid#0",
+  "retained": "shape@stale#0",
+  "camera": {
+    "position": [
+      0,
+      -14,
+      9
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "fov": 42,
+    "zoom": 1
+  }
+}

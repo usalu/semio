@@ -8,6 +8,10 @@ use super::*;
 const DOCUMENT_LOAD_CANCELLED: &str = "document.load-cancelled: the load was cancelled; the previous document is unchanged";
 
 #[cfg(not(target_arch = "wasm32"))]
+#[path = "💾️save/🦀️.rs"]
+pub(super) mod native_save;
+
+#[cfg(not(target_arch = "wasm32"))]
 pub(super) mod wasm_program_exchange {
     use super::*;
     use semio_framework_value::DslValue;
@@ -19,7 +23,7 @@ use semio_framework_value::ToValue;
     use store::pack_rt;
 
     static SEQ: AtomicU64 = AtomicU64::new(1);
-    fn next_seq() -> u64 {
+    pub(super) fn next_seq() -> u64 {
         SEQ.fetch_add(1, Ordering::Relaxed)
     }
 
@@ -67,7 +71,7 @@ use semio_framework_value::ToValue;
 
     /// 🧾 An `AppFrame::Error`'s full message: the generic fault summary, plus — whenever `report`
     /// carries real `mutation.*` messages — `` — code: text [target]; ...`` appended.
-    fn app_frame_error_message(fault: &[u8], report: &[u8]) -> String {
+    pub(super) fn app_frame_error_message(fault: &[u8], report: &[u8]) -> String {
         let mut message = app_frame_fault_summary(fault);
         let summary = dispatch_report_summary(report);
         if !summary.is_empty() {
@@ -82,7 +86,7 @@ use semio_framework_value::ToValue;
     /// reactor's dedicated command-page argument. `AppFrame`s the guest sends back travel as `Effect::SendMessage{
     /// target: Shell{instance}, payload: pack(AppFrame)}` and are already unpacked by
     /// `KernelClient::exchange_commands` — this fn is now a thin awaiting wrapper, not a decoder.
-    async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<ExchangeOutcome, ProgramFault> {
+    pub(super) async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<ExchangeOutcome, ProgramFault> {
         let outcome = client.exchange_commands(instance_id, commands).await?;
         observe_ephemeral(instance_id, &outcome.frames).await;
         Ok(outcome)
@@ -97,7 +101,7 @@ use semio_framework_value::ToValue;
     /// 👥️ Keeps the last `AppFrame::Ephemeral` of one command turn (contract-freeze §C7.6: the guest appends
     /// one to every command batch it answers), decoded: its interaction and tool run cross the presence wire
     /// typed, its presence pack verbatim.
-    async fn observe_ephemeral(instance_id: u32, frames: &[AppFrame]) {
+    pub(crate) async fn observe_ephemeral(instance_id: u32, frames: &[AppFrame]) {
         let Some(AppFrame::Ephemeral { presence, presence_generation, interaction, tool_run, history_edit, .. }) = frames.iter().rev().find(|frame| matches!(frame, AppFrame::Ephemeral { .. })) else { return };
         let interaction = if interaction.is_empty() { None } else { protocol::decode_presence_interaction(interaction, &mut 0).await.ok() };
         let tool_run = if tool_run.is_empty() { None } else { protocol::decode_presence_tool_run(tool_run).ok() };

@@ -190,3 +190,60 @@ Areas: bill 0.0025 against 0.002. Legs and feet are within the limit after I sli
 - **Skull** in the structure list is a smooth loft without orbits.
 - **Values not from a table:** humerus, ulna and tibiotarsus lengths, and the standing height and breadth, are my estimates.
 - **Not opened:** the `🗑️generated` renders of 1:100 thermal and the 1:100 2D; single-list `volumes-render.ts` views (I used the six-direction sheets instead).
+
+## Round 5 handcraft (2026-11-20/21)
+
+Scripts: the asset's chain, extended in place (`r3-herring-gull-body.ts`: head, neck, primaries; `r3-herring-gull-coarse.ts`, `r4-herring-gull-500.ts`: head and neck; `r3_herring_gull_roots.py`: tucked legs in the soaring poses), `r5-squirrel-gull-look.sh`. Build and splice: `PYTHONUTF8=1 sh r3-herring-gull-run.sh catalog`.
+
+### Reference table (modelled to)
+
+| measure | reference | source |
+|---|---|---|
+| length bill tip to tail tip | 560-660 mm | Cramp 1983 |
+| wingspan | 1230-1550 mm (asset 1450) | Cramp 1983 |
+| culmen / gonys depth | 48-60 / 17-21 mm | Cramp 1983 |
+| tarsus | 58-70 mm | Cramp 1983 |
+| tail | 160-180 mm | Cramp 1983 |
+| femur / tarsometatarsus / carpometacarpus | 58.1 / 66.0 / 71.7 mm | IMNH R-976 |
+| primary projection beyond tail (standing) | 50-80 mm | own knowledge |
+| flight posture | legs folded back, feet trailing under the tail | own knowledge |
+
+### Model vs reference (1:50, standing, spliced catalog)
+
+| measure | model | reference | deviation |
+|---|---|---|---|
+| bill tip to primary tips / bounding length | 602.7 mm | dimensions 603 | 0.05 % |
+| height / breadth | 346.7 / 118.8 mm | dimensions 351 / 119 | 1.2 / 0.2 % |
+| culmen (feathering to tip, head bone 0.067-0.1255) | 58.5 mm | 48-60 | in range |
+| bill depth at base / gonys | 19.4 / 17.4 mm | 17-21 | in range |
+| femur / tibiotarsus / tarsus / middle toe (rig) | 58 / 105 / 66 / 58 mm | 58.1 / ~105 / 66.0 / ~58 | under 0.2 % |
+| span in `gliding` | 1.45 m | 1.45 | 0 |
+| bounding box 1:100 / 1:200 / 1:500 | 603.0 x 346.2 / 602.8 x 346.6 / 602.8 x 348.3 mm | same | under 1.4 % |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B (flat-cut occiput sitting on a tube neck like a cap, neck-2 poking through the crown, a hard throat step where the lower neck left the breast) -> B+/A- | B+ (not re-opened) | B+ -> B+ (unchanged; skull a smooth loft) |
+| 1:100 | B (same head and neck) -> A- | B+ (not opened) | B (not opened) |
+| 1:200 | B- -> B (head domed; rendered, not opened after) | B (not opened) | B (not opened) |
+| 1:500 | B (rendered, not opened after) | B (not opened) | B (rendered, not opened) |
+| poses | `gliding` D (legs hanging straight down, wings a chain of narrow leaves), landing C+ -> `gliding` C+ (legs tucked, feet trailing under the tail), landing C+ | | |
+
+### Changes
+
+- Head 1:50/1:100/1:200/1:500: occiput domed (new end stations behind the condyle), crown lowered 3 mm (25 -> 22 mm half depth at 1:50), so the long flat-crowned gull head replaces the high round dove head.
+- Neck 1:50 and 1:100: lower neck moved dorsally and slimmed (39 -> 31 mm half depth), ends domed; upper neck shortened so it no longer pierces the crown; the throat now runs into the breast without the step.
+- Primaries 1:50: tried a deeper wedge and a sunk front end; the deeper rows lifted the structure's primary shafts out of the body silhouette (`volumes-structure-coverage` 8.2 mm > 7.5 mm, caused by the reshaped `mirror` texture solid) and the bill reshape raised the bill area to 0.003 m² (+31 %): both reverted to round 3.
+- Root: poses `gliding`, `gliding-up`, `gliding-down` fold the legs (thigh -9, shank -36, tarsus -33, foot -80 degrees from rest; trunk-relative), description of `gliding` corrected (en, de). The `soar` clip inherits them; the landing keys keep their reaching legs.
+- Checks: `volumes-check.ts --product` PASS at four scales (silhouette IoU elevation 0.961 / 0.956 / 0.949 at 1:50 / 1:100 / 1:200); `r3-validate.ts animals/herring-gull --volumes` VALID (checkVolumes 0); spliced.
+
+### Opened
+
+1:50 body before and after (six views and right view, five iterations), `gliding` before and after, landing t = 1.6 s after, 1:50 structure before, 1:100 body after. Rendered, not opened: 1:200/1:500 body after, thermal and structure at 1:50 and 1:500 after.
+
+### Remaining (reason)
+
+- Spread wings stay grade C+: three rigid strips per wing on the folded-rest rig cannot open a feather fan; chord about 60 % of the real one with gaps at elbow and wrist. A widened tucked web (+22 mm) changed nothing visible and poked through the folded wing, so it was reverted. Fix needs feather bones in the rig (request in `tool-requests.md`).
+- A small dark sliver of the primaries shows between coverts and secondaries on the folded wing; hiding it moved the structure shafts out of the silhouette.
+- Back view busy around the vent (strip ends seen end-on); skull in the structure list without orbits.

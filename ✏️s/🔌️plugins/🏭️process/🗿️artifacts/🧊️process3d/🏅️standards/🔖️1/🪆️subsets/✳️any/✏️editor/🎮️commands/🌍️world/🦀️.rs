@@ -17,7 +17,7 @@ use semio_s_artifact_process_process3d_inferences::capability_for_measure_kind;
 use crate::step::insert_step_emit;
 use semio_s_artifact_process_process3d_model::next_step_id;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
-use semio_s_artifact_process_process3d_model::{snapshot::MeasureKind, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::WorkingSolid};
+use semio_s_artifact_process_process3d_model::{snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::WorkingSolid};
 use machine::Command;
 use semio_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_tool_machine::{drive_chart_gesture, GestureChart, GesturePhase, ToolRefusal, ToolYield};
@@ -171,23 +171,41 @@ pub mod world_pointer_down {
         cfg: &ConfigView<'_, Process3dConfig>,
         ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        validate_position("worldPointerDown", payload.position)?;
         let fixture = doc.snapshot;
-        let utility = ctx.active_utility()?;
-        if utility == "select" {
-            return Ok(Emit::default());
-        }
-        let measure_kind = match utility {
-            "drill" => MeasureKind::Drill,
-            "attach" => MeasureKind::Attach,
-            _ => MeasureKind::Cut,
-        };
+        let Some(measure_kind) = semio_s_artifact_process_process3d_modes::windows::workpiece::placement::placement_kind(ctx.active_utility()?) else { return Ok(Emit::default()); };
         let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
         let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: semio_s_artifact_process_process3d_inferences::measure_for_capability(&capability, Some(payload.position)) };
-        world_emit("worldPointerDown", doc, cfg, step, vec![set_active_utility_effect("select")])
+        let effects = set_active_utility_effect(Some(ctx.view_state()?), "select").into_iter().collect();
+        world_emit("worldPointerDown", doc, cfg, step, effects)
     }
 }
 //#endregion 🔖️WorldPointerDown
+
+pub mod world_pointer_move {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+    #[dsl(keyword = "world-pointer-move")]
+    pub struct WorldPointerMove {
+        #[dsl(coord)]
+        pub position: [f64; 3],
+    }
+
+    pub fn handle(payload: &WorldPointerMove, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        validate_position("worldPointerMove", payload.position)?;
+        Ok(Emit::default())
+    }
+}
+
+fn validate_position(action: &str, position: [f64; 3]) -> Result<(), Fault> {
+    if position.into_iter().all(f64::is_finite) {
+        Ok(())
+    } else {
+        Err(semio_s_artifact_process_process3d_kit::process3d_action_fault(action, "requires three finite position coordinates"))
+    }
+}
 
 //#region 🔖️WorldFaceDragEnd
 pub mod world_face_drag_end {

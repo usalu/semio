@@ -363,6 +363,13 @@ message En1998Mutation {
     ChangeTieBeamSteelArea change_tie_beam_steel_area = 359;
     ChangeTieBeamSteelDesignStrength change_tie_beam_steel_design_strength = 360;
     ChangeTieBeamWidth change_tie_beam_width = 361;
+    InsertCase insert_case = 362;
+    RemoveCase remove_case = 363;
+    ChangeCaseNumber change_case_number = 364;
+    ChangeCaseText change_case_text = 365;
+    ChangeCaseLabelEn change_case_label_en = 366;
+    ChangeCaseLabelDe change_case_label_de = 367;
+    ChangeCaseEntryId change_case_entry_id = 368;
   }
 }
 message ChangeAnnex {
@@ -1828,4 +1835,59 @@ message ChangeTieBeamSteelDesignStrength {
 message ChangeTieBeamWidth {
   string id = 1;
   double new_width = 2;
+}
+
+message InsertCase {
+  uint64 index = 1;
+  CaseRow case = 2;
+}
+
+message RemoveCase {
+  string id = 1;
+}
+
+message ChangeCaseNumber {
+  string case_id = 1;
+  string key = 2;
+  optional double value = 3;
+}
+
+message ChangeCaseText {
+  string case_id = 1;
+  string key = 2;
+  optional string value = 3;
+}
+
+message ChangeCaseLabelEn {
+  string case_id = 1;
+  string new_value = 2;
+}
+
+message ChangeCaseLabelDe {
+  string case_id = 1;
+  string new_value = 2;
+}
+
+message ChangeCaseEntryId {
+  string case_id = 1;
+  string new_value = 2;
+}
+
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
 }

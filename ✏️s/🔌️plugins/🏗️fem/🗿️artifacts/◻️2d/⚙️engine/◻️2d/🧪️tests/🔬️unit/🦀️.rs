@@ -106,9 +106,12 @@ fn rectangle_with_hole_region_doc() -> Fem2dSnapshotValue {
 #[test]
 fn build_model_reports_dangling_material() {
     let mut doc = persisted::persist(&simply_supported_beam_doc());
-    drain(std::mem::take(&mut doc.materials));
-    let err = build_model(&doc, "dead").unwrap_err();
+    let mut empty = Fem2dSnapshot::default();
+    std::mem::swap(&mut doc.materials, &mut empty.materials);
+    let result = build_model(&doc, "dead");
     drain(doc);
+    drain(empty);
+    let err = result.unwrap_err();
     assert!(err.to_string().contains("material"), "unexpected error: {err}");
 }
 
@@ -124,9 +127,12 @@ fn build_model_reports_dangling_section() {
 #[test]
 fn build_model_reports_dangling_node() {
     let mut doc = persisted::persist(&simply_supported_beam_doc());
-    drain(std::mem::take(&mut doc.nodes));
-    let err = build_model(&doc, "dead").unwrap_err();
+    let mut empty = Fem2dSnapshot::default();
+    std::mem::swap(&mut doc.nodes, &mut empty.nodes);
+    let result = build_model(&doc, "dead");
     drain(doc);
+    drain(empty);
+    let err = result.unwrap_err();
     assert!(err.to_string().contains("node"), "unexpected error: {err}");
 }
 // #endregion 🔖️BuildModel
@@ -184,7 +190,8 @@ fn self_weight_case_produces_nonzero_reactions() {
 fn region_self_weight_via_solve_all_matches_total_mass_times_gravity() {
     let doc = rectangle_region_doc();
     let results = with(&doc, |d| fem2d_solve_all(d)).expect("region self-weight solves via solve_all");
-    let result = results.get("self").unwrap();
+    let source = semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "self").unwrap();
+    let result = &results[&source];
     let total_ty_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Ty).map(|r| r.value).sum();
     let (thickness, area, rho) = (0.02, 4.0 * 2.0, 7850.0);
     let expected = rho * thickness * area * GRAVITY_G;
@@ -201,13 +208,10 @@ fn fem2d_solve_all_returns_case_and_combination_results() {
 
     let results = with(&doc, |d| fem2d_solve_all(d)).expect("solves all");
     assert_eq!(results.len(), 3, "expected 2 cases + 1 combination, got keys {:?}", results.keys().collect::<Vec<_>>());
-    assert!(results.contains_key("dead"));
-    assert!(results.contains_key("live"));
-    assert!(results.contains_key("uls"));
-
-    let dead = results.get("dead").unwrap().clone();
-    let live = results.get("live").unwrap().clone();
-    let combo = results.get("uls").unwrap();
+    let source = |kind, id| semio_s_fem_analyses_model::encode_result_source_parts(kind, id).unwrap();
+    let dead = &results[&source("loadCase", "dead")];
+    let live = &results[&source("loadCase", "live")];
+    let combo = &results[&source("combination", "uls")];
 
     for cd in &combo.displacements {
         let dd = dead.displacements.iter().find(|d| d.node_id == cd.node_id).unwrap();

@@ -11,6 +11,7 @@ pub const INTERPRETER_SOURCE: &str = concat!(
     include_str!("🧱️core-types-and-module-model/🦀️.rs"),
     include_str!("🧩️component-artifact/🦀️.rs"),
     include_str!("🔌️owned-semio-boundary/🦀️.rs"),
+    include_str!("🔌️owned-semio-boundary/🌱️preparation/🦀️.rs"),
     include_str!("🔎️binary-decoder-and-module-parser/🦀️.rs"),
     include_str!("🧭️instruction-shape/🦀️.rs"),
     include_str!("🏛️instance-state/🦀️.rs"),
@@ -18,20 +19,23 @@ pub const INTERPRETER_SOURCE: &str = concat!(
     include_str!("💾️memory-and-bulk-execution/🦀️.rs"),
     include_str!("🧮️numeric-execution/🦀️.rs"),
     include_str!("🔢️numeric-semantics/🦀️.rs"),
+    include_str!("🔢️numeric-semantics/🧮️execution/🦀️.rs"),
+    include_str!("🔢️numeric-semantics/🧱️types/🦀️.rs"),
     include_str!("📸️checkpoint-codec/🦀️.rs"),
     include_str!("🏗️instance/🦀️.rs"),
+    include_str!("🏗️instance/🧊️prepared/🦀️.rs"),
     include_str!("🏗️instance/▶️invocation/🦀️.rs"),
     include_str!("🏗️instance/▶️invocation/🧭️control/🦀️.rs"),
     include_str!("🏗️instance/▶️invocation/💾️memory/🦀️.rs"),
     include_str!("🏗️instance/▶️invocation/📞️host/🦀️.rs"),
 );
 
-use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 #[path = "🧱️core-types-and-module-model/🦀️.rs"]
 mod core_types_and_module_model;
-pub use core_types_and_module_model::{CoreError, CoreModule, CoreStepOutcome, ExportKind, FunctionType, HostCall, MemoryLimits, StepControl, TableLimits, Value, ValueType};
+pub use core_types_and_module_model::{CoreModule, CoreStepOutcome, ExportKind, FunctionType, HostCall, MemoryLimits, StepControl, TableLimits};
+pub use semio_plugin_interpreter_numeric::{CoreError, Value, ValueType};
 use core_types_and_module_model::{CHECKPOINT_MAGIC, CHECKPOINT_VERSION, ConstExpr, ControlBounds, DataDecl, ElementDecl, FunctionDecl, GlobalDecl, SegmentMode, WASM_PAGE_BYTES};
 
 #[path = "🧩️component-artifact/🦀️.rs"]
@@ -64,18 +68,18 @@ mod memory_and_bulk_execution;
 
 #[path = "🧮️numeric-execution/🦀️.rs"]
 mod numeric_execution;
-use numeric_execution::{execute_numeric,execute_numeric_fixed,numeric_arity,NumericError,map_top};
-
-#[path = "🔢️numeric-semantics/🦀️.rs"]
-mod numeric_semantics;
-use numeric_semantics::{canonical_f32, canonical_f64, round_ties_even_f32, round_ties_even_f64, saturating_i32_from_f32, saturating_i32_from_f64, saturating_i64_from_f32, saturating_i64_from_f64, trunc_i32_from_f32, trunc_i32_from_f64, trunc_i64_from_f32, trunc_i64_from_f64, wasm_max_f32, wasm_max_f64, wasm_min_f32, wasm_min_f64};
+use numeric_execution::{execute_numeric, map_top};
+use semio_plugin_interpreter_numeric::{
+    execute_numeric_fixed, numeric_arity, saturating_i32_from_f32, saturating_i32_from_f64,
+    saturating_i64_from_f32, saturating_i64_from_f64, NumericError,
+};
 
 #[path = "📸️checkpoint-codec/🦀️.rs"]
 mod checkpoint_codec;
 
 #[path="🏗️instance/🦀️.rs"]
 mod original_instance_opening;
-pub use original_instance_opening::{CoreInstanceOpening,CoreOriginalInvocationCall,CoreOriginalInvocationStatus,CoreOriginalHostCall};
+pub use original_instance_opening::{CoreInputRetirementAuthority,CoreInstanceOpening,CoreOriginalInvocationCall,CoreOriginalInvocationStatus,CoreOriginalHostCall,PreparedCoreInstance};
 
 //#region 💾️CheckpointCodec
 
@@ -122,7 +126,7 @@ mod tests;
 
 #[cfg(any(test, feature = "testkit"))]
 pub mod testkit {
-    pub use super::{core_types_and_module_model::*, component_artifact::*, owned_semio_boundary::*, binary_decoder_and_module_parser::*, instruction_shape::*, instance_state::*, instruction_execution::*, memory_and_bulk_execution::*, numeric_execution::*, numeric_semantics::*, checkpoint_codec::*};
+    pub use super::{core_types_and_module_model::*, component_artifact::*, owned_semio_boundary::*, binary_decoder_and_module_parser::*, instruction_shape::*, instance_state::*, instruction_execution::*, memory_and_bulk_execution::*, numeric_execution::*, checkpoint_codec::*, CoreError, Value, ValueType};
     #[cfg(test)]
     pub use super::tests::*;
 }

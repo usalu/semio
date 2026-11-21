@@ -1,0 +1,29 @@
+{
+  "capacityMiB": 192,
+  "unitMiB": 64,
+  "reservationsMiB": [
+    128,
+    65,
+    64
+  ],
+  "admitted": [
+    true,
+    false,
+    true
+  ],
+  "afterHolderExitsMiB": 128,
+  "fragmentation": {
+    "capacityMiB": 256,
+    "holdersMiB": [
+      64,
+      64,
+      64,
+      64
+    ],
+    "release": [
+      0,
+      2
+    ],
+    "admitMiB": 128
+  }
+}

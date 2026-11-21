@@ -67,5 +67,19 @@
     "cloneFactory": 1,
     "denied": 0,
     "success": 2
+  },
+  "retirement": {
+    "shared": {
+      "arcRootAdmission": false,
+      "extraDepth": 0,
+      "returnedReadSurvives": true,
+      "complete": true
+    },
+    "last": {
+      "arcRootAdmission": true,
+      "extraDepth": 1,
+      "returnedReadSurvives": false,
+      "complete": true
+    }
   }
 }

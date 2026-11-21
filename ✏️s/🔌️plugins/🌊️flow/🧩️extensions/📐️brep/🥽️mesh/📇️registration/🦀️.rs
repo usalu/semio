@@ -39,12 +39,18 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
         ("scaleComponents", "Scale Mesh Components", "Mesh Editing", &[]),
         ("bevel", "Bevel Mesh Edges", "Mesh Editing", &[("amount", 0.1), ("segments", 1.0)]),
         ("dissolveEdges", "Dissolve Mesh Edges", "Mesh Editing", &[]),
+        ("bridge", "Bridge Mesh Boundary Loops", "Mesh Editing", &[]),
+        ("extrudeBoundary", "Extrude Mesh Boundary Edges", "Mesh Editing", &[]),
         ("dissolveVertices", "Dissolve Mesh Vertices", "Mesh Editing", &[]),
         ("mergeVertices", "Merge Mesh Vertices", "Mesh Editing", &[("tolerance", 0.0001)]),
         ("moveProportional", "Move Mesh Proportionally", "Mesh Editing", &[("radius", 1.0)]),
         ("snapVertices", "Snap Mesh Vertices to Grid", "Mesh Editing", &[("grid", 1.0)]),
         ("mirror", "Mirror Mesh Half", "Mesh Editing", &[("tolerance", 0.0001)]),
         ("decimate", "Simplify Mesh", "Mesh Editing", &[("ratio", 0.5)]),
+        ("combine", "Combine Meshes", "Mesh Editing", &[]),
+        ("intersect", "Intersect Convex Meshes", "Mesh Editing", &[]),
+        ("difference", "Subtract Convex Mesh", "Mesh Editing", &[]),
+        ("union", "Union Convex Meshes", "Mesh Editing", &[]),
         ("mergeCoplanar", "Merge Coplanar Mesh Faces", "Mesh Repair", &[]),
         ("loopCut", "Cut Mesh Loops", "Mesh Editing", &[("cuts", 1.0)]),
         ("knifeCut", "Knife Cut Mesh Face", "Mesh Editing", &[("face", 0.0)]),
@@ -77,6 +83,7 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
         let id = format!("brep.mesh.{operation}");
         let mut inputs = Vec::new();
         if !matches!(operation, "construct" | "importObj" | "importStl" | "importGlb" | "box" | "plane" | "torus" | "uvSphere" | "sphere" | "cylinder" | "cone" | "fromBrep") { inputs.push(ChannelSpec::requires("mesh", &[&id]).with_value_types(&["mesh"])); }
+        if matches!(operation,"combine"|"intersect"|"difference"|"union") { inputs.push(ChannelSpec::requires("other", &[&id]).with_value_types(&["mesh"])); }
         if operation == "construct" { inputs.push(ChannelSpec::text_default("data", r#"{"vertices":[[0,0,0],[1,0,0],[0,1,0]],"faces":[[0,1,2]]}"#, &[&id])); }
         if operation == "importObj" { inputs.push(ChannelSpec::text_default("data", "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n", &[&id])); }
         if matches!(operation, "importStl" | "importGlb") { inputs.push(ChannelSpec::requires("data", &[&id]).with_value_types(&["text"])); }
@@ -84,6 +91,8 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
         if matches!(operation, "extrude" | "inset" | "subdivide" | "flip" | "deleteFaces" | "moveVertices" | "loopCut" | "bevel" | "dissolveEdges") {
             inputs.push(ChannelSpec::requires(match operation { "moveVertices" => "vertices", "loopCut" | "bevel" | "dissolveEdges" => "edges", _ => "faces" }, &[&id]).with_value_types(&["text"]).with_default(Value::Dictionary(text_dictionary("[0]"))));
         }
+        if operation == "bridge" { inputs.push(ChannelSpec::text_default("edges", "[0,7]", &[&id])); }
+        if operation == "extrudeBoundary" { inputs.push(ChannelSpec::text_default("edges", "[0]", &[&id])); }
         for (id_suffix, selection, flag) in [("setShading", "faces", "smooth"), ("markSeams", "edges", "seam")] {
             if operation == id_suffix {
                 inputs.push(ChannelSpec::text_default(selection, "[0]", &[&id]));
@@ -110,7 +119,7 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
         }
         match operation {
             "transform"=>{let identity=[1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0];let list=identity.into_iter().enumerate().fold(Dictionary::with_schema("list"),|list,(index,value)|list.insert(index.to_string(),Value::Dictionary(number_dictionary(value))));let mut channel=ChannelSpec::named("MA","mat","matrix","Matrix").with_operators(vec![id.clone()]).with_value_types(&["list"]).with_item_types(&["number"]).with_default(Value::Dictionary(list));channel.cardinality=neural_engine::Cardinality::Exactly(16);inputs.push(channel);},
-            "translate" | "moveVertices" | "translateComponents" | "moveProportional" => inputs.push(vector_channel("offset", &id, [0.0, 0.0, 1.0])),
+            "translate" | "moveVertices" | "translateComponents" | "moveProportional" | "extrudeBoundary" => inputs.push(vector_channel("offset", &id, [0.0, 0.0, 1.0])),
             "rotate" | "rotateComponents" => inputs.push(vector_channel("axis", &id, [0.0, 0.0, 1.0])),
             "scale" | "scaleComponents" => inputs.push(vector_channel("factor", &id, [1.0, 1.0, 1.0])),
             _ => {}
@@ -151,14 +160,20 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
             "translateComponents" => "Move selected vertices, edges, or faces; shared vertices move once.",
             "rotateComponents" => "Rotate selected components about their centroid or a chosen point; angle is in radians.",
             "scaleComponents" => "Scale selected components about their centroid or a chosen point, preserving polygon indices.",
-            "bevel" => "Round selected edges of a closed convex mesh with 1–64 profile segments; reject widths crossing adjacent vertices.",
+            "bevel" => "Round selected edges with 1–64 profile segments on closed convex meshes or one isolated convex edge with a planar endpoint neighborhood.",
             "dissolveEdges" => "Remove selected connecting edges and join their neighboring polygon faces.",
+            "bridge" => "Connect two boundary loops using a directed edge from each loop to align triangle and quad walls.",
+            "extrudeBoundary" => "Extrude one open, exposed chain of boundary edges by an explicit displacement vector.",
             "dissolveVertices" => "Join a planar connected vertex neighborhood into one polygon without removing its surface.",
             "mergeVertices" => "Merge selected vertices at the first position, their mean, or within the distance tolerance; clean collapsed polygon loops.",
             "moveProportional" => "Move selected vertices fully and surrounding vertices with linear distance falloff from the center within the radius.",
             "snapVertices" => "Snap selected vertices to an origin-aligned grid with positive spacing.",
             "mirror" => "Reflect a one-sided mesh across an origin axis plane; weld only matching seam vertices within the tolerance.",
             "decimate" => "Approximate mesh simplification by shortest-edge collapse with winding and manifold checks; may stop before the target ratio.",
+            "combine" => "Join two polygon meshes with matching attribute channels into separate components.",
+            "intersect" => "Intersect two outward closed convex polygon meshes. Surface channels are kept when their supporting face can represent the clipped patch.",
+            "difference" => "Subtract a convex polygon mesh using plane, corner, opposing slab, through-tunnel, blind-pocket, or enclosed-cavity cuts. The cut faces use authored surface channels from the second mesh.",
+            "union" => "Join outward closed convex polygon meshes across matching or certified partial overlaps. Exposed polygons keep their authored surfaces.",
             "mergeCoplanar" => "Join adjacent coplanar faces without changing their surface.",
             "loopCut" => "Cut connected quad strips through selected preview edges; 1–256 cuts share vertices and crossing strips form grids.",
             "knifeCut" => "Split one face along the projected line through two points, sharing new boundary vertices with its neighbors.",
@@ -169,7 +184,7 @@ pub fn register_mesh(registry: &mut Registry, session: &Session) {
             "deleteFaces" => "Remove selected faces, leaving open boundaries for further editing.",
             "triangulate" => "Triangulate polygon faces, including concave planar polygons.",
             "weld" => "Merge vertices within the tolerance and remove collapsed faces.",
-            "orient" => "Make adjacent face winding consistent across connected components.",
+            "orient" => "Orient each closed component outward and make winding consistent on open components.",
             "fillHoles" => "Cap open boundary loops with polygon faces.",
             "setShading" => "Set selected faces to smooth or flat shading and rebuild their vertex normals.",
             "recomputeNormals" => "Rebuild vertex normals from the polygon faces and their shading modes.",

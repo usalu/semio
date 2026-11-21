@@ -1,12 +1,21 @@
 //! 📥️ Budgeted PNG reconstruction with private RGBA publication.
 use super::{RasterImage,Ihdr,parse_ihdr,samples_per_pixel,packed_row_bytes,bpp_bytes,ADAM7,adam7_pass_dims,pixel_to_rgba,paeth,crc32_update};
 use semio_framework_deflate::{Inflater,InflateOutcome};
-use semio_framework_value::RetainedAllocationEffect;
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{ByteReadSource, RetireOwned, RetainedAllocationEffect, RetirementDemand};
+use semio_framework_value::paged::PagedBytes;
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, retained_clone_grant_admits};
+use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value_persistent::list::PagedList;
 #[path="📝️text/🦀️.rs"] mod text;
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]
 pub struct PngDecodeInput{pub data:Vec<u8>,pub max_pixels:usize,pub max_bytes:usize,pub max_chunks:usize}
+/// 📏️ Bounds the decoded raster and traversal of the original encoded source.
+#[derive(Clone, Copy, Debug)]
+pub struct PngDecodeLimits {
+    pub max_pixels: usize,
+    pub max_bytes: usize,
+    pub max_chunks: usize,
+}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct PngDecodeProgress{pub phase:&'static str,pub bytes:usize,pub total_bytes:usize,pub pixels:usize,pub total_pixels:usize,pub work:u64,pub done:bool}
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
@@ -17,6 +26,13 @@ impl std::fmt::Display for PngDecodeError{fn fmt(&self,f:&mut std::fmt::Formatte
 impl std::error::Error for PngDecodeError{}
 fn invalid(v:&'static str)->PngDecodeError{PngDecodeError::Invalid(v)}
 fn be(data:&[u8],at:usize)->u32{u32::from_be_bytes(data[at..at+4].try_into().unwrap())}
+fn read_array<const N: usize>(source: &impl ByteReadSource, offset: usize) -> Result<[u8; N], PngDecodeError> {
+    let mut bytes = [0; N];
+    if source.read_bytes(offset, &mut bytes) != N {
+        return Err(invalid("Truncated PNG source"));
+    }
+    Ok(bytes)
+}
 #[derive(semio_framework_value::RetireOwned)]
 struct Chunk{kind:[u8;4],start:usize,pub at:usize,end:usize,crc:u32}
 struct PngInflater(Inflater);
@@ -44,8 +60,8 @@ impl semio_framework_value::retirement::RetirementCursor for PngInflaterRetireme
 }
 /// 🧩️ Reconstruction consumes one chunk byte, inflated byte, or expanded pixel per work unit.
 #[derive(semio_framework_value::RetireOwned)]
-pub struct PngDecodeJob{
- source:Vec<u8>,max_pixels:usize,max_chunks:usize,maximum_bytes:usize,total_bytes:usize,phase:&'static str,work:u64,bytes:usize,pixels:usize,total_pixels:usize,
+pub struct PngDecodeJob<S: RetireOwned = Vec<u8>>{
+ source:S,max_pixels:usize,max_chunks:usize,maximum_bytes:usize,total_bytes:usize,phase:&'static str,work:u64,bytes:usize,pixels:usize,total_pixels:usize,
  at:usize,chunks:usize,chunk:Option<Chunk>,header:Option<Ihdr>,palette:[[u8;3];256],palette_length:usize,alpha:[u8;256],alpha_length:usize,gray_trans:Option<u32>,rgb_trans:Option<(u32,u32,u32)>,had_palette:bool,had_transparency:bool,
  had_idat:bool,closed_idat:bool,ranges:PagedList<(usize,usize),65536>,z_length:usize,range:usize,range_at:usize,z_at:usize,z_header:[u8;2],z_header_length:usize,tail:[u8;4],tail_length:usize,inflater:Option<PngInflater>,pending:Option<u8>,output:RasterImage,allocation_at:u8,
  pass:usize,pass_width:usize,pass_height:usize,sx:u32,sy:u32,dx:u32,dy:u32,row:usize,column:usize,row_at:Option<usize>,row_bytes:usize,stride:usize,bpp:usize,filter:u8,
@@ -53,43 +69,104 @@ pub struct PngDecodeJob{
 }
 impl PngDecodeJob{
  pub fn new(input:PngDecodeInput)->Result<Self,(PngDecodeError,PngDecodeInput)>{
-  if !(1..=16777216).contains(&input.max_pixels)||!(8..=67108864).contains(&input.max_bytes)||!(1..=65536).contains(&input.max_chunks)||input.data.len()<8||input.data.len()>input.max_bytes||input.data[..8]!=[137,80,78,71,13,10,26,10]{return Err((invalid("Invalid PNG input contract"),input));}
-  let total_bytes=input.data.len();
-  Ok(Self{source:input.data,max_pixels:input.max_pixels,max_chunks:input.max_chunks,maximum_bytes:input.max_bytes,total_bytes,phase:"chunks",work:0,bytes:8,pixels:0,total_pixels:0,at:8,chunks:0,chunk:None,header:None,palette:[[0;3];256],palette_length:0,alpha:[0;256],alpha_length:0,gray_trans:None,rgb_trans:None,had_palette:false,had_transparency:false,had_idat:false,closed_idat:false,ranges:PagedList::empty(),z_length:0,range:0,range_at:0,z_at:0,z_header:[0;2],z_header_length:0,tail:[0;4],tail_length:0,inflater:None,pending:None,output:RasterImage::default(),allocation_at:0,pass:0,pass_width:0,pass_height:0,sx:0,sy:0,dx:1,dy:1,row:0,column:0,row_at:None,row_bytes:0,stride:0,bpp:0,filter:0,current:Vec::new(),previous:Vec::new(),raw_bytes:0,expected_bytes:0,adler_a:1,adler_b:0,stream_done:false,cancelled:false,failed:None,last_progress:Default::default(),last_work:0,partial_allocated:0,text:None})
+  let limits = PngDecodeLimits { max_pixels: input.max_pixels, max_bytes: input.max_bytes, max_chunks: input.max_chunks };
+  if let Err(error) = limits.validate(&input.data) { return Err((error, input)); }
+  Ok(Self::from_source(input.data, limits))
+ }
+}
+
+impl PngDecodeLimits {
+    fn validate(self, source: &impl ByteReadSource) -> Result<(), PngDecodeError> {
+        let valid = (1..=16777216).contains(&self.max_pixels)
+            && (8..=67108864).contains(&self.max_bytes)
+            && (1..=65536).contains(&self.max_chunks)
+            && (8..=self.max_bytes).contains(&source.byte_len())
+            && read_array::<8>(source, 0)? == [137,80,78,71,13,10,26,10];
+        if !valid { return Err(invalid("Invalid PNG input contract")); }
+        Ok(())
+    }
+}
+
+impl<const N: usize> PngDecodeJob<PagedBytes<N>> {
+    /// 🧮️ Quotes the fixed decoder state and movement of the encoded page owner.
+    pub fn paged_birth_demand() -> RetirementDemand {
+        RetirementDemand {
+            copy_bytes: size_of::<Option<Self>>() + size_of::<Option<PagedBytes<N>>>(),
+            depth: 1, ..Default::default()
+        }
+    }
+
+    /// 🗃️ Moves the unchanged page owner only after the caller funds PNG admission.
+    pub fn admit_paged(
+        source: &mut ControlledRetirement<PagedBytes<N>>,
+        limits: PngDecodeLimits,
+        effect: &mut RetainedAllocationEffect<'_>,
+    ) -> Result<Option<(Self, RetainedCloneProgress)>, PngDecodeError> {
+        let demand = Self::paged_birth_demand();
+        let validation_work = 9;
+        let decoder_state_work = 256 * 4;
+        if !retained_clone_grant_admits(effect.grant(), demand)
+            || effect.remaining_work_units().map_err(|_| PngDecodeError::WorkLimit)? < validation_work + decoder_state_work {
+            return Ok(None);
+        }
+        if !source.original_is_untouched() {
+            return Err(invalid("PNG source is no longer available for transfer"));
+        }
+        if !effect.performed(validation_work).map_err(|_| PngDecodeError::WorkLimit)? {
+            return Ok(None);
+        }
+        limits.validate(source.original().ok_or(PngDecodeError::Incomplete)?)?;
+        if !effect.performed(decoder_state_work).map_err(|_| PngDecodeError::WorkLimit)? {
+            return Ok(None);
+        }
+        let source = source.take_original().ok_or(PngDecodeError::Incomplete)?;
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
+        Ok(Some((Self::from_source(source, limits), progress)))
+    }
+
+    /// 🪪️ Borrows the encoded pages under the decoder's original ownership.
+    pub fn paged_source(&self) -> &PagedBytes<N> { &self.source }
+}
+
+impl<S: ByteReadSource + RetireOwned> PngDecodeJob<S> {
+ fn from_source(source: S, limits: PngDecodeLimits) -> Self {
+  let total_bytes = source.byte_len();
+  Self{source,max_pixels:limits.max_pixels,max_chunks:limits.max_chunks,maximum_bytes:limits.max_bytes,total_bytes,phase:"chunks",work:0,bytes:8,pixels:0,total_pixels:0,at:8,chunks:0,chunk:None,header:None,palette:[[0;3];256],palette_length:0,alpha:[0;256],alpha_length:0,gray_trans:None,rgb_trans:None,had_palette:false,had_transparency:false,had_idat:false,closed_idat:false,ranges:PagedList::empty(),z_length:0,range:0,range_at:0,z_at:0,z_header:[0;2],z_header_length:0,tail:[0;4],tail_length:0,inflater:None,pending:None,output:RasterImage::default(),allocation_at:0,pass:0,pass_width:0,pass_height:0,sx:0,sy:0,dx:1,dy:1,row:0,column:0,row_at:None,row_bytes:0,stride:0,bpp:0,filter:0,current:Vec::new(),previous:Vec::new(),raw_bytes:0,expected_bytes:0,adler_a:1,adler_b:0,stream_done:false,cancelled:false,failed:None,last_progress:Default::default(),last_work:0,partial_allocated:0,text:None}
  }
  fn parse_chunk(&mut self,c:Chunk)->Result<(),PngDecodeError>{
-  let source=&self.source;let data=&source[c.start..c.end];
+  let length=c.end-c.start;
   let h=self.header.as_ref().map(|h|(h.width,h.height,h.bit_depth,h.color_type,h.interlace));
   if h.is_none()&&c.kind!=*b"IHDR"{return Err(invalid("IHDR must be first"));}
   if c.kind!=*b"IDAT"&&self.had_idat{self.closed_idat=true;}
   match &c.kind{
    b"IHDR"=>{
     if h.is_some()||self.chunks!=1{return Err(invalid("Duplicate or misplaced IHDR"));}
-    if data.len()!=13{return Err(invalid("Invalid PNG header size"));}let width=be(data,0);let height=be(data,4);let depth=data[8];let color=data[9];let valid=match color{0=>matches!(depth,1|2|4|8|16),2|4|6=>matches!(depth,8|16),3=>matches!(depth,1|2|4|8),_=>false};
+    if length!=13{return Err(invalid("Invalid PNG header size"));}let data=read_array::<13>(&self.source,c.start)?;let width=be(&data,0);let height=be(&data,4);let depth=data[8];let color=data[9];let valid=match color{0=>matches!(depth,1|2|4|8|16),2|4|6=>matches!(depth,8|16),3=>matches!(depth,1|2|4|8),_=>false};
     if width==0||height==0||width>16384||height>16384||!valid||data[10]!=0||data[11]!=0||data[12]>1{return Err(invalid("Invalid PNG header"));}
     if width as usize*height as usize>self.max_pixels{return Err(invalid("PNG pixel limit exceeded"));}
-    let header=parse_ihdr(data).map_err(|_|invalid("Invalid PNG header"))?;self.total_pixels=crate::validate_extent(header.width,header.height).map_err(|_|invalid("Invalid PNG dimensions"))?;
+    let header=parse_ihdr(&data).map_err(|_|invalid("Invalid PNG header"))?;self.total_pixels=crate::validate_extent(header.width,header.height).map_err(|_|invalid("Invalid PNG dimensions"))?;
     if self.total_pixels>self.max_pixels{return Err(invalid("PNG pixel limit exceeded"));}self.header=Some(header);
    }
    b"PLTE"=>{
     let color=h.unwrap().3;let depth=h.unwrap().2;
-    if self.had_palette||self.had_transparency||self.had_idat||matches!(color,0|4)||data.is_empty()||data.len()>768||data.len()%3!=0||color==3&&data.len()/3>1usize<<depth{return Err(invalid("Invalid PNG palette"));}
-    self.palette_length=data.len()/3;for(i,value)in data.chunks_exact(3).enumerate(){self.palette[i]=[value[0],value[1],value[2]];}self.had_palette=true;
+    if self.had_palette||self.had_transparency||self.had_idat||matches!(color,0|4)||length==0||length>768||length%3!=0||color==3&&length/3>1usize<<depth{return Err(invalid("Invalid PNG palette"));}
+    if self.source.read_bytes(c.start,&mut self.palette.as_flattened_mut()[..length])!=length{return Err(invalid("Truncated PNG palette"));}
+    self.palette_length=length/3;self.had_palette=true;
    }
    b"tRNS"=>{
     if self.had_transparency||self.had_idat{return Err(invalid("Invalid transparency placement"));}self.had_transparency=true;let color=h.unwrap().3;let depth=h.unwrap().2;
     match color{
-     3=>{if !self.had_palette||data.is_empty()||data.len()>self.palette_length{return Err(invalid("Invalid palette transparency"));}self.alpha_length=data.len();self.alpha[..data.len()].copy_from_slice(data);}
-     0|2=>{if data.len()!=if color==0{2}else{6}{return Err(invalid("Invalid sample transparency"));}let mut samples=[0u32;3];for (i,pair) in data.chunks_exact(2).enumerate(){samples[i]=u32::from(u16::from_be_bytes([pair[0],pair[1]]));if samples[i]>(1u32<<depth)-1{return Err(invalid("Transparency exceeds sample depth"));}}if color==0{self.gray_trans=Some(samples[0]);}else{self.rgb_trans=Some((samples[0],samples[1],samples[2]));}}
+     3=>{if !self.had_palette||length==0||length>self.palette_length{return Err(invalid("Invalid palette transparency"));}if self.source.read_bytes(c.start,&mut self.alpha[..length])!=length{return Err(invalid("Truncated PNG transparency"));}self.alpha_length=length;}
+     0|2=>{if length!=if color==0{2}else{6}{return Err(invalid("Invalid sample transparency"));}let mut samples=[0u32;3];for (i,sample) in samples[..length/2].iter_mut().enumerate(){*sample=u32::from(u16::from_be_bytes(read_array(&self.source,c.start+i*2)?));if *sample>(1u32<<depth)-1{return Err(invalid("Transparency exceeds sample depth"));}}if color==0{self.gray_trans=Some(samples[0]);}else{self.rgb_trans=Some((samples[0],samples[1],samples[2]));}}
      _=>return Err(invalid("Transparency is forbidden for alpha images")),
     }
    }
    b"IDAT"=>{
     if self.closed_idat||h.unwrap().3==3&&!self.had_palette{return Err(invalid("Invalid IDAT placement"));}
-    self.had_idat=true;self.ranges.push_reserved((c.start,c.end)).map_err(|_|invalid("PNG range backing was not admitted"))?;self.z_length+=data.len();
+    self.had_idat=true;self.ranges.push_reserved((c.start,c.end)).map_err(|_|invalid("PNG range backing was not admitted"))?;self.z_length+=length;
    }
    b"IEND"=>{
-    if !data.is_empty()||!self.had_idat||self.at!=self.total_bytes||self.z_length<6{return Err(invalid("Invalid PNG end"));}
+    if length!=0||!self.had_idat||self.at!=self.total_bytes||self.z_length<6{return Err(invalid("Invalid PNG end"));}
     self.phase="allocation";self.range_at=self.ranges.get(0).unwrap().0;let header=self.header.as_ref().unwrap();
     self.output.width=header.width;self.output.height=header.height;
     self.bpp=bpp_bytes(header);self.stride=packed_row_bytes(header.width,header.color_type,header.bit_depth);
@@ -105,14 +182,14 @@ impl PngDecodeJob{
   let source=&self.source;
   if self.chunk.is_none(){
    self.chunks+=1;if self.at+12>self.total_bytes||self.chunks>self.max_chunks{return Err(invalid("Truncated PNG or chunk limit exceeded"));}
-   let length=be(source,self.at)as usize;if length>2147483647{return Err(invalid("Invalid chunk length"));}let end=self.at+8+length;
+   let length=u32::from_be_bytes(read_array(source,self.at)?)as usize;if length>2147483647{return Err(invalid("Invalid chunk length"));}let end=self.at+8+length;
    if length>2147483647||end+4>self.total_bytes{return Err(invalid("Invalid chunk length"));}
-   let kind:[u8;4]=source[self.at+4..self.at+8].try_into().unwrap();if !kind.iter().all(u8::is_ascii_alphabetic){return Err(invalid("Invalid chunk type"));}
+   let kind:[u8;4]=read_array(source,self.at+4)?;if !kind.iter().all(u8::is_ascii_alphabetic){return Err(invalid("Invalid chunk type"));}
    self.chunk=Some(Chunk{kind,start:self.at+8,at:self.at+4,end,crc:0xffffffff});self.bytes=self.at+4;return Ok(0);
   }
   let c=self.chunk.as_mut().unwrap();
-  if c.at<c.end{c.crc=crc32_update(c.crc,&source[c.at..c.at+1]);c.at+=1;self.bytes=c.at;return Ok(0);}
-  if c.crc^0xffffffff!=be(source,c.end){return Err(invalid("PNG CRC mismatch"));}
+  if c.at<c.end{let byte=source.byte_at(c.at).ok_or_else(||invalid("Truncated PNG chunk"))?;c.crc=crc32_update(c.crc,&[byte]);c.at+=1;self.bytes=c.at;return Ok(0);}
+  if c.crc^0xffffffff!=u32::from_be_bytes(read_array(source,c.end)?){return Err(invalid("PNG CRC mismatch"));}
   if c.kind==*b"IDAT"&&!self.ranges.has_reserved_slot(){let step=match self.ranges.reserve_one_funded(&mut effect.nested(grant)).result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step))=>step,Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied)=>return Err(invalid("PNG range allocation refused")),Err(semio_framework_value_persistent::list::PagedListReservationFailure::Allocation{error,..})=>{self.partial_allocated=error.allocated_bytes;return Err(invalid("PNG range allocation refused"))},Err(semio_framework_value_persistent::list::PagedListReservationFailure::Work(_))=>return Err(invalid("PNG range allocation exceeded its original work"))};if step.copied_items==0&&!self.ranges.has_reserved_slot(){return Err(invalid("PNG range allocation refused"));}return Ok(step.retained_capacity_bytes);}
   self.at=c.end+4;self.bytes=self.at;let c=self.chunk.take().unwrap();self.parse_chunk(c)?;Ok(0)
  }
@@ -129,7 +206,7 @@ impl PngDecodeJob{
  fn z_byte(&mut self)->Option<u8>{
   let &(start,end)=self.ranges.get(self.range)?;
   if self.range_at==end{self.range+=1;self.range_at=self.ranges.get(self.range).map(|r|r.0).unwrap_or(0);return None;}
-  debug_assert!(self.range_at>=start);let value=self.source[self.range_at];self.range_at+=1;self.z_at+=1;Some(value)
+  debug_assert!(self.range_at>=start);let value=self.source.byte_at(self.range_at)?;self.range_at+=1;self.z_at+=1;Some(value)
  }
  fn raw(&mut self,value:u8)->Result<(),PngDecodeError>{
   self.raw_bytes+=1;if self.raw_bytes>self.expected_bytes||self.pass_width==0{return Err(invalid("Excess PNG scanline data"));}
@@ -193,6 +270,9 @@ impl PngDecodeJob{
   Ok(if self.phase=="inflating"{self.inflater.as_ref().and_then(|owner|owner.next_retained_allocation_bytes()).unwrap_or(0)}else{0})
  }
  pub fn progress(&self)->PngDecodeProgress{PngDecodeProgress{phase:self.phase,bytes:self.bytes,total_bytes:self.total_bytes,pixels:self.pixels,total_pixels:self.total_pixels,work:self.work,done:self.phase=="complete"}}
+}
+
+impl PngDecodeJob {
  pub fn source(&self)->&[u8]{&self.source}
  /// 📝️ Quotes the in-place text metadata cursor bound to this validated source.
  pub fn text_metadata_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Option<text::PngTextState>>(),depth:1,..Default::default()}}
@@ -208,6 +288,9 @@ impl PngDecodeJob{
  pub fn text_metadata_last_work(&self)->u64{self.text.as_ref().map_or(0,|text|text.last_work())}
  /// 📤️ Moves ordered metadata pairs after their complete validation.
  pub fn take_text_metadata(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<(String,String)>,RetainedCloneProgress)>,PngDecodeError>{self.check()?;self.text.as_mut().ok_or(PngDecodeError::Incomplete)?.take(grant)}
+}
+
+impl<S: ByteReadSource + RetireOwned> PngDecodeJob<S> {
  pub fn decoded_properties(&self)->Result<PngDecodedProperties,PngDecodeError>{self.result()?;let header=self.header.as_ref().ok_or(PngDecodeError::Incomplete)?;Ok(PngDecodedProperties{width:header.width,height:header.height,color_type:header.color_type,bit_depth:header.bit_depth})}
  pub fn last_turn_progress(&self)->RetainedCloneProgress{self.last_progress}
  pub fn last_turn_work(&self)->u64{self.last_work}

@@ -3,7 +3,13 @@
 import { expect, test } from "bun:test";
 import { componentProfileV1 } from "../../🏷️component-receipt/🟦️.ts";
 import { componentsDescribeArgumentsV1 } from "../../🧩️component-stage/🟦️.ts";
-import { buildModePolicy, readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { buildModeEnvironment, buildModePolicy, readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+
+import {
+  createScriptProcessEnvelope, receiveScriptProcessInvocation, requireIssuedResourceControlInvocationV1,
+  scriptInvocationEnvironment, withIssuedResourceControlV1, withScriptProcessEnvelope,
+  SCRIPT_PROCESS_INVOCATION_ENV,
+} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const USAGE = /usage: components describe/u;
 process.env.SEMIO_BUILD_MODE ??= "prototype";
@@ -39,4 +45,22 @@ test("🚫 a --facet without a value is the usage error", () => {
   expect(() => componentsDescribeArgumentsV1(["alpha", "--facet"])).toThrow(USAGE);
   expect(() => componentsDescribeArgumentsV1(["--facet"])).toThrow(USAGE);
   expect(() => componentsDescribeArgumentsV1(["--profile", "release", "alpha", "--facet"])).toThrow(USAGE);
+});
+
+test("compiler admission receives the component invocation from a profile-only environment", async () => {
+  const profile = buildModeEnvironment("prototype", {});
+  expect(profile[SCRIPT_PROCESS_INVOCATION_ENV]).toBeUndefined();
+  const envelope = createScriptProcessEnvelope(
+    { version: 1, owner: "test:component-compiler", maximumElapsedMilliseconds: 10000 }, {}, Date.now(),
+  );
+  await withScriptProcessEnvelope(envelope, original =>
+    withIssuedResourceControlV1(original, "test:component-compiler", 1000, async phase => {
+      const environment = scriptInvocationEnvironment(original, profile);
+      await receiveScriptProcessInvocation(environment, async received => {
+        expect(received).toBe(original);
+        requireIssuedResourceControlInvocationV1(phase, received);
+        expect(() => requireIssuedResourceControlInvocationV1({ ...phase }, received)).toThrow("Live Original resource control issuance required");
+      });
+      expect(profile[SCRIPT_PROCESS_INVOCATION_ENV]).toBeUndefined();
+    }));
 });

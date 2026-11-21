@@ -1,7 +1,7 @@
 //! 🧪️ Laws of the raster menu filter: a filter is ONE edit holding ONE `apply-filter` leaf on the layer's pixels with the
 //! session selection (a flip mirrors the whole image); a filter the layer or the session cannot take leaves zero trace.
 
-use semio_s_artifact_raster_raster_editor::config::RasterConfig;
+use crate::config::RasterConfig;
 use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 
 fn receive_persistent_fixture(value:semio_framework_value::DslValue,grant:semio_framework_value::RetainedCloneGrant)->semio_s_artifact_raster_raster_model::RasterSelectionSpans{
@@ -11,8 +11,8 @@ use semio_framework_value::ToValue;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_plugin::{ArtifactView, ConfigView};
-use semio_s_artifact_raster_raster_editor::commands::apply_filter::*;
-use semio_s_artifact_raster_raster_editor::selection::RasterPixelSelection;
+use super::{apply_filter_leaf, handle, ApplyFilter};
+use crate::selection::RasterPixelSelection;
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
 use semio_plugin::HistoryView;
 

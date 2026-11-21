@@ -13,7 +13,7 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::{RasterAssetChild, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use protocol::{Mutation, OpBinary};
-use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkOutcome, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 
 #[path = "🔓️owned-field-decode/🦀️.rs"]
 mod owned_field_decode;

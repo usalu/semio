@@ -127,6 +127,8 @@ pub mod standards {
                             #[path = "../../../../⬅️remove-table-column/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                         }
+                        #[path = "../../../../✍️edit-table-cell/🦀️.rs"]
+                        pub mod edit_table_cell;
                     }
                 }
             }

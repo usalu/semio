@@ -1,5 +1,7 @@
 //! 📣️ Borrows the mounted instance's original host-event routing owners.
-use super::*;
+use crate::VcsArtifactApp;
+use semio_plugin_decl_app::ArtifactApp;
+use store::{MemberFactory, ReferenceSpaceMember};
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
  pub(crate) fn shared_command_source_pending(&self)->bool{self.host_events.delivering||!self.host_events.action_delivery.terminal_is_empty()||self.host_events.routes.cache_busy()||self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some()||self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty()||self.original_typed_command.pending()||self.original_typing.pending()||self.original_emission.pending()}
  pub(crate) fn host_event_routing_ctx(&mut self) -> semio_plugin_instance_dispatch::host_event_routing::HostEventRoutingCtx<'_, A> {

@@ -13,7 +13,7 @@ import { nativeLaunchEnvironmentV1, readNativeLaunchDeclarationV1, selectNativeL
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { Server } from "node:http";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { nativeRendererBinary } from "../🏗️compiler/🦀️native/📜️script.ts";
+import { withNativeRendererBinaryV1 } from "../🏗️compiler/🦀️native/📜️script.ts";
 import { nativeRuntimeDirectory, withNativeRuntimeV1 } from "./📦️modules/🟦️.ts";
 
 const registryPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry";
@@ -62,12 +62,20 @@ export async function runRunScript(context: Readonly<{ root: string; repoRoot: s
   const catalog=projection.playgrounds;
   const row = catalog.find((entry: { variant: string }) => entry.variant === variant);
   if (!row) throw new Error(`Unknown native playground: ${variant}`);
-  const signal = context.invocation.control.signal;
-  {
-    const binary=playgroundNativeHostArtifactV1(repo,row.nativeHost,profile)??nativeRendererBinary(resolve(context.root,"../📦️packages/🦀️rust"),profile);
-    if(!existsSync(binary))throw new Error(`Missing native host artifact: ${binary}`);
-    await runNativeSession(binary, ["--plugin", variant, ...axes, ...(row.app ? ["--app", row.app] : []), ...(row.brand ? ["--brand", row.brand] : []), ...(args.includes("--smoke") ? ["--smoke"] : [])], nativeLaunchEnvironmentV1(context.invocation, { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype", SEMIO_PLUGIN_MODULES: runtime, SEMIO_RUNTIME_ASSETS: repo }, selectNativeLaunchDeclarationV1(readNativeLaunchDeclarationV1(nativeLaunchDeclaration),row.nativeLaunchPolicy,path=>readFileSync(join(repo,path),"utf8")), Date.now()), repo,context.invocation,createRequestedIssuedResourceControlV1(runtimeControl,0,signal),row.assets?.length ? () => createAssetHttpServerV1(repo, 0, row.assets, PLAYGROUND_ASSET_PROVIDERS_V1) : undefined);
+  const phase = createRequestedIssuedResourceControlV1(runtimeControl,0,context.invocation.control.signal);
+  const command = ["--plugin",variant,...axes,...(row.app ? ["--app",row.app] : []),...(row.brand ? ["--brand",row.brand] : []),...(args.includes("--smoke") ? ["--smoke"] : [])];
+  const declaration = selectNativeLaunchDeclarationV1(readNativeLaunchDeclarationV1(nativeLaunchDeclaration),row.nativeLaunchPolicy,path=>readFileSync(join(repo,path),"utf8"));
+  const environment = nativeLaunchEnvironmentV1(context.invocation,{...process.env,SEMIO_PLUGIN:variant,SEMIO_RENDERER:"wgpu",SEMIO_BUILD_MODE:profile,SEMIO_PLUGIN_MODULES:runtime,SEMIO_RUNTIME_ASSETS:repo},declaration,Date.now());
+  const assetDeclarations = row.assets.map(({ app: _app, ...declaration }) => declaration);
+  const assets = assetDeclarations.length ? () => createAssetHttpServerV1(repo,0,assetDeclarations,PLAYGROUND_ASSET_PROVIDERS_V1) : undefined;
+  const launch = (binary: string, control: ResourceLeaseControl) =>
+    runNativeSession(binary,command,environment,repo,context.invocation,control,assets);
+  const binary = playgroundNativeHostArtifactV1(repo,row.nativeHost,profile);
+  if(binary){
+    if(!existsSync(binary))throw Error("Missing native host artifact: "+binary);
+    return launch(binary,phase);
   }
+  return withNativeRendererBinaryV1(resolve(context.root,"../📦️packages/🦀️rust"),profile,repo,context.invocation,phase,launch);
   });
   });
 }
@@ -94,6 +102,9 @@ export async function runScaleScript(context: Readonly<{ root: string; repoRoot:
   if (!args.length || args.length % 2 !== 0 || args.some((value, index) => index % 2 === 0 && !["--scale", "--scale-wasm", "--shards", "--report"].includes(value))) throw new Error("Native scale accepts --scale, --scale-wasm, --shards and --report value pairs");
   for (const flag of ["--scale", "--scale-wasm", "--report"]) if (args.filter(value => value === flag).length !== 1) throw new Error(`Native scale requires exactly one ${flag}`);
   const report=args[args.indexOf("--report")+1];if(!report)throw new Error("Finite scale report required");mkdirSync(dirname(resolve(context.repoRoot,report)),{recursive:true});
-  const signal = context.invocation.control.signal;
-  await runNativeBinary(nativeRendererBinary(resolve(context.root, "../📦️packages/🦀️rust"), profile), args, nativeLaunchEnvironmentV1(context.invocation, process.env, readNativeLaunchDeclarationV1(nativeLaunchDeclaration), Date.now()),context.repoRoot,context.invocation,createRequestedIssuedResourceControlV1(phaseControl,0,signal));
+  const control = createRequestedIssuedResourceControlV1(phaseControl,0,context.invocation.control.signal);
+  const environment = nativeLaunchEnvironmentV1(context.invocation,process.env,readNativeLaunchDeclarationV1(nativeLaunchDeclaration),Date.now());
+  await withNativeRendererBinaryV1(resolve(context.root,"../📦️packages/🦀️rust"),profile,context.repoRoot,context.invocation,control,
+    (binary,phase)=>runNativeBinary(binary,args,environment,context.repoRoot,context.invocation,phase));
 }
+

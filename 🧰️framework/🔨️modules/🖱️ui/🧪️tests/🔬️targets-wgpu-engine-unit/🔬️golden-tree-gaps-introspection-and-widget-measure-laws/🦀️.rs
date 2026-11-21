@@ -133,7 +133,7 @@ fn golden_section_known_gap() {
 /// promise, not equivalence with anything immediate-mode.
 #[test]
 fn golden_image_known_gap() {
-    let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None });
+    let node = UiNode::Image(UiImageNode { source_page: None, id: "img".into(), src: String::new(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None });
     let (instances, _, _) = retained_stats(&node);
     assert!(instances > 0, "an empty-src Image should still paint its alt text");
 }
@@ -194,7 +194,7 @@ fn every_ui_node_kind_has_a_widget_kit_arm_that_paints() {
     let indeterminate = UiNode::Progress(UiProgressNode { id: "p".into(), completed: 0.0, total: None, value_text: Label::data("busy"), presence: UiPresence::default(), menu: None });
     assert!(paints(&indeterminate) > 0, "an indeterminate Progress must still paint its busy band");
 
-    let image = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None });
+    let image = UiNode::Image(UiImageNode { source_page: None, id: "img".into(), src: String::new(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None });
     assert!(paints(&image) > 0, "an Image with no decodable source must paint its placeholder plus alt text");
 
     let group = UiNode::Group(UiGroupNode {

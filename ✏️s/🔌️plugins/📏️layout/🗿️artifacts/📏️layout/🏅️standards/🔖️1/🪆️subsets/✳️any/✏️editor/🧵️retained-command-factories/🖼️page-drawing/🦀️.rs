@@ -3,14 +3,13 @@ use super::*;
 use semio_framework_value::{ValueError,RetirementDemand,RetainedCloneProgress,retained_clone::{RetainedCloneSource,StagedSourceAdmission},retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_s_artifact_layout_layout_editor_commands::patch_page::{PatchPage,drawing::source::OriginalPageDrawingSource};
 
-use semio_plugin::app::{child_read::OriginalChildMemberLookup,MemberKeyRef};
+use semio_plugin::app::{ChildEmitPreparation,MemberKeyRef,child_editor::read::ChildEditorRead,child_read::OriginalChildMemberLookup};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_editor::child_editor::{DRAWING_CHILD_VECTOR_READ,DRAWING_CHILD_SET_ARTBOARD};
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_plugin::app::child_read::command::{OriginalChildEditorCommandCursor,OriginalChildEditorCommandAuthority};
-use semio_plugin::ChildEmitPreparation;
 fn advance_source(
- source:&mut OriginalPageDrawingSource,parent:&LayoutSnapshot,read:Option<&semio_plugin::app::editor::read::ChildEditorRead<'_,DrawingSnapshot>>,cx:&mut StepContext<'_>,
+ source:&mut OriginalPageDrawingSource,parent:&LayoutSnapshot,read:Option<&ChildEditorRead<'_,DrawingSnapshot>>,cx:&mut StepContext<'_>,
 )->Result<bool,semio_framework_job::OriginalTurnFailure>{
  let Some((result,performed))=cx.with_original_source_effect(cx.retained_grant(),|_,effect|source.advance_original(parent,read,effect))?else{return Ok(false)};
  cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
@@ -22,6 +21,7 @@ fn add_demand(a:RetirementDemand,b:RetirementDemand)->Result<RetirementDemand,Va
 
 pub(super) type PageCommandSource=RetainedCloneSource<PatchPage>;
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub(super) struct PageDrawingOwners{pub output:Option<Emit<LayoutMutation,NoConfigMutation>>,pub preparation:Option<ChildEmitPreparation>,pub mutation:Option<DrawingMutation>,pub authority:Option<OriginalChildEditorCommandAuthority>,pub qualifier:Option<OriginalChildEditorCommandCursor>,pub lookup:Option<OriginalChildMemberLookup>,pub drawing:Option<OriginalPageDrawingSource>,pub command:Option<PageCommandSource>,pub staged:Option<StagedSourceAdmission<PatchPage,PatchPage>>}
 pub(super) struct PageDrawingWork{pub owners:ControlledRetirement<PageDrawingOwners>,pub closing:bool,pub qualified:bool}
 impl PageDrawingWork{
@@ -117,7 +117,8 @@ impl PageDrawingWork{
   }else{
    let command=owners.command.as_ref().unwrap().try_borrow()?;
    let qualified=source.read_qualification()?;
-   let Some((result,performed))=cx.with_original_source_effect(cx.retained_grant(),|_,effect|DRAWING_CHILD_SET_ARTBOARD.qualify_original(parent,command,qualified,&read,qualifier,effect))?else{return Ok(None)};
+   let qualified_parent=source.qualified_parent()?;
+   let Some((result,performed))=cx.with_original_source_effect(cx.retained_grant(),|_,effect|DRAWING_CHILD_SET_ARTBOARD.qualify_original(qualified_parent,command,qualified,&read,qualifier,effect))?else{return Ok(None)};
    cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
    match result{Ok(step)=>{cx.consume_retained(step.progress)?;self.qualified=step.stamp.is_some()},Err(error)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}
   }Ok(None)

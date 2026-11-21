@@ -6,16 +6,72 @@ import{readFileSync}from"node:fs";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { pluginFamilyText } from "../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 import { jobRetirementPayloadFixtureUrl } from "@semio-tech/framework/job/testing/fixtures";
+test("live cleanup yields to the owner of the next typed command turn", async () => {
+  const rows = await Bun.file(new URL("🧫️fixtures/⏩️foreground/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const owner = db.query("SELECT CASE ? WHEN 'worker' THEN 'maintenance' WHEN 'retirement' THEN 'maintenance' WHEN 'presentedPage' THEN 'host' WHEN 'emissionAdmission' THEN 'dispatch' ELSE 'publication' END AS owner");
+    for (const row of rows) expect(owner.get(row.stage)).toEqual({ owner: row.owner });
+  } finally { db.close(); }
+  const source = readFileSync(new URL("../../🪜️maintenance-ladder/🦀️.rs", import.meta.url), "utf8");
+  const live = source.slice(source.indexOf("fn maintenance_tool_selection"), source.indexOf("fn maintenance_stage_demand"));
+  expect(live).toContain("MaintenanceTool::AwaitingPublication");
+  expect(live).toContain("self.tools.original_emission_admission.is_some()");
+});
+test("mounted maintenance shares the ladder while preparation and close keep their own authority", async () => {
+  const rows = await Bun.file(new URL("🧫️fixtures/🪴️live-owner/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const select = db.query(`SELECT
+      CASE WHEN $phase = 'preparation' AND NOT $handoff THEN 'mounted' ELSE 'ladder' END AS live,
+      CASE WHEN $resident THEN 'mounted' ELSE 'ladder' END AS close,
+      CASE WHEN $handoff AND $resident THEN 'retire'
+        WHEN $phase = 'maintenance' AND NOT $handoff THEN 'maintain' END AS mountedStep`);
+    for (const row of rows) {
+      expect(select.get({ $phase: row.phase, $resident: Number(row.resident), $handoff: Number(row.documentHandoff) }))
+        .toEqual({ live: row.live, close: row.close, mountedStep: row.mountedStep });
+    }
+  } finally { db.close(); }
+  const source = readFileSync(new URL("../../🧵️instance/🔌️plugin-app-impl/🦀️.rs", import.meta.url), "utf8");
+  const live = source.slice(source.indexOf("fn mounted_owner_maintenance_phase"), source.indexOf("fn mounted_owner_close_step"));
+  expect(live).toContain("A::mounted_job_maintenance_phase(identity.instance_id) != Some(MountedOwnerPhaseV1::Preparation)");
+  expect(live).toContain("self.ingest.document_blocks_pending_effects()");
+  expect(live).not.toContain("mounted_jobs_terminal_is_empty");
+  const ladder = readFileSync(new URL("../../🪜️maintenance-ladder/🦀️.rs", import.meta.url), "utf8");
+  const mountedQuote = ladder.slice(ladder.indexOf("15 => match self.tools.live_runtime_instance_id"), ladder.indexOf("16 => (!self.tools"));
+  expect(mountedQuote).toContain("A::mounted_job_maintenance_phase(instance_id) == Some(MountedOwnerPhaseV1::Maintenance)");
+  expect(mountedQuote).toContain("self.ingest.document_blocks_pending_effects()");
+  expect(mountedQuote).toContain("A::mounted_job_close_demands(instance_id, body)");
+  expect(ladder).toContain("A::mounted_job_close_step(instance_id, cx, grant)");
+  expect(ladder).toContain("self.ingest.advance_snapshot_read_returns_one");
+});
+test("archive dependencies can use the limited maintenance grant", async () => {
+  const law = await Bun.file(new URL("🧫️fixtures/🗄️archive-credit/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const eligible = db.query(`SELECT CASE
+      WHEN NOT $pending OR $stage IN (8, 14, 15) THEN 1
+      WHEN $stage = 24 THEN $items >= $minimum
+      ELSE $items > $minimum END AS allowed`);
+    for (const row of law.cases) {
+      expect(eligible.get({ $pending: Number(row.archivePending), $stage: row.stage, $items: row.items, $minimum: law.archiveMinimumItems }))
+        .toEqual({ allowed: Number(row.eligible) });
+    }
+  } finally { db.close(); }
+  const scheduler = readFileSync(new URL("../../🧵️instance/📥️staging/🪜️maintenance-ladder/🦀️.rs", import.meta.url), "utf8");
+  expect(scheduler).toContain("matches!(unit, MaintenanceUnit::Stage(8 | 14 | 15))");
+  expect(scheduler).toContain("!archive && !archive_dependency && available_items <= DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS");
+});
 test("mounted worker forwards its original paid turn before a separate borrowed semantic turn",async()=>{
  const fixture=await Bun.file(new URL("🧫️fixtures/🪟️outcome-borrow/🔣️.json",import.meta.url)).json(),law=fixture.workerReceipt;
  expect(new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["originalGrant","receipt","consumptionCount","semanticOnReceiptTurn","poolWrapperBirth","metadataCopyCurrency","originalOutcomeUntilAcknowledgement"],properties:{originalGrant:{const:[1,17,8192,65536,9]},receipt:{const:[1,17,0,0]},consumptionCount:{const:1},semanticOnReceiptTurn:{const:false},poolWrapperBirth:{const:false},metadataCopyCurrency:{const:0},originalOutcomeUntilAcknowledgement:{const:true}}})(law)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE original_worker(axis INTEGER,grant INTEGER,receipt INTEGER)");law.receipt.forEach((receipt:number,axis:number)=>db.query("INSERT INTO original_worker VALUES(?,?,?)").run(axis,law.originalGrant[axis],receipt));expect(db.query("SELECT count(*) AS n FROM original_worker WHERE receipt>grant").get()).toEqual({n:0});expect(db.query("SELECT grant-receipt AS remaining FROM original_worker ORDER BY axis").all().map((row:any)=>row.remaining)).toEqual([0,0,8192,65536]);}finally{db.close();}
- const source=pluginFamilyText(),start=source.indexOf("fn drive_worker_step(&mut self,"),body=source.slice(start,source.indexOf("fn next_token",start));expect(start>=0).toBe(true);expect(body.includes("session.take_checked_out_retained_step_receipt()")).toBe(true);expect(body.includes("cx.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same))")).toBe(true);expect(body.includes("worker_semantic_pending")).toBe(true);expect(body.includes("Progress(progress)")).toBe(true);expect(body.includes("pump_one_for_interactive_turn(pool")).toBe(false);
+ const source=pluginFamilyText(),start=source.indexOf("fn drive_worker_step(&mut self,"),body=source.slice(start,source.indexOf("fn next_token",start));expect(start>=0).toBe(true);expect(body.includes("session.take_checked_out_retained_step_receipt()")).toBe(true);expect(body.includes("cx.with_retained_loan(grant,|loaned|loaned.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same)))")).toBe(true);expect(body.includes("worker_semantic_pending")).toBe(true);expect(body.includes("Progress(progress)")).toBe(true);expect(body.includes("pump_one_for_interactive_turn(pool")).toBe(false);
 });
 test("mounted worker borrows its actual descriptor until paid acknowledgement and separate resume",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🪟️outcome-borrow/🔣️.json",import.meta.url)).json();expect(new Ajv().compile({type:"object",required:["contract","originalGrant","payloadOwner","nativeAddressUnchanged","byValueHandback","semanticBorrowCount","metadataCopyCurrency","turns"],properties:{contract:{const:"framework.plugin.original-mounted-outcome-borrow"},originalGrant:{const:[1,4096,65536,262144,64]},payloadOwner:{const:"original-worker-job"},nativeAddressUnchanged:{const:true},byValueHandback:{const:false},semanticBorrowCount:{const:1},metadataCopyCurrency:{const:0},turns:{type:"array",minItems:4,maxItems:4}}})(law)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE handback(phase TEXT,items INTEGER,copy INTEGER)");for(const turn of law.turns)db.query("INSERT INTO handback VALUES(?,?,?)").run(turn.phase,turn.items,turn.copy);expect(db.query("SELECT sum(items) AS items,sum(copy) AS copy FROM handback").get()).toEqual({items:4,copy:0});}finally{db.close();}
- const source=pluginFamilyText(),start=source.indexOf("fn drive_worker_step(&mut self,"),body=source.slice(start,source.indexOf("fn next_token",start));expect(start>=0).toBe(true);expect(body.includes("checked_out_outcome()")).toBe(true);expect(body.includes("acknowledge_checked_out_outcome(grant)")).toBe(true);expect(body.includes("JobOutcomeView::")).toBe(true);expect(body.includes("take_checked_out_outcome()")).toBe(false);expect(body.includes("JobOutcomeSlot::from_outcome")).toBe(false);expect(body.includes("worker_outcome_pending")).toBe(true);expect(body.includes("copied_bytes:size_of::<bool>()")).toBe(false);
+ const source=pluginFamilyText(),start=source.indexOf("fn drive_worker_step(&mut self,"),body=source.slice(start,source.indexOf("fn next_token",start));expect(start>=0).toBe(true);expect(body.includes("checked_out_outcome()")).toBe(true);expect(body.includes("acknowledge_checked_out_outcome(cx)")).toBe(true);expect(body.includes("JobOutcomeView::")).toBe(true);expect(body.includes("take_checked_out_outcome()")).toBe(false);expect(body.includes("JobOutcomeSlot::from_outcome")).toBe(false);expect(body.includes("worker_outcome_pending")).toBe(true);expect(body.includes("copied_bytes:size_of::<bool>()")).toBe(false);
 });
 test("mounted fault capture copies original bounded pages before acknowledgement without cold conversion",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🪟️outcome-borrow/🔣️.json",import.meta.url)).json(),capture=law.faultCapture;expect(new Ajv().compile({type:"object",required:["originalGrant","sourceBytes","pageBytes","capacityBytes","metadataCopyCurrency","originalDescriptorUntilCaptureComplete","decodeOrReencodeDuringCapture","copyReceipts","semanticResumeAfterAcknowledgement"],properties:{originalGrant:{const:[1,17,8192,65536,9]},sourceBytes:{const:321},pageBytes:{const:[321]},capacityBytes:{const:480},metadataCopyCurrency:{const:0},originalDescriptorUntilCaptureComplete:{const:true},decodeOrReencodeDuringCapture:{const:false},copyReceipts:{type:"array",minItems:19,maxItems:19},semanticResumeAfterAcknowledgement:{const:true}}})(capture)).toBe(true);
@@ -55,6 +111,12 @@ test("archive retirement admits original history and preserves whole physical cu
  expect(owner).toContain("admit_owned_retirement");
  expect(owner).not.toContain(".truncate(");
  expect(owner).not.toContain("field.pop()");
+ expect(owner).toContain("let release_bytes = self.fault.capacity()");
+ const retirementStart = source.indexOf("fn drive_document_archive_original(");
+ const retirement = source.slice(retirementStart, source.indexOf("pub const DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS", retirementStart));
+ expect(retirement).toMatch(/if !matches!\(funded, Ok\(true\)\)[\s\S]*if closing && active\.terminal\(\) && active\.inputs_are_empty\(\)/);
+ expect(retirement).toContain("let demand = active.terminal_removal_demands()");
+ expect(retirement).toContain("released_bytes: demand.release_bytes");
 });
 test("prepared child retirement quotes original headers and separates visibility custody",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/📦️prepared-child/🔣️.json",import.meta.url)).json();expect(new Ajv().compile({type:"object",required:["originalGrant","metadataFields","metadataCopyCurrency","metadataRemovalSeparate","visibilityRemovalSeparate","readReturnPreservesOriginalReceipt","childCompleteIsParentProgress"],properties:{originalGrant:{const:[1,4096,65536,262144,64]},metadataFields:{const:7},metadataCopyCurrency:{const:0},metadataRemovalSeparate:{const:true},visibilityRemovalSeparate:{const:true},readReturnPreservesOriginalReceipt:{const:true},childCompleteIsParentProgress:{const:true}}})(law)).toBe(true);
@@ -77,10 +139,14 @@ test("constructor continuations preserve original kind and receipt before semant
  expect(law.phase).toEqual(["Preparation","Close"]);expect(law.phaseUsesOriginalPolicy).toBe(true);
  const collectorStart=source.indexOf("pub fn retain_original_ownership_receipts"),collector=source.slice(collectorStart,source.indexOf("///",collectorStart));expect(collector.includes("app.take_constructor_receipt()")).toBe(true);expect(collector.includes("TypedOperationFixtureOwnershipReceipt::Constructor { kind, phase, grant, progress }")).toBe(true);expect(collector.includes("ArtifactStoreConstructorPhase::Preparation => policy.preparation")).toBe(true);expect(collector.includes("ArtifactStoreConstructorPhase::Close => fixture_close_grant(policy)")).toBe(true);const closeGrantStart=source.indexOf("pub fn fixture_close_grant("),closeGrant=source.slice(closeGrantStart,source.indexOf("}",closeGrantStart));expect(closeGrantStart>=0).toBe(true);expect(closeGrant.includes("mounted_policy.close")).toBe(true);
  const outputStart=source.indexOf("pub struct PluginExchangeOutput"),output=source.slice(outputStart,source.indexOf("//#region",outputStart));expect(output.includes("pub constructor_receipt: Option<(semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind, semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>")).toBe(true);
- const closeStart=source.indexOf("fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)",implementation),close=source.slice(closeStart,source.indexOf("fn close_terminal_is_empty",closeStart));expect(close.includes("self.stores.close_store_constructor_unit(&mut self.constructor, effect)")).toBe(true);expect(close.includes("self.constructor.has_constructor_receipt()")).toBe(true);
+ const closeStart=source.indexOf("fn close_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)",implementation),close=source.slice(closeStart,source.indexOf("fn close_terminal_is_empty",closeStart));expect(close.includes("self.stores.close_store_constructor_unit(&mut self.constructor, effect)")).toBe(true);expect(close.includes("self.constructor.has_constructor_receipt()")).toBe(true);
  const continuationStart=source.indexOf("fn advance_typed_operation_output_with_leftover<"),continuation=source.slice(continuationStart,source.indexOf("match app.take_reserved_commit_outcome()",continuationStart));expect(continuation.includes("output.collect_original_receipts(app)")).toBe(true);const collectStart=source.indexOf("fn collect_original_receipts<PA:PluginApp>"),collect=source.slice(collectStart,source.indexOf("}",collectStart));expect(collectStart>=0).toBe(true);expect(collect.includes("self.constructor_receipt=app.take_constructor_receipt()")).toBe(true);const postedReceipt = continuation.slice(continuation.lastIndexOf("output.collect_original_receipts(app)"));
- expect(postedReceipt).toMatch(/if output\.ownership_receipt_pending\(\)\s*\{\s*let after = cx\.retained_progress\(\)/);
- expect(postedReceipt.indexOf("output.original_receiving = Some")).toBeGreaterThan(postedReceipt.indexOf("if posted !="));
+ expect(postedReceipt).toMatch(/if output\.ownership_receipt_pending\(\)\s*\{[\s\S]*output\.bind_window_posting\(before,cx\.retained_progress\(\),reserved,original,recipient\)/);
+ const postingStart = source.indexOf("fn bind_window_posting(");
+ const posting = source.slice(postingStart, source.indexOf("fn original_receipt_family", postingStart));
+ expect(posting).toContain("if !self.ownership_receipt_pending(){return Ok(())}");
+ expect(posting).toContain("let before = before.checked_add(reserved)?");
+ expect(posting).toMatch(/if posted!=RetainedCloneProgress::default\(\)\{self\.original_receiving=Some/);
  expect(postedReceipt.trimEnd().endsWith("return Ok((output, None));\n    }")).toBe(true);
 });
 test("original replacement retirement preserves full grants and physical pin backing",async()=>{
@@ -95,7 +161,7 @@ test("publication continuations borrow the original driver identity authority",a
  const db=new Database(":memory:");try{db.run("CREATE TABLE driver(items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER,depth INTEGER)");db.query("INSERT INTO driver VALUES(?,?,?,?,?)").run(...law.native.grant);expect(Object.values(db.query("SELECT items,copy,capacity,release,depth FROM driver").get()as object)).toEqual(law.native.grant);}finally{db.close();}
  const source=pluginFamilyText(),identity="identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>";
  for(const marker of["async fn advance_typed_operation_publication(","fn advance_typed_operation_output_with_leftover<","pub async fn plugin_continue_typed_operations<","pub async fn plugin_complete_reserved_spawned_job<","pub async fn settle_registered_typed_operation<","async fn drive_host_typed_continuations<","async fn drive_host_call_with_deferred_acks<"]){const start=source.indexOf(marker),signature=source.slice(start,source.indexOf(" -> ",start));expect(start>=0).toBe(true);expect(signature.includes(identity)).toBe(true);}
- for(const marker of["async fn drive_host_typed_continuations<","async fn drive_host_call_with_deferred_acks<"]){const start=source.indexOf(marker),body=source.slice(start,source.indexOf("    ///",start));expect(body.includes("retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)")).toBe(true);expect(body.includes("app.advance_typed_operation_publication(identity,mounted_policy.preparation,receiving)")).toBe(true);expect(body.includes("ownership_receipts")).toBe(true);}
+ for(const marker of["async fn drive_host_typed_continuations<","async fn drive_host_call_with_deferred_acks<"]){const start=source.indexOf(marker),body=source.slice(start,source.indexOf("    ///",start));expect(body.includes("retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)")).toBe(true);expect(body.includes("cx.with_retained_loan(mounted_policy.preparation, |same| ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(identity, same))")).toBe(true);expect(body.includes("ownership_receipts")).toBe(true);}
  expect(source.includes("pub(crate) async fn drive_tool_run_turn(&mut self,cx:&mut semio_framework_job::StepContext<'_>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)")).toBe(true);expect(source.includes("ctx.drive_tool_run_turn(cx, identity).await?")).toBe(true);expect(source.includes("app.advance_typed_operation_publication(identity,cx)")).toBe(true);expect(source.includes("advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, &mut pages, identity,cx)")).toBe(true);
  const reactor=readModuleTreeSource(new URL("../../⚛️reactor/🔄️turn/🦀️.rs",import.meta.url));expect(/TypedOperationGrant::turn\(budget,\s*cx\),\s*identity,\s*cx\)/u.test(reactor)).toBe(true);expect(/job,\s*reserved_output,\s*identity,\s*cx\)/u.test(reactor)).toBe(true);
 });
@@ -116,7 +182,7 @@ test("tool run receipt preserves the original grant through every runtime handof
  const source=pluginFamilyText();expect(source.includes("fn take_tool_run_receipt(&mut self) -> Option<(RetainedCloneGrant, RetainedCloneProgress)>")).toBe(true);expect(source.includes("self.tool_runs.take_original_receipt()")).toBe(true);expect(source.includes("self.tool_runs.has_original_receipt()")).toBe(true);expect(source.includes("self.tool_run_receipt=app.take_tool_run_receipt()")).toBe(true);
  const stopStart=source.indexOf("fn spent(&self, output: &PluginExchangeOutput)"),stop=source.slice(stopStart,source.indexOf("fn expired",stopStart));expect(stop.includes("output.tool_run_receipt.is_some()")).toBe(true);
  const continuationStart=source.indexOf("pub async fn plugin_continue_typed_operations"),continuation=source.slice(continuationStart,source.indexOf("//#endregion",continuationStart));expect(continuation.includes("collected.1.tool_run_receipt=output.tool_run_receipt")).toBe(true);
- const inlineStart=source.indexOf("if let Some(operation) = flags.started_typed_operation"),inline=source.slice(inlineStart,source.indexOf("effect_bytes.extend",inlineStart));expect(inline.includes("!typed_output.ownership_receipt_pending()")).toBe(true);expect(source.includes("self.tool_run_receipt.is_some()")).toBe(true);expect(inline.includes("typed_output.tool_run_receipt=more.tool_run_receipt")).toBe(true);expect(source.includes("tool_run_receipt: typed_output.tool_run_receipt")).toBe(true);
+ const inlineStart=source.indexOf("if let Some(operation) = flags.started_typed_operation"),inline=source.slice(inlineStart,source.indexOf("state.effects.append",inlineStart));expect(inline.includes('!state.typed_output.as_mut().expect("retained actual typed output").ownership_receipt_pending()')).toBe(true);expect(source.includes("self.tool_run_receipt.is_some()")).toBe(true);expect(inline.includes("typed_output.tool_run_receipt=more.tool_run_receipt")).toBe(true);expect(source.includes("tool_run_receipt: typed_output.tool_run_receipt")).toBe(true);
  expect(source.includes("TypedOperationFixtureOwnershipReceipt::ToolRun { grant, progress }")).toBe(true);
 });
 test("child root maintenance borrows original retainers and separates terminal registry removal",async()=>{
@@ -124,11 +190,11 @@ test("child root maintenance borrows original retainers and separates terminal r
  expect(new Ajv().compile({type:"object",required:["currencies","phases","retainers","queryHasEffects","childCompleteIsParentComplete"],properties:{currencies:{const:["items","copy","capacity","release","depth"]},retainers:{const:["current-root","sibling-retirements","member-preview","saved-reviewed-preview"]},queryHasEffects:{const:false},childCompleteIsParentComplete:{const:false}}})(law)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE owner(items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER,depth INTEGER)");db.query("INSERT INTO owner VALUES(?,?,?,?,?)").run(...law.originalGrant);const r=law.composedReceipt;expect(r).toEqual(law.childReceipt.map((value:number,index:number)=>value+law.borrowedTableReceipt[index]));expect(law.composedDepth).toBe(law.borrowedTableDepth+law.childDepth);expect(Object.values(db.query("SELECT items-? AS items,copy-? AS copy,capacity-? AS capacity,release-? AS release,depth FROM owner").get(...r)as object)).toEqual(law.remaining);}finally{db.close();}
  const source=pluginFamilyText(),producer=readFileSync(new URL("../../🧩️composition/♻️root/🦀️.rs",import.meta.url),"utf8"),start=producer.indexOf("fn advance_original_child_root_retirement"),step=producer.slice(start);
- expect(step.includes("grant: RetainedCloneGrant")).toBe(true);expect(step.includes("original_content_step_owners")).toBe(true);expect(step.includes("RetainedCloneStep::Complete(progress)=>RetainedCloneStep::Progress")).toBe(true);expect(step.includes("sibling_content_owners")).toBe(false);expect(step.includes("maximum_copy_bytes:grant.maximum_copy_bytes-reserved")).toBe(true);
+ expect(step.includes("let grant = effect.grant()")).toBe(true);expect(step.includes("&mut effect.nested(child_grant)")).toBe(true);expect(step.includes("original_content_step_owners")).toBe(true);expect(step.includes("RetainedCloneStep::Complete(progress)=>RetainedCloneStep::Progress")).toBe(true);expect(step.includes("sibling_content_owners")).toBe(false);expect(step.includes("maximum_copy_bytes:grant.maximum_copy_bytes-reserved")).toBe(true);
  const queryStart=producer.indexOf("fn original_child_root_retirement_demands"),query=producer.slice(queryStart,producer.indexOf("fn advance_original_child_root_retirement",queryStart));expect(queryStart>=0).toBe(true);for(const verb of[".clone()",".take()",".remove(",".close_step("])expect(query.includes(verb)).toBe(false);
  const reclaimStart=source.indexOf("fn reclaim_child_retirements("),reclaim=source.slice(reclaimStart,source.indexOf("\n        }",reclaimStart));expect(reclaim.includes("child_root_retirement_step")).toBe(false);expect(reclaim.includes("child_member_retirement_step")).toBe(false);
  expect(source.includes("pub trait ChildContentRetainers")).toBe(true);expect(source.includes("member.review_children.as_ref().map(|review|&review.view)")).toBe(true);expect(source.includes("member.children.as_ref()")).toBe(true);
- const mountedStart=source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp"),mounted=source.slice(mountedStart);expect(source.includes("MAINTENANCE_CHILD_ROOT_STAGE => self.child_root_retirement_step(grant).map(PluginLifecycleStep::Progress)")).toBe(true);expect(source.includes("CloseRung::ChildRootRetirements=>Ok(RetainedCloneStep::Progress(self.ladder_ctx().child_root_retirement_step(grant)?))")).toBe(true);expect(source.includes("self.child_root_retirement_unit(grant, self.close.close_child_root_detached)")).toBe(true);expect(source.includes("advance_original_child_root_retirement(&mut self.child_composition.child_content_retirements, &mut self.child_composition.children, Some(&mut self.child_composition.child_member_retirements), &self.child_composition.child_content_root, member, review, &mut self.maintenance.maintenance_child_root_cursor, grant, closing)")).toBe(true);
+ const mountedStart=source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp"),mounted=source.slice(mountedStart);expect(source.includes("if stage==MAINTENANCE_CHILD_ROOT_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.child_root_retirement_step(effect)")).toBe(true);expect(source.includes("CloseRung::ChildRootRetirements=>Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.ladder_ctx().child_root_retirement_step(effect)")).toBe(true);expect(source.includes("self.child_root_retirement_unit(effect, self.close.close_child_root_detached)")).toBe(true);expect(source.includes("advance_original_child_root_retirement(&mut self.child_composition.child_content_retirements, &mut self.child_composition.children, Some(&mut self.child_composition.child_member_retirements), &self.child_composition.child_content_root, member, review, &mut self.maintenance.maintenance_child_root_cursor, effect, closing)")).toBe(true);
 });
 test("every shared artifact fixture propagates the original caller policy and identity",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🧾️fixture-caller/🔣️.json",import.meta.url)).json();
@@ -141,14 +207,74 @@ test("every shared artifact fixture propagates the original caller policy and id
 test("runtime forwards one original grant and validates every actual lifecycle currency",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🎟️lifecycle-grant/🔣️.json",import.meta.url)).json();
  const db=new Database(":memory:");try{db.run("CREATE TABLE turns(items INTEGER, copy INTEGER, capacity INTEGER, release INTEGER, depth INTEGER, called INTEGER)");const names={maximumItems:1,maximumCopyBytes:law.demand.copyBytes,maximumCapacityBytes:law.demand.capacityBytes,maximumReleaseBytes:law.demand.releaseBytes,maximumDepth:law.demand.depth};for(const axis of law.refusalAxes){const grant={...law.grant,[axis]:names[axis as keyof typeof names]-1};db.query("INSERT INTO turns VALUES(?,?,?,?,?,?)").run(grant.maximumItems,grant.maximumCopyBytes,grant.maximumCapacityBytes,grant.maximumReleaseBytes,grant.maximumDepth,0);}db.query("INSERT INTO turns VALUES(?,?,?,?,?,?)").run(law.grant.maximumItems,law.grant.maximumCopyBytes,law.grant.maximumCapacityBytes,law.grant.maximumReleaseBytes,law.grant.maximumDepth,1);expect(db.query("SELECT count(*) AS n FROM turns WHERE items>=1 AND copy>=? AND capacity>=? AND release>=? AND depth>=?").get(law.demand.copyBytes,law.demand.capacityBytes,law.demand.releaseBytes,law.demand.depth)).toEqual({n:1});expect(db.query("SELECT sum(called) AS n FROM turns").get()).toEqual({n:1});}finally{db.close();}
- const source=pluginFamilyText(),trait=source.slice(source.indexOf("pub trait PluginApp: Send"),source.indexOf("async fn app_id",source.indexOf("pub trait PluginApp: Send")));expect(trait.includes("fn close_retirement_demands(&self, body: usize)")).toBe(true);expect(trait.includes("fn maintenance_retirement_demands(&self, body: usize)")).toBe(true);expect(trait.includes("fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant)")).toBe(true);expect(trait.includes("fn maintenance_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant)")).toBe(true);expect(trait.includes("maximum_bytes")).toBe(false);
- const transport=source.slice(source.indexOf("fn runtime_lifecycle_step("),source.indexOf("struct RuntimeLiveCleanupJob",source.indexOf("fn runtime_lifecycle_step(")));expect(transport.includes("semio_framework_value::advance_retirement_turn(demand,grant,owner)")).toBe(true);const native=readFileSync(new URL("../../../../../../🔨️modules/🌱️value/♻️retirement/🎟️turn/🦀️.rs",import.meta.url),"utf8");for(const field of ["maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth","receipt.fits(grant)","owner(grant)","terminal_is_empty"])expect(native.includes(field)).toBe(true);expect(source.includes("impl semio_framework_value::RetirementReceipt for PluginLifecycleStep")).toBe(true);expect(transport.includes("artifact_close_release_grant")).toBe(false);expect(source.includes("instance.app.mounted_owner_maintenance_step(&mut turn)")).toBe(true);expect(source.includes("instance.app.mounted_owner_close_step(&mut turn)")).toBe(true);
+ const source=pluginFamilyText(),trait=source.slice(source.indexOf("pub trait PluginApp: Send"),source.indexOf("async fn app_id",source.indexOf("pub trait PluginApp: Send")));expect(trait.includes("fn close_retirement_demands(&self, body: usize)")).toBe(true);expect(trait.includes("fn maintenance_retirement_demands(&self, body: usize,maximum_work_units:u64)")).toBe(true);expect(trait.includes("fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant)")).toBe(true);expect(trait.includes("fn maintenance_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant)")).toBe(true);expect(trait.includes("maximum_bytes")).toBe(false);
+ const transport=source.slice(source.indexOf("fn runtime_lifecycle_step("),source.indexOf("struct RuntimeLiveCleanupJob",source.indexOf("fn runtime_lifecycle_step(")));expect(transport).toContain("semio_framework_value::advance_retirement_turn(demand,grant,|grant|");expect(transport).toContain("result:owner(grant)");const native=readFileSync(new URL("../../../../../../🔨️modules/🌱️value/♻️retirement/🎟️turn/🦀️.rs",import.meta.url),"utf8");for(const field of ["maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth","receipt.fits(grant)","owner(grant)","terminal_is_empty"])expect(native.includes(field)).toBe(true);expect(source.includes("impl semio_framework_value::RetirementReceipt for PluginLifecycleStep")).toBe(true);expect(transport.includes("artifact_close_release_grant")).toBe(false);expect(source.includes("instance.app.mounted_owner_maintenance_step(&mut turn)")).toBe(true);expect(source.includes("instance.app.mounted_owner_close_step(&mut turn)")).toBe(true);
+});
+
+test("runtime maintenance closes against the caller grant", async () => {
+  const law = await Bun.file(new URL("🧫️fixtures/🎟️maintenance-close/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const admits = db.query(`SELECT
+      ? <= ? AND ? <= ? AND ? <= ? AND ? <= ? AND (NOT ? OR ?) AS accepted`);
+    for (const row of law.cases) {
+      for (const [grant, accepted] of [[law.callerGrant, row.callerAccepted], [law.mountedClosePolicy, row.mountedAccepted]]) {
+        const axes = row.receipt.flatMap((used: number, index: number) => [used, grant[index]]);
+        expect(admits.get(...axes, Number(row.complete), Number(row.empty))).toEqual({ accepted });
+      }
+    }
+  } finally {
+    db.close();
+  }
+  const source = pluginFamilyText();
+  const start = source.indexOf("let mut maintenance = match cell.maintenance_pump.try_lock()");
+  expect(start).toBeGreaterThanOrEqual(0);
+  const close = source.slice(start, source.indexOf("match progress", start));
+  expect(close).toMatch(/let grant\s*=\s*cx\.retained_grant\(\);/);
+  expect(close).toContain("maintenance.close_step(cx)");
+  expect(close).toContain("step.admit(grant, maintenance.terminal_is_empty())");
+});
+
+test("runtime cleanup keeps the parent pending until its weak owner returns", async () => {
+  const cases = await Bun.file(new URL("🧫️fixtures/🪶️cleanup-parent/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const transition = db.query(`SELECT
+      CASE WHEN :child = "complete" AND :weakOwned THEN "pending" ELSE :child END AS parent,
+      :items AS items, :copy AS copy, :capacity AS capacity, :release AS release`);
+    for (const { child, weakOwned, receipt: [items, copy, capacity, release], parent } of cases) {
+      expect(transition.get({ ":child": child, ":weakOwned": Number(weakOwned), ":items": items,
+        ":copy": copy, ":capacity": capacity, ":release": release })).toEqual({ parent, items, copy, capacity, release });
+    }
+  } finally {
+    db.close();
+  }
+  const source = pluginFamilyText();
+  for (const job of ["RuntimeLiveCleanupJob", "RuntimeCloseCleanupJob"]) {
+    const implementation = source.indexOf(`impl<PA: PluginApp> semio_framework_job::InteractiveJob for ${job}<PA>`);
+    expect(implementation).toBeGreaterThanOrEqual(0);
+    const start = source.indexOf("fn close_step", implementation);
+    const close = source.slice(start, source.indexOf("fn next_close_copy_byte_demand", start));
+    expect(close).toMatch(/self\.publication\.close_step\(cx\)\?[\s\S]*Complete \{ progress \} if !self\.terminal_is_empty\(\) => Step::Pending \{ progress \}/);
+  }
 });
 
 test("runtime cleanup retains original payload headers through the shared slot producer before the separate resume turn",async()=>{
  const law=await Bun.file(jobRetirementPayloadFixtureUrl).json();expect(law.slotStages).toEqual(["payload","metadata","parent-complete"]);
  const db=new Database(":memory:");try{db.run("CREATE TABLE handbacks(variant TEXT,phase INTEGER,header INTEGER,resume INTEGER)");for(const variant of law.variants){for(let phase=0;phase<4;phase++)db.query("INSERT INTO handbacks VALUES(?,?,?,?)").run(variant,phase,Number(phase<2),Number(phase===3));}expect(db.query("SELECT count(*) AS n FROM handbacks WHERE resume=1 AND header=0 AND phase=3").get()).toEqual({n:6});expect(db.query("SELECT count(*) AS n FROM handbacks WHERE resume=1 AND header=1").get()).toEqual({n:0});}finally{db.close();}
- const source=pluginFamilyText();for(const name of ["runtime_live_cleanup_pump_one","runtime_close_cleanup_pump_one"]){const start=source.indexOf(`fn ${name}<`),body=source.slice(start,source.indexOf("if pump.session.is_none()",start));expect(body.includes("let acknowledgement=session.acknowledge_outcome(grant);cx.consume_retained(acknowledgement.progress())?;")).toBe(true);expect(body.includes("pump.outcome_pending=false;")).toBe(true);expect(body.includes("pump.resume_pending=true;")).toBe(true);expect(body.indexOf("session.acknowledge_outcome(grant)")<body.indexOf("if pump.resume_pending")).toBe(true);expect(body.includes("if pump.resume_pending")).toBe(true);expect(body.includes("outcome.close_step(grant)")).toBe(false);}
+ const source = pluginFamilyText();
+ for (const name of ["runtime_live_cleanup_pump_one", "runtime_close_cleanup_pump_one"]) {
+  const start = source.indexOf(`fn ${name}<`);
+  const body = source.slice(start, source.indexOf("if pump.session.is_none()", start));
+  expect(body).toContain("if !session.acknowledge_outcome(cx)?");
+  expect(body).toContain("pump.outcome_pending=false;");
+  expect(body).toContain("pump.resume_pending=true;");
+  expect(body.indexOf("session.acknowledge_outcome(cx)")).toBeLessThan(body.indexOf("if pump.resume_pending"));
+  expect(body).toContain("session.close_step(cx)?");
+  expect(body).not.toContain("outcome.close_step(grant)");
+  const outcome = source.slice(start, source.indexOf("pump.outcome_pending = true", start));
+  expect(outcome).toMatch(/take_checked_out_retained_step_receipt\(\)[\s\S]*checked_out_continuation\(\)[\s\S]*pump\.faulted = true;[\s\S]*checked_out_outcome\(\)/);
+ }
  const start=source.indexOf("impl<PA: PluginApp> RuntimeLiveCleanupPump"),body=source.slice(start,source.indexOf("struct RuntimeCloseCleanupPump",start));expect(body.includes("session.retirement_demands(body)")).toBe(true);expect(body.includes("if session.terminal_is_empty(){cx.consume_retained(metadata)?;drop(self.session.take());self.outcome_pending=false;self.resume_pending=false;")).toBe(true);expect(body.includes("self.closing && self.session.is_none() && self.rejected.is_none() && !self.outcome_pending")).toBe(true);expect(body.includes("close_step_outcome_slot")).toBe(false);
 });
 
@@ -156,8 +282,8 @@ test("media and typed worker handbacks retain original outcomes and use all admi
  const law=await Bun.file(jobRetirementPayloadFixtureUrl).json();
  const db=new Database(":memory:");try{db.run("CREATE TABLE private_handbacks(owner TEXT,variant TEXT,phase TEXT,resume INTEGER)");for(const owner of ["media","typed"]){for(const variant of law.variants){for(const phase of [...law.slotStages,"resume"])db.query("INSERT INTO private_handbacks VALUES(?,?,?,?)").run(owner,variant,phase,Number(phase==="resume"));}}expect(db.query("SELECT count(*) AS n FROM private_handbacks WHERE resume=1").get()).toEqual({n:12});expect(db.query("SELECT count(*) AS n FROM private_handbacks WHERE resume=1 AND phase!='resume'").get()).toEqual({n:0});}finally{db.close();}
  const source=pluginFamilyText(),mediaStart=source.indexOf("fn retire_nonterminal_outcome("),media=source.slice(mediaStart,source.indexOf("fn terminal_is_empty",mediaStart)),typedStart=source.indexOf("fn drive_worker_step("),typed=source.slice(typedStart,source.indexOf("fn next_token",typedStart));
- expect(media.includes("grant: RetainedCloneGrant")).toBe(true);expect(media.includes("Result<PluginLifecycleStep, Fault>")).toBe(true);expect(media.includes("session.acknowledge_checked_out_outcome(grant)")).toBe(true);expect(media.includes("self.resume_pending = true")).toBe(true);
- expect(typed.includes("let grant=cx.retained_grant();")).toBe(true);expect(typed.includes("Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>")).toBe(true);expect(typed.includes("acknowledge_checked_out_outcome(grant)")).toBe(true);expect(typed.includes("take_checked_out_outcome()")).toBe(false);expect(typed.includes("self.worker_resume_pending=true")).toBe(true);for(const body of [media,typed])expect(body.includes("JobPayloadCloseStep")).toBe(false);
+ expect(media.includes("grant: RetainedCloneGrant")).toBe(true);expect(media.includes("Result<PluginLifecycleStep, Fault>")).toBe(true);expect(media.includes("session.acknowledge_checked_out_outcome(cx)")).toBe(true);expect(media.includes("self.resume_pending = true")).toBe(true);
+ expect(typed.includes("let grant=cx.retained_grant();")).toBe(true);expect(typed.includes("Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>")).toBe(true);expect(typed.includes("acknowledge_checked_out_outcome(cx)")).toBe(true);expect(typed.includes("take_checked_out_outcome()")).toBe(false);expect(typed.includes("self.worker_resume_pending=true")).toBe(true);for(const body of [media,typed])expect(body.includes("JobPayloadCloseStep")).toBe(false);
  const pollStart=source.indexOf("pub(crate) async fn drive_owned_media_export("),poll=source.slice(pollStart,source.indexOf("if let Some(rejected) = active.session_rejected.as_mut()",pollStart));expect(pollStart>=0).toBe(true);expect(poll.includes("take_checked_out_outcome")).toBe(false);expect(poll.includes("if active.resume_pending || active.outcome_pending {")).toBe(true);expect(poll.includes("active.retire_nonterminal_outcome(cx)")).toBe(true);
 });
 
@@ -165,20 +291,20 @@ test("envelope and initializer handbacks admit one original full turn without fo
  const law=await Bun.file(jobRetirementPayloadFixtureUrl).json();
  const db=new Database(":memory:");try{db.run("CREATE TABLE decode_turns(owner TEXT,variant TEXT,phase INTEGER,payload INTEGER,resume INTEGER)");for(const owner of ["envelope","initializer"]){for(const variant of law.variants){for(let phase=0;phase<4;phase++)db.query("INSERT INTO decode_turns VALUES(?,?,?,?,?)").run(owner,variant,phase,Number(phase<2),Number(phase===3));}}expect(db.query("SELECT count(*) AS n FROM decode_turns WHERE resume=1 AND payload=0").get()).toEqual({n:12});expect(db.query("SELECT count(*) AS n FROM decode_turns WHERE resume=1 AND payload=1").get()).toEqual({n:0});}finally{db.close();}
  const source=pluginFamilyText(),envelopeStart=source.indexOf("impl<P, Mutation> ActiveArtifactEnvelopeDecode"),envelope=source.slice(envelopeStart,source.indexOf("fn decode_worker_owners_are_terminal",envelopeStart)),initializerStart=source.indexOf("fn drive_initializer("),initializer=source.slice(initializerStart,source.indexOf("fn drive_retained_store",initializerStart));
- for(const body of [envelope,initializer]){expect(body.includes("grant: RetainedCloneGrant")).toBe(true);expect(body.includes("Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>")).toBe(true);expect(body.includes("session.acknowledge_checked_out_outcome(grant)")).toBe(true);expect(body.includes("self.resume_pending=true")).toBe(true);expect(body.includes("JobPayloadCloseStep")).toBe(false);}
+ for(const body of [envelope,initializer]){expect(body.includes("grant: RetainedCloneGrant")).toBe(true);expect(body.includes("Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>")).toBe(true);expect(body.includes("session.acknowledge_checked_out_outcome(cx)")).toBe(true);expect(body.includes("self.resume_pending=true")).toBe(true);expect(body.includes("JobPayloadCloseStep")).toBe(false);}
  expect(source.includes("fn force_worker_session_terminal(")).toBe(false);const start=source.indexOf("fn advance_ready_envelope_decode_worker_owners("),body=source.slice(start,source.indexOf("pub fn cancel_artifact_envelope_decode",start));expect(start>=0).toBe(true);expect(body.includes("grant: RetainedCloneGrant")).toBe(true);expect(body.includes("for _")).toBe(false);expect(body.includes("4096")).toBe(false);expect(source.includes("rejected.next_close_demands(")).toBe(false);expect(source.includes("session.next_close_demands(")).toBe(false);
 });
 
 test("envelope return pumps preserve every original currency and separate owner metadata removal",()=>{
  const db=new Database(":memory:");try{db.run("CREATE TABLE returns(owner TEXT,phase INTEGER,capacity INTEGER,release INTEGER)");for(const owner of ["field","completed"]){db.query("INSERT INTO returns VALUES(?,?,?,?)").run(owner,0,64,0);db.query("INSERT INTO returns VALUES(?,?,?,?)").run(owner,1,0,128);db.query("INSERT INTO returns VALUES(?,?,?,?)").run(owner,2,0,0);}expect(db.query("SELECT sum(capacity) AS capacity,sum(release) AS release FROM returns").get()).toEqual({capacity:128,release:256});}finally{db.close();}
- const source=pluginFamilyText();for(const [name,step] of [["drive_envelope_field_decoder_returns","erased_step(retirement, grant)"],["drive_envelope_completed_record_returns","completed_step(retirement.as_mut(), grant)"]]){const start=source.indexOf(`fn ${name}(`),body=source.slice(start,source.indexOf("\n    }\n",start));expect(start>=0).toBe(true);expect(body.includes("grant: RetainedCloneGrant")).toBe(true);expect(body.includes("Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>")).toBe(true);expect(body.includes("SnapshotRetirementStep")).toBe(false);expect(body.includes(step)).toBe(true);expect(body.includes("plugin_turn_admitted(handoff_demand(), grant)?")).toBe(true);expect(body.includes("PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress })")).toBe(true);expect(body.includes("PluginLifecycleStep::Complete(empty)")).toBe(true);}
- const fundsStart=source.indexOf("pub fn plugin_grant_funds("),funds=source.slice(fundsStart,source.indexOf("\n}\n",fundsStart));for(const field of ["maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth"])expect(funds.includes(field)).toBe(true);for(const helper of ["fn erased_step<","fn completed_step<"]){const start=source.indexOf(helper),body=source.slice(start,source.indexOf("\n}\n",start));expect(body.includes("plugin_turn_admitted(demand, grant)?")).toBe(true);expect(body.includes("admit_retained_clone_close(grant, step,")).toBe(true);}
+ const source=pluginFamilyText();for(const [name,step] of [["drive_envelope_field_decoder_returns","erased_step(cx, retirement, grant)"],["drive_envelope_completed_record_returns","completed_step(cx, retirement.as_mut(), grant)"]]){const start=source.indexOf(`fn ${name}(`),body=source.slice(start,source.indexOf("\n    }\n",start));expect(start>=0).toBe(true);expect(body.includes("grant: RetainedCloneGrant")).toBe(true);expect(body.includes("Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>")).toBe(true);expect(body.includes("SnapshotRetirementStep")).toBe(false);expect(body.includes(step)).toBe(true);expect(body.includes("plugin_turn_admitted(handoff_demand(), grant)?")).toBe(true);expect(body.includes("PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress })")).toBe(true);expect(body.includes("PluginLifecycleStep::Complete(empty)")).toBe(true);}
+ const fundsStart=source.indexOf("pub fn plugin_grant_funds("),funds=source.slice(fundsStart,source.indexOf("\n}\n",fundsStart));for(const field of ["maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth"])expect(funds.includes(field)).toBe(true);for(const helper of ["fn erased_step<","fn completed_step<"]){const start=source.indexOf(helper),body=source.slice(start,source.indexOf("\n}\n",start));expect(body).toContain("original_lifecycle_effect_step(cx, grant, demand, |_, effect|");expect(body).toContain("let child = effect.grant()");expect(body).toContain("admit_retained_clone_close(child, step,");}
 });
 
 test("independent lifecycle release preserves original empty allocation extents and fixed refusal",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/📏️live-physical-demand/🔣️.json",import.meta.url)).json();
  const db=new Database(":memory:");try{db.run("CREATE TABLE originals(extent INTEGER,copy INTEGER,release INTEGER,called INTEGER)");for(const extent of [...law.allocationBytes,law.refusedAllocationBytes]){db.query("INSERT INTO originals VALUES(?,?,?,?)").run(extent,law.ordinaryGrantBytes,law.maximumAdmissionBytes,Number(extent<=law.maximumAdmissionBytes));}expect(db.query("SELECT count(*) AS n FROM originals WHERE called=1 AND extent>copy AND extent<=release").get()).toEqual({n:3});expect(db.query("SELECT extent,called FROM originals WHERE extent>release").get()).toEqual({extent:law.refusedAllocationBytes,called:0});}finally{db.close();}
- const source=pluginFamilyText(),policy=readFileSync(new URL("../../🏇️mounted-owner/🦀️.rs",import.meta.url),"utf8");for(const axis of ["maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth"])expect(policy.includes("grant."+axis)).toBe(true);expect(policy.includes("MountedOwnerPhaseV1::Maintenance => self.maintenance")).toBe(true);expect(source.includes("MountedOwnerTurnV1::admit(instance_id, identity, phase, cell.mounted_policy, cx)?")).toBe(true);expect(source.includes("let grant=state.mounted_policy.close;")).toBe(true);expect(source.includes("step.progress().unwrap_or_default() != turn.progress()")).toBe(true);
+ const source=pluginFamilyText(),policy=readFileSync(new URL("../../🏇️mounted-owner/🦀️.rs",import.meta.url),"utf8");for(const axis of ["maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth"])expect(policy.includes("grant."+axis)).toBe(true);expect(policy.includes("MountedOwnerPhaseV1::Maintenance => self.maintenance")).toBe(true);expect(source.includes("MountedOwnerTurnV1::admit(instance_id, identity, phase, cell.mounted_policy, cx)?")).toBe(true);expect(source.includes("MountedOwnerTurnV1::admit(state.instance_id, identity, MountedOwnerPhaseV1::Close, state.mounted_policy, cx)?")).toBe(true);expect(source.includes("step.progress().unwrap_or_default() != turn.progress()")).toBe(true);
  const native=readFileSync(new URL("🦀️.rs",import.meta.url),"utf8");expect(native.includes("runtime_live_maintenance_step")).toBe(false);expect(native.includes("PluginCloseStep")).toBe(false);expect(native.includes("assert_eq!(actual, grant)")).toBe(true);expect(native.includes("every_actual_progress_currency_resets_close_and_live_stall_credit")).toBe(true);
 });
 
@@ -186,7 +312,13 @@ test("mounted callers retain the original inline outcome and remove only its act
  const law=await Bun.file(jobRetirementPayloadFixtureUrl).json();expect(new Ajv().compile({type:"object",required:["slotHeaderRemoval","slotPresenceBytes"],properties:{slotHeaderRemoval:{const:"in-place"},slotPresenceBytes:{const:0}}})(law)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE slots(owner TEXT,phase TEXT,copy INTEGER,move INTEGER)");for(const owner of ["runtime-live","runtime-close","media","typed","envelope","initializer","framework"]){for(const phase of ["payload","metadata","resume"])db.query("INSERT INTO slots VALUES(?,?,?,?)").run(owner,phase,Number(phase==="metadata"&&owner!=="typed")*law.slotPresenceBytes,0);}expect(db.query("SELECT count(*) AS n,sum(copy) AS copy,sum(move) AS move FROM slots WHERE phase='metadata'").get()).toEqual({n:7,copy:0,move:0});}finally{db.close();}
  const source=pluginFamilyText();for(const [name,flag] of [["ActiveMediaExport","outcome_pending:bool"],["MountedTypedCommandFullOperation<","worker_outcome_pending: bool"],["ActiveArtifactEnvelopeDecode<","outcome_pending: bool"],["ActiveArtifactStoreReplacement<","outcome_pending: bool"]]){const start=source.indexOf(`struct ${name}`),body=source.slice(start,source.indexOf("\n}\n",start));expect(start>=0).toBe(true);expect(body.includes(flag)).toBe(true);expect(body.includes("JobOutcomeSlot")).toBe(false);expect(body.includes("Option<semio_framework_job::StepOutcome>")).toBe(false);}
- const frameworkStart=source.indexOf("framework reserved mounted worker checkout lost its exact outcome"),framework=source.slice(frameworkStart,source.indexOf("let overrun =",frameworkStart));expect(frameworkStart>=0).toBe(true);expect(framework.includes("session.checked_out_outcome()")).toBe(true);expect(framework.includes("view.is_terminal()")).toBe(true);expect(framework.includes("JobOutcomeSlot")).toBe(false);const overrunStart=source.indexOf("let overrun =",frameworkStart),acknowledgement=source.slice(overrunStart,overrunStart+900);expect(acknowledgement.includes("session.acknowledge_checked_out_outcome(close_grant)")).toBe(true);expect(acknowledgement.includes("session.checked_out_outcome_descriptor().is_none()")).toBe(true);
+ const framework=readFileSync(new URL("../../👷️job/🏛️reserved/⚙️worker/🦀️.rs",import.meta.url),"utf8");
+ expect(framework).toContain("session.take_checked_out_retained_step_receipt()");
+ expect(framework).toContain("session.checked_out_outcome()");
+ expect(framework).toContain("self.terminal=match &view");
+ expect(framework).not.toContain("JobOutcomeSlot");
+ expect(framework).toContain("cx.with_retained_loan(grant,|same|session.acknowledge_checked_out_outcome(same))");
+ expect(framework).toContain("session.checked_out_outcome_descriptor().is_none()");
 });
 
 test("media close forwards one original full grant and preserves rich unsupported owners",()=>{
@@ -196,7 +328,7 @@ test("media close forwards one original full grant and preserves rich unsupporte
 test("replacement close preserves the original full child receipt before separate disposer and Store removal",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/📦️retained-store/🔣️.json",import.meta.url)).json();expect(new Ajv().compile({type:"object",required:["phases","currencies","originalPointerOnDenial","childCompleteIsParentProgress","separateDisposerAndStoreRemoval","parentCompleteRequiresAllOwners"],properties:{phases:{const:["child","disposer","store","parent-frontier"]},currencies:{const:["items","copy","capacity","release","depth"]},originalPointerOnDenial:{const:true},childCompleteIsParentProgress:{const:true},separateDisposerAndStoreRemoval:{const:true},parentCompleteRequiresAllOwners:{const:true}}})(law)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE replacement(phase TEXT,original INTEGER,capacity INTEGER,release INTEGER,complete INTEGER)");for(const [phase,original,capacity,release,complete]of [[law.phases[0],1,64,0,0],[law.phases[1],1,0,128,0],[law.phases[2],0,0,256,0],[law.phases[3],0,0,0,0]])db.query("INSERT INTO replacement VALUES(?,?,?,?,?)").run(phase,original,capacity,release,complete);expect(db.query("SELECT sum(capacity) AS capacity,sum(release) AS release,sum(complete) AS complete FROM replacement").get()).toEqual({capacity:64,release:384,complete:0});}finally{db.close();}
- const source=pluginFamilyText(),start=source.indexOf("fn drive_retained_store("),body=source.slice(start,source.indexOf("fn terminal_is_empty",start));expect(body.includes("grant: RetainedCloneGrant")).toBe(true);expect(body.includes("Result<PluginLifecycleStep, Fault>")).toBe(true);expect(body.includes("disposer.retirement_demands(store,grant.maximum_copy_bytes)")).toBe(true);expect(body.includes("disposer.close_step(store,grant)")).toBe(true);expect(body.includes("runtime_lifecycle_step(demand,grant")).toBe(true);expect(body.includes("PluginLifecycleStep::Progress(progress)")).toBe(true);expect(body.includes("maximum_release_bytes")).toBe(true);expect(body.includes("maximum_copy_bytes")).toBe(true);expect(body.includes("PluginCloseStep")).toBe(false);
+ const source=pluginFamilyText(),start=source.indexOf("fn drive_retained_store("),body=source.slice(start,source.indexOf("fn terminal_is_empty",start));expect(body.includes("let grant = effect.grant()")).toBe(true);expect(body.includes("Result<PluginLifecycleStep, Fault>")).toBe(true);expect(body.includes("disposer.retirement_demands(store,grant.maximum_copy_bytes)")).toBe(true);expect(body.includes("disposer.close_step(store,effect)")).toBe(true);expect(body.includes("runtime_lifecycle_step(demand,grant")).toBe(true);expect(body.includes("PluginLifecycleStep::Progress(progress)")).toBe(true);expect(body.includes("maximum_release_bytes")).toBe(true);expect(body.includes("maximum_copy_bytes")).toBe(true);expect(body.includes("PluginCloseStep")).toBe(false);
 });
 
 test("mounted envelope returns quote original owners and preserve receipts through the installed maintenance entrance",async()=>{
@@ -204,15 +336,15 @@ test("mounted envelope returns quote original owners and preserve receipts throu
  const db=new Database(":memory:");try{db.run("CREATE TABLE receipts(owner TEXT,phase TEXT,items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER,parent_complete INTEGER)");for(const owner of law.owners){db.query("INSERT INTO receipts VALUES(?,?,?,?,?,?,?)").run(owner,law.phases[0],...law.childProgress,0);db.query("INSERT INTO receipts VALUES(?,?,?,?,?,?,?)").run(owner,law.phases[1],1,24,0,256,0);}expect(db.query("SELECT sum(items) AS items,sum(copy) AS copy,sum(capacity) AS capacity,sum(release) AS release,sum(parent_complete) AS complete FROM receipts").get()).toEqual({items:4,copy:110,capacity:128,release:768,complete:0});}finally{db.close();}
  const source=pluginFamilyText();for(const [name,helper] of [["envelope_field_decoder_returns_demands","erased_demand("],["envelope_completed_record_returns_demands","completed_demand("]]){const quoteStart=source.indexOf(`fn ${name}(`),quote=source.slice(quoteStart,source.indexOf("\n    }\n",quoteStart));expect(quoteStart>=0).toBe(true);expect(quote.includes("handoff_demand()")).toBe(true);expect(quote.includes(helper)).toBe(true);expect(quote.includes(".take()")).toBe(false);expect(quote.includes(".remove(")).toBe(false);expect(quote.includes(".close_step(")).toBe(false);}
  const demandStart=source.indexOf("pub(super) fn erased_demand<"),demandBody=source.slice(demandStart,source.indexOf("\n}\n",demandStart));for(const part of ["owner.next_demand(body)?","demand.depth=demand.depth.max(1)"])expect(demandBody.includes(part)).toBe(true);for(const field of ["copy_bytes","capacity_bytes","release_bytes"])expect(demandBody.includes(field)).toBe(false);
- const entranceStart=source.indexOf("pub fn envelope_decode_close_step("),entrance=source.slice(entranceStart,source.indexOf("\n    }\n",entranceStart));expect(entranceStart>=0).toBe(true);expect(entrance.includes("drive_envelope_completed_record_returns(grant, true)")).toBe(true);expect(entrance.includes("drive_envelope_field_decoder_returns(grant, true)")).toBe(true);expect(entrance.includes("drive_envelope_decode_jobs(cx,grant, true)")).toBe(true);expect(entrance.includes("PluginLifecycleStep::Progress(progress) if progress != empty => return Ok(step)")).toBe(true);expect(entrance.indexOf("drive_envelope_completed_record_returns")<entrance.indexOf("drive_envelope_field_decoder_returns")).toBe(true);const jobsStart=source.indexOf("fn drive_envelope_decode_jobs("),jobs=source.slice(jobsStart,source.indexOf("pub fn envelope_decode_close_step(",jobsStart));expect(jobsStart>=0).toBe(true);expect(jobs.includes("PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => progress")).toBe(true);expect(jobs.includes("copied_items: progress.copied_items.max(1)")).toBe(true);
- const stageStart=source.indexOf("fn maintenance_stage_step(&mut self,stage:u8"),stageBody=source.slice(stageStart,source.indexOf("if stage==24{",stageStart));expect(stageStart>=0).toBe(true);expect(stageBody.includes("if stage==13{return self.drive_envelope_completed_record_returns(grant,false)}")).toBe(true);expect(stageBody.includes("if stage==12{return self.drive_envelope_field_decoder_returns(grant,false)}")).toBe(true);const pollStart=source.indexOf("async fn advance_typed_operation_publication(&mut self,",source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp")),poll=source.slice(pollStart,source.indexOf("fn tool_run_presence",pollStart));expect(poll.includes("drive_artifact_envelope_decode_worker")).toBe(false);
+ const entranceStart=source.indexOf("pub fn envelope_decode_close_step("),entrance=source.slice(entranceStart,source.indexOf("\n    }\n",entranceStart));expect(entranceStart>=0).toBe(true);expect(entrance.includes("drive_envelope_completed_record_returns(cx, grant, true)")).toBe(true);expect(entrance.includes("drive_envelope_field_decoder_returns(cx, grant, true)")).toBe(true);expect(entrance.includes("drive_envelope_decode_jobs(cx,grant, true)")).toBe(true);expect(entrance.includes("PluginLifecycleStep::Progress(progress) if progress != empty => return Ok(step)")).toBe(true);expect(entrance.indexOf("drive_envelope_completed_record_returns")<entrance.indexOf("drive_envelope_field_decoder_returns")).toBe(true);const jobsStart=source.indexOf("fn drive_envelope_decode_jobs("),jobs=source.slice(jobsStart,source.indexOf("pub fn envelope_decode_close_step(",jobsStart));expect(jobsStart>=0).toBe(true);expect(jobs.includes("PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => progress")).toBe(true);expect(jobs.includes("copied_items: progress.copied_items.max(1)")).toBe(true);
+ const stageStart=source.indexOf("fn maintenance_stage_step(&mut self,stage:u8"),stageBody=source.slice(stageStart,source.indexOf("if stage==24{",stageStart));expect(stageStart>=0).toBe(true);expect(stageBody.includes("if stage==13{return self.drive_envelope_completed_record_returns(cx,grant,false)}")).toBe(true);expect(stageBody.includes("if stage==12{return self.drive_envelope_field_decoder_returns(cx,grant,false)}")).toBe(true);const pollStart=source.indexOf("async fn advance_typed_operation_publication(&mut self,",source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp")),poll=source.slice(pollStart,source.indexOf("fn tool_run_presence",pollStart));expect(poll.includes("drive_artifact_envelope_decode_worker")).toBe(false);
 });
 
 test("typed publication retains actual preparation currencies without reconstructing them from checkpoints",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🎟️preparation/🔣️.json",import.meta.url)).json();expect(new Ajv().compile({type:"object",required:["currencies","grantSource","receiptSource","checkpointIsNotReceipt","oneOutstandingReceipt"],properties:{currencies:{const:["items","copy","capacity","release"]},grantSource:{const:"original-phase-policy-and-context-remaining"},receiptSource:{const:"original-store-preparation"},checkpointIsNotReceipt:{const:true},oneOutstandingReceipt:{const:true}}})(law)).toBe(true);const db=new Database(":memory:");try{db.run("CREATE TABLE preparation(cursor INTEGER,items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER)");for(const row of law.rows)db.query("INSERT INTO preparation VALUES(?,?,?,?,?)").run(...row);expect(db.query("SELECT count(distinct cursor) AS checkpoints,sum(items) AS items,sum(copy) AS copy,sum(capacity) AS capacity,sum(release) AS release FROM preparation").get()).toEqual({checkpoints:1,items:2,copy:46,capacity:16384,release:8192});}finally{db.close();}
  const source=pluginFamilyText(),branchStart=source.indexOf("store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership)"),branch=source.slice(branchStart,source.indexOf("store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused",branchStart));expect(branchStart>=0).toBe(true);expect(branch.includes("ownership.fits(grant.retained_grant())")).toBe(true);expect(branch.includes("mounted.note_publication_checkpoint(checkpoint)")).toBe(true);expect(branch.includes("mounted.publication_ownership_progress")).toBe(false);
  const settlement=source.lastIndexOf("let receipt=cx.consume_receiving_retained(retained,ownership)",branchStart);expect(settlement).toBeGreaterThan(0);expect(source.slice(settlement,branchStart)).toContain("receipt?;advance");expect(source.includes("publication_ownership_progress: Option<(RetainedCloneGrant,RetainedCloneProgress)>")).toBe(true);
- const runStart=source.indexOf("async fn publish_mounted_typed_operation_run_admitted("),run=source.slice(runStart,source.indexOf("fn mounted_typed_interaction_writes_are_next",runStart));expect(run.includes("mounted.publication_ownership_progress.is_some()")).toBe(true);expect(run).toContain("original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress())");expect(run).toContain("original_lifecycle_delta(original_before,after)");
+ const runStart=source.indexOf("async fn publish_mounted_typed_operation_run_admitted("),run=source.slice(runStart,source.indexOf("fn mounted_typed_interaction_writes_are_next",runStart));expect(run.includes("mounted.publication_ownership_progress.is_some()")).toBe(true);expect(run).toContain("original_lifecycle_net_after(cx.retained_progress(), reserved_before, cx.reserved_return_progress())");expect(run).toContain("original_lifecycle_delta(original_before, after)");
  const boundedStart=source.indexOf("fn advance(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant,",source.indexOf("for BoundedConfigPreparation<C, M>")),bounded=source.slice(boundedStart,source.indexOf("fn has_pending_receiving_recovery",boundedStart));expect(boundedStart).toBeGreaterThan(0);expect(bounded.includes("bounded config semantic preparation requires its original incremental mutation owner")).toBe(true);expect(bounded.includes("Mutation::inverse(")).toBe(false);expect(bounded.includes("self.mutation.take()")).toBe(false);
  expect(source.includes("fn take_typed_operation_preparation_receipt(&mut self)")).toBe(true);expect(source.includes("self.preparation_receipt=app.take_typed_operation_preparation_receipt()")).toBe(true);expect(source.includes("let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(body_grant)")).toBe(true);
 });
@@ -245,9 +377,25 @@ test("continuation carries the original preparation and history receipts before 
 test("mounted actor capture borrows original text and yields its paid receipt before publication",async()=>{
  const law=await Bun.file(new URL("../../🏇️mounted-owner/🧪️tests/🧫️fixtures/🎭️actor/🔣️.json",import.meta.url)).json();
  const schema=await Bun.file(new URL("../../🏇️mounted-owner/🧬️schema/🎭️actor/🔣️.json",import.meta.url)).json();expect(new Ajv().compile(schema)(law)).toBe(true);
- const db=new Database(":memory:");try{db.run("CREATE TABLE capture(items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER,depth INTEGER)");db.query("INSERT INTO capture VALUES(?,?,?,?,?)").run(...law.sqlVector.originalGrant);const v=law.sqlVector;expect([1,v.textBytes+v.headerCopyBytes,v.textBytes+v.arcFrameBytes,0]).toEqual(v.receipt);expect(Object.values(db.query("SELECT items-? AS items,copy-? AS copy,capacity-? AS capacity,release-? AS release,depth FROM capture").get(...v.receipt)as object)).toEqual(v.remaining);}finally{db.close();}
+ const db = new Database(":memory:");
+ try {
+   const remainingCopy = db.query("SELECT length(CAST($text AS BLOB)) AS bytes, $copy - length(CAST($text AS BLOB)) AS remaining");
+   const encoder = new TextEncoder();
+   const copyBudget = law.nativeGrant[1];
+   for (const sample of law.cases) {
+     const text = sample.text ?? sample.repeat.repeat(sample.bytes);
+     const bytes = encoder.encode(text).length;
+     expect(remainingCopy.get({ $text: text, $copy: copyBudget })).toEqual({ bytes, remaining: copyBudget - bytes });
+   }
+ } finally { db.close(); }
  const source=pluginFamilyText(),start=source.indexOf("fn publish_mounted_typed_operation_unit("),body=source.slice(start,source.indexOf("fn ack_mounted",start));
- expect(body.includes("mounted.admit_actor_capture(retained,cx)")).toBe(true);expect(body.indexOf("mounted.admit_actor_capture")<body.indexOf("self.stores.store.admit_apply_batch(")).toBe(true);expect(body.includes("&mut mounted.actor_capture,&mut emit.artifact_mutations")).toBe(true);expect(body.includes("&mut mounted.actor_capture,&mut emit.config_mutations")).toBe(true);expect(body.includes("&mut mounted.actor_capture,&mut emit.draft_mutations")).toBe(true);expect(body.includes("mounted.meta.actor.clone()")).toBe(false);expect(source.includes("actor_capture: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>")).toBe(true);
+ const capture = body.indexOf("mounted.admit_actor_capture(retained,cx)? {return Ok(());}");
+ expect(capture).toBeGreaterThanOrEqual(0);
+ for (const lane of ["artifact_mutations", "config_mutations", "window_config_mutations", "draft_mutations"]) {
+   expect(body.indexOf(`&mut mounted.actor_capture,&mut emit.${lane}`)).toBeGreaterThan(capture);
+ }
+ expect(body).not.toContain("mounted.meta.actor.clone()");
+ expect(source).toContain("actor_capture: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>");
  const frontier=readFileSync(new URL("../../🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs",import.meta.url),"utf8");expect(frontier.includes("self.actor_capture.is_some()")).toBe(true);expect(frontier.includes("self.actor_capture.as_mut()")).toBe(true);
 });
 
@@ -256,4 +404,36 @@ test("original member ingress pays native field and registry headers before ever
  const db=new Database(":memory:");try{db.run("CREATE TABLE original_fields(text TEXT,capacity INTEGER,fields INTEGER)");for(let i=0;i<law.texts.length;i++)db.query("INSERT INTO original_fields VALUES(?,?,?)").run(law.texts[i],law.capacities[i],law.fields);expect(db.query("SELECT sum(capacity*fields) AS backing,count(distinct text) AS vectors FROM original_fields").get()).toEqual({backing:law.capacities.reduce((sum:number,value:number)=>sum+value*law.fields,0),vectors:3});}finally{db.close();}
  const source=pluginFamilyText(),start=source.indexOf("impl OwnedDocumentMemberIngress {"),body=source.slice(start,source.indexOf("impl Drop for OwnedDocumentMemberIngress",start));expect(body.includes("copy_bytes: size_of_val(&*self.request)")).toBe(true);expect(body.includes("size_of::<String>() + size_of::<u8>()")).toBe(true);expect(body.includes("copied_bytes: demand.copy_bytes")).toBe(true);
  const registryStart=source.indexOf("impl OwnedDocumentMemberIngressRegistry {"),registry=source.slice(registryStart,source.indexOf("impl Drop for OwnedDocumentMemberIngressRegistry",registryStart));expect(registry.includes("if !self.sealed")).toBe(true);expect(registry.includes("copy_bytes: size_of::<bool>()")).toBe(true);expect(registry.includes("copied_bytes: demand.copy_bytes")).toBe(true);expect(registry.includes("size_of::<OwnedDocumentMemberIngress>()")).toBe(true);
+});
+
+test("unpaid original media control keeps the mounted format worker parked", async () => {
+  const fixture = await Bun.file(new URL("🧫️fixtures/🎞️media-control/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const format = db.query("SELECT NOT (? OR ?) AS runnable");
+    for (const row of fixture) expect(format.get(Number(row.pagePending), Number(row.controlPending)))
+      .toEqual({ runnable: Number(row.formatRunnable) });
+  } finally { db.close(); }
+  const turn = readFileSync(new URL("../../⚛️reactor/🔄️turn/🌀️poll-kernel-turn/🦀️.rs", import.meta.url), "utf8");
+  const ingress = turn.indexOf("::drive_raw_media(runtime, events");
+  const format = turn.indexOf("::drive_raw_media_format(runtime");
+  expect(ingress).toBeGreaterThanOrEqual(0);
+  expect(format).toBeGreaterThan(ingress);
+  expect(turn.slice(ingress, format)).toContain("matches!(events.as_ref(), Some(Event::OriginalMediaControl(_)))");
+  expect(turn.slice(ingress, format)).toContain("command_page.is_none() && !pending_media_control");
+});
+
+test("both close fault observations retain the measured clock", async () => {
+  const fixtures = await Bun.file(new URL("🧫️fixtures/⏱️close-fault/🔣️.json", import.meta.url)).json();
+  const db = new Database(":memory:");
+  try {
+    const elapsed = db.query("SELECT CASE WHEN ?1 = 'zero-progress' THEN ?3 ELSE ?2 END AS elapsed");
+    for (const row of fixtures) expect(elapsed.get(row.cause, row.callbackUs, row.stallUs)).toEqual({ elapsed: row.reportedUs });
+  } finally { db.close(); }
+  const registry = await Bun.file(new URL("../../⚛️reactor/🏃️runtime/📥️staging/♻️reactor-lifecycle/🗃️instance-registry/🦀️.rs", import.meta.url)).text();
+  const lifetime = await Bun.file(new URL("../../🚪️lifetime/🦀️.rs", import.meta.url)).text();
+  const cleanup = await Bun.file(new URL("../../⚛️reactor/🏃️runtime/📦️instances/🔁️cleanup-turns/🦀️.rs", import.meta.url)).text();
+  expect(registry).toMatch(/if cause == RuntimeCleanupFault::ZeroProgress\s*\{\s*self\.stall_credit_spent_us\.load/);
+  expect(lifetime).toContain("state.close_fault(cause)");
+  expect(cleanup).toContain("state.close_fault(cause)");
 });

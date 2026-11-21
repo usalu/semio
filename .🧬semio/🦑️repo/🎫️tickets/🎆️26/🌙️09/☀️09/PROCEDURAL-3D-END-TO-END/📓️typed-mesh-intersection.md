@@ -1,0 +1,7 @@
+# Typed mesh intersection
+
+The Generation3d mesh catalogue now registers `mesh.edit.intersect` with bilingual descriptions, two typed mesh inputs, and one previewable polygon-mesh output. The compiled Flow catalogue exposes the same operation as `brep.mesh.intersect`. The typed job captures both sources and calls the authored retained constructor with their full polygon and compatible surface data. Face contact publishes the canonical empty mesh. The operator covers closed convex inputs with representable authored surface channels.
+
+The existing retained mesh pair adapter also serves Combine. The first step of a turn checks whether the next quote can fit. After at least one event, it yields when the remaining turn cannot admit the next quote. This avoids a permanent work-limit fault on a valid intersection at high work fuel when the turn's retained item grant is exhausted.
+
+The language-neutral schema fixture covers overlapping axis-aligned boxes, an octagonal intersection from rotated boxes, and face-only contact. The compact native witness uses the actual authored mesh kernel and real StepContext with the typed capture, clipping, projection and import. It checks deterministic topology, geometry metrics and no partial publication on cancellation. The independent catalogue and geometry oracles passed 58 tests and 361 assertions, including exact parity with published Flow mesh operators. The full linked procedural package remains pending.

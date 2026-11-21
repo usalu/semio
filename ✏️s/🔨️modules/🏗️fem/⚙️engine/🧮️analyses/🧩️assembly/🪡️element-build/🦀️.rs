@@ -45,7 +45,7 @@ impl AnalysisModelOwner<'_> {
         }
     }
 
-    fn node_depth(&self, index: usize) -> Result<usize, FemError> {
+    pub(super) fn node_depth(&self, index: usize) -> Result<usize, FemError> {
         match self {
             Self::Borrowed(_) | Self::Owned(_) => Ok(1),
             Self::Mounted(model) => model.nodes.values.next_get_depth_demand(index).map_err(|_| FemError::Singular),

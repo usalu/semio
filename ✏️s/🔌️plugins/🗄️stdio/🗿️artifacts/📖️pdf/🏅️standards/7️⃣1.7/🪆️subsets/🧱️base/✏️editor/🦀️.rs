@@ -19,6 +19,10 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO
 use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
 use {semio_plugin::built_to_component_tree,semio_plugin::ArtifactEditor,semio_plugin::ArtifactView,semio_plugin::ComponentTree,semio_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_plugin::DraftView,semio_plugin::Editor,semio_plugin::Emit,semio_plugin::Fault,semio_plugin::NoConfig,semio_plugin::NoConfigMutation,semio_plugin::NoDraft,semio_plugin::NoDraftMutation,semio_plugin::NoPresence,semio_plugin::NoPresenceMutation,semio_plugin::NoTransient,semio_plugin::NoTransientMutation,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_2d_compute::EngineHandles;
+use semio_s_artifact_stdio_pdf_editor_document::PickerPngWork;
+
+#[path = "📥️local-image/🦀️.rs"]
+mod image_import;
 
 //#region 🔖️Dialect
 /// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract: this file's own surface-id
@@ -36,6 +40,10 @@ pub enum Pdf17EditorCommand {
     SetPage { page: u32, item: u32, revision: String, text: String },
     #[dsl(key = "page-edit")]
     PageEdit { action: String, payload: String },
+    #[dsl(key = "pick-image")]
+    PickImage { page: u32, operator: u32, x: f64, y: f64, width: f64, height: f64, guard: String },
+    #[dsl(key = "import-local-image")]
+    ImportImage { page: u32, operator: u32, revision: String, x: f64, y: f64, width: f64, height: f64, payload: String },
 }
 
 //#region 🔖️OpCodec
@@ -93,13 +101,22 @@ impl protocol::OpBinary for Pdf17EditorCommand {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf17EditorCommand, ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf17EditorCommand, ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "replace-image", "import-local-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-font-size", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
 pub struct Pdf17Editor;
+
+fn emit_page_command(command: &Pdf17EditorCommand, snapshot: &PdfSnapshot) -> Option<Result<Emit<PdfMutation>, Fault>> {
+    match command {
+        Pdf17EditorCommand::SetPage { page, item, revision, text } => Some(page_text_edit_mutations(snapshot, *page, *item, revision, text)
+            .map(|artifact_mutations| Emit { artifact_mutations, ..Default::default() })),
+        Pdf17EditorCommand::PageEdit { action, payload } => Some(crate::editor::page::emit_page_edit(snapshot, action, payload)),
+        _ => None,
+    }
+}
 
 impl ArtifactEditor for Pdf17Editor {
     type Snapshot = PdfSnapshot;
@@ -117,7 +134,21 @@ impl ArtifactEditor for Pdf17Editor {
     const DIALECT: Dialect = PDF17_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
     const SINGLE_TURN_NATURAL_DECODE: bool = true;
+
+    fn build_original_picker_job(
+        request: &mut Option<semio_plugin::app::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>>,
+        body: &mut Option<Box<dyn semio_plugin::app::ArtifactReservedJob+Send>>,
+        construction: &mut semio_plugin::__job::OriginalConstructionAdmission,
+        cx: &mut semio_plugin::__job::StepContext<'_>,
+    ) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        semio_plugin::app::admit_reserved_work::<semio_plugin::EditorApp<Self>, PickerPngWork<semio_plugin::EditorApp<Self>>>(
+            request, body, construction, cx,
+        )
+    }
 
     fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
         Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.pdf@1.7", extension: ".pdf", media_type: "application/pdf", binary: true })
@@ -151,13 +182,23 @@ impl ArtifactEditor for Pdf17Editor {
         controller: "s.stdio.pdf@1.7/*#editor",
         artifact_schema: "stdio.pdf.1.7",
         preparation: "stdio-pdf-1-7-base-snapshot-edit",
-        bounded_native: true
+        document_store_owners: PdfMutation::document_store_owners,
+        bounded_native: true,
+        native_media_export: { factory: semio_s_artifact_stdio_pdf_native_save::factory::PdfNativeExportFactory<semio_plugin::EditorApp<Self>>, io: semio_s_artifact_stdio_pdf_native_save::factory::app_io, build: semio_s_artifact_stdio_pdf_native_save::job::PdfGraphSaveJob::<semio_plugin::EditorApp<Self>>::admit_original },
+        native: {
+            factory_name: "PdfLocalImageImport",
+            factory_type: image_import::PdfLocalImageImport,
+            contract: image_import::CONTRACT,
+            build: image_import::build,
+            tools: ["import-local-image"]
+        }
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |native| match native {
             Pdf17EditorCommand::SetPage { .. } => "set-page",
             Pdf17EditorCommand::PageEdit { action, .. } => crate::editor::page::static_action(action),
+            _ => image_import::command_id(native).expect("PDF image editor command id"),
         })
     }
 
@@ -172,6 +213,7 @@ impl ArtifactEditor for Pdf17Editor {
                 let edit = semio_s_artifact_stdio_contract::window_kit_document_text_edit(args)?;
                 Ok(Pdf17EditorCommand::SetPage { page: edit.page, item: edit.item, revision: edit.revision, text: edit.text })
             }
+            other if image_import::admits(other) => image_import::from_action(other, args),
             other if crate::editor::page::is_page_action(other) => {
                 let edit = crate::editor::page::edit_from_action(other, args)?;
                 Ok(Pdf17EditorCommand::PageEdit { action: edit.action, payload: edit.payload })
@@ -196,13 +238,8 @@ impl ArtifactEditor for Pdf17Editor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
-            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::SetPage { page, item, revision, text }) => {
-                let artifact_mutations = page_text_edit_mutations(doc.snapshot, *page, *item, revision, text)?;
-                Ok(Emit { artifact_mutations, ..Default::default() })
-            }
-                        semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::PageEdit { action, payload }) => {
-                crate::editor::page::emit_page_edit(doc.snapshot, action, payload)
-            }
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(command) => emit_page_command(command, doc.snapshot)
+                .unwrap_or_else(|| Err(Fault::from("PNG import requires its retained interactive job"))),
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
         }
     }
@@ -220,6 +257,13 @@ impl ArtifactEditor for Pdf17Editor {
             )
             .map(built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(semio_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
+        }
+    }
+
+    fn operation_progress_scope() -> semio_plugin::kernel::UiDirtyScope {
+        semio_plugin::kernel::UiDirtyScope::Partial {
+            window_bodies: vec![crate::editor::page::INSPECTOR_BODY_KEY.into()], panel_bodies: Vec::new(),
+            utilities: false, tools: false, engagements: false, measures: false, labels: false,
         }
     }
 
@@ -242,7 +286,16 @@ impl ArtifactEditor for Pdf17Editor {
         }
         if body_key == crate::editor::page::INSPECTOR_BODY_KEY {
             let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);
-            return crate::editor::page::render_inspector(doc.snapshot, selected, "s.stdio.pdf@1.7/*#editor", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);
+            let controller = "s.stdio.pdf@1.7/*#editor";
+            let revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
+            let mut inspector = crate::editor::page::render_inspector(doc.snapshot, selected, controller, revision, view_state.locale)?;
+            if !doc.operations().is_empty() {
+                let progress = semio_plugin::app::operation_progress::operation_progress_controls(doc.operations(), controller, view_state.locale)?;
+                for child in std::iter::once(progress).chain(std::mem::take(&mut inspector.children)) {
+                    inspector.children.try_push(child).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.fixed-capacity", "PDF operation progress children"))?;
+                }
+            }
+            return Ok(built_to_component_tree(inspector));
         }
         Self::render(body_key, doc, cfg, view_state)
 
@@ -270,20 +323,17 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf17Ed
 
 semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     editor: Pdf17Editor,
-    tools: ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"],
+    tools: ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-font-size", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"],
     payload_schema: "semio.stdio.document-text-edit-command.v1",
     reduce: |command, snapshot| {
         match command {
-            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::SetPage { page, item, revision, text }) => {
-                let artifact_mutations = page_text_edit_mutations(snapshot, *page, *item, revision, text)?;
-                Ok(Emit { artifact_mutations, ..Default::default() })
-            }
-            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::PageEdit { action, payload }) => {
-                crate::editor::page::emit_page_edit(snapshot, action, payload)
-            }
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(command) => emit_page_command(command, snapshot)
+                .unwrap_or_else(|| Err(Fault::from("stdio-pdf-native-edit-command-mismatch"))),
             _ => Err(Fault::from("stdio-pdf-native-edit-command-mismatch")),
         }
     },
+    host_tools: ["insert-image", "replace-image"],
+    work: image_import::native_work,
 }
 
 //#endregion 🔖️Editor
@@ -302,6 +352,10 @@ pub fn create_pdf17_editor() -> semio_plugin::AppDefinition {
     let builder = builder.window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition());
     let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));
     let mut definition = semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition();
+    for window in definition.window_kinds.iter_mut() {
+        if window.id == main::WINDOW_KIND_ID { window.actions.retain(|action| action.id != "insert-image"); }
+    }
+    definition.actions.extend(image_import::actions().into_iter().chain(std::iter::once(semio_s_artifact_stdio_pdf_native_save::factory::export_action())));
     crate::editor::page::install_object_interaction(&mut definition);
     definition
 }

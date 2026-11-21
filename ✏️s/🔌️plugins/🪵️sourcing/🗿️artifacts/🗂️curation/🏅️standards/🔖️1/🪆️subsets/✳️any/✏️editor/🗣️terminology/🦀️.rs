@@ -16,7 +16,9 @@ semio_ui_locale::app_labels! {
         grid_instance_display_representative: native_en "Representative only", native_de "Nur Vertreter", reuse_en "Representative only", reuse_de "Nur Vertreter";
         grid_instance_display_representative_with_count: native_en "Representative and count", native_de "Vertreter und Anzahl", reuse_en "Representative and count", reuse_de "Vertreter und Anzahl";
         mode_curation: native_en "Curation", native_de "Kuratierung", reuse_en "Curation", reuse_de "Kuratierung";
+        search: native_en "Search", native_de "Suchen", reuse_en "Search", reuse_de "Suchen";
         search_placeholder: native_en "Search…", native_de "Suchen…", reuse_en "Search…", reuse_de "Suchen…";
+        minimum_availability: native_en "Minimum availability", native_de "Mindestverfügbarkeit", reuse_en "Minimum availability", reuse_de "Mindestverfügbarkeit";
         all_typologies: native_en "All Typologies", native_de "Alle Typologien", reuse_en "All Typologies", reuse_de "Alle Typologien";
         col_name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
         col_module: native_en "Module", native_de "Modul", reuse_en "Module", reuse_de "Modul";

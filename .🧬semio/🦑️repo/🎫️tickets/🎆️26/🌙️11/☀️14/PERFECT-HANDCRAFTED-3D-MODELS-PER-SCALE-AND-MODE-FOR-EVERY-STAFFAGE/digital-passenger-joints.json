@@ -1,0 +1,153 @@
+{
+  "parent-carrying-toddler": {
+    "root": "toddler-torso",
+    "neck": "toddler-neck",
+    "head": "toddler-head",
+    "atlas": [
+      0.06086,
+      0.00562,
+      0
+    ],
+    "neckMassKg": 0.21,
+    "neckCentreM": [
+      0.026,
+      0.009
+    ],
+    "breath": [
+      [
+        "toddler-nostrils",
+        "th-toddler-nose-breath"
+      ],
+      [
+        "toddler-mouth",
+        "th-toddler-mouth-breath"
+      ]
+    ],
+    "lowerPitch": {
+      "standing-carry": 0,
+      "heel-strike-l": 1,
+      "walk-1": 0,
+      "midstance-l": -1,
+      "walk-3": 0,
+      "walk-4": 1,
+      "walk-5": 0,
+      "walk-6": -1,
+      "walk-7": 0,
+      "hoisting": 3
+    }
+  },
+  "parent-with-stroller": {
+    "root": "child",
+    "neck": "child-neck",
+    "head": "child-head",
+    "c7": [
+      -0.064,
+      0.235,
+      0.1925
+    ],
+    "atlas": [
+      -0.05,
+      0.285,
+      0.1925
+    ],
+    "breath": [
+      [
+        "child-nose",
+        "th-child-nose-breath"
+      ],
+      [
+        "child-mouth",
+        "th-child-mouth-breath"
+      ]
+    ],
+    "leftArm": [
+      [
+        -0.038,
+        0.228,
+        0.2865
+      ],
+      [
+        0.022,
+        0.138,
+        0.3085
+      ],
+      [
+        0.122,
+        0.124,
+        0.2805
+      ],
+      [
+        0.16,
+        0.12,
+        0.2685
+      ]
+    ],
+    "rightArm": [
+      [
+        -0.038,
+        0.228,
+        0.0985
+      ],
+      [
+        0.022,
+        0.138,
+        0.0765
+      ],
+      [
+        0.122,
+        0.124,
+        0.1045
+      ],
+      [
+        0.16,
+        0.12,
+        0.1165
+      ]
+    ],
+    "leftLeg": [
+      [
+        0,
+        0,
+        0.2425
+      ],
+      [
+        0.172,
+        0.008,
+        0.2525
+      ],
+      [
+        0.248,
+        -0.122,
+        0.2525
+      ],
+      [
+        0.31,
+        -0.134,
+        0.2525
+      ]
+    ],
+    "rightLeg": [
+      [
+        0,
+        0,
+        0.1425
+      ],
+      [
+        0.172,
+        0.008,
+        0.1325
+      ],
+      [
+        0.248,
+        -0.122,
+        0.1325
+      ],
+      [
+        0.31,
+        -0.134,
+        0.1325
+      ]
+    ],
+    "skinAreaM2": 0.042
+  }
+}

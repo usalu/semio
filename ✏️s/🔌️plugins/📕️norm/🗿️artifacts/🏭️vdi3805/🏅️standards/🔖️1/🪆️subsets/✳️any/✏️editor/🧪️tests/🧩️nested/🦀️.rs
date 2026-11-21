@@ -1,7 +1,7 @@
 //! 🌡️ VDI descendant edits retain typed radiator configuration and recompute its real exponent check.
 
 use semio_framework_value::DslValue;
-use semio_s_artifact_norm_vdi3805_model::conforming_blatt_3_dataset;
+use semio_s_artifact_norm_vdi3805_model::conforming_radiator_dataset;
 use semio_s_artifact_norm_vdi3805_mutations::{resolve_edit, Vdi3805Mutation};
 use semio_s_plugin_norm_app_surface::NormEdit;
 use semio_s_plugin_norm_compliance::CheckStatus;
@@ -10,7 +10,7 @@ use semio_s_plugin_norm_compliance::CheckStatus;
 fn a_nested_heat_exponent_edit_recomputes_the_real_radiator_check_without_mutating_the_original() {
     let law: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("business fixture");
     let number = |key: &str| law[key].as_f64().expect("fixture number");
-    let document = conforming_blatt_3_dataset();
+    let document = conforming_radiator_dataset();
     let original = serde_json::to_value(&document).expect("independent original snapshot");
     let product = &document.catalog.products[0];
     assert_eq!(product.id, law["productId"].as_str().expect("product id"));
@@ -47,7 +47,7 @@ fn a_nested_heat_exponent_edit_recomputes_the_real_radiator_check_without_mutati
 #[test]
 fn a_rendered_product_row_removes_its_owned_identity_without_mutating_the_original() {
     let law: serde_json::Value = serde_json::from_str(include_str!("remove.json")).expect("row removal fixture");
-    let document = conforming_blatt_3_dataset();
+    let document = conforming_radiator_dataset();
     let original = serde_json::to_value(&document).expect("independent original");
     let collection = law["collection"].as_str().expect("collection");
     let pointer = format!("/{}", collection.replace('.', "/"));

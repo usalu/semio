@@ -1,4 +1,4 @@
-import {withDescriptorEmitterV1,withDescriptorEmitterTaskV1} from "../🛠️emitter/🟦️.ts";
+import {withDescriptorEmitterTaskV1} from "../🛠️emitter/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readArtifactBytesV1} from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -17,6 +17,7 @@ import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../📇️registry/✅️catalo
 import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME } from "../🏗️component-build/🟦️.ts";
 import { emitSemanticDescriptorV1, type DescriptorEmissionControlV1, type SemanticDescriptorEmissionV1 } from "../🛂️descriptor-emission/🟦️.ts";
+import { actorPreparationPolicyV1, readOptionalActorImageV1 } from "../../📦️model/🌱️actor-preparation/🟦️.ts";
 
 //#region 🔖️ComponentStage
 /** 🪪️ One plugin or extension component crate as the describe stage sees it: its discovered source identity plus the
@@ -69,7 +70,7 @@ export function canonicalDescriptorDiffV1(committed: unknown, emitted: unknown, 
 export type ComponentDescribeModeV1 = "verify" | "write" | "local";
 
 /** 🖋️ Publishes one semantic pair at the owner root as two atomic renames, never a half-written pair. */
-function publishSemanticPair(ownerRoot: string, emission: SemanticDescriptorEmissionV1): void {
+function publishSemanticPair(ownerRoot: string, emission: Pick<SemanticDescriptorEmissionV1,"packBytes"|"jsonBytes">): void {
   const pack = join(ownerRoot, DESCRIPTOR_PACK_FILENAME), json = join(ownerRoot, DESCRIPTOR_JSON_FILENAME), suffix = `.${process.pid}.describe`;
   try {
     writeFileSync(pack + suffix, emission.packBytes, { flag: "wx" });
@@ -84,26 +85,28 @@ function publishSemanticPair(ownerRoot: string, emission: SemanticDescriptorEmis
 
 /** 🛂️ The cached describe stage over one staged deliverable: the semantic descriptor pair exactly these bytes answer, keyed by the component's digest and the
  * emitter binary's digest, strict-decoded and refused when it names another component. */
-export async function describeComponentStageV1(repoRoot: string, target: ComponentStageTargetV1, deliverable: ComponentDeliverableV1, cache: StageCacheV1, control: Omit<DescriptorEmissionControlV1,"emitter">): Promise<SemanticDescriptorEmissionV1> {
- return withDescriptorEmitterV1(repoRoot,control.invocation,control.compiler,emitter=>withDescriptorEmitterTaskV1(emitter,control.invocation,async actualTool=>{
+export async function describeComponentStageV1(repoRoot: string, target: ComponentStageTargetV1, deliverable: ComponentDeliverableV1, cache: StageCacheV1, control: DescriptorEmissionControlV1): Promise<SemanticDescriptorEmissionV1> {
+ return withDescriptorEmitterTaskV1(control.emitter,control.invocation,async actualTool=>{
   const component=await fileSha256V1(deliverable.wasm),tool=actualTool.sha256;
   const output = mkdtempSync(join(dirname(deliverable.directory), ".describe-"));let primaryFailed=false;
   try {
-    await cache.run({ stage: "describe", schemaVersion: 1, inputs: { component }, tools: { emitter: tool } }, output, async (directory) => {
-      const emission = await emitSemanticDescriptorV1(repoRoot, { component: deliverable.wasm, artifactRoot: dirname(deliverable.directory) }, {...control,emitter});
+    await cache.run({ stage: "describe", schemaVersion: control.prepareActor ? 2 : 1, inputs: { component }, tools: { emitter: tool } }, output, async (directory) => {
+      const emission = await emitSemanticDescriptorV1(repoRoot, { component: deliverable.wasm, artifactRoot: dirname(deliverable.directory) }, control);
       writeFileSync(join(directory, DESCRIPTOR_PACK_FILENAME), emission.packBytes);
       writeFileSync(join(directory, DESCRIPTOR_JSON_FILENAME), emission.jsonBytes);
+      if (emission.actorImage) writeFileSync(join(directory, actorPreparationPolicyV1.image), emission.actorImage);
     }, control.compiler.signal, target.packageName);
     const packBytes = await readArtifactBytesV1(join(output, DESCRIPTOR_PACK_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,control.compiler.signal), jsonBytes = await readArtifactBytesV1(join(output, DESCRIPTOR_JSON_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,control.compiler.signal), pair = verifySemanticDescriptorPairBytesV1(jsonBytes, packBytes);
     if (pair.pluginId !== target.pluginId || pair.packageId !== target.packageId || pair.role !== target.role) throw new Error(`${target.pluginId}: the component describes ${pair.pluginId} (${pair.packageId}, ${pair.role})`);
-    return Object.freeze({ pluginId: pair.pluginId, packageId: pair.packageId, role: pair.role, version: pair.version, componentSha256: component, jsonBytes, packBytes, semanticSha256: pair.semanticSha256 });
+    const actorImage = control.prepareActor ? await readOptionalActorImageV1(join(output, actorPreparationPolicyV1.image), control.compiler.signal) : undefined;
+    return Object.freeze({ pluginId: pair.pluginId, packageId: pair.packageId, role: pair.role, version: pair.version, componentSha256: component, jsonBytes, packBytes, semanticSha256: pair.semanticSha256, ...(actorImage ? {actorImage} : {}) });
   } catch(error){primaryFailed=true;throw error;}
   finally {try{rmSync(output,{recursive:true,force:true});}catch(error){if(!primaryFailed)throw error;}}
- }));
+ });
 }
 /** ⚖️ Settles an emitted semantic pair against the committed pair by `mode` and resolves with the canonical drift (empty when equal). A `verify` refusal names
  * every differing path and the command that commits the shipped declaration. */
-export function settleComponentDescriptorV1(repoRoot: string, target: ComponentStageTargetV1, deliverable: ComponentDeliverableV1, emission: SemanticDescriptorEmissionV1, mode: ComponentDescribeModeV1): readonly string[] {
+export function settleComponentDescriptorV1(repoRoot: string, target: ComponentStageTargetV1, deliverable: Pick<ComponentDeliverableV1,"profile"|"directory">, emission: Pick<SemanticDescriptorEmissionV1,"packBytes"|"jsonBytes">, mode: ComponentDescribeModeV1): readonly string[] {
   if (mode === "verify" && deliverable.profile !== SHIPPED_COMPONENT_PROFILE) throw new Error(`${target.pluginId}: only shipped ${SHIPPED_COMPONENT_PROFILE} bytes are verified against the committed descriptor`);
   if (mode === "local" && COMPONENT_PROFILE_POLICIES[deliverable.profile].shipped) throw new Error(`${target.pluginId}: a local describe is for the iterate profile only`);
   const committedPack = join(target.ownerRoot, DESCRIPTOR_PACK_FILENAME), committedJson = join(target.ownerRoot, DESCRIPTOR_JSON_FILENAME);

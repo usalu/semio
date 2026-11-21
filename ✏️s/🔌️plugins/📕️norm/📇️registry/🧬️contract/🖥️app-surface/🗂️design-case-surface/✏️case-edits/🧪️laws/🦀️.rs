@@ -41,7 +41,8 @@ where
     assert_eq!(rows.len(), before.len() + 1, "add: one case more");
     let added = rows.last().cloned().expect("added case");
     assert_eq!(added.entry_id, entry.id, "add: the case verifies the picked entry");
-    assert_eq!(added.numbers.iter().find(|n| n.id == spec.key).map(|n| n.value), spec.example, "add: inputs are seeded with the examples");
+    let initial = C::new_document_case(&entry, &added.id);
+    assert_eq!(added, CaseRow::from(&initial), "add: the catalogue defines the initial case");
     assert!(answers(&host, &added.id) > 0, "add: the checks window lists the case");
     matches_full(&host, "add");
 

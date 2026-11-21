@@ -9,155 +9,6 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 include!("🧰️original-support.rs");
 
 #[test]
-fn original_obj_import_publishes_shell_or_solid_after_funded_topology() {
-    original_mesh_import("brep.io.importObj", "obj", include_str!("🔣️original-obj-import.json"), 97820);
-}
-
-#[test]
-fn original_stl_import_publishes_binary_and_ascii_after_funded_topology() {
-    original_mesh_import("brep.io.importStl", "base64", include_str!("🔣️original-stl-import.json"), 97822);
-}
-
-#[test]
-fn original_obj_and_stl_export_bound_the_source_through_registered_roundtrip() {
-    use semio_s_spatial_kernel_semio_session::{read_geometry, read_text, read_channel_number};
-
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-mesh-export.json")).unwrap();
-    let facts = &fixture["closedBox"];
-    let [width, depth, height] = fixture_xyz(&facts["size"]);
-    let session = Session::new();
-    let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-    let mut caller = OriginalJobFixtureCaller::admit(OperationId(97823), Generation(17), stock(), || Some(1000), 1500, 32768);
-    let (mut born, mut free) = (0, 0);
-    let primitive = run_live_query(&registry, "brep.prim3d.box",
-        Dictionary::new().insert("width", number(width)).insert("depth", number(depth)).insert("height", number(height)),
-        &mut caller, &mut born, &mut free);
-    let source = primitive.get("solid").unwrap();
-    let source_handle = read_geometry(&primitive, "solid").unwrap();
-    let export_input = |geometry: &Value| Dictionary::new().insert("geometry", geometry.clone()).insert("deflection", number(0.1));
-    let handles = || session.with_kernel_read(|kernel| Ok(kernel.live_handles())).unwrap();
-    let mut planar = None;
-    for (export, import, channel) in [("brep.io.exportObj", "brep.io.importObj", "obj"), ("brep.io.exportStl", "brep.io.importStl", "stl")] {
-        let before = handles();
-        let encoded = run_live_query(&registry, export, export_input(source), &mut caller, &mut born, &mut free);
-        assert_eq!(handles(), before);
-        let text = read_text(&encoded, channel).unwrap();
-        if channel == "obj" { assert_eq!(text.lines().filter(|line|line.starts_with("f ")).count(), facts["triangles"].as_u64().unwrap() as usize); }
-        else { assert_eq!(semio_framework_value::base64_standard_decode(&text).unwrap().len(), 84 + 50 * facts["triangles"].as_u64().unwrap() as usize); }
-        let decoded = run_live_query(&registry, import, Dictionary::new().insert("data", encoded.get(channel).unwrap().clone())
-            .insert("tolerance", number(1e-6)), &mut caller, &mut born, &mut free);
-        let shape = decoded.get("geometry").unwrap();
-        for (method, output, key) in [("brep.measure.volume", "volume", "volume"), ("brep.measure.area", "area", "area")] {
-            let measured = run_live_query(&registry, method, Dictionary::new().insert("geometry", shape.clone()), &mut caller, &mut born, &mut free);
-            assert!((read_channel_number(&measured, output).unwrap() - facts[key].as_f64().unwrap()).abs() < 1e-9);
-        }
-        planar = Some(shape.clone());
-    }
-    let before = handles();
-    let encoded = run_live_query(&registry, "brep.io.exportObj", export_input(&planar.unwrap()), &mut caller, &mut born, &mut free);
-    assert_eq!(read_text(&encoded, "obj").unwrap().lines().filter(|line|line.starts_with("f ")).count(), facts["triangles"].as_u64().unwrap() as usize);
-    assert_eq!(handles(), before);
-
-    let mut job = Some(admit_live_job(&registry, "brep.io.exportStl", export_input(source)));
-    let mut text_allocated = false;
-    for _ in 0..10000 {
-        let job = job.as_mut().unwrap();
-        let encoding = job.progress().phase == "mesh-export-encoding";
-        let copy = job.next_step_copy_byte_demand().unwrap().max(128);
-        run(&mut caller, Grant { maximum_items: 1, maximum_copy_bytes: copy, ..stock() }, &mut born, &mut free, |cx| {
-            let (step, receipt) = job.step(cx).unwrap();
-            assert!(matches!(step, neural_engine::OperatorJobStep::Working(_)));
-            text_allocated = encoding && receipt.retained_capacity_bytes != 0;
-            Ok(())
-        });
-        if text_allocated { break; }
-    }
-    assert!(text_allocated);
-    job.as_mut().unwrap().cancel();
-    close_live_job(&mut job, &mut caller, &mut born, &mut free);
-    assert_eq!(handles(), before);
-    assert!(session.with_kernel_read(|kernel|Ok(kernel.kind_sync(&source_handle).is_ok())).unwrap());
-    caller.retire_exact();
-}
-
-fn original_mesh_import(operator: &str, field: &str, source: &str, operation: u64) {
-    use semio_framework_3d_brep_engine::ShapeRoot;
-    use semio_s_spatial_kernel_semio_session::{map_kernel_error, read_geometry};
-
-    let fixtures: serde_json::Value = serde_json::from_str(source).unwrap();
-    let session = Session::new();
-    let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
-    let mut caller = OriginalJobFixtureCaller::admit(OperationId(operation), Generation(17), stock(), || Some(1000), 1500, 32768);
-    let grant = Grant { maximum_items: 1, maximum_copy_bytes: 128, ..stock() };
-    let (mut born, mut free) = (0, 0);
-    let input = |row: &serde_json::Value| {
-        let data = semio_s_spatial_kernel_semio_session::text_dictionary(row[field].as_str().unwrap().to_owned());
-        Dictionary::new().insert("data", Value::Dictionary(data)).insert("tolerance", number(1e-6))
-    };
-    let sizes = || session.with_kernel_read(|kernel| {
-        let body = kernel.tessellation_body();
-        Ok([kernel.live_handles().len(), body.vertices.len(), body.edges.len(), body.faces.len(), body.solids.len(), body.shells.len()])
-    }).unwrap();
-    for row in fixtures["cases"].as_array().unwrap() {
-        let before = sizes();
-        let output = run_live_query(&registry, operator, input(row), &mut caller, &mut born, &mut free);
-        let handle = read_geometry(&output, "geometry").unwrap();
-        let shape = session.with_kernel_read(|kernel| kernel.export_shape(&handle).map_err(|error| map_kernel_error(&error))).unwrap();
-        let kind = match shape.root { ShapeRoot::Solid(_) => "solid", ShapeRoot::Shell(_) => "shell", _ => panic!("mesh has a native shell or solid root") };
-        assert_eq!(kind, row["kind"].as_str().unwrap());
-        assert_eq!(sizes()[0], before[0] + 1);
-        let body = &shape.body;
-        for (actual, key) in [(body.vertices.len(), "vertices"), (body.edges.len(), "edges"), (body.faces.len(), "faces")] {
-            assert_eq!(actual, row[key].as_u64().unwrap() as usize);
-        }
-        let (area, volume) = body.faces.iter().fold((0.0, 0.0), |(area, volume), (_, face)| {
-            let first = body.loops.get(face.outer.unwrap()).unwrap().first;
-            let second = body.coedges.get(first).unwrap().next;
-            let third = body.coedges.get(second).unwrap().next;
-            let [a, b, c] = [first, second, third].map(|id| body.vertices.get(body.coedge_endpoints(id).unwrap().0).unwrap().position);
-            (area + 0.5 * (b - a).cross(c - a).norm(), volume + a.to_vec().dot(b.to_vec().cross(c.to_vec())) / 6.0)
-        });
-        assert!((area - row["area"].as_f64().unwrap()).abs() < 1e-10);
-        assert!((volume - row["volume"].as_f64().unwrap()).abs() < 1e-10);
-    }
-
-    let before = sizes();
-    let mut job = Some(admit_live_job(&registry, operator, input(&fixtures["cases"][0])));
-    for _ in 0..2000 {
-        run(&mut caller, grant, &mut born, &mut free, |cx| {
-            assert!(matches!(job.as_mut().unwrap().step(cx).unwrap().0, neural_engine::OperatorJobStep::Working(_)));
-            Ok(())
-        });
-        if sizes()[3] > before[3] { break; }
-    }
-    assert!(sizes()[3] > before[3]);
-    assert_eq!(sizes()[0], before[0]);
-    job.as_mut().unwrap().cancel();
-    close_live_job(&mut job, &mut caller, &mut born, &mut free);
-    assert_eq!(sizes(), before);
-
-    for row in fixtures["invalid"].as_array().unwrap() {
-        let mut job = Some(admit_live_job(&registry, operator, input(row)));
-        let mut refusal = None;
-        for _ in 0..2000 {
-            run(&mut caller, grant, &mut born, &mut free, |cx| {
-                match job.as_mut().unwrap().step(cx) {
-                    Ok((neural_engine::OperatorJobStep::Working(_), _)) => {}
-                    Ok(_) => panic!("an invalid mesh cannot publish a root"),
-                    Err(error) => refusal = Some(error),
-                }
-                Ok(())
-            });
-            if refusal.is_some() { break; }
-        }
-        close_live_job(&mut job, &mut caller, &mut born, &mut free);
-        assert!(format!("{:?}", refusal.expect("invalid original mesh refuses")).contains("InvalidValue"));
-        assert_eq!(sizes(), before);
-    }
-    caller.retire_exact();
-}
-
-#[test]
 fn analytic_curves_and_plane_return_the_closest_point_through_the_original_registry() {
     let fixture = evaluate_fixture();
     let session = Session::new();
@@ -532,6 +383,112 @@ fn retained_vertex_publishes_and_previews_with_rollback_before_publication() {
 }
 
 #[test]
+fn original_solid_distance_measures_supported_solid_pairs() {
+    use semio_s_spatial_kernel_semio_session::{read_channel_number, vector_dictionary};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-sphere-distance.json")).unwrap();
+    let session = Session::new();
+    let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(98670), Generation(17), stock(), || Some(1000), 1500, 131072);
+    let (mut born, mut free) = (0, 0);
+    let mut evaluate = |operator: &str, input| run_live_query(&registry, operator, input, &mut caller, &mut born, &mut free);
+    let vector = |axes| Value::Dictionary(vector_dictionary(axes));
+    let place = |evaluate: &mut dyn FnMut(&str, Dictionary) -> neural_engine::ColdOwner<Dictionary>, geometry, offset| {
+        let input = Dictionary::new().insert("geometry", geometry).insert("offset", vector(offset));
+        evaluate("brep.xform.translate", input).get("geometryOut").unwrap().clone()
+    };
+    let make_sphere = |evaluate: &mut dyn FnMut(&str, Dictionary) -> neural_engine::ColdOwner<Dictionary>, spec: &serde_json::Value| {
+        let input = Dictionary::new().insert("radius", number(spec["radius"].as_f64().unwrap()));
+        let geometry = evaluate("brep.prim3d.sphere", input).get("solid").unwrap().clone();
+        place(evaluate, geometry, fixture_xyz(&spec["center"]))
+    };
+    let check = |evaluate: &mut dyn FnMut(&str, Dictionary) -> neural_engine::ColdOwner<Dictionary>, a: Value, b: Value, spec: &serde_json::Value| {
+        let expected = spec["expected"].as_f64().unwrap();
+        for (left, right) in [(a.clone(), b.clone()), (b, a)] {
+            let input = Dictionary::new().insert("a", left).insert("b", right);
+            let output = evaluate(fixture["operator"].as_str().unwrap(), input);
+            let actual = read_channel_number(&output, "distance").unwrap();
+            assert!((actual - expected).abs() < 1e-12, "{}: {actual} != {expected}", spec["name"]);
+        }
+    };
+    for pair in fixture["spherePairs"].as_array().unwrap() {
+        let a = make_sphere(&mut evaluate, &pair["left"]);
+        let b = make_sphere(&mut evaluate, &pair["right"]);
+        check(&mut evaluate, a, b, pair);
+    }
+    let make_box = |evaluate: &mut dyn FnMut(&str, Dictionary) -> neural_engine::ColdOwner<Dictionary>, spec: &serde_json::Value| {
+        let input = ["width", "depth", "height"].into_iter().zip(fixture_xyz(&spec["size"]))
+            .fold(Dictionary::new(), |input, (axis, extent)| input.insert(axis, number(extent)));
+        let mut box_solid = evaluate("brep.prim3d.box", input).get("solid").unwrap().clone();
+        let angle = spec["rotation"].as_f64().unwrap();
+        if angle != 0.0 {
+            let input = Dictionary::new().insert("geometry", box_solid)
+                .insert("axis", vector([0.0, 0.0, 1.0])).insert("angle", number(angle));
+            box_solid = evaluate("brep.xform.rotate", input).get("geometryOut").unwrap().clone();
+        }
+        place(evaluate, box_solid, fixture_xyz(&spec["origin"]))
+    };
+    for spec in fixture["sphereBoxes"].as_array().unwrap() {
+        let box_solid = make_box(&mut evaluate, spec);
+        let sphere = make_sphere(&mut evaluate, &spec["sphere"]);
+        check(&mut evaluate, box_solid, sphere, spec);
+    }
+    for spec in fixture["curvedSolids"].as_array().unwrap() {
+        let parameters = spec["parameters"].as_object().unwrap();
+        let input = parameters.iter().fold(Dictionary::new(), |input, (name, value)| {
+            input.insert(name.as_str(), number(value.as_f64().unwrap()))
+        });
+        let constructor = format!("brep.prim3d.{}", spec["kind"].as_str().unwrap());
+        let geometry = evaluate(&constructor, input).get("solid").unwrap().clone();
+        let solid = place(&mut evaluate, geometry, fixture_xyz(&spec["origin"]));
+        let sphere = make_sphere(&mut evaluate, &spec["sphere"]);
+        check(&mut evaluate, solid, sphere, spec);
+    }
+    let cylinders: serde_json::Value = serde_json::from_str(include_str!("🔣️original-cylinder-distance.json")).unwrap();
+    let cylinder = |evaluate: &mut dyn FnMut(&str, Dictionary) -> neural_engine::ColdOwner<Dictionary>, spec: &serde_json::Value| {
+        let input = Dictionary::new().insert("radius", number(spec["radius"].as_f64().unwrap()))
+            .insert("height", number(spec["height"].as_f64().unwrap()));
+        let mut geometry = evaluate("brep.prim3d.cylinder", input).get("solid").unwrap().clone();
+        if spec["reverse"] == true {
+            let point = |xyz| Value::Dictionary(semio_s_spatial_kernel_semio_session::point_dictionary(xyz));
+            let reflection = Dictionary::new().insert("geometry", geometry).insert("origin", point([0.; 3]))
+                .insert("normal", point([0., 0., 1.]));
+            geometry = evaluate("brep.xform.mirror", reflection).get("geometryOut").unwrap().clone();
+        }
+        place(evaluate, geometry, fixture_xyz(&spec["center"]))
+    };
+    let first = cylinder(&mut evaluate, &cylinders["stock"]);
+    for spec in cylinders["cases"].as_array().unwrap() {
+        let second = cylinder(&mut evaluate, spec);
+        check(&mut evaluate, first.clone(), second, spec);
+    }
+    for spec in cylinders["boxes"].as_array().unwrap() {
+        let box_solid = make_box(&mut evaluate, &spec["box"]);
+        let tube = cylinder(&mut evaluate, &spec["cylinder"]);
+        check(&mut evaluate, box_solid, tube, spec);
+    }
+    let cavities: serde_json::Value = serde_json::from_str(include_str!("🔣️original-sphere-cavity-distance.json")).unwrap();
+    for shell in cavities["shells"].as_array().unwrap() {
+        let stock = if shell["kind"] == "sphere" {
+            let input = Dictionary::new().insert("radius", number(shell["radius"].as_f64().unwrap()));
+            evaluate("brep.prim3d.sphere", input).get("solid").unwrap().clone()
+        } else {
+            let input = ["width", "depth", "height"].into_iter().zip(fixture_xyz(&shell["size"]))
+                .fold(Dictionary::new(), |input, (axis, extent)| input.insert(axis, number(extent)));
+            evaluate("brep.prim3d.box", input).get("solid").unwrap().clone()
+        };
+        let stock = place(&mut evaluate, stock, fixture_xyz(&shell["origin"]));
+        let cavity = make_sphere(&mut evaluate, &shell["void"]);
+        let input = Dictionary::new().insert("a", stock).insert("b", cavity);
+        let material = evaluate("brep.bool.cut", input).get("solid").unwrap().clone();
+        for spec in shell["cases"].as_array().unwrap() {
+            let probe = make_sphere(&mut evaluate, spec);
+            check(&mut evaluate, material.clone(), probe, spec);
+        }
+    }
+    caller.retire(stock());
+}
+
+#[test]
 fn original_certified_solid_queries_cover_contact_and_exact_box_distance() {
     use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, vector_dictionary};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-solid-queries.json")).unwrap();
@@ -601,6 +558,164 @@ fn original_certified_solid_queries_cover_contact_and_exact_box_distance() {
         assert_eq!(read_channel_number(&result, "distance").unwrap(), row["expected"].as_f64().unwrap());
     }
     caller.retire(stock());
+}
+
+#[test]
+fn original_classify_reads_retained_orthogonal_boolean_material() {
+    use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, vector_dictionary};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-solid-queries.json")).unwrap();
+    let booleans: serde_json::Value = serde_json::from_str(include_str!("🔣️original-box-booleans.json")).unwrap();
+    for (index, row) in fixture["orthogonalClassify"].as_array().unwrap().iter().enumerate() {
+        let session = Session::new();
+        let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(97580 + index as u64), Generation(17), stock(), || Some(1000), 1500, 131072);
+        let (mut born, mut free) = (0, 0);
+        let mut evaluate = |operator: &str, input| retained_boolean_result(&registry, operator, input, &mut caller, &mut born, &mut free);
+        let mut place_box = |row: &serde_json::Value| {
+            let input = ["width", "depth", "height"].into_iter().zip(fixture_xyz(&row["size"]))
+                .fold(Dictionary::new(), |input, (axis, extent)| input.insert(axis, number(extent)));
+            let solid = evaluate("brep.prim3d.box", input);
+            let input = Dictionary::new().insert("geometry", solid.get("solid").unwrap().clone())
+                .insert("offset", Value::Dictionary(vector_dictionary(fixture_xyz(&row["origin"]))));
+            evaluate("brep.xform.translate", input).get("geometryOut").unwrap().clone()
+        };
+        let source = &booleans[row["source"].as_str().unwrap()];
+        let [a, b] = ["a", "b"].map(|key| place_box(&source[key]));
+        let clip = row.get("clip").map(&mut place_box);
+        let input = Dictionary::new().insert("a", a).insert("b", b);
+        let result = evaluate(row["operator"].as_str().unwrap(), input);
+        let mut solid = result.get("solid").unwrap().clone();
+        if let Some(clip) = clip {
+            let input = Dictionary::new().insert("a", solid).insert("b", clip);
+            solid = evaluate("brep.bool.intersect", input).get("solid").unwrap().clone();
+        }
+        for probe in row["points"].as_array().unwrap() {
+            let input = Dictionary::new().insert("solid", solid.clone())
+                .insert("point", Value::Dictionary(point_dictionary(fixture_xyz(&probe[0]))));
+            let result = evaluate(fixture["classify"].as_str().unwrap(), input);
+            assert_eq!(read_channel_number(&result, "classification").unwrap(), probe[1].as_f64().unwrap(), "{} {}", row["name"], probe[0]);
+        }
+        caller.retire(stock());
+    }
+}
+
+#[test]
+fn original_classify_uses_spherical_trims_and_inward_cavity_boundaries() {
+    check_original_curved_classification("sphericalClassify", 97610);
+}
+
+#[test]
+fn original_classify_uses_cylindrical_profiles_and_trimmed_axial_caps() {
+    check_original_curved_classification("cylindricalClassify", 97620);
+}
+
+#[test]
+fn original_classify_reaches_finite_revolutions_and_eccentric_axial_steps() {
+    use semio_s_spatial_kernel_semio_session::{point_dictionary,read_channel_number,vector_dictionary};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️original-revolved-classification.json")).unwrap();
+    for (index,row) in fixture["cases"].as_array().unwrap().iter().enumerate(){
+        let session=Session::new();
+        let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+        let mut caller=OriginalJobFixtureCaller::admit(OperationId(99230+index as u64),Generation(17),stock(),||Some(1000),1500,131072);
+        let (mut born,mut free)=(0,0);
+        let mut evaluate=|op,input|run_live_query(&registry,op,input,&mut caller,&mut born,&mut free);
+        let [a,b]=std::array::from_fn(|i|row["radii"][i].as_f64().unwrap());
+        let point=|p|Value::Dictionary(point_dictionary(p));
+        let vector=|p|Value::Dictionary(vector_dictionary(p));
+        let height=||row["height"].as_f64().unwrap();
+        let kind=row["kind"].as_str().unwrap();
+        let geometry=match kind{
+            "frustum"=>{
+                let crown=height()*b/(b-a);
+                let cone=evaluate("brep.prim3d.cone",Dictionary::new().insert("radius",number(b)).insert("height",number(crown)));
+                let halves=evaluate("brep.intersect.split",Dictionary::new().insert("solid",cone.get("solid").unwrap().clone())
+                    .insert("planeOrigin",point([0.,0.,height()])).insert("planeNormal",vector([0.,0.,1.])));
+                halves.get("negative").unwrap().clone()
+            }
+            "torus"|"annular-sector"=>{
+                let profile=if kind=="torus"{
+                    let circle=evaluate("brep.curve.circle",Dictionary::new().insert("center",point([a,0.,0.]))
+                        .insert("normal",vector([0.,-1.,0.])).insert("radius",number(b)));
+                    evaluate("brep.util.faceFromWire",Dictionary::new().insert("wire",circle.get("curve").unwrap().clone()))
+                }else{
+                    let points=[[a,0.,0.],[b,0.,0.],[b,0.,height()],[a,0.,height()]];
+                    evaluate("brep.surf.planarFace",polygon_fixture_input(&serde_json::json!({"points":points})))
+                };
+                let result=evaluate("brep.sweep.revolve",Dictionary::new().insert("face",profile.get("face").unwrap().clone())
+                    .insert("axisOrigin",point([0.;3])).insert("axisDirection",vector([0.,0.,1.]))
+                    .insert("angle",number(row["rotationDegrees"].as_f64().unwrap().to_radians())));
+                result.get("solid").unwrap().clone()
+            }
+            "bore"|"step"=>{
+                let mut cylinder=|radius,extent,offset:[f64;3]|{
+                    let solid=evaluate("brep.prim3d.cylinder",Dictionary::new().insert("radius",number(radius)).insert("height",number(extent)));
+                    let solid=solid.get("solid").unwrap().clone();
+                    if offset==[0.;3]{return solid;}
+                    let result=evaluate("brep.xform.translate",Dictionary::new().insert("geometry",solid).insert("offset",vector(offset)));
+                    result.get("geometryOut").unwrap().clone()
+                };
+                let [lo,hi]=std::array::from_fn(|i|row["span"][i].as_f64().unwrap());
+                let radial=row["offset"].as_f64().unwrap();
+                let (op,outer,inner)=if kind=="bore"{
+                    ("brep.bool.cut",cylinder(b,height(),[0.;3]),cylinder(a,hi-lo,[radial,0.,lo]))
+                }else{
+                    ("brep.bool.fuse",cylinder(b,hi-lo,[0.,0.,lo]),cylinder(a,height(),[radial,0.,0.]))
+                };
+                evaluate(op,Dictionary::new().insert("a",outer).insert("b",inner)).get("solid").unwrap().clone()
+            }
+            _=>panic!("unknown retained revolution fixture"),
+        };
+        let handles=||session.with_kernel_read(|kernel|Ok(kernel.live_handles())).unwrap();
+        let initial=handles();
+        for probe in row["probes"].as_array().unwrap(){
+            let [x,y,z]=fixture_xyz(&probe[0]);
+            let world=if kind=="frustum"{[x,-y,height()-z]}else{[x,y,z]};
+            let distance=probe[1].as_f64().unwrap();
+            let expected=if distance.abs()<=1e-6{2.}else if distance<0.{0.}else{1.};
+            let result=evaluate(fixture["classify"].as_str().unwrap(),Dictionary::new()
+                .insert("solid",geometry.clone()).insert("point",point(world)));
+            assert_eq!(read_channel_number(&result,"classification").unwrap(),expected,"{row:?} {world:?}");
+        }
+        assert_eq!(handles(),initial);
+        caller.retire(stock());
+    }
+}
+
+fn check_original_curved_classification(family: &str, operation: u64) {
+    use semio_s_spatial_kernel_semio_session::{point_dictionary, read_channel_number, vector_dictionary};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️original-solid-queries.json")).unwrap();
+    for (index, row) in fixture[family].as_array().unwrap().iter().enumerate() {
+        let session = Session::new();
+        let registry = neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(operation + index as u64), Generation(17), stock(), || Some(1000), 1500, 131072);
+        let (mut born, mut free) = (0, 0);
+        let mut evaluate = |operator: &str, input| retained_boolean_result(&registry, operator, input, &mut caller, &mut born, &mut free);
+        let [a, b] = ["a", "b"].map(|port| {
+            let spec = &row[port];
+            let (operator, input) = match spec["kind"].as_str().unwrap() {
+                "box" => ("brep.prim3d.box", ["width", "depth", "height"].into_iter().zip(fixture_xyz(&spec["size"]))
+                    .fold(Dictionary::new(), |input, (axis, extent)| input.insert(axis, number(extent)))),
+                "cylinder" => ("brep.prim3d.cylinder", ["radius", "height"].into_iter()
+                    .fold(Dictionary::new(), |input, key| input.insert(key, number(spec[key].as_f64().unwrap())))),
+                "sphere" => ("brep.prim3d.sphere", Dictionary::new().insert("radius", number(spec["radius"].as_f64().unwrap()))),
+                _ => panic!("unknown curved Boolean operand"),
+            };
+            let solid = evaluate(operator, input).get("solid").unwrap().clone();
+            let offset = fixture_xyz(&spec["origin"]);
+            if offset == [0.; 3] { return solid; }
+            let translate = Dictionary::new().insert("geometry", solid).insert("offset", Value::Dictionary(vector_dictionary(offset)));
+            evaluate("brep.xform.translate", translate).get("geometryOut").unwrap().clone()
+        });
+        let result = evaluate(row["operator"].as_str().unwrap(), Dictionary::new().insert("a", a).insert("b", b));
+        let solid = result.get("solid").unwrap();
+        for probe in row["points"].as_array().unwrap() {
+            let input = Dictionary::new().insert("solid", solid.clone())
+                .insert("point", Value::Dictionary(point_dictionary(fixture_xyz(&probe[0]))));
+            let result = evaluate(fixture["classify"].as_str().unwrap(), input);
+            assert_eq!(read_channel_number(&result, "classification").unwrap(), probe[1].as_f64().unwrap(), "{} {}", row["name"], probe[0]);
+        }
+        caller.retire(stock());
+    }
 }
 
 #[test]
@@ -1001,7 +1116,7 @@ fn retained_explode_restores_compound_member_aliases_in_authored_order() {
 
 #[test]
 fn original_closest_point_respects_skew_plane_and_circular_trims(){
-    use semio_framework_3d_brep_curve::Curve3;
+    use semio_framework_3d_brep_curve::{Curve3,bspline::KnotVector};
     use semio_framework_3d_brep_engine::{ShapeRoot,ShapeValue};
     use semio_framework_3d_brep_representation::topology::{Body,Edge,Vertex};
     use semio_framework_3d_brep_surface::Surface;
@@ -1031,6 +1146,31 @@ fn original_closest_point_respects_skew_plane_and_circular_trims(){
     let result=run_live_query(&registry,"brep.eval.surfaceClosestUv",Dictionary::new().insert("surface",surface).insert("point",xyz(&row["target"])),&mut caller,&mut born,&mut free);
     assert_point(&result,row);
     for (i,key) in ["u","v"].into_iter().enumerate(){assert!((read_channel_number(&result,key).unwrap()-row["uv"][i].as_f64().unwrap()).abs()<1e-10);}
+
+    let rational:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🧪️tests/🧫️fixtures/rational-plane-nearest.json")).unwrap();
+    let knots=|axis:usize|{
+        let [low,high]:[f64;2]=serde_json::from_value(rational["domain"][axis].clone()).unwrap();
+        KnotVector::new(vec![low,low,high,high],1,2).unwrap()
+    };
+    let controls=rational["controls"].as_array().unwrap().iter()
+        .map(|row|row.as_array().unwrap().iter().map(point).collect()).collect();
+    let surface=Surface::Nurbs{u_knots:knots(0),v_knots:knots(1),controls,
+        weights:serde_json::from_value(rational["weights"].clone()).unwrap()};
+    let mut body=Body::new();
+    let label=body.new_label();
+    let patch=import(ShapeValue{root:ShapeRoot::Surface{surface,label},body});
+    for row in rational["queries"].as_array().unwrap(){
+        let input=Dictionary::new().insert("surface",patch.clone()).insert("point",xyz(&row["target"]));
+        let output=run_live_query(&registry,"brep.eval.surfaceClosestUv",input,&mut caller,&mut born,&mut free);
+        assert_point(&output,row);
+        for (index,key) in ["u","v"].into_iter().enumerate(){
+            assert!((read_channel_number(&output,key).unwrap()-row["uv"][index].as_f64().unwrap()).abs()<1e-10);
+        }
+        assert!((read_channel_number(&output,"distance").unwrap()-row["distance"].as_f64().unwrap()).abs()<1e-10);
+        let input=Dictionary::new().insert("geometry",patch.clone()).insert("point",xyz(&row["target"]));
+        let output=run_live_query(&registry,"brep.measure.closestPoint",input,&mut caller,&mut born,&mut free);
+        assert_point(&output,row);
+    }
 
     for row in fixture["circularEdge"].as_array().unwrap(){
         let [lo,hi]:[f64;2]=serde_json::from_value(row["range"].clone()).unwrap();
@@ -1086,13 +1226,58 @@ fn original_closest_point_uses_certified_primitive_boundaries(){
 }
 
 #[test]
+fn original_closest_point_keeps_analytic_boolean_cavity_boundaries(){
+    use semio_s_spatial_kernel_semio_session::{point_dictionary,read_geometry,read_xyz,vector_dictionary};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🧪️tests/🧫️fixtures/derived-solid-nearest.json")).unwrap();
+    let session=Session::new();
+    let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+    let mut caller=OriginalJobFixtureCaller::admit(OperationId(97485),Generation(17),stock(),||Some(1000),1500,32768);
+    let (mut born,mut free)=(0,0);
+    for kind in ["sphereShell","boxShell"]{
+        let row=&fixture[kind];
+        let mut placed=|operator:&str,parameters:Dictionary,offset:&serde_json::Value|{
+            let source=run_live_query(&registry,operator,parameters,&mut caller,&mut born,&mut free);
+            let input=Dictionary::new().insert("geometry",source.get("solid").unwrap().clone())
+                .insert("offset",Value::Dictionary(vector_dictionary(fixture_xyz(offset))));
+            run_live_query(&registry,"brep.xform.translate",input,&mut caller,&mut born,&mut free)
+                .get("geometryOut").unwrap().clone()
+        };
+        let outer=if kind=="sphereShell"{
+            placed("brep.prim3d.sphere",Dictionary::new().insert("radius",number(row["outerRadius"].as_f64().unwrap())),&row["outer"])
+        }else{
+            let [width,depth,height]=fixture_xyz(&row["size"]);
+            let parameters=Dictionary::new().insert("width",number(width)).insert("depth",number(depth)).insert("height",number(height));
+            placed("brep.prim3d.box",parameters,&row["origin"])
+        };
+        let inner=placed("brep.prim3d.sphere",Dictionary::new().insert("radius",number(row["innerRadius"].as_f64().unwrap())),&row["inner"]);
+        let input=Dictionary::new().insert("a",outer).insert("b",inner);
+        let cut=run_live_query(&registry,"brep.bool.cut",input,&mut caller,&mut born,&mut free);
+        let input=Dictionary::new().insert("geometry",cut.get("solid").unwrap().clone());
+        let output=run_live_query(&registry,"brep.measure.boundingBox",input,&mut caller,&mut born,&mut free);
+        let handle=read_geometry(&output,"box").unwrap();
+        let actual=session.with_kernel_read(|kernel|Ok(kernel.live_solid_primitive(handle.as_str()).unwrap().axis_aligned_bounds())).unwrap();
+        for (point,expected) in actual.into_iter().zip(row["bounds"].as_array().unwrap()){
+            assert!(point.to_array().into_iter().zip(fixture_xyz(expected)).all(|(a,b)|(a-b).abs()<1e-10));
+        }
+        for probe in row["queries"].as_array().unwrap(){
+            let query=Dictionary::new().insert("geometry",cut.get("solid").unwrap().clone())
+                .insert("point",Value::Dictionary(point_dictionary(fixture_xyz(&probe["target"]))));
+            let output=run_live_query(&registry,"brep.measure.closestPoint",query,&mut caller,&mut born,&mut free);
+            assert!(read_xyz(&output,"pointOut").unwrap().into_iter().zip(fixture_xyz(&probe["point"]))
+                .all(|(actual,expected)|(actual-expected).abs()<1e-10));
+        }
+    }
+    caller.retire_exact();
+}
+
+#[test]
 fn original_closest_point_traverses_the_authored_planar_face_with_holes() {
     use semio_framework_3d_brep_curve::Curve3;
     use semio_framework_3d_brep_engine::{ShapeRoot, ShapeValue};
     use semio_framework_3d_brep_representation::topology::{Body, Edge, Face, Vertex, make_loop};
     use semio_framework_3d_brep_surface::Surface;
     use semio_framework_3d_brep_vector::{Pnt3, Vec3, matrix::Frame3};
-    use semio_s_spatial_kernel_semio_session::{geometry_dict, map_kernel_error, point_dictionary, read_xyz};
+    use semio_s_spatial_kernel_semio_session::{geometry_dict, map_kernel_error, point_dictionary, read_channel_number, read_xyz};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️planar-face-projection.json")).unwrap();
     let point = |row: &serde_json::Value| {
@@ -1141,44 +1326,125 @@ fn original_closest_point_traverses_the_authored_planar_face_with_holes() {
     let mut caller = OriginalJobFixtureCaller::admit(OperationId(97485), Generation(17), stock(), || Some(1000), 1500, 32768);
     let (mut born, mut free) = (0, 0);
     let grant = Grant { maximum_items: 1, maximum_copy_bytes: 128, ..stock() };
+    let area = run_live_query(&registry, "brep.measure.area", Dictionary::new().insert("geometry", Value::Dictionary(handle.clone())), &mut caller, &mut born, &mut free);
+    assert!((read_channel_number(&area, "area").unwrap() - fixture["area"].as_f64().unwrap()).abs() < 1e-10);
     let expected_turns = 2 + 3 + fixture["outer"].as_array().unwrap().len() +
         fixture["holes"].as_array().unwrap().iter().map(|ring| ring.as_array().unwrap().len()).sum::<usize>();
-    for row in fixture["cases"].as_array().unwrap() {
-        let input = Dictionary::new()
-            .insert("geometry", Value::Dictionary(handle.clone()))
-            .insert("point", Value::Dictionary(point_dictionary(fixture_xyz(&row["target"]))));
-        let mut job = Some(admit_live_job(&registry, "brep.measure.closestPoint", input));
-        let mut turns = 0;
-        let mut result = None;
-        for _ in 0..100 {
-            let job = job.as_mut().unwrap();
-            let projecting = job.progress().phase == "planar-closest-point";
-            if projecting && turns == 0 {
-                run(&mut caller, Grant { maximum_copy_bytes: 0, ..grant }, &mut born, &mut free, |cx| {
-                    let (step, receipt) = job.step(cx).unwrap();
-                    assert!(matches!(step, neural_engine::OperatorJobStep::Working(_)));
-                    assert_eq!(receipt, Progress::default());
+    for (index, row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let target = Value::Dictionary(point_dictionary(fixture_xyz(&row["target"])));
+        let vertex = run_live_query(&registry, "brep.util.vertex", Dictionary::new().insert("point", target.clone()), &mut caller, &mut born, &mut free)
+            .get("vertex").unwrap().clone();
+        let face = Value::Dictionary(handle.clone());
+        let closest = Dictionary::new().insert("geometry", face.clone()).insert("point", target);
+        let jobs = [("brep.measure.closestPoint", closest), ("brep.measure.distance", Dictionary::new().insert("a", vertex.clone()).insert("b", face.clone())),
+            ("brep.measure.distance", Dictionary::new().insert("a", face).insert("b", vertex))];
+        if index == 0 {
+            let mut cancelled = Some(admit_live_job(&registry, "brep.measure.distance", jobs[1].1.clone()));
+            for _ in 0..7 {
+                run(&mut caller, grant, &mut born, &mut free, |cx| {
+                    let (status, receipt) = cancelled.as_mut().unwrap().step(cx).unwrap();
+                    assert!(matches!(status, neural_engine::OperatorJobStep::Working(_)));
+                    assert!(receipt.fits(grant));
                     Ok(())
                 });
             }
+            assert_eq!(cancelled.as_ref().unwrap().progress().phase, "planar-closest-point");
+            cancelled.as_mut().unwrap().cancel();
             run(&mut caller, grant, &mut born, &mut free, |cx| {
-                let (step, receipt) = job.step(cx).unwrap();
-                if projecting {
-                    assert_eq!(receipt.copied_items, 1);
-                    assert_eq!(receipt.retained_capacity_bytes, 0);
-                    turns += 1;
-                }
-                if let neural_engine::OperatorJobStep::Done(value) = step { result = Some(value); }
+                assert!(matches!(cancelled.as_mut().unwrap().step(cx).unwrap().0, neural_engine::OperatorJobStep::Cancelled(_)));
                 Ok(())
             });
-            if result.is_some() { break; }
+            close_live_job(&mut cancelled, &mut caller, &mut born, &mut free);
         }
-        close_live_job(&mut job, &mut caller, &mut born, &mut free);
-        assert_eq!(turns, expected_turns);
-        let result = neural_engine::ColdOwner::new(result.expect("planar projection completes under one-item grants"));
-        let actual = read_xyz(&result, "pointOut").unwrap();
-        let expected = fixture_xyz(&row["point"]);
-        assert!(actual.into_iter().zip(expected).all(|(a, b)| (a - b).abs() < 1e-10), "{} {:?}", row["name"], actual);
+        for (operator, input) in jobs {
+            let mut job = Some(admit_live_job(&registry, operator, input));
+            let mut turns = 0;
+            let mut result = None;
+            for _ in 0..100 {
+                let job = job.as_mut().unwrap();
+                let projecting = job.progress().phase == "planar-closest-point";
+                if projecting && turns == 0 {
+                    run(&mut caller, Grant { maximum_copy_bytes: 0, ..grant }, &mut born, &mut free, |cx| {
+                        let (step, receipt) = job.step(cx).unwrap();
+                        assert!(matches!(step, neural_engine::OperatorJobStep::Working(_)));
+                        assert_eq!(receipt, Progress::default());
+                        Ok(())
+                    });
+                }
+                run(&mut caller, grant, &mut born, &mut free, |cx| {
+                    let (step, receipt) = job.step(cx).unwrap();
+                    if projecting {
+                        assert_eq!(receipt.copied_items, 1);
+                        assert_eq!(receipt.retained_capacity_bytes, 0);
+                        turns += 1;
+                    }
+                    if let neural_engine::OperatorJobStep::Done(value) = step { result = Some(value); }
+                    Ok(())
+                });
+                if result.is_some() { break; }
+            }
+            close_live_job(&mut job, &mut caller, &mut born, &mut free);
+            assert_eq!(turns, expected_turns);
+            let result = neural_engine::ColdOwner::new(result.expect("planar projection completes under one-item grants"));
+            if operator == "brep.measure.distance" {
+                let actual = read_channel_number(&result, "distance").unwrap();
+                assert!((actual - row["distance"].as_f64().unwrap()).abs() < 1e-10, "{}: {actual}", row["name"]);
+            } else {
+                let actual = read_xyz(&result, "pointOut").unwrap();
+                let expected = fixture_xyz(&row["point"]);
+                assert!(actual.into_iter().zip(expected).all(|(a, b)| (a - b).abs() < 1e-10), "{} {:?}", row["name"], actual);
+            }
+        }
+    }
+
+    for (index, row) in fixture["linearDistance"].as_array().unwrap().iter().enumerate() {
+        let origin = point(&row["origin"]);
+        let direction = vector(&row["direction"]);
+        let source = if row["range"].is_array() {
+            let range: (f64, f64) = serde_json::from_value(row["range"].clone()).unwrap();
+            let mut body = Body::new();
+            let support = Curve3::Line { origin, dir: direction };
+            let [v0, v1] = [range.0, range.1].map(|t| {
+                let label = body.new_label();
+                body.vertices.insert(Vertex { position: support.eval(t), label, tol: Default::default() })
+            });
+            let curve = body.curves3.insert(support);
+            let label = body.new_label();
+            let edge = body.edges.insert(Edge { curve, range, v0, v1, label, tol: Default::default() });
+            let shape = ShapeValue { root: ShapeRoot::Edge(edge), body };
+            session.with_kernel(|kernel| {
+                let live = kernel.import_shape(&shape).map_err(|error| map_kernel_error(&error))?;
+                Ok(Value::Dictionary(geometry_dict(kernel, &live)?))
+            }).unwrap()
+        } else {
+            let input = Dictionary::new().insert("start", Value::Dictionary(point_dictionary(origin.to_array())))
+                .insert("end", Value::Dictionary(point_dictionary((origin + direction).to_array())));
+            run_live_query(&registry, "brep.curve.line", input, &mut caller, &mut born, &mut free).get("curve").unwrap().clone()
+        };
+        let face = Value::Dictionary(handle.clone());
+        for (order, (left, right)) in [(&source, &face), (&face, &source)].into_iter().enumerate() {
+            let input = Dictionary::new().insert("a", left.clone()).insert("b", right.clone());
+            if index == 0 && order == 0 {
+                let mut cancelled = Some(admit_live_job(&registry, "brep.measure.distance", input.clone()));
+                for _ in 0..6 {
+                    run(&mut caller, grant, &mut born, &mut free, |cx| {
+                        let (step, receipt) = cancelled.as_mut().unwrap().step(cx).unwrap();
+                        assert!(matches!(step, neural_engine::OperatorJobStep::Working(_)) && receipt.fits(grant));
+                        Ok(())
+                    });
+                }
+                assert_eq!(cancelled.as_ref().unwrap().progress().phase, "planar-closest-point");
+                cancelled.as_mut().unwrap().cancel();
+                run(&mut caller, grant, &mut born, &mut free, |cx| {
+                    assert!(matches!(cancelled.as_mut().unwrap().step(cx).unwrap().0, neural_engine::OperatorJobStep::Cancelled(_)));
+                    Ok(())
+                });
+                close_live_job(&mut cancelled, &mut caller, &mut born, &mut free);
+            }
+            let result = retained_boolean_result(&registry, "brep.measure.distance", input, &mut caller, &mut born, &mut free);
+            let distance = read_channel_number(&result, "distance").unwrap();
+            assert!((distance - row["distance"].as_f64().unwrap()).abs() < 1e-10, "{}: {distance}", row["id"]);
+        }
     }
 
     let mut curved = shape;
@@ -1201,23 +1467,31 @@ fn original_closest_point_traverses_the_authored_planar_face_with_holes() {
         let dictionary = geometry_dict(kernel, &handle)?;
         Ok((handle, dictionary))
     }).unwrap();
-    let input = Dictionary::new().insert("geometry", Value::Dictionary(curved_handle))
-        .insert("point", Value::Dictionary(point_dictionary([14.0, 20.0, 30.0])));
-    let mut job = Some(admit_live_job(&registry, "brep.measure.closestPoint", input));
-    let mut error = None;
-    for _ in 0..8 {
-        run(&mut caller, grant, &mut born, &mut free, |cx| {
-            match job.as_mut().unwrap().step(cx) {
-                Ok((neural_engine::OperatorJobStep::Working(_), _)) => {}
-                Ok(_) => panic!("mixed face boundary must refuse original closest point"),
-                Err(refusal) => error = Some(refusal),
-            }
-            Ok(())
-        });
-        if error.is_some() { break; }
+    let curved = Value::Dictionary(curved_handle);
+    let target = Value::Dictionary(point_dictionary([14.0, 20.0, 30.0]));
+    let vertex = run_live_query(&registry, "brep.util.vertex", Dictionary::new().insert("point", target.clone()), &mut caller, &mut born, &mut free)
+        .get("vertex").unwrap().clone();
+    for (operator, input) in [
+        ("brep.measure.closestPoint", Dictionary::new().insert("geometry", curved.clone()).insert("point", target)),
+        ("brep.measure.distance", Dictionary::new().insert("a", vertex.clone()).insert("b", curved.clone())),
+        ("brep.measure.distance", Dictionary::new().insert("a", curved).insert("b", vertex)),
+    ] {
+        let mut job = Some(admit_live_job(&registry, operator, input));
+        let mut error = None;
+        for _ in 0..8 {
+            run(&mut caller, grant, &mut born, &mut free, |cx| {
+                match job.as_mut().unwrap().step(cx) {
+                    Ok((neural_engine::OperatorJobStep::Working(_), _)) => {}
+                    Ok(_) => panic!("mixed face boundary must refuse {operator}"),
+                    Err(refusal) => error = Some(refusal),
+                }
+                Ok(())
+            });
+            if error.is_some() { break; }
+        }
+        close_live_job(&mut job, &mut caller, &mut born, &mut free);
+        assert!(format!("{:?}", error.expect("mixed circular trim must refuse")).contains("UnsupportedOwner"));
     }
-    close_live_job(&mut job, &mut caller, &mut born, &mut free);
-    assert!(format!("{:?}", error.expect("original closest point refuses circular trim in mixed boundary")).contains("UnsupportedOwner"));
 
     let solid = session.with_kernel(|kernel| kernel.box_prim_sync(1.0, 1.0, 1.0).map_err(|error| map_kernel_error(&error))).unwrap();
     let cursor = session.plan_planar_closest(face_handle.as_str(), [14.0, 20.0, 30.0]).unwrap().unwrap();
@@ -1492,4 +1766,152 @@ fn original_surface_intersection_publishes_axial_circles_and_preserves_tangency_
         }
         caller.retire(stock());
     }
+}
+
+#[test]
+fn original_conic_plane_contacts_publish_exact_tangent_or_secant_and_retire_draft() {
+    use flow_extension_sdk::geometry::GeometryWorkIdentity;
+    use semio_s_spatial_kernel_semio_session::{point_dictionary,read_geometry,vector_dictionary};
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/✂️brep-intersect/🔣️.json")).unwrap();
+    let tolerance=corpus["tolerance"].as_f64().unwrap();
+    for (i,row) in corpus["retainedConicPlane"].as_array().unwrap().iter().enumerate(){
+        let session=Session::new();
+        let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+        let identity=GeometryWorkIdentity{operation:98701+i as u64,generation:17};
+        let mut caller=OriginalJobFixtureCaller::admit(OperationId(identity.operation),Generation(identity.generation),stock(),||Some(1000),1500,32768);
+        let (mut born,mut free)=(0,0);
+        let point=|raw|Value::Dictionary(point_dictionary(fixture_xyz(raw)));
+        let vector=|raw|Value::Dictionary(vector_dictionary(fixture_xyz(raw)));
+        let a=row["curve"]["radii"][0].as_f64().unwrap();
+        let b=row["curve"]["radii"][1].as_f64().unwrap();
+        let base=Dictionary::new().insert("center",point(&row["curve"]["center"])).insert("normal",vector(&row["curve"]["normal"]));
+        let (constructor,parameters)=if a==b{("brep.curve.circle",base.insert("radius",number(a)))}
+            else{("brep.curve.ellipse",base.insert("semiMajor",number(a)).insert("semiMinor",number(b)))};
+        let curve=retained_boolean_result(&registry,constructor,parameters,&mut caller,&mut born,&mut free);
+        let plane=Dictionary::new().insert("origin",point(&row["plane"]["origin"])).insert("normal",vector(&row["plane"]["normal"]));
+        let plane=retained_boolean_result(&registry,"brep.surf.plane",plane,&mut caller,&mut born,&mut free);
+        let input=Dictionary::new().insert("curve",curve.get("curve").unwrap().clone())
+            .insert("surface",plane.get("surface").unwrap().clone()).insert("tolerance",number(tolerance));
+        let operator="brep.intersect.curveSurface";
+        let grant=Grant{maximum_items:1,maximum_copy_bytes:128,..stock()};
+        let counts=||session.with_kernel_read(|kernel|{
+            let body=kernel.representation();
+            Ok([kernel.live_handles().len(),body.vertices.len(),body.edges.len(),body.curves3.len()])
+        }).unwrap();
+        let before=counts();
+        if let Some(reason)=row["fault"].as_str(){
+            let mut invalid=Some(admit_live_job(&registry,operator,input));
+            run(&mut caller,grant,&mut born,&mut free,|cx|{
+                let result=invalid.as_mut().unwrap().step(cx);
+                assert!(matches!(result,Err(error) if format!("{error:?}").contains(reason)));
+                Ok(())
+            });
+            close_live_job(&mut invalid,&mut caller,&mut born,&mut free);
+            assert_eq!(counts(),before);
+            caller.retire(stock());
+            continue;
+        }
+        let points=row["points"].as_array().unwrap();
+        if points.len()==2 {
+            let mut draft=Some(admit_live_job(&registry,operator,input.clone()));
+            for _ in 0..100 {
+                run(&mut caller,grant,&mut born,&mut free,|cx|{
+                    let (state,receipt)=draft.as_mut().unwrap().step(cx).unwrap();
+                    assert!(matches!(state,neural_engine::OperatorJobStep::Working(_)));assert!(receipt.fits(grant));
+                    Ok(())
+                });
+                if counts()[1]>before[1]{break;}
+            }
+            assert!(counts()[1]>before[1]);assert_eq!(counts()[0],before[0]);
+            draft.as_mut().unwrap().cancel();
+            run(&mut caller,stock(),&mut born,&mut free,|cx|{
+                assert!(matches!(draft.as_mut().unwrap().step(cx).unwrap().0,neural_engine::OperatorJobStep::Cancelled(_)));
+                Ok(())
+            });
+            close_live_job(&mut draft,&mut caller,&mut born,&mut free);
+            assert_eq!(counts(),before);
+        }
+        let result=retained_boolean_result(&registry,operator,input,&mut caller,&mut born,&mut free);
+        let handle=read_geometry(&result,"wire").unwrap();
+        let mesh=run_funded_preview(&session,identity,handle.as_str(),&mut caller,&mut born,&mut free);
+        mesh.validate_component_references().unwrap();
+        let xyz=if points.len()==2{&mesh.edge_positions}else{&mesh.positions};
+        assert_eq!(xyz.len(),3*points.len());
+        for (actual,expected) in xyz.chunks_exact(3).zip(points){
+            assert!(actual.into_iter().zip(fixture_xyz(expected)).all(|(&x,y)|(f64::from(x)-y).abs()<1e-5));
+        }
+        assert_eq!(mesh.component_references["vertex"].len(),points.len());
+        caller.retire(stock());
+    }
+}
+
+#[test]
+fn original_section_preserves_spherical_cap_and_band_chords() {
+    use semio_s_spatial_kernel_semio_session::{point_dictionary,read_channel_number,vector_dictionary};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🧪️tests/🧫️fixtures/spherical-strip-section.json")).unwrap();
+    let session=Session::new();
+    let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+    let mut caller=OriginalJobFixtureCaller::admit(OperationId(97486),Generation(17),stock(),||Some(1000),1500,65536);
+    let (mut born,mut free)=(0,0);
+    let mut evaluate=|operator:&str,input|run_live_query(&registry,operator,input,&mut caller,&mut born,&mut free);
+    let sphere=evaluate("brep.prim3d.sphere",Dictionary::new().insert("radius",number(fixture["sphereRadius"].as_f64().unwrap())));
+    let original=sphere.get("solid").unwrap();
+    for row in fixture["cases"].as_array().unwrap(){
+        let [low,high]:[f64;2]=serde_json::from_value(row["axial"].clone()).unwrap();
+        let clip=evaluate("brep.prim3d.box",Dictionary::new().insert("width",number(8.)).insert("depth",number(8.)).insert("height",number(high-low)));
+        let clip=evaluate("brep.xform.translate",Dictionary::new().insert("geometry",clip.get("solid").unwrap().clone())
+            .insert("offset",Value::Dictionary(vector_dictionary([-4.,-4.,low]))));
+        let material=evaluate("brep.bool.intersect",Dictionary::new().insert("a",original.clone()).insert("b",clip.get("geometryOut").unwrap().clone()));
+        let normal=fixture_xyz(&row["normal"]);
+        for axis in [normal,normal.map(|value|-value)]{
+            let input=Dictionary::new().insert("solid",material.get("solid").unwrap().clone())
+                .insert("planeOrigin",Value::Dictionary(point_dictionary(fixture_xyz(&row["plane"]))))
+                .insert("planeNormal",Value::Dictionary(vector_dictionary(axis)));
+            let result=evaluate("brep.intersect.section",input);
+            let faces=result.get("faces").and_then(Value::as_dictionary).unwrap();
+            assert!(faces.get("1").is_none());
+            let area=evaluate("brep.measure.area",Dictionary::new().insert("geometry",faces.get("0").unwrap().clone()));
+            let area=read_channel_number(&area,"area").unwrap();
+            assert!((area-row["area"].as_f64().unwrap()).abs()<1e-6,"{}: {area}",row["name"]);
+        }
+    }
+    caller.retire_exact();
+}
+
+#[test]
+fn original_split_publishes_both_signed_spherical_halves() {
+    use semio_s_spatial_kernel_semio_session::{point_dictionary,read_channel_number,vector_dictionary};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🧪️tests/🧫️fixtures/spherical-plane-split.json")).unwrap();
+    let session=Session::new();
+    let registry=neural_engine::ColdOwner::new(semio_s_plugin_flow_brep::module_registry(&session));
+    let mut caller=OriginalJobFixtureCaller::admit(OperationId(97487),Generation(17),stock(),||Some(1000),1500,65536);
+    let (mut born,mut free)=(0,0);
+    let mut evaluate=|operator:&str,input|run_live_query(&registry,operator,input,&mut caller,&mut born,&mut free);
+    let sphere=evaluate("brep.prim3d.sphere",Dictionary::new().insert("radius",number(fixture["radius"].as_f64().unwrap())));
+    for row in fixture["cases"].as_array().unwrap(){
+        let mut stock=sphere.get("solid").unwrap().clone();
+        if let Some(span)=row["span"].as_array(){
+            let low=span[0].as_f64().unwrap();
+            let high=span[1].as_f64().unwrap();
+            let box_shape=evaluate("brep.prim3d.box",Dictionary::new().insert("width",number(8.)).insert("depth",number(8.)).insert("height",number(high-low)));
+            let tool=evaluate("brep.xform.translate",Dictionary::new().insert("geometry",box_shape.get("solid").unwrap().clone())
+                .insert("offset",Value::Dictionary(vector_dictionary([-4.,-4.,low]))));
+            stock=evaluate("brep.bool.intersect",Dictionary::new().insert("a",stock).insert("b",tool.get("geometryOut").unwrap().clone()))
+                .get("solid").unwrap().clone();
+        }
+        let normal=fixture_xyz(&row["normal"]);
+        for sign in [1.,-1.]{
+            let halves=evaluate("brep.intersect.split",Dictionary::new().insert("solid",stock.clone())
+                .insert("planeOrigin",Value::Dictionary(point_dictionary(fixture_xyz(&row["origin"]))))
+                .insert("planeNormal",Value::Dictionary(vector_dictionary(normal.map(|value|value*sign)))));
+            for (index,channel) in ["positive","negative"].into_iter().enumerate(){
+                let input=Dictionary::new().insert("geometry",halves.get(channel).unwrap().clone());
+                let result=evaluate("brep.measure.volume",input);
+                let actual=read_channel_number(&result,"volume").unwrap();
+                let expected=row["volumes"][index^usize::from(sign<0.)].as_f64().unwrap();
+                assert!((actual-expected).abs()<1e-9,"{} {channel}: {actual}",row["name"]);
+            }
+        }
+    }
+    caller.retire_exact();
 }

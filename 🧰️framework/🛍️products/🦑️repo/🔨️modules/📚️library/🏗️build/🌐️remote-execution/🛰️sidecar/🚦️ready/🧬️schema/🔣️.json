@@ -3,6 +3,7 @@
   "description": "A worker that makes itself ready: the numbers of the loop, the stages with what each depends on, the refusal texts and the status file `<store>/v1/origins/<origin>/ready.json`.",
   "definitions": {
     "Hex": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "DependencyInputs": {"const": {"manifest": "package.json", "lock": "bun.lock"}},
     "Policy": {
       "const": {
         "version": 1,
@@ -21,6 +22,7 @@
         "observePollMilliseconds": 30000,
         "idlePollMilliseconds": 120000,
         "statusIntervalMilliseconds": 5000,
+        "statusHeartbeatMilliseconds": 30000,
         "leaseRenewMilliseconds": 10000,
         "leaseStaleMilliseconds": 60000,
         "humanFreshMilliseconds": 90000,
@@ -81,7 +83,7 @@
         }
       }
     },
-    "Inflight": {"type": "object", "additionalProperties": false, "required": ["stage", "pid", "startedMs", "exitFile", "log"], "properties": {"stage": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}, "exitFile": {"type": "string"}, "log": {"type": "string"}, "supervisor": {"type": "integer", "minimum": 1}, "watchdog": {"$ref": "#/definitions/Watchdog"}, "launch": {"$ref": "#/definitions/StageLaunch"}, "stop": {"enum": ["stall", "overdue", "restart", "timeout", "cancel"]}}},
+    "Inflight": {"type": "object", "additionalProperties": false, "required": ["stage", "pid", "startedMs", "exitFile", "log"], "if":{"required":["toolsGraceDenial"]},"then":{"required":["launch","stop","deadline"],"properties":{"stage":{"const":"tools"},"stop":{"const":"timeout"},"deadline":{"const":"hard-cap"}}},"properties": {"stage": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "startedMs": {"type": "integer", "minimum": 1}, "exitFile": {"type": "string"}, "log": {"type": "string"}, "supervisor": {"type": "integer", "minimum": 1}, "watchdog": {"$ref": "#/definitions/Watchdog"}, "launch": {"$ref": "#/definitions/StageLaunch"}, "stop": {"$ref": "#/definitions/StageStop"}, "toolsGraceDenial":{"$ref":"#/definitions/ToolsGraceDenial"},"deadline": {"$ref": "#/definitions/DeadlineStop"}, "stepOverdue": {"$ref": "#/definitions/StepOverdueEvidence"}}},
     "StageStop": {"enum": ["timeout", "cancel", "stall", "overdue", "restart"]},
     "StageLaunch": {
       "type": "object", "additionalProperties": false,
@@ -131,9 +133,23 @@
         "holderEvidence": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]},
         "semantics": {"type": "object", "maxProperties": 32, "additionalProperties": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WatchdogDigest"}]}},
         "cpu": {"type": "array", "maxItems": 512, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/definitions/WatchdogInteger"}}},
-        "windows": {"$ref": "#/definitions/WindowsWatchdogSample"}
+        "windows": {"$ref": "#/definitions/WindowsWatchdogSample"},
+        "lastActivity": {"$ref": "#/definitions/OwnedActivity"},
+        "toolsGrace": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/ToolsGraceCheckpoint"}]}
       }
     },
+    "OwnedActivity": {"description":"The latest recognized owned activity and its producer's work counter.","type":"object","additionalProperties":false,"required":["resource","counter"],"properties":{"resource":{"type":"string","pattern":"^(?:native-artifact-input-(?:stage|read|verification)|nx:source-(?:index|verification)|javascript-(?:selected-payload|preserving-source)|dependencies:(?:workspace-edges|Source-aliases|selected-postorder|sync-bindings|store-ownership:frontier))$"},"counter":{"type":"integer","minimum":1,"maximum":9007199254740991}}},
+    "ToolsGraceDenial": {"enum":["not-eligible","budget-exhausted","progress-quiet","sample-missing","sample-unqualified","sample-stale","series-unqualified","series-needs-advances"]},
+    "DeadlineStop": {"enum":["hard-cap","soft-cap-idle"]},
+    "StepOverdueEvidence": {"description":"The owned overdue decision: step elapsed, declared bound and computed limit in seconds, and time since other progress in milliseconds.","type":"object","additionalProperties":false,"required":["seconds","bound","limit","quietMs"],"properties":{"seconds":{"$ref":"#/definitions/WatchdogInteger"},"bound":{"$ref":"#/definitions/WatchdogInteger"},"limit":{"$ref":"#/definitions/WatchdogInteger"},"quietMs":{"$ref":"#/definitions/WatchdogInteger"}}},
+    "TimingWatchdog": {"type":"object","additionalProperties":false,"minProperties":1,"if":{"required":["toolsGraceDenial"]},"then":{"required":["deadline"],"properties":{"deadline":{"const":"hard-cap"}}},"properties":{"lastActivity":{"$ref":"#/definitions/OwnedActivity"},"toolsGraceDenial":{"$ref":"#/definitions/ToolsGraceDenial"},"deadline":{"$ref":"#/definitions/DeadlineStop"},"stepOverdue":{"$ref":"#/definitions/StepOverdueEvidence"}}},
+    "ToolsGracePolicy": {"const":{"stage":"tools","baseMultiplier":4,"extraIntervals":1,"maxRegistryNames":2048,"maxRegistryBytes":65536,"maxRegistryAgeMs":300000}},
+    "ToolsGracePhase": {"enum":["native-artifact-input-verification","native-artifact-input-stage","native-artifact-input-read","javascript-selected-payload","dependencies:selected-postorder","dependencies:workspace-edges","dependencies:Source-aliases","dependencies:funded-ownership:state","dependencies:funded-ownership:list","dependencies:funded-ownership:readText","dependencies:funded-ownership:membership","dependencies:funded-ownership:frontier","dependencies:funded-ownership:selection","dependencies:funded-ownership:publication","dependencies:sync-bindings","javascript-source-provider"]},
+    "ToolsGraceCounter": {"type":"object","additionalProperties":false,"required":["phase","series","done","previousAt","advancedAt","reset"],"properties":{"phase":{"$ref":"#/definitions/ToolsGracePhase"},"series":{"$ref":"#/definitions/ToolsGraceNatural"},"done":{"$ref":"#/definitions/ToolsGraceNatural"},"reset":{"type":"boolean"},"previousAt":{"$ref":"#/definitions/ToolsGraceClock"},"advancedAt":{"$ref":"#/definitions/ToolsGraceClock"}}},
+    "ToolsGraceNatural": {"type":"integer","minimum":1,"maximum":9007199254740991},
+    "ToolsGraceProof": {"type":"object","additionalProperties":false,"required":["pid","birth","parentSince","sourceSince"],"properties":{"pid":{"$ref":"#/definitions/ToolsGraceNatural"},"birth":{"$ref":"#/definitions/ToolsGraceNatural"},"parentSince":{"$ref":"#/definitions/ToolsGraceNatural"},"sourceSince":{"$ref":"#/definitions/ToolsGraceNatural"}}},
+    "ToolsGraceClock": {"type":"integer","minimum":0,"maximum":9007199254740991},
+    "ToolsGraceCheckpoint": {"type":"object","additionalProperties":false,"required":["proof","counters","current","sampleAt","registryAt"],"properties":{"proof":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/ToolsGraceProof"}]},"counters":{"type":"array","maxItems":16,"items":{"$ref":"#/definitions/ToolsGraceCounter"}},"current":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/ToolsGracePhase"}]},"sampleAt":{"$ref":"#/definitions/ToolsGraceNatural"},"registryAt":{"$ref":"#/definitions/ToolsGraceClock"}}},
     "WindowsWatchdogSample": {
       "type": "object",
       "additionalProperties": false,
@@ -157,9 +173,37 @@
       "const": [
         {"name": "native", "kind": "bootstrap", "arguments": ["setup"], "timeoutMilliseconds": 7200000, "inputs": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json", "global.json"], "bootstrapInput": true},
         {"name": "repo-mcp", "kind": "repo", "arguments": ["run", "repo-mcp:install"], "timeoutMilliseconds": 3600000, "inputs": [], "bootstrapInput": false},
-        {"name": "dependencies", "kind": "repo", "arguments": ["dependencies", "sync", "--all"], "timeoutMilliseconds": 3600000, "inputs": ["bun.lock", "package.json"], "bootstrapInput": false},
+        {"name": "dependencies", "kind": "repo", "arguments": ["dependencies", "sync", "--all"], "timeoutMilliseconds": 3600000, "inputs": ["bun.lock", "package.json"], "bootstrapInput": false, "dependencyInputs": true},
         {"name": "tools", "kind": "repo", "arguments": ["tools", "setup", "all"], "timeoutMilliseconds": 3600000, "inputs": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🔣️.json", "package.json"], "bootstrapInput": false},
-        {"name": "workspace", "kind": "repo", "arguments": ["run-many", "--projects=@semio-tech/norm-din4108,@semio-tech/norm-din4108-rs,repo-mcp", "--targets=build"], "timeoutMilliseconds": 3600000, "inputs": [], "bootstrapInput": false}
+        {"name": "workspace", "kind": "repo", "arguments": ["run-many", "--projects=@semio-tech/norm-din4108,@semio-tech/norm-din4108-rs,repo-mcp", "--targets=build"], "timeoutMilliseconds": 3600000, "inputs": [
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📥️caller/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🎚️mode/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🌍️environment/📋️policy/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/bun.lock",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📜️script.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📥️loading/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📥️loading/🔣️contract.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📥️loading/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🔣️policy.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧬️schema/🔣️.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts",
+          "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+          "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json"
+        ], "bootstrapInput": false}
       ]
     },
     "Probes": {
@@ -247,7 +291,8 @@
       "properties": {
         "version": {"const": 1}, "origin": {"type": "string"}, "updatedMs": {"type": "integer"},
         "runs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["stage", "startedMs", "endedMs", "seconds", "exit", "outcome", "peakMegabytes", "attempts", "digest"],
-          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": ["integer", "null"]}, "digest": {"type": ["string", "null"]}, "endEvidence": {"enum": ["exit-receipt", "observed"]}, "signal": {"type": ["string", "null"]}}}}
+          "if":{"required":["watchdog"],"properties":{"watchdog":{"required":["toolsGraceDenial"]}}},"then":{"properties":{"stage":{"const":"tools"},"outcome":{"const":"stage-timeout"}}},
+          "properties": {"stage": {"type": "string"}, "startedMs": {"type": "integer"}, "endedMs": {"type": "integer"}, "seconds": {"type": "integer"}, "exit": {"type": ["integer", "null"]}, "outcome": {"enum": ["ok", "stage-failed", "stage-timeout", "stalled", "spawn-failed", "interrupted"]}, "peakMegabytes": {"type": ["integer", "null"]}, "growthMegabytes": {"type": ["integer", "null"]}, "attempts": {"type": ["integer", "null"]}, "digest": {"type": ["string", "null"]}, "endEvidence": {"enum": ["exit-receipt", "observed"]}, "signal": {"type": ["string", "null"]}, "watchdog": {"$ref": "#/definitions/TimingWatchdog"}}}}
       }
     },
     "Containment": {

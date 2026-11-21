@@ -7,6 +7,13 @@ fn fixture() -> Value {
     serde_json::from_str(include_str!("../🗂️WindowChrome/compositor.cases.json")).unwrap()
 }
 
+fn stack_cases(cases: &Value) -> impl Iterator<Item = &Value> {
+    cases["interlock"].as_array().unwrap().iter().filter(|case| {
+        let windows = case["windows"].as_array().unwrap();
+        windows.iter().all(|window| window["left"] == windows[0]["left"] && window["width"] == windows[0]["width"])
+    })
+}
+
 fn edge(value: &Value) -> CardStackEdge {
     CardStackEdge { depth: value["depth"].as_f64().unwrap(), chips: value["chips"].as_array().unwrap().iter().map(|chip| CardBandSpan { left: chip["left"].as_f64().unwrap(), right: chip["right"].as_f64().unwrap() }).collect() }
 }
@@ -19,11 +26,8 @@ fn card(window: &Value) -> CardStackCard {
 fn a_stack_of_the_interlock_vectors_places_each_card_on_its_neighbours_bottom_line() {
     let cases = fixture();
     let mut stacks = 0;
-    for case in cases["interlock"].as_array().unwrap() {
+    for case in stack_cases(&cases) {
         let windows = case["windows"].as_array().unwrap();
-        if windows.iter().any(|window| window["left"] != windows[0]["left"]) {
-            continue;
-        }
         stacks += 1;
         let cards: Vec<_> = windows.iter().map(card).collect();
         let tops: Vec<f64> = layout_card_stack(&cards).iter().map(|placement| placement.top).collect();
@@ -36,7 +40,7 @@ fn a_stack_of_the_interlock_vectors_places_each_card_on_its_neighbours_bottom_li
 #[test]
 fn interlocked_outlines_paint_every_vector_line_once_and_straight() {
     let cases = fixture();
-    for case in cases["interlock"].as_array().unwrap() {
+    for case in stack_cases(&cases) {
         let mut input = Vec::new();
         for (owner, window) in case["windows"].as_array().unwrap().iter().enumerate() {
             let placement = CardStackPlacement { top: window["top"].as_f64().unwrap(), height: window["height"].as_f64().unwrap(), top_depth: window["topEdge"]["depth"].as_f64().unwrap(), bottom_depth: window["bottomEdge"]["depth"].as_f64().unwrap() };
@@ -73,11 +77,13 @@ fn interlocked_outlines_paint_every_vector_line_once_and_straight() {
 #[test]
 fn painting_a_stack_draws_the_shared_band_lines_once() {
     let cases = fixture();
-    let case = &cases["interlock"][0];
+    let case = stack_cases(&cases)
+        .find(|case| case["name"] == "footer chip of the upper card shares the band with the title chip of the lower card")
+        .expect("shared vertical band fixture");
     let cards: Vec<_> = case["windows"].as_array().unwrap().iter().map(card).collect();
     let mut draw = DrawList::default();
     let color = Rgba { r: 0.2, g: 0.3, b: 0.4, a: 1.0 };
-    paint_card_stack(&mut draw, &card_stack_outlines(0.0, 0.0, 400.0, &cards), 1.0, color, SharedBorderState::Normal);
+    paint_card_stack(&mut draw, &card_stack_outlines(0.0, 0.0, 400.0, &cards), 1.0, |_| (color, SharedBorderState::Normal));
     while !draw.finalize_shared_borders_step().unwrap() {}
     let painted: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.rect[2] > 0.0 && item.rect[3] > 0.0).collect();
     let covered = |y: f32, low: f32, high: f32| painted.iter().filter(|item| item.rect[1] == y && item.rect[3] == 1.0).map(|item| (item.rect[0] + item.rect[2]).min(high) - item.rect[0].max(low)).filter(|width| *width > 0.0).sum::<f32>();

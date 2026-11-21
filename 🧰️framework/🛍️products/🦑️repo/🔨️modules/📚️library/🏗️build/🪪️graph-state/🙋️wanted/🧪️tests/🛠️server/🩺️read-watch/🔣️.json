@@ -120,5 +120,459 @@
         }
       ]
     }
+  ],
+  "startup": {
+    "idle": 1500000,
+    "ceiling": 43200000,
+    "steps": [
+      {
+        "at": 120000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:list:64\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "key": "build:parser-source",
+        "done": 64
+      },
+      {
+        "at": 325000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:state:189184\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "key": "build:parser-source",
+        "done": 189184
+      },
+      {
+        "at": 350000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:list:189184\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "key": "build:parser-source",
+        "done": 189184
+      },
+      {
+        "at": 370000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:list:64\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "key": "build:parser-source",
+        "done": 64
+      },
+      {
+        "at": 560000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:selection:601664\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "key": "build:parser-source",
+        "done": 601664
+      },
+      {
+        "at": 600000,
+        "line": "[script] {\"owner\":\"different:owner\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:list:4000000\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+      },
+      {
+        "at": 610000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:unknown:4000000\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+      },
+      {
+        "at": 620000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:readText:601665\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+      },
+      {
+        "at": 630000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:state:9007199254741056\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+      },
+      {
+        "at": 850000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:discover\",\"stage\":\"running\"}"
+      },
+      {
+        "at": 880000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:discover\",\"stage\":\"complete\"}",
+        "key": "build:discover",
+        "done": 1
+      },
+      {
+        "at": 900000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:discover\",\"stage\":\"complete\"}",
+        "key": "build:discover",
+        "done": 1
+      },
+      {
+        "at": 910000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:commands\",\"stage\":\"complete\"}",
+        "key": "build:commands",
+        "done": 1
+      },
+      {
+        "at": 970000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:unrelated\",\"stage\":\"complete\"}"
+      },
+      {
+        "at": 980000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:commands\",\"stage\":\"complete\",\"activity\":{\"resource\":\"build:parser-source:list:800000\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+      },
+      {
+        "at": 990000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"complete\"}"
+      },
+      {
+        "at": 1000000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:4808\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+      },
+      {
+        "at": 1011000,
+        "line": "[owners] owner records present: 4631 of 4808, 177 to infer or fetch"
+      },
+      {
+        "at": 1501000,
+        "line": "[repo] still working after 1501 s; last phase started: source.served"
+      },
+      {
+        "at": 2409999,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:commands\",\"stage\":\"complete\"}",
+        "key": "build:commands",
+        "done": 1
+      },
+      {
+        "at": 2410000,
+        "line": "[repository:command] still running after 2110 s"
+      },
+      {
+        "at": 43200000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:parser-source:readText:602624\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "key": "build:parser-source",
+        "done": 602624
+      }
+    ]
+  },
+  "repair": {
+    "idle": 1500000,
+    "ceiling": 43200000,
+    "steps": [
+      {
+        "at": 100,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:3655:4809:1:1:busy|project|1|1000\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": 0,
+        "kind": "inference",
+        "done": 3655
+      },
+      {
+        "at": 200,
+        "line": "[owners] owners 3655 of 4809 done: 3655 present, 0 fetched from the fleet, 0 inferred here (0 running), 0 wanted from the fleet, 0 stale in the fleet",
+        "epoch": 0,
+        "kind": "ledger",
+        "done": 3655
+      },
+      {
+        "at": 300,
+        "line": "graph: generation 18 published, sealed",
+        "epoch": 0,
+        "kind": "generation",
+        "done": 18
+      },
+      {
+        "at": 120000,
+        "line": "[graph-repair] {\"round\":1,\"registry\":\"followed\",\"roots\":[\"owner/src\"],\"adopted\":false,\"moved\":true}",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 120001,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:4810\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": 1,
+        "kind": "inference",
+        "done": 0
+      },
+      {
+        "at": 120500,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:2:4810\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": 1,
+        "kind": "inference",
+        "done": 2
+      },
+      {
+        "at": 124000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:47:4810\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": 1,
+        "kind": "inference",
+        "done": 47
+      },
+      {
+        "at": 125000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:47:4810:1:1:busy|project|1|10\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 126000,
+        "line": "[graph-repair] {\"round\":1,\"registry\":\"followed\",\"roots\":[\"owner/src\"],\"adopted\":false,\"moved\":true}",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 126100,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:2:4810:1:1:busy|project|1|100\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 126150,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:47:4810:1:1:busy|project|1|10\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 126200,
+        "line": "graph: generation 18 published, sealed",
+        "epoch": 0,
+        "kind": "generation",
+        "done": 18
+      },
+      {
+        "at": 126300,
+        "line": "[graph-repair] {\"round\":2,\"registry\":\"followed\",\"roots\":[\"owner/src\"],\"adopted\":false,\"moved\":false}",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 126400,
+        "line": "[graph-repair] {\"round\":3,\"registry\":\"followed\",\"roots\":[\"owner/src\"],\"adopted\":false,\"moved\":true}",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 126500,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:1:4810\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": 1,
+        "kind": "inference",
+        "done": 1
+      },
+      {
+        "at": 127000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:52:4810\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": 1,
+        "kind": "inference",
+        "done": 52
+      },
+      {
+        "at": 130000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:66:4810\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": 1,
+        "kind": "inference",
+        "done": 66
+      },
+      {
+        "at": 132000,
+        "line": "[owners] owners 66 of 4810 done: 66 present, 0 fetched from the fleet, 0 inferred here (0 running), 0 wanted from the fleet, 0 stale in the fleet",
+        "epoch": 1,
+        "kind": "ledger",
+        "done": 66
+      },
+      {
+        "at": 1500300,
+        "line": "ordinary chatter",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 1632000,
+        "line": "[graph-repair] {\"round\":1,\"registry\":\"followed\",\"roots\":[\"owner/src\"],\"adopted\":false,\"moved\":true}",
+        "epoch": null,
+        "kind": null,
+        "done": null
+      },
+      {
+        "at": 43200000,
+        "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:67:4810\",\"mode\":\"shared\",\"elapsedMs\":0}}",
+        "epoch": 1,
+        "kind": "inference",
+        "done": 67
+      }
+    ]
+  },
+  "workspaceEdges": [
+    {
+      "at": 100,
+      "entries": 63
+    },
+    {
+      "at": 120,
+      "entries": 127,
+      "stage": "complete"
+    },
+    {
+      "at": 140,
+      "entries": 191,
+      "elapsedMs": 3
+    },
+    {
+      "at": 160,
+      "entries": 255,
+      "mode": "shared"
+    },
+    {
+      "at": 180,
+      "entries": 319,
+      "owner": "workspace:package"
+    },
+    {
+      "at": 200,
+      "entries": 383,
+      "command": "build:projects"
+    },
+    {
+      "at": 220,
+      "entries": 127
+    },
+    {
+      "at": 250,
+      "entries": 127
+    },
+    {
+      "at": 280,
+      "entries": 63
+    },
+    {
+      "at": 320,
+      "repair": true
+    },
+    {
+      "at": 340,
+      "entries": 127
+    },
+    {
+      "at": 360,
+      "entries": 191
+    }
+  ],
+  "storeOwnership": [
+    {
+      "at": 100,
+      "operation": "list",
+      "done": 64,
+      "elapsedMs": 1076
+    },
+    {
+      "at": 200,
+      "operation": "frontier",
+      "done": 128,
+      "elapsedMs": 1080
+    },
+    {
+      "at": 250,
+      "operation": "readText",
+      "done": 192,
+      "elapsedMs": 1090,
+      "mode": "shared"
+    },
+    {
+      "at": 300,
+      "operation": "frontier",
+      "done": 1503168,
+      "elapsedMs": 755008
+    },
+    {
+      "at": 350,
+      "operation": "list",
+      "done": 64,
+      "elapsedMs": 842
+    },
+    {
+      "at": 400,
+      "operation": "readText",
+      "done": 902336,
+      "elapsedMs": 215425
+    },
+    {
+      "at": 450,
+      "operation": "frontier",
+      "done": 1101888,
+      "elapsedMs": 265599
+    },
+    {
+      "at": 500,
+      "operation": "frontier",
+      "done": 1503168,
+      "elapsedMs": 270000
+    },
+    {
+      "at": 520,
+      "operation": "foreign",
+      "done": 1503232,
+      "elapsedMs": 270000
+    },
+    {
+      "at": 540,
+      "operation": "frontier",
+      "done": 1503233,
+      "elapsedMs": 270000
+    },
+    {
+      "at": 560,
+      "operation": "frontier",
+      "done": 1503232,
+      "elapsedMs": -1
+    },
+    {
+      "at": 600,
+      "operation": "publication",
+      "done": 1503232,
+      "elapsedMs": 270001
+    },
+    {
+      "at": 1500600
+    }
+  ],
+  "preservationOwnership": [
+    {
+      "at": 100,
+      "done": 5504
+    },
+    {
+      "at": 1400000,
+      "done": 491072
+    },
+    {
+      "at": 1500100,
+      "done": 491072
+    },
+    {
+      "at": 1500200,
+      "done": 557888
+    },
+    {
+      "at": 2100000,
+      "done": 600576,
+      "mode": "shared"
+    },
+    {
+      "at": 2200000,
+      "done": 600640,
+      "elapsedMs": 36
+    },
+    {
+      "at": 2250000,
+      "done": 600641
+    },
+    {
+      "at": 2300000,
+      "done": 600640,
+      "resource": "preservation-retirement"
+    },
+    {
+      "at": 2400000,
+      "done": 600640,
+      "command": "build:projects"
+    },
+    {
+      "at": 2500000,
+      "done": 64
+    },
+    {
+      "at": 2900000,
+      "done": 600832
+    },
+    {
+      "at": 4400000,
+      "done": 600832
+    }
   ]
 }

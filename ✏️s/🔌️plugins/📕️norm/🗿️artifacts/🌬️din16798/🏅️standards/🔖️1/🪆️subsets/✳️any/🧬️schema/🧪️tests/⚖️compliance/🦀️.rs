@@ -25,6 +25,60 @@ fn office_ventilation_table_b6_b7_ida_cat_ii_low_pollution() {
 }
 
 #[test]
+fn occupied_nonresidential_outdoor_air_respects_the_hygienic_minimum() {
+    let directory = family_any_dir().join("🧬️schema/🧪️tests/⚖️compliance");
+    let result = semio_s_plugin_norm_compliance::python_oracle::command()
+        .arg(directory.join("🐍️.py"))
+        .arg("--hygienic-fixture")
+        .arg(directory.join("🔣️hygienic-airflow.json"))
+        .output().unwrap();
+    assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️hygienic-airflow.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let number = |key: &str| case[key].as_f64().unwrap();
+        let mut doc = Din16798Snapshot::compliant_office();
+        doc.annex = if case["annex"] == "De" { AnnexChoice::De } else { AnnexChoice::En };
+        let zone = &mut doc.zones[0];
+        zone.comfort_category = case["category"].as_str().unwrap().into();
+        zone.usage_type = case["usage"].as_str().unwrap().into();
+        zone.vent_method = case["method"].as_str().unwrap().into();
+        zone.occupants = case["occupants"].as_u64().unwrap().try_into().unwrap();
+        zone.floor_area_m2 = number("areaM2");
+        zone.outdoor_air_supplied_m3_h = number("supplyM3H");
+        let expected_demand = zone.outdoor_air_supplied_m3_h.max(number("healthMinimumM3H"));
+        let zone_id = zone.id.clone();
+        doc.vent_systems[0].design_airflow_m3_h = number("supplyM3H");
+        let report = check_full_environment(&doc);
+        let airflow = report.checks.iter().find(|c| c.id == format!("din16798-1.vent.{zone_id}")).unwrap();
+        assert!((airflow.limit.value - number("designMinimumM3H")).abs() < 1e-9, "{name}");
+        assert_eq!(airflow.status, if case["passes"] == true { CheckStatus::Pass } else { CheckStatus::Fail }, "{name}");
+        assert_eq!(airflow.remedies.is_empty(), case["passes"] == true, "{name}");
+        let capacity = report.checks.iter().find(|c| c.id == "din16798-3.capacity.vent-central").unwrap();
+        assert!((capacity.computed.value - expected_demand).abs() < 1e-9, "{name}");
+        assert_eq!(capacity.status, if expected_demand > number("supplyM3H") { CheckStatus::Fail } else { CheckStatus::Pass }, "{name}");
+    }
+}
+
+#[test]
+fn inspection_age_reports_the_record_without_assuming_a_mandatory_interval() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️inspection-age.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut doc = Din16798Snapshot::compliant_office();
+        doc.annex = if case["annex"] == "De" { AnnexChoice::De } else { AnnexChoice::En };
+        let vent = &mut doc.vent_systems[0];
+        vent.system_type = case["systemType"].as_str().unwrap().into();
+        vent.years_since_inspection = case["yearsSinceInspection"].as_u64().unwrap().try_into().unwrap();
+        let report = check_full_environment(&doc);
+        let inspection = report.checks.iter().find(|c| c.id == "din16798-17.inspection-age.vent-central").unwrap();
+        assert_eq!(serde_json::to_value(inspection.status).unwrap(), case["status"]);
+        assert_eq!(inspection.clause.part, case["guidanceClause"].as_str().unwrap());
+        assert_eq!(inspection.computed.value, case["computedYears"].as_f64().unwrap());
+        assert!(inspection.remedies.is_empty());
+    }
+}
+
+#[test]
 fn pmv_iso7730_near_neutral_at_office_defaults() {
     let pmv = part_1::pmv_iso7730(24.5, 45.0, 0.1, 1.2, 0.5);
     assert!(pmv.abs() < 0.5, "pmv={pmv}");
@@ -49,12 +103,10 @@ fn heat_recovery_min_for_mechanical_systems() {
 }
 
 #[test]
-fn de_annex_co2_absolute_tighter_than_en() {
-    use semio_s_artifact_norm_din16798_checks::annex_params::AnnexParams;
-    let de = AnnexParams::de();
-    let en = AnnexParams::en();
-    assert!(de.co2_absolute_other_ppm < en.co2_absolute_other_ppm);
-    assert!(de.acoustic_limit_residential_db < en.acoustic_limit_residential_db);
+fn de_annex_uses_its_own_co2_deltas() {
+    use semio_s_artifact_norm_din16798_checks::part_1::co2_above_outdoor_ppm;
+    assert_eq!(co2_above_outdoor_ppm(AnnexChoice::De, ComfortCategory::II), 550.0);
+    assert_eq!(co2_above_outdoor_ppm(AnnexChoice::En, ComfortCategory::II), 800.0);
 }
 
 #[test]
@@ -91,12 +143,12 @@ fn de_annex_diverges_from_en_on_same_subject() {
     let r_en = check_full_environment(&en);
     let de_co2 = r_de.checks.iter().find(|c| c.id.contains("co2")).unwrap();
     let en_co2 = r_en.checks.iter().find(|c| c.id.contains("co2")).unwrap();
-    assert_ne!(de_co2.status, en_co2.status, "DE absolute CO₂ cap must diverge from EN at 1150 ppm");
+    assert_ne!(de_co2.status, en_co2.status, "DE Table NA.9 must diverge from EN Table B.9 at 1150 ppm");
 }
 
 #[test]
 fn adaptive_model_runs_annex_b2_and_skips_pmv_ppd() {
-    let mut doc = Din16798Snapshot::compliant_office();
+    let mut doc = Din16798Snapshot { annex: AnnexChoice::En, ..Din16798Snapshot::compliant_office() };
     doc.zones[0].comfort_model = ComfortModel::Adaptive.as_str().into();
     doc.theta_rm_c = 15.0;
     doc.zones[0].t_op_summer_c = 24.5;
@@ -107,6 +159,36 @@ fn adaptive_model_runs_annex_b2_and_skips_pmv_ppd() {
     for id_part in ["pmv.summer", "ppd.summer", "pmv.winter", "ppd.winter"] {
         let c = report.checks.iter().find(|c| c.id.contains(id_part)).unwrap_or_else(|| panic!("missing {id_part}"));
         assert_eq!(c.status, CheckStatus::NotApplicable, "{id_part} must be N/A under adaptive");
+    }
+}
+
+#[test]
+fn thermal_report_uses_published_direction_and_applicability() {
+    let mut doc = Din16798Snapshot { annex: AnnexChoice::En, ..Din16798Snapshot::compliant_office() };
+    doc.theta_rm_c = 20.0;
+    doc.zones[0].comfort_model = ComfortModel::Adaptive.as_str().into();
+    for (temp, expected) in [(21.3, CheckStatus::Fail), (21.5, CheckStatus::Pass), (28.5, CheckStatus::Fail)] {
+        doc.zones[0].t_op_summer_c = temp;
+        let report = check_full_environment(&doc);
+        let adaptive = report.checks.iter().find(|c| c.id == "din16798-1.adaptive.zone-office").unwrap();
+        assert_eq!(adaptive.status, expected, "{temp}");
+        if temp == 21.3 {
+            assert!(adaptive.remedies.iter().any(|remedy| matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::AtLeast)));
+        }
+    }
+    doc.theta_rm_c = 10.0;
+    let report = check_full_environment(&doc);
+    assert!(report.checks.iter().any(|check| check.id == "din16798-1.adaptive.zone-office" && check.status == CheckStatus::UnverifiedBasis));
+    doc.annex = AnnexChoice::De;
+    doc.theta_rm_c = 20.0;
+    let report = check_full_environment(&doc);
+    assert!(report.checks.iter().any(|check| check.id == "din16798-1.adaptive.zone-office" && check.status == CheckStatus::UnverifiedBasis));
+    doc.zones[0].comfort_model = ComfortModel::FixedHvac.as_str().into();
+    doc.zones[0].t_op_winter_c = 25.0;
+    doc.zones[0].t_op_summer_c = 22.0;
+    let report = check_full_environment(&doc);
+    for id in ["din16798-1.top.summer.zone-office", "din16798-1.top.winter.zone-office"] {
+        assert!(report.checks.iter().any(|check| check.id == id && check.status == CheckStatus::Pass));
     }
 }
 
@@ -484,14 +566,19 @@ fn residential_method3_uses_predefined_rates() {
     assert_eq!(VentMethod::parse(&doc.zones[0].vent_method), VentMethod::Method3PredefinedRates);
     let report = check_full_environment(&doc);
     let vent = report.checks.iter().find(|c| c.id.contains("din16798-1.vent.")).unwrap();
-    assert!((vent.limit.value - 363.6).abs() < 0.5, "method3 limit={}", vent.limit.value);
-    assert!(report.complies(), "fails: {:?}", report.failing().map(|c| &c.id).collect::<Vec<_>>());
+    assert!((vent.limit.value - 75.6).abs() < 0.5, "method3 limit={}", vent.limit.value);
+    assert_eq!(vent.status, CheckStatus::Pass);
+    let german = Din16798Snapshot { annex: AnnexChoice::De, ..doc };
+    let report = check_full_environment(&german);
+    for id in ["din16798-1.vent.zone-flat", "din16798-1.co2.zone-flat"] {
+        assert_eq!(report.checks.iter().find(|check| check.id == id).unwrap().status, CheckStatus::UnverifiedBasis);
+    }
 }
 
 #[test]
 fn draught_rate_respects_category_limit() {
-    let dr = semio_s_artifact_norm_din16798_checks::part_1::draught_rate_percent(24.5, 0.1, 40.0);
-    let lim = semio_s_artifact_norm_din16798_checks::part_1::draught_limit_percent(semio_s_artifact_norm_din16798_checks::ComfortCategory::II);
+    let dr = part_1::draught_rate_percent(24.5, 0.1, 40.0).unwrap();
+    let lim = part_1::draught_limit_percent(AnnexChoice::De, ComfortCategory::II).unwrap();
     assert!(dr < lim, "DR={dr} lim={lim}");
     let mut doc = Din16798Snapshot::compliant_office();
     doc.zones[0].air_speed_m_s = 0.35;
@@ -499,6 +586,24 @@ fn draught_rate_respects_category_limit() {
     let d = report.checks.iter().find(|c| c.id.contains("draught")).unwrap();
     assert_eq!(d.status, CheckStatus::Fail);
     assert!(d.remedies.iter().any(|r| r.applicable && r.target.path.contains("airSpeedMS")));
+}
+
+#[test]
+fn german_humidity_and_draught_use_the_national_design_values() {
+    let mut doc = Din16798Snapshot::compliant_office();
+    doc.zones[0].rh_percent = 27.0;
+    let check_id = "din16798-1.rh.zone-office";
+    let report = check_full_environment(&doc);
+    assert!(report.checks.iter().any(|c| c.id == check_id && c.status == CheckStatus::Info));
+    doc.vent_systems[0].humidification_provided_kg_h = 1.0;
+    let report = check_full_environment(&doc);
+    assert!(report.checks.iter().any(|c| c.id == check_id && c.status == CheckStatus::Fail && c.limit.value == 30.0));
+    doc.annex = AnnexChoice::En;
+    let report = check_full_environment(&doc);
+    assert!(report.checks.iter().any(|c| c.id == check_id && c.status == CheckStatus::Pass && c.limit.value == 25.0));
+    doc.zones[0].air_speed_m_s = 0.5;
+    let report = check_full_environment(&doc);
+    assert!(report.checks.iter().any(|c| c.id == "din16798-1.draught.zone-office" && c.status == CheckStatus::UnverifiedBasis));
 }
 
 fn report_fingerprint(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<(String, CheckStatus, u64, u64, u64)> {
@@ -558,7 +663,7 @@ fn perturb_leaf_value(doc: &mut Din16798Snapshot, path: &str) {
                 "ventMethod" => if s.contains("method_3") {
                     "method_1_perceived_air_quality".into()
                 } else {
-                    "method_3_predefined_rates".into()
+                    "method_2_limit_concentration".into()
                 },
                 "systemType" => if s == "natural" { "central_mech" } else { "natural" }.into(),
                 "odaClass" => match s.as_str() {
@@ -611,9 +716,28 @@ fn leaf_applies_in_example(doc: &Din16798Snapshot, path: &str, leaf: &str) -> bo
                 .find(|z| z.id == id)
                 .map(|z| {
                     ComfortModel::parse(&z.comfort_model) == ComfortModel::FixedHvac
-                        || VentMethod::parse(&z.vent_method) == VentMethod::Method2LimitConcentration
                 })
                 .unwrap_or(true)
+        }
+        "floorAreaM2" | "pollutionClass" => {
+            let Some(zone) = zone_id_from_leaf_path(path).and_then(|id| doc.zones.iter().find(|zone| zone.id == id)) else {
+                return true;
+            };
+            match (leaf, VentMethod::parse(&zone.vent_method), zone.usage_type.as_str()) {
+                (_, VentMethod::Method2LimitConcentration, _) => false,
+                (_, VentMethod::Method3PredefinedRates, "residential") => false,
+                ("pollutionClass", VentMethod::Method1PerceivedAirQuality, "residential") => false,
+                _ => true,
+            }
+        }
+        "illuminanceLx" => zone_id_from_leaf_path(path).and_then(|id| doc.zones.iter().find(|zone| zone.id == id))
+            .is_none_or(|zone| part_1::illuminance_min_lx(semio_s_artifact_norm_din16798_checks::parse_usage(&zone.usage_type)).is_some()),
+        "turbulenceIntensityPercent" => {
+            let Some(zone) = zone_id_from_leaf_path(path).and_then(|id| doc.zones.iter().find(|zone| zone.id == id)) else {
+                return true;
+            };
+            part_1::draught_limit_percent(doc.annex, parse_category(&zone.comfort_category)).is_some()
+                && part_1::draught_rate_percent(zone.t_op_summer_c, zone.air_speed_m_s, zone.turbulence_intensity_percent).is_some()
         }
         "cellarVentilationM3H" => doc.cellar_area_m2 > 0.0,
         _ => true,
@@ -631,7 +755,7 @@ fn editable_leaves_perturb_at_least_one_check_across_examples() {
     v2.fan_q_v_m3_s = 500.0 / 3600.0;
     compliant.vent_systems.push(v2);
 
-    let mut adaptive = Din16798Snapshot::compliant_office();
+    let mut adaptive = Din16798Snapshot { annex: AnnexChoice::En, ..Din16798Snapshot::compliant_office() };
     adaptive.zones[0].comfort_model = "adaptive".into();
     adaptive.theta_rm_c = 18.0;
 

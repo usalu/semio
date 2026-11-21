@@ -1,4 +1,5 @@
 use semio_framework_value::{ValueError as MediaValueError, ValueRefusalKind as MediaRefusal, NativeEncodeControl as MediaNative, RetainedAllocationEffect as MediaEffect, RetainedWorkOutcome as MediaOutcome};
+use semio_framework_value::native_encoding::NativeEncodeAllocationOutcomeStatus;
 use semio_framework_value::retained_clone::{RetainedCloneGrant as MediaGrant, RetainedCloneProgress as MediaProgress};
 use semio_os_kernel::io::control::{NativeSnapshotBodyWallet as MediaWallet, NativeSnapshotEffectProgress as MediaMarker, NativeSnapshotFailure as MediaFailure, NativeSnapshotWork as MediaWork, NativeSnapshotEncodeOwner as MediaOwner, native_snapshot_turn as media_turn};
 use store::os_pack::record::BorrowedProjectedPackCursor as MediaPackCursor;
@@ -37,13 +38,13 @@ fn media_performed(effect: &mut MediaEffect<'_>) -> Result<(), MediaValueError> 
 /// 🎟️ Opens exactly one quoted original effect per call, charges its receipt to the turn wallet and keeps the marker and failure slots caller-retained.
 struct MediaEffectTurn<'a> { pub wallet: &'a mut MediaWallet, pub marker: &'a mut MediaMarker, pub unwind: &'a mut Option<MediaFailure>, pub work: &'a mut MediaWork }
 impl MediaEffectTurn<'_> {
-    pub fn run(&mut self, native: &mut MediaNative<'_>, demand: MediaGrant, bytes: Option<usize>, operation: &mut impl FnMut(&mut MediaProgress, &mut MediaEffect<'_>) -> Result<(), MediaValueError>) -> Result<(), MediaFailure> {
+    pub fn run(&mut self, native: &mut MediaNative<'_>, demand: MediaGrant, bytes: Option<usize>, maximum_work: u64, operation: &mut impl FnMut(&mut MediaProgress, &mut MediaEffect<'_>) -> Result<(), MediaValueError>) -> Result<(), MediaFailure> {
         if self.unwind.is_some() { return Err(MediaValueError::literal(MediaRefusal::InvariantViolated, "media encoder effect requires empty retained failure slot").into()); }
         self.wallet.admit_frontier(demand).map_err(|_| media_frontier_error())?;
         native.checkpoint()?;
         let grant = self.wallet.remaining_grant();
         let mut local = MediaProgress::default();
-        let attempt = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| native.effect_allocated_with_work(grant, &mut local, demand, bytes, 1, &mut self.marker.state.view(), &mut self.marker.failure, operation)));
+        let attempt = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| native.effect_allocated_with_work(grant, &mut local, demand, bytes, maximum_work, &mut self.marker.state.view(), &mut self.marker.failure, operation)));
         let recorded = self.wallet.record_progress(local);
         let progress = self.wallet.progress();
         match attempt {
@@ -51,6 +52,9 @@ impl MediaEffectTurn<'_> {
                 let done = self.work.take(MediaOutcome { work: turn.work, result: turn.result.map_err(|error| MediaFailure::from_encode_effect(error, progress)) })?;
                 recorded?;
                 if done.is_none() { return Err(MediaValueError::literal(MediaRefusal::InvariantViolated, "media encoder effect awaits an unfinished original reply").into()); }
+                if matches!(self.marker.state.allocation_status(), NativeEncodeAllocationOutcomeStatus::Accepted | NativeEncodeAllocationOutcomeStatus::Canceled) {
+                    self.marker.state.outcome = None;
+                }
                 self.marker.reset_completed()?;
                 Ok(())
             }
@@ -68,7 +72,8 @@ fn advance_media_cursor(cursor: &mut MediaPackCursor, source: &IntrinsicMediaSou
     let capacity = cursor.next_capacity_byte_demand()?;
     let demand = MediaGrant { maximum_items: 1, maximum_copy_bytes: remaining.maximum_copy_bytes.min(scratch.len()).max(cursor.next_minimum_copy_bytes()), maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: cursor.next_advance_depth_demand()? };
     let mut step = None;
-    turn.run(native, demand, (capacity != 0).then_some(capacity), &mut |physical, effect| match cursor.advance_intrinsic(source, 1, scratch, effect) {
+    let maximum_work = cursor.next_intrinsic_advance_work_demand()?;
+    turn.run(native, demand, (capacity != 0).then_some(capacity), maximum_work, &mut |physical, effect| match cursor.advance_intrinsic(source, 1, scratch, effect) {
         Ok(done) => { *physical = done.progress; step = Some(done); Ok(()) }
         Err(failure) => { *physical = failure.reason.retained_progress(); Err(failure.reason) }
     })?;
@@ -83,7 +88,8 @@ fn close_media_cursor(cursor: &mut MediaPackCursor, native: &mut MediaNative<'_>
         let quote = cursor.retirement_demands()?;
         let demand = MediaGrant { maximum_items: 1, maximum_copy_bytes: quote.copy_bytes, maximum_capacity_bytes: quote.capacity_bytes, maximum_release_bytes: quote.release_bytes, maximum_depth: quote.depth };
         let mut progress = MediaProgress::default();
-        turn.run(native, demand, (quote.capacity_bytes != 0).then_some(quote.capacity_bytes), &mut |physical, effect| match cursor.close(effect) {
+        let maximum_work = 1 + u64::from(quote.copy_bytes != 0);
+        turn.run(native, demand, (quote.capacity_bytes != 0).then_some(quote.capacity_bytes), maximum_work, &mut |physical, effect| match cursor.close(effect) {
             Ok(done) => { *physical = done.progress; progress = done.progress; Ok(()) }
             Err(failure) => { *physical = failure.reason.retained_progress(); Err(failure.reason) }
         })?;
@@ -99,7 +105,7 @@ fn encode_intrinsic_into(port: &str, schema: &str, value: &DslValue, state: &mut
     turn.wallet.copy_encode_text_into(native, schema, &mut parts.1, 2)?;
     let cursor_bytes = size_of::<MediaPackCursor>(); let header_bytes = size_of::<Option<Box<MediaPackCursor>>>();
     let birth = MediaGrant { maximum_items: 1, maximum_copy_bytes: header_bytes, maximum_capacity_bytes: cursor_bytes, maximum_release_bytes: 0, maximum_depth: 2 };
-    turn.run(native, birth, Some(cursor_bytes), &mut |physical, effect| {
+    turn.run(native, birth, Some(cursor_bytes), 1, &mut |physical, effect| {
         media_performed(effect)?;
         *effect.actual() = Some(0);
         state.cursor = Some(Box::new(MediaPackCursor::default()));
@@ -129,7 +135,7 @@ fn encode_intrinsic_into(port: &str, schema: &str, value: &DslValue, state: &mut
             if count > length.saturating_sub(data.len()) { return Err(media_projection_error().into()); }
             if count != 0 {
                 let demand = MediaGrant { maximum_items: 1, maximum_copy_bytes: count, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 };
-                turn.run(native, demand, None, &mut |physical, effect| {
+                turn.run(native, demand, None, 1, &mut |physical, effect| {
                     media_performed(effect)?;
                     data.extend_from_slice(&scratch[..count]);
                     *physical = MediaProgress { copied_items: 1, copied_bytes: count, ..Default::default() };

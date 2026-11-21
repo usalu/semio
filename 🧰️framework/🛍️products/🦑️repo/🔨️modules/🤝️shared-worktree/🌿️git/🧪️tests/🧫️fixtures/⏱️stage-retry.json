@@ -1,0 +1,22 @@
+{
+ "version": 1,
+ "cold": {
+  "base": {"name": "nested/base.txt", "content": "base\n"},
+  "late": {"name": "late.txt", "content": "late current\n"},
+  "next": {"name": "replace.txt", "content": "next\n"},
+  "old": "old\n",
+  "working": "working bytes\n"
+ },
+ "steps": [
+  {"trigger": "first-missing", "applied": 0, "queued": 1, "stage": ["base.txt"]},
+  {"trigger": "unchanged", "applied": 0, "queued": 1, "stage": ["base.txt"]},
+  {"trigger": "unrelated", "applied": 0, "queued": 2, "stage": ["base.txt"]},
+  {"trigger": "new-register", "applied": 2, "queued": 1, "stage": ["base.txt", "ready.txt"]},
+  {"trigger": "replacement", "applied": 0, "queued": 1, "stage": ["base.txt", "ready.txt"]},
+  {"trigger": "loose-object", "applied": 1, "queued": 0, "stage": ["base.txt", "late.txt", "ready.txt"]},
+  {"trigger": "locked", "applied": 0, "queued": 1, "stage": ["base.txt", "late.txt", "ready.txt"]},
+  {"trigger": "new-register-during-lock", "applied": 0, "queued": 2, "stage": ["base.txt", "late.txt", "ready.txt"]},
+  {"trigger": "lock-released", "applied": 0, "queued": 2, "stage": ["base.txt", "late.txt", "ready.txt"]},
+  {"trigger": "lock-retry-due", "applied": 2, "queued": 0, "stage": ["base.txt", "first.txt", "late.txt", "ready.txt", "second.txt"]}
+ ]
+}

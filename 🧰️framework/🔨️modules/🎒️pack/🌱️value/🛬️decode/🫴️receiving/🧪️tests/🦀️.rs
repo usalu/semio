@@ -34,6 +34,33 @@ fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtur
 fn grant()->RetainedCloneGrant{let f=fixture();let f=&f["turn"];RetainedCloneGrant{maximum_items:f["items"].as_u64().unwrap()as usize,maximum_copy_bytes:f["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:f["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:f["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:f["depth"].as_u64().unwrap()as usize}}
 fn source()->(Vec<u8>,RecordValue){let f=fixture();let text:String=serde_json::from_value(f["text"].clone()).unwrap();let items:Vec<String>=serde_json::from_value(f["items"].clone()).unwrap();let mut expected=RecordValue::default();expected.fields.insert(0,FieldValue::Text(text));expected.fields.insert(1,FieldValue::List(items.into_iter().map(FieldValue::Text).collect()));let owned=RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"text",semio_framework_dsl_record::Shape::Text),FieldSpec::new(1,"items",semio_framework_dsl_record::Shape::List(Box::new(semio_framework_dsl_record::Shape::Text)))]);let source=semio_framework_pack_record::encode_record_body(&owned,&expected,&Default::default()).unwrap();(source,expected)}
 #[test]
+fn original_record_receiving_limits_follow_addressable_allocation() {
+    let (source, expected) = source();
+    let grant = grant();
+    for policy in fixture()["allocationPolicies"].as_array().unwrap() {
+        let max_total_alloc = policy["maximumBytes"].as_str().unwrap().parse().unwrap();
+        let limits = PackLimits { max_total_alloc, ..PackLimits::default() };
+        let maximum: usize = policy[format!("limit{}", usize::BITS)].as_str().unwrap().parse().unwrap();
+        let (mut receiving, _) = RetainedRecordReceiving::admit(&source, (0, source.len()), spec(), limits, grant).result.unwrap().unwrap();
+        assert_eq!(receiving.maximum, maximum);
+        let mut callback = |_| true;
+        let mut native = NativeDecodeControl::new(1 << 24, &mut callback);
+        with_record_native_work(&mut native, |mut native| {
+            for _ in 0..10_000 {
+                if receiving.is_ready() { break }
+                assert!(receiving.step(&source, &mut native, grant).result.unwrap().fits(grant));
+            }
+            assert!(receiving.is_ready());
+            let mut output = None;
+            receiving.take_into(&mut output, grant).result.unwrap();
+            assert_eq!(output.as_ref(), Some(&expected));
+            let mut output = ControlledRetirement::new(output).ok().unwrap();
+            while !output.terminal_is_empty() { output.step(grant).unwrap(); }
+            while !receiving.terminal_is_empty() { receiving.close_step(grant).result.unwrap(); }
+        });
+    }
+}
+#[test]
 fn original_record_receiving_one_item_retains_source_native_and_serde_output(){
  let(source,expected)=source();let grant=grant();let mut native_callback=|_|true;let mut native=NativeDecodeControl::new(1<<24,&mut native_callback);
  with_record_native_work(&mut native,|mut native|{let(mut receiving,admitted)=RetainedRecordReceiving::admit(&source,(0,source.len()),spec(),PackLimits::default(),grant).result.unwrap().unwrap();assert_eq!(admitted.copied_items,1);let mut births=0;let mut releases=0;let mut turns=0;

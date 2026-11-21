@@ -5162,6 +5162,21 @@
             "to": 0.3
           },
           {
+            "id": "stop-ring",
+            "kind": "extrude",
+            "bone": "sill",
+            "material": "timber",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.4], [1.224, 0.4], [1.224, -0.4], [0.0, -0.4]],
+            "holes": [
+              [[0.03, 0.37], [0.03, -0.37], [1.194, -0.37], [1.194, 0.37]]
+            ],
+            "plane": "yz",
+            "from": 0.195,
+            "to": 0.225
+          },
+          {
             "id": "sash-frame",
             "kind": "extrude",
             "bone": "sash",
@@ -5213,6 +5228,11 @@
             "of": "lining",
             "region": "frame-timber",
             "sectionFaces": ["-u", "+v"]
+          },
+          {
+            "id": "th-stop-ring",
+            "of": "stop-ring",
+            "region": "frame-timber"
           },
           {
             "id": "th-sill",
@@ -5309,8 +5329,8 @@
         ],
         "decisions": [
           {
-            "en": "Body: the window as four masses for 1:200: the sill board, the lining arch of jambs and head in one piece (stop strips merged), the sash as one 70 mm frame ring 90 mm deep (rail and stile differences, weather bar, beads and hinges below the 30 mm feature merged or dropped) and the glass as one slab in the sight size.",
-            "de": "Körper: das Fenster als vier Massen für 1:200: das Sohlbrett, der Futterbogen aus Seiten- und Kopfbrettern in einem Stück (Anschlagleisten eingeschlossen), der Flügel als ein 70-mm-Rahmenring 90 mm tief (Unterschiede von Riegeln und Flügelhölzern, Wetterschenkel, Glasleisten und Bänder unter dem Merkmal von 30 mm zusammengefasst oder entfallen) und das Glas als eine Platte im Lichtmaß."
+            "en": "Body: the window as five masses for 1:200: the sill board, the lining arch of jambs and head in one piece, the four stop strips as one 30 x 30 mm stop ring on the exterior side that covers the 12 mm rebate clearance (an open gap below the 30 mm feature would show daylight through the frame), the sash as one 70 mm frame ring 90 mm deep (rail and stile differences, weather bar, beads and hinges below the 30 mm feature merged or dropped) and the glass as one slab in the sight size.",
+            "de": "Körper: das Fenster als fünf Massen für 1:200: das Sohlbrett, der Futterbogen aus Seiten- und Kopfbrettern in einem Stück, die vier Anschlagleisten als ein Anschlagring 30 x 30 mm außen, der die Falzluft von 12 mm deckt (eine offene Fuge unter dem Merkmal von 30 mm zeigte Tageslicht durch den Rahmen), der Flügel als ein 70-mm-Rahmenring 90 mm tief (Unterschiede von Riegeln und Flügelhölzern, Wetterschenkel, Glasleisten und Bänder unter dem Merkmal von 30 mm zusammengefasst oder entfallen) und das Glas als eine Platte im Lichtmaß."
           },
           {
             "en": "Thermal: the glass centre and the edge zone share the one glass slab of the body as the 2D glass line does (pane-glass takes its exterior face, pane-edge references the same slab with every face marked, so only the total is compared at this scale); sash ring and lining arch reference the body with their room-side faces and the faces against the masonry marked; the sill board as before.",
@@ -5374,6 +5394,55 @@
                 ]
               ]
             ]
+          },
+          {
+            "id": "stop-ring",
+            "kind": "extrude",
+            "bone": "sill",
+            "material": "timber",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [
+                0.0,
+                0.4
+              ],
+              [
+                1.224,
+                0.4
+              ],
+              [
+                1.224,
+                -0.4
+              ],
+              [
+                0.0,
+                -0.4
+              ]
+            ],
+            "holes": [
+              [
+                [
+                  0.03,
+                  0.37
+                ],
+                [
+                  0.03,
+                  -0.37
+                ],
+                [
+                  1.194,
+                  -0.37
+                ],
+                [
+                  1.194,
+                  0.37
+                ]
+              ]
+            ],
+            "plane": "yz",
+            "from": 0.195,
+            "to": 0.225
           },
           {
             "id": "sash-frame",
@@ -5528,6 +5597,11 @@
             "plane": "yz",
             "from": 0.0,
             "to": 0.3
+          },
+          {
+            "id": "th-stop-ring",
+            "of": "stop-ring",
+            "region": "frame-timber"
           },
           {
             "id": "th-sill",

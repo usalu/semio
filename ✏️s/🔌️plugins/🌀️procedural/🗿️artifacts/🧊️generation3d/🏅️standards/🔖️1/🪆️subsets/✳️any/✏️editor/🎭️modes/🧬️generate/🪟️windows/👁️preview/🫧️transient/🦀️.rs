@@ -16,12 +16,12 @@ impl semio_plugin::WindowTransientOwner for Generation3dGeneratePreviewWindowTra
     }
 }
 
-pub fn addressed(snapshot: &semio_plugin::WindowTransientSnapshot, eval_text: Option<String>) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
+pub fn addressed(snapshot: &semio_plugin::WindowTransientSnapshot, eval_text: Option<String>, generation_id: Option<String>) -> Result<semio_plugin::WindowTransientMutation, semio_plugin::Fault> {
     if snapshot.window_kind_id() != super::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW || snapshot.get::<Generation3dGeneratePreviewWindowTransientOwner>().is_none() {
         return Err(semio_plugin::Fault::from("generation3d-generate-preview-window-transient-required"));
     }
     Ok(semio_plugin::WindowTransientMutation::of::<Generation3dGeneratePreviewWindowTransientOwner>(
         snapshot.window_id(),
-        Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text },
+        Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text, generation_id },
     ))
 }

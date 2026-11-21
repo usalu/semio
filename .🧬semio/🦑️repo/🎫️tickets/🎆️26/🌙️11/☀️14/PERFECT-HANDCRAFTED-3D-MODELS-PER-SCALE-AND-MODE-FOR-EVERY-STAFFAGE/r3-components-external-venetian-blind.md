@@ -108,3 +108,26 @@ Final check: silhouette IoU 0.994 / 0.999 / 0.999 at 1:50, 0.993 / 1 / 1 at 1:10
 - Render artefacts, not geometry: coplanar cover back and wall face flicker in the thermal back panel at 1:100 and 1:500; a small dark mark on the cover top at 1:500.
 - Frame corners are butt-jointed bars, not mitred; gaskets and thermal break strips are omitted.
 - Package height and guide-rail profile rest on my estimate, not on a manufacturer table.
+
+## Round 5 handcraft (2026-11-21)
+
+Renders (opened with Read) under `🗑️generated/r5-external-venetian-blind/before/` and `after/` (made by `r5-c01-sheets.sh`). (renders in `🗑️generated/r3-sheet`). I opened body, structure and the cut thermal sheets at 1:50; body at 1:100, 1:200 and 1:500; the 2D at 1:500; the clip `raise-lower` at 5 s; and the pose `closed-in-gust`. Further poses were rendered but not opened.
+
+Against the reference (Z 90 lamella 90 mm at 80 mm pitch, 58 x 56 head rail, 30 x 20 guide rails, 18 lamellae): no deviation.
+
+| scale | before = after (body / thermal / structure) |
+|---|---|
+| 1:50 | A- / A- / A- |
+| 1:100 | A- / A- / A- |
+| 1:200 | A- / A- / A- |
+| 1:500 | B+ / A- / B+ |
+
+At 1:500 the five 75 mm strips read as a ladder rather than as a lamella screen. The 2D draws the same strips, so a toned screen would need 2D and 3D together.
+
+Poses: the stack collects from below with tapes that shorten; the gust pose closes as a shingled screen.
+
+No change. The source equals the catalog; it is VALID.
+
+The insulation unit contains two 4 mm panes around a 16 mm sealed argon space. The 12 mm spacer follows a 6 mm inner bend radius. Its physical profile persists in every model, while the cavity outline uses fewer stations at smaller scales. A Three.js ray and bounding boxes independently checked the weather-side and room-side faces, pane and cavity dimensions, spacer, and thermal layer order. Measured external area, structural coverage, scale agreement, silhouette and mesh-count checks passed at all four scales. The twelve exported scenes occupy 2,222,780 bytes.
+
+A visual comparison then showed the coarse physical blind had only five of the eighteen slats. The 1:500 physical model, paper views and heat-transfer surfaces now retain all eighteen 1.13 m slats and their separate tilt axes. Three.js stock checks, the full document validator, measured scale checks and independent GLB readback passed. The updated GLB is 2,280,848 bytes.

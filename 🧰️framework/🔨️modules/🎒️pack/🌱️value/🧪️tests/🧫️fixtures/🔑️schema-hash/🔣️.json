@@ -1,5 +1,6 @@
 {
   "schema": "semio.pack.schema-hash/v1",
+  "ordinaryConstruction": { "hostEntropyRequests": 0 },
   "shapeTags": {
     "bool": 1, "int": 2, "uint": 3, "float": 4, "text": 5, "bytes64": 6, "enum": 7, "tuple": 8, "list": 9, "record": 10,
     "block": 11, "statements": 12, "map": 13, "value": 14, "table": 15, "wire": 16, "quantity": 17, "angle": 18, "ref": 19,

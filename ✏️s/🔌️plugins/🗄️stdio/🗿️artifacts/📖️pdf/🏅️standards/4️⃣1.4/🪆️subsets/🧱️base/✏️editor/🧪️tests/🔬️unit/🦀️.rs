@@ -77,7 +77,7 @@ fn own14_typed_page_command_uses_the_own_mutation_codec() {
     assert_eq!(restored, original);
 }
 
-semio_plugin::history_edit_acceptance_law!("stdio/Pdf14Editor", Pdf14Editor, || semio_plugin::App { definition: create_pdf14_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio/Pdf14Editor", Pdf14Editor, || semio_plugin::App { definition: create_pdf14_editor(), examples: Vec::new() }, fixtures_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|root| root.join("🏅️standards").is_dir() && std::fs::read_to_string(root.join("📦️packages/🦀️rust/Cargo.toml")).is_ok_and(|manifest| manifest.contains("name = \"semio-s-artifact-stdio-pdf\""))).expect("PDF artifact workspace").join("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base"));
 
 #[semio_framework_async_macros::async_test]
 async fn natural_pdf_14_file_opens_its_own_output_and_refuses_files_the_page_model_would_degrade() {

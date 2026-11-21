@@ -192,9 +192,19 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     mounted.publication = Some(ArtifactToolCompletionValue::Emit(Ok(Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { window_config_mutations: vec![mutation], ..Default::default() }), EphemeralEmit::default()));
     let grant = mounted_policy.maintenance;
     let mut yielded_with_retained_receipt = 0;
+    let mut admitted_store_batch = false;
+    let mut refreshed_generation = None;
     let mut page = None;
     for _ in 0..4096 {
-        publish_window_config_fixture_unit(&mut app,&mut mounted,grant,caller.context).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
+        admitted_store_batch |= publish_window_config_fixture_unit(&mut app,&mut mounted,grant,caller.context).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
+        let authority = mounted.window_config_authority.as_ref().unwrap();
+        if let Some(generation) = refreshed_generation {
+            assert_eq!(authority.snapshot.generation(), generation);
+            assert!(authority.pending_snapshot.is_none(), "a paid refresh does not capture another snapshot while its result page is pending");
+        } else if authority.snapshot.generation() > generation_before {
+            refreshed_generation = Some(authority.snapshot.generation());
+            assert!(authority.pending_snapshot.is_none(), "the original snapshot transfers before the published generation advances");
+        }
         if mounted.pending_window_config_receipt.is_some() {
             yielded_with_retained_receipt += 1;
         }
@@ -203,8 +213,10 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
             break;
         }
     }
+    assert!(admitted_store_batch, "the original Store constructor has its own mounted receipt");
     let mut page = page.expect("the retained window config receipt reaches its result page");
     assert_eq!(page.lane, TypedOperationResultLane::WindowConfig);
+    assert!(semio_plugin_testing_laws::artifact_app_laws::present_fixture_mounted_page(&mut mounted,grant,caller.context).unwrap().is_none(), "a transferred authority presents one result page before ACK");
     assert!(yielded_with_retained_receipt > 0, "the first refresh unit yields while the displaced snapshot awaits custody");
     assert!(mounted.pending_window_config_receipt.is_none() && mounted.published_window_config);
     assert!(mounted.window_config_authority.as_ref().is_some_and(|authority| authority.snapshot.generation() > generation_before), "the captured authority was refreshed to the published generation");
@@ -251,15 +263,29 @@ assert!(semio_plugin_testing_laws::artifact_app_laws::retire_fixture_acknowledge
 //#endregion 🎯️RetargetAndSettings
 
 /// 🪟️ Returns each publication receipt to the original window fixture caller once.
-fn publish_window_config_fixture_unit(app:&mut ToyApp,mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>,grant:semio_framework_value::retained_clone::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+fn publish_window_config_fixture_unit(app:&mut ToyApp,mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>,grant:semio_framework_value::retained_clone::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
  cx.with_retained_loan(grant,|same|{
+  let waiting_for_window_result = |operation: &semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>| {
+   operation.pending_artifact_publication.as_ref().is_some_and(|owner| {
+    owner.lane().0 == TypedOperationResultLane::WindowConfig && owner.accepted_receipt().is_none()
+   })
+  };
   let before=same.retained_progress();
+  let window_frame_existed = waiting_for_window_result(mounted);
+  let work_before = same.original_work_units_spent();
   app.typed_ctx().publish_mounted_typed_operation_unit(mounted,grant,same)?;
-  if let Some((issued,progress))=mounted.publication_ownership_progress.take(){
+  let receipt = mounted.publication_ownership_progress.take();
+  let admitted_now = window_frame_existed && waiting_for_window_result(mounted) && receipt.is_some();
+  if admitted_now {
+   assert!(receipt.is_some_and(|(_, progress)| progress.copied_items == 1 && progress.retained_capacity_bytes > 0));
+   assert_eq!(same.retained_progress(), before, "Store admission did not open a native receiving scope");
+   assert_eq!(same.original_work_units_spent(), work_before, "Store admission did not spend receiving work");
+  }
+  if let Some((issued,progress))=receipt{
    assert!(progress.fits(issued)&&progress.fits(grant));
    let unposted=semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress,before,same.retained_progress())?;
    same.consume_retained(unposted)?;
   }
-  Ok(())
+  Ok(admitted_now)
  })
 }

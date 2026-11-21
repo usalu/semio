@@ -1,9 +1,12 @@
-import {afterAll,expect,test} from "bun:test";
+import {afterAll,expect,spyOn,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import * as fs from "node:fs/promises";
 import {createHash} from "node:crypto";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import healthyHeal from "./🧫️fixtures/🩹️healthy-heal.json" with {type:"json"};
 import {appendEventsV1,formatHlcV1,readEventsV1,listOriginsV1,storeBlobV1,type FleetEventV1} from "../../📒️journal/🟦️.ts";
 import {gitBrokenV1,gitStateV1} from "../../🌿️git/🟦️.ts";
 import {authorisePacksV1} from "../🧷️packgate/🟦️.ts";
@@ -96,6 +99,30 @@ posixTest("a worker keeps its old packs while the fleet holds an index whose pac
  }finally{await shut(server);await shut(worker);}
 },120_000);
 
+
+posixTest("a winning tombstone preserves an unheld private pack and its index",async()=>{
+ const {store,server,worker}=await pair();
+ const db=new Database(":memory:");
+ try{
+  const baseline=new Set(readdirSync(at(worker,".git/objects/pack")));
+  write(worker,"local-pack-source.txt","exact unshared content\n");
+  cli(worker,["add","--","local-pack-source.txt"]);
+  cli(worker,["commit","-q","-m","private packed commit"]);
+  cli(worker,["repack","-d","-q"]);
+  const privatePaths=readdirSync(at(worker,".git/objects/pack")).filter(name=>!baseline.has(name)&&/^pack-[0-9a-f]+\.(?:pack|idx)$/u.test(name)).map(name=>".git/objects/pack/"+name);
+  expect(privatePaths).toHaveLength(2);
+  const tip=cli(worker,["rev-parse","HEAD"]).trim(),before=new Map(privatePaths.map(path=>[path,sha(at(worker,path))])),now=Date.now();
+  const deletes:FleetEventV1[]=privatePaths.map((path,index)=>({version:1,hlc:formatHlcV1({ms:now,counter:index},"g1-m09"),operation:"delete",path,base:null}));
+  const expected=db.query("select value as path from json_each(?1) where ?2 <> 'put' order by value").all(JSON.stringify(privatePaths),"absent").map(row=>(row as {path:string}).path);
+  expect(privatePaths.every(path=>worker.replica!.files.get(path)===undefined)).toBe(true);
+  await appendEventsV1(store,"g1-m09",deletes);
+  await followOnceV1(worker.replica!);
+  expect(privatePaths.filter(path=>existsSync(at(worker,path))&&sha(at(worker,path))===before.get(path)).sort()).toEqual(expected);
+  expect(privatePaths.map(path=>worker.replica!.manifest.get(path)?.operation)).toEqual(["delete","delete"]);
+  expect(ok(worker,["cat-file","-e",tip+"^{commit}"])).toBe(true);
+ }finally{db.close();await shut(server);await shut(worker);}
+},20000);
+
 posixTest("the check names why HEAD does not resolve, the heal brings the shared git files and the stage back from the store, and nothing is reported once it is sound",async()=>{
  const {server,worker}=await pair();
  try{
@@ -153,3 +180,59 @@ posixTest("a running daemon finds a repository it cannot read at its first round
   controller.abort();await done.catch(()=>{});
  }finally{controller.abort();await shut(server);await shut(worker);}
 },120_000);
+
+posixTest("a healthy Git heal yields to an ordinary journal turn between ordered slices",async()=>{
+ const {store,server,worker}=await pair(),controller=new AbortController(),database=new Database(":memory:"),trace:{kind:string;id:number}[]=[],delayed=new Map<string,number>();
+ const stat=fs.lstat,statSpy=spyOn(fs,"lstat").mockImplementation((async (path:Parameters<typeof fs.lstat>[0],options?:any)=>{
+  const id=typeof path==="string"?delayed.get(path):undefined;
+  if(id!==undefined&&/\bhealGit(?:Path)?V1\b/u.test(new Error().stack??"")){trace.push({kind:"probe",id});await Bun.sleep(healthyHeal.latencyMilliseconds);}
+  return stat(path,options);
+ }) as typeof fs.lstat);
+ let running:ReturnType<typeof runV1>|undefined;
+ try{
+  await shut(worker);
+  expect(await gitBrokenV1(worker.options.worktree)).toBeNull();
+  const options={...worker.options,watch:false,gitCheckMilliseconds:50,gitHealMilliseconds:0,attestMilliseconds:50,storeGate:async()=>{trace.push({kind:"turn",id:0});},opened(replica:ReplicaV1){
+   for(let id=0;id<healthyHeal.probes;id++){
+    const path=".git/objects/aa/"+id.toString(16).padStart(38,"0");
+    write(worker,path,"fixture "+id);
+    const row={hlc:formatHlcV1({ms:Date.now(),counter:id},"g1-server"),operation:"put" as const,sha256:sha(at(worker,path)),bytes:Buffer.byteLength("fixture "+id),executable:false};
+    replica.manifest.set(path,row);replica.files.set(path,{...row,mtimeMs:statSync(at(worker,path)).mtimeMs});
+    delayed.set(at(worker,path),id);
+   }
+  }};
+  write(worker,healthyHeal.worktreePath,"ordinary healthy-heal proof");
+  running=runV1(options,controller.signal,event=>{if(event.event==="published"&&event.stage!=="git")trace.push({kind:"published",id:0});});
+  const deadline=performance.now()+8000;
+  while(performance.now()<deadline&&(!trace.some(row=>row.kind==="probe"&&row.id===healthyHeal.probes-1)||!trace.some(row=>row.kind==="published")))await Bun.sleep(10);
+  controller.abort();await running;
+  const expected=database.query(`with rows as (
+   select key position,json_extract(value,'$.kind') kind,json_extract(value,'$.id') id from json_each(?1)
+  ), first_round as (select min(position) first,max(position) last,count(*) n from (select * from rows where kind='probe' order by position limit ?2))
+  select n,(select count(*) from rows where kind in ('turn','published') and position > first and position < last) between_count from first_round`).get(JSON.stringify(trace),healthyHeal.probes) as {n:number;between_count:number};
+  expect(expected.n).toBe(healthyHeal.probes);
+  expect(expected.between_count).toBeGreaterThan(0);
+  expect(trace.filter(row=>row.kind==="probe").slice(0,healthyHeal.probes).map(row=>row.id)).toEqual(Array.from({length:healthyHeal.probes},(_,id)=>id));
+  expect((await readEventsV1(store,"g1-m01",undefined)).events.some(event=>event.path===healthyHeal.worktreePath)).toBe(true);
+ }finally{controller.abort();await running?.catch(()=>{});statSpy.mockRestore();database.close();await shut(server);await shut(worker);}
+},30000);
+
+test("Git heal discards an absent leaf observed after its turn was cancelled",async()=>{
+ const worker=machine("g1-m01",temp("cancel-store")),controller=new AbortController(),reason=Error("fixture cancelled"),path=".git/HEAD",target=at(worker,path);
+ await open(worker);
+ const replica=worker.replica!,row={hlc:formatHlcV1({ms:Date.now(),counter:0},"g1-server"),operation:"put" as const,sha256:"a".repeat(64),bytes:42,executable:false};
+ replica.manifest.set(path,row);replica.files.set(path,{...row,mtimeMs:0});
+ const entered=Promise.withResolvers<void>(),release=Promise.withResolvers<void>(),stat=fs.lstat;
+ const mock=spyOn(fs,"lstat").mockImplementation((async (name:Parameters<typeof fs.lstat>[0],options?:any)=>{
+  if(name===target){entered.resolve();await release.promise;}
+  return stat(name,options);
+ }) as typeof fs.lstat);
+ try{
+  const pending=healGitV1(replica,controller.signal);
+  await Promise.race([entered.promise,pending.then(()=>{throw Error("no Git leaf probe");})]);
+  controller.abort(reason);release.resolve();
+  await expect(pending).rejects.toBe(reason);
+  expect(replica.files.get(path)).toEqual({...row,mtimeMs:0});
+  expect(replica.queue.has(path)).toBe(false);
+ }finally{release.resolve();mock.mockRestore();await shut(worker);}
+});

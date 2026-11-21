@@ -2,7 +2,7 @@ import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/�
 import{wasmPackageCargoConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {withRepositoryCompilerLaneV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryCompilerStoreLaneV1,withRepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {repositoryCargoCompilerInputsV1,repositoryCargoNetworkV1} from "../../🦀️cargo/📥️dependencies/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
@@ -17,6 +17,7 @@ import { requireWasmBindgenSourceLockV1, wasmBindgenVersion, wasmBindgenCargoCom
 import { cargoDirectories } from "../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 import {prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {repositoryStrictStorageV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🟦️.ts";
 import {preparedBinaryen} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts";
 import {resolveWorkspaceBin} from "../../🟦️.ts";
@@ -79,8 +80,14 @@ export type RepositoryWasmBuildOptionsV1=Omit<WasmPackWebBuildOptions,"storage"|
 /** 🦀️ Retains real dependencies, toolchain, compiler writer and finite package through selected-mode publication and callback drainage. */
 export async function buildRepositoryWasmWebV1(options:RepositoryWasmBuildOptionsV1):Promise<void>{
  options=Object.freeze({...options,pkg:Object.freeze({...options.pkg,files:Object.freeze([...options.pkg.files])}),cargoFeatures:Object.freeze([...(options.cargoFeatures??[])])});requireIssuedResourceControlInvocationV1(options.control,options.invocation);const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),workspace=authority.repositoryRoot,mode=authority.original.buildMode,owner=relative(workspace,resolve(options.rsDir)).replaceAll("\\","/");if(typeof options.consume!=="function"||!owner||owner.startsWith("../"))throw Error("Actual declared WASM producer and consumer required");const consumption=wasmPackageCargoConsumptionV1(options.producer),control=options.control,environment=scriptInvocationEnvironment(options.invocation,{...process.env,SEMIO_BUILD_MODE:mode});
- await withRepositoryCompilerLaneV1(workspace,mode,control,environment,{crates:[owner],unitCache:false},async(store,control)=>{
-  const compilerEnvironment=store.environment,selected=repositoryWasmBuildPolicyV1(options.rsDir,compilerEnvironment),policy={...selected,workspaceRoot:workspace,mode,sourceOwner:owner,artifactDirectory:store.captureDirectory,buildDirectory:store.buildDirectory,sourceBoundary:store.sourceBoundary};await store.storage.recheck();
-  await buildWasmWebV1({...options,cargoConfigurationSelectors:[],storage:store.storage,environment:compilerEnvironment,control,withCargoInputs:repositoryCargoCompilerInputsV1({workspace,invocation:options.invocation,consumption,network:repositoryCargoNetworkV1(options.invocation,workspace),control,storage:store.storage}),consume:capture=>withProducedWasmPackageTaskV1(capture,async package_=>{await withRepositoryCacheStoreV1(workspace,"products",options.invocation,package_.control,(products,productsPhase)=>{const request=repositoryWasmPackageRequestV1(products.root,package_.owner);return withRepositoryArtifactDestinationV1({workspace,invocation:options.invocation,storage:products.storage,control:products.control,phaseControl:productsPhase,directory:request.path},destination=>stageRepositoryArtifacts(destination,request.owner,package_.files));});await package_.recheck();await options.consume(capture);})},policy);await store.storage.recheck();
+ const configuration=join(workspace,".cargo/config.toml"),selectors:readonly string[]=[];
+ const selection=wasmCompilerSelectionArgumentsV1({mode,manifest:join(options.componentDir,"Cargo.toml"),configuration,selectors,threads:options.threads??false,features:options.cargoFeatures??[],noDefaultFeatures:options.noDefaultFeatures??false});
+ await withRepositoryCompilerStoreV1(workspace,mode,control,environment,async(store,control)=>{
+  const preparation={...repositoryCargoPreparationStorageV1(workspace),directory:requireNativeStoragePathV1(store.root,join(store.buildDirectory,"preparation"))};
+  await prepareCargoWorkspaceInvocation(preparation,workspace,selection.cargo,options.componentDir,store.environment,control);
+  await withRepositoryCompilerStoreLaneV1(store,control,{crates:[owner],unitCache:false},async(store,control)=>{
+   const compilerEnvironment=store.environment,selected=repositoryWasmBuildPolicyV1(options.rsDir,compilerEnvironment),policy={...selected,workspaceRoot:workspace,mode,sourceOwner:owner,compilerConfiguration:configuration,artifactDirectory:store.captureDirectory,buildDirectory:store.buildDirectory,sourceBoundary:store.sourceBoundary};await store.storage.recheck();
+   await buildWasmWebV1({...options,cargoConfigurationSelectors:selectors,storage:store.storage,environment:compilerEnvironment,control,withCargoInputs:repositoryCargoCompilerInputsV1({workspace,invocation:options.invocation,consumption,network:repositoryCargoNetworkV1(options.invocation,workspace),control,storage:store.storage}),consume:capture=>withProducedWasmPackageTaskV1(capture,async package_=>{await withRepositoryCacheStoreV1(workspace,"products",options.invocation,package_.control,(products,productsPhase)=>{const request=repositoryWasmPackageRequestV1(products.root,package_.owner);return withRepositoryArtifactDestinationV1({workspace,invocation:options.invocation,storage:products.storage,control:products.control,phaseControl:productsPhase,directory:request.path},destination=>stageRepositoryArtifacts(destination,request.owner,package_.files));});await package_.recheck();await options.consume(capture);})},policy);await store.storage.recheck();
+  });
  });
 }

@@ -1,0 +1,19 @@
+[workspace]
+
+[package]
+name = "note-mcp-replay"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "note-mcp-replay"
+path = "../note-mcp-replay.rs"
+
+[dependencies]
+semio-framework-async = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-os-store-text-io = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust" }
+semio-os-vcs = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust" }
+semio-s-artifact-note-note-mutations = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-note-note-schema = { path = "../../../../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }

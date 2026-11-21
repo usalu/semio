@@ -9,6 +9,8 @@ pub trait GlbSource {
     fn vertices(&self) -> usize;
     fn indices(&self) -> usize;
     fn has_normals(&self) -> bool;
+    fn has_uvs(&self) -> bool { false }
+    fn uv(&self, _: usize) -> (Option<[f32; 2]>, u64) { (None, 0) }
     fn position(&self, vertex: usize) -> (Option<[f32; 3]>, u64);
     fn normal(&self, vertex: usize) -> (Option<[f32; 3]>, u64);
     fn index(&self, index: usize) -> (Option<u32>, u64);
@@ -16,12 +18,14 @@ pub trait GlbSource {
 
 impl GlbSource for crate::MeshData {
     fn read_work(&self) -> u64 { 1 }
-    fn valid_layout(&self) -> bool { self.positions.len() % 3 == 0 }
+    fn valid_layout(&self) -> bool { self.positions.len() % 3 == 0 && (self.uvs.is_empty() || self.uvs.len() == self.vertices() * 2) }
     fn vertices(&self) -> usize { self.positions.len() / 3 }
     fn indices(&self) -> usize { self.indices.len() }
     fn has_normals(&self) -> bool { self.normals.len() == self.positions.len() }
     fn position(&self, vertex: usize) -> (Option<[f32; 3]>, u64) { (vertex.checked_mul(3).and_then(|start| self.positions.get(start..start.checked_add(3)?)).and_then(|value| value.try_into().ok()), 1) }
     fn normal(&self, vertex: usize) -> (Option<[f32; 3]>, u64) { (vertex.checked_mul(3).and_then(|start| self.normals.get(start..start.checked_add(3)?)).and_then(|value| value.try_into().ok()), 1) }
+    fn uv(&self, vertex: usize) -> (Option<[f32; 2]>, u64) { (vertex.checked_mul(2).and_then(|start| self.uvs.get(start..start.checked_add(2)?)).and_then(|value| value.try_into().ok()), 1) }
+    fn has_uvs(&self) -> bool { !self.uvs.is_empty() }
     fn index(&self, index: usize) -> (Option<u32>, u64) { (self.indices.get(index).copied(), 1) }
 }
 
@@ -126,11 +130,11 @@ pub struct GlbTurn { pub written: usize, pub copied_bytes: usize, pub complete: 
 pub struct GlbFailure { pub reason: &'static str, pub work: u64 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Stage { Positions, Indices, Normals, ClearNormals, AccumulateNormals, NormalizeNormals, Header, PositionBytes, NormalBytes, IndexBytes, Done }
+enum Stage { Positions, Indices, Normals, ClearNormals, AccumulateNormals, NormalizeNormals, Header, PositionBytes, NormalBytes, IndexBytes, UvBytes, Done }
 
 /// 🧭️ An allocation-free cursor; each funded turn inspects one vertex or triangle or writes one byte.
 pub struct GlbCursor {
-    vertices: usize, indices: usize, supplied_normals: bool, stage: Stage, at: usize,
+    vertices: usize, indices: usize, supplied_normals: bool, uvs: bool, stage: Stage, at: usize,
     min: [f32; 3], max: [f32; 3], header: [u8; 2048], header_len: usize,
     word: [u8; 12], word_len: usize, word_at: usize,
 }
@@ -149,7 +153,7 @@ impl GlbCursor {
     pub fn new(source: &impl GlbSource) -> Result<Self, &'static str> {
         let vertices = source.vertices(); let indices = source.indices();
         if !source.valid_layout() || (vertices == 0) != (indices == 0) || indices % 3 != 0 || vertices > u32::MAX as usize || indices > u32::MAX as usize { return Err("invalid GLB mesh dimensions"); }
-        Ok(Self { vertices, indices, supplied_normals: source.has_normals(), stage: if vertices == 0 { Stage::Header } else { Stage::Positions }, at: 0, min: [f32::INFINITY; 3], max: [f32::NEG_INFINITY; 3], header: [0; 2048], header_len: 0, word: [0; 12], word_len: 0, word_at: 0 })
+        Ok(Self { vertices, indices, supplied_normals: source.has_normals(), uvs: source.has_uvs(), stage: if vertices == 0 { Stage::Header } else { Stage::Positions }, at: 0, min: [f32::INFINITY; 3], max: [f32::NEG_INFINITY; 3], header: [0; 2048], header_len: 0, word: [0; 12], word_len: 0, word_at: 0 })
     }
 
     fn read<T>(source: &impl GlbSource, result: (Option<T>, u64), work: &mut u64) -> Result<T, &'static str> {
@@ -171,10 +175,20 @@ impl GlbCursor {
         }
         let position_bytes = self.vertices.checked_mul(12).ok_or("GLB length overflow")?;
         let index_bytes = self.indices.checked_mul(4).ok_or("GLB length overflow")?;
-        let binary = position_bytes.checked_mul(2).and_then(|n| n.checked_add(index_bytes)).ok_or("GLB length overflow")?;
+        let uv_start = position_bytes.checked_mul(2).and_then(|n| n.checked_add(index_bytes)).ok_or("GLB length overflow")?;
+        let uv_bytes = if self.uvs { self.vertices.checked_mul(8).ok_or("GLB length overflow")? } else { 0 };
+        let binary = uv_start.checked_add(uv_bytes).ok_or("GLB length overflow")?;
         let mut header = [0u8; 2048];
         let mut text = FixedText { bytes: &mut header[20..], len: 0 };
-        write!(text, "{{\"asset\":{{\"version\":\"2.0\"}},\"scene\":0,\"scenes\":[{{\"nodes\":[0]}}],\"nodes\":[{{\"mesh\":0}}],\"meshes\":[{{\"primitives\":[{{\"attributes\":{{\"POSITION\":0,\"NORMAL\":1}},\"indices\":2,\"mode\":4}}]}}],\"accessors\":[{{\"bufferView\":0,\"componentType\":5126,\"count\":{},\"type\":\"VEC3\",\"min\":[{},{},{}],\"max\":[{},{},{}]}},{{\"bufferView\":1,\"componentType\":5126,\"count\":{},\"type\":\"VEC3\"}},{{\"bufferView\":2,\"componentType\":5125,\"count\":{},\"type\":\"SCALAR\"}}],\"bufferViews\":[{{\"buffer\":0,\"byteOffset\":0,\"byteLength\":{}}},{{\"buffer\":0,\"byteOffset\":{},\"byteLength\":{}}},{{\"buffer\":0,\"byteOffset\":{},\"byteLength\":{}}}],\"buffers\":[{{\"byteLength\":{}}}]}}", self.vertices, self.min[0], self.min[1], self.min[2], self.max[0], self.max[1], self.max[2], self.vertices, self.indices, position_bytes, position_bytes, position_bytes, position_bytes * 2, index_bytes, binary).map_err(|_| "GLB header exceeds fixed bound")?;
+        (|| -> std::fmt::Result {
+            let texcoord = if self.uvs { ",\"TEXCOORD_0\":3" } else { "" };
+            write!(text, "{{\"asset\":{{\"version\":\"2.0\"}},\"scene\":0,\"scenes\":[{{\"nodes\":[0]}}],\"nodes\":[{{\"mesh\":0}}],\"meshes\":[{{\"primitives\":[{{\"attributes\":{{\"POSITION\":0,\"NORMAL\":1{texcoord}}},\"indices\":2,\"mode\":4}}]}}],")?;
+            write!(text, "\"accessors\":[{{\"bufferView\":0,\"componentType\":5126,\"count\":{},\"type\":\"VEC3\",\"min\":[{},{},{}],\"max\":[{},{},{}]}},{{\"bufferView\":1,\"componentType\":5126,\"count\":{},\"type\":\"VEC3\"}},{{\"bufferView\":2,\"componentType\":5125,\"count\":{},\"type\":\"SCALAR\"}}", self.vertices, self.min[0], self.min[1], self.min[2], self.max[0], self.max[1], self.max[2], self.vertices, self.indices)?;
+            if self.uvs { write!(text, ",{{\"bufferView\":3,\"componentType\":5126,\"count\":{},\"type\":\"VEC2\"}}", self.vertices)?; }
+            write!(text, "],\"bufferViews\":[{{\"buffer\":0,\"byteOffset\":0,\"byteLength\":{position_bytes}}},{{\"buffer\":0,\"byteOffset\":{position_bytes},\"byteLength\":{position_bytes}}},{{\"buffer\":0,\"byteOffset\":{},\"byteLength\":{index_bytes}}}", position_bytes * 2)?;
+            if self.uvs { write!(text, ",{{\"buffer\":0,\"byteOffset\":{uv_start},\"byteLength\":{uv_bytes}}}")?; }
+            write!(text, "],\"buffers\":[{{\"byteLength\":{binary}}}]}}")
+        })().map_err(|_| "GLB header exceeds fixed bound")?;
         let json_len = (text.len + 3) & !3; drop(text);
         let end = 20usize.checked_add(json_len).ok_or("GLB length overflow")?;
         if end + 8 > header.len() { return Err("GLB header exceeds fixed bound"); }
@@ -186,19 +200,19 @@ impl GlbCursor {
         self.header_len = end + 8; self.header[..self.header_len].copy_from_slice(&header[..self.header_len]); Ok(())
     }
 
-    fn load_vector(&mut self, value: [f32; 3]) { for (index, part) in value.iter().enumerate() { self.word[index * 4..index * 4 + 4].copy_from_slice(&part.to_le_bytes()); } self.word_len = 12; self.word_at = 0; }
+    fn load_vector<const N: usize>(&mut self, value: [f32; N]) { for (index, part) in value.iter().enumerate() { self.word[index * 4..index * 4 + 4].copy_from_slice(&part.to_le_bytes()); } self.word_len = N * 4; self.word_at = 0; }
 
     /// 📏️ Quotes the maximum copied bytes for the next turn.
-    pub fn next_copy_demand(&self) -> usize { match self.stage { Stage::Header if self.header_len == 0 => self.header.len() + size_of::<usize>(), Stage::ClearNormals | Stage::AccumulateNormals | Stage::NormalizeNormals => 64, Stage::Positions => 40, Stage::PositionBytes | Stage::NormalBytes | Stage::IndexBytes => 40, Stage::Indices | Stage::Normals | Stage::Header => 16, Stage::Done => 0 } }
+    pub fn next_copy_demand(&self) -> usize { match self.stage { Stage::Header if self.header_len == 0 => self.header.len() + size_of::<usize>(), Stage::ClearNormals | Stage::AccumulateNormals | Stage::NormalizeNormals => 64, Stage::Positions => 40, Stage::PositionBytes | Stage::NormalBytes | Stage::IndexBytes | Stage::UvBytes => 40, Stage::Indices | Stage::Normals | Stage::Header => 16, Stage::Done => 0 } }
 
     /// ⛽️ Quotes the next turn's maximum primitive work.
-    pub fn next_work_demand(&self, source: &impl GlbSource) -> u64 { let read = source.read_work(); match self.stage { Stage::Header if self.header_len == 0 => 4096, Stage::AccumulateNormals => read.saturating_mul(6).saturating_add(64), Stage::NormalizeNormals => 32, Stage::Positions | Stage::Normals => read.saturating_add(4), Stage::PositionBytes | Stage::NormalBytes if self.word_len == 0 => read.saturating_add(4), Stage::Indices => read.saturating_add(1), Stage::IndexBytes if self.word_len == 0 => read.saturating_add(2), Stage::Done => 0, _ => 1 } }
+    pub fn next_work_demand(&self, source: &impl GlbSource) -> u64 { let read = source.read_work(); match self.stage { Stage::Header if self.header_len == 0 => 4096, Stage::AccumulateNormals => read.saturating_mul(6).saturating_add(64), Stage::NormalizeNormals => 32, Stage::Positions | Stage::Normals => read.saturating_add(4), Stage::PositionBytes | Stage::NormalBytes | Stage::UvBytes if self.word_len == 0 => read.saturating_add(4), Stage::Indices => read.saturating_add(1), Stage::IndexBytes if self.word_len == 0 => read.saturating_add(2), Stage::Done => 0, _ => 1 } }
 
     /// ⏭️ Advances at most one source inspection or one output byte without allocating.
     pub fn advance(&mut self, source: &impl GlbSource, normals: &mut [[f32; 3]], output: &mut [u8], items: usize, copy_bytes: usize, depth: usize, fuel: u64) -> Result<GlbTurn, GlbFailure> {
         if output.is_empty() || items == 0 || depth == 0 || copy_bytes < self.next_copy_demand() || fuel < self.next_work_demand(source) || self.stage == Stage::Done { return Ok(GlbTurn { written: 0, copied_bytes: 0, complete: self.stage == Stage::Done, work: 0 }); }
-        if !source.valid_layout() || source.vertices() != self.vertices || source.indices() != self.indices || source.has_normals() != self.supplied_normals || (!self.supplied_normals && normals.len() != self.vertices) { return Err(GlbFailure { reason: "GLB source dimensions or normal storage changed", work: 1 }); }
-        let mut observed = 0; let mut work = match self.stage { Stage::Header if self.header_len == 0 => 0, Stage::AccumulateNormals => 64, Stage::NormalizeNormals => 32, Stage::Positions | Stage::Normals => 4, Stage::PositionBytes | Stage::NormalBytes if self.word_len == 0 => 4, Stage::IndexBytes if self.word_len == 0 => 2, _ => 1 }; let mut written = 0; let mut copied_bytes = 0;
+        if !source.valid_layout() || source.vertices() != self.vertices || source.indices() != self.indices || source.has_normals() != self.supplied_normals || source.has_uvs() != self.uvs || (!self.supplied_normals && normals.len() != self.vertices) { return Err(GlbFailure { reason: "GLB source dimensions or normal storage changed", work: 1 }); }
+        let mut observed = 0; let mut work = match self.stage { Stage::Header if self.header_len == 0 => 0, Stage::AccumulateNormals => 64, Stage::NormalizeNormals => 32, Stage::Positions | Stage::Normals => 4, Stage::PositionBytes | Stage::NormalBytes | Stage::UvBytes if self.word_len == 0 => 4, Stage::IndexBytes if self.word_len == 0 => 2, _ => 1 }; let mut written = 0; let mut copied_bytes = 0;
         let result = (|| -> Result<(), &'static str> { match self.stage {
             Stage::Positions => { let p = Self::vertex(source, self.at, &mut observed)?; for axis in 0..3 { self.min[axis] = self.min[axis].min(p[axis]); self.max[axis] = self.max[axis].max(p[axis]); } copied_bytes = 24 + size_of::<usize>(); self.at += 1; if self.at == self.vertices { self.at = 0; self.stage = Stage::Indices; copied_bytes += 1; } }
             Stage::Indices => { if Self::read(source, source.index(self.at), &mut observed)? as usize >= self.vertices { return Err("invalid GLB index"); } self.at += 1; copied_bytes = size_of::<usize>(); if self.at == self.indices { self.at = 0; self.stage = if self.supplied_normals { Stage::Normals } else { Stage::ClearNormals }; copied_bytes += 1; } }
@@ -209,7 +223,21 @@ impl GlbCursor {
             Stage::NormalizeNormals => { let value = normals[self.at]; if !value.iter().all(|v| v.is_finite()) { return Err("non-finite generated GLB normal"); } let scale = value.iter().fold(0.0f32, |maximum, v| maximum.max(v.abs())); let scaled = if scale > 0.0 { value.map(|v| v / scale) } else { value }; let length = scaled.iter().map(|v| v*v).sum::<f32>().sqrt(); normals[self.at] = if length > 0.0 && scale > 1e-8 / length { scaled.map(|v| v / length) } else { value }; self.at += 1; copied_bytes = 12 + size_of::<usize>(); if self.at == self.vertices { self.at = 0; self.stage = Stage::Header; copied_bytes += 1; } }
             Stage::PositionBytes => { if self.word_len == 0 { self.load_vector(Self::vertex(source, self.at, &mut observed)?); copied_bytes = 12 + 2 * size_of::<usize>(); } else { output[0] = self.word[self.word_at]; written = 1; self.word_at += 1; copied_bytes = size_of::<usize>(); if self.word_at == self.word_len { self.word_len = 0; self.at += 1; copied_bytes += 2 * size_of::<usize>(); if self.at == self.vertices { self.at = 0; self.stage = Stage::NormalBytes; copied_bytes += 1; } } } }
             Stage::NormalBytes => { if self.word_len == 0 { let value = if self.supplied_normals { Self::read(source,source.normal(self.at),&mut observed)? } else { normals[self.at] }; self.load_vector(value); copied_bytes = 12 + 2 * size_of::<usize>(); } else { output[0] = self.word[self.word_at]; written = 1; self.word_at += 1; copied_bytes = size_of::<usize>(); if self.word_at == self.word_len { self.word_len = 0; self.at += 1; copied_bytes += 2 * size_of::<usize>(); if self.at == self.vertices { self.at = 0; self.stage = Stage::IndexBytes; copied_bytes += 1; } } } }
-            Stage::IndexBytes => { if self.word_len == 0 { self.word[..4].copy_from_slice(&Self::read(source,source.index(self.at),&mut observed)?.to_le_bytes()); self.word_len = 4; self.word_at = 0; copied_bytes = 4 + 2 * size_of::<usize>(); } else { output[0] = self.word[self.word_at]; written = 1; self.word_at += 1; copied_bytes = size_of::<usize>(); if self.word_at == self.word_len { self.word_len = 0; self.at += 1; copied_bytes += 2 * size_of::<usize>(); if self.at == self.indices { self.stage = Stage::Done; copied_bytes += 1; } } } }
+            Stage::IndexBytes => { if self.word_len == 0 { self.word[..4].copy_from_slice(&Self::read(source,source.index(self.at),&mut observed)?.to_le_bytes()); self.word_len = 4; self.word_at = 0; copied_bytes = 4 + 2 * size_of::<usize>(); } else { output[0] = self.word[self.word_at]; written = 1; self.word_at += 1; copied_bytes = size_of::<usize>(); if self.word_at == self.word_len { self.word_len = 0; self.at += 1; copied_bytes += 2 * size_of::<usize>(); if self.at == self.indices { self.at = 0; self.stage = if self.uvs { Stage::UvBytes } else { Stage::Done }; copied_bytes += 1; } } } }
+            Stage::UvBytes => {
+                if self.word_len == 0 {
+                    let uv = Self::read(source, source.uv(self.at), &mut observed)?;
+                    if !uv.iter().all(|value| value.is_finite()) { return Err("non-finite GLB UV"); }
+                    self.load_vector(uv);
+                    copied_bytes = 8 + 2 * size_of::<usize>();
+                } else {
+                    output[0] = self.word[self.word_at]; written = 1; self.word_at += 1; copied_bytes = size_of::<usize>();
+                    if self.word_at == self.word_len {
+                        self.word_len = 0; self.at += 1; copied_bytes += 2 * size_of::<usize>();
+                        if self.at == self.vertices { self.stage = Stage::Done; copied_bytes += 1; }
+                    }
+                }
+            }
             Stage::Done => unreachable!(),
         } Ok(()) })();
         work = work.saturating_add(observed);

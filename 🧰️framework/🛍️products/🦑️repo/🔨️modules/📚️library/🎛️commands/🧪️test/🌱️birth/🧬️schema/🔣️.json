@@ -25,6 +25,27 @@
         "nativeRequests": [
           {
             "prefix": [
+              "components",
+              "iterate"
+            ],
+            "exact": false
+          },
+          {
+            "prefix": [
+              "components",
+              "describe"
+            ],
+            "exact": false
+          },
+          {
+            "prefix": [
+              "components",
+              "profile-independence"
+            ],
+            "exact": false
+          },
+          {
+            "prefix": [
               "test",
               "storybook"
             ],

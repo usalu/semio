@@ -1,0 +1,5 @@
+# Archive Post-Decode Readiness Audit
+
+The imported parent archive hydrates to an Envelope. Following forward and inverse mutation decoding, the envelope path hydrates history changes and retires its temporary history, Pack, runtime, and owner catalog before handing the envelope to begin_persisted_document_store_replacement. The hydration source explicitly leaves replay to the replacement Store initializer. The archive then waits for initialization, admits and seals members, and polls replacement until Ready, Cancelled, or Fault; it acknowledges the replacement before declaring the archive outcome.
+
+No concrete additional blocker was established from this read-only source trace. This does not establish that replacement replay, publication, view refresh, or asset restoration succeeds in the browser: those phases remain downstream of the observed DecodeForward failure and require a fresh staged guest and live import. The attempt-42 staging log showed compilation still progressing, with no completed component at the time inspected; source readiness and runtime behavior were not verified by this trace.

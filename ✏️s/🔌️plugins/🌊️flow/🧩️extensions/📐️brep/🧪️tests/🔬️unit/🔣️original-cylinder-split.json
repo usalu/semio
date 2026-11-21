@@ -1,0 +1,191 @@
+{
+  "operator": "brep.intersect.split",
+  "cylinder": {
+    "origin": [
+      4,
+      -2,
+      7
+    ],
+    "radius": 2,
+    "height": 6,
+    "angleY": -1.5707963267948966
+  },
+  "cases": [
+    {
+      "name": "positive X is opposite the placed cylinder axis",
+      "origin": [
+        2,
+        8,
+        12
+      ],
+      "normal": [
+        2,
+        0,
+        0
+      ],
+      "sectionCenter": [
+        2,
+        -2,
+        7
+      ],
+      "positive": {
+        "bounds": [
+          [
+            2,
+            -4,
+            5
+          ],
+          [
+            4,
+            0,
+            9
+          ]
+        ],
+        "volume": 25.132741228718345
+      },
+      "negative": {
+        "bounds": [
+          [
+            -2,
+            -4,
+            5
+          ],
+          [
+            2,
+            0,
+            9
+          ]
+        ],
+        "volume": 50.26548245743669
+      }
+    },
+    {
+      "name": "negative X is along the placed cylinder axis",
+      "origin": [
+        -1,
+        6,
+        10
+      ],
+      "normal": [
+        -3,
+        0,
+        0
+      ],
+      "sectionCenter": [
+        -1,
+        -2,
+        7
+      ],
+      "positive": {
+        "bounds": [
+          [
+            -2,
+            -4,
+            5
+          ],
+          [
+            -1,
+            0,
+            9
+          ]
+        ],
+        "volume": 12.566370614359172
+      },
+      "negative": {
+        "bounds": [
+          [
+            -1,
+            -4,
+            5
+          ],
+          [
+            4,
+            0,
+            9
+          ]
+        ],
+        "volume": 62.83185307179586
+      }
+    }
+  ],
+  "refused": [
+    {
+      "origin": [
+        4,
+        -2,
+        7
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ],
+      "reason": "tangent"
+    },
+    {
+      "origin": [
+        -2,
+        -2,
+        7
+      ],
+      "normal": [
+        -1,
+        0,
+        0
+      ],
+      "reason": "tangent"
+    },
+    {
+      "origin": [
+        -3,
+        -2,
+        7
+      ],
+      "normal": [
+        -1,
+        0,
+        0
+      ],
+      "reason": "external"
+    },
+    {
+      "origin": [
+        2,
+        -2,
+        7
+      ],
+      "normal": [
+        1,
+        0.01,
+        0
+      ],
+      "reason": "oblique"
+    },
+    {
+      "origin": [
+        2,
+        -2,
+        7
+      ],
+      "normal": [
+        0,
+        1,
+        0
+      ],
+      "reason": "parallel"
+    },
+    {
+      "origin": [
+        2,
+        -2,
+        7
+      ],
+      "normal": [
+        0,
+        0,
+        0
+      ],
+      "reason": "zero"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "planMegabytes": 20000,
+  "competingMegabytes": 20000,
+  "hostMegabytes": 32768,
+  "observeWhileReapingMilliseconds": 800,
+  "cancelled": "slice caller cancelled",
+  "spawnFailure": "slice process creation refused"
+}

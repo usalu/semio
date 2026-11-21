@@ -56,7 +56,7 @@ mod tests {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
-            terminology_breadcrumbs: HashMap::new(),
+            terminology_breadcrumbs: Default::default(),
             introduction: None,
             dialogs: Vec::new(),
             media_inputs: Vec::new(),

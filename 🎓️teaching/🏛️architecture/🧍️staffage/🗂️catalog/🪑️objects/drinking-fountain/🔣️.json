@@ -370,7 +370,8 @@
               ],
               "closed": true,
               "region": "bubbler-brass",
-              "material": "chrome-brass"
+              "material": "chrome-brass",
+              "penMm": 0.18
             },
             {
               "id": "pedestal",
@@ -521,7 +522,8 @@
               "w": 0.0395,
               "h": 0.045,
               "region": "bubbler-brass",
-              "material": "chrome-brass"
+              "material": "chrome-brass",
+              "penMm": 0.18
             }
           ],
           "front": [
@@ -560,7 +562,8 @@
               "w": 0.054,
               "h": 0.18,
               "region": "bubbler-brass",
-              "material": "chrome-brass"
+              "material": "chrome-brass",
+              "penMm": 0.18
             },
             {
               "id": "pedestal",
@@ -711,7 +714,8 @@
               "rx": 0.0225,
               "ry": 0.0225,
               "region": "bubbler-brass",
-              "material": "chrome-brass"
+              "material": "chrome-brass",
+              "penMm": 0.18
             }
           ],
           "plan": [
@@ -745,7 +749,8 @@
               "r0": 0.027,
               "r1": 0.016,
               "region": "bubbler-brass",
-              "material": "chrome-brass"
+              "material": "chrome-brass",
+              "penMm": 0.18
             }
           ]
         },

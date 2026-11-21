@@ -176,13 +176,38 @@ const inside = (p: Vec2, ring: readonly Vec2[]): boolean => {
 
 /** 🕳️ Whether the holes are faulty: a hole touching or crossing the outline or another hole, lying outside the outline or inside another hole. */
 export function holesFault(outer: readonly Vec2[], holes: readonly (readonly Vec2[])[], pace: Pace = new Pace()): boolean {
-  const tol = 1e-12 * scaleOf([outer, ...holes]);
-  const rings = [outer, ...holes];
-  const loop = (ring: readonly Vec2[]) => ring.map((p, i) => [p, ring[(i + 1) % ring.length]!] as const);
-  for (let a = 0; a < rings.length; a++) for (let b = a + 1; b < rings.length; b++)
-    for (const [p, q] of loop(rings[a]!)) {
-      pace.tick(rings[b]!.length);
-      for (const [r, s] of loop(rings[b]!)) if (contact(p, q, r, s, tol)) return true;
+  if (holes.length === 0) return false;
+  const scale = scaleOf([outer, ...holes]);
+  const tol = 1e-12 * scale;
+  const margin = Math.sqrt(tol * (4 * scale + tol));
+  const rings = [outer, ...holes].map((ring, index) => {
+    const edges = ring.map((p, i) => [p, ring[(i + 1) % ring.length]!] as const);
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const [x, y] of ring) {
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
     }
-  return holes.some((hole) => !inside(hole[0]!, outer) || holes.some((other) => other !== hole && inside(hole[0]!, other)));
+    return { ring, index, edges, minX, minY, maxX, maxY };
+  }).sort((a, b) => a.minX - b.minX);
+  for (const hole of holes) {
+    pace.tick(outer.length);
+    if (!inside(hole[0]!, outer)) return true;
+  }
+  for (let i = 0; i < rings.length; i++) {
+    const a = rings[i]!;
+    for (let j = i + 1; j < rings.length; j++) {
+      pace.tick();
+      const b = rings[j]!;
+      if (b.minX > a.maxX + margin) break;
+      if (b.minY > a.maxY + margin || a.minY > b.maxY + margin) continue;
+      for (const [p, q] of a.edges) {
+        pace.tick(b.edges.length);
+        for (const [r, s] of b.edges) if (contact(p, q, r, s, tol)) return true;
+      }
+      if (a.index !== 0 && b.index !== 0 && (inside(a.ring[0]!, b.ring) || inside(b.ring[0]!, a.ring))) return true;
+    }
+  }
+  return false;
 }

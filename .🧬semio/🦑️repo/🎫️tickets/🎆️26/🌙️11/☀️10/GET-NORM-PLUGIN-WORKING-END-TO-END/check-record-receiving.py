@@ -48,18 +48,24 @@ def build(name, replacement=None):
     compile(name, [*args, "-Copt-level=1", f"--emit=link={rlib},metadata={rlib.with_suffix('.rmeta')}"])
     return args, rlib
 
-catalog = "semio_framework_pack_format_catalog"
-_, catalog_lib = build(catalog)
-args, rlib = build(crate, (catalog, catalog_lib))
+if "compiled" in sys.argv[2:]:
+    args = ["-Ldependency=" + str(path) for path in lane.parents[2].glob("**/out") if "/build/" in str(path)]
+    parser = libraries(crate.replace("_", "-"))
+else:
+    catalog = "semio_framework_pack_format_catalog"
+    _, catalog_lib = build(catalog)
+    args, rlib = build(crate, (catalog, catalog_lib))
+    parser = external(crate, rlib)
 fixture = next((workspace / "🧰️framework/🔨️modules").glob("*pack/*value/🛬️decode/*receiving/*tests/*fixtures/🔣️.json"))
 binary = output / "record-receiving.wasm"
 proof = ["--edition=2021", "--target=wasm32-wasip2", "-Cstrip=symbols", "-o", str(binary), str(ticket / "check-record-receiving.rs")]
 proof.extend(argument for argument in args if argument.startswith("-Ldependency="))
 proof.append(f"-Ldependency={output}")
-proof.extend(external(crate, rlib))
+proof.extend(parser)
 for package in (
     "semio-framework-dsl-record", "semio-framework-pack-record", "semio-framework-replication-codec",
-    "semio-framework-value", "semio-framework-value-control-contract", "semio-framework-value-native-owned", "serde_json",
+    "semio-framework-value", "semio-framework-value-control-contract", "semio-framework-value-native-owned",
+    "semio-framework-value-native-receiving-original", "serde_json",
     "semio-framework-pack", "semio-os-semio", "semio-s-artifact-norm-din18599-model",
     "semio-s-artifact-norm-din18599-io", "semio-s-artifact-stdio-semio-table-model",
 ):

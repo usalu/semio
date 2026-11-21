@@ -310,7 +310,8 @@ fn is_interactive_kind(node: &UiNode) -> bool {
 pub(super) fn node_state_box(tree: &UiTree, id: NodeId) -> Option<semio_ui_border_presentation::BoxStateInput<NodeId>> {
     let node = tree.node(id)?;
     let interactive = is_interactive_kind(&node.spec.0) || matches!(&node.spec.0, UiNode::Stack(stack) if stack.activate.is_some()) || tree.disclosure_is_interactive(id);
-    Some(semio_ui_border_presentation::BoxStateInput { id, parent: node.parent, interactive, disabled: node.spec.0.presence().state == UiState::Disabled, marks: semio_ui_border_presentation::BoxStateMarks::NONE })
+    let hover_within = matches!(&node.spec.0, UiNode::OverviewCard(_));
+    Some(semio_ui_border_presentation::BoxStateInput { id, parent: node.parent, interactive, hover_within, disabled: node.spec.0.presence().state == UiState::Disabled, marks: semio_ui_border_presentation::BoxStateMarks::NONE })
 }
 
 pub(super) fn node_is_focusable(tree: &UiTree, id: NodeId) -> bool {

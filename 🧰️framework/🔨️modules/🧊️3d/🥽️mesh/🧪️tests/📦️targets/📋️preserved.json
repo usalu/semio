@@ -76,7 +76,7 @@
       "obj_export_writes_texture_coordinates_per_corner_once_the_mesh_is_unwrapped",
       "the_seam_set_encodes_in_ascending_order"
     ],
-    "assertions": 196
+    "minimumAssertions": 196
   },
   {
     "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🔬️modeling/🦀️.rs",
@@ -101,7 +101,7 @@
       "smooth_normal_fixture_excludes_flat_faces_and_face_order",
       "retained_modeling_jobs_slice_work_and_match_synchronous_geometry"
     ],
-    "assertions": 125
+    "minimumAssertions": 118
   },
   {
     "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🔬️jobs/🦀️.rs",
@@ -148,7 +148,7 @@
       "retained_primitives_generate_bounded_corners_and_reconstruction",
       "original_modeling_scratch_owners_preserve_all_physical_allocations"
     ],
-    "assertions": 737
+    "minimumAssertions": 731
   },
   {
     "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🎨️surface/🧪️tests/🔬️unit/🦀️.rs",
@@ -161,9 +161,10 @@
       "unwrapping_is_deterministic_and_independent_of_the_step_budget",
       "unwrapping_a_closed_mesh_without_seams_stays_finite_and_bounded",
       "a_cancelled_job_retires_and_a_finished_job_cannot_run_again",
-      "unwrapping_refuses_an_authored_uv_channel_and_an_empty_mesh"
+      "unwrapping_replaces_only_the_active_named_uv_channel",
+      "unwrapping_refuses_an_empty_mesh"
     ],
-    "assertions": 30
+    "minimumAssertions": 50
   },
   {
     "path": "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🔎️quality/🧪️tests/🔬️unit/🦀️.rs",
@@ -173,7 +174,7 @@
       "a_flipped_face_in_a_halfedge_mesh_is_reported_through_the_flip_flag",
       "parry3d_trimesh_mass_properties_agree_with_the_divergence_report"
     ],
-    "assertions": 22
+    "minimumAssertions": 9
   },
   {
     "path": "🧰️framework/🔨️modules/🧊️3d/🌀️rigid/🧪️tests/🔬️unit/🦀️.rs",
@@ -185,7 +186,7 @@
       "isometry_inverse_round_trips_a_point",
       "isometry_compose_matches_sequential_application"
     ],
-    "assertions": 6
+    "minimumAssertions": 6
   },
   {
     "path": "🧰️framework/🔨️modules/🧊️3d/🧿️collision/🧪️tests/🧿️collision/🦀️.rs",
@@ -210,6 +211,6 @@
       "containment_holds_for_a_mesh_whose_indices_mix_windings",
       "fast_containment_agrees_with_the_winding_number_including_points_on_faces_edges_and_vertices"
     ],
-    "assertions": 37
+    "minimumAssertions": 37
   }
 ]

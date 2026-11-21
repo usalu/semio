@@ -1,0 +1,5 @@
+{
+  "affected": 488,
+  "retained": 12,
+  "cases": ["unchanged", "missing at patch", "altered at patch"]
+}

@@ -35,6 +35,17 @@ pub struct CompiledHandle {
 }
 
 impl CompiledHandle {
+    /// 🌱️ Prepares an opted-in guest before the compiled parent enters shared runtime custody.
+    pub fn prepare_owned_actor(&mut self, fuel: u64, progress: impl FnMut(u64) -> bool) -> Result<bool, PluginHostError> {
+        self.owned.as_mut().map_or(Ok(false), |owned| owned.prepare_actor(fuel, progress))
+    }
+
+    /// 🧊️ Attaches a retained preparation to the actual owned compiled actor.
+    pub fn restore_owned_actor(&mut self, component_sha256: [u8; 32], image: &[u8], maximum_bytes: usize, checkpoint: impl FnMut() -> bool) -> Result<(), PluginHostError> {
+        self.owned.as_mut().ok_or_else(|| PluginHostError::Plugin("prepared actor requires its owned runtime".into()))?
+            .restore_actor_preparation(component_sha256, image, maximum_bytes, checkpoint)
+    }
+
     /// 🪪️ Compares the exact immutable compiled parents, not merely their package digest.
     pub fn same_origin(&self,other:&Self)->bool {
         self.package_hash==other.package_hash&&match (&self.component,&other.component,&self.owned,&other.owned){

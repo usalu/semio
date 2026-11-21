@@ -21,10 +21,17 @@ pub fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match 
 pub fn observed<R>(grant:RetainedCloneGrant,maximum:u64,actual:&mut Option<usize>,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->(R,(usize,usize)){with_effect(grant,maximum,actual,|effect|semio_framework_value_testing_allocator::observe_retirement_allocations(||operation(effect)))}
 /// 🧾️ Generous per-turn stock for closing fixture-owned results.
 pub fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}}
+/// 🚪️ Runs a close through the same reply invocation selected by native receiving.
+pub fn close_step<T:retirement::RetireOwned>(owner:&mut retirement::controlled::ControlledRetirement<T>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>{
+ let body=effect.grant().maximum_copy_bytes;
+ let mut result=None;
+ semio_framework_value_control_contract::with_original_invocation(None,effect,&mut |effect|result=Some(settled(owner.step(body,effect)))).unwrap();
+ result.expect("fixture close invocation ran")
+}
 /// ♻️ Closes one typed owner through controlled retirement turns inside original effects.
 pub fn close<T:retirement::RetireOwned>(value:T){
  let mut owner=retirement::controlled::ControlledRetirement::new(value).map_err(|(error,_)|error).expect("fixture owner supports typed retirement");
- for _ in 0..4096{if owner.terminal_is_empty(){return}let mut actual=None;let turn=settled(with_effect(stock(),1<<20,&mut actual,|effect|owner.step(effect)));turn.result.expect("fixture close step refused");}
+ for _ in 0..4096{if owner.terminal_is_empty(){return}let mut actual=None;let turn=with_effect(stock(),1<<20,&mut actual,|effect|close_step(&mut owner,effect));turn.result.expect("fixture close step refused");}
  panic!("fixture close exhausted its turns")
 }
 /// 🛂️ Adapts one recording closure to the original allocation authority port.

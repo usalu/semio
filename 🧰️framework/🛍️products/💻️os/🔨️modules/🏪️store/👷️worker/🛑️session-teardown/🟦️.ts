@@ -1,3 +1,5 @@
+import { retireAtomicHubDocument } from "../📦️atomic-hub-group/🟦️.ts";
+import { retireLocalAtomicDocumentFrames } from "../🧩️atomic-document-relay/🟦️.ts";
 import type { ArtifactBootstrapWorkerEvent, BackboneWorkerRequest, BackboneWorkerResponse } from "../../../../🟦️";
 import { type ArtifactState, artifactScope, artifacts, documentServices } from "../🧾️document-state/🟦️.ts";
 import type { DocumentArtifactBootstrapOwner, DocumentArtifactRebootstrapOwner } from "../🚀️artifact-bootstrap/🏷️owners/🟦️.ts";
@@ -111,6 +113,8 @@ export function closeArtifactRuntime(runtimeKey: string): void {
   const state = artifacts.get(runtimeKey);
   if (!state) return;
   state.closed = true;
+  retireLocalAtomicDocumentFrames(state);
+  retireAtomicHubDocument(state);
   state.browserActorViewState = null;
   abortArtifactRebootstrap(state);
   abortArtifactBootstrap(state);

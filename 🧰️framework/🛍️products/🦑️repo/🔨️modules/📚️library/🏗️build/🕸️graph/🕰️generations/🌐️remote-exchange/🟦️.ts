@@ -1,19 +1,20 @@
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {createHash} from "node:crypto";
 import {constants,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
-import {open} from "node:fs/promises";
+import {open,type FileHandle} from "node:fs/promises";
 import {totalmem} from "node:os";
 import {join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {GENERATION_POLICY_V1 as P,readGenerationManifestV1,readGenerationPointerV1,type GenerationFilePortV1} from "../🟨️.mjs";
 import {remoteCacheEffectiveUploadV1} from "../../../🌐️remote-cache/🟦️.ts";
 import {remoteCacheFetchV1,resolveRemoteCacheV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
-import {httpRemoteExecutionContentV1,type RemoteExecutionContentV1} from "../../../🌐️remote-execution/🗄️content/🟦️.ts";
+import {httpRemoteExecutionContentV1,RemoteExecutionContentErrorV1,type RemoteExecutionContentV1} from "../../../🌐️remote-execution/🗄️content/🟦️.ts";
 import {REAPI_V1,decodeProtobufV1,encodeProtobufV1} from "../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 import {documentNameV1,generationSignatureV1,neutralizeGenerationFromMemoryV1,neutralKeyV1,transformGenerationDocumentV1,transformGenerationManifestV1,transformNamedGenerationDocumentV1,type GenerationDocumentV1,type NeutralKnownV1,type NeutralRowV1} from "./🧳️portable/🟦️.ts";
 import {profilePhaseV1} from "../../../⏱️profile/🟨️.mjs";
 import {repositoryCacheBudgetV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
-import {CLOSURE_POLICY_V1,closureLeafPutterV1,closureOwnersV1,closuresOfFragmentsV1,obtainClosureLeafV1,type ClosureNamespaceV1} from "../../🩹️closure-repair/🟨️.mjs";
+import {CLOSURE_POLICY_V1,closureLeafPutterV1,obtainClosureLeafV1,type ClosureNamespaceV1} from "../../🩹️closure-repair/🟨️.mjs";
+import {closureEntryV1,encodeClosureMemoV1,inventoryFragmentClosuresV1,packClosureShardsV1,readClosureMemoV1,readClosureShardsV1,type ClosureLeafV1,type ClosureShardV1,type PackedClosureShardV1} from "./🧲️closure-shards/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🏷️ The inline description of one uploaded generation: what a client compares before it downloads anything. `manifest` names the neutral manifest; `signature` is the root independent state; `stateMs` is the time of the tree state it describes and `stale` the owners its producer knew stale in it, which together rank the heads of different machines (`publishedMs` only dates the upload). */
@@ -25,7 +26,7 @@ export type GenerationHeadEvidenceV1=Readonly<{manifest:string;origin:string;gen
 /** 🎯️ Pins complete head evidence to the registry, platform and implementation that qualified it. */
 export type GenerationHeadCandidateV1=GenerationHeadEvidenceV1&Readonly<{identity:string;platform:string;implementation:string}>;
 /** 🧾️ What one exchange did; a refusal or a failure never fails the graph load that asked. */
-export type GenerationExchangeOutcomeV1=Readonly<{status:"restored"|"uploaded"|"local"|"absent"|"foreign"|"empty"|"current"|"remote-better"|"incomplete"|"oversized"|"failed";generation?:number;owners?:number;documents?:number;sent?:number;bytes?:number;ageSeconds?:number;stale?:number;reason?:string;closures?:GenerationClosuresV1;head?:GenerationHeadEvidenceV1}>;
+export type GenerationExchangeOutcomeV1=Readonly<{status:"restored"|"uploaded"|"local"|"absent"|"foreign"|"empty"|"current"|"remote-better"|"incomplete"|"oversized"|"failed";generation?:number;localManifest?:string;owners?:number;documents?:number;sent?:number;bytes?:number;ageSeconds?:number;stale?:number;reason?:string;closures?:GenerationClosuresV1;head?:GenerationHeadEvidenceV1}>;
 /** 🧲️ What an exchange did with the build input closure leaves a generation names: how many it names, how many were uploaded or fetched, and the leaves it could not obtain with the owners that name them (those owners are stale, the generation is not complete). */
 export type GenerationClosuresV1=Readonly<{named:number;sent:number;fetched:number;missing:readonly Readonly<{key:string;namespace:ClosureNamespaceV1;projects:readonly string[]}>[]}>;
 /** 🗄️ Where the closure leaves of this machine live and how they are read and written: the graph store of the workspace by default. */
@@ -34,6 +35,7 @@ export interface ClosurePortV1{
  size(namespace:ClosureNamespaceV1,key:string):number|undefined;
  /** 📏️ Reads one leaf, bounding allocation to the supplied maximum when present. */
  read(namespace:ClosureNamespaceV1,key:string,maximumBytes?:number):Promise<Uint8Array|undefined>;
+ verify?(namespace:ClosureNamespaceV1,key:string,signal?:AbortSignal):Promise<boolean|undefined>;
  put(namespace:ClosureNamespaceV1,key:string,bytes:Uint8Array):Promise<void>;
 }
 /** 🪟️ The verdict of one look at the heads of the group: `none` (no head of this registry, platform and scope), `other-code` (built by other code, a reader would find every owner stale), `partial` (its producer knew `stale` owners stale in it, a read is still going on), `complete` (its producer knew no stale owner); `ahead` tells whether a restore would take it and `held` how many owners the sealed generation of this machine has (0 without one). */
@@ -56,7 +58,7 @@ export interface GenerationExchangeV1{
 type Files=Pick<GenerationFilePortV1,"read"|"write"|"list">;
 type Location=Readonly<{content:RemoteExecutionContentV1;instance:string;key:string;root:string;workspace:string;platform:string;files:Files;signal?:AbortSignal;now?:()=>number;cursors?:GenerationCursorsV1;keys?:readonly string[];origin?:string;implementation?:string;stale?:number;serving?:boolean;closures?:ClosurePortV1;scope?:string}>;
 
-const restoredReason="restored from the remote cache",policy=schema.definitions.Policy.const,document=new RegExp(policy.document,"u"),closureDocument=new RegExp(policy.closure,"u"),snapshotDocument=new RegExp(policy.snapshot,"u"),sha=(bytes:Uint8Array):string=>createHash("sha256").update(bytes).digest("hex");
+const restoredReason="restored from the remote cache",policy=schema.definitions.Policy.const,document=new RegExp(policy.document,"u"),snapshotDocument=new RegExp(policy.snapshot,"u"),sha=(bytes:Uint8Array):string=>createHash("sha256").update(bytes).digest("hex");
 
 /** 🗝️ The action key of the head of the generations one machine of the group published, for a registry on one platform: the generation format, the owner registry identity, the platform and the origin that writes it, never a path. The server keeps the first bytes of a key against every other origin (a key must determine its bytes), so each origin owns one head, overwrites only its own, and a reader takes the newest head of all origins. */
 export function generationExchangeKeyV1(identity:string,platform:string,origin:string,scope:string=policy.allScope):string{return sha(Buffer.from(JSON.stringify(scope===policy.allScope?[policy.domain,identity,platform,origin]:[policy.domain,identity,platform,origin,scope])));}
@@ -71,7 +73,7 @@ function generationHeadEvidenceV1(note:GenerationNoteV1,key:string):GenerationHe
 /** 🔭️ Whether a head describes the scope a reader wants: a head of one slice is never the generation of another slice or of the whole workspace, and the whole workspace is the scope of a head that names none. */
 export const generationScopeMatchesV1=(note:Readonly<{scope?:string}>,scope:string|undefined):boolean=>(note.scope??policy.allScope)===(scope??policy.allScope);
 
-type HeadV1=Readonly<{note:GenerationNoteV1|undefined;entries:readonly {path:string;hash:string;size:number}[];from:string}>;
+type HeadV1=Readonly<{note:GenerationNoteV1|undefined;entries:readonly {path:string;hash:string;size:number}[];shards:readonly ClosureShardV1[];from:string}>;
 type RankedV1=HeadV1&Readonly<{note:GenerationNoteV1}>;
 
 /** 🏁️ How many owners a reader would find stale in a head at `nowMs`: the owners its producer knew stale (all of them when the reader's code differs from the code that built it, the policy's guess when the producer did not know), plus the owners the tree moved under since: counted from the paths that changed between the head's snapshot and the reader's tree when the reader measured them, else estimated from the age of the state. Lower is better. */
@@ -113,8 +115,9 @@ const noteOf=(bytes:Uint8Array|undefined):GenerationNoteV1|undefined=>{
 
 async function readHead(location:Location):Promise<HeadV1|undefined>{
  const bytes=await location.content.readActionResult(location.instance,location.key,location.signal);if(!bytes)return undefined;
- const result=decodeProtobufV1(REAPI_V1.actionResult,bytes),files=(result.output_files??[]) as {path:string;digest:{hash:string;size_bytes:number|string}}[];
- return{note:noteOf(result.stdout_raw as Uint8Array|undefined),entries:files.map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)})),from:location.key};
+ if(bytes.length>policy.maximumActionResultBytes)return undefined;
+ const result=decodeProtobufV1(REAPI_V1.actionResult,bytes),files=result.output_files as {path:string;digest:{hash:string;size_bytes:number|string}}[],directories=result.output_directories as {path:string;tree_digest?:{hash:string;size_bytes:number|string}}[];
+ return{note:noteOf(result.stdout_raw as Uint8Array|undefined),entries:files.map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)})),shards:directories.map(row=>({path:row.path,hash:row.tree_digest?.hash??"",size:Number(row.tree_digest?.size_bytes)})),from:location.key};
 }
 
 async function remoteNote(location:Location,reader:Readonly<{implementation?:string;nearest?:boolean;prefer?:(head:RankedV1)=>boolean}>={}):Promise<HeadV1|undefined>{
@@ -169,44 +172,120 @@ async function localState(root:string,files:Files):Promise<{manifest:ReturnType<
  return{manifest:readGenerationManifestV1(manifestBytes),digest:pointer.manifest,generation:pointer.generation,modifiedMs:listed?.modifiedMs??0,restored:pointer.reason===restoredReason};
 }
 
-const closureFolderV1:Readonly<Record<ClosureNamespaceV1,string>>={"build-input-closures":"i","build-lock-closures":"l"};
-const closurePathV1=(namespace:ClosureNamespaceV1,key:string):string=>`c/${closureFolderV1[namespace]}/${key}.json`;
+/** 👥️ Resolves owning projects only for closures that need a missing-leaf report. */
+function closureOwnersOfV1(owners:ReturnType<typeof readGenerationManifestV1>["owners"]){
+ const byFragment=new Map<string,string[]>();
+ for(const [name,row] of Object.entries(owners)){const names=byFragment.get(row.fragment)??[];names.push(name);byFragment.set(row.fragment,names);}
+ return (fragments:ReadonlySet<string>)=>[...fragments].flatMap(fragment=>byFragment.get(fragment)??[]).sort();
+}
 
-/** 🧾️ The leaves of the fragments (`names`, their brotli documents read by `read`) with the memory file `memoFile` of fragments seen before; a fragment is content addressed so its leaves never change. */
-async function namedClosuresV1(names:readonly string[],read:(name:string)=>Promise<Uint8Array|undefined>,memoFile:string|undefined){
- const memo=new Map<string,[string,ClosureNamespaceV1][]>();
- if(memoFile!==undefined)try{const value=JSON.parse(readFileSync(memoFile,"utf8")) as {version:number;entries:[string,[string,ClosureNamespaceV1][]][]};if(value.version===1&&Array.isArray(value.entries))for(const[name,leaves]of value.entries)if(typeof name==="string"&&Array.isArray(leaves))memo.set(name,leaves);}catch{}
- const named=await closuresOfFragmentsV1({names,read,memo,concurrency:policy.concurrency});
- if(memoFile!==undefined){const keep=new Set(names),temporary=memoFile+"."+process.pid+".tmp";try{writeFileSync(temporary,JSON.stringify({version:1,entries:[...memo].filter(([name])=>keep.has(name))}));renameSync(temporary,memoFile);}catch{rmSync(temporary,{force:true});}}
- return named;
+type UploadedClosuresV1={report:GenerationClosuresV1;staleOwners:number|undefined;leaves:readonly ClosureLeafV1[];shards:readonly PackedClosureShardV1[]};
+
+/** 📒 Reads the closure keys previously checked or sent to this CAS instance. */
+function readSentClosuresV1(file:string,instance:string):Set<string>{
+ try{
+  const value=JSON.parse(readFileSync(file,"utf8")) as {version:number;instance:string;keys:string[]};
+  if(value.version===1&&value.instance===instance&&Array.isArray(value.keys))return new Set(value.keys);
+ }catch{}
+ return new Set();
+}
+
+/** 💾 Atomically remembers the closure keys qualified for the next publication. */
+function writeSentClosuresV1(file:string,instance:string,keys:ReadonlySet<string>):void{
+ const temporary=file+"."+process.pid+".tmp";
+ try{writeFileSync(temporary,JSON.stringify({version:1,instance,keys:[...keys]}));renameSync(temporary,file);}catch{rmSync(temporary,{force:true});}
+}
+
+/** 📤 Sends a closure only when the current local bytes match its bounded digest. */
+async function sendClosureV1({closures,signal,content,instance}:Location,row:ClosureLeafV1):Promise<boolean>{
+ signal?.throwIfAborted();
+ const data=await closures?.read(row.namespace,row.key,row.size);
+ if(!data||data.length!==row.size||sha(data)!==row.key)return false;
+ await content.write(instance,{hash:row.key,size:row.size},data,signal);
+ return true;
+}
+
+/** 🛠️ Requalifies the addressed closure metadata and leaves after a cache eviction, then retries the same head once. */
+async function writeGenerationHeadV1(location:Location,result:Uint8Array,uploaded:UploadedClosuresV1):Promise<number>{
+ const{content,instance,key,signal,root}=location;
+ const rejected=await content.writeActionResult(instance,key,result,signal).then(()=>undefined,error=>{
+  const missing=error instanceof RemoteExecutionContentErrorV1&&error.code===3?error.missingOutput:undefined;
+  if(missing===undefined||!uploaded.leaves.some(row=>row.key===missing)&&!uploaded.shards.some(row=>row.hash===missing))throw error;
+  return missing;
+ });
+ if(rejected===undefined)return 0;
+ const leaves=new Map(uploaded.leaves.map(row=>[row.key,row] as const)),shards=new Map(uploaded.shards.map(row=>[row.hash,row] as const));
+ const checked=[...shards.values(),...[...leaves.values()].map(row=>({hash:row.key,size:row.size}))],unchecked=new Set([rejected]);let repaired=0;
+ try{
+  signal?.throwIfAborted();
+  for(const row of await content.missing(instance,checked.filter(row=>row.hash!==rejected),signal))unchecked.add(row.hash);
+  await each([...unchecked],async digest=>{
+   const shard=shards.get(digest),leaf=leaves.get(digest);
+   if(shard)await content.write(instance,shard,shard.bytes,signal);
+   else if(leaf&&await sendClosureV1(location,leaf))repaired++;
+   else return;
+   unchecked.delete(digest);
+  });
+  signal?.throwIfAborted();
+  if(unchecked.size)throw Error("Generation closure no longer available: "+unchecked.values().next().value);
+  await content.writeActionResult(instance,key,result,signal);
+  return repaired;
+ }catch(error){
+  if(error instanceof RemoteExecutionContentErrorV1&&error.code===3&&error.missingOutput!==undefined&&leaves.has(error.missingOutput))unchecked.add(error.missingOutput);
+  if(unchecked.size){
+   const file=root+".closures-sent.json",memo=readSentClosuresV1(file,instance);
+   for(const hash of unchecked)memo.delete(hash);
+   writeSentClosuresV1(file,instance,memo);
+  }
+  throw error;
+ }
 }
 
 /** ⬆️ Uploads the closure leaves a generation names, deduplicated and bounded, before its head is written: every leaf this machine holds that the cache misses (the cache is asked once, by name and size) is read, verified against its name and written; a leaf this machine does not hold is reported with the owners that name it and never fails the upload. */
-async function uploadClosuresV1(location:Location,manifest:ReturnType<typeof readGenerationManifestV1>,fragments:readonly string[],entries:{path:string;hash:string;size:number}[]):Promise<GenerationClosuresV1>{
+async function uploadClosuresV1(location:Location,manifest:ReturnType<typeof readGenerationManifestV1>,fragments:readonly string[]):Promise<UploadedClosuresV1>{
  const{closures,content,instance,signal,files,root}=location;
- if(!closures)return{named:0,sent:0,fetched:0,missing:[]};
- const named=closureOwnersV1(await namedClosuresV1(fragments,async name=>files.read(join(root,P.fragments,name+".json.br")),root+".closures.json"),manifest.owners),held:{key:string;namespace:ClosureNamespaceV1;size:number}[]=[],missing:{key:string;namespace:ClosureNamespaceV1;projects:readonly string[]}[]=[];
- for(const[key,row]of[...named].sort((a,b)=>a[0]<b[0]?-1:1)){
-  const size=closures.size(row.namespace,key);
-  if(size===undefined||size<1||size>CLOSURE_POLICY_V1.maximumLeafBytes)missing.push({key,namespace:row.namespace,projects:row.projects});
-  else if(held.length<policy.maximumClosures)held.push({key,namespace:row.namespace,size});
+ const memoPath=root+".closures.json",memo=readClosureMemoV1(await readBoundedClosureLeafV1(memoPath,policy.maximumClosureMemoBytes).catch(()=>undefined));
+ const unchanged=fragments.length===memo.size&&fragments.every(name=>memo.has(name));
+ const references=await inventoryFragmentClosuresV1(fragments,name=>files.read(join(root,P.fragments,name+".json.br")),signal,memo);
+ if(!unchanged){
+  const text=encodeClosureMemoV1(fragments,memo),staged=memoPath+"."+process.pid+".tmp";
+  if(text!==undefined)try{writeFileSync(staged,text);renameSync(staged,memoPath);}catch{rmSync(staged,{force:true});}
  }
- const sentFile=root+".closures-sent.json",before=new Set<string>();
- try{const value=JSON.parse(readFileSync(sentFile,"utf8")) as {version:number;instance:string;keys:string[]};if(value.version===1&&value.instance===instance&&Array.isArray(value.keys))for(const key of value.keys)before.add(key);}catch{}
- const asking=held.filter(row=>!before.has(row.key)),absent=new Set((await content.missing(instance,asking.map(row=>({hash:row.key,size:row.size})),signal)).map(digest=>digest.hash));let sent=0;
- await each(held.filter(row=>absent.has(row.key)),async row=>{const data=await closures.read(row.namespace,row.key);if(!data||sha(data)!==row.key){missing.push({key:row.key,namespace:row.namespace,projects:named.get(row.key)!.projects});return;}await content.write(instance,{hash:row.key,size:data.length},data,signal);sent++;});
- const lost=new Set(missing.map(row=>row.key));
- for(const row of held)if(!lost.has(row.key))entries.push({path:closurePathV1(row.namespace,row.key),hash:row.key,size:row.size});
- const temporary=sentFile+"."+process.pid+".tmp";try{writeFileSync(temporary,JSON.stringify({version:1,instance,keys:held.filter(row=>!lost.has(row.key)).map(row=>row.key)}));renameSync(temporary,sentFile);}catch{rmSync(temporary,{force:true});}
- return{named:named.size,sent,fetched:0,missing:missing.slice(0,policy.maximumClosureReports)};
+ const named=[...references].sort((a,b)=>a[0]<b[0]?-1:1),held:ClosureLeafV1[]=[];
+ for(const[,{key,namespace}]of named){
+  if(held.length===policy.maximumClosures)break;
+  signal?.throwIfAborted();
+  const size=closures?.size(namespace,key);
+  if(size!==undefined&&Number.isSafeInteger(size)&&size>0&&size<=CLOSURE_POLICY_V1.maximumLeafBytes)held.push({key,namespace,size});
+ }
+ const sentFile=root+".closures-sent.json",before=readSentClosuresV1(sentFile,instance);
+ const asking=held.filter(row=>!before.has(row.key)),absent=new Set((await content.missing(instance,asking.map(row=>({hash:row.key,size:row.size})),signal)).map(digest=>digest.hash)),rejected=new Set<string>();let sent=0;
+ await each(asking.filter(row=>absent.has(row.key)),async row=>{
+  if(await sendClosureV1(location,row))sent++;
+  else rejected.add(closureEntryV1(row.namespace,row.key));
+ });
+ const leaves=held.filter(row=>!rejected.has(closureEntryV1(row.namespace,row.key))),shards=packClosureShardsV1(leaves);
+ const missingShards=new Set((await content.missing(instance,shards,signal)).map(row=>row.hash));
+ await each(shards.filter(row=>missingShards.has(row.hash)),row=>content.write(instance,row,row.bytes,signal));
+ writeSentClosuresV1(sentFile,instance,new Set(leaves.map(row=>row.key)));
+ const listed=new Set(leaves.map(row=>closureEntryV1(row.namespace,row.key))),ownersOf=closureOwnersOfV1(manifest.owners);
+ const stale=new Set<string>(),missing:GenerationClosuresV1["missing"][number][]=[];let globalMissing=false;
+ for(const [entry,{key,namespace,fragments}] of named)if(!listed.has(entry)){
+  if(fragments.has(manifest.global))globalMissing=true;
+  const projects=ownersOf(fragments);
+  for(const project of projects)stale.add(project);
+  if(missing.length<policy.maximumClosureReports)missing.push({key,namespace,projects});
+ }
+ const staleOwners=globalMissing?(Object.keys(manifest.owners).length||undefined):stale.size;
+ return{report:{named:named.length,sent,fetched:0,missing},staleOwners,leaves,shards};
 }
 
 /** 🌊️ Reads an unknown-length closure response into bounded storage, cancelling its stream on overflow. */
-async function readRemoteClosureLeafV1({content,instance,signal}:Location,key:string):Promise<Uint8Array|undefined>{
+async function readRemoteClosureLeafV1({content,instance,signal}:Pick<Location,"content"|"instance"|"signal">,key:string,size?:number):Promise<Uint8Array|undefined>{
  signal?.throwIfAborted();
- const stream=await content.stream(instance,{hash:key,size:0},signal);
+ const stream=await content.stream(instance,{hash:key,size:size??0},signal);
  if(!stream)return undefined;
- const maximum=CLOSURE_POLICY_V1.maximumLeafBytes;
+ const maximum=size??CLOSURE_POLICY_V1.maximumLeafBytes;
  let bytes=Buffer.alloc(0),length=0;
  for await(const chunk of stream){
   signal?.throwIfAborted();
@@ -218,38 +297,37 @@ async function readRemoteClosureLeafV1({content,instance,signal}:Location,key:st
   }
   bytes.set(chunk,length);length=next;
  }
- return bytes.subarray(0,length);
+ return size!==undefined&&length!==size?undefined:bytes.subarray(0,length);
 }
 
 /** ⬇️ Obtains the closure leaves the fragments of a generation about to be restored name and this machine lacks: each is read from the fleet cache by name (bounded and verified), and the leaves nobody has are reported with the owners that name them, whose records the load removes so they are derived again. */
-async function restoreClosuresV1(location:Location,manifest:ReturnType<typeof readGenerationManifestV1>,requireComplete:boolean):Promise<GenerationClosuresV1|undefined>{
+async function restoreClosuresV1(location:Location,manifest:ReturnType<typeof readGenerationManifestV1>,inventory:ReadonlyMap<string,ClosureLeafV1>,requireComplete:boolean,completeInventory:boolean):Promise<GenerationClosuresV1|undefined>{
  const{closures,signal,files,root}=location;
- if(!closures&&!requireComplete)return undefined;
  const names=[...new Set<string>([manifest.global,...Object.values(manifest.owners).map(owner=>owner.fragment)])];
- const named=closureOwnersV1(await closuresOfFragmentsV1({names,concurrency:1,read:async(name:string)=>{
-  signal?.throwIfAborted();
-  const bytes=await files.read(join(root,P.fragments,name+".json.br"));
-  if(!bytes)throw Error("Generation fragment unavailable: "+name);
-  return bytes;
- }}),manifest.owners);
+ const named=await inventoryFragmentClosuresV1(names,name=>files.read(join(root,P.fragments,name+".json.br")),signal);
+ if([...inventory.keys()].some(entry=>!named.has(entry))||completeInventory&&inventory.size!==named.size)throw new RestoreDocumentErrorV1("Generation closure inventory differs from its fragments");
  if(!closures)return named.size===0?{named:0,sent:0,fetched:0,missing:[]}:undefined;
  const verify=requireComplete?async(namespace:ClosureNamespaceV1,key:string):Promise<boolean>=>{
   signal?.throwIfAborted();
   const size=closures.size(namespace,key),maximum=CLOSURE_POLICY_V1.maximumLeafBytes;
-  if(size===undefined||size<1||size>maximum)return false;
+  if(size===undefined||size<1||size>maximum||size!==inventory.get(closureEntryV1(namespace,key))?.size)return false;
+  const verified=await closures.verify?.(namespace,key,signal);
+  if(verified!==undefined)return verified;
   const bytes=await closures.read(namespace,key,maximum).catch(()=>undefined);
-  return bytes!==undefined&&bytes.length>0&&bytes.length<=maximum&&sha(bytes)===key;
+  return bytes!==undefined&&bytes.length===size&&sha(bytes)===key;
  }:undefined;
  const rows=[...named],absent:typeof rows=[];
- if(verify)await each(rows,async([key,row])=>{if(!await verify(row.namespace,key))absent.push([key,row]);});
- else for(const [key,row] of rows)if(closures.size(row.namespace,key)===undefined)absent.push([key,row]);
- if(requireComplete&&absent.length>policy.maximumClosures)return undefined;
- const missing:{key:string;namespace:ClosureNamespaceV1;projects:readonly string[]}[]=[];let got=0;
- await each(absent.slice(0,policy.maximumClosures),async([key,row])=>{
-  const state=await obtainClosureLeafV1({directory:closures.directory,namespace:row.namespace,key,fetch:()=>readRemoteClosureLeafV1(location,key),put:closures.put,signal,verify});
-  if(state==="refetched")got++;else if(state==="missing")missing.push({key,namespace:row.namespace,projects:row.projects});
+ if(verify)await each(rows,async row=>{if(!await verify(row[1].namespace,row[1].key))absent.push(row);});
+ else for(const row of rows)if(closures.size(row[1].namespace,row[1].key)===undefined)absent.push(row);
+ const recovered=new Set<string>();let got=0;
+ await each(absent.slice(0,policy.maximumClosures),async([entry,{namespace,key}])=>{
+  const state=await obtainClosureLeafV1({directory:closures.directory,namespace,key,fetch:()=>readRemoteClosureLeafV1(location,key,inventory.get(entry)?.size),put:closures.put,signal,verify});
+  if(state==="refetched")got++;
+  if(state!=="missing")recovered.add(entry);
  });
- return{named:named.size,sent:0,fetched:got,missing:missing.sort((a,b)=>a.key<b.key?-1:1).slice(0,policy.maximumClosureReports)};
+ const ownersOf=closureOwnersOfV1(manifest.owners);
+ const missing=absent.filter(([entry])=>!recovered.has(entry)).sort(([a],[b])=>a<b?-1:1).slice(0,policy.maximumClosureReports).map(([,row])=>({key:row.key,namespace:row.namespace,projects:ownersOf(row.fragments)}));
+ return{named:named.size,sent:0,fetched:got,missing};
 }
 
 /** 🧠️ The neutral documents an earlier upload of this store made (original name to neutral name and size), valid only under the key of the root and the code that made them; empty where the file is missing, damaged or of another key. */
@@ -265,13 +343,17 @@ function writeNeutralMemoV1(file:string,key:string|undefined,known:NeutralKnownV
 }
 class NeutralStaleV1 extends Error{}
 
-/** ⬆️ Uploads the newest sealed generation of one store in its neutral form (root replaced by the root token, every document renamed after its new bytes), unless the cache already holds this state (same signature) or a head of another machine that is at least as good (it leaves its readers the same number of stale owners or fewer; a machine under the serving memory size must beat it by the shadow margin). Only the documents the cache misses are sent, so an interrupted upload resumes from what arrived. Documents go first, the action result that names them last. */
+/** ⬆️ Uploads the newest sealed generation of one store in its neutral form (root replaced by the root token, every document renamed after its new bytes), unless the cache already holds this state (same signature, with a verified retry able to complete its own partial head) or a head of another machine that is at least as good (it leaves its readers the same number of stale owners or fewer; a machine under the serving memory size must beat it by the shadow margin). Only the documents the cache misses are sent, so an interrupted upload resumes from what arrived. Documents go first, the action result that names them last. */
 export async function publishGenerationV1(location:Location&Readonly<{ifAbsent?:boolean}>):Promise<GenerationExchangeOutcomeV1>{
- const{content,instance,key,root,files,signal}=location,local=await localState(root,files);if(!local)return{status:"empty"};
+ const{content,instance,key,root,files,signal}=location;
+ signal?.throwIfAborted();
+ const local=await localState(root,files);if(!local)return{status:"empty"};
  const signature=generationSignatureV1(local.manifest),remote=await remoteNote(location,{implementation:local.manifest.implementation}).catch(()=>undefined),owners=Object.keys(local.manifest.owners).length;
- if(remote?.note?.signature===signature&&(local.restored||remote.note.stateMs>=Math.floor(local.modifiedMs)))return{status:"current",generation:local.generation,owners};
+ const stateMs=Math.floor(local.modifiedMs),current=remote?.note?.signature===signature&&(local.restored||remote.note.stateMs>=stateMs);
+ const completing=current&&!local.restored&&location.stale===0&&remote?.from===key&&remote.note?.stateMs===stateMs&&remote.note.stale!==0;
+ if(current&&!completing)return{status:"current",generation:local.generation,owners};
  const mine=Math.min(owners,location.stale??policy.unmeasuredStale)+(location.serving===false?policy.shadowMarginOwners:0);
- if(remote&&(location.ifAbsent||remote.note!==undefined&&remote.from!==location.key&&generationHeadScoreV1(remote.note,(location.now??Date.now)(),{implementation:local.manifest.implementation})<=mine))return{status:"remote-better",generation:local.generation,owners};
+ if(!completing&&remote&&(location.ifAbsent||remote.note!==undefined&&remote.from!==location.key&&generationHeadScoreV1(remote.note,(location.now??Date.now)(),{implementation:local.manifest.implementation})<=mine))return{status:"remote-better",generation:local.generation,owners};
  const paths=generationDocumentPathsV1(local.digest,local.manifest);if(paths.length>policy.maximumDocuments)return{status:"oversized",reason:String(paths.length)+" documents"};
  const snapshot=await location.cursors?.snapshotFor(local.generation).catch(()=>undefined),shipped=snapshot!==undefined&&snapshot.bytes.length<=policy.maximumSnapshotBytes?snapshot:undefined;
  const memoFile=root+".neutral.json",memoKey=neutralKeyV1(location.workspace);
@@ -292,12 +374,16 @@ export async function publishGenerationV1(location:Location&Readonly<{ifAbsent?:
  const manifestName=moved.manifestPath.slice(P.manifests.length+1,-5);let bytesSent=0,sent=0;
  await profilePhaseV1("graph.upload.write",()=>each(rows.filter(row=>missing.has(row.hash)),async row=>{const data=row.bytes??sending.get(row.hash)!;await content.write(instance,{hash:row.hash,size:row.size},data,signal);bytesSent+=row.size;sent++;}));
  writeNeutralMemoV1(memoFile,memoKey,moved.known);
- const entries=rows.map(row=>({path:row.path,hash:row.hash,size:row.size})),fragmentNames=[...new Set<string>([local.manifest.global,...Object.values(local.manifest.owners).map(owner=>owner.fragment)])].sort(),leaves=await profilePhaseV1("graph.upload.closures",()=>uploadClosuresV1(location,local.manifest,fragmentNames,entries)).catch((error):GenerationClosuresV1=>({named:0,sent:0,fetched:0,missing:[{key:"0".repeat(64),namespace:"build-input-closures",projects:[String(error?.message??error).slice(0,120)]}]})),naming=new Set(leaves.missing.flatMap(row=>row.projects)).size;
- const note:GenerationNoteV1={version:1,generation:local.generation,owners:Object.keys(local.manifest.owners).length,identity:local.manifest.identity,manifest:manifestName,signature,platform:location.platform,publishedMs:(location.now??Date.now)(),origin:location.origin??"local",stateMs:Math.floor(local.modifiedMs),implementation:local.manifest.implementation,...location.stale===undefined?{}:{stale:Math.min(owners,Math.max(0,Math.floor(location.stale))+naming)},...shipped?{snapshot:shipped.instance}:{},...location.scope===undefined||location.scope===policy.allScope?{}:{scope:location.scope}};
- const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:entries.map(row=>({path:row.path,digest:{hash:row.hash,size_bytes:row.size}})),stdout_raw:Buffer.from(JSON.stringify(note))});
- try{await content.writeActionResult(instance,key,result,signal);}catch(error){if((error as {code?:number})?.code===3)rmSync(root+".closures-sent.json",{force:true});throw error;}
+ const fragmentNames=[...new Set<string>([local.manifest.global,...Object.values(local.manifest.owners).map(owner=>owner.fragment)])].sort(),uploaded=await profilePhaseV1("graph.upload.closures",()=>uploadClosuresV1(location,local.manifest,fragmentNames)).catch((error):UploadedClosuresV1=>({staleOwners:undefined,leaves:[],shards:[],report:{named:0,sent:0,fetched:0,missing:[{key:"0".repeat(64),namespace:"build-input-closures",projects:[String(error?.message??error).slice(0,120)]}]}}));
+ signal?.throwIfAborted();
+ const stale=location.stale===undefined||uploaded.staleOwners===undefined?undefined:Math.min(owners,Math.max(0,Math.floor(location.stale))+uploaded.staleOwners);
+ if(completing&&stale!==0)return{status:"current",generation:local.generation,owners,closures:uploaded.report};
+ const note:GenerationNoteV1={version:1,generation:local.generation,owners,identity:local.manifest.identity,manifest:manifestName,signature,platform:location.platform,publishedMs:(location.now??Date.now)(),origin:location.origin??"local",stateMs,implementation:local.manifest.implementation,...stale===undefined?{}:{stale},...shipped?{snapshot:shipped.instance}:{},...location.scope===undefined||location.scope===policy.allScope?{}:{scope:location.scope}};
+ const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:rows.map(row=>({path:row.path,digest:{hash:row.hash,size_bytes:row.size}})),output_directories:uploaded.shards.map(row=>({path:row.path,tree_digest:{hash:row.hash,size_bytes:row.size}})),stdout_raw:Buffer.from(JSON.stringify(note))});
+ if(result.length>policy.maximumActionResultBytes)return{status:"oversized",reason:String(result.length)+" ActionResult bytes",closures:uploaded.report};
+ const repaired=await profilePhaseV1("graph.upload.head",()=>writeGenerationHeadV1(location,result,uploaded));
  const head=generationHeadEvidenceV1(note,key);
- return{status:"uploaded",generation:note.generation,owners:note.owners,documents:rows.length,sent,bytes:bytesSent,closures:leaves,...head?{head}:{}};
+ return{status:"uploaded",generation:note.generation,owners:note.owners,documents:rows.length,sent,bytes:bytesSent,closures:{...uploaded.report,sent:uploaded.report.sent+repaired},...head?{head}:{}};
 }
 
 /** ⬇️ Makes a store serve the generation another machine of the group uploaded: when the store is empty, or when it holds another state (other signature) that is older than the upload by more than `marginMilliseconds`. Every document is verified against its name, moved to the root of this machine and renamed after its new bytes, the manifest is renumbered above the local generation, and the pointer is written last. Rows keep the stamps of the producer: the fact check compares content when a stamp differs, so the load verifies the restored generation by content and recomputes only what differs. */
@@ -375,7 +461,7 @@ export async function restoreGenerationV1(location:Location&Readonly<{identity:s
  const local=await localState(root,files);
  const remote=expectedKey?await readHead({...location,key:expectedKey,keys:undefined}):await remoteNote(location,{implementation:location.implementation,nearest:true,...requireComplete?{prefer:head=>completeAheadHeadV1(location,local,head)}:{}});
  if(!remote)return{status:"absent"};
- const{note,entries}=remote;
+ const{note,entries,shards}=remote;
  if(expectedHead){
   const evidence=note&&generationHeadEvidenceV1(note,remote.from);
   if(!note||!evidence||!matchingHeadV1(location,note)||note.stale!==0||note.implementation!==expectedHead.implementation||evidence.origin!==expectedHead.origin||evidence.scope!==expectedHead.scope||evidence.generation!==expectedHead.generation||evidence.manifest!==expectedHead.manifest)return{status:"incomplete",reason:"expected generation head changed"};
@@ -383,9 +469,9 @@ export async function restoreGenerationV1(location:Location&Readonly<{identity:s
  if(!note||!matchingHeadV1(location,note)||requireComplete&&generationHeadEvidenceV1(note,remote.from)===undefined)return{status:"foreign"};
  if(local&&keepsLocalV1(local,note,remote.from,location))return{status:"local"};
  if(requireComplete&&(note.stale!==0||note.implementation!==location.implementation))return{status:"incomplete",reason:"complete compatible generation required"};
- const manifestPath=`${P.manifests}/${note.manifest}.json`,snapshotPath=note.snapshot===undefined?undefined:`s/${note.snapshot}.snapshot.br`,documents=entries.filter(entry=>entry.path!==snapshotPath&&!closureDocument.test(entry.path));
+ const manifestPath=`${P.manifests}/${note.manifest}.json`,snapshotPath=note.snapshot===undefined?undefined:`s/${note.snapshot}.snapshot.br`,documents=entries.filter(entry=>entry.path!==snapshotPath);
  const indexed=new Map(documents.map(entry=>[entry.path,entry])),sourceEntry=indexed.get(manifestPath);
- if(documents.length>policy.maximumDocuments+1||entries.length>policy.maximumDocuments+policy.maximumClosures+1||!sourceEntry||sourceEntry.size>P.maximumManifestBytes||indexed.size!==documents.length||documents.some(entry=>!document.test(entry.path)||entry.hash!==documentNameV1(entry.path)||!Number.isSafeInteger(entry.size)||entry.size<=0||entry.size>policy.maximumDocumentBytes))return{status:"incomplete",reason:"action result"};
+ if(entries.length>policy.maximumDocuments+1||!sourceEntry||sourceEntry.size>P.maximumManifestBytes||indexed.size!==documents.length||documents.some(entry=>!document.test(entry.path)||entry.hash!==documentNameV1(entry.path)||!Number.isSafeInteger(entry.size)||entry.size<=0||entry.size>policy.maximumDocumentBytes))return{status:"incomplete",reason:"action result"};
  const uniqueManifest=documents.filter(entry=>entry.path.startsWith(P.manifests+"/")).length===1;
  if(requireComplete&&!uniqueManifest)return{status:"incomplete",reason:"one generation manifest required"};
  const source=await readRestoreDocumentV1(location,sourceEntry);
@@ -394,10 +480,15 @@ export async function restoreGenerationV1(location:Location&Readonly<{identity:s
  if(requireComplete&&(sourceManifest.generation!==note.generation||sourceManifest.identity!==note.identity||sourceManifest.implementation!==note.implementation||Object.keys(sourceManifest.owners).length!==note.owners))return{status:"incomplete",reason:"generation manifest differs from its head"};
  const required=generationDocumentPathsV1(note.manifest,sourceManifest).slice(1);
  if(required.some(path=>!indexed.has(path))||requireComplete&&required.length+1!==documents.length)return{status:"incomplete",reason:"generation documents differ from their manifest"};
+ const inventory=await readClosureShardsV1(shards,row=>content.stream(instance,row,signal),signal).catch(()=>undefined);
+ signal?.throwIfAborted();
+ if(!inventory)return{status:"incomplete",reason:"required generation closure inventory unavailable"};
  const {renamed,bytes:stagedBytes}=await profilePhaseV1("graph.restore.documents",()=>stageRestoreDocumentsV1(location,required.map(path=>indexed.get(path)!)));
  const generation=Math.max(local?.generation??-1,note.generation)+1,{document:moved}=transformGenerationManifestV1(source.bytes,renamed,location.workspace,"expand",generation),manifest=readGenerationManifestV1(moved.bytes);
  if(moved.bytes.length>P.maximumManifestBytes)return{status:"incomplete",reason:"expanded generation manifest exceeds its finite limit"};
- const closures=await profilePhaseV1("graph.restore.closures",()=>restoreClosuresV1(location,manifest,requireComplete)).catch(()=>undefined);
+ let closures;
+ try{closures=await profilePhaseV1("graph.restore.closures",()=>restoreClosuresV1(location,manifest,inventory,requireComplete,note.stale===0));}
+ catch(error){signal?.throwIfAborted();return{status:"incomplete",reason:String((error as Error).message)};}
  signal?.throwIfAborted();
  if(requireComplete&&(!closures||closures.missing.length>0))return{status:"incomplete",reason:"required generation closures unavailable",closures};
  const naming=new Set((closures?.missing??[]).flatMap(row=>row.projects)).size,bytes=stagedBytes+moved.bytes.length,manifestName=documentNameV1(moved.path);
@@ -413,56 +504,95 @@ export async function restoreGenerationV1(location:Location&Readonly<{identity:s
   if(data&&sha(data)===snapshotEntry.hash)await location.cursors.install(manifest.generation,{instance:note.snapshot!,bytes:data});
  }catch{}
  const head=uniqueManifest&&sourceManifest.generation===note.generation?generationHeadEvidenceV1(note,remote.from):undefined;
- return{status:"restored",generation:manifest.generation,owners:note.owners,documents:required.length+1,bytes,ageSeconds:Math.max(0,Math.round(((location.now??Date.now)()-note.stateMs)/1000)),...note.stale===undefined&&naming===0?{}:{stale:Math.min(note.owners,Math.max(note.stale??0,naming))},...closures?{closures}:{},...head?{head}:{}};
+ return{status:"restored",generation:manifest.generation,localManifest:manifestName,owners:note.owners,documents:required.length+1,bytes,ageSeconds:Math.max(0,Math.round(((location.now??Date.now)()-note.stateMs)/1000)),...note.stale===undefined&&naming===0?{}:{stale:Math.min(note.owners,Math.max(note.stale??0,naming))},...closures?{closures}:{},...head?{head}:{}};
 }
 
 /** 📏️ Reads a regular local closure within its caller's byte limit even if the directory entry changes after the size check. */
-async function readBoundedClosureLeafV1(path:string,maximumBytes:number):Promise<Uint8Array|undefined>{
+async function withBoundedClosureLeafV1<T>(path:string,maximumBytes:number,read:(file:FileHandle,size:number)=>Promise<T|undefined>):Promise<T|undefined>{
  const file=await open(path,constants.O_RDONLY|(constants.O_NONBLOCK??0));
  try{
   const status=await file.stat();
   if(!status.isFile()||status.size<1||status.size>maximumBytes)return undefined;
-  const bytes=Buffer.allocUnsafe(status.size);
+  const result=await read(file,status.size);
+  if(result===undefined)return undefined;
+  const{bytesRead}=await file.read(Buffer.allocUnsafe(1),0,1,null);
+  return bytesRead===0?result:undefined;
+ }finally{await file.close();}
+}
+
+async function readBoundedClosureLeafV1(path:string,maximumBytes:number):Promise<Uint8Array|undefined>{
+ return withBoundedClosureLeafV1(path,maximumBytes,async(file,size)=>{
+  const bytes=Buffer.allocUnsafe(size);
   let offset=0;
   while(offset<bytes.length){
    const{bytesRead}=await file.read(bytes,offset,bytes.length-offset,null);
    if(bytesRead===0)return undefined;
    offset+=bytesRead;
   }
-  const{bytesRead}=await file.read(Buffer.alloc(1),0,1,null);
-  return bytesRead===0?bytes:undefined;
- }finally{await file.close();}
+  return bytes;
+ });
+}
+
+async function verifyBoundedClosureLeafV1(path:string,key:string,signal?:AbortSignal):Promise<boolean>{
+ const digest=await withBoundedClosureLeafV1(path,CLOSURE_POLICY_V1.maximumLeafBytes,async(file,size)=>{
+  const hash=createHash("sha256"),chunk=Buffer.allocUnsafe(Math.min(size,64*1024));
+  for(let remaining=size;remaining>0;){
+   signal?.throwIfAborted();
+   const{bytesRead}=await file.read(chunk,0,Math.min(remaining,chunk.length),null);
+   if(bytesRead===0)return undefined;
+   hash.update(chunk.subarray(0,bytesRead));
+   remaining-=bytesRead;
+  }
+  return hash.digest("hex");
+ });
+ return digest===key;
 }
 
 /** 🗄️ The closure leaves of the graph store of a workspace (`<graph partition>/m/<namespace>`), read with the storage budget of the workspace; `undefined` stays out of the exchange when the store cannot be located. */
 export function workspaceClosurePortV1(workspace:string):ClosurePortV1|undefined{
  try{
   const base=join(repositoryCacheBudgetV1(workspace).partitions.graph.directory,"m"),directory=(namespace:ClosureNamespaceV1)=>join(base,namespace);
-  return{directory,size:(namespace,key)=>{try{const row=statSync(join(directory(namespace),key+".json"));return row.isFile()?row.size:undefined;}catch{return undefined;}},read:async(namespace,key,maximumBytes)=>{try{const path=join(directory(namespace),key+".json");return maximumBytes===undefined?readFileSync(path):await readBoundedClosureLeafV1(path,maximumBytes);}catch{return undefined;}},put:closureLeafPutterV1(workspace)};
+  const path=(namespace:ClosureNamespaceV1,key:string)=>join(directory(namespace),key+".json");
+  return{
+   directory,
+   size:(namespace,key)=>{try{const row=statSync(path(namespace,key));return row.isFile()?row.size:undefined;}catch{return undefined;}},
+   read:async(namespace,key,maximumBytes)=>{try{return maximumBytes===undefined?readFileSync(path(namespace,key)):await readBoundedClosureLeafV1(path(namespace,key),maximumBytes);}catch{return undefined;}},
+   verify:async(namespace,key,signal)=>{
+    signal?.throwIfAborted();
+    if((namespace!=="build-input-closures"&&namespace!=="build-lock-closures")||!/^[0-9a-f]{64}$/u.test(key))return undefined;
+    try{
+     return await verifyBoundedClosureLeafV1(path(namespace,key),key,signal);
+    }catch(error){return (error as NodeJS.ErrnoException).code==="ENOENT"?false:undefined;}
+    finally{signal?.throwIfAborted();}
+   },
+   put:closureLeafPutterV1(workspace)
+  };
  }catch{return undefined;}
 }
 
-/** 🌐️ The exchange of this process: `undefined` while no remote cache endpoint is configured. A failure disables it for the rest of the process, so a dead cache server costs one short probe instead of a timeout per load. */
-export function remoteGenerationExchangeV1(input:Readonly<{environment:Readonly<Record<string,string|undefined>>;workspace:string;identity():Promise<string>;platform?:string;cursors?:GenerationCursorsV1;origins?:Readonly<{self:string;all:readonly string[]}>;serving?:boolean;closures?:ClosurePortV1;scope?:string}>):GenerationExchangeV1|undefined{
+/** 🌐️ The exchange of this process: `undefined` while no remote cache endpoint is configured. A failed exchange pauses later requests for the configured retry interval, so a recovering cache remains usable in a long-lived process. */
+export function remoteGenerationExchangeV1(input:Readonly<{environment:Readonly<Record<string,string|undefined>>;workspace:string;identity():Promise<string>;platform?:string;cursors?:GenerationCursorsV1;origins?:Readonly<{self:string;all:readonly string[]}>;serving?:boolean;closures?:ClosurePortV1;scope?:string;now?:()=>number}>):GenerationExchangeV1|undefined{
  let resolved;try{resolved=resolveRemoteCacheV1(input.environment,{root:input.workspace});}catch{return undefined;}
  if(!resolved)return undefined;
  const contract=resolved.contract,signedFetch=remoteCacheFetchV1(resolved.environment,{root:input.workspace});
  const platform=input.platform??`${process.platform}-${process.arch}`.toLowerCase(),token=resolved.token,make=(probe:boolean)=>httpRemoteExecutionContentV1({endpoint:contract.endpoint,token,fetch:signedFetch,timeoutSeconds:probe?policy.probeTimeoutSeconds:contract.timeoutSeconds,retries:probe?policy.probeRetries:contract.retries});
  const origins=input.origins??fleetOriginsV1(input.workspace),serving=input.serving??totalmem()/1048576>=policy.servingTotalMegabytes,scope=input.scope??policy.allScope,heads=(identity:string)=>({key:generationExchangeKeyV1(identity,platform,origins.self,scope),keys:origins.all.map(origin=>generationExchangeKeyV1(identity,platform,origin,scope)),origin:origins.self,scope});
- const closures=input.closures??workspaceClosurePortV1(input.workspace);let down=false;
+ const closures=input.closures??workspaceClosurePortV1(input.workspace),now=input.now??Date.now;
+ let retryAt=-Infinity;
+ const waiting=()=>now()<retryAt;
  const guard=async(run:()=>Promise<GenerationExchangeOutcomeV1>,signal?:AbortSignal):Promise<GenerationExchangeOutcomeV1>=>{
-  if(down)return{status:"failed",reason:"the remote cache was unreachable earlier in this process"};
-  try{return await run();}catch(error){if(!signal?.aborted&&!(error instanceof RestoreDocumentErrorV1))down=true;return{status:"failed",reason:String((error as Error)?.message??error).slice(0,200)};}
+  if(waiting())return{status:"failed",reason:"the remote cache retry is deferred"};
+  try{return await run();}catch(error){if(!signal?.aborted&&!(error instanceof RestoreDocumentErrorV1))retryAt=now()+policy.failureRetryMilliseconds;return{status:"failed",reason:String((error as Error)?.message??error).slice(0,200)};}
  };
  const exchange:GenerationExchangeV1={
   upload:remoteCacheEffectiveUploadV1(contract),
   restore:({root,fs,signal,implementation,requireComplete,expectedHead})=>guard(async()=>{const identity=await input.identity();return restoreGenerationV1({content:make(false),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors,closures,requireComplete,expectedHead});},signal),
-  look:async({root,fs,signal,implementation,requireComplete})=>{if(down)return{ahead:false,held:0,state:"none"};try{const identity=await input.identity();return await remoteGenerationLookV1({content:make(true),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors,requireComplete});}catch{return{ahead:false,held:0,state:"none"};}},
-  ahead:async({root,fs,signal,implementation})=>{if(down)return false;try{const identity=await input.identity();return await remoteGenerationAheadV1({content:make(true),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors});}catch{return false;}},
- publish:({root,fs,signal,ifAbsent,stale})=>guard(async()=>publishGenerationV1({content:make(ifAbsent===true),instance:contract.instance,...heads(await input.identity()),root,workspace:input.workspace,platform,files:fs,signal,ifAbsent,stale,serving,cursors:input.cursors,closures})),
+  look:async({root,fs,signal,implementation,requireComplete})=>{if(waiting())return{ahead:false,held:0,state:"none"};try{const identity=await input.identity();return await remoteGenerationLookV1({content:make(true),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors,requireComplete});}catch{return{ahead:false,held:0,state:"none"};}},
+  ahead:async({root,fs,signal,implementation})=>{if(waiting())return false;try{const identity=await input.identity();return await remoteGenerationAheadV1({content:make(true),instance:contract.instance,...heads(identity),identity,root,workspace:input.workspace,platform,files:fs,signal,implementation,cursors:input.cursors});}catch{return false;}},
+ publish:({root,fs,signal,ifAbsent,stale})=>guard(async()=>publishGenerationV1({content:make(ifAbsent===true),instance:contract.instance,...heads(await input.identity()),root,workspace:input.workspace,platform,files:fs,signal,ifAbsent,stale,serving,cursors:input.cursors,closures}),signal),
   leaf:async({namespace,key,signal})=>{
-   if(down)return undefined;
-   try{const data=await make(true).read(contract.instance,{hash:key,size:0},signal);return data&&data.length>0&&data.length<=CLOSURE_POLICY_V1.maximumLeafBytes&&sha(data)===key?data:undefined;}catch{return undefined;}
+   if(waiting())return undefined;
+   try{const data=await readRemoteClosureLeafV1({content:make(true),instance:contract.instance,signal},key);return data&&data.length>0&&sha(data)===key?data:undefined;}catch{return undefined;}
   },
  };
  return Object.freeze(exchange);

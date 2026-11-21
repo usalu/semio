@@ -1,4 +1,6 @@
 {
+  "remainingCloseCopyBytes": 26704,
+  "lastAssemblyPhase": 26,
   "cases": [
     {
       "cancelAt": "final-allocation-before-service-initialization",

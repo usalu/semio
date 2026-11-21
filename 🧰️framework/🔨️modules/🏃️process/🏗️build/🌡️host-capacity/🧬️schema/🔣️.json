@@ -739,6 +739,34 @@
         }
       }
     },
+    "RebuildRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "pid", "start", "askedAtMs", "scope", "holderPid", "holderStart", "holderBootAtMs", "holderAdmittedAtMs"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{8,32}$"},
+        "pid": {"type": "integer", "minimum": 1},
+        "start": {"type": "string", "minLength": 1, "maxLength": 128},
+        "askedAtMs": {"type": "integer", "minimum": 0},
+        "scope": {"type": "string", "pattern": "^[A-Za-z0-9_-]{8,32}$"},
+        "holderPid": {"type": "integer", "minimum": 1},
+        "holderStart": {"type": "string", "minLength": 1, "maxLength": 128},
+        "holderBootAtMs": {"type": "integer", "minimum": 0},
+        "holderAdmittedAtMs": {"type": "integer", "minimum": 0}
+      }
+    },
+    "RebuildRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["request", "minimum", "total", "floor", "capacity"],
+      "properties": {
+        "request": {"$ref": "#/definitions/RebuildRequest"},
+        "minimum": {"type": "integer", "minimum": 1},
+        "total": {"type": "integer", "minimum": 1},
+        "floor": {"type": "integer", "minimum": 0},
+        "capacity": {"type": "integer", "minimum": 0}
+      }
+    },
     "Waiter": {
       "type": "object",
       "additionalProperties": false,
@@ -773,6 +801,10 @@
         },
         "grow": {
           "type": "boolean"
+        },
+        "rebuild": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,32}$"
         }
       }
     },
@@ -856,6 +888,14 @@
         },
         "rampSlot": {
           "type": "boolean"
+        },
+        "rebuildScope": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,32}$"
+        },
+        "rebuildBookedAtMs": {
+          "type": "integer",
+          "minimum": 0
         },
         "phase": {
           "$ref": "#/definitions/Phase"

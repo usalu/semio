@@ -98,6 +98,156 @@
       "mutations": 1
     },
     {
+      "query": "CREATE (n:Piece) SET n.name = 'added', n.x = 15, n.y = 25 RETURN n.name, n.x, n.y",
+      "oracle": {
+        "mutate": [
+          "INSERT INTO nodes (id, kind, name) VALUES ('n-2', 'Piece', 'n')",
+          "UPDATE nodes SET name = 'added' WHERE id = 'n-2'",
+          "UPDATE nodes SET x = 15 WHERE id = 'n-2'",
+          "UPDATE nodes SET y = 25 WHERE id = 'n-2'"
+        ],
+        "select": "SELECT name, x, y FROM nodes WHERE id = 'n-2'"
+      },
+      "columns": ["n.name", "n.x", "n.y"],
+      "rows": [["added", 15, 25]],
+      "mutations": 4,
+      "postNodeCount": 3
+    },
+    {
+      "query": "MATCH (a:Piece) SET a.label = 'selected' RETURN a.id, a.label",
+      "oracle": {
+        "mutate": "UPDATE nodes SET label = 'selected' WHERE kind = 'Piece'",
+        "select": "SELECT id, label FROM nodes WHERE kind = 'Piece' ORDER BY id"
+      },
+      "columns": ["a.id", "a.label"],
+      "rows": [["child", "selected"], ["root", "selected"]],
+      "mutations": 2
+    },
+    {
+      "query": "MATCH (a:Piece) WHERE a.id = 'root' MATCH (a:Piece)-[r:Connection]->(b:Piece) SET r.u = 5 RETURN a.name, b.name, r.u",
+      "oracle": {
+        "mutate": "UPDATE edges SET u = 5 WHERE source = 'root' AND kind = 'Connection'",
+        "select": "SELECT a.name, b.name, r.u FROM nodes a JOIN edges r ON r.source = a.id JOIN nodes b ON b.id = r.target WHERE a.id = 'root'"
+      },
+      "columns": ["a.name", "b.name", "r.u"],
+      "rows": [["core", "capsule", 5]],
+      "mutations": 1
+    },
+    {
+      "query": "MATCH (a:Piece) WHERE a.id = 'missing' MATCH (b:Piece) CREATE (n:Piece) RETURN n.id",
+      "oracle": { "select": "SELECT b.id FROM nodes a CROSS JOIN nodes b WHERE a.id = 'missing'" },
+      "columns": ["n.id"],
+      "rows": [],
+      "mutations": 0,
+      "postNodeCount": 2
+    },
+    {
+      "query": "MATCH (a:Piece) WHERE a.id = 'root' CREATE (a:Piece)-[r:Connection]->(b:Piece) RETURN a.id, b.id, r.kind",
+      "oracle": {
+        "mutate": [
+          "INSERT INTO nodes (id, kind, name) VALUES ('b-2', 'Piece', 'b')",
+          "INSERT INTO edges (id, kind, source, target) VALUES ('e-1', 'Connection', 'root', 'b-2')"
+        ],
+        "select": "SELECT source, target, kind FROM edges WHERE id = 'e-1'"
+      },
+      "columns": ["a.id", "b.id", "r.kind"],
+      "rows": [["root", "b-2", "Connection"]],
+      "mutations": 2,
+      "postNodeCount": 3,
+      "postEdgeCount": 2
+    },
+    {
+      "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) DELETE r RETURN a.name, b.name",
+      "oracle": {
+        "mutate": "DELETE FROM edges WHERE kind = 'Connection'",
+        "select": "SELECT a.name, b.name FROM nodes a, nodes b WHERE a.id = 'root' AND b.id = 'child'"
+      },
+      "columns": ["a.name", "b.name"],
+      "rows": [["core", "capsule"]],
+      "mutations": 1,
+      "postNodeCount": 2,
+      "postEdgeCount": 0
+    },
+    {
+      "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) DELETE a, b, r",
+      "oracle": {
+        "cascade": "DELETE FROM edges WHERE source IN ('root', 'child') OR target IN ('root', 'child')",
+        "mutate": "DELETE FROM nodes WHERE id IN ('root', 'child')"
+      },
+      "columns": [],
+      "rows": [],
+      "mutations": 2,
+      "postNodeCount": 0,
+      "postEdgeCount": 0
+    },
+    {
+      "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) DELETE a RETURN b.name",
+      "portlessEndpoints": true,
+      "oracle": {
+        "cascade": "DELETE FROM edges WHERE source = 'root' OR target = 'root'",
+        "mutate": "DELETE FROM nodes WHERE id = 'root'",
+        "select": "SELECT name FROM nodes WHERE id = 'child'"
+      },
+      "columns": ["b.name"],
+      "rows": [["capsule"]],
+      "mutations": 1,
+      "postNodeCount": 1,
+      "postEdgeCount": 0
+    },
+    {
+      "query": "MATCH (a:Piece) WHERE a.id = 'n-2' DELETE a CREATE (n:Piece) RETURN a.id, n.id",
+      "rootId": "n-2",
+      "oracle": {
+        "cascade": "DELETE FROM edges WHERE source = 'n-2' OR target = 'n-2'",
+        "mutate": [
+          "DELETE FROM nodes WHERE id = 'n-2'",
+          "INSERT INTO nodes (id, kind, name) VALUES ('n-3', 'Piece', 'n')"
+        ],
+        "select": "SELECT (SELECT id FROM nodes WHERE id = 'n-2'), id FROM nodes WHERE id = 'n-3'"
+      },
+      "columns": ["a.id", "n.id"],
+      "rows": [[null, "n-3"]],
+      "mutations": 2,
+      "postNodeCount": 2,
+      "postEdgeCount": 0
+    },
+    {
+      "query": "MERGE (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, r.kind, b.name",
+      "oracle": {
+        "select": "SELECT a.name, r.kind, b.name FROM nodes a JOIN edges r ON r.source = a.id JOIN nodes b ON b.id = r.target WHERE r.kind = 'Connection'"
+      },
+      "columns": ["a.name", "r.kind", "b.name"],
+      "rows": [["core", "Connection", "capsule"]],
+      "mutations": 0
+    },
+    {
+      "query": "MATCH (a:Piece) WHERE a.id = 'child' MERGE (a:Piece)-[r:Connection]->(b:Piece) RETURN a.id, r.id, b.id",
+      "oracle": {
+        "mutate": [
+          "INSERT INTO nodes (id, kind, name) VALUES ('b-2', 'Piece', 'b')",
+          "INSERT INTO edges (id, kind, source, target) VALUES ('e-1', 'Connection', 'child', 'b-2')"
+        ],
+        "select": "SELECT source, id, target FROM edges WHERE id = 'e-1'"
+      },
+      "columns": ["a.id", "r.id", "b.id"],
+      "rows": [["child", "e-1", "b-2"]],
+      "mutations": 2,
+      "postNodeCount": 3,
+      "postEdgeCount": 2
+    },
+    {
+      "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN r",
+      "oracle": {
+        "nodes": "SELECT id FROM nodes WHERE id IN (SELECT source FROM edges WHERE kind = 'Connection' UNION SELECT target FROM edges WHERE kind = 'Connection') ORDER BY id",
+        "edges": "SELECT id FROM edges WHERE kind = 'Connection' ORDER BY id"
+      },
+      "columns": ["r"],
+      "rows": [],
+      "nodeIds": ["child", "root"],
+      "edgeIds": ["e1"],
+      "mutations": 0
+    },
+    {
       "query": "MATCH (a:Piece) WHERE a.name = 'capsule' DELETE a",
       "oracle": {"cascade": "DELETE FROM edges WHERE source = 'child' OR target = 'child'", "mutate": "DELETE FROM nodes WHERE name = 'capsule'"},
       "columns": [], "rows": [], "mutations": 1, "postNodeCount": 1, "postEdgeCount": 0
@@ -160,6 +310,18 @@
         "e1"
       ],
       "mutations": 0
+    }
+  ],
+  "invalidMutations": [
+    {
+      "query": "MATCH (a:Piece) WHERE a.id = 'root' SET a.name = 'temporary', a.unknown = 'invalid' RETURN a.name",
+      "errorContains": "unknown property",
+      "oracle": {
+        "accepted": "UPDATE nodes SET name = 'temporary' WHERE id = 'root'",
+        "refused": "UPDATE nodes SET unknown = 'invalid' WHERE id = 'root'",
+        "select": "SELECT name FROM nodes WHERE id = 'root'"
+      },
+      "rows": [["core"]]
     }
   ],
   "resultOwnership": {

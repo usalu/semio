@@ -1,0 +1,187 @@
+{
+  "request": {
+    "loan": {
+      "operationId": "fedcba9876543210",
+      "generation": "8000000000000007",
+      "instanceId": 9,
+      "documentId": "doc:raw-picker",
+      "baseRevision": "0123456789abcdef0123456789abcdef0123456789abcdeffedcba9876543211"
+    },
+    "kind": 131,
+    "maximumFileBytes": 24546
+  },
+  "seq": "101",
+  "cases": [
+    {
+      "name": "registered PNG",
+      "trigger": "normal",
+      "expected": "complete",
+      "phase": [
+        "begin",
+        "page#0",
+        "page#1",
+        "complete"
+      ],
+      "reads": [
+        4096,
+        100
+      ],
+      "progress": [
+        4096,
+        4196
+      ]
+    },
+    {
+      "name": "same fixed page on refusal",
+      "trigger": "retry-page",
+      "expected": "complete",
+      "phase": [
+        "begin",
+        "page#0",
+        "page#0",
+        "page#1",
+        "complete"
+      ],
+      "reads": [
+        4096,
+        100
+      ],
+      "progress": [
+        4096,
+        4196
+      ]
+    },
+    {
+      "name": "preflight refusal preserves the same staged page",
+      "trigger": "retry-backpressure",
+      "expected": "complete",
+      "phase": ["begin", "page#0", "page#0", "page#1", "complete"],
+      "reads": [4096, 100],
+      "progress": [4096, 4196]
+    },
+    {
+      "name": "retained page waits for funded copy",
+      "trigger": "pending-page",
+      "expected": "complete",
+      "phase": [
+        "begin",
+        "page#0",
+        "poll:page#0",
+        "page#1",
+        "complete"
+      ],
+      "reads": [
+        4096,
+        100
+      ],
+      "progress": [
+        4096,
+        4196
+      ]
+    },
+    {
+      "name": "complete waits for format publication",
+      "trigger": "pending-complete",
+      "expected": "complete",
+      "phase": ["begin", "page#0", "page#1", "complete", "poll:complete"],
+      "reads": [4096, 100],
+      "progress": [4096, 4196]
+    },
+    {
+      "name": "unadmitted control is reoffered",
+      "trigger": "retry-control",
+      "expected": "complete",
+      "phase": ["begin", "begin", "page#0", "page#1", "complete"],
+      "reads": [4096, 100],
+      "progress": [4096, 4196]
+    },
+    {
+      "name": "already-queued control is not offered twice",
+      "trigger": "control-deferred",
+      "expected": "complete",
+      "phase": [
+        "begin",
+        "poll:begin",
+        "page#0",
+        "page#1",
+        "complete"
+      ],
+      "reads": [
+        4096,
+        100
+      ],
+      "progress": [
+        4096,
+        4196
+      ]
+    },
+    {
+      "name": "foreign full revision earns no progress",
+      "trigger": "wrong-ack",
+      "expected": "original-media.foreign-ack",
+      "phase": [
+        "begin",
+        "page#0",
+        "cancel"
+      ],
+      "reads": [
+        4096
+      ],
+      "progress": []
+    },
+    {
+      "name": "guest rejects changed revision before tail",
+      "trigger": "guest-stale",
+      "expected": "original-media.stale",
+      "phase": [
+        "begin",
+        "page#0",
+        "page#1",
+        "cancel"
+      ],
+      "reads": [
+        4096,
+        100
+      ],
+      "progress": [
+        4096
+      ]
+    },
+    {
+      "name": "stale effect while reading",
+      "trigger": "stale-read",
+      "expected": "cancelled",
+      "phase": [
+        "begin",
+        "cancel"
+      ],
+      "reads": [
+        4096
+      ],
+      "progress": []
+    },
+    {
+      "name": "abort while reading",
+      "trigger": "abort-read",
+      "expected": "cancelled",
+      "phase": [
+        "begin",
+        "cancel"
+      ],
+      "reads": [
+        4096
+      ],
+      "progress": []
+    },
+    {
+      "name": "dismissed chooser retires the issued intent",
+      "trigger": "cancel-picker",
+      "expected": "cancelled",
+      "phase": [
+        "cancel"
+      ],
+      "reads": [],
+      "progress": []
+    }
+  ]
+}

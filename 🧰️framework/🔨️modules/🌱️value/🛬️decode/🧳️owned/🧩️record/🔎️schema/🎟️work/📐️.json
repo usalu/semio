@@ -8,6 +8,7 @@
     "depth": 64,
     "maximumTurns": 100000
   },
+  "metadata": {"items": 3, "work": 3},
   "cases": [
     {
       "key": "alpha",

@@ -10,7 +10,7 @@ import { parseJackDiff } from "../../🔺️diff/🟦️.ts";
 import { parseJackJsonValue } from "../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
-const json = (url: URL): unknown => JSON.parse(readFileSync(url, "utf8"));
+const json = (source: URL | string): unknown => JSON.parse(readFileSync(source, "utf8"));
 
 /** 🧬️ Reads one JSON Schema document — the same `JSON.parse`, typed as what Ajv actually takes. */
 const schema = (url: URL): AnySchema => JSON.parse(readFileSync(url, "utf8"));
@@ -56,11 +56,24 @@ export function testJackDocumentContract(): void {
   const snapshotFixtures = readdirSync(fixtureRoot, { recursive: true })
     .map((path) => String(path).replaceAll("\\", "/"))
     .filter((path) => path.includes("/📸️snapshot/") && path.endsWith("/🔣️.json"));
-  assert.equal(snapshotFixtures.length, 2);
+  assert(snapshotFixtures.length >= 2);
+  const fixturePhases = new Map<string, Set<string>>();
   for (const path of snapshotFixtures) {
-    const parsed = parseJackSnapshot(parseJackJsonValue(json(new URL(join(fixtureRoot, path), import.meta.url))));
+    const [test, relative] = path.split("/📸️snapshot/");
+    assert(test && relative, path);
+    const phase = relative.split("/", 1)[0];
+    assert(phase, path);
+    const phases = fixturePhases.get(test) ?? new Set<string>();
+    phases.add(phase);
+    fixturePhases.set(test, phases);
+    const value = json(join(fixtureRoot, path));
+    assert(validateSnapshot(value), JSON.stringify(validateSnapshot.errors));
+    const parsed = parseJackSnapshot(parseJackJsonValue(value));
     assert.equal(parsed.content.target.dialect.artifactKind, cases.expectedSelectedKind, path);
     assert.equal(parsed.content.target.artifactId, parsed.content.childId, path);
+  }
+  for (const [test, phases] of fixturePhases) {
+    assert.deepEqual(phases, new Set(["⬅️before", "➡️after"]), test);
   }
   assert.equal(parsedDiff.content, null);
   for (const invalid of cases.invalidDocuments) {

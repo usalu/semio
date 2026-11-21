@@ -15,8 +15,10 @@ type GraphResponseV1={status:number;response:Response;signal:AbortSignal};
 /** 🎟️ The answer to a claim. */
 export type GraphFleetClaimV1={state:"granted";untilMilliseconds:number}|{state:"held";by:string;untilMilliseconds:number;expectedMilliseconds?:number}|{state:"stored"}|{state:"full"}|{state:"unavailable";fault:GraphFleetFaultV1};
 
+/** ⏱️ The request class and effective budget of a timed-out required upload. */
+export type GraphPutTimeoutV1=Readonly<{request:"cas-put"|"action-result-put";deadlineMilliseconds:number}>;
 /** 📥️ What a write ended with: stored, or the refusal with its true reason (the status and first words of the answer of the cache, no answer in time, no connection). */
-export type GraphPutV1=Readonly<{stored:true}>|Readonly<{stored:false;refusal:GraphRefusalV1}>;
+export type GraphPutV1=Readonly<{stored:true}>|Readonly<{stored:false;refusal:GraphRefusalV1;timeout?:GraphPutTimeoutV1}>;
 
 /** 📡️ The fleet cache as the graph exchange uses it. Every call is bounded by a timeout and never throws; a fault is an answer and is remembered beside the cache so the next processes skip the tier for a while. */
 export interface GraphFleetClientV1{
@@ -80,9 +82,12 @@ export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Rea
   try{const response=await request(url,{method,headers:headers(init.headers),signal:requestSignal,...(init.body===undefined?{}:{body:init.body})});return{status:response.status,response,signal:requestSignal};}
   catch(error){signal?.throwIfAborted();return{error:(error as {name?:string})?.name==="TimeoutError"||(error as {name?:string})?.name==="AbortError"?"timeout":"network"};}
  }
- async function put(url:string,timeout:number,init:{body:BodyInit;headers:Record<string,string>}):Promise<GraphPutV1>{
-  const answer=await attempt("PUT",url,timeout,init);
-  if("error" in answer){mark("down");return{stored:false,refusal:graphRefusalOfV1(answer.error)};}
+ async function put(request:GraphPutTimeoutV1["request"],url:string,deadlineMilliseconds:number,init:{body:BodyInit;headers:Record<string,string>}):Promise<GraphPutV1>{
+  const answer=await attempt("PUT",url,deadlineMilliseconds,init);
+  if("error" in answer){
+   mark("down");
+   return{stored:false,refusal:graphRefusalOfV1(answer.error),...(answer.error==="timeout"?{timeout:{request,deadlineMilliseconds}}:{})};
+  }
   if(answer.status===200)return{stored:true};
   let body="";try{body=await answer.response.text();}catch{}
   return{stored:false,refusal:graphRefusalOfV1(answer.status,body)};
@@ -117,16 +122,16 @@ export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Rea
   },
   async hasBlob(hash){
    if(hash===EMPTY)return true;
-   const answer=await call("HEAD",`${base}/cas/${hash}`,t.headMilliseconds);
-   if(typeof answer==="string")return undefined;
+   const answer=await attempt("HEAD",`${base}/cas/${hash}`,t.headMilliseconds,{});
+   if("error" in answer)return undefined;
    return answer.status===200?true:answer.status===404?false:undefined;
   },
   async putBlob(hash,bytes){
    if(hash===EMPTY)return{stored:true};
-   return put(`${base}/cas/${hash}`,blobTimeout(bytes.length),{body:body(bytes),headers:{"content-type":"application/octet-stream"}});
+   return put("cas-put",`${base}/cas/${hash}`,blobTimeout(bytes.length),{body:body(bytes),headers:{"content-type":"application/octet-stream"}});
   },
   async putResult(key,bytes,slot,expect){
-   return put(`${base}/ac/${key}`,t.claimMilliseconds*4,{body:body(bytes),headers:{"content-type":"application/octet-stream",[policy.slotHeader]:slot,...(expect===undefined?{}:{"x-semio-expect":expect})}});
+   return put("action-result-put",`${base}/ac/${key}`,t.claimMilliseconds*4,{body:body(bytes),headers:{"content-type":"application/octet-stream",[policy.slotHeader]:slot,...(expect===undefined?{}:{"x-semio-expect":expect})}});
   },
   async claim(key,owner,ttlMilliseconds,expectedMilliseconds){
    const answer=await call("POST",`${base}/claim/ac/${key}`,t.claimMilliseconds,{body:JSON.stringify({owner,ttlMilliseconds,...(expectedMilliseconds===undefined?{}:{expectedMilliseconds})})});

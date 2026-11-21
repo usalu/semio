@@ -1,0 +1,340 @@
+{
+  "mesh": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ]
+    ],
+    "surface": [
+      {
+        "kind": "vertexNormal",
+        "index": 0,
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 1,
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 2,
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 0,
+        "uv": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 1,
+        "uv": [
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 2,
+        "uv": [
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "smoothFace",
+        "index": 0
+      },
+      {
+        "kind": "seamEdge",
+        "index": 0
+      }
+    ],
+    "attributes": {
+      "fixtureId": {
+        "domain": "vertex",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          10,
+          20,
+          30
+        ]
+      },
+      "faceName": {
+        "domain": "face",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          "panel"
+        ]
+      },
+      "surfaceMaterial": {
+        "domain": "face",
+        "semantic": "material",
+        "interpolation": "nearest",
+        "values": [
+          "leftPanel"
+        ]
+      }
+    },
+    "textures": {
+      "sharedImage": {
+        "mime": "image/png",
+        "bytes": [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 104, 104, 104, 248, 15, 0, 5, 132, 2, 128, 140, 205, 102, 38, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]
+      },
+      "leftImage": {
+        "mime": "image/png",
+        "bytes": [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 248, 239, 192, 240, 31, 0, 5, 192, 2, 63, 42, 142, 184, 141, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]
+      }
+    },
+    "materials": {
+      "sharedPanel": {
+        "baseColor": [
+          0.5,
+          0.5,
+          0.5,
+          1
+        ],
+        "baseColorTexture": "sharedImage",
+        "textureSamplers": {
+          "baseColorTexture": {
+            "wrapS": 10497,
+            "wrapT": 33071
+          }
+        }
+      },
+      "leftPanel": {
+        "baseColor": [
+          1,
+          0.25,
+          0,
+          1
+        ],
+        "baseColorTexture": "leftImage"
+      }
+    }
+  },
+  "other": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2
+      ],
+      [
+        2,
+        0,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ]
+    ],
+    "surface": [
+      {
+        "kind": "vertexNormal",
+        "index": 0,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 1,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 2,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 0,
+        "uv": [
+          0.25,
+          0.25
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 1,
+        "uv": [
+          0.25,
+          0.75
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 2,
+        "uv": [
+          0.75,
+          0.25
+        ]
+      }
+    ],
+    "attributes": {
+      "fixtureId": {
+        "domain": "vertex",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          40,
+          50
+        ],
+        "indices": [
+          1,
+          0,
+          1
+        ]
+      },
+      "faceName": {
+        "domain": "face",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          "return"
+        ]
+      },
+      "surfaceMaterial": {
+        "domain": "face",
+        "semantic": "material",
+        "interpolation": "nearest",
+        "values": [
+          "rightPanel"
+        ]
+      }
+    },
+    "textures": {
+      "sharedImage": {
+        "mime": "image/png",
+        "bytes": [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 104, 104, 104, 248, 15, 0, 5, 132, 2, 128, 140, 205, 102, 38, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]
+      },
+      "rightImage": {
+        "mime": "image/png",
+        "bytes": [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 96, 104, 248, 255, 31, 0, 4, 130, 2, 127, 231, 216, 90, 108, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]
+      }
+    },
+    "materials": {
+      "sharedPanel": {
+        "baseColor": [
+          0.5,
+          0.5,
+          0.5,
+          1
+        ],
+        "baseColorTexture": "sharedImage",
+        "textureSamplers": {
+          "baseColorTexture": {
+            "wrapS": 10497,
+            "wrapT": 33071
+          }
+        }
+      },
+      "rightPanel": {
+        "baseColor": [
+          0,
+          0.5,
+          1,
+          1
+        ],
+        "baseColorTexture": "rightImage"
+      }
+    }
+  },
+  "expected": {
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        4,
+        5
+      ]
+    ],
+    "vertices": 6,
+    "area": 4,
+    "fixtureIds": [
+      10,
+      20,
+      30,
+      50,
+      40,
+      50
+    ],
+    "smoothFace": 0,
+    "seamEdge": 0,
+    "materials": [
+      "leftPanel",
+      "rightPanel",
+      "sharedPanel"
+    ],
+    "textures": [
+      "leftImage",
+      "rightImage",
+      "sharedImage"
+    ],
+    "facesMaterials": [
+      "leftPanel",
+      "rightPanel"
+    ]
+  }
+}

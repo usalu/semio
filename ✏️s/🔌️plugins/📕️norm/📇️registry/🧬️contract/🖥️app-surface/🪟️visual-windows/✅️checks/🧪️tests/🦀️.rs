@@ -204,3 +204,83 @@ fn the_checks_window_publishes_a_table_and_one_row_node_per_listed_check_in_both
     let filtered = ChecksViewState { filter: ChecksFilter { fail: false, ..ChecksFilter::default() }, ..ChecksViewState::default() };
     assert_eq!(check_window_nodes(&report, &filtered, Locale::En).len(), 1 + report.checks.len() - 1, "a filtered row is not announced");
 }
+
+#[test]
+fn expanded_checks_keep_every_requested_slice_within_the_document_node_budget() {
+    use semio_plugin::{TreeWindowRequest, ViewModel};
+    use semio_ui_contract::UI_DOCUMENT_NODES;
+    use semio_ui_locale::Terminology;
+
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let mut report = CheckReport::default();
+    for index in 0..48 {
+        let mut check = check(&format!("test-{index}"), "ULS", "6.2.10", "B1", 1.12, CheckStatus::Fail);
+        check.explanation = LocalizedCopy::new("Failure explanation. ".repeat(33), "Begründung. ".repeat(60));
+        report.push(check);
+    }
+    let state = ChecksViewState { sort: ChecksSort::ReportOrder, ..ChecksViewState::default() };
+    let spec = ChecksWindowSpec { controller_id: Some("s.norm-eurocode.en1990@1/*#editor"), actions: ChecksActions { view_controls: true, ..ChecksActions::default() }, ..ChecksWindowSpec::default() };
+    let expected: Vec<_> = std::iter::once("norm-checks-group-0".to_owned())
+        .chain((0..report.checks.len()).map(|index| format!("norm-checks-check-{index}")))
+        .collect();
+
+    fn node_count(node: &BuiltNode) -> usize {
+        1 + node.children.iter().map(node_count).sum::<usize>()
+    }
+
+    let mut offset = 0;
+    let mut pages = 0;
+    while offset < expected.len() {
+        let body = "norm-en1990-checks";
+        let view = ViewModel {
+            tree_windows: vec![TreeWindowRequest { body_key: body.into(), node_key: NORM_CHECKS_SECTION_ID.into(), open: Some(true), offset: offset as u32, rows: (expected.len() - offset).min(32) as u32 }],
+            ..ViewModel::new(Locale::En, Terminology::Native)
+        };
+        let node = render_checks_with(&report, &state, &spec, &TreeWindows::for_body(&view, body), Locale::En).expect("Checks page");
+        assert!(node_count(&node) <= UI_DOCUMENT_NODES);
+        let tree = node.children.iter().find(|child| child.key.as_str() == NORM_CHECKS_TREE_ID).expect("Checks tree");
+        let listing = tree.children.iter().find(|child| child.key.as_str() == NORM_CHECKS_SECTION_ID).expect("Checks listing");
+        assert!(!listing.children.is_empty(), "no page can prevent access to the rest of the report");
+        let actual: Vec<_> = listing.children.iter().map(|row| row.key.as_str()).collect();
+        assert_eq!(actual, expected[offset..offset + actual.len()]);
+        offset += actual.len();
+        let serialized: serde_json::Value = serde_json::from_str(&project(node)).expect("valid tree projection");
+        let text = serialized.to_string();
+        assert!(text.contains("Failure explanation.") && text.contains("Increase thickness"));
+        pages += 1;
+    }
+    assert!(pages > 1);
+}
+
+#[test]
+fn the_summary_pages_report_parts_after_its_controls() {
+    use semio_plugin::{TreeWindowRequest, ViewModel};
+    use semio_ui_locale::Terminology;
+
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let mut report = CheckReport::default();
+    for index in 0..42 {
+        report.push(check(&format!("test-{index}"), &format!("Part {index}"), "6.2.10", "B1", 0.9, CheckStatus::Pass));
+    }
+    let spec = ChecksWindowSpec { controller_id: Some("s.norm-eurocode-structural.en1993@1/*#editor"), actions: ChecksActions { view_controls: true, ..ChecksActions::default() }, ..ChecksWindowSpec::default() };
+    let summary_total = 1 + 11 + report.summary.parts.len();
+    let mut seen = Vec::new();
+    let mut offset = 0;
+    while offset < summary_total {
+        let body = "norm.en1993.play.checks";
+        let view = ViewModel {
+            tree_windows: vec![TreeWindowRequest { body_key: body.into(), node_key: NORM_CHECKS_SUMMARY_ID.into(), open: Some(true), offset: offset as u32, rows: (summary_total - offset).min(32) as u32 }],
+            ..ViewModel::new(Locale::En, Terminology::Native)
+        };
+        let node = render_checks_with(&report, &ChecksViewState::default(), &spec, &TreeWindows::for_body(&view, body), Locale::En).expect("Summary page");
+        let tree = node.children.iter().find(|child| child.key.as_str() == NORM_CHECKS_TREE_ID).expect("Checks tree");
+        let summary = tree.children.iter().find(|child| child.key.as_str() == NORM_CHECKS_SUMMARY_ID).expect("Summary section");
+        assert!(!summary.children.is_empty());
+        seen.extend(summary.children.iter().map(|row| row.key.as_str().to_owned()));
+        offset += summary.children.len();
+        project(node);
+    }
+    assert_eq!(seen[0], "norm-checks.summary.verdict");
+    assert!(seen[1..12].iter().all(|id| id.starts_with("norm-checks.control.")));
+    assert!(seen[12..].iter().enumerate().all(|(index, id)| id == &format!("norm-checks.summary.part-{index}")));
+}

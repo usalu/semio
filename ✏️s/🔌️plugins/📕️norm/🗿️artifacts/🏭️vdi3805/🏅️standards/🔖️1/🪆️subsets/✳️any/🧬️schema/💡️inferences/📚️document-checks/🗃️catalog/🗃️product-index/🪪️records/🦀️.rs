@@ -76,8 +76,11 @@ pub(super) fn check_product_configuration(out: &mut Vec<CheckResult>, product: &
     out.push(cfg.build());
 }
 
-/// 🧾 Checks the part 7 record of the product.
+/// 🧾 Checks the native title projection where the sheet uses it.
 pub(super) fn check_product_record_700(out: &mut Vec<CheckResult>, product: &semio_s_artifact_norm_vdi3805_model::CatalogueProduct, article: &str) {
+    if product.sheet.0 == 22 {
+        return;
+    }
     if let Some((ri, rec)) = product.records.iter().enumerate().find(|(_, r)| r.family.0 == "700") {
         let de = rec.fields.get(2).cloned().unwrap_or_default();
         let en = rec.fields.get(4).cloned().unwrap_or_default();
@@ -149,6 +152,9 @@ pub(super) fn check_native_records(out: &mut Vec<CheckResult>, product: &semio_s
                 ));
         }
         out.push(rf.build());
+        if product.sheet.0 == 22 && record.family.has_part22_correction_fields() {
+            continue;
+        }
         for (fi, field) in record.fields.iter().enumerate().skip(1) {
             let ok = !field.is_empty();
             let mut ff = CheckResult::assess(

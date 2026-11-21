@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "name": "the queued replacement arrives",
+      "checkpoint": false,
+      "steps": [
+        {"pack": "pending", "elapsed": 0, "retained": true},
+        {"pack": "applied", "elapsed": 500, "retained": false}
+      ]
+    },
+    {
+      "name": "an adopted orphan index expires",
+      "checkpoint": true,
+      "steps": [
+        {"pack": "missing", "elapsed": 599500, "retained": true},
+        {"pack": "missing", "elapsed": 599999, "retained": true},
+        {"pack": "missing", "elapsed": 600000, "retained": false}
+      ]
+    }
+  ]
+}

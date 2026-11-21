@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "tag": 26,
+  "shape": "SetImage",
+  "numericPath": ["image", "body", "values"],
+  "imageDiscriminator": "samples",
+  "mutations": [
+    {"id": "FixtureRgb", "width": 64, "height": 64, "components": 3, "color": "deviceRgb", "softMask": "FixtureAlpha", "stride": 5},
+    {"id": "FixtureAlpha", "width": 64, "height": 64, "components": 1, "color": "deviceGray", "stride": 13}
+  ],
+  "malformed": [
+    {"replace": ["\"mutation\":\"setImage\"", "\"mutation\":\"removeImage\""]},
+    {"replace": ["\"kind\":\"samples\"", "\"kind\":\"artifact\""]},
+    {"replace": ["\"width\":64", "\"width\":64,\"width\":32"]},
+    {"replace": ["251]},\"softMask\"", "251],\"values\":[0]},\"softMask\""]},
+    {"replace": ["\"values\":[0", "\"values\":[true"]},
+    {"replace": ["\"values\":[0", "\"values\":[0,]"]},
+    {"replace": ["\"height\":64", "\"height\":\"64\""], "typed": true},
+    {"replace": ["\"values\":[0", "\"values\":[4294967296"], "typed": true}
+  ]
+}

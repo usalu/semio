@@ -1,0 +1,9 @@
+# Authored Surface in Automatic Mesh Orient
+
+Automatic Orient now records each final relative face reversal and carries point normals, per-corner UV, smooth shading and authored seam membership into its rebuilt mesh. UVs follow original face and vertex identity through winding reversal. Seam lookup matches either direction of the original edge and keeps the marker on both repaired halfedges. A raw point normal reverses when all its incident faces reverse. Mixed incidence retains the single authored raw point direction.
+
+Named normals use the normal remap’s signed direction policy. Face and corner data reverse on repaired faces. If any face reverses, vertex-domain authored normals become corner samples so one shared vertex can express the required direction on each face. When no face needs reversal, named normal domains remain stable. The source and pending output remain in the original controlled owner through the funded incidence and surface stages.
+
+The neutral witness has two adjacent triangles that traverse their shared edge in the same direction. It carries distinct per-face UV charts, a marked seam, raw normals, a named face normal and a named point normal. Three.js independently checked effective winding and projected corner order. A small standalone Rust harness compiled the exact production incidence and raw normal cursor over equivalent halfedge records. It verified the pre-rebuild authored normal updates and inert short grants, with 22 copied bytes over 18 events.
+
+All 32 portable Mesh tests passed with 4,212 assertions. The touched Rust sources parsed, and source closure admitted Mesh Reconstruction at 1,421 active lines and 120,644 bytes and the 3D facade at 2,655 active lines and 226,213 bytes. Registered Flow success and cancellation fixtures cover the full remap. Their linked execution remains pending the shared repository build. The separate lightweight harness covers the production incidence and raw normal cursor.

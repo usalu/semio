@@ -1,9 +1,9 @@
 /** 📤️ Static app declarations bind a checked export to its output port and downloadable representation. */
-import { EXPORT_MEDIA_FILE_ACTION_ID, EXPORT_SNAPSHOT_FILE_ACTION_ID, type AppDefinition, type MediaType } from "@semio-tech/framework";
+import { EXPORT_MEDIA_FILE_ACTION_ID, EXPORT_SNAPSHOT_FILE_ACTION_ID, NATURAL_FILE_PORT_ID, type AppDefinition, type MediaType } from "@semio-tech/framework";
 import type { AppDocumentIdentity } from "@semio-tech/framework/wire-contracts";
 import { decodePackValue } from "@semio-tech/framework/packs";
-import { collectMediaExportBytes, type MediaTransportPort } from "../🚚️lifecycle/🟦️.ts";
-import type { SegmentedDownloadSinkFactory } from "../../🧱️elements/📤️SegmentedDownload/🟦️.ts";
+import { MediaExportReferenceRequired, receiveMediaExportBytes, type MediaTransportPort } from "../🚚️lifecycle/🟦️.ts";
+import type { SegmentedDownloadSink, SegmentedDownloadSinkFactory } from "../../🧱️elements/📤️SegmentedDownload/🟦️.ts";
 
 export type MediaFileExportV1 = {
   readonly outputPort: string;
@@ -24,11 +24,12 @@ export type MediaFileExportOperationV1 = {
   readonly progress: (completed: number, total: number | null) => void;
   readonly sinkFactory: SegmentedDownloadSinkFactory;
   readonly yieldTurn?: () => Promise<void>;
+  readonly beforeDelivery?: () => Promise<void>;
 };
 
 /** 🔌️ Resolves one unambiguous app-owned export declaration without trusting invocation arguments. */
 export function declaredMediaFileExportV1(app: AppDefinition, actionId: MediaFileExportActionIdV1): MediaFileExportV1 | null {
-  const actions = [...app.actions, ...app.windowKinds.flatMap(kind => kind.actions)].filter(action => action.id === actionId);
+  const actions = [...(app.actions ?? []), ...app.windowKinds.flatMap(kind => kind.actions ?? [])].filter(action => action.id === actionId);
   if (actions.length === 0) return null;
   const value = (id: string): string | null => {
     const values = actions.map(action => {
@@ -42,6 +43,15 @@ export function declaredMediaFileExportV1(app: AppDefinition, actionId: MediaFil
   const ports = app.io?.ports.filter(port => port.id === outputPort);
   if (ports?.length !== 1 || ports[0]!.direction !== "out") return null;
   return { outputPort, filename, mediaType, formatKind, portMediaType: ports[0]!.mediaType };
+}
+
+/** 🎛️ Resolves a producer for the exact native binary format selected by Save. */
+export function declaredNaturalMediaFileExportV1(app: AppDefinition, format: Readonly<{formatKind: string; mediaType: string; binary: boolean}>, filename: string): MediaFileExportV1 | null {
+  if (!format.binary) return null;
+  const declaration = declaredMediaFileExportV1(app, EXPORT_MEDIA_FILE_ACTION_ID);
+  return declaration?.outputPort === NATURAL_FILE_PORT_ID && declaration.formatKind === format.formatKind && declaration.mediaType === format.mediaType
+    ? {...declaration, filename}
+    : null;
 }
 
 /** 🧾️ Checks the completed binary representation against its declared port and format. */
@@ -65,35 +75,61 @@ export async function downloadDeclaredMediaFileV1(operation: MediaFileExportOper
   if (identity.app_instance_id !== instanceId || !identity.parent_document_id) throw new Error("media-export.document-owner");
   const sourceCurrent = (latest: AppDocumentIdentity): boolean => latest.app_instance_id === identity.app_instance_id && latest.parent_document_id === identity.parent_document_id && latest.base_revision === identity.base_revision;
   operation.progress(0, null);
-  const exported = await collectMediaExportBytes({
-    instanceId, parentDocumentId: identity.parent_document_id, revision: identity.base_revision,
-    outputPort: declaration.outputPort, mediaType: declaration.mediaType, port, cancelled,
-    progress: status => operation.progress(Number(status.applied_progress > BigInt(Number.MAX_SAFE_INTEGER) ? BigInt(Number.MAX_SAFE_INTEGER) : status.applied_progress), null),
-    ...(operation.yieldTurn === undefined ? {} : { yieldTurn: operation.yieldTurn }),
-  });
-  if (exported === null || cancelled()) return false;
-  if (!mediaFileDescriptorMatchesV1(decodePackValue(Uint8Array.from(exported.descriptor)), declaration)) throw new Error("media-export.descriptor-mismatch");
-  const latest = await port.readAppDocumentIdentity(instanceId);
-  if (cancelled()) return false;
-  if (!sourceCurrent(latest)) throw new Error("media-export.source-changed");
-  const sink = await operation.sinkFactory(declaration.filename, declaration.mediaType);
+  const delivery: { sink?: SegmentedDownloadSink } = {};
+  const abort = async (reason: unknown): Promise<void> => {
+    const sink = delivery.sink;
+    delete delivery.sink;
+    await sink?.abort(reason);
+  };
   try {
-    const total = exported.chunks.reduce((bytes, chunk) => bytes + chunk.byteLength, 0);
-    let completed = 0;
-    for (const chunk of exported.chunks) {
-      if (cancelled()) { await sink.abort("media-export.cancelled"); return false; }
-      await sink.write(chunk);
-      completed += chunk.byteLength;
-      operation.progress(completed, total);
-      await (operation.yieldTurn?.() ?? new Promise<void>(resolve => globalThis.setTimeout(resolve, 0)));
-    }
+    const exported = await receiveMediaExportBytes({
+      instanceId, parentDocumentId: identity.parent_document_id, revision: identity.base_revision,
+      outputPort: declaration.outputPort, mediaType: declaration.mediaType, port, cancelled,
+      progress: status => operation.progress(Number(status.applied_progress > BigInt(Number.MAX_SAFE_INTEGER) ? BigInt(Number.MAX_SAFE_INTEGER) : status.applied_progress), null),
+      ...(operation.yieldTurn === undefined ? {} : { yieldTurn: operation.yieldTurn }),
+    }, {
+      begin: async descriptor => {
+        if (!mediaFileDescriptorMatchesV1(decodePackValue(Uint8Array.from(descriptor)), declaration)) throw new Error("media-export.descriptor-mismatch");
+        const latest = await port.readAppDocumentIdentity(instanceId);
+        if (cancelled()) return;
+        if (!sourceCurrent(latest)) throw new Error("media-export.source-changed");
+        delivery.sink = await operation.sinkFactory(declaration.filename, declaration.mediaType);
+      },
+      page: async (chunk, completed, total) => {
+        if (delivery.sink === undefined) throw new Error("media-export.sink-unavailable");
+        await delivery.sink.write(chunk);
+        operation.progress(completed, total);
+      },
+    });
+    if (!exported || cancelled()) { await abort("media-export.cancelled"); return false; }
+    if (delivery.sink === undefined) throw new Error("media-export.sink-unavailable");
+    await operation.beforeDelivery?.();
+    if (cancelled()) { await abort("media-export.cancelled"); return false; }
     const beforeDelivery = await port.readAppDocumentIdentity(instanceId);
-    if (cancelled()) { await sink.abort("media-export.cancelled"); return false; }
+    if (cancelled()) { await abort("media-export.cancelled"); return false; }
     if (!sourceCurrent(beforeDelivery)) throw new Error("media-export.source-changed");
-    await sink.close();
+    await delivery.sink.close();
     return true;
   } catch (error) {
-    await sink.abort(error);
+    await abort(error);
     throw error;
   }
+}
+
+/** 🔀️ Selects the prepared segmented producer or the same-revision native reference producer. */
+export async function deliverNaturalMediaFileV1(
+  segmented: (() => Promise<boolean>) | null,
+  stillCurrent: () => Promise<void>,
+  reference: () => Promise<void>,
+): Promise<void> {
+  if (segmented !== null) {
+    try {
+      if (!await segmented()) throw new Error("natural-file.export-owner-retired");
+      return;
+    } catch (reason) {
+      if (!(reason instanceof MediaExportReferenceRequired)) throw reason;
+      await stillCurrent();
+    }
+  }
+  await reference();
 }

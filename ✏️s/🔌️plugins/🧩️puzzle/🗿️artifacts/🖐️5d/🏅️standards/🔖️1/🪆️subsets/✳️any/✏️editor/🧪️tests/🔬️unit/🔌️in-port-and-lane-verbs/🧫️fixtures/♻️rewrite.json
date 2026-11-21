@@ -1,0 +1,18 @@
+{
+  "invocation": {
+    "rule": {
+      "name": "Move a part on the board",
+      "lhs": {"pattern": {"leftVar": "part", "leftKind": "Hexagonal Cut Concrete Forest Left"}},
+      "rhs": {
+        "create": [],
+        "delete": [],
+        "set": [{"var": "part", "prop": "x", "value": 3}],
+        "merge": [],
+        "parameters": []
+      }
+    },
+    "bindings": {}
+  },
+  "path": "/parts/0/2d/x",
+  "expected": 3.0
+}

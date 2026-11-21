@@ -107,13 +107,6 @@ mod manifest_and_io;
 
 //#endregion 🔖️IoTests
 
-//#region 🔖️CrossCutting
-
-#[path = "🎮️interaction-behavior/🦀️.rs"]
-mod interaction_behavior;
-
-//#endregion 🔖️CrossCutting
-
 //#region 🔖️MediaTests
 
 //#endregion 🔖️MediaTests

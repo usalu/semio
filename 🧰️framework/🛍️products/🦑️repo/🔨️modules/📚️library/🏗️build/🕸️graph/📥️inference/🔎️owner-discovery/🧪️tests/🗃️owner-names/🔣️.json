@@ -1,0 +1,8 @@
+{
+  "owners": 4807,
+  "cases": [
+    { "name": "first, middle, last and repeated exact owners", "input": "default", "projects": [0, 2381, 4806, 4806], "accepted": true },
+    { "name": "unregistered owner", "input": "default", "projects": [4807], "accepted": false },
+    { "name": "empty input", "input": "", "projects": [4806], "accepted": false }
+  ]
+}

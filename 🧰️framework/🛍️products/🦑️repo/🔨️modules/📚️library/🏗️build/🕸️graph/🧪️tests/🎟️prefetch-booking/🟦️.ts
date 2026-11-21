@@ -1,18 +1,26 @@
-/** 🎟️ Contract: a prefetching run asks for the capacity of its rebuild before it queues for anything, and books the learned size of the rebuild only once it holds a claim to compute. The upgrade is a wait in the machine-wide queue that is cheap to hold; the booking is a reservation that every other run counts, so a prefetcher that waits for a compute slot must not hold it (with several waiting prefetchers the ledger went negative and the farm request of the very same run could not fit beside its own parent's booking). */
+/** 🎟️ Contract: a prefetching run obtains its replacement reservation before it enters graph custody. The claimed computation only marks the phase, and the reservation is released back to planning when prefetch ends. */
 import {graphSourceV1} from "../📖️source/🟦️.ts";
 import{expect,test}from"bun:test";
 import{readFileSync}from"node:fs";
 
 const source=graphSourceV1();
-const method=source.slice(source.indexOf("async prefetch(request:GenerationPrefetchRequestV1,"),source.indexOf("\n",source.indexOf("async prefetch(request:GenerationPrefetchRequestV1,")));
+const prefetch=source.indexOf("async prefetch<T>(request:GenerationPrefetchRequestV1,");
+const method=source.slice(prefetch,source.indexOf("\n    },",prefetch));
 const prefetcher=source.slice(source.indexOf("async function prefetchStaleGenerationV1("),source.indexOf("export function edgeRefreshOwnersV1("));
 
-test("the prefetch of a graph asks for its capacity first and hands the booking to the claimed computation, never booking before the slots",()=>{
+test("prefetch obtains capacity before custody and marks the phase at the claimed computation",()=>{
  expect(source,"the upgrade before the custody (rev3-g/upgrade-before-custody) lands first").toMatch(/import ?\{markBuildCapacityPhaseV1,upgradeBuildCapacityBeforeRebuildV1\} ?from/u);
- expect(method).toContain("await upgradeBuildCapacityBeforeRebuildV1();");
+ expect(method).toContain("await prepareRebuild(published);");
  expect(method).toContain('book:()=>markBuildCapacityPhaseV1("rebuild")');
- expect(method.indexOf("upgradeBuildCapacityBeforeRebuildV1")).toBeLessThan(method.indexOf("prefetchStaleGenerationV1"));
- expect(method.match(/markBuildCapacityPhaseV1\(/gu)?.length).toBe(1);
+ expect(method.indexOf("prepareRebuild")).toBeLessThan(method.indexOf("prefetchStaleGenerationV1"));
+ expect(method).toContain('finally{try{releaseCapacity?.();}finally{await markBuildCapacityPhaseV1("plan");}}');
+});
+
+test("an exact peer publication can end the capacity wait and restore without starting a rebuild",()=>{
+ expect(source).toContain("async()=>available=await published.available()");expect(source).toContain("const restored=await published.restore()");
+ expect(source).toContain("if(prepared.restored!==undefined)return prepared.restored;");
+ const loader=readFileSync(new URL("../../🕰️generations/🔌️load/🟨️.mjs",import.meta.url),"utf8");
+ expect(loader).toContain('attempt(claim??true,store,control,expectedHead),{dirty:[],structural:true},undefined,"restore"');
 });
 
 test("the booking happens inside the computation of a claimed chunk, once, before the first project is inferred",()=>{

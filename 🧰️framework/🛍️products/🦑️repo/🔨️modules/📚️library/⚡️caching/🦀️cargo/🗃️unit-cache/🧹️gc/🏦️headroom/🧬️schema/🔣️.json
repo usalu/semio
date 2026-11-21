@@ -6,13 +6,13 @@
     "Policy": {
       "const": {
         "historyFile": "history.json",
+        "latestAdmissionFile": "admission",
         "claim": "headroom",
         "claimPollMilliseconds": 20,
         "claimAttempts": 100,
         "heartbeatMilliseconds": 2000,
         "staleMilliseconds": 20000,
         "abandonedMilliseconds": 600000,
-        "strandedGraceMilliseconds": 120000,
         "pollMilliseconds": 250,
         "pollMaximumMilliseconds": 2000,
         "pollBackoffBasisPoints": 15000,
@@ -63,6 +63,10 @@
         "waiting": {
           "en": "[repo cargo] waiting {seconds}s for compiler image headroom: this command is expected to write {need} GiB ({free} GiB free, {held} GiB still expected from {running} running command(s), {ahead} GiB reserved for commands ahead, {floor} GiB kept free)",
           "de": "[repo cargo] warte seit {seconds}s auf Platz im Compiler-Image: dieser Befehl schreibt voraussichtlich {need} GiB ({free} GiB frei, {held} GiB noch erwartet von {running} laufenden Befehl(en), {ahead} GiB für vorausgehende Befehle reserviert, {floor} GiB bleiben frei)"
+        },
+        "metadataWaiting": {
+          "en": "[repo cargo] waiting {seconds}s for compiler image space to record admission ({free} GiB free)",
+          "de": "[repo cargo] warte seit {seconds}s auf Platz im Compiler-Image, um die Zulassung zu erfassen ({free} GiB frei)"
         },
         "reclaiming": {
           "en": "[repo cargo] freeing {shortfall} GiB of idle lanes, incremental sessions and cold units for the commands waiting on the compiler image",

@@ -1,0 +1,12 @@
+# Single Custody Handover Ask
+
+A waiter previously used an admission snapshot to write its handover request after leaving the admission lease. Another waiter could put the first request on disk while the first waiter was still resolving the current implementation digest. The delayed waiter then overwrote the request and reset its timestamp. Holder release could also remove the claim and sidecars while an unconditional ask was still pending, producing an orphan. A write failure was logged as an ask.
+
+The custody path resolves the current implementation digest outside admission. It acquires admission again only for candidate blockers and verifies each one's live lease, held claim, conflict, current progress and prior request. The conditional create runs under that same admission lease. This serialization is necessary because the generation file port's `ifAbsent` option uses a preflight check followed by an atomic rename. Once the sidecar is present, competing waiters preserve its timestamp. An unreadable sidecar can be replaced under admission. After creation the waiter confirms the blocker still holds custody. If release or process exit won, the waiter removes the sidecar without reporting an ask. Holder release remains independent of admission. Reports run after admission and a failed or cancelled write does not create a second request.
+
+The SQLite-backed fixtures delayed one requester while another persisted the request, delayed the write until after holder release, and refused the write. Before the fix they showed two reports with the original timestamp overwritten, an orphan with one false report, and a false report without a sidecar. All three now pass. The competing fixture also verifies that the implementation callback can enter a holder fence without reentering admission.
+
+The unfiltered claim-progress, general custody, bounded-door and native-kernel custody suites passed 36 tests and 991 assertions. After adding the post-write lease check and malformed-sidecar case, unfiltered claim-progress and bounded-door passed 17 tests and 90 assertions. No live graph reader, service or cache was changed.
+
+- [Custody implementation](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🟨️.mjs)
+- [Deterministic race tests](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🧪️tests/🚪️bounded-door/🟦️.ts)

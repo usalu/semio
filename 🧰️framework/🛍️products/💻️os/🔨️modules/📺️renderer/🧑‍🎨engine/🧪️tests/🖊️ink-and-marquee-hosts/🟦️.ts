@@ -3,8 +3,9 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { SelectionMarquee } from "@semio-tech/ui-react";
-import { computeDagMarqueeOverlay, InkCanvasHost, inkItemBounds, eraseInkStrokePointsInItem, inkParagraphsToHtml, inkResizeBounds, inkScaleItemWithinGroup, inkClipboardPayload, inkItemsFromClipboardPayload, screenToWorld, worldToScreen, type InkDocument, type InkStrokeItem } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { computeDagMarqueeOverlay, InkCanvasHost, inkItemBounds, inkParagraphsToHtml, inkResizeBounds, inkScaleItemWithinGroup, inkClipboardPayload, inkItemsFromClipboardPayload, screenToWorld, worldToScreen, type InkDocument, type InkStrokeItem } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
+import { verifyEraserClipping, verifyEraserEventPlacement } from "./eraser.contract.ts";
 
 describe("dag marquee overlay", () => {
   it("computes a rect overlay with numeric bounds for the rectangle method", () => {
@@ -262,40 +263,9 @@ describe("ink canvas host", () => {
       ]);
   });
 
-  it("splits an ink stroke into fragments when erasing its middle point", () => {
-    const ink: InkStrokeItem = {
-      kind: "stroke",
-      id: "ink-1",
-      name: "Ink",
-      x: 0,
-      y: 0,
-      width: 80,
-      height: 1,
-      visible: true,
-      locked: false,
-      points: [
-        [0, 0],
-        [40, 0],
-        [80, 0],
-      ],
-      strokeWidth: 2,
-      color: [0, 0, 0, 1],
-    };
-    const fragments = eraseInkStrokePointsInItem(ink, 40, 0, 5);
-    expect(fragments).toHaveLength(0);
-    const wideStroke: InkStrokeItem = {
-      ...ink,
-      points: [
-        [0, 0],
-        [10, 0],
-        [40, 0],
-        [70, 0],
-        [80, 0],
-      ],
-    };
-    const splitFragments = eraseInkStrokePointsInItem(wideStroke, 40, 0, 5);
-    expect(splitFragments).toHaveLength(2);
-  });
+  it("clips stroke segments against the eraser circle", verifyEraserClipping);
+
+  it("keeps surviving fragments next to their source", verifyEraserEventPlacement);
 
   it("round-trips bold and link marks between paragraphs and html", () => {
     const html = inkParagraphsToHtml([{ runs: [{ text: "hello", bold: true, link: "https://semio.tech" }] }]);

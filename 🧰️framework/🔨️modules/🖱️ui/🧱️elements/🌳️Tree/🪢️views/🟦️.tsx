@@ -34,7 +34,9 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const childItems = direction === "up" ? [...rawChildItems].reverse() : rawChildItems;
   const childWindow = branchCount > 0 ? undefined : item.window;
   const windowTotal = Math.max(0, Math.floor(childWindow?.total ?? 0));
-  const spacerRows = treeWindowSpacerRows(childWindow, childItems.length);
+  const contentRows = childWindow ? item.windowContentRows ?? 0 : 0;
+  const mountedRows = childItems.length + contentRows;
+  const spacerRows = treeWindowSpacerRows(childWindow, mountedRows);
   const isWaiting = Boolean(item.waiting);
   const hasDynamicChildren = Boolean(item.getItems);
   const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.content || item.emptyState) || branchCount > 0 || windowTotal > 0;
@@ -45,7 +47,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const defaultOpen = hasControl ? !hasNestedTreeItems || getTreeItemDefaultOpen(item) : getTreeItemDefaultOpen(item);
   const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), defaultOpen);
   const propertyExpandable = hasControl ? hasNestedTreeItems : isExpandable;
-  const isWindowPending = windowTotal > 0 && childItems.length === 0 && treeOpenState.open;
+  const isWindowPending = windowTotal > 0 && mountedRows === 0 && treeOpenState.open;
   const isLoading = (loadingById[getTreeItemLoadingId(item.id)] ?? false) || Boolean(item.loading) || isWindowPending;
 
   reactHostPort.useEffect(() => {
@@ -100,16 +102,16 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       branchCount={branchCount}
       activeBranchIndex={clampedBranchIndex}
       onBranchChange={setActiveBranchIndex}
-      windowAttributes={treeWindowDomAttributes(childWindow, childItems.length, item.windowKey, item.windowPath)}
+      windowAttributes={treeWindowDomAttributes(childWindow, mountedRows, item.windowKey, item.windowPath)}
       windowRowIndex={windowRowIndex}
       windowRowTotal={windowRowTotal}
       windowRowExtent={windowRowExtent}
     >
       {hasControl && !hasNestedTreeItems ? item.control : null}
-      {item.content}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}
+      {item.content}
       {childItems.map((childItem, index) => (
-        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={(direction === "up" ? index === 0 : index === childItems.length - 1) && spacerRows.trailing === 0} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />
+        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={(direction === "up" ? index === 0 : index === childItems.length - 1) && spacerRows.trailing === 0} windowRowIndex={treeWindowRowIndexOf(childWindow, mountedRows, contentRows + index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />
       ))}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing", childWindow?.rowExtent)}
       {!isLoading && childItems.length === 0 && item.emptyState && (

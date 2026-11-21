@@ -242,3 +242,56 @@ fn dag_paint_scene_keeps_labels_when_lod_forced_at_low_zoom() {
         assert_eq!(row["text"], semio_framework_pack_json::Value::from(node.name.as_str()), "a caption is the node's NAME at every captioned tier");
     }
 }
+
+#[test]
+fn detail_port_rows_join_native_screen_picks_without_replacing_existing_targets() {
+    use semio_os_infinite_board_dag_graph::{dag_pick_targets_at_screen_json, sync_connection_hit_picking_for_lod, world_to_screen_point};
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🎯️pick-rows.json")).unwrap();
+    let mut host=DagHost::default_demo();
+    host.viewport.set_viewport(1280,800,1.0);
+    host.viewport.set_automatic_lod(false);
+    for case in fixture["cases"].as_array().unwrap(){
+        let read=|key:&str|case[key].as_str().unwrap();
+        host.viewport.set_forced_draw_lod_label(read("lod"));
+        sync_connection_hit_picking_for_lod(&mut host.viewport,&mut host.graph);
+        let node=host.graph.host_snapshot.nodes.iter().find(|node|node.id==read("widget")).unwrap();
+        let output=read("side")=="output";
+        let ports=if output{node.outputs()}else{node.inputs()};
+        let index=ports.iter().position(|port|port.id==read("port")).unwrap();
+        let qualified=format!("{}@{}",read("widget"),read("port"));
+        let row=if output{output_port_row_hit_bounds(node,index)}else{input_port_row_hit_bounds(node,index)}.unwrap();
+        let probe=match read("probe"){
+            "row"=>{
+                let from_anchor=fixture["reference"]["rowFractionFromAnchor"].as_f64().unwrap();
+                let fraction=if output{1.0-from_anchor}else{from_anchor};
+                Point::new(row.0+(row.2-row.0)*fraction,(row.1+row.3)*0.5)
+            },
+            "anchor"=>handle_world(&host,&qualified),
+            _=>{
+                let (_,top,_,bottom)=channel_row_bounds(node,0);
+                Point::new(computation_column_divider_x(node).unwrap(),(top+bottom)*0.5)
+            }
+        };
+        let (sx,sy)=world_to_screen_point(&host.viewport,&host.graph,probe.x,probe.y);
+        let targets:Vec<serde_json::Value>=serde_json::from_str(&dag_pick_targets_at_screen_json(&host.viewport,&host.graph,sx,sy)).unwrap();
+        let handles=targets.iter().filter(|target|target["domain"]=="handle").collect::<Vec<_>>();
+        match case["handle"].as_str(){
+            Some(expected)=>{
+                let hits=handles.iter().filter(|target|target["id"]==expected).collect::<Vec<_>>();
+                assert_eq!(hits.len(),1,"{case}");
+                assert_eq!(hits[0]["generality"],2);
+                assert_eq!(hits[0]["label"],format!("{} · {}",read("widget"),read("port")));
+            }
+            None=>assert!(handles.is_empty(),"{case}: {targets:?}"),
+        }
+        if case["rowAddition"]==true{
+            assert!(targets.iter().any(|target|target["domain"]=="node"&&target["id"]==read("widget")));
+            let (sx,sy)=world_to_screen_point(&host.viewport,&host.graph,probe.x,probe.y);
+            host.viewport.set_forced_draw_lod_label("normal");
+            sync_connection_hit_picking_for_lod(&mut host.viewport,&mut host.graph);
+            let baseline:Vec<serde_json::Value>=serde_json::from_str(&dag_pick_targets_at_screen_json(&host.viewport,&host.graph,sx,sy)).unwrap();
+            assert_eq!(&targets[..targets.len()-1],baseline.as_slice());
+            assert_eq!(targets.last().unwrap()["id"],qualified);
+        }
+    }
+}

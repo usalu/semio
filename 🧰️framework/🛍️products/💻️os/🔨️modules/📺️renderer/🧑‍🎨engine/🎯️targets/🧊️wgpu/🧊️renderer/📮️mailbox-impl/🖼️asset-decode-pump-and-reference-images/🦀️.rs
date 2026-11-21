@@ -79,7 +79,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                     probe.begin_close();
                     return Ok(RendererAssetDecodeTurnKind::Cancelled);
                 }
-                apply_world3d_terrain_tile_bytes(&mut state.terrain, z, x, y, &bytes);
+                apply_world3d_terrain_tile_bytes(&mut state.terrain, probe.owner().owner().url(), z, x, y, &bytes);
                 probe.begin_close();
                 return Ok(RendererAssetDecodeTurnKind::Published);
             }
@@ -402,7 +402,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 if !world3d_asset_cancellation_requested(&state.assets, owner.token()) {
                     match owner.kind() {
                         WorldAssetRequestKind::Terrain { z, x, y } => {
-                            apply_world3d_terrain_tile_bytes(&mut state.terrain, z, x, y, &[]);
+                            apply_world3d_terrain_tile_bytes(&mut state.terrain, owner.url(), z, x, y, &[]);
                         }
                         _ => mark_world3d_asset_miss(&mut state.assets, owner.url()),
                     }

@@ -19,6 +19,17 @@ type Base<'a> = RetainedCloneRef<'a, RemodelingSnapshot>;
 fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvariantViolated, "remodeling retained assigned-field phase or source changed")
 }
+fn check_supported_rows(diff: &RemodelingDiff) -> Result<(), ValueError> {
+    if diff.streams.as_ref().is_some_and(|delta| !delta.is_empty())
+        || diff.assets.as_ref().is_some_and(|delta| !delta.is_empty())
+        || diff.durable_artifacts.as_ref().is_some_and(|delta| !delta.is_empty())
+        || diff.calibration.as_ref().is_some_and(|delta| !delta.cameras.is_empty() || !delta.rig.is_empty())
+        || diff.gcps.as_ref().is_some_and(|delta| !delta.is_empty())
+    {
+        return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "remodeling retained apply requires keyed row preparation"));
+    }
+    Ok(())
+}
 fn scalar(copy_bytes: usize) -> RetirementDemand {
     RetirementDemand { copy_bytes, depth: 1, ..Default::default() }
 }
@@ -448,7 +459,11 @@ impl RetainedDiffApply<RemodelingSnapshot, RemodelingDiff> for RemodelingApply {
         if self.phase > SLOTS {
             return Err(invalid());
         }
-        if maximum_work_units == 0 || self.phase == SLOTS {
+        if maximum_work_units == 0 {
+            return Ok(Default::default());
+        }
+        check_supported_rows(d.get())?;
+        if self.phase == SLOTS {
             return Ok(Default::default());
         }
         let slot = self.slot(self.phase);
@@ -493,6 +508,7 @@ impl RetainedDiffApply<RemodelingSnapshot, RemodelingDiff> for RemodelingApply {
                     return Err(invalid().into());
                 }
                 if self.phase == SLOTS {
+                    check_supported_rows(d.get())?;
                     return Ok(RetainedDiffPreflightAdvance::Ready(Default::default(), true));
                 }
                 if self.preflight_work_demand(d, original, post, body, maximum_work_units)? == 0 {
@@ -541,6 +557,7 @@ impl RetainedDiffApply<RemodelingSnapshot, RemodelingDiff> for RemodelingApply {
         if self.phase != SLOTS || self.commit > SLOTS {
             return Err(invalid());
         }
+        check_supported_rows(d.get())?;
         if self.commit == SLOTS {
             return Ok(Default::default());
         }

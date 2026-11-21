@@ -3,7 +3,7 @@ use semio_framework_value_native_decode_handoff::{NativeDecodeFrameHandoff,Nativ
 use semio_framework_value_native_shared_slots::*;
 use semio_framework_value_native_decoding::{NativeDecodeControl,NativeReceivingEffect,NativeReceivingEffectPoll,NativeReceivingEffectFailure,NativeReceivingEffectState,NativeReceivingEffectOutcome};
 use semio_framework_value_shared_issuance::{SealedShared,SharedOriginal};
-use semio_framework_value_retirement::{OriginalRetirementFailure,retirement::RetireOwned};
+use semio_framework_value_retirement::{OriginalRetirementFailure,retirement::{RetireOwned,arc_custody::ArcLease}};
 use semio_framework_value_allocation_return::original::{SharedOriginalStorage};
 use std::{sync::Arc,marker::PhantomData,mem::size_of};
 type Reply<'a>=OriginalEffectReply<'a,RetainedCloneStep,OriginalRetirementFailure>;
@@ -25,7 +25,7 @@ trait Mode<T:RetireOwned+Sync=u64>:Send+Sync+'static{
  fn consume_demand(output:&Option<Self::Output>,owner:&Option<SharedOriginal<T>>)->Result<(RetirementDemand,u64),ValueError>;
  fn consume<'a>(output:&mut Option<Self::Output>,owner:&mut Option<SharedOriginal<T>>,value:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'a>)->Result<Complete<'a>,ValueError>;
 }
-struct IssuedMode;struct SealedMode;
+struct IssuedMode;struct SealedMode;struct ArcMode;
 macro_rules! shared_mode{($mode:ident,$out:ident)=>{
  impl<T:RetireOwned+Sync> Mode<T> for $mode{
   type Output=$out<T>;
@@ -45,9 +45,24 @@ macro_rules! shared_mode{($mode:ident,$out:ident)=>{
  fn value(output:&Self::Output)->&T{output.get()}
  fn consume_demand(output:&Option<Self::Output>,owner:&Option<SharedOriginal<T>>)->Result<(RetirementDemand,u64),ValueError>{if let Some(output)=output{return Ok((output.original_election_demand()?,output.original_election_work_demand()?))}let owner=owner.as_ref().unwrap();if owner.terminal_is_empty(){Ok((fixed(size_of::<Option<SharedOriginal<T>>>()),1))}else{Ok((owner.take_value_demand()?,owner.take_value_work_demand()?))}}
  fn consume<'a>(output:&mut Option<Self::Output>,owner:&mut Option<SharedOriginal<T>>,value:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'a>)->Result<Complete<'a>,ValueError>{if output.is_some(){let turn=SealedShared::try_owner_into(output,owner,effect);return Ok(reply.complete(turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())).map_err(Into::into)))}if owner.as_ref().unwrap().terminal_is_empty(){let(d,_)=Self::consume_demand(output,owner)?;assert!(effect.performed(1)?);owner.take();return Ok(reply.complete(Ok(RetainedCloneStep::Complete(receipt(d)))))}let turn=owner.as_mut().unwrap().take_value_step(value,effect);Ok(reply.complete(turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())).map_err(Into::into)))}
+};(@ArcMode)=>{
+ fn value(output:&Self::Output)->&T { output.get().unwrap() }
+ fn consume_demand(_: &Option<Self::Output>, _: &Option<SharedOriginal<T>>) -> Result<(RetirementDemand,u64),ValueError> {
+    let copy_bytes = size_of::<Option<Self::Output>>() + size_of::<Option<T>>() + size_of::<T>() + 2 * size_of::<usize>();
+    Ok((RetirementDemand { copy_bytes, release_bytes: semio_framework_value_allocation_return::shared_allocation_bytes::<T>(), depth: 1, ..Default::default() }, 1))
+ }
+ fn consume<'a>(output:&mut Option<Self::Output>,owner:&mut Option<SharedOriginal<T>>,value:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'a>)->Result<Complete<'a>,ValueError>{
+    let (demand, work) = Self::consume_demand(output, owner)?;
+    assert!(value.is_none() && retained_clone_grant_admits(effect.grant(), demand) && effect.performed(work)?);
+    let lease = output.take().unwrap();
+    *value = Arc::into_inner(lease.0.unwrap());
+    assert!(value.is_some());
+    Ok(reply.complete(Ok(RetainedCloneStep::Complete(receipt(demand)))))
+ }
 }}
 shared_mode!(IssuedMode,SharedOriginalStorage);
 shared_mode!(SealedMode,SealedShared);
+shared_mode!(ArcMode,ArcLease);
 #[path="../../🧪️tests/source-bank.rs"]mod source_bank;
 use source_bank::Bank;
 #[path="../../../📦️handoff/🧪️tests/driver.rs"] mod driver;
@@ -82,15 +97,28 @@ fn constructor<M:Mode>(interrupt:bool){
 }
 #[test]fn actual_issued_constructor_retains_original_slots_and_settles_before_take(){constructor::<IssuedMode>(false)}
 #[test]fn actual_sealed_constructor_recovers_recorded_original_post_without_replay(){constructor::<SealedMode>(true)}
+#[test]fn actual_arc_constructor_returns_original_value_and_retires_backing(){constructor::<ArcMode>(false)}
 
-fn cancel_unpublished<M:Mode>(){
+
+fn cancel_unpublished<M:Mode>(birth_turns: usize){
  let mut bank=Bank::new(false);let mut observer=|_|true;let mut native=NativeDecodeControl::new(1<<20,&mut observer);let mut frame=NativeReceivingEffect::default();let mut producer=OriginalEffectAuthority::new(Commands::<M>{source:bank.source.clone(),mode:PhantomData});let mut slots=Slots::<M>::default();let mut input=Some(73);let d=Slots::<M>::capture_demand().unwrap();let work=slots.capture_work_demand(&input).unwrap();complete(command(&mut bank,&mut native,&mut frame,&mut producer,d,work,Command::Capture(&mut slots,&mut input))).result.unwrap();
- advance_paid(&mut bank,&mut native,&mut frame,&mut producer,&mut slots).successful().result.unwrap();assert!(!slots.output_ready());assert_eq!(slots.input(),Some(&73));assert!(bank.wallet.lock().unwrap().spent.retained_capacity_bytes>0);
+ for _ in 0..birth_turns {
+     advance_paid(&mut bank,&mut native,&mut frame,&mut producer,&mut slots).successful().result.unwrap();
+ }
+ assert!(!slots.output_ready());assert_eq!(slots.input(),Some(&73));assert!(bank.wallet.lock().unwrap().spent.retained_capacity_bytes>0);
  let mut returned=None;for _ in 0..12{let d=slots.reclaim_input_demand().unwrap();let turn=complete(command(&mut bank,&mut native,&mut frame,&mut producer,d,1,Command::Reclaim(&mut slots,&mut returned)));if turn.result.is_ok(){break}let d=slots.close_demand(4096).unwrap();let work=slots.close_work_demand(4096).unwrap();complete(command(&mut bank,&mut native,&mut frame,&mut producer,d,work,Command::Close(&mut slots))).result.unwrap();}
  assert_eq!(returned,Some(73));for _ in 0..4{if slots.terminal_is_empty(){break}let d=slots.close_demand(4096).unwrap();let work=slots.close_work_demand(4096).unwrap();complete(command(&mut bank,&mut native,&mut frame,&mut producer,d,work,Command::Close(&mut slots))).result.unwrap();}assert!(slots.terminal_is_empty());let wallet=bank.wallet.lock().unwrap();assert_eq!(wallet.spent.retained_capacity_bytes,wallet.spent.released_bytes);assert_eq!(256-wallet.fuel,native.actual_work());drop(wallet);assert!(producer.into_producer().is_ok());
 }
-#[test]fn actual_issued_unpublished_birth_cancels_and_returns_the_original_input(){cancel_unpublished::<IssuedMode>()}
-#[test]fn actual_sealed_unpublished_birth_cancels_and_returns_the_original_input(){cancel_unpublished::<SealedMode>()}
+#[test]fn actual_issued_unpublished_birth_cancels_and_returns_the_original_input(){cancel_unpublished::<IssuedMode>(1)}
+#[test]fn actual_sealed_unpublished_birth_cancels_and_returns_the_original_input(){cancel_unpublished::<SealedMode>(1)}
+#[test]
+fn actual_arc_unpublished_birth_cancels_and_returns_the_original_input() {
+    let work = shared_law()["work"].clone();
+    assert_eq!(work["arcOutputSlot"], 1);
+    assert_eq!(work["arcAllocation"], semio_framework_value_allocation_return::shared_uninitialized_work_demand());
+    assert_eq!(work["arcPublication"], semio_framework_value_allocation_return::shared_arc_publication_work_demand());
+    cancel_unpublished::<ArcMode>(2);
+}
 #[test]fn actual_constructor_rejects_foreign_source_before_action_and_header_clear(){
  let mut bank=Bank::new(false);let mut foreign=Bank::new(false);let mut observer=|_|true;let mut native=NativeDecodeControl::new(1<<20,&mut observer);let mut frame=NativeReceivingEffect::default();let mut producer=OriginalEffectAuthority::new(Commands::<IssuedMode>{source:bank.source.clone(),mode:PhantomData});let mut foreign_frame=NativeReceivingEffect::default();let mut foreign_producer=OriginalEffectAuthority::new(Commands::<IssuedMode>{source:foreign.source.clone(),mode:PhantomData});let mut slots=Slots::<IssuedMode>::default();let mut input=Some(73);let d=Slots::<IssuedMode>::capture_demand().unwrap();let work=slots.capture_work_demand(&input).unwrap();complete(command(&mut bank,&mut native,&mut frame,&mut producer,d,work,Command::Capture(&mut slots,&mut input))).result.unwrap();
  let before=foreign.wallet.lock().unwrap().fuel;assert!(foreign.run(&mut native,|native|IssuedMode::advance(&mut slots,native)).is_err());assert_eq!(foreign.wallet.lock().unwrap().fuel,before);assert_eq!(slots.input(),Some(&73));assert!(!slots.advance_pending());

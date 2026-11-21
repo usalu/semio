@@ -126,3 +126,49 @@ Rendered but not opened: 1:100 structure and thermal, 1:500 structure, 1:100 and
 - **Omitted fittings.** Screws, table locks and the slide balls are not modelled. Felt glides exist only as structural supports, because 4 mm pads would lift the legs off their anchors.
 - **Test load.** The 750 N edge load remains an authored estimate, as the asset already states.
 - **Not run.** The repo test suites were not run, only the two checks of the brief.
+
+## Round 5 handcraft (2026-11-21)
+
+Sheets rendered with `sh r5-sheets.sh furniture/dining-table before "closed extended set-for-dinner edge-test-load pulled-apart-key" "extend-table 1"`. Opened with the Read tool: body 1:50 (six views with rig), 1:50 structure, 1:50 thermal cut, 1:50 `extended`, a montage of body 1:100 / 1:200 / 1:500 / 1:500 `extended`, a montage of structure and thermal cut at 1:100 / 1:200 / 1:500, the 2D at 1:50, a montage of the 2D at 1:100 / 1:200 / 1:500 with the poses `set-for-dinner` and `pulled-apart-key` and the clip `extend-table` at 1 s, and the 1:50 body from below (turn 30, tilt -22). Measurements: `r5-furniture-extent.ts furniture/dining-table 50`.
+
+### Reference against model (1:50, pose closed)
+
+| Quantity | Reference (source as in section 1) | Model | Deviation |
+| --- | --- | --- | --- |
+| Length x depth x height | 1600 x 900 x 750 mm (asset, Höffner 160 x 90 listings) | 1600 x 900 x 750 | 0 % |
+| Top thickness | 30 mm (layer `top-plank`; 20-40 mm in listings) | 30 (15 + 15 bevelled) | 0 % |
+| Underside of apron (knee clearance) | at least 600 mm | 610 | in range |
+| Apron | 25 x 80 mm | 25 x 80 (0.61-0.69 m) | 0 % |
+| Leg | 70 mm square under the apron, 45 mm at the floor | 70 / 45 | 0 % |
+| Leg centres | x 0.135 m from the ends, z +-0.375 m (anchors) | 0.135 / +-0.375 | 0 % |
+| Leaf | 600 x 900 x 30 mm | 600 x 900 x 30 (621 with bevels) | 0 % |
+| Slide tube / centre bar | 25 x 12 mm tube, 21 x 8 mm bar, 1.00 m | 25 x 12 / 21 x 8 / 1.000 | 0 % |
+
+### Grades (before = after; no geometry change)
+
+| Scale | Body | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | A | A | A- |
+| 1:100 | A | A | A- |
+| 1:200 | A | A | A- |
+| 1:500 | A- | A | A- |
+
+What I saw:
+- 1:50 reads at once as a solid oak extending table: bevelled top, shadow gap with the blocks and the stored leaf, aprons tenoned between tapered legs. From below you see the tubes on the inner apron faces, the centre bar at the joint and nothing floating.
+- The `extended`, `set-for-dinner`, `pulled-apart-key` and `extend-table` frames stay closed: the leaf rises between the halves and nothing passes through anything.
+- The coarser scales are clean step-by-step generalisations: square plates, straight legs at 1:200, and a slab-and-U-frame at 1:500.
+- Thermal regions are tidy at every scale. The structure is the timber itself (D3 allows this: the top, aprons and legs are the members), with tenon and slide joints. The glides and masses are inside the legs and the top, so they cannot be seen.
+
+Checks: `r3-validate.ts furniture/dining-table --volumes` gives `VALID ... schema 0, validateAsset 0, checkVolumes 0` (print suitability included). `volumes-check.ts --product` gives `PASS` with 41 rule lines ok.
+
+Changes: none. Every measure is within 3 % and I found no visual defect at grade B or worse.
+
+Open points:
+- The leaf held flush in the extended pose sits 30 mm above the centre bars. Only the dowels and friction hold it, and there is no lift bracket. A bracket needs its own bone, and any cleat under the leaf collides with the tubes in the stored position. I checked this against the measured extents.
+- The structure grade is A- only because supports and masses are hidden inside the members.
+
+## 21 November lift mechanism and stored clearance
+
+The dining table now has four captive screw lifts on two stationary crossheads. The digital and printed 1:500 boards keep their 30 mm thickness and the stowed leaf clears the tops. Four lift stations passed 121 positions at all four scales, strict product validation passed, and an independent reader reopened all twelve presentation scenes in a 3,849,244-byte GLB. The C-section runners have a 12 mm inward slot for the crosshead brackets. The two stationary crossheads span the centre bars and hold four shouldered nuts. Four 16 mm posts lift the leaf at x = 640 and 960 mm and z = ±245 mm. The screw heads bear against the underside through both animation phases. The fine crossheads have five lightening pockets apiece. The fine triangulated steel volumes and the material density account for the change to a 64.65 kg table. This is a modeled mechanism and its load estimates have not been tested on hardware.
+
+The language-independent dimensions are in [digital-leaf-case.json](digital-leaf-case.json). [digital-leaf-check.mjs](digital-leaf-check.mjs) checks contact, minimum nut engagement and the stored boards with Three.js. Shipped input SHA-256 a2fd99e3124a01c712bbc4ffaa877c81cefa39d228504453b89ba049b5cee264.

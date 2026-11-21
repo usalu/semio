@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
-  "artifact": "s.norm-eurocode.en1991",
+  "artifact": "s.norm.en1991",
   "inputs": [
     {
       "key": "a",
@@ -3362,6 +3362,1085 @@
       "min": 0.0,
       "max": 1.0,
       "example": 0.0
+    },
+    {
+      "key": "rail_fatigue_speed",
+      "scope": "E2.21.1",
+      "kind": "number",
+      "en": "Maximum permitted vehicle speed",
+      "de": "Höchstzulässige Fahrzeuggeschwindigkeit",
+      "confidence": "high",
+      "unit": "km/h",
+      "unitId": "KilometrePerHour",
+      "min": 0.0,
+      "max": 200.0
+    },
+    {
+      "key": "rail_fatigue_lambda",
+      "scope": "E2.21",
+      "kind": "number",
+      "en": "Damage equivalence factor λ",
+      "de": "Schädigungsäquivalenzfaktor λ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rail_fatigue_gamma_f",
+      "scope": "E2.21",
+      "kind": "number",
+      "en": "Fatigue loading factor γ_Ff",
+      "de": "Teilsicherheitsbeiwert für Ermüdungslasten γ_Ff",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rail_fatigue_gamma_m",
+      "scope": "E2.21",
+      "kind": "number",
+      "en": "Fatigue strength factor γ_Mf",
+      "de": "Teilsicherheitsbeiwert für Ermüdungsfestigkeit γ_Mf",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rail_fatigue_stress",
+      "scope": "E2.21",
+      "kind": "number",
+      "en": "Governing static LM71 / SW/0 stress range without α or Φ₂",
+      "de": "Maßgebende statische Schwingbreite aus LM71 / SW/0 ohne α und Φ₂",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "rail_fatigue_strength",
+      "scope": "E2.21",
+      "kind": "number",
+      "en": "Reference fatigue strength Δσ_C",
+      "de": "Referenzwert der Ermüdungsfestigkeit Δσ_C",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "rail_fatigue_mix",
+      "scope": "E2.21.3",
+      "kind": "choice",
+      "en": "Traffic mix",
+      "de": "Verkehrsmischung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "standard",
+          "en": "Standard traffic",
+          "de": "Standardverkehr"
+        },
+        {
+          "value": "heavy",
+          "en": "Heavy traffic, 250 kN axles",
+          "de": "Schwerverkehr mit 250-kN-Achsen"
+        },
+        {
+          "value": "light",
+          "en": "Light traffic",
+          "de": "Leichtverkehr"
+        }
+      ]
+    },
+    {
+      "key": "rail_hslm_a_train",
+      "scope": "E2.22",
+      "kind": "choice",
+      "en": "HSLM-A universal train",
+      "de": "HSLM-A-Universalzug",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "A1",
+          "en": "A1",
+          "de": "A1"
+        },
+        {
+          "value": "A2",
+          "en": "A2",
+          "de": "A2"
+        },
+        {
+          "value": "A3",
+          "en": "A3",
+          "de": "A3"
+        },
+        {
+          "value": "A4",
+          "en": "A4",
+          "de": "A4"
+        },
+        {
+          "value": "A5",
+          "en": "A5",
+          "de": "A5"
+        },
+        {
+          "value": "A6",
+          "en": "A6",
+          "de": "A6"
+        },
+        {
+          "value": "A7",
+          "en": "A7",
+          "de": "A7"
+        },
+        {
+          "value": "A8",
+          "en": "A8",
+          "de": "A8"
+        },
+        {
+          "value": "A9",
+          "en": "A9",
+          "de": "A9"
+        },
+        {
+          "value": "A10",
+          "en": "A10",
+          "de": "A10"
+        }
+      ]
+    },
+    {
+      "key": "rail_hslm_b_span",
+      "scope": "E2.22.1",
+      "kind": "number",
+      "en": "Span for Figure 6.14",
+      "de": "Stützweite für Bild 6.14",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "min": 0.0,
+      "max": 7.0
+    },
+    {
+      "key": "rail_hslm_b_count",
+      "scope": "E2.22.1",
+      "kind": "number",
+      "en": "Axle count read from Figure 6.14",
+      "de": "Anzahl der Achsen aus Bild 6.14",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 10.0,
+      "max": 20.0
+    },
+    {
+      "key": "rail_hslm_b_spacing",
+      "scope": "E2.22.1",
+      "kind": "number",
+      "en": "Axle spacing read from Figure 6.14",
+      "de": "Achsabstand aus Bild 6.14",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "min": 2.5,
+      "max": 3.5
+    },
+    {
+      "key": "rail_hslm_structure",
+      "scope": "E2.22.2",
+      "kind": "choice",
+      "en": "Structural configuration for Table 6.4",
+      "de": "Tragwerkskonfiguration für Tabelle 6.4",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "simple",
+          "en": "Simply supported line beam or simple plate, negligible skew, rigid supports",
+          "de": "Einfeldträger oder einfache Platte, vernachlässigbare Schiefe, starre Auflager"
+        },
+        {
+          "value": "continuous",
+          "en": "Continuous line beam or simple plate, negligible skew, rigid supports",
+          "de": "Durchlaufträger oder einfache Platte, vernachlässigbare Schiefe, starre Auflager"
+        },
+        {
+          "value": "complex",
+          "en": "Complex structure without significant floor vibration modes",
+          "de": "Komplexes Tragwerk ohne maßgebende Fahrbahnplattenschwingungen"
+        },
+        {
+          "value": "complex_floor",
+          "en": "Complex structure with significant floor vibration modes",
+          "de": "Komplexes Tragwerk mit maßgebenden Fahrbahnplattenschwingungen"
+        }
+      ]
+    },
+    {
+      "key": "crane_duty",
+      "scope": "E3.06",
+      "kind": "choice",
+      "en": "Crane use in Table B.1",
+      "de": "Kraneinsatz nach Tabelle B.1",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "1",
+          "en": "Manual hoisting",
+          "de": "Handbetriebener Kran"
+        },
+        {
+          "value": "2",
+          "en": "Assembly work",
+          "de": "Montagekran"
+        },
+        {
+          "value": "3",
+          "en": "Power station service",
+          "de": "Kraftwerkskran"
+        },
+        {
+          "value": "4",
+          "en": "Warehouse, intermittent duty",
+          "de": "Lagerkran im Aussetzbetrieb"
+        },
+        {
+          "value": "5",
+          "en": "Warehouse, spreader or scrap handling, continuous duty",
+          "de": "Lagerkran, Kran mit Lasttraverse oder Schrottplatzkran im Dauerbetrieb"
+        },
+        {
+          "value": "6",
+          "en": "Workshop use",
+          "de": "Werkstattkran"
+        },
+        {
+          "value": "7",
+          "en": "Travelling bridge or ram, grab or magnet",
+          "de": "Brücken- oder Stempelkran mit Greifer oder Magnet"
+        },
+        {
+          "value": "8",
+          "en": "Casting service",
+          "de": "Gießereikran"
+        },
+        {
+          "value": "9",
+          "en": "Soaking-pit service",
+          "de": "Tiefofenkran"
+        },
+        {
+          "value": "10",
+          "en": "Stripping or charging",
+          "de": "Blockauszieh- oder Beschickungskran"
+        },
+        {
+          "value": "11",
+          "en": "Forging service",
+          "de": "Schmiedekran"
+        },
+        {
+          "value": "12",
+          "en": "Transporter bridge or portal system, hook duty",
+          "de": "Verladebrücke, Halbportal- oder Portalkran mit Laufkatze oder Drehwerk, Hakenbetrieb"
+        },
+        {
+          "value": "13",
+          "en": "Transporter bridge or portal system, grab or magnet duty",
+          "de": "Verladebrücke, Halbportal- oder Portalkran mit Laufkatze oder Drehwerk, Greifer- oder Magnetbetrieb"
+        },
+        {
+          "value": "14",
+          "en": "Travelling conveyor bridge, fixed or sliding belts",
+          "de": "Fahrbare Bandbrücke mit festem oder verschiebbarem Förderband"
+        },
+        {
+          "value": "15",
+          "en": "Dockyard, slipway or fitting-out, hook duty",
+          "de": "Werft-, Helling- oder Ausrüstungskran, Hakenbetrieb"
+        },
+        {
+          "value": "16",
+          "en": "Quay, slewing or floating service, hook duty",
+          "de": "Kai-, Dreh-, Schwimm- oder Wippdrehkran, Hakenbetrieb"
+        },
+        {
+          "value": "17",
+          "en": "Quay, slewing or floating service, grab or magnet duty",
+          "de": "Kai-, Dreh-, Schwimm- oder Wippdrehkran, Greifer- oder Magnetbetrieb"
+        },
+        {
+          "value": "18",
+          "en": "Heavy floating or gantry service",
+          "de": "Schwerlast-Schwimm- oder -Portalkran"
+        },
+        {
+          "value": "19",
+          "en": "Shipboard cargo, hook duty",
+          "de": "Schiffsladekran, Hakenbetrieb"
+        },
+        {
+          "value": "20",
+          "en": "Shipboard cargo, grab or magnet duty",
+          "de": "Schiffsladekran, Greifer- oder Magnetbetrieb"
+        },
+        {
+          "value": "21",
+          "en": "Construction tower crane with slewing gear",
+          "de": "Turmdrehkran für den Baubetrieb"
+        },
+        {
+          "value": "22",
+          "en": "Erection or derrick, hook duty",
+          "de": "Aufricht- oder Derrickkran, Hakenbetrieb"
+        },
+        {
+          "value": "23",
+          "en": "Rail-mounted slewing crane, hook duty",
+          "de": "Schienengebundener Drehkran, Hakenbetrieb"
+        },
+        {
+          "value": "24",
+          "en": "Rail-mounted slewing crane, grab or magnet duty",
+          "de": "Schienengebundener Drehkran, Greifer- oder Magnetbetrieb"
+        },
+        {
+          "value": "25",
+          "en": "Railway crane authorised to travel in trains",
+          "de": "Für die Beförderung in Zügen zugelassener Eisenbahnkran"
+        },
+        {
+          "value": "26",
+          "en": "Truck or mobile crane, hook duty",
+          "de": "Fahrzeug- oder Mobilkran, Hakenbetrieb"
+        },
+        {
+          "value": "27",
+          "en": "Truck or mobile crane, grab or magnet duty",
+          "de": "Fahrzeug- oder Mobilkran, Greifer- oder Magnetbetrieb"
+        },
+        {
+          "value": "28",
+          "en": "Heavy truck or mobile crane",
+          "de": "Schwerlast-Fahrzeug- oder -Mobilkran"
+        }
+      ]
+    },
+    {
+      "key": "silo_modulus_source",
+      "scope": "E4.06",
+      "kind": "choice",
+      "en": "Unloading modulus basis",
+      "de": "Grundlage des Entlastungsmoduls",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "tested",
+          "en": "Material unloading test",
+          "de": "Entlastungsversuch am Schüttgut"
+        },
+        {
+          "value": "density",
+          "en": "Estimate from unit weight and base filling stress",
+          "de": "Abschätzung aus Wichte und vertikaler Füllspannung am Wandfuß"
+        }
+      ]
+    },
+    {
+      "key": "silo_delta_cooling",
+      "scope": "E4.06",
+      "kind": "number",
+      "en": "Stored solid temperature minus wall temperature",
+      "de": "Temperatur des Schüttguts minus Wandtemperatur",
+      "confidence": "high",
+      "unit": "K",
+      "unitId": "Kelvin"
+    },
+    {
+      "key": "silo_wall_thickness",
+      "scope": "E4.06",
+      "kind": "number",
+      "en": "Thickness of the vertical silo wall",
+      "de": "Dicke der vertikalen Silowand",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "silo_wall_expansion",
+      "scope": "E4.06",
+      "kind": "number",
+      "en": "Wall expansion coefficient α_w in 10⁻⁶/K",
+      "de": "Wärmeausdehnungskoeffizient der Wand α_w in 10⁻⁶/K",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "silo_wall_modulus",
+      "scope": "E4.06",
+      "kind": "number",
+      "en": "Wall elastic modulus E_w",
+      "de": "Elastizitätsmodul der Wand E_w",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "silo_unloading_modulus",
+      "scope": "E4.06",
+      "kind": "number",
+      "en": "Measured unloading modulus E_sU at the assessed depth",
+      "de": "Gemessener Entlastungsmodul E_sU in Nachweistiefe",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "silo_solid_poisson",
+      "scope": "E4.06",
+      "kind": "number",
+      "en": "Poisson’s ratio ν of the solid (0.30 if omitted)",
+      "de": "Querdehnzahl ν des Schüttguts (0,30 ohne Eingabe)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "silo_solid_weight",
+      "scope": "E4.06",
+      "kind": "number",
+      "en": "Unit weight of the stored solid γ",
+      "de": "Wichte des Schüttguts γ",
+      "confidence": "high",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "silo_base_filling_stress",
+      "scope": "E4.06",
+      "kind": "number",
+      "en": "Vertical filling stress p_vft at the base of the vertical wall",
+      "de": "Vertikale Füllspannung p_vft am Fuß der vertikalen Wand",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "tank_wind_enclosure",
+      "scope": "E4.09",
+      "kind": "choice",
+      "en": "Circular cylindrical tank or catch basin",
+      "de": "Kreiszylindrischer Tank oder Auffangbecken",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "open_tank",
+          "en": "Open-top tank",
+          "de": "Tank mit offener Oberseite"
+        },
+        {
+          "value": "open_basin",
+          "en": "Open-top catch basin",
+          "de": "Offenes Auffangbecken"
+        },
+        {
+          "value": "small_vents",
+          "en": "Tank vented through small openings",
+          "de": "Tank mit kleinen Lüftungsöffnungen"
+        }
+      ]
+    },
+    {
+      "key": "tank_wind_qe",
+      "scope": "E4.09",
+      "kind": "number",
+      "en": "Peak velocity pressure q_p at external reference height",
+      "de": "Böengeschwindigkeitsdruck q_p in äußerer Bezugshöhe",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "tank_wind_qi",
+      "scope": "E4.09",
+      "kind": "number",
+      "en": "Peak velocity pressure q_p at internal reference height",
+      "de": "Böengeschwindigkeitsdruck q_p in innerer Bezugshöhe",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "tank_wind_cpe",
+      "scope": "E4.09",
+      "kind": "number",
+      "en": "Local external pressure coefficient c_pe",
+      "de": "Lokaler Außendruckbeiwert c_pe",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "tank_pressure_situation",
+      "scope": "E4.09.1",
+      "kind": "choice",
+      "en": "Internal pressure design situation",
+      "de": "Bemessungssituation für den Innendruck",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "operation",
+          "en": "Operation",
+          "de": "Betrieb"
+        },
+        {
+          "value": "test",
+          "en": "Pressure test",
+          "de": "Druckprüfung"
+        }
+      ]
+    },
+    {
+      "key": "tank_pressure_min",
+      "scope": "E4.09.1",
+      "kind": "number",
+      "en": "Specified minimum gauge pressure",
+      "de": "Festgelegter minimaler Relativdruck",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "tank_pressure_max",
+      "scope": "E4.09.1",
+      "kind": "number",
+      "en": "Specified maximum gauge pressure",
+      "de": "Festgelegter maximaler Relativdruck",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "rail_aero_q",
+      "scope": "E2.18,E2.18.1,E2.18.2,E2.18.3,E2.18.4",
+      "kind": "number",
+      "en": "Basic pressure magnitude from the applicable figure",
+      "de": "Grundwert des Druckbetrags aus dem zugehörigen Bild",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "rail_aero_end",
+      "scope": "E2.18,E2.18.1,E2.18.2,E2.18.3,E2.18.4",
+      "kind": "number",
+      "en": "Distance from the nearer structural end along the track",
+      "de": "Abstand vom näheren Bauwerksende in Gleisrichtung",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "rail_aero_train",
+      "scope": "E2.18,E2.18.1,E2.18.3",
+      "kind": "choice",
+      "en": "First train aerodynamic shape",
+      "de": "Aerodynamische Form des ersten Zugs",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unfavourable",
+          "en": "Unfavourable shape",
+          "de": "Ungünstige Form"
+        },
+        {
+          "value": "smooth",
+          "en": "Smooth-sided train",
+          "de": "Zug mit glatten Seitenflächen"
+        },
+        {
+          "value": "streamlined",
+          "en": "Streamlined train",
+          "de": "Stromlinienförmiger Zug"
+        }
+      ]
+    },
+    {
+      "key": "rail_aero_small_panel",
+      "scope": "E2.18,E2.18.3",
+      "kind": "choice",
+      "en": "Panel size for the vertical pressure rule",
+      "de": "Elementgröße für den vertikalen Druckansatz",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "full",
+          "en": "Full surface or ordinary panel",
+          "de": "Gesamtfläche oder reguläres Element"
+        },
+        {
+          "value": "small",
+          "en": "Small panel 1.00 m high by 2.50 m long",
+          "de": "Kleines Element mit 1,00 m Höhe und 2,50 m Länge"
+        }
+      ]
+    },
+    {
+      "key": "rail_aero_q_other",
+      "scope": "E2.18.1,E2.18.2",
+      "kind": "number",
+      "en": "Basic pressure from the second applicable track, if present",
+      "de": "Grundwert des Drucks aus dem zweiten ansetzbaren Gleis, falls vorhanden",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "rail_aero_other_train",
+      "scope": "E2.18.1",
+      "kind": "choice",
+      "en": "Second train aerodynamic shape",
+      "de": "Aerodynamische Form des zweiten Zugs",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unfavourable",
+          "en": "Unfavourable shape",
+          "de": "Ungünstige Form"
+        },
+        {
+          "value": "smooth",
+          "en": "Smooth-sided train",
+          "de": "Zug mit glatten Seitenflächen"
+        },
+        {
+          "value": "streamlined",
+          "en": "Streamlined train",
+          "de": "Stromlinienförmiger Zug"
+        }
+      ]
+    },
+    {
+      "key": "rail_aero_edge",
+      "scope": "E2.18.1",
+      "kind": "number",
+      "en": "Distance from the edge of a wide crossing structure, if applicable",
+      "de": "Abstand vom Rand eines breiten kreuzenden Bauwerks, falls zutreffend",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "rail_aero_height",
+      "scope": "E2.18.2",
+      "kind": "number",
+      "en": "Underside height above the first track railhead",
+      "de": "Höhe der Unterseite über der Schienenoberkante des ersten Gleises",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "rail_aero_other_height",
+      "scope": "E2.18.2",
+      "kind": "number",
+      "en": "Underside height above the second track railhead",
+      "de": "Höhe der Unterseite über der Schienenoberkante des zweiten Gleises",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "rail_aero_clearance_min",
+      "scope": "E2.18.3",
+      "kind": "number",
+      "en": "Minimum distance from track centre to the surface",
+      "de": "Kleinster Abstand der Fläche von der Gleisachse",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "rail_aero_clearance_max",
+      "scope": "E2.18.3",
+      "kind": "number",
+      "en": "Maximum distance from track centre to the surface",
+      "de": "Größter Abstand der Fläche von der Gleisachse",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "rail_aero_enclosed_length",
+      "scope": "E2.18.4",
+      "kind": "number",
+      "en": "Length of the track enclosure",
+      "de": "Länge der Gleiseinhausung",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "min": 0.0,
+      "max": 20.0
+    },
+    {
+      "key": "rail_aero_enclosed_tracks",
+      "scope": "E2.18.4",
+      "kind": "choice",
+      "en": "Enclosed tracks",
+      "de": "Eingehauste Gleise",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "one",
+          "en": "One track",
+          "de": "Ein Gleis"
+        },
+        {
+          "value": "two",
+          "en": "Two tracks",
+          "de": "Zwei Gleise"
+        }
+      ]
+    },
+    {
+      "key": "rail_aero_enclosed_overhead",
+      "scope": "E2.18.4",
+      "kind": "number",
+      "en": "Overhead base pressure from Figure 6.23 for one track",
+      "de": "Grundwert des Überkopfdrucks aus Bild 6.23 für ein Gleis",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "bb_source",
+      "scope": "E12.03",
+      "kind": "choice",
+      "en": "German Annex BB fire load basis",
+      "de": "Brandlastgrundlage nach deutschem Anhang BB",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "typical_use",
+          "en": "Typical room occupancy (Table BB.1)",
+          "de": "Nutzungstypischer Raum (Tabelle BB.1)"
+        },
+        {
+          "value": "survey",
+          "en": "Project fire-load survey (BB.3.3)",
+          "de": "Brandlasterhebung im Einzelfall (BB.3.3)"
+        }
+      ],
+      "example": "typical_use"
+    },
+    {
+      "key": "bb_gamma",
+      "scope": "E12.03",
+      "kind": "number",
+      "en": "Project partial factor γ_fi,q from BB.5",
+      "de": "Projektspezifischer Teilsicherheitsbeiwert γ_fi,q nach BB.5",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "bb_use_chi",
+      "scope": "E12.03",
+      "kind": "number",
+      "en": "Occupancy combustion efficiency χ for BB.1",
+      "de": "Verbrennungseffektivität χ der Nutzung für BB.1",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.8
+    },
+    {
+      "key": "bb_construction_mj",
+      "scope": "E12.03",
+      "kind": "number",
+      "en": "Effective construction fire load after combustion and protection factors",
+      "de": "Wirksame Brandlast der Konstruktion nach Verbrennungs- und Schutzbeiwerten",
+      "confidence": "high",
+      "unit": "MJ/m²",
+      "unitId": "MegajoulePerSquareMetre",
+      "example": 0.0
+    },
+    {
+      "key": "bb_survey_mj",
+      "scope": "E12.03",
+      "kind": "number",
+      "en": "Effective surveyed fire load per floor area after combustion and protection factors",
+      "de": "Wirksame erhobene Brandlast je Grundfläche nach Verbrennungs- und Schutzbeiwerten",
+      "confidence": "high",
+      "unit": "MJ/m²",
+      "unitId": "MegajoulePerSquareMetre",
+      "example": 50.0
+    },
+    {
+      "key": "area",
+      "scope": "E12.03.1",
+      "kind": "number",
+      "en": "Fire-separated floor area of the occupancy unit",
+      "de": "Brandschutztechnisch abgetrennte Grundfläche der Nutzungseinheit",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre",
+      "example": 100.0
+    },
+    {
+      "key": "bb_ignition_use",
+      "scope": "E12.03.1",
+      "kind": "choice",
+      "en": "Occupancy for ignition probability (Table BB.3)",
+      "de": "Nutzung für die Brandentstehungswahrscheinlichkeit (Tabelle BB.3)",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "residential",
+          "en": "Residential building",
+          "de": "Wohngebäude"
+        },
+        {
+          "value": "office",
+          "en": "Office building",
+          "de": "Bürogebäude"
+        },
+        {
+          "value": "hospital",
+          "en": "Hospital or care home",
+          "de": "Krankenhaus oder Pflegeheim"
+        },
+        {
+          "value": "hotel",
+          "en": "Hotel or accommodation",
+          "de": "Hotel oder Beherbergungsstätte"
+        },
+        {
+          "value": "school",
+          "en": "School or education facility",
+          "de": "Schule oder Bildungseinrichtung"
+        },
+        {
+          "value": "retail",
+          "en": "Retail or commercial building",
+          "de": "Verkaufsstätte oder Geschäftshaus"
+        },
+        {
+          "value": "theatre",
+          "en": "Theatre or cinema",
+          "de": "Theater oder Kino"
+        },
+        {
+          "value": "assembly",
+          "en": "Other assembly occupancy",
+          "de": "Sonstige Versammlungsstätte"
+        }
+      ],
+      "example": "office"
+    },
+    {
+      "key": "bb_probability_method",
+      "scope": "E12.03.1",
+      "kind": "choice",
+      "en": "Annual ignition probability method",
+      "de": "Methode für die jährliche Brandentstehungswahrscheinlichkeit",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "conservative",
+          "en": "Larger of area-based and tabulated probabilities",
+          "de": "Größere Wahrscheinlichkeit aus Flächenansatz und Tabelle"
+        },
+        {
+          "value": "area",
+          "en": "Area-based probability",
+          "de": "Flächenbezogene Wahrscheinlichkeit"
+        },
+        {
+          "value": "average",
+          "en": "Tabulated mean for representative floor areas",
+          "de": "Tabellenmittel bei repräsentativer Grundfläche"
+        }
+      ],
+      "example": "conservative"
+    },
+    {
+      "key": "bb_occupant_failure",
+      "scope": "E12.03.1",
+      "kind": "number",
+      "en": "Occupant fire response failure probability p_2,1",
+      "de": "Ausfallwahrscheinlichkeit p_2,1 der Selbsthilfemaßnahmen",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.5
+    },
+    {
+      "key": "bb_brigade",
+      "scope": "E12.03.1",
+      "kind": "choice",
+      "en": "Fire brigade response (Table BB.4)",
+      "de": "Brandbekämpfung durch die Feuerwehr (Tabelle BB.4)",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "public",
+          "en": "Public fire service",
+          "de": "Öffentliche Feuerwehr"
+        },
+        {
+          "value": "onsite_four",
+          "en": "On-site fire brigade with four crews and automatic detection and alert",
+          "de": "Betriebsfeuerwehr mit vier Staffeln und automatischer Brandmeldung und Alarmierung"
+        },
+        {
+          "value": "onsite_two",
+          "en": "On-site fire brigade with two crews and automatic detection and alert",
+          "de": "Betriebsfeuerwehr mit zwei Staffeln und automatischer Brandmeldung und Alarmierung"
+        },
+        {
+          "value": "project",
+          "en": "Project-specific response failure probability",
+          "de": "Projektspezifische Ausfallwahrscheinlichkeit der Feuerwehr"
+        }
+      ],
+      "example": "public"
+    },
+    {
+      "key": "bb_response_min",
+      "scope": "E12.03.1",
+      "kind": "number",
+      "en": "Alarm-to-operation time for the brigade, including alarm and response delay",
+      "de": "Vornahmezeit der Feuerwehr mit Alarmierungszeit und Hilfsfrist",
+      "confidence": "high",
+      "unit": "min",
+      "unitId": "Minute",
+      "example": 15.0
+    },
+    {
+      "key": "bb_brigade_project",
+      "scope": "E12.03.1",
+      "kind": "number",
+      "en": "Fire brigade failure p_2,2 for project-specific response",
+      "de": "Ausfallwahrscheinlichkeit p_2,2 für projektspezifische Feuerwehr",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.2
+    },
+    {
+      "key": "bb_suppression",
+      "scope": "E12.03.1",
+      "kind": "choice",
+      "en": "Automatic suppression system (Table BB.4)",
+      "de": "Automatische Löschanlage (Tabelle BB.4)",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "absent",
+          "en": "No automatic suppression system",
+          "de": "Keine automatische Löschanlage"
+        },
+        {
+          "value": "standard",
+          "en": "Sprinklers to VdS/CEA requirements",
+          "de": "Sprinkleranlage nach VdS/CEA"
+        },
+        {
+          "value": "other_sprinkler",
+          "en": "Other automatic sprinkler system",
+          "de": "Sonstige automatische Sprinkleranlage"
+        },
+        {
+          "value": "water",
+          "en": "Other water-based system",
+          "de": "Sonstige Wasserlöschanlage"
+        },
+        {
+          "value": "gas",
+          "en": "Gaseous suppression system",
+          "de": "Gaslöschanlage"
+        }
+      ],
+      "example": "absent"
+    },
+    {
+      "key": "bb_failure_group",
+      "scope": "E12.03.1",
+      "kind": "choice",
+      "en": "Annual target reliability group (Table BB.5)",
+      "de": "Gruppe der Zielzuverlässigkeit pro Jahr (Tabelle BB.5)",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "office",
+          "en": "Residential, office or similar uses",
+          "de": "Wohnen, Büro oder vergleichbare Nutzung"
+        },
+        {
+          "value": "other",
+          "en": "Special buildings in Table BB.5 rows 2 to 7",
+          "de": "Sonderbauten nach Tabelle BB.5 Zeile 2 bis 7"
+        },
+        {
+          "value": "agricultural",
+          "en": "Agricultural building",
+          "de": "Landwirtschaftlich genutztes Gebäude"
+        },
+        {
+          "value": "project",
+          "en": "Project target with independent substantiation",
+          "de": "Nachgewiesener projektspezifischer Zielwert"
+        }
+      ],
+      "example": "office"
+    },
+    {
+      "key": "bb_consequence",
+      "scope": "E12.03.1",
+      "kind": "choice",
+      "en": "Consequences of structural failure",
+      "de": "Schadensfolgen bei Bauteilversagen",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "high",
+          "en": "High",
+          "de": "Hoch"
+        },
+        {
+          "value": "medium",
+          "en": "Medium",
+          "de": "Mittel"
+        },
+        {
+          "value": "low",
+          "en": "Low",
+          "de": "Gering"
+        }
+      ],
+      "example": "medium"
+    },
+    {
+      "key": "bb_project_failure",
+      "scope": "E12.03.1",
+      "kind": "number",
+      "en": "Independently substantiated annual target failure probability p_f",
+      "de": "Nachgewiesene jährliche Ziel-Versagenswahrscheinlichkeit p_f",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 1.3e-05
     }
   ]
 }

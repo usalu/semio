@@ -221,6 +221,10 @@ impl ShellState {
                 pending_file_opens: Vec::new(),
                 import_transfers: VecDeque::new(),
                 import_transfer_next: 1,
+                #[cfg(not(target_arch = "wasm32"))]
+                native_media_save: None,
+                #[cfg(not(target_arch = "wasm32"))]
+                native_original_media: Vec::new(),
                 last_envelope_dsl: None,
                 #[cfg(not(target_arch = "wasm32"))]
                 document_services: Vec::new(),

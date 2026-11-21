@@ -5,7 +5,6 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateMedia, compareEditedGeometry, validateCanvasCapture } from "./media-oracles.mjs";
-import { assertSurfaceHealthy } from "./browser-health.mjs";
 import { assertRenderedTextContrast } from "./browser-text-contrast.mjs";
 import { planBrowserOutputPaths } from "./browser-output-paths.mjs";
 import { waitForProjection } from "./browser-projection.mjs";
@@ -13,8 +12,11 @@ import { waitForProjection } from "./browser-projection.mjs";
 const ticket = dirname(fileURLToPath(import.meta.url));
 const contract = JSON.parse(readFileSync(join(ticket, "browser-journey.json"), "utf8"));
 const extended = process.argv.includes("--physical-interactions");
-const steps = extended ? [...contract.steps, ...contract.physicalInteractions.steps] : contract.steps;
-const outputChildren = ["report.json", "console.txt", "failure.png", "boot-canvas.png", "baseline.svg", "baseline.png", "edited.svg", "edited.png", "edited.pdf", "edited.semio-archive", "linked-before.svg", "linked-after.svg", "downloads", join("downloads", "a".repeat(36)), ...steps.map((step, index) => String(index + 1).padStart(2, "0") + "-" + step.step + ".png")];
+const largeSheet = process.argv.includes("--large-sheet-preview");
+assert.ok(!(largeSheet && extended), "Choose one opt-in browser journey mode");
+const steps = largeSheet ? [...contract.steps.slice(0, 2), ...contract.largeSheetPreview.steps]
+  : extended ? [...contract.steps, ...contract.physicalInteractions.steps] : contract.steps;
+const outputChildren = ["report.json", "console.txt", "failure.png", "boot-canvas.png", "baseline.svg", "baseline.png", "edited.svg", "edited.png", "edited.pdf", "edited.semio-archive", "linked-before.svg", "linked-after.svg", "downloads", join("downloads", "a".repeat(36)), ...(largeSheet ? ["large-sheet.svg", "large-sheet-after.svg"] : []), ...steps.map((step, index) => String(index + 1).padStart(2, "0") + "-" + step.step + ".png")];
 const requestedTicketIndex = process.argv.indexOf("--output-ticket");
 const requestedTicket = requestedTicketIndex < 0 ? ticket : process.argv[requestedTicketIndex + 1];
 assert.ok(requestedTicket, "--output-ticket requires an existing ticket folder");
@@ -57,7 +59,7 @@ try {
   if (cancellation) throw Error("Browser journey cancelled: " + cancellation.reason);
   const context = await browser.newContext({ viewport: { width: 1900, height: 1200 }, acceptDownloads: true, locale: "en-US" });
   page = await context.newPage();
-  if (extended) await page.addInitScript(() => localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"));
+  if (extended || largeSheet) await page.addInitScript(() => localStorage.setItem("SEMIO_RUNTIME_DIAGNOSTICS", "1"));
   page.on("console", message => lines.push({ t: Date.now() - start, type: message.type(), text: message.text() }));
   page.on("pageerror", error => lines.push({ t: Date.now() - start, type: "pageerror", text: String(error) }));
   page.setDefaultTimeout(15000);
@@ -72,7 +74,8 @@ try {
     const tabs = nodes.filter(node => node.getAttribute("role") === "tab" && /^dock\.tab\.[^.]*\..+$/.test(node.dataset.nodeKey));
     const active = tabs.filter(node => node.getAttribute("aria-selected") === "true" && /blueprint/i.test(node.dataset.nodeKey));
     const canvas = document.getElementById("semio-wgpu-canvas");
-    const statuses = nodes.filter(node => node.getAttribute("role") === "status" || node.getAttribute("role") === "alert");
+    const statuses = [...document.querySelectorAll('[role="status"], [role="alert"]')]
+      .filter(node => !node.closest('[hidden], [aria-hidden="true"]'));
     return {
       ready: document.documentElement.getAttribute("data-semio-os-ready"),
       error: document.documentElement.getAttribute("data-semio-os-error"),
@@ -82,9 +85,13 @@ try {
       selected: rows.filter(row => row.getAttribute("aria-selected") === "true").map(row => row.dataset.nodeKey).sort(),
       ownerWindowId: active.length === 1 ? active[0].dataset.nodeKey.split(".").slice(3).join(".") : null,
       windowIds: [...new Set(tabs.map(node => node.dataset.nodeKey.split(".").slice(3).join(".")))].sort(),
-      hosts: canvas ? [{ id: canvas.id, phase: null, fault: null, statusJson: null, boardStatusJson: null, canvases: [{ width: canvas.width, height: canvas.height }], uiTurn: canvas.dataset.uiTurn }] : [],
+      canvas: canvas ? { width: canvas.width, height: canvas.height, uiTurn: canvas.dataset.uiTurn } : null,
       accessibility: { nodes: nodes.length, unnamed: nodes.filter(node => node.dataset.actionable === "true" && !node.getAttribute("aria-label") && !node.textContent?.trim()).map(node => node.dataset.nodeKey) },
-      surfaceFaults: statuses.filter(node => node.getAttribute("role") === "alert" || /fault|failed|refused|unreachable/i.test(node.getAttribute("aria-label") ?? "")).map(node => ({ id: node.dataset.nodeKey, text: node.getAttribute("aria-label") })),
+      surfaceFaults: statuses.map(node => ({
+        id: node.dataset.nodeKey ?? node.id,
+        alert: node.getAttribute("role") === "alert",
+        text: [node.getAttribute("aria-label"), node.textContent?.trim()].filter(Boolean).join(" "),
+      })).filter(status => status.alert || /fault|failed|refused|unreachable/i.test(status.text)),
     };
   });
 
@@ -94,7 +101,7 @@ try {
     assert.deepEqual(state.surfaceFaults, [], "visible surface fault");
     assert.ok(state.accessibility.nodes > 0, "current renderer publishes accessible controls");
     assert.deepEqual(state.accessibility.unnamed, [], "actionable controls carry accessible names");
-    for (const host of state.hosts) assertSurfaceHealthy(host);
+    assert.ok(state.canvas?.width > 0 && state.canvas?.height > 0, "visible renderer canvas has backing pixels");
   };
   const faults = from => lines.slice(from).filter(line => {
     if (line.text.includes("contributions push refused empty pack")) return false;
@@ -231,10 +238,17 @@ try {
     assert.ok(bytes.length > 32, name + " payload");
     return { bytes, path, submitted, filename: result.suggestedFilename() };
   };
-  const inspectorText = () => nodes().and(page.locator('[data-window="framework.panel.inspection"] textarea[data-node-key*="global.story.story-1.content"]'));
+  const inspectorWindow = "framework.panel.inspection";
+  const demoStory = "layout-play-inspector.global.story.story-1.content";
+  const inspector = () => nodes().and(page.locator(attr("data-window", inspectorWindow) + ':not([aria-hidden="true"])'));
+  const inspectorText = () => inspector().and(page.locator(`textarea[data-node-key^="${demoStory}.span.0."][data-node-key$=".input"]`));
   const openInspector = async () => {
-    if (await inspectorText().count() === 0) await togglePanel("framework.panel.inspection");
-    await one(inspectorText(), "story-1 authored textarea");
+    if (await inspector().count() === 0) await togglePanel(inspectorWindow);
+    if (await inspectorText().count() === 0) {
+      const story = await one(inspector().and(page.locator(attr("data-node-key", demoStory))), "story-1 content row");
+      if (await story.getAttribute("aria-expanded") === "false") await activate(story, "story-1 content disclosure");
+    }
+    await one(inspectorText(), "story-1 first content span");
   };
   const storyMarker = async (marker, previous) => {
     await openInspector();
@@ -253,7 +267,7 @@ try {
   };
 
   await page.goto(url, { waitUntil: "domcontentloaded" });
-  const boot = await poll("layout boot", state => state.ready === "layout" && state.ownerWindowId !== null && state.hosts.some(host => host.canvases.some(canvas => canvas.width > 100 && canvas.height > 100)), 180000);
+  const boot = await poll("layout boot", state => state.ready === "layout" && state.ownerWindowId !== null && state.canvas?.width > 100 && state.canvas?.height > 100, 180000);
   let owner = boot.ownerWindowId;
   assert.ok(/blueprint/i.test(owner), "boot focuses a Blueprint owner");
   const canvas = page.locator('#semio-wgpu-canvas');
@@ -268,6 +282,7 @@ try {
   for (const id of contract.demo.requiredFrames) assert.ok(baseline.frameIds.includes(id), "demo frame " + id);
   await record("artifact-panel-baseline", { observed: true, frameIds: baseline.frameIds, pageIds: baseline.pageIds });
 
+  async function runDocumentJourney() {
   await selectContentPage();
   const beforeSvg = await download(owner, "exportSvg", "baseline.svg");
   const beforePng = await download(owner, "exportPng", "baseline.png");
@@ -435,7 +450,7 @@ try {
     next.searchParams.set("example", linked.exampleId);
     const fromPlacement = lines.length;
     await page.goto(next.href, { waitUntil: "domcontentloaded" });
-    const nextBoot = await poll("linked asset example boot", state => state.ready === "layout" && state.ownerWindowId !== null && state.hosts.some(host => host.canvases.some(canvas => canvas.width > 100)), 180000);
+    const nextBoot = await poll("linked asset example boot", state => state.ready === "layout" && state.ownerWindowId !== null && state.canvas?.width > 100, 180000);
     owner = nextBoot.ownerWindowId;
     await openArtifact();
     const beforePlacement = await poll("linked example's original page and frame", state => state.pageIds.includes(linked.pageRowKey) && state.frameIds.includes(linked.originalFrameId));
@@ -451,14 +466,26 @@ try {
       }
       await one(key(linked.rowKey).and(page.getByRole("treeitem", { name: linked.rowLabel, exact: true })), "persisted linked-asset catalogue row");
     };
-    const { JSDOM } = await import("jsdom");
-    const rasterRefs = bytes => [...new JSDOM(bytes.toString("utf8"), { contentType: "image/svg+xml" }).window.document.querySelectorAll("image")].map(node => node.getAttribute("href"));
+    const [{ JSDOM }, { observeLinkedProxy }] = await Promise.all([import("jsdom"), import("./browser-physical-interactions.mjs")]);
+    const rasterRefs = bytes => {
+      const { window } = new JSDOM(bytes.toString("utf8"), { contentType: "image/svg+xml" });
+      try {
+        return [...window.document.querySelectorAll("image")].map(node => node.getAttribute("href"));
+      } finally {
+        window.close();
+      }
+    };
     const originalImage = rasterRefs((await download(owner, "exportSvg", "linked-before.svg")).bytes);
     assert.equal(originalImage.length, 1, "linked example initially paints one raster");
     assert.ok(originalImage[0].startsWith("data:image/png;base64,"));
     await openCatalogue();
+    const verifyPlacedPaint = await observeLinkedProxy({
+      page, owner, bytes: Buffer.from(originalImage[0].split(",")[1], "base64"),
+      tolerance: linked.proxyColorTolerance, minimumColorPixels: linked.minimumProxyColorPixels,
+    });
     const dropped = await dragStoredLayoutLink(page, owner, linked.rowKey);
     assert.equal(dropped.source.sourceLinkId, linked.linkId);
+    const proxyPaint = await verifyPlacedPaint(dropped.to);
     await openArtifact();
     const afterPlacement = await poll("exact linked frame added", state => state.frameIds.length === beforePlacement.frameIds.length + 1);
     const created = added(beforePlacement.frameIds, afterPlacement.frameIds);
@@ -466,8 +493,77 @@ try {
     assert.equal(created.introduced.length, 1);
     const placed = rasterRefs((await download(owner, "exportSvg", "linked-after.svg")).bytes);
     assert.deepEqual(placed, [originalImage[0], originalImage[0]], "placed frame paints the actual persisted source PNG again");
-    await record("physical-linked-placement", { valid: true, frameId: created.introduced[0], ...dropped }, fromPlacement);
+    await record("physical-linked-placement", { valid: true, proxyVisible: true, frameId: created.introduced[0], proxyPaint, ...dropped }, fromPlacement);
   }
+
+  }
+
+  if (largeSheet) {
+    const { verifyLargeSheetSvg, verifyLargeSheetUnchanged, verifyLargeViewport } = await import("./browser-large-sheet.mjs");
+    const specification = contract.largeSheetPreview;
+    const fixture = JSON.parse(readFileSync(resolve(ticket, "../../../../../../..", specification.fixture), "utf8"));
+    const sheet = fixture.document.pages[0];
+    assert.equal(fixture.document.schema, "layout.layout");
+    assert.equal(fixture.document.pages.length, 1);
+    assert.deepEqual([sheet.width, sheet.height], [fixture.vectorWidth, fixture.vectorHeight]);
+    assert.equal(sheet.frames.length, fixture.frameCount);
+    await selectContentPage();
+    if (await inspector().count() === 0) await togglePanel(inspectorWindow);
+    const pause = milliseconds => page.waitForTimeout(milliseconds);
+    const fieldInput = (action, field) => inspector().and(page.locator(attr("data-node-key", "layout-play-inspector." + action + "." + field + ".input")));
+    const patch = async (action, field, value) => {
+      const input = fieldInput(action, field);
+      await one(input, action + " " + field);
+      const began = performance.now();
+      await input.fill(String(value));
+      await input.press("Tab");
+      await waitForProjection(action + " " + field + " commit", async () => {
+        if (await input.count() !== 1) return null;
+        return input.evaluate(element => ({ value: element.value, blurred: element !== document.activeElement }));
+      }, state => state?.blurred && Number(state.value) === value, { pause });
+      return performance.now() - began;
+    };
+    const selectedPosition = async () => {
+      const inputs = [fieldInput("patchFrame", "x"), fieldInput("patchFrame", "y")];
+      if (!(await Promise.all(inputs.map(input => input.count()))).every(count => count === 1)) return null;
+      return (await Promise.all(inputs.map(input => input.inputValue()))).map(Number);
+    };
+    const fromAuthoring = lines.length;
+    const dimensionsMs = { width: await patch("patchPage", "width", sheet.width), height: await patch("patchPage", "height", sheet.height) };
+    const positions = new Set(sheet.frames.map(({ bounds }) => String([bounds.x, bounds.y])));
+    assert.equal(positions.size, fixture.frameCount, "each rectangle has a unique inspector position");
+    const authored = [];
+    for (const frame of sheet.frames) {
+      assert.equal(frame.kind, "rect");
+      assert.equal(frame.bounds.rotation, 0);
+      const { x, y, w, h } = frame.bounds;
+      const previous = await selectedPosition();
+      assert.notDeepEqual(previous, [x, y], "frame position changes selection after addFrame");
+      const began = performance.now();
+      await submitAction(owner, "addFrame", { kind: "rect", x, y });
+      await waitForProjection("selected position for " + frame.id, selectedPosition, values => values?.[0] === x && values?.[1] === y, { pause });
+      const addMs = performance.now() - began;
+      const widthMs = await patch("patchFrame", "width", w);
+      const heightMs = await patch("patchFrame", "height", h);
+      authored.push({ sourceId: frame.id, x, y, width: w, height: h, addMs, widthMs, heightMs, uiTurn: (await snapshot()).canvas.uiTurn });
+      console.log("[DEBUG] Large-sheet frames authored " + authored.length + "/" + fixture.frameCount);
+    }
+    if (await inspector().count() > 0) await togglePanel(inspectorWindow);
+    const saved = await download(owner, "exportSvg", "large-sheet.svg");
+    await record("large-sheet-authoring", { ...verifyLargeSheetSvg(saved.bytes, fixture), dimensionsMs, authored }, fromAuthoring);
+    if (await pane(owner).count() > 0) {
+      await activate(key("framework.window." + owner + ".engagement.toggle"), "Close Actions before viewport input");
+      await pane(owner).first().waitFor({ state: "detached" });
+    }
+    await openArtifact();
+    const state = await snapshot();
+    const fromMotion = lines.length;
+    const motion = await verifyLargeViewport({ page, owner });
+    await poll("viewport motion keeps the authored document", next => next.artifactPanels === 1 && sameDocument(next, state));
+    const afterMotion = await download(owner, "exportSvg", "large-sheet-after.svg");
+    const documentUnchanged = verifyLargeSheetUnchanged(saved.bytes, afterMotion.bytes);
+    await record("large-sheet-viewport", { ...motion, documentUnchanged }, fromMotion);
+  } else await runDocumentJourney();
 
   for (const expected of steps) {
     const actual = report.steps.find(step => step.step === expected.step);

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/elevation.json",
+  "description": "A regular WGS84 grid of elevation point samples before vertical exaggeration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bounds", "rows"],
+  "properties": {
+    "bounds": {
+      "x-semio-ui": { "label": { "en": "Elevation bounds", "de": "Grenzen des Höhenrasters" } },
+      "description": "West, south, east and north sample coordinates in decimal degrees.",
+      "type": "array",
+      "items": [
+        { "type": "number", "minimum": -180, "maximum": 180 },
+        { "type": "number", "minimum": -90, "maximum": 90 },
+        { "type": "number", "minimum": -180, "maximum": 180 },
+        { "type": "number", "minimum": -90, "maximum": 90 }
+      ],
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "rows": {
+      "x-semio-ui": { "label": { "en": "Elevation rows", "de": "Zeilen des Höhenrasters" } },
+      "description": "South-to-north rows with west-to-east samples. Heights are whole meters.",
+      "type": "array",
+      "minItems": 33,
+      "maxItems": 33,
+      "items": {
+        "type": "array",
+        "minItems": 33,
+        "maxItems": 33,
+      "items": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "valid": [
+    {
+      "name": "rgba-large",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "seed": 63029
+    },
+    {
+      "name": "rgb-all-filters",
+      "width": 73,
+      "height": 49,
+      "mode": "RGB",
+      "seed": 47
+    },
+    {
+      "name": "gray-alpha",
+      "width": 23,
+      "height": 19,
+      "mode": "LA",
+      "seed": 179
+    },
+    {
+      "name": "gray",
+      "width": 33,
+      "height": 17,
+      "mode": "L",
+      "seed": 731
+    }
+  ],
+  "refusals": [
+    {
+      "name": "chunk-crc",
+      "kind": "InvalidCrc"
+    },
+    {
+      "name": "adler",
+      "kind": "InvalidAdler"
+    },
+    {
+      "name": "nonconsecutive-idat",
+      "kind": "InvalidChunk"
+    },
+    {
+      "name": "unexpected-alpha-key",
+      "kind": "UnsupportedImage"
+    },
+    {
+      "name": "trailing",
+      "kind": "InvalidEnd"
+    },
+    {
+      "name": "duplicate-palette",
+      "kind": "InvalidChunk"
+    }
+  ]
+}

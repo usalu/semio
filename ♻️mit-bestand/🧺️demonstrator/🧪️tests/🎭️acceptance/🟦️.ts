@@ -525,6 +525,40 @@ test(`overview chrome ${language}`, async ({ page }) => {
 });
 });
 
+test("short overview scrolls below its chrome and returns focus to the opened card", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 300 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await dismissIntroduction(page, page.locator('[id="ui.introduction.skip"]'));
+
+  const overview = page.locator('[data-layered-overview][data-mode="strip"]');
+  const grid = overview.locator("[data-layered-overlay]");
+  const navbar = overview.locator(':scope > div > [data-slot="navbar"]');
+  const footer = overview.locator(':scope > div > [data-slot="footer"]');
+  const cards = grid.locator("[data-overview-card]");
+  await expect(navbar).toHaveClass(/ui-chrome-tint/);
+  await expect(footer).toHaveClass(/ui-chrome-tint/);
+  const topBand = (await navbar.boundingBox())!;
+  const bottomBand = (await footer.boundingBox())!;
+  const first = (await cards.first().boundingBox())!;
+  expect(first.y).toBeGreaterThanOrEqual(topBand.y + topBand.height - 1);
+
+  await grid.evaluate((element) => { element.scrollTop = 16; });
+  expect((await cards.first().boundingBox())!.y).toBeLessThan(topBand.y + topBand.height);
+  await grid.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  const last = cards.last();
+  const end = (await last.boundingBox())!;
+  expect(end.y + end.height).toBeLessThanOrEqual(bottomBand.y + 1);
+  expect((await navbar.boundingBox())!.y).toBe(topBand.y);
+  expect((await footer.boundingBox())!.y).toBe(bottomBand.y);
+
+  await last.focus();
+  await page.keyboard.press("Enter");
+  await expect(grid).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(last).toBeFocused();
+  await expect.poll(() => grid.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+});
+
 /** 🧭️ No stored choice and no supported browser language: the viewer is asked, nothing is preselected, and the choice is applied, declared and kept across a reload. */
 test.describe("language choice", () => {
   test.use({ locale: "fr-FR" });

@@ -189,13 +189,60 @@ for (const text of options) {
   await pick(text);
   await waitMeshes(`edit:${text}`, meshWait, EXPECTED_WIDGETS[text], text, undefined, "window:procedural-preview");
 }
+if (options.includes("Rectangle Extrude Volume")) await pick("Rectangle Extrude Volume");
 await page.keyboard.press("Meta+Alt+ArrowRight");
 await waitMeshes("generate-mode", 10);
-{
-  const add = page.locator(':text-is("Add Generation"), :text-is("Generation hinzufügen"), [data-action-id="addGeneration"]').first();
-  if (await add.count()) { await add.click({ timeout: 4000 }); console.log("[DEBUG] clicked Add Generation"); }
-  else console.log("[DEBUG] Add Generation row not found");
+const generationControls = { added: [], renamed: null, removed: [], error: null };
+const rowSelector = '[role="treeitem"][id*=".generation."]';
+const rowIds = () => page.locator(rowSelector).evaluateAll(rows => rows.map(row => row.id));
+const row = id => page.locator(`[role="treeitem"][id=${JSON.stringify(id)}]`);
+const add = page.locator('[role="treeitem"][id$=".add-generation"]');
+const twoLanguages = {
+  rename: /^(Rename generation|Generierung umbenennen)$/u,
+  remove: /^(Remove|Entfernen)$/u,
+};
+async function addProbeGeneration() {
+  const previous = await rowIds();
+  await add.press("Enter", { timeout: 8000 });
+  await page.waitForFunction(({ selector, previous }) =>
+    [...document.querySelectorAll(selector)].some(element => !previous.includes(element.id)),
+  { selector: rowSelector, previous }, { timeout: meshWait * 1000 });
+  const added = (await rowIds()).filter(id => !previous.includes(id));
+  if (added.length !== 1) throw Error("Adding a generation must publish exactly one new row");
+  generationControls.added.push(added[0]);
+  return added[0];
+}
+try {
+  const saved = await addProbeGeneration();
   await waitMeshes("generate-added", meshWait);
+  const disposable = await addProbeGeneration();
+  await row(saved).press("Enter", { timeout: 8000 });
+  const field = page.getByRole("textbox", { name: twoLanguages.rename });
+  await field.waitFor({ state: "visible", timeout: 8000 });
+  if (await field.getAttribute("id") !== saved + ".rename") throw Error("Selecting a generation must open its own accessible name field");
+  await field.fill("Preview study");
+  await field.press("Enter");
+  await row(saved).getByText("Preview study", { exact: true }).waitFor({ timeout: 8000 });
+  generationControls.renamed = saved;
+  await row(disposable).getByRole("button", { name: twoLanguages.remove }).press("Enter", { timeout: 8000 });
+  await row(disposable).waitFor({ state: "detached", timeout: 8000 });
+  generationControls.removed.push(disposable);
+  await row(saved).getByText("Preview study", { exact: true }).waitFor({ timeout: 8000 });
+} catch (error) {
+  generationControls.error = String(error);
+} finally {
+  for (const id of generationControls.added) {
+    if (!(await row(id).count())) continue;
+    try {
+      await row(id).getByRole("button", { name: twoLanguages.remove }).press("Enter", { timeout: 8000 });
+      await row(id).waitFor({ state: "detached", timeout: 8000 });
+      generationControls.removed.push(id);
+    } catch (error) {
+      generationControls.error ??= String(error);
+    }
+  }
+  writeFileSync(join(outDir, "generation-controls.json"), JSON.stringify(generationControls, null, 2));
+  if (generationControls.error) console.log("[DEBUG] generation controls", generationControls.error);
 }
 await page.keyboard.press("Meta+Alt+ArrowLeft");
 await waitMeshes("back-to-edit", 5);
@@ -209,3 +256,4 @@ writeFileSync(join(outDir, "results.json"), JSON.stringify(results, null, 2));
 writeFileSync(join(outDir, "console.txt"), lines.join("\n"));
 console.log("DONE steps", results.length, "meshSteps", results.filter((r) => r.meshes > 0).length);
 await browser.close();
+if (generationControls.error) process.exitCode = 1;

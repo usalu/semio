@@ -7,6 +7,16 @@ pub fn fault(message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.page-edit"), message)
 }
 
+/// 📝️ Appends a position-only PDF text adjustment in original font units.
+pub fn append_advance(content: &mut Vec<PdfOp>, advance: f64, size: f64, scale: f64) -> Result<(), Fault> {
+    if advance != 0.0 {
+        if size * scale == 0.0 { return Err(fault("cannot restore an advance with zero text scale")); }
+        let amount = -advance * 100_000.0 / (size * scale);
+        content.push(PdfOp::ShowTextArray { items: vec![PdfTextArrayItem::Adjust { amount }] });
+    }
+    Ok(())
+}
+
 pub fn set_outline(snapshot: &PdfSnapshot, page: usize, index: f64, title: &str) -> Result<Vec<PdfMutation>, Fault> {
     if title.is_empty() {
         return Err(fault("an outline needs a title"));
@@ -305,3 +315,7 @@ pub fn set_document_id(permanent: &str, changing: &str) -> Vec<PdfMutation> {
     };
     vec![PdfMutation::SetDocumentId(SetDocumentId { id })]
 }
+
+#[path = "🖼️image-authoring/🦀️.rs"]
+mod image_authoring;
+pub use self::image_authoring::*;

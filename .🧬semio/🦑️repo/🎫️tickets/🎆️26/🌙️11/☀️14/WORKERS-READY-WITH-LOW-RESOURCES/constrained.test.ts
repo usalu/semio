@@ -7,6 +7,7 @@ import Ajv2020 from "ajv/dist/2020";
 import cases from "./constrained.cases.json";
 import schema from "./constrained.json";
 import readySchema from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧬️schema/🔣️.json";
+import * as constrained from "./constrained.ts";
 import { withConstrainedCapacity, runWhenDiskAdmitted, requireConstrainedDisk, constrainedDisk, constrainedLabArguments, constrainedMount, constrainedOptions, constrainedPaths, exportReceipts } from "./constrained.ts";
 import { newHostCapacityIdV1, withHostCapacityV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
 import { readHostCapacityPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
@@ -58,6 +59,19 @@ test("lab launch has its original isolated stage flags and short path", () => {
   expect(() => constrainedLabArguments("/private/tmp/" + "a".repeat(50), value)).toThrow();
 });
 
+test("private attach requires owners on at the exact mount before launching the frozen child", () => {
+  const fixture = cases.ownedMount;
+  expect(constrained.constrainedAttachArguments(fixture.path, fixture.backing)).toEqual(fixture.expectedArguments);
+  using oracle = new Database(":memory:");
+  const accepted = oracle.query("SELECT (?1 = ?2 AND ?3 = 1) AS accepted");
+  for (const row of fixture.table) {
+    const expected = accepted.get(row.point, fixture.path, Number(row.owners)) as { accepted: number };
+    expect(Boolean(expected.accepted)).toBe(row.accepted);
+    if (row.accepted) expect(() => constrained.requireConstrainedMountedOwners(row.entry, fixture.path)).not.toThrow();
+    else expect(() => constrained.requireConstrainedMountedOwners(row.entry, fixture.path)).toThrow();
+  }
+});
+
 test("detach requires one exact image and mount association", () => {
   const backing = "/ticket/generated/l-123/lab.sparseimage";
   const mount = "/private/tmp/lv-123abc";
@@ -74,6 +88,22 @@ test("detach requires one exact image and mount association", () => {
   expect(() => constrainedMount({ images: [own, own] }, backing, mount)).toThrow();
   expect(() => constrainedMount({ images: [image(backing, mount, "/tmp/foreign")] }, backing, mount)).toThrow();
   expect(() => constrainedMount({ images: [{ "image-path": backing }] }, backing, mount)).toThrow();
+});
+
+test("outer detach preserves both nested backing and nested mounts in the current inventory", () => {
+  const { path, backing } = cases.ownedMount;
+  const outer = {"image-path": backing, "system-entities": [{"mount-point": path, "dev-entry": "/dev/disk42s1"}]};
+  using oracle = new Database(":memory:");
+  const nested = oracle.query("SELECT EXISTS (SELECT 1 FROM json_each(?1) WHERE substr(value, 1, length(?2) + 1) = ?2 || '/') AS retained");
+  for (const row of cases.nestedImageInventory) {
+    const oracleDecision = nested.get(JSON.stringify([path, ...row.canonicalPaths]), path) as {retained: number};
+    expect(Boolean(oracleDecision.retained)).toBe(row.retainsOuter);
+    const extra = {"image-path": row.backing, "system-entities": row.mounts.map(mount => ({"mount-point": mount}))};
+    const inventory = { images: [outer, extra] };
+    const requireClear = () => constrained.requireNoConstrainedNestedImages(inventory, path);
+    if (row.retainsOuter) expect(requireClear).toThrow("Nested lab image remains attached");
+    else expect(requireClear).not.toThrow();
+  }
 });
 
 test("retains the exact private machine receipt and refuses a substituted file", () => {
@@ -116,11 +146,14 @@ test("an interrupted lab retains the exact stage timing without claiming a termi
     mkdirSync(state, { recursive: true });
     mkdirSync(destination);
     const bytes = Buffer.from(JSON.stringify({
-      version: 1, origin: "slice-lab-1b0f-m1", updatedMs: 14000,
-      runs: [{ stage: "native", startedMs: 1000, endedMs: 14000, seconds: 13, exit: 0, outcome: "ok", peakMegabytes: 192, growthMegabytes: 112, attempts: 1, digest: "0083cde0ef5d", endEvidence: "exit-receipt" }],
+      version: 1, origin: "slice-lab-1b0f-m1", updatedMs: 15000,
+      runs: [
+        { stage: "native", startedMs: 1000, endedMs: 14000, seconds: 13, exit: 0, outcome: "ok", peakMegabytes: 192, growthMegabytes: 112, attempts: 1, digest: "0083cde0ef5d", endEvidence: "exit-receipt" },
+        { stage: "tools", startedMs: 14000, endedMs: 15000, seconds: 1, exit: 1, outcome: "stage-timeout", peakMegabytes: 1261, attempts: 1, digest: "74a5657f7c70", endEvidence: "exit-receipt", watchdog: { deadline: "hard-cap", lastActivity: { resource: "dependencies:workspace-edges", counter: 41983 } } },
+      ],
     }) + "\n");
     const validator = new Ajv2020({ strict: false });
-    expect(validator.validate(readySchema.definitions.Timings, JSON.parse(bytes.toString()))).toBe(true);
+    expect(validator.validate({ ...readySchema.definitions.Timings, definitions: readySchema.definitions }, JSON.parse(bytes.toString()))).toBe(true);
     const source = join(state, "ready-timings.json");
     writeFileSync(source, bytes);
     const device = lstatSync(mount, { bigint: true }).dev;

@@ -24,6 +24,12 @@ export function readyIdentityV1(known:ReadyKnownV1,table:readonly ReadyProcessV1
  return known.startMs===0||near(row.startMs,known.startMs,tolerance)?"same":"reused";
 }
 
+/** 🪪️ Confirms a later birth for the same PID independently in both process observations. */
+export function readyConfirmProcessReplacementV1(known:ReadyKnownV1,first:ReadyProcessV1,second:readonly ReadyProcessV1[],tolerance:number=P.toleranceMilliseconds):ReadyProcessV1|undefined{
+ if(!Number.isFinite(tolerance)||tolerance<0||known.startMs<=0||first.pid!==known.pid||!Number.isFinite(first.startMs)||!(first.startMs-known.startMs>tolerance))return undefined;
+ return second.find(row=>row.pid===known.pid&&row.startMs===first.startMs&&row.windows?.birth===first.windows?.birth);
+}
+
 /** 🏔️ Whether a worker is busy with its readiness: its `ready.json` says not ready in a state of work (running, waiting, backing off) and was written within `foregroundFreshMilliseconds`, so a loop that died never holds a graph server back for ever. The graph server of the machine neither serves nor refreshes meanwhile: readiness is the foreground, a whole-workspace read is not. A pure function.
  * @see ./🧪️tests/🤝️holder-custody/🐍️.py */
 export function readyForegroundBusyV1(status:unknown,nowMs:number,policy:typeof P=P):boolean{
@@ -277,14 +283,18 @@ export function readySemanticsChangedV1(root:string,before:Readonly<Record<strin
  return null;
 }
 
-/** 📜️ The process table from the text of `ps -A -o pid=,ppid=,etime=,comm=` (Linux and macOS): the start time is the moment of the call less the elapsed time (`[[dd-]hh:]mm:ss`), good to a second; the name is the last part of `comm`. */
-export function readyParseUnixTableV1(text:string,nowMs:number):readonly ReadyProcessV1[]{
+const posixProcessColumns="pid=,ppid=,lstart=,comm=";
+const posixProcessEnvironment=()=>({...process.env,LC_ALL:"C",TZ:"UTC0"});
+
+/** 📜️ Reads absolute process births from the C-locale UTC `ps` listing, at one-second precision. */
+export function readyParseUnixTableV1(text:string):readonly ReadyProcessV1[]{
  const rows:ReadyProcessV1[]=[];
  for(const line of text.split("\n")){
-  const found=/^\s*(\d+)\s+(\d+)\s+(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)(?:\s+(\S.*?))?\s*$/u.exec(line);
+  const found=/^\s*(\d+)\s+(\d+)\s+([A-Z][a-z]{2}) ([A-Z][a-z]{2}) +([0-9]{1,2}) (\d{2}:\d{2}:\d{2}) (\d{4})(?:\s+(\S.*?))?\s*$/u.exec(line);
   if(found===null)continue;
-  const seconds=((Number(found[3]??0)*24+Number(found[4]??0))*60+Number(found[5]))*60+Number(found[6]),name=found[7]===undefined?undefined:found[7].split("/").at(-1)!;
-  rows.push({pid:Number(found[1]),ppid:Number(found[2]),startMs:nowMs-seconds*1000,...name===undefined||name===""?{}:{name}});
+  const pid=Number(found[1]),ppid=Number(found[2]),start=`${found[3]}, ${found[5]!.padStart(2,"0")} ${found[4]} ${found[7]} ${found[6]} GMT`,date=new Date(start),startMs=date.getTime();
+  if(!Number.isSafeInteger(pid)||!Number.isSafeInteger(ppid)||!Number.isFinite(startMs)||date.toUTCString()!==start)continue;
+  const name=found[8]?.split("/").at(-1);rows.push({pid,ppid,startMs,...name?{name}:{}});
  }
  return rows;
 }
@@ -334,14 +344,8 @@ export function readyWindowsTreeSampleV1(input:Readonly<{table:readonly ReadyPro
  return{checkpoint:{rootBirth,cpu},progress:ticks>=input.minimumCpuMilliseconds*10000,megabytes:complete&&Number.isSafeInteger(bytes)?Math.round(bytes/1048576):null,changed};
 }
 
-/** ⏱️ The elapsed time of `ps -o etime=` (`[[dd-]hh:]mm:ss`) in milliseconds, `null` when the text is not that. */
-export function readyElapsedMillisecondsV1(text:string):number|null{
- const found=/^\s*(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+)\s*$/u.exec(text);
- return found===null?null:((((Number(found[1]??0)*24+Number(found[2]??0))*60+Number(found[3]))*60+Number(found[4]))*1000);
-}
-
-/** 🕰️ The start time of one process, synchronously (a lease check asks for one process only): `ps -o etime=` on Linux and macOS, the creation date of the Win32 process on Windows; `null` when the process is not there or the command fails. */
-export function readyProcessStartSyncV1(pid:number,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now):number|null{
+/** 🕰️ Reads one lease owner's absolute process birth, or null when it could not be observed. */
+export function readyProcessStartSyncV1(pid:number,platform:NodeJS.Platform=process.platform):number|null{
  try{
   const id=Math.trunc(pid);
   if(!Number.isInteger(id)||id<1)return null;
@@ -349,8 +353,8 @@ export function readyProcessStartSyncV1(pid:number,platform:NodeJS.Platform=proc
    const run=spawnSync("powershell.exe",["-NoProfile","-NonInteractive","-Command",`([DateTimeOffset](Get-CimInstance Win32_Process -Filter 'ProcessId=${id}').CreationDate).ToUnixTimeMilliseconds()`],{encoding:"utf8",windowsHide:true,timeout:15000}),value=Number(run.stdout.trim());
    return Number.isFinite(value)&&value>0?value:null;
   }
-  const run=spawnSync("ps",["-o","etime=","-p",String(id)],{encoding:"utf8",timeout:5000}),elapsed=readyElapsedMillisecondsV1(run.stdout);
-  return elapsed===null?null:now()-elapsed;
+  const run=spawnSync("ps",["-p",String(id),"-o",posixProcessColumns],{encoding:"utf8",timeout:5000,env:posixProcessEnvironment()});
+  return run.status===0?readyParseUnixTableV1(run.stdout).find(row=>row.pid===id)?.startMs??null:null;
  }catch{return null;}
 }
 
@@ -358,21 +362,21 @@ export function readyProcessStartSyncV1(pid:number,platform:NodeJS.Platform=proc
 export function readyTableCommandV1(platform:NodeJS.Platform=process.platform):Readonly<{command:string;args:readonly string[]}>{
  return platform==="win32"
   ?{command:"powershell.exe",args:["-NoProfile","-NonInteractive","-Command","Get-CimInstance -ClassName Win32_Process -Property ProcessId,ParentProcessId,CreationDate,KernelModeTime,UserModeTime,WorkingSetSize,Name -ErrorAction Stop | ForEach-Object { if ($null -ne $_.CreationDate) { $born = [DateTimeOffset]$_.CreationDate; @($_.ProcessId,$_.ParentProcessId,$born.ToUnixTimeMilliseconds(),$born.UtcTicks,$_.KernelModeTime,$_.UserModeTime,$_.WorkingSetSize,$_.Name) -join [char]9 } }"]}
-  :{command:"ps",args:["-A","-o","pid=,ppid=,etime=,comm="]};
+  :{command:"ps",args:["-A","-o",posixProcessColumns]};
 }
 
-/** 📜️ Reads the process table of this machine; an empty list when the command fails or takes longer than `timeoutMilliseconds`. The start times are counted from the moment the command was started, not from the moment it ended: `ps` states the elapsed time of a process as of its own start, so a table that took 30 s on a swapping machine otherwise made every process look 30 s younger and the stage wrapper "another process that reused the pid". `run` replaces the command (a test); it answers the text or `null`.
+/** 📜️ Reads absolute process births independently of when the table command is scheduled; failed and timed-out observations return no rows.
  * @see ./🧪️tests/🪜️step-overdue */
-export function readyReadTableV1(timeoutMilliseconds:number=20000,platform:NodeJS.Platform=process.platform,now:()=>number=Date.now,run?:(command:string,args:readonly string[],timeoutMilliseconds:number)=>Promise<string|null>,signal?:AbortSignal):Promise<readonly ReadyProcessV1[]>{
+export function readyReadTableV1(timeoutMilliseconds:number=20000,platform:NodeJS.Platform=process.platform,run?:(command:string,args:readonly string[],timeoutMilliseconds:number)=>Promise<string|null>,signal?:AbortSignal):Promise<readonly ReadyProcessV1[]>{
  if(signal?.aborted)return Promise.resolve([]);
- const {command,args}=readyTableCommandV1(platform),sampledAt=now();
- const parse=(out:string|null):readonly ReadyProcessV1[]=>out===null?[]:platform==="win32"?readyParseWindowsTableV1(out):readyParseUnixTableV1(out,sampledAt);
+ const {command,args}=readyTableCommandV1(platform);
+ const parse=(out:string|null):readonly ReadyProcessV1[]=>out===null?[]:platform==="win32"?readyParseWindowsTableV1(out):readyParseUnixTableV1(out);
  if(run!==undefined)return run(command,args,timeoutMilliseconds).then(text=>signal?.aborted?[]:parse(text),()=>[]);
  return new Promise(done=>{
   let out="",finished=false;
   const end=(table:readonly ReadyProcessV1[])=>{if(!finished){finished=true;clearTimeout(timer);signal?.removeEventListener("abort",stop);done(table);}};
   let child:ReturnType<typeof spawn>;
-  try{child=spawn(command,[...args],{windowsHide:true,stdio:["ignore","pipe","ignore"]});}catch{return done([]);}
+  try{child=spawn(command,[...args],{windowsHide:true,stdio:["ignore","pipe","ignore"],...platform==="win32"?{}:{env:posixProcessEnvironment()}});}catch{return done([]);}
   const stop=()=>{try{child.kill();}catch{}end([]);};
   const timer=setTimeout(stop,timeoutMilliseconds);
   signal?.addEventListener("abort",stop,{once:true});

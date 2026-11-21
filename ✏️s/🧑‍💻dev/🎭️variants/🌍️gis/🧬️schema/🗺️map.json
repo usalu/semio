@@ -1,0 +1,10 @@
+{
+  "ownerRoot": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis",
+  "viteConfig": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🏗️builder/🌐️vite/🗺️map.ts",
+  "browserEntry": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🚀️entry/🗺️map.ts",
+  "localHub": {
+    "version": 1,
+    "service": "local-hub",
+    "defaultProfileId": "developer"
+  }
+}

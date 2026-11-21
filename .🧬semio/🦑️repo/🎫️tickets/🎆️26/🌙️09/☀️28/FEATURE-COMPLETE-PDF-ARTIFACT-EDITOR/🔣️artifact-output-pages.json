@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "slotCases": [
+    {
+      "logicalSlots": 1,
+      "physicalPages": 1,
+      "lastPageSlots": 1
+    },
+    {
+      "logicalSlots": 64,
+      "physicalPages": 1,
+      "lastPageSlots": 64
+    },
+    {
+      "logicalSlots": 65,
+      "physicalPages": 2,
+      "lastPageSlots": 1
+    },
+    {
+      "logicalSlots": 129,
+      "physicalPages": 3,
+      "lastPageSlots": 1
+    },
+    {
+      "logicalSlots": 8192,
+      "physicalPages": 128,
+      "lastPageSlots": 64
+    }
+  ],
+  "retainedOutputMaximumBytes": 33554432,
+  "pageBytes": 4096,
+  "slotsPerPage": 64,
+  "contiguousMaximumBytes": 65536
+}

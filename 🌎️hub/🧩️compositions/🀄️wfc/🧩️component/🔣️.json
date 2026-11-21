@@ -207,7 +207,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -300,7 +300,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -450,7 +450,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -600,7 +600,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -674,7 +674,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -748,7 +748,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -890,7 +890,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1019,7 +1019,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1093,7 +1093,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -1148,7 +1148,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -1193,7 +1193,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -1238,7 +1238,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -1283,7 +1283,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -1328,7 +1328,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -2288,6 +2288,60 @@
             },
             "actions": [
               {
+                "id": "pin-preview",
+                "label": {
+                  "native": {
+                    "en": "Pin Solution",
+                    "de": "Lösung anheften"
+                  },
+                  "reuse": {
+                    "en": "Pin Solution",
+                    "de": "Lösung anheften"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": true,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": true,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Pins the displayed finished preview as one document edit. Solve again after changing the document.",
+                      "de": "Heftet die angezeigte fertige Vorschau als eine Dokumentänderung an. Nach Dokumentänderungen erneut lösen."
+                    },
+                    "reuse": {
+                      "en": "Pins the displayed finished preview as one document edit. Solve again after changing the document.",
+                      "de": "Heftet die angezeigte fertige Vorschau als eine Dokumentänderung an. Nach Dokumentänderungen erneut lösen."
+                    }
+                  }
+                }
+              },
+              {
                 "id": "solve",
                 "label": {
                   "native": {
@@ -2325,7 +2379,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2356,7 +2410,7 @@
                 "kind": "mutation",
                 "iconId": "sparkles",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "writes": [
@@ -2379,7 +2433,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2490,7 +2544,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2602,7 +2656,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2695,7 +2749,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2750,7 +2804,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -2795,7 +2849,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -2840,7 +2894,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -2885,7 +2939,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -2930,7 +2984,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -3953,7 +4007,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4020,7 +4074,7 @@
                 "default": false
               }
             ],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "writes": [
@@ -4043,7 +4097,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -6614,6 +6668,42 @@
             },
             "iconId": "paint-bucket",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": false,
               "rebase": "restart",
               "reconfigure": "restart",
@@ -7211,6 +7301,45 @@
               "reuse": {
                 "en": "A contradicting solve cannot be pinned.",
                 "de": "Eine widersprüchliche Lösung lässt sich nicht fixieren."
+              }
+            }
+          },
+          {
+            "code": "wfc.bitmap.preview.unavailable",
+            "label": {
+              "native": {
+                "en": "Solve the output before pinning its preview.",
+                "de": "Vor dem Anheften der Vorschau die Ausgabe lösen."
+              },
+              "reuse": {
+                "en": "Solve the output before pinning its preview.",
+                "de": "Vor dem Anheften der Vorschau die Ausgabe lösen."
+              }
+            }
+          },
+          {
+            "code": "wfc.bitmap.preview.stale",
+            "label": {
+              "native": {
+                "en": "The document changed after this preview. Solve it again before pinning.",
+                "de": "Das Dokument hat sich nach dieser Vorschau geändert. Vor dem Anheften erneut lösen."
+              },
+              "reuse": {
+                "en": "The document changed after this preview. Solve it again before pinning.",
+                "de": "Das Dokument hat sich nach dieser Vorschau geändert. Vor dem Anheften erneut lösen."
+              }
+            }
+          },
+          {
+            "code": "wfc.bitmap.preview.extent",
+            "label": {
+              "native": {
+                "en": "The preview has a different output size. Solve it again before pinning.",
+                "de": "Die Vorschau hat eine andere Ausgabegröße. Vor dem Anheften erneut lösen."
+              },
+              "reuse": {
+                "en": "The preview has a different output size. Solve it again before pinning.",
+                "de": "Die Vorschau hat eine andere Ausgabegröße. Vor dem Anheften erneut lösen."
               }
             }
           },
@@ -8366,7 +8495,44 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      },
+                      "reuse": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "weight",
+                    "label": {
+                      "native": {
+                        "en": "Weight",
+                        "de": "Gewicht"
+                      },
+                      "reuse": {
+                        "en": "Weight",
+                        "de": "Gewicht"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 1.0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8390,7 +8556,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8420,7 +8586,25 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      },
+                      "reuse": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8444,7 +8628,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8474,7 +8658,44 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      },
+                      "reuse": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "weight",
+                    "label": {
+                      "native": {
+                        "en": "Weight",
+                        "de": "Gewicht"
+                      },
+                      "reuse": {
+                        "en": "Weight",
+                        "de": "Gewicht"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 1.0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8498,7 +8719,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8528,7 +8749,42 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      },
+                      "reuse": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "mediaJson",
+                    "label": {
+                      "native": {
+                        "en": "Media JSON",
+                        "de": "Medien-JSON"
+                      },
+                      "reuse": {
+                        "en": "Media JSON",
+                        "de": "Medien-JSON"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8552,7 +8808,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8582,7 +8838,149 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Rule",
+                        "de": "Regel"
+                      },
+                      "reuse": {
+                        "en": "Rule",
+                        "de": "Regel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "tileAId",
+                    "label": {
+                      "native": {
+                        "en": "Tile A",
+                        "de": "Kachel A"
+                      },
+                      "reuse": {
+                        "en": "Tile A",
+                        "de": "Kachel A"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "tileBId",
+                    "label": {
+                      "native": {
+                        "en": "Tile B",
+                        "de": "Kachel B"
+                      },
+                      "reuse": {
+                        "en": "Tile B",
+                        "de": "Kachel B"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "direction",
+                    "label": {
+                      "native": {
+                        "en": "Direction",
+                        "de": "Richtung"
+                      },
+                      "reuse": {
+                        "en": "Direction",
+                        "de": "Richtung"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "RIGHT",
+                          "label": {
+                            "native": {
+                              "en": "East",
+                              "de": "Osten"
+                            },
+                            "reuse": {
+                              "en": "East",
+                              "de": "Osten"
+                            }
+                          }
+                        },
+                        {
+                          "value": "LEFT",
+                          "label": {
+                            "native": {
+                              "en": "West",
+                              "de": "Westen"
+                            },
+                            "reuse": {
+                              "en": "West",
+                              "de": "Westen"
+                            }
+                          }
+                        },
+                        {
+                          "value": "BOTTOM",
+                          "label": {
+                            "native": {
+                              "en": "South",
+                              "de": "Süden"
+                            },
+                            "reuse": {
+                              "en": "South",
+                              "de": "Süden"
+                            }
+                          }
+                        },
+                        {
+                          "value": "TOP",
+                          "label": {
+                            "native": {
+                              "en": "North",
+                              "de": "Norden"
+                            },
+                            "reuse": {
+                              "en": "North",
+                              "de": "Norden"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true,
+                    "default": "RIGHT"
+                  },
+                  {
+                    "id": "allowed",
+                    "label": {
+                      "native": {
+                        "en": "Allowed",
+                        "de": "Erlaubt"
+                      },
+                      "reuse": {
+                        "en": "Allowed",
+                        "de": "Erlaubt"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8606,7 +9004,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8636,7 +9034,25 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Rule",
+                        "de": "Regel"
+                      },
+                      "reuse": {
+                        "en": "Rule",
+                        "de": "Regel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8660,7 +9076,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8690,7 +9106,46 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "width",
+                    "label": {
+                      "native": {
+                        "en": "Columns",
+                        "de": "Spalten"
+                      },
+                      "reuse": {
+                        "en": "Columns",
+                        "de": "Spalten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 16
+                  },
+                  {
+                    "id": "height",
+                    "label": {
+                      "native": {
+                        "en": "Rows",
+                        "de": "Zeilen"
+                      },
+                      "reuse": {
+                        "en": "Rows",
+                        "de": "Zeilen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 16
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8714,7 +9169,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8744,7 +9199,46 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "cellWidth",
+                    "label": {
+                      "native": {
+                        "en": "Cell Width",
+                        "de": "Zellbreite"
+                      },
+                      "reuse": {
+                        "en": "Cell Width",
+                        "de": "Zellbreite"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 1.0
+                  },
+                  {
+                    "id": "cellHeight",
+                    "label": {
+                      "native": {
+                        "en": "Cell Height",
+                        "de": "Zellhöhe"
+                      },
+                      "reuse": {
+                        "en": "Cell Height",
+                        "de": "Zellhöhe"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 1.0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8768,7 +9262,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8798,7 +9292,44 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "periodicX",
+                    "label": {
+                      "native": {
+                        "en": "Wrap Horizontally",
+                        "de": "Horizontal umlaufen"
+                      },
+                      "reuse": {
+                        "en": "Wrap Horizontally",
+                        "de": "Horizontal umlaufen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": false
+                  },
+                  {
+                    "id": "periodicY",
+                    "label": {
+                      "native": {
+                        "en": "Wrap Vertically",
+                        "de": "Vertikal umlaufen"
+                      },
+                      "reuse": {
+                        "en": "Wrap Vertically",
+                        "de": "Vertikal umlaufen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8822,7 +9353,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8852,7 +9383,27 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "seed",
+                    "label": {
+                      "native": {
+                        "en": "Seed",
+                        "de": "Startwert"
+                      },
+                      "reuse": {
+                        "en": "Seed",
+                        "de": "Startwert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8876,7 +9427,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8906,7 +9457,63 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  },
+                  {
+                    "id": "tileId",
+                    "label": {
+                      "native": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      },
+                      "reuse": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8930,7 +9537,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -8960,7 +9567,46 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -8984,7 +9630,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9014,7 +9660,46 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9038,7 +9723,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9068,7 +9753,46 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9092,7 +9816,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9122,7 +9846,46 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9146,7 +9909,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9176,7 +9939,54 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "exampleId",
+                    "label": {
+                      "native": {
+                        "en": "Example",
+                        "de": "Beispiel"
+                      },
+                      "reuse": {
+                        "en": "Example",
+                        "de": "Beispiel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pipes",
+                          "label": {
+                            "native": {
+                              "en": "Pipes",
+                              "de": "Rohre"
+                            },
+                            "reuse": {
+                              "en": "Pipes",
+                              "de": "Rohre"
+                            }
+                          }
+                        },
+                        {
+                          "value": "terrain",
+                          "label": {
+                            "native": {
+                              "en": "Terrain",
+                              "de": "Gelände"
+                            },
+                            "reuse": {
+                              "en": "Terrain",
+                              "de": "Gelände"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": false,
+                    "default": "pipes"
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9200,7 +10010,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9230,7 +10040,25 @@
                 },
                 "kind": "view",
                 "iconId": "eye",
-                "args": [],
+                "args": [
+                  {
+                    "id": "tileId",
+                    "label": {
+                      "native": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      },
+                      "reuse": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9255,7 +10083,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9285,7 +10113,65 @@
                 },
                 "kind": "view",
                 "iconId": "eye",
-                "args": [],
+                "args": [
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "zoom",
+                    "label": {
+                      "native": {
+                        "en": "Zoom",
+                        "de": "Zoom"
+                      },
+                      "reuse": {
+                        "en": "Zoom",
+                        "de": "Zoom"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 1.0
+                  }
+                ],
                 "inPalette": false,
                 "semantics": {
                   "effects": {
@@ -9310,7 +10196,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9331,7 +10217,26 @@
                 },
                 "kind": "view",
                 "iconId": "eye",
-                "args": [],
+                "args": [
+                  {
+                    "id": "visible",
+                    "label": {
+                      "native": {
+                        "en": "Visible",
+                        "de": "Sichtbar"
+                      },
+                      "reuse": {
+                        "en": "Visible",
+                        "de": "Sichtbar"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9356,7 +10261,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9386,7 +10291,26 @@
                 },
                 "kind": "view",
                 "iconId": "eye",
-                "args": [],
+                "args": [
+                  {
+                    "id": "enabled",
+                    "label": {
+                      "native": {
+                        "en": "Enabled",
+                        "de": "Aktiviert"
+                      },
+                      "reuse": {
+                        "en": "Enabled",
+                        "de": "Aktiviert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9411,7 +10335,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9441,7 +10365,27 @@
                 },
                 "kind": "view",
                 "iconId": "eye",
-                "args": [],
+                "args": [
+                  {
+                    "id": "factor",
+                    "label": {
+                      "native": {
+                        "en": "Grid Factor",
+                        "de": "Rasterfaktor"
+                      },
+                      "reuse": {
+                        "en": "Grid Factor",
+                        "de": "Rasterfaktor"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 1.0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -9466,7 +10410,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9521,7 +10465,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -9566,7 +10510,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -9611,7 +10555,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -9656,7 +10600,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -9701,7 +10645,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -10701,7 +11645,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -10732,7 +11676,7 @@
                 "kind": "view",
                 "iconId": "eye",
                 "args": [],
-                "inPalette": true,
+                "inPalette": false,
                 "semantics": {
                   "effects": {
                     "reads": [
@@ -10756,7 +11700,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -10786,7 +11730,65 @@
                 },
                 "kind": "view",
                 "iconId": "eye",
-                "args": [],
+                "args": [
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "zoom",
+                    "label": {
+                      "native": {
+                        "en": "Zoom",
+                        "de": "Zoom"
+                      },
+                      "reuse": {
+                        "en": "Zoom",
+                        "de": "Zoom"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": false,
+                    "default": 1.0
+                  }
+                ],
                 "inPalette": false,
                 "semantics": {
                   "effects": {
@@ -10811,7 +11813,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -10832,7 +11834,54 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "exampleId",
+                    "label": {
+                      "native": {
+                        "en": "Example",
+                        "de": "Beispiel"
+                      },
+                      "reuse": {
+                        "en": "Example",
+                        "de": "Beispiel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "pipes",
+                          "label": {
+                            "native": {
+                              "en": "Pipes",
+                              "de": "Rohre"
+                            },
+                            "reuse": {
+                              "en": "Pipes",
+                              "de": "Rohre"
+                            }
+                          }
+                        },
+                        {
+                          "value": "terrain",
+                          "label": {
+                            "native": {
+                              "en": "Terrain",
+                              "de": "Gelände"
+                            },
+                            "reuse": {
+                              "en": "Terrain",
+                              "de": "Gelände"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": false,
+                    "default": "pipes"
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -10856,7 +11905,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -10911,7 +11960,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -10956,7 +12005,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -11001,7 +12050,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -11046,7 +12095,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -11091,7 +12140,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -14616,6 +15665,42 @@
             },
             "iconId": "paint-bucket",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": false,
               "rebase": "restart",
               "reconfigure": "restart",
@@ -15206,7 +16291,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -15251,7 +16336,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -15296,7 +16381,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -15341,7 +16426,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -15386,7 +16471,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -15431,7 +16516,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -16321,7 +17406,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16393,7 +17478,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16503,7 +17588,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16613,7 +17698,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16736,7 +17821,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16808,7 +17893,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16897,7 +17982,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -16969,7 +18054,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -17043,7 +18128,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -17345,7 +18430,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -18649,7 +19768,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -18951,7 +20070,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -20307,7 +21460,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -20415,7 +21568,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -20487,7 +21640,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -20578,7 +21731,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -20650,7 +21803,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -20791,7 +21944,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -20863,7 +22016,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -20918,7 +22071,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -20982,7 +22135,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -21036,7 +22189,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -21081,7 +22234,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -23569,6 +24722,42 @@
             },
             "iconId": "paint-bucket",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": false,
               "rebase": "restart",
               "reconfigure": "restart",
@@ -25049,7 +26238,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25161,7 +26350,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25191,7 +26380,90 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "axis",
+                    "label": {
+                      "native": {
+                        "en": "Axis",
+                        "de": "Achse"
+                      },
+                      "reuse": {
+                        "en": "Axis",
+                        "de": "Achse"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "x",
+                          "label": {
+                            "native": {
+                              "en": "x",
+                              "de": "x"
+                            },
+                            "reuse": {
+                              "en": "x",
+                              "de": "x"
+                            }
+                          }
+                        },
+                        {
+                          "value": "y",
+                          "label": {
+                            "native": {
+                              "en": "y",
+                              "de": "y"
+                            },
+                            "reuse": {
+                              "en": "y",
+                              "de": "y"
+                            }
+                          }
+                        },
+                        {
+                          "value": "z",
+                          "label": {
+                            "native": {
+                              "en": "z",
+                              "de": "z"
+                            },
+                            "reuse": {
+                              "en": "z",
+                              "de": "z"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true,
+                    "default": "x"
+                  },
+                  {
+                    "id": "sizes",
+                    "label": {
+                      "native": {
+                        "en": "Cell Sizes",
+                        "de": "Zellgrößen"
+                      },
+                      "reuse": {
+                        "en": "Cell Sizes",
+                        "de": "Zellgrößen"
+                      }
+                    },
+                    "schema": {
+                      "kind": "array",
+                      "items": {
+                        "kind": "number",
+                        "min": 0.0,
+                        "integer": false
+                      },
+                      "minItems": 1
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25215,7 +26487,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25245,7 +26517,62 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "periodicX",
+                    "label": {
+                      "native": {
+                        "en": "Wrap X",
+                        "de": "X umlaufend"
+                      },
+                      "reuse": {
+                        "en": "Wrap X",
+                        "de": "X umlaufend"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": false
+                  },
+                  {
+                    "id": "periodicY",
+                    "label": {
+                      "native": {
+                        "en": "Wrap Y",
+                        "de": "Y umlaufend"
+                      },
+                      "reuse": {
+                        "en": "Wrap Y",
+                        "de": "Y umlaufend"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": false
+                  },
+                  {
+                    "id": "periodicZ",
+                    "label": {
+                      "native": {
+                        "en": "Wrap Z",
+                        "de": "Z umlaufend"
+                      },
+                      "reuse": {
+                        "en": "Wrap Z",
+                        "de": "Z umlaufend"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25269,7 +26596,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25299,7 +26626,149 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Id",
+                        "de": "Id"
+                      },
+                      "reuse": {
+                        "en": "Id",
+                        "de": "Id"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "label",
+                    "label": {
+                      "native": {
+                        "en": "Label",
+                        "de": "Bezeichnung"
+                      },
+                      "reuse": {
+                        "en": "Label",
+                        "de": "Bezeichnung"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "weight",
+                    "label": {
+                      "native": {
+                        "en": "Weight",
+                        "de": "Gewicht"
+                      },
+                      "reuse": {
+                        "en": "Weight",
+                        "de": "Gewicht"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 1.0
+                  },
+                  {
+                    "id": "r",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 255.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 255
+                  },
+                  {
+                    "id": "g",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 255.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 255
+                  },
+                  {
+                    "id": "b",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 255.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 255
+                  },
+                  {
+                    "id": "a",
+                    "label": {
+                      "native": {
+                        "en": "Alpha",
+                        "de": "Alpha"
+                      },
+                      "reuse": {
+                        "en": "Alpha",
+                        "de": "Alpha"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 255.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 255
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25323,7 +26792,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25353,7 +26822,25 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Id",
+                        "de": "Id"
+                      },
+                      "reuse": {
+                        "en": "Id",
+                        "de": "Id"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25377,7 +26864,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25407,7 +26894,44 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "tileId",
+                    "label": {
+                      "native": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      },
+                      "reuse": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "weight",
+                    "label": {
+                      "native": {
+                        "en": "Weight",
+                        "de": "Gewicht"
+                      },
+                      "reuse": {
+                        "en": "Weight",
+                        "de": "Gewicht"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 1.0
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25431,7 +26955,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25461,7 +26985,113 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "tileId",
+                    "label": {
+                      "native": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      },
+                      "reuse": {
+                        "en": "Tile",
+                        "de": "Kachel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "r",
+                    "label": {
+                      "native": {
+                        "en": "Red",
+                        "de": "Rot"
+                      },
+                      "reuse": {
+                        "en": "Red",
+                        "de": "Rot"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 255.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 255
+                  },
+                  {
+                    "id": "g",
+                    "label": {
+                      "native": {
+                        "en": "Green",
+                        "de": "Grün"
+                      },
+                      "reuse": {
+                        "en": "Green",
+                        "de": "Grün"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 255.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 255
+                  },
+                  {
+                    "id": "b",
+                    "label": {
+                      "native": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      },
+                      "reuse": {
+                        "en": "Blue",
+                        "de": "Blau"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 255.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 255
+                  },
+                  {
+                    "id": "a",
+                    "label": {
+                      "native": {
+                        "en": "Alpha",
+                        "de": "Alpha"
+                      },
+                      "reuse": {
+                        "en": "Alpha",
+                        "de": "Alpha"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "min": 0.0,
+                      "max": 255.0,
+                      "step": 1.0,
+                      "integer": true
+                    },
+                    "required": false,
+                    "default": 255
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25485,7 +27115,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25515,7 +27145,175 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Id",
+                        "de": "Id"
+                      },
+                      "reuse": {
+                        "en": "Id",
+                        "de": "Id"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "tileAId",
+                    "label": {
+                      "native": {
+                        "en": "Tile A",
+                        "de": "Kachel A"
+                      },
+                      "reuse": {
+                        "en": "Tile A",
+                        "de": "Kachel A"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "tileBId",
+                    "label": {
+                      "native": {
+                        "en": "Tile B",
+                        "de": "Kachel B"
+                      },
+                      "reuse": {
+                        "en": "Tile B",
+                        "de": "Kachel B"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "direction",
+                    "label": {
+                      "native": {
+                        "en": "Direction",
+                        "de": "Richtung"
+                      },
+                      "reuse": {
+                        "en": "Direction",
+                        "de": "Richtung"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "RIGHT",
+                          "label": {
+                            "native": {
+                              "en": "Right",
+                              "de": "Rechts"
+                            },
+                            "reuse": {
+                              "en": "Right",
+                              "de": "Rechts"
+                            }
+                          }
+                        },
+                        {
+                          "value": "LEFT",
+                          "label": {
+                            "native": {
+                              "en": "Left",
+                              "de": "Links"
+                            },
+                            "reuse": {
+                              "en": "Left",
+                              "de": "Links"
+                            }
+                          }
+                        },
+                        {
+                          "value": "BACK",
+                          "label": {
+                            "native": {
+                              "en": "Back",
+                              "de": "Hinten"
+                            },
+                            "reuse": {
+                              "en": "Back",
+                              "de": "Hinten"
+                            }
+                          }
+                        },
+                        {
+                          "value": "FRONT",
+                          "label": {
+                            "native": {
+                              "en": "Front",
+                              "de": "Vorne"
+                            },
+                            "reuse": {
+                              "en": "Front",
+                              "de": "Vorne"
+                            }
+                          }
+                        },
+                        {
+                          "value": "TOP",
+                          "label": {
+                            "native": {
+                              "en": "Top",
+                              "de": "Oben"
+                            },
+                            "reuse": {
+                              "en": "Top",
+                              "de": "Oben"
+                            }
+                          }
+                        },
+                        {
+                          "value": "BOTTOM",
+                          "label": {
+                            "native": {
+                              "en": "Bottom",
+                              "de": "Unten"
+                            },
+                            "reuse": {
+                              "en": "Bottom",
+                              "de": "Unten"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true,
+                    "default": "RIGHT"
+                  },
+                  {
+                    "id": "allowed",
+                    "label": {
+                      "native": {
+                        "en": "Allowed",
+                        "de": "Erlaubt"
+                      },
+                      "reuse": {
+                        "en": "Allowed",
+                        "de": "Erlaubt"
+                      }
+                    },
+                    "schema": {
+                      "kind": "boolean"
+                    },
+                    "required": false,
+                    "default": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25539,7 +27337,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25569,7 +27367,25 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "id",
+                    "label": {
+                      "native": {
+                        "en": "Id",
+                        "de": "Id"
+                      },
+                      "reuse": {
+                        "en": "Id",
+                        "de": "Id"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -25593,7 +27409,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25722,7 +27538,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25834,7 +27650,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -25946,7 +27762,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -26058,7 +27874,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -26130,7 +27946,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -26202,7 +28018,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -26256,7 +28072,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -26302,7 +28118,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -26347,7 +28163,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -26367,7 +28183,141 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "x",
+                    "label": {
+                      "native": {
+                        "en": "X",
+                        "de": "X"
+                      },
+                      "reuse": {
+                        "en": "X",
+                        "de": "X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "y",
+                    "label": {
+                      "native": {
+                        "en": "Y",
+                        "de": "Y"
+                      },
+                      "reuse": {
+                        "en": "Y",
+                        "de": "Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "z",
+                    "label": {
+                      "native": {
+                        "en": "Z",
+                        "de": "Z"
+                      },
+                      "reuse": {
+                        "en": "Z",
+                        "de": "Z"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "targetX",
+                    "label": {
+                      "native": {
+                        "en": "Target X",
+                        "de": "Ziel X"
+                      },
+                      "reuse": {
+                        "en": "Target X",
+                        "de": "Ziel X"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "targetY",
+                    "label": {
+                      "native": {
+                        "en": "Target Y",
+                        "de": "Ziel Y"
+                      },
+                      "reuse": {
+                        "en": "Target Y",
+                        "de": "Ziel Y"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "targetZ",
+                    "label": {
+                      "native": {
+                        "en": "Target Z",
+                        "de": "Ziel Z"
+                      },
+                      "reuse": {
+                        "en": "Target Z",
+                        "de": "Ziel Z"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 0.0
+                  },
+                  {
+                    "id": "zoom",
+                    "label": {
+                      "native": {
+                        "en": "Zoom",
+                        "de": "Zoom"
+                      },
+                      "reuse": {
+                        "en": "Zoom",
+                        "de": "Zoom"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true,
+                    "default": 1.0
+                  }
+                ],
                 "inPalette": false,
                 "semantics": {
                   "effects": {
@@ -26391,7 +28341,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -26483,7 +28433,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -26537,7 +28487,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -26839,7 +28789,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -28110,6 +30094,50 @@
             },
             "actions": [
               {
+                "id": "commit-fill",
+                "label": {
+                  "native": {
+                    "en": "Commit Fill",
+                    "de": "Füllen übernehmen"
+                  },
+                  "reuse": {
+                    "en": "Commit Fill",
+                    "de": "Füllen übernehmen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": true,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "interactionSelect",
                 "label": {
                   "native": {
@@ -28395,7 +30423,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -32238,6 +34300,42 @@
             },
             "iconId": "paint-bucket",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": false,
               "rebase": "restart",
               "reconfigure": "restart",
@@ -32738,6 +34836,32 @@
           }
         },
         "faultNotices": [
+          {
+            "code": "wfc.grid3d.fill.invalid",
+            "label": {
+              "native": {
+                "en": "The fill result is invalid.",
+                "de": "Das Füllergebnis ist ungültig."
+              },
+              "reuse": {
+                "en": "The fill result is invalid.",
+                "de": "Das Füllergebnis ist ungültig."
+              }
+            }
+          },
+          {
+            "code": "wfc.grid3d.fill.stale",
+            "label": {
+              "native": {
+                "en": "This fill belongs to an older document revision.",
+                "de": "Dieses Füllergebnis gehört zu einem älteren Dokumentstand."
+              },
+              "reuse": {
+                "en": "This fill belongs to an older document revision.",
+                "de": "Dieses Füllergebnis gehört zu einem älteren Dokumentstand."
+              }
+            }
+          },
           {
             "code": "wfc.grid3d.window.required",
             "label": {
@@ -33734,7 +35858,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -33806,7 +35930,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -33916,7 +36040,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -34026,7 +36150,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -34149,7 +36273,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -34221,7 +36345,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -34310,7 +36434,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -34382,7 +36506,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -34456,7 +36580,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -34758,7 +36882,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -36062,7 +38220,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -36364,7 +38522,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -37707,7 +39899,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -37761,7 +39953,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -37807,7 +39999,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -37905,7 +40097,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -37977,7 +40169,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -38068,7 +40260,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -38140,7 +40332,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -38263,7 +40455,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -38335,7 +40527,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -38390,7 +40582,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -38454,7 +40646,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -38508,7 +40700,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -40996,6 +43188,42 @@
             },
             "iconId": "paint-bucket",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": false,
               "rebase": "restart",
               "reconfigure": "restart",
@@ -42518,7 +44746,7 @@
           }
         },
         "iconId": "map",
-        "artifactJson": "semio wfc.wfc3d.dsl v1\nschema=s.wfc.wfc3d seed=7\nslots [id:TEXT x:NUM y:NUM z:NUM width:NUM height:NUM depth:NUM pinned:TEXT] {\n  corridor 1 0 0 1 1 1 _\n  room-a 0 0 0 1 1 1 _\n  room-b 2 0 0 1 1 1 _\n}\nedges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {\n  edge-a-corridor room-a corridor beside\n  edge-corridor-b corridor room-b beside\n}\ntiles [id:TEXT label:TEXT weight:NUM media:VAL] {\n  corridor Corridor 1 {\n    color={\n      a=255 b=210 g=200 r=200\n    }\n    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]\n  }\n  room Room 2 {\n    color={\n      a=255 b=100 g=140 r=180\n    }\n    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]\n  }\n}\nrules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {\n  rule-room-corridor corridor room _ true\n}\n",
+        "artifactJson": "semio wfc.wfc3d.dsl v1\nschema=s.wfc.wfc3d seed=7\nslots [id:TEXT x:NUM y:NUM z:NUM width:NUM height:NUM depth:NUM pinned:TEXT] {\n  corridor 1 0 0 1 1 1 _\n  room-a 0 0 0 1 1 1 _\n  room-b 2 0 0 1 1 1 _\n}\nedges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {\n  edge-a-corridor room-a corridor beside\n  edge-corridor-b corridor room-b beside\n}\ntiles [id:TEXT label:TEXT weight:NUM media:VAL] {\n  corridor Corridor 1 {\n    kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ] indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] color={\n      r=200 g=200 b=210 a=255\n    }\n  }\n  room Room 2 {\n    kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ] indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] color={\n      r=180 g=140 b=100 a=255\n    }\n  }\n}\nrules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {\n  rule-room-corridor corridor room _ true\n}\n",
         "dialect": {
           "artifactKind": "s.wfc.wfc3d",
           "standard": "1",
@@ -42538,7 +44766,7 @@
           }
         },
         "iconId": "layers",
-        "artifactJson": "semio wfc.wfc3d.dsl v1\nschema=s.wfc.wfc3d seed=42\nslots [id:TEXT x:NUM y:NUM z:NUM width:NUM height:NUM depth:NUM pinned:TEXT] {\n  bay-0-ground 0 0 0 1 1 1 _\n  bay-0-top 0 1 0 1 1 1 _\n  bay-1-ground 1 0 0 1 1 1 _\n  bay-1-top 1 1 0 1 1 1 roof\n}\nedges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {\n  edge-bay-0-stack bay-0-ground bay-0-top above\n  edge-bay-1-stack bay-1-ground bay-1-top above\n  edge-ground-row bay-0-ground bay-1-ground beside\n  edge-top-row bay-0-top bay-1-top beside\n}\ntiles [id:TEXT label:TEXT weight:NUM media:VAL] {\n  roof Roof 1 {\n    color={\n      a=255 b=50 g=60 r=120\n    }\n    indices=[ 0 2 1 0 3 2 0 1 5 0 5 4 3 0 4 1 2 5 2 3 4 2 4 5 ] kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 1.0 0.0 ]\n  }\n  wall Wall 3 {\n    color={\n      a=255 b=195 g=205 r=210\n    }\n    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]\n  }\n}\nrules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {\n  rule-roof-roof roof roof _ true\n  rule-roof-roof-beside roof roof beside false\n  rule-wall-roof roof wall _ true\n  rule-wall-wall wall wall _ true\n}\n",
+        "artifactJson": "semio wfc.wfc3d.dsl v1\nschema=s.wfc.wfc3d seed=42\nslots [id:TEXT x:NUM y:NUM z:NUM width:NUM height:NUM depth:NUM pinned:TEXT] {\n  bay-0-ground 0 0 0 1 1 1 _\n  bay-0-top 0 1 0 1 1 1 _\n  bay-1-ground 1 0 0 1 1 1 _\n  bay-1-top 1 1 0 1 1 1 roof\n}\nedges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {\n  edge-bay-0-stack bay-0-ground bay-0-top above\n  edge-bay-1-stack bay-1-ground bay-1-top above\n  edge-ground-row bay-0-ground bay-1-ground beside\n  edge-top-row bay-0-top bay-1-top beside\n}\ntiles [id:TEXT label:TEXT weight:NUM media:VAL] {\n  roof Roof 1 {\n    kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 1.0 0.0 ] indices=[ 0 2 1 0 3 2 0 1 5 0 5 4 3 0 4 1 2 5 2 3 4 2 4 5 ] color={\n      r=120 g=60 b=50 a=255\n    }\n  }\n  wall Wall 3 {\n    kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ] indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] color={\n      r=210 g=205 b=195 a=255\n    }\n  }\n}\nrules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {\n  rule-roof-roof roof roof _ true\n  rule-roof-roof-beside roof roof beside false\n  rule-wall-roof roof wall _ true\n  rule-wall-wall wall wall _ true\n}\n",
         "dialect": {
           "artifactKind": "s.wfc.wfc3d",
           "standard": "1",
@@ -42558,7 +44786,7 @@
           }
         },
         "iconId": "building",
-        "artifactJson": "semio wfc.wfc3d.dsl v1\nschema=s.wfc.wfc3d seed=19\nslots [id:TEXT x:NUM y:NUM z:NUM width:NUM height:NUM depth:NUM pinned:TEXT] {\n  cantilever 1.5 3 0 2 1 1 _\n  storey-0 0 0 0 2 3 2 pier\n  storey-1 0 3 0 2 3 2 _\n  storey-2 0 6 0 2 3 2 _\n  storey-3 0 9 0 2 1 2 _\n}\nedges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {\n  edge-0-1 storey-0 storey-1 above\n  edge-1-2 storey-1 storey-2 above\n  edge-2-3 storey-2 storey-3 above\n  edge-cantilever storey-1 cantilever beside\n  edge-cantilever-brace storey-2 cantilever beside\n}\ntiles [id:TEXT label:TEXT weight:NUM media:VAL] {\n  cap Cap 1 {\n    color={\n      a=255 b=110 g=90 r=90\n    }\n    indices=[ 0 2 1 0 3 2 0 1 5 0 5 4 3 0 4 1 2 5 2 3 4 2 4 5 ] kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 1.0 0.0 ]\n  }\n  deck Deck 3 {\n    color={\n      a=255 b=160 g=190 r=200\n    }\n    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]\n  }\n  pier Pier 2 {\n    color={\n      a=255 b=135 g=130 r=130\n    }\n    indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ]\n  }\n}\nrules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {\n  rule-cap-deck-above cap deck above true\n  rule-cap-pier-above cap pier above true\n  rule-deck-deck deck deck _ true\n  rule-deck-pier deck pier _ true\n  rule-pier-pier pier pier _ true\n  rule-pier-pier-above pier pier above false\n}\n",
+        "artifactJson": "semio wfc.wfc3d.dsl v1\nschema=s.wfc.wfc3d seed=19\nslots [id:TEXT x:NUM y:NUM z:NUM width:NUM height:NUM depth:NUM pinned:TEXT] {\n  cantilever 1.5 3 0 2 1 1 _\n  storey-0 0 0 0 2 3 2 pier\n  storey-1 0 3 0 2 3 2 _\n  storey-2 0 6 0 2 3 2 _\n  storey-3 0 9 0 2 1 2 _\n}\nedges [id:TEXT from-slot-id:TEXT to-slot-id:TEXT relation:TEXT] {\n  edge-0-1 storey-0 storey-1 above\n  edge-1-2 storey-1 storey-2 above\n  edge-2-3 storey-2 storey-3 above\n  edge-cantilever storey-1 cantilever beside\n  edge-cantilever-brace storey-2 cantilever beside\n}\ntiles [id:TEXT label:TEXT weight:NUM media:VAL] {\n  cap Cap 1 {\n    kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 0.0 1.0 0.0 1.0 0.0 1.0 1.0 0.0 ] indices=[ 0 2 1 0 3 2 0 1 5 0 5 4 3 0 4 1 2 5 2 3 4 2 4 5 ] color={\n      r=90 g=90 b=110 a=255\n    }\n  }\n  deck Deck 3 {\n    kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ] indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] color={\n      r=200 g=190 b=160 a=255\n    }\n  }\n  pier Pier 2 {\n    kind=\"mesh\" positions=[ 0.0 0.0 0.0 1.0 0.0 0.0 1.0 1.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 1.0 0.0 1.0 1.0 1.0 1.0 0.0 1.0 1.0 ] indices=[ 0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5 ] color={\n      r=130 g=130 b=135 a=255\n    }\n  }\n}\nrules [id:TEXT tile-a-id:TEXT tile-b-id:TEXT relation:TEXT allowed:BOOL] {\n  rule-cap-deck-above cap deck above true\n  rule-cap-pier-above cap pier above true\n  rule-deck-deck deck deck _ true\n  rule-deck-pier deck pier _ true\n  rule-pier-pier pier pier _ true\n  rule-pier-pier-above pier pier above false\n}\n",
         "dialect": {
           "artifactKind": "s.wfc.wfc3d",
           "standard": "1",

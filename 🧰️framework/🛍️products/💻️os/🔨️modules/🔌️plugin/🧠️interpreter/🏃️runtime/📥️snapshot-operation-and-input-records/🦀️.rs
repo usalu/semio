@@ -112,5 +112,6 @@ pub fn owned_engine_identity() -> &'static str {
 pub struct OwnedRuntime {
     pub(super) next_instance_id: std::sync::atomic::AtomicU32,
     pub(super) original_clock:fn()->Option<u64>,
+    pub(super) input_retirement:semio_plugin_interpreter::CoreInputRetirementAuthority,
 }
 //#endregion 🧠️OwnedRuntime

@@ -254,7 +254,8 @@ function Screen(props: {
   const step = state.step;
   const at = useReleaseClock(state.course);
   const { screens, failed: screenFailed } = useCourseScreens(courseScreen(step.screen), props.timing);
-  usePreload(step.screen === "home" && screens.HomeScreen !== undefined, PRELOADED_SCREENS);
+  const portable = useMediaQuery(`${UI_MOBILE_MEDIA_QUERY}, (pointer: coarse)`);
+  usePreload(!portable && step.screen === "home" && screens.HomeScreen !== undefined, PRELOADED_SCREENS);
   const [introductionPage, setIntroductionPage] = useState<string | undefined>(undefined);
   const waiting = (
     <Page>
@@ -356,7 +357,7 @@ function Client(props: ClientProps): ReactElement {
   const ownScope = stepKey(state.step);
   const [swipe, setSwipe] = useState<{ readonly scope: string; readonly page: string }>();
   const [layout, setLayout] = useState<{ readonly scope: string; readonly value: PresencePresentation["layout"] }>();
-  const captureSwipe = useCallback((page: string) => setSwipe({ scope: ownScope, page }), [ownScope]);
+  const captureSwipe = useCallback((page: string) => setSwipe((previous) => previous?.scope === ownScope && previous.page === page ? previous : { scope: ownScope, page }), [ownScope]);
   const captureLayout = useCallback((value: PresencePresentation["layout"]) => setLayout({ scope: ownScope, value }), [ownScope]);
   const [reveal, setReveal] = useState<string | undefined>();
   const [revealedBy, setRevealedBy] = useState<"focus" | "pointer" | undefined>();

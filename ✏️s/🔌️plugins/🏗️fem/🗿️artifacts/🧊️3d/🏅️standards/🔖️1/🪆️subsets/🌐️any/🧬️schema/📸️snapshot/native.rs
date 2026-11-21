@@ -1,5 +1,5 @@
 //! 🛬️ Original authoring owners receive persistent FEM rows through physical grants and retain every close frontier.
-use super::{Fem3dSnapshot, Fem3dSnapshotValue};
+use super::{Fem3dSnapshot, Fem3dSnapshotValue, FemIdentityKind};
 use semio_framework_value::{
     OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind,
     retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep, StagedSourceAdmission, retained_clone_grant_admits},
@@ -152,20 +152,25 @@ fn validate_authoring(value:&Fem3dSnapshotValue,owner:&mut store::NativeSnapshot
             let(start,end,material,section)=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||Ok(match element{
                 crate::standards::v1::subsets::any::schema::structure::FemElement::Bar{start,end,material_id,section_id,..}|crate::standards::v1::subsets::any::schema::structure::FemElement::Frame{start,end,material_id,section_id,..}=>(start.as_str(),end.as_str(),material_id.as_str(),section_id.as_str())
             }))?;
-            {let mut rank=None;meter.take(index.lookup(value,super::FemIdentityKind::Node,start,&mut rank,original))?;}{let mut rank=None;meter.take(index.lookup(value,super::FemIdentityKind::Node,end,&mut rank,original))?;}
-            {let mut rank=None;meter.take(index.lookup(value,super::FemIdentityKind::Material,material,&mut rank,original))?;}{let mut rank=None;meter.take(index.lookup(value,super::FemIdentityKind::Section,section,&mut rank,original))?;}
+            index.probe_rank(value,FemIdentityKind::Node,start,original,progress,unwind,meter)?;
+            index.probe_rank(value,FemIdentityKind::Node,end,original,progress,unwind,meter)?;
+            index.probe_rank(value,FemIdentityKind::Material,material,original,progress,unwind,meter)?;
+            index.probe_rank(value,FemIdentityKind::Section,section,original,progress,unwind,meter)?;
         }
-        for support in &value.supports{let node=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||Ok(support.node_id.as_str()))?;{let mut rank=None;meter.take(index.lookup(value,super::FemIdentityKind::Node,node,&mut rank,original))?;}}
+        for support in &value.supports {
+            let node = semio_s_fem_receiving::inspect(original, progress, unwind, meter, || Ok(support.node_id.as_str()))?;
+            index.probe_rank(value, FemIdentityKind::Node, node, original, progress, unwind, meter)?;
+        }
         for case in &value.load_cases{
             let loads=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||Ok(case.loads.as_slice()))?;
             for load in loads{
                 use crate::standards::v1::subsets::any::schema::structure::FemLoad;
                 let(reference,finite)=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||Ok(match load{
-                    FemLoad::Nodal{node_id,value:force,..}=>(Some((super::FemIdentityKind::Node,node_id.as_str())),force.is_finite()),
-                    FemLoad::MemberUdl{element_id,wx,wy,wz,..}=>(Some((super::FemIdentityKind::Element,element_id.as_str())),wx.is_finite()&&wy.is_finite()&&wz.is_finite()),
-                    FemLoad::Area{solid_id,pressure,..}=>(Some((super::FemIdentityKind::Solid,solid_id.as_str())),pressure.is_finite()),
+                    FemLoad::Nodal{node_id,value:force,..}=>(Some((FemIdentityKind::Node,node_id.as_str())),force.is_finite()),
+                    FemLoad::MemberUdl{element_id,wx,wy,wz,..}=>(Some((FemIdentityKind::Element,element_id.as_str())),wx.is_finite()&&wy.is_finite()&&wz.is_finite()),
+                    FemLoad::Area{solid_id,pressure,..}=>(Some((FemIdentityKind::Solid,solid_id.as_str())),pressure.is_finite()),
                 }))?;
-                if let Some((kind,id))=reference{{let mut rank=None;meter.take(index.lookup(value,kind,id,&mut rank,original))?;}}
+                if let Some((kind,id))=reference{index.probe_rank(value,kind,id,original,progress,unwind,meter)?;}
                 semio_s_fem_receiving::inspect(original,progress,unwind,meter,||if finite{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::InvalidValue,"FEM load components must be finite binary64 values"))})?;
             }
         }
@@ -428,6 +433,10 @@ impl Fem3dReceiving {
         macro_rules! owned { ($ty:ty, $present:expr) => { return Ok((self.retirement.next_owner_demands::<$ty>($present, &None, body)?, self.retirement.next_owner_work::<$ty>($present, &None, body)?)) } }
         if let Some(rx) = self.nodes_receiver.as_ref() { slot!(rx, size_of::<Option<NodeReceiver>>()) }
         if let Some(rx) = self.materials_receiver.as_ref() { slot!(rx, size_of::<Option<MaterialReceiver>>()) }
+        if self.source.as_ref().is_some_and(RetainedCloneSource::publication_pending) {
+            let admission = self.admission.as_ref().ok_or_else(invalid)?;
+            return Ok((admission.next_demand()?, admission.next_work_demand()?));
+        }
         if let Some(source) = self.source.as_ref() {
             return Ok(if source.terminal_is_empty() { (fixed(2 * size_of::<Option<RetainedCloneSource<Fem3dSnapshotValue>>>()), 1) } else { (source.next_close_demand(body)?, source.next_close_work_demand(body)?) });
         }
@@ -464,6 +473,11 @@ impl Fem3dReceiving {
         if let Some(rx) = self.materials_receiver.as_mut() {
             if rx.terminal_is_empty() { release!(self.materials_receiver) }
             return settled(effect, |effect, reply| rx.close_into(body, effect, reply)).map(|step| RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.source.as_ref().is_some_and(RetainedCloneSource::publication_pending) {
+            let Some(admission) = self.admission.as_mut() else { return fail(invalid()) };
+            let turn = admission.advance(&mut self.source, effect);
+            return Complete(RetainedWorkOutcome { result: turn.result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(Into::into), work: turn.work });
         }
         if let Some(source) = self.source.as_mut() {
             if source.terminal_is_empty() { release!(self.source) }

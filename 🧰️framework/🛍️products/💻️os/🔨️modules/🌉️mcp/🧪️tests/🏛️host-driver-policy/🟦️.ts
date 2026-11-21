@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
+import { Database } from "bun:sqlite";
+import typedNoteOpen from "./🧫️fixtures/typed-note-open.json" with { type: "json" };
 import { readFileSync } from "node:fs";
 import { MCP_HOST_DRIVER_POLICY_PATH, MCP_HOST_OPERATION_POLICY_PATH, withMcpHostDriverPolicy } from "../../🟦️.ts";
 
@@ -23,6 +25,21 @@ test("the policy is finite and gives the root turn real time: currency is bounde
 test("every launch gets the authored policy exactly once and a caller's own policy is never replaced", () => {
   expect(withMcpHostDriverPolicy(["stdio", "--folder", "x"])).toEqual(["stdio", "--folder", "x", "--host-driver-policy", MCP_HOST_DRIVER_POLICY_PATH, "--operation-policy", MCP_HOST_OPERATION_POLICY_PATH]);
   expect(withMcpHostDriverPolicy(["stdio", "--host-driver-policy", "mine.json"])).toEqual(["stdio", "--host-driver-policy", "mine.json", "--operation-policy", MCP_HOST_OPERATION_POLICY_PATH]);
+});
+
+test("configured stock funds the measured typed Note readiness frontier", () => {
+  const database = new Database(":memory:");
+  try {
+    const balance = database.query<{ remaining: number }, [number, number, number]>("select ?1 - (?2 - ?3) as remaining");
+    for (const axis of Object.keys(typedNoteOpen.issued) as (keyof typeof typedNoteOpen.issued)[]) {
+      const actual = policy.operation[axis] - (typedNoteOpen.issued[axis] - typedNoteOpen.remainingAtReadiness[axis]);
+      expect(balance.get(policy.operation[axis], typedNoteOpen.issued[axis], typedNoteOpen.remainingAtReadiness[axis])?.remaining).toBe(actual);
+      expect(actual, axis).toBeGreaterThan(0);
+    }
+    expect(policy.drive.maximumItems).toBeGreaterThanOrEqual(typedNoteOpen.driveItems);
+  } finally {
+    database.close();
+  }
 });
 
 test("cleanup, host transit and guest infrastructure reserve disjoint currency within the same finite operation",()=>{

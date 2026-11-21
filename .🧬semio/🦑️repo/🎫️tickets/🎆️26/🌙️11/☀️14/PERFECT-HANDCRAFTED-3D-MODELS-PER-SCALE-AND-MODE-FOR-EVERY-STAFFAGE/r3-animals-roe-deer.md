@@ -85,3 +85,46 @@ Sources: Andersen, Duncan, Linnell (1998) "The European Roe Deer" (asset referen
 - The rump patch is a shallow cap 7 mm proud of the buttocks, not a change of coat colour on one surface.
 - Not opened after the last edits: structure and thermal of 1:200, thermal of 1:500 beyond the overlay sheet, 2D of 1:100 and 1:200, clips other than one walk frame. No product test run (`repo run ... :test`) was started from this task.
 - Reference values are from memory (section 1); no measured specimen or web source was consulted.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-roe-deer-50.ts` (1:50 hand tables; neck base and scapula top remodelled), `r5-roe-deer-coarse.ts` (1:100, 1:200, 1:500 hand tables), `r5-roe-deer-draw2d.ts` (2D redraw, ruling E1), `r5-roe-deer-upper500.py` (the 1:500 shoulder-and-upper-arm outline drawn by hand: the traced outline carries a rear bump whose visible width is 0.176 mm on paper, under the 0.2 mm print feature), `r5-roe-deer-run.sh` (whole work-document pipeline from `asset-before.json` with the r5 scripts; `sh r3-roe-deer-publish.sh` writes the catalog and splices), `r5-grid.ts`. Rollback inputs: `🗑️generated/r5-roe-deer/asset-before.json`, `volumes-before.json`.
+
+Note on the pipeline: re-running the round 3 pipeline unchanged did not reproduce the catalog of 2026-11-20 17:37: the limb outlines differ by tessellation noise (the tessellation fix of round 4) and the 1:500 `near-fore-upper` outline had been simplified by hand afterwards (that is what `r5-roe-deer-upper500.py` now states in a script).
+
+### Reference
+
+Section 1 of round 3 stands (Andersen et al. 1998, Ellenberger/Dittrich/Baum, Nickel/Schummer/Seiferle; bone lengths from archaeozoological collections). Model against it, 1:50, rest pose: withers 0.754 (ref 0.65 to 0.75, large buck, +0.5 %), croup 0.776 (2 to 3 cm above the withers, in range), femur 0.1846 (0.185), tibia 0.2249 (0.225), hind cannon 0.2299 (0.23), scapula 0.164 (0.165), humerus 0.1521 (0.15 to 0.16), radius 0.1953 (0.19 to 0.20), fore cannon 0.169 (0.17), skull 0.22 (0.21 to 0.22), ear 0.135 (0.12 to 0.14), antler 0.20 (0.20 to 0.25): every value within 1 %. Spine dorsal along the vertebral axis (lumbosacral 0.712, thoracolumbar 0.706, C7/T1 0.612), cervical spine curved. No rig fix was needed. Dimensions: length 1.035 to 1.038 m (measured body box after the new 1:500 muzzle row; heightM 1.122 and depthM 0.203 unchanged).
+
+### Grades (my own look)
+
+| list | 1:50 before / after | 1:100 | 1:200 | 1:500 |
+|---|---|---|---|---|
+| body | B+ / A- | B+ / A- | B / B+ | D / C+ |
+| structure | A- / A- | B+ / B+ | B / B | C / C |
+| thermal | B+ / B+ | B+ / B+ | B+ / B+ | B- / B- |
+
+Before: in the grazing pose and the alarm-freeze clip the neck base swung its dorsal rear corner up out of the withers as a sharp fin (the loft started 0.07 m behind C7 with a 0.112 m half depth); at 1:200 the scapula top did the same; 1:500 antlers were 76 mm cylinders with ball tips (mushrooms taller than the ears), the muzzle a flat-cut tube.
+
+### Changes
+
+- Neck base at all four scales: first section moved to 0.05 m behind C7, lowered 30 mm, half depth 0.094 m; the withers now stay smooth from the alert pose to the grazing pose.
+- Scapula top at 1:50, 1:100, 1:200 starts 30 mm lower on the blade, so it stays under the withers when the trunk pitches.
+- 1:500: antlers taper from 84 to 44 mm without a ball tip (overall extent still above the 75 mm feature); head with two closing muzzle rows; joint fills at hock and carpus at the leg radius (no collar). The upper-arm outline is drawn by hand (see above).
+- 2D of all four scales redrawn from the new solids (ruling E1), texts unchanged.
+
+### Checks
+
+Work document and catalog: `r3-validate.ts animals/roe-deer --volumes`: schema 0, validateAsset 0, checkVolumes 0 (print suitability included). `volumes-check.ts --product`: 41 ok, 0 fail. Silhouette IoU elevation / front / plan: 0.993 / 0.983 / 0.984 (1:50), 0.986 / 0.966 / 0.975, 0.973 / 0.962 / 0.968, 0.943 / 0.943 / 0.933. Published with `r3-roe-deer-publish.sh` (catalog unchanged since the backup; members `dimensions`, `representations`, `volumes` written; volumes spliced).
+
+### Opened
+
+Six-view body, structure and thermal (cut) sheets of all four scales, 1:500 three-quarter close-ups after each iteration, grazing at 1:50, 1:100 and 1:200 (side) before and after the neck fix, all 21 poses at 1:50 (four contact sheets), clip `alarm-freeze` at t 0.5 s.
+
+### Remaining issues
+
+- 1:500 is still a stack of 76 mm tubes: the 75 mm feature and the 0.2 mm print feature (100 mm visible width at 1:500) forbid tapering legs or slimming the antlers (real beam 20 mm); the far fore leg needs its carpus fill to stay printable. Grade C+ is the honest ceiling under those floors; a `slender` antler would need an open-stroke antler in the 1:500 drawing (tool request material, not done).
+- 1:500 structure: one bar per bone at the floor, bulky (C).
+- Trunk seams (croup, loin, chest as three solids for spine flexion) still show as thin rings and as two lines in the 2D.
+- Claw area: `hooves` passes only with the claw tops marked as junction faces (round 3, section 6).
+- The near foreleg in `grazing` is drawn back under the chest with a near-horizontal forearm (round 3 pose); it reads, but a straighter stance would be more typical.

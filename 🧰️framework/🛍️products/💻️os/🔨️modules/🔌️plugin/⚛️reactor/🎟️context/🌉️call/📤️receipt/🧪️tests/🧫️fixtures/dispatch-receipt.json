@@ -1,0 +1,10 @@
+[
+  {"name":"resident copy total exceeds the new loan","axis":1,"baseline":1548000,"observed":2199043,"completion":400,"carry":0,"redeemed":1000,"grant":1471583,"aggregate":651443,"fresh":650443},
+  {"name":"copy redemption remains visible on the wire","axis":1,"baseline":9000,"observed":9100,"completion":64,"carry":0,"redeemed":90,"grant":74,"aggregate":164,"fresh":74},
+  {"name":"previous capacity redemption exceeds current grant","axis":2,"baseline":15,"observed":62,"completion":0,"carry":0,"redeemed":40,"grant":7,"aggregate":47,"fresh":7},
+  {"name":"previous release redemption exceeds current grant","axis":3,"baseline":129,"observed":1029,"completion":0,"carry":0,"redeemed":890,"grant":10,"aggregate":900,"fresh":10},
+  {"name":"bootstrap carry is added once","axis":0,"baseline":200,"observed":212,"completion":2,"carry":6,"redeemed":4,"grant":16,"aggregate":20,"fresh":16},
+  {"name":"actual fresh overage is retained for rejection","axis":1,"baseline":2048,"observed":2248,"completion":64,"carry":0,"redeemed":20,"grant":243,"aggregate":264,"fresh":244},
+  {"name":"counter regression cannot publish","axis":1,"baseline":201,"observed":200,"completion":64,"carry":0,"redeemed":0,"grant":256,"aggregate":null,"fresh":null},
+  {"name":"sre cannot redeem more than the dispatch performed","axis":1,"baseline":200,"observed":204,"completion":64,"carry":0,"redeemed":69,"grant":256,"aggregate":68,"fresh":null}
+]

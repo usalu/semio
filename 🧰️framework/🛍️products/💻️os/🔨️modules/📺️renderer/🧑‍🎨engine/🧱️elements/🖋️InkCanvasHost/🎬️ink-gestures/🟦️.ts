@@ -1,5 +1,5 @@
 /** 🎬️ InkCanvasHost gestures: the action dispatcher, the interaction selection and hover publishing and the begin, live, commit, abort and atomic gesture lifecycle of the ink events. */
-import { useCallback, useMemo } from "../../⚛️react-port/🟦️.ts";
+import { useCallback, useMemo, useRef } from "../../⚛️react-port/🟦️.ts";
 import { inkCanvasActions } from "@semio-tech/framework";
 import { useShellContextMenuFallback, useMapContextMenuSpecs } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { type InkCanvasEvent, type InkDragGesture, type InkItem, type InkPendingLive } from "../🧾️ink-model/🟦️.ts";
@@ -34,14 +34,19 @@ export function useInkGestures(core: InkCore1) {
     },
     [dispatch, interactionDomain],
   );
+  const hoverOwner = JSON.stringify([node.controllerId, node.surfaceId, doc?.id, interactionDomain?.domainId, interactionDomain?.granularity]);
+  const lastHover = useRef<{ readonly owner: string; readonly target: string | null } | null>(null);
   const publishInteractionHover = useCallback(
     (block: InkItem | null): boolean => {
-      if (!interactionDomain || (block && !block.interactionId)) return false;
-      const targets = block ? [{ granularity: interactionDomain.granularity, id: block.interactionId! }] : [];
+      if (!node.controllerId || !interactionDomain || (block && !block.interactionId)) return false;
+      const target = block?.interactionId ?? null;
+      if (lastHover.current?.owner === hoverOwner && lastHover.current.target === target) return true;
+      const targets = target === null ? [] : [{ granularity: interactionDomain.granularity, id: target }];
       dispatch("interactionHover", { domainId: interactionDomain.domainId, channel: "pointer", targets: JSON.stringify(targets) });
+      lastHover.current = { owner: hoverOwner, target };
       return true;
     },
-    [dispatch, interactionDomain],
+    [dispatch, hoverOwner, interactionDomain, node.controllerId],
   );
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();

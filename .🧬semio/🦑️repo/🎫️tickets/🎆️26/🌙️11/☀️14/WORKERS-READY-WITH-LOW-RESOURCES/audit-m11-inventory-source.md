@@ -1,0 +1,7 @@
+# m11 Inventory Source Audit
+
+The 19:26:00 UTC terminal reports inventory overdue (2,740 s observed, 600 s declared, 1,200 s limit, 600,917 ms quiet). The 19:25:50 mirrored sample contained 306,913 distinct source observations, 378 completed owner checks and 155,328 memo rows before rotation. These figures do not identify the active subphase or prove that a particular Native operation was unresponsive.
+
+Current Graph `📥️load/🟦️.ts` lines 140–154 records registry, memo read, seed and check phases; lines 156–173 records discovery, per-owner memo checking and discovery operations, passes the invocation signal to settling, and checks the invocation on each owner. Lines 175–187 report publication, catalog and membership hash and wrap inventory with the slice step report. The retained snapshot path checks resource control around revalidation and each read, and yields between chunks (lines 78, 86). The prior m06 audit found expensive Native pre/post verification boundaries; the supplied m11 terminal and rotated sample do not establish which current boundary or phase consumed the quiet interval.
+
+No additional concrete current Native inventory phase lacking progress or cancellation is demonstrated by this evidence. This is a source and supplied-observation audit; it does not establish successful completion or rule out a defect requiring a phase-specific live sample. No workload was restarted.

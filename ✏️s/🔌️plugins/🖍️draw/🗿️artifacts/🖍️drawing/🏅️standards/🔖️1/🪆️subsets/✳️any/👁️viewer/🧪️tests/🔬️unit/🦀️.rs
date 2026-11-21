@@ -1,18 +1,9 @@
 use super::*;
 
 async fn restore_archive(app: &mut impl semio_plugin::PluginApp, operation: u64, archive: protocol::DocumentArchivePack, cx: &mut semio_plugin::StepContext<'_>) -> Result<(), String> {
-    app.begin_document_archive_load(operation, archive).map_err(|error| format!("{error:?}"))?;
-    for _ in 0..100_000 {
-        let status = Box::pin(app.poll_document_archive_load(operation, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)).await.map_err(|error| format!("{error:?}"))?;
-        match status.state {
-            protocol::DocumentArchiveLoadState::Ready => return app.acknowledge_document_archive_load(operation).map_err(|error| format!("{error:?}")),
-            protocol::DocumentArchiveLoadState::Fault | protocol::DocumentArchiveLoadState::Cancelled => return Err(format!("drawing archive restore failed: {status:?}")),
-            _ => {}
-        }
-        app.maintenance_step(cx, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
-        std::thread::yield_now();
-    }
-    Err("drawing archive restore exceeded its work bound".into())
+    use semio_plugin::artifact_app_laws as laws;
+    laws::admit_document_archive_load(app, operation, archive, cx).map_err(|error| format!("{error:?}"))?;
+    laws::settle_document_archive_load(app, operation, &mut laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -49,7 +40,7 @@ async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
             let action=row["verb"].as_str().unwrap();let count=before+row["layerDelta"].as_u64().unwrap() as usize;let name=row["name"].as_str();
             let history_meta = semio_plugin::ActionMeta { instance_id: meta.instance_id + 2, ..laws::meta(fixture[row["actor"].as_str().unwrap()].as_str().unwrap()) };
             let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut *reopened, action, None, &history_meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|error| format!("{error:?}"))?;
-            semio_plugin::app::settle_framework_reserved_admission(&mut *reopened, admitted).await.map_err(|error| format!("{error:?}"))?;
+            semio_plugin::app::settle_framework_reserved_admission(&mut *reopened, admitted, scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             laws::settle_registered_typed_operation(&mut *reopened, history_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             let snapshot = reopened.snapshot().map_err(|error| format!("{error:?}"))?;
             if snapshot.layers.len() != count { return Err(format!("{action} lost the pre-switch rectangle history")); }

@@ -58,6 +58,10 @@ fn plane_recover(coords: &[[f64; 2]], rule: &[(f64, f64, f64)], shape: impl Fn(f
     ElementResult::Plane { gauss }
 }
 
+fn stress_gradient_product([dix, diy]: [f64; 2], [sxx, syy, sxy]: [f64; 3], [djx, djy]: [f64; 2]) -> f64 {
+    dix * sxx * djx + dix * sxy * djy + diy * sxy * djx + diy * syy * djy
+}
+
 /// 🏋️ Consistent plane-continuum mass `ρ·t·∫Nᵀ·N·dA`, evaluated at the SAME Gauss rule as
 /// `plane_stiffness` — `shape_full` returns BOTH shape values (for `Nᵀ·N`) and parametric
 /// derivatives (for `jacobian_2d`'s `det(J)`), unlike `plane_b_and_weights`'s gradient-only closure.
@@ -91,11 +95,11 @@ fn plane_geometric_stiffness(coords: &[[f64; 2]], rule: &[(f64, f64, f64)], shap
         let b = b_matrix_plane(&d_n_xy);
         let eps = b.mul_vec(u_local);
         let sigma = d.mul_vec(&eps);
-        let (sxx, syy, sxy) = (sigma.get(0), sigma.get(1), sigma.get(2));
+        let stress = [sigma.get(0), sigma.get(1), sigma.get(2)];
         let scale = w * det_j * thickness;
-        for (i, &[dix, diy]) in d_n_xy[..n_nodes].iter().enumerate() {
-            for (j, &[djx, djy]) in d_n_xy[..n_nodes].iter().enumerate() {
-                let s = dix * sxx * djx + dix * sxy * djy + diy * sxy * djx + diy * syy * djy;
+        for (i, &left) in d_n_xy[..n_nodes].iter().enumerate() {
+            for (j, &right) in d_n_xy[..n_nodes].iter().enumerate() {
+                let s = stress_gradient_product(left, stress, right);
                 kg.add_at(2 * i, 2 * j, s * scale);
                 kg.add_at(2 * i + 1, 2 * j + 1, s * scale);
             }
@@ -117,13 +121,111 @@ pub struct Tri3Cst {
     pub density: f64,
 }
 
+struct TriangleJacobian {
+    dx_dxi: f64,
+    dx_deta: f64,
+    dy_dxi: f64,
+    dy_deta: f64,
+    determinant: f64,
+}
+
+impl TriangleJacobian {
+    fn new(positions: &[[f64; 3]]) -> Self {
+        let dx_dxi = positions[1][0] - positions[0][0];
+        let dx_deta = positions[2][0] - positions[0][0];
+        let dy_dxi = positions[1][1] - positions[0][1];
+        let dy_deta = positions[2][1] - positions[0][1];
+        let determinant = dx_dxi * dy_deta - dx_deta * dy_dxi;
+        Self { dx_dxi, dx_deta, dy_dxi, dy_deta, determinant }
+    }
+
+    fn checked(positions: &[[f64; 3]]) -> Option<Self> {
+        if positions.len() != 3 {
+            return None;
+        }
+        let jacobian = Self::new(positions);
+        (jacobian.determinant.is_finite() && jacobian.determinant.abs() > f64::EPSILON).then_some(jacobian)
+    }
+
+    fn gradients(&self) -> [[f64; 2]; 3] {
+        shape_tri3(0.0, 0.0).1.map(|[dxi, deta]| {
+            [
+                (self.dy_deta * dxi - self.dy_dxi * deta) / self.determinant,
+                (-self.dx_deta * dxi + self.dx_dxi * deta) / self.determinant,
+            ]
+        })
+    }
+}
+
+fn plane_strain_column([dx, dy]: [f64; 2], axis: usize) -> [f64; 3] {
+    if axis == 0 { [dx, 0.0, dy] } else { [0.0, dy, dx] }
+}
+
 impl Tri3Cst {
     /// 🌧️ Integrates one CST area-pressure and consistent translational gravity row.
     pub fn mounted_load_row(&self, positions: &[[f64; 3]], row: usize, pressure: f64, gravity: [f64; 2]) -> Option<f64> {
-        if row >= 6 || positions.len() != 3 { return None; }
-        let determinant = (positions[1][0] - positions[0][0]) * (positions[2][1] - positions[0][1]) - (positions[2][0] - positions[0][0]) * (positions[1][1] - positions[0][1]);
-        if !determinant.is_finite() || determinant.abs() <= f64::EPSILON { return None; }
+        if row >= 6 {
+            return None;
+        }
+        let determinant = TriangleJacobian::checked(positions)?.determinant;
         Some((self.density * self.thickness * gravity[row % 2] - if row % 2 == 1 { pressure } else { 0.0 }) * determinant.abs() / 6.0)
+    }
+
+    /// 🧷 Evaluates one CST initial-stress cell from the fixed triangle and its displacements.
+    pub fn mounted_geometric_cell(&self, positions: &[[f64; 3]], displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        if row >= 6 || column >= 6 || displacement.len() != 6 || displacement.iter().any(|value| !value.is_finite()) {
+            return None;
+        }
+        let jacobian = TriangleJacobian::checked(positions)?;
+        if row % 2 != column % 2 {
+            return Some(0.0);
+        }
+        let value = self.geometric_cells(&jacobian, displacement)(row, column);
+        value.is_finite().then_some(value)
+    }
+
+    fn constitutive_coefficients(&self) -> (f64, f64, f64) {
+        match self.kind {
+            PlaneKind::Stress => {
+                let factor = self.e / (1.0 - self.nu * self.nu);
+                (factor, factor * self.nu, factor * (1.0 - self.nu) / 2.0)
+            }
+            PlaneKind::Strain => {
+                let factor = self.e / ((1.0 + self.nu) * (1.0 - 2.0 * self.nu));
+                (factor * (1.0 - self.nu), factor * self.nu, factor * (1.0 - 2.0 * self.nu) / 2.0)
+            }
+        }
+    }
+
+    fn mass_cell(&self, determinant: f64, row: usize, column: usize) -> f64 {
+        if row % 2 != column % 2 {
+            return 0.0;
+        }
+        let coefficient = self.density * self.thickness * determinant / 24.0;
+        if row == column { 2.0 * coefficient } else { coefficient }
+    }
+
+    fn geometric_cells(&self, jacobian: &TriangleJacobian, displacement: &[f64]) -> impl Fn(usize, usize) -> f64 {
+        let gradients = jacobian.gradients();
+        let mut strain = [0.0; 3];
+        for ([dx, dy], dofs) in gradients.iter().copied().zip(displacement.chunks_exact(2)) {
+            strain[0] += dx * dofs[0];
+            strain[1] += dy * dofs[1];
+            strain[2] += dy * dofs[0];
+            strain[2] += dx * dofs[1];
+        }
+        let (normal, coupling, shear) = self.constitutive_coefficients();
+        let [exx, eyy, exy] = strain;
+        let stress = [normal * exx + coupling * eyy, coupling * exx + normal * eyy, shear * exy];
+        let scale = 0.5 * jacobian.determinant * self.thickness;
+        move |row, column| {
+            if row % 2 != column % 2 {
+                return 0.0;
+            }
+            let left = gradients[row.max(column) / 2];
+            let right = gradients[row.min(column) / 2];
+            stress_gradient_product(left, stress, right) * scale
+        }
     }
 
     fn rule(&self) -> Vec<(f64, f64, f64)> {
@@ -134,10 +236,6 @@ impl Tri3Cst {
         shape_tri3(xi, eta).1.to_vec()
     }
 
-    fn shape_full(xi: f64, eta: f64) -> (Vec<f64>, Vec<[f64; 2]>) {
-        let (n, dn) = shape_tri3(xi, eta);
-        (n.to_vec(), dn.to_vec())
-    }
 }
 
 impl Element for Tri3Cst {
@@ -180,60 +278,22 @@ impl Element for Tri3Cst {
     }
 
     fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
-        if row >= 6 || column >= 6 || ctx.positions.len() != 3 {
+        if row >= 6 || column >= 6 {
             return None;
         }
-        let coordinates = [[ctx.positions[0][0], ctx.positions[0][1]], [ctx.positions[1][0], ctx.positions[1][1]], [ctx.positions[2][0], ctx.positions[2][1]]];
-        let dx_dxi = coordinates[1][0] - coordinates[0][0];
-        let dx_deta = coordinates[2][0] - coordinates[0][0];
-        let dy_dxi = coordinates[1][1] - coordinates[0][1];
-        let dy_deta = coordinates[2][1] - coordinates[0][1];
-        let determinant = dx_dxi * dy_deta - dx_deta * dy_dxi;
-        if !determinant.is_finite() || determinant.abs() <= f64::EPSILON {
-            return None;
-        }
-        let parametric = [[-1.0, -1.0], [1.0, 0.0], [0.0, 1.0]];
-        let derivatives = std::array::from_fn::<_, 3, _>(|index| {
-            let derivative = parametric[index];
-            [(dy_deta * derivative[0] - dy_dxi * derivative[1]) / determinant, (-dx_deta * derivative[0] + dx_dxi * derivative[1]) / determinant]
-        });
-        let b = |strain: usize, dof: usize| {
-            let derivative = derivatives[dof / 2];
-            match (strain, dof % 2) {
-                (0, 0) => derivative[0],
-                (1, 1) => derivative[1],
-                (2, 0) => derivative[1],
-                (2, 1) => derivative[0],
-                _ => 0.0,
-            }
-        };
-        let constitutive = |left: usize, right: usize| match self.kind {
-            PlaneKind::Stress => {
-                let factor = self.e / (1.0 - self.nu * self.nu);
-                match (left, right) {
-                    (0, 0) | (1, 1) => factor,
-                    (0, 1) | (1, 0) => factor * self.nu,
-                    (2, 2) => factor * (1.0 - self.nu) / 2.0,
-                    _ => 0.0,
-                }
-            }
-            PlaneKind::Strain => {
-                let factor = self.e / ((1.0 + self.nu) * (1.0 - 2.0 * self.nu));
-                match (left, right) {
-                    (0, 0) | (1, 1) => factor * (1.0 - self.nu),
-                    (0, 1) | (1, 0) => factor * self.nu,
-                    (2, 2) => factor * (1.0 - 2.0 * self.nu) / 2.0,
-                    _ => 0.0,
-                }
-            }
-        };
+        let jacobian = TriangleJacobian::checked(&ctx.positions)?;
+        let derivatives = jacobian.gradients();
+        let left = plane_strain_column(derivatives[row / 2], row % 2);
+        let right = plane_strain_column(derivatives[column / 2], column % 2);
+        let (normal, coupling, shear) = self.constitutive_coefficients();
+        let constitutive = [[normal, coupling, 0.0], [coupling, normal, 0.0], [0.0, 0.0, shear]];
         let mut value = 0.0;
-        for left in 0..3 {
-            for right in 0..3 {
-                value += b(left, row) * constitutive(left, right) * b(right, column);
+        for i in 0..3 {
+            for j in 0..3 {
+                value += left[i] * constitutive[i][j] * right[j];
             }
         }
-        Some(value * 0.5 * determinant * self.thickness)
+        Some(value * 0.5 * jacobian.determinant * self.thickness)
     }
 
     fn recover(&self, ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
@@ -247,14 +307,40 @@ impl Element for Tri3Cst {
     /// coordinates, integrated EXACTLY by the degree-2-precision 3-point rule (own stiffness rule
     /// `self.rule()` is only 1-point, adequate for the constant-strain stiffness but NOT exact here).
     fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
-        let coords = plane_coords(ctx);
-        Some(plane_mass(&coords, &gauss_tri(3), Self::shape_full, self.density, self.thickness, 3))
+        let determinant = TriangleJacobian::new(&ctx.positions).determinant;
+        let mut mass = MatD::zeros(6, 6);
+        for row in 0..6 {
+            for column in 0..6 {
+                mass.set(row, column, self.mass_cell(determinant, row, column));
+            }
+        }
+        Some(mass)
+    }
+
+    fn mounted_mass_cell(&self, positions: &[[f64; 3]], row: usize, column: usize) -> Option<f64> {
+        if row >= 6 || column >= 6 {
+            return None;
+        }
+        let jacobian = TriangleJacobian::checked(positions)?;
+        let value = self.mass_cell(jacobian.determinant, row, column);
+        value.is_finite().then_some(value)
     }
 
     fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
-        let coords = plane_coords(ctx);
-        let d = self.kind.d_matrix(self.e, self.nu);
-        Some(plane_geometric_stiffness(&coords, &self.rule(), Self::shape, &d, self.thickness, u_element, 3))
+        assert_eq!(u_element.len(), 6, "triangle displacement count");
+        let jacobian = TriangleJacobian::new(&ctx.positions);
+        let cell = self.geometric_cells(&jacobian, &u_element.0);
+        let mut geometric = MatD::zeros(6, 6);
+        for row in 0..6 {
+            for column in 0..6 {
+                geometric.set(row, column, cell(row, column));
+            }
+        }
+        Some(geometric)
+    }
+
+    fn mounted_geometric_stiffness_cell(&self, ctx: &ElementContext, displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        self.mounted_geometric_cell(&ctx.positions, displacement, row, column)
     }
 }
 // #endregion 🔖️Tri3Cst

@@ -13,6 +13,7 @@ use semio_s_artifact_norm_din4108_mut_windows::{insert_zone_window, remove_zone_
 use semio_s_artifact_norm_din4108_mut_elements::{insert_element, remove_element, change_element_area, change_element_adjacent, change_element_kind, change_element_orientation_deg, change_element_inclination_deg, change_element_delta_u_g, change_element_delta_u_f, change_element_delta_u_r};
 use semio_s_artifact_norm_din4108_mut_layers::{insert_layer, remove_layer, reorder_layers, change_layer_thickness, change_layer_lambda, change_layer_mu, change_layer_material_id, change_layer_application_type, change_layer_compressive_class};
 use semio_s_artifact_norm_din4108_mut_thermal_bridge::{insert_thermal_bridge, remove_thermal_bridge, change_thermal_bridge_psi, change_thermal_bridge_length, change_thermal_bridge_bb2_type};
+use semio_s_artifact_norm_din4108_mut_building::{insert_case, remove_case, change_case_number, change_case_text, change_case_label_en, change_case_label_de, change_case_entry_id};
 use protocol::OpText;
 
 //#region 🔖️OpText
@@ -194,6 +195,36 @@ pub(crate) enum Din4108MutationDsl {
         index: usize,
         new_application_type: String,
     },
+    InsertCase {
+        index: usize,
+        #[dsl(block)]
+        case: semio_s_artifact_norm_din4108_model::CaseRow,
+    },
+    RemoveCase {
+        id: String,
+    },
+    ChangeCaseNumber {
+        case_id: String,
+        key: String,
+        value: Option<f64>,
+    },
+    ChangeCaseText {
+        case_id: String,
+        key: String,
+        value: Option<String>,
+    },
+    ChangeCaseLabelEn {
+        case_id: String,
+        new_value: String,
+    },
+    ChangeCaseLabelDe {
+        case_id: String,
+        new_value: String,
+    },
+    ChangeCaseEntryId {
+        case_id: String,
+        new_value: String,
+    },
     ChangeLayerCompressiveClass {
         element_id: String,
         index: usize,
@@ -278,6 +309,13 @@ pub(crate) fn din4108_mutation_to_dsl(mutation: &Din4108Mutation) -> Din4108Muta
         Din4108Mutation::ChangeZoneWindowOrientation(payload) => Din4108MutationDsl::ChangeZoneWindowOrientation { zone_id: payload.zone_id.clone(), window_id: payload.window_id.clone(), new_orientation: payload.new_orientation.clone() },
         Din4108Mutation::ChangeZoneWindowInclinationDeg(payload) => Din4108MutationDsl::ChangeZoneWindowInclinationDeg { zone_id: payload.zone_id.clone(), window_id: payload.window_id.clone(), new_inclination_deg: payload.new_inclination_deg },
         Din4108Mutation::ChangeLayerApplicationType(payload) => Din4108MutationDsl::ChangeLayerApplicationType { element_id: payload.element_id.clone(), index: payload.index, new_application_type: payload.new_application_type.clone() },
+        Din4108Mutation::InsertCase(payload) => Din4108MutationDsl::InsertCase { index: payload.index, case: payload.case.clone() },
+        Din4108Mutation::RemoveCase(payload) => Din4108MutationDsl::RemoveCase { id: payload.id.clone() },
+        Din4108Mutation::ChangeCaseNumber(payload) => Din4108MutationDsl::ChangeCaseNumber { case_id: payload.case_id.clone(), key: payload.key.clone(), value: payload.value },
+        Din4108Mutation::ChangeCaseText(payload) => Din4108MutationDsl::ChangeCaseText { case_id: payload.case_id.clone(), key: payload.key.clone(), value: payload.value.clone() },
+        Din4108Mutation::ChangeCaseLabelEn(payload) => Din4108MutationDsl::ChangeCaseLabelEn { case_id: payload.case_id.clone(), new_value: payload.new_value.clone() },
+        Din4108Mutation::ChangeCaseLabelDe(payload) => Din4108MutationDsl::ChangeCaseLabelDe { case_id: payload.case_id.clone(), new_value: payload.new_value.clone() },
+        Din4108Mutation::ChangeCaseEntryId(payload) => Din4108MutationDsl::ChangeCaseEntryId { case_id: payload.case_id.clone(), new_value: payload.new_value.clone() },
         Din4108Mutation::ChangeLayerCompressiveClass(payload) => Din4108MutationDsl::ChangeLayerCompressiveClass { element_id: payload.element_id.clone(), index: payload.index, new_compressive_class: payload.new_compressive_class.clone() },
     }
 }
@@ -327,6 +365,13 @@ pub(crate) fn din4108_mutation_from_dsl(dsl: Din4108MutationDsl) -> Din4108Mutat
         Din4108MutationDsl::ChangeZoneWindowOrientation { zone_id, window_id, new_orientation } => Din4108Mutation::ChangeZoneWindowOrientation(change_zone_window_orientation::ChangeZoneWindowOrientation { zone_id, window_id, new_orientation }),
         Din4108MutationDsl::ChangeZoneWindowInclinationDeg { zone_id, window_id, new_inclination_deg } => Din4108Mutation::ChangeZoneWindowInclinationDeg(change_zone_window_inclination_deg::ChangeZoneWindowInclinationDeg { zone_id, window_id, new_inclination_deg }),
         Din4108MutationDsl::ChangeLayerApplicationType { element_id, index, new_application_type } => Din4108Mutation::ChangeLayerApplicationType(change_layer_application_type::ChangeLayerApplicationType { element_id, index, new_application_type }),
+        Din4108MutationDsl::InsertCase { index, case } => Din4108Mutation::InsertCase(insert_case::InsertCase { index, case }),
+        Din4108MutationDsl::RemoveCase { id } => Din4108Mutation::RemoveCase(remove_case::RemoveCase { id }),
+        Din4108MutationDsl::ChangeCaseNumber { case_id, key, value } => Din4108Mutation::ChangeCaseNumber(change_case_number::ChangeCaseNumber { case_id, key, value }),
+        Din4108MutationDsl::ChangeCaseText { case_id, key, value } => Din4108Mutation::ChangeCaseText(change_case_text::ChangeCaseText { case_id, key, value }),
+        Din4108MutationDsl::ChangeCaseLabelEn { case_id, new_value } => Din4108Mutation::ChangeCaseLabelEn(change_case_label_en::ChangeCaseLabelEn { case_id, new_value }),
+        Din4108MutationDsl::ChangeCaseLabelDe { case_id, new_value } => Din4108Mutation::ChangeCaseLabelDe(change_case_label_de::ChangeCaseLabelDe { case_id, new_value }),
+        Din4108MutationDsl::ChangeCaseEntryId { case_id, new_value } => Din4108Mutation::ChangeCaseEntryId(change_case_entry_id::ChangeCaseEntryId { case_id, new_value }),
         Din4108MutationDsl::ChangeLayerCompressiveClass { element_id, index, new_compressive_class } => Din4108Mutation::ChangeLayerCompressiveClass(change_layer_compressive_class::ChangeLayerCompressiveClass { element_id, index, new_compressive_class }),
     }
 }
@@ -335,6 +380,20 @@ pub(crate) fn din4108_mutation_from_dsl(dsl: Din4108MutationDsl) -> Din4108Mutat
 fn demo_mutation_cases() -> Vec<Din4108Mutation> {
     use semio_s_plugin_norm_compliance::ClimateZoneDe;
     vec![
+        Din4108Mutation::InsertCase(insert_case::InsertCase {
+            index: 0,
+            case: semio_s_artifact_norm_din4108_model::CaseRow {
+                id: "pressure-test".into(), entry_id: "G26-01".into(),
+                label_en: "Pressure test".into(), label_de: "Differenzdruckmessung".into(),
+                numbers: vec![], texts: vec![],
+            },
+        }),
+        Din4108Mutation::RemoveCase(remove_case::RemoveCase { id: "pressure-test".into() }),
+        Din4108Mutation::ChangeCaseNumber(change_case_number::ChangeCaseNumber { case_id: "pressure-test".into(), key: "test_volume".into(), value: Some(300.0) }),
+        Din4108Mutation::ChangeCaseText(change_case_text::ChangeCaseText { case_id: "pressure-test".into(), key: "test_ventilation".into(), value: Some("mechanical".into()) }),
+        Din4108Mutation::ChangeCaseLabelEn(change_case_label_en::ChangeCaseLabelEn { case_id: "pressure-test".into(), new_value: "Pressure test".into() }),
+        Din4108Mutation::ChangeCaseLabelDe(change_case_label_de::ChangeCaseLabelDe { case_id: "pressure-test".into(), new_value: "Differenzdruckmessung".into() }),
+        Din4108Mutation::ChangeCaseEntryId(change_case_entry_id::ChangeCaseEntryId { case_id: "pressure-test".into(), new_value: "G26-02".into() }),
         Din4108Mutation::ChangeClimateZone(change_climate_zone::ChangeClimateZone { new_climate_zone: ClimateZoneDe::Zone3 }),
         Din4108Mutation::ChangeUsage(change_usage::ChangeUsage { new_usage: "nonresidential".into() }),
         Din4108Mutation::ChangeTIntC(change_t_int_c::ChangeTIntC { new_t_int_c: 21.5 }),

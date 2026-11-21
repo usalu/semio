@@ -175,3 +175,52 @@ pub struct MeshModelingProgress {
     pub phase: &'static str,
 }
 
+#[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
+pub enum MeshIntersectionFace {
+    Left(u32),
+    RightPlane(u32),
+    ReversedRightPlane(u32),
+    /// ◧️ Original left cap cut along its certified profile edges.
+    LeftBoundary(u32),
+    /// ◨️ Original right cap cut along its certified profile edges.
+    RightBoundary(u32),
+}
+
+impl MeshIntersectionFace {
+    /// 🧾️ Reports the original operand and face row for a retained patch.
+    pub fn source_face(self) -> (usize, u32) {
+        match self {
+            Self::Left(id) | Self::LeftBoundary(id) => (0, id),
+            Self::RightPlane(id) | Self::ReversedRightPlane(id) | Self::RightBoundary(id) => (1, id),
+        }
+    }
+}
+
+/// 🧩️ Carries indexed rings, originating source faces or planes, and interpolation lineage for each position.
+/// A generated edge origin refers only to earlier entries, including positions removed by later planes.
+#[derive(semio_framework_value::RetireOwned)]
+pub struct MeshIntersectionSolid {
+    pub geometry:MeshPolygonSoup,
+    pub faces:Vec<MeshIntersectionFace>,
+    pub points:Vec<MeshSourceVertex>,
+    /// 🪡️ Maps each participating right-source vertex to its output position, including welded seam positions.
+    pub right_points:Vec<u32>,
+    /// 🧮️ Carries output IDs and right-side interpolation recipes for generated points.
+    pub right_interpolations:Vec<(u32,MeshSourceVertex)>,
+    /// 📦️ Identifies a source returned unchanged by the geometry operation.
+    pub retained_operand:Option<u8>,
+}
+
+/// 🏁️ A settled contact or separation has no volumetric intersection.
+pub enum MeshConvexIntersectionStep {
+    Working,
+    Empty,
+    Solid(MeshIntersectionSolid),
+    Cancelled,
+}
+
+/// 🧭️ Binds authored reconstruction to one retained solid intersection provider.
+pub trait MeshIntersectionKernel: semio_framework_value::retirement::RetireOwned {
+    fn create(left:MeshPolygonSoup,right:MeshPolygonSoup)->MeshResult<Self> where Self: Sized;
+    fn advance(&mut self)->MeshResult<MeshConvexIntersectionStep>;
+}

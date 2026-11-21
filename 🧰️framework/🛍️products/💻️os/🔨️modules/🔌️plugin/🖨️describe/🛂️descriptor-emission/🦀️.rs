@@ -301,7 +301,7 @@ impl std::fmt::Display for DescribeError {
 }
 
 /// 📄 Reads exactly one bounded regular non-symlink artifact in fixed-size chunks.
-fn read_artifact(path: &Path, label: &str) -> Result<(Vec<u8>, String), DescribeError> {
+fn read_artifact(path: &Path, label: &str) -> Result<(Vec<u8>, [u8; 32]), DescribeError> {
     let metadata = fs::symlink_metadata(path).map_err(|error| DescribeError(format!("reading {label} metadata {}: {error}", path.display())))?;
     if metadata.file_type().is_symlink() || !metadata.file_type().is_file() {
         return Err(DescribeError(format!("{label} {} must be a regular non-symlink file", path.display())));
@@ -327,7 +327,7 @@ fn read_artifact(path: &Path, label: &str) -> Result<(Vec<u8>, String), Describe
     if bytes.len() as u64 != metadata.len() {
         return Err(DescribeError(format!("{label} {} changed while reading", path.display())));
     }
-    Ok((bytes, semio_framework_hash::hex_lower(&hash.finalize())))
+    Ok((bytes, hash.finalize()))
 }
 
 fn transaction_path(out_dir: &Path, name: &str, role: &str) -> PathBuf {
@@ -542,8 +542,12 @@ pub fn descriptor_pack(value: &CanonicalDescriptorValue) -> Vec<u8> {
 /// verification step, and enforced nothing when it did not. Failing at the writer makes the
 /// invalid state unrepresentable instead of relying on every caller to remember.
 pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<(PackageDescriptor, Vec<u8>), DescribeError> {
-    let (wasm_bytes, _) = read_artifact(wasm_path, "component")?;
-    let (descriptor_bytes, runtime, compiled) = execute_describe_owned(&wasm_bytes, wasm_path).await?;
+    describe_model_component(wasm_path, out_dir, false).await
+}
+
+async fn describe_model_component(wasm_path: &Path, out_dir: &Path, prepare_actor: bool) -> Result<(PackageDescriptor, Vec<u8>), DescribeError> {
+    let (wasm_bytes, component_sha256) = read_artifact(wasm_path, "component")?;
+    let (descriptor_bytes, runtime, mut compiled) = execute_describe_owned(&wasm_bytes, wasm_path).await?;
 
     let decoded = store::pack_rt::decode_wire_value(&descriptor_bytes).map_err(|error| DescribeError(format!("decoding describe() output as a pack: {error}")))?;
     let descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(decoded).map_err(|error| DescribeError(format!("decoding describe() output as a PackageDescriptor: {error}")))?;
@@ -566,8 +570,44 @@ pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<(Pac
         }
     }
     write_descriptor_pair_atomic(out_dir, &final_bytes, format!("{final_json}\n").as_bytes())?;
+    if prepare_actor {
+        write_prepared_actor(&mut compiled, component_sha256, out_dir)?;
+    }
 
     Ok((descriptor, final_bytes))
+}
+
+fn write_prepared_actor(compiled: &mut OwnedCompiledGuest, component_sha256: [u8; 32], out_dir: &Path) -> Result<(), DescribeError> {
+    const IMAGE: &str = "📦️actor.semio";
+    const MAXIMUM_BYTES: usize = 512 * 1024 * 1024;
+    let began = std::time::Instant::now();
+    let deadline = std::time::Duration::from_millis(u64::from(DESCRIBE_DEADLINE_MS));
+    let mut next_report = 0;
+    let prepared = compiled.prepare_actor(DESCRIBE_FUEL_BUDGET, |fuel| {
+        if fuel >= next_report {
+            eprintln!("[describe] owned phase=prepare fuel={fuel} elapsed_ms={}", began.elapsed().as_millis());
+            next_report = fuel + 25_000_000;
+        }
+        began.elapsed() < deadline
+    }).map_err(|error| DescribeError(error.to_string()))?;
+    if !prepared {
+        return Ok(());
+    }
+    let temporary = transaction_path(out_dir, IMAGE, "prepare");
+    let result = (|| {
+        let mut file = OpenOptions::new().write(true).create_new(true).open(&temporary).map_err(|error| DescribeError(error.to_string()))?;
+        compiled.write_actor_preparation(component_sha256, MAXIMUM_BYTES, |bytes| {
+            if began.elapsed() >= deadline {
+                return Err(std::io::Error::other("actor image publication deadline exceeded"));
+            }
+            file.write_all(bytes)
+        }).map_err(|error| DescribeError(error.to_string()))?;
+        file.sync_all().map_err(|error| DescribeError(error.to_string()))?;
+        drop(file);
+        fs::rename(&temporary, out_dir.join(IMAGE)).map_err(|error| DescribeError(error.to_string()))
+    })();
+    if result.is_err() { let _ = fs::remove_file(temporary); }
+    result
 }
 //#endregion 🔖️Describe
 
@@ -631,20 +671,28 @@ pub async fn component_codec_rows(wasm_path: &Path, pairs: &[(String, String)]) 
     Ok(rows)
 }
 
-/// ⌨️ `describe <component.wasm> --out <dir>` and `codecs <component.wasm>
-/// --kinds <kind=schema,…> --out <file.json>`. Returns the process exit code (0 success, 1 a failure,
-/// 2 a usage error).
+/// ⌨️ Handles `capabilities`, `describe <component.wasm> --out <dir>`, and
+/// `codecs <component.wasm> --kinds <kind=schema,…> --out <file.json>`.
+/// Returns 0 on success, 1 on failure, or 2 for invalid usage.
 pub async fn run(args: Vec<String>) -> i32 {
     let mut rest = args.into_iter();
     match rest.next().as_deref() {
+        Some("capabilities") if rest.next().is_none() => {
+            println!("{}", r#"{"version":1,"prepareActor":true}"#);
+            0
+        }
+        Some("capabilities") => {
+            eprintln!("usage: semio-plugin-describe capabilities");
+            2
+        }
         Some("describe") => run_describe(rest.collect()).await,
         Some("codecs") => run_codecs(rest.collect()).await,
         Some(other) => {
-            eprintln!("semio-plugin-describe: unknown command {other:?} (expected \"describe\" or \"codecs\")");
+            eprintln!("semio-plugin-describe: unknown command {other:?} (expected \"capabilities\", \"describe\", or \"codecs\")");
             2
         }
         None => {
-            eprintln!("usage: semio-plugin-describe describe <component.wasm> --out <dir>");
+            eprintln!("usage: semio-plugin-describe capabilities | describe <component.wasm> --out <dir> | codecs <component.wasm> --kinds <kind=schema,…> --out <file.json>");
             2
         }
     }
@@ -722,10 +770,12 @@ async fn run_codecs(args: Vec<String>) -> i32 {
 async fn run_describe(args: Vec<String>) -> i32 {
     let mut wasm_path: Option<PathBuf> = None;
     let mut out_dir: Option<PathBuf> = None;
+    let mut prepare_actor = false;
     let mut iter = args.into_iter();
     while let Some(arg) = iter.next() {
         match arg.as_str() {
             "--out" => out_dir = iter.next().map(PathBuf::from),
+            "--prepare-actor" => prepare_actor = true,
             _ if wasm_path.is_none() => wasm_path = Some(PathBuf::from(arg)),
             other => {
                 eprintln!("semio-plugin-describe describe: unexpected argument {other:?}");
@@ -737,7 +787,7 @@ async fn run_describe(args: Vec<String>) -> i32 {
         eprintln!("usage: semio-plugin-describe describe <component.wasm> --out <dir>");
         return 2;
     };
-    match describe_component(&wasm_path, &out_dir).await {
+    match describe_model_component(&wasm_path, &out_dir, prepare_actor).await {
         Ok((descriptor, pack)) => {
             println!("described {} ({:?}, role={:?}) -> {}/🛂️.descriptor.semio + 🔣️.json (semantic_descriptor_sha256={})", wasm_path.display(), descriptor.manifest.plugin_id, descriptor.role, out_dir.display(), semio_framework_hash::sha256_hex(&pack));
             0

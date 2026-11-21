@@ -3,11 +3,11 @@
 use super::*;
 
 // #region 🔖️Features
-geo_operation!(Fillet, "solid", |k, i| k.fillet(&read_geometry(i, "geometry")?, read_channel_number(i, "radius")?));
+geo_operation!(Fillet, "solid", |k, i| k.fillet(&read_geometry(i, "geometry")?, read_channel_number(i, "radius")?), FilletAll);
 
 geo_operation!(FilletVariable, "solid", |k, i| k.fillet_variable(&read_geometry(i, "geometry")?, read_channel_number(i, "radiusStart")?, read_channel_number(i, "radiusEnd")?,));
 
-geo_operation!(Chamfer, "solid", |k, i| k.chamfer(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
+geo_operation!(Chamfer, "solid", |k, i| k.chamfer(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?), ChamferAll);
 
 geo_operation!(ChamferAsymmetric, "solid", |k, i| k.chamfer_asymmetric(&read_geometry(i, "geometry")?, read_channel_number(i, "d1")?, read_channel_number(i, "d2")?,));
 
@@ -16,12 +16,9 @@ geo_operation!(ChamferAsymmetric, "solid", |k, i| k.chamfer_asymmetric(&read_geo
 pub(super) struct FilletEdges(pub(super) SessionCapture);
 
 impl Operator for FilletEdges {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
-            retire_geometry_capture!(0);
+    retire_geometry_capture!(0);
+    retained_geometry_job!(FilletEdges);
+
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -54,7 +51,7 @@ pub(super) struct ShellMutation(pub(super) SessionCapture);
 
 impl Operator for ShellMutation {
     retire_geometry_capture!(0);
-    retained_geometry_job!(BoxShell);
+    retained_geometry_job!(Shell);
 
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel(|kernel| {

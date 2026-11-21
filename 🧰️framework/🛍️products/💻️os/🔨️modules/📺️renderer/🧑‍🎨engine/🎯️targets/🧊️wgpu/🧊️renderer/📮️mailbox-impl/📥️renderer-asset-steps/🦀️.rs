@@ -47,23 +47,32 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         }
     }
 
-    pub fn reset_world_asset_response_step(&self, fetch: &mut RendererAssetFetchOwner) -> RendererAssetSealStep {
-        let RendererAssetFetchOwner::World { surface_token, owner, .. } = fetch else {
-            return RendererAssetSealStep::Refused("shared renderer asset has no world response to reset");
-        };
-        match owner.retire_partial_response_step() {
+    pub fn reset_renderer_asset_response_step(&self, fetch: &mut RendererAssetFetchOwner) -> RendererAssetSealStep {
+        if !fetch.allows_transport_retry() {
+            return RendererAssetSealStep::Refused("the renderer asset does not permit transport retries");
+        }
+        match fetch.owner_mut().retire_partial_response_step() {
             Ok(true) => {}
             Ok(false) => return RendererAssetSealStep::Busy,
-            Err(_) => return RendererAssetSealStep::Refused("the world response is already sealed or closing"),
+            Err(_) => return RendererAssetSealStep::Refused("the asset response is already sealed or closing"),
         }
-        let Ok(mut runtime) = self.try_lock() else { return RendererAssetSealStep::Busy };
-        let Some(interaction) = runtime.interaction_mut() else { return RendererAssetSealStep::Busy };
-        let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(*surface_token) else {
-            return RendererAssetSealStep::Refused("the world surface generation retired");
+        let released = match fetch {
+            RendererAssetFetchOwner::Shared(owner) => {
+                let Ok(mut authority) = renderer_asset_io().try_lock() else { return RendererAssetSealStep::Busy };
+                authority.release_partial_response(owner)
+            }
+            RendererAssetFetchOwner::World { surface_token, owner, .. } => {
+                let Ok(mut runtime) = self.try_lock() else { return RendererAssetSealStep::Busy };
+                let Some(interaction) = runtime.interaction_mut() else { return RendererAssetSealStep::Busy };
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_token_mut(*surface_token) else {
+                    return RendererAssetSealStep::Refused("the world surface generation retired");
+                };
+                state.assets.asset_io.release_partial_response(owner)
+            }
         };
-        match state.assets.asset_io.release_partial_response(owner) {
+        match released {
             Ok(()) => RendererAssetSealStep::Granted,
-            Err(_) => RendererAssetSealStep::Refused("the world asset authority refused the partial response handback"),
+            Err(_) => RendererAssetSealStep::Refused("the asset authority refused the partial response handback"),
         }
     }
 
@@ -103,7 +112,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 if let Some((_, kind, url)) = rejection.filter(|_| !world3d_asset_cancellation_requested(&state.assets, owner.token())) {
                     match kind {
                         WorldAssetRequestKind::Terrain { z, x, y } => {
-                            apply_world3d_terrain_tile_bytes(&mut state.terrain, z, x, y, &[]);
+                            apply_world3d_terrain_tile_bytes(&mut state.terrain, &url, z, x, y, &[]);
                         }
                         _ => mark_world3d_asset_miss(&mut state.assets, &url),
                     }

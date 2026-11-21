@@ -1,0 +1,40 @@
+{
+  "before": {
+    "schema": "stdio.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792,
+        "text": "Proof cover"
+      },
+      {
+        "width": 300,
+        "height": 400,
+        "text": "Print proof"
+      }
+    ]
+  },
+  "mutation": {
+    "mutation": "resize-page",
+    "payload": {
+      "index": 1,
+      "width": 595.276,
+      "height": 841.89
+    }
+  },
+  "after": {
+    "schema": "stdio.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792,
+        "text": "Proof cover"
+      },
+      {
+        "width": 595.276,
+        "height": 841.89,
+        "text": "Print proof"
+      }
+    ]
+  }
+}

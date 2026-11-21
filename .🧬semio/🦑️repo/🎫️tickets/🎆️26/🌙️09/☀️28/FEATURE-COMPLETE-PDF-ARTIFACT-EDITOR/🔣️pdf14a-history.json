@@ -1,0 +1,39 @@
+{
+  "before": {
+    "schema": "stdio.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792,
+        "text": "Archive reference"
+      },
+      {
+        "width": 300,
+        "height": 400,
+        "text": "Shelf inventory"
+      }
+    ]
+  },
+  "mutation": {
+    "mutation": "replace-page-text",
+    "payload": {
+      "index": 1,
+      "text": "Corrected shelf inventory"
+    }
+  },
+  "after": {
+    "schema": "stdio.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792,
+        "text": "Archive reference"
+      },
+      {
+        "width": 300,
+        "height": 400,
+        "text": "Corrected shelf inventory"
+      }
+    ]
+  }
+}

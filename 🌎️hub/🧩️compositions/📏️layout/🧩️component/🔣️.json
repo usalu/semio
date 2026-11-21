@@ -206,7 +206,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -265,7 +265,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -323,7 +323,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -381,7 +381,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -439,7 +439,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -497,7 +497,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -555,7 +555,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -609,7 +609,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -911,7 +911,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -1803,7 +1837,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -2420,7 +2488,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2471,7 +2539,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2522,7 +2590,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2540,6 +2608,108 @@
                 "export the document as pdf",
                 "print this layout to pdf"
               ]
+            }
+          },
+          {
+            "id": "exportStep",
+            "label": {
+              "native": {
+                "en": "Export STEP",
+                "de": "STEP exportieren"
+              },
+              "reuse": {
+                "en": "Export STEP",
+                "de": "STEP exportieren"
+              }
+            },
+            "kind": "shell",
+            "iconId": "code",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": true,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Exports the active page geometry and text annotations as STEP.",
+                  "de": "Exportiert Geometrie und Textanmerkungen der aktiven Seite als STEP."
+                },
+                "reuse": {
+                  "en": "Exports the active page geometry and text annotations as STEP.",
+                  "de": "Exportiert Geometrie und Textanmerkungen der aktiven Seite als STEP."
+                }
+              }
+            }
+          },
+          {
+            "id": "exportIdml",
+            "label": {
+              "native": {
+                "en": "Export IDML",
+                "de": "IDML exportieren"
+              },
+              "reuse": {
+                "en": "Export IDML",
+                "de": "IDML exportieren"
+              }
+            },
+            "kind": "shell",
+            "iconId": "code",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": true,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Exports editable pages, text and supported assets as an IDML package.",
+                  "de": "Exportiert bearbeitbare Seiten, Text und unterstützte Assets als IDML-Paket."
+                },
+                "reuse": {
+                  "en": "Exports editable pages, text and supported assets as an IDML package.",
+                  "de": "Exportiert bearbeitbare Seiten, Text und unterstützte Assets als IDML-Paket."
+                }
+              }
             }
           },
           {
@@ -2577,7 +2747,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2632,7 +2802,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2686,7 +2856,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2732,7 +2902,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2787,7 +2957,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2842,7 +3012,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2888,7 +3058,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2934,7 +3104,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2980,7 +3150,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3026,7 +3196,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3072,7 +3242,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3118,7 +3288,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -3159,7 +3329,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5908,11 +6078,20 @@
             "importFormats": [],
             "exportStdioKinds": [
               "stdio.svg",
-              "stdio.png"
+              "stdio.png",
+              "stdio.pdf",
+              "stdio.step",
+              "stdio.idml",
+              "stdio.dxf",
+              "stdio.dwg"
             ],
             "importStdioKinds": [
               "stdio.svg",
-              "stdio.png"
+              "stdio.pdf",
+              "stdio.step",
+              "stdio.idml",
+              "stdio.dxf",
+              "stdio.dwg"
             ]
           }
         ],
@@ -5972,8 +6151,25 @@
               "multiplicity": "many"
             }
           ],
-          "exportFormats": [],
-          "importFormats": [],
+          "exportFormats": [
+            "json",
+            "svg",
+            "png",
+            "pdf",
+            "step",
+            "idml",
+            "dxf",
+            "dwg"
+          ],
+          "importFormats": [
+            "json",
+            "svg",
+            "pdf",
+            "step",
+            "idml",
+            "dxf",
+            "dwg"
+          ],
           "artifact": {
             "id": "2d.layout",
             "name": "2D Layout",
@@ -6753,6 +6949,26 @@
           "standard": "1",
           "subset": "*"
         }
+      },
+      {
+        "id": "linked-asset",
+        "label": {
+          "native": {
+            "en": "Linked Asset",
+            "de": "Verknüpftes Bild"
+          },
+          "reuse": {
+            "en": "Linked Asset",
+            "de": "Verknüpftes Bild"
+          }
+        },
+        "iconId": "image",
+        "artifactJson": "semio layout.layout.dsl v1\nschema=layout.layout name=\"Linked Asset\" grid=baseline-grid=12 baseline-offset=0 snap-to-baseline=false paragraph-styles=[ ] character-styles=[ ] stories=[ ] links=[\n  { id=chart-preview path=chart-preview.png hash=\"\" width=16 height=16 dpi=72 state=ready proxy-data-url=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAEG0lEQVR4AQEQBO/7APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f8A9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/wD29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/9vXx//b18f/29fH/9vXx//b18f/29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f8A9vXx//b18f8aXZf/Gl2X/xpdl/8aXZf/Gl2X//b18f/29fH/54pI/+eKSP/nikj/54pI/+eKSP/29fH/9vXx/wD29fH/9vXx/xpdl/8aXZf/Gl2X/xpdl/8aXZf/9vXx//b18f/nikj/54pI/+eKSP/nikj/54pI//b18f/29fH/APb18f/29fH/Gl2X/xpdl/8aXZf/Gl2X/xpdl//29fH/9vXx/+eKSP/nikj/54pI/+eKSP/nikj/9vXx//b18f/aNkAVAtQijwAAAABJRU5ErkJggg==\" artifact-kind=s.stdio.png artifact-ref=\"\" }\n] parent-pages=[ ] spreads=[ { id=spread-1 name=\"Spread 1\" page-ids=[ page-1 ] } ] pages=[\n  { id=page-1 name=\"Page 1\" spread-id=spread-1 width=400 height=500\n    margins {\n      top=0 right=0 bottom=0 left=0\n    }\n    columns {\n      count=1 gutter=0\n    }\n    layer-ids=[ layer-1 ]\n    frames {\n      image id=frame-chart layer-id=layer-1 link-id=chart-preview\n      bounds {\n        x=48 y=48 width=144 height=144 rotation=0\n      }\n    }\n    guides [x:NUM y:NUM width:NUM height:NUM] {\n    }\n    layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {\n      layer-1 Content true false [ frame-chart ]\n    }\n    overrides [object-id:REF bounds:BLOCK visible:BOOL locked:BOOL] {\n    }\n  }\n]\n",
+        "dialect": {
+          "artifactKind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        }
       }
     ],
     "capabilities": [
@@ -6774,7 +6990,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "2d.layout"
+        "kind": "s.layout.layout"
       }
     }
   ],
@@ -6792,6 +7008,80 @@
   },
   "quotas": {},
   "contributions": {
+    "fileTypes": [
+      {
+        "formatKind": "dwg",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "imports": true,
+        "exports": true
+      },
+      {
+        "formatKind": "dxf",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "imports": true,
+        "exports": true
+      },
+      {
+        "formatKind": "idml",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "imports": true,
+        "exports": true
+      },
+      {
+        "formatKind": "json",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "imports": true,
+        "exports": true
+      },
+      {
+        "formatKind": "pdf",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "imports": true,
+        "exports": true
+      },
+      {
+        "formatKind": "png",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "imports": false,
+        "exports": true
+      },
+      {
+        "formatKind": "step",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "imports": true,
+        "exports": true
+      },
+      {
+        "formatKind": "svg",
+        "mediaType": {
+          "class": "twoD",
+          "form": "vector"
+        },
+        "imports": true,
+        "exports": true
+      }
+    ],
     "panels": [
       {
         "kind": {
@@ -6955,8 +7245,47 @@
           "subset": "*"
         },
         "counterpart": {
+          "artifactKind": "s.stdio.idml",
+          "standard": "8.0",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
           "artifactKind": "s.stdio.json",
           "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.pdf",
+          "standard": "1.7",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.step",
+          "standard": "ap214",
           "subset": "*"
         },
         "direction": "import"
@@ -6999,8 +7328,23 @@
             "subset": "*"
           },
           {
+            "artifactKind": "s.stdio.idml",
+            "standard": "8.0",
+            "subset": "*"
+          },
+          {
             "artifactKind": "s.stdio.json",
             "standard": "rfc8259",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.pdf",
+            "standard": "1.7",
+            "subset": "*"
+          },
+          {
+            "artifactKind": "s.stdio.step",
+            "standard": "ap214",
             "subset": "*"
           },
           {
@@ -7011,5 +7355,142 @@
         ]
       }
     ]
-  }
+  },
+  "assets": [
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 26772,
+      "sha256": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 27608,
+      "sha256": "33c29e564b169dbbc1a90be9f050fcde7fb204232bc4f3c52bf4b844e31dbba6"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 19540,
+      "sha256": "31ff08942c8f4ff98276c050f039a2685d91d923867ea6c776c6a291a086fc13"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 23652,
+      "sha256": "afbacbae52dbd6a6250f9ffd1e690227564c744508d703d36df14c322816b657"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 8536,
+      "sha256": "ebbfea501df1f01063a103c99ac6c76a6a239ee45856a57c6730d8c4456803e4"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 83404,
+      "sha256": "207ecd3bb593edda35f515399f8d2aad0021d72525ba0a5ac212001f318cc4e5"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 146732,
+      "sha256": "fa6c50b00fb39b2f984a53fbf03f2ae5c2624045d1738614e80c1e68c59267a7"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 79792,
+      "sha256": "4eaa8acc313c6fc34aa9a0b6a2ff24ebb8a910568d2c1b3f4fed2aeead58ba15"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 86008,
+      "sha256": "654c549ae1488f355924e53b9bfd150d672df6b0c053b21b8dd17a2f8a2c6718"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 80404,
+      "sha256": "0bb1b805256ac06bfe079eed3624fd3ffe2117e854c8ab5cafa87baa3778b3ec"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 178048,
+      "sha256": "b107e95dcd571bd40408cf5906f91780171abd9edf4328af54888e95a28549d1"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 150208,
+      "sha256": "ff5d9966357cff7cf59bae37208e2c7fb473bd538add5e11676be691eba87f42"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 136852,
+      "sha256": "b972f7d349cd89ac6c6fee0b0eaed39c1656aa51d74e932cac89abd21f00fff9"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 30548,
+      "sha256": "dfe0fc53375e8bb7f6fbaa639087f905d7aebf07108816d92524e9b3d81b2a50"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 5444,
+      "sha256": "5b6d1483840ee81afd7220816e6cca4713692f85626273d1a827f8b878f32a35"
+    }
+  ]
 }

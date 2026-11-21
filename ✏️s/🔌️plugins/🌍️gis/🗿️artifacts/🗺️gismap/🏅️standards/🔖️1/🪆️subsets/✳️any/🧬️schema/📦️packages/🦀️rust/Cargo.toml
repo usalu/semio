@@ -46,7 +46,6 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-gis-gismap-demo-asset = { path = "../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-mutations = { path = "../../🔺️diff/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-snapshot = { path = "../../📸️snapshot/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
@@ -57,6 +56,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-semio = { workspace = true }
 geo = { version = "0.31.0", default-features = false }
 geojson = { version = "1.0.0", default-features = false }
 semio-framework-async-macros = { workspace = true }

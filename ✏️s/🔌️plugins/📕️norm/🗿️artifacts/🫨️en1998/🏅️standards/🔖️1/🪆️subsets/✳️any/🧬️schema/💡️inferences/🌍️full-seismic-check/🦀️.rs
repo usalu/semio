@@ -159,6 +159,19 @@ pub fn check_full_seismic_scoped(document: &En1998Snapshot, scope: Scope<'_>, st
     evaluate_silos_tanks(&mut report, document, &annex_params, gamma_i, a_g, s, tb, tc, td, scope);
     evaluate_foundations_walls(&mut report, document, &annex_params, a_g, s, tb, tc, td, gamma_i, scope);
     evaluate_towers(&mut report, document, &annex_params, gamma_i, a_g, s, tb, tc, td, scope);
+    for (index, case) in document.cases.iter().enumerate() {
+        if !scope.admits("cases", index) {
+            continue;
+        }
+        if !step(0.0) {
+            return report;
+        }
+        report.extend(crate::case_catalogue::evaluate_design_case(
+            &semio_s_plugin_norm_compliance::design_case::DesignCase::from(case),
+            annex,
+        ));
+    }
+
     report
 }
 

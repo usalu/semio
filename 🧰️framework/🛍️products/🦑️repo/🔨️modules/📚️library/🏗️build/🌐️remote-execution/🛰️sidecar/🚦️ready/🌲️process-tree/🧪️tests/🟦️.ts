@@ -7,7 +7,7 @@ import {join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-import {READY_TREE_POLICY_V1 as P,readyDeadlineV1,readyScaledTreePolicyV1,readyStallRestartV1,readyForgetTreeV1,readyIdentityV1,readyKillPlanV1,readyKillTreeV1,readyLeaseVerdictV1,readyParseUnixTableV1,readyParseWindowsTableV1,readyProcessStartSyncV1,readyElapsedMillisecondsV1,readyProgressKeyV1,readyNormaliseLineV1,readyStallTrackerV1,readyStalledV1,readyReadTableV1,readyReadTreeV1,readyTableCommandV1,readyHolderRestartV1,readyHolderWaitTrackerV1,readySemanticsChangedV1, readySemanticsV1,readyTreeMembersV1,readyWriteTreeV1,readyCpuMillisecondsV1,readyLivenessV1,readyTreeCpuV1,type ReadyProcessV1} from "../🟦️.ts";
+import {READY_TREE_POLICY_V1 as P,readyDeadlineV1,readyScaledTreePolicyV1,readyStallRestartV1,readyForgetTreeV1,readyIdentityV1,readyKillPlanV1,readyKillTreeV1,readyLeaseVerdictV1,readyParseUnixTableV1,readyParseWindowsTableV1,readyProcessStartSyncV1,readyProgressKeyV1,readyNormaliseLineV1,readyStallTrackerV1,readyStalledV1,readyReadTableV1,readyReadTreeV1,readyTableCommandV1,readyHolderRestartV1,readyHolderWaitTrackerV1,readySemanticsChangedV1, readySemanticsV1,readyTreeMembersV1,readyWriteTreeV1,readyCpuMillisecondsV1,readyLivenessV1,readyTreeCpuV1,type ReadyProcessV1} from "../🟦️.ts";
 
 /** 🌲️ Contract: a stage that is stopped is stopped with every process below it, including the orphans of exited parents, never a process that only has the same pid; a lease or an in-flight record names `{pid, startMs}` and a reused pid frees it; a stage that moves its counters is not stopped at the soft cap, one that stands still is. The fixture is language-agnostic; a Python oracle derives the same verdicts again. */
 const scratch:string[]=[],ajv=new Ajv({strict:false});
@@ -98,7 +98,7 @@ test("identity: the same process, a gone one and a reused pid are told apart",()
 });
 
 test("the two process table formats parse, the unix one from the real ps of this machine",async()=>{
- expect(readyParseUnixTableV1("  10     1    05:30\n 11 10 1-02:03:04\n  garbage\n 12 10 03:04:05\n",1_000_000_000_000)).toEqual([{pid:10,ppid:1,startMs:1_000_000_000_000-330_000},{pid:11,ppid:10,startMs:1_000_000_000_000-((24+2)*3600+3*60+4)*1000},{pid:12,ppid:10,startMs:1_000_000_000_000-(3*3600+4*60+5)*1000}]);
+ expect(readyParseUnixTableV1("  10  1 Sat Nov  7 08:50:07 2026\n 11 10 Sat Nov  7 08:50:08 2026\n  garbage\n 12 10 Sat Nov  7 08:50:09 2026\n")).toEqual([{pid:10,ppid:1,startMs:Date.UTC(2026,10,7,8,50,7)},{pid:11,ppid:10,startMs:Date.UTC(2026,10,7,8,50,8)},{pid:12,ppid:10,startMs:Date.UTC(2026,10,7,8,50,9)}]);
  expect(readyParseWindowsTableV1("4\t0\t1794000000000\t639000000000000000\r\n812\t4\t1794000001500\t639000000015000000\r\nnot a row\r\n")).toEqual([{pid:4,ppid:0,startMs:1794000000000,windows:{birth:"639000000000000000"}},{pid:812,ppid:4,startMs:1794000001500,windows:{birth:"639000000015000000"}}]);
  expect(readyTableCommandV1("win32").command).toBe("powershell.exe");expect(readyTableCommandV1("linux").command).toBe("ps");
  if(process.platform!=="win32"){
@@ -142,8 +142,7 @@ test("real processes: the grandchild of an exited parent is found by the sample 
  }finally{try{process.kill(orphan,"SIGKILL");}catch{}}
 },30000);
 
-test("the start of one process: elapsed text parses, and the start of this process is found within a second or two",()=>{
- expect(readyElapsedMillisecondsV1("1-02:03:04")).toBe(((24+2)*3600+3*60+4)*1000);expect(readyElapsedMillisecondsV1("   05:30")).toBe(330000);expect(readyElapsedMillisecondsV1("garbage")).toBeNull();
+test("the birth of one process matches its runtime clock",()=>{
  if(process.platform==="win32")return;
  const start=readyProcessStartSyncV1(process.pid);expect(start).not.toBeNull();expect(Math.abs(start!-(Date.now()-process.uptime()*1000))).toBeLessThan(5000);
  expect(readyProcessStartSyncV1(2_000_000_000)).toBeNull();expect(readyProcessStartSyncV1(-5)).toBeNull();

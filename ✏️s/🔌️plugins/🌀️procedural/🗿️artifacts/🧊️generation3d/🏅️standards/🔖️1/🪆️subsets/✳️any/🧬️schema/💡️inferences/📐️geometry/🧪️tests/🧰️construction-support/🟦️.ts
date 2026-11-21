@@ -110,6 +110,20 @@ export const measure = (body: Body, wanted: string[], expected: Record<string, a
         out[key] = body.kind === "solid" ? body.analytic?.area ?? (body.manifold ? body.manifold.surfaceArea() : body.triangles.reduce((sum, triangle) => sum + triangle.getArea(), 0)) : outlineArea((body as { loop: Vector3[] }).loop);
         break;
       case "volume": out[key] = body.kind === "solid" ? body.analytic?.volume ?? (body.manifold ? body.manifold.volume() : Math.abs(signedVolume(body.triangles))) : NaN; break;
+      case "centroid": {
+        if (body.kind !== "solid") throw new Error("centroid requires a closed solid");
+        const origin = body.triangles[0]!.a;
+        const moment = new Vector3();
+        let volume = 0;
+        for (const triangle of body.triangles) {
+          const [a, b, c] = [triangle.a, triangle.b, triangle.c].map(point => point.clone().sub(origin)) as [Vector3, Vector3, Vector3];
+          const weight = a.dot(b.clone().cross(c));
+          volume += weight;
+          moment.addScaledVector(a.add(b).add(c), weight);
+        }
+        out[key] = moment.divideScalar(4 * volume).add(origin).toArray();
+        break;
+      }
       case "faces": out[key] = (body as { faces?: number }).faces; break;
       case "corners": { const { sample } = body as Extract<Body, { kind: "surface" }>; out[key] = [sample(0, 0), sample(1, 0), sample(0, 1), sample(1, 1)].map(point => point.toArray()); break; }
       case "center": out[key] = (body as Extract<Body, { kind: "surface" }>).sample(0.5, 0.5).toArray(); break;

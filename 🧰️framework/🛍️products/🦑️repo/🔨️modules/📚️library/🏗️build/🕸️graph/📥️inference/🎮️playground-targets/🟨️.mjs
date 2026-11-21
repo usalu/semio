@@ -169,7 +169,14 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
     for (const row of metadata.semio.playground ?? []) playgrounds.push({ ...row, pluginId: id, cratePath: root,buildCatalog });
   }
 
-  const wgpuRoot = buildPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"), wgpuProject = projectAt(wgpuRoot);
+  const wgpuSourceRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu";
+  const wgpuRoot = `${wgpuSourceRoot}/📦️packages/🟦️typescript`, wgpuProject = projectAt(wgpuRoot);
+  const devRoot = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev";
+  const freshness = { semio: { sourceInputObservation: "freshness" } };
+  const liveInputs = (inputs, entries) => ({
+    inputs: inputs.map(path => `{workspaceRoot}/${path}`),
+    metadata: { semio: { ...freshness.semio, runtimeSourceEntries: entries.map(path => `{workspaceRoot}/${path}`) } },
+  });
   if (!wgpuProject?.name || !["prototype","release"].every(mode=>wgpuProject.targets?.wasm?.configurations?.[mode]?.env?.SEMIO_BUILD_MODE===mode)) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
   const flowRoot="🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust", flowProject=projectAt(flowRoot);
   if(!flowProject?.name || !flowProject.targets?.wasm)throw new Error(`Flow must name its authored browser producer: ${flowRoot}`);
@@ -207,6 +214,18 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       if (root.startsWith("../") || !project?.name || !project.targets?.wasm) throw new Error(`Playground engine must name an authored wasm producer: ${path}`);
       return `${project.name}:wasm`;
     }));
+    const contribution = playground.devContribution === undefined ? undefined : JSON.parse(readFileSync(join(workspaceRoot, playground.devContribution), "utf8"));
+    const reactInputs = contribution === undefined
+      ? liveInputs([], [`${devRoot}/🏗️builder/🌐️vite/🟦️.ts`, `${devRoot}/🚀️entry/🟦️.ts`])
+      : liveInputs([playground.devContribution], [contribution.viteConfig, contribution.browserEntry]);
+    const wgpuInputs = liveInputs([], [composition ?? `${wgpuSourceRoot}/🌐️server/🎚️config/🟦️.ts`]);
+    const nativeLaunchSources = [
+      ...(playground.nativeLaunchPolicy === undefined ? [] : [playground.nativeLaunchPolicy]),
+      ...(components.get(playground.pluginId).assets ?? [])
+        .filter(asset => asset.kind === "mesh-collection" && (asset.app === undefined || asset.app === playground.app))
+        .map(asset => asset.catalog),
+    ];
+    const nativeInputs = [transitiveOutputs, ...[...new Set(nativeLaunchSources)].map(path => `{workspaceRoot}/${loaded.playgroundCompositionPathV1(path)}`)];
     for (const profile of ["prototype", "release"]) {
       const nativeScript = "repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts";
       result[`prepare-${playground.variant}-native-${profile}`] = withCacheDecision({
@@ -218,14 +237,16 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       }, "deterministic", "pure-function-of-inputs");
       for (const operation of ["run", "smoke"]) result[`${operation}-${playground.variant}-native-${profile}`] = withCacheDecision({
         cache: false, continuous: false, outputs: [],
+        inputs: nativeInputs, metadata: freshness,
         dependsOn: [`prepare-${playground.variant}-native-${profile}`, `${nativeHost?.project??wgpuProject.name}:${nativeHost?.target??"native-build"}`],
         options: { command: `${nativeScript} run ${playground.variant} ${profile}${operation === "smoke" ? " --smoke" : ""}`, forwardAllArgs: true },
       }, "live", "drives-running-process");
-      result[`serve-${playground.variant}-react-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`], options: { command: `repo ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
-      result[`dev-${playground.variant}-react-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `repo ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
+      result[`serve-${playground.variant}-react-${profile}`] = withCacheDecision({ ...reactInputs, cache: false, continuous: true, outputs: [], dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`], options: { command: `repo ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
+      result[`dev-${playground.variant}-react-${profile}`] = withCacheDecision({ ...reactInputs, cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-react-${profile}`], options: { command: `repo ./📜️script.ts serve ${playground.variant} react ${profile}` } }, "continuous", "serves-until-stopped");
       result[`activate-${playground.variant}-react-${profile}`] = withCacheDecision({
       cache: true,
       parallelism: false,
+      metadata: freshness,
       outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/runtime/react/${playground.variant}`],
       inputs: [transitiveOutputs, ...ownerSources(bootSelected)],
       dependsOn: [`prepare-${playground.variant}-react-${profile}`],
@@ -238,10 +259,11 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       dependsOn: [`@semio-tech/plugin-registry:session-${playground.variant}`, "@semio-tech/framework-plugin-web:support", "semio-os-infinite:fonts", ...rendererEngines, ...engines, ...bootComponents],
       options: { command: `repo ./📜️script.ts prepare ${playground.variant} react ${profile}` },
       }, "deterministic", "check-without-outputs");
-      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = withCacheDecision({ cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile} --port ${wgpuPort}`, ...(composition===undefined?{}:{env:{SEMIO_WGPU_COMPOSITION_PATH:composition}}) } }, "continuous", "serves-until-stopped");
+      for (const command of ["serve", "dev"]) result[`${command}-${playground.variant}-wgpu-${profile}`] = withCacheDecision({ ...wgpuInputs, cache: false, continuous: true, outputs: [], dependsOn: [`activate-${playground.variant}-wgpu-${profile}`], options: { command: `repo ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve ${playground.variant} ${profile} --port ${wgpuPort}`, ...(composition===undefined?{}:{env:{SEMIO_WGPU_COMPOSITION_PATH:composition}}) } }, "continuous", "serves-until-stopped");
       result[`activate-${playground.variant}-wgpu-${profile}`] = withCacheDecision({
       cache: true,
       parallelism: false,
+      metadata: freshness,
       outputs: [`{workspaceRoot}/.cache/b/p/m/browser/${profile}/runtime/wgpu/${playground.variant}`],
       inputs: [transitiveOutputs, ...ownerSources(bootSelected)],
       dependsOn: [`prepare-${playground.variant}-wgpu-${profile}`],
@@ -256,7 +278,6 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
       }, "deterministic", "check-without-outputs");
     }
     const name = `build-${playground.variant}-react-release`;
-    const contribution = playground.devContribution === undefined ? undefined : JSON.parse(readFileSync(join(workspaceRoot, playground.devContribution), "utf8"));
     const contributionSources = contribution === undefined ? [] : [`{workspaceRoot}/${playground.devContribution}`, ...(typeof contribution.ownerRoot === "string" ? [`{workspaceRoot}/${buildPath(contribution.ownerRoot)}/**/*`] : []), ...(contribution.browserSessionFactories ?? []).filter(row => typeof row.engine === "string").map(row => `{workspaceRoot}/${buildPath(row.engine).replace(/^\.\//u, "")}/**/*`)];
     result[name] = withCacheDecision({
       cache: true,

@@ -43,17 +43,21 @@ pub fn fixture_renew_turn(cx:&mut semio_framework_job::StepContext<'_>,fuel:u64,
         if delta.copied_items>HostLifetimeStock::ITEMS||delta.copied_bytes>HostLifetimeStock::COPY_BYTES||delta.retained_capacity_bytes>HostLifetimeStock::CAPACITY_BYTES||delta.released_bytes>HostLifetimeStock::RELEASE_BYTES{return Err(host_lifetime_refusal("host lifetime retained stock exhausted across fixture turns"))}
         Ok(())
     })?;
-    if semio_framework_job::testkit::return_source_pinned(cx).is_some(){semio_framework_job::testkit::renew_payload_page_grant(cx);return Ok(())}
+    if semio_framework_job::testkit::return_source_pinned(cx).is_some() {
+        return semio_framework_job::testkit::renew_pinned_turn(cx, fuel, grant);
+    }
     semio_framework_job::testkit::renew_turn(cx,fuel,grant)
 }
 
 /// 🪪️ Pays every birth the runtime performs while opening an instance through the SAME routine, `PluginApp::advance_instance_birth`: fixture constructors skip that opening, so a typed action could never obtain its cancellation lease.
 pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-    fixture_end_turn(cx)?;
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let (grant, _) = cx.original_turn_ceiling();
     let (instance_id,actor)=app.birth_identity().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture app has no bound instance identity to be born under"))?;
     let mut birth=semio_plugin_reactor_app::InstanceBirth::default();
     let mut paid=Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture cancellation issuer birth exceeded its authored turn bound").into());
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if let Err(failure) = fixture_renew_turn(cx, fuel, grant) { paid = Err(failure.into()); break; }
         match app.advance_instance_birth(&mut birth,instance_id,&actor,cx){Ok(false)=>{}Ok(true)=>{paid=Ok(());break}Err(failure)=>{paid=Err(failure);break}}
     }
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
@@ -119,42 +123,48 @@ pub async fn produce_fixture_media<P:PluginApp>(app:&mut P,port:&str,owner:&mut 
     Err(semio_framework_job::OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media production fixture exceeded its authored turn bound")).into())
 }
 
-/// 🎬️ Submits one interactive media export through the real original receiving port: each pending turn funds one maintenance step under the authored close loan until the handle is received.
-pub async fn submit_fixture_media_export<P:PluginApp>(app:&mut P,port:&str,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportHandle,semio_framework_job::OriginalTurnFailure>{
+/// 🎬️ Renews the original receiving turn until the foreground media submission yields its handle.
+pub async fn submit_fixture_media_export<P:PluginApp>(app:&mut P,port:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_decl_media::ArtifactMediaExportHandle,semio_framework_job::OriginalTurnFailure>{
+    let (grant,fuel)=(cx.original_turn_ceiling().0,OriginalFixtureCaller::turn_fuel());
+    fixture_renew_turn(cx,fuel,grant)?;
+    ensure_fixture_cancellation_issuer(app,cx)?;
     let mut receiver=None;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        fixture_renew_turn(cx,fuel,grant)?;
         if app.submit_media_export(port,&mut receiver,cx).await?{break}
-        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
     }
     receiver.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media submission fixture exceeded its authored turn bound").into())
 }
 
 /// 📡️ Advances one submitted media export to its next poll answer through the real original receiving port.
-pub async fn poll_fixture_media_export<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportPoll,semio_framework_job::OriginalTurnFailure>{
+pub async fn poll_fixture_media_export<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_decl_media::ArtifactMediaExportPoll,semio_framework_job::OriginalTurnFailure>{
+    let (grant,fuel)=(cx.original_turn_ceiling().0,OriginalFixtureCaller::turn_fuel());
     let mut receiver=None;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        fixture_renew_turn(cx,fuel,grant)?;
         if app.poll_media_export(handle.original_loan(),&mut receiver,cx).await?{break}
-        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
     }
     receiver.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media poll fixture exceeded its authored turn bound").into())
 }
 
 /// 📦️ Publishes one completed media export result as the segmented download the host would hand out.
-pub async fn retain_fixture_media_export_result<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,result:semio_plugin_decl_media::ArtifactMediaExportResult,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportPublishedStatus,semio_framework_job::OriginalTurnFailure>{
+pub async fn retain_fixture_media_export_result<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,result:semio_plugin_decl_media::ArtifactMediaExportResult,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_decl_media::ArtifactMediaExportPublishedStatus,semio_framework_job::OriginalTurnFailure>{
+    let (grant,fuel)=(cx.original_turn_ceiling().0,OriginalFixtureCaller::turn_fuel());
     let mut source=Some(semio_plugin_decl_media::ArtifactMediaExportPoll::Complete(result));let mut status=None;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        fixture_renew_turn(cx,fuel,grant)?;
         if app.retain_media_export_result(handle.original_loan(),&mut source,&mut status,cx).await?{break}
-        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
     }
     status.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media download publication fixture exceeded its authored turn bound").into())
 }
 
 /// ⬇️ Takes the next segmented download chunk of one retained media export; `None` is the end of the download.
-pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
+pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
+    let (grant,fuel)=(cx.original_turn_ceiling().0,OriginalFixtureCaller::turn_fuel());
     let mut receiver=None;
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        fixture_renew_turn(cx,fuel,grant)?;
         if app.take_media_export_chunk(handle.original_loan(),&mut receiver,terminal,cx).await?{return Ok(receiver)}
-        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
     }
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media chunk fixture exceeded its authored turn bound").into())
 }
@@ -170,7 +180,7 @@ pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&st
 
 fn close_fixture_action_inputs(args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant){
     if args.is_some()||fault.is_some(){
-        let mut receiving=Some(semio_plugin_instance_stores::action_ingress::ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:None,args,prepared:None,assembled:None,fault});
+        let mut receiving=Some(semio_plugin_instance_stores::action_ingress::ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_press_selected:false,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:None,args,prepared:None,assembled:None,fault});
         let mut original_caller=None;
         let mut owner=semio_plugin_instance_stores::action_ingress::ActionIngressRecord::receive(&mut receiving,&mut original_caller,cx).expect("original fixture action receiving receipt").expect("authored caller must fund original unused argument receiving");
         owner.finish_parser();
@@ -323,10 +333,10 @@ pub const LAW_DOCUMENT_LOAD_OPERATION: u64 = 1 << 61;
 pub fn admit_document_archive_load<P: PluginApp>(app: &mut P, operation: u64, mut archive: protocol::DocumentArchivePack, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
     let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
     let fresh = OriginalFixtureCaller::turn_fuel();
-    let fresh_grant = cx.retained_grant();
+    let (fresh_grant, _) = cx.original_turn_ceiling();
     for _ in 0..OriginalFixtureCaller::maximum_turns() {
-        if PluginApp::begin_document_archive_load(app, operation, &mut archive, &mut admission, cx)? { return Ok(()) }
         fixture_renew_turn(cx, fresh, fresh_grant)?;
+        if PluginApp::begin_document_archive_load(app, operation, &mut archive, &mut admission, cx)? { return Ok(()) }
     }
     Err(semio_framework_value::ValueError::invariant("the archive admission exceeded its original caller bound").into())
 }
@@ -335,10 +345,10 @@ pub fn admit_document_archive_load<P: PluginApp>(app: &mut P, operation: u64, mu
 pub fn admit_document_archive_merge<P: PluginApp>(app: &mut P, operation: u64, mut archive: protocol::DocumentArchivePack, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
     let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
     let fresh = OriginalFixtureCaller::turn_fuel();
-    let fresh_grant = cx.retained_grant();
+    let (fresh_grant, _) = cx.original_turn_ceiling();
     for _ in 0..OriginalFixtureCaller::maximum_turns() {
-        if PluginApp::begin_document_archive_merge(app, operation, &mut archive, &mut admission, cx)? { return Ok(()) }
         fixture_renew_turn(cx, fresh, fresh_grant)?;
+        if PluginApp::begin_document_archive_merge(app, operation, &mut archive, &mut admission, cx)? { return Ok(()) }
     }
     Err(semio_framework_value::ValueError::invariant("the archive merge admission exceeded its original caller bound").into())
 }
@@ -360,13 +370,17 @@ where
 /// 🧾️ Drives and acknowledges a fixture's admitted archive load on the original caller.
 pub async fn settle_document_archive_load<P: PluginApp>(app:&mut P, operation:u64, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     let mut polls = 0usize;
+    let trace = std::env::var_os("SEMIO_XLSX_ARCHIVE_PROGRESS").is_some();
     let fresh = OriginalFixtureCaller::turn_fuel();
-    let fresh_grant = cx.retained_grant();
+    let (fresh_grant, _) = cx.original_turn_ceiling();
     ensure_fixture_cancellation_issuer(app,cx)?;
     let status = loop {
         fixture_renew_turn(cx, fresh, fresh_grant)?;
         cx.consume_fuel(1);let grant=cx.retained_grant();PluginApp::maintenance_step(app,cx,grant)?;
         let status = PluginApp::poll_document_archive_load(app, operation, identity,cx).await?;
+        if trace && polls >= 2048 && polls.is_power_of_two() {
+            eprintln!("[DEBUG] Archive reload operation {operation}, turn {polls}, state {:?}, records {}/{}, owners {}", status.state, status.completed, status.total, app.close_diagnostic());
+        }
         if !law_load_running(&status, &mut polls)? {
             break status;
         }
@@ -403,11 +417,11 @@ pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_plugin_reactor_
     let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
     let mut polls = 0usize;
     let fresh = OriginalFixtureCaller::turn_fuel();
-    let fresh_grant = cx.retained_grant();
+    let (fresh_grant, _) = cx.original_turn_ceiling();
     let mut admitted = false;
     for _ in 0..OriginalFixtureCaller::maximum_turns() {
-        if semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx).await? { admitted = true; break }
         fixture_renew_turn(cx, fresh, fresh_grant)?;
+        if semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx).await? { admitted = true; break }
     }
     if !admitted { return Err(semio_framework_value::ValueError::invariant("the archive admission exceeded its original caller bound").into()) }
     let status = loop {
@@ -639,6 +653,22 @@ mod renew_turn_laws {
         }
         assert_eq!(cx.fuel_remaining(), 1);
         fixture_renew_turn(cx, fresh, grant).expect("the last turn renews so the scope retires from fresh fuel");
+    }
+
+    /// 🏔️ Restores an issued turn after its predecessor has no available admission items.
+    #[test]
+    fn archive_admission_uses_the_issued_turn_after_a_local_grant_is_spent() {
+        let mut scope = OriginalFixtureScope::admit();
+        let cx = scope.cx();
+        let source = cx.original_recipient_identity();
+        let fuel = OriginalFixtureCaller::turn_fuel();
+        let (issued, _) = cx.original_turn_ceiling();
+        fixture_renew_turn(cx, fuel, RetainedCloneGrant { maximum_items: 1, ..issued }).expect("narrow original fixture turn");
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }).expect("consume the last item of this turn");
+        assert_eq!(cx.retained_grant().maximum_items, 0);
+        fixture_renew_turn(cx, fuel, issued).expect("renew the issued archive turn");
+        assert!(cx.retained_grant().maximum_items >= 2);
+        assert_eq!(cx.original_recipient_identity(), source);
     }
 
     /// ⚖️ LAW: the production turn bound survives renewal: a load that stays running stops with a fault at the authored bound.

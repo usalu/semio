@@ -42,7 +42,20 @@ impl GuestRelayGuestSubloan{pub fn budget(&self)->OriginalJobBudget{self.budget}
 struct GuestHold{descriptor:GuestRelayGuestSubloan,producer:OriginalNativeRecipientIdentity}
 #[derive(Default)]
 struct GuestAccount{observed:GuestUsage,forfeited:GuestUsage,escrow_held:GuestUsage}
-impl GuestAccount{fn usage(&self)->Result<GuestUsage,ValueError>{self.observed.add(self.forfeited)?.add(self.escrow_held)}fn propose_escrow(&self,held:GuestUsage,redeemed:GuestUsage,released:GuestUsage)->Result<(GuestUsage,GuestUsage),ValueError>{if [held,redeemed,released].iter().any(|value|value.capacity!=0||value.release!=0){return Err(invalid("escrow changes only its three reserved currency axes"))}let remaining=self.escrow_held.add(held)?.sub(redeemed)?.sub(released)?;let observed=self.observed.add(redeemed)?;Ok((remaining,observed))}}
+impl GuestAccount{
+ fn usage(&self)->Result<GuestUsage,ValueError>{self.observed.add(self.forfeited)?.add(self.escrow_held)}
+ fn propose_escrow(&self,held:GuestUsage,redeemed:GuestUsage,released:GuestUsage)->Result<(GuestUsage,GuestUsage),ValueError>{
+  let remaining=self.escrow_held.add(held)?.sub(redeemed)?.sub(released)?;
+  let observed=self.observed.add(redeemed)?;
+  Ok((remaining,observed))
+ }
+ fn propose_escrow_forfeiture(&self,pending:escrow::Currency)->Result<GuestUsage,ValueError>{
+  let extent=|value|usize::try_from(value).map_err(|_|invalid("history held currency exceeds host extent"));
+  let held=GuestUsage{items:extent(pending.items)?,copy:extent(pending.copy)?,capacity:extent(pending.capacity)?,release:extent(pending.release)?,work:pending.work};
+  if self.escrow_held!=held{return Err(invalid("history retirement cannot forfeit another journal's held currency"))}
+  self.forfeited.add(held)
+ }
+}
 #[derive(Clone,Copy)]
 struct GuestSettlement{descriptor:GuestRelayGuestSubloan,input:RetainedTurnInput,progress:RetainedCloneProgress,work:u64,producer:OriginalNativeRecipientIdentity}
 /// 🧾️ Only the issuing ledger returns this exact settled producer receipt.
@@ -54,7 +67,16 @@ struct GuestEscrowChange{held:GuestUsage,redeemed:GuestUsage,released:GuestUsage
 #[derive(Default)]
 pub(crate) struct GuestLedger{accounts:[GuestAccount;2],hold:Option<GuestHold>,last:Option<GuestSettlement>,escrow_claims:usize,bootstrap_held:GuestUsage}
 impl GuestLedger{
- fn propose_cross_loan(&self,changes:[GuestEscrowChange;2],fresh_purpose:GuestRelayGuestPurpose,fresh:GuestUsage)->Result<[(GuestUsage,GuestUsage);2],ValueError>{let mut proposal=[(GuestUsage::default(),GuestUsage::default());2];for index in 0..2{let change=changes[index];let(held,observed)=self.accounts[index].propose_escrow(change.held,change.redeemed,change.released)?;proposal[index]=(held,if index==fresh_purpose.index(){observed.add(fresh)?}else{observed});}Ok(proposal)}
+ fn propose_cross_loan(&self,changes:[GuestEscrowChange;2],fresh_purpose:GuestRelayGuestPurpose,fresh:GuestUsage)->Result<[(GuestUsage,GuestUsage);2],ValueError>{
+  let mut proposal=[(GuestUsage::default(),GuestUsage::default());2];
+  for (index,(account,change)) in self.accounts.iter().zip(changes).enumerate(){
+   let(held,observed)=account.propose_escrow(change.held,change.redeemed,change.released)?;
+   let observed=if index==fresh_purpose.index(){observed.add(fresh)?}else{observed};
+   observed.add(account.forfeited)?.add(held)?;
+   proposal[index]=(held,observed);
+  }
+  Ok(proposal)
+ }
  pub(crate) fn pending(&self)->bool{self.hold.is_some()}
  pub(crate) fn escrow_pending(&self)->bool{self.bootstrap_held!=GuestUsage::default()||self.escrow_claims!=0||self.accounts.iter().any(|account|account.escrow_held!=GuestUsage::default())}
  fn usage(&self,held:bool)->Result<GuestUsage,ValueError>{let mut usage=self.accounts[0].usage()?.add(self.accounts[1].usage()?)?.add(self.bootstrap_held)?;if held{if let Some(hold)=self.hold{usage=usage.add(GuestUsage::reservation(hold.descriptor.budget.retained_policy,hold.descriptor.budget.fuel))?;}}Ok(usage)}
@@ -118,13 +140,85 @@ impl GuestRelayWakeDriver{
 #[cfg(test)]
 mod tests{
  use super::*;
+ fn retire_fixture_producer(driver:&GuestRelayWakeDriver,producer:OriginalNativeRecipientIdentity)->semio_framework_job::OriginalNativeRetiredWitness{
+  let mut closed=false;
+  for _ in 0..256{
+   driver.dispatch_cleanup_admission_step(false,|_,cx|GuestRelayAdmissionCall{
+    result:cx.close_original_native_recipient_step(producer).map(|done|closed=done),execution:None,
+   }).unwrap();
+   if closed{break}
+  }
+  assert!(closed);
+  for _ in 0..256{
+   let mut witness=None;
+   driver.dispatch_return_birth_close_step(|cx|{
+    witness=cx.original_native_retired_witness(producer)?;
+    Ok(())
+   }).unwrap();
+   if let Some(witness)=witness{return witness}
+  }
+  panic!("producer retirement did not return every child Source")
+ }
+
  #[test]
  fn wire_grant_refuses_each_unfunded_scope(){
   for header in [144,152,184]{let(items,demand,work)=semio_plugin_guest_contract::original_actor_context::original_core_first_response_reserve(header).unwrap();let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert!(check_core_wire_grant(grant,work,header).is_ok());for denied in [RetainedCloneGrant{maximum_items:items-1,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{assert!(check_core_wire_grant(denied,work,header).is_err())}assert!(check_core_wire_grant(grant,work-1,header).is_err());assert!(check_core_wire_grant(grant,work,136).is_err());}
  }
  #[test]
- fn proposed_cross_loan_redemption_keeps_origin_purpose_and_releases_only_unused(){
-  let mut ledger=GuestLedger::default();ledger.accounts[0].escrow_held=GuestUsage{items:3,copy:17,work:5,..Default::default()};ledger.accounts[1].observed=GuestUsage{items:1,copy:2,work:1,..Default::default()};let redeemed=GuestUsage{items:1,copy:7,work:2,..Default::default()};let released=GuestUsage{items:1,copy:4,work:1,..Default::default()};let(held,observed)=ledger.accounts[0].propose_escrow(GuestUsage::default(),redeemed,released).unwrap();assert_eq!((held.items,held.copy,held.work),(1,6,2));assert_eq!((observed.items,observed.copy,observed.work),(1,7,2));assert_eq!((ledger.accounts[1].usage().unwrap().items,ledger.accounts[1].usage().unwrap().copy),(1,2));let next_grant_copy=2;assert!(redeemed.copy>next_grant_copy&&ledger.accounts[1].observed.copy<=next_grant_copy);assert!(ledger.accounts[0].propose_escrow(GuestUsage::default(),GuestUsage{copy:18,..Default::default()},GuestUsage::default()).is_err());assert_eq!(ledger.accounts[0].escrow_held.copy,17);
+ fn five_axis_escrow_conserves_purpose_stock(){
+  let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/escrow-ledger.json")).unwrap();
+  let words=|row:&serde_json::Value|serde_json::from_value::<[u64;5]>(row.clone()).unwrap();
+  let parse=|row:&serde_json::Value|{
+   let [items,copy,capacity,release,work]=words(row);
+   let native=|value|usize::try_from(value).unwrap();
+   GuestUsage{items:native(items),copy:native(copy),capacity:native(capacity),release:native(release),work}
+  };
+  for row in law["settlements"].as_array().unwrap(){
+   let name=row["name"].as_str().unwrap();
+   let mut ledger=GuestLedger::default();
+   let held=parse(&row["held"]);
+   let observed=parse(&row["observed"]);
+   ledger.accounts[0]=GuestAccount{escrow_held:held,observed,forfeited:parse(&row["forfeited"])};
+   let change=GuestEscrowChange{held:parse(&row["reserve"]),redeemed:parse(&row["redeem"]),released:parse(&row["release"])};
+   let fresh=parse(&row["fresh"]);
+   let result=ledger.propose_cross_loan([change,GuestEscrowChange::default()],GuestRelayGuestPurpose::Infrastructure,fresh);
+   assert!(ledger.accounts[0].escrow_held==held&&ledger.accounts[0].observed==observed,"{name}");
+   assert!(ledger.accounts[1].usage().unwrap()==GuestUsage::default(),"{name}");
+   let expected=&row["expected"];
+   if expected.is_null(){assert!(result.is_err(),"{name}");continue}
+   let [(held,observed),(infrastructure_held,infrastructure_observed)]=result.unwrap();
+   assert!(held==parse(&expected["held"])&&observed==parse(&expected["observed"]),"{name}");
+   assert!(infrastructure_held==GuestUsage::default()&&infrastructure_observed==fresh,"{name}");
+   ledger.accounts[0].escrow_held=held;
+   ledger.accounts[0].observed=observed;
+   ledger.accounts[1].observed=infrastructure_observed;
+   assert!(ledger.usage(false).unwrap()==parse(&expected["total"]),"{name}");
+  }
+  for row in law["retirements"].as_array().unwrap(){
+   let name=row["name"].as_str().unwrap();
+   let held=parse(&row["held"]);
+   let forfeited=parse(&row["forfeited"]);
+   let account=GuestAccount{escrow_held:held,forfeited,..Default::default()};
+   let [items,copy,capacity,release,work]=words(&row["journal"]);
+   let result=account.propose_escrow_forfeiture(escrow::Currency{items,copy,capacity,release,work});
+   let expected=&row["expected"];
+   if expected.is_null(){assert!(result.is_err(),"{name}");continue}
+   let retired=GuestAccount{forfeited:result.unwrap(),..Default::default()};
+   assert!(retired.forfeited==parse(expected)&&retired.usage().unwrap()==account.usage().unwrap(),"{name}");
+  }
+ }
+ #[test]
+ fn five_axis_escrow_rejects_unrepresentable_balances(){
+  let mut ledger=GuestLedger::default();
+  ledger.accounts[0].escrow_held=GuestUsage{capacity:usize::MAX,release:1,..Default::default()};
+  let one_capacity=GuestUsage{capacity:1,..Default::default()};
+  let no_change=GuestEscrowChange::default();
+  let reserve=GuestEscrowChange{held:one_capacity,..Default::default()};
+  assert!(ledger.propose_cross_loan([reserve,no_change],GuestRelayGuestPurpose::Infrastructure,GuestUsage::default()).is_err());
+  assert!(ledger.propose_cross_loan([no_change,no_change],GuestRelayGuestPurpose::Semantic,one_capacity).is_err());
+  ledger.accounts[0].escrow_held.capacity=0;
+  ledger.accounts[0].forfeited.release=usize::MAX;
+  assert!(ledger.accounts[0].propose_escrow_forfeiture(escrow::Currency{release:1,..Default::default()}).is_err());
  }
  #[test]
  fn escrow_held_stock_stays_in_its_origin_purpose_and_physical_total(){
@@ -159,12 +253,15 @@ mod tests{
   let mut first=None;for _ in 0..32{first=driver.admit_guest_subloan_inner(&mut lease,GuestRelayGuestPurpose::Semantic,false,None).unwrap();if first.is_some(){break}}let first=first.unwrap();let budget=first.budget();assert_eq!(budget.fuel,request.work_units);assert_eq!(budget.input.work.fuel+1,infrastructure_budget.input.work.fuel);assert_eq!(budget.retained_policy.maximum_capacity_bytes,request.retained.maximum_capacity_bytes);assert!(driver.receive_guest_subloan(first,RetainedTurnInput{epoch:budget.input.epoch+1,..budget.input},Default::default(),0).is_err());assert!(!driver.forfeit_guest_subloan_step().unwrap());
   let before=driver.original.try_lock().unwrap().treasury.original_remaining();let spent=RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()};let producer=lease.recipient_identity();let proof=driver.receive_guest_subloan_witness(first,budget.input,spent,1).unwrap();let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/settlement.json")).unwrap();assert_eq!(proof.proves(first,budget.input,spent,1,producer),law[0]["accepted"].as_bool().unwrap());assert_eq!(proof.proves(first,RetainedTurnInput{epoch:budget.input.epoch+1,..budget.input},spent,1,producer),law[1]["accepted"].as_bool().unwrap());assert_eq!(before,driver.original.try_lock().unwrap().treasury.original_remaining());assert!(driver.receive_guest_subloan(first,budget.input,RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()},1).is_ok());assert!(driver.receive_guest_subloan(first,budget.input,Default::default(),0).is_err());
   let mut pending=None;for _ in 0..32{pending=driver.admit_guest_subloan_inner(&mut lease,GuestRelayGuestPurpose::Semantic,false,None).unwrap();if pending.is_some(){break}}let pending=pending.unwrap();assert!(!driver.forfeit_guest_subloan_step().unwrap());drop(lease);
+  retire_fixture_producer(&driver,producer);
+  assert!(driver.forfeit_guest_subloan_step().unwrap());
   for _ in 0..256{if driver.close_root_step().unwrap(){break}}assert!(driver.operation_terminal_is_empty().unwrap());let original=driver.original.try_lock().unwrap();let ledger=&original.operation.as_ref().unwrap().guest;assert_eq!(ledger.accounts[0].observed.work,1);assert_eq!(ledger.accounts[0].forfeited.work,pending.budget().fuel);assert!(!ledger.pending());
  }
 
  #[test]
  fn reconciliation_lends_the_actual_ledger_inside_its_source_callback(){
   let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let caps:super::super::GuestRelayOperationCaps=serde_json::from_value(fixture["caps"].clone()).unwrap();let request:super::super::GuestRelayOperationRequest=serde_json::from_value(fixture["cases"][0]["request"].clone()).unwrap();let driver=caps.issue(request,||Some(1000),Box::new(||false)).unwrap();let mut seen=false;
+  let mut admitted=false;for _ in 0..64{admitted=driver.admit_root_step().unwrap();if admitted{break}}assert!(admitted);
   for _ in 0..64{driver.dispatch_escrow_reconciliation_step(false,|cx,session|{assert!(driver.original.try_lock().is_err());assert!(!session.ledger.pending());let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;assert_eq!(parent.source_identity()?,session.source);assert!(session.binding.matches(cx));seen=true;Ok(())}).unwrap();if seen{break}}assert!(seen);for _ in 0..256{if driver.close_root_step().unwrap(){break}}assert!(driver.operation_terminal_is_empty().unwrap());
  }
  #[test]
@@ -189,9 +286,17 @@ mod tests{
   let mut producer=Some(Producer(false));let mut history=Some(GuestIssuedHistoryHome::empty());let mut producer_lease=None;let mut history_lease=None;
   for _ in 0..128{driver.dispatch_admission_step(false,|_,cx|{let result=(||{if producer_lease.is_none(){cx.admit_original_native(&mut producer,&mut producer_lease)?;}if history_lease.is_none(){cx.admit_original_native(&mut history,&mut history_lease)?;}Ok(())})();GuestRelayAdmissionCall{result,execution:None}}).unwrap();if producer_lease.is_some()&&history_lease.is_some(){break}}assert!(producer.is_none()&&history.is_none());let mut producer_lease=producer_lease.unwrap();let history_lease=history_lease.unwrap();let producer_id=producer_lease.recipient_identity();let history_id=history_lease.recipient_identity();
   let mut loan=None;for _ in 0..64{loan=driver.admit_guest_subloan_inner(&mut producer_lease,GuestRelayGuestPurpose::Semantic,false,None).unwrap();if loan.is_some(){break}}let loan=loan.unwrap();drop(producer_lease);drop(history_lease);driver.abandon_operation();
-  let mut witness=None;for _ in 0..256{driver.dispatch_cleanup_admission_step(false,|_,cx|{let result=(||{cx.close_original_native_recipient_step(producer_id)?;if witness.is_none(){witness=cx.original_native_retired_witness(producer_id)?;}Ok(())})();GuestRelayAdmissionCall{result,execution:None}}).unwrap();if witness.is_some(){break}}let witness=witness.unwrap();
+  let witness=retire_fixture_producer(&driver,producer_id);
   let mut retired=false;for _ in 0..256{driver.dispatch_escrow_reconciliation_step(true,|cx,mut issuer|{cx.with_original_native_root_step::<GuestIssuedHistoryHome>(history_id,|home,cx|{retired=issuer.retire_closed_history_step(home,producer_id,&witness,cx)?;Ok(())})?;Ok(())}).unwrap();if retired{break}}assert!(retired);
   {let original=driver.original.try_lock().unwrap();let ledger=&original.operation.as_ref().unwrap().guest;assert_eq!(ledger.accounts[0].observed.work,0);assert_eq!(ledger.accounts[0].forfeited.work,loan.budget().fuel);assert!(!ledger.pending()&&!ledger.escrow_pending());}
-  for _ in 0..256{driver.dispatch_cleanup_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:cx.close_original_native_recipient_step(history_id).map(|_|()),execution:None}).unwrap();if driver.close_root_step().unwrap(){break}}assert!(driver.operation_terminal_is_empty().unwrap());
+  let mut history_closed=false;
+  for _ in 0..256{
+   driver.dispatch_cleanup_admission_step(false,|_,cx|GuestRelayAdmissionCall{
+    result:cx.close_original_native_recipient_step(history_id).map(|done|history_closed=done),execution:None,
+   }).unwrap();
+   if history_closed{break}
+  }
+  assert!(history_closed);
+  for _ in 0..256{if driver.close_root_step().unwrap(){break}}assert!(driver.operation_terminal_is_empty().unwrap());
  }
 }

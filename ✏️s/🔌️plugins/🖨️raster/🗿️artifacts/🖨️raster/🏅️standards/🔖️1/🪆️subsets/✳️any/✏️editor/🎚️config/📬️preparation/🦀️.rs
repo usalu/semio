@@ -37,7 +37,7 @@ impl ConfigApplyMutation<RasterConfig> for RasterConfigMutation {
         let Self::SetPixelSelection(edit)=self else{return Ok((true,receipt()));};
         let Some(selection)=edit.selection.as_ref() else{return Ok((true,receipt()));};
         let count=semio_framework_pixels::editing::validate_extent(selection.width,selection.height).map_err(|_|refusal().with_retained_progress(receipt()))?;
-        let characters=selection.layer_id.chars().take(257).count();work+=characters as u64;
+        let characters=selection.layer_id.chars().take(257).count();work+=characters as u128;
         if selection.target!=post.paint_target||selection.layer_id.is_empty()||characters>256||selection.spans.maximum_end()>count as u64{return Err(refusal().with_retained_progress(receipt()));}
         *cursor=selection.spans.len();Ok((true,receipt()))
         })();semio_framework_value::RetainedWorkOutcome{result,work}

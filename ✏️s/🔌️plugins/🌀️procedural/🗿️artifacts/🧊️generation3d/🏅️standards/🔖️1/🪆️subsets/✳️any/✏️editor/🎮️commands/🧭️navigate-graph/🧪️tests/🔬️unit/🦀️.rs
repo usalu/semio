@@ -38,7 +38,7 @@ fn every_anchor_rule_the_fixture_states_holds() {
     for row in fixture["anchors"].as_array().expect("anchors") {
         let selection = strings(&row["selection"]);
         let expected = row["anchor"].as_str();
-        assert_eq!(anchor_node(&document.host_snapshot, &selection), expected, "{:?}: {}", selection, row["why"].as_str().unwrap_or_default());
+        assert_eq!(anchor_node(&document.host_snapshot, row["granularity"].as_str().unwrap_or(NODE_GRANULARITY), &selection), expected, "{:?}: {}", selection, row["why"].as_str().unwrap_or_default());
     }
 }
 
@@ -50,10 +50,12 @@ fn every_arrow_walk_lands_where_the_fixture_says() {
     for walk in fixture["walks"].as_array().expect("walks") {
         let name = walk["name"].as_str().expect("walk name");
         let mut selection = strings(&walk["start"]);
+        let mut granularity = walk["granularity"].as_str().unwrap_or(NODE_GRANULARITY);
         for step in walk["steps"].as_array().expect("steps") {
             let named = step["step"].as_str().expect("step");
-            if let Some(target) = step_target(&document.host_snapshot, &selection, step_of(named)) {
+            if let Some(target) = step_target(&document.host_snapshot, granularity, &selection, step_of(named)) {
                 selection = vec![target.to_string()];
+                granularity = NODE_GRANULARITY;
             }
             assert_eq!(selection, strings(&step["expected"]), "{name}: after {named}");
             walked += 1;
@@ -67,10 +69,29 @@ fn a_keyboard_step_authors_no_document_and_no_config_operation() {
     let document = hex_column();
     let ports = std::collections::BTreeMap::from([("extrude".to_string(), vec!["extrude@wire".to_string(), "extrude@vector".to_string()])]);
     for step in [FlowGraphStep::Next, FlowGraphStep::Previous, FlowGraphStep::Upstream, FlowGraphStep::Downstream] {
-        let target = step_target(&document.host_snapshot, &["extrude".to_string()], step);
+        let target = step_target(&document.host_snapshot, NODE_GRANULARITY, &["extrude".to_string()], step);
         assert!(target.is_some(), "the hex column answers every direction from `extrude`");
     }
-    assert_eq!(activate_ports(&document.host_snapshot, &ports, &["extrude".to_string()]).map(Vec::as_slice), Some(["extrude@wire".to_string(), "extrude@vector".to_string()].as_slice()), "activate opens the anchor's ports");
-    assert_eq!(activate_ports(&document.host_snapshot, &ports, &["extrude@wire".to_string(), "extrude@vector".to_string()]), None, "an already-open node opens no further");
-    assert_eq!(activate_ports(&document.host_snapshot, &ports, &["height".to_string()]), None, "a node with no published port opens nothing");
+    assert_eq!(activate_ports(&document.host_snapshot, &ports, NODE_GRANULARITY, &["extrude".to_string()]).map(Vec::as_slice), Some(["extrude@wire".to_string(), "extrude@vector".to_string()].as_slice()), "activate opens the anchor's ports");
+    assert_eq!(activate_ports(&document.host_snapshot, &ports, HANDLE_GRANULARITY, &["extrude@wire".to_string(), "extrude@vector".to_string()]), None, "an already-open node opens no further");
+    assert_eq!(activate_ports(&document.host_snapshot, &ports, NODE_GRANULARITY, &["height".to_string()]), None, "a node with no published port opens nothing");
+}
+
+#[test]
+fn keyboard_anchors_a_shared_node_and_handle_id_by_granularity() {
+    let ports: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🔌️graph-ports/🔣️.json")).unwrap();
+    let case = ports["cases"].as_array().unwrap().iter().find(|case| case["widget"] == "a@b").unwrap();
+    let widget = case["widget"].as_str().unwrap();
+    let handle = case["target"].as_str().unwrap();
+    let mut document = hex_column();
+    let mut neurons = document.host_snapshot.widgets.iter_mut().filter_map(|node| match node {
+        semio_framework_artifact_flow_flow::Widget::Neuron { id, .. } => Some(id),
+        _ => None,
+    });
+    for id in [widget, handle] {
+        *neurons.next().expect("fixture neuron") = id.to_owned();
+    }
+    let selection = [handle.to_owned()];
+    assert_eq!(anchor_node(&document.host_snapshot, NODE_GRANULARITY, &selection), Some(handle));
+    assert_eq!(anchor_node(&document.host_snapshot, HANDLE_GRANULARITY, &selection), Some(widget));
 }

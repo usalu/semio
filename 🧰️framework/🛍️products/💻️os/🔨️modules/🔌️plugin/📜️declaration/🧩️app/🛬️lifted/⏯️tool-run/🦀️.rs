@@ -19,7 +19,7 @@ use semio_plugin_decl_views::tool_run_contract::ToolRunTraceKeys;
 /// - `instance_owner` is the instance's retained operation owner, shared with its commands.
 /// - `port` carries the host effects the job asks for and the wake of a job waiting on them.
 /// - `trace_keys` allocates trace keys no record of this run uses, e.g. one per placement a revalidate job
-///   re-tests; every job of the run shares it, so keys never collide across rebuilds and purposes.
+///   re-tests. Each job builder borrows the run's allocator, so keys never collide across rebuilds and purposes.
 /// - `entity_marks` holds `(provisional length at the end of the tick that appended it, entity)` per entity, in
 ///   append order: which provisional op prefix each placement's entity belongs to.
 /// - `children` is the composed read the job runs on: the live owned children, whose member a member run
@@ -41,7 +41,7 @@ pub struct ToolRunJobRequest<'a, A: ArtifactApp> {
     pub instance_owner: ArtifactInstanceOperationOwnerHandle,
     pub port: ToolRunJobPort,
     pub host: Option<semio_plugin_actor_host::Host>,
-    pub trace_keys: ToolRunTraceKeys,
+    pub trace_keys: &'a ToolRunTraceKeys,
     pub entity_marks: &'a [(u32, u64)],
     pub children: ChildContentView,
     pub member_ops: &'a [Vec<u8>],

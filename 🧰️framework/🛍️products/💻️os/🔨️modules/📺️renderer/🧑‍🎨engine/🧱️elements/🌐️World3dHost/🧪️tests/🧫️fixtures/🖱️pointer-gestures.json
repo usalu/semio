@@ -413,5 +413,59 @@
     ],
     "selectionTargetsArgsBuilder": "world3dSelectionTargetsActionArgs",
     "instanceTargetBuilder": "world3dInstanceInteractionTarget"
+  },
+  "engagement": {
+    "selectionCases": [
+      {
+        "wire": {},
+        "active": false
+      },
+      {
+        "wire": {
+          "engagementSessionActive": true
+        },
+        "active": true
+      },
+      {
+        "wire": {
+          "engagementSessionActive": false
+        },
+        "active": false
+      }
+    ],
+    "surfaceId": "cad-main/perspective",
+    "windowId": "window-7",
+    "pane": "perspective",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "commands": [
+      {
+        "phase": "press",
+        "action": "worldPointerDown",
+        "modifiers": {
+          "shiftKey": true,
+          "ctrlKey": false,
+          "metaKey": true
+        }
+      },
+      {
+        "phase": "move",
+        "action": "worldPointerMove"
+      }
+    ],
+    "queue": {
+      "generation": 7,
+      "first": [
+        200,
+        200
+      ],
+      "latest": [
+        204,
+        205
+      ]
+    }
   }
 }

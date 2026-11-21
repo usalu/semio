@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::rule::{Assignment, Lhs, Paramete
 use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationDiff};
+use protocol::{ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra, MutationDiff};
 use replication::{MapDelta, MapEntryOperation};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::diff::JackDiff;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
@@ -264,7 +264,7 @@ impl MutationDiff<RewritingSnapshot> for RewritingDiff {}
 impl protocol::ColdMutationDiff<RewritingSnapshot> for RewritingDiff {
     fn absorb(&mut self, other: Self) {
         match (&mut self.working_graph, other.working_graph) {
-            (Some(earlier), Some(next)) => MutationDiff::<JackSnapshot>::absorb(earlier, next),
+            (Some(earlier), Some(next)) => ColdMutationDiff::<JackSnapshot>::absorb(earlier, next),
             (slot @ None, next) => *slot = next,
             (Some(_), None) => {}
         }
@@ -286,7 +286,7 @@ impl protocol::ColdMutationDiff<RewritingSnapshot> for RewritingDiff {
         let snapshot = &*unpublished;
         let mut next = snapshot.clone();
         if let Some(graph) = &self.working_graph {
-            next.working_graph = MutationDiff::<JackSnapshot>::apply(graph, &snapshot.working_graph, capability).map_err(|error| error.under(["workingGraph"]))?;
+            ColdMutationDiff::<JackSnapshot>::apply(graph, &mut next.working_graph, capability).map_err(|error| error.under(["workingGraph"]))?;
         }
         if let Some(patch) = &self.lhs {
             patch.write_into(&mut next.lhs);
@@ -314,7 +314,7 @@ impl DiffAlgebra<RewritingSnapshot> for RewritingDiff {
 impl protocol::ColdDiffAlgebra<RewritingSnapshot> for RewritingDiff {
     fn inverse(&self, base: &RewritingSnapshot) -> Self {
         Self {
-            working_graph: self.working_graph.as_ref().map(|graph| DiffAlgebra::<JackSnapshot>::inverse(graph, &base.working_graph)),
+            working_graph: self.working_graph.as_ref().map(|graph| ColdDiffAlgebra::<JackSnapshot>::inverse(graph, &base.working_graph)),
             lhs: self.lhs.as_ref().map(|patch| patch.inverse(&base.lhs)),
             rhs: self.rhs.as_ref().map(|patch| patch.inverse(&base.rhs)),
             parameter_bindings: self.parameter_bindings.as_ref().map(|delta| invert_map(delta, &base.parameter_bindings)),

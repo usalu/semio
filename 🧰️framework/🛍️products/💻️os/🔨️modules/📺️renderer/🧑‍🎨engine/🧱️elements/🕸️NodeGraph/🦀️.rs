@@ -135,7 +135,7 @@ pub fn fixture_from_node_graph_records(nodes: &[GraphNodeRecord], edges: &[Graph
         schema: "dag.host_snapshot".into(),
         camera: DagCamera { x: viewport.x, y: viewport.y, zoom: viewport.zoom },
         nodes: nodes.iter().map(node_record_to_spec).collect(),
-        edges: edges.iter().map(|edge| DagHostSnapshotEdge { id: edge.id.clone(), source: format!("{}@{}", edge.source_node_id, edge.source_port_id), target: format!("{}@{}", edge.target_node_id, edge.target_port_id), ..Default::default() }).collect(),
+        edges: edges.iter().map(|edge| DagHostSnapshotEdge { id: edge.id.clone(), source: semio_os_infinite_directed_presentation::dag_endpoint(&edge.source_node_id, &edge.source_port_id), target: semio_os_infinite_directed_presentation::dag_endpoint(&edge.target_node_id, &edge.target_port_id), ..Default::default() }).collect(),
     }
 }
 

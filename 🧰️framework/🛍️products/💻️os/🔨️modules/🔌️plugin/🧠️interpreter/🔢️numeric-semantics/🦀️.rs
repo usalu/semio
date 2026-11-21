@@ -1,9 +1,19 @@
 //! 🔢️ Numeric semantics: the canonical nans, the ties-even rounding, the wasm minimum and maximum and the truncating and saturating conversions. See [`super`].
 
-use super::*;
+#[path = "🧮️execution/🦀️.rs"]
+mod execution;
+#[path = "🧱️types/🦀️.rs"]
+mod types;
+
+pub use execution::{execute_numeric_fixed, numeric_arity, NumericError};
+pub use types::{CoreError, Value, ValueType};
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
 
 //#region 🔢️NumericSemantics
-pub(super) fn canonical_f32(value: f32) -> f32 {
+fn canonical_f32(value: f32) -> f32 {
     if value.is_nan() {
         f32::from_bits(0x7fc0_0000)
     } else {
@@ -11,7 +21,7 @@ pub(super) fn canonical_f32(value: f32) -> f32 {
     }
 }
 
-pub(super) fn canonical_f64(value: f64) -> f64 {
+fn canonical_f64(value: f64) -> f64 {
     if value.is_nan() {
         f64::from_bits(0x7ff8_0000_0000_0000)
     } else {
@@ -19,15 +29,15 @@ pub(super) fn canonical_f64(value: f64) -> f64 {
     }
 }
 
-pub(super) fn round_ties_even_f32(value: f32) -> f32 {
+fn round_ties_even_f32(value: f32) -> f32 {
     value.round_ties_even()
 }
 
-pub(super) fn round_ties_even_f64(value: f64) -> f64 {
+fn round_ties_even_f64(value: f64) -> f64 {
     value.round_ties_even()
 }
 
-pub(super) fn wasm_min_f32(left: f32, right: f32) -> f32 {
+fn wasm_min_f32(left: f32, right: f32) -> f32 {
     if left.is_nan() || right.is_nan() {
         return f32::NAN;
     }
@@ -44,7 +54,7 @@ pub(super) fn wasm_min_f32(left: f32, right: f32) -> f32 {
     }
 }
 
-pub(super) fn wasm_max_f32(left: f32, right: f32) -> f32 {
+fn wasm_max_f32(left: f32, right: f32) -> f32 {
     if left.is_nan() || right.is_nan() {
         return f32::NAN;
     }
@@ -61,7 +71,7 @@ pub(super) fn wasm_max_f32(left: f32, right: f32) -> f32 {
     }
 }
 
-pub(super) fn wasm_min_f64(left: f64, right: f64) -> f64 {
+fn wasm_min_f64(left: f64, right: f64) -> f64 {
     if left.is_nan() || right.is_nan() {
         return f64::NAN;
     }
@@ -78,7 +88,7 @@ pub(super) fn wasm_min_f64(left: f64, right: f64) -> f64 {
     }
 }
 
-pub(super) fn wasm_max_f64(left: f64, right: f64) -> f64 {
+fn wasm_max_f64(left: f64, right: f64) -> f64 {
     if left.is_nan() || right.is_nan() {
         return f64::NAN;
     }
@@ -95,11 +105,11 @@ pub(super) fn wasm_max_f64(left: f64, right: f64) -> f64 {
     }
 }
 
-pub(super) fn trunc_i32_from_f32(value: f32, signed: bool) -> Result<i32, NumericError> {
+fn trunc_i32_from_f32(value: f32, signed: bool) -> Result<i32, NumericError> {
     trunc_i32_from_f64(f64::from(value), signed)
 }
 
-pub(super) fn trunc_i32_from_f64(value: f64, signed: bool) -> Result<i32, NumericError> {
+fn trunc_i32_from_f64(value: f64, signed: bool) -> Result<i32, NumericError> {
     if value.is_nan() {
         return Err(NumericError::Conversion);
     }
@@ -117,11 +127,11 @@ pub(super) fn trunc_i32_from_f64(value: f64, signed: bool) -> Result<i32, Numeri
     }
 }
 
-pub(super) fn trunc_i64_from_f32(value: f32, signed: bool) -> Result<i64, NumericError> {
+fn trunc_i64_from_f32(value: f32, signed: bool) -> Result<i64, NumericError> {
     trunc_i64_from_f64(f64::from(value), signed)
 }
 
-pub(super) fn trunc_i64_from_f64(value: f64, signed: bool) -> Result<i64, NumericError> {
+fn trunc_i64_from_f64(value: f64, signed: bool) -> Result<i64, NumericError> {
     if value.is_nan() {
         return Err(NumericError::Conversion);
     }
@@ -139,11 +149,11 @@ pub(super) fn trunc_i64_from_f64(value: f64, signed: bool) -> Result<i64, Numeri
     }
 }
 
-pub(super) fn saturating_i32_from_f32(value: f32, signed: bool) -> i32 {
+pub fn saturating_i32_from_f32(value: f32, signed: bool) -> i32 {
     saturating_i32_from_f64(f64::from(value), signed)
 }
 
-pub(super) fn saturating_i32_from_f64(value: f64, signed: bool) -> i32 {
+pub fn saturating_i32_from_f64(value: f64, signed: bool) -> i32 {
     if value.is_nan() {
         return 0;
     }
@@ -154,11 +164,11 @@ pub(super) fn saturating_i32_from_f64(value: f64, signed: bool) -> i32 {
     }
 }
 
-pub(super) fn saturating_i64_from_f32(value: f32, signed: bool) -> i64 {
+pub fn saturating_i64_from_f32(value: f32, signed: bool) -> i64 {
     saturating_i64_from_f64(f64::from(value), signed)
 }
 
-pub(super) fn saturating_i64_from_f64(value: f64, signed: bool) -> i64 {
+pub fn saturating_i64_from_f64(value: f64, signed: bool) -> i64 {
     if value.is_nan() {
         return 0;
     }

@@ -1,0 +1,21 @@
+{
+  "representation": "json-number-array",
+  "source": "exact borrowed byte span within one immutable JSON source",
+  "shape": {"type": "array", "items": {"type": "number"}},
+  "output": "paged NativeValueSource with borrowed native-number children in wire order",
+  "cases": [
+    {"source": "[]", "numbers": []},
+    {"source": "[0, -0, 18446744073709551615, -9223372036854775808, 1.0, 1e2, -0.25]", "numbers": ["u:0", "i:0", "u:18446744073709551615", "i:-9223372036854775808", "f:1", "f:100", "f:-0.25"]},
+    {"source": " [ 1,\n2\t, 0 ] \r", "numbers": ["u:1", "u:2", "u:0"]},
+    {"source": "[1,]"},
+    {"source": "[,1]"},
+    {"source": "[01]"},
+    {"source": "[1e]"},
+    {"source": "[1e999]"},
+    {"source": "[1,true]"},
+    {"source": "[1] 2"},
+    {"source": "[1"},
+    {"source": "1"}
+  ],
+  "archiveFixture": {"case": "largeImage", "field": ["image", "body", "values"], "canonicalSamples": 4194304, "sample": 0}
+}

@@ -1,0 +1,15 @@
+[
+  {"argv": ["dev", "playground", "raster", "react", "prototype"], "profile": "prototype"},
+  {"argv": ["dev", "playground", "play-raster", "react", "release"], "profile": "release"},
+  {"argv": ["dev", "playground", "raster", "wgpu", "prototype"], "profile": "prototype"},
+  {"argv": ["dev", "playground", "play-raster", "wgpu", "release"], "profile": "release"},
+  {"argv": ["dev", "playground", "gis2d", "native", "prototype"], "profile": "prototype"},
+  {"argv": ["dev", "playground", "gis2d", "native", "release"], "profile": "release"},
+  {"argv": ["dev", "playground", "gis2d", "native", "prototype", "--smoke"], "profile": null},
+  {"argv": ["dev", "playground", "../raster", "react", "prototype"], "profile": null},
+  {"argv": ["dev", "playground", "raster", "react", "preview"], "profile": null},
+  {"argv": ["dev", "playground", "raster", "react"], "profile": null},
+  {"argv": ["dev", "playground", "raster", "react", "prototype", "--port", "5173"], "profile": null},
+  {"argv": ["dev", "playground", "--help"], "profile": null},
+  {"argv": ["dev", "storybook", "raster", "react", "prototype"], "profile": null}
+]

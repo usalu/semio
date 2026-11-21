@@ -1,3 +1,4 @@
+import { flushPendingAtomicHubGroup } from "../📦️atomic-hub-group/🟦️.ts";
 import { DOCUMENT_BACKBONE_BATCH_LIMITS, encodeClientCommandsFrameExact, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA } from "@semio-tech/framework-replication";
 import type { MutationEnvelope, ExactWireMutationEnvelope, WireFrontierSummary } from "@semio-tech/framework-replication";
 import type { CommandAckOutcome } from "../../../../🟦️";
@@ -35,7 +36,8 @@ const HUB_OUTBOX_BATCH_BYTES = DOCUMENT_BACKBONE_BATCH_LIMITS.maximumBytes / 2;
 /** 🚿️ Sends the outbox's next bounded batch once the socket is live, no batch awaits its `Ack` and no transient refusal is backing
  * off. Called on every relay, `Ack`, authenticated `Session`, catch-up completion, link restore and refusal timer. */
 export function flushMutationsToHubIfReady(state: ArtifactState): void {
-  if (!documentBackboneRelayReady(state) || state.outbox.length === 0 || state.pendingBatches.size > 0 || state.transientRefusal?.timer != null) return;
+  if (!documentBackboneRelayReady(state) || state.pendingBatches.size > 0 || state.transientRefusal?.timer != null) return;
+  if (flushPendingAtomicHubGroup(state) || state.outbox.length === 0) return;
   const limit = state.transientRefusal?.batchLimit ?? HUB_OUTBOX_BATCH_ENVELOPES;
   const envelopes: MutationEnvelope[] = [];
   const wireEnvelopes: ExactWireMutationEnvelope[] = [];

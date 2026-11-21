@@ -11,6 +11,21 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_norm_en1998_diff::En1998Diff;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
+#[path = "➕️insert-case/🦀️.rs"]
+mod insert_case;
+#[path = "➖️remove-case/🦀️.rs"]
+mod remove_case;
+#[path = "🔢️change-case-number/🦀️.rs"]
+mod change_case_number;
+#[path = "🔤️change-case-text/🦀️.rs"]
+mod change_case_text;
+#[path = "🏷️change-case-label-en/🦀️.rs"]
+mod change_case_label_en;
+#[path = "🏷️change-case-label-de/🦀️.rs"]
+mod change_case_label_de;
+#[path = "📇️change-case-entry-id/🦀️.rs"]
+mod change_case_entry_id;
+
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
 pub use edit_rules::{resolve_edit, EDIT_RULES, ID_REMOVALS};
@@ -385,6 +400,13 @@ use semio_s_artifact_norm_en1998_mut_placements::remove_placement;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = En1998Snapshot, diff = En1998Diff, schema = "s.norm-eurocode.en1998", reference = En1998Snapshot, reference_diff = En1998Diff)]
 pub enum En1998Mutation {
+    InsertCase(insert_case::InsertCase),
+    RemoveCase(remove_case::RemoveCase),
+    ChangeCaseNumber(change_case_number::ChangeCaseNumber),
+    ChangeCaseText(change_case_text::ChangeCaseText),
+    ChangeCaseLabelEn(change_case_label_en::ChangeCaseLabelEn),
+    ChangeCaseLabelDe(change_case_label_de::ChangeCaseLabelDe),
+    ChangeCaseEntryId(change_case_entry_id::ChangeCaseEntryId),
     ChangeAnnex(change_annex::ChangeAnnex),
     InsertBuilding(insert_building::InsertBuilding),
     RemoveBuilding(remove_building::RemoveBuilding),
@@ -749,6 +771,13 @@ pub enum En1998Mutation {
 }
 
 pub const KINDS: &[&str] = &[
+    "insert-case",
+    "remove-case",
+    "change-case-number",
+    "change-case-text",
+    "change-case-label-en",
+    "change-case-label-de",
+    "change-case-entry-id",
     "change-annex",
     "insert-building",
     "remove-building",

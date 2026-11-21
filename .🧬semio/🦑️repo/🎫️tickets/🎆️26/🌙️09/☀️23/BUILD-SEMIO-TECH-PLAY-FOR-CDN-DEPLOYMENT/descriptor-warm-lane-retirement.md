@@ -1,0 +1,9 @@
+# Descriptor Warm Lane Retirement
+
+Both the successful `wSiw5a4` attempt 3 and the cold `wrsWb7f` attempt 1 selected Cargo lane `q53457c` and target `t-ce555540`. The recreated lane records the same descriptor owner `semio-plugin-describe`. The previous attempt spent 35.197 seconds in Cargo and recorded 568 fresh and five rebuilt artifact events. The cold attempt recorded 530 rebuilt events and zero fresh events at the inspection cutoff. Of those, 428 matched the earlier fresh events by package ID, target name and complete output paths, including all 68 registry events observed at that cutoff.
+
+The compiler fill ledger still measured 1,234,239,488 bytes under `q53457c/release` at 12:10:17 CET. The current `q53457c` directory and its lane record were created at 12:16:56 CET. Line 706 of `.cache/b/r/m/u/gc.log` records a completed collection of `pd7fa12` and `q53457c`, with two lanes removed. The stable key mapped to newly created storage. The collection log gives neither a timestamp nor the policy reason or lease snapshot for that decision.
+
+The intervening Store engine bundle preparation failure was real. The inherited Pack JSON dependency had lost its workspace declaration, and a peer changed it to a direct path before the new site attempt. That repair and the source edits can account for changes in the workspace graph and dependent units. They do not account for the cold registry artifacts with identical target names and paths. The local cross-lane unit cache is disabled by default in this native release and the sampled Cargo invocations show no unit-cache wrapper.
+
+The release has already rebuilt the sampled artifacts in the current lane. No supported live recovery was identified. The evidence establishes lane eviction and a cold rebuild, with no evidence that collection removed an active writer lease or violated its retention policy. No compiler, cache, or process state was changed during inspection.

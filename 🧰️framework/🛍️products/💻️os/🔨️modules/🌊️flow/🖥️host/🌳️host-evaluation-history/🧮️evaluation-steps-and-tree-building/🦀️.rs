@@ -29,12 +29,23 @@ impl FlowHost {
         self.pending_evaluation.as_ref().map_or(Ok(RetirementDemand{depth:1,..Default::default()}),|work|if work.is_closing()||!work.source_matches(self.evaluation_revision,self.operator_registry_generation())||work.fault().is_some(){work.next_close_demands(copy)}else{work.next_demands(&self.host_snapshot,copy)})
     }
 
-    pub fn evaluate_cold_step(&mut self, budget: EvalStepBudget,source_required:&dyn Fn(u64)->bool) -> Result<Vec<String>,ValueError> {
+    pub fn evaluate_cold_step(&mut self, budget: EvalStepBudget, source_required: &dyn Fn(u64) -> bool) -> Result<Vec<String>, ValueError> {
+        self.evaluate_cold_step_with_seeds(budget, source_required, |_| {})
+    }
+
+    /// 🌱️ Runs the cold diagnostic walk with caller-projected source values.
+    pub fn evaluate_cold_step_with_seeds(
+        &mut self,
+        budget: EvalStepBudget,
+        source_required: &dyn Fn(u64) -> bool,
+        project: impl FnOnce(&mut HashMap<String, Dictionary>),
+    ) -> Result<Vec<String>, ValueError> {
         if !self.baseline_publication_terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original baseline publication must advance before another evaluation"))}
         self.drain_displaced();
         self.pending_extension_evals.clear();
         let tree = self.build_tree();
-        let seeds = self.build_seeds();
+        let mut seeds = self.build_seeds();
+        project(&mut seeds);
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.current_baseline_snapshot(), &snapshot);
         if self.baseline_answers_everything(&dirty) {

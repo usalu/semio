@@ -1,0 +1,50 @@
+[
+  {
+    "name": "native-retirement-with-a-resident-return-budget",
+    "issued": 999900,
+    "observed": 999901,
+    "performed": 1,
+    "redeemed": 0,
+    "expected": 999899
+  },
+  {
+    "name": "authenticated-redemption-only-counts-in-its-origin",
+    "issued": 999900,
+    "observed": 999901,
+    "performed": 5,
+    "redeemed": 4,
+    "expected": 999899
+  },
+  {
+    "name": "preserve-the-contexts-narrower-work",
+    "issued": 12,
+    "observed": 7,
+    "performed": 5,
+    "redeemed": 4,
+    "expected": 7
+  },
+  {
+    "name": "fresh-work-exhausts-the-issue",
+    "issued": 2,
+    "observed": 1,
+    "performed": 6,
+    "redeemed": 4,
+    "expected": 0
+  },
+  {
+    "name": "fresh-work-exceeds-the-issue",
+    "issued": 1,
+    "observed": 1,
+    "performed": 6,
+    "redeemed": 4,
+    "expected": null
+  },
+  {
+    "name": "redemption-exceeds-actual-work",
+    "issued": 10,
+    "observed": 9,
+    "performed": 3,
+    "redeemed": 4,
+    "expected": null
+  }
+]

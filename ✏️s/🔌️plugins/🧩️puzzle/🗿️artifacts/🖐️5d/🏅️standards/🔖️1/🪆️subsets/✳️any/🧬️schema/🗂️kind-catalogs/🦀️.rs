@@ -297,6 +297,43 @@ pub fn kind_catalogs_kit_snapshot(catalogs: &Puzzle5dKindCatalogs) -> SemioKitSn
     SemioKitSnapshot { types: kind_catalogs_kit_types(catalogs), ..SemioKitSnapshot::default() }
 }
 
+type SemioKitMutation = semio_s_artifact_stdio_semio_kit::schema::mutations::SemioKitMutation;
+type KitMemberProducer = semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer<SemioKitSnapshot, SemioKitMutation>;
+
+semio_os_kernel::space_members! {
+    native_producer: &semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+    history_limits: store::os_store::HistoryReadLimits {
+        file_bytes: 67_108_864, frame_body_bytes: 1_048_576, records: 8192,
+        maximum_fields: 128, maximum_text_bytes: 1_048_576, maximum_binary_bytes: 1_048_576,
+        maximum_json_bytes: 1_048_576, maximum_json_allocation_bytes: 8_388_608,
+        maximum_json_items: 65_536, maximum_json_depth: 64
+    },
+    maximum_history_allocation_bytes: 8_388_608,
+    pub enum Puzzle5dMembers, Puzzle5dMembersOpen {
+        Kit("s.stdio.semio", "v1", "kit", "stdio.semio") => (SemioKitSnapshot, SemioKitMutation, KitMemberProducer, KitMemberProducer::new()),
+    }
+}
+
+/// 📦️ Rebuilds a catalog child only when its canonical kit matches the persisted handle.
+pub fn genesis_kind_catalogs_pack(
+    handle: &Option<store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>>,
+    extra: &Option<Puzzle5dKindCatalogsExtra>,
+    slot: &str,
+    child_id: &str,
+) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+    let Some(expected) = handle.as_ref().filter(|handle| slot == "kindCatalogs" && handle.child_id == child_id) else {
+        return Ok(None);
+    };
+    let catalogs = kind_catalogs_of(handle, extra).expect("the persisted handle is present");
+    if &kind_catalogs_child_handle(&catalogs) != expected {
+        return Err(semio_framework_value::ValueError::invariant("puzzle5d catalog content differs from its persisted child handle"));
+    }
+    let kit = kind_catalogs_kit_snapshot(&catalogs);
+    <SemioKitSnapshot as pack::snapshot::ArtifactPack>::encode_pack_with(&kit, &Default::default())
+        .map(Some)
+        .map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
+}
+
 /// 🪪️ Content-addressed child handle for a kind-catalogs bundle — hashes the deterministic JSON of
 /// the derived `SemioKitType` list so peers replaying the same catalogs converge on the same
 /// `child_id` (never a random/incrementing id), mirroring `sourcing`'s `catalog_child_handle`.

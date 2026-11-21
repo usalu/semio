@@ -98,5 +98,9 @@ include!("../../🧪️tests/🔬️renderer-color-stroke-raster/🦀️.rs");
 pub mod draw_list;
 // #endregion 🔖️DrawList
 
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+#[path = "🖌️canvas-2d-session/🦀️.rs"]
+pub mod canvas_2d_session;
+
 #[cfg(test)]
 include!("../../🧪️tests/🔬️renderer-opaque-scene-retirement/🦀️.rs");

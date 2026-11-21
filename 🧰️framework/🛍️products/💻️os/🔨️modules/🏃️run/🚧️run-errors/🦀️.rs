@@ -20,6 +20,11 @@ pub enum RunError {
         produced: MediaType,
         accepted: MediaType,
     },
+    InvalidMediaContract {
+        edge_id: String,
+        expected_type: MediaType,
+        expected_conversion: Option<(MediaForm, MediaForm)>,
+    },
     UnregisteredConversion {
         edge_id: String,
         from: MediaForm,
@@ -79,6 +84,7 @@ impl std::fmt::Display for RunError {
             Self::UnknownNode(node) => write!(formatter, "unknown workflow node {node}"),
             Self::UnknownPort { edge_id, node_id, port_id } => write!(formatter, "workflow edge {edge_id} references unknown port `{port_id}` on node `{node_id}`"),
             Self::Incompatible { edge_id, produced, accepted } => write!(formatter, "workflow edge {edge_id} type mismatch: producer offers {produced:?}, consumer accepts {accepted:?}"),
+            Self::InvalidMediaContract { edge_id, expected_type, expected_conversion } => write!(formatter, "workflow edge {edge_id} must accept {expected_type:?} with conversion {expected_conversion:?}"),
             Self::UnregisteredConversion { edge_id, from, to } => write!(formatter, "workflow edge {edge_id} negotiated a conversion {from:?} -> {to:?} but no converter is registered for it"),
             Self::MissingRequiredInput { node_id, port_id } => write!(formatter, "input port `{port_id}` on node `{node_id}` is required but has no incoming edge"),
             Self::MultiplicityViolation { node_id, port_id, count } => write!(formatter, "input port `{port_id}` on node `{node_id}` accepts at most one connection but has {count}"),

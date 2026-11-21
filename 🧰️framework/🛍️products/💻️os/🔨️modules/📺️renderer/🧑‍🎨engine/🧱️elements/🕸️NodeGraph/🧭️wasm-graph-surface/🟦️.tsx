@@ -95,7 +95,7 @@ export function WasmGraphSurface({
           if (verdict.kind === "pinchBegin") {
             const session = sessionRef.current;
             pinchLogScaleRef.current = 0;
-            pickInteraction.onCanvasPointerLeave();
+            pickInteraction.onCanvasPointerCancel();
             for (const tracked of gestureRecognizer.pointers) event.currentTarget.setPointerCapture?.(tracked.pointerId);
             session?.pointerCancelScreen?.();
             session?.renderFrame();
@@ -160,7 +160,7 @@ export function WasmGraphSurface({
             emitInteractionState();
           }
           if (verdict.kind !== "single") return;
-          pickInteraction.onCanvasPointerLeave();
+          pickInteraction.onCanvasPointerCancel();
           if (!session?.pointerCancelScreen) return;
           session.pointerCancelScreen();
           session.renderFrame();

@@ -1,6 +1,7 @@
 syntax = "proto3";
 // 💾️ Binary-facet grammar mirror (descriptive) — see ../🛰️.proto for the canonical facet
 // schema; this file describes the OP PACK-BINARY ENCODING header of the same shape.
+// The tag identifies a declared record. The payload contains its typed Pack wire value.
 package semio.s_stdio_semio_graph_mutations.binary;
 
 message SemioGraphOpFrameHeader {

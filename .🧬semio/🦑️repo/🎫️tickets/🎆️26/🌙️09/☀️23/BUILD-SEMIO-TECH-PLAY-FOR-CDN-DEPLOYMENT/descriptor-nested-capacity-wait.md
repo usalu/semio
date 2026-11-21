@@ -1,0 +1,13 @@
+# Descriptor Nested Capacity Wait
+
+In generation `wTxgqdA`, descriptor PID 66294 held the shared host-capacity lease and waited for CPU slots while parent driver PID 19506 retained four CPU leases. The descriptor's managed job holds a jobserver slot. Other active compiler owners hold additional slots; the host-capacity label is a shared lease held during the CPU acquisition, not itself proof of a blocked shared lease.
+
+Play declares `describe-tool` as `workerProtocol: jobserver`. The component driver's jobserver work path acquires one actual jobserver token and spawns the job as a child process. Descriptor artifact capture independently calls `compileUnitsForHostV1` and `withCompilerCapacityScopeV1` before Cargo spawn. Its available request has a planned minimum and maximum; one free CPU is insufficient when the request's minimum is larger, although the actual request for this process was not recorded here.
+
+`withCompilerCapacityScopeV1` lends private credits only through its live `AsyncLocalStorage` parent frame, same namespace and issued control refinement; that frame does not cross a process spawn. Thus the separate descriptor child has no such parent and requests new kernel CPU leases even though its parent's pool and jobserver slot are held. This is a structural double reservation and can starve dependent work, but it is not proof of a permanent deadlock while unrelated owners can release slots. Environment markers do not authorize lending: `acquireCompilerCapacityLeaseV1` expressly refuses them. The in-process `withNativeBuildStageCapacityV1` borrower requires real retained frame and jobserver custody, and the paid-process custodian acquires its own real capacity for direct children; neither establishes a currently available cross-process borrower of the driver's held grant.
+
+A correct repair requires a genuinely owned cross-process allocation with bounded credits, lifetime, cancellation and drain semantics, or an architecture that executes the compiler under an existing legal in-process borrower. A jobserver token or parallelism environment variable alone is not authority. No change, signal or build was made during this audit.
+
+## Wait outcome
+
+The descriptor eventually received capacity without intervention. Its ledger recorded 1,374.234 seconds of capacity wait and 5.595 seconds in Cargo before a Job context edit triggered the next retry (`e5394b1c0063` to `657a97af6c7e`). Before the wait resolved, a lease snapshot showed all ten host CPU slots held, with four belonging to the Play driver. This was host contention while the descriptor waited for separate CPU leases. No lease cycle was reported, and the driver retained its normal retry and cancellation controls.

@@ -43,7 +43,7 @@ pub fn depths(element: &EnvelopeElement) -> Vec<f64> {
     depth
 }
 
-/// 🌡️ The winter boundary and the profile of an element: the single source shared with the Glaser check.
+/// 🌡️ Temperature profile using the element's own geometry and surface resistances.
 pub fn winter_profile(element: &EnvelopeElement) -> part_3::VapourProfile {
     let (r_si, r_se) = checks::surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
     part_3::vapour_profile(&element.layers, r_si, r_se, part_3::GLASER_WINTER)
@@ -97,8 +97,11 @@ fn glaser(report: &CheckReport, element: &EnvelopeElement) -> Option<Diagram2d> 
     if element.layers.is_empty() || matches!(element.kind.as_str(), "window" | "door") {
         return None;
     }
-    let profile = winter_profile(element);
     let check = format!("din4108-3.glaser.{}", element.id);
+    if report.checks.iter().any(|result| result.id == check && result.status == CheckStatus::NotApplicable) {
+        return None;
+    }
+    let profile = part_3::annex_a_winter_profile(&element.layers)?;
     let vapour: Vec<Vec2> = profile.sd_m.iter().zip(&profile.p_pa).map(|(x, y)| p(*x, *y)).collect();
     let saturation: Vec<Vec2> = profile.sd_m.iter().zip(&profile.p_sat_pa).map(|(x, y)| p(*x, *y)).collect();
     let markers = (0..profile.sd_m.len())

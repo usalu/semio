@@ -7,8 +7,6 @@ use crate::standards::v1::subsets::any::schema::graph::{Edge, EntityRef, GraphEf
 use std::collections::{BTreeMap, BTreeSet};
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::ast::{Clause, Expr, Pattern, Query, QueryResult, ReturnItem};
-#[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::executor::execution::{emit_create_operations_from_graph, emit_set_operation_from_graph};
 use crate::standards::v1::subsets::any::schema::executor::{execution};
 use crate::standards::v1::subsets::any::schema::runner::run;
 use crate::standards::v1::subsets::any::schema::executor::execute;
@@ -21,9 +19,19 @@ use crate::standards::v1::subsets::any::schema::graph::Camera;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use crate::standards::v1::subsets::any::schema::manifest::Manifest;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneProgress, RetainedWorkPoll};
 
 /// 🧸️ The retained content child of a standalone snapshot — what the run-query job reads from its child view.
 fn content_of(snapshot:&JackSnapshot)->std::sync::Arc<crate::standards::v1::subsets::any::schema::content::JackContentOwner>{crate::standards::v1::subsets::any::schema::content::jack_content_for_handle(&snapshot.content).expect("retained fixture content")}
+
+fn close_query_step(grant: RetainedCloneGrant, close: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll) -> RetainedCloneProgress {
+    let (poll, _) = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant).unwrap()
+        .with_effect(close).unwrap().expect("query retirement admitted");
+    match poll {
+        RetainedWorkPoll::Complete(turn) => turn.result.expect("query retirement step").progress(),
+        RetainedWorkPoll::Pending { .. } => RetainedCloneProgress::default(),
+    }
+}
 
 fn mini_graph() -> Graph {
     let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
@@ -56,7 +64,7 @@ async fn run_match_return_graph() {
     assert_eq!(result.kind, QueryResultKind::Graph);
     let fixture = result.graph_snapshot.expect("graph fixture");
     assert_eq!(fixture.nodes.len(), 2);
-    assert_eq!(fixture.edges().expect("valid retained Jack child").len(), 1);
+    assert_eq!(fixture.edges.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -199,13 +207,25 @@ async fn lex_not_equal() {
 async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_publication() {
     let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let graph = if case["inlineManifest"] == true {
+        let mut graph = if case["inlineManifest"] == true {
             let mut snapshot = mini_graph().to_snapshot::<crate::test_support::FixtureComposition>();
             snapshot.manifest_id = None;
             Graph::from_snapshot(snapshot).unwrap()
         } else {
             mini_graph()
         };
+        if case["portlessEndpoints"] == true {
+            let edge = graph.edges.get_mut("e1").expect("fixture edge");
+            edge.source = "root".into();
+            edge.target = "child".into();
+        }
+        if let Some(root_id) = case["rootId"].as_str() {
+            let mut root = graph.nodes.remove("root").expect("fixture root");
+            root.id = root_id.into();
+            graph.add_node(root);
+            graph.root_node_id = Some(root_id.into());
+            graph.edges.get_mut("e1").expect("fixture edge").source = format!("{root_id}@out");
+        }
         let query = parse(case["query"].as_str().unwrap()).unwrap();
         let expected = execute(&graph, &query).unwrap();
         let snapshot = graph.to_snapshot::<crate::test_support::FixtureComposition>();
@@ -239,11 +259,12 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         assert!(packed.len() <= 1_048_576, "retained query result exceeded its emitted byte admission");
         let json: serde_json::Value = serde_json::from_str(&packed).unwrap();
         assert_eq!(json["columns"], case["columns"]);
-        assert_eq!(json["rows"], case["rows"]);
+        let rows = |value: &serde_json::Value| semio_framework_pack_json::from_json_str::<Vec<Vec<PropertyValue>>>(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        assert_eq!(rows(&json["rows"]), rows(&case["rows"]));
         if let Some(node_ids) = case.get("nodeIds") {
             let graph = actual.0.graph_snapshot.as_ref().expect("typed graph result retains its local fixture owner");
             let mut actual_nodes: Vec<_> = graph.nodes.iter().map(|node| node.id.clone()).collect();
-            let mut actual_edges: Vec<_> = graph.edges().expect("valid retained Jack child").iter().map(|edge| edge.id.clone()).collect();
+            let mut actual_edges: Vec<_> = graph.edges.iter().map(|edge| edge.id.clone()).collect();
             actual_nodes.sort();
             actual_edges.sort();
             assert_eq!(serde_json::to_value(actual_nodes).unwrap(), *node_ids);
@@ -252,12 +273,10 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
             let graph_json = graph.to_json().unwrap();
             let projected: serde_json::Value = serde_json::from_str(&graph_json).unwrap();
             assert_eq!(projected["manifest"], serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&graph.manifest)).unwrap());
-            let decoded = JackSnapshot::from_json(&graph_json).unwrap();
-            assert_eq!(decoded.manifest_id, graph.manifest_id);
-            assert_eq!(decoded.manifest, graph.manifest);
+            assert_eq!(JackQueryGraphSnapshot::from_json(&graph_json).unwrap(), **graph);
         }
         assert_eq!(actual.1.len(), case["mutations"].as_u64().unwrap() as usize);
-        let mut published = mini_graph();
+        let mut published = graph;
         crate::standards::v1::subsets::any::schema::operations::apply_graph_effects(&mut published, &actual.1).unwrap();
         if let Some(count) = case.get("postNodeCount") { assert_eq!(published.nodes.len(), count.as_u64().unwrap() as usize); }
         if let Some(count) = case.get("postEdgeCount") { assert_eq!(published.edges.len(), count.as_u64().unwrap() as usize); }
@@ -274,6 +293,27 @@ async fn query_ownership_artifact_contract_exposes_document_state_only() {
         for (name, field) in schema["properties"].as_object().unwrap() {
             assert_eq!(field["x-semio-state"], "artifact", "{name} belongs to a separate app or window owner");
         }
+    }
+}
+
+#[test]
+fn invalid_query_mutation_leaves_the_graph_unchanged() {
+    let fixture: serde_json::Value = serde_json::from_str(runtime_fixture_text("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
+    for case in fixture["invalidMutations"].as_array().unwrap() {
+        let mut graph = mini_graph();
+        let before = graph.clone();
+        let source = case["query"].as_str().unwrap();
+        let expected = case["errorContains"].as_str().unwrap();
+        assert!(run(&mut graph, source).unwrap_err().contains(expected));
+        assert_eq!(graph, before);
+        let mut execution = QueryExecution::new(before, parse(source).unwrap());
+        let error = (0..1000).find_map(|_| match execution.step() {
+            Err(error) => Some(error),
+            Ok(None) => None,
+            Ok(Some(_)) => panic!("invalid query effects were published"),
+        }).expect("invalid mutation terminates execution");
+        assert!(error.message.contains(expected));
+        assert!(execution.step().is_err());
     }
 }
 
@@ -298,7 +338,7 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
         }
         let demand = preparation.close_demands(maximum_bytes).expect("preparation close quote");
         let grant = RetainedCloneGrant { maximum_items: policy["retirementItemsPerStep"].as_u64().expect("retirement items") as usize, ..crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand) };
-        assert!(preparation.close_step(grant).expect("preparation close").progress().fits(grant));
+        assert!(close_query_step(grant, |effect| preparation.close_step(effect)).fits(grant));
     }
     assert!(preparation.terminal_is_empty());
     assert_eq!(source.content.local_owner::<crate::standards::v1::subsets::any::schema::content::JackContentOwner>().expect("source survives cancellation").read().node_count(), source_owner.read().node_count());
@@ -322,7 +362,7 @@ fn query_ownership_preparation_rejection(source: &JackSnapshot) -> semio_framewo
         }
         let demand = preparation.close_demands(4_096).expect("rejected preparation close quote");
         let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
-        assert!(preparation.close_step(grant).expect("rejected preparation close").progress().fits(grant));
+        assert!(close_query_step(grant, |effect| preparation.close_step(effect)).fits(grant));
     }
     assert!(preparation.terminal_is_empty());
     error
@@ -336,12 +376,20 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
     node_graph.nodes.get_mut("root").expect("root node").properties.insert("payload".into(), PropertyValue::String("n".repeat(property_bytes)));
     let node_source = node_graph.to_snapshot::<crate::test_support::FixtureComposition>();
     let error=query_ownership_preparation_rejection(&node_source);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"query entity exceeds its byte grant");
-    assert_eq!(node_source.nodes().expect("valid retained Jack child").iter().find(|node| node.id == "root").expect("oversized source node remains live").properties.get("payload").expect("retained payload property").as_str().map(str::len), Some(property_bytes));
+    let node_owner = content_of(&node_source);
+    let nodes = node_owner.read();
+    let root = (0..nodes.node_count()).find(|&index| nodes.query_node_id(index) == Some("root")).unwrap();
+    let source_node = nodes.query_node(root, property_bytes + 4096).unwrap().unwrap();
+    assert_eq!(source_node.properties.get("payload").and_then(PropertyValue::as_str).map(str::len), Some(property_bytes));
     let mut edge_graph = mini_graph();
     edge_graph.edges.get_mut("e1").expect("fixture edge").properties.insert("payload".into(), PropertyValue::String("e".repeat(property_bytes)));
     let edge_source = edge_graph.to_snapshot::<crate::test_support::FixtureComposition>();
     let error=query_ownership_preparation_rejection(&edge_source);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"query entity exceeds its byte grant");
-    assert_eq!(edge_source.edges().expect("valid retained Jack child").iter().find(|edge| edge.id == "e1").expect("oversized source edge remains live").properties.get("payload").expect("retained payload property").as_str().map(str::len), Some(property_bytes));
+    let edge_owner = content_of(&edge_source);
+    let edges = edge_owner.read();
+    let index = (0..edges.edge_count()).find(|&index| edges.query_edge_id(index) == Some("e1")).unwrap();
+    let source_edge = edges.query_edge(index, property_bytes + 4096).unwrap().unwrap();
+    assert_eq!(source_edge.properties.get("payload").and_then(PropertyValue::as_str).map(str::len), Some(property_bytes));
 }
 
 #[test]
@@ -382,7 +430,7 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
         }
         let demand = execution.close_demands(4_096).expect("rejected execution close quote");
         let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
-        assert!(execution.close_step(grant).expect("rejected execution close").progress().fits(grant));
+        assert!(close_query_step(grant, |effect| execution.close_step(effect)).fits(grant));
     }
     assert!(execution.terminal_is_empty());
 }

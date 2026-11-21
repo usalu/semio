@@ -9,6 +9,10 @@ description = "Graph manifest registry of the 2D puzzle: the manifests generated
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.preparation]
+script = "../../../📦️packages/🦀️rust/📜️script.ts"
+command = ["graph-generate"]
+
 [lints]
 workspace = true
 

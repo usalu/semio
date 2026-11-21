@@ -188,3 +188,22 @@ fn retained_action_cancellation_handles_do_not_cancel_a_later_action(){
     assert_eq!(input.drive_retained_action_step().unwrap().is_some(),fixture["expectedSecondPublication"].as_bool().unwrap());
 }
 
+
+#[test]
+fn retained_text_action_preserves_the_addressed_input_receipt() {
+    use semio_ui_action::{ActionQueueReceipt, ActionQueueReceiptSource};
+
+    let mut input = InputState::<ActionDescriptor>::default();
+    let action = || ActionDescriptor { controller_id: "generation".into(), action: "updateGenerationValues".into(), args: None };
+    let receipt = ActionQueueReceipt { source: ActionQueueReceiptSource::RetainedInput, token: std::num::NonZeroU64::new(1).unwrap(), member: 0, abort_correlation_on_error: false };
+    let source = "é🧬".repeat(800);
+    input.begin_retained_string_action_owned_with_receipt(action(), "value".into(), source.clone(), Some(receipt)).unwrap();
+    assert!(input.drive_retained_action_step().unwrap().is_none());
+    let queued = input.drive_retained_action_step().unwrap().unwrap();
+    assert_eq!(queued.receipt, Some(receipt));
+    assert_eq!(queued.descriptor.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()), Some(source.as_str()));
+    input.begin_retained_string_action_owned_with_receipt(action(), "value".into(), source, Some(receipt)).unwrap();
+    let mut closed = Vec::new();
+    while !input.close_step_with_receipt(|receipt| closed.push(receipt)).unwrap() {}
+    assert_eq!(closed, [receipt]);
+}

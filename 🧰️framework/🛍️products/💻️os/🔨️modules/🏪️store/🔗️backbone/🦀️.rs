@@ -380,8 +380,10 @@ impl BackboneChannelPort for BackboneChannelPorts {
                 if !state.accepting || state.uri != uri {
                     return Err(VcsError::Backbone("actor backbone channel is retired or addressed to another URI".into()));
                 }
-                state.inbound_bytes = 0;
-                Ok(state.inbound.drain(..).collect())
+                let ordinary = state.inbound.iter().position(|frame| atomic_transport::atomic_wire_front(frame)).unwrap_or(state.inbound.len());
+                let original: Vec<_> = state.inbound.drain(..ordinary).collect();
+                state.inbound_bytes -= original.iter().map(Vec::len).sum::<usize>();
+                Ok(original)
             }
         }
     }
@@ -516,7 +518,8 @@ impl Backbone for ChannelBackbone {
 
     async fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
         let mut inbound = self.inbound.as_ref().ok_or_else(|| VcsError::Backbone("channel backbone is closing".into()))?.lock().map_err(|_| VcsError::Backbone("lock poisoned".into()))?;
-        Ok(inbound.drain(..).collect())
+        let ordinary = inbound.iter().position(atomic_transport::atomic_message_front).unwrap_or(inbound.len());
+        Ok(inbound.drain(..ordinary).collect())
     }
 }
 
@@ -605,6 +608,8 @@ pub async fn resolve_backbone(uri: &str) -> Result<Backbones, VcsError> {
 use semio_framework_value_testing_allocator as _;
 #[path="📤️original-outbox/🦀️.rs"]
 pub mod original_outbox;
+#[path="🧩️atomic-transport.rs"]
+pub mod atomic_transport;
 #[cfg(test)]
 #[path = "🧪️effect/🦀️.rs"]
 pub(crate) mod test_effect;

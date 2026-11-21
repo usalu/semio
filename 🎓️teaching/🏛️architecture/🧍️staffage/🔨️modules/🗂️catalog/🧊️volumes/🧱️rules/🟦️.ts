@@ -7,13 +7,14 @@
  *
  * @see ../../🧊️volume/🟦️.ts — the per-solid rules
  * @see ../🟦️.ts — `checkVolumes`, the superset with geometry */
-import type { Asset, AuthoredVolume, ScaleDenominator, Slug, StructuralSolid, Text, ThermalSolid, VolumeList, VolumeSolid } from "../../../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredVolume, Respiration, ScaleDenominator, Slug, StructuralSolid, Text, ThermalSolid, VolumeList, VolumeSolid } from "../../../../🧬️schema/🟦️.ts";
+import { polyhedronExtents } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { SCALE_DENOMINATORS } from "../../../../🧬️schema/🟦️.ts";
-import { flattenGeometry } from "../../../🧮️evaluation/🟦️.ts";
+import { flattenGeometry, solidDrawingProjector } from "../../../🧮️evaluation/🟦️.ts";
 import { eligibleBones } from "../../../🎨️depiction/🏗️structural-view/🟦️.ts";
 import { authoredVolumes, isReference, solidsOf } from "../🧱️lists/🟦️.ts";
 import { centreLineOf } from "../🧵️centreline/🟦️.ts";
-import { copyMesh } from "../🌓️silhouette/🟦️.ts";
+import { copyMesh, extentOf, repeatMaps } from "../🌓️silhouette/🟦️.ts";
 import { qualityOf } from "../../../🧊️volume/⏱️job/🟦️.ts";
 
 /** 📜️ The rule ids of the volumes. `volumes-solids` is the per-solid family (`volume-*` codes), `volumes-copied` the 3D twin of `representation-copied`, `volumes-slender` the check of the `slender` declaration, `volumes-views-disagree` the agreement of the 2D viewpoints with each other. */
@@ -22,7 +23,7 @@ export const VOLUME_RULES = ["volumes-availability", "volumes-silhouette", "volu
 /** 🏷️ One of {@link VOLUME_RULES}. */
 export type VolumeRule = (typeof VOLUME_RULES)[number];
 
-/** 🚦️ The thresholds of the design, never weakened silently: silhouette IoU and Hausdorff (in smallest features), bounds (in features), cross-scale IoU, Hausdorff and union volume change, thermal area tolerance at 1:50 and at coarser scales, the margin of the thermal bounding box (in features), the roles of thin sheets and the decision prefix that declares a scale already minimal. */
+/** 🚦️ The thresholds of the design, never weakened silently: silhouette IoU and Hausdorff (in smallest features), bounds (in features), cross-scale IoU, Hausdorff and union volume change, thermal area tolerance at 1:50 and at coarser scales, the margin of the thermal bounding box (in features), the roles of thin sheets, the decision prefix that declares a scale already minimal, the region kinds that are transparent closures of a cavity and the share of its outer area below which a region counts as lying wholly in a closed cavity (E3). */
 export const VOLUME_LIMITS = {
   silhouetteIouElevation: 0.9,
   silhouetteIouOther: 0.88,
@@ -53,6 +54,8 @@ export const VOLUME_LIMITS = {
   monotonicChordM: 0.002,
   monotonicSegments: 32,
   sectionAngleDeg: 45,
+  transparentRegionKinds: ["glazing"],
+  enclosedOuterFraction: 0.02,
 } as const;
 
 /** 📐️ One measured quantity of a rule against its limit: `bound` "min" means the value must be at least the limit, "max" at most. */
@@ -111,7 +114,7 @@ export const featureOf = (denominator: number, minFeatureMm: number = VOLUME_LIM
 type Extent = readonly number[];
 const span = (values: readonly number[]): number => (values.length === 0 ? 0 : Math.max(...values) - Math.min(...values));
 
-/** 🧮️ The three bone-local extents of the shape of a solid in metres, sorted ascending, scaled by the smallest factor of its `transform`. */
+/** 🧮️ The three dimensions of a solid in metres, using the section path length for a swept loft, sorted ascending, scaled by the smallest factor of its `transform`. */
 export function sortedExtents(solid: VolumeSolid): readonly [number, number, number] {
   let extents: Extent;
   switch (solid.kind) {
@@ -137,13 +140,19 @@ export function sortedExtents(solid: VolumeSolid): readonly [number, number, num
       extents = [solid.to - solid.from, span(solid.profile.map((q) => q[0])) * taper, span(solid.profile.map((q) => q[1])) * taper];
       break;
     }
-    case "loft":
-      extents = [
-        Math.hypot(...solid.sections[0]!.at.map((v, i) => solid.sections[solid.sections.length - 1]!.at[i]! - v)),
-        2 * Math.max(...solid.sections.map((s) => s.rx)),
-        2 * Math.max(...solid.sections.map((s) => s.ry)),
-      ];
+    case "polyhedron":
+      extents = polyhedronExtents(solid.vertices, solid.triangles[0]);
       break;
+    case "loft": {
+      let pathLength = 0;
+      for (let i = 1; i < solid.sections.length; i++) {
+        const [x, y, z] = solid.sections[i]!.at;
+        const previous = solid.sections[i - 1]!.at;
+        pathLength += Math.hypot(x - previous[0], y - previous[1], z - previous[2]);
+      }
+      extents = [pathLength, 2 * Math.max(...solid.sections.map((s) => s.rx)), 2 * Math.max(...solid.sections.map((s) => s.ry))];
+      break;
+    }
   }
   const factor = solid.transform?.scale === undefined ? 1 : Math.min(...solid.transform.scale);
   return extents.map((e) => e * factor).sort((p, q) => p - q) as unknown as readonly [number, number, number];
@@ -213,41 +222,231 @@ export function minimumWidth(points: readonly { readonly x: number; readonly y: 
   return best === Infinity ? 0 : best;
 }
 
-/** 🖋️ The thinnest filled 2D shape extent in metres that the representation of a scale draws for each bone (the least of the shorter side of the bounding box and the smallest width over all directions, {@link minimumWidth}, of every filled closed body, detail or glazing shape); bones without such a shape are absent. */
+/** 🖋️ The thinnest filled 2D shape extent in metres that of the authored section or its paper projection for each bone (the least of the shorter side of the bounding box and the smallest width over all directions, {@link minimumWidth}, of every filled closed body, detail or glazing shape); bones without such a shape are absent. */
 export function thinnestDrawn(asset: Asset, denominator: ScaleDenominator): ReadonlyMap<Slug, number> {
   const rep = asset.representations[`${denominator}`];
   const out = new Map<Slug, number>();
   if (rep === undefined || rep.status !== "authored") return out;
-  for (const shape of [...rep.geometry.elevation, ...rep.geometry.front, ...rep.geometry.plan]) {
-    if (shape.kind === "member" || shape.filled === false || !["body", "detail", "glazing"].includes(shape.role)) continue;
-    const flat = flattenGeometry(shape);
-    if (!flat.closed) continue;
-    const points = flat.rings.flat();
-    if (points.length === 0) continue;
-    const [xs, ys] = [points.map((q) => q.x), points.map((q) => q.y)];
-    const thin = Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), minimumWidth(points));
-    if (thin > 0) out.set(shape.bone, Math.min(out.get(shape.bone) ?? Infinity, thin));
+  let project: ReturnType<typeof solidDrawingProjector> | undefined;
+  for (const view of ["elevation", "front", "plan"] as const) {
+    for (const shape of rep.geometry[view]) {
+      if (shape.kind === "member" || !shape.filled || !["body", "detail", "glazing"].includes(shape.role)) continue;
+      const flat = flattenGeometry(shape);
+      if (!flat.closed) continue;
+      if (shape.solid) project ??= solidDrawingProjector(asset, { kind:"pose", pose:asset.presentation.defaultPose });
+      const sectionWidth = minimumWidth(flat.rings.flat());
+      const projectedWidth = shape.solid ? minimumWidth(project!(shape, flat.rings, view).flat()) : sectionWidth;
+      const thin = projectedWidth > 1e-9 ? Math.min(sectionWidth, projectedWidth) : sectionWidth;
+      if (thin > 1e-9) out.set(shape.bone, Math.min(out.get(shape.bone) ?? Infinity, thin));
+    }
   }
   return out;
 }
 
-/** 🔬️ `volumes-feature` (amendments C13, C20; the aggregate `minDimensionM` is information, the per-solid findings judge): no solid of any list has a dimension below min(the smallest feature of the scale, the thinnest filled 2D shape extent drawn for its bone at that scale), except `role` in {@link VOLUME_LIMITS}.thinRoles (declared thin sheets), `slender` solids (C2), `texture` solids (C10) and thermal shells with a `layer` (C20, they keep the real layer thickness): a solid is never forced thicker than its own drawing. */
+type Point3 = readonly [number, number, number];
+const offset3 = (a: Point3, b: Point3): Point3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const dot3 = (a: Point3, b: Point3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+
+/** 📍️ Whether a triangle intersects the sphere around an outlet centre, including its three edges. */
+function nearTriangle(p: Point3, a: Point3, b: Point3, c: Point3, radius2: number): boolean {
+  for (const [start, end] of [[a, b], [b, c], [c, a]] as const) {
+    const edge = offset3(end, start), delta = offset3(p, start);
+    const length2 = dot3(edge, edge), along = dot3(delta, edge);
+    const t = Math.min(1, Math.max(0, along / (length2 || 1)));
+    if (dot3(delta, delta) - 2 * t * along + t * t * length2 <= radius2) return true;
+  }
+  const ab = offset3(b, a), ac = offset3(c, a), ap = offset3(p, a);
+  const xx = dot3(ab, ab), xy = dot3(ab, ac), yy = dot3(ac, ac), px = dot3(ap, ab), py = dot3(ap, ac);
+  const det = xx * yy - xy * xy;
+  if (det <= 0) return false;
+  const u = (yy * px - xy * py) / det, v = (xx * py - xy * px) / det;
+  return u >= 0 && v >= 0 && u + v <= 1 && dot3(ap, ap) - u * px - v * py <= radius2;
+}
+
+/** 👃️ A located source lies within one declared aperture diameter of its physical tissue boundary in the same bone frame. */
+function onTissue(source: VolumeSolid, surfaces: readonly VolumeSolid[], diameter: number, quality: ReturnType<typeof qualityOf>): boolean {
+  const bounds = extentOf([{id:source.id,...copyMesh(source, quality)}]);
+  const mid: Point3 = [(bounds.min[0]+bounds.max[0])/2, (bounds.min[1]+bounds.max[1])/2, (bounds.min[2]+bounds.max[2])/2];
+  const centres: Point3[] = source.repeat ? repeatMaps(source.repeat).map(({a,b}) =>
+    [a[0]!*mid[0]+a[1]!*mid[1]+a[2]!*mid[2]+b[0]!, a[3]!*mid[0]+a[4]!*mid[1]+a[5]!*mid[2]+b[1]!, a[6]!*mid[0]+a[7]!*mid[1]+a[8]!*mid[2]+b[2]!]) : [mid];
+  return centres.every(centre => surfaces.some(surface => {
+    const mesh = copyMesh(surface, quality);
+    const points: Point3[] = surface.repeat ? repeatMaps(surface.repeat).map(({a,b}) => {
+      const [x,y,z] = offset3(centre, b as Point3);
+      return [a[0]!*x+a[3]!*y+a[6]!*z, a[1]!*x+a[4]!*y+a[7]!*z, a[2]!*x+a[5]!*y+a[8]!*z];
+    }) : [centre];
+    const vertex = (i: number): Point3 => [mesh.positions[3*i]!,mesh.positions[3*i+1]!,mesh.positions[3*i+2]!];
+    return points.some(p => {
+      for (let i = 0; i < mesh.indices.length; i += 3) {
+        if (nearTriangle(p, vertex(mesh.indices[i]!), vertex(mesh.indices[i + 1]!), vertex(mesh.indices[i + 2]!), diameter * diameter)) return true;
+      }
+      return false;
+    });
+  }));
+}
+
+/** 🫁️ True when a thin thermal outlet has a face spanning the declared breath diameter. The two face dimensions exceed its normal thickness. */
+function breathFace(solid: VolumeSolid, diameter: number): boolean {
+  const scale = solid.transform?.scale ?? [1, 1, 1];
+  let thickness: number, width: number, length: number;
+  if (solid.kind === "ellipsoid") {
+    [thickness, width, length] = solid.radii.map((r, i) => 2 * r * scale[i]!).sort((a, b) => a - b) as [number, number, number];
+  } else if (solid.kind === "extrude" && solid.taperTo === undefined) {
+    const [u, v, normal]: [number, number, number] = solid.plane === "xy" ? [0, 1, 2] : solid.plane === "yz" ? [1, 2, 0] : [2, 0, 1];
+    const face = solid.profile.map(([x, y]) => ({ x: x * scale[u]!, y: y * scale[v]! }));
+    thickness = (solid.to - solid.from) * scale[normal]!;
+    width = minimumWidth(face);
+    length = 0;
+    for (let i = 0; i < face.length; i++) for (let j = i + 1; j < face.length; j++) {
+      length = Math.max(length, Math.hypot(face[i]!.x - face[j]!.x, face[i]!.y - face[j]!.y));
+    }
+  } else {
+    return false;
+  }
+  return thickness > 0 && thickness < width && Math.abs(length - diameter) <= 1e-6;
+}
+
+/** 🧵 Physical stock gauges associated with a material and bone by that scale's thermal surfaces. A conflicting gauge makes the association ambiguous. */
+function sheetGauges(asset: Asset, volume: AuthoredVolume): ReadonlyMap<string, number> {
+  const layers = new Map(asset.thermal.regions.flatMap(region => region.layers.map(layer => [`${region.id}/${layer.id}`, layer] as const)));
+  const body = new Map(volume.body.map(solid => [solid.id, solid]));
+  const gauges = new Map<string, number>();
+  for (const surface of volume.thermal) {
+    if (surface.layer === undefined) continue;
+    const layer = layers.get(`${surface.region}/${surface.layer}`);
+    const solid = "of" in surface ? body.get(surface.of) : surface;
+    if (solid === undefined || layer?.thicknessM === undefined || layer.material !== solid.material) continue;
+    const key = `${solid.bone}/${solid.material}`;
+    const previous = gauges.get(key);
+    gauges.set(key, previous === undefined || previous === layer.thicknessM ? layer.thicknessM : NaN);
+  }
+  return gauges;
+}
+
+/** 📐 A planar sheet keeps its declared material gauge through the normal and must still meet the feature width within its plane. */
+function matchesSheet(solid: VolumeSolid, gauge: number | undefined, feature: number): boolean {
+  if (solid.kind !== "extrude" || !(gauge !== undefined && gauge > 0) || solid.taperTo !== undefined) return false;
+  const [u, v, normal] = solid.plane === "xy" ? [0,1,2] as const : solid.plane === "yz" ? [1,2,0] as const : [2,0,1] as const;
+  const scale = solid.transform?.scale ?? [1,1,1];
+  const thickness = Math.abs((solid.to - solid.from) * scale[normal]!);
+  if (Math.abs(thickness - gauge) > Math.max(1e-9, gauge * 1e-5)) return false;
+  const width = minimumWidth(solid.profile.map(([a,b]) => ({ x:a * scale[u]!, y:b * scale[v]! })));
+  return width >= Math.max(feature, VOLUME_LIMITS.slenderRatio * thickness) - 1e-9;
+}
+
+/** 🪡 Exact physical correspondence keeps material gauges and anatomical dimensions independent of paper scale. */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) !== Array.isArray(b)) return false;
+  const left = a as Record<string,unknown>, right = b as Record<string,unknown>;
+  return Object.keys(left).length === Object.keys(right).length && Object.keys(left).every(key => Object.hasOwn(right,key) && sameValue(left[key],right[key]));
+}
+
+function retainedStations(coarse: readonly unknown[], fine: readonly unknown[]): boolean {
+  if (coarse.length < 2 || coarse.length > fine.length || !sameValue(coarse[0],fine[0]) || !sameValue(coarse.at(-1),fine.at(-1))) return false;
+  let at = 1;
+  for (let i = 1; i < coarse.length - 1; i++) {
+    while (at < fine.length - 1 && !sameValue(coarse[i],fine[at])) at++;
+    if (at >= fine.length - 1) return false;
+    at++;
+  }
+  return true;
+}
+
+type PhysicalFields = Readonly<Record<string,unknown>>;
+
+const displayFields = new Set(["id","of","tone","sectionFaces"]);
+
+function physicalMatch(coarse: PhysicalFields, fine: PhysicalFields): boolean {
+  const keys = Object.keys(coarse).filter(key => !displayFields.has(key));
+  if (keys.length !== Object.keys(fine).filter(key => !displayFields.has(key)).length) return false;
+  return keys.every(key => {
+    if (!Object.hasOwn(fine,key)) return false;
+    if (key === "sections" && coarse.kind === "loft") return retainedStations(coarse[key] as readonly unknown[],fine[key] as readonly unknown[]);
+    return sameValue(coarse[key],fine[key]);
+  });
+}
+
+function physicalSources(fine: AuthoredVolume, list: VolumeList): (solid: VolumeSolid) => boolean {
+  const groups = new Map<string,PhysicalFields[]>();
+  const group = (s: PhysicalFields) => JSON.stringify([s.bone,s.kind,s.material,s.region,s.layer,s.member,s.part,s.anchor]);
+  const body = new Map(fine.body.map(s => [s.id,s]));
+  for (const entry of fine[list]) {
+    const solid = "of" in entry ? { ...body.get(entry.of), ...entry } : entry;
+    const key = group(solid), groupSolids = groups.get(key);
+    if (groupSolids) groupSolids.push(solid);
+    else groups.set(key,[solid]);
+  }
+  return solid => groups.get(group(solid))?.some(source => physicalMatch(solid,source)) ?? false;
+}
+
+/** 🔬️ `volumes-feature` (amendments C13, C20; the aggregate `minDimensionM` is information, the per-solid findings judge): no solid of any list has a dimension below min(the smallest feature of the scale, the thinnest filled 2D shape extent drawn for its bone at that scale), except `role` in {@link VOLUME_LIMITS}.thinRoles (declared thin sheets), `slender` solids (C2), `texture` solids (C10) and thermal shells with a `layer` and physiological surfaces without an individual filled region on their bone in print. Broad flat extrusions matching the thermal material gauge retain their sheet thickness. A tagged breath outlet on the anchor bone retains its physical thickness when its face spans the declared diameter above a separate tissue surface. A coarser solid may keep the exact dimensions of its 1:50 counterpart on the same bone and material, including a loft with unchanged end sections and a subset of its original interior stations. */
 export function featureRule(asset: Asset, scales?: readonly ScaleDenominator[], minFeatureMm: number = VOLUME_LIMITS.minFeatureMm): RuleResult {
   const c = collector("volumes-feature");
+  const finest = asset.volumes?.["50"];
+  const sources = new Map<VolumeList,(solid: VolumeSolid) => boolean>();
+  const tissueRegions = new Set(asset.thermal.regions.filter((region) => region.model === "body").map((region) => region.id));
+  const respiration = new Map<Slug | undefined, Respiration | undefined>();
+  respiration.set(undefined, asset.thermal.respiration);
+  for (const passenger of asset.thermal.passengers) respiration.set(passenger.id, passenger.respiration);
+  const breathSurfaces = new Map(asset.thermal.regions.filter(region => region.model === "body").map(region => {
+    const source = respiration.get(region.body?.subject);
+    return [region.id, [source?.noseEmitter, source?.mouthEmitter]] as const;
+  }));
+  const breaths = asset.thermal.emitters.flatMap(emitter => {
+    const anchor = emitter.kind === "breath" ? asset.anchors.find(a => a.id === emitter.anchor && a.kind === "emitter") : undefined;
+    return anchor === undefined ? [] : [{ emitter, anchor }];
+  });
   for (const volume of authoredVolumes(asset)) {
     if (scales !== undefined && !scales.includes(volume.denominator)) continue;
-    if (asset.representations[`${volume.denominator}`]?.status === "unavailable") continue;
+    const drawing = asset.representations[`${volume.denominator}`];
+    if (drawing?.status !== "authored") continue;
+    const printedTissues = new Set<string>();
+    for (const view of Object.values(drawing.geometry)) {
+      for (const shape of view) {
+        const region = shape.region ?? (shape.regions?.length === 1 ? shape.regions[0] : undefined);
+        if (shape.filled && region !== undefined && tissueRegions.has(region)) printedTissues.add(`${shape.bone}/${region}`);
+      }
+    }
+    const gauges = sheetGauges(asset, volume);
+    const tissueSurfaces = new Map<string, VolumeSolid[]>();
+    if (breaths.length) {
+      const surfaces = new Map(solidsOf(volume, "thermal").map(s => [s.id, s]));
+      for (const { id, region } of volume.thermal) {
+        const surface = surfaces.get(id);
+        if (surface === undefined || surface.tags?.includes("emitter") || !tissueRegions.has(region)) continue;
+        const key = `${surface.bone}/${region}`;
+        const entries = tissueSurfaces.get(key) ?? [];
+        entries.push(surface);
+        tissueSurfaces.set(key, entries);
+      }
+    }
     const feature = featureOf(volume.denominator, minFeatureMm);
     const drawn = thinnestDrawn(asset, volume.denominator);
     for (const list of ["body", "thermal", "structure"] as const) {
       const solids = (volume[list] as readonly (VolumeSolid | ThermalSolid | StructuralSolid)[]).filter((solid) => !isReference(solid)) as readonly VolumeSolid[];
       let smallest = Infinity;
       solids.forEach((solid) => {
+        const region = list === "thermal" ? (solid as ThermalSolid).region : undefined;
+        if (region !== undefined && tissueRegions.has(region)) {
+          const key = `${solid.bone}/${region}`;
+          if (!solid.tags?.includes("emitter") && !printedTissues.has(key)) return;
+          if (solid.tags?.includes("emitter") && tissueSurfaces.has(key) && breaths.some(({ emitter, anchor }) =>
+            anchor.bone === solid.bone && (emitter.region === undefined || emitter.region === region) &&
+            breathSurfaces.get(region)?.includes(emitter.id) && solid.tags!.includes(emitter.id) && breathFace(solid, emitter.diameterM) &&
+            onTissue(solid, tissueSurfaces.get(key)!, emitter.diameterM, qualityOf(asset, volume.denominator)))) return;
+        }
         const dimension = smallestDimension(solid);
         const limit = Math.min(feature, drawn.get(solid.bone) ?? Infinity);
-        const thin = (VOLUME_LIMITS.thinRoles as readonly string[]).includes(solid.role) || solid.slender === true || solid.texture === true || (list === "thermal" && (solid as { layer?: string }).layer !== undefined);
+        const sheet = dimension < limit && list === "body" && matchesSheet(solid, gauges.get(`${solid.bone}/${solid.material}`), limit);
+        const thin = sheet || (VOLUME_LIMITS.thinRoles as readonly string[]).includes(solid.role) || solid.slender === true || solid.texture === true || (list === "thermal" && (solid as { layer?: string }).layer !== undefined);
         if (!thin && dimension < smallest) smallest = dimension;
         if (!thin && dimension < limit - 1e-9) {
+          if (volume.denominator !== 50 && finest?.status === "authored") {
+            let matches = sources.get(list);
+            if (!matches) { matches = physicalSources(finest,list); sources.set(list,matches); }
+            if (matches(solid)) return;
+          }
           const m = c.measure({ scale: volume.denominator, list, name: `minDimensionM:${solid.id}`, value: dimension, limit, bound: "min" });
           c.fail(`volumes.${volume.denominator}.${list}[${(volume[list] as readonly { id: string }[]).findIndex((s) => s.id === solid.id)}]`, `Solid "${solid.id}" of ${list} is ${(dimension * 1000).toFixed(1)} mm thin, below ${(limit * 1000).toFixed(1)} mm (the smallest feature of 1:${volume.denominator}${limit < feature ? ` or the thinnest drawing of bone "${solid.bone}"` : ""}).`, `Körper "${solid.id}" von ${list} ist ${(dimension * 1000).toFixed(1)} mm dünn, unter ${(limit * 1000).toFixed(1)} mm (dem kleinsten Merkmal von 1:${volume.denominator}${limit < feature ? ` oder der dünnsten Zeichnung des Knochens "${solid.bone}"` : ""}).`, { scale: volume.denominator, list, measurements: [m] });
         }
@@ -345,7 +544,7 @@ export function structureCoverageRule(asset: Asset, scales?: readonly ScaleDenom
 export type SolidSimilarity = { readonly kind: "identical" | "subset" | "scaled" | "distinct"; readonly sharedSolids: number; readonly coarseSolids: number; readonly fineSolids: number; readonly factor?: number };
 
 const ROUND_M = 1e-4;
-const LENGTH_KEYS = new Set(["size", "radii", "cornerRadius", "p0", "p1", "r0", "r1", "origin", "from", "to", "at", "rx", "ry", "translation", "profile", "holes"]);
+const LENGTH_KEYS = new Set(["size", "radii", "cornerRadius", "p0", "p1", "r0", "r1", "origin", "from", "to", "at", "rx", "ry", "translation", "profile", "holes", "vertices"]);
 const IDENTITY_KEYS = new Set(["id", "of", "region", "layer", "member", "part", "anchor", "tags"]);
 
 function normal(value: unknown, factor: number, lengths: boolean): unknown {

@@ -40,7 +40,7 @@ pub async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<Action
         named_layouts: Vec::new(),
         default_layout: None,
         terminologies: Vec::new(),
-        terminology_breadcrumbs: std::collections::HashMap::new(),
+        terminology_breadcrumbs: Default::default(),
         introduction: None,
         tutorials: Vec::new(),
         dialogs: Vec::new(),

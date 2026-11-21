@@ -82,25 +82,56 @@ impl OriginalConstructionAdmission{
   Ok(if settled{crate::InteractiveJobCloseStep::Complete{progress}}else{crate::InteractiveJobCloseStep::Pending{progress}})
  }
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.authority.is_none()&&self.source.is_none()&&self.child.is_none()&&!self.complete&&!self.failed_taken&&self.frame.phase()==semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty}
- /// 📏️ Quotes exactly the metadata move the next [`Self::close_step`] performs, branch for branch.
- pub fn close_demand(&self)->RetirementDemand{
-  let step=|copy_bytes:usize|RetirementDemand{copy_bytes,depth:1,..Default::default()};
-  if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.is_failed()&&!self.failed_taken{return step(0)}
-  if self.source.is_some()||self.child.is_some(){return step(std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.child))}
-  if self.authority.is_some(){return step(std::mem::size_of_val(&self.authority))}
-  if self.binding.is_some()||self.complete||self.failed_taken{return step(std::mem::size_of_val(&self.binding)+2*std::mem::size_of::<bool>())}
-  Default::default()
+ /// 📏️ Quotes the next single metadata slot, leaving a producer refusal in its original receiver.
+ pub fn close_demand(&self) -> RetirementDemand {
+  let copy_bytes = if self.frame.phase() != semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty || self.failure_untaken() {
+   0
+  } else if self.source.is_some() {
+   std::mem::size_of_val(&self.source)
+  } else if self.child.is_some() {
+   std::mem::size_of_val(&self.child)
+  } else if self.authority.is_some() {
+   std::mem::size_of_val(&self.authority)
+  } else if self.complete || self.failed_taken {
+   std::mem::size_of::<bool>()
+  } else if self.binding.is_some() {
+   std::mem::size_of_val(&self.binding)
+  } else {
+   return Default::default();
+  };
+  RetirementDemand { copy_bytes, depth: 1, ..Default::default() }
  }
- /// 🧮️ Quotes the items the next [`Self::close_step`] posts, branch for branch with [`Self::close_demand`].
- pub fn close_items(&self)->usize{
-  if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.is_failed()&&!self.failed_taken{return 1}
-  if self.source.is_some()||self.child.is_some(){return 2}
-  if self.authority.is_some(){return 1}
-  if self.binding.is_some()||self.complete||self.failed_taken{return 3}
-  1
+ /// 🧮️ The next constructor close can spend one retained item.
+ pub fn close_items(&self) -> usize { 1 }
+
+ /// ♻️ Retires one settled control slot, preserving original Source identity until the last slot.
+ pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+  self.validate(cx)?;
+  if self.terminal_is_empty() { return Ok(true); }
+  if self.frame.phase() != semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty || self.failure_untaken() {
+   return Ok(false);
+  }
+  if !construction_metadata(cx, self.close_demand().copy_bytes, self.close_items())? {
+   return Ok(false);
+  }
+  if self.source.is_some() {
+   self.source = None;
+  } else if self.child.is_some() {
+   self.child = None;
+  } else if self.authority.is_some() {
+   self.release_authority();
+   if self.authority.is_some() {
+    return Err(ValueError::invariant("constructor authority still owns an action").into());
+   }
+  } else if self.complete {
+   self.complete = false;
+  } else if self.failed_taken {
+   self.failed_taken = false;
+  } else {
+   self.binding = None;
+  }
+  Ok(self.terminal_is_empty())
  }
- /// ♻️ Retires settled control metadata without starting another semantic constructor.
- pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.is_failed()&&!self.failed_taken{return Ok(false)}if self.source.is_some()||self.child.is_some(){let bytes=std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.child);if construction_metadata(cx,bytes,2)?{self.source=None;self.child=None}return Ok(false)}if self.authority.is_some(){if !construction_metadata(cx,std::mem::size_of_val(&self.authority),1)?{return Ok(false)}self.release_authority();if self.authority.is_some(){return Err(ValueError::invariant("constructor authority still owns an action").into())}}if self.binding.is_some()||self.complete||self.failed_taken{if !construction_metadata(cx,std::mem::size_of_val(&self.binding)+2*std::mem::size_of::<bool>(),3)?{return Ok(false)}self.binding=None;self.complete=false;self.failed_taken=false}Ok(true)}
  fn take_failure_bytes(&self)->usize{std::mem::size_of::<Option<OriginalConstructionFailure>>()+std::mem::size_of::<Option<super::OriginalNativeReceivingOutcome>>()+std::mem::size_of_val(&self.child)+std::mem::size_of::<bool>()}
  /// 📐️ Quotes moving this admission's retained failure into its owner's empty resident slot: the items it posts and its physical demand.
  pub fn take_failure_demand(&self)->OriginalConstructionDemand{OriginalConstructionDemand{items:ORIGINAL_CONSTRUCTION_FAILURE_ITEMS,copy_bytes:self.take_failure_bytes(),capacity_bytes:0,release_bytes:0,depth:1}}
@@ -152,8 +183,19 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
  admission.validate(context)?;
  if admission.is_failed(){return Ok(OriginalConstructionStatus::Failed)}
  if admission.complete{return Ok(OriginalConstructionStatus::Ready)}
- if admission.source.is_some(){let ready=output.is_some();let bytes=std::mem::size_of_val(&admission.source)+std::mem::size_of_val(&admission.child)+std::mem::size_of_val(&admission.authority)+std::mem::size_of::<bool>();if !construction_metadata(context,bytes,3)?{return Ok(OriginalConstructionStatus::Pending)}admission.source=None;admission.child=None;admission.release_authority();admission.complete=ready;return Ok(if ready{OriginalConstructionStatus::Ready}else{OriginalConstructionStatus::Pending})}
- if output.is_some(){return Err(ValueError::invariant("construction requires its original empty candidate").into())}
+ let recovering=admission.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty;
+ if admission.source.is_some(){
+    if recovering {
+        if construction_metadata(context,std::mem::size_of_val(&admission.source),1)?{admission.source=None;}
+        return Ok(OriginalConstructionStatus::Pending);
+    }
+    let ready=output.is_some()&&admission.child.is_some();
+    let bytes=std::mem::size_of_val(&admission.source)+std::mem::size_of_val(&admission.child)+std::mem::size_of_val(&admission.authority)+std::mem::size_of::<bool>();
+    if !construction_metadata(context,bytes,3)?{return Ok(OriginalConstructionStatus::Pending)}
+    admission.source=None;admission.child=None;admission.release_authority();admission.complete=ready;
+    return Ok(if ready{OriginalConstructionStatus::Ready}else{OriginalConstructionStatus::Pending})
+ }
+ if output.is_some()&&!recovering{return Err(ValueError::invariant("construction requires its original empty candidate").into())}
  if context.is_cancelled()||context.should_yield(){return Ok(OriginalConstructionStatus::Pending)}
  if admission.binding.is_none(){if construction_metadata(context,std::mem::size_of_val(&admission.binding),1)?{admission.binding=Some(super::OriginalSourceBinding::borrow(context))}return Ok(OriginalConstructionStatus::Pending)}
  let candidate=std::mem::size_of::<Option<O>>();let capture=RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of_val(&admission.child),..Default::default()};let(complete,total_work)=original_construction_reserve::<O>(demand,work)?;
@@ -168,6 +210,7 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
   let witness=native.source_witness()?;let mut construct=Some(construct);
   let poll=native.receive_prepared_construction(physical,frame,work+1,authority,|scope,effect,authority,action|{
    let mut run=|effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>|->Result<RetainedCloneStep,ValueError>{
+    if output.is_some(){return Err(ValueError::invariant("construction cannot overwrite its retained candidate"))}
     let construct=construct.take().ok_or_else(||ValueError::invariant("construction call already consumed"))?;
     let turn=scope.with_limits(body_grant,work,|scope|construct(scope,effect.actual()))?;
     if effect.actual().is_none(){if let Ok((_,progress))=&turn.result{if progress.retained_capacity_bytes!=0{*effect.actual()=Some(progress.retained_capacity_bytes)}}}

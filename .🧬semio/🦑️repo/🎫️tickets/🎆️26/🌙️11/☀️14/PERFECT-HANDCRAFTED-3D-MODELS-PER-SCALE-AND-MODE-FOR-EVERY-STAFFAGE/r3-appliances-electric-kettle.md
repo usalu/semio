@@ -218,3 +218,42 @@ Validation results:
   - The rim roll's 0.9 mm sheet. It is modelled, but too thin to be seen in the renders.
 - **Facets.** Lid flange and base edges show tessellation facets in the product renderer. This is renderer quality, not geometry.
 - **Lid and pose.** The 3 mm boiling lift appears in every overlay as a thin 3D-only strip under the lid flange. It is below the feature at every scale.
+
+## Round 5 handcraft (2026-11-21)
+
+Process (all assets of E03; final `r3-validate.ts <asset> --catalog-only --volumes` VALID for all five after the splice): `r5-appliances-render.sh` rendered every list at every scale, every pose and both clips at 1:50 (t 0.5 s) and the 2D of every drawn scale into `🗑️generated/r5-<slug>/before` and `/after`; `r5-seated-montage.ts` laid them out for reading; every sheet named below was opened with the Read tool. `r5-appliances-measure.ts` measured the body extents per scale in the default pose (numbers below). Grades: body / thermal / structure.
+
+### Reference and model (default pose `boiling`)
+
+| quantity | reference | source | model | deviation |
+|---|---|---|---|---|
+| height | 205-305 mm (1.7 L class), asset 240 mm | Russell Hobbs Classics, Ariete 2869/2877, Bosch TWK7203 | 240.0 mm (1:50), 238 (1:100), 248 (1:200), 248 -> 240 mm (1:500 after) | 1:200 +3.3 % |
+| width spout to handle | 220-230 mm, asset 245 mm | same | 248.3 mm (1:50), 246.5, 250.4, 251.7 mm | +1.3 % to +2.7 % |
+| depth (jug diameter) | 160-220 mm, asset 180 mm | same | 180 mm (1:50, 1:100, 1:500), 190 mm (1:200 base) | 0 % / +5.6 % at 1:200 |
+| power base | about 180 mm, 25-30 mm high | product knowledge | 180 x 30 mm | 0 % |
+| jug | r 75 to 70 mm cone, 175 mm | round 3 | r 74.8 mm at 1:50; 1:500 was a barrel r 88 mm, now r 79 to 71 mm | 1:500 before +18 % |
+| fill 1.0 L | 59.5 mm deep | asset mass | 59.5 mm (1:50), 60 mm (1:500; was 75 mm and 4 mm outside the jug wall) | - |
+
+### Grades
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / B+ | unchanged |
+| 1:100 | A- / A- / B+ | unchanged |
+| 1:200 | B+ / A- / B+ | unchanged |
+| 1:500 | C+ / C / C+ (barrel-bellied jug wider than the real one, flat fin spout, octagon plate handle, water through the wall, lid and four structure solids copied from 1:200, one-sentence decision) | A- / A- / B+ |
+| poses `off`, `heating`, clips `boil`, `rattle` (t 0.5) | A- (lid rattle 3 mm, skirt keeps it closed) | unchanged |
+
+Seen before: body at all scales, structure and thermal cut at all scales, three poses and both clip frames, 2D 1:50, 1:100, 1:200. After: 1:500 body, thermal cut and structure (twice, before and after lowering the lid).
+
+### Change
+
+- 1:500 (`r5-electric-kettle-500.py`): authored anew. Body: power base, the jug as the true cone r 79 to 71 mm with the rolled rim, the spout as a two-section taper from its 60 mm root to the 18 mm mouth, the C handle as a five-section round bow through its two fixings, lid with dome and knob in one turn ending at the 0.24 m height (was 8 mm over). Thermal: references, the 1 L fill 60 mm deep inside the jug, steam outlet in the mouth, plume sleeve 2 mm over the new spout. Structure: base rim wall with top deck, jug cup 6 mm on an 8 mm floor, handle, lid plate, water slab and mass, contact ring. Decisions for body, thermal and structure (en, de). `volumes-check --product` PASS (7.8 s), `volumes-copied` 0 against every finer scale.
+
+### Open points
+
+- 1:200 keeps its 40 mm stepped lid and 40 mm base (height 0.248 m, +3.3 %), which its own 2D draws; not changed in this round.
+- Teapot-like conical spout at 1:50 to 1:200 matches the covered spout of the class but is a separate cone on the shoulder with a visible seam; lid flange facets are tessellation.
+- Structure from outside still looks like the kettle (monocoque jug), as stated in round 3.
+
+The 1:500 structural base now closes its meridian around the supporting skirt and bearing plate. This removed a self-intersecting cap in the export. All twelve GLB scenes reloaded independently at 1,472,500 bytes.

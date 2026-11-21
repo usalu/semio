@@ -31,7 +31,7 @@ async fn applies_to_committed_after() {
     apply_gis_terrain_mutation(&mut snapshot, &mutation()).expect("change-exaggeration applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-exaggeration/raises-exaggeration-from-1-to-2-5: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.mesh, base.mesh, "parent scalar edits preserve owned mesh identity");
-    assert!(snapshot.mesh.is_some(), "change-exaggeration/raises-exaggeration-from-1-to-2-5: the terrain always owns a mesh child — the slot is never emptied by an edit");
+    assert!(snapshot.mesh.is_some(), "the exaggeration change retains the fixture's explicit mesh reference");
 }
 
 /// 🪆️ Verifies the declared parent edit while retaining the committed mesh handle.

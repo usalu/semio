@@ -1,0 +1,11 @@
+# Disconnected planar BRep Section
+
+The exact planar section traces every closed contour of the authored solid, verifies disjoint boundaries, and assigns each hole to its containing material component. The material region follows even nesting depth. The requested normal determines exterior winding and holes run oppositely. A separate crossed void is attached only to the region that contains it. The original bounded wire and polygon-face constructors certify and build each native face. The Flow Section operator returns all faces from its existing list port.
+
+The runner stages the private topology and claims before committing the complete face set under the same session and registry locks. An underfunded or invalid batch retains all incoming index rows. Cancellation retires any staged claims and then incrementally closes each private face. Source admission moved the pure section implementation and its spherical strip into the existing BRep query crate. The robust planar ray predicate now lives with the shared vector predicates.
+
+The shared neutral fixture describes a connected U-shaped prism cut across both arms. Manifold measures areas of 3 and 6. With a unit void through the wider section, it measures areas of 3 and 5 and retains separate signed rings of 6 and −1 on the second face. Both portable tests pass. The compact exact Section run reproduced the original no-region refusal and passed all 76 geometry checks after the change. The full native tests and the registered Flow path remain pending managed build capacity. The registered case checks two live face handles, native area, preview component validity, and cancellation of both private faces.
+
+The current exact planar shell envelope remains bounded to 18 source faces, 32 vertices, 48 distinct edges, and five output contours. Crossed void shells that independently yield multiple contours require additional support.
+
+The production source preflight uses the repository’s actual Rust closure reader with the pinned compiler target. Current selected analysis, query, native registry, solid transaction, engine, Session, Flow, replication index, and vector closures all fit the configured maximums. The shared atomic claim transaction now serves both Split and Section. A single Session adapter declaration preserves the different native reservation and publication methods.

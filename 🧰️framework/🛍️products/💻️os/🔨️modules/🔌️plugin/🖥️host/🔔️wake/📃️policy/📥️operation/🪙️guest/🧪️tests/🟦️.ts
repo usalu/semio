@@ -18,3 +18,25 @@ test("cancelled infrastructure ends before the reserved host cleanup window",()=
 import settlement from"./🧫️fixtures/settlement.json"with{type:"json"};
 import settlementSchema from"../🧬️schema/settlement.json"with{type:"json"};
 test("settlement witness is bound to its exact producer and receipt",()=>{expect(new Ajv({strict:true}).compile(settlementSchema)(settlement)).toBe(true);const db=new Database(":memory:");try{for(const row of settlement){const actual=(db.query("SELECT ?=1 AND ?=3 AND ?=1 AND ?=2 AND ?=4 AND ?=7 AS accepted").get(row.serial,row.epoch,row.items,row.copy,row.work,row.producer)as{accepted:number}).accepted;expect(Boolean(actual)).toBe(row.accepted);}}finally{db.close();}});
+
+import coreWidth from "./🧫️fixtures/core-width.json" with {type:"json"};
+import coreWidthSchema from "../🧬️schema/core-width.json" with {type:"json"};
+test("fixed Core grants preserve wasm32 integers with wider host stock",()=>{
+ const validate=new Ajv({strict:true}).compile(coreWidthSchema);
+ expect(validate(coreWidth),JSON.stringify(validate.errors)).toBe(true);
+ const db=new Database(":memory:");
+ try{
+  const semanticCeiling=db.query<{n:number},[number,number]>("SELECT min(?, (1 << 32)-1-?) AS n");
+  const sum=db.query<{n:number},[number,number]>("SELECT ?+? AS n");
+  const fitsCore=(value:number)=>BigInt.asUintN(32,BigInt(value))===BigInt(value);
+  for(const row of coreWidth.cases){
+   const semantic=row.requested.map((grant,index)=>semanticCeiling.get(grant,index<4?coreWidth.infrastructure[index]:0)!.n);
+   const header=semantic.map((grant,index)=>index<4?sum.get(grant,coreWidth.infrastructure[index])!.n:Math.max(grant,coreWidth.infrastructure[index]));
+   expect(semantic,row.name).toEqual(row.semantic);
+   expect(header,row.name).toEqual(row.header);
+   expect([...semantic,...header].every(fitsCore),row.name).toBe(true);
+  }
+  expect(coreWidth.physical.every((grant)=>!fitsCore(grant))).toBe(true);
+  for(const rejected of coreWidth.invalidInfrastructure)expect(rejected.every(fitsCore)).toBe(false);
+ }finally{db.close();}
+});

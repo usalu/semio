@@ -794,6 +794,18 @@
         }
       ]
     },
+    "browserInputs": {
+      "sourceInputObservation": "freshness",
+      "runtimeSourceEntries": {
+        "react": [
+          "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️entry/🟦️.ts"
+        ],
+        "wgpu": [
+          "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts"
+        ]
+      }
+    },
     "rows": [
       {
         "name": "prepare-<%= variant %>-native-<%= profile %>",

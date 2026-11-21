@@ -57,3 +57,11 @@ impl semio_framework_dsl_record::DslField for PropertyBag {
  fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Map(fields)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"graph property map required"))};control.scoped_stage(|control|{control.begin_stage(0)?;let mut output=DecodedValue::new(Self::from_admitted(control.allocate_vec(fields.len())?),<Self as FromValue>::retire_decoded);for(key,value)in fields{let key=control.copy_text(key)?;let value=<PropertyValue as semio_framework_dsl_record::DslField>::from_value_controlled(value,control)?;output.get_mut().admitted_insert(key,value,control)?;}Ok(output.take())})}
  fn retire_decoded(self){<Self as FromValue>::retire_decoded(self)}
 }
+
+impl semio_framework_dsl_record::receiving::owned::DslOwnedReceivingField for PropertyBag {
+    type Cursor = semio_framework_dsl_record::receiving::owned::NativeFieldReceiving<Self>;
+
+    fn receiving_cursor() -> Self::Cursor {
+        Self::Cursor::default()
+    }
+}

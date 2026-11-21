@@ -26,7 +26,7 @@
       "reclaimFloorBytes": 6442450944,
       "reclaimRatioPercent": 300,
       "reclaimTightHostFreeBytes": 51539607552,
-      "minimumBytes": 25769803776,
+      "minimumBytes": 6442450944,
       "maximumBytes": 42949672960
     },
     "rust": {

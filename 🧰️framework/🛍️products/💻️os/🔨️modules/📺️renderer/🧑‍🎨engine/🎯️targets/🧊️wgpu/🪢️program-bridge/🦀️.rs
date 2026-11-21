@@ -6,7 +6,7 @@ extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 #[cfg(any(test, not(target_arch = "wasm32")))]
 extern crate semio_os_kernel as store;
-use semio_renderer_wgpu_host_base::{frame_latency, plugin_catalog, run_renderer_io};
+use semio_renderer_wgpu_host_base::{frame_latency, plugin_catalog};
 
 #[path = "../../../🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs"]
 mod program_bridge;

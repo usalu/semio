@@ -1,0 +1,12 @@
+{
+  "steps": [
+    { "begin": ["norm", 1, "typed-operation"], "pending": 1 },
+    { "begin": ["norm", 1, "extension-invocation"], "pending": 2 },
+    { "begin": ["norm", 2, "typed-operation"], "pending": 2 },
+    { "release": 0, "pending": 1 },
+    { "release": 0, "pending": 1 },
+    { "release": 1, "pending": 0 },
+    { "release": 2, "pending": 0 }
+  ],
+  "observedBusy": [true, true, true, true, false, false]
+}

@@ -1,77 +1,25 @@
-# Course shared-border consolidation
+# Course border verification
 
-## Mechanism added (framework, reused by the course)
-- `OverviewCard` (`🧱️elements/🃏️OverviewCard/🟦️.tsx`): new `flush` prop. No body padding; the content is a
-  `data-shared-border-group data-orientation="vertical"`, so its children are cells with single dividers and the card's
-  silhouette is their outer edge.
-- `WindowChrome/🟦️.tsx` re-exports `useSharedBorderFrameRef`; the slim chrome export (`🪟️chrome/🟦️.ts`) exposes it.
-- Course chrome (`🪟️chrome/🟦️.tsx`): `CELL`, `GROUP`, `CardSection`, `RowList` (flush group+cell, or `framed` =
-  shared-border frame with compositor), `CourseCard flush`, `Dialog flush`, `Segments` as a frame of cells (+ `flush` row),
-  `BodyButton row` (full-width cell, no outline), `ProblemNote cell`.
+The screenshot shows the German Course sorting result. Its inset crowd table was registering with the compositor as a cell inside an already bordered result section. The chart table now shares the figure’s surrounding cell. The table header owns its divider, and the score histogram has one continuous baseline. The page picker, pet-action grid and numeric guess field use shared-border cells for their control dividers.
 
-## Spots fixed
-- Quiz page: quiz card flush (description/facts, challenge fieldset, hints = cells; fieldset has no own border, so no box in a
-  box); tasks card is one flush `RowList` (dividers only, outer edges = card edges); crowd card flush, "Show it now" is a
-  full-width row cell (verified live). Footer chips ("Start/Continue ...") are drawn by the silhouette as one path with the
-  card (verified by DOM: chip right/bottom == card right/bottom, chip button border 0).
-- Run: head card flush (description, steps nav, progress, hint, problem, clock as cells); steps are a shared group, rows
-  below 40rem, cells of one row from 40rem (course CSS flips the dividers with a higher-specificity rule); active step marks
-  its seam via `data-active`. Task card flush: body, crowd door, figures as cells. `course-run-head` tier removed (fixture).
-- Classification: drop zones are dashed frames whose heading/notes/radar are cells and whose chips are a flush `RowList`
-  (no chip borders). Sorting: list is a framed `RowList`, rows are cells. Matching: slots are a framed `RowList`; the
-  `.course-slot` own borders (hairline + 2px first-row) removed.
-- Results: head card flush, new-badge tiles are rows of a `RowList`; table head rules 2px -> hairline (results, leaderboard,
-  radar, profile, record/plot CSS).
-- Home: leaderboard card flush, period toggle is a flush row on the card edges with one divider below; badge strip is one
-  row of equal cells (`.course-badge-strip`) sharing edges (verified live); badges page tiles are rows.
-- Identity dialog flush (fieldset, handle, note, problem, working = cells); waiting card flush with row buttons.
-- Segments (preferences, leaderboard page) are now a frame whose buttons share dividers (compositor), no wrapping.
-- Crowd door (`CrowdDoor`) is a cell group (button row + explanation).
+## Course component tests
 
-## Left as is, on purpose
-- Footer chips and Navbar/Footer (silhouette / other agent).
-- Value cards in matching and presence follow buttons: discrete drag/toggle tokens with gaps, not rows.
-- Selects/icon buttons inside rows, the lock notice of locked tasks, preferences' labelled controls: single controls in padded
-  rows, not adjacent to an edge.
+All 367 tests passed across shared borders, home grid, crowd results, pets, quantity formatting and keyboard task controls. The CSS checks used Lightning CSS to resolve declarations with custom properties. The final run used the installed Vitest runner after the repository capacity queue held the retry for more than 90 seconds.
 
-## Files
-`OverviewCard/🟦️.tsx`, `WindowChrome/🟦️.tsx`, ui `🪟️chrome/🟦️.ts`, course `🪟️chrome`, `📖️quiz-page`, `⛰️challenge`,
-`🗳️crowd`, `▶️run`, `🗂️classification`, `↕️sorting`, `🃏️matching`, `🧩️task`, `🏁️results`, `🏆️leaderboard`, `🏅️badges`,
-`🪪️identity`, `📚️app`, `🟦️.tsx` (exports), styles `🧩️task-layouts`, `🗃️record-tables`, `📊️plots-and-crowd`,
-`🏁️results-and-preferences`, radar/profile (`border-b`).
+## Course browser check
 
-## Tests
-- New `🧪️tests/🧱️shared-borders/🟦️.tsx` (flush card, RowList, framed list, Segments, row button, cell note; stylesheet checked
-  with lightningcss: no borders on rows, flip rule + hairline-only tables). Registered in the course vitest config.
-- Updated adaptive-layout fixture (run-head tier removed, kinds 64rem tier named, steps wording) and badges test
-  (`learner-pages`: shared cells instead of border-solid/dashed).
-- Result: whole course-react vitest suite 47 files / 1121 tests pass (run via bun vitest directly; `repo run` was slow).
-- UI: two OverviewCard tests (flush / non-flush) pass 5/5 with the coordinator's `vitest-ui.config.ts` (the stale lift-class test was fixed by the coordinator).
+The German dark-mode adaptive journey passed in Chromium at 375 and 1920 CSS pixels. It ran against the actual Course app using the ticket’s local Vite preview and the cached development proctor with a fresh database. Both journeys submitted the quiz, verified the answer table’s border ownership and checked the single 1 CSS pixel histogram baseline. Pointer entry over the sorting result caption recolored every painted card edge. SVG bounds, edge geometry, count and 1 CSS pixel computed stroke width matched at rest and hover, with no repeated path spans.
 
-## Follow-up round (live verification in the dev server, offline runs work)
-- Task body: the run's task card is flush end to end; `TaskBody` returns cells (clock, prompt + "Task n of m" line in ONE
-  section so the header line no longer has its own extra divider, then the task view as a cell).
-- Classification: pool and categories are the two cells of one `course-classify` group. Pool has no frame and no dashed
-  border, its rows are flush with the card body edges; below 84rem one divider between pool and categories, from 84rem the
-  divider turns into one vertical line (`.course-categories` inline-start) shared by both columns, pool stays sticky. Dashed
-  bins stay dashed inside padded categories (they touch no frame edge).
-- Trailing controls: `.course-cell` (select, move buttons, remove button, guess entry + unit select) = stretch to the row's
-  top/bottom/right edges, no border of their own, exactly one hairline to their left (below the label across the row in
-  narrow rooms: a hairline above). Applied to classification, sorting (up/down, guess), matching (select, remove, guess).
-  `SELECT_CLASS`/`ICON_BUTTON_CLASS` lost their `border`; rows lost their padding (label/grip carry it).
-- Sorting/matching bodies are padded sections with a framed `RowList`; mockup previews in rows (`.course-mockup`) are
-  padded under a hairline so their frame no longer lies on the row/frame edges.
-- Header line / Submit chip: no doubled edges (probe below); the "Task n of m" line shares the prompt's section.
+The pointer check initially found a move-only path on desktop and two half-pixel segments that retraced the phone card’s existing edges. The compositor now discards spans whose snapped endpoints cross and skips move-only paths. Five neutral junction cases cover crossing, collapsed spans, perpendicular joins and ordinary spans. The targeted shared-window suites passed 94 tests.
 
-### Live check (Playwright-free DOM probe in the built-in browser)
-Probe: for every element with a visible border side, report (a) two different elements whose borders lie on the same line
-and overlap > 6px, (b) any element border lying on a card's outer edge. Run on the run screen of every task of
-physics (classification, 2 sorting), heating (matching, easy and hard), ventilation (hard: classification with radar,
-sorting with guesses), parametric-design (5 classification), grasshopper-data (4 classification with mockups),
-excel-workbook (3 classification with mockups), bim-concepts, optimization-decisions, and the results of ventilation.
-Result: no overlaps, no border on any card edge after the fixes; remaining "hits" were inside the Excel/Grasshopper mockup
-art itself, and radar "values as a table" rows inside a closed `<details>` (not rendered). 375px width checked for steps,
-sorting and classification rows. Not touched: value cards of matching (discrete drag tokens with gaps), drop zones' dashed
-frames (kept on purpose).
-- Tests: full course suite 47 files / 1123 tests green; shared-borders test now also covers the classification cells and the
-  `.course-cell` rule.
+The original `repo run` gate was cancelled after 230 seconds waiting for the project slice. The local Vite preview omits assignment PDF delivery, which the result journey does not use. A separate Chromium check confirmed the histogram baseline at device pixel ratios 1 and 2.
+
+## Course forced colours
+
+The clock and drop zones already belong to the compositor. Their forced-colour states now use paired system colors for the clock and drop-target labels. The leaderboard’s personal-row outline remains because its row uses native table separators. The Course contrast, clock and pointer suites passed 58 tests. Chromium confirmed that the warning clock, expired clock and drop-target label use contrasting system colour pairs with `outline-style: none`.
+
+## Related UI smoke tests
+
+- Hub Admin passed 28 tests across administration, routing and localization.
+- Staffage passed 8 shared-border tests.
+- Presentation passed 12 deck rendering and DOM interaction tests.

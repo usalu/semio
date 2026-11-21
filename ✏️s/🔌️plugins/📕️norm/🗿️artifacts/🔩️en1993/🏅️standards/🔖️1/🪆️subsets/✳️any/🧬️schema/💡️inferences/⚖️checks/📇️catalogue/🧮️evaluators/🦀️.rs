@@ -4,6 +4,36 @@ use crate::clauses::{fatigue_fire, misc, parts_2_6, resistance};
 use semio_s_plugin_norm_compliance::design_case::DesignCase;
 use semio_s_plugin_norm_compliance::QuantityKind;
 
+#[path = "🧱️lattice-node/🦀️.rs"]
+mod lattice_node;
+
+pub use lattice_node::lattice_node_fatigue;
+
+#[path = "🛞️hollow-section/🦀️.rs"]
+mod hollow_section;
+
+pub use hollow_section::hollow_section_fatigue;
+
+#[path = "🪢️load-carrying-weld/🦀️.rs"]
+mod load_carrying_weld;
+pub use load_carrying_weld::load_carrying_weld_fatigue;
+
+#[path = "🧱️attachment-fatigue/🦀️.rs"]
+mod attachment_fatigue;
+pub use attachment_fatigue::attachment_fatigue;
+
+#[path = "🪡️transverse-butt-weld/🦀️.rs"]
+mod transverse_butt_weld;
+pub use transverse_butt_weld::transverse_butt_weld_fatigue;
+
+#[path = "🛠️built-up-weld/🦀️.rs"]
+mod built_up_weld;
+pub use built_up_weld::built_up_weld_fatigue;
+
+#[path = "🔩️plain-and-fastened-fatigue/🦀️.rs"]
+mod plain_and_fastened_fatigue;
+pub use plain_and_fastened_fatigue::plain_and_fastened_fatigue;
+
 /// 📏️ One verification row: what is demanded, what is available and the worked steps.
 pub struct Row {
     pub key: &'static str,
@@ -35,6 +65,10 @@ impl Inputs<'_> {
     pub fn n(&self, key: &str) -> Result<f64, String> {
         self.0.values.numbers.get(key).copied().ok_or_else(|| format!("missing input {key}"))
     }
+
+    pub fn t(&self, key: &str) -> Result<&str, String> {
+        self.0.values.texts.get(key).map(String::as_str).ok_or_else(|| format!("missing input {key}"))
+    }
 }
 
 /// 🟦️ EN 1993-1-7: stress σ = k p b²/t² of a plate under transverse pressure against fy/γM0.
@@ -56,6 +90,286 @@ pub fn bridge_fatigue(q: &Inputs<'_>) -> Outcome {
 pub fn fatigue_combined(q: &Inputs<'_>) -> Outcome {
     let u = fatigue_fire::combined_normal_shear(q.n("delta_sigma")?, q.n("delta_sigma_c")?, q.n("delta_tau")?, q.n("delta_tau_c")?, q.n("gamma_ff")?, q.n("gamma_mf")?);
     Ok(vec![Row::ratio("interaction", "(γFf Δσ/(Δσc/γMf))³ + (γFf Δτ/(Δτc/γMf))⁵ ≤ 1", "(γFf Δσ/(Δσc/γMf))³ + (γFf Δτ/(Δτc/γMf))⁵ ≤ 1", u, format!("interaction sum {u:.3}"))])
+}
+
+const HOT_SPOT_DETAILS: [(&str, f64, bool); 7] = [
+    ("ground-butt", 112.0, false),
+    ("as-welded-butt", 100.0, false),
+    ("full-penetration-cruciform", 100.0, true),
+    ("non-load-bearing-fillet", 100.0, true),
+    ("bracket-stiffener-end", 100.0, true),
+    ("cover-plate-end", 100.0, true),
+    ("load-bearing-fillet-cruciform", 90.0, true),
+];
+
+/// 🔩 EN 1993-1-9:2005 Annex B resistance with weld-toe structural stresses.
+pub fn hot_spot_fatigue(q: &Inputs<'_>) -> Outcome {
+    let detail = q.t("hot_spot_detail")?;
+    let Some((row, &(_, category, check_angle))) = HOT_SPOT_DETAILS.iter().enumerate().find(|(_, item)| item.0 == detail) else {
+        return Err(format!("unknown model {detail}"));
+    };
+    if q.t("hot_spot_crack")? != "toe" {
+        return Err("Table B.1 applies to cracks starting at the weld toe".into());
+    }
+    if q.t("hot_spot_basis")? != "confirmed" {
+        return Err("Confirm the Table B.1 fabrication conditions and include misalignment in the structural stress".into());
+    }
+    if check_angle && !(0.0..=60.0).contains(&q.n("hot_spot_angle")?) {
+        return Err("Table B.1 requires a weld toe angle of at most 60 degrees for this detail".into());
+    }
+
+    let gamma_ff = q.n("gamma_ff")?;
+    let gamma_mf = q.n("gamma_mf")?;
+    let range = q.n("hot_spot_range")?;
+    let frequent = q.n("hot_spot_frequent")?;
+    let fy = q.n("fy")?;
+    if ![gamma_ff, gamma_mf, fy].into_iter().all(|value| value.is_finite() && value > 0.0)
+        || ![range, frequent].into_iter().all(|value| value.is_finite() && value >= 0.0)
+    {
+        return Err("Enter finite stresses and positive partial factors and yield strength".into());
+    }
+    let demand = range * gamma_ff;
+    let capacity = category / gamma_mf;
+    let frequent_limit = 1.5 * fy;
+    Ok(vec![
+        Row::new("fatigue", "Weld toe fatigue resistance", "Ermüdungsfestigkeit am Nahtübergang", QuantityKind::Stress, demand * 1e6, capacity * 1e6, format!("B.1({}): γ_Ff Δσ_E,2 = {demand:.2} MPa ≤ Δσ_C/γ_Mf = {capacity:.2} MPa (Δσ_C = {category:.0} MPa).", row + 1)),
+        Row::new("frequent-range", "Frequent direct stress range", "Häufige Normalspannungsschwingbreite", QuantityKind::Stress, frequent * 1e6, frequent_limit * 1e6, format!("Δσ(ψ₁ Q_k) = {frequent:.2} MPa ≤ 1.5 f_y = {frequent_limit:.2} MPa.")),
+    ])
+}
+
+const RUNWAY_DETAILS: [(&str, f64, &str); 7] = [
+    ("rolled", 160.0, "web"),
+    ("full-tee", 71.0, "web"),
+    ("partial-tee", 36.0, "throat"),
+    ("fillet", 36.0, "throat"),
+    ("t-full", 71.0, "web"),
+    ("t-partial", 36.0, "throat"),
+    ("t-fillet", 36.0, "throat"),
+];
+
+/// 🚋 EN 1993-1-9:2005+AC:2009 Table 8.10 and §8(1)–(2), using equivalent and frequent wheel-load stress ranges.
+pub fn runway_junction_fatigue(q: &Inputs<'_>) -> Outcome {
+    let detail = q.t("runway_detail")?;
+    let Some((row, &(_, category, location))) = RUNWAY_DETAILS.iter().enumerate().find(|(_, item)| item.0 == detail) else {
+        return Err(format!("unknown model {detail}"));
+    };
+    if q.t("runway_basis")? != "confirmed" {
+        return Err("Confirm the Table 8.10 geometry and wheel-load stress basis, including EN 1993-1-8 conformity where effective full penetration is used".into());
+    }
+    if q.t("runway_location")? != location {
+        return Err(if location == "web" { "Use the vertical compressive stress range in the web" } else { "Use the vertical compressive stress range in the weld throat" }.into());
+    }
+    let range = q.n("runway_range")?;
+    let frequent = q.n("runway_frequent")?;
+    let gamma_ff = q.n("gamma_ff")?;
+    let gamma_mf = q.n("gamma_mf")?;
+    let fy = q.n("fy")?;
+    if ![range, frequent].into_iter().all(|value| value.is_finite() && value >= 0.0)
+        || ![gamma_ff, gamma_mf, fy].into_iter().all(|value| value.is_finite() && value > 0.0)
+    {
+        return Err("Enter finite stresses and positive partial factors and yield strength".into());
+    }
+
+    let (en, de, mark) = if location == "web" {
+        ("Web fatigue resistance", "Ermüdungsfestigkeit des Stegs", "")
+    } else {
+        ("Weld-throat fatigue resistance", "Ermüdungsfestigkeit des Nahtquerschnitts", "*")
+    };
+    let demand = range * gamma_ff;
+    let capacity = category / gamma_mf;
+    let frequent_limit = 1.5 * fy;
+    Ok(vec![
+        Row::new("fatigue", en, de, QuantityKind::Stress, demand * 1e6, capacity * 1e6, format!("8.10({}): Δσ_C = {category:.0}{mark} MPa. γ_Ff Δσ_E,2 = {demand:.2} MPa ≤ Δσ_C/γ_Mf = {capacity:.2} MPa.", row + 1)),
+        Row::new("frequent-range", "Frequent direct stress range", "Häufige Normalspannungsschwingbreite", QuantityKind::Stress, frequent * 1e6, frequent_limit * 1e6, format!("Δσ(ψ₁ Q_k) = {frequent:.2} MPa ≤ 1.5 f_y = {frequent_limit:.2} MPa.")),
+    ])
+}
+
+/// 🚧 EN 1993-1-9 Table 8.9 detail 1, with the category selected at the 12 mm thickness boundary.
+pub fn open_stringer_fatigue(q: &Inputs<'_>) -> Outcome {
+    if q.t("deck_open_end_basis")? != "confirmed" {
+        return Err("Confirm the open stringer geometry and the direct stress basis for Table 8.9 detail 1".into());
+    }
+    let thickness = q.n("deck_open_thickness")?;
+    if thickness <= 0.0 {
+        return Err("Enter a positive plate thickness for Table 8.9 detail 1".into());
+    }
+    let category = if thickness <= 12.0 { 80.0 } else { 71.0 };
+    nominal_direct_checks(q, q.n("deck_open_range")?, q.n("deck_open_frequent_direct")?, category, format!("8.9(1): t = {thickness} mm"))
+}
+
+/// 🌁 EN 1993-1-9 Table 8.9 detail 2, using the combined cross-girder stress range before damage equivalence.
+pub fn continuous_open_stringer_fatigue(q: &Inputs<'_>) -> Outcome {
+    if q.t("deck_open_cross_basis")? != "confirmed" {
+        return Err("Confirm the continuous open stringer and the cross-girder web stress basis for Table 8.9 detail 2".into());
+    }
+    let normal = q.n("deck_cross_direct")?;
+    let shear = q.n("deck_cross_shear")?;
+    let equivalence = q.n("deck_cross_equivalence")?;
+    if equivalence <= 0.0 {
+        return Err("Enter a positive damage equivalence and impact factor".into());
+    }
+
+    let combined = 0.5 * (normal + normal.hypot(2.0 * shear));
+    let mut rows = nominal_direct_checks(q, equivalence * combined, q.n("deck_open_frequent_direct")?, 56.0, format!("8.9(2): Δσ_eq = ½(Δσ + √(Δσ² + 4 Δτ²)) = {combined:.2} MPa"))?;
+    let frequent_shear = q.n("deck_cross_frequent_shear")?;
+    let shear_limit = 1.5 * q.n("fy")? / 3.0_f64.sqrt();
+    rows.push(Row::new("frequent-shear", "Frequent shear stress range", "Häufige Schubspannungsschwingbreite", QuantityKind::Stress, frequent_shear * 1e6, shear_limit * 1e6, format!("Δτ(ψ₁ Q_k) = {frequent_shear:.2} MPa ≤ 1.5 f_y / √3 = {shear_limit:.2} MPa.")));
+    let between = q.n("deck_between_utilization")?;
+    rows.push(Row::ratio("between-stringers", "Separate deck fatigue check between stringers", "Separater Ermüdungsnachweis zwischen den Längsrippen", between, format!("EN 1993-2: η = {between:.3} ≤ 1.")));
+    Ok(rows)
+}
+
+fn nominal_direct_checks(q: &Inputs<'_>, equivalent: f64, frequent: f64, category: f64, reference: String) -> Outcome {
+    let demand = q.n("gamma_ff")? * equivalent;
+    let capacity = category / q.n("gamma_mf")?;
+    let frequent_limit = 1.5 * q.n("fy")?;
+    Ok(vec![
+        Row::new("fatigue", "Fatigue resistance", "Ermüdungsfestigkeit", QuantityKind::Stress, demand * 1e6, capacity * 1e6, format!("{reference}. γ_Ff Δσ_E,2 = {demand:.2} MPa ≤ Δσ_C,red/γ_Mf = {capacity:.2} MPa.")),
+        Row::new("frequent-range", "Frequent direct stress range", "Häufige Normalspannungsschwingbreite", QuantityKind::Stress, frequent * 1e6, frequent_limit * 1e6, format!("Δσ(ψ₁ Q_k) = {frequent:.2} MPa ≤ 1.5 f_y = {frequent_limit:.2} MPa.")),
+    ])
+}
+
+/// 🚉 EN 1993-1-9 Table 8.8 details 1 to 4 with longitudinal stress ranges in the closed stringer.
+pub fn closed_stringer_fatigue(q: &Inputs<'_>) -> Outcome {
+    let detail = q.t("closed_connection_detail")?;
+    let required_confirmation = if detail == "backed" { "backed-confirmed" } else { "confirmed" };
+    let (detail_number, category) = match detail {
+        "cutout" | "continuous" => {
+            let thickness = q.n("closed_web_thickness")?;
+            if thickness <= 0.0 {
+                return Err("Enter a positive cross-girder web thickness".into());
+            }
+            let number = if detail == "cutout" { 1 } else { 2 };
+            (number, if thickness <= 12.0 { 80.0 } else { 71.0 })
+        }
+        "separate" => (3, 36.0),
+        "backed" => (4, 71.0),
+        _ => return Err(format!("unknown model {detail}")),
+    };
+    closed_stringer_direct_checks(q, required_confirmation, category, format!("8.8({detail_number})"))
+}
+
+/// 🕳️ EN 1993-1-9 Table 8.8 detail 6 using the qualified critical-section stress range.
+pub fn closed_stringer_cutout_fatigue(q: &Inputs<'_>) -> Outcome {
+    let method = q.t("closed_cutout_method")?;
+    let category = match method {
+        "vierendeel" => 71.0,
+        "bridge-method" => 112.0,
+        _ => return Err(format!("unknown model {method}")),
+    };
+    closed_stringer_direct_checks(q, "confirmed", category, "8.8(6)".into())
+}
+
+/// 🪚 EN 1993-1-9 Table 8.8 detail 5 with the size factor of the qualified Table 8.3 weld group.
+pub fn closed_stringer_splice_fatigue(q: &Inputs<'_>) -> Outcome {
+    let group = q.t("closed_splice_group")?;
+    let category = match group {
+        "ground" => 112.0,
+        "flat" => 90.0,
+        "as-welded" => 80.0,
+        _ => return Err(format!("unknown model {group}")),
+    };
+    let thickness = q.n("closed_splice_thickness")?;
+    if thickness <= 0.0 {
+        return Err("Enter a positive rib splice thickness".into());
+    }
+    let size_factor = (25.0 / thickness).min(1.0).powf(0.2);
+    closed_stringer_direct_checks(q, "confirmed", size_factor * category, format!("8.8(5): Δσ_C = {category:.0} MPa; k_s = {size_factor:.4}"))
+}
+
+fn closed_stringer_direct_checks(q: &Inputs<'_>, confirmation: &str, category: f64, reference: String) -> Outcome {
+    if q.t("closed_geometry")? != confirmation {
+        return Err("Confirm all applicable geometry, fabrication and stress requirements, including backing tack-weld placement for detail 4".into());
+    }
+    nominal_direct_checks(q, q.n("closed_range")?, q.n("closed_frequent")?, category, reference)
+}
+
+/// 🛣️ EN 1993-1-9 Table 8.8 details 7 and 8 with the weld-section bending stress.
+pub fn closed_stringer_deck_weld_fatigue(q: &Inputs<'_>) -> Outcome {
+    if q.t("closed_geometry")? != "confirmed" {
+        return Err("Confirm the rib and weld geometry and the bending stress basis".into());
+    }
+    let rib = q.n("closed_weld_rib_thickness")?;
+    let throat = q.n("closed_weld_throat")?;
+    let gap = q.n("closed_weld_gap")?;
+    let root = q.n("closed_weld_root_face")?;
+    if rib <= 0.0 || throat <= 0.0 {
+        return Err("Enter positive rib wall and weld throat thicknesses".into());
+    }
+    let kind = q.t("closed_weld_type")?;
+    let (detail, category, thickness) = match kind {
+        "recessed" if throat >= rib && gap <= 2.0 && root <= 2.0 => (7, 71.0, rib),
+        "recessed" | "fillet" if gap <= 0.5 => (8, 50.0, throat),
+        "recessed" | "fillet" => return Err("The weld fit-up dimensions exceed the limits in Table 8.8".into()),
+        _ => return Err(format!("unknown model {kind}")),
+    };
+    let modulus = thickness.powi(2) / 6.0;
+    let equivalent = q.n("closed_weld_moment")? / modulus;
+    let frequent = q.n("closed_weld_frequent_moment")? / modulus;
+    nominal_direct_checks(q, equivalent, frequent, category, format!("8.8({detail}): W_w = {modulus:.3} mm²"))
+}
+
+const CHS_LATTICE_FACTORS: [[Option<f64>; 3]; 4] = [
+    [Some(1.5), None, Some(1.3)],
+    [Some(1.5), Some(1.8), Some(1.4)],
+    [Some(1.5), None, Some(1.2)],
+    [Some(1.5), Some(1.65), Some(1.25)],
+];
+
+const RHS_LATTICE_FACTORS: [[Option<f64>; 3]; 4] = [
+    [Some(1.5), None, Some(1.5)],
+    [Some(1.5), Some(2.2), Some(1.6)],
+    [Some(1.5), None, Some(1.3)],
+    [Some(1.5), Some(2.0), Some(1.4)],
+];
+
+/// 🔲 Factors from EN 1993-1-9:2005 with AC:2009, Tables 4.1 and 4.2.
+fn lattice_factor(section: &str, joint: &str, member: &str, [beta, gamma, tau, angle]: [f64; 4]) -> Result<(&'static str, f64), String> {
+    let (table, factors, beta_range, gamma_range) = match section {
+        "chs" => ("4.1", &CHS_LATTICE_FACTORS, 0.30..=0.60, 12.0..=30.0),
+        "rhs" => ("4.2", &RHS_LATTICE_FACTORS, 0.40..=0.60, 6.25..=12.5),
+        _ => return Err(format!("unknown model {section}")),
+    };
+    let row = match joint {
+        "gap-k" => 0,
+        "gap-n" | "gap-n-kt" => 1,
+        "overlap-k" => 2,
+        "overlap-n" | "overlap-n-kt" => 3,
+        _ => return Err(format!("unknown model {joint}")),
+    };
+    let col = match member {
+        "chord" => 0,
+        "vertical" => 1,
+        "diagonal" => 2,
+        _ => return Err(format!("unknown model {member}")),
+    };
+    let Some(k_1) = factors[row][col] else {
+        return Err("The selected table has no factor for a K-joint vertical".into());
+    };
+    if !beta_range.contains(&beta) || !gamma_range.contains(&gamma) || !(0.25..=1.0).contains(&tau) || !(30.0..=60.0).contains(&angle) {
+        return Err(format!("The joint geometry exceeds the bounds of Table {table}"));
+    }
+    Ok((table, k_1))
+}
+
+/// 🔲 EN 1993-1-9:2005 with AC:2009, Tables 4.1 and 4.2 and Eq. (6.3).
+pub fn lattice_joint_fatigue(q: &Inputs<'_>) -> Outcome {
+    if q.t("lattice_basis")? != "confirmed" {
+        return Err("Confirm the in-plane pinned model, external member loads and Table 8.7 detail".into());
+    }
+    let (table, k_1) = lattice_factor(q.t("lattice_section")?, q.t("lattice_joint")?, q.t("lattice_member")?, [
+        q.n("lattice_beta")?, q.n("lattice_gamma")?, q.n("lattice_tau")?, q.n("lattice_angle")?,
+    ])?;
+    let range = q.n("lattice_range")?;
+    let category = q.n("delta_sigma_c")?;
+    let gamma_ff = q.n("gamma_ff")?;
+    let gamma_mf = q.n("gamma_mf")?;
+    if !range.is_finite() || range < 0.0 || ![category, gamma_ff, gamma_mf].into_iter().all(|value| value.is_finite() && value > 0.0) {
+        return Err("Enter a finite nonnegative stress range and positive category and partial factors".into());
+    }
+    let demand = k_1 * gamma_ff * range;
+    let capacity = category / gamma_mf;
+    Ok(vec![Row::new("fatigue", "Lattice joint fatigue resistance", "Ermüdungsfestigkeit des Fachwerkknotens", QuantityKind::Stress, demand * 1e6, capacity * 1e6, format!("{table}: k₁ = {k_1:.2}; k₁ γ_Ff Δσ_E,2 = {demand:.2} MPa ≤ Δσ_C/γ_Mf = {capacity:.2} MPa."))])
 }
 
 /// 🪵 EN 1993-5 §5.2.2: sheet pile bending resistance βB Wel fy/γM0 against MEd.

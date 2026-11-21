@@ -898,16 +898,12 @@ where
     fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure> {
         self.begin_close();
         let before = cx.retained_progress();
+        let reserved_before = cx.reserved_return_progress();
         let native_retired = self.retire_native(cx)?;
         if let Some(failure) = self.original_failure.take() { return Err(failure); }
-        if !native_retired {
-            let after = cx.retained_progress();
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {
-                copied_items: after.copied_items - before.copied_items,
-                copied_bytes: after.copied_bytes - before.copied_bytes,
-                retained_capacity_bytes: after.retained_capacity_bytes - before.retained_capacity_bytes,
-                released_bytes: after.released_bytes - before.released_bytes,
-            }));
+        let progress = cx.fresh_retained_progress_since(before, reserved_before)?;
+        if !native_retired || progress != RetainedCloneProgress::default() || cx.reserved_return_progress() != reserved_before {
+            return Ok(RetainedCloneStep::Progress(progress));
         }
         if self.terminal_is_empty(){return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))}
         let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;

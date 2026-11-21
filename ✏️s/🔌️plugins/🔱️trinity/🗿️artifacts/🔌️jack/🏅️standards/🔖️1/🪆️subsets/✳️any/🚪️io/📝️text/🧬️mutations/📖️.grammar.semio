@@ -3,8 +3,9 @@ grammar jack.mutations
 extension jack
 start line
 
-line = set-query
+line = set-query / set-root
 
 set-query = "set-query" SP text
+set-root = "set-root" [ SP text ]
 
 text = OCTET+

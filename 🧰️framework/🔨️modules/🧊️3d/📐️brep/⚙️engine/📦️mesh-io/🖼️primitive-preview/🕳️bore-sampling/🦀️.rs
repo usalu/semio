@@ -25,6 +25,9 @@ impl BoreSampling {
             || !source.radius.is_finite() || source.radius <= 0.0
             || ![xmin, ymin, zmin, xmax, ymax, zmax, x, y].into_iter().all(reasonable)
             || zmin as f32 >= zmax as f32
+            || !source.bore_span.into_iter().all(reasonable)
+            || source.bore_span[0]<zmin||source.bore_span[1]>zmax
+            || source.bore_span[0] as f32>=source.bore_span[1] as f32
         {
             return Err(invalid_preview());
         }
@@ -91,7 +94,7 @@ impl BoreSampling {
 
     pub(super) fn rim_point(&self, top: bool, index: usize) -> Pnt3 {
         let [x, y] = self.source.center;
-        Pnt3::new(x, y, self.z(top)) + self.radial(index) * self.source.radius
+        Pnt3::new(x,y,self.source.bore_span[usize::from(top)])+self.radial(index)*self.source.radius
     }
 
     fn stock_point(&self, top: bool, index: usize) -> Pnt3 {
@@ -132,6 +135,15 @@ impl BoreSampling {
         points.map(|point| Vertex { point, normal })
     }
 
+    /// 🛟️ Samples the material-facing disk at one interior end of the bore.
+    pub(super) fn floor_triangle(&self,top:bool,slot:usize)->[Vertex;3]{
+        let [x,y]=self.source.center;
+        let center=Pnt3::new(x,y,self.source.bore_span[usize::from(top)]);
+        let (a,b)=(self.rim_point(top,slot),self.rim_point(top,slot+1));
+        let normal=if top{-NativeVec3::Z}else{NativeVec3::Z};
+        (if top{[center,b,a]}else{[center,a,b]}).map(|point|Vertex{point,normal})
+    }
+
     pub(super) fn wall_triangle(&self, slot: usize) -> [Vertex; 3] {
         let sector = slot / 2;
         let corners = if slot % 2 == 0 {
@@ -151,7 +163,7 @@ mod tests {
     fn bore_rim_is_shared_and_every_stock_corner_is_sampled_exactly() {
         let source = BorePreviewSource {
             origin: [1.0, 2.0, 3.0], dimensions: [4.0, 3.0, 2.0], center: [2.25, 3.75], radius: 0.6,
-            first_label: 19, volume: 24.0 - 0.72 * std::f64::consts::PI,
+            bore_span:[3.0,5.0],first_label: 19, volume: 24.0 - 0.72 * std::f64::consts::PI,
         };
         let sampling = BoreSampling::new(source, 0.001).unwrap();
         assert!(sampling.segments() <= MAX_SEGMENTS);

@@ -1,3 +1,5 @@
+import{Database}from"bun:sqlite";
+import coverage from"./🔣️.json"with{type:"json"};
 import{afterAll,expect,test}from"bun:test";
 import{mkdtempSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
@@ -315,4 +317,27 @@ test("a graph builder is advertised while its table of owner costs is fresh in t
   expect(await fleetBuilderAdvertisedV1({client:reader,withinMilliseconds:wantedPolicyV1.ttlMilliseconds})).toBe(true);
   expect(await fleetBuilderAdvertisedV1({client:reader,withinMilliseconds:wantedPolicyV1.ttlMilliseconds,now:()=>Date.now()+2*wantedPolicyV1.ttlMilliseconds})).toBe(false);
  }finally{await server.stop(true);}
+},60000);
+
+test("a zero-wave reader accepts a fully served request and refuses only if owners remain",async()=>{
+ const {server,client}=await world(),db=new Database(":memory:");
+ try{
+  const remaining=db.query("select count(*) as n from (select value from json_each(?1) except select value from json_each(?2))");
+  for(const row of coverage.rows){
+   expect(remaining.get(JSON.stringify(coverage.requested),JSON.stringify(row.served)),row.name).toEqual({n:row.remaining});
+   const reader=client("reader-"+row.name),serving=client("server-"+row.name),requester="g1-reader-"+row.name,time=clock(),createdMs=time.now();
+   let sent=false;
+   const sleep=async(milliseconds:number)=>{
+    await time.sleep(milliseconds);
+    if(sent)return;
+    sent=true;
+    const request=(await readWantedV1({client:serving,requester,now:time.now}))!;
+    expect(request).toMatchObject({requester,graphKey:KEY,createdMs,projects:coverage.requested});
+    expect(await publishServedV1({client:serving,server:"g1-server",request:{...request,left:row.left},projects:row.served,generation:row.remaining===0?7:null,now:time.now})).toBe(true);
+   };
+   const result=fleetReadV1({stale:coverage.requested,admittedMegabytes:coverage.admittedMegabytes,client:reader,requester,platform:PLATFORM,graphKey:KEY,language:"en",say:()=>{},sleep,now:time.now});
+   if(row.remaining===0)await expect(result).resolves.toMatchObject({outcome:"served",plan:{waveProjects:0},arrived:row.served.length,missing:[]});
+   else await expect(result).rejects.toMatchObject({code:wantedRefusalV1.code,values:{missing:row.remaining,arrived:row.served.length}});
+  }
+ }finally{db.close();await server.stop(true);}
 },60000);

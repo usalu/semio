@@ -730,3 +730,17 @@ record change-critical-region-restrained-bar-spacing-m tag=361
 field payload bytes
 record change-foundation-pile-axial-load-n tag=362
 field payload bytes
+record insertCase tag=363
+field payload bytes
+record removeCase tag=364
+field payload bytes
+record changeCaseNumber tag=365
+field payload bytes
+record changeCaseText tag=366
+field payload bytes
+record changeCaseLabelEn tag=367
+field payload bytes
+record changeCaseLabelDe tag=368
+field payload bytes
+record changeCaseEntryId tag=369
+field payload bytes

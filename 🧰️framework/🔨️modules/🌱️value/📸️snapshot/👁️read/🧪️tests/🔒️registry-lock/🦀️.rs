@@ -85,3 +85,35 @@ fn snapshot_registry_backing_reports_the_actual_selected_work(){
  let mut fuel=(SNAPSHOT_READ_LEASE_CAPACITY/SNAPSHOT_READ_SLOT_PAGE+SNAPSHOT_READ_LEASE_CAPACITY/SNAPSHOT_READ_GENERATION_PAGE) as u64;while registry.owned_backing_work_demand().unwrap()!=0{let demand=registry.owned_backing_demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.close_owned_backing_step(grant));assert_eq!(turn.work,law["release"].as_u64().unwrap());fuel=fuel.checked_sub(turn.work).unwrap();let progress=turn.result.unwrap().progress();assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));}
  assert_eq!(fuel,0);assert_eq!(registry.owned_backing_work_demand().unwrap(),law["empty"].as_u64().unwrap());
 }
+
+#[test]
+fn owned_retirement_birth_funds_the_original_header_before_moving_it() {
+    use crate::presence_test_retirement::{finish_box, with_effect};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["ownedRetirementBirth"].as_array().unwrap() {
+        let mut pending = Some(41u32);
+        let mut active = None;
+        let demand = artifact_retirement_owned_birth_demands(&pending).unwrap();
+        let defining = semio_framework_value::retirement::controlled::controlled_retirement_birth_demand(pending.as_ref().unwrap()).unwrap();
+        assert_eq!(demand.copy_bytes, defining.copy_bytes);
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: demand.copy_bytes.checked_add_signed(row["copyDelta"].as_i64().unwrap() as isize).unwrap(),
+            maximum_capacity_bytes: demand.capacity_bytes,
+            maximum_depth: demand.depth,
+            ..Default::default()
+        };
+        let mut actual = None;
+        let turn = with_effect(grant, 1, &mut actual, |effect| artifact_retirement_admit_owned(&mut pending, &mut active, effect));
+        let progress = turn.result.unwrap().progress();
+        let moved = row["moved"].as_bool().unwrap();
+        assert_eq!(active.is_some(), moved);
+        assert_eq!(actual, moved.then_some(demand.capacity_bytes));
+        assert_eq!(pending, if moved { None } else { Some(41) });
+        assert_eq!(progress.copied_bytes, if moved { demand.copy_bytes } else { 0 });
+        if moved {
+            assert!(finish_box(&mut active) >= demand.capacity_bytes);
+            assert!(active.is_none());
+        }
+    }
+}

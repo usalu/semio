@@ -1,0 +1,113 @@
+//! 🔁️ The headless channel runs the current Source-bound guest event protocol.
+
+use super::*;
+use semio_framework::kernel::{Event, TurnResult};
+use semio_framework_pack_json::JsonReadLimits;
+use semio_framework_value::ValueRefusalKind;
+use semio_plugin_host::{GuestRelayNativeOrigin, GuestRelayOperationRequest};
+use semio_plugin_host_poll::{EventJsonSource, GuestPollNoReceiverState, GuestPollSession, GuestPollSessionStatus, OriginalNativeDecodePolicy};
+
+const POLL_STEPS_PER_YIELD: usize = 32;
+
+pub(super) type NativePoll = GuestPollSession<TurnResult, GuestPollNoReceiverState>;
+
+impl PluginArtifactChannel {
+    pub(super) fn issue_native_poll(&self, actor: semio_framework_actor::ActorId, origin: GuestRelayNativeOrigin, scope: &ActivationScope) -> Result<Box<NativePoll>, Fault> {
+        let host = self.host_driver_policy;
+        let cancel = scope.cancel().clone();
+        let driver = self.operation_caps().issue(GuestRelayOperationRequest {
+            work_units: host.root.operation_fuel,
+            maximum_elapsed_microseconds: host.root.maximum_lifetime_microseconds,
+            retained: host.operation,
+        }, semio_framework_job::default_now_us, Box::new(move || cancel.is_cancelled_now())).map_err(|error| Self::not_wired("guest poll Source", error))?;
+        let maximum_owned_bytes = host.operation.maximum_capacity_bytes;
+        let limits = JsonReadLimits {
+            maximum_bytes: u64::from(host.root.max_patch_bytes),
+            maximum_allocation_bytes: maximum_owned_bytes,
+            maximum_depth: host.operation.maximum_depth,
+            maximum_items: u64::try_from(host.operation.maximum_items).unwrap_or(u64::MAX),
+        };
+        Ok(Box::new(NativePoll::new(driver, actor, origin, OriginalNativeDecodePolicy { maximum_owned_bytes }, limits, GuestPollNoReceiverState::new())))
+    }
+
+    pub(super) fn with_native_turn<T>(&mut self, instance: u32, events: &[Event], receive: impl FnOnce(&mut Self, &TurnResult) -> Result<T, Fault>) -> Result<T, Fault> {
+        if self.closing_instances.contains(&instance) { return Err(Self::not_wired("guest poll", "instance still holds a closing Source")); }
+        let mut poll = self.instances.remove(&instance).ok_or_else(|| Self::not_wired("guest poll", format!("no open instance {instance}")))?;
+        let result = poll_turn(&mut poll, events, &ActivationScope::detached(), std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET, |output| receive(self, output));
+        self.instances.insert(instance, poll);
+        result
+    }
+}
+
+/// ♻️ Returns the native guest, its receipts and its original Source before removing the instance.
+pub(super) fn close_poll(poll: &mut NativePoll) -> bool {
+    let status = semio_framework_async::block_on(poll.close(|_, _, _| Ok(true)));
+    if status == GuestPollSessionStatus::Closed && poll.terminal_is_empty() { return true; }
+    if std::env::var_os("RUST_BACKTRACE").is_some() { eprintln!("[DEBUG] poll close: {status:?}; primary: {:?}; retirement: {:?}", poll.failure(), poll.cleanup_failure()); }
+    false
+}
+
+/// 🚪️ Opens the native actor while retaining its actual pending Source.
+pub(super) fn open_poll(poll: &mut NativePoll, scope: &ActivationScope, deadline: std::time::Instant) -> Result<(), Fault> {
+    next_poll_phase(poll, scope, deadline, NativePoll::open_step)
+}
+
+/// 🔜️ Advances one state-machine phase up to its original budget or cancellation boundary.
+fn next_poll_phase(poll: &mut NativePoll, scope: &ActivationScope, deadline: std::time::Instant, step: impl Fn(&mut NativePoll) -> GuestPollSessionStatus) -> Result<(), Fault> {
+    loop {
+        scope.checkpoint()?;
+        match step(poll) {
+            GuestPollSessionStatus::Ready => return Ok(()),
+            GuestPollSessionStatus::Pending if std::time::Instant::now() < deadline => std::thread::yield_now(),
+            GuestPollSessionStatus::Pending => return Err(PluginArtifactChannel::budget_fault("guest poll")),
+            status => return Err(poll_fault(poll, status)),
+        }
+    }
+}
+
+/// 👂️ Borrows the received kernel output before acknowledging it back to its own Source.
+pub(super) fn poll_turn<T>(poll: &mut NativePoll, events: &[Event], scope: &ActivationScope, deadline: std::time::Instant, receive: impl FnOnce(&TurnResult) -> Result<T, Fault>) -> Result<T, Fault> {
+    next_poll_phase(poll, scope, deadline, NativePoll::next_input_step)?;
+    let (ordinary, page) = match events {
+        [page @ (Event::CommandIngressPage { .. } | Event::ColdDocumentPairPage(_))] => (&[][..], Some(page)),
+        _ => (events, None),
+    };
+    let events = EventJsonSource(ordinary);
+    let input = poll.event_input(&events, page).map_err(|error| PluginArtifactChannel::not_wired("guest poll input", error))?;
+    let input = std::pin::pin!(input);
+    let mut receive = Some(receive);
+    let mut result = None;
+    let mut steps_since_yield = 0;
+    loop {
+        scope.checkpoint()?;
+        let status = poll.drive_step(input.as_ref(), &mut |output, _, _| {
+            if let Some(receive) = receive.take() { result = Some(receive(output)); }
+            Ok(true)
+        });
+        match status {
+            GuestPollSessionStatus::Complete => return result.unwrap_or_else(|| Err(poll_fault(poll, status))),
+            GuestPollSessionStatus::Pending | GuestPollSessionStatus::Delivered if std::time::Instant::now() < deadline => {
+                steps_since_yield += 1;
+                if steps_since_yield == POLL_STEPS_PER_YIELD {
+                    std::thread::yield_now();
+                    steps_since_yield = 0;
+                }
+            }
+            GuestPollSessionStatus::Pending | GuestPollSessionStatus::Delivered => return Err(PluginArtifactChannel::budget_fault("guest poll")),
+            status => return Err(poll_fault(poll, status)),
+        }
+    }
+}
+
+fn poll_fault(poll: &NativePoll, status: GuestPollSessionStatus) -> Fault {
+    if std::env::var_os("RUST_BACKTRACE").is_some() { eprintln!("[DEBUG] poll fault: {status:?}; primary: {:?}; retirement: {:?}", poll.failure(), poll.cleanup_failure()); }
+    let failure = poll.failure().or_else(|| poll.cleanup_failure());
+    if let Some(value) = failure.and_then(|failure| failure.primary.as_ref()).and_then(|primary| primary.primary_value()) {
+        match value.kind {
+            ValueRefusalKind::WorkLimit => return Fault { message: format!("guest poll: {}", value.message), ..PluginArtifactChannel::budget_fault("guest poll") },
+            ValueRefusalKind::Canceled => return Fault { code: ACTIVATION_CANCELLED_FAULT_CODE.to_string(), message: format!("guest poll: {}", value.message) },
+            _ => {}
+        }
+    }
+    PluginArtifactChannel::not_wired("guest poll", format!("{status:?}: {failure:?}"))
+}

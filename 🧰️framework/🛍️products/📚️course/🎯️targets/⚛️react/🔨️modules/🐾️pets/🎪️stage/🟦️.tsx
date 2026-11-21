@@ -233,12 +233,11 @@ export function PetsPlayground(props: { readonly playing: PetPlay; readonly text
             <span id={`${scope}-${player.species}`} {...CELL} className="p-double text-sm font-semibold">
               {player.name}
             </span>
-            <span {...CELL} className="course-tiles px-single">
+            <div {...GROUP} {...CELL} className="course-tiles">
               {PET_DEEDS.map((deed) => (
                 <BodyButton
                   key={deed}
                   row
-                  tile
                   onClick={() => {
                     playing.play(player.species, deed);
                     announce(text(PET_DEED_SAID[deed], { name: player.name }));
@@ -247,7 +246,7 @@ export function PetsPlayground(props: { readonly playing: PetPlay; readonly text
                   {text(PET_DEED_LABELS[deed])}
                 </BodyButton>
               ))}
-            </span>
+            </div>
           </div>
         ))}
         <p role="status" aria-live="polite" aria-atomic="true" {...CELL} className="m-0 p-double text-xs text-muted-foreground">

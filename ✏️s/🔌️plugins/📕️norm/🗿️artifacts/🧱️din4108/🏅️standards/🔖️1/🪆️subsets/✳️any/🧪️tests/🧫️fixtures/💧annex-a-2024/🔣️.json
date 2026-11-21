@@ -1,0 +1,66 @@
+{
+  "worked": true,
+  "layers": [
+    {
+      "d": 0.0125,
+      "mu": 8,
+      "lam": 0.21
+    },
+    {
+      "d": 0.08,
+      "mu": 2,
+      "lam": 0.04
+    },
+    {
+      "d": 0.3,
+      "mu": 10,
+      "lam": 0.79
+    },
+    {
+      "d": 0.06,
+      "mu": 25,
+      "lam": 0.035
+    },
+    {
+      "d": 0.008,
+      "mu": 150,
+      "lam": 1.0
+    }
+  ],
+  "interfaces": [
+    2,
+    4
+  ],
+  "interface_mass": [
+    0.783,
+    0.089
+  ],
+  "total_condensed": 0.872,
+  "total_evaporable": 3.197,
+  "elevations": [
+    [
+      -25,
+      true
+    ],
+    [
+      0,
+      true
+    ],
+    [
+      699.999,
+      true
+    ],
+    [
+      700,
+      true
+    ],
+    [
+      700.001,
+      false
+    ],
+    [
+      2030,
+      false
+    ]
+  ]
+}

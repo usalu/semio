@@ -1,0 +1,35 @@
+--- a/🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️owned/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️owned/🦀️.rs
+@@ -29,3 +29,4 @@
+ 
+-fn unquoted_receiving_work(fuel: u64) -> u64 {
++/// ⛽️ Shares the bounded automatic Work quote with callers that price their physical axes.
++pub fn unquoted_receiving_work(fuel: u64) -> u64 {
+     fuel.div_ceil(2).min(UNQUOTED_RECEIVING_WORK)
+--- a/🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs
+@@ -84,3 +84,3 @@
+ mod original_job_decoder;
+-pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput,original_receiving_scope_headroom};
++pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput,original_receiving_scope_headroom,unquoted_receiving_work};
+ //#endregion 📄️RetainedPayload
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️receiving/🏗️steps/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️receiving/🏗️steps/🦀️.rs
+@@ -86,4 +86,4 @@
+ }
+-/// 🪙️ The work one receiving scope is quoted: half of the turn's fuel, the framework's own unquoted scope rule, so the held scope never starves the turn that drives it.
+-pub fn receiving_units(fuel:u64)->u64{fuel.div_ceil(2)}
++/// 🪙️ Uses the framework’s bounded default Work quote with the plugin’s exact physical demand.
++pub fn receiving_units(fuel:u64)->u64{semio_framework_job::unquoted_receiving_work(fuel)}
+ /// 🔀️ The smallest demand that funds both of two alternative steps of one turn.
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️receiving/🧾️copies/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🛬️receiving/🧾️copies/🦀️.rs
+@@ -5 +5 @@
+-use crate::original_steps::{settled_grant,admission_demand,admission_return_demand,admission_settle,admission_step,adopted,begun,built,built_with,construction,fixed,funded,receipt,replied,retired,retired_native,retired_poll,scoped,unbuilt,unit};
++use crate::original_steps::{settled_grant,admission_demand,admission_return_demand,admission_settle,admission_step,adopted,begun,built,built_with,construction,fixed,funded,receipt,receiving_units,replied,retired,retired_native,retired_poll,scoped,unbuilt,unit};
+@@ -20 +20 @@
+-  3=>{let source=self.source.as_ref().ok_or_else(invalid)?.try_borrow()?;let body=self.body;let cursor=self.cursor.as_mut().ok_or_else(invalid)?;let maximum=cx.fuel_remaining();let d=cursor.advance_demands(source,body,maximum)?;scoped(cx,d,|effect|replied::<OriginalRetirementFailure>(effect,|effect,reply|cursor.advance_into(source,body,maximum,effect,reply).map(drop)))?;if cursor.output_ready(){self.phase=4}},
++  3=>{let source=self.source.as_ref().ok_or_else(invalid)?.try_borrow()?;let body=self.body;let cursor=self.cursor.as_mut().ok_or_else(invalid)?;let maximum=receiving_units(cx.fuel_remaining());let d=cursor.advance_demands(source,body,maximum)?;scoped(cx,d,|effect|replied::<OriginalRetirementFailure>(effect,|effect,reply|cursor.advance_into(source,body,maximum,effect,reply).map(drop)))?;if cursor.output_ready(){self.phase=4}},
+@@ -36 +36 @@
+-   3=>self.cursor.as_ref().ok_or_else(invalid)?.advance_demands(self.source.as_ref().ok_or_else(invalid)?.try_borrow()?,self.body,fuel)?,
++   3=>self.cursor.as_ref().ok_or_else(invalid)?.advance_demands(self.source.as_ref().ok_or_else(invalid)?.try_borrow()?,self.body,receiving_units(fuel))?,

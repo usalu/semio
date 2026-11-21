@@ -266,7 +266,7 @@ pub fn every_command() -> Vec<FlowCommand> {
         FlowCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "g1".into() }),
         FlowCommand::SelectGeneration(select_generation::SelectGeneration { id: "g1".into() }),
         FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
-        FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_os_kernel::DslValue::float(5.0) }),
+        FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), field_index: Some(1), value: semio_os_kernel::DslValue::float(5.0) }),
         FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: FLOW_PLAY_WINDOW_MAIN.into() }),
         FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output: Some(semio_framework_pack_json::from_json_str(r#"{"cancellable":false,"done":true,"phase":"complete","unitsDone":1,"unitsTotal":1,"output":{}}"#,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) }),
         FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),

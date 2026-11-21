@@ -691,6 +691,36 @@
       "reuseEn": "Extrude Mesh Faces",
       "reuseDe": "Mesh-Flächen extrudieren"
     },
+    "catalogue_brep_mesh_bridge": {
+      "nativeEn": "Bridge Mesh Boundary Loops",
+      "nativeDe": "Mesh-Randschleifen verbinden",
+      "reuseEn": "Bridge Mesh Boundary Loops",
+      "reuseDe": "Mesh-Randschleifen verbinden"
+    },
+    "catalogue_brep_mesh_intersect": {
+      "nativeEn": "Intersect Convex Meshes",
+      "nativeDe": "Konvexe Netze schneiden",
+      "reuseEn": "Intersect Convex Meshes",
+      "reuseDe": "Konvexe Netze schneiden"
+    },
+    "catalogue_brep_mesh_difference": {
+      "nativeEn": "Subtract Convex Mesh",
+      "nativeDe": "Konvexes Netz abziehen",
+      "reuseEn": "Subtract Convex Mesh",
+      "reuseDe": "Konvexes Netz abziehen"
+    },
+    "catalogue_brep_mesh_union": {
+      "nativeEn": "Union Convex Meshes",
+      "nativeDe": "Konvexe Netze vereinigen",
+      "reuseEn": "Union Convex Meshes",
+      "reuseDe": "Konvexe Netze vereinigen"
+    },
+    "catalogue_brep_mesh_extrude_boundary": {
+      "nativeEn": "Extrude Mesh Boundary Edges",
+      "nativeDe": "Mesh-Randkanten extrudieren",
+      "reuseEn": "Extrude Mesh Boundary Edges",
+      "reuseDe": "Mesh-Randkanten extrudieren"
+    },
     "catalogue_brep_mesh_fill_holes": {
       "nativeEn": "Fill Mesh Holes",
       "nativeDe": "Mesh-Löcher schließen",

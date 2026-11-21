@@ -1,8 +1,9 @@
 /* 🤏 The pointer drag states and the spider diagram's paint. */
 
 /* 🤏️ Pointer drag: the ghost follows the pointer, the source dims, the zone under the pointer is highlighted. The ghost
-   is an empty copy of the source's list holding the copy of the source, so the copy is laid out as its source is. A grip refuses panning, so a finger that starts on it does not scroll the page under the drag. */
-[data-course-grip] {
+   is an empty copy of the source's list holding the copy of the source, so the copy is laid out as its source is.
+   An enabled grip reserves the gesture for dragging. */
+[data-course-grip]:not([data-locked]) {
   touch-action: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;

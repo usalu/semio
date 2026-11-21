@@ -71,6 +71,8 @@
     }
   ],
   "cases": [
+    {"name":"sourcing-empty-host-pack","policy":"sourcing","input":"[]","expected":"[]"},
+    {"name":"process-empty-host-pack","policy":"process","input":"[]","expected":"[]"},
     {
       "name": "raw-preserves-invalid-json",
       "policy": "raw",

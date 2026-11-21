@@ -3,13 +3,24 @@
 use crate::standards::v1::subsets::any::schema::content::{jack_content_for_handle,jack_working_scene_from_read,JackContentFactory,JackWorkingScene};
 use crate::standards::v1::subsets::any::schema::content_read::{JackContentRead,JackOwnedContent};
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
-use semio_plugin::{Fault,app::ChildContentView};
-use semio_framework_value::ValueError;
+use crate::standards::v1::subsets::any::schema::graph::GraphEffect;
+use semio_plugin::{Fault,app::{ChildContentView,child_read::ChildReadRegistration,child_editor::registration::ChildEditorRegistration}};
+use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind};
+
+#[path="🪆️child/🦀️.rs"]
+mod child;
+pub use child::JackChildQualification;
 
 /// 🏗️ The authored native installation selects members, live bindings, genesis and format assembly.
 pub trait JackComposition:JackContentFactory+Default+Clone+Send+Sync+'static{
     type Members:store::ReferenceSpaceMember+store::MemberFactory+Send+'static;
     type Read<'a>:JackContentRead+'a;
+    type ContentSnapshot: RetireOwned + store::StoreState;
+    type ContentMutation: protocol::SemanticMutation<Self::ContentSnapshot> + protocol::OpBinary + RetireOwned;
+    fn child_editor() -> Option<(&'static ChildReadRegistration<Self::ContentSnapshot>, &'static ChildEditorRegistration<Self::ContentSnapshot>)> { None }
+    fn child_mutations(_: &Self::ContentSnapshot, _: &[GraphEffect]) -> Result<Vec<Self::ContentMutation>, ValueError> {
+        Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "Jack composition has no content mutation producer"))
+    }
     fn initial_snapshot()->JackSnapshot;
     fn example_snapshot(id:&str)->Option<JackSnapshot>;
     fn initial_viewer_snapshot()->JackSnapshot;

@@ -4,7 +4,7 @@
  */
 
 import { decodeDagHoverJson } from "@semio-tech/framework/infinite/board/io/text/dag-input";
-import { useCallback, useEffect, type DragEvent, type MouseEvent } from "../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useRef, type DragEvent, type MouseEvent } from "../../⚛️react-port/🟦️.ts";
 import {
   CATALOGUE_DRAG_MIME,
   getActiveCatalogueDragPayload,
@@ -17,7 +17,8 @@ import {
   flowAddWidgetArgs,
   flowJsonText,
   nodeGraphInputDecodeControl,
-  nodeGraphPickChannel,
+  projectedFlowPortCode,
+  type FlowGraphChannel,
   publishNodeGraphHover,
   resolveHostSnapshotWidgetInstanceId
 } from "../🧰️graph-core/🟦️.ts";
@@ -41,9 +42,10 @@ export type FlowCoreAfterFlowPickAndSpotlight = FlowCoreAfterFlowSessionAttach &
 export function useFlowPickAndSpotlight(core: FlowCoreAfterFlowSessionAttach) {
   const {
     scene, editable, sessionRef, schedulerRef, containerRef, labelStateJson, sessionReady, spotlight, setSpotlight,
-    setSpotlightSections, appCatalogue, pickTargetsRef, sceneRef, dispatch, paintOverlays, renderFlow, interactionLedger,
+    setSpotlightSections, appCatalogue, sceneRef, dispatch, paintOverlays, renderFlow, interactionLedger,
     hoverRequestRef, emitInteractionState
   } = core;
+  const pointerPickRevision = useRef(0);
   const flowGraphCanvasHostShellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
     () => {
@@ -57,48 +59,59 @@ export function useFlowPickAndSpotlight(core: FlowCoreAfterFlowSessionAttach) {
   );
 
   const pickInteraction = useCanvasPickInteraction({
-    resolveTargetsAtClient: (client) => {
+    resolveTargetsAtClientAsync: async (client, signal) => {
       const session = sessionRef.current;
       const container = containerRef.current;
       if (!session || !container) return [];
+      pointerPickRevision.current += 1;
+      const revision = interactionLedger.sceneHoverRevision;
       const rect = container.getBoundingClientRect();
-      const sx = client.x - rect.left;
-      const sy = client.y - rect.top;
-      observeFlowTask(session, "pickTargetsAtScreenJson:pointer", session.pickTargetsAtScreenJson(sx, sy), (value) => {
-        try {
-          pickTargetsRef.current = JSON.parse(flowJsonText(value)) as CanvasPickTarget[];
-        } catch {
-          pickTargetsRef.current = [];
+      const task = session.pickTargetsAtScreenJson(client.x - rect.left, client.y - rect.top);
+      const cancel = () => task.cancel();
+      signal.addEventListener("abort", cancel, { once: true });
+      try {
+        const value = await readObservedFlowTask(session, "pickTargetsAtScreenJson:pointer", task);
+        signal.throwIfAborted();
+        if (sessionRef.current !== session || revision !== interactionLedger.sceneHoverRevision) {
+          throw new DOMException("The graph hover source changed", "AbortError");
         }
-      });
-      return [...pickTargetsRef.current];
+        const targets = JSON.parse(flowJsonText(value));
+        return Array.isArray(targets) ? targets as CanvasPickTarget[] : [];
+      } finally {
+        signal.removeEventListener("abort", cancel);
+      }
     },
     onHoverFocus: (focus) => {
       const session = sessionRef.current;
       if (!session) return;
       const request = ++hoverRequestRef.current;
       const sceneHoverRevision = interactionLedger.sceneHoverRevision;
-      const isCurrent = () => sessionRef.current === session && request === hoverRequestRef.current && sceneHoverRevision === interactionLedger.sceneHoverRevision;
+      const pickRevision = pointerPickRevision.current;
+      const isCurrent = () => sessionRef.current === session && request === hoverRequestRef.current
+        && pickRevision === pointerPickRevision.current && sceneHoverRevision === interactionLedger.sceneHoverRevision;
       const target = focus.target;
-      const channel = nodeGraphPickChannel(target);
+      const channel = target?.domain === "handle" ? (target as CanvasPickTarget & { channel?: FlowGraphChannel }).channel : undefined;
       interactionLedger.beginLocalHover();
-      setFlowSessionHover(session, channel
-        ? { hoveredId: channel.nodeId, portId: channel.portId }
+      const mark = channel
+        ? { hoveredId: channel.widgetId, portId: channel.port, portDirection: channel.direction }
         : target?.domain === "edge"
           ? { edgeId: target.id }
-          : { hoveredId: target?.id });
-      void Promise.all([
-        readObservedFlowTask(session, "hoveredWidgetId:pointer", session.hoveredWidgetId()),
-        readObservedFlowTask(session, "hoveredChannelJson:pointer", session.hoveredChannelJson()),
-      ]).then(async ([hoveredValue, channelValue]) => {
-        const hoveredId = typeof hoveredValue === "string" ? hoveredValue : undefined;
-        const hover = await decodeDagHoverJson(flowJsonText(channelValue), nodeGraphInputDecodeControl(isCurrent, () => schedulerRef.current?.invalidate()));
+          : { hoveredId: target?.id };
+      setFlowSessionHover(session, mark, () => {
         if (!isCurrent()) return;
-        const portId=hover.channel?.port;
-        const edgeId=hover.edge ?? undefined;
-        if (interactionLedger.publishHover({ hoveredId, portId, edgeId }, sceneHoverRevision)) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hoveredId, portId, edgeId);
-      }).catch(() => {});
-      schedulerRef.current?.invalidate();
+        void Promise.all([
+          readObservedFlowTask(session, "hoveredWidgetId:pointer", session.hoveredWidgetId()),
+          readObservedFlowTask(session, "hoveredChannelJson:pointer", session.hoveredChannelJson()),
+        ]).then(async ([hoveredValue, channelValue]) => {
+          const hover = await decodeDagHoverJson(flowJsonText(channelValue), nodeGraphInputDecodeControl(isCurrent, () => schedulerRef.current?.invalidate()));
+          const hoveredId = hover.channel?.widgetId ?? (typeof hoveredValue === "string" ? hoveredValue : undefined);
+          if (!isCurrent()) return;
+          const portId = hover.channel && projectedFlowPortCode(sceneRef.current.nodes, hover.channel);
+          const edgeId = hover.edge ?? undefined;
+          if (interactionLedger.publishHover({ hoveredId, portId, edgeId }, sceneHoverRevision)) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hoveredId, portId, edgeId);
+        }).catch(() => {});
+        schedulerRef.current?.invalidate();
+      });
     },
     onSelectTarget: () => {
       emitInteractionState();

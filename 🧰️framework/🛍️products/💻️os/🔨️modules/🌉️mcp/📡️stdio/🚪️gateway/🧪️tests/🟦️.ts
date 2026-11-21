@@ -2,7 +2,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import policy from "../🧬️schema/🔣️.json";
 import { expect, test } from "bun:test";
-import { InitializeResultSchema, JSONRPCErrorSchema, ListToolsResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import { CancelledNotificationSchema, InitializeResultSchema, JSONRPCErrorSchema, ListToolsResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import { PassThrough } from "node:stream";
 import { serveWarmMcpGateway, WarmMcpGateway, type WarmMcpFrame, warmMcpReply } from "../🟦️.ts";
 import corpus from "./🔣️.json";
@@ -38,11 +38,29 @@ test("warm gateway replies satisfy the reference SDK schemas", () => {
     const reply = warmMcpReply(row.request as WarmMcpFrame) as { result?: unknown } | null;
     if (reply === null) continue;
     if (row.request.method === "initialize") expect(InitializeResultSchema.safeParse(reply.result).success).toBe(true);
-    if (row.request.method === "tools/list") expect(ListToolsResultSchema.safeParse(reply.result).success).toBe(true);
   }
   const failed = replay(corpus.journeys.find((journey) => journey.name === "staging-failed")!.steps as Step[]).flatMap((entry) => (entry.toClient?.error === undefined ? [] : [entry.toClient]));
-  expect(failed.length).toBe(2);
-  for (const frame of failed) expect(JSON.stringify(JSONRPCErrorSchema.safeParse(frame).success)).toBe("true");
+  expect(failed.map((frame) => frame.id)).toEqual([2, 3, 4, 5]);
+  for (const frame of failed) expect(JSONRPCErrorSchema.safeParse(frame).success).toBe(true);
+});
+
+test("queued cancellation agrees with the reference SDK and SQLite", () => {
+  const journey = corpus.journeys.find(row => row.name === "cancel-before-dispatch")!;
+  const staged = journey.steps.findIndex(step => step.staged === 0);
+  const frames = journey.steps.slice(0, staged).map(step => step.client);
+  const { params } = CancelledNotificationSchema.parse(frames.pop());
+  const late = CancelledNotificationSchema.parse(journey.steps[staged + 1]!.client);
+  const db = new Database(":memory:");
+  try {
+    const outstanding = db.query("select value from json_each(?1) where json_extract(value, '$.id') is not ?2 order by key")
+      .all(JSON.stringify(frames), params.requestId) as { value: string }[];
+    expect(replay(journey.steps as Step[]).map(entry => entry.toServer)).toEqual([
+      ...outstanding.map(row => JSON.parse(row.value)),
+      { jsonrpc: "2.0", ...late },
+    ]);
+  } finally {
+    db.close();
+  }
 });
 
 const peer = String.raw`const rl=require('node:readline').createInterface({input:process.stdin});rl.on('line',line=>{const m=JSON.parse(line);if(m.method==='initialize')process.stdout.write(JSON.stringify({jsonrpc:'2.0',id:m.id,result:{protocolVersion:m.params.protocolVersion,capabilities:{tools:{}},serverInfo:{name:'semio',version:'peer'}}})+'\n');else if(m.method==='tools/list')process.stdout.write('not json\n'+JSON.stringify({jsonrpc:'2.0',id:m.id,result:{tools:[{name:'peer-tool',inputSchema:{type:'object'}}]}})+'\n')});rl.on('close',()=>process.exit(0));`;
@@ -80,13 +98,13 @@ test("warm gateway serves a client while staging runs, then splices in the real 
   expect(InitializeResultSchema.safeParse(lines.find((frame) => frame.id === 1)!.result).success).toBe(true);
   send({ jsonrpc: "2.0", method: "notifications/initialized" });
   send({ jsonrpc: "2.0", id: 2, method: "tools/list" });
-  await until(() => lines.some((frame) => frame.id === 2));
-  expect((lines.find((frame) => frame.id === 2)!.result as { tools: unknown[] }).tools).toEqual([]);
+  send({ jsonrpc: "2.0", id: 3, method: "ping" });
+  await until(() => lines.some((frame) => frame.id === 3));
+  expect(lines.some((frame) => frame.id === 2)).toBe(false);
   release(0);
   await until(() => lines.some((frame) => frame.method === "notifications/prompts/list_changed"));
-  send({ jsonrpc: "2.0", id: 3, method: "tools/list" });
-  await until(() => lines.some((frame) => frame.id === 3));
-  expect(ListToolsResultSchema.parse(lines.find((frame) => frame.id === 3)!.result).tools[0]?.name).toBe("peer-tool");
+  await until(() => lines.some((frame) => frame.id === 2));
+  expect(ListToolsResultSchema.parse(lines.find((frame) => frame.id === 2)!.result).tools[0]?.name).toBe("peer-tool");
   expect(lines.every((frame) => frame.jsonrpc === "2.0")).toBe(true);
   input.end();
   expect(await served).toBe(0);
@@ -99,6 +117,27 @@ test("warm gateway ends cleanly when the client leaves during staging", async ()
   input.end();
   expect(await served).toBe(0);
   expect(aborted).toBe(true);
+});
+
+test("a peer that exits before the native handshake fails discovery and the launcher", async () => {
+  const input = new PassThrough();
+  const output = new PassThrough();
+  let wire = "";
+  output.on("data", (chunk: Buffer) => { wire += chunk.toString(); });
+  const { peerStatus, gatewayStatus, errorCode } = corpus.earlyPeerExit;
+  const served = serveWarmMcpGateway({ stage: async () => 0, command: () => process.execPath, args: ["-e", `process.exit(${peerStatus})`], cwd: process.cwd(), env: process.env, input, output });
+  for (const frame of [
+    corpus.replies[0]!.request,
+    { jsonrpc: "2.0", method: "notifications/initialized" },
+    { jsonrpc: "2.0", id: 2, method: "tools/list" },
+  ]) input.write(JSON.stringify(frame) + "\n");
+  try {
+    expect(await served).toBe(gatewayStatus);
+    const failure = wire.trim().split("\n").map(line => JSON.parse(line)).find(frame => frame.id === 2);
+    expect(JSONRPCErrorSchema.parse(failure).error.code).toBe(errorCode);
+  } finally {
+    input.end();
+  }
 });
 
 test("warm gateway never starts a peer after client EOF and late staging settlement", async () => {

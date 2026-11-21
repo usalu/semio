@@ -11,6 +11,7 @@ type Din4108Diff {
   zones: Din4108ZoneDelta! @state(class: ARTIFACT)
   elements: Din4108ElementDelta! @state(class: ARTIFACT)
   thermalBridges: Din4108ThermalBridgeDelta! @state(class: ARTIFACT)
+  cases: CaseRowDelta! @state(class: ARTIFACT)
 }
 
 type Din4108WindowDelta {
@@ -199,4 +200,104 @@ type Din4108ThermalBridgePatch {
   psi: Float
   lengthM: Float
   bb2Type: String
+}
+
+type CaseNumberPatch {
+  value: Float
+}
+
+type CaseNumberRemoval {
+  id: String!
+  index: Int!
+}
+
+type CaseNumberInsertion {
+  index: Int!
+  row: CaseNumber!
+}
+
+type CaseNumberRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type CaseNumberModification {
+  id: String!
+  patch: CaseNumberPatch!
+}
+
+type CaseNumberDelta {
+  removed: [CaseNumberRemoval!]!
+  inserted: [CaseNumberInsertion!]!
+  moved: [CaseNumberRelocation!]!
+  modified: [CaseNumberModification!]!
+}
+
+type CaseTextPatch {
+  value: String
+}
+
+type CaseTextRemoval {
+  id: String!
+  index: Int!
+}
+
+type CaseTextInsertion {
+  index: Int!
+  row: CaseText!
+}
+
+type CaseTextRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type CaseTextModification {
+  id: String!
+  patch: CaseTextPatch!
+}
+
+type CaseTextDelta {
+  removed: [CaseTextRemoval!]!
+  inserted: [CaseTextInsertion!]!
+  moved: [CaseTextRelocation!]!
+  modified: [CaseTextModification!]!
+}
+
+type CaseRowPatch {
+  labelEn: String
+  labelDe: String
+  entryId: String
+  numbers: CaseNumberDelta
+  texts: CaseTextDelta
+}
+
+type CaseRowRemoval {
+  id: String!
+  index: Int!
+}
+
+type CaseRowInsertion {
+  index: Int!
+  row: CaseRow!
+}
+
+type CaseRowRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+
+type CaseRowModification {
+  id: String!
+  patch: CaseRowPatch!
+}
+
+type CaseRowDelta {
+  removed: [CaseRowRemoval!]!
+  inserted: [CaseRowInsertion!]!
+  moved: [CaseRowRelocation!]!
+  modified: [CaseRowModification!]!
 }

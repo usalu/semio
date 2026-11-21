@@ -95,6 +95,9 @@ function lifecycleReceipt(raw, activationGeneration) {
 }
 
 function normalizeCommandIngress(status) {
+  const originalMediaAck = optionValue(status.originalMediaAck);
+  if (originalMediaAck !== undefined && originalMediaAck !== null) return { tag: "original-media-ack", val: originalMediaAck };
+
   const tag = commandIngressKinds.get(status.kind);
   if (!tag) throw new Error(\`unknown command ingress kind: \${status.kind}\`);
   if (tag === "idle") return { tag };

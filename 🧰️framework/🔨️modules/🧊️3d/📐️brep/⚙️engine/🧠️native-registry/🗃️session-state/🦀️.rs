@@ -78,6 +78,28 @@ impl BrepRegistry {
         self.live.get(handle).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "geometry query requires a live handle"))
     }
 
+    /// 🧷️ Borrows a registered analytic support and any owning edge's parameter trim.
+    pub fn original_intersection_curve(&self, handle: &str) -> Result<(&Curve3, Option<(f64, f64)>), ValueError> {
+        match self.original_query_entity(handle)? {
+            Entity::Curve(curve, _) => Ok((curve, None)),
+            Entity::Edge(id) => {
+                let edge = self.body.edges.get(*id).ok_or_else(|| ValueError::invariant("live edge record is missing"))?;
+                let curve = self.body.curves3.get(edge.curve).ok_or_else(|| ValueError::invariant("live edge curve is missing"))?;
+                Ok((curve, Some(edge.range)))
+            }
+            _ => Err(ValueError::literal(ValueRefusalKind::InvalidValue, "curve intersection requires original curves or edges")),
+        }
+    }
+
+    /// 🪜️ Quotes the registered handle and any edge and supporting curve arena paths.
+    pub fn original_intersection_curve_depth(&self, handle: &str) -> Result<usize, ValueError> {
+        let depth = self.tessellation_source_depth_demand(handle)?;
+        let Entity::Edge(id) = self.original_query_entity(handle)? else { return Ok(depth); };
+        let edge = self.body.edges.get(*id).ok_or_else(|| ValueError::invariant("live edge record is missing"))?;
+        Ok(depth.max(self.body.edges.next_remove_depth_demand(*id)?)
+            .max(self.body.curves3.next_remove_depth_demand(edge.curve)?))
+    }
+
     /// 🧊️ Quotes the original borrowed handle index before cold query admission.
     pub fn tessellation_source_depth_demand(&self,source:&str)->Result<usize,semio_framework_value::ValueError>{self.live.next_contains_depth_demand(source)}
 }

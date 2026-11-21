@@ -80,6 +80,13 @@ impl<'ctx> PointerCtx<'ctx> {
                 semio_ui_declaration::ui::SurfaceKind::World3d => {
                     if let Some(state) = self.surfaces.world3d_states.get_mut(&cancelled.host_id) {
                         infinite_world::world::world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene);
+                        if state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
+                            && infinite_world::world::enqueue_world3d_events(&mut state.authority, [
+                                infinite_world::world::WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::CaptureLost)
+                            ]).is_err()
+                        {
+                            debug_log("[DEBUG] world3d terrain capture cancel reached the intent queue limit");
+                        }
                     }
                 }
                 semio_ui_declaration::ui::SurfaceKind::NodeGraph => {

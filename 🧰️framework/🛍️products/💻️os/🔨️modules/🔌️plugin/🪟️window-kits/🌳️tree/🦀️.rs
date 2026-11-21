@@ -203,6 +203,17 @@ impl PanelTreeBuilder {
         Ok(self)
     }
 
+    /// 🧮️ Builds a complete body with one indexed section and reserves the actual item cost of its fixed tree and section.
+    pub fn indexed_body(namespace: &str, windows: &TreeWindows<'_>, id: &str, label: Label, total: usize, row: impl FnMut(usize) -> UiAssemblyResult<BuiltNode>) -> UiAssemblyResult<BuiltNode> {
+        if windows.nodes_remaining() != TREE_WINDOW_BODY_NODE_BUDGET || windows.items_remaining() != TREE_WINDOW_BODY_ITEM_BUDGET {
+            return Err(ui_assembly_error("panel-tree.indexed-body-ledger"));
+        }
+        let chrome = Self::new(namespace)?.section(id, Some(label.clone()), true, UiFixedList::default())?.build()?;
+        let fixed_items = semio_ui_runtime::surface_subtree_items(&chrome).map_err(|_| ui_assembly_error("panel-tree.indexed-body-chrome"))?;
+        windows.items.set(semio_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS.saturating_sub(1 + fixed_items));
+        Self::new(namespace)?.window_indexed_section(windows, id, Some(label), true, total, row)?.build()
+    }
+
     /// 🪟️ [`Self::window_section`] with an empty-state placeholder row — see
     /// [`tree_window_section_or_placeholder`].
     pub fn window_section_or_placeholder<T, L: TryInto<Label>>(
@@ -388,15 +399,25 @@ pub struct TreeWindows<'a> {
     budget: std::cell::Cell<u32>,
     nodes: std::cell::Cell<isize>,
     items: std::cell::Cell<usize>,
+    row_items: std::cell::Cell<Option<usize>>,
     reserved: std::cell::Cell<usize>,
     claimed: std::cell::RefCell<Vec<String>>,
     path: std::cell::RefCell<Vec<String>>,
+    resource_scope: Option<(&'a ViewModel, String)>,
 }
 
 impl<'a> TreeWindows<'a> {
     /// 🪟️ Every request the host filed for `body_key`, plus its measured viewport budget.
     pub fn for_body(view: &'a ViewModel, body_key: &str) -> Self {
-        Self::seated(view.tree_windows.iter().filter(|request| request.body_key == body_key), view.tree_viewport_rows.unwrap_or(TREE_WINDOW_DEFAULT_ROWS))
+        let requests = view.tree_windows.iter().filter(|request| {
+            request.body_key == body_key && (request.open.is_some() || request.rows != 1
+                || ui::window_resource::WindowResourcePage::parse(&format!("{}.1", request.node_key)).is_none())
+        });
+        let mut windows = Self::seated(requests, view.tree_viewport_rows.unwrap_or(TREE_WINDOW_DEFAULT_ROWS));
+        if view.window_id.is_some() {
+            windows.resource_scope = Some((view, body_key.to_owned()));
+        }
+        windows
     }
 
     /// 🪟️ No host state at all (tests, a body the host has never rendered): author defaults and
@@ -429,9 +450,11 @@ impl<'a> TreeWindows<'a> {
             budget: std::cell::Cell::new(viewport_rows),
             nodes: std::cell::Cell::new(TREE_WINDOW_BODY_NODE_BUDGET as isize),
             items: std::cell::Cell::new(TREE_WINDOW_BODY_ITEM_BUDGET),
+            row_items: std::cell::Cell::new(None),
             reserved: std::cell::Cell::new(TREE_WINDOW_BODY_NODE_BUDGET - unreserved),
             claimed: std::cell::RefCell::new(Vec::new()),
             path: std::cell::RefCell::new(Vec::new()),
+            resource_scope: None,
         }
     }
 
@@ -460,6 +483,33 @@ impl<'a> TreeWindows<'a> {
         joined
     }
 
+    /// 🖼️ Builds one image child through its body-owned source route and charges its whole subtree.
+    pub fn retained_image(&self, key: &str, source: &str, alt: Label) -> UiAssemblyResult<Option<BuiltNode>> {
+        use semio_plugin_window_transient::{image_with_source, paged_text_carrier_nodes, WindowResourceRequests};
+        let path = self.path_of(key);
+        let id = format!("framework.tree.image.{:016x}", ui::window_resource::WindowResource::owner_digest("", &path));
+        let resources = self.resource_scope.as_ref().and_then(|(view, body_key)| {
+            Some(WindowResourceRequests { window_id: view.window_id.as_deref()?, body_key, requests: &view.tree_windows })
+        });
+        let inline_nodes = WindowResourceRequests::image_page_nodes();
+        let cost = if resources.is_some() {
+            WindowResourceRequests::image_body_nodes_up_to(source, inline_nodes)
+        } else if UiText::try_from_str(source).is_some() {
+            0
+        } else {
+            paged_text_carrier_nodes(source)
+        };
+        if cost + 1 > self.nodes_remaining().saturating_sub(self.reserved.get()) || cost > inline_nodes {
+            return Ok(None);
+        }
+        let node = match resources {
+            Some(resources) => resources.image_up_to(&id, source, alt, inline_nodes),
+            None => image_with_source(&id, source, alt),
+        }?;
+        self.debit(cost + 1);
+        Ok(Some(node))
+    }
+
     /// 🧾️ Whether the render currently stands inside an enclosing window's row closure — the
     /// container being built there is that row, already charged by its parent.
     fn is_nested(&self) -> bool {
@@ -481,6 +531,25 @@ impl<'a> TreeWindows<'a> {
     /// 🧾️ Reconciliation items windowed rows may still charge — see [`TREE_WINDOW_BODY_ITEM_BUDGET`].
     pub fn items_remaining(&self) -> usize {
         self.items.get()
+    }
+
+    /// 🧮️ Prices an indexed row's fixed subtree before granting its nested windows. The outer row charges the completed subtree.
+    pub fn with_row_chrome<T>(&self, chrome: &BuiltNode, build: impl FnOnce() -> UiAssemblyResult<T>) -> UiAssemblyResult<T> {
+        let budget = self.row_items.get().ok_or_else(|| ui_assembly_error("tree-window.row-scope"))?;
+        let cost = semio_ui_runtime::surface_subtree_items(chrome).map_err(|_| ui_assembly_error("tree-window.row-chrome"))?;
+        let prior = self.items.replace(budget.checked_sub(cost).ok_or_else(|| ui_assembly_error("ui.fixed-capacity"))?);
+        let result = build();
+        self.items.set(prior);
+        result
+    }
+
+    /// 🧾️ Holds the price of one finished row for a sibling window while the current window materialises its rows.
+    pub fn with_sibling_row_reserve<T>(&self, sibling: &BuiltNode, build: impl FnOnce() -> UiAssemblyResult<T>) -> UiAssemblyResult<T> {
+        let reserve = semio_ui_runtime::surface_subtree_items(sibling).map_err(|_| ui_assembly_error("tree-window.sibling-row"))?.min(self.items.get());
+        self.items.set(self.items.get() - reserve);
+        let result = build();
+        self.items.set(self.items.get() + reserve);
+        result
     }
 
     /// 🧾️ Gives back the node records of `rows` a window was granted but did not materialise.
@@ -547,6 +616,13 @@ impl<'a> TreeWindows<'a> {
         let spent = want.min(self.nodes_remaining().saturating_sub(self.reserved.get()));
         self.debit(spent);
         spent
+    }
+
+    /// 🧾️ Charges records owned by a fixed content child without spending another window’s seats.
+    pub fn try_debit_unreserved(&self, records: usize) -> bool {
+        if records > self.nodes_remaining().saturating_sub(self.reserved.get()) { return false; }
+        self.debit(records);
+        true
     }
 
     fn seat(&self, node_key: &str) -> Option<&(&'a TreeWindowRequest, std::cell::Cell<usize>)> {
@@ -660,7 +736,9 @@ pub(crate) fn tree_window_indexed_rows<B: HasChildren>(mut builder: B, windows: 
         }
         windows.path.borrow_mut().push(id.to_owned());
         windows.items.set(items - (items / 4).min(TREE_WINDOW_ROW_OWN_ITEMS));
+        let enclosing_items = windows.row_items.replace(Some(items));
         let materialised = row(index);
+        windows.row_items.set(enclosing_items);
         windows.path.borrow_mut().pop();
         let node = match materialised {
             Ok(node) => node,

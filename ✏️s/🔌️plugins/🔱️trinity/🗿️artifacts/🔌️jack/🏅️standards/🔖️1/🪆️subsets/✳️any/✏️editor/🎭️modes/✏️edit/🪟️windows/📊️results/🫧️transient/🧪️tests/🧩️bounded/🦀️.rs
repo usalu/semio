@@ -1,8 +1,9 @@
 //! 🧪️ Large query output moves once and retires through exact tracked ownership.
 
-use crate::editor::jack::transient::results_window::{schema};
 use crate::editor::jack::transient::results_window::*;
 use semio_plugin::WindowTransientOwner;
+use semio_framework_job::{OriginalRetirementPump, OriginalRetirementTurn};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneStep, RetainedWorkPoll};
 
 /// 🎟️ One five-currency one-item grant whose byte currencies all equal `bytes`.
 fn one_item_grant(items: usize, bytes: usize) -> store::os_store::one_item::ArtifactStoreOneItemGrant {
@@ -14,19 +15,27 @@ fn maintenance_grant(bytes: usize) -> semio_framework_value::retained_clone::Ret
     one_item_grant(1, bytes).retained_grant()
 }
 
-fn close_publication(publication: &mut store::ArtifactEphemeralOneItemPublication<JackResultsWindowTransient, JackResultsWindowTransientMutation>) {
+fn close_publication(turn: &mut OriginalRetirementTurn, publication: &mut store::ArtifactEphemeralOneItemPublication<JackResultsWindowTransient, JackResultsWindowTransientMutation>) {
     publication.begin_close();
+    let body = crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES;
     for _ in 0..65_536 {
         if publication.terminal_is_empty() {
             return;
         }
-        let demand = publication.retirement_demands(crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack results publication close quote");
-        let funded = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
-        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: funded.maximum_items, maximum_copy_bytes: funded.maximum_copy_bytes, maximum_capacity_bytes: funded.maximum_capacity_bytes, maximum_release_bytes: funded.maximum_release_bytes, maximum_depth: funded.maximum_depth };
-        let step = publication.close_step(grant).expect("Jack results publication close");
-        assert!(step.progress().fits(funded));
+        let demand = publication.retirement_demands(body).expect("Jack results publication close quote");
+        let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
+        assert!(retirement_turn(turn, grant, |effect| publication.close_step(body, effect)).progress().fits(grant));
     }
     assert!(publication.terminal_is_empty());
+}
+
+/// 💳️ Funds one publication retirement action from an exact test loan.
+fn retirement_turn(turn: &mut OriginalRetirementTurn, grant: RetainedCloneGrant, close: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll) -> RetainedCloneStep {
+    let (poll, _) = turn.with_effect(|effect| close(&mut effect.nested(grant))).unwrap().expect("results retirement admitted");
+    match poll {
+        RetainedWorkPoll::Complete(turn) => turn.result.expect("results retirement step"),
+        RetainedWorkPoll::Pending { .. } => RetainedCloneStep::Progress(Default::default()),
+    }
 }
 
 #[test]
@@ -35,7 +44,11 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     let payload = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);
     assert!(payload.len() > fixture["payload"]["minimumUtf8Bytes"].as_u64().unwrap() as usize);
     let payload_pointer = payload.as_ptr();
+    let payload_bytes = payload.len();
+    let mut accepted = |_| true;
+    let mut receiving = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut accepted);
     let owners = JackResultsWindowTransientOwner::build_owners();
+    let mut pump = OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), maintenance_grant(65_536)).unwrap();
     let mut state = store::TransientStore::<JackResultsWindowTransient, JackResultsWindowTransientMutation>::new(Default::default());
     let held_base = state.current_read().unwrap();
     let mutation = JackResultsWindowTransientMutation::ReplaceQueryResult(ReplaceQueryResult {
@@ -45,14 +58,25 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     });
     let mut publication =
         state.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, mutation, owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap_or_else(|rejected| panic!("large Jack result admission: {}", rejected.reason));
-    let zero = one_item_grant(fixture["grants"]["blocked"]["maximumItems"].as_u64().unwrap() as usize, fixture["grants"]["blocked"]["maximumBytes"].as_u64().unwrap() as usize);
-    assert!(matches!(state.advance_publish_one(&mut publication, zero).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
-    assert_eq!(publication.progress().completed_items, 0);
-    let grant = one_item_grant(fixture["grants"]["advance"]["maximumItems"].as_u64().unwrap() as usize, fixture["grants"]["advance"]["maximumBytes"].as_u64().unwrap() as usize);
+    use store::os_store::one_item_publication::ArtifactStoreOneItemAdvance;
+    let fixture_grant = |name: &str| {
+        let grant = &fixture["grants"][name];
+        one_item_grant(grant["maximumItems"].as_u64().unwrap() as usize, grant["maximumBytes"].as_u64().unwrap() as usize)
+    };
+    for name in ["blocked", "undersized"] {
+        assert!(matches!(state.advance_publish_one(&mut publication, fixture_grant(name), &mut receiving).unwrap(), ArtifactStoreOneItemAdvance::Blocked));
+        assert_eq!(publication.progress().completed_items, 0);
+    }
+    let grant = fixture_grant("advance");
+    assert!(grant.maximum_copy_bytes < payload_bytes);
     for _ in 0..16 {
-        if matches!(state.advance_publish_one(&mut publication, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
-            assert!(publication.acknowledge());
-            break;
+        match state.advance_publish_one(&mut publication, grant, &mut receiving).unwrap() {
+            ArtifactStoreOneItemAdvance::Published(..) => {
+                assert!(publication.acknowledge());
+                break;
+            }
+            ArtifactStoreOneItemAdvance::PreparationProgress(..) | ArtifactStoreOneItemAdvance::Progress(..) => {}
+            _ => panic!("results publication stopped in {:?}: {:?}", publication.phase(), publication.fault()),
         }
     }
     let published = state.current_root();
@@ -62,13 +86,13 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     assert_eq!(published.query_execution_id.as_deref(), fixture["published"]["queryExecutionId"].as_str());
     let kind: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&result.kind)).unwrap();
     assert_eq!(kind, fixture["published"]["kind"]);
-    close_publication(&mut publication);
+    close_publication(&mut pump, &mut publication);
     assert_eq!(held_base.query_execution_id, None);
-    assert!(matches!(state.maintenance_returned_reads_step(&owners.state_retirement, maintenance_grant(65_536)).unwrap(), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)));
+    assert!(matches!(retirement_turn(&mut pump, maintenance_grant(65_536), |effect| state.maintenance_returned_reads_step(&owners.state_retirement, effect)), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)));
     assert!(!state.returned_reads_terminal_is_empty(), "the live tracked alias must remain visible to terminal ownership");
     drop(held_base);
     for _ in 0..128 {
-        if matches!(state.maintenance_returned_reads_step(&owners.state_retirement, maintenance_grant(65_536)).unwrap(), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+        if matches!(retirement_turn(&mut pump, maintenance_grant(65_536), |effect| state.maintenance_returned_reads_step(&owners.state_retirement, effect)), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             break;
         }
     }
@@ -79,20 +103,21 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     let mut cancellation =
         state.begin_publish_one_leased(semio_framework_job::OperationId(2), 1, cancelled, owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap_or_else(|rejected| panic!("cancellation admission: {}", rejected.reason));
     assert!(state.cancel_publish_one(&mut cancellation));
-    assert!(matches!(state.advance_publish_one(&mut cancellation, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
-    close_publication(&mut cancellation);
+    assert!(matches!(state.advance_publish_one(&mut cancellation, grant, &mut receiving).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
+    close_publication(&mut pump, &mut cancellation);
     assert!(std::sync::Arc::ptr_eq(&before_cancel, &state.current_root()));
     drop(before_cancel);
     drop(published);
 
     let mut retirement = state.begin_retirement(Default::default(), owners.state_retirement.clone());
+    let body = crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES;
     for _ in 0..65_536 {
         if retirement.terminal_is_empty() {
             break;
         }
-        let demand = retirement.retirement_demands(crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("all Jack results aliases were returned");
+        let demand = retirement.retirement_demands(body).expect("all Jack results aliases were returned");
         let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
-        assert!(retirement.close_step(grant).unwrap().progress().fits(grant));
+        assert!(retirement_turn(&mut pump, grant, |effect| retirement.close_step(body, effect)).progress().fits(grant));
     }
     assert!(retirement.terminal_is_empty());
 }

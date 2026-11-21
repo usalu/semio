@@ -2,10 +2,66 @@
 
 use super::*;
 
+/// 📈️ Writes one field under an original grant and retains its ID across solver previews.
+pub(super) fn publish_visual_field(
+    fields: &mut semio_s_fem_analyses_model::AssemblyOrder<NodeLiveField>,
+    index: usize,
+    id: &str,
+    mut field: NodeLiveField,
+    cx: &mut StepContext<'_>,
+) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    let grant = cx.retained_grant();
+    let append = index == fields.len();
+    let invalid = |detail| ValueError::literal(ValueRefusalKind::InvariantViolated, detail);
+    if append && fields.capacity() == fields.len() {
+        let target = fields.whole_page_capacity(index + 1);
+        semio_s_fem_sparse::reserve_funded_page(fields, target, cx)
+            .map_err(|_| invalid("fem2d.visual-field-capacity"))?;
+        return Ok(false);
+    }
+    let depth = if append { fields.next_push_depth_demand() } else { fields.next_get_depth_demand(index) }
+        .map_err(|_| invalid("fem2d.visual-field-address"))?;
+    let bytes = if append { id.len() } else { 0 };
+    let demand = RetirementDemand { copy_bytes: 2 * size_of::<NodeLiveField>() + bytes, capacity_bytes: bytes, depth: depth.max(1), ..Default::default() };
+    if !semio_s_fem_payload_turns::numerical_grant_covers(grant, demand) {
+        return Ok(false);
+    }
+    let Some((result, work)) = cx.with_original_effect(grant, |_, effect| -> Result<RetainedCloneProgress, ValueError> {
+        if !effect.performed(1)? { return Ok(RetainedCloneProgress::default()); }
+        let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
+        if append {
+            if bytes != 0 { *effect.actual() = Some(0); }
+            field.node_id.try_reserve_exact(bytes).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "fem2d.visual-field-id-allocation"))?;
+            field.node_id.push_str(id);
+            progress.retained_capacity_bytes = field.node_id.capacity();
+            if progress.retained_capacity_bytes != 0 { *effect.actual() = Some(progress.retained_capacity_bytes); }
+            fields.push_reserved(field).map_err(|_| invalid("fem2d.visual-field-page"))?;
+        } else {
+            let target = fields.get_mut(index).ok_or_else(|| invalid("fem2d.visual-field-missing"))?;
+            if target.node_id != id { return Err(invalid("fem2d.visual-field-id-changed")); }
+            std::mem::swap(&mut field.node_id, &mut target.node_id);
+            *target = field;
+        }
+        Ok(progress)
+    })? else {
+        return Ok(false);
+    };
+    let step = semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome {
+        result: result.map(semio_framework_value::RetainedCloneStep::Progress),
+        work,
+    })?;
+    Ok(step.progress().copied_items == 1)
+}
+
 //#region 🧰️FixedArena
 pub(super) struct MountedState {
     pub(super) identity: MountedIdentity,
     pub(super) source: Option<ResolvedResultSource>,
+    pub(super) family: semio_s_fem_app_surface::ResultMode,
+    pub(super) mode_index: usize,
+    pub(super) eigen: Option<MountedEigen>,
+    pub(super) eigenvalue: Option<f64>,
+    pub(super) mode_shape_peak: f64,
     pub(super) snapshot: Option<store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>>,
     pub(super) snapshot_return: Option<store::os_store::snapshot_read::SnapshotReadReturn>,
     pub(super) cancel: semio_framework_job::CancelToken,
@@ -136,6 +192,7 @@ impl MountedState {
         if let Some(child) = self.mesh.as_ref() { merge_close_demand(demand, semio_s_fem_sparse::numerical_close_demand(child)?); }
         if let Some(child) = self.pcg.as_ref() { merge_close_demand(demand, semio_s_fem_sparse::numerical_close_demand(child)?); }
         if let Some(child) = self.pcg_build.as_ref() { merge_close_demand(demand, child.close_demand()?); }
+        if let Some(eigen) = self.eigen.as_ref() { eigen.close_demands(demand)?; }
         Ok(())
     }
 
@@ -143,6 +200,11 @@ impl MountedState {
         Self {
             identity,
             source: None,
+            family: semio_s_fem_app_surface::ResultMode::Static,
+            mode_index: 0,
+            eigen: None,
+            eigenvalue: None,
+            mode_shape_peak: 0.0,
             snapshot: Some(snapshot),
             snapshot_return: None,
             cancel: semio_framework_job::root_cancel_token(),

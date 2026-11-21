@@ -50,7 +50,10 @@ async function verifyDelivery(selected) {
     const receipt = await readFile(join(directory, "🧾️receipt.json")).catch(error => {
       if (error.code !== "ENOENT") throw error;
     });
-    if (receipt) wrapped.set(JSON.parse(receipt).pluginId, {directory, receipt});
+    if (receipt) {
+      const pluginId = JSON.parse(receipt).pluginId;
+      if (deliveries.get(pluginId)?.receipt.equals(receipt)) wrapped.set(pluginId, {directory, receipt});
+    }
   }
   for (const [component, routes] of componentRoutes) {
     if (!routes.some(id => selected.includes(id))) continue;
@@ -78,23 +81,26 @@ async function verifyDelivery(selected) {
 }
 
 const phase = process.argv[2] ?? "all";
-if (!["all","lanes","browser","workflow","delivery"].includes(phase)) throw Error("Unknown verification phase: " + phase);
+if (!["all","lanes","browser","workflow","delivery","routes"].includes(phase)) throw Error("Unknown verification phase: " + phase);
 const ids = process.argv.length > 3 ? process.argv.slice(3) : allIds;
 if (ids.some(id => !allIds.includes(id)) || new Set(ids).size !== ids.length) throw Error("Invalid Standards variant selection");
 const runName = ids === allIds ? "verified" : `verified-${createHash("sha256").update(ids.join(",")).digest("hex").slice(0, 8)}`;
+const required = [...componentRoutes].filter(([,routes]) => routes.some(id => ids.includes(id))).map(([component]) => component);
 const receipts = [];
 const deliveries = new Map();
 for (const dir of await readdir(modules)) {
   const path = join(modules,dir);
-  if (![...componentRoutes.keys()].some(component => dir.endsWith(component))) continue;
+  if (!required.some(component => dir.endsWith(component))) continue;
   const receiptBytes = await readFile(join(path,"🧾️receipt.json"));
   const receipt = JSON.parse(receiptBytes);
+  if (!required.includes(receipt.pluginId) || deliveries.has(receipt.pluginId)) throw Error("Unexpected or duplicate Standards component " + receipt.pluginId);
   deliveries.set(receipt.pluginId,{dir,path,receipt:receiptBytes});
   const bridge = await readFile(join(path,"🌉️bridge.js"),"utf8");
   if (!bridge.includes("now + admission.maximumElapsedUs")) throw Error("Staged bridge requires an issued deadline in " + dir);
   receipts.push({component:receipt.pluginId,wasmSha256:receipt.wasmSha256,sourceTreeDigest:receipt.sourceTreeDigest});
 }
-if (new Set(receipts.map(row => row.component)).size !== componentRoutes.size) throw Error("Missing a Standards component");
+const missing = required.filter(component => !deliveries.has(component));
+if (missing.length) throw Error("Missing Standards components " + missing.join(", "));
 await writeFile(join(output,`${runName}-components.json`),JSON.stringify(receipts,null,2));
 if (["all","lanes"].includes(phase) && await run("bash",[join(ticket,"play-standards-native.sh"),"lane"],root,`${runName}-lanes.log`)) throw Error("Standards lane activation failed");
 if (phase === "lanes") process.exit(0);
@@ -102,17 +108,18 @@ await verifyDelivery(ids);
 if (phase === "delivery") process.exit(0);
 let routeExit = 0;
 if (phase !== "workflow") {
-  const log = `${runName}-routes.jsonl`;
-  routeExit = await run(process.execPath,[join(ticket,"probe-norm-routes.mjs"),...ids],root,log);
+  const log = `${runName}-${phase === "routes" ? "paint" : "routes"}.jsonl`;
+  const routeEnvironment = phase === "routes" ? {...env, PLAY_TEST_REQUIRE_DRAW:"1"} : env;
+  routeExit = await run(process.execPath,[join(ticket,"probe-norm-routes.mjs"),...ids],root,log,routeEnvironment);
   const routeRows = (await readFile(join(output,log),"utf8")).split("\n").filter(line => line.startsWith("{")).map(line => JSON.parse(line));
   const failedRoutes = ids.filter(id => {
     const rows = routeRows.filter(row => row.id === id);
-    return rows.length !== 1 || rows[0].shell?.shellReady !== id || rows[0].error || rows[0].faults?.length;
+    return rows.length !== 1 || rows[0].shell?.shellReady !== id || rows[0].error || rows[0].faults?.length || rows[0].failedRequests?.length || (phase === "routes" && !rows[0].draw?.vertices);
   });
   if (routeExit || failedRoutes.length) console.error("Failed route verification", ...failedRoutes);
   routeExit ||= Number(failedRoutes.length > 0);
 }
-const testExit = await run(process.execPath,[cli,"test","--config","🔨️modules/🧪️e2e/🎚️config/🟦️.ts","--output",join(output,`${runName}-panes`),"--grep","boots .*\\((" + ids.join("|") + ")\\)"],play,`${runName}-panes.log`);
+const testExit = phase === "routes" ? 0 : await run(process.execPath,[cli,"test","--config","🔨️modules/🧪️e2e/🎚️config/🟦️.ts","--output",join(output,`${runName}-panes`),"--grep","boots .*\\((" + ids.join("|") + ")\\)"],play,`${runName}-panes.log`);
 
 for (const [component, routes] of componentRoutes) {
   if (!routes.some(id => ids.includes(id))) continue;

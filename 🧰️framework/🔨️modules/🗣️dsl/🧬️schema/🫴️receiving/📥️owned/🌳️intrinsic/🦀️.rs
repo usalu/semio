@@ -54,6 +54,20 @@ fn receiver_close<I:SourceOwner,T:SourceReceived<I>>(child:&mut Receiver<I,T>,bo
 }
 fn absent<R>(name:&'static str)->Result<R,ValueError>{Err(ValueError::invariant(name))}
 impl<I:SourceOwner,T:SourceReceived<I>,O:NativeSourceOrigin<I>>NativeSourceReceiving<I,T,O>{
+ /// 🌱️ Starts source admission with its already moved original input.
+ pub fn from_original(original:I)->Self{
+  let mut receiver=Self::default();
+  *receiver.original.value=Some(original);
+  receiver.phase=2;
+  receiver
+ }
+ /// ⏱️ Quotes the exact selected Work through the original native child's frontier.
+ pub fn selected_work_demand(&self,input:&Option<FieldValue>,body:usize)->Result<u64,ValueError>{
+  match self.select_advance(input,body,u64::MAX)?{
+   OwnedAdvanceSelection::Local{work}=>Ok(work),
+   OwnedAdvanceSelection::Nested=>self.receiver_ref()?.selected_advance_work_demand(body),
+  }
+ }
  fn taking(&self)->bool{self.admission.as_ref().is_some_and(|admission|!admission.terminal_is_empty())}
  fn admission_quote(&self)->Result<(RetirementDemand,u64),ValueError>{let admission=self.admission.as_ref().ok_or_else(||ValueError::invariant("admission absent"))?;match self.projection.quote(admission)?{Some(quote)=>Ok(quote),None=>Ok((admission.next_demand()?,admission.advance_work_demand()?))}}
  fn receiver_ref(&self)->Result<&Receiver<I,T>,ValueError>{self.receiver.get().ok_or_else(||ValueError::invariant("get target absent"))}

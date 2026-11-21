@@ -26,3 +26,8 @@ Feature: The outer area of a thermal region is the surface the air from outside 
     Given the sample figure at 1:50 with its left arm as a tube closed by two discs
     When the thermal coverage is measured
     Then the outer area of the arms equals that with a solid rod, grows by the bore when one disc is removed, the cell is reported and an aborted run throws
+
+  Scenario: A narrow lid opening at a coarse print scale
+    Given a box with 6 mm walls and a 14 mm open slit in its lid
+    Then the inside of its floor exchanges heat with outside air at 1:500
+    And shutting the slit encloses the same floor

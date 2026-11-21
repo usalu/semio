@@ -1,5 +1,6 @@
-use crate::catalogue::*;
-use crate::*;
+use semio_s_artifact_norm_en1991_checks::catalogue::*;
+use semio_s_artifact_norm_en1991_checks::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 
 fn out(id: &str, case: &Case) -> Vec<Outcome> { evaluate_outcomes(id, case).unwrap_or_else(|e| panic!("{id}: {e}")) }
 fn v(o: &[Outcome], key: &str) -> f64 { o.iter().find(|x| x.key == key).unwrap_or_else(|| panic!("missing outcome {key}")).value }
@@ -65,16 +66,16 @@ async fn e12_worked_examples() {
     }
     for (t, e) in [(5.0, 947.7), (30.0, 1097.7), (60.0, 1100.0)] { assert!((v(&out("E12.01", &de("2").with_s("curve", "hydrocarbon").with_n("t_min", t)), "theta_g") - 273.15 - e).abs() < 0.1); }
     for (t, e) in [(5.0, 588.5), (30.0, 680.0), (60.0, 680.0)] { assert!((v(&out("E12.01", &de("3").with_s("curve", "external").with_n("t_min", t)), "theta_g") - 273.15 - e).abs() < 0.1); }
-    let o = out("E12.02", &de("4").with_n("a_f", 50.0).with_n("a_t", 184.84).with_n("a_v", 5.0).with_n("h_eq", 2.0).with_n("b", 1160.0).with_n("q_fd_mj", 336.0));
+    let o = out("E12.02", &en("4").with_n("a_f", 50.0).with_n("a_t", 184.84).with_n("a_v", 5.0).with_n("h_eq", 2.0).with_n("b", 1160.0).with_n("q_fd_mj", 336.0));
     near(v(&o, "O"), 0.0382551, 1e-5);
     near(v(&o, "gamma"), 0.914657, 1e-5);
     near(v(&o, "q_td"), 90.8894, 1e-5);
     near(v(&o, "t_max") / 3600.0, 0.475176, 1e-5);
     near(v(&o, "theta_max") - 273.15, 822.168, 1e-5);
-    near(v(&out("E12.03", &de("5").with_n("area", 250.0).with_n("q_fk_mj", 420.0).with_n("delta_q2", 1.0)), "q_fd"), 504e6, 1e-9);
+    near(v(&out("E12.03", &en("5").with_n("area", 250.0).with_n("q_fk_mj", 420.0).with_n("delta_q2", 1.0)), "q_fd"), 504e6, 1e-9);
     near(v(&out("E12.06", &de("6").with_n("theta_g_c", 841.8).with_n("theta_m_c", 500.0)), "h_net"), 62_407.0, 2e-3);
     near(v(&out("E12.07", &de("7").with_n("g_k", 100.0).with_n("q_k", 50.0).with_n("psi", 0.5)), "eta_fi"), 0.595238, 1e-6);
-    let o = out("E12.04", &de("8").with_n("q_fd_mj", 504.0).with_n("height", 3.0).with_n("alpha_v", 0.1).with_n("k_b", 0.07));
+    let o = out("E12.04", &en("8").with_n("q_fd_mj", 504.0).with_n("height", 3.0).with_n("alpha_v", 0.1).with_n("k_b", 0.07));
     near(v(&o, "t_ed") / 60.0, 58.5935, 1e-5);
     let o = out("E12.05", &de("9").with_n("d", 1.0).with_n("q_w", 2.0e6).with_n("z", 3.0));
     near(v(&o, "L_f"), 3.88539, 1e-5);
@@ -195,7 +196,10 @@ async fn e15_e16_e17_worked_examples() {
     near(v(&o, "v_b"), 21.3625, 1e-4);
     near(v(&o, "q_b"), 285.223, 1e-4);
     near(v(&out("E16.06", &de("s").with_v("q_ci", &[1000.0, 200.0])), "Q_c_sum"), 1200.0, 1e-12);
-    near(v(&out("E16.01", &de("r").with_n("duration_days", 2.0)), "snow_factor"), 0.458916, 1e-5);
+    assert!(out("E16.01", &de("r").with_n("duration_days", 2.0)).iter().all(|o| o.key != "snow_factor"));
+    near(v(&out("E16.01", &de("r").with_n("duration_days", 60.0)), "snow_factor"), 0.632217627027, 1e-9);
+    assert!(evaluate_outcomes("E13.10", &en("short").with_n("v", 0.4).with_n("n_years", 4.0)).is_err());
+    near(v(&out("E13.10", &en("constant").with_n("v", 0.0).with_n("n_years", 5.0)), "factor"), 1.0, 1e-12);
 
     let o = out("E17.01", &de("i").with_s("road", "urban"));
     near(v(&o, "F_dx"), 750_000.0, 1e-12);
@@ -290,26 +294,44 @@ async fn e2_e3_e4_worked_examples() {
 #[semio_framework_async_macros::async_test]
 async fn validity_ranges_warn_and_limits_fail_with_remedies() {
     use semio_s_plugin_norm_compliance::CheckStatus;
-    let results = evaluate_case("E12.02", &de("v").with_n("a_f", 50.0).with_n("a_t", 184.84).with_n("a_v", 0.5).with_n("h_eq", 2.0).with_n("b", 1160.0).with_n("q_fd_mj", 336.0));
+    let results = evaluate_case("E12.02", &en("v").with_n("a_f", 50.0).with_n("a_t", 184.84).with_n("a_v", 0.5).with_n("h_eq", 2.0).with_n("b", 1160.0).with_n("q_fd_mj", 336.0));
     assert!(results.iter().any(|r| r.status == CheckStatus::Warning), "tiny opening must leave the validity range");
     assert!(results.iter().all(|r| r.status != CheckStatus::Fail));
-    let results = evaluate_case("E12.04", &de("r").with_n("q_fd_mj", 504.0).with_n("height", 3.0).with_n("alpha_v", 0.1).with_n("k_b", 0.07).with_n("resistance_min", 30.0));
+    let results = evaluate_case("E12.04", &en("r").with_n("q_fd_mj", 504.0).with_n("height", 3.0).with_n("alpha_v", 0.1).with_n("k_b", 0.07).with_n("resistance_min", 30.0));
     let fail = results.iter().find(|r| r.status == CheckStatus::Fail).expect("58.6 min exceeds R30");
     assert!(!fail.remedies.is_empty());
     assert!(fail.utilization > 1.0);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn informative_rows_pass_with_zero_utilisation_and_keep_their_value() {
+async fn german_natural_fire_uses_annex_bb_and_excludes_en_annexes_a_and_f() {
+    use semio_s_plugin_norm_compliance::CheckStatus;
+
+    let bb = de("bb").with_s("bb_source", "typical_use").with_s("occupancy", "office")
+        .with_n("bb_use_chi", 0.8).with_n("bb_construction_mj", 20.0).with_n("bb_gamma", 1.25);
+    near(v(&out("E12.03", &bb), "q_fd"), 609e6, 1e-12);
+    let survey = de("survey").with_s("bb_source", "survey").with_n("bb_survey_mj", 20.0).with_n("bb_gamma", 1.25);
+    near(v(&out("E12.03", &survey), "q_fd"), 50e6, 1e-12);
+    let checks = evaluate_case("E12.03", &bb);
+    assert!(checks.iter().any(|check| check.ndps.iter().any(|id| id == "ndp.en1991.1-2.fire-load-bb.office")));
+    assert!(checks.iter().all(|check| check.ndps.iter().all(|id| !id.contains("fire-load-fractile"))));
+    for entry in ["E12.02", "E12.04"] {
+        let checks = evaluate_case(entry, &bb);
+        assert_eq!(checks[0].status, CheckStatus::NotApplicable);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn informational_values_keep_zero_utilisation_and_respect_evidence_status() {
     use semio_s_plugin_norm_compliance::CheckStatus;
     let results = evaluate_case("E11.01", &en("i").with_s("material", "reinforced_concrete").with_n("thickness", 0.2));
     assert!(!results.is_empty());
-    for r in &results { assert_eq!(r.status, CheckStatus::Pass, "{}", r.id); assert!(r.utilization.abs() < 1e-12, "{}", r.id); }
+    for r in &results { assert_eq!(r.status, CheckStatus::UnverifiedBasis, "{}", r.id); assert!(r.utilization.abs() < 1e-12, "{}", r.id); }
     assert!((results[0].computed.value - 5000.0).abs() < 1e-9);
     let negative = evaluate_case("E14.08", &en("n").with_s("zone", "D").with_n("h_over_d", 0.6));
-    assert!(negative.iter().all(|r| r.status == CheckStatus::Pass));
+    assert!(negative.iter().all(|r| matches!(r.status, CheckStatus::Pass | CheckStatus::UnverifiedBasis)));
     let suction = evaluate_case("E14.08", &en("s").with_s("zone", "A").with_n("h_over_d", 1.0));
-    assert!(suction.iter().all(|r| r.status == CheckStatus::Pass && r.utilization.abs() < 1e-12), "negative information must not fail");
+    assert!(suction.iter().all(|r| matches!(r.status, CheckStatus::Pass | CheckStatus::UnverifiedBasis) && r.utilization.abs() < 1e-12), "negative information must not fail");
 }
 
 #[semio_framework_async_macros::async_test]

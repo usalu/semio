@@ -1,0 +1,34 @@
+[
+  {
+    "name": "owned binary with a catalog",
+    "binaryOverride": null,
+    "catalog": "catalog",
+    "modelsAvailable": true,
+    "staged": ["mcp:build", "catalog:generate"],
+    "active": ["native", "models"]
+  },
+  {
+    "name": "explicit binary with a catalog",
+    "binaryOverride": "independent/semio-os-mcp",
+    "catalog": "catalog",
+    "modelsAvailable": true,
+    "staged": ["catalog:generate"],
+    "active": ["models"]
+  },
+  {
+    "name": "catalog without retained models",
+    "binaryOverride": null,
+    "catalog": "catalog",
+    "modelsAvailable": false,
+    "staged": ["mcp:build", "catalog:generate"],
+    "active": ["native"]
+  },
+  {
+    "name": "explicit binary without a catalog",
+    "binaryOverride": "independent/semio-os-mcp",
+    "catalog": null,
+    "modelsAvailable": false,
+    "staged": [],
+    "active": []
+  }
+]

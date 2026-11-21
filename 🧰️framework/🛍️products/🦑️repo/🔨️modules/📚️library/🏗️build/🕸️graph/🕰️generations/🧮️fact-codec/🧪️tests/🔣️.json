@@ -3,6 +3,7 @@
  "indexes": [
   {
    "id": "empty",
+   "viewTableBytes": 0,
    "index": {
     "version": 1,
     "owners": [],
@@ -12,6 +13,7 @@
   },
   {
    "id": "owners-only",
+   "viewTableBytes": 76,
    "index": {
     "version": 1,
     "owners": [
@@ -39,6 +41,7 @@
   },
   {
    "id": "shared-facts-and-paths",
+   "viewTableBytes": 200,
    "index": {
     "version": 1,
     "owners": [

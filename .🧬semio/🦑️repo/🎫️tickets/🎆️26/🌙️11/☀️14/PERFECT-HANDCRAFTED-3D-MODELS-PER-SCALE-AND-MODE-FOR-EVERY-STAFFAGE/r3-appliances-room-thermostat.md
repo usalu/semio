@@ -51,3 +51,48 @@ Final check: `volumes-check.ts appliances/room-thermostat --product` PASS; `r3-v
 - `r3-sheet.ts` and `volumes-render.ts` fail at the digital scales (`tool-requests.md`); 1:200 and 1:500 were judged on `r3-room-thermostat-sheet.ts` without rig marks. Poses other than `calling` were rendered only at 1:50 (`set-high`, three-quarter), not opened one by one at the coarse scales; the dial is rotationally near-symmetric there.
 
 State: DONE (with the listed limits)
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-room-thermostat-model.py` (imports the round-3 model, changes 1:50 grip and 1:100 structure, writes the volumes source). No root change outside `volumes`.
+
+### Reference and model against it
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| face | 84 x 84 mm (Danfoss RET1000), 75 x 75 mm (Eberle RTR-E 6121); asset is the 90 mm class (`dimensions`) | 90 x 90 mm | 0 % to `dimensions`; +7 % to RET1000 (class value, not a single product) |
+| depth with dial | 25.5 mm (RTR-E) to 28-37 mm (RET1000) | 27 mm | in range |
+| housing depth | about 15 mm | 15 mm | 0 % |
+| fixing | 60 mm screw pitch on a flush box (DIN 49073-1) | 60 mm | 0 % |
+| dial | about 40 to 42 mm, 12 mm proud | 42 mm, 12 mm proud | 0 % |
+| display | 36 x 21 mm lens | 36 x 21 mm | 0 % |
+
+`volumes-bounds` 1:50: 0 mm in all axes.
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | B+ (grip ring a zig-zag star of 48 points, reads as a gear) / A- / A- | A- / A- / A- |
+| 1:100 | A- / A- / B- (bar, bosses, shaft; no joint, no mass) | A- / A- / A- |
+| 1:200 | B+ / A- / B+ | B+ / A- / B+ (unchanged) |
+| 1:500 | B+ / B+ / B+ | B+ / B+ / B+ (unchanged) |
+
+### Changes
+
+- 1:50 `dial`: scalloped grip outline, 24 round finger scoops 1.1 mm deep between flat lands (192 stated points), like the moulded knobs of the reference products; the thermal `{ of }` follows.
+- 1:100 structure: potentiometer joint (15 mm disc where the shaft enters the housing), circuit-board mass block 15 x 30 x 15 mm at the housing centre (where the 1:50 mass lies), knob mass 15 mm ball at the knob centre; decision rewritten en/de.
+
+### Looked at (opened)
+
+Before: every scale's body, thermal cut and structure, poses idle, set-high, clips turn-up t 3 s and heating-cycle t 150 s, 1:50 three-quarter close-up. After: 1:50 close-up (turn 70, tilt 20), 1:50 pose set-high, 1:50 thermal cut, 1:100 structure; 2D 1:50 enlarged (clean, knob with index, display, lamp). 2D 1:200 and 1:500 do not exist (digital scales).
+
+### Checks
+
+`volumes-check.ts --product`: PASS. `r3-validate.ts appliances/room-thermostat --catalog-only --volumes`: VALID. Spliced.
+
+### Remaining
+
+- 1:200 octagon-chamfered prism and 16-gon knob, 1:500 slab and 12-gon boss: crisp but faceted (B+); the knob is below the feature at both scales.
+- Index is an 11-to-4 mm tongue on the cap (product-class arrow index), not a moulded line.
+- No hidden electronics region (thermal data puts the heat on the casing).

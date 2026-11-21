@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 testkit = ["semio-os-infinite-world-model/testkit", "semio-os-infinite-world-components/testkit"]
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pixels = { path = "../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }

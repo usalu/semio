@@ -359,7 +359,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -6850,7 +6884,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -7426,7 +7494,13 @@
                 }
               }
             ],
-            "utilities": [],
+            "utilities": [
+              "select",
+              "terrainRaise",
+              "terrainLower",
+              "terrainSmooth"
+            ],
+            "initialUtilityId": "select",
             "interactions": [
               "features"
             ],
@@ -7478,6 +7552,128 @@
                 "interactiveJob": "migrated"
               },
               "audience": "chrome"
+            }
+          },
+          {
+            "id": "configureTerrainBrush",
+            "label": {
+              "native": {
+                "en": "Configure Terrain Brush",
+                "de": "Geländepinsel einstellen"
+              },
+              "reuse": {
+                "en": "Configure Terrain Brush",
+                "de": "Geländepinsel einstellen"
+              }
+            },
+            "kind": "view",
+            "iconId": "circle",
+            "args": [
+              {
+                "id": "radius",
+                "label": {
+                  "native": {
+                    "en": "Radius (samples)",
+                    "de": "Radius (Rasterpunkte)"
+                  },
+                  "reuse": {
+                    "en": "Radius (samples)",
+                    "de": "Radius (Rasterpunkte)"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "max": 32.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 4
+              },
+              {
+                "id": "elevationStep",
+                "label": {
+                  "native": {
+                    "en": "Elevation Step (m)",
+                    "de": "Höhenänderung (m)"
+                  },
+                  "reuse": {
+                    "en": "Elevation Step (m)",
+                    "de": "Höhenänderung (m)"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 1.0,
+                  "max": 32767.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 25
+              },
+              {
+                "id": "smoothStrength",
+                "label": {
+                  "native": {
+                    "en": "Smoothing (%)",
+                    "de": "Glättung (%)"
+                  },
+                  "reuse": {
+                    "en": "Smoothing (%)",
+                    "de": "Glättung (%)"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "max": 100.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 50
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets the radius, elevation step and smoothing strength for this terrain window.",
+                  "de": "Legt Radius, Höhenänderung und Glättungsstärke für dieses Geländefenster fest."
+                },
+                "reuse": {
+                  "en": "Sets the radius, elevation step and smoothing strength for this terrain window.",
+                  "de": "Legt Radius, Höhenänderung und Glättungsstärke für dieses Geländefenster fest."
+                }
+              }
             }
           },
           {
@@ -7556,6 +7752,1482 @@
                   "en": "Sets the vertical exaggeration factor the terrain surface is drawn with.",
                   "de": "Legt den Überhöhungsfaktor fest, mit dem die Geländeoberfläche gezeichnet wird."
                 }
+              }
+            }
+          },
+          {
+            "id": "clearElevationSource",
+            "label": {
+              "native": {
+                "en": "Clear Elevation Source",
+                "de": "Höhenquelle entfernen"
+              },
+              "reuse": {
+                "en": "Clear Elevation Source",
+                "de": "Höhenquelle entfernen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Clears the saved elevation grid.",
+                  "de": "Entfernt das gespeicherte Höhenraster."
+                },
+                "reuse": {
+                  "en": "Clears the saved elevation grid.",
+                  "de": "Entfernt das gespeicherte Höhenraster."
+                }
+              }
+            }
+          },
+          {
+            "id": "createElevationGrid",
+            "label": {
+              "native": {
+                "en": "Create Flat Grid",
+                "de": "Flaches Höhenraster erstellen"
+              },
+              "reuse": {
+                "en": "Create Flat Grid",
+                "de": "Flaches Höhenraster erstellen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "west",
+                "label": {
+                  "native": {
+                    "en": "West Longitude",
+                    "de": "Westlicher Längengrad"
+                  },
+                  "reuse": {
+                    "en": "West Longitude",
+                    "de": "Westlicher Längengrad"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -180.0,
+                  "max": 180.0,
+                  "integer": false
+                },
+                "required": false,
+                "default": 5.55
+              },
+              {
+                "id": "south",
+                "label": {
+                  "native": {
+                    "en": "South Latitude",
+                    "de": "Südlicher Breitengrad"
+                  },
+                  "reuse": {
+                    "en": "South Latitude",
+                    "de": "Südlicher Breitengrad"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -90.0,
+                  "max": 90.0,
+                  "integer": false
+                },
+                "required": false,
+                "default": 50.58
+              },
+              {
+                "id": "east",
+                "label": {
+                  "native": {
+                    "en": "East Longitude",
+                    "de": "Östlicher Längengrad"
+                  },
+                  "reuse": {
+                    "en": "East Longitude",
+                    "de": "Östlicher Längengrad"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -180.0,
+                  "max": 180.0,
+                  "integer": false
+                },
+                "required": false,
+                "default": 5.61
+              },
+              {
+                "id": "north",
+                "label": {
+                  "native": {
+                    "en": "North Latitude",
+                    "de": "Nördlicher Breitengrad"
+                  },
+                  "reuse": {
+                    "en": "North Latitude",
+                    "de": "Nördlicher Breitengrad"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -90.0,
+                  "max": 90.0,
+                  "integer": false
+                },
+                "required": false,
+                "default": 50.64
+              },
+              {
+                "id": "height",
+                "label": {
+                  "native": {
+                    "en": "Initial Height in Meters",
+                    "de": "Starthöhe in Metern"
+                  },
+                  "reuse": {
+                    "en": "Initial Height in Meters",
+                    "de": "Starthöhe in Metern"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -32768.0,
+                  "max": 32767.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 100
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "gradeTerrainRegion",
+            "label": {
+              "native": {
+                "en": "Grade Region",
+                "de": "Region nivellieren"
+              },
+              "reuse": {
+                "en": "Grade Region",
+                "de": "Region nivellieren"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Region ID",
+                    "de": "Regions-ID"
+                  },
+                  "reuse": {
+                    "en": "Region ID",
+                    "de": "Regions-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "height",
+                "label": {
+                  "native": {
+                    "en": "Target Height in Meters",
+                    "de": "Zielhöhe in Metern"
+                  },
+                  "reuse": {
+                    "en": "Target Height in Meters",
+                    "de": "Zielhöhe in Metern"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -32768.0,
+                  "max": 32767.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 100
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets terrain samples inside an existing GIS region to one height and preserves the holes.",
+                  "de": "Setzt Rasterpunkte in einer vorhandenen GIS-Region auf eine Höhe und erhält die Aussparungen."
+                },
+                "reuse": {
+                  "en": "Sets terrain samples inside an existing GIS region to one height and preserves the holes.",
+                  "de": "Setzt Rasterpunkte in einer vorhandenen GIS-Region auf eine Höhe und erhält die Aussparungen."
+                }
+              }
+            }
+          },
+          {
+            "id": "generateTerrainContours",
+            "label": {
+              "native": {
+                "en": "Generate Terrain Contours",
+                "de": "Geländehöhenlinien erzeugen"
+              },
+              "reuse": {
+                "en": "Generate Terrain Contours",
+                "de": "Geländehöhenlinien erzeugen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "intervalMetres",
+                "label": {
+                  "native": {
+                    "en": "Contour Interval (m)",
+                    "de": "Höhenlinienabstand (m)"
+                  },
+                  "reuse": {
+                    "en": "Contour Interval (m)",
+                    "de": "Höhenlinienabstand (m)"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.1,
+                  "max": 65535.0,
+                  "integer": false
+                },
+                "required": false,
+                "default": 25.0
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces generated contours with lines at multiples of the interval in metres, using the saved elevation grid.",
+                  "de": "Ersetzt erzeugte Höhenlinien durch Linien in Vielfachen des Höhenabstands in Metern, anhand des gespeicherten Höhenrasters."
+                },
+                "reuse": {
+                  "en": "Replaces generated contours with lines at multiples of the interval in metres, using the saved elevation grid.",
+                  "de": "Ersetzt erzeugte Höhenlinien durch Linien in Vielfachen des Höhenabstands in Metern, anhand des gespeicherten Höhenrasters."
+                }
+              }
+            }
+          },
+          {
+            "id": "addOverlayPosition",
+            "label": {
+              "native": {
+                "en": "Add Position",
+                "de": "Position hinzufügen"
+              },
+              "reuse": {
+                "en": "Add Position",
+                "de": "Position hinzufügen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Feature ID",
+                    "de": "Objekt-ID"
+                  },
+                  "reuse": {
+                    "en": "Feature ID",
+                    "de": "Objekt-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "minLen": 1
+                },
+                "required": true
+              },
+              {
+                "id": "label",
+                "label": {
+                  "native": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "reuse": {
+                    "en": "Name",
+                    "de": "Name"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "longitude",
+                "label": {
+                  "native": {
+                    "en": "Longitude",
+                    "de": "Längengrad"
+                  },
+                  "reuse": {
+                    "en": "Longitude",
+                    "de": "Längengrad"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -180.0,
+                  "max": 180.0,
+                  "integer": false
+                },
+                "required": true
+              },
+              {
+                "id": "latitude",
+                "label": {
+                  "native": {
+                    "en": "Latitude",
+                    "de": "Breitengrad"
+                  },
+                  "reuse": {
+                    "en": "Latitude",
+                    "de": "Breitengrad"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -90.0,
+                  "max": 90.0,
+                  "integer": false
+                },
+                "required": true
+              },
+              {
+                "id": "elevation",
+                "label": {
+                  "native": {
+                    "en": "Elevation (m)",
+                    "de": "Höhe (m)"
+                  },
+                  "reuse": {
+                    "en": "Elevation (m)",
+                    "de": "Höhe (m)"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a position using WGS84 coordinates.",
+                  "de": "Fügt eine Position mit WGS84-Koordinaten hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a position using WGS84 coordinates.",
+                  "de": "Fügt eine Position mit WGS84-Koordinaten hinzu."
+                }
+              }
+            }
+          },
+          {
+            "id": "removeOverlayFeature",
+            "label": {
+              "native": {
+                "en": "Remove Map Feature",
+                "de": "Kartenobjekt entfernen"
+              },
+              "reuse": {
+                "en": "Remove Map Feature",
+                "de": "Kartenobjekt entfernen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Feature ID",
+                    "de": "Objekt-ID"
+                  },
+                  "reuse": {
+                    "en": "Feature ID",
+                    "de": "Objekt-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "minLen": 1
+                },
+                "required": true
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes a position, route or region by its feature ID.",
+                  "de": "Entfernt eine Position, Route oder Fläche anhand ihrer Objekt-ID."
+                },
+                "reuse": {
+                  "en": "Removes a position, route or region by its feature ID.",
+                  "de": "Entfernt eine Position, Route oder Fläche anhand ihrer Objekt-ID."
+                }
+              }
+            }
+          },
+          {
+            "id": "clearOverlays",
+            "label": {
+              "native": {
+                "en": "Clear Map Features",
+                "de": "Kartenobjekte entfernen"
+              },
+              "reuse": {
+                "en": "Clear Map Features",
+                "de": "Kartenobjekte entfernen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Clears the map's positions, routes and regions.",
+                  "de": "Entfernt die Positionen, Routen und Flächen der Karte."
+                },
+                "reuse": {
+                  "en": "Clears the map's positions, routes and regions.",
+                  "de": "Entfernt die Positionen, Routen und Flächen der Karte."
+                }
+              }
+            }
+          },
+          {
+            "id": "editOverlayShape",
+            "label": {
+              "native": {
+                "en": "Edit Route or Region",
+                "de": "Route oder Fläche bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit Route or Region",
+                "de": "Route oder Fläche bearbeiten"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Feature ID",
+                    "de": "Objekt-ID"
+                  },
+                  "reuse": {
+                    "en": "Feature ID",
+                    "de": "Objekt-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "minLen": 1
+                },
+                "required": true
+              },
+              {
+                "id": "kind",
+                "label": {
+                  "native": {
+                    "en": "Shape",
+                    "de": "Form"
+                  },
+                  "reuse": {
+                    "en": "Shape",
+                    "de": "Form"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "route",
+                      "label": {
+                        "native": {
+                          "en": "Route",
+                          "de": "Route"
+                        },
+                        "reuse": {
+                          "en": "Route",
+                          "de": "Route"
+                        }
+                      }
+                    },
+                    {
+                      "value": "region",
+                      "label": {
+                        "native": {
+                          "en": "Region",
+                          "de": "Fläche"
+                        },
+                        "reuse": {
+                          "en": "Region",
+                          "de": "Fläche"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "route"
+              },
+              {
+                "id": "mode",
+                "label": {
+                  "native": {
+                    "en": "Edit",
+                    "de": "Bearbeitung"
+                  },
+                  "reuse": {
+                    "en": "Edit",
+                    "de": "Bearbeitung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "replace",
+                      "label": {
+                        "native": {
+                          "en": "Create or Replace",
+                          "de": "Erstellen oder ersetzen"
+                        },
+                        "reuse": {
+                          "en": "Create or Replace",
+                          "de": "Erstellen oder ersetzen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "append",
+                      "label": {
+                        "native": {
+                          "en": "Append Vertices",
+                          "de": "Stützpunkte hinzufügen"
+                        },
+                        "reuse": {
+                          "en": "Append Vertices",
+                          "de": "Stützpunkte hinzufügen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "replace"
+              },
+              {
+                "id": "coordinates",
+                "label": {
+                  "native": {
+                    "en": "WGS84 Vertices",
+                    "de": "WGS84-Stützpunkte"
+                  },
+                  "reuse": {
+                    "en": "WGS84 Vertices",
+                    "de": "WGS84-Stützpunkte"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "maxLen": 512,
+                  "format": {
+                    "kind": "json"
+                  }
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "Enter [[longitude, latitude], …] in up to 512 bytes. Append more vertices in another edit.",
+                    "de": "Bis zu 512 Byte als [[Längengrad, Breitengrad], …] eingeben. Weitere Stützpunkte lassen sich anschließend hinzufügen."
+                  },
+                  "reuse": {
+                    "en": "Enter [[longitude, latitude], …] in up to 512 bytes. Append more vertices in another edit.",
+                    "de": "Bis zu 512 Byte als [[Längengrad, Breitengrad], …] eingeben. Weitere Stützpunkte lassen sich anschließend hinzufügen."
+                  }
+                }
+              },
+              {
+                "id": "label",
+                "label": {
+                  "native": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "reuse": {
+                    "en": "Name",
+                    "de": "Name"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "moveOverlayPosition",
+            "label": {
+              "native": {
+                "en": "Move Position",
+                "de": "Position verschieben"
+              },
+              "reuse": {
+                "en": "Move Position",
+                "de": "Position verschieben"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "id",
+                "label": {
+                  "native": {
+                    "en": "Feature ID",
+                    "de": "Objekt-ID"
+                  },
+                  "reuse": {
+                    "en": "Feature ID",
+                    "de": "Objekt-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "minLen": 1
+                },
+                "required": true
+              },
+              {
+                "id": "longitude",
+                "label": {
+                  "native": {
+                    "en": "Longitude",
+                    "de": "Längengrad"
+                  },
+                  "reuse": {
+                    "en": "Longitude",
+                    "de": "Längengrad"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -180.0,
+                  "max": 180.0,
+                  "integer": false
+                },
+                "required": true
+              },
+              {
+                "id": "latitude",
+                "label": {
+                  "native": {
+                    "en": "Latitude",
+                    "de": "Breitengrad"
+                  },
+                  "reuse": {
+                    "en": "Latitude",
+                    "de": "Breitengrad"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -90.0,
+                  "max": 90.0,
+                  "integer": false
+                },
+                "required": true
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "editElevation",
+            "label": {
+              "native": {
+                "en": "Edit Elevation",
+                "de": "Höhe bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit Elevation",
+                "de": "Höhe bearbeiten"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "operation",
+                "label": {
+                  "native": {
+                    "en": "Operation",
+                    "de": "Vorgang"
+                  },
+                  "reuse": {
+                    "en": "Operation",
+                    "de": "Vorgang"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "set-sample",
+                      "label": {
+                        "native": {
+                          "en": "Set Sample Height",
+                          "de": "Punkthöhe festlegen"
+                        },
+                        "reuse": {
+                          "en": "Set Sample Height",
+                          "de": "Punkthöhe festlegen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "raise-lower",
+                      "label": {
+                        "native": {
+                          "en": "Raise or Lower Area",
+                          "de": "Bereich anheben oder absenken"
+                        },
+                        "reuse": {
+                          "en": "Raise or Lower Area",
+                          "de": "Bereich anheben oder absenken"
+                        }
+                      }
+                    },
+                    {
+                      "value": "flatten",
+                      "label": {
+                        "native": {
+                          "en": "Grade to Elevation",
+                          "de": "Auf Zielhöhe nivellieren"
+                        },
+                        "reuse": {
+                          "en": "Grade to Elevation",
+                          "de": "Auf Zielhöhe nivellieren"
+                        }
+                      }
+                    },
+                    {
+                      "value": "smooth",
+                      "label": {
+                        "native": {
+                          "en": "Smooth Area",
+                          "de": "Bereich glätten"
+                        },
+                        "reuse": {
+                          "en": "Smooth Area",
+                          "de": "Bereich glätten"
+                        }
+                      }
+                    },
+                    {
+                      "value": "offset",
+                      "label": {
+                        "native": {
+                          "en": "Offset Entire Grid",
+                          "de": "Gesamtes Raster verschieben"
+                        },
+                        "reuse": {
+                          "en": "Offset Entire Grid",
+                          "de": "Gesamtes Raster verschieben"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "raise-lower"
+              },
+              {
+                "id": "column",
+                "label": {
+                  "native": {
+                    "en": "Column from West",
+                    "de": "Spalte ab Westen"
+                  },
+                  "reuse": {
+                    "en": "Column from West",
+                    "de": "Spalte ab Westen"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "max": 32.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 16
+              },
+              {
+                "id": "row",
+                "label": {
+                  "native": {
+                    "en": "Row from South",
+                    "de": "Zeile ab Süden"
+                  },
+                  "reuse": {
+                    "en": "Row from South",
+                    "de": "Zeile ab Süden"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "max": 32.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 16
+              },
+              {
+                "id": "radius",
+                "label": {
+                  "native": {
+                    "en": "Radius in Samples",
+                    "de": "Radius in Rasterpunkten"
+                  },
+                  "reuse": {
+                    "en": "Radius in Samples",
+                    "de": "Radius in Rasterpunkten"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "max": 32.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 4
+              },
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "Meters or Smoothing Percent",
+                    "de": "Meter oder Glättungsprozent"
+                  },
+                  "reuse": {
+                    "en": "Meters or Smoothing Percent",
+                    "de": "Meter oder Glättungsprozent"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": -32768.0,
+                  "max": 32767.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "required": false,
+                "default": 25
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Edits stored heights in meters. Use a negative value to lower terrain or enter 0–100 to smooth.",
+                  "de": "Bearbeitet gespeicherte Höhen in Metern. Negative Werte senken das Gelände ab. Zum Glätten 0–100 eingeben."
+                },
+                "reuse": {
+                  "en": "Edits stored heights in meters. Use a negative value to lower terrain or enter 0–100 to smooth.",
+                  "de": "Bearbeitet gespeicherte Höhen in Metern. Negative Werte senken das Gelände ab. Zum Glätten 0–100 eingeben."
+                }
+              }
+            }
+          },
+          {
+            "id": "importElevationGrid",
+            "label": {
+              "native": {
+                "en": "Import Elevation Grid…",
+                "de": "Höhenraster importieren…"
+              },
+              "reuse": {
+                "en": "Import Elevation Grid…",
+                "de": "Höhenraster importieren…"
+              }
+            },
+            "kind": "shell",
+            "iconId": "code",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Imports a WGS84 Esri ASCII Grid (.asc, up to 24 KiB) with elevations in metres. Replaces the current elevation grid.",
+                  "de": "Importiert ein WGS84-Esri-ASCII-Raster (.asc, bis zu 24 KiB) mit Höhen in Metern. Ersetzt das aktuelle Höhenraster."
+                },
+                "reuse": {
+                  "en": "Imports a WGS84 Esri ASCII Grid (.asc, up to 24 KiB) with elevations in metres. Replaces the current elevation grid.",
+                  "de": "Importiert ein WGS84-Esri-ASCII-Raster (.asc, bis zu 24 KiB) mit Höhen in Metern. Ersetzt das aktuelle Höhenraster."
+                }
+              }
+            }
+          },
+          {
+            "id": "exportElevationGrid",
+            "label": {
+              "native": {
+                "en": "Export Elevation Grid…",
+                "de": "Höhenraster exportieren…"
+              },
+              "reuse": {
+                "en": "Export Elevation Grid…",
+                "de": "Höhenraster exportieren…"
+              }
+            },
+            "kind": "shell",
+            "iconId": "code",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Downloads the saved heights as a WGS84 Esri ASCII Grid (.asc). Requires equal latitude and longitude spacing.",
+                  "de": "Lädt die gespeicherten Höhen als WGS84-Esri-ASCII-Raster (.asc) herunter. Die Abstände in Längen- und Breitengraden müssen gleich sein."
+                },
+                "reuse": {
+                  "en": "Downloads the saved heights as a WGS84 Esri ASCII Grid (.asc). Requires equal latitude and longitude spacing.",
+                  "de": "Lädt die gespeicherten Höhen als WGS84-Esri-ASCII-Raster (.asc) herunter. Die Abstände in Längen- und Breitengraden müssen gleich sein."
+                }
+              }
+            }
+          },
+          {
+            "id": "importGeoJson",
+            "label": {
+              "native": {
+                "en": "Import GeoJSON Overlays…",
+                "de": "GeoJSON-Overlays importieren…"
+              },
+              "reuse": {
+                "en": "Import GeoJSON Overlays…",
+                "de": "GeoJSON-Overlays importieren…"
+              }
+            },
+            "kind": "shell",
+            "iconId": "code",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the current overlays with points, lines, and polygons from a GeoJSON FeatureCollection (up to 24 KiB).",
+                  "de": "Ersetzt die aktuellen Overlays durch Punkte, Linien und Polygone aus einer GeoJSON-FeatureCollection mit höchstens 24 KiB."
+                },
+                "reuse": {
+                  "en": "Replaces the current overlays with points, lines, and polygons from a GeoJSON FeatureCollection (up to 24 KiB).",
+                  "de": "Ersetzt die aktuellen Overlays durch Punkte, Linien und Polygone aus einer GeoJSON-FeatureCollection mit höchstens 24 KiB."
+                }
+              }
+            }
+          },
+          {
+            "id": "exportGeoJson",
+            "label": {
+              "native": {
+                "en": "Export GeoJSON Overlays…",
+                "de": "GeoJSON-Overlays exportieren…"
+              },
+              "reuse": {
+                "en": "Export GeoJSON Overlays…",
+                "de": "GeoJSON-Overlays exportieren…"
+              }
+            },
+            "kind": "shell",
+            "iconId": "code",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Downloads the current overlay features and their properties as GeoJSON.",
+                  "de": "Lädt die aktuellen Overlay-Objekte und ihre Eigenschaften als GeoJSON herunter."
+                },
+                "reuse": {
+                  "en": "Downloads the current overlay features and their properties as GeoJSON.",
+                  "de": "Lädt die aktuellen Overlay-Objekte und ihre Eigenschaften als GeoJSON herunter."
+                }
+              }
+            }
+          },
+          {
+            "id": "importGeoJsonFile",
+            "label": {
+              "native": {
+                "en": "Load GeoJSON Overlays",
+                "de": "GeoJSON-Overlays laden"
+              },
+              "reuse": {
+                "en": "Load GeoJSON Overlays",
+                "de": "GeoJSON-Overlays laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "importElevationGridFile",
+            "label": {
+              "native": {
+                "en": "Load Elevation Grid",
+                "de": "Höhenraster laden"
+              },
+              "reuse": {
+                "en": "Load Elevation Grid",
+                "de": "Höhenraster laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": true,
+                "class": "interactive",
+                "interactiveJob": "migrated"
               }
             }
           },
@@ -9630,6 +11302,86 @@
             }
           },
           {
+            "id": "setActiveUtility",
+            "label": {
+              "native": {
+                "en": "Set Active Utility",
+                "de": "Aktives Hilfsmittel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Utility",
+                "de": "Aktives Hilfsmittel festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "wrench",
+            "args": [
+              {
+                "id": "utilityId",
+                "label": {
+                  "native": {
+                    "en": "Utility",
+                    "de": "Hilfsmittel"
+                  },
+                  "reuse": {
+                    "en": "Utility",
+                    "de": "Hilfsmittel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "windowKindId",
+                "label": {
+                  "native": {
+                    "en": "Window",
+                    "de": "Fenster"
+                  },
+                  "reuse": {
+                    "en": "Window",
+                    "de": "Fenster"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "recordTutorial",
             "label": {
               "native": {
@@ -9918,6 +11670,25 @@
           {
             "kind": {
               "kind": "app",
+              "id": "framework.panel.inspection"
+            },
+            "label": {
+              "native": {
+                "en": "Terrain Data",
+                "de": "Geländedaten"
+              },
+              "reuse": {
+                "en": "Terrain Data",
+                "de": "Geländedaten"
+              }
+            },
+            "group": "details",
+            "bodyKey": "gis3d.terrain.data",
+            "children": []
+          },
+          {
+            "kind": {
+              "kind": "app",
               "id": "framework.panel.history"
             },
             "label": {
@@ -9986,7 +11757,71 @@
             }
           }
         ],
-        "utilities": [],
+        "utilities": [
+          {
+            "id": "select",
+            "label": {
+              "native": {
+                "en": "Select",
+                "de": "Auswählen"
+              },
+              "reuse": {
+                "en": "Select",
+                "de": "Auswählen"
+              }
+            },
+            "iconId": "mouse-pointer",
+            "allowsActionsWhileActive": true
+          },
+          {
+            "id": "terrainRaise",
+            "label": {
+              "native": {
+                "en": "Raise Terrain",
+                "de": "Gelände anheben"
+              },
+              "reuse": {
+                "en": "Raise Terrain",
+                "de": "Gelände anheben"
+              }
+            },
+            "iconId": "arrow-up",
+            "cursor": "crosshair",
+            "allowsActionsWhileActive": true
+          },
+          {
+            "id": "terrainLower",
+            "label": {
+              "native": {
+                "en": "Lower Terrain",
+                "de": "Gelände absenken"
+              },
+              "reuse": {
+                "en": "Lower Terrain",
+                "de": "Gelände absenken"
+              }
+            },
+            "iconId": "arrow-down",
+            "cursor": "crosshair",
+            "allowsActionsWhileActive": true
+          },
+          {
+            "id": "terrainSmooth",
+            "label": {
+              "native": {
+                "en": "Smooth Terrain",
+                "de": "Gelände glätten"
+              },
+              "reuse": {
+                "en": "Smooth Terrain",
+                "de": "Gelände glätten"
+              }
+            },
+            "iconId": "paintbrush",
+            "cursor": "crosshair",
+            "allowsActionsWhileActive": true
+          }
+        ],
         "tools": [],
         "commands": [],
         "interactions": [
@@ -10206,7 +12041,6 @@
               "class": "threeD",
               "form": "mesh"
             },
-            "kindId": "3d.mesh",
             "required": false,
             "multiplicity": "many"
           }
@@ -10287,6 +12121,48 @@
               "multiplicity": "one"
             },
             {
+              "id": "elevation:in",
+              "label": {
+                "native": {
+                  "en": "Elevation source",
+                  "de": "Höhenquelle"
+                },
+                "reuse": {
+                  "en": "Elevation source",
+                  "de": "Höhenquelle"
+                }
+              },
+              "direction": "in",
+              "mediaType": {
+                "class": "data",
+                "form": "value"
+              },
+              "kindId": "gis.elevation-grid",
+              "required": false,
+              "multiplicity": "one"
+            },
+            {
+              "id": "elevation:out",
+              "label": {
+                "native": {
+                  "en": "Elevation source",
+                  "de": "Höhenquelle"
+                },
+                "reuse": {
+                  "en": "Elevation source",
+                  "de": "Höhenquelle"
+                }
+              },
+              "direction": "out",
+              "mediaType": {
+                "class": "data",
+                "form": "value"
+              },
+              "kindId": "gis.elevation-grid",
+              "required": false,
+              "multiplicity": "many"
+            },
+            {
               "id": "scene:out",
               "label": {
                 "native": {
@@ -10303,7 +12179,6 @@
                 "class": "threeD",
                 "form": "mesh"
               },
-              "kindId": "3d.mesh",
               "required": false,
               "multiplicity": "many"
             }
@@ -10317,7 +12192,268 @@
             "componentKind": "gisterrain"
           }
         },
-        "faultNotices": []
+        "faultNotices": [
+          {
+            "code": "gis.terrain.import.size",
+            "label": {
+              "native": {
+                "en": "Choose a complete ASCII Grid file of 24 KiB or smaller.",
+                "de": "Wähle eine vollständige ASCII-Rasterdatei mit höchstens 24 KiB."
+              },
+              "reuse": {
+                "en": "Choose a complete ASCII Grid file of 24 KiB or smaller.",
+                "de": "Wähle eine vollständige ASCII-Rasterdatei mit höchstens 24 KiB."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.import.header",
+            "label": {
+              "native": {
+                "en": "The ASCII Grid header requires dimensions, cell size, and a matching corner or centre origin.",
+                "de": "Der ASCII-Rasterkopf benötigt Abmessungen, Zellgrösse und zusammengehörige Eck- oder Mittelpunktkoordinaten."
+              },
+              "reuse": {
+                "en": "The ASCII Grid header requires dimensions, cell size, and a matching corner or centre origin.",
+                "de": "Der ASCII-Rasterkopf benötigt Abmessungen, Zellgrösse und zusammengehörige Eck- oder Mittelpunktkoordinaten."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.import.bounds",
+            "label": {
+              "native": {
+                "en": "The ASCII Grid extent must be in WGS84 longitude and latitude degrees.",
+                "de": "Die Ausdehnung des ASCII-Rasters muss in WGS84-Längen- und Breitengraden angegeben sein."
+              },
+              "reuse": {
+                "en": "The ASCII Grid extent must be in WGS84 longitude and latitude degrees.",
+                "de": "Die Ausdehnung des ASCII-Rasters muss in WGS84-Längen- und Breitengraden angegeben sein."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.import.samples",
+            "label": {
+              "native": {
+                "en": "The ASCII Grid must contain the declared number of finite elevations in the range −32768 to 32767 metres.",
+                "de": "Das ASCII-Raster muss die angegebene Anzahl endlicher Höhenwerte zwischen −32768 und 32767 Metern enthalten."
+              },
+              "reuse": {
+                "en": "The ASCII Grid must contain the declared number of finite elevations in the range −32768 to 32767 metres.",
+                "de": "Das ASCII-Raster muss die angegebene Anzahl endlicher Höhenwerte zwischen −32768 und 32767 Metern enthalten."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.import.nodata",
+            "label": {
+              "native": {
+                "en": "Fill the ASCII Grid’s NoData cells before importing it.",
+                "de": "Fülle die fehlenden Höhenwerte im ASCII-Raster vor dem Import aus."
+              },
+              "reuse": {
+                "en": "Fill the ASCII Grid’s NoData cells before importing it.",
+                "de": "Fülle die fehlenden Höhenwerte im ASCII-Raster vor dem Import aus."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.export.missing",
+            "label": {
+              "native": {
+                "en": "This terrain has no saved elevation grid.",
+                "de": "Dieses Gelände hat kein gespeichertes Höhenraster."
+              },
+              "reuse": {
+                "en": "This terrain has no saved elevation grid.",
+                "de": "Dieses Gelände hat kein gespeichertes Höhenraster."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.export.cell-shape",
+            "label": {
+              "native": {
+                "en": "Esri ASCII Grid requires the same longitude and latitude sample spacing.",
+                "de": "Esri-ASCII-Raster benötigen gleiche Abstände in Längen- und Breitengraden."
+              },
+              "reuse": {
+                "en": "Esri ASCII Grid requires the same longitude and latitude sample spacing.",
+                "de": "Esri-ASCII-Raster benötigen gleiche Abstände in Längen- und Breitengraden."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.geojson.file",
+            "label": {
+              "native": {
+                "en": "Choose a complete GeoJSON file of 24 KiB or smaller.",
+                "de": "Wähle eine vollständige GeoJSON-Datei mit höchstens 24 KiB."
+              },
+              "reuse": {
+                "en": "Choose a complete GeoJSON file of 24 KiB or smaller.",
+                "de": "Wähle eine vollständige GeoJSON-Datei mit höchstens 24 KiB."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.geojson.collection",
+            "label": {
+              "native": {
+                "en": "Choose a GeoJSON FeatureCollection.",
+                "de": "Wähle eine GeoJSON-FeatureCollection."
+              },
+              "reuse": {
+                "en": "Choose a GeoJSON FeatureCollection.",
+                "de": "Wähle eine GeoJSON-FeatureCollection."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.geojson.invalid",
+            "label": {
+              "native": {
+                "en": "GeoJSON cannot be exchanged because its structure or coordinates are invalid. {detail}",
+                "de": "Die GeoJSON-Struktur oder Koordinaten sind ungültig. {detail}"
+              },
+              "reuse": {
+                "en": "GeoJSON cannot be exchanged because its structure or coordinates are invalid. {detail}",
+                "de": "Die GeoJSON-Struktur oder Koordinaten sind ungültig. {detail}"
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.geojson.geometry",
+            "label": {
+              "native": {
+                "en": "Use Point, LineString or Polygon features with two or three coordinate values per position.",
+                "de": "Verwende Punkte, Linien oder Polygone mit zwei oder drei Koordinatenwerten pro Position."
+              },
+              "reuse": {
+                "en": "Use Point, LineString or Polygon features with two or three coordinate values per position.",
+                "de": "Verwende Punkte, Linien oder Polygone mit zwei oder drei Koordinatenwerten pro Position."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.geojson.extent",
+            "label": {
+              "native": {
+                "en": "The feature data exceeds the local GeoJSON exchange limit.",
+                "de": "Die Objektdaten überschreiten die Grenze für den lokalen GeoJSON-Austausch."
+              },
+              "reuse": {
+                "en": "The feature data exceeds the local GeoJSON exchange limit.",
+                "de": "Die Objektdaten überschreiten die Grenze für den lokalen GeoJSON-Austausch."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.contour.interval",
+            "label": {
+              "native": {
+                "en": "Enter a contour interval from 0.1 to 65,535 metres.",
+                "de": "Einen Höhenlinienabstand von 0,1 bis 65.535 Metern eingeben."
+              },
+              "reuse": {
+                "en": "Enter a contour interval from 0.1 to 65,535 metres.",
+                "de": "Einen Höhenlinienabstand von 0,1 bis 65.535 Metern eingeben."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.contour.invalid-source",
+            "label": {
+              "native": {
+                "en": "The saved elevation grid is invalid.",
+                "de": "Das gespeicherte Höhenraster ist ungültig."
+              },
+              "reuse": {
+                "en": "The saved elevation grid is invalid.",
+                "de": "Das gespeicherte Höhenraster ist ungültig."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.contour.missing-source",
+            "label": {
+              "native": {
+                "en": "Create or import an elevation grid first.",
+                "de": "Zuerst ein Höhenraster erstellen oder importieren."
+              },
+              "reuse": {
+                "en": "Create or import an elevation grid first.",
+                "de": "Zuerst ein Höhenraster erstellen oder importieren."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.contour.density",
+            "label": {
+              "native": {
+                "en": "The contour interval produces too many lines. Increase the interval.",
+                "de": "Der Höhenlinienabstand erzeugt zu viele Linien. Den Abstand vergrößern."
+              },
+              "reuse": {
+                "en": "The contour interval produces too many lines. Increase the interval.",
+                "de": "Der Höhenlinienabstand erzeugt zu viele Linien. Den Abstand vergrößern."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.contour.canceled",
+            "label": {
+              "native": {
+                "en": "Contour generation was canceled.",
+                "de": "Die Erzeugung der Höhenlinien wurde abgebrochen."
+              },
+              "reuse": {
+                "en": "Contour generation was canceled.",
+                "de": "Die Erzeugung der Höhenlinien wurde abgebrochen."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.contour.command",
+            "label": {
+              "native": {
+                "en": "The contour tool received a different command.",
+                "de": "Das Höhenlinienwerkzeug hat einen anderen Befehl erhalten."
+              },
+              "reuse": {
+                "en": "The contour tool received a different command.",
+                "de": "Das Höhenlinienwerkzeug hat einen anderen Befehl erhalten."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.brush.settings-invalid",
+            "label": {
+              "native": {
+                "en": "Choose a whole-number radius, elevation step and smoothing strength within the shown ranges.",
+                "de": "Wählen Sie ganzzahlige Werte für Radius, Höhenänderung und Glättungsstärke innerhalb der angezeigten Bereiche."
+              },
+              "reuse": {
+                "en": "Choose a whole-number radius, elevation step and smoothing strength within the shown ranges.",
+                "de": "Wählen Sie ganzzahlige Werte für Radius, Höhenänderung und Glättungsstärke innerhalb der angezeigten Bereiche."
+              }
+            }
+          },
+          {
+            "code": "gis.terrain.window.context-required",
+            "label": {
+              "native": {
+                "en": "Choose the terrain window to configure.",
+                "de": "Wählen Sie das Geländefenster für die Einstellung."
+              },
+              "reuse": {
+                "en": "Choose the terrain window to configure.",
+                "de": "Wählen Sie das Geländefenster für die Einstellung."
+              }
+            }
+          }
+        ]
       },
       {
         "id": "s.gis.gisterrain@1/*#viewer",
@@ -11104,7 +13240,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio gis.gisterrain.dsl v1\nexaggeration=1.5\nmesh=child-id=terrain-demo-mesh artifact-id=terrain-demo-mesh artifact-kind=s.stdio.semio standard=v1 subset=mesh\n",
+        "artifactJson": "semio gis.gisterrain.dsl v1\nexaggeration=1.5 imported-map=positions=[ {\n  id=\"p_institut_de_botanique_ulg_liege\" lon=5.5818 lat=50.603 label=\"Institut de Botanique\"\n}\n {\n  id=\"p_lycee_block_3000\" lon=5.5901 lat=50.6102 label=\"Lycée Block 3000\"\n}\n] routes=[ {\n  id=\"r_sart_tilman\" label=\"Sart Tilman\" points=[ [ 5.5818 50.603 ] [ 5.5844 50.6039 ] [ 5.5875 50.6065 ] [ 5.5901 50.6102 ] ]\n}\n] regions=[ {\n  id=\"g_sart_tilman\" label=\"Sart Tilman\" points=[ [ 5.5774 50.6015 ] [ 5.5823 50.6007 ] [ 5.584 50.6037 ] [ 5.5797 50.6053 ] ]\n}\n] properties=[ { name=projectOrigin value={\n  lon=5.5818 lat=50.603\n}\n} ] elevation-source=bounds=5.555,50.585,5.608333333333333,50.638333333333335 rows=[ [ 242 238 241 245 252 251 250 245 244 238 229 223 207 194 188 176 154 132 123 112 87 74 74 70 87 124 141 149 154 159 163 166 165 ] [ 229 236 240 240 245 246 245 248 245 245 244 243 231 223 214 216 212 212 209 169 93 76 71 88 119 135 147 151 155 157 156 156 159 ] [ 234 236 229 240 240 243 246 250 242 243 237 233 227 228 228 223 221 217 205 162 80 69 78 100 119 131 142 151 156 154 152 152 156 ] [ 226 230 233 228 235 233 237 246 245 241 241 236 223 215 210 203 200 187 180 154 83 71 77 104 116 127 137 143 148 149 149 151 163 ] [ 218 229 220 225 226 227 234 233 235 237 239 236 231 218 216 198 190 179 149 122 83 71 76 95 108 115 128 139 140 143 140 147 157 ] [ 214 210 212 215 224 219 226 226 235 235 236 236 237 237 229 224 215 206 183 143 89 74 73 84 108 126 117 126 132 132 139 143 149 ] [ 211 212 214 213 212 215 220 229 228 234 231 236 239 239 236 231 224 212 182 142 106 71 75 75 90 117 127 129 128 132 135 135 140 ] [ 206 211 213 212 177 202 209 221 225 230 233 238 234 233 232 234 222 212 187 155 123 89 69 72 74 92 113 129 128 128 128 130 133 ] [ 206 204 199 178 172 198 206 210 215 217 220 227 227 221 223 223 216 198 180 186 174 130 82 67 72 71 66 77 92 103 95 115 116 ] [ 200 195 161 144 178 197 197 201 199 208 208 210 208 210 202 204 203 196 191 194 183 146 116 78 68 70 75 68 67 70 71 73 76 ] [ 113 119 116 116 147 150 167 177 170 185 190 196 199 198 195 192 192 195 191 192 176 171 170 145 133 138 135 112 93 68 65 69 69 ] [ 82 82 86 86 91 93 94 97 120 140 147 163 170 177 177 180 180 175 180 179 179 165 166 179 189 192 170 146 127 107 69 68 67 ] [ 74 74 69 74 69 69 68 70 68 76 82 88 92 112 135 156 165 149 160 166 171 168 163 165 171 182 180 158 155 143 79 68 64 ] [ 60 71 62 60 62 63 65 67 64 63 64 68 68 66 68 92 114 142 130 146 152 151 153 148 167 168 179 186 165 121 71 67 70 ] [ 66 67 66 60 63 64 66 57 64 62 62 65 65 65 65 66 67 92 118 117 138 138 145 136 146 150 156 143 109 67 68 68 69 ] [ 65 65 64 65 63 64 65 63 65 65 58 61 63 66 64 67 68 68 77 86 127 127 113 116 136 126 84 66 68 66 69 64 68 ] [ 69 64 64 62 63 63 63 64 64 63 63 61 58 62 64 63 68 69 68 71 78 90 90 92 73 63 64 66 67 68 69 64 61 ] [ 68 78 106 97 89 101 111 109 100 77 65 65 68 59 63 66 65 66 66 66 67 64 67 67 64 65 68 67 66 67 68 63 65 ] [ 89 121 120 123 119 118 124 124 116 107 94 66 67 62 57 67 64 66 64 61 65 66 62 68 69 67 67 62 63 68 60 64 71 ] [ 80 100 120 125 128 130 126 125 118 122 115 66 64 62 66 67 65 65 68 63 65 68 70 73 67 63 68 69 68 68 68 73 81 ] [ 95 93 108 126 130 129 124 123 119 118 88 68 69 71 70 69 67 65 64 65 72 66 64 65 67 70 69 71 68 70 76 80 99 ] [ 101 100 111 129 136 134 128 116 119 107 73 69 70 70 69 72 67 67 68 60 65 70 65 66 67 64 68 73 72 78 82 83 93 ] [ 122 127 127 134 126 136 128 102 96 72 66 66 67 69 49 47 59 70 69 68 69 67 67 64 66 73 70 75 81 92 109 116 107 ] [ 157 142 139 151 138 119 110 79 68 68 67 66 64 69 62 59 69 68 70 67 68 65 65 65 69 74 80 88 100 104 115 123 124 ] [ 151 151 140 135 135 109 73 67 67 69 67 68 67 62 70 66 64 68 66 65 67 63 66 71 75 90 111 117 123 120 123 125 125 ] [ 135 117 109 103 94 81 68 70 64 64 65 73 63 66 66 71 66 65 65 64 64 66 72 77 95 108 122 124 124 125 126 128 127 ] [ 118 104 92 86 80 71 70 69 65 66 69 57 60 69 63 67 65 65 65 65 67 67 90 108 117 124 127 129 128 126 126 128 128 ] [ 94 98 95 82 76 72 68 67 66 72 69 66 73 68 64 62 66 66 66 68 63 71 101 114 119 119 128 128 129 128 128 127 127 ] [ 96 88 84 79 80 72 68 66 67 76 59 67 70 66 64 69 71 70 67 61 64 82 101 111 117 121 126 121 132 126 125 126 131 ] [ 120 93 86 82 77 71 70 68 64 71 58 61 70 66 60 65 68 67 65 68 64 65 97 101 109 115 120 125 127 125 123 121 123 ] [ 112 101 92 83 79 72 69 70 65 72 69 59 68 69 65 68 63 70 64 64 65 68 68 81 104 111 113 114 120 121 118 112 116 ] [ 120 108 87 84 75 71 69 68 67 72 71 67 63 61 66 67 68 64 67 63 66 65 65 65 81 101 105 111 113 112 112 106 117 ] [ 121 110 101 91 76 69 69 68 67 68 66 70 78 68 61 71 67 67 67 66 67 62 63 63 62 70 91 96 101 100 101 98 112 ] ]\n",
         "dialect": {
           "artifactKind": "s.gis.gisterrain",
           "standard": "1",
@@ -15171,6 +17307,98 @@
                 }
               ],
               "identity": "s.stdio.html"
+            },
+            {
+              "capabilities": [
+                {
+                  "claims": [],
+                  "descriptorSha256": "700f7d0d8f74cdff7cf996bf16d411babffb08f6af104337591fd2b3f3f2c190",
+                  "executable": false,
+                  "identity": "s.stdio.idf.conformance-suite.public-corpus",
+                  "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "aed4a60a239e91a795c56cc4fdb75506942ade7524a6ffd5de1bcc0a9357ac15",
+                  "executable": false,
+                  "identity": "s.stdio.idf.localization.de",
+                  "kind": "localization",
+                  "localizations": [
+                    {
+                      "locale": "de",
+                      "text": "EnergyPlus-Eingabedaten\nPositionsbasierte Gebäudesimulationseingabe für EnergyPlus 25.2."
+                    }
+                  ]
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "856a307d4b8591a40d3e824895c33265e5e256510128e475bd726abaf6d58c60",
+                  "executable": false,
+                  "identity": "s.stdio.idf.localization.en",
+                  "kind": "localization",
+                  "localizations": [
+                    {
+                      "locale": "en",
+                      "text": "EnergyPlus Input Data\nEnergyPlus 25.2 positional building simulation input."
+                    }
+                  ]
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "ebc4360a65a2e9f0254bcf53d6dfd27ea77a4211c9bbda0f47c8349af0a1ab45",
+                  "executable": false,
+                  "identity": "s.stdio.idf.resource.external-references",
+                  "kind": "resource",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "ba177e68db1f45c59148295abd1c157de7bae999990e1f924cdf1ea5365a943a",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2",
+                  "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "3d62a00d64d9ecacaf096429ea62c64015828f7d7c0cc5e41f21eb6466669020",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2.dialect.source",
+                  "kind": "source-dialect",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "3e1a03ae5fc469741b1ec92f692d4562d16f0bfb25daf663b29afce964edbb95",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2.profile.any",
+                  "kind": "profile",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "1349a0610591dbda80f102ae8be39394143fe0506cac61ddaf8f941a98197a64",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".idf"
+                    }
+                  ],
+                  "descriptorSha256": "37075e821b9aafd591a951c1d4eac8b011cb8bc22529af20c8d0bf0a4bf12bfa",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2.representation.extension-idf",
+                  "kind": "representation",
+                  "localizations": []
+                }
+              ],
+              "identity": "s.stdio.idf"
             },
             {
               "capabilities": [
@@ -22834,6 +25062,25 @@
       {
         "kind": {
           "kind": "app",
+          "id": "framework.panel.inspection"
+        },
+        "label": {
+          "native": {
+            "en": "Terrain Data",
+            "de": "Geländedaten"
+          },
+          "reuse": {
+            "en": "Terrain Data",
+            "de": "Geländedaten"
+          }
+        },
+        "group": "details",
+        "bodyKey": "gis3d.terrain.data",
+        "children": []
+      },
+      {
+        "kind": {
+          "kind": "app",
           "id": "framework.panel.history"
         },
         "label": {
@@ -26917,6 +29164,98 @@
                 }
               ],
               "identity": "s.stdio.html"
+            },
+            {
+              "capabilities": [
+                {
+                  "claims": [],
+                  "descriptorSha256": "700f7d0d8f74cdff7cf996bf16d411babffb08f6af104337591fd2b3f3f2c190",
+                  "executable": false,
+                  "identity": "s.stdio.idf.conformance-suite.public-corpus",
+                  "kind": "conformance-suite",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "aed4a60a239e91a795c56cc4fdb75506942ade7524a6ffd5de1bcc0a9357ac15",
+                  "executable": false,
+                  "identity": "s.stdio.idf.localization.de",
+                  "kind": "localization",
+                  "localizations": [
+                    {
+                      "locale": "de",
+                      "text": "EnergyPlus-Eingabedaten\nPositionsbasierte Gebäudesimulationseingabe für EnergyPlus 25.2."
+                    }
+                  ]
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "856a307d4b8591a40d3e824895c33265e5e256510128e475bd726abaf6d58c60",
+                  "executable": false,
+                  "identity": "s.stdio.idf.localization.en",
+                  "kind": "localization",
+                  "localizations": [
+                    {
+                      "locale": "en",
+                      "text": "EnergyPlus Input Data\nEnergyPlus 25.2 positional building simulation input."
+                    }
+                  ]
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "ebc4360a65a2e9f0254bcf53d6dfd27ea77a4211c9bbda0f47c8349af0a1ab45",
+                  "executable": false,
+                  "identity": "s.stdio.idf.resource.external-references",
+                  "kind": "resource",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "ba177e68db1f45c59148295abd1c157de7bae999990e1f924cdf1ea5365a943a",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2",
+                  "kind": "standard",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "3d62a00d64d9ecacaf096429ea62c64015828f7d7c0cc5e41f21eb6466669020",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2.dialect.source",
+                  "kind": "source-dialect",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "3e1a03ae5fc469741b1ec92f692d4562d16f0bfb25daf663b29afce964edbb95",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2.profile.any",
+                  "kind": "profile",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
+                  "descriptorSha256": "1349a0610591dbda80f102ae8be39394143fe0506cac61ddaf8f941a98197a64",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".idf"
+                    }
+                  ],
+                  "descriptorSha256": "37075e821b9aafd591a951c1d4eac8b011cb8bc22529af20c8d0bf0a4bf12bfa",
+                  "executable": false,
+                  "identity": "s.stdio.idf.standard.25-2.representation.extension-idf",
+                  "kind": "representation",
+                  "localizations": []
+                }
+              ],
+              "identity": "s.stdio.idf"
             },
             {
               "capabilities": [

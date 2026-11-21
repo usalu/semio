@@ -5,7 +5,7 @@ use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "blatt-7";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Blatt 7 conforming", "Blatt 7 konform")
+    LocalizedLabel::native("Part 7 fan catalogue", "Ventilatorkatalog nach Blatt 7")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/blatt-7/🗣️.dsl.semio");

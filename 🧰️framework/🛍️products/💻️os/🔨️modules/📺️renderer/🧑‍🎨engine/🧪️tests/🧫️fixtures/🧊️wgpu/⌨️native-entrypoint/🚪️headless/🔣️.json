@@ -44,7 +44,8 @@
           "pluginId": "empty-smoke",
           "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
           "wasmPath": "component.wasm",
-          "descriptorPath": "descriptor.json"
+          "descriptorPath": "descriptor.json",
+          "consumes": []
         }
       ]
     }

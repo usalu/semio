@@ -75,3 +75,5 @@ Not opened: the 1:100 body sheet and the 1:500 structure sheet were rendered but
 - The drum blades start and stop inside the front third; the real spirals run the whole drum length.
 - 1:500 total thermal area is 27 % under the declared sum, close to the 30 % limit.
 - During this run a repeated `--apply` once re-transformed the poses and clips (the root script was not idempotent). I restored them from a copy of the original catalog file taken before the first write, made the script idempotent, and verified three consecutive applies write nothing. No other file was touched.
+
+The fuel tank and intake contours remain printable at 1:150, 1:200 and 1:350. The native 1:200 feature, silhouette and cross-scale measurements also passed.

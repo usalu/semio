@@ -5,5 +5,10 @@
     {"id": "missing-export", "source": "empty", "accepted": false},
     {"id": "wrong-type", "source": "number", "accepted": false},
     {"id": "unbundled-relative", "source": "relative", "accepted": false}
+  ],
+  "bundleSizes": [
+    {"bytes": 8388609, "accepted": true},
+    {"bytes": 33554432, "accepted": true},
+    {"bytes": 33554433, "accepted": false}
   ]
 }

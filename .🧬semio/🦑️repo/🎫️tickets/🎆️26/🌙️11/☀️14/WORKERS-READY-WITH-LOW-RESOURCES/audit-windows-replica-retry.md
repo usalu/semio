@@ -1,0 +1,7 @@
+# Windows Replica Retry Audit
+
+The current replica source keeps an in-memory per-path cooldown for blocked or blob-wanted queue entries. The first delay is 500 ms, exponentially increasing to 30 seconds; the map resets on replica restart. A sharing-blocked target unlink or rename makes one attempt per eligible queue turn and leaves the event queued. Each pass still snapshots and settles the queue, then processes Git and stage work before ordinary worktree work with bounded concurrent pools. Consequently enough earlier expensive work could delay later materialization, but the observed queue length and cumulative sharing-violation count do not establish starvation or identify a blocked readiness input.
+
+The existing race test injects sharing failures and compares retry rounds to a SQLite oracle while asserting that one unrelated file arrives. A separate test proves the journal cursor can reach the head while a sharing-blocked path remains queued. These tests show isolation for one blocked path and the distinction between ingestion and materialization, not latency for thousands of paths. A deterministic performance regression needs a bounded multi-path fixture and an explicit delivery or operation-count bound, together with path-level observation establishing that a readiness input is queued or delayed.
+
+Source: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🟦️.ts, especially lines 1613–1621, 1736, 1839, 2018 and 2106–2157; tests: sibling 🧪️tests/🏁️race.ts lines 62–115. No worker action was taken.

@@ -74,3 +74,53 @@ Final check line: `volumes-check.ts appliances/electricity-meter --product` = `P
 - `r3-sheet.ts` cannot render 1:500 (no 2D representation of that scale); rendered through the slot swap of `r3-electricity-meter-peek500.sh`, so those sheets carry the footer "1:200". Logged in `tool-requests.md`.
 - The 2D of 1:200 was opened only at paper size (0.66 mm by 1.0 mm), not enlarged in this session; the plan of 1:50 is cropped at the lower edge of the enlargement.
 - At 1:500 the supports lie flush in the back face of the base slab (coincident faces flicker in the back view).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-electricity-meter-model.py` (round-3 model with the changes below; writes the volumes source), `r5-electricity-meter-roots.py` (print root fix in the catalog, text edit of six coordinates), `r5-appliances-render.sh`, `r5-appliances-view2d.ts` (enlarged product 2D).
+
+### Reference and model against it
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| width | 120 to 145 mm (NZR Ferraris single phase) | 132 mm | in range |
+| height incl. lug | 210 to 270 mm (NZR) | 212 mm | in range |
+| depth | 100 to 150 mm (NZR) | 118 mm | in range |
+| rotor disc diameter | 80 to 90 mm | 84 mm | in range |
+| rotor disc thickness | 1 to 2 mm (aluminium sheet) | 1.6 mm (was 1.2) | in range, see print fix |
+| register | 6 rollers, about 7 mm wide, 14 mm diameter | drum of 5 + decimal roller, 14 mm | 0 % |
+| fixing | three points, lug above, two screws below (DIN 43857-1 principle) | lug hole y +0.100, screws y -0.058, 105 mm apart | distances not verified against the standard text |
+
+`volumes-bounds` 1:50: deviation 0 mm in all three axes against `dimensions`.
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- |
+| 1:100 | A- / A- / B+ | A- / A- / B+ |
+| 1:200 | B+ / A- / C+ (screw studs 30 mm round standing out of the base sides and above the slab, lug merged) | B+ / A- / A- |
+| 1:500 | B+ / A- / B- (upper support standing 18 mm above the slab) | B+ / A- / A- |
+| catalog | INVALID: `PRINT range-end-feature` disc 0.196 mm at 1:75 (1:50 and 1:100 bands) | VALID |
+
+### Changes
+
+- 1:200 structure: the three supports are 30 mm pads through the 26 mm base slab (`z` 0.032 to 0.059), lower pair at 101 mm instead of 105 mm so they stay inside the 132 mm base, upper pad at the top edge of the slab (y 0.079) where the merged lug hangs; within one feature of the anchors.
+- 1:500 structure: upper pad moved from y 0.100 (floating above the slab) to y 0.082 inside the slab.
+- Print root fix: the edge-on disc (1.2 mm, 0.18 mm pen) measured 0.196 mm at 1:75. A 0.2 mm pen (as 1:200 has) was tried: it then covered the 2 mm window margin beside the dial plate (rim 0.196 mm at 1:100). Final: disc and the 1:50 hub drawn at 1.6 mm in the 1:50 and 1:100 drawings, disc modelled at 1.6 mm at 1:50 and 1:100 (`volumes-feature` requires the solid to be as thick as its drawing), decisions updated en/de.
+- Decisions of 1:200 and 1:500 rewritten for the supports.
+
+### Looked at (opened)
+
+Before: 1:50 body, thermal cut, structure; 1:100 body, thermal cut, structure; 1:200 body, thermal cut, structure; 1:500 body, thermal cut, structure; poses idle, half-load, full-load; clips run t 3 s, daily-load t 180 s; 2D 1:50, 1:100, 1:200 at paper size. After: 1:200 and 1:500 structure, 1:200 body, 1:500 thermal cut, 1:50 body, 1:100 structure; 2D 1:50 and 1:200 enlarged (`r5-appliances-view2d.ts`: clean, true to the body; at 1:200 the 0.18 mm pen nearly fills the 0.66 mm meter, inherent to the scale).
+
+### Checks
+
+`volumes-check.ts appliances/electricity-meter --product`: PASS. `r3-validate.ts appliances/electricity-meter --catalog-only --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0). Spliced with `volumes-insert.py`.
+
+### Remaining
+
+- The pane is drawn opaque by the sheet tool, so register and disc are only seen in cuts.
+- 1:100 structure keeps the two shelves of 1:50 as one repeated bar (B+): the frame at 15 mm could be one channel.
+- At 1:500 the pads lie flush in the back face of the slab (coincident faces flicker in the back view).
+- DIN 43857-1 distances (158 mm, 105 mm) remain unverified against the standard text.

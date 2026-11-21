@@ -47,3 +47,28 @@ fn the_committed_demo_document_equals_the_seeded_cases_and_covers_the_registry()
         assert!(rows.iter().any(|row| row.entry_id == entry.id), "{} has no case in the demo document", entry.id);
     }
 }
+
+#[test]
+fn qualified_characteristic_value_bases() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/📇️catalogue/characteristic-actions.json")).unwrap();
+    let entry = design_case::entry::<En1990Cases>("E90.08").unwrap();
+    for input in fixture.as_array().unwrap() {
+        let id = input["id"].as_str().unwrap();
+        let mut case = design_case::seed::<En1990Cases>(&entry, id);
+        case.values.numbers.clear();
+        for (key, value) in input["num"].as_object().unwrap() {
+            case.values.numbers.insert(key.clone(), value.as_f64().unwrap());
+        }
+        for (key, value) in input["text"].as_object().unwrap() {
+            case.values.texts.insert(key.clone(), value.as_str().unwrap().into());
+        }
+        let results = evaluate_design_case(&case, AnnexChoice::En);
+        if input["valid"] == true {
+            assert!(!results.is_empty(), "{id}");
+            assert!(results.iter().all(|row| row.status == CheckStatus::Pass && row.limit.kind == QuantityKind::Force), "{id}");
+        } else {
+            assert_eq!(results.len(), 1, "{id}");
+            assert_eq!(results[0].status, CheckStatus::NotApplicable, "{id}");
+        }
+    }
+}

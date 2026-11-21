@@ -411,84 +411,103 @@ impl<V: semio_framework_value::FromValue> semio_framework_value::FromValue for R
     }
 }
 
-/// ♻️ Retires one fixed-capacity map entry by entry, then each exact page allocation, through the framework's admitted cursor protocol.
-struct RasterOwnedMapRetirement<V: semio_framework_value::retirement::RetireOwned> {
+use semio_framework_value::retained_clone::retained_clone_grant_admits;
+use semio_framework_value::retirement::{
+    admit_retirement_cursor, record_retirement_work, retirement_cursor_birth_demand, RetireOwned,
+    RetirementCursor, RetirementStep,
+};
+use semio_framework_value::{RetainedAllocationEffect, RetainedCloneProgress, RetirementDemand, ValueError};
+
+/// ♻️ Drains each retained map entry before releasing its empty page.
+#[doc(hidden)]
+pub struct RasterOwnedMapRetirement<V: RetireOwned> {
     map: std::mem::ManuallyDrop<RasterOwnedMap<V>>,
+    entry: std::mem::ManuallyDrop<Option<(String, V)>>,
 }
 
-impl<V: semio_framework_value::retirement::RetireOwned> RasterOwnedMapRetirement<V> {
-    fn last_entry(&self) -> Option<&(String, V)> {
-        let slot = self.map.ordered_slot(self.map.length.checked_sub(1)?)?;
-        self.map.entry(slot)
-    }
-
-    fn page_bytes(&self) -> usize {
-        if self.map.allocated_page_count() == 0 { 0 } else { size_of::<RasterOwnedMapPage<V>>() }
+impl<V: RetireOwned> RasterOwnedMapRetirement<V> {
+    fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetirementStep {
+        if self.terminal_is_empty() {
+            return RetirementStep::Complete(0);
+        }
+        let demand = match self.next_demand(body) {
+            Ok(demand) => demand,
+            Err(error) => return RetirementStep::Failure(error.into(), 0),
+        };
+        let grant = effect.grant();
+        if grant.maximum_items == 0 || effect.maximum_work_units() == 0 || !retained_clone_grant_admits(grant, demand) {
+            return RetirementStep::BudgetExhausted;
+        }
+        if self.entry.is_some() {
+            let turn = admit_retirement_cursor(&mut *self.entry, effect);
+            return match turn.result {
+                Ok(Some((cursor, progress))) => RetirementStep::ChildProgress(cursor, progress, turn.work),
+                Ok(None) => RetirementStep::BudgetExhausted,
+                Err(error) => RetirementStep::Failure(error.into(), turn.work),
+            };
+        }
+        let work = match record_retirement_work(effect, 1) {
+            Ok(work) => work,
+            Err((error, work)) => return RetirementStep::Failure(error.into(), work),
+        };
+        if self.map.is_empty() {
+            self.map.take_empty_page_backing().expect("Raster retained the quoted page").release();
+        } else {
+            *self.entry = self.map.take_last_entry();
+        }
+        RetirementStep::Progress(RetainedCloneProgress {
+            copied_items: 1,
+            copied_bytes: demand.copy_bytes,
+            released_bytes: demand.release_bytes,
+            ..Default::default()
+        }, work)
     }
 }
 
-impl<V: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetirementCursor for RasterOwnedMapRetirement<V> {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
-        use semio_framework_value::retirement::{RetireOwned, RetirementStep};
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return RetirementStep::BudgetExhausted;
+impl<V: RetireOwned> RetirementCursor for RasterOwnedMapRetirement<V> {
+    semio_framework_value::native_retirement_reply!();
+
+    fn next_demand(&self, _body: usize) -> Result<RetirementDemand, ValueError> {
+        if let Some(entry) = self.entry.as_ref() {
+            return retirement_cursor_birth_demand(entry);
         }
-        if self.map.length > 0 {
-            let entry = self.map.take_last_entry().expect("Raster owned map retains the entry it quoted");
-            return RetirementStep::Child(entry.retirement());
+        if !self.map.is_empty() {
+            return Ok(RetirementDemand { copy_bytes: size_of::<Option<(String, V)>>() + size_of::<usize>(), depth: 1, ..Default::default() });
         }
-        let bytes = self.page_bytes();
-        if bytes == 0 {
-            return RetirementStep::Complete(1);
+        if self.map.allocated_page_count() != 0 {
+            return Ok(RetirementDemand { copy_bytes: size_of::<RasterOwnedMapPageBacking<V>>(), release_bytes: RasterOwnedMap::<V>::conservative_page_credit_bytes(), depth: 1, ..Default::default() });
         }
-        if bytes > grant.maximum_release_bytes {
-            return RetirementStep::BudgetExhausted;
-        }
-        let page = self.map.take_empty_page_backing().expect("Raster owned map retains the page it quoted");
-        page.release();
-        RetirementStep::Bytes(bytes)
+        Ok(RetirementDemand::default())
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.map.length == 0 && self.map.allocated_page_count() == 0
-    }
-
-    fn next_close_byte_demand(&self) -> Option<usize> {
-        Some(if self.map.length == 0 { self.page_bytes() } else { 0 })
-    }
-
-    fn next_birth_bytes(&self, _maximum_bytes: usize) -> Option<usize> {
-        if self.map.length == 0 {
-            return Some(0);
-        }
-        semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(self.last_entry()?)
+        self.entry.is_none() && self.map.is_empty() && self.map.allocated_page_count() == 0
     }
 
     fn terminal_release_bytes(&self) -> Option<usize> {
-        Some(size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
 }
 
-impl<V: semio_framework_value::retirement::RetireOwned> Drop for RasterOwnedMapRetirement<V> {
+impl<V: RetireOwned> Drop for RasterOwnedMapRetirement<V> {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || semio_framework_value::retirement::RetirementCursor::terminal_is_empty(self), "Raster owned map retirement abandoned before terminal-empty");
-        if semio_framework_value::retirement::RetirementCursor::terminal_is_empty(self) {
+        let terminal = self.terminal_is_empty();
+        assert!(terminal || std::thread::panicking(), "Raster owned map retirement abandoned before terminal-empty");
+        if terminal {
             unsafe { std::mem::ManuallyDrop::drop(&mut self.map) };
         }
     }
 }
 
-impl<V: semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for RasterOwnedMap<V> {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        Box::new(RasterOwnedMapRetirement { map: std::mem::ManuallyDrop::new(self) })
-    }
+impl<V: RetireOwned> RetireOwned for RasterOwnedMap<V> {
+    type RetirementCursor = RasterOwnedMapRetirement<V>;
 
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        Some(size_of::<RasterOwnedMapRetirement<V>>())
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        RasterOwnedMapRetirement { map: std::mem::ManuallyDrop::new(self), entry: std::mem::ManuallyDrop::new(None) }
     }
 
     fn controlled_retirement_supported() -> bool {
-        true
+        V::controlled_retirement_supported()
     }
 }
 

@@ -1,0 +1,199 @@
+{
+  "standard": "VDI 3805 Blatt 22:2019-03",
+  "corrections": [
+    {
+      "id": "22-0001",
+      "recordFamily": "710.10",
+      "effective": "2019-11",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=3",
+      "field": 7,
+      "prior": [
+        1,
+        9
+      ],
+      "current": [
+        1,
+        10
+      ]
+    },
+    {
+      "id": "22-0003",
+      "recordFamily": "700",
+      "effective": "2022-01",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=7",
+      "fields": {
+        "21": {
+          "format": "N",
+          "unit": "kW",
+          "onlyWhenField20Nonzero": true
+        },
+        "40": {
+          "format": "I",
+          "codes": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            99
+          ]
+        },
+        "41": {
+          "format": "A",
+          "requiredWhenField40": 99
+        }
+      }
+    },
+    {
+      "id": "22-0004",
+      "recordFamily": "710.09",
+      "effective": "2022-01",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=9",
+      "fields": [
+        {
+          "format": "A6",
+          "value": "710.09"
+        },
+        {
+          "format": "I",
+          "range": [
+            1,
+            2147483647
+          ]
+        },
+        {
+          "format": "I",
+          "codes": [
+            1,
+            2
+          ]
+        },
+        {
+          "format": "N",
+          "unit": "°C",
+          "name": "flowOrIndoorEnteringAirTemperature"
+        },
+        {
+          "format": "N",
+          "unit": "°C",
+          "name": "maximumSourceTemperature"
+        },
+        {
+          "format": "N",
+          "unit": "°C",
+          "name": "minimumSourceTemperature"
+        },
+        {
+          "format": "I",
+          "minimum": 1,
+          "name": "step"
+        },
+        {
+          "format": "N",
+          "name": "modulatingLoad"
+        }
+      ]
+    },
+    {
+      "id": "22-0010",
+      "recordFamily": "110",
+      "effective": "2026-01",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=18",
+      "field": 2,
+      "prior": [
+        1,
+        6
+      ],
+      "current": [
+        1,
+        7
+      ],
+      "manufacturerRange": [
+        100,
+        999
+      ],
+      "newType": "hybridAirWaterAirAir"
+    },
+    {
+      "id": "22-0011",
+      "recordFamily": "400",
+      "effective": "2026-01",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=19",
+      "field": 2,
+      "prior": [
+        1,
+        2
+      ],
+      "current": [
+        1,
+        4
+      ],
+      "newTypes": {
+        "3": "multiSplit",
+        "4": "hydroSplitMonobloc"
+      }
+    },
+    {
+      "id": "22-0013",
+      "recordFamily": "700",
+      "effective": "2026-01",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=22",
+      "fields": {
+        "34": {
+          "format": "N",
+          "unit": "kg CO2 equivalent"
+        },
+        "35": {
+          "format": "N",
+          "unit": "t CO2 equivalent"
+        },
+        "36": {
+          "format": "I",
+          "codes": [
+            1,
+            2
+          ]
+        },
+        "37": {
+          "format": "A",
+          "codes": [
+            "A1",
+            "A2",
+            "A2L",
+            "A3",
+            "B1",
+            "B2",
+            "B3"
+          ]
+        },
+        "38": {
+          "format": "A"
+        },
+        "39": {
+          "format": "I",
+          "codes": [
+            0,
+            1
+          ]
+        },
+        "42": {
+          "format": "I",
+          "codes": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "unit": "dB"
+        },
+        "43": {
+          "format": "N",
+          "unit": "dB(A)"
+        }
+      }
+    }
+  ]
+}

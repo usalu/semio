@@ -1,0 +1,21 @@
+{
+  "title": "Get Dev FEM 2D Working End to End",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Verify the developer launch, actual model edit, calculation, and result display.",
+  "goal": "🎯runningframework/🎯runningproducts/🎯runningos/🎯runnings/🎯runningplugins/🎯runningfem/🎯runningfem2d",
+  "sessions": [
+    "de9ed495-bcd9-42b2-a79d-edd66ccc45c8"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-20 19:21:16",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "prompt": "Verify the developer launch, actual model edit, calculation, and result display."
+    }
+  ]
+}

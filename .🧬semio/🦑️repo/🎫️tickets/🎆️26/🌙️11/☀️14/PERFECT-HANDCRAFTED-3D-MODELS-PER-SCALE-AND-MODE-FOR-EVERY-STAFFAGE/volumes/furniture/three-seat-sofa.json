@@ -10299,6 +10299,28 @@
      "part": "member"
     },
     {
+     "id": "member-deck",
+     "kind": "box",
+     "bone": "frame",
+     "material": "birch-plywood",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      1.6,
+      0.075,
+      0.74
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.0275,
+       0.005
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
      "id": "member-back-panel",
      "kind": "box",
      "bone": "frame",
@@ -10793,8 +10815,8 @@
      "de": "Körper, für 75 mm neu gebaut: ein Sitzblock (Sockel und Sitzkissen zusammengefasst, 0,10 bis 0,43 m), ein Rückenblock (Rückenkissen und Rückenrahmen zusammengefasst, geneigte Fläche, 0,85 m), zwei Armblöcke bis 0,62 m und vier 75-mm-Füße. Das Modell ist minimal: kleiner geht es nicht, ohne das Sofa zu verlieren."
     },
     {
-     "en": "Thermal: the blocks are split back into their regions by own solids (plinth, seat cushions, back cushions, back frame), arms and feet are their surfaces. Structure: the feet, two 75 mm base rails, a 75 mm back panel, a 75 mm panel per arm, 75 mm bearing bands of the cushions, glides of the foot size, masses.",
-     "de": "Thermik: die Blöcke sind durch eigene Körper wieder in ihre Regionen geteilt (Sockel, Sitzkissen, Rückenkissen, Rückenrahmen), Armlehnen und Füße sind ihre Oberflächen. Tragwerk: die Füße, zwei 75-mm-Sockelschienen, eine 75-mm-Rückenplatte, je Armlehne eine 75-mm-Platte, 75-mm-Auflagebänder der Kissen, Gleiter in Fußgröße, Massen."
+     "en": "Thermal: the blocks are split back into their regions by own solids (plinth, seat cushions, back cushions, back frame), arms and feet are their surfaces. Structure: the feet, two 75 mm base rails with the 75 mm ply deck between them under the seat bands, a 75 mm back panel, a 75 mm panel per arm, 75 mm bearing bands of the cushions, glides of the foot size, masses.",
+     "de": "Thermik: die Blöcke sind durch eigene Körper wieder in ihre Regionen geteilt (Sockel, Sitzkissen, Rückenkissen, Rückenrahmen), Armlehnen und Füße sind ihre Oberflächen. Tragwerk: die Füße, zwei 75-mm-Sockelschienen mit dem 75-mm-Sperrholzdeck dazwischen unter den Sitzbändern, eine 75-mm-Rückenplatte, je Armlehne eine 75-mm-Platte, 75-mm-Auflagebänder der Kissen, Gleiter in Fußgröße, Massen."
     }
    ]
   }

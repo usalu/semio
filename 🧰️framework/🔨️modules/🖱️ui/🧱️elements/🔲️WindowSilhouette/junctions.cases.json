@@ -3,5 +3,12 @@
     { "name": "siblings", "rectangles": [[0,0,100,100,1,1],[100,0,100,100,1,1]], "point": [100,0], "expected": [100,1] },
     { "name": "nested partial", "rectangles": [[0,0,100,100,1,1],[0,30,50,40,1,1]], "point": [0,30], "expected": [1,31] },
     { "name": "scaled siblings", "rectangles": [[0,0,100,100,2,3],[200,0,100,100,2,3]], "point": [200,0], "expected": [200,3] }
+  ],
+  "paintSpans": [
+    { "name": "collapsed span has no stroke", "horizontal": true, "centerline": 1, "from": [1,1], "to": [1,1], "expected": [] },
+    { "name": "crossed mobile side does not retrace a neighbour", "horizontal": false, "centerline": 1, "from": [1,904.5], "to": [1,904], "expected": [] },
+    { "name": "crossed horizontal span does not reverse", "horizontal": true, "centerline": 10, "from": [40.5,10], "to": [40,10], "expected": [] },
+    { "name": "coincident tangent coordinates retain an orthogonal join", "horizontal": true, "centerline": 10, "from": [40,9], "to": [40,11], "expected": [[40,9],[40,10],[40,11]] },
+    { "name": "ordinary span connects both junctions", "horizontal": false, "centerline": 10, "from": [9,40], "to": [11,50], "expected": [[9,40],[10,40],[10,50],[11,50]] }
   ]
 }

@@ -1,0 +1,30 @@
+{
+  "semio": [
+    {
+      "method": "tools/list",
+      "collection": "tools",
+      "identity": "name",
+      "expected": ["context_resolve", "artifact_create", "action_prepare", "inference_run"]
+    },
+    {
+      "method": "resources/list",
+      "collection": "resources",
+      "identity": "uri",
+      "expected": ["semio://workspace"]
+    },
+    {
+      "method": "prompts/list",
+      "collection": "prompts",
+      "identity": "name",
+      "expected": ["explore_workspace"]
+    }
+  ],
+  "repo": [
+    {
+      "method": "resources/list",
+      "collection": "resources",
+      "identity": "uri",
+      "expected": ["repo://goals"]
+    }
+  ]
+}

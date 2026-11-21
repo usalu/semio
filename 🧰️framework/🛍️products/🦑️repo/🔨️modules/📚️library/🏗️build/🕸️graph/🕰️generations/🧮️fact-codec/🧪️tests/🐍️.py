@@ -1,4 +1,4 @@
-"""Independent model of the binary fact index (see the schema file next to the code): `key` answers the identity of a value under a text limit (JSON on stdin), `encode` turns a logical index (JSON on stdin) into the document (hex on stdout), `decode` turns a document (hex on stdin) back into canonical JSON, `strings` lists the table strings. Standard library only."""
+"""🧮️ Independent model of the binary fact index (see the schema file next to the code): `key` answers the identity of a value under a text limit (JSON on stdin), `encode` turns a logical index (JSON on stdin) into the document (hex on stdout), `decode` turns a document (hex on stdin) back into canonical JSON, `strings` lists the table strings and `view-table-bytes` measures the opened view tables (hex on stdin). Standard library only."""
 import hashlib
 import json
 import re
@@ -285,7 +285,8 @@ def decode(data):
         classes.append(cls)
     if at != len(data):
         raise Refusal("trailing")
-    return {"version": 1, "owners": owners, "rows": rows, "classes": classes}, table
+    counts = (string_count, kind_count, owner_count, fact_count, row_count, class_count)
+    return {"version": 1, "owners": owners, "rows": rows, "classes": classes}, table, counts
 
 
 def main():
@@ -296,9 +297,13 @@ def main():
         request = json.load(sys.stdin)
         text = canonical(request["value"])
         sys.stdout.write(text if len(text.encode("utf-16-le")) // 2 <= request["limit"] else "#" + hashlib.sha256(text.encode("utf-8")).hexdigest())
+    elif command == "view-table-bytes":
+        _, _, counts = decode(bytes.fromhex(sys.stdin.read().strip()))
+        formats = ("IIIi", "I", "I", "I", "HIIB", "II")
+        sys.stdout.write(str(sum(count * struct.calcsize("<" + layout) for count, layout in zip(counts, formats))))
     elif command in ("decode", "strings"):
         try:
-            index, table = decode(bytes.fromhex(sys.stdin.read().strip()))
+            index, table, _ = decode(bytes.fromhex(sys.stdin.read().strip()))
         except Refusal as error:
             sys.stderr.write("refused: %s\n" % error)
             sys.exit(3)

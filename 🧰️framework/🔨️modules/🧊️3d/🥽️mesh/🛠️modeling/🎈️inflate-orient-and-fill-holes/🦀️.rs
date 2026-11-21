@@ -2,6 +2,9 @@
 
 use super::*;
 
+#[path="🔃️flip/🦀️.rs"]
+mod flip;
+
 pub(super) struct Inflate {
     pub(super) snapshot:Snapshot,
     pub(super) input:Vec<FaceId>,
@@ -31,10 +34,10 @@ pub(super) struct Inflate {
 }
 
 impl Inflate {
-    pub(super) fn phase(&self)->&'static str { if self.inset {["inset-selection","snapshot","inset-vertices","inset-borders","inset-corners","inset-transfer","inset-reconstruct","inset-source-vertices","inset-source-remap","inset-attributes"][self.phase as usize]}else {["extrude-selection","snapshot","extrude-boundaries","extrude-vertices","extrude-corners","extrude-borders","extrude-reconstruct","extrude-source-vertices","extrude-source-remap","extrude-attributes"][self.phase as usize]} }
+    pub(super) fn phase(&self)->&'static str { if self.inset {["inset-selection","snapshot","inset-vertices","inset-borders","inset-corners","inset-transfer","inset-reconstruct","inset-source-vertices","inset-source-remap","inset-surface","inset-attributes"][self.phase as usize]}else {["extrude-selection","snapshot","extrude-boundaries","extrude-vertices","extrude-corners","extrude-borders","extrude-reconstruct","extrude-source-vertices","extrude-source-remap","extrude-surface","extrude-attributes"][self.phase as usize]} }
     fn admit_position(&self)->MeshResult<()> {if self.soup.positions.len()>=100_000 {Err(MeshKernelError::InvalidInput("face expansion exceeds vertex capacity".into()))}else {Ok(())}}
     fn admit_face(&mut self,corners:usize)->MeshResult<()> {if self.soup.faces.len()>=100_000 || self.emitted_corners.saturating_add(corners)>600_000 {return Err(MeshKernelError::InvalidInput("face expansion exceeds mesh capacity".into()));}self.emitted_corners+=corners;Ok(())}
-    pub(super) fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
+    pub(super) fn advance(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{if self.cursor==self.input.len() {self.cursor=0;self.phase=1;}else {let face=self.input[self.cursor];self.snapshot.source.face_boundary(face)?;if !self.selected.insert(face.0) {return Err(MeshKernelError::InvalidInput("duplicate selected face".into()));}self.cursor+=1;}}
             1=>{if self.snapshot.complete() {self.soup.positions=std::mem::take(&mut self.snapshot.soup.positions);self.cursor=0;self.phase=7;}}
@@ -67,8 +70,13 @@ impl Inflate {
             }
             6=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {self.attributes=Some(SourceAttributeRemap::new(mesh,None,Some(std::mem::take(&mut self.source_faces)),None,None));self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices=Some(Vec::new());self.cursor=0;self.phase=8;}},
             7=>{if self.cursor==self.snapshot.source.vertex_count() {self.cursor=0;self.phase=2;}else {self.vertex_sources.push(SourceVertex::Original(self.cursor as u32));self.cursor+=1;}},
-            8=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.cursor==origins.len() {self.phase=9;}else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.vertex_sources[origins[self.cursor] as usize]);self.cursor+=1;}},
-            9=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
+            8=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.cursor==origins.len() {self.attributes.as_mut().unwrap().retain_expanded_surface(self.snapshot.source.face_count(),self.inset);self.phase=9;}else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.vertex_sources[origins[self.cursor] as usize]);self.cursor+=1;}},
+            9=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {attributes.step_refined_surface(&self.snapshot.source,grant,receipt)?;}
+                else {self.phase=10;}
+            },
+            10=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
             _=>unreachable!(),
         }
         Ok(None)
@@ -83,8 +91,11 @@ pub(super) struct Orient {
     pub(super) edges:HistoryFoldIndex<(u32,u32),Vec<(usize,bool)>>,
     pub(super) keys:Vec<(u32,u32)>,
     pub(super) adjacency:Vec<Vec<(usize,bool)>>,
-    pub(super) oriented:Vec<bool>,
+    pub(super) component:Vec<usize>,
+    pub(super) outward_flip:Vec<bool>,
+    pub(super) shell:Option<ShellWinding>,
     pub(super) flipped:Vec<bool>,
+    pub(super) flip_incidence:Vec<u8>,
     pub(super) stack:Vec<usize>,
     pub(super) active:Option<usize>,
     pub(super) face:usize,
@@ -97,13 +108,53 @@ pub(super) struct Orient {
     pub(super) phase:u8,
 }
 
+pub(super) struct ShellWinding {
+    seed:usize,
+    origin:[f64;3],
+    corner:usize,
+    faces:usize,
+    flipped:usize,
+    closed:bool,
+    volume:f64,
+    correction:f64,
+}
+
+impl ShellWinding {
+    fn new(seed:usize,origin:[f64;3])->Self {
+        Self {seed,origin,corner:0,faces:1,flipped:0,closed:true,volume:0.0,correction:0.0}
+    }
+
+    fn track(&mut self,triangle:[[f64;3];3],flip:bool) {
+        let [a,b,c]=triangle.map(|p|[0,1,2].map(|axis|p[axis]-self.origin[axis]));
+        let signed=a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0]);
+        let value=if flip {-signed}else{signed};
+        let adjusted=value-self.correction;
+        let next=self.volume+adjusted;
+        self.correction=(next-self.volume)-adjusted;
+        self.volume=next;
+    }
+
+    pub(super) fn reverse(&self)->bool {self.closed&&self.volume<0.0}
+}
+
 impl Orient {
-    pub(super) fn phase(&self)->&'static str { ["snapshot","orient-initialize","orient-incidence","orient-adjacency","orient-components","orient-corners","orient-reconstruct","orient-attributes","orient-selection"][self.phase as usize] }
+    pub(super) fn phase(&self)->&'static str {
+        if self.input.is_none() {
+            match self.phase {10|11=>return "orient-normal-incidence",12=>return "orient-authored-normals",15=>return "orient-surface",_=>{}}
+        }
+        ["snapshot","orient-initialize","orient-incidence","orient-adjacency","orient-components","orient-corners","orient-reconstruct","orient-attributes","flip-selection","flip-face-backing","flip-vertex-backing","flip-incidence","flip-normals","flip-winding","flip-publish"][self.phase as usize] }
+    pub(super) fn surface_demand(&self,copy:usize)->Result<Option<semio_framework_value::RetirementDemand>,semio_framework_value::ValueError> {
+        if self.phase==15 {return self.attributes.as_ref().unwrap().refined_surface_demand(&self.snapshot.source,copy);}
+        Ok(self.flip_surface_demand())
+    }
     pub(super) fn initialization_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
         let count=self.snapshot.soup.faces.len();
-        let (slots,bytes)=if self.adjacency.capacity()<count {(count,size_of::<Vec<(usize,bool)>>())}else if self.oriented.capacity()<count||self.flipped.capacity()<count {(count,size_of::<bool>())}else {(0,0)};
-        let capacity=slots.checked_mul(bytes).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original orientation initialization backing extent overflow"))?;
-        let copy=if slots!=0||self.cursor==count {0}else {size_of::<Vec<(usize,bool)>>()+2*size_of::<bool>()};
+        let bytes=if self.adjacency.capacity()<count {size_of::<Vec<(usize,bool)>>()}
+            else if self.component.capacity()<count {size_of::<usize>()}
+            else if self.flipped.capacity()<count || self.outward_flip.capacity()<count {size_of::<bool>()}
+            else {0};
+        let capacity=count.checked_mul(bytes).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original orientation initialization backing extent overflow"))?;
+        let copy=if bytes!=0||self.cursor==count {0}else {size_of::<Vec<(usize,bool)>>()+size_of::<usize>()+2*size_of::<bool>()};
         Ok(semio_framework_value::RetirementDemand {copy_bytes:copy,capacity_bytes:capacity,depth:3,..Default::default()})
     }
     pub(super) fn incidence_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
@@ -133,28 +184,102 @@ impl Orient {
     }
     pub(super) fn components_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
         use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
-        let copy_bytes=if let Some(face)=self.active {self.adjacency[face].get(self.neighbor).filter(|(neighbor,_)|!self.oriented[*neighbor]).map_or(0,|_|size_of::<usize>()+2*size_of::<bool>())}else if self.stack.is_empty()&&self.cursor<self.oriented.len()&&!self.oriented[self.cursor] {size_of::<usize>()+size_of::<bool>()}else {0};
-        let capacity_bytes=if copy_bytes!=0&&self.stack.capacity()==0 {self.oriented.len().checked_mul(size_of::<usize>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original component stack backing extent overflow"))?}else {0};
-        if copy_bytes!=0&&capacity_bytes==0&&self.stack.len()==self.stack.capacity() {return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original component stack exceeds its face backing"));}
+        let mut push_bytes=0;
+        let mut sign_bytes=0;
+        if let Some(face)=self.active {
+            let shell=self.shell.as_ref().expect("active orientation shell");
+            if !self.accumulates(face,shell) {
+                if self.adjacency[face].get(self.neighbor).is_some_and(|(neighbor,_)|self.component[*neighbor]==usize::MAX) {
+                    push_bytes=2*size_of::<usize>()+size_of::<bool>();
+                }
+            }
+        }else if self.stack.is_empty() {
+            if let Some(shell)=&self.shell {
+                sign_bytes=usize::from(shell.reverse())*size_of::<bool>();
+            }else if self.component.get(self.cursor)==Some(&usize::MAX) {
+                push_bytes=2*size_of::<usize>();
+            }
+        }
+        let copy_bytes=push_bytes+sign_bytes;
+        let capacity_bytes=if push_bytes!=0&&self.stack.capacity()==0 {self.component.len().checked_mul(size_of::<usize>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original component stack backing extent overflow"))?}else {0};
+        if push_bytes!=0&&capacity_bytes==0&&self.stack.len()==self.stack.capacity() {return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original component stack exceeds its face backing"));}
         Ok(RetirementDemand {copy_bytes:if capacity_bytes!=0 {0}else {copy_bytes},capacity_bytes,depth:3,..Default::default()})
     }
+    pub(super) fn accumulates(&self,face:usize,shell:&ShellWinding)->bool {
+        shell.closed && shell.corner<self.snapshot.soup.faces[face].len()-2
+    }
+
+    fn reverses_face(&self,face:usize)->bool {
+        self.flipped[face] ^ self.outward_flip.get(self.component[face]).copied().unwrap_or(false)
+    }
+
+    fn advance_component(&mut self)->MeshResult<()> {
+        if let Some(face)=self.active {
+            let shell=self.shell.as_ref().expect("active orientation shell");
+            if self.accumulates(face,shell) {
+                let ring=&self.snapshot.soup.faces[face];
+                let triangle=[ring[0],ring[shell.corner+1],ring[shell.corner+2]].map(|vertex|self.snapshot.soup.positions[vertex as usize].map(f64::from));
+                let shell=self.shell.as_mut().unwrap();
+                shell.track(triangle,self.flipped[face]);
+                shell.corner+=1;
+            }else if let Some(&(neighbor,relative))=self.adjacency[face].get(self.neighbor) {
+                let expected=self.flipped[face]^relative;
+                if self.component[neighbor]==usize::MAX {
+                    self.component[neighbor]=shell.seed;
+                    self.flipped[neighbor]=expected;
+                    let shell=self.shell.as_mut().unwrap();
+                    shell.faces+=1;
+                    shell.flipped+=usize::from(expected);
+                    self.stack.push(neighbor);
+                }else if self.flipped[neighbor]!=expected {
+                    return Err(MeshKernelError::InvalidInput("mesh component has contradictory winding".into()));
+                }
+                self.neighbor+=1;
+            }else {self.active=None;}
+        }else if let Some(face)=self.stack.pop() {
+            let shell=self.shell.as_mut().expect("stack orientation shell");
+            shell.corner=0;
+            shell.closed&=self.adjacency[face].len()==self.snapshot.soup.faces[face].len();
+            self.active=Some(face);
+            self.neighbor=0;
+        }else if let Some(shell)=self.shell.take() {
+            let reverse=shell.reverse();
+            if reverse {self.outward_flip[shell.seed]=true;}
+            self.flip_count+=if reverse {shell.faces-shell.flipped}else {shell.flipped};
+        }else if self.cursor==self.component.len() {
+            self.phase=5;
+            self.face=0;
+        }else {
+            let seed=self.cursor;
+            if self.component[seed]==usize::MAX {
+                let origin=self.snapshot.soup.positions[self.snapshot.soup.faces[seed][0] as usize].map(f64::from);
+                self.component[seed]=seed;
+                self.shell=Some(ShellWinding::new(seed,origin));
+                self.stack.push(seed);
+            }
+            self.cursor+=1;
+        }
+        Ok(())
+    }
+
     pub(super) fn corners_demands(&self)->semio_framework_value::RetirementDemand {
-        let swapping=self.snapshot.soup.faces.get(self.face).is_some_and(|face|self.flipped[self.face]&&self.reversing<face.len()/2);
+        let swapping=self.snapshot.soup.faces.get(self.face).is_some_and(|face|self.reverses_face(self.face)&&self.reversing<face.len()/2);
         semio_framework_value::RetirementDemand {copy_bytes:if swapping {2*size_of::<u32>()}else {0},depth:3,..Default::default()}
     }
     pub(super) fn advance(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
+        if (8..=14).contains(&self.phase) {return self.advance_flip(grant,receipt);}
         match self.phase {
             0=>{if self.snapshot.complete() {self.phase=1;}}
             1=>{
                 let count=self.snapshot.soup.faces.len();let demand=self.initialization_demands().map_err(MeshKernelError::Retained)?;
                 if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {return Ok(None);}
                 if demand.capacity_bytes!=0 {
-                    let result=if self.adjacency.capacity()<count {self.adjacency.try_reserve_exact(count).map(|()|self.adjacency.capacity()*size_of::<Vec<(usize,bool)>>())}else if self.oriented.capacity()<count {self.oriented.try_reserve_exact(count).map(|()|self.oriented.capacity()*size_of::<bool>())}else {self.flipped.try_reserve_exact(count).map(|()|self.flipped.capacity()*size_of::<bool>())};
+                    let result=if self.adjacency.capacity()<count {self.adjacency.try_reserve_exact(count).map(|()|self.adjacency.capacity()*size_of::<Vec<(usize,bool)>>())}else if self.component.capacity()<count {self.component.try_reserve_exact(count).map(|()|self.component.capacity()*size_of::<usize>())}else if self.flipped.capacity()<count {self.flipped.try_reserve_exact(count).map(|()|self.flipped.capacity()*size_of::<bool>())}else {self.outward_flip.try_reserve_exact(count).map(|()|self.outward_flip.capacity()*size_of::<bool>())};
                     let bytes=result.map_err(|_|MeshKernelError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original orientation initialization backing reservation failed")))?;
                     *receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:bytes,..Default::default()};
                     if bytes>grant.maximum_capacity_bytes {return Err(MeshKernelError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original orientation allocator exceeded admitted backing").with_retained_progress(*receipt)));}
                 }else {
-                    if self.cursor==count {self.phase=if self.input.is_some() {8}else {2};self.cursor=0;}else {self.adjacency.push(Vec::new());self.oriented.push(false);self.flipped.push(false);self.cursor+=1;}
+                    if self.cursor==count {self.phase=2;self.cursor=0;}else {self.adjacency.push(Vec::new());self.component.push(usize::MAX);self.flipped.push(false);self.outward_flip.push(false);self.cursor+=1;}
                     *receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
                 }
             }
@@ -204,25 +329,31 @@ impl Orient {
             4=>{
                 let demand=self.components_demands().map_err(MeshKernelError::Retained)?;
                 if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {return Ok(None);}
-                if demand.capacity_bytes!=0 {self.stack.try_reserve_exact(self.oriented.len()).map_err(|_|MeshKernelError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original component stack backing reservation failed")))?;*receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:self.stack.capacity()*size_of::<usize>(),..Default::default()};if !receipt.fits(grant) {return Err(MeshKernelError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original component allocator exceeded its admitted backing").with_retained_progress(*receipt)));}return Ok(None);}
-                if let Some(face)=self.active {
-                    if self.neighbor==self.adjacency[face].len() {self.active=None;}
-                    else {let (neighbor,relative)=self.adjacency[face][self.neighbor];if !self.oriented[neighbor] {self.oriented[neighbor]=true;self.flipped[neighbor]=self.flipped[face]^relative;self.flip_count+=usize::from(self.flipped[neighbor]);self.stack.push(neighbor);}self.neighbor+=1;}
-                }else if let Some(face)=self.stack.pop() {self.active=Some(face);self.neighbor=0;}
-                else if self.cursor==self.oriented.len() {self.phase=5;self.face=0;}
-                else {if !self.oriented[self.cursor] {self.oriented[self.cursor]=true;self.stack.push(self.cursor);}self.cursor+=1;}
+                if demand.capacity_bytes!=0 {self.stack.try_reserve_exact(self.component.len()).map_err(|_|MeshKernelError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original component stack backing reservation failed")))?;*receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:self.stack.capacity()*size_of::<usize>(),..Default::default()};if !receipt.fits(grant) {return Err(MeshKernelError::Retained(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original component allocator exceeded its admitted backing").with_retained_progress(*receipt)));}return Ok(None);}
+                self.advance_component()?;
                 *receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
             }
             5=>{
                 let demand=self.corners_demands();
                 if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {return Ok(None);}
-                if self.face==self.snapshot.soup.faces.len() {self.build=Some(Build::unreferenced(std::mem::take(&mut self.snapshot.soup)));self.phase=6;}
-                else {let face=&mut self.snapshot.soup.faces[self.face];if self.flipped[self.face] && self.reversing<face.len()/2 {let opposite=face.len()-1-self.reversing;face.swap(self.reversing,opposite);self.reversing+=1;}else {self.face+=1;self.reversing=0;}}
+                if self.face==self.snapshot.soup.faces.len() {self.build=Some(Build::unreferenced(std::mem::take(&mut self.snapshot.soup)));self.cursor=0;self.phase=10;}
+                else {let reverse=self.reverses_face(self.face);let face=&mut self.snapshot.soup.faces[self.face];if reverse && self.reversing<face.len()/2 {let opposite=face.len()-1-self.reversing;face.swap(self.reversing,opposite);self.reversing+=1;}else {self.flipped[self.face]=reverse;self.face+=1;self.reversing=0;}}
                 *receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
             }
-            6=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {self.attributes=Some(SourceAttributeRemap::new(mesh,None,None,None,None));self.phase=7;}},
+            6=>{
+                if let Some(mesh)=self.build.as_mut().unwrap().advance()? {
+                    let mut attributes=SourceAttributeRemap::new(mesh,None,None,None,None);
+                    let reversals=(self.flip_count>0).then(||std::mem::take(&mut self.flipped));
+                    attributes.retain_reoriented_surface(reversals);
+                    self.attributes=Some(attributes);self.phase=15;
+                }
+            },
+            15=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {attributes.step_refined_surface(&self.snapshot.source,grant,receipt)?;}
+                else {self.phase=7;}
+            },
             7=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
-            8=>{let input=self.input.as_ref().unwrap();if self.cursor==input.len() {self.face=0;self.cursor=0;self.phase=5;}else {let id=input[self.cursor];self.snapshot.source.face_boundary(id)?;self.flipped[id.0 as usize]=!self.flipped[id.0 as usize];self.cursor+=1;}},
             _=>unreachable!(),
         }
         Ok(None)
@@ -252,8 +383,8 @@ pub(super) struct FillHoles {
 }
 
 impl FillHoles {
-    pub(super) fn phase(&self)->&'static str { ["snapshot","fill-holes-boundaries","fill-holes-rotate","fill-holes-corners","fill-holes-reconstruct","fill-holes-source-corners","fill-holes-source-faces","fill-holes-attributes"][self.phase as usize] }
-    pub(super) fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
+    pub(super) fn phase(&self)->&'static str { ["snapshot","fill-holes-boundaries","fill-holes-rotate","fill-holes-corners","fill-holes-reconstruct","fill-holes-source-corners","fill-holes-source-faces","fill-holes-attributes","fill-holes-surface"][self.phase as usize] }
+    pub(super) fn advance(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{if self.snapshot.complete() {self.cursor=0;self.phase=5;}}
             1=>{
@@ -268,10 +399,15 @@ impl FillHoles {
                 else {self.vertices.push(edge.vertex);self.boundary_edges.push(self.probe);self.probe=edge.next;self.rotations=0;}
             }
             3=>{let index=self.vertices.len()-1-self.corner;let corner=self.boundary_edges[index];let edge=self.boundary_edges[(index+self.vertices.len()-1)%self.vertices.len()];self.cap.push(self.vertices[index]);self.corner_sources.push(Some(corner));self.edge_sources.push(Some(edge));self.cap_faces.push(self.snapshot.source.halfedges[edge as usize].face.unwrap());self.corner+=1;if self.corner==self.vertices.len() {self.snapshot.soup.faces.push(std::mem::take(&mut self.cap));self.face_sources.push(std::mem::take(&mut self.cap_faces));self.filled+=1;self.vertices.clear();self.boundary_edges.clear();self.phase=1;}},
-            4=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {let mut attributes=SourceAttributeRemap::new(mesh,None,None,None,None);attributes.configuration_mut()?.corner_sources=Some(std::mem::take(&mut self.corner_sources));attributes.configuration_mut()?.edge_sources=Some(std::mem::take(&mut self.edge_sources));attributes.configuration_mut()?.generated_faces=Some(std::mem::take(&mut self.face_sources));self.attributes=Some(attributes);self.phase=7;}},
+            4=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {let mut attributes=SourceAttributeRemap::new(mesh,None,None,None,None);attributes.configuration_mut()?.corner_sources=Some(std::mem::take(&mut self.corner_sources));attributes.configuration_mut()?.edge_sources=Some(std::mem::take(&mut self.edge_sources));attributes.configuration_mut()?.generated_faces=Some(std::mem::take(&mut self.face_sources));attributes.retain_filled_surface(self.snapshot.source.face_count());self.attributes=Some(attributes);self.phase=8;}},
             5=>{if self.cursor==self.snapshot.source.halfedge_count() {self.cursor=0;self.phase=6;}else {self.corner_sources.push(None);self.edge_sources.push(None);self.cursor+=1;}},
             6=>{if self.cursor==self.snapshot.source.face_count() {self.cursor=0;self.phase=1;}else {self.face_sources.push(vec![self.cursor as u32]);self.cursor+=1;}},
             7=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
+            8=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {attributes.step_refined_surface(&self.snapshot.source,grant,receipt)?;}
+                else {self.phase=7;}
+            },
             _=>unreachable!(),
         }
         Ok(None)

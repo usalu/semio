@@ -143,5 +143,42 @@
       "identity": "original-read",
       "preserved": true
     }
-  }
+  },
+  "closeWork": [
+    {
+      "name": "idle",
+      "performed": 0,
+      "copiedItems": 0,
+      "releasedBytes": 0,
+      "spent": 0
+    },
+    {
+      "name": "idle-after-work",
+      "performed": 4,
+      "copiedItems": 0,
+      "releasedBytes": 0,
+      "spent": 4
+    },
+    {
+      "name": "stage-movement",
+      "performed": 0,
+      "copiedItems": 1,
+      "releasedBytes": 0,
+      "spent": 1
+    },
+    {
+      "name": "box-release",
+      "performed": 0,
+      "copiedItems": 1,
+      "releasedBytes": 18560,
+      "spent": 1
+    },
+    {
+      "name": "already-metered-release",
+      "performed": 3,
+      "copiedItems": 1,
+      "releasedBytes": 18560,
+      "spent": 3
+    }
+  ]
 }

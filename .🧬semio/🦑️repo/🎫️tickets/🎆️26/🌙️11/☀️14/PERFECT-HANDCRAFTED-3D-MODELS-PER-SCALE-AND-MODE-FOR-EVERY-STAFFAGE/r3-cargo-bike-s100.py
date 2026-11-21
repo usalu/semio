@@ -48,7 +48,7 @@ def wheel(S, bone):
     S.swept(f"rim-{tag}", bone, outer, -0.015, 0.015, "body", LIGHT, None, RIM, pen=PEN, holes=[inner], tol=0.0006, views=SIDE)
     hz = w["nut"] + 0.004
     rh = 0.04 if tag == "r" else 0.03
-    S.put(S.rev(f"hub-{tag}", bone, [(-hz, 0.009), (-hz, 0.012), (-0.034, 0.012), (-0.034, rh), (0.034, rh), (0.034, 0.012), (hz, 0.012), (hz, 0.009)], c, [0, 0, 1], RIM, METAL))
+    S.put(S.annulus(f"hub-{tag}", bone, [(-hz, 0.009), (-hz, 0.012), (-0.034, 0.012), (-0.034, rh), (0.034, rh), (0.034, 0.012), (hz, 0.012), (hz, 0.009)], c, [0, 0, 1], RIM, METAL))
     S.struct_of(f"hub-{tag}", bone)
     S.struct(S.cyl(f"bearing-{tag}", bone, [c[0], c[1], -0.034], [c[0], c[1], 0.034], 0.011, RIM, 0.5), bone, "joint")
     S.disc(f"hub-{tag}", bone, c, 2 * rh, -0.034, 0.034, "detail", METAL, None, RIM, pen=PEN)
@@ -184,7 +184,7 @@ def drive(S):
         S.put(S.cap(i, "frame", a3, b3, 0.0038, RIM, 0.25, role="detail", slender=True))
         S.wire(i, a3, b3, "detail", 0.25, None, RIM, 0.1, views=SIDE)
     z = pt.CHAINRING[1]
-    S.put(S.rev("chainring", "crank", [(z - 0.006, 0.03), (z - 0.006, 0.089), (z + 0.002, 0.089), (z + 0.002, 0.03)], B, [0, 0, 1], PLASTIC, 0.3, role="detail", texture=True))
+    S.put(S.annulus("chainring", "crank", [(z - 0.006, 0.03), (z - 0.006, 0.089), (z + 0.002, 0.089), (z + 0.002, 0.03)], B, [0, 0, 1], PLASTIC, 0.3, role="detail", texture=True))
     S.disc("chainring", "crank", B, 0.178, z - 0.006, z + 0.002, "detail", 0.3, None, PLASTIC, pen=PEN, filled=False, views=SIDE)
     S.put(S.cyl("crank-axle", "crank", [B[0], B[1], -0.072], [B[0], B[1], 0.072], 0.009, RIM, METAL, role="detail"))
     S.struct_of("crank-axle", "crank")
@@ -213,7 +213,7 @@ def fork(S):
     S.put(S.tube("fork-crown", "fork", crown, AL, TUBE, hint=[kit.UP_F[0], kit.UP_F[1], 0.0]), reg)
     S.struct_of("fork-crown", "fork")
     S.plank("fork-crown", "fork", fp(pt.CROWN_F[0], 0.004), fp(pt.CROWN_F[1], 0.004), 0.048, 0.0, "body", TUBE, reg, AL, pen=PEN, wide=0.136)
-    S.put(S.rev("drum-f", "fork", [(0.0, 0.01), (0.0, 0.034), (pt.DRUM_F[1] - pt.DRUM_F[0], 0.034), (pt.DRUM_F[1] - pt.DRUM_F[0], 0.01)], fp(pt.DRUM_F[0]), [kit.UP_F[0], kit.UP_F[1], 0.0], AL, 0.3, role="detail"), reg)
+    S.put(S.annulus("drum-f", "fork", [(0.0, 0.01), (0.0, 0.034), (pt.DRUM_F[1] - pt.DRUM_F[0], 0.034), (pt.DRUM_F[1] - pt.DRUM_F[0], 0.01)], fp(pt.DRUM_F[0]), [kit.UP_F[0], kit.UP_F[1], 0.0], AL, 0.3, role="detail"), reg)
     S.plank("drum-f", "fork", fp(pt.DRUM_F[0]), fp(pt.DRUM_F[1]), 0.068, 0.0, "detail", 0.3, reg, AL, pen=PEN, wide=0.068)
     for side, name in ((1, "l"), (-1, "r")):
         a, b = fp(pt.CROWN_F[0] + 0.005, 0.002, side * 0.052), fp(0.0, kit.OFFSET_F, side * 0.05)
@@ -232,7 +232,7 @@ def cockpit(S):
     S.struct(S.pipe("steerer-r", "bar", bp(0.04), bp(pt.RISER_TOP), 0.0143, 0.002, AL, 0.4), "bar")
     for u, name in ((pt.HEAD_R[0], "low"), (pt.HEAD_R[1], "top")):
         S.struct(S.pipe(f"bearing-r-{name}", "bar", bp(u - 0.008), bp(u + 0.008), 0.022, 0.007, AL, 0.5), "bar", "joint")
-    S.put(S.rev("drum-r", "bar", [(0.0, 0.01), (0.0, 0.034), (pt.HEAD_R[0] - 0.004 - pt.DRUM_R[0], 0.034), (pt.HEAD_R[0] - 0.004 - pt.DRUM_R[0], 0.01)], bp(pt.DRUM_R[0]), [kit.UP_R[0], kit.UP_R[1], 0.0], AL, 0.3, role="detail"), reg)
+    S.put(S.annulus("drum-r", "bar", [(0.0, 0.01), (0.0, 0.034), (pt.HEAD_R[0] - 0.004 - pt.DRUM_R[0], 0.034), (pt.HEAD_R[0] - 0.004 - pt.DRUM_R[0], 0.01)], bp(pt.DRUM_R[0]), [kit.UP_R[0], kit.UP_R[1], 0.0], AL, 0.3, role="detail"), reg)
     S.plank("drum-r", "bar", bp(pt.DRUM_R[0]), bp(pt.HEAD_R[0] - 0.004), 0.068, 0.0, "detail", 0.3, reg, AL, pen=PEN, wide=0.068)
     S.put(S.cyl("riser", "bar", bp(pt.HEAD_R[1] + 0.004), bp(pt.RISER_TOP), 0.0175, AL, TUBE), reg)
     S.struct(S.pipe("riser", "bar", bp(pt.HEAD_R[1] + 0.004), bp(pt.RISER_TOP), 0.0175, 0.002, AL, 0.4), "bar")

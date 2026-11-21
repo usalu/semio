@@ -19,7 +19,7 @@ use semio_ui_declaration::IconName;
 use semio_ui_locale::Label;
 use semio_ui_declaration::ui::UiTreeActionPlacement;
 use semio_ui_wgpu_controls::stepper::{push_stepper_chrome, push_stepper_icon};
-use semio_ui_wgpu_paint::{TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_TOGGLE_WIDTH, celebrate_color, celebrate_stroke, celebrate_turns, chrome_band_rect, color_input_swatch, field_paint_metrics, focus_ring_visible, hover_owner, node_selection_outline, paint_checkbox, paint_loading_border, paint_progress, paint_separator, paint_slider_travel, paint_stack_frame, paint_waiting_border, presence_overlay, section_paint_metrics, select_menu_top_for, select_popup_row_rect};
+use semio_ui_wgpu_paint::{TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_TOGGLE_WIDTH, chrome_band_rect, color_input_swatch, field_paint_metrics, focus_ring_visible, hover_owner, node_selection_outline, paint_checkbox, paint_loading_border, paint_presence_accent_effect, paint_progress, paint_separator, paint_slider_travel, paint_stack_frame, paint_waiting_border, presence_overlay, section_paint_metrics, select_menu_top_for, select_popup_row_rect};
 
 /// 📐️ Every retained chrome metric below is the generated token's px value, never a hand-typed one
 /// — `PANEL_HEADER` is `--size-medium` (`chrome.panelHeaderHeightUiSpacing`, 22.4px, what React's
@@ -583,13 +583,7 @@ pub fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth:
         UiStatus::Finished => draw.push_shared_border_effect(row, ring_color, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Normal),
         UiStatus::Idle => {}
     }
-    if item.presence.state == UiState::Introducing || item.presence.state == UiState::Celebrating {
-        let celebrating = item.presence.state == UiState::Celebrating;
-        let turns = if celebrating { celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds) } else { 0.0 };
-        let ring = if celebrating { celebrate_color(theme, turns) } else { theme.accent };
-        let stroke = if celebrating { celebrate_stroke(theme, turns) } else { theme.stroke_hairline };
-        draw.push_shared_border_effect(row, ring, theme.border_radius, stroke, if celebrating { semio_ui_draw_contract::SharedBorderState::Celebrated } else { semio_ui_draw_contract::SharedBorderState::Introduced });
-    }
+    paint_presence_accent_effect(draw, row, theme, item.presence.state);
     paint_tree_guides(draw, x, row.y, row.h, depth, is_last_at_level, theme);
     let indent = x + (depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
     let expandable = item.items.as_ref().is_some_and(|items| !items.is_empty());

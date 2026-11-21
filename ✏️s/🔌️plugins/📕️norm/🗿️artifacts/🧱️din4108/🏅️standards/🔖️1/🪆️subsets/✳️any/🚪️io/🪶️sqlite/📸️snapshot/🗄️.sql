@@ -74,3 +74,6 @@ CREATE TABLE din4108_thermal_bridge (
   psi_ieee754_bits INTEGER NOT NULL, psi_ieee754_class TEXT NOT NULL,
   length_m_ieee754_bits INTEGER NOT NULL, length_m_ieee754_class TEXT NOT NULL
 );
+CREATE TABLE din4108_case (id INTEGER PRIMARY KEY,document_id INTEGER NOT NULL REFERENCES din4108_document(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),logical_id TEXT NOT NULL,label_en TEXT NOT NULL,label_de TEXT NOT NULL,entry_id TEXT NOT NULL);
+CREATE TABLE din4108_case_number (id INTEGER PRIMARY KEY,case_id INTEGER NOT NULL REFERENCES din4108_case(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),logical_id TEXT NOT NULL,value REAL,value_ieee754_bits INTEGER NOT NULL,value_ieee754_class TEXT NOT NULL);
+CREATE TABLE din4108_case_text (id INTEGER PRIMARY KEY,case_id INTEGER NOT NULL REFERENCES din4108_case(id),ordinal INTEGER NOT NULL CHECK(ordinal>=0),logical_id TEXT NOT NULL,value TEXT NOT NULL);

@@ -44,7 +44,7 @@ impl<'ctx> PointerCtx<'ctx> {
     pub async fn pump_sync_events(&mut self) -> bool {
         use tokio::sync::broadcast::error::TryRecvError;
         #[cfg(not(target_arch = "wasm32"))]
-        let shell_io_changed = self.as_session().poll_shell_io();
+        let shell_io_changed = self.as_session().poll_shell_io() | self.as_window_actions().poll_original_media().await;
         #[cfg(target_arch = "wasm32")]
         let shell_io_changed = false;
         let directory_changed = self.as_actions().pump_directory_events().await || shell_io_changed;

@@ -33,7 +33,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioCadApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioCadApps>::builder("stdio-cad").label("Stdio CAD").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-cad").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioCadApps>::new("stdio-cad").label("Stdio CAD").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-cad").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_step::declaration(semio_s_artifact_stdio_step::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_dwg::declaration(semio_s_artifact_stdio_dwg::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_dxf::declaration(semio_s_artifact_stdio_dxf::definition()?).map_err(PluginAssemblyError::definition)?);

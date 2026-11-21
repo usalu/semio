@@ -4,6 +4,8 @@
   "required": [
     "failedEpoch",
     "failedKind",
+    "wireLength",
+    "retiredInputFlags",
     "cases",
     "acknowledgment"
   ],
@@ -14,6 +16,13 @@
     },
     "failedKind": {
       "const": 8
+    },
+    "wireLength": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "retiredInputFlags": {
+      "const": 2
     },
     "cases": {
       "type": "array",

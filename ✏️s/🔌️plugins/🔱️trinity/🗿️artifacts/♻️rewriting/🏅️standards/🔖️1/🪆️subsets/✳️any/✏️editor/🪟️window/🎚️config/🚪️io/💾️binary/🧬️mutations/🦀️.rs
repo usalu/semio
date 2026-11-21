@@ -6,6 +6,8 @@ use super::*;
 use crate::editor::rewriting::window_config::mutations::*;
 use crate::editor::rewriting::window_config::RewritingWindowConfig;
 
+semio_os_kernel::original_ordinal_operation_receiving!(RewritingWindowConfigMutation);
+
 impl protocol::OpBinary for RewritingWindowConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)

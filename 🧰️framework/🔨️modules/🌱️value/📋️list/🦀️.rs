@@ -616,9 +616,10 @@ impl<T, const N: usize> PagedList<T, N> {
         let mut link = &mut self.root;
         for height in (0..=root_height).rev() {
             if link.is_empty() {
+                let prior = link.capacity();
                 pay(&mut effect)?;A::reserve(link, 1,effect.as_deref_mut().map(|effect|effect.actual())).map_err(|_| PagedListAllocationError{work:1,..rejected(PagedListRefusalKind::AllocationFailed, "fixed list metadata allocation failed")})?;
                 if link.capacity()<1{return Err(PagedListAllocationError{work:1,..rejected(PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot")}.into());}
-                let actual = link.capacity() * size_of::<Page<T>>();
+                let actual = if prior == 0 { link.capacity() * size_of::<Page<T>>() } else { 0 };
                 link.push(if height == 0 { Page::Leaf { items: Vec::new(), slots: 0 } } else { Page::Branch { height, children: std::array::from_fn(|_| Vec::new()) } });
                 self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
                 if self.allocated > isize::MAX as usize {

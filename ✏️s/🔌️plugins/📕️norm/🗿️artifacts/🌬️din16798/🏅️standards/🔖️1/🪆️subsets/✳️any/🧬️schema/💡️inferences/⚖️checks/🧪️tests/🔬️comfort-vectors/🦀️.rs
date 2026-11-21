@@ -45,10 +45,15 @@ fn the_adaptive_bands_equal_the_oracle() {
     for row in section("adaptive") {
         let theta = number(&row, "theta_rm");
         let centre = part_1::adaptive_comfort_temperature_c(theta);
-        let half = part_1::adaptive_band_k(category(&row));
+        let bounds = part_1::adaptive_operative_bounds(theta, category(&row));
         close(centre, number(&row, "centre"), 1e-9, "comfort temperature");
-        close(centre - half, number(&row, "lower"), 1e-9, "lower limit");
-        close(centre + half, number(&row, "upper"), 1e-9, "upper limit");
+        match bounds {
+            Some((lower, upper)) => {
+                close(lower, number(&row, "lower"), 1e-9, "lower limit");
+                close(upper, number(&row, "upper"), 1e-9, "upper limit");
+            }
+            None => assert!(row["lower"].is_null() && row["upper"].is_null(), "missing range for {row}"),
+        }
     }
 }
 
@@ -68,9 +73,8 @@ fn the_ventilation_components_equal_the_oracle() {
 #[test]
 fn the_co2_limits_equal_the_oracle() {
     for row in section("co2") {
-        let annex = annex_params::AnnexParams::for_choice(if row["annex"] == "de" { AnnexChoice::De } else { AnnexChoice::En });
-        let usage = parse_usage(row["usage"].as_str().expect("usage"));
-        close(part_1::co2_limit_above_outdoor_ppm(&annex, usage, category(&row), number(&row, "outdoor")), number(&row, "limit_above"), 1e-9, &format!("{row}"));
+        let annex = if row["annex"] == "de" { AnnexChoice::De } else { AnnexChoice::En };
+        close(part_1::co2_above_outdoor_ppm(annex, category(&row)), number(&row, "limit_above"), 1e-9, &format!("{row}"));
     }
 }
 
@@ -118,4 +122,95 @@ fn the_pmv_inversion_reproduces_the_brentq_roots_of_every_category_also_outside_
 #[test]
 fn the_pmv_inversion_reports_no_root_for_an_unreachable_limit() {
     assert!(part_1::invert_t_op_for_pmv(50.0, 0.1, 1.2, 0.5, 3.5, true).is_none());
+}
+
+#[test]
+fn airflow_design_methods_match_published_reference_scenarios() {
+    let fixtures = include_str!("../../../../../🧪️tests/🧫️fixtures/🌬️design-airflow/🔣️.tsv");
+    for line in fixtures.lines().skip(1) {
+        let columns: Vec<_> = line.split('\t').collect();
+        let annex = match columns[1] {
+            "en" => AnnexChoice::En,
+            "de" => AnnexChoice::De,
+            other => panic!("unknown annex {other}"),
+        };
+        let method = match columns[2] {
+            "method1" => VentMethod::Method1PerceivedAirQuality,
+            "method2" => VentMethod::Method2LimitConcentration,
+            "method3" => VentMethod::Method3PredefinedRates,
+            other => panic!("unknown method {other}"),
+        };
+        let category = parse_category(columns[5]);
+        let gradient: f64 = columns[8].parse().unwrap();
+        if columns[0].starts_with("german-na9-") {
+            close(part_1::co2_above_outdoor_ppm(annex, category), gradient, 1e-9, columns[0]);
+        }
+        let rate = part_1::required_outdoor_air_for_method(
+            annex, method, columns[6].parse().unwrap(), columns[7].parse().unwrap(), category,
+            parse_usage(columns[3]), parse_pollution(columns[4]), gradient,
+        );
+        match columns[9] {
+            "scope" => assert_eq!(rate, Err(part_1::OutdoorAirBasisGap::OutsideDefaultTable), "{}", columns[0]),
+            "gradient" => assert_eq!(rate, Err(part_1::OutdoorAirBasisGap::NoPositiveCo2Gradient), "{}", columns[0]),
+            "german_method3" => assert_eq!(rate, Err(part_1::OutdoorAirBasisGap::GermanMethod3), "{}", columns[0]),
+            "german_residential" => assert_eq!(rate, Err(part_1::OutdoorAirBasisGap::GermanResidentialBasis), "{}", columns[0]),
+            "german_approval" => assert_eq!(rate, Err(part_1::OutdoorAirBasisGap::GermanVeryLowPollutionEvidence), "{}", columns[0]),
+            number => close(rate.expect(columns[0]), number.parse().unwrap(), 1e-9, columns[0]),
+        }
+    }
+}
+
+
+#[test]
+fn design_temperatures_match_the_table_rows() {
+    let fixtures = include_str!("../../../../../🧪️tests/🧫️fixtures/🌡️design-temperatures/🔣️.tsv");
+    for line in fixtures.lines().skip(1) {
+        let columns: Vec<_> = line.split('\t').collect();
+        let annex = if columns[0] == "de" { AnnexChoice::De } else { AnnexChoice::En };
+        let bounds = part_1::seasonal_design_temperatures(annex, parse_usage(columns[1]), parse_category(columns[2]));
+        if columns[3] == "scope" {
+            assert_eq!(bounds, None, "{line}");
+        } else {
+            assert_eq!(bounds, Some((columns[3].parse().unwrap(), columns[4].parse().unwrap())), "{line}");
+        }
+    }
+}
+
+
+#[test]
+fn humidity_and_draught_follow_the_published_design_tables_and_input_ranges() {
+    let fixtures = include_str!("../../../../../🧪️tests/🧫️fixtures/🌡️humidity-and-draught/🔣️.tsv");
+    for line in fixtures.lines().skip(1) {
+        let columns: Vec<_> = line.split('\t').collect();
+        let annex = if columns[0] == "de" { AnnexChoice::De } else { AnnexChoice::En };
+        let cat = parse_category(columns[1]);
+        let num = |index: usize| columns[index].parse::<f64>().unwrap();
+        let humidity = (columns[5] != "-").then(|| (num(5), num(6)));
+        let limit = (columns[7] != "-").then(|| num(7));
+        assert_eq!(part_1::humidity_band(annex, cat), humidity, "{line}");
+        assert_eq!(part_1::draught_limit_percent(annex, cat), limit, "{line}");
+        let rate = part_1::draught_rate_percent(num(2), num(3), num(4));
+        assert_eq!(rate.is_some(), columns[8] == "yes", "{line}");
+        if let (Some(rate), Some(limit)) = (rate, limit) {
+            if rate > limit {
+                let max = part_1::maximum_air_speed_for_draught(num(2), num(3), num(4), limit);
+                assert!(part_1::draught_rate_percent(num(2), max, num(4)).unwrap() <= limit, "{line}");
+                assert!(part_1::draught_rate_percent(num(2), max + 0.001, num(4)).unwrap() > limit, "{line}");
+            }
+        }
+    }
+}
+
+
+#[test]
+fn lighting_and_equipment_noise_reproduce_the_published_profile_values() {
+    let fixtures = include_str!("../../../../../🧪️tests/🧫️fixtures/🔆️lighting-and-noise/🔣️.tsv");
+    for line in fixtures.lines().skip(1) {
+        let columns: Vec<_> = line.split('\t').collect();
+        let annex = if columns[0] == "de" { AnnexChoice::De } else { AnnexChoice::En };
+        let usage = parse_usage(columns[1]);
+        let cat = parse_category(columns[2]);
+        assert_eq!(part_1::illuminance_min_lx(usage), columns[3].parse().ok(), "{line}");
+        assert_eq!(part_1::acoustic_limit_db(annex, usage, cat), columns[4].parse().ok(), "{line}");
+    }
 }

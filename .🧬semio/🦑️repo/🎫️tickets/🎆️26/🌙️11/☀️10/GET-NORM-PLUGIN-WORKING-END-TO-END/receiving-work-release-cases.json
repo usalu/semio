@@ -1,0 +1,8 @@
+[
+  {"issuedWork":0,"issuedRelease":0,"reservedWork":0,"reservedRelease":0},
+  {"issuedWork":1,"issuedRelease":1,"reservedWork":1,"reservedRelease":1},
+  {"issuedWork":2097151,"issuedRelease":134217727,"reservedWork":1048576,"reservedRelease":67108864},
+  {"issuedWork":2097152,"issuedRelease":134217728,"reservedWork":1048576,"reservedRelease":67108864},
+  {"issuedWork":2097153,"issuedRelease":134217729,"reservedWork":1048576,"reservedRelease":67108864},
+  {"issuedWork":50000000,"issuedRelease":536870912,"reservedWork":1048576,"reservedRelease":67108864}
+]

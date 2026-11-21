@@ -22,7 +22,8 @@
     "save-stale",
     "save-archive-failure",
     "save-retired-export",
-    "save-edited-export"
+    "save-edited-export",
+    "archive-failure-before-retirement"
   ],
   "expectedBeforeAck": [
     "import",
@@ -34,6 +35,7 @@
     "focus",
     "shell.documentTransfer.file-opened"
   ],
+  "archiveFailureBeforeRetirement": ["create", "shell.documentTransfer.import-failed", "destroy"],
   "expectedFailureCleanup": [
     "drain",
     "destroy"
@@ -50,5 +52,35 @@
   "saveRequests": [
     "localDocumentArchive",
     "externalChanged"
+  ],
+  "segmentedSave": [
+    {
+      "id": "current",
+      "chunks": [
+        [
+          37,
+          80
+        ],
+        [
+          68,
+          70
+        ]
+      ],
+      "delivered": true
+    },
+    {
+      "id": "edited",
+      "chunks": [
+        [
+          37,
+          80
+        ],
+        [
+          68,
+          70
+        ]
+      ],
+      "delivered": false
+    }
   ]
 }

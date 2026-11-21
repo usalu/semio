@@ -46,3 +46,54 @@ fn per_turn_outcome_costs_what_it_holds_and_failures_stay_out_of_line(){
  assert!(outcome<=256,"per-turn outcome {outcome} bytes must not hold the {turn} byte receiving refusal inline");
  assert!(primary<=turn);
 }
+
+#[test]
+fn invalid_utf8_keeps_its_paid_prefix_and_failure_owner(){
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+ let mut wire=corpus["cases"].as_array().unwrap().iter().find(|row|row["name"]=="unicode").unwrap()["wire"].as_str().unwrap().as_bytes().to_vec();
+ let prefix=corpus["invalidUtf8"]["validPrefix"].as_u64().unwrap()as usize;
+ wire[prefix]=corpus["invalidUtf8"]["invalidByte"].as_u64().unwrap()as u8;
+ assert!(serde_json::from_slice::<Projection>(&wire).is_err());
+ let g=RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:16_777_216,maximum_capacity_bytes:16_777_216,maximum_release_bytes:16_777_216,maximum_depth:64};
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(943),Generation(1),g,clock,100_000_000,1_000_000);
+ caller.retain_dispatch().unwrap();
+ let limits=JsonReadLimits{maximum_bytes:2048,maximum_allocation_bytes:g.maximum_capacity_bytes,maximum_depth:16,maximum_items:10000};
+ let mut source=OriginalJsonOutputSource::<Projection>::new(OriginalNativeDecodePolicy{maximum_owned_bytes:g.maximum_capacity_bytes},limits);
+ let mut closes=Vec::new();
+ let mut refused=false;
+ for _ in 0..100 {
+  if let Some(outcome)=funded(&mut caller,g,|cx|source.receive_step(&wire,cx)){
+   assert!(outcome.receiving_refusal.is_none());
+   if outcome.value.is_err(){
+    let receiver=source.receiver().unwrap();
+    let parser=receiver.parser.as_ref().unwrap();
+    assert_eq!(receiver.parse_work_quote(wire.len(),0,10).unwrap(),0);
+    assert_eq!(receiver.parse_work_quote(wire.len(),1,10).unwrap(),1);
+    assert_eq!(receiver.parse_work_quote(wire.len(),10,1).unwrap(),1);
+    assert!(matches!(receiver.syntax_error(),Some(JsonError::InvalidUtf8)));
+    assert!(receiver.failure().is_some());
+    assert!(receiver.action.terminal_is_empty());
+    assert_eq!(receiver.bytes_read(),0);
+    assert_eq!(parser.last_turn_work(),prefix as u64+1);
+    assert_eq!(parser.normal_step_progress().copied_items,prefix+1);
+    refused=true;
+   }
+   closes.push(ControlledRetirement::retain(outcome));
+   drain(&mut caller,g,&mut source,&mut closes);
+   if refused{break}
+  }
+ }
+ assert!(refused);
+ caller.cancel().cancel_now();
+ for _ in 0..100000{
+  drain(&mut caller,g,&mut source,&mut closes);
+  if source.terminal_is_empty(){break}
+  if let OriginalJsonOutputClose::Producer(Some(outcome))=funded(&mut caller,g,|cx|source.close_step(cx)){
+   assert!(outcome.receiving_refusal.is_none());
+   outcome.value.unwrap();
+  }
+ }
+ assert!(closes.is_empty());
+ assert!(source.terminal_is_empty());
+ caller.retire(g);
+}

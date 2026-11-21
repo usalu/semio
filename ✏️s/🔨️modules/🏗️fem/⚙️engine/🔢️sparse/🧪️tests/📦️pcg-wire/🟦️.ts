@@ -2,9 +2,16 @@ import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch, type Operation } from "fast-json-patch";
 import fixture from "../🧫️fixtures/📦️pcg-wire/🔣️.json" with { type: "json" };
+import pendingOutcome from "../🧫️fixtures/📦️pcg-wire/pending-outcome.json" with { type: "json" };
 
 
 export function testFemPcgWireOracle(): void {
+  const pending = { [pendingOutcome.marker]: [] as number[] };
+  assert.equal(Object.keys(pending).length === 0, pendingOutcome.initiallyEmpty);
+  const retirement = applyPatch(pending, [{ op: "remove", path: "/" + pendingOutcome.marker }], true, false);
+  assert.equal(retirement.length, pendingOutcome.copiedItems);
+  assert.equal(retirement[0].removed.length, pendingOutcome.releasedBytes);
+  assert.equal(Object.keys(retirement.newDocument).length === 0, pendingOutcome.finallyEmpty);
   
   
   

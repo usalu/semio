@@ -2,12 +2,20 @@
 
 use super::planar_dual_coordinates;
 use semio_framework_3d_brep_construction::primitives::SolidPrimitive;
-use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_curve::{bounded_spline::{closest_spline_parameter, SplineRefusal}, Curve3};
 use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 use semio_framework_3d_brep_vector::matrix::Frame3;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
+
+#[path = "🥚️ellipse-trim/🦀️.rs"]
+mod ellipse_trim;
+#[path = "📐️rational-plane/🦀️.rs"]
+mod rational_plane;
+#[path = "🐚️derived-solids/🦀️.rs"]
+mod derived_solids;
+pub use derived_solids::{frustum_bounds, frustum_nearest, spherical_caps_bounds, spherical_caps_nearest, spherical_shell_bounds, spherical_shell_nearest};
 
 fn invalid()->ValueError{
     ValueError::literal(ValueRefusalKind::InvalidValue,"nearest analytic parameters require finite nondegenerate geometry")
@@ -53,25 +61,6 @@ fn plane_uv(frame:&Frame3,target:Pnt3)->Result<[f64;2],ValueError>{
     planar_dual_coordinates(*frame,target).map_err(|_|invalid())
 }
 
-/// 🧵️ Projects onto the closed trim of a supported analytic edge.
-pub fn edge_nearest(curve:&Curve3,target:Pnt3,range:(f64,f64))->Result<Pnt3,ValueError>{
-    match curve{
-        Curve3::Line{origin,dir}=>Ok(line_parameter(*origin,*dir,target,Some(range))?.1),
-        Curve3::Circle{..}=>{
-            let (lo,hi)=(range.0.min(range.1),range.0.max(range.1));
-            if !range.0.is_finite()||!range.1.is_finite(){return Err(invalid());}
-            let ([angle],_,_)=curve_nearest(curve,target)?;
-            let on_trim=lo+(angle-lo).rem_euclid(TAU);
-            if on_trim<=hi{return Ok(curve.eval(on_trim));}
-            let a=curve.eval(lo);
-            let b=curve.eval(hi);
-            let distance=|point:Pnt3|{let delta=point-target;delta.x.hypot(delta.y).hypot(delta.z)};
-            Ok(if distance(a)<=distance(b){a}else{b})
-        },
-        _=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"closest point on this trim requires original distance subdivision")),
-    }
-}
-
 /// 💿️ Projects onto a filled circle or ellipse.
 pub fn conic_disk_nearest(curve:&Curve3,target:Pnt3)->Result<Pnt3,ValueError>{
     let (frame,a,b)=match curve{
@@ -82,7 +71,7 @@ pub fn conic_disk_nearest(curve:&Curve3,target:Pnt3)->Result<Pnt3,ValueError>{
     if a<=0.0||b<=0.0||!a.is_finite()||!b.is_finite(){return Err(invalid());}
     let [u,v]=plane_uv(frame,target)?;
     if (u/a).hypot(v/b)<=1.0{return Ok(frame.origin+frame.x*u+frame.y*v);}
-    Ok(curve_nearest(curve,target)?.1)
+    Ok(curve_nearest((curve,None),target)?.1)
 }
 
 /// 🧊️ Projects onto the boundary of an analytic solid primitive.
@@ -163,26 +152,52 @@ fn ellipse_parameter(x:f64,y:f64,a:f64,b:f64)->Result<f64,ValueError>{
     Ok(if swapped{angle(v,u)}else{angle(u,v)})
 }
 
-/// 📍️ Returns the nearest parameter, point, and distance on a supported analytic curve.
-pub fn curve_nearest(curve:&Curve3,target:Pnt3)->Result<([f64;1],Pnt3,f64),ValueError>{
+/// 🎯️ Projects onto a supported original curve and its optional owning edge trim.
+pub fn curve_nearest((curve,trim):(&Curve3,Option<(f64,f64)>),target:Pnt3)->Result<([f64;1],Pnt3,f64),ValueError>{
     check(target)?;
     let parameter=match curve{
         Curve3::Line{origin,dir}=>{
-            let (parameter,point)=line_parameter(*origin,*dir,target,None)?;
+            let (parameter,point)=line_parameter(*origin,*dir,target,trim)?;
             return result([parameter],point,target);
         }
         Curve3::Circle{frame,radius} if radius.is_finite()&&*radius>0.0=>{
             let p=frame.to_local(target);
-            angle(p.x,p.y)
+            let parameter=angle(p.x,p.y);
+            if let Some((a,b))=trim {
+                if !a.is_finite()||!b.is_finite(){return Err(invalid());}
+                let (lo,hi)=(a.min(b),a.max(b));
+                let on_trim=lo+(parameter-lo).rem_euclid(TAU);
+                if p.x==0.0&&p.y==0.0 {lo}
+                else if on_trim<=hi {on_trim}
+                else {
+                    let left=result([lo],curve.eval(lo),target)?;
+                    let right=result([hi],curve.eval(hi),target)?;
+                    return Ok(if left.2<=right.2 {left}else{right});
+                }
+            }else{parameter}
         }
         Curve3::Ellipse{frame,major_radius,minor_radius}=>{
             let p=frame.to_local(target);
-            ellipse_parameter(p.x,p.y,*major_radius,*minor_radius)?
+            if let Some(range)=trim { ellipse_trim::nearest(p.x,p.y,*major_radius,*minor_radius,range)? }
+            else { ellipse_parameter(p.x,p.y,*major_radius,*minor_radius)? }
         }
-        Curve3::Nurbs{..}=>return Err(unsupported()),
+        Curve3::Nurbs{..}=>{
+            let (t,point,distance)=closest_spline_parameter(curve,trim,target).map_err(spline_refusal)?;
+            return Ok(([t],point,distance));
+        }
         _=>return Err(invalid()),
     };
     result([parameter],curve.eval(parameter),target)
+}
+
+fn spline_refusal(error:SplineRefusal)->ValueError{
+    let (kind,message)=match error{
+        SplineRefusal::Unsupported=>(ValueRefusalKind::UnsupportedOwner,"retained spline projection requires a nonperiodic spline of degree one through three with up to 32 controls"),
+        SplineRefusal::InvalidSpline=>(ValueRefusalKind::InvalidValue,"retained spline projection requires continuous finite controls, knots, and positive weights"),
+        SplineRefusal::InvalidRange=>(ValueRefusalKind::InvalidValue,"retained spline projection requires a finite ordered trim inside the source domain"),
+        SplineRefusal::Unresolved=>(ValueRefusalKind::InvalidValue,"retained spline nearest parameter could not be resolved at finite precision"),
+    };
+    ValueError::literal(kind,message)
 }
 
 /// 📍️ Returns the nearest parameters, point, and distance on a supported analytic surface.
@@ -195,7 +210,22 @@ pub fn surface_nearest(surface:&Surface,target:Pnt3)->Result<([f64;2],Pnt3,f64),
     let frame=match surface{
         Surface::Plane{frame}|Surface::Cylinder{frame,..}|Surface::Cone{frame,..}|
         Surface::Sphere{frame,..}|Surface::Torus{frame,..}=>frame,
-        Surface::Nurbs{..}=>return Err(unsupported()),
+        Surface::Nurbs{u_knots,v_knots,controls,weights}=>{
+            use semio_framework_3d_brep_curve::bspline::KnotVector;
+            let domain=|knots:&KnotVector|{
+                let [lo,a,b,hi]=knots.knots.as_slice() else{return None;};
+                (knots.degree==1&&lo==a&&b==hi&&lo.is_finite()&&hi.is_finite()&&lo<hi&&(*hi-*lo).is_finite()).then_some([*lo,*hi])
+            };
+            let unsupported=||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original surface projection requires a certified planar bilinear patch");
+            let [[u0,u1],[v0,v1]]=[domain(u_knots).ok_or_else(unsupported)?,domain(v_knots).ok_or_else(unsupported)?];
+            let [bottom,top]=controls.as_slice() else{return Err(unsupported());};
+            let [left,right]=weights.as_slice() else{return Err(unsupported());};
+            let ([p00,p01],[p10,p11])=(bottom.as_slice(),top.as_slice()) else{return Err(unsupported());};
+            let ([w00,w01],[w10,w11])=(left.as_slice(),right.as_slice()) else{return Err(unsupported());};
+            let [s,t]=rational_plane::nearest_uv([*p00,*p10,*p11,*p01],[*w00,*w10,*w11,*w01],target).ok_or_else(unsupported)?;
+            let [u,v]=[(u1-u0).mul_add(s,u0).clamp(u0,u1),(v1-v0).mul_add(t,v0).clamp(v0,v1)];
+            return result([u,v],surface.point_original(u,v).ok_or_else(invalid)?,target);
+        }
     };
     let local=frame.to_local(target);
     check(local)?;

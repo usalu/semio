@@ -206,6 +206,14 @@ export interface RemoveTableColumn {
   id: string;
 }
 
+/** ✍️ Replaces one cell at its zero-based row and column. */
+export interface EditTableCell {
+  id: string;
+  row: number;
+  column: number;
+  content: string;
+}
+
 export type NoteMutation =
   | ({ mutation: "renameNote" } & RenameNote)
   | ({ mutation: "changeGridVisible" } & ChangeGridVisible)
@@ -239,4 +247,5 @@ export type NoteMutation =
   | ({ mutation: "insertTableRow" } & InsertTableRow)
   | ({ mutation: "removeTableRow" } & RemoveTableRow)
   | ({ mutation: "insertTableColumn" } & InsertTableColumn)
-  | ({ mutation: "removeTableColumn" } & RemoveTableColumn);
+  | ({ mutation: "removeTableColumn" } & RemoveTableColumn)
+  | ({ mutation: "editTableCell" } & EditTableCell);

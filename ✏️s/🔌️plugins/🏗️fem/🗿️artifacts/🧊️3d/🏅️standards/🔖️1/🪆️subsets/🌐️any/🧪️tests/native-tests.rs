@@ -11,7 +11,11 @@ fn advance(auth:&mut Authorities,rx:&mut Fem3dReceiving,control:&mut NativeDecod
 fn received<T>(auth:&mut Authorities,native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut store::NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<T,store::NativeSnapshotFailure>)->(RetainedWorkOutcome<T,store::NativeSnapshotFailure>,RetainedCloneProgress){
  let mut progress=RetainedCloneProgress::default();
  let poll=auth.nested(native,grant,|native,_|{let mut owner=store::NativeSnapshotDecodeOwner::new(native,grant);let turn=run(&mut owner);progress=owner.progress();RetainedWorkPoll::Complete(turn)});
- match poll{RetainedWorkPoll::Complete(turn)=>(turn,progress),RetainedWorkPoll::Pending{..}=>panic!("a synchronous snapshot turn stayed pending")}
+ let RetainedWorkPoll::Complete(turn) = poll else { panic!("a synchronous snapshot turn stayed pending") };
+ if turn.result.is_ok() {
+    original_owners::close_retired(native);
+ }
+ (turn, progress)
 }
 fn close(rx:Fem3dReceiving){retire(rx)}
 fn original() -> RetainedCloneGrant {

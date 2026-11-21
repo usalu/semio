@@ -35,6 +35,6 @@ The hover and focus probe waits on the target's nearest compositor. Controls who
 - All six Play cells completed two onboarding and 78 landing targets with 80 focus checks and no reports on the staged path.
 - The bridge regression checks that a page error raised during the first Staffage target persists in the result. The runner reports Staffage's initial paint, script load, sweep start and first target separately so a timeout identifies the stalled phase. All 13 bridge, cell-selection and settle cases passed.
 
-## Remaining browser verification
+## Final browser verification
 
-The current supervisor serves the batch at [English OS mobile and Staffage tablet](http://127.0.0.1:5700/?cells=staffage:en:768,os:en:375). Establish keyboard modality with Tab and start the batch with Enter. The batch saves results and attempt state to the report's primary matrix directory. The in-app browser is required for both cells.
+The final English tablet Staffage and mobile OS cells passed. The OS retry used the original showcase through native Vite with isolated dependencies after reads from the mounted repository caches stalled. The chip probe checked snapped outlines at their painted corners. Its regression fixture reproduces the measured closed outline, a missing side and a disconnected side. [Final matrix](live-final.md) · [Launcher diagnosis](launcher-diagnosis.md)

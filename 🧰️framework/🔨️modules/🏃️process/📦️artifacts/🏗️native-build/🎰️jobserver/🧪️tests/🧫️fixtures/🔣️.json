@@ -93,6 +93,14 @@
     "tokens": 3,
     "attempts": 5
   },
+  "retirement": {
+    "tokens": 3,
+    "driverSlots": 2,
+    "abandonedBorrow": "acquired",
+    "whileClientActive": "unavailable",
+    "afterPartialProbe": "acquired",
+    "afterRetirement": "acquired"
+  },
   "oracle": {
     "tokens": 4,
     "workers": 8,
@@ -111,6 +119,8 @@
   },
   "exclusive": {
     "tokens": 3,
+    "waitingHeld": 1,
+    "externalBorrow": "acquired",
     "workers": 8,
     "holdMs": 15,
     "rounds": 2,

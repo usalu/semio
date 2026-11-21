@@ -1,7 +1,7 @@
 {
   "title": "Gis Map End to End",
   "emoji": "🗺️",
-  "status": "closed",
+  "status": "open",
   "description": "Get the gis map working end to end: the infinite-canvas tiled-map surface renders, and zooming, panning, LOD banding and the raster/vector tile pipeline are correctly implemented and performant in the s product (dev target s-react, port 6070).",
   "summary": "Verified the public React GIS launch end to end on port 6040, including watcher-driven materialization and activation. Fixed startup/discovery, daemon routing, publication contention, compiler outputs, compile errors, and map redraw/cancellation. All 17 map tests and focused infrastructure checks pass. Browser rendering, layers, style, zoom, selection and tile transport verified. Evidence and limitations: 📓️startup-verification.md. Generated outputs removed; development server left running.",
   "github": {
@@ -11,6 +11,18 @@
   "sessions": [
     "⚪f85bf12f57a842989759bdf156b99432",
     "⚪7ea30973b2c64219a08089aa7fb9f550",
-    "⚪f39ddc241cff4dc0a920bddc39dd2984"
+    "⚪f39ddc241cff4dc0a920bddc39dd2984",
+    "ebfd10fa-b6cb-4ff9-92dd-586128ebe00e"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-21 02:22:49",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "prompt": "Get GIS 2D running end to end and performantly across devices, with parallel device and implementation verification."
+    }
   ]
 }

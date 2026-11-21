@@ -1,0 +1,11 @@
+{
+  "source": "Adam7 palette transparency",
+  "pageBytes": 4096,
+  "paddingChunk": "vpAg",
+  "seams": [
+    { "chunk": "PLTE", "offset": 33, "fieldOffset": 8, "fieldBytes": 12, "splitAfter": 2, "paddingCrc": 3215944580 },
+    { "chunk": "tRNS", "offset": 57, "fieldOffset": 0, "fieldBytes": 8, "splitAfter": 2, "paddingCrc": 3643937247 },
+    { "chunk": "IDAT", "offset": 73, "fieldOffset": 8, "fieldBytes": 31, "splitAfter": 1, "paddingCrc": 2870777995 },
+    { "chunk": "IEND", "offset": 116, "fieldOffset": 8, "fieldBytes": 4, "splitAfter": 2, "paddingCrc": 1885397525 }
+  ]
+}

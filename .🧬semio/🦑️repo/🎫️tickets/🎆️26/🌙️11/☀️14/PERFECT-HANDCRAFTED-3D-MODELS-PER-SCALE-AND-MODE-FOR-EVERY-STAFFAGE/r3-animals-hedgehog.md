@@ -142,3 +142,54 @@ Still not A:
 - `rolled` at 1:200 is a closed lump with a jagged seam between the halves, not a ball; at 1:500 it was not looked at.
 - At 1:200 and 1:500 the region `spines-skirt` is hidden inside the dome while the animal stands.
 - The round-3 list of section 6 stands (one spine joint, tufts for spines, nose size, toe blocks).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-hedgehog-model.ts <50|100|200|500> --write` (the round-3/4 hand tables carried over and remodelled), then the round-3 chain `r3-hedgehog-draw2d.ts`, `r3-hedgehog-candidate.ts`, `r3-validate.ts --file`, `r3-hedgehog-apply.py` (root members are the unchanged round-4 rig, anchors and poses, verified equal to the catalog before writing; 2D redrawn from the new bodies; volumes spliced). Shared helpers of this round: `r5-fauna-render.sh`, `r5-fauna-measure.ts`. Inputs kept: `🗑️generated/r5-hedgehog/asset-before.json`, `volumes-before.json`.
+
+### Reference
+
+Section 1 stands (Reeve 1994; *Erinaceus europaeus*, 1 kg, foraging). Added for this round: in a foraging hedgehog the spines lie back towards the rump at roughly 30 to 40 degrees to the skin; they stand erect and radiate only when the animal is alarmed or rolled.
+
+### Model against reference at 1:50 (`r5-fauna-measure.ts`, foraging pose)
+
+| measure | reference | model | deviation |
+|---|---|---|---|
+| length over spines | 0.28 (dimensions; head-body 0.20 to 0.27 plus rear spines) | 0.274 | -2.1 % |
+| height to the spine tips | 0.12 to 0.14 (dimensions 0.128) | 0.123 | -3.9 % against `dimensions`, inside the species range; the laid-back spines lower the envelope by 5 mm (dimensions not changed, bounds rule passes) |
+| width over spines | 0.13 to 0.16 (dimensions 0.15) | 0.146 | -2.7 % |
+| head occiput to nose tip | 0.06 to 0.066 | 0.066 along the bone | 0 |
+| head width over the cheeks | 0.045 | 0.048 | +6 % (fur on the jowls) |
+| eye | 7 to 8 mm | 8 mm | 0 |
+| ear | 20 to 30 mm, at the edge of the spines | 18 x 15 mm, at z 21.5 mm beside the brow fringe | -10 % against the lower end (7.8 mm feature for the thickness) |
+| belly clearance | 20 to 30 mm | 27 mm | in range |
+| hind foot / fore foot | 40 to 45 / 25 to 30 mm | 40 / 28 mm | in range |
+
+Rig audit: unchanged from round 4 (two-bone legs with elbow and knee, flexing back at the mid-back joint, bowls as coat bones); its known limit (one spine joint) remains.
+
+### Grades (sheets opened)
+
+| scale | list | before | after |
+|---|---|---|---|
+| 1:50 | body | B (spines radiate like a cactus in front and side view, skirt tufts stick straight out sideways, head a straight cone, ear a ball on the crown) | A- |
+| 1:50 | thermal / structure | A- / A- | A- / A- (structure only the slender rays corrected) |
+| 1:100 | body / thermal / structure | B / B+ / B+ | B+ / B+ / B+ |
+| 1:200 | body / thermal / structure | B / B+ / B+ | B+ / B+ / B+ |
+| 1:500 | body / thermal / structure | B / B+ / B | B+ / B+ / B |
+| 1:50 | rolled | B (cactus ball, bare wedge on the flank) | B+ (spines swirl back, bare wedge remains) |
+
+### What changed
+
+- Spines: every tuft of dome, saddle and the four skirt bowls lies back towards the rump (dome and saddle lean `tilt` 0.75 to 1.7 at 1:50 and 1.5 at 1:100; the bowl tufts, which were radial, get the same backward lean while their roots stay on the bowl). Side and plan now read as a sleek spiny coat with the fringe over the face and rump, not a cactus.
+- Head at 1:50: domed brow, fuller cheeks and jowls (mandible 37.6 mm across at the angle), the snout tapering to a fine downturned tip with the nose pad 1.2 mm lower; ears moved from the crown to the edge of the spine fringe beside the brow.
+- Structure: slender digit rays thinned (manus 0.8 mm at 1:50, 1.2 mm coarser; pes 1.1 mm) so that the stricter slenderness measure (at least 20) holds; the catalog asset was INVALID on these 10 rays before this round.
+- 2D of 1:50 and 1:100 redrawn from the new bodies (ruling E1); 1:200 and 1:500 representations stay unavailable.
+- Checks: `volumes-check.ts animals/hedgehog --product` PASS; `r3-validate.ts animals/hedgehog --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); spliced.
+
+### Remaining issues, with reason
+
+- Height to the spine tips 0.123 against `dimensions` 0.128 (-3.9 %); both inside the species range, left for a dimensions review rather than steered.
+- The rolled ball keeps a bare wedge on each flank where the two dome halves part around the single mid-back joint; a real hedgehog flexes the whole column (rig limit, round-3 section 6).
+- Spines are 372 tufts of 8.4 mm at 1:50 (feature floor), not 6000 spines; the four orbicularis rings in the structure still follow the four rig bowls.
+- The ear is 7.8 mm thick (feature floor); the nose bulb is larger than life to meet its declared area (area-review, round 3).
+- 1:100 to 1:500 heads remain one cone without jaw, eyes and ears (below those scales' features).

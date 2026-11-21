@@ -1,22 +1,167 @@
 //! 🧪️ Original PNG ownership matches independent decoding and actual allocator receipts.
 use super::*;
 use crate::retirement::tests::{drain,observed};
+use semio_framework_value::{
+    ByteReadSource, RetireOwned,
+    paged::PagedBytes,
+    retirement::controlled::ControlledRetirement,
+};
 #[path="../../../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
 mod effect;
 type Turn=(PngDecodeProgress,semio_framework_value::retained_clone::RetainedCloneProgress);
 /// 🪢️ One decoder turn inside one actual original effect.
 fn advance_with(job:&mut PngDecodeJob,grant:RetainedCloneGrant)->Result<Turn,PngDecodeError>{effect::with_effect(grant,1<<40,&mut None,|effect|job.advance(effect))}
-fn advance_observed(job:&mut PngDecodeJob,grant:RetainedCloneGrant)->(Turn,(usize,usize)){effect::with_effect(grant,1<<40,&mut None,|effect|{let(result,physical)=observed(||job.advance(effect));(result.unwrap(),physical)})}
+fn advance_observed<S: ByteReadSource + RetireOwned>(job:&mut PngDecodeJob<S>,grant:RetainedCloneGrant)->(Turn,(usize,usize)){effect::with_effect(grant,1<<40,&mut None,|effect|{let(result,physical)=observed(||job.advance(effect));(result.unwrap(),physical)})}
 fn rows()->serde_json::Value{serde_json::from_str(crate::text("📷️png/📥️decode/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn input(row:&serde_json::Value)->PngDecodeInput{PngDecodeInput{data:serde_json::from_value(row["data"].clone()).unwrap(),max_pixels:row["maxPixels"].as_u64().unwrap()as usize,max_bytes:row["maxBytes"].as_u64().unwrap()as usize,max_chunks:row["maxChunks"].as_u64().unwrap()as usize}}
 fn job(input:PngDecodeInput)->PngDecodeJob{PngDecodeJob::new(input).unwrap()}
-fn grant(job:&PngDecodeJob)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:job.next_copy_byte_demand().unwrap(),maximum_capacity_bytes:job.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:job.next_depth_demand().unwrap()}}
+fn grant<S: ByteReadSource + RetireOwned>(job:&PngDecodeJob<S>)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:job.next_copy_byte_demand().unwrap(),maximum_capacity_bytes:job.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:job.next_depth_demand().unwrap()}}
 fn finish(job:&mut PngDecodeJob,items:usize)->Result<(),PngDecodeError>{let(mut work,mut bytes,mut pixels)=(0,0,0);for _ in 0..2000000{let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:items*131072,maximum_capacity_bytes:67108864,maximum_release_bytes:0,maximum_depth:job.next_depth_demand()?};let(progress,receipt)=advance_with(job,grant)?;assert!(receipt.fits(grant));assert!(progress.work-work<=items as u64);assert!(progress.bytes>=bytes);assert!(progress.pixels>=pixels);work=progress.work;bytes=progress.bytes;pixels=progress.pixels;if progress.done{return Ok(());}}panic!("PNG job did not finish")}
-fn output(job:&mut PngDecodeJob)->RasterImage{job.take_result(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()}).unwrap().unwrap().0}
+fn output<S: ByteReadSource + RetireOwned>(job:&mut PngDecodeJob<S>)->RasterImage{job.take_result(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<RasterImage>(),maximum_depth:1,..Default::default()}).unwrap().unwrap().0}
 fn oracle(data:&[u8])->RasterImage{let mut decoder=png::Decoder::new(std::io::Cursor::new(data));decoder.set_transformations(png::Transformations::EXPAND|png::Transformations::STRIP_16);let mut reader=decoder.read_info().unwrap();let mut bytes=vec![0;reader.output_buffer_size()];let info=reader.next_frame(&mut bytes).unwrap();let mut out=Vec::new();for pixel in bytes[..info.buffer_size()].chunks(info.color_type.samples()){match info.color_type{png::ColorType::Grayscale=>out.extend_from_slice(&[pixel[0],pixel[0],pixel[0],255]),png::ColorType::Rgb=>out.extend_from_slice(&[pixel[0],pixel[1],pixel[2],255]),png::ColorType::GrayscaleAlpha=>out.extend_from_slice(&[pixel[0],pixel[0],pixel[0],pixel[1]]),png::ColorType::Rgba=>out.extend_from_slice(pixel),_=>panic!("oracle did not expand palette")}}RasterImage{width:info.width,height:info.height,pixels:out}}
 #[test]
 fn png_decode_shared_all_depths_filters_interlace_and_huffman_under_grants(){
  let rows=rows();for row in rows.as_array().unwrap(){let expected:Vec<u8>=serde_json::from_value(row["expected"]["pixels"].clone()).unwrap();let reference=oracle(&input(&row["input"]).data);assert_eq!(reference.pixels,expected,"{} independent PNG oracle",row["name"]);for items in [1,7,4096]{let mut job=job(input(&row["input"]));finish(&mut job,items).unwrap();assert_eq!(job.result().unwrap().pixels,expected);let image=output(&mut job);assert_eq!((image.width,image.height),(reference.width,reference.height));drain(job);drain(image);}}
+}
+
+#[test]
+fn png_decode_moves_paged_original_across_chunk_seams_under_exact_grants() {
+    type Source = PagedBytes<65536>;
+    let fixture: serde_json::Value =
+        serde_json::from_str(include_str!("🧫️fixtures/📦️paged.json")).unwrap();
+    let rows = rows();
+    let row = rows.as_array().unwrap().iter().find(|row| row["name"] == fixture["source"]).unwrap();
+    let mut input = input(&row["input"]);
+    let expected: Vec<u8> = serde_json::from_value(row["expected"]["pixels"].clone()).unwrap();
+    let page_bytes = fixture["pageBytes"].as_u64().unwrap() as usize;
+    let padding_chunk = fixture["paddingChunk"].as_str().unwrap().as_bytes();
+    let mut inserted = 0;
+    let mut fields = Vec::new();
+    for (index, seam) in fixture["seams"].as_array().unwrap().iter().enumerate() {
+        let n = |key| seam[key].as_u64().unwrap() as usize;
+        let offset = n("offset") + inserted;
+        assert_eq!(&input.data[offset + 4..offset + 8], seam["chunk"].as_str().unwrap().as_bytes());
+        let split = n("splitAfter");
+        let field = (index + 1) * page_bytes - split;
+        let padding = field - n("fieldOffset") - offset - 12;
+        let mut chunk = (padding as u32).to_be_bytes().to_vec();
+        chunk.extend_from_slice(padding_chunk);
+        chunk.resize(8 + padding, 0);
+        chunk.extend_from_slice(&(n("paddingCrc") as u32).to_be_bytes());
+        inserted += chunk.len();
+        input.data.splice(offset..offset, chunk);
+        fields.push((field, split, n("fieldBytes")));
+    }
+    let reference = oracle(&input.data);
+    assert_eq!(reference.pixels, expected);
+    let limits = PngDecodeLimits {
+        max_pixels: input.max_pixels,
+        max_bytes: input.max_bytes,
+        max_chunks: input.max_chunks,
+    };
+    let (source, (source_allocated, source_released)) =
+        observed(|| Source::try_from_slice(&input.data).unwrap());
+    for (offset, split, count) in fields {
+        let left = source.retained_bytes().contiguous_at(offset).unwrap();
+        assert_eq!(left.len(), split);
+        let mut bytes = [0; 32];
+        assert_eq!(source.read_bytes(offset, &mut bytes[..count]), count);
+        assert_eq!(&bytes[..count], &input.data[offset..offset + count]);
+    }
+    let pages = |source: &Source| {
+        (0..source.len()).step_by(page_bytes)
+            .map(|at| source.retained_bytes().contiguous_at(at).unwrap().as_ptr())
+            .collect::<Vec<_>>()
+    };
+    let original_pages = pages(&source);
+    let mut owner = ControlledRetirement::retain(source);
+    let birth = PngDecodeJob::<Source>::paged_birth_demand();
+    let funded = RetainedCloneGrant {
+        maximum_items: 1,
+        maximum_copy_bytes: birth.copy_bytes,
+        maximum_capacity_bytes: birth.capacity_bytes,
+        maximum_release_bytes: birth.release_bytes,
+        maximum_depth: birth.depth,
+    };
+    let short = RetainedCloneGrant { maximum_copy_bytes: funded.maximum_copy_bytes - 1, ..funded };
+    for (grant, work) in [(short, 1 << 40), (funded, 1)] {
+        let (denied, heap) = effect::with_effect(grant, work, &mut None, |effect| {
+            observed(|| PngDecodeJob::admit_paged(&mut owner, limits, effect))
+        });
+        assert!(denied.unwrap().is_none());
+        assert_eq!(heap, (0, 0));
+        assert!(owner.original_is_untouched());
+        assert_eq!(pages(owner.original().unwrap()), original_pages);
+    }
+    let short_limit = PngDecodeLimits { max_bytes: input.data.len() - 1, ..limits };
+    let (invalid, heap) = effect::with_effect(funded, 1 << 40, &mut None, |effect| {
+        observed(|| PngDecodeJob::admit_paged(&mut owner, short_limit, effect))
+    });
+    assert!(matches!(invalid, Err(PngDecodeError::Invalid(_))));
+    assert_eq!(heap, (0, 0));
+    assert!(owner.original_is_untouched());
+    assert_eq!(pages(owner.original().unwrap()), original_pages);
+
+    let (admitted, heap) = effect::with_effect(funded, 1 << 40, &mut None, |effect| {
+        observed(|| PngDecodeJob::admit_paged(&mut owner, limits, effect))
+    });
+    let (mut decoder, receipt) = admitted.unwrap().unwrap();
+    assert_eq!(heap, (0, 0));
+    assert_eq!(receipt, semio_framework_value::RetainedCloneProgress {
+        copied_items: 1,
+        copied_bytes: birth.copy_bytes,
+        ..Default::default()
+    });
+    assert!(owner.terminal_is_empty());
+    assert_eq!(pages(decoder.paged_source()), original_pages);
+    assert!(decoder.paged_source().iter().eq(input.data.iter().copied()));
+    assert!(matches!(decoder.result(), Err(PngDecodeError::Incomplete)));
+
+    let mut vector = job(input);
+    let mut allocated = 0;
+    let mut released = 0;
+    let mut denials = 0;
+    for _ in 0..200_000 {
+        let before = decoder.progress();
+        let quote = grant(&decoder);
+        assert_eq!(quote, grant(&vector));
+        let offset = before.bytes % page_bytes;
+        if offset.min(page_bytes - offset) < 8 || quote.maximum_capacity_bytes != 0 {
+            let short = if quote.maximum_capacity_bytes != 0 {
+                RetainedCloneGrant { maximum_capacity_bytes: quote.maximum_capacity_bytes - 1, ..quote }
+            } else {
+                RetainedCloneGrant { maximum_copy_bytes: quote.maximum_copy_bytes - 1, ..quote }
+            };
+            assert_eq!(advance_observed(&mut decoder, short), ((before, Default::default()), (0, 0)));
+            assert_eq!(decoder.last_turn_work(), 0);
+            denials += 1;
+        }
+        let turn = advance_observed(&mut decoder, quote);
+        assert_eq!(turn, advance_observed(&mut vector, quote));
+        let ((progress, receipt), physical) = turn;
+        assert!(receipt.fits(quote));
+        assert_eq!(physical, (receipt.retained_capacity_bytes, receipt.released_bytes));
+        assert_eq!(progress.work - before.work, 1);
+        allocated += physical.0;
+        released += physical.1;
+        if progress.done { break; }
+    }
+    assert!(denials >= original_pages.len());
+    assert_eq!(pages(decoder.paged_source()), original_pages);
+    assert_eq!(decoder.decoded_properties().unwrap(), vector.decoded_properties().unwrap());
+    let image = output(&mut decoder);
+    let vector_image = output(&mut vector);
+    assert_eq!((image.width, image.height), (reference.width, reference.height));
+    assert_eq!(image.pixels, reference.pixels);
+    assert_eq!(image.pixels, vector_image.pixels);
+    let (decoder_allocated, decoder_released) = drain(decoder);
+    let (image_allocated, image_released) = drain(image);
+    assert_eq!(
+        source_allocated + allocated + decoder_allocated + image_allocated,
+        source_released + released + decoder_released + image_released,
+    );
+    drain(vector);
+    drain(vector_image);
 }
 #[test]
 fn png_decode_malformed_originals_refuse_private_output(){

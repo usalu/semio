@@ -161,4 +161,13 @@ impl FlowHost {
         self.evaluate_internal();
         Ok(self.last_eval_json.clone())
     }
+
+    /// 🌱️ Evaluates a generation with caller-projected source outputs.
+    pub fn evaluate_with_seeds(
+        &mut self,
+        project: impl FnOnce(&mut std::collections::HashMap<String, neural_engine::Dictionary>),
+    ) -> Result<String, FlowCoreError> {
+        self.evaluate_cold_step_with_seeds(neural_engine::EvalStepBudget::UNBOUNDED, &|_| true, project)?;
+        Ok(self.last_eval_json.clone())
+    }
 }

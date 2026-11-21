@@ -1,5 +1,24 @@
 //! 🎯️ Registry ownership, original typed/wire sources and paid erased-job closure share one actual caller.
 use super::*;
+
+#[test]
+fn declaration_registry_orders_exact_keys_without_seeded_state() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️ordered-registry.json")).unwrap();
+    let key = |row: &serde_json::Value| ToolFactoryKey::new(row[0].as_str().unwrap(), row[1].as_str().unwrap());
+    let bus = ActionBus::new();
+    for row in fixture["registration"].as_array().unwrap() {
+        let entry = key(row);
+        bus.register(factory::<64>(&entry.controller_id, &[&entry.tool_id])).unwrap();
+    }
+    let factories = fixture["factoryOrder"].as_array().unwrap().iter().map(key).collect::<Vec<_>>();
+    assert_eq!(bus.keys(), factories);
+    let alias = key(&fixture["alias"]["key"]);
+    let target = key(&fixture["alias"]["target"]);
+    bus.register_alias(alias.clone(), target).unwrap();
+    assert_eq!(bus.keys().strip_suffix(&[alias.clone()]).unwrap(), factories.as_slice());
+    assert!(bus.contains(&alias));
+    assert_eq!(bus.payload_schema_id(&alias), None);
+}
 use super::admission::tests::{source,close,grant,clock,admitted_decoder};
 use semio_framework_job::{Generation,RevisionId,OriginalJobFixtureCaller,OriginalJobDecodeOwner,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,JobOutcomeKind,InteractiveJobCloseStep,InteractiveJobStep,OriginalJobReturn,OriginalJobReturnClaim,OriginalJobReturnOrigin,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand};

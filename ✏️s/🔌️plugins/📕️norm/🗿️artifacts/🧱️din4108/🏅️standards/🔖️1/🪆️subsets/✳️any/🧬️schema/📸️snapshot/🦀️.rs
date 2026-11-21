@@ -9,6 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::ClimateZoneDe;
+pub use semio_s_plugin_norm_compliance::design_case::{CaseNumber, CaseRow, CaseText};
 
 use framework_schema::ArtifactSchema;
 
@@ -44,6 +45,9 @@ pub struct Din4108Snapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub thermal_bridges: Vec<ThermalBridge>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub cases: Vec<CaseRow>,
 }
 
 impl Default for Din4108Snapshot {
@@ -63,6 +67,7 @@ impl Din4108Snapshot {
             has_mechanical_ventilation: true,
             airtightness_n50: 1.5,
             bb2_details_conform: true,
+            cases: Vec::new(),
             zones: vec![
                 ThermalZone {
                     id: "zone-living".into(),

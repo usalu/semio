@@ -3,6 +3,21 @@
   "title": "Host-wide content-addressed store / Rechnerweiter inhaltsadressierter Speicher",
   "$comment": "🗄️ CasPolicyV1: one store per host, shared and deduplicated by all workspaces, size-capped with least-recently-accessed eviction. Byte sizes are plain numbers; ratios are fractions of capBytes.",
   "definitions": {
+    "GraphClosureArea": {
+      "$comment": "The host collector accounts for source inventories. The graph owner retires them under its reference census and writer cut.",
+      "const": "build-input-closures"
+    },
+    "UsageHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "bytes", "atMs"],
+      "properties": {
+        "version": {"const": 1},
+        "bytes": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "atMs": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "automaticScope": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
     "Policy": {
       "const": {
         "version": 1,
@@ -27,11 +42,6 @@
           {
             "id": "graph-memo",
             "capBytes": 4294967296,
-            "maxAgeMs": 604800000
-          },
-          {
-            "id": "build-input-closures",
-            "capBytes": 8589934592,
             "maxAgeMs": 604800000
           }
         ]
@@ -101,9 +111,17 @@
     },
     "Messages": {
       "const": {
+        "previewProgress": {
+          "en": "Cache preview scanned {entries} entries, {usedGib} GiB used of {capGib} GiB, {freedMib} MiB reclaimable.",
+          "de": "Cache-Vorschau prüfte {entries} Einträge, {usedGib} GiB von {capGib} GiB belegt, {freedMib} MiB freigebbar."
+        },
         "progress": {
           "en": "Cache store: scanned {entries} entries, {usedGib} GiB used of {capGib} GiB, freed {freedMib} MiB.",
           "de": "Cache-Speicher: {entries} Einträge geprüft, {usedGib} GiB belegt von {capGib} GiB, {freedMib} MiB freigegeben."
+        },
+        "previewCollection": {
+          "en": "Of the scanned entries, cache cleanup would remove {evicted} and free {freedMib} MiB. The remaining {keptGib} GiB would include {protectedMib} MiB of protected data{partial}.",
+          "de": "Cache-Bereinigung im Probelauf. Einträge zur Entfernung: {evicted}. Freigebbar sind {freedMib} MiB, {keptGib} GiB blieben erhalten, davon {protectedMib} MiB geschützt{partial}."
         },
         "done": {
           "en": "Cache store collected: {evicted} entries, {freedMib} MiB freed, {keptGib} GiB kept, {protectedMib} MiB protected{partial}.",
@@ -112,10 +130,6 @@
         "partitionState": {
           "en": " Partition {partition} was {usedPercent}% used (high watermark {highPercent}%, low watermark {lowPercent}%).",
           "de": " Partition {partition} war zu {usedPercent} % belegt (obere Marke {highPercent} %, untere Marke {lowPercent} %)."
-        },
-        "partitionShortfall": {
-          "en": " The partition stays {overMib} MiB above its low watermark because the rest is pinned, leased or too young.",
-          "de": " Die Partition bleibt um {overMib} MiB über ihrer unteren Marke, weil der Rest gepinnt, geleast oder zu jung ist."
         },
         "idle": {
           "en": "Cache store is below the high watermark ({usedGib} GiB of {capGib} GiB); nothing to collect.",
@@ -130,8 +144,12 @@
           "de": ", vor dem Ende abgebrochen"
         },
         "shortfall": {
-          "en": "The store stays above its cap by {overMib} MiB because the rest is pinned, leased or too young.",
-          "de": "Der Speicher bleibt um {overMib} MiB über der Grenze, weil der Rest gepinnt, geleast oder zu jung ist."
+          "en": "The collection is {overMib} MiB short of its low-water target.",
+          "de": "Bis zur unteren Grenze fehlen der Bereinigung {overMib} MiB."
+        },
+        "graphClosures": {
+          "en": " The graph owns {protectedMib} MiB of source inventories. To reclaim unreferenced inventories, run repo cache gc --area=graph-inference.",
+          "de": " Der Graph verwaltet {protectedMib} MiB an Quellinventaren. Nicht referenzierte Inventare lassen sich mit repo cache gc --area=graph-inference bereinigen."
         },
         "status": {
           "en": "Cache store {root}: {objects} objects, {usedGib} GiB of {capGib} GiB cap.",
@@ -141,9 +159,17 @@
           "en": "Partition {partition}: {usedPercent}% used, {freeGib} GiB free (collection from {highPercent}% down to {lowPercent}%, writes and builds refused from {criticalPercent}%).",
           "de": "Partition {partition}: {usedPercent} % belegt, {freeGib} GiB frei (Bereinigung ab {highPercent} % bis auf {lowPercent} %, Schreiben und Builds abgelehnt ab {criticalPercent} %)."
         },
+        "previewAdoption": {
+          "en": "Cache preview found {linked} files that could share {objects} stored objects, saving {savedMib} MiB, with {failed} failures{partial}.",
+          "de": "Cache-Vorschau. {linked} Dateien könnten sich {objects} gespeicherte Objekte teilen und {savedMib} MiB einsparen. Fehlgeschlagen: {failed}{partial}."
+        },
         "adopted": {
           "en": "Cache store: {linked} files now share {objects} stored objects, {savedMib} MiB saved, {failed} failed{partial}.",
           "de": "Cache-Speicher: {linked} Dateien teilen sich jetzt {objects} gespeicherte Objekte, {savedMib} MiB gespart, {failed} fehlgeschlagen{partial}."
+        },
+        "previewAdopting": {
+          "en": "Cache preview examined {entries} files, with {savedMib} MiB in potential savings.",
+          "de": "Cache-Vorschau prüfte {entries} Dateien, mögliche Einsparung bisher {savedMib} MiB."
         },
         "adopting": {
           "en": "Cache store: examined {entries} files, {savedMib} MiB saved so far.",

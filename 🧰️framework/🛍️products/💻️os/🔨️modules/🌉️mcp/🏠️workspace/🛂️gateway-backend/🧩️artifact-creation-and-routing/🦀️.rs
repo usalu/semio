@@ -52,13 +52,19 @@ impl HeadlessWorkspace {
 
     /// 🆕️ Creates `artifact_id` as a REAL artifact of `schema`, seeded from the owning plugin's own See [design notes](README.md).
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn create_plugin_artifact(&self, artifact_id: &str, kind: &InstalledArtifactKind, scope: &ActivationScope) -> Result<(usize, usize), GatewayError> {
+    pub fn create_plugin_artifact(&self, artifact_id: &str, kind: &InstalledArtifactKind, initial: Option<&serde_json::Value>, scope: &ActivationScope) -> Result<(usize, usize), GatewayError> {
         let path = match &self.origin {
             WorkspaceOrigin::Folder { path } => path.clone(),
             WorkspaceOrigin::Hub { .. } => return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "creating a plugin-typed artifact in a hub-bound workspace needs the hub's own document-create authority — bind --folder to create one locally").retryable()),
         };
         let mut channel = self.open_session_artifact_channel_scoped(&kind.plugin_id, Some(&kind.app_id), scope)?;
         channel.activate(0, scope).map_err(activation_fault)?;
+        let imported = if let Some(initial) = initial {
+            let ArtifactChannels::Plugin(owner) = &mut channel else {
+                return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "initial content requires an owner JSON import on the selected channel"));
+            };
+            Some(owner.import_initial_artifact(0, artifact_id, &initial.to_string(), scope)?)
+        } else { None };
         scope.enter(ActivationPhase::ReadingDocument).map_err(activation_fault)?;
         let frames = exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact]).map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` refused ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message)))?;
         let (pack, spr) = match frames.into_iter().next() {
@@ -66,6 +72,11 @@ impl HeadlessWorkspace {
             Some(AppFrame::Error(fault)) => return Err(GatewayError::new(GatewayErrorCode::SideEffectRejected, format!("`{}` rejected ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message))),
             other => return Err(GatewayError::new(GatewayErrorCode::Internal, format!("`{}` answered ReadArtifact with {other:?}", kind.plugin_id))),
         };
+        if let Some(imported) = imported {
+            if imported != pack {
+                return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "owner read returned a different snapshot from the imported initial content"));
+            }
+        }
         let canonical = Self::canonical_artifact_owner(&spr, &self.installed_artifact_kinds()?)?;
         if canonical.plugin_id != kind.plugin_id || canonical.app_id != kind.app_id { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "owner pair schema belongs to another plugin or app")); }
         scope.checkpoint().map_err(activation_fault)?;

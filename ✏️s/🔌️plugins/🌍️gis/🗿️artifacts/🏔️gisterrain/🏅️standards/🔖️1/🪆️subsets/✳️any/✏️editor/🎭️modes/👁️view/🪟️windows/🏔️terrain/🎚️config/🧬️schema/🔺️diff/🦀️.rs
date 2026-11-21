@@ -1,15 +1,28 @@
 //! 🔺️ Ordered sparse GIS 3D configuration changes.
 
-use super::GisTerrainWindowConfig;
+use super::{GisTerrainWindowConfig, TerrainBrushSettings};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔺️Diff
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(default, deny_unknown_fields))]
+#[value(default, deny_unknown_fields)]
+pub struct TerrainBrushChange {
+    #[dsl(block)]
+    pub brush: Option<TerrainBrushSettings>,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default, deny_unknown_fields))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct GisTerrainWindowConfigDelta {
     pub camera_json: Option<String>,
+    #[dsl(block)]
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    pub brush: Option<TerrainBrushChange>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -36,6 +49,9 @@ impl GisTerrainWindowConfigDiff {
             if step.camera_json.is_some() {
                 folded.camera_json = step.camera_json.clone();
             }
+            if step.brush.is_some() {
+                folded.brush = step.brush;
+            }
             folded
         })
     }
@@ -46,8 +62,12 @@ impl protocol::MutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConfigDi
 impl protocol::ColdMutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {
     fn absorb(&mut self, other: Self) {
         let mut folded = self.folded();
-        if let Some(camera) = other.folded().camera_json {
+        let other = other.folded();
+        if let Some(camera) = other.camera_json {
             folded.camera_json = Some(camera);
+        }
+        if other.brush.is_some() {
+            folded.brush = other.brush;
         }
         *self = Self::from(folded);
     }
@@ -58,6 +78,10 @@ impl protocol::ColdMutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConf
         for step in &self.steps {
             if let Some(value) = &step.camera_json {
                 next.camera_json = value.clone();
+            }
+            if let Some(change) = step.brush {
+                next.brush = change.brush.map(TerrainBrushSettings::validate).transpose()
+                    .map_err(|error| protocol::MutationApplyError::new("mutation.invalid", error.to_string()).at(["brush"]))?;
             }
         }
         *unpublished = next;
@@ -73,7 +97,11 @@ impl protocol::DiffAlgebra<GisTerrainWindowConfig> for GisTerrainWindowConfigDif
 
 impl protocol::ColdDiffAlgebra<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {
     fn inverse(&self, base: &GisTerrainWindowConfig) -> Self {
-        Self::from(GisTerrainWindowConfigDelta { camera_json: self.folded().camera_json.map(|_| base.camera_json.clone()) })
+        let folded = self.folded();
+        Self::from(GisTerrainWindowConfigDelta {
+            camera_json: folded.camera_json.map(|_| base.camera_json.clone()),
+            brush: folded.brush.map(|_| TerrainBrushChange { brush: base.brush }),
+        })
     }
 }
 //#endregion 🔺️Diff

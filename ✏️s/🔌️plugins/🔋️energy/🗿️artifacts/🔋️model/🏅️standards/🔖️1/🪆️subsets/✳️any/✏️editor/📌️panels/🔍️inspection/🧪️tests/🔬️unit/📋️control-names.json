@@ -1,0 +1,11 @@
+{
+  "schema": "semio.energy.inspector.control-names/1",
+  "controls": [
+    { "row": "site.latitude", "suffix": "input", "en": "Latitude (°)", "de": "Breitengrad (°)" },
+    { "row": "site.longitude", "suffix": "input", "en": "Longitude (°)", "de": "Längengrad (°)" },
+    { "row": "site.elevation", "suffix": "input", "en": "Elevation (m)", "de": "Höhe (m)" },
+    { "row": "site.time-zone", "suffix": "input", "en": "Time zone (h)", "de": "Zeitzone (h)" },
+    { "row": "site.north-axis", "suffix": "input", "en": "North axis (°)", "de": "Nordachse (°)" },
+    { "row": "results.field", "suffix": "select", "en": "Surfaces coloured by", "de": "Flächen eingefärbt nach" }
+  ]
+}

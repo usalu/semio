@@ -355,6 +355,17 @@
       }
     }
   ],
+  "flatPositionRefusals": [
+    { "name": "root on an empty graph", "nodes": [], "edges": [], "rootNodeId": "missing" },
+    {
+      "name": "non-finite accumulated position",
+      "nodes": ["a", "b", "c"],
+      "edges": [
+        { "id": "first", "source": "a", "target": "b", "u": 1e308, "v": 0 },
+        { "id": "second", "source": "b", "target": "c", "u": 1e308, "v": 0 }
+      ]
+    }
+  ],
   "identityRefusal": {
     "entityReads": 0,
     "requestedBytes": 0,

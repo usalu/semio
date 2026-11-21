@@ -13,7 +13,7 @@ _spec = importlib.util.spec_from_file_location("kit", os.path.join(HERE, "r3-sto
 K = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(K)
 
-CAT = Path("/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/storage-crate-stack/🔣️.json")
+CAT = Path(__file__).resolve().parent.parents[6] / "🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🪑️objects/storage-crate-stack/🔣️.json"
 N = 5
 G = 9.80665
 
@@ -275,6 +275,66 @@ def geometry100():
     return views(sol, fr, pl, front_solids=False)
 
 
+def cut_front(k, denominator):
+    """✂️ Longitudinal midsection across the foot, floor, tapered side walls, bearing ledge and U-shaped return."""
+    y = K.PITCH * (k - 1)
+    bone = f"crate-{k}"
+    body, rim, foot = tones(k)
+    z = 5 - .1*k
+    def plate(name, width, bottom, left, height, tone):
+        part=rect(f"c{k}-{name}", bone, "body", z, True, tone, left, y+bottom, width, height)
+        part["penMm"] = .20
+        return part
+    shoulder=K.HW*K.f(.262)
+    contour=[(-.16,0),(.16,0),(.16,.012),(K.HW,.012),(shoulder,.262),(.2,.262),(.2,.3),(-.2,.3),(-.2,.262),(-shoulder,.262),(-K.HW,.012),(-.16,.012)]
+    back=poly(f"c{k}-retained-wall",bone,"body",z-.05,True,body,[(x,y+h) for x,h in contour])
+    if denominator<500:
+        outline=back.pop("points")
+        hole=[(-.052,.215),(-.06,.223),(-.06,.242),(-.052,.250),(.052,.250),(.06,.242),(.06,.223),(.052,.215)]
+        def path(points):
+            return "M "+" L ".join(f"{x:.6f} {h:.6f}" for x,h in points)+" Z"
+        back.update(kind="path",d=path(outline)+" "+path([(w,y+u) for w,u in hole]))
+        back.pop("closed")
+    cuts=[back]
+    if denominator<500:cuts.append(plate("bottom-section",.32,.012,-.16,.008,body))
+    for label, sign in (("near",-1),("far",1)):
+        if denominator==500 and sign>0:continue
+        at_base=K.HW if sign>0 else K.HW-K.FINE["p3"][2]
+        w0,w1=at_base*K.f(K.U0),at_base*K.f(.295)
+        pts=[(sign*w0,y+K.U0),(sign*w1,y+.295),(sign*(w1-K.T*K.f(.295)),y+.295),(sign*(w0-K.T),y+K.U0)]
+        wall=poly(f"c{k}-{label}-section",bone,"body",z,True,body,pts)
+        wall["penMm"]=.20
+        cuts.append(wall)
+        if denominator<=200:
+            toe=at_base-.005
+            cuts.append(plate(f"{label}-foot-section",.004,0,toe-.004 if sign>0 else -toe,.014,foot))
+        if denominator<=100:
+            if sign>0:cuts.append(plate(f"{label}-skirt-section",.003,.262,.197,.038,rim))
+            cuts.append(plate(f"{label}-flange-section",.0195,.292,.1805 if sign>0 else -.2,.008,rim))
+    if denominator<=200:
+        outer=K.HW*K.f(K.FINE["ledge_u"])-.0005
+        cuts.append(plate("ledge-section",outer-K.FINE["edge3"],K.FINE["ledge_u"],-outer,K.PITCH-K.FINE["ledge_u"],rim))
+    return cuts
+
+
+def drawings(scale):
+    """🏺 Project the moulding at true stock with a front cut through the load-bearing ring."""
+    d=int(scale);fine=geometry50();geom=geometry100() if d==100 else geometry_tub(scale) if d>100 else fine
+    geom['elevation']=fine['elevation']
+    if d==200:
+        elev=[]
+        for k in range(1,6):
+            bone=f'crate-{k}';tone=tones(k)[0];top=K.HV*K.f(.262)
+            pts=[(0,-.26),(0,.26),(.012,.26),(.012,K.HV),(.262,top),(.262,-top),(.012,-K.HV),(.012,-.26)]
+            shell=solid(poly(f'c{k}-foot-and-wall',bone,'body',4.91-.1*k,True,tone,pts),K.HW-.005,K.HW*K.f(.262))
+            shell['penMm']=.20
+            elev.extend([shell,next(s for s in fine['elevation'] if s['id']==f'c{k}-rim')])
+        geom['elevation']=elev
+    geom['front']=[shape for k in range(1,6) for shape in cut_front(k,d)]
+    for s in geom['elevation']:
+        if s['id'].endswith('-foot') or (d>=200 and s['id'].endswith('-body')):s['penMm']=.20
+    return geom
+
 def geometry_tub(scale):
     """✏️ 1:200 and 1:500: per crate the tapering tub from the floor up to the rim collar and the collar of 0.60 x 0.40 m on top (30 mm at 1:200, 75 mm at 1:500), both solids."""
     sol, fr = [], []
@@ -369,9 +429,10 @@ def apply(doc):
     a["structure"]["assumptions"] = [text(
         "A column of rigid crates standing on the foot ring of the lowest crate; every crate is turned against the one below and transfers its weight and its 10 kg of goods through its foot to the three stacking ledges at the top of the crate below, and from there through the walls to its own foot.",
         "Eine Säule starrer Kisten auf dem Fußring der untersten Kiste; jede Kiste ist gegen die untere gedreht und gibt ihr Gewicht und ihre 10 kg Ware über ihren Fuß an die drei Stapelleisten oben in der unteren Kiste weiter und von dort über die Wände an deren Fuß.")]
-    geometry = {"50": geometry50(), "100": geometry100(), "200": geometry_tub("200"), "500": geometry_tub("500")}
+    geometry = {d:drawings(d) for d in ("50","100","200","500")}
     for scale, rep in a["representations"].items():
         rep["geometry"] = geometry[scale]
+        rep["sections"] = {"front":{"plane":0,"label":text("Longitudinal crate section","Kistenlängsschnitt")}}
         rep["decisions"] = DECISIONS[scale]
 
 

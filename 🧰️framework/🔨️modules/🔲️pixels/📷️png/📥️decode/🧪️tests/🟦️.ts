@@ -6,6 +6,7 @@ import {PNG} from "pngjs";
 import {deflateSync,inflateSync} from "node:zlib";
 import cases from "./🧫️fixtures/🔣️.json";
 import invalid from "./🧫️fixtures/⚠️invalid/🔣️.json";
+import paged from "./🧫️fixtures/📦️paged.json";
 import schema from "../🧬️schema/🔣️.json";
 import {PngDecodeJob,decodePngImage,type PngDecodeInput} from "../🟦️.ts";
 const funded={maximumItems:4096,maximumCopyBytes:268435456,maximumCapacityBytes:67108864,maximumReleaseBytes:0,maximumDepth:1};
@@ -26,6 +27,27 @@ describe("PNG reconstruction",()=>{
   const pixels=oracle.depth===16?Array.from(oracle.data as unknown as Uint16Array,v=>v>>>8):Array.from(oracle.data);
   const visible=(values:number[])=>values.map((v,i)=>i%4<3&&row.expected.pixels[i-i%4+3]===0?0:v);
   expect(visible(pixels)).toEqual(visible(row.expected.pixels as number[]));
+ });
+ test("PNG page seam fixture matches the independent raster and byte checks",()=>{
+  const row=cases.find(row=>row.name===paged.source)!;
+  const bytes=[...row.input.data];
+  let inserted=0;
+  for(const [index,seam] of paged.seams.entries()){
+   const offset=seam.offset+inserted;
+   expect(String.fromCharCode(...bytes.slice(offset+4,offset+8))).toBe(seam.chunk);
+   const boundary=(index+1)*paged.pageBytes;
+   const field=boundary-seam.splitAfter;
+   const padding=chunk(paged.paddingChunk,new Array<number>(field-seam.fieldOffset-offset-12).fill(0));
+   expect(padding.slice(-4)).toEqual(be(seam.paddingCrc));
+   bytes.splice(offset,0,...padding);
+   inserted+=padding.length;
+   const original=seam.offset+seam.fieldOffset;
+   expect(bytes.slice(field,field+seam.fieldBytes)).toEqual(row.input.data.slice(original,original+seam.fieldBytes));
+  }
+  const reference=PNG.sync.read(Buffer.from(bytes));
+  expect({width:reference.width,height:reference.height,pixels:Array.from(reference.data)}).toEqual(row.expected);
+  const image=finish(new PngDecodeJob({...row.input,data:Uint8Array.from(bytes)}),7);
+  expect({width:image.width,height:image.height,pixels:Array.from(image.pixels)}).toEqual(row.expected);
  });
  test("seeded third-party compression with dynamic, fixed and stored blocks",()=>{
   let seed=0x762ba5;const width=257,height=41,expected:number[]=[],raw:number[]=[];

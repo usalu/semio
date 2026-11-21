@@ -372,7 +372,7 @@
           "originSourceHash": "7948262a7efb32ffc01e4884d961d3055aa858426c85c6da51cbca1739dff142",
           "language": "rust",
           "expectedRole": "implementation",
-          "content": "//! 📇️ Renderer macro registration.\n\n#[cfg(not(target_os = \"wasi\"))]\n#[macro_export]\nmacro_rules! action_args_json {\n    ($($tt:tt)*) => {\n        semio_framework::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))\n    };\n}\n\n"
+          "content": "//! 📇️ Renderer macro registration.\n\n#[cfg(not(target_os = \"wasi\"))]\n#[macro_export]\nmacro_rules! action_args_json {\n    ($($tt:tt)*) => {\n        Some(semio_framework::DslValue::from(serde_json::json!($($tt)*)))\n    };\n}\n\n"
         }
       ],
       "generatedSourceRetirements": [

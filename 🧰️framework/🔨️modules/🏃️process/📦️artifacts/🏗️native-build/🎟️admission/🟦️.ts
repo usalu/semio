@@ -11,7 +11,7 @@ import { existsSync, rmSync } from "node:fs";
 import { mkdir, readFile, readdir, rename, writeFile, rm } from "node:fs/promises";
 import { createServer, type Socket } from "node:net";
 import { availableParallelism, tmpdir, totalmem } from "node:os";
-import { basename, dirname, extname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, posix, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { captureSchedulerReceiptV1, readSchedulerReceiptV1, schedulerIdentityV1, schedulerReceiptFileV1, schedulerReceiptHoldsV1, writeSchedulerReceiptV1 } from "./🔖️scheduler/🟦️.ts";
@@ -220,18 +220,19 @@ export function sourceKlocV1(source: string): Promise<number> {
 const SOCKET_PATH_BYTES_V1 = 100;
 
 /** 🔌️ A private broker endpoint: a short Unix socket path (sockets are limited to ~104 bytes) or a Windows named pipe. */
-export function brokerEndpointV1(platform: NodeJS.Platform = process.platform): string {
+export function brokerEndpointV1(platform: NodeJS.Platform = process.platform, temporaryDirectory = tmpdir()): string {
   const name = `semio-broker-${process.pid}-${randomBytes(6).toString("hex")}`;
   if (platform === "win32") return `\\\\.\\pipe\\${name}`;
-  const preferred = join(tmpdir(), `${name}.sock`);
-  return Buffer.byteLength(preferred) < SOCKET_PATH_BYTES_V1 ? preferred : join("/tmp", `${name}.sock`);
+  const preferred = posix.join(temporaryDirectory, `${name}.sock`);
+  return Buffer.byteLength(preferred) < SOCKET_PATH_BYTES_V1 ? preferred : posix.join("/tmp", `${name}.sock`);
 }
 
 /** 🛣️ One registered Cargo pass, so units can be keyed by profile. */
 export type BrokerPassV1 = Readonly<{ id: string; profile: string; target: string }>;
 
 /** 📡️ Live broker counters for the timeline and the stall watchdog. */
-export type BrokerStatsV1 = Readonly<{ running: number; waiting: number; frozen: boolean; budgetBytes: number; predictedRunningBytes: number; actualRunningBytes: number; lastActivityMs: number }>;
+/** 🧮 Current compiler counts, memory budget, resident bytes and pressure charge. */
+export type BrokerStatsV1 = Readonly<{ running: number; waiting: number; frozen: boolean; budgetBytes: number; predictedRunningBytes: number; actualRunningBytes: number; chargedRunningBytes: number; lastActivityMs: number }>;
 
 /** 🔏️ The driver's admission broker. */
 export interface AdmissionBrokerV1 {
@@ -243,18 +244,21 @@ export interface AdmissionBrokerV1 {
   close(): Promise<void>;
 }
 
-type Entry = { request: AdmitRequestV1; key: string; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; socket: Socket };
+type Entry = { request: AdmitRequestV1; key: string; profile: string; predictedBytes: number; expectedWallMs: number | null; remainingMs: number; arrival: number; requestMs: number; admittedMs: number; rssBytes: number; chargedBytes: number; socket: Socket };
 
 /** ▶️ Starts the admission broker: wrappers connect, ask for admission, stream resident memory and report completion.
  * The budget is `physical − reserve − rolling maximum of the driver's other children`; measured overshoot or swap-out freezes admission. */
 export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: number; history: ReadonlyMap<string, readonly UnitObservationV1[]>; endpoint?: string; now?: () => number }>): Promise<AdmissionBrokerV1> {
   const now = options.now ?? Date.now, endpoint = options.endpoint ?? brokerEndpointV1(), passes = new Map<string, BrokerPassV1>();
   const waiting: Entry[] = [], running = new Set<Entry>(), completed: UnitRecordV1[] = [], nonRustc: { atMs: number; bytes: number }[] = [];
-  let frozen = false, arrivals = 0, lastActivityMs = now();
+  let frozen = false, swapOutBytesPerSecond: number | null = null, arrivals = 0, lastActivityMs = now();
   const budget = (): number => options.physicalBytes - ADMISSION_POLICY_V1.reserveBytes - Math.max(0, ...nonRustc.map((row) => row.bytes));
   const verdict = (socket: Socket, admitted: boolean): void => { if (!socket.destroyed) socket.write(`{"v":1,"op":"verdict","admitted":${admitted}}\n`); };
+  const charged = (): number => [...running].reduce((sum, entry) => sum + entry.chargedBytes, 0);
   const schedule = (): void => {
-    const ordered = admissionOrderV1(waiting), state = { budgetBytes: budget(), frozen, nowMs: now(), running: [...running].map((entry) => ({ predictedBytes: entry.predictedBytes, expectedEndMs: entry.expectedWallMs === null ? null : entry.admittedMs + entry.expectedWallMs })) };
+    const budgetBytes = budget();
+    frozen = admissionFrozenV1(frozen, { actualBytes: charged(), budgetBytes, swapOutBytesPerSecond });
+    const ordered = admissionOrderV1(waiting), state = { budgetBytes, frozen, nowMs: now(), running: [...running].map((entry) => ({ predictedBytes: Math.max(entry.predictedBytes, entry.chargedBytes), expectedEndMs: entry.expectedWallMs === null ? null : entry.admittedMs + entry.expectedWallMs })) };
     for (const index of admitWaitersV1(state, ordered)) {
       const entry = ordered[index]!;
       waiting.splice(waiting.indexOf(entry), 1);
@@ -275,8 +279,11 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
     let entry: Entry | undefined, finished = false, chain = Promise.resolve();
     socket.on("error", () => undefined);
     socket.once("close", () => { chain = chain.then(() => { if (!finished) forget(entry); }); });
-    createInterface({ input: socket, crlfDelay: Infinity }).on("line", (line) => {
+    const lines = createInterface({ input: socket, crlfDelay: Infinity });
+    lines.on("error", () => socket.destroy());
+    lines.on("line", (line) => {
       chain = chain.then(async () => {
+        if (finished) return;
         const message = JSON.parse(line) as { op?: string };
         if (message.op === "cached" && !entry) {
           const request = admitDefinition<CachedRequestV1>("CachedRequestV1", message), pass = passes.get(request.pass);
@@ -286,12 +293,13 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           finished = true;
           lastActivityMs = at;
           verdict(socket, true);
+          socket.end();
           return;
         }
         if (message.op === "recall" && !entry) {
           const request = admitDefinition<RecallRequestV1>("RecallRequestV1", message), artifact = unitArtifactV1(request);
           const record = [...completed].reverse().find((row) => row.pass === request.pass && row.exit === 0 && !row.cache && row.artifact === artifact) ?? null;
-          if (!socket.destroyed) socket.write(`${JSON.stringify({ v: 1, op: "unit", record })}\n`);
+          if (!socket.destroyed) socket.end(`${JSON.stringify({ v: 1, op: "unit", record })}\n`);
           finished = true;
           return;
         }
@@ -301,18 +309,22 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
           const key = unitKeyV1(request, pass.profile), history = options.history.get(key) ?? [];
           const componentFinal = request.crateTypes.includes("cdylib") && request.target !== "host";
           const predictedBytes = predictPeakBytesV1(history.map((row) => row.peakRssBytes), { kloc: history.length || componentFinal ? 0 : await sourceKlocV1(request.source), componentFinal });
-          entry = { request, key, profile: pass.profile, predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals++, requestMs: now(), admittedMs: 0, rssBytes: 0, socket };
+          entry = { request, key, profile: pass.profile, predictedBytes, expectedWallMs: expectedWallMsV1(history), remainingMs: history.at(-1)?.remainingMs ?? 0, arrival: arrivals++, requestMs: now(), admittedMs: 0, rssBytes: 0, chargedBytes: 0, socket };
           waiting.push(entry);
           lastActivityMs = entry.requestMs;
           schedule();
           if (waiting.includes(entry)) verdict(socket, false);
         } else if (message.op === "rss" && entry) {
-          entry.rssBytes = admitDefinition<{ bytes: number }>("RssReportV1", message).bytes;
+          const sample = admitDefinition<{ bytes: number; chargedBytes: number }>("RssReportV1", message);
+          entry.rssBytes = sample.bytes;
+          entry.chargedBytes = sample.chargedBytes;
+          schedule();
         } else if (message.op === "done" && entry && running.has(entry)) {
           const done = admitDefinition<DoneReportV1>("DoneReportV1", message), request = entry.request;
           finished = true;
           running.delete(entry);
           lastActivityMs = now();
+          socket.end();
           completed.push(Object.freeze({ key: entry.key, pass: request.pass, profile: entry.profile, target: request.target, crate: request.crate, package: request.package, version: request.version, crateTypes: request.crateTypes, primary: request.primary, artifact: unitArtifactV1(request), dependencies: request.externs.map((path) => { const extern = externArtifactsV1(path); return { artifacts: extern.candidates, edge: extern.edge }; }), buildScriptOutDir: request.buildScriptOutDir, predictedBytes: entry.predictedBytes, requestMs: entry.requestMs, admittedMs: entry.admittedMs, startMs: done.startMs, endMs: done.endMs, rmetaMs: done.rmetaMs, peakRssBytes: done.peakRssBytes, userMs: done.userMs, sysMs: done.sysMs, exit: done.exit }));
           schedule();
         } else throw Error(`Unexpected broker message ${line.slice(0, 200)}`);
@@ -328,10 +340,10 @@ export async function startAdmissionBrokerV1(options: Readonly<{ physicalBytes: 
       const at = now();
       nonRustc.push({ atMs: at, bytes: sample.nonRustcBytes });
       while (nonRustc.length && nonRustc[0]!.atMs < at - ADMISSION_POLICY_V1.nonRustcWindowMs) nonRustc.shift();
-      frozen = admissionFrozenV1(frozen, { actualBytes: [...running].reduce((sum, entry) => sum + entry.rssBytes, 0), budgetBytes: budget(), swapOutBytesPerSecond: sample.swapOutBytesPerSecond });
+      swapOutBytesPerSecond = sample.swapOutBytesPerSecond;
       schedule();
     },
-    stats: () => ({ running: running.size, waiting: waiting.length, frozen, budgetBytes: budget(), predictedRunningBytes: [...running].reduce((sum, entry) => sum + entry.predictedBytes, 0), actualRunningBytes: [...running].reduce((sum, entry) => sum + entry.rssBytes, 0), lastActivityMs }),
+    stats: () => ({ running: running.size, waiting: waiting.length, frozen, budgetBytes: budget(), predictedRunningBytes: [...running].reduce((sum, entry) => sum + entry.predictedBytes, 0), actualRunningBytes: [...running].reduce((sum, entry) => sum + entry.rssBytes, 0), chargedRunningBytes: charged(), lastActivityMs }),
     units: () => completed,
     close: () => new Promise<void>((accept) => { server.close(() => { if (process.platform !== "win32") rmSync(endpoint, { force: true }); accept(); }); for (const entry of [...waiting, ...running]) entry.socket.destroy(); }),
   };

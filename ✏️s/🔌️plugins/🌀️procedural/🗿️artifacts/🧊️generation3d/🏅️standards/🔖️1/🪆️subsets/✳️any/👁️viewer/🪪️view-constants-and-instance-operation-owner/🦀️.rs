@@ -90,6 +90,7 @@ impl<'a> Generation3dViewedDocument<'a> {
 /// retained owner exactly.
 pub(super) struct Generation3dViewInstanceOperationOwner {
     pub(super) eval_session: Option<FlowEvalSession>,
+    pub(super) preview_hover: preview_eval::PreviewHoverPublications,
     /// ⏯️ The `previewEval` run's surface-owned half: attached preview roster and the live job's port.
     run_link: preview_eval::PreviewEvalRunLink,
     pub(super) closing: bool,
@@ -97,7 +98,7 @@ pub(super) struct Generation3dViewInstanceOperationOwner {
 
 impl Generation3dViewInstanceOperationOwner {
     pub(super) fn new() -> Self {
-        Self { eval_session: Some(FlowEvalSession::new()), run_link: preview_eval::PreviewEvalRunLink::default(), closing: false }
+        Self { eval_session: Some(FlowEvalSession::new()), preview_hover: Default::default(), run_link: preview_eval::PreviewEvalRunLink::default(), closing: false }
     }
 
     pub(super) fn with_session<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
@@ -125,7 +126,7 @@ impl Generation3dViewInstanceOperationOwner {
 
 impl preview_eval::PreviewEvalRunOwner for Generation3dViewInstanceOperationOwner {
     fn preview_eval_parts(&mut self) -> Option<(&mut FlowEvalSession, &mut preview_eval::PreviewEvalRunLink)> {
-        let Self { eval_session, run_link, closing } = self;
+        let Self { eval_session, run_link, closing, .. } = self;
         eval_session.as_mut().filter(|_| !*closing).map(|session| (session, run_link))
     }
 }
@@ -133,6 +134,11 @@ impl preview_eval::PreviewEvalRunOwner for Generation3dViewInstanceOperationOwne
 impl semio_plugin::ArtifactInstanceOperationOwner for Generation3dViewInstanceOperationOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+
+    fn interaction_hover_group(&self, domain: &str, window: &str, reference: &str) -> Option<(&'static str, Vec<String>)> {
+        if self.closing || domain != preview::GENERATION3D_VIEW_INTERACTION_DOMAIN { return None; }
+        self.preview_hover.targets(window, reference).map(|targets| (preview::GENERATION3D_VIEW_INTERACTION_GRANULARITY, targets.to_vec()))
     }
 
     fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {

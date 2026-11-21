@@ -1,0 +1,32 @@
+{
+  "schema": "semio.dsl.declaration-language-registry/v1",
+  "ambientEntropy": false,
+  "batches": [
+    {
+      "languages": [
+        { "id": "note.document", "role": "Document", "extension": "note" },
+        { "id": "wfc.bitmap", "role": "Document", "extension": "bitmap" }
+      ],
+      "accepted": true
+    },
+    {
+      "languages": [{ "id": "note.document", "role": "Document", "extension": "note" }],
+      "accepted": true
+    },
+    {
+      "languages": [
+        { "id": "note.ops", "role": "Ops", "extension": "op" },
+        { "id": "note.document", "role": "Config", "extension": "note" }
+      ],
+      "accepted": false
+    },
+    {
+      "languages": [
+        { "id": "wfc.config", "role": "Config", "extension": "wfcconfig" },
+        { "id": "wfc.config", "role": "Document", "extension": "wfcconfig" }
+      ],
+      "accepted": false
+    }
+  ],
+  "sortedLanguageIds": ["note.document", "wfc.bitmap"]
+}

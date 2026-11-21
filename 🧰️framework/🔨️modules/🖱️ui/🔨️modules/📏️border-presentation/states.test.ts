@@ -9,9 +9,11 @@ import { borderStatePriority, resolveBoxStates, type BorderState, type StateBox 
 function referenceStates(boxes: readonly StateBox[], pointer: string | null, focusVisible: string | null): Record<string, BorderState> {
   const byId = lodash.keyBy(boxes, "id");
   const chain = (id: string | null): StateBox[] => id === null ? [] : [byId[id]!, ...chain(byId[id]!.parent)];
-  const hovered = lodash.find(chain(pointer), box => box.interactive && !box.disabled)?.id;
+  const pointerChain = chain(pointer);
+  const hovered = lodash.find(pointerChain, box => box.interactive && !box.disabled)?.id;
+  const enclosed = new Set(lodash.filter(pointerChain, box => box.hoverWithin && !box.disabled).map(box => box.id));
   const focused = lodash.find(chain(focusVisible), box => box.interactive)?.id;
-  return lodash.mapValues(byId, box => lodash.maxBy<BorderState>([...box.marks, "normal", ...(box.id === hovered ? ["hover" as const] : []), ...(box.id === focused ? ["focus" as const] : [])], state => borderStatePriority[state])!);
+  return lodash.mapValues(byId, box => lodash.maxBy<BorderState>([...box.marks, "normal", ...(box.id === hovered || enclosed.has(box.id) ? ["hover" as const] : []), ...(box.id === focused ? ["focus" as const] : [])], state => borderStatePriority[state])!);
 }
 
 describe("box state ownership", () => {
@@ -26,7 +28,7 @@ describe("box state ownership", () => {
       expect(JSON.stringify(boxes)).toBe(snapshot);
     });
   }
-  test("no ancestor of a hovered or focused box is ever stated by it", () => {
+  test("ordinary ancestors do not acquire hover or focus from a descendant", () => {
     const depth = 6;
     const boxes: StateBox[] = lodash.range(depth).map(index => ({ id: `n${index}`, parent: index ? `n${index - 1}` : null, interactive: index % 2 === 1, disabled: false, marks: [] }));
     for (const leaf of boxes) {

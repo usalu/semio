@@ -3,11 +3,10 @@
 //! selection paint here exactly as they do on the sibling surface's own preview.
 //!
 //! 🕹️ The window declares `SurfaceKind::World3d` with `domain_id = "graph"` and
-//! `domain_granularity_id = "handle"`, and every emitted instance carries `interactionId =
-//! {widgetId}@{channel}` — the same channel-qualified id the framework's `interaction_topology`
-//! declares as a `handle`, so a world pick resolves to a real declared target instead of being
-//! pruned by `validate_state`. Hover is read off the ephemeral pointer channel and selection off the
-//! persisted interaction store; the viewer stores NEITHER (see `👁️viewer/🫧️transient/🦀️.rs`).
+//! `domain_granularity_id = "handle"`. Each instance carries the directional channel address
+//! declared by `interaction_topology`, and overlapping geometry can publish its channel addresses
+//! together. Hover comes from the ephemeral pointer channel and selection from the persisted
+//! interaction store (see `👁️viewer/🫧️transient/🦀️.rs`).
 //!
 //! 🧵️ Evaluation input is the viewer's own ephemeral local-only `preview_eval_text`, computed
 //! chunked and cancellable in `Generation3dViewCommandWork`. `render` NEVER evaluates: a pure render
@@ -115,12 +114,13 @@ pub fn preview_window_measures(config: &Generation3dViewConfig, is_de: bool, vie
 //#region 🔖️Marks
 /// 🕹️ One render's resolved `graph`-domain marks — read-only twin of the sibling surface's own.
 ///
-/// A preview instance id is `{widgetId}@{channel}#{index}`, so an id counts as marked when the
+/// Each direction has its own world instance. An id counts as marked when the
 /// domain names the instance itself, its channel (`{widgetId}@{channel}`, byte-identical to the
 /// declared `handle` target) or its widget (`{widgetId}`). That three-level match is what makes
 /// hover bidirectional between a graph surface and this world surface.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Generation3dViewMarks {
+    pub hover_source_window: Option<Option<String>>,
     pub hovered: std::collections::BTreeSet<String>,
     pub selected: std::collections::BTreeSet<String>,
 }
@@ -130,21 +130,10 @@ impl Generation3dViewMarks {
     /// the persisted interaction store. The viewer stores neither itself.
     pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
         Self {
+            hover_source_window: interaction.hover_source_window(GENERATION3D_VIEW_INTERACTION_DOMAIN, GENERATION3D_VIEW_INTERACTION_CHANNEL).map(|window| window.map(str::to_owned)),
             hovered: interaction.hover(GENERATION3D_VIEW_INTERACTION_DOMAIN, GENERATION3D_VIEW_INTERACTION_CHANNEL).ids.iter().cloned().collect(),
             selected: interaction.selection(GENERATION3D_VIEW_INTERACTION_DOMAIN).ids.iter().cloned().collect(),
         }
-    }
-
-    fn marked(set: &std::collections::BTreeSet<String>, widget_id: &str, channel: &str, index: usize) -> bool {
-        set.contains(widget_id) || set.contains(&format!("{widget_id}@{channel}")) || set.contains(&format!("{widget_id}@{channel}#{index}"))
-    }
-
-    pub fn hovers(&self, widget_id: &str, channel: &str, index: usize) -> bool {
-        Self::marked(&self.hovered, widget_id, channel, index)
-    }
-
-    pub fn selects(&self, widget_id: &str, channel: &str, index: usize) -> bool {
-        Self::marked(&self.selected, widget_id, channel, index)
     }
 }
 //#endregion 🔖️Marks
@@ -157,7 +146,6 @@ impl Generation3dViewMarks {
 /// through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
-use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelItem;
 
 /// 🧮️ Evaluates the whole fixture once, IN PROCESS. TEST-ONLY and never on the live path: the
 /// served chain evaluates through `ExtensionInvocation` because a guest links no operators at all,
@@ -169,181 +157,70 @@ pub fn evaluate_host_snapshot(host_snapshot: &semio_framework_artifact_flow_flow
     semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default()).expect("test host closes cold")
 }
 
-/// 👁️ One preview instance per geometry-bearing value per OUTPUT CHANNEL, each carrying its
+/// 👁️ Each geometry-bearing input or output value gets its own preview instance, carrying its
 /// declared `interactionId` plus the live hovered/selected flags the world host paints with.
 pub struct ViewPreviewPayload {
+    pub bounds: Option<preview_eval::PreviewBounds>,
     pub meshes_json: String,
     pub instances_json: String,
     pub selected_ids: Vec<String>,
     pub hovered_id: Option<String>,
+    pub hovered_ids: Vec<String>,
+    pub hover_source_window: Option<Option<String>>,
+    pub hover_groups: preview_eval::PreviewHoverGroups,
 }
 
 impl Default for ViewPreviewPayload {
     fn default() -> Self {
-        Self { meshes_json: "[]".into(), instances_json: "[]".into(), selected_ids: Vec::new(), hovered_id: None }
+        Self { bounds: None, meshes_json: "[]".into(), instances_json: "[]".into(), selected_ids: Vec::new(), hovered_id: None, hovered_ids: Vec::new(), hover_source_window: None, hover_groups: Default::default() }
     }
 }
 
-/// 🧊️ One built mesh table — everything in a preview payload that does NOT depend on hover or
-/// selection. Held across renders keyed by [`PreviewMeshTable::signature`] so orbiting the camera or
-/// moving the pointer rebuilds only the instance table.
-struct PreviewMeshTable {
-    signature: u64,
-    meshes_json: String,
-    mesh_id_by_instance: std::collections::BTreeMap<String, String>,
-}
+pub use preview_eval::{preview_tessellation_count, reset_preview_mesh_table};
 
-thread_local! {
-    /// 🧊️ The single live mesh table. One entry, not an LRU: a surface paints one document at one
-    /// LOD at a time, and holding stale tables would retain their whole vertex payloads.
-    static PREVIEW_MESH_TABLE: std::cell::RefCell<Option<PreviewMeshTable>> = const { std::cell::RefCell::new(None) };
-    /// 🧮️ How many real tessellations the preview path has run in this process — the observable a
-    /// hover-only re-render must leave untouched.
-    static PREVIEW_TESSELLATIONS: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
-}
-
-/// 🧮️ Preview tessellations run so far. A hover/camera re-render of an unchanged document must not
-/// move this (`🎭️modes/👁️view/🧪️tests/👁️preview/🔬️unit/🦀️.rs`).
-pub fn preview_tessellation_count() -> u64 {
-    PREVIEW_TESSELLATIONS.with(std::cell::Cell::get)
-}
-
-/// 🧹️ Drops the retained mesh table — for a test that wants a cold measurement.
-pub fn reset_preview_mesh_table() {
-    PREVIEW_MESH_TABLE.with(|table| table.borrow_mut().take());
-}
-
-/// 🔒 What a built mesh table is valid for: the evaluation it was tessellated from, the deflection
-/// its LOD asked for, the shading mode applied to it, the preview widgets it covered — and the
-/// chain's own answers so far.
-///
-/// ⏱️ That last term is what makes the retained table correct under the ADDRESSED chain: a
-/// `flowTessellateResolve` folds one more mesh pack into the session without moving the evaluation
-/// text one byte, so a signature that ignored the session would pin the first (empty) table and no
-/// arriving mesh would ever reach the screen. The signature uses the cache epoch and resolved
-/// geometry handles, so it also changes when the live pack replaces an equal-size fallback.
-fn preview_mesh_signature(
-    eval_json: &str,
-    tolerance_bits: u64,
-    show_mode: &str,
-    preview_ids: &[String],
-    eval: &Value,
-    session: Option<&semio_os_flow::FlowEvalSession>,
-    lookup: Option<&preview_eval::PreviewMeshLookup<'_>>,
-) -> u64 {
-    use std::hash::{Hash, Hasher};
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    eval_json.hash(&mut hasher);
-    tolerance_bits.hash(&mut hasher);
-    show_mode.hash(&mut hasher);
-    preview_ids.hash(&mut hasher);
-    if let (Some(session), Some(lookup)) = (session, lookup) {
-        session.preview_mesh_epoch().hash(&mut hasher);
-        for id in preview_ids {
-            for item in preview_eval::preview_channel_items_for_widget(eval, id) {
-                if item.handle.is_empty() {
-                    continue;
-                }
-                lookup.resolve(id, &item).map(|(handle, _)| handle).hash(&mut hasher);
-            }
-        }
-    }
-    hasher.finish()
-}
-
-/// 🧊️ Copies each distinct resident mesh once, in preview declaration order. Only reached when [`preview_mesh_signature`] says the retained table is stale.
-fn build_preview_mesh_table(
-    signature: u64,
-    eval: &Value,
-    preview_ids: &[String],
-    show_mode: &str,
-    lookup: Option<&preview_eval::PreviewMeshLookup<'_>>,
-) -> PreviewMeshTable {
-    let mut meshes: Vec<Value> = Vec::new();
-    let mut mesh_id_by_source = std::collections::BTreeMap::<String, String>::new();
-    let mut mesh_id_by_instance = std::collections::BTreeMap::new();
-    for id in preview_ids {
-        for item in preview_eval::preview_channel_items_for_widget(eval, id) {
-            let PreviewChannelItem { channel, index, inline, .. } = &item;
-            let instance = format!("{id}@{channel}#{index}");
-            let resolved = lookup.and_then(|lookup| lookup.resolve(id, &item));
-            let source = resolved.as_ref().map(|(handle, _)| handle.as_ref());
-            if let Some(mesh_id) = source.and_then(|handle| mesh_id_by_source.get(handle)) {
-                mesh_id_by_instance.insert(instance, mesh_id.clone());
-                continue;
-            }
-            let data = match inline {
-                Some(inline) => preview_eval::inline_preview_mesh(inline),
-                None => {
-                    if resolved.is_none() { PREVIEW_TESSELLATIONS.with(|count| count.set(count.get() + 1)); }
-                    resolved.as_ref().map(|(_, mesh)| (*mesh).clone())
-                }
-            };
-            let Some(data) = data.map(|data| preview_eval::apply_show_mode_mesh(data, show_mode)).filter(preview_eval::mesh_has_preview_geometry) else { continue };
-            let mesh_id = format!("eval-{instance}");
-            let mut mesh_object = Object::new();
-            mesh_object.insert("id", Value::String(mesh_id.clone()));
-            mesh_object.insert("role", Value::String(preview_eval::preview_mesh_role(inline.as_ref(), &data).to_string()));
-            mesh_object.insert("data", Value::from(data));
-            meshes.push(Value::Object(mesh_object));
-            if let Some(source) = source { mesh_id_by_source.insert(source.to_owned(), mesh_id.clone()); }
-            mesh_id_by_instance.insert(instance, mesh_id);
-        }
-    }
-    PreviewMeshTable { signature, meshes_json: semio_framework_pack_json::to_string(&Value::Array(meshes)), mesh_id_by_instance }
-}
-
-pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, config: &Generation3dViewConfig, session: Option<&semio_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
-    if eval_json.is_empty() {
-        return ViewPreviewPayload::default();
-    }
-    let eval = match semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-        Ok(value) if value.get("error").and_then(Value::as_str).is_none() => value,
-        _ => return ViewPreviewPayload::default(),
-    };
-    let hover_sources = preview_eval::preview_hover_sources(host_snapshot, &marks.hovered);
+pub fn preview_payload(evaluation: &preview_eval::PreviewEvaluation<'_>, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, config: &Generation3dViewConfig, session: Option<&semio_os_flow::FlowEvalSession>, marks: &Generation3dViewMarks) -> ViewPreviewPayload {
+    let hover_source_window = marks.hover_source_window.clone();
+    let Some(eval) = evaluation.geometry() else { return ViewPreviewPayload { hover_source_window, ..Default::default() }; };
+    let selected_graph = preview_eval::PreviewGraphTargets::from_ids(&marks.selected);
+    let hovered_graph = preview_eval::PreviewGraphTargets::from_ids(&marks.hovered);
+    let wire_hover = preview_eval::preview_wire_hover(host_snapshot, &hovered_graph);
     let tolerance = config.tolerance();
     let show_mode = config.effective_show_mode();
     let preview_ids = preview_eval::preview_widget_ids(host_snapshot);
-    let lookup = session.map(preview_eval::PreviewMeshLookup::new);
-    let signature = preview_mesh_signature(eval_json, tolerance.to_bits(), show_mode, &preview_ids, &eval, session, lookup.as_ref());
-    PREVIEW_MESH_TABLE.with(|retained| {
-        let mut retained = retained.borrow_mut();
-        if retained.as_ref().is_none_or(|table| table.signature != signature) {
-            *retained = Some(build_preview_mesh_table(signature, &eval, &preview_ids, show_mode, lookup.as_ref()));
-        }
-        let table = retained.as_ref().expect("preview mesh table was just built");
-        let mut instances: Vec<Value> = Vec::new();
-        let mut selected_ids: Vec<String> = Vec::new();
-        let mut hovered_id: Option<String> = None;
-        for id in &preview_ids {
-            for item in preview_eval::preview_channel_items_for_widget(&eval, id) {
-                let PreviewChannelItem { channel, index, .. } = item;
-                let instance_id = format!("{id}@{channel}#{index}");
-                let Some(mesh_id) = table.mesh_id_by_instance.get(&instance_id) else { continue };
-                let selected = marks.selects(id, &channel, index);
-                let hovered = marks.hovers(id, &channel, index) || hover_sources.contains(id) || hover_sources.contains(&format!("{id}@{channel}"));
-                if selected {
-                    selected_ids.push(instance_id.clone());
-                }
-                if hovered && hovered_id.is_none() {
-                    hovered_id = Some(instance_id.clone());
-                }
-                let mut instance_object = Object::new();
-                instance_object.insert("id", Value::String(instance_id));
-                instance_object.insert("meshId", Value::String(mesh_id.clone()));
-                instance_object.insert("position", vec3_json([0.0, 0.0, 0.0]));
-                instance_object.insert("rotation", Value::Array(vec![Value::from(0.0), Value::from(0.0), Value::from(0.0), Value::from(1.0)]));
-                instance_object.insert("scale", vec3_json([1.0, 1.0, 1.0]));
-                instance_object.insert("label", Value::String(format!("{id}@{channel}")));
-                instance_object.insert("interactionId", Value::String(format!("{id}@{channel}")));
-                instance_object.insert("selected", Value::Bool(selected));
-                instance_object.insert("hovered", Value::Bool(hovered));
-                instances.push(Value::Object(instance_object));
+    let Some(table) = preview_eval::preview_mesh_table(evaluation, &preview_ids, session, show_mode, tolerance) else {
+        return ViewPreviewPayload { hover_source_window, ..Default::default() };
+    };
+    let mut instances: Vec<Value> = Vec::new();
+    let mut selected_ids: Vec<String> = Vec::new();
+    let mut hovered_ids = Vec::new();
+    for id in &preview_ids {
+        for item in preview_eval::preview_viewport_items_for_widget(eval, id) {
+            let address = item.address(id);
+            let Some(placement) = table.placements.get(&address.instance) else { continue };
+            let selected = address.marked(&selected_graph);
+            let hovered = address.marked(&hovered_graph)
+                || wire_hover.matches(id, &address.port, item.is_input());
+            let label = address.label();
+            let interaction_id = address.interaction_id();
+            let instance_id = address.instance;
+            if selected {
+                selected_ids.push(instance_id.clone());
             }
+            if hovered { hovered_ids.push(instance_id.clone()); }
+            let mut instance_object = Object::new();
+            instance_object.insert("id", Value::String(instance_id));
+            instance_object.insert("meshId", Value::String(placement.mesh_id.clone()));
+            instance_object.insert("position", vec3_json([0.0, 0.0, 0.0]));
+            instance_object.insert("rotation", Value::Array(vec![Value::from(0.0), Value::from(0.0), Value::from(0.0), Value::from(1.0)]));
+            instance_object.insert("scale", vec3_json([1.0, 1.0, 1.0]));
+            instance_object.insert("label", Value::String(label));
+            instance_object.insert("interactionId", Value::String(interaction_id));
+            instance_object.insert("selected", Value::Bool(selected));
+            instances.push(Value::Object(instance_object));
         }
-        ViewPreviewPayload { meshes_json: table.meshes_json.clone(), instances_json: semio_framework_pack_json::to_string(&Value::Array(instances)), selected_ids, hovered_id }
-    })
+    }
+    let hover_groups = preview_eval::attach_preview_hover_targets(&mut instances, GENERATION3D_VIEW_INTERACTION_GRANULARITY, &table.hover_aliases, table.hover_revision);
+    ViewPreviewPayload { bounds: table.bounds, meshes_json: table.meshes_json.clone(), instances_json: semio_framework_pack_json::to_string(&Value::Array(instances)), selected_ids, hovered_id: hovered_ids.first().cloned(), hovered_ids, hover_source_window, hover_groups }
 }
 
 /// 🧮️ `[f64; 3]` -> a `pack::json` array, for the position/scale fields above.
@@ -358,6 +235,8 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
     let mut value = semio_framework_pack_json::parse(&world3d_selection_json("rectangle", &payload.selected_ids, payload.hovered_id.as_deref()), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| Value::Object(Object::new()));
     let show_edges = matches!(config.effective_show_mode(), "wireframe" | "shaded+edges");
     if let Some(object) = value.as_object_mut() {
+        object.insert("hoveredIds", Value::Array(payload.hovered_ids.iter().cloned().map(Value::String).collect()));
+        preview_eval::stamp_preview_hover_source(object, payload.hover_source_window.as_ref());
         object.insert("transformMode", Value::String(String::new()));
         object.insert("gumballActive", Value::Bool(false));
         object.insert("showEdges", Value::Bool(show_edges));
@@ -372,18 +251,19 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// 👁️ Pure `(Generation3dSnapshot, Generation3dViewConfig, marks) -> BuiltNode` read: the camera,
 /// shading mode, LOD and sun all come from the viewer's own config, hover/selection from the
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_os_flow::FlowEvalSession>, run: Option<&semio_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, is_de: bool) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    let eval_json = eval_json.unwrap_or_default();
-    let payload = preview_payload(eval_json, &document.host_snapshot, config, session, marks);
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_os_flow::FlowEvalSession>, run: Option<&semio_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels, windows: &semio_plugin::TreeWindows<'_>, is_de: bool, hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    let evaluation = preview_eval::PreviewEvaluation::from_json(eval_json.unwrap_or_default());
+    let mut payload = preview_payload(&evaluation, &document.host_snapshot, config, session, marks);
+    *hover_groups = Some(std::mem::take(&mut payload.hover_groups));
     let selection_json = preview_selection_json(config, &payload);
     let status_json = preview_eval::preview_window_status_json(
         session,
         run,
-        preview_eval::preview_status_json(eval_json, &document.host_snapshot),
+        preview_eval::preview_status_json(&evaluation, &document.host_snapshot),
         &preview_eval::PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json },
         None,
     );
-    let fit_json = preview_eval::preview_fit_json(&document.host_snapshot, &payload.meshes_json);
+    let fit_json = preview_eval::preview_fit_json(&document.host_snapshot, payload.bounds);
     let sun = config.sun();
     let surface = semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         SURFACE_ID,
@@ -405,7 +285,10 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
         labels.preview_canvas_hint.as_str(),
         semio_ui_contract::Liveness::Polite,
     )?;
-    let rows = preview_eval::preview_value_rows(eval_json);
-    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, "procedural3d-view", "generation3d-view-values", if is_de { "Werte" } else { "Values" }, &rows)
+    let rows = preview_eval::preview_value_rows(&evaluation);
+    let graph_ids: Vec<_> = marks.hovered.iter().cloned().collect();
+    let hover = preview_eval::PreviewChannelHover::new(&document.host_snapshot, &graph_ids, None);
+    let hovered_ports = hover.matching(rows.iter().map(|row| row.id.as_str()));
+    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, "procedural3d-view", "generation3d-view-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(is_de, labels.graph_input_port.as_str(), labels.graph_output_port.as_str()), &rows, &hovered_ports)
 }
 //#endregion 🔖️Render

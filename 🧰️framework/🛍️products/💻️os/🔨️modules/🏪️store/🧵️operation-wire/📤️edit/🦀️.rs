@@ -1,6 +1,9 @@
 //! 📤️ Original edit metadata and operation pages feed the bounded causal message writer.
 use super::{ArtifactOperationWire,ArtifactOriginalOperationBytes,ArtifactPreparedOperationOutput};
 use semio_os_spr::Edit;
+use semio_framework_replication_causal::binary::atomic_group::{
+    ATOMIC_BACKBONE_MAXIMUM_BYTES, ATOMIC_EDIT_PREFIX_BYTES, AtomicBackboneSender, is_atomic_backbone_tool,
+};
 use semio_framework_value::{RetainedAllocationEffect,ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement};
 use crate::completed;
 use semio_framework_pack_json::{retained_alias,retained_alias_demand};
@@ -25,15 +28,20 @@ pub struct ArtifactOriginalEditWire<M:Sync>{
     wire:ArtifactOperationWire<M>,
     output:ArtifactPreparedOperationOutput,
     cursor:CausalEnvelopeWireCursor,
-    pending:[u8;64],length:usize,offset:usize,row:usize,phase:u8,closing:bool,
+    pending:[u8;64],length:usize,offset:usize,row:usize,phase:u8,closing:bool,prefix:Option<usize>,
 }
 impl<M:Sync> ArtifactOriginalEditWire<M>{
     pub fn birth_demands()->RetirementDemand{header::<Self>()}
     pub fn admit(source:&mut Option<RetainedOwnedProjection<Edit<M>>>,wire:ArtifactOperationWire<M>,maximum_payload:usize,maximum_capacity:usize,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         let d=Self::birth_demands();if !retained_clone_grant_admits(grant,d){return Ok(None)}
         let original=source.as_ref().ok_or_else(invalid)?.borrow()?;let edit=original.get();if edit.forwards.len()!=edit.mutation_meta.len(){return Err(invalid())}
-        let output=ArtifactPreparedOperationOutput::empty(maximum_payload,maximum_capacity)?;
-        Ok(Some((Self{original:ManuallyDrop::new(source.take()),projection:ManuallyDrop::new(None),child:ManuallyDrop::new(None),forward:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),wire,output,cursor:Default::default(),pending:[0;64],length:0,offset:0,row:0,phase:0,closing:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))
+        let transaction = edit.mutation_meta.first().and_then(|row| row.transaction.as_ref());
+        let atomic = transaction.is_some_and(|transaction| is_atomic_backbone_tool(&transaction.tool));
+        if atomic && !edit.mutation_meta.iter().all(|row| row.transaction.as_ref() == transaction) { return Err(invalid()); }
+        let (limit, capacity) = if atomic { (ATOMIC_BACKBONE_MAXIMUM_BYTES, 4 * ATOMIC_BACKBONE_MAXIMUM_BYTES) }
+            else { (maximum_payload, maximum_capacity) };
+        let output=ArtifactPreparedOperationOutput::empty(limit,capacity)?;
+        Ok(Some((Self{original:ManuallyDrop::new(source.take()),projection:ManuallyDrop::new(None),child:ManuallyDrop::new(None),forward:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),wire,output,cursor:Default::default(),pending:[0;64],length:0,offset:0,row:0,phase:0,closing:false,prefix:atomic.then_some(0)},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))
     }
     fn element(&self)->Result<Option<RetainedCloneRef<'_,M>>,ValueError>{
         let inverse=self.phase==3;let row=self.row;let edit=self.original.as_ref().ok_or_else(invalid)?.borrow()?;
@@ -42,9 +50,17 @@ impl<M:Sync> ArtifactOriginalEditWire<M>{
     }
     fn child_birth()->RetirementDemand{let mut d=ArtifactOriginalOperationBytes::<M>::birth_demands();d.capacity_bytes=size_of::<ArtifactOriginalOperationBytes<M>>();d.copy_bytes+=size_of::<Option<Box<ArtifactOriginalOperationBytes<M>>>>();d}
     fn child_drop()->RetirementDemand{RetirementDemand{release_bytes:size_of::<ArtifactOriginalOperationBytes<M>>(),..header::<Option<Box<ArtifactOriginalOperationBytes<M>>>>()}}
+    fn atomic_prefix(&self, output: &mut [u8; ATOMIC_EDIT_PREFIX_BYTES]) -> Result<usize, ValueError> {
+        let edit = self.original.as_ref().ok_or_else(invalid)?.borrow()?;
+        AtomicBackboneSender::edit_prefix(&edit.get().id, output)
+    }
     pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.closing{return self.close_demands(body)}
         let mut d=match self.phase{
+             0 if self.prefix.is_some() => {
+                let mut prefix = [0; ATOMIC_EDIT_PREFIX_BYTES];
+                self.output.append_demands((self.atomic_prefix(&mut prefix)? - self.prefix.unwrap()).min(body))?
+             },
             0|3=>match self.element()?{Some(element)=>retained_alias_demand(element)?,None=>header::<u8>()},
             1|4=>Self::child_birth(),2|5=>self.child.as_ref().ok_or_else(invalid)?.demands(body)?,
             6 if self.offset<self.length=>self.output.append_demands((self.length-self.offset).min(body))?,
@@ -64,13 +80,23 @@ impl<M:Sync> ArtifactOriginalEditWire<M>{
         let d=self.demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
         let metadata=size_of::<usize>()*3+size_of::<u8>();let g=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-metadata,..grant};
         let p=match self.phase{
+             0 if self.prefix.is_some() => {
+                let mut prefix = [0; ATOMIC_EDIT_PREFIX_BYTES];
+                let end = self.atomic_prefix(&mut prefix)?;
+                let offset = self.prefix.unwrap();
+                let before = self.output.len();
+                let receipt = self.output.append(&prefix[offset..end], &mut effect.nested(g))?;
+                let next = offset + self.output.len() - before;
+                self.prefix = (next < end).then_some(next);
+                receipt
+             },
             0|3=>match self.element()?{None=>{self.phase=6;RetainedCloneProgress{copied_items:1,..Default::default()}},Some(element)=>{let Some((owner,p))=retained_alias(element,&mut effect.nested(g))? else{return Ok(RetainedCloneStep::Progress(Default::default()))};*self.projection=Some(owner);self.phase+=1;p}},
             1|4=>{let(owner,mut p)=ArtifactOriginalOperationBytes::admit_paged(&mut self.projection,self.wire,262144,1<<20,g)?.ok_or_else(invalid)?;*self.child=Some(Box::new(owner));p.retained_capacity_bytes+=size_of::<ArtifactOriginalOperationBytes<M>>();p.copied_bytes+=size_of::<Option<Box<ArtifactOriginalOperationBytes<M>>>>();self.phase+=1;p},
             2|5=>{let step=self.child.as_mut().ok_or_else(invalid)?.advance(&mut effect.nested(g))?;if matches!(step,RetainedCloneStep::Complete(_)){if self.phase==2{*self.forward=self.child.take();self.phase=3}else{*self.inverse=self.child.take();self.phase=6}}step.progress()},
-            6 if self.offset<self.length=>{let p=self.output.append(&self.pending[self.offset..self.length],&mut effect.nested(g))?;self.offset+=p.copied_bytes;p},
+            6 if self.offset<self.length=>{let before=self.output.len();let p=self.output.append(&self.pending[self.offset..self.length],&mut effect.nested(g))?;self.offset+=self.output.len()-before;p},
             6=>{let original=self.original.as_ref().ok_or_else(invalid)?.borrow()?;let view=EditWireView{edit:original.get(),wire:self.wire,headers,current:self.row,forward:self.forward.as_deref(),inverse:self.inverse.as_deref()};let step=self.cursor.advance(&view,&mut self.pending,g)?;self.length=step.written_bytes;self.offset=0;if self.cursor.row_index()>self.row||self.cursor.is_complete(){if let Some(owner)=self.forward.as_mut(){owner.begin_close()}if let Some(owner)=self.inverse.as_mut(){owner.begin_close()}self.phase=7}step.progress},
             7|8=>{let slot=if self.phase==7{&mut self.forward}else{&mut self.inverse};if let Some(owner)=slot.as_mut(){if !owner.terminal_is_empty(){owner.close_step(&mut effect.nested(g))?.progress()}else{drop(slot.take());self.phase+=1;RetainedCloneProgress{copied_items:1,copied_bytes:Self::child_drop().copy_bytes,released_bytes:Self::child_drop().release_bytes,..Default::default()}}}else{self.phase+=1;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}}},
-            9 if self.offset<self.length=>{let p=self.output.append(&self.pending[self.offset..self.length],&mut effect.nested(g))?;self.offset+=p.copied_bytes;p},
+            9 if self.offset<self.length=>{let before=self.output.len();let p=self.output.append(&self.pending[self.offset..self.length],&mut effect.nested(g))?;self.offset+=self.output.len()-before;p},
             9 if !self.cursor.is_complete()=>{self.row=self.cursor.row_index();self.phase=0;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<usize>()+size_of::<u8>(),..Default::default()}},
             9=>{self.phase=10;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
             10=>{if let Some(original)=self.original.as_mut(){if !original.terminal_is_empty(){completed(original.close_step(grant.maximum_copy_bytes,&mut effect.nested(g)))?.progress()}else{self.original.take();self.phase=11;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<RetainedOwnedProjection<Edit<M>>>>(),..Default::default()}}}else{return Err(invalid())}},

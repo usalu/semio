@@ -1,0 +1,5 @@
+# Fresh Publication Admission Audit
+
+The PDF log shows shared directory admission waiting for about five seconds before the fresh capture writer timed out. The target timeout is a wrapper around the directory admission timeout; acquireHoldingGate preserves the typed ResourceLeaseTimeoutErrorV1 cause and resourceLeaseAdmission context. acquireFreshResourceLeaseV1 sets a zero target timeout and a bounded admission patience.
+
+Retry only a typed fresh-acquisition timeout whose admission context and cause match the exact directory, resource, mode and open operation, under the original signal and control with cancellable backoff and progress. Each failed attempt must fully release the admission gate and acquisition guard before retry. Propagate actual target contention and all non-admission errors. Do not relax target timeout or bypass the gate. Test admission held beyond five seconds followed by release, actual target contention, cancellation and deadlines, unrelated errors, and release of both publication writers.

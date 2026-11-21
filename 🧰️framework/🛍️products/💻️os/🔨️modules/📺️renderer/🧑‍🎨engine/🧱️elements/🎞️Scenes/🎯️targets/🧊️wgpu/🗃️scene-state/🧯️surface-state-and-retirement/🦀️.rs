@@ -93,7 +93,7 @@ pub(crate) struct SceneSurfaceRetirement {
 
 fn retire_scene_text(text: &mut String) -> bool {
     if !text.is_empty() {
-        let mut end = text.len().saturating_sub(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
+        let mut end = text.len().saturating_sub(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         while !text.is_char_boundary(end) {
             end += 1;
         }
@@ -139,7 +139,19 @@ fn retire_host_temporal_reply(reply: &mut Option<ui_contract::HostTemporalFormat
 }
 
 impl SceneSurfaceRetirement {
-    pub(crate) fn close_step(&mut self) -> bool {
+    pub(crate) fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if let Some(raster) = self.raster.as_mut() {
+            if raster.close_step(cx)? {
+                assert!(raster.terminal_is_empty(), "component raster owner must be empty before releasing its grant");
+                self.raster = None;
+                PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().acknowledge_retired_owner());
+            }
+            return Ok(false);
+        }
+        Ok(self.close_local_step())
+    }
+
+    fn close_local_step(&mut self) -> bool {
         if !self.raster_started {
             let taken = PENDING_RASTER_STATE.with(|cell| {
                 let mut surfaces = cell.borrow_mut();
@@ -152,15 +164,6 @@ impl SceneSurfaceRetirement {
             let Some(taken) = taken else { return false };
             self.raster = taken.map(PendingRasterSurfaceRetirement::new);
             self.raster_started = true;
-            return false;
-        }
-        if let Some(raster) = self.raster.as_mut() {
-            if !raster.close_step() {
-                return false;
-            }
-            assert!(raster.terminal_is_empty(), "component raster owner must be empty before releasing its grant");
-            self.raster = None;
-            PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().acknowledge_retired_owner());
             return false;
         }
         if let Some(target) = self.external_target.as_ref() {
@@ -502,15 +505,15 @@ impl SceneSurfaceRetirement {
 }
 
 /// 🧵️ Releases one retained scene allocation before a window or replacement mount advances.
-pub fn close_retired_scene_surface_one() -> bool {
+pub fn close_retired_scene_surface_one(cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     SCENE_SURFACE_RETIREMENT.with(|cell| {
         let mut slot = cell.borrow_mut();
-        let Some(owner) = slot.as_mut() else { return false };
-        if owner.close_step() {
+        let Some(owner) = slot.as_mut() else { return Ok(false) };
+        if owner.close_step(cx)? {
             *slot = None;
             SCENE_STATE.with(|cell| cell.borrow_mut().acknowledge_retired_owner());
         }
-        true
+        Ok(true)
     })
 }
 //#endregion SceneRuntime

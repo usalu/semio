@@ -15,7 +15,8 @@ const MAX_DCT_WORKING_BYTES: usize = 96 * 1024 * 1024;
 pub(super) fn image_layer(snapshot: &PdfSnapshot, content: &[PdfOp], item: &Placed) -> Option<Value> {
     let page = &snapshot.pages[item.object.page];
     let resources = NativePdfArtifactResources::from_objects(&snapshot.objects);
-    let resolve = |reference: &ArtifactRef, size, channels| dct_samples(&resources, reference, size, channels);
+    let resolve = |reference: &ArtifactRef, size, channels| semio_s_artifact_stdio_pdf_editor_document::graph_png_preview(&resources, reference, size, channels)
+        .or_else(|| dct_samples(&resources, reference, size, channels));
     let samples = match content.get(item.object.end) {
         Some(PdfOp::InlineImage { image }) => PdfImagePreviewSamples::inline(image, &resolve)?,
         _ => PdfImagePreviewSamples::xobject(snapshot.image(&item.object.text)?, |id| snapshot.image(id), &resolve)?,

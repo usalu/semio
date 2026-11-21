@@ -36,9 +36,9 @@ const sliderTickClassName = cn("bg-element pointer-events-none absolute w-px dat
 
 /** 🔘️ Slider thumb presentation (extent token applied per instance). */
 const sliderThumbBaseClassName = cn(
-  "block shrink-0 rounded-full bg-element transition-[background-color] outline-hidden",
+  "block shrink-0 rounded-full border border-transparent bg-element transition-colors outline-hidden",
   "hover:bg-emphasized group-hover:bg-emphasized",
-  "focus-visible:bg-active-base focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0",
+  "focus-visible:bg-active-base focus-visible:border-emphasized",
   "data-[dragging=true]:bg-active-base",
   "disabled:pointer-events-none disabled:opacity-50",
 );

@@ -610,6 +610,10 @@
       "en": "{count} derived facts exceed the cutoff bound of {maximum}",
       "de": "{count} abgeleitete Fakten überschreiten die Grenze von {maximum} für den Abschnitt"
     },
+    "graph.plan-verified": {
+      "en": "graph: plan answered and verified",
+      "de": "Graph: Plan beantwortet und geprüft"
+    },
     "graph.plan-refused": {
       "en": "{text}",
       "de": "{text}"

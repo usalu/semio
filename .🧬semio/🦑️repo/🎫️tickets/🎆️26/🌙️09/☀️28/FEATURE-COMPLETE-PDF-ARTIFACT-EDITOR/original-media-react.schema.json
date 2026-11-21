@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Media Picker Host Exchange",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/receipt"
+    }
+  ],
+  "$defs": {
+    "loan": {
+      "$ref": "urn:semio:original-media-ingress#/$defs/loan"
+    },
+    "u64": {
+      "$ref": "urn:semio:original-media-ingress#/$defs/u64"
+    },
+    "kind": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 255
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "loan",
+        "kind",
+        "maximumFileBytes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "loan": {
+          "$ref": "#/$defs/loan"
+        },
+        "kind": {
+          "$ref": "#/$defs/kind"
+        },
+        "maximumFileBytes": {
+          "$ref": "urn:semio:original-media-ingress#/$defs/nonemptyExtent"
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "loan",
+        "owner",
+        "seq",
+        "kind",
+        "phase",
+        "extent",
+        "result"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "loan": {
+          "$ref": "#/$defs/loan"
+        },
+        "owner": {
+          "$ref": "#/$defs/u64"
+        },
+        "seq": {
+          "$ref": "#/$defs/u64"
+        },
+        "kind": {
+          "$ref": "#/$defs/kind"
+        },
+        "phase": {
+          "enum": [
+            "begin",
+            "page",
+            "complete",
+            "cancel"
+          ]
+        },
+        "pageIndex": {
+          "$ref": "urn:semio:original-media-ingress#/$defs/ordinal"
+        },
+        "extent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 536870912
+        },
+        "result": {
+          "enum": [
+            "retry",
+            "pending",
+            "accepted",
+            "stale",
+            "refused"
+          ]
+        }
+      },
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "page"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "required": [
+          "pageIndex"
+        ],
+        "properties": {
+          "pageIndex": {
+            "$ref": "urn:semio:original-media-ingress#/$defs/ordinal"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "pageIndex": false
+        }
+      }
+    }
+  }
+}

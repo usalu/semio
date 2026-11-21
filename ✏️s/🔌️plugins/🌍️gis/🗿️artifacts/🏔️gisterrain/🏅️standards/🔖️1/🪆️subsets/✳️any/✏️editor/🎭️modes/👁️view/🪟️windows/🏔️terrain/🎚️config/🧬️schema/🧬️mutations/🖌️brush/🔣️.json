@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🧬️mutations/🖌️brush",
+  "semanticKind": "set-terrain-brush",
+  "displayName": "Set Terrain Brush",
+  "emoji": "🖌️",
+  "aggregateVariant": "SetTerrainBrush",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-terrain-brush",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

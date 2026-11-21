@@ -10,6 +10,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_norm_en1998_model::{En1998Accelerogram, En1998Assessment, En1998Bearing, En1998Bridge, En1998Building, En1998Diaphragm, En1998CriticalRegion, En1998Foundation, En1998IsolationSystem, En1998Joint, En1998Member, En1998Pier, En1998PierBase, En1998Placement, En1998RetainingWall, En1998Silo, En1998Site, En1998Slope, En1998Snapshot, En1998SoilLayer, En1998Tank, En1998TieBeam, En1998Tower, MemberKind};
 use framework_schema::ArtifactSchema;
+use semio_s_plugin_norm_compliance::design_case::CaseRow;
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -62,6 +63,8 @@ pub struct En1998Artifact {
     pub pier_bases: Vec<En1998PierBase>,
     #[state(artifact)]
     pub critical_regions: Vec<En1998CriticalRegion>,
+    #[state(artifact)]
+    pub cases: Vec<CaseRow>,
 }
 //#endregion 🔖️Artifact
 
@@ -89,6 +92,7 @@ impl En1998Artifact {
             isolation_systems: self.isolation_systems.clone(),
             pier_bases: self.pier_bases.clone(),
             critical_regions: self.critical_regions.clone(),
+            cases: self.cases.clone(),
             placements: self.placements.clone(),
         }
     }
@@ -116,6 +120,7 @@ impl En1998Artifact {
             isolation_systems: snapshot.isolation_systems,
             pier_bases: snapshot.pier_bases,
             critical_regions: snapshot.critical_regions,
+            cases: snapshot.cases,
             placements: snapshot.placements,
         }
     }
@@ -136,8 +141,7 @@ use semio_s_plugin_norm_compliance::AnnexChoice;
 #[path = "🧪️tests/🎯️oracle-wiring/🦀️.rs"]
 pub mod oracle_wiring;
 
-#[path = "🧱️horizontal/🦀️.rs"]
-pub mod horizontal;
+pub use semio_s_artifact_norm_en1998_schema_formulas::{case_catalogue, horizontal};
 
 #[path = "🌉️bridge/🦀️.rs"]
 pub mod bridge;

@@ -27,7 +27,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioBimApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioBimApps>::builder("stdio-bim").label("Stdio BIM").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-bim").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioBimApps>::new("stdio-bim").label("Stdio BIM").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-bim").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_ifc_catalog::declaration(semio_s_artifact_stdio_ifc::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_bcf::declaration(semio_s_artifact_stdio_bcf::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.editor::<semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::Ifc2x3AnyEditor>(semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::create_ifc2x3_any_editor());

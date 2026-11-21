@@ -400,6 +400,31 @@
     "de": "Mesh-Flächen extrudieren"
   },
   {
+    "id": "brep.mesh.extrudeBoundary",
+    "en": "Extrude Mesh Boundary Edges",
+    "de": "Mesh-Randkanten extrudieren"
+  },
+  {
+    "id": "brep.mesh.intersect",
+    "en": "Intersect Convex Meshes",
+    "de": "Konvexe Netze schneiden"
+  },
+  {
+    "id": "brep.mesh.difference",
+    "en": "Subtract Convex Mesh",
+    "de": "Konvexes Netz abziehen"
+  },
+  {
+    "id": "brep.mesh.union",
+    "en": "Union Convex Meshes",
+    "de": "Konvexe Netze vereinigen"
+  },
+  {
+    "id": "brep.mesh.bridge",
+    "en": "Bridge Mesh Boundary Loops",
+    "de": "Mesh-Randschleifen verbinden"
+  },
+  {
     "id": "brep.mesh.fillHoles",
     "en": "Fill Mesh Holes",
     "de": "Mesh-Löcher schließen"

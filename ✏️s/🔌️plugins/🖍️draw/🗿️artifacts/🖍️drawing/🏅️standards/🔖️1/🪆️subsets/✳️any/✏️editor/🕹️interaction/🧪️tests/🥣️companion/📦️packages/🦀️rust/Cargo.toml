@@ -38,4 +38,4 @@ semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"]
 serde_json = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-s-artifact-draw-drawing-editor = { workspace = true }
+semio-s-artifact-draw-drawing-editor = { workspace = true, features = ["testkit"] }

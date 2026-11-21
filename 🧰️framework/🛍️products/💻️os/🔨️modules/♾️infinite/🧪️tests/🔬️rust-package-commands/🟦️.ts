@@ -28,8 +28,8 @@ const FONT_TOOL = "pack-typst-font-assets";
 export class FontsScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("fonts takes no arguments");
-    const workspace = this.repoRoot, mode = readBuildMode(process.env.SEMIO_BUILD_MODE), authority = readNativeCallerAuthorityV1(this.invocation.capabilities), phaseControl = scriptCompilerAdmissionControlV1(this.invocation, "font-assets:publication", 0), manifest = resolve(workspace, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml"), owner = relative(workspace, ROOT).replaceAll("\\", "/");
-    if (mode !== authority.original.buildMode) throw new Error("Original font asset build mode required");
+    const workspace = this.repoRoot, authority = readNativeCallerAuthorityV1(this.invocation.capabilities), mode = authority.original.buildMode, phaseControl = scriptCompilerAdmissionControlV1(this.invocation, "font-assets:publication", 0), manifest = resolve(workspace, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml"), owner = relative(workspace, ROOT).replaceAll("\\", "/");
+    if (process.env.SEMIO_BUILD_MODE !== undefined && readBuildMode(process.env.SEMIO_BUILD_MODE) !== mode) throw new Error("Original font asset build mode required");
     const lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control: phaseControl, environment: scriptInvocationEnvironment(this.invocation, {}), request: { kind: "exact", parallelism: 1 } });
     try { await withRepositoryCacheStoreV1(workspace, "products", this.invocation, phaseControl,products => withRepositoryCacheStoreV1(workspace, "diagnostics", this.invocation, products.control,diagnostics => withArtifactScratchV1({ workspace, invocation: this.invocation, storage: diagnostics.storage, control: diagnostics.control, phaseControl, request: { version: 1, mode, owner } }, destination => withArtifactDestinationTaskV1(destination, this.invocation, async sink => {
       const asset = join(sink.directory, FONT_ASSET);

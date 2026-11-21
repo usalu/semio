@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/framework/plugin/mounted-snapshot-read-preparation",
   "title": "Mounted Snapshot Read Preparation",
+  "description": "An unready preparation with a nonzero receipt remains runnable. Its caller retains the pending poll and grants the next bounded turn before lending the snapshot.",
   "type": "object",
   "additionalProperties": false,
   "required": [

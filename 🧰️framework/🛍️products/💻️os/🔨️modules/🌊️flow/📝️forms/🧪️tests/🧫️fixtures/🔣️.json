@@ -38,6 +38,36 @@
       "schema": "choice"
     },
     {
+      "kind": "variable",
+      "id": "caption",
+      "name": "caption",
+      "schema": "text"
+    },
+    {
+      "kind": "variable",
+      "id": "width",
+      "name": "width",
+      "schema": "number"
+    },
+    {
+      "kind": "variable",
+      "id": "visible",
+      "name": "visible",
+      "schema": "boolean"
+    },
+    {
+      "kind": "variable",
+      "id": "offset",
+      "name": "offset",
+      "schema": "vector"
+    },
+    {
+      "kind": "variable",
+      "id": "origin",
+      "name": "origin",
+      "schema": "point"
+    },
+    {
       "kind": "outputAction",
       "id": "send",
       "action": "send"
@@ -58,6 +88,26 @@
     ],
     [
       "mode",
+      "variable"
+    ],
+    [
+      "caption",
+      "variable"
+    ],
+    [
+      "width",
+      "variable"
+    ],
+    [
+      "visible",
+      "variable"
+    ],
+    [
+      "offset",
+      "variable"
+    ],
+    [
+      "origin",
       "variable"
     ]
   ],
@@ -93,20 +143,237 @@
             "src": "data:image/svg+xml,test"
           },
           {
-            "id": "mode",
-            "label": "INPUT MODE",
-            "kind": "single",
-            "default": "inputMode",
-            "options": [
+            "id": "caption",
+            "label": "CAPTION",
+            "kind": "text",
+            "schema": "text",
+            "default": ""
+          },
+          {
+            "id": "width",
+            "label": "WIDTH",
+            "kind": "number",
+            "schema": "number",
+            "default": 0
+          },
+          {
+            "id": "visible",
+            "label": "VISIBLE",
+            "kind": "boolean",
+            "schema": "boolean",
+            "default": false
+          },
+          {
+            "id": "offset",
+            "label": "OFFSET",
+            "kind": "vector",
+            "schema": "vector",
+            "fields": [
               {
-                "value": "choice",
-                "label": "CHOICE"
+                "key": "x",
+                "label": "X",
+                "value": 0
+              },
+              {
+                "key": "y",
+                "label": "Y",
+                "value": 0
+              },
+              {
+                "key": "z",
+                "label": "Z",
+                "value": 0
               }
-            ],
-            "schema": "choice"
+            ]
+          },
+          {
+            "id": "origin",
+            "label": "ORIGIN",
+            "kind": "vector",
+            "schema": "point",
+            "fields": [
+              {
+                "key": "x",
+                "label": "X",
+                "value": 0
+              },
+              {
+                "key": "y",
+                "label": "Y",
+                "value": 0
+              },
+              {
+                "key": "z",
+                "label": "Z",
+                "value": 0
+              }
+            ]
           }
         ]
       }
     ]
+  },
+  "variableAnswers": [
+    {
+      "schema": "text",
+      "value": ""
+    },
+    {
+      "schema": "number",
+      "value": 0
+    },
+    {
+      "schema": "boolean",
+      "value": false
+    },
+    {
+      "schema": "vector",
+      "value": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "schema": "point",
+      "value": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "answerEdits": [
+    {
+      "questionId": "width",
+      "value": 2.75,
+      "accepted": true
+    },
+    {
+      "questionId": "visible",
+      "value": true,
+      "accepted": true
+    },
+    {
+      "questionId": "caption",
+      "value": "Updated caption",
+      "accepted": true
+    },
+    {
+      "questionId": "offset",
+      "value": [
+        1,
+        2,
+        3
+      ],
+      "accepted": true
+    },
+    {
+      "questionId": "offset",
+      "fieldIndex": 1,
+      "value": -4,
+      "accepted": true
+    },
+    {
+      "questionId": "offset",
+      "fieldIndex": 2,
+      "value": 0.5,
+      "accepted": true
+    },
+    {
+      "questionId": "origin",
+      "fieldIndex": 0,
+      "value": 2,
+      "accepted": true
+    },
+    {
+      "questionId": "offset",
+      "fieldIndex": 4,
+      "value": 5,
+      "accepted": false
+    },
+    {
+      "questionId": "offset",
+      "fieldIndex": 0,
+      "value": "bad",
+      "accepted": false
+    },
+    {
+      "questionId": "offset",
+      "value": [
+        1,
+        2
+      ],
+      "accepted": false
+    },
+    {
+      "questionId": "visible",
+      "value": "false",
+      "accepted": false
+    },
+    {
+      "questionId": "mode",
+      "value": "choice",
+      "accepted": false
+    }
+  ],
+  "expectedAnswers": {
+    "amount": 3,
+    "input_note": null,
+    "image": null,
+    "width": 2.75,
+    "visible": true,
+    "caption": "Updated caption",
+    "offset": [
+      1,
+      -4,
+      0.5
+    ],
+    "origin": [
+      2,
+      0,
+      0
+    ]
+  },
+  "expectedSeeds": {
+    "width": {
+      "port": "width",
+      "schema": "number",
+      "fields": {
+        "value": 2.75
+      }
+    },
+    "visible": {
+      "port": "visible",
+      "schema": "boolean",
+      "fields": {
+        "value": true
+      }
+    },
+    "caption": {
+      "port": "caption",
+      "schema": "text",
+      "fields": {
+        "value": "Updated caption"
+      }
+    },
+    "offset": {
+      "port": "offset",
+      "schema": "vector",
+      "fields": {
+        "x": 1,
+        "y": -4,
+        "z": 0.5
+      }
+    },
+    "origin": {
+      "port": "origin",
+      "schema": "point",
+      "fields": {
+        "x": 2,
+        "y": 0,
+        "z": 0
+      }
+    }
   }
 }

@@ -68,7 +68,7 @@ pub(super) fn node_graph_gesture_is_screen_path(surface_id: &str, at: Option<(f6
             entry.published_graph_hit = digest;
             engine_canvas_debug_log(&format!("[TRACE] wgpu node-graph hit surface={surface_id} sx={sx:.1} sy={sy:.1} trace={trace}"));
         }
-        hit.is_screen_path()
+        hit.is_screen_path() || !dag.graph.engine.selection.handle_ids.is_empty() || !dag.graph.engine.selection.edge_ids.is_empty()
     })
 }
 
@@ -92,6 +92,7 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
         let Some(entry) = map.get_mut(surface_id) else { return Ok(None) };
         let Some(engine) = entry.node_graph.as_mut() else { return Ok(None) };
         entry.sync_cache.scene_owns_hover = false;
+        entry.sync_cache.local_owns_hover = true;
         match engine {
             NodeGraphEngine::Flow(host) => match intent.phase {
                 flow::dag::DagPointerPhase::Down => host.pointer_down_screen(intent.x, intent.y, intent.button, intent.shift, intent.ctrl_or_meta, intent.alt, intent.pan),
@@ -109,25 +110,27 @@ fn apply_node_graph_screen_pointer(surface_id: &str, intent: flow::dag::DagPoint
                 flow::dag::DagPointerPhase::Leave => host.pointer_cancel_screen(),
             },
         }
-        let (hovered_handle, hovered_edge) = graph_hovered_part(engine, intent.x, intent.y);
-        let (edits, node_ids, hovered_id, camera) = match engine {
+        let (hovered_handle, hovered_edge) = graph_hovered_part(engine, &entry.sync_cache.flow_ports, intent.x, intent.y)?;
+        let (edits, dag, ports) = match engine {
             NodeGraphEngine::Flow(host) => {
                 host.resync_interaction_projection();
                 let edits = host.dag.graph.take_graph_edits();
                 let _ = host.dag.graph.take_journal_refusal();
-                let camera = &host.dag.graph.host_snapshot.camera;
-                (edits, host.dag.graph.selected_node_ids(), hovered_node_id_ref(&host.dag.viewport, &host.dag.graph).map(str::to_owned), [camera.x, camera.y, camera.zoom])
+                (edits, &host.dag, Some(&entry.sync_cache.flow_ports))
             }
             NodeGraphEngine::Dag(host) => {
                 host.resync_interaction_projection();
                 let edits = host.dag.graph.take_graph_edits();
                 let _ = host.dag.graph.take_journal_refusal();
-                let camera = &host.dag.graph.host_snapshot.camera;
-                (edits, host.dag.graph.selected_node_ids(), hovered_node_id_ref(&host.dag.viewport, &host.dag.graph).map(str::to_owned), [camera.x, camera.y, camera.zoom])
+                (edits, &host.dag, None)
             }
         };
+        let selection = bounded_graph_selection(dag, ports)?;
+        let hovered_id = hovered_node_id_ref(&dag.viewport, &dag.graph).map(str::to_owned);
+        let camera = &dag.graph.host_snapshot.camera;
+        let snapshot = graph_projection_snapshot_with_selection(selection, hovered_id, hovered_handle, hovered_edge, [camera.x, camera.y, camera.zoom])?;
         mark_engine_scene_repaint(&mut map, surface_id);
-        Ok(Some(GraphScreenPointerOutcome { edits, snapshot: graph_projection_snapshot(node_ids, hovered_id, hovered_handle, hovered_edge, camera)? }))
+        Ok(Some(GraphScreenPointerOutcome { edits, snapshot }))
     })
 }
 
@@ -198,7 +201,7 @@ pub(super) fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &s
             return Ok(false);
         };
         let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), outcome.snapshot, node_graph_interaction_domain(surface_id).as_deref())?;
-        write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
+        write_graph_interaction_actions(&mut reservation, surface_id, wire_surface_id.as_str(), controller_id, &dispatch)?;
         write_graph_edit_action(&mut reservation, controller_id, &outcome.edits)?;
         reservation.publish_partial()?;
         record_graph_interaction(surface_id, dispatch.digest);
@@ -213,7 +216,7 @@ pub(super) fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &s
         return Ok(true);
     }
     let mut reservation = input.reserve_actions(items, items * semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
-    write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
+    write_graph_interaction_actions(&mut reservation, surface_id, wire_surface_id.as_str(), controller_id, &dispatch)?;
     write_graph_edit_action(&mut reservation, controller_id, &outcome.edits)?;
     reservation.publish()?;
     record_graph_interaction(surface_id, dispatch.digest);
@@ -224,10 +227,9 @@ pub(super) fn node_graph_screen_pointer_into(surface_id: &str, controller_id: &s
 pub(super) fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<(NodeGraphPointerPlan, GraphInteractionSnapshot)>, semio_ui_action::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
-        let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else {
-            return Ok(None);
-        };
-        let (hovered_handle, hovered_edge) = graph_hovered_part(engine, intent.x, intent.y);
+        let Some(entry) = map.get(surface_id) else { return Ok(None) };
+        let Some(engine) = entry.node_graph.as_ref() else { return Ok(None) };
+        let (hovered_handle, hovered_edge) = graph_hovered_part(engine, &entry.sync_cache.flow_ports, intent.x, intent.y)?;
         match engine {
             NodeGraphEngine::Flow(host) => {
                 let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
@@ -269,43 +271,57 @@ pub(super) fn commit_node_graph_pointer(surface_id: &str, plan: NodeGraphPointer
         };
         if committed {
             entry.sync_cache.scene_owns_hover = false;
+            entry.sync_cache.local_owns_hover = true;
             mark_engine_scene_repaint(&mut map, surface_id);
         }
         committed
     })
 }
 
-fn bounded_graph_selection(dag: &flow::dag::DagHost) -> Result<(Vec<String>, Option<String>), semio_ui_action::BoundedActionFault> {
-    if dag.graph.selected_node_count() > semio_ui_action::ACTION_NODE_CAPACITY - 2 {
+fn bounded_graph_selection(dag: &flow::dag::DagHost, ports: Option<&FlowPortAddresses>) -> Result<DagSelectionDomains, semio_ui_action::BoundedActionFault> {
+    let selected = &dag.graph.engine.selection;
+    if selected.node_ids.len() + selected.edge_ids.len() + selected.handle_ids.len() > semio_ui_action::ACTION_NODE_CAPACITY - 2 {
         return Err(semio_ui_action::BoundedActionFault::NodeCredits);
     }
-    let hovered = hovered_node_id_ref(&dag.viewport, &dag.graph);
+    let nodes = dag.graph.selected_node_id_refs();
+    let edge_id_refs = || selected.edge_ids.iter().filter_map(move |id| dag.graph.edge_id_map.get(id).map(String::as_str));
+    let handles = selected.handle_ids.iter().filter_map(|id| dag.graph.channel_view(*id));
     let mut bytes = 0usize;
-    for id in dag.graph.selected_node_id_refs().chain(hovered) {
-        if id.len() > semio_ui_action::ACTION_STRING_BYTE_CAPACITY {
-            return Err(semio_ui_action::BoundedActionFault::StringCredits);
-        }
-        bytes = bytes.checked_add(id.len()).ok_or(semio_ui_action::BoundedActionFault::ByteCredits)?;
-        if bytes > semio_ui_action::ACTION_ITEM_BYTE_CAPACITY {
-            return Err(semio_ui_action::BoundedActionFault::ByteCredits);
-        }
+    let mut credit = |len: usize| {
+        if len > semio_ui_action::ACTION_STRING_BYTE_CAPACITY { return Err(semio_ui_action::BoundedActionFault::StringCredits); }
+        bytes += len;
+        if bytes > semio_ui_action::ACTION_ITEM_BYTE_CAPACITY { return Err(semio_ui_action::BoundedActionFault::ByteCredits); }
+        Ok(())
+    };
+    for id in dag.graph.selected_node_id_refs().chain(edge_id_refs()) { credit(id.len())?; }
+    let mut handle_ids = Vec::new();
+    for channel in handles {
+        let port = ports.and_then(|ports| ports.semantic(channel.widget_id, channel.port, channel.direction)).unwrap_or(channel.port);
+        credit(channel.widget_id.len().saturating_add(1).saturating_add(port.len()))?;
+        handle_ids.push(format!("{}@{port}", channel.widget_id));
     }
-    Ok((dag.graph.selected_node_id_refs().map(str::to_owned).collect(), hovered.map(str::to_owned)))
+    handle_ids.sort_unstable();
+    let mut edge_ids: Vec<_> = edge_id_refs().map(str::to_owned).collect();
+    edge_ids.sort_unstable();
+    Ok(DagSelectionDomains { nodes: nodes.map(str::to_owned).collect(), edges: edge_ids, handles: handle_ids })
 }
 
 pub(super) fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -> Result<GraphInteractionSnapshot, semio_ui_action::BoundedActionFault> {
-    let (dag, current_camera) = match entry.node_graph.as_ref() {
+    let (dag, ports, current) = match entry.node_graph.as_ref() {
         Some(NodeGraphEngine::Flow(host)) => {
-            (&host.dag, [host.host_snapshot.camera.x, host.host_snapshot.camera.y, host.host_snapshot.camera.zoom])
+            let camera = &host.host_snapshot.camera;
+            (&host.dag, Some(&entry.sync_cache.flow_ports), [camera.x, camera.y, camera.zoom])
         }
         Some(NodeGraphEngine::Dag(host)) => {
-            (&host.dag, [host.dag.graph.host_snapshot.camera.x, host.dag.graph.host_snapshot.camera.y, host.dag.graph.host_snapshot.camera.zoom])
+            let camera = &host.dag.graph.host_snapshot.camera;
+            (&host.dag, None, [camera.x, camera.y, camera.zoom])
         }
         None => return Err(semio_ui_action::BoundedActionFault::Structure),
     };
-    let (node_ids, hovered_id) = bounded_graph_selection(dag)?;
-    let hovered_handle = dag.graph.hovered_channel().map(|channel| format!("{}@{}", channel.widget_id, channel.port));
+    let selection = bounded_graph_selection(dag, ports)?;
+    let hovered_id = hovered_node_id_ref(&dag.viewport, &dag.graph).map(str::to_owned);
+    let hovered_handle = dag.graph.engine.hover.and_then(|id| dag.graph.channel_view(id)).map(|channel| graph_handle_target(ports, channel.widget_id, channel.port, channel.direction)).transpose()?;
     let hovered_edge = dag.graph.hovered_edge_id().map(str::to_owned);
-    graph_projection_snapshot(node_ids, hovered_id, hovered_handle, hovered_edge, camera.unwrap_or(current_camera))
+    graph_projection_snapshot_with_selection(selection, hovered_id, hovered_handle, hovered_edge, camera.unwrap_or(current))
 }
 //#endregion NodeGraph

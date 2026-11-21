@@ -16,11 +16,24 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct UpdateGenerationValues {
     pub generation_id: Option<String>,
     pub question_id: String,
+    pub field_index: Option<u32>,
     pub value: semio_framework_value::DslValue,
 }
 
 pub fn handle(payload: &UpdateGenerationValues, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    let generation_id = payload.generation_id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String);
-    let args = semio_framework_value::DslValue::object([("generationId".to_string(), generation_id), ("questionId".to_string(), semio_framework_value::DslValue::String(payload.question_id.clone())), ("value".to_string(), payload.value.clone())]);
-    Ok(generation_command_result("updateGenerationValues", Some(&args), doc.snapshot, cfg.snapshot).map(|result| result.emit).unwrap_or_default())
+    Ok(generation_command_result("updateGenerationValues", Some(&payload.arguments()), doc.snapshot, cfg.snapshot).map(|result| result.emit).unwrap_or_default())
+}
+
+
+impl UpdateGenerationValues {
+    /// 🧾️ Builds the shared generation transition arguments from a typed command.
+    pub fn arguments(&self) -> semio_framework_value::DslValue {
+        use semio_framework_value::DslValue;
+        DslValue::object([
+            ("generationId".into(), self.generation_id.clone().map_or(DslValue::Null, DslValue::String)),
+            ("questionId".into(), DslValue::String(self.question_id.clone())),
+            ("fieldIndex".into(), self.field_index.map_or(DslValue::Null, |index| DslValue::uint(u64::from(index)))),
+            ("value".into(), self.value.clone()),
+        ])
+    }
 }

@@ -39,7 +39,7 @@ semio-framework-intrinsic-size = { path = "../../../../📏️intrinsic-size/�
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 wasm-bindgen = { workspace = true }
 js-sys = "0.3.83"
-web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+web-sys = { version = "0.3.98", features = ["CanvasRenderingContext2d", "CanvasWindingRule", "Document", "HtmlCanvasElement", "ImageData"] }
 
 [dev-dependencies]
 semio-framework-canvas-assets = { path = "../../../🔌️runtime-assets/📦️packages/🦀️rust", features = ["testkit"] }

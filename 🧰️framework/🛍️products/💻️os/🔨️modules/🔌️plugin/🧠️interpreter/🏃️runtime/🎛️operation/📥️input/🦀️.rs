@@ -1,5 +1,6 @@
 //! 📥️ Original host admission measures borrowed JSON before physical input reservation.
 use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value::retirement::__control::{OriginalEffectReply, OriginalEffectReplyComplete};
 #[path="🛫️encode/🦀️.rs"]
 mod encoding;
 
@@ -17,6 +18,16 @@ impl semio_framework_value::ErasedSnapshotRetirement for JsonBackingOwner{
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.bytes.as_ref().map_or(0,Vec::capacity))}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.bytes.is_some()))}
     fn terminal_is_empty(&self)->bool{self.bytes.is_none()}
+    fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
+    fn close_into<'reply>(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: OriginalEffectReply<'reply, semio_framework_value::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>) -> Result<OriginalEffectReplyComplete<'reply, semio_framework_value::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure>, ValueError> {
+        if !self.terminal_is_empty() && !effect.performed(1)? {
+            return Ok(reply.complete(Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))));
+        }
+        let semio_framework_value::RetainedWorkPoll::Complete(closed) = self.close_step(body, effect) else {
+            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "host JSON close did not record a reply"));
+        };
+        Ok(reply.complete(closed.result))
+    }
 }
 impl Drop for JsonBackingOwner{fn drop(&mut self){assert!(std::thread::panicking()||self.bytes.is_none(),"host JSON original frame reached Drop before admitted release");if self.bytes.is_none(){unsafe{std::mem::ManuallyDrop::drop(&mut self.bytes);}}}}
 

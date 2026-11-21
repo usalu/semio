@@ -1,0 +1,9 @@
+# Replica Code Adoption with Pending Incoming Files
+
+The freshly read m05 attestation at November 21 01:50:19.628 UTC reports code `7ca5ebf7…` and 2,746 incoming files. It still reports 3,022 historical sharing violations. The earlier observation of `c1c4…` with 2,745 pending files is therefore a transient state. The mirror does not identify which earlier admission or timing condition the old process was waiting on.
+
+The replica supplies a busy predicate to the attester while the incoming queue is nonempty or an apply batch runs. This delays adoption only until the existing 300-second cap following the stable, jittered adoption point. Code stability, peer/snapshot admission, self-check, fallback and minimum uptime all remain independent. The restart decision sets a flag; the outer replica loop awaits its current turn before shutting down. The restart path releases sidecar observation, persists pending state and cursors in the local state log, and releases the daemon lock. Open reloads the same registers, requeues unresolved entries and reconciles the owned journal tail.
+
+The private `🧰️scripts/replica-queued-adoption-repro.ts` fixture uses the actual replica loop with an admitted private code digest and deliberately unavailable unrelated blob. With a projected clock it observes the earlier busy wait and the ordinary capped restart. The exact pending PUT and publisher cursor survive re-open. Supplying the withheld blob afterward satisfies the queue and materializes the expected independently hashed bytes. The focused run passed one test and 11 assertions in 0.37 seconds. The transcript is `🗑️generated/replica-queued-adoption.log`.
+
+The queue-empty requirement remains a separate condition for an attested settled manifest checkpoint. The physical adoption and the private durability run supply no reason to alter production restart policy or stage priority. No live host or external queue was changed.

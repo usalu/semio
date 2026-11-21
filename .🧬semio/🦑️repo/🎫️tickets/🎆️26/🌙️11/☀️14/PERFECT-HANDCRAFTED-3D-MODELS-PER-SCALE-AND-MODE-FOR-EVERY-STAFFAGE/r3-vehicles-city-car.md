@@ -110,3 +110,59 @@ Opened: 1:50 body sheet (six views), front and rear three-quarter, `hatch-open` 
 - `sectionFaces` on the undersides of roof and bonnet skins and the inner faces of pillars and glass follow the first author's "outward faces only" reading; under C25/C31 a reviewer may want the cabin closed instead.
 - Reference figures are from memory, not looked up.
 - Earlier renders of the first author under `🗑️generated/r3-city-car/` and my candidate document there were deleted; sheets remain under `🗑️generated/r3-sheet`, `r3-2d`, `volumes-tools/render`.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5_city_car_kit.py` (body-in-white writers on the round 3 master lines: nose, tail panel, side walls, stepped floor, wheel houses, arch lips, bumpers, wrap-around headlamps, mirror housings), `r5_city_car_s50.py`, `r5_city_car_s100.py`, `r5_city_car_s200.py`, `r5_city_car_s500.py`, `r5-city-car-build.py` (source), `r5_city_car_2d.py` + `r5-city-car-draw.py` (drawings), `r5-city-car-roots.py` (areas). Output under `🗑️generated/r5-city-car/`.
+
+### Reference (spec sheets; from memory, no web lookup in this round)
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| length | VW Polo 6R 3970, Swift AZG 3850, Jazz GE 3900 mm | 3.90 m body, 3.916 m over the bumper covers | in class |
+| body width | 1682 to 1695 mm | 1.68 m | 0 to -0.9 % |
+| width over mirrors | Polo 1901 mm | 1.90 m (mirror tips at z = +-0.95) | 0 % |
+| height | 1462 to 1525 mm | 1.50 m | in class |
+| wheelbase | 2430 to 2500 mm | 2.45 m | in class |
+| overhang front / rear | Polo 824 / 676 mm | 0.80 + 0.008 / 0.65 + 0.008 m | -2.9 % / -2.7 % |
+| track | Polo 1463, Swift 1480 mm | 1.44 m | -1.6 % (Polo) |
+| tyre 185/60 R15 | 603 mm, 185 mm wide | 0.60 m, 0.185 m | 0 % |
+| front floor (heel point) | about 0.30 m | 0.33 m top of floor | +3 cm (floor 85 mm thick incl. carpet) |
+| front seat cushion top | H-point about 0.52 m | cushion top 0.585 m | in range |
+| boot floor / loading sill | about 0.58 / 0.72 m | 0.58 m / tail panel top 0.825 m behind the hatch lip | |
+| bumper shut lines | front about 0.50 m, rear about 0.60 m | 0.50 m / 0.60 m (also the 2D lines) | 0 % |
+| headlamp height | lower edge 0.67, upper 0.76 m, under the bonnet shut line | 0.67 to 0.76 m, x 1.64 to 1.91 m | |
+
+### Grades (opened sheets: 1:50 body, hatch-open, bonnet-open, braking-nose-down, driving, lane-start, lane-cruise-entry, lane-exit, crawl-in, clip drive-by t 2 s, clip park-and-open-hatch t 6 s, front three-quarter close-up, structure, thermal cut, overlays; 1:100 body, structure, thermal cut; 1:200 body, structure, thermal cut; 1:500 body, structure, thermal cut; 2D 1:50, 1:100, 1:200, 1:500)
+
+| scale | list | before | after |
+|---|---|---|---|
+| 1:50 | body | B (closed hull to the belt, nose a smooth loft without bumpers, oval lamp blobs low on the corners, ball mirrors, no arch lips, boot solid in hatch-open) | A- (hollow body in white, bumper covers with shut lines, wrap-around lamps, mirror housings with glass, arch lips, dust shields, seats with cushions and bases, boot open in hatch-open) |
+| 1:50 | thermal | C (cut shows a solid red block up to the belt with seats standing on it) | A- (cabin, floor, wheel houses, seats, dash, engine, exhaust as real spaces and solids) |
+| 1:50 | structure | A- (unibody tube cage) | A- (unchanged) |
+| 1:100 | body / thermal / structure | B / C / A- | A- / A- / A- |
+| 1:200 | body / thermal / structure | B / B- (floating cabin slab) / B+ | B+ / B+ / B+ |
+| 1:500 | body / thermal / structure | B / B / B | B+ (mirror housings) / B / B |
+| poses, clips | all | B (solid boot) | A- (all nine poses and two clip frames closed, no tearing) |
+
+### Changes
+
+- 1:50 and 1:100 lower body rebuilt as a body in white: `nose` (master hull ahead of the firewall at x 0.78), `tail-panel` (behind x -1.79), `side-wall-l/r` (50 / 60 mm walls whose outer face is the master hull side, from sill or arch line to the belt), `floor` stepped 0.33 / 0.45 / 0.58 m that rests on the rear arch line and narrows to the wheel-house plates only where the arch rises through it, `wheelhouse-l/r` bands and `wheelhouse-plate-*` inner plates (front ones close the front arch tunnel), `belt-rail-l/r/rear`, `dashboard`; dropped `hull`, `underbody`, the full-width `waist` deck and `cabin-deck`.
+- Details: `bumper-front` / `bumper-rear` covers (8 mm proud at 1:50, 15 mm at 1:100) with shut lines at 0.50 / 0.60 m, `intake`, `fog-lamp-*`, `diffuser-rear`, `reflector-rear-*`; `headlamp-*` as lens lofts laid on the hull from the wing round the corner (x 1.64 to 1.905); `mirror-*` as lofted housings with `mirror-glass-*` on the rear face; `arch-lip-*` beads on every arch; `dust-shield-*` behind every wheel (the dark disc seen through the spokes; it also restores the elevation silhouette); body seat cushions and bases.
+- 1:200: same open lower shell for 30 mm features (60 mm walls, 30 mm floor and plates), mirror housings, lamp lofts; the hidden cabin slab of round 3 that floated at mid-height in the hollow body replaced by hidden cushions and dashboard. 1:500: mirror housings.
+- Thermal: interior is a hidden region, so its solids are own copies, not references (validator rule). Faces that look into cabin and boot carry `sectionFaces` as in round 3: the plate pillars and the hinged tailgate leave seams wider than the C31 flood cell (1.9 mm), so without them the flood reaches the cabin and every region read double (measured body-panels 29.4 against 15.4, roof 4.74 against 2.5).
+- 2D: headlamps redrawn in elevation, front and plan at 1:50, 1:100, 1:200 as the true views of the new lamp lofts (`r5_city_car_2d.py`); nothing else in the drawings changed. Bumper lines at 0.50 / 0.60 m already matched.
+- Root areas (C16, factor within 1.5, passive regions): `body-panels` 15.4 -> 20.2 m2 (the hollow body adds floor underside, wheel-house liners, bumper covers, arch lips and mirror housings: 1:50 measures 20.17), `interior` 5 -> 7.2 m2 (seat cushions, bases, backs, headrests, dashboard and steering wheel: 1:50 measures 7.23, hand value 2 front seats 3.0 + bench 2.4 + dash 1.4 + wheel and headrests 0.4 = 7.2).
+
+### Check
+
+`volumes-check.ts vehicles/city-car --product`: PASS (609.7 s), every rule line ok at all four scales (silhouette IoU 1:50 0.994 / 0.986 / 0.987, p95 11 / 15 / 23 mm; thermal 1:50 body-panels +0.2 %, every region within 15 %); `r3-validate.ts vehicles/city-car --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0); spliced with `volumes-insert.py`.
+
+### Remaining
+
+- The nose stays a closed loft under the bonnet (engine bay not hollow in `bonnet-open`; the engine is a hidden thermal region and may not be a body solid). Door shut lines are texture capsules, doors have no bones.
+- Side walls are flat-faced per station (exponent 8) where the round 3 hull rounded into sill and belt (exponent 12): a faint wave shows along the lower side between the arches.
+- The cabin is not airtight for the C31 flood, so inward faces are marked as section faces; sealing pillars, glass and tailgate seams would let the marks go.
+- 1:200 and 1:500 stay a step below 1:50 in detail (polygonal arches by design, glass mass at 1:200 and 1:500); structure lists unchanged from round 3 (tube idealisation).
+
+The 1:100 exhaust outlet uses a 0.20 mm paper outline. The complete drawing passed at 1:55, 1:75, 1:100, 1:125 and 1:150.

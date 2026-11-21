@@ -13,6 +13,12 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfI
 mod sampled_alpha;
 pub use sampled_alpha::PdfImagePreviewSamples;
 
+#[path = "🎞️controlled/🦀️.rs"]
+mod controlled;
+pub use controlled::{ControlledImageBinding, ControlledImageResources};
+#[cfg(test)]
+use controlled::ControlledImageCursor;
+
 /// 📋 The image dictionary keys the typed model owns; everything else is `extra`.
 const IMAGE_KEYS: &[&str] = &["Type", "Subtype", "Width", "Height", "ColorSpace", "BitsPerComponent", "ImageMask", "Decode", "Interpolate", "SMask", "SMaskInData", "Mask", "Matte", "Intent", "OC", "StructParent", "Length", "Filter", "DecodeParms"];
 
@@ -84,7 +90,26 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
     dict.extend(image.extra.iter().cloned());
     let (data,filters)=match &image.body {
         PdfImageBody::Samples {values}=>(pack_image_samples(image.width,image.height,image_components(image),image.bits_per_component,values)?,vec![PdfStreamFilter::Flate {predictor:None}]),
-        PdfImageBody::Artifact {reference}=>{let PdfObject::Stream {data,filters,..}=sink.resolve_artifact(reference)? else{return Err(PdfEngineError::Unsupported("image artifact is not a native stream".into()));};if !filters.iter().any(|filter|filter.is_image_codec()){return Err(PdfEngineError::Unsupported("referenced image artifact has no native image codec".into()));}(data,filters)},
+        PdfImageBody::Artifact {reference}=>{
+            use crate::standards::v1_7::subsets::base::io::foreign_artifacts::png_source::PngPlane;
+            let value = sink.resolve_artifact(reference)?;
+            let sourced_png = PngPlane::match_reference(reference);
+            if let Some(role) = sourced_png {
+                let number = |key| value.dict_get(key).and_then(PdfObject::as_i64);
+                if image.bits_per_component != 8 || role.channels() != image_components(image) as usize
+                    || number("Width") != Some(i64::from(image.width)) || number("Height") != Some(i64::from(image.height))
+                {
+                    return Err(PdfEngineError::Malformed("PDF PNG resource geometry changed before image lowering".into()));
+                }
+            }
+            let PdfObject::Stream {data,filters,..} = value else {
+                return Err(PdfEngineError::Unsupported("image artifact is not a native stream".into()));
+            };
+            if sourced_png.is_none() && !filters.iter().any(|filter|filter.is_image_codec()) {
+                return Err(PdfEngineError::Unsupported("referenced image artifact has no native image codec".into()));
+            }
+            (data,filters)
+        },
     };
     let mut object=raw_stream(dict,data);if let PdfObject::Stream {filters:slot,..}=&mut object {*slot=filters;}
 
@@ -94,17 +119,21 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
 fn image_components(image:&PdfImage)->u32 {if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)}}
 /// 📏️ Returns the sample count per row and packed byte length for an image grid.
 pub fn packed_image_geometry(width: u32, height: u32, components: u32, bits: u32) -> PResult<(usize, usize)> {
+    checked_image_geometry(width, height, components, bits).map_err(|reason| PdfEngineError::Unsupported(reason.into()))
+}
+
+fn checked_image_geometry(width: u32, height: u32, components: u32, bits: u32) -> Result<(usize, usize), &'static str> {
     if !matches!(bits, 1 | 2 | 4 | 8 | 16) || components == 0 {
-        return Err(PdfEngineError::Unsupported("image sample depth or components are invalid".into()));
+        return Err("image sample depth or components are invalid");
     }
     let count = (width as usize).checked_mul(components as usize)
-        .ok_or_else(|| PdfEngineError::Unsupported("image row sample count overflow".into()))?;
+        .ok_or("image row sample count overflow")?;
     let row = count.checked_mul(bits as usize)
-        .ok_or_else(|| PdfEngineError::Unsupported("image row width overflow".into()))?.div_ceil(8);
+        .ok_or("image row width overflow")?.div_ceil(8);
     count.checked_mul(height as usize).filter(|count| *count <= isize::MAX as usize / std::mem::size_of::<u32>())
-        .ok_or_else(|| PdfEngineError::Unsupported("image sample storage overflow".into()))?;
+        .ok_or("image sample storage overflow")?;
     let length = row.checked_mul(height as usize)
-        .ok_or_else(|| PdfEngineError::Unsupported("image body width overflow".into()))?;
+        .ok_or("image body width overflow")?;
     Ok((count, length))
 }
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus};
@@ -124,7 +153,11 @@ pub struct PdfImageSampleCursor {
 
 impl PdfImageSampleCursor {
     pub fn new(width: u32, height: u32, components: u32, bits: u32) -> PResult<Self> {
-        let (row_samples, packed_length) = packed_image_geometry(width, height, components, bits)?;
+        Self::checked_new(width, height, components, bits).map_err(|reason| PdfEngineError::Unsupported(reason.into()))
+    }
+
+    fn checked_new(width: u32, height: u32, components: u32, bits: u32) -> Result<Self, &'static str> {
+        let (row_samples, packed_length) = checked_image_geometry(width, height, components, bits)?;
         let height = height as usize;
         let row_bytes = packed_length.checked_div(height).unwrap_or(0);
         Ok(Self { row_samples, row_bytes, packed_length, sample_count: row_samples * height, bits: bits as usize, output: Vec::new(), stage: SampleStage::Active })
@@ -231,6 +264,28 @@ pub fn pack_image_samples(width:u32,height:u32,components:u32,bits:u32,values:&[
 mod sample_tests {
     use super::*;
 
+    #[test]
+    fn controlled_dct_reference_agrees_with_the_native_resource_port() {
+        use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfDctResourceIdentity;
+
+        let data = b"physical DCT custody";
+        for color_transform in [None, Some(0), Some(1)] {
+            let stream = PdfObject::Stream {
+                dict: Vec::new(), data: data.to_vec(), filters: vec![PdfStreamFilter::Dct { color_transform }],
+            };
+            let reference = NativePdfArtifactResources::default().admit("s.stdio.jpeg", stream).unwrap();
+            let mut incremental = PdfDctResourceIdentity::new(color_transform).unwrap();
+            for _ in 0..data.len() {
+                assert_eq!(incremental.advance(data, 1), 1);
+            }
+            assert!(incremental.complete(data.len()));
+            assert_eq!(incremental.reference(), reference);
+            let bytes = reference.artifact_id.capacity() + reference.dialect.artifact_kind.capacity()
+                + reference.dialect.standard.capacity() + reference.dialect.subset.capacity();
+            assert_eq!(bytes, PdfDctResourceIdentity::REFERENCE_BYTES);
+        }
+    }
+
     const ONE: CosGrant = CosGrant { work: 1, allocation_bytes: 64, release_bytes: 64 };
 
     #[test]
@@ -250,6 +305,54 @@ mod sample_tests {
             }
             assert_eq!(cursor.take_samples().unwrap(), expected);
         }
+    }
+
+
+    #[test]
+    fn controlled_xobject_replays_samples_under_two_capacity_grants() {
+        let name = |key, value| PdfDictEntry::new(key, PdfObject::name(value));
+        let mut stream = PdfObject::Stream {
+            dict: vec![
+                name("Type", "XObject"), name("Subtype", "Image"), name("ColorSpace", "DeviceRGB"),
+                PdfDictEntry::new("Width", PdfObject::Int(2)), PdfDictEntry::new("Height", PdfObject::Int(1)),
+                PdfDictEntry::new("BitsPerComponent", PdfObject::Int(8)),
+                PdfDictEntry::new("ImageMask", PdfObject::Bool(false)), PdfDictEntry::new("Interpolate", PdfObject::Bool(true)),
+            ],
+            data: vec![255, 0, 4, 0, 128, 5], filters: Vec::new(),
+        };
+        let mut image = ControlledImageCursor::new(&stream).unwrap().unwrap();
+        let PdfObject::Stream { data, .. } = &stream else { unreachable!() };
+        let denied = CosGrant { allocation_bytes: 0, ..ONE };
+        for _ in 0..2 {
+            assert!(image.reserving_samples());
+            assert_eq!(image.advance(data, denied).status, Ok(CosStatus::NeedsAllocation { bytes: 24 }));
+            assert_eq!(image.advance(data, ONE).allocated_bytes, 24);
+            for _ in 0..6 {
+                assert!(!image.reserving_samples());
+                let step = image.advance(data, ONE);
+                assert_eq!((step.work, step.allocated_bytes), (1, 0));
+            }
+        }
+        let [image, role] = image.take_images("Im0").unwrap();
+        assert_eq!(image, role);
+        assert!(image.interpolate && !image.image_mask);
+        assert_eq!(image.body, PdfImageBody::Samples { values: vec![255, 0, 4, 0, 128, 5] });
+
+        let mut partial = ControlledImageCursor::new(&stream).unwrap().unwrap();
+        for _ in 0..10 { let _ = partial.advance(data, ONE); }
+        partial.begin_close();
+        let denied = CosGrant { release_bytes: 0, ..ONE };
+        assert_eq!(partial.close_step(denied).status, Ok(CosStatus::NeedsRelease { bytes: 24 }));
+        assert_eq!(partial.close_step(ONE).released_bytes, 24);
+        assert_eq!(partial.close_step(ONE).released_bytes, 24);
+        assert_eq!(partial.close_step(ONE).status, Ok(CosStatus::Closed));
+
+        let PdfObject::Stream { data, .. } = &mut stream else { unreachable!() };
+        data.pop();
+        assert!(ControlledImageCursor::new(&stream).is_err());
+        let PdfObject::Stream { dict, .. } = &mut stream else { unreachable!() };
+        dict.push(PdfDictEntry::new("SMask", PdfObject::Null));
+        assert!(ControlledImageCursor::new(&stream).unwrap().is_none());
     }
 
     #[test]

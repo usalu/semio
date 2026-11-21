@@ -7,11 +7,17 @@ async fn primary_asset_is_nonempty() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn mesh_child_handle_addresses_its_own_target() {
-    let text = fixture_text!("../../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
-    let mesh = snapshot.mesh.expect("demo fixture carries its composed mesh");
-    assert_eq!(mesh.child_id, mesh.target.artifact_id);
+async fn bundled_example_infers_a_surface_without_a_synthetic_child_reference() {
+    let text = super::source().document();
+    let snapshot = <crate::GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("demo fixture parses");
+    assert!(snapshot.mesh.is_none());
+    let grid = snapshot.elevation_source.as_ref().expect("demo owns elevation source").grid();
+    assert!(crate::schema::imported_map::is_bundled_terrain_grid(&grid));
+    let overlays = snapshot.imported_map.as_ref().expect("demo owns overlays");
+    assert_eq!((overlays.positions.len(), overlays.routes.len(), overlays.regions.len()), (2, 1, 1));
+    let relief = crate::gis_terrain_mesh_from_snapshot(&snapshot).expect("Liège terrain surface");
+    let positions = &relief.meshes[0].primitives[0].positions;
+    assert!(positions.iter().any(|position| position.z != positions[0].z));
 }
 
 //#region 🧪️InferenceLaws

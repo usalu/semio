@@ -1,0 +1,6 @@
+[
+  { "mode": "release", "platform": "darwin", "files": [], "build": true },
+  { "mode": "release", "platform": "win32", "files": [".semio-artifact.json", "semio-plugin-describe.exe"], "build": false },
+  { "mode": "prototype", "platform": "linux", "files": [".semio-artifact.json"], "build": true },
+  { "mode": "prototype", "platform": "darwin", "files": [".semio-artifact.json", "semio-plugin-describe"], "build": false }
+]

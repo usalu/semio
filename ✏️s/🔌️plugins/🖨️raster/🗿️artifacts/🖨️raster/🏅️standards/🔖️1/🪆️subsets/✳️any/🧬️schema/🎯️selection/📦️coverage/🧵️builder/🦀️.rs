@@ -96,6 +96,104 @@ impl RasterSelectionSpansBuilder{
 }
 impl Drop for RasterSelectionSpansBuilder{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"packed selection builder retains unfinished pages until funded closure");}}
 
+#[doc(hidden)]
+pub struct RasterSelectionBuilderRetirement(RasterSelectionSpansBuilder);
+
+impl semio_framework_value::RetireOwned for RasterSelectionSpansBuilder {
+    type RetirementCursor = RasterSelectionBuilderRetirement;
+
+    fn retirement_seed(self) -> Self::RetirementCursor { RasterSelectionBuilderRetirement(self) }
+
+    fn controlled_retirement_supported() -> bool { true }
+}
+
+impl RasterSelectionBuilderRetirement {
+    fn close(
+        &mut self, original: Option<&mut OriginalRetirementCloseLoan<'_>>, body: usize,
+        effect: &mut RetainedAllocationEffect<'_>, recover: bool,
+    ) -> OriginalRetirementPoll {
+        use semio_framework_value::{RetainedWorkOutcome, RetainedWorkPoll};
+        let before=effect.performed_boundary();
+        if self.0.terminal_is_empty() {
+            return RetainedWorkPoll::Complete(RetainedWorkOutcome { result:Ok(RetainedCloneStep::Complete(Default::default())),work:0 });
+        }
+        if !self.0.is_closing() {
+            if recover { return RetainedWorkPoll::Pending {work:0}; }
+            let result=self.0.begin_close_paid(effect).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);
+            let work=effect.performed_since(before).expect("original selection close receipt");
+            return RetainedWorkPoll::Complete(RetainedWorkOutcome {result,work});
+        }
+        let mut answer=None;
+        let routed=(|| {
+            let reply=OriginalEffectReply::borrow(&mut answer)?;
+            self.0.close_routed(original,body,effect,reply,recover).map(|_|())
+        })();
+        let work=effect.performed_since(before).expect("original selection close receipt");
+        match (routed,answer) {
+            (Err(error),_)=>RetainedWorkPoll::Complete(RetainedWorkOutcome {result:Err(error.into()),work}),
+            (Ok(_),Some(result))=>RetainedWorkPoll::Complete(RetainedWorkOutcome {result,work}),
+            (Ok(_),None)=>RetainedWorkPoll::Pending {work},
+        }
+    }
+}
+
+impl semio_framework_value::retirement::RetirementCursor for RasterSelectionBuilderRetirement {
+    fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,
+        reply:OriginalEffectReply<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,
+    )->Result<OriginalEffectReplyComplete<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,ValueError>{
+        self.close_reply(None,body,effect,reply,false)
+    }
+
+    fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,
+        reply:OriginalEffectReply<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,
+    )->Result<OriginalEffectReplyComplete<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,ValueError>{
+        self.close_reply(None,body,effect,reply,true)
+    }
+
+    fn close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,
+        reply:OriginalEffectReply<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,
+    )->Result<OriginalEffectReplyComplete<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,ValueError>{
+        self.close_reply(Some(original),body,effect,reply,false)
+    }
+
+    fn recover_close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,
+        reply:OriginalEffectReply<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,
+    )->Result<OriginalEffectReplyComplete<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,ValueError>{
+        self.close_reply(Some(original),body,effect,reply,true)
+    }
+
+    fn requires_original_birth(&self)->bool{self.0.requires_original_birth()}
+    fn requires_original_control(&self)->bool{self.0.requires_original_control()}
+    fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
+        semio_framework_value::retirement::erased_cursor_turn(self.0.close_original_birth_step(original,grant))
+    }
+    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if self.0.terminal_is_empty(){return Ok(Default::default());}
+        if self.0.is_closing(){self.0.close_demands(body)}else{Ok(self.0.begin_close_demand())}
+    }
+    fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{
+        if self.0.terminal_is_empty(){return Ok(0);}
+        if self.0.is_closing(){self.0.close_work_demand(body)}else{Ok(self.0.begin_close_work_demand())}
+    }
+    fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
+    fn terminal_release_bytes(&self)->Option<usize>{self.0.terminal_is_empty().then_some(size_of::<Self>())}
+}
+
+impl RasterSelectionBuilderRetirement {
+    fn close_reply<'r>(&mut self,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,
+        reply:OriginalEffectReply<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,recover:bool,
+    )->Result<OriginalEffectReplyComplete<'r,semio_framework_value::retirement::RetirementStep,OriginalRetirementFailure>,ValueError>{
+        use semio_framework_value::{RetainedWorkPoll,retirement::RetirementStep};
+        Ok(match self.close(original,body,effect,recover){
+            RetainedWorkPoll::Pending {..}=>reply.pending(),
+            RetainedWorkPoll::Complete(turn)=>reply.complete(turn.result.map(|step|{
+                if self.0.terminal_is_empty()&&step.progress()==Default::default(){RetirementStep::Complete(turn.work)}
+                else {RetirementStep::Progress(step.progress(),turn.work)}
+            })),
+        })
+    }
+}
+
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

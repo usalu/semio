@@ -1,0 +1,37 @@
+{
+  "request": {"v": 1, "op": "recall", "pass": "p1", "crate": "missing", "outDir": "/lane/a/deps", "extraFilename": "-1f"},
+  "afterDisconnect": {"v": 1, "op": "unit", "record": null},
+  "physicalCharge": {
+    "budgetBytes": 5261334937,
+    "samples": [
+      {
+        "rssBytes": 536870912,
+        "chargedBytes": 5260286361,
+        "presetFrozen": false,
+        "frozen": false,
+        "admitsPeer": false
+      },
+      {
+        "rssBytes": 536870912,
+        "chargedBytes": 5690831667,
+        "presetFrozen": false,
+        "frozen": true,
+        "admitsPeer": false
+      },
+      {
+        "rssBytes": 536870912,
+        "chargedBytes": 5260286361,
+        "presetFrozen": true,
+        "frozen": true,
+        "admitsPeer": false
+      },
+      {
+        "rssBytes": 536870912,
+        "chargedBytes": 1073741824,
+        "presetFrozen": true,
+        "frozen": false,
+        "admitsPeer": true
+      }
+    ]
+  }
+}

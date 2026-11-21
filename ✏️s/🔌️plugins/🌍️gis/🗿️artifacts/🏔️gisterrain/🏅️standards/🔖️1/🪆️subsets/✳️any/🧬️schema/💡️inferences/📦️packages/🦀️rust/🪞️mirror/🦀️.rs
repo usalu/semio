@@ -42,6 +42,10 @@ pub mod standards {
                 pub mod io {
                     #[path = "."]
                     pub mod text {
+                        #[path = "../../../../../🚪️io/📝️text/🏔️ascii-grid/🦀️.rs"]
+                        pub mod ascii_grid;
+                        #[path = "../../../../../🚪️io/📝️text/🌍️geojson/🦀️.rs"]
+                        pub mod geojson;
                         #[path = "../../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
                         #[path = "../../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]

@@ -33,7 +33,85 @@ pub enum PdfMutation {
     ResizePage(ResizePage),
     ReplacePageText(ReplacePageText),
 }
-dsl::original_pack_value_operation_receiving!(PdfMutation);
+
+mod history_target {
+//! 🎯 Exact borrowed Store conflict paths for the PDF mutation vocabulary.
+
+use super::PdfMutation;
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use std::io::{Cursor, Write};
+use store::ArtifactOperationTargets;
+
+#[derive(Clone, Copy)]
+struct Segment(usize);
+
+impl Segment {
+    fn visit<T>(self, read: impl FnOnce(&[u8]) -> Result<T, ValueError>) -> Result<T, ValueError> {
+        let mut scratch = [0; 32];
+        let mut output = Cursor::new(&mut scratch[..]);
+        write!(output, "{}", self.0).map_err(|_| ValueError::invariant("PDF conflict path exceeds its fixed scratch"))?;
+        let end = output.position() as usize;
+        read(&scratch[..end])
+    }
+}
+
+fn absent() -> ValueError {
+    ValueError::literal(ValueRefusalKind::InvalidValue, "PDF conflict path segment is absent")
+}
+
+impl ArtifactOperationTargets for PdfMutation {
+    fn len(&self) -> usize {
+        self.conflict_segments().into_iter().flatten().count()
+    }
+
+    fn segment_len(&self, index: usize) -> Result<usize, ValueError> {
+        self.conflict_segment(index)?.visit(|segment| Ok(segment.len()))
+    }
+
+    fn read_segment(&self, index: usize, offset: usize, output: &mut [u8]) -> Result<usize, ValueError> {
+        self.conflict_segment(index)?.visit(|segment| {
+            let rest = segment.get(offset..).ok_or_else(absent)?;
+            let copied = rest.len().min(output.len());
+            output[..copied].copy_from_slice(&rest[..copied]);
+            Ok(copied)
+        })
+    }
+}
+
+impl PdfMutation {
+    /// 🎞️ Lends the canonical target directly from the persisted operation.
+    pub fn original_conflict_target(&self) -> Option<&dyn ArtifactOperationTargets> {
+        self.conflict_segments()[0].map(|_| self as &dyn ArtifactOperationTargets)
+    }
+
+    /// 🏠 Admits the document's semantic replay, retirement and conflict target issuers together.
+    pub fn document_store_owners(
+        grant: semio_framework_value::RetainedCloneGrant,
+    ) -> Result<
+        (store::os_store::document_store_owners::DocumentStoreOwners<super::PdfSnapshot, Self>, semio_framework_value::RetainedCloneProgress),
+        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<super::PdfSnapshot, Self>,
+    > {
+        semio_plugin::cold_replay_document_store_owners::<super::PdfSnapshot, Self>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_target(Self::original_conflict_target);
+            (owners, progress)
+        })
+    }
+
+    fn conflict_segment(&self, index: usize) -> Result<Segment, ValueError> {
+        self.conflict_segments().get(index).copied().flatten().ok_or_else(absent)
+    }
+
+    fn conflict_segments(&self) -> [Option<Segment>; 2] {
+        match self {
+            Self::InsertPage(operation) => [Some(Segment(operation.index)), None],
+            Self::RemovePage(operation) => [Some(Segment(operation.index)), None],
+            Self::MovePage(operation) => [Some(Segment(operation.from)), None],
+            Self::ResizePage(operation) => [Some(Segment(operation.index)), None],
+            Self::ReplacePageText(operation) => [Some(Segment(operation.index)), None],
+        }
+    }
+}
+}
 
 //#endregion 🔖️Aggregate
 

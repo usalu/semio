@@ -232,6 +232,7 @@
         "fault": {
           "enum": [
             "unchanged",
+            "settled-ancestry-replacement",
             "exact-leaf-absent",
             "ancestor-absent",
             "ancestor-replaced",

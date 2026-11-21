@@ -1,0 +1,18 @@
+{
+  "schema": "semio.plugin.declaration-example-cache/v1",
+  "registrations": [
+    { "dialect": { "artifactKind": "s.note.note", "standard": "1", "subset": "any" }, "examples": ["first", "second"] },
+    { "dialect": { "artifactKind": "s.wfc.bitmap", "standard": "1", "subset": "any" }, "examples": ["wfc-first"] },
+    { "dialect": { "artifactKind": "s.note.note", "standard": "2", "subset": "any" }, "examples": ["standard-two"] },
+    { "dialect": { "artifactKind": "s.note.note", "standard": "1", "subset": "small" }, "examples": ["small-subset"] },
+    { "dialect": { "artifactKind": "s.note.note", "standard": "1", "subset": "any" }, "examples": ["second", "third"] },
+    { "dialect": { "artifactKind": "s.note.note", "standard": "1", "subset": "any" }, "examples": [] }
+  ],
+  "lookups": [
+    { "dialect": { "artifactKind": "s.note.note", "standard": "1", "subset": "any" }, "examples": ["second", "third"] },
+    { "dialect": { "artifactKind": "s.wfc.bitmap", "standard": "1", "subset": "any" }, "examples": ["wfc-first"] },
+    { "dialect": { "artifactKind": "s.note.note", "standard": "2", "subset": "any" }, "examples": ["standard-two"] },
+    { "dialect": { "artifactKind": "s.note.note", "standard": "1", "subset": "small" }, "examples": ["small-subset"] },
+    { "dialect": { "artifactKind": "s.wfc.bitmap", "standard": "2", "subset": "small" }, "examples": [] }
+  ]
+}

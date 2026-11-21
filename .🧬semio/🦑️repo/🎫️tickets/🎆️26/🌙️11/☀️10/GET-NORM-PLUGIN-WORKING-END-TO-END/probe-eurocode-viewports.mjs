@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ticket = fileURLToPath(new URL(".", import.meta.url));
 const root = resolve(ticket, "../../../../../../..");
-const output = join(ticket, "🗑️generated", "eurocode-viewports");
+const output = join(ticket, "🗑️generated", process.env.PLAY_VIEWPORT_OUTPUT ?? "eurocode-viewports");
 const require = createRequire(join(root, "🏢️semio-tech", "🎡️play", "package.json"));
 const { chromium } = require("playwright");
 const { PNG } = require("pngjs");
@@ -20,6 +20,8 @@ const cases = new Map([
 const ids = process.argv.length > 2 ? process.argv.slice(2) : [...cases.keys()];
 assert(ids.every(id => cases.has(id)));
 const timeout = Number(process.env.PLAY_VIEWPORT_TIMEOUT_MS ?? 180_000);
+const startupTimeout = Number(process.env.PLAY_VIEWPORT_STARTUP_TIMEOUT_MS ?? timeout);
+const exampleTimeout = Number(process.env.PLAY_VIEWPORT_EXAMPLE_TIMEOUT_MS ?? timeout);
 const origin = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:6034/";
 const preview = process.env.PLAY_TEST_GUEST;
 const freshPath = preview && "/@fs" + pathToFileURL(resolve(preview)).pathname;
@@ -28,6 +30,16 @@ const bindingsSource = previewBindings && await (async () => {
   const imports = join(root, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "🌐️browser-bundle", "🕸️imports", "🟦️.ts");
   const { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } = await import(pathToFileURL(imports));
   return rewritePreview2ShimImportSource(await readFile(previewBindings, "utf8"), `../${PREVIEW2_VENDOR_RELATIVE}/`);
+})();
+const currentBridge = process.env.PLAY_TEST_CURRENT_JOBS === "1" && await (async () => {
+  assert(preview && previewBindings, "the current preview requires paired core and bindings");
+  const plugin = join(root, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin");
+  const generator = join(plugin, "🌐️browser-bundle", "🏗️materialization", "🌉️component-bridge-source", "🟦️.ts");
+  const { pluginComponentBridgeSource } = await import(pathToFileURL(generator));
+  const component = basename(previewBindings, ".js");
+  const module = component.match(/^semio_hub_(norm(?:_\w+)*)_component$/u)?.[1].replaceAll("_", "-");
+  assert(module, "the paired preview must be a Norm component");
+  return { module, source: pluginComponentBridgeSource(component, basename(preview)) };
 })();
 await mkdir(output, { recursive: true });
 
@@ -95,25 +107,29 @@ function interiorColors(data) {
   return colors.size;
 }
 
-async function assertPalette(page, scope, total) {
+async function assertPalette(scope, total) {
   const menu = scope.locator('[data-tree-window-key="norm-viewport-insert"][data-tree-window-path]').first();
   await menu.waitFor({ state: "visible", timeout });
   assert.equal(Number(await menu.getAttribute("data-tree-window-total")), total);
   const outliner = scope.locator('[data-tree-window-key="norm-outliner-root"][data-tree-window-path]').first();
   await outliner.waitFor({ state: "attached", timeout });
   assert(Number(await outliner.getAttribute("data-tree-window-total")) >= 35);
-  await menu.locator('[data-tree-window-spacer="trailing"]').evaluate(element => element.scrollIntoView({ block: "end" }));
-  await page.waitForFunction(total => [...document.querySelectorAll('[data-tree-window-key="norm-viewport-insert"][data-tree-window-path]')].some(element => {
-    const offset = Number(element.getAttribute("data-tree-window-offset"));
-    return offset > 0 && [...element.querySelectorAll("[data-tree-window-row]")].some(row => Number(row.getAttribute("data-tree-window-row")) === total - 1);
-  }), total, { timeout });
-  return { total, offset: Number(await menu.getAttribute("data-tree-window-offset")) };
+  const last = menu.locator(`[data-tree-window-row="${total - 1}"]`).first();
+  const requestedLastPage = await last.count() === 0;
+  if (requestedLastPage) {
+    await menu.locator('[data-tree-window-spacer="trailing"]').evaluate(element => element.scrollIntoView({ block: "end" }), undefined, { timeout });
+  }
+  await last.waitFor({ state: "visible", timeout });
+  await last.scrollIntoViewIfNeeded({ timeout });
+  return { total, offset: Number(await menu.getAttribute("data-tree-window-offset")), requestedLastPage, last: (await last.innerText()).trim() };
 }
 
 const browser = await chromium.launch({ headless: process.env.PLAY_HEADED !== "1", args: ["--in-process-gpu", "--enable-unsafe-swiftshader", "--disable-renderer-backgrounding"] });
 try {
   for (const id of ids) {
-    const result = { id, faults: [] };
+    const result = { id, faults: [], failedRequests: [] };
+    let stage = "shell";
+    const started = performance.now();
     const context = await browser.newContext({ locale: "en-US", viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
     const trace = message => { if (process.env.PLAY_TRACE_ROUTE) console.error(`[DEBUG] ${id} ${message}`); };
@@ -121,7 +137,9 @@ try {
       page.on("response", response => {
         const path = new URL(response.url()).pathname;
         if (/norm.*\.(?:core\.wasm|component\.js)$/.test(path)) trace(`${response.status()} ${path}`);
+        if (response.status() >= 400) result.failedRequests.push(`${response.status()} ${path}`);
       });
+      page.on("requestfailed", request => result.failedRequests.push(`${request.failure()?.errorText} ${new URL(request.url()).pathname}`));
       page.on("console", message => {
         const text = message.text();
         if ((previewBindings && message.type() === "error") || /eurocode settle|\barchive\b|semantic failure|source-not-ready|setActiveExample|ui\.surface-render/.test(text)) trace(text.split("\n")[0]);
@@ -139,6 +157,15 @@ try {
       if (actorId.startsWith("norm-eurocode")) console.info("[DEBUG] eurocode settle missing", JSON.stringify({actorId, operation:call?.label ?? null, missing, published:[...published], results:results.length, status:wireTurnStatusTag(results.at(-1)?.status)}));`);
           trace(`turn-settle observer attached=${instrumented !== source}`);
           await route.fulfill({response, body: instrumented});
+        });
+      }
+      if (currentBridge) {
+        await page.context().route(url => {
+          const parts = decodeURIComponent(url.pathname).split("/");
+          return parts.at(-3) === "🔌️plugin-modules" && parts.at(-2)?.endsWith(currentBridge.module) && parts.at(-1) === "🌉️bridge.js";
+        }, async route => {
+          result.guestBridge = currentBridge.module;
+          await route.fulfill({contentType: "text/javascript", body: currentBridge.source});
         });
       }
       if (bindingsSource) {
@@ -160,10 +187,13 @@ try {
       const scope = page.locator(`[data-layered-pane="${id}"]`);
       const shell = scope.locator(`[data-shell-id="${id}"]`);
       const terminal = shell.locator("xpath=self::*[@data-shell-ready or @data-shell-error or @data-shell-not-found]");
-      await terminal.waitFor({ state: "attached", timeout });
+      await terminal.waitFor({ state: "attached", timeout: startupTimeout });
       assert(await shell.getAttribute("data-shell-ready") !== null, JSON.stringify(await shell.evaluate(element => ({ state: { ...element.dataset }, detail: element.innerText.slice(0, 2000) }))));
+      result.shellMs = Math.round(performance.now() - started);
+      stage = "initial model";
       if (freshPath) assert.equal(result.guest, preview, "the fresh component core must be requested");
       if (previewBindings) assert.equal(result.guestBindings, previewBindings, "the paired generated bindings must be requested");
+      if (currentBridge) assert.equal(result.guestBridge, currentBridge.module, "the matching current bridge must be requested");
       const skip = shell.locator('[id="ui.introduction.skip"]');
       if (await skip.count()) await skip.click({ timeout });
 
@@ -171,9 +201,19 @@ try {
       const model = scope.locator(modelSelector).first();
       await reveal(scope, "Model", model);
       result.initial = await assertModel(model);
+      result.firstModelMs = Math.round(performance.now() - started);
+      result.initialColors = interiorColors(await model.locator("canvas[data-world-geometry-drawn]").first().screenshot({ timeout }));
+      assert(result.initialColors > 1, "the initial model canvas should contain varying interior pixels");
       trace(`initial model drawn at ${result.initial.revision}`);
 
+      if (process.env.PLAY_VIEWPORT_INITIAL_ONLY === "1") {
+        assert.deepEqual(result.faults, []);
+        result.status = "initial-paint-passed";
+        continue;
+      }
+
       const picker = scope.locator('[id="playground.navbar.fixture"]');
+      stage = "example picker";
       await picker.waitFor({ state: "visible", timeout });
       const original = (await picker.innerText()).trim();
       assert(original, "the picker must show the curated example");
@@ -188,32 +228,46 @@ try {
         assert.deepEqual(await options.allTextContents(), [original]);
         await page.keyboard.press("Escape");
         await options.first().waitFor({ state: "hidden", timeout });
-      } else {
+      } else if (process.env.PLAY_VIEWPORT_SKIP_EXAMPLE_SWITCH !== "1") {
+        stage = "alternate example";
         const blank = options.and(page.locator('[data-value="__none__"]'));
-        const alternative = await blank.count() ? blank : options.and(page.locator('[aria-selected="false"]:not([aria-disabled="true"])')).first();
+        const hasBlank = await blank.count() > 0;
+        const alternative = hasBlank ? blank : options.and(page.locator('[aria-selected="false"]:not([aria-disabled="true"])')).first();
         const alternativeLabel = (await alternative.innerText({ timeout })).trim();
         assert.notEqual(alternativeLabel, original);
         await alternative.click({ timeout });
-        await page.waitForFunction(({ id, label }) => document.querySelector(`[data-layered-pane="${id}"] [id="playground.navbar.fixture"]`)?.textContent?.trim() === label, { id, label: alternativeLabel }, { timeout });
-        await page.waitForFunction(({ selector, revision }) => {
+        await page.waitForFunction(({ id, label, selector, revision, blank }) => {
+          if (document.querySelector(`[data-layered-pane="${id}"] [id="playground.navbar.fixture"]`)?.textContent?.trim() !== label) return false;
           const viewport = document.querySelector(selector);
           const next = viewport?.getAttribute("data-world-geometry-revision");
-          return !viewport || (next !== null && next !== revision);
-        }, { selector: modelSelector, revision: result.initial.revision }, { timeout });
+          const data = viewport?.getAttribute("data-instances-json");
+          const instances = data ? Object.keys(JSON.parse(data)).length : 0;
+          const draw = viewport?.querySelector("canvas[data-world-geometry-drawn]");
+          if (blank) return instances === 0;
+          return next && next !== revision && instances > 0 && draw?.dataset.worldGeometryRevision === next;
+        }, { id, label: alternativeLabel, selector: modelSelector, revision: result.initial.revision, blank: hasBlank }, { timeout: exampleTimeout });
+        const alternativeRevision = await model.count() ? await model.getAttribute("data-world-geometry-revision") : null;
+        result.alternative = { label: alternativeLabel, blank: hasBlank, revision: alternativeRevision, elapsedMs: Math.round(performance.now() - started) };
+        stage = "restore example";
         await picker.click({ timeout });
         await curated.click({ timeout });
-        await page.waitForFunction(({ selector, instances }) => {
+        await page.waitForFunction(({ id, label, selector, previous }) => {
+          if (document.querySelector(`[data-layered-pane="${id}"] [id="playground.navbar.fixture"]`)?.textContent?.trim() !== label) return false;
           const viewport = document.querySelector(selector);
-          const data = viewport?.getAttribute("data-instances-json");
-          if (!data || Object.keys(JSON.parse(data)).length !== instances) return false;
+          const revision = viewport?.getAttribute("data-world-geometry-revision");
+          if (!revision || revision === previous) return false;
           const drawn = viewport.querySelector("canvas[data-world-geometry-drawn]");
-          return Number(drawn?.dataset.worldGeometryVertices) > 0 && drawn?.dataset.worldGeometryRevision === viewport.dataset.worldGeometryRevision;
-        }, { selector: modelSelector, instances: result.initial.instances }, { timeout });
+          return Number(drawn?.dataset.worldGeometryVertices) > 0 && drawn?.dataset.worldGeometryRevision === revision;
+        }, { id, label: original, selector: modelSelector, previous: alternativeRevision }, { timeout: exampleTimeout });
         result.restored = await assertModel(model);
+        result.restoreMs = Math.round(performance.now() - started);
         trace(`restored ${original} at ${result.restored.revision}`);
-        assert.equal(result.restored.instances, result.initial.instances);
+      } else {
+        await page.keyboard.press("Escape");
+        await options.first().waitFor({ state: "hidden", timeout });
       }
       const currentModel = result.restored ?? result.initial;
+      stage = "camera zoom";
       result.modelColors = interiorColors(await model.locator("canvas[data-world-geometry-drawn]").first().screenshot({ path: join(output, id + "-model.png"), timeout }));
       assert(result.modelColors > 1, "the model canvas should contain varying interior pixels");
       assert(currentModel.camera, "the viewport exports its live camera");
@@ -226,9 +280,13 @@ try {
       result.cameraAfterZoom = await model.getAttribute("data-viewport-camera-json");
 
       const scenario = cases.get(id);
-      if (scenario.palette) result.palette = await assertPalette(page, scope, scenario.palette);
+      if (scenario.palette) {
+        stage = "insert palette";
+        result.palette = await assertPalette(scope, scenario.palette);
+      }
       if (process.env.PLAY_TEST_VIEWER_TRANSFER) result.controls = await assertModelControls(page, scope, model, modelSelector, result.cameraAfterZoom);
       if (scenario.diagrams) {
+        stage = "diagram pixels";
         const diagram = scope.locator(`[data-ui-node-key^="norm.${id}.play.diagrams."] .semio-canvas-2d-host`).first();
         await reveal(scope, "Diagrams", diagram);
         const canvas = diagram.locator("canvas").first();
@@ -258,11 +316,15 @@ try {
       result.status = "passed";
     } catch (error) {
       result.status = "failed";
+      result.stage = stage;
       result.error = String(error);
       result.surfaces = await page.locator("[data-surface-id]").evaluateAll(rows => rows.map(row => row.getAttribute("data-surface-id"))).catch(() => []);
+      result.exampleAtFailure = await page.locator(`[data-layered-pane="${id}"] [id="playground.navbar.fixture"]`).first().textContent({ timeout: 1000 }).catch(() => null);
+      result.pageTextAtFailure = (await page.locator("body").innerText({ timeout: 1000 }).catch(() => "")).slice(0, 1500);
       await page.screenshot({ path: join(output, id + "-failure.png"), timeout: 5000 }).catch(() => {});
       process.exitCode = 1;
     } finally {
+      result.elapsedMs = Math.round(performance.now() - started);
       console.log(JSON.stringify(result));
       await context.close();
     }

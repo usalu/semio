@@ -7,11 +7,14 @@
  * @see ../../🧊️model-silhouette/🥒️.feature
  * @see ../../🧊️catalog-silhouette/🥒️.feature
  */
-import { tessellateSolid } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
-import type { Asset, ScaleDenominator, ViewSection, VolumeList, VolumeSolid } from "../../../../🧬️schema/🟦️.ts";
+import { invert4, multiply4, tessellateSolid, type M4 } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+import type { Asset, AuthoredVolume, ScaleDenominator, ViewSection, VolumeList, VolumeSolid } from "../../../../🧬️schema/🟦️.ts";
 import { solidsOf } from "../🧱️lists/🟦️.ts";
 import { centreLineOf, clusterPoints } from "../🧵️centreline/🟦️.ts";
 import { CAMERAS } from "../../../🎨️depiction/🔭️views/🟦️.ts";
+import type { BoneFrame, Vec3 } from "../../../🔗️contracts/🟦️.ts";
+import { restFrames } from "../../../🦴️rig/🟦️.ts";
+import { worldFrameOf, type FrameLike } from "../../../🧊️volume/🦴️skeleton/🟦️.ts";
 import { evaluate } from "../../../🧮️evaluation/🟦️.ts";
 import { qualityOf } from "../../../🧊️volume/⏱️job/🟦️.ts";
 
@@ -29,28 +32,44 @@ export type Group = readonly Ring[];
 /** 🧭️ The bone axes of a solid in the world, the frame that `sectionFaces` refer to. */
 export type AxisFrame = { readonly u: { readonly x: number; readonly y: number; readonly z: number }; readonly v: { readonly x: number; readonly y: number; readonly z: number }; readonly w: { readonly x: number; readonly y: number; readonly z: number } };
 
-/** 🧊️ A solid in the world: a triangle mesh with the bone frame and the `slender` and `sectionFaces` declarations of the solid it comes from. */
-export type World = { readonly id: string; readonly bone?: string; readonly positions: Float64Array; readonly indices: Uint32Array; readonly frame?: AxisFrame; readonly slender?: boolean; readonly penM?: number; readonly copyVertices?: number; readonly envelope?: boolean; readonly emitter?: boolean; readonly texture?: boolean; readonly soft?: boolean; readonly sectionFaces?: readonly string[] };
+type SeparateCopies = { readonly coordinatesPerCopy: number; readonly indices: Uint32Array };
+
+/** 🧊️ A posed triangle mesh with its bone frame and authored presentation attributes. Exact body references may share the same geometry. */
+export type World = { readonly geometrySource?: World; readonly separateCopies?: SeparateCopies; readonly id: string; readonly bone?: string; readonly positions: Float64Array; readonly indices: Uint32Array; readonly frame?: AxisFrame; readonly slender?: boolean; readonly penM?: number; readonly copyVertices?: number; readonly envelope?: boolean; readonly emitter?: boolean; readonly texture?: boolean; readonly soft?: boolean; readonly sectionFaces?: readonly string[] };
 type Vec = readonly [number, number, number];
 
 /** 🧭️ The cut axis (world x, y, z) and the sign of the retained side of the section of each viewpoint: the elevation is seen from -z (what lies at larger z remains), the front from +x (smaller x), the plan from +y (smaller y); a section with `retained: "near"` keeps the opposite side. */
 export const CUT = { elevation: { axis: 2, retained: 1 }, front: { axis: 0, retained: -1 }, plan: { axis: 1, retained: -1 } } as const;
 
-const MESHES = new Map<string, { readonly positions: Float64Array; readonly indices: Uint32Array }>();
-const MESH_LIMIT = 20000;
+type CopyMesh = { readonly positions: Float64Array; readonly indices: Uint32Array };
+const MESHES = new Map<string, CopyMesh>();
+const MESH_CACHE_BYTES = 32 * 1024 * 1024;
+let retainedMeshBytes = 0;
+const meshBytes = (key: string, mesh: CopyMesh): number => 192 + key.length * 2 + mesh.positions.byteLength + mesh.indices.byteLength;
 
 /** 🧊️ The mesh of one copy of a solid in its bone frame after `transform` (without `repeat`), tessellated once by the kernel per distinct geometry and quality and cached. */
 export function copyMesh(solid: VolumeSolid, quality: { readonly chordM: number; readonly minSegments: number; readonly maxSegments: number }): { readonly positions: Float64Array; readonly indices: Uint32Array } {
   const { id: _id, bone, material: _material, role: _role, tone: _tone, weights: _weights, tags: _tags, repeat: _repeat, slender: _slender, envelope: _envelope, texture: _texture, sectionFaces: _sectionFaces, ...geometry } = solid as VolumeSolid & Record<string, unknown>;
   const key = JSON.stringify([geometry, quality]);
-  let hit = MESHES.get(key);
-  if (hit === undefined) {
-    const g = tessellateSolid({ ...(geometry as object), id: "mesh", bone, material: "m", role: "body", tone: 0.5, node: bone } as never, quality);
-    hit = { positions: Float64Array.from(g.positions), indices: Uint32Array.from(g.indices) };
-    if (MESHES.size >= MESH_LIMIT) MESHES.clear();
+  const hit = MESHES.get(key);
+  if (hit) {
+    MESHES.delete(key);
     MESHES.set(key, hit);
+    return hit;
   }
-  return hit;
+  const g = tessellateSolid({ ...(geometry as object), id: "mesh", bone, material: "m", role: "body", tone: 0.5, node: bone } as never, quality);
+  const mesh = { positions: Float64Array.from(g.positions), indices: Uint32Array.from(g.indices) };
+  const bytes = meshBytes(key, mesh);
+  if (bytes <= MESH_CACHE_BYTES) {
+    for (const [oldKey, oldMesh] of MESHES) {
+      if (retainedMeshBytes + bytes <= MESH_CACHE_BYTES) break;
+      MESHES.delete(oldKey);
+      retainedMeshBytes -= meshBytes(oldKey, oldMesh);
+    }
+    MESHES.set(key, mesh);
+    retainedMeshBytes += bytes;
+  }
+  return mesh;
 }
 
 /** 🕰️ The affine maps of the copies of a `repeat`: copy k is p -> A_k p + b_k, the step (a rotation of `rotationRad` about the axis through `origin`, then `translation`) applied k times; the same placement as the kernel's. */
@@ -77,31 +96,117 @@ export function repeatMaps(repeat: NonNullable<VolumeSolid["repeat"]>): readonly
   return out;
 }
 
-/** 🧊️ Every solid of one list of the volume at 1:`scale` (the body by default), tessellated once per distinct geometry by the kernel (cached; the copies of a `repeat` are instances of one mesh) and carried to the world by the bone frames of the evaluated pose; empty when the scale is not authored. */
-export function worldSolids(asset: Asset, bones: Record<string, { readonly frame: { readonly o: { x: number; y: number; z: number }; readonly u: { x: number; y: number; z: number }; readonly v: { x: number; y: number; z: number }; readonly w: { x: number; y: number; z: number } } }>, scale: number, list: VolumeList = "body"): readonly World[] {
+const frameMatrix = (frame: FrameLike): M4 => {
+  const { o, u, v, w } = worldFrameOf(frame);
+  return [...u, 0, ...v, 0, ...w, 0, ...o, 1];
+};
+
+const REST_FRAME_MATRICES = new WeakMap<Asset["rig"], Record<string, M4>>();
+
+/** 🧶 Poses uniformly weighted solids with the same rest-to-pose joint transforms as the exported skin. */
+function posedFrames(asset: Asset, bones: Readonly<Record<string, { readonly frame: BoneFrame }>>) {
+  const palette = new Map<string, M4>();
+  return (solid: VolumeSolid): BoneFrame => {
+    const joints = solid.weights?.filter(w => w.weight > 0).slice(0, 4);
+    if (!joints?.length) return bones[solid.bone]!.frame;
+    let rest = REST_FRAME_MATRICES.get(asset.rig);
+    if (!rest) {
+      rest = Object.fromEntries(Object.entries(restFrames(asset.rig)).map(([id, solved]) => [id, frameMatrix(solved.frame)]));
+      REST_FRAME_MATRICES.set(asset.rig, rest);
+    }
+    const blend = Array<number>(16).fill(0);
+    const sum = joints.reduce((total, joint) => total + joint.weight, 0);
+    for (const joint of joints) {
+      let delta = palette.get(joint.bone);
+      if (!delta) {
+        delta = multiply4(frameMatrix(bones[joint.bone]!.frame), invert4(rest[joint.bone]!));
+        palette.set(joint.bone, delta);
+      }
+      for (let i = 0; i < 16; i++) blend[i]! += delta[i]! * joint.weight / sum;
+    }
+    const matrix = multiply4(blend, rest[solid.bone]!);
+    const column = (i: number): Vec3 => ({ x: matrix[i]!, y: matrix[i + 1]!, z: matrix[i + 2]! });
+    return { o: column(12), u: column(0), v: column(4), w: column(8) };
+  };
+}
+
+/** 📐 The positive local section normals after a skin transform can shear or compress its tangents. */
+function sectionAxes({ u, v, w }: BoneFrame): AxisFrame {
+  const normal = (a: Vec3, b: Vec3, toward: Vec3): Vec3 => {
+    const x = a.y * b.z - a.z * b.y, y = a.z * b.x - a.x * b.z, z = a.x * b.y - a.y * b.x;
+    const length = Math.hypot(x, y, z);
+    if (!length) return { x: 0, y: 0, z: 0 };
+    const scale = (x * toward.x + y * toward.y + z * toward.z < 0 ? -1 : 1) / length;
+    return { x: x * scale, y: y * scale, z: z * scale };
+  };
+  return { u: normal(v, w, u), v: normal(w, u, v), w: normal(u, v, w) };
+}
+
+/** 📏️ Separate bounding intervals prevent vertices of translated copies from welding across copies. */
+function disjointTranslations(positions: Float64Array, stride: number): boolean {
+  if (!stride || positions.length <= stride) return false;
+  for (let axis = 0; axis < 3; axis++) {
+    const sign = positions[stride + axis]! >= positions[axis]! ? 1 : -1;
+    let previousMax = -Infinity;
+    let separated = true;
+    for (let start = 0; start < positions.length && separated; start += stride) {
+      let low = Infinity, high = -Infinity;
+      for (let i = start + axis; i < start + stride; i += 3) {
+        const value = sign * positions[i]!;
+        low = Math.min(low, value);
+        high = Math.max(high, value);
+      }
+      separated = low - previousMax > 1e-6;
+      previousMax = high;
+    }
+    if (separated) return true;
+  }
+  return false;
+}
+
+/** 🧊️ Poses the tessellated solids of one authored volume list. Passing the body worlds from the same asset, scale and pose shares exact geometry for references to body solids. */
+export function worldSolids(asset: Asset, bones: Readonly<Record<string, { readonly frame: BoneFrame }>>, scale: number, list: VolumeList = "body", bodyWorlds?: readonly World[]): readonly World[] {
   const volume = (asset.volumes as Record<string, { readonly status: string }>)[String(scale)];
   if (volume === undefined || volume.status !== "authored") return [];
   const quality = qualityOf(asset);
   const emitters = new Set(asset.thermal.emitters.map((e) => e.id));
   const pens = (asset.representations[String(scale) as unknown as keyof Asset["representations"]] as unknown as { readonly pens?: Record<string, number | null> }).pens ?? {};
+  const posed = posedFrames(asset, bones);
+  const bodyById = bodyWorlds && new Map(bodyWorlds.map(solid => [solid.id, solid]));
+  const references = new Map<string, World>();
+  if (bodyById && list !== "body") {
+    for (const entry of (volume as AuthoredVolume)[list]) {
+      if (!("of" in entry)) continue;
+      const source = bodyById.get(entry.of);
+      if (source) references.set(entry.id, source);
+    }
+  }
   return solidsOf(volume as never, list).map((solid: VolumeSolid) => {
-    const f = bones[solid.bone]!.frame;
-    const base = copyMesh(solid, quality);
-    const maps = solid.repeat === undefined ? [{ a: [1, 0, 0, 0, 1, 0, 0, 0, 1], b: [0, 0, 0] }] : repeatMaps(solid.repeat);
-    const per = base.positions.length;
-    const positions = new Float64Array(per * maps.length);
-    const indices = new Uint32Array(base.indices.length * maps.length);
-    maps.forEach(({ a: A, b }, k) => {
-      for (let i = 0; i < per; i += 3) {
-        const [px, py, pz] = [base.positions[i]!, base.positions[i + 1]!, base.positions[i + 2]!];
-        const [a, bb, c] = [A[0]! * px + A[1]! * py + A[2]! * pz + b[0]!, A[3]! * px + A[4]! * py + A[5]! * pz + b[1]!, A[6]! * px + A[7]! * py + A[8]! * pz + b[2]!];
-        positions[k * per + i] = f.o.x + a * f.u.x + bb * f.v.x + c * f.w.x;
-        positions[k * per + i + 1] = f.o.y + a * f.u.y + bb * f.v.y + c * f.w.y;
-        positions[k * per + i + 2] = f.o.z + a * f.u.z + bb * f.v.z + c * f.w.z;
-      }
-      for (let i = 0; i < base.indices.length; i++) indices[k * base.indices.length + i] = base.indices[i]! + (k * per) / 3;
-    });
-    return { id: solid.id, bone: solid.bone, positions, indices, frame: { u: f.u, v: f.v, w: f.w }, ...(solid.slender === true ? { slender: true, copyVertices: base.positions.length / 3, ...(((pens[solid.role] ?? pens.body) ?? 0) > 0 ? { penM: (((pens[solid.role] ?? pens.body) as number) * scale) / 1000 } : {}) } : {}), ...(solid.envelope === true ? { envelope: true } : {}), ...(solid.tags?.some((tag) => tag === "emitter" || emitters.has(tag)) === true ? { emitter: true } : {}), ...(solid.texture === true ? { texture: true } : {}), ...(solid.sectionFaces === undefined ? {} : { sectionFaces: solid.sectionFaces }) };
+    const f = posed(solid);
+    const source = references.get(solid.id);
+    let positions: Float64Array, indices: Uint32Array, separateCopies: SeparateCopies | undefined, copyVertices: number | undefined;
+    if (source) {
+      ({ positions, indices, separateCopies, copyVertices } = source);
+    } else {
+      const base = copyMesh(solid, quality);
+      const maps = solid.repeat === undefined ? [{ a: [1, 0, 0, 0, 1, 0, 0, 0, 1], b: [0, 0, 0] }] : repeatMaps(solid.repeat);
+      const per = base.positions.length;
+      positions = new Float64Array(per * maps.length);
+      indices = maps.length === 1 ? base.indices.slice() : new Uint32Array(base.indices.length * maps.length);
+      maps.forEach(({ a: A, b }, k) => {
+        for (let i = 0; i < per; i += 3) {
+          const [px, py, pz] = [base.positions[i]!, base.positions[i + 1]!, base.positions[i + 2]!];
+          const [a, bb, c] = [A[0]! * px + A[1]! * py + A[2]! * pz + b[0]!, A[3]! * px + A[4]! * py + A[5]! * pz + b[1]!, A[6]! * px + A[7]! * py + A[8]! * pz + b[2]!];
+          positions[k * per + i] = f.o.x + a * f.u.x + bb * f.v.x + c * f.w.x;
+          positions[k * per + i + 1] = f.o.y + a * f.u.y + bb * f.v.y + c * f.w.y;
+          positions[k * per + i + 2] = f.o.z + a * f.u.z + bb * f.v.z + c * f.w.z;
+        }
+        if (maps.length > 1) for (let i = 0; i < base.indices.length; i++) indices[k * base.indices.length + i] = base.indices[i]! + (k * per) / 3;
+      });
+      if (maps.length > 1 && !solid.repeat?.rotationRad && disjointTranslations(positions, per)) separateCopies = { coordinatesPerCopy: per, indices: base.indices };
+      copyVertices = per / 3;
+    }
+    return { ...(source ? { geometrySource: source } : {}), ...(separateCopies ? { separateCopies } : {}), id: solid.id, bone: solid.bone, positions, indices, frame: solid.weights?.length && solid.sectionFaces?.length ? sectionAxes(f) : { u: f.u, v: f.v, w: f.w }, ...(solid.slender === true ? { slender: true, copyVertices, ...(((pens[solid.role] ?? pens.body) ?? 0) > 0 ? { penM: (((pens[solid.role] ?? pens.body) as number) * scale) / 1000 } : {}) } : {}), ...(solid.envelope === true ? { envelope: true } : {}), ...(solid.tags?.some((tag) => tag === "emitter" || emitters.has(tag)) === true ? { emitter: true } : {}), ...(solid.texture === true ? { texture: true } : {}), ...(solid.sectionFaces === undefined ? {} : { sectionFaces: solid.sectionFaces }) };
   });
 }
 
@@ -325,38 +430,42 @@ function axisStroke(points: readonly Point[], pen: number): readonly Ring[] {
 }
 
 /** 📚️ What a view is compared with. `cut` is what the drawing has to show: every projected triangle of the solids, or for a declared section the cut faces of the bodies the plane crosses. `visible` is all the drawing may fill: every projected triangle, or for a section the projection of everything that remains beyond the plane (the far faces of a cut body included, clipped at the plane). A body in front of the plane is removed from `cut` and `visible`; `full` is the projection of the whole volume, where a section may still show a removed or hidden body as a thin outline (the overhead and hidden-line convention). */
-export function referenceOf(view: Viewpoint, solids: readonly World[], section: ViewSection | undefined, drawn?: Drawn): { readonly cut: Group[]; readonly visible: Group[]; readonly full: Group[] } {
+export function referenceOf(view: Viewpoint, solids: readonly World[], section: ViewSection | undefined, drawn?: Drawn, geometry: "drawing" | "mesh" = "drawing"): { readonly cut: Group[]; readonly visible: Group[]; readonly full: Group[] } {
   const cut: Group[] = [];
-  const visible: Group[] = [];
-  const full: Group[] = [];
+  const visible: Group[] = section === undefined ? cut : [];
+  const full: Group[] = section === undefined ? cut : [];
   const side = { axis: CUT[view].axis, retained: section?.retained === "near" ? -CUT[view].retained : CUT[view].retained };
-  const at = (s: World, i: number): Vec => [s.positions[i * 3]!, s.positions[i * 3 + 1]!, s.positions[i * 3 + 2]!];
-  const flat = (polygon: readonly Vec[]): Group => [polygon.map((q) => project(view, q[0]!, q[1]!, q[2]!))];
   for (const whole of solids) {
-    if (section === undefined && whole.slender === true) {
-      for (const ring of strokesOf(view, whole, drawn)) {
-        cut.push([ring]);
-        visible.push([ring]);
-      }
+    if (geometry === "drawing" && section === undefined && whole.slender === true) {
+      for (const ring of strokesOf(view, whole, drawn)) cut.push([ring]);
       continue;
     }
-    for (const s of section === undefined ? [whole] : pieces(whole)) {
-    if (section !== undefined) for (let t = 0; t < whole.indices.length; t += 3) full.push(flat([at(whole, whole.indices[t]!), at(whole, whole.indices[t + 1]!), at(whole, whole.indices[t + 2]!)]));
-    let low = false;
-    let high = false;
-    if (section !== undefined) for (let t = 0; t < s.indices.length; t++) (s.positions[s.indices[t]! * 3 + side.axis]! < section.plane ? (low = true) : (high = true));
-    const crossing = low && high;
-    if (section !== undefined && !crossing && (side.retained > 0 ? !high : !low)) continue;
-    for (let t = 0; t < s.indices.length; t += 3) {
-      const triangle = [at(s, s.indices[t]!), at(s, s.indices[t + 1]!), at(s, s.indices[t + 2]!)];
-      const kept = section === undefined || !crossing ? triangle : clipTriangle(triangle, side.axis, section.plane, side.retained > 0);
-      if (kept.length >= 3) visible.push(flat(kept));
-      if (section === undefined) cut.push(flat(triangle));
-    }
-    if (crossing && section !== undefined) cut.push(cutLoops(s, side.axis, section.plane).map((loop) => loop.map((q) => project(view, q[0]!, q[1]!, q[2]!))));
+    const p = whole.positions;
+    const projected: Point[] = [];
+    for (let i = 0; i < p.length; i += 3) projected.push(project(view, p[i]!, p[i + 1]!, p[i + 2]!));
+    const triangle = (indices: Uint32Array, t: number): Group => [[projected[indices[t]!]!, projected[indices[t + 1]!]!, projected[indices[t + 2]!]!]];
+    for (let t = 0; t < whole.indices.length; t += 3) full.push(triangle(whole.indices, t));
+    if (section === undefined) continue;
+    const at = (i: number): Vec => [p[i * 3]!, p[i * 3 + 1]!, p[i * 3 + 2]!];
+    for (const piece of pieces(whole)) {
+      const indices = piece.indices;
+      let low = false, high = false;
+      for (const i of indices) {
+        if (p[i * 3 + side.axis]! < section.plane) low = true;
+        else high = true;
+        if (low && high) break;
+      }
+      if (side.retained > 0 ? !high : !low) continue;
+      for (let t = 0; t < indices.length; t += 3) {
+        if (low && high) {
+          const kept = clipTriangle([at(indices[t]!), at(indices[t + 1]!), at(indices[t + 2]!)], side.axis, section.plane, side.retained > 0);
+          if (kept.length >= 3) visible.push([kept.map(q => project(view, q[0], q[1], q[2]))]);
+        } else visible.push(triangle(indices, t));
+      }
+      if (low && high) cut.push(cutLoops(piece, side.axis, section.plane).map(loop => loop.map(q => project(view, q[0], q[1], q[2]))));
     }
   }
-  return { cut, visible, full: section === undefined ? visible : full };
+  return { cut, visible, full };
 }
 
 export function edt1(f: Float64Array, n: number, d: Float64Array, v: Int32Array, z: Float64Array): void {
@@ -476,7 +585,7 @@ export function boundsOf(rings: Group): readonly [number, number, number, number
 export function distanceToTriangle(p: Point, t: readonly [Point, Point, Point]): number {
   const inside = (a: Point, b: Point): number => (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
   const [d0, d1, d2] = [inside(t[0], t[1]), inside(t[1], t[2]), inside(t[2], t[0])];
-  if ((d0 >= 0 && d1 >= 0 && d2 >= 0) || (d0 <= 0 && d1 <= 0 && d2 <= 0)) return 0;
+  if ((d0 !== 0 || d1 !== 0 || d2 !== 0) && ((d0 >= 0 && d1 >= 0 && d2 >= 0) || (d0 <= 0 && d1 <= 0 && d2 <= 0))) return 0;
   let best = Infinity;
   for (let k = 0; k < 3; k++) {
     const [a, b] = [t[k]!, t[(k + 1) % 3]!];
@@ -486,6 +595,21 @@ export function distanceToTriangle(p: Point, t: readonly [Point, Point, Point]):
     best = Math.min(best, Math.hypot(p.x - a.x - f * dx, p.y - a.y - f * dy));
   }
   return best;
+}
+
+/** 🪶 Distance to the nearest projected mesh triangle, capped at the supplied search radius. */
+export function projectedBodyDistance(faces: readonly Group[], frame: Box): (point: Point, radius: number) => number {
+  const nearby = bucketIndex(faces, boundsOf, frame, mayTouch, 32);
+  return (point, radius) => {
+    const window = { minX: point.x - radius, minY: point.y - radius, maxX: point.x + radius, maxY: point.y + radius };
+    let distance = radius;
+    for (const group of nearby(window)) {
+      const triangle = group[0];
+      if (triangle?.length === 3) distance = Math.min(distance, distanceToTriangle(point, triangle as readonly [Point, Point, Point]));
+      if (distance === 0) break;
+    }
+    return distance;
+  };
 }
 
 /** 🖼️ A binary coverage grid sampled at cell centres, filled by the even-odd scanline rule. */
@@ -827,7 +951,9 @@ function measureBanded(asset: Asset, state: Evaluated, solids: readonly World[],
   let softHist: number[] | undefined;
   const section = (asset.representations[String(scale) as unknown as keyof Asset["representations"]] as unknown as { readonly sections?: Partial<Record<Viewpoint, ViewSection>> }).sections?.[view];
   const prepared = referenceCached(view, solids, section, drawnFor(asset, state, view, scale));
-  const [queryRef, queryVis, queryFull] = [prepared.cut, prepared.visible, prepared.full].map((list) => bucketIndex(list as readonly Group[], boundsOf, frame, mayTouch)) as [(b: Box) => readonly Group[], (b: Box) => readonly Group[], (b: Box) => readonly Group[]];
+  const queryReference = bucketIndex(prepared.cut, boundsOf, frame, mayTouch);
+  const queryVisible = section === undefined ? undefined : bucketIndex(prepared.visible, boundsOf, frame, mayTouch);
+  const queryFull = section === undefined ? undefined : bucketIndex(prepared.full, boundsOf, frame, mayTouch);
   const queryDrawn = bucketIndex(evaluatedOf(state, view), (shape) => boundsOf(shape.rings), frame);
   const hasEdge = (box: Box): boolean => {
     const [i0, i1] = [Math.max(0, Math.floor((box.minX - edge.minX) / edge.cell)), Math.min(edge.width - 1, Math.floor((box.maxX - edge.minX) / edge.cell))];
@@ -841,7 +967,8 @@ function measureBanded(asset: Asset, state: Evaluated, solids: readonly World[],
       const core: Box = { minX, minY, maxX: minX + Math.ceil((Math.min(frame.maxX, minX + side) - minX) / cell) * cell, maxY: minY + Math.ceil((Math.min(frame.maxY, minY + side) - minY) / cell) * cell };
       const box: Box = { minX: core.minX - margin, minY: core.minY - margin, maxX: core.maxX + margin, maxY: core.maxY + margin };
       if (!hasEdge({ minX: core.minX - edge.cell, minY: core.minY - edge.cell, maxX: core.maxX + edge.cell, maxY: core.maxY + edge.cell })) continue;
-      const tile = measureView(asset, state, solids, view, scale, undefined, featureM, Infinity, false, { core, box, cell, prepared: { reference: queryRef(box), visible: queryVis(box), full: queryFull(box), evaluated: queryDrawn(box) } });
+      const reference = queryReference(box);
+      const tile = measureView(asset, state, solids, view, scale, undefined, featureM, Infinity, false, { core, box, cell, prepared: { reference, visible: queryVisible?.(box) ?? reference, full: queryFull?.(box) ?? reference, evaluated: queryDrawn(box) } });
       worst = Math.max(worst, tile.hausdorffM);
       hard = hard === undefined ? [...tile.spread.hard] : hard.map((x, k) => x + (tile.spread.hard[k] ?? 0));
       softHist = softHist === undefined ? [...tile.spread.soft] : softHist.map((x, k) => x + (tile.spread.soft[k] ?? 0));
@@ -1046,11 +1173,17 @@ export function measureView(asset: Asset, state: Evaluated, solids: readonly Wor
   let softExtentM = 0;
   if (softWorlds.length > 0 || softDrawn.length > 0) {
     softMask = new Mask(box, cell);
-    const soft = [...(softWorlds.length > 0 ? referenceCached(view, softWorlds, undefined, drawnFor(asset, state, view, scale)).cut : []), ...softDrawn];
-    for (const g of soft) softMask.fill(g);
-    const xs = soft.flatMap((g) => g.flatMap((r) => r.map((p) => p.x)));
-    const ys = soft.flatMap((g) => g.flatMap((r) => r.map((p) => p.y)));
-    softExtentM = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+    const projected = softWorlds.length > 0 ? referenceCached(view, softWorlds, undefined, drawnFor(asset, state, view, scale)).cut : [];
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const groups of [projected, softDrawn]) for (const g of groups) {
+      softMask.fill(g);
+      const b = boundsOf(g);
+      minX = Math.min(minX, b[0]);
+      maxX = Math.max(maxX, b[1]);
+      minY = Math.min(minY, b[2]);
+      maxY = Math.max(maxY, b[3]);
+    }
+    softExtentM = Math.max(0, maxX - minX, maxY - minY);
   }
   const drawnMask = new Uint8Array(area.cells.length);
   for (let i = 0; i < drawnMask.length; i++) drawnMask[i] = area.cells[i]! | ink.cells[i]!;
@@ -1061,6 +1194,13 @@ export function measureView(asset: Asset, state: Evaluated, solids: readonly Wor
   const edgeMask = wantEdge ? (() => { const [x, y] = [boundaryOf(drawnMask, volume.width, volume.height), boundaryOf(reference3d, volume.width, volume.height)]; return x.map((v, k) => v | y[k]!); })() : undefined;
   const edge = edgeMask !== undefined ? { mask: edgeMask, width: volume.width, height: volume.height, minX: box.minX, minY: box.minY, cell } : undefined;
   return { ...(edge === undefined ? {} : { edge }), spread, p95M: quantileOf(spread.hard, 0.95, cell), p95SoftM: quantileOf(spread.soft, 0.95, cell), softExtentM, counts: { both, either, drawn: a, volume: v, drawnCut }, hausdorffM, iou: either === 0 ? 1 : both / either, recall: a === 0 ? 1 : both / a, precision: v === 0 ? 1 : drawnCut / v, filled, outlines, reference, visible, full, section: section !== undefined, box, cell, openStrokes: strokes.length, shapes: evaluated.length };
+}
+
+/** 📐️ Computes the rule measurements for a single viewpoint. Projected triangles and tile caches belong to this view and can be released as soon as its scalar measurements are returned. */
+export function measureBodyView(asset: Asset, state: Evaluated, body: readonly World[], view: Viewpoint, scale: number, featureM: number, softIds: ReadonlySet<string>): Pick<Measured, "iou" | "p95M" | "p95SoftM" | "softExtentM" | "hausdorffM"> {
+  const solids = body.filter(w => w.texture !== true).map(w => softIds.has(w.id) ? { ...w, soft: true } : w);
+  const { iou, p95M, p95SoftM, softExtentM, hausdorffM } = measureView(asset, state, solids, view, scale, undefined, featureM);
+  return { iou, p95M, p95SoftM, softExtentM, hausdorffM };
 }
 
 /** 📏️ Width, height and depth of the physical body in metres. */

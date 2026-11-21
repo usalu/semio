@@ -278,18 +278,54 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [0.2115, 0.002],
-                [0.215, 0.0026],
-                [0.217, 0.0036],
-                [0.2178, 0.005],
-                [0.218, 0.0062],
-                [0.218, 0.0085],
-                [0.0, 0.0085],
-                [0.0, 0.0062],
-                [0.0002, 0.005],
-                [0.001, 0.0036],
-                [0.003, 0.0026],
-                [0.0065, 0.002]
+                [
+                  0.2115,
+                  0.002
+                ],
+                [
+                  0.215,
+                  0.0026
+                ],
+                [
+                  0.217,
+                  0.0036
+                ],
+                [
+                  0.2178,
+                  0.005
+                ],
+                [
+                  0.218,
+                  0.0062
+                ],
+                [
+                  0.218,
+                  0.0085
+                ],
+                [
+                  0.0,
+                  0.0085
+                ],
+                [
+                  0.0,
+                  0.0062
+                ],
+                [
+                  0.0002,
+                  0.005
+                ],
+                [
+                  0.001,
+                  0.0036
+                ],
+                [
+                  0.003,
+                  0.0026
+                ],
+                [
+                  0.0065,
+                  0.002
+                ]
               ],
               "closed": true,
               "region": "underside",
@@ -319,16 +355,46 @@
               "tone": 0.55,
               "kind": "poly",
               "points": [
-                [0.2135, -0.0014],
-                [0.2135, 0.0025],
-                [0.2132, 0.0035],
-                [0.2125, 0.0041],
-                [0.2113, 0.0045],
-                [-0.0023, 0.0045],
-                [-0.0035, 0.0041],
-                [-0.0042, 0.0035],
-                [-0.0045, 0.0025],
-                [-0.0045, -0.0014]
+                [
+                  0.2135,
+                  -0.0014
+                ],
+                [
+                  0.2135,
+                  0.0025
+                ],
+                [
+                  0.2132,
+                  0.0035
+                ],
+                [
+                  0.2125,
+                  0.0041
+                ],
+                [
+                  0.2113,
+                  0.0045
+                ],
+                [
+                  -0.0023,
+                  0.0045
+                ],
+                [
+                  -0.0035,
+                  0.0041
+                ],
+                [
+                  -0.0042,
+                  0.0035
+                ],
+                [
+                  -0.0045,
+                  0.0025
+                ],
+                [
+                  -0.0045,
+                  -0.0014
+                ]
               ],
               "closed": true,
               "region": "lid",
@@ -357,7 +423,16 @@
               "filled": false,
               "tone": 0.1,
               "kind": "poly",
-              "points": [[0.0238, 0.0069], [0.0468, 0.0069]],
+              "points": [
+                [
+                  0.0238,
+                  0.0069
+                ],
+                [
+                  0.0468,
+                  0.0069
+                ]
+              ],
               "closed": false
             }
           ],
@@ -392,16 +467,46 @@
               "tone": 0.55,
               "kind": "poly",
               "points": [
-                [0.2135, -0.0014],
-                [0.2135, 0.0025],
-                [0.2132, 0.0035],
-                [0.2125, 0.0041],
-                [0.2113, 0.0045],
-                [-0.0023, 0.0045],
-                [-0.0035, 0.0041],
-                [-0.0042, 0.0035],
-                [-0.0045, 0.0025],
-                [-0.0045, -0.0014]
+                [
+                  0.2135,
+                  -0.0014
+                ],
+                [
+                  0.2135,
+                  0.0025
+                ],
+                [
+                  0.2132,
+                  0.0035
+                ],
+                [
+                  0.2125,
+                  0.0041
+                ],
+                [
+                  0.2113,
+                  0.0045
+                ],
+                [
+                  -0.0023,
+                  0.0045
+                ],
+                [
+                  -0.0035,
+                  0.0041
+                ],
+                [
+                  -0.0042,
+                  0.0035
+                ],
+                [
+                  -0.0045,
+                  0.0025
+                ],
+                [
+                  -0.0045,
+                  -0.0014
+                ]
               ],
               "closed": true,
               "region": "lid",
@@ -494,23 +599,68 @@
               "tone": 0.6,
               "kind": "poly",
               "points": [
-                [0.15, 0.002],
-                [0.1535, 0.0026],
-                [0.1555, 0.0036],
-                [0.1563, 0.005],
-                [0.1565, 0.0062],
-                [0.1565, 0.0085],
-                [0.1565, 0.0125],
-                [-0.1565, 0.0125],
-                [-0.1565, 0.0085],
-                [-0.1565, 0.0062],
-                [-0.1563, 0.005],
-                [-0.1555, 0.0036],
-                [-0.1535, 0.0026],
-                [-0.15, 0.002]
+                [
+                  0.15,
+                  0.002
+                ],
+                [
+                  0.1535,
+                  0.0026
+                ],
+                [
+                  0.1555,
+                  0.0036
+                ],
+                [
+                  0.1563,
+                  0.005
+                ],
+                [
+                  0.1565,
+                  0.0062
+                ],
+                [
+                  0.1565,
+                  0.0085
+                ],
+                [
+                  0.1565,
+                  0.0125
+                ],
+                [
+                  -0.1565,
+                  0.0125
+                ],
+                [
+                  -0.1565,
+                  0.0085
+                ],
+                [
+                  -0.1565,
+                  0.0062
+                ],
+                [
+                  -0.1563,
+                  0.005
+                ],
+                [
+                  -0.1555,
+                  0.0036
+                ],
+                [
+                  -0.1535,
+                  0.0026
+                ],
+                [
+                  -0.15,
+                  0.002
+                ]
               ],
               "closed": true,
-              "regions": ["deck", "underside"],
+              "regions": [
+                "deck",
+                "underside"
+              ],
               "material": "alu-anodised"
             }
           ],
@@ -530,27 +680,6 @@
               "r": 0.009,
               "region": "deck",
               "material": "alu-anodised"
-            },
-            {
-              "id": "plan-hinge",
-              "bone": "lid",
-              "role": "body",
-              "z": 3.15,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "ellipse",
-              "cx": 0.0,
-              "cy": 0.0,
-              "rx": 0.0045,
-              "ry": 0.0045,
-              "region": "lid",
-              "material": "keycap-plastic",
-              "solid": {
-                "kind": "extruded",
-                "sweep": "w",
-                "z0": -0.135,
-                "z1": 0.135
-              }
             },
             {
               "id": "plan-key-row-1",
@@ -653,16 +782,46 @@
               "tone": 0.55,
               "kind": "poly",
               "points": [
-                [0.2135, -0.0014],
-                [0.2135, 0.0025],
-                [0.2132, 0.0035],
-                [0.2125, 0.0041],
-                [0.2113, 0.0045],
-                [-0.0023, 0.0045],
-                [-0.0035, 0.0041],
-                [-0.0042, 0.0035],
-                [-0.0045, 0.0025],
-                [-0.0045, -0.0014]
+                [
+                  0.2135,
+                  -0.0014
+                ],
+                [
+                  0.2135,
+                  0.0025
+                ],
+                [
+                  0.2132,
+                  0.0035
+                ],
+                [
+                  0.2125,
+                  0.0041
+                ],
+                [
+                  0.2113,
+                  0.0045
+                ],
+                [
+                  -0.0023,
+                  0.0045
+                ],
+                [
+                  -0.0035,
+                  0.0041
+                ],
+                [
+                  -0.0042,
+                  0.0035
+                ],
+                [
+                  -0.0045,
+                  0.0025
+                ],
+                [
+                  -0.0045,
+                  -0.0014
+                ]
               ],
               "closed": true,
               "region": "lid",
@@ -678,8 +837,8 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.273 m by 0.221 m side view, 5.5 mm by 4.4 mm on paper: the chassis as a 10.5 mm slab with a boat-shaped bilge on two rubber feet, its keyboard deck ending at a ledge before the rear edge, on which the 9 mm hinge barrel sits, and the lid rising from the barrel, leaning back by 15 degrees. Front view: the 0.313 m wide chassis on its two front feet with the bilge at both sides and the lid behind it with the dark glass and the lit panel on its face. Top view: the chassis with rounded corners, six key rows and the trackpad, and the lid seen from above as a band behind the hinge barrel.",
-            "de": "Eine Seitenansicht von 0,273 m mal 0,221 m, auf Papier 5,5 mm mal 4,4 mm: das Chassis als 10,5-mm-Platte mit bootsförmiger Kimm auf zwei Gummifüßen, dessen Tastaturdeck vor der Hinterkante an einem Absatz endet, auf dem die 9-mm-Scharnierwalze sitzt, und der Deckel, der aus der Walze aufsteigt und sich um 15 Grad nach hinten lehnt. Vorderansicht: das 0,313 m breite Chassis auf seinen zwei vorderen Füßen mit der Kimm an beiden Seiten und dahinter der Deckel mit dem dunklen Glas und dem leuchtenden Panel auf seiner Fläche. Draufsicht: das Chassis mit gerundeten Ecken, sechs Tastenreihen und Touchpad sowie der Deckel von oben als Band hinter der Scharnierwalze."
+            "en": "A 0.273 m by 0.221 m side view, 5.5 mm by 4.4 mm on paper: the chassis as a 10.5 mm slab with a boat-shaped bilge on two rubber feet, its keyboard deck ending at a ledge before the rear edge, on which the 9 mm hinge barrel sits, and the lid rising from the barrel, leaning back by 15 degrees. Front view: the 0.313 m wide chassis on its two front feet with the bilge at both sides and the lid behind it with the dark glass and the lit panel on its face. Top view: the chassis with rounded corners, six key rows and the trackpad, and the lid seen from above as a band over the hinge barrel, which it hides.",
+            "de": "Eine Seitenansicht von 0,273 m mal 0,221 m, auf Papier 5,5 mm mal 4,4 mm: das Chassis als 10,5-mm-Platte mit bootsförmiger Kimm auf zwei Gummifüßen, dessen Tastaturdeck vor der Hinterkante an einem Absatz endet, auf dem die 9-mm-Scharnierwalze sitzt, und der Deckel, der aus der Walze aufsteigt und sich um 15 Grad nach hinten lehnt. Vorderansicht: das 0,313 m breite Chassis auf seinen zwei vorderen Füßen mit der Kimm an beiden Seiten und dahinter der Deckel mit dem dunklen Glas und dem leuchtenden Panel auf seiner Fläche. Draufsicht: das Chassis mit gerundeten Ecken, sechs Tastenreihen und Touchpad sowie der Deckel von oben als Band über der Scharnierwalze, die er verdeckt."
           },
           "retained": {
             "en": "Overall height 0.221 m with the lid open at 105 degrees, chassis depth 0.218 m, deck 12.5 mm above the desk, lid thickness 6.5 mm, the feet, the bilge, the parting line of the two covers, the hinge ledge and barrel, the glass with its lit panel, the key rows and the trackpad.",
@@ -736,7 +895,48 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [[0.2115, 0.0], [0.216, 0.0012], [0.2177, 0.003], [0.218, 0.005], [0.218, 0.0085], [0.0, 0.0085], [0.0, 0.005], [0.0003, 0.003], [0.002, 0.0012], [0.0065, 0.0]],
+              "points": [
+                [
+                  0.2115,
+                  0.0
+                ],
+                [
+                  0.216,
+                  0.0012
+                ],
+                [
+                  0.2177,
+                  0.003
+                ],
+                [
+                  0.218,
+                  0.005
+                ],
+                [
+                  0.218,
+                  0.0085
+                ],
+                [
+                  0.0,
+                  0.0085
+                ],
+                [
+                  0.0,
+                  0.005
+                ],
+                [
+                  0.0003,
+                  0.003
+                ],
+                [
+                  0.002,
+                  0.0012
+                ],
+                [
+                  0.0065,
+                  0.0
+                ]
+              ],
               "closed": true,
               "region": "underside",
               "material": "alu-anodised"
@@ -765,16 +965,46 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [0.2135, -0.0014],
-                [0.2135, 0.003],
-                [0.212, 0.0045],
-                [-0.003, 0.0045],
-                [-0.0045, 0.003],
-                [-0.0045, -0.0014],
-                [-0.0032, -0.0032],
-                [0.0, -0.0045],
-                [0.0032, -0.0032],
-                [0.0043, -0.0014]
+                [
+                  0.2135,
+                  -0.0014
+                ],
+                [
+                  0.2135,
+                  0.003
+                ],
+                [
+                  0.212,
+                  0.0045
+                ],
+                [
+                  -0.003,
+                  0.0045
+                ],
+                [
+                  -0.0045,
+                  0.003
+                ],
+                [
+                  -0.0045,
+                  -0.0014
+                ],
+                [
+                  -0.0032,
+                  -0.0032
+                ],
+                [
+                  0.0,
+                  -0.0045
+                ],
+                [
+                  0.0032,
+                  -0.0032
+                ],
+                [
+                  0.0043,
+                  -0.0014
+                ]
               ],
               "closed": true,
               "region": "lid",
@@ -791,16 +1021,46 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [0.2135, -0.0014],
-                [0.2135, 0.003],
-                [0.212, 0.0045],
-                [-0.003, 0.0045],
-                [-0.0045, 0.003],
-                [-0.0045, -0.0014],
-                [-0.0032, -0.0032],
-                [0.0, -0.0045],
-                [0.0032, -0.0032],
-                [0.0043, -0.0014]
+                [
+                  0.2135,
+                  -0.0014
+                ],
+                [
+                  0.2135,
+                  0.003
+                ],
+                [
+                  0.212,
+                  0.0045
+                ],
+                [
+                  -0.003,
+                  0.0045
+                ],
+                [
+                  -0.0045,
+                  0.003
+                ],
+                [
+                  -0.0045,
+                  -0.0014
+                ],
+                [
+                  -0.0032,
+                  -0.0032
+                ],
+                [
+                  0.0,
+                  -0.0045
+                ],
+                [
+                  0.0032,
+                  -0.0032
+                ],
+                [
+                  0.0043,
+                  -0.0014
+                ]
               ],
               "closed": true,
               "region": "lid",
@@ -842,16 +1102,46 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [0.15, 0.0],
-                [0.1545, 0.0012],
-                [0.1562, 0.003],
-                [0.1565, 0.005],
-                [0.1565, 0.0085],
-                [-0.1565, 0.0085],
-                [-0.1565, 0.005],
-                [-0.1562, 0.003],
-                [-0.1545, 0.0012],
-                [-0.15, 0.0]
+                [
+                  0.15,
+                  0.0
+                ],
+                [
+                  0.1545,
+                  0.0012
+                ],
+                [
+                  0.1562,
+                  0.003
+                ],
+                [
+                  0.1565,
+                  0.005
+                ],
+                [
+                  0.1565,
+                  0.0085
+                ],
+                [
+                  -0.1565,
+                  0.0085
+                ],
+                [
+                  -0.1565,
+                  0.005
+                ],
+                [
+                  -0.1562,
+                  0.003
+                ],
+                [
+                  -0.1545,
+                  0.0012
+                ],
+                [
+                  -0.15,
+                  0.0
+                ]
               ],
               "closed": true,
               "region": "underside",
@@ -925,16 +1215,46 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [0.2135, -0.0014],
-                [0.2135, 0.003],
-                [0.212, 0.0045],
-                [-0.003, 0.0045],
-                [-0.0045, 0.003],
-                [-0.0045, -0.0014],
-                [-0.0032, -0.0032],
-                [0.0, -0.0045],
-                [0.0032, -0.0032],
-                [0.0043, -0.0014]
+                [
+                  0.2135,
+                  -0.0014
+                ],
+                [
+                  0.2135,
+                  0.003
+                ],
+                [
+                  0.212,
+                  0.0045
+                ],
+                [
+                  -0.003,
+                  0.0045
+                ],
+                [
+                  -0.0045,
+                  0.003
+                ],
+                [
+                  -0.0045,
+                  -0.0014
+                ],
+                [
+                  -0.0032,
+                  -0.0032
+                ],
+                [
+                  0.0,
+                  -0.0045
+                ],
+                [
+                  0.0032,
+                  -0.0032
+                ],
+                [
+                  0.0043,
+                  -0.0014
+                ]
               ],
               "closed": true,
               "region": "lid",
@@ -1008,9 +1328,37 @@
               "filled": true,
               "tone": 0.55,
               "kind": "poly",
-              "points": [[0.215, 0.0], [0.218, 0.003], [0.218, 0.0125], [0.0, 0.0125], [0.0, 0.003], [0.003, 0.0]],
+              "points": [
+                [
+                  0.215,
+                  0.0
+                ],
+                [
+                  0.218,
+                  0.003
+                ],
+                [
+                  0.218,
+                  0.0125
+                ],
+                [
+                  0.0,
+                  0.0125
+                ],
+                [
+                  0.0,
+                  0.003
+                ],
+                [
+                  0.003,
+                  0.0
+                ]
+              ],
               "closed": true,
-              "regions": ["deck", "underside"],
+              "regions": [
+                "deck",
+                "underside"
+              ],
               "material": "alu-anodised"
             },
             {
@@ -1026,7 +1374,8 @@
               "w": 0.218,
               "h": 0.0065,
               "region": "lid",
-              "material": "alu-anodised"
+              "material": "alu-anodised",
+              "penMm": 0.2
             }
           ],
           "front": [
@@ -1049,7 +1398,8 @@
                 "sweep": "w",
                 "z0": -0.1565,
                 "z1": 0.1565
-              }
+              },
+              "penMm": 0.2
             },
             {
               "id": "base",
@@ -1059,9 +1409,37 @@
               "filled": true,
               "tone": 0.55,
               "kind": "poly",
-              "points": [[0.1535, 0.0], [0.1565, 0.003], [0.1565, 0.0125], [-0.1565, 0.0125], [-0.1565, 0.003], [-0.1535, 0.0]],
+              "points": [
+                [
+                  0.1535,
+                  0.0
+                ],
+                [
+                  0.1565,
+                  0.003
+                ],
+                [
+                  0.1565,
+                  0.0125
+                ],
+                [
+                  -0.1565,
+                  0.0125
+                ],
+                [
+                  -0.1565,
+                  0.003
+                ],
+                [
+                  -0.1535,
+                  0.0
+                ]
+              ],
               "closed": true,
-              "regions": ["deck", "underside"],
+              "regions": [
+                "deck",
+                "underside"
+              ],
               "material": "alu-anodised"
             }
           ],
@@ -1079,7 +1457,10 @@
               "w": 0.218,
               "h": 0.313,
               "r": 0.009,
-              "regions": ["deck", "underside"],
+              "regions": [
+                "deck",
+                "underside"
+              ],
               "material": "alu-anodised"
             },
             {

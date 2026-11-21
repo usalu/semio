@@ -76,6 +76,8 @@ pub struct World3dSceneComponentSource {
 pub struct World3dSceneInstanceEntry {
     #[serde(default)]
     pub component_source: Option<World3dSceneComponentSource>,
+    #[serde(default)]
+    pub component_pickable: Option<bool>,
     pub id: String,
     pub mesh_id: String,
     /// 🎯️ The TOPOLOGY target this rendered instance stands for — several instances of one channel
@@ -86,6 +88,9 @@ pub struct World3dSceneInstanceEntry {
     pub interaction_id: Option<String>,
     #[serde(default)]
     pub interaction_granularity_id: Option<String>,
+    /// 🎯️ Compact, bounded pointer targets resolved by the scene producer.
+    #[serde(default, deserialize_with = "deserialize_instance_hover_targets")]
+    pub hover_targets: Option<String>,
     #[serde(default)]
     pub position: Option<[f64; 3]>,
     #[serde(default)]
@@ -116,6 +121,38 @@ pub struct World3dSceneInstanceEntry {
     /// reach a mesh (ticket 26/09/17 packet W2f §5.5). `None` leaves the alpha untouched.
     #[serde(default)]
     pub opacity: Option<f64>,
+}
+
+fn deserialize_instance_hover_targets<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+    let value = serde_json::Value::deserialize(deserializer)?;
+    Ok(encode_instance_hover_targets(&value))
+}
+
+fn encode_instance_hover_targets(value: &serde_json::Value) -> Option<String> {
+    use std::fmt::Write;
+    use semio_os_infinite_world_cursors::{world_write_interaction_target, WorldInteractionText};
+
+    let targets = value.as_array()?;
+    if targets.is_empty() || targets.len() > WORLD_INTERACTION_OBJECT_CAPACITY {
+        return None;
+    }
+    let mut seen = HashSet::new();
+    let mut output = WorldInteractionText::default();
+    output.write_char('[').ok()?;
+    for row in targets {
+        let target = (row.get("granularity")?.as_str()?, row.get("id")?.as_str()?);
+        if [target.0, target.1].iter().any(|part| part.is_empty() || part.len() > WORLD_INTERACTION_ID_BYTE_CAPACITY) {
+            return None;
+        }
+        if seen.insert(target) {
+            if seen.len() > 1 {
+                output.write_char(',').ok()?;
+            }
+            world_write_interaction_target(&mut output, target.0, &[target.1]).ok()?;
+        }
+    }
+    output.write_char(']').ok()?;
+    Some(output.as_str().to_owned())
 }
 
 /// 🎥️ `World3dScene.camera_json` — the window's own camera measure, authored host-side.
@@ -338,12 +375,14 @@ pub fn world3d_camera_fit_work_pending(camera_state: &WorldCameraState, scene_st
     })
 }
 
-/// 🎯️ `World3dScene.selection_json` — both the plain-instance half (`ids`/`hoveredId`, what the
+/// 🎯️ `World3dScene.selection_json` — both the plain-instance half (`ids`/`hoveredIds`/`hoveredId`, what the
 /// framework `interactionSelect`/`interactionHover` verbs address) and the component half
 /// (`granularity`/`componentIds`/`hoveredComponent`, the unconverted `worldPick` mechanism).
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct World3dSceneSelectionRecord {
+    #[serde(default)]
+    pub engagement_session_active: bool,
     #[serde(default)]
     pub method: Option<String>,
     #[serde(default)]
@@ -354,6 +393,10 @@ pub struct World3dSceneSelectionRecord {
     pub gumball_target: Option<[f32; 3]>,
     #[serde(default)]
     hovered_id: Option<String>,
+    #[serde(default)]
+    hovered_ids: Option<Vec<String>>,
+    #[serde(default, deserialize_with = "deserialize_hover_source_window")]
+    hover_source_window_id: Option<Option<String>>,
     #[serde(default)]
     pub granularity: Option<String>,
     #[serde(default)]
@@ -378,6 +421,10 @@ pub struct World3dSceneSelectionRecord {
     /// ⚡️ `selection_json.gumballLiveDispatch` — React's `WorldSelectionRecord.gumballLiveDispatch`.
     #[serde(default)]
     pub gumball_live_dispatch: Option<bool>,
+}
+
+fn deserialize_hover_source_window<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<Option<String>>, D::Error> {
+    Option::<String>::deserialize(deserializer).map(Some)
 }
 
 /// 🎯️ `selection_json.hoveredComponent` — the vertex/edge/face under the pointer, if any.
@@ -612,6 +659,7 @@ pub fn publish_world3d_scene_bridge_snapshot(session_state: &mut WorldSessionSta
     for instance in cursor.instances.iter().filter(|instance| instance.interaction_granularity_id.is_some()) {
         interaction_state.instance_interaction_granularity_ids.insert(instance.id.clone(), instance.interaction_granularity_id.clone().expect("instance interaction granularity filtered above"));
     }
+    interaction_state.component_unpickable_instance_ids = cursor.instances.iter().filter(|instance| instance.component_pickable == Some(false)).map(|instance| instance.id.clone()).collect();
     scene_state.instance_positions.clear();
     for instance in &cursor.instances {
         scene_state.instance_positions.insert(instance.id.clone(), instance.position.unwrap_or([0.0; 3]));
@@ -715,7 +763,15 @@ pub fn publish_world3d_scene_bridge_snapshot(session_state: &mut WorldSessionSta
             return Err(fault);
         }
     }
-    semio_ui_declaration::ui::world3d_snapshot_seal(token)
+    let lease = semio_ui_declaration::ui::world3d_snapshot_seal(token)?;
+    let hover_targets = cursor.instances.iter().filter_map(|instance| {
+        instance.hover_targets.as_ref().map(|targets| (instance.id.clone(), targets.clone()))
+    }).collect();
+    if interaction_state.instance_hover_targets != hover_targets {
+        interaction_state.instance_hover_targets = hover_targets;
+        session_state.interaction_revision = revision;
+    }
+    Ok(lease)
 }
 
 /// 🎨️ The base color an instance without its own `color` paints with: the scene environment's
@@ -730,9 +786,7 @@ fn scene_bridge_neutral_color(scene_state: &WorldSceneState) -> ([f32; 4], Scene
         .map_or(([1.0; 4], SceneColorSource3d::SemanticNeutral), |color| (parse_color(color), SceneColorSource3d::Environment))
 }
 
-/// 🎯️ Applies the scene's own selection document to this world's live selection/hover channels —
-/// only when the document itself changed, so an optimistic local preview between two identical
-/// refreshes is never clobbered (the rule the React host follows too).
+/// 🎯️ Applies selection changes and hands off local instance hover when another surface publishes a new mark.
 ///
 /// 🎛️ Authored config WINS over the mode, exactly as React's `gumballConfig ?? gumballConfigForTransformMode(mode)`.
 pub fn sync_world3d_scene_selection(session_state: &mut WorldSessionState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, scene_state: &mut WorldSceneState, selection_json: &str) {
@@ -742,24 +796,44 @@ pub fn sync_world3d_scene_selection(session_state: &mut WorldSessionState, selec
     }
     selection_state.scene_selection_digest = Some(digest);
     let Ok(record) = serde_json::from_str::<World3dSceneSelectionRecord>(selection_json) else { return };
+    let hovered_ids = record.hovered_ids.map(|ids| ids.into_iter().collect());
+    let hover_group_changed = selection_state.scene_hovered_ids != hovered_ids;
+    let source = record.hover_source_window_id;
+    let foreign_source = source.as_ref().is_some_and(|window| match window {
+        Some(window) => session_state.window_instance_id.as_deref() != Some(window.as_str()),
+        None => true,
+    });
+    let apply_instance_hover = !selection_state.local_instance_hover || hovered_ids.is_none()
+        || (foreign_source && (hover_group_changed || selection_state.scene_hover_source_window != source));
+    let instance_hover_changed = apply_instance_hover && (hover_group_changed
+        || selection_state.local_hover_id != record.hovered_id || selection_state.local_hover_granularity_id.is_some()
+        || selection_state.local_instance_hover);
     let component_ids:Vec<String>=record.component_ids.iter().filter_map(scene_component_id_text).collect();
     let (hovered_object,hovered_mode,hovered_id)=record.hovered_component.map_or((None,None,None),|hovered|(hovered.object_id,hovered.mode,hovered.id.as_ref().and_then(scene_component_id_text)));
     let gumball_target=record.gumball_target.filter(|target|target.iter().all(|value|value.is_finite()));
     let changed=selection_state.selected_ids!=record.ids || gumball_state.gumball_selection_ids!=record.gumball_selection_ids || gumball_state.gumball_target!=gumball_target
-        || selection_state.local_hover_id!=record.hovered_id || selection_state.local_hover_granularity_id.is_some() || selection_state.component_ids!=component_ids
+        || instance_hover_changed || selection_state.component_ids!=component_ids
         || selection_state.hovered_component_object_id!=hovered_object || selection_state.hovered_component_mode!=hovered_mode || selection_state.hovered_component_id!=hovered_id
         || selection_state.active_object_id!=record.active_object_id || gumball_state.gumball_config!=record.gumball_config || gumball_state.gumball_live_dispatch!=record.gumball_live_dispatch.unwrap_or(false)
         || record.method.as_ref().is_some_and(|method|selection_state.selection_method!=*method) || record.granularity.as_ref().is_some_and(|granularity|selection_state.granularity!=*granularity)
         || record.targets.as_ref().is_some_and(|targets|selection_state.selection_targets!=*targets) || record.show_edges.is_some_and(|show_edges|selection_state.show_edges!=show_edges)
-        || record.transform_mode.as_ref().is_some_and(|mode|gumball_state.transform_mode!=*mode);
+        || record.transform_mode.as_ref().is_some_and(|mode|gumball_state.transform_mode!=*mode)
+        || selection_state.engagement_session_active != record.engagement_session_active;
+    selection_state.engagement_session_active = record.engagement_session_active;
     if let Some(method) = record.method {
         selection_state.selection_method = method;
     }
     selection_state.selected_ids = record.ids;
     gumball_state.gumball_selection_ids = record.gumball_selection_ids;
     gumball_state.gumball_target = gumball_target;
-    selection_state.local_hover_id = record.hovered_id;
-    selection_state.local_hover_granularity_id = None;
+    if apply_instance_hover {
+        selection_state.local_hover_id = record.hovered_id;
+        selection_state.local_instance_hover = false;
+        selection_state.local_hover_granularity_id = None;
+        selection_state.local_hover_targets = None;
+    }
+    selection_state.scene_hovered_ids = hovered_ids;
+    selection_state.scene_hover_source_window = source;
     if let Some(granularity) = record.granularity {
         selection_state.granularity = granularity;
     }

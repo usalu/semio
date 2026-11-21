@@ -3,21 +3,16 @@
 use super::*;
 
 pub(super) fn canvas_scene_of_tree(tree: semio_plugin::ComponentTree) -> semio_plugin::Canvas2dScene {
-    let decoded = match &tree.root.component {
-        semio_plugin::Component::Surface(surface) => semio_ui_scene::decode(surface).map_err(|_| "canvas payload"),
-        _ => Err("canvas surface"),
-    };
-    artifact_laws::project_and_retire_fixture_tree(tree).expect("retire canvas tree");
-    decoded.expect("typed canvas")
+    canvas_scene(artifact_laws::project_and_retire_fixture_tree(tree).expect("project and retire canvas tree"))
 }
 
 pub(super) fn canvas_scene(projection: String) -> semio_plugin::Canvas2dScene {
-    artifact_laws::decode_fixture_scene::<semio_plugin::Canvas2dScene>(&projection).expect("typed canvas")
+    artifact_laws::decode_fixture_scene_with_lanes::<semio_plugin::Canvas2dScene>(&projection).expect("typed canvas")
 }
 
 pub(super) async fn settle_drawing_geometry(app:&mut DrawingAppFixture,view:Option<&ViewModel>){
     use semio_plugin::reactor::jobs::{registry_driver::RegistryJobDriver,JobStep};
-    for effect in artifact_laws::fixture_pending_effects(&mut app.0,view).await.expect("registered Drawing pending effects"){match effect{
+    for effect in artifact_laws::fixture_pending_effects(&mut app.0,view).await.expect("registered Drawing pending effects").unwrap_or_default(){match effect{
         Effect::CancelJob{job}=>{RegistryJobDriver::generous(job).cancel().expect("registered Drawing geometry cancels");},
         Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{let mut driver=RegistryJobDriver::generous(job);driver.start(&kind,input,None).expect("registered Drawing geometry admits");let mut complete=false;for _ in 0..100000{match driver.step().expect("registered Drawing geometry steps"){JobStep::Running(_)=>{},JobStep::Done(_)=>{complete=true;break;},JobStep::Failed(error)=>panic!("registered Drawing geometry failed: {}",String::from_utf8_lossy(&error))}}assert!(complete,"registered Drawing geometry must settle before its canvas witness");},
         _=>{},
@@ -180,12 +175,12 @@ async fn canvas_point_to_world_matches_host_formula() {
 async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     let (mut app, meta) = inline_selection_app().await;
     let mut utility_meta = meta.clone();
-    let view = meta.view_state.clone().expect("canvas window view");
+    let view = meta.view_state.as_deref().expect("canvas window view").clone();
     utility_meta.view_state = Some(ViewModel {
-        active_utility_by_window_id: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([("drawing-canvas".to_string(), Some("shapeRect".to_string()))]),
+        active_utility_by_window_id: [("drawing-canvas".to_string(), Some("shapeRect".to_string()))].into(),
         active_utility_id: None,
         ..view
-    });
+    }.into());
     let before = app.snapshot().unwrap().layers.len();
     settled(
         &mut app,
@@ -202,6 +197,7 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     assert_eq!(drawing_active_utility(&ViewModel { active_utility_id: Some("pen".into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }), "pen", "the flat field still resolves when no map entry addresses the window");
     assert_eq!(drawing_active_utility(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)), DRAWING_DEFAULT_UTILITY);
     artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    retire_owned_fixture_view(utility_meta);
 }
 
 /// 📤️ `exportDocument` (palette default `pdf`) hands the host one `DownloadMediaExport` whose base64

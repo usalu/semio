@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["coreHex", "componentSha256", "imageSha256", "wireBytes", "prefix", "memoryPrefix", "table", "globalWire", "dataLive", "elementsLive"],
+  "properties": {
+    "coreHex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$"},
+    "componentSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "imageSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "wireBytes": {"type": "integer", "minimum": 49},
+    "prefix": {"const": "53454d494f50410001"},
+    "memoryPrefix": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+    "table": {"type": "array", "items": {"type": ["integer", "null"], "minimum": 0}},
+    "globalWire": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$"},
+    "dataLive": {"type": "array", "items": {"enum": [0, 1]}},
+    "elementsLive": {"type": "array", "items": {"enum": [0, 1]}}
+  }
+}

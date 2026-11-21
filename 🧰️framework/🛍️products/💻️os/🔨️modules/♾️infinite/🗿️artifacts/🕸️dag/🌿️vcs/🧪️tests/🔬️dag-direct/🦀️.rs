@@ -154,6 +154,8 @@ fn direct_leaf_roster_and_codec_contracts() {
         assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small index")));
         assert_eq!(mutation.descriptor().diff_participation, protocol::MutationDiffParticipation::ApplyOnly);
         assert_codecs(&mutation);
+        semio_os_kernel::os_dsl::original_receiving::check_receiving_round_trip(std::slice::from_ref(&mutation))
+            .expect("original receiving agrees with the fixture's binary codec");
     }
     for row in fixture["invalid"].as_array().expect("invalid vectors") {
         let mut json = row["payload"].clone();

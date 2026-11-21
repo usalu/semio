@@ -486,8 +486,23 @@
       "budgetMs": 60000,
       "typecheck": "none",
       "files": [
-        "📦️artifacts/🏗️native-build/🧩️component-pass/🩺️failure-diagnosis/🧪️tests/🟦️.ts"
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🩺️failure-diagnosis/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🔁️failure-churn/🧪️tests/reclaim.test.ts"
       ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "component-reclaim",
+      "budgetMs": 160000,
+      "typecheck": "none",
+      "files": [
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts"
+      ],
+      "testNamePattern": "^reclaim preserves Cargo",
       "platforms": [
         "darwin",
         "linux",

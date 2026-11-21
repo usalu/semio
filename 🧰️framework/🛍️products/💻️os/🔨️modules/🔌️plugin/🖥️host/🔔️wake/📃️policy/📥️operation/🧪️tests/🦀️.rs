@@ -86,16 +86,51 @@ fn abandoned_source_cancels_actual_callbacks_and_still_accepts_paid_cleanup(){
 }
 
 #[test]
+fn original_vm_refinement_charges_fresh_work_under_the_issued_total(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/vm-refinement.json")).unwrap();
+ for row in law.as_array().unwrap(){
+  let number=|key|row[key].as_u64().unwrap();
+  let result=refine_execution_work(number("issued"),number("observed"),number("performed").into(),number("redeemed"));
+  assert_eq!(result.ok(),row["expected"].as_u64(),"{}",row["name"]);
+ }
+ assert!(refine_execution_work(u64::MAX,u64::MAX,u128::from(u64::MAX)+1,0).is_err());
+}
+
+#[test]
 fn native_retirement_receives_scoped_execution_after_its_actual_metadata(){
  use semio_framework_job::{OriginalNativeRetirement,OriginalTurnFailure,StepContext};
  use semio_framework_value::RetainedCloneProgress;
+ use std::sync::atomic::{AtomicU64,Ordering};
+ static ISSUED_WORK:AtomicU64=AtomicU64::new(0);
  struct VmParent{empty:bool}
  impl OriginalNativeRetirement for VmParent{
   fn close_requires_execution(&self)->bool{!self.empty}
-  fn close_on_source(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let before=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;cx.consume_fuel(1);super::GuestRelayWakeDriver::execute_current_original(cx,|budget,_|{assert!(budget.input.grant.maximum_items<before.grant.maximum_items);assert!(budget.input.work.fuel<before.work.fuel);Some(semio_framework_actor::OriginalGuestExecutionReceipt{budget,spent_fuel:Some(0),submitted:false})})?;self.empty=true;Ok(true)}
+  fn close_on_source(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+   let before=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;
+   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;
+   cx.consume_fuel(1);
+   assert_eq!(cx.original_work_units_spent(),1);
+   assert_eq!(cx.reserved_return_work(),0);
+   let expected=ISSUED_WORK.load(Ordering::Relaxed)-1;
+   assert!(expected>cx.fuel_remaining());
+   super::GuestRelayWakeDriver::execute_current_original(cx,|budget,_|{
+    assert_eq!(budget.input.grant.maximum_items,before.grant.maximum_items-1);
+    assert_eq!(budget.input.work.fuel,expected);
+    Some(semio_framework_actor::OriginalGuestExecutionReceipt{budget,spent_fuel:Some(0),submitted:false})
+   })?;
+   self.empty=true;
+   Ok(true)
+  }
   fn terminal_is_empty(&self)->bool{self.empty}
  }
  impl Drop for VmParent{fn drop(&mut self){assert!(self.empty)}}
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let caps:super::GuestRelayOperationCaps=serde_json::from_value(law["caps"].clone()).unwrap();let request:super::GuestRelayOperationRequest=serde_json::from_value(law["cases"][0]["request"].clone()).unwrap();let driver=caps.issue(request,||Some(1000),Box::new(||false)).unwrap();let mut input=Some(VmParent{empty:false});let mut lease=None;
- for _ in 0..64{driver.dispatch_admission_step(false,|_,cx|super::GuestRelayAdmissionCall{result:cx.admit_original_native(&mut input,&mut lease).map(|_|()),execution:None}).unwrap();if lease.is_some(){break}}assert!(input.is_none());drop(lease);let mut closed=false;for _ in 0..512{if driver.close_root_step().unwrap(){closed=true;break}}assert!(closed);assert!(driver.operation_terminal_is_empty().unwrap());
+ for _ in 0..64{driver.dispatch_admission_step(false,|_,cx|super::GuestRelayAdmissionCall{result:cx.admit_original_native(&mut input,&mut lease).map(|_|()),execution:None}).unwrap();if lease.is_some(){break}}assert!(input.is_none());drop(lease);
+ let mut closed=false;
+ for _ in 0..512{
+  ISSUED_WORK.store(driver.original.try_lock().unwrap().root.fuel_remaining(),Ordering::Relaxed);
+  if driver.close_root_step().unwrap(){closed=true;break}
+ }
+ assert!(closed);
+ assert!(driver.operation_terminal_is_empty().unwrap());
 }

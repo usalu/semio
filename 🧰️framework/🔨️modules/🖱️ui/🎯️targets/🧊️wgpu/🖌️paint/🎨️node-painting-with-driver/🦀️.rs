@@ -32,6 +32,7 @@ pub fn paint_node_step_with_driver(
     driver_drag: UiDriverDrag,
     block_reversed: bool,
     inline: ui_contract::FlowInline,
+    hover_pointer: Option<(f32, f32)>,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
 ) -> RetainedNodePaintStep {
@@ -89,7 +90,10 @@ pub fn paint_node_step_with_driver(
             UiNode::IconSelect(select) => paint_icon_select_node_step(select, atlas, draw, cursor, node, theme, bounds, presence),
             UiNode::Field(field) => paint_field_node_step(field, tree, id, atlas, draw, cursor, theme, bounds, presence),
             UiNode::Section(section) => paint_section_node_step(section, tree, id, atlas, draw, cursor, theme, bounds, presence),
-            UiNode::CardStack(_) => paint_card_stack_node_step(tree, id, atlas, draw, cursor, theme, bounds, presence),
+            UiNode::CardStack(_) => {
+                let pointer = hover_pointer.filter(|_| node.flags.contains(NodeFlags::HOVERED));
+                paint_card_stack_node_step(tree, id, atlas, draw, cursor, theme, bounds, presence, pointer)
+            }
             UiNode::OverviewCard(_) => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(_) if semio_ui_wgpu_mounted_layout::owning_tree_spec(tree, id).is_some() => retained_presence_step(draw, bounds, theme, presence),
             UiNode::Group(group) => paint_group_node_step(group, atlas, icons, draw, cursor, theme, bounds, presence),

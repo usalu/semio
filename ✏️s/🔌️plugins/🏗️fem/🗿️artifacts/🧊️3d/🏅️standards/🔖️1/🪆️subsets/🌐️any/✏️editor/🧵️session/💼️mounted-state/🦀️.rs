@@ -205,7 +205,7 @@ impl MountedState {
                         return Ok(session_pending(items, bytes));
                     }
                     self.solver = None;
-                    return Ok(session_pending(items, bytes));
+                    return Ok(session_pending(items.max(1), bytes));
                 }
                 self.close_lane = 5;
                 session_pending(1, 0)
@@ -219,7 +219,7 @@ impl MountedState {
                     return Ok(session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotRead<Fem3dSnapshot>>()));
                 }
                 if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
-                    return Ok(session_pending(0, 0));
+                    return Ok(PluginLifecycleStep::AwaitingInput { reason: "FEM3D awaits the original snapshot return" });
                 }
                 if self.snapshot_return.take().is_some() {
                     return Ok(session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotReadReturn>()));

@@ -38,7 +38,7 @@ pub const CHROME_ACTION_ARGS_BYTES: usize = 512;
 /// was registered with — the rect a probe aims a pointer at, no dock-plan reconstruction needed.
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DumpHitTarget {
+pub struct DumpHitTarget {
     pub control_id: String,
     pub kind: String,
     pub rect: [f32; 4],
@@ -56,7 +56,7 @@ struct DumpHitTarget {
 /// probe reads the ledger before a step and after it and takes everything above the remembered `seq`.
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DumpDispatchedAction {
+pub struct DumpDispatchedAction {
     pub seq: u64,
     pub controller_id: String,
     pub action: String,
@@ -87,7 +87,7 @@ struct DumpDispatchedAction {
 /// would have to translate.
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DumpSurface {
+pub struct DumpSurface {
     pub id: String,
     pub level: String,
     pub element_id: String,
@@ -189,22 +189,22 @@ pub fn native_accessibility_windows() -> Vec<semio_renderer_wgpu_native_platform
 }
 
 #[derive(Clone, Default)]
-struct ChromeAccessibilityPublication {
+pub(crate) struct ChromeAccessibilityPublication {
     pub generation: u64,
     pub nodes: Vec<ui_contract::AccessibilityProjectionNode>,
 }
 
-pub static CHROME_ACCESSIBILITY: WorkerCell<ChromeAccessibilityPublication> = WorkerCell::new(Default::default);
+pub(crate) static CHROME_ACCESSIBILITY: WorkerCell<ChromeAccessibilityPublication> = WorkerCell::new(Default::default);
 
 const ACCESSIBILITY_VISIBLE_WINDOW_CAPACITY: usize = 256;
 
 #[derive(Default)]
-struct AccessibilityVisibleWindows {
+pub(crate) struct AccessibilityVisibleWindows {
     pub published: Vec<String>,
     staging: Vec<String>,
 }
 
-pub static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new(Default::default);
+pub(crate) static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new(Default::default);
 
 pub fn staged_retained_clock_surfaces() -> Vec<(String, semio_ui_wgpu_engine::UiSurfaceToken)> {
     let visible = ACCESSIBILITY_VISIBLE_WINDOWS.borrow().staging.clone();
@@ -714,7 +714,7 @@ pub fn ledger_push_action(ledger: &mut ChromeLedger, action: &ActionDescriptor, 
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DumpChrome {
+pub struct DumpChrome {
     pub armed: bool,
     pub generation: u64,
     #[serde(skip_serializing_if = "Option::is_none")]

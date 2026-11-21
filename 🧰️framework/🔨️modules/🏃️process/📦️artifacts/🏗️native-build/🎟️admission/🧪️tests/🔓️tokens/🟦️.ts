@@ -25,16 +25,16 @@ async function drive(scheduler:string,scratch:string,units:number,tokens:number,
  const broker=await startAdmissionBrokerV1({physicalBytes:reserveBytes+100*2**20,history:new Map()});broker.registerPass({id:"p",profile:"dev",target:"host"});
  const pool=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobs),children:ReturnType<typeof spawn>[]=[];
  let finished=0;
- const all=new Promise<void>(done=>{
+ const all=pool.withClient(environment=>new Promise<void>(done=>{
   void(async()=>{
    for(let index=0;index<units;index++){
     const slot=await pool.acquire();
-    const child=spawn(scheduler,[rustc,"--crate-name","u"+index,"--crate-type","lib","--emit=link","-C","extra-filename=-"+index,"--out-dir",join(scratch,"out"),join(sources,"s"+index+".rs")],{env:{...process.env,...pool.environment(),SEMIO_BUILD_BROKER:broker.endpoint,SEMIO_BUILD_PASS:"p",CARGO_PKG_NAME:"p"+index},stdio:"ignore"});
+    const child=spawn(scheduler,[rustc,"--crate-name","u"+index,"--crate-type","lib","--emit=link","-C","extra-filename=-"+index,"--out-dir",join(scratch,"out"),join(sources,"s"+index+".rs")],{env:{...process.env,...environment,SEMIO_BUILD_BROKER:broker.endpoint,SEMIO_BUILD_PASS:"p",CARGO_PKG_NAME:"p"+index},stdio:"ignore"});
     children.push(child);child.on("close",()=>{slot.release();if(++finished===units)done();});
    }
    for(let extra=0;extra<hoard;extra++)pool.acquire().then(()=>undefined,()=>undefined);
   })();
- });
+ }));
  let deadlocked=false;
  await Promise.race([all,pause(boundMs).then(()=>{deadlocked=true;})]);
  const admitted=broker.units().length;

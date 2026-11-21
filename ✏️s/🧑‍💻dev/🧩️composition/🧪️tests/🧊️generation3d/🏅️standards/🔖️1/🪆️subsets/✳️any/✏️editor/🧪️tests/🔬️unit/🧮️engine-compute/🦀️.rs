@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_preview_eval::PreviewEvaluation;
 use semio_framework_test_fixtures::repo_text;
 
 // 🧮️ Engine compute: preview payloads, mesh bridges, preview marks and graph projections.
@@ -14,7 +15,7 @@ fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifa
     let eval_json = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default());
     let mut session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
     crate::flow_operators::resolve_preview_geometry(&eval_json, host_snapshot, &cfg.lod_mode, &mut session);
-    let payload = preview_payload(&eval_json, host_snapshot, cfg, Some(&session), &Default::default());
+    let payload = preview_payload(&PreviewEvaluation::from_json(&eval_json), host_snapshot, cfg, Some(&session), &Default::default());
     crate::flow_operators::retire_flow_eval_session(session);
     (payload.meshes_json, payload.instances_json)
 }
@@ -313,7 +314,7 @@ fn mesh_preview_renders_without_a_brep_conversion_in_editor_and_viewer() {
     assert_eq!(meshes[0]["role"], "solid");
     assert_eq!(mesh_data_from_json(&meshes[0]["data"]), expected);
     assert_eq!(instances[0]["id"], "mesh@meshOut#0");
-    let viewer = semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview::preview_payload(&eval_json, &fixture, &Default::default(), None, &Default::default());
+    let viewer = semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview::preview_payload(&PreviewEvaluation::from_json(&eval_json), &fixture, &Default::default(), None, &Default::default());
     let viewer_meshes: Vec<Value> = serde_json::from_str(&viewer.meshes_json).unwrap();
     assert_eq!(mesh_data_from_json(&viewer_meshes[0]["data"]), expected);
     fixture.retire_cold();
@@ -398,17 +399,22 @@ fn preview_payload_emits_no_instance_for_a_pure_data_channel() {
 /// own channel, and an instance-level mark covers only itself.
 #[test]
 fn preview_marks_resolve_node_channel_and_instance_ids() {
-    let node = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi".to_string()].into_iter().collect(), selected: Default::default() };
-    assert!(node.hovers("multi", "a", 0) && node.hovers("multi", "b", 3));
-    assert!(!node.hovers("other", "a", 0));
+    use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelAddress;
+    let matched = |set: &PreviewInteractionMarks, widget, channel, index| {
+        PreviewChannelAddress::new(widget, channel, index, false).marked(&set.hovered)
+    };
 
-    let channel = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
-    assert!(channel.hovers("multi", "b", 0) && channel.hovers("multi", "b", 7));
-    assert!(!channel.hovers("multi", "a", 0));
+    let node = PreviewInteractionMarks { hovered: ["multi".to_string()].into_iter().collect(), ..Default::default() };
+    assert!(matched(&node, "multi", "a", 0) && matched(&node, "multi", "b", 3));
+    assert!(!matched(&node, "other", "a", 0));
 
-    let instance = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi@b#2".to_string()].into_iter().collect(), selected: Default::default() };
-    assert!(instance.hovers("multi", "b", 2));
-    assert!(!instance.hovers("multi", "b", 1));
+    let channel = PreviewInteractionMarks { hovered: ["multi@b".to_string()].into_iter().collect(), ..Default::default() };
+    assert!(matched(&channel, "multi", "b", 0) && matched(&channel, "multi", "b", 7));
+    assert!(!matched(&channel, "multi", "a", 0));
+
+    let instance = PreviewInteractionMarks { hovered: ["multi@b#2".to_string()].into_iter().collect(), ..Default::default() };
+    assert!(matched(&instance, "multi", "b", 2));
+    assert!(!matched(&instance, "multi", "b", 1));
 }
 
 /// 🕹️ Graph → world: hovering the NODE in the node graph must light up every one of its
@@ -418,17 +424,27 @@ fn preview_payload_marks_every_channel_of_a_hovered_node() {
     let _serial = test_serial();
     let fixture = preview_widget_fixture("multi", vec!["a".into(), "b".into()]);
     let eval_json = json!({ "multi": { "out": {
-            "a": { "$schema": "point", "x": 1.0, "y": 2.0, "z": 3.0 },
+            "a": [
+                { "$schema": "point", "x": 1.0, "y": 2.0, "z": 3.0 },
+                { "$schema": "point", "x": 2.0, "y": 2.0, "z": 3.0 }
+            ],
             "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
         } } })
     .to_string();
-    let marks = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi".to_string()].into_iter().collect(), selected: ["multi@a".to_string()].into_iter().collect() };
-    let payload = preview_payload(&eval_json, &fixture, &Generation3dConfig::default(), None, &marks);
+    let marks = PreviewInteractionMarks { graph_hover_source: Some(Some("graph:1".into())), hovered: ["multi".to_string()].into_iter().collect(), selected: ["multi@a".to_string()].into_iter().collect(), ..Default::default() };
+    let payload = preview_payload(&PreviewEvaluation::from_json(&eval_json), &fixture, &Generation3dConfig::default(), None, &marks);
     let instances: Vec<Value> = serde_json::from_str(&payload.instances_json).expect("instances json");
-    assert_eq!(instances.len(), 2);
-    assert!(instances.iter().all(|entry| entry.get("hovered").and_then(Value::as_bool) == Some(true)), "node hover must reach every channel: {instances:?}");
-    assert_eq!(payload.selected_ids, vec!["multi@a#0".to_string()], "channel-level selection must not spill onto the sibling channel");
-    assert!(payload.hovered_id.is_some(), "the scene needs a concrete hovered instance to paint");
+    assert_eq!(instances.len(), 3);
+    let selection = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json(&Generation3dConfig::default(), "", &payload);
+    let selection: Value = serde_json::from_str(&selection).unwrap();
+    assert_eq!(selection["hoveredIds"], json!(["multi@a#0", "multi@a#1", "multi@b#0"]));
+    assert_eq!(selection["hoverSourceWindowId"], "graph:1");
+    assert_eq!(payload.selected_ids, ["multi@a#0", "multi@a#1"]);
+    assert!(payload.hovered_id.is_some(), "the scene needs a primary hover address");
+    let no_hover = PreviewInteractionMarks { hovered: Default::default(), ..marks };
+    let unmarked = preview_payload(&PreviewEvaluation::from_json(&eval_json), &fixture, &Generation3dConfig::default(), None, &no_hover);
+    assert_eq!(payload.instances_json, unmarked.instances_json);
+    assert!(unmarked.hover_source_window.is_none());
 }
 
 /// 🕹️ Graph → world, narrowed: hovering one PORT lights up only that channel's geometry.
@@ -441,11 +457,11 @@ fn preview_payload_marks_only_the_hovered_channel() {
             "b": { "$schema": "vector", "x": 4.0, "y": 5.0, "z": 6.0 }
         } } })
     .to_string();
-    let marks = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default() };
-    let payload = preview_payload(&eval_json, &fixture, &Generation3dConfig::default(), None, &marks);
-    let instances: Vec<Value> = serde_json::from_str(&payload.instances_json).expect("instances json");
-    let hovered: Vec<&str> = instances.iter().filter(|entry| entry.get("hovered").and_then(Value::as_bool) == Some(true)).filter_map(|entry| entry.get("id").and_then(Value::as_str)).collect();
-    assert_eq!(hovered, vec!["multi@b#0"], "only the hovered channel may light up: {instances:?}");
+    let marks = PreviewInteractionMarks { hovered: ["multi@b".to_string()].into_iter().collect(), selected: Default::default(), ..Default::default() };
+    let payload = preview_payload(&PreviewEvaluation::from_json(&eval_json), &fixture, &Generation3dConfig::default(), None, &marks);
+    let selection = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_selection_json(&Generation3dConfig::default(), "", &payload);
+    let selection: Value = serde_json::from_str(&selection).unwrap();
+    assert_eq!(selection["hoveredIds"], json!(["multi@b#0"]));
     assert_eq!(payload.hovered_id.as_deref(), Some("multi@b#0"));
 }
 
@@ -453,7 +469,7 @@ fn preview_payload_marks_only_the_hovered_channel() {
 /// and its port, which is what the node-graph window paints.
 #[test]
 fn graph_marks_project_instance_hover_back_onto_its_node_and_port() {
-    let marks = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: ["multi@b#0".to_string()].into_iter().collect(), selected: ["multi@a#1".to_string()].into_iter().collect() };
+    let marks = PreviewInteractionMarks { hovered: ["multi@b#0".to_string()].into_iter().collect(), selected: ["multi@a#1".to_string()].into_iter().collect(), ..Default::default() };
     assert_eq!(marks.hovered_graph_target(), Some(("multi".to_string(), Some("b".to_string()))));
     assert!(marks.graph_highlight_ids().contains(&"multi".to_string()));
     assert_eq!(marks.graph_selection_ids(), vec!["multi".to_string()]);
@@ -472,6 +488,7 @@ fn interaction_topology_ports_match_the_node_graph_port_ids() {
     assert!(!ports_by_node.is_empty(), "default fixture should project graph nodes");
     assert!(ports_by_node.values().any(|ports| !ports.is_empty()), "default fixture should project at least one port");
     for (node_id, ports) in &ports_by_node {
+        assert_eq!(ports.iter().collect::<std::collections::BTreeSet<_>>().len(), ports.len(), "every canvas port keeps one graph target");
         for port in ports {
             assert!(port.starts_with(&format!("{node_id}@")), "port {port} must be qualified by its node {node_id}");
             assert_eq!(PreviewInteractionMarks::widget_of(port), node_id.as_str());
@@ -494,5 +511,40 @@ fn widget_preview_eligibility_covers_neurons_output_previews_and_clusters() {
     assert!(widget_previews(&output));
     assert!(widget_previews(&cluster));
     assert!(!widget_previews(&slider));
+}
+#[test]
+fn spatial_variables_use_their_own_preview_channel_in_edit_and_view() {
+    let _serial = test_serial();
+    use semio_framework_artifact_flow_flow::{Widget, variable_io_ports};
+    let case: Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🧫️fixtures/spatial-preview-variables.json")).unwrap();
+    let mut host = preview_widget_fixture("fixture", Vec::new());
+    host.widgets.clear();
+    let mut evaluated = serde_json::Map::new();
+    for row in case["widgets"].as_array().unwrap() {
+        let id = row["id"].as_str().unwrap();
+        let name = row["name"].as_str().unwrap();
+        let schema = row["schema"].as_str().unwrap();
+        let (_, outputs) = variable_io_ports(name, schema);
+        let channel = outputs.first().unwrap().id.as_str();
+        assert_eq!(channel, row["channel"].as_str().unwrap());
+        host.widgets.push(Widget::Variable { id: id.into(), name: name.into(), schema: schema.into() });
+        let value = if let Some(xyz) = row["coords"].as_array() {
+            json!({ "$schema": schema, "x": xyz[0], "y": xyz[1], "z": xyz[2] })
+        } else {
+            json!({ "$schema": schema, "value": row["value"] })
+        };
+        evaluated.insert(id.into(), json!({ "out": { (channel): value } }));
+    }
+    let raw = serde_json::to_string(&evaluated).unwrap();
+    let eval = PreviewEvaluation::from_json(&raw);
+    let hovered = [case["hover"].as_str().unwrap().to_owned()].into_iter().collect();
+    let edit = preview_payload(&eval, &host, &Default::default(), None, &PreviewInteractionMarks { hovered, ..Default::default() });
+    let view = semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview::preview_payload(&eval, &host, &Default::default(), None, &Default::default());
+    for json in [edit.instances_json, view.instances_json] {
+        let rows: Vec<Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(Value::Array(rows.into_iter().map(|row| row["id"].clone()).collect()), case["expected"]);
+    }
+    assert_eq!(edit.hovered_ids, [format!("{}#0", case["hover"].as_str().unwrap())]);
+    assert_eq!(edit.meshes_json, view.meshes_json);
 }
 //#endregion 🔖️EngineComputeTests

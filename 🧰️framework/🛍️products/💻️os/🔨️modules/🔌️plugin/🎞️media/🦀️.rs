@@ -39,7 +39,7 @@ pub struct ActiveMediaExport{
  pub parts:std::mem::ManuallyDrop<Option<MediaExportOwnedParts>>,
  pub parts_retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<MediaExportOwnedParts>>>,
  pub operation:semio_framework_job::Operation,pub contract:semio_framework::ToolExecutionContract,
- pub session:Option<semio_framework_job_worker::MountedWorkerJobSession<ArtifactReservedToolJob>>,pub session_rejected:Option<semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactReservedToolJob>>,
+ pub session:Option<semio_framework_job_worker::MountedWorkerJobSession<ArtifactReservedToolJob>>,pub session_rejected:Option<Box<semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactReservedToolJob>>>,
  pub outcome_pending:bool,pub resume_pending:bool,
  pub lease:std::mem::ManuallyDrop<Option<ToolCancellationLease>>,
  pub cancellation_retirement:Option<Box<semio_plugin_operation::ToolCancellationLeaseRetirement>>,
@@ -49,6 +49,22 @@ impl std::ops::Deref for ActiveMediaExport{type Target=MediaExportOwnedParts;fn 
 impl std::ops::DerefMut for ActiveMediaExport{fn deref_mut(&mut self)->&mut Self::Target{self.parts.as_mut().expect("live media operation retains its original publication parts")}}
 
 impl ActiveMediaExport {
+    /// 📦️ Quotes the terminal removal of the original worker admission carrier and its backing.
+    pub fn worker_admission_release_demand() -> RetirementDemand {
+        type Admission = semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactReservedToolJob>;
+        RetirementDemand { copy_bytes: size_of::<Option<Box<Admission>>>(), release_bytes: size_of::<Admission>(), depth: 1, ..Default::default() }
+    }
+
+    /// ♻️ Releases the empty admission carrier using its original retirement turn.
+    pub fn release_worker_admission(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let demand = Self::worker_admission_release_demand();
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, _| {
+            assert!(self.session_rejected.as_ref().is_some_and(|source| source.terminal_is_empty()));
+            self.session_rejected.take();
+            Ok((PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() }), false))
+        })
+    }
+
     pub fn running_poll(&self) -> ArtifactMediaExportPoll {
         ArtifactMediaExportPoll::Running { applied_progress: self.applied_progress, checkpoint_available: self.checkpoint_available }
     }
@@ -77,7 +93,7 @@ impl ActiveMediaExport {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         if self.close_stage == ActiveMediaExportCloseStage::Live { return Ok(RetirementDemand { copy_bytes: size_of::<ActiveMediaExportCloseStage>() + size_of::<bool>(), ..item }); }
         if let Some(rejected) = self.session_rejected.as_ref() {
-            if rejected.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(rejected), ..item }); }
+            if rejected.terminal_is_empty() { return Ok(Self::worker_admission_release_demand()); }
             return rejected.retirement_demands(body);
         }
         if let Some(session) = self.session.as_ref() {
@@ -112,7 +128,7 @@ impl ActiveMediaExport {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
         }
         if let Some(rejected)=self.session_rejected.as_mut(){
-            if rejected.terminal_is_empty(){let bytes=size_of_val(rejected);if grant.maximum_copy_bytes<bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}drop(self.session_rejected.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));}
+            if rejected.terminal_is_empty(){return self.release_worker_admission(cx,grant)}
             let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
             return original_rejection_lifecycle(cx,demand,grant,"media original rejection awaits worker handback",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))});
         }

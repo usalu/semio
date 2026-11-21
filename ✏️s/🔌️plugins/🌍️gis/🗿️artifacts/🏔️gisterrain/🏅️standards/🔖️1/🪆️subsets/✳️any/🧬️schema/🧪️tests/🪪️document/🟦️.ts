@@ -10,6 +10,8 @@ import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
+import elevationSchema from "../../🗺️imported-map/🏔️elevation/🔣️.json" with { type: "json" };
+import elevationSource from "../../../🖼️assets/🎬️demo/🏔️elevation.json" with { type: "json" };
 import { parseGisTerrainArtifact } from "../../🟦️.ts";
 import { parseGisTerrainSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseGisTerrainDiff, applyGisTerrainDiff } from "../../🔺️diff/🟦️.ts";
@@ -32,15 +34,16 @@ export function testTerrainDocumentContractOracle(): void {
     assert.deepEqual(nativeJson(applyGisTerrainDiff(parseGisTerrainSnapshot(foreignDocument(row.before)), parseGisTerrainDiff(foreignDiff(row.diff)))), expected, row.name);
   }
   const empty = { exaggeration: 0 };
+  const elevated = { ...empty, elevationSource };
   assertDocumentContractOracle({
-    name: "GIS Terrain", dependencies: [ioSchema, childSchema,artifactReferenceSchema],
+    name: "GIS Terrain", dependencies: [ioSchema, childSchema,artifactReferenceSchema,elevationSchema],
     artifact: { schema: artifactSchema, parse: value=>parseGisTerrainArtifact(foreignDocument(value)), nativeJson },
     snapshot: { schema: snapshotSchema, parse: value=>parseGisTerrainSnapshot(foreignDocument(value)), nativeJson },
     diff: { schema: diffSchema, parse: value=>parseGisTerrainDiff(foreignDiff(value)), nativeJson },
-    validDocuments: [{ input: vectors.document, output: vectors.document }, { input: empty, output: empty }],
+    validDocuments: [{ input: vectors.document, output: vectors.document }, { input: empty, output: empty }, { input: elevated, output: elevated }],
     invalidDocuments: vectors.invalidDocuments, invalidDiffs: vectors.invalidDiffs,
     mutationRoots: [join(import.meta.dir, "../../../🧪️tests/🧫️fixtures/🧬️mutations")],
-    committed: { snapshots: 4, diffs: 2 },
+    committed: { snapshots: 6, diffs: 3 },
   });
   assert.deepEqual(nativeJson(parseGisTerrainDiff(foreignDiff(vectors.diff))), vectors.diff);
   assert.deepEqual(parseGisTerrainDiff({}), { exaggeration: null, importedMap: null });

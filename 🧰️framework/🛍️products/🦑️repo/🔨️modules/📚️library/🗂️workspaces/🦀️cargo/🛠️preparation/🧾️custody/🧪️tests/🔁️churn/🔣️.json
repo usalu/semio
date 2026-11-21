@@ -1,0 +1,12 @@
+[
+  { "source": true, "effect": "edit", "status": 1, "signal": null, "retry": true },
+  { "source": true, "effect": "vanished", "status": 75, "signal": null, "retry": true },
+  { "source": false, "effect": "edit", "status": 1, "signal": null, "retry": false },
+  { "source": false, "input": "directory", "effect": "edit", "status": 1, "signal": null, "retry": true },
+  { "source": false, "input": "file", "effect": "vanished", "status": 75, "signal": null, "retry": true },
+  { "source": true, "effect": "cancel", "status": 1, "signal": null, "retry": false },
+  { "source": true, "effect": "edit", "status": null, "signal": "SIGTERM", "retry": false },
+  { "source": true, "effect": "edit", "status": 0, "signal": null, "retry": false },
+  { "source": true, "effect": "outside", "status": 1, "signal": null, "retry": false },
+  { "source": true, "effect": "invalid", "status": 1, "signal": null, "retry": false }
+]

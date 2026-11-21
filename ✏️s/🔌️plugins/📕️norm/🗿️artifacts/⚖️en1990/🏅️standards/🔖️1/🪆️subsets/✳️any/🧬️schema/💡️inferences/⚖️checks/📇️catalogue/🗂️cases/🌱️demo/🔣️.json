@@ -48,6 +48,10 @@
     "q_cov": 0.3,
     "q_mean": 2.0,
     "v_g": 0.1
+   },
+   "texts": {
+    "g_value_basis": "normal-bounds",
+    "q_value_basis": "annual-gumbel"
    }
   },
   "E90.09": {

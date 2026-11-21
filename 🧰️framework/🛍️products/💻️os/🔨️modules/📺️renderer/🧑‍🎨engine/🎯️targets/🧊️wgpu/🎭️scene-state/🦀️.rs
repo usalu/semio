@@ -119,7 +119,7 @@ pub struct SceneListTransferSession {
 }
 
 #[derive(Debug)]
-struct SceneListTransferAuthority {
+pub struct SceneListTransferAuthority {
     pub next_generation: u64,
     pub active: Option<SceneListTransferSession>,
 }

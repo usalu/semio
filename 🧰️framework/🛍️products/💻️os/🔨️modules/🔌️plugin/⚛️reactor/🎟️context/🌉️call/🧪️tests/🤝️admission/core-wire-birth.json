@@ -1,0 +1,19 @@
+{
+  "operation": 8853,
+  "generation": 1,
+  "now": 1,
+  "deadline": 10000000,
+  "fuel": 10000000,
+  "dispatchCopyBytes": [19, 23],
+  "grant": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 67108864,
+    "maximumReleaseBytes": 67108864,
+    "maximumDepth": 64
+  },
+  "expected": {
+    "publisherReadyOnFirstBorrow": true,
+    "receiptHasPhysicalEffects": true
+  }
+}

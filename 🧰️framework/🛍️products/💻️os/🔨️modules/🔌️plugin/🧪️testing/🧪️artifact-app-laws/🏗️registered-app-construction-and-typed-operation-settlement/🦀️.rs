@@ -365,11 +365,15 @@ pub fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: sem
     }
     if let Some((operation, grant, progress)) = app.take_typed_operation_preparation_receipt() {
         if grant.restricted_by(policy.preparation) != grant { return Err(semio_framework::Fault::from("registered fixture preparation receipt grant exceeds its original caller authority")); }
-        if !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture preparation receipt progress exceeds its original caller grant")); }
+        if !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() {
+            return Err(semio_framework::Fault::from(format!("registered fixture preparation receipt for {operation:?} exceeds its original grant: receipt {progress:?}, grant {grant:?}")));
+        }
         recipient.push(TypedOperationFixtureOwnershipReceipt::Preparation { operation, grant, progress });
     }
     if let Some((operation, grant, progress)) = app.take_typed_operation_retirement_receipt() {
-        if grant != policy.close || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture Close receipt differs from its original caller authority")); }
+        if grant.restricted_by(policy.close) != grant || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() {
+            return Err(semio_framework::Fault::from(format!("registered fixture Close receipt for {operation:?} exceeds its original authority: receipt {progress:?}, grant {grant:?}, policy {:?}", policy.close)));
+        }
         recipient.push(TypedOperationFixtureOwnershipReceipt::Retirement { operation, grant, progress });
     }
     if let Some((grant, progress)) = app.take_history_command_receipt() {
@@ -467,8 +471,11 @@ pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: s
     retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)?;
     while close_turn<maximum_turns {
         if app.close_terminal_is_empty() { return Ok(ownership_receipts); }
-        if cx.retirement_should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture close exhausted its caller opportunity").into())}
         let grant = fixture_close_grant(mounted_policy);
+        if semio_framework_job::testkit::return_source_pinned(cx).is_some() {
+            fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant)?;
+        }
+        if cx.retirement_should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture close exhausted its caller opportunity").into())}
         let demand = app.close_retirement_demands(grant.maximum_copy_bytes)?;
         let available = semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx, grant);
         last_quote = Some((demand, available, cx.fuel_remaining()));

@@ -1,0 +1,9 @@
+# Staffage Phone Audit
+
+- The phone route tree unmounts the catalog list when opening an asset and swaps trees across the mobile breakpoint (`🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🏠️overview/🟦️.tsx:311`). The scrollable `PageFrame` has no restoration in the routing module, so navigating back from a deep list or rotating across the breakpoint loses the list position. Verify with a long catalog, browser Back and rotation.
+- The viewer stage uses `touch-pan-y` while pointer capture implements both horizontal and vertical image pan (`🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🗺️stage/🟦️.tsx:98`). Vertical touch is handed to browser scrolling and the cancellation handler commits the partial drag. Verify deliberate page scroll and image panning on a real touch browser.
+- Existing grid-scroll feature scenarios and React tests simulate viewport and observer results; they do not verify real layout, scrolling, or gesture dispatch (`🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🥒️.feature`). Verify narrow portrait, short landscape, enlarged text, navigation and back with a browser.
+
+## Stage Swipe Investigation
+
+The stage declares `touch-pan-y touch-pinch-zoom` and cancels transient pan on `pointercancel`; the asset PageFrame is the intended `overflow-auto` scroll container. The timed-out browser probe waits only for an attached stage and dispatches eight CDP touch moves without pacing. Before attributing the failure to application behavior, wait for stable visible layout, pace moves over animation frames, and record computed touch-action, hit element, ancestor overflow and scroll ranges, initial and final scrollTop, and pointercancel. The stage and figure each also declare overflow hidden. The available source alone does not establish why the swipe did not scroll.

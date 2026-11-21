@@ -181,6 +181,7 @@ export type SessionWorkLedgerV1 = {
   readonly begin: (pluginId: string, instanceId: number, kind: SessionWorkKindV1) => () => void;
   readonly pending: (pluginId: string, instanceId: number) => number;
   readonly outstanding: (pluginId: string, instanceId: number) => string;
+  readonly subscribe: (listener: () => void) => () => void;
   readonly total: () => number;
 };
 
@@ -194,12 +195,15 @@ function sessionWorkKeyV1(pluginId: string, instanceId: number, kind: SessionWor
 
 export function createSessionWorkLedgerV1(): SessionWorkLedgerV1 {
   const counts = new Map<string, number>();
+  const listeners = new Set<() => void>();
   const kinds: readonly SessionWorkKindV1[] = ["typed-operation", "extension-invocation"];
   const at = (pluginId: string, instanceId: number, kind: SessionWorkKindV1): number => counts.get(sessionWorkKeyV1(pluginId, instanceId, kind)) ?? 0;
+  const notify = () => { for (const listener of listeners) listener(); };
   return {
     begin: (pluginId, instanceId, kind) => {
       const key = sessionWorkKeyV1(pluginId, instanceId, kind);
       counts.set(key, (counts.get(key) ?? 0) + 1);
+      notify();
       let released = false;
       return () => {
         if (released) return;
@@ -207,10 +211,15 @@ export function createSessionWorkLedgerV1(): SessionWorkLedgerV1 {
         const next = (counts.get(key) ?? 1) - 1;
         if (next <= 0) counts.delete(key);
         else counts.set(key, next);
+        notify();
       };
     },
     pending: (pluginId, instanceId) => kinds.reduce((sum, kind) => sum + at(pluginId, instanceId, kind), 0),
     outstanding: (pluginId, instanceId) => kinds.map((kind) => `${kind}=${at(pluginId, instanceId, kind)}`).join(" "),
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => { listeners.delete(listener); };
+    },
     total: () => [...counts.values()].reduce((sum, count) => sum + count, 0),
   };
 }
@@ -325,14 +334,14 @@ export type SessionAppSwitchPortsV1<TApp, TViewState> = {
  * view-state republish, without one it is a no-op that answers the live session. */
 export async function runSessionAppSwitchV1<TApp, TViewState>(
   ports: SessionAppSwitchPortsV1<TApp, TViewState>,
-  request: { readonly pluginId: string; readonly appId: string; readonly viewState?: TViewState },
+  request: { readonly pluginId: string; readonly appId: string; readonly viewState?: TViewState; readonly replaceCurrent?: boolean },
   onRetireFailed?: (session: SessionAppSwitchSessionV1<TApp, TViewState>, error: unknown) => void,
 ): Promise<SessionAppSwitchOutcomeV1<TApp, TViewState>> {
   const trace = ports.trace ?? (() => {});
   const app = ports.resolveApp(request.pluginId, request.appId);
   if (app === null) return { status: "unresolvable", session: ports.session, pending: 0 };
   const current = ports.session;
-  if (current !== null && current.pluginId === request.pluginId && ports.appId(current.app) === request.appId) {
+  if (!request.replaceCurrent && current !== null && current.pluginId === request.pluginId && ports.appId(current.app) === request.appId) {
     if (request.viewState === undefined) return { status: "unchanged", session: current, pending: 0 };
     const republished = { ...current, viewState: request.viewState };
     trace("publish", ports.appId(republished.app));
@@ -388,7 +397,7 @@ export type SessionAppSwitchGateV1<TApp, TViewState> = {
   readonly busy: () => boolean;
   readonly run: (
     ports: SessionAppSwitchPortsV1<TApp, TViewState>,
-    request: { readonly pluginId: string; readonly appId: string; readonly viewState?: TViewState },
+    request: { readonly pluginId: string; readonly appId: string; readonly viewState?: TViewState; readonly replaceCurrent?: boolean },
     onRetireFailed?: (session: SessionAppSwitchSessionV1<TApp, TViewState>, error: unknown) => void,
   ) => Promise<SessionAppSwitchOutcomeV1<TApp, TViewState>>;
 };

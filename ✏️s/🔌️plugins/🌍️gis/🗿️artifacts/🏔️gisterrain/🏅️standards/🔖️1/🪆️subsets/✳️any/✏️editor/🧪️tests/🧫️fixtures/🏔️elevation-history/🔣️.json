@@ -1,0 +1,9 @@
+{
+  "port": "elevation:in",
+  "schema": "gis.elevation-grid",
+  "resolution": 33,
+  "first": { "bounds": [7.1, 46.0, 7.2, 46.1], "heightMeters": 1250 },
+  "second": { "bounds": [7.1, 46.0, 7.2, 46.1], "heightMeters": 1600 },
+  "undo": [1250, null],
+  "redo": [1250, 1600]
+}

@@ -210,3 +210,43 @@ What the views show:
 - **No backdraft shutter or cable gland.** Not modelled. In the default pose `high` a shutter would stand open anyway.
 - **Area figures.** The 1:200 blades (0.044 against 0.0285) and the hub (+31 %) are high because the 30 mm floor thickens them. Only the 1:200 total is judged, at 10.8 %.
 - **Area corrections.** Both are within the factor 1.5 of C16 and are listed here, not in `area-review.md`.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-duct-fan-500.py` (new 1:500, uses the round-3 solid writers). Shared root fix: `r3-lib.ts cornerNormals` (see below).
+
+### Reference (model to) and model vs reference, 1:50
+
+| Quantity | Reference | Model | Deviation |
+|---|---|---|---|
+| Wall plate | 0.22 x 0.22 m, 12 mm ABS (DN 200 plate fan class: Maico EZQ/EZS, Vents 150 M scaled to DN 200) | 0.22 x 0.22 x 0.012 m | 0 % |
+| Duct spigot / bore | DN 200: 200 mm outside, thin wall | 200 mm, bore 195 mm, bead 208 mm | 0 % |
+| Depth over spigot | 90 mm (asset dimension) | 90 mm (bbox deviation 4 mm = the 4 mm proud screw caps) | within feature |
+| Throat / tip clearance | 1 to 2 mm | 176 mm throat, tips 1 mm inside | ok |
+| Blades | 5, pitch 35-40 deg root / 20-25 tip, 2-3 mm thick | 5, 38 -> 24 deg, 3.2 -> 2 mm, chord 40 -> 62 mm | ok |
+| External-rotor can | 60-70 mm | 68 mm | ok |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- (plate faces shaded with diagonal wedges by the sheet renderer) | A- / A- / A- |
+| 1:100 | B+ / A- / A- (same wedges) | A- / A- / A- |
+| 1:200 | B / B+ / B+ | B+ / B+ / B+ (unchanged solids; wedges gone) |
+| 1:500 | C+ / C+ / C+ (round-1 leftover: 12-gon bore, plank blades, 4 mm plate, boxy spider) | A- / A- / A- |
+
+Opened: body sheets 1:50, 1:100, 1:200, 1:500 (before and after), thermal cut and structure at every scale, poses `off`, `low` (three-quarter), clip `speed-steps` t 1 s (right), 2D 1:50, 1:100, 1:200.
+
+### Changes
+
+- 1:500 authored anew: rounded 0.22 m plate 12 mm with a true 32-sided 192 mm bore, housing tube to the duct end, a two-bar motor cross, the 80 mm can and three swept 8 mm blade planforms; thermal by reference with the outlet annulus; structure plate, tube, cross, can, one mass, pin and roller at the corner screws.
+- Root fix of the review tool: `r3-lib.ts cornerNormals` averaged every face at a welded vertex, so flat caps of extrudes with holes or fillets (this plate, many others) were shaded with light and dark wedges (open requests in `tool-requests.md`, 2026-11-19/20). Each corner now averages only the faces within the crease angle of its own face, area-weighted; flat caps are flat.
+
+### Checks
+
+`volumes-check.ts --product` PASS; `r3-validate.ts --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); spliced.
+
+### Remaining
+
+- 1:200 blades are three planforms through the 30 mm blade stage with visible tip gaps in the zoomed sheet (0.02 mm on paper): the drawing's abstraction, kept.
+- Supports at 1:100 to 1:500 are buried in the plate and show as z-fighting dots in the structure sheets (renderer).

@@ -430,5 +430,6 @@
       "poissonRatio": 1.35
     }
   ],
-  "criticalRegions": []
+  "criticalRegions": [],
+  "cases": []
 }

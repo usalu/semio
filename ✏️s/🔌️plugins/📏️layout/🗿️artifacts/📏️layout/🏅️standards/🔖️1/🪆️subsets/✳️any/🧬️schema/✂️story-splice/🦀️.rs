@@ -44,3 +44,37 @@ pub fn splice(story: &TextStory, offset: usize, delete: usize, insert: &str) -> 
     let (start, end) = (usize::try_from(start).ok()?, usize::try_from(end).ok()?);
     Some(TextStory { id: story.id.clone(), content: format!("{}{}{}", &story.content[..start], insert, &story.content[end..]), style_runs })
 }
+
+/// 🔁️ Finds the smallest contiguous replacement in Unicode scalar coordinates.
+pub fn replacement(content: &str, value: &str) -> Option<(usize, usize, String)> {
+    let mut prefix_bytes = 0;
+    let mut offset = 0;
+    for (old, new) in content.chars().zip(value.chars()) {
+        if old != new { break; }
+        prefix_bytes += old.len_utf8();
+        offset += 1;
+    }
+    let old = &content[prefix_bytes..];
+    let new = &value[prefix_bytes..];
+    if old.is_empty() && new.is_empty() { return None; }
+    let mut suffix_bytes = 0;
+    for (old, new) in old.chars().rev().zip(new.chars().rev()) {
+        if old != new { break; }
+        suffix_bytes += old.len_utf8();
+    }
+    let delete = old[..old.len() - suffix_bytes].chars().count();
+    Some((offset, delete, new[..new.len() - suffix_bytes].to_owned()))
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn replacement_matches_the_authored_scalar_cases() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+        for row in fixture["cases"].as_array().unwrap() {
+            let actual = super::replacement(row["before"].as_str().unwrap(), row["after"].as_str().unwrap());
+            let expected: Option<(usize, usize, String)> = serde_json::from_value(row["expected"].clone()).unwrap();
+            assert_eq!(actual, expected);
+        }
+    }
+}

@@ -59,6 +59,7 @@ pub enum NoteMutation {
     RemoveTableRow(RemoveTableRow),
     InsertTableColumn(InsertTableColumn),
     RemoveTableColumn(RemoveTableColumn),
+    EditTableCell(EditTableCell),
 }
 //#endregion 🔖️Mutations
 
@@ -91,6 +92,7 @@ pub use crate::standards::v1::subsets::ink::schema::mutations::change_eraser_rad
 pub use crate::standards::v1::subsets::ink::schema::mutations::change_pencil_width::ChangePencilWidth;
 pub use crate::standards::v1::subsets::ink::schema::mutations::edit_block_ink_stroke::EditBlockInkStroke;
 pub use crate::standards::v1::subsets::math::schema::mutations::edit_block_math::EditBlockMath;
+pub use crate::standards::v1::subsets::table::schema::mutations::edit_table_cell::EditTableCell;
 pub use crate::standards::v1::subsets::table::schema::mutations::insert_table_column::InsertTableColumn;
 pub use crate::standards::v1::subsets::table::schema::mutations::insert_table_row::InsertTableRow;
 pub use crate::standards::v1::subsets::table::schema::mutations::remove_table_column::RemoveTableColumn;
@@ -152,6 +154,7 @@ pub const KINDS: &[&str] = &[
     "remove-table-row",
     "insert-table-column",
     "remove-table-column",
+    "edit-table-cell",
 ];
 
 /// ↩️ `mutation`'s own inverse against `base`, as the step LIST `protocol::Mutation::inverse`
@@ -296,6 +299,11 @@ pub fn edit_block_math(id: String, new_tex: String) -> NoteMutation {
 /// 🏗️ Builder of the `edit_block_text` leaf for this aggregate; the leaf builder stays generic over its aggregate.
 pub fn edit_block_text(id: String, new_paragraphs: Vec<crate::NoteTextParagraph>) -> NoteMutation {
     crate::standards::v1::subsets::text::schema::mutations::edit_block_text::edit_block_text::<NoteMutation>(id, new_paragraphs)
+}
+
+/// 📋️ Replaces one table cell through the aggregate mutation.
+pub fn edit_table_cell(id: String, row: usize, column: usize, content: String) -> NoteMutation {
+    NoteMutation::EditTableCell(EditTableCell { id, row, column, content })
 }
 
 /// 🏗️ Builder of the `insert_table_column` leaf for this aggregate; the leaf builder stays generic over its aggregate.

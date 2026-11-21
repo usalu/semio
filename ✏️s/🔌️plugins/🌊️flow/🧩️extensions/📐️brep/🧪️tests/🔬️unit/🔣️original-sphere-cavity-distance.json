@@ -1,0 +1,28 @@
+{
+  "operator": "brep.measure.distance",
+  "shells": [
+    {
+      "kind": "sphere",
+      "origin": [0, 0, 0],
+      "radius": 5,
+      "void": { "center": [0.5, 0, 0], "radius": 2 },
+      "cases": [
+        { "name": "eccentric-cavity-center", "center": [0.5, 0, 0], "radius": 0.5, "expected": 1.5 },
+        { "name": "eccentric-cavity-offset", "center": [0.5, 1, 0], "radius": 0.5, "expected": 0.5 },
+        { "name": "cavity-tangent", "center": [0.5, 1.5, 0], "radius": 0.5, "expected": 0 },
+        { "name": "spherical-exterior", "center": [6, 0, 0], "radius": 0.5, "expected": 0.5 }
+      ]
+    },
+    {
+      "kind": "box",
+      "origin": [0, 0, 0],
+      "size": [6, 6, 6],
+      "void": { "center": [3, 3, 3], "radius": 1.5 },
+      "cases": [
+        { "name": "box-cavity-center", "center": [3, 3, 3], "radius": 0.5, "expected": 1 },
+        { "name": "box-exterior-edge", "center": [8, 7, 3], "radius": 0.5, "expected": 1.7360679774997898 },
+        { "name": "box-material-overlap", "center": [5.5, 3, 3], "radius": 0.5, "expected": 0 }
+      ]
+    }
+  ]
+}

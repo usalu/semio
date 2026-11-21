@@ -56,6 +56,49 @@ fn mathematical_pcg_and_original_native_job_share_neutral_outcomes() {
 }
 
 #[test]
+fn mounted_pcg_retains_its_checkpoint_and_matches_the_neutral_solution() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/❄️cold/🔣️.json")).unwrap();
+    let case = &fixture["cases"][0];
+    let rows = case["matrix"].as_array().unwrap();
+    let mut matrix = Coo::new(rows.len());
+    let mut rhs = MountedScalarSlots::new();
+    while !rhs.admit_one(rows.len(), NUMERICAL_OWNER_PAGE_BYTES).unwrap().0 {}
+    for (row, cells) in rows.iter().enumerate() {
+        for (column, value) in cells.as_array().unwrap().iter().enumerate() {
+            matrix.add(row, column, value.as_f64().unwrap());
+        }
+        rhs.push(case["rhs"][row].as_f64().unwrap()).unwrap();
+    }
+    let operation = test_operation(180_010);
+    let mut original = OriginalNumericalFixture::new(operation);
+    let mut construction = PcgJobConstruction::new_with_mounted_rhs(operation, matrix.to_csr(), rhs).ok().unwrap();
+    for _ in 0..256 {
+        if original.turn(TEST_GRANT, 4, u64::MAX, |cx| construction.step_funded(cx)).unwrap() { break; }
+    }
+    let mut job = construction.take_complete().expect("mounted PCG construction completes");
+    let mut checkpoints = 0;
+    let mut complete = false;
+    for _ in 0..1024 {
+        match original.step_seen(&mut job, TEST_GRANT, 4, u64::MAX) {
+            Seen::Checkpoint(_) => checkpoints += 1,
+            Seen::Complete(_) => { complete = true; break; }
+            Seen::Yield | Seen::Preview(_) => {}
+            Seen::Fault(_) | Seen::Cancelled => break,
+        }
+    }
+    let (solution, stats) = job.solution();
+    let solution: Vec<_> = solution.iter().copied().collect();
+    original.close(&mut job);
+    original.finish();
+    assert!(complete && stats.converged);
+    assert_eq!(checkpoints, 0);
+    assert_eq!(stats.iterations, case["iterations"].as_u64().unwrap() as usize);
+    for (index, value) in solution.into_iter().enumerate() {
+        assert!((value - case["solution"][index].as_f64().unwrap()).abs() < 1e-10);
+    }
+}
+
+#[test]
 fn pcg_matches_ldlt_and_dense_lu() {
     let n = 8;
     let edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 0), (0, 4), (2, 6)];

@@ -13,7 +13,7 @@ Feature: Apply every typed note document table mutation twice — once in Rust, 
   document shape — not only this subset's own members — because every scenario validates the whole
   document, not merely the fields this subset's own kinds write.
 
-  This subset owns a table block's rows and columns: `insert-table-row`/`insert-table-column` append BLANK cells, which is what makes their inverses exact against the committed trailing-blank vectors, and `remove-table-row`/`remove-table-column` drop the trailing row or column.
+  This subset owns a table block's rows and columns: `insert-table-row`/`insert-table-column` append BLANK cells, which is what makes their inverses exact against the committed trailing-blank vectors, and `remove-table-row`/`remove-table-column` drop the trailing row or column. `edit-table-cell` replaces the content at a row and column.
 
   @id-mutate
   @level-exhaustive
@@ -34,6 +34,7 @@ Feature: Apply every typed note document table mutation twice — once in Rust, 
       | remove-table-row    | ⬆️remove-table-row/⬆️drops     |
       | insert-table-column | ➡️insert-table-column/➡️appends |
       | remove-table-column | ⬅️remove-table-column/⬅️drops   |
+      | edit-table-cell     | ✍️edit-table-cell/🪶️changes      |
 
   @id-inverse
   @level-exhaustive
@@ -52,3 +53,4 @@ Feature: Apply every typed note document table mutation twice — once in Rust, 
       | remove-table-row    | ⬆️remove-table-row/⬆️drops     |
       | insert-table-column | ➡️insert-table-column/➡️appends |
       | remove-table-column | ⬅️remove-table-column/⬅️drops   |
+      | edit-table-cell     | ✍️edit-table-cell/🪶️changes      |

@@ -60,7 +60,7 @@ impl ReconstructionRunJob {
     /// ledger's provisional op count the writer continues from.
     pub fn new(identity: ToolRunIdentity, scene: Arc<RemodelingSnapshot>, checkpoint: Option<&[u8]>, provisional: u32) -> Self {
         let inputs = reconstruction_inputs(&scene);
-        let mut engine = Box::new(ReconstructionEngine::new(&build_engine_params(&scene.params, &scene.calibration)));
+        let mut engine = Box::new(ReconstructionEngine::new(&build_engine_params(&scene.params)));
         engine.observe();
         let mut writer = ToolRunTickWriter::with_provisional_base(identity, provisional);
         let resume = checkpoint.and_then(ReconstructionRunCheckpoint::decode).filter(|checkpoint| checkpoint.inputs == inputs && checkpoint.provisional_ops <= provisional);
@@ -216,7 +216,7 @@ impl ReconstructionRunJob {
                 EngineObservation::TracksBuilt { tracks } => self.step(ReconstructionRunReason::TracksBuilt, &[tracks as u64]),
                 EngineObservation::CameraRegistered { frame, pose } => {
                     self.count(ReconstructionRunCounter::Cameras, 1);
-                    let preview = camera_pose_preview(frame as u32, &pose);
+                    let preview = camera_pose_preview(frame as u64, &pose);
                     let [w, x, y, z] = preview.rotation_wxyz;
                     self.upsert(camera_trace_key(frame), ReconstructionRunReason::CameraRegistered, ToolRunTraceSubject::Instance3d { mesh: RECONSTRUCTION_TRACE_CAMERA_MESH, position: preview.translation, rotation: [x, y, z, w], scale: RECONSTRUCTION_TRACE_CAMERA_SCALE });
                     self.step(ReconstructionRunReason::CameraRegistered, &[frame as u64]);
@@ -257,7 +257,7 @@ impl ReconstructionRunJob {
     }
 
     /// 📥️ One bounded ingestion slice; `Some(reason)` once a frame verdict was taken.
-    pub(super) fn ingest(&mut self) -> Result<Option<(u64, ReconstructionRunReason)>, ()> {
+    pub(super) fn ingest(&mut self) -> Result<Option<(u64, u64, ReconstructionRunReason)>, ()> {
         let RunPhase::Ingest { stream, frame, ingestion } = &mut self.phase else { return Err(()) };
         let scene = self.scene.as_ref().ok_or(())?;
         let Some(current) = ingestion.as_mut() else {
@@ -272,16 +272,18 @@ impl ReconstructionRunJob {
                 return Ok(None);
             };
             let index = u64::from(frame_ref.index);
+            let entity = FrameCapture::entity(*stream as u32, frame_ref.index);
             *frame += 1;
             return Ok(match frame_ingestion(scene, frame_ref) {
                 Some(next) => {
                     *ingestion = Some(next);
                     None
                 }
-                None => Some((index, ReconstructionRunReason::FrameUnreadable)),
+                None => Some((entity, index, ReconstructionRunReason::FrameUnreadable)),
             });
         };
         let index = u64::from(current.frame.index);
+        let entity = FrameCapture::entity(*stream as u32, current.frame.index);
         if let Some(decoder) = current.decoder.as_mut() {
             match decoder.advance() {
                 BoundedDecodeProgress::Working => return Ok(None),
@@ -292,7 +294,7 @@ impl ReconstructionRunJob {
                 }
                 BoundedDecodeProgress::Failed(_) => {
                     *ingestion = None;
-                    return Ok(Some((index, ReconstructionRunReason::FrameUnreadable)));
+                    return Ok(Some((entity, index, ReconstructionRunReason::FrameUnreadable)));
                 }
             }
         }
@@ -304,9 +306,12 @@ impl ReconstructionRunJob {
         let pixels = image.width as usize * image.height as usize;
         let sharpness = if pixels == 0 { 0.0 } else { (done.sharpness_sum / pixels as f64) as f32 };
         let engine = self.engine.as_mut().ok_or(())?;
+        let stream_ref = &scene.streams[*stream];
+        let capture = FrameCapture { stream: *stream as u32, intrinsics: stream_intrinsics(&scene.calibration, stream_ref.camera_id.as_deref()) };
         Ok(Some((
+            entity,
             index,
-            match engine.push_frame_with_sharpness(done.frame.index, image, done.frame.timestamp_ms, sharpness) {
+            match engine.push_frame_with_sharpness(done.frame.index, image, done.frame.timestamp_ms + stream_ref.sync_offset_ms, sharpness, capture) {
                 FrameAcceptance::Accepted => ReconstructionRunReason::FrameAccepted,
                 FrameAcceptance::RejectedStride | FrameAcceptance::RejectedMaxFrames => ReconstructionRunReason::FrameSkipped,
                 FrameAcceptance::RejectedBlur => ReconstructionRunReason::FrameBlurred,
@@ -333,11 +338,11 @@ impl ReconstructionRunJob {
 
     fn advance_ingest(&mut self) -> Result<bool, &'static str> {
         match self.ingest() {
-            Ok(Some((frame, reason))) => {
+            Ok(Some((entity, frame, reason))) => {
                 self.frames_decided += 1;
                 let counter = if reason == ReconstructionRunReason::FrameAccepted { ReconstructionRunCounter::FramesAccepted } else { ReconstructionRunCounter::FramesRejected };
                 self.count(counter, 1);
-                self.upsert(frame_trace_key(frame), reason, ToolRunTraceSubject::Entity { entity: frame });
+                self.upsert(frame_trace_key(entity), reason, ToolRunTraceSubject::Entity { entity });
                 self.step(reason, &[frame]);
                 Ok(true)
             }

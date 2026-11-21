@@ -67,7 +67,7 @@ async fn original_export_read_returns_under_exact_physical_grants() {
     let read = issuer.snapshot_read().unwrap();
     let original = read.get() as *const DrawingSnapshot;
     let stock = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 128 };
-    let mut caller = OriginalJobFixtureCaller::admit(OperationId(0x44524558), Generation(issuer.generation().0), stock, || Some(0), u64::MAX, 1 << 24);
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(0x44524558), Generation(issuer.generation()), stock, || Some(0), u64::MAX, 1 << 24);
     let mut work = Work::new(Default::default(), Default::default());
     work.read = Some(read);
     work.begin_close();

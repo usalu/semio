@@ -79,6 +79,14 @@ pub use polygon_triangulation::{cross3, dot3, length3, newell_normal, sub3, tria
 mod tessellation_job_and_obj_export;
 pub use tessellation_job_and_obj_export::{MeshObjExport, MeshTessellationJob, MeshTessellationStep};
 
+#[path = "🧭️obj-channels/🦀️.rs"]
+mod obj_channels;
+pub use obj_channels::MeshObjChannels;
+
+#[path="📇️polygon-source-capture/🦀️.rs"]
+mod polygon_source_capture;
+pub use polygon_source_capture::{MeshPolygonSourceCapture,MeshPolygonSourceStep,reserve_polygon_backing};
+
 //#endregion Types
 
 //#region Primitives

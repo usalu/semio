@@ -1,5 +1,5 @@
 use semio_s_artifact_norm_en1991_checks::{part_1_4, part_2};
-use semio_s_artifact_norm_en1991_examples::example_subjects::{de_accidental_variants, de_bridge_compliant, de_fire_parametric_compliant, de_office_compliant, multi_fail_noncompliant};
+use semio_s_artifact_norm_en1991_examples::example_subjects::{de_accidental_variants, de_bridge_compliant, en_fire_parametric_compliant, de_office_compliant, multi_fail_noncompliant};
 use semio_s_artifact_norm_en1991_inferences::evaluate;
 use semio_s_artifact_norm_en1991_model::{AccidentalCase, AccidentalImpact, En1991Snapshot, FireMode, WindFace};
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckStatus};
@@ -31,7 +31,7 @@ async fn terrain_fire_curve_group_and_class_inputs_are_validated() {
     let mut doc = En1991Snapshot::example(AnnexChoice::De);
     doc.terrain_category = 9;
     assert_eq!(find(&evaluate(&doc), "en1991.input.terrainCategory").status, CheckStatus::Fail);
-    let mut fire = de_fire_parametric_compliant();
+    let mut fire = en_fire_parametric_compliant();
     fire.fire_mode = FireMode::Nominal;
     fire.fire_curve = semio_s_artifact_norm_en1991_model::part_1_2::FireCurve::Parametric;
     assert_eq!(find(&evaluate(&fire), "en1991.input.fireCurve").status, CheckStatus::Fail);
@@ -110,11 +110,23 @@ async fn zero_degrees_is_a_valid_temperature_input() {
 
 #[semio_framework_async_macros::async_test]
 async fn parametric_fire_reports_validity_and_uses_the_full_curve() {
-    let report = evaluate(&de_fire_parametric_compliant());
+    let report = evaluate(&en_fire_parametric_compliant());
     assert!(report.checks.iter().all(|c| c.status != CheckStatus::Fail), "{:?}", report.checks.iter().filter(|c| c.status == CheckStatus::Fail).map(|c| &c.id).collect::<Vec<_>>());
     let gas = find(&report, "en1991.1-2.gas-temperature");
     assert!(gas.computed.value > 700.0 + 273.15 && gas.computed.value < 1300.0 + 273.15);
     assert!(report.checks.iter().any(|c| c.id == "en1991.1-2.validity"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn german_parametric_fire_requires_dedicated_annex_models() {
+    let mut document = en_fire_parametric_compliant();
+    document.annex = AnnexChoice::De;
+    let report = evaluate(&document);
+    for (id, basis) in [("en1991.1-2.gas-temperature", "Annex AA"), ("en1991.1-2.fire-load", "Annex BB")] {
+        let check = find(&report, id);
+        assert_eq!(check.status, CheckStatus::NotApplicable);
+        assert_eq!(check.clause.section, basis);
+    }
 }
 
 #[semio_framework_async_macros::async_test]

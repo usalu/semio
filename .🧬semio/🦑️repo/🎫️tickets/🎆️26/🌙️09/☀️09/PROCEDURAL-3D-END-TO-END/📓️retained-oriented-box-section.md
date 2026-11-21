@@ -1,0 +1,14 @@
+# Retained Section for oriented and once-clipped boxes
+
+`brep.intersect.section` now accepts live world-axis Boxes, rectangular transformed Box certificates, and either half of a certified oblique Box Split. It produces one planar trimmed face with the requested normal, using exact intersections of the supporting plane and the stock's straight edges. A transverse plane may share original stock vertices or complete edges. Supporting contacts, a coincident Split cap, external planes and zero normals are refused.
+
+The geometry cursor visits 12 edges for rectangular stock and up to 15 for once-clipped stock. It uses fixed storage for up to 10 vertices and seven intersection points. Endpoint hits are shared, crossing points stay on the authored plane, and a result requires material on both sides. The authored normal determines loop orientation. The Flow continuation accounts each edge separately and retains the existing private polygon face staging and cancellation path. Native conic dispatch remains on its original path.
+
+## Evidence
+
+- `🔣️original-box-section.json` is shared by the independent Manifold/Three, compact Rust and registered Flow checks. Manifold independently transforms, clips and slices the solids. The oracle verifies three prior cases, rotated edge- and vertex-aligned cuts, an oblique rotated hexagon, a clipped rotated heptagon, and six refusal cases. It checks area, bounds, polygon size and volume on either side. The Section and adjacent Split oracles passed 15 tests and 241 assertions.
+- `🐍️oriented-box-section-source-check.py` compiles the production cursor, clipped geometry, transform certificates and Section provenance dispatch into a compact Rust proof. Both windings, support coplanarity, area, bounds, per-edge quote, contact and refusal passed across 20 Section tests and 19 shared regressions. The adjacent oblique Split compact suite passed all 21 tests.
+- The registered `original-brep-solids` Flow test runs Box → Rotate → Translate → Split → Section. It checks the one-member faces list, delayed live handle publication, one edge per turn, cancellation and exact topology, support, area and preview bounds. Managed Cargo execution of this target remains pending while the managed graph and Generation3d check hold shared capacity.
+- The canonical active Rust source measure passed Representation at 3,971 lines and 191,322 bytes, Construction at 3,890 and 195,894, Native Registry at 3,986 and 217,295, Solid Transaction at 3,783 and 196,026, Flow BRep at 2,796 and 151,488, and original-solids at 2,503 and 261,384. The active limits are 4,000 lines and 262,144 bytes per measured closure.
+
+This initial scope covers rectangular and once-clipped convex Box certificates. See [Retained Section of convex Boolean prisms](📓️retained-convex-prism-section.md) for the extension to convex prismatic Boolean results.

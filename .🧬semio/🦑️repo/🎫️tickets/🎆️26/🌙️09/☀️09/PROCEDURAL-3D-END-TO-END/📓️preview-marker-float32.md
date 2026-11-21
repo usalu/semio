@@ -1,0 +1,5 @@
+# Preview marker Float32 coordinates
+
+Point markers omit geometry when any coordinate overflows the renderer's Float32 representation. The edit, generate and view payloads already filter empty mesh results, so out-of-range points do not publish instances. A vector whose tip rounds to zero on every axis uses the same origin marker as an exact zero vector. Vectors with a representable nonzero component keep their direction, and plane normals continue to normalize in Float64.
+
+The neutral fixture includes 12 point, vector and plane cases, including the Float32 maximum, a finite Float64 value beyond that maximum, the smallest positive Float32 value and plane normals near both Float64 extremes. The isolated Rust run compiled the actual preview marker definitions. The previous implementation failed both point-overflow cases and the vector-underflow case. The updated code passed all 12. The independent Three.js check passed all 12 through Float32BufferAttribute and Vector3. The linked preview-eval fixture remains pending.

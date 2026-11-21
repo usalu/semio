@@ -236,6 +236,8 @@ def apply(asset):
         text("Track is a rigid simply supported slotted box beam between the pin on the west jamb head and the roller on the east jamb head; the leaf weight is transmitted through its two trolleys as a moving vertical load whose resultant acts at the carriage.", "Die Schiene ist ein starrer, frei aufliegender geschlitzter Kastenträger zwischen dem Festlager auf dem West- und dem Rollenlager auf dem Ostpfostenkopf; das Flügelgewicht wird über die zwei Laufwagen als wandernde Vertikallast übertragen, deren Resultierende am Wagen angreift."),
         text("Wind on the leaf is out of plane and is not represented in this elevation model; the floor guide takes only that out-of-plane restraint, the latch is not modelled.", "Winddruck auf den Flügel wirkt senkrecht zur Ebene und ist in diesem Ansichtsmodell nicht enthalten; die Bodenführung nimmt nur diese Querhalterung auf, der Riegel ist nicht modelliert."),
     ]
+    import runpy
+    runpy.run_path(os.path.join(os.path.dirname(__file__), "equipment-fine-ink.py"))["apply"](asset)
     return asset
 
 

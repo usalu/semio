@@ -1,9 +1,9 @@
 //! 🧰️ Dev-only support of the font crate family tests: authored font bytes and funded physical close with heap witnesses.
 use semio_framework_test_fixtures::fixture_path;
 use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneStep},work::RetainedWorkLedger,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,ValueError};
-use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet,invocation_extent,invoke_original};
 /// 🔤️ Reads one shipped font asset outline by its `🖼️assets/🔤️fonts` family path.
-pub fn bytes(font:&str)->Vec<u8>{let path=fixture_path!("../../../../../../..").join("🖼️assets/🔤️fonts").join(font).join("🔤️outline.ttf");std::fs::read(path).unwrap()}
+pub fn bytes(font:&str)->Vec<u8>{let path=fixture_path!("../../../../../..").join("🖼️assets/🔤️fonts").join(font).join("🔤️outline.ttf");std::fs::read(&path).unwrap_or_else(|error|panic!("font fixture {}: {error}",path.display()))}
 /// 🧹️ Closes one owner with single-item grants and returns the physically released bytes.
 pub fn close<T:RetireOwned>(value:T)->usize{close_with_items(value,1)}
 /// 🧮️ Closes one owner with `items`-item grants over one original effect bank, proving every step against the heap witness, and returns the released bytes.
@@ -26,6 +26,7 @@ pub fn close_with_items<T:RetireOwned>(value:T,items:usize)->usize{
   assert!(!physical.overflowed);
   assert_eq!(physical.requested_bytes,receipt.retained_capacity_bytes);
   assert_eq!(physical.released_bytes,receipt.released_bytes);
+  bank.post(receipt,grant,(physical.requested_bytes,physical.released_bytes));
   released+=physical.released_bytes;
  }
  assert!(owner.terminal_is_empty());
@@ -34,11 +35,21 @@ pub fn close_with_items<T:RetireOwned>(value:T,items:usize)->usize{
  released
 }
 fn turn<T:RetireOwned>(bank:&mut EffectBank,owner:&mut ControlledRetirement<T>,body:usize,grant:RetainedCloneGrant)->(RetainedCloneStep,semio_framework_trace::HeapAllocationObservation){
- let mut observed=None;
- let(poll,_)=bank.run(grant,WORK,|effect|{let(poll,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(body,effect));observed=Some(heap);poll});
+ let (extent,maximum)=invocation_extent(grant,WORK).unwrap();
+ let turn=bank.run_outcome(extent,maximum,|effect|{
+  let before=effect.performed_boundary();
+  let result=invoke_original(effect,Some((grant,WORK)),|effect|{
+   semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(body,effect))
+  });
+  RetainedWorkOutcome{result,work:effect.performed_since(before).unwrap()}
+ });
  assert_ne!(bank.take_admitted(),Some(false));
- let step=match poll{RetainedWorkPoll::Complete(turn)=>turn.result.unwrap_or_else(|_|panic!("font retirement step failed")),RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default())};
- (step,observed.expect("effect ran"))
+ let (poll,heap)=turn.result.unwrap();
+ let step=match poll{
+  RetainedWorkPoll::Complete(turn)=>turn.result.unwrap_or_else(|error|panic!("font retirement step failed with body {body} and grant {grant:?}: {error:?}")),
+  RetainedWorkPoll::Pending{..}=>panic!("font retirement stayed pending under its original invocation"),
+ };
+ (step,heap)
 }
 /// ⏱️ Fixture work ceiling every close turn may record.
 pub const WORK:u64=1<<20;

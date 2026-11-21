@@ -57,7 +57,7 @@ pub mod commands {
     pub mod work_app;
     #[path="🖼️pixel-edit/🦀️.rs"]
     pub mod pixel_edit;
-    pub use semio_s_artifact_raster_raster_editor_commands_2::commands::{add_layer, camera, delete_layer, drop_layer_kind, duplicate_layer, export_png, move_layer, patch_layer, patch_layers, set_active_example, set_brush_hardness, set_brush_size, set_layer_visible, set_paint_target, toggle_layer_visible};
+    pub use semio_s_artifact_raster_raster_editor_commands_2::commands::{add_layer, camera, delete_layer, drop_layer_kind, duplicate_layer, export_png, import_png, move_layer, patch_layer, patch_layers, set_active_example, set_brush_hardness, set_brush_size, set_layer_visible, set_paint_target, toggle_layer_visible};
 }
 //#endregion 🪢️TaxonomyMounts
 
@@ -104,6 +104,8 @@ semio_plugin::app_commands! {
         "setFilterAmount" as "filter-amount" => set_filter_amount::SetFilterAmount,
         "setImageGrid" as "image-grid" => set_image_grid::SetImageGrid,
         "selectPixels" as "select-pixels" => select_pixels::SelectPixels,
+        "importPng" as "import-png" => import_png::ImportPng,
+        "importPngFile" as "import-png-file" => import_png_file::ImportPngFile,
     }
 }
 
@@ -118,6 +120,8 @@ use crate::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer,
 use crate::commands::{set_brush_opacity, set_brush_size, set_brush_color, set_brush_hardness};
 use crate::commands::camera::{set_camera, set_camera_zoom};
 use crate::commands::set_composite_viewport;
+use crate::commands::import_png;
+use crate::commands::import_png::file as import_png_file;
 
 //#endregion 🔖️Commands
 

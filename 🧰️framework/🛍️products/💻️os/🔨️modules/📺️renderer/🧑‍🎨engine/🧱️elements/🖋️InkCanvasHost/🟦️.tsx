@@ -11,6 +11,7 @@ import { openSurfaceContextMenu, useShellContextMenuFallback, type SurfaceContex
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { cn, ContextMenuController, marqueeCoverageFromGesture, screenRectFromPoints, SelectionMarquee, surfaceClass } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
+import { useEffect } from "../⚛️react-port/🟦️.ts";
 import { CanvasPresenceOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";
 import { type InkTableItem, type InkTextItem } from "./🧾️ink-model/🟦️.ts";
 import { findInkItem, flattenInkItems, inkPresenceCanvasV1, worldToScreen } from "./📐️ink-geometry/🟦️.ts";
@@ -32,6 +33,13 @@ export function InkCanvasHost(props: ComponentSceneHostProps) {
   Object.assign(core, useInkPointer(core));
   Object.assign(core, useInkEditAndClipboard(core));
   const { atomicGesture, commitTableEdit, commitTextEdit, contextMenu, contextMenuTitleLabel, doc, emptySceneLabel, handleBlockPointerDown, handleContextMenu, handleCopy, handleDoubleClick, handlePaste, handlePointerCancel, handlePointerDown, handlePointerDownCapture, handlePointerMove, handlePointerUp, handleResizePointerDown, handleWheel, hoveredId, isNavigator, localPresenceActor, marqueePoints, node, presencePointerRef, presenceWindowId, publishInkPresenceView, releaseContact, rootRef, scene, selectedIds, selectionBounds, setContextMenu, setTableEdit, setTextEdit, showResizeHandles, tableEdit, textEdit , presenceRuntimeKey } = core;
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || isNavigator) return;
+    root.addEventListener("wheel", handleWheel, { passive: false });
+    return () => root.removeEventListener("wheel", handleWheel);
+  }, [handleWheel, isNavigator, rootRef]);
 
   if (!scene || !doc) return <div className="text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
 
@@ -66,7 +74,6 @@ export function InkCanvasHost(props: ComponentSceneHostProps) {
       onPointerCancel={(event) => {
         if (releaseContact(event.pointerId)) handlePointerCancel();
       }}
-      onWheel={handleWheel}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
       onCopy={handleCopy}

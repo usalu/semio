@@ -7,6 +7,7 @@ use std::sync::Arc;
 #[cfg(any(test, feature = "testkit"))]
 use std::sync::Mutex;
 use semio_framework_dispatch_macros::dyn_enum;
+pub use semio_framework::ViewModel;
 use semio_framework_value::DslValue;
 use semio_framework_value::ValueError;
 use serde::Deserialize;
@@ -92,7 +93,7 @@ pub struct ActionTarget {
 #[derive(Clone, Debug, PartialEq)]
 pub enum AppCommand {
     ReadHistory,
-    PureCommand { capability_id: String, input: serde_json::Value, view_state: Option<semio_framework::ViewModel> },
+    PureCommand { capability_id: String, input: serde_json::Value, view_state: Option<ViewModel> },
     TransactionPrepare { txn_id: String, ops: PreparedOps, origin: MutationOrigin },
     TransactionCommit { txn_id: String },
     TransactionRollback { txn_id: String },
@@ -818,7 +819,7 @@ pub struct InvokeRequest {
     pub expected_revision: Option<RevisionStamp>,
     pub idempotency_key: Option<String>,
     pub approval_handle: Option<String>,
-    pub context: Option<semio_framework::ViewModel>,
+    pub context: Option<ViewModel>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]

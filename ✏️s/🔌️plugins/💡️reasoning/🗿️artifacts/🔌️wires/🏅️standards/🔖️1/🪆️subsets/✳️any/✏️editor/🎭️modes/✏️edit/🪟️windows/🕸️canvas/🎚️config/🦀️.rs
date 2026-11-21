@@ -45,7 +45,17 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Wires
 
 }
 
-impl store::ConfigRecord for WiresCanvasWindowConfig {}
+impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for WiresCanvasWindowConfig {
+    type Receiving = store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+
+    fn original_pack_birth_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self::Receiving>(), depth: 1, ..Default::default() }
+    }
+
+    fn admit_original_pack(source: &[u8], limits: protocol::PackLimits, native: &semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant) -> Result<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        Self::Receiving::admit(source, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), limits, native, grant)
+    }
+}
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
@@ -82,6 +92,18 @@ impl semio_plugin::WindowConfigOwner for WiresCanvasWindowConfigOwner {
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
         semio_plugin::bounded_window_config_preparation_factory::<Self>()
     }
+    fn native_pair_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_plugin::window_config_native_pair_demands::<Self::State>())
+    }
+    fn admit_native_pair(pack: &[u8], spr: &[u8], pack_limits: protocol::PackLimits, history_limits: store::os_store::codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits, native: &mut semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant, output: &mut Option<Box<dyn semio_plugin::WindowConfigNativePairReceiving<Self::State>>>) -> Result<semio_framework_value::RetainedCloneProgress, store::os_store::codec_registry::native_snapshot::OriginalArtifactPairFailure> {
+        semio_plugin::admit_window_config_native_pair::<Self::State>(pack, spr, pack_limits, history_limits, native, grant, output)
+    }
+    fn native_operation_wire() -> store::os_store::ArtifactOperationWire<Self::Mutation> {
+        store::os_store::ArtifactOperationWire::canonical().with_original_receiving()
+    }
+    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_plugin::bounded_window_config_store_disposer_birth::<Self>()
+    }
     fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
         semio_plugin::bounded_window_config_store_disposer::<Self>()
     }
@@ -105,3 +127,7 @@ pub fn addressed(view: &semio_plugin::ViewModel, mutation: WiresCanvasWindowConf
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

@@ -30,7 +30,7 @@ for (const s of S.body) {
 if (scale >= 200) for (const region of ["beak", "cere", "eye"]) S.thermal.push({ id: `th-${region}-head`, of: "head", region });
 if (scale >= 200) {
   const from = S.body.length;
-  S.ell("th-breath-nostril", "head", H(S, scale === 200 ? 0.024 : 0.022, 0.003), scale === 200 ? [0.0146, 0.0146, 0.0146] : [0.014, 0.014, 0.014], { material: "cere-wax", tone: 0.2 });
+  S.ell("th-breath-nostril", "head", H(S, scale === 200 ? 0.024 : 0.022, 0.003), scale === 200 ? [0.0152, 0.0152, 0.0152] : [0.014, 0.014, 0.014], { material: "cere-wax", tone: 0.2 });
   S.toThermal(from, "plumage-neck-head", ["emitter", "breath-nostril"]);
 } else
   for (const sd of [-1, 1] as const) {

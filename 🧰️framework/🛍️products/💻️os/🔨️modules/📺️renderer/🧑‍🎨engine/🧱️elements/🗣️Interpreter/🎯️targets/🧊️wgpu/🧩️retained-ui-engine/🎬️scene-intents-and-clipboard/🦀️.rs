@@ -207,14 +207,19 @@ pub fn write_os_clipboard(text: &str, _input: &mut semio_ui_wgpu_input::InputSta
 struct ClipboardInvocationInput { original:semio_framework_job::OriginalCallerSourceLoan,source:semio_ui_wgpu_input::ClipboardIntentSource,recipient:semio_ui_wgpu_input::ClipboardIntentRecipient,slot:u8,generation:u64 }
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
+type ClipboardJob = semio_ui_wgpu_hosting::host::ClipboardIoJob;
+#[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
+type ClipboardSession = semio_framework_job_worker::WorkerJobSession<ClipboardJob>;
+
+#[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 struct MountedClipboardIo {
     invocation:ClipboardInvocationInput,
-    initializer:semio_ui_wgpu_hosting::host::ClipboardIoJobInitializer,
+    job:Option<ClipboardJob>,
     pub params:Option<semio_framework_job_worker_authority::BatchJobParams>,
     parameter_cancel:Option<semio_framework_async::CancelTokenRetirement>,
-    preparation:Option<semio_framework_job_worker::WorkerJobSessionPreparation<semio_ui_wgpu_hosting::host::ClipboardIoJob>>,
-    session:Option<semio_framework_job_worker::WorkerJobSession<semio_ui_wgpu_hosting::host::ClipboardIoJob>>,
-    pub outcome:Option<semio_framework_job_worker::WorkerJobOutcome<semio_ui_wgpu_hosting::host::ClipboardIoJob>>,
+    admission:semio_framework_job_worker::WorkerJobSessionAdmission<ClipboardJob, ClipboardSession>,
+    session:Option<ClipboardSession>,
+    pub outcome:Option<semio_framework_job_worker::WorkerJobOutcome<ClipboardJob>>,
     pub copied:Option<String>,
     delivered:bool,
     closing:bool,
@@ -230,12 +235,6 @@ static MOUNTED_CLIPBOARD_IO:WorkerCell<[MountedClipboardSlot;32]>=WorkerCell::ne
 fn clipboard_refusal(message:&'static str)->semio_framework_job::OriginalTurnFailure {semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message).into()}
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-fn clipboard_demand_failure(error:semio_framework_job_worker::WorkerJobDemandError)->semio_framework_job::OriginalTurnFailure{match error{semio_framework_job_worker::WorkerJobDemandError::Refused(error)=>error.into(),semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>clipboard_refusal("clipboard original demand remains checked out")}}
-
-#[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-fn clipboard_alias_failure(error:semio_framework_async::CancelTokenRetirementError)->semio_framework_job::OriginalTurnFailure{match error{semio_framework_async::CancelTokenRetirementError::Refused(error)=>error.into(),semio_framework_async::CancelTokenRetirementError::Blocked(_)=>clipboard_refusal("clipboard original cancellation alias remains borrowed")}}
-
-#[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 pub fn validate_clipboard_source(source:semio_ui_wgpu_input::ClipboardIntentSource,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if source.operation!=cx.operation()||source.generation!=cx.generation()||!cx.original_source_epoch().is_some_and(|epoch|epoch>=source.epoch){return Err(clipboard_refusal("clipboard intent requires its actual initiating source and authenticated incoming epoch"))}Ok(())}
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
@@ -246,8 +245,8 @@ pub fn submit_clipboard_io(source:&mut Option<semio_ui_wgpu_input::OriginalClipb
         if !cx.original_source_parent()?.admit_loan(&mut slot.pending_source,cx)?{return Ok(false)}
         let original=slot.pending_source.take().expect("admitted original clipboard source");
         let intent=source.take().expect("admitted original clipboard intent");let invocation:ClipboardInvocationInput=ClipboardInvocationInput{original,source:intent.source,recipient:intent.recipient,slot:index as u8,generation:slot.generation+1};
-        let initializer=match intent.text{Some(text)=>semio_ui_wgpu_hosting::host::ClipboardIoJobInitializer::write(text),None=>semio_ui_wgpu_hosting::host::ClipboardIoJobInitializer::read()};
-        slot.generation=invocation.generation;slot.mounted=Some(MountedClipboardIo{invocation,initializer,params:None,parameter_cancel:None,preparation:None,session:None,outcome:None,copied:None,delivered:false,closing:false});
+        let job = match intent.text { Some(text) => ClipboardJob::write(text), None => ClipboardJob::read() };
+        slot.generation=invocation.generation;slot.mounted=Some(MountedClipboardIo{invocation,job:Some(job),params:None,parameter_cancel:None,admission:Default::default(),session:None,outcome:None,copied:None,delivered:false,closing:false});
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_bytes:bytes,..Default::default()})?;Ok(true)
     })
 }
@@ -264,8 +263,9 @@ pub fn deliver_clipboard_recipient(recipient:&semio_ui_wgpu_input::ClipboardInte
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 pub fn pump_clipboard_io_one(input:&mut semio_ui_wgpu_input::InputState<ActionDescriptor>,cx:&mut semio_framework_job::StepContext<'_>,cleanup:bool)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-    use semio_framework_job::{InteractiveJob};
-use semio_framework_job_worker::{WorkerJobPoll as Poll};use semio_framework_job_worker_authority::{WorkerJobInitializer};
+    use semio_framework_job::{InteractiveJob, close_original_retained_step, receive_original_retained_work};
+    use semio_framework_job_worker::{WorkerJobDemandError, WorkerJobPoll as Poll};
+    use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError};
     MOUNTED_CLIPBOARD_IO.with(|cell|{let mut slots=cell.borrow_mut();
         if let Some(slot)=slots.iter_mut().find(|slot|slot.pending_source.as_ref().is_some_and(|loan|loan.validate_retirement_context(cx).is_ok())){
             let loan=slot.pending_source.as_mut().expect("retained clipboard source");
@@ -277,37 +277,114 @@ use semio_framework_job_worker::{WorkerJobPoll as Poll};use semio_framework_job_
         let owner=slot.mounted.as_mut().unwrap();validate_clipboard_source(owner.invocation.source,cx)?;if owner.invocation.slot as usize!=index||owner.invocation.generation!=slot.generation{return Err(clipboard_refusal("clipboard recipient generation changed before original acknowledgement"))}if !owner.invocation.original.terminal_is_empty(){owner.invocation.original.validate_context(cx)?;}
         if cx.should_yield(){return Ok(true)}if cleanup||cx.is_cancelled(){owner.closing=true;}
         if owner.closing {
-            if let Some(outcome)=owner.outcome.as_mut(){let step=outcome.acknowledge_outcome(cx.retained_grant());cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if outcome.outcome_descriptor().is_some(){return Ok(true)}owner.outcome.take().unwrap().begin_close();return Ok(true)}
-            if let Some(session)=owner.session.as_mut(){session.begin_close();if session.has_original_cancel_alias_witness(cx.original_cancel_token()).map_err(clipboard_demand_failure)?{if let Some(step)=cx.with_original_effect(cx.retained_grant(),|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn).map_err(clipboard_demand_failure)?{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);return Ok(true)}}let _=session.close_step(cx)?;if session.terminal_is_empty(){owner.session=None;}return Ok(true)}
-            if let Some(preparation)=owner.preparation.as_mut(){preparation.begin_close();let _=preparation.close_step(&mut owner.initializer,cx)?;if preparation.terminal_is_empty(){owner.preparation=None;}return Ok(true)}
-            if !owner.initializer.partial_terminal_is_empty(){let demand=owner.initializer.partial_retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|unsafe{owner.initializer.close_partial_step(std::ptr::null_mut(),grant)})?;return Ok(true)}
-            if owner.params.is_some(){if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(true)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);let params=owner.params.take().unwrap();owner.parameter_cancel=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(true)}
-            if let Some(cancel)=owner.parameter_cancel.as_mut(){let step=cx.with_original_effect(cx.retained_grant(),|cx,effect|cancel.return_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn).map_err(clipboard_alias_failure)?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if cancel.terminal_is_empty(){owner.parameter_cancel=None;}return Ok(true)}
+            if let Some(outcome) = owner.outcome.as_mut() {
+                if outcome.acknowledge_outcome(cx)? {
+                    owner.outcome.take().unwrap().begin_close();
+                }
+                return Ok(true);
+            }
+            if let Some(session) = owner.session.as_mut() {
+                session.begin_close();
+                match session.has_original_cancel_alias_witness(cx.original_cancel_token()) {
+                    Ok(true) => {
+                        if let Some((turn, _)) = cx.with_original_effect(cx.retained_grant(), |cx,effect| session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))? {
+                            let result = match turn.result {
+                                Ok(Some(step)) => Ok(step),
+                                Ok(None) | Err(WorkerJobDemandError::Contention(_)) => Ok(RetainedCloneStep::Progress(Default::default())),
+                                Err(WorkerJobDemandError::Refused(error)) => Err(error),
+                            };
+                            receive_original_retained_work(cx,RetainedWorkOutcome { result, work:turn.work })?;
+                        }
+                        return Ok(true);
+                    }
+                    Ok(false) => {}
+                    Err(WorkerJobDemandError::Contention(_)) => return Ok(true),
+                    Err(WorkerJobDemandError::Refused(error)) => return Err(error.into()),
+                }
+                session.close_step(cx)?;
+                if session.terminal_is_empty() { owner.session=None; }
+                return Ok(true);
+            }
+            if !owner.admission.terminal_is_empty() {
+                owner.admission.close_step(cx)?;
+                return Ok(true);
+            }
+            if let Some(job) = owner.job.as_mut() {
+                job.begin_close();
+                if job.terminal_is_empty() {
+                    let demand = RetirementDemand { copy_bytes: std::mem::size_of::<Option<ClipboardJob>>(), depth:1, ..Default::default() };
+                    close_original_retained_step(cx,demand,|_| {
+                        owner.job = None;
+                        RetainedWorkOutcome { result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1, copied_bytes:demand.copy_bytes, ..Default::default() })), work:1 }
+                    })?;
+                } else {
+                    job.close_step(cx)?;
+                }
+                return Ok(true);
+            }
+            if owner.params.is_some() {
+                let grant=cx.retained_grant();
+                if grant.maximum_items==0||grant.maximum_depth==0 { return Ok(true); }
+                let params=owner.params.take().unwrap();
+                owner.parameter_cancel=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));
+                receive_original_retained_work(cx,RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;
+                return Ok(true);
+            }
+            if let Some(cancel) = owner.parameter_cancel.as_mut() {
+                if let Some((turn,_)) = cx.with_original_effect(cx.retained_grant(), |cx,effect| cancel.return_alias_step(cx.original_cancel_token(),effect))? {
+                    let result = match turn.result {
+                        Ok(step) => Ok(step),
+                        Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => Ok(RetainedCloneStep::Progress(Default::default())),
+                        Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(error),
+                    };
+                    receive_original_retained_work(cx,RetainedWorkOutcome { result, work:turn.work })?;
+                }
+                if cancel.terminal_is_empty() { owner.parameter_cancel=None; }
+                return Ok(true);
+            }
             let release=match &owner.invocation.recipient{semio_ui_wgpu_input::ClipboardIntentRecipient::Write(window)|semio_ui_wgpu_input::ClipboardIntentRecipient::Window(window)=>window.capacity(),_=>0}+owner.copied.as_ref().map_or(0,String::capacity);
             if release>0{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth<2||grant.maximum_release_bytes<release{return Ok(true)}drop(std::mem::replace(&mut owner.invocation.recipient,semio_ui_wgpu_input::ClipboardIntentRecipient::Write(String::new())));drop(owner.copied.take());cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})?;cx.consume_fuel(1);return Ok(true)}
             if !owner.invocation.original.terminal_is_empty(){let parent=cx.original_source_parent()?;let _=owner.invocation.original.close_step(parent,cx)?;return Ok(true)}
             if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(true)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);slot.mounted=None;return Ok(true)
         }
         if owner.session.is_none(){
-            if owner.params.is_none(){let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(true)};cx.consume_fuel(1);owner.params=Some(semio_framework_job_worker_authority::BatchJobParams{operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig{retained:cx.retained_grant(),site:"renderer_original_clipboard",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:cx.deadline_us().saturating_sub(cx.now_us().unwrap_or(cx.deadline_us()))},now_us:cx.clock_source()});return Ok(true)}
-            if owner.preparation.is_none(){if let Some((preparation,_))=semio_framework_job_worker::WorkerJobSessionPreparation::try_begin(&mut owner.initializer,&mut owner.params,cx)?{owner.preparation=Some(preparation);cx.consume_fuel(1)}return Ok(true)}
-            let(session,progress)=owner.preparation.as_mut().unwrap().advance(&mut owner.initializer,&mut owner.params,cx)?;cx.consume_fuel(progress.copied_items as u64);if let Some(session)=session{owner.session=Some(session);owner.preparation=None;}return Ok(true)
+            if owner.params.is_none() && owner.admission.terminal_is_empty() {
+                let mut cancel = None;
+                let admitted = cx.admit_original_cancel_alias(&mut cancel);
+                owner.params = cancel.map(|cancel| semio_framework_job_worker_authority::BatchJobParams {
+                    operation:cx.operation(),
+                    generation:cx.generation(),
+                    cancel,
+                    config:semio_framework_job_worker_authority::BatchDriveConfig {
+                        retained:cx.retained_grant(),
+                        site:"renderer_original_clipboard",
+                        stage:semio_framework_job::InteractiveStage::InteractiveStep,
+                        fuel_per_step:cx.fuel_remaining(),
+                        step_budget_us:cx.deadline_us().saturating_sub(cx.now_us().unwrap_or(cx.deadline_us())),
+                    },
+                    now_us:cx.clock_source(),
+                });
+                admitted?;
+                return Ok(true);
+            }
+            owner.admission.advance(&mut owner.job,&mut owner.params,&mut owner.session,cx)?;
+            return Ok(true);
         }
         let session=owner.session.as_mut().unwrap();
         if owner.outcome.is_none(){match session.poll(){Poll::Idle=>{if let Some((ticket,kind))=session.try_step_on_original_caller(cx)?{let _=session.take_retained_step_receipt().map_err(|_|clipboard_refusal("clipboard original callback receipt remains checked out"))?;owner.outcome=Some(if kind==Poll::Terminal{session.take_terminal()}else{session.take_outcome(ticket)}.map_err(|_|clipboard_refusal("clipboard original outcome remains owned by its producer"))?);}return Ok(true)},Poll::Closing=>{owner.closing=true;return Ok(true)},Poll::TerminalEmpty=>{owner.session=None;owner.closing=true;return Ok(true)},_=>return Ok(true)}}
         let outcome=owner.outcome.as_mut().unwrap();
         if !owner.delivered&&outcome.outcome_descriptor().is_some_and(|descriptor|descriptor.is_acknowledged()){
-            let terminal=outcome.outcome_descriptor().unwrap().is_terminal();let step=outcome.acknowledge_outcome(cx.retained_grant());cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if outcome.outcome_descriptor().is_some(){return Ok(true)}let original=owner.outcome.take().unwrap();if terminal{original.begin_close();owner.closing=true;}else if let Err(original)=original.resume(){owner.outcome=Some(original);return Err(clipboard_refusal("clipboard acknowledged original yield remains checked out"))}return Ok(true)
+            let terminal=outcome.outcome_descriptor().unwrap().is_terminal();let acknowledged=outcome.acknowledge_outcome(cx)?;if !acknowledged{return Ok(true)}let original=owner.outcome.take().unwrap();if terminal{original.begin_close();owner.closing=true;}else if let Err(original)=original.resume(){owner.outcome=Some(original);return Err(clipboard_refusal("clipboard acknowledged original yield remains checked out"))}return Ok(true)
         }
         if !owner.delivered{
             let Some(view)=outcome.outcome()?else{let original=owner.outcome.take().unwrap();if let Err(original)=original.resume(){owner.outcome=Some(original);return Err(clipboard_refusal("clipboard yielding original outcome refused resumption"))}return Ok(true)};
-            let result=match &view{semio_framework_job::JobOutcomeView::Yield{..}=>{let step=outcome.acknowledge_outcome(cx.retained_grant());cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if outcome.outcome_descriptor().is_some(){return Ok(true)}let original=owner.outcome.take().unwrap();if let Err(original)=original.resume(){owner.outcome=Some(original);return Err(clipboard_refusal("clipboard acknowledged yield refused original resumption"))}return Ok(true)},semio_framework_job::JobOutcomeView::Complete{..}=>{
+            let result=match &view{semio_framework_job::JobOutcomeView::Yield{..}=>{let acknowledged=outcome.acknowledge_outcome(cx)?;if !acknowledged{return Ok(true)}let original=owner.outcome.take().unwrap();if let Err(original)=original.resume(){owner.outcome=Some(original);return Err(clipboard_refusal("clipboard acknowledged yield refused original resumption"))}return Ok(true)},semio_framework_job::JobOutcomeView::Complete{..}=>{
                 match semio_ui_wgpu_hosting::host::ClipboardIoJob::read_candidate(&view){Some(semio_ui_wgpu_hosting::host::ClipboardContentBorrow::Text(text))=>{
                     let grant=cx.retained_grant();if owner.copied.is_none(){if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<text.len(){return Ok(true)}let copied=String::with_capacity(text.len());let capacity=copied.capacity();cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;cx.consume_fuel(1);owner.copied=Some(copied);return Ok(true)}
                     let copied=owner.copied.as_mut().unwrap();if copied.len()<text.len(){let grant=cx.retained_grant();let mut end=(copied.len()+grant.maximum_copy_bytes).min(text.len());while !text.is_char_boundary(end){end-=1}let bytes=end-copied.len();if grant.maximum_items==0||grant.maximum_depth==0||bytes==0{return Ok(true)}copied.push_str(&text[copied.len()..end]);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(true)}Ok(Some(semio_ui_wgpu_hosting::host::ClipboardContent::Text(owner.copied.take().unwrap())))},Some(semio_ui_wgpu_hosting::host::ClipboardContentBorrow::ImageRgba8{..})=>Err(semio_ui_action::BoundedActionFault::Structure),None=>Ok(None)}},_=>Err(semio_ui_action::BoundedActionFault::Structure)};
             if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(true)}deliver_clipboard_recipient(&owner.invocation.recipient,result,input);owner.delivered=true;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(true)
         }
-        let step=outcome.acknowledge_outcome(cx.retained_grant());cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if outcome.outcome_descriptor().is_none(){owner.outcome.take().unwrap().begin_close();owner.closing=true;}Ok(true)
+        let acknowledged=outcome.acknowledge_outcome(cx)?;if acknowledged{owner.outcome.take().unwrap().begin_close();owner.closing=true;}Ok(true)
     })
 }
 

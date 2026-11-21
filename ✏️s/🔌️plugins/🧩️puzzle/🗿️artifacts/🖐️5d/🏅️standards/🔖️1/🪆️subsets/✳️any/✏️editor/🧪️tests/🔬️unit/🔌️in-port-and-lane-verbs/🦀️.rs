@@ -24,8 +24,8 @@ async fn kit_in_retained_import_media_dispatches_the_exact_factory_and_applies_c
         "kindCompatibility": [{ "source": "retained-door", "target": "retained-door", "bidirectional": true }],
     });
     let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
-    let result = semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", media, &meta("local"), app.1.cx()).await.expect("retained kit:in dispatch");
-    assert!(!result.mutations.is_empty(), "exact retained import must publish document mutations");
+    let mut operation = mount_original_import(&mut app, "kit:in", media).await;
+    finish_original_import(&mut app, "kit:in", &mut operation).await.expect("retained kit:in dispatch");
     let after = projection_of(&app);
     assert_ne!(after, before, "exact retained import must apply its completion output");
     let snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&after.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("retained projection deserializes");
@@ -43,20 +43,24 @@ async fn kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_d
     let maximum = format!("{prefix}{label}{suffix}");
     assert_eq!(maximum.len(), PUZZLE5D_IMPORT_MEDIA_BYTES);
     let mut app = app_with_registry();
+    let before = projection_of(&app);
     let exact = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: maximum.clone() } };
-    semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", exact, &meta("local"), app.1.cx()).await.expect("exact media maximum retained dispatch");
+    let mut operation = mount_original_import(&mut app, "kit:in", exact).await;
+    finish_original_import(&mut app, "kit:in", &mut operation).await.expect("exact media maximum retained dispatch");
     let after_exact = projection_of(&app);
+    assert_ne!(after_exact, before, "exact media maximum applies the catalog edit");
     let plus_one = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: format!("{maximum} ") } };
-    let error = semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", plus_one, &meta("local"), app.1.cx()).await.expect_err("media maximum plus one must fail before Serde");
-    assert!(error.message.contains("predecode cap"), "the plus-one refusal must be the predecode cap, got {:?} {:?}", error.code, error.message);
+    let mut operation = mount_original_import(&mut app, "kit:in", plus_one).await;
+    let error = finish_original_import(&mut app, "kit:in", &mut operation).await.expect_err("media maximum plus one must fail before decoding");
+    assert!(format!("{error:?}").contains("predecode cap"), "the plus-one refusal must be the predecode cap, got {error:?}");
     assert_eq!(projection_of(&app), after_exact, "rejected plus-one media must not mutate the document");
 }
 
 /// 🔌️ The flagship `kit:in` seam: feeding a `kit.catalog` fragment shaped exactly like
 /// block3d's `puzzle3d_catalog_fragment` (`objectKinds`/`vortexKinds`, camelCase) through
-/// `Puzzle5dPlayApp::import_media` must normalize `objectKinds` into the typed
+/// the mounted media producer must normalize `objectKinds` into the typed
 /// `kindCatalogs.parts` (with each per-object `vortices[]` entry becoming a grip template) and
-/// `vortexKinds` into `kindCatalogs.grips`, and land both after applying the returned operations.
+/// `vortexKinds` into `kindCatalogs.grips`, and publish both in the document.
 #[semio_framework_async_macros::async_test]
 async fn kit_in_retained_import_media_upserts_part_and_grip_kinds_into_kind_catalogs() {
     let mut app = app_with_registry();
@@ -76,9 +80,11 @@ async fn kit_in_retained_import_media_upserts_part_and_grip_kinds_into_kind_cata
     });
     let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
-    let result = semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", media, &meta("local"), app.1.cx()).await.expect("retained kit:in import succeeds");
-    assert!(!result.mutations.is_empty(), "importing a non-empty fragment must emit real operations");
+    let before = projection_of(&app);
+    let mut operation = mount_original_import(&mut app, "kit:in", media).await;
+    finish_original_import(&mut app, "kit:in", &mut operation).await.expect("retained kit:in import succeeds");
     let next_projection = projection_of(&app);
+    assert_ne!(next_projection, before, "importing a non-empty fragment must publish a document edit");
 
     let next_snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&next_projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("next_projection deserializes as Puzzle5dSnapshot");
     let catalogs = crate::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of(&next_snapshot.kind_catalogs, &next_snapshot.kind_catalogs_extra).expect("parts catalog present");
@@ -110,14 +116,58 @@ async fn kit_in_retained_import_media_is_idempotent_on_repeated_delivery() {
     });
     let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
-    for _ in 0..2 {
-        semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", media.clone(), &meta("local"), app.1.cx()).await.expect("retained kit:in import succeeds");
-    }
-
+    let mut first = mount_original_import(&mut app, "kit:in", media.clone()).await;
+    finish_original_import(&mut app, "kit:in", &mut first).await.expect("first kit import succeeds");
+    let first_projection = projection_of(&app);
+    let mut second = mount_original_import(&mut app, "kit:in", media).await;
+    finish_original_import(&mut app, "kit:in", &mut second).await.expect("repeated kit import succeeds");
     let current = projection_of(&app);
+    assert_eq!(current, first_projection, "repeated kit import preserves the canonical document");
     let current_snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&current.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("current deserializes as Puzzle5dSnapshot");
     let catalogs = crate::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of(&current_snapshot.kind_catalogs, &current_snapshot.kind_catalogs_extra).expect("parts catalog present");
     assert_eq!(catalogs.parts.iter().filter(|entry| entry.id == "capsule").count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
+}
+
+
+#[semio_framework_async_macros::async_test]
+async fn kit_in_keeps_the_catalog_member_in_the_native_archive() {
+    use semio_plugin::{PluginApp, artifact_app_laws as laws};
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧰️catalog-archive.json")).expect("kit archive fixture");
+    let port = fixture["port"].as_str().unwrap();
+    let schema = fixture["schema"].as_str().unwrap();
+    let mut app = app_with_registry();
+    let mut members = Vec::new();
+    for fragment in fixture["deliveries"].as_array().unwrap() {
+        let media = Media {
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+            payload: semio_plugin::MediaPayload::Structured { schema: schema.into(), json: fragment.to_string() },
+        };
+        let mut operation = mount_original_import(&mut app, port, media).await;
+        finish_original_import(&mut app, port, &mut operation).await.expect("catalog import publishes");
+        let archive = app.0.document_archive().await.expect("native catalog archive");
+        let [member] = archive.members.as_slice() else { panic!("catalog archive carries exactly one kit member") };
+        assert_eq!(Some(member.owner.slot.as_str()), fixture["slot"].as_str());
+        assert_eq!(Some(member.reference.artifact_kind.as_str()), fixture["dialect"]["artifactKind"].as_str());
+        assert_eq!(Some(member.reference.standard.as_str()), fixture["dialect"]["standard"].as_str());
+        assert_eq!(Some(member.reference.subset.as_str()), fixture["dialect"]["subset"].as_str());
+        let snapshot = app.snapshot().expect("live catalog snapshot");
+        let catalog = snapshot.typed().kind_catalogs.as_ref().expect("catalog child handle");
+        assert_eq!(member.owner.child_id, catalog.child_id);
+        assert_eq!(member.reference.artifact_id, catalog.target.artifact_id);
+        assert!(!member.envelope_pack.is_empty());
+        members.push(member.reference.artifact_id.clone());
+    }
+    assert_ne!(members[0], members[1], "updating the catalog replaces its content-addressed member");
+
+    let archive = app.0.document_archive().await.expect("native catalog archive once settled");
+    let mut reopened = app_with_registry();
+    laws::admit_document_archive_load(&mut reopened.0, 91, archive, reopened.1.cx()).expect("admit catalog archive");
+    laws::settle_document_archive_load(&mut reopened.0, 91, &mut laws::fixture_identity(), reopened.1.cx()).await.expect("restore catalog archive");
+    assert_eq!(projection_of(&reopened), projection_of(&app));
+    let restored = reopened.0.document_archive().await.expect("restored catalog archive");
+    assert_eq!(restored.members.len(), 1);
+    assert_eq!(restored.members[0].reference.artifact_id, members[1]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -134,13 +184,210 @@ async fn kit_in_port_is_declared_on_the_app_io() {
 }
 //#endregion 🔖️KitInPort
 
+const REWRITE_FIXTURE: &str = include_str!("🧫️fixtures/♻️rewrite.json");
+const REWRITE_MEDIA_SCHEMA: &str = "trinity.rewrite.invocation";
+const REWRITE_MEDIA_TYPE: MediaType = MediaType { class: MediaClass::Computation, form: MediaForm::Value };
+
+fn settle_import_media(app: &mut Puzzle5dTestApp) -> Result<(), semio_plugin::app::PluginLifecycleFailure> {
+    use semio_plugin::artifact_app_laws::{fixture_mounted_policy, settle_registered_typed_operation};
+    semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(
+        settle_registered_typed_operation(&mut app.0, 1, fixture_mounted_policy(), &mut identity, app.1.cx())
+    )).map(|_| ())
+}
+
+async fn mount_original_import(app: &mut Puzzle5dTestApp, port: &str, media: Media) -> semio_plugin::app::OriginalMediaImport {
+    use semio_plugin::app::{OriginalMediaImport, PluginApp};
+    use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, ensure_fixture_cancellation_issuer, fixture_mounted_policy, fixture_renew_turn, retain_original_ownership_receipts};
+
+    let cx = app.1.cx();
+    let grant = cx.retained_grant();
+    ensure_fixture_cancellation_issuer(&mut app.0, cx).expect("mounted cancellation issuer");
+    let action = meta("local");
+    let mut media = Some(media);
+    let mut progress = OriginalMediaImport::default();
+    let mut receipts = Vec::new();
+    let mut progressed_turns = 0;
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant).expect("renew the original import turn");
+        let before = (cx.retained_progress(), cx.fuel_remaining());
+        assert!(!app.0.advance_original_media_import(port, &mut media, &action, &mut progress, cx).await.expect("original media import advances"));
+        retain_original_ownership_receipts(&mut app.0, fixture_mounted_policy(), &mut receipts).expect("collect original mount receipts");
+        progressed_turns += usize::from((cx.retained_progress(), cx.fuel_remaining()) != before);
+        if progress.operation.is_some() {
+            assert!(media.is_none());
+            return progress;
+        }
+    }
+    panic!(
+        "original {port} import did not mount after {progressed_turns} progress turns, source consumed {}, receipts {}, pending operation {}, close {}",
+        media.is_none(), receipts.len(), app.0.has_pending_typed_operations(), app.0.close_diagnostic(),
+    );
+}
+
+async fn finish_original_import(
+    app: &mut Puzzle5dTestApp,
+    port: &str,
+    progress: &mut semio_plugin::app::OriginalMediaImport,
+) -> Result<(), semio_plugin::__job::OriginalTurnFailure> {
+    use semio_plugin::app::PluginApp;
+    use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, fixture_mounted_policy, fixture_renew_turn, retain_original_ownership_receipts};
+
+    let policy = fixture_mounted_policy();
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let grant = app.1.cx().retained_grant();
+    let mut receipts = Vec::new();
+    let action = meta("local");
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(app.1.cx(), fuel, grant).expect("renew the original import turn");
+        if app.0.advance_original_media_import(port, &mut None, &action, progress, app.1.cx()).await? {
+            return Ok(());
+        }
+        fixture_renew_turn(app.1.cx(), fuel, grant).expect("renew the publication turn");
+        semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(
+            app.0.advance_typed_operation_publication(&mut identity, app.1.cx())
+        )).expect("advance the mounted producer");
+        retain_original_ownership_receipts(&mut app.0, policy, &mut receipts).expect("collect original publication receipts");
+        fixture_renew_turn(app.1.cx(), fuel, grant).expect("renew the maintenance turn");
+        app.0.maintenance_step(app.1.cx(), policy.maintenance).expect("maintain original publication");
+        retain_original_ownership_receipts(&mut app.0, policy, &mut receipts).expect("collect original retirement receipts");
+        while app.take_typed_operation_ui_progress().is_some() {}
+        while app.take_typed_operation_completion().await.expect("drain completion").is_some() {}
+    }
+    panic!("the import failed to answer after publication and retirement: {}", app.0.close_diagnostic());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn rewrite_in_applies_one_native_edit_and_refuses_a_foreign_schema() {
+    use semio_plugin::app::{MediaArtifact, MediaArtifactDescriptor, MediaConsumption, MediaWireFormat, PluginApp};
+    use semio_plugin::artifact_app_laws::{self as laws, OriginalFixtureCaller, ensure_fixture_cancellation_issuer, fixture_renew_turn};
+
+    let fixture: serde_json::Value = serde_json::from_str(REWRITE_FIXTURE).expect("rewrite fixture");
+    let mut app = app_with_registry();
+    let before = projection_of(&app);
+    let io = Puzzle5dPlayApp::io().expect("puzzle5d declares an AppIo");
+    let port = io.ports.iter().find(|port| port.id == "rewrite:in").expect("rewrite:in port declared");
+    assert_eq!(crate::editor::puzzle5d::create_puzzle5d_app().io, io);
+    assert_eq!(port.media_type, REWRITE_MEDIA_TYPE);
+    assert_eq!(port.kind_id.as_deref(), Some(REWRITE_MEDIA_SCHEMA));
+    assert!(Puzzle5dPlayApp::accepts_original_structured_media(&port.id, REWRITE_MEDIA_SCHEMA, &REWRITE_MEDIA_TYPE));
+    let media = Media {
+        media_type: REWRITE_MEDIA_TYPE,
+        payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fixture["invocation"].to_string() },
+    };
+    let mut progress = mount_original_import(&mut app, "rewrite:in", media).await;
+    let error = finish_original_import(&mut app, "rewrite:in", &mut progress).await.expect_err("foreign rule schema is refused");
+    assert!(format!("{error:?}").contains("rewrite:in"), "{error:?}");
+    assert_eq!(projection_of(&app), before);
+
+    let mut app = app_with_registry();
+    ensure_fixture_cancellation_issuer(&mut app.0, app.1.cx()).expect("mounted cancellation issuer");
+    let invocation = parse(&fixture["invocation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native JSON decode");
+    let artifact = MediaArtifact {
+        descriptor: MediaArtifactDescriptor {
+            edge_id: None,
+            port_id: Some("rule:out".into()),
+            kind_id: None,
+            media_type: Some(REWRITE_MEDIA_TYPE),
+            wire: MediaWireFormat::Intrinsic { schema: REWRITE_MEDIA_SCHEMA.into() },
+            blob_hash: None,
+        },
+        data: store::pack_rt::encode_wire_value(&semio_framework_pack_json::to_dsl_value(&invocation)),
+    };
+    let cx = app.1.cx();
+    let grant = cx.retained_grant();
+    let mut artifact = Some(artifact);
+    let mut result = None;
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant).expect("renew the intrinsic media turn");
+        result = app.0.consume_media(&port.id, &mut artifact, cx).await.expect("poll intrinsic media import");
+        if result.is_some() {
+            break;
+        }
+    }
+    assert!(matches!(result, Some(MediaConsumption::Applied)), "intrinsic media import mounts");
+    settle_import_media(&mut app).expect("rewrite applies");
+    let path = fixture["path"].as_str().expect("changed part projection");
+    let mut expected: serde_json::Value = serde_json::from_str(&before.to_string()).expect("independent projection decode");
+    *expected.pointer_mut(path).expect("part position field") = fixture["expected"].clone();
+    let after: serde_json::Value = serde_json::from_str(&projection_of(&app).to_string()).expect("independent projection decode");
+    assert_eq!(after, expected);
+
+    let archive = app.0.document_archive().await.expect("archive the rewritten document");
+    let mut reopened = app_with_registry();
+    let operation = laws::LAW_DOCUMENT_LOAD_OPERATION;
+    laws::admit_document_archive_load(&mut reopened.0, operation, archive, reopened.1.cx()).expect("admit replay of the rewritten document");
+    laws::settle_document_archive_load(&mut reopened.0, operation, &mut laws::fixture_identity(), reopened.1.cx()).await.expect("restore the rewritten document");
+    let restored: serde_json::Value = serde_json::from_str(&projection_of(&reopened).to_string()).expect("independent restored projection decode");
+    assert_eq!(restored, expected);
+
+    dispatch(&mut app, "undo", None, None).expect("one undo restores the pre-rewrite document");
+    assert_eq!(projection_of(&app), before);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn rewrite_in_cancellation_publishes_no_document_edit() {
+    use semio_plugin::app::{CANCEL_TYPED_OPERATION_ACTION_ID, PluginApp};
+    use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, fixture_mounted_policy, fixture_renew_turn, retain_original_ownership_receipts};
+
+    let mut fixture: serde_json::Value = serde_json::from_str(REWRITE_FIXTURE).expect("rewrite fixture");
+    let assignments = fixture["invocation"]["rule"]["rhs"]["set"].as_array_mut().expect("rule assignments");
+    for x in 4..20 {
+        assignments.push(serde_json::json!({"var": "part", "prop": "x", "value": x}));
+    }
+    let mut app = app_with_registry();
+    let before = projection_of(&app);
+    let media = Media {
+        media_type: REWRITE_MEDIA_TYPE,
+        payload: semio_plugin::MediaPayload::Structured { schema: REWRITE_MEDIA_SCHEMA.into(), json: fixture["invocation"].to_string() },
+    };
+    let progress = mount_original_import(&mut app, "rewrite:in", media).await;
+    let operation = progress.operation.expect("exact mounted rewrite operation");
+    assert!(app.has_pending_typed_operations());
+    let policy = fixture_mounted_policy();
+    let grant = app.1.cx().retained_grant();
+    let mut receipts = Vec::new();
+    for _ in 0..8 {
+        fixture_renew_turn(app.1.cx(), OriginalFixtureCaller::turn_fuel(), grant).expect("renew the rewrite worker turn");
+        semio_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(
+            app.0.advance_typed_operation_publication(&mut identity, app.1.cx())
+        )).expect("advance one rewrite turn");
+        retain_original_ownership_receipts(&mut app.0, policy, &mut receipts).expect("collect original publication receipts");
+    }
+    assert!(app.has_pending_typed_operations());
+    assert_eq!(projection_of(&app), before);
+    let target = semio_plugin::__value::DslValue::Object(vec![
+        ("operationId".into(), semio_plugin::__value::DslValue::String(format!("{:016x}", operation.operation.0))),
+        ("generation".into(), semio_plugin::__value::DslValue::String(format!("{:016x}", operation.generation.0))),
+    ]);
+    dispatch_through_action(&mut app, CANCEL_TYPED_OPERATION_ACTION_ID, &target).expect("cancel pending rewrite");
+    assert!(!app.has_pending_typed_operations());
+    assert_eq!(projection_of(&app), before);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn rewrite_in_waits_for_its_original_publication_before_answering() {
+    let fixture: serde_json::Value = serde_json::from_str(REWRITE_FIXTURE).expect("rewrite fixture");
+    let invocation = parse(&fixture["invocation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native JSON decode");
+    let media = Media {
+        media_type: REWRITE_MEDIA_TYPE,
+        payload: semio_plugin::MediaPayload::Intrinsic { schema: REWRITE_MEDIA_SCHEMA.into(), value: semio_framework_pack_json::to_dsl_value(&invocation) },
+    };
+    let mut app = app_with_registry();
+    let before = projection_of(&app);
+    let mut progress = mount_original_import(&mut app, "rewrite:in", media).await;
+    assert_eq!(projection_of(&app), before, "a mounted producer has not published");
+    finish_original_import(&mut app, "rewrite:in", &mut progress).await.expect("original media import completes");
+    assert!(progress.complete);
+    let after: serde_json::Value = serde_json::from_str(&projection_of(&app).to_string()).expect("independent projection decode");
+    assert_eq!(after.pointer(fixture["path"].as_str().unwrap()), Some(&fixture["expected"]));
+}
+
 //#region 🔖️ClipboardMaximum
 static CLIPBOARD_MAXIMUM_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📋️clipboard-maximum/🔣️.json"));
 
 /// 📋️ LAW (language-neutral fixture): on the largest shipped example with every part selected, the copy fragment
 /// carries every part, the cut removes every copied part and the paste of that fragment creates every part again.
-/// Each verb runs as one step of its framework-reserved job (cost in `📓️wave-W2-B.md` §5); `import-media` is not
-/// implemented by puzzle 5d (only the retained `kit:in` import is).
+/// Each verb runs as one step of its framework-reserved job (cost in `📓️wave-W2-B.md` §5).
 #[test]
 fn clipboard_verbs_cover_every_part_of_the_largest_example() {
     let fixture: serde_json::Value = serde_json::from_str((*CLIPBOARD_MAXIMUM_FIXTURE)).expect("clipboard fixture parses");

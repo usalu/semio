@@ -1,0 +1,5 @@
+# Shared preview mesh publication
+
+Edit, Generate and View use one shared mesh table within a renderer thread. The last entry compares the exact evaluation text, Flow session identity and mesh mutation epoch, source fallback policy, ordered visible widgets and resolved source handles, show mode and tolerance. Marks, component pickability and component pivots are still projected for each view. Hover republishes the small instance marks and reuses the converted mesh table. The scene transport still owns a string copy of the table.
+
+The neutral fixture reproduced a cross-session stale mesh with equal local epochs and handles. After the change both actual Edit and View payload functions passed seven compact native cases, including the 12-step cache fixture, same-session replacement, display changes, fallback, Current policy and hidden widgets. SQLite independently reproduced the cache-key transitions and passed 25 assertions. The registered Flow owner fixture uses real resident mesh packs and checks exact session isolation. The managed linked run remains in progress. [Performance audit](📓️preview-mesh-cache-performance-audit.md)

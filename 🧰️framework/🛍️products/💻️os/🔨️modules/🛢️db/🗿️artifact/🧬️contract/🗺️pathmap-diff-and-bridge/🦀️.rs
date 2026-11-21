@@ -19,6 +19,11 @@ pub async fn encode_pathmap(value: &DslValue) -> Vec<u8> {
     store::pack_rt::encode_wire_value(value)
 }
 
+/// 📥️ Admits a path-map value to the canonical paged bytes of an outgoing causal envelope.
+pub async fn encode_pathmap_payload(value: &DslValue) -> Result<protocol::CausalPayload, DbError> {
+    protocol::CausalPayload::try_from_slice(&encode_pathmap(value).await).map_err(|error| DbError::InvalidArgument(error.to_string()))
+}
+
 /// 🎯️ Inverse of `encode_pathmap`.
 async fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
     store::pack_rt::decode_wire_value(bytes).map_err(wire_err)
@@ -60,7 +65,7 @@ pub async fn diff_entries(diff: &protocol::ArtifactDiff) -> Result<Vec<(String, 
     if diff.schema.0 != DB_PATHMAP_SCHEMA {
         return Ok(Vec::new());
     }
-    entries_from_value(&decode_pathmap(&diff.payload).await?).await
+    entries_from_value(&decode_pathmap(&diff.payload.to_vec_owner()).await?).await
 }
 
 /// ↩️ Entries for an envelope's inverse diff (the `undo` pipeline's source) — same
@@ -69,7 +74,7 @@ pub async fn inverse_entries(inverse: &protocol::InverseMutation) -> Result<Vec<
     if inverse.schema.0 != DB_PATHMAP_SCHEMA {
         return Ok(Vec::new());
     }
-    entries_from_value(&decode_pathmap(&inverse.payload).await?).await
+    entries_from_value(&decode_pathmap(&inverse.payload.to_vec_owner()).await?).await
 }
 
 /// 🧮️ The inverse of `entries_from_value` — rebuilds a JSON object from path-value pairs,
@@ -125,8 +130,8 @@ where
         dependencies: op.dependencies(),
         observed: None,
         target: op.conflict_target(),
-        diff: protocol::ArtifactDiff { schema: schema.clone(), payload: encode_pathmap(&forward).await },
-        inverse: protocol::InverseMutation { schema, payload: encode_pathmap(&backward).await },
+        diff: protocol::ArtifactDiff { schema: schema.clone(), payload: encode_pathmap_payload(&forward).await? },
+        inverse: protocol::InverseMutation { schema, payload: encode_pathmap_payload(&backward).await? },
         timestamp: op.timestamp().unwrap_or(default_timestamp),
         transaction: None, verb: None, line: None,
     })

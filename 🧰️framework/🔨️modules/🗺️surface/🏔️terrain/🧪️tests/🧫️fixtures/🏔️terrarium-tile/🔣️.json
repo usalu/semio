@@ -1,0 +1,9 @@
+{
+  "origin": { "longitude": 9.7382, "latitude": 52.3759 },
+  "camera": { "position": [0, 0, 100], "target": [0, 0, 0], "minZoom": 6, "maxZoom": 11 },
+  "expectedCenter": { "z": 11, "x": 1079, "y": 672, "key": "11/1079/672" },
+  "rows": 25,
+  "pixel": [128, 123, 128, 255],
+  "exaggeration": 2,
+  "expectedMeshHeight": 247
+}

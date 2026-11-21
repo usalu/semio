@@ -28,7 +28,13 @@ test("Guest original input-slot witness agrees with independent SQL and serde-co
  expect(validateGrant(guestInputFixture.closeGrant)).toBe(true);expect(validateGrant(guestInputFixture.deniedCloseGrant)).toBe(true);expect(guestInputFixture.closeAuthority).toBe("independentCallerWallet");expect(guestInputFixture.closeGrant).not.toEqual(guestInputFixture.grant);
  const database=new Database(":memory:");try{database.exec(guestInputFixture.schema);database.query("INSERT INTO original_input VALUES(?,?)").run(1,guestInputFixture.value);expect(database.query("SELECT value FROM original_input WHERE id=1").get()).toEqual({value:guestInputFixture.value});}finally{database.close();}
  const source=readFileSync(new URL("../../🗂️guest-document-codec/🦀️.rs",import.meta.url),"utf8"),start=source.indexOf("fn guest_sqlite_import("),end=source.indexOf("fn register_guest_document_codec",start),body=source.slice(start,end);
- expect(body).toContain("database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>");expect(body.indexOf("native.receive_nested")).toBeLessThan(body.indexOf("database.take()"));expect(body).toContain("Ok((||{");expect(body).toContain("frame.wire=Some(");expect(body).toContain("std::str::from_utf8(&payload.bytes)");expect(body).not.toContain("payload.clone()");
+ expect(body).toContain("database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>");
+ expect(body.indexOf("native.receive_nested")).toBeLessThan(body.indexOf("native.move_existing"));
+ expect(body.indexOf("native.move_existing")).toBeLessThan(body.indexOf("control.checkpoint"));
+ expect(body).toContain("*produced=Some(");
+ expect(body).toContain("guest_sqlite_reply(&mut frame.guest)");
+ expect(body).toContain("std::str::from_utf8(&payload.bytes)");
+ expect(body).not.toContain("payload.clone()");
 });
 
 test("Probe original semantic custody policy matches independent exact numeric and SQLite ordinals",()=>{
@@ -54,7 +60,9 @@ test("Probe semantic edge policies preserve exact numeric TEXT and shuffled sour
  }finally{database.close();}
  const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8"),start=source.indexOf("fn number_value"),end=source.indexOf("impl store::os_store::serialization::ArtifactSqliteSnapshotHost",start),number=source.slice(start,end);
  expect(number).toContain("control.check_value_bytes(text.len())?");expect(number).not.toContain("semio_framework_pack_json::parse(");
- expect(source).toContain("to_sqlite_database_receiving");expect(source).toContain("from_sqlite_database_receiving");
+ expect(source).toContain("decode_sqlite_snapshot_native");
+ expect(source).toContain("encode_sqlite_snapshot_native");
+ expect(source).toContain("owner.receive_nested");
 });
 import nativeFixture from "../🫴️native/🧪️tests/🧫️fixtures/🔣️.json";
 import {exportSqliteDatabase,importSqliteDatabase,parseSqliteDatabaseSchema,type SqliteValue} from "@semio-tech/framework-sqlite-snapshot-ts";

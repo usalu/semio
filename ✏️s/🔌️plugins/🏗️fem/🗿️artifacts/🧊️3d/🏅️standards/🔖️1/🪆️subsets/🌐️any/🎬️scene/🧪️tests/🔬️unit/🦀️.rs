@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_fem_receiving::cold::retire;
 
 fn demo() -> Fem3dSnapshot {
     semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
@@ -42,6 +43,68 @@ fn every_entity_is_an_instance_keyed_by_its_own_id_and_granularity() {
     unique.sort_unstable();
     unique.dedup();
     assert_eq!(unique.len(), ids.len(), "instance ids are unique: {ids:?}");
+    retire(doc);
+}
+
+#[test]
+fn bundled_solid_surfaces_publish_opaque_rgba_per_vertex() {
+    let doc = demo();
+    let stress = doc.nodes.iter().enumerate().map(|(index, node)| (node.id.as_str().to_owned(), index as f64)).collect::<HashMap<_, _>>();
+    for stress in [None, Some(&stress)] {
+        let (meshes, _) = fem3d_solid_mesh_entries(&doc, None, 1.0, stress).expect("bundled solid mesh");
+        assert!(!meshes.is_empty(), "the bundled demo exercises the custom solid mesh lane");
+        for mesh in meshes {
+            let data = mesh.get("data").expect("mesh data");
+            let positions = data.get("positions").and_then(Value::as_array).expect("positions");
+            let colors = data.get("colors").and_then(Value::as_array).expect("vertex colors");
+            assert!(!positions.is_empty());
+            assert_eq!(positions.len() % 3, 0);
+            assert_eq!(colors.len(), positions.len() / 3 * 4);
+            for rgba in colors.chunks_exact(4) {
+                assert_eq!(rgba[3].as_f64(), Some(1.0));
+            }
+        }
+    }
+    retire(doc);
+}
+
+#[test]
+fn solid_surfaces_share_positions_and_preserve_every_boundary_face() {
+    let oriented_face = |points: [[f64; 3]; 3]| {
+        let mut vertices = points.map(|point| point.map(f64::to_bits));
+        let start = (0..vertices.len()).min_by_key(|&index| vertices[index]).unwrap();
+        vertices.rotate_left(start);
+        vertices
+    };
+    let doc = demo();
+    let fixture = semio_framework_pack_json::parse(include_str!("🧫️boundary.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let original = mesh_preview::fem3d_mesh_preview(&doc).unwrap();
+    let (scene, _) = fem3d_solid_mesh_entries(&doc, None, 1.0, None).unwrap();
+    assert_eq!(scene, fem3d_solid_mesh_entries(&doc, None, 1.0, None).unwrap().0);
+    assert_eq!(original.len(), scene.len());
+    for (solid, mesh) in original.iter().zip(&scene) {
+        let data = mesh.get("data").unwrap();
+        let positions = data.get("positions").and_then(Value::as_array).unwrap();
+        let indices = data.get("indices").and_then(Value::as_array).unwrap();
+        let normal = data.get("attributes").and_then(|attributes| attributes.get("normal")).unwrap();
+        assert_eq!(normal.get("domain").and_then(Value::as_str), Some("face"));
+        assert_eq!(normal.get("values").and_then(Value::as_array).unwrap().len(), solid.boundary_tris.len());
+        assert!(positions.len() < indices.len() * 3);
+        assert_eq!(indices.len(), solid.boundary_tris.len() * 3);
+        assert_eq!(Some(solid.solid_id.as_str()), fixture.get("solid").and_then(Value::as_str));
+        assert_eq!(Some(positions.len() as u64 / 3), fixture.get("boundaryVertices").and_then(Value::as_u64));
+        assert_eq!(Some(indices.len() as u64), fixture.get("expandedVertices").and_then(Value::as_u64));
+        assert_eq!(Some(indices.len() as u64 / 3), fixture.get("faces").and_then(Value::as_u64));
+        let mut expected: Vec<_> = solid.boundary_tris.iter().map(|face| oriented_face(face.map(|index| solid.points[index as usize]))).collect();
+        let mut actual: Vec<_> = indices.chunks_exact(3).map(|face| oriented_face(std::array::from_fn(|corner| {
+            let offset = face[corner].as_u64().unwrap() as usize * 3;
+            std::array::from_fn(|axis| positions[offset + axis].as_f64().unwrap())
+        }))).collect();
+        expected.sort_unstable();
+        actual.sort_unstable();
+        assert_eq!(expected, actual);
+    }
+    retire(doc);
 }
 
 /// 🏋️ LAW: a load is drawn as arrow glyphs whose hits redirect onto the load id — a nodal load ends
@@ -65,6 +128,8 @@ fn load_glyphs_redirect_their_hit_onto_the_load() {
     };
     let udl = instances(&udl_doc).into_iter().filter(|instance| instance.get("interactionId").and_then(Value::as_str) == Some(fem3d_load_target("dead", "udl").unwrap().as_str())).count();
     assert_eq!(udl, MEMBER_LOAD_ARROWS_3D * 2);
+    retire(udl_doc);
+    retire(doc);
 }
 
 /// 🌐️ LAW: the deformed scene moves nodes, their members and the glyphs riding them by the same
@@ -79,6 +144,7 @@ fn displacements_move_nodes_members_supports_and_load_glyphs_together() {
     let z = |id: &str| find(&all, id).get("position").and_then(Value::as_array).expect("position")[2].as_f64().expect("z");
     assert!((z(&fem3d_entity_target("node", "n20_l1").unwrap()) - 1.8).abs() < 1e-9, "the node dropped by one metre at scale 100");
     assert!((z(&fem3d_entity_target("load", &format!("{}:head", fem3d_load_target("live", "l2").unwrap())).unwrap()) - (1.8 + LOAD_ARROW_HEAD_3D)).abs() < 1e-9, "the load arrow rides its node");
+    retire(doc);
 }
 
 /// 🧭️ LAW: the cone quaternion takes the mesh's +Y axis onto the requested direction.

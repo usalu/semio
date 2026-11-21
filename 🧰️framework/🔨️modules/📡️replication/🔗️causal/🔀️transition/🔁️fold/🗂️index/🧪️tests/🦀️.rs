@@ -179,3 +179,34 @@ fn original_fold_membership_admitted_insert_keeps_each_original_key(){
   assert_eq!(original+admitted,freed);let(_,terminal)=observe(||drop(close));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));
  }
 }
+
+#[test]
+fn vacant_batch_preserves_input_on_refusal_then_transfers_original_rows() {
+    use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+
+    let mut index = HistoryFoldIndex::<String, usize>::new();
+    for i in 0..12 { index.insert(format!("seed-{i}"), i); }
+    for i in 0..5 { assert_eq!(index.remove(&format!("seed-{i}")), Some(i)); }
+    let mut rows = std::array::from_fn::<_, 5, _>(|i| Some((format!("face-{i}"), i)));
+    let pointers = rows.each_ref().map(|row| row.as_ref().unwrap().0.as_ptr());
+    let depth = index.vacant_batch_demand(rows.len()).unwrap().depth;
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: depth, ..Default::default() };
+    assert!(index.insert_vacant_batch_reserved(&mut rows, RetainedCloneGrant { maximum_depth: depth - 1, ..grant }).is_err());
+    assert_eq!(index.len(), 7);
+    assert_eq!(rows.each_ref().map(|row| row.as_ref().unwrap().0.as_ptr()), pointers);
+
+    let original = rows[4].replace(("seed-8".into(), 42)).unwrap();
+    assert!(index.insert_vacant_batch_reserved(&mut rows, grant).is_err());
+    assert_eq!((index.len(), index.get("seed-8")), (7, Some(&8)));
+    rows[4] = Some(original);
+
+    let (receipt, heap) = observe(|| index.insert_vacant_batch_reserved(&mut rows, grant).unwrap());
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    assert_eq!(receipt.copied_items, 1);
+    assert!(rows.iter().all(Option::is_none));
+    for (ordinal, pointer) in pointers.into_iter().enumerate() {
+        let (key, &value) = index.get_key_value(&format!("face-{ordinal}")).unwrap();
+        assert_eq!((key.as_ptr(), value), (pointer, ordinal));
+    }
+    check(&index, index.root);
+}

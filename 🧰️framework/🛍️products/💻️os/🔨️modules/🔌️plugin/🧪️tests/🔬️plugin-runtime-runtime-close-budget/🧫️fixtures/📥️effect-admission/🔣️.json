@@ -1,0 +1,15 @@
+[
+  { "archive": "idle", "merge": false, "replacement": "idle", "completed": 0, "total": 0, "armed": false, "poll": "published", "runnable": false, "retained": false },
+  { "archive": "staged", "merge": false, "replacement": "idle", "completed": 0, "total": 118, "armed": true, "poll": "published", "runnable": false, "retained": true },
+  { "archive": "pending", "merge": false, "replacement": "idle", "completed": 0, "total": 118, "armed": true, "poll": "published", "runnable": false, "retained": true },
+  { "archive": "running", "merge": false, "replacement": "retiring", "completed": 118, "total": 118, "armed": true, "poll": "published", "runnable": false, "retained": true },
+  { "archive": "retiring", "merge": false, "replacement": "complete", "completed": 118, "total": 118, "armed": true, "poll": "published", "runnable": false, "retained": true },
+  { "archive": "ready", "merge": false, "replacement": "idle", "completed": 118, "total": 118, "armed": true, "poll": "paused", "runnable": true, "retained": true },
+  { "archive": "ready", "merge": false, "replacement": "idle", "completed": 118, "total": 118, "armed": true, "poll": "published", "runnable": false, "retained": false },
+  { "archive": "cancelled", "merge": false, "replacement": "idle", "completed": 57, "total": 118, "armed": true, "poll": "published", "runnable": false, "retained": false },
+  { "archive": "fault", "merge": false, "replacement": "idle", "completed": 0, "total": 118, "armed": true, "poll": "published", "runnable": false, "retained": false },
+  { "archive": "running", "merge": true, "replacement": "idle", "completed": 57, "total": 118, "armed": true, "poll": "published", "runnable": false, "retained": false },
+  { "archive": "idle", "merge": false, "replacement": "candidate", "completed": 0, "total": 0, "armed": true, "poll": "published", "runnable": false, "retained": true },
+  { "archive": "idle", "merge": false, "replacement": "retiring", "completed": 0, "total": 0, "armed": true, "poll": "published", "runnable": false, "retained": true },
+  { "archive": "idle", "merge": false, "replacement": "complete", "completed": 0, "total": 0, "armed": true, "poll": "published", "runnable": false, "retained": false }
+]

@@ -1,0 +1,28 @@
+# Paid PNG Placement Handoff
+
+The existing raster decoder supplies one immutable RGBA8 raster to the editor document owner after verifying the retained picker Source and full revision. The placement sampler checks the exact raster address, dimensions, extent and revision. It scans opacity and projects straight color and optional alpha in fixed 4 KiB windows. It leaves the existing raster with its owner and allocates no second raster or plane backing.
+
+The native Pack writer reserves its output through the repository's funded `PagedBytes` allocator. It copies one admitted portion at a time and computes the established semantic plane identity, chunk CRC32C and BLAKE3 over the original plane windows. It also uses the established paired PNG manifest, flags and row framing. The private candidate exposes its original Pack only after the final plane digest and footer match. Cancellation and stale revision revoke it permanently and leave the private pages available to paid retirement.
+
+`prepare_raw_png_rows` uses the registered editor's placement validation against the live PDF snapshot. The control shape specifies mask first when needed, color next, and one exact insertion or replacement. It applies to both explicit `PaintXObject` and replaceable inline images. Both new image bodies carry bounded `ArtifactRef` values that share the original digest. The encoded row control is capped at 8 KiB, including a 32-byte base revision and each registered operation's format-1 frame. The typed row preparation currently uses the existing ordinary encoder for these small controls. Its physical scratch accounting belongs in the mounted preparation lane.
+
+`PdfRawPngPublication` takes the exact completed Pack and its typed owners into one paid private slot. It checks the actual Original caller, exact captured revision and cancellation before offering both to the mounted transaction. The mounted publisher can call `PdfRawPngRows::donate_rows` and move the rows in `PngPlacementRows::into_mutations` order into its admitted mutation pages while it keeps the original Pack private. The raw picker must acknowledge Published only from the mounted transaction's irreversible `ArtifactStoreOneItemAdvance::Published` branch. A partial mount, missing resource install, rejection or cancellation keeps both owners private for the same caller's close.
+
+## Verification
+
+The two focused native Pack tests linked exact repository Pack, value and hash artifacts. They reused the 32×32 Rust decoder output, exercised one-copy-byte-short admission, compared every packaged byte to the existing canonical Pack writer, reopened via its native archive reader, challenged raster substitution and full revision changes, and reconciled every physical backing on completion and canceled partial work. The successful close released 9,960 funded bytes for the alpha layout and 5,080 for the opaque layout, including controlled retirement bookkeeping.
+
+Pillow independently matched all 3,072 RGB bytes and all 1,024 alpha bytes in the masked file. The opaque file contains the same RGB bytes and has no mask chunk. A separate Python reader checked the header, all segment CRC32C values, the footer and the exact paired SHA-256 for both files.
+
+| Test archive | Bytes | Paired SHA-256 |
+| --- | ---: | --- |
+| RGB with soft mask | 4,609 | `be0ef00dbed7b4c996b71a53af581a7d713351867e65fd36cd6f8ef7bd932263` |
+| Opaque RGB | 3,534 | `4ad5bbbf845b3ff9f7461655e2ce273293f4f131179dd4fb256e8483e08a579e` |
+
+The guarded candidate type-checked on WASI against the exact linked-governed mutation model and editor-document dependency metadata. The check compiled the full staged pixels codec, the facade and the complete PDF editor document package. The new raw owner sits in the document package. The Base editor controller closure does not grow. A focused standalone WASI command linked the actual PDF mutation, VCS and SPR history libraries and passed all four combinations of opaque or masked image with insertion or replacement. The fixture reopened the exact paged Pack, checked its live revision and graph-role binding, and verified the actual registered binary operations before and after persisted apply, undo and redo.
+
+## Mounted Registration
+
+`raw-png-placement-stage.py` materializes nine source postimages and hashes the live preimages. It includes the separately verified decoder change. `raw-png-placement-typecheck.py .cache/b/r/m/u/l/p14702f` checks the production candidates using the governed WASI artifact metadata. `raw-png-placement-run.py .cache/b/r/m/u/l/p5d2dcc/prototype/build` runs the native Pack laws. `raw-png-placement-oracle.py` runs the independent Pillow comparison. After the WASI metadata stage, run `raw-png-placement-run.py .cache/b/r/m/u/l/p14702f/wasm32-wasip2/prototype/build --wasm` for the four typed history laws. The raw ingress and decoder proof is in `raw-png-handoff.md`.
+
+The existing `ArtifactMutationPages` can admit the bounded typed rows in a single document edit. Its mounted receiving method presently owns mutation pages, outbound operations and replay history, with no paired native resource attachment. The current registered resource port looks up conventional COS stream owners. The next production step is one compare-and-install in that mounted owner that persists the native page owner with the rows, whose resource read and Save path resolve the attached Pack from the same reachable history. Leave the existing picker route active until that publication and reopen path is registered. The staged product handoff stops at the authenticated, paid transaction boundary.

@@ -82,15 +82,20 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         let(root,previous)=self.insert_at(self.root,key,value);self.root=Some(root);Ok((previous,RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 
-    fn has_vacant_pair_backing(&self) -> bool {
+    fn has_vacant_batch_backing(&self, count: usize) -> bool {
         let unused = self.nodes.capacity() - self.nodes.len();
-        unused >= 2 || self.free_head.is_some_and(|first| unused == 1 || self.nodes[first].left.is_some())
+        let mut free = self.free_head;
+        for _ in unused..count {
+            let Some(slot) = free else { return false; };
+            free = self.nodes[slot].left;
+        }
+        true
     }
 
-    /// 📐️ Quotes one backing step or both vacant insertions before either new row is visible.
-    pub fn vacant_pair_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-        let depth = self.height(self.root) + 3;
-        if self.has_vacant_pair_backing() {
+    /// 📐️ Quotes the next backing step or the bounded vacant batch commit.
+    pub fn vacant_batch_demand(&self, count: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        let depth = self.height(self.root).saturating_add(count).saturating_add(1);
+        if self.has_vacant_batch_backing(count) {
             return Ok(semio_framework_value::RetirementDemand { depth, ..Default::default() });
         }
         let value_error = |error: semio_framework_value_persistent::list::PagedListError| index_page_refusal(error.kind, error.reason);
@@ -102,10 +107,10 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         })
     }
 
-    /// 🧰️ Advances only the next funded page toward a pair of available rows.
-    pub fn reserve_vacant_pair(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneProgress>, ValueError> {
+    /// 🧰️ Advances only the next funded page toward a complete vacant batch.
+    pub fn reserve_vacant_batch(&mut self, count: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneProgress>, ValueError> {
         use semio_framework_value_persistent::list::{PagedListReservationFailure, PagedListReservationOutcome};
-        if self.has_vacant_pair_backing() { return Ok(None); }
+        if self.has_vacant_batch_backing(count) { return Ok(None); }
         let result = self.nodes.reserve_capacity_one_funded(usize::MAX, effect).result;
         match result {
             Ok(PagedListReservationOutcome::Denied) => Ok(Some(Default::default())),
@@ -116,19 +121,38 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         }
     }
 
-    /// 🪴️ Commits one atomic pair of preadmitted rows without allocation or payload copies.
-    pub fn insert_vacant_pair_reserved(&mut self, rows: [(K, V); 2], grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, [(K, V); 2])> {
-        if rows[0].0 == rows[1].0 || rows.iter().any(|(key, _)| self.contains_key(key)) {
-            return Err((ValueError::invariant("original pair requires two distinct vacant index keys"), rows));
+    /// 🪴️ Commits preadmitted vacant rows together, preserving every input on refusal.
+    pub fn insert_vacant_batch_reserved(&mut self, rows: &mut [Option<(K, V)>], grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+        let count = rows.len();
+        for (i, row) in rows.iter().enumerate() {
+            let (key, _) = row.as_ref().ok_or_else(|| ValueError::invariant("original batch row is missing"))?;
+            if self.contains_key(key) || rows[..i].iter().flatten().any(|(other, _)| other == key) {
+                return Err(ValueError::invariant("original batch requires distinct vacant index keys"));
+            }
         }
-        if !self.has_vacant_pair_backing() || grant.maximum_depth < self.height(self.root) + 3 || grant.maximum_items == 0 {
-            return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "original pair insertion exceeds the admitted rows"), rows));
+        if !self.has_vacant_batch_backing(count) || grant.maximum_depth < self.height(self.root).saturating_add(count).saturating_add(1) || grant.maximum_items == 0 {
+            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "original batch insertion exceeds the admitted rows"));
         }
-        for (key, value) in rows {
+        for row in rows {
+            let (key, value) = row.take().expect("admitted batch row");
             let (root, _) = self.insert_at(self.root, key, value);
             self.root = Some(root);
         }
         Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+    }
+
+    pub fn vacant_pair_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        self.vacant_batch_demand(2)
+    }
+
+    pub fn reserve_vacant_pair(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneProgress>, ValueError> {
+        self.reserve_vacant_batch(2, effect)
+    }
+
+    pub fn insert_vacant_pair_reserved(&mut self, rows: [(K, V); 2], grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, (ValueError, [(K, V); 2])> {
+        let mut rows = rows.map(Some);
+        self.insert_vacant_batch_reserved(&mut rows, grant)
+            .map_err(|error| (error, rows.map(|row| row.expect("refused pair row"))))
     }
 
     fn insert_at(&mut self,root:Option<usize>,key:K,value:V)->(usize,Option<V>) { let Some(root)=root else {self.mark_mutation();let node=FoldIndexNode{entry:Some((key,value)),retired_entry:None,left:None,right:None,height:1,count:1};let index=if let Some(index)=self.free_head{self.free_head=self.nodes[index].left;self.nodes[index]=node;index}else{let index=self.nodes.len();self.nodes.push(node);index};return(index,None)};let order=key.cmp(&self.nodes[root].entry.as_ref().unwrap().0);let previous=match order {Ordering::Less=>{let(child,previous)=self.insert_at(self.nodes[root].left,key,value);self.nodes[root].left=Some(child);previous},Ordering::Greater=>{let(child,previous)=self.insert_at(self.nodes[root].right,key,value);self.nodes[root].right=Some(child);previous},Ordering::Equal=>{self.mark_mutation();self.displaced_keys.push(key);return(root,Some(std::mem::replace(&mut self.nodes[root].entry.as_mut().unwrap().1,value)));}};(self.balance(root),previous) }

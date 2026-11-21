@@ -15,6 +15,9 @@ use store::TextError;
 
 pub use semio_s_plugin_norm_compliance_core::*;
 
+#[path = "📊️normal-distribution/🦀️.rs"]
+pub mod normal_distribution;
+
 #[path = "🏛️norm-error-and-family/🦀️.rs"]
 mod norm_error_and_family;
 pub use norm_error_and_family::*;

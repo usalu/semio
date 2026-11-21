@@ -83,6 +83,13 @@ for case in FIXTURE["store"]:
 for case in FIXTURE["intakeProgress"]:
     check(len(range(0,case["bytes"],1 << 20))==case["observations"],"intake progress "+str(case["bytes"]))
 
+for case in FIXTURE["materialisationProgress"]:
+    times=[0]+case["completionMs"]
+    if case["stallMs"] is not None:
+        times.append(case["stallMs"])
+    expired=any(end-start>=case["deadlineMs"] for start,end in zip(times,times[1:]))
+    check(("stalled" if expired else "done")==case["status"],"materialisation progress "+case["name"])
+
 from collections import Counter
 
 BLOCKED_REASONS=set(SCHEMA["definitions"]["BlockedReasons"]["const"])

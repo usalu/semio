@@ -1,0 +1,71 @@
+{
+  "inlineBytes": 80,
+  "cases": [
+    {
+      "name": "ordinary member",
+      "key": "unit",
+      "detail": false,
+      "value": "mm"
+    },
+    {
+      "name": "empty member",
+      "key": "",
+      "detail": true,
+      "value": false
+    },
+    {
+      "name": "outer whitespace",
+      "key": " unit ",
+      "detail": true,
+      "value": 15
+    },
+    {
+      "name": "control characters",
+      "key": "\u0000\t unit\n",
+      "detail": true,
+      "value": [
+        "marker"
+      ]
+    },
+    {
+      "name": "long identical prefix A",
+      "key": "編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編                🚀#A",
+      "detail": true,
+      "value": {
+        "shape": "A"
+      }
+    },
+    {
+      "name": "long identical prefix B",
+      "key": "編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編編                🚀#B",
+      "detail": true,
+      "value": {
+        "shape": "B"
+      }
+    },
+    {
+      "name": "fits the inline byte limit",
+      "key": "µµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµ",
+      "detail": false,
+      "value": 1
+    },
+    {
+      "name": "exceeds the inline byte limit",
+      "key": "µµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµ",
+      "detail": true,
+      "value": 2
+    },
+    {
+      "name": "collapsed internal spaces",
+      "key": "unit  symbol",
+      "detail": true,
+      "value": null
+    },
+    {
+      "name": "invisible leading format mark",
+      "key": "﻿unit",
+      "detail": true,
+      "value": "custom"
+    }
+  ]
+}

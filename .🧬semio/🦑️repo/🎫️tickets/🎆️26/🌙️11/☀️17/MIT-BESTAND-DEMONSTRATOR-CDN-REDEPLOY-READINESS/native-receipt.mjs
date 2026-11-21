@@ -1,6 +1,17 @@
-import{issueStoreReceiptV1,settleStoreReceiptV1}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🟨️.mjs";
-const[mode,projectRoot,target,issuedJson,ok]=process.argv.slice(2);
 import { fileURLToPath } from "node:url";
-const declaration={workspaceRoot:fileURLToPath(new URL("../../../../../../../",import.meta.url)),projectRoot,target,outputs:["{projectRoot}/.🧾️store/"+target+".json"]};
-try{if(mode==="issue")process.stdout.write(JSON.stringify(issueStoreReceiptV1(declaration)));
-else await settleStoreReceiptV1(declaration,JSON.parse(issuedJson),{succeeded:ok==="1",startedAtMs:Number(process.argv[7])});}catch{if(mode==="issue")process.stdout.write("{}");}
+import { issueStoreReceiptV1, settleStoreReceiptV1, storeReceiptOutputV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🟨️.mjs";
+
+const [mode, projectRoot, target, issuedJson, ok, start] = process.argv.slice(2);
+const declaration = {
+  workspaceRoot: fileURLToPath(new URL("../../../../../../../", import.meta.url)),
+  projectRoot,
+  target,
+  outputs: [storeReceiptOutputV1(target)],
+};
+if (mode === "issue") {
+  process.stdout.write(JSON.stringify(issueStoreReceiptV1(declaration)));
+} else if (mode === "settle" && ["0", "1"].includes(ok) && Number.isFinite(Number(start))) {
+  await settleStoreReceiptV1(declaration, JSON.parse(issuedJson), { succeeded: ok === "1", startedAtMs: Number(start) });
+} else {
+  throw Error("Expected issue or settle with task status and start time");
+}

@@ -12,7 +12,7 @@ use semio_s_plugin_puzzle_jobs::BrowserCaller;
 use std::cell::{Cell, RefCell};
 use wasm_bindgen::prelude::*;
 
-type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>>;
+type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>, <Puzzle5dPlayApp as semio_plugin::ArtifactEditor>::Members>;
 
 const PUZZLE5D_ENVELOPE_MAXIMUM_PAGES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 const PUZZLE5D_ENVELOPE_MAXIMUM_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;

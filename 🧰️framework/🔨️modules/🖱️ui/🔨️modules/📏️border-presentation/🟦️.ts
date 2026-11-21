@@ -84,16 +84,17 @@ export function resolveBorderSegments(segments: readonly BorderSegment[]): Resol
   }
   return output;
 }
-/** 📦 One box of the state model: an id in a parent tree, its interactivity, disabled flag and own state markers. */
+/** 📦 One box of the state model, with an optional silhouette that responds to hover within it. */
 export interface StateBox {
   readonly id: string;
   readonly parent: string | null;
   readonly interactive: boolean;
+  readonly hoverWithin?: boolean;
   readonly disabled: boolean;
   readonly marks: readonly BorderState[];
 }
 
-/** 🎚️ State of every box: hover goes to the innermost enabled interactive box under the pointer, focus to the innermost interactive box of the focus-visible element, marks only to the marked box; the strongest wins. See `design.md` of the closed-state-silhouette ticket.
+/** 🎚️ Hover goes to the innermost enabled control and to enabled ancestors that paint on hover within. Focus and markers stay local.
  *
  * @see ./states.cases.json */
 export function resolveBoxStates(boxes: readonly StateBox[], pointer: string | null, focusVisible: string | null): Record<string, BorderState> {
@@ -102,10 +103,17 @@ export function resolveBoxStates(boxes: readonly StateBox[], pointer: string | n
     for (let box = from === null ? undefined : byId.get(from), steps = 0; box && steps <= boxes.length; box = box.parent === null ? undefined : byId.get(box.parent), steps++) if (accepts(box)) return box.id;
     return null;
   };
-  const hovered = innermost(pointer, box => box.interactive && !box.disabled), focused = innermost(focusVisible, box => box.interactive);
+  const hovered = new Set<string>();
+  let hasControl = false;
+  for (let box = pointer === null ? undefined : byId.get(pointer), steps = 0; box && steps < boxes.length; box = box.parent === null ? undefined : byId.get(box.parent), steps++) {
+    if (box.disabled) continue;
+    if (box.hoverWithin || (!hasControl && box.interactive)) hovered.add(box.id);
+    hasControl ||= box.interactive;
+  }
+  const focused = innermost(focusVisible, box => box.interactive);
   return Object.fromEntries(boxes.map(({ id, marks }) => {
     const candidates: BorderState[] = ["normal", ...marks];
-    if (id === hovered) candidates.push("hover");
+    if (hovered.has(id)) candidates.push("hover");
     if (id === focused) candidates.push("focus");
     return [id, candidates.reduce((winner, state) => borderStatePriority[state] > borderStatePriority[winner] ? state : winner)];
   }));

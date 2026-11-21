@@ -10,6 +10,8 @@ import { makeEffectDispatchOne } from "../../../🛠️ShellHelpers/🔩️plumb
 import { programHistoryProjectionsWithLoadV1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { importOpenedFilesV1 } from "../../../🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 import { resolveManifestLabel } from "../../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { pickOriginalMedia } from "../../../🔌️PluginRuntime/🚚️handle-turn-drive/original-media-pick.ts";
+import { originalMediaRequest } from "../../../🔌️PluginRuntime/🚚️handle-turn-drive/original-media-wire.ts";
 import { coerceWireBytes } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import type { ShellCoreAfterSpawnedSession } from "../../🛫️spawned-session/🟦️.ts";
 
@@ -58,6 +60,29 @@ export async function applyRequestFileOpenEffect({ loadedPlugins, isCurrentEffec
 }) {
   const { accept, readAs, importAction, multiple, args, maxFileBytes } = effect.requestFileOpen;
   const filter = accept || ".spk,.dsl,.ops,application/octet-stream";
+  if (typeof args === "object" && args !== null && "originalMedia" in args) {
+    const issued = args.originalMedia;
+    const current = () => isCurrentEffectOwner(effectOwner);
+    const host = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId)?.handle;
+    if (!host?.openOriginalMediaIngress) throw new Error("original-media.host-unavailable");
+    if (multiple) throw new Error("original-media.selection-count");
+    const request = originalMediaRequest(issued, baseSession.instanceId);
+    const exchange = host.openOriginalMediaIngress(baseSession.instanceId, request);
+    const transfers = core.documentTransferRef.current;
+    let pickedName = "";
+    try {
+      const status = await pickOriginalMedia(request, exchange, () => requestFileSelectionV1(filter), current, (file) => {
+        pickedName = file.name;
+        return transfers.trackDocumentTransfer(file.name, baseSession.pluginId);
+      });
+      if (status === "cancelled" && pickedName) transfers.notifyDocumentTransfer("import-cancelled", pickedName, "info");
+    } catch (error) {
+      if (!pickedName) throw error;
+      const code = error instanceof Error && error.message === "The selected media exceeds its admitted source extent" ? "import-size-limit" : "import-failed";
+      transfers.notifyDocumentTransfer(code, pickedName, "error");
+    }
+    return;
+  }
   const selected = maxFileBytes === undefined ? undefined : await requestFileSelectionV1(filter, multiple);
   const unbounded = selected === undefined ? await requestFileOpen(filter, readAs, multiple) : [];
   const picked = selected ?? unbounded;

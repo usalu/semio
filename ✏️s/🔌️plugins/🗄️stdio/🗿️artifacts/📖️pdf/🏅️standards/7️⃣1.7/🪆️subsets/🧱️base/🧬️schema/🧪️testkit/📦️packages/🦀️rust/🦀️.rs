@@ -20,7 +20,7 @@ mod document_contracts {
         io::text::snapshot::retained_text::admit_retained_text,
         modules::{
             lexer::{parse_indirect_at, CosGrant},
-            lift::{lift_document, ControlledDocumentLiftCursor, ControlledLiftBarrier, ControlledLiftEvent,
+            lift::{lift_document, lift_document_with, ControlledDocumentLiftCursor, ControlledLiftBarrier, ControlledLiftEvent,
                 DocumentLiftAction, DocumentLiftCursor, DocumentLiftGrant, DocumentLiftStatus, PageContentBarrier, PageContentEvent},
         },
         schema::{
@@ -28,6 +28,96 @@ mod document_contracts {
             stream_roles::PdfStreamRoleValue,
         },
     };
+
+    fn inherited_fixture_objects() -> Vec<PdfIndirectObject> {
+        let input = include_bytes!("../../../../🧪️tests/🧫️fixtures/🌳️page-tree/🧪️nested-inheritance.pdf");
+        (1..=13).map(|number| {
+            let header = format!("\n{number} 0 obj\n");
+            let offset = input.windows(header.len()).position(|bytes| bytes == header.as_bytes()).unwrap() + 1;
+            let (id, value) = parse_indirect_at(input, offset).unwrap();
+            PdfIndirectObject { id, value }
+        }).collect()
+    }
+
+    #[test]
+    fn document_lifting_preserves_inherited_page_geometry_and_text_resources() {
+        let objects = inherited_fixture_objects();
+        let mut source = GraphSource::new(&objects);
+        let trailer = [PdfDictEntry::new("Root", PdfObject::Ref(ObjRef { num: 1, gen: 0 }))];
+        let lifted = lift_document_with(&trailer, "1.7", &mut source);
+        assert!(lifted.admission_error.is_none());
+        assert_eq!(lifted.page_refs.iter().map(|reference| reference.num).collect::<Vec<_>>(), [6, 5, 3]);
+        let pages = &lifted.snapshot.pages;
+        let probes = [
+            ([0.0, 0.0, 200.0, 250.0], Some([10.0, 20.0, 190.0, 230.0]), 180, "FInner", "Override"),
+            ([0.0, 0.0, 300.0, 400.0], Some([10.0, 20.0, 190.0, 230.0]), 90, "FInner", "Inner"),
+            ([0.0, 0.0, 300.0, 400.0], None, 0, "FRoot", "Root"),
+        ];
+        assert_eq!(pages.len(), probes.len());
+        for (page, (media, crop, rotation, font, label)) in pages.iter().zip(probes) {
+            assert_eq!((page.media_box, page.crop_box, page.rotate), (media, crop, rotation));
+            assert!(page.content.iter().any(|op| matches!(op, PdfOp::SetFont { name, .. } if name == font)));
+            assert!(page.content.iter().any(|op| matches!(op, PdfOp::ShowText { text: PdfTextString::Text { text } } if text == label)));
+        }
+    }
+
+    #[test]
+    fn semantic_lift_stages_pages_and_transfers_cancelled_or_failed_results() {
+        let graph = inherited_fixture_objects();
+        let trailer = [PdfDictEntry::new("Root", PdfObject::Ref(ObjRef { num: 1, gen: 0 }))];
+        let mut cursor = DocumentLiftCursor::new();
+        let traversal = CosGrant { work: 1, allocation_bytes: 64 * 1024, release_bytes: 64 * 1024 };
+        let planned = DocumentLiftGrant { traversal, semantic: false };
+        {
+            let mut first_borrow = GraphSource::new(&graph);
+            let first = cursor.advance(&trailer, "1.7", &mut first_borrow, planned, false);
+            assert_eq!(first.status, DocumentLiftStatus::NeedsSemantic(DocumentLiftAction::Header));
+        }
+        let mut source = GraphSource::new(&graph);
+        for _ in 0..2048 {
+            let plan = cursor.advance(&trailer, "1.7", &mut source, planned, false);
+            assert!(plan.semantic.is_none());
+            if let Some(turn) = plan.traversal {
+                assert!(turn.work <= traversal.work);
+            }
+            if let DocumentLiftStatus::NeedsSemantic(action) = plan.status {
+                let turn = cursor.advance(&trailer, "1.7", &mut source, DocumentLiftGrant { traversal: CosGrant::default(), semantic: true }, false);
+                assert_eq!(turn.semantic, Some(action));
+                assert!(turn.traversal.is_none());
+                if action == (DocumentLiftAction::ProjectPage { index: 0 }) {
+                    assert_eq!(cursor.page_progress(), (3, 1));
+                    assert_eq!(cursor.advance(&trailer, "1.7", &mut source, DocumentLiftGrant::default(), true).status, DocumentLiftStatus::Cancelled);
+                    assert!(cursor.take_result().is_none());
+                    let retained = cursor.take_partial().expect("partial semantic result");
+                    assert_eq!(retained.lifter.snapshot.pages.len(), 1);
+                    assert_eq!(retained.pages.len(), 3);
+                    break;
+                }
+            }
+        }
+        assert_eq!(cursor.page_progress().1, 1);
+        drop(cursor);
+        drop(source);
+
+        let mut graph = graph;
+        let PdfObject::Stream { data, .. } = &mut graph[12].value else { panic!("fixture content stream"); };
+        *data = b"BI /W 1 /H 1 /BPC 8 /CS /G /F /VendorFilter ID x EI\n".to_vec();
+        let mut source = GraphSource::new(&graph);
+        let mut cursor = DocumentLiftCursor::new();
+        let grant = DocumentLiftGrant { traversal, semantic: true };
+        for _ in 0..2048 {
+            let turn = cursor.advance(&trailer, "1.7", &mut source, grant, false);
+            if turn.status == DocumentLiftStatus::Failed {
+                assert!(cursor.take_result().is_none());
+                let retained = cursor.take_partial().expect("failed semantic result");
+                assert!(retained.lifter.admission_error.is_some());
+                assert!(retained.failed_page.is_some());
+                assert!(retained.lifter.snapshot.pages.is_empty());
+                return;
+            }
+        }
+        panic!("malformed page did not stop the semantic lift");
+    }
 
     #[test]
     fn resource_free_document_projects_identically_without_cold_semantic_grants() {
@@ -88,91 +178,6 @@ mod document_contracts {
                 }
             }
             assert!(ended);
-        }
-    }
-
-    #[test]
-    fn controlled_annotations_match_cold_lift_and_retain_partial_pages() {
-        use crate::standards::v1_7::subsets::base::schema::snapshot::PdfAnnotation;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📌️controlled-annotations/🔣️.json")).unwrap();
-        let mut objects: Vec<_> = fixture["objects"].as_array().unwrap().iter().map(|row| {
-            let authored = format!("{} {} obj\n{}\nendobj\n", row[0], row[1], row[2].as_str().unwrap());
-            let (id, value) = parse_indirect_at(authored.as_bytes(), 0).unwrap();
-            PdfIndirectObject { id, value }
-        }).collect();
-        let mut root = [PdfDictEntry::new("Root", PdfObject::Ref(objects[0].id))];
-        admit_retained_text(&mut objects, &mut root, |id| (1..=8).contains(&id.num).then(|| id.num as usize - 1)).unwrap();
-        let cold = lift_document(&root, "1.7", &mut GraphSource::new(&objects)).unwrap();
-        assert_eq!(cold.pages.iter().map(|page| page.annotations.len()).collect::<Vec<_>>(), [2, 1]);
-        assert_eq!(cold.pages[0].annotations[0].contents.as_deref(), fixture["expected"]["note"]["contents"].as_str());
-        assert_eq!(cold.pages[0].annotations[0].name.as_deref(), fixture["expected"]["note"]["name"].as_str());
-
-        for mode in ["complete", "cancel", "appearance"] {
-            let mut graph = objects.clone();
-            if mode == "appearance" {
-                let PdfObject::Dict(entries) = &mut graph[5].value else { panic!("link dictionary"); };
-                entries.push(PdfDictEntry::new("AP", PdfObject::Dict(Vec::new())));
-            }
-            let expected = graph.clone();
-            let mut graph = BorrowedAnnotationGraph(graph);
-            let mut cursor = DocumentLiftCursor::controlled();
-            let mut grant = CosGrant { work: 1, ..Default::default() };
-            let mut events = 0;
-            let mut note_granted = false;
-            let mut slots_granted = false;
-            let mut ended = false;
-            for _ in 0..2048 {
-                let cancelled = mode == "cancel" && note_granted && grant.allocation_bytes == 0;
-                let receipt = cursor.advance(&root, "1.7", &mut graph, grant, cancelled);
-                assert!(receipt.work <= 1 && receipt.allocated_bytes <= grant.allocation_bytes && receipt.released_bytes <= grant.release_bytes);
-                match receipt.event.unwrap() {
-                    ControlledLiftEvent::NeedsAllocation { bytes } => {
-                        slots_granted |= bytes == 2 * std::mem::size_of::<PdfAnnotation>();
-                        grant.allocation_bytes = bytes;
-                        assert_eq!(receipt.work, 0);
-                    }
-                    ControlledLiftEvent::NeedsRelease { bytes } => grant.release_bytes = bytes,
-                    ControlledLiftEvent::More => {
-                        note_granted |= receipt.allocated_bytes == ["Review note", "review-1", "Comment", "Reviewer", "Plan"].iter().map(|s| s.len()).sum::<usize>() + 3 * std::mem::size_of::<f64>();
-                        grant.allocation_bytes = 0;
-                        grant.release_bytes = 0;
-                    }
-                    ControlledLiftEvent::Complete => {
-                        assert_eq!(mode, "complete");
-                        assert_eq!(cursor.take_result().unwrap(), cold);
-                        ended = true;
-                        break;
-                    }
-                    event @ (ControlledLiftEvent::Cancelled | ControlledLiftEvent::Deferred(ControlledLiftBarrier::Page)) => {
-                        assert_eq!(event, if mode == "cancel" { ControlledLiftEvent::Cancelled } else { ControlledLiftEvent::Deferred(ControlledLiftBarrier::Page) });
-                        assert!(cursor.take_result().is_none());
-                        let inspected = graph.0.clone();
-                        cursor.begin_close();
-                        let close = CosGrant { work: 1, allocation_bytes: 0, release_bytes: usize::MAX };
-                        while cursor.close_step(close).event != Ok(ControlledLiftEvent::Closed) {}
-                        assert_eq!(graph.0, inspected);
-                        let partial = cursor.take_partial();
-                        assert!(partial.snapshot.unwrap().pages.is_empty());
-                        assert_eq!(partial.page.unwrap().annotations, cold.pages[0].annotations[..1]);
-                        ended = true;
-                        break;
-                    }
-                    event => panic!("unexpected controlled annotation state {event:?}"),
-                }
-                events += receipt.work;
-            }
-            assert!(ended && slots_granted && note_granted && events > 10);
-            assert_eq!(graph.0, expected);
-        }
-    }
-
-    struct BorrowedAnnotationGraph(Vec<PdfIndirectObject>);
-
-    impl ObjectSource for BorrowedAnnotationGraph {
-        fn get(&mut self, _: ObjRef) -> Option<PdfObject> { panic!("controlled annotations must borrow PDF originals") }
-
-        fn inspect(&mut self, reference: ObjRef, read: &mut dyn FnMut(Option<&PdfObject>)) {
-            read(self.0.iter().find(|object| object.id == reference).map(|object| &object.value));
         }
     }
 

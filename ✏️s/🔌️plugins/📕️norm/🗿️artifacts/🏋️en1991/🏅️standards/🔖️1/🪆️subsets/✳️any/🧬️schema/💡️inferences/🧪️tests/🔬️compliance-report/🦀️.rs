@@ -22,9 +22,9 @@ async fn de_office_compliant_example_passes() {
 #[semio_framework_async_macros::async_test]
 async fn the_fire_load_check_uses_exactly_the_chosen_basis_and_cites_it() {
     use semio_s_artifact_norm_en1991_model::FireLoadBasis;
-    use semio_s_artifact_norm_en1991_examples::example_subjects::de_fire_parametric_compliant;
+    use semio_s_artifact_norm_en1991_examples::example_subjects::en_fire_parametric_compliant;
     let fire_load = |doc: &En1991Snapshot| evaluate(doc).checks.into_iter().find(|c| c.id == "en1991.1-2.fire-load").expect("fire-load check");
-    let table = En1991Snapshot { fire_load_basis: FireLoadBasis::OccupancyTable, fire_load_density_qf: 900.0e6, ..de_fire_parametric_compliant() };
+    let table = En1991Snapshot { annex: AnnexChoice::En, fire_load_basis: FireLoadBasis::OccupancyTable, fire_load_density_qf: 900.0e6, ..en_fire_parametric_compliant() };
     let user = En1991Snapshot { fire_load_basis: FireLoadBasis::UserSpecified, ..table.clone() };
     let (by_table, by_user) = (fire_load(&table), fire_load(&user));
     assert!(by_table.explanation.en.contains("Table E.4 row \"office\"") && by_table.explanation.de.contains("Tabelle E.4 Zeile \"office\""), "{}", by_table.explanation.en);
@@ -486,8 +486,8 @@ async fn snapshot_json_validates_against_schema() {
 async fn field_meta_coverage_all_committed_examples() {
     use semio_s_artifact_norm_en1991_editor::field_meta::en1991_field_meta;
     use semio_s_artifact_norm_en1991_examples::example_subjects::{
-        de_accidental_variants, de_bridge_compliant, de_bridge_noncompliant, de_fire_parametric_compliant,
-        de_fire_parametric_noncompliant, de_office_compliant, multi_fail_noncompliant,
+        de_accidental_variants, de_bridge_compliant, de_bridge_noncompliant, en_fire_parametric_compliant,
+        en_fire_parametric_noncompliant, de_office_compliant, multi_fail_noncompliant,
     };
     use semio_s_artifact_norm_en1991_io::text::snapshot::encode_en1991_snapshot_json;
     for doc in [
@@ -495,8 +495,8 @@ async fn field_meta_coverage_all_committed_examples() {
         multi_fail_noncompliant(),
         de_bridge_compliant(),
         de_bridge_noncompliant(),
-        de_fire_parametric_compliant(),
-        de_fire_parametric_noncompliant(),
+        en_fire_parametric_compliant(),
+        en_fire_parametric_noncompliant(),
         de_accidental_variants(),
     ] {
         let json: serde_json::Value = serde_json::from_str(&encode_en1991_snapshot_json(&doc)).unwrap();
@@ -554,7 +554,7 @@ async fn field_meta_coverage_all_committed_examples() {
 #[semio_framework_async_macros::async_test]
 async fn scope_aware_perturbation_of_editable_leaves() {
     use semio_s_artifact_norm_en1991_examples::example_subjects::{
-        de_accidental_variants, de_bridge_compliant, de_fire_parametric_compliant, de_office_compliant,
+        de_accidental_variants, de_bridge_compliant, en_fire_parametric_compliant, de_office_compliant,
     };
     use semio_s_artifact_norm_en1991_model::{FireMode, StructureKind};
     let office_na = [
@@ -734,7 +734,7 @@ async fn scope_aware_perturbation_of_editable_leaves() {
     let suites = [
         ("office", de_office_compliant(), &office_na[..]),
         ("bridge", de_bridge_compliant(), &bridge_na[..]),
-        ("fire", de_fire_parametric_compliant(), &fire_na[..]),
+        ("fire", en_fire_parametric_compliant(), &fire_na[..]),
         ("accidental", de_accidental_variants(), &accidental_na[..]),
     ];
     for (name, base, na) in suites {
@@ -1058,7 +1058,7 @@ fn claims_document(tank: bool) -> En1991Snapshot {
 async fn every_spec_id_is_traced_to_a_check_the_documents_or_design_cases_emit() {
     let mut lowland = de_office_compliant();
     lowland.north_german_lowland_snow = true;
-    let documents = [claims_document(false), claims_document(true), En1991Snapshot::example(AnnexChoice::De), de_office_compliant(), lowland, semio_s_artifact_norm_en1991_examples::example_subjects::de_bridge_compliant(), semio_s_artifact_norm_en1991_examples::example_subjects::de_fire_parametric_compliant(), semio_s_artifact_norm_en1991_examples::example_subjects::de_accidental_variants(), multi_fail_noncompliant(), wave_3_document(), wave_6_document()];
+    let documents = [claims_document(false), claims_document(true), En1991Snapshot::example(AnnexChoice::De), de_office_compliant(), lowland, semio_s_artifact_norm_en1991_examples::example_subjects::de_bridge_compliant(), semio_s_artifact_norm_en1991_examples::example_subjects::en_fire_parametric_compliant(), semio_s_artifact_norm_en1991_examples::example_subjects::de_accidental_variants(), multi_fail_noncompliant(), wave_3_document(), wave_6_document()];
     let emitted = documents
         .iter()
         .fold(semio_s_plugin_norm_compliance::spec_trace::Emitted::default(), |emitted, doc| emitted.with_checks(evaluate(doc).checks.into_iter().map(|c| c.id)))

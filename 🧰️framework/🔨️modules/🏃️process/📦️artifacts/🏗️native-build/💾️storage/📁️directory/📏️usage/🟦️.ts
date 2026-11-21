@@ -34,8 +34,11 @@ export async function measureNativeDirectoryUsageAsyncV1(root:string,options:Rea
  const maximumEntries=options.maximumEntries??protocol.maximumEntries,signal=options.signal,port=options.port??systemNativeDirectoryWalkV1(signal),row=protocol.usage,windows=process.platform==="win32",separator=windows?row.entry.windowsSeparator:row.entry.posixSeparator;
  if(!row.entry.platforms.includes(process.platform))throw Error(row.entry.refusal);
  if(!Number.isSafeInteger(maximumEntries)||maximumEntries<1)throw Error("Positive entry bound required");
- const seen=new Set<string>(),stack:{path:string;depth:number}[]=[],waiting:(()=>void)[]=[];
- let allocatedBytes=0,logicalBytes=0,entries=0,active=0,failed=false,failure:unknown;
+ type Directory={path:string;depth:number};
+ type Listing={names:readonly string[];prefix:string;depth:number;next:number;pending:number};
+ type Job={directory:Directory}|{listing:Listing;start:number;end:number};
+ const seen=new Set<string>(),stack:Directory[]=[],listed:Listing[]=[],waiting:(()=>void)[]=[];
+ let allocatedBytes=0,logicalBytes=0,entries=0,active=0,retained=0,failed=false,failure:unknown;
  const wake=()=>{for(const resume of waiting.splice(0))resume();};
  const fail=(error:unknown)=>{if(!failed){failed=true;failure=error;}wake();};
  const take=(path:string,depth:number,stat:EntryStatV1)=>{
@@ -44,32 +47,48 @@ export async function measureNativeDirectoryUsageAsyncV1(root:string,options:Rea
   allocatedBytes+=Number(stat.blocks)*512;if(stat.isFile())logicalBytes+=Number(stat.size);
   if(stat.isDirectory()){if(depth>=protocol.maximumDepth)throw Error("Directory usage depth bound exceeded");stack.push({path,depth});wake();}
  };
- const next=async():Promise<{path:string;depth:number}|undefined>=>{
+ const next=async():Promise<Job|undefined>=>{
   for(;;){
    if(failed)return undefined;
-   const item=stack.pop();if(item){active++;return item;}
+   if(stack.length&&retained<row.concurrency){retained++;active++;return{directory:stack.pop()!};}
+   const listing=listed.at(-1);
+   if(listing){
+    const start=listing.next,end=Math.min(start+row.batch,listing.names.length);
+    listing.pending++;listing.next=end;active++;
+    if(end===listing.names.length)listed.pop();
+    return{listing,start,end};
+   }
    if(active===0)return undefined;
    await new Promise<void>(resume=>waiting.push(resume));
   }
  };
- take(resolve(root),0,await port.stat(resolve(root)));
+ const list=async({path,depth}:Directory)=>{
+  let admitted=false;
+  try{
+   signal?.throwIfAborted();let names:readonly string[];try{names=await port.list(path);}catch(error){if(vanished(error))return;throw error;}
+   if(!names.length||failed)return;
+   const prefix=path.endsWith(separator)?path:path+separator;
+   listed.push({names,prefix,depth,next:0,pending:0});admitted=true;
+  }finally{if(!admitted)retained--;}
+ };
+ const batch=async(listing:Listing,start:number,end:number)=>{
+  try{
+   signal?.throwIfAborted();const paths:string[]=[];
+   for(let index=start;index<end;index++)paths.push(appendNativeDirectoryEntryV1(listing.prefix,listing.names[index]!,windows));
+   const results=await Promise.all(paths.map(async path=>{try{return{path,stat:await port.stat(path)};}catch(error){if(!vanished(error))fail(error);return undefined;}}));
+   for(const result of results)if(result&&!failed)take(result.path,listing.depth+1,result.stat);
+  }finally{if(--listing.pending===0&&listing.next===listing.names.length)retained--;}
+ };
+ signal?.throwIfAborted();const base=resolve(root);take(base,0,await port.stat(base));
  const worker=async()=>{
-  for(let item=await next();item;item=await next()){
-   try{
-    signal?.throwIfAborted();
-    let names:readonly string[];try{names=await port.list(item.path);}catch(error){if(vanished(error))continue;throw error;}
-    const prefix=item.path.endsWith(separator)?item.path:item.path+separator;
-    for(let index=0;index<names.length&&!failed;index+=row.batch){
-     signal?.throwIfAborted();
-     const paths:string[]=[];for(let offset=index;offset<Math.min(names.length,index+row.batch);offset++)paths.push(appendNativeDirectoryEntryV1(prefix,names[offset]!,windows));
-     const results=await Promise.all(paths.map(async path=>{try{return{path,stat:await port.stat(path)};}catch(error){if(!vanished(error))fail(error);return undefined;}}));
-     for(const result of results)if(result&&!failed)take(result.path,item.depth+1,result.stat);
-    }
-   }catch(error){fail(error);}finally{active--;wake();}
+  for(let job=await next();job;job=await next()){
+   try{if(failed)continue;if("directory" in job)await list(job.directory);else await batch(job.listing,job.start,job.end);}
+   catch(error){fail(error);}finally{active--;wake();}
   }
  };
  await Promise.all(Array.from({length:row.concurrency},worker));
  if(failed)throw failure;
+ signal?.throwIfAborted();
  if(!Number.isSafeInteger(allocatedBytes))throw Error("Directory usage overflow");
  return Object.freeze({allocatedBytes,logicalBytes,entries});
 }

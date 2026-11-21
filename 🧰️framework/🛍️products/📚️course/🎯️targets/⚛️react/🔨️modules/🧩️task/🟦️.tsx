@@ -10,7 +10,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FocusEv
 import type { Answer, CompareHint, Hint, Quantity, SheetTask, Slug, Text } from "@semio-tech/course";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { startPointerDrag } from "../🤏️drag/🟦️.ts";
-import { useAnnouncement, type Announcement } from "../🪟️chrome/🟦️.tsx";
+import { CELL, useAnnouncement, type Announcement } from "../🪟️chrome/🟦️.tsx";
 import { formatCount, formatQuantity, formatTimes, parseQuantity, quantityReading, quantitySymbol, quantityUnits, splitGuess, withUnit } from "../📏️quantity/🟦️.ts";
 
 /** 🧾️ The props of one task interaction: the presented task, the learner's current answer and where changes go; the
@@ -97,10 +97,12 @@ export function DragGrip(props: { readonly title: string; readonly onDrop: (zone
   return (
     <span
       data-course-grip=""
-      className={`course-target inline-grid min-w-[1.75em] touch-none select-none place-items-center text-muted-foreground ${locked ? "cursor-not-allowed opacity-50" : "cursor-grab"}`}
+      data-locked={locked ? "" : undefined}
+      className={`course-target inline-grid min-w-[1.75em] select-none place-items-center text-muted-foreground ${locked ? "cursor-not-allowed opacity-50" : "cursor-grab"}`}
       aria-hidden="true"
       title={title}
       onPointerDown={locked ? undefined : (event: PointerEvent<HTMLSpanElement>) => {
+        if (event.isPrimary === false || event.button !== 0) return;
         abandon.current?.();
         abandon.current = startPointerDrag(event, onDrop);
       }}
@@ -233,7 +235,7 @@ export function GuessField(props: {
   };
 
   return (
-    <div className="course-guess min-w-0">
+    <div {...CELL} className="course-guess min-w-0">
       <div ref={entry} data-shared-border-group="" className="course-guess-entry">
         <input
           id={id}

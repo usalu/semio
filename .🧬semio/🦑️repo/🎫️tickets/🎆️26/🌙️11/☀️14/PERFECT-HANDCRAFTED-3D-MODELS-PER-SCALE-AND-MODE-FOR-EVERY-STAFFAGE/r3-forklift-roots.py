@@ -162,6 +162,14 @@ def clip_texts(old):
     return result
 
 
+def coarse_pens(scale, geometry):
+    ids = {"200": {"body-l", "body-r", "floor-plate"}, "500": {"body-l", "body-r", "fender-l", "fender-r", "pallet", "frame-front"}}
+    for shapes in geometry.values():
+        for shape in shapes:
+            if shape["id"] in ids.get(str(scale), set()):
+                shape["penMm"] = 0.21
+
+
 def apply(asset, K, data):
     asset["summary"] = text("A battery-electric four-wheel counterbalanced forklift of 2.5 t (Jungheinrich EFG 425 class): a Duplex ZT mast with nested channels, two lift cylinders and a free-lifting ISO class 2 carriage with load backrest and 1.15 m forks, two tilt cylinders, an overhead guard, twin-motor drive axle and steer axle with superelastic tyres, the battery under the seat and a cast counterweight, and a Euro pallet with 1 t of goods; the front and rear axle reactions shift with the load moment.",
                             "Ein batterieelektrischer Vierrad-Gegengewichtsstapler mit 2,5 t Tragkraft (Klasse Jungheinrich EFG 425): ein Duplex-ZT-Mast mit geschachtelten Profilen, zwei Hubzylindern und einem freihebenden Gabelträger nach ISO Klasse 2 mit Lastschutzgitter und 1,15-m-Gabeln, zwei Neigezylinder, Fahrerschutzdach, Antriebsachse mit zwei Fahrmotoren und Lenkachse mit Superelastikreifen, die Batterie unter dem Sitz und ein gegossenes Gegengewicht, dazu eine Europalette mit 1 t Ladegut; die Reaktionen von Vorder- und Hinterachse verschieben sich mit dem Lastmoment.")
@@ -181,5 +189,6 @@ def apply(asset, K, data):
             region["hidden"] = HIDDEN[region["id"]]
     for scale, shapes in data["shapes"].items():
         rep = asset["representations"][scale]
+        coarse_pens(scale, shapes)
         rep["geometry"] = shapes
         rep["decisions"] = data["decisions"][scale]

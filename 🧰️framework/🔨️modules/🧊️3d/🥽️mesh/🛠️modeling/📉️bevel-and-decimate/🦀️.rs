@@ -15,11 +15,18 @@ pub(super) struct Bevel {
     pub(super) selected: HistoryFoldSet<u32>,
     pub(super) planes: Vec<(Vec3, f32)>,
     profile: Option<Profile>,
+    local: Option<LocalBevel>,
     pub(super) clip: Option<MeshClipJob>,
     pub(super) build: Option<Build>,
     pub(super) attributes:Option<SourceAttributeRemap>,
     retain_channels:bool,
     pub(super) phase: u8,
+}
+
+struct LocalBevel {
+    endpoints:[u32;2],
+    faces:[[u32;3];2],
+    degrees:[usize;2],
 }
 
 struct Profile {
@@ -32,6 +39,7 @@ struct Profile {
     pub(super) radius: f32,
     theta: f32,
     clearance: f32,
+    interior: bool,
     side: usize,
     pub(super) corner: usize,
     segment: u32,
@@ -39,14 +47,14 @@ struct Profile {
 
 impl Bevel {
     pub(super) fn new(source: HalfedgeMesh, edges: Vec<EdgeId>, amount: f32, segments: u32) -> Self {
-        Self {retain_channels:!source.attributes.is_empty() || !source.uv_seams.is_empty(),attributes:None,snapshot: Snapshot::new(source), edges, amount, segments, extent: 0.0, epsilon: 0.0, face: 0, vertex: 0, edge: 0, selected: HistoryFoldSet::new(), planes: Vec::new(), profile: None, clip: None, build: None, phase: 0 }
+        Self {retain_channels:!source.attributes.is_empty() || !source.uv_seams.is_empty(),attributes:None,snapshot: Snapshot::new(source), edges, amount, segments, extent: 0.0, epsilon: 0.0, face: 0, vertex: 0, edge: 0, selected: HistoryFoldSet::new(), planes: Vec::new(), profile: None, local: None, clip: None, build: None, phase: 0 }
     }
 
     pub(super) fn phase(&self) -> &'static str {
-        match self.phase { 0 => "snapshot", 1..=3 => "validate", 4 => "profile", 5 => "clip", 6=>"reconstruct",7=>"bevel-clip-reconstruct",8=>"bevel-source-vertices",9=>"bevel-clip-attributes",10=>"snapshot",_=>"bevel-final-attributes" }
+        match self.phase { 0 => "snapshot", 1..=3 => "validate", 4 => "profile", 5 => "clip", 6=>"reconstruct",7=>"bevel-clip-reconstruct",8=>"bevel-source-vertices",9=>"bevel-clip-attributes",10=>"snapshot",11=>"bevel-final-attributes",12=>"bevel-surface",13|14=>"bevel-local-certificate",_=>unreachable!() }
     }
 
-    pub(super) fn advance(&mut self) -> MeshResult<Option<HalfedgeMesh>> {
+    pub(super) fn advance(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress) -> MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0 => { if self.snapshot.complete() { self.phase = 1; } }
             1 => {
@@ -56,23 +64,53 @@ impl Bevel {
                     if self.epsilon == 0.0 { return Err(MeshKernelError::DegenerateOperation); }
                     self.vertex = 0;
                     self.phase = 2;
-                } else { self.extent = self.extent.max(Vec3(positions[self.vertex]).sub(Vec3(positions[0])).length()); self.vertex += 1; }
+                } else {
+                    self.retain_channels|=self.snapshot.source.vertices[self.vertex].normal.is_some();
+                    self.extent=self.extent.max(Vec3(positions[self.vertex]).sub(Vec3(positions[0])).length());
+                    self.vertex+=1;
+                }
             }
             2 => {
                 let soup = &self.snapshot.soup;
                 if self.face == soup.faces.len() { self.phase = 3; self.vertex = 0; }
                 else {
                     let normal = soup.normals[self.face];
+                    self.retain_channels|=self.snapshot.source.faces[self.face].smooth;
                     let origin = Vec3(soup.positions[soup.faces[self.face][0] as usize]);
-                    if normal.length() == 0.0 || Vec3(soup.positions[self.vertex]).sub(origin).dot(normal) > self.epsilon { return Err(MeshKernelError::InvalidInput("bevel requires an outward convex mesh".into())); }
-                    self.vertex += 1;
+                    if normal.length()==0.0 {return Err(MeshKernelError::InvalidInput("bevel requires an outward convex mesh".into()));}
+                    if self.local.is_none()&&Vec3(soup.positions[self.vertex]).sub(origin).dot(normal)>self.epsilon {
+                        if self.edges.len()!=1 {return Err(MeshKernelError::InvalidInput("multi-edge bevel requires an outward convex mesh".into()));}
+                        let source=&self.snapshot.source;
+                        let edge=&source.halfedges[self.edges[0].0 as usize];
+                        self.local=Some(LocalBevel{endpoints:[edge.vertex,source.halfedges[edge.next as usize].vertex],faces:[[0;3];2],degrees:[0;2]});
+                    }
+                    self.vertex=if self.local.is_some(){soup.positions.len()}else{self.vertex+1};
                     if self.vertex == soup.positions.len() { self.vertex = 0; self.face += 1; }
                 }
             }
             3 => {
-                if self.vertex == self.snapshot.source.halfedges.len() { self.phase = 4; }
-                else {
-                    if self.snapshot.source.halfedges[self.vertex].twin.is_none() { return Err(MeshKernelError::InvalidInput("bevel requires a closed manifold mesh".into())); }
+                if self.vertex == self.snapshot.source.halfedges.len() {
+                    self.phase=4;
+                    if let Some(local)=&self.local {
+                        let [left,right]=local.faces;
+                        if local.degrees!=[3,3]||left.iter().filter(|face|right.contains(face)).count()!=2 {
+                            return Err(MeshKernelError::InvalidInput("local bevel requires two trihedral endpoints".into()));
+                        }
+                        self.face=0;self.vertex=0;self.phase=14;
+                    }
+                } else {
+                    let edge=&self.snapshot.source.halfedges[self.vertex];
+                    self.retain_channels|=edge.uv!=[0.0;2];
+                    if edge.twin.is_none() { return Err(MeshKernelError::InvalidInput("bevel requires a closed manifold mesh".into())); }
+                    if let Some(local)=&mut self.local {
+                        if let Some(side)=local.endpoints.iter().position(|&vertex|vertex==edge.vertex) {
+                            if local.degrees[side]==3 {return Err(MeshKernelError::InvalidInput("local bevel requires two trihedral endpoints".into()));}
+                            let face=edge.face.ok_or(MeshKernelError::InvalidHandle)?;
+                            if local.faces[side][..local.degrees[side]].contains(&face){return Err(MeshKernelError::NonManifold);}
+                            local.faces[side][local.degrees[side]]=face;
+                            local.degrees[side]+=1;
+                        }
+                    }
                     self.vertex += 1;
                 }
             }
@@ -82,9 +120,13 @@ impl Bevel {
                         let face = &self.snapshot.soup.faces[profile.faces[profile.side]];
                         let point = Vec3(self.snapshot.soup.positions[face[profile.corner] as usize]);
                         let distance = profile.origin.sub(point).dot(profile.directions[profile.side]);
-                        if distance > self.epsilon { profile.clearance = profile.clearance.min(distance); }
+                        if self.local.is_some()&&distance < -self.epsilon {return Err(MeshKernelError::InvalidInput("local bevel requires a convex selected edge".into()));}
+                        if distance > self.epsilon {profile.interior=true;profile.clearance=profile.clearance.min(distance);}
                         profile.corner += 1;
-                        if profile.corner == face.len() { profile.corner = 0; profile.side += 1; }
+                        if profile.corner == face.len() {
+                            if self.local.is_some()&&!profile.interior {return Err(MeshKernelError::InvalidInput("local bevel requires a convex selected edge".into()));}
+                            profile.interior=false;profile.corner=0;profile.side+=1;
+                        }
                     } else {
                         if self.amount >= profile.clearance * 0.5 || self.amount <= self.epsilon { return Err(MeshKernelError::InvalidInput("bevel width must stay below half the neighboring face clearance".into())); }
                         let angle = profile.theta * (profile.segment as f32 + 0.5) / self.segments as f32;
@@ -94,7 +136,9 @@ impl Bevel {
                         profile.segment += 1;
                         if profile.segment == self.segments { self.profile = None; }
                     }
-                } else if self.edge == self.edges.len() { self.phase = 5; self.edge = 0; }
+                } else if self.edge == self.edges.len() {
+                    self.phase=if self.local.is_some(){13}else{5};self.edge=0;self.vertex=0;
+                }
                 else {
                     let id = self.edges[self.edge].0;
                     self.edge += 1;
@@ -110,13 +154,13 @@ impl Bevel {
                         if sine.abs() < 1e-5 { return Err(MeshKernelError::DegenerateOperation); }
                         let origin = Vec3(self.snapshot.soup.positions[he.vertex as usize]);
                         let tangent = n2.sub(n1.scale(cosine)).scale(1.0 / sine);
-                        self.profile = Some(Profile { faces, directions: [tangent, n1.sub(n2.scale(cosine)).scale(1.0 / sine)], origin, normal: n1, tangent, center: origin.sub(n1.add(n2).scale(self.amount / sine)), radius: self.amount * (1.0 + cosine) / sine, theta, clearance: f32::INFINITY, side: 0, corner: 0, segment: 0 });
+                        self.profile = Some(Profile { faces, directions: [tangent, n1.sub(n2.scale(cosine)).scale(1.0 / sine)], origin, normal: n1, tangent, center: origin.sub(n1.add(n2).scale(self.amount / sine)), radius: self.amount * (1.0 + cosine) / sine, theta, clearance: f32::INFINITY, interior:false, side: 0, corner: 0, segment: 0 });
                     }
                 }
             }
             5 => {
                 if let Some(clip) = &mut self.clip {
-                    if clip.advance(&mut self.snapshot.soup)? {if self.retain_channels {self.build=Some(Build::unreferenced(std::mem::take(&mut self.snapshot.soup)));self.phase=7;}else {self.clip=None;self.edge+=1;}}
+                    if clip.advance(&mut self.snapshot.soup)? {if self.retain_channels {self.build=Some(Build::new(std::mem::take(&mut self.snapshot.soup),true));self.phase=7;}else {self.clip=None;self.edge+=1;}}
                 } else if self.edge < self.planes.len() {
                     let (normal, distance) = self.planes[self.edge];
                     self.clip = Some(MeshClipJob::new(normal, distance, self.epsilon));
@@ -132,14 +176,74 @@ impl Bevel {
                 }
             }
             7=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {let clip=self.clip.as_mut().unwrap();let mut attributes=SourceAttributeRemap::new(mesh,None,Some(clip.take_source_faces()?),None,None);attributes.configuration_mut()?.corner_faces=Some(clip.take_corner_faces()?);attributes.configuration_mut()?.generated_faces=Some(clip.take_face_weights()?);attributes.configuration_mut()?.generated_vertices=Some(Vec::new());self.attributes=Some(attributes);self.vertex=0;self.phase=8;}},
-            8=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.vertex==origins.len() {self.phase=9;}else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.clip.as_ref().unwrap().vertex_source(origins[self.vertex] as usize)?);self.vertex+=1;}},
-            9=>{if let Some(mesh)=self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source)? {self.snapshot=Snapshot::new(mesh);self.clip=None;self.build=None;self.attributes=None;self.phase=10;}},
+            8=>{
+                let build=self.build.as_ref().unwrap();
+                let origins=build.origin_vertices();
+                let attributes=self.attributes.as_mut().unwrap();
+                if self.vertex==origins.len() {
+                    let first_cap=attributes.configuration_mut()?.faces.as_ref().unwrap().len()-1;
+                    attributes.retain_filled_surface(first_cap);
+                    self.phase=12;
+                }else {
+                    let origin=self.clip.as_ref().unwrap().vertex_source(origins[self.vertex] as usize)?;
+                    attributes.configuration_mut()?.generated_vertices.as_mut().unwrap().push(origin);
+                    self.vertex+=1;
+                }
+            },
+            9=>if let Some(mesh)=self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source)? {
+                if self.edge+1==self.planes.len() {
+                    if mesh.face_count()<4 {return Err(MeshKernelError::InvalidInput("bevel removed the solid".into()));}
+                    return Ok(Some(mesh));
+                }
+                self.snapshot=Snapshot::new(mesh);self.clip=None;self.build=None;self.attributes=None;self.phase=10;
+            },
             10=>{if self.snapshot.complete() {self.edge+=1;self.phase=5;}},
             11=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
+            12=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {attributes.step_refined_surface(&self.snapshot.source,grant,receipt)?;}
+                else {self.phase=9;}
+            },
+            13=>{
+                let soup=&self.snapshot.soup;
+                let (normal,limit)=self.planes[self.edge];
+                let distance=Vec3(soup.positions[self.vertex]).dot(normal)-limit;
+                let outside=self.local.as_ref().unwrap().endpoints.contains(&(self.vertex as u32));
+                if (outside&&distance<=self.epsilon)||(!outside&&distance>=-self.epsilon) {
+                    return Err(MeshKernelError::InvalidInput("local bevel profile crosses its endpoint neighborhood".into()));
+                }
+                self.vertex+=1;
+                if self.vertex==soup.positions.len(){
+                    self.vertex=0;self.edge+=1;
+                    if self.edge==self.planes.len(){self.edge=0;self.phase=5;}
+                }
+            },
+            14=>{
+                let soup=&self.snapshot.soup;
+                let id=self.local.as_ref().unwrap().faces[self.face/3][self.face%3] as usize;
+                let face=&soup.faces[id];
+                let origin=Vec3(soup.positions[face[0] as usize]);
+                let vertex=Vec3(soup.positions[face[self.vertex] as usize]);
+                if vertex.sub(origin).dot(soup.normals[id]).abs()>self.epsilon {
+                    return Err(MeshKernelError::InvalidInput("local bevel requires planar endpoint faces".into()));
+                }
+                self.vertex+=1;
+                if self.vertex==face.len(){
+                    self.vertex=0;self.face+=1;
+                    if self.face==6 {self.phase=4;}
+                }
+            },
             _=>unreachable!(),
         }
         Ok(None)
     }
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+pub(super) enum DecimateDiscard {
+    Candidate(Candidate),
+    Reconstruction(Build, HalfedgeMesh),
+    Collapse(Snapshot, HistoryFoldSet<(u32, u32)>, Option<Build>, Option<SourceAttributeRemap>),
 }
 
 pub(super) struct Decimate {
@@ -156,19 +260,36 @@ pub(super) struct Decimate {
     pub(super) edge_sources:Vec<(u32,u32)>,
     collapse:(u32,u32),
     pub(super) attributes:Option<SourceAttributeRemap>,
+    pub(super) discard:Option<semio_framework_value::retirement::controlled::ControlledRetirement<DecimateDiscard>>,
     pub(super) phase: u8,
 }
 
 impl Decimate {
     pub(super) fn new(source: HalfedgeMesh, target: usize) -> Self {
-        Self { snapshot: Snapshot::new(source), target, closed: true, edges: HistoryFoldSet::new(), ranked: BinaryHeap::new(), candidate: None, build: None, face: 0, corner: 0, source_faces:Vec::new(),edge_sources:Vec::new(),collapse:(0,0),attributes:None,phase: 0 }
+        Self { snapshot: Snapshot::new(source), target, closed: true, edges: HistoryFoldSet::new(), ranked: BinaryHeap::new(), candidate: None, build: None, face: 0, corner: 0, source_faces:Vec::new(),edge_sources:Vec::new(),collapse:(0,0),attributes:None,discard:None,phase: 0 }
     }
 
     pub(super) fn phase(&self) -> &'static str {
+        if self.discard.is_some() { return "decimate-retire"; }
+        if self.phase==5 && self.attributes.as_ref().is_some_and(|attributes|attributes.retaining_refined_surface()) {return "decimate-surface";}
         match self.phase { 0 => "snapshot", 1 => "edges", 2 => "candidate", 3 => "reconstruct",4=>"decimate-source-vertices",_=>"decimate-attributes" }
     }
 
-    pub(super) fn advance(&mut self) -> MeshResult<Option<HalfedgeMesh>> {
+    fn discard(&mut self, original: DecimateDiscard) {
+        debug_assert!(self.discard.is_none());
+        self.discard = Some(semio_framework_value::retirement::controlled::ControlledRetirement::retain(original));
+    }
+
+    pub(super) fn advance(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, receipt: &mut RetainedCloneProgress) -> MeshResult<Option<HalfedgeMesh>> {
+        if self.discard.is_some() {
+            super::close_modeling_handoff(&mut self.discard, effect, receipt)?;
+            return Ok(None);
+        }
+        if effect.remaining_work_units().map_err(MeshKernelError::Retained)? == 0
+            || !effect.performed(1).map_err(MeshKernelError::Retained)?
+        {
+            return Ok(None);
+        }
         match self.phase {
             0 => {
                 if self.snapshot.source.vertex_count() <= self.target { return Ok(Some(std::mem::replace(&mut self.snapshot.source, HalfedgeMesh::empty()))); }
@@ -196,22 +317,54 @@ impl Decimate {
                 if let Some(candidate) = &mut self.candidate {
                     match candidate.advance(&self.snapshot.soup, self.closed)? {
                         CandidateStep::Working => {},
-                        CandidateStep::Rejected => { self.candidate = None; },
-                        CandidateStep::Accepted(soup,faces,edges) => {self.collapse=(candidate.a,candidate.b);self.source_faces=faces;self.edge_sources=edges;self.build = Some(Build::new(soup, self.closed)); self.phase = 3; self.candidate = None;},
+                        CandidateStep::Rejected => {
+                            let discard = self.candidate.take().unwrap();
+                            self.discard(DecimateDiscard::Candidate(discard));
+                        },
+                        CandidateStep::Accepted(soup,faces,edges) => {
+                            self.collapse=(candidate.a,candidate.b);
+                            self.source_faces=faces;
+                            self.edge_sources=edges;
+                            self.build=Some(Build::new(soup,self.closed));
+                            self.phase=3;
+                            let discard = self.candidate.take().unwrap();
+                            self.discard(DecimateDiscard::Candidate(discard));
+                        },
                     }
                 } else if let Some(Reverse(edge)) = self.ranked.pop() { self.candidate = Some(Candidate::new(edge.a, edge.b)); }
                 else { return Ok(Some(std::mem::replace(&mut self.snapshot.source, HalfedgeMesh::empty()))); }
             }
             3 => {
                 if let Some(mesh) = self.build.as_mut().unwrap().advance()? {
-                    if mesh.vertex_count() >= self.snapshot.source.vertex_count() { self.build = None; self.phase = 2; }
+                    if mesh.vertex_count() >= self.snapshot.source.vertex_count() {
+                        let build = self.build.take().unwrap();
+                        self.discard(DecimateDiscard::Reconstruction(build, mesh));
+                        self.phase=2;
+                    }
                     else {
                         let mut attributes=SourceAttributeRemap::new(mesh,None,Some(std::mem::take(&mut self.source_faces)),None,None);attributes.configuration_mut()?.generated_vertices=Some(Vec::new());attributes.configuration_mut()?.edge_source_keys=Some(std::mem::take(&mut self.edge_sources));self.attributes=Some(attributes);self.corner=0;self.phase=4;
                     }
                 }
             }
-            4=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.corner==origins.len() {self.phase=5;}else {let vertex=origins[self.corner];self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(if vertex==self.collapse.0 {SourceVertex::Edge{a:self.collapse.0,b:self.collapse.1,t:0.5}}else {SourceVertex::Original(vertex)});self.corner+=1;}},
-            5=>{if let Some(mesh)=self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source)? {self.snapshot=Snapshot::new(mesh);self.edges.clear();self.ranked.clear();self.build=None;self.attributes=None;self.face=0;self.corner=0;self.phase=0;}},
+            4=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.corner==origins.len() {self.attributes.as_mut().unwrap().retain_refined_surface();self.phase=5;}else {let vertex=origins[self.corner];self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(if vertex==self.collapse.0 {SourceVertex::Edge{a:self.collapse.0,b:self.collapse.1,t:0.5}}else {SourceVertex::Original(vertex)});self.corner+=1;}},
+            5=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {
+                    attributes.step_refined_surface(&self.snapshot.source,effect.grant(),receipt)?;
+                    return Ok(None);
+                }
+                if let Some(mesh)=attributes.advance(&mut self.snapshot.source)? {
+                    let snapshot=std::mem::replace(&mut self.snapshot,Snapshot::new(mesh));
+                    let edges=std::mem::take(&mut self.edges);
+                    let build=self.build.take();
+                    let attributes=self.attributes.take();
+                    self.discard(DecimateDiscard::Collapse(snapshot,edges,build,attributes));
+                    self.ranked.clear();
+                    self.face=0;
+                    self.corner=0;
+                    self.phase=0;
+                }
+            },
             _=>unreachable!(),
         }
         Ok(None)

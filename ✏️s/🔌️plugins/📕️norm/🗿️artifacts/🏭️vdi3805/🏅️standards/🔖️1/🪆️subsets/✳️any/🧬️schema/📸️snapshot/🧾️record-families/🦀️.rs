@@ -135,6 +135,11 @@ impl RecordFamilyId {
     pub const R690: &'static str = "690";
     pub const R700: &'static str = "700";
     pub const R710: &'static str = "710";
+    pub const R710_09: &'static str = "710.09";
+    pub const R710_10: &'static str = "710.10";
+    pub const R710_15: &'static str = "710.15";
+    pub const R710_16: &'static str = "710.16";
+    pub const R710_17: &'static str = "710.17";
     pub const R720: &'static str = "720";
     pub const R730: &'static str = "730";
     pub const R740: &'static str = "740";
@@ -161,6 +166,11 @@ impl RecordFamilyId {
     pub const R950: &'static str = "950";
     pub const R960: &'static str = "960";
     pub const R970_41: &'static str = "970.41";
+
+    /// 🗓️ Part 22 record families with published correction checks.
+    pub fn has_part22_correction_fields(&self) -> bool {
+        matches!(self.0.as_str(), Self::R110 | Self::R400 | Self::R700 | Self::R710_09 | Self::R710_10 | Self::R710_15 | Self::R710_16 | Self::R710_17)
+    }
 
     pub fn all_known() -> &'static [&'static str] {
         &[

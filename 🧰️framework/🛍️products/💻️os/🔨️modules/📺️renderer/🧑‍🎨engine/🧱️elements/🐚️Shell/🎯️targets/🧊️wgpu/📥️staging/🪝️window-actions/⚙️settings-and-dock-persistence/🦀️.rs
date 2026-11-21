@@ -3,6 +3,9 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎞️original-picker.rs"]
+mod original_picker;
 
 //#region ShellLifecycle
 impl<'ctx> WindowActionsCtx<'ctx> {
@@ -121,6 +124,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                     self.opening.pending_file_opens.push(PendingFileOpen { controller_id: controller_id.to_string(), accept, read_as, import_action, args, multiple, max_file_bytes });
                     #[cfg(not(target_arch = "wasm32"))]
                     {
+                        if self.queue_original_media(controller_id, args.as_ref()) { continue; }
                         let controller_id = controller_id.to_string();
                         self.settle.submit_shell_io_future(async move { ShellIoCompletion::Import(PickedImport { opened: request_file_open(&accept, read_as.as_deref(), multiple, max_file_bytes).await, controller_id, import_action, args, multiple }) });
                     }

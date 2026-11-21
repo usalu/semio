@@ -110,6 +110,44 @@ fn receipt(value: &DslValue) -> Lift<life::Receipt> {
     })
 }
 
+fn bounded_media_text(value: &DslValue, key: &str, maximum: usize) -> Lift<String> {
+    let value = field(value, key)?.as_str().ok_or_else(outside)?;
+    if value.is_empty() || value.chars().take(maximum + 1).count() > maximum { return Err(outside()); }
+    Ok(value.to_owned())
+}
+
+fn original_media_control(value: &DslValue) -> Lift<ev::OriginalMediaControlEvent> {
+    let loan = field(value, "loan")?;
+    let operation_id = bounded_media_text(loan, "operationId", 16)?;
+    let generation = bounded_media_text(loan, "generation", 16)?;
+    let base_revision = bounded_media_text(loan, "baseRevision", 64)?;
+    let valid_hex = |value: &str, width| value.len() == width &&
+        value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte));
+    if !valid_hex(&operation_id, 16) || !valid_hex(&generation, 16) || !valid_hex(&base_revision, 64) {
+        return Err(outside());
+    }
+    let control = field(value, "control")?;
+    let phase = field(control, "tag")?.as_str().ok_or_else(outside)?;
+    let control = match (phase, control.get("val")) {
+        ("begin", Some(begin)) => ev::OriginalMediaControl::Begin(ev::OriginalMediaBegin {
+            name: bounded_media_text(begin, "name", 255)?,
+            media_type: bounded_media_text(begin, "mediaType", 255)?,
+        }),
+        ("complete", None) => ev::OriginalMediaControl::Complete,
+        ("cancel", None) => ev::OriginalMediaControl::Cancel,
+        _ => return Err(outside()),
+    };
+    Ok(ev::OriginalMediaControlEvent {
+        loan: ev::OriginalMediaLoan {
+            operation_id, generation, base_revision, instance_id: word32(loan, "instanceId")?,
+            document_id: bounded_media_text(loan, "documentId", 256)?,
+        },
+        owner: word64(value, "owner")?, seq: word64(value, "seq")?,
+        kind: u8::try_from(word64(value, "kind")?).map_err(|_| outside())?,
+        extent: word32(value, "extent")?, control,
+    })
+}
+
 /// 🎟️ Lifts one event value; the guest never sees a host-built generated value, only this schema-checked lift.
 pub fn event_from_value(value: &DslValue) -> Lift<ev::Event> {
     let (tag, val) = tagged(value)?;
@@ -118,6 +156,7 @@ pub fn event_from_value(value: &DslValue) -> Lift<ev::Event> {
     }
     let val = payload(val)?;
     Ok(match tag.as_str() {
+        "original-media-control" => ev::Event::OriginalMediaControl(original_media_control(val)?),
         "instance-open" => ev::Event::InstanceOpen(ev::InstanceOpenEvent {
             instance: word32(val, "instance")?,
             activation_generation: word64(val, "activationGeneration")?,

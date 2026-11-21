@@ -1,0 +1,22 @@
+{
+  "tolerance": 1e-08,
+  "output": "wire",
+  "cases": [
+    {"id": "equal-radius secant", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [6, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": [[3, -4, 0], [3, 4, 0]]},
+    {"id": "very close unequal centers still meet at two points", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [1e-10, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": [[5e-11, -5, 0], [5e-11, 5, 0]]},
+    {"id": "external tangency", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [10, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": [[5, 0, 0]], "tangent": true},
+    {"id": "internal tangency", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [3, 0, 0], "radius": 2, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": [[5, 0, 0]], "tangent": true},
+    {"id": "concentric unequal radii", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 0], "radius": 2, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": []},
+    {"id": "separate supports", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [11, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": []},
+    {"id": "parallel separated planes", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [6, 0, 1], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": []},
+    {"id": "opposed normals", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [6, 0, 0], "radius": 5, "normal": [0, 0, -1], "axis": [0, -1, 0]}, "points": [[3, -4, 0], [3, 4, 0]]},
+    {"id": "rotated plane", "a": {"center": [1, 2, 3], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "b": {"center": [7, 2, 3], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": [[4, 2, 7], [4, 2, -1]]},
+    {"id": "both trims including an angular seam", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [5.5, 7]}, "b": {"center": [0, 8, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [2.2, 2.8]}, "points": [[-3, 4, 0]]},
+    {"id": "trim excludes both contacts", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [1, 2]}, "b": {"center": [6, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": []},
+    {"id": "coincident complete circles", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": [], "fault": "infinitely many intersections"},
+    {"id": "coincident disjoint trims", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [0, 0.5]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [1, 2]}, "points": []},
+    {"id": "coincident complementary trims share two endpoints", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [0, 3.141592653589793]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [3.141592653589793, 6.283185307179586]}, "points": [[0, 5, 0], [0, -5, 0]], "tangent": true},
+    {"id": "coincident trimmed arcs overlap across the seam", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [5.5, 7]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [0, 0.5]}, "points": [], "fault": "infinitely many intersections"},
+    {"id": "coincident opposite orientations share an endpoint", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [5.5, 6.283185307179586]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, -1], "axis": [0, -1, 0], "range": [2, 3.141592653589793]}, "points": [[0, 5, 0]], "tangent": true}
+  ]
+}

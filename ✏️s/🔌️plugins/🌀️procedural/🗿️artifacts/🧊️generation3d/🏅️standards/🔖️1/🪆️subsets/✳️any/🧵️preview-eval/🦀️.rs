@@ -56,6 +56,10 @@ pub use window_addressing::*;
 mod preview_geometry;
 pub use preview_geometry::*;
 
+#[path = "📦️preview-mesh-table/🦀️.rs"]
+mod preview_mesh_table;
+pub use preview_mesh_table::*;
+
 #[path = "⏱️tick-and-resolve/🦀️.rs"]
 mod tick_and_resolve;
 pub use tick_and_resolve::*;
@@ -80,29 +84,202 @@ pub use tool_run::*;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-/// 🔌️ Output channels whose values travel along a hovered wire or into a hovered inlet.
-pub fn preview_hover_sources(
-    host: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
-    hovered: &std::collections::BTreeSet<String>,
-) -> std::collections::BTreeSet<String> {
-    let mut sources = std::collections::BTreeSet::new();
-    if hovered.is_empty() {
-        return sources;
-    }
-    for wire in &host.synapses {
-        if hovered.contains(&wire.id) || hovered.contains(&format!("{}@{}", wire.to, wire.to_port)) {
-            if wire.from_port.is_empty(){sources.insert(wire.from.clone());}
-            else{sources.insert(format!("{}@{}",wire.from,wire.from_port));}
+/// 🧭️ Which evaluation a window can publish and use to resolve preview geometry.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum PreviewEvaluationSource {
+    WithFallback,
+    Current,
+}
+
+impl PreviewEvaluationSource {
+    fn text(self, session: &FlowEvalSession) -> &str {
+        match self {
+            Self::WithFallback => session.painted_eval_json(),
+            Self::Current => session.eval_json(),
         }
     }
-    sources
 }
 
-pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
+/// 📃️ One parsed evaluation shared by the geometry, status and value projections of a preview.
+pub struct PreviewEvaluation<'a> {
+    source: &'a str,
+    evaluation_source: PreviewEvaluationSource,
+    document: semio_framework_pack_json::Value,
 }
 
-pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<semio_ui_declaration::ui::NodeGraphNodeRecord>, Vec<semio_ui_declaration::ui::NodeGraphEdgeRecord>) {
+impl<'a> PreviewEvaluation<'a> {
+    pub fn from_json(source: &'a str) -> Self {
+        Self::from_source(source, PreviewEvaluationSource::WithFallback)
+    }
+
+    pub fn from_source(source: &'a str, evaluation_source: PreviewEvaluationSource) -> Self {
+        let document = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject)
+            .unwrap_or(semio_framework_pack_json::Value::Null);
+        Self { source, evaluation_source, document }
+    }
+
+    pub fn source(&self) -> &'a str {
+        self.source
+    }
+
+    pub fn mesh_lookup<'session>(&self, session: &'session FlowEvalSession) -> PreviewMeshLookup<'session> {
+        PreviewMeshLookup::for_source(session, self.evaluation_source)
+    }
+
+    pub fn geometry(&self) -> Option<&semio_framework_pack_json::Value> {
+        self.document.as_object()?;
+        self.document.get("error").and_then(semio_framework_pack_json::Value::as_str).is_none().then_some(&self.document)
+    }
+}
+
+/// 🪟️ Carries the authoritative pointer window into the scene's hover projection.
+pub fn stamp_preview_hover_source(object: &mut semio_framework_pack_json::Object, source: Option<&Option<String>>) {
+    use semio_framework_pack_json::Value;
+    if let Some(source) = source {
+        object.insert("hoverSourceWindowId", source.clone().map_or(Value::Null, Value::String));
+    }
+}
+
+/// 🗺️ Builds the shared Edit and View topology from authored widgets and visible canvas handles.
+pub fn graph_interaction_topology(
+    snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    ports: &BTreeMap<String, Vec<String>>,
+) -> semio_plugin::InteractionTopology {
+    use semio_framework_artifact_flow_flow::{neural::Neuron, Widget};
+    use semio_plugin::TopologyNode;
+    use semio_s_artifact_procedural_3d_model::{widget_id, GraphTargetKind::{Edge, Handle, Node}};
+
+    fn children(neuron: &Neuron, parent: &str, ordered: &mut Vec<TopologyNode>) {
+        let id = Node.target(&neuron.id);
+        ordered.push(TopologyNode { id: id.clone(), granularity: Node.granularity().into(), parent: Some(parent.into()) });
+        if let Some(tree) = &neuron.tree {
+            for child in &tree.neurons { children(child, &id, ordered); }
+        }
+    }
+
+    let mut ordered = Vec::new();
+    for widget in &snapshot.widgets {
+        let raw = widget_id(widget);
+        let id = Node.target(raw);
+        ordered.push(TopologyNode { id: id.clone(), granularity: Node.granularity().into(), parent: None });
+        for port in ports.get(raw).into_iter().flatten() {
+            ordered.push(TopologyNode { id: Handle.target(port), granularity: Handle.granularity().into(), parent: Some(id.clone()) });
+        }
+        if let Widget::Cluster { tree, .. } = widget {
+            for child in &tree.neurons { children(child, &id, &mut ordered); }
+        }
+    }
+    for wire in &snapshot.synapses {
+        ordered.push(TopologyNode { id: Edge.target(&wire.id), granularity: Edge.granularity().into(), parent: None });
+    }
+    semio_plugin::InteractionTopology { domains: [("graph".into(), semio_plugin::DomainTopology { ordered })].into() }
+}
+
+/// 🎯️ Raw IDs decoded once for matching surface geometry and authored wires.
+#[derive(Default)]
+pub struct PreviewGraphTargets<'a> {
+    nodes: std::collections::BTreeSet<&'a str>,
+    handles: std::collections::BTreeSet<&'a str>,
+    edges: std::collections::BTreeSet<&'a str>,
+}
+
+impl<'a> PreviewGraphTargets<'a> {
+    pub fn from_ids(ids: impl IntoIterator<Item = &'a String>) -> Self {
+        use semio_s_artifact_procedural_3d_model::GraphTargetKind::{self, Edge, Handle, Node};
+        let mut targets = Self::default();
+        for id in ids {
+            if let Some((kind, id)) = GraphTargetKind::parse(id) {
+                match kind { Node => &mut targets.nodes, Handle => &mut targets.handles, Edge => &mut targets.edges }.insert(id);
+            }
+        }
+        targets
+    }
+
+    pub fn marks(&self, widget: &str, port: &str) -> bool {
+        self.nodes.contains(widget) || self.handles.contains(port)
+    }
+}
+
+/// 🔌️ Geometry endpoints reached through a hovered wire or inlet.
+#[derive(Default)]
+pub struct PreviewWireHover<'a> {
+    ports: std::collections::BTreeSet<String>,
+    input_widgets: std::collections::BTreeSet<&'a str>,
+    output_widgets: std::collections::BTreeSet<&'a str>,
+}
+
+impl<'a> PreviewWireHover<'a> {
+    fn include_endpoint(&mut self, widget: &'a str, channel: &str, input: bool) {
+        if channel.is_empty() {
+            let widgets = if input { &mut self.input_widgets } else { &mut self.output_widgets };
+            widgets.insert(widget);
+        } else {
+            self.ports.insert(semio_s_artifact_procedural_3d_model::graph_port_id(widget, channel, input));
+        }
+    }
+
+    /// 🎯️ Checks the precise endpoint or a whole-dictionary endpoint on its own side.
+    pub fn matches(&self, widget: &str, port: &str, input: bool) -> bool {
+        let widgets = if input { &self.input_widgets } else { &self.output_widgets };
+        widgets.contains(widget) || self.ports.contains(port)
+    }
+}
+
+/// 🔗️ Projects hovered wires to both endpoints and hovered inlets to their producers.
+pub fn preview_wire_hover<'a>(
+    host: &'a semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    hovered: &PreviewGraphTargets<'_>,
+) -> PreviewWireHover<'a> {
+    let mut endpoints = PreviewWireHover::default();
+    if hovered.edges.is_empty() && hovered.handles.is_empty() {
+        return endpoints;
+    }
+    for wire in &host.synapses {
+        if hovered.edges.contains(wire.id.as_str()) {
+            endpoints.include_endpoint(&wire.from, &wire.from_port, false);
+            endpoints.include_endpoint(&wire.to, &wire.to_port, true);
+        } else if hovered.handles.contains(semio_s_artifact_procedural_3d_model::graph_port_id(&wire.to, &wire.to_port, true).as_str()) {
+            endpoints.include_endpoint(&wire.from, &wire.from_port, false);
+        }
+    }
+    endpoints
+}
+
+/// 🔦️ Resolves one published graph or component hover against directional channel IDs.
+pub struct PreviewChannelHover<'a> {
+    graph: PreviewGraphTargets<'a>,
+    wires: PreviewWireHover<'a>,
+    component_output: Option<String>,
+}
+
+impl<'a> PreviewChannelHover<'a> {
+    pub fn new(
+        host: &'a semio_framework_artifact_flow_flow::FlowHostSnapshot,
+        graph_ids: &'a [String],
+        component_output: Option<String>,
+    ) -> Self {
+        let graph = PreviewGraphTargets::from_ids(graph_ids);
+        let wires = preview_wire_hover(host, &graph);
+        Self { graph, wires, component_output: component_output.filter(|_| graph_ids.is_empty()) }
+    }
+
+    /// 🎯️ Tests the complete canonical handle, including its input or output direction.
+    pub fn matches(&self, port_id: &str) -> bool {
+        let Some(port) = semio_s_artifact_procedural_3d_model::parse_graph_port_id(port_id) else { return false };
+        self.graph.marks(port.widget, port_id)
+            || self.wires.matches(port.widget, port_id, port.input)
+            || self.component_output.as_deref() == Some(port_id)
+    }
+
+    /// 📋️ Supplies the matching raw IDs in a presenter's own row order.
+    pub fn matching<'row>(&self, candidates: impl IntoIterator<Item = &'row str>) -> Vec<String> {
+        candidates.into_iter().filter(|id| self.matches(id)).map(str::to_owned).collect()
+    }
+}
+
+/// 🔎️ Projects registered nodes and resolves each wire using its structured Flow endpoints.
+pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_os_infinite_directed_presentation::DagHostSnapshot, synapses: &[semio_framework_artifact_flow_flow::SynapseSpec]) -> (Vec<semio_ui_declaration::ui::NodeGraphNodeRecord>, Vec<semio_ui_declaration::ui::NodeGraphEdgeRecord>) {
+    use semio_s_artifact_procedural_3d_model::{graph_port_code, graph_port_id};
     let nodes: Vec<semio_ui_declaration::ui::NodeGraphNodeRecord> = host_snapshot
         .nodes
         .iter()
@@ -113,19 +290,26 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_os_infinite_directed_
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_ui_declaration::ui::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_ui_declaration::ui::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_ui_declaration::ui::NodeGraphPortRecord { id: graph_port_id(&node.id, &port.id, true), code: Some(port.id.clone()), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_ui_declaration::ui::NodeGraphPortRecord { id: graph_port_id(&node.id, &port.id, false), code: Some(port.id.clone()), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
             ..Default::default()
         })
         .collect();
-    let edges: Vec<semio_ui_declaration::ui::NodeGraphEdgeRecord> = host_snapshot
-        .edges
-        .iter()
-        .map(|edge| {
-            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
-            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            semio_ui_declaration::ui::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+    let by_id: BTreeMap<_, _> = synapses.iter().map(|synapse| (synapse.id.as_str(), synapse)).collect();
+    let edges = host_snapshot.edges.iter().filter_map(|edge| {
+        let synapse = by_id.get(edge.id.as_str())?;
+        let (source_node, source) = semio_os_infinite_directed_presentation::parse_dag_endpoint(&edge.source)?;
+        let (target_node, target) = semio_os_infinite_directed_presentation::parse_dag_endpoint(&edge.target)?;
+        if source_node != synapse.from || target_node != synapse.to { return None; }
+        Some(semio_ui_declaration::ui::NodeGraphEdgeRecord {
+            id: edge.id.clone(),
+            source_node_id: synapse.from.clone(),
+            source_port_id: graph_port_code(&source, false).into_owned(),
+            target_node_id: synapse.to.clone(),
+            target_port_id: graph_port_code(&target, true).into_owned(),
+            label: None,
         })
+    })
         .collect();
     (nodes, edges)
 }

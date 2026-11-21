@@ -119,20 +119,23 @@ describe("👆️ touch drag", () => {
     });
     try {
       const during = new Event("touchmove", { bubbles: true, cancelable: true });
-      window.dispatchEvent(during);
+      grip.dispatchEvent(during);
       expect(during.defaultPrevented).toBe(true);
+      const elsewhere = new Event("touchmove", { bubbles: true, cancelable: true });
+      document.body.dispatchEvent(elsewhere);
+      expect(elsewhere.defaultPrevented).toBe(false);
     } finally {
       act(() => {
         fireEvent.pointerUp(window, { button: 0, pointerId: 7, clientX: 8, clientY: 40 });
       });
     }
     const after = new Event("touchmove", { bubbles: true, cancelable: true });
-    window.dispatchEvent(after);
+    grip.dispatchEvent(after);
     expect(after.defaultPrevented).toBe(false);
   });
 
-  it("refuses panning on a grip in the stylesheet the page loads", () => {
-    expect(stylesheet).toMatch(/\[data-course-grip\] \{[^}]*touch-action: none;/u);
+  it("refuses panning only on enabled grips in the stylesheet the page loads", () => {
+    expect(stylesheet).toMatch(/\[data-course-grip\]:not\(\[data-locked\]\) \{[^}]*touch-action: none;/u);
   });
 });
 
@@ -258,7 +261,7 @@ describe("⌨️ classification by keyboard", () => {
       expect(document.querySelector(".course-drag-ghost")).not.toBeNull();
       unmount();
       expect(document.querySelector(".course-drag-ghost")).toBeNull();
-      expect(removed.mock.calls.map(([type]) => type)).toEqual(expect.arrayContaining(["keydown", "pointercancel", "pointermove", "pointerup", "touchmove"]));
+      expect(removed.mock.calls.map(([type]) => type)).toEqual(expect.arrayContaining(["keydown", "blur", "pointercancel", "pointermove", "pointerup"]));
       act(() => {
         fireEvent.pointerUp(window, { clientX: 10, clientY: 10 });
       });

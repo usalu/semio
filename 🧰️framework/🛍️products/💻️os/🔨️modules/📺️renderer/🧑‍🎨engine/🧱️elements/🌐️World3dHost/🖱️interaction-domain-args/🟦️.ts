@@ -6,9 +6,9 @@ import { type MergeMode } from "@semio-tech/framework";
 /** 🖱️ Mirrors `nodeGraphHoverActionArgs` (`NodeGraph/🟦️.tsx`) for a world window bound to a
  * framework interaction domain (`scene.domainId`), reporting the scene's own
  * `domainGranularityId` — the same shape a `domain_id`-aware `interactionHover` handler expects. */
-export function world3dHoverActionArgs(domainId: string, granularity: string, id: string | null | undefined) {
-  const targets = id ? [{ granularity, id }] : [];
-  return { domainId, channel: "pointer", targets: JSON.stringify(targets) };
+export function world3dHoverActionArgs(domainId: string, granularity: string, id: string | null | undefined, aliasesJson?: string) {
+  const targets = id ? aliasesJson ?? JSON.stringify([{ granularity, id }]) : "[]";
+  return { domainId, channel: "pointer", targets };
 }
 
 /** 🖱️ A selection is a SET of topology ids, so the target list this builds is one: the same id

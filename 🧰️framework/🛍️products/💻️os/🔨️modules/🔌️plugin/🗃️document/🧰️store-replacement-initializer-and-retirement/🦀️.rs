@@ -1,6 +1,7 @@
 //! 🧰️ Store replacement initializer and retirement: the rejected member driver, the initializer driver, the retirement demands, the retained store driver, the drop guard, the admission target and the app projection cache. See [`super`].
 
 use super::*;
+use super::store_replacement_vocabulary::StoreInitializerOutcome;
 
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
 where
@@ -126,7 +127,12 @@ where
             }
 
             let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
-            return original_rejection_lifecycle(cx,demand,grant,"store initializer rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))});
+            let before = cx.retained_progress();
+            let step = original_rejection_lifecycle(cx,demand,grant,"store initializer rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))})?;
+            return match step {
+                PluginLifecycleStep::Progress(_) => Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before, cx.retained_progress())?)),
+                other => Ok(other),
+            };
         }
         if self.outcome_pending{
             let before=cx.retained_progress();
@@ -138,7 +144,7 @@ where
                     self.fold_progress = progress;
                 }
                 match self.outcome_terminal.take() {
-                    Some((1, _)) => {
+                    Some(StoreInitializerOutcome::Candidate) => {
                         let candidate = session
                             .checked_out_job_mut()
                             .and_then(ArtifactStoreInitializationJob::take_candidate)
@@ -146,7 +152,7 @@ where
                         *self.retained_store = Some(candidate);
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::AwaitingMembers);
                     }
-                    Some((2, initializer_code)) => {
+                    Some(StoreInitializerOutcome::Failed(initializer_code)) => {
                         let accepted = session.checked_out_job_mut().is_some_and(ArtifactStoreInitializationJob::accept_terminal_failure);
                         if !accepted {
                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority").into());
@@ -154,11 +160,34 @@ where
                         self.refusal.get_or_insert(ArtifactStoreReplacementRefusal::InitializerFailed(initializer_code));
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::RetiringRejectedMembers);
                     }
-                    _ => {}
+                    Some(StoreInitializerOutcome::Continuation(initializer_code)) => {
+                        self.refusal.get_or_insert(ArtifactStoreReplacementRefusal::InitializerFailed(initializer_code));
+                        self.terminal_target = Some(ActiveArtifactStoreReplacementState::RetiringRejectedMembers);
+                    }
+                    None => {}
                 }
                 self.resume_pending=true;
             }
             return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+        }
+        let cancelled = business_cancelled || cx.is_cancelled();
+        let worker_closing = self.session.as_ref().is_some_and(|session| session.poll() == semio_framework_job_worker::WorkerJobPoll::Closing);
+        if self.terminal_target.is_none() && (cancelled || worker_closing) {
+            let demand = self.initializer_close_handoff_demand();
+            if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+                return Ok(PluginLifecycleStep::Progress(Default::default()));
+            }
+            let session = self.session.as_mut().ok_or_else(|| plugin_sdk_fault("store initializer closing handoff lost its session"))?;
+            if !self.resume_pending {
+                session.begin_close();
+            }
+            self.refusal.get_or_insert(if worker_closing {
+                ArtifactStoreReplacementRefusal::InitializerFailed(ArtifactStoreRefusalCode::from_page(b"initializer-callback-fault"))
+            } else {
+                ArtifactStoreReplacementRefusal::Cancelled
+            });
+            self.terminal_target = Some(ActiveArtifactStoreReplacementState::RetiringRejectedMembers);
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         if self.resume_pending{
             let session=self.session.as_ref().ok_or_else(||plugin_sdk_fault("store initializer original outcome handback lost its session"))?;
@@ -178,13 +207,17 @@ where
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
             use semio_framework_job_worker_authority::WorkerJobCloseStep;
+            let reserved_before = cx.reserved_return_progress();
             let step = session.close_step(cx)?;
             let progress = step.progress();
             if !progress.fits(grant) || matches!(step, WorkerJobCloseStep::Complete { .. }) && !session.terminal_is_empty() {
                 return Err(ValueError::invariant("store initializer retirement violated its phase grant or terminal witness").with_retained_progress(progress).into());
             }
             return Ok(match step {
-                WorkerJobCloseStep::Pending { .. } | WorkerJobCloseStep::Complete { .. } => PluginLifecycleStep::Progress(progress),
+                WorkerJobCloseStep::Pending { .. } | WorkerJobCloseStep::Complete { .. } => {
+                    let reserved = semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(reserved_before, cx.reserved_return_progress())?;
+                    PluginLifecycleStep::Progress(progress.checked_add(reserved)?)
+                }
                 WorkerJobCloseStep::Blocked => PluginLifecycleStep::AwaitingInput { reason: "store initializer original terminal worker remains contended" },
             });
         }
@@ -202,10 +235,15 @@ where
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-receipt"), "store initializer original receipt exceeded its received turn").with_retained_progress(progress).into());
                 }
                 self.outcome_terminal = match session.checked_out_outcome() {
-                    Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. })) => Some((1, ArtifactStoreRefusalCode::EMPTY)),
-                    Ok(Some(semio_framework_job::JobOutcomeView::Cancelled { .. })) => Some((2, ArtifactStoreRefusalCode::from_page(b"initializer-cancelled"))),
-                    Ok(Some(semio_framework_job::JobOutcomeView::Fault { detail, .. })) => Some((2, ArtifactStoreRefusalCode::from_page(detail.page(0).unwrap_or(b"initializer-faulted-without-detail")))),
-                    Ok(Some(_)) | Ok(None) => None,
+                    Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. })) => Some(StoreInitializerOutcome::Candidate),
+                    Ok(Some(semio_framework_job::JobOutcomeView::Cancelled { .. })) => Some(StoreInitializerOutcome::Failed(ArtifactStoreRefusalCode::from_page(b"initializer-cancelled"))),
+                    Ok(Some(semio_framework_job::JobOutcomeView::Fault { detail, .. })) => Some(StoreInitializerOutcome::Failed(ArtifactStoreRefusalCode::from_page(detail.page(0).unwrap_or(b"initializer-faulted-without-detail")))),
+                    Ok(None) => session.checked_out_continuation().map(|continuation| {
+                        let cause = continuation.callback.or(continuation.qualification).or(continuation.receipt_qualification);
+                        let detail = cause.map_or(b"initializer-continuation-without-detail".as_slice(), |failure| failure.primary.message().as_bytes());
+                        StoreInitializerOutcome::Continuation(ArtifactStoreRefusalCode::from_page(detail))
+                    }),
+                    Ok(Some(_)) => None,
                     Err(_) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome").into()),
                 };
                 self.outcome_pending = true;

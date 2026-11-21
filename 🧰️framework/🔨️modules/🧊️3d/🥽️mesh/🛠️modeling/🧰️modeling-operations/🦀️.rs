@@ -31,6 +31,7 @@ pub trait MeshModelingOps: Sized {
     fn knife_cut_job(&self,face:FaceId,a:Vec3,b:Vec3)->MeshResult<MeshModelingJob>;
     fn knife_cut_job_owned(self,face:FaceId,a:Vec3,b:Vec3)->MeshResult<MeshModelingJob>;
     fn indexed_triangle_job(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>)->MeshResult<MeshModelingJob>;
+    fn indexed_surface_job(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>,uvs:Vec<f32>)->MeshResult<MeshModelingJob>;
     fn parametric_primitive_job(grid: semio_framework_mesh_engine::ParametricMeshGrid) -> MeshResult<MeshModelingJob>;
     /// 🍩 Builds a torus one grid element per step.
     fn torus_primitive_job(major: f32, minor: f32, segments: u32, rings: u32) -> MeshResult<MeshModelingJob> {
@@ -57,6 +58,11 @@ pub trait MeshModelingOps: Sized {
     fn flip_faces_job_owned(self,faces:&[FaceId])->MeshResult<MeshModelingJob>;
     fn fill_holes_job(&self)->MeshResult<MeshModelingJob>;
     fn fill_holes_job_owned(self)->MeshResult<MeshModelingJob>;
+    fn bridge_boundary_loops_job(&self,anchors:[EdgeId;2])->MeshResult<MeshModelingJob>;
+    fn extrude_boundary_job(&self,edges:&[EdgeId],offset:Vec3)->MeshResult<MeshModelingJob>;
+    fn extrude_boundary_job_owned(self,edges:&[EdgeId],offset:Vec3)->MeshResult<MeshModelingJob>;
+    fn extrude_boundary(&mut self,edges:&[EdgeId],offset:Vec3)->MeshResult<()>;
+    fn bridge_boundary_loops_job_owned(self,anchors:[EdgeId;2])->MeshResult<MeshModelingJob>;
     fn loop_cut_job(&self,edges:&[EdgeId],cuts:u32)->MeshResult<MeshModelingJob>;
     fn loop_cut_job_owned(self,edges:&[EdgeId],cuts:u32)->MeshResult<MeshModelingJob>;
     fn subdivide_faces_job(&self, faces: &[FaceId])->MeshResult<MeshModelingJob>;
@@ -103,6 +109,7 @@ pub trait MeshModelingOps: Sized {
     fn weld_coincident_vertices(&mut self,precision:f32)->MeshResult<usize>;
     fn orient_faces_consistently(&mut self) -> MeshResult<usize>;
     fn fill_holes(&mut self) -> MeshResult<usize>;
+    fn bridge_boundary_loops(&mut self,anchors:[EdgeId;2])->MeshResult<()>;
     fn mirror(&mut self, axis: MirrorAxis, weld_threshold: f32) -> MeshResult<()>;
     fn decimate(&mut self, target_ratio: f32) -> MeshResult<()>;
     fn decimate_with_progress(&mut self, target_ratio: f32, progress: impl FnMut(f32) -> bool) -> MeshResult<()>;
@@ -194,6 +201,7 @@ impl MeshModelingOps for HalfedgeMesh {
     }
     /// 📥 Retains position welding, corner identities and indexed reconstruction.
     fn indexed_triangle_job(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>)->MeshResult<MeshModelingJob> {let(work,progress)=Import::indexed(positions,indices,normals)?;Ok(MeshModelingJob {work:Work::Import(Box::new(work)),progress,cancelled:false,retired:false})}
+    fn indexed_surface_job(positions:Vec<f32>,indices:Vec<u32>,normals:Vec<f32>,uvs:Vec<f32>)->MeshResult<MeshModelingJob> {let(work,progress)=Import::indexed_surface(positions,indices,normals,uvs)?;Ok(MeshModelingJob {work:Work::Import(Box::new(work)),progress,cancelled:false,retired:false})}
     /// 📦 Retains reconstruction of an admitted typed polygon source without cloning its channels.
     fn polygon_source_job(source:semio_framework_mesh_engine::PolygonMeshSource)->MeshResult<MeshModelingJob> {let(work,progress)=Import::polygon(source)?;Ok(MeshModelingJob {work:Work::Import(Box::new(work)),progress,cancelled:false,retired:false})}
     fn parametric_primitive_job(grid: semio_framework_mesh_engine::ParametricMeshGrid) -> MeshResult<MeshModelingJob> {
@@ -222,18 +230,45 @@ impl MeshModelingOps for HalfedgeMesh {
     fn orient_faces_job(&self)->MeshResult<MeshModelingJob> {self.clone().orient_faces_job_owned()}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     fn orient_faces_job_owned(self)->MeshResult<MeshModelingJob> {let source_corners=self.halfedge_count();
-        Ok(MeshModelingJob { work:Work::Orient(Box::new(Orient {input:None,flip_count:0,attributes:None,snapshot:Snapshot::new(self),edges:HistoryFoldIndex::new(),keys:Vec::new(),adjacency:Vec::new(),oriented:Vec::new(),flipped:Vec::new(),stack:Vec::new(),active:None,face:0,corner:0,cursor:0,neighbor:0,reversing:0,incidence:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
+        Ok(MeshModelingJob { work:Work::Orient(Box::new(Orient {input:None,flip_count:0,attributes:None,snapshot:Snapshot::new(self),edges:HistoryFoldIndex::new(),keys:Vec::new(),adjacency:Vec::new(),component:Vec::new(),outward_flip:Vec::new(),shell:None,flipped:Vec::new(),flip_incidence:Vec::new(),stack:Vec::new(),active:None,face:0,corner:0,cursor:0,neighbor:0,reversing:0,incidence:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
     }
     /// 🔄 Retains selected winding changes through existing orientation reconstruction.
     fn flip_faces_job(&self,faces:&[FaceId])->MeshResult<MeshModelingJob> {self.clone().flip_faces_job_owned(faces)}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
-    fn flip_faces_job_owned(self,faces:&[FaceId])->MeshResult<MeshModelingJob> {if faces.is_empty() {return Err(MeshKernelError::EmptySelection);}let mut job=self.orient_faces_job_owned()?;let Work::Orient(work)=&mut job.work else {unreachable!()};work.input=Some(faces.to_vec());Ok(job)}
+    fn flip_faces_job_owned(self,faces:&[FaceId])->MeshResult<MeshModelingJob> {if faces.is_empty() {return Err(MeshKernelError::EmptySelection);}let mut job=self.orient_faces_job_owned()?;let Work::Orient(work)=&mut job.work else {unreachable!()};work.input=Some(faces.to_vec());work.phase=9;job.progress.phase=work.phase();Ok(job)}
     /// 🕳️ Retains boundary rotations and cap corners before reconstruction.
     fn fill_holes_job(&self)->MeshResult<MeshModelingJob> {self.clone().fill_holes_job_owned()}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
     fn fill_holes_job_owned(self)->MeshResult<MeshModelingJob> {let source_corners=self.halfedge_count();
         Ok(MeshModelingJob { work:Work::FillHoles(Box::new(FillHoles { snapshot:Snapshot::new(self),visited:HistoryFoldSet::new(),vertices:Vec::new(),boundary_edges:Vec::new(),cap:Vec::new(),cap_faces:Vec::new(),corner_sources:Vec::new(),edge_sources:Vec::new(),face_sources:Vec::new(),attributes:None,cursor:0,start:0,probe:0,rotations:0,corner:0,corners:source_corners,filled:0,build:None,phase:0 })),progress:MeshModelingProgress { units_done:0,units_total:source_corners.saturating_mul(16).saturating_add(1),phase:"snapshot" },cancelled:false,retired:false })
     }
+    /// 📏️ Retains one selected boundary chain and its displacement.
+    fn extrude_boundary_job(&self,edges:&[EdgeId],offset:Vec3)->MeshResult<MeshModelingJob>{
+        self.clone().extrude_boundary_job_owned(edges,offset)
+    }
+    /// 📤️ Moves the source into retained boundary extrusion.
+    fn extrude_boundary_job_owned(self,edges:&[EdgeId],offset:Vec3)->MeshResult<MeshModelingJob>{
+        let total=self.halfedge_count().saturating_mul(30)+self.vertex_count()+edges.len().saturating_mul(edges.len()+20)+1;
+        Ok(MeshModelingJob{work:Work::BoundaryExtrude(Box::new(BoundaryExtrude::new(self,edges.to_vec(),offset)?)),
+            progress:MeshModelingProgress{units_done:0,units_total:total,phase:"snapshot"},cancelled:false,retired:false})
+    }
+    /// 🧱️ Builds the strip and atomically replaces the source.
+    fn extrude_boundary(&mut self,edges:&[EdgeId],offset:Vec3)->MeshResult<()>{
+        *self=self.extrude_boundary_job(edges,offset)?.finish_with_progress(|_|true)?;
+        Ok(())
+    }
+    /// 🏗️ Connects two rim loops using the selected halfedges to align their winding.
+    fn bridge_boundary_loops_job(&self,anchors:[EdgeId;2])->MeshResult<MeshModelingJob>{
+        self.clone().bridge_boundary_loops_job_owned(anchors)
+    }
+
+    fn bridge_boundary_loops_job_owned(self,anchors:[EdgeId;2])->MeshResult<MeshModelingJob>{
+        let total=self.halfedge_count().saturating_mul(16).saturating_add(1);
+        let work=Bridge::new(self,anchors)?;
+        Ok(MeshModelingJob{work:Work::Bridge(Box::new(work)),progress:MeshModelingProgress{
+            units_done:0,units_total:total,phase:"snapshot"},cancelled:false,retired:false})
+    }
+
     /// ✂️ Retains strip propagation, exact expansion admission and grid construction.
     fn loop_cut_job(&self,edges:&[EdgeId],cuts:u32)->MeshResult<MeshModelingJob> {self.clone().loop_cut_job_owned(edges,cuts)}
     /// 📦 Moves the caller-owned source into the same retained modeling work.
@@ -438,6 +473,11 @@ impl MeshModelingOps for HalfedgeMesh {
     /// `weld_coincident_vertices` first if the mesh may contain importer-duplicated boundary vertices, or
     /// this will also "cap" seams that are actually already shared with a differently-indexed neighbor.
     /// Returns the number of holes filled.
+    fn bridge_boundary_loops(&mut self,anchors:[EdgeId;2])->MeshResult<()>{
+        *self=self.bridge_boundary_loops_job(anchors)?.finish_with_progress(|_|true)?;
+        Ok(())
+    }
+
     fn fill_holes(&mut self) -> MeshResult<usize> {
         let mut job=self.fill_holes_job()?;loop {match modeling_job::modeling_step(&mut job)? {MeshModelingStep::Done(mesh)=>{let count=job.filled_hole_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh hole filling cancelled".into()))}}
     }

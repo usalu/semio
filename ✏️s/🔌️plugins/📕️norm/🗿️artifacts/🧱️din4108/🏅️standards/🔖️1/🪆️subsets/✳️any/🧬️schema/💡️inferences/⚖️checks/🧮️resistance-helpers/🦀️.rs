@@ -46,9 +46,6 @@ pub fn f_rsi_minimum(t_int_c: f64, rh_int: f64) -> f64 {
 /// ❄️ DIN 4108-3 winter condensed mass limit for most constructions [kg/m²].
 pub const GLASER_MASS_LIMIT: f64 = 1.0;
 
-/// ❄️ DIN 4108-3 condensed mass limit for wood / wood-based layers [kg/m²].
-pub const GLASER_MASS_LIMIT_WOOD: f64 = 0.5;
-
 pub(super) fn loc(en: &str, de: &str) -> LocalizedCopy {
     LocalizedCopy::new(en, de)
 }

@@ -75,7 +75,7 @@ pub use operation_contexts::{
 
 #[path = "🔍️lane-views/🦀️.rs"]
 mod lane_views;
-pub use lane_views::{ConfigView, DraftView, InteractionView, PresencePeersView, PresenceView};
+pub use lane_views::{ConfigView, DraftView, HoverSurface, InteractionView, PresencePeersView, PresenceView};
 
 #[path = "🕳️empty-lanes/🦀️.rs"]
 mod empty_lanes;

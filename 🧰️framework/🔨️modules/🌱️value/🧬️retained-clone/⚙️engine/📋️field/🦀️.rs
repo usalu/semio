@@ -65,7 +65,7 @@ impl<T:RetainedClone> RetainedFieldCursor<T>{
 }
 
 impl<T: RetainedClone> Default for RetainedFieldCursor<T> {
-    fn default() -> Self { Self { child: ManuallyDrop::new(None),native:ManuallyDrop::new(T::NATIVE_CURSOR_SEED.map(NativeProjectionBacking::new)), source: ManuallyDrop::new(Default::default()), closing: false, child_closing:false,release_reply:ManuallyDrop::new(None) } }
+    fn default() -> Self { Self { child: ManuallyDrop::new(None),native:ManuallyDrop::new(T::NATIVE_CURSOR_SEED.map(NativeProjectionBacking::new_resident)), source: ManuallyDrop::new(Default::default()), closing: false, child_closing:false,release_reply:ManuallyDrop::new(None) } }
 }
 
 impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {

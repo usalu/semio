@@ -130,3 +130,41 @@ Opened with the Read tool: `r3-sheet` 1:50 body (default pose and clip `reverse-
 - **Not modelled:** cable, filter, clip-on cover, outer hood (the asset shows the unit with them taken off), the hollow inside of the fan housing and the motor windings.
 - **Structure looks close to the body** from outside at every scale, because for this object the casing parts are the members; rim, bosses, screws, terminal box, blades, cap, outer collar (1:50) and the channels are absent from it.
 - **Not run:** `repo` test targets and the model export; only the ticket tools above.
+
+## Round 5 handcraft
+
+Process (round 5, 2026-11-21): rendered and opened with the Read tool, before and after: `r3-sheet` body, structure and `--list thermal --cut` at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50 and one clip frame, the `r3-2d` drawings of every drawn scale (1:500 has no drawing: its representation is unavailable, the 3D 1:500 is a digital scale). Coarse sheets were opened as 2 x 2 contact sheets (`r5-grid.ts`, half size). Measurements with `r5-e01-measure.ts` (world extents per solid in the default pose). Root edits through `r5-e01-roots.py` (candidate validated with `r3-validate.ts --file --volumes` before writing), volumes through the asset's `r5-<slug>-model.py` (which re-uses the hand-stated round-3 lists it keeps and states every new solid by hand), splice with `volumes-insert.py`. The round-3 reference table above stays the reference; the table below measures the model against it.
+
+### Model against reference (Lunos e2 60, Ambientika 200, Blauberg Vento Expert A50)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+|---|---|---|---|
+| Sleeve | 200 mm pipe class (Ambientika ceramic 170 mm in 200 mm pipe) | 196 mm OD, 3 mm wall | inside the class |
+| Ceramic core | 154 to 170 mm diameter, 150 to 243 mm long | 160 mm x 100 mm | inside the class (short end) |
+| Inner cover base | about 260 mm square | 260 x 260 x 20 mm | 0 % |
+| Wall depth of the sleeve | from 200 to 240 mm | 220 mm behind the tray | inside the class |
+| Impeller | about 170 mm | 172 mm in a 176 mm throat | 0 % |
+| 1:100 / 1:200 / 1:500 overall | 0.26 x 0.26 x 0.24 m | identical at every scale | 0 % |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- (unchanged, re-read: tray with rim, bosses, screws and terminal box, fan housing with inlet radius, sleeve and collar, EPP jacket, ceramic with open channels, struts, twisted blades, domed can and cap; references in their regions; members, joints and the two corner screws) |
+| 1:100 | A- / A- / A- | A- / A- / A- |
+| 1:200 | A- / B (ceramic surface coincident with the tube bore: stripes in every cut) / A- | A- / A- / A- |
+| 1:500 | C+ (inherited: tray a 4 mm sheet, blades 5 mm plates, same coincident core, one generic sentence) / B / B | A- / A- / A- |
+| Poses off, extract, supply, clip reverse-spin t 1.3 s | A- | A- (blades stay rooted) |
+| 2D 1:50 / 1:100 / 1:200 | A- | A- |
+
+### Changes
+
+- 1:200: ceramic disc and its two outlet patches seated 1 mm into the tube wall (radius 0.083 instead of 0.082, which lay exactly on the bore).
+- 1:500 authored anew (`r5-decentralised-hrv-fan-model.py`): 20 mm tray with 20 mm corners and the 164 mm bore, one merged tube, seated ceramic disc, bridge bar, three broad 15 mm blades, 80 mm hub; thermal references and 5 mm outlet skins; structure references, mass, corner-screw pin and roller. Three bilingual decisions.
+- No root edits. Final: `r3-validate.ts --volumes` VALID, `volumes-check.ts --product` PASS.
+
+### Remaining issues
+
+- Tray floor 7.5 mm at 1:50 instead of 2.5 mm (round-3 author request on C30 for a two-solid shell still open).
+- Honeycomb channels are 18 mm generalisations of 3 mm cells; small revolves are visibly polygonal at the product tessellation.
+- The structure is close to the body from outside because the casing parts are the members (stated in round 3).

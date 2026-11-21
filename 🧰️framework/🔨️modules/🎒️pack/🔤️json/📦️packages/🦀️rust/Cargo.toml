@@ -60,3 +60,7 @@ path = "../../🧪️tests/🪢️pending-quote/🦀️.rs"
 [[test]]
 name = "quote-equals-receipt-law"
 path = "../../🧪️tests/📏️quote-equals-receipt/🦀️.rs"
+
+[[test]]
+name = "original-json-owner"
+path = "../../📥️decode/🧳️receiving/🧪️tests/🔬️owner/🦀️.rs"

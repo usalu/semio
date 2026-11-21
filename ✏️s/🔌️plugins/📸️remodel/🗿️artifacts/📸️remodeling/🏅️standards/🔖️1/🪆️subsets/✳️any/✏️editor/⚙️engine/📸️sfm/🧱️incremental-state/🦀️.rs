@@ -68,13 +68,13 @@ impl Default for SfmConfig {
 }
 
 /// 📦️ A finished (or in-progress) reconstruction snapshot: registered cameras (by frame index), their
-/// triangulated points, each point's originating track id, and the shared calibration.
+/// triangulated points, each point's originating track id, and calibrations keyed by frame index.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Reconstruction {
     pub cameras: Vec<(usize, CameraPose)>,
     pub points: Vec<[f64; 3]>,
     pub point_track_ids: Vec<usize>,
-    pub intrinsics: Intrinsics,
+    pub intrinsics: std::collections::BTreeMap<usize, Intrinsics>,
 }
 
 /// 🧩️ Bundle-adjustment [`BipartiteResiduals`] problem for [`IncrementalSfm`]'s `local_ba`/`global_ba`:
@@ -88,7 +88,7 @@ pub struct Reconstruction {
 /// since [`BipartiteResiduals::evaluate`] receives a term but not its index into `residual_terms()`.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct SfmBundleProblem {
-    pub intrinsics: Intrinsics,
+    pub intrinsics: Vec<Intrinsics>,
     pub num_cameras: usize,
     pub num_points: usize,
     pub terms: Vec<ResidualTerm>,
@@ -129,7 +129,7 @@ impl BipartiteResiduals for SfmBundleProblem {
         let eps = 1e-6;
         let residual_at = |xi: [f64; 6], point: [f64; 3]| -> [f64; 2] {
             let pose = CameraPose(Se3::exp(xi));
-            reproject(&self.intrinsics, &pose, point).map_or([obs[0] + 1.0e3, obs[1] + 1.0e3], |p| [p[0] - obs[0], p[1] - obs[1]])
+            reproject(&self.intrinsics[ai], &pose, point).map_or([obs[0] + 1.0e3, obs[1] + 1.0e3], |p| [p[0] - obs[0], p[1] - obs[1]])
         };
         let xi: [f64; 6] = std::array::from_fn(|k| a_params[ai].get(k));
         let point: [f64; 3] = std::array::from_fn(|k| b_params[bi].get(k));
@@ -172,10 +172,10 @@ impl BipartiteResiduals for SfmBundleProblem {
 /// correspondences with the same normalized-ray MSAC threshold, so their [`TwoViewResult::score`]s are
 /// directly comparable; five-point wins ties.
 #[cfg(test)]
-pub(super) fn estimate_init_pair_essential(matches: &[([f64; 2], [f64; 2])], k: &Intrinsics, seed: u64) -> Option<TwoViewResult> {
+pub(super) fn estimate_init_pair_essential(matches: &[([f64; 2], [f64; 2])], a: &Intrinsics, b: &Intrinsics, seed: u64) -> Option<TwoViewResult> {
     const FIVE_POINT_THRESHOLD: f64 = 0.005;
-    let five_point = estimate_essential_five_point(matches, k, k, FIVE_POINT_THRESHOLD, seed);
-    let eight_point = estimate_essential(matches, k, k);
+    let five_point = estimate_essential_five_point(matches, a, b, FIVE_POINT_THRESHOLD, seed);
+    let eight_point = estimate_essential(matches, a, b);
     match (five_point, eight_point) {
         (Some(five), Some(eight)) => Some(if five.score <= eight.score { five } else { eight }),
         (Some(five), None) => Some(five),
@@ -188,7 +188,7 @@ pub(super) fn estimate_init_pair_essential(matches: &[([f64; 2], [f64; 2])], k: 
 /// already-triangulated point cloud, growing the reconstruction frame by frame.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct IncrementalSfm {
-    pub(super) intrinsics: Intrinsics,
+    pub(super) intrinsics: Vec<Intrinsics>,
     pub(super) tracks: FeatureTracks,
     pub(super) keypoints_per_frame: Vec<Vec<Keypoint>>,
     pub(super) pairwise_matches: Vec<(usize, usize, Vec<Match>)>,
@@ -338,7 +338,8 @@ pub struct ReconstructionSnapshotPreparation {
 
 impl IncrementalSfm {
     /// 🆕️ Starts an empty incremental reconstruction over a shared calibration, precomputed feature tracks and per-frame keypoints.
-    pub fn new(intrinsics: Intrinsics, tracks: FeatureTracks, keypoints_per_frame: Vec<Vec<Keypoint>>, cfg: SfmConfig) -> Self {
+    pub fn new(intrinsics: Vec<Intrinsics>, tracks: FeatureTracks, keypoints_per_frame: Vec<Vec<Keypoint>>, cfg: SfmConfig) -> Self {
+        assert_eq!(intrinsics.len(), keypoints_per_frame.len(), "one calibration per feature frame");
         Self { intrinsics, tracks, keypoints_per_frame, pairwise_matches: Vec::new(), cfg, cameras: Vec::new(), points: std::collections::BTreeMap::new(), point_events: None }
     }
 

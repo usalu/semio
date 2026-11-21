@@ -27,6 +27,12 @@
         "state": {"enum": ["waves", "sealed"]},
         "parent": {"anyOf": [{"$ref": "#/definitions/Hex"}, {"type": "null"}]},
         "generation": {"type": "integer", "minimum": 0},
+        "repair": {
+          "type": "object",
+          "required": ["parent", "receipt"],
+          "additionalProperties": false,
+          "properties": {"parent": {"$ref": "#/definitions/Hex"}, "receipt": {"$ref": "#/definitions/Hex"}}
+        },
         "identity": {"$ref": "#/definitions/Hex"},
         "implementation": {"$ref": "#/definitions/Hex"},
         "steps": {"type": "array", "maxItems": 16, "items": {"$ref": "#/definitions/Step"}},

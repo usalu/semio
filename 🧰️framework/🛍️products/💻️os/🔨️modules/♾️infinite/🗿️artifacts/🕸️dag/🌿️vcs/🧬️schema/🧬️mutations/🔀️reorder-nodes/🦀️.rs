@@ -2,7 +2,7 @@ use super::super::{dag_index_to_wire, DagDelta, DagDiff, DagMutation, DagSnapsho
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🔀️ One positional step of a `reorder-nodes` gesture: node `id` lands at z-stack position `to`, counted in the list as it stands after the steps before it.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct NodeMove {
@@ -10,7 +10,7 @@ pub struct NodeMove {
     pub to: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]

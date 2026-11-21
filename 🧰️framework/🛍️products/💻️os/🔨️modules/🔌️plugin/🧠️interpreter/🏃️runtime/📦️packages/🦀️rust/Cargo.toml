@@ -51,3 +51,7 @@ wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "co
 [[test]]
 name = "original-scalar-call"
 path = "../../🎟️call/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "prepared-actor-startup"
+path = "../../🏗️startup/🧪️tests/prepared.rs"

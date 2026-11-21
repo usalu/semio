@@ -356,6 +356,7 @@ impl Din18599HeatingPatch {
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599DhwPatch {
+    pub dwelling_count: Option<u32>,
     pub specific_demand_kwh_person_a: Option<f64>,
     pub storage_loss_kwh_a: Option<f64>,
     pub distribution_loss_kwh_a: Option<f64>,
@@ -364,6 +365,9 @@ pub struct Din18599DhwPatch {
 
 impl Din18599DhwPatch {
     fn apply_to_row(&self, row: &mut semio_s_artifact_norm_din18599_model::DhwSystem) -> Result<(), protocol::MutationApplyError> {
+        if let Some(value) = self.dwelling_count {
+            row.dwelling_count = value;
+        }
         if let Some(value) = &self.specific_demand_kwh_person_a {
             row.specific_demand_kwh_person_a = value.clone();
         }
@@ -380,6 +384,9 @@ impl Din18599DhwPatch {
     }
 
     fn merge(&mut self, other: Self) {
+        if other.dwelling_count.is_some() {
+            self.dwelling_count = other.dwelling_count;
+        }
         if other.specific_demand_kwh_person_a.is_some() {
             self.specific_demand_kwh_person_a = other.specific_demand_kwh_person_a;
         }
@@ -396,6 +403,7 @@ impl Din18599DhwPatch {
 
     fn inverse_from_row(&self, row: &semio_s_artifact_norm_din18599_model::DhwSystem) -> Self {
         Self {
+            dwelling_count: self.dwelling_count.map(|_| row.dwelling_count),
             specific_demand_kwh_person_a: self.specific_demand_kwh_person_a.as_ref().map(|_| row.specific_demand_kwh_person_a.clone()),
             storage_loss_kwh_a: self.storage_loss_kwh_a.as_ref().map(|_| row.storage_loss_kwh_a.clone()),
             distribution_loss_kwh_a: self.distribution_loss_kwh_a.as_ref().map(|_| row.distribution_loss_kwh_a.clone()),

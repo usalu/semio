@@ -104,3 +104,15 @@ Running `repo ./📜️script.ts serve …` directly is refused ("Original paren
 
 - Activation → serve → browser boot on 6087: model/results windows non-empty, example switch, action dispatch.
 - Debt kept from 2026-09: mounted live-visual owner page is 4 KiB / 128 node slots (`✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/🦀️.rs:19,98`).
+
+## November 21 verification
+
+The latest published official component predates the mounted maintenance fix. Its native successor on the verification proxy at port 6097 settled startup sequence 7 and loaded Demo. Concrete Forest also settled through its exact terminal ACK and changed Model from 47 instances to 234. The picker kept showing Demo, so the host dispatch and selection guards are under trace. Demo Add Node, Undo and Redo each changed the actual node instances with no matching console errors.
+
+A separate Demo run remained Analysis queued for ten minutes. The snapshot preparation continuation fix awaits a new component. The primary repo build and an isolated native Cargo build are progressing. The activation and fresh-browser verification watchers are set for the updated component. The ticket remains open.
+
+### November 21 mid-build checks
+
+The official driver retried twice after source changed underneath Cargo. The active third Cargo attempt is advancing through the plugin and artifact crates. The isolated wasm32-wasip2 fallback continues on E:. On publication the watchers activate the official build and start fresh port 6087 browser contexts for the example sequence, completed Results, and Add Node, Undo and Redo. The independent fallback exercises Results and Model/action flows on port 6098.
+
+The smoke check accepts the exact current static Results caption and requires nonempty mesh and instance data in the visible Results canvas host. It also captures the mounted job spawn and scoped render/admission warnings. The [Results delivery audit](📓️results-delivery-audit.md) maps those diagnostics to source milestones.

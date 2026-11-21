@@ -1,0 +1,238 @@
+{
+  "mesh": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ]
+    ],
+    "surface": [
+      {
+        "kind": "vertexNormal",
+        "index": 0,
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 1,
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 2,
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 0,
+        "uv": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 1,
+        "uv": [
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 2,
+        "uv": [
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "smoothFace",
+        "index": 0
+      },
+      {
+        "kind": "seamEdge",
+        "index": 0
+      }
+    ],
+    "attributes": {
+      "fixtureId": {
+        "domain": "vertex",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          10,
+          20,
+          30
+        ]
+      },
+      "faceName": {
+        "domain": "face",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          "panel"
+        ]
+      }
+    }
+  },
+  "other": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2
+      ],
+      [
+        2,
+        0,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ]
+    ],
+    "surface": [
+      {
+        "kind": "vertexNormal",
+        "index": 0,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 1,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 2,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 0,
+        "uv": [
+          0.25,
+          0.25
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 1,
+        "uv": [
+          0.25,
+          0.75
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 2,
+        "uv": [
+          0.75,
+          0.25
+        ]
+      }
+    ],
+    "attributes": {
+      "fixtureId": {
+        "domain": "vertex",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          40,
+          50
+        ],
+        "indices": [
+          1,
+          0,
+          1
+        ]
+      },
+      "faceName": {
+        "domain": "face",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          "return"
+        ]
+      }
+    }
+  },
+  "expected": {
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        3,
+        4,
+        5
+      ]
+    ],
+    "vertices": 6,
+    "area": 4,
+    "fixtureIds": [
+      10,
+      20,
+      30,
+      50,
+      40,
+      50
+    ],
+    "smoothFace": 0,
+    "seamEdge": 0
+  }
+}

@@ -1,0 +1,40 @@
+semio norm.vdi3805.dsl v1
+strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="2024-01-01" charset=UTF-8 record-count=8 building-system-number=system-code="420" subsystem="10" sequence=1 extensions=fields={
+}
+extensions=fields={
+}
+products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
+  HP-12 {manufacturer-code=DEMO product-group=HP article-number=HP-12} [ {locale=de text="Luft-Luft-Wärmepumpe"} {locale=en text="Air-to-air heat pump"} ] 22 [ {family="100" fields=[ "100" DEMO HP HP-12 "22" ] extensions=fields={
+  }
+  } {family="110" fields=[ "110" "4" ] extensions=fields={
+  }
+  } {family="400" fields=[ "400" "2" ] extensions=fields={
+  }
+  } {family="700" fields=[ "700" "1" "" "" "8" "3.6" "2.22" "" "" "" "" "" "" "" "" "" "" "" "" "1" "7" "" "" "" "" "" "" "" "" "" "" "" "" "675" "0.743" "1" "A2L" "" "0" "4" "" "0" "39" ] extensions=fields={
+  }
+  } {family="710.09" fields=[ "710.09" "1" "1" "20" "35" "-20" "1" "" ] extensions=fields={
+  }
+  } {family="710.15" fields=[ "710.15" "1" "1" "" "-20" "25" "10" "46" "2" "250" "1800" "2" "" "0" "1" "30" "15" "1" "2" ] extensions=fields={
+  }
+  } {family="710.16" fields=[ "710.16" "2" "1" "1" "7" "8" "145" "0.9" "0.005" "0.006" "0.005" "0.011" "2" "3" "675" ] extensions=fields={
+  }
+  } {family="710.17" fields=[ "710.17" "3" "2" "61" "1800" ] extensions=fields={
+  }
+  } ] {id=cfg.HP-12 attributes={
+    entries=[ ] kind="generic"
+  }
+  function-refs=[ ]} [ ] [ ] {fields={
+  }
+  }
+}
+edition-profile={
+}
+correction-as-of=year=2026 month=1 index=
+entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
+  HP-12 22 [ "Luft-Luft-Wärmepumpe" "Air-to-air heat pump" ] _
+}
+geometry={
+}
+curves={
+}
+limits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32

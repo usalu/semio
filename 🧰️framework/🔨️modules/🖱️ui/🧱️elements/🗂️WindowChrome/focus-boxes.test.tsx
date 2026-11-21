@@ -16,11 +16,21 @@ const rect = (left: number, top: number, width: number, height: number) => ({ le
 describe("keyboard focus belongs to the compositor", () => {
   afterEach(cleanup);
 
-  it("class 1: the browser outline is off inside a compositor root through a layer declared after the utilities, without !important, and the tabpanel outline is gone", () => {
+  it("suppresses the browser outline for compositor boxes while retaining it for unregistered controls", () => {
     const sheet = postcss.parse(css());
     const layer = sheet.nodes.find(node => node.type === "atrule" && node.name === "layer" && node.params === "shared-border-outline") as import("postcss").AtRule;
-    const rule = layer.nodes!.find(node => node.type === "rule" && node.selector.includes("[data-shared-border-root] :focus-visible")) as import("postcss").Rule;
+    const rule = layer.nodes!.find(node => node.type === "rule" && node.selector.includes("[data-shared-border-root]")) as import("postcss").Rule;
     expect(rule.nodes.some(node => node.type === "decl" && node.prop === "outline" && node.value === "none" && !node.important)).toBe(true);
+    const root = document.createElement("div");
+    root.setAttribute("data-shared-border-root", "");
+    root.innerHTML = "<button id='owned' data-shared-border-frame></button><button id='native'></button>";
+    document.body.append(root);
+    try {
+      for (const button of root.querySelectorAll("button")) {
+        button.focus();
+        expect(button.matches(rule.selector)).toBe(button.id === "owned");
+      }
+    } finally { root.remove(); }
     expect(sheet.nodes.indexOf(layer)).toBeGreaterThan(sheet.nodes.findIndex(node => node.type === "atrule" && node.name === "import" && node.params.includes("tailwindcss")));
     expect(css()).not.toMatch(/\[role="tabpanel"\]:focus-visible/);
   });

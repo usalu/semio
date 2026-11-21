@@ -221,12 +221,4 @@ pub fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
     triangles
 }
 
-fn find_edge_position(vertices:&[u32],from:u32,to:u32)->Option<usize> {(0..vertices.len()).find(|&index|vertices[index]==from && vertices[(index+1)%vertices.len()]==to)}
-
-fn merge_face_loops(a:&[u32],b:&[u32])->Option<Vec<u32>> {
-    if a.len()<3 || b.len()<3 {return None;}
-    let ai=(0..a.len()).find(|&index|find_edge_position(b,a[(index+1)%a.len()],a[index]).is_some())?;let bi=find_edge_position(b,a[(ai+1)%a.len()],a[ai])?;
-    if (0..a.len()).any(|index|index!=ai && find_edge_position(b,a[(index+1)%a.len()],a[index]).is_some()) {return None;}
-    let mut merged=vec![a[ai]];merged.extend((2..b.len()).map(|index|b[(bi+index)%b.len()]));merged.extend((1..a.len()).map(|index|a[(ai+index)%a.len()]));let mut seen=HistoryFoldSet::new();if merged.iter().any(|&id|!seen.insert(id)) {None}else {Some(merged)}
-}
 //#endregion Polygon

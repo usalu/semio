@@ -58,12 +58,17 @@ def check_element(element, failures):
         count += 1
         if abs(x - want) > 1e-12:
             failures.append(f"{element['id']}: temperature abscissa {x}, oracle {want}")
+    if element["vapour"] is None:
+        return count
     sd = [0.0]
-    for layer in element["layers"]:
-        sd.append(sd[-1] + layer["d"] * layer["mu"])
-    p_int = element["rh_int"] * saturation_iso_13788(element["t_int"])
-    p_ext = element["rh_ext"] * saturation_iso_13788(element["t_ext"])
-    sat = [saturation_iso_13788(t) for t in expected]
+    for index, layer in enumerate(element["layers"]):
+        thickness = layer["d"] * layer["mu"]
+        if index == len(element["layers"]) - 1:
+            thickness = max(thickness, 0.1)
+        sd.append(sd[-1] + thickness)
+    p_int, p_ext = 1168.0, 321.0
+    moisture_temperatures = nodal_temperatures({**element, "r_si": 0.25, "r_se": 0.04})
+    sat = [saturation_iso_13788(t) for t in moisture_temperatures]
     last = len(sd) - 1
     planes = []
 
@@ -88,9 +93,8 @@ def check_element(element, failures):
             failures.append(f"{element['id']}: vapour abscissa {x}, oracle {s_k}")
         if abs(y - want) > SATURATION_TOLERANCE * max(abs(want), 1.0):
             failures.append(f"{element['id']}: vapour pressure at s_d {s_k} is {y}, oracle {want}")
-    for (_, y), t in zip(element["saturation"], expected):
+    for (_, y), want in zip(element["saturation"], sat):
         count += 1
-        want = saturation_iso_13788(t)
         if abs(y - want) > SATURATION_TOLERANCE * want:
             failures.append(f"{element['id']}: saturation pressure {y}, oracle {want}")
     return count

@@ -1,6 +1,7 @@
 //! 🧱️ Jack query preparation: the bounded preparation steps and the `QueryExecutionPreparation` state machine.
 
 use super::*;
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll};
 
 /// 🧱 One preparation turn clones one snapshot metadata field or one working-scene entity.
 pub enum QueryPreparationStep {
@@ -91,67 +92,45 @@ impl QueryExecutionPreparation {
         self.closing = true;
     }
 
-    /// 📏️ Quotes the next close turn: the retained child cursor, a staged typed owner, the partial metadata clone, else one extraction move.
+    /// 📏️ Quotes retirement of the next retained query preparation owner.
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        use store::os_store::snapshot_read::{artifact_retirement_box_demands, artifact_retirement_owned_birth_demands};
         if let Some(owner) = self.retirement.as_ref() {
-            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
+            return artifact_retirement_box_demands(owner, body);
         }
         if self.closing_owner.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.closing_owner);
+            return artifact_retirement_owned_birth_demands(&self.closing_owner);
         }
         if !self.metadata.terminal_is_empty() {
             return self.metadata.close_demands(body);
         }
-        if self.graph.is_some() || self.query.is_some() {
-            return Ok(RetirementDemand { copy_bytes: size_of::<QueryClosingOwner>(), depth: 1, ..Default::default() });
+        if self.graph.is_some() {
+            return artifact_retirement_owned_birth_demands(&self.graph);
         }
-        Ok(Default::default())
+        artifact_retirement_owned_birth_demands(&self.query)
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(empty));
-        }
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if !admit_demand(grant, demand, "query preparation close exceeds admitted depth")? {
-            return Ok(RetainedCloneStep::Progress(empty));
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        use store::os_store::snapshot_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step};
+        if !self.closing {
+            return RetainedWorkPoll::Pending { work: 0 };
         }
         if self.retirement.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return artifact_retirement_box_close_step(&mut self.retirement, effect.grant().maximum_copy_bytes, effect);
         }
-        if self.closing_owner.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.closing_owner, &mut self.retirement, grant);
-        }
-        if !self.metadata.terminal_is_empty() {
-            return self.metadata.close_step(grant);
-        }
-        let extracted = if let Some(graph) = self.graph.as_mut() {
-            if let Some((_, node)) = graph.nodes.pop_first() {
-                Some(QueryClosingOwner::Effect(GraphEffect::CreateNode(node)))
-            } else if let Some((_, edge)) = graph.edges.pop_first() {
-                Some(QueryClosingOwner::Effect(GraphEffect::CreateEdge(edge)))
-            } else {
-                let metadata = graph_metadata_owner(graph);
-                self.graph = None;
-                Some(QueryClosingOwner::Metadata(metadata))
-            }
+        let turn = if self.closing_owner.is_some() {
+            artifact_retirement_admit_owned(&mut self.closing_owner, &mut self.retirement, effect)
+        } else if !self.metadata.terminal_is_empty() {
+            return self.metadata.close_step(effect);
+        } else if self.graph.is_some() {
+            artifact_retirement_admit_owned(&mut self.graph, &mut self.retirement, effect)
+        } else if self.query.is_some() {
+            artifact_retirement_admit_owned(&mut self.query, &mut self.retirement, effect)
         } else {
-            self.query.take().map(QueryClosingOwner::Query)
+            self.terminal = true;
+            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }
         };
-        match extracted {
-            Some(owner) => {
-                self.closing_owner = Some(owner);
-                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }))
-            }
-            None => {
-                self.terminal = true;
-                Ok(RetainedCloneStep::Complete(empty))
-            }
-        }
+        RetainedWorkPoll::Complete(turn).map_err(Into::into)
     }
 
     pub fn terminal_is_empty(&self) -> bool {

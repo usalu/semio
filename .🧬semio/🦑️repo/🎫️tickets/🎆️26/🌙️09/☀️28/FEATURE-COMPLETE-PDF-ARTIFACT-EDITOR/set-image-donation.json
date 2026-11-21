@@ -1,0 +1,18 @@
+{
+  "image": {"id": "ArchiveRgb", "width": 64, "height": 64, "components": 3, "stride": 5},
+  "alpha": {"id": "ArchiveAlpha", "width": 64, "height": 64, "components": 1, "stride": 13},
+  "ordinaryGrammar": [
+    "{\"image\":{\"id\":\"Reordered\",\"width\":1,\"height\":1,\"body\":{\"values\":[17],\"kind\":\"samples\"}},\"mutation\":\"setImage\"}",
+    "{\"mutation\":\"setImage\",\"image\":{\"id\":\"Artifact\",\"width\":1,\"height\":1,\"body\":{\"kind\":\"artifact\",\"reference\":{\"artifactId\":\"image-1\",\"dialect\":{\"artifactKind\":\"s.stdio.png\",\"standard\":\"1.2\",\"subset\":\"*\"}},\"values\":[true]}}}"
+  ],
+  "malformed": [
+    ["\"mutation\":\"setImage\"", "\"mutation\":\"removeImage\""],
+    ["\"kind\":\"samples\"", "\"kind\":\"noSuchBody\""],
+    ["\"width\":64", "\"width\":64,\"width\":32"],
+    ["\"height\":64", "\"height\":\"64\""],
+    ["\"values\":[0", "\"values\":[4294967296"],
+    ["\"values\":[0", "\"values\":[1.0"],
+    ["\"values\":[0", "\"values\":[true"],
+    ["\"values\":[0", "\"values\":[0,]"]
+  ]
+}

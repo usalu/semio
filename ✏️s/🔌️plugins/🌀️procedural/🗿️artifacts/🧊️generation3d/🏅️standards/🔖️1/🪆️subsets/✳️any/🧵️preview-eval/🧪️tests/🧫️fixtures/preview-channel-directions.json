@@ -1,0 +1,320 @@
+{
+  "evaluation": {
+    "operator": {
+      "out": {
+        "same": {
+          "$schema": "geometry",
+          "handle": "solid-out",
+          "kind": "solid"
+        },
+        "stat": {
+          "$schema": "dictionary",
+          "handle": "solid-metadata",
+          "x": 91,
+          "y": 92,
+          "z": 93
+        },
+        "z": {
+          "$schema": "geometry",
+          "handle": "wire-reader",
+          "kind": "wire"
+        }
+      },
+      "in": {
+        "same": [
+          {
+            "$schema": "geometry",
+            "handle": "solid-in",
+            "kind": "solid"
+          },
+          {
+            "handle": "solid-untyped",
+            "x": 88,
+            "y": 89,
+            "z": 90
+          },
+          {
+            "$schema": "geometry",
+            "handle": "solid-nested",
+            "kind": "solid"
+          }
+        ],
+        "a": {
+          "0": {
+            "$schema": "face",
+            "handle": "face-first"
+          },
+          "1": {
+            "$schema": "annotation",
+            "handle": "face-metadata",
+            "x": 4,
+            "y": 5,
+            "z": 6
+          },
+          "2": {
+            "$schema": "edge",
+            "handle": "edge-next"
+          },
+          "10": {
+            "$schema": "shell",
+            "handle": "shell-last"
+          },
+          "$schema": "list"
+        }
+      }
+    },
+    "meter": {
+      "out": {
+        "area": 15
+      },
+      "in": {
+        "source": {
+          "$schema": "geometry",
+          "handle": "solid-measured",
+          "kind": "solid"
+        }
+      }
+    },
+    "sink": {
+      "in": {
+        "target": {
+          "$schema": "vertex",
+          "handle": "vertex-sink"
+        }
+      }
+    },
+    "source": {
+      "out": {
+        "result": {
+          "$schema": "geometry",
+          "handle": "solid-origin",
+          "kind": "solid"
+        }
+      }
+    },
+    "relay": {
+      "in": {
+        "pass": {
+          "$schema": "geometry",
+          "handle": "solid-shared",
+          "kind": "solid"
+        }
+      },
+      "out": {
+        "pass": {
+          "$schema": "geometry",
+          "handle": "solid-shared",
+          "kind": "solid"
+        }
+      }
+    },
+    "scalar-relay": {
+      "in": { "Amount": { "$schema": "numeric", "value": 7 } },
+      "out": { "Amount": { "$schema": "numeric", "value": 7 } }
+    },
+    "hidden": {
+      "out": {
+        "wanted": {
+          "$schema": "geometry",
+          "handle": "solid-exported",
+          "kind": "solid"
+        },
+        "other": {
+          "$schema": "face",
+          "handle": "face-unselected"
+        },
+        "metadata": {
+          "x": 55,
+          "y": 56,
+          "z": 57,
+          "handle": "solid-export-metadata"
+        }
+      },
+      "in": {
+        "candidate": {
+          "$schema": "geometry",
+          "handle": "wire-hidden-input",
+          "kind": "wire"
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "widget": "operator",
+      "viewport": [
+        {
+          "port": "operator@same",
+          "instance": "operator@same#0",
+          "handle": "solid-out",
+          "input": false
+        },
+        {
+          "port": "operator@z",
+          "instance": "operator@z#0",
+          "handle": "wire-reader",
+          "input": false
+        },
+        {
+          "port": "operator@!ia",
+          "instance": "operator@!ia#in-0",
+          "handle": "face-first",
+          "input": true
+        },
+        {
+          "port": "operator@!ia",
+          "instance": "operator@!ia#in-1",
+          "handle": "edge-next",
+          "input": true
+        },
+        {
+          "port": "operator@!ia",
+          "instance": "operator@!ia#in-2",
+          "handle": "shell-last",
+          "input": true
+        },
+        {
+          "port": "operator@!isame",
+          "instance": "operator@!isame#in-0",
+          "handle": "solid-in",
+          "input": true
+        },
+        {
+          "port": "operator@!isame",
+          "instance": "operator@!isame#in-1",
+          "handle": "solid-nested",
+          "input": true
+        }
+      ],
+      "export": [
+        "solid-out",
+        "wire-reader"
+      ],
+      "marks": [
+        {
+          "ids": [
+            "h:operator@same"
+          ],
+          "instances": [
+            "operator@same#0"
+          ]
+        },
+        {
+          "ids": [
+            "n:operator"
+          ],
+          "instances": [
+            "operator@same#0",
+            "operator@z#0",
+            "operator@!ia#in-0",
+            "operator@!ia#in-1",
+            "operator@!ia#in-2",
+            "operator@!isame#in-0",
+            "operator@!isame#in-1"
+          ]
+        },
+        {
+          "ids": [
+            "h:operator@!isame"
+          ],
+          "instances": [
+            "operator@!isame#in-0",
+            "operator@!isame#in-1"
+          ]
+        }
+      ]
+    },
+    {
+      "widget": "meter",
+      "viewport": [
+        {
+          "port": "meter@!isource",
+          "instance": "meter@!isource#in-0",
+          "handle": "solid-measured",
+          "input": true
+        }
+      ],
+      "export": [],
+      "marks": []
+    },
+    {
+      "widget": "sink",
+      "viewport": [
+        {
+          "port": "sink@!itarget",
+          "instance": "sink@!itarget#in-0",
+          "handle": "vertex-sink",
+          "input": true
+        }
+      ],
+      "export": [
+        "vertex-sink"
+      ],
+      "marks": []
+    },
+    {
+      "widget": "source",
+      "viewport": [
+        {
+          "port": "source@result",
+          "instance": "source@result#0",
+          "handle": "solid-origin",
+          "input": false
+        }
+      ],
+      "export": [
+        "solid-origin"
+      ],
+      "marks": []
+    },
+    {
+      "widget": "relay",
+      "variable": { "name": "pass", "schema": "geometry" },
+      "viewport": [
+        {
+          "port": "relay@pass",
+          "instance": "relay@pass#0",
+          "handle": "solid-shared",
+          "input": false
+        },
+        {
+          "port": "relay@!ipass",
+          "instance": "relay@!ipass#in-0",
+          "handle": "solid-shared",
+          "input": true
+        }
+      ],
+      "export": [
+        "solid-shared"
+      ],
+      "marks": [
+        { "ids": ["h:relay@!ipass"], "instances": ["relay@!ipass#in-0"] },
+        { "ids": ["h:relay@pass"], "instances": ["relay@pass#0"] }
+      ]
+    },
+    {
+      "widget": "scalar-relay",
+      "variable": { "name": "Amount", "schema": "numeric" },
+      "viewport": [],
+      "export": [],
+      "marks": []
+    }
+  ],
+  "hoverTargetsByHandle": {
+    "solid-shared": [
+      {
+        "granularity": "handle",
+        "id": "h:relay@!ipass"
+      },
+      {
+        "granularity": "handle",
+        "id": "h:relay@pass"
+      }
+    ]
+  },
+  "exportOnly": {
+    "widget": "hidden",
+    "channel": "wanted",
+    "pending": "solid-exported"
+  }
+}

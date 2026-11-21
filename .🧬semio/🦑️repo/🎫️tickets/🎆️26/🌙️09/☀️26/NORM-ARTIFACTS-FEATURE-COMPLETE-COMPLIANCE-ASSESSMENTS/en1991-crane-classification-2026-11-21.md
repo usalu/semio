@@ -1,0 +1,7 @@
+# EN 1991 crane classification and rotor force
+
+The E3.06 design case now exposes the recommended HC hoisting and S fatigue classes for all 28 crane-use rows of informative Annex B, Table B.1 in EN 1991-3:2006. The older target treated Annex B as a table of factors. Annex B instead gives classification guidance for cases where the supplier's classification is unavailable. The underlying dynamic-factor and fatigue rules remain in the section 2 provisions. Each entry uses the alternatives in the published table, and the demo uses the workshop crane example. [DIN EN 1991-3 edition](https://www.dinmedia.de/en/standard/din-en-1991-3/134860849) · [EN 1991-3:2006, Table B.1](https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.3.2006.pdf)
+
+The E3.07 rotor calculation now cites §3.5(3), Equation 3.1, and uses the same force formula in the design-case editor and machine records. It reports the free force of the rotor. The structural equivalent static force and dynamic magnification under §3.5(5)–(6) remain open. [EN 1991-3:2006, §3.5](https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.3.2006.pdf)
+
+The Rust catalogue evaluator and an SQLite lookup agreed for all 28 independently recorded Table B.1 rows. The EN 1991:2026 edition uses its own clauses and scope. The results in this ticket cover the 2006 edition currently represented by the catalogue. [UNI EN 1991-3:2026](https://store.uni.com/en/en-1991-3-2026)

@@ -5,12 +5,11 @@ schema s.stdio.semio.graph
 start body
 framing record
 
-# Real `SemioGraphMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
-# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
-# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
+# Operation frame: format byte, record tag varint, then the selected variant's typed Pack wire value.
+# Each record is one mutation kind at its authored wire tag.
 header fixed 2
 field format u8
-field tag u8
+field tag varint
 record create-node tag=0
 field payload bytes
 record delete-node tag=1

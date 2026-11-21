@@ -21,6 +21,8 @@ impl<M:OriginalMirroredOperation> RetireOwned for MirroredOperationReceiving<M>{
 }
 impl<M:OriginalMirroredOperation+OpBinaryReceiving<DomainFailure=<M::Mirror as OpBinaryReceiving>::DomainFailure>> OpBinaryReceivingCursor<M> for MirroredOperationReceiving<M>{
  fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{self.inner.demands(source,body)}
+ fn step_work_demand(&self,source:&[u8],body:usize)->Result<u64,ValueError>{self.inner.step_work_demand(source,body)}
+ fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{self.inner.step(source,native,body,grant)}
  fn step_in(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{self.inner.step_in(source,native,body,effect)}
  fn domain_failure(&self)->Option<&<M::Mirror as OpBinaryReceiving>::DomainFailure>{self.inner.domain_failure()}
  fn domain_failure_demand(&self)->Result<RetirementDemand,ValueError>{self.inner.domain_failure_demand()}
@@ -34,6 +36,7 @@ impl<M:OriginalMirroredOperation+OpBinaryReceiving<DomainFailure=<M::Mirror as O
   turn
  }
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.inner.close_demands(body)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.inner.close_work_demand(body)}
  fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.inner.close_step(effect)}
  fn terminal_is_empty(&self)->bool{self.inner.terminal_is_empty()}
 }

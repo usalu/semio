@@ -201,6 +201,7 @@ macro_rules! snapshot_details_editor_support {
         $(, document_store_owners: $document_store_owners:path)?
         $(, bounded_native: $bounded_native:tt)?
         $(, native_snapshot_pack: $native_snapshot_pack:tt)?
+        $(, native_media_export: { factory: $native_media_export_factory:ty, io: $native_media_export_io:path, build: $native_media_export_build:path })?
         $(, native: {
             factory_name: $native_factory_name:literal,
             factory_type: $native_factory_type:ty,
@@ -248,6 +249,10 @@ macro_rules! snapshot_details_editor_support {
                 let controller = registry.controller_id().to_string();
                 registry.register(semio_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<semio_plugin::EditorApp<Self>>::new(&controller))?;
             )?
+            $(
+                let controller = registry.controller_id().to_string();
+                registry.register(<$native_media_export_factory>::new(&controller))?;
+            )?
             $crate::register_snapshot_edit_tool_factory::<Self>(registry)
         }
 
@@ -255,6 +260,18 @@ macro_rules! snapshot_details_editor_support {
             fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<semio_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_plugin::MediaConstruction,cx:&mut semio_plugin::__job::StepContext<'_>)->Result<bool,semio_plugin::__job::OriginalTurnFailure>{
                 let _=stringify!($native_snapshot_pack);
                 semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_plugin::EditorApp<Self>>::admit_original(request,body,construction,cx)
+            }
+        )?
+
+        $(
+            fn io() -> Option<semio_plugin::AppIo> { Some($native_media_export_io()) }
+
+            fn build_media_export_job(
+                request: &mut Option<semio_plugin::ArtifactMediaExportJobRequest<semio_plugin::EditorApp<Self>>>,
+                body: &mut Option<Box<dyn semio_plugin::ArtifactReservedJob + Send>>,
+                construction: &mut semio_plugin::MediaConstruction, cx: &mut semio_plugin::__job::StepContext<'_>,
+            ) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+                $native_media_export_build(request, body, construction, cx)
             }
         )?
 

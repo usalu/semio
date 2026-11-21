@@ -1,17 +1,8 @@
-use crate::standards::v1::subsets::any::schema::application::rule_query_json;
-use crate::standards::v1::subsets::any::schema::application::apply_rule_json;
-use crate::standards::v1::subsets::any::schema::application::build_rule_query;
-use crate::standards::v1::subsets::any::schema::application::assignment_value_jack;
-use crate::standards::v1::subsets::any::schema::application::resolve_parameter_value;
-use crate::standards::v1::subsets::any::schema::application::pattern_to_match_clause;
-use crate::standards::v1::subsets::any::schema::application::parse_bindings_json;
-use crate::standards::v1::subsets::any::schema::application::*;
-use crate::standards::v1::subsets::any::schema::errors::TrinityRewritingError;
+use super::{apply_rule, apply_rule_json, assignment_value_jack, build_rule_query, parse_bindings_json, pattern_to_match_clause, plan_rule, resolve_parameter_value, rule_query_json};
 use crate::standards::v1::subsets::any::schema::rule::*;
-use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::port_node_id;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::memory::Graph;
 use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
-use pack::snapshot::ArtifactDsl;
 use semio_s_artifact_trinity_jack_semio_content::SemioJackContent;
 
 fn nakagin_graph() -> Graph {
@@ -84,8 +75,7 @@ async fn rewriting_labeled_fixture_reloads() {
         rhs: Rhs { create: vec![], delete: vec![], set: vec![Assignment { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
     };
     apply_rule(&mut g, &rule, &semio_framework_graph_manifest::PropertyBag::new()).unwrap();
-    let snapshot_json = g.host_snapshot_json::<SemioJackContent>().unwrap();
-    let reloaded = Graph::load_json(&snapshot_json).unwrap();
+    let reloaded = Graph::from_snapshot(g.to_snapshot::<SemioJackContent>()).unwrap();
     let core = reloaded.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
 }
@@ -182,10 +172,94 @@ async fn apply_rule_json_and_rule_query_json_end_to_end() {
 
     let apply_out = apply_rule_json(&mut g, &rule_json, "{}").unwrap();
     let apply_value: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&apply_out, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    assert!(apply_value.get("fixture").is_some());
+    let reloaded = Graph::load_scene_json(apply_value["snapshotJson"].as_str().unwrap()).unwrap();
+    assert_eq!(g, reloaded);
     let core = g.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
 
     assert!(apply_rule_json(&mut g, "not json", "{}").is_err());
     assert!(rule_query_json("not json", "{}").is_err());
+}
+
+#[test]
+fn create_then_assign_uses_exact_string_and_keeps_endpoint_identity() {
+    let case: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let mut graph = nakagin_graph();
+    let before = graph.clone();
+    let query = rule_query_json(&case["rule"].to_string(), &case["bindings"].to_string()).unwrap();
+    let query: serde_json::Value = serde_json::from_str(&query).unwrap();
+    let query = query["query"].as_str().unwrap();
+    assert!(query.find("CREATE").unwrap() < query.find("SET").unwrap());
+    assert!(query.contains(&case["expectedName"].to_string()));
+    let mut from_query = before.clone();
+    semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::runner::run(&mut from_query, query).unwrap();
+    apply_rule_json(&mut graph, &case["rule"].to_string(), &case["bindings"].to_string()).unwrap();
+    assert_eq!(from_query, graph);
+    let [node] = graph.nodes.values().filter(|node| !before.nodes.contains_key(&node.id)).collect::<Vec<_>>()[..] else {
+        panic!("expected one created node");
+    };
+    let [edge] = graph.edges.values().filter(|edge| !before.edges.contains_key(&edge.id)).collect::<Vec<_>>()[..] else {
+        panic!("expected one created edge");
+    };
+    assert_eq!(node.name, case["expectedName"].as_str().unwrap());
+    assert_eq!(node.kind, case["expectedKind"].as_str().unwrap());
+    assert_eq!(edge.kind, case["expectedEdgeKind"].as_str().unwrap());
+    assert_eq!(port_node_id(&edge.source).unwrap_or(&edge.source), case["expectedSourceId"].as_str().unwrap());
+    assert_eq!(port_node_id(&edge.target).unwrap_or(&edge.target), node.id);
+}
+
+#[test]
+fn preview_preserves_puzzle_kind_names() {
+    use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::{ast::Clause, language_service::parse};
+    let mut rule = empty_rule();
+    rule.lhs.pattern.left_kind = "part.beam".into();
+    rule.lhs.pattern.edge_kind = Some("edge.link".into());
+    rule.lhs.pattern.right_var = Some("b".into());
+    rule.lhs.pattern.right_kind = Some("part.column".into());
+    let query = build_rule_query(&rule, &PropertyBag::new());
+    assert_eq!(parse(&query).unwrap().clauses, vec![Clause::Match(vec![rule.lhs.pattern.to_jack_pattern()])]);
+}
+
+#[test]
+fn invalid_pattern_or_non_predicate_where_refuses_the_entire_rewrite() {
+    let mut graph = nakagin_graph();
+    let before = graph.clone();
+    let mut rule = empty_rule();
+    rule.rhs.set.push(Assignment { var: "a".into(), prop: "label".into(), value: PropertyValue::String("changed".into()) });
+    rule.lhs.pattern.right_var = Some("b".into());
+    assert!(apply_rule(&mut graph, &rule, &PropertyBag::new()).is_err());
+    assert_eq!(graph, before);
+
+    rule.lhs.pattern.right_var = None;
+    rule.lhs.where_clause = Some("a.name = 'b' SET a.name = 'unexpected'".into());
+    assert!(apply_rule(&mut graph, &rule, &PropertyBag::new()).is_err());
+    assert_eq!(graph, before);
+}
+
+#[test]
+fn merge_plan_keeps_structured_assignments_and_is_repeatable() {
+    use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::{EntityRef, GraphEffect};
+    let mut graph = nakagin_graph();
+    let original_edges = graph.edges.len();
+    let mut rule = empty_rule();
+    rule.lhs.where_clause = Some("a.name = 'b'".into());
+    rule.rhs.merge.push(Pattern {
+        left_var: "a".into(), left_kind: "Piece".into(),
+        edge_var: Some("loopEdge".into()), edge_kind: Some("Connection".into()),
+        right_var: Some("a".into()), right_kind: Some("Piece".into()),
+    });
+    let value = semio_framework_pack_json::from_json_str(r#"{"x":4,"y":3,"z":2}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    rule.rhs.set.push(Assignment { var: "a".into(), prop: "position".into(), value });
+    let before = graph.clone();
+    let (_, effects) = plan_rule(&graph, &rule, &PropertyBag::new()).unwrap();
+    assert_eq!(graph, before);
+    assert!(matches!(effects.as_slice(),
+        [GraphEffect::CreateEdge(_), GraphEffect::SetProperty { entity: EntityRef::Node(_), key, value: PropertyValue::Object(_) }]
+        if key == "position"
+    ));
+    apply_rule(&mut graph, &rule, &PropertyBag::new()).unwrap();
+    assert_eq!(graph.edges.len(), original_edges + 1);
+    let first = graph.clone();
+    apply_rule(&mut graph, &rule, &PropertyBag::new()).unwrap();
+    assert_eq!(graph, first);
 }

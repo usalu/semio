@@ -75,6 +75,21 @@ pub async fn encode(frame: &ServerFrame, document_id: &str) -> Message {
     Message::Binary(encode_server_frame(frame, Lane::Command).await.into())
 }
 
+/// 🪢 Preserves packet ordering and the original edit identity on document fanout and hello replay.
+pub async fn encode_document_fanout(frame: &ServerFrame, document_id: &str) -> Result<Vec<Message>, &'static str> {
+    let ServerFrame::Commands { envelopes, .. } = frame else { return Ok(vec![encode(frame, document_id).await]); };
+    if !envelopes.iter().any(|row| row.transaction.as_ref().is_some_and(|tx| protocol::atomic_group::is_atomic_backbone_tool(&tx.tool))) {
+        return Ok(vec![encode(frame, document_id).await]);
+    }
+    let mut projected = frame.clone();
+    project_server_frame(&mut projected, document_id);
+    let ServerFrame::Commands { envelopes, frontier, .. } = projected else { unreachable!() };
+    let group = protocol::atomic_hub::AtomicWalEdit { edit_id: frontier.head_edit_id.clone(), rows: envelopes.len() };
+    let metadata = ServerFrame::Ack { batch_id: 0, stages: Vec::new(), frontier };
+    let metadata = encode_server_frame(&metadata, Lane::Command).await;
+    group.relay(&envelopes, &metadata).map(|frames| frames.into_iter().map(|frame| Message::Binary(frame.into())).collect())
+}
+
 pub async fn error_frame(code: &str, message: impl Into<String>) -> Message {
     encode(&ServerFrame::Error { code: code.to_string(), message: message.into() }, "").await
 }
@@ -116,10 +131,17 @@ pub async fn submit_commands(handle: &db::ArtifactHandle, gate: &db::security::S
             return (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: Vec::new() }) }], frontier }, None);
         }
     };
+    submit_admitted_batch(handle, gate, actor, batch_id, committed_before, batch, policy).await
+}
+
+/// 🧾️ Publishes one durable receipt, selected only after the native WAL frontier advances.
+pub async fn submit_admitted_batch(handle: &db::ArtifactHandle, gate: &db::security::SecurityGate, actor: &ActorId, batch_id: u64, committed_before: Option<u64>, batch: db::document::CommandBatch, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>) {
+    let group_id = batch.atomic_edit().map(|group| group.edit_id.clone());
+    let envelopes = batch.envelopes.clone();
     match handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy }).await {
         Ok(Ok(receipt)) => {
             gate.record_committed(&envelopes.iter().map(|envelope| (&envelope.actor, &envelope.mutation_id)).collect::<Vec<_>>(), now_ms().max(0) as u64);
-            let frontier = engine_frontier_to_wire(&receipt.frontier, receipt.command_id.0.clone());
+            let frontier = engine_frontier_to_wire(&receipt.frontier, group_id.unwrap_or_else(|| receipt.command_id.0.clone()));
             let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() };
             let advanced = committed_before.is_some_and(|before| receipt.frontier.commit_seq > before);
             (ack, advanced.then(|| ServerFrame::Commands { envelopes, origin: actor.clone(), frontier }))

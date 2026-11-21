@@ -1,6 +1,17 @@
 {
   "cases": [
     {
+      "name": "escaped output and analytic annotation after a punctuated widget",
+      "kind": "components",
+      "ids": [
+        "a@b#c~d@!o!i%40%23%7E%2540#0.face.2~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~1~bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "components": [
+        2
+      ],
+      "selectionText": "[2]"
+    },
+    {
       "name": "Empty Selection",
       "ids": [],
       "kind": "basic"

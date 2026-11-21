@@ -221,20 +221,41 @@ async function showPeerStores(groupId:string,originId:string,say:(key:string,var
 function showFleet(report:FleetReportV1,say:(key:string,variables?:Variables)=>void,header:string):void{
  say(header);
  for(const row of report.rows)say("fleet.row",{origin:row.originId,platform:row.platform??"-",age:row.ageSeconds===null?"-":`${row.ageSeconds}s`,lag:row.behindOrigins===null?"-":`${row.behindOrigins}/${row.incoming}`,basis:row.basis===undefined?"now":`cp:${row.checkpointSeconds??"-"}${row.checkpointSeconds===null||row.checkpointSeconds===undefined?"":"s"}`,sync:row.sync===null?"-":row.sync?"@fleet.on":"@fleet.off",code:row.code??"-",view:row.view===null?"-":`${row.view.modified}/${row.view.deleted}/${row.view.untracked}`,latency:spellLatency(row.latency),verdict:`@fleet.verdict.${row.verdict}`});
- for(const item of report.warnings)say(`fleet.warning.${item.kind}`,{origin:item.originId,detail:item.detail});
+ for(const item of report.warnings){
+  const kind=item.kind==="stage"&&item.detail.startsWith("observe-")?"stage-observation":item.kind;
+  say(`fleet.warning.${kind}`,{origin:item.originId,detail:item.detail});
+ }
  for(const item of report.differing)say(differsKey(report,item),{origin:item.originId,field:item.field,value:item.value?.slice(0,80)??"-",expected:item.expected?.slice(0,80)??"-"});
  say(report.ok?"fleet.ok":"fleet.failed",{origins:report.rows.length,fresh:report.freshSeconds});
 }
 
-/** 🚦️ The readiness table of the workers, one row per origin from its own `ready.json`, in each output language with the stored reason of that language; the group server and workers without a status are named, and the verdict of `fleet` is not changed by it. */
+const readinessLine=(value:string):string=>value.replace(/[\u0000-\u001f\u007f-\u009f]/gu," ").trim();
+
+/** 🚥️ Shows current readiness and labels older observations as last reported, with the worker's diagnostic text in the requested language. */
 function showReadiness(rows:readonly ReadinessRowV1[],context:ReplicaCommandContextV1,languages:readonly ReplicaLanguageV1[]):void{
  const workers=rows.filter(row=>row.kind==="worker");
  if(workers.length===0)return;
+ const counts={ready:0,stale:0,future:0,missing:0,workers:workers.length};
+ for(const row of workers){
+  if(row.currentReady===true)counts.ready+=1;
+  if(row.freshness!=="fresh")counts[row.freshness]+=1;
+ }
  for(const language of languages){
   const text=(key:string,variables:Variables={}):string=>replicaTextV1(language,key,variables);
   context.notice(text("fleet.ready.header"));
-  for(const row of workers)context.notice(text("fleet.ready.row",{origin:row.originId,state:row.state??text("fleet.ready.none"),ready:row.ready===null?"-":text(row.ready?"fleet.ready.yes":"fleet.ready.no"),stage:row.state===null||row.stageCount===0?"-":`${row.stageIndex}/${row.stageCount}${row.stage===null?"":`:${row.stage}`}`,attempts:row.attempts,exit:row.exit??"-",peak:row.peakMegabytes??"-",age:row.ageSeconds===null?"-":`${row.ageSeconds}s`,digest:row.digest===null?"-":row.digest.slice(0,8),reason:row.refusal===null?"-":row.refusal[language]}));
-  context.notice(text("fleet.ready.summary",{ready:workers.filter(row=>row.ready===true).length,workers:workers.length,silent:workers.filter(row=>row.state===null).length}));
+  for(const row of workers){
+   const report=row.lastReport;
+   if(report===null){context.notice(text("fleet.ready.absent",{origin:row.originId}));continue;}
+   const current=row.freshness==="fresh";
+   const state=current?report.state:text("fleet.ready.last",{freshness:text("fleet.ready."+row.freshness),state:report.state});
+   const ready=text((row.currentReady??report.ready)?"fleet.ready.yes":"fleet.ready.no");
+   const stage=report.stageCount===0?"-":`${report.stageIndex}/${report.stageCount}${report.stage===null?"":`:${readinessLine(report.stage)}`}`;
+   const refusal=readinessLine(report.refusal?.[language]??"")||"-";
+   const reason=readinessLine(report.reason?.[language]??"")||"-";
+   const progress=readinessLine(report.tail.findLast(line=>readinessLine(line)!=="")??"").slice(0,300)||"-";
+   context.notice(text("fleet.ready.row",{origin:row.originId,state,ready,stage,attempts:report.attempts,exit:report.exit??"-",peak:report.peakMegabytes??"-",age:row.ageSeconds===null?"-":`${row.ageSeconds}s`,digest:report.digest.slice(0,8),refusal,reason,progress}));
+  }
+  context.notice(text("fleet.ready.summary",counts));
  }
 }
 
@@ -436,7 +457,7 @@ async function execute(parsed:ReplicaArgumentsV1,context:ReplicaCommandContextV1
   }
   if(signal.aborted)return {exitCode:130};
   if(parsed.flags.has("--json")){requireAttestShapeV1("Report",report,"Closed fleet report required");context.write(JSON.stringify(report));}
-  else{showFleet(report,say,"fleet.header");showReadiness(await readinessReportV1(storeRoot,Date.now()),context,replicaLanguagesV1(parsed.values["--lang"],context.environment));}
+  else{showFleet(report,say,"fleet.header");showReadiness(await readinessReportV1(storeRoot),context,replicaLanguagesV1(parsed.values["--lang"],context.environment));}
   const blocked=await listAccessV1(storeRoot);
   for(const item of blocked)say("fleet.access",{origin:item.originId,worktree:item.worktree,state:item.state});
   if(!parsed.flags.has("--json"))await showPeerStores(options.groupId,options.originId,say);

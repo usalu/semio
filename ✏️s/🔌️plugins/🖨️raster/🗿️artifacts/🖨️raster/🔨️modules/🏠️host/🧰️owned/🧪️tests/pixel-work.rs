@@ -26,7 +26,7 @@ fn pixel_source(fixture: &serde_json::Value) -> RasterSnapshot {
 
 fn prepared_mutation(source:&RasterSnapshot,mutation:&RasterMutation)->RasterPreparedMutation{
     let mut apply=RasterOneItemApply::new();
-    for _ in 0..100_000{let demand=apply.advance_demands(source,mutation,32768).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let turn=apply.advance_controlled(source,mutation,OperationId(753),semio_framework_job::Generation(1),256,grant,||false);assert!(turn.work<=256);let(post,receipt)=turn.result.unwrap();assert!(receipt.fits(grant));if let Some(post)=post{assert!(apply.terminal_is_empty());return post;}}
+    for _ in 0..100_000{let demand=apply.advance_demands(source,mutation,32768).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let turn=with_effect(grant, 256, |effect| apply.advance_controlled(source,mutation,OperationId(753),semio_framework_job::Generation(1),effect,||false));assert!(turn.work<=256);let(post,receipt)=turn.result.unwrap();assert!(receipt.fits(grant));if let Some(post)=post{assert!(apply.terminal_is_empty());return post;}}
     panic!("original mutation preparation failed to complete");
 }
 
@@ -37,8 +37,8 @@ fn replay_candidate_uses_actual_original_control_and_refuses_foreign_caller(){
  let mutation=RasterMutation::RenameLayer(rename_layer::RenameLayer{layer_id:"paint".into(),new_name:row["renamed"].as_str().unwrap().into()});let context=store::os_store::ArtifactReplayPreparationContext{mode:store::os_store::ArtifactReplayPreparationMode::Prefix,operation_index:row["operationIndex"].as_u64().unwrap()as u32,generation:row["generation"].as_u64().unwrap(),base_revision:[row["revisionByte"].as_u64().unwrap()as u8;32]};let mut apply=RasterOneItemApply::new();let mut caller=OriginalWorkFixture::new();let mut foreign=OriginalWorkFixture::new();let mut prepared=None;
  for index in 0..10000{
   let d=apply.advance_demands(&source,&mutation,32768).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
-  caller.work_turn(grant,256,|cx|{let mut work=0;let result=cx.with_native_receiving::<_,ValueError>(|control|{let turn=apply.advance_replay_controlled(&source,&mutation,context,grant,control);work=turn.work;turn.result});let receipt=result.as_ref().map(|(_,p)|*p).unwrap_or_else(|error|error.retained_progress());cx.consume_fuel(work);cx.consume_receiving_retained(grant,receipt)?;let(post,_)=result?;prepared=post;Ok(())}).unwrap();
-  if index==0{foreign.work_turn(grant,256,|cx|{let mut work=0;let result=cx.with_native_receiving::<_,ValueError>(|control|{let turn=apply.advance_replay_controlled(&source,&mutation,context,grant,control);work=turn.work;turn.result});cx.consume_fuel(work);assert_eq!(result.is_err(),row["foreignCallerRefused"].as_bool().unwrap());assert_eq!(work,0);Ok(())}).unwrap();}
+  caller.work_turn(grant,256,|cx|{let mut work=0;let result=cx.with_native_receiving::<_,ValueError>(|control|{let turn=apply.advance_replay_controlled(&source,&mutation,context,grant,control);work=turn.work;turn.result});let receipt=result.as_ref().map(|(_,p)|*p).unwrap_or_else(|error|error.retained_progress());cx.consume_work(work);cx.consume_receiving_retained(grant,receipt)?;let(post,_)=result?;prepared=post;Ok(())}).unwrap();
+  if index==0{foreign.work_turn(grant,256,|cx|{let mut work=0;let result=cx.with_native_receiving::<_,ValueError>(|control|{let turn=apply.advance_replay_controlled(&source,&mutation,context,grant,control);work=turn.work;turn.result});cx.consume_work(work);assert_eq!(result.is_err(),row["foreignCallerRefused"].as_bool().unwrap());assert_eq!(work,0);Ok(())}).unwrap();}
   if prepared.is_some(){break}
  }
  assert!(apply.terminal_is_empty());let prepared=prepared.unwrap();assert_eq!(prepared.inverse.as_ref().unwrap().len(),row["inverseRows"].as_u64().unwrap()as usize);assert_eq!(semio_s_artifact_raster_raster_model::layer_name(prepared.snapshot.layers.last().unwrap()),row["renamed"].as_str().unwrap());caller.retire_owned(prepared,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,..test_wallet()});caller.finish();foreign.finish();retire_raster_value_cold(source);retire_raster_value_cold(mutation);
@@ -94,7 +94,7 @@ fn maximum_stroke_points_are_copied_in_bounded_pages() {
         if copied_points==point_count {break;}
     }
     assert_eq!(copied_points,point_count);
-    for _ in 0..200_000 {if work.terminal_is_empty(){break;}work.close_step(exact_grant(work.close_demands(32768).result.unwrap())).unwrap();}
+    for _ in 0..200_000 {if work.terminal_is_empty(){break;}with_effect(exact_grant(work.close_demands(32768).unwrap()), 256, |effect| work.close_step(effect)).result.unwrap();}
     assert!(work.terminal_is_empty());
     retire_raster_value_cold(source);retire_raster_value_cold(mutation);
 }
@@ -107,7 +107,7 @@ fn maximum_stroke_row_scratch_yields_without_stalling_the_first_pixel() {
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,..test_wallet()};let mut work=RasterPixelComputeWork::new();let mut completed=false;
     for _ in 0..1000{let demand=work.demands(&source,&mutation,32768).unwrap();assert!(demand.copy_bytes<=32768);let step=work.advance(&source,&mutation,grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneStep::Complete(_)){let(before,after)=work.take().unwrap();assert_eq!(after.pixels,[255,0,0,255]);drop((before,after));completed=true;break;}}
     assert!(completed);
-    for _ in 0..200_000{if work.terminal_is_empty(){break;}work.close_step(exact_grant(work.close_demands(32768).result.unwrap())).unwrap();}assert!(work.terminal_is_empty());
+    for _ in 0..200_000{if work.terminal_is_empty(){break;}with_effect(exact_grant(work.close_demands(32768).unwrap()), 256, |effect| work.close_step(effect)).result.unwrap();}assert!(work.terminal_is_empty());
     retire_raster_value_cold(source);retire_raster_value_cold(mutation);
 }
 
@@ -142,7 +142,7 @@ fn semantic_pixel_output_hashes_and_checks_destination_under_byte_grants() {
     assert_eq!(result.key.as_deref(),Some(semio_s_artifact_raster_raster_model::raster_image_content_id("image",image).as_str()));
     assert_eq!(&image.frames[0].rgba8[..4],&[255,255,255,0]);
     assert!(turns>256);
-    for _ in 0..200_000{if work.terminal_is_empty(){break;}work.close_step(exact_grant(work.close_demands(32768).result.unwrap())).unwrap();}
+    for _ in 0..200_000{if work.terminal_is_empty(){break;}with_effect(exact_grant(work.close_demands(32768).unwrap()), 256, |effect| work.close_step(effect)).result.unwrap();}
     assert!(work.terminal_is_empty());
     retire_raster_value_cold(result);retire_raster_value_cold(source);retire_raster_value_cold(mutation);
 }
@@ -155,7 +155,7 @@ fn canonical_pixel_destination_is_compared_before_reuse() {
     let mut first=RasterPixelResultWork::new();
     loop{if matches!(first.advance(&source,&mutation,grant).unwrap(),RetainedCloneStep::Complete(_)){break;}}
     let prepared=first.take().unwrap();let key=prepared.key.as_ref().unwrap().clone();
-    for _ in 0..200_000{if first.terminal_is_empty(){break;}first.close_step(exact_grant(first.close_demands(32768).result.unwrap())).unwrap();}
+    for _ in 0..200_000{if first.terminal_is_empty(){break;}with_effect(exact_grant(first.close_demands(32768).unwrap()), 256, |effect| first.close_step(effect)).result.unwrap();}
     assert!(first.terminal_is_empty());
     for equal in [true,false]{
         let image=if equal{prepared.image.as_ref().unwrap().clone()}else{semio_s_artifact_raster_raster_model::semio_image_from_rgba8(1,1,vec![0;4])};
@@ -166,7 +166,7 @@ fn canonical_pixel_destination_is_compared_before_reuse() {
         }
         assert_eq!(refused,!equal);
         assert_eq!(completed,equal);
-        for _ in 0..200_000{if work.terminal_is_empty(){break;}work.close_step(exact_grant(work.close_demands(32768).result.unwrap())).unwrap();}
+        for _ in 0..200_000{if work.terminal_is_empty(){break;}with_effect(exact_grant(work.close_demands(32768).unwrap()), 256, |effect| work.close_step(effect)).result.unwrap();}
         assert!(work.terminal_is_empty());
     }
     retire_raster_value_cold(prepared);retire_raster_value_cold(source);retire_raster_value_cold(mutation);
@@ -200,7 +200,7 @@ fn six_pixel_computations_share_bounded_candidates_and_explicit_cancellation() {
         for cut in [Some(0),Some(32),Some(160),None]{
             let mut work=RasterPixelComputeWork::new();let mut turns=0;
             loop{if cut==Some(turns){break}let step=work.advance(&source,&mutation,grant).unwrap();assert!(step.progress().fits(grant));turns+=1;if matches!(step,RetainedCloneStep::Complete(_)){assert!(cut.is_none());let(before,after)=work.take().unwrap();assert!(before.pixels.iter().all(|byte|*byte==0));assert_eq!(&after.pixels[..4],fixture["firstPixels"][name].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>());drop((before,after));break}assert!(turns<100_000);}
-            for _ in 0..200_000{if work.terminal_is_empty(){break}work.close_step(exact_grant(work.close_demands(32768).result.unwrap())).unwrap();}
+            for _ in 0..200_000{if work.terminal_is_empty(){break}with_effect(exact_grant(work.close_demands(32768).unwrap()), 256, |effect| work.close_step(effect)).result.unwrap();}
             assert!(work.terminal_is_empty());
             if cut.is_none(){assert!(turns>=fixture["minimumTurns"].as_u64().unwrap());}
         }
@@ -234,7 +234,7 @@ fn decoded_image_copy_preserves_profiles_metadata_frames_and_replacement_ownersh
         else { assert_eq!(result,source);assert_eq!(semio_s_artifact_raster_raster_model::raster_image_content_id("probe",&result),format!("probe-{}",fixture["digest"].as_str().unwrap())); }
         for _ in 0..1000 {
             if work.terminal_is_empty() { break; }
-            work.close_step(exact_grant(work.close_demands(32768).result.unwrap())).unwrap();
+            with_effect(exact_grant(work.close_demands(32768).unwrap()), 256, |effect| work.close_step(effect)).result.unwrap();
         }
         assert!(work.terminal_is_empty());
         drop(result);
@@ -273,7 +273,7 @@ fn pixel_source_preparation_quotes_reservation_copies_and_cancelled_storage() {
         for _ in 0..100_000 {
             if work.terminal_is_empty() { break; }
             let demand = work.close_demands(32768).unwrap();
-            work.close_step(exact_grant(demand)).result.unwrap();
+            with_effect(exact_grant(demand), 256, |effect| work.close_step(effect)).result.unwrap();
         }
         assert!(work.terminal_is_empty());
         if cut.is_none() { assert!(turns >= fixture["minimumTurns"].as_u64().unwrap()); }
@@ -289,12 +289,12 @@ fn semantic_pixel_routes_yield_during_large_image_work() {
         let source = pixel_source(&fixture);
         let mutation = pixel_route(route.as_str().unwrap());
         let mut work = RasterOneItemApply::new();
-        let (pending, empty) = work.advance(&source,&mutation,OperationId(750),semio_framework_job::Generation(1),0,grant).unwrap();
+        let (pending, empty) = with_effect(grant, 0, |effect| work.advance(&source,&mutation,OperationId(750),semio_framework_job::Generation(1),effect)).unwrap();
         assert!(pending.is_none());
         assert_eq!(empty,RetainedCloneProgress::default());
         let mut turns = 0;
         let candidate = loop {
-            let (candidate, receipt) = work.advance(&source, &mutation, OperationId(750), semio_framework_job::Generation(1), fixture["grant"]["fuel"].as_u64().unwrap(), grant).unwrap();
+            let (candidate, receipt) = with_effect(grant, fixture["grant"]["fuel"].as_u64().unwrap(), |effect| work.advance(&source, &mutation, OperationId(750), semio_framework_job::Generation(1), effect)).unwrap();
             assert!(receipt.fits(grant));
             turns += 1;
             assert!(turns < 100_000);
@@ -317,11 +317,15 @@ fn retained_asset_image_hashes_yield_and_removal_inverse_retains_the_exact_root(
     let image=semio_s_artifact_raster_raster_model::semio_image_from_rgba8(1024,1024,vec![0;1024*1024*4]);
     let (asset,_)=semio_s_artifact_raster_raster_model::RasterImagePayload::from_owned(image,grant).result.unwrap();
     let add=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset{asset_id:"large".into(),asset});let mut apply=RasterOneItemApply::new();let mut turns=0;
-    let added=loop{let(post,receipt)=apply.advance(&source,&add,OperationId(751),semio_framework_job::Generation(1),1,grant).unwrap();assert!(receipt.fits(grant));turns+=1;assert!(turns<100_000);if let Some(post)=post{break post;}};
+    let added=loop{let(post,receipt)=with_effect(grant, 128, |effect| apply.advance(&source,&add,OperationId(751),semio_framework_job::Generation(1),effect)).unwrap();assert!(receipt.fits(grant));turns+=1;assert!(turns<100_000);if let Some(post)=post{break post;}};
     assert!(turns>=fixture["minimumTurns"].as_u64().unwrap());assert_eq!(added.inverse.as_ref().unwrap().len(),1);
     let root=added.snapshot.assets.get("large").unwrap().local_owner::<semio_s_artifact_raster_raster_model::SemioImageSnapshot>().unwrap();
     let remove=RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset{asset_id:"large".into()});let mut apply=RasterOneItemApply::new();
-    let removed=loop{let(post,receipt)=apply.advance(&added.snapshot,&remove,OperationId(752),semio_framework_job::Generation(1),1,grant).unwrap();assert!(receipt.fits(grant));if let Some(post)=post{break post;}};
+    let removed = (0..100_000).find_map(|_| {
+        let (post, receipt) = with_effect(grant, 128, |effect| apply.advance(&added.snapshot, &remove, OperationId(752), semio_framework_job::Generation(1), effect)).unwrap();
+        assert!(receipt.fits(grant));
+        post
+    }).expect("funded asset removal finishes");
     let RasterMutation::AddLayerAsset(inverse)=&removed.inverse.as_ref().unwrap()[0]else{panic!("removal inverse must restore the image root")};assert!(std::ptr::eq(inverse.asset.image(),root.as_ref()));assert!(!removed.snapshot.assets.contains_key("large"));assert!(added.snapshot.assets.contains_key("large"));
     drop(root);retire_raster_value_cold(removed);retire_raster_value_cold(added);retire_raster_value_cold(add);retire_raster_value_cold(remove);retire_raster_value_cold(source);
 }

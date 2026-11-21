@@ -48,3 +48,11 @@ impl semio_framework_dsl_record::DslField for DagExpandedPaths{
 }
 #[path="🛬️receive/🦀️.rs"]mod receiving;
 pub use receiving::ExpandedPathsReceiver;
+
+impl semio_framework_dsl_record::receiving::owned::DslOwnedReceivingField for DagExpandedPaths {
+    type Cursor = semio_framework_dsl_record::receiving::owned::NativeFieldReceiving<Self>;
+
+    fn receiving_cursor() -> Self::Cursor {
+        Self::Cursor::default()
+    }
+}

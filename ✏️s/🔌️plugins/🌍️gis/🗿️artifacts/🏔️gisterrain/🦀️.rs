@@ -46,7 +46,7 @@ pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
 }
 //#endregion 🔹ArtifactKind
 
-pub use semio_s_artifact_gis_gisterrain_inferences::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, gis_terrain_mesh_from_snapshot};
+pub use semio_s_artifact_gis_gisterrain_inferences::{gis_terrain_elevation_grid, gis_terrain_mesh_buffers, gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, gis_terrain_mesh_from_snapshot, TerrainElevationGrid, TerrainTileMeshJson};
 
 //#region 🔖️Register
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) — replaces
@@ -236,7 +236,7 @@ pub use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutatio
 pub mod examples {
     #[path = "."]
     pub mod demo {
-        pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::examples::demo::*;
+        pub use semio_s_artifact_gis_gisterrain_editor::examples::demo::*;
 
     }
 }

@@ -1,12 +1,14 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {mkdtempSync,rmSync} from "node:fs";
+import {cp} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {createNodeFilePortV1} from "../../../🟨️.mjs";
 import {implementationDigestV1,loadGenerationGraphV1,restoreExpectedWholeGenerationV1} from "../../🟨️.mjs";
 import {createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
 import fixture from "./🔣️.json";
+import retryFixture from "./🕓️retry.json";
 
 test("a restore-only request preserves a matching seal and attempts one exact head only under structural custody",async()=>{
  using oracle=new Database(":memory:");
@@ -60,5 +62,54 @@ test("a restore-only request preserves a matching seal and attempts one exact he
    if(result.status==="restored")expect(result.localManifest).toBe(pointer.manifest);
    expect(mock.log,row.name).toEqual([]);
   }
+ }finally{rmSync(area,{recursive:true,force:true});}
+});
+
+
+test("a waiting whole read retries its same exact candidate after a transient restore failure",async()=>{
+ using oracle=new Database(":memory:");
+ const area=mkdtempSync(join(tmpdir(),"whole-retry-"));
+ try{
+  const producer=join(area,"producer"),reader=join(area,"reader"),source=createMockHost(producer),target=createMockHost(reader),files=createNodeFilePortV1();
+  await seed(producer,ringFiles(6));await seed(reader,ringFiles(6));await loadGenerationGraphV1(source.host);
+  const sourceRoot=join(producer,".gen"),targetRoot=join(reader,".gen"),pointer=(await files.read(join(sourceRoot,"current.json")))!;
+  const identity=await source.host.identity(),implementation=implementationDigestV1(await source.host.implementationRows());
+  const expected={origin:"g1-producer",scope:"all",generation:7,manifest:"1".repeat(64),identity,platform:"darwin-arm64",implementation};
+  let clock=0,restores=0;
+  const availability:number[]=[];
+  Object.assign(target.host,{
+   now:()=>clock,
+   waitNoticeMilliseconds:1,
+   async prepareWholeRebuild(wait:{available():Promise<boolean>;restore():Promise<unknown>}){
+    for(const offset of retryFixture.observations){
+     clock=offset;
+     availability.push(Number(await wait.available()));
+    }
+    const expectedAvailability=oracle.query("select value >= ?1 as eligible from json_each(?2) order by key").values(retryFixture.retryMilliseconds,JSON.stringify(retryFixture.observations)).flat();
+    expect(availability).toEqual(expectedAvailability);
+    return{restored:await wait.restore()};
+   },
+   async wholeGate({look,fund}:{look():Promise<{ahead:boolean;candidate?:typeof expected}>;fund():Promise<unknown>}){
+    const seen=await look();
+    if(restores===0)return{candidate:seen.candidate,release:async()=>{}};
+    expect(seen.ahead).toBe(false);
+    expect(await fund()).toBeUndefined();
+    return{release:async()=>{}};
+   },
+   exchange:{
+    async look(){return{state:"complete",ahead:true,held:0,candidate:expected};},
+    async restore(options:{expectedHead:typeof expected;requireComplete:boolean;fs:typeof files}){
+     expect(options.expectedHead).toEqual(expected);expect(options.requireComplete).toBe(true);
+     if(++restores===1)return{status:"incomplete",reason:"closure temporarily unavailable"};
+     for(const name of ["m","o","f","x"])await cp(join(sourceRoot,name),join(targetRoot,name),{recursive:true});
+     await options.fs.write(join(targetRoot,"current.json"),pointer);
+     return{status:"restored",head:expected,generation:7};
+    }
+   },
+  });
+  const result=await loadGenerationGraphV1(target.host,{lean:true});
+  expect(restores).toBe(2);
+  expect(target.log).toEqual([]);
+  expect(Object.keys(result.graph.projects)).toHaveLength(6);
  }finally{rmSync(area,{recursive:true,force:true});}
 });

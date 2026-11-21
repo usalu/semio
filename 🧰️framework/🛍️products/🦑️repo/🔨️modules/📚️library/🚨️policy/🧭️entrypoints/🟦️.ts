@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { runPolicyExit } from "../🏃️runner/🟦️.ts";
 import { createScriptProcessEnvelope, readScriptPolicy, receiveScriptProcessInvocation, runScriptMain, SCRIPT_PROCESS_INVOCATION_ENV, type ScriptInvocation, ScriptRouter, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { retryOnConcurrentEditV1 } from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 
 /** 🚪️When argv contains `policy`, runs this bundle's policy lint and exits. */
 export async function dispatchPolicyArgv(segments: string[], scriptUrl: string): Promise<boolean> {
@@ -25,12 +26,22 @@ export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
 }
 
 /** 📜️Workspace root `script.ts` entry (no policy dispatch). */
-export async function runWorkspaceScriptMain(router: ScriptRouter, options:Readonly<{freshCapabilities?:()=>Promise<Readonly<Record<string,unknown>>>}>={}): Promise<void> {
-  const run = (invocation: ScriptInvocation) => runScriptMain(router, { invocation });
+export async function runWorkspaceScriptMain(router: ScriptRouter, options:Readonly<{argv?:readonly string[];freshCapabilities?:()=>Promise<Readonly<Record<string,unknown>>>;retryFreshBuild?:boolean}>={}): Promise<void> {
+  const argv = options.argv === undefined ? undefined : Object.freeze([...options.argv]);
+  const run = (invocation: ScriptInvocation) => runScriptMain(router, { invocation, argv });
   if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) return receiveScriptProcessInvocation(process.env, run);
   const policy = readScriptPolicy({ version: 1, owner: "workspace-root", maximumElapsedMilliseconds: 0 });
-  const capabilities=await options.freshCapabilities?.()??{workspaceRoot:router.repoRoot};
-  return withScriptProcessEnvelope(createScriptProcessEnvelope(policy, capabilities, Date.now()), run);
+  const capabilities = await options.freshCapabilities?.() ?? {workspaceRoot:router.repoRoot};
+  const birth = (dispatch = run) => withScriptProcessEnvelope(createScriptProcessEnvelope(policy, capabilities, Date.now()), dispatch);
+  if (!options.retryFreshBuild) return birth();
+  let signal: AbortSignal | undefined;
+  return retryOnConcurrentEditV1("build", () => {
+    signal = undefined;
+    return birth(original => {
+      signal = original.control.signal;
+      return run(original);
+    });
+  }, { retryable: () => signal?.aborted === false });
 }
 
 /**

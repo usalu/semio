@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/gmodg-26-airtightness/schema.json",
+  "title": "Airtightness test at 50 Pa",
+  "description": "Measured airflows of the test subject and the documented basis for using the result under GModG §26.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "before_completion",
+    "annex_na_confirmed",
+    "conditioned_volume_m3",
+    "mechanical_ventilation",
+    "pressurisation_m3_h",
+    "depressurisation_m3_h",
+    "basis",
+    "scope"
+  ],
+  "properties": {
+    "before_completion": {
+      "type": "boolean"
+    },
+    "annex_na_confirmed": {
+      "type": "boolean"
+    },
+    "conditioned_volume_m3": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "mechanical_ventilation": {
+      "type": "boolean"
+    },
+    "pressurisation_m3_h": {
+      "type": "number",
+      "minimum": 0
+    },
+    "depressurisation_m3_h": {
+      "type": "number",
+      "minimum": 0
+    },
+    "basis": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "volume"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "envelope_area_m2"
+          ],
+          "properties": {
+            "kind": {
+              "const": "envelope_area"
+            },
+            "envelope_area_m2": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "scope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "whole_building"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "non_residential",
+            "only_selected_zones",
+            "different_requirements"
+          ],
+          "properties": {
+            "kind": {
+              "const": "non_residential_zone"
+            },
+            "non_residential": {
+              "type": "boolean"
+            },
+            "only_selected_zones": {
+              "type": "boolean"
+            },
+            "different_requirements": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "identical_units",
+            "exterior_access_only",
+            "annex_nb_confirmed"
+          ],
+          "properties": {
+            "kind": {
+              "const": "exterior_unit_sample"
+            },
+            "identical_units": {
+              "type": "boolean"
+            },
+            "exterior_access_only": {
+              "type": "boolean"
+            },
+            "annex_nb_confirmed": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

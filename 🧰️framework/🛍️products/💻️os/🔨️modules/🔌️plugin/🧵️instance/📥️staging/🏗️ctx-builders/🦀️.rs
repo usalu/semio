@@ -1,6 +1,4 @@
-//! 🐂️ The composer's bundle builders: one exclusive builder per use-case crate and one shared builder per crate that has `&self` members (WP7 of the instance family).
-//!
-//! 🏗️ Each builder borrows the composer fields its bundle names; the extension list is fixed here to [`InstanceExtensions`].
+//! 🐂️ Builds shared and exclusive use-case bundles with the instance's fixed extension list.
 use semio_plugin_decl_emission::{ActionMeta, Emit};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;

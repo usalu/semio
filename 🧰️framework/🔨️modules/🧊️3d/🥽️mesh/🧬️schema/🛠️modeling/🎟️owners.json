@@ -1081,8 +1081,8 @@
         "parentDepth": 3,
         "flagCopyBytes": 1,
         "stackElementBytes": 8,
-        "rootCopyBytes": 9,
-        "neighborCopyBytes": 10,
+        "rootCopyBytes": 16,
+        "neighborCopyBytes": 17,
         "reservationCopyBytes": 0,
         "cancelTurns": [
           0,
@@ -1249,7 +1249,7 @@
               false
             ],
             "flipCount": 0,
-            "copyBytes": 9
+            "copyBytes": 16
           },
           "snapshotClosedPreparation": {
             "oriented": [
@@ -1269,7 +1269,7 @@
               false
             ],
             "flipCount": 0,
-            "copyBytes": 59
+            "copyBytes": 101
           },
           "snapshotMisorientedPreparation": {
             "oriented": [
@@ -1281,7 +1281,7 @@
               true
             ],
             "flipCount": 1,
-            "copyBytes": 19
+            "copyBytes": 33
           }
         },
         "correctedNormal": [

@@ -13,3 +13,14 @@ pub use grid_fit::{CoonsSurfaceBuild, CurveSplineBuild, GridSurfaceBuild};
 #[path = "🌙️arc/🦀️.rs"]
 mod arc;
 pub use arc::ArcSplineBuild;
+
+
+#[path = "〰️nurbs-cuboid/🦀️.rs"]
+pub mod nurbs_cuboid;
+
+#[path = "🪢️quadratic-arc/🦀️.rs"]
+pub mod quadratic_arc;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️funded-storage/🦀️.rs"]
+mod funded_storage;

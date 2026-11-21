@@ -63,5 +63,119 @@
     ]
   },
   "obj": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n",
+  "authoredJson": {
+    "source": {
+      "vertices": [
+        [
+          0.1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "attributes": {
+        "custom": {
+          "domain": "corner",
+          "semantic": "custom",
+          "interpolation": "nearest",
+          "values": [
+            {
+              "label": "雪\n\u0001",
+              "nested": [
+                1,
+                null,
+                true,
+                {
+                  "one": "\\Quoted\""
+                }
+              ]
+            }
+          ],
+          "indices": [
+            0,
+            0,
+            0
+          ]
+        },
+        "material": {
+          "domain": "face",
+          "semantic": "material",
+          "interpolation": "constant",
+          "values": [
+            "paint"
+          ]
+        }
+      },
+      "materials": {
+        "paint": {
+          "baseColor": [
+            0,
+            0.25,
+            0.5,
+            1
+          ],
+          "baseColorTexture": "tex",
+          "extras": {
+            "tag": "雪"
+          }
+        }
+      },
+      "textures": {
+        "tex": {
+          "mime": "image/png",
+          "bytes": [
+            0,
+            127,
+            255
+          ]
+        }
+      },
+      "surface": [
+        {
+          "kind": "vertexNormal",
+          "index": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "kind": "smoothFace",
+          "index": 0
+        },
+        {
+          "kind": "cornerUv",
+          "index": 2,
+          "uv": [
+            0.125,
+            0.875
+          ]
+        },
+        {
+          "kind": "seamEdge",
+          "index": 0
+        }
+      ]
+    },
+    "coordinate": 0.1,
+    "textureRepeat": 512
+  },
   "independentOracle": "serde_json + gltf"
 }

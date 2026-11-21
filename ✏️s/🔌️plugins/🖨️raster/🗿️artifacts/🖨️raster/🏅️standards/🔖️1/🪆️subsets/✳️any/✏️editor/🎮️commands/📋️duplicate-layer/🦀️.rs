@@ -24,3 +24,7 @@ pub fn handle(payload: &DuplicateLayer, doc: &ArtifactView<'_, RasterSnapshot>, 
     Ok(Emit {artifact_mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {parent_id,index,layer:Box::new(layer)})],effects:vec![selection],..Default::default()})
 }
 
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

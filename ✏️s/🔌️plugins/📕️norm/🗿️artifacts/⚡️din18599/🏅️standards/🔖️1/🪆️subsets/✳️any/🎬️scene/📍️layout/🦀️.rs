@@ -52,7 +52,7 @@ fn direction(quadrant: usize) -> Vec3 {
 }
 
 fn on_top(element: &EnvelopeElement) -> bool {
-    element.kind == ElementKind::Roof || (matches!(element.kind, ElementKind::Window | ElementKind::Door) && element.tilt_deg < 45.0)
+    matches!(element.kind, ElementKind::Roof | ElementKind::RoofGlazing | ElementKind::RoofDome | ElementKind::RoofWindow | ElementKind::RooflightStrip)
 }
 
 fn slab(zone: &ZoneBox, z: f64) -> Panel {
@@ -65,11 +65,11 @@ fn standing(zone: &ZoneBox, element: &EnvelopeElement, slot: usize, count: usize
     let normal = direction(quadrant);
     let tangent = v3(-normal.y, normal.x, 0.0);
     let offset = zone.side * ((slot as f64 + 1.0) / (count as f64 + 1.0) - 0.5);
-    let opening = matches!(element.kind, ElementKind::Window | ElementKind::Door);
+    let opening = matches!(element.kind, ElementKind::Door | ElementKind::Window | ElementKind::GlazedDoor);
     let (width, height, sill, thickness) = if opening {
         let height = (element.area_m2.max(0.01) / 1.5).sqrt().min(zone.height * 0.9);
         let width = (element.area_m2.max(0.01) / height).min(zone.side * 0.9 / count as f64);
-        let sill = if element.kind == ElementKind::Door { 0.0 } else { (0.9_f64).min(zone.height - height).max(0.0) };
+        let sill = if matches!(element.kind, ElementKind::Door | ElementKind::GlazedDoor) { 0.0 } else { (0.9_f64).min(zone.height - height).max(0.0) };
         (width, height, sill, OPENING_THICKNESS)
     } else {
         (zone.side, zone.height, 0.0, WALL_THICKNESS)
@@ -92,7 +92,7 @@ impl Layout {
         for element in &document.elements {
             let Some(zone) = zones.get(&element.zone_id) else { continue };
             let panel = match element.kind {
-                ElementKind::Floor => slab(zone, -SLAB_THICKNESS),
+                ElementKind::Floor | ElementKind::GroundSlabPerimeter | ElementKind::GroundSlabInterior => slab(zone, -SLAB_THICKNESS),
                 _ if on_top(element) && element.kind == ElementKind::Roof => slab(zone, zone.height),
                 _ if on_top(element) => Panel { size: v3((element.area_m2.max(0.01)).sqrt().min(zone.side * 0.9), (element.area_m2.max(0.01)).sqrt().min(zone.side * 0.9), OPENING_THICKNESS), ..slab(zone, zone.height) },
                 _ => {

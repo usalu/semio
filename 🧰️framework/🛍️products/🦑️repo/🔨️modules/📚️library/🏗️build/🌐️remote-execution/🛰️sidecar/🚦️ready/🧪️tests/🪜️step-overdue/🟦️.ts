@@ -1,4 +1,5 @@
 import{afterAll,expect,test}from"bun:test";
+import{Database}from"bun:sqlite";
 import{chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
@@ -6,7 +7,7 @@ import{describeSliceReadStepV1,sliceReadStepV1}from"../../../../../🧠️memory
 import residentSchema from"../../../../../🏡️resident/🧬️schema/🔣️.json"with{type:"json"};
 import slicePolicy from"../../../../../🧠️memory/📋️slice-report/🧬️schema/🔣️.json"with{type:"json"};
 import{readyKillRecordLineV1}from"../../🌲️process-tree/🧹️containment/🟦️.ts";
-import{READY_TREE_POLICY_V1 as TREE,readyIdentityV1,readyReadTableV1,readyScaledTreePolicyV1,readyStepOfV1,readyStepOverdueSecondsV1,readyStepWatchV1}from"../../🌲️process-tree/🟦️.ts";
+import{READY_TREE_POLICY_V1 as TREE,readyConfirmProcessReplacementV1,readyIdentityV1,readyProcessStartSyncV1,readyReadTableV1,readyScaledTreePolicyV1,readyStepOfV1,readyStepOverdueSecondsV1,readyStepWatchV1}from"../../🌲️process-tree/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import{READY_STAGES_V1 as STAGES,createReadyLeaseV1,emptyReadyStateV1,readyDigestsV1,readyEndingV1,readyRefusalV1,runReadyStageV1,runReadyV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyStatusV1}from"../../🟦️.ts";
 
@@ -185,20 +186,38 @@ test("the ending of a stage in words: an exit status, a signal, or neither",()=>
  for(const exit of[0,1,75,null])for(const signal of[null,"SIGKILL"]){const refusal=readyRefusalV1("stage-failed",{stage:"workspace",ending:readyEndingV1(exit,signal)});expect(refusal.en).not.toContain("{");expect(refusal.en).not.toContain("status -");expect(refusal.de).not.toContain("{");}
 });
 
-const PS="  1234     1    01:40 bun\n";
-test("law: the start time of a process counts from the moment the process table was asked for, so a table that takes 30 s does not make the stage wrapper another process",async()=>{
- let clock=1_000_000;
- const table=await readyReadTableV1(20000,"linux",()=>clock,async()=>{clock+=30_000;return PS;});
- expect(table).toHaveLength(1);expect(table[0]!.startMs,"counted from the start of the read").toBe(1_000_000-100_000);
- expect(readyIdentityV1({pid:1234,startMs:1_000_000-100_000-2_000},table)).toBe("same");
- expect(readyIdentityV1({pid:1234,startMs:1_000_000-100_000-40_000},table)).toBe("reused");
- expect(await readyReadTableV1(20000,"linux",()=>0,async()=>null)).toEqual([]);expect(await readyReadTableV1(20000,"linux",()=>0,async()=>{throw Error("x");})).toEqual([]);
+test("two delayed process observations retain the recorded live birth",async()=>{
+ const fixture=inventoryHeartbeat.processBirth,oracle=new Database(":memory:");
+ try{
+  const expected=oracle.query("select 1000*unixepoch(?1) as birth, abs(1000*unixepoch(?1)-1000*unixepoch(?2))<=?3 as same").get(fixture.birth,fixture.recorded,TREE.toleranceMilliseconds)as{birth:number;same:number};
+  for(const platform of["darwin","linux"]as const)for(const read of fixture.reads){
+   const request=Date.parse(read.requested),[minutes,seconds]=read.relative.split(":").map(Number),elapsed=(minutes!*60+seconds!)*1000;
+   expect(request+read.delayedMilliseconds-elapsed).toBe(expected.birth);
+   expect(request-elapsed).toBeLessThan(Date.parse(fixture.recorded)-TREE.toleranceMilliseconds);
+   const table=await readyReadTableV1(30000,platform,async(program,args)=>{expect(program).toBe("ps");expect(args).toEqual(["-A","-o","pid=,ppid=,lstart=,comm="]);return fixture.table;});
+   expect(table).toEqual([{pid:fixture.pid,ppid:1,startMs:expected.birth,name:"bun"}]);
+   expect(readyIdentityV1({pid:fixture.pid,startMs:Date.parse(fixture.recorded)},table)).toBe(expected.same?"same":"reused");
+  }
+ }finally{oracle.close();}
+});
+test("only two observations of the same later birth confirm a replacement",()=>{
+ const fixture=inventoryHeartbeat.processBirth,known={pid:fixture.pid,startMs:Date.parse(fixture.birth)},process=(offset:number)=>({pid:known.pid,ppid:1,startMs:known.startMs+offset}),oracle=new Database(":memory:");
+ try{for(const row of fixture.replacements){
+  const second=row.secondOffset===null?[]:[process(row.secondOffset)],expected=oracle.query("select coalesce(?1 > ?3 and ?1 = ?2, 0) as confirmed").get(row.firstOffset,row.secondOffset,TREE.toleranceMilliseconds)as{confirmed:number};
+  expect(Boolean(expected.confirmed)).toBe(row.confirmed);expect(readyConfirmProcessReplacementV1(known,process(row.firstOffset),second)).toBe(row.confirmed?second[0]:undefined);
+ }}finally{oracle.close();}
 });
 
 test("the real process table agrees with the clock of the runtime about this process",async()=>{
  const before=Date.now(),table=await readyReadTableV1(),row=table.find(entry=>entry.pid===process.pid);
  expect(row).toBeDefined();
  expect(Math.abs(row!.startMs-(before-process.uptime()*1000))).toBeLessThanOrEqual(3000);
+ if(process.platform!=="win32"){
+  await new Promise(done=>setTimeout(done,25));
+  expect(readyProcessStartSyncV1(process.pid)).toBe(row!.startMs);
+  expect((await readyReadTableV1()).find(entry=>entry.pid===process.pid)?.startMs).toBe(row!.startMs);
+ }
+ expect(await readyReadTableV1(20000,"linux",async()=>null)).toEqual([]);expect(await readyReadTableV1(20000,"linux",async()=>{throw Error("x");})).toEqual([]);
 });
 
 test("a lower count in a new inventory observation still advances the explicit step",()=>{

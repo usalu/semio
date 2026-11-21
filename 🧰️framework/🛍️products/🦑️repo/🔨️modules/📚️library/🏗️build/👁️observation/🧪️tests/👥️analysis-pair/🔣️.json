@@ -1,0 +1,7 @@
+{
+  "original": "An exact input.\n",
+  "replacement": "A concurrent source edit.\n",
+  "nested": "A physical dependency.\n",
+  "providers": ["head", "length"],
+  "expectedResults": [{ "head": "An" }, { "length": 16 }]
+}

@@ -10,6 +10,7 @@ import {parseRemoteCacheActionResultV1} from "../../../🔬️action-result/🟦
 import {createClaimTableV1} from "../../../🎟️claims/🟦️.ts";
 import {collectRemoteCacheDirectoryV1} from "../../../🧹️collector/🟦️.ts";
 import {RemoteCacheStoreV1} from "../../../💾️store/🟦️.ts";
+import {REAPI_V1,encodeProtobufV1} from "../../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
 
 const scratch:string[]=[];
 const directory=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`rcache-live-${label}-`));scratch.push(path);return path;};
@@ -159,4 +160,22 @@ test("the host store's own eviction (cap, age or partition pressure) cannot take
  expect(await restorable(r,"ac","9".repeat(64),unit)).toBe(true);expect(await restorable(r,"nx","e1",[nx])).toBe(true);expect(gone(r,stray)).toBe(true);
  await r.store.close();
  const after=await collectCasV1({root:r.host.root,policy:{...quiet(0),capBytes:1}});expect(after.evicted,"the pin ends with the server").toBeGreaterThan(0);expect(gone(r,unit[0]!)).toBe(true);
+});
+
+test("a live action pins the content of its authenticated output trees",async()=>{
+ const r=await rig("tree"),leaf=text("tree-file"),stray=text("unreferenced"),actionKey=sha("tree-action");
+ const digest=(bytes:Uint8Array)=>({hash:sha(bytes),size_bytes:bytes.length});
+ const tree=encodeProtobufV1(REAPI_V1.tree,{root:{files:[{name:"leaf",digest:digest(leaf)}]}}),head=encodeProtobufV1(REAPI_V1.actionResult,{output_directories:[{path:"out",tree_digest:digest(tree)}]});
+ try{
+  await blob(r,leaf);await blob(r,tree);await blob(r,stray);
+  expect(await r.store.put("main","ac",actionKey,body(head),{mode:"replace",slot:{slot:slot("tree")}})).toBe("created");
+  expect(await r.store.pinLive()).toBe(2);
+  const {collectCasV1}=await import("../../../../🗄️cas/🧹️collector/🟦️.ts");
+  const outcome=await collectCasV1({root:r.host.root,policy:{...quiet(0),capBytes:1}});
+  expect(outcome.status).toBe("collected");
+  expect(await r.store.readBytes("main","ac",actionKey,2**20)).toEqual(Buffer.from(head));
+  expect(await r.host.read(sha(tree))).toEqual(Buffer.from(tree));
+  expect(await r.host.read(sha(leaf))).toEqual(Buffer.from(leaf));
+  expect(gone(r,stray)).toBe(true);
+ }finally{await r.store.close();}
 });

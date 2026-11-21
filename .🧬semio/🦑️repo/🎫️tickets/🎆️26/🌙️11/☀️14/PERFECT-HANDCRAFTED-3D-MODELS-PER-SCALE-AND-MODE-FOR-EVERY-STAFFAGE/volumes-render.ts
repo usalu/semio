@@ -94,7 +94,7 @@ export function fit(meshes: readonly SolidMesh[], cam: Cam, w: number, h: number
   return { cam, scale, cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, cz: 0, ox: w / 2, oy: h / 2, zc: ext === null ? 0 : (ext.min[2] + ext.max[2]) / 2 };
 }
 
-export function drawAxon(c: Canvas, ax: Axon, items: readonly Item[], opts: { cut?: boolean; alpha?: number; clearDepth?: boolean } = {}): void {
+export function drawAxon(c: Canvas, ax: Axon, items: readonly Item[], opts: { cut?: boolean; alpha?: number; clearDepth?: boolean; unlit?: boolean } = {}): void {
   const { cam } = ax;
   const light = (() => {
     const v = [-0.4, 0.8, 0.5];
@@ -123,7 +123,7 @@ export function drawAxon(c: Canvas, ax: Axon, items: readonly Item[], opts: { cu
       nx /= nl; ny /= nl; nz /= nl;
       const facing = nx * cam.e[0] + ny * cam.e[1] + nz * cam.e[2];
       const lam = Math.abs(nx * light[0]! + ny * light[1]! + nz * light[2]!);
-      const k = (0.4 + 0.6 * lam) * (facing >= 0 ? 1 : 0.62);
+      const k = opts.unlit ? 1 : (0.4 + 0.6 * lam) * (facing >= 0 ? 1 : 0.62);
       const col: RGB = [clamp(color[0] * k), clamp(color[1] * k), clamp(color[2] * k)];
       c.triangle([sx[a]!, sy[a]!, sd[a]!, w[a * 3 + 2]!], [sx[b]!, sy[b]!, sd[b]!, w[b * 3 + 2]!], [sx[d]!, sy[d]!, sd[d]!, w[d * 3 + 2]!], col, opts.cut ? ax.zc : Infinity, 0.06 / ax.scale, cutAxes !== undefined && cutAxes.some((q) => nx * q[0] + ny * q[1] + nz * q[2] >= Math.SQRT1_2) ? ([255, 255, 255] as RGB) : null);
     }
@@ -163,7 +163,7 @@ async function productNumbers(asset: Json, scale: number): Promise<Numbers> {
   }
 }
 
-function overlayPanel(w: number, h: number, asset: Json, scale: number, view: (typeof VIEWS)[number], sm: ReturnType<typeof scaleMeshes>, numbers: Numbers): Canvas {
+export function overlayPanel(w: number, h: number, asset: Json, scale: number, view: (typeof VIEWS)[number], sm: ReturnType<typeof scaleMeshes>, numbers: Numbers): Canvas {
   const out = new Canvas(w, h, [247, 247, 244]);
   const body = sm.body.filter((_, i) => sm.solids.body[i]!.texture !== true);
   if (body.length === 0) {

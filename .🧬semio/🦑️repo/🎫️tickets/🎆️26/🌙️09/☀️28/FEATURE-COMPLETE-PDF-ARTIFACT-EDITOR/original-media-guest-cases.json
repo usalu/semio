@@ -1,0 +1,17 @@
+{
+  "pageBytes": 4096,
+  "png": {
+    "width": 32,
+    "height": 32,
+    "pageLengths": [4096, 100],
+    "sha256": "496028d27cd6a2b304e7bc58a2c01c15f687c67ac2c090dfea8a3d56b9c52761",
+    "rasterSha256": "d67c656e01756650d77717b0839985a056ec28ffe174601d690fc407a2ceffca"
+  },
+  "cases": [
+    { "name": "issued picker", "terminal": "format-input", "accepted": [0, 1] },
+    { "name": "equal operation ids on foreign Source", "terminal": "refused", "accepted": [] },
+    { "name": "repeat Begin after consumption", "terminal": "refused", "accepted": [] },
+    { "name": "last revision byte changed during copy", "terminal": "canceled", "accepted": [] },
+    { "name": "last revision byte changed after handoff", "terminal": "canceled", "accepted": [0, 1] }
+  ]
+}

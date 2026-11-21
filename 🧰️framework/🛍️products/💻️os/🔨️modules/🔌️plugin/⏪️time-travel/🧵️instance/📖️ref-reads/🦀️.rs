@@ -38,6 +38,20 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
 
     pub fn time_travel_retirement_demands(&self, body: usize) -> Result<RetirementDemand,ValueError> {
         if self.time_travel.owners().any(TimeTravelOwners::finalizing){if let Some(TimeTravelQueryOutput::CommitCloseDemand(demand))=self.time_travel_query(TimeTravelStoreQuery::CommitCloseDemand(body)){return demand}}
+        if self.time_travel.closing {
+            let selected: &dyn TimeTravelOwners = match &self.time_travel.member {
+                Some(member) => member.owners.as_deref().unwrap_or(&self.time_travel.document),
+                None => &self.time_travel.document,
+            };
+            if let Some(demand) = selected.close_handoff_demand() { return Ok(demand); }
+            let queue = &self.time_travel.command_retirements;
+            let may_admit = self.time_travel.pending_command.is_none() && self.time_travel.discard_cursor.is_none();
+            if may_admit && (self.time_travel.editor.is_some() || self.time_travel.patch.is_some()) {
+                if !queue.has_reserved_slot() { return queue.reserve_demand(); }
+                if let Some(editor) = self.time_travel.editor.as_ref() { return queue.admit_owned_demand(editor); }
+                if let Some(patch) = self.time_travel.patch.as_ref() { return queue.admit_owned_demand(patch); }
+            }
+        }
         if self.time_travel.document.discard_issuer_missing(){self.stores.store.owned_mutation_retirement_factory()?;return Ok(RetirementDemand{depth:1,..Default::default()});}
         let demand=self.time_travel.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}
         if let Some(demand)=self.member_subject_retirement_demands(body)?{return Ok(demand)}

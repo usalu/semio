@@ -1,6 +1,8 @@
 /** 🌍️ Contract: machines that load the graph of the whole workspace through one real fleet cache server read it once. The first machine reads and offers its generation; every other machine, started at the same time or later, waits or fetches and infers nothing on an identical tree and exactly the changed owners on a changed tree; a question under the policy current fetches a complete head instead of refusing, and refuses on an incomplete one.
  * @see ../../🟦️.ts */
 import {afterEach,expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import capacityCases from "../🔣️.json" with {type:"json"};
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -24,7 +26,7 @@ function fleet(server:RemoteCacheServerV1,all:readonly string[],options:{gate?:b
  const mount=(workspace:string,self:string)=>{
   const mock=createMockHost(workspace,{ownerDelayMs:options.ownerDelayMs}),host=mock.host as any;
   host.exchange=remoteGenerationExchangeV1({environment,workspace,identity:()=>mock.host.identity(),platform,origins:{self,all}});
-  if(options.gate!==false)host.wholeGate=(request:{identity:string;look():Promise<any>;signal?:AbortSignal})=>wholeReadGateV1({client:graphFleetClientV1({endpoint:server.url.replace(/\/+$/u,""),instance:"main",token:undefined,upload:true,stateDirectory:scratch()}),identity:request.identity,platform,owner:self,language:"en",look:request.look,signal:request.signal,say:line=>lines.push(self+": "+line),claimTtlMilliseconds:3000,claimHeartbeatMilliseconds:300,waitSliceMilliseconds:150,waitMaximumMilliseconds:60000});
+  if(options.gate!==false)host.wholeGate=(request:{identity:string;look():Promise<any>;signal?:AbortSignal;fund?:Parameters<typeof wholeReadGateV1>[0]["fund"]})=>wholeReadGateV1({client:graphFleetClientV1({endpoint:server.url.replace(/\/+$/u,""),instance:"main",token:undefined,upload:true,stateDirectory:scratch()}),identity:request.identity,platform,owner:self,language:"en",look:request.look,signal:request.signal,fund:request.fund,say:line=>lines.push(self+": "+line),claimTtlMilliseconds:3000,claimHeartbeatMilliseconds:300,waitSliceMilliseconds:150,waitMaximumMilliseconds:60000});
   return mock;
  };
  return{mount,lines,environment};
@@ -89,3 +91,39 @@ test("a question under the policy current with a read going on here is refused a
  const refusal=await loadGenerationGraphV1(busy.host,{policy:"current"}).then(()=>undefined,error=>error as Error&{code?:string});
  expect(refusal?.code).toBe("GENERATION_NONE_SEALED");expect(busy.events.some(event=>event.startsWith("builder"))).toBe(false);
 },60000);
+
+test("an unfunded planner leaves the real whole claim available and restores from the funded builder",async()=>{
+ const row=capacityCases.unfundedPlanner,server=await serve(),all=[row.initial,row.eligible],{mount,lines}=fleet(server,all),roots=all.map(()=>scratch()),events:string[]=[],db=new Database(":memory:");
+ for(const root of roots)await seed(root,ringFiles(row.owners));
+ const [waiting,eligible]=all.map((origin,index)=>mount(roots[index]!,origin));
+ type Funding={available():Promise<boolean>;restore():Promise<unknown>};
+ let entered!:()=>void,resume!:()=>void;
+ const queued=new Promise<void>(done=>entered=done),gate=new Promise<void>(done=>resume=done);
+ const waitingHost=waiting!.host as any,eligibleHost=eligible!.host as any;
+ waitingHost.prepareWholeRebuild=async(published:Funding)=>{
+  events.push("wait");entered();await gate;
+  const restored=await published.available()?await published.restore():undefined;
+  events.push("restore");
+  return{restored};
+ };
+ eligibleHost.prepareWholeRebuild=async()=>{events.push("book");return{release:()=>events.push("release")};};
+ const build=eligibleHost.withBuilder;
+ eligibleHost.withBuilder=async(...args:unknown[])=>{
+  if(args[3]==="build"){expect(args[5]).toBe(true);events.push("build");}
+  return build(...args);
+ };
+ const first=loadGenerationGraphV1(waitingHost);
+ try{
+  await queued;
+  const second=await loadGenerationGraphV1(eligibleHost);
+  expect(second.stats.ownersReinferred).toBe(row.owners);
+  expect(lines.find(line=>line.includes("reads it once"))?.startsWith(row.eligible)).toBe(true);
+  resume();
+  expect((await first).stats.ownersReinferred).toBe(0);
+  const order=db.query(`SELECT
+   EXISTS(SELECT 1 FROM json_each(?) a LEFT JOIN json_each(?) b ON a.key=b.key WHERE a.value IS NOT b.value)
+   OR json_array_length(?)<>json_array_length(?) AS mismatch`).get(JSON.stringify(row.orderedEvents),JSON.stringify(events),JSON.stringify(row.orderedEvents),JSON.stringify(events));
+  expect(order).toEqual({mismatch:0});
+  expect(total([waiting!,eligible!])).toBe(row.owners);
+ }finally{resume();await first.catch(()=>undefined);db.close();}
+},15000);

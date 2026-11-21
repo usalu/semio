@@ -92,6 +92,23 @@ test("independent JSON member ownership corpus retains first positions and final
 });
 
 
+test("independent JSON member slot swaps preserve order and values", () => {
+  const { ownership } = JSON.parse(read("🧪️tests/🧫️fixtures/🧩️members/🔣️.json")) as {
+    ownership: { text: string; swaps: { slots: [number, number]; accepted: boolean; keys: string[] }[] };
+  };
+  const errors: ParseError[] = [];
+  const tree = parseTree(ownership.text, errors, { disallowComments: true, allowTrailingComma: false })!;
+  expect(errors).toEqual([]);
+  const members = Object.entries(getNodeValue(tree) as Record<string, unknown>);
+  for (const { slots: [first, second], accepted, keys } of ownership.swaps) {
+    const inBounds = members[first] !== undefined && members[second] !== undefined;
+    expect(inBounds).toBe(accepted);
+    if (inBounds) [members[first], members[second]] = [members[second]!, members[first]!];
+    expect(members.map(([name]) => name)).toEqual(keys);
+    expect(Object.fromEntries(members)).toEqual(JSON.parse(ownership.text));
+  }
+});
+
 test("independent JSON parser validates retained admission large candidates", () => {
   const fixture=JSON.parse(read("🧪️tests/🧫️fixtures/🚦️owned-controls.json")) as {retainedAdmission:{textUnit:string;textRepeats:number;collectionItems:number;phases:string[]}};
   const law=fixture.retainedAdmission,label=law.textUnit.repeat(law.textRepeats);

@@ -23,6 +23,7 @@ impl FlowEvalSession {
 
     pub fn new() -> Self {
         Self {
+            preview_cache_identity: semio_framework_job::allocate_operation_id().0,
             state: std::mem::ManuallyDrop::new(FlowEvalSessionState {
                 retiring_geometry_port: None,
                 geometry_port: None,
@@ -56,12 +57,11 @@ impl FlowEvalSession {
                 pending_tick_display:None,
                 tick_display_progress:Default::default(),
                 tick_evaluation_ready:0,
-                pending_host:None,
+                host:None,
                 pending_snapshot_copy:None,
                 pending_tick_snapshot:None,
                 pending_tick_snapshot_retirement:None,
                 pending_tick_snapshot_origin:None,
-                retiring_host:None,
                 pending_host_cancelled:false,
                 preview_cancellation_cursor:None,
                 preview_cancellation_phase:0,

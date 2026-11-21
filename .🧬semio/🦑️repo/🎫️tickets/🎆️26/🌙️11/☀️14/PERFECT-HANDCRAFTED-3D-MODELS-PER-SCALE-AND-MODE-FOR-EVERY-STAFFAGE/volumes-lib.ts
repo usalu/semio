@@ -9,8 +9,9 @@ import { dirname, join } from "node:path";
 
 import { tessellateSolid } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { evaluate } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+import { qualityOf } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧊️volume/⏱️job/🟦️.ts";
 import { VOLUME_LIMITS } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
-import { CancelledError, GENERATED, Mask, QUALITY_FOR, TICKET, VIEWS, checkCancelled, extentOf, frames, loadAsset, meshes, projectWorld, resolveAsset, restState, toWorld, type Box, type CatalogEntry, type Json, type P2, type RestState, type Ring, type SolidMesh, type V3, type View } from "./volumes-base.ts";
+import { CancelledError, GENERATED, Mask, TICKET, VIEWS, checkCancelled, extentOf, frames, loadAsset, meshes, projectWorld, resolveAsset, restState, toWorld, type Box, type CatalogEntry, type Json, type P2, type RestState, type Ring, type SolidMesh, type V3, type View } from "./volumes-base.ts";
 
 export * from "./volumes-base.ts";
 
@@ -155,7 +156,7 @@ export function geometryKey(solid: Json, q: object): string {
 }
 
 /** ⚡️ The tessellation of one solid in its bone frame (transform and repeat applied), from memory, else from the disk cache under `🗑️generated/volumes-tools/cache/tess`, else computed once by the kernel and stored. */
-export function localGeometry(solid: Json, q: { chordM: number; minSegments: number; maxSegments: number }): { positions: Float64Array; indices: Uint32Array } {
+export function localGeometry(solid: Json, q: TessellationQuality): { positions: Float64Array; indices: Uint32Array } {
   const key = geometryKey(solid, q);
   const hit = tessMemory.get(key);
   if (hit !== undefined) return hit;
@@ -191,15 +192,18 @@ export function localGeometry(solid: Json, q: { chordM: number; minSegments: num
   return out;
 }
 
-export const qualityOfAsset = (asset: Json): { chordM: number; minSegments: number; maxSegments: number } => {
-  const q = QUALITY_FOR(maxDim(asset));
+export type TessellationQuality = { chordM: number; minSegments: number; maxSegments: number; round?: { radiusM: number; segments: number } };
+
+/** 🎚️ The product's own tessellation quality (`qualityOf`, the rule of the viewer and of every 3D export): at 1:`scale` what the product shows at that scale, without a scale the reference the catalog validator measures with; `--fast` is a coarser iteration quality. */
+export const qualityOfAsset = (asset: Json, scale?: number): TessellationQuality => {
+  const q = qualityOf(asset as never, scale);
   return quality.fast ? { chordM: q.chordM * 2.5, minSegments: 10, maxSegments: 32 } : q;
 };
 
 /** 🧊️ Solids carried to the world by the bone frames of the default pose at 1:`scale`, from the tessellation cache. */
 export function meshesAt(asset: Json, scale: number, solids: readonly Json[]): SolidMesh[] {
   const frame = poseState(asset, scale).frames;
-  const q = qualityOfAsset(asset);
+  const q = qualityOfAsset(asset, scale);
   return solids.map((solid) => {
     checkCancelled();
     const f = frame[solid.bone];
@@ -572,7 +576,7 @@ export function checkAsset(asset: Json, source: Json, options: CheckOptions = {}
             notes.push(`${s.id}: bone/material`);
           }
           try {
-            const g = tessellateSolid({ ...source, node: source.bone } as never, QUALITY_FOR(maxDim(asset)));
+            const g = tessellateSolid({ ...source, node: source.bone } as never, qualityOfAsset(asset, scale));
             if (g.indices.length === 0 || g.positions.some((p) => !Number.isFinite(p))) throw new Error("empty or non-finite mesh");
           } catch (error) {
             bad++;

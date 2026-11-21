@@ -1,0 +1,234 @@
+{
+  "cases": [
+    {
+      "before": {
+        "id": "text-1",
+        "name": "text-1",
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 80,
+        "kind": "text",
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "Vorher"
+              }
+            ]
+          }
+        ],
+        "fontSize": 18,
+        "fontWeight": "normal",
+        "align": "left"
+      },
+      "after": {
+        "id": "text-1",
+        "name": "text-1",
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 80,
+        "kind": "text",
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "Überarbeitet",
+                "bold": true
+              },
+              {
+                "text": " and linked",
+                "link": "https://example.test"
+              }
+            ]
+          },
+          {
+            "runs": [
+              {
+                "text": "Second line"
+              }
+            ]
+          }
+        ],
+        "fontSize": 18,
+        "fontWeight": "normal",
+        "align": "left"
+      },
+      "mutation": "editBlockText",
+      "patch": {
+        "field": "paragraphs",
+        "value": [
+          {
+            "runs": [
+              {
+                "text": "Überarbeitet",
+                "bold": true
+              },
+              {
+                "text": " and linked",
+                "link": "https://example.test"
+              }
+            ]
+          },
+          {
+            "runs": [
+              {
+                "text": "Second line"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "id": "table-1",
+        "name": "table-1",
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 80,
+        "kind": "table",
+        "columns": [
+          "A",
+          "B"
+        ],
+        "rows": [
+          [
+            {
+              "content": "keep"
+            },
+            {
+              "content": "before"
+            }
+          ],
+          [
+            {
+              "content": "also keep"
+            },
+            {
+              "content": ""
+            }
+          ]
+        ]
+      },
+      "after": {
+        "id": "table-1",
+        "name": "table-1",
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 80,
+        "kind": "table",
+        "columns": [
+          "A",
+          "B"
+        ],
+        "rows": [
+          [
+            {
+              "content": "keep"
+            },
+            {
+              "content": "Zelle β"
+            }
+          ],
+          [
+            {
+              "content": "also keep"
+            },
+            {
+              "content": ""
+            }
+          ]
+        ]
+      },
+      "mutation": "editTableCell",
+      "patch": {
+        "field": "rows",
+        "row": 0,
+        "column": 1,
+        "value": "Zelle β"
+      }
+    },
+    {
+      "before": {
+        "id": "math-1",
+        "name": "math-1",
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 80,
+        "kind": "math",
+        "tex": "x",
+        "displayMode": true
+      },
+      "after": {
+        "id": "math-1",
+        "name": "math-1",
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 80,
+        "kind": "math",
+        "tex": "x^2",
+        "displayMode": true
+      },
+      "mutation": "editBlockMath",
+      "patch": {
+        "field": "tex",
+        "value": "x^2"
+      }
+    },
+    {
+      "before": {
+        "id": "text-1",
+        "name": "text-1",
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 80,
+        "kind": "text",
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "Vorher"
+              }
+            ]
+          }
+        ],
+        "fontSize": 18,
+        "fontWeight": "normal",
+        "align": "left"
+      },
+      "after": {
+        "id": "text-1",
+        "name": "text-1",
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 80,
+        "kind": "text",
+        "paragraphs": [
+          {
+            "runs": [
+              {
+                "text": "Vorher"
+              }
+            ]
+          }
+        ],
+        "fontSize": 24,
+        "fontWeight": "normal",
+        "align": "left"
+      },
+      "mutation": "changeBlockFontSize",
+      "patch": {
+        "field": "fontSize",
+        "value": 24
+      }
+    }
+  ]
+}

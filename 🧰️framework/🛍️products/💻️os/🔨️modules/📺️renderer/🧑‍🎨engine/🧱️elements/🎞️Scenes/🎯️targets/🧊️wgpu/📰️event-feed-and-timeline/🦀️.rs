@@ -393,7 +393,7 @@ pub fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct EventFeedLayout {
+pub struct EventFeedLayout {
     pub inner: Rect,
     pub card_gap: f32,
     pub card_padding: f32,
@@ -710,7 +710,7 @@ fn paint_history_avatar(ctx: &mut FrameworkWidgetContext<'_>, image_id: &str, au
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct GraphTimelineLayout {
+pub struct GraphTimelineLayout {
     pub inner: Rect,
     pub row_height: f32,
     pub label_track_width: f32,

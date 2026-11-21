@@ -11,10 +11,9 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
     let page_index = || req_index(args, "page");
     let object_id = || req_text(args, "object");
     let text_value = || req_text(args, "text");
-    if action == "move-page" {
-        return Ok(payload_edit(action, page_index()?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-    }
     let (page, object, text, extra, x, y, width, height, red, green, blue) = match action {
+        "move-page" => (page_index()?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-font-size" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, req_num(args, "size")?, 0.0, 0.0, 0.0),
         "set-text" => (page_index()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         "move" => (page_index()?, object_id()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, 0.0, 0.0, 0.0, 0.0),
         "delete" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),

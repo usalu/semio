@@ -109,6 +109,21 @@
       "@semio-tech/plugin-registry:generate",
       "@semio-tech/assets:build"
     ],
+    "stdioCatalogJob": {
+      "id": "stdio-catalog-definition",
+      "root": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+      "command": ["repo", "./📜️script.ts", "composition", "prepare-catalog-definition"],
+      "after": [],
+      "profile": "release",
+      "target": "host",
+      "workerProtocol": "reserved",
+      "policies": ["process"]
+    },
+    "stdioCatalogConsumers": [
+      "semio-hub-gis-component",
+      "semio-hub-stdio-component",
+      "semio-hub-vcs-component"
+    ],
     "bundleAfter": [
       "job:flow-wasm",
       "job:surface-wasm",

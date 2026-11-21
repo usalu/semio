@@ -1,0 +1,15 @@
+{
+  "issued": {
+    "maximumItems": 48000000,
+    "maximumCopyBytes": 3000000000,
+    "maximumCapacityBytes": 2147483648,
+    "maximumReleaseBytes": 2147483648
+  },
+  "remainingAtReadiness": {
+    "maximumItems": 23674247,
+    "maximumCopyBytes": 1618589153,
+    "maximumCapacityBytes": 1740332753,
+    "maximumReleaseBytes": 1785438266
+  },
+  "driveItems": 4096
+}

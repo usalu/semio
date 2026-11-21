@@ -60,7 +60,7 @@ impl BoundedJob for MountedJob {
     fn cancel(&mut self) {
         record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled);
         if let Ok(shell) = self.shell.try_borrow() {
-            if let Some(state) = shell.as_ref() {
+            if let Some(state) = shell.as_ref().filter(|state| state.identity == self.identity) {
                 state.cancel.cancel_now();
             }
         }

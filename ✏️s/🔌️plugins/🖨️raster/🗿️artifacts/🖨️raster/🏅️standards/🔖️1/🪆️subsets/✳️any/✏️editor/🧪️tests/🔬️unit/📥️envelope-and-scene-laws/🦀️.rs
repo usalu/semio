@@ -6,7 +6,7 @@
 /// exclusively through the retained page authority. The envelope the wire describes is retired here
 /// through the same owner bundle the app's decode hook installs, one bounded grant per turn.
 fn raster_envelope_wire() -> Vec<u8> {
-    use pack::snapshot::ArtifactPack;
+    use store::snapshot::ArtifactPack;
 
     let snapshot = semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     let snapshot_pack = snapshot.encode_pack();

@@ -12,6 +12,14 @@ pub(super) const INK_SELECTION_ITEM_CAPACITY: usize = semio_ui_action::ACTION_NO
 
 pub const INK_EVENT_JSON_BYTE_CAPACITY: usize = semio_ui_action::ACTION_STRING_BYTE_CAPACITY;
 
+#[doc(hidden)]
+#[derive(Clone, Copy, Default)]
+pub struct InkBlockPosition {
+    pub(crate) parent: Option<usize>,
+    pub(crate) sibling: usize,
+    id_span: Option<(u16, u16)>,
+}
+
 pub struct InkInteractionDocument {
     pub source: String,
     #[cfg(any(test, feature = "testkit"))]
@@ -24,6 +32,11 @@ pub struct InkInteractionDocument {
     pub span_len: usize,
     #[cfg(not(any(test, feature = "testkit")))]
     pub(crate) span_len: usize,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub positions: Box<[InkBlockPosition; INK_INTERACTION_ITEM_CAPACITY]>,
+    #[cfg(not(any(test, feature = "testkit")))]
+    pub(crate) positions: Box<[InkBlockPosition; INK_INTERACTION_ITEM_CAPACITY]>,
     pub schema: String,
     pub id: String,
     pub camera: InkCameraJson,
@@ -39,6 +52,22 @@ impl InkInteractionDocument {
             return Ok(None);
         };
         serde_json::from_slice(&self.source.as_bytes()[usize::from(start)..usize::from(end)]).map(Some).map_err(|_| semio_ui_action::BoundedActionFault::Structure)
+    }
+
+    pub(crate) fn block_id(&self, slot: usize) -> Result<Option<String>, semio_ui_action::BoundedActionFault> {
+        let Some((start, end)) = self.positions[slot].id_span else { return Ok(None) };
+        serde_json::from_slice(&self.source.as_bytes()[usize::from(start)..usize::from(end)]).map(Some).map_err(|_| semio_ui_action::BoundedActionFault::Structure)
+    }
+
+    pub(crate) fn contains_block_id(&self, id: &str) -> Result<bool, semio_ui_action::BoundedActionFault> {
+        for slot in 0..self.span_len {
+            let Some((start, end)) = self.positions[slot].id_span else { continue };
+            let source = &self.source[usize::from(start) + 1..usize::from(end) - 1];
+            if source == id || (source.contains('\\') && self.block_id(slot)?.as_deref() == Some(id)) {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 }
 
@@ -118,11 +147,12 @@ fn ink_skip_value(bytes: &[u8], start: usize, depth: usize) -> Result<usize, sem
     }
 }
 
-fn ink_collect_block_array(bytes: &[u8], start: usize, spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize, depth: usize) -> Result<usize, semio_ui_action::BoundedActionFault> {
+fn ink_collect_block_array(bytes: &[u8], start: usize, spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize, positions: &mut [InkBlockPosition; INK_INTERACTION_ITEM_CAPACITY], parent: Option<usize>, depth: usize) -> Result<usize, semio_ui_action::BoundedActionFault> {
     if depth > semio_ui_action::ACTION_DEPTH_CAPACITY || bytes.get(start) != Some(&b'[') {
         return Err(semio_ui_action::BoundedActionFault::Structure);
     }
     let mut index = start + 1;
+    let mut sibling = 0;
     loop {
         index = ink_skip_ws(bytes, index);
         if bytes.get(index) == Some(&b']') {
@@ -133,7 +163,9 @@ fn ink_collect_block_array(bytes: &[u8], start: usize, spans: &mut [Option<(u16,
         }
         let slot = *span_len;
         *span_len += 1;
-        let end = if bytes.get(index) == Some(&b'{') { ink_collect_block_object(bytes, index, spans, span_len, depth + 1)? } else { ink_skip_value(bytes, index, depth + 1)? };
+        positions[slot] = InkBlockPosition { parent, sibling, id_span: None };
+        sibling += 1;
+        let end = if bytes.get(index) == Some(&b'{') { ink_collect_block_object(bytes, index, spans, span_len, positions, slot, depth + 1)? } else { ink_skip_value(bytes, index, depth + 1)? };
         spans[slot] = Some((u16::try_from(index).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?, u16::try_from(end).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?));
         index = ink_skip_ws(bytes, end);
         match bytes.get(index) {
@@ -144,7 +176,7 @@ fn ink_collect_block_array(bytes: &[u8], start: usize, spans: &mut [Option<(u16,
     }
 }
 
-fn ink_collect_block_object(bytes: &[u8], start: usize, spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize, depth: usize) -> Result<usize, semio_ui_action::BoundedActionFault> {
+fn ink_collect_block_object(bytes: &[u8], start: usize, spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize, positions: &mut [InkBlockPosition; INK_INTERACTION_ITEM_CAPACITY], slot: usize, depth: usize) -> Result<usize, semio_ui_action::BoundedActionFault> {
     let mut index = start + 1;
     let mut is_group = false;
     let mut children = None;
@@ -163,7 +195,9 @@ fn ink_collect_block_object(bytes: &[u8], start: usize, spans: &mut [Option<(u16
         index = ink_skip_ws(bytes, index + 1);
         let value_start = index;
         index = ink_skip_value(bytes, value_start, depth + 1)?;
-        if key == b"kind" {
+        if key == b"id" && bytes.get(value_start) == Some(&b'"') {
+            positions[slot].id_span = Some((u16::try_from(value_start).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?, u16::try_from(index).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?));
+        } else if key == b"kind" {
             is_group = serde_json::from_slice::<String>(&bytes[value_start..index]).is_ok_and(|kind| kind == "group");
         } else if key == b"children" && bytes.get(value_start) == Some(&b'[') {
             children = Some((value_start, index));
@@ -177,7 +211,7 @@ fn ink_collect_block_object(bytes: &[u8], start: usize, spans: &mut [Option<(u16
     };
     if is_group {
         if let Some((children_start, children_end)) = children {
-            let scanned_end = ink_collect_block_array(bytes, children_start, spans, span_len, depth + 1)?;
+            let scanned_end = ink_collect_block_array(bytes, children_start, spans, span_len, positions, Some(slot), depth + 1)?;
             if scanned_end != children_end {
                 return Err(semio_ui_action::BoundedActionFault::Structure);
             }
@@ -187,6 +221,10 @@ fn ink_collect_block_object(bytes: &[u8], start: usize, spans: &mut [Option<(u16
 }
 
 pub fn collect_ink_document_block_spans(bytes: &[u8], spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize) -> Result<(), semio_ui_action::BoundedActionFault> {
+    collect_ink_document_block_positions(bytes, spans, span_len, &mut [InkBlockPosition::default(); INK_INTERACTION_ITEM_CAPACITY])
+}
+
+pub(super) fn collect_ink_document_block_positions(bytes: &[u8], spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize, positions: &mut [InkBlockPosition; INK_INTERACTION_ITEM_CAPACITY]) -> Result<(), semio_ui_action::BoundedActionFault> {
     let mut index = ink_skip_ws(bytes, 0);
     if bytes.get(index) != Some(&b'{') {
         return Err(semio_ui_action::BoundedActionFault::Structure);
@@ -205,7 +243,7 @@ pub fn collect_ink_document_block_spans(bytes: &[u8], spans: &mut [Option<(u16, 
             return Err(semio_ui_action::BoundedActionFault::Structure);
         }
         index = ink_skip_ws(bytes, index + 1);
-        index = if blocks { ink_collect_block_array(bytes, index, spans, span_len, 0)? } else { ink_skip_value(bytes, index, 0)? };
+        index = if blocks { ink_collect_block_array(bytes, index, spans, span_len, positions, None, 0)? } else { ink_skip_value(bytes, index, 0)? };
         index = ink_skip_ws(bytes, index);
         match bytes.get(index) {
             Some(b',') => index += 1,

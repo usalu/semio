@@ -1,7 +1,8 @@
 (* ebnf trinity.jack.mutations *)
 (* ISO-14977-style mirror of the normative 📖️.grammar.semio (same production names, kebab-case -> "space case"). *)
-line = set query ;
+line = set query | set root ;
 set query = 'set-query', space, text ;
+set root = 'set-root', [space, text] ;
 text = octet, { octet } ;
 
 (* Framework dialect-primitive terminals, given one concrete definition each for a self-contained mirror. *)

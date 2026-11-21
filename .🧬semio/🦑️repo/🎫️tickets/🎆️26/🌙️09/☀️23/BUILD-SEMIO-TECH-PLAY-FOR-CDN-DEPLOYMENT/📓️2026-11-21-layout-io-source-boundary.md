@@ -1,0 +1,7 @@
+# Layout I/O Source Boundary
+
+Play attempt 8 stopped during source preflight because the Layout I/O closure measured 263,216 bytes against a 262,144-byte limit. Its file count was 29 of 32. Consolidating the identical PDF, STEP, and IDML binary adapters initially saved 1,720 bytes. A concurrent expansion of Drawing birth preparation added more source while the first scoped preflight was running, so the repair also needed a larger boundary between model projection and format I/O.
+
+The existing Layout model snapshot owner now implements the cold `LayoutSnapshot` to `VectorScene` projection and rectangle primitive. Layout I/O re-exports both public functions through their existing paths and still selects and encodes the output format. The PDF, STEP, and IDML registry entries still use their original dialects, order, payload and diagnostic handling through the shared adapter. No Cargo manifest, lockfile, or source limit changed.
+
+The ticket’s source preflight passed over the full Layout plugin subtree. The exact post-edit census measured 29 files and 256,760 bytes for Layout I/O, and 31 files and 240,020 bytes for the model. Scoped whitespace verification passed. A Python comparison against the current indexed sources found identical projection and rectangle bodies after indentation normalization, and identical adapter bodies after substituting the format and dialect parameters. No Cargo build, Rust check, or descriptor generation was started for this repair.

@@ -1,0 +1,10 @@
+{
+  "actor": "fixture-actor",
+  "otherActor": "fixture-other",
+  "edit": "edit-original-media",
+  "tool": "s.stdio.pdf.document@1/*#original-media",
+  "rows": 3,
+  "bytesPerRow": 36000,
+  "commits": 1,
+  "catchupFrom": 2
+}

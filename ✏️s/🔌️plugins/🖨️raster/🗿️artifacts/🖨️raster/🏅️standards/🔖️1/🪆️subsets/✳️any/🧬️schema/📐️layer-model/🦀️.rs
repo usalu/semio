@@ -131,6 +131,7 @@ pub struct RasterLayerMask {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
+#[derive(semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub enum RasterLayerNode {
     #[value(rename = "pixel", rename_all = "camelCase")]
     Pixel {

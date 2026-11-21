@@ -20,7 +20,6 @@ async fn checked_snapshot_media_export_matches_complete_materialized_record() {
         let document = app.0.document_identity().expect("saved document identity");
         let revision = app.0.document_base_revision().expect("saved document revision");
         let close = fixture_close_grant(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-        let poll_grant = if cut.is_some() { semio_framework_value::RetainedCloneGrant { maximum_items: 1, ..close } } else { close };
         let mut canonical: Option<Vec<u8>> = None;
         for _ in 0..if cut.is_none() { 2 } else { 1 } {
             let mut submitted = None;
@@ -34,18 +33,18 @@ async fn checked_snapshot_media_export_matches_complete_materialized_record() {
             let mut terminal = false;
             for turn in 0..OriginalFixtureCaller::maximum_turns() {
                 if cut == Some(turn) { app.0.cancel_media_export(&handle).await.expect("cancel original snapshot export"); cancelled = true; }
-                match poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), poll_grant).await.expect("snapshot export poll") {
+                match poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.expect("snapshot export poll") {
                     ArtifactMediaExportPoll::Running { applied_progress, .. } => { assert!(applied_progress >= progress); progress = applied_progress; }
                     ArtifactMediaExportPoll::Cancelled => { assert!(cancelled); terminal = true; break; }
                     ArtifactMediaExportPoll::Complete(result) => {
                         assert!(!cancelled, "cancelled export cannot publish bytes");
                         assert_eq!(result.schema, fixture["schema"].as_str().unwrap());
                         assert_eq!(result.mime_type, fixture["mimeType"].as_str().unwrap());
-                        let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx(), close).await.expect("retain snapshot output");
+                        let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx()).await.expect("retain snapshot output");
                         let mut bytes = Vec::new();
                         let mut done = false;
                         for _ in 0..=(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES / ArtifactOutputChunks::CHUNK_BYTES) {
-                            if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx(), close).await.expect("snapshot output chunk") { bytes.extend_from_slice(&chunk); }
+                            if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx()).await.expect("snapshot output chunk") { bytes.extend_from_slice(&chunk); }
                             if done { break; }
                         }
                         assert!(done, "snapshot output drained to terminal");

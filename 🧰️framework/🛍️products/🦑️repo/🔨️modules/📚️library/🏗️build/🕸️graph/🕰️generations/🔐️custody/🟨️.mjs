@@ -58,8 +58,9 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
  const directory=join(root,P.directory),pathOf=name=>join(directory,name+".json"),sidePath=(name,kind)=>join(directory,name+"."+kind+".json"),own=new Map(),SIDE=/^([a-f0-9]{24})\.(progress|ask)\.json$/u;
  const resource={claim:name=>"graph-custody:"+root+":"+name,admission:"graph-custody-admission:"+root};
  const write=async claim=>{await fs.write(pathOf(claim.token),Buffer.from(canonicalJsonV1(readCustodyClaimV1(claim))));own.set(claim.token,claim);return claim;};
- const readSide=async(name,kind,read)=>{const bytes=await fs.read(sidePath(name,kind));if(!bytes)return undefined;try{return read(JSON.parse(Buffer.from(bytes).toString("utf8")));}catch{return undefined;}};
- const writeSide=(name,kind,value)=>fs.write(sidePath(name,kind),Buffer.from(canonicalJsonV1(value)));
+ const decodeSide=(bytes,read)=>{if(!bytes)return undefined;try{return read(JSON.parse(Buffer.from(bytes).toString("utf8")));}catch{return undefined;}};
+ const readSide=async(name,kind,read)=>decodeSide(await fs.read(sidePath(name,kind)),read);
+ const writeSide=(name,kind,value,options)=>fs.write(sidePath(name,kind),Buffer.from(canonicalJsonV1(value)),options);
  const removeSides=name=>Promise.all(["progress","ask"].map(kind=>fs.remove(sidePath(name,kind)).catch(()=>{})));
  const readOne=async name=>{const bytes=await fs.read(pathOf(name));if(!bytes)return undefined;try{return readCustodyClaimV1(JSON.parse(Buffer.from(bytes).toString("utf8")));}catch{return undefined;}};
 
@@ -87,6 +88,16 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
  const active=async signal=>{const at=now();return(await live(signal)).filter(row=>!isDeposedV1(row,at));};
 
  const admitted=async(signal,body)=>{const admission=await lease.hold(resource.admission,{signal});try{return await body();}finally{admission.release();}};
+
+ /** 🛡️ Verifies that the named blocker is still held and conflicts with the waiter. */
+ async function heldBlocker(name,waiter){
+  const held=await readOne(name);
+  if(held?.state!=="held"||!claimsConflictV1(waiter,held))return undefined;
+  if(own.has(name))return held;
+  const probe=await lease.tryHold(resource.claim(name));
+  if(!probe)return held;
+  probe.release();
+ }
 
  /** 🎫️ The handle of a held claim: `owners`/`structural` say what it may write, `extend` widens it at once when no other held claim conflicts (answering the request to queue again otherwise), `alone` makes it structural when no other live claim exists, `release` gives it back. */
  function handle(name,lock,settings){
@@ -158,12 +169,29 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
   const mine={owners:ownersOf(owners),structural:structural===true,...holder?{holder:readHolderV1(holder)}:{}},started=now(),told=new Set();let claim,noticed=-Infinity,seen,seenAt=-Infinity;
   const digestNow=async()=>{if(!currentDigest)return undefined;if(now()-seenAt<P.noticeMilliseconds&&seen!==undefined)return seen;try{seen=await currentDigest();}catch{}seenAt=now();return seen;};
   const asking=async blockers=>{
-   const at=now(),current=await digestNow();
-   for(const row of blockers){
-    if(isDeposedV1(row,at))continue;
-    const reason=askReasonV1({claim:row,now:at,current});
-    if(!reason)continue;
-    await writeSide(row.token,"ask",{version:1,reason,atMs:at,by:{pid:process.pid,digest:mine.holder?.digest??""}}).catch(()=>{});
+   const current=await digestNow(),seenAt=now(),candidates=blockers.filter(row=>askReasonV1({claim:row,now:seenAt,current}));
+   aborted(signal);
+   if(!candidates.length)return;
+   const written=await admitted(signal,async()=>{
+    const asked=[];
+    for(const {token} of candidates){
+     aborted(signal);
+     const held=await heldBlocker(token,claim);
+     if(!held)continue;
+     const path=sidePath(token,"ask"),[progress,bytes]=await Promise.all([readSide(token,"progress",readProgressV1),fs.read(path)]);
+     const row={...held,progress,ask:decodeSide(bytes,readAskV1)},at=now(),reason=askReasonV1({claim:row,now:at,current});
+     if(!reason)continue;
+     aborted(signal);
+     if(bytes)await fs.remove(path).catch(()=>{});
+     aborted(signal);
+     const saved=await writeSide(token,"ask",{version:1,reason,atMs:at,by:{pid:process.pid,digest:mine.holder?.digest??""}},{ifAbsent:true}).catch(()=>false);
+     if(!saved)continue;
+     if(!await heldBlocker(token,claim)){await fs.remove(path).catch(()=>{});continue;}
+     asked.push({row,reason,at});
+    }
+    return asked;
+   });
+   for(const {row,reason,at} of written){
     if(reason==="stalled")say("askedStalled",{pid:row.holder?.pid??0,seconds:Math.round((idleMillisecondsV1(row,at)??0)/1000)});else say("askedStale",{pid:row.holder?.pid??0,digest:(row.holder?.digest??"").slice(0,12),current:(current??"").slice(0,12)});
    }
   };

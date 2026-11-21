@@ -263,6 +263,20 @@ fn orient2d_exact(a: Pnt2, b: Pnt2, c: Pnt2) -> Orient {
     expansion_sign(&det[..len])
 }
 
+/// 🪁️ Classifies a horizontal ray crossing and contact with a closed segment.
+pub fn ray_event(a: Pnt2, b: Pnt2, target: Pnt2) -> (bool, bool) {
+    let by_y = (a.y > target.y) != (b.y > target.y);
+    let between_x = (a.x.min(b.x)..=a.x.max(b.x)).contains(&target.x);
+    let between_y = (a.y.min(b.y)..=a.y.max(b.y)).contains(&target.y);
+    if !between_x { return (by_y && target.x < a.x.min(b.x), false); }
+    if !between_y { return (false, false); }
+    match orient2d(a, b, target) {
+        Orient::Positive => (by_y && a.y < b.y, false),
+        Orient::Negative => (by_y && a.y > b.y, false),
+        Orient::Zero => (false, true),
+    }
+}
+
 /// 🎯️ Orientation of four 3D points via the signed volume of tetrahedron `(a,b,c,d)`, computed as
 /// the scalar triple product `(b-a) · ((c-a) × (d-a))`. [`Orient::Positive`] when `(b-a,c-a,d-a)`
 /// form a right-handed frame; [`Orient::Zero`] when the four points are coplanar.

@@ -22,19 +22,11 @@ async fn editable_archive_restores_nested_masks_assets_adjustments_and_history()
     context::dispatch(&mut source,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id.into(),field:"name".into(),value:rename["after"].as_str().unwrap().into()})).await;
     let edited=source.snapshot().unwrap();let archive=source.document_archive().await.unwrap();
     assert!(!archive.parent_pack.is_empty());assert!(!archive.parent_spr.is_empty());
-    let mut restored=context::app().await;restored.begin_document_archive_load(71,archive).unwrap();
-    let mut ready=false;
-    for _ in 0..100000 {
-        let status=restored.0.poll_document_archive_load(71, &mut semio_plugin::artifact_app_laws::fixture_identity(), restored.1.cx()).await.unwrap();
-        match status.state {
-            protocol::DocumentArchiveLoadState::Ready=>{ready=true;break;},
-            protocol::DocumentArchiveLoadState::Fault=>panic!("{}",semio_framework_diagnostic::decode_fault_bytes(&status.fault).describe()),
-            protocol::DocumentArchiveLoadState::Cancelled=>panic!("archive unexpectedly cancelled"),
-            _=>{}
-        }
-        restored.0.maintenance_step(restored.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();semio_framework_async::yield_once().await;
-    }
-    assert!(ready,"editable archive did not finish within its fixture turn bound");restored.acknowledge_document_archive_load(71).unwrap();
+    let mut restored=context::app().await;
+    use semio_plugin::artifact_app_laws::{admit_document_archive_load, fixture_identity, settle_document_archive_load};
+    admit_document_archive_load(&mut restored.0, 71, archive, restored.1.cx()).expect("original archive admission");
+    settle_document_archive_load(&mut restored.0, 71, &mut fixture_identity(), restored.1.cx()).await
+        .expect("original archive reaches a ready and acknowledged terminal");
     let loaded=restored.snapshot().unwrap();assert_eq!(loaded,edited);assert_eq!(layer_name(find_layer(&loaded.layers,id).unwrap()),rename["after"].as_str().unwrap());retire_raster_snapshot(loaded);
     context::history(&mut restored,"undo").await;let undone=restored.snapshot().unwrap();assert_eq!(undone,before);retire_raster_snapshot(undone);
     context::history(&mut restored,"redo").await;let redone=restored.snapshot().unwrap();assert_eq!(redone,edited);retire_raster_snapshot(redone);

@@ -1,0 +1,188 @@
+[
+  {
+    "envelopeClass": "Opaque",
+    "setpointC": 20,
+    "components": [
+      [
+        100,
+        0.3,
+        1
+      ],
+      [
+        50,
+        0.2,
+        0.5
+      ]
+    ],
+    "meanU": 0.23333333333333334,
+    "limitU": 0.28
+  },
+  {
+    "envelopeClass": "Opaque",
+    "setpointC": 18,
+    "components": [
+      [
+        80,
+        0.6,
+        0.5
+      ]
+    ],
+    "meanU": 0.3,
+    "limitU": 0.5
+  },
+  {
+    "envelopeClass": "Opaque",
+    "setpointC": 19,
+    "components": [
+      [
+        100,
+        0.28,
+        1
+      ]
+    ],
+    "meanU": 0.28,
+    "limitU": 0.28
+  },
+  {
+    "envelopeClass": "Transparent",
+    "setpointC": 19,
+    "components": [
+      [
+        100,
+        1.5,
+        1
+      ]
+    ],
+    "meanU": 1.5,
+    "limitU": 1.5
+  },
+  {
+    "envelopeClass": "Transparent",
+    "setpointC": 12,
+    "components": [
+      [
+        10,
+        4,
+        0.5
+      ],
+      [
+        10,
+        3,
+        1
+      ]
+    ],
+    "meanU": 2.5,
+    "limitU": 2.8
+  },
+  {
+    "envelopeClass": "CurtainWall",
+    "setpointC": 19,
+    "components": [
+      [
+        20,
+        1.6,
+        1
+      ]
+    ],
+    "meanU": 1.6,
+    "limitU": 1.5
+  },
+  {
+    "envelopeClass": "CurtainWall",
+    "setpointC": 18.999,
+    "components": [
+      [
+        20,
+        2.8,
+        1
+      ]
+    ],
+    "meanU": 2.8,
+    "limitU": 3.0
+  },
+  {
+    "envelopeClass": "RoofGlazing",
+    "setpointC": 19,
+    "components": [
+      [
+        20,
+        2.5,
+        1
+      ]
+    ],
+    "meanU": 2.5,
+    "limitU": 2.5
+  },
+  {
+    "envelopeClass": "RoofGlazing",
+    "setpointC": 12,
+    "components": [
+      [
+        20,
+        3.1,
+        1
+      ]
+    ],
+    "meanU": 3.1,
+    "limitU": 3.1
+  },
+  {
+    "envelopeClass": "RoofGlazing",
+    "setpointC": 11.999,
+    "components": [
+      [
+        20,
+        3.1,
+        1
+      ]
+    ],
+    "meanU": 3.1,
+    "limitU": null
+  },
+  {
+    "envelopeClass": "Opaque",
+    "setpointC": 20,
+    "components": [
+      [
+        0,
+        0.5,
+        1
+      ]
+    ],
+    "meanU": null,
+    "limitU": 0.28
+  },
+  {
+    "envelopeClass": "Opaque",
+    "setpointC": 20,
+    "components": [
+      [
+        15,
+        -0.1,
+        1
+      ]
+    ],
+    "meanU": null,
+    "limitU": 0.28
+  },
+  {
+    "envelopeClass": "Opaque",
+    "setpointC": 20,
+    "components": [
+      [
+        15,
+        0.5,
+        0.8
+      ]
+    ],
+    "meanU": null,
+    "limitU": 0.28
+  },
+  {
+    "envelopeClass": "Opaque",
+    "setpointC": 20,
+    "components": [],
+    "meanU": null,
+    "limitU": 0.28
+  }
+]

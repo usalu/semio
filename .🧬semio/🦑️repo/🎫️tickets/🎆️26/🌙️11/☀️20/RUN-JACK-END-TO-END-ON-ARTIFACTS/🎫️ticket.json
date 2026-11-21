@@ -1,0 +1,621 @@
+{
+  "title": "Run Jack End to End on Artifacts",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "Make the Cypher-inspired Jack language run end to end against live artifacts, including inference, mutations, and user-facing execution. Verify with language-neutral fixtures and runtime tests.",
+  "summary": "Jack runs against live Semio graph artifacts with inference and atomic mutations. Verified mounted CREATE, rollback, root DELETE, undo, and paid close. All seven mounted tests and the standalone native mutation codec law passed. See verification.md for the test record and coverage limits.",
+  "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS/RUNNING-OS/RUNNING-S/RUNNING-PLUGINS/RUNNING-TRINITY/RUNNING-JACK",
+  "sessions": [
+    "e8bbf889-434c-438c-abdf-f89cf72e1fe4"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-20 14:47:48",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "prompt": "Make the Cypher-inspired Jack language run end to end against live artifacts, including inference, mutations, and user-facing execution. Verify with language-neutral fixtures and runtime tests."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-20 18:26:55",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "summary": "Jack runs against live Semio graph artifacts with inference and atomic mutations. Verified mounted CREATE, rollback, root DELETE, undo, and paid close. All seven mounted tests and the standalone native mutation codec law passed. See verification.md for the test record and coverage limits.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/RUN-JACK-END-TO-END-ON-ARTIFACTS/closure-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/RUN-JACK-END-TO-END-ON-ARTIFACTS/content-adapter.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/RUN-JACK-END-TO-END-ON-ARTIFACTS/editor.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/RUN-JACK-END-TO-END-ON-ARTIFACTS/lsp-wasm-producer.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/RUN-JACK-END-TO-END-ON-ARTIFACTS/mutation-execution.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/RUN-JACK-END-TO-END-ON-ARTIFACTS/verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/RUN-JACK-END-TO-END-ON-ARTIFACTS/🎫️ticket.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/RUN-JACK-END-TO-END-ON-ARTIFACTS/📌️important/📝️.md"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️artifact-editor-impl/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🔭️viewer-and-interaction-topology/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️child-publication/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎛️play-app-editor/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🖥️play-app/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️play-app/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️patch-page/🖼️drawing/📖️source/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-command-factories/🖼️page-drawing/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧪️tests/🔬️window/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧬️schema/🧬️mutations/🔍️set-lod-mode/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧬️schema/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧪️tests/🧩️bounded/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧪️tests/🧫️fixtures/🧩️bounded-publication/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/▶️run-query/🧵️job/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/▶️run-query/🧵️job/🪆️mutation-source/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️manifest/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️play-app/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-commands/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🫴️receiving/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🎯️set-root/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🅰️.g4"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🎯️set-root/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/📖️.grammar.semio"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🔤️.ebnf"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔌️mutate-jack-1/🐍️.py"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔌️mutate-jack-1/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔌️mutate-jack-1/🥒️.feature"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔌️mutate-jack-1/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🪆️query/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-root/🧹️clears-the-root/🎯️outcome/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-root/🧹️clears-the-root/📸️snapshot/➡️after/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-root/🧹️clears-the-root/📸️snapshot/⬅️before/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-root/🧹️clears-the-root/🔺️diff/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-root/🧹️clears-the-root/🦠️mutation/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛️flat-position/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/🎛️flat-position/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/🧭topology/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔤️lexer/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-root/🔗️.graphql"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-root/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-root/🛰️.proto"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-root/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-root/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-root/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎️set-query/🧪️tests/🔎️replaces-the-query/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️.graphql"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️.proto"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️structural-correspondence/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/📦️packages/🦀️rust/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/▶️query-execution/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/🔁️pattern-delete-return/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/🧱️execution-preparation/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/▶️query-runner/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/▶️query-runner/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏗️composition/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏗️composition/🪆️child/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/📑️snapshot-clone/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/📸️snapshot-decode/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/🔄️mutation-decode/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust/📋️project.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️memory-graph/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧩️registration/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/🔬️rust-package-commands/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/🧰️support/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🪆️content/👁️read/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🪆️content/🔗️.graphql"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🪆️content/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🪆️content/🧿️semio/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🪆️content/🧿️semio/🧱️owned/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🪆️child/🧪️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/📦️packages/🦀️rust/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🌶️.spicy"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🔗️.graphql"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🔠️.abnf"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🛰️.proto"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🥋️.ksy"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✂️delete-edge/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/✋️drag-nodes/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕add-edge-property/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➕add-node-property/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➖remove-edge-property/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/➖remove-node-property/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🌉️create-edge/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🎚️set-edge-property/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🎛️set-node-property/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏗️create-node/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️rename-node/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📍move-node/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/📐resize-node/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔌add-node-port/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔚remove-node-port/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🔧change-node-kind/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🖍️change-node-label/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🚪️io/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🚪️io/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🔎️query-ownership-and-examples/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🔭️lod-catalogue-and-examples/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🖼️scene-rendering-and-text-edit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🤖️agent-lane-and-archive-laws/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🩹️rail-verb-laws/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🗂️layout/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🧫️fixtures/▶️query-publication.json"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🪆️content/🦀️.rs"
+        },
+        {
+          "path": "🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs"
+        },
+        {
+          "path": "🌎️hub/🧩️compositions/🔱️trinity/🧩️component/🔣️.json"
+        },
+        {
+          "path": "🌎️hub/🧩️compositions/🔱️trinity/🧪️tests/🔬️surface/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🪜️staging/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎠️kernel/📤️return/🔤️json/🖼️ui/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🔮️testing/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/📊️table-image-surface-and-extension-builders/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🧪️tests/🧩️components/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🗃️table-image-extension-and-component/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🧾️fields/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🪟️group-visibility/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/📥️lifted/🧵️operation-wire/🧳️receiving/🔢️binary/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🗑️envelope-genesis-and-displaced-snapshot-retirements/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🏪️space-member-for-artifact-store/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/🧳️receiving/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎞️media/📤️structured/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️registration/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🎛️artifact-app-trait/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪆️child/🎯️editor/📨️command/🧪️tests.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/✏️artifact-editor-trait/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/👁️artifact-viewer-trait/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📖️viewer-app/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🖊️editor-app/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🏗️registered-app-construction-and-typed-operation-settlement/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🏪️stores/📥️staging/📮️action-ingress/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📥️staging/⌨️typed-command/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🔒️close-terminal/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🏃️mounted-run-and-pump/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/👶️child-operation-unit/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🔁️stall-witness-and-unit-advance/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/🪆️child-group/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫴️receiving/📦️pack-value/🏷️tagged/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🕸️wasm-outputs/🧪️tests/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🕸️wasm-outputs/🧪️tests/🟦️.ts"
+        }
+      ]
+    }
+  ]
+}

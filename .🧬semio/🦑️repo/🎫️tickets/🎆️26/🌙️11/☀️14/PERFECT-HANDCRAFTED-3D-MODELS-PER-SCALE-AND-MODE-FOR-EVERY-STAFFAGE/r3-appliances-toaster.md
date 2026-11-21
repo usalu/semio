@@ -95,3 +95,40 @@ Solid counts body / thermal / structure: 1:50 19 / 16 / 16, 1:100 11 / 10 / 10, 
 - **Controls on the long face** is the less common layout (see section 1).
 
 State: DONE
+
+## Round 5 handcraft
+
+Scripts: `r5-toaster-model.py` (keeps the hand-stated lists of `r3-toaster-model.py`, restates the 1:200 slots and slot air and the 1:500 housing and slot air), `r5-toaster-texts.json` (1:200 and 1:500 decisions). Renders in `🗑️generated/r5-toaster/{before,after}/` (opened: body, structure and thermal cut at every scale, poses `idle`, `popped`, clips `toast-cycle` t 150 and `cool-down` t 300 at 1:50, the zoomed 2D of 1:50, 1:100, 1:200, the 1:200 thermal side view at full size).
+
+### Reference and measurement (1:50)
+
+| Quantity | Reference | Source | Model | Deviation |
+|---|---|---|---|---|
+| L x D x H | 320 x 185 x 205 mm (class 260-320 x 160-190 x 180-210) | De'Longhi Icona CTO2003 data sheet; IEC 60335-2-9 | 300 x 170 x 200 mm with bread | inside the class |
+| Slots | 135-145 x 28-36 mm, 55-65 mm apart | product survey | 136 x 30 mm, 60 mm apart | in range |
+| Slice | 100-120 mm square, 12-14 mm | sandwich bread | 104 x 115 x 13 mm | in range |
+| Carriage travel | 35-45 mm | product | 40 mm | in range |
+| Dial | 25-35 mm | product | 30 mm | in range |
+| Feet | 20-27 mm, 6-12 mm high | product | 22-27 mm, 12 mm | in range |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | unchanged (re-opened) |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | A- / B (slices coplanar with the slot walls flicker as a hatch through the deck; one slot-air plate across deck and bread) / A- | A- / A- / A- |
+| 1:500 | B (four chamfered sections, octagonal shoulders) / B / A- | A- / A- / A- |
+| Poses/clips | A- (idle: lever up over a sunk carriage, see round 3) | unchanged |
+
+### Changes
+
+- 1:200 slots in the deck 32 mm wide around the 30 mm slices (no coplanar faces); slot air as four flush outlet patches in the open slot ends.
+- 1:500 housing five sections with rounded shoulders; slot air as two flush end patches.
+- `volumes-check.ts --product` PASS, `r3-validate.ts --volumes` VALID; spliced.
+
+### Remaining
+
+- `idle` pose disagreement between lever and carriage (schema cannot hide the bread per pose).
+- Controls on the long face (less common layout, kept for the planar rig).
+- Envelope top face still marked as section face under the cap (the wrap is open-topped in reality).

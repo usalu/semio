@@ -1,0 +1,4 @@
+{
+  "inputs": ["zeta", "alpha", "zeta", "ä", "alpha", "", "ä", ""],
+  "ordinals": [0, 1, 0, 2, 1, 3, 4, 3]
+}

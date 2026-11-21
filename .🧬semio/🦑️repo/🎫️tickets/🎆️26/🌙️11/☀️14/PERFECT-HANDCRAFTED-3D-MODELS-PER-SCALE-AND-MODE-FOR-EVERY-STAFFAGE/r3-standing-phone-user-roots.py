@@ -34,6 +34,7 @@ TEXTING = {
     "forearm-l": {"angleDeg": 97.0, "twistDeg": -78.3},
     "hand-l": {"angleDeg": -8.5, "abductionDeg": -25.8, "twistDeg": 3.0},
     "phone": {"angleDeg": 0},
+    "ponytail": {"angleDeg": 40},
 }
 CALL = {
     "torso": {"angleDeg": 0},
@@ -46,6 +47,7 @@ CALL = {
     "forearm-l": {"angleDeg": 88.7, "twistDeg": -27.3},
     "hand-l": {"angleDeg": 9.3, "abductionDeg": -0.5, "twistDeg": -1.1},
     "phone": {"angleDeg": -62.3},
+    "ponytail": {"angleDeg": -1},
 }
 PHOTO = {
     "torso": {"angleDeg": 1},
@@ -58,6 +60,7 @@ PHOTO = {
     "forearm-l": {"angleDeg": 76.2, "twistDeg": -90},
     "hand-l": {"angleDeg": -0.5, "abductionDeg": -27.9, "twistDeg": -0.9},
     "phone": {"angleDeg": 0},
+    "ponytail": {"angleDeg": -3},
 }
 POSES = {"texting": TEXTING, "phone-call": CALL, "photo-pose": PHOTO}
 DESCRIPTIONS = {
@@ -76,14 +79,14 @@ DESCRIPTIONS = {
 }
 SCROLL = [
     None,
-    {"head": {"angleDeg": -25}, "neck": {"angleDeg": -19}, "torso": {"angleDeg": -4}, "hand-l": {"angleDeg": -7}},
-    {"head": {"angleDeg": -19}, "neck": {"angleDeg": -16.5}, "torso": {"angleDeg": -2}, "hand-l": {"angleDeg": -10}},
-    {"head": {"angleDeg": -24}, "neck": {"angleDeg": -18.5}, "torso": {"angleDeg": -3.5}, "hand-l": {"angleDeg": -7.5}},
+    {"head": {"angleDeg": -25}, "neck": {"angleDeg": -19}, "torso": {"angleDeg": -4}, "hand-l": {"angleDeg": -7}, "ponytail": {"angleDeg": 45}},
+    {"head": {"angleDeg": -19}, "neck": {"angleDeg": -16.5}, "torso": {"angleDeg": -2}, "hand-l": {"angleDeg": -10}, "ponytail": {"angleDeg": 34.5}},
+    {"head": {"angleDeg": -24}, "neck": {"angleDeg": -18.5}, "torso": {"angleDeg": -3.5}, "hand-l": {"angleDeg": -7.5}, "ponytail": {"angleDeg": 43}},
     None,
 ]
 ANSWER = [
     None,
-    {"neck": {"angleDeg": -7}, "head": {"angleDeg": -8}, "torso": {"angleDeg": -1}},
+    {"neck": {"angleDeg": -7}, "head": {"angleDeg": -8}, "torso": {"angleDeg": -1}, "ponytail": {"angleDeg": 16}},
     {
         "torso": {"angleDeg": -1},
         "neck": {"angleDeg": -4},
@@ -92,6 +95,7 @@ ANSWER = [
         "forearm-r": {"angleDeg": 132, "twistDeg": 30},
         "hand-r": {"angleDeg": 18, "abductionDeg": 6, "twistDeg": -4},
         "phone": {"angleDeg": -38},
+        "ponytail": {"angleDeg": 5},
         "arm-l": {"angleDeg": 16, "abductionDeg": 10, "twistDeg": 64},
         "forearm-l": {"angleDeg": 96, "twistDeg": -50},
         "hand-l": {"angleDeg": 3, "abductionDeg": -9, "twistDeg": 0},
@@ -101,7 +105,12 @@ ANSWER = [
 ]
 
 
+PONYTAIL = {"id": "ponytail", "parent": "head", "title": {"en": "Ponytail from the hair tie", "de": "Pferdeschwanz ab dem Haargummi"}, "x": 0.044, "y": 0.104, "angleDeg": 180, "lengthM": 0.075, "joint": {"type": "revolute", "minDeg": -60, "maxDeg": 60}}
+
+
 def fix_rig(asset):
+    if not any(b["id"] == "ponytail" for b in asset["rig"]["bones"]):
+        asset["rig"]["bones"].append(json.loads(json.dumps(PONYTAIL)))
     bones = {b["id"]: b for b in asset["rig"]["bones"]}
     for bid, _parent, x, y, z, angle, length in rig.BONES:
         bone = bones[bid]
@@ -216,6 +225,11 @@ def fix_decisions(asset):
         asset["representations"][scale]["decisions"].update(texts)
 
 
+def fix_ranges(asset):
+    """🔭 The 1:500 drawing prints its clasped hands and toe caps under the 0.2 mm laser minimum at 1:1000: its range ends at 1:650 (round 5)."""
+    asset["representations"]["500"]["validRange"]["maxDenominator"] = 650
+
+
 def fixed(asset):
     out = copy.deepcopy(asset)
     fix_rig(out)
@@ -225,6 +239,7 @@ def fixed(asset):
     fix_shapes(out)
     fix_decisions(out)
     fix_dimensions(out)
+    fix_ranges(out)
     return out
 
 

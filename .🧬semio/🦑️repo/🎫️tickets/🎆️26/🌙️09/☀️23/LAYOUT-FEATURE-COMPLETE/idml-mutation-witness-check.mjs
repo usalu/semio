@@ -26,7 +26,7 @@ export async function verifyRetainedIdmlMutationWitnesses() {
   if (diagnostics.length) throw new Error(diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")).join("\n"));
   const fflate = require("fflate");
   const jsonPatch = require("fast-json-patch");
-  const {SaxesParser} = require(path.join(root,"node_modules/.bun/saxes@6.0.0/node_modules/saxes"));
+  const {SaxesParser} = require("saxes");
   const oracle = await import(pathToFileURL(path.join(root,"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🧪️tests/oracle.mjs")).href);
   const base = path.resolve(ticket, "🗑️generated", "idml-mutation-witness-check");
   const output = path.resolve(base, "run-" + Date.now().toString(36));

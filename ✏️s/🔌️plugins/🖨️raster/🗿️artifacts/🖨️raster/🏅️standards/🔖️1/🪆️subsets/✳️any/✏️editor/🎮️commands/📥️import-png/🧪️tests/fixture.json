@@ -1,0 +1,34 @@
+{
+  "picker": {
+    "accept": "image/png,.png",
+    "readAs": "dataUrl",
+    "importAction": "importPngFile",
+    "maxFileBytes": 3144704
+  },
+  "cases": [
+    {
+      "name": "png-data-url",
+      "payload": "data:image/png;base64,iVBORw0KGgo=",
+      "offset": 22
+    },
+    {
+      "name": "octet-stream-data-url",
+      "payload": "data:application/octet-stream;base64,iVBORw0KGgo=",
+      "offset": 37
+    },
+    {
+      "name": "reject-wrong-carrier",
+      "payload": "data:image/jpeg;base64,iVBORw0KGgo=",
+      "offset": null
+    },
+    {
+      "name": "reject-empty-base64",
+      "payload": "data:image/png;base64,",
+      "offset": null
+    }
+  ],
+  "labels": {
+    "en": "Import PNG",
+    "de": "PNG importieren"
+  }
+}

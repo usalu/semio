@@ -104,6 +104,8 @@ export interface LayoutProps {
   panels?: Partial<Record<Anchor, Omit<PanelProps, "anchor">>>;
   mobilePanel?: LayoutMobilePanelProps;
   canvas: React.ReactNode;
+  /** 📜️ Scrolls page content beneath the navbar and footer while keeping its first and last items clear of the bars. */
+  scrollCanvas?: boolean;
   /** 🌀️ When set, paints a loading/waiting ring on the canvas viewport wrapper. */
   canvasStatus?: UiStatus;
   /** 🦴 Optional skeleton shown inside the canvas ring while `canvasStatus` is busy. */
@@ -112,46 +114,77 @@ export interface LayoutProps {
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, panels, mobilePanel, canvas, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => (
-  <UiMobileProvider mobile={mobile}>
-    <GhostProvider>
-      <div data-slot="layout" data-level="base" className={cn("relative flex h-full w-full flex-col overflow-hidden", surfaceClass, className)}>
-        <SurfaceScope level="base" fill="surface">
-          {navbar && <div className="flex-shrink-0">{navbar}</div>}
-          {subnavbar && <div className="flex-shrink-0">{subnavbar}</div>}
-          {mobile ? (
-            <div className="flex flex-col flex-1 min-h-0">
-              {mobilePanel && mobilePanel.visible && <LayoutMobilePanel {...mobilePanel} />}
-              <div className={cn("flex-1 min-w-0 min-h-0 relative", mobilePanel?.visible && "hidden", chromeStatusBorderClass(canvasStatus))}>
-                {canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas}
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-1 min-h-0 relative">
-              <div data-slot="layout-canvas-column" className="flex flex-col flex-1 min-w-0 relative">
-                <div className="flex flex-1 min-h-0 relative">
-                  <div className={cn("flex-1 min-w-0 min-h-0 relative", chromeStatusBorderClass(canvasStatus))}>
-                    {canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas}
-                  </div>
-                </div>
-              </div>
-              {ANCHORS.map((anchor) => {
-                const panelProps = panels?.[anchor];
-                return panelProps ? <Panel key={anchor} {...panelProps} anchor={anchor} /> : null;
-              })}
-            </div>
-          )}
-          {footer && <div className="flex-shrink-0">{footer}</div>}
-          {subfooter && (
-            <div data-slot="layout-subfooter" className="flex-shrink-0">
-              {subfooter}
-            </div>
-          )}
-        </SurfaceScope>
+/** 📏️ Keeps browser focus and anchor scrolling clear of the full sticky band. */
+function bindScrollBand(band: HTMLDivElement | null) {
+  const scrollport = band?.parentElement;
+  if (!band || !scrollport) return;
+  const property = band.dataset.slot === "layout-scroll-start" ? "scroll-padding-block-start" : "scroll-padding-block-end";
+  const setPadding = (height: number) => scrollport.style.setProperty(property, `${height}px`);
+  setPadding(band.offsetHeight);
+  const observer = typeof ResizeObserver === "function" ? new ResizeObserver(([entry]) => setPadding(entry?.borderBoxSize?.[0]?.blockSize ?? band.offsetHeight)) : undefined;
+  observer?.observe(band);
+  return () => {
+    observer?.disconnect();
+    scrollport.style.removeProperty(property);
+  };
+}
+
+const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, panels, mobilePanel, canvas, scrollCanvas = false, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => {
+  const canvasBody = canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas;
+  const canvasClassName = cn("flex-1 min-w-0 min-h-0 relative", scrollCanvas && "isolate", chromeStatusBorderClass(canvasStatus));
+  const middle = mobile ? (
+    <div className="flex flex-col flex-1 min-h-0">
+      {mobilePanel?.visible && <LayoutMobilePanel {...mobilePanel} />}
+      <div className={cn(canvasClassName, mobilePanel?.visible && "hidden")}>{canvasBody}</div>
+    </div>
+  ) : (
+    <div className="flex flex-1 min-h-0 relative">
+      <div data-slot="layout-canvas-column" className="flex flex-col flex-1 min-w-0 relative">
+        <div className="flex flex-1 min-h-0 relative">
+          <div className={canvasClassName}>{canvasBody}</div>
+        </div>
       </div>
-    </GhostProvider>
-  </UiMobileProvider>
-);
+      {ANCHORS.map((anchor) => {
+        const panelProps = panels?.[anchor];
+        return panelProps ? <Panel key={anchor} {...panelProps} anchor={anchor} /> : null;
+      })}
+    </div>
+  );
+  return (
+    <UiMobileProvider mobile={mobile}>
+      <GhostProvider>
+        <div data-slot="layout" data-level="base" className={cn("relative flex h-full w-full flex-col overflow-hidden", surfaceClass, className)}>
+          <SurfaceScope level="base" fill="surface">
+            {scrollCanvas ? (
+              <div data-slot="layout-scrollport" tabIndex={0}>
+                {navbar || subnavbar ? (
+                  <div ref={bindScrollBand} data-slot="layout-scroll-start" className="ui-chrome-tint">
+                    {navbar}
+                    {subnavbar}
+                  </div>
+                ) : null}
+                {middle}
+                {footer && <div ref={bindScrollBand} data-slot="layout-scroll-end" className="ui-chrome-tint">{footer}</div>}
+              </div>
+            ) : (
+              <>
+                {navbar && <div className="flex-shrink-0">{navbar}</div>}
+                {subnavbar && <div className="flex-shrink-0">{subnavbar}</div>}
+                {middle}
+                {footer && <div className="flex-shrink-0">{footer}</div>}
+              </>
+            )}
+            {subfooter && (
+              <div data-slot="layout-subfooter" className="flex-shrink-0">
+                {subfooter}
+              </div>
+            )}
+          </SurfaceScope>
+        </div>
+      </GhostProvider>
+    </UiMobileProvider>
+  );
+};
 
 export { Layout };
 

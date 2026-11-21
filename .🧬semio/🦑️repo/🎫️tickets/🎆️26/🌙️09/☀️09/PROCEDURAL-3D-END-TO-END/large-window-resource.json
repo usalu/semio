@@ -1,0 +1,11 @@
+{
+  "window": "generate.form:1",
+  "wrongWindow": "generate.form:2",
+  "question": "question.image",
+  "body": "generate.form.body",
+  "width": 1024,
+  "height": 768,
+  "seed": 305419896,
+  "minimumSourceBytes": 2066032,
+  "pages": 25
+}

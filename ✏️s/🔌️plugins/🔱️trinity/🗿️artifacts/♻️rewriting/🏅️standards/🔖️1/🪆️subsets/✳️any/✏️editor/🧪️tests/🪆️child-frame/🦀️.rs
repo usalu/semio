@@ -34,7 +34,7 @@ async fn full_frame_app()->RichFrameApp{
  envelope.dialect=Some(dialect.clone());
  let mut child=store::ArtifactStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("actual rich member store");
  store::install_funded_member_store_owners(&mut child,&::semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer::<SemioGraphSnapshot,SemioGraphMutation>::new()).expect("funded member catalog");
- app.register_child("workingGraph",logical,dialect,RichFrameMembers::Graph(Box::new(child))).await.expect("publish complete member");
+ app.register_child("workingGraph",logical,dialect,RichFrameMembers::Graph(Box::new(child)), &mut artifact_app_laws::fixture_identity()).await.expect("publish complete member");
  RichFrameApp(app,scope)
 }
 #[semio_framework_async_macros::async_test]

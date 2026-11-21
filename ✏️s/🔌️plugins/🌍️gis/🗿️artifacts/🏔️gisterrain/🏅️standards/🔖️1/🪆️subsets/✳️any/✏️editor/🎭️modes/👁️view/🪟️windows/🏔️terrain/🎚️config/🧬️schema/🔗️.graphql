@@ -1,4 +1,12 @@
 type GisTerrainWindowConfig {
   # @owner window
   cameraJson: String! @state(class: CONFIG)
+  # @owner window
+  brush: TerrainBrushSettings @state(class: CONFIG)
+}
+
+type TerrainBrushSettings {
+  radius: Int!
+  elevationStep: Int!
+  smoothStrength: Int!
 }

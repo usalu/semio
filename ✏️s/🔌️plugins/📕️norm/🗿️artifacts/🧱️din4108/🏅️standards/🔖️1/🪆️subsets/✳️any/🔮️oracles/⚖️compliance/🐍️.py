@@ -14,9 +14,6 @@ R_SE = 0.04
 F_RSI_MIN = 0.70
 R_SI_MOULD = 0.25
 DELTA_0 = 2.0e-10
-WINTER = (20.0, 0.50, -5.0, 0.80, 2160.0)
-SUMMER = (12.0, 0.70, 12.0, 0.70, 2160.0)
-SD_FLOOR = 1.0e-3
 
 
 def layer_r(d, lam):
@@ -89,57 +86,45 @@ def interface_temperatures(layers, r_si, r_se, t_int, t_ext):
     return [float(t) for t in np.linalg.solve(conductance, source)]
 
 
-def glaser_planes(layers, r_si, r_se, period):
-    """Condensation planes of the Glaser iteration: the interface of largest excess becomes a plane at saturation, repeated until no excess is left."""
-    t_i, rh_i, t_e, rh_e, _ = period
-    temps = interface_temperatures(layers, r_si, r_se, t_i, t_e)
-    t_c = [temps[0]] + [temps[i + 1] for i in range(len(layers))]
+def annex_a_masses(layers):
+    temperatures = interface_temperatures(layers, 0.25, 0.04, 20.0, -5.0)
     sd = [0.0]
-    for L in layers:
-        sd.append(sd[-1] + float(L["thicknessM"]) * float(L["mu"]))
-    ps = [saturation_pa(t) for t in t_c]
-    last = len(sd) - 1
-    planes = []
-
-    def pressures():
-        nodes = sorted([0, last] + planes)
-        fixed = {0: rh_i * saturation_pa(t_i), last: rh_e * saturation_pa(t_e), **{k: ps[k] for k in planes}}
-        p = [0.0] * len(sd)
-        for a, b in zip(nodes, nodes[1:]):
-            span = sd[b] - sd[a]
-            for k in range(a, b + 1):
-                p[k] = fixed[a] + (fixed[b] - fixed[a]) * ((sd[k] - sd[a]) / span if span > 0 else 0.0)
-        return p, nodes, fixed
-
-    while True:
-        p, nodes, fixed = pressures()
-        excess = [(p[k] - ps[k], k) for k in range(1, last) if k not in planes and p[k] > ps[k]]
-        if not excess:
-            return sd, ps, planes, nodes, fixed
-        planes.append(max(excess)[1])
-
-
-def glaser_masses(layers, r_si, r_se):
-    """DIN 4108-3 Annex A masses in kg/m2: g = (p_i - p_c) / Z with Z = s_d / delta0, over the period in seconds; the condensate is the flux into minus the flux out of each plane."""
-    sd, ps, planes, nodes, fixed = glaser_planes(layers, r_si, r_se, WINTER)
-    seconds = WINTER[4] * 3600.0
-    condensed = 0.0
-    for idx, k in enumerate(nodes[1:-1], start=1):
-        a, b = nodes[idx - 1], nodes[idx + 1]
-        z_in, z_out = max(sd[k] - sd[a], SD_FLOOR) / DELTA_0, max(sd[b] - sd[k], SD_FLOOR) / DELTA_0
-        condensed += ((fixed[a] - ps[k]) / z_in + (fixed[b] - ps[k]) / z_out) * seconds
-    condensed = max(condensed, 0.0)
-    t_i, rh_i, t_e, rh_e, hours = SUMMER
-    ts = interface_temperatures(layers, r_si, r_se, t_i, t_e)
-    ps_s = [saturation_pa(ts[0])] + [saturation_pa(ts[i + 1]) for i in range(len(layers))]
-    p_b = {0: rh_i * saturation_pa(t_i), len(sd) - 1: rh_e * saturation_pa(t_e)}
-    value = lambda n: p_b[n] if n in p_b else ps_s[n]
-    evaporated = 0.0
-    for idx, k in enumerate(nodes[1:-1], start=1):
-        a, b = nodes[idx - 1], nodes[idx + 1]
-        z_in, z_out = max(sd[k] - sd[a], SD_FLOOR) / DELTA_0, max(sd[b] - sd[k], SD_FLOOR) / DELTA_0
-        evaporated += (max(ps_s[k] - value(a), 0.0) / z_in + max(ps_s[k] - value(b), 0.0) / z_out) * hours * 3600.0
-    return condensed, evaporated
+    for index, layer in enumerate(layers):
+        thickness = layer["thicknessM"] * layer["mu"]
+        sd.append(sd[-1] + (max(thickness, 0.1) if index + 1 == len(layers) else thickness))
+    p = [1168.0, *(saturation_pa(t) for t in temperatures[1:-1]), 321.0]
+    hull = []
+    for point in range(len(sd)):
+        while len(hull) > 1:
+            a, b = hull[-2:]
+            if (p[b] - p[a]) * (sd[point] - sd[b]) < (p[point] - p[b]) * (sd[b] - sd[a]):
+                break
+            hull.pop()
+        hull.append(point)
+    duration = 7776000.0
+    wet = []
+    stored = 0.0
+    for left, point, right in zip(hull, hull[1:], hull[2:]):
+        incoming = (p[left] - p[point]) / (sd[point] - sd[left])
+        outgoing = (p[point] - p[right]) / (sd[right] - sd[point])
+        water = DELTA_0 * (incoming - outgoing) * duration
+        if water > 0.0:
+            wet.append([sd[point], water])
+            stored += water
+    capacity = 0.0
+    while wet and duration > 0.0:
+        inward = 1e-7 / wet[0][0]
+        outward = 1e-7 / (sd[-1] - wet[-1][0])
+        if len(wet) == 1:
+            capacity += duration * (inward + outward)
+            break
+        stage = min(duration, wet[0][1] / inward, wet[-1][1] / outward)
+        capacity += stage * (inward + outward)
+        wet[0][1] -= stage * inward
+        wet[-1][1] -= stage * outward
+        wet = [entry for entry in wet if entry[1] > 1e-14]
+        duration -= stage
+    return stored, capacity
 
 
 def qty(obj, *keys):
@@ -214,7 +199,7 @@ def compare_report(snap, report):
         gl_id = f"din4108-3.glaser.{eid}"
         dry_id = f"din4108-3.drying.{eid}"
         if gl_id in checks and checks[gl_id].get("status") != "notApplicable":
-            want_condensed, want_evaporated = glaser_masses(el["layers"], r_si, r_se)
+            want_condensed, want_evaporated = annex_a_masses(el["layers"])
             got = qty(checks[gl_id], "computed")
             checked += 1
             if got is None or not within(got, want_condensed, tol):

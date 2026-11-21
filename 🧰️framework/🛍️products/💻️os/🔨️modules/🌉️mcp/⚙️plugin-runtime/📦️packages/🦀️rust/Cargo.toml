@@ -48,6 +48,7 @@ semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵�
 semio-plugin = { path = "../../../../🔌️plugin/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }
 semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-plugin-host-poll = { path = "../../../../🔌️plugin/🖥️host/🔁️poll/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

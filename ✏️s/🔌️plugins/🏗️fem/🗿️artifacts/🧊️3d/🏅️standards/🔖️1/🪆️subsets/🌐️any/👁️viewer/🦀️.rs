@@ -63,11 +63,11 @@ impl ArtifactViewer for Fem3dViewer {
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA;
 
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_plugin::MountedOwnerPhaseV1> {
-        (!semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_pending(instance_id).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_demands(instance_id)
     }
 
     fn mounted_job_close_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {

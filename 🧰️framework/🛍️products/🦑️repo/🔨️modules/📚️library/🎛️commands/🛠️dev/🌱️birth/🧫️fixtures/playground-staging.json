@@ -1,0 +1,25 @@
+[
+  {
+    "id": "cold GIS",
+    "boot": ["gis"],
+    "staging": [{ "pluginId": "gis", "directoryPresent": false, "bridgePresent": false, "artifactMarkerPresent": false }],
+    "build": ["gis"]
+  },
+  {
+    "id": "warm GIS",
+    "boot": ["gis"],
+    "staging": [{ "pluginId": "gis", "directoryPresent": true, "descriptorPluginId": "gis", "bridgePresent": true, "artifactMarkerPresent": true }],
+    "build": []
+  },
+  {
+    "id": "incomplete dependencies and unrelated component",
+    "boot": ["host", "bridge", "catalogue"],
+    "staging": [
+      { "pluginId": "host", "directoryPresent": true, "descriptorPluginId": "host", "bridgePresent": true, "artifactMarkerPresent": true },
+      { "pluginId": "bridge", "directoryPresent": true, "descriptorPluginId": "catalogue", "bridgePresent": true, "artifactMarkerPresent": true },
+      { "pluginId": "catalogue", "directoryPresent": true, "descriptorPluginId": "catalogue", "bridgePresent": true, "artifactMarkerPresent": false },
+      { "pluginId": "unrelated", "directoryPresent": false, "bridgePresent": false, "artifactMarkerPresent": false }
+    ],
+    "build": ["bridge", "catalogue"]
+  }
+]

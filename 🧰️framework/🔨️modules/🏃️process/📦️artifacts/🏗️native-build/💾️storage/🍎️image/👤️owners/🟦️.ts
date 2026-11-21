@@ -14,8 +14,10 @@ export function nativeImageHostMountOfV1(mountOutput:string,real:string):Readonl
  if(!best)throw Error("Hosting mount of the Native image directory not found in the mount table");
  return Object.freeze({mountPoint:best.mountPoint,flags:Object.freeze(best.flags),owners:!best.flags.includes(protocol.mountWithoutOwnersFlag)});
 }
-/** 🛑️ Refuses a nested attach inside a parent mounted without owners and names the one-time remount. */
-export function requireNativeImageHostOwnersV1(mountOutput:string,directory:string):void{
+/** 🛑️ Refuses attachment on a hosting volume mounted without owners and identifies that volume. */
+export function requireNativeImageHostOwnersV1(mountOutput:string,directory:string,modeledParentMount?:string):void{
  const host=nativeImageHostMountV1(mountOutput,directory);
- if(!host.owners)throw Error("Nested Native image cannot attach inside the parent mounted without owners at "+host.mountPoint+"; once, while no process uses it, run `/usr/bin/hdiutil detach "+host.mountPoint+"` and rerun `repo`, which re-attaches the parent canonically with owners on");
+ if(host.owners)return;
+ if(host.mountPoint===modeledParentMount)throw Error("Nested Native image cannot attach inside the parent mounted without owners at "+host.mountPoint+"; once, while no process uses it, run `/usr/bin/hdiutil detach "+host.mountPoint+"` and rerun `repo`, which re-attaches the parent canonically with owners on");
+ throw Error("Native image cannot attach on the volume mounted without owners at "+host.mountPoint+". Enable ownership on the hosting volume before rerunning repo.");
 }

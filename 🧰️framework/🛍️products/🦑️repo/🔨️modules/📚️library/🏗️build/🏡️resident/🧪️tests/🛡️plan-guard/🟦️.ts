@@ -1,6 +1,8 @@
 /** 🛡️ Contract: the pool stops a slice worker for the size of its process tree only when the host is really endangered: before it refuses it asks the worker to settle (collect and shrink) once and measures again, it refuses only when the settled tree is still above the limit and the memory the host can still give out is below the reserve or the memory pressure is raised, and a tree above the absolute ceiling is always refused; the refusal names the tree, the limit, the available memory and the reserve; the limits are the schema's `slicePlanGuard`.
  * @see ../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs */
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import treeSample from "./🧫️fixtures/🔣️tree-sample.json" with {type:"json"};
 import {readFileSync} from "node:fs";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {planGuardVerdictV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs";
@@ -37,17 +39,52 @@ test("the limits are the schema's: 2048 MB reserve, 60 % ceiling",()=>{
 });
 
 type Fake={emit:(event:string,value:unknown)=>void;sent:unknown[]};
-const harness=(options:{observed:()=>number;availableMegabytes?:number;pressure?:()=>string|undefined;answer?:(worker:Fake,set:(megabytes:number)=>void)=>void;wait?:number}) => {
+const harness=(options:{observed:()=>number|Promise<number>;onGuard?:()=>void;availableMegabytes?:number;pressure?:()=>string|undefined;answer?:(worker:Fake,set:(megabytes:number)=>void)=>void;wait?:number}) => {
  const workers:Fake[]=[],lines:string[]=[],state={terminated:0};
  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,cutPolicy:{...GRAPH_CUT_POLICY_V1,levels:0},graceMilliseconds:50,sampleMilliseconds:10,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
   planGuard:{...guard,settleWaitMilliseconds:options.wait??guard.settleWaitMilliseconds},report:(line:string)=>{lines.push(line);},hostPressure:options.pressure??(()=>"normal"),
   headroom:()=>({limitBytes:Infinity,currentBytes:0,...options.availableMegabytes===undefined?{}:{availableBytes:options.availableMegabytes*MiB}}),
   reserve:async({megabytes}:{megabytes:number})=>({megabytes,attach:()=>undefined,release:()=>undefined}),
   observe:async()=>options.observed(),
+  pressure:options.onGuard===undefined?undefined:()=>({sample:()=>{options.onGuard!();return {tripped:false};}}),
   createWorker:()=>{const listeners:Record<string,(value:unknown)=>void>={},sent:unknown[]=[],fake:Fake={emit:(event,value)=>listeners[event]?.(value),sent};workers.push(fake);return{pid:4242,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},send:(message:{type:string})=>{sent.push(message);if(message.type==="settle")queueMicrotask(()=>options.answer?.(fake,()=>undefined));},terminate:async()=>{state.terminated++;return 0;}};}});
  const started=async()=>{for(let tries=0;workers.length===0&&tries<200;tries++)await wait(10);return workers[0]!;};
  return{pool,workers,lines,state,started};
 };
+
+test("a pending native tree sample cannot start another sampling operation",async()=>{
+ const db=new Database(":memory:"),samples:number[]=[];
+ let tick=0,release!:()=>void,atBoundary!:()=>void,resumed!:()=>void;
+ const first=new Promise<void>(resolve=>{release=resolve;}),boundary=new Promise<void>(resolve=>{atBoundary=resolve;}),resumption=new Promise<void>(resolve=>{resumed=resolve;});
+ let released=false;
+ const {pool,started}=harness({
+  observed:async()=>{
+   if(released){resumed();return treeSample.megabytes;}
+   samples.push(1);
+   await first;
+   samples.push(-1);
+   return treeSample.megabytes;
+  },
+  onGuard:()=>{if(++tick===treeSample.ticks)atBoundary();},
+  availableMegabytes:6000,
+ });
+ const run=pool.run({root:"/tmp/plan-tree-sample"}),worker=await started();
+ try{
+  await boundary;
+  const oracle=db.query(`select max(inFlight) as count from (
+   select sum(cast(value as integer)) over (order by key) as inFlight from json_each(?1)
+  )`).get(JSON.stringify(samples)) as {count:number};
+  expect(oracle.count).toBe(treeSample.maximumInFlight);
+  released=true;release();
+  await resumption;
+ }finally{
+  release();
+  worker.emit("message",{type:"done",graph:{}});
+  await run;
+  await pool.close();
+  db.close();
+ }
+});
 
 test("a tree 5 MB over the limit on a host with 6000 MB available is settled once and continues, and the worker is never stopped",async()=>{
  const{pool,lines,state,started}=harness({observed:()=>6558,availableMegabytes:6000,answer:worker=>worker.emit("message",{type:"settled"})}),run=pool.run({root:"/tmp/plan-guard"}),worker=await started();

@@ -90,3 +90,58 @@ Final check: silhouette IoU elevation / front / plan 1:50 0.986 / 0.996 / 0.995,
 - The right hand misses its place under the notebook by 2 to 4 mm in the stand-up keys (wrist limits); the left hand carries it exactly.
 - Thighs and shanks are circular in 2D (revolved profiles), 6 % off their true sections.
 - `kernel-traps` was not re-run on the new solids. Tests and fixtures that embed this asset were not regenerated or run.
+
+## Round 5 handcraft
+
+2026-11-21. Brief `r5-brief.md`. The round-3 scripts (`r3-seated-reader-*.ts`) are the root of the model and still reproduced the catalog byte for byte at the start (all three lists of all four scales and every other member), so they were extended in place; new round-5 tools: `r5-seated-measure.ts` (model against the reference table, any scale, pose or rest frames), `r5-seated-look.sh` (body, structure, thermal cut of the four scales and every pose plus one clip frame as montages), `r5-seated-montage.ts`.
+
+### Reference table (modelled to) and model vs reference, 1:50, rest frames (`bun r5-seated-measure.ts reader --rest`)
+
+| quantity | reference | model | deviation | source |
+|---|---|---|---|---|
+| sitting height (seat to vertex) | 0.875 | 0.896 | +2.4 % | DIN 33402-2 f P50 0.857 at 1.65 m, scaled to 1.68 m |
+| head height chin to vertex (H/7.5) | 0.224 | 0.224 (round 4: 0.232, +3.8 %) | -0.2 % | brief; ISO 7250 f P50 |
+| head breadth over the hair | 0.155 | 0.153 (round 4: 0.160, +3.2 %) | -1.3 % | ISO 7250 f P50 0.147 + hair |
+| shoulder joint above the seat | 0.590 | 0.589 | -0.2 % | 0.818 H - 0.52 H + hip 0.09 above the seat |
+| shoulder joint spacing | 0.330 | 0.330 | 0 % | biacromial 0.365 - 2 x 0.02 |
+| bideltoid breadth in the sweater | 0.450 | 0.438 | -2.7 % | DIN 33402 f P50 0.43 + knit |
+| upper arm / forearm | 0.312 / 0.245 | 0.311 / 0.245 | -0.2 / +0.2 % | Winter 0.186 H / 0.146 H |
+| hand length | 0.181 | 0.178 | -1.4 % | 0.108 H; DIN 33402 |
+| hip breadth seated in jeans | 0.405 | 0.405 | -0.1 % | DIN 33402 f P50 0.39 + jeans |
+| thigh clearance over the raked slats | 0.155 | 0.156 | +0.6 % | DIN 33402 f P50 0.15 + cloth |
+| knee joint height | 0.491 | 0.491 | 0 % | Winter 0.285 H + 12 mm sole |
+| buttock-knee length | 0.595 | 0.603 | +1.4 % | DIN 33402 f P50 0.585 + cloth |
+| calf breadth in jeans | 0.115 | 0.116 | +0.9 % | ANSUR II f 0.107 + 2 x 4 mm denim |
+| shoe length | 0.265 | 0.271 | +2.3 % | 0.152 H foot + 0.02; EU 39 |
+| ankle joint height in the shoe | 0.078 | 0.078 | 0 % | Winter 0.039 H + 12 mm sole |
+
+Every quantity within 3 % at 1:50. The bench, notebook and cup keep the round-3 reference table above (unchanged objects). The rig (joint centres, spine curvature, lumbosacral offset, shoulder joints ahead of the spine) was audited against the table and needed no change.
+
+### Grades (my own look at every sheet; before = catalog state of round 4)
+
+| scale | body before | body after | structure before / after | thermal before / after |
+|---|---|---|---|---|
+| 1:50 | B (hair a thick beanie with a brim over the temples; sleeve caps as balls standing on the shoulders; elbows z-fighting where two equal domes met; chin 8 mm long) | A | A / A (mandible raised with the chin) | A / A |
+| 1:100 | B (same hair and caps; elbow seam) | A | A / A | A / A |
+| 1:200 | B (beanie hair; ragged knee seam where the shank top stood out of the pointed thigh end) | A- | A- / A- | A- / A- |
+| 1:500 | B- (beanie hair; knee seams with dark slivers) | A- | A- / A- | A- / A- |
+| poses 1:50 (seated-upright, reclined-reading, reaching-for-cup, leaning-forward, rising, standing) and clip `lean-back` at 3 s | A- (closed, natural; same hair and cap defects as the body) | A | | |
+
+### Changes
+
+- Head: lower face shortened (chin -0.101 -> -0.094 m on the head bone at 1:50, the same share at 1:100, 1:200, 1:500) so that chin to vertex is H/7.5; mandible of the structure raised with it at 1:50 and 1:100.
+- Hair restated at every scale as drawn-back hair: 5 to 9 mm over the skull, 2 to 4 mm at the temples, down to the nape at the back, hairline crossing the forehead at about 7 cm above the brows at a clear angle (no grazing seam), bun unchanged. At 1:200 and 1:500 the hairline sits a little higher so that the visible face keeps the 0.2 mm printable feature down to 1:350 (the first try failed `PRINT range-end-feature` at 0.186 mm).
+- Shoulders: the sleeve no longer starts with a quarter-sphere dome round the shoulder joint; five stated rows lean the cap inwards under the sweater shoulder (trapezius slope into the deltoid), at 1:50, 1:100, 1:200 and 1:500.
+- Elbows: the forearm's elbow dome is 7 mm smaller than the sleeve's, so the olecranon is one surface (no z-fight) at 1:50 and 1:100.
+- Knees at 1:200 and 1:500: thigh ends full and rounded, shank tops smaller and inside them.
+- 2D of all four scales redrawn from the new bodies (`r3-seated-reader-draw2d.ts`, ruling E1) and written with the volumes (`r3-seated-reader-write.py`, `volumes-insert.py`).
+
+Final: `r3-validate.ts humans/seated-reader --catalog-only` VALID (schema 0, validateAsset 0, print suitability at every scale and range end). `volumes-check.ts --product`: `FAIL: 8 measurement(s) over 4 rule line(s)`, all `volumes-thermal-coverage` on areas the author may not change and already in `area-review.md`: jeans +64 % / +63 %, shoes +40 % (body-model areas, C18), bench +172 % / +156 % and the 1:200 / 1:500 totals that follow from it (C16, filed 2026-11-20), cup +16.3 % at 1:50 (limit 15 %; the cup was not touched, the measured value moved with the shared tessellation change; row already in `area-review.md`). Silhouette, bounds, feature, monotonic, cross-scale, structure coverage, bones, copied green.
+
+Looked at (Read): body sheets of 1:50, 1:100, 1:200, 1:500 (montage `🗑️generated/r5-seated/reader/v2-body.png` and single three-quarter views after each change), head close-ups 1:100 and 1:200, structure and thermal cut of all four scales, the six poses and the clip frame (montage), the product 2D of all four scales.
+
+### Remaining issues
+
+- The black jagged rings round the knees in the front views and the black bar under the raked seat slats are the sheet renderer inking grazing surfaces as depth steps (geometry closed and smooth; `tool-requests.md` 2026-11-21).
+- No cloth folds; the sweater is one smooth knit mass with a single bust mass. The notebook reads thin in the side view because it is held nearly edge-on (A5 pad, 12 mm).
+- Area rows above stay red until the area reviewers decide (not forced, C16/C18).

@@ -26,7 +26,7 @@ struct DumpNodeState {
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DumpNode {
+pub struct DumpNode {
     pub path: String,
     pub kind: &'static str,
     pub rect: [f32; 4],
@@ -36,7 +36,9 @@ struct DumpNode {
     font_size: Option<f32>,
     font_weight: Option<u32>,
     pub visible: bool,
-    pub state: DumpNodeState,
+    state: DumpNodeState,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    graph_hover: Option<semio_ui_declaration::ui::NodeGraphHover>,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -58,7 +60,7 @@ pub(super) struct DumpStructure {
 /// renderer-private one, so a second renderer publishing the same tree needs no new consumer.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct DumpAccessibilityWindow {
+pub struct DumpAccessibilityWindow {
     pub window_id: String,
     pub window_generation: u64,
     pub nodes: Vec<ui_contract::AccessibilityProjectionNode>,
@@ -74,7 +76,7 @@ pub(super) struct DumpAccessibilityWindow {
 /// window, in the order the engine tracks them, which is the reading order across the dock.
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct DumpAccessibility {
+pub struct DumpAccessibility {
     pub window_id: Option<String>,
     pub window_ids: Vec<String>,
     pub windows: Vec<DumpAccessibilityWindow>,
@@ -203,6 +205,8 @@ pub fn ui_node_kind_tag(node: &UiNode) -> &'static str {
         UiNode::Field(_) => "field",
         UiNode::Section(_) => "section",
         UiNode::Group(_) => "group",
+        UiNode::CardStack(_) => "cardStack",
+        UiNode::OverviewCard(_) => "overviewCard",
         UiNode::Tree(_) => "tree",
         UiNode::Image(_) => "image",
         UiNode::ComponentScene(_) => "componentScene",
@@ -229,6 +233,8 @@ fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
         UiNode::Field(n) => Some(n.id.as_str()),
         UiNode::Section(n) => Some(n.id.as_str()),
         UiNode::Group(n) => Some(n.id.as_str()),
+        UiNode::CardStack(n) => Some(n.id.as_str()),
+        UiNode::OverviewCard(n) => Some(n.id.as_str()),
         UiNode::Progress(n) => Some(n.id.as_str()),
         UiNode::Image(n) => Some(n.id.as_str()),
         UiNode::ComponentScene(n) => Some(n.surface_id.as_str()),
@@ -329,7 +335,8 @@ fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<St
             None => (None, None, None, None),
         },
         UiNode::Group(group) => (Some(group.label.as_str().to_string()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),
-        UiNode::Tree(_) => (None, None, None, None),
+        UiNode::CardStack(_) | UiNode::Tree(_) => (None, None, None, None),
+        UiNode::OverviewCard(card) => (Some(card.title.as_str().to_string()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),
         UiNode::Image(image) => (image.alt.as_ref().map(|alt| alt.as_str().to_string()), None, None, None),
         UiNode::ComponentScene(_) => (None, None, None, None),
         UiNode::ExternalSlot(_) => (None, None, None, None),
@@ -378,6 +385,10 @@ pub fn walk_dump(tree: &semio_ui_retained_tree::tree::UiTree, id: NodeId, origin
     }
 
     let (text, color, bg, font_size) = dump_visual_fields(ui_node, theme, hovered);
+    let graph_hover = match ui_node {
+        UiNode::ComponentScene(scene) => scene.node_graph.as_ref().and_then(|graph| graph.hover.clone()),
+        _ => None,
+    };
     nodes.push(DumpNode {
         path: path.clone(),
         kind: ui_node_kind_tag(ui_node),
@@ -389,6 +400,7 @@ pub fn walk_dump(tree: &semio_ui_retained_tree::tree::UiTree, id: NodeId, origin
         font_weight: None,
         visible: presence.visible(),
         state: DumpNodeState { hovered, disabled, selected: presence.selected },
+        graph_hover,
     });
 
     for (index, child) in tree.children(id).enumerate() {

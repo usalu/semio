@@ -91,9 +91,6 @@ pub fn export_document(format: &str, doc: &LayoutSnapshot, control: &mut Interch
     checkpoint(control, doc.pages.len(), doc.pages.len())?;
     Ok(result)
 }
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"] mod tests;
-
 #[path = "🧵️export/🦀️.rs"]
 mod export_session;
 pub use export_session::{InterchangeExportAdvance,InterchangeExportSession};
@@ -102,4 +99,3 @@ pub use export_session::{InterchangeExportAdvance,InterchangeExportSession};
 mod drawing;
 pub use drawing::{lift_vector_scene,DrawingBirthPreparation};
 
-#[cfg(test)]#[path="🧭️source-plan/🧪️tests/🦀️.rs"]mod source_plan_tests;

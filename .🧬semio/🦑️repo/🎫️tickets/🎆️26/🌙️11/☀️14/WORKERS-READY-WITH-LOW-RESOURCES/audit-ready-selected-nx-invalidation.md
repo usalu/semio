@@ -1,0 +1,15 @@
+# Ready Workspace Invalidation for Selected Nx
+
+At 08:49 UTC on November 21, the replicated records still showed six workers with fresh Ready heartbeats and their original November 18 workspace completions. The latest terminal workspace receipts for m05, m11 and m12 were failures, and all three had active retries. The old Ready workspace digest used only the platform and stage name. A fresh heartbeat could therefore keep reusing a completion issued before the Nx changes.
+
+The workspace stage now declares selected Nx command inputs, the tool recipe and lock, the actual Nx patch, and source files and policies that govern authorizer compilation, receipt verification, loading, SDK reuse and descriptor reads. The fingerprint is a bounded list of existing repository inputs. It avoids launching Nx, opening its generated SDK or capturing the whole authorizer closure while Ready is idle. Future changes outside these declared files remain outside this Ready invalidation boundary.
+
+The file port opens each requested input and compares bigint descriptor stamps. Unchanged readable files reuse their content hashes. Changed files are read and checked against the same descriptor and named file before caching. Missing, unreadable, changing and non-regular inputs drop any cached value. This also preserves content-based digest stability across ordinary restarts and equal-content replacements.
+
+The former workspace digest will become stale once this declaration is active. A replacement completion comes from the existing supervised workspace command. Its guarded build and tooling caches can be reused when their own authorities hold. A scope change or a fresh heartbeat alone provides no completion. The other readiness stages keep independent digests, and the existing marker-only first adoption policy remains in force.
+
+The neutral fixture reproduced the selected-lock invalidation gap before the change. It now checks authored expected invalidation and compares the exact decision with an independent Python implementation for Linux, macOS and Windows. Selected Nx policy, lock, patch and runtime changes invalidate workspace. An unrelated patch and an observer restart preserve Ready. A root dependency lock edit continues to invalidate dependencies. Local port tests cover a same-size replacement with a restored modification time, deletion, a directory at the input name and hashing after restart. No live worker operation was issued.
+
+The declaration has a test against the selected tooling manifest’s unique `semio.toolPatches` Nx entry and the actual file. A future recipe path change fails that test until the Ready roster follows the selected patch.
+
+All 49 main Ready tests passed in the broader run. Its stage-completion fixtures require an absolute scratch directory to launch their exact script and initially received a ticket-relative directory. The isolated rerun used the absolute ticket artifact path and passed all eight stage-completion tests with 300 assertions. The five focused digest, roster and file-cache tests passed with 107 assertions on the final source.

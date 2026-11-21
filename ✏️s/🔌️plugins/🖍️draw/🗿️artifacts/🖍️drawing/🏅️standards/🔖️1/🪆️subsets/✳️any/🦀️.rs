@@ -6,7 +6,7 @@
 use semio_s_artifact_draw_drawing_examples::examples;
 use semio_s_artifact_draw_drawing_editor as editor;
 use semio_s_artifact_draw_drawing_viewer as viewer;
-use semio_s_artifact_draw_drawing_model::DRAWING_DIALECT;
+use semio_s_artifact_draw_drawing_model::{DRAWING_DIALECT, inferences::drawing_artifact_inference_descriptor};
 use semio_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_plugin::ExampleSource;
 use std::sync::OnceLock;
@@ -14,7 +14,7 @@ use std::sync::OnceLock;
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
-    DESCRIPTORS.get_or_init(|| vec![schema::inferences::drawing_artifact_inference_descriptor()]).as_slice()
+    DESCRIPTORS.get_or_init(|| vec![drawing_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.

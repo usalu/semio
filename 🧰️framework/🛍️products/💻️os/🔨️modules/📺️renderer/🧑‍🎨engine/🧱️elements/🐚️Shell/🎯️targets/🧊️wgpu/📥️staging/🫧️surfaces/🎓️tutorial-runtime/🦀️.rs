@@ -109,7 +109,7 @@ pub fn tutorial_camera_to_orbit(state: &semio_framework::onboarding::TutorialCam
 }
 
 pub fn tutorial_capture_camera_pose(surfaces: &SurfaceState, window_id: &str) -> Option<semio_framework::onboarding::TutorialCameraState> {
-    surfaces.world3d_state_for_window(window_id).or_else(|| surfaces.icon_render_states.get(window_id)).map(|world| orbit_to_tutorial_camera(&world.orbit))
+    surfaces.world3d_state_for_window(window_id).or_else(|| surfaces.icon_render_states.get(window_id)).map(|world| orbit_to_tutorial_camera(&world.camera.orbit))
 }
 
 pub fn tutorial_apply_camera_pose(surfaces: &mut SurfaceState, window_id: &str, pose: &semio_framework::onboarding::TutorialCameraState) {
@@ -117,10 +117,10 @@ pub fn tutorial_apply_camera_pose(surfaces: &mut SurfaceState, window_id: &str, 
         return;
     };
     if let Some(world) = surfaces.world3d_state_for_window_mut(window_id) {
-        world.orbit = orbit.clone();
+        world.camera.orbit = orbit.clone();
     }
     if let Some(world) = surfaces.icon_render_states.get_mut(window_id) {
-        world.orbit = orbit;
+        world.camera.orbit = orbit;
     }
 }
 

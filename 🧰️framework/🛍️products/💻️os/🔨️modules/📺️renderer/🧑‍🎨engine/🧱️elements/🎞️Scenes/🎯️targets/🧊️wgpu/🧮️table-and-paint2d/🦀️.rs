@@ -271,7 +271,7 @@ fn render_table_cell(cell: &Value, id: &str, rect: Rect, ctx: &mut FrameworkWidg
 
 /// 📐️ A table's fixed metrics — the ONE derivation the paint lays rows out with and the pointer
 /// path re-derives hits from, so a header band, a row band and their hit bands cannot drift.
-struct TableMetrics {
+pub struct TableMetrics {
     pub(crate) header_h: f32,
     pub row_h: f32,
     pub(crate) pad: f32,

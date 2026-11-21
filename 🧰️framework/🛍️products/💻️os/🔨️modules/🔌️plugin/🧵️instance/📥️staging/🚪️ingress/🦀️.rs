@@ -1,6 +1,4 @@
-//! 📒️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-app` members (WP6 step S0 of the instance family).
-//!
-//! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
+//! 🚪️ Mount constructors, store and envelope ingress, document archives, and child members.
 use semio_plugin_instance_stores::stores_components::{ActionIngress, ConstructorState, InstanceStores, LocalInteraction, PeerRoster};
 use semio_framework::kernel::ActorId;
 use semio_plugin_window_kits::AppActionRegistry;
@@ -45,8 +43,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         Self::with_registry(app, AppActionRegistry::default(), actor, mounted_policy, identity).await
     }
 
-    /// 🧬️ Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
-    /// enforces default materialization, required-arg validation, and kind discipline.
+    /// 🧬️ Mounts with the action registry for defaults, required arguments, and kind checks.
 
     /// 🧱 Runs `initial_snapshot` on its own frame so fixture sync cannot nest inside envelope construction.
     #[inline(never)]

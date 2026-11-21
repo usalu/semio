@@ -41,6 +41,7 @@ semio-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️p
 semio-renderer-wgpu-shell-view-chrome = { path = "../../../🍱️shell-view-chrome/📦️packages/🦀️rust" }
 semio-renderer-wgpu-ui-engine = { path = "../../../🖱️ui-engine/📦️packages/🦀️rust" }
 semio-renderer-wgpu-ui-engine-focus = { path = "../../../👆️ui-engine-focus/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

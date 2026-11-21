@@ -232,7 +232,7 @@ impl LayoutExportJob {
             if entered.is_none(){return Ok(());}if !self.pdf_items.reserve_one_in(&mut work,effect)?||!self.pdf_pages.reserve_one_in(&mut work,effect)?{return Ok(());}
             if self.pdf_items.len()>=MAX_LAYOUT_EXPORT_DECODED_ITEMS{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout-export-item-limit").into());}
             if self.text.as_ref().is_some_and(ExportTextState::has_active){if let Some(item)=self.text.as_mut().unwrap().advance_one_in(&snapshot,&mut work,effect)?{self.push_plan_item(item,&mut work).map_err(Fault::from)?;}return Ok(());}
-            self.plan_pdf_one(effect,&mut work,drawing_read).map_err(Fault::from)?;Ok(())
+            self.plan_pdf_one(effect,&mut work,drawing_read)
         };
         let run=|_:&mut StepContext<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>|->Result<(),semio_framework_job::OriginalTurnFailure>{
             let result=plan(effect);
@@ -294,18 +294,34 @@ impl LayoutExportJob {
 
     pub(super) fn begin_encode_one(&mut self,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.emit_output_one(context,false,|job,work|{job.begin_encoder(work)?;job.stage=ExportStage::Encode;Ok(())})}
 
-    pub(super) fn encode_one(&mut self,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub(super) fn encode_one(&mut self,context:&mut StepContext<'_>,drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if matches!(self.request.as_ref().unwrap().kind,LayoutExportKind::Svg|LayoutExportKind::Png|LayoutExportKind::Pdf){
             let fidelity=self.fidelity.get_or_insert_with(FidelityState::new);
             if !fidelity.prepared{if !fidelity.prepare_image_one(&mut self.pdf_items,&self.request.as_ref().unwrap().snapshot,context).map_err(Fault::from)?{return Ok(true);}let grant=context.retained_grant();let mut work=semio_framework_2d_text_font::work::RetainedWorkLedger::new(grant);let Some((result,performed))=context.with_original_effect(grant,|_,effect|{let result=fidelity.prepare_one(&self.pdf_items,self.text.as_ref(),self.drawing.as_ref(),&mut work,effect);semio_s_artifact_layout_layout_engine::scene::metadata_index::record_native_step(effect).map_err(|error|error.to_string())?;result})?else{return Ok(true)};context.consume_work(performed);context.consume_retained(work.receipt())?;result.map_err(Fault::from)?;return Ok(true);}
         }
         if self.request.as_ref().is_some_and(|request|request.kind==LayoutExportKind::Pdf)&&!self.prepare_pdf_offset_in(context)?{return Ok(false)}
-        self.emit_output_one(context,false,|job,work|match job.request.as_ref().unwrap().kind{LayoutExportKind::Svg=>job.encode_svg_one(work),LayoutExportKind::Pdf=>job.encode_pdf_one(work),LayoutExportKind::Png=>job.encode_png_one(work),LayoutExportKind::Package=>job.encode_package_one(work),LayoutExportKind::Step|LayoutExportKind::Idml=>job.encode_interchange_one(work)})
+        let graph=if self.required_step_drawing().is_some(){
+            let read=drawing_read.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"STEP requires an original qualified Drawing read"))?;
+            let step=match read.vector.read(read.source,context.retained_grant()){
+                Ok(step)=>step,
+                Err(error)=>{context.consume_retained(error.retained_progress())?;return Err(error.into());}
+            };
+            context.consume_retained(step.progress)?;
+            if !step.done{return Ok(false);}
+            Some(step.graph.ok_or_else(||semio_framework_value::ValueError::invariant("Qualified STEP Drawing graph is missing"))?)
+        }else{None};
+        self.emit_output_one(context,false,|job,work|match job.request.as_ref().unwrap().kind{LayoutExportKind::Svg=>job.encode_svg_one(work),LayoutExportKind::Pdf=>job.encode_pdf_one(work),LayoutExportKind::Png=>job.encode_png_one(work),LayoutExportKind::Package=>job.encode_package_one(work),LayoutExportKind::Step|LayoutExportKind::Idml=>job.encode_interchange_one(work,graph)})
     }
 
-    fn encode_interchange_one(&mut self,work:&mut OutputWork) -> Result<(), String> {
-        let snapshot = &self.request.as_ref().unwrap().snapshot;
-        match self.interchange_session.as_mut().ok_or("layout-export-session-missing")?.advance(snapshot)? {
+    fn encode_interchange_one(&mut self,work:&mut OutputWork,drawing:Option<&dyn semio_framework_io_ports::VectorGraphSourceV1>) -> Result<(), String> {
+        let request = self.request.as_ref().unwrap();
+        let session = self.interchange_session.as_mut().ok_or("layout-export-session-missing")?;
+        let step = if request.kind==LayoutExportKind::Step {
+            session.advance_with_original_step_drawing(&request.snapshot,drawing)?
+        }else{
+            session.advance(&request.snapshot)?
+        };
+        match step {
             InterchangeExportAdvance::Chunk(bytes) => self.output.append(&bytes,work),
             InterchangeExportAdvance::Progress { .. } => Ok(()),
             InterchangeExportAdvance::Done => {

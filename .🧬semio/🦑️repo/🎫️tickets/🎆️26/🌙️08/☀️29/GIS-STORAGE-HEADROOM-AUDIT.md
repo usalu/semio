@@ -1,0 +1,5 @@
+# GIS Storage Headroom Audit
+
+Saved Surface benchmark logs identify compiler lanes `pd65fe9` (baseline), `p3430bc` (optimized), and `p98e9b9` (WASM check). All three lane directories were absent at the inspection. The current GIS launch log identifies lane `p63442a`, which exists and is the held warm build lane. The earlier GIS lane `p29b103` was also absent. These observations do not measure other shared artifacts and do not authorize manual removal.
+
+The component driver already calls managed unit-storage relief before compilation, installs pressure rechecks, and supplies on-demand unit-storage reclamation. The older ticket dry-run reported approximately 316 MiB of individually identified removals and declined quota tightening on volumes where access times cannot distinguish used from unused caches. That report is historical; use the current managed dry-run for present decisions. The ticket's generated data is small relative to the physical floor. No additional safe manual reclamation was established, and the live GIS lane and native staging should remain intact while the build runs.

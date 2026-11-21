@@ -404,49 +404,72 @@ fn group_row(group: &ChecksGroup, group_index: usize, state: &ChecksViewState, l
     builder.try_build().map_err(|_| row_error("ui.node.build"))
 }
 
+fn check_subtree_nodes(node: &BuiltNode) -> usize {
+    1 + node.children.iter().map(check_subtree_nodes).sum::<usize>()
+}
+
 enum ChecksListRow<'a> {
     Group { index: usize, group: &'a ChecksGroup },
     Check { index: usize },
 }
 
-fn summary_rows(report: &CheckReport, state: &ChecksViewState, locale: Locale, spec: &ChecksWindowSpec) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let summary = &report.summary;
-    let verdict = if summary.complies { chrome("✓ Complies", "✓ Erfüllt", locale) } else { chrome("✗ Does not comply", "✗ Nicht erfüllt", locale) };
-    let description = format!("✓{} ⚠{} ✗{} ∅{} · u {}", summary.pass, summary.warning, summary.fail, summary.not_applicable, utilisation_percent_text(summary.worst_utilization, locale));
-    let mut rows = vec![tree_item_desc("norm-checks.summary.verdict", norm_ui_label(verdict)?, Some(description))?];
-    for (part_index, part) in summary.parts.iter().enumerate() {
-        let state_glyph = if part.complies { '✓' } else { '✗' };
-        rows.push(tree_item_desc(
-            format!("norm-checks.summary.part-{part_index}"),
-            norm_ui_label(format!("{state_glyph} {}", part.part))?,
-            Some(format!("✓{} ⚠{} ✗{} ∅{} · u {}", part.pass, part.warning, part.fail, part.not_applicable, utilisation_percent_text(part.worst_utilization, locale))),
-        )?);
-    }
-    if let Some(pending) = state.pending {
-        rows.push(tree_item_desc("norm-checks.summary.pending", norm_ui_label(chrome("Evaluating…", "Berechnung läuft…", locale))?, Some(format!("{} / {}", pending.completed, pending.total)))?);
-        if let (Some(controller_id), true) = (spec.controller_id, spec.actions.cancel_evaluation) {
-            rows.push(tree_item_with_action("norm-checks.summary.cancel", norm_ui_label(chrome("Cancel evaluation", "Berechnung abbrechen", locale))?, None, norm_action(controller_id, "cancelEvaluation", None)?)?);
-        }
-    }
-    if let (Some(controller_id), true) = (spec.controller_id, spec.actions.view_controls) {
-        rows.extend(view_control_rows(state, locale, controller_id)?);
-    }
-    ui_node_list(rows.into_iter().map(Ok))
+enum ChecksSummaryRow {
+    Verdict,
+    Part(usize),
+    Pending(ChecksPending),
+    Cancel(&'static str),
+    View { id: String, label: String, state: ChecksViewState, controller: &'static str },
 }
 
-fn view_control_rows(state: &ChecksViewState, locale: Locale, controller_id: &'static str) -> UiAssemblyResult<Vec<BuiltNode>> {
+fn summary_rows(report: &CheckReport, state: &ChecksViewState, locale: Locale, spec: &ChecksWindowSpec) -> Vec<ChecksSummaryRow> {
+    let mut rows = vec![ChecksSummaryRow::Verdict];
+    if let Some(pending) = state.pending {
+        rows.push(ChecksSummaryRow::Pending(pending));
+        if let (Some(controller), true) = (spec.controller_id, spec.actions.cancel_evaluation) {
+            rows.push(ChecksSummaryRow::Cancel(controller));
+        }
+    }
+    if let (Some(controller), true) = (spec.controller_id, spec.actions.view_controls) {
+        view_control_rows(&mut rows, state, locale, controller);
+    }
+    rows.extend((0..report.summary.parts.len()).map(ChecksSummaryRow::Part));
+    rows
+}
+
+fn summary_row(report: &CheckReport, row: &ChecksSummaryRow, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+    let summary = &report.summary;
+    match row {
+        ChecksSummaryRow::Verdict => {
+            let verdict = if summary.complies { chrome("✓ Complies", "✓ Erfüllt", locale) } else { chrome("✗ Does not comply", "✗ Nicht erfüllt", locale) };
+            let description = format!("✓{} ⚠{} ✗{} ∅{} · u {}", summary.pass, summary.warning, summary.fail, summary.not_applicable, utilisation_percent_text(summary.worst_utilization, locale));
+            tree_item_desc("norm-checks.summary.verdict", norm_ui_label(verdict)?, Some(description))
+        }
+        ChecksSummaryRow::Part(index) => {
+            let part = &summary.parts[*index];
+            let state_glyph = if part.complies { '✓' } else { '✗' };
+            tree_item_desc(
+                format!("norm-checks.summary.part-{index}"),
+                norm_ui_label(format!("{state_glyph} {}", part.part))?,
+                Some(format!("✓{} ⚠{} ✗{} ∅{} · u {}", part.pass, part.warning, part.fail, part.not_applicable, utilisation_percent_text(part.worst_utilization, locale))),
+            )
+        }
+        ChecksSummaryRow::Pending(pending) => tree_item_desc("norm-checks.summary.pending", norm_ui_label(chrome("Evaluating…", "Berechnung läuft…", locale))?, Some(format!("{} / {}", pending.completed, pending.total))),
+        ChecksSummaryRow::Cancel(controller) => tree_item_with_action("norm-checks.summary.cancel", norm_ui_label(chrome("Cancel evaluation", "Berechnung abbrechen", locale))?, None, norm_action(controller, "cancelEvaluation", None)?),
+        ChecksSummaryRow::View { id, label, state, controller } => {
+            let args = action_args_map(vec![("view", ui_value_text(state.encode())?)])?;
+            tree_item_with_action(id, norm_ui_label(label)?, None, norm_action(controller, "setChecksView", Some(args))?)
+        }
+    }
+}
+
+fn view_control_rows(rows: &mut Vec<ChecksSummaryRow>, state: &ChecksViewState, locale: Locale, controller: &'static str) {
     let mark = |on: bool| if on { "●" } else { "○" };
-    let mut rows = Vec::new();
-    let mut push = |id: String, label: String, next: ChecksViewState| -> UiAssemblyResult<()> {
-        let args = action_args_map(vec![("view", ui_value_text(next.encode())?)])?;
-        rows.push(tree_item_with_action(id, norm_ui_label(label)?, None, norm_action(controller_id, "setChecksView", Some(args))?)?);
-        Ok(())
-    };
+    let mut push = |id, label, state| rows.push(ChecksSummaryRow::View { id, label, state, controller });
     for (name_en, name_de, grouping) in [("entity", "Gegenstand", ChecksGrouping::Entity), ("clause", "Klausel", ChecksGrouping::Clause), ("part", "Teil", ChecksGrouping::Part)] {
-        push(format!("norm-checks.control.group-{name_en}"), format!("{} {}: {}", mark(state.grouping == grouping), chrome("Group by", "Gruppieren nach", locale), chrome(name_en, name_de, locale)), ChecksViewState { grouping, ..state.clone() })?;
+        push(format!("norm-checks.control.group-{name_en}"), format!("{} {}: {}", mark(state.grouping == grouping), chrome("Group by", "Gruppieren nach", locale), chrome(name_en, name_de, locale)), ChecksViewState { grouping, ..state.clone() });
     }
     for (name_en, name_de, sort) in [("worst first", "Schlechteste zuerst", ChecksSort::WorstFirst), ("report order", "Berichtsreihenfolge", ChecksSort::ReportOrder), ("clause", "Klausel", ChecksSort::ClauseOrder), ("title", "Titel", ChecksSort::Title)] {
-        push(format!("norm-checks.control.sort-{}", name_en.replace(' ', "-")), format!("{} {}: {}", mark(state.sort == sort), chrome("Sort", "Sortieren", locale), chrome(name_en, name_de, locale)), ChecksViewState { sort, ..state.clone() })?;
+        push(format!("norm-checks.control.sort-{}", name_en.replace(' ', "-")), format!("{} {}: {}", mark(state.sort == sort), chrome("Sort", "Sortieren", locale), chrome(name_en, name_de, locale)), ChecksViewState { sort, ..state.clone() });
     }
     let toggles: [(&str, &str, &str, bool); 4] = [("pass", "Bestanden", "pass", state.filter.pass), ("warning", "Warnung", "warning", state.filter.warning), ("fail", "Nicht bestanden", "fail", state.filter.fail), ("not applicable", "Nicht anwendbar", "na", state.filter.not_applicable)];
     for (slot, (name_en, name_de, id, on)) in toggles.into_iter().enumerate() {
@@ -457,9 +480,8 @@ fn view_control_rows(state: &ChecksViewState, locale: Locale, controller_id: &'s
             2 => next.filter.fail = !on,
             _ => next.filter.not_applicable = !on,
         }
-        push(format!("norm-checks.control.show-{id}"), format!("{} {}: {}", mark(on), chrome("Show", "Anzeigen", locale), chrome(name_en, name_de, locale)), next)?;
+        push(format!("norm-checks.control.show-{id}"), format!("{} {}: {}", mark(on), chrome("Show", "Anzeigen", locale), chrome(name_en, name_de, locale)), next);
     }
-    Ok(rows)
 }
 
 /// ✅️ Renders the checks window with default view state; the minimal replacement of the retired report tree.
@@ -476,11 +498,20 @@ pub fn render_checks_with(report: &CheckReport, state: &ChecksViewState, spec: &
         rows.push(ChecksListRow::Group { index, group });
         rows.extend(group.rows.iter().map(|check_index| ChecksListRow::Check { index: *check_index }));
     }
-    let mut tree = PanelTreeBuilder::new(NORM_CHECKS_TREE_ID)?.section(
+    let summary = summary_rows(report, state, locale, spec);
+    let mut remaining = semio_ui_contract::UI_DOCUMENT_NODES
+        .saturating_sub(5.max(semio_ui_contract::TREE_WINDOW_FIXED_NODE_HEADROOM));
+    let mut tree = PanelTreeBuilder::new(NORM_CHECKS_TREE_ID)?.window_section(
+        windows,
         NORM_CHECKS_SUMMARY_ID,
         Some(norm_ui_label(chrome("Summary", "Zusammenfassung", locale))?),
         true,
-        summary_rows(report, state, locale, spec)?,
+        &summary,
+        |row| {
+            let node = summary_row(report, row, locale)?;
+            remaining = remaining.checked_sub(check_subtree_nodes(&node)).ok_or_else(|| row_error("ui.fixed-capacity"))?;
+            Ok(node)
+        },
     )?;
     if let (Some(controller_id), Some(domain)) = (spec.controller_id, spec.interaction_domain) {
         tree = tree.interaction_domain(controller_id, domain.to_string())?;
@@ -492,9 +523,13 @@ pub fn render_checks_with(report: &CheckReport, state: &ChecksViewState, spec: &
             Some(norm_ui_label(chrome("Checks", "Nachweise", locale))?),
             true,
             &rows,
-            |row| match row {
-                ChecksListRow::Group { index, group } => group_row(group, *index, state, locale, spec),
-                ChecksListRow::Check { index } => check_row(&report.checks[*index], *index, state, locale, spec),
+            |row| {
+                let node = match row {
+                    ChecksListRow::Group { index, group } => group_row(group, *index, state, locale, spec),
+                    ChecksListRow::Check { index } => check_row(&report.checks[*index], *index, state, locale, spec),
+                }?;
+                remaining = remaining.checked_sub(check_subtree_nodes(&node)).ok_or_else(|| row_error("ui.fixed-capacity"))?;
+                Ok(node)
             },
             norm_ui_label(if report.checks.is_empty() { chrome("No checks computed.", "Keine Nachweise berechnet.", locale) } else { chrome("No checks match the filter.", "Keine Nachweise passen zum Filter.", locale) })?,
         )?

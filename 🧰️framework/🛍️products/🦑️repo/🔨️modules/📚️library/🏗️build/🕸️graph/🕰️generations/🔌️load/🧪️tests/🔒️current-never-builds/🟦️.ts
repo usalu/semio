@@ -4,8 +4,13 @@ import {mkdtempSync,realpathSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
+import ts from "typescript";
+import {writeJsonStreamV1} from "../../../🌊️json-stream/🟨️.mjs";
+import {boundGenerationPinV1} from "../../../../📍️pin/🟦️.ts";
+import {buildInvocationGraphSelectionV1,readBuildOwnerRegistryV1} from "../../../../🚪️admission/🟦️.ts";
+import {selectLiteralBuildProjectsV1} from "../../../../../🧭️selection/📥️options/🟦️.ts";
 import {canonicalJsonV1} from "../../../🟨️.mjs";
-import {generationAgeTextV1,loadGenerationGraphV1,renderGenerationMessageV1,renderWholeReadProgressV1} from "../../🟨️.mjs";
+import {extractGraphPolicyV1,generationAgeTextV1,loadGenerationGraphV1,renderGenerationMessageV1,renderWholeReadProgressV1} from "../../🟨️.mjs";
 import {applyOps,createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃️world/🟦️.ts";
 import {reportBoundaryErrorV1} from "../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts";
 
@@ -77,6 +82,57 @@ test("a closure read under the policy current keeps its way: no whole-workspace 
   const{graph}=await loadGenerationGraphV1(mock.host,{policy:"current",closure:["p1"]});
   expect(Object.keys((graph as any).projects)).toContain("p1");
   expect(mock.said.some(row=>row.key==="sealedAge")).toBe(false);
+ }finally{clean(dir);}
+});
+
+test("a current project query reads the sealed graph without selected facts custody or any fallback writer",async()=>{
+ const dir=scratch(),name="@semio-tech/framework-os-dev",files=ringFiles(6),manifest="pkg/p2/project.json";
+ try{
+  files[manifest]=JSON.stringify({...JSON.parse(files[manifest]!),name});
+  await seed(dir,files);
+  const runtime=new URL("../../../../../⌨️command/⚙️runtime/🟦️.ts",import.meta.url),source=await Bun.file(runtime).text(),tree=ts.createSourceFile(runtime.pathname,source,ts.ScriptTarget.Latest,true);
+  const names=["runOwnedBuildInLeasesV1","runBuildGraphQueryV1"],functions=names.map(name=>tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text===name));
+  const program=ts.transpileModule(functions.map(node=>node?.getText(tree)??"").join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText.replace(/\bimport\(/gu,"load(").replaceAll("import.meta.dirname","''").replace(/\bexport \{\};\s*$/u,"");
+  const args=["show","project",name,"--graph-policy=current","--json"],selected=extractGraphPolicyV1(args,{}),invocation={control:{signal:new AbortController().signal}},phase={},packets:string[]=[],preGraph:string[]=[];
+  const refuse=()=>{throw Error("Current project query attempted writer admission");};
+  async function query(mock:ReturnType<typeof createMockHost>){
+   Object.assign(mock.host,{withBuilder:refuse,membership:refuse,exchange:{ahead:refuse,upload:true,publish:refuse},settleClosure:refuse,sealed:refuse});
+   const load=async(specifier:string)=>{
+    if(specifier.endsWith("/🚀️bootstrap/⌨️cli/🟦️.ts"))return {runNativeRepoRecoveryV1:async()=>false};
+    if(specifier.endsWith("/🚀️bootstrap/⌨️cli/🔌️ports/🟦️.ts"))return {};
+    if(specifier.endsWith("/🕸️graph/📍️pin/🟦️.ts"))return {boundGenerationPinV1};
+    if(specifier.endsWith("/📥️opening/🏪️store/🟦️.ts"))return {withRepositoryCacheStoreV1:async(_root:string,_partition:string,_invocation:unknown,_control:unknown,body:(store:unknown,phase:unknown)=>unknown)=>body({},phase)};
+    if(specifier.endsWith("/🕸️graph/🚪️admission/🟦️.ts"))return {buildInvocationGraphSelectionV1,readBuildOwnerRegistryV1};
+    if(specifier.endsWith("/📥️options/🟦️.ts"))return {selectLiteralBuildProjectsV1};
+    if(specifier.endsWith("/📥️inference/🟨️.mjs"))return {readBuildOwnerRegistrySourceV1:()=>JSON.stringify({version:1,owners:[{name,root:"pkg/p2",manifest:"pkg/p2/📋️project.json",packages:[]}],catalogProviders:[]})};
+    if(specifier.endsWith("/🕸️graph/🟦️.ts"))return {loadBuildGraphV1:async(_root:string,_original:unknown,_control:unknown,options:{selection:unknown;graph:Parameters<typeof loadGenerationGraphV1>[1]})=>{
+     if(JSON.stringify(options.selection)!=='{"kind":"all"}')throw Error("Current project query requested selected graph facts");
+     return (await loadGenerationGraphV1(mock.host,options.graph)).graph;
+    }};
+    if(specifier.endsWith("/🧭️selection/🟦️.ts"))return {buildOptionV1:()=>undefined};
+    if(specifier.endsWith("/🌊️json-stream/🟨️.mjs"))return {writeJsonStreamV1};
+    throw Error("Unexpected current query import "+specifier);
+   };
+   const ports={load,process:{env:{}},profilePhaseV1:(_name:string,fn:()=>unknown)=>fn(),profileMarkV1:()=>{},markBuildCapacityPhaseV1:async()=>{},ensureTaskDependenciesV1:async()=>{preGraph.push("dependencies");},maintainTaskStoresV1:async()=>{preGraph.push("maintenance");},withRepositoryCommandEnvironmentV1:(_root:string,_args:unknown,_original:unknown,_phase:unknown,body:(context:unknown)=>unknown)=>body({selected:{graphPolicy:selected.policy},resolved:{args:selected.args},invocation}),machineOutputV1:{write:(text:string,callback?:(error?:Error)=>void)=>{packets.push(text);callback?.();}}};
+   const run=new Function(...Object.keys(ports),program+";return runOwnedBuildInLeasesV1")(...Object.values(ports));
+   await run(dir,args,invocation,phase);
+  }
+  const empty=createMockHost(dir);
+  await expect(query(empty)).rejects.toMatchObject({code:"GENERATION_NONE_SEALED"});
+  expect(empty.events).toEqual(["shared"]);expect(empty.holdsLog).toEqual([]);expect(empty.log).toEqual([]);expect(packets).toEqual([]);
+  await loadGenerationGraphV1(createMockHost(dir).host);
+  const expected=pythonGraph(dir).projects[name],pointer=join(dir,".gen","current.json"),before=await Bun.file(pointer).text();
+  await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const changed=2;\n'}]);
+  expect(pythonGraph(dir).projects[name]).not.toEqual(expected);
+  const current=createMockHost(dir);
+  await query(current);
+  expect(JSON.parse(packets.join(""))).toEqual(expected);
+  expect(current.events).toEqual(["shared"]);expect(current.holdsLog).toEqual([]);expect(current.log).toEqual([]);
+  const broken=createMockHost(dir),key="a".repeat(64);
+  broken.host.expand=async()=>{throw Object.assign(Error("ENOENT: lstat 'build-input-closures/"+key+".json'"),{code:"ENOENT"});};
+  await expect(query(broken)).rejects.toMatchObject({code:"closure-missing",missingClosure:key});
+  expect(broken.events).toEqual(["shared"]);expect(broken.holdsLog).toEqual([]);expect(broken.log).toEqual([]);
+  expect(await Bun.file(pointer).text()).toBe(before);expect(preGraph).toEqual([]);
  }finally{clean(dir);}
 });
 

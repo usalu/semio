@@ -31,6 +31,13 @@ test("Flow-shaped compiler source drift reaches exit 75 only for a proven edit",
       const detail=scenario==="change"?source:scenario==="ordinary"?`fixture-WASM failed (${fixture.ordinaryCompilerStatus})`:"fixture parent cancellation";
       expect(result.stderr).toContain(detail);
       expect(result.stderr).not.toContain("cancelled its original control");
+      const prefix="cargo:running-source-digest-mismatch:";
+      const diagnostics=result.stderr.split("\n").filter(line=>line.startsWith("[script] {")).flatMap(line=>{
+        const resource=JSON.parse(line.slice(9)).activity?.resource;
+        return typeof resource==="string"&&resource.startsWith(prefix)?[JSON.parse(resource.slice(prefix.length))]:[];
+      });
+      const digest=(text:string)=>new Bun.CryptoHasher("sha256").update(text).digest("hex");
+      expect(diagnostics).toEqual(scenario==="change"?[{version:1,path:source,expected:digest(fixture.original),observed:digest(fixture.edited)}]:[]);
       let alive:boolean;
       try{alive=process.kill(launched.pid,0);}catch{alive=false;}
       expect(alive).toBe(false);

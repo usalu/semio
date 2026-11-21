@@ -28,7 +28,11 @@ def exercise(content, output, page_content=None, document_stage=None, large_fixt
         fonts = content.parent / "🔤️fonts"
         font_codec = (fonts / "🦀️.rs").read_text().rsplit("#[cfg(test)]", 1)[0]
         cmap = (fonts / "🗺️cmap/🦀️.rs").resolve().as_posix()
-        (scratch / "font-codec.rs").write_text(font_codec.replace('🗺️cmap/🦀️.rs', cmap))
+        cff = (fonts / "✒️cff/🦀️.rs").read_text().replace("#[cfg(test)]\nmod tests {", "#[cfg(cff_package_tests)]\nmod tests {", 1)
+        cff_path = (scratch / "cff.rs").resolve()
+        cff_path.write_text(cff)
+        font_codec = font_codec.replace('🗺️cmap/🦀️.rs', cmap).replace('✒️cff/🦀️.rs', cff_path.as_posix())
+        (scratch / "font-codec.rs").write_text(font_codec)
         tests = content / "🧪️tests/🔬️unit/🧪️content-program.rs"
         source = scratch / "main.rs"
         source.write_text(r'''

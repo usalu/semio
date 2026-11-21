@@ -108,3 +108,63 @@ All with `r3-sheet.ts` (six views, rig on and off), plus `r3-mallard-duck-view2d
 ## 7. Files
 
 Changed in the resume session: `r3-mallard-duck-body.ts` (strip with `zTop`, rear primaries, lens sections, neck, ring, tail, drumstick, thigh), `r3-mallard-duck-coarse.ts` (rear primaries / wing tip, neck, tail, drumstick, wing proud), `r3_mallard_duck_roots.py` (`walk_legs` for the waddle keys), `r3-mallard-duck-2d.ts` (near shank and near leg stroke layer), new `r3-mallard-duck-width.ts` (lateral extents per solid). Outputs: `volumes/animals/mallard-duck.json`, `r3-mallard-duck-2d.json`, the catalog file `🐕️animals/mallard-duck/🔣️.json` (rig, poses, anchors, provenance, materials, representations, dimensions 0.30 / 0.437 / 0.13 m, volumes).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: the asset's chain, edited in place (`r3-mallard-duck-body.ts`: wing layer order, head and bill width, eye; `r3-mallard-duck-coarse.ts`: heads, bills and wing layers of 1:100, 1:200, 1:500; `r3-mallard-duck-model.ts`: 1:200 nares outlet). Build and splice: `sh r3-mallard-duck-run.sh catalog`. Sheets: `bash r5-fauna-render.sh animals/mallard-duck <before|after> s2 swimming dabbling upending wing-stretch waddle@0.3 paddle@0.3 dabble@2` into `🗑️generated/r5-mallard-duck/`.
+
+### Reference table (modelled to)
+
+| measure | reference | source |
+|---|---|---|
+| length bill tip to tail tip, standing (not stretched) | about 0.43-0.44 m (stretched skin 0.50-0.65 m) | Cramp & Simmons 1977; standing length own knowledge |
+| crown height standing relaxed / breadth over the folded wings | about 0.30 m / 0.12-0.13 m | own knowledge (round 3 table) |
+| bill culmen / width | 51-61 mm / 21-23 mm | Cramp & Simmons 1977; width own knowledge |
+| head width with plumage | about 38 mm | own knowledge |
+| tail | 80-91 mm | Cramp & Simmons 1977 |
+| tarsus / middle toe with claw | 42-48 / 52-60 mm | Cramp & Simmons 1977 |
+| femur / tibiotarsus / tarsometatarsus | about 50 / 86 / 45 mm | Woelfle 1967 |
+| humerus + ulna + carpometacarpus (folded wing to the primary tips) | about 92 + 78 + 57 mm, wing chord 257-285 mm | Woelfle 1967, Cramp & Simmons 1977 |
+
+### Model vs reference (1:50, standing, spliced catalog; `r5-fauna-measure.ts`, rig)
+
+| measure | model | reference | deviation |
+|---|---|---|---|
+| bounding length | 438 mm | 437 (dimensions) / about 430-440 | 0.2 % |
+| height / breadth | 300 / 130 mm | 300 / 120-130 | 0 % / in range |
+| bill along the axis (feathering to tip) | 56 mm | 51-61 | in range |
+| bill width | 22 mm (was 24, +4 %) | 21-23 | in range |
+| head width | 38 mm (was 40, +5 %) | 38 | 0 % |
+| tail bone / feathers | 85 mm | 80-91 | in range |
+| femur / tibiotarsus / tarsus / middle toe (rig) | 50 / 85 / 45 / 58 mm | 50 / 86 / 45 / 52-60 | under 1.2 % |
+| folded wing bone (shoulder to primary tips) | 249 mm | wing chord 257-285 from the wrist | short of the chord because the folded wing bone starts at the shoulder and the primaries tips lie over the rump (as round 3) |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B+ (speculum and primaries broke through the wing coverts as a row of tiles along the lower rear wing edge; head 5 % and bill 4 % too wide) -> A- | A- -> A- (nested contour/down shells, plume patch flush) | B+ -> B+ (keel plate deep in the front view; unchanged) |
+| 1:100 | A- (head wedge from the front, tiny primary slivers under the wing) -> A- | B+ (not opened) | B+ (not opened) |
+| 1:200 | B (head a flat-crowned wedge, ragged lower wing edge with the flank showing through in patches, pointed bill) -> A- | B+ (rendered, not opened) | B (opened after: deep sternum wedge, bulky skull; unchanged) |
+| 1:500 | B (wedge head, cone bill) -> B+ | B+ (opened after) | B (slender bars; not opened) |
+| poses | waddle t 0.3 A- (both knees inside the flank, stance foot planted), upending B+ -> unchanged; swimming, dabbling, wing-stretch, paddle t 0.3, dabble t 2 rendered | | |
+
+### Changes
+
+- 1:50 wing: layer order of the folded wing put right: primaries under the coverts (proud 2.2 mm, they show only behind the wing end, as on a folded mallard wing), speculum above the coverts (6.2 mm) so it reads as one continuous band with its edge instead of interleaved tiles.
+- 1:100 / 1:200: coverts 4.2 / 5.6 mm and scapulars 7.4 mm proud, so the wing edge is one clean line with no flank showing through; 1:200 nares outlet 18 mm (the feature floor of the redrawn head).
+- Heads at 1:100, 1:200, 1:500 restated with an occiput station and a domed crown (7 and 6 stations, Catmull-Rom between them) instead of the flat-crowned wedge; bills at 1:200 and 1:500 end in the rounded spatula with the nail station instead of a cone point.
+- Head lateral half widths 4 % narrower and bill 5 % narrower at every scale (head 38 mm, bill 22 mm); eye moved 0.6 mm inwards to stay flush.
+- 2D of 1:50, 1:100, 1:200 redrawn from the new bodies by the chain (ruling E1); 1:500 unavailable as before (the drake is 0.9 mm long).
+- Checks: `r3-validate.ts animals/mallard-duck` VALID (schema 0, validateAsset 0); `--volumes`: checkVolumes 2, the same two `areaDeviation:bill` lines as round 3 (1:50 0.75, 1:100 0.72); `volumes-check.ts --product` otherwise green (cross-scale IoU 0.99-1.0, silhouette as round 3). Spliced.
+
+### Opened
+
+1:50 body before and after (six views, three-quarter from behind twice), 1:200 body before and twice after, 1:500 body before and after, 1:100 body after, 1:50 structure before, 1:200 structure after (B: sternum a deep wedge plate, skull bulky, limb bones slender bars), 1:50 thermal cut after, 1:500 thermal cut after (B+: tidy regions, plume patch on the back), pose `upending` before, pose `swimming` after (A-: paddling legs, body closed), clip `waddle` t 0.3 after, 2D 1:50 after. Rendered, not opened: thermal 1:100/1:200, structure 1:100/1:500 after, poses dabbling, wing-stretch, clips paddle t 0.3 and dabble t 2, 2D 1:100 and 1:200.
+
+### Remaining (reason)
+
+- `bill` thermal area 0.0038 m² against the declared 0.0022 m² (C18/C27, physiological value, already in `author-requests.md`): checkVolumes stays at 2.
+- Plumage as smooth tone zones with straight seams between rump, flank and breast; no feather edges at 1:50.
+- `wing-stretch` and any spread wing: one rigid wing strip per side (feather bones requested in `tool-requests.md`, 2026-11-21).
+- Coarse thermal and structure sheets and several poses were rendered but not opened in this round.

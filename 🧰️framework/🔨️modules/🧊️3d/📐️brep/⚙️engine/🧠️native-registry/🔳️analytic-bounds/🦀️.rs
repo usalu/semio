@@ -1,7 +1,7 @@
 //! 🔳️ Original exact axis intervals and funded box construction.
 
 use super::*;
-use semio_framework_3d_brep_analysis::analytic_curve_bounds;
+use semio_framework_3d_brep_analysis::{analytic_curve_bounds, nearest_analytic};
 
 impl BrepRegistry {
     /// 🎟️ Quotes all original lookup paths for the selected analytic bound.
@@ -10,10 +10,7 @@ impl BrepRegistry {
         match self.original_query_entity(handle)? {
             Entity::Solid(id, Some(_)) => Ok(depth.max(self.body.solids.next_remove_depth_demand(*id)?)),
             Entity::Face(_) => self.planar_face_boundary_depth(handle),
-            Entity::Edge(id) => {
-                let Some(edge) = self.body.edges.get(*id) else { return Err(ValueError::invariant("live bounds edge is missing")); };
-                Ok(depth.max(self.body.edges.next_remove_depth_demand(*id)?).max(self.body.curves3.next_remove_depth_demand(edge.curve)?))
-            }
+            Entity::Edge(_) => Ok(depth.max(self.original_intersection_curve_depth(handle)?)),
             _ => Ok(depth),
         }
     }
@@ -24,11 +21,16 @@ impl BrepRegistry {
         Ok(match self.original_query_entity(handle)? {
             Entity::Solid(id, Some(provenance)) if self.body.solids.contains(*id) => match provenance {
                 SolidProvenance::Primitive(source) => Some(source.primitive.axis_aligned_bounds()),
+                SolidProvenance::RoundedBox(source,_) => Some(source.bounds().map(pnt)),
+                SolidProvenance::ClippedBox(source) => source.bounds(),
                 SolidProvenance::Bore(source) => {
                     let origin = pnt(source.origin);
                     Some([origin, origin + vec3(source.dimensions)])
                 }
-                SolidProvenance::PlanarBoundary => None,
+                SolidProvenance::SphericalShell(shell,_) => Some(nearest_analytic::spherical_shell_bounds(*shell)),
+                SolidProvenance::SphericalCaps(caps,_) => Some(nearest_analytic::spherical_caps_bounds(*caps)),
+                SolidProvenance::Frustum(shape,_) => Some(nearest_analytic::frustum_bounds(shape.frame,shape.radii,shape.height)),
+                SolidProvenance::PlanarBoundary(..) | SolidProvenance::Orthogonal(_) | SolidProvenance::PlacedOrthogonal(..) | SolidProvenance::CircularPrism(..) | SolidProvenance::TorusSector(..) | SolidProvenance::Annular(..) => None,
             },
             Entity::Curve(curve, _) => bounds(curve, curve.domain()),
             Entity::Edge(id) => {

@@ -280,6 +280,8 @@ def apply(a):
         rep = a["representations"][str(s)]
         rep["geometry"] = {"elevation": elevation(s), "front": front(s), "plan": plan(s)}
         rep["decisions"] = DECISIONS[s]
+    import runpy
+    runpy.run_path(os.path.join(os.path.dirname(__file__), "equipment-fine-ink.py"))["apply"](a)
     for pose in a["poses"]:
         if pose["id"] == "dead-load":
             pose["description"] = text("The bay hangs from the slab brackets at the heads of its mullions under its own weight, sunlit.", "Das Feld hängt unter Eigengewicht an den Deckenkonsolen an den Köpfen seiner Pfosten, besonnt.")

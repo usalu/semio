@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🔌️ The closed neutral Jack parent, complete literal child address, JSON carrier and query event have independent Rust/Python implementations. Ajv and SQLite validate the same committed parent/event/diff vectors in the TypeScript law. Registered rich graph behavior belongs to the authored composition.",
+  "_comment": "🔌️ The neutral Jack parent carrier and its query and root events have independent Rust/Python implementations. Ajv and SQLite validate the same parent/event/diff vectors in TypeScript.",
   "oracles": [
     {
       "id": "jack-python-independent",
@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "Independent Python implementation of the closed Jack parent JSON carrier and set-query event, written from the parent snapshot/diff schemas and the authored committed vector. Every parent field and all five child-address coordinates participate in comparison; no graph child is materialized or reconstructed. The adjacent TypeScript law also compares complete event output to SQLite JSON and validates input with Ajv.",
+      "rationale": "Independent Python implementation of the Jack parent carrier and its set-query and set-root events using the snapshot and diff schemas. The comparisons include every parent field and child-address coordinate. The TypeScript law also compares the event output to SQLite JSON and validates input with Ajv.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -40,9 +40,9 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🔺️diff/🔣️.json; ../🧪️tests/🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query; ../🖼️assets/🎬️demo/🔣️.json",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🔺️diff/🔣️.json; ../🧪️tests/🧫️fixtures/🧬️mutations; ../🖼️assets/🎬️demo/🔣️.json",
         "fixtureCoverage": {
-          "vectors": 4,
+          "vectors": 7,
           "capabilitiesCovered": [
             "jack-1-mutate"
           ]
@@ -67,10 +67,22 @@
               "directoryName": "🔎️replaces-the-query"
             }
           ]
+        },
+        {
+          "mutationId": "set-root",
+          "sourceMutationDirectoryName": "🎯️set-root",
+          "mutationDirectoryName": "🎯️set-root",
+          "scenarios": [
+            {
+              "id": "clears-the-root",
+              "directoryName": "🧹️clears-the-root"
+            }
+          ]
         }
       ],
       "kinds": [
-        "set-query"
+        "set-query",
+        "set-root"
       ]
     }
   ],
@@ -86,7 +98,7 @@
         {
           "id": "set-query",
           "capability": "jack-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op"
@@ -95,6 +107,23 @@
             "operation": "set-query",
             "bridgeVersion": 1,
             "variant": "SetQuery"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "jack-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-root",
+          "capability": "jack-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": ["applied", "no-op"],
+          "productionDispatch": {
+            "operation": "set-root",
+            "bridgeVersion": 1,
+            "variant": "SetRoot"
           },
           "oracleRequirements": [
             {

@@ -8,10 +8,12 @@ import { basename, dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
+import {blake3} from "@noble/hashes/blake3.js";
 import Ajv from "ajv";
 import {runCargoRelayV1} from "../🌊️relay/🟦️.ts";
 import {actualCargoCompilerPlanningPortV1} from "../🕸️units/📥️capture/🟦️.ts";
-import { BoundedDiagnosticsV1, buildCargoArtifacts, readCargoArtifactBuildPolicyV1, writeCompletedCargoInvocationProvenanceV1 } from "../🟦️.ts";
+import unitGraphs from "../🕸️units/🧪️tests/🧫️fixtures/🔣️.json" with {type:"json"};
+import { BoundedDiagnosticsV1, buildCargoArtifacts, readCargoArtifactBuildPolicyV1, withCapturedCargoArtifactsTaskV1, withCapturedCargoCompilationTaskV1, writeCompletedCargoInvocationProvenanceV1, type CapturedCargoArtifactsV1 } from "../🟦️.ts";
 import {publishedCargoArtifactDirectoryV1} from "../📤️published/🟦️.ts";
 import {withIssuedLawStorageV1,lawBuildOptionsV1,lawCompilerConfigurationV1,lawSourceBoundaryV1,type LawStorageV1} from "./🦀️cargo/🟦️.ts";
 import type {ScriptInvocation} from "../../../🧭️routing/🟦️.ts";
@@ -30,7 +32,10 @@ function target(message:Readonly<Record<string,unknown>>):Readonly<Record<string
 const relayInvocation = <T>(run: (invocation: any) => Promise<T>): Promise<T> => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "native-artifacts-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), run);
 const fixtureOutput = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 const fixtureLeaseDirectory=join(repository.root,".cache/b/l/m/data");
-if (fixtureOutput.length > 129) throw Error("Native artifact fixture output exceeds the admitted compiler suffix path budget");
+function directFixtureOutput():string{
+ if(fixtureOutput.length>129)throw Error("Native artifact fixture output exceeds the admitted compiler suffix path budget");
+ return fixtureOutput;
+}
 const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const resourceReadSchema = JSON.parse(readFileSync(new URL("../📥️resources/🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -50,11 +55,11 @@ for (const vector of fixture.compilerCustody) registerIsolatedBuildTestV1(import
     });
 }, new RegExp(vector.id, "u"));
 test("completed Cargo provenance requires complete actual physical authority before publication",async()=>{
- const root=mkdtempSync(join(fixtureOutput,"p-")),started=performance.now(),signal=new AbortController(),physical=new CurrentPhysicalOwnerV1(root,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.signal.aborted,remainingMs:()=>60000-(performance.now()-started),onProgress:row=>{}}),invocation={manifest:join(root,"Cargo.toml"),cwd:root,command:"check",args:[],buildDirectory:null,builtAtMs:Date.now(),status:0,cancelled:false,units:[],buildScripts:[]};
+ const root=mkdtempSync(join(directFixtureOutput(),"p-")),started=performance.now(),signal=new AbortController(),physical=new CurrentPhysicalOwnerV1(root,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.signal.aborted,remainingMs:()=>60000-(performance.now()-started),onProgress:row=>{}}),invocation={manifest:join(root,"Cargo.toml"),cwd:root,command:"check",args:[],buildDirectory:null,builtAtMs:Date.now(),status:0,cancelled:false,units:[],buildScripts:[]};
  for(const key of fixture.provenancePhysicalRequiredFields){const port:Partial<ReturnType<Parameters<typeof writeCompletedCargoInvocationProvenanceV1>[4]>>={control:physical.control,read:(path:string)=>physical.read(path),digest:(path:string)=>physical.digest(path),measure:(path:string)=>physical.measure(path),directoryEntries:(path:string)=>physical.directoryEntries(path),checkpoint:()=>physical.checkpoint(),recheck:()=>physical.recheck()};assert.ok(key in port);delete port[key as keyof typeof port];const receipt=join(root,key+".json"),result=writeCompletedCargoInvocationProvenanceV1(receipt,invocation,new Map(),root,()=>port as ReturnType<Parameters<typeof writeCompletedCargoInvocationProvenanceV1>[4]>);expect(result).toBeInstanceOf(Promise);await expect(result).rejects.toThrow();expect(existsSync(receipt)).toBe(false);}
 });
 test("actual physical owner rechecks originally absent compiler inputs before publication",async()=>{
- const root=mkdtempSync(join(fixtureOutput,"a-")),path=join(root,fixture.provenanceAbsentInput.path),started=performance.now(),signal=new AbortController(),physical=new CurrentPhysicalOwnerV1(root,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.signal.aborted,remainingMs:()=>60000-(performance.now()-started),onProgress:row=>{}});expect(await physical.read(path)).toBeUndefined();writeFileSync(path,fixture.provenanceAbsentInput.bytes);expect(Bun.file(path).size).toBe(Buffer.byteLength(fixture.provenanceAbsentInput.bytes));await expect(physical.recheck()).rejects.toThrow();
+ const root=mkdtempSync(join(directFixtureOutput(),"a-")),path=join(root,fixture.provenanceAbsentInput.path),started=performance.now(),signal=new AbortController(),physical=new CurrentPhysicalOwnerV1(root,{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>signal.signal.aborted,remainingMs:()=>60000-(performance.now()-started),onProgress:row=>{}});expect(await physical.read(path)).toBeUndefined();writeFileSync(path,fixture.provenanceAbsentInput.bytes);expect(Bun.file(path).size).toBe(Buffer.byteLength(fixture.provenanceAbsentInput.bytes));await expect(physical.recheck()).rejects.toThrow();
 });
 test("native artifact policy is explicit and schema-first", () => {
   const validate = new Ajv({strict:true}).compile(schema);
@@ -65,16 +70,106 @@ test("native artifact policy is explicit and schema-first", () => {
   expect(()=>readCargoArtifactBuildPolicyV1({SEMIO_CARGO_ARTIFACT_POLICY:JSON.stringify(fixture.policy)},"/foreign")).toThrow();
 });
 for(const vector of fixture.vectors){const name=`captured native artifacts: ${vector.id}`,body=async(checkpoint:()=>void)=>{const control=new AbortController();await withBuildStorageV1(control.signal,async(held,admission)=>{
-  const root=mkdtempSync(join(held.root,"n-")), source=join(root,"owner"), emitted=join(root,"emitted");mkdirSync(source);mkdirSync(emitted);
-  const manifest=join(source,"Cargo.toml");writeFileSync(manifest,'[workspace]\n[package]\nname="fixture"\nversion="0.1.0"\nedition="2021"\n[[bin]]\nname="fixture"\npath="main.rs"\n');writeFileSync(join(source,"Cargo.lock"),'version=4\n[[package]]\nname="fixture"\nversion="0.1.0"\n');
+  const witnessed=vector.consumedSource!==undefined,packageName=witnessed?"f":"fixture";
+  const root=witnessed?held.root:mkdtempSync(join(held.root,"n-")),source=join(root,"owner"),emitted=join(root,"b","emitted");mkdirSync(source);mkdirSync(emitted,{recursive:true});
+  const manifest=join(source,"Cargo.toml");writeFileSync(manifest,`[workspace]\n[package]\nname="${packageName}"\nversion="0.1.0"\nedition="2021"\n[[bin]]\nname="${packageName}"\npath="main.rs"\n`);writeFileSync(join(source,"Cargo.lock"),`version=4\n[[package]]\nname="${packageName}"\nversion="0.1.0"\n`);
   for(const file of fixture.files)writeFileSync(join(emitted,file.name),Buffer.from(file.hex,"hex"),{mode:0o700});
+  writeFileSync(join(emitted, fixture.files[0].name + ".d"), "fixture: main.rs\n");
   const sourcePath=join(source,"main.rs");writeFileSync(sourcePath,"fn main() {}\n");
-  const primary={reason:"compiler-artifact",manifest_path:manifest,package_id:`path+${pathToFileURL(source).href}#fixture@0.1.0`,target:{kind:["bin"],name:"fixture",src_path:sourcePath},filenames:[join(emitted,fixture.files[0].name)],executable:join(emitted,fixture.files[0].name)};
-  const compiler=vector.mode==="wait"?'setInterval(()=>{},1000)':vector.mode==="fail"?'process.exit(19)':vector.mode==="empty"?'process.stdout.write("compiler empty\\n")':`process.stdout.write(${JSON.stringify(JSON.stringify(primary)+'\n')})`;
-  const policy={version:1 as const,mode:"prototype" as const,compilerConfiguration:lawCompilerConfigurationV1(root),cwd:source,buildDirectory:join(root,"compiler"),leaseDirectory:fixtureLeaseDirectory,captureDirectory:join(root,"captures"),budgetMs:120000};
-  let cancel:ReturnType<typeof setTimeout>|undefined;if(vector.mode==="wait")cancel=setTimeout(()=>control.abort(),150);
-  let failure:unknown;try{await buildCargoArtifacts(manifest,[],policy,lawBuildOptionsV1(held,admission,{commandPort:{compilerIdentity:"fixture-compiler-v1",toolchainIdentity:"fixture-toolchain-v1",command:process.execPath,args:["-e",compiler]}}));}catch(error){failure=error;}finally{clearTimeout(cancel);}
-  if(vector.accepted){expect(failure).toBeUndefined();const bytes=readFileSync(join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,"prototype"),fixture.files[0].name));expect(bytes.toString("hex")).toBe(fixture.files[0].hex);expect(createHash("sha256").update(bytes).digest("hex")).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(fixture.files[0].hex,"hex"))).toString("hex"));}else{expect(failure).toBeInstanceOf(Error);expect(existsSync(join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,"prototype"),fixture.files[0].name))).toBe(false);}
+  const primary={reason:"compiler-artifact",manifest_path:manifest,package_id:`path+${pathToFileURL(source).href}#${packageName}@0.1.0`,target:{kind:["bin"],name:packageName,src_path:sourcePath},filenames:[join(emitted,fixture.files[0].name)],executable:join(emitted,fixture.files[0].name)};
+  const compilerRuns = join(root, "calls");
+  const observationOutput = vector.observationOutput ? {version:1 as const,directory:join(root,"b","semio-cargo-observations","result")} : undefined;
+  const published = observationOutput?.directory ?? publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,"prototype");
+  const publishedPath = join(published,fixture.files[0].name);
+  let consumerRuns = 0, receipts = 0;
+  const editPath = vector.replacementLock===undefined ? sourcePath : join(source,"Cargo.lock");
+  const replacement = vector.replacementLock ?? vector.replacementSource;
+  const emit = 'process.stdout.write(' + JSON.stringify(JSON.stringify(primary) + "\n") + ')';
+  const measureRuns = 'const fs=require("node:fs");const first=!fs.existsSync(' + JSON.stringify(compilerRuns) + ');fs.appendFileSync(' + JSON.stringify(compilerRuns) + ',"x");';
+  const editSource=`fs.writeFileSync(${JSON.stringify(sourcePath)},${JSON.stringify(replacement)});`;
+  if(vector.consumedSource!==undefined){
+    const consumed=Buffer.from(vector.consumedSource),checksum=Buffer.from(blake3(consumed)).toString("hex");
+    writeFileSync(primary.executable+".d",`${primary.executable}: ${sourcePath}\n# checksum:blake3=${checksum} file_len:${consumed.byteLength} ${sourcePath}\n`);
+  }
+  const compiler = vector.mode === "wait" ? measureRuns + "setInterval(()=>{},1000)"
+    : vector.mode === "empty" ? 'process.stdout.write("compiler empty\\n")'
+    : vector.mode === "fail" ? measureRuns + "process.exit(19)"
+    : vector.mode === "source-edit" ? measureRuns + "if(first){fs.writeFileSync(" + JSON.stringify(sourcePath) + "," + JSON.stringify(vector.replacementSource) + ");process.exit(19);}" + emit
+    : vector.mode === "verified-source-edit" ? measureRuns+emit+`;setTimeout(()=>{${editSource}setTimeout(()=>{},1000);},1000)`
+    : vector.mode === "verified-source-edit-before-announcement" ? measureRuns+editSource+`setTimeout(()=>{${emit};},1600)`
+    : vector.mode === "successful-source-edit" ? measureRuns
+      + "if(fs.existsSync(" + JSON.stringify(publishedPath) + ")) throw Error('stale attempt published its output');"
+      + "if(first)fs.writeFileSync(" + JSON.stringify(editPath) + "," + JSON.stringify(replacement) + ");"
+      + "fs.writeFileSync(" + JSON.stringify(primary.executable) + ", Buffer.from(first?"
+      + JSON.stringify(vector.staleArtifact) + ":" + JSON.stringify(fixture.files[0].hex) + ",'hex'));" + emit
+    : emit;
+  const policy={version:1 as const,mode:"prototype" as const,compilerConfiguration:lawCompilerConfigurationV1(root),cwd:source,buildDirectory:join(root,"b"),leaseDirectory:fixtureLeaseDirectory,captureDirectory:join(root,witnessed?"c":"captures"),budgetMs:120000};
+  const packageId = primary.package_id;
+  const fixtureUnit = unitGraphs.cases[0]!.units[0]!;
+  const graph = { version: 1, roots: [0], units: [{
+    ...fixtureUnit, pkg_id: packageId, target: { ...fixtureUnit.target, name:packageName, kind: ["bin"], crate_types: ["bin"], src_path: sourcePath },
+    profile: { ...fixtureUnit.profile, ...(witnessed?{name:"r"}:{}), incremental: false }, platform: null, features: [],
+  }] };
+  const metadata = { workspace_root: source, packages: [{
+    ...Object.fromEntries(["description", "homepage", "repository", "license", "license_file", "rust_version", "readme"].map(field => [field, null])),
+    id: packageId, name:packageName, version: "0.1.0", manifest_path: manifest, source: null, authors: [],
+  }] };
+  let graphCaptures = 0;
+  const fixtureInputs = {
+    planningPort: {
+      async capture(_program: string, args: readonly string[]) {
+        if (args[0] === "metadata") return metadata;
+        if (args.includes("--unit-graph")) { graphCaptures++; return graph; }
+        return {};
+      },
+      async cfg() { return []; },
+      async compiler() { return { program: process.execPath, digest: "0".repeat(64), hostTriple: fixtureUnit.platform!, cargoProgram: process.execPath }; },
+      async sourceInputs() { return []; },
+    },
+    sourcePort: {
+      async cfg() { return []; },
+      async read(path: string) { return existsSync(path) ? readFileSync(path) : null; },
+      async recheck() {},
+    },
+  };
+  const cancel = vector.mode === "wait" ? setInterval(() => {
+    if (existsSync(compilerRuns)) control.abort();
+  }, 20) : undefined;
+  const consume=(capture:CapturedCargoArtifactsV1)=>withCapturedCargoArtifactsTaskV1(capture,async view=>{
+    consumerRuns++;
+    const observation=decodeCargoProvenanceV1(view.observation);
+    const staged=observation.units.flatMap(unit=>unit.artifacts).find(row=>row.stagedPath===publishedPath);
+    const bytes=Buffer.from(fixture.files[0].hex,"hex");
+    expect(staged?.stagedSha256).toBe(createHash("sha256").update(bytes).digest("hex"));
+    expect(readFileSync(view.files.get(fixture.files[0].name)!)).toEqual(bytes);
+    expect(readFileSync(publishedPath)).toEqual(bytes);
+    const changed=observation.units.flatMap(unit=>unit.inputs).find(input=>input.path===editPath)??observation.invocationInputs.find(input=>input.path===editPath);
+    const observedSource=vector.consumedSource??replacement;
+    expect(changed?.sha256).toBe(createHash("sha256").update(observedSource).digest("hex"));
+    if(vector.retainCompilationBytes!==undefined)await withCapturedCargoCompilationTaskV1(capture,async compilation=>{
+      expect(compilation.observationSha256).toBe(view.observationSha256);
+      const index=JSON.parse(readFileSync(compilation.files.get("index.json")!.path,"utf8"));
+      const retained=index.files.find((row:{source:string})=>row.source===primary.executable);
+      expect(retained.sha256).toBe(staged?.stagedSha256);
+      expect(readFileSync(compilation.files.get(retained.path)!.path)).toEqual(bytes);
+      if(vector.consumedSource!==undefined){
+        const input=index.files.find((row:{source:string})=>row.source===sourcePath);
+        expect(readFileSync(compilation.files.get(input.path)!.path,"utf8")).toBe(observedSource);
+        expect(input.sha256).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(observedSource))).toString("hex"));
+      }
+    });
+  });
+  const observed=vector.consumerRuns===undefined ? {} : {consume,provenance:(path:string)=>{receipts++;expect(existsSync(path)).toBe(true);}};
+  let failure:unknown;
+  try{
+    await buildCargoArtifacts(manifest,[],policy,lawBuildOptionsV1(held,admission,{...fixtureInputs,...observed,...(observationOutput?{observationOutput}:{}),retainCompilationBytes:vector.retainCompilationBytes,retainConsumedSources:vector.consumedSource!==undefined,commandPort:{compilerIdentity:"fixture-compiler-v1",toolchainIdentity:"fixture-toolchain-v1",command:process.execPath,args:["-e",compiler]}}));
+  }catch(error){failure=error;}finally{clearInterval(cancel);}
+  if(vector.accepted){expect(failure).toBeUndefined();const bytes=readFileSync(publishedPath);expect(bytes.toString("hex")).toBe(fixture.files[0].hex);expect(createHash("sha256").update(bytes).digest("hex")).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(fixture.files[0].hex,"hex"))).toString("hex"));}else{expect(failure).toBeInstanceOf(Error);expect(existsSync(join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,"prototype"),fixture.files[0].name))).toBe(false);}
+  if (vector.graphCaptures !== undefined) expect(graphCaptures).toBe(vector.graphCaptures);
+  if (vector.compilerRuns !== undefined) expect(readFileSync(compilerRuns, "utf8").length).toBe(vector.compilerRuns);
+  if (vector.consumerRuns !== undefined) {expect(consumerRuns).toBe(vector.consumerRuns);expect(receipts).toBe(vector.consumerRuns);}
+  if (vector.expectedFailure !== undefined) expect(String(failure)).toContain(vector.expectedFailure);
+  if (replacement !== undefined) expect(readFileSync(editPath, "utf8")).toBe(replacement);
   expect(existsSync(policy.captureDirectory) ? readdirSync(policy.captureDirectory) : []).toEqual([]);checkpoint();
 });};if(vector.accepted)test(name,()=>body(()=>undefined),120000);else registerIsolatedBuildTestV1(import.meta.path,name,{bodyMilliseconds:120000,scope:{kind:"body"}},body,/Cargo (artifact build failed|emitted no final artifacts)|Cancel|cancel|abort/u);}
 
@@ -168,7 +263,7 @@ test("actual compiler resource read consumes in-place bytes and tracks only orig
 
 test("completed compiler unit custody requires explicit discovery or received candidate authority",async()=>{
  const schema=(await import("../🧬️schema/🧾️unit-evidence/🔣️.json")).default,validate=new Ajv({strict:true}).compile(schema);for(const vector of[fixture.unitEvidence.discovery,fixture.unitEvidence.received]){expect(validate(vector)).toBe(true);for(const key of fixture.unitEvidence.required){const invalid={...vector};delete invalid[key];expect(validate(invalid)).toBe(false);}}
- const root=mkdtempSync(join(fixtureOutput,"u-")),manifest=join(root,"Cargo.toml"),source=join(root,"unit.rs"),artifact=join(root,"libunit.rmeta"),receipt=join(root,"receipt.json");writeFileSync(manifest,'[workspace]\n[package]\nname="unit"\nversion="0.0.0"\nedition="2021"\n[lib]\npath="unit.rs"\n');writeFileSync(source,"pub fn unit() {}\n");writeFileSync(artifact,fixture.internalDepInfoOwnership.artifact);const reference=Bun.spawn([registeredToolExecutableV1("cargo"),"metadata","--offline","--no-deps","--format-version=1","--manifest-path",manifest],{cwd:root,stdout:"pipe",stderr:"pipe"}),metadata=JSON.parse(await new Response(reference.stdout).text());expect(await reference.exited).toBe(0);expect(metadata.packages[0].targets[0].src_path).toBe(source);const invocation={manifest,cwd:root,command:"check",args:[],buildDirectory:null,builtAtMs:Date.now(),status:0,cancelled:false,units:[{message:{package_id:"path+file://actual#unit@0.0.0",manifest_path:manifest,target:{name:"unit",kind:["lib"],src_path:source},filenames:[artifact]}}],buildScripts:[]};await expect(writeCompletedCargoInvocationProvenanceV1(receipt,invocation,new Map(),root,()=>provenancePhysical(root))).rejects.toThrow();expect(existsSync(receipt)).toBe(false);
+ const root=mkdtempSync(join(directFixtureOutput(),"u-")),manifest=join(root,"Cargo.toml"),source=join(root,"unit.rs"),artifact=join(root,"libunit.rmeta"),receipt=join(root,"receipt.json");writeFileSync(manifest,'[workspace]\n[package]\nname="unit"\nversion="0.0.0"\nedition="2021"\n[lib]\npath="unit.rs"\n');writeFileSync(source,"pub fn unit() {}\n");writeFileSync(artifact,fixture.internalDepInfoOwnership.artifact);const reference=Bun.spawn([registeredToolExecutableV1("cargo"),"metadata","--offline","--no-deps","--format-version=1","--manifest-path",manifest],{cwd:root,stdout:"pipe",stderr:"pipe"}),metadata=JSON.parse(await new Response(reference.stdout).text());expect(await reference.exited).toBe(0);expect(metadata.packages[0].targets[0].src_path).toBe(source);const invocation={manifest,cwd:root,command:"check",args:[],buildDirectory:null,builtAtMs:Date.now(),status:0,cancelled:false,units:[{message:{package_id:"path+file://actual#unit@0.0.0",manifest_path:manifest,target:{name:"unit",kind:["lib"],src_path:source},filenames:[artifact]}}],buildScripts:[]};await expect(writeCompletedCargoInvocationProvenanceV1(receipt,invocation,new Map(),root,()=>provenancePhysical(root))).rejects.toThrow();expect(existsSync(receipt)).toBe(false);
 });
 
 test("a build with declared deliverables stages exactly those files and none of the sibling library outputs", async () => { const stop = new AbortController(); await withBuildStorageV1(stop.signal, async (held, admission) => {
@@ -186,7 +281,7 @@ test("a build with declared deliverables stages exactly those files and none of 
 }); });
 
 test("compiler diagnostics stay inside their line budget while the complete stream and the newest failure lines survive", () => {
-  const spec = fixture.diagnostics, directory = mkdtempSync(join(fixtureOutput, "g-")), path = join(directory, "cargo.log");
+  const spec = fixture.diagnostics, directory = mkdtempSync(join(directFixtureOutput(), "g-")), path = join(directory, "cargo.log");
   const shown: string[] = [], fd = openSync(path, "w"), rows = Array.from({ length: spec.lines }, (_, index) => `line ${index}`);
   const diagnostics = new BoundedDiagnosticsV1(fd, (line) => shown.push(line), spec.live, spec.newest);
   for (const row of rows) diagnostics.line(row);

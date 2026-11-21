@@ -4,25 +4,7 @@ use super::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     pub(super) async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract> {
-        self.tools.bounded_contracts()
-            .cloned()
-            .chain(self.tools.framework_registrations().map(|(_,row)|row).map(|registration| ArtifactToolPublicContract {
-                owner: registration.owner,
-                controller_id: registration.key.controller_id.clone(),
-                tool_id: registration.key.tool_id.clone(),
-                schema_id: registration.schema_id.clone(),
-                max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
-                publication_lanes: registration.publication_lanes,
-            }))
-            .chain(self.tools.app_registrations().map(|(_,row)|row).map(|registration| ArtifactToolPublicContract {
-                owner: registration.owner,
-                controller_id: registration.key.controller_id.clone(),
-                tool_id: registration.key.tool_id.clone(),
-                schema_id: registration.schema_id.clone(),
-                max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
-                publication_lanes: registration.publication_lanes,
-            }))
-            .collect()
+        self.tools.public_tool_contracts()
     }
 
     pub(super) fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> {

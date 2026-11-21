@@ -1,7 +1,7 @@
 //! 🏛️ Original host configuration values retain their accepted input, native JSON owners and exact output through handoff.
 use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration as Declaration,OriginalHostConfigurationProjection as Projection,OriginalContributionProjection as Contributions};
 use semio_framework_job::{OriginalConstructionAdmission,StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalNativeReceivingOutcome,receive_original_receiving_work};
-use semio_plugin_job_receiving::original_steps::{adopted,built,built_with,construction,fixed,receipt,retired,retired_poll,unbuilt};
+use semio_plugin_job_receiving::original_steps::{adopted,built,built_with,construction,fixed,receipt,retired,retired_poll,unbuilt,covering_child,receiving_units};
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,NativeEncodeControl,NativeEncodeContinuation,retirement::RetireOwned,retained_clone::{NativeAllocationIdentity,RetainedCloneClose}};
 use semio_framework_pack_json::{JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonError,JsonBorrowedWriteCursor,JsonWriteSource,JsonWriteNode};
 use std::mem::{ManuallyDrop,size_of};
@@ -93,14 +93,17 @@ impl<M:RetireOwned+Send+'static> OriginalHostConfiguration<M>{
             },
             4=>{
                 let owners=self.owners.as_ref().unwrap();let text=owners.args.as_ref().and_then(|args|args.get("json")).and_then(DslValue::as_str).unwrap_or("[]");let quote=owners.parser.as_ref().ok_or_else(invalid)?.normal_step_demands(text);let d=match quote{Ok(d)=>d,Err(error)=>{let native=matches!(error,JsonError::Native(_));let retained=self.metadata(cx,admission,|owner|{owner.owners.as_mut().unwrap().error=Some(error);if native{owner.phase=12}else{owner.empty=true;owner.phase=1;owner.position=0}})?;if retained&&native{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native host JSON quote refused its original source").into())}return Ok(false)}};if !funds(grant,d){return Ok(false)}
-                let mut scope:Option<OriginalNativeReceivingOutcome>=None;let mut stepped=None;let maximum=cx.fuel_remaining();
-                if !cx.with_native_receiving(&mut scope,|control,grant|{stepped=control.with_effect(grant,maximum,|control,effect|{let result=(||->Result<RetainedCloneStep,ValueError>{
+                let mut scope:Option<OriginalNativeReceivingOutcome>=None;let mut stepped=None;
+                let maximum=receiving_units(cx.fuel_remaining());
+                let body=semio_framework_job::original_receiving_scope_quote(d);
+                let quote=semio_framework_value::invocation_extent(body,maximum)?;
+                if !cx.with_native_receiving_quoted(&mut scope,quote,|control,_|{stepped=control.with_effect_reported(body,maximum,|control,effect|{let result=(||->Result<RetainedCloneStep,ValueError>{
                     let owners=self.owners.as_mut().unwrap();let text=owners.args.as_ref().and_then(|args|args.get("json")).and_then(DslValue::as_str).unwrap_or("[]");let parser=owners.parser.as_mut().unwrap();let result=parser.step_source(text,1,control,effect,true);let progress=parser.normal_step_progress();
                     match result{Ok(Some(root))=>{owners.root=Some(root);self.phase=5;self.entry=0},Ok(None)=>{},Err(JsonError::Native(error))=>{self.phase=12;return Err(error.with_retained_progress(progress))},Err(error)=>{owners.error=Some(error);self.empty=true;self.phase=1;self.position=0}}
                     Ok(RetainedCloneStep::Complete(progress))
-                })();RetainedWorkOutcome{result,work:effect.performed_work().max(1)}})?;Ok(())})?{return Ok(false)}
+                })();result})?;Ok(())})?{return Ok(false)}
                 let scope=scope.ok_or_else(invalid)?;if scope.source_refusal.is_some()||scope.call.is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original host configuration receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
-                if let Some(turn)=stepped{receive_original_receiving_work(cx,turn)?;}
+                if let Some((result,work))=stepped{let turn=covering_child(cx,RetainedWorkOutcome{result,work});receive_original_receiving_work(cx,turn)?;}
             },
             5=>{
                 let owners=self.owners.as_ref().unwrap();let Some(values)=owners.root.as_ref().and_then(entries)else{self.metadata(cx,admission,|owner|{owner.empty=true;owner.phase=1})?;return Ok(false)};

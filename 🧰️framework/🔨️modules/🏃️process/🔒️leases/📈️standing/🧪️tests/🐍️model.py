@@ -58,6 +58,13 @@ def progress(case):
         if resource.startswith(family["prefix"]):
             match=re.match(family["pattern"],resource)
             if match:return {"phase":match[1],"done":int(match[2]),"total":int(match[3])}
+    tally=rules.get("bindingTally")
+    if tally and resource.startswith(tally["prefix"]):
+        match=re.fullmatch(tally["pattern"],resource)
+        if not match:return None
+        done,total,canonical,changed=map(int,match.groups()[1:])
+        if max(done,total,canonical,changed)>2**53-1 or done>total or canonical+changed!=done:return None
+        return {"phase":match[1],"done":done,"total":total}
     match=re.match(rules["counter"],resource)
     if match:return {"phase":match[1][:rules["maximumPhaseCharacters"]],"done":int(match[2])}
     return {"phase":resource[:rules["maximumPhaseCharacters"]]}

@@ -10,7 +10,7 @@
 
 use crate::terminology::catalogue_kind_label;
 use crate::terminology::LayoutLabels;
-use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_value_map, ui_value_text};
+use semio_s_artifact_layout_layout_editor_commands::{layout_action, ui_label, ui_value_map, ui_value_text};
 use semio_plugin::{tree_item_desc, tree_item_with_action};
 use semio_s_artifact_layout_layout_model::ImageLink;
 use semio_ui_locale::Label;
@@ -87,7 +87,7 @@ fn linked_catalogue_item(link: &ImageLink, document_id: Option<&str>, position: 
     let label = [&link.path, &link.artifact_ref, &link.id].into_iter().find(|label| !label.is_empty()).map_or("", String::as_str);
     let label = UiText::clipped(label);
     let id = crate::link_presentation_key("layout-catalogue", &link.id, position)?;
-    let item = tree_item_desc(id.as_str(), Label::data(label.as_str()), None)?;
+    let item = tree_item_desc(id.as_str(), ui_label(label.as_str())?, None)?;
     let payload = document_id
         .filter(|document_id| !document_id.is_empty() && !link.id.is_empty() && document_id.len() <= id.capacity() && link.id.len() <= id.capacity())
         .map(|document_id| serde_json::json!({ "kind": "image", "sourceDocumentId": document_id, "sourceLinkId": link.id }).to_string())

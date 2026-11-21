@@ -1,0 +1,7 @@
+{
+  "mutation": "editTableCell",
+  "id": "table-1",
+  "row": 0,
+  "column": 1,
+  "content": "Zelle β"
+}

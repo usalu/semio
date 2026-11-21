@@ -258,7 +258,7 @@ export function structure(K: Fox): Json[] {
     mem(ear(K, `${n}-ear-cartilage`, sd, BONE, 0.086, [[0.02, 0.014, fl], [0.3, 0.021, fl], [0.7, 0.012, fl], [1, 0.0045, fl]]), `ear-${k}`);
     mem(K.run(`${n}-ilium`, "pelvis", [{ p: [0.074, 0.41, sd * 0.036], rl: 0.0045, rs: 0.017 }, { p: [0.04, 0.4, sd * 0.03], rl: 0.0045, rs: 0.012 }, { p: [0.0, 0.376, sd * 0.03], rl: 0.007, rs: 0.011 }], BONE), "pelvis");
     mem(K.run(`${n}-ischium`, "pelvis", [{ p: [0.002, 0.374, sd * 0.03], rl: 0.0055, rs: 0.009 }, { p: [-0.03, 0.368, sd * 0.03], rl: 0.005, rs: 0.0075 }, { p: [-0.05, 0.372, sd * 0.034], rl: 0.0065, rs: 0.011 }], BONE), "pelvis");
-    for (let i = 0; i < 13; i++) mem(Object.assign(K.run(`${n}-rib-${i + 1}`, "thorax", ribPath(i, sd, 0.0025), BONE, thin), { slender: true }), "thorax");
+    for (let i = 0; i < 13; i++) mem(Object.assign(K.run(`${n}-rib-${i + 1}`, "thorax", ribPath(i, sd, i === 0 ? 0.0018 : 0.0025), BONE, i === 0 ? { floor: 0.0018 } : thin), { slender: true }), "thorax");
     mem(Object.assign(K.run(`${n}-costal-arch`, "thorax", [{ p: [0.3, 0.236, sd * 0.01], rl: 0.0025, rs: 0.0025 }, ...[9, 10, 11, 12].map((i) => ({ p: ribPath(i, sd, 0.0025)[4]!.p, rl: 0.0025, rs: 0.0025 }))], BONE, thin), { slender: true }), "thorax");
     mem(K.limb(`${n}-femur`, `thigh-h${k}`, FEMUR, BONE, { sd }), `thigh-h${k}`);
     const tu = K.frame(`thigh-h${k}`).u;

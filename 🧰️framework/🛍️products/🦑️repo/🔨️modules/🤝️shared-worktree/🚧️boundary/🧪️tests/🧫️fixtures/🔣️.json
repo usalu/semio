@@ -1,5 +1,6 @@
 {
  "version": 1,
+ "mutableHash": {"bytes": 10485777, "chunkBytes": 1048576, "checkBytes": 8388608, "firstByte": 113, "sha256": "e3e7ec97558e6586295c5d5d6b9ff3f1a7eecd457a6c1bc042910f82583bf360"},
  "ignore": [
   {"name": "blank lines, comments, escaped hash and bang", "lines": ["", "# comment", "   ", "\\#hash", "\\!bang", "foo"], "cases": [
    {"path": "#hash", "directory": false, "ignored": true},

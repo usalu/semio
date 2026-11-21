@@ -297,6 +297,44 @@ fn camera_fit_ownership_preserves_user_orbit_until_revision_or_seed_changes() {
 }
 
 #[test]
+fn scene_bridge_replaces_and_retires_authored_hover_targets() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let fixture = scene_bridge_fixture();
+    let mut scene = scene_from_bridge_fixture(&fixture);
+    let mut instances = fixture["instancesJson"].clone();
+    let hovered = &mut instances.as_array_mut().unwrap()[0];
+    let id = hovered["id"].as_str().unwrap().to_owned();
+    let targets = serde_json::json!([
+        { "granularity": "handle", "id": "axis@!ivector" },
+        { "granularity": "handle", "id": "axis@vector" },
+    ]);
+    hovered["hoverTargets"] = targets.clone();
+    scene.world_3d.as_mut().unwrap().instances_json = instances.to_string();
+    let bounds = Rect::new(0.0, 0.0, 800.0, 600.0);
+    let mut state = World3dState::new("surface-hover-group".into(), "controller".into());
+    drive_scene_bridge(&mut state, &scene, bounds);
+    let group = |state: &World3dState| serde_json::from_str::<serde_json::Value>(&state.interaction.instance_hover_targets[&id]).unwrap();
+    assert_eq!(group(&state), targets);
+    let first = state.session.interaction_revision;
+    let replacement = serde_json::json!([{ "granularity": "handle", "id": "axis@next" }]);
+    instances[0]["hoverTargets"] = replacement.clone();
+    scene.world_3d.as_mut().unwrap().instances_json = instances.to_string();
+    drive_scene_bridge(&mut state, &scene, bounds);
+    assert!(state.session.interaction_revision > first);
+    assert_eq!(group(&state), replacement);
+    instances[0].as_object_mut().unwrap().remove("hoverTargets");
+    scene.world_3d.as_mut().unwrap().instances_json = instances.to_string();
+    drive_scene_bridge(&mut state, &scene, bounds);
+    assert!(!state.interaction.instance_hover_targets.contains_key(&id));
+    instances[0]["hoverTargets"] = targets;
+    scene.world_3d.as_mut().unwrap().instances_json = instances.to_string();
+    drive_scene_bridge(&mut state, &scene, bounds);
+    assert!(state.interaction.instance_hover_targets.contains_key(&id));
+    retire_bridged_surface(&mut state);
+    assert!(state.interaction.instance_hover_targets.is_empty());
+}
+
+#[test]
 fn scene_bridge_renders_the_generation3d_preview_payload_into_a_snapshot() {
     let _gate = semio_os_infinite_world_host::world_test_gate();
     let fixture = scene_bridge_fixture();
@@ -382,12 +420,12 @@ fn world_surfaces_echo_their_trace_cursor_under_their_window_instance() {
     let delta = semio_framework_tool_run::ToolRunTraceDelta::decode(&bytes).expect("fixture delta decodes");
     let lane = base64_codec::base64_url_encode(&bytes);
     let mut bound = World3dState::new("surface-bound".into(), "controller".into());
-    bound.trace.tool_run_trace_window_id = Some("world-left".into());
+    bound.session.window_instance_id = Some("world-left".into());
     bound.trace.tool_run_trace.apply_lane(Some(&lane)).expect("lane applies");
     let mut unbound = World3dState::new("surface-unbound".into(), "controller".into());
     unbound.trace.tool_run_trace.apply_lane(Some(&lane)).expect("lane applies");
     let mut idle = World3dState::new("surface-idle".into(), "controller".into());
-    idle.trace.tool_run_trace_window_id = Some("world-right".into());
+    idle.session.window_instance_id = Some("world-right".into());
     let echoed = world3d_tool_run_trace_cursors([&bound, &unbound, &idle]);
     let expected = semio_framework_tool_run::ToolRunTraceCursor { run: delta.identity.id.run, generation: delta.identity.generation, page: delta.next };
     assert_eq!(echoed, std::collections::HashMap::from([("world-left".to_string(), expected)]));
@@ -727,4 +765,108 @@ fn delivered_projection_spec_frames_once_after_accepted_camera() {
     sync_world3d_projection_content_frame(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut state.bridge);
     assert_eq!(state.camera.orbit.target.to_array(), accepted.target.to_array());
     assert_eq!(state.camera.orbit.to_camera().position.to_array(), accepted.to_camera().position.to_array());
+}
+
+
+#[test]
+fn projected_instance_hover_list_repaints_shared_mesh_rows_without_rebuild() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let fixture: serde_json::Value = serde_json::from_str(read_static(
+        "../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/hovered-instances.json",
+    )).expect("shared hover projection fixture");
+    let mut state = World3dState::new("hover-surface".into(), "hover-controller".into());
+    let mut by_mesh = BTreeMap::<String, Vec<Instance3d>>::new();
+    for row in fixture["instances"].as_array().unwrap() {
+        let mesh_id = row["meshId"].as_str().unwrap();
+        let id = row["id"].as_str().unwrap();
+        by_mesh.entry(mesh_id.into()).or_default().push(Instance3d {
+            component_source: None, id: id.into(), model: Mat4::identity(), color: [1.0; 4],
+            selected: false, hovered: true, material: Default::default(),
+        });
+    }
+    for (mesh_key, instances) in by_mesh {
+        state.scene.draws.push(SceneDraw3d { mesh_key, mesh_version: 13, instances, shadow_role: Default::default() });
+    }
+    let selected = "design@surface#0";
+    let unrelated = "unrelated@body#0";
+    state.interaction.instance_interaction_ids.insert(unrelated.into(), "design@surface#1".into());
+    let generation = (state.scene.draw_generation, state.scene.geometry_generation);
+    let buffers: Vec<_> = state.scene.draws.iter().map(|draw| draw.instances.as_ptr()).collect();
+    let mut previous_selection_json = None;
+    for (index, row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        if let Some(local) = row.get("local") {
+            let target = local.as_str().map(|id| serde_json::json!({
+                "granularity":"object", "id": resolved_item_id(&state.session, id)
+            }));
+            let targets = serde_json::to_string(&target.into_iter().collect::<Vec<_>>()).unwrap();
+            let action = ActionDescriptor {
+                controller_id: state.session.controller_id.clone(), action: "interactionHover".into(),
+                args: Some(semio_framework::dsl_value!({"domainId":resolved_domain_id(&state.session), "targets": targets.as_str()})),
+            };
+            apply_world_action_preview(&mut state.session, &mut state.selection, &mut state.gumball, &mut state.scene, &action);
+        } else {
+            let mut projection = row.get("selection").unwrap_or(&fixture["selection"]).clone();
+            projection["ids"] = serde_json::json!([selected]);
+            projection["method"] = serde_json::json!(if index == 0 { "rectangle" } else { "pick" });
+            previous_selection_json = Some(projection.to_string());
+        }
+        sync_world3d_scene_selection(&mut state.session, &mut state.selection, &mut state.gumball, &mut state.scene,
+            previous_selection_json.as_deref().unwrap());
+        apply_runtime_draw_flags(&mut state.selection, &mut state.interaction, &mut state.scene);
+        let expected: HashSet<_> = row["expected"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
+        let hovered: HashSet<_> = state.scene.draws.iter().flat_map(|draw| &draw.instances)
+            .filter(|instance| instance.hovered).map(|instance| instance.id.as_str()).collect();
+        assert_eq!(hovered, expected, "hover projection case {index}");
+        assert_eq!(state.selection.has_published_pointer_instance_hover(), row.get("local").and_then(serde_json::Value::as_str).is_some());
+        let selected_rows: Vec<_> = state.scene.draws.iter().flat_map(|draw| &draw.instances)
+            .filter(|instance| instance.selected).map(|instance| instance.id.as_str()).collect();
+        assert_eq!(selected_rows, [selected]);
+        assert_eq!((state.scene.draw_generation, state.scene.geometry_generation), generation);
+        assert_eq!(state.scene.draws.iter().map(|draw| draw.instances.as_ptr()).collect::<Vec<_>>(), buffers);
+    }
+    let component_hover = serde_json::json!({
+        "hoveredIds": [], "hoveredId": unrelated, "ids": [selected],
+        "hoveredComponent": {"objectId":unrelated,"mode":"edge","id":7}
+    }).to_string();
+    sync_world3d_scene_selection(&mut state.session, &mut state.selection, &mut state.gumball, &mut state.scene, &component_hover);
+    apply_runtime_draw_flags(&mut state.selection, &mut state.interaction, &mut state.scene);
+    assert_eq!(state.selection.local_hover_id.as_deref(), Some(unrelated));
+    assert!(!state.selection.has_instance_hover());
+    assert!(state.scene.draws.iter().flat_map(|draw| &draw.instances).all(|instance| !instance.hovered));
+}
+
+#[test]
+fn authored_hover_hands_off_only_to_a_new_origin_or_graph_mark() {
+    let fixture: serde_json::Value = serde_json::from_str(read_static(
+        "../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/hovered-instances.json",
+    )).expect("shared hover projection fixture");
+    let mut state = World3dState::new("hover-surface".into(), "hover-controller".into());
+    state.session.window_instance_id = Some("preview:1".into());
+    let scene_revision = (state.scene.draw_generation, state.scene.geometry_generation);
+    for (index, step) in fixture["handoff"].as_array().unwrap().iter().enumerate() {
+        if let Some(local) = step.get("local") {
+            let target = local.as_str().map(|id| serde_json::json!({
+                "granularity": "object", "id": resolved_item_id(&state.session, id),
+            }));
+            let targets = serde_json::to_string(&target.into_iter().collect::<Vec<_>>()).unwrap();
+            let action = ActionDescriptor {
+                controller_id: state.session.controller_id.clone(), action: "interactionHover".into(),
+                args: Some(semio_framework::dsl_value!({"domainId":resolved_domain_id(&state.session), "targets": targets.as_str()})),
+            };
+            apply_world_action_preview(&mut state.session, &mut state.selection, &mut state.gumball, &mut state.scene, &action);
+        }
+        if let Some(record) = step.get("selection") {
+            let mut record = record.clone();
+            if let Some(selected) = record.get("selected") { record["ids"] = selected.clone(); }
+            sync_world3d_scene_selection(&mut state.session, &mut state.selection, &mut state.gumball, &mut state.scene, &record.to_string());
+        }
+        let painted: Vec<_> = fixture["instances"].as_array().unwrap().iter().filter_map(|row| row["id"].as_str())
+            .filter(|id| state.selection.projected_instance_hovers().map_or_else(
+                || state.selection.local_hover_id.as_deref() == Some(*id),
+                |ids| ids.contains(*id),
+            )).collect();
+        let expected: Vec<_> = step["expected"].as_array().unwrap().iter().filter_map(serde_json::Value::as_str).collect();
+        assert_eq!(painted, expected, "handoff case {index}");
+        assert_eq!((state.scene.draw_generation, state.scene.geometry_generation), scene_revision);
+    }
 }

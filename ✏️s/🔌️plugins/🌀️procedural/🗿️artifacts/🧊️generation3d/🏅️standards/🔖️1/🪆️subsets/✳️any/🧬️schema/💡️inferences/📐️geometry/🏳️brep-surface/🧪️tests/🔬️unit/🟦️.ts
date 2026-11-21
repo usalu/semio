@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { CylinderGeometry, LineCurve3, Matrix3, Matrix4, Plane, QuadraticBezierCurve3, ShapeUtils, Triangle, Vector2, Vector3, Vector4 } from "three";
+import { CylinderGeometry, ExtrudeGeometry, LineCurve3, Matrix3, Matrix4, Plane, QuadraticBezierCurve3, Path, Shape, ShapeGeometry, ShapeUtils, Triangle, Vector2, Vector3, Vector4 } from "three";
 import { NURBSCurve } from "three/addons/curves/NURBSCurve.js";
 import { NURBSSurface } from "three/addons/curves/NURBSSurface.js";
 import { disagreements, type FixtureCase } from "../../../🧪️tests/🧰️oracle-support/🟦️.ts";
@@ -22,6 +22,8 @@ type Fixture = {
     jumpControl: number; jumpDelta: XYZ;
   };
   exactSplineFace: { degree: number; knots: number[]; controls: XYZ[]; weights: number[]; trim: [number, number]; third: XYZ; ends: [XYZ, XYZ]; area: number };
+  retainedRectangularOpeningExtrusion: { outer: [[number,number],[number,number]]; opening: [[number,number],[number,number]]; cases: { axis: number; level: number; delta: number; capLevels: [number,number]; volume: number }[] };
+  retainedBoreCapOffset: { stock: XYZ; bore: { origin: XYZ; radius: number }; area: number; cases: { normal: XYZ; distance: number; z: number; thickness: number; thickZ: [number, number]; volume: number; extrude: { operator: string; vector: XYZ; levels: [number, number]; volume: number } }[] };
   pointFacePreview: { name: string; triangles: number; inside: XYZ; notch: XYZ; notchDistance: number };
 };
 const fixture = JSON.parse(readFileSync(new URL("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🏳️brep-surface/🔣️.json", import.meta.url), "utf8")) as Fixture;
@@ -218,4 +220,83 @@ test("Three preserves a trimmed rational face boundary in its exact plane coordi
   });
   ring.push(coordinates(new Vector3(...row.third)));
   expect(Math.abs(ShapeUtils.area(ring))).toBeCloseTo(row.area, 7);
+});
+
+test("Three preserves the circular opening when offsetting either selected bore cap", () => {
+  const row=fixture.retainedBoreCapOffset;
+  const [width,depth,height]=row.stock;
+  const { origin,radius }=row.bore;
+  const shape=new Shape([new Vector2(0,0),new Vector2(width,0),new Vector2(width,depth),new Vector2(0,depth)]);
+  const opening=new Path();
+  opening.absarc(origin[0],origin[1],radius,0,2*Math.PI,true);
+  shape.holes.push(opening);
+  for (const { normal,distance,z } of row.cases) {
+    const geometry=new ShapeGeometry(shape,128);
+    const plane=new Plane(new Vector3(...normal),normal[2]>0 ? -height : 0.).translate(new Vector3(...normal).multiplyScalar(distance));
+    geometry.translate(0,0,plane.coplanarPoint(new Vector3()).z);
+    const points=geometry.getAttribute("position"), indices=geometry.getIndex()!;
+    const center=new Vector3(origin[0],origin[1],z);
+    let area=0;
+    for (let i=0;i<indices.count;i+=3) {
+      const p=[0,1,2].map(j=>new Vector3().fromBufferAttribute(points,indices.getX(i+j))) as [Vector3,Vector3,Vector3];
+      const triangle=new Triangle(...p);
+      area+=triangle.getArea();
+      expect(triangle.containsPoint(center)).toBe(false);
+    }
+    expect(area).toBeCloseTo(row.area,3);
+    expect(plane.distanceToPoint(center)).toBeCloseTo(0,10);
+  }
+});
+
+test("Three extrudes the selected perforated sheet with an open through-wall", () => {
+  const { stock:[width,depth], bore:{ origin,radius }, cases }=fixture.retainedBoreCapOffset;
+  const shape=new Shape([new Vector2(0,0),new Vector2(width,0),new Vector2(width,depth),new Vector2(0,depth)]);
+  const opening=new Path();
+  opening.absarc(origin[0],origin[1],radius,0,2*Math.PI,true);
+  shape.holes.push(opening);
+  const witnesses=cases.flatMap(({normal,z,thickness,thickZ,volume,extrude})=>[
+    { z, travel:normal[2]*thickness, levels:thickZ, volume },
+    { z, travel:extrude.vector[2], levels:extrude.levels, volume:extrude.volume }
+  ]);
+  for (const { z,travel,levels,volume } of witnesses) {
+    const height=Math.abs(travel);
+    const base=z+Math.min(0,travel);
+    const geometry=new ExtrudeGeometry(shape,{ depth:height, bevelEnabled:false, curveSegments:128 });
+    geometry.translate(0,0,base);
+    geometry.computeBoundingBox();
+    expect(geometry.boundingBox!.min.z).toBeCloseTo(levels[0],6);
+    expect(geometry.boundingBox!.max.z).toBeCloseTo(levels[1],6);
+    const points=geometry.getAttribute("position");
+    let signedVolume=0;
+    for (let i=0;i<points.count;i+=3) {
+      const a=new Vector3().fromBufferAttribute(points,i);
+      const b=new Vector3().fromBufferAttribute(points,i+1);
+      const c=new Vector3().fromBufferAttribute(points,i+2);
+      signedVolume+=a.dot(b.cross(c))/6;
+    }
+    expect(signedVolume).toBeCloseTo(volume,3);
+  }
+});
+
+test("Three preserves the rectangular opening along each signed world axis", () => {
+  const { outer,opening,cases }=fixture.retainedRectangularOpeningExtrusion;
+  const rectangle=([[x0,y0],[x1,y1]]: [[number,number],[number,number]])=>[
+    new Vector2(x0,y0),new Vector2(x1,y0),new Vector2(x1,y1),new Vector2(x0,y1),
+  ];
+  const shape=new Shape(rectangle(outer));
+  shape.holes.push(new Path(rectangle(opening).reverse()));
+  for (const { axis,level,delta,capLevels,volume } of cases) {
+    const geometry=new ExtrudeGeometry(shape,{ depth:Math.abs(delta), bevelEnabled:false });
+    const positions=geometry.getAttribute("position");
+    const vertices=Array.from({length:positions.count},(_,i)=>{
+      const local=new Vector3().fromBufferAttribute(positions,i);
+      return new Vector3().setComponent((axis+1)%3,local.x).setComponent((axis+2)%3,local.y)
+        .setComponent(axis,local.z+level+Math.min(0,delta));
+    });
+    expect(Math.min(...vertices.map(p=>p.getComponent(axis)))).toBeCloseTo(capLevels[0],6);
+    expect(Math.max(...vertices.map(p=>p.getComponent(axis)))).toBeCloseTo(capLevels[1],6);
+    let actual=0;
+    for (let i=0;i<vertices.length;i+=3) actual+=vertices[i]!.dot(vertices[i+1]!.clone().cross(vertices[i+2]!))/6;
+    expect(actual).toBeCloseTo(volume,6);
+  }
 });

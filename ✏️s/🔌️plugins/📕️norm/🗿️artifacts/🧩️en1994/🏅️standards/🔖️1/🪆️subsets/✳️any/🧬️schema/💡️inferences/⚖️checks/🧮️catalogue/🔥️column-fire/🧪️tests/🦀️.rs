@@ -75,9 +75,24 @@ fn material_factors_interpolate_between_the_nodes() {
 }
 
 #[test]
-fn the_tabulated_data_stay_empty_until_transcribed() {
-    assert!(COLUMN_TABLE.is_empty());
-    assert_eq!(check_tabulated(COLUMN_TABLE, 60, 0.5, 0.3, 0.05, 0.01), Tabulated::NoData);
+fn table_4_6_dimensions_and_missing_cells_follow_the_published_rows() {
+    let expected = include_str!("table-4-6.tsv");
+    assert_eq!(COLUMN_TABLE.len(), expected.lines().count() - 1);
+    for line in expected.lines().skip(1) {
+        let [rating, load, dimension, axis, reinforcement] = line.split('\t').collect::<Vec<_>>().try_into().unwrap();
+        let number = |cell: &str, scale: f64| cell.parse::<f64>().ok().map(|value| value / scale);
+        let row = COLUMN_TABLE.iter().find(|row| Some(f64::from(row.rating_min)) == number(rating, 1.0)
+            && Some(row.load_level) == number(load, 1.0)).unwrap();
+        assert_eq!(row.min_width_m.value, number(dimension, 1000.0));
+        assert_eq!(row.min_axis_distance_m.value, number(axis, 1000.0));
+        assert_eq!(row.min_reinforcement_ratio.value, number(reinforcement, 100.0));
+        for cell in [row.min_width_m, row.min_axis_distance_m, row.min_reinforcement_ratio] {
+            assert_eq!(cell.verified, cell.value.is_some());
+        }
+    }
+    assert_eq!(check_tabulated(COLUMN_TABLE, 90, 0.50, 0.4, 0.07, 0.04), Tabulated::NoData);
+    assert_eq!(check_tabulated(COLUMN_TABLE, 60, 0.40, 0.3, 0.05, 0.04),
+        Tabulated::Evaluated { utilization: 1.0, verified: true });
 }
 
 #[test]

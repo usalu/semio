@@ -107,7 +107,7 @@ impl HeadlessWorkspace {
                 let registry = load_plugin_registry(&repo_root)?;
                 let mut descriptors = Vec::new();
                 for plugin_id in self.catalog_plugin_ids() {
-                    descriptors.push(load_package_descriptor(&find_plugin_entry(&registry, &plugin_id)?.owner_root)?);
+                    descriptors.push(load_registry_plugin_descriptor(&repo_root, find_plugin_entry(&registry, &plugin_id)?)?);
                 }
                 Ok(descriptors)
             }
@@ -163,17 +163,17 @@ impl HeadlessWorkspace {
     /// 📂️ Explicit folder reopen reads durable custody rather than a stale live alias.
     pub fn read_open_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         if let WorkspaceOrigin::Folder { path } = &self.origin {
-            if !self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(artifact_id) {
-                return semio_framework_async::block_on(store::sync::FolderEventLogStorage::new(path.clone()).read(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()));
-            }
+            return semio_framework_async::block_on(store::sync::FolderEventLogStorage::new(path.clone()).read(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()));
         }
         self.read_artifact_bytes(artifact_id)
     }
 
     pub fn read_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
-        if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
-            let files = ::semio_framework_async::poll::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
-            return Ok(Some((files.pack, files.spr)));
+        if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
+            if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
+                let files = ::semio_framework_async::poll::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
+                return Ok(Some((files.pack, files.spr)));
+            }
         }
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(binding) = self.plugin_artifact_binding(artifact_id) {

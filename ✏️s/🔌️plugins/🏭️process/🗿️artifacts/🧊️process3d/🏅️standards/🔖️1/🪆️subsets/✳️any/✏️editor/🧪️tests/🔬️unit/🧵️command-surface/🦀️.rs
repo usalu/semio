@@ -66,15 +66,19 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     let mut ids = PROCESS3D_BOUNDED_TOOL_IDS.iter().chain(PROCESS3D_MODEL_IMPORT_TOOL_IDS).chain(PROCESS3D_RESUMABLE_TOOL_IDS).copied().collect::<Vec<_>>();
     ids.sort_unstable();
     ids.dedup();
-    assert_eq!(ids.len(), 31);
-    assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS.len(), 24);
+    assert_eq!(ids.len(), 32);
+    assert_eq!(PROCESS3D_BOUNDED_TOOL_IDS.len(), 25);
     assert_eq!(PROCESS3D_MODEL_IMPORT_TOOL_IDS, &["importModelFile"]);
     assert_eq!(process3d_retained_raw_bytes("moveStep"), 8_192);
     assert_eq!(process3d_retained_raw_bytes("importModelFile"), 33_856);
     assert_eq!(PROCESS3D_RESUMABLE_TOOL_IDS.len(), 6);
     assert!(ids.iter().all(|tool_id| process3d_command_disposition(tool_id).is_some()));
     assert_eq!(process3d_command_disposition("nonsense"), None);
-    assert_eq!(<Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 31);
+    let proofs = <Process3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs();
+    assert_eq!(proofs.len(), 32);
+    for proof in proofs {
+        assert_eq!(proof.factory_type_name.and_then(|name| name.rsplit("::").next()), Some(proof.factory), "{}", proof.tool_id);
+    }
     assert_eq!(process3d_bounded_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(process3d_resumable_contract().shape, ToolExecutionShape::Resumable);
     assert_eq!(process3d_resumable_contract().cancellation, ToolCancellationPolicy::PerOperation);
@@ -82,14 +86,9 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert_eq!(process3d_resumable_contract().progress_every_steps, 1);
 }
 
-/// 🕹️ Every command this app declares is UI-reachable, on one of the three lanes it actually owns.
-/// A browser dispatch passes three framework gates — `validate_ui_dispatch_classification` (the
-/// manifest classification must be `Migrated`), `qualified_tool_proof` (the id must own a retained
-/// disposition so `build_tool_job` builds a job rather than returning `Ok(None)`), and
-/// `unsupported_publication_contracts` (each named lane must have a preparation factory) — so this
-/// pins all three at once, over the closed command vocabulary rather than a hand-kept list.
+/// 🕹️ Declared UI actions and the addressed host configuration command have retained dispatch on the lanes they own.
 #[semio_framework_async_macros::async_test]
-async fn every_declared_command_is_ui_reachable_on_a_real_lane() {
+async fn every_declared_command_has_a_real_publication_lane() {
     use semio_plugin::ArtifactToolPublicationLane;
 
     let definition = create_process3d_app();
@@ -112,12 +111,17 @@ async fn every_declared_command_is_ui_reachable_on_a_real_lane() {
         assert!(!contract.is_empty(), "{id} names an empty publication-lane contract");
         assert!(!contract.contains(&ArtifactToolPublicationLane::HostOnly) || contract.len() == 1, "{id} mixes HostOnly with a store lane: {contract:?}");
         assert!(
-            contract.iter().all(|lane| matches!(lane, ArtifactToolPublicationLane::HostOnly | ArtifactToolPublicationLane::Artifact | ArtifactToolPublicationLane::Config)),
+            contract.iter().all(|lane| matches!(lane, ArtifactToolPublicationLane::HostOnly | ArtifactToolPublicationLane::Artifact | ArtifactToolPublicationLane::Config | ArtifactToolPublicationLane::WindowTransient)),
             "{id} publishes on a lane this app owns no one-item preparation factory for: {contract:?}"
         );
-        assert_eq!(declared.get(id).copied(), Some(InteractiveJobClassification::Migrated), "{id} is not declared Migrated, so validate_ui_dispatch_classification would reject its UI dispatch");
+        assert_eq!(contract.contains(&ArtifactToolPublicationLane::WindowTransient), matches!(id, "engagementAbort" | "worldPointerDown" | "worldPointerMove"), "{id}");
+        if id == "setContributions" {
+            assert!(Process3dPlayApp::original_host_configuration(id).is_some());
+            assert_eq!(contract, &[ArtifactToolPublicationLane::Config]);
+        }
+        assert_eq!(declared.get(id).copied(), Some(InteractiveJobClassification::Migrated), "{id} must declare migrated execution");
     }
-    assert_eq!(lanes.len(), 31);
+    assert_eq!(lanes.len(), 32);
     assert!(<Process3dPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
     assert!(<Process3dPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
 }
@@ -208,6 +212,9 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
     replayed.begin_close();
     assert!(matches!(caller.close(&mut replayed, grant).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }));
     assert!(replayed.terminal_is_empty());
+    uninterrupted.begin_close();
+    assert!(matches!(caller.close(&mut uninterrupted, grant).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }));
+    caller.finish();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -221,7 +228,7 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
     let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
     let bounded = [
         Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
-        Process3dCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }),
+        Process3dCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: Some(45.0) }),
         Process3dCommand::LoadModelRequest(load_model_request::LoadModelRequest {}),
     ];
     for command in &bounded {
@@ -256,7 +263,11 @@ async fn retained_bounded_and_resumable_maximum_steps_stay_below_eight_milliseco
                 break;
             }
         }
+        work.begin_close();
+        let grant = semio_plugin::artifact_app_laws::OriginalWorkFixture::stock();
+        assert!(matches!(caller.close(&mut work, grant).expect("maximum fixture work closure"), InteractiveJobCloseStep::Complete { .. }));
     }
+    caller.finish();
 }
 
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -269,7 +280,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 31, "every Process3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 32, "every Process3dCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -307,6 +318,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "stepCursorForward" => "step-cursor-forward",
             "engagementSubmit" => "engagement-submit",
             "worldPointerDown" => "world-pointer-down",
+            "worldPointerMove" => "world-pointer-move",
             "worldFaceDragEnd" => "world-face-drag-end",
             "importModelFile" => "import-model-file",
             "engagementInput" => "engagement-input",
@@ -362,11 +374,12 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
         Process3dCommand::StepCursorForward(step_cursor_forward::StepCursorForward {}),
         Process3dCommand::EngagementSubmit(engagement_submit::EngagementSubmit {}),
         Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }),
+        Process3dCommand::WorldPointerMove(world_pointer_move::WorldPointerMove { position: [1.0, 2.0, 3.0] }),
         Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }),
         Process3dCommand::ImportModelFile(import_model_file::ImportModelFile { name: "beam.step".into(), payload: "data:application/octet-stream;base64,AAAA".into() }),
         Process3dCommand::EngagementInput(engagement_input::EngagementInput { value: "cut".into() }),
         Process3dCommand::EngagementAbort(engagement_abort::EngagementAbort {}),
-        Process3dCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 }),
+        Process3dCommand::SetCamera(set_camera::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: Some(45.0) }),
         Process3dCommand::ToggleSun(toggle_sun::ToggleSun {}),
         Process3dCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }),
         Process3dCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 45.0 }),

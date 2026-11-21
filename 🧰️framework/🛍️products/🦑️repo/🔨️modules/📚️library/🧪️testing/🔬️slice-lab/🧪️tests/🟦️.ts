@@ -96,6 +96,7 @@ print(json.dumps([[len(os.fsencode(path)), probe(path)] for path in sys.argv[1:]
  });
  test("the phase of the read is parsed from its progress line",()=>{
   expect(sliceLabPhaseV1("Reading the project graph slice (12 s): taken 3 of 40.")).toEqual({phase:"taken",done:3,total:40});
+  expect(sliceLabPhaseV1("Reading the project graph slice (4800 s): taken (pass 2) 155 of 596.")).toEqual({phase:"taken",done:155,total:596});
   expect(sliceLabPhaseV1("something else")).toBeUndefined();
  });
  test("the verdict names the wall with stage, phase, text and the last twenty lines",()=>{

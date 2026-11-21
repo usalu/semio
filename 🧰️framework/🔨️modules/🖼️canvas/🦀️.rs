@@ -6,7 +6,7 @@ pub use semio_framework_canvas_assets::{icon_pack, install_runtime_assets, FontR
 pub use semio_framework_canvas_camera::{camera, lod};
 pub use semio_framework_canvas_icons::{decode_icon, encode_icon, icon_codec, resolve_icon_kind, Icon, IconName, MetabolismIconName, ResolvedIcon, ThemedSvgLookup};
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-pub use semio_framework_canvas_scene::gpu_session;
+pub use semio_framework_canvas_scene::{canvas_2d_session, gpu_session};
 pub use semio_framework_canvas_scene::{
     advance_opaque_scene_retirement, append_shape_to_path, canvas_content, draw_list, geom_sel, opaque_scene_retirement_status, publish_opaque_scene_retirement, raster, render, reserve_opaque_scene_retirement, svg_icon, text, theme, Affine, Arc,
     BezPath, BlendMode, CanvasError, CanvasPathRetirement, CanvasSceneRetirement, CanvasStrokeRetirement, Cap, Circle, Color, CubicBez, FillRule, Line, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Paint, PathEl, Point, RasterImage, Rect,

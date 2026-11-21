@@ -73,8 +73,8 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn register_window_config_owners(registry: &mut WindowConfigOwnerRegistry) -> Result<(), Fault> {
         E::register_window_config_owners(registry)
     }
-    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
-        E::retained_window_transient_target(command)
+    fn retained_window_transient_target<'a>(command: &'a Self::Command, view: Option<&'a ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        E::retained_window_transient_target(command, view)
     }
     fn interaction_scope(verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
         E::interaction_scope(verb, domains)
@@ -94,6 +94,14 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     }
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_reserved_tool_job(request,body,construction,cx)
+    }
+    fn build_original_picker_job(
+        request: &mut Option<ArtifactReservedToolJobRequest<Self>>,
+        body: &mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,
+        construction: &mut semio_framework_job::OriginalConstructionAdmission,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        E::build_original_picker_job(request, body, construction, cx)
     }
     fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_plugin_decl_app::media_contract::MediaConstruction,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_media_export_job(request,body,construction,cx)

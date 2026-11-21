@@ -6,6 +6,12 @@ extern crate self as semio_s_artifact_procedural_3d_model;
 #[path = "🧭️transforms/🦀️.rs"]
 pub mod transforms;
 
+pub use semio_s_artifact_procedural_3d_graph_ports::{
+    GraphInstanceAddress, GraphPortAddress, GraphTargetKind, graph_channel_code_unit_width,
+    graph_instance_id, graph_output_channel_body, graph_port_channel, graph_port_code,
+    graph_port_id, parse_graph_instance_id, parse_graph_port_id,
+};
+
 
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::snapshot::Generation3dSnapshot;
@@ -106,23 +112,8 @@ pub fn generation3d_artifact_schema_descriptor() -> ::semio_framework_schema_reg
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-
-//#endregion 🧬️DerivedArtifactFacets
-
 //#region 🔖️DocumentHelpers
-/// 🗑️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// pure helpers over document types (`FlowHostSnapshot`/`DagHostSnapshot`/`FlowHost`), not app-referencing (the
-/// Config-referencing preview/mesh-export helpers that used to sit alongside these stayed in
-/// `crate::editor::generation3d` instead — see that file's own `PreviewPipeline`/`MeshBridge` regions).
+/// 🍄️ Bundled hexagonal mushroom column example.
 pub const PROCEDURAL_EXAMPLE_HEX_COLUMN: &str = "hexagonal-mushroom-column";
 pub const PROCEDURAL_EXAMPLE_RECT_EXTRUDE: &str = "rectangle-extrude-volume";
 pub const PROCEDURAL_EXAMPLE_SPHERE_TORUS: &str = "sphere-cut-with-torus";
@@ -132,20 +123,12 @@ pub const PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE: &str = "face-sweep-extrude";
 pub const PROCEDURAL_EXAMPLE_RECTANGLE_WIRE: &str = "rectangle-wire-preview";
 pub const PROCEDURAL_EXAMPLE_MESH_WORKBENCH: &str = "mesh-workbench";
 pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
-
-
-
-/// 📄️ The artifact's `Default` projection. NOT empty: `FlowHostSnapshot::default()`
-/// (`🧰️framework/…/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs`) is the three-widget
-/// `slider → add → preview` demo graph, so this is the DEFAULT document, not the empty one — the
-/// name it carried until ticket 26/09/09/PROCEDURAL-3D-END-TO-END said otherwise and made every
-/// "empty document" law read against a populated graph.
+/// 📄️ The artifact's default projection containing the slider, add and preview demo graph.
 pub fn default_generation3d_snapshot() -> Generation3dSnapshot {
     Generation3dSnapshot::default()
 }
 
-/// 🕳️ The genuinely EMPTY projection: no widgets, no synapses, no positions, no generations — the
-/// identity element every totality law is written against.
+/// 🕳️ The empty projection used as the identity in document laws.
 pub fn empty_generation3d_snapshot() -> Generation3dSnapshot {
     let mut snapshot = Generation3dSnapshot::default();
     snapshot.host_snapshot.widgets.clear();
@@ -215,11 +198,6 @@ pub fn generation_host_snapshot_for(host_snapshot: &FlowHostSnapshot, generation
             Widget::InputImage { src, .. } => {
                 if let Some(next) = value.as_str() {
                     *src = next.to_string();
-                }
-            }
-            Widget::Variable { name, .. } => {
-                if let Some(next) = value.as_str() {
-                    *name = next.to_string();
                 }
             }
             _ => {}
@@ -317,10 +295,8 @@ pub fn widget_id(widget: &Widget) -> &str {
         | Widget::Cluster { id, .. } => id,
     }
 }
-/// 👁️ Whether a widget contributes preview geometry at all. A `Neuron` carries its own author-set
-/// `preview` toggle; an `OutputPreview` is a preview by construction; a `Cluster` has no toggle of
-/// its own, so its contract output channels always preview, which is the only way a grouped
-/// sub-graph's geometry reaches the 3D world at all.
+/// 👁️ Whether the widget is an enabled document geometry source. Neurons use their preview toggle,
+/// and output-preview widgets and clusters supply their contract geometry by construction.
 pub fn widget_previews(widget: &Widget) -> bool {
     matches!(widget, Widget::Neuron { preview: true, .. } | Widget::OutputPreview { .. } | Widget::Cluster { .. })
 }

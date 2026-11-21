@@ -77,6 +77,7 @@ export const CORE_EN = {
   "state.cancelled.body": "Some assets are not loaded, so tags, summaries, masses or completion may be missing from the results.",
   "state.noResults.title": "Nothing matches",
   "state.noResults.body": "No asset fits this search and these filters. Clear them or try fewer words.",
+  "state.assetUnknown": "This asset is not in the archive.",
   "state.missing.title": "Not authored yet",
   "state.failed.short": "Not loaded",
   "state.missing.short": "Not authored",

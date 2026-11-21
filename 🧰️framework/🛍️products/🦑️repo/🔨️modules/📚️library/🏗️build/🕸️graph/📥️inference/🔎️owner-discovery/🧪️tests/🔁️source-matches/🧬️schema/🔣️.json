@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": ["folders", "filesPerKind", "scanCopies", "patterns"],
+  "additionalProperties": false,
+  "properties": {
+    "folders": { "type": "array", "minItems": 2, "items": { "type": "string", "pattern": "^[a-z]+$" } },
+    "filesPerKind": { "type": "integer", "minimum": 10 },
+    "scanCopies": { "type": "integer", "minimum": 2 },
+    "patterns": { "type": "array", "minItems": 3, "items": { "type": "string", "minLength": 1 } }
+  }
+}

@@ -59,6 +59,40 @@ impl<M:RetireOwned+Send+Sync+'static> Drop for OriginalTypingCommit<M>{fn drop(&
 pub struct OriginalTypingDispatch<A:ArtifactApp>{pub(crate) birth:OriginalStoreBirth,unit:Option<()>,pub(crate) fault:Option<semio_framework::Fault>,captured:ManuallyDrop<Option<SharedUtf8>>,ledger:usize,binding:Option<OriginalSourceBinding>,decoder:Option<(NativeAllocationIdentity,u64)>,body:usize,pub(crate) phase:u8,pub(crate) suppress:bool,pub(crate) all:bool,pub(crate) now:Option<u64>,pub(crate) control:bool,pub(crate) retire_windows:bool,pub(crate) published:bool,pub(crate) expect_artifact:bool,pub(crate) after:ManuallyDrop<Option<SharedUtf8>>,previous:ManuallyDrop<Option<SharedUtf8>>,pub(crate) key:Option<semio_framework_value::retained_clone::original_slot::RetainedOriginalSlotKey>,pub(crate) roster:usize,pub(crate) compared:usize,pub(crate) row:ManuallyDrop<Option<Box<OriginalTypingCommit<A::Mutation>>>>,pub(crate) metadata:ManuallyDrop<Option<ActionMeta>>,pub(crate) transaction:ManuallyDrop<Option<protocol::TransactionRef>>,pub(crate) values:ManuallyDrop<Option<Vec<A::Mutation>>>,pub(crate) verb:ManuallyDrop<Option<String>>,pub(crate) input:ManuallyDrop<Option<OriginalEmissionInput<A>>>,pub(crate) receipt:ManuallyDrop<Option<semio_framework::kernel::InvocationResult>>,caller:ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub(crate) original_metadata:ManuallyDrop<Option<ActionMeta>>,retirement:RetainedCloneClose,offset:usize}
 impl<A:ArtifactApp> Default for OriginalTypingDispatch<A>{fn default()->Self{Self{birth:OriginalStoreBirth::default(),unit:None,fault:None,captured:ManuallyDrop::new(None),ledger:0,binding:None,decoder:None,body:0,phase:0,suppress:false,all:false,now:None,control:false,retire_windows:false,published:false,expect_artifact:false,after:ManuallyDrop::new(None),previous:ManuallyDrop::new(None),key:None,roster:0,compared:0,row:ManuallyDrop::new(None),metadata:ManuallyDrop::new(None),transaction:ManuallyDrop::new(None),values:ManuallyDrop::new(None),verb:ManuallyDrop::new(None),input:ManuallyDrop::new(None),receipt:ManuallyDrop::new(None),caller:ManuallyDrop::new(None),original_metadata:ManuallyDrop::new(None),retirement:Default::default(),offset:0}}}
 impl<A:ArtifactApp> OriginalTypingDispatch<A>{
+ semio_framework_value::initialization::original_empty_fields!(INITIAL_FIELDS, initial_field_demands, initialize_field_at;
+    birth = OriginalStoreBirth::default(),
+    unit = None,
+    fault = None,
+    captured = ManuallyDrop::new(None),
+    ledger = 0,
+    binding = None,
+    decoder = None,
+    body = 0,
+    phase = 0,
+    suppress = false,
+    all = false,
+    now = None,
+    control = false,
+    retire_windows = false,
+    published = false,
+    expect_artifact = false,
+    after = ManuallyDrop::new(None),
+    previous = ManuallyDrop::new(None),
+    key = None,
+    roster = 0,
+    compared = 0,
+    row = ManuallyDrop::new(None),
+    metadata = ManuallyDrop::new(None),
+    transaction = ManuallyDrop::new(None),
+    values = ManuallyDrop::new(None),
+    verb = ManuallyDrop::new(None),
+    input = ManuallyDrop::new(None),
+    receipt = ManuallyDrop::new(None),
+    caller = ManuallyDrop::new(None),
+    original_metadata = ManuallyDrop::new(None),
+    retirement = Default::default(),
+    offset = 0,
+ );
  pub fn pending(&self)->bool{self.binding.is_some()}
  pub fn started(&self)->bool{self.binding.is_some()||!self.birth.terminal_is_empty()||self.unit.is_some()}
  pub fn complete(&self)->bool{self.phase==9}

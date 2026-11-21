@@ -158,3 +158,51 @@ Opened with the Read tool: `r3-sheet` 1:50 body (six views, then front, rear thr
 - Glass is shown opaque by the sheet tool, so the interior was judged only through the open doors of the kneeling pose and from the solids' coordinates.
 - Reference values are from memory of manufacturer data, not re-fetched.
 - Front overhang 2.65 m is 5 to 15 cm shorter than the class (2.70 to 2.80 m) because the wheelbase (5.90 m) and rear overhang (3.45 m) were kept at their real values within the given 12.00 m length (`widthM`).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r3_city_bus_coarse.py` (edited in place: door leaf frames at 1:200 and 1:500, thicker mirror arms and a narrower kerb-side mirror at 1:100 and 1:200), `r3-city-bus-build.py` (unchanged, rebuilds the source), `r5-vehicles-patch.py` with `r5-city-bus-patch.json` (the 2D root patch, shape by shape), `r5-vehicles-render.sh`, `r5-vehicles-ship.sh`. Renders: `🗑️generated/r5-city-bus/before/`.
+
+### Reference (Solaris Urbino 12 electric, Solaris press specification UITP 2023, fetched 2026-11-21) and model
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| length | 12.000 m | 12.000 m | 0 % |
+| width (body) | 2.550 m | 2.550 m | 0 % |
+| height without pantograph | 3.300 m | 3.300 m | 0 % |
+| wheelbase | 5.900 m | 5.900 m | 0 % |
+| front overhang | 2.700 m | 2.650 m | -1.9 % |
+| rear overhang | 3.400 m | 3.450 m | +1.5 % |
+| door arrangement | 2-2-2 (three double doors) | two double doors (2-2-0, the asset's class choice) | see open points |
+| tyre 275/70 R 22.5 | 0.957 m | 0.960 m | +0.3 % |
+| floor at the doors (UN R107, class) | 0.32 to 0.34 m | 0.34 m | in range |
+
+### Grades (opened: body, structure and thermal cut at 1:50, 1:100, 1:200, 1:500; all seven poses and the three clip frames at 1:50; 2D at every scale)
+
+| scale | body before / after | thermal before / after | structure before / after |
+|---|---|---|---|
+| 1:50 | A- / A- | A- / A- | A- / A- |
+| 1:100 | A- / A- | A- / A- | A- / A- |
+| 1:200 | A- / A- | B+ (grey palette, documented) / B+ | B+ (door leaves as solid panel references) / A- |
+| 1:500 | B+ / B+ | B+ / B+ | B (four 75 mm door slabs in the frame) / A- |
+| poses, clips | A- except kneeling-at-stop B+ (forward leaf of the front door slides past the nose corner) | | |
+
+Catalog before: INVALID under the print rule (`mirror-arm-l` 0.168 mm at 1:150 for 1:100 and 1:200; `door-opening-m/f` 0.192 mm at 1:1000).
+
+### Changes
+
+- Structure 1:200 and 1:500: each of the four door leaves is now a frame of two stiles and two rails (40 mm / 75 mm sections) on its carriage, the real leaf frame, instead of the leaf panel referenced as one member slab. Decisions (en, de) updated.
+- Mirrors 1:100 and 1:200 (3D and 2D front and plan): arms r 17/20 -> 22/25 mm (real mirror arm tubes 40 to 50 mm); the kerb-side driver's mirror housing 180 -> 140 mm wide at the same outer edge (overall width 2.95 m unchanged), so its arm shows 35 mm beyond the wall.
+- 2D 1:500 plan: the two door reveals `door-opening-m/f` drawn 100 mm deep instead of 41.5 mm (a 0.08 mm sliver on paper).
+- Tried and reverted: a deeper 1:500 drive axle (0.26 m) made the axle a sliver under the kneeling skirt and the product then refused 1:500 at its nominal scale; the round-3 axle stays. Tried and reverted: narrowing the 1:500 range to 1:900 (the door-reveal measure is dominated by the pen and barely moves with the denominator).
+
+Check: `VALID vehicles/city-bus (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`; `volumes-check.ts --product` PASS (671 s).
+
+### Open points
+
+- Front door, pose `kneeling-at-stop` and clip `arrive-kneel-doors` (B+): the forward leaf of the front door slides 0.55 m forward on the prismatic `door-f-fwd` bone and stands proud of the curved nose corner. A real front door of this class swings (inward or outward plug) about vertical columns at the jambs; that needs revolute door bones with a vertical axis, re-authored leaf solids, 2D shapes, poses and clips at every scale. Not done in this round.
+- Door arrangement 2-2-0 against the reference 2-2-2: the asset was authored as a two-door 12 m bus (the class exists); a third door would be a new layout of the rear overhang, not a correction.
+- Coarse thermal sheets show the coarse solids in one grey: the sheet tool's palette for solids without `layer` (documented in round 3), not the model.
+- 1:500 body (B+): wheels are plain discs with the twins merged, roof units plain slabs; minimal at 75 mm.
+
+The 1:200 side and front views of the electric axle casting use a 0.16 mm pen. The 1:350 endpoint and all affected feature and silhouette checks passed.

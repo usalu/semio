@@ -14,7 +14,8 @@ for key in sorted(set(cat) | set(new)):
     if key == "volumes" or cat.get(key) == new.get(key):
         continue
     if key == "representations":
-        for a, b in zip(cat[key], new[key]):
+        for scale in sorted(set(cat[key]) | set(new[key]), key=int):
+            a, b = cat[key].get(scale, {}), new[key].get(scale, {})
             if a == b:
                 continue
             geo_a, geo_b = a.get("geometry", {}), b.get("geometry", {})
@@ -22,9 +23,9 @@ for key in sorted(set(cat) | set(new)):
                 sa = {s["id"]: s for s in geo_a.get(view, [])}
                 sb = {s["id"]: s for s in geo_b.get(view, [])}
                 changed = [i for i in sa if i in sb and sa[i] != sb[i]]
-                print(" rep", a.get("scale"), view, "changed", len(changed), "gone", sorted(set(sa) - set(sb)), "new", sorted(set(sb) - set(sa)), changed[:12])
+                print(" rep", scale, view, "changed", len(changed), "of", len(sa), "gone", sorted(set(sa) - set(sb)), "new", sorted(set(sb) - set(sa)))
             other = [k for k in set(a) | set(b) if k != "geometry" and a.get(k) != b.get(k)]
             if other:
-                print(" rep", a.get("scale"), "other members", other)
+                print(" rep", scale, "other members", other)
     else:
         print("differs:", key)

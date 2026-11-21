@@ -224,6 +224,113 @@ fn an_instance_hover_reports_the_resolved_granularity_on_the_pointer_channel() {
     }
 }
 
+fn retire_grouped_hover_fixture(state: &mut World3dState) {
+    assert!(semio_os_infinite_world_bridge::begin_world3d_dynamic_retirement(&mut state.session, &mut state.camera, &mut state.retirement, &mut state.scene, &mut state.assets));
+    for _ in 0..4096 {
+        if with_world_step_context(1, |context| semio_os_infinite_world_host::step_world3d_dynamic_retirement(state, context)) {
+            break;
+        }
+    }
+    assert!(semio_os_infinite_world_host::world3d_dynamic_retirement_terminal_is_empty(state));
+}
+
+#[test]
+fn an_authored_instance_hover_group_publishes_on_the_native_pointer_channel() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️grouped-hover.json")).unwrap();
+    for case in law["cases"].as_array().unwrap() {
+        let mut state = fixture_state();
+        let mut authored = case["instance"].clone();
+        authored["meshId"] = state.scene.draws.get(0).unwrap().mesh_key.clone().into();
+        let instance: World3dSceneInstanceEntry = serde_json::from_value(authored).unwrap();
+        let draw = state.scene.draws.get_mut(0).unwrap();
+        draw.instances[0].id = instance.id.clone();
+        let position = instance.position.unwrap_or([0.0; 3]);
+        for (axis, coordinate) in position.into_iter().enumerate() {
+            draw.instances[0].model.cols[3][axis] = coordinate as f32;
+        }
+        let peer = &law["cases"][if instance.id == "axis@!ivector#in-0" { 1 } else { 0 }]["instance"];
+        let peer: World3dSceneInstanceEntry = serde_json::from_value(peer.clone()).unwrap();
+        draw.instances[1].id = peer.id.clone();
+        draw.instances[1].model = Mat4::identity();
+        let (origin, direction) = instance_ray(&state, &instance.id);
+        state.session.bound_domain_granularity_id = case["defaultGranularity"].as_str().map(str::to_owned);
+        state.interaction.instance_interaction_ids = instance.interaction_id.clone().map(|id| (instance.id.clone(), id)).into_iter().collect();
+        state.interaction.instance_interaction_granularity_ids = instance.interaction_granularity_id.clone().map(|id| (instance.id.clone(), id)).into_iter().collect();
+        state.interaction.instance_hover_targets = [(instance.id.clone(), instance.hover_targets.clone()), (peer.id, peer.hover_targets)]
+            .into_iter().filter_map(|(id, targets)| targets.map(|targets| (id, targets))).collect();
+        let hover = |state: &mut World3dState, origin| {
+            let cursor = ray_cursor(state, WorldRayPickPurpose::Hover, origin, direction, 0);
+            publish_pick(state, cursor)
+        };
+        let expected = &case["expected"];
+        let action = hover(&mut state, origin).expect("instance hover publishes");
+        assert_eq!(action.action, "interactionHover");
+        assert_eq!(arg(&action, "channel"), "pointer");
+        assert_eq!(&decoded_targets(&action), expected, "{}", case["name"]);
+        assert!(hover(&mut state, origin).is_none());
+        let cursor = ray_cursor(&state, WorldRayPickPurpose::Instance, origin, direction, 0);
+        let click = publish_pick(&mut state, cursor).expect("instance click publishes");
+        assert_eq!(decoded_targets(&click), serde_json::json!([{
+            "id": instance.interaction_id.as_deref().unwrap_or(&instance.id),
+            "granularity": instance.interaction_granularity_id.as_deref().or(case["defaultGranularity"].as_str()).unwrap(),
+        }]));
+        if instance.hover_targets.is_some() {
+            state.interaction.instance_hover_targets.remove(&instance.id);
+            let updated = hover(&mut state, origin).expect("changed group with same primary publishes");
+            assert_eq!(decoded_targets(&updated), decoded_targets(&click));
+            state.interaction.instance_hover_targets.insert(instance.id.clone(), instance.hover_targets.unwrap());
+            assert_eq!(&decoded_targets(&hover(&mut state, origin).unwrap()), expected);
+        }
+        let clear = hover(&mut state, Vec3::new(500.0, 500.0, 4.0)).expect("hover clear publishes");
+        assert_eq!(decoded_targets(&clear), serde_json::json!([]));
+        assert_eq!(&decoded_targets(&hover(&mut state, origin).unwrap()), expected);
+        retire_grouped_hover_fixture(&mut state);
+    }
+}
+
+#[test]
+fn authored_hover_groups_obey_escaped_payload_and_utf8_identifier_credits() {
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️grouped-hover.json")).unwrap();
+    let limits = &law["limits"];
+    let rows: Vec<_> = (0..limits["oversizedUniqueTargets"].as_u64().unwrap()).map(|index| {
+        serde_json::json!({ "granularity": "handle", "id": format!("{}{index}", limits["oversizedTargetText"].as_str().unwrap()) })
+    }).collect();
+    let parse = |targets| serde_json::from_value::<World3dSceneInstanceEntry>(serde_json::json!({ "id": "instance", "meshId": "mesh", "hoverTargets": targets })).unwrap().hover_targets;
+    assert!(serde_json::to_string(&rows).unwrap().len() > limits["payloadBytes"].as_u64().unwrap() as usize);
+    assert!(parse(serde_json::json!(rows)).is_none());
+    let duplicate = serde_json::json!({ "granularity": "handle", "id": "same" });
+    assert!(parse(serde_json::json!(vec![duplicate; WORLD_INTERACTION_OBJECT_CAPACITY + 1])).is_none());
+    let length = limits["idBytes"].as_u64().unwrap() as usize;
+    let id = "ä".repeat(length / 2);
+    let rows = serde_json::json!([{ "granularity": "face", "id": id }]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&parse(rows.clone()).unwrap()).unwrap(), rows);
+    assert!(parse(serde_json::json!([{ "granularity": "face", "id": format!("{id}a") }])).is_none());
+}
+
+#[test]
+fn authored_hover_falls_back_when_the_action_cannot_fit_the_group() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let mut state = fixture_state();
+    let cap = semio_ui_action::ACTION_STRING_BYTE_CAPACITY;
+    state.session.controller_id = "c".repeat(cap);
+    state.session.bound_domain_id = Some("d".repeat(cap));
+    state.session.window_instance_id = Some("w".repeat(cap));
+    let instance = state.scene.draws.get(0).unwrap().instances[0].id.clone();
+    let rows: Vec<_> = (0..14).map(|index| {
+        serde_json::json!({ "granularity": "granular!", "id": format!("{}{index:02}", "x".repeat(WORLD_INTERACTION_ID_BYTE_CAPACITY - 2)) })
+    }).collect();
+    let record: World3dSceneInstanceEntry = serde_json::from_value(serde_json::json!({ "id": instance, "meshId": "mesh", "hoverTargets": rows })).unwrap();
+    state.interaction.instance_hover_targets.insert(instance.clone(), record.hover_targets.expect("the group fits the target string"));
+    let (origin, direction) = instance_ray(&state, &instance);
+    let cursor = ray_cursor(&state, WorldRayPickPurpose::Hover, origin, direction, 0);
+    let hover = publish_pick(&mut state, cursor).expect("the ordinary target fits the action");
+    let cursor = ray_cursor(&state, WorldRayPickPurpose::Instance, origin, direction, 0);
+    let click = publish_pick(&mut state, cursor).unwrap();
+    assert_eq!(decoded_targets(&hover), decoded_targets(&click));
+    retire_grouped_hover_fixture(&mut state);
+}
+
 #[test]
 fn a_background_click_clears_with_an_empty_target_list_rather_than_a_silence() {
     let _gate = semio_os_infinite_world_host::world_test_gate();

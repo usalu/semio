@@ -111,7 +111,7 @@ impl DocumentState {
     /// 🔌️ The current session's program manifest (for its `commands: Vec<CommandDefinition>` — Plugin-scope
     /// commands apply whenever any of that plugin's apps is focused, mirroring `os-shell.tsx`'s
     /// `activePluginManifest`).
-    pub fn active_plugin_manifest(&self, plugins: &PluginState) -> Option<&semio_framework::PluginManifest> {
+    pub fn active_plugin_manifest<'a>(&self, plugins: &'a PluginState) -> Option<&'a semio_framework::PluginManifest> {
         let session = self.session.as_ref()?;
         plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|entry| &entry.manifest)
     }

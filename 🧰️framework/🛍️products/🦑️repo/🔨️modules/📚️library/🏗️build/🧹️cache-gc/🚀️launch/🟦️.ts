@@ -13,7 +13,7 @@ import {repositoryCacheBudgetV1} from "../../../⚡️caching/💾️storage/�
 import {CACHE_SIZE_FILE_V1,cacheLedgerV1,cacheRootDirectoryV1,cacheTextV1,readCacheSizeLedgerV1,type CacheLedgerV1,type CacheSizeLedgerV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {budgetSweepDecisionV1,type BudgetSweepDecisionV1} from "../🧮️sweep/🟦️.ts";
 import {nxToolingStoreBoundPolicyV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/🎚️store-bound/🟦️.ts";
-import {nativeFreeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {nativeFreeSpaceSyncV1,nativePartitionOfV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 🚦️ What a writer that just looked at the graph image's free space should do about optional caches. */
 export type GraphCollectorDecisionV1="launch"|"enough"|"throttled"|"failed";
@@ -128,8 +128,8 @@ export async function launchBudgetSweepIfDueV1(workspace:string,overrides:Partia
 
 /** 📏️ The free bytes of the mounted image of a partition of a workspace, undefined while the image is not mounted. */
 function mountedPartitionFreeBytesV1(workspace:string,partition:"graph"|"products"|"tools"):number|undefined{
- const directory=repositoryCacheBudgetV1(workspace).partitions[partition].directory,mount=join(directory,"m");
- if(statSync(mount).dev===statSync(directory).dev)return undefined;
+ const directory=repositoryCacheBudgetV1(workspace).partitions[partition].directory,mount=join(directory,"m"),native=nativePartitionOfV1(mount);
+ if(native?.directory===directory?!native.attached:statSync(mount).dev===statSync(directory).dev)return undefined;
  return nativeFreeSpaceSyncV1(mount)?.availableBytes;
 }
 /** 🆓️ The free bytes of the mounted graph image of a workspace, undefined while the image is not mounted. */

@@ -332,16 +332,19 @@ impl FolderEventLogStorage {
         }
         Ok(events)
     }
-    /// 📖️ Folds the latest stored `(pack, spr)` event for `document_id`.
+    /// 📖️ Projects the latest stored document snapshot to its `(pack, spr)` pair.
     pub async fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, semio_os_vcs::VcsError> {
-        Ok(self.events()?.into_iter().rev().find(|event| event.kind == DOCUMENT_PUT_EVENT && event.key == document_id).map(|event| (event.primary, event.secondary)))
+        Ok(self.read_snapshot(document_id).await?.map(|(pack, spr, _)| (pack, spr)))
     }
 
     pub async fn read_snapshot(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>, Option<Vec<u8>>)>, semio_os_vcs::VcsError> {
-        self.events()?.into_iter().rev().find(|event| matches!(event.kind, DOCUMENT_PUT_EVENT | DOCUMENT_ARCHIVE_PUT_EVENT) && event.key == document_id).map(|event| {
+        self.latest_document_event(document_id)?.map(|event| {
             let (pack, spr) = Self::event_pair(&event)?;
             Ok((pack, spr, (event.kind == DOCUMENT_ARCHIVE_PUT_EVENT).then_some(event.primary)))
         }).transpose()
+    }
+    fn latest_document_event(&self, document_id: &str) -> Result<Option<FolderEvent>, semio_os_vcs::VcsError> {
+        Ok(self.events()?.into_iter().rev().find(|event| matches!(event.kind, DOCUMENT_PUT_EVENT | DOCUMENT_ARCHIVE_PUT_EVENT) && event.key == document_id))
     }
     fn event_pair(event: &FolderEvent) -> Result<(Vec<u8>, Vec<u8>), semio_os_vcs::VcsError> {
         if event.kind == DOCUMENT_PUT_EVENT { return Ok((event.primary.clone(), event.secondary.clone())); }
@@ -357,9 +360,9 @@ impl FolderEventLogStorage {
     pub async fn write_if_current(&self, document_id: &str, schema: &str, expected: Option<(&[u8], &[u8])>, pack: &[u8], spr: &[u8]) -> Result<bool, semio_os_vcs::VcsError> {
         self.append_checked(&FolderEvent { kind: DOCUMENT_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: pack.into(), secondary: spr.into() }, Some(expected), None).map(|event| event.is_some())
     }
-    /// 🗃️ Folds the latest exact recursive archive for `document_id`.
+    /// 🗃️ Returns the exact recursive archive held by the current document event.
     pub async fn read_archive(&self, document_id: &str) -> Result<Option<Vec<u8>>, semio_os_vcs::VcsError> {
-        Ok(self.events()?.into_iter().rev().find(|event| event.kind == DOCUMENT_ARCHIVE_PUT_EVENT && event.key == document_id).map(|event| event.primary))
+        Ok(self.latest_document_event(document_id)?.filter(|event| event.kind == DOCUMENT_ARCHIVE_PUT_EVENT).map(|event| event.primary))
     }
 
     /// 🪪️ Updates an exact pair/archive baseline while retaining every recursive member.
@@ -368,8 +371,16 @@ impl FolderEventLogStorage {
     }
     /// 🗃️ Appends one indivisible recursive-document archive event.
     pub async fn write_archive(&self, document_id: &str, schema: &str, archive: &[u8]) -> Result<(), semio_os_vcs::VcsError> {
+        self.append_archive(document_id, schema, archive, false).await.map(|_| ())
+    }
+    /// 🆕️ Appends the first archive only if the document has no persisted snapshot.
+    pub async fn create_archive_if_absent(&self, document_id: &str, schema: &str, archive: &[u8]) -> Result<bool, semio_os_vcs::VcsError> {
+        self.append_archive(document_id, schema, archive, true).await
+    }
+    async fn append_archive(&self, document_id: &str, schema: &str, archive: &[u8], require_absent: bool) -> Result<bool, semio_os_vcs::VcsError> {
         semio_os_spr::decode_document_archive_bytes(archive).await.map_err(|error| semio_os_vcs::VcsError::Backbone(error.to_string()))?;
-        self.append(&FolderEvent { kind: DOCUMENT_ARCHIVE_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: archive.into(), secondary: Vec::new() })
+        self.append_checked(&FolderEvent { kind: DOCUMENT_ARCHIVE_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: archive.into(), secondary: Vec::new() }, require_absent.then_some(None), None)
+            .map(|event| event.is_some())
     }
     /// 📇️ Lists latest document events in newest-write-first order.
     pub async fn document_ids(&self) -> Result<Vec<String>, semio_os_vcs::VcsError> {

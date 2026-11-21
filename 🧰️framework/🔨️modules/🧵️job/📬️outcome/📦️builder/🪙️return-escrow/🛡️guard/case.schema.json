@@ -8,6 +8,7 @@
     "metadata",
     "cases",
     "identityCases",
+    "extentCases",
     "observer",
     "freshAtSettlement"
   ],
@@ -106,6 +107,19 @@
           "expected": false
         }
       ]
+    },
+    "extentCases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["extent", "accepted"],
+        "properties": {
+          "extent": {"type": "integer", "minimum": 1},
+          "accepted": {"type": "boolean"}
+        }
+      }
     },
     "observer": {
       "const": {

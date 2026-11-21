@@ -74,6 +74,17 @@ fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end:
     tokens.push(SpannedToken { token, start, end });
 }
 
+fn quoted_end(bytes: &[u8], start: usize, quote: u8) -> Option<usize> {
+    let mut index = start + 1;
+    while let Some(&byte) = bytes.get(index) {
+        if byte == quote {
+            return Some(index + 1);
+        }
+        index += if quote == b'"' && byte == b'\\' { 2 } else { 1 };
+    }
+    None
+}
+
 /// 🔤️ Byte-span-tracked jack lexer. `forgiving = true` never fails (used by live editors mid-keystroke);
 /// `forgiving = false` rejects unterminated strings and unrecognized characters.
 pub fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String> {
@@ -125,29 +136,31 @@ pub fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, St
                 i += 1;
             }
             b'\'' | b'"' => {
-                let quote = c;
-                i += 1;
-                let lit_start = i;
-                while i < bytes.len() && bytes[i] != quote {
-                    i += 1;
-                }
-                if i >= bytes.len() {
+                let Some(end) = quoted_end(bytes, start, c) else {
                     if forgiving {
-                        let s = String::from_utf8_lossy(&bytes[lit_start..i]).into_owned();
-                        push_spanned(&mut tokens, Token::StringLit(s), start, i);
+                        push_spanned(&mut tokens, Token::StringLit(input[start + 1..].to_owned()), start, input.len());
                         break;
                     }
                     return Err("unterminated string".into());
-                }
-                let s = String::from_utf8_lossy(&bytes[lit_start..i]).into_owned();
-                i += 1;
-                push_spanned(&mut tokens, Token::StringLit(s), start, i);
+                };
+                let literal = &input[start + 1..end - 1];
+                let decoded = if c == b'"' {
+                    match semio_framework_pack_json::from_json_str(&input[start..end], semio_framework_pack_json::JsonMemberPolicy::Reject) {
+                        Ok(value) => value,
+                        Err(_) if forgiving => literal.to_owned(),
+                        Err(error) => return Err(error.to_string()),
+                    }
+                } else {
+                    literal.to_owned()
+                };
+                push_spanned(&mut tokens, Token::StringLit(decoded), start, end);
+                i = end;
             }
             b'-' if i + 1 < bytes.len() && bytes[i + 1] == b'>' => {
                 push_spanned(&mut tokens, Token::Arrow, start, start + 2);
                 i += 2;
             }
-            b'0'..=b'9' | b'-' if i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() => {
+            b'0'..=b'9' | b'-' if c.is_ascii_digit() || bytes.get(i + 1).is_some_and(u8::is_ascii_digit) => {
                 let num_start = i;
                 if bytes[i] == b'-' {
                     i += 1;
@@ -219,12 +232,9 @@ pub fn tokenize(input: &str) -> Vec<TokenSpan> {
         .map(|row| {
             let mut class = token_class(&row.token);
             if matches!(row.token, Token::StringLit(_)) {
-                let quote = input.as_bytes().get(row.start);
-                if quote == Some(&b'\'') || quote == Some(&b'"') {
-                    let closed = input.as_bytes().get(row.end.saturating_sub(1)) == quote;
-                    if !closed {
-                        class = TokenClass::Error;
-                    }
+                let bytes = input.as_bytes();
+                if quoted_end(&bytes[..row.end], row.start, bytes[row.start]).is_none() {
+                    class = TokenClass::Error;
                 }
             }
             TokenSpan { class, start: row.start, end: row.end }

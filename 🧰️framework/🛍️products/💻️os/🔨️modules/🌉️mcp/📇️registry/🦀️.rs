@@ -6,7 +6,7 @@ use semio_os_kernel::native_catalog::NativeCatalogV1;
 use semio_os_kernel::native_catalog::configured_native_catalog_v1;
 use std::path::Path;
 use std::path::PathBuf;
-use crate::plugin_paths_and_descriptor::{load_package_descriptor, plugin_registry_entries};
+use crate::plugin_paths_and_descriptor::{load_registry_plugin_descriptor, plugin_registry_entries};
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 
 //#region 🔖️RegistryDiscovery
@@ -31,7 +31,7 @@ impl RegistryDiscovery {
         let mut descriptors = Vec::with_capacity(entries.len());
         for entry in &entries {
             descriptor_paths.push(entry.owner_root.join("🔣️.json"));
-            match load_package_descriptor(&entry.owner_root) {
+            match load_registry_plugin_descriptor(&root, entry) {
                 Ok(descriptor) => descriptors.push(descriptor),
                 Err(error) => diagnostics.push(format!("skipping plugin `{}`: {error}", entry.plugin_id)),
             }

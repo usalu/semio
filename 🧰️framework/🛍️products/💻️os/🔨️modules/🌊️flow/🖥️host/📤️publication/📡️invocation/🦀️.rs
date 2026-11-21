@@ -1,7 +1,6 @@
 //! 📡️ The original invocation source remains leased until every nested response has been admitted.
 use super::*;
-#[path="🪪️identity/🦀️.rs"]
-pub mod identity;
+pub use semio_os_flow_host_source::invocation_identity as identity;
 pub use identity::FlowInvocationIdentity;
 pub use semio_os_flow_host_source::invocation_request as request_work;
 pub use request_work::{FlowInvocationRequestSource,FlowInvocationRequestWork,FlowInvocationExternalResumeSource};

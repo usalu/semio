@@ -40,11 +40,25 @@ const contentOf=row=>row.kind==="file"&&row.fact&&row.fact.error===undefined?row
 const digestOf=row=>row.kind==="digest"&&row.fact&&row.fact.sha256!==null?row.fact:undefined;
 
 /** 🧭️ Every directory and content path a row and its nested observations depend on. */
-export function rowDependenciesV1(row,directories,paths){
+export function rowDependenciesV1(row,directories,paths=undefined){
  const directory=structuralDirectoryV1(row);if(directory!==undefined)directories.add(directory);
  const entry=existingEntryV1(row)??siblingResolutionV1(row);if(entry!==undefined)directories.add(entry.directory);
- if(contentOf(row)||digestOf(row))paths.add(row.path);
+ if(paths!==undefined&&(contentOf(row)||digestOf(row)))paths.add(row.path);
  for(const nested of nestedOf(row))rowDependenciesV1(nested,directories,paths);
+}
+
+
+/** 🪶️ Collects directory dependencies from packed rows without decoding content-only facts. */
+async function directoryDependenciesV1({rows,index,signal},wanted,needs=undefined){
+ const yieldNow=createYielderV1(),packed=index?.rows===rows?index:undefined;
+ for(let id=0;id<rows.length;id++){
+  if((id&255)===0){signal?.throwIfAborted();await yieldNow();}
+  if(needs!==undefined&&!needs(id))continue;
+  const kind=packed?.rowKindOf?.(id);
+  if(kind==="file"||kind==="digest")continue;
+  rowDependenciesV1(rebaseRowV1(rows[id]),wanted);
+ }
+ signal?.throwIfAborted();
 }
 
 /**
@@ -87,18 +101,18 @@ export function createEpochDoubtV1({stamps,statFile=path=>stat(path).catch(()=>u
    return Uint8Array.from(rows,row=>doubtful(row)?1:0);
   },
   /** 💾️ After the check: keeps the stamps of the directories whose rows were all verified to hold and none stale, so the next pass vouches for them; only the rows that were not verified and the stale ones are read, never the rows that held. */
-  async settled({rows,ids,stale}){
-   const selected=new Uint8Array(rows.length),exclude=new Set(),forget=id=>{const own=new Set();rowDependenciesV1(rebaseRowV1(rows[id]),own,new Set());for(const path of own)exclude.add(path);};
+  async settled(input){
+   const {rows,ids,stale}=input,selected=new Uint8Array(rows.length),exclude=new Set();
    for(const id of ids)selected[id]=1;
-   for(let id=0;id<rows.length;id++)if(selected[id]!==1)forget(id);
-   for(const id of stale)if(selected[id]===1)forget(id);
+   await directoryDependenciesV1(input,exclude,id=>selected[id]!==1||stale.has(id));
    return stamps.save(measured,exclude);
   },
   /** 📦️ After a generation is published: stamps every directory its structural rows look into, as far as it was untouched since `observedAt` (before the facts were observed), so a fresh process vouches for those directories at once. */
-  async published({rows,observedAt}){
-   const wanted=new Set(),ignored=new Set();
-   for(const row of rows)rowDependenciesV1(rebaseRowV1(row),wanted,ignored);
-   const{measured:taken}=await stamps.classify([...wanted],{observedAt});
+  async published(input){
+   const {observedAt,signal}=input,wanted=new Set();
+   await directoryDependenciesV1(input,wanted);
+   const{measured:taken}=await stamps.classify([...wanted],{observedAt,signal});
+   signal?.throwIfAborted();
    return stamps.save(taken);
   },
   stats:()=>({directories:directories.size,files:files.size}),

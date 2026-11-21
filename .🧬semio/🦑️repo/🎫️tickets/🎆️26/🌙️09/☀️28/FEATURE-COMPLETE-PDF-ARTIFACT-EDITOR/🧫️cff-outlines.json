@@ -1,0 +1,29 @@
+{
+  "fonts": [
+    "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/📖️LibertinusSerif-Regular.otf",
+    "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/🖋️LibertinusSerif-Italic.otf",
+    "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/⌨️LibertinusMono-Regular.otf"
+  ],
+  "characters": [
+    "A",
+    "g",
+    "R",
+    "S",
+    "é",
+    "ö",
+    "̧",
+    " "
+  ],
+  "cidFont": {
+    "path": "🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/🌏️noto-sans-cjk-sc/🌏️NotoSansCJKsc-Regular.otf",
+    "characters": [
+      "中",
+      "文",
+      "語",
+      "日",
+      "é",
+      "A",
+      " "
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import { joinTakeLookV1 } from "../📥️take/🟨️.mjs";
 
 export const LOOK_POLICY_V1 = Object.freeze({ ...schema.definitions.Policy.const });
 const TEXTS = schema.definitions.Texts.const;
@@ -29,13 +30,13 @@ export function lookBatchesV1(lanes, size, isolated = () => false) {
 export const lookQueuedTextV1 = (language, fields) => fill(TEXTS[language === "de" ? "de" : "en"].queued, fields);
 
 /**
- * 🔭️ The queue of owner looks of a read: every look is a job of a farm child (the assembly authority, the verdict on the stored record and the closure references of up to `maximumOwnersPerJob` owners; `shared` is what every job carries, read in the flow of the caller of `start` or `ask` when it is a function), the parent only dispatches the jobs and hands each owner its answer. At most as many jobs run at once as children are ready (re-read at every settlement and whenever the farm grows through `kick`), a job is dispatched only while the answers nobody asked for yet stay below a lead of `leadJobsPerChild` jobs per child, and an owner that asks before its job was dispatched leaves its batch and goes to the front in a job of its own (exempt from the lead), so it never waits for the slowest owner of a batch. `ask(name)` answers the reply of the owner once (a second ask looks again, as does an answer older than `freshMilliseconds`), undefined when the farm is gone, and rejects with `refuse(name, reason)` when the farm could not look at it.
+ * 🔭️ The queue of owner looks of a read: every look is a job of a farm child (the assembly authority, the verdict on the stored record and the closure references of up to `maximumOwnersPerJob` owners; `shared` is what every job carries, read in the flow of the caller of `start` or `ask` when it is a function), the parent only dispatches the jobs and hands each owner its answer. At most as many jobs run at once as children are ready (re-read at every settlement and whenever the farm grows through `kick`), a job is dispatched only while the answers nobody asked for yet stay below a lead of `leadJobsPerChild` jobs per child, and an owner that asks before its job was dispatched leaves its batch and goes to the front in a job of its own (exempt from the lead), so it never waits for the slowest owner of a batch. `ask(name)` answers the reply of the owner once (a second ask looks again, as does an answer older than `freshMilliseconds`), undefined when the farm is gone, and rejects with `refuse(name, reason)` when the farm could not look at it. A cancelled observer releases its wait immediately and leaves the queue in custody of the look and its answer.
  * @param {{ farm: { width(): number, observe(job: object): Promise<{ looks?: object[] } | undefined> }, jobOf: (name: string) => object, shared?: object | (() => object), refuse: (name: string, reason: string) => Error, say?: (text: (language: string) => string) => void, policy?: typeof LOOK_POLICY_V1, now?: () => number }} options
  * @see ./🧪️tests/🟦️.ts
  */
 export function createLookQueueV1({ farm, jobOf, shared = {}, refuse, say = () => {}, policy = LOOK_POLICY_V1, now = () => performance.now() }) {
   const entries = new Map(), queue = [], counts = { jobs: 0, owners: 0, asked: 0, again: 0, refused: 0 };
-  let running = 0, held = 0, flying = 0, size = 1;
+  let running = 0, held = 0, flying = 0, size = 1, prefetchSignal;
   const children = () => Math.max(1, farm.width());
   const entryOf = (name, batch) => {
     let resolve, reject;
@@ -67,7 +68,7 @@ export function createLookQueueV1({ farm, jobOf, shared = {}, refuse, say = () =
     ).finally(() => { running--; flying -= batch.names.length; pump(); });
   };
   const pump = () => {
-    while (queue.length > 0 && running < children() && (queue[0].urgent === true || held + flying < children() * policy.leadJobsPerChild * size)) run(queue.shift());
+    while (queue.length > 0 && running < children() && (queue[0].urgent === true || !prefetchSignal?.aborted && held + flying < children() * policy.leadJobsPerChild * size)) run(queue.shift());
   };
   const enqueue = (names, front) => {
     const batch = { names, state: "queued", urgent: front, shared: typeof shared === "function" ? shared() : shared };
@@ -76,8 +77,9 @@ export function createLookQueueV1({ farm, jobOf, shared = {}, refuse, say = () =
     return batch;
   };
   return Object.freeze({
-    /** 🔭️ Queues the looks of all lanes of a take pass, in batches. */
-    start(lanes, isolated) {
+    /** 🔭️ Queues the looks of all lanes of a take pass, in batches, and dispatches only explicit requests when its signal ends. */
+    start(lanes, isolated, signal) {
+      prefetchSignal = signal;
       const names = lanes.reduce((total, lane) => total + lane.length, 0);
       if (names === 0) return;
       size = lookBatchSizeV1(names, farm.width() || policy.assumedChildren, policy);
@@ -90,7 +92,8 @@ export function createLookQueueV1({ farm, jobOf, shared = {}, refuse, say = () =
     /** 🔔️ Tells the queue that a child became ready. */
     kick() { pump(); },
     /** 🔭️ The look of one owner: the answer of its job, queued or flown already. */
-    ask(name) {
+    ask(name, signal) {
+      if (signal?.aborted) return Promise.reject(signal.reason);
       counts.asked++;
       let entry = entries.get(name);
       if (entry !== undefined && entry.ready && now() - entry.at > policy.freshMilliseconds) { held--; entries.delete(name); entry = undefined; counts.again++; }
@@ -104,8 +107,8 @@ export function createLookQueueV1({ farm, jobOf, shared = {}, refuse, say = () =
         } else { queue.splice(queue.indexOf(batch), 1); batch.urgent = true; queue.unshift(batch); }
         pump();
       }
-      const settled = entry;
-      return settled.promise.finally(() => { if (entries.get(name) === settled) { entries.delete(name); if (settled.ready) held--; } });
+      const settled = entry, answer = signal === undefined ? settled.promise : joinTakeLookV1(settled.promise, signal);
+      return answer.finally(() => { if (!signal?.aborted && entries.get(name) === settled) { entries.delete(name); if (settled.ready) held--; } });
     },
     stats() { return Object.freeze({ ...counts, queued: queue.reduce((total, batch) => total + batch.names.length, 0), flying, running, held }); },
   });

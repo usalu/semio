@@ -1,0 +1,21 @@
+annex	usage	category	winter_min_c	summer_max_c
+de	office	I	21	25.5
+de	office	II	20	26
+de	office	III	19	27
+de	office	IV	18	28
+en	office	I	21	25.5
+en	office	II	20	26
+en	office	III	19	27
+en	office	IV	18	28
+de	meeting	II	20	26
+de	classroom	III	19	27
+en	meeting	III	19	27
+en	classroom	IV	18	28
+en	residential	I	21	25.5
+en	residential	II	20	26
+en	residential	III	18	27
+en	residential	IV	16	28
+de	residential	II	scope	
+en	corridor	II	scope	
+de	retail	II	scope	
+de	kitchen	II	scope	

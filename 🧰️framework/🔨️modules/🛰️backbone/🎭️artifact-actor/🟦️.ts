@@ -7,7 +7,7 @@ import { decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch } from "../../📡
 import type { DocumentScope } from "../../📇️directory/🟦️.ts";
 import { replicationPackCodec } from "../../🎁️packs/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, type CommandAckOutcome, commandAckOutcomeOfValueV1, commandBatchIdOfValueV1, decodeDocumentArchiveBytes, DOCUMENT_ARCHIVE_MAXIMUM_BYTES } from "../../🪢️wire-contracts/🟦️.ts";
-import { parseDocumentBackboneMessage, parseInboundDocumentBackboneMessage } from "../🔀️message/🟦️.ts";
+import { parseDocumentBackboneTransportMessage, parseInboundDocumentBackboneMessage } from "../🔀️message/🟦️.ts";
 import type { PersistenceBinding } from "../🔑️persistence-binding/🟦️.ts";
 
 //#region 🔖️BackboneWorkerProtocol
@@ -97,7 +97,7 @@ export type BrowserActorUiMountedV1 = Readonly<{
 
 export function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
   if (message.kind === "documentBackbone") {
-    return { kind: "documentBackbone", message: Array.from(parseDocumentBackboneMessage(message.message).message) };
+    return { kind: "documentBackbone", message: Array.from(parseDocumentBackboneTransportMessage(message.message).message) };
   }
   if (message.kind === "localMutations") {
     return { kind: "localMutations", envelopes: encodeCausalEnvelopeBatch(message.envelopes, replicationPackCodec) };
@@ -113,7 +113,7 @@ export function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
 export function parseArtifactActorMsg(message: Record<string, unknown>): ArtifactActorMsg {
   if (message.kind === "documentBackbone") {
     if (Object.keys(message).sort().join(",") !== "kind,message" || !Array.isArray(message.message) || message.message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || !message.message.every((entry) => Number.isInteger(entry) && entry >= 0 && entry <= 255)) throw new Error("backbone worker request: invalid document backbone message");
-    return { kind: "documentBackbone", message: parseDocumentBackboneMessage(Uint8Array.from(message.message as readonly number[])).message };
+    return { kind: "documentBackbone", message: parseDocumentBackboneTransportMessage(Uint8Array.from(message.message as readonly number[])).message };
   }
   if (message.kind === "localMutations" && Array.isArray(message.envelopes) && message.envelopes.every((entry) => typeof entry === "number")) {
     return { kind: "localMutations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[], replicationPackCodec) };

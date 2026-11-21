@@ -1,32 +1,31 @@
-import{pendingCratePathsV1}from"./🕓️pending-crates/🟨️.mjs";
-import{staleConfigOwnersV1}from"./🏷️config-owners/🟨️.mjs";
+import{createGenerationPlanV1}from"./🧭️plan/🟨️.mjs";
+export{unfoundedWithheldOwnersV1}from"./🧭️plan/🟨️.mjs";
 import{readEdgeReadsV1,readEnvironmentPartsV1}from"./🧵️edge-reads/🟨️.mjs";
 import{createBoundedCacheV1}from"../../🧊️bounded/🟨️.mjs";
 import{orderOwnersV1,readPriorityV1,writePendingV1}from"./🧭️steering/🟨️.mjs";
 import{createHash,randomBytes}from"node:crypto";
 import{brotliCompressSync,brotliDecompressSync,constants as zlibConstants}from"node:zlib";
 import{lstat,mkdir,open,readdir,readFile,rename,rm}from"node:fs/promises";
-import{dirname,join,sep}from"node:path";
-import{createProjectFileIndexV1}from"../🧭️file-owner/🟨️.mjs";
+import{dirname,join}from"node:path";
 import{graphStringInternerV1,internJsonStringsV1}from"../../🧠️memory/🟨️.mjs";
 import{canonicalJsonV1,compareCodePointsV1,decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"./🧮️fact-codec/🟨️.mjs";
 import{coverageOfV1,mergeVerifiedStampV1,readVerifiedStampV1,uncoveredOfV1}from"./🔭️coverage/🟨️.mjs";
 import{INDEX_CHUNK_POLICY_V1,addOwnerRunsV1,bulkUpsertClassesV1,classesOfChunksV1,createChunkInternerV1}from"./🧱️chunk-classes/🟨️.mjs";
 import{createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1}from"./🧭️frontier/🟨️.mjs";
 import{mergeIntoHeadV1}from"./🔀️merge/🟨️.mjs";
-import{createClosureSettlerV1,sharedClosureSettlerV1,stampOfV1}from"../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
+import{createClosureSettlerV1,sharedClosureSettlerV1}from"../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
 import{createCasStoreV1}from"../../🗄️cas/🗃️store/🟦️.ts";
 import{createNodeStoreV1}from"../🧮️derived-nodes/💾️store/🟨️.mjs";
-import{selectDoubtfulRowsV1}from"./🔎️doubt/🟨️.mjs";
 import{adoptRecordedRootsV1}from"../../👁️observation/🏚️relocation/🟨️.mjs";
 import{profilePhaseV1}from"../../⏱️profile/🟨️.mjs";
-import{derivedOwnerNameV1,derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,splitStaleConsumersV1,suspectRowsV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"./✂️cutoff/🟨️.mjs";
+import{derivedOwnerNameV1,derivedUpsertsV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,unsupportedDerivedV1}from"./✂️cutoff/🟨️.mjs";
 import{GENERATION_POLICY_V1,P,HEX,sha256,isObject,unpack,aborted,fail,requireKeys,requireHex,requireCount,requireText}from"./🧱️guards/🟨️.mjs";
-import{ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1 as createFactIndexRowsV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,rowOwnerNamesV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1}from"./🧮️fact-rows/🟨️.mjs";
+import{ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1 as createFactIndexRowsV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1}from"./🧮️fact-rows/🟨️.mjs";
 export{GENERATION_POLICY_V1,ROW_KEY_TEXT_LIMIT_V1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1};
 import{emptyFactIndexViewV1,patchFactIndexBytesV1}from"./🌊️stream-patch/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import{BUILD_JOURNAL_V1,buildJournalKeyV1,createBuildJournalV1}from"./🔖️journal/🟨️.mjs";
+import{retireClosureRepairReceiptsV1}from"./🩹️closure-repair/🟨️.mjs";
 import{readGenerationPointerV1,readGenerationManifestV1,readGenerationFragmentV1}from"./📖️documents/🟨️.mjs";
 import{createNodeFilePortV1,createFileLeasePortV1,defaultSleep}from"./🗃️file-ports/🟨️.mjs";
 export{readGenerationPointerV1,readGenerationManifestV1,readGenerationFragmentV1,createNodeFilePortV1,createFileLeasePortV1};
@@ -102,27 +101,6 @@ async function mapLimit(items,limit,visit,signal){
  return out;
 }
 
-/** 🚧️ The withheld owners of a generation that do not hold the source that withholds them: an untagged `unavailable` owner names the file that does not parse (`config`), and it stays valid only while the bytes of that file are the ones it was withheld for, so a generation that carries no fact about that file (a withholding recorded before its facts were kept) can never notice the repair and its owner must be inferred again. Sources outside the workspace and tagged owners (rediscovered as a group) are not judged. The judgement is global: a repair is bounded by the withheld owners and one build heals all of them, instead of one build per layer of the closure they open. */
-export function unfoundedWithheldOwnersV1(index,owners,separator=sep){
- const open=new Map(),kinds=new Set(["file","analysis","digest"]);
- for(const[name,row]of Object.entries(owners)){
-  if(row.kind!=="unavailable"||row.tag||typeof row.config!=="string"||row.config.startsWith(".."))continue;
-  const at=index.owners.indexOf(name);if(at>=0)open.set(at,[name,row.config]);
- }
- for(const cls of index.classes){
-  if(!open.size)break;
-  const here=cls.o.filter(at=>open.has(at));if(!here.length)continue;
-  const configs=new Set(here.map(at=>open.get(at)[1]));
-  for(const id of cls.r){
-   const row=index.rows[id];if(!kinds.has(row.kind))continue;
-   const path=separator==="/"?row.path:row.path.split(separator).join("/");
-   for(const config of configs)if(path===config||path.endsWith("/"+config)){for(const at of here)if(open.get(at)?.[1]===config)open.delete(at);configs.delete(config);}
-   if(!configs.size)break;
-  }
- }
- return[...open.values()].map(([name])=>name);
-}
-
 /** 🧠️ The answers of the derived questions of one store root: the node store under `root` (unless `durable` is false) and the settler that keeps the graph of the answers in memory, so the readers and the builder of one load ask each question once. */
 export function createAnswersV1({root,fs=createNodeFilePortV1(),durable=true,workspaceRoot}){
  if(durable&&workspaceRoot!==undefined){
@@ -172,8 +150,8 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const index=unpackFactIndexV1(bytes,P.maximumIndexBytes);stats.indexLoads++;adoptRecordedRootsV1(index,workspaceRoot);
   indexCache.set(digest,index);return index;
  }
- async function readIndexView(digest){
-  const key="view:"+digest,cached=indexCache.get(key)??indexCache.get(digest);if(cached)return cached;
+ async function readIndexView(digest,{fresh=false}={}){
+  const key="view:"+digest,cached=fresh?undefined:indexCache.get(key)??indexCache.get(digest);if(cached)return cached;
   const bytes=await fs.read(indexPath(digest));if(!bytes)return undefined;
   if(sha256(bytes)!==digest)throw fail("Fact index content differs from its name","GENERATION_CORRUPT");
   const index=openPackedFactIndexV1(bytes,P.maximumIndexBytes,"fact-index:"+digest.slice(0,12));stats.indexViews++;adoptRecordedRootsV1(index,workspaceRoot);
@@ -203,65 +181,14 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  const store=(directory,value,extension,limit)=>keep(directory,packGenerationDocumentV1(value,limit),extension);
  const writeManifest=async manifest=>{const bytes=Buffer.from(canonicalJsonV1(readGenerationManifestV1(Buffer.from(canonicalJsonV1(manifest)))));if(bytes.length>P.maximumManifestBytes)throw fail("Generation manifest exceeds its finite limit");const digest=sha256(bytes);await fs.write(manifestPath(digest),bytes,{ifAbsent:true});return digest;};
 
- /**
-  * 🔍️ Verifies the facts of the selected owners (every owner without a selection) and maps the observed membership changes to their owners through the roots of the manifest.
-  * `changes` undefined means the caller cannot diff membership: the plan is cold.
-  */
- async function plan({current,identity,changes,journalDirty,only,skipEnvironment=false,signal,progress}){
-  const cold=reason=>({kind:"cold",reason,dirty:new Set(),added:[],removed:[],pending:[],envStale:true,checked:0});
-  if(!current?.manifest)return cold(current?(current.missing?"manifest":"invalidated"):"empty");
-  const manifest=current.manifest;
-  if(manifest.identity!==identity)return cold("identity");
-  if(changes===undefined)return cold("frontier");
-  const times={},indexAt=now(),index=await profilePhaseV1("graph.plan.index",()=>readIndexView(manifest.factIndex));times.index=now()-indexAt;if(!index)return cold("index");
-  const present=new Set(await fs.names(join(root,P.fragments)));if(!present.has(manifest.global+".json.br"))return cold("global");
-  const dirty=new Set(),added=[],removed=new Set(),reasons=[],owners=Object.entries(manifest.owners),ownerOf=createProjectFileIndexV1(Object.fromEntries(owners.map(([name,row])=>[name,{root:row.root}])));
-  const configs=new Map(owners.filter(([,row])=>row.config!==undefined).map(([name,row])=>[row.config,name]));
-  let envStale=false;
-  const pending=pendingCratePathsV1(changes,ownerOf);
-  for(const change of changes){
-   const known=configs.get(change.path);
-   if(pending.has(change.path))continue;
-   if(change.config&&change.kind==="added"){added.push(change.path);const prior=ownerOf(change.path);if(prior!==undefined&&manifest.owners[prior].config!==change.path&&change.path.startsWith(manifest.owners[prior].root+"/")&&!change.path.slice(manifest.owners[prior].root.length+1).includes("/"))removed.add(prior);}
-   else if(change.config&&change.kind==="removed"&&known)removed.add(known);
-   else if(change.config&&known)dirty.add(known);
-   else if(change.directory&&change.kind!=="removed")continue;
-   else{const owner=ownerOf(change.path);if(owner!==undefined)dirty.add(owner);else{envStale=true;if(change.kind!=="removed")added.push(change.path);}}
-  }
-  for(const[name,row]of owners)if((!only||only.has(name))&&!present.has(row.fragment+".json.br"))dirty.add(name);
-  const unfounded=unfoundedWithheldOwnersV1(index,manifest.owners);for(const name of unfounded)dirty.add(name);
-  const scope=only?new Set(skipEnvironment?only:[...only,P.envOwner]):undefined,selection=selectFactClassesV1(index,scope?scopeWithDerivedV1(index,scope):undefined);
-  const factsAt=now(),verifiable=verifiableRowIdsV1(index,selection.ids),candidates=doubt?await profilePhaseV1("graph.plan.doubt",()=>selectDoubtfulRowsV1(index,verifiable,doubt,{signal,progress,chunk:P.doubtChunkRows})):verifiable;
-  const{stale}=await profilePhaseV1("graph.plan.facts",()=>staleFactRowsV1(index,candidates,hold,{signal,progress,...doubt?{budget:Infinity}:{}}));
-  times.facts=now()-factsAt;await doubt?.settled?.({rows:index.rows,ids:verifiable,stale});
-  const settleAt=now();const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await profilePhaseV1("graph.plan.settle",()=>settler.settle({pseudoRows:suspectRowsV1(index,suspects),derive,signal,progress,hold,...journalDirty?{dirty:journalDirty}:{staleFacts:[...stale].map(id=>index.rows[id])},...workspaceRoot!==undefined?{vouchStamp:(name,cheap)=>stampOfV1(join(workspaceRoot,name),undefined,cheap)}:{}})),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
-  await settler.release?.();times.settle=now()-settleAt;
-  for(const name of direct){if(name===P.envOwner)envStale=true;else if(manifest.owners[name])dirty.add(name);}
-  for(const name of staleConfigOwnersV1({rows:index.rows,stale,configs,workspaceRoot}))if(manifest.owners[name])dirty.add(name);
-  for(const holders of changedHolders.values())for(const name of holders)if(manifest.owners[name])dirty.add(name);
-  for(const change of changes){
-   if(reasons.length>=P.reasonRows)break;if(change.directory&&change.kind!=="removed"||pending.has(change.path))continue;
-   const owner=configs.get(change.path)??ownerOf(change.path);reasons.push({change:{path:change.path,kind:change.kind},owners:[owner??P.envOwner]});
-  }
-  const staleIds=[...stale].sort((a,b)=>a-b),holders=reasons.length<P.reasonRows&&staleIds.length?rowOwnerNamesV1(index,selection.classes,staleIds,isDerivedOwnerV1):new Map();
-  for(const id of staleIds){
-   if(reasons.length>=P.reasonRows)break;
-   const names=holders.get(id);
-   if(!names?.length)continue;
-   reasons.push({row:index.rows[id],owners:names});
-  }
-  for(const[name,row]of settled.changed){if(reasons.length>=P.reasonRows)break;const names=[...changedHolders.get(name)??[]].sort(compareCodePointsV1).slice(0,3);if(names.length)reasons.push({row,owners:names});}
-  for(const name of removed)dirty.delete(name);
-  const scoped=only?new Set([...[...dirty].filter(name=>only.has(name)),...unfounded]):dirty,clean=!scoped.size&&!added.length&&!removed.size&&!envStale;
-  const staleKinds={};for(const id of stale){const kind=index.rows[id].kind;staleKinds[kind]=(staleKinds[kind]??0)+1;}
-  return{kind:clean?"clean":"delta",times,dirty:scoped,added,removed:[...removed],pending:[...pending].sort(compareCodePointsV1),envStale,checked:selection.ids.length,stale:stale.size,doubtful:candidates.length,staleKinds,reasons,cutoff:{questions:suspects.size,held:settled.held.size,kept:settled.kept.size,changed:settled.changed.size,failed:settled.failed,reused:settled.reused},refresh:settled.held};
- }
+ const plan=createGenerationPlanV1({readIndexView,fragmentNames:()=>fs.names(join(root,P.fragments)),now,doubt,settler,derive,hold,workspaceRoot});
 
  /** 🤝️ Swaps the pointer for the next generation only if it still names the generation the builder started from; the exclusive hold covers one small read and one rename and nothing else. */
- async function publish({manifestDigest,expectedGeneration,reason,verified,signal,claim}){
+ async function publish({manifestDigest,expectedGeneration,expectedManifest,expectedRepairParent,reason,verified,signal,claim}){
   const body=async()=>{
    const started=now(),pointer=await readPointer();
-   if((pointer?.generation??-1)!==expectedGeneration){stats.casConflicts++;stats.publishHeldMs.push(now()-started);return{published:false,pointer};}
+   aborted(signal);
+   if((pointer?.generation??-1)!==expectedGeneration||expectedManifest!==undefined&&(pointer?.manifest??null)!==expectedManifest||expectedRepairParent!==undefined&&(pointer?.parent!==expectedRepairParent||pointer.reason!=="closure-missing")){stats.casConflicts++;stats.publishHeldMs.push(now()-started);return{published:false,pointer};}
    const next={version:1,generation:expectedGeneration+1,manifest:manifestDigest,parent:pointer?.manifest??null,...(reason?{reason}:{}),...(verified?{verified}:{})};
    await fs.write(pointerPath,Buffer.from(canonicalJsonV1(next)));stats.published++;stats.publishHeldMs.push(now()-started);return{published:true,pointer:next};
   };
@@ -270,14 +197,40 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  const journal=createBuildJournalV1({fs,root,manifestPath,publish,settler,say,stepped});
- /** 🏗️ Builds and publishes the next generation from the newest one: the plan names the dirty owners, `compute` refreshes exactly those and unchanged fragments are carried over by digest. The verification view of the fact index (the rows the plan read stay materialized in it) is released before `compute` runs, so the inference never carries it; a later plan in this process opens it again. */
+ async function disposeSources(disposers){for(const dispose of disposers.splice(0))try{await dispose();}catch{}}
+ /** 🩹️ Opens the immutable repair source while the real pointer remains a tombstone. */
+ async function openRepairBase({repair,identity,implementation,signal,continuing}){
+  let manifest,frontier;
+  try{
+   manifest=await readManifestAt(repair.parent,signal);
+   if(!manifest||manifest.generation+1!==repair.generation||manifest.identity!==identity||manifest.implementation!==implementation||!repair.owners.every(name=>Object.hasOwn(manifest.owners,name)))return;
+   frontier=await readFrontier(manifest.frontier);
+   if(frontier?.version!==1||!Array.isArray(frontier.directories)||!Array.isArray(frontier.members)||!Number.isFinite(frontier.capturedAt))return;
+   const indexAvailable=continuing?(await fs.names(join(root,P.indexes))).includes(manifest.factIndex+".facts.br"):await readIndexView(manifest.factIndex,{fresh:true});
+   if(!indexAvailable)return;
+  }catch{aborted(signal);return;}
+  return{manifest,frontier};
+ }
+ /** 🔏️ Reopens and authenticates the original index immediately before composing a repaired candidate. */
+ async function repairPatchIndex(digest,signal){
+  try{
+   const index=await readIndexView(digest,{fresh:true});
+   if(!index)throw fail("Archived generation fact index is missing","GENERATION_INCOMPLETE");
+   return index;
+  }catch(cause){
+   aborted(signal);
+   throw Object.assign(fail("Archived generation fact index is unavailable for repair","GENERATION_CLOSURE_REPAIR_UNQUALIFIED"),{cause});
+  }
+ }
+ const unfundedRepair=(current,plan)=>({current,built:false,published:false,computed:0,plan,needsBuild:true,repairUnavailable:true,pending:{generation:current?.pointer.generation??-1,dirty:[],roots:{},structural:true}});
+ const supersededRepair=(current,identity,computed)=>({current,built:computed>0,published:false,computed,...current?.manifest?.identity===identity?{}:{needsBuild:true,pending:{generation:current?.pointer.generation??-1,dirty:[],roots:{},structural:true}}});
+ /** 🏗️ Builds and publishes the next generation from the newest one: the plan names the dirty owners, `compute` refreshes exactly those and unchanged fragments are carried over by digest. The verification view of the fact index (the rows the plan read stay materialized in it) is released before `compute` runs, so the inference never carries it; a later plan in this process opens it again. A cold build releases its row sources after encoding them. A delta retains its sources across waves and a possible publication merge. */
  async function build(request){
   let wave,total=0,last;
   const carry={owners:undefined,env:undefined,envParts:undefined,upserts:new Map(),append:new Map(),dropped:new Set(),returned:new Set(),derived:new Set(),disposers:[],journalKey:undefined,tried:false,done:0,waves:0,files:[],names:undefined,resumedFrom:false};
   try{
    for(;;){
-    let computed;
-    try{last=await buildOnce(wave?{...request,hint:wave}:request,result=>{computed=result;},carry);}finally{const dispose=computed?.dispose;computed=undefined;if(dispose)carry.disposers.push(dispose);}
+    last=await buildOnce(wave?{...request,hint:wave}:request,carry);
     total+=last.computed??0;
     if(last.more){try{await request.wave?.({generation:(last.current?.pointer.generation??-1)+1,done:total,total:total+(last.deferred?.plan?.dirty?.size??0),...(last.phases?{phases:last.phases}:{})});}catch{}
      const stop=await request.claim?.handover?.().catch(()=>undefined);
@@ -286,15 +239,25 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
     if(!last.more)return{...last,computed:total};
     wave=last.deferred;
    }
-  }finally{for(const dispose of carry.disposers)try{await dispose();}catch{}}
+  }finally{await disposeSources(carry.disposers);}
  }
-  async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim},own,carry){
+  async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim,repair,qualify},carry){
   const marks={};if(!processStartedV1){processStartedV1=true;marks.start=Math.round(process.uptime()*1000);}Object.assign(marks,carriedStagesV1);for(const key of Object.keys(carriedStagesV1))delete carriedStagesV1[key];let markedAt=now();const mark=name=>{const at=now();marks[name]=(marks[name]??0)+at-markedAt;markedAt=at;};
   await profilePhaseV1("graph.build.prime",async()=>prime?.(signal));mark("prime");
-  const current=await read(signal),usable=current?.manifest&&current.manifest.identity===identity?current.manifest:undefined;
+  const current=await read(signal);
+  if(repair&&(current?.pointer.manifest!==null||current.pointer.generation!==repair.generation||current.pointer.parent!==repair.parent||current.pointer.reason!=="closure-missing"))return supersededRepair(current,identity,0);
+  const resumeBinding=repair?{parent:repair.parent,receipt:repair.receipt}:undefined;
+  if(repair){
+   requireHex(repair.receipt,"repair receipt");requireHex(repair.parent,"repair parent");
+   if(typeof qualify!=="function"||!Array.isArray(repair.owners)||!repair.owners.length||repair.owners.length>P.maximumOwners||repair.owners.some(name=>typeof name!=="string"||!name)||new Set(repair.owners).size!==repair.owners.length||repair.maximumOwners!==undefined&&(!Number.isSafeInteger(repair.maximumOwners)||repair.maximumOwners<1))throw fail("Verified owners and candidate qualification required for closure repair");
+  }
+  const continuing=hint?.wave!==undefined&&carry.waves>0;
+  const retained=repair?await openRepairBase({repair,identity,implementation,signal,continuing}):undefined;
+  const usable=repair?retained?.manifest:current?.manifest?.identity===identity?current.manifest:undefined;
   const reuse=hint&&usable&&current.pointer.generation===hint.generation&&(hint.wave!==undefined||(hint.holds?await hint.holds().catch(()=>false):now()-hint.atMs<=P.hintMaximumAgeMilliseconds));
-  let previous=usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined,live=reuse?hint.live:await profilePhaseV1("graph.build.membership",async()=>{const began=now();try{return await membership(previous?.frontier?previous:undefined,signal);}finally{marks.membership=now()-began;}});
-  const found=reuse?hint.plan:await profilePhaseV1("graph.build.plan",()=>plan({current,identity,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress}));
+  let previous=retained??(usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined),live=reuse?hint.live:await profilePhaseV1("graph.build.membership",async()=>{const began=now();try{return await membership(previous?.frontier?previous:undefined,signal);}finally{marks.membership=now()-began;}});
+  if(repair){only=undefined;coverage=undefined;}
+  const found=reuse?hint.plan:await profilePhaseV1("graph.build.plan",()=>plan({current,identity,repairBase:retained?.manifest,forcedOwners:retained?repair.owners:undefined,verifyAll:!!repair,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress}));
   const priority=readPriorityV1();mark("plan");for(const[name,ms]of Object.entries(found.times??{}))marks["plan."+name]=ms;
   if(found.kind==="clean"){
    writePendingV1(process.env,current?.pointer.generation??-1,[],priority);
@@ -302,21 +265,42 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    return{...await refreshMetadata({current,live,signal,held:found.refresh,claim}),built:false,plan:found,computed:0};
   }
   const cold=found.kind==="cold",ordered=cold?[]:orderOwnersV1([...found.dirty].sort(compareCodePointsV1),priority);
-  const journalKey=carry.journalKey??=buildJournalKeyV1({parent:current?.pointer.manifest??null,identity,membership:live.digest,cold,names:[...ordered].sort(compareCodePointsV1),removed:[...found.removed].sort(compareCodePointsV1),added:[...found.added].sort(compareCodePointsV1)});
-  const resumed=!hint?.wave&&!carry.tried?await journal.resume({key:journalKey,current,identity,implementation,found,signal,claim}):undefined;carry.tried=true;
+  if(repair?.maximumOwners!==undefined&&(cold||found.envStale||found.added.length||found.removed.length||ordered.length>repair.maximumOwners))return unfundedRepair(current,found);
+  if(repair&&claim&&claim.structural!==true)return unfundedRepair(current,found);
+  if(repair&&hint?.wave&&!reuse&&carry.owners)throw fail("Closure repair base lost between waves","GENERATION_CLOSURE_REPAIR_UNQUALIFIED");
+  const journalKey=carry.journalKey??=buildJournalKeyV1({parent:current?.pointer.manifest??null,identity,membership:live.digest,cold,names:[...ordered].sort(compareCodePointsV1),removed:[...found.removed].sort(compareCodePointsV1),added:[...found.added].sort(compareCodePointsV1),...repair?{repair:resumeBinding,generation:repair.generation,implementation}:{}});
+  const verifyResume=repair?async manifest=>{
+   const frontier=await readFrontier(manifest.frontier);if(!frontier)return false;
+   const refreshed=await membership({manifest,frontier},signal);
+   if(refreshed.digest!==manifest.membership)return false;
+   const verdict=await plan({repairBase:manifest,identity,changes:refreshed.changes,verifyAll:true,signal,progress});
+   return verdict.kind==="clean"&&!verdict.refresh?.size;
+  }:undefined;
+  const resumed=!hint?.wave&&!carry.tried?await journal.resume({key:journalKey,current,repair:resumeBinding,identity,implementation,found,signal,claim,qualify,verify:verifyResume}):undefined;carry.tried=true;
+  if(resumed?.superseded)return supersededRepair(await read(signal),identity,0);
   if(resumed?.result)return resumed.result;
   if(resumed?.carry)Object.assign(carry,resumed.carry);
   const owners0=cold?{}:carry.owners??usable.owners,names=resumed?.names??ordered,offset=hint?.wave?.done??carry.done,wave=names.slice(0,hint?.wave?.size??scaledOwnerWaveV1(P.ownerWave,process.env.SEMIO_SLICE_WAVE_BASIS_POINTS)),rest=names.slice(wave.length),waveStartedMs=now(),steps=[];
   const markStep=async(step,inputs,output,persist)=>{steps.push({step,inputs,output});await persist?.();await stepped?.(step);};
   if(!cold)writePendingV1(process.env,current?.pointer.generation??-1,names,priority);
-  const want=claim&&await claim.extend({owners:[...names,...found.removed],structural:cold||found.envStale||found.added.length>0,signal});
+  const want=claim&&await claim.extend({owners:[...names,...found.removed],structural:!!repair||cold||found.envStale||found.added.length>0,signal});
   if(want&&!want.held)return{current,built:false,published:false,computed:0,plan:found,needsBuild:true,pending:{generation:current?.pointer.generation??-1,roots:{},...want.request}};
   aborted(signal);
-  const spec={cold,owners:wave,more:rest.length>0,total:offset+names.length,done:offset,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:carry.env??usable.env,previousParts:cold?undefined:carry.envParts??usable.envParts,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
+  const repairOwnerSet=repair?new Set(repair.owners):undefined,forcedOwners=repair?wave.filter(name=>repairOwnerSet.has(name)):undefined;
+  const spec={cold,owners:wave,...repair?{forcedOwners}:{},more:rest.length>0,total:offset+names.length,done:offset,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:carry.env??usable.env,previousParts:cold?undefined:carry.envParts??usable.envParts,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
    stubs:Object.fromEntries(Object.entries(owners0).map(([name,row])=>[name,{root:row.root,kind:row.kind,targets:row.targets,...(row.nativeRoot?{nativeRoot:row.nativeRoot}:{}),...(row.config?{config:row.config}:{}),...(row.tag?{tag:row.tag}:{}),...(row.reads?{reads:row.reads}:{})}]))};
   previous=undefined;indexCache.clear();
-    const result=await profilePhaseV1("graph.build.compute",()=>compute(spec,signal));own(result);mark("compute");
-  stats.computed+=result.owners.length;aborted(signal);
+  let result=await profilePhaseV1("graph.build.compute",()=>compute(spec,signal));
+  {const dispose=result.dispose;if(dispose)carry.disposers.push(dispose);}
+  mark("compute");
+  const computed=result.owners.length;stats.computed+=computed;aborted(signal);
+  if(forcedOwners?.length){
+   const results=new Map(result.owners.map(owner=>[owner.name,owner])),renames=new Set(result.owners.filter(owner=>owner.partial===undefined&&owner.kind==="project"&&!owner.tag&&!Object.hasOwn(owners0,owner.name)).map(owner=>owner.root));
+   for(const name of forcedOwners){
+    const owner=results.get(name),previous=owners0[name];
+    if(owner?owner.partial!==undefined:previous.kind!=="project"||previous.tag||!renames.has(previous.root))throw fail("Closure repair requires a fresh computation of "+name,"GENERATION_CLOSURE_REPAIR_UNQUALIFIED");
+   }
+  }
   const envDigest=result.env.digest,owners={...owners0},dropped=new Set(found.removed),upserts=new Map(),append=new Map(),returned=new Set(),stored=[];
   for(const name of dropped)delete owners[name];
   for(const owner of result.owners){
@@ -338,30 +322,32 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
     const noisy=returned.size>P.ownerWave;if(noisy)say?.("storing",{count:returned.size});
   let fragmentsDone=0;if(stored.length)await progress?.({phase:"fragments",done:0,total:stored.length});
   await profilePhaseV1("graph.build.fragments",()=>mapLimit(stored,P.readConcurrency,async job=>{await job();if(stored.length)await progress?.({phase:"fragments",done:++fragmentsDone,total:stored.length});},signal));mark("fragments");
-  await markStep("storing",journalKey,sha256(Buffer.from(canonicalJsonV1([...returned].sort(compareCodePointsV1).map(name=>owners[name]?.fragment??null)))));
+  const {env:{parts:computedParts},replaceTags,carried,inferred,phases:computePhases,global:globalPayload}=result;
+  upserts.set(P.envOwner,result.env.rows??[]);
+  for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);
+  for(const fact of result.derived??[])carry.derived.add(derivedOwnerNameV1(fact.row));
+  result=undefined;stored.length=0;
+  await markStep("storing",journalKey,sha256(Buffer.from(canonicalJsonV1([...returned].sort(compareCodePointsV1).map(name=>owners[name]?.fragment??null)))));aborted(signal);
   for(const name of wave)if(!returned.has(name)&&!dropped.has(name)){delete owners[name];dropped.add(name);}
-  for(const[name,row]of Object.entries(owners))if(row.tag&&result.replaceTags?.includes(row.tag)&&!returned.has(name)){delete owners[name];dropped.add(name);}
+  for(const[name,row]of Object.entries(owners))if(row.tag&&replaceTags?.includes(row.tag)&&!returned.has(name)){delete owners[name];dropped.add(name);}
   for(const name of returned)dropped.delete(name);
   const renamed=new Map();
   for(const name of returned){const row=owners[name];if(row&&!row.tag&&row.kind==="project")renamed.set(row.root,name);}
   for(const[name,row]of Object.entries(owners))if(!returned.has(name)&&!row.tag&&row.kind==="project"&&renamed.has(row.root)){delete owners[name];dropped.add(name);}
-  for(const name of result.carried??[])if(owners[name]&&!returned.has(name))owners[name]={...owners[name],edgesEnv:envDigest};
-  for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name+" ("+JSON.stringify({kind:row.kind,tag:row.tag??null,edges:String(row.edgesEnv??"none").slice(0,12),environment:String(envDigest).slice(0,12),root:row.root,dirty:wave.includes(name),returned:returned.has(name),dropped:dropped.has(name),carried:(result.carried??[]).includes(name),sameRootReturned:[...returned].filter(other=>owners[other]?.root===row.root)})+")","GENERATION_INCOMPLETE");
-  upserts.set(P.envOwner,result.env.rows??[]);
-  for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);
-  for(const fact of result.derived??[])carry.derived.add(derivedOwnerNameV1(fact.row));
+  for(const name of carried??[])if(owners[name]&&!returned.has(name))owners[name]={...owners[name],edgesEnv:envDigest};
+  for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name+" ("+JSON.stringify({kind:row.kind,tag:row.tag??null,edges:String(row.edgesEnv??"none").slice(0,12),environment:String(envDigest).slice(0,12),root:row.root,dirty:wave.includes(name),returned:returned.has(name),dropped:dropped.has(name),carried:(carried??[]).includes(name),sameRootReturned:[...returned].filter(other=>owners[other]?.root===row.root)})+")","GENERATION_INCOMPLETE");
   if(rest.length){
-   const{owners:_table,...envParts}=result.env.parts??{};
-   carry.owners=owners;carry.env=envDigest;carry.envParts=result.env.parts?envParts:undefined;carry.names??=ordered;
+   const{owners:_table,...envParts}=computedParts??{};
+   carry.owners=owners;carry.env=envDigest;carry.envParts=computedParts?envParts:undefined;carry.names??=ordered;
    for(const[name,rows]of upserts)if(name!==P.envOwner)carry.upserts.set(name,rows);
    for(const[name,rows]of append)carry.append.set(name,rows);
    for(const name of dropped)carry.dropped.add(name);
    for(const name of returned)carry.returned.add(name);
    carry.done=offset+wave.length;
-   await journal.wave({key:journalKey,current,identity,implementation,carry,steps,upserts,append,owners,env:{digest:envDigest,...result.env.parts?{parts:envParts}:{}}});carry.waves++;
+   await journal.wave({key:journalKey,current,repair:resumeBinding,identity,implementation,carry,steps,upserts,append,owners,env:{digest:envDigest,...computedParts?{parts:envParts}:{}}});carry.waves++;
    if(claim&&typeof claim.settle==="function"){await claim.progress?.({phase:"owners",done:carry.done,total:offset+names.length}).catch(()=>{});await claim.settle(wave).catch(()=>false);}
    writePendingV1(process.env,current?.pointer.generation??-1,rest,priority);
-   return{current,built:true,published:false,more:true,plan:found,computed:result.owners.length,phases:{...marks,...Object.fromEntries(Object.entries(result.phases??{}).map(([name,ms])=>["compute."+name,ms]))},carried:result.carried?.length??0,deferred:{generation:current?.pointer.generation??-1,live,atMs:now(),wave:{done:carry.done,size:nextOwnerWaveV1({size:wave.length,elapsedMilliseconds:now()-waveStartedMs,inferred:result.inferred,basisPoints:process.env.SEMIO_SLICE_WAVE_BASIS_POINTS})},plan:{...found,times:{},kind:"delta",dirty:new Set(rest),added:[],removed:[],pending:[],envStale:false,reasons:[],refresh:new Map(),stale:0,staleKinds:{}}}};
+   return{current,built:true,published:false,more:true,plan:found,computed:computed,phases:{...marks,...Object.fromEntries(Object.entries(computePhases??{}).map(([name,ms])=>["compute."+name,ms]))},carried:carried?.length??0,deferred:{generation:current?.pointer.generation??-1,live,atMs:now(),wave:{done:carry.done,size:nextOwnerWaveV1({size:wave.length,elapsedMilliseconds:now()-waveStartedMs,inferred:inferred,basisPoints:process.env.SEMIO_SLICE_WAVE_BASIS_POINTS})},plan:{...found,times:{},kind:"delta",dirty:new Set(rest),added:[],removed:[],pending:[],envStale:false,reasons:[],refresh:new Map(),stale:0,staleKinds:{}}}};
   }
   for(const[name,rows]of carry.upserts)if(!upserts.has(name))upserts.set(name,rows);
   for(const[name,rows]of carry.append)if(!append.has(name))append.set(name,rows);
@@ -369,8 +355,15 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const name of carry.returned)returned.add(name);
   for(const name of returned)dropped.delete(name);
     if(noisy)say?.("indexing",{count:Object.keys(owners).length});
-    let index=await profilePhaseV1("graph.build.patch",async()=>patchView(cold?emptyFactIndexViewV1():await readIndexView(usable.factIndex),{drop:[...dropped],upserts,append},signal));
+    let index=await profilePhaseV1("graph.build.patch",async()=>{
+     const base=cold?emptyFactIndexViewV1():repair?await repairPatchIndex(usable.factIndex,signal):await readIndexView(usable.factIndex);
+     return patchView(base,{drop:[...dropped],upserts,append},signal);
+    });
   
+  if(cold){
+   upserts.clear();append.clear();carry.upserts.clear();carry.append.clear();
+   await disposeSources(carry.disposers);aborted(signal);
+  }
   const orphans=orphanedDerivedOwnersV1(index);if(orphans.length)index=await patchView(index,{drop:orphans},signal);
   const unsupported=unsupportedDerivedV1(index);if(unsupported.length)throw fail("Derived facts need a supporting computation: "+unsupported.slice(0,3).map(row=>row.path.slice(0,96)).join(", "),"GENERATION_INCOMPLETE");
 
@@ -379,25 +372,27 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const packedIndex=await profilePhaseV1("graph.build.pack",()=>packFactIndexBytesV1(index.document.buffer,P.maximumIndexBytes)),indexStored=await profilePhaseV1("graph.build.keep",()=>keep(P.indexes,packedIndex.bytes,".facts.br"));
   
   mark("pack");
-  const globalStored=await store(P.fragments,{version:1,name:"@global",value:result.global??null},".json.br",P.maximumFragmentBytes);
+  const globalDigest=repair&&!cold&&globalPayload===undefined?usable.global:(await store(P.fragments,{version:1,name:"@global",value:globalPayload??null},".json.br",P.maximumFragmentBytes)).digest;
   const frontierStored=await store(P.frontiers,live.frontier,".json.br",P.maximumIndexBytes);
   const expectedGeneration=current?.pointer.generation??-1;
-  const{owners:_table,...envParts}=result.env.parts??{},next={version:1,generation:expectedGeneration+1,parent:current?.pointer.manifest??null,identity,implementation,env:envDigest,membership:live.digest,frontier:frontierStored.digest,factIndex:indexStored.digest,global:globalStored.digest,...(result.env.parts?{envParts}:{}),owners,built:{kind:cold?"cold":"delta",base:cold?null:usable.generation,dirty:[...returned].sort(compareCodePointsV1)}};
+  const{owners:_table,...envParts}=computedParts??{},next={version:1,generation:expectedGeneration+1,parent:current?.pointer.manifest??null,identity,implementation,env:envDigest,membership:live.digest,frontier:frontierStored.digest,factIndex:indexStored.digest,global:globalDigest,...(computedParts?{envParts}:{}),owners,built:{kind:cold?"cold":"delta",base:cold?null:usable.generation,dirty:[...returned].sort(compareCodePointsV1)}};
   const manifestDigest=await writeManifest(next);aborted(signal);
-  await markStep("indexing",steps.at(-1).output,indexStored.digest,()=>journal.sealed({key:journalKey,current,identity,implementation,steps,manifest:manifestDigest,derived:[...carry.derived]}));
+  await qualify?.(next,signal);aborted(signal);
+  await markStep("indexing",steps.at(-1).output,indexStored.digest,()=>journal.sealed({key:journalKey,current,repair:resumeBinding,identity,implementation,steps,manifest:manifestDigest,derived:[...carry.derived]}));
   const verified=stamp&&!rest.length?mergeVerifiedStampV1({owners:Object.keys(owners).sort(compareCodePointsV1),scope:cold?undefined:only,observedAtMs,carried:cold?undefined:coverage}):undefined;
-  let outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest,expectedGeneration,verified,signal,claim})),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
+  let outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest,expectedGeneration,...repair?{expectedManifest:null,expectedRepairParent:repair.parent}:{},verified,signal,claim})),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
   mark("publish");
+  if(!done&&repair){await journal.clear(journalKey);return supersededRepair(await read(signal),identity,computed);}
   if(!done&&!cold){index=undefined;const merged=await mergeIntoHeadV1({read,readIndex:readIndexView,writeManifest,publish:input=>publish({...input,claim}),patch:(base,patch)=>patchView(base,patch,signal),pack:value=>packFactIndexBytesV1(value.document.buffer,P.maximumIndexBytes),keep:bytes=>keep(P.indexes,bytes,".facts.br"),key:rowKeyV1,stats},{base:current,mine:next,patch:{drop:[...dropped],upserts,append},verified,signal});if(merged.outcome){outcome=merged.outcome;done=merged;}}
   
-  if(!done)return{current:await read(signal),built:true,published:false,plan:found,computed:result.owners.length};
+  if(!done)return{current:await read(signal),built:true,published:false,plan:found,computed:computed};
   indexCache.set("view:"+done.kept.digest,done.index);
   await journal.clear(journalKey);await markStep("sealing",indexStored.digest,manifestDigest);
   await profilePhaseV1("graph.build.indexed",()=>settler.markIndexed({held:found.refresh,dropped:[...carry.derived]}).catch(()=>undefined));
   if(!done.theirs)writePendingV1(process.env,outcome.pointer.generation,rest,priority);
-  if(!rest.length)await profilePhaseV1("graph.build.stamps",async()=>doubt?.published?.({rows:done.index.rows,observedAt:observedAtMs}).catch(()=>false));
-  if(!rest.length&&await(claim?claim.alone({signal}).catch(()=>false):true))await profilePhaseV1("graph.build.retire",()=>retire({signal}).catch(error=>{if(signal?.aborted)throw error;}));
-  return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:result.owners.length,phases:{...marks,...Object.fromEntries(Object.entries(result.phases??{}).map(([name,ms])=>["compute."+name,ms]))},carried:result.carried?.length??0,...(done.theirs?{merged:done.theirs.length}:{}),...(carry.resumedFrom?{resumed:true}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
+  if(!rest.length)await profilePhaseV1("graph.build.stamps",async()=>doubt?.published?.({rows:done.index.rows,index:done.index,observedAt:observedAtMs,signal}).catch(()=>false));
+  if(!rest.length&&await(claim?claim.alone({signal}).catch(()=>false):true))await profilePhaseV1("graph.build.retire",()=>retire({signal,claim}).catch(error=>{if(signal?.aborted)throw error;}));
+  return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:computed,phases:{...marks,...Object.fromEntries(Object.entries(computePhases??{}).map(([name,ms])=>["compute."+name,ms]))},carried:carried?.length??0,...(done.theirs?{merged:done.theirs.length}:{}),...(carry.resumedFrom?{resumed:true}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
  }
 
  /** 🧷️ Publishes the same owners under a refreshed membership frontier, so the next verification is a stat pass again; losing the swap is harmless. */
@@ -413,10 +408,16 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🔁️ Brings the caller to a generation that holds. `current` serves the newest generation of this identity without verification or waiting; `fresh` verifies (only the closure `only` when given), serves a verified generation without any lease and builds otherwise, inside `builder` (which hands the build its slice claim; see `./🔐️custody`) or the builder lease, where a holder that finds the work done by a peer returns that generation untouched and a build whose swap a peer won merges onto the peer's generation (see `./🔀️merge`). */
- async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt,published,wave,planned,unchanged}){
+ async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt,published,wave,planned,unchanged,repair,qualify}){
   if(!P.policies.includes(policy))throw fail("Closed graph policy required");
   const started=now(),first=await read(signal),usable=first?.manifest&&first.manifest.identity===identity;
   if(policy==="current"&&usable)return{current:first,served:"current",built:false,published:false,computed:0};
+  if(repair){
+   const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,published,wave,observedAtMs:started,claim,repair,qualify});
+   const pending={generation:repair.generation,dirty:[],roots:{},structural:true};
+   const result=await(builder?builder(body,pending):lease?lease.exclusive(resources.builder,body,{signal}):body());
+   return{...result,served:"built"};
+  }
   let hint,scope=only,coverage,pending,carried;
   if(usable&&requestedAt!==undefined&&first.pointer.verified!==undefined){
    const owners=Object.keys(first.manifest.owners).sort(compareCodePointsV1);
@@ -435,7 +436,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    if(verdict.kind==="delta")pending={structural:verdict.envStale||verdict.added.length>0||verdict.removed.length>0,generation:first.pointer.generation,dirty:[...verdict.dirty].sort(compareCodePointsV1),roots:Object.fromEntries([...verdict.dirty].filter(name=>first.manifest.owners[name]).map(name=>[name,first.manifest.owners[name].root]))};
    if(verdict.kind==="delta"&&previous.frontier){hint={generation:first.pointer.generation,plan:verdict,live,atMs:now(),...unchanged?{holds:()=>unchanged(live)}:{}};carried={key,plan:verdict,live};}
   }
-  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,published,wave,hint,only:scope,observedAtMs:started,coverage,claim});
+  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,published,wave,hint,only:scope,observedAtMs:started,coverage,claim,qualify});
   let resumedComputed;
   for(let attempt=0;attempt<8;attempt++){
    const result=await(builder?builder(body,pending):lease?lease.exclusive(resources.builder,body,{signal}):body());
@@ -520,39 +521,42 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🎯️ Brings the caller to a generation that holds for the closure of `roots`: only the facts those projects consume are verified, so an edit elsewhere neither waits for a builder nor is refreshed for this caller. */
- async function refreshClosure({roots,neighbors,closure,identity,implementation,policy="fresh",membership,compute,signal,progress,builder,requestedAt}){
+ async function refreshClosure({roots,neighbors,closure,...request}){
+  const {identity,policy="fresh",signal}=request;
   const closeOf=current=>closure?closure(current,{signal}):closureOf(current,roots,{neighbors,signal});
   const first=await read(signal);let names,unborn=false;
   if(first?.manifest&&first.manifest.identity===identity){try{names=await closeOf(first);}catch(error){if(error?.code==="GENERATION_UNKNOWN_OWNER"){names=new Set();unborn=true;}else if(error?.code!=="GENERATION_INCOMPLETE")throw error;}}
-  let verified=names,result=await refresh({identity,implementation,policy,only:names,membership,compute,signal,progress,builder,requestedAt});
+  let verified=names,result=await refresh({...request,only:names});
   if(result.needsBuild)return result;
   let built=result.built,published=result.published,computed=result.computed;
   for(let round=0;;round++){
    const closure=verified&&!unborn&&result.current.pointer.generation===first.pointer.generation?verified:await closeOf(result.current);
    if(policy==="current"||!verified||round>=8||[...closure].every(name=>verified.has(name)))return{...result,built,published,computed,...(built?{served:"built"}:{}),names:closure};
-   verified=new Set([...verified,...closure]);result=await refresh({identity,implementation,policy,only:verified,membership,compute,signal,progress,builder,requestedAt});
+   verified=new Set([...verified,...closure]);result=await refresh({...request,only:verified,repair:undefined});
    if(result.needsBuild)return result;built=built||result.built;published=published||result.published;computed+=result.computed;
   }
  }
 
  /** 🧹️ Removes documents that no retained generation names once they are older than the grace window (every file of the index directory is an index document, whatever format its generation used); a failure only costs disk. */
- async function retire({signal}={}){
+ async function retire({signal,claim}={}){
   aborted(signal);const pointer=await readPointer();if(!pointer)return;
   const files=await fs.list(join(root,P.manifests)),rows=[];
   for(const file of files){aborted(signal);if(!/^[a-f0-9]{64}\.json$/u.test(file.name))continue;const digest=file.name.slice(0,64),bytes=await fs.read(manifestPath(digest));if(!bytes)throw fail("Generation manifest disappeared before retirement","GENERATION_INCOMPLETE");if(bytes.length>P.maximumManifestBytes||sha256(bytes)!==digest)throw fail("Generation manifest content differs from its name","GENERATION_CORRUPT");rows.push({digest,manifest:readGenerationManifestV1(bytes)});}
   if(pointer.manifest!==null&&!rows.some(row=>row.digest===pointer.manifest))throw fail("Current generation manifest missing before retirement","GENERATION_INCOMPLETE");
   rows.sort((a,b)=>b.manifest.generation-a.manifest.generation);
-  const kept=rows.filter((row,index)=>index<P.retainGenerations||row.digest===pointer.manifest),live=new Set([pointer.manifest]),fragments=new Set(),indexes=new Set(),frontiers=new Set();
+  const repairParent=pointer.manifest===null&&pointer.reason==="closure-missing"?pointer.parent:null;
+  const kept=rows.filter((row,index)=>index<P.retainGenerations||row.digest===pointer.manifest||row.digest===repairParent),live=new Set([pointer.manifest]),fragments=new Set(),indexes=new Set(),frontiers=new Set();
   for(const row of kept){live.add(row.digest);indexes.add(row.manifest.factIndex);fragments.add(row.manifest.global);if(row.manifest.frontier)frontiers.add(row.manifest.frontier);for(const owner of Object.values(row.manifest.owners))fragments.add(owner.fragment);}
   const cutoff=now()-P.graceMilliseconds;
   const sweep=async(directory,keep,extension)=>{for(const file of await fs.list(join(root,directory))){aborted(signal);if(file.name.endsWith(extension)&&!keep.has(file.name.slice(0,64))&&file.modifiedMs<cutoff)await fs.remove(join(root,directory,file.name));}};
   await sweep(P.manifests,live,".json");await sweep(P.fragments,fragments,".json.br");await sweep(P.indexes,indexes,"");await sweep(P.frontiers,frontiers,".json.br");await sweep(BUILD_JOURNAL_V1.directory,new Set(),"");await nodes?.prune({now:now()});
+  await retireClosureRepairReceiptsV1({root,fs,pointer,cutoff,signal,fence:claim?.fence?body=>claim.fence(body,{signal}):undefined});
  }
 
- /** ♻️ Marks the newest generation invalid without deleting anything; the next fresh reader builds. */
- async function invalidate({reason="invalidated",signal,claim}={}){
-  const pointer=await readPointer(),digest=null;
-  const outcome=await publish({manifestDigest:digest,expectedGeneration:pointer?.generation??-1,reason,signal,claim});
+ /** ♻️ Marks a generation invalid without deleting anything, optionally fenced to the observed manifest. */
+ async function invalidate({reason="invalidated",expected,signal,claim}={}){
+  const generation=expected?.generation??(await readPointer())?.generation??-1;
+  const outcome=await publish({manifestDigest:null,expectedGeneration:generation,expectedManifest:expected?.manifest,reason,signal,claim});
   return outcome.published;
  }
 

@@ -116,6 +116,25 @@ pub struct ViewModel {
     pub window_instances: Vec<ViewWindowInstance>,
 }
 
+/// 🔒️ Lends a window projection while retaining the original ownership of both ordered roots.
+pub struct ScopedWindowView<'a> {
+    original: &'a ViewModel,
+    view: ViewModel,
+}
+
+impl std::ops::Deref for ScopedWindowView<'_> {
+    type Target = ViewModel;
+
+    fn deref(&self) -> &ViewModel { &self.view }
+}
+
+impl Drop for ScopedWindowView<'_> {
+    fn drop(&mut self) {
+        self.view.active_utility_by_window_id.return_scoped_alias(&self.original.active_utility_by_window_id);
+        self.view.tool_run_trace_cursor_by_window_id.return_scoped_alias(&self.original.tool_run_trace_cursor_by_window_id);
+    }
+}
+
 /// 🛬️ Decodes through the one value decoder so an error retires every ordered map it already built instead of dropping it.
 impl<'de> Deserialize<'de> for ViewModel {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
@@ -223,6 +242,11 @@ impl ViewModel {
             active_utility_id: self.active_utility_by_window_id.get(window_id).cloned().flatten(),
             ..self.clone()
         })
+    }
+
+    /// 🪟️ Reads one window without transferring the ownership of its host view.
+    pub fn scope_window_instance(&self, window_id: &str) -> Option<ScopedWindowView<'_>> {
+        self.for_window_instance(window_id).map(|view| ScopedWindowView { original: self, view })
     }
 
     /// 🪛️ Resolves the addressed, focused and call-level utility while honoring explicit clears.

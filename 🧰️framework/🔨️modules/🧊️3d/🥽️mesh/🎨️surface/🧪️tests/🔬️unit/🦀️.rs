@@ -177,11 +177,77 @@ fn a_cancelled_job_retires_and_a_finished_job_cannot_run_again() {
 }
 
 #[test]
-fn unwrapping_refuses_an_authored_uv_channel_and_an_empty_mesh() {
-    let mut mesh = HalfedgeMesh::plane_prim(1.0, 1.0).unwrap();
+fn unwrapping_replaces_only_the_active_named_uv_channel() {
     use semio_framework_value::DslValue;
-    let values = vec![DslValue::Array(vec![DslValue::float(0.0), DslValue::float(0.0)]); 4];
-    mesh.set_attribute("uv".into(), MeshAttribute { domain: MeshAttributeDomain::Vertex, semantic: MeshAttributeSemantic::Uv, interpolation: MeshAttributeInterpolation::Linear, values, indices: None }).unwrap();
-    assert!(matches!(mesh.unwrap_uv_job(), Err(MeshKernelError::InvalidInput(_))));
-    assert!(matches!(HalfedgeMesh::empty().unwrap_uv_job(), Err(MeshKernelError::EmptySelection)));
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🛠️modeling/🗺️authored-unwrap.json")).unwrap();
+    let positions:Vec<[f32;3]>=serde_json::from_value(fixture["positions"].clone()).unwrap();
+    let faces:Vec<Vec<u32>>=serde_json::from_value(fixture["faces"].clone()).unwrap();
+    let [a,b]:[u32;2]=serde_json::from_value(fixture["seam"].clone()).unwrap();
+    let normal:[f32;3]=serde_json::from_value(fixture["normal"].clone()).unwrap();
+    let mut mesh=HalfedgeMesh::from_faces(&positions,&faces).unwrap();
+    for point in &mut mesh.vertices {point.normal=Some(normal);}
+    mesh.faces[0].smooth=true;
+    let seam=(0..mesh.halfedge_count()).map(|id|EdgeId(id as u32))
+        .find(|&id|mesh.edge_endpoints(id).unwrap()==(VertexId(a),VertexId(b))).unwrap();
+    mesh.mark_uv_seam(&[seam],true);
+    let sample=|value:&serde_json::Value|DslValue::Array(value.as_array().unwrap().iter()
+        .map(|number|DslValue::float(number.as_f64().unwrap())).collect());
+    let active=fixture["active"]["name"].as_str().unwrap();
+    let secondary=fixture["secondary"]["name"].as_str().unwrap();
+    mesh.set_attribute(secondary.into(),MeshAttribute{domain:MeshAttributeDomain::Face,
+        semantic:MeshAttributeSemantic::Uv,interpolation:MeshAttributeInterpolation::Nearest,
+        values:vec![sample(&fixture["secondary"]["value"])],indices:Some(vec![0;faces.len()])}).unwrap();
+    mesh.set_attribute(active.into(),MeshAttribute{domain:MeshAttributeDomain::Vertex,
+        semantic:MeshAttributeSemantic::Uv,interpolation:MeshAttributeInterpolation::Nearest,
+        values:fixture["active"]["values"].as_array().unwrap().iter().map(sample).collect(),
+        indices:Some(serde_json::from_value(fixture["active"]["indices"].clone()).unwrap())}).unwrap();
+    let before=mesh.to_json().unwrap();
+    let mut cancelled=mesh.unwrap_uv_job().unwrap();
+    while cancelled.progress().phase!="unwrap-apply" {assert!(matches!(cancelled.step(1).unwrap(),MeshModelingStep::Working(_)));}
+    cancelled.cancel();
+    assert!(matches!(cancelled.step(1).unwrap(),MeshModelingStep::Cancelled(_)));
+    assert_eq!(mesh.to_json().unwrap(),before);
+
+    let (output,_)=drain(mesh.unwrap_uv_job().unwrap(),1);
+    let (fast,_)=drain(mesh.unwrap_uv_job().unwrap(),1024);
+    assert_eq!(output.to_json().unwrap(),fast.to_json().unwrap());
+    let attribute=&output.attributes()[active];
+    assert_eq!(attribute.domain,MeshAttributeDomain::Corner);
+    assert_eq!(attribute.interpolation,MeshAttributeInterpolation::Linear);
+    assert_eq!(attribute.domain_len() as u64,fixture["expected"]["corners"].as_u64().unwrap());
+    let secondary_out=&output.attributes()[secondary];
+    assert_eq!(secondary_out.domain,MeshAttributeDomain::Face);
+    assert_eq!(secondary_out.indices,mesh.attributes()[secondary].indices);
+    assert_eq!(secondary_out.values,mesh.attributes()[secondary].values);
+    assert_eq!(output.polygon_soup(),mesh.polygon_soup());
+    assert!(output.is_uv_seam(seam));
+    assert!(output.faces[0].smooth && !output.faces[1].smooth);
+    assert!(output.vertices.iter().all(|point|point.normal==Some(normal)));
+    for (corner,edge) in output.halfedges.iter().enumerate() {
+        assert_eq!(attribute.value_at(corner).unwrap().as_array().unwrap().iter().map(|v|v.as_f64().unwrap() as f32).collect::<Vec<_>>(),edge.uv);
+        assert!(edge.uv.iter().all(|value|(0.0..=1.0).contains(value)));
+    }
+    let target_ratio=(fixture["expected"]["longSide"].as_f64().unwrap()/fixture["expected"]["shortSide"].as_f64().unwrap()) as f32;
+    for face in corner_uvs(&output) {
+        let points=face.iter().map(|(_,uv)|*uv).collect::<Vec<_>>();
+        let mut sides=[0,1,2].map(|i|(points[i][0]-points[(i+1)%3][0]).hypot(points[i][1]-points[(i+1)%3][1]));
+        sides.sort_by(f32::total_cmp);
+        assert!((sides[1]/sides[0]-1.0).abs()<1e-5);
+        assert!((sides[2]/sides[0]-target_ratio).abs()<1e-5);
+    }
+    let twin=output.halfedges[seam.0 as usize].twin.unwrap();
+    let a=output.halfedges[seam.0 as usize].uv;
+    let b=output.halfedges[output.halfedges[twin as usize].next as usize].uv;
+    assert_ne!(a,b);
+    let preview=output.tessellate().unwrap();
+    assert_eq!(preview.uvs.len(),output.halfedge_count()*2);
+    assert_eq!(preview.attributes[secondary].indices,secondary_out.indices);
+    for (&vertex,uv) in preview.vertex_ids.iter().zip(preview.uvs.chunks_exact(2)) {
+        assert!(output.halfedges.iter().any(|edge|edge.vertex==vertex && edge.uv.as_slice()==uv));
+    }
+}
+
+#[test]
+fn unwrapping_refuses_an_empty_mesh() {
+    assert!(matches!(HalfedgeMesh::empty().unwrap_uv_job(),Err(MeshKernelError::EmptySelection)));
 }

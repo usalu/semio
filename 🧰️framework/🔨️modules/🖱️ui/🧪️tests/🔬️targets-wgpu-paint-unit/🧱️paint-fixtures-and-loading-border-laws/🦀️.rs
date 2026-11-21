@@ -51,12 +51,16 @@ fn settle_borders(draw: &mut DrawList) {
 }
 
 fn paint_retained_node_for_test(tree: &UiTree, node: NodeId, theme: &Theme, atlas: &mut FontAtlas) -> DrawList {
+    paint_retained_node_with_pointer_for_test(tree, node, theme, atlas, None)
+}
+
+fn paint_retained_node_with_pointer_for_test(tree: &UiTree, node: NodeId, theme: &Theme, atlas: &mut FontAtlas, pointer: Option<(f32, f32)>) -> DrawList {
     let layout = tree.accepted_layout(node).expect("retained node layout");
     let absolute = tree.absolute_rect(node).expect("retained node bounds");
     let mut draw = DrawList::default();
     let mut cursor = RetainedNodePaintCursor::default();
     for _ in 0..16_384 {
-        match paint_node_step_with_driver(tree, node, absolute.x - layout.x, absolute.y - layout.y, theme, atlas, None, false, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, &mut draw, &mut cursor) {
+        match paint_node_step_with_driver(tree, node, absolute.x - layout.x, absolute.y - layout.y, theme, atlas, None, false, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, pointer, &mut draw, &mut cursor) {
             RetainedNodePaintStep::Pending => {}
             RetainedNodePaintStep::Complete => return draw,
             RetainedNodePaintStep::Fault => panic!("retained node paint fault"),

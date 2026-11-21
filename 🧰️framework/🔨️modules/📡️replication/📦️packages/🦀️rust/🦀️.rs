@@ -18,7 +18,7 @@ pub use semio_framework_replication_codec::{ByteRange, ByteReader, ByteSpan, Byt
 pub use semio_framework_replication_command_ingress::{COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES, CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, FixedCommandPage, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, OriginalCommandField, OriginalCommandVarint, PagedCommand, PagedCommandReader, RejectedCommandBuild, RejectedCommandBuildRegistry};
 pub use semio_framework_replication_format::{COMMIT_FRAME_LEN, COMMIT_PAYLOAD_LEN, CommitPayload, FORMAT_VERSION_MAJOR, FORMAT_VERSION_MINOR, FrameCursor, HEADER_SIZE, Header, MAGIC, RecordFrame, RecordSlice, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprIdentityRecord, SprWriter, VerificationLevel, WriteOptions, build_header_bytes, extract_range, parse_commit_payload, parse_header_bytes, read_header, recover, verify_slice, write_commit_payload};
 pub use semio_framework_replication_conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport, MutationReplayOutcome, ProtocolConflictRetirement, ReplayReport};
-pub use semio_framework_replication_causal::binary::{DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DocumentBackboneBatchLimitsV1, decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec};
+pub use semio_framework_replication_causal::binary::{atomic_group, atomic_hub, VerifiedAtomicEdit, decode_verified_atomic_backbone, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DocumentBackboneBatchLimitsV1, decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec};
 #[cfg(feature = "deflate")]
 pub use semio_framework_replication_codec::{DeflateCodec, DeflateRetainedCursor};
 pub use semio_framework_replication_interaction::{DomainHover, DomainSelection, DomainTopology, HierarchyProvider, HoverInput, HoverSpec, InteractionOutline, InteractionState, InteractionTarget, InteractionTopology, MergeMode, SelectionInput, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, next_hover, next_selection, validate_state};
@@ -134,7 +134,10 @@ pub mod io {
         pub use semio_framework_replication_codec::{DiffBinary, OpBinary, OpBinaryReceiving, OpBinaryReceivingCursor};
 
         pub mod causal {
-            pub use semio_framework_replication_causal::binary::{DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DocumentBackboneBatchLimitsV1, decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec};
+            pub use semio_framework_replication_causal::binary::{
+                atomic_group, decode_verified_atomic_backbone, decode_verified_atomic_backbone_at_document, VerifiedAtomicEdit,
+            };
+            pub use semio_framework_replication_causal::binary::{atomic_hub, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES, DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS, DocumentBackboneBatchLimitsV1, decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec};
         }
 
         pub mod operation_bytes {
@@ -217,6 +220,11 @@ pub mod wire {
     pub use crate::wire::local_interaction::transport;
 
     pub mod command_ingress {
+        pub use semio_framework_replication_command_ingress::{
+            ORIGINAL_MEDIA_COMMAND_KIND, OriginalMediaControlEvent, OriginalMediaWireAck,
+            OriginalMediaWireControl, OriginalMediaWireLoan, OriginalMediaWirePhase,
+            OriginalMediaWireResult,
+        };
         pub use semio_framework_replication_command_ingress::{COMMAND_BATCH_MAXIMUM_ITEMS, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES, CommandBatch, CommandBatchDriver, CommandBatchProgress, CommandDriverRegistry, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, CommandPageCursor, CommandPageSet, FixedCommandPage, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, OriginalCommandField, OriginalCommandVarint, PagedCommand, PagedCommandReader, RejectedCommandBuild, RejectedCommandBuildRegistry};
     }
 

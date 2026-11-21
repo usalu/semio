@@ -12,6 +12,9 @@ pub trait OriginalConvertedOperation: OpBinaryReceiving<DomainFailure = ValueErr
 
     fn conversion_demand(state: &Self::Conversion, input: &Option<Self::Mirror>, body: usize) -> Result<RetirementDemand, ValueError>;
 
+    /// ⛽️ Quotes the selected local conversion before its original effect opens.
+    fn conversion_work_demand(_: &Self::Conversion, _: &Option<Self::Mirror>, _: usize) -> Result<u64, ValueError> { Ok(1) }
+
     fn convert_step(
         state: &mut Self::Conversion,
         input: &mut Option<Self::Mirror>,
@@ -109,6 +112,15 @@ impl<M: OriginalConvertedOperation> OpBinaryReceivingCursor<M> for ConvertedOper
         M::conversion_demand(state, &self.input.value, body)
     }
 
+    fn step_work_demand(&self, source: &[u8], body: usize) -> Result<u64, ValueError> {
+        if !self.received {
+            return if self.inner.is_ready() { Ok(Self::STEP_WORK) } else { self.inner.step_work_demand(source, body) };
+        }
+        if self.is_ready() { return Ok(0); }
+        let state = self.state.value.as_ref().ok_or_else(|| invalid("original operation conversion state is absent"))?;
+        M::conversion_work_demand(state, &self.input.value, body)
+    }
+
     fn step(
         &mut self, source: &[u8], native: &mut NativeDecodeControl<'_>, body: usize,
         grant: RetainedCloneGrant,
@@ -120,12 +132,21 @@ impl<M: OriginalConvertedOperation> OpBinaryReceivingCursor<M> for ConvertedOper
         if !retained_clone_grant_admits(grant, demand) {
             return RetainedWorkOutcome { result: Ok(Default::default()), work: 0 };
         }
+        if !self.received && !self.inner.is_ready() {
+            let turn = self.inner.step(source, native, body, grant);
+            self.failed = turn.result.is_err();
+            return turn;
+        }
+        let work = match self.step_work_demand(source, body) {
+            Ok(work) => work,
+            Err(error) => return RetainedWorkOutcome { result: Err(error.into()), work: 0 },
+        };
         let received = self.received;
         let step = |control: &mut NativeDecodeControl<'_>, effect: &mut RetainedAllocationEffect<'_>| self.step_in(source, control, body, effect).result;
         let turn = if received {
-            native.with_allocated_effect_reported(demand, Self::STEP_WORK, step)
+            native.with_allocated_effect_reported(demand, work, step)
         } else {
-            native.with_effect_reported(grant, Self::STEP_WORK, step)
+            native.with_effect_reported(grant, work, step)
         };
         match turn {
             Ok(Some((result, work))) => RetainedWorkOutcome { result, work },
@@ -185,6 +206,13 @@ impl<M: OriginalConvertedOperation> OpBinaryReceivingCursor<M> for ConvertedOper
         self.state.close_demands(body)
     }
 
+    fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        if !self.inner.terminal_is_empty() { return self.inner.close_work_demand(body); }
+        if !self.output.terminal_is_empty() { return self.output.close_work_demand(body); }
+        if !self.input.terminal_is_empty() { return self.input.close_work_demand(body); }
+        self.state.close_work_demand(body)
+    }
+
     fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         self.closing = true;
         if self.terminal_is_empty() {
@@ -233,12 +261,7 @@ impl<M: OriginalConvertedOperation> ConvertedOperationRetirement<M> {
 impl<M: OriginalConvertedOperation> RetirementCursor for ConvertedOperationRetirement<M> {
     semio_framework_value::native_retirement_reply!();
 
-    fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> {
-        if !self.0.inner.terminal_is_empty() { return Ok(1); }
-        if !self.0.output.terminal_is_empty() { return self.0.output.close_work_demand(body); }
-        if !self.0.input.terminal_is_empty() { return self.0.input.close_work_demand(body); }
-        self.0.state.close_work_demand(body)
-    }
+    fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> { self.0.close_work_demand(body) }
 
     fn terminal_is_empty(&self) -> bool { self.0.terminal_is_empty() }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.0.close_demands(usize::MAX)?.depth) }

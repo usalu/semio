@@ -33,6 +33,7 @@ semio-renderer-wgpu-runtime-mailbox = { path = "../../../📨️runtime-mailbox/
 semio-renderer-wgpu-ui-engine-dump = { path = "../../../🔎️ui-engine-dump/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-ui-prepared = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
@@ -50,7 +51,6 @@ semio-renderer-wgpu-shell-view-panels = { path = "../../../🪀️shell-view-pan
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-ui-prepared = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
 semio-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
 semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

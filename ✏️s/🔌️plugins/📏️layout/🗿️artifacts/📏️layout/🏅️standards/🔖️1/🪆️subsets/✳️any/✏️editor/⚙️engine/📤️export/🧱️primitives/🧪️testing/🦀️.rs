@@ -21,7 +21,20 @@ pub fn layout_export_fixture_caller(operation: Operation, generation: Generation
 pub fn append_output_fixture(output:&mut ChunkRope,source:&[u8],caller:&mut OriginalJobFixtureCaller){for bytes in source.chunks(OUTPUT_BODY_BYTES){for turn in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET{if output.has_room(bytes.len()){break;}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let grant=cx.retained_grant();let Some((result,work))=cx.with_original_effect(grant,|_,effect|output.prepare_one(bytes.len(),effect))?else{return Ok(())};cx.consume_work(work);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(progress)?;result?;Ok(())}).expect("original output fixture backing");assert!(turn+1<LAYOUT_EXPORT_FIXTURE_TURN_BUDGET);}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let mut work=OutputWork::new(cx.retained_grant());let result=output.append(bytes,&mut work);cx.consume_retained(work.receipt())?;result.map_err(Fault::from)?;Ok(())}).expect("original output fixture payload");}}
 
 /// ♻️ Tests retire every physical byte page using the exact original writer caller.
-pub fn close_output_fixture(output:&mut ChunkRope,caller:&mut OriginalJobFixtureCaller){for turn in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET{if output.terminal_is_empty(){return;}caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let step=output.close_one(cx.retained_grant())?;cx.consume_retained(step.progress())?;Ok(())}).expect("original output fixture close");assert!(turn+1<LAYOUT_EXPORT_FIXTURE_TURN_BUDGET);}panic!("original output fixture close did not finish");}
+pub fn close_output_fixture(output:&mut ChunkRope,caller:&mut OriginalJobFixtureCaller){for turn in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET{if output.terminal_is_empty(){return;}advance_output_close_fixture(output,caller,LAYOUT_EXPORT_FIXTURE_TURN);assert!(turn+1<LAYOUT_EXPORT_FIXTURE_TURN_BUDGET);}panic!("original output fixture close did not finish");}
+
+/// ⏱️ Executes one close turn with the original caller and posts its physical and Work receipts.
+pub fn advance_output_close_fixture(output:&mut ChunkRope,caller:&mut OriginalJobFixtureCaller,grant:RetainedCloneGrant)->semio_framework_value::RetainedCloneStep{
+    use semio_framework_value::RetainedCloneStep;
+    caller.turn(grant,|cx|{
+        let grant=cx.retained_grant();
+        let Some((result,work))=cx.with_original_effect(grant,|_,effect|output.close_one(effect))?else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+        cx.consume_work(work);
+        let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
+        cx.consume_retained(progress)?;
+        Ok(result?)
+    }).expect("original output fixture close")
+}
 
 /// 🚧️ Tests observe the real append refusal without replacing the original caller or output owner.
 pub fn output_append_refused_fixture(output:&mut ChunkRope,source:&[u8],caller:&mut OriginalJobFixtureCaller)->bool{caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let mut work=OutputWork::new(cx.retained_grant());let result=output.append(source,&mut work);cx.consume_retained(work.receipt())?;Ok(result.is_err())}).expect("original output fixture refusal")}

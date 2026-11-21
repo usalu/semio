@@ -108,3 +108,55 @@ Final check line: `FAIL: 1 measurement(s) over 1 rule line(s)` (`areaDeviation:s
 - Front and plan 2D shapes are flat outlines without `solid`: exact in the default pose, approximate in the gait poses (as before).
 - Grades as I see them: 1:50 body A-, thermal A-, structure A-; 1:100 A-; 1:200 B+; 1:500 B+.
 - `provenance.notes` still says 7.5 heads and does not mention this round; pose descriptions were not rewritten (they already say "near hand on the bag strap").
+
+## Round 5 handcraft (2026-11-21)
+
+Started from the authoring source as found: the round-4 reviewer had split the overcoat into a body above a waist seam and a skirt of two thigh-weighted halves and a centre strip (`coatParts`) but not spliced it; that state was taken over, finished and spliced. Scripts edited at the root (the asset's own): `r3-walking-commuter-s50.ts` (face features, left hand, thenar, pocket flaps, tucked skirt tops, `acromion`), `r3-walking-commuter-coarse.ts` (1:500 skeleton, 1:100 acromion), `r3-walking-commuter-texts.json` (decisions en/de); pipeline `r3-walking-commuter-run.sh` (build, 2D redraw, candidate, validate) and `r3-walking-commuter-commit.sh` (catalog write, splice). Rig, poses and clips unchanged.
+
+### Reference and model (barefoot stature H = 1.78 m, man, 72 kg; derby shoes lift him 24 mm)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| head, chin to vertex | H / 7.5 = 0.237 m (ANSUR II men 0.232) | 0.233 m | -1.7 % |
+| bony biacromial breadth | 0.226 H = 0.402 m (ANSUR II men; brief ~0.23 H = 0.409) | 0.408 m (acromion carried out from 0.192 to 0.204 m incl. bone radius in round 5) | +1.5 % (-0.2 %) |
+| shoulder joint spacing | 0.33 to 0.38 m (biacromial less 2 x 25 to 35 mm) | 0.38 m (rig, kept) | upper end of the range |
+| shoulder joint height | 0.818 H = 1.456 m + 24 mm | 1.479 m | -0.07 % |
+| elbow / wrist height | 0.630 H / 0.485 H + 24 mm = 1.145 / 0.887 m | 1.149 / 0.889 m | +0.3 % / +0.2 % |
+| hip / knee / ankle joint | 0.52 to 0.53 H / 0.285 H / 0.039 H, + 24 mm | 0.959 / 0.524 / 0.099 m | in range / +0.6 % / ankle carries the heel |
+| upper arm / forearm / hand | 0.186 H / 0.146 H / 0.108 H = 0.331 / 0.260 / 0.192 m | 0.33 / 0.26 / 0.19 m | -0.3 % / 0 % / -1.0 % |
+| foot / derby shoe EU 43 | 0.15 H = 0.267 m / 0.295 x 0.105 m, heel 25 mm | 0.297 x 0.108 m shoe, heel 25 mm | +0.7 % / +2.9 % |
+| clothed bideltoid | 0.49 m nude + coat about 0.04 m | 0.52 m | -1 % |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B+ (eyes and brow standing 6 to 10 mm off the face, lips and chin as glued-on bars, a clawed left hand with the fingers bent to 72 degrees and the thumb pointing 67 mm ahead like a hitchhiker, the thenar piercing the back of the hand, pocket flaps cut by the skirt seam, skirt halves opening a ledge at the waist seam in the stride) -> A | A- -> A | A- (acromion inside the shoulder joint) -> A |
+| 1:100 | A- -> A- (unchanged model; the skirt tuck applies) | A- -> A- | A- -> A |
+| 1:200 | B+ -> A- (skirt tuck) | A- -> A- | A- -> A- |
+| 1:500 | B+ -> A- | A- -> A- | B (rib cage as one egg and pelvis as one basin, i.e. blocks) -> A- (three slender rib hoops, sternum, shoulder-girdle and hip-bone lines on the slender spine) |
+
+### Changes
+
+- Face: eyes set into the face (3 mm proud), brows as flat ridges, chin flush; left hand relaxed (finger joints 12 / 30 / 46 degrees from the bone axis instead of 20 / 48 / 72), thumb along the index finger (tip 51 mm ahead of the axis instead of 67 mm), thenar inside the palm; pocket flaps on the coat body above the waist seam, 3.5 mm proud of the cloth.
+- Coat skirt (round-4 split, finished): the tops of the two skirt halves and the centre strip are tucked 20 mm up under the coat body and set 5 to 14 mm inside it, so the waist seam stays closed in every walk frame (looked at `walk-cycle` 0.3 s from the front, back and three-quarter).
+- Structure: scapular spine carried out to the acromion at 0.196 m (1:50, 1:100); 1:500 rib cage and pelvis blocks replaced by slender rib hoops and bone lines (C2).
+- Decisions rewritten for the split coat (1:50) and the 1:500 skeleton (en, de). 2D redrawn by the round-3 tool from the new bodies at every scale.
+- Checks: `r3-validate.ts humans/walking-commuter --catalog-only` VALID (schema 0, validateAsset 0); `--volumes` and `volumes-check.ts --product`: one red line, `shoes` 0.216 against 0.1326 m² (+63 %, C18 body region; with the area reviewers, `area-review.md` "Round 5 handcraft re-measure"). Every other rule ok at every scale.
+
+### What I saw (opened)
+
+`r3-sheet` 1:50 body before and after, the `walk-cycle` frame at 0.3 s (six views) and close-ups of the skirt in that frame (three iterations), close-ups of head, left hand, feet and waist; 1:50 structure (six views and front alone after the acromion change), 1:500 body, 1:500 structure before and after, `r3-2d` 1:50. Rendered, not opened: 1:100 and 1:200 body, structure and thermal sheets, the 1:50 and coarse thermal cuts, the other poses (check-watch, contact, loading, passing) and `r3-2d` 1:500; for those only the green checks and the round-3 looks stand.
+
+### Still not A, with the reason
+
+- `shoes` area (C18, area reviewers). Face still plain (no eyelids, nostrils), a mask at close range; at 1:50 the face is 4.6 mm on paper.
+- Rig shoulder joints 0.38 m apart, at the upper end of the anatomical range; moving them would move the gripping right hand off the strap anchor and every arm key.
+- The right hand closed on the strap turns in the solids, not in the rig (round 3).
+- The waist seam shows a slight wave in the stride; the coat has no cloth folds beyond the skirt split.
+
+## Eyelids, eyebrows, nose and mouth on 21 November
+
+At 1:50 and 1:100, the head has paired raised lids, sclera, irises and pupils in sockets spaced 64 mm apart. Each lid has a 27 mm opening. The nasal bridge blends into two alar wings with recessed fossae. The upper and lower vermilion meet along a recessed mouth line. The fine contours use 24 orbital stations and the intermediate representation uses 16. The coarser head volumes retain their broad facial profile.
+
+Three.js ray tests checked the recesses, the oral seam, the open lid centres, opposing mesh edges and the relative order of the visible eye layers. The body and thermal references agree on the face-skin field. All thirteen volume rules passed at all four scales on the finished geometry. The independent reader reopened twelve shipped scenes at 6,999,000 bytes. The orbital widths and pigmentation dimensions are authored design measurements in [the facial fixture](digital-commuter-orbits.json).

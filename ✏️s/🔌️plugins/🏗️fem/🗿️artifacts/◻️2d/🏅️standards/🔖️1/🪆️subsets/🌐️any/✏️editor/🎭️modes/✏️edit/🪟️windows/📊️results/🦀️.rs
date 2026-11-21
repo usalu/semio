@@ -18,15 +18,20 @@ use semio_s_fem_app_surface::ResultDisplay;
 use semio_s_fem_app_surface::MODE_SHAPE_AMPLITUDE_RATIO;
 
 use semio_s_fem_app_surface::VON_MISES_BANDS;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_canvas_text_layer;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_deformed_edge_layer;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_deformed_shape_layers;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_model_extent;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_region_mesh_triangles;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::fem2d_structure_layers_with;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::MOMENT_SCALE_2D;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_element_endpoints;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::find_node_2d;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::screen_2d;
+use semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::MountedFieldsView;
 use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::Dof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_os_kernel::Viewport2d;
@@ -35,7 +40,7 @@ use semio_plugin::built_text_node;
 use semio_plugin::BuiltNode;
 use semio_plugin::Canvas2dScene;
 use semio_ui_locale::Label;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "fem2d-results";
@@ -125,16 +130,8 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
         layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-a"), (10.0, y), (26.0, y), (26.0, y + 14.0), color, 1.0));
         layers.push(filled_triangle_layer(&format!("legend-swatch-{i}-b"), (10.0, y), (26.0, y + 14.0), (10.0, y + 14.0), color, 1.0));
     }
-    layers.push(semio_framework_pack_json::json!({
-        "id": "legend-label-min",
-        "transform": [1.0, 0.0, 0.0, 1.0, 30.0, 20.0 + VON_MISES_BANDS.len() as f64 * 14.0],
-        "text": { "content": format!("{min:.1} Pa"), "size": 11.0 },
-    }));
-    layers.push(semio_framework_pack_json::json!({
-        "id": "legend-label-max",
-        "transform": [1.0, 0.0, 0.0, 1.0, 30.0, 28.0],
-        "text": { "content": format!("{max:.1} Pa"), "size": 11.0 },
-    }));
+    layers.push(fem2d_canvas_text_layer("legend-label-min", 30.0, 20.0 + VON_MISES_BANDS.len() as f64 * 14.0, &format!("{min:.1} Pa"), 11.0));
+    layers.push(fem2d_canvas_text_layer("legend-label-max", 30.0, 28.0, &format!("{max:.1} Pa"), 11.0));
     layers
 }
 //#endregion 🔖️StressContourHelpers
@@ -281,6 +278,38 @@ pub fn render(
     }
 }
 
+fn mounted_region_deformation_layers<'a>(
+    triangles: impl Iterator<Item = [&'a str; 3]>,
+    points: &HashMap<&str, ((f64, f64), bool)>,
+) -> Vec<Value> {
+    let mut edges = HashSet::new();
+    let mut layers = Vec::new();
+    for [a, b, c] in triangles {
+        for (start, end) in [(a, b), (b, c), (c, a)] {
+            let (start, end) = (start.min(end), start.max(end));
+            let (Some(&(start_point, true)), Some(&(end_point, true))) = (points.get(start), points.get(end)) else { continue; };
+            if edges.insert((start, end)) {
+                layers.push(fem2d_deformed_edge_layer(format!("region-deformed-{}-{start}-{end}", start.len()), start_point, end_point));
+            }
+        }
+    }
+    layers
+}
+
+fn mounted_deformation_layers(doc: &Fem2dSnapshot, view: &MountedFieldsView<'_>, scale: f64, select: impl Fn(&NodeLiveField) -> [f64; 2]) -> Vec<Value> {
+    let points: HashMap<_, _> = view.model_nodes().map(|(id, [x, y], field)| {
+        let [dx, dy] = field.map(&select).unwrap_or([0.0; 2]);
+        (id, (screen_2d(x + scale * dx, y + scale * dy), field.is_some()))
+    }).collect();
+    let mut layers: Vec<_> = doc.elements.iter().filter_map(|element| {
+        let (start, end) = fem2d_element_endpoints(element);
+        let (&(start, _), &(end, _)) = (points.get(start)?, points.get(end)?);
+        Some(fem2d_deformed_edge_layer(format!("deformed-{}", element_id(element)), start, end))
+    }).collect();
+    layers.extend(mounted_region_deformation_layers(view.model_triangles(), &points));
+    layers
+}
+
 fn render_mounted(
     doc: &Fem2dSnapshot,
     display: &ResultDisplay,
@@ -293,19 +322,45 @@ fn render_mounted(
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    let (family, index) = match display.mode { DisplayMode::Static => (semio_s_fem_app_surface::ResultMode::Static, 0), DisplayMode::Modal(index) => (semio_s_fem_app_surface::ResultMode::Modal, index), DisplayMode::Buckling(index) => (semio_s_fem_app_surface::ResultMode::Buckling, index) };
     let layers = semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_fields(operation, authority, |visual| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
-        if family != semio_s_fem_app_surface::ResultMode::Static {
-            layers.push(semio_framework_pack_json::json!({ "id": "analysis-progress", "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0], "text": { "content": labels.failed.as_str(), "size": 11.0 } }));
-        }
-        if let Some(view) = visual {
+        use semio_s_fem_app_surface::ResultMode;
+        let (family, index) = match display.mode {
+            DisplayMode::Static => (ResultMode::Static, 0),
+            DisplayMode::Modal(index) => (ResultMode::Modal, index),
+            DisplayMode::Buckling(index) => (ResultMode::Buckling, index),
+        };
+        if let Some(view) = visual.filter(|view| view.matches_selection(doc, family, index, display.source_id.as_deref())) {
             let visual = view.progress;
-            let displacements = view.fields.iter().map(|field| (field.node_id.clone(), [field.displacement[0], field.displacement[1], 0.0, 0.0, 0.0, 0.0])).collect();
-            layers.extend(fem2d_deformed_shape_layers(doc, &displacements, doc.analysis.deformation_scale * animation.amplitude()));
+            let amplitude = animation.amplitude();
+            if family == ResultMode::Static {
+                layers.extend(mounted_deformation_layers(doc, &view, doc.analysis.deformation_scale * amplitude, |field| field.displacement));
+                if visual.validated_final || view.retained {
+                    layers.extend(mounted_reaction_labels(doc, view.fields.iter(), amplitude));
+                }
+            } else if let Some(eigenvalue) = view.eigenvalue {
+                if view.mode_shape_peak > 0.0 {
+                    layers.extend(mounted_deformation_layers(doc, &view, mode_shape_scale(doc, amplitude) / view.mode_shape_peak, |field| field.mode_shape));
+                }
+                let number = index + 1;
+                let caption = if family == ResultMode::Modal {
+                    let hz = eigenvalue.sqrt() / std::f64::consts::TAU;
+                    format!("{} {number}: {hz:.3} Hz", labels.mode_shape.as_str())
+                } else {
+                    format!("{} {number}: {eigenvalue:.3}", labels.buckling_mode.as_str())
+                };
+                layers.push(fem2d_canvas_text_layer("eigen-result", 10.0, 52.0, &caption, 12.0));
+            }
             let status = if matches!(visual.state, semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::FemVisualState::FaultedCancelled) { labels.failed.as_str() } else if visual.validated_final { labels.converged.as_str() } else { labels.pending.as_str() };
             let retained = if view.retained { labels.previous_results.as_str() } else { "" };
-            layers.push(semio_framework_pack_json::json!({ "id": "analysis-progress", "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0], "text": { "content": format!("{status} · {} / {} · {} {:.3e} {retained}", visual.progress_completed, visual.progress_total, labels.residual.as_str(), visual.residual_norm), "size": 11.0 } }));
+            let caption = if family != ResultMode::Static && visual.validated_final && view.eigenvalue.is_none() {
+                labels.mode_unavailable.as_str().to_owned()
+            } else {
+                format!("{status} · {} / {} · {} {:.3e} {retained}", visual.progress_completed, visual.progress_total, labels.residual.as_str(), visual.residual_norm)
+            };
+            layers.push(fem2d_canvas_text_layer("analysis-progress", 10.0, 20.0, caption.trim_end(), 11.0));
+        } else {
+            layers.push(fem2d_canvas_text_layer("analysis-progress", 10.0, 20.0, labels.pending.as_str(), 11.0));
         }
         layers.extend(playback_caption_layer(animation, labels));
         layers
@@ -325,11 +380,7 @@ pub fn mode_shape_scale(doc: &Fem2dSnapshot, amplitude: f64) -> f64 {
 /// still results window looks exactly as it always did.
 fn playback_caption_layer(animation: &semio_s_fem_app_surface::FemResultsAnimation, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> Option<Value> {
     animation.playing.then(|| {
-        semio_framework_pack_json::json!({
-            "id": "playback-caption",
-            "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 36.0],
-            "text": { "content": format!("{} {:.2} · \u{25b6} {} Hz", labels.phase.as_str(), animation.phase, animation.speed), "size": 11.0 },
-        })
+        fem2d_canvas_text_layer("playback-caption", 10.0, 36.0, &format!("{} {:.2} · \u{25b6} {} Hz", labels.phase.as_str(), animation.phase, animation.speed), 11.0)
     })
 }
 
@@ -380,6 +431,46 @@ fn place_reaction_label(anchor_x: f64, anchor_y: f64, stack_index: usize, conten
     (base_x, base_y)
 }
 
+fn mounted_reaction_labels<'a>(doc: &Fem2dSnapshot, fields: impl Iterator<Item = &'a NodeLiveField>, amplitude: f64) -> Vec<Value> {
+    let values: HashMap<_, _> = fields.map(|field| (field.node_id.as_str(), field.reaction)).collect();
+    let reactions = doc.supports.iter().flat_map(|support| {
+        let node_id = support.node_id.as_str();
+        let values = values.get(node_id);
+        support.fixed.iter().filter_map(move |dof| {
+            let dof = Dof::from(*dof);
+            values?.get(dof.index()).map(|value| (node_id, dof, *value))
+        })
+    });
+    reaction_labels(doc, reactions, amplitude)
+}
+
+fn reaction_labels<'a>(doc: &Fem2dSnapshot, reactions: impl Iterator<Item = (&'a str, Dof, f64)>, amplitude: f64) -> Vec<Value> {
+    let mut entries: Vec<_> = reactions.collect();
+    entries.sort_unstable_by_key(|(node_id, dof, _)| (*node_id, dof.index()));
+    entries.dedup_by_key(|(node_id, dof, _)| (*node_id, dof.index()));
+    let mut placed = Vec::new();
+    let mut layers = Vec::with_capacity(entries.len());
+    let mut previous_node = None;
+    let mut stack_index = 0;
+    for (node_id, dof, value) in entries {
+        let Some(node) = find_node_2d(&doc.nodes, node_id) else { continue };
+        if previous_node != Some(node_id) {
+            previous_node = Some(node_id);
+            stack_index = 0;
+        }
+        let (x, y) = screen_2d(node.x, node.y);
+        let unit = match dof {
+            Dof::Tx | Dof::Ty | Dof::Tz => "N",
+            Dof::Rx | Dof::Ry | Dof::Rz => "N·m",
+        };
+        let content = format!("{dof:?}: {:.0} {unit}", value * amplitude);
+        let (label_x, label_y) = place_reaction_label(x, y, stack_index, &content, &mut placed);
+        layers.push(fem2d_canvas_text_layer(&format!("reaction-{node_id}-{dof:?}"), label_x, label_y, &content, REACTION_LABEL_SIZE));
+        stack_index += 1;
+    }
+    layers
+}
+
 /// 📊️ Static results: undeformed structure faintly, plus a deformed-shape polyline, text labels at
 /// every support reaction, (for beams) a moment-diagram polyline, and (for meshed regions) a
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
@@ -401,16 +492,16 @@ fn render_static(
     active_utility: &str,
     labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+    let case_id = source_id.map(str::to_string).or_else(|| doc.load_cases.first().and_then(|case| semio_s_fem_analyses_model::encode_result_source_parts("loadCase", &case.id).ok()));
+    let Some(case_id) = case_id else {
+        return placeholder(Label::data(labels.no_load_case.as_str()));
+    };
     let amplitude = animation.amplitude();
     let scene = with_static_results(doc, key, |results| {
-        let case_id = source_id.map(str::to_string).or_else(|| doc.load_cases.first().and_then(|case| semio_s_fem_analyses_model::encode_result_source_parts("loadCase", &case.id).ok()));
-        let Some(case_id) = case_id else {
-            return Err(labels.no_load_case.as_str().to_owned());
-        };
         let Some(result) = results.get(&case_id) else {
             return Err(format!("{}: {case_id}", labels.result_missing.as_str()));
         };
-        Ok(static_layers(doc, &case_id, result, interaction, animation, amplitude, labels))
+        Ok(static_layers(doc, result, interaction, animation, amplitude, labels))
     });
     let layers = match scene {
         Ok(Ok(layers)) => layers,
@@ -426,7 +517,6 @@ fn render_static(
 /// frame is one consistent instant of the structure's motion rather than a mix of poses.
 fn static_layers(
     doc: &Fem2dSnapshot,
-    case_id: &str,
     result: &semio_s_fem_model::StaticResult,
     interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &semio_s_fem_app_surface::FemResultsAnimation,
@@ -441,32 +531,7 @@ fn static_layers(
     layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, doc.analysis.deformation_scale * amplitude));
     layers.extend(playback_caption_layer(animation, labels));
 
-    //#region 🔖️ReactionLabels
-    let mut reaction_entries: Vec<(&semio_s_fem_model::NodeReaction, f64, f64)> = Vec::new();
-    for reaction in &result.reactions {
-        let Some(node) = find_node_2d(&doc.nodes, &reaction.node_id) else { continue };
-        let (sx, sy) = screen_2d(node.x, node.y);
-        reaction_entries.push((reaction, sx, sy));
-    }
-    reaction_entries.sort_by(|(left, ..), (right, ..)| left.node_id.cmp(&right.node_id).then(left.dof.index().cmp(&right.dof.index())));
-    let mut stack_by_node: HashMap<String, usize> = HashMap::new();
-    let mut placed_reaction_labels: Vec<ReactionLabelBounds> = Vec::new();
-    for (reaction, sx, sy) in reaction_entries {
-        let stack_index = {
-            let entry = stack_by_node.entry(reaction.node_id.clone()).or_insert(0);
-            let index = *entry;
-            *entry += 1;
-            index
-        };
-        let content = format!("{:?}: {:.0} N", reaction.dof, reaction.value * amplitude);
-        let (label_x, label_y) = place_reaction_label(sx, sy, stack_index, &content, &mut placed_reaction_labels);
-        layers.push(semio_framework_pack_json::json!({
-            "id": format!("reaction-{}-{:?}", reaction.node_id, reaction.dof),
-            "transform": [1.0, 0.0, 0.0, 1.0, label_x, label_y],
-            "text": { "content": content, "size": REACTION_LABEL_SIZE },
-        }));
-    }
-    //#endregion 🔖️ReactionLabels
+    layers.extend(reaction_labels(doc, result.reactions.iter().map(|value| (value.node_id.as_str(), value.dof, value.value)), amplitude));
 
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
@@ -498,7 +563,7 @@ fn static_layers(
     }
 
     //#region 🔖️StressContour
-    let nodal_von_mises = semio_s_artifact_fem_2d_engine::fem2d_engine::mesh_preview::fem2d_nodal_von_mises(doc, case_id).unwrap_or_default();
+    let nodal_von_mises = semio_s_artifact_fem_2d_engine::fem2d_engine::mesh_preview::fem2d_nodal_von_mises(doc, result).unwrap_or_default();
     let mesh_triangles = fem2d_region_mesh_triangles(doc);
     let mut valued_triangles: Vec<StressContourTriangle> = Vec::new();
     for (_, tri_points, node_ids) in &mesh_triangles {
@@ -553,11 +618,7 @@ fn render_modal(
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
-        layers.push(semio_framework_pack_json::json!({
-            "id": "modal-caption",
-            "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
-            "text": { "content": format!("{} {}: {freq_hz:.3} Hz", labels.mode_shape.as_str(), mode_index + 1), "size": 12.0 },
-        }));
+        layers.push(fem2d_canvas_text_layer("modal-caption", 10.0, 20.0, &format!("{} {}: {freq_hz:.3} Hz", labels.mode_shape.as_str(), mode_index + 1), 12.0));
         layers.extend(playback_caption_layer(animation, labels));
         layers
     });
@@ -598,11 +659,7 @@ fn render_buckling(
     let mode = with_mode_values(doc, key, ModeKey::Buckling(case_id, mode_index), |(factor, disp_map)| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         layers.extend(fem2d_deformed_shape_layers(doc, disp_map, scale));
-        layers.push(semio_framework_pack_json::json!({
-            "id": "buckling-caption",
-            "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
-            "text": { "content": format!("{} {}: {} {factor:.3}", labels.buckling_mode.as_str(), mode_index + 1, labels.factor.as_str()), "size": 12.0 },
-        }));
+        layers.push(fem2d_canvas_text_layer("buckling-caption", 10.0, 20.0, &format!("{} {}: {} {factor:.3}", labels.buckling_mode.as_str(), mode_index + 1, labels.factor.as_str()), 12.0));
         layers.extend(playback_caption_layer(animation, labels));
         layers
     });

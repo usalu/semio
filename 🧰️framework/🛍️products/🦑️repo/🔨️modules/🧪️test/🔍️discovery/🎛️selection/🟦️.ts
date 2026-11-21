@@ -17,6 +17,15 @@ export function selectCases(repoRoot: string, segments: readonly string[]): Disc
   return all.filter((entry) => matchesOwner(entry) && (ownerRoot === null || entry.owner === ownerRoot) && (caseSlug === null || entry.case === caseSlug) && (project === null || entry.projectName === project));
 }
 
+/** 🎯️ Rejects explicit case execution that names no matching authored case. */
+export function caseSelectionProblem(segments: readonly string[], selected: number): string | undefined {
+  const index = segments.indexOf("--case");
+  if (index === -1) return;
+  const name = segments[index + 1];
+  if (!name || name.startsWith("--")) return "--case requires an exact authored test case name";
+  if (selected === 0) return `--case ${JSON.stringify(name)} matched no authored test case. Use the complete directory name from test discovery.`;
+}
+
 /** ☑️ Implementations a command should exercise: every claimed adapter unless `--implementation` narrows it. */
 export function selectImplementations(discovered: DiscoveredCase, segments: readonly string[]): Implementation[] {
   const index = segments.indexOf("--implementation");

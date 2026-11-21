@@ -263,6 +263,59 @@ export async function runReplicaCommandV1(_args,context){
  }finally{if(shim.proc.exitCode===null)await stopShim(shim);}
 },30000);
 
+test("the installed supervisor replaces its exact child after a proven asynchronous Git progress stall",async()=>{
+ const box=sandbox("async-progress",{supervisor:readFileSync(supervisorFile,"utf8")});
+ const progress=join(sourceDirectory,"..","💓️progress","🟦️.ts");
+ put(box.repo,`${relative}/🛡️resilience/🟦️.ts`,"export const selfCheckV1=async()=>({ok:true}),startRejectionV1=async()=>null;");
+ put(box.repo,`${relative}/🩺️attest/🟦️.ts`,"export const codeDigestV1=async()=> 'a'.repeat(64);");
+ put(box.repo,`${relative}/🔁️replica/⌨️command/🟦️.ts`,`
+ import {existsSync,writeFileSync,readFileSync} from "node:fs";
+ import {join} from "node:path";
+ import {createReplicaProgressWatchV1} from ${JSON.stringify(progress)};
+ export async function runReplicaCommandV1(_args,context){
+  const first=join(context.root,"started"),record=join(context.root,"progress-intent");
+  context.write(JSON.stringify({version:1,event:"started"}));
+  if(existsSync(first)){
+   writeFileSync(join(context.root,"next"),String(process.pid));
+   await new Promise(done=>context.signal.addEventListener("abort",done,{once:true}));
+   return {exitCode:0};
+  }
+  writeFileSync(first,String(process.pid));
+  let advance=0;
+  const monitor=createReplicaProgressWatchV1({
+   pid:process.pid,now:()=>Date.now()+advance,signal:context.signal,
+   probe:async()=>({store:true,local:true}),
+   prepare:async value=>{
+    const beat=JSON.parse(readFileSync(join(context.root,".cache/f/boot/beat.json"),"utf8"));
+    if(beat.pid!==process.pid||beat.phase!=="run"||beat.lagMs>=1000)throw Error("Live owned child heartbeat required");
+    writeFileSync(record,JSON.stringify(value));return true;
+   },
+   restart:()=>{
+    const arm=globalThis[Symbol.for("semio.fleet.gitProgressRestart")];
+    if(typeof arm!=="function"||arm()!==true)throw Error("Actual boot child force bound required");
+   },
+  });
+  monitor.attested();
+  setTimeout(()=>{advance=120001;},100);
+  await monitor.run("git-heal-metadata",()=>new Promise(()=>{}));
+  return {exitCode:0};
+ }
+ `);
+ const shim=startShim(box,{SEMIO_FLEET_ENTRY_EARLY_MS:"300",SEMIO_FLEET_BOOT_GRACE_MS:"400",SEMIO_FLEET_BOOT_BEAT_MS:"100"});
+ try{
+  await until(()=>existsSync(join(box.repo,"next"))||shim.proc.exitCode!==null,9000);
+  expect(shim.proc.exitCode).toBeNull();
+  const first=Number(readFileSync(join(box.repo,"started"),"utf8")),next=Number(readFileSync(join(box.repo,"next"),"utf8"));
+  expect(next).not.toBe(first);
+  const intent=JSON.parse(readFileSync(join(box.repo,"progress-intent"),"utf8"));
+  expect(intent).toMatchObject({pid:first,scope:"git-heal-metadata",reason:"git-metadata-progress-stall"});
+  expect(intent.at-intent.began).toBeGreaterThanOrEqual(120000);
+  expect(intent.at-intent.attested).toBeGreaterThanOrEqual(120000);
+  expect(readEntryStateV1(box.entry)?.attempts.some(item=>item.outcome==="exit 1")).toBe(true);
+  expect(existsSync(join(box.repo,".cache/f/boot/loop-blocked-restart.json"))).toBe(false);
+ }finally{if(shim.proc.exitCode===null)await stopShim(shim);}
+},20000);
+
 test("a worktree supervisor with a broken static import falls back to the newest sealed snapshot, which runs with its reason shown in both languages",async()=>{
  const box=sandbox("static",{supervisor:failingSupervisor});
  const digest=writeSnapshot(join(box.repo,".cache","f","code"),"sealed-1",workingSupervisor);

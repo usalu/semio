@@ -1,0 +1,138 @@
+{
+  "sphereRadius": 3,
+  "cases": [
+    {
+      "name": "one planar closure",
+      "axial": [
+        0.75,
+        3
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ],
+      "plane": [
+        0,
+        0,
+        0
+      ],
+      "arcs": 1,
+      "radius": 3,
+      "area": 9.68449151263369
+    },
+    {
+      "name": "two planar closures",
+      "axial": [
+        -1,
+        1
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ],
+      "plane": [
+        0,
+        0,
+        0
+      ],
+      "arcs": 2,
+      "radius": 3,
+      "area": 11.773918619666574
+    },
+    {
+      "name": "interior parallel plane",
+      "axial": [
+        -1,
+        1
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "plane": [
+        0,
+        0,
+        0.25
+      ],
+      "arcs": 0,
+      "radius": 2.9895651857753496,
+      "area": 28.077984341458777
+    },
+    {
+      "name": "oblique plane through both closures",
+      "axial": [
+        -1,
+        1
+      ],
+      "normal": [
+        0.6,
+        0,
+        0.8
+      ],
+      "plane": [
+        0,
+        0,
+        0.2
+      ],
+      "arcs": 2,
+      "radius": 2.995730294936445,
+      "area": 18.82606333806712
+    }
+  ],
+  "refused": [
+    {
+      "name": "coincident outside closure",
+      "axial": [
+        -1,
+        1
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "plane": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "sphere tangent",
+      "axial": [
+        -1,
+        1
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ],
+      "plane": [
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "parallel plane outside strip",
+      "axial": [
+        -1,
+        1
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "plane": [
+        0,
+        0,
+        1.5
+      ]
+    }
+  ]
+}

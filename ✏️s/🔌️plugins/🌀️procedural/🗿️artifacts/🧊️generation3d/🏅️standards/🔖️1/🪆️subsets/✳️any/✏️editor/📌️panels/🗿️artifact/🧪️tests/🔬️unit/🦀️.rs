@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_preview_eval::PreviewEvaluation;
 use super::*;
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::graph_outline;
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_OUTLINE_NODES;
@@ -10,8 +11,8 @@ const DOCUMENT_ROWS_LAW: &str = include_str!("../🧫️fixtures/🔬️unit/�
 fn law_document_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(DOCUMENT_ROWS_LAW).expect("document rows law json");
     let fixture = semio_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
-    let dag = FlowHost::project_dag_snapshot(&fixture, &semio_os_flow::flow_neuron_kind_info_map());
-    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
+    let dag = FlowHost::project_registered_dag_snapshot(&fixture);
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag, &fixture.synapses);
     let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native));
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("document tree builds");
     fixture.retire_cold();
@@ -243,10 +244,13 @@ fn every_windowed_container_carries_a_distinct_node_key() {
 #[test]
 fn scalar_tree_exposes_graph_targets_in_a_scrollable_split() {
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧵️preview-eval/🧪️tests/🧫️fixtures/🔢️value-readout.json")).unwrap();
-    let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(&fixture["eval"].to_string());
+    let text = fixture["eval"].to_string();
+    let evaluation = PreviewEvaluation::from_json(&text);
+    let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(&evaluation);
     let scene = semio_plugin::built_text_node(semio_ui_locale::Label::data("scene")).unwrap();
-    let node = semio_s_procedural_core_semantic_ui::scene_with_channel_values(scene, &TreeWindows::unhosted(), "procedural3d-view", "test-values", "Values", &rows).unwrap();
+    let node = semio_s_procedural_core_semantic_ui::scene_with_channel_values(scene, &TreeWindows::unhosted(), "procedural3d-view", "test-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(false, "Input", "Output"), &rows, &[]).unwrap();
     let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
     let projection: serde_json::Value = serde_json::from_str(&projection).unwrap();
     let wrappers = projection["children"].as_array().unwrap();
@@ -257,4 +261,55 @@ fn scalar_tree_exposes_graph_targets_in_a_scrollable_split() {
     assert_eq!(row["key"], "node@flag");
     assert_eq!(row["component"]["granularity"], "handle");
     assert_eq!(row["bindings"][0]["trigger"], "hoverPreview");
+}
+
+#[test]
+fn channel_preview_expands_a_late_value_under_the_same_graph_target() {
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧵️preview-eval/🧪️tests/🧫️fixtures/🔢️value-readout.json")).unwrap();
+    let text = fixture["eval"].to_string();
+    let evaluation = PreviewEvaluation::from_json(&text);
+    let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(&evaluation);
+    let separator = semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR;
+    let body = GENERATION_3D_PLAY_BODY_ARTIFACT;
+    let view = window_view(vec![
+        TreeWindowRequest { body_key: body.into(), node_key: ["values", "node@list"].join(separator), open: Some(true), offset: 0, rows: 1 },
+        TreeWindowRequest { body_key: body.into(), node_key: ["values", "node@list", "out"].join(separator), open: Some(true), offset: 4, rows: 1 },
+        TreeWindowRequest { body_key: body.into(), node_key: ["values", "node@!imeta"].join(separator), open: Some(true), offset: 0, rows: 1 },
+        TreeWindowRequest { body_key: body.into(), node_key: ["values", "node@meta"].join(separator), open: Some(true), offset: 0, rows: 1 },
+        TreeWindowRequest { body_key: body.into(), node_key: ["values", "node@meta", "out"].join(separator), open: Some(true), offset: 0, rows: 1 },
+        TreeWindowRequest { body_key: body.into(), node_key: ["values", "node@meta", "out", "1"].join(separator), open: Some(true), offset: 0, rows: 1 },
+    ]);
+    let windows = TreeWindows::for_body(&view, body);
+    let scene = semio_plugin::built_text_node(semio_ui_locale::Label::data("scene")).unwrap();
+    let labels = semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(true, "Eingang", "Ausgang");
+    let node = semio_s_procedural_core_semantic_ui::scene_with_channel_values(scene, &windows, "procedural3d-view", "test-values", &labels, &rows, &[]).unwrap();
+    let text = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
+    let projection: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let list = container(&projection, "node@list");
+    let output = &list["children"][0];
+    assert_eq!(output["key"], "out");
+    assert_eq!(output["component"]["label"], "Ausgang");
+    assert_eq!(window_of(output), (5, 4, 1));
+    let value = &output["children"][0];
+    assert_eq!(value["key"], "5");
+    assert_eq!(value["component"]["description"], fixture["expanded"][0]["value"].to_string());
+    assert!(value["component"]["granularity"].is_null());
+    assert_eq!(value["bindings"][0]["args"]["targetId"], list["bindings"][0]["args"]["targetId"]);
+    let meta_input = container(&projection, "node@!imeta");
+    let meta = container(&projection, "node@meta");
+    assert_eq!(meta_input["component"]["label"], meta["component"]["label"]);
+    assert_eq!(meta_input["children"][0]["component"]["label"], "Eingang");
+    assert_ne!(meta_input["bindings"][0]["args"]["targetId"], meta["bindings"][0]["args"]["targetId"]);
+    let meta_output = &meta["children"][0];
+    assert_eq!(meta_output["component"]["label"], "Ausgang");
+    assert_eq!(window_of(meta_output), (1, 0, 1));
+    let unit = &meta_output["children"][0];
+    assert_eq!(unit["component"]["label"], "unit");
+    assert_eq!(unit["component"]["description"], fixture["expanded"][1]["value"].to_string());
+    assert_eq!(unit["bindings"][0]["args"]["targetId"], meta["bindings"][0]["args"]["targetId"]);
+    let scene = semio_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<semio_ui_declaration::ui::TextEditorScene>(&unit.to_string()).unwrap();
+    assert_eq!(scene.buffer, fixture["expanded"][1]["value"].as_str().unwrap());
+    assert_eq!(scene.settings_json.as_deref(), Some(r#"{"readOnly":true}"#));
 }

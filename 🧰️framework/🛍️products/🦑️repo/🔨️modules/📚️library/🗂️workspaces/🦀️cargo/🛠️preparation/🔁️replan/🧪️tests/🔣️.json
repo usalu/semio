@@ -7,5 +7,9 @@
     {"kind": "changed-after-update", "identityCalls": 2, "dependencyCalls": 3, "refused": false},
     {"kind": "always-changing-after-update", "identityCalls": 4, "dependencyCalls": 4, "refused": true},
     {"kind": "expired", "identityCalls": 1, "dependencyCalls": 0, "refused": true}
+  ],
+  "implementationCases": [
+    {"before": "export const version = 1;", "after": "export const version = 2;", "reason": "bytes"},
+    {"before": "export const version = 1;", "after": null, "reason": "vanished"}
   ]
 }

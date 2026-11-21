@@ -1,0 +1,26 @@
+# Bounded Original Media Transfer
+
+A selected image needs to reach the existing PDF instance under its captured full revision and edit target. The current natural-file route creates a document. The current action picker stages text chunks and assembles them into one guest string. The existing command and archive packet lanes demonstrate how a host can transfer individual byte pages while a guest owns the retained original. [Original media audit](original-media-image-audit.md)
+
+The staged transfer contract uses an issued loan carrying operation, generation, instance, document and full revision. Only the editor retains the chosen insertion or replacement target. The host sends a Begin descriptor, ordered byte pages with exact lengths, and one Complete or Cancel. Begin is bounded by the selected editor's admitted source extent. The wire page size is 4,096 bytes and the transport ceiling follows the current 512 MiB browser natural-file ceiling. A particular format can admit a smaller source extent.
+
+The browser-side sender reads one Blob slice per acknowledged page. It checks cancellation and target ownership before and after the bounded read, validates the byte count, and reports only accepted bytes. Failure sends a Cancel for that same loan. A transfer whose completion acknowledgment was interrupted needs the receiver's idempotent terminal response. The receiver must validate that the loan is issued, reserve and ingest original pages under the operation's physical grant, gate completion on exact page coverage, and retire partial pages on any terminal refusal. The normal PDF commit must still check the original full revision and publish the image, resource and placement as one mutation transaction.
+
+The eight neutral transfer cases passed. The 1,572,881-byte specimen passed in 385 bounded reads with the original SHA-256 and exact loan on every frame. A truncated read, cancellation, stale revision and rejected page each left one acknowledged page and drove cancellation without completion. An empty or oversized selection performed no reads. Ajv independently validated all actual frames.
+
+The portable Rust sender passed the same eight neutral cases and the 1.5 MiB exact-byte transfer. It holds one fixed 4 KiB read buffer, waits for each acknowledgment and checks that the native source has no trailing byte after the selected extent. The React and native WGPU host senders are staged. The WGPU I/O worker must provide the file handle, and the shared guest receiver must validate and consume the same loan. The separate JPEG owner retains native compressed pages and validates format custody. Bounded preview, commit, Save, reopen and the full PNG alpha path require their actual product integration.
+
+- [Frame schema](🔣️original-media-ingress.schema.json)
+- [Neutral transfer law](🔣️original-media-ingress-cases.json)
+- [Bounded asynchronous sender](📜️original-media-ingress.ts)
+- [Byte and shape verification](📜️original-media-ingress-test.ts)
+- [Portable native sender](📜️original-media-ingress.rs)
+- [Shared neutral native law](📜️original-media-ingress-native.py)
+
+The native guest receiver probe used the real repository paged-value and retirement implementations. The 1,572,881-byte witness traversed 385 issued source pages and retained 1,738,856 bytes of backing, retired in full after handing the original to its format job. A separate cancellation after one page refused further writes and released all 4,488 paid backing bytes. In each case closing allocated a further 592 paid bytes and retired them in the same ledger, with total release equal to total receipt capacity. Wrong revision, wrong instance, wrong extent, duplicate order, and zero-capacity or zero-copy calls transferred no work. The tests passed in 0.16 seconds. The guest WIT adapter and target publication remain staged.
+
+The guest bridge was driven with the repository’s real CommandPageCursor and FixedCommandPage. It refused all eleven changed command cursor fields and both wrong-length cases, held the first 4 KiB page across repeated 512-byte copy grants, accepted the one-byte tail, and handed the format stage the exact bytes. All three guest tests passed. The full revision stays on the issued operation binding because the existing WIT cursor carries only its transport owner, generation, instance and ordinal fields. The staged bridge has no assigned live command kind or actor registration yet.
+
+The neutral sender law now includes 13 cases. Both senders refused an empty filename or document identifier, a 256-character UTF-8 filename and an invalid MIME token before reading or staging any bytes, and used the same binary MIME default when the picker supplied none. The browser sender snapshots the exact loan and declared byte extent before its first await. A mutable-source test confirmed that late mutation of the original JavaScript object could not alter the captured revision, byte count or progress. All corresponding Rust and Ajv-backed TypeScript cases passed.
+
+The browser sender also cancels an outstanding sliced read without waiting for that backing reader to return. The test held a 4 KiB read open, observed only begin and cancel, then released the backing promise and confirmed that no page or progress appeared after cancellation.

@@ -1,0 +1,9 @@
+section	joint	chord	vertical	diagonal
+chs	gap-k	1.50		1.30
+chs	gap-n-kt	1.50	1.80	1.40
+chs	overlap-k	1.50		1.20
+chs	overlap-n-kt	1.50	1.65	1.25
+rhs	gap-k	1.50		1.50
+rhs	gap-n-kt	1.50	2.20	1.60
+rhs	overlap-k	1.50		1.30
+rhs	overlap-n-kt	1.50	2.00	1.40

@@ -273,11 +273,24 @@ async fn materialize_and_publish_check_in(
     };
     drop(wal);
     drop(storage);
-    let envelopes: Vec<MutationEnvelope> = commits.into_iter().flat_map(|commit| commit.envelopes).collect();
+    let envelopes = if commits.iter().any(|commit| commit.original_edit.is_some()) {
+        let mut commits = commits;
+        for commit in &mut commits {
+            for row in &mut commit.envelopes {
+                row.document_id = protocol::ArtifactId(scope.document_id.as_str().to_owned());
+            }
+        }
+        directory::os_spr::atomic_hub::encode_checkpoint_replay(
+            commits.iter().map(|commit| (commit.original_edit.as_ref(), commit.envelopes.as_slice()))
+        ).map_err(|error| CheckInEndV1 { refusal: Some(DocumentCheckInRefusalV1::CodecRefused), cause: Some(error.into()) })?
+    } else {
+        let rows: Vec<MutationEnvelope> = commits.into_iter().flat_map(|commit| commit.envelopes).collect();
+        directory::os_spr::encode_envelopes(&rows)
+    };
     job.advance(DocumentCheckInPhaseV1::Materializing, 2);
     let candidate = authority
         .materialize_check_in(
-            CheckInMaterialization { descriptor: descriptor.clone(), scope: scope.clone(), parent_checkpoint_id: current.checkpoint_id, base_pair: active.pair().clone(), head: head.clone(), envelopes: directory::os_spr::encode_envelopes(&envelopes) },
+            CheckInMaterialization { descriptor: descriptor.clone(), scope: scope.clone(), parent_checkpoint_id: current.checkpoint_id, base_pair: active.pair().clone(), head: head.clone(), envelopes },
             &context,
         )
         .await

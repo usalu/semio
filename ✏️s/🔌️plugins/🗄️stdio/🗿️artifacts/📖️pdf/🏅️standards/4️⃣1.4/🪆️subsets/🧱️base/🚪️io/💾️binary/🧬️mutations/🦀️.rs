@@ -45,6 +45,22 @@ impl OpBinary for PdfMutation {
 }
 //#endregion 🔖️Framing
 
+#[path = "📥️receiving/🦀️.rs"]
+mod receiving;
+pub use receiving::{Pdf14OperationReceiving, Pdf14ReceivingRetirement};
+
+impl protocol::OpBinaryReceiving for PdfMutation {
+    type DomainFailure = semio_framework_value::ValueError;
+    type Receiving = Pdf14OperationReceiving;
+
+    fn admit_receiving(
+        source: &[u8], range: (usize, usize), grant: semio_framework_value::RetainedCloneGrant,
+    ) -> semio_framework_value::RetainedWorkOutcome<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>> {
+        Pdf14OperationReceiving::admit(source, range, grant)
+    }
+}
+
+
 #[path="🫳️borrowed/🦀️.rs"]
 mod borrowed_operation_source;
 

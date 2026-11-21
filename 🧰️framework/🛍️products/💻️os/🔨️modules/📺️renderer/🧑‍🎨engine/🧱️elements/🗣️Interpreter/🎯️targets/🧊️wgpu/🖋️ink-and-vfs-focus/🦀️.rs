@@ -20,7 +20,7 @@ use semio_ui_theme::geometry::Rect;
 use semio_ui_declaration::ui::{UiComponentSceneNode, UiNode};
 
 //#region 🗂️VirtualFileSystemFocus
-struct FocusedVfsControl {
+pub struct FocusedVfsControl {
     pub window_id: String,
     pub window_generation: u64,
     pub node: NodeId,
@@ -76,7 +76,7 @@ pub fn apply_focused_vfs_control_key(key: &semio_ui_wgpu_input::KeyAction, input
 //#endregion 🗂️VirtualFileSystemFocus
 
 //#region 🖋️InkEditorFocus
-struct FocusedInkEditor {
+pub struct FocusedInkEditor {
     pub window_id: String,
     pub window_generation: u64,
     pub node: NodeId,
@@ -246,14 +246,14 @@ pub fn apply_focused_ink_paste(text: &str, image_data_url: bool, input: &mut sem
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct PendingNativeInkClipboard {
-    pub source:semio_ui_wgpu_input::ClipboardIntentSource,
+pub struct PendingNativeInkClipboard {
+    source:semio_ui_wgpu_input::ClipboardIntentSource,
     pub address: InkClipboardAddress,
-    pub outcome: Option<Result<Option<semio_ui_wgpu_hosting::host::ClipboardContent>, semio_ui_action::BoundedActionFault>>,
+    outcome: Option<Result<Option<semio_ui_wgpu_hosting::host::ClipboardContent>, semio_ui_action::BoundedActionFault>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct PendingNativeInkClipboardSlot {
+pub struct PendingNativeInkClipboardSlot {
     pub generation: u64,
     pub mounted: Option<PendingNativeInkClipboard>,
 }
@@ -299,14 +299,14 @@ fn queue_ink_clipboard_read(address: InkClipboardAddress,input:&mut semio_ui_wgp
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct PendingNativeTextEditorClipboard {
-    pub source:semio_ui_wgpu_input::ClipboardIntentSource,
+pub struct PendingNativeTextEditorClipboard {
+    source:semio_ui_wgpu_input::ClipboardIntentSource,
     pub focus: FocusedTextEditor,
-    pub outcome: Option<Result<Option<semio_ui_wgpu_hosting::host::ClipboardContent>, semio_ui_action::BoundedActionFault>>,
+    outcome: Option<Result<Option<semio_ui_wgpu_hosting::host::ClipboardContent>, semio_ui_action::BoundedActionFault>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-struct PendingNativeTextEditorClipboardSlot {
+pub struct PendingNativeTextEditorClipboardSlot {
     pub generation: u64,
     pub mounted: Option<PendingNativeTextEditorClipboard>,
 }
@@ -508,10 +508,10 @@ pub fn abort_focused_ink_clipboard_stream(stream: u64) -> bool {
     })
 }
 
-struct TextEditorInputStream {
+pub struct TextEditorInputStream {
     pub id: u64,
     pub focus: FocusedTextEditor,
-    pub text: String,
+    text: String,
 }
 
 thread_local! {

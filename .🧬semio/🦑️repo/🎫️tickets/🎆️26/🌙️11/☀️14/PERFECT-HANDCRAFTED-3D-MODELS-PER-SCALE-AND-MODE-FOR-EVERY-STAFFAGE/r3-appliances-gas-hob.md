@@ -203,3 +203,48 @@ Images I opened: `r3-sheet` body sheets at 1:50, 1:100 and 1:200; the 1:50 three
 - **Small parts.** The ignition electrode and thermocouple (5 to 6 mm) are below the 7.5 mm feature and are left out.
 - **Interior parts.** The gas pipe and tap exist only in `structure`. The injector and venturi were tried in `thermal`, but they count as outer area (C29 counts faces covered by other solids) and would have made the burner area meaningless, so they were removed.
 - **Table-top variant.** Built-in dominoes have their knob on the top. This asset stands on its housing as a table-top unit, so its knob is on the fascia, as its rig requires.
+
+## Round 5 handcraft
+
+Scripts: `r5-gas-hob-kit.py` (measures), `-model.py` (every solid of 1:50 to 1:500 by hand), `-draw.py` (2D of 1:50 to 1:200, ruling E1), `-roots.py` (catalog roots), `-texts.json`, `-run.sh`. Renders under `🗑️generated/r5-gas-hob/{before,after}/` (all opened: body, structure and thermal cut at every scale, poses `off`, `simmer`, clips `flicker` t 0.5 and `light-and-burn` t 150 at 1:50, the 2D at 1:50, 1:100 and 1:200 full and zoomed).
+
+### Reference (manufacturer data)
+
+| Quantity | Reference | Source | Model 1:50 | Deviation |
+|---|---|---|---|---|
+| Top W x D | 306 x 527 mm built-in; table-top plate 300 x 497 | BSH PRB326B90X / PRA3A6D70 / Siemens ER3A6AD70 | 300 x 496 mm plate + 23 mm knob | 0 % (W), -0.2 % (D, plate) |
+| Height incl. pan support | about 88 to 95 mm | BSH data sheets | 88 mm | 0 % to dims |
+| Rapid burner cap | 73 to 100 mm | Sabaf series 1/2 (GEV 2015) | 96 mm | in range |
+| Port crown | about 90 mm | Sabaf | 90 mm, 36 ports | 0 % |
+| Pan-support bar | cast iron 10 mm wide, 12 to 14 mm deep | BSH domino grates (measured on product photos against the 306 mm width) | 10 x 12 mm | 0 % |
+| Pan-support frame | about 270 mm square over the burner | BSH | 270 mm | 0 % |
+| Pan level above plate | 40 to 50 mm | BSH | 48 mm | in range |
+| Pan-support mass | about 1.0 to 1.3 kg | cast-iron volume of the modelled grate (155 cm3 x 7200 kg/m3) | 1.1 kg (was 0.7) | root fix |
+| Knob | 26 to 30 mm | product | 26 mm | in range |
+| Feet | 15 to 25 mm | product | 20 mm | in range |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | B+ / B+ / B- (false seam 10 mm inside the top edge and diagonal shading creases in plan; 8 x 8 mm wire-like grate; flame members were copies of the flame volumes) | A- / A- / A- |
+| 1:100 | B / B / B- (flame member copies) | A- / A- / A- |
+| 1:200 | B- / B / C (flame a closed mushroom dome over the cap; structure a block of overlapping walls and slab) | A- / A- / A- |
+| 1:500 | C / C / C (near copy of 1:200 with sub-feature bars; dome; boxy structure) | A- / A- / A- |
+| Poses/clips | B+ | A- (closed; flames hide in `off`, crown leans whole in `flicker`) |
+
+### Changes
+
+- Top plate one extrude of 300 x 496 mm with the 0.15 m well opening (no seam, no shading creases); thermal underside marked as mounting face.
+- Pan support rebuilt to the BSH section 10 x 12 mm, legs 10 mm, fingers 10 mm with a deeper tip; 2D of 1:50 and 1:100 redrawn (rail outline, legs, plan bars and fingers); 1:200 bars 30 mm (see below).
+- 1:200 flame is a 30 mm crown ring standing on the cap rim, open in the middle; the 1:200 pan support is a 30 mm frame on 30 mm posts (the scale's feature), and the 1:200 side view draws pan support, burner and flame as one outline `burner-block`, as the front view already did, so the band prints to its preset end 1:350 (with 15 mm bars the bars and the 7 mm burner band between plate and crown fell below 0.2 mm beyond 1:210; narrowing the range is refused by the new `valid-range-gap` rule). Its thermal grate is the four real 10 x 12 mm bars as slender solids (C2), at 1:500 too, so the 1:200 area total stays honest.
+- 1:500 authored anew: 40 mm slab, turned knob stub, one turned burner crown with conical top, 20 mm frame on posts; thermal splits crown into burner and flame; structure ring + inset slab.
+- Structure: flame members are thin flame bands at every scale (no flame volume copies); coarse housing is a wall ring with the top slab set into it (no overlap, no z-fight).
+- Roots: trivet bone mass 0.7 -> 1.1 kg, `dimensions.massKg` 5.23 -> 5.63, provenance and structure assumption texts; `thermal.regions.trivet.areaM2` 0.047 -> 0.062 (1:50 outer area of the real grate, factor 1.32); 1:200 `validRange` kept at 1:150 to 1:350 and made printable by the redrawn side view (the catalog was INVALID on the print check at 1:350).
+- Checks: `volumes-check.ts --product` all ok, `r3-validate.ts --volumes` VALID (checkVolumes 0); spliced.
+
+### Remaining
+
+- Flame tongues are closed lofts that read slightly petal-like in grey shading; the renderer shows the tone, not the blue flame colour.
+- Ignition electrode and thermocouple (5 to 6 mm) stay below the 7.5 mm feature and are left out.
+- 1:200 draws the pan support at the 30 mm feature (real 10 mm) and burner, flame and pan support as one outline in side and front view.

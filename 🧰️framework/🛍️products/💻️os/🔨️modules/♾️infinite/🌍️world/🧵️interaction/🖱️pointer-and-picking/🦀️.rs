@@ -294,13 +294,18 @@ pub fn apply_world_action_preview(session_state: &mut WorldSessionState, selecti
         selection_state.hovered_component_object_id = component_object;
         selection_state.hovered_component_mode = component_mode;
         selection_state.local_hover_id = None;
+        selection_state.pointer_instance_hover_published = false;
         selection_state.local_hover_granularity_id = None;
+        selection_state.local_hover_targets = None;
     } else {
         selection_state.hovered_component_id = None;
         selection_state.hovered_component_object_id = None;
         selection_state.hovered_component_mode = None;
+        selection_state.local_instance_hover = true;
         selection_state.local_hover_id = ids.into_iter().next();
+        selection_state.pointer_instance_hover_published = selection_state.local_hover_id.is_some();
         selection_state.local_hover_granularity_id = targets.first().and_then(|target| target.get("granularity")).and_then(|value| value.as_str()).map(str::to_string);
+        selection_state.local_hover_targets = None;
     }
 }
 
@@ -343,19 +348,35 @@ pub fn pick_hover_action(session_state: &mut WorldSessionState, camera_state: &m
         selection_state.hovered_component_object_id = hit.as_ref().map(|(_, _, object)| object.clone());
         selection_state.hovered_component_mode = hit.as_ref().map(|(kind, _, _)| kind.clone());
         selection_state.local_hover_id = None; selection_state.local_hover_granularity_id = None;
+        selection_state.local_hover_targets = None;
+        selection_state.pointer_instance_hover_published = false;
         let id = hit.as_ref().map(|(kind, group, object)| format!("{object}.{kind}.{group}"));
         let targets = world_interaction_targets(Some(&session_state.surface_id), id.as_deref(), hit.as_ref().map(|(kind, _, _)| kind.as_str()), session_state.bound_domain_id.is_some()).ok()?;
         return Some(ActionDescriptor { controller_id: session_state.controller_id.clone(), action: "interactionHover".into(), args: Some(semio_framework::dsl_value!({ "domainId": resolved_domain_id(session_state), "channel": "pointer", "targets": targets.as_str() })) });
     }
     let hit = pick_instance_at(session_state, camera_state, scene_state, x, y, inner).or_else(|| pick_reference_at(session_state, camera_state, scene_state, x, y, inner).map(|url| format!("reference:{url}")));
     let target = hit.as_deref().map(|id| (instance_interaction_id(interaction_state, id).to_string(), instance_interaction_granularity_id(session_state, interaction_state, id).to_string()));
-    if selection_state.local_hover_id.as_deref() == target.as_ref().map(|(id, _)| id.as_str()) && selection_state.local_hover_granularity_id.as_deref() == target.as_ref().map(|(_, granularity)| granularity.as_str()) {
+    let group = hit.as_deref().and_then(|id| semio_os_infinite_world_cursors::world_authored_hover_targets(session_state, interaction_state, id));
+    if selection_state.local_hover_id.as_deref() == target.as_ref().map(|(id, _)| id.as_str()) && selection_state.local_hover_granularity_id.as_deref() == target.as_ref().map(|(_, granularity)| granularity.as_str())
+        && selection_state.local_hover_targets.as_deref() == group
+        && (target.is_some() || !(selection_state.has_instance_hover() || selection_state.has_published_pointer_instance_hover()))
+    {
         return None;
     }
+    selection_state.local_instance_hover = true;
+    selection_state.pointer_instance_hover_published = target.is_some();
     selection_state.local_hover_id = target.as_ref().map(|(id, _)| id.clone());
     selection_state.local_hover_granularity_id = target.as_ref().map(|(_, granularity)| granularity.clone());
-    let targets = world_interaction_targets(Some(&session_state.surface_id), target.as_ref().map(|(id, _)| id.as_str()), target.as_ref().map(|(_, kind)| kind.as_str()), session_state.bound_domain_id.is_some()).ok()?;
-    Some(ActionDescriptor { controller_id: session_state.controller_id.clone(), action: "interactionHover".into(), args: Some(semio_framework::dsl_value!({ "domainId": resolved_domain_id(session_state), "channel": "pointer", "targets": targets.as_str() })) })
+    selection_state.local_hover_targets = group.map(str::to_owned);
+    let singleton;
+    let targets = match group {
+        Some(targets) => targets,
+        None => {
+            singleton = world_interaction_targets(Some(&session_state.surface_id), target.as_ref().map(|(id, _)| id.as_str()), target.as_ref().map(|(_, kind)| kind.as_str()), session_state.bound_domain_id.is_some()).ok()?;
+            singleton.as_str()
+        }
+    };
+    Some(ActionDescriptor { controller_id: session_state.controller_id.clone(), action: "interactionHover".into(), args: Some(semio_framework::dsl_value!({ "domainId": resolved_domain_id(session_state), "channel": "pointer", "targets": targets })) })
 }
 
 /// 🎯️ Geometry oracle publishes the same shared interaction command and target text.

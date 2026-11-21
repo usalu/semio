@@ -3,11 +3,12 @@
 //! Node graph camera, catalogue drag and drop, wheel, pointer, connection cursor, published interaction,
 //! labels and overlays of an engine surface.
 
-use semio_renderer_wgpu_engine_registry::engine_surface_registry::{ENGINE_SURFACES, EngineSurface, EngineSurfaceRegistry, NodeGraphEngine, PublishedGraphInteraction, engine_canvas_debug_log, engine_surface_wire_id, published_graph_interaction};
+use semio_renderer_wgpu_engine_registry::engine_surface_registry::{ENGINE_SURFACES, EngineSurface, EngineSurfaceId, EngineSurfaceRegistry, FlowPortAddresses, NodeGraphEngine, PublishedGraphInteraction, engine_canvas_debug_log, engine_surface_wire_id, published_graph_interaction};
 use semio_renderer_wgpu_engine_board::paint2d::{paint2d_marquee_overlay, paint2d_navigator_overlay_rect};
 use crate::element_contracts::FrameworkWidgetContext;
 use flow::dag::dag_screen_to_world;
 use flow::FlowHost;
+use flow::infinite::board::schema::dag_input::{DagChannelDirection, DagChannelRef, DagSelectionDomains};
 use semio_framework_canvas as canvas;
 use semio_os_node_graph::GraphHost;
 use serde_json::{json, Value};
@@ -45,7 +46,7 @@ pub use wheel_and_pointer_into::{
     node_graph_pointer_down_into, node_graph_pointer_move_into, node_graph_pointer_up_into,
     node_graph_wheel_into, GraphInteractionSnapshot,
 };
-use wheel_and_pointer_into::{graph_hovered_handle, graph_plan_fault, NodeGraphPointerPlan};
+use wheel_and_pointer_into::{graph_handle_target, graph_hovered_part, graph_plan_fault, graph_projection_snapshot_with_selection, NodeGraphPointerPlan};
 
 #[path = "🔗️screen-pointer-and-commit/🦀️.rs"]
 mod screen_pointer_and_commit;
@@ -62,7 +63,7 @@ use interaction_dispatch::{
     world_to_screen_inner, write_graph_interaction_actions,
 };
 pub use interaction_dispatch::{
-    graph_interaction_dispatch, log_graph_geometry_census, node_graph_domain_targets_json,
+    graph_interaction_dispatch, log_graph_geometry_census, node_graph_domain_targets_json, node_graph_pointer_leave_into,
     GraphInteractionDispatch,
 };
 

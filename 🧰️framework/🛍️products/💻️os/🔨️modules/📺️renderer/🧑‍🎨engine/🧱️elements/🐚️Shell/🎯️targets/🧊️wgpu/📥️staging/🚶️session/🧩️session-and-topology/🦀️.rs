@@ -9,7 +9,18 @@ impl<'ctx> SessionCtx<'ctx> {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn poll_shell_io(&mut self) -> bool {
         const MAX_COMPLETIONS_PER_FRAME: usize = 8;
-        let mut changed = false;
+        let (mut changed, completion) = self.opening.poll_media_save(&self.docs, &self.plugins);
+        if let Some((file, result)) = completion {
+            use semio_renderer_wgpu_program_bridge::NativeSaveOutcome;
+            let local = |en: &str, de: &str| if self.prefs.locale_id == "de" { de.to_owned() } else { en.to_owned() };
+            let (notice, severity, code) = match result {
+                Ok(NativeSaveOutcome::Delivered) => (local("Saved", "Gespeichert"), semio_framework::Severity::Info, "exported"),
+                Ok(NativeSaveOutcome::Cancelled) => (local("Save canceled", "Speichern abgebrochen"), semio_framework::Severity::Info, "export-cancelled"),
+                Ok(NativeSaveOutcome::ReferenceRequired) => (local("Save needs the reference exporter", "Speichern erfordert den Referenzexport"), semio_framework::Severity::Error, "export-failed"),
+                Err(why) => (why, semio_framework::Severity::Error, "export-failed"),
+            };
+            self.chrome.show_transient_notice(format!("{notice} · {file}"), severity, Some(code));
+        }
         for _ in 0..MAX_COMPLETIONS_PER_FRAME {
             let result = match self.settle.shell_io_pending.front() {
                 Some(pending) => pending.receiver.try_recv(),
@@ -275,8 +286,10 @@ impl<'ctx> SessionCtx<'ctx> {
             view_state.window_instances = session_window_instances(session, &self.dock.dock);
         }
         view_state.active_utility_by_window_id = self.windows.active_utility_by_window.iter().map(|(id, utility)| (id.clone(), Some(utility.clone()))).collect();
-        view_state.tool_run_trace_cursor_by_window_id = infinite_world::world::world3d_tool_run_trace_cursors(self.surfaces.world3d_states.values());
-        view_state.tool_run_trace_cursor_by_window_id.extend(semio_renderer_wgpu_engine_attach::engine_surface_attach::board2d_tool_run_trace_cursors());
+        view_state.tool_run_trace_cursor_by_window_id = infinite_world::world::world3d_tool_run_trace_cursors(self.surfaces.world3d_states.values())
+            .into_iter()
+            .chain(semio_renderer_wgpu_engine_attach::engine_surface_attach::board2d_tool_run_trace_cursors())
+            .collect();
         if !spawned {
             view_state.focused_window_id = self.windows.active_window_id.clone();
         }

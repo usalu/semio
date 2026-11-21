@@ -1,0 +1,10 @@
+{
+  "atlas": [0.11229,0.016,0],
+  "headNeckMassKg": 5.413,
+  "neckMassKg": 0.88,
+  "neckComM": [0.052,0.025,0],
+  "combinedComM": [0.1412,0,0],
+  "lowerPitchDeg": {"standing-pointing":1,"gesturing-to-group":-1,"holding-flag":0,"waving":-4,"wave-swing-a":-4,"wave-swing-b":-4,"turning-to-group":-9},
+  "turnLowerTwistDeg": 9,
+  "poseCount": 7
+}

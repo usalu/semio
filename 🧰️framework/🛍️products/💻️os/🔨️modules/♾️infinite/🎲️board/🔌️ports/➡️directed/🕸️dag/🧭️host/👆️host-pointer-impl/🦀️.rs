@@ -45,6 +45,7 @@ impl DagHost {
             graph: DagGraphState {
                 host_snapshot: snapshot,
                 engine: DagBoardEngine::new(),
+                hover_ports: Vec::new(),
                 node_id_map: HistoryFoldIndex::new(),
                 handle_key_map: HistoryFoldIndex::new(),
                 handle_port_shape: HistoryFoldIndex::new(),

@@ -28,6 +28,7 @@ pub mod standards {
                     pub mod mutations {
                         pub use semio_s_artifact_stdio_gltf_mutations_mutations::standards::v2_0::subsets::any::schema::mutations::*;
 
+                        #[cfg(test)]
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_4::standards::v2_0::subsets::any::schema::mutations::fixture_corpus_tests;
                         pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::add_required_extension;
                         pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::add_used_extension;

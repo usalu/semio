@@ -44,7 +44,7 @@
 
 // #region 🔌️Adapters
 import { useEffect, useState, useSyncExternalStore, type ReactElement } from "../⚛️react-port/🟦️.ts";
-import { Button, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
+import { Button, SharedBorderRow, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor } from "@semio-tech/framework";
 import { type ActivationRegistry } from "@semio-tech/framework";
 import { type RuntimeMetricsSnapshot } from "@semio-tech/framework";
@@ -447,14 +447,15 @@ export function TaskManagerPanel({ rows, onAction, runtimeAttached = true }: Tas
     {
       id: "actions",
       header: labels.columns.actions,
-      className: "!px-0 sticky right-0 z-panel bg-background",
+      cell: "row",
+      className: "sticky right-0 z-panel bg-background",
       headerClassName: "px-single sticky right-0 z-panel bg-background",
       accessor: (row) => (
-        <div className="flex h-full items-stretch">
+        <SharedBorderRow edges={["left", "right"]} className="w-full">
           <Button type="button" variant="outline" icon="pause" aria-label={`${labels.actions.suspend}: ${row.actorId}`} onClick={() => onAction("suspend", row.actorId)} />
           <Button type="button" variant="outline" icon="play" aria-label={`${labels.actions.resume}: ${row.actorId}`} onClick={() => onAction("resume", row.actorId)} />
           <Button type="button" variant="outline" icon="square" aria-label={`${labels.actions.cancel}: ${row.actorId}`} onClick={() => onAction("cancel", row.actorId)} />
-        </div>
+        </SharedBorderRow>
       ),
     },
   ];

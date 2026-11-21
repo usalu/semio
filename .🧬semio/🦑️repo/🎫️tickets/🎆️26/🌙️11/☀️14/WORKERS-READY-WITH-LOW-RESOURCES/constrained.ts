@@ -1,7 +1,7 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { chmodSync, closeSync, constants, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readSync, realpathSync, rmdirSync, statfsSync, unlinkSync, writeFileSync } from "node:fs";
 import { userInfo } from "node:os";
-import { join, resolve, sep } from "node:path";
+import { join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import schema from "./constrained.json";
 import readySchema from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧬️schema/🔣️.json";
@@ -13,6 +13,7 @@ import { casPartitionBudgetV1 } from "../../../../../../../🧰️framework/🛍
 import { runOwnedCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { nativeImageHdiutilCommandV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🛠️hdiutil/🟦️.ts";
 import { nativeImageInventoryV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📥️information/🟦️.ts";
+import { nativeImageHostMountOfV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/👤️owners/🟦️.ts";
 import { readSliceLabOptionsV1, SLICE_LAB_POLICY_V1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🔬️slice-lab/🟦️.ts";
 
 const policy = schema["x-policy"];
@@ -145,6 +146,15 @@ async function imageTool(args: string[], cwd: string, signal: AbortSignal) {
   const command = nativeImageHdiutilCommandV1(args, cwd);
   return exactOutput(command.program, [...command.args], command.cwd, command.env, signal);
 }
+/** 💿 Requests owners on the private outer APFS image before any nested image attaches. */
+export function constrainedAttachArguments(mount: string, backing: string): string[] {
+  return ["attach", "-plist", "-mount", "required", "-nobrowse", "-owners", "on", "-mountpoint", mount, backing];
+}
+/** 🔒 Verifies the outer private image itself hosts nested attaches with owners enabled. */
+export function requireConstrainedMountedOwners(mountTable: string, mount: string): void {
+  const host = nativeImageHostMountOfV1(mountTable, mount);
+  if (host.mountPoint !== mount || !host.owners) throw Error("Owners must be enabled on the exact private lab mount");
+}
 function record(value: unknown): ObjectRecord {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw Error("Expected image inventory object");
   return value as ObjectRecord;
@@ -164,6 +174,16 @@ export function constrainedMount(inventory: ObjectRecord, backing: string, mount
   const device = occupants[0]!.entry["dev-entry"];
   if (mounted.length !== 1 || typeof device !== "string" || !/^\/dev\/disk[0-9]+(?:s[0-9]+)*$/u.test(device)) throw Error("Exact private mounted device required");
   return device;
+}
+/** 🛡️ Preserves the outer image while the inventory still contains a nested image. */
+export function requireNoConstrainedNestedImages(inventory: ObjectRecord, mount: string): void {
+  const roots = mount.startsWith("/private/tmp/") ? [mount, mount.slice("/private".length)] : [mount];
+  const descendant = (value: unknown) => {
+    if (typeof value !== "string" || !posix.isAbsolute(value)) return false;
+    const normalized = posix.normalize(value);
+    return roots.some(root => value.startsWith(root + "/") || normalized.startsWith(root + "/"));
+  };
+  if (records(inventory.images).some(row => descendant(row["image-path"]) || records(row["system-entities"]).some(entity => descendant(entity["mount-point"])))) throw Error("Nested lab image remains attached");
 }
 function copyReceipt(source: string, destination: string, device: bigint, accept: (value: ObjectRecord) => boolean) {
   if (!lstatSync(source, { throwIfNoEntry: false })) return false;
@@ -309,11 +329,13 @@ async function runConstrained(options: Options) {
         signal.throwIfAborted();
         requireGrant();
         if (!equalIdentity(exactPrivateDirectory(mount), bare) || constrainedMount(await inventory(signal), backing, mount)) throw Error("Unused private mount required");
-        await imageTool(["attach", "-plist", "-mount", "required", "-nobrowse", "-mountpoint", mount, backing], dir, signal);
+        const attach = nativeImageHdiutilCommandV1(constrainedAttachArguments(mount, backing), dir);
+        await exactOutput(attach.program, [...attach.args], attach.cwd, attach.env, signal);
         if (!constrainedMount(await inventory(signal), backing, mount)) throw Error("Private image did not attach at its owned mount");
         mounted = exactDirectory(mount);
         if (mounted.dev === bare.dev || !readdirSync(mount).every(name => [".fseventsd", ".Spotlight-V100", ".Trashes"].includes(name))) throw Error("Fresh private APFS root required");
         chmodSync(mount, 0o700);
+        requireConstrainedMountedOwners(await exactOutput("/sbin/mount", [], dir, attach.env, signal), mount);
         if (!equalIdentity(exactPrivateDirectory(mount), mounted)) throw Error("Private mounted root changed");
         const virtual = statfsSync(mount, { bigint: true });
         if (virtual.bavail * virtual.bsize < BigInt(policy.minimumVirtualGiB * GiB)) throw Error("Formatted private APFS volume is below the 40 GiB lab floor");
@@ -353,7 +375,9 @@ async function runConstrained(options: Options) {
           if (mounted) {
             try { receipts = exportReceipts(mount, dir, current.dev); } catch (error) { receiptFailure = error; primary ??= error; }
           }
-          if (records(observed.images).some(row => typeof row["image-path"] === "string" && row["image-path"].startsWith(mount + sep))) throw Error("Nested lab image remains attached");
+          const settled = mounted ? await inventory(drain) : observed;
+          if (constrainedMount(settled, backing, mount) !== device) throw Error("Private image association changed before detach");
+          requireNoConstrainedNestedImages(settled, mount);
           exactBacking(backing, image);
           if (!equalIdentity(exactDirectory(mount), current)) throw Error("Private mount identity changed before detach");
           await imageTool(["detach", mount], dir, drain);

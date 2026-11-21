@@ -125,3 +125,33 @@ Coordinates: world x along the container, y up, z left; the drawn elevation side
 - Louvre frames, attenuator faces and splitters render reddish/dark through the aluminium material colour of the sheet renderer; tones were set lighter, the hue is the renderer's.
 - The genset itself (engine, alternator, radiator) is not in `body`: the container is closed and nothing of it is visible except through the open flap (the splitters).
 - The `skid-tank` pose fractions (exposed 0.14, contact 0.43) were derived for the old 27.5 m²; with 32.9 m² the free share is about 0.10, left to the area reviewers.
+
+## Round 5 handcraft
+
+Round-5 author (M02), 2026-11-21. Renders: `🗑️generated/r5-diesel-generator/before/` (every sheet of `r5-sheets.sh`: body, structure, thermal cut at 1:50 to 1:500, poses `off`, `idle`, `half-load`, `rated-load`, `loading-up`, clip `start-run-stop` t 6 s, 2D at all scales; montages `m1`, `m2`).
+
+### Reference and model against it (1:50)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| container L x W x H | 6.058 x 2.438 x 2.591 m (ISO 668 1CC) | 6.06 x 2.44 x 2.59 m | +0.03 / +0.08 / -0.04 % |
+| corner casting | 178 x 162 x 118 mm (ISO 1161) | 178 x 162 x 118 mm | 0 % |
+| corner post | about 150 x 150 mm | 160 x 150 mm | +7 % on one side (built-up post class value, not a standard number) |
+| bottom rail clearance | 12.5 mm | 12.5 mm | 0 % |
+| silencer (8 in outlet) | about 0.55-0.6 m x 2.2 m, 2:1 heads | 0.57 x 2.22 m, 2:1 heads | in range |
+| stack | 0.2 m | 0.2 m | 0 % |
+| mass | 7.2 t | 7.2 t | 0 % |
+
+### Grades (before -> after; body / thermal / structure)
+
+- 1:50: A- / A- / A- (unchanged): ISO frame with apertured castings, louvres with blades, doors with hinges and levers, silencer on saddles with bellows inlet, stack with flapper cap, hood with flap; in `rated-load` the flap swings out on its hinge and the cap stands open, everything attached.
+- 1:100 A- / B+ / A-, 1:200 A- / B+ / A-, 1:500 A- / B+ / B+ (hood and silencer at 1:500 are whole-part members). Thermal coarse scales: the solid wall block shows the sheet renderer's speckled cut cap (not coincident faces: wall core, posts and louvres only touch); regions are tidy.
+- 2D: A- at every scale; VALID with print suitability.
+
+### Changes
+
+None. The asset was VALID and every sheet opened showed no defect that the round-5 bar requires to rebuild.
+
+### Remaining
+
+- Engine, alternator and radiator are not in `thermal` (no hidden regions declared; adding them would invent heat flows); `sectionFaces` on inward wall faces from round 3 remain where the C31 flood now also applies.

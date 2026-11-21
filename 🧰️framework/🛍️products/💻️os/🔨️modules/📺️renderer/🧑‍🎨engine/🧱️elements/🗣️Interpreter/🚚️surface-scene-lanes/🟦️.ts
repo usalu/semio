@@ -74,6 +74,26 @@ export function surfaceSceneLaneText(state: UiDocumentState, root: UiNodeRecord)
   return payload;
 }
 
+/** 📦️ Resolves a complete named carrier beneath this record. */
+export function retainedTextBody(read: (id: UiNodeId) => UiNodeRecord | undefined, record: UiNodeRecord, key: string, bytes: number): string | undefined {
+  const child = record.children?.map(read).find(child => child?.key === key);
+  if (!child) return undefined;
+  const seen = new Set<UiNodeId>();
+  const stack = [...(child.children ?? [])].reverse();
+  const pages: string[] = [];
+  while (stack.length > 0) {
+    const id = stack.pop()!;
+    const page = read(id);
+    if (!page || seen.has(id)) return undefined;
+    seen.add(id);
+    if (page.component.type === "text") pages.push(packedTextLeaf(page.component.value, page.component.dataAttributes));
+    else if (page.component.type !== "container") return undefined;
+    for (let i = (page.children ?? []).length - 1; i >= 0; i--) stack.push(page.children[i]!);
+  }
+  const payload = pages.join("");
+  return utf8ByteLength(payload) === bytes ? payload : undefined;
+}
+
 /** 🚚️ Collects one paged surface's arrived lane texts, keyed by reserved carrier key, ready for
  * `sceneFromLanes` over the same `lanes` table. A lane the spine does not declare is ignored; a lane
  * that is declared but not yet fully arrived falls back to its last complete text, or is omitted when

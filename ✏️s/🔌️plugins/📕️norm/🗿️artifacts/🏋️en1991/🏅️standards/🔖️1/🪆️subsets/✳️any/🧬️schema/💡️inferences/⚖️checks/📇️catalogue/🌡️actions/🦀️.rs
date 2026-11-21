@@ -93,8 +93,15 @@ fn e16_01(c: &Case) -> R {
     let mut out = vec![
         Outcome::info("n_years", "Return period", "Wiederkehrperiode", QuantityKind::Time, years * 365.25 * 86400.0).steps(format!("Duration {days} d → {years} a.")).basis(&["ndp.en1991.e16.returns"]),
         Outcome::info("c_prob", "Wind probability factor c_prob", "Wind-Wahrscheinlichkeitsbeiwert c_prob", QuantityKind::Dimensionless, cp).steps(format!("c_prob = {cp:.6}.")).basis(&["ndp.en1991.e16.returns"]),
-        Outcome::info("snow_factor", "Snow factor s_n/s_k (V = 0.4)", "Schneefaktor s_n/s_k (V = 0,4)", QuantityKind::Dimensionless, part_1_3::return_period_factor(0.4, p)).steps("Annex D with V = 0.4.").steps_de("Anhang D mit V = 0,4.").basis(&["ndp.en1991.e16.returns"]),
     ];
+    if let Some(factor) = part_1_3::return_period_factor(0.4, p) {
+        out.push(Outcome::info("snow_factor", "Snow factor s_n/s_k (V = 0.4)", "Schneefaktor s_n/s_k (V = 0,4)", QuantityKind::Dimensionless, factor)
+            .steps("Annex D with V = 0.4.").steps_de("Anhang D mit V = 0,4.").basis(&["ndp.en1991.e16.returns"]));
+    } else {
+        out.push(Outcome::warn("snow_probability", "Snow return period needs a project assessment", "Wiederkehrperiode für Schneelasten projektspezifisch ermitteln", QuantityKind::Dimensionless, p, 0.20)
+            .steps("EN 1991-1-3 Annex D is applicable only for annual exceedance probabilities up to 0.20.")
+            .steps_de("EN 1991-1-3 Anhang D gilt nur für jährliche Überschreitungswahrscheinlichkeiten bis 0,20."));
+    }
     if v > 0.0 { out.push(Outcome::info("v_b", "Scaled basic velocity", "Skalierte Basisgeschwindigkeit", QuantityKind::Dimensionless, v * cp).steps(format!("v_b = {:.4} m/s.", v * cp))); out.push(Outcome::info("q_b", "Scaled basic velocity pressure", "Skalierter Basisgeschwindigkeitsdruck", QuantityKind::Pressure, part_1_4::basic_velocity_pressure_pa(c.o("rho", 1.25), v * cp)).steps("q_b = ½ρ(c_prob v_b)².")); }
     Ok(out)
 }

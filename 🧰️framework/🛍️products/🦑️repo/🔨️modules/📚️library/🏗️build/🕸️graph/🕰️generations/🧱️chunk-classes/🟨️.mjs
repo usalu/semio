@@ -28,8 +28,8 @@ export function addOwnerRunsV1(interner,numbers,count,owner){
  for(let at=0;at<count;at++)if(at===count-1||interner.cuts(numbers[at])){interner.add(numbers,from,at+1,owner);from=at+1;}
 }
 
-/** 🗃️ The classes of an index over `rowCount` rows from the interned runs (with `typed`, the consumers of a class that unites several runs are merged in typed lists, four bytes per consumer, instead of a set and a list per class): rows -> runs -> classes (rows with equal owner sets merge, sorted by their first row), the same partition the expanded construction gives. */
-export function classesOfChunksV1(rowCount,interner,{typed=false}={}){
+/** 🗃️ The classes of an index over `rowCount` rows from the interned runs (with `ownerCount`, owner ids are dense from zero and a reusable typed scratch list merges holders of overlapping runs, at most five bytes per live owner): rows -> runs -> classes (rows with equal owner sets merge, sorted by their first row), the same partition the expanded construction gives. */
+export function classesOfChunksV1(rowCount,interner,{ownerCount}={}){
  const{chunks,holders}=interner,first=new Uint32Array(rowCount+1);
  for(const ids of chunks)for(const id of ids)first[id+1]++;
  for(let id=0;id<rowCount;id++)first[id+1]+=first[id];
@@ -46,10 +46,22 @@ export function classesOfChunksV1(rowCount,interner,{typed=false}={}){
   group.r.push(id);
  }
  const merged=new Map(),classes=[];
+ let ownerScratch,ownerSeen;
  for(const group of groups){
   const[from,to]=group.span;let o;
   if(to-from===1)o=holders[held[from]];
-  else if(typed){let total=0;for(let at=from;at<to;at++)total+=holders[held[at]].length;const all=new Uint32Array(total);let fill=0;for(let at=from;at<to;at++){all.set(holders[held[at]],fill);fill+=holders[held[at]].length;}all.sort();let unique=0;for(let at=0;at<total;at++)if(at===0||all[at]!==all[at-1])all[unique++]=all[at];o=all.subarray(0,unique);}
+  else if(ownerCount!==undefined){
+   ownerScratch??=new Uint32Array(ownerCount);
+   ownerSeen??=new Uint8Array(ownerCount);
+   let count=0;
+   for(let at=from;at<to;at++)for(const owner of holders[held[at]])if(!ownerSeen[owner]){
+    ownerSeen[owner]=1;
+    ownerScratch[count++]=owner;
+   }
+   o=ownerScratch.subarray(0,count);
+   for(const owner of o)ownerSeen[owner]=0;
+   o.sort();
+  }
   else{const set=new Set();for(let at=from;at<to;at++)for(const owner of holders[held[at]])set.add(owner);o=[...set].sort((a,b)=>a-b);}
   let hash=o.length;for(const owner of o)hash=(Math.imul(hash,0x9e3779b1)^owner)>>>0;
   let chain=merged.get(hash),found;

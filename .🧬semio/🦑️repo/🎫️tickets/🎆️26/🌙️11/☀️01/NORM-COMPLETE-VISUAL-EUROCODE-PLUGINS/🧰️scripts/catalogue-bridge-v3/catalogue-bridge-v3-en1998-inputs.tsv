@@ -51,3 +51,47 @@ depth_dia||n|m|12|r0.5:100|Diaphragm depth D|Scheibentiefe D|high|
 x_pos||n|m|12|r0:200|Position x along the span|Position x entlang der Spannweite|high|
 chord_area||n|m2|0.005|r1e-6:10,L|Chord area A|Gurtfläche A|high|
 chord_fd||n|MPa|435|r1:1000|Chord design strength fd|Gurtbemessungsfestigkeit fd|high|
+@choice tw_damping_source|energy|Modal strain energy by component|Modale Verformungsenergie je Komponente
+@choice tw_damping_source|experimental|Experimentally justified equivalent modal damping|Experimentell abgesicherte äquivalente modale Dämpfung
+@choice tw_action|damage|Damage limitation seismic action|Erdbebeneinwirkung zur Schadensbegrenzung
+@choice tw_action|design|Design seismic action|Bemessungserdbebeneinwirkung
+tw_damping_source|C98-09|c||energy||Basis for the equivalent modal damping|Grundlage der äquivalenten modalen Dämpfung|high|
+tw_action|C98-09|c||design||Seismic action for liner or cladding damping|Erdbebeneinwirkung für Dämpfung von Auskleidung oder Verkleidung|high|
+xi_percent|C98-09|n|1|5|r0:100|Experimentally justified equivalent modal damping in percent|Experimentell abgesicherte äquivalente modale Dämpfung in Prozent|high|
+t_1|C98-09|n|s|0.5|r0:20|Period of this mode|Periode dieser Eigenform|high|
+mass|C98-09|n|kg|10000|r1:1e10|Effective seismic mass of this mode|Effektive Erdbebenmasse dieser Eigenform|high|
+tw_welded_energy|C98-09|n|1|0.7||Relative strain energy in welded steel|Relative Verformungsenergie in geschweißtem Stahl|high|
+tw_bolted_energy|C98-09|n|1|0||Relative strain energy in bolted steel|Relative Verformungsenergie in geschraubtem Stahl|high|
+tw_reinforced_energy|C98-09|n|1|0.3||Relative strain energy in reinforced concrete|Relative Verformungsenergie in Stahlbeton|high|
+tw_prestressed_energy|C98-09|n|1|0||Relative strain energy in prestressed concrete|Relative Verformungsenergie in Spannbeton|high|
+tw_ceramic_energy|C98-09|n|1|0||Relative strain energy in ceramic cladding|Relative Verformungsenergie in keramischer Verkleidung|high|
+tw_masonry_energy|C98-09|n|1|0||Relative strain energy in the masonry liner|Relative Verformungsenergie in der Ziegelauskleidung|high|
+tw_liner_steel_energy|C98-09|n|1|0||Relative strain energy in the steel liner|Relative Verformungsenergie in der Stahlauskleidung|high|
+tw_frp_energy|C98-09|n|1|0||Relative strain energy in the fibre-reinforced polymer liner|Relative Verformungsenergie in der faserverstärkten Kunststoffauskleidung|high|
+tw_sway_energy|C98-09|n|1|0||Relative strain energy from horizontal foundation motion|Relative Verformungsenergie aus horizontaler Gründungsbewegung|high|
+tw_rocking_energy|C98-09|n|1|0||Relative strain energy from foundation rocking|Relative Verformungsenergie aus Kippen der Gründung|high|
+tw_vertical_energy|C98-09|n|1|0||Relative strain energy from vertical foundation motion|Relative Verformungsenergie aus vertikaler Gründungsbewegung|high|
+tw_sway_xi|C98-09|n|1|10||Horizontal foundation damping in percent if active|Horizontale Gründungsdämpfung in Prozent bei Beteiligung|high|
+tw_rocking_xi|C98-09|n|1|7||Rocking foundation damping in percent if active|Kippdämpfung der Gründung in Prozent bei Beteiligung|high|
+tw_vertical_xi|C98-09|n|1|15||Vertical foundation damping in percent if active|Vertikale Gründungsdämpfung in Prozent bei Beteiligung|high|
+@choice guy_mass_model|included|Cable and ice mass included and any significant impulse checked in the mast analysis|Seil- und Eismassen berücksichtigt und maßgebende Stoßeinwirkungen in der Mastberechnung geprüft
+@choice guy_mass_model|open|Mass or impulse assessment still open|Massen- oder Stoßbewertung noch offen
+@choice guy_sag_model|short|Short mast and constant tension-tie stiffness|Kurzer Mast und konstante Zugbandsteifigkeit
+@choice guy_sag_model|negligible|Negligible sag substantiated for this cable|Vernachlässigbarer Durchhang dieses Seils nachgewiesen
+@choice guy_sag_model|sag|Sag accounted for at the assessed cable equilibrium|Durchhang im untersuchten Seilgleichgewicht berücksichtigt
+@choice guy_modulus_basis|cable|Measured or manufacturer cable modulus|Gemessener oder vom Hersteller angegebener Seilmodul
+@choice guy_modulus_basis|strand|Individual strand modulus with wrapping-angle correction|Einzelstrangmodul mit Korrektur des Wickelwinkels
+guy_mast_height|C98-10|n|m|35||Height of the steel mast|Höhe des Stahlmasts|high|
+guy_mass_model|C98-10|c||included||Mass and impulsive action in the mast model|Masse und Stoßeinwirkung im Mastmodell|high|
+guy_sag_model|C98-10|c||short||Sag calculation basis|Grundlage der Durchhangberechnung|high|
+guy_modulus_basis|C98-10|c||cable||Source of the cable modulus|Quelle des Seilmoduls|high|
+guy_length|C98-10|n|m|30||Cable length|Seillänge|high|
+guy_area|C98-10|n|m2|0.001||Area of the cable section|Seilquerschnittsfläche|high|
+guy_inclination|C98-10|n|deg|45||Cable angle above horizontal|Seilneigung zur Horizontalen|high|
+guy_wrap_angle|C98-10|n|deg|12||Strand wrapping angle for the single-strand basis|Wickelwinkel beim Einzelstrangansatz|high|
+guy_modulus|C98-10|n|Pa|200000000000||Cable or individual strand elastic modulus|Elastizitätsmodul des Seils oder Einzelstrangs|high|
+guy_unit_weight|C98-10|n|N_m3|78000||Cable unit weight including the design ice load|Wichte des Seils einschließlich der Bemessungseislast|high|
+guy_equilibrium_stress|C98-10|n|Pa|250000000||Tensile stress at the assessed cable equilibrium|Zugspannung im untersuchten Seilgleichgewicht|high|
+guy_preload_stress|C98-10|n|Pa|250000000||Cable preload stress|Seilvorspannung|high|
+guy_seismic_stress|C98-10|n|Pa|150000000||Maximum cable stress variation from the design earthquake|Größte Seilspannungsänderung aus dem Bemessungserdbeben|high|
+q_factor|C98-10|n|1|1.5|r1:5|Behaviour factor of the low-dissipative mast|Verhaltensbeiwert des gering dissipativen Masts|high|

@@ -1,17 +1,48 @@
 {
   "accepted": [
-    { "previewEvalText": null },
-    { "previewEvalText": "{\"node\":{\"value\":7}}" }
+    {
+      "previewEvalText": null,
+      "generationId": null
+    },
+    {
+      "previewEvalText": "{\"node\":{\"value\":7}}",
+      "generationId": "selected"
+    }
   ],
   "rejected": [
-    { "previewEvalText": 7 },
-    { "previewEvalText": "{}", "windowId": "payload-owned" }
+    {
+      "previewEvalText": 7
+    },
+    {
+      "previewEvalText": "{}",
+      "windowId": "payload-owned"
+    },
+    {
+      "previewEvalText": "{}",
+      "generationId": 7
+    }
   ],
   "configWithMisclassifiedField": {
     "lodMode": "",
     "showMode": "shaded",
-    "camera": { "x": 0, "y": 0, "zoom": 1 },
-    "previewCamera": { "position": [4, -4, 3], "target": [0, 0, 0], "fov": 45 },
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "previewCamera": {
+      "position": [
+        4,
+        -4,
+        3
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "fov": 45
+    },
     "sunJson": "{}",
     "previewEvalText": "{}"
   }

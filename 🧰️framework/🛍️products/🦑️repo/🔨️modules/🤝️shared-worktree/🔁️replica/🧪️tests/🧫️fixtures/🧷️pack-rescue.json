@@ -1,0 +1,93 @@
+{
+  "minimumAgeMilliseconds": 120000,
+  "cases": [
+    {
+      "id": "idle",
+      "rows": [
+        {
+          "stem": "pack-known",
+          "role": "fleet",
+          "files": [
+            "pack",
+            "idx"
+          ],
+          "ageMilliseconds": 3600000
+        },
+        {
+          "stem": "pack-authorised",
+          "role": "authorised",
+          "files": [
+            "pack",
+            "idx"
+          ],
+          "ageMilliseconds": 3600000
+        },
+        {
+          "stem": "pack-young",
+          "role": "local",
+          "files": [
+            "pack",
+            "idx"
+          ],
+          "ageMilliseconds": 0
+        },
+        {
+          "stem": "pack-orphan",
+          "role": "local",
+          "files": [
+            "idx"
+          ],
+          "ageMilliseconds": 7200000
+        },
+        {
+          "stem": "pack-known-fragment",
+          "role": "fleet",
+          "files": [
+            "idx"
+          ],
+          "ageMilliseconds": 7200000
+        }
+      ]
+    },
+    {
+      "id": "invalid-local-index",
+      "rows": [
+        {
+          "stem": "pack-known",
+          "role": "fleet",
+          "files": [
+            "pack",
+            "idx"
+          ],
+          "ageMilliseconds": 3600000
+        },
+        {
+          "stem": "pack-authorised",
+          "role": "authorised",
+          "files": [
+            "pack",
+            "idx"
+          ],
+          "ageMilliseconds": 3600000
+        },
+        {
+          "stem": "pack-old",
+          "role": "local",
+          "files": [
+            "pack",
+            "idx"
+          ],
+          "ageMilliseconds": 3600000
+        },
+        {
+          "stem": "pack-orphan",
+          "role": "local",
+          "files": [
+            "idx"
+          ],
+          "ageMilliseconds": 7200000
+        }
+      ]
+    }
+  ]
+}

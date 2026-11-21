@@ -1,0 +1,13 @@
+{
+  "climateZone": "Zone2",
+  "usage": "residential",
+  "tIntC": 20.0,
+  "rhInt": 0.5,
+  "hasMechanicalVentilation": true,
+  "airtightnessN50": 1.5,
+  "bb2DetailsConform": true,
+  "zones": [],
+  "elements": [],
+  "thermalBridges": [],
+  "cases": []
+}

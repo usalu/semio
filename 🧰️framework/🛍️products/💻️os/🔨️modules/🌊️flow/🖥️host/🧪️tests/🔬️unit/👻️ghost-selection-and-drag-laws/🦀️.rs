@@ -168,6 +168,61 @@ fn channel_hover_and_selection_round_trip_at_detail_lod() {
 }
 
 #[test]
+fn flow_directional_channels_round_trip_through_picks_hover_and_selection() {
+    use semio_os_infinite::board::schema::dag_input::DagChannelRef;
+    use semio_os_infinite::board::handle_position;
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️directional-picks.json")).unwrap();
+    let mut host = host_with_test_fixture();
+    let widget_id = host.add_widget(&fixture["widget"].to_string(), 0.0, 300.0).unwrap();
+    host.resync_host_snapshot_from_scene(host.host_snapshot.clone());
+    host.set_viewport(1280, 800, 1.0);
+    host.set_automatic_lod(false);
+    let port = fixture["widget"]["name"].as_str().unwrap();
+    let mut selected = Vec::new();
+    for case in fixture["cases"].as_array().unwrap() {
+        host.set_forced_draw_lod_label(case["lod"].as_str().unwrap());
+        let output = case["direction"] == "out";
+        let direction = if output { DagChannelDirection::Out } else { DagChannelDirection::In };
+        let role = if output { HandleRole::Source } else { HandleRole::Target };
+        let node = host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == widget_id).unwrap();
+        let (id, handle) = host.dag.graph.engine.handles.iter().find(|(_, handle)| handle.role == role && host.dag.graph.engine.nodes[&handle.node_id].center == Point::new(node.x, node.y)).unwrap();
+        let id = *id;
+        let anchor = handle_position(&host.dag.graph.engine.nodes[&handle.node_id], handle);
+        let x = if case["probe"] == "row" { anchor.x + (node.x - anchor.x) * 0.5 } else { anchor.x };
+        let (sx, sy) = world_screen_point(&host, x, anchor.y);
+        let rows: Vec<serde_json::Value> = serde_json::from_str(&host.pick_targets_at_screen_json(sx, sy)).unwrap();
+        let picks: Vec<_> = rows.iter().filter(|row| row["domain"] == "handle").collect();
+        assert_eq!(picks.len(), 1, "{case}: {rows:?}");
+        let expected = serde_json::json!({"widgetId":widget_id, "port":port, "direction":case["direction"]});
+        let expected_row = serde_json::json!({
+            "domain": "handle",
+            "generality": 2,
+            "id": format!("{widget_id}@{port}"),
+            "label": format!("{widget_id} · {port}"),
+            "channel": expected,
+        });
+        assert_eq!(picks[0], &expected_row);
+        let channel: DagChannelRef = serde_json::from_value(expected).unwrap();
+        host.set_hover_channel_direction(Some(&widget_id), Some(port), Some(direction));
+        assert_eq!(host.dag.graph.engine.hover, Some(id));
+        assert_eq!(host.hover_facts().channel.as_ref(), Some(&channel));
+        if !selected.contains(&channel) {
+            selected.push(channel);
+        }
+    }
+    host.set_selection(&["slider".to_owned()]);
+    host.set_selected_channels(&selected);
+    assert_eq!(host.selected_widget_ids(), ["slider"]);
+    assert_eq!(host.selected_channels().len(), selected.len());
+    assert!(selected.iter().all(|channel| host.selected_channels().contains(channel)));
+    host.set_selected_channels(&[]);
+    assert_eq!(host.selected_widget_ids(), ["slider"]);
+    assert!(host.selected_channels().is_empty());
+    host.retire_cold();
+}
+
+#[test]
 fn drag_merge_node_preserves_single_fixture_widget() {
     let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {

@@ -2,24 +2,40 @@
   "windowKindId": "gis3d-main",
   "leftWindowId": "terrain-left",
   "rightWindowId": "terrain-right",
-  "base": {"cameraJson": "{\"position\":[800,-800,600],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":45}"},
+  "base": {"cameraJson": ""},
   "accepted": [
+    {"cameraJson": ""},
+    {"cameraJson": "", "brush": null},
     {"cameraJson": "{}"},
-    {"cameraJson": "{\"position\":[1,2,3],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":50}"}
+    {"cameraJson": "{\"position\":[1,2,3],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":50}"},
+    {"cameraJson": "", "brush": {"radius": 0, "elevationStep": 1, "smoothStrength": 0}},
+    {"cameraJson": "{}", "brush": {"radius": 32, "elevationStep": 32767, "smoothStrength": 100}}
   ],
   "rejected": [
     {},
     {"cameraJson": null},
     {"cameraJson": "{}", "windowId": "payload-owned"},
-    {"cameraJson": "{}", "selection": []}
+    {"cameraJson": "{}", "selection": []},
+    {"cameraJson": "{}", "brush": {"radius": 33, "elevationStep": 1, "smoothStrength": 0}},
+    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStep": 0, "smoothStrength": 10}},
+    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStep": 1, "smoothStrength": 10.5}},
+    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStep": 1, "smoothStrength": 101}},
+    {"cameraJson": "{}", "brush": {"radius": 0, "elevationStep": 1, "smoothStrength": 0, "windowId": "foreign"}}
   ],
+  "brush": {
+    "windowId": "terrain-left",
+    "settings": {"radius": 7, "elevationStep": 31, "smoothStrength": 65},
+    "activeUtility": "terrainLower",
+    "expectedTarget": {"action": "editElevation", "arguments": {"operation": "raise-lower", "radius": 7, "value": -31}},
+    "expectedOther": {"action": "editElevation", "arguments": {"operation": "raise-lower", "radius": 4, "value": -25}}
+  },
   "cases": [
     {
       "windowId": "terrain-left",
       "cameraJson": "{\"position\":[10,20,30],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":40}",
       "expected": {
         "terrain-left": {"cameraJson": "{\"position\":[10,20,30],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":40}"},
-        "terrain-right": {"cameraJson": "{\"position\":[800,-800,600],\"target\":[0,0,0],\"up\":[0,0,1],\"fov\":45}"}
+        "terrain-right": {"cameraJson": ""}
       }
     },
     {

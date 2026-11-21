@@ -4,8 +4,62 @@
 
 use super::*;
 
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "🧪️tests/🦀️.rs"]
+mod native_contribution_tests;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn scoped_contribution_command<'a>(
+    receiver: &str,
+    app_id: &str,
+    consumed: &[String],
+    owner_consumes: Option<&[String]>,
+    enabled: impl Iterator<Item = (&'a str, &'a [semio_framework::manifest::TopicContribution])>,
+) -> Option<(semio_framework::manifest::CommandInvocation, Vec<String>)> {
+    use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
+    use semio_framework_value::DslValue;
+
+    let mut entries = Vec::new();
+    let mut providers = Vec::new();
+    for (plugin_id, contributions) in enabled {
+        let before = entries.len();
+        for contribution in contributions {
+            let topic = &contribution.topic;
+            if plugin_id == receiver || consumed.contains(topic) && owner_consumes.is_none_or(|topics| topics.contains(topic)) {
+                entries.push(semio_framework::ProgramContributionEntry { plugin_id: plugin_id.into(), topic_contribution: Some(contribution.clone()) });
+            }
+        }
+        if entries.len() != before {
+            providers.push(plugin_id.into());
+        }
+    }
+    if entries.is_empty() {
+        return None;
+    }
+    let json = semio_framework_pack_json::to_json_string(&entries);
+    let address = CommandAddress {
+        owner: CommandOwnerAddress::App { plugin_id: receiver.into(), app_id: app_id.into() },
+        command_id: "setContributions".into(),
+    };
+    let arguments = [("json".into(), DslValue::String(json)), ("page".into(), DslValue::uint(0)), ("pageCount".into(), DslValue::uint(1))].into_iter().collect();
+    Some((CommandInvocation { address, arguments }, providers))
+}
+
 //#region ShellActions
 impl PluginState {
+    /// 🧩️ Projects the enabled registry's contributions into the receiving app's host command.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn native_contribution_command(&self, receiver: &ProgramBridgeEntry, app_id: &str) -> Option<(semio_framework::manifest::CommandInvocation, Vec<String>)> {
+        let enabled = self.plugins.iter().filter(|plugin| {
+            !self.extensions.iter().any(|entry| !entry.enabled && entry.record.extension_id == plugin.plugin_id)
+        });
+        let owner = enabled.clone().find(|plugin| plugin.plugin_id != receiver.plugin_id && plugin.manifest.apps.iter().any(|app| app.id == app_id));
+        scoped_contribution_command(
+            &receiver.plugin_id, app_id, receiver.native_consumes(), owner.map(ProgramBridgeEntry::native_consumes),
+            enabled.map(|plugin| (plugin.plugin_id.as_str(), plugin.manifest.topic_contributions.as_slice())),
+        )
+    }
+
     //#region 🔖️DirectoryAndIdentity
     //#region 💡️InferencePort
     #[cfg(not(target_arch = "wasm32"))]

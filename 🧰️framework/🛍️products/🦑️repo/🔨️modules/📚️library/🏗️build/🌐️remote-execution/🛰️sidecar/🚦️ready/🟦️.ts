@@ -1,10 +1,11 @@
+import{toolsProgressPaths,recordToolsProgress,sampleToolsProgress,toolsGraceActive,toolsGraceDenial,currentToolsCheckpoint,type ToolsCheckpoint,type ToolsGraceDenial}from"./⏳️tools-grace/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import{readFreeSpaceV1,type FreeSpaceOptionsV1,type FreeSpaceUnknownReasonV1}from"../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
 import{createHash}from"node:crypto";
 import{spawn,spawnSync}from"node:child_process";
-import{closeSync,existsSync,fstatSync,mkdirSync,openSync,readFileSync,readSync,realpathSync,renameSync,rmSync,statSync,writeFileSync,writeSync}from"node:fs";
+import{closeSync,constants,existsSync,fstatSync,mkdirSync,openSync,readFileSync,readSync,realpathSync,renameSync,rmSync,statSync,writeFileSync,writeSync,type BigIntStats}from"node:fs";
 import{availableParallelism,homedir,hostname,setPriority,tmpdir}from"node:os";
-import{delimiter,dirname,join}from"node:path";
+import{delimiter,dirname,isAbsolute,join,relative,sep}from"node:path";
 import{StringDecoder}from"node:string_decoder";
 import{readToolSetupRefusalLineV1}from"../../../🧰️tool-setup/🛑️refusal/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -14,10 +15,11 @@ import{remoteExecutionOriginV1}from"../../🌡️load/🟦️.ts";
 import type{RemoteExecutionSidecarContextV1}from"../🧰️shared/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import nativeBootstrap from"../../../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json"with{type:"json"};
-import{readyDeadlineV1,readyForgetTreeV1,readyStallTrackerV1,readyStalledV1,readyIdentityV1,readyKillTreeV1,readyLivenessV1,readyTreeCpuV1,readyLeaseVerdictV1,readyHolderRestartV1,readyStaleStopV1,readyStagePhaseV1,type ReadyPhaseV1,readyHolderWaitTrackerV1,readyHolderWaitOfV1,readyHolderCustodyV1,readyBackgroundReaderV1,readyForegroundBusyV1,type ReadyHolderWaitV1,type ReadyReadRecordV1,readyScaledTreePolicyV1,readyStallRestartV1,readyStepWatchV1,readyStepOverdueSecondsV1,type ReadyStepV1,type ReadyStepWatchCheckpointV1,readySemanticsV1,readySemanticsChangedV1,readyProcessStartSyncV1,readyProgressKeyV1,readyReadTableV1,readyReadTreeV1,readyTreeMembersV1,readyWindowsTreeSampleV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyWindowsWatchdogSampleV1,type ReadyKnownV1,type ReadyProcessV1}from"./🌲️process-tree/🟦️.ts";
+import{readyDeadlineV1,readyForgetTreeV1,readyStallTrackerV1,readyStalledV1,readyIdentityV1,readyConfirmProcessReplacementV1,readyKillTreeV1,readyLivenessV1,readyTreeCpuV1,readyLeaseVerdictV1,readyHolderRestartV1,readyStaleStopV1,readyStagePhaseV1,type ReadyPhaseV1,readyHolderWaitTrackerV1,readyHolderWaitOfV1,readyHolderCustodyV1,readyBackgroundReaderV1,readyForegroundBusyV1,type ReadyHolderWaitV1,type ReadyReadRecordV1,readyScaledTreePolicyV1,readyStallRestartV1,readyStepWatchV1,readyStepOverdueSecondsV1,type ReadyStepV1,type ReadyStepWatchCheckpointV1,readySemanticsV1,readySemanticsChangedV1,readyProcessStartSyncV1,readyProgressKeyV1,readyReadTableV1,readyReadTreeV1,readyTreeMembersV1,readyWindowsTreeSampleV1,readyWriteTreeV1,READY_TREE_POLICY_V1,type ReadyWindowsWatchdogSampleV1,type ReadyKnownV1,type ReadyProcessV1}from"./🌲️process-tree/🟦️.ts";
 import{CAS_RESERVE_FACTOR_V1}from"../../../🗄️cas/🧬️schema/🟦️.ts";
 import{localMachineSpeedFactorV1,scaledMillisecondsV1}from"../../../🐢️speed/🟨️.mjs";
 import{inspectTypescriptCompilerV1}from"../../../🚀️bootstrap/🔷️typescript-compiler/🟨️.mjs";
+import{javascriptPublishedLockInputsV1}from"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔒️lock-sync/📋️inputs/🟦️.ts";
 import{READY_CONTAINMENT_POLICY_V1,readyContainmentLineV1,readyContainmentStatusV1,readyHeirsV1,readyKillRecorderV1,readyOwnerTokenV1,readyReapOrphansV1,readyRegistryEntriesV1,readyRegistryRootV1,readySharedPidsV1,readySampleDelayV1,readyStopV1,readyStoppedWindowsV1,readySweepRostersV1,type ReadyKillReasonV1,type ReadyContainmentResultV1,type ReadyContainmentV1,type ReadyPersonV1,type ReadyReapedV1,type ReadyWindowV1}from"./🌲️process-tree/🧹️containment/🟦️.ts";
 
 /** 🚦️ The numbers of the readiness loop (see `./🧬️schema/🔣️.json`). */
@@ -35,7 +37,7 @@ export function readyForegroundBusyOfStoreV1(store:string|undefined,origin:strin
 }
 const P=READY_POLICY_V1,ZERO="0".repeat(64),sha=(text:string|Uint8Array):string=>createHash("sha256").update(text).digest("hex");
 
-export type ReadyStageV1=Readonly<{name:string;kind:"bootstrap"|"repo";arguments:readonly string[];timeoutMilliseconds:number;inputs:readonly string[];bootstrapInput:boolean}>;
+export type ReadyStageV1=Readonly<{name:string;kind:"bootstrap"|"repo";arguments:readonly string[];timeoutMilliseconds:number;inputs:readonly string[];bootstrapInput:boolean;dependencyInputs?:true}>;
 export type ReadyPlatformV1="linux"|"macos"|"windows";
 export type ReadyCodeV1="sidecar-restarting"|"human-running"|"lease-held"|"memory-low"|"stage-failed"|"tooling-compiler"|"stage-timeout"|"stage-stalled"|"stage-stall-exhausted"|"stage-code-changed"|"stage-code-stale"|"stage-step-overdue"|"stage-holder-silent"|"store-full"|"disk-short"|"disk-unmeasured"|"disk-collecting"|"disk-consumers"|"loop-failed"|"spawn-failed"|"interrupted"|"server";
 export type ReadyReasonCodeV1="first-run"|"inputs-changed"|"previous-failed"|"stalled"|"code-changed"|"code-stale"|"step-overdue"|"holder-silent"|"adopted"|"binary-missing";
@@ -43,7 +45,12 @@ export type ReadyReasonV1=Readonly<{code:ReadyReasonCodeV1;en:string;de:string}>
 export type ReadyRefusalV1=Readonly<{code:ReadyCodeV1;en:string;de:string}>;
 export type ReadyStateNameV1="ready"|"running"|"waiting"|"backoff"|"observing"|"server";
 export type ReadyStatusV1={version:1;origin:string;host:string;platform:ReadyPlatformV1;pid:number;state:ReadyStateNameV1;digest:string;ready:boolean;stage:string|null;stageIndex:number;stageCount:number;attempts:number;exit:number|null;refusal:ReadyRefusalV1|null;reason:ReadyReasonV1|null;containment?:ReadyContainmentV1|null;peakMegabytes:number|null;tail:string[];nextAttemptMs:number|null;readyMs:number|null;startedMs:number;updatedMs:number};
-export type ReadyTimingV1=Readonly<{stage:string;startedMs:number;endedMs:number;seconds:number;exit:number|null;outcome:"ok"|"stage-failed"|"stage-timeout"|"stalled"|"spawn-failed"|"interrupted";peakMegabytes:number|null;growthMegabytes?:number|null;attempts:number|null;digest:string|null;endEvidence?:ReadyEndEvidenceV1;signal?:string|null}>;
+type ReadyOwnedActivityV1=Readonly<{resource:string;counter:number}>;
+type ReadyDeadlineStopV1="hard-cap"|"soft-cap-idle";
+type ReadyStepOverdueEvidenceV1=Readonly<{seconds:number;bound:number;limit:number;quietMs:number}>;
+type ReadyStopEvidenceV1=Readonly<{deadline?:ReadyDeadlineStopV1;toolsGraceDenial?:ToolsGraceDenial;stepOverdue?:ReadyStepOverdueEvidenceV1}>;
+type ReadyTimingWatchdogV1=ReadyStopEvidenceV1&Readonly<{lastActivity?:ReadyOwnedActivityV1}>;
+export type ReadyTimingV1=Readonly<{watchdog?:ReadyTimingWatchdogV1;stage:string;startedMs:number;endedMs:number;seconds:number;exit:number|null;outcome:"ok"|"stage-failed"|"stage-timeout"|"stalled"|"spawn-failed"|"interrupted";peakMegabytes:number|null;growthMegabytes?:number|null;attempts:number|null;digest:string|null;endEvidence?:ReadyEndEvidenceV1;signal?:string|null}>;
 export type ReadyFailureV1=Readonly<{digest:string;stage:string;attempts:number;exit:number|null;signal?:string|null;code:ReadyCodeV1;nextAttemptMs:number;atMs:number;tail:readonly string[]}>;
 export type ReadyLocalStateV1={version:1;stages:Record<string,{digest:string;doneMs:number}>;appliedCompletions?:Readonly<Record<string,string>>;failure:ReadyFailureV1|null;attempts:number;peakMegabytes:number|null;readyMs:number|null;adopted:boolean};
 
@@ -71,12 +78,12 @@ export function readyRefusalV1(code:ReadyCodeV1,fields:Readonly<Record<string,st
 }
 
 /** #️⃣ Hashes each stage independently from its name, host platform and admitted input hashes, then combines the stage digests in bootstrap order. */
-export function readyDigestsV1(input:Readonly<{platform:ReadyPlatformV1;hash:(path:string)=>string|undefined;stages?:readonly ReadyStageV1[]}>):Readonly<{digest:string;stages:readonly Readonly<{name:string;digest:string}>[]}>{
+export function readyDigestsV1(input:Readonly<{platform:ReadyPlatformV1;hash:(path:string,stage:ReadyStageV1)=>string|undefined;stages?:readonly ReadyStageV1[]}>):Readonly<{digest:string;stages:readonly Readonly<{name:string;digest:string}>[]}>{
  const windows=input.platform==="windows",bootstrap=(windows?P.bootstrap.windows:P.bootstrap.unix).join("/");
  const nativeInputs=windows?[bootstrap,nativeBootstrap.definitions.RustupInstallation.const.windowsProcess]:[bootstrap];
  const stages=(input.stages??READY_STAGES_V1).map(stage=>{
   const paths=[...stage.inputs,...stage.bootstrapInput?nativeInputs:[]];
-  const digest=sha(`${stage.name}\n${input.platform}\n${ZERO}\n`+paths.map(path=>`${path}\0${input.hash(path)??"absent"}\n`).join(""));
+  const digest=sha(`${stage.name}\n${input.platform}\n${ZERO}\n`+paths.map(path=>`${path}\0${input.hash(path,stage)??"absent"}\n`).join(""));
   return{name:stage.name,digest};
  });
  return Object.freeze({digest:sha(stages.map(stage=>stage.digest).join("\n")),stages:Object.freeze(stages)});
@@ -290,11 +297,12 @@ export function readyHumanActiveV1(directory:string,now:number=Date.now(),probe:
 
 export const emptyReadyStateV1=():ReadyLocalStateV1=>({version:1,stages:{},failure:null,attempts:0,peakMegabytes:null,readyMs:null,adopted:false});
 
-/** 📊️ The status file `<store>/v1/origins/<origin>/ready.json`: replaced atomically at most every few seconds and at once when the state changes; validated against the schema, never throws (a store that cannot be written costs nothing). */
-export function createReadyStatusV1(input:Readonly<{store:string|undefined;origin:string;platform?:ReadyPlatformV1;now?:()=>number;rename?:(from:string,to:string)=>void}>):Readonly<{update(patch:Partial<ReadyStatusV1>):void;current():ReadyStatusV1}>{
+/** 📊️ Publishes validated Ready receipts on state changes and coalesces ordinary updates. Explicit heartbeats renew running or retry evidence at the slower heartbeat interval. */
+export function createReadyStatusV1(input:Readonly<{store:string|undefined;origin:string;platform?:ReadyPlatformV1;now?:()=>number;rename?:(from:string,to:string)=>void}>):Readonly<{update(patch:Partial<ReadyStatusV1>):void;heartbeat():void;current():ReadyStatusV1}>{
  const now=input.now??Date.now,startedMs=now();
  let doc:ReadyStatusV1={version:1,origin:input.origin,host:hostname(),platform:input.platform??readyPlatformV1(),pid:process.pid,state:"waiting",digest:ZERO,ready:false,stage:null,stageIndex:0,stageCount:READY_STAGES_V1.length,attempts:0,exit:null,refusal:null,reason:null,peakMegabytes:null,tail:[],nextAttemptMs:null,readyMs:null,startedMs,updatedMs:startedMs},written=0,timer:ReturnType<typeof setTimeout>|undefined;
  const write=():void=>{
+  if(timer!==undefined)clearTimeout(timer);
   timer=undefined;written=now();
   if(input.store===undefined||input.store==="")return;
   try{
@@ -308,15 +316,16 @@ export function createReadyStatusV1(input:Readonly<{store:string|undefined;origi
   update(patch){
    const changed=patch.state!==undefined&&patch.state!==doc.state||patch.stage!==undefined&&patch.stage!==doc.stage||patch.ready!==undefined&&patch.ready!==doc.ready;
    doc={...doc,...patch};
-   if(changed||now()-written>=P.statusIntervalMilliseconds){if(timer!==undefined)clearTimeout(timer);write();}
+   if(changed||now()-written>=P.statusIntervalMilliseconds)write();
    else if(timer===undefined){timer=setTimeout(write,P.statusIntervalMilliseconds);timer.unref?.();}
   },
+  heartbeat(){if(!doc.ready&&(doc.state==="running"||doc.state==="backoff")&&now()-written>=P.statusHeartbeatMilliseconds)write();},
   current:()=>doc,
  });
 }
 
 type ReadyEndEvidenceV1="exit-receipt"|"observed";
-export type ReadyRunResultV1=Readonly<{stage?:string;physicalEnd?:Readonly<{endedMs:number;endEvidence:ReadyEndEvidenceV1;digest:string|null}>;attribution?:"applied"|"known"|"unproven";containment?:ReadyContainmentResultV1;signal?:string|null;stepOverdue?:Readonly<ReadyStepV1&{limit:number;quiet:number}>;holderSilent?:Readonly<{pid:number;command:string;seconds:number}>;exit:number|null;timedOut:boolean;spawnFailed:boolean;cancelled:boolean;stalled:boolean;codeChanged?:string;codeStale?:boolean;detached:boolean;startedMs:number;peakMegabytes:number|null;tail:readonly string[];failure?:readonly string[]}>;
+export type ReadyRunResultV1=Readonly<{watchdog?:ReadyTimingWatchdogV1;stage?:string;physicalEnd?:Readonly<{endedMs:number;endEvidence:ReadyEndEvidenceV1;digest:string|null}>;attribution?:"applied"|"known"|"unproven";containment?:ReadyContainmentResultV1;signal?:string|null;stepOverdue?:Readonly<ReadyStepV1&{limit:number;quiet:number}>;holderSilent?:Readonly<{pid:number;command:string;seconds:number}>;exit:number|null;timedOut:boolean;spawnFailed:boolean;cancelled:boolean;stalled:boolean;codeChanged?:string;codeStale?:boolean;detached:boolean;startedMs:number;peakMegabytes:number|null;tail:readonly string[];failure?:readonly string[]}>;
 type ReadyLogMirrorV1=(stage:string,lines:readonly string[],owner?:string)=>void;
 export type ReadyPortsV1=Readonly<{
  server:boolean;stages?:readonly ReadyStageV1[];now():number;sleep(milliseconds:number,signal:AbortSignal):Promise<void>;jitter:number;cores:number;
@@ -325,8 +334,8 @@ export type ReadyPortsV1=Readonly<{
  marker:Readonly<{exists():boolean;write():void}>;repoPresent():boolean;human():boolean;
  lease:ReturnType<typeof createReadyLeaseV1>;inflight?():string|undefined;
  memory():Readonly<{availableMegabytes:number|null;ok:boolean}>;disk?(stage:string):ReadyDiskShortV1|null;diskUnknown?(stage:string):readonly ReadyDiskUnknownV1[];recover?(request:Readonly<{stage:string;short:ReadyDiskShortV1;signal:AbortSignal;report(line:string):void}>):Promise<ReadyDiskRecoveryV1>;freeMegabytes?():number|null;compiler?():Readonly<{en:string;de:string}>|null;
- run(stage:ReadyStageV1,options:Readonly<{signal:AbortSignal;jobs:number;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;mirror?:ReadyLogMirrorV1}>):Promise<ReadyRunResultV1>;
- status:Readonly<{update(patch:Partial<ReadyStatusV1>):void}>;
+ run(stage:ReadyStageV1,options:Readonly<{signal:AbortSignal;jobs:number;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;onActivity?():void;mirror?:ReadyLogMirrorV1}>):Promise<ReadyRunResultV1>;
+ status:Readonly<{update(patch:Partial<ReadyStatusV1>):void;heartbeat?():void}>;
  mirror?:ReadyLogMirrorV1;timing?(run:ReadyTimingV1):void;
  say(line:string):void;busy?(busy:boolean):void;restartPending?():boolean;
 }>;
@@ -341,10 +350,15 @@ export async function runReadyV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<
   catch(error){
    if(signal.aborted)return;
    failures=ports.now()-started>=P.loopStableMilliseconds?1:failures+1;
-   const pause=readyBackoffV1(failures,ports.jitter),message=String((error as Error|undefined)?.message??error).replace(/\s+/gu," ").slice(0,P.tailCharacters),seconds=Math.round(pause/1000);
-   try{ports.status.update({state:"backoff",ready:false,refusal:readyRefusalV1("loop-failed",{message,seconds,count:failures}),nextAttemptMs:ports.now()+pause});}catch{}
+   const pause=readyBackoffV1(failures,ports.jitter),nextAttemptMs=ports.now()+pause,message=String((error as Error|undefined)?.message??error).replace(/\s+/gu," ").slice(0,P.tailCharacters),seconds=Math.round(pause/1000);
+   try{ports.status.update({state:"backoff",ready:false,refusal:readyRefusalV1("loop-failed",{message,seconds,count:failures}),nextAttemptMs});}catch{}
    try{ports.say(`readiness loop failed (${message}), it starts again in ${seconds} s (try ${failures} in a row) / Bereitschaftsschleife fehlgeschlagen (${message}), sie startet in ${seconds} s neu (Versuch ${failures} in Folge)`);}catch{}
-   await ports.sleep(pause,signal);
+   while(!signal.aborted){
+    const remaining=nextAttemptMs-ports.now();
+    if(remaining<=0)break;
+    await ports.sleep(Math.min(remaining,P.statusHeartbeatMilliseconds),signal);
+    if(!signal.aborted&&ports.now()<nextAttemptMs)ports.status.heartbeat?.();
+   }
   }
  }
 }
@@ -424,13 +438,15 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
     };
     ports.busy?.(true);stalledStage=undefined;
     const freeBefore=ports.inflight?.()!==undefined?null:ports.freeMegabytes?.()??null;
-    let result:ReadyRunResultV1;
-    try{result=await ports.run(row,{signal,jobs,onStage,onLine:line=>{ports.status.update({tail:[line.slice(0,P.tailCharacters)]});},...ports.mirror===undefined?{}:{mirror:(...args)=>ports.mirror!(...args)}});}finally{ports.busy?.(false);}
+    let result:ReadyRunResultV1,watching=true;
+    const onActivity=()=>{if(watching&&!signal.aborted)ports.status.heartbeat?.();};
+    try{result=await ports.run(row,{signal,jobs,onStage,onActivity,onLine:line=>{ports.status.update({tail:[line.slice(0,P.tailCharacters)]});},...ports.mirror===undefined?{}:{mirror:(...args)=>ports.mirror!(...args)}});}
+    finally{watching=false;ports.busy?.(false);}
     if(result.stage!==undefined&&result.stage!==row.name&&!result.detached&&!signal.aborted){
       lastContainment=result.containment===undefined?null:readyContainmentStatusV1({stage:result.stage,...result.containment});
       const {endedMs,endEvidence,digest}=result.physicalEnd??{endedMs:ports.now(),endEvidence:"observed" as const,digest:null};
       ports.timing?.({stage:result.stage,startedMs:result.startedMs,endedMs,seconds:Math.max(0,Math.round((endedMs-result.startedMs)/1000)),
-       exit:result.exit,signal:result.signal??null,outcome:readyTerminalOutcomeV1(result),endEvidence,peakMegabytes:result.peakMegabytes,growthMegabytes:null,attempts:null,digest});
+       exit:result.exit,signal:result.signal??null,outcome:readyTerminalOutcomeV1(result),endEvidence,peakMegabytes:result.peakMegabytes,growthMegabytes:null,attempts:null,digest,...timingWatchdogV1(result.watchdog)});
       continue;
      }
      if(!result.detached&&!signal.aborted)lastContainment=result.containment===undefined?null:readyContainmentStatusV1({stage:row.name,...result.containment});
@@ -442,13 +458,15 @@ async function runReadyLoopV1(ports:ReadyPortsV1,signal:AbortSignal):Promise<voi
       ports.timing?.({stage:row.name,startedMs:result.startedMs,endedMs,seconds:Math.max(0,Math.round((endedMs-result.startedMs)/1000)),
        exit:result.exit,outcome,peakMegabytes:result.peakMegabytes,growthMegabytes:freeBefore===null?null:((free:number|null)=>free===null?null:Math.max(0,freeBefore-free))(ports.freeMegabytes?.()??null),
        attempts:state.attempts+(outcome==="ok"?0:1),digest:physical===undefined?stages[decision.stageIndex]!.digest.slice(0,12):physical.digest,
-       ...physical===undefined?{}:{endEvidence:physical.endEvidence,signal:result.signal??null}});
+       ...physical===undefined?{}:{endEvidence:physical.endEvidence,signal:result.signal??null},...timingWatchdogV1(result.watchdog)});
      }
     if(result.detached||signal.aborted){const latest=ports.state.read();ports.state.write({...latest,peakMegabytes:Math.max(latest.peakMegabytes??0,peak??0)||latest.peakMegabytes});break;}
     if(!stalledOut)stalls.delete(row.name);
     const stallCount=stalledOut&&result.codeChanged===undefined?(stalls.get(row.name)??0)+1:0,stallVerdict=stallCount>0?readyStallRestartV1({consecutive:stallCount}):undefined,stallExhausted=stallVerdict?.action==="fail";
     if(stalledOut&&!stallExhausted){
-     const byCode=result.codeChanged!==undefined,stale=result.codeStale===true,silent=result.codeChanged===undefined?result.holderSilent:undefined,over=result.codeChanged===undefined&&silent===undefined?result.stepOverdue:undefined,minutes=Math.round((stale?READY_TREE_POLICY_V1.staleStageMilliseconds:byCode?READY_TREE_POLICY_V1.holderWaitRestartMilliseconds:READY_TREE_POLICY_V1.stallStopMilliseconds)/60000),pause=stallVerdict?.waitMilliseconds??0;
+     const byCode=result.codeChanged!==undefined,stale=result.codeStale===true,silent=byCode?undefined:result.holderSilent,recorded=result.watchdog?.stepOverdue;
+     const over=byCode||silent!==undefined?undefined:result.stepOverdue??(readyValidStepEvidenceV1(recorded)?{text:"recorded read / aufgezeichneter Lesevorgang",seconds:recorded.seconds,bound:recorded.bound,limit:recorded.limit,quiet:Math.round(recorded.quietMs/1000)}:undefined);
+     const minutes=Math.round((stale?READY_TREE_POLICY_V1.staleStageMilliseconds:byCode?READY_TREE_POLICY_V1.holderWaitRestartMilliseconds:READY_TREE_POLICY_V1.stallStopMilliseconds)/60000),pause=stallVerdict?.waitMilliseconds??0;
      if(stallCount>0)stalls.set(row.name,stallCount);
      stalledStage=row.name;stalledReason=stale?"code-stale":byCode?"code-changed":silent!==undefined?"holder-silent":over!==undefined?"step-overdue":"stalled";
      ports.mirror?.(`${row.name}-stalled`,result.failure??result.tail);
@@ -541,6 +559,8 @@ function writeReadyLocalRecordV1(file:string,value:unknown):void{
  catch(error){try{rmSync(temporary,{force:true});}catch{}throw error;}
 }
 
+const timingWatchdogV1=(watchdog:ReadyTimingWatchdogV1|undefined)=>watchdog===undefined?{}:{watchdog};
+const readyTimingWatchdogV1=(lastActivity:ReadyOwnedActivityV1|undefined,evidence:ReadyStopEvidenceV1)=>timingWatchdogV1(lastActivity===undefined&&evidence.deadline===undefined&&evidence.stepOverdue===undefined?undefined:{...lastActivity===undefined?{}:{lastActivity},...evidence});
 const readyTerminalOutcomeV1=(result:ReadyRunResultV1,ok=readyCleanExitV1(result)):ReadyTimingV1["outcome"]=>ok?"ok":result.timedOut?"stage-timeout":result.stalled&&!result.cancelled?"stalled":result.spawnFailed?"spawn-failed":result.cancelled?"interrupted":"stage-failed";
 const readyCleanExitV1=(result:ReadyRunResultV1):boolean=>result.exit===0&&result.signal==null&&!result.detached&&!result.timedOut&&!result.spawnFailed&&!result.cancelled&&!result.stalled;
 
@@ -548,12 +568,13 @@ const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(er
 
 /** 🧾️ The record of the stage in flight, `<worktree>/.cache/f/ready/running.json`: which stage, which process group, when it started, where its exit file and log are. */
 type ReadyWatchdogV1=Readonly<{
+ toolsGrace?:ToolsCheckpoint|null;
  version:1;owner:string;peakMegabytes:number;progressAt:number;stallAt:number;armedAt:number;progressKey:string|null;phase:ReadyPhaseV1;phaseAt:number;offset:number;
  seen:readonly string[];step:ReadyStepWatchCheckpointV1;holderSince:number|null;holderEvidence:string|null;
- semantics:Readonly<Record<string,string|null>>;cpu:readonly (readonly [number,number])[];windows?:ReadyWindowsWatchdogSampleV1;
+ semantics:Readonly<Record<string,string|null>>;cpu:readonly (readonly [number,number])[];windows?:ReadyWindowsWatchdogSampleV1;lastActivity?:ReadyOwnedActivityV1;
 }>;
 type ReadyStageStopV1=Extract<ReadyKillReasonV1,"stall"|"overdue"|"restart"|"timeout"|"cancel">;
-export type ReadyInflightV1=Readonly<{stage:string;pid:number;startedMs:number;exitFile:string;log:string;supervisor?:number;watchdog?:ReadyWatchdogV1;launch?:ReadyStageLaunchV1;stop?:ReadyStageStopV1}>;
+export type ReadyInflightV1=Readonly<{stage:string;pid:number;startedMs:number;exitFile:string;log:string;supervisor?:number;watchdog?:ReadyWatchdogV1;launch?:ReadyStageLaunchV1;stop?:ReadyStageStopV1}>&ReadyStopEvidenceV1;
 
 function readInflightV1(file:string):ReadyInflightV1|undefined{
  try{
@@ -568,6 +589,15 @@ function readInflightV1(file:string):ReadyInflightV1|undefined{
 
 const readyPhysicalLaunchV1=(flight:ReadyInflightV1):ReadyStageLaunchV1|undefined=>flight.launch!==undefined&&!validateJsonSchemaSubset(schema.definitions.StageLaunch,flight.launch,schema).length?flight.launch:undefined;
 const readyRecordedStageStopV1=(flight:ReadyInflightV1):ReadyStageStopV1|undefined=>flight.stop!==undefined&&schema.definitions.StageStop.enum.includes(flight.stop)&&readyPhysicalLaunchV1(flight)!==undefined?flight.stop:undefined;
+const readyValidStepEvidenceV1=(step:ReadyStepOverdueEvidenceV1|undefined):step is ReadyStepOverdueEvidenceV1=>step!==undefined&&!validateJsonSchemaSubset(schema.definitions.StepOverdueEvidence,step,schema).length&&step.seconds>=step.limit&&step.limit>=step.bound;
+const readyRecordedStopEvidenceV1=(flight:ReadyInflightV1,stop:ReadyStageStopV1|undefined):ReadyStopEvidenceV1=>{
+ if(stop==="timeout"&&flight.deadline!==undefined&&schema.definitions.DeadlineStop.enum.includes(flight.deadline)){
+  const denial=flight.toolsGraceDenial;
+  return{deadline:flight.deadline,...flight.stage==="tools"&&flight.deadline==="hard-cap"&&denial!==undefined&&schema.definitions.ToolsGraceDenial.enum.includes(denial)?{toolsGraceDenial:denial}:{}};
+ }
+ if(stop==="overdue"&&readyValidStepEvidenceV1(flight.stepOverdue))return{stepOverdue:flight.stepOverdue};
+ return{};
+};
 const readyStoppedForStallV1=(stop:ReadyStageStopV1|undefined):boolean=>stop==="stall"||stop==="overdue"||stop==="restart";
 
 function readyPhysicalEndV1(flight:ReadyInflightV1,observedMs:number,exitMs?:number):NonNullable<ReadyRunResultV1["physicalEnd"]>{
@@ -584,6 +614,7 @@ function restoredWatchdogV1(inflight:ReadyInflightV1,now:number,policy:typeof RE
  const times=[row.progressAt,row.stallAt,row.phaseAt,row.step.movedAt,row.holderSince];
  if(times.some(at=>at!==null&&(at<inflight.startedMs||at>now))||row.armedAt<inflight.startedMs||row.armedAt>now+2*P.samplerMilliseconds+P.pollMilliseconds||
   row.seen.length>policy.stallSeenMaximum||row.step.seen.length>policy.stallSeenMaximum)return undefined;
+ if(row.toolsGrace!==undefined&&row.toolsGrace!==null&&!currentToolsCheckpoint(row.toolsGrace,inflight.startedMs,now)){const {toolsGrace:_invalid,...retained}=row;return retained;}
  return row;
 }
 
@@ -611,7 +642,26 @@ function logSinceV1(log:string,offset:number):Readonly<{lines:string[];offset:nu
 }
 
 
-/** 🗂️ Recovers structured tool refusals from a failed stage using bounded buffers and complete lines. */
+const readyActivityResourceV1=new RegExp(schema.definitions.OwnedActivity.properties.resource.pattern,"u");
+const readyActivityCounterV1=/^([A-Za-z-]+(?::[A-Za-z-]+)*):([1-9][0-9]{0,15})(?:\/[1-9][0-9]{0,3}:canonical:[0-9]{1,4}:changed:[0-9]{1,4})?$/u;
+
+/** \u{1f4cd}\uFE0F Retains the latest productive counter from the bounded batch of complete stage log lines. */
+function readyOwnedActivityV1(lines:readonly string[],last:ReadyOwnedActivityV1|undefined):ReadyOwnedActivityV1|undefined{
+ for(const line of lines){
+  if(line.length>P.refusalLineCharacters||!line.startsWith("[script] {"))continue;
+  let row:{stage?:string;activity?:{resource?:string;mode?:string;elapsedMs?:number}}|null;
+  try{row=JSON.parse(line.slice(9));}catch{continue;}
+  if(row?.stage!=="running"||typeof row.activity?.resource!=="string"||(row.activity.mode!=="shared"&&row.activity.mode!=="exclusive")||
+   typeof row.activity.elapsedMs!=="number"||!Number.isFinite(row.activity.elapsedMs)||row.activity.elapsedMs<0)continue;
+  const matched=readyActivityCounterV1.exec(row.activity.resource);
+  if(matched===null||!readyActivityResourceV1.test(matched[1]!))continue;
+  const resource=matched[1]!,counter=Number(matched[2]);
+  if(Number.isSafeInteger(counter)&&(last?.resource!==resource||counter>last.counter))last={resource,counter};
+ }
+ return last;
+}
+
+/** \u{1f5c2}\uFE0F Recovers structured tool refusals from a failed stage using bounded buffers and complete lines. */
 function toolFailureEvidenceV1(stage:string,log:string):string[]{
  if(stage!=="tools")return[];
  const lines=new Map<string,string>(),buffer=Buffer.alloc(P.failureEvidenceChunkBytes),decoder=new StringDecoder("utf8");
@@ -679,15 +729,15 @@ function logTailV1(log:string,count:number=P.tailLines,width:number=P.tailCharac
 /** 🧹️ What a stage runner needs to find the orphans of earlier tries: the lease registry folder of the user, the windows of this worker's stopped tries and the working window of a person. */
 export type ReadyOrphanPortsV1=Readonly<{registryRoot:string;windows():readonly ReadyWindowV1[];human():ReadyPersonV1|null}>;
 
-type ReadyStageInputV1=Readonly<{completion?:ReadyStageCompletionV1;root:string;environment:Readonly<Record<string,string|undefined>>;stage:ReadyStageV1;signal:AbortSignal;jobs:number;home?:string;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;mirror?:ReadyLogMirrorV1;tree?:typeof READY_TREE_POLICY_V1;orphans?:ReadyOrphanPortsV1;containment?:typeof READY_CONTAINMENT_POLICY_V1;speed?:number}>;
-type ReadyStageObserverV1=Pick<ReadyStageInputV1,"onLine"|"mirror"|"onStage">;
+type ReadyStageInputV1=Readonly<{completion?:ReadyStageCompletionV1;root:string;environment:Readonly<Record<string,string|undefined>>;stage:ReadyStageV1;signal:AbortSignal;jobs:number;home?:string;onLine(line:string):void;onStage?(stage:string,adopted:boolean):void;onActivity?():void;mirror?:ReadyLogMirrorV1;tree?:typeof READY_TREE_POLICY_V1;orphans?:ReadyOrphanPortsV1;containment?:typeof READY_CONTAINMENT_POLICY_V1;speed?:number}>;
+type ReadyStageObserverV1=Pick<ReadyStageInputV1,"onLine"|"mirror"|"onStage"|"onActivity">;
 type ReadyStageWatchV1={stage:string;stop:AbortController;observers:Set<ReadyStageObserverV1>;result:Promise<ReadyRunResultV1>;line?:string;physical?:Readonly<{stage:string;adopted:boolean}>;snapshot?:()=>ReadyRunResultV1};
 const readyStageWatchesV1=new Map<string,ReadyStageWatchV1>();
 const detachedReadyStageV1=(startedMs:number=Date.now(),tail:readonly string[]=[],peakMegabytes:number|null=null):ReadyRunResultV1=>({exit:null,timedOut:false,spawnFailed:false,cancelled:false,stalled:false,detached:true,startedMs,peakMegabytes,tail});
 const sameReadyFlightV1=(left:ReadyInflightV1|undefined,right:ReadyInflightV1):boolean=>left?.stage===right.stage&&left.pid===right.pid&&left.startedMs===right.startedMs&&left.exitFile===right.exitFile;
 
 function followReadyStageV1(watch:ReadyStageWatchV1,input:ReadyStageInputV1):Promise<ReadyRunResultV1>{
- const observer={onLine:input.onLine,mirror:input.mirror,onStage:input.onStage};
+ const observer={onLine:input.onLine,mirror:input.mirror,onStage:input.onStage,onActivity:input.onActivity};
  return new Promise((finish,fail)=>{
   const leave=()=>{input.signal.removeEventListener("abort",detach);return watch.observers.delete(observer);};
   const detach=()=>{
@@ -717,7 +767,8 @@ export async function runReadyStageV1(input:ReadyStageInputV1):Promise<ReadyRunR
    const line=(text:string):void=>{owned.line=text;for(const observer of observers)observer.onLine(text);};
    const mirror:ReadyLogMirrorV1=(...args)=>{for(const observer of observers)observer.mirror?.(...args);};
    const onStage=(stage:string,adopted:boolean)=>{delete owned.line;owned.physical={stage,adopted};for(const observer of observers)observer.onStage?.(stage,adopted);};
-   const owned:ReadyStageWatchV1={stage:input.stage.name,stop,observers,result:Promise.resolve().then(()=>runOwnedReadyStageV1({...input,signal:stop.signal,onLine:line,mirror,onStage},directory,owned)).finally(()=>{if(readyStageWatchesV1.get(key)===owned)readyStageWatchesV1.delete(key);})};
+   const onActivity=()=>{for(const observer of observers)observer.onActivity?.();};
+   const owned:ReadyStageWatchV1={stage:input.stage.name,stop,observers,result:Promise.resolve().then(()=>runOwnedReadyStageV1({...input,signal:stop.signal,onLine:line,mirror,onStage,onActivity},directory,owned)).finally(()=>{if(readyStageWatchesV1.get(key)===owned)readyStageWatchesV1.delete(key);})};
    readyStageWatchesV1.set(key,watch=owned);
   }
   const result=await followReadyStageV1(watch,input);
@@ -743,19 +794,20 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
  if(record!==undefined&&!alive(record.pid)&&!existsSync(record.exitFile)){
   const physicalEnd=readyPhysicalEndV1(record,Date.now());
   input.mirror?.(record.stage,logTailV1(record.log,P.mirrorLines,P.mirrorLineCharacters),ownerOf(record.stage,record.startedMs));
-  let stop:ReadyStageStopV1|undefined;
+  let stop:ReadyStageStopV1|undefined,evidenceAtStop:ReadyStopEvidenceV1={};
   if(sameReadyFlightV1(readInflightV1(inflightFile),record)){
    await sweepRosters();
    const held=readInflightV1(inflightFile);
    if(held!==undefined&&sameReadyFlightV1(held,record)){
     stop=readyRecordedStageStopV1(held);
+    evidenceAtStop=readyRecordedStopEvidenceV1(held,stop);
     rmSync(inflightFile,{force:true});
    }
   }
   const failure=failed("the process of the stage vanished without an exit status / der Prozess der Stufe verschwand ohne Exit-Status",false);
   const observed=restoredWatchdogV1(record,Date.now(),input.tree??readyScaledTreePolicyV1(speed));
   const evidence=toolFailureEvidenceV1(record.stage,record.log);
-  return {...failure,timedOut:stop==="timeout",cancelled:stop==="cancel",stalled:readyStoppedForStallV1(stop),startedMs:record.startedMs,physicalEnd,peakMegabytes:observed?.peakMegabytes||null,tail:[...failureLinesV1(record.log,P.tailLines-failure.tail.length,P.tailCharacters,evidence),...failure.tail],failure:[...failureLinesV1(record.log,P.mirrorLines-failure.tail.length,P.mirrorLineCharacters,evidence),...failure.tail],containment:{reaped:earlier.reaped,survivors:earlier.survivors}};
+  return {...failure,...readyTimingWatchdogV1(observed?.lastActivity,evidenceAtStop),timedOut:stop==="timeout",cancelled:stop==="cancel",stalled:readyStoppedForStallV1(stop),startedMs:record.startedMs,physicalEnd,peakMegabytes:observed?.peakMegabytes||null,tail:[...failureLinesV1(record.log,P.tailLines-failure.tail.length,P.tailCharacters,evidence),...failure.tail],failure:[...failureLinesV1(record.log,P.mirrorLines-failure.tail.length,P.mirrorLineCharacters,evidence),...failure.tail],containment:{reaped:earlier.reaped,survivors:earlier.survivors}};
  }
  if(record===undefined){await sweepRosters();const swept=await reapRegistry(null,"registry");earlier.reaped.push(...swept.reaped);earlier.survivors.push(...swept.survivors);record=readInflightV1(inflightFile);if(record!==undefined)watch.stage=record.stage;}
  const wait=async(inflight:ReadyInflightV1,fresh=false):Promise<ReadyRunResultV1>=>new Promise<ReadyRunResultV1>((finish,fail)=>{
@@ -766,6 +818,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
    const owner=ownerOf(inflight.stage,inflight.startedMs),mirror=()=>input.mirror?.(inflight.stage,logTailV1(inflight.log,P.mirrorLines,P.mirrorLineCharacters),owner);
    if(!fresh)prepareOwnedSliceReportV1(input.root,owner);
   const stop=readyRecordedStageStopV1(inflight);
+  let evidenceAtStop=readyRecordedStopEvidenceV1(inflight,stop);
   let timedOut=stop==="timeout",cancelled=stop==="cancel",stalled=readyStoppedForStallV1(stop),tick=0,last="",killed=stop!==undefined,known:readonly ReadyKnownV1[]=readyReadTreeV1(directory,inflight.stage)?.processes??[],sampling=false,codeFile:string|undefined,codeStale=false,codeCheckedAt=0,finishing=false,reaping=false,reapedAt=0,nextSample=0,sampledAt=Date.now(),watching=true;
   const treePolicy=input.tree??readyScaledTreePolicyV1(speed),observedAt=Date.now(),prior=restoredWatchdogV1(inflight,observedAt,treePolicy);
   const semanticsAtStart=prior?.semantics??readySemanticsV1(input.root,treePolicy,sha),tracker=readyStallTrackerV1(treePolicy,prior?.seen),stepWatch=readyStepWatchV1(treePolicy,prior?.step),holder=readyHolderWaitTrackerV1(treePolicy,prior?.holderSince);
@@ -774,32 +827,46 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
   let awaitingProbe=observedAt<armedAt;
   let peak=prior?.peakMegabytes??0,progressKey=prior?.progressKey??null,progressAt=prior?.progressAt??inflight.startedMs,stallAt=prior?.stallAt??inflight.startedMs,
    phase=prior?.phase??null,phaseAt=prior?.phaseAt??inflight.startedMs,phaseOffset=prior?.offset??0,holderEvidence=prior?.holderEvidence??null,
-   cpuBefore:ReadonlyMap<number,number>=new Map(prior?.cpu),windowsBefore=windows?prior?.windows:undefined,dirty=prior===undefined||needsProbe,lastWrite=0;
+   lastActivity=prior?.lastActivity,cpuBefore:ReadonlyMap<number,number>=new Map(prior?.cpu),windowsBefore=windows?prior?.windows:undefined,dirty=prior===undefined||needsProbe,lastWrite=0;
   if(prior===undefined&&!fresh){
    const recent=analysisTailV1(inflight.log),key=readyProgressKeyV1(recent.slice(-P.tailLines)),fed=logSinceV1(inflight.log,0);
+   lastActivity=readyOwnedActivityV1(fed.lines,lastActivity);
    phase=readyStagePhaseV1(fed.lines,phase,treePolicy);phaseOffset=fed.offset;progressKey=key===null?null:sha(key);
    const seen=tracker.observe(recent);
    if(seen)try{progressAt=stallAt=Math.max(inflight.startedMs,Math.min(observedAt,Math.floor(statSync(inflight.log).mtimeMs)));}catch{}
    stepWatch.observe(recent,stallAt);
   }
+  let reportedActivityAt=stallAt;
   const checkpoint=(force=false):void=>{
    if(!watching||!dirty||!force&&Date.now()-lastWrite<P.watchdogWriteMilliseconds)return;
    lastWrite=Date.now();
    try{
     const held=readInflightV1(inflightFile);
     if(held===undefined||!sameReadyFlightV1(held,inflight))return;
-    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore}};
+    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore},...lastActivity===undefined?{}:{lastActivity},...toolsPaths===undefined?{}:{toolsGrace}};
     const text=JSON.stringify({...held,watchdog});
     if(Buffer.byteLength(text)>P.watchdogRecordBytes)return;
     const temporary=inflightFile+"."+process.pid+".tmp";
     try{writeFileSync(temporary,text);renameSync(temporary,inflightFile);dirty=false;}finally{rmSync(temporary,{force:true});}
+    if(!killed&&!finishing&&!input.signal.aborted&&stallAt>reportedActivityAt){reportedActivityAt=stallAt;input.onActivity?.();}
    }catch{}
   };
   const moved=(now=Date.now()):void=>{stallAt=now;progressAt=now;dirty=true;};
-  checkpoint();
   const holderLines=treePolicy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u")),left=new Map<number,ReadyKnownV1>(earlier.survivors.map(row=>[row.pid,row])),reaped:ReadyReapedV1[]=[...earlier.reaped];
   const rootOf=():ReadyKnownV1=>({pid:inflight.pid,startMs:inflight.startedMs});
-  let overdueStep:Readonly<ReadyStepV1&{limit:number;quiet:number}>|undefined,aliveAt=Date.now(),tableMilliseconds=0,confirming=false,killReason:ReadyStageStopV1=stop??"stall",inspecting=false,inspectedAt=0,silentHolder:Readonly<{pid:number;command:string;seconds:number}>|undefined;const yielded=new Set<number>();
+   const toolsEligible=stage.name==="tools"&&stage.kind==="repo"&&JSON.stringify(stage.arguments)==='["tools","setup","all"]'&&
+    readyPhysicalLaunchV1(inflight)!==undefined&&treePolicy.hardCapMultiplier===4&&!Object.hasOwn(treePolicy.stageHardCapMultipliers,"tools");
+   const toolsPaths=toolsEligible?toolsProgressPaths(input.root,input.orphans?.registryRoot??readyRegistryRootV1(input.environment,process.platform,home)):undefined;
+   let toolsGrace=prior?.toolsGrace??null;
+   const observeToolsGrace=(table:readonly ReadyProcessV1[]):void=>{
+    const now=Date.now();
+    if(toolsPaths===undefined||now-inflight.startedMs<4*stageTimeout-treePolicy.stallMilliseconds)return;
+    const value=readyIdentityV1(rootOf(),table)==="same"?sampleToolsProgress({...toolsPaths,owner,started:inflight.startedMs,now,
+     tolerance:contain.edgeToleranceMilliseconds,members:known.filter(row=>row.pid!==inflight.pid)}):undefined;
+    toolsGrace=recordToolsProgress(toolsGrace,value,now);dirty=true;
+   };
+  checkpoint();
+  let overdueStep:Readonly<ReadyStepV1&{limit:number;quiet:number}>|undefined,aliveAt=Date.now(),confirming=false,killReason:ReadyStageStopV1=stop??"stall",inspecting=false,inspectedAt=0,silentHolder:Readonly<{pid:number;command:string;seconds:number}>|undefined;const yielded=new Set<number>();
   const recorder=(reason:ReadyKillReasonV1)=>readyKillRecorderV1({directory,stage:inflight.stage,owner:ownerOf(inflight.stage,inflight.startedMs),reason,seconds:Math.round(treePolicy.stallStopMilliseconds/1000),say,policy:contain});
   const progressEvery=Math.max(1,Math.round(P.progressMilliseconds/P.pollMilliseconds)),sampleEvery=Math.max(1,Math.round(P.samplerMilliseconds/P.pollMilliseconds)),mirrorEvery=Math.max(1,Math.round(P.mirrorMilliseconds/P.pollMilliseconds));
   let settling:Promise<void>|undefined;
@@ -812,12 +879,13 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
    readyWriteTreeV1(directory,inflight.stage,rootOf(),result.survivors,Date.now());
    for(const row of result.survivors)say(readyContainmentLineV1("survivor",{pid:row.pid,name:row.name??"?",passes:result.passes}));
   })();
-  const kill=(reason:ReadyStageStopV1):void=>{
-   if(killed||!watching)return;
+  const kill=(reason:ReadyStageStopV1,evidence:ReadyStopEvidenceV1={}):boolean=>{
+   if(killed||!watching)return false;
+   checkpoint(true);
    const held=readInflightV1(inflightFile);
-   if(held===undefined||!sameReadyFlightV1(held,inflight))return;
-   if(held.launch!==undefined)try{writeReadyLocalRecordV1(inflightFile,{...held,stop:reason});}catch(error){failWatch(error);return;}
-   killed=true;killReason=reason;void settle().catch(failWatch);
+   if(held===undefined||!sameReadyFlightV1(held,inflight))return false;
+   if(held.launch!==undefined)try{writeReadyLocalRecordV1(inflightFile,{...held,stop:reason,...evidence});}catch(error){failWatch(error);return false;}
+   killed=true;killReason=reason;evidenceAtStop=evidence;void settle().catch(failWatch);return true;
   };
   const readRecord=():ReadyReadRecordV1|undefined=>{try{const value=JSON.parse(readFileSync(machinePathV1(input.root,...treePolicy.readRecord),"utf8")) as Partial<ReadyReadRecordV1>;return Number.isSafeInteger(value.runner)&&Number.isFinite(value.startedMs)&&(value.reason==="request"||value.reason==="refresh")?{reason:value.reason,runner:value.runner!,read:value.read??null,startedMs:value.startedMs!,status:value.status??null,endedMs:value.endedMs??null}:undefined;}catch{return undefined;}};
   const inspect=async(named:ReadyHolderWaitV1,waiting:number):Promise<void>=>{
@@ -847,7 +915,8 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
   const failWatch=(error:unknown):void=>{watching=false;clearInterval(timer);input.signal.removeEventListener("abort",detach);fail(error);};
   const complete=(result:ReadyRunResultV1,containTree:boolean,endedMs?:number):void=>{
    finishing=true;
-   result={...result,physicalEnd:readyPhysicalEndV1(inflight,Date.now(),endedMs)};
+   if(!killed&&owns())lastActivity=readyOwnedActivityV1(logSinceV1(inflight.log,phaseOffset).lines,lastActivity);
+   result={...result,...readyTimingWatchdogV1(lastActivity,evidenceAtStop),physicalEnd:readyPhysicalEndV1(inflight,Date.now(),endedMs)};
    const publish=()=>{
     try{
      if(owns()){
@@ -864,6 +933,39 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
    if(!containTree){publish();return;}
    void settle().then(publish,failWatch);
   };
+   const sampleTree=(maximum?:number):void=>{sampling=true;void readyReadTableV1(maximum,undefined,undefined,windows||maximum!==undefined?input.signal:undefined).then(table=>{
+    sampling=false;if(maximum!==undefined)probeUntil=0;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);
+    if(killed||!watching||finishing||!owns())return;
+    const root=rootOf(),tolerance=treePolicy.toleranceMilliseconds,identity=readyIdentityV1(root,table,tolerance);
+    if(maximum!==undefined&&identity!=="same"){toolsGrace=recordToolsProgress(toolsGrace,undefined,Date.now());dirty=true;}
+    if(table.length===0)return;
+    if(identity==="reused"&&!existsSync(inflight.exitFile)&&!confirming){
+     confirming=true;const first=table.find(row=>row.pid===root.pid)!,confirmationBegan=Date.now();
+     void readyReadTableV1(undefined,undefined,undefined,input.signal).then(second=>{
+      confirming=false;if(!watching||finishing||killed||!owns()||existsSync(inflight.exitFile))return;
+      const again=readyConfirmProcessReplacementV1(root,first,second,tolerance);if(again===undefined)return;
+      const why=changedLineV1(root.pid,root.startMs,again.startMs,first.startMs,tolerance,Date.now()-confirmationBegan);
+      complete({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)},true);
+     });return;
+    }
+    known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})],tolerance);sampledAt=Date.now();observeToolsGrace(table);readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);
+     if(windows&&!existsSync(cancelFile)){
+      const sample=readyWindowsTreeSampleV1({table,root:root.pid,members:known,previous:windowsBefore,maximum:P.watchdogCpuMaximum,minimumCpuMilliseconds:treePolicy.livenessCpuMilliseconds});
+      if(sample!==undefined){
+       windowsBefore=sample.checkpoint;
+       if(sample.progress)moved();
+       const peakChanged=sample.megabytes!==null&&sample.megabytes>peak;
+       if(peakChanged)peak=sample.megabytes!;
+       dirty||=sample.changed||peakChanged;
+       checkpoint(peakChanged);
+      }
+     }
+    });};
+   const probeNow=Date.now(),probeLimit=2*P.pollMilliseconds;
+   let probeUntil=!fresh&&!killed&&toolsPaths!==undefined&&probeNow-progressAt<=treePolicy.stallMilliseconds&&
+    toolsGraceActive(toolsGrace,{stage:stage.name,started:inflight.startedMs,now:probeNow,soft:stageTimeout,quiet:treePolicy.stallMilliseconds,sampleLimit:treePolicy.stallMilliseconds})?
+    Math.min(probeNow+probeLimit,inflight.startedMs+5*stageTimeout):0;
+   if(probeUntil>probeNow)sampleTree(probeUntil-probeNow);
   const timer=setInterval(()=>{
    tick++;
    if(finishing)return;
@@ -884,25 +986,24 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
    aliveAt=Date.now();
     if(tick%mirrorEvery===0)mirror();
    const probeEnded=awaitingProbe&&Date.now()>=armedAt;if(probeEnded)awaitingProbe=false;
-   if(tick%progressEvery===0||!fresh&&tick===1||probeEnded){const recent=analysisTailV1(inflight.log),line=formatLogLineV1(recent.at(-1)??"",P.tailCharacters),raw=readyProgressKeyV1(recent.slice(-P.tailLines)),key=raw===null?null:sha(raw);if(key!==null&&key!==progressKey){progressKey=key;progressAt=Date.now();dirty=true;}if(line!==""&&line!==last){last=line;input.onLine(line);}if(tracker.observe(recent))moved();const since=holder.snapshot(),waiting=holder.observe(recent,Date.now()),fed=logSinceV1(inflight.log,phaseOffset),seenPhase=readyStagePhaseV1(fed.lines,phase,treePolicy);if(phaseOffset!==fed.offset||since!==holder.snapshot())dirty=true;phaseOffset=fed.offset;if(!killed&&!inspecting&&holder.snapshot()!==null&&Date.now()-inspectedAt>=treePolicy.holderCheckMilliseconds){const named=readyHolderWaitOfV1(recent,treePolicy);if(named!==undefined){inspecting=true;inspectedAt=Date.now();void inspect(named,waiting).catch(()=>undefined).finally(()=>{inspecting=false;});}}if(seenPhase!==phase){if(phase!==null||seenPhase!=="reading")phaseAt=Date.now();phase=seenPhase;dirty=true;}const watched=stepWatch.observe(recent,Date.now());if(!killed&&Date.now()>=armedAt&&phase!=="executing"&&watched.overdue&&watched.step!==undefined){overdueStep={...watched.step,limit:readyStepOverdueSecondsV1(watched.step.bound,treePolicy),quiet:Math.round(watched.quietMs/1000)};stalled=true;kill("overdue");}if(!killed&&watching&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))&&owns()){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder",inflight.stage).then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}if(!killed&&(waiting>=treePolicy.holderWaitRestartMilliseconds||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const holder=readyHolderRestartV1(waiting,true,treePolicy),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy,sha);if(file!==null&&(holder||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))){codeFile=file;codeStale=!holder;stalled=true;kill("restart");}}}
-   if(Date.now()>=nextSample&&!sampling&&!killed){sampling=true;const tableBegan=Date.now();void readyReadTableV1(undefined,undefined,undefined,undefined,windows?input.signal:undefined).then(table=>{sampling=false;tableMilliseconds=Date.now()-tableBegan;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);if(table.length===0||killed||!watching||finishing||!owns())return;const root=rootOf();if(readyIdentityV1(root,table)==="reused"&&!existsSync(inflight.exitFile)&&!confirming&&!finishing){confirming=true;const first=table.find(row=>row.pid===root.pid)!;void readyReadTableV1().then(second=>{confirming=false;if(!watching||finishing||killed||existsSync(inflight.exitFile)||second.length===0||readyIdentityV1(root,second)!=="reused")return;const again=second.find(row=>row.pid===root.pid)!,why=changedLineV1(root.pid,root.startMs,again.startMs,first.startMs,P.toleranceMilliseconds,tableMilliseconds);complete({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)},true);});return;}known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})]);sampledAt=Date.now();readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);
-     if(windows&&!existsSync(cancelFile)){
-      const sample=readyWindowsTreeSampleV1({table,root:root.pid,members:known,previous:windowsBefore,maximum:P.watchdogCpuMaximum,minimumCpuMilliseconds:treePolicy.livenessCpuMilliseconds});
-      if(sample!==undefined){
-       windowsBefore=sample.checkpoint;
-       if(sample.progress)moved();
-       const peakChanged=sample.megabytes!==null&&sample.megabytes>peak;
-       if(peakChanged)peak=sample.megabytes!;
-       dirty||=sample.changed||peakChanged;
-       checkpoint(peakChanged);
-      }
-     }
-    });}
+   if(tick%progressEvery===0||!fresh&&tick===1||probeEnded){const recent=analysisTailV1(inflight.log),line=formatLogLineV1(recent.at(-1)??"",P.tailCharacters),raw=readyProgressKeyV1(recent.slice(-P.tailLines)),key=raw===null?null:sha(raw);if(key!==null&&key!==progressKey){progressKey=key;progressAt=Date.now();dirty=true;}if(line!==""&&line!==last){last=line;input.onLine(line);}if(tracker.observe(recent))moved();const since=holder.snapshot(),waiting=holder.observe(recent,Date.now()),fed=logSinceV1(inflight.log,phaseOffset),seenPhase=readyStagePhaseV1(fed.lines,phase,treePolicy);if(phaseOffset!==fed.offset||since!==holder.snapshot())dirty=true;phaseOffset=fed.offset;if(!killed)lastActivity=readyOwnedActivityV1(fed.lines,lastActivity);if(!killed&&!inspecting&&holder.snapshot()!==null&&Date.now()-inspectedAt>=treePolicy.holderCheckMilliseconds){const named=readyHolderWaitOfV1(recent,treePolicy);if(named!==undefined){inspecting=true;inspectedAt=Date.now();void inspect(named,waiting).catch(()=>undefined).finally(()=>{inspecting=false;});}}if(seenPhase!==phase){if(phase!==null||seenPhase!=="reading")phaseAt=Date.now();phase=seenPhase;dirty=true;}const watched=stepWatch.observe(recent,Date.now());if(!killed&&Date.now()>=armedAt&&phase!=="executing"&&watched.overdue&&watched.step!==undefined){
+     const {seconds,bound}=watched.step,limit=readyStepOverdueSecondsV1(bound,treePolicy),stepOverdue={seconds,bound,limit,quietMs:watched.quietMs};
+     if(kill("overdue",readyValidStepEvidenceV1(stepOverdue)?{stepOverdue}:{})){overdueStep={...watched.step,limit,quiet:Math.round(watched.quietMs/1000)};stalled=true;}
+    }if(!killed&&watching&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))&&owns()){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder",inflight.stage).then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}if(!killed&&(waiting>=treePolicy.holderWaitRestartMilliseconds||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const holder=readyHolderRestartV1(waiting,true,treePolicy),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy,sha);if(file!==null&&(holder||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))){codeFile=file;codeStale=!holder;stalled=true;kill("restart");}}}
+   if(Date.now()>=nextSample&&!sampling&&!killed)sampleTree();
    let peakChanged=false;
    if(!windows&&(tick%sampleEvery===0||!fresh&&tick===1)){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){const observedPeak=readyTreeMegabytesV1(rows.stdout,inflight.pid);if(observedPeak>peak){peak=observedPeak;peakChanged=dirty=true;}const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy))moved();if(cpu.size!==cpuBefore.size||[...cpu].some(([pid,spent])=>cpuBefore.get(pid)!==spent))dirty=true;cpuBefore=cpu;}}
    checkpoint(peakChanged);
    if(!killed&&Date.now()>=armedAt&&readyStalledV1(Date.now()-stallAt,treePolicy)){stalled=true;kill("stall");}
-   {const elapsed=Date.now()-inflight.startedMs;if(elapsed>stageTimeout){const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:Date.now()-progressAt,policy:treePolicy});if(verdict==="timeout"||verdict==="stalled"&&Date.now()>=armedAt){timedOut=true;kill("timeout");}}}
+   const elapsed=Date.now()-inflight.startedMs;
+   if(elapsed>stageTimeout){
+    const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:Date.now()-progressAt,policy:treePolicy}),now=Date.now();
+    const denial=verdict==="timeout"?toolsGraceDenial(toolsGrace,{stage:stage.name,eligible:toolsPaths!==undefined,progressing:now-progressAt<=treePolicy.stallMilliseconds,started:inflight.startedMs,now,
+     soft:stageTimeout,quiet:treePolicy.stallMilliseconds,sampleLimit:2*contain.slowSampleMilliseconds+P.pollMilliseconds}):undefined;
+    if(verdict==="timeout"&&denial!==undefined&&now>=probeUntil){
+     timedOut=true;kill("timeout",{deadline:"hard-cap",...inflight.stage!=="tools"?{}:{toolsGraceDenial:denial}});
+    }else if(verdict==="stalled"&&now>=armedAt){timedOut=true;kill("timeout",{deadline:"soft-cap-idle"});}
+   }
    if(watching&&existsSync(cancelFile)&&owns()){cancelled=true;kill("cancel");if(killed)rmSync(cancelFile,{force:true});}
   },P.pollMilliseconds);
   input.signal.addEventListener("abort",detach,{once:true});
@@ -938,11 +1039,41 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
 export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFilesystemFactsV1|null;root:string;environment:Readonly<Record<string,string|undefined>>;origin:string;group:string|undefined;home?:string;stages?:readonly ReadyStageV1[];work?:{busy:boolean;restartPending:boolean;wake?:()=>void};say(line:string):void}>):ReadyPortsV1{
  const directory=machinePathV1(input.root,...P.directory),stateFile=join(directory,P.stateName),marker=machinePathV1(input.root,".cache","f",P.markerName),windows=process.platform==="win32";
  const status=createReadyStatusV1({store:input.environment.SEMIO_FLEET_STORE_ROOT,origin:input.origin});
- const hashOf=(path:string):string|undefined=>{try{return readyInputHashV1(path,readFileSync(join(input.root,...path.split("/")),"utf8"));}catch{return undefined;}};
+ const inputHashes=new Map<string,{stamp:string;hash:string}>(),dependencyHashes=new Map<string,{stamp:string;hash:string}>();
+ const stamp=(row:BigIntStats)=>[row.dev,row.ino,row.mode,row.size,row.mtimeNs,row.ctimeNs].join(":");
+ const hashOf=(path:string,stage:ReadyStageV1):string|undefined=>{
+   const absolute=join(input.root,...path.split("/")),dependencies=stage.dependencyInputs===true,hashes=dependencies?dependencyHashes:inputHashes;
+   let fd:number|undefined;
+  try{
+    const row=statSync(absolute,{bigint:true}),before=stamp(row),cached=hashes.get(path);
+    if(!row.isFile())throw Error("Regular readiness input required");
+    if(cached?.stamp===before)return cached.hash;
+    if(dependencies){
+     const inside=relative(realpathSync(input.root),realpathSync(absolute));
+     if(inside===".."||inside.startsWith(".."+sep)||isAbsolute(inside))throw Error("Readiness dependency input escapes the workspace");
+    }
+   fd=openSync(absolute,constants.O_RDONLY|(constants.O_NONBLOCK??0));
+    if(before!==stamp(fstatSync(fd,{bigint:true})))throw Error("Readiness input changed before hashing");
+    const hash=dependencies?sha(readFileSync(fd)):readyInputHashV1(path,readFileSync(fd,"utf8"));
+   if(before!==stamp(fstatSync(fd,{bigint:true}))||before!==stamp(statSync(absolute,{bigint:true})))throw Error("Readiness input changed during hashing");
+    hashes.set(path,{stamp:before,hash});return hash;
+   }catch{hashes.delete(path);return undefined;}
+  finally{if(fd!==undefined)closeSync(fd);}
+ };
  const recentRuns=():readonly ReadyTimingV1[]=>{try{return(JSON.parse(readFileSync(join(directory,P.timingsName),"utf8")) as {runs:ReadyTimingV1[]}).runs;}catch{return[];}};
  const owner=`${process.pid}:${Math.random().toString(16).slice(2)}`,jitter=parseInt(sha(input.origin).slice(0,8),16)/0x100000000;
   let lastSliceOwner:string|undefined,lastSliceReport:string|undefined;
  const plan=input.stages??READY_STAGES_V1,platform=readyPlatformV1(),home=input.home??homedir(),lease=createReadyLeaseV1({directory,owner});
+ const measure=(stages:readonly ReadyStageV1[])=>{
+  const measured=stages.map(stage=>{
+   if(!stage.dependencyInputs)return stage;
+   const {manifest,lock}=schema.definitions.DependencyInputs.const;
+   const paths=new Set([...stage.inputs,...javascriptPublishedLockInputsV1(input.root,manifest,lock)]);
+   for(const key of dependencyHashes.keys())if(!paths.has(key))dependencyHashes.delete(key);
+   return {...stage,inputs:[...paths].sort()};
+  });
+  return readyDigestsV1({platform,hash:hashOf,stages:measured});
+ };
  const state:ReadyPortsV1["state"]={
   read:()=>{try{const value=JSON.parse(readFileSync(stateFile,"utf8")) as ReadyLocalStateV1;return value.version===1&&value.stages!==null&&typeof value.stages==="object"?value:emptyReadyStateV1();}catch{return emptyReadyStateV1();}},
   write:value=>writeReadyLocalRecordV1(stateFile,value),
@@ -951,7 +1082,7 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
  const launchProof=(stage:string,recipe:string,current:ReadyLocalStateV1):ReadyStageLaunchV1|undefined=>{
   const index=plan.findIndex(row=>row.name===stage);
   if(index<0||index>64)return undefined;
-  const digests=readyDigestsV1({platform,hash:hashOf,stages:plan.slice(0,index+1)}).stages,prerequisites:ReadyStageLaunchV1["prerequisites"][number][]=[];
+   const digests=measure(plan.slice(0,index+1)).stages,prerequisites:ReadyStageLaunchV1["prerequisites"][number][]=[];
   for(const row of digests.slice(0,-1)){
    const completed=current.stages[row.name],proof=current.appliedCompletions?.[row.name];
    if(completed?.digest!==row.digest)return undefined;
@@ -983,8 +1114,13 @@ export function createReadyPortsV1(input:Readonly<{facts?(path:string):ReadyFile
 
  return{
   server:isServer(input.origin,input.group),...input.stages===undefined?{}:{stages:input.stages},now:Date.now,jitter,cores:availableParallelism(),
-  sleep:(milliseconds,signal)=>new Promise<void>(done=>{if(signal.aborted)return done();const timer=setTimeout(done,milliseconds);signal.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});}),
-  digests:async()=>readyDigestsV1({platform:readyPlatformV1(),hash:hashOf,...input.stages===undefined?{}:{stages:input.stages}}),
+  sleep:(milliseconds,signal)=>new Promise<void>(done=>{
+   if(signal.aborted)return done();
+   const finish=()=>{clearTimeout(timer);signal.removeEventListener("abort",finish);done();};
+   const timer=setTimeout(finish,milliseconds);
+   signal.addEventListener("abort",finish,{once:true});
+  }),
+   digests:async()=>measure(plan),
    state,
   marker:{exists:()=>existsSync(marker),write:()=>{mkdirSync(machinePathV1(input.root,".cache","f"),{recursive:true});writeFileSync(marker,new Date().toISOString()+"\n");}},
   repoPresent:()=>readyRepoBinaryV1(input.home??homedir(),input.environment)!==undefined,

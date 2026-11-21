@@ -1,0 +1,7 @@
+component_ids	status
+	fail
+package	fail
+component-a	pass
+component-a,component-b	pass
+component-a,package	fail
+component-a, 	fail

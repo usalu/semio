@@ -1,0 +1,9 @@
+# Mixed Face Selections in Mesh Component Edits
+
+Rotate Components and Scale Components now accept meshes with authored face normals and tangents when a selection includes only part of a face. A wholly selected face transforms its declared direction. Partially selected and untouched faces keep their submitted face directions. When those faces share one indexed sample with a wholly selected face, the operation allocates a distinct transformed sample. Per-point and per-corner selection semantics already use the affected vertex.
+
+The retained face classification walks one corner under its quoted selection lookup depth, stops at the first combination of selected and unselected corners, and reports one Work event per admitted scan. Geometry and normal updates can progress independently of the named face sample. No new placement restrictions apply.
+
+The neutral fixture includes two disconnected triangles sharing indexed face-normal and tangent samples. One face is partly selected and actually deforms during the chosen rotation, and the other is wholly selected. The current native implementation verified both rotation and nonuniform scale. Each spent 17 funded normal and face-classification turns and transferred 96 bytes. A short copy allowance left the production cursor inert. Cancellation after two face-classification turns retired 27,678 bytes in each case without publication. Three.js independently matched moved positions, inverse-transpose face normals and transformed tangents on the wholly selected face, while the original sample and topology remained exact on the mixed face.
+
+All 28 portable Mesh tests passed with 4,133 assertions. The 3D facade admitted 2,549 active lines and 220,358 bytes. The registered Flow workbench covers the mixed rotation. The official linked Flow target remains storage-gated.

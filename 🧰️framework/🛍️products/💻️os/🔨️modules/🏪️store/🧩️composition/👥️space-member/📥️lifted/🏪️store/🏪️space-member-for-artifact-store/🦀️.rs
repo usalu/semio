@@ -125,7 +125,7 @@ where
         if publication.group_history.is_some() || publication.group_displaced.is_some() {
             return Err(semio_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"group-reserved member candidate requires an atomic group visibility authority")).to_string());
         }
-        self.advance_apply_batch(&mut publication.publication, body, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant },receiving).map_err(|error| error.to_string())
+        self.advance_apply_batch(&mut publication.publication, body, grant, receiving).map_err(|error| error.to_string())
     }
 
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
@@ -157,7 +157,7 @@ where
         if matches!(publication.publication.phase(), ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Fault) {
             return Err(semio_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation is no longer in a prepublication phase")).to_string());
         }
-        match self.advance_apply_batch(&mut publication.publication, body, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant },receiving).map_err(|error| error.to_string())? {
+        match self.advance_apply_batch(&mut publication.publication, body, grant, receiving).map_err(|error| error.to_string())? {
             ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint,ownership) => Ok(ArtifactStoreOneItemPreparationStep::Progress(checkpoint,ownership)),
             ArtifactStoreOneItemAdvance::Progress(_) => Err(semio_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member preparation returned an unmeasured publication turn")).to_string()),
             ArtifactStoreOneItemAdvance::Blocked => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
@@ -194,7 +194,7 @@ where
         if publication.terminal_is_empty() {
             return Ok(Some(RetainedCloneStep::Complete(Default::default())));
         }
-        if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.owners.snapshot_read_leases)) {
+        if !publication.member.as_ref().is_some_and(|member| member.identity() == self.owners.snapshot_read_leases.identity()) {
             return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort belongs to a different exact store authority"));
         }
         if publication.publication.group_preparation.is_some() {

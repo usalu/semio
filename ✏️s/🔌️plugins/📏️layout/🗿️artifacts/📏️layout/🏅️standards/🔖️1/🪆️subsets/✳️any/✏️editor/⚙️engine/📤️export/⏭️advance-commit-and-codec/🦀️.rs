@@ -39,7 +39,7 @@ impl LayoutExportJob {
         }
     }
 
-    pub(super) fn advance_one(&mut self,context:&mut StepContext<'_>,drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>)->Result<(),semio_framework_job::OriginalTurnFailure>{match self.stage{ExportStage::Plan=>self.plan_one_in(context,drawing_read),ExportStage::BeginEncode=>self.begin_encode_one(context).map(|_|()),ExportStage::Encode=>self.encode_one(context).map(|_|()),ExportStage::Base64=>self.emit_output_one(context,true,|job,work|job.base64_one(work)).map(|_|()),ExportStage::Validate=>self.validate_one().map_err(|error|Fault::from(error).into()),ExportStage::PackageCommit=>self.package_commit_one(context).map(|_|()),ExportStage::Complete=>Ok(())}}
+    pub(super) fn advance_one(&mut self,context:&mut StepContext<'_>,drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>)->Result<(),semio_framework_job::OriginalTurnFailure>{match self.stage{ExportStage::Plan=>self.plan_one_in(context,drawing_read),ExportStage::BeginEncode=>self.begin_encode_one(context).map(|_|()),ExportStage::Encode=>self.encode_one(context,drawing_read).map(|_|()),ExportStage::Base64=>self.emit_output_one(context,true,|job,work|job.base64_one(work)).map(|_|()),ExportStage::Validate=>self.validate_one().map_err(|error|Fault::from(error).into()),ExportStage::PackageCommit=>self.package_commit_one(context).map(|_|()),ExportStage::Complete=>Ok(())}}
 
     pub(super) fn milestone(&self)->checkpoint::ExportMilestone{checkpoint::ExportMilestone{stage:self.stage as u8,raw_bytes:self.output.len,encoded_bytes:self.encoded.len,published_chunks:self.commit_cursor}}
     pub(super) fn commit_work_turn(&mut self,committed:bool,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let mut work_units=self.work_units.checked_add(1).ok_or_else(||Fault::from("layout-export-work-overflow"))?;let committed_units=self.committed_units.checked_add(u64::from(committed)).ok_or_else(||Fault::from("layout-export-work-overflow"))?;let matched=if let Some(target)=self.restore_target.as_ref(){checkpoint::replay_position(committed_units,target.committed_units,self.active_output().len as u64==target.output_bytes&&self.active_output().digest==target.output_digest,self.stage==ExportStage::Complete).map_err(Fault::from)?}else{false};if matched{work_units=work_units.max(self.restore_target.as_ref().unwrap().work_units);self.restore_target=None;}self.work_units=work_units;if committed{self.committed_units=committed_units;}context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1+usize::from(committed)+usize::from(matched),copied_bytes:size_of::<u64>()*(1+usize::from(committed))+if matched{size_of::<Option<LayoutExportCheckpoint>>()}else{0},..Default::default()})?;Ok(matched)}
@@ -112,6 +112,14 @@ impl LayoutExportJob {
             _=>{},
         }
         let result=(||{
+            let output=match self.close_stage{
+                LayoutExportCloseStage::Output=>Some(&mut self.output),
+                LayoutExportCloseStage::Encoded=>Some(&mut self.encoded),
+                _=>None,
+            };
+            if let Some(output)=output.filter(|output|!output.terminal_is_empty()){
+                return output.close_one(effect).map(|step|RetainedCloneStep::Progress(step.progress()))
+            }
             let item=RetainedCloneProgress{copied_items:1,..Default::default()};
             if effect.remaining_work_units()?==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
             if !effect.performed(1)?{return Err(ValueError::invariant("Layout paired close exceeded admitted work"))}
@@ -120,8 +128,6 @@ impl LayoutExportJob {
                 LayoutExportCloseStage::PdfItems=>self.close_stage=LayoutExportCloseStage::PdfPages,
                 LayoutExportCloseStage::PdfPages=>self.close_stage=LayoutExportCloseStage::Interchange,
                 LayoutExportCloseStage::Output|LayoutExportCloseStage::Encoded=>{
-                    let output=if self.close_stage==LayoutExportCloseStage::Output{&mut self.output}else{&mut self.encoded};
-                    if !output.terminal_is_empty(){return output.close_one(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
                     self.close_stage=if self.close_stage==LayoutExportCloseStage::Output{LayoutExportCloseStage::Encoded}else{LayoutExportCloseStage::PngRow};
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportCloseStage>(),..item}))
                 },
@@ -191,7 +197,11 @@ impl LayoutExportJob{
 }
 
 impl InteractiveJob for LayoutExportJob {
-    fn step<'a>(&'a mut self,context:&mut StepContext<'_>)->LayoutExportTurn<'a>{self.step_with_drawing_read(context,None)}
+    fn step<'a>(
+        &'a mut self, context: &mut StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>,
+    ) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_with_drawing_read(context, None))
+    }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {

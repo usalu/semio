@@ -68,6 +68,31 @@ describe("🎚️ the viewer", () => {
   }
   const clip: ViewerState = { ...DEFAULT_VIEWER, selection: { kind: "clip", clip: "walk" }, timeS: 0.5 };
 
+  it("discards a cancelled touch drag and commits a completed drag", () => {
+    const patches: Partial<ViewerState>[] = [];
+    const { container } = render(<Stateful initial={clip} patches={patches} />);
+    const stage = container.querySelector<HTMLElement>("[data-stage]")!;
+    expect(stage.style.touchAction).toBe("pan-y pinch-zoom");
+    const drawing = stage.querySelector<HTMLElement>("div[style]")!;
+    const initial = drawing.style.transform;
+    Object.defineProperty(stage, "setPointerCapture", { value: vi.fn() });
+    const send = (type: string, y: number) => fireEvent(stage, Object.assign(
+      new MouseEvent(type, { bubbles: true, clientX: 40, clientY: y }),
+      { pointerId: 1, pointerType: "touch" },
+    ));
+    send("pointerdown", 30);
+    send("pointermove", 60);
+    expect(drawing.style.transform).not.toBe(initial);
+    send("pointercancel", 60);
+    expect(drawing.style.transform).toBe(initial);
+    expect(patches).toEqual([]);
+
+    send("pointerdown", 30);
+    send("pointermove", 60);
+    send("pointerup", 60);
+    expect(patches).toEqual([{ pan: { xMm: 0, yMm: expect.any(Number) } }]);
+  });
+
   it("offers the three viewpoints, the sheet, the axonometric view and the 3D model as one radio group with names in both languages", () => {
     const patches: Partial<ViewerState>[] = [];
     const { unmount } = render(<Stateful initial={clip} patches={patches} />);

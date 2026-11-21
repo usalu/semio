@@ -19,6 +19,7 @@ use crate::ladders_components::{CloseCursors, MaintenanceCursors};
 use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
 use semio_plugin_decl_emission::Emit;
 use semio_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_plugin_mounted_owner::MountedOwnerPhaseV1;
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;
@@ -72,6 +73,7 @@ pub enum MaintenanceUnit {
 enum MaintenanceTool {
     Worker(usize, u64),
     Awaiting,
+    AwaitingPublication,
     Idle,
 }
 
@@ -119,7 +121,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work}).map(progressed).map_err(Into::into)
             }
             MaintenanceUnit::GrantedMounted=>self.granted_mounted_retirement_step(cx).map(progressed),
-            MaintenanceUnit::ToolOverlay=>self.as_render().tool_overlay_retirement_step(cx,grant,false).map(progressed).map_err(Into::into),
+            MaintenanceUnit::ToolOverlay => {
+                let mut render = self.as_render();
+                if render.tool_overlay_waits_for_foreground() {
+                    return Ok(PluginLifecycleStep::AwaitingInput { reason: "tool overlay waits for the original foreground source" });
+                }
+                render.tool_overlay_retirement_step(cx, grant, false).map(progressed).map_err(Into::into)
+            },
             MaintenanceUnit::ToolRuns=>Ok(self.as_tool_run().tool_run_retire_step(cx)?.map_or_else(idle,progressed)),
             MaintenanceUnit::TimeTravel=>Ok(self.as_time_travel().time_travel_retire_step_context(grant,cx)?.map_or_else(idle,progressed)),
             MaintenanceUnit::Pressure(stage)|MaintenanceUnit::Stage(stage)=>self.maintenance_stage_step(stage,cx,grant),
@@ -147,10 +155,17 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         if stage==24{return self.drive_document_archive_load_retirements(cx,grant,false)}
         if stage==11{return self.drive_envelope_decode_jobs(cx,grant,false)}
         if stage==16{return self.tools.instance_operation_owner.maintenance_step(cx,grant)}
-        if stage==15{return match self.tools.live_runtime_instance_id{Some(instance)=>A::mounted_job_maintenance_step(instance,cx,grant),None=>Ok(idle())}}
+        if stage == 15 {
+            let Some(instance_id) = self.tools.live_runtime_instance_id else { return Ok(idle()) };
+            return if self.ingest.document_blocks_pending_effects() {
+                A::mounted_job_close_step(instance_id, cx, grant)
+            } else {
+                A::mounted_job_maintenance_step(instance_id, cx, grant)
+            };
+        }
         if stage==14{return self.drive_store_replacement_jobs(cx,grant,false)}
         if stage==23{return Ok(match semio_framework_job_worker::pump_worker_job_retirements(1,cx)?{semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress}|semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original worker retirement awaits custody"}})}
-        if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::Worker(index,operation_id)=>{self.maintenance.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tools.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;cx.with_retained_loan(grant,|same|owner.drive_worker_step(same)).map_err(Into::into)}}}
+if stage==0{return match self.shared().maintenance_tool_selection(){MaintenanceTool::AwaitingPublication=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed command awaits its original dispatch or publication turn"}),MaintenanceTool::Awaiting=>Ok(PluginLifecycleStep::AwaitingInput{reason:"every typed operation awaits its exact presented host result ACK"}),MaintenanceTool::Idle=>Ok(idle()),MaintenanceTool::Worker(index,operation_id)=>{self.maintenance.maintenance_tool_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;let owner=self.tools.tool_operations.get_mut(operation_id).ok_or_else(||maintenance_fault("interactive-job.maintenance-tool-authority","typed operation authority changed during its original turn"))?;cx.with_retained_loan(grant,|same|owner.drive_worker_step(same)).map_err(Into::into)}}}
         if stage==1{
             let Some((index,operation_id))=self.media.media_closures.next_id_from(self.maintenance.maintenance_media_cursor)else{return Ok(idle())};self.maintenance.maintenance_media_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
             if self.media.media_closures.get(operation_id).is_some_and(|active|active.download_pending){return Ok(PluginLifecycleStep::AwaitingInput{reason:"terminal media source remains retained until its original output receiving"})}
@@ -186,13 +201,16 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         if stage==8{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.ingest.advance_snapshot_read_returns_one(&mut *self.stores,&mut *self.interaction,effect).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
         if stage==MAINTENANCE_CHILD_ROOT_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.child_root_retirement_step(effect).map(RetainedCloneStep::Progress).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
         if stage==MAINTENANCE_CHILD_MEMBER_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.child_member_retirement_step(effect).map(RetainedCloneStep::Progress).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
-        if stage==MAINTENANCE_DOCUMENT_DISPLACED_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_poll(self.stores.store.maintenance_retirements_step(effect))).map(progressed)}
+        if stage==MAINTENANCE_DOCUMENT_DISPLACED_STAGE {
+            if !self.stores.store.has_pending_maintenance_retirements() { return Ok(idle()); }
+            return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_poll(self.stores.store.maintenance_retirements_step(effect))).map(progressed);
+        }
         if stage==MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE{
             return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|{
                 use semio_plugin_ownership::bounded_ownership::{plugin_settle_poll,PluginLifecycleFailure};
-                if !self.stores.config_store.maintenance_retirements_terminal_is_empty(){plugin_settle_poll(self.stores.config_store.maintenance_retirements_step(effect))}
-                else if !self.stores.draft_store.maintenance_retirements_terminal_is_empty(){plugin_settle_poll(self.stores.draft_store.maintenance_retirements_step(effect))}
-                else if !self.stores.interaction_store.maintenance_retirements_terminal_is_empty(){plugin_settle_poll(self.stores.interaction_store.maintenance_retirements_step(effect))}
+                if self.stores.config_store.has_pending_maintenance_retirements(){plugin_settle_poll(self.stores.config_store.maintenance_retirements_step(effect))}
+                else if self.stores.draft_store.has_pending_maintenance_retirements(){plugin_settle_poll(self.stores.draft_store.maintenance_retirements_step(effect))}
+                else if self.stores.interaction_store.has_pending_maintenance_retirements(){plugin_settle_poll(self.stores.interaction_store.maintenance_retirements_step(effect))}
                 else{self.stores.window_config_store.maintenance_retirements_step(effect).map_err(PluginLifecycleFailure::from)}
             }).map(progressed)
         }
@@ -379,17 +397,35 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let demand=self.shared().store_replacement_demands(closing,loan.maximum_copy_bytes)?;
         let composed=self.shared().store_replacement_target(closing).and_then(|(_,operation)|self.ingest.store_replacement_jobs.get(operation))
             .is_some_and(|job|matches!(job.state, ActiveArtifactStoreReplacementState::Initializing | ActiveArtifactStoreReplacementState::OpeningMembers));
+        #[cfg(target_arch = "wasm32")]
+        let replacement = self.shared().store_replacement_target(closing)
+            .and_then(|(_, operation)| self.ingest.store_replacement_jobs.get(operation))
+            .map(|job| (job.state, job.outcome_pending, job.resume_pending, job.terminal_target));
         let advance=|same:&mut semio_framework_job::StepContext<'_>,grant|{
             let step=self.drive_store_replacement_original(same,grant,closing)?;
             let terminal=self.ingest.store_replacement_jobs.is_empty();
             let step=if !terminal{match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step}}else{step};
             Ok((step,terminal))
         };
-        if composed {
+        let step = if composed {
             original_composed_lifecycle_step(cx,loan,demand,advance)
         }else{
             semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,advance)
+        };
+        #[cfg(target_arch = "wasm32")]
+        {
+            use core::sync::atomic::{AtomicUsize, Ordering};
+            static EMPTY_REPLACEMENT_TURNS: AtomicUsize = AtomicUsize::new(0);
+            if matches!(&step, Ok(PluginLifecycleStep::Progress(progress)) if *progress == RetainedCloneProgress::default()) {
+                let turns = EMPTY_REPLACEMENT_TURNS.fetch_add(1, Ordering::Relaxed) + 1;
+                if matches!(turns, 8 | 64 | 128 | 256) {
+                    eprintln!("[DEBUG] Document replacement {:?}, demand {demand:?}, loan {loan:?}, remaining {:?}, empty turns {turns}", replacement, cx.retained_grant());
+                }
+            } else {
+                EMPTY_REPLACEMENT_TURNS.store(0, Ordering::Relaxed);
+            }
         }
+        step
     }
 
     fn drive_store_replacement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
@@ -463,7 +499,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 if active.retained_store.is_some() && active.retained_disposer.is_none() {
                     *active.retained_disposer = Some(A::build_document_store_disposer().ok_or_else(|| plugin_sdk_fault("app did not supply the required rejected-candidate disposer"))?);
                 }
-                active.drive_rejected_members(&self.child_composition.child_content_root,cx,grant)
+                cx.with_replacement_current(active.replacement_identity(), |owner| {
+                    active.drive_rejected_members(&self.child_composition.child_content_root, owner, grant)
+                })
             }
             State::CandidateReady => self.commit_store_replacement_candidate(operation_id, closing,cx).map_err(Into::into),
             State::RetiringCommittedStore | State::RetiringRejectedCandidate => {
@@ -682,17 +720,23 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             && self.ingest.envelope_field_decoders.get().is_none_or(|owner|owner.next_returned_ticket().is_none())
             && self.ingest.envelope_completed_record_retirements.is_empty()
             && self.ingest.envelope_completed_records.get().is_none_or(|owner|owner.terminal_is_empty())
-            && self.stores.store.maintenance_retirements_terminal_is_empty()
-            && self.stores.config_store.maintenance_retirements_terminal_is_empty()
-            && self.stores.draft_store.maintenance_retirements_terminal_is_empty()
-            && self.stores.interaction_store.maintenance_retirements_terminal_is_empty()
+            && !self.stores.store.has_pending_maintenance_retirements()
+            && !self.stores.config_store.has_pending_maintenance_retirements()
+            && !self.stores.draft_store.has_pending_maintenance_retirements()
+            && !self.stores.interaction_store.has_pending_maintenance_retirements()
             && self.stores.window_config_store.maintenance_retirements_terminal_is_empty()
             && self.stores.window_transient_store.maintenance_terminal_is_empty()
             && self.stores.retired_window_transient_stores.is_empty()
             && self.stores.presence_store.local_read_maintenance_is_idle()
             && self.ingest.snapshot_read_returns_terminal_is_empty(&*self.stores, &*self.interaction)
             && !semio_framework_job_worker::worker_job_retirements_are_parked()
-            && self.tools.live_runtime_instance_id.is_none_or(|instance_id| A::mounted_jobs_terminal_is_empty(instance_id))
+            && self.tools.live_runtime_instance_id.is_none_or(|instance_id| {
+                if self.ingest.document_blocks_pending_effects() {
+                    A::mounted_jobs_terminal_is_empty(instance_id)
+                } else {
+                    A::mounted_job_maintenance_phase(instance_id).is_none()
+                }
+            })
     }
 
     pub fn maintenance_unit_at(&self, position: usize, cursor: u8) -> Option<MaintenanceUnit> {
@@ -744,27 +788,34 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
     }
 
     fn maintenance_tool_selection(&self) -> MaintenanceTool {
-        let mut occupied = false;
-        let mut every_operation_awaits_presented_ack = true;
+        let mut awaits_publication = self.tools.original_emission_admission.is_some()
+            || self.tools.original_emission_receipt.is_some()
+            || self.tools.original_emission_construction.as_ref().is_some_and(|owner| !owner.terminal_is_empty());
+        let mut awaits_ack = false;
+        let mut retiring = false;
         for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
             let index = (self.maintenance.maintenance_tool_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
             let Some((operation_id, operation)) = self.tools.tool_operations.entry(index).map(|entry| (entry.0, &entry.1)) else { continue };
-            occupied = true;
+            retiring |= operation.granted_retirement_ready() && operation.granted_retirement_pending();
             match operation.stage {
-                MountedTypedCommandFullOperationStage::Worker if operation.producer_build_pending() => every_operation_awaits_presented_ack = false,
+                MountedTypedCommandFullOperationStage::Worker if operation.producer_build_pending() => awaits_publication = true,
                 MountedTypedCommandFullOperationStage::Worker => return MaintenanceTool::Worker(index, operation_id),
-                MountedTypedCommandFullOperationStage::AwaitingAck if operation.result_page_presented => {}
-                MountedTypedCommandFullOperationStage::Retiring | MountedTypedCommandFullOperationStage::Publishing | MountedTypedCommandFullOperationStage::AwaitingAck => every_operation_awaits_presented_ack = false,
+                MountedTypedCommandFullOperationStage::AwaitingAck if operation.result_page_presented => awaits_ack = true,
+                MountedTypedCommandFullOperationStage::Publishing | MountedTypedCommandFullOperationStage::AwaitingAck => awaits_publication = true,
+                MountedTypedCommandFullOperationStage::Retiring => retiring = true,
             }
         }
-        if occupied && every_operation_awaits_presented_ack { MaintenanceTool::Awaiting } else { MaintenanceTool::Idle }
+        if retiring { return MaintenanceTool::Idle; }
+        if awaits_publication { return MaintenanceTool::AwaitingPublication; }
+        if awaits_ack { return MaintenanceTool::Awaiting; }
+        MaintenanceTool::Idle
     }
 
     fn maintenance_stage_demand(&self, stage: u8, body: usize) -> Result<Option<RetirementDemand>, ValueError> {
         Ok(match stage {
             0 => match self.maintenance_tool_selection() {
                 MaintenanceTool::Worker(_, operation_id) => self.tools.tool_operations.get(operation_id).map(|operation| operation.worker_step_demands(body)).transpose()?,
-                MaintenanceTool::Awaiting => Some(RetirementDemand::default()),
+                MaintenanceTool::Awaiting | MaintenanceTool::AwaitingPublication => Some(RetirementDemand::default()),
                 MaintenanceTool::Idle => None,
             },
             1 => {
@@ -801,14 +852,17 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
                 })
             }
             8 => (!self.ingest.snapshot_read_returns_terminal_is_empty(&*self.stores, &*self.interaction)).then(|| self.ingest.snapshot_read_returns_demands(&*self.stores, &*self.interaction, body)).transpose()?,
-            MAINTENANCE_DOCUMENT_DISPLACED_STAGE => (!self.stores.store.maintenance_retirements_terminal_is_empty()).then(|| self.stores.store.maintenance_retirements_demands(body)).transpose()?,
+            MAINTENANCE_DOCUMENT_DISPLACED_STAGE => self.stores.store.has_pending_maintenance_retirements().then(|| self.stores.store.maintenance_retirements_demands(body)).transpose()?,
             10 => self.envelope_ingress_target(false).map(|_| self.envelope_ingress_demands(false, body)).transpose()?,
             11 => (!self.ingest.envelope_decode_jobs.is_empty()).then(|| self.envelope_decode_jobs_demands(false, body)).transpose()?,
             12 => (!self.ingest.envelope_field_decoder_retirements.is_empty() || self.ingest.envelope_field_decoders.get().is_some_and(|owner|owner.next_returned_ticket().is_some())).then(|| self.envelope_field_decoder_returns_demands(false, body)).transpose()?,
             13 => (!self.ingest.envelope_completed_record_retirements.is_empty() || !self.ingest.envelope_completed_records.get().is_none_or(|owner|owner.terminal_is_empty())).then(|| self.envelope_completed_record_returns_demands(false, body)).transpose()?,
             14 => self.store_replacement_target(false).map(|_| self.store_replacement_demands(false, body)).transpose()?,
             15 => match self.tools.live_runtime_instance_id {
-                Some(instance_id) if !A::mounted_jobs_terminal_is_empty(instance_id) => Some(A::mounted_job_maintenance_demands(instance_id, body)?),
+                Some(instance_id) if self.ingest.document_blocks_pending_effects() => {
+                    (!A::mounted_jobs_terminal_is_empty(instance_id)).then(|| A::mounted_job_close_demands(instance_id, body)).transpose()?
+                }
+                Some(instance_id) if A::mounted_job_maintenance_phase(instance_id) == Some(MountedOwnerPhaseV1::Maintenance) => Some(A::mounted_job_maintenance_demands(instance_id, body)?),
                 _ => None,
             },
             16 => (!self.tools.instance_operation_owner.terminal_is_empty().unwrap_or(false)).then(|| self.tools.instance_operation_owner.retirement_demands(body)).transpose()?,
@@ -824,11 +878,11 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             23 => semio_framework_job_worker::worker_job_retirements_are_parked().then(item_demand),
             24 => self.document_archive_target(false).map(|_| self.document_archive_demands(false, body)).transpose()?,
             MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => {
-                if !self.stores.config_store.maintenance_retirements_terminal_is_empty() {
+                if self.stores.config_store.has_pending_maintenance_retirements() {
                     Some(self.stores.config_store.maintenance_retirements_demands(body)?)
-                } else if !self.stores.draft_store.maintenance_retirements_terminal_is_empty() {
+                } else if self.stores.draft_store.has_pending_maintenance_retirements() {
                     Some(self.stores.draft_store.maintenance_retirements_demands(body)?)
-                } else if !self.stores.interaction_store.maintenance_retirements_terminal_is_empty() {
+                } else if self.stores.interaction_store.has_pending_maintenance_retirements() {
                     Some(self.stores.interaction_store.maintenance_retirements_demands(body)?)
                 } else if !self.stores.window_config_store.maintenance_retirements_terminal_is_empty() {
                     Some(self.stores.window_config_store.maintenance_retirements_demands(body)?)
@@ -883,9 +937,18 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         let Some((_, operation_id)) = self.store_replacement_target(closing) else { return Ok(RetirementDemand::default()) };
         self.ingest.store_replacement_jobs.get(operation_id).map_or(Ok(RetirementDemand::default()),|active|{
             let mounted_cancelled=active.mounted_genesis.is_some_and(|(operation,_)|
-                self.tools.mounted_genesis_lease(operation,active.operation,active.generation).is_none_or(|lease|lease.publication_is_cancelled()));
+                self.tools.mounted_genesis_lease(operation,active.operation,active.generation).is_none_or(|lease|lease.publication_is_cancelled()||lease.publication_claim().is_finished()));
             store_replacement_unit_demands::<A,M>(active,closing||mounted_cancelled,body)
         })
+    }
+
+    /// 🚞️ Arms another turn only while the original stock can drive the same archive lane as maintenance.
+    pub fn document_archive_maintenance_is_runnable(&self, stock: RetainedCloneGrant) -> Result<bool, ValueError> {
+        if stock.maximum_items < DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS || self.document_archive_target(false).is_none() {
+            return Ok(false);
+        }
+        let demand = self.document_archive_demands(false, stock.maximum_copy_bytes)?;
+        Ok(semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand, stock))
     }
 
     pub fn document_archive_waits_for_host(&self) -> bool {
@@ -896,7 +959,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         let cursor = if closing { self.close.close_document_archive_cursor } else { self.maintenance.maintenance_document_archive_cursor };
         (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
             let index = (cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            self.ingest.document_archive_loads.entry(index).filter(|entry| closing || (!(entry.1.terminal() && entry.1.terminal_is_empty()) && !entry.1.awaits_merge())).map(|entry| (index, entry.0))
+            self.ingest.document_archive_loads.entry(index).filter(|entry| closing || (!entry.1.terminal() && !entry.1.awaits_merge())).map(|entry| (index, entry.0))
         })
     }
 

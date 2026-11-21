@@ -25,6 +25,18 @@
   ],
   "cases": [
     {
+      "id": "nested-value-type",
+      "kind": "value-type",
+      "source": {"kind": "list", "of": {"kind": "list", "of": {"kind": "schema", "of": "s.trinity.jack"}}},
+      "expected": {"kind": "list", "of": {"kind": "list", "of": {"kind": "schema", "of": "s.trinity.jack"}}}
+    },
+    {
+      "id": "primitive-value-type",
+      "kind": "value-type",
+      "source": {"kind": "integer"},
+      "expected": {"kind": "integer"}
+    },
+    {
       "id": "set-empty",
       "kind": "set",
       "source": [],

@@ -70,7 +70,7 @@ pub struct ShellChromePresentState {
 }
 
 #[derive(Default)]
-struct ShellChromeMaintenance {
+pub struct ShellChromeMaintenance {
     pub load_requested: bool,
     pub load_phase: u8,
     pub introduction_read: Option<String>,

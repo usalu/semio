@@ -95,3 +95,55 @@ Sheets under `🗑️generated/r3-sheet/furniture/height-adjustable-desk.s<N>.<l
 - Plan depth at 1:50 reads 0.81 m because the handset stands 12 mm proud of the 0.80 m board; `dimensions.depthM` stays 0.8.
 
 State: DONE
+
+## Round 5 handcraft (2026-11-21)
+
+Sheets rendered with `sh r5-sheets.sh furniture/height-adjustable-desk before "mid-height standing-height" "raise-and-lower 12"`. Opened:
+- body 1:50 (six views with rig);
+- a montage of body 1:100 / 1:200 / 1:500 and structure 1:50;
+- a montage of the 1:50 thermal cut, structure and thermal cut at 1:100 / 1:200 / 1:500, and `raise-and-lower` at 12 s;
+- a montage of `mid-height` and `standing-height` at 1:50 with the 2D of all four scales;
+- the 1:50 body from below (turn 30, tilt -22).
+
+Measurements: `r5-furniture-extent.ts furniture/height-adjustable-desk 50`.
+
+### Reference against model (1:50, seated-height)
+
+| Quantity | Reference | Model | Deviation |
+| --- | --- | --- | --- |
+| Board | 1600 x 800 x 25 mm | 1600 x 800 x 25 | 0 % |
+| Top surface, seated | 720 mm (asset pose; frames 600-1250) | 720 | 0 % |
+| T-foot | 700 x 80 mm, 25-45 mm high (UPLIFT V2) | 700 x 80 x 35 (taper 28-45) | 0 % |
+| Outer column tube | 64 x 94 mm (95 x 66 FlexiSpot E7, 60 x 90 LINAK DL21) | 64 x 94 | 0 % |
+| Stage / inner tube | 56 x 86 / 48 x 78 mm | 56 x 86 / 48 x 78 | 0 % |
+| Motor housing | about 80 x 100 x 150 mm | 80 x 100 x 150 | 0 % |
+| 27 in monitor panel | 614 x 368 mm, active 598 x 336 | 614 x 368, screen 598 x 336 | 0 % |
+| 15.6 in laptop | 360 x 250 x 20 mm | 360 x 250 x 20 | 0 % |
+| Overall height (monitor top) | 1.18 m (asset) | 1.180 | 0 % |
+
+### Grades (before = after; no change)
+
+| Scale | Body | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | A | A | A |
+| 1:100 | A | A | A- |
+| 1:200 | A | A | A- |
+| 1:500 | A- | A | A- |
+
+What I saw:
+- **1:50.** The tapered T-feet stand on glides, with three telescoping tubes and bushings, motor housings and side rails. The crossbar, open cable tray and control box sit under the rounded board. The monitor has its screen facing the user, the rear bulge, the neck and the base. Seen from below, everything is attached.
+- **Poses and clip.** `mid-height`, `standing-height` and `raise-and-lower` at 12 s extend both columns evenly. The tubes stay overlapped and nothing opens.
+- **Coarser scales.** These simplify cleanly down to a 1:500 sign that still reads as a sit-stand desk with a monitor.
+- **Thermal and structure.** Thermal is tidy, and the cut shows the board core inside the laminate. The structure is a closed path of feet, tubes, head plates, rails, crossbar and board, with collars, pads and masses.
+
+Checks: `r3-validate.ts furniture/height-adjustable-desk --volumes` gives `VALID ... schema 0, validateAsset 0, checkVolumes 0` (print included). `volumes-check.ts --product` gives `PASS (51.1 s)` with 41 lines ok.
+
+Changes: none. Every measure is within 3 % and I found no defect at grade B or worse.
+
+Open points:
+- No cables are modelled.
+- The laptop is shown closed.
+- The crossbar is 65 mm below the board: some current frames carry it directly under the board, and both kinds exist.
+- The coarse structure grades are A- only because masses and pads are hidden in the tubes.
+
+The current 27-inch monitor has a 614 × 368 × 15 mm bezel, 598 × 336 × 2 mm cover glass, a separate backplane, a 3 mm rear panel, four M4 VESA fixings on a 100 mm square and a horizontal tilt axle. Its 97-frame tilt check preserved the spindle center and rigid screen dimensions from −5° to 20°. The authored heat allocation is 8 W at the glass and 17 W at the back. The stand transfers the 78.5 N display load into the worktop. The independent reader opened all twelve exported scenes (1,823,996 bytes).

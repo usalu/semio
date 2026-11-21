@@ -14,6 +14,22 @@ use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Gran
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 use std::mem::{size_of, take};
 
+#[path = "🕳️polygon-opening/🦀️.rs"]
+mod polygon_opening;
+pub use polygon_opening::{PolygonOpening, line_pcurve, point2, segments_intersect};
+
+#[path = "🛤️wire-recipe/🦀️.rs"]
+mod wire_recipe;
+pub use wire_recipe::{HelixWireRecipe, PolygonWireRecipe};
+
+#[path = "🪷️conic-boundary/🦀️.rs"]
+mod conic_boundary;
+pub use conic_boundary::complete_conic_boundary;
+
+#[path = "🪓️spherical-split/🦀️.rs"]
+mod spherical_split;
+pub use spherical_split::{spherical_axial_span,split_spherical_support};
+
 /// 🧩️ The certified recipe that drives one unpublished solid topology.
 pub enum SolidBoundary {
     Analytic(SolidPrimitive),

@@ -1,0 +1,39 @@
+{
+  "rule": {
+    "name": "Move and rename one part and extend its fastener",
+    "lhs": {"pattern":{"leftVar":"a","leftKind":"Part","edgeVar":"f","edgeKind":"Fastener","rightVar":"b","rightKind":"Part"}},
+    "rhs": {"create":[],"delete":[],"merge":[],"parameters":[{"name":"gap","kind":"number","default":7}],
+      "set":[{"var":"a","prop":"name","value":"Renamed"},{"var":"a","prop":"x","value":3},{"var":"a","prop":"y","value":4},{"var":"f","prop":"gap","value":"$gap"}]}
+  },
+  "createRule": {
+    "name": "Replace a fastener with a connection to a newly labelled part",
+    "lhs": {"pattern":{"leftVar":"a","leftKind":"Part","edgeVar":"f","edgeKind":"Fastener","rightVar":"b","rightKind":"Part"}},
+    "rhs": {"create":[{"leftVar":"a","leftKind":"Part","edgeVar":"new","edgeKind":"Fastener","rightVar":"c","rightKind":"Part"}],
+      "delete":["f"],"merge":[],"parameters":[],
+      "set":[{"var":"c","prop":"label","value":"New world part"},{"var":"new","prop":"gap","value":2}]}
+  },
+  "before": {
+    "schema": "puzzle.5d",
+    "domain": "architecture",
+    "label": "Preserved",
+    "meta": {"description": "Rewrite fixture"},
+    "parts": [
+      {"id":"a","2d":{"x":1,"y":2,"text":"A","width":5},"3d":{"origin":[1,2,3],"scale":[1,2,3],"label":"World A"},"grips":[{"id":"rim","gripKind":"port","2d":{"angle":0.5},"3d":{"position":[0,1,0]}}]},
+      {"id":"b","2d":{"text":"B"},"grips":[{"id":"rim","gripKind":"port"}]}
+    ],
+    "fasteners": [{"id":"f","source":"a:rim","target":"b:rim","gap":2,"turn":0.5}],
+    "targetVolumes": [{"id":"keep","origin":[2,4,6],"locked":true}]
+  },
+  "after": {
+    "schema": "puzzle.5d",
+    "domain": "architecture",
+    "label": "Preserved",
+    "meta": {"description": "Rewrite fixture"},
+    "parts": [
+      {"id":"a","2d":{"x":3,"y":4,"text":"Renamed","width":5},"3d":{"origin":[1,2,3],"scale":[1,2,3],"label":"World A"},"grips":[{"id":"rim","gripKind":"port","2d":{"angle":0.5},"3d":{"position":[0,1,0]}}]},
+      {"id":"b","2d":{"text":"B"},"grips":[{"id":"rim","gripKind":"port"}]}
+    ],
+    "fasteners": [{"id":"f","source":"a:rim","target":"b:rim","gap":7,"turn":0.5}],
+    "targetVolumes": [{"id":"keep","origin":[2,4,6],"locked":true}]
+  }
+}

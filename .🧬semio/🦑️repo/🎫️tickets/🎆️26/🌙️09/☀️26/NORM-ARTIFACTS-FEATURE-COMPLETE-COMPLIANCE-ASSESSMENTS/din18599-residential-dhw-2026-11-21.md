@@ -1,0 +1,7 @@
+# DIN V 18599-10 residential useful hot water
+
+The energy balance calculates residential hot-water demand from net floor area and dwelling count, independent of occupant count and occupant-specific inputs. The count also selects the Table 4 internal gain rate for residential zones. For mean dwelling area A in m², the unit rate is max(16.5 − 0.05 A, 8.5) kWh/(m²·a). The rate applies to the complete residential net floor area and the calculated demand is weighted by days of the month. [BBSR-Online-Publikation 113/2024, pages 17–18](https://wohnungswirtschaft-heute.de/wp-content/uploads/2025/09/bbsr-online-113-2024-dl-wowi-energie-sept-25.pdf)
+
+The report distinguishes useful demand from the modelled system allowances and flags missing dwelling counts or invalid floor areas. The field is available in the schema, editor and mutation. The supplied office example is explicitly non-residential. Non-residential process and specific-use profiles remain in DE-10 and Part 8 system losses remain a screening calculation. [DIN interpretations on Part 10](https://www.din.de/resource/blob/68624/9b6ade5098332800c2a14378d476985a/auslegungen-zu-din-v-18599-10-data.pdf)
+
+All 13 language-neutral scenarios matched the production Rust calculation and an independently formulated SQLite query. The existing SQLite TypeScript suite passed 40 tests with 1,230 assertions, including ownership, invalid dwelling counts and round trips through the underlying SQLite database. The Rust and browser integration tests await build capacity.

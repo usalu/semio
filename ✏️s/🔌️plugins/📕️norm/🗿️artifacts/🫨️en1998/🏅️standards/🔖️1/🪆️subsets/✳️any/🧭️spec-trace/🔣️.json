@@ -53,6 +53,8 @@
   "BR-10",
   "BR-11",
   "BR-12",
+  "BR-15",
+  "BR-16",
   "AS-01",
   "AS-02",
   "AS-03",
@@ -66,6 +68,7 @@
   "ST-01",
   "ST-02",
   "ST-03",
+  "ST-04",
   "TW-01",
   "TW-02",
   "TW-03",
@@ -833,18 +836,41 @@
   },
   {
    "id": "BR-12",
-   "clause": "2.3.6",
-   "entity": "bridges",
+   "clause": "EN 1998-2:2005+A2:2011 §3.3(1)–(6)",
+   "entity": "CaseRow",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "spatial variability of the seismic action is not modelled: the repository spec row for long bridges gives only the placeholder `d_ground = ...` without formula, input or criterion",
-     "de": "räumliche Veränderlichkeit der Erdbebeneinwirkung ist nicht modelliert: die Zeile der Spezifikation für lange Brücken nennt nur den Platzhalter `d_ground = ...` ohne Formel, Eingabe oder Kriterium"
-    }
+    "kind": "design-case",
+    "entry": "C98-12"
    },
    "description": {
-    "en": "spatial variability of the seismic action for long bridges",
-    "de": "räumliche Veränderlichkeit der Erdbebeneinwirkung für lange Brücken"
+    "en": "The continuous deck checks whether spatial variability must be considered and provides the Set A displacement and strain for each selected support.",
+    "de": "Für den durchlaufenden Überbau werden die Pflicht zur Berücksichtigung der räumlichen Veränderlichkeit sowie Verschiebung und Dehnung nach Satz A am gewählten Auflager bestimmt."
+   }
+  },
+  {
+   "id": "BR-15",
+   "clause": "EN 1998-2:2005+A2:2011 §3.3(6)",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-13"
+   },
+   "description": {
+    "en": "Set B calculates the absolute displacement magnitude at an interior or end support for use with opposite signs at adjacent supports.",
+    "de": "Satz B liefert den Betrag der absoluten Verschiebung am Zwischen- oder Endauflager für die Anwendung mit entgegengesetztem Vorzeichen an benachbarten Auflagern."
+   }
+  },
+  {
+   "id": "BR-16",
+   "clause": "EN 1998-2:2005+A2:2011 §3.3(7)",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-14"
+   },
+   "description": {
+    "en": "Structural effects from inertia and both separate pseudo-static displacement sets combine by SRSS in each analysis direction.",
+    "de": "Die Trägheitswirkung und die Auswirkungen beider getrennten quasistatischen Verschiebungssätze werden richtungsweise nach der SRSS-Regel überlagert."
    }
   },
   {
@@ -1038,34 +1064,44 @@
   },
   {
    "id": "ST-03",
-   "clause": "EN 1998-4 pipelines",
+   "clause": "EN 1998-4:2006 §6.3, §6.5 and §6.6",
    "entity": "tanks",
    "realisation": {
     "kind": "not-modelled",
     "reason": {
-     "en": "buried pipelines are not modelled: the repository spec line `ε = a_g / V_s strain (wave passage ε = a_g/(2 c)), Δ = ε L; verification ε <= ε_rd — optional` divides an acceleration by a velocity, which is not a strain (the wave-passage strain needs the peak ground velocity, which the spec does not define), gives no limit ε_rd, and EN 1998 has no pipeline entity to carry L and the joints",
-     "de": "erdverlegte Rohrleitungen sind nicht modelliert: die Zeile der Spezifikation `ε = a_g / V_s strain (wave passage ε = a_g/(2 c)), Δ = ε L; verification ε <= ε_rd — optional` teilt eine Beschleunigung durch eine Geschwindigkeit, was keine Dehnung ist (die Wellendurchgangsdehnung braucht die maximale Bodengeschwindigkeit, die die Spezifikation nicht definiert), nennt keinen Grenzwert ε_rd, und EN 1998 hat keine Rohrleitungsentität für L und die Fugen"
+     "en": "The stable homogeneous soil wave case is covered in ST-04. Concrete pipes, unwelded joints, global buckling, permanent ground deformation and fault crossings require dedicated inputs and models.",
+     "de": "Der Wellenfall auf stabilem homogenem Baugrund ist in ST-04 erfasst. Betonrohre, ungeschweißte Verbindungen, globales Knicken, bleibende Bodenverformungen und Verwerfungsquerungen erfordern eigene Eingaben und Modelle."
     }
    },
    "description": {
-    "en": "buried pipelines",
-    "de": "erdverlegte Rohrleitungen"
+    "en": "Buried pipeline soil deformation, pipe joints, concrete restraint and fault crossing.",
+    "de": "Bodenverformungen, Rohrverbindungen, Betonrohre und Verwerfungsquerungen erdverlegter Rohrleitungen."
+   }
+  },
+  {
+   "id": "ST-04",
+   "clause": "EN 1998-4:2006 §6.4, §6.5.2 and Annex B",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C98-11"
+   },
+   "description": {
+    "en": "The documented welded-steel pipe on stable soil checks Annex B wave passage, the perfect-bond demand, and the §6.5.2 tensile and compressive limits for the axial and bending strain envelope.",
+    "de": "Für das dokumentierte geschweißte Stahlrohr auf stabilem Baugrund werden der Wellendurchgang nach Anhang B, der Verbundbedarf und die Zug- und Druckdehnungsgrenzen nach 6.5.2 geprüft."
    }
   },
   {
    "id": "TW-01",
-   "clause": "EN 1998-6 damping",
+   "clause": "EN 1998-6:2005 4.2.4 / Annex B",
    "entity": "towers",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "structural damping per structure type is not modelled: the repository spec line `structural damping ξ per Table (steel chimney 1-2 %, RC 2-5 %, guyed mast 0.5 %…); η correction with ξ` gives ranges without a selection rule and no rule for applying η to the design spectrum, so any single ξ would be an invented value",
-     "de": "Strukturdämpfung nach Bauwerksart ist nicht modelliert: die Zeile der Spezifikation `structural damping ξ per Table (steel chimney 1-2 %, RC 2-5 %, guyed mast 0.5 %…); η correction with ξ` nennt Bereiche ohne Auswahlregel und keine Regel, η auf das Bemessungsspektrum anzuwenden, jedes einzelne ξ wäre daher ein erfundener Wert"
-    }
+    "kind": "design-case",
+    "entry": "C98-09"
    },
    "description": {
-    "en": "structural damping and the damping correction of towers",
-    "de": "Strukturdämpfung und Dämpfungskorrektur von Türmen"
+    "en": "One mode at a time, Annex B modal damping from component strain energies or experimental evidence and the corrected elastic response spectrum. The tower model still uses a fixed damping ratio for its automatic design-spectrum CQC analysis.",
+    "de": "Modale Dämpfung je Eigenform nach Anhang B aus Verformungsenergien oder Versuchsnachweis und korrigiertes elastisches Antwortspektrum. Das Turmmodell verwendet weiterhin einen festen Dämpfungswert für seine automatische CQC-Berechnung mit dem Bemessungsspektrum."
    }
   },
   {
@@ -1118,18 +1154,15 @@
   },
   {
    "id": "TW-05",
-   "clause": "EN 1998-6 guyed masts",
+   "clause": "EN 1998-6:2005 §4.2.3 / §8.2",
    "entity": "towers",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "guyed masts are not modelled: the repository spec line `Guyed masts: cable prestress, Δ = a_g/ω²; optional` marks the item optional, gives no cable prestress law or non-linear cable formula (`guyed masts non-linear cable` in TW-03), and the tower entity has no cables or guys",
-     "de": "abgespannte Maste sind nicht modelliert: die Zeile der Spezifikation `Guyed masts: cable prestress, Δ = a_g/ω²; optional` markiert den Punkt als optional, nennt kein Seilvorspanngesetz und keine nichtlineare Seilformel (`guyed masts non-linear cable` in TW-03), und die Turmentität hat keine Seile oder Abspannungen"
-    }
+    "kind": "design-case",
+    "entry": "C98-10"
    },
    "description": {
-    "en": "guyed masts",
-    "de": "abgespannte Maste"
+    "en": "Checks one guy cable for the strict seismic stress and preload relationship, low-dissipative factor and horizontal stiffness at the assessed equilibrium. The complete nonlinear mast and cable-mass model remains external.",
+    "de": "Prüft die strenge Bedingung für seismische Spannung und Vorspannung, den Verhaltensbeiwert für geringe Dissipation und die horizontale Steifigkeit eines Abspannseils im untersuchten Gleichgewicht. Das vollständige nichtlineare Mast- und Seilmassenmodell wird separat ermittelt."
    }
   }
  ]

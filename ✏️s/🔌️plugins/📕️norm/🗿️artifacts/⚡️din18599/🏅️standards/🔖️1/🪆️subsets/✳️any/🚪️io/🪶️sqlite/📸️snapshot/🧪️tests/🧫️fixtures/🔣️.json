@@ -78,6 +78,7 @@
     "energyCarrier": "unknown fuel 世界\u0000"
   },
   "dhw": {
+    "dwellingCount": 1,
     "specificDemandKwhPersonA": 100.25,
     "storageLossKwhA": 200.5,
     "distributionLossKwhA": 300.75,

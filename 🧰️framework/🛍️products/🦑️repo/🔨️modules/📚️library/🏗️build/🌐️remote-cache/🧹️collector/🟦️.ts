@@ -1,7 +1,7 @@
 import {randomUUID} from "node:crypto";
 import {link,readdir,readFile,rename,stat,unlink,writeFile} from "node:fs/promises";
 import {join} from "node:path";
-import {parseRemoteCacheActionResultV1} from "../🔬️action-result/🟦️.ts";
+import {parseRemoteCacheActionResultV1,type RemoteCacheDigestV1} from "../🔬️action-result/🟦️.ts";
 import {classifySlotsV1,SLOT_GRACE_MILLISECONDS_V1,slotBudgetTierV1,type SlotVerdictV1} from "../../🪢️slots/🟦️.ts";
 import {readRemoteCacheMetaV1,readRemoteCacheReferencesV1,removeRemoteCacheMetaV1,scanRemoteCacheMetaV1,type RemoteCacheMetaV1} from "../🏷️retention/🟦️.ts";
 
@@ -120,7 +120,7 @@ export async function findDanglingRemoteCacheResultsV1(root:string,index:Readonl
 }
 
 /** 🧹️ Everything one directory collection needs; `claimed` protects entries an active claim holds, `graceMilliseconds` is the supersession grace, `reclaim` receives the blobs no remaining entry references and answers what it freed. */
-export type RemoteCacheCollectionRequestV1=Readonly<{root:string;maximumBytes:number;maximumAgeMilliseconds:number;dryRun:boolean;verifyResults:boolean;now?:number;graceMilliseconds?:number;claimed?:(key:string)=>boolean;reclaim?:(hashes:readonly string[],dryRun:boolean)=>Promise<RemoteCacheFillV1>;hasBlobs?:(hashes:readonly string[])=>Promise<readonly boolean[]>}>&RemoteCacheWalkHooksV1;
+export type RemoteCacheCollectionRequestV1=Readonly<{root:string;maximumBytes:number;maximumAgeMilliseconds:number;dryRun:boolean;verifyResults:boolean;now?:number;graceMilliseconds?:number;claimed?:(key:string)=>boolean;reclaim?:(hashes:readonly string[],dryRun:boolean)=>Promise<RemoteCacheFillV1>;hasBlobs?:(hashes:readonly string[])=>Promise<readonly boolean[]>;readTree?:(namespace:string,tree:RemoteCacheDigestV1)=>Promise<Uint8Array|undefined>}>&RemoteCacheWalkHooksV1;
 
 const fill=(rows:Iterable<{size:number}>):RemoteCacheFillV1=>{let entries=0,bytes=0;for(const row of rows){entries++;bytes+=row.size;}return {entries,bytes};};
 
@@ -147,14 +147,14 @@ export async function removeRemoteCacheEntryV1(root:string,drop:RemoteCacheDropV
 }
 
 /** 🔗️ The blobs that remain referenced after a removal: the sidecar references of slotted entries and the references read from the other entries. */
-export async function liveRemoteCacheReferencesV1(root:string,remaining:Iterable<string>,metas:ReadonlyMap<string,RemoteCacheMetaV1>,signal?:AbortSignal):Promise<Set<string>>{
+export async function liveRemoteCacheReferencesV1(root:string,remaining:Iterable<string>,metas:ReadonlyMap<string,RemoteCacheMetaV1>,signal?:AbortSignal,readTree?:RemoteCacheCollectionRequestV1["readTree"]):Promise<Set<string>>{
  const live=new Set<string>();let done=0;
  for(const key of remaining){
   const meta=metas.get(key);
   if(meta){for(const hash of meta.refs)live.add(hash);continue;}
-  const kind=key.split("/")[1];if(kind!=="ac"&&kind!=="nx")continue;
+  const [namespace,kind]=key.split("/");if(kind!=="ac"&&kind!=="nx")continue;
   if(++done%CHECK_EVERY===0)signal?.throwIfAborted();
-  for(const hash of await readRemoteCacheReferencesV1(join(root,...key.split("/")),kind,parseRemoteCacheActionResultV1))live.add(hash);
+  for(const hash of await readRemoteCacheReferencesV1(join(root,...key.split("/")),kind,parseRemoteCacheActionResultV1,readTree&& (tree=>readTree(namespace!,tree))))live.add(hash);
  }
  return live;
 }
@@ -181,7 +181,7 @@ export async function collectRemoteCacheDirectoryV1(request:RemoteCacheCollectio
   if(request.reclaim&&dropped.size>0){
    const candidates=new Set<string>();for(const key of dropped){const meta=metas.get(key);if(meta)for(const hash of meta.refs)candidates.add(hash);}
    if(candidates.size>0){
-    const live=await liveRemoteCacheReferencesV1(request.root,[...index.keys()].filter(key=>!dropped.has(key)),metas,request.signal);
+    const live=await liveRemoteCacheReferencesV1(request.root,[...index.keys()].filter(key=>!dropped.has(key)),metas,request.signal,request.readTree);
     reclaimed=await request.reclaim([...candidates].filter(hash=>!live.has(hash)),request.dryRun);
    }
   }

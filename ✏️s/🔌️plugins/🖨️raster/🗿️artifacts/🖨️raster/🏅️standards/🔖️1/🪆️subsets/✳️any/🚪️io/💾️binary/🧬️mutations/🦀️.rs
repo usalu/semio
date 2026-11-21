@@ -49,3 +49,6 @@ impl OpBinary for RasterMutation {
     }
 }
 }
+
+#[path="original.rs"]
+mod original;

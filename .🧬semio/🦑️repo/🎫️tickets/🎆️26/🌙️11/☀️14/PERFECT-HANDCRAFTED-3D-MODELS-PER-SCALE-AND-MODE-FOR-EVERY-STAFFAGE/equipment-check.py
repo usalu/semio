@@ -1,7 +1,6 @@
 """🔎 Run catalog validation for each equipment asset and retain per-asset diagnostics during review."""
 import os
 import subprocess
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import sys
 
@@ -19,6 +18,6 @@ def check(spec):
         result = subprocess.run(["repo","tools","exec","bun","--",str(ticket/"r3-validate.ts"),spec,"--catalog-only","--volumes"],stdout=sink,stderr=sink)
     print(spec,result.returncode,flush=True)
 
-with ThreadPoolExecutor(max_workers=2) as workers:
-    list(workers.map(check,specs))
+for spec in specs:
+    check(spec)
 

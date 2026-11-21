@@ -106,6 +106,24 @@ impl ArtifactEngine {
             }
         }
 
+        if let Some(group) = batch.atomic_edit() {
+            if !group.admits(&batch.envelopes) || batch.envelopes.iter().any(|row| row.diff.schema.0 == DB_PATHMAP_SCHEMA || row.inverse.schema.0 == DB_PATHMAP_SCHEMA) ||
+                !matches!(options.durability, DurabilityClass::Fsync | DurabilityClass::Quorum(_)) {
+                return Err(DbError::InvalidArgument("original media requires one durable grouped commit".into()));
+            }
+            let committed = batch.envelopes.iter().filter(|row| self.applied.contains_key(&row.mutation_id.0)).count();
+            if let Some(prior) = self.committed_atomic_edits.get(&group.edit_id) {
+                if committed != batch.envelopes.len() ||
+                    !prior.iter().eq(batch.envelopes.iter().map(|row| &row.mutation_id)) ||
+                    batch.envelopes.iter().any(|row| self.applied.get(&row.mutation_id.0) != Some(row)) {
+                    return Err(DbError::Conflict("original media edit identity was committed with different rows".into()));
+                }
+            } else if committed != 0 {
+                return Err(DbError::Conflict("original media overlaps an established edit".into()));
+            }
+        } else if batch.envelopes.iter().any(|row| row.transaction.as_ref().is_some_and(|tx| protocol::atomic_group::is_atomic_backbone_tool(&tx.tool))) {
+            return Err(DbError::InvalidArgument("original media rows require authenticated atomic admission".into()));
+        }
         if let Some(cached) = self.applied_receipts.get(&command_id.0) {
             return Ok(cached.clone());
         }
@@ -147,6 +165,9 @@ impl ArtifactEngine {
             }
         }
 
+        if batch.atomic_edit().is_some() && !planned.is_empty() && planned.len() != batch.envelopes.len() {
+            return Err(DbError::Conflict("original media cannot publish a partial edit".into()));
+        }
         if planned.is_empty() {
             let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash().await?), messages: Vec::new() };
             self.remember_receipt(&receipt);
@@ -169,20 +190,42 @@ impl ArtifactEngine {
 
         let head_seq = self.frontier.head_seq.checked_add(planned.len() as u64).ok_or(DbError::LimitExceeded("db_artifact::head_seq"))?;
         let mut records = db_wal_log::WalRecordBatch::new();
+        if let Some(group) = batch.atomic_edit() {
+            let body = group.encode().map_err(|message| DbError::InvalidArgument(message.into()))?;
+            let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let mut control = db_wal_log::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 4096)?;
+            let descriptor = admit_wal_bytes(body, protocol::atomic_hub::MAX_ATOMIC_WAL_DESCRIPTOR_BYTES as u64, &mut control).await?;
+            push_wal_record(&mut records, db_wal_log::WalRecord::Outbox(descriptor), &mut control).await?;
+        }
         let _ = records.push(db_wal_log::WalRecord::Frontier(Frontier { document: self.document.clone(), head_seq, commit_seq: self.frontier.commit_seq + 1, chain_hash: [0; 32], epoch: self.frontier.epoch }));
-        self.wal.preflight_submit(&commands, &records)?;
+        if let Err(error) = self.wal.preflight_submit(&commands, &records) {
+            close_wal_record_batch(&mut records).await?;
+            return Err(error);
+        }
         let _ = records.close_step()?;
         let wal_facet = self.storage.wal().await;
-        self.wal.begin_write(&wal_facet).await?;
+        let writable = self.wal.begin_write(&wal_facet).await;
         drop(wal_facet);
+        if let Err(error) = writable {
+            close_wal_record_batch(&mut records).await?;
+            return Err(error);
+        }
 
         let mut touched_all = db_state::TouchedSet::new();
         let mut conflicts_all: Vec<ConflictRecord> = Vec::new();
         let mut applied_actor_seqs: Vec<u64> = Vec::with_capacity(planned.len());
         let mut newly_applied: Vec<(&protocol::MutationEnvelope, db_state::TouchedSet)> = Vec::with_capacity(planned.len());
+        let grouped = batch.atomic_edit().is_some();
         for (envelope, plan) in planned {
-            self.commit_one(envelope, plan.entries).await?;
-            applied_actor_seqs.push(*self.actor_seq.get(envelope.actor.0.as_str()).unwrap_or(&0));
+            if grouped {
+                if !plan.entries.is_empty() {
+                    close_wal_record_batch(&mut records).await?;
+                    return Err(DbError::Internal("original media may only stage registered semantic rows".into()));
+                }
+            } else {
+                self.commit_one(envelope, plan.entries).await?;
+                applied_actor_seqs.push(*self.actor_seq.get(envelope.actor.0.as_str()).unwrap_or(&0));
+            }
             for region in &plan.touched.regions {
                 touched_all.record(region.clone());
             }
@@ -190,22 +233,39 @@ impl ArtifactEngine {
             newly_applied.push((envelope, plan.touched));
         }
 
+        let state_hash = match self.state.content_hash().await {
+            Ok(hash) => hash,
+            Err(error) => {
+                close_wal_record_batch(&mut records).await?;
+                return Err(error);
+            }
+        };
+        let new_frontier = Frontier { document: self.document.clone(), head_seq, commit_seq: self.frontier.commit_seq + 1, chain_hash: state_hash.0, epoch: self.frontier.epoch };
+        let _ = records.push(db_wal_log::WalRecord::Frontier(new_frontier.clone()));
+
+        let wal_facet = self.storage.wal().await;
+        let appended = self.wal.submit(&wal_facet, &commands, &records, options.durability, now_ms).await;
+        drop(wal_facet);
+        close_wal_record_batch(&mut records).await?;
+        let appended = appended?;
+        if grouped {
+            for (envelope, _) in &newly_applied {
+                self.applied.insert(envelope.mutation_id.0.clone(), (*envelope).clone());
+                let ordinal = self.actor_seq.entry(envelope.actor.0.as_str().to_owned()).or_insert(0);
+                *ordinal += 1;
+                applied_actor_seqs.push(*ordinal);
+            }
+            let group = batch.atomic_edit().expect("admitted original semantic group");
+            self.committed_atomic_edits.insert(group.edit_id.clone(), batch.envelopes.iter().map(|row| row.mutation_id.clone()).collect());
+            self.head_edit_id = Some(protocol::MutationId(group.edit_id.clone()));
+        }
         for (envelope, _) in &newly_applied {
             self.remember_target(envelope);
         }
         for touch in batch_touches {
             remember_recent_touch(&mut self.recent_touches, touch);
         }
-
-        let new_frontier = Frontier { document: self.document.clone(), head_seq, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().await?.0, epoch: self.frontier.epoch };
-        let mut records = db_wal_log::WalRecordBatch::new();
-        let _ = records.push(db_wal_log::WalRecord::Frontier(new_frontier.clone()));
-
-        let wal_facet = self.storage.wal().await;
-        let appended = self.wal.submit(&wal_facet, &commands, &records, options.durability, now_ms).await?;
-        drop(wal_facet);
         self.config.security.record_committed(&newly_applied.iter().map(|(envelope, _)| (&envelope.actor, &envelope.mutation_id)).collect::<Vec<_>>(), now_ms);
-        let _ = records.close_step()?;
         drop(records);
         self.frontier = new_frontier.clone();
 
@@ -219,7 +279,7 @@ impl ArtifactEngine {
         self.index_backlog.queue_frontier(&queued, &new_frontier);
 
         let projection_classes = (self.config.projections)();
-        if !projection_classes.is_empty() {
+        if !projection_classes.is_empty() && !grouped {
             let index_facet = self.storage.index().await;
             let engine = db_projection::ProjectionEngine::new(&index_facet, self.document.clone(), projection_classes).await?;
             for (offset, (envelope, touched)) in newly_applied.iter().enumerate() {
@@ -228,11 +288,11 @@ impl ArtifactEngine {
         }
 
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all }, &db_preview::DbConflictOracle::default());
-        self.head_edit_id = Some(command_id.clone());
+        if !grouped { self.head_edit_id = Some(command_id.clone()); }
 
         let _ = self.refresh_live_queries().await;
 
-        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash().await?), messages };
+        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(state_hash), messages };
         self.remember_receipt(&receipt);
         Ok(receipt)
     }

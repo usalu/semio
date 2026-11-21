@@ -2863,12 +2863,6 @@
       "packages": []
     },
     {
-      "name": "@semio-tech/hub-layout-drawing-rs",
-      "root": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/📦️packages/🦀️rust",
-      "manifest": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/📦️packages/🦀️rust/📋️project.json",
-      "packages": []
-    },
-    {
       "name": "@semio-tech/hub-ledgers-rs",
       "root": "🌎️hub/🏗️bootstrap/📒️ledgers/📦️packages/🦀️rust",
       "manifest": "🌎️hub/🏗️bootstrap/📒️ledgers/📦️packages/🦀️rust/📋️project.json",
@@ -10598,6 +10592,12 @@
       "packages": []
     },
     {
+      "name": "semio-plugin-interpreter-numeric",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🔢️numeric-semantics/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🔢️numeric-semantics/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-plugin-reactor-staged-forms",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/📝️forms/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/📝️forms/📦️packages/🦀️rust/Cargo.toml",
@@ -11544,6 +11544,12 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-procedural-3d-graph-ports",
+      "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔌️graph-ports/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔌️graph-ports/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-procedural-3d-retained-commands",
       "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-commands/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-commands/📦️packages/🦀️rust/Cargo.toml",
@@ -11595,6 +11601,12 @@
       "name": "semio-s-artifact-stdio-pdf-lexer",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️lexer/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️lexer/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-pdf-native-save",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/💾️native-save/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/💾️native-save/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {

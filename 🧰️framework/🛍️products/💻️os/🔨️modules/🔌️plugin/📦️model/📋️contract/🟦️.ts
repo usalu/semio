@@ -2,6 +2,7 @@ import publicationSchema from "../../../../../🦑️repo/🔨️modules/📚️
 import type {RepositoryArtifactRequestV1} from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/👓️reading/📋️contract/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import { actorPreparationPolicyV1 } from "../🌱️actor-preparation/🟦️.ts";
 import {createHash} from "node:crypto";
 import {isAbsolute,join,resolve} from "node:path";
 export type ComponentModelIntentV1=Readonly<{version:1;mode:"prototype"|"release";pluginId:string;cratePath:string}>;
@@ -16,4 +17,4 @@ export function componentModelLayoutV1(productsRoot:string,value:unknown):Readon
 }
 
 /** 👓️ Describes the complete model read extent as DATA; only the actual generic reader can retain it. */
-export function componentModelRequestV1(productsRoot:string,value:unknown):RepositoryArtifactRequestV1{const layout=componentModelLayoutV1(productsRoot,value),policy=publicationSchema.definitions.Protocol.const;return Object.freeze({version:1,...layout,maximumBytes:policy.maximumOutputBytes,maximumFiles:Object.keys(schema.definitions.Protocol.const).length});}
+export function componentModelRequestV1(productsRoot:string,value:unknown):RepositoryArtifactRequestV1{const layout=componentModelLayoutV1(productsRoot,value),policy=publicationSchema.definitions.Protocol.const;const names=[...Object.values(schema.definitions.Protocol.const),actorPreparationPolicyV1.image,actorPreparationPolicyV1.receipt];return Object.freeze({version:1,...layout,maximumBytes:policy.maximumOutputBytes,maximumFiles:names.length});}

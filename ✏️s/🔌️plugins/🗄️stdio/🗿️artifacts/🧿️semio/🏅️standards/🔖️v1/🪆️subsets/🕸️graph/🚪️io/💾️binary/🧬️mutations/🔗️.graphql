@@ -1,5 +1,6 @@
 # 💾️ Binary-facet grammar mirror (descriptive) — see ../🔗️.graphql for the canonical
 # facet schema; this file describes the OP PACK-BINARY ENCODING header of the same shape.
+# The tag identifies a declared record. The payload is its typed Pack wire value in hexadecimal.
 type SemioGraphOpFrameHeader {
   format: Int!
   tag: Int!

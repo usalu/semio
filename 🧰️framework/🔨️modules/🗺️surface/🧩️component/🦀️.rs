@@ -30,6 +30,15 @@ mod terrain_session {
             self.core.set_exaggeration(exaggeration);
         }
 
+        pub fn set_elevation_grid_json(&mut self, json: &str) -> bool {
+            self.core.set_elevation_grid_json(json)
+        }
+
+        #[wasm_bindgen(js_name = pickElevationGridJson)]
+        pub fn pick_elevation_grid_json(&self, ray_json: &str) -> String {
+            self.core.pick_elevation_grid_json(ray_json)
+        }
+
         pub fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
             self.core.visible_terrain_tiles_json(camera_json)
         }
@@ -44,6 +53,14 @@ mod terrain_session {
 
         pub fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
             self.core.terrain_tile_mesh_json(z, x, y)
+        }
+
+        pub fn terrain_overlay_tile_json(&self, z: u32, x: u32, y: u32, overlays_json: &str) -> String {
+            self.core.terrain_overlay_tile_json(z, x, y, overlays_json)
+        }
+
+        pub fn terrain_origin_elevation(&self, z: u32, x: u32, y: u32) -> Option<f32> {
+            self.core.terrain_origin_elevation(z, x, y)
         }
     }
 

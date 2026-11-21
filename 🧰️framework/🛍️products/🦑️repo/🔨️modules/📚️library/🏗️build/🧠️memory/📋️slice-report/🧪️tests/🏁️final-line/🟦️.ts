@@ -1,5 +1,6 @@
 /** 🏁️ Contract: when the owners of a read are done, the progress line says so with the final count: the last value the timer happened to see (588 of 590) is not what a worker shows for the rest of the read, which goes on through admission, assembly and repair rounds with no owner source left. */
 import{expect,test}from"bun:test";
+import{Database}from"bun:sqlite";
 import{registerSliceReportSourceV1,sliceReadStepV1,startSliceProgressV1}from"../../🟨️.mjs";
 import fixture from"./🔣️.json"with{type:"json"};
 
@@ -50,4 +51,32 @@ test("a newly settled owner count reaches Ready while the enclosing owner round 
   expect(watch.observe([step(2),finalLine],quiet).overdue).toBe(false);
   expect(watch.observe([step(3),finalLine],2*quiet).overdue).toBe(true);
  },{round:1});}finally{remove();stop();}
+});
+
+test("certified owner progress distinguishes two passes with identical numeric counters",async()=>{
+ const {readyStepWatchV1,readyStallTrackerV1}=await import("../../../../🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🟦️.ts");
+ const db=new Database(":memory:"),told:{phase:string;done:number;total:number}[]=[];
+ const row=fixture.repeatedPass;
+ let ledger={done:row.counters[0]!,total:row.total},pass=row.first;
+ const remove=registerSliceReportSourceV1("owners",()=>({pass,ledger})),stop=startSliceProgressV1({emit:event=>told.push(event),milliseconds:5});
+ const change=async(next:number,done:number)=>{pass=next;ledger={done,total:row.total};await pause(35);return told.at(-1)!;};
+ const render=(value:typeof told[number],outer:number)=>`Reading the project graph slice (${outer} s): ${value.phase} ${value.done} of ${value.total}.`;
+ const step=`Reading the project graph slice (${row.elapsed+5} s): reading the owners (round 2) / Lese die Projekte (Runde 2) ${row.elapsed} of 3600.`;
+ try{
+  const first=await change(row.first,row.counters[0]!),second=await change(row.first,row.counters[1]!);
+  const old=[render(first,row.elapsed),render(second,row.elapsed+1)];
+  const watch=readyStepWatchV1(),stall=readyStallTrackerV1();
+  watch.observe([...old,step],0);expect(stall.observe(old)).toBe(true);
+  const changed=await change(row.second,row.counters[0]!),advanced=await change(row.second,row.counters[1]!);
+  const current=[render(changed,row.elapsed+2),render(advanced,row.elapsed+3)];
+  const sql=db.query("select count(distinct pass || ':' || counter) as count from (select ?1 pass, ?3 counter union all select ?1, ?4 union all select ?2, ?3 union all select ?2, ?4)");
+  expect((sql.get(row.first,row.second,...row.counters) as {count:number}).count).toBe(4);
+  expect(stall.observe(current)).toBe(true);
+  const quiet=fixture.quietMilliseconds;
+  expect(watch.observe([step,...current],quiet).overdue).toBe(false);
+  expect(stall.observe([render(advanced,row.elapsed+4)])).toBe(false);
+  expect(watch.observe([step,render(advanced,row.elapsed+4)],2*quiet).overdue).toBe(true);
+  remove();await pause(35);
+  expect(told.at(-1)).toEqual({phase:"owners done (pass 2)",done:row.counters[1],total:row.total});
+ }finally{remove();stop();db.close();}
 });

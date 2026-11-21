@@ -1,0 +1,40 @@
+{
+  "asset": "mallard-duck",
+  "pose": "wing-stretch",
+  "folded": "standing",
+  "shoulderFrameElbow": [
+    0.09068,
+    0.0046,
+    0.013
+  ],
+  "shoulderFrameWrist": [
+    0.01344,
+    0.0208,
+    0.021
+  ],
+  "shoulderFrameManusTip": [
+    0.0984,
+    0.02332,
+    0.02
+  ],
+  "side": [
+    [
+      "n",
+      "near",
+      -1
+    ],
+    [
+      "f",
+      "far",
+      1
+    ]
+  ],
+  "scales": [
+    50,
+    100,
+    200,
+    500
+  ],
+  "minimumJointMovementM": 0.008,
+  "maximumJointErrorM": 0.000001
+}

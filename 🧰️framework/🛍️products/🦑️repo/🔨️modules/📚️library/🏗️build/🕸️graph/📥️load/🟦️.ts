@@ -163,7 +163,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
         try{
           const facts=await observeOwnerFactsMemoizedV1({
             key,
-            hold:rows=>{lookup.stage("memo-check");return buildGraphSourceFactsHoldV1(rows,invocation,undefined,lookup.verified);},
+            hold:rows=>{lookup.stage("memo-check");return buildGraphSourceFactsHoldV1(rows,invocation,undefined,lookup.verified,true);},
             observation,
             observe:()=>{lookup.stage("discovery");return producer.discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,{workspaceRoot:root,invocation,phaseControl,selection:options.selection,nativeCache,nativeClosures,onOwnerDiscoveryPhase:lookup.operation},inputs);},
           }) as never;
@@ -314,7 +314,7 @@ function requireSelectedSubgraphV1(slice:BuildGraphV1,selected:BuildGraphV1):voi
 }
 
 
-type BuildGraphLoadOptionsV1={selection:BuildGraphSelectionV1;reuse?:boolean;baseline?:boolean;onStats?:(stats:GenerationLoadStatsV1)=>void;graph?:{policy?:"fresh"|"current";closure?:readonly string[];lean?:boolean;compact?:boolean;externalInputs?:readonly string[]}};
+type BuildGraphLoadOptionsV1={selection:BuildGraphSelectionV1;reuse?:boolean;baseline?:boolean;onStats?:(stats:GenerationLoadStatsV1)=>void;graph?:{policy?:"fresh"|"current";closure?:readonly string[];sealedOnly?:boolean;lean?:boolean;compact?:boolean;externalInputs?:readonly string[]}};
 
 
 /** 🕸️ Loads the graph with the strict self-checks of the loaded implementation; the generation path runs pinned and completes with what it loaded. A moved owner registry is adopted (the authority snapshot is dropped and the registry read once more, its owners are inferred or served by their own records) and never ends the read: under the pin the next registry read is fixed again, so the loop has no count to give up at and ends with the first candidate that holds. */
@@ -325,7 +325,7 @@ async function loadBuildGraphUnpinnedV1(root:string,invocation:ScriptInvocation,
   if(!invocation)throw Error("Original build graph producer invocation required");
   if(options.selection.kind==="all"&&!options.baseline){
     const producer=await import("../📥️inference/🟨️.mjs"),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));
-    const loadedAll=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure,lean:options.graph?.lean,externalInputs:options.graph?.externalInputs,pin:boundGenerationPinV1()});
+    const loadedAll=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure,sealedOnly:options.graph?.sealedOnly,lean:options.graph?.lean,externalInputs:options.graph?.externalInputs,pin:boundGenerationPinV1()});
     options.onStats?.(loadedAll.stats);const graph=loadedAll.graph as BuildGraphV1;
     if(process.env.SEMIO_BUILD_GRAPH_VERIFY==="1"&&!options.graph?.closure&&!options.graph?.lean)requireEqualBuildGraphsV1(graph,await loadBuildGraphV1(root,invocation,phaseControl,{selection:options.selection,baseline:true}));
     checkScriptInvocation(invocation);return graph;

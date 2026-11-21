@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {fetchGraphEntryV1,publishGraphEntryOutcomeV1,publishGraphEntryV1,type GraphDocumentV1,type GraphFleetClientV1,type GraphRefusalV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import {fetchGraphEntryV1,publishGraphEntryOutcomeV1,publishGraphEntryV1,type GraphDocumentV1,type GraphFleetClientV1,type GraphPutTimeoutV1,type GraphRefusalV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import type {GraphStateV1} from "../../../../🪪️graph-state/🟦️.ts";
 import type {ProjectClaimV1} from "../../../../🪪️graph-state/📦️project-records/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -98,18 +98,19 @@ export function ownerPoolOpenWavesV1(waves:readonly OwnerPoolWaveV1[],now:number
 }
 
 /** 🧾️ The stage and closed cache refusal of a wave offer. */
-export type OwnerPoolPublishRefusalV1=Readonly<{stage:(typeof schema.definitions.PublishStage.enum)[number];code:GraphRefusalV1["code"]|"unavailable";status:number|null;transient:boolean}>;
+export type OwnerPoolPublishRefusalV1=Readonly<{stage:(typeof schema.definitions.PublishStage.enum)[number];code:GraphRefusalV1["code"]|"unavailable";status:number|null;transient:boolean;timeout?:GraphPutTimeoutV1}>;
 
 /** ⬆️ Publishes the pool of a wave to the fleet cache: the manifest first, then the pointer with this wave added to the waves that are open (a swap against the pointer read just before, so a wave of another machine is kept and nobody replaces anybody), so a puller that sees the pointer finds the manifest and a new wave never makes a puller drop the wave it is working on. `false` when the fleet refuses (nothing is lost: the publisher infers every owner itself). */
 export async function publishOwnerPoolV1(input:Readonly<{client:GraphFleetClientV1;owner:string;manifest:OwnerPoolManifestV1;now?:()=>number;onRefused?:(refusal:OwnerPoolPublishRefusalV1)=>void}>):Promise<boolean>{
  const {client,owner,manifest}=input,{head}=manifest,now=(input.now??Date.now)();
- const refused=(stage:OwnerPoolPublishRefusalV1["stage"],why?:GraphRefusalV1)=>{
-  input.onRefused?.({stage,code:why?.code??"unavailable",status:why?.status??null,transient:why?.transient??true});
+ const refused=(stage:OwnerPoolPublishRefusalV1["stage"],why?:GraphRefusalV1,timeout?:GraphPutTimeoutV1)=>{
+  const evidence=why?.code==="no-answer"&&timeout!==undefined&&(timeout.request==="cas-put"||timeout.request==="action-result-put")&&Number.isSafeInteger(timeout.deadlineMilliseconds)&&timeout.deadlineMilliseconds>0;
+  input.onRefused?.({stage,code:why?.code??"unavailable",status:why?.status??null,transient:why?.transient??true,...(evidence?{timeout:{request:timeout.request,deadlineMilliseconds:timeout.deadlineMilliseconds}}:{})});
   return false;
  };
  const stored=await publishGraphEntryOutcomeV1({client,state:ownerPoolStateV1("manifest",head.id),owner,documents:[{name:P.headName,bytes:encode(head)},{name:P.sessionName,bytes:manifest.session},{name:P.unitsName,bytes:encode(manifest.units)}]});
  if(!stored.stored){
-  if(stored.refusal?.status!==409||ownerPoolIdV1(head,manifest.units)!==head.id)return refused("manifest",stored.refusal);
+  if(stored.refusal?.status!==409||ownerPoolIdV1(head,manifest.units)!==head.id)return refused("manifest",stored.refusal,stored.timeout);
   const present=await readOwnerPoolV1(client,head.id);
   if(!present||ownerPoolIdV1(present.head,present.units)!==head.id)return refused("manifest-verification",stored.refusal);
  }

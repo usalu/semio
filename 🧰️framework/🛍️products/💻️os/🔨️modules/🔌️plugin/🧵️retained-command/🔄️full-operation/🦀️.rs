@@ -279,6 +279,13 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         }
     }
 
+    /// 🧾️ Counts an advancing paid publication or acknowledged Store retirement step in the stall witness.
+    pub fn note_paid_publication_progress(&mut self, progress: RetainedCloneProgress) {
+        if self.stage == MountedTypedCommandFullOperationStage::Publishing && progress != RetainedCloneProgress::default() {
+            self.publication_progress = self.publication_progress.saturating_add(1);
+        }
+    }
+
     /// 🚫️ A rejected worker admission never ran the job, so no completion value will ever
     /// arrive: publication would spin on `completion.take() == None` for as long as the host
     /// keeps advancing it. The operation is terminal the moment its session is refused —

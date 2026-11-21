@@ -1,3 +1,4 @@
+import {concurrentEditV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import{physicalSourceOriginV1,type PhysicalSourceModuleMetaV1}from"../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./📦️storage/🟦️.ts";
 import {randomBytes,createHash} from "node:crypto";
@@ -16,6 +17,22 @@ export type CargoDependencyPairRunnerV1=(args:string[],cwd:string,signal:AbortSi
 /** 🔎️ Receives bounded identity acquisition separately from the unchanged update and fetch pair. */
 export type CargoDependencyIdentityV1=(root:string,signal:AbortSignal)=>Promise<string>;
 const sha=(path:string):string=>{const info=lstatSync(path);if(info.isSymbolicLink()||!info.isFile())throw Error("Preparation source must be a physical file");return createHash("sha256").update(readFileSync(path)).digest("hex");};
+
+function requirePreparedCargoSources(sources: readonly { path: string; sha256: string }[]): void {
+  for (const source of sources) {
+    let current: string;
+    try {
+      current = sha(source.path);
+    } catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+        throw concurrentEditV1("vanished", source.path, "Prepared source disappeared", "build");
+      }
+      throw error;
+    }
+    if (current !== source.sha256) throw concurrentEditV1("bytes", source.path, "Prepared source changed", "build");
+  }
+}
+
 /** 🔗️ Replans pre-command manifest edits, then owns update and locked fetch under original exclusive custody, and leaves a witness of the held receipt for launchers when the identity names its tool files.
  * @see ./👁️witness/🟦️.ts */
 export async function withPreparedCargoDependencyPairV1(storage:CargoPreparationStorageV1,root:string,manifest:string,control:ResourceLeaseControl,runner:CargoDependencyPairRunnerV1,identity:CargoDependencyIdentityV1,preparation:CargoPreparationControlV1,sourcePaths:readonly string[]=[],packages:readonly string[]=[],toolInputs:readonly string[]=[]):Promise<void> {
@@ -25,11 +42,11 @@ export async function withPreparedCargoDependencyPairV1(storage:CargoPreparation
  mkdirSync(directory,{recursive:true});const sources=[...new Set([fileURLToPath(physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL)),fileURLToPath(new URL("../🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./📜️script.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🧾️custody/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🧾️custody/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🧾️synchronization/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🔁️replan/🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("./🔁️replan/🧬️schema/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("../🧬️schema/🏃️invocation/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),fileURLToPath(new URL("../🧬️schema/🛠️preparation/🔣️.json",physicalSourceOriginV1(import.meta.url,(import.meta as PhysicalSourceModuleMetaV1).semioPhysicalSourceURL))),...sourcePaths])].map(path=>({path,sha256:sha(path)}));
  for(let attempt=1;;attempt++){
  try{
- check();for(const source of sources)if(sha(source.path)!==source.sha256)throw Error(`Prepared source changed: ${source.path}`);
+ check();requirePreparedCargoSources(sources);
  const observations:CargoPhysicalObservationsV1=new Map(),scope=cargoWorkspaceForManifest(root,manifest,observations);
  const prepared=await prepareCargoOwnersControlledV1(root,scope,preparation,packages,directory,observations),scopes=prepared.owners.map(owner=>cargoWorkspaceForManifest(root,owner==="."?"Cargo.toml":owner+"/Cargo.toml",observations));check();const membership=cargoWorkspaceForManifest(root,scope.manifest),published=prepared.recipes.some(recipe=>recipe.outputs.some(output=>resolve(output.path)===resolve(root,membership.manifest)));if(published){try{publishSelectedCargoWorkspaceMembershipV1(root,membership,"check",scopes);}catch(error){if(error instanceof Error&&error.message===`Cargo source membership is stale: ${membership.manifest}`)throw Error(`Prepared output membership conflict: ${membership.manifest}`,{cause:error});throw error;}}else publishSelectedCargoWorkspaceMembershipV1(root,membership,"write",scopes);
  const ownerRoster=JSON.stringify(scopes.map(scope=>scope.manifest)),members=prepared.owners.map(owner=>{const scope=scopes.find(scope=>scope.directory===owner);if(!scope)throw Error("Prepared workspace disappeared");return{owner,roster:JSON.stringify(cargoWorkspaceMembers(root,scope,observations))};}),inputs=[...new Set([...prepared.manifests,...members.flatMap(member=>(JSON.parse(member.roster) as {manifest:string}[]).map(pkg=>pkg.manifest))])].map(path=>cargoPreparationInputV1(root,resolve(root,path),"file"));
- const current=async():Promise<void>=>{check();for(const source of sources)if(sha(source.path)!==source.sha256)throw Error(`Prepared source changed: ${source.path}`);for(const input of inputs)if(cargoPreparationInputV1(root,input.path,input.kind).sha256!==input.sha256)throw new CargoPreparationManifestChangedV1(`Prepared manifest changed: ${input.path}`);const currentScopes=scopes.map(scope=>cargoWorkspaceForManifest(root,scope.manifest));if(JSON.stringify(currentScopes.map(scope=>scope.manifest))!==ownerRoster)throw new CargoPreparationManifestChangedV1("Prepared workspace roster changed");for(const member of members){const scope=currentScopes.find(scope=>scope.directory===member.owner);if(!scope||JSON.stringify(cargoWorkspaceMembers(root,scope))!==member.roster)throw new CargoPreparationManifestChangedV1("Prepared member roster changed");}for(const recipe of prepared.recipes)await assertCargoPreparationObservationCurrentV1(recipe,preparation);check();};
+ const current=async():Promise<void>=>{check();requirePreparedCargoSources(sources);for(const input of inputs)if(cargoPreparationInputV1(root,input.path,input.kind).sha256!==input.sha256)throw new CargoPreparationManifestChangedV1(`Prepared manifest changed: ${input.path}`);const currentScopes=scopes.map(scope=>cargoWorkspaceForManifest(root,scope.manifest));if(JSON.stringify(currentScopes.map(scope=>scope.manifest))!==ownerRoster)throw new CargoPreparationManifestChangedV1("Prepared workspace roster changed");for(const member of members){const scope=currentScopes.find(scope=>scope.directory===member.owner);if(!scope||JSON.stringify(cargoWorkspaceMembers(root,scope))!==member.roster)throw new CargoPreparationManifestChangedV1("Prepared member roster changed");}for(const recipe of prepared.recipes)await assertCargoPreparationObservationCurrentV1(recipe,preparation);check();};
  await current();
  const configuration=[".cargo/config",".cargo/config.toml","rust-toolchain","rust-toolchain.toml"].flatMap(name=>[resolve(root,name),resolve(root,scope.directory,name)]).map(path=>cargoPreparationInputV1(root,path,"file"));
  const tool=await identity(root,signal);await current();if(!tool.trim())throw Error("Cargo tool identity unavailable");

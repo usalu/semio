@@ -62,6 +62,3 @@ pub mod oracle_wiring;
 #[cfg(test)]
 #[path = "🧪️tests/🗂️catalogue-trace/🦀️.rs"]
 mod catalogue_trace_tests;
-
-#[path = "📇️catalogue/🦀️.rs"]
-pub mod case_catalogue;

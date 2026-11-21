@@ -4,7 +4,17 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { SphereGeometry, TorusGeometry, ShapeUtils, Triangle, Vector2, Vector3 } from "three";
 import retainedWorkbench from "../🧫️fixtures/🥽️retained-workbench/🔣️.json";
+import glbSurface from "../🧫️fixtures/🧊️glb-surface/🔣️.json";
 import {expect,test} from "bun:test";
+import "./🧊️glb-scene.ts";
+import "./🪶️decimate.ts";
+import "./🧵️obj-corners.ts";
+import "./🧭️orient-shells.ts";
+import "./🎨️triangulate-surface.ts";
+import "./🎨️subdivide-surface.ts";
+import "./🧲️weld-surface.ts";
+import "./🪶️decimate-surface.ts";
+import "./🔗️combine.ts";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv";
 const channelContract = JSON.parse(readFileSync(new URL("../../../🧬️schema/🪪️channels/🔣️.json", import.meta.url), "utf8"));
@@ -141,4 +151,32 @@ test("parametric mesh topology matches the indexed Three.js primitives", () => {
     expect(geometry.index!.count / 3).toBe(fixture.triangles);
     geometry.dispose();
   }
+});
+
+test("GLTFLoader preserves divergent UV and normal samples at welded positions", async () => {
+  const source = process.env.SEMIO_TEST_NATIVE_GLB;
+  const bytes = Uint8Array.from(source ? readFileSync(source) : Buffer.from(glbSurface.source, "base64")).buffer;
+  const model = await new GLTFLoader().parseAsync(bytes, "");
+  const geometry = (model.scene.children[0] as Mesh).geometry;
+  const indices = geometry.getIndex();
+  const points = new Set<string>();
+  const attributes = [
+    { key: "position", expected: glbSurface.positions },
+    { key: "normal", expected: glbSurface.normals },
+    { key: "uv", expected: glbSurface.uvs },
+  ];
+  expect(indices?.count).toBe(glbSurface.positions.length);
+  for (const { key, expected } of attributes) {
+    const attribute = geometry.getAttribute(key);
+    for (let index = 0; index < expected.length; index++) {
+      const value = ["getX", "getY", "getZ"].slice(0, attribute.itemSize).map(axis => {
+        const component = axis as "getX" | "getY" | "getZ";
+        return attribute[component](indices!.getX(index));
+      });
+      expect(value).toEqual(expected[index]!);
+      if (key === "position") points.add(value.join(","));
+    }
+  }
+  expect(points.size).toBe(glbSurface.weldedVertices);
+  geometry.dispose();
 });

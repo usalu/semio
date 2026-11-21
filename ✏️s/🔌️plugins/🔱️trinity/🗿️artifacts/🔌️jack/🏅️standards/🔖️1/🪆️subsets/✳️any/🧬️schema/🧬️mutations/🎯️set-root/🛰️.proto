@@ -1,0 +1,3 @@
+syntax = "proto3";
+package semio.s.trinity.jack.mutation.set_root;
+message SetRoot { optional string value = 1; }

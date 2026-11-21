@@ -1,3 +1,2 @@
 semio gis.gisterrain.dsl v1
 exaggeration=1.5
-mesh=child-id=terrain-demo-mesh artifact-id=terrain-demo-mesh artifact-kind=s.stdio.semio standard=v1 subset=mesh

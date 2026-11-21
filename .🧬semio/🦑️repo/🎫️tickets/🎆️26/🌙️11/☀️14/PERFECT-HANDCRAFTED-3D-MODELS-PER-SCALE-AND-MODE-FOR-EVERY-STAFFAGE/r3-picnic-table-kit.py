@@ -1,6 +1,6 @@
 """🧺 Round 3, furniture/picnic-table: the measures of the real table, every part of every scale stated by hand in world coordinates, and the helpers that turn a part into its bone-local solid.
 
-The subject: a 1.80 m A-frame picnic table of 45 mm pressure-treated pine. Top: five 132 x 40 mm planks with 10 mm drainage gaps (0.70 m wide, top face at 0.75 m) screwed on two end cleats and a centre cleat. Two A-frames at 0.10 m from the plank ends, each of two 95 x 45 mm legs raked 60 degrees to the ground in one layer and, lapped on their outer faces in a second layer, a 95 x 45 mm cleat under the top and a 95 x 45 mm stretcher at seat-bracket height, clamped by M10 carriage bolts and the M12 pivot bolts. Two 70 x 45 mm braces run from the stretchers up to the centre cleat. Each bench (two 145 x 40 mm planks, 1.50 m, seat at 0.44 m) hangs between the A-frames on two folded 8 mm steel gusset brackets that turn on the pivot bolts through leg and stretcher; a spring plunger on each gusset snaps into an 8 mm bearing plate on the inner leg face, in the seat position and, 90 degrees further down, in the stowed position where the bench hangs plumb between the frames.
+The subject: a 1.80 m A-frame picnic table of 45 mm pressure-treated pine. Top: five 132 x 40 mm planks with 10 mm drainage gaps (0.70 m wide, top face at 0.75 m) screwed on two end cleats and an 89 x 45 mm centre cleat (a 2 x 4 on edge that takes up the plumb-cut ends of both braces). Two A-frames at 0.10 m from the plank ends, each of two 95 x 45 mm legs raked 60 degrees to the ground in one layer and, lapped on their outer faces in a second layer, a 95 x 45 mm cleat under the top and a 95 x 45 mm stretcher at seat-bracket height, clamped by M10 carriage bolts and the M12 pivot bolts. Two 70 x 45 mm braces run from the stretchers up to the centre cleat. Each bench (two 145 x 40 mm planks, 1.50 m, seat at 0.44 m) hangs between the A-frames on two folded 8 mm steel gusset brackets that turn on the pivot bolts through leg and stretcher; a spring plunger on each gusset snaps into an 8 mm bearing plate on the inner leg face, in the seat position and, 90 degrees further down, in the stowed position where the bench hangs plumb between the frames.
 
 World frame: X across the table (the end elevation), Y up, Z along the table (left +). A part is one of: `pz` (a profile in (X, Y) pushed along Z), `px` (a profile in (Z, Y) pushed along X), `rev` (a profile of [axial, radial] turned about a world axis). Bench parts are stated for the right bench (+X) and mirrored for the left one.
 """
@@ -22,7 +22,7 @@ FOOT_C = 0.665
 RAKE = math.radians(60.0)
 CLEAT_HALF, CLEAT_Y0, BEVEL = 0.33, 0.615, 0.045
 STRETCH_HALF, STRETCH_Y = 0.53, (0.3275, 0.4225)
-MID_HALF, MID_Y0, MID_T = 0.31, 0.64, 0.0225
+MID_HALF, MID_Y0, MID_T = 0.31, 0.621, 0.0225
 PIVOT = (0.45, 0.375)
 TOP_JOINT = (-0.35, 0.71)
 BENCH_X, BENCH_Y, BENCH_HALF = (0.01, 0.31), (0.025, 0.065), 0.75
@@ -292,7 +292,10 @@ def parts100():
 def parts200():
     """🗺 1:200, smallest feature 30 mm: the top as one slab, each bench as one board, the frames member by member, each bracket as a 30 mm block between board end and leg."""
     (bx0, bx1), (by0, by1) = BENCH_X, BENCH_Y
-    out = [pz("top-slab", "top", rect(-TOP_HALF, TOP_Y0, TOP_HALF, TOP_Y1), (-LENGTH / 2, LENGTH / 2), PINE, 0.7, "top", (6, 6, 6))]
+    out = [
+        pz("top-slab", "top", rect(-TOP_HALF, TOP_Y0, TOP_HALF, TOP_Y1), (-LENGTH / 2, LENGTH / 2), PINE, 0.7, "top", (6, 6, 6)),
+        pz("top-cleat", "top", rect(-MID_HALF, MID_Y0, MID_HALF, TOP_Y0), (-MID_T, MID_T), PINE, 0.5, "frame", (None, 3.1, None)),
+    ]
     near = [
         pz("leg-r", "frame", leg(False), LEG_Z, PINE, 0.55, "frame", (3, 3, 3)),
         pz("cleat", "frame", rect(-CLEAT_HALF, CLEAT_Y0, CLEAT_HALF, TOP_Y0), BEAM_Z, PINE, 0.5, "frame", (5, 3.2, None)),

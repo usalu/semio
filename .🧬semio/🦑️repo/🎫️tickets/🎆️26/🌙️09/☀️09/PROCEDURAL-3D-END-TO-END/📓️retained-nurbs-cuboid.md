@@ -1,0 +1,13 @@
+# Retained Convert to NURBS for Cuboids
+
+The installed `brep.util.convertToNurbs` operator admits a live certified axis-aligned cuboid through the existing `geometry` input and returns an independently published solid on `geometryOut`. The source handle, analytic supports and edge curves remain usable. A finite translated cuboid uses the same admission. The funded route refuses unsupported owners such as spheres and standalone curves.
+
+The result uses twelve degree-one rational Bézier curves for the 3D edges and six bilinear NURBS face supports, all with unit weights. Each edge preserves its authored parameter range. Each face derives both knot intervals from the four retained pcurves and uses the original plane's world points at the chart corners. Topological loops, coedge orientation and pcurves keep their original coordinate meaning. A separate cuboid certificate supplies exact solid area, volume and preview. Certified copy and affine transforms that remain cuboids preserve the spline encoding.
+
+The publication quotes one spline allocation or topology operation per turn. The partially built spline row stays in the unpublished transaction until its arena slot is funded. Cancellation releases its staged buffers and any inserted spline rows before freeing the original transaction journal. The normal retention compactor owns the published geometry.
+
+The neutral fixtures cover origin and translated fractional cuboids. The compact Rust witness runs the current funded transaction and spline source against cached topology stores under exact grants with underfunded turns and cancellation. Instrumented allocation and release bytes match each funded receipt. It compares all 3D edges and all face trims to their original supports. Three.js independently validates the expected edge point, interior patch point, bounding box, area and volume. The registered Flow test exercises the original operator on both cuboids, measures the published output, and requires the input to survive cancellation and completion. Full official linking remains deferred under the current storage gate.
+
+The retained scope covers exact cuboid topology. Original STEP export now serializes the retained spline representation. Other solid families and general affine images remain separate gaps. The direct synchronous kernel API still owns its existing broad edit-in-place operation; Flow uses the new retained shape-producing route.
+
+The measured source closures are 3,999 active lines for Engine, 3,995 for Native Registry and 3,223 for Solid Transaction. The Semio Session closure is 254,237 active bytes.

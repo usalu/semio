@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "tap": {
+    "start": { "x": 300, "y": 300 },
+    "end": { "x": 303, "y": 302 },
+    "feature": { "kind": "feature", "id": "station" }
+  },
+  "thresholdRelease": {
+    "end": { "x": 306, "y": 300 },
+    "finalCamera": { "x": -3, "y": 0, "zoom": 2 }
+  },
+  "drag": {
+    "initialCamera": { "x": 0, "y": 0, "zoom": 2 },
+    "start": { "x": 300, "y": 300 },
+    "move": { "x": 340, "y": 320 },
+    "end": { "x": 350, "y": 330 },
+    "moveCamera": { "x": -20, "y": -10, "zoom": 2 },
+    "finalCamera": { "x": -25, "y": -15, "zoom": 2 }
+  }
+}

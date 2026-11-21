@@ -18,6 +18,11 @@ use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_vector::matrix::Frame3;
 use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
+#[path = "🧵️spline-plane/🦀️.rs"]
+mod spline_plane;
+
+type PlaneContacts = [Option<CurveSurfaceHit>; 4];
+
 // #region 🔖️Api
 
 /// ➿ An isolated curve/surface intersection: world point plus curve and surface parameters.
@@ -42,7 +47,8 @@ pub fn intersect_curve_surface(curve: &Curve3, surface: &Surface, tol: f64) -> R
         (Curve3::Line { origin, dir }, Surface::Sphere { frame, radius }) => intersect_line_sphere(*origin, *dir, frame, *radius, tol),
         (Curve3::Line { origin, dir }, Surface::Cylinder { frame, radius }) => intersect_line_cylinder(*origin, *dir, frame, *radius, tol),
         (Curve3::Line { origin, dir }, Surface::Cone { frame, half_angle }) => intersect_line_cone(*origin, *dir, frame, *half_angle, tol),
-        (Curve3::Circle { frame, radius }, Surface::Plane { frame: pf }) => intersect_circle_plane(frame, *radius, pf, tol),
+        (Curve3::Circle { .. } | Curve3::Ellipse { .. }, Surface::Plane { frame }) =>
+            Ok(intersect_original_curve_plane((curve, None),frame,tol)?.into_iter().flatten().flatten().collect()),
         (Curve3::Circle { frame, radius }, Surface::Sphere { frame: sf, radius: sr }) => intersect_circle_sphere(frame, *radius, sf, *sr, tol),
         _ => intersect_general(curve, surface, tol),
     }
@@ -194,22 +200,52 @@ fn intersect_line_cone(origin: Pnt3, dir: Vec3, frame: &Frame3, half_angle: f64,
     Ok(hits)
 }
 
-/// ➿ Circle/plane: substituting the circle's own parametrization into the plane's implicit
-/// equation collapses to `A cos t + B sin t + C = 0`, solved via the amplitude/phase form.
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn intersect_circle_plane(cf: &Frame3, radius: f64, pf: &Frame3, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
-    if radius <= tol {
-        return Err(IntersectError::Degenerate("non-positive circle radius".into()));
+/// 🪟️ Finds bounded isolated contacts of a retained curve or trimmed edge and a plane.
+pub fn intersect_original_curve_plane((curve, trim): (&Curve3, Option<(f64, f64)>), plane: &Frame3, tol: f64)
+    -> Result<Option<PlaneContacts>, LineIntersectionRefusal>
+{
+    use LineIntersectionRefusal::{DegenerateConic, InvalidRange, InvalidTolerance, NonFinite};
+    if !(tol.is_finite() && tol > 0.0) { return Err(InvalidTolerance); }
+    if trim.is_some_and(|(lo, hi)| !lo.is_finite() || !hi.is_finite() || lo > hi) { return Err(InvalidRange); }
+    if matches!(curve, Curve3::Nurbs { .. }) { return spline_plane::contacts(curve, trim, plane, tol); }
+    let build = |t| {
+        let point = curve.eval(t);
+        let uv = plane.to_local(point);
+        if !uv.to_array().into_iter().chain(point.to_array()).all(f64::is_finite) { return Err(NonFinite); }
+        Ok((CurveSurfaceHit { point, t, u: uv.x, v: uv.y }, uv.z))
+    };
+    if let Some((lo, _)) = trim.filter(|(lo, hi)| lo == hi) {
+        let (hit, distance) = build(lo)?;
+        return Ok(Some([(distance.abs() <= tol).then_some(hit), None, None, None]));
     }
-    let n = pf.z;
-    let d0 = n.dot(cf.origin - pf.origin);
-    let a = radius * n.dot(cf.x);
-    let b = radius * n.dot(cf.y);
-    solve_trig_hits(a, b, d0, tol, |t| {
-        let point = cf.origin + cf.x * (radius * t.cos()) + cf.y * (radius * t.sin());
-        let uv = pf.to_local(point);
-        CurveSurfaceHit { point, t, u: uv.x, v: uv.y }
-    })
+    let (frame, radii) = match curve {
+        Curve3::Line { origin, dir } => {
+            let hit = intersect_line_plane_unique(*origin, *dir, plane, tol)?
+                .filter(|hit| trim.is_none_or(|(lo, hi)| (lo..=hi).contains(&hit.t)));
+            return Ok(Some([hit, None, None, None]));
+        }
+        Curve3::Circle { frame, radius } => (frame, [*radius; 2]),
+        Curve3::Ellipse { frame, major_radius, minor_radius } => (frame, [*major_radius, *minor_radius]),
+        Curve3::Nurbs { .. } => unreachable!(),
+    };
+    if radii.into_iter().any(|r| !r.is_finite() || r <= tol) { return Err(DegenerateConic); }
+    let [a, b, c] = conic_plane_equation(frame, plane);
+    let mut hits = [None; 4];
+    for (slot, t) in hits.iter_mut().zip(solve_trig_parameters(radii[0] * a, radii[1] * b, c, tol)?
+        .into_iter().flatten().filter_map(|t| if trim.is_some() { super::curve_curve::conic_parameter(curve, t, trim, tol) } else { Some(t) })) {
+        *slot = Some(build(t)?.0);
+    }
+    if let [Some(a), Some(b), ..] = &hits {
+        if a.point.distance(b.point) <= tol { hits[1] = None; }
+        else if trim.is_some() && a.t > b.t { hits.swap(0, 1); }
+    }
+    Ok(Some(hits))
+}
+
+/// 🧮️ Resolves the raw plane equation against the circle or ellipse frame.
+pub(super) fn conic_plane_equation(conic: &Frame3, plane: &Frame3) -> [f64; 3] {
+    let normal = plane.z;
+    [normal.dot(conic.x), normal.dot(conic.y), normal.dot(conic.origin - plane.origin)]
 }
 
 /// ➿ Circle/sphere: substituting the circle's parametrization into `|p − center|² = r²` collapses
@@ -234,36 +270,26 @@ fn intersect_circle_sphere(cf: &Frame3, radius: f64, sf: &Frame3, sphere_radius:
     })
 }
 
-/// ➿ Solves `a cos t + b sin t + c = 0` via the amplitude/phase substitution
-/// `a cos t + b sin t = r cos(t − φ)`, `r = √(a²+b²)`, `φ = atan2(b, a)`. A discriminant within
-/// `tol` of the tangency boundary reports [`IntersectError::Tangent`] (matching every other
-/// quadratic analytic case's convention); otherwise up to two roots, deduplicated by 3D distance.
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn solve_trig_hits(a: f64, b: f64, c: f64, tol: f64, build: impl Fn(f64) -> CurveSurfaceHit) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
-    let amp = (a * a + b * b).sqrt();
-    if amp <= tol {
-        if c.abs() <= tol {
-            return Err(IntersectError::Tangent);
-        }
-        return Ok(vec![]);
+/// ➿️ Solves the periodic line of contact using a stable amplitude before classifying tangency.
+pub(super) fn solve_trig_parameters(a:f64,b:f64,c:f64,tol:f64)->Result<[Option<f64>;2],LineIntersectionRefusal>{
+    let amp=a.hypot(b);
+    if ![amp,c].into_iter().all(f64::is_finite){return Err(LineIntersectionRefusal::NonFinite);}
+    if amp<=tol {
+        return if c.abs()<=tol{Err(LineIntersectionRefusal::Infinite)}else{Ok([None,None])};
     }
-    let ratio = (-c / amp).clamp(-1.0, 1.0);
-    if (ratio.abs() - 1.0).abs() * amp <= tol {
-        let phase = b.atan2(a);
-        let t = phase + ratio.acos();
-        return Ok(vec![build(t)]);
-    }
-    if c.abs() > amp + tol {
-        return Ok(vec![]);
-    }
-    let phase = b.atan2(a);
-    let delta = ratio.acos();
-    let mut hits = Vec::with_capacity(2);
-    for t in [phase + delta, phase - delta] {
-        let hit = build(t);
-        if hits.iter().all(|h: &CurveSurfaceHit| h.point.distance(hit.point) > tol) {
-            hits.push(hit);
-        }
+    let separation=c.abs()-amp;
+    if separation>tol{return Ok([None,None]);}
+    let phase=b.atan2(a);
+    let delta=(-c/amp).clamp(-1.,1.).acos();
+    if separation.abs()<=tol{return Ok([Some(phase+delta),None]);}
+    Ok([Some(phase+delta),Some(phase-delta)])
+}
+
+fn solve_trig_hits(a:f64,b:f64,c:f64,tol:f64,build:impl Fn(f64)->CurveSurfaceHit)->Result<Vec<CurveSurfaceHit>,IntersectError>{
+    let mut hits=Vec::with_capacity(2);
+    for t in solve_trig_parameters(a,b,c,tol)?.into_iter().flatten(){
+        let hit=build(t);
+        if hits.iter().all(|h:&CurveSurfaceHit|h.point.distance(hit.point)>tol){hits.push(hit);}
     }
     Ok(hits)
 }

@@ -5,7 +5,7 @@ use super::*;
 /// 🧸️ The live scene composed from the app's `content` member store (design §20.15: the parent holds no content).
 pub(super) async fn live_scene(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>) -> jack::standards::v1::subsets::any::schema::content::JackWorkingScene {
     use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-    use store::{snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, ReferenceSpaceMember};
     let snapshot = app.snapshot().expect("Jack parent projection");
     let bytes = app.child_store("content", &snapshot.content.child_id).await.expect("Jack content child").document_pack_bytes().await.expect("Jack content child pack");
     let (nodes, edges) = crate::content::working_from_jack_content_snapshot(&SemioGraphSnapshot::decode_pack(&bytes).expect("Jack content child snapshot")).expect("Jack content child scene");
@@ -31,8 +31,8 @@ pub(super) async fn node_name(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp<
 pub(super) async fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>, ids: &[&str],cx:&mut semio_framework_job::StepContext<'_>) {
     let targets: Vec<semio_framework_pack_json::Value> = ids.iter().map(|id| semio_framework_pack_json::json!({ "granularity": "node", "id": id })).collect();
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": "ast", "targets": semio_framework_pack_json::to_json_string(&targets) }));
-    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,"interactionSelect",Some(args),&meta("local"),&mut semio_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.expect("interactionSelect");
-    semio_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interactionSelect reserved-job commit");
+    let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(app,"interactionSelect",Some(args),&meta("local"),&mut semio_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.expect("interactionSelect");
+    semio_plugin::app::settle_framework_reserved_admission(app, admitted, cx).await.expect("interactionSelect reserved-job commit");
     artifact_app_laws::settle_registered_typed_operation(app, JACK_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("interactionSelect publication");
 }
 
@@ -81,7 +81,7 @@ async fn run_query_populates_results_and_a_set_query_mutates_projection() {
     let mut app = new_app().await;
     let view = query_windows();
     let editor = view.for_window_instance("editor-main").unwrap();
-    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()), results_window_id: "results-main".into() }, &semio_plugin::ActionMeta { view_state: Some(editor), ..meta("local") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()), results_window_id: "results-main".into() }, &semio_plugin::ActionMeta { view_state: Some(editor.into()), ..meta("local") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
     .await
     .expect("run");
     drive_query_ownership_operations(&mut app,cx).await.expect("query completes");
@@ -156,7 +156,7 @@ async fn text_edit_puts_the_query_into_the_document() {
     let mut app = new_app().await;
     let view = query_windows();
     let editor = view.for_window_instance("editor-main").unwrap();
-    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_plugin::ActionMeta { view_state: Some(editor.clone().into()), ..meta("local") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx)
         .await
         .expect("edit");
     drive_query_ownership_operations(&mut app,cx).await.expect("edit completes");
@@ -194,7 +194,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
     let mut app = new_app().await;
     let view = query_windows();
     let editor = view.for_window_instance("editor-main").unwrap();
-    let meta_of = || semio_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") };
+    let meta_of = || semio_plugin::ActionMeta { view_state: Some(editor.clone().into()), ..meta("local") };
     let before = jack_query(&mut app, &editor, cx).await;
     let edits = app.edit_transactions().len();
     let mut now = 50_000;
@@ -218,7 +218,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
     assert!(transactions.last().cloned().flatten().is_some_and(|transaction| transaction.tool.ends_with("#textEdit")), "the edit carries the run's TransactionRef: {transactions:?}");
     for (verb, expected) in [("undo", &before), ("redo", &run.expected)] {
         let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,verb,None,&meta_of(),&mut semio_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
-        semio_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{verb} settles: {fault:?}"));
+        semio_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted, cx).await.unwrap_or_else(|fault| panic!("{verb} settles: {fault:?}"));
         drive_query_ownership_operations(&mut app,cx).await.unwrap_or_else(|error| panic!("{verb} publishes: {error}"));
         assert_eq!(&jack_query(&mut app, &editor, cx).await, expected, "one {verb} moves the whole run");
     }

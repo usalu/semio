@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/mutation/set-root/schema.json",
+  "title": "SetRoot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mutation", "value"],
+  "properties": {
+    "mutation": { "const": "setRoot" },
+    "value": { "type": ["string", "null"] }
+  }
+}

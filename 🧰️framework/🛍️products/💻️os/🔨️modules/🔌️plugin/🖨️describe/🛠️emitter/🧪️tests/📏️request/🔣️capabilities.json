@@ -1,0 +1,9 @@
+[
+  {"output":"{\"version\":1,\"prepareActor\":true}\n","accepted":true},
+  {"output":"{\"prepareActor\":true,\"version\":1}\r\n","accepted":true},
+  {"output":"{\"version\":2,\"prepareActor\":true}\n","accepted":false},
+  {"output":"{\"version\":1,\"prepareActor\":false}\n","accepted":false},
+  {"output":"{\"version\":1}\n","accepted":false},
+  {"output":"{\"version\":1,\"prepareActor\":true,\"extra\":true}\n","accepted":false},
+  {"output":"semio-plugin-describe: unknown command \"capabilities\"\n","accepted":false}
+]

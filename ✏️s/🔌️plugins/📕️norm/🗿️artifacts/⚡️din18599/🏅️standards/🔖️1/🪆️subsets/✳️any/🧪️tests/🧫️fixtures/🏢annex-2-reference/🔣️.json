@@ -1,0 +1,474 @@
+{
+  "rows": [
+    {
+      "kind": "Wall",
+      "adjacency": "Outdoor",
+      "clause": "1.1",
+      "transmittance": [
+        0.28,
+        0.35
+      ],
+      "solar": null,
+      "visible": null
+    },
+    {
+      "kind": "Floor",
+      "adjacency": "Outdoor",
+      "clause": "1.1",
+      "transmittance": [
+        0.28,
+        0.35
+      ],
+      "solar": null,
+      "visible": null
+    },
+    {
+      "kind": "CurtainWall",
+      "adjacency": "Outdoor",
+      "clause": "1.2",
+      "transmittance": [
+        1.4,
+        1.9
+      ],
+      "solar": [
+        0.48,
+        0.6
+      ],
+      "visible": [
+        0.72,
+        0.78
+      ]
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Ground",
+      "clause": "1.3",
+      "transmittance": [
+        0.35,
+        0.35
+      ],
+      "solar": null,
+      "visible": null
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Unheated",
+      "clause": "1.3",
+      "transmittance": [
+        0.35,
+        0.35
+      ],
+      "solar": null,
+      "visible": null
+    },
+    {
+      "kind": "GroundSlabPerimeter",
+      "adjacency": "Ground",
+      "clause": "1.3",
+      "transmittance": [
+        0.35,
+        0.35
+      ],
+      "solar": null,
+      "visible": null
+    },
+    {
+      "kind": "GroundSlabInterior",
+      "adjacency": "Ground",
+      "clause": "1.3",
+      "transmittance": [
+        0.35,
+        0.35
+      ],
+      "solar": null,
+      "visible": null
+    },
+    {
+      "kind": "Roof",
+      "adjacency": "Outdoor",
+      "clause": "1.4",
+      "transmittance": [
+        0.2,
+        0.35
+      ],
+      "solar": null,
+      "visible": null
+    },
+    {
+      "kind": "RoofGlazing",
+      "adjacency": "Outdoor",
+      "clause": "1.5",
+      "transmittance": [
+        2.7,
+        2.7
+      ],
+      "solar": [
+        0.63,
+        0.63
+      ],
+      "visible": [
+        0.76,
+        0.76
+      ]
+    },
+    {
+      "kind": "RooflightStrip",
+      "adjacency": "Outdoor",
+      "clause": "1.6",
+      "transmittance": [
+        2.4,
+        2.4
+      ],
+      "solar": [
+        0.55,
+        0.55
+      ],
+      "visible": [
+        0.48,
+        0.48
+      ]
+    },
+    {
+      "kind": "RoofDome",
+      "adjacency": "Outdoor",
+      "clause": "1.7",
+      "transmittance": [
+        2.7,
+        2.7
+      ],
+      "solar": [
+        0.64,
+        0.64
+      ],
+      "visible": [
+        0.59,
+        0.59
+      ]
+    },
+    {
+      "kind": "Window",
+      "adjacency": "Outdoor",
+      "clause": "1.8",
+      "transmittance": [
+        1.3,
+        1.9
+      ],
+      "solar": [
+        0.6,
+        0.6
+      ],
+      "visible": [
+        0.78,
+        0.78
+      ]
+    },
+    {
+      "kind": "GlazedDoor",
+      "adjacency": "Outdoor",
+      "clause": "1.8",
+      "transmittance": [
+        1.3,
+        1.9
+      ],
+      "solar": [
+        0.6,
+        0.6
+      ],
+      "visible": [
+        0.78,
+        0.78
+      ]
+    },
+    {
+      "kind": "RoofWindow",
+      "adjacency": "Outdoor",
+      "clause": "1.9",
+      "transmittance": [
+        1.4,
+        1.9
+      ],
+      "solar": [
+        0.6,
+        0.6
+      ],
+      "visible": [
+        0.78,
+        0.78
+      ]
+    },
+    {
+      "kind": "Door",
+      "adjacency": "Outdoor",
+      "clause": "1.10",
+      "transmittance": [
+        1.8,
+        2.9
+      ],
+      "solar": null,
+      "visible": null
+    },
+    {
+      "kind": "Door",
+      "adjacency": "Unheated",
+      "clause": "1.10",
+      "transmittance": [
+        1.8,
+        2.9
+      ],
+      "solar": null,
+      "visible": null
+    }
+  ],
+  "cases": [
+    {
+      "kind": "Wall",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "Floor",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "Floor",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "Floor",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "CurtainWall",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "CurtainWall",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "CurtainWall",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Ground",
+      "setpointC": 19
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Ground",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Ground",
+      "setpointC": 12
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Unheated",
+      "setpointC": 19
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Unheated",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "Wall",
+      "adjacency": "Unheated",
+      "setpointC": 12
+    },
+    {
+      "kind": "GroundSlabPerimeter",
+      "adjacency": "Ground",
+      "setpointC": 19
+    },
+    {
+      "kind": "GroundSlabPerimeter",
+      "adjacency": "Ground",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "GroundSlabPerimeter",
+      "adjacency": "Ground",
+      "setpointC": 12
+    },
+    {
+      "kind": "GroundSlabInterior",
+      "adjacency": "Ground",
+      "setpointC": 19
+    },
+    {
+      "kind": "GroundSlabInterior",
+      "adjacency": "Ground",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "GroundSlabInterior",
+      "adjacency": "Ground",
+      "setpointC": 12
+    },
+    {
+      "kind": "Roof",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "Roof",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "Roof",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "RoofGlazing",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "RoofGlazing",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "RoofGlazing",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "RooflightStrip",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "RooflightStrip",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "RooflightStrip",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "RoofDome",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "RoofDome",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "RoofDome",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "Window",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "Window",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "Window",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "GlazedDoor",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "GlazedDoor",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "GlazedDoor",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "RoofWindow",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "RoofWindow",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "RoofWindow",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "Door",
+      "adjacency": "Outdoor",
+      "setpointC": 19
+    },
+    {
+      "kind": "Door",
+      "adjacency": "Outdoor",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "Door",
+      "adjacency": "Outdoor",
+      "setpointC": 12
+    },
+    {
+      "kind": "Door",
+      "adjacency": "Unheated",
+      "setpointC": 19
+    },
+    {
+      "kind": "Door",
+      "adjacency": "Unheated",
+      "setpointC": 18.99
+    },
+    {
+      "kind": "Door",
+      "adjacency": "Unheated",
+      "setpointC": 12
+    },
+    {
+      "kind": "Window",
+      "adjacency": "Heated",
+      "setpointC": 20
+    },
+    {
+      "kind": "RoofWindow",
+      "adjacency": "Outdoor",
+      "setpointC": 11.99
+    }
+  ]
+}

@@ -72,10 +72,23 @@ export const schedulerBinaries = (): Promise<ReadonlyMap<string, string>> => (gl
   const manifest = fileURLToPath(new URL("../../🎟️admission/📦️packages/🦀️rust/Cargo.toml", import.meta.url)), declared = Bun.TOML.parse(readFileSync(manifest, "utf8")) as { bin: { name: string }[]; example: { name: string }[] };
   let repository = dirname(manifest);
   while (!existsSync(join(repository, "package.json")) || !(JSON.parse(readFileSync(join(repository, "package.json"), "utf8")).scripts?.repo)) { if (dirname(repository) === repository) throw Error("Cargo laws require the repository that issues their compiler store"); repository = dirname(repository); }
-  const issued = (args: readonly string[]) => captureOwnedCommandV1(process.execPath, ["repo", "cargo", "--store=shared", "--configuration=release", "--", ...args, "--manifest-path", manifest], repository, { control, env: { ...process.env, SEMIO_BUILD_MODE: "release" }, output: { maximumBytes: 16777216, maximumLines: 65536 } });
-  await issued(["build", "--bins", "--examples"]);
-  const metadata = (await issued(["metadata", "--format-version", "1", "--no-deps"])).split("\n").find((line) => line.startsWith("{\"")), release = join(JSON.parse(metadata ?? "null").target_directory, "release");
-  return new Map([...declared.bin.map((row) => [row.name, join(release, row.name)] as const), ...declared.example.map((row) => [row.name, join(release, "examples", row.name)] as const)].map(([name, path]) => { const copy = join(output, name); copyFileSync(path, copy); return [name, copy] as const; }));
+  const issued = (args: readonly string[]) => captureOwnedCommandV1("repo", ["cargo", "--store=shared", "--configuration=release", "--", ...args, "--manifest-path", manifest], repository, { control, env: { ...process.env, SEMIO_BUILD_MODE: "release" }, output: { maximumBytes: 16777216, maximumLines: 65536 } });
+  const built = await issued(["build", "--bins", "--examples", "--message-format=json"]);
+  const executables = new Map<string, string>();
+  for (const line of built.split("\n")) {
+    if (!line.startsWith('{"')) continue;
+    const message = JSON.parse(line);
+    if (message.reason === "compiler-artifact" && typeof message.executable === "string") {
+      executables.set(message.target.name, message.executable);
+    }
+  }
+  return new Map([...declared.bin, ...declared.example].map(({name}) => {
+    const executable = executables.get(name);
+    if (!executable) throw Error(`Cargo did not publish the scheduler test executable ${name}`);
+    const copy = join(output, basename(executable));
+    copyFileSync(executable, copy);
+    return [name, copy] as const;
+  }));
 });
 
 /** 🦀️ A dependency-free Cargo workspace: `base` ← `left`, `right` ← `top` (rlibs), so pipelining, fan-in and a critical chain are observable in seconds; `right` is ten times `left`, so the chain through it is unambiguous. */
@@ -103,10 +116,12 @@ export async function buildThroughBrokerV1(options: Readonly<{ manifest: string;
   const sampler = setInterval(() => { peakRunning = Math.max(peakRunning, broker.stats().running); }, 5);
   try {
     const slot = await pool.acquire();
-    const child = spawn(registeredToolExecutableV1("cargo"), ["build", "--offline", "--manifest-path", options.manifest, "--workspace", ...(options.extraArgs ?? [])], { env: { ...process.env, ...pool.environment(), RUSTC_WRAPPER: scheduler, SEMIO_BUILD_BROKER: broker.endpoint, SEMIO_BUILD_PASS: "law", CARGO_TARGET_DIR: join(directory, "t"), CARGO_BUILD_BUILD_DIR: join(directory, "b"), CARGO_TERM_COLOR: "never" }, stdio: ["ignore", "ignore", "pipe"] });
     let stderr = "";
-    child.stderr!.on("data", (chunk) => { stderr += chunk; });
-    const exit = await new Promise<number>((accept) => child.once("close", (code) => accept(code ?? 1)));
+    const exit = await pool.withClient(async environment => {
+      const child = spawn(registeredToolExecutableV1("cargo"), ["build", "--offline", "--manifest-path", options.manifest, "--workspace", ...(options.extraArgs ?? [])], { env: { ...process.env, ...environment, RUSTC_WRAPPER: scheduler, SEMIO_BUILD_BROKER: broker.endpoint, SEMIO_BUILD_PASS: "law", CARGO_TARGET_DIR: join(directory, "t"), CARGO_BUILD_BUILD_DIR: join(directory, "b"), CARGO_TERM_COLOR: "never" }, stdio: ["ignore", "ignore", "pipe"] });
+      child.stderr!.on("data", (chunk) => { stderr += chunk; });
+      return new Promise<number>((accept) => child.once("close", (code) => accept(code ?? 1)));
+    });
     slot.release();
     if (exit !== 0) console.error(stderr);
     return { units: broker.units(), runs: [], exit, peakRunning, targetDirectory: join(directory, "t") };

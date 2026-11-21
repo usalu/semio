@@ -1,51 +1,67 @@
-//! 📤️ Known host effect fields keep original typed owners through exact deferred retirement.
-use semio_framework::Effect;
-use semio_framework_value::{retirement::{RetireOwned,RetirementCursor,RetirementStep},RetainedAllocationEffect};
-use std::mem::ManuallyDrop;
+//! 📤️ Known host effect fields keep their typed owners through exact deferred retirement.
+
+use semio_framework::{Effect, kernel::ClipboardFragment};
+use semio_framework_value::{DslValue, retirement::RetireOwned};
+
 pub struct CompletionEffect(pub Effect);
-macro_rules! birth{($($value:expr),*$(,)?)=>{semio_framework_value::retirement::sequence_birth_bytes(&[$(semio_framework_value::retirement::deferred_birth_bytes_for($value)),*])};}
-macro_rules! sequence{($($value:expr),*$(,)?)=>{semio_framework_value::retirement::sequence(vec![$(Box::new(semio_framework_value::retirement::deferred($value))as Box<dyn RetirementCursor>),*])};}
-impl CompletionEffect{pub fn supported(effect:&Effect)->bool{matches!(effect,Effect::Notify{..}|Effect::Navigate{..}|Effect::LoadDocument{..}|Effect::OpenExternalUrl{..}|Effect::SetPanel{..}|Effect::DownloadMediaExport{..}|Effect::RequestFileOpen{..}|Effect::SetActiveUtility{..}|Effect::SetActiveTool{..}|Effect::OpenDialog{..}|Effect::DispatchAction{..}|Effect::ReplayShellCommand{..}|Effect::ClipboardWrite{..})}}
-impl CompletionEffect{pub fn original_birth(effect:&Effect)->Option<usize>{match effect{Effect::Notify{message}=>birth!(message),Effect::Navigate{uri}=>birth!(uri),Effect::LoadDocument{pack,spr}=>birth!(pack,spr),Effect::OpenExternalUrl{url}=>birth!(url),Effect::SetPanel{panel_json}=>birth!(panel_json),Effect::DownloadMediaExport{filename,mime_type,data,encoding}=>birth!(filename,mime_type,data,encoding),Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple,max_file_bytes}=>birth!(&req.0,accept,read_as,import_action,args,multiple,max_file_bytes),Effect::SetActiveUtility{window_id,utility_id}=>birth!(window_id,utility_id),Effect::SetActiveTool{tool_id}=>birth!(tool_id),Effect::OpenDialog{req,dialog_id,args}=>birth!(&req.0,dialog_id,args),Effect::DispatchAction{req,action,args,delay_ms}=>birth!(&req.0,action,args,delay_ms),Effect::ReplayShellCommand{action_id,args}=>birth!(action_id,args),Effect::ClipboardWrite{fragment}=>birth!(fragment),_=>None}}}
-struct Unsupported{original:ManuallyDrop<Effect>}
-impl RetirementCursor for Unsupported{
- fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet"))}
 
- fn next_computational_work(&self,_body:usize)->Result<u64,semio_framework_value::ValueError>{Ok(0)}
- semio_framework_value::native_retirement_reply!();
- fn terminal_is_empty(&self)->bool{false}
- fn next_birth_bytes(&self,_copy:usize)->Option<usize>{None}
-}
-impl Unsupported{fn close_step(&mut self,_body:usize,_effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet").into(),0)}}
-impl Drop for Unsupported{fn drop(&mut self){assert!(std::thread::panicking(),"unsupported original host effect lost retained custody");}}
-impl RetireOwned for CompletionEffect{
- type RetirementCursor=Box<dyn RetirementCursor>;
- fn retirement_seed(self)->Self::RetirementCursor{match self.0{Effect::Notify{message}=>sequence!(message),
-Effect::Navigate{uri}=>sequence!(uri),
-Effect::LoadDocument{pack,spr}=>sequence!(pack,spr),
-Effect::OpenExternalUrl{url}=>sequence!(url),
-Effect::SetPanel{panel_json}=>sequence!(panel_json),
-Effect::DownloadMediaExport{filename,mime_type,data,encoding}=>sequence!(filename,mime_type,data,encoding),
-Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple,max_file_bytes}=>sequence!(req.0,accept,read_as,import_action,args,multiple,max_file_bytes),
-Effect::SetActiveUtility{window_id,utility_id}=>sequence!(window_id,utility_id),
-Effect::SetActiveTool{tool_id}=>sequence!(tool_id),
-Effect::OpenDialog{req,dialog_id,args}=>sequence!(req.0,dialog_id,args),
-Effect::DispatchAction{req,action,args,delay_ms}=>sequence!(req.0,action,args,delay_ms),
-Effect::ReplayShellCommand{action_id,args}=>sequence!(action_id,args),
-Effect::ClipboardWrite{fragment}=>sequence!(fragment),original=>Box::new(Unsupported{original:ManuallyDrop::new(original)})}}
- fn retirement_birth_bytes(&self)->Option<usize>{match self{Self(Effect::Notify{message})=>birth!(message),
-Self(Effect::Navigate{uri})=>birth!(uri),
-Self(Effect::LoadDocument{pack,spr})=>birth!(pack,spr),
-Self(Effect::OpenExternalUrl{url})=>birth!(url),
-Self(Effect::SetPanel{panel_json})=>birth!(panel_json),
-Self(Effect::DownloadMediaExport{filename,mime_type,data,encoding})=>birth!(filename,mime_type,data,encoding),
-Self(Effect::RequestFileOpen{req,accept,read_as,import_action,args,multiple,max_file_bytes})=>birth!(&req.0,accept,read_as,import_action,args,multiple,max_file_bytes),
-Self(Effect::SetActiveUtility{window_id,utility_id})=>birth!(window_id,utility_id),
-Self(Effect::SetActiveTool{tool_id})=>birth!(tool_id),
-Self(Effect::OpenDialog{req,dialog_id,args})=>birth!(&req.0,dialog_id,args),
-Self(Effect::DispatchAction{req,action,args,delay_ms})=>birth!(&req.0,action,args,delay_ms),
-Self(Effect::ReplayShellCommand{action_id,args})=>birth!(action_id,args),
-Self(Effect::ClipboardWrite{fragment})=>birth!(fragment),_=>None}}
- fn controlled_retirement_supported()->bool{true}
+#[doc(hidden)]
+#[derive(semio_framework_value::RetireOwned)]
+pub enum CompletionEffectFields {
+    Text(String),
+    LoadDocument(Vec<u8>, Vec<u8>),
+    DownloadMediaExport(String, String, String, Option<String>),
+    RequestFileOpen(u64, String, Option<String>, String, Option<DslValue>, bool, Option<u32>),
+    SetActiveUtility(String, String),
+    OpenDialog(u64, String, Option<DslValue>),
+    DispatchAction(u64, String, Option<DslValue>, u64),
+    ReplayShellCommand(String, Option<DslValue>),
+    ClipboardWrite(ClipboardFragment),
 }
 
+impl CompletionEffect {
+    /// 🧩️ Identifies effects with a defined original retirement seed.
+    pub fn supported(effect: &Effect) -> bool {
+        matches!(effect, Effect::Notify { .. } | Effect::Navigate { .. } | Effect::LoadDocument { .. }
+            | Effect::OpenExternalUrl { .. } | Effect::SetPanel { .. } | Effect::DownloadMediaExport { .. }
+            | Effect::RequestFileOpen { .. } | Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. }
+            | Effect::OpenDialog { .. } | Effect::DispatchAction { .. } | Effect::ReplayShellCommand { .. }
+            | Effect::ClipboardWrite { .. })
+    }
+
+    /// 📐️ Quotes the inline retirement cursor before taking the effect.
+    pub fn original_birth(effect: &Effect) -> Option<usize> {
+        Self::supported(effect).then_some(size_of::<<Self as RetireOwned>::RetirementCursor>())
+    }
+}
+
+impl RetireOwned for CompletionEffect {
+    type RetirementCursor = <CompletionEffectFields as RetireOwned>::RetirementCursor;
+
+    fn retirement_ready(&self) -> bool { Self::supported(&self.0) }
+
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        use CompletionEffectFields as Fields;
+        let fields = match self.0 {
+            Effect::Notify { message } => Fields::Text(message),
+            Effect::Navigate { uri } => Fields::Text(uri),
+            Effect::LoadDocument { pack, spr } => Fields::LoadDocument(pack, spr),
+            Effect::OpenExternalUrl { url } => Fields::Text(url),
+            Effect::SetPanel { panel_json } => Fields::Text(panel_json),
+            Effect::DownloadMediaExport { filename, mime_type, data, encoding } => Fields::DownloadMediaExport(filename, mime_type, data, encoding),
+            Effect::RequestFileOpen { req, accept, read_as, import_action, args, multiple, max_file_bytes } => {
+                Fields::RequestFileOpen(req.0, accept, read_as, import_action, args, multiple, max_file_bytes)
+            }
+            Effect::SetActiveUtility { window_id, utility_id } => Fields::SetActiveUtility(window_id, utility_id),
+            Effect::SetActiveTool { tool_id } => Fields::Text(tool_id),
+            Effect::OpenDialog { req, dialog_id, args } => Fields::OpenDialog(req.0, dialog_id, args),
+            Effect::DispatchAction { req, action, args, delay_ms } => Fields::DispatchAction(req.0, action, args, delay_ms),
+            Effect::ReplayShellCommand { action_id, args } => Fields::ReplayShellCommand(action_id, args),
+            Effect::ClipboardWrite { fragment } => Fields::ClipboardWrite(fragment),
+            _ => unreachable!("original retirement admission checks completion effect support"),
+        };
+        fields.retirement_seed()
+    }
+
+    fn controlled_retirement_supported() -> bool { true }
+}

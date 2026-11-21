@@ -508,6 +508,7 @@ pub fn schema_descriptor(id: &'static str) -> ::semio_framework_schema_registry:
 
     /// 🔒️ Closes the fixture app set under the `dyn_enum_close!` vocabulary without importing it into the fixture itself.
     mod closed_apps {
+        use semio_plugin_reactor_app::OriginalMediaImport;
         use semio_plugin_mounted_owner::MountedOwnerPhaseV1;
 use semio_plugin_decl_app::EphemeralSnapshot;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;

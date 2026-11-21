@@ -33,7 +33,7 @@ export default defineConfig({
     name: "@semio-tech/framework-os-mcp",
     environment: "node",
     include: [resolve(root, "../../🧪️tests/*/🟦️.ts")],
-    exclude: [resolve(root, "./🟦️.ts"), resolve(root, "../../🧪️tests/🎚️config/🟦️.ts"), resolve(root, "../../🧪️tests/🧫️fixtures/🟦️.ts")],
+    exclude: ["🚪️canonical", "🌱️process-arena", "🎚️config", "🏛️host-driver-policy", "📇️plugin-catalog-argument", "🧫️fixtures"].map(directory => resolve(root, "../../🧪️tests", directory, "🟦️.ts")),
     env: { S_AGENT_BRIDGE_DIR: SUITE_AGENT_BRIDGE_DIR },
     coverage: { include: ["../../🟦️.ts"] },
     testTimeout: 30_000,

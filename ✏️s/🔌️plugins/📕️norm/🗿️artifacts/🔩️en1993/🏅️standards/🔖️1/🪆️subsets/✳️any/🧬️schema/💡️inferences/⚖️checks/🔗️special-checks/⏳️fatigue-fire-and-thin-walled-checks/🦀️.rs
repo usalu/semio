@@ -5,8 +5,7 @@ use super::*;
 /// ⏳ Checks the Palmgren-Miner fatigue details of EN 1993-1-9 and the fire resistance of EN 1993-1-2.
 pub(super) fn check_fatigue_and_fire(document: &En1993Snapshot, annex: AnnexChoice, params: AnnexParams, scope: Scope<'_>, report: &mut CheckReport) {
     for fat in document.fatigue_details.iter().filter(|e| scope.admits("fatigueDetails", &e.id)) {
-        let method = part_1_9::parse_method(fat.method.as_str());
-        let gmf = part_1_9::gamma_mf(method);
+        let gmf = part_1_9::gamma_mf(fat.method, fat.consequence, annex);
         let delta_c = part_1_9::detail_category_pa(fat.category);
         let history: Vec<f64> = fat.stress_history.split_whitespace().filter_map(|v| v.parse::<f64>().ok()).collect();
         let counted: Vec<(f64, f64)> = if fat.spectrum.is_empty() && history.len() >= 2 { crate::clauses::fatigue_fire::rainflow(&history).into_iter().map(|(range, n)| (range * 1e6, n)).collect() } else { Vec::new() };
@@ -22,7 +21,7 @@ pub(super) fn check_fatigue_and_fire(document: &En1993Snapshot, annex: AnnexChoi
             loc("Fatigue Palmgren-Miner damage", "Ermüdungsschädigung Palmgren-Miner"),
         )
         .annex(annex)
-        .ndp(AnnexParams::GAMMA_MF)
+        .ndp(part_1_9::gamma_mf_id(fat.method, fat.consequence))
         .utilization(dimensionless(damage), dimensionless(1.0))
         .explanation(loc(
             &format!("D={:.3} (Σ n_i/N_i, cat. {}, γ_Mf={}, {origin_en}).", damage, fat.category, gmf),

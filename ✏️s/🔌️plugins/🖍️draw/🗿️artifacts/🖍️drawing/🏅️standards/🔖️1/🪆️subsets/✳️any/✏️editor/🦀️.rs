@@ -84,25 +84,7 @@ use semio_s_artifact_draw_drawing_editor_interaction::panels::catalogue::DRAWING
 use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PLAY_BODY_LAYERS;
 use semio_s_artifact_draw_drawing_editor_interaction::panels::properties::DRAWING_PLAY_BODY_PROPERTIES;
 
-//#region 🔖️Constants
-
-/// 🧰️ The utility armed for THIS window. The React host keeps utilities per window
-/// (`ViewModel::active_utility_by_window_id`, keyed by window instance id) and only mirrors the
-/// ACTIVE window's utility into the flat `active_utility_id`; a gesture dispatched into a pane that
-/// is not the shell's active window therefore carried `None` and every rectangle drag ran as a
-/// marquee select (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17). Resolution order: the
-/// addressed window's entry, the focused window's entry, the flat field, the default.
-pub fn drawing_active_utility(view: &semio_plugin::ViewModel) -> &str {
-    view.contextual_utility()
-        .unwrap_or(DRAWING_DEFAULT_UTILITY)
-}
-
-/// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
-    semio_plugin::UiValue::Bool(value)
-}
-
-//#endregion 🔖️Constants
+pub use semio_s_artifact_draw_drawing_editor_interaction::{drawing_active_utility, ui_value_bool};
 
 //#region 🔖️Commands
 semio_plugin::app_commands! {
@@ -199,7 +181,7 @@ use semio_s_artifact_draw_drawing_editor_store_preparation::DrawingArtifactStore
 
 #[path = "🔏️proof-catalogs/🦀️.rs"]
 mod proof_catalogs;
-use proof_catalogs::*;
+use proof_catalogs::drawing_bounded_proofs;
 
 //#endregion 🧾️ProofCatalogs
 

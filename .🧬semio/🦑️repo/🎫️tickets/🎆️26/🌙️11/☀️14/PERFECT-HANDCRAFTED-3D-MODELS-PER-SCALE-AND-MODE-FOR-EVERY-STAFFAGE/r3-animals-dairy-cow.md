@@ -82,3 +82,52 @@ Final check: `FAIL: 6 measurement(s) over 4 rule line(s)`: `areaDeviation:lower-
 - Lying pose: the udder is rigid and dips into the ground; the lie-down clip was not re-checked frame by frame after the pose fix.
 - Structure: bones use the new material `bone` with authored thermal numbers; the scapula is a tapered plate with a spine bar; costal cartilages are not modelled (sternal ribs are full hoops).
 - Not run: `repo` test targets and the model export.
+
+## Round 5 handcraft (2026-11-21)
+
+State: spliced; `r3-validate.ts animals/dairy-cow --volumes`: schema 0, validateAsset 0, checkVolumes 6 — the same six physiological area measurements as in round 3 (`lower-legs` 0.66 / 0.56 and `hooves` 3.07 / 1.91 at 1:50 / 1:100, totals 0.37 / 0.44 at 1:200 / 1:500), which authors must not change (C18, C27); they are with the area reviewers (`area-review.md`, `author-requests.md` "r3 animals/dairy-cow"; round-5 values appended to `area-review.md`). Every other rule passes at every scale (silhouette IoU 0.995 / 0.991 / 0.996 at 1:50 down to 0.981 / 0.957 / 0.950 at 1:500). Scripts: `r5-dairy-cow-rig.py` (hind leg root fix and IK of every pose and clip key), `r5-dairy-cow-lying.py`, `r5_dairy_cow_body.py`, `r5_dairy_cow_frame.py`, `r5-dairy-cow-model.py`, `r5-dairy-cow-draw2d.ts`, `r5-candidate.py`, chain `r5-dairy-cow-ship.sh [--apply]`.
+
+### Reference (model to)
+
+Holstein-Friesian cow 650 kg, withers 1.45 m, stature 1.47 m (Dyce, Sack, Wensing; Ellenberger/Dittrich/Baum; Holstein linear-type data; from knowledge, about ±3 cm). Heights above ground, x ahead of the hip joint.
+
+| landmark | reference | rig / model round 5 | round 4 |
+|---|---|---|---|
+| withers; sacrum; hooks height x width; pins height x width | 1.45; 1.46-1.48; 1.38-1.42 x 0.55-0.58; 1.25-1.30 x 0.30-0.35 | 1.455; 1.47; 1.39 x 0.52; 1.285 x 0.34 | same |
+| vertebral column | dorsal under the topline | pelvis/lumbar/thorax along the column (since round 3) | same |
+| hip joint; stifle joint; hock (talocrural) centre; point of hock | 1.10-1.15; 0.72-0.78; 0.46-0.50; 0.55-0.60 | 1.106; 0.735; 0.46; 0.56 | 1.106; 0.79; 0.402; 0.50 |
+| femur; tibia; metatarsus with distal tarsus (joint to joint) | 0.42-0.46; 0.37-0.41; 0.32-0.36 | 0.431; 0.385; 0.349 | 0.40; 0.48 (+20 %); 0.29 (-15 %) |
+| hind cannon from vertical in stance | 0-8 deg | 5.6 deg | 4 deg with a low hock |
+| shoulder joint; elbow; carpus; fore fetlock; hind fetlock | 0.95-1.03; 0.76-0.80; 0.40; 0.13-0.15; 0.11-0.14 | 0.974; 0.783; 0.394; 0.134; 0.113 | same |
+| chest floor; barrel width; belly line | 0.66-0.68; 0.70-0.75; 0.60-0.62 | 0.665; 0.73; 0.61 | same |
+| claw sole length, width; coronet height | 0.11-0.13, 0.05; 0.065-0.075 | 0.112-0.118, 0.05-0.054; 0.068 | same |
+| udder floor; teat length | 0.52-0.56; 0.05-0.07 | 0.54; 0.065 | same |
+
+All values lie within 3 % of the band; the hook width (0.52 against 0.55-0.58) is 5 % narrow (the hook masses sit on the lumbar shelf; widening them changes the C27 areas).
+
+### Grades (my eye, opened renders)
+
+| scale | body before → after | thermal | structure | 2D |
+|---|---|---|---|---|
+| 1:50 | B+ → A- | B+ → B+ (not re-opened) | B+ → B+ (not re-opened; hind bones re-stated) | B+ → A- |
+| 1:100 | B → B+ (not opened) | B+ (not opened) | B+ (not opened) | B → B+ (not opened) |
+| 1:200 | B → B+ (not opened) | B+ (not opened) | B (not opened) | B → B+ (not opened) |
+| 1:500 | B- → B+ | B (not opened) | B (not opened) | B → B+ (not opened) |
+
+### Changes
+
+- Rig (root): hind legs only: femur 0.40 → 0.431, tibia 0.48 → 0.385, metatarsus 0.29 → 0.349, stifle (0.246, 0.79) → (0.22, 0.735), hock (-0.036, 0.402) → (-0.05, 0.46); every pose and clip key solved again by IK onto the old fetlock (residual 0.0 mm at every claw, the tail, head and udder); limits shifted by the mean change of the solved offsets, metatarsus widened to 120 deg for `lying-resting`; masses scaled with the bone, anchors and 31 elevation shapes carried.
+- Pose `lying-resting` (root): the rigid udder hung 0.12 m (teats 0.14 m) below the plane the cow lies on; the udder bone is drawn up by dx 0.103, dy 0.065 (in the pelvis frame) so its floor sits on that plane; `lie-down` blends into it.
+- Body: the trunk is one skin per table (barrel, back) on the lumbar bone, blended over pelvis, loin and thorax, instead of front and rear pieces with a seam at the thoracolumbar joint (the `waist` filler is gone); 1:200 and 1:500 trunk in one mass instead of two eggs; hind leg segments restated on the new bones (thigh lowered to the new stifle, gaskin to the hock, cannon 0.349); hidden lead-in sections at hock, knee and fetlock so no flat cap shows; ears with nine sections (no hexagon); hook bones lower and flatter; 1:500 forehand mass along the shoulder (it stuck forward of the brisket) and 1:500 pastern and claw block at the 75 mm floor (the catalog's 46 mm claws were below the print floor).
+- Structure: femur, tibia, metatarsus, patella on the new bones.
+- 2D (ruling E1): redrawn from the new body; thorax shapes take the trunk skin (no false seam line); teats and tail switch `solid: revolved` (round in front and plan instead of rectangles).
+
+### Renders opened
+
+1:50 body (six views twice, right side twice), `lying-resting` (six views), 1:500 body (six views, right side), 2D 1:50 (candidate).
+
+### Remaining, with reason
+
+- Area: `lower-legs` and `hooves` stay above their physiological shares (C18/C27; area reviewers).
+- Patches are straps whose edges step where they dive into the trunk facets; hook and pin bones are still ellipsoid bosses; shoulder and arm masses show their outline on the chest (rigid per-bone solids, no skin weights per vertex).
+- Not opened in round 5: structure and thermal at any scale, 1:100 and 1:200 body, poses other than `lying-resting`, clips, 2D at 1:100 to 1:500.

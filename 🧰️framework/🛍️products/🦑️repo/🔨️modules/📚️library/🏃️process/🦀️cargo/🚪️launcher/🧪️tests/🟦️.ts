@@ -81,13 +81,32 @@ test("isolated store refuses an invented reservation before any filesystem effec
  await expect(withRepositoryCargoIsolatedStoreV1({storage:{} as never,base,control},async()=>{})).rejects.toThrow();expect(existsSync(base)).toBe(false);expect(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")).toContain("isolatedDirectory");
 });
 
-test("a command learns the larger of its lane growth and the image free-space fall, never a negative number",()=>{
- const rows=[[5,100,90],[5,100,60],[-7,100,130],[0,null,null],[9,null,50],[3,100,100]] as const,run=Bun.spawnSync(["python3","-I","-c","import json,sys\nprint(json.dumps([max(0,g,(b-a) if b is not None and a is not None else 0) for g,b,a in json.loads(sys.argv[1])]))",JSON.stringify(rows)]);
+test("a command learns the larger of its lane growth and the occupied image growth, never a negative number",()=>{
+ const rows=[[5,100,90],[5,100,60],[-7,100,130],[0,null,null],[9,null,50],[3,100,100]] as const,run=Bun.spawnSync(["python3","-I","-c","import json,sys\nprint(json.dumps([max(0,g,(a-b) if b is not None and a is not None else 0) for g,b,a in json.loads(sys.argv[1])]))",JSON.stringify(rows)]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);
  expect(rows.map(([grown,before,after])=>commandWriteBytesV1(grown,before,after))).toEqual(JSON.parse(run.stdout.toString()));
 });
 
-test("the image free-space fall is learned only for an exclusive command: concurrent writers never inflate a lane's sample",()=>{
- expect(commandWriteBytesV1(10,1000,400)).toBe(600);expect(commandWriteBytesV1(10,1000,400,true)).toBe(600);
- expect(commandWriteBytesV1(10,1000,400,false)).toBe(10);expect(commandWriteBytesV1(900,1000,400,false)).toBe(900);expect(commandWriteBytesV1(10,null,400,true)).toBe(10);expect(commandWriteBytesV1(-5,400,1000,true)).toBe(0);
+test("the occupied image growth is learned only for an exclusive command: concurrent writers never inflate a lane's sample",()=>{
+ expect(commandWriteBytesV1(10,400,1000)).toBe(600);expect(commandWriteBytesV1(10,400,1000,true)).toBe(600);
+ expect(commandWriteBytesV1(10,400,1000,false)).toBe(10);expect(commandWriteBytesV1(900,400,1000,false)).toBe(900);expect(commandWriteBytesV1(10,null,400,true)).toBe(10);expect(commandWriteBytesV1(-5,1000,400,true)).toBe(0);
+});
+
+test("repository Cargo prepares declared owner outputs before source admission", async () => {
+ const fixture = await Bun.file(new URL("./🧰️preparation.json",import.meta.url)).json();
+ const source = ts.createSourceFile("launcher.ts",readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true);
+ const launcher = source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="launchRepositoryCargoV1"&&node.body);
+ expect(launcher).toBeDefined();
+ const positions = new Map<string,number>();
+ const visit=(node:ts.Node)=>{
+  if(ts.isCallExpression(node) && ts.isIdentifier(node.expression) && !positions.has(node.expression.text)) positions.set(node.expression.text,node.getStart(source));
+  ts.forEachChild(node,visit);
+ };
+ visit(launcher!);
+ const db=new Database(":memory:");
+ try {
+  const actual=fixture.order.map((step:string)=>positions.get(step)??null);
+  const result=db.query("select ? is not null and ? < ? and ? < ? as admitted").get(actual[0],actual[0],actual[1],actual[1],actual[2]);
+  expect(result).toEqual({admitted:fixture.admitted});
+ }finally{db.close();}
 });

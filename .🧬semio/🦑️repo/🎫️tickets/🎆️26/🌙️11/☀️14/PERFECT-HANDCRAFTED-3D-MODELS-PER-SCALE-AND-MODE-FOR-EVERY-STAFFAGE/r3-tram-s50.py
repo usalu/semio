@@ -194,9 +194,9 @@ def bogie(xb, bt, powered):
         wb = f'ws-{bt}{k + 1}'
         w = []
         for side, st in ((1, 'l'), (-1, 'r')):
-            w.append(rev(f'wheel-{wb}-{st}', END, 'steel-wheel', 'body', 0.3, wheel_loop(), [xb + dx, 0.3, side * Z_BACK], (0, 0, side)))
+            w.append(rev(f'wheel-{wb}-{st}', END, 'steel-wheel', 'body', 0.3, wheel_loop(), [xb + dx, 0.3, side * Z_BACK], (0, 0, side), bore=True))
             w.append(cyl(f'stub-axle-{wb}-{st}', END, 'steel-wheel', 'detail', STEEL, [xb + dx, 0.3, side * 0.56], (0, 0, side), 0.09, 0.055))
-            w.append(rev(f'brake-disc-{wb}-{st}', END, 'cast-iron', 'detail', 0.55, [[0.096, 0.09], [0.096, 0.2], [0.114, 0.2], [0.114, 0.09]], [xb + dx, 0.3, side * Z_BACK], (0, 0, side)))
+            w.append(rev(f'brake-disc-{wb}-{st}', END, 'cast-iron', 'detail', 0.55, [[0.096, 0.09], [0.096, 0.2], [0.114, 0.2], [0.114, 0.09]], [xb + dx, 0.3, side * Z_BACK], (0, 0, side), bore=True))
         b += [on(s, wb, (xb + dx, 0.3)) for s in w]
     return b
 

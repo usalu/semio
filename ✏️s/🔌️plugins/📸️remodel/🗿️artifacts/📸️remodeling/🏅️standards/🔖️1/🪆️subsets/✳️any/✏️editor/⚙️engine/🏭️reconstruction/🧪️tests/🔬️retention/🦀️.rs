@@ -113,12 +113,16 @@ fn retention(engine: &ReconstructionEngine) -> Retention {
 /// 🛰️ The `synthetic-orbit` engine, frames pushed exactly as `🧵️reconstruction-session` pushes them.
 fn synthetic_orbit_engine() -> ReconstructionEngine {
     let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("the synthetic-orbit document parses");
-    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params);
+    let capture = FrameCapture {
+        stream: 0,
+        intrinsics: crate::editor::remodeling::engine::stream_intrinsics(&scene.calibration, scene.streams[0].camera_id.as_deref()),
+    };
     eprintln!("[RETAIN] params voxel={} truncation={} dense={:?} sources={} texture={}", params.tsdf_voxel_size, params.tsdf_truncation, params.dense, params.dense_source_views, params.texture_enabled);
     let mut engine = ReconstructionEngine::new(&params);
     for (index, (_, bytes)) in semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames().enumerate() {
         let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image("image/png", bytes).expect("the fixture frame decodes");
-        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
+        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0, capture);
     }
     engine
 }

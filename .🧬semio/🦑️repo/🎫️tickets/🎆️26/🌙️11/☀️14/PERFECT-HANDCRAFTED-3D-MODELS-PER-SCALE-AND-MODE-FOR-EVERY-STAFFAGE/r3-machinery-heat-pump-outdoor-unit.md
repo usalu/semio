@@ -88,3 +88,46 @@ Check (`$BUN volumes-check.ts machinery/heat-pump-outdoor-unit --product`, 2026-
 - Sheet panels are 7.5 / 15 mm thick at 1:50 / 1:100 instead of 1.2 mm: the feature rule judges the overall extents, and a flat panel with a hole cannot be a thin-walled hollow solid; folded parts (rear post, cover skirt, bell mouth, column shell) keep their thin-walled form.
 - The back of the coil at 1:100 shows the fin face without the wire guard (4 mm wires are below the scale). Fin texture and screws are not modelled.
 - The 1:500 front panel shows a shading wedge from the cap triangulation around the round opening in `r3-sheet` (renderer, already reported for delivery-van).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-heat-pump-outdoor-unit-kit.py` (imports the round 3 kit, replaces 1:200 and 1:500, areas, 1:200 hatch and texts, the 1:500 band; `--apply` as round 3), `r5-m03-render.sh` (all sheets of one asset), `r5-m03-capprobe.ts` (corner normals of a cap, used to rule out a mesh defect behind the shading wedges).
+
+### Reference (manufacturer data, checked 2026-11-21)
+
+| quantity | Vaillant aroTHERM plus VWL 105/6 and 125/6 (installer quick guide, product sheet) | Mitsubishi Ecodan PUZ-WM112 class (K) | asset class value (modelled) | model 1:50 | deviation from class value |
+|---|---|---|---|---|---|
+| height incl. feet | 1,565 mm | about 1,340 mm | 1,450 mm (S2) | 1,450 mm | 0 |
+| width (lateral) | 1,100 mm | 1,050 mm | 1,100 mm | 1,100 mm casing, 1,115 mm cover | 0 / +1.4 % (cover overhang) |
+| depth | 450 mm (449 in the German planning guide) | 480 mm | 450 mm casing, 470 mm with cover | 430 casing + 20 mm grille dome, 470 mm cover | -0.4 % / 0 |
+| fan | one axial fan (single-fan 10/12 kW class) | one | 0.56 m blade, 0.60 m opening | 0.552 m blade tip circle, 0.60 m opening | -1.4 % |
+| mass | 194 kg | about 130 kg | 150 kg | 143 + 7 kg bones | 0 |
+
+The 1.45 m class height lies between the two manufacturer units (1.34 and 1.565 m); `dimensions` are not changed without a cited single reference, so the class value stays.
+
+### Grades before -> after (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- (unchanged model; thermal now honest C31 references) |
+| 1:100 | A- / A- / B+ | A- / A- / B+ |
+| 1:200 | B (side coil a flat dark slab, cover sunk 20 mm into the casing with a ragged seam) / B+ / B+ | A- (13 louvre bars at 90 mm in a frame over the recessed fin pack, cover rests on the casing) / A- / B+ |
+| 1:500 | B (cover sunk into the casing) / B+ / B | B+ / B+ / B |
+| poses | heating, cooling, defrosting, off, serviced (cover open 80 degrees about the rear hinge, no collision) and `defrost-sequence` t = 15 s opened: closed and natural | unchanged |
+
+Opened: r3-sheet body, structure, thermal --cut at 1:50, 1:100 (body), 1:200 (body, thermal, before and after), 1:500 (body); all five poses and the clip frame at 1:50; r3-2d at 1:50, 1:200 (candidate), 1:500.
+
+### Changes
+
+- 1:200: casing (front panel, column shell, side strip, top panel, partition, posts, top frame) ends at y = 1.405 under the cover instead of 1.425 inside it; the fin pack moves 30 mm behind the side face and 13 louvre bars (30 mm, 90 mm pitch) with a top and bottom frame bar form the guard; 2D side elevation gets a `louvres` hatch (0.45 mm) and the decisions say so.
+- 1:500: casing top at 1.405 under the cover slab.
+- Thermal: the round-4 stand-in `th-compressor-envelope` (box with `sectionFaces` on faces looking into the closed column, forbidden by C31 g) is gone; the column panel, column back and service panel are plain references again. With the flood the closed column no longer counts: `casing` 4.6 -> 3.75 (measured 3.736), `base-tray` 1.2 -> 1.0 (0.992), both within C16, listed in `area-review.md`.
+- `representations.500.validRange.maxDenominator` 1000 -> 900 (feet and cover print at 0.2 mm there; 1:950 and 1:800 measured below).
+
+Check: `r3-validate.ts machinery/heat-pump-outdoor-unit --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0).
+
+### Remaining
+
+- The front panel of 1:50 to 1:500 shows soft triangular shading wedges in `r3-sheet` at some zooms; the corner normals of the cap are exactly (1, 0, 0) (`r5-m03-capprobe.ts`), so it is the sheet rasteriser, not the mesh (already filed for delivery-van and sorption-wheel).
+- The cover-to-casing contact of 1:200 still draws a faint grainy seam line (coplanar contact seen edge-on).
+- Sheet panels stay at the scale feature (7.5 / 15 mm) instead of 1.2 mm (round 3 reason).

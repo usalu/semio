@@ -48,6 +48,8 @@ pub trait OpBinaryReceivingCursor<M:OpBinaryReceiving>:semio_framework_value::re
     fn is_ready(&self)->bool;
     fn take_into(&mut self,recipient:&mut Option<M>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress>;
     fn close_demands(&self,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
+    /// ⛽️ Quotes the selected retirement action before the original caller funds its close effect.
+    fn close_work_demand(&self, _maximum_copy_bytes: usize) -> Result<u64, semio_framework_value::ValueError> { Ok(1) }
     fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll;
     fn terminal_is_empty(&self)->bool;
 }

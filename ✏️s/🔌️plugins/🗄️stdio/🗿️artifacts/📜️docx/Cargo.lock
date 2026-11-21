@@ -3879,6 +3879,7 @@ name = "semio-framework-graph-manifest"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
@@ -5386,6 +5387,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-os-spr",
  "semio-os-store-engine-core",
  "semio-os-store-engine-live",
@@ -6980,6 +6982,8 @@ dependencies = [
  "semio-framework",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-replication-command-ingress",
+ "semio-framework-value-persistent",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
  "semio-framework-value",
@@ -7981,7 +7985,12 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-job",
  "semio-framework-value",
+ "semio-plugin-interpreter-numeric",
 ]
+
+[[package]]
+name = "semio-plugin-interpreter-numeric"
+version = "0.1.0"
 
 [[package]]
 name = "semio-plugin-interpreter-runtime"
@@ -9093,6 +9102,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
  "semio-framework-replication-error",
@@ -9522,6 +9532,17 @@ version = "0.1.0"
 dependencies = [
  "semio-s-artifact-stdio-pdf-model",
  "semio-s-artifact-stdio-pdf-snapshot-2",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-pdf-native-save"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-publication",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-schema-4",
 ]
 
 [[package]]
@@ -12579,6 +12600,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-hash",
+ "semio-framework-pixels",
  "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
@@ -13980,6 +14002,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-pdf-schema-5"
 version = "0.1.0"
 dependencies = [
+ "semio-s-artifact-stdio-pdf-native-save",
  "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-async",

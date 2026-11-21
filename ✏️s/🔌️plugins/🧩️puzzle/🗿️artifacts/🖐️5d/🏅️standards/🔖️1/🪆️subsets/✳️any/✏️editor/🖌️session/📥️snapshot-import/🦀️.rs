@@ -4,6 +4,7 @@ use semio_plugin::ArtifactReservedJob;
 
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
+use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs;
 use semio_plugin::ArtifactReservedToolJobRequest;
 use semio_plugin::ArtifactToolCompletion;
 use semio_plugin::EditorApp;
@@ -15,7 +16,16 @@ use semio_framework_pack_json::{parse, Value};
 use crate::editor::puzzle5d::session::support::{puzzle5d_import_checkpoint, puzzle5d_job_fault, puzzle5d_step_envelope};
 use crate::editor::puzzle5d::Puzzle5dPlayApp;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_IMPORT_DECODED_ITEMS, PUZZLE5D_IMPORT_MEDIA_BYTES, PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE, PUZZLE5D_IMPORT_MUTATION_ITEMS, PUZZLE5D_IMPORT_MUTATION_PAGES, PUZZLE5D_IMPORT_SEMANTIC_ITEMS, PUZZLE5D_RESERVED_PAGE_BYTES, puzzle5d_editor_projection};
-use semio_framework_job::StepContext;
+use crate::puzzle5d_rewriting::{QueryExecution, prepare_puzzle5d_effects, start_puzzle5d_rewrite};
+use semio_framework_job::{InteractiveJobCloseStep, StepContext};
+use semio_framework_value::{DslValue, bounded_clone::DSL_VALUE_CLONE_MAXIMUM_DEPTH};
+use semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of;
+use semio_s_artifact_trinity_rewriting_inferences::rule_media::{
+    REWRITE_MEDIA_MAX_BYTES, REWRITE_MEDIA_SCHEMA, REWRITE_MEDIA_TYPE, decode_invocation, decode_invocation_value,
+};
+
+pub const PUZZLE5D_REWRITE_INPUT_PORT: &str = "rewrite:in";
+const MAX_REWRITE_GRAPH_ITEMS: usize = 16_384;
 
 //#region 🧵️ReservedJobs
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -48,6 +58,7 @@ enum Puzzle5dImportStage {
     Compatibility,
     CatalogMutation,
     Complete,
+    RewritePlan,
 }
 
 /// ♻️ The owners one `Puzzle5dImportJob` still holds when it closes, retired as one controlled bundle.
@@ -63,6 +74,7 @@ struct Puzzle5dImportOwners {
     grip_index: Vec<(String, usize)>,
     compatibility_index: Vec<((String, String), usize)>,
     mutation_pages: [Vec<Puzzle5dMutation>; PUZZLE5D_IMPORT_MUTATION_PAGES],
+    rewrite_mutations: Option<Vec<Puzzle5dMutation>>,
     current_part: Option<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind>,
     pub pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle5dPlayApp>>>,
 }
@@ -85,6 +97,8 @@ pub struct Puzzle5dImportJob {
     grip_index: Vec<(String, usize)>,
     compatibility_index: Vec<((String, String), usize)>,
     mutation_pages: [Vec<Puzzle5dMutation>; PUZZLE5D_IMPORT_MUTATION_PAGES],
+    rewrite_mutations: Option<Vec<Puzzle5dMutation>>,
+    rewrite_execution: Option<QueryExecution>,
     pub cursor: usize,
     pub nested_cursor: usize,
     pub decoded_items: usize,
@@ -120,6 +134,64 @@ fn puzzle5d_decode_import_fragment(media_json: &str) -> Result<Value, String> {
     parse(media_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 
+fn rewrite_value_fits(value: &DslValue, depth: usize, remaining: &mut usize) -> Option<()> {
+    if depth == 0 {
+        return None;
+    }
+    *remaining = remaining.checked_sub(size_of::<DslValue>())?;
+    match value {
+        DslValue::String(text) => *remaining = remaining.checked_sub(text.len())?,
+        DslValue::Bytes(_) => return None,
+        DslValue::Array(items) => {
+            for item in items {
+                rewrite_value_fits(item, depth - 1, remaining)?;
+            }
+        }
+        DslValue::Object(fields) => {
+            for (key, item) in fields.iter() {
+                *remaining = remaining.checked_sub(size_of::<String>().saturating_add(key.len()))?;
+                rewrite_value_fits(item, depth - 1, remaining)?;
+            }
+        }
+        DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => {}
+    }
+    Some(())
+}
+
+fn puzzle5d_rewrite_import(snapshot: &crate::Puzzle5dSnapshot, media: &Media) -> Result<(QueryExecution, Puzzle5dKindCatalogs), String> {
+    use semio_plugin::MediaPayload;
+    if media.media_type != REWRITE_MEDIA_TYPE {
+        return Err("puzzle5d rewrite:in requires trinity.rewrite.invocation media".into());
+    }
+    let invocation = match &media.payload {
+        MediaPayload::Structured { schema, json } if schema == REWRITE_MEDIA_SCHEMA => decode_invocation(json),
+        MediaPayload::Intrinsic { schema, value } if schema == REWRITE_MEDIA_SCHEMA => {
+            let mut remaining = REWRITE_MEDIA_MAX_BYTES;
+            rewrite_value_fits(value, DSL_VALUE_CLONE_MAXIMUM_DEPTH, &mut remaining)
+                .ok_or("puzzle5d rewrite:in payload exceeds its predecode cap")?;
+            decode_invocation_value(value)
+        }
+        _ => return Err("puzzle5d rewrite:in requires trinity.rewrite.invocation media".into()),
+    }.map_err(|error| format!("puzzle5d rewrite:in: {error}"))?;
+    let catalog_extent = snapshot.kind_catalogs_extra.as_ref().map_or(0, |catalog| {
+        catalog.parts.iter().fold(catalog.parts.len() + catalog.grips.len() + catalog.fasteners.len() + catalog.ropes.len(), |total, part| {
+            total.saturating_add(part.grips.len())
+        })
+    });
+    let base_extent = snapshot.fasteners.len() + snapshot.target_volumes.len() + snapshot.kind_compatibility.len() + catalog_extent;
+    let extent = snapshot.parts.iter().try_fold(base_extent, |total, part| {
+        let total = total.saturating_add(1).saturating_add(part.grips.len());
+        (total <= MAX_REWRITE_GRAPH_ITEMS).then_some(total)
+    });
+    if extent.is_none_or(|extent| extent > MAX_REWRITE_GRAPH_ITEMS) {
+        return Err("puzzle5d rewrite:in graph exceeds its item cap".into());
+    }
+    let catalogs = kind_catalogs_of(&snapshot.kind_catalogs, &snapshot.kind_catalogs_extra).unwrap_or_default();
+    let execution = start_puzzle5d_rewrite(snapshot, &catalogs, &invocation.rule, &invocation.bindings)
+        .map_err(|error| format!("puzzle5d rewrite:in: {error}"))?;
+    Ok((execution, catalogs))
+}
+
 impl Default for Puzzle5dImportJob {
     fn default()->Self{
         Self {
@@ -140,6 +212,8 @@ impl Default for Puzzle5dImportJob {
             grip_index: Vec::new(),
             compatibility_index: Vec::new(),
             mutation_pages: std::array::from_fn(|_| Vec::new()),
+            rewrite_mutations: None,
+            rewrite_execution: None,
             cursor: 0,
             nested_cursor: 0,
             decoded_items: 0,
@@ -399,6 +473,10 @@ impl Puzzle5dImportJob {
                 self.stage = Puzzle5dImportStage::Complete;
             }
             Puzzle5dImportStage::Complete => return self.turn_complete(request),
+            Puzzle5dImportStage::RewritePlan => {
+                cx.set_stage("puzzle5d-rewrite-plan");
+                if let Some(outcome) = self.turn_rewrite(snapshot) { return outcome; }
+            }
         }
         self.progress = self.progress.saturating_add(1);
         cx.consume_fuel(1);
@@ -408,8 +486,19 @@ impl Puzzle5dImportJob {
     /// 🧱️ Decodes one record of the imported snapshot.
     fn turn_decode(&mut self,snapshot:&Puzzle5dPlaySnapshot) -> Option<crate::puzzle_job::JobTurn> {
         let Some(semio_plugin::ArtifactReservedToolInput::Media{port,media})=self.input.as_ref()else{return Some(puzzle5d_job_fault("puzzle5d import requires its original media owner"))};
+        if port == PUZZLE5D_REWRITE_INPUT_PORT {
+            match puzzle5d_rewrite_import(snapshot.typed(), media) {
+                Ok((execution, catalogs)) => {
+                    self.rewrite_execution = Some(execution);
+                    self.catalogs = catalogs;
+                }
+                Err(error) => return Some(puzzle5d_job_fault(error)),
+            }
+            self.stage = Puzzle5dImportStage::RewritePlan;
+            return None;
+        }
         if port != "kit:in" {
-            return Some(puzzle5d_job_fault("puzzle5d import only implements kit:in"));
+            return Some(puzzle5d_job_fault("puzzle5d import requires kit:in or rewrite:in"));
         }
         if self.media_json.is_none(){if let semio_plugin::MediaPayload::Intrinsic{value,..}=&media.payload{self.media_json=Some(semio_framework_pack_json::to_json_string(value));}}
         let media_json=match &media.payload{
@@ -453,6 +542,29 @@ impl Puzzle5dImportJob {
         self.catalog_changed = !self.had_catalogs;
         self.stage = Puzzle5dImportStage::CensusParts;
         self.cursor = 0;
+        None
+    }
+
+    fn turn_rewrite(&mut self, snapshot: &Puzzle5dPlaySnapshot) -> Option<crate::puzzle_job::JobTurn> {
+        let Some(execution) = self.rewrite_execution.as_mut() else {
+            return Some(puzzle5d_job_fault("puzzle5d rewrite:in lost its query execution"));
+        };
+        let planned = match execution.step() {
+            Ok(planned) => planned,
+            Err(error) => return Some(puzzle5d_job_fault(format!("puzzle5d rewrite:in: {error}"))),
+        };
+        if execution.effect_count() > PUZZLE5D_IMPORT_MUTATION_ITEMS {
+            return Some(puzzle5d_job_fault("puzzle5d rewrite:in mutation limit exceeded"));
+        }
+        let (_, effects) = planned?;
+        if effects.len() > PUZZLE5D_IMPORT_MUTATION_ITEMS {
+            return Some(puzzle5d_job_fault("puzzle5d rewrite:in mutation limit exceeded"));
+        }
+        match prepare_puzzle5d_effects(snapshot.typed(), &self.catalogs, &effects) {
+            Ok(mutations) => self.rewrite_mutations = Some(mutations),
+            Err(error) => return Some(puzzle5d_job_fault(format!("puzzle5d rewrite:in: {error}"))),
+        }
+        self.stage = Puzzle5dImportStage::Complete;
         None
     }
 
@@ -658,11 +770,14 @@ impl Puzzle5dImportJob {
             return crate::puzzle_job::JobTurn::Yield;
         }
         if !self.completed {
-            let mut mutation_pages = std::mem::take(&mut self.mutation_pages);
-            let mut mutations = std::mem::take(&mut mutation_pages[0]);
-            for page in mutation_pages.iter_mut().skip(1) {
-                mutations.append(page);
-            }
+            let mutations = self.rewrite_mutations.take().unwrap_or_else(|| {
+                let mut mutation_pages = std::mem::take(&mut self.mutation_pages);
+                let mut mutations = std::mem::take(&mut mutation_pages[0]);
+                for page in mutation_pages.iter_mut().skip(1) {
+                    mutations.append(page);
+                }
+                mutations
+            });
             let completion=&request.completion;
             if let Err(rejected) = completion.complete(Ok(Emit::mutations(mutations)), EphemeralEmit::default()) {
                 let message = rejected.fault.message.clone();
@@ -700,13 +815,30 @@ impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzz
         self.outbox.borrow_outcome(descriptor)
     }
 
-    fn begin_close(&mut self){self.closing=true}
+    fn begin_close(&mut self) {
+        self.closing = true;
+        if let Some(execution) = self.rewrite_execution.as_mut() {
+            execution.begin_close();
+        }
+    }
     fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(execution) = self.rewrite_execution.as_ref().filter(|execution| !execution.terminal_is_empty()) {
+            return execution.close_demands(body);
+        }
         if !self.close_staged{return Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Puzzle5dImportOwners>(),depth:1,..Default::default()})}crate::puzzle_job::job_close_demands(&self.outbox,&self.owners,body)
     }
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        self.closing=true;if !self.close_staged{let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;return semio_framework_job::close_original_retained_step(cx,demand,|_|{self.owners.stage(Puzzle5dImportOwners{input:self.input.take(),media_json:self.media_json.take(),fragment:self.fragment.take(),catalogs:std::mem::take(&mut self.catalogs),compatibility:std::mem::take(&mut self.compatibility),part_index:std::mem::take(&mut self.part_index),grip_index:std::mem::take(&mut self.grip_index),compatibility_index:std::mem::take(&mut self.compatibility_index),mutation_pages:std::mem::take(&mut self.mutation_pages),current_part:self.current_part.take(),pending_completion_rejection:self.pending_completion_rejection.take()});self.close_staged=true;semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})}crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx)
+        self.begin_close();
+        if let Some(execution) = self.rewrite_execution.as_mut().filter(|execution| !execution.terminal_is_empty()) {
+            let demand = execution.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+            let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| execution.close_step(effect))?;
+            return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
+        self.closing=true;if !self.close_staged{let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;return semio_framework_job::close_original_retained_step(cx,demand,|_|{self.owners.stage(Puzzle5dImportOwners{input:self.input.take(),media_json:self.media_json.take(),fragment:self.fragment.take(),catalogs:std::mem::take(&mut self.catalogs),compatibility:std::mem::take(&mut self.compatibility),part_index:std::mem::take(&mut self.part_index),grip_index:std::mem::take(&mut self.grip_index),compatibility_index:std::mem::take(&mut self.compatibility_index),mutation_pages:std::mem::take(&mut self.mutation_pages),rewrite_mutations:self.rewrite_mutations.take(),current_part:self.current_part.take(),pending_completion_rejection:self.pending_completion_rejection.take()});self.close_staged=true;semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})}crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx)
     }
-    fn terminal_is_empty(&self)->bool{self.closing&&self.close_staged&&self.outbox.terminal_is_empty()&&self.owners.is_empty()}
+    fn terminal_is_empty(&self)->bool{
+        self.closing&&self.close_staged&&self.outbox.terminal_is_empty()&&self.owners.is_empty()
+            && self.rewrite_execution.as_ref().is_none_or(QueryExecution::terminal_is_empty)
+    }
 }
 //#endregion 🧵️ReservedJobs

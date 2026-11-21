@@ -1,7 +1,7 @@
 //! 📥️ Flat DSL coverage rows feed the same granted packed builder as original native arrays.
 use super::super::*;
 use semio_framework_dsl_record::{DslOwnedReceivingField,OwnedFieldReceiving,FieldValue,receiving::owned::*};
-use semio_framework_value::{NativeDecodeControl,RetainedAllocationEffect,RetainedCloneGrant,RetainedWorkOutcome,RetainedWorkPoll,retained_clone::OriginalEffectReply};
+use semio_framework_value::{NativeDecodeControl,RetainedAllocationEffect,RetainedCloneGrant,RetainedWorkOutcome,RetainedWorkPoll,retained_clone::{OriginalEffectReply,OriginalSourceTurnWitness}};
 use std::mem::ManuallyDrop;
 
 pub struct RasterCoverageFieldReceiving{source:OwnedSlot<FieldValue>,current:OwnedSlot<FieldValue>,row:OwnedSlot<RasterSelectionSpan>,output:OwnedSlot<RasterSelectionSpans>,child:OwnedReceivingSlot<RasterSelectionSpan>,builder:ManuallyDrop<Option<RasterSelectionSpansBuilder>>,index:usize,length:usize,phase:u8,closing:bool,failed:bool}
@@ -9,7 +9,7 @@ impl Default for RasterCoverageFieldReceiving{fn default()->Self{Self{source:Def
 impl DslOwnedReceivingField for RasterSelectionSpans{type Cursor=RasterCoverageFieldReceiving;fn receiving_cursor()->Self::Cursor{Self::Cursor::default()}}
 /// 🪢️ Settles one reply-shaped builder close action into an owned closing turn.
 fn builder_close(builder:&mut RasterSelectionSpansBuilder,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OwnedClose{
-    if !builder.is_closing(){return done(effect,builder.begin_close_paid(effect).map(|step|step.progress()).map_err(Into::into));}
+    if !builder.is_closing(){let started=builder.begin_close_paid(effect);return done(effect,started.map(|step|step.progress()).map_err(Into::into));}
     let mut slot=None;let ran=OriginalEffectReply::borrow(&mut slot).and_then(|reply|builder.close_into(body,effect,reply).map(|_|()));
     match(ran,slot.take()){(Err(error),_)=>done(effect,Err(error.into())),(Ok(()),Some(settled))=>done(effect,settled.map(|step|step.progress())),(Ok(()),None)=>RetainedWorkPoll::Pending{work:effect.performed_work()}}
 }
@@ -26,7 +26,7 @@ impl RasterCoverageFieldReceiving{
             3 if self.row.value.is_none()=>{let poll=self.child.take_into(&mut self.row.value,&mut effect.nested(child_grant(g)));return settle(effect,normal(poll));},
             4 if !self.child.terminal_is_empty()=>{let poll=self.child.close_step(&mut effect.nested(child_grant(g)));return settle(effect,receiving(poll));},
             5=>{let result=match self.builder.as_mut(){Some(builder)=>builder.push(&mut self.row.value,effect),None=>Err(invariant())};if result.is_ok()&&self.row.value.is_none(){self.index+=1;self.phase=if self.index==self.length{7}else if self.builder().is_ok_and(|b|b.accepts_row()){1}else{6};}return done(effect,result.map(|step|step.progress()).map_err(Into::into));},
-            6 if !self.builder()?.output_ready()&&!self.builder()?.accepts_row()=>{return match self.builder.as_mut().ok_or_else(invariant).and_then(|builder|builder.advance(effect)){Ok(None)=>RetainedWorkPoll::Pending{work:effect.performed_work()},Ok(Some(settled))=>done(effect,settled.map(|step|step.progress()).map_err(Into::into)),Err(error)=>done(effect,Err(error.into()))};},
+            6 if self.builder.as_ref().is_some_and(|builder|!builder.output_ready()&&!builder.accepts_row())=>{return match self.builder.as_mut().ok_or_else(invariant).and_then(|builder|builder.advance(effect)){Ok(None)=>RetainedWorkPoll::Pending{work:effect.performed_work()},Ok(Some(settled))=>done(effect,settled.map(|step|step.progress()).map_err(Into::into)),Err(error)=>done(effect,Err(error.into()))};},
             7=>{let result=self.builder.as_mut().ok_or_else(invariant).and_then(|builder|builder.finish(effect));if result.is_ok(){self.phase=6;}return done(effect,result.map(|step|step.progress()).map_err(Into::into));},
             8=>{let result=self.builder.as_mut().ok_or_else(invariant).and_then(|builder|builder.take(effect));return match result{Ok(Some(output))=>{*self.output.value=Some(output);self.phase=9;done(effect,Ok(receipt(demand)))},Ok(None)=>idle(effect),Err(error)=>done(effect,Err(error.into()))};},
             9 if self.builder.as_ref().is_some_and(|builder|!builder.terminal_is_empty())=>{let poll=builder_close(self.builder.as_mut().unwrap(),body,effect);return settle(effect,receiving(poll));},
@@ -75,7 +75,7 @@ impl OwnedFieldReceiving<RasterSelectionSpans> for RasterCoverageFieldReceiving{
             11=>local(0),_=>local(1),
         }
     }
-    fn advance_nested(&mut self,_source:&mut Option<FieldValue>,native:&mut NativeDecodeControl<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->OwnedPoll{if self.failed||self.closing||self.phase!=2||self.child.is_ready(){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invariant().into()),work:0});}let poll=self.child.advance_nested(&mut self.current.value,native,body,maximum_work_units,child_grant(g));poison(&mut self.failed,&poll);poll}
+    fn advance_nested(&mut self,_source:&mut Option<FieldValue>,native:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->OwnedPoll{if self.failed||self.closing||self.phase!=2||self.child.is_ready(){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invariant().into()),work:0});}let poll=self.child.advance_nested(&mut self.current.value,native,witness,body,maximum_work_units,child_grant(g));poison(&mut self.failed,&poll);poll}
     fn advance_local(&mut self,source:&mut Option<FieldValue>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OwnedPoll{let poll=self.selected(source,body,effect);poison(&mut self.failed,&poll);poll}
     fn is_ready(&self)->bool{!self.closing&&!self.failed&&self.phase==11&&self.output.value.is_some()}
     fn take_into(&mut self,output:&mut Option<RasterSelectionSpans>,effect:&mut RetainedAllocationEffect<'_>)->OwnedTake{if !self.is_ready(){return done(effect,Err(invariant()));}move_into(&mut self.output.value,output,effect)}

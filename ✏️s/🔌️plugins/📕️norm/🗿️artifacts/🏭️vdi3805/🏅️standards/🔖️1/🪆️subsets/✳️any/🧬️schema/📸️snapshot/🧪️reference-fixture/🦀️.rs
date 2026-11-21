@@ -220,7 +220,7 @@ pub fn nonconforming_valve_dataset() -> Vdi3805Snapshot {
     doc
 }
 /// 📋 Assessed operative Blätter that require committed examples (CORRECTION 13:43 + Wave D Round 3).
-pub const ASSESSED_BLATT_SHEETS: &[u16] = &[2, 3, 4, 5, 6, 7, 8, 16, 19, 53, 60];
+pub const ASSESSED_BLATT_SHEETS: &[u16] = &[2, 3, 4, 5, 6, 8, 16, 22, 53, 60];
 
 fn base_header() -> ManufacturerFile {
     ManufacturerFile {
@@ -295,13 +295,13 @@ fn snapshot_with_products(products: Vec<CatalogueProduct>) -> Vdi3805Snapshot {
     }
 }
 
-/// ✅️ Conforming Blatt-3 radiator example.
-pub fn conforming_blatt_3_dataset() -> Vdi3805Snapshot {
+/// ✅️ Conforming Blatt-6 radiator example.
+pub fn conforming_radiator_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_valve_dataset();
     doc.catalog.products[0].id = "RAD-600".into();
     doc.catalog.products[0].identity.article_number = "RAD-600".into();
     doc.catalog.products[0].configuration.id = format!("cfg.RAD-600");
-    doc.catalog.products[0].sheet = SheetId(3);
+    doc.catalog.products[0].sheet = SheetId(6);
     doc.catalog.products[0].title = bilingual("Heizkörper 600", "Radiator 600");
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Radiator(RadiatorAttributes {
         standard_output_w: 1200.0,
@@ -325,9 +325,9 @@ pub fn conforming_blatt_3_dataset() -> Vdi3805Snapshot {
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
 }
-/// ❌️ Non-conforming Blatt-3 radiator (≥2 fails).
-pub fn nonconforming_blatt_3_dataset() -> Vdi3805Snapshot {
-    let mut doc = conforming_blatt_3_dataset();
+/// ❌️ Non-conforming Blatt-6 radiator (≥2 fails).
+pub fn nonconforming_radiator_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_radiator_dataset();
     if let SheetAttributes::Radiator(ref mut a) = doc.catalog.products[0].configuration.attributes {
         a.heat_exponent_n = 0.2;
         a.standard_output_w = 0.0;
@@ -338,13 +338,13 @@ pub fn nonconforming_blatt_3_dataset() -> Vdi3805Snapshot {
     sync_titles_into_records(&mut doc.catalog.products[0]);
     doc
 }
-/// ✅️ Conforming Blatt-5 pump example.
-pub fn conforming_blatt_5_dataset() -> Vdi3805Snapshot {
+/// ✅️ Conforming Blatt-4 pump example.
+pub fn conforming_pump_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_valve_dataset();
     doc.catalog.products[0].id = "PMP-50".into();
     doc.catalog.products[0].identity.article_number = "PMP-50".into();
     doc.catalog.products[0].configuration.id = format!("cfg.PMP-50");
-    doc.catalog.products[0].sheet = SheetId(5);
+    doc.catalog.products[0].sheet = SheetId(4);
     doc.catalog.products[0].title = bilingual("Heizungspumpe DN50", "Heating pump DN50");
     doc.catalog.products[0].configuration.attributes = SheetAttributes::PumpHeating(PumpHeatingAttributes {
         dn_suction: 50,
@@ -371,9 +371,9 @@ pub fn conforming_blatt_5_dataset() -> Vdi3805Snapshot {
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
 }
-/// ❌️ Non-conforming Blatt-5 pump.
-pub fn nonconforming_blatt_5_dataset() -> Vdi3805Snapshot {
-    let mut doc = conforming_blatt_5_dataset();
+/// ❌️ Non-conforming Blatt-4 pump.
+pub fn nonconforming_pump_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_pump_dataset();
     if let SheetAttributes::PumpHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
         a.nominal_flow_m3_s = 0.0;
         a.hydraulic_efficiency = 1.5;
@@ -383,13 +383,13 @@ pub fn nonconforming_blatt_5_dataset() -> Vdi3805Snapshot {
     sync_titles_into_records(&mut doc.catalog.products[0]);
     doc
 }
-/// ✅️ Conforming Blatt-6 heat generator.
-pub fn conforming_blatt_6_dataset() -> Vdi3805Snapshot {
+/// ✅️ Conforming Blatt-3 heat generator.
+pub fn conforming_heat_generator_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_valve_dataset();
     doc.catalog.products[0].id = "HG-24".into();
     doc.catalog.products[0].identity.article_number = "HG-24".into();
     doc.catalog.products[0].configuration.id = format!("cfg.HG-24");
-    doc.catalog.products[0].sheet = SheetId(6);
+    doc.catalog.products[0].sheet = SheetId(3);
     doc.catalog.products[0].title = bilingual("Wärmeerzeuger 24 kW", "Heat generator 24 kW");
     doc.catalog.products[0].configuration.attributes = SheetAttributes::HeatGenerator(HeatGeneratorAttributes {
         nominal_heat_output_w: 24000.0,
@@ -408,9 +408,9 @@ pub fn conforming_blatt_6_dataset() -> Vdi3805Snapshot {
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
 }
-/// ❌️ Non-conforming Blatt-6 heat generator.
-pub fn nonconforming_blatt_6_dataset() -> Vdi3805Snapshot {
-    let mut doc = conforming_blatt_6_dataset();
+/// ❌️ Non-conforming Blatt-3 heat generator.
+pub fn nonconforming_heat_generator_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_heat_generator_dataset();
     if let SheetAttributes::HeatGenerator(ref mut a) = doc.catalog.products[0].configuration.attributes {
         a.nominal_heat_output_w = 0.0;
         a.fuel_type.clear();
@@ -425,65 +425,50 @@ pub fn nonconforming_blatt_6_dataset() -> Vdi3805Snapshot {
 pub fn conforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
     match sheet {
         2 => conforming_valve_dataset(),
-        3 => conforming_blatt_3_dataset(),
-        5 => conforming_blatt_5_dataset(),
-        6 => conforming_blatt_6_dataset(),
-        4 => snapshot_with_products(vec![generic_product(
-            "PIPE-DN50",
-            4,
-            "PIPE",
-            "Rohr DN50",
-            "Pipe DN50",
-            vec![("dn", "50"), ("pressure_class", "PN16"), ("connection_type", "weld"), ("outer_diameter_m", "0.0603"), ("wall_thickness_m", "0.0029")],
-        )]),
-        7 => snapshot_with_products(vec![generic_product(
-            "TANK-200",
-            7,
-            "TANK",
-            "Speicher 200 L",
-            "Storage 200 L",
-            vec![("dn", "50"), ("pressure_class", "PN10"), ("connection_type", "flange"), ("volume_m3", "0.2")],
-        )]),
-        8 => snapshot_with_products(vec![generic_product(
-            "FIT-80",
-            8,
-            "FIT",
-            "Armatur DN80",
-            "Fitting DN80",
-            vec![("product_group", "FIT"), ("type_code", "STD"), ("dn", "80"), ("pressure_class", "PN16")],
-        )]),
-        16 => snapshot_with_products(vec![generic_product(
+        6 => conforming_radiator_dataset(),
+        4 => conforming_pump_dataset(),
+        3 => conforming_heat_generator_dataset(),
+        7 => snapshot_with_products(vec![generic_product("FAN-01", 7, "FAN", "Ventilator", "Fan", vec![])]),
+        9 => snapshot_with_products(vec![generic_product("AHU-01", 9, "AHU", "Modulares RLT-Gerät", "Modular air handling unit", vec![])]),
+        29 => snapshot_with_products(vec![generic_product("DUCT-01", 29, "DUCT", "Luftkanal", "Air duct", vec![])]),
+        8 => snapshot_with_products(vec![generic_product("BRN-01", 8, "BRN", "Brenner", "Burner", vec![])]),
+        16 => snapshot_with_products(vec![generic_product("FSD-100", 16, "FSD", "Brandschutzklappe", "Fire damper", vec![])]),
+        5 => snapshot_with_products(vec![generic_product(
             "AT-100",
-            16,
+            5,
             "AT",
             "Luftdurchlass",
             "Air terminal",
             vec![("product_group", "AT"), ("type_code", "TYPE-A"), ("airflow_m3_s", "0.15"), ("pressure_drop_pa", "25")],
         )]),
+        10 => snapshot_with_products(vec![generic_product(
+            "FILTER-01", 10, "FIL", "Luftfilter", "Air filter",
+            vec![("airflow_m3_s", "0.5"), ("filter_class", "F7")],
+        )]),
         19 => snapshot_with_products(vec![generic_product(
-            "FIL-F7",
-            19,
-            "FIL",
-            "Filter F7",
-            "Filter F7",
-            vec![("product_group", "FIL"), ("type_code", "STD"), ("airflow_m3_s", "0.5"), ("filter_class", "F7")],
+            "SOLAR-01", 19, "SOLAR", "Thermischer Solarkollektor", "Thermal solar collector",
+            vec![],
         )]),
-        53 => snapshot_with_products(vec![generic_product(
-            "HP-12",
-            53,
-            "HP",
-            "Wärmepumpe 12 kW",
-            "Heat pump 12 kW",
-            vec![("product_group", "HP"), ("type_code", "STD"), ("dn", "32"), ("nominal_heat_output_w", "12000"), ("cop", "3.5")],
-        )]),
-        60 => snapshot_with_products(vec![generic_product(
-            "COMP-50",
-            60,
-            "COMP",
-            "Kompensator DN50",
-            "Compensator DN50",
-            vec![("dn", "50"), ("pressure_class", "PN16"), ("connection_type", "flange"), ("axial_force_n", "5000")],
-        )]),
+        22 => {
+            let mut product = generic_product("HP-12", 22, "HP", "Luft-Luft-Wärmepumpe", "Air-to-air heat pump", vec![]);
+            product.records.retain(|record| record.family.0 != RecordFamilyId::R700);
+            let records: &[&[&str]] = &[
+                &["110", "4"],
+                &["400", "2"],
+                &["700", "1", "", "", "8", "3.6", "2.22", "", "", "", "", "", "", "", "", "", "", "", "", "1", "7", "", "", "", "", "", "", "", "", "", "", "", "", "675", "0.743", "1", "A2L", "", "0", "4", "", "0", "39"],
+                &["710.09", "1", "1", "20", "35", "-20", "1", ""],
+            ];
+            product.records.extend(records.iter().map(|fields| NativeRecord {
+                family: RecordFamilyId(fields[0].into()),
+                fields: fields.iter().map(|field| (*field).into()).collect(),
+                extensions: ExtensionBag::default(),
+            }));
+            let mut document = snapshot_with_products(vec![product]);
+            document.correction_as_of = EditionId::new(2026, 1);
+            document
+        }
+        53 => snapshot_with_products(vec![generic_product("CAB-01", 53, "CAB", "Schaltschrank", "Control cabinet", vec![])]),
+        60 => snapshot_with_products(vec![generic_product("SOC-01", 60, "SOC", "Unterputzsteckdose", "Flush-mounted socket", vec![])]),
         other => snapshot_with_products(vec![generic_product(
             &format!("GEN-{other}"),
             other,
@@ -499,9 +484,9 @@ pub fn conforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
 pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
     match sheet {
         2 => nonconforming_valve_dataset(),
-        3 => nonconforming_blatt_3_dataset(),
-        5 => nonconforming_blatt_5_dataset(),
-        6 => nonconforming_blatt_6_dataset(),
+        6 => nonconforming_radiator_dataset(),
+        4 => nonconforming_pump_dataset(),
+        3 => nonconforming_heat_generator_dataset(),
         _ => {
             let mut doc = conforming_blatt_dataset(sheet);
             if let Some(product) = doc.catalog.products.get_mut(0) {
@@ -526,6 +511,9 @@ pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
                         fields.push(v.clone());
                     }
                     r210.fields = fields;
+                }
+                if matches!(sheet, 5 | 8 | 16 | 22 | 53 | 60) {
+                    product.records.retain(|record| record.family.0 != RecordFamilyId::R100);
                 }
                 doc.catalog.file.record_count = 0;
             }

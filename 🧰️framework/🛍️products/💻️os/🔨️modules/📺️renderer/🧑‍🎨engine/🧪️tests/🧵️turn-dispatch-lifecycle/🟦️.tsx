@@ -218,7 +218,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
        * Its native twins are `a_command_page_set_reaches_its_terminal_status_in_one_turn_per_page` and
        * the continuation bound in `retained_operation_continues_after_command_admission_until_
        * publication_and_retirement`. */
-      it("spends one worker turn per command page plus the guest's own continuations and none of its own", async () => {
+       it("spends one worker turn per command page plus the guest's command continuations", async () => {
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
         const COMMAND_BYTES = 8_192;
         const invocation = { address: { pluginId: "ingress-census", appId: "fixture", windowKindId: "editor", actionId: "registerBrushMesh" }, arguments: { payload: "m".repeat(7_800) } };
@@ -228,6 +228,8 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
           const plain = { uiPatches: [], effects: [], nextWake: null };
           const more = { ...plain, status: { tag: "more-work" } };
           const idle = { ...plain, status: { tag: "idle" } };
+           const pending = { ...more, commandIngress: { tag: "command-pending", val: {} } };
+           const complete = { ...idle, commandIngress: { tag: "command-complete", val: {} } };
           const kinds: string[] = [];
           let counting = false;
           let bytes = 0;
@@ -259,12 +261,12 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
                     declared = cursor.pageCount;
                   }
                   value = cursor.pageIndex + 1 === cursor.pageCount
-                    ? { ...(remaining > 0 ? more : idle), commandIngress: { tag: "command-complete", val: {} } }
+                     ? remaining > 0 ? pending : complete
                     : { ...more, commandIngress: { tag: "page-accepted", val: {} } };
                 } else if (counting) {
-                  kinds.push("settle-continuation");
+                   kinds.push("command-continuation");
                   remaining -= 1;
-                  value = remaining > 0 ? more : idle;
+                   value = remaining > 0 ? pending : complete;
                 }
               }
               queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
@@ -284,7 +286,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
             expect(bytes).toBeGreaterThan(COMMAND_BYTES - 1_024);
             expect(bytes).toBeLessThanOrEqual(COMMAND_BYTES);
             expect(declared).toBe(2);
-            expect(kinds).toEqual([...Array.from({ length: declared }, (_, page) => `command-page#${page}`), ...Array.from({ length: guestContinuations }, () => "settle-continuation")]);
+             expect(kinds).toEqual([...Array.from({ length: declared }, (_, page) => `command-page#${page}`), ...Array.from({ length: guestContinuations }, () => "command-continuation")]);
             census.push({ guestContinuations, bytes, pages: declared, turns: kinds.length });
           } finally {
             try { await handle?.dispose(); } finally {
@@ -301,7 +303,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
       /** 🚦️ LAW: a command page the guest refuses with `backpressure` is offered AGAIN and never skipped.
        *
        * 🐛️ The pump submitted each page exactly once whatever the answer, so a refused page left the guest's assembly one page short and the next page arrived with `page_index != pages admitted`: the reactor's `plugin.command-page-order` fault (the 136-page `setContributions` of the procedural hub, boot never ready). Its native twin is `CommandBatchDriver::observe`, which only advances on `page-accepted`. */
-      it("offers a backpressured command page again instead of skipping it", async () => {
+      it("reoffers a page after a cut event batch or guest backpressure", async () => {
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
         const invocation = { address: { pluginId: "page-order", appId: "fixture", windowKindId: "editor", actionId: "registerBrushMesh" }, arguments: { payload: "m".repeat(7_800) } };
         const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
@@ -332,7 +334,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
                 if (counting) offers.push(pageIndex);
                 const refuse = counting && pageIndex === 1 && !refused;
                 if (refuse) refused = true;
-                value = { ...idle, commandIngress: { tag: refuse ? "backpressure" : pageIndex + 1 === pageCount ? "command-complete" : "page-accepted", val: {} } };
+                value = counting && offers.length === 1 ? { ...idle, deferredEvents: 1, commandIngress: { tag: "idle" } } : { ...idle, commandIngress: { tag: refuse ? "backpressure" : pageIndex + 1 === pageCount ? "command-complete" : "page-accepted", val: {} } };
               }
             }
             queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
@@ -349,7 +351,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
           counting = true;
           await handle.handleAction(instance, JSON.stringify({ ...invocation, address: { ...invocation.address, instanceId: String(instance) } }), { locale: "en", terminology: "native", windowInstances: [] } as never);
           counting = false;
-          expect(offers).toEqual([0, 1, 1]);
+          expect(offers).toEqual([0, 0, 1, 1]);
         } finally {
           try { await handle?.dispose(); } finally {
             client.disposeAll();
@@ -558,6 +560,32 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
           const invocation = invocationFromFrames([], result.effects, "action");
           expect({ output: invocation.output, requestedEffects: invocation.requestedEffects }).toEqual(settlement.invocation);
         });
+      });
+
+      it("returns completed command effects while unrelated actor work is still pending", async () => {
+        const { default: equal } = await import("fast-deep-equal");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📨️command-settlement.json");
+        for (const entry of fixture.cases) {
+          const status = { tag: fixture.status.tag as "more-work" };
+          const acknowledgements = entry.acknowledgements as readonly ShardEventEnvelope[];
+          let crossings = 0;
+          await withFakeShardClient(async (_actor, events) => {
+            crossings += 1;
+            expect(crossings, entry.name).toBeLessThanOrEqual(entry.crossings);
+            expect(events, entry.name).toEqual(acknowledgements);
+            return { uiPatches: [], effects: fixture.receiptEffects, nextWake: null, status, deferredEvents: 0 };
+          }, async () => {
+            const result = await settleAcknowledgedPluginTurns("completed-ingress#7", [{
+              uiPatches: [], effects: fixture.commandEffects, nextWake: null, status,
+              commandIngress: { tag: "command-complete" },
+              deferredEvents: entry.deferredEvents,
+            }], acknowledgements);
+            const effects = [...fixture.commandEffects, ...(entry.crossings ? fixture.receiptEffects : [])];
+            expect(equal(result.effects, effects), entry.name).toBe(true);
+            expect(result.status, entry.name).toEqual(status);
+          });
+          expect(crossings, entry.name).toBe(entry.crossings);
+        }
       });
     });
   //#endregion 🧪️terra-web-plugin-runtime

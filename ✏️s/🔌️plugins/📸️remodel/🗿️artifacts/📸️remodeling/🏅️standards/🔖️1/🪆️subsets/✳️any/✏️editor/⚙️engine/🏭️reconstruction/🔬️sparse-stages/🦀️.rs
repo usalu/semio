@@ -236,6 +236,10 @@ fn reset_pair_query(preparation: &mut PairMatchPreparation) {
     preparation.pending = None;
 }
 
+fn frame_intrinsics(frame: &AcceptedFrame, params: &EngineParams) -> remodeling_camera::Intrinsics {
+    frame.capture.intrinsics.unwrap_or_else(|| default_intrinsics(frame.image.width, frame.image.height, params.assumed_focal_ratio, params.distortion))
+}
+
 impl ReconstructionEngine {
     /// 🎯️ One fuel-bounded luma/detect/describe slice; returns whether more frames remain.
     /// 🧭️ One frame's features in fuel-bounded slices: luma conversion by pixel runs, the resumable
@@ -468,10 +472,11 @@ impl ReconstructionEngine {
     /// fewer than [`PAIR_VERIFICATION_MIN_INLIERS`] matches skips the solve and keeps its matches.
     fn step_verifying_pair(&mut self) -> bool {
         let preparation = self.pair_match_preparation.as_mut().expect("pair match preparation");
-        let verifiable = preparation.matches.len() >= PAIR_VERIFICATION_MIN_INLIERS && self.keypoints_per_frame.len() > preparation.frame_a.max(preparation.frame_b) && !self.frames.is_empty();
+        let verifiable = preparation.matches.len() >= PAIR_VERIFICATION_MIN_INLIERS && self.keypoints_per_frame.len() > preparation.frame_a.max(preparation.frame_b) && self.frames.len() > preparation.frame_a.max(preparation.frame_b);
         if verifiable {
-            let intrinsics = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio, self.params.distortion);
             let (frame_a, frame_b) = (preparation.frame_a, preparation.frame_b);
+            let a = frame_intrinsics(&self.frames[frame_a], &self.params);
+            let b = frame_intrinsics(&self.frames[frame_b], &self.params);
             let verification = preparation.verification.get_or_insert_with(|| PairVerification {
                 correspondences: preparation
                     .matches
@@ -486,10 +491,10 @@ impl ReconstructionEngine {
                 best: None,
             });
             let seed = ((frame_a as u64) << 32 | frame_b as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ verification.attempts as u64;
-            let threshold = PAIR_VERIFICATION_THRESHOLD_PX / intrinsics.fx.max(intrinsics.fy).max(1.0);
+            let threshold = PAIR_VERIFICATION_THRESHOLD_PX / a.fx.max(a.fy).max(b.fx).max(b.fy).max(1.0);
             if verification.attempts < PAIR_VERIFICATION_STEPS {
-                if let Some(candidate) = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::estimate_essential_five_point_bounded(&verification.correspondences, &intrinsics, &intrinsics, threshold, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP, 0) {
-                    let polished = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::polish_essential(candidate, &verification.correspondences, &intrinsics, threshold);
+                if let Some(candidate) = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::estimate_essential_five_point_bounded(&verification.correspondences, &a, &b, threshold, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP, 0) {
+                    let polished = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::polish_essential(candidate, &verification.correspondences, &a, &b, threshold);
                     if verification.best.as_ref().is_none_or(|best| polished.inliers.len() > best.inliers.len()) {
                         verification.best = Some(polished);
                     }
@@ -594,10 +599,10 @@ impl ReconstructionEngine {
     /// reconstruction the trace explains, instead of a pipeline failure.
     pub(super) fn step_estimating_poses(&mut self) -> Result<bool, String> {
         if self.sfm.is_none() {
-            let intr = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio, self.params.distortion);
+            let intrinsics = self.frames.iter().map(|frame| frame_intrinsics(frame, &self.params)).collect();
             let tracks = self.tracks.clone().expect("tracks built before EstimatingPoses");
             let keypoints = self.keypoints_per_frame.clone();
-            let mut sfm = semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::IncrementalSfm::new(intr, tracks, keypoints, self.params.sfm.clone());
+            let mut sfm = semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::IncrementalSfm::new(intrinsics, tracks, keypoints, self.params.sfm.clone());
             if self.recorded.is_some() {
                 sfm.observe_points();
             }

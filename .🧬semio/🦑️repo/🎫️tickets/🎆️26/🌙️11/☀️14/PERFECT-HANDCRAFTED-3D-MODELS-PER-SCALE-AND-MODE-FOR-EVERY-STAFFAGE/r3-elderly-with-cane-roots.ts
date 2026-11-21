@@ -19,7 +19,7 @@ const deg = (r: number): number => (r * 180) / Math.PI;
 const r4 = (x: number): number => Math.round(x * 1e4) / 1e4;
 const wrap = (d: number): number => ((((d + 180) % 360) + 360) % 360) - 180;
 
-const CANE_L = 0.734;
+const CANE_L = 0.748;
 const CROOK_R = 0.045;
 const HAND_SLOPE = -50;
 const GRIP: [number, number] = [0.0538, -0.0059];

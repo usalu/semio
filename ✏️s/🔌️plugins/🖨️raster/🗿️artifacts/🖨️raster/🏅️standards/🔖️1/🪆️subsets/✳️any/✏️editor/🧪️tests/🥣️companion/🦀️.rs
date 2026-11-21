@@ -7,14 +7,8 @@ extern crate semio_os_kernel as store;
 
 #[path = "../../🖱️selection/🧪️tests/🦀️.rs"]
 mod layer_selection_tests;
-#[path = "../../🎮️commands/🌈️apply-filter/🧪️tests/🦀️.rs"]
-mod commands_apply_filter_tests;
-#[path = "../../🎮️commands/🎬️set-active-example/🧪️tests/🔬️unit/🦀️.rs"]
-mod commands_set_active_example_tests;
 #[path = "../../🎮️commands/🎭️mask-from-selection/🧪️tests/🦀️.rs"]
 mod commands_mask_from_selection_tests;
-#[path = "../../🎮️commands/📋️duplicate-layer/🧪️tests/🦀️.rs"]
-mod commands_duplicate_layer_tests;
 #[path = "../../🎮️commands/🔄️transform-image/🧪️tests/🦀️.rs"]
 mod commands_transform_image_tests;
 #[path = "../../🎮️commands/🖌️paint-stroke/🧪️tests/🦀️.rs"]
@@ -29,8 +23,6 @@ mod commands_fill_region_tests;
 mod commands_fill_selection_tests;
 #[path = "../../🎮️commands/🫳️merge-down/🧪️tests/🦀️.rs"]
 mod commands_merge_down_tests;
-#[path = "../../🎮️commands/🚚️move-layer/🧪️tests/🦀️.rs"]
-mod commands_move_layer_tests;
 #[path = "../../💾️document/🧪️tests/🦀️.rs"]
 mod editor_document_tests;
 #[path = "../../📤️export/🧪️tests/🦀️.rs"]

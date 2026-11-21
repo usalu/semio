@@ -138,8 +138,8 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn build_retargetable_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Self::Config>>>, Fault> {
         V::build_retargetable_tool_run_job(request)
     }
-    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
-        V::retained_window_transient_target(command)
+    fn retained_window_transient_target<'a>(command: &'a Self::Command, view: Option<&'a ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        V::retained_window_transient_target(command, view)
     }
     fn interaction_scope(verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
         V::interaction_scope(verb, domains)

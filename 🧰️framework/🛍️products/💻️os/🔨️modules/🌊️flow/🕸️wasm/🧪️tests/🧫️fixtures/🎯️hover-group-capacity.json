@@ -1,0 +1,9 @@
+{
+  "count": 1024,
+  "oldLimitBytes": 65536,
+  "maximumBodyBytes": 1048576,
+  "widgetBytes": 210,
+  "port": "solid",
+  "widgetPrefix": "copy-",
+  "escapeSample": "\"\\"
+}

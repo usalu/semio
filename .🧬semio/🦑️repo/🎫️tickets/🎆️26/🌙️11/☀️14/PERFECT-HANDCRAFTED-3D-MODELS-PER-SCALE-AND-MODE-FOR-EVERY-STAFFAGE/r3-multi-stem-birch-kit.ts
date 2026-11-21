@@ -10,7 +10,8 @@ const { unionPolygons } = (await import(join(STAFFAGE, "🔨️modules/🔺️po
 export type View = "elevation" | "front" | "plan";
 export type Sec = { p: V3; x: V3; y: V3; rx: number; ry: number };
 export type Group = "stool" | "root" | "base" | "stem" | "leader" | "branch" | "twig" | "tip" | "strand" | "leaf";
-export type Part = { id: string; bone: string; material: string; tone: number; group: Group; sections: Sec[]; flags?: Json; owner?: string; az?: number };
+/** 🧩️ A part is a loft through its sections, or, when `capsule` is set, the hull of two spheres (its two sections then only carry the end points and radii for measuring and drawing). */
+export type Part = { id: string; bone: string; material: string; tone: number; group: Group; sections: Sec[]; flags?: Json; owner?: string; az?: number; capsule?: { p0: V3; p1: V3; r0: number; r1: number } };
 export type Mark = { id: string; bone: string; material: string; tone: number; c: V3; axes: [V3, V3, V3]; radii: V3 };
 
 export const D2R = Math.PI / 180;
@@ -87,9 +88,10 @@ export function along(part: Part, f: number): V3 {
   return pts[pts.length - 1]!;
 }
 
-/** 🧱️ The bone-local loft of a part. */
+/** 🧱️ The bone-local solid of a part: a loft, or a capsule. */
 export function solidOf(part: Part, frames: Record<string, Frame>): Json {
   const f = frames[part.bone]!;
+  if (part.capsule) return { id: part.id, kind: "capsule", bone: part.bone, material: part.material, role: "body", tone: part.tone, p0: toLocal(f, part.capsule.p0).map(r5), p1: toLocal(f, part.capsule.p1).map(r5), r0: r5(part.capsule.r0), r1: r5(part.capsule.r1), ...(part.flags ?? {}) };
   const sections = part.sections.map((s) => {
     const z = cross(s.x, s.y);
     return { at: toLocal(f, s.p).map(r5), rx: r5(s.rx), ry: r5(s.ry), exponent: 2, rotation: quaternion(unit(dirToLocal(f, s.x)), unit(dirToLocal(f, s.y)), unit(dirToLocal(f, z))) };
@@ -136,6 +138,11 @@ export const ringOf = (s: Sec, n = 20): V3[] => Array.from({ length: n }, (_, i)
 
 /** 🌳️ The polygons whose union is the outline of a part in a view: the hull of every two consecutive section rings. */
 export function partPolygons(view: View, part: Part, n = 20): P2[][] {
+  if (part.capsule) {
+    const { p0, p1, r0, r1 } = part.capsule;
+    const disc = (c: P2, r: number): P2[] => Array.from({ length: n }, (_, i) => ({ x: c.x + r * Math.cos((2 * Math.PI * (i + 0.5)) / n), y: c.y + r * Math.sin((2 * Math.PI * (i + 0.5)) / n) }));
+    return [hull([...disc(project(view, p0), r0), ...disc(project(view, p1), r1)])];
+  }
   const rings = part.sections.map((s) => ringOf(s, n).map((p) => project(view, p)));
   const out: P2[][] = [];
   for (let i = 0; i + 1 < rings.length; i++) {
@@ -181,9 +188,17 @@ export const inRing = (p: P2, ring: P2[]): boolean => {
 /** 📦️ The world bounding box of parts (section rings). */
 export function bounds(parts: Part[]): { min: V3; max: V3 } {
   const min: V3 = [Infinity, Infinity, Infinity], max: V3 = [-Infinity, -Infinity, -Infinity];
-  for (const part of parts) for (const s of part.sections) for (const p of ringOf(s, 16)) for (let k = 0; k < 3; k++) {
-    min[k] = Math.min(min[k]!, p[k]!);
-    max[k] = Math.max(max[k]!, p[k]!);
+  const take = (p: V3, r: number): void => {
+    for (let k = 0; k < 3; k++) {
+      min[k] = Math.min(min[k]!, p[k]! - r);
+      max[k] = Math.max(max[k]!, p[k]! + r);
+    }
+  };
+  for (const part of parts) {
+    if (part.capsule) {
+      take(part.capsule.p0, part.capsule.r0);
+      take(part.capsule.p1, part.capsule.r1);
+    } else for (const s of part.sections) for (const p of ringOf(s, 16)) take(p, 0);
   }
   return { min, max };
 }

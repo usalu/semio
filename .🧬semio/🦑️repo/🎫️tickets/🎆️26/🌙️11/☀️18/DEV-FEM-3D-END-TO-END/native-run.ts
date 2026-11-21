@@ -16,7 +16,8 @@ const env = scriptProcessEnvironment(createScriptProcessEnvelope({version: 1, ow
 const attempts = join(import.meta.dirname, "🗑️generated", "attempts");
 mkdirSync(attempts, {recursive: true});
 const keep = createWriteStream(join(attempts, `${selection.replace(/[^a-z0-9-]+/giu, "_")}-${Date.now()}.txt`));
-const child = spawn("repo", args, {cwd, env, stdio: ["inherit", "pipe", "pipe"], shell: process.platform === "win32"});
+const nativeTest = args[0] === "--native-bun-test";
+const child = spawn(nativeTest ? process.execPath : "repo", nativeTest ? ["test", ...args.slice(1)] : args, {cwd, env, stdio: ["inherit", "pipe", "pipe"], shell: !nativeTest && process.platform === "win32"});
 for (const [from, to] of [[child.stdout, process.stdout], [child.stderr, process.stderr]] as const) from.on("data", chunk => {to.write(chunk); keep.write(chunk);});
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.once(signal, () => child.kill(signal));
 child.on("close", code => keep.end(() => process.exit(code ?? 1)));

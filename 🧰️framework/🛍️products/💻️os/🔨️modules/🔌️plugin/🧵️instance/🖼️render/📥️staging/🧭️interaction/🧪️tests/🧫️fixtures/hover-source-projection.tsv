@@ -1,0 +1,6 @@
+name	owner	channel	ids	expected
+named window	graph:1	pointer	design	graph:1
+panel	@panel	pointer	design	@panel
+unknown origin	-	pointer	design	-
+different channel	graph:1	keyboard	design	-
+no live mark	graph:1	pointer		-

@@ -1,0 +1,19 @@
+# Energy Wrapper Cache Reuse
+
+The “0 reused” line in the replacement run `wt48zqN` counts Cargo messages with `compiler-artifact.fresh === true`. The per-unit Rust wrapper can restore a requested output and report an independent local CAS hit. Cargo has already classified that unit as dirty when it invokes the wrapper, so its artifact message can still carry `fresh: false`.
+
+The two Energy runs have byte-identical unit graph files, SHA-256 `d7009277388692190df2f585d9892c4f7dff13c9676ef15c5596e03f2dabfbbe`. Prior `wKZ8QJX` recorded 1,028 non-fresh Cargo artifact announcements in `p29efda`. At the 11:41:03 snapshot, the replacement `pfb95ce` had 960, all non-fresh. Its Cargo log began 11:26:13.942.
+
+## Actual wrapper restoration
+
+Both Energy runs ask for the same host value-derive-expansion output `libsemio_framework_value_derive_expansion-94a56f5c98355f74.rlib`. The replacement wrapper PID 72585 records `broker-replay` and `hit` at 11:26:25.698–.699 for `39be45e0e61f674a50d8b056788a7e3a95f4e7d5b301a618e232fc73b22667c0`, an exact key published by another recent wrapper invocation at 11:26:07.864. The new lane's physical output mtime is 11:26:25.572, within that restoration's reported 146 ms, and its Cargo artifact announcement says `fresh: false`. A second stable host proc-macro output `libsemio_framework_value_derive-ccf30cc681b12fd3.dylib` shows the same sequence at 11:26:27.234–.235.
+
+Across the same time interval, the shared wrapper journal contains 338 local hits and corresponding broker replays plus 1,246 misses and successful publishes. It also contains 1,308 remote breaker skips. Those counts include concurrently active Procedural and other shared wrapper activity and must not be attributed wholly to Energy. The above per-unit correlation specifically shows actual restoration in Energy's replacement lane.
+
+## Repeatable same-key miss
+
+Both Energy Cargo traces select host `unicode-ident 1.0.24` without features and the same `e2269eccff0054bc` artifact suffix. The old broker reports active rustc time for the unit around 08:53:04. The host wrapper journal rotated off the old run's first units. The three still-visible wrapper observations at 10:29:05, 11:06:10 and the Energy replacement at 11:26:20 all use `39b6e4794223150bb8ba103321a320c002ec2f38e4cef4574ae42e538596dfcd`, and all miss and publish. Every recorded component fingerprint in those events agrees, including toolchain, normalized flags, source, externs and environment. Two host and WASI `serde` variants show the same repetition on their own stable keys. Each replacement lookup skips remote lookup with “breaker: down.”
+
+At 11:25:30.214, the unit-cache eviction journal records 839 entries pruned by the missing-object/invalid-entry cleanup, followed by 464 superseded keys, 976 stale build units, and one lane retirement from the same collector. The current exact `unicode-ident` entry is the replacement written at 11:26:20.768, and its referenced CAS bodies are present. No earlier entry remains in that key directory. The journal records aggregate counts and cannot identify which eligibility check failed the earlier key. The independently restored value-derive keys also disappeared from the entry tree later, despite having been readable during the replacement. Shared host CAS collection uses disk pressure and age retention independent of the Cargo lane; supersession and entry repair can retire entries, and an exact key cannot restore after the object or entry is gone.
+
+The production wrapper is enabled and restores exact keys where retained. The records establish a widespread retention loss and repeated same-key misses with remote fallback unavailable. They establish neither a cache-key defect nor a specific mistaken eviction. No production policy, fingerprints, or fleet services were changed. No module builds were run for this read-only audit.

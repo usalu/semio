@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "name": "a pure constructor yields readiness",
+      "component": "0061736d010000000105016000017f030201000720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100000a0601040041010b",
+      "fuel": 16,
+      "continue": true,
+      "ready": true
+    },
+    {
+      "name": "a guest asking for a host seed cannot be prepared",
+      "component": "0061736d010000000105016000017f020c0103656e7604736565640000030201000720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100010a0601040010000b",
+      "fuel": 16,
+      "continue": true,
+      "ready": false,
+      "hostImport": "env::seed"
+    },
+    {
+      "name": "a constructor may refuse preparation",
+      "component": "0061736d010000000105016000017f030201000720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100000a0601040041000b",
+      "fuel": 16,
+      "continue": true,
+      "ready": false
+    },
+    {
+      "name": "no issued fuel leaves no prepared image",
+      "component": "0061736d010000000105016000017f030201000720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100000a0601040041010b",
+      "fuel": 0,
+      "continue": true,
+      "ready": false
+    },
+    {
+      "name": "cancel before preparation leaves no image",
+      "component": "0061736d010000000105016000017f030201000720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100000a0601040041010b",
+      "fuel": 16,
+      "continue": false,
+      "ready": false
+    }
+  ],
+  "storageCases": [
+    {
+      "name": "a constructor observes refused memory growth beyond its storage budget",
+      "component": "0061736d010000000105016000017f0302010005030100010720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100000a0b01090041014000417f460b",
+      "oracle": "0061736d010000000105016000017f030201000504010101010720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100000a0b01090041014000417f460b",
+      "maximumStorageBytes": 65536
+    },
+    {
+      "name": "a constructor observes refused table growth beyond its storage budget",
+      "component": "0061736d010000000105016000017f030201000404017000010720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100000a0e010c00d0704101fc0f00417f460b",
+      "oracle": "0061736d010000000105016000017f03020100040501700101010720011c73656d696f5f6f776e65645f707265706172655f6163746f725f763100000a0e010c00d0704101fc0f00417f460b",
+      "maximumStorageBytes": 16
+    }
+  ]
+}

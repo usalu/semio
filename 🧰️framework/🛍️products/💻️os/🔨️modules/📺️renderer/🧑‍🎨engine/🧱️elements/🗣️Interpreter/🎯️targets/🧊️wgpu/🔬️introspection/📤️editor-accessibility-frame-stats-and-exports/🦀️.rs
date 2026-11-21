@@ -4,14 +4,14 @@ use super::*;
 
 //#region 🔬️Introspection
 //#region 🔬️IntrospectionBuilders
-struct TextEditorAccessibilityEntry {
+pub struct TextEditorAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
     pub key: String,
-    pub label: String,
-    pub depth: usize,
-    pub rect: Rect,
-    pub value: String,
+    label: String,
+    depth: usize,
+    rect: Rect,
+    value: String,
     read_only: bool,
 }
 

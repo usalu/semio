@@ -312,6 +312,7 @@ impl DrawingMemberWirePreparation{
    let turn=if matches!(self.phase,Phase::Take|Phase::CloseJson){
     c.with_effect_reported(g.retained_grant(),work,|c,effect|self.local_step(c,body,d,effect))?
    }else{
+    if d.capacity_bytes!=0{c.admit_turn_capacity(d.capacity_bytes)?;}
     c.with_allocated_effect_reported(d,work,|c,effect|self.local_step(c,body,d,effect))?
    };
    let Some((result,work))=turn else{return Ok(Step::Blocked)};
@@ -351,6 +352,13 @@ impl ArtifactStoreOneItemPreparation<P,M> for DrawingMemberWirePreparation{
   let result=self.advance_original(body,g,c);
   self.work=self.work.max(work_u64(c.actual_work().saturating_sub(before)));
   result
+ }
+ fn minimum_advance_items(&self,body:usize)->Result<usize,ValueError>{
+  if let Some(inner)=self.inner.as_ref(){return inner.minimum_advance_items(body)}
+  if self.phase==Phase::Receive{
+   return self.receiver.as_ref().ok_or_else(||invalid("drawing original JSON owner vanished"))?.minimum_advance_items(body,WIRE_WORK)
+  }
+  Ok(1)
  }
  fn has_pending_receiving_recovery(&self)->bool{
   self.pending_receiving_demand().is_some()||self.inner.as_ref().is_some_and(|inner|inner.has_pending_receiving_recovery())

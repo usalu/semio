@@ -1,0 +1,257 @@
+[
+  {
+    "id": "small_variation_single",
+    "num": {
+      "g_mean": 100,
+      "v_g": 0.06
+    },
+    "text": {
+      "g_value_basis": "single-mean",
+      "q_value_basis": "none"
+    },
+    "valid": true
+  },
+  {
+    "id": "small_variation_sensitive",
+    "num": {
+      "g_mean": 100,
+      "v_g": 0.03
+    },
+    "text": {
+      "g_value_basis": "normal-bounds",
+      "q_value_basis": "none"
+    },
+    "valid": true
+  },
+  {
+    "id": "large_variation",
+    "num": {
+      "g_mean": 100,
+      "v_g": 0.2
+    },
+    "text": {
+      "g_value_basis": "normal-bounds",
+      "q_value_basis": "none"
+    },
+    "valid": true
+  },
+  {
+    "id": "zero_variation",
+    "num": {
+      "g_mean": 100,
+      "v_g": 0
+    },
+    "text": {
+      "g_value_basis": "normal-bounds",
+      "q_value_basis": "none"
+    },
+    "valid": true
+  },
+  {
+    "id": "signed_gaussian_mean",
+    "num": {
+      "g_mean": -100,
+      "v_g": 0.2
+    },
+    "text": {
+      "g_value_basis": "normal-bounds",
+      "q_value_basis": "none"
+    },
+    "valid": true
+  },
+  {
+    "id": "prescribed_bounds",
+    "num": {
+      "g_prescribed_lower": 90,
+      "g_prescribed_upper": 117
+    },
+    "text": {
+      "g_value_basis": "prescribed-bounds",
+      "q_value_basis": "none"
+    },
+    "valid": true
+  },
+  {
+    "id": "prescribed_bounds_inverted",
+    "num": {
+      "g_prescribed_lower": 120,
+      "g_prescribed_upper": 90
+    },
+    "text": {
+      "g_value_basis": "prescribed-bounds",
+      "q_value_basis": "none"
+    },
+    "valid": false
+  },
+  {
+    "id": "cov_undefined",
+    "num": {
+      "g_mean": 0,
+      "v_g": 0.2
+    },
+    "text": {
+      "g_value_basis": "normal-bounds",
+      "q_value_basis": "none"
+    },
+    "valid": false
+  },
+  {
+    "id": "cov_negative",
+    "num": {
+      "g_mean": 100,
+      "v_g": -0.01
+    },
+    "text": {
+      "g_value_basis": "normal-bounds",
+      "q_value_basis": "none"
+    },
+    "valid": false
+  },
+  {
+    "id": "gumbel_annual_98",
+    "num": {
+      "q_mean": 2,
+      "q_cov": 0.3
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "annual-gumbel"
+    },
+    "valid": true
+  },
+  {
+    "id": "gumbel_annual_95",
+    "num": {
+      "q_mean": 100,
+      "q_cov": 0.1,
+      "q_probability": 0.95
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "annual-gumbel"
+    },
+    "valid": true
+  },
+  {
+    "id": "gumbel_annual_5",
+    "num": {
+      "q_mean": 100,
+      "q_cov": 0.1,
+      "q_probability": 0.05
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "annual-gumbel"
+    },
+    "valid": true
+  },
+  {
+    "id": "gumbel_zero_variation",
+    "num": {
+      "q_mean": 100,
+      "q_cov": 0
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "annual-gumbel"
+    },
+    "valid": true
+  },
+  {
+    "id": "gumbel_invalid_probability",
+    "num": {
+      "q_mean": 100,
+      "q_cov": 0.1,
+      "q_probability": 1
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "annual-gumbel"
+    },
+    "valid": false
+  },
+  {
+    "id": "gumbel_invalid_mean",
+    "num": {
+      "q_mean": 0,
+      "q_cov": 0.1
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "annual-gumbel"
+    },
+    "valid": false
+  },
+  {
+    "id": "gumbel_missing_variation",
+    "num": {
+      "q_mean": 100
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "annual-gumbel"
+    },
+    "valid": false
+  },
+  {
+    "id": "prescribed_variable",
+    "num": {
+      "q_prescribed": 125
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "prescribed"
+    },
+    "valid": true
+  },
+  {
+    "id": "mixed_prescribed",
+    "num": {
+      "g_prescribed_lower": 90,
+      "g_prescribed_upper": 120,
+      "q_prescribed": 150
+    },
+    "text": {
+      "g_value_basis": "prescribed-bounds",
+      "q_value_basis": "prescribed"
+    },
+    "valid": true
+  },
+  {
+    "id": "mixed_statistical",
+    "num": {
+      "g_mean": 100,
+      "v_g": 0.1,
+      "q_mean": 2,
+      "q_cov": 0.3
+    },
+    "text": {
+      "g_value_basis": "normal-bounds",
+      "q_value_basis": "annual-gumbel"
+    },
+    "valid": true
+  },
+  {
+    "id": "missing_basis",
+    "num": {
+      "g_mean": 100,
+      "v_g": 0.1
+    },
+    "text": {
+      "g_value_basis": "none",
+      "q_value_basis": "none"
+    },
+    "valid": false
+  },
+  {
+    "id": "unsupported_basis",
+    "num": {
+      "g_mean": 100
+    },
+    "text": {
+      "g_value_basis": "unknown",
+      "q_value_basis": "none"
+    },
+    "valid": false
+  }
+]

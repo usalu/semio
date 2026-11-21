@@ -1,21 +1,16 @@
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use super::*;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
-use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
-use crate::context::dispatch;
-use crate::context::fem2d_app;
+use crate::context::{dispatch, fem2d_app};
+use semio_os_kernel as protocol;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
-use pack::snapshot::ArtifactDsl;
-#[cfg(test)] use semio_plugin::component::ArtifactView;
-#[cfg(test)] use semio_plugin::component::NoConfig;
-#[cfg(test)] use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-#[cfg(test)] use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_element::PatchElement;
-#[cfg(test)] use semio_plugin::component::Emit;
-#[cfg(test)] use semio_plugin::component::NoConfigMutation;
-#[cfg(test)] use semio_framework::Fault;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_element::{PatchElement, handle};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementPatch;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{FemElement, element_id};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::{Fem2dSnapshot, Fem2dSnapshotRetiring, Fem2dSnapshotValue};
+use semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 
-fn demo() -> Fem2dSnapshot {
-    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
+fn demo() -> Fem2dSnapshotRetiring {
+    Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("the bundled demo fixture parses"))
 }
 
 fn emit(snapshot: &Fem2dSnapshot, payload: PatchElement) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
@@ -28,9 +23,8 @@ fn emit(snapshot: &Fem2dSnapshot, payload: PatchElement) -> Result<Emit<Fem2dMut
 #[semio_framework_async_macros::async_test]
 async fn patch_element_repoints_a_section_on_the_demo_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchElement(PatchElement { id: "e3".into(), field: "sectionId".into(), value: "post140".into() })).await;
-    let snapshot = app.snapshot().expect("snapshot");
+    let snapshot = app.snapshot_ref();
     let element = snapshot.elements.iter().find(|element| element_id(element) == "e3").expect("e3 survives the patch");
     let FemElement::Beam { section_id, material_id, .. } = element else { panic!("e3 stays a beam") };
     assert_eq!(section_id, "post140");
@@ -62,17 +56,18 @@ async fn patch_element_with_the_current_reference_emits_nothing_2d() {
 /// 👥️ Two inspector commands authored on one base compose their independent intent in either replay order.
 #[test]
 fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
-    let first=emit(&base,PatchElement{id:"e1".into(),field:"start".into(),value:"n3".into()}).unwrap().artifact_mutations.remove(0);
-    let second=emit(&base,PatchElement{id:"e1".into(),field:"kind".into(),value:"beam".into()}).unwrap().artifact_mutations.remove(0);
-    let first_then_second=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&first).unwrap().0,&second).unwrap().0;
-    let combined=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&second).unwrap().0,&first).unwrap().0;
+    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshotValue>(include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
+    let accepted = Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(base.clone()).expect("admit the neutral fixture"));
+    let first=emit(&accepted,PatchElement{id:"e1".into(),field:"start".into(),value:"n3".into()}).unwrap().artifact_mutations.remove(0);
+    let second=emit(&accepted,PatchElement{id:"e1".into(),field:"kind".into(),value:"beam".into()}).unwrap().artifact_mutations.remove(0);
+    let first_then_second=apply_cold_mutation(&apply_cold_mutation(&base,&first).unwrap().0,&second).unwrap().0;
+    let combined=apply_cold_mutation(&apply_cold_mutation(&base,&second).unwrap().0,&first).unwrap().0;
     assert_eq!(combined,first_then_second);
-    assert!(matches!(&combined.elements[0],crate::FemElement::Beam{start,..} if start=="n3"));
-    let mut undo=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undo=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&undo,inverse).unwrap().0;}
-    assert_eq!(undo,semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&second).unwrap().0,"undo owns no sibling field");
+    assert!(matches!(&combined.elements[0],FemElement::Beam{start,..} if start=="n3"));
+    let mut undo=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undo=apply_cold_mutation(&undo,inverse).unwrap().0;}
+    assert_eq!(undo,apply_cold_mutation(&base,&second).unwrap().0,"undo owns no sibling field");
     let first_diff=protocol::ColdMutation::diff(&first,&base).into_parts().0;let second_diff=protocol::ColdMutation::diff(&second,&base).into_parts().0;
-    let mut sum=first_diff.clone();protocol::ColdMutationDiff::absorb(&mut sum,second_diff);
+    let mut sum=first_diff.clone();protocol::ColdMutationDiff::<Fem2dSnapshotValue>::absorb(&mut sum,second_diff);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
+    assert_eq!(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
 }

@@ -215,12 +215,6 @@ impl HalfedgeMesh {
         VertexId(id)
     }
 
-    fn rebuild_from_polygon_soup(&mut self, positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<()> {
-        self.require_topology_source_remap("topology reconstruction")?;
-        let mut mesh=Self::from_faces(positions,faces)?;mesh.materials=std::mem::take(&mut self.materials);mesh.textures=std::mem::take(&mut self.textures);*self=mesh;
-        Ok(())
-    }
-
     pub fn polygon_soup(&self) -> (Vec<[f32; 3]>, Vec<Vec<u32>>) {
         let positions: Vec<[f32; 3]> = self.vertices.iter().map(|v| v.position).collect();
         let mut faces = Vec::new();
@@ -304,34 +298,6 @@ impl HalfedgeMesh {
 
 //#region Edit
 impl HalfedgeMesh {
-
-    fn require_topology_source_remap(&self,operation:&str)->MeshResult<()> {if let Some((name,_))=self.attributes.first_key_value() {return Err(MeshKernelError::InvalidInput(format!("mesh attribute '{name}' requires declared source remapping for {operation}")));}if !self.uv_seams.is_empty() {return Err(MeshKernelError::InvalidInput(format!("mesh UV seams require declared source remapping for {operation}")));}Ok(())}
-
-    /// 🧹️ Compacts away vertices no longer referenced by any face, so `vertex_count()` reflects the mesh's
-    /// actual remaining complexity after operations (like retained decimation) that remap vertex ids away
-    /// without themselves shrinking the position buffer.
-    fn drop_unreferenced_vertices(&mut self) -> MeshResult<()> {
-        let (positions, face_list) = self.polygon_soup();
-        let mut used = vec![false; positions.len()];
-        for face in &face_list {
-            for &vi in face {
-                used[vi as usize] = true;
-            }
-        }
-        if used.iter().all(|&u| u) {
-            return Ok(());
-        }
-        let mut remap = vec![0u32; positions.len()];
-        let mut compacted = Vec::new();
-        for (i, &keep) in used.iter().enumerate() {
-            if keep {
-                remap[i] = compacted.len() as u32;
-                compacted.push(positions[i]);
-            }
-        }
-        let new_faces: Vec<Vec<u32>> = face_list.into_iter().map(|f| f.into_iter().map(|vi| remap[vi as usize]).collect()).collect();
-        self.rebuild_from_polygon_soup(&compacted, &new_faces)
-    }
 
     pub fn set_shading(&mut self, faces: &[FaceId], smooth: bool) -> MeshResult<()> {
         *self = self.set_shading_job(faces, smooth)?.finish_with_progress()?;

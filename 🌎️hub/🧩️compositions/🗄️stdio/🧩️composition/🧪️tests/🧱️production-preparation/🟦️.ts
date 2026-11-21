@@ -1,4 +1,5 @@
 import { test, expect } from "bun:test";
+import { Database } from "bun:sqlite";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import * as toml from "@iarna/toml";
@@ -41,6 +42,17 @@ for (const row of cases.cases) test(`production preparation isolates examples: $
     expect(result.receipts).toBeGreaterThan(0);
     const prepared = readFileSync(manifestPath, "utf8");
     expect(Bun.TOML.parse(prepared)).toEqual(toml.parse(prepared));
+    const oracle = new Database(":memory:");
+    try {
+      const constructor = oracle.query<{ call: string }, [string, string, string, string, string]>("select printf('%s::<%s, %s>::%s(\"%s\")', ?1, ?2, ?3, ?4, ?5) as call");
+      for (const component of owners as { id: string; enum: string; root: string }[]) {
+        const expected = constructor.get(cases.builder.type, cases.builder.labelState, component.enum, cases.builder.method, component.id);
+        expect(expected).not.toBeNull();
+        expect(readFileSync(join(scratch, component.root), "utf8")).toContain(expected!.call);
+      }
+    } finally {
+      oracle.close();
+    }
     let writes = 0;
     for (const path of cases.examplePaths) {
       if (row.examplesPresent) writes += Number(readFileSync(join(scratch, path), "utf8") !== examples.get(path));

@@ -32,7 +32,7 @@ fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint:
     let mut changed = false;
     let size_key = format!("{width}x{height}");
     if cache.size_key.as_deref() != Some(size_key.as_str()) {
-        host.scene.set_size(width, height, 1.0);
+        host.set_size(width, height, 1.0);
         cache.size_key = Some(size_key);
         changed = true;
     }
@@ -89,7 +89,7 @@ fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint:
     let camera_json = if navigator { host.navigator_fit_camera_json(f64::from(width), f64::from(height)) } else { paint.camera_json.clone() };
     if cache.camera_json.as_deref() != Some(camera_json.as_str()) {
         if let Some((x, y, zoom)) = engine_camera_from_json(&camera_json) {
-            board_set_camera(&mut host.scene, &mut host.outbox, x, y, zoom);
+            host.set_camera(x, y, zoom);
         }
         cache.camera_json = Some(camera_json);
         changed = true;
@@ -167,7 +167,7 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
         let mut changed = created;
         let size_key = format!("{width}x{height}");
         if entry.editor_sync_cache.size_key.as_deref() != Some(size_key.as_str()) {
-            host.scene.set_size(width, height, 1.0);
+            host.set_size(width, height, 1.0);
             entry.editor_sync_cache.size_key = Some(size_key);
             changed = true;
         }
@@ -183,7 +183,7 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
                 if editor.buffer == host.text() {
                     entry.editor_delivery.explicit_dirty = false;
                     entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
-                    entry.editor_delivery.explicit_changes = None;
+                    entry.editor_delivery.explicit_changes = Vec::new();
                     entry.editor_delivery.explicit_conflict = false;
                     entry.editor_delivery.explicit_past.clear();
                     entry.editor_delivery.explicit_future.clear();
@@ -200,7 +200,7 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
                 }
             } else if explicit {
                 entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
-                entry.editor_delivery.explicit_changes = None;
+                entry.editor_delivery.explicit_changes = Vec::new();
                 entry.editor_delivery.explicit_conflict = false;
                 entry.editor_delivery.explicit_snapshot = Some(editor.buffer.clone());
                 entry.editor_delivery.explicit_error = None;
@@ -295,7 +295,7 @@ pub fn stage_engine_scene_paint(scene: &UiComponentSceneNode, bounds: Rect, clea
 }
 
 #[derive(Clone, Copy)]
-pub(crate) struct RasterCompositeProgress {
+pub struct RasterCompositeProgress {
     pub completed: u64,
     pub done: bool,
 }

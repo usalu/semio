@@ -7,6 +7,12 @@ pub fn drawing_kind(kind: &str) -> bool {
     matches!(kind, "drawing" | "dwg" | "dxf" | "svg" | "cad" | "s.draw.drawing" | "s.stdio.dwg" | "s.stdio.dxf" | "s.stdio.svg" | "s.cad.cad")
 }
 
+/// 🔗️ Checks whether this placed link addresses the original document Drawing.
+pub fn link_references_document_drawing(doc: &LayoutSnapshot, link: &semio_s_artifact_layout_layout_model::ImageLink) -> bool {
+    drawing_kind(&link.artifact_kind) && !link.artifact_ref.is_empty()
+        && doc.background_drawing.as_ref().is_some_and(|member| member.handle.target.artifact_id == link.artifact_ref)
+}
+
 pub(super) fn paint_display_stroke(scene: &mut Scene, transform: Affine, stroke: &DisplayStroke) {
     if let Some(fill) = stroke.fill.filter(|color| color[3] > 0.001) {
         if stroke.points.len() >= 3 {

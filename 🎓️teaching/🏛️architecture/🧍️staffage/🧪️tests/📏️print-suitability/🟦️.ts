@@ -3,7 +3,9 @@
  * @see ./🥒️.feature — the scenarios
  * @see ../../🗂️catalog/🖨️print-profiles/🔣️.json — the profiles
  */
+import { vec2 } from "gl-matrix";
 import { describe, expect, it } from "vitest";
+import { fixture } from "../🧰️support/🧰️.ts";
 import type { AuthoredRepresentation, Shape } from "../../🧬️schema/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, measureSuitability } from "../../🔨️modules/🖨️representation/🟦️.ts";
 import { defaultShapes, rolesAssetWith } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
@@ -21,6 +23,30 @@ describe("📏️ print suitability", () => {
       expect(result.violations, `1:${denominator}`).toEqual([]);
       expect(result.suitable).toBe(true);
     }
+  });
+
+  it("measures each authored drawing at a shared print boundary", () => {
+    type Drawing = { band: 100 | 200; id: string; widthM: number; inkWidthMm: number };
+    const { sharedBoundary: edge } = fixture<{ sharedBoundary: { denominator: number; penMm: number; drawings: Drawing[] } }>("🕳️valid-range-coverage");
+    const asset = rolesAssetWith((denominator) => {
+      const drawing = edge.drawings.find((d) => d.band === denominator);
+      return drawing ? [rect(drawing.id, 0, drawing.widthM, 0.5, "body", { penMm: edge.penMm })] : defaultShapes();
+    });
+    for (const drawing of edge.drawings) {
+      const rep = asset.representations[drawing.band] as AuthoredRepresentation;
+      const result = measureSuitability(asset, rep, edge.denominator, DEFAULT_PRINT_PROFILE);
+      const features = result.violations.filter((violation) => violation.check === "feature");
+      const width = vec2.length(vec2.scale(vec2.create(), vec2.fromValues(drawing.widthM, 0), 1000 / edge.denominator)) + edge.penMm;
+      expect(width).toBeCloseTo(drawing.inkWidthMm, 6);
+      expect(features.map((v) => v.shapes)).toEqual([[drawing.id]]);
+      expect(features[0]!.measuredMm).toBeCloseTo(width, 6);
+    }
+    const fine = asset.representations[100] as AuthoredRepresentation;
+    const coarse = asset.representations[200] as AuthoredRepresentation;
+    const replacement = { ...fine, geometry: coarse.geometry };
+    const measured = measureSuitability(asset, replacement, edge.denominator, DEFAULT_PRINT_PROFILE);
+    expect(measured.violations.filter((v) => v.check === "feature").map((v) => v.shapes)).toEqual([[edge.drawings[1]!.id]]);
+    expect(asset.representations[100]).toBe(fine);
   });
 
   it("treats touching and overlapping ink as a join, not a gap", () => {

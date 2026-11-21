@@ -101,3 +101,18 @@ Opened with the Read tool: 1:50 body sheet (six views with rig), 1:50 three-quar
 - **Omitted real parts:** gasket, vent holes, sensor pocket, rivet nuts in the tray back.
 - **Not opened:** 1:100 and 1:200 thermal sheets, 1:100 structure, the `night-idle` 2D sheet and the 1:500 2D sheet were rendered but not looked at.
 - During the work one failed apply let `volumes-insert.py` splice new volumes onto the old rig for about a minute; the next write repaired it.
+
+## Round 5 handcraft
+
+No geometry change. Every scale and list rendered and opened (body, structure, thermal cut at 1:50 to 1:500; poses `night-idle`, `operating`, `stagnation` and clip `operating` t 150 at 1:50; 2D 1:50 to 1:500). Reference as in section 1 (2.0 x 1.0 x 0.1 m class, 3.2 mm pane, 22 mm headers, 25 x 25 x 2 mm angle stand); model extents equal `dimensions` (bounds 0 mm).
+
+| scale | before = after (body / thermal / structure) |
+|---|---|
+| 1:50 | A- / A- / B+ (structure: the pane member covers the frame from the front, it reads as a slab there; from behind an open frame) |
+| 1:100 | A- / A- / B+ |
+| 1:200 | A- / A- / B+ |
+| 1:500 | B+ / B+ / B+ |
+
+### Check: red, not by the model
+
+`volumes-check.ts --product` fails at 1:50, 1:100 (per region) and 1:200 (total): since the C31 flood the glazed box is a closed cavity, so the absorber (3.88 m²) and both headers measure an outer area near 0, glazing 1.99 against 3.96 and housing 2.94 against 5.27. The values are beyond the factor 1.5 an author may apply (C16) and the absorber/header case is a rule conflict (C31 e asks for `hidden`, B4 and the `hidden` text forbid it for a visible part). Logged in `area-review.md` and `tool-requests.md` (2026-11-21); not forced.

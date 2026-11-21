@@ -71,3 +71,52 @@ Why three areas stay red: `helmet` (0.0484) and `sneakers` (0.0677) are skin sha
 ## 7. Files
 
 Scripts in the ticket folder: `r3-child-on-kick-scooter-ref.py` (reference numbers), `-fk.py`, `-root.py` (rig, anchors, IK), `-kit.py`, `-body50.py`, `-coarse.py`, `-volumes.py` (thermal, structure, decisions), `-build.py`, `-project2d.ts`, `-draw2d.py` (2D, dimensions, texts), `-probe.ts` (all poses and clips), `-suit.ts` (print suitability per view and pose), `-sheet.ts`, `-run.sh` (rebuild + validate candidate), `-apply.ts`, `-ship.sh` (rebuild, probe, write catalog, splice, validate). Appended: `author-requests.md`, `area-review.md`, `tool-requests.md`.
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: `r5-child-on-kick-scooter-body.py` (reads the round 4 source kept as `🗑️generated/r5-child-on-kick-scooter/volumes.before.json`, writes `volumes/humans/child-on-kick-scooter.json`), `r5-child-on-kick-scooter-root.py` (print-range root fixes in the catalog file, text edits), measurements with `r5-skateboarder-measure.ts`. Spliced; `r3-validate.ts humans/child-on-kick-scooter --catalog-only` VALID (schema 0, validateAsset 0; it was INVALID with 5 `PRINT range-end-*` findings of the new print check before).
+
+### Reference (modelled to) and model against it, 1:50, pose gliding
+
+| quantity | reference (girl, 8 y; Snyder 1977, DIN 33402-2 children) | model | deviation |
+|---|---|---|---|
+| stature | 1.274 m | 1.274 m (rig), 1.343 m over helmet and deck | 0 % |
+| head height | H / 6.5 = 0.195 m | 0.195 (round 3) | 0 % |
+| thigh | 0.302 m (hip 0.643 - knee 0.341) | 0.302 | 0 % |
+| shank | 0.293 m | 0.293 | 0 % |
+| upper arm / forearm / hand | 0.229 / 0.179 / 0.133 m | 0.229 / 0.179 / 0.133 | 0 % |
+| foot (shoe EU 33) | 0.207 m | 0.112 + 0.062 bones, shoe 0.205 m | -1 % |
+| thigh breadth (leggings) | 0.115 m | 0.112 | -2.6 % |
+| calf breadth | 0.080 m | 0.080 | 0 % |
+| knee breadth (leggings) | 0.075-0.085 m | 0.084 (2 x 0.042) | in range |
+| upper arm / forearm (sleeve) | 0.090 / 0.070 m | 0.094 / 0.070 | +4 % (jacket) / 0 % |
+| scooter | wheelbase 0.56 m, wheel 145 x 30 mm, bar 0.34 m | 0.56 / 145 x 30 / 0.344 | 0 % |
+
+The rig was already right (round 3); no rig, pose or clip change needed.
+
+### Grades (before -> after; body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | B+ / A- / A- | A- / A- / A- |
+| 1:100 | B+ / B+ / A- | A- / B+ / A- |
+| 1:200 | B+ / B+ / B+ | B+ / B+ / B+ (unchanged) |
+| 1:500 | B+ / B+ / B | B+ / B+ / B (unchanged) |
+
+Defects seen before (sheets opened: 1:50 body six views, three-quarter close-up, left view crops of upper and lower body, 1:50 structure, 1:500 body): a ball at each knee (thigh end 45 mm wide, 33 mm past the joint, shank top 35 mm: the thigh stood proud of the shank in every pose); the print check failed (spoon brake drawn 3 mm above the deck, 0.07 mm gap at 1:20; 1:200 and 1:500 ranges too wide for the 68 mm scooter base and the edge-on 30 mm wheel).
+
+### Changes
+
+- 1:50 and 1:100 knee: both segments 42 mm in radius at the joint line, the thigh tapering inside the shank to 18 mm 26 mm past it, the shank top tapering inside the thigh to 13 mm 32 mm above it; leggings shells redrawn at their depth. Opened after: 1:50 pushing-off six views (knees closed and smooth, pushing foot on the ground).
+- Root (catalog): 1:50 elevation `fender` hinge points seated on the deck top (y 0.088 / 0.0925 -> 0.0845); `representations.200.validRange.maxDenominator` 350 -> 330, `representations.500.validRange` 350..1000 -> 330..500 (beyond 1:500 the wheel seen edge-on, bar stem and handlebar fall below 0.2 mm in the pushing poses; measured 0.197 mm at 1:520). 2D 1:50 opened after: unchanged apart from the brake seat.
+
+### Checks after
+
+`volumes-check.ts --product`: all rules ok except `volumes-thermal-coverage` helmet 0.95 / 0.62 and sneakers 0.52 / 0.37 (1:50 / 1:100; C18 body regions, unchanged, already in `area-review.md`) and wheels +17 % at 1:50 (0.096 m² measured against the decided 0.082; appended to `area-review.md`, not forced).
+
+### Remaining (with reason)
+
+- 1:200 and 1:500 not remodelled this round (B+): fists at the 75 mm floor at 1:500, the fork plate through the wheel disc.
+- Helmet a smooth dome without vents; face plain; ribcage one barrel at 1:200 and 1:500.
+
+The fork blades, knee and toe outlines retain their shapes up to the 1:330 endpoint of the 1:200 representation. The document passed its full print-range check. Independently reopened scenes total 4,352,100 bytes across the twelve digital outputs.

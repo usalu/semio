@@ -19,8 +19,6 @@ impl std::ops::Deref for Fem2dSnapshotRetiring {
 impl Drop for Fem2dSnapshotRetiring {
     fn drop(&mut self) {
         let Some(snapshot) = self.0.take() else { return };
-        let Ok(mut owner) = semio_framework_value::retirement::controlled::ControlledRetirement::new(snapshot) else { return };
-        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 256 * 1048576, maximum_capacity_bytes: 256 * 1048576, maximum_release_bytes: 256 * 1048576, maximum_depth: 128 };
-        while !owner.terminal_is_empty() && owner.step(grant).is_ok() {}
+        <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(snapshot);
     }
 }

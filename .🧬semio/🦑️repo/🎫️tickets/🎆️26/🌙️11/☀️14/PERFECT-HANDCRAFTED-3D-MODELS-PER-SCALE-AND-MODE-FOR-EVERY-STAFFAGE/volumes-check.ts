@@ -49,7 +49,7 @@ const m = merged(asset, source);
 type Tagged = Measurement & { engine: "p" | "o" };
 const progress = (msg: string) => process.stderr.write(`[check] ${entry.category}/${entry.slug} ${msg}\n`);
 const notes: string[] = [];
-if (fast) notes.push("--fast: owned approximate measurements for iteration; run without --fast to see the catalog validator's numbers");
+if (fast) notes.push("--fast: owned approximate measurements for iteration (no C31 flood: closed cavities count as outer area here); run without --fast to see the catalog validator's numbers");
 if (args.includes("--owned")) notes.push("--owned: owned measurements, not the catalog validator");
 let findings: { rule: string; scale?: number; list?: string; message: string }[] = [];
 let measurements: Tagged[] = [];

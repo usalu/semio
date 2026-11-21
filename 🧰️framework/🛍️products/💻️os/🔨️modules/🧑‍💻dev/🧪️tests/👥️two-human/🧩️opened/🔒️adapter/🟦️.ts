@@ -32,7 +32,7 @@ export function openedUiOwnerV1(page: Page, signal: AbortSignal): { ui: OpenedUi
     if (await locator.count() !== 1) throw Error("Interaction requires exactly one element");
     return locator;
   };
-  const operations: OpenedUiV1 = {
+  const operations: Required<OpenedUiV1> = {
     async observe(selector, attributes, readText = true) {
       check();
       const locator = page.locator(selector), count = await locator.count();
@@ -92,6 +92,35 @@ export function openedUiOwnerV1(page: Page, signal: AbortSignal): { ui: OpenedUi
       if (paths.length > 1 && !chooser.isMultiple()) throw Error("File chooser does not accept multiple files");
       await chooser.setFiles([...paths], { timeout: policy.selectorTimeoutMs });
       check();
+    },
+    async cancelFilePicker(selector) {
+      check();
+      const target = await one(selector);
+      const session = await page.context().newCDPSession(page);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let onAbort: (() => void) | undefined;
+      try {
+        check();
+        await session.send("Page.enable");
+        await session.send("Page.setInterceptFileChooserDialog", { enabled: true, cancel: true });
+        check();
+        const requested = new Promise<void>((resolve, reject) => {
+          onAbort = () => reject(signal.reason ?? Error("Cancelled"));
+          signal.addEventListener("abort", onAbort, { once: true });
+          timer = setTimeout(() => reject(Error("Browser did not open a file picker")), policy.selectorTimeoutMs);
+          session.once("Page.fileChooserOpened", event => {
+            if (event.backendNodeId === undefined) reject(Error("File picker request has no input"));
+            else resolve();
+          });
+        });
+        await Promise.all([requested, target.click({ timeout: policy.selectorTimeoutMs })]);
+        check();
+      } finally {
+        clearTimeout(timer);
+        if (onAbort) signal.removeEventListener("abort", onAbort);
+        await session.send("Page.setInterceptFileChooserDialog", { enabled: false }).catch(() => undefined);
+        await session.detach().catch(() => undefined);
+      }
     },
     async download(selector) {
       check();
@@ -159,6 +188,7 @@ export function openedUiOwnerV1(page: Page, signal: AbortSignal): { ui: OpenedUi
     click: selector => track(() => operations.click(selector)),
     press: (selector, key) => track(() => operations.press(selector, key)),
     chooseFiles: (selector, paths) => track(() => operations.chooseFiles(selector, paths)),
+    cancelFilePicker: selector => track(() => operations.cancelFilePicker(selector)),
     download: selector => track(() => operations.download(selector)),
   };
   return { ui, async finish() { revoked = true; if (active.size) await page.close().catch(() => undefined); await Promise.allSettled([...active]); } };

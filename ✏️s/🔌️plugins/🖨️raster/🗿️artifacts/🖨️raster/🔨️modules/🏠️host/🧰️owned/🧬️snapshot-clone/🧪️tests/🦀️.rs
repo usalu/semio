@@ -1,5 +1,7 @@
 //! 🧪️ Clone physical receipts bind every payload page to the actual caller grant.
 use super::*;
+use crate::tests::with_effect;
+use semio_s_artifact_raster_raster_model::retire_raster_value_cold;
 
 fn turn(clone:&mut RasterDslValueCloneAuthority,source:&semio_framework_value::DslValue,totals:&mut RasterOwnerTotals,grant:RetainedCloneGrant)->RetainedCloneProgress{
  let demand=clone.demands(source,grant.maximum_copy_bytes).unwrap();
@@ -28,7 +30,7 @@ fn byte_clone_denial_preserves_owner_and_payload_copy_is_paged(){
 fn empty_nested_clone_controller_requires_its_own_release_turn(){
  let source=RasterLayerNode::Pixel{id:String::new(),name:String::new(),visible:true,locked:false,opacity:1.0,blend_mode:String::new(),transform:semio_s_artifact_raster_raster_model::RasterTransform::default(),mask:None,width:None,height:None,image_key:None};
  let mut snapshot=RasterSnapshotCloneAuthority::new();*snapshot.layer=Some(Box::new(RasterLayerCloneAuthority::new(&source)));let bytes=size_of::<RasterLayerCloneAuthority>();let demand=snapshot.close_demands(128).unwrap();assert_eq!(demand.release_bytes,bytes);
- let denied=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:32768,maximum_release_bytes:bytes-1,maximum_depth:64};let denied_turn=snapshot.close_step(denied);assert_eq!(denied_turn.work,0);assert_eq!(denied_turn.result.unwrap().progress(),RetainedCloneProgress::default());assert!(snapshot.layer.is_some());let turn=snapshot.close_step(RetainedCloneGrant{maximum_release_bytes:bytes,..denied});assert_eq!(turn.work,1);let receipt=turn.result.unwrap().progress();assert_eq!(receipt.released_bytes,bytes);assert!(snapshot.layer.is_none());let empty=snapshot.value.take().unwrap();retire_raster_value_cold(empty);retire_raster_value_cold(source);assert!(snapshot.terminal_is_empty());
+ let denied=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:32768,maximum_release_bytes:bytes-1,maximum_depth:64};let denied_turn=with_effect(denied, 256, |effect| snapshot.close_step(effect));assert_eq!(denied_turn.work,0);assert_eq!(denied_turn.result.unwrap().progress(),RetainedCloneProgress::default());assert!(snapshot.layer.is_some());let turn=with_effect(RetainedCloneGrant{maximum_release_bytes:bytes,..denied}, 256, |effect| snapshot.close_step(effect));assert_eq!(turn.work,1);let receipt=turn.result.unwrap().progress();assert_eq!(receipt.released_bytes,bytes);assert!(snapshot.layer.is_none());let empty=snapshot.value.take().unwrap();retire_raster_value_cold(empty);retire_raster_value_cold(source);assert!(snapshot.terminal_is_empty());
 }
 
 #[test]

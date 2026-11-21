@@ -119,3 +119,18 @@ e_mean||n|1|||Mean action effect|Mittelwert der Beanspruchung|low|
 e_sd||n|1|||Standard deviation of the action effect|Standardabweichung der Beanspruchung|low|
 r_k||n|1|||Characteristic resistance R_k|Charakteristischer Widerstand R_k|low|
 e_k||n|1|||Characteristic action effect E_k|Charakteristische Beanspruchung E_k|low|
+
+# Characteristic values of actions, EN 1990 §4.1.2
+@choice g_value_basis|none|No permanent action in this case|Keine ständige Einwirkung in diesem Fall
+@choice g_value_basis|single-mean|Small variation and insensitive structure|Geringe Veränderlichkeit und unempfindliches Tragwerk
+@choice g_value_basis|normal-bounds|Two characteristic values from a Gaussian distribution|Zwei charakteristische Werte aus einer Normalverteilung
+@choice g_value_basis|prescribed-bounds|Two values from the project design basis|Zwei Werte aus der Bemessungsgrundlage
+@choice q_value_basis|none|No variable action in this case|Keine veränderliche Einwirkung in diesem Fall
+@choice q_value_basis|annual-gumbel|Annual maxima with a qualified Gumbel model|Jahresmaxima mit bestätigter Gumbel-Verteilung
+@choice q_value_basis|prescribed|Prescribed characteristic or nominal value|Vorgegebener charakteristischer Wert oder Nennwert
+g_value_basis|E90.08|c||normal-bounds||Permanent action characteristic-value basis|Grundlage für charakteristische ständige Einwirkungen|high|
+q_value_basis|E90.08|c||annual-gumbel||Variable action characteristic-value basis|Grundlage für charakteristische veränderliche Einwirkungen|high|
+g_prescribed_lower|E90.08|n|N|||Prescribed lower characteristic value|Vorgegebener unterer charakteristischer Wert|high|
+g_prescribed_upper|E90.08|n|N|||Prescribed upper characteristic value|Vorgegebener oberer charakteristischer Wert|high|
+q_prescribed|E90.08|n|N|||Prescribed variable action value|Vorgegebener Wert der veränderlichen Einwirkung|high|
+q_probability|E90.08|n|1|0.98|r0:1|Fractile probability for annual maxima|Fraktilwahrscheinlichkeit für Jahresmaxima|high|0.98 is the default for ordinary climatic annual maxima.

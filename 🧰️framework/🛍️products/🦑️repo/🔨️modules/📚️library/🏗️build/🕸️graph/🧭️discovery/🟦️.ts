@@ -45,6 +45,17 @@ function observedFileDigestV1(root:string,file:string):string{
 }
 
 
+/** 🎯️ Restricts direct project inference to the admitted owners while retaining foreign source inputs. */
+export function buildGraphProjectInferenceOptionsV1(selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,admission?:BuildOwnerAdmissionV1):{analyzeLockfile:true;catalogProviders:BuildOwnerAdmissionV1["catalogProviders"];ownerAdmission?:BuildOwnerAdmissionV1;ownerRoots?:Set<string>}{
+ if(selection.kind==="all")return {analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath}))};
+ if(!admission)throw Error("Closed selected owner admission required");
+ const options={analyzeLockfile:true as const,catalogProviders:admission.catalogProviders,ownerAdmission:admission};
+ if(selection.kind!=="tasks"||selection.excludeDependencies!==true)return options;
+ const names=new Set(admission.owners),ownerRoots=new Set(registry.owners.filter(owner=>names.has(owner.name)).map(owner=>owner.root));
+ if(ownerRoots.size!==names.size)throw Error("Canonical direct inference owner roots required");
+ return {...options,ownerRoots};
+}
+
 /** 📚️ Assembles all owned inference contributions without installing or invoking Nx. */
 export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelectionV1,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,suppliedFiles?:string[],admission?:BuildOwnerAdmissionV1,compact=false):Promise<BuildGraphV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);selection=readBuildGraphSelectionV1(selection);registry=readBuildOwnerRegistryV1(registry);
@@ -52,7 +63,7 @@ export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelec
   if(selection.kind!=="all"&&!admission)throw Error("Closed selected owner admission required");
   const files=suppliedFiles??(selection.kind==="all"?buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation)):admission!.files);
   const [owner,tests,policies]=await Promise.all([import("../📥️inference/🟨️.mjs"),import("../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("../📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);
-  const policy=graphDeclarationV1("../🔣️policy.json"),options={analyzeLockfile:true,catalogProviders:selection.kind==="all"?registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})):admission!.catalogProviders,...(selection.kind!=="all"?{ownerAdmission:admission}:{})},foreign=new Set(admission?.observedFiles??[]);
+  const policy=graphDeclarationV1("../🔣️policy.json"),options=buildGraphProjectInferenceOptionsV1(selection,registry,admission),foreign=new Set(admission?.observedFiles??[]);
   const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")?!foreign.has(file):javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),{...options,catalogFiles:[...foreign].sort()},{workspaceRoot:root,invocation,phaseControl,registry});
   if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
   const contributions=[...primary,...await tests.discoverTestBuildProjectsV1(files.filter(file=>file.endsWith(".feature")),{}, {workspaceRoot:root,invocation,phaseControl})];

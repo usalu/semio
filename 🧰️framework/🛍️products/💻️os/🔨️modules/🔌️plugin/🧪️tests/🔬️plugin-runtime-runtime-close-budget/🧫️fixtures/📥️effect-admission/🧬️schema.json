@@ -1,0 +1,20 @@
+{
+  "type": "array",
+  "minItems": 9,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["archive", "merge", "replacement", "completed", "total", "armed", "poll", "runnable", "retained"],
+    "properties": {
+      "archive": { "enum": ["idle", "staged", "pending", "running", "retiring", "ready", "cancelled", "fault"] },
+      "merge": { "type": "boolean" },
+      "replacement": { "enum": ["idle", "candidate", "retiring", "complete"] },
+      "completed": { "type": "integer", "minimum": 0 },
+      "total": { "type": "integer", "minimum": 0 },
+      "armed": { "type": "boolean" },
+      "poll": { "enum": ["paused", "published"] },
+      "runnable": { "type": "boolean" },
+      "retained": { "type": "boolean" }
+    }
+  }
+}

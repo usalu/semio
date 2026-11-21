@@ -10,3 +10,15 @@ unsafe impl<T:NativeRecordFields+Send+Sync+'static> NativeRecordFields for Seale
 unsafe impl<T:NativeRecordFields+Send+Sync+'static> NativeRecordFields for crate::retirement::arc_custody::original::SharedOriginalStorage<T>{fn native_schema_count()->usize{T::native_schema_count()}fn native_schema_field(index:usize)->Option<NativeRecordSchema>{T::native_schema_field(index)}}
 impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> NativeReceive<I> for SealedShared<T>{type Receiver=NativeSharedReceiver<I,T,T::Receiver,NativeReceiverSeedFor<I,T>>;fn receiver()->Self::Receiver{Self::Receiver::new(false)}fn record_subset_receiver()->Option<Self::Receiver>{Some(Self::Receiver::new(true))}fn receiver_template(subset:bool)->Option<semio_framework_value_native_storage::NativeSeedTemplate<Self::Receiver>>{<Self::Receiver as semio_framework_value_native_receiver_protocol::NativeReceiver<I,Self>>::seed_template(subset)}}
 impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> NativeReceive<I> for crate::retirement::arc_custody::original::SharedOriginalStorage<T>{type Receiver=NativeSharedReceiver<I,T,T::Receiver,NativeReceiverSeedFor<I,T>,Self>;fn receiver()->Self::Receiver{Self::Receiver::new(false)}fn record_subset_receiver()->Option<Self::Receiver>{Some(Self::Receiver::new(true))}fn receiver_template(subset:bool)->Option<semio_framework_value_native_storage::NativeSeedTemplate<Self::Receiver>>{<Self::Receiver as semio_framework_value_native_receiver_protocol::NativeReceiver<I,Self>>::seed_template(subset)}}
+
+impl<I: Sync + 'static + ?Sized, T: NativeReceive<I> + Send + Sync + 'static> NativeReceive<I>
+    for crate::retirement::arc_custody::ArcLease<T>
+{
+    type Receiver = NativeSharedReceiver<I, T, T::Receiver, NativeReceiverSeedFor<I, T>, Self>;
+
+    fn receiver() -> Self::Receiver { Self::Receiver::new(false) }
+    fn record_subset_receiver() -> Option<Self::Receiver> { Some(Self::Receiver::new(true)) }
+    fn receiver_template(subset: bool) -> Option<semio_framework_value_native_storage::NativeSeedTemplate<Self::Receiver>> {
+        <Self::Receiver as semio_framework_value_native_receiver_protocol::NativeReceiver<I, Self>>::seed_template(subset)
+    }
+}

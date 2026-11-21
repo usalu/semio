@@ -6,5 +6,10 @@
   {"active":{"state":"RUNNING","progress":[{"fraction":0.2}]},"terminal":{"state":"SUCCEEDED","cancelRequested":true,"commit":null},"unchanged":true,"expected":false},
   {"active":{"state":"RUNNING","progress":[{"fraction":0.2}]},"terminal":{"state":"CANCELLED","cancelRequested":true,"commit":{"mutation":"committed"}},"unchanged":true,"expected":false},
   {"active":{"state":"RUNNING","progress":[{"fraction":0.2}]},"terminal":{"state":"CANCELLED","cancelRequested":true,"commit":null},"unchanged":false,"expected":false}
+ ],
+ "documentCases": [
+  {"name":"both bytes survive active cancellation","progressDelayMs":40,"cancelDelayMs":30,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yg=="},"expected":true},
+  {"name":"missing history is not an unchanged document","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ=="},"after":{"packBase64":"YQ=="},"expected":false},
+  {"name":"changed history is not an unchanged document","progressDelayMs":0,"cancelDelayMs":0,"before":{"packBase64":"YQ==","sprBase64":"Yg=="},"after":{"packBase64":"YQ==","sprBase64":"Yw=="},"expected":false}
  ]
 }

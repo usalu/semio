@@ -50,7 +50,11 @@ const note = (text) => {
 
 const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--use-angle=metal"] });
 const page = await browser.newPage({ viewport });
-page.on("console", (m) => lines.push(`${at()} ${m.type()} ${m.text().slice(0, 6000)}`));
+page.on("console", (message) => {
+  const body = message.text();
+  const budget = body.includes("wgpu node-graph geometry surface=") ? 256_000 : 6_000;
+  lines.push(at() + " " + message.type() + " " + body.slice(0, budget));
+});
 page.on("pageerror", (e) => lines.push(`${at()} pageerror ${String(e).slice(0, 2000)}`));
 
 const has = (needle) => lines.filter((line) => line.includes(needle));
@@ -435,7 +439,105 @@ const runExamples = async (phase) => {
   await pump(600);
 };
 
-if (boot.booted && only !== "boot") await runExamples("edit");
+const shellHandle = "shell@solid";
+const isShell = (id) => id === shellHandle || typeof id === "string" && id.startsWith(shellHandle + "#");
+const isShellPort = (hover) => hover?.nodeId === "shell" && (hover.portId === "solid" || hover.portId === shellHandle);
+
+const shellGraphPoint = () => {
+  const geometry = lastOf("wgpu node-graph geometry surface=");
+  const rect = lastOf("wgpu-shell engine surfaces")?.match(/"[^"]*procedural-main[^"]*?@(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)\+(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)"/u);
+  if (!geometry || !rect) return null;
+  try {
+    const rows = JSON.parse(geometry.slice(geometry.indexOf("entities=") + 9));
+    const handle = rows.find((row) => row.kind === "handle" && row.id === shellHandle && row.direction !== "in");
+    if (!handle?.geometry?.rect) return null;
+    const [w, h, left, top] = rect.slice(1).map(Number);
+    const [x, y, rw, rh] = handle.geometry.rect;
+    const point = [x + rw / 2, y + rh / 2];
+    return point[0] > 0 && point[0] < w && point[1] > 0 && point[1] < h
+      ? [left + point[0], top + point[1]] : null;
+  } catch {
+    return null;
+  }
+};
+
+const shellMeshSurface = async () => {
+  const surfaces = await page.evaluate(async () => {
+    try {
+      const raw = await globalThis.semioWgpuIntrospection?.dumpMeshStats("procedural-preview");
+      return raw ? JSON.parse(raw).surfaces : [];
+    } catch {
+      return [];
+    }
+  });
+  return surfaces?.find((surface) => surface.instances.some((instance) => isShell(instance.interactionId) || isShell(instance.id))) ?? null;
+};
+
+const shellGraphHover = async () => (await dump("procedural-main"))?.structure?.nodes?.find((node) => node.graphHover)?.graphHover ?? null;
+
+const waitForShell = async (expected, milliseconds, point) => {
+  const deadline = Date.now() + milliseconds;
+  do {
+    const result = await expected();
+    if (result) return result;
+    await pump(350, point);
+  } while (Date.now() < deadline);
+  return null;
+};
+
+const verifyShellHover = async () => {
+  const proof = { label: "edit:box-shell-bidirectional-hover", verdict: "fail", graphToPreview: null, previewToGraph: null, cleared: false };
+  try {
+    const picker = await openPicker("Box Shell hover");
+    const row = picker.rows["shell.example.box-shell-preview"];
+    if (!row) throw new Error("Box Shell picker row has no retained hit target");
+    await pickExample(row, "exact hover");
+    const preview = await waitForShell(shellMeshSurface, 25000);
+    const port = await waitForShell(shellGraphPoint, 25000);
+    if (!preview || !port) throw new Error("Box Shell geometry or graph port never became visible");
+    await page.mouse.move(...port);
+    proof.graphToPreview = await waitForShell(async () => {
+      const target = (await shellMeshSurface())?.hovered;
+      return isShell(target) ? { point: port, target } : null;
+    }, 12000, port);
+    if (!proof.graphToPreview) throw new Error("Shell output hover did not reach the preview instance");
+    const away = [3, 3];
+    await page.mouse.move(...away);
+    const cleared = () => Promise.all([shellMeshSurface(), shellGraphHover()]).then(([surface, hover]) => Boolean(surface && !surface.hovered && !hover));
+    if (!await waitForShell(cleared, 10000, away)) throw new Error("Shell port hover did not clear");
+
+    const body = dockPlan()["procedural-preview"];
+    if (!body) throw new Error("Box Shell preview is outside the mounted dock");
+    const [left, top, width, height] = preview.rect;
+    const fractions = [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8];
+    const points = fractions.flatMap(y => fractions.map(x => [body.x + left + x * width, body.y + top + y * height]));
+    for (const point of points) {
+      await page.mouse.move(...point);
+      proof.previewToGraph = await waitForShell(async () => {
+        const [surface, hover] = await Promise.all([shellMeshSurface(), shellGraphHover()]);
+        return isShell(surface?.hovered) && isShellPort(hover) ? { point, target: surface.hovered, hover } : null;
+      }, 450, point);
+      if (proof.previewToGraph) break;
+    }
+    if (!proof.previewToGraph) throw new Error("No picked preview instance returned the exact shell output port");
+    await page.mouse.move(...away);
+    proof.cleared = Boolean(await waitForShell(cleared, 10000, away));
+    if (!proof.cleared) throw new Error("Preview hover did not clear both surfaces");
+    proof.verdict = "pass";
+  } catch (error) {
+    proof.error = String(error);
+    process.exitCode = 1;
+  } finally {
+    results.push(proof);
+    writeFileSync(join(outDir, "bidirectional-hover.json"), JSON.stringify(proof, null, 2));
+    note("Box Shell bidirectional hover " + proof.verdict + " " + (proof.error ?? ""));
+  }
+};
+
+if (boot.booted && only !== "boot") {
+  await verifyShellHover();
+  await runExamples("edit");
+}
 
 /** 🔀️ Mode: the `mod+alt+→` chord the chrome-parity lane reserved, else the navbar mode group,
  * else a boot-time `?mode=generate` reload recorded as `fallback`. */

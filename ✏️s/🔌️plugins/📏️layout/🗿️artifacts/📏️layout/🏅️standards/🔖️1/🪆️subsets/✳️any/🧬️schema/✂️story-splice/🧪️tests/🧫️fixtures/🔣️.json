@@ -1,0 +1,95 @@
+{
+  "cases": [
+    {
+      "before": "",
+      "after": "",
+      "expected": null
+    },
+    {
+      "before": "Aé🙂Z",
+      "after": "Aø🚀Z",
+      "expected": [
+        1,
+        2,
+        "ø🚀"
+      ]
+    },
+    {
+      "before": "𐐀🤝",
+      "after": "𐐀🤝!",
+      "expected": [
+        2,
+        0,
+        "!"
+      ]
+    },
+    {
+      "before": "𐐀🤝!",
+      "after": "𐐀🤝",
+      "expected": [
+        2,
+        1,
+        ""
+      ]
+    },
+    {
+      "before": "abcdEFzz",
+      "after": "abcdzz",
+      "expected": [
+        4,
+        2,
+        ""
+      ]
+    },
+    {
+      "before": "é",
+      "after": "é",
+      "expected": [
+        0,
+        1,
+        "é"
+      ]
+    },
+    {
+      "before": "👨‍👩‍👦",
+      "after": "👨‍👩‍👧",
+      "expected": [
+        4,
+        1,
+        "👧"
+      ]
+    },
+    {
+      "before": "\u0000x",
+      "after": "\u0000y",
+      "expected": [
+        1,
+        1,
+        "y"
+      ]
+    },
+    {
+      "before": "aaa",
+      "after": "aaaa",
+      "expected": [
+        3,
+        0,
+        "a"
+      ]
+    },
+    {
+      "before": "abc",
+      "after": "xy",
+      "expected": [
+        0,
+        3,
+        "xy"
+      ]
+    },
+    {
+      "before": "préfixe",
+      "after": "préfixe",
+      "expected": null
+    }
+  ]
+}

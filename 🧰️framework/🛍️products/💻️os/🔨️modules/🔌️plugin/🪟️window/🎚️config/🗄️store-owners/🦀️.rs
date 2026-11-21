@@ -191,6 +191,7 @@ pub trait ErasedWindowConfigStoreOwner: Send {
 
     fn dispatch<'a, 'b>(&'a mut self, actor: &'a str, mutation: WindowConfigMutation, identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>>;
     fn admit_begin(&mut self, operation: semio_framework_job::OperationId, actor: &mut Option<ControlledRetirement<SharedUtf8>>, mutations: &mut Vec<WindowConfigMutation>, authority: &WindowConfigAuthority, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedWindowConfigPublication>,RetainedCloneProgress)>,ValueError>;
+    fn admit_store_batch(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, Fault>;
     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body:usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault>;
     fn refresh_demands(&self,authority:&WindowConfigAuthority,body:usize)->Result<RetirementDemand,ValueError>;
     fn refresh(&mut self,authority:&mut WindowConfigAuthority,effect:&mut RetainedAllocationEffect<'_>)->Result<crate::window_mutation::WindowAuthorityRefreshStep,Fault>;
@@ -385,6 +386,25 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         Ok(Some((Box::new(publication),RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
     }
 
+    fn admit_store_batch(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, Fault> {
+        let publication = publication
+            .as_any_mut()
+            .downcast_mut::<TypedWindowConfigPublication<O>>()
+            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.publication-type"), "window config publication did not match its registered window owner"))?;
+        if publication.closing || publication.publication.is_some() {
+            return Ok(None);
+        }
+        let address=publication.window_id.original().ok_or_else(||Fault::from("original window publication lost its captured address"))?;
+        let partition=self.partitions.get_mut(address).ok_or_else(||Fault::from("original window publication lost its exact partition"))?;
+        let admitted = partition.store.admit_member_apply_batch(
+            publication.operation, publication.generation, publication.revision,
+            &mut publication.actor, &mut publication.pending, &mut publication.transaction, grant,
+        ).map_err(ValueError::into_fault)?;
+        let Some((batch, progress)) = admitted else { return Ok(None) };
+        *publication.publication = Some(batch);
+        Ok(Some(progress))
+    }
+
     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body:usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
         let publication = publication
             .as_any_mut()
@@ -393,13 +413,10 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         if publication.closing{return Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked);}
         let address=publication.window_id.original().ok_or_else(||Fault::from("original window publication lost its captured address"))?;
         let partition=self.partitions.get_mut(address).ok_or_else(||Fault::from("original window publication lost its exact partition"))?;
-        if publication.publication.is_none(){
-            return match partition.store.admit_member_apply_batch(publication.operation,publication.generation,publication.revision,&mut publication.actor,&mut publication.pending,&mut publication.transaction,grant.retained_grant()).map_err(|error|error.into_fault())?{
-                Some((owner,progress))=>{*publication.publication=Some(owner);Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(Default::default(),progress))},
-                None=>Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked),
-            };
-        }
-        let result=partition.store.advance_apply_batch_with_turn_ceiling(publication.publication.as_mut().expect("admitted original Store publication remains"),body,grant,turn_ceiling,receiving).map_err(|error|error.into_fault());
+        let Some(batch) = publication.publication.as_mut() else {
+            return Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked);
+        };
+        let result=partition.store.advance_apply_batch_with_turn_ceiling(batch,body,grant,turn_ceiling,receiving).map_err(|error|error.into_fault());
         if publication.publication.as_ref().is_some_and(|owner|owner.phase()==store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing){publication.closing=true;}
         result
     }

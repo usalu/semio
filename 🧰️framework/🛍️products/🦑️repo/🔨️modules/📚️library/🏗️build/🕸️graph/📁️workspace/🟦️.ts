@@ -142,4 +142,4 @@ export async function buildGraphMembershipV1(root:string,files:string[],invocati
 
 
 /** 🚪️ Admits content-aware observations through the same owned inference mechanism. */
-export async function buildGraphSourceFactsHoldV1(observations:readonly unknown[],invocation?:ScriptInvocation,onStale?:(row:{kind:string;path:string;fact:unknown})=>void,onVerified?:(rows:number)=>void):Promise<boolean>{return observationV1.observationsHold(observations,64,new Set(),new Set(),invocation?.control.signal,onStale,onVerified);}
+export async function buildGraphSourceFactsHoldV1(observations:readonly unknown[],invocation?:ScriptInvocation,onStale?:(row:{kind:string;path:string;fact:unknown})=>void,onVerified?:(rows:number)=>void,withinRound=false):Promise<boolean>{return withinRound?observationV1.observationsHoldWithinRoundV1(observations,64,invocation?.control.signal,onStale,onVerified):observationV1.observationsHold(observations,64,new Set(),new Set(),invocation?.control.signal,onStale,onVerified);}

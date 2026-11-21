@@ -1,0 +1,368 @@
+{
+  "description": "Vectors of the drawing-coverage contract (rule valid-range-gap): the preset bands promised by the product and, per case, the validRange [min, max] of each preset (or \"unavailable\") with the holes the rule must report as [from, to, border] (border = the authored preset the finding is filed under: the finest authored preset whose band starts at or below the hole). The promised interval of an asset is the union of the bands of its authored presets; the covered interval the union of their valid ranges, both ends inclusive.",
+  "bands": {
+    "50": [
+      20,
+      75
+    ],
+    "100": [
+      75,
+      150
+    ],
+    "200": [
+      150,
+      350
+    ],
+    "500": [
+      350,
+      1000
+    ]
+  },
+  "sharedBoundary": {
+    "denominator": 150,
+    "penMm": 0.05,
+    "drawings": [
+      { "band": 100, "id": "fine-flange", "widthM": 0.018, "inkWidthMm": 0.17 },
+      { "band": 200, "id": "coarse-web", "widthM": 0.009, "inkWidthMm": 0.11 }
+    ]
+  },
+  "cases": [
+    {
+      "name": "the promised bands exactly",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": [
+          75,
+          150
+        ],
+        "200": [
+          150,
+          350
+        ],
+        "500": [
+          350,
+          1000
+        ]
+      },
+      "gaps": []
+    },
+    {
+      "name": "a moved boundary between authored neighbours",
+      "ranges": {
+        "50": [
+          20,
+          55
+        ],
+        "100": [
+          55,
+          150
+        ],
+        "200": [
+          150,
+          350
+        ],
+        "500": "unavailable"
+      },
+      "gaps": []
+    },
+    {
+      "name": "the coarsest authored band narrowed below its promise",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": [
+          75,
+          150
+        ],
+        "200": [
+          150,
+          210
+        ],
+        "500": "unavailable"
+      },
+      "gaps": [
+        [
+          210,
+          350,
+          200
+        ]
+      ]
+    },
+    {
+      "name": "the 1:500 band ending before 1:1000",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": [
+          75,
+          150
+        ],
+        "200": [
+          150,
+          350
+        ],
+        "500": [
+          350,
+          800
+        ]
+      },
+      "gaps": [
+        [
+          800,
+          1000,
+          500
+        ]
+      ]
+    },
+    {
+      "name": "the finest band starting after 1:20",
+      "ranges": {
+        "50": [
+          30,
+          55
+        ],
+        "100": [
+          55,
+          150
+        ],
+        "200": [
+          150,
+          350
+        ],
+        "500": [
+          350,
+          1000
+        ]
+      },
+      "gaps": [
+        [
+          20,
+          30,
+          50
+        ]
+      ]
+    },
+    {
+      "name": "a hole between two authored neighbours",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": [
+          75,
+          150
+        ],
+        "200": [
+          150,
+          300
+        ],
+        "500": [
+          330,
+          1000
+        ]
+      },
+      "gaps": [
+        [
+          300,
+          330,
+          200
+        ]
+      ]
+    },
+    {
+      "name": "a hole of one denominator",
+      "ranges": {
+        "50": [
+          20,
+          74
+        ],
+        "100": [
+          75,
+          150
+        ],
+        "200": [
+          150,
+          350
+        ],
+        "500": [
+          350,
+          1000
+        ]
+      },
+      "gaps": [
+        [
+          74,
+          75,
+          50
+        ]
+      ]
+    },
+    {
+      "name": "moved boundaries and a short coarsest band",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": [
+          75,
+          130
+        ],
+        "200": [
+          130,
+          250
+        ],
+        "500": [
+          250,
+          500
+        ]
+      },
+      "gaps": [
+        [
+          500,
+          1000,
+          500
+        ]
+      ]
+    },
+    {
+      "name": "a band reaching beyond the promise",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": [
+          75,
+          150
+        ],
+        "200": [
+          150,
+          350
+        ],
+        "500": [
+          350,
+          1200
+        ]
+      },
+      "gaps": []
+    },
+    {
+      "name": "overlapping neighbours leave no hole",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": [
+          75,
+          160
+        ],
+        "200": [
+          150,
+          350
+        ],
+        "500": [
+          350,
+          1000
+        ]
+      },
+      "gaps": []
+    },
+    {
+      "name": "two holes in one asset",
+      "ranges": {
+        "50": [
+          20,
+          60
+        ],
+        "100": [
+          75,
+          150
+        ],
+        "200": [
+          150,
+          300
+        ],
+        "500": "unavailable"
+      },
+      "gaps": [
+        [
+          60,
+          75,
+          50
+        ],
+        [
+          300,
+          350,
+          200
+        ]
+      ]
+    },
+    {
+      "name": "only the 1:50 drawing, narrowed",
+      "ranges": {
+        "50": [
+          20,
+          60
+        ],
+        "100": "unavailable",
+        "200": "unavailable",
+        "500": "unavailable"
+      },
+      "gaps": [
+        [
+          60,
+          75,
+          50
+        ]
+      ]
+    },
+    {
+      "name": "an unavailable preset between authored ones promises nothing",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": "unavailable",
+        "200": [
+          150,
+          350
+        ],
+        "500": "unavailable"
+      },
+      "gaps": []
+    },
+    {
+      "name": "a coarser band starting late after an unavailable preset",
+      "ranges": {
+        "50": [
+          20,
+          75
+        ],
+        "100": "unavailable",
+        "200": [
+          160,
+          350
+        ],
+        "500": "unavailable"
+      },
+      "gaps": [
+        [
+          150,
+          160,
+          200
+        ]
+      ]
+    }
+  ]
+}

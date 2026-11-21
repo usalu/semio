@@ -1,34 +1,32 @@
 //! ✂️ Bounded intersections of analytic supporting lines and planes.
 
 use super::*;
-use semio_framework_3d_brep_intersect::{intersect_line_line_unique, intersect_line_plane_unique, LineIntersectionRefusal};
+use semio_framework_3d_brep_intersect::{intersect_original_curve_curve, intersect_original_curve_plane, LineIntersectionRefusal};
 
 impl Brep {
-    fn original_line(&self, handle: &str) -> Result<(Pnt3, NativeVec3), ValueError> {
-        match self.original_curve(handle)? {
-            Curve3::Line { origin, dir } => Ok((*origin, *dir)),
-            _ => Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "retained linear intersection requires a line")),
-        }
+    /// ✂️ Resolves an original supporting curve or an edge's bounded supporting geometry.
+    pub fn original_curve_curve_contacts(&self, a: &str, b: &str, tolerance: f64) -> Result<[Option<EVec3>; 4], ValueError> {
+        let left = self.native.original_intersection_curve(a)?;
+        let right = self.native.original_intersection_curve(b)?;
+        let hits = intersect_original_curve_curve(left, right, tolerance).map_err(refusal)?;
+        Ok(hits.ok_or_else(|| ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original curve intersection requires analytic lines, circles or ellipses"))?
+            .map(|hit| hit.map(|hit| evec(hit.point))))
     }
 
-    /// 📍️ Plans one native vertex for the unique intersection of two supporting lines.
-    pub fn plan_original_line_line(&mut self, a: &str, b: &str, tolerance: f64) -> Result<VertexPublication, ValueError> {
-        let (o1, d1) = self.original_line(a)?;
-        let (o2, d2) = self.original_line(b)?;
-        let hit = intersect_line_line_unique(o1, d1, o2, d2, tolerance).map_err(refusal)?.ok_or_else(no_intersection)?;
-        self.plan_vertex_publication(evec(hit.point))
+    /// 🪜️ Quotes the original edge and curve arena traversal in addition to the live handle.
+    pub fn original_intersection_curve_source_depth(&self, handle: &str) -> Result<usize, ValueError> {
+        self.native.original_intersection_curve_depth(handle)
     }
 
-    /// 🪟️ Plans one native vertex for a unique supporting line and plane intersection.
-    pub fn plan_original_line_plane(&mut self, curve: &str, surface: &str, tolerance: f64) -> Result<VertexPublication, ValueError> {
-        let (origin, direction) = self.original_line(curve)?;
+    /// 🪟️ Resolves up to four exact contacts with a live analytic plane.
+    pub fn original_curve_plane_contacts(&self, curve:&str, surface:&str,tolerance:f64)->Result<[Option<EVec3>;4],ValueError> {
         let frame = match self.native.original_query_entity(surface)? {
             Entity::Surface(Surface::Plane { frame }, _) => frame,
             Entity::Surface(..) => return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "retained curve/surface intersection requires a plane")),
             _ => return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "curve/surface intersection requires a surface")),
         };
-        let hit = intersect_line_plane_unique(origin, direction, frame, tolerance).map_err(refusal)?.ok_or_else(no_intersection)?;
-        self.plan_vertex_publication(evec(hit.point))
+        let contacts=intersect_original_curve_plane(self.native.original_intersection_curve(curve)?,frame,tolerance).map_err(refusal)?;
+        contacts.map(|hits|hits.map(|hit|hit.map(|h|evec(h.point)))).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"retained plane intersection requires a supported line, circle, ellipse or bounded spline"))
     }
     /// 🧭️ Plans the exact continuous curve shared by two live analytic surfaces.
     pub fn plan_original_surface_intersection(&mut self, a: &str, b: &str, tolerance: f64) -> Result<AnalyticPublication, ValueError> {
@@ -43,10 +41,6 @@ impl Brep {
         })?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "no intersection wire"))?;
         Ok(self.native.plan_prepared_analytic_curve(curve))
     }
-}
-
-fn no_intersection() -> ValueError {
-    ValueError::literal(ValueRefusalKind::InvalidValue, "no intersection")
 }
 
 fn refusal(error: LineIntersectionRefusal) -> ValueError {

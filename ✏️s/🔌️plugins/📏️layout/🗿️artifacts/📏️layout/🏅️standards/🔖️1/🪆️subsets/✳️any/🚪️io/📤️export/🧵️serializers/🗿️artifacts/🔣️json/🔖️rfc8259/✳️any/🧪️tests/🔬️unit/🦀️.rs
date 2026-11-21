@@ -1,7 +1,9 @@
-use super::*;
+use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_layout_layout_io::export::serializers::artifacts::json::v_rfc8259::any::serialize_text;
+
 #[test]
 fn json_text_round_trip_preserves_the_language_neutral_snapshot() {
-    let fixture = include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-pages/🔀️moves/📸️snapshot/⬅️before/🔣️.json");
+    let fixture = fixture_text!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-pages/🔀️moves/📸️snapshot/⬅️before/🔣️.json");
     let snapshot = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire2_codec::parse_layout_document(fixture).unwrap();
     let actual = serialize_text(&snapshot).unwrap();
     let oracle: serde_json::Value = serde_json::from_str(fixture).unwrap();

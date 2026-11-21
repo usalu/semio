@@ -4,7 +4,7 @@ import {join} from "node:path";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {ensureFleetIdentityV1} from "../../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {admitRemoteExecutionActionV1,buildRemoteExecutionLoadReportV1,type RemoteExecutionHostViewV1,type RemoteExecutionLoadReportV1} from "../../🌡️load/🟦️.ts";
-import {remoteExecutionWorkerWhyOfMessageV1,remoteExecutionWorkerWhyV1,type RemoteExecutionWorkerWhyCodeV1} from "../../🌡️load/🔎️why/🟦️.ts";
+import {remoteExecutionActionPlatformWhyV1,remoteExecutionWorkerWhyOfMessageV1,remoteExecutionWorkerWhyV1,type RemoteExecutionWorkerWhyCodeV1} from "../../🌡️load/🔎️why/🟦️.ts";
 import {RemoteExecutionSchedulerV1} from "../../🗓️scheduler/🟦️.ts";
 import {runRemoteExecutionAgentV1} from "../../🛰️agent/🟦️.ts";
 import {checkRemoteExecutionAgentReadinessV1} from "../../🛰️agent/🩺️readiness/🟦️.ts";
@@ -13,18 +13,19 @@ import {readRemoteExecutionPolicyV1,requireRemoteExecutionShapeV1} from "../../�
 const scratch:string[]=[],servers:{stop:(force?:boolean)=>void}[]=[];
 afterEach(()=>{for(const server of servers.splice(0))server.stop(true);for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
 const temporary=():string=>{const path=mkdtempSync(join(testScratchRootV1("rexec-why"),"scratch-"));scratch.push(path);return path;};
-const CODES:readonly RemoteExecutionWorkerWhyCodeV1[]=["starting","no-scheduler","scheduler-unreachable","identity-unregistered","no-toolchain","provisioning","sandbox-unavailable","disk-full","policy-off","not-registered","no-headroom","failed"];
+const CODES:readonly RemoteExecutionWorkerWhyCodeV1[]=["starting","no-scheduler","scheduler-unreachable","identity-unregistered","no-toolchain","provisioning","sandbox-unavailable","action-unsupported","disk-full","policy-off","not-registered","no-headroom","failed"];
 const view:RemoteExecutionHostViewV1={host:{version:1,atMs:Date.now()+86_400_000,platform:"darwin",cores:8,totalMegabytes:65536,availableMegabytes:60000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:0.5,openFiles:1000,openFilesMaximum:200000,attachedImages:0},grants:[],waiters:[]} as never;
 const toolchain="rustc 1.0.0-nightly (abcdef 2026-07-20)\nhost: aarch64-apple-darwin\n";
 
 async function fakeScheduler(workerStatus:number){
- const reports:RemoteExecutionLoadReportV1[]=[];
+ const reports:RemoteExecutionLoadReportV1[]=[],workerRequests:string[]=[];
  const server=Bun.serve({port:0,hostname:"127.0.0.1",async fetch(request){
   const path=new URL(request.url).pathname;
   if(path==="/v1/fleet/load"){reports.push(await request.json() as RemoteExecutionLoadReportV1);return new Response("{}",{status:200});}
+   workerRequests.push(path);
   return new Response("Forbidden: this worker belongs to another origin",{status:workerStatus});
  }});
- servers.push(server);return {url:`http://127.0.0.1:${server.port}`,reports};
+ servers.push(server);return {url:`http://127.0.0.1:${server.port}`,reports,workerRequests};
 }
 const agentOptions=(root:string,url:string,signal:AbortSignal)=>({root,environment:{SEMIO_UNIT_CACHE_TOOLCHAIN:toolchain,SEMIO_FLEET_ORIGIN:"g1-test"},origin:"g1-test",scheduler:url,concurrency:1,directory:join(root,"work"),sandbox:"isolated-root" as const,materialize:"copy" as const,maximumBlobBytes:1048576,inlineOutputBytes:0,loadIntervalSeconds:1,signal,view:async()=>view});
 async function until<T>(read:()=>T|undefined,milliseconds=15000):Promise<T>{const end=Date.now()+milliseconds;for(;;){const value=read();if(value!==undefined)return value;if(Date.now()>end)throw Error("not reached");await Bun.sleep(50);}}
@@ -59,6 +60,22 @@ test("readiness names the first thing that is wrong: policy, worker key, confine
  await ensureFleetIdentityV1({root,originId:"g1-test",group:"g1"});
  expect(check()).toBeUndefined();
  expect(check({confinement:"required"})).toBe("sandbox-unavailable");
+});
+
+test("Windows reports the unsupported Rust action ABI and keeps the load reporter without a worker",async()=>{
+ const root=temporary(),fake=await fakeScheduler(200),controller=new AbortController(),policy={...readRemoteExecutionPolicyV1().worker,actions:"rustc" as const,sandbox:"isolated-root" as const,confinement:"best-effort" as const};
+ await ensureFleetIdentityV1({root,originId:"g1-test",group:"g1"});
+ const why=checkRemoteExecutionAgentReadinessV1({root,policy,platform:"win32"});
+ expect(why?.code).toBe("action-unsupported");expect(why).toEqual(remoteExecutionActionPlatformWhyV1("rustc","win32"));
+ expect(checkRemoteExecutionAgentReadinessV1({root,policy,platform:"darwin"})).toBeUndefined();
+ expect(remoteExecutionActionPlatformWhyV1("rustc","linux")).toBeUndefined();
+ const agent=runRemoteExecutionAgentV1({...agentOptions(root,fake.url,controller.signal),actions:"rustc",worker:false,why,ready:()=>false});
+ try{
+  await until(()=>fake.reports[0]);
+  expect(fake.reports[0]).toMatchObject({headroom:false,worker:{state:"absent",why:{code:"action-unsupported"}}});
+  expect(fake.workerRequests).toEqual([]);
+  requireRemoteExecutionShapeV1("LoadReport",fake.reports[0],"closed");
+ }finally{controller.abort();await agent;}
 });
 
 test("a worker the scheduler refuses reports itself absent with the reason, in every report, and the agent keeps reporting its load",async()=>{

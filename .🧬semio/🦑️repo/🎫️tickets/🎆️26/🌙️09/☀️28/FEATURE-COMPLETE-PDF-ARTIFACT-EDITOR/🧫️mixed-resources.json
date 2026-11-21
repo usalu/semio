@@ -1,0 +1,25 @@
+{
+  "schema": "semio.stdio.pdf-mixed-resources.v1",
+  "resourceOwners": [
+    2,
+    6,
+    10,
+    2
+  ],
+  "contentOwners": [
+    4,
+    7,
+    12,
+    14
+  ],
+  "lines": [
+    "Mixed page 1",
+    "Mixed page 2",
+    "Mixed page 3",
+    "Mixed page 4"
+  ],
+  "expectedMuPdfBaseline": [
+    20,
+    10
+  ]
+}

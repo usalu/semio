@@ -22,11 +22,10 @@ pub use scene_document_and_host_sync::{
 
 #[path = "📤️draft-actions-and-outbox/🦀️.rs"]
 mod draft_actions_and_outbox;
-pub(crate) use draft_actions_and_outbox::TextEditorExplicitDraftSettings;
 pub use draft_actions_and_outbox::{
     drive_text_editor_outbox_step, end_every_text_editor_typing, end_text_editor_typing,
     has_pending_text_editor_outbox, text_editor_explicit_draft_settings, text_editor_wheel_into,
-    TextEditorActionOutcome,
+    TextEditorActionOutcome, TextEditorExplicitDraftSettings,
 };
 use draft_actions_and_outbox::{emit_text_editor_actions, text_editor_receipt_token};
 #[cfg(target_arch="wasm32")]
@@ -38,12 +37,10 @@ pub use receipts_and_explicit_draft::{
     drive_text_editor_retained_action_step, settle_text_editor_action_receipt,
     text_editor_apply_explicit_draft_into, text_editor_cancel_explicit_publication,
     text_editor_discard_explicit_draft, text_editor_explicit_draft_status,
-    text_editor_move_explicit_draft_history, TextEditorRetainedActionStep,
+    text_editor_move_explicit_draft_history, TextEditorExplicitDraftStatus, TextEditorRetainedActionBatch,
+    TextEditorRetainedActionStep,
 };
 use receipts_and_explicit_draft::{text_editor_action_bytes, write_text_editor_selection};
-pub(crate) use receipts_and_explicit_draft::{
-    TextEditorExplicitDraftStatus, TextEditorRetainedActionBatch,
-};
 
 #[path = "🖋️editing-and-pointer-api/🦀️.rs"]
 mod editing_and_pointer_api;

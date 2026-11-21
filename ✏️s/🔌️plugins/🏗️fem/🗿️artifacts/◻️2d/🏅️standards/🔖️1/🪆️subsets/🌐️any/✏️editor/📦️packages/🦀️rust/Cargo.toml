@@ -28,6 +28,10 @@ path = "../../🧪️tests/🔬️app/🦀️.rs"
 name = "editor_app_2"
 path = "../../🧪️tests/🔬️app-2/🦀️.rs"
 
+[[test]]
+name = "editor_boot"
+path = "../../🧪️tests/🌱️boot/🦀️.rs"
+
 [dependencies]
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

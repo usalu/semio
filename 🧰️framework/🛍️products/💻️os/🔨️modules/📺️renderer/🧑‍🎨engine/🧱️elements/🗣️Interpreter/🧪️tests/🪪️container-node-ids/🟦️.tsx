@@ -86,7 +86,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("renders a field row's own authored id and associates its label with the control id the row implies", () => {
-      mount([container(1, "puzzle3d-play-settings.grid-spacing", "field", "Spacing", [2]), node(2, "puzzle3d-play-settings.grid-spacing.control", { type: "text", value: "10", emphasize: null, dataAttributes: null })], 1);
+      mount([container(1, "puzzle3d-play-settings.grid-spacing", "field", "Spacing", [2]), node(2, "puzzle3d-play-settings.grid-spacing.control", { type: "input", kind: "number", value: "10" })], 1);
       const field = document.getElementById(`${SURFACE}/puzzle3d-play-settings.grid-spacing`);
       expect(field).not.toBeNull();
       expect(field!.getAttribute("data-slot")).toBe("field");

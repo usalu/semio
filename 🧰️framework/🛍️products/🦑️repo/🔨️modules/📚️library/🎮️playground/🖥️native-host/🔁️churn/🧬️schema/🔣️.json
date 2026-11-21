@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "environment": "SEMIO_PLAYGROUND_NATIVE_HOST_SOURCE_EDIT",
+        "marker": "[native-host-source-edit] ",
+        "requestBytes": 16,
+        "maximumCharacters": 1536
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "request",
+    "reason",
+    "path"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "request": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$(?![\\s\\S])"
+    },
+    "reason": {
+      "const": "input"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

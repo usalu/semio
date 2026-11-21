@@ -6,13 +6,13 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { Kit, parts, thermalOf, type Json, type V3 } from "./r3-runner-kit.ts";
-import { M, body50 } from "./r3-runner-body50.ts";
+import { M, body50 } from "./r5-runner-with-blade-prosthesis-body50.ts";
 import { OUT, ASSET_FILE } from "./r3-runner-roots.ts";
 
 export const SCALES = [50, 100, 200, 500] as const;
 export type Built = { volume: Json; kit: Kit };
 const optional = async (file: string): Promise<Json> => (existsSync(join(import.meta.dir, file)) ? await import(`./${file}`) : {});
-const coarse = await optional("r3-runner-coarse.ts");
+const coarse = await optional("r5-runner-with-blade-prosthesis-coarse.ts");
 const lists = await optional("r3-runner-lists.ts");
 
 function thermalDraft(asset: Json, k: Kit, scale: number): Json[] {

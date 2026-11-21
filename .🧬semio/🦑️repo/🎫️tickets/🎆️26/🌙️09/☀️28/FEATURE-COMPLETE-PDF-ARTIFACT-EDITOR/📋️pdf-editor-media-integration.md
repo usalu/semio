@@ -1,0 +1,17 @@
+# PDF Editor Media Integration Boundaries
+
+## Picker and preview
+
+The normal PDF PNG picker uses `Effect::RequestFileOpen` with an exact operation-captured full revision and digests. The app command builder normalizes a one-chunk data URL and the registered `PdfLocalImageImport` works only within the declared 24,546-byte source and 4,096-pixel sampled model. The staged image transport lands regular fixed command pages without using that string path. Its controller still needs a reserved lifetime-bound operation issued from the pending editor and a distinct authenticated command ingress registration. The existing `MediaIn` decoder immediately materializes a contiguous data field, so routing already-paged bytes through it would lose the intended bound. The browser picker already exposes `requestFileSelectionV1` before any bytes are read, while the native shell selects a native path. Both can feed the staged 4 KiB acknowledgement contract once the new ingress operation is registered.
+
+The large JPEG preview can borrow a verified native graph source and fill only its requested sample pages. A normal retained renderer must bind source identity, document revision and viewport extent before that operation begins. It also needs an output cache handoff that ends with the same paid closure, and the display transform must continue to follow the existing affine and color semantics.
+
+## Save
+
+The standard React Save implementation in the document transfer scope reads `naturalFileFormatV1`, persists the attached local archive, calls `exportAppMedia(instanceId, "artifact:native")`, rechecks archive identity and downloads a contiguous artifact payload. The plugin's `produce_media` calls `Pdf17Editor::encode_natural_file` on the refreshed snapshot and returns a single Vec. Replacing its internal writer alone leaves the contiguous ABI and full final allocation in place.
+
+The separate declared media export path already binds the exact instance and parent document, submits one Original media job, polls progress or cancellation, enforces the declared port/descriptor MIME and kind, checks the revision again, and drains a framework-owned segmented output. Implement the native PDF Save producer as a declared binary output on that path, use the existing input snapshot close lease, and select that same logical natural format from the normal Save action. Its delivery gate must retain the current attached archive equality check and must neither commit a sink before it nor loosen the actor's revision guard. The staged page adapter, writer stream and independent reopen proof are collected in `pdf-segmented-save-page.md`. The fixed output spine at the maximal 32 MiB host allowance requires separate allocator evidence from the tested 2.1 MB declared guide.
+
+## History
+
+The draft SetImage archive receiver matches canonical format-1 bytes without building one generic Value node per numeric sample. The DCT operation payload uses standard identity Pack chunks and the existing ArtifactStore operation-wire override can lend its paged source. The native admission and exact cold forward/inverse projection have separate focused tests. Mounted history must install the custom wire source and receiving schema together, issue an edit at the exact PDF revision, and prove that reopen, undo and redo keep the graph resource tied to the right logical reference without copying the entire image. The VT editor's actual base mutation is PdfMutation while its separate VT codec owns its own tag family.

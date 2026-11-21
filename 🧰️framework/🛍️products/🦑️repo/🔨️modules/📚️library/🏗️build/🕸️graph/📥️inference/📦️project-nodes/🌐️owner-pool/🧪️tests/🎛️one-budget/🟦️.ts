@@ -10,6 +10,9 @@ import{graphFleetSettingsV1}from"../../../../../../🪪️graph-state/🧶️nx/
 import{remoteCacheFetchV1}from"../../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import{OWNER_POOL_POLICY_V1 as P,ownerPoolIdV1,ownerPoolSizingV1,ownerPoolTargetV1,publishOwnerPoolV1,type OwnerPoolHostV1,type OwnerPoolManifestV1,type OwnerPoolUnitV1}from"../../🟦️.ts";
 import{runOwnerPoolV1}from"../../🏃️runner/🟨️.mjs";
+import type{OwnerPoolStatusV1}from"../../📊️status/🟦️.ts";
+import{OWNER_POOL_CHILD_EXIT_V1}from"../../🧒️child/🟨️.mjs";
+import fixture from"../🧫️fixtures/🔣️.json"with{type:"json"};
 import{ownerPoolHostOfV1}from"../../../../../../🌐️remote-execution/🛰️sidecar/🏊️pool/🟦️.ts";
 
 const scratch:string[]=[];
@@ -98,13 +101,19 @@ test("a pool with claimable work that waits states the exact numbers in English 
  const {server,environment}=await world();
  try{
   const root=temp("root"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})});
-  expect(await publishOwnerPoolV1({client,owner:"o",manifest:manifestOf(unitsOf(6),"memory",{burnMilliseconds:10,revision:"revision-a"})})).toBe(true);
-  const sizing=ownerPoolSizingV1({host:host({availableMegabytes:6000,idleCores:6,load:2,foreground:{cpu:0,unrealizedMegabytes:3000}}),children:2,childMegabytes:1237}),patches:Record<string,unknown>[]=[];
-  expect(sizing).toMatchObject({children:3,reason:"nothing-fits",limit:{limit:"memory",needMegabytes:1237,freeMegabytes:258,heldMegabytes:2457,floorMegabytes:2048}});
-  await runOwnerPoolV1({root,environment:{...process.env,...environment},signal:AbortSignal.timeout(20000),capacity:async()=>sizing,once:true,driver:driverPath,priority:0,targetPollMilliseconds:100,pollMilliseconds:300,status:watch(patches),revision:"revision-a"});
-  const said=patches.filter(patch=>patch.reason==="nothing-fits"&&patch.reasonText!==null&&patch.reasonText!==undefined) as {reasonText:{en:string;de:string}}[];
-  expect(said.length).toBeGreaterThan(0);
-  const {en,de}=said[0]!.reasonText;
+  const manifest=manifestOf(unitsOf(6),"memory",{revision:"revision-a"});
+  expect(await publishOwnerPoolV1({client,owner:"o",manifest})).toBe(true);
+  const row=fixture.target.find(row=>row.name==="foreground memory leaves too little room to start any child")!;
+  const sizing=ownerPoolSizingV1({...row,host:row.host as OwnerPoolHostV1});
+  const controller=new AbortController();
+  let said:Partial<OwnerPoolStatusV1>|undefined;
+  const status={update(patch:Partial<OwnerPoolStatusV1>){
+   if(patch.reason==="nothing-fits"){said=patch;controller.abort();}
+  }};
+  await runOwnerPoolV1({root,environment:{...process.env,...environment},totalMegabytes:row.host.totalMegabytes,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(20000)]),capacity:async()=>sizing,revision:"revision-a",targetPollMilliseconds:100,status});
+  expect(said).toMatchObject({wave:manifest.head.id,units:6,children:0,target:0});
+  expect(said?.reasonText).toBeTruthy();
+  const {en,de}=said!.reasonText!;
   for(const text of[en,de])for(const number of["1237","258","2048","2457"])expect(text,number).toContain(number);
   expect(en).toContain("needs");expect(de).toContain("braucht");expect(en).not.toBe(de);
  }finally{await server.stop();}
@@ -115,9 +124,32 @@ test("fewer children than the target is not silent: the pool says how many run a
  try{
   const root=temp("root"),client=graphFleetClientV1(graphFleetSettingsV1(root,environment)!,{fetch:remoteCacheFetchV1(environment,{root})});
   expect(await publishOwnerPoolV1({client,owner:"o",manifest:manifestOf(unitsOf(30,3000),"starting",{burnMilliseconds:2500,revision:"revision-a"})})).toBe(true);
-  const patches:Record<string,unknown>[]=[],controller=new AbortController(),running=runOwnerPoolV1({root,environment:{...process.env,...environment},signal:controller.signal,capacity:async()=>({children:3,reason:null}),driver:driverPath,priority:0,targetPollMilliseconds:100,pollMilliseconds:300,status:watch(patches),revision:"revision-a"});
-  const began=Date.now();while(Date.now()-began<20000&&!patches.some(patch=>patch.reason==="starting"))await new Promise<void>(done=>setTimeout(done,50));
-  controller.abort();await running;
+  const patches:Record<string,unknown>[]=[],controller=new AbortController(),children:Bun.Subprocess<"pipe","pipe","inherit">[]=[];
+  const spawn=(command:string[],options:Bun.SpawnOptions.OptionsObject<"pipe","pipe","inherit">)=>{
+   const child=Bun.spawn(command,options);
+   children.push(child);
+   return child;
+  };
+  let ready=0;
+  const observe=(_id:number,line:{t:string})=>{if(line.t==="ready")ready++;};
+  const running=runOwnerPoolV1({root,environment:{...process.env,...environment},signal:controller.signal,capacity:async()=>({children:3,reason:null}),driver:driverPath,priority:0,targetPollMilliseconds:100,pollMilliseconds:300,status:watch(patches),revision:"revision-a",spawn,observe});
+  try{
+   const began=Date.now();
+   while(Date.now()-began<20000&&(ready<children.length||!patches.some(patch=>patch.reason==="starting")))await Bun.sleep(50);
+   expect(children.length).toBeGreaterThan(0);
+   expect(ready).toBe(children.length);
+  }finally{
+   controller.abort();
+   await running.finally(async()=>{
+    const deadline=AbortSignal.timeout(10000);
+    const kill=()=>{for(const child of children)if(child.exitCode===null)child.kill("SIGKILL");};
+    deadline.addEventListener("abort",kill,{once:true});
+    try{
+     const codes=await Promise.all(children.map(child=>{child.ref();return child.exited;}));
+     expect(codes).toEqual(children.map(()=>OWNER_POOL_CHILD_EXIT_V1.drained));
+    }finally{deadline.removeEventListener("abort",kill);}
+   });
+  }
   const said=patches.find(patch=>patch.reason==="starting") as {reasonText:{en:string;de:string};children:number;target:number}|undefined;
   expect(said).toBeDefined();expect(said!.target).toBe(3);
   expect(said!.reasonText.en).toMatch(/^starting: \d of 3 children run, the next one may start in \d+ s$/u);

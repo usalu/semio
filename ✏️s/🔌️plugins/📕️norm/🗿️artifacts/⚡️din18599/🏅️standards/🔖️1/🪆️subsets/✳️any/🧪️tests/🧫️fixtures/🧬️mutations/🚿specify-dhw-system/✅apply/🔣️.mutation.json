@@ -1,6 +1,7 @@
 {
   "mutation": "specifyDhwSystem",
   "newDhw": {
+    "dwellingCount": 2,
     "specificDemandKwhPersonA": 550.0,
     "storageLossKwhA": 200.0,
     "distributionLossKwhA": 150.0,

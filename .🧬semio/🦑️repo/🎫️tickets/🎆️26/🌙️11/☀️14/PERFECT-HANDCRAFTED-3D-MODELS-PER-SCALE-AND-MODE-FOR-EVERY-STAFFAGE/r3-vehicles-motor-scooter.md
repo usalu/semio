@@ -89,3 +89,48 @@ Final check (`r3-motor-scooter-ship.sh`): candidate `VALID`, print suitability w
 - The renderer facets the 12 inch tyres and lofts visibly; the solids themselves are true revolves and lofts.
 - Of the coarse lists I opened 1:200 structure (closed load path, shock up to the rail) and 1:500 thermal cut (every region present; the sheet tool paints the unlayered panel and steering regions grey because its legend only knows their 1:50 layers); 1:200 thermal, 1:500 structure and 1:100 thermal cut were checked by the product check only.
 - Passenger footrests, number plate and brake hoses are not modelled.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: the round-3 scale files were edited at the root (`r3-motor-scooter-s50.py`, `-s100.py`, `-s200.py`, `-s500.py`, `-roots.py`); `r5-v03-sheets.sh` (all sheets of one asset), `r5-v03-measure.py` (rig against reference), `r5-v03-check.sh`. Shipped with `r3-motor-scooter-ship.sh`.
+
+### Reference and model against reference
+
+| quantity | reference (Vespa Primavera 125, Piaggio data; ETRTO) | model | deviation |
+| --- | --- | --- | --- |
+| wheelbase | 1340 mm | 1340.1 mm (rig axles) | 0.0 % |
+| length / width / height | 1852 / 735 / 1150 mm | dims 1.85 / 0.74 / 1.15 m, bounds within the check limits at every scale | < 1 % |
+| wheel outer radius | 229 / 236 mm (110/70-12, 120/70-12) | 230 / 230 mm | +0.4 % / -2.5 % (rear kept so the ride loop closes) |
+| head angle (rake 25 degrees) | 65 degrees from horizontal | 65.0 degrees | 0 % |
+| trail | about 80 mm | 79.6 mm | -0.5 % |
+| seat height | 790 mm | seat top 0.775 to 0.83 m (stepped) | within the step |
+| centre stand leg | about 200 mm | 215 mm | +7 % (own estimate, not a published value) |
+| swing pivot under the cylinder, arm to axle | about 0.40 m | 0.4008 m | 0.2 % |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure | poses/clips |
+| --- | --- | --- | --- | --- |
+| 1:50 | B+ -> A- | A- -> A- | A- -> A- | B (rear shock drifted 30 mm in braking) -> A- |
+| 1:100 | B -> A- | B+ -> A- | B+ -> A- | |
+| 1:200 | B- -> B+ | B -> B+ | B -> B | |
+| 1:500 | C+ -> B | B -> B | B- -> B- | |
+
+Opened: before and after, the body sheet of every scale; before, structure and thermal cut of every scale, every pose at 1:50 (11) and one frame of each clip (ride-loop 0.31 s, stop-and-shut-down 3.15 s), 2D of 1:50 to 1:500.
+
+Defects seen before: the rear body was a box at every scale, with a flat vertical front face from the seat nose down to the floor and hard corners (a dark slab in the three-quarter views); the rear shock was one rigid part on the frame and left the belt case in `braking-nose-down`; no passenger footrests, number plate or front brake hose (round-4 queue); the 1:500 had no front mudguard (the scooter's most recognisable part); the 1:100 had no header pipe (exhaust area 37 % low under the C31 flood measurement); the catalog was INVALID (PRINT: tail-lamp feature 0.198 mm at 1:20).
+
+Changes:
+- Rear body (all four scales, root of the body, drawings re-projected by the pipeline): the front of the rear shell now rakes from a fillet on the floor (toe 15 to 45 mm high depending on the scale) up to the seat nose in four or three rounder sections (superellipse exponent 2.3 to 2.8), like the pressed rear shell of the real scooter; the top meets the seat hinge. The true-extent symbol follows.
+- Rear shock (1:50): damper body and top eye on `frame`, piston rod, spring and lower eye on `swing`, overlapping by 60 mm, so the shock telescopes when the engine unit swings ±5 degrees and both eyes stay on their mounts; the structure carries both halves.
+- 1:50 detail: folded aluminium passenger footrests on the floor edges, the number plate (texture sheet) on its holder, the front brake hose (8 mm, slender) from inside the headset down the front of the fork leg to the caliper; tail lamp 4 mm deeper so its glazing reads at 1:20 (print root fix, catalog VALID again).
+- 1:100: 28 mm header pipe from the cylinder under the engine to the silencer, drawn as a detail; hinge knuckle under the seat nose (the structural seat hinge had been outside the body).
+- 1:500: the front mudguard as a 75 mm crescent 0.2 m wide over the front tyre (starts at 40 degrees so the length stays 1.85 m).
+- `areaM2` `rims` 0.62 -> 0.60 (C16, factor 0.97): measured outer area 0.52 at 1:50 and 0.70 at 1:100 under the C31 flood; listed in `area-review.md`.
+- Decisions of 1:50 and 1:100 (en, de) name the new parts.
+
+Final: `r3-validate.ts vehicles/motor-scooter --catalog-only` VALID (schema 0, validateAsset 0); `volumes-check.ts vehicles/motor-scooter --product` PASS (every rule at every scale).
+
+Seen after (1:50 body sheet, 1:200 and 1:500 body sheets): the rear shell flows down from the seat into the floor, the plate sits under the tail lamp, footrests show as small bars at the floor edges, the 1:500 has its mudguard crescent; nothing floats.
+
+Still imperfect: 1:500 handlebar is one 0.74 m spindle with raised ends standing for the mirrors (75 mm floor); 1:200/1:500 wheels are plain discs; the rear-shock halves are rigid (no telescopic bone), so in the extreme swing the spring leaves a 13 mm visible step on the damper body; the brake hose is not in the thermal list (its 0.006 m² would push `brake-disc` over 15 %).

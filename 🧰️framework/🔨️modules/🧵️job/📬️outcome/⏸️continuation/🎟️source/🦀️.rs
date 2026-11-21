@@ -113,6 +113,10 @@ pub fn reserve_original_return_rows(cx:&mut StepContext<'_>,rows:usize)->Result<
   let posted=cx.consume_retained(P{copied_items:1,copied_bytes:ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES,..Default::default()});cx.consume_fuel(1);posted?;
  }
 }
+/// 🛡️ Reserves the return row for a header guard and records a pending claim.
+pub fn reserve_original_header_guard_row(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ if reserve_original_return_rows(cx,1)?{Ok(true)}else{claim_why("header_guard_row_unavailable")}
+}
 pub fn receive_original_return_witness(cx:&mut StepContext<'_>,credit:&mut OriginalReturnClaimCredit,input:&mut Option<OriginalReturnWitness>)->Result<bool,OriginalTurnFailure>{
  let Some(witness)=input.as_mut()else{return Ok(true)};cx.original_source_parent()?.validate_borrowed_context(cx)?;let budget=cx.return_budget.as_ref().ok_or_else(||refused("source-paid return has no genuine receiving source"))?;let origin=budget.get().origin().ok_or_else(||refused("source-paid return receiver source is unbound"))?;if origin.source!=witness.source||origin.recipient!=budget.get()as*const OriginalReturnBudget as usize||cx.original_clock_binding()!=Some(origin.clock)||!std::ptr::fn_addr_eq(cx.clock_source(),origin.now)||cx.original_absolute_deadline_us()!=origin.deadline{return Err(refused("source-paid return requires its unchanged original receiving source").into())}
  cx.preflight_original_reserved_return(witness.progress,witness.work)?;cx.return_budget.as_mut().ok_or_else(||ValueError::invariant("return_budget absent"))?.get_mut().redeem(credit,witness)?;cx.receive_original_reserved_return(witness.progress,witness.work)?;witness.mark_received()?;input.take();if credit.terminal_is_empty(){let budget=cx.return_budget.as_mut().ok_or_else(||refused("original return source budget disappeared"))?.get_mut();if budget.delivery==OriginalReturnDelivery::LocalWitness{let table=budget.table_mut().ok_or_else(||refused("original return table disappeared"))?;let identity=table.row_at(credit.slot,credit.serial).ok_or_else(||refused("original return claim row disappeared"))?.identity;table.mark_local_received(identity)?}}Ok(true)

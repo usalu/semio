@@ -494,7 +494,7 @@ pub const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
 
 /// 🎥️ Camera pose — persisted by the exact composite-window configuration owner, never in
 /// `NoteSnapshot` or app-wide configuration, so two open canvases retain independent poses.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]

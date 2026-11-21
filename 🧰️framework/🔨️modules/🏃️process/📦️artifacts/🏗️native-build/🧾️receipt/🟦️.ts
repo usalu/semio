@@ -207,6 +207,13 @@ export function cargoDepInfoResolvedChecksumsV1(dep: Pick<CargoDepInfoV1, "baseD
   return dep.checksums.map((row) => ({ path: resolve(base, row.path), blake3: row.blake3, length: row.length }));
 }
 
+/** 🧩️ Selects rustc's unit records when Cargo also provides a transitive uplift. */
+export function cargoCompilerDepInfoV1(rows: readonly CargoDepInfoV1[], targetSource: string): readonly CargoDepInfoV1[] {
+  const checked = rows.filter(row => row.checksums.length > 0);
+  const ownsTarget = checked.some(row => row.baseDirectory !== null && cargoDepInfoResolvedChecksumsV1(row).some(checksum => checksum.path === targetSource));
+  return ownsTarget ? checked : rows;
+}
+
 /** 🚰️ Receives the receipt document as ordered text chunks without ever holding the whole document. */
 export interface CargoProvenanceSinkV1 {
   write(chunk: string): Promise<void>;

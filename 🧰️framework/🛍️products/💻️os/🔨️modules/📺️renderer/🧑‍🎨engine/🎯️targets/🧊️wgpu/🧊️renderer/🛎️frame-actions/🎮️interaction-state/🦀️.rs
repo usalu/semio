@@ -265,7 +265,7 @@ impl AppInteractionState {
                         .surfaces.tiled_map_states
                         .get(&target.host_id)
                         .filter(|surface| surface.window_id == target.window_id)
-                        .map(|surface| semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
+                        .map(|surface| semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, None, &mut self.input)),
                     semio_ui_declaration::ui::SurfaceKind::Board2d => self
                         .shell
                         .surfaces.board2d_states
@@ -408,7 +408,10 @@ impl AppInteractionState {
         let touch_profile = self.touch_profile();
         let mut touch_gestures = Vec::new();
         let outcome = match target.kind {
-            SurfaceKind::World3d => self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| {
+            SurfaceKind::World3d => self.shell.surfaces.world3d_states.get_mut(host_id).filter(|state| {
+                state.session.window_instance_id.as_deref() == Some(target.window_id.as_str())
+                    && state.session.surface_id == target.surface_id
+            }).map(|state| {
                 if pointer.kind == ui_render::PointerKind::Touch {
                     let contact = if down { world_touch::Contact::Down { id: pointer.id.0, x: f64::from(x), y: f64::from(y) } } else { world_touch::Contact::Up { id: pointer.id.0 } };
                     let steps = world_touch::feed(host_id, touch_profile, app_now_ms(), contact);
@@ -429,17 +432,13 @@ impl AppInteractionState {
                 outcome
             }
             SurfaceKind::TiledMap => self.shell.surfaces.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                let touch_handled = pointer.kind == ui_render::PointerKind::Touch
-                    && if down {
-                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_down(host_id, surface.bounds, pointer.id, x, y)
+                if pointer.kind == ui_render::PointerKind::Touch {
+                    if down {
+                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_down(&target, surface.bounds, pointer.id, x, y, &modifiers);
+                        Ok(())
                     } else {
-                        match semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, &mut self.input) {
-                            Ok(handled) => handled,
-                            Err(fault) => return Err(fault),
-                        }
-                    };
-                if touch_handled {
-                    Ok(())
+                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, Some((surface.bounds, x, y)), &mut self.input).map(|_| ())
+                    }
                 } else if down {
                     semio_renderer_wgpu_scene_feeds::tiled_map_pointer_down_into(&target, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input).map(|_| ())
                 } else {
@@ -479,6 +478,17 @@ impl AppInteractionState {
         }
     }
 
+    fn clear_node_graph_hover_except(&mut self, active: Option<(&str, &str)>) -> bool {
+        for (host_id, surface) in &self.shell.surfaces.node_graph_states {
+            if active == Some((host_id.as_str(), surface.window_id.as_str())) { continue; }
+            if let Err(fault) = semio_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_leave_into(host_id, &surface.controller_id, &mut self.input) {
+                self.input.record_action_fault(fault);
+                return false;
+            }
+        }
+        true
+    }
+
     pub async fn handle_pointer_move(&mut self, pointer: ui_render::PointerInfo, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
         use semio_ui_declaration::ui::SurfaceKind;
         let (drag_dx, drag_dy) = self.pointer_capture.advance(pointer.id, x, y).unwrap_or((0.0, 0.0));
@@ -504,12 +514,16 @@ impl AppInteractionState {
         if target.is_none() && self.pointer_capture.holder(pointer.id) != Some(PointerHitOwner::Surface) {
             PointerCtx::of(&mut self.shell).handle_pointer_move_for(pointer.id, x, y, down, &mut self.input, &self.theme);
         }
-        let world_id = target.as_ref().filter(|target| target.kind == SurfaceKind::World3d).map(|target| target.host_id.as_str());
+        let world_target = target.as_ref().filter(|target| target.kind == SurfaceKind::World3d);
         let touch = pointer.kind == ui_render::PointerKind::Touch;
         let touch_profile = self.touch_profile();
         let mut touch_gestures = Vec::new();
         for (host_id, state) in self.shell.surfaces.world3d_states.iter_mut() {
-            let intent = if Some(host_id.as_str()) == world_id {
+            let intent = if world_target.is_some_and(|target| {
+                target.host_id.as_str() == host_id.as_str()
+                    && state.session.window_instance_id.as_deref() == Some(target.window_id.as_str())
+                    && state.session.surface_id == target.surface_id
+            }) {
                 if touch {
                     let steps = world_touch::feed(host_id, touch_profile, app_now_ms(), world_touch::Contact::Move { id: pointer.id.0, x: f64::from(x), y: f64::from(y) });
                     if let Err(fault) = world_touch::apply(state, &steps, &modifiers, &mut touch_gestures) {
@@ -519,12 +533,17 @@ impl AppInteractionState {
                     continue;
                 }
                 WorldInteractionIntent::pointer_move(x, y, drag_dx, drag_dy, down, button, &modifiers)
-            } else if world3d_hover_is_published(&state.selection) {
+            } else if world3d_hover_clear_is_owed(&state.selection, &state.authority) {
                 WorldInteractionIntent::pointer_leave(x, y)
             } else {
                 continue;
             };
-            if enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_err() {
+            let accepted = if down && button == 0 && state.terrain.terrain_brush().is_some() && intent.phase == infinite_world::world::WorldInteractionPhase::PointerMove {
+                infinite_world::world::enqueue_world3d_events(&mut state.authority, [intent]).is_ok()
+            } else {
+                enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_ok()
+            };
+            if !accepted {
                 self.input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
                 return;
             }
@@ -552,6 +571,9 @@ impl AppInteractionState {
                 return;
             }
         }
+        let active_graph = target.as_ref().filter(|target| target.kind == SurfaceKind::NodeGraph)
+            .map(|target| (target.host_id.as_str(), target.window_id.as_str()));
+        if !self.clear_node_graph_hover_except(active_graph) { return; }
         let Some(target) = target else { return };
         let host_id = &target.host_id;
         let outcome = match target.kind {
@@ -567,7 +589,8 @@ impl AppInteractionState {
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
                 .map(|surface| {
-                    if pointer.kind == ui_render::PointerKind::Touch && semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y) {
+                    if pointer.kind == ui_render::PointerKind::Touch {
+                        semio_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_move(host_id, surface.bounds, pointer.id, x, y);
                         Ok(())
                     } else {
                         semio_renderer_wgpu_scene_feeds::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())
@@ -617,8 +640,27 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
         DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(*pointer),
         DispatchEvent::PointerLeave { pointer } => {
             if pointer.kind != ui_render::PointerKind::Touch {
+                let terrain_captured = semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id).is_some_and(|target| {
+                    target.kind == semio_ui_declaration::ui::SurfaceKind::World3d
+                        && app.shell.surfaces.world3d_states.get(&target.host_id).is_some_and(|state| {
+                            state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
+                        })
+                });
+                if terrain_captured {
+                    app.handle_pointer_cancel(*pointer);
+                }
                 app.shell.directory.presence_pointer = None;
                 app.shell.input.leave_retained_pointer_window(pointer.id, &mut app.input);
+                if !app.clear_node_graph_hover_except(None) { return; }
+                for (_, state) in app.shell.surfaces.world3d_states.iter_mut() {
+                    if world3d_hover_clear_is_owed(&state.selection, &state.authority) {
+                        let intent = WorldInteractionIntent::pointer_leave(state.session.bounds.x - 1.0, state.session.bounds.y - 1.0);
+                        if enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_err() {
+                            app.input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
+                            return;
+                        }
+                    }
+                }
             }
         }
         DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {

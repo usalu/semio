@@ -57,6 +57,7 @@ describe("shell notice bands", () => {
       expect(row.getAttribute("data-slot")).toBe("shared-border-row");
       expect(row.className).not.toMatch(/border|gap-/u);
       expect(row.children).toHaveLength(2);
+      expect(row.children[0]!.classList.contains("flex-1")).toBe(true);
       expect(row.children[1]!.getAttribute("data-slot")).toBe("button-group");
     }
     expect(stack.querySelector("[data-semio-plugin-install-cancel]")).toBeTruthy();

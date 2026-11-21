@@ -46,13 +46,15 @@ import { admitCrossingViewContext } from "../🖼️surface-refresh/🟦️.ts";
 //#region 🔖️plugin-runtime
 //#region 🔖️ActorAdapter
 //#region 🔖️GenericThunkQueue
-export function inspectEncodedAppCommand(events: readonly Uint8Array[]): { actionId: string | null; seq: number | null; lane: "Interactive" | "Background" } {
+export function inspectEncodedAppCommand(events: readonly Uint8Array[]): { actionId: string | null; seq: number | null; lane: "Interactive" | "Background"; mediaIn?: true } {
   try {
     const command = decodeAppCommand(events[0]!);
+    if (events.length === 1 && "MediaIn" in command) return { actionId: null, seq: null, lane: "Interactive", mediaIn: true };
     const seq = "Command" in command ? command.Command.seq : "ConfigCommand" in command ? command.ConfigCommand.seq : null;
     if (!("Command" in command)) return { actionId: null, seq, lane: "Interactive" };
-    const invocation = decodePackValue(new Uint8Array(command.Command.command)) as { readonly address?: { readonly actionId?: unknown } } | null;
-    const actionId = typeof invocation?.address?.actionId === "string" ? invocation.address.actionId : null;
+    const invocation = decodePackValue(new Uint8Array(command.Command.command)) as { readonly address?: { readonly actionId?: unknown; readonly commandId?: unknown } } | null;
+    const id = invocation?.address?.actionId ?? invocation?.address?.commandId;
+    const actionId = typeof id === "string" ? id : null;
     return { actionId, seq, lane: actionId === null ? "Interactive" : commandIngressLaneForActionV1(actionId) };
   } catch {
     return { actionId: null, seq: null, lane: "Interactive" };

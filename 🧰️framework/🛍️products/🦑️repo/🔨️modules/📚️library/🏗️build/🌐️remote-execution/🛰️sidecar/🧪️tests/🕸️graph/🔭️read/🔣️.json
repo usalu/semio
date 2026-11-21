@@ -1,0 +1,89 @@
+{
+  "resume": {
+    "progressAt": 10,
+    "before": 20,
+    "adoptedAt": 180,
+    "stallDumpAt": 100,
+    "generation": 7,
+    "nextGeneration": 8,
+    "silent": 170
+  },
+  "lateMeasure": {
+    "after": 30,
+    "maxMegabytes": 5000,
+    "grantMegabytes": 100
+  },
+  "capacityWait": {
+    "arrival": 100,
+    "firstProof": 1200,
+    "lastWait": 1950,
+    "booking": 2000,
+    "bookedProof": 2100,
+    "afterBooking": 2950
+  },
+  "capacityClockRace": {
+    "stall": 600,
+    "arrival": 100,
+    "sampled": 575,
+    "secondTick": 605,
+    "cadence": 50
+  },
+  "capacityDecisions": [
+    {
+      "label": "memory",
+      "id": "exact",
+      "verdict": "wait",
+      "reason": "memory",
+      "paused": true
+    },
+    {
+      "label": "fair queue",
+      "id": "exact",
+      "verdict": "wait",
+      "reason": "queue-order",
+      "paused": true
+    },
+    {
+      "label": "load",
+      "id": "exact",
+      "verdict": "wait",
+      "reason": "load",
+      "paused": true
+    },
+    {
+      "label": "host pressure",
+      "id": "exact",
+      "verdict": "wait",
+      "reason": "pressure-critical",
+      "paused": true
+    },
+    {
+      "label": "structurally impossible",
+      "id": "exact",
+      "verdict": "wait",
+      "reason": "never",
+      "paused": false
+    },
+    {
+      "label": "terminal starvation",
+      "id": "exact",
+      "verdict": "wait",
+      "reason": "starved",
+      "paused": false
+    },
+    {
+      "label": "admitted",
+      "id": "exact",
+      "verdict": "admit",
+      "reason": "fits",
+      "paused": false
+    },
+    {
+      "label": "foreign request",
+      "id": "other",
+      "verdict": "wait",
+      "reason": "queue-order",
+      "paused": false
+    }
+  ]
+}

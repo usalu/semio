@@ -11,6 +11,59 @@
 //! capability metadata (audit Phase 0/1) instead of silently mixing exact analytic results with
 //! tessellate-then-rebuild mesh approximations under one undifferentiated `Result`.
 
+#[path="🧭️revolution-distance/🦀️.rs"]
+mod revolution_distance;
+pub use revolution_distance::frustum_signed_distance;
+
+#[path="✂️axial-section/🦀️.rs"]
+mod axial_section;
+pub use axial_section::AxialPartition;
+
+#[path="✂️clipped-box/🦀️.rs"]
+mod clipped_box;
+pub use clipped_box::{ClippedBox,ClippedBoxBoundary};
+
+#[path="✂️box-section/🦀️.rs"]
+mod box_section;
+pub use box_section::{BoxSectionDraft,SectionPolygon};
+
+#[path="📐️pattern-placement/🦀️.rs"]
+mod pattern_placement;
+pub use pattern_placement::SolidPatternRecipe;
+
+#[path="🪟️perforated-prism/🦀️.rs"]
+mod perforated_prism;
+pub use perforated_prism::{PerforatedPrism,PERFORATED_RING_SIZES};
+
+#[path="📐️footprint/🦀️.rs"]
+mod footprint;
+pub use footprint::Footprint;
+
+#[path="🔺️polygon-region/🦀️.rs"]
+mod polygon_region;
+pub use polygon_region::{PolygonRegion,RectangleOperation};
+
+#[path="📐️box-finish-layout/🦀️.rs"]
+pub mod box_finish_layout;
+#[path="📦️rounded-box/🦀️.rs"]
+mod rounded_box;
+pub use rounded_box::{RoundedBox, quadrant as rounded_box_quadrant};
+
+#[path="🍩️torus-sector/🦀️.rs"]
+mod torus_sector;
+pub use torus_sector::TorusSector;
+#[path="🧿️annular-revolution/🦀️.rs"]
+mod annular_revolution;
+pub use annular_revolution::AnnularRevolution;
+
+#[path="🔵️spherical-shell/🦀️.rs"]
+mod spherical_shell;
+pub use spherical_shell::{SphericalShell,SphericalShellBoundary};
+
+#[path="🌗️spherical-caps/🦀️.rs"]
+mod spherical_caps;
+pub use spherical_caps::SphericalCaps;
+
 /// 📐️ Column vector `[x,y,z]`.
 pub type Vec3 = [f64; 3];
 
@@ -136,6 +189,7 @@ pub struct BorePreviewSource {
     pub origin: [f64; 3],
     pub dimensions: [f64; 3],
     pub center: [f64; 2],
+    pub bore_span: [f64; 2],
     pub radius: f64,
     pub first_label: u64,
     pub volume: f64,
@@ -146,6 +200,44 @@ impl BorePreviewSource {
     pub const TOP_RING_EDGE: usize = 13;
     pub const CYLINDER_SEAM_EDGE: usize = 14;
     pub const BORE_WALL_FACE: usize = 6;
+
+
+    pub fn is_open(&self, top:bool)->bool {
+        self.bore_span[usize::from(top)]==self.origin[2]+if top{self.dimensions[2]}else{0.0}
+    }
+
+    pub fn cap_face(&self,top:bool)->usize {
+        if self.is_open(top){usize::from(top)}
+        else{7+usize::from(top&&!self.is_open(false))}
+    }
+
+    pub fn closed_bore(&self)->bool{!self.is_open(false)&&!self.is_open(true)}
+    pub fn face_count(&self)->usize{7+usize::from(!self.is_open(false))+usize::from(!self.is_open(true))}
+
+    /// 📍️ Measures the signed distance to exterior planes, bore wall and any interior end disks.
+    pub fn signed_boundary_distance(&self,[x,y,z]:[f64;3])->f64{
+        let [x0,y0,z0]=self.origin;
+        let [width,depth,height]=self.dimensions;
+        let [x1,y1,z1]=[x0+width,y0+depth,z0+height];
+        let [lo,hi]=self.bore_span;
+        let gap=|p:f64,min:f64,max:f64|(min-p).max(p-max).max(0.0);
+        let [dx,dy,dz]=[gap(x,x0,x1),gap(y,y0,y1),gap(z,z0,z1)];
+        let xy=dx.hypot(dy);
+        let radial=(x-self.center[0]).hypot(y-self.center[1]);
+        let radial_gap=radial-self.radius;
+        let sides=(x-x0).abs().min((x-x1).abs()).hypot(dy).hypot(dz)
+            .min((y-y0).abs().min((y-y1).abs()).hypot(dx).hypot(dz));
+        let wall=radial_gap.hypot(gap(z,lo,hi));
+        let mut distance=sides.min(wall);
+        for (top,exterior,interior) in [(false,z0,lo),(true,z1,hi)]{
+            let opening=self.is_open(top);
+            let cap_xy=if opening{xy.max(-radial_gap)}else{xy};
+            distance=distance.min((z-exterior).hypot(cap_xy));
+            if !opening{distance=distance.min((z-interior).hypot(radial_gap.max(0.0)));}
+        }
+        let void=radial_gap<0.0&&(lo..=hi).contains(&z);
+        if dx==0.0&&dy==0.0&&dz==0.0&&!void{-distance}else{distance}
+    }
 
     pub fn vertex_label(self, index: usize) -> u64 { self.first_label + index as u64 }
     pub fn edge_label(self, index: usize) -> u64 { self.first_label + 10 + index as u64 }

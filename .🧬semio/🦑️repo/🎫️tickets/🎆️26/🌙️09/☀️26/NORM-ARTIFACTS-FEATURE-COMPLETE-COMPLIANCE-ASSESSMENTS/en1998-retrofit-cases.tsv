@@ -1,0 +1,24 @@
+case	applicable	first	second	third	fourth	fifth	sixth	outcome	capacity
+jacket-shear	1	120000	0	0	0	0	0	1	108000
+jacket-moment	1	150000	0	0	0	0	0	1	150000
+jacket-yield	1	0.016	0	0	0	0	0	1	0.0168
+jacket-ultimate	1	0.035	0	0	0	0	0	1	0.035
+jacket-shear	1	0	0	0	0	0	0	0	
+jacket-shear	0	120000	0	0	0	0	0	0	
+steel-shear	1	0.6	0.004	0.4	45	90	355000000	1	340800
+steel-shear	1	0.6	0.004	1	45	90	355000000	1	852000
+steel-shear	1	0.5	0.006	0.33	45	45	300000000	1	420021.4280248092
+steel-shear	0	0.6	0.004	0.4	45	90	355000000	0	
+steel-shear	1	0.6	0.004	1.01	45	90	355000000	0	
+steel-shear	1	0.6	0.004	0.4	0	90	355000000	0	
+steel-shear	1	0.6	0.004	0.4	45	0	355000000	0	
+steel-shear	1	0.6	0.004	0.4	45	90	0	0	
+splice	1	0.8	1.2	2	2	1	1	1	1.2
+splice	1	0.8	1.199	2	2	1	1	-1	1.2
+splice	1	0.8	1.4	1	2	1	1	-1	1.2
+splice	1	0.8	1.4	2	1	1	1	-1	1.2
+splice	1	0.8	1.4	2	2	1	0	-1	1.2
+splice	1	0.8	1.4	2	2	0	0	1	1.2
+splice	1	0.8	1.4	2.5	2	0	0	0	
+splice	1	0	1.4	2	2	0	0	0	
+splice	0	0.8	1.4	2	2	0	0	0	

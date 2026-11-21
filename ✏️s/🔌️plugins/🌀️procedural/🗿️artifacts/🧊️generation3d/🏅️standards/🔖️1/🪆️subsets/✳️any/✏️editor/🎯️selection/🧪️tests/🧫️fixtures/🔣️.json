@@ -1,6 +1,15 @@
 {
   "valid": [
     {
+      "id": "a@b#c~d@!o!i%40%23%7E%2540#0.face.2",
+      "instance": "a@b#c~d@!o!i%40%23%7E%2540#0",
+      "widget": "a@b#c~d",
+      "channel": "!i@#~%40",
+      "index": 0,
+      "granularity": "face",
+      "component": 2
+    },
+    {
       "id": "box@meshOut#0.face.2",
       "instance": "box@meshOut#0",
       "widget": "box",

@@ -23,6 +23,7 @@ BONE_MATERIAL = {"id": "bone", "title": {"en": "Bone", "de": "Knochen"}, "emissi
 OLD_THIGH, OLD_SHANK, OLD_ANKLE = 0.4153, 0.4056, 0.0772
 THIGH, SHANK, ANKLE, BALL = 0.40, 0.418, 0.088, 0.13
 SCALE_LEG = (THIGH + SHANK) / (OLD_THIGH + OLD_SHANK)
+RANGES = {"200": {"maxDenominator": 300}, "500": {"minDenominator": 300}}
 
 
 def r(value, digits=4):
@@ -382,6 +383,8 @@ def apply(asset):
     if os.path.exists(texts):
         for scale, decisions in json.load(open(texts, encoding="utf8")).get("representations", {}).items():
             asset["representations"][scale]["decisions"] = decisions
+    for scale, fields in RANGES.items():
+        asset["representations"][scale]["validRange"].update(fields)
     source = os.path.join(T, "volumes", "humans", "parent-carrying-toddler.json")
     if "--with-volumes" in sys.argv and os.path.exists(source):
         asset["volumes"] = json.load(open(source, encoding="utf8"))["volumes"]

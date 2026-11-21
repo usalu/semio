@@ -14,11 +14,11 @@ import { CardGrid, CardGridCell, Icon, OverviewCard, SharedBorderRow, SharedBord
 export { CardGrid, CardGridCell, Icon, SharedBorderRow, SharedBorderRowCell, SharedBorderRowField, cn, type IconName };
 
 /** 🪢️ A row of cells that stands up as a column where the window is narrower than `below`: wrapping cells cannot share one divider, so a narrow window stacks them instead. */
-export function Bar(props: Omit<SharedBorderRowProps, "orientation"> & { readonly below?: "mobile" | "tablet" }): ReactElement {
+export function Bar(props: Omit<SharedBorderRowProps, "orientation"> & { readonly below?: "mobile" | "tablet" | "never" }): ReactElement {
   const { below = "mobile", ...rest } = props;
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const tablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
-  const stacked = below === "tablet" ? mobile || tablet : mobile;
+  const stacked = below === "tablet" ? mobile || tablet : below === "mobile" && mobile;
   return <SharedBorderRow orientation={stacked ? "vertical" : "horizontal"} {...rest} />;
 }
 
@@ -72,7 +72,7 @@ export function Button(props: ButtonHTMLAttributes<HTMLButtonElement> & { readon
 }
 
 /** 🧷️ Buttons that are one control: a single frame with one shared hairline between neighbours instead of a bordered chip each. Children are `Button`s with `grouped` or elements marked `data-shared-border-cell`. */
-export function ButtonGroup(props: { readonly label?: string; readonly className?: string; readonly children: ReactNode; readonly below?: "mobile" | "tablet" }): ReactElement {
+export function ButtonGroup(props: { readonly label?: string; readonly className?: string; readonly children: ReactNode; readonly below?: "mobile" | "tablet" | "never" }): ReactElement {
   return (
     <Bar role="group" aria-label={props.label} {...(props.below === undefined ? {} : { below: props.below })} className={cn("max-w-full", props.className)}>
       {asCells(props.children)}
@@ -263,7 +263,7 @@ export function Note(props: { readonly children: ReactNode; readonly className?:
 }
 
 /** 🗂️ A labelled group of controls: a column of a label cell and one row of cells (stacked on a narrow window), named for assistive technology by its label. */
-export function Group(props: { readonly legend: ReactNode; readonly children: ReactNode; readonly className?: string; readonly below?: "mobile" | "tablet"; readonly stacked?: boolean }): ReactElement {
+export function Group(props: { readonly legend: ReactNode; readonly children: ReactNode; readonly className?: string; readonly below?: "mobile" | "tablet" | "never"; readonly stacked?: boolean }): ReactElement {
   const id = useId();
   return (
     <SharedBorderRow orientation="vertical" role="group" aria-labelledby={id} className={props.className}>

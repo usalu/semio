@@ -10,3 +10,5 @@ pub mod bounding_volume;
 pub mod classification;
 #[path = "📏mass-properties/🦀️.rs"]
 pub mod mass_properties;
+#[path = "✂️planar-section/🦀️.rs"]
+pub mod planar_section;

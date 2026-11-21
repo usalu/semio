@@ -1,0 +1,7 @@
+# Selected Vertex Weld Surface Fidelity
+
+Merge Vertices now runs the exact, funded surface projection already used by Grid Weld. The selected positional representative supplies the built-in point normal. Each retained corner supplies its original UV, each face keeps its smooth flag, and a seam survives on both newly twinned halfedges. Generic attributes still receive their original contributors and declared interpolation.
+
+The language-neutral fixture merges two pairs of nearby vertices between a smooth front and a flat return. Both selected representatives have higher source IDs than the points they replace, and the faces use separate UV charts. The production-linked Rust test passed with the selected normals and positions, both UV samples at each shared point, both seam halfedges, the original face attribute indices, and averaged point attributes. A copy grant one byte below the quoted atom returned an empty receipt and left progress unchanged.
+
+Three.js independently reproduced the compact vertex count and surface area. It also checked the ordered representative and the corner samples in the portable fixture. The full Mesh jobs file passed 12 tests and 279 assertions in the Node replay. The compact proof launcher accepts the selected-weld mode. The predecessor-only executable encountered a transitive crate link error. The production-linked regression passed on the current executor.

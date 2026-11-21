@@ -25,3 +25,22 @@ fn analytic_highlight_remaps_exact_labels_and_refuses_changed_source() {
     let changed = semio_framework_pack_json::parse(&serde_json::json!([{ "id": target.instance, "meshId": "mesh", "componentSource": {"handle":"c".repeat(64),"revision":source.revision} }]).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(projected_target(target, &changed, &meshes).is_none());
 }
+
+#[test]
+fn component_addresses_keep_authored_widget_and_channel() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixtures["valid"].as_array().unwrap() {
+        let id = case["id"].as_str().unwrap();
+        let target = ComponentTarget::parse(id).expect(id);
+        assert_eq!(target.widget, case["widget"].as_str().unwrap());
+        assert_eq!(target.channel(), case["channel"].as_str().unwrap());
+        assert_eq!(target.interaction_id(), id);
+    }
+
+    let case = &fixtures["valid"][0];
+    let source = &fixtures["analyticAdmission"][0];
+    let id = format!("{}~{}~1~{}", case["id"].as_str().unwrap(), source["handle"].as_str().unwrap(), source["revision"].as_str().unwrap());
+    let target = ComponentTarget::parse(&id).expect(&id);
+    assert_eq!(target.widget, case["widget"].as_str().unwrap());
+    assert_eq!(target.interaction_id(), id);
+}

@@ -1,0 +1,56 @@
+[
+  {
+    "parent": {
+      "items": 3,
+      "bytes": 27150
+    },
+    "scope": {
+      "items": 1,
+      "bytes": 120
+    },
+    "demand": {
+      "items": 3,
+      "bytes": 211
+    },
+    "expected": {
+      "items": 3,
+      "bytes": 331
+    }
+  },
+  {
+    "parent": {
+      "items": 1,
+      "bytes": 20
+    },
+    "scope": {
+      "items": 1,
+      "bytes": 12
+    },
+    "demand": {
+      "items": 1,
+      "bytes": 20
+    },
+    "expected": {
+      "items": 1,
+      "bytes": 12
+    }
+  },
+  {
+    "parent": {
+      "items": 5,
+      "bytes": 36
+    },
+    "scope": {
+      "items": 1,
+      "bytes": 12
+    },
+    "demand": {
+      "items": 5,
+      "bytes": 30
+    },
+    "expected": {
+      "items": 5,
+      "bytes": 36
+    }
+  }
+]

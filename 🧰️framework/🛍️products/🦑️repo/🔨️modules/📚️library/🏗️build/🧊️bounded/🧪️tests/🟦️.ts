@@ -5,7 +5,7 @@ import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import{boundedCacheStatsV1,createBoundedCacheV1,shrinkBoundedCachesV1}from"../🟨️.mjs";
+import{BOUNDED_POLICY_V1,boundedCacheStatsV1,createBoundedCacheV1,shrinkBoundedCachesV1}from"../🟨️.mjs";
 
 type Operation=["set",string,number]|["get",string]|["peek",string]|["delete",string];
 interface Case{id:string;maxEntries:number;maxBytes:number;operations:Operation[];expected:{hits:number;misses:number;evictions:number;rejected:number;bytes:number;keys:string[]}}
@@ -56,9 +56,16 @@ test("concurrent loads of a key share one loader call, a failure is not cached a
 });
 
 test("named caches are listed by name and the registry is bounded",()=>{
- createBoundedCacheV1({name:"test:b",maxEntries:1,maxBytes:1});createBoundedCacheV1({name:"test:a",maxEntries:2,maxBytes:2});
- const names=boundedCacheStatsV1().map(row=>row.name);expect(names.indexOf("test:a")).toBeLessThan(names.indexOf("test:b"));
- for(let index=0;index<400;index++)createBoundedCacheV1({name:"flood:"+index,maxEntries:1,maxBytes:1});expect(boundedCacheStatsV1().length).toBeLessThanOrEqual(256);
+ const b=createBoundedCacheV1({name:"test:b",maxEntries:1,maxBytes:1}),a=createBoundedCacheV1({name:"test:a",maxEntries:2,maxBytes:2});
+ const names=boundedCacheStatsV1().map(row=>row.name);
+ expect(names.filter(name=>name===a.stats().name||name===b.stats().name)).toEqual(["test:a","test:b"]);
+ const limit=BOUNDED_POLICY_V1.maximumRegistered,held=Array.from({length:limit+1},(_,index)=>createBoundedCacheV1({name:"flood:"+index,maxEntries:1,maxBytes:1}));
+ const registered=new Set(boundedCacheStatsV1().map(row=>row.name));
+ expect(registered.size).toBe(limit);
+ expect(registered.has(held[0]!.stats().name)).toBe(false);
+ expect(registered.has(held[limit]!.stats().name)).toBe(true);
+ const replacement=createBoundedCacheV1({name:"flood:1",maxEntries:2,maxBytes:2});
+ expect(boundedCacheStatsV1().find(row=>row.name===replacement.stats().name)?.maxBytes).toBe(2);
 });
 
 test("shrink evicts the oldest entries down to a fraction, the registry shrink reaches every named cache",()=>{
@@ -66,4 +73,28 @@ test("shrink evicts the oldest entries down to a fraction, the registry shrink r
  for(let key=0;key<10;key++)cache.set(key,10);
  expect(cache.shrink(0.5)).toBe(50);expect(evicted).toEqual([0,1,2,3,4]);expect(cache.keys()).toEqual([5,6,7,8,9]);
  expect(()=>cache.shrink(2)).toThrow();expect(shrinkBoundedCachesV1(0)).toBeGreaterThanOrEqual(50);expect(cache.stats().entries).toBe(0);expect(cache.stats().bytes).toBe(0);
+});
+
+
+test("the registry leaves collections to their owners and still trims live caches",async()=>{
+ const evicted:string[]=[];
+ const makeCache=(name:string)=>createBoundedCacheV1<string,Uint8Array>({name,maxEntries:2,maxBytes:16,sizeOf:value=>value.byteLength,onEvict:()=>evicted.push(name)});
+ const live=makeCache("test:live-owner");
+ live.set("row",new Uint8Array(8));
+ const releaseOwner=()=>{
+  const cache=makeCache("test:released-owner"),row=new Uint8Array(8);
+  cache.set("row",row);
+  return {cache:new WeakRef(cache),row:new WeakRef(row)};
+ };
+ const released=releaseOwner();
+ expect(boundedCacheStatsV1().find(row=>row.name==="test:released-owner")?.bytes).toBe(8);
+ for(let pass=0;pass<8;pass++){await Bun.sleep(5);Bun.gc(true);}
+ expect(released.cache.deref()).toBeUndefined();
+ expect(released.row.deref()).toBeUndefined();
+ shrinkBoundedCachesV1(0);
+ const names=boundedCacheStatsV1().map(row=>row.name);
+ expect(names).not.toContain("test:released-owner");
+ expect(names).toContain("test:live-owner");
+ expect(live.stats().bytes).toBe(0);
+ expect(evicted).toEqual(["test:live-owner"]);
 });

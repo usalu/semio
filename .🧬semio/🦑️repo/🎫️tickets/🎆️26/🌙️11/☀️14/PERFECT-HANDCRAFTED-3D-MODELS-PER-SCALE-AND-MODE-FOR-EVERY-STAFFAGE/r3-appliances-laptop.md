@@ -75,3 +75,41 @@ Final check line: `volumes-check.ts appliances/laptop --product` -> `PASS (3.4 s
 - Structure plates are 2 mm instead of the real 1 to 1.2 mm so that they stay visible; stated in the decisions.
 - Internals (battery, board, fans, heat pipe) are not modelled: the asset declares no hidden thermal region, and inventing them would steer physical data.
 - Key legends, logo and the display gasket are below any modelled feature and left out.
+
+## Round 5 handcraft (2026-11-21)
+
+Process (all assets of E03; final `r3-validate.ts <asset> --catalog-only --volumes` VALID for all five after the splice): `r5-appliances-render.sh` rendered every list at every scale, every pose and both clips at 1:50 (t 0.5 s) and the 2D of every drawn scale into `🗑️generated/r5-<slug>/before` and `/after`; `r5-seated-montage.ts` laid them out for reading; every sheet named below was opened with the Read tool. `r5-appliances-measure.ts` measured the body extents per scale in the default pose (numbers below). Grades: body / thermal / structure.
+
+### Reference and model (default pose `open`, 105 degrees)
+
+| quantity | reference | source | model | deviation |
+|---|---|---|---|---|
+| width | 313.6 / 312.6 mm | ASUS Zenbook 14 UX3402 / MacBook Pro 14 | 313.0 mm (all scales) | -0.2 % |
+| depth (chassis) | 220.6 / 221.2 mm | same | 218.0 mm | -1.2 % |
+| closed thickness | 16.9 / 15.5 mm | same | 17 mm + 2 mm feet | +0.6 % |
+| panel 14 in 16:10 | 301.6 x 188.5 mm | diagonal | 301.6 x 188.5 mm | 0 % |
+| trackpad | 130 x 78-80 mm | product practice | 130 x 78 mm | 0 % |
+| keyboard well | about 280 x 105 mm | product practice | 279 x 104 mm | -0.4 / -1 % |
+| hinge barrel | 8-10 mm | product practice | 8.9 mm | - |
+| open envelope | 0.221 x 0.273 m (asset dimensions) | - | 0.2211 x 0.2725 m (1:50), 0.2212 x 0.2731 m (1:500) | 0 / +0.1 % |
+
+### Grades
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A / A- / A-; catalog INVALID (print: hidden plan barrel 0.187 mm at 1:20) | A / A- / A-; VALID |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | A- / A- / A-; catalog INVALID (print: 6.5 mm lid 0.199 mm at 1:350) | unchanged; band ends at 1:320 |
+| 1:500 | A- / A- / B+ | unchanged |
+| poses `open-idle`, `closed`, clips `open-lid`, `work-and-sleep` (t 0.5) | A (lid closes flush onto the deck, half-open lid clear of the chassis) | unchanged |
+
+Seen: body at all scales, structure and thermal cut at all scales, three poses and both clip frames at 1:50, 2D 1:50, 1:100, 1:200. The clamshell reads right at first sight: tub with bilge and feet, 78 keys with inverted-T arrows, glass trackpad, speaker grilles, hinge barrel at the real axis, display in its bezel; closed, it is one 19 mm slab. The model needed no change; the catalog asset was refused by the print check.
+
+### Change (root, `r5-laptop-print.py`, candidate validated before writing)
+
+- 1:50 plan: the hinge barrel shape lay under the lid shell, only a 1 mm sliver of it stayed visible (0.187 mm at the 1:20 end of the band); it is removed from the plan, the silhouette decision says the lid band hides the barrel (en, de). The 3D barrel stays (it is hidden in plan in 3D as well).
+- 1:200 `validRange.maxDenominator` 350 -> 320: the 6.5 mm lid with the 0.18 mm body pen reaches 0.200 mm exactly at 1:320 (6.5 / 320 + 0.18); the 1:500 drawing is unavailable, so no band starts at 1:350. 2D 1:50 and 1:200 re-rendered and opened after the change.
+
+### Open points
+
+- 1:500 keeps a dark screen inset in the lid at the 75 mm feature (digital only), structure there is two plates on one hinge axle (B+).

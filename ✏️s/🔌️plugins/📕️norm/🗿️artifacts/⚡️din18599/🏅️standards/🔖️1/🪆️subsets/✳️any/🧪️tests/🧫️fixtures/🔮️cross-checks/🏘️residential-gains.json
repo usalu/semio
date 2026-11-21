@@ -1,0 +1,43 @@
+{
+  "edition": "DIN V 18599-10:2018-09",
+  "clause": "5, Table 4",
+  "netFloorAreaM2": 100,
+  "cases": [
+    {
+      "useClass": "ResidentialUpToTwoDwellings",
+      "dailyWhM2": 45,
+      "averageWM2": 1.875,
+      "januaryKWh": 139.5,
+      "februaryKWh": 126,
+      "annualKWh": 1642.5,
+      "dwellingCount": 1
+    },
+    {
+      "useClass": "ResidentialUpToTwoDwellings",
+      "dailyWhM2": 45,
+      "averageWM2": 1.875,
+      "januaryKWh": 139.5,
+      "februaryKWh": 126,
+      "annualKWh": 1642.5,
+      "dwellingCount": 2
+    },
+    {
+      "useClass": "ResidentialMultifamily",
+      "dailyWhM2": 90,
+      "averageWM2": 3.75,
+      "januaryKWh": 279,
+      "februaryKWh": 252,
+      "annualKWh": 3285,
+      "dwellingCount": 3
+    },
+    {
+      "useClass": "ResidentialMultifamily",
+      "dailyWhM2": 90,
+      "averageWM2": 3.75,
+      "januaryKWh": 279,
+      "februaryKWh": 252,
+      "annualKWh": 3285,
+      "dwellingCount": 99
+    }
+  ]
+}

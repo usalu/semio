@@ -82,3 +82,39 @@ Decisions are bilingual sentences per list at every scale; "Minimal:" declared a
 - The thermal `--cut` sheet is unreadable from front and back (tool cut artifact, as reported for the sister assets).
 
 State: DONE
+
+
+## Round 5 handcraft
+
+No geometry change: the round 3 model already meets the bar; the only change is the sheet tool fix that made the cut thermal panels readable. Zoom tool `r5-c02-zoom.ts`; backup of the source: `🗑️generated/r5-solid-brick-wall-1960/volumes-before.json` (identical to the source now).
+
+### Reference vs model (1:50, measured in the source solids)
+
+| item | reference | model | deviation |
+|---|---|---|---|
+| NF brick | 240 x 115 x 71 mm (DIN 105-1) | headers 240 deep, stretchers 115, 71 high | 0 % |
+| course | 1/12 m = 83.33 mm, bed 12.33 mm (DIN 4172) | 12 courses, repeat 83.33, bed 12.33 | 0 % |
+| head / longitudinal joint | 10 mm | 10 mm | 0 % |
+| 36.5 cm block bond | stretcher row 115 + joint 10 + header row 240, rows change side each course, quarter-brick offset 62.5 mm, header pitch 125, stretcher pitch 250 | as stated (header joints 0.03 + n x 0.125, stretcher joints 0.0925 / 0.2175 + n x 0.25) | 0 % |
+| build-up | 15 mm lime-cement plaster, 365 mm solid brick NF in block bond, 20 mm mineral render = 400 mm | same thicknesses | 0 % |
+| centre of mass from the room face | computed from layer masses | 0.20109 m (712 kg) | 0 % |
+
+### Grades (opened: body, structure and thermal `--cut` at 1:50, 1:100, 1:200, 1:500; 2D at every scale; 1:50 in winter-night (default) and clip sunrise t 0.5; winter-sun was rendered but could not be opened (image viewer hook timed out), it moves no bone; the poses change the thermal state only)
+
+- Body: A / A / A / A (1:50 / 1:100 / 1:200 / 1:500): 1:50 the bond reads at both cut ends and the top course matches the 2D plan line for line; 1:100 the leaves as slabs; 1:200 one 400 mm block (both skins below the 30 mm feature); 1:500 one crisp slab as drawn. Before = after.
+- Thermal: A at every scale; before B as read on the sheets only because of the tool moiré, the model itself was right.
+- Structure: A at every scale: the bonded leaf (1:50 brick by brick, coarser as one 365 mm member), the bed under the leaf, the mass at the real centre of mass.
+- Solid counts body 57 / 2 / 1 / 1, thermal 3 / 2 / 1 / 1, structure 57 / 3 / 3 / 3.
+
+### Changes
+
+- Thermal `--cut` sheets: the front, back and three-quarter panels showed a dense moiré (round 3 report: "tool cut artifact"). Cause found in the sheet tool: the cut shows the back face of one layer shell and the front face of the next in the same plane, and float noise decided pixel by pixel. Fixed at the root in `r3-lib.ts` (depth tie of 0.01 mm, later solid wins; `tool-requests.md` 2026-11-21); re-rendered, the panels now show clean layers.
+
+### Checks
+
+`volumes-check.ts components/solid-brick-wall-1960 --product` PASS; `r3-validate.ts components/solid-brick-wall-1960 --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); catalog `volumes` equal to the source (nothing to splice).
+
+### Remaining (with reason)
+
+- 1:200 and 1:500 bodies are both one 400 mm block (they differ in tone and bed); a homogeneous wall whose skins are 15 and 20 mm has nothing more to show under a 30 mm feature.
+- The mass sphere lies at the real centre of mass inside the opaque leaf and is hidden in opaque renders; brick tone is uniform.

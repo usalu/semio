@@ -57,6 +57,7 @@ export interface Din18599CoolingPatchPlantValue {
 }
 
 export interface Din18599DhwPatch {
+  dwellingCount: number | null;
   specificDemandKwhPersonA: number | null;
   storageLossKwhA: number | null;
   distributionLossKwhA: number | null;
@@ -176,7 +177,7 @@ export const parseDin18599Diff: NormWireReader<Din18599Diff> = normWireObject<Di
 export const parseDin18599ClimatePatch: NormWireReader<Din18599ClimatePatch> = normWireObject<Din18599ClimatePatch>({ thetaEC: normWireRequired(normWireNullable(normWireArray(normWireNumber, 12, 12))), gHWM2: normWireRequired(normWireNullable(normWireArray(normWireRange(normWireNumber, {"minimum":0}), 12, 12))) });
 export const parseDin18599CoolingPatch: NormWireReader<Din18599CoolingPatch> = normWireObject<Din18599CoolingPatch>({ plant: normWireRequired(normWireNullable(normWireRef(() => parseDin18599CoolingPatchPlantValue))) });
 export const parseDin18599CoolingPatchPlantValue: NormWireReader<Din18599CoolingPatchPlantValue> = normWireObject<Din18599CoolingPatchPlantValue>({ value: normWireRequired(normWireNullable(parseCoolingPlant)) });
-export const parseDin18599DhwPatch: NormWireReader<Din18599DhwPatch> = normWireObject<Din18599DhwPatch>({ specificDemandKwhPersonA: normWireRequired(normWireNullable(normWireNumber)), storageLossKwhA: normWireRequired(normWireNullable(normWireNumber)), distributionLossKwhA: normWireRequired(normWireNullable(normWireNumber)), energyCarrier: normWireRequired(normWireNullable(normWireString)) });
+export const parseDin18599DhwPatch: NormWireReader<Din18599DhwPatch> = normWireObject<Din18599DhwPatch>({ dwellingCount: normWireRequired(normWireNullable(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295}))), specificDemandKwhPersonA: normWireRequired(normWireNullable(normWireNumber)), storageLossKwhA: normWireRequired(normWireNullable(normWireNumber)), distributionLossKwhA: normWireRequired(normWireNullable(normWireNumber)), energyCarrier: normWireRequired(normWireNullable(normWireString)) });
 export const parseDin18599ElementsInserted: NormWireReader<Din18599ElementsInserted> = normWireObject<Din18599ElementsInserted>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseEnvelopeElement) });
 export const parseDin18599ElementsModified: NormWireReader<Din18599ElementsModified> = normWireObject<Din18599ElementsModified>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseDin18599ElementsPatch)) });
 export const parseDin18599ElementsMoved: NormWireReader<Din18599ElementsMoved> = normWireObject<Din18599ElementsMoved>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });

@@ -1,0 +1,68 @@
+{
+  "cases": [
+    {
+      "name": "unseen stem",
+      "stem": "pack-0000000000000000000000000000000000000001",
+      "mode": "absent",
+      "grant": "none",
+      "extension": "pack",
+      "local": true
+    },
+    {
+      "name": "interned stem",
+      "stem": "pack-0000000000000000000000000000000000000002",
+      "mode": "interned",
+      "grant": "none",
+      "extension": "pack",
+      "local": true
+    },
+    {
+      "name": "retired stem",
+      "stem": "pack-0000000000000000000000000000000000000003",
+      "mode": "delete",
+      "grant": "none",
+      "extension": "pack",
+      "local": true
+    },
+    {
+      "name": "retired stem companion",
+      "stem": "pack-0000000000000000000000000000000000000004",
+      "mode": "delete",
+      "grant": "none",
+      "extension": "idx",
+      "local": true
+    },
+    {
+      "name": "live fleet stem",
+      "stem": "pack-0000000000000000000000000000000000000005",
+      "mode": "put",
+      "grant": "none",
+      "extension": "pack",
+      "local": false
+    },
+    {
+      "name": "live fleet companion",
+      "stem": "pack-0000000000000000000000000000000000000006",
+      "mode": "put",
+      "grant": "none",
+      "extension": "idx",
+      "local": false
+    },
+    {
+      "name": "explicit publisher grant",
+      "stem": "pack-0000000000000000000000000000000000000007",
+      "mode": "delete",
+      "grant": "publish",
+      "extension": "pack",
+      "local": false
+    },
+    {
+      "name": "retire-only grant",
+      "stem": "pack-0000000000000000000000000000000000000008",
+      "mode": "delete",
+      "grant": "retire",
+      "extension": "pack",
+      "local": true
+    }
+  ]
+}

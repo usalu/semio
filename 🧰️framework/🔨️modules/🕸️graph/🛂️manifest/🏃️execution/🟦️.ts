@@ -9,6 +9,7 @@ import { basename, join, relative, resolve } from "node:path";
 import { BundleScript, scriptInvocationBudget,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,scriptInvocationEnvironment } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import {checkResourceLeaseControl} from "@semio-tech/process/leases";
+import { completeCargoPreparationObservationV1, observeCargoPreparationInputV1, observeCargoPreparationOutputV1 } from "../../../🏃️process/🦀️cargo-workspace/🟦️.ts";
 import { readGraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../📽️projection/🟦️.ts";
 import { graphOutputInventory, graphOutputNodes, writeGraphArtifacts } from "../📤️publication/🟦️.ts";
@@ -20,8 +21,16 @@ export class GenerateScript extends BundleScript {
   async run(): Promise<void> {
     const root = this.repoRoot;
     const outDir = join(this.root, "..", "..", "🤖️generated");
-    const rendered = renderGraphArtifacts(root, outDir, readGraphOutputCatalog(join(this.root,"../../🛂️manifest/📇️outputs.json")));
+    const read = (path: string): string => {
+      const bytes = readFileSync(path);
+      observeCargoPreparationInputV1(path, "file", bytes);
+      return bytes.toString("utf8");
+    };
+    const catalog = readGraphOutputCatalog(join(this.root, "../../🛂️manifest/📇️outputs.json"), read);
+    const rendered = renderGraphArtifacts(root, outDir, catalog, true, { read, observe: (path, kind, suffix) => observeCargoPreparationInputV1(path, kind, undefined, suffix) });
     writeGraphArtifacts(outDir, rendered.artifacts);
+    for (const artifact of rendered.artifacts) observeCargoPreparationOutputV1(artifact.path, artifact.content);
+    completeCargoPreparationObservationV1();
     console.log(`[framework-graph] wrote ${rendered.manifestCount} manifests to ${relative(root, outDir)}`);
   }
 }

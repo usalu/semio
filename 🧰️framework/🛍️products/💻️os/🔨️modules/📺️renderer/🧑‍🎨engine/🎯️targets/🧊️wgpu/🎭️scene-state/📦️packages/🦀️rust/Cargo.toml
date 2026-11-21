@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-renderer-wgpu-contracts/testkit", "semio-renderer-wgpu-engine-registry/testkit", "semio-renderer-wgpu-thread-isolation/isolated"]
+testkit = ["semio-framework-job/testkit", "semio-renderer-wgpu-contracts/testkit", "semio-renderer-wgpu-engine-registry/testkit", "semio-renderer-wgpu-thread-isolation/isolated"]
 
 [dependencies]
 semio-renderer-wgpu-canvas2d-paint = { path = "../../../🖌️canvas2d-paint/📦️packages/🦀️rust" }

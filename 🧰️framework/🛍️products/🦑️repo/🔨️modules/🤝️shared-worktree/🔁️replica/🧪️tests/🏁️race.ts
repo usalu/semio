@@ -5,7 +5,10 @@ import * as real from "node:fs/promises";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
-import {appendEventsV1,blobPathV1,formatHlcV1,readHeadV1} from "../../📒️journal/🟦️.ts";
+import {appendEventsV1,blobPathV1,formatHlcV1,readEventsV1,readHeadV1,storeBlobV1} from "../../📒️journal/🟦️.ts";
+import spellingFixture from "./🧫️fixtures/🧺️spelling.json" with {type:"json"};
+import outboundFixture from "./🧫️fixtures/⏩️outbound.json" with {type:"json"};
+import {writeHintV1} from "../../🎣️tiers/🟦️.ts";
 import {createStoreGuardV1} from "../../🛡️resilience/🟦️.ts";
 import {createHash} from "node:crypto";
 import type {ReplicaEventV1} from "../🟦️.ts";
@@ -26,8 +29,8 @@ const wrap=(op:string)=>async(...args:unknown[])=>{
  }
  return result;
 };
-mock.module("node:fs/promises",()=>({...originals,...Object.fromEntries(["rename","unlink","copyFile","symlink","stat","lstat","open"].map(op=>[op,wrap(op)]))}));
-const {closeReplicaV1,compactV1,followOnceV1,joinV1,openReplicaV1,publishOnceV1,seedV1,verifyV1}=await import("../🟦️.ts");
+mock.module("node:fs/promises",()=>({...originals,...Object.fromEntries(["rename","unlink","copyFile","symlink","stat","lstat","open","readdir"].map(op=>[op,wrap(op)]))}));
+const {applyQueue,closeReplicaV1,compactV1,followOnceV1,joinV1,openReplicaV1,publishOnceV1,runV1,seedV1,verifyV1}=await import("../🟦️.ts");
 
 const scratch:string[]=[];
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`replica-race-${label}-`));scratch.push(path);return path;};
@@ -73,6 +76,7 @@ for(const code of ["EBUSY","EPERM","EACCES"]){
   expect(faults[0]!.left).toBe(999);
   expect(events.filter(event=>event.event==="blocked"&&event.path==="held.txt")).toEqual([{version:1,event:"blocked",path:"held.txt",reason:"sharing-violation"}]);
   expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-sharing-violation",count:1,lastMs:clock.ms});
+  expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-incoming-worktree-sharing",count:1,lastMs:clock.ms});
   expect(events.filter(event=>event.event==="error")).toEqual([]);
   expect(existsSync(join(b.worktree,"held.txt"))).toBe(true);
   const head=(await readHeadV1(store,"a"))!;
@@ -88,11 +92,12 @@ for(const code of ["EBUSY","EPERM","EACCES"]){
 }
 
 test("a sharing-blocked put spends one rename attempt per queue turn and does not delay unrelated work",async()=>{
- const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b);
+ const {a,b,clock,store}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b);
  try{
   put(a,"busy.txt","arriving");put(a,"unrelated.txt","ready");
   await publishOnceV1(first);
-  const db=new Database(":memory:"),started=clock.ms;
+  const db=new Database(":memory:"),started=clock.ms,source=blobPathV1(store,createHash("sha256").update("arriving").digest("hex"));
+  let reads=0;hook=(op,path)=>{if(op==="open"&&path.startsWith(source+"\0"))reads++;};
   try{
    faults=[{op:"rename",match:"busy.txt",code:"EBUSY",left:sharingQueue.refusedAttempts}];
    const rows=db.query(`with rounds as (
@@ -101,20 +106,110 @@ test("a sharing-blocked put spends one rename attempt per queue turn and does no
     ), progress as (
      select *,sum(elapsed>=ready) over(order by number) attempts from rounds
     )
-    select elapsed,max(0,?2-attempts) remaining,other+(attempts>?2) applied,attempts<=?2 queued
-    from progress order by number`).all(JSON.stringify(sharingQueue.rounds),sharingQueue.refusedAttempts) as {elapsed:number;remaining:number;applied:number;queued:number}[];
+    select elapsed,max(0,?2-attempts) remaining,other+(attempts>?2) applied,attempts<=?2 queued,
+      min(attempts,?2) sharingCount,max(case when elapsed>=ready and attempts<=?2 then elapsed end) over(order by number) sharingAt
+    from progress order by number`).all(JSON.stringify(sharingQueue.rounds),sharingQueue.refusedAttempts) as {elapsed:number;remaining:number;applied:number;queued:number;sharingCount:number;sharingAt:number}[];
+   const expected=db.query("select count(distinct value) reads from json_each(?)").get(JSON.stringify(["arriving", "arriving", "arriving"])) as {reads:number};
    for(const row of rows){
     clock.ms=started+row.elapsed;
     expect(await followOnceV1(second)).toMatchObject({applied:row.applied,queued:row.queued});
     expect(faults[0]!.left).toBe(row.remaining);
+    const details=second.failures.diagnostics();
+    expect(details).toContainEqual({kind:"blocked-incoming-worktree-sharing",count:row.sharingCount,lastMs:started+row.sharingAt});
+    expect(second.failures.summary()).toContainEqual({kind:"blocked",count:row.sharingCount,lastMs:started+row.sharingAt});
+    expect(second.failures.summary()).not.toContainEqual({kind:"blocked-incoming-worktree-sharing",count:row.sharingCount,lastMs:started+row.sharingAt});
+    expect(second.failures.diagnostics(2)).toEqual(details.slice(0,2));
     expect(readFileSync(join(b.worktree,"unrelated.txt"),"utf8")).toBe("ready");
    }
+   expect(reads).toBe(expected.reads);
   }finally{db.close();}
   expect(readFileSync(join(b.worktree,"busy.txt"),"utf8")).toBe("arriving");
+ }finally{hook=undefined;faults=[];await closeReplicaV1(first);await closeReplicaV1(second);}
+},60000);
+
+
+test("a Git input rename sharing violation stays outside the ordinary worktree diagnostic",async()=>{
+ const {a,b,clock,store}=await pair(),second=await openReplicaV1(b),path=".git/refs/tags/fixture";
+ try{
+  const text="a".repeat(40)+"\n",source=join(a.worktree,"seed.txt");
+  writeFileSync(source,text);
+  const {sha256,bytes}=await storeBlobV1(store,"a",source);
+  await appendEventsV1(store,"a",[{version:1,hlc:formatHlcV1({ms:++clock.ms,counter:0},"a"),operation:"put",path,sha256,bytes,executable:false,base:null}]);
+  faults=[{op:"rename",match:"fixture",code:"EBUSY",left:1}];
+  await followOnceV1(second);
+  expect(faults[0]!.left).toBe(0);
+  expect(second.queue.has(path)).toBe(true);
+  const details=second.failures.diagnostics();
+  expect(details).toContainEqual({kind:"blocked-sharing-violation",count:1,lastMs:clock.ms});
+  expect(details.some(item=>item.kind==="blocked-incoming-worktree-sharing")).toBe(false);
+ }finally{faults=[];await closeReplicaV1(second);}
+},60000);
+
+test("a new winning PUT does not inherit the prior sharing cooldown or its temporary bytes",async()=>{
+ const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b),path="new-winner.txt";
+ try{
+  put(a,path,"first");await publishOnceV1(first);
+  faults=[{op:"rename",match:path,code:"EBUSY",left:1}];
+  expect((await followOnceV1(second)).queued).toBe(1);
+  expect(readdirSync(second.paths.tmp).filter(name=>readFileSync(join(second.paths.tmp,name),"utf8")==="first")).toHaveLength(1);
+  clock.ms++;put(a,path,"second");await publishOnceV1(first);
+  expect(await followOnceV1(second)).toMatchObject({applied:1,queued:0});
+  expect(readFileSync(join(b.worktree,path),"utf8")).toBe("second");
+  expect(readdirSync(second.paths.tmp)).toEqual([]);
  }finally{faults=[];await closeReplicaV1(first);await closeReplicaV1(second);}
 },60000);
 
-test("verified incoming fragments renew the store guard only when physical bytes advance",async()=>{
+
+for(const kind of ["private replacement","CAS replacement","abort","close"] as const)test("a sharing-blocked PUT revalidates or releases its staged file after "+kind,async()=>{
+ const {a,b,clock,store}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b),path="exact.txt",body="source";
+ let closed=false;
+ try{
+  put(a,path,body);await publishOnceV1(first);
+  const source=blobPathV1(store,createHash("sha256").update(body).digest("hex"));
+  faults=[{op:"rename",match:path,code:"EBUSY",left:1}];
+  expect((await followOnceV1(second)).queued).toBe(1);
+  const staged=readdirSync(second.paths.tmp);
+  expect(staged).toHaveLength(1);
+  if(kind==="close"){
+   await closeReplicaV1(second);closed=true;expect(readdirSync(second.paths.tmp)).toEqual([]);return;
+  }
+  if(kind==="abort"){
+   const controller=new AbortController();
+   controller.abort(Error("fixture abort"));
+   await expect(applyQueue(second,controller.signal)).rejects.toThrow("fixture abort");
+   expect(readdirSync(second.paths.tmp)).toEqual([]);return;
+  }
+  const sourceChanged=kind==="CAS replacement",file=sourceChanged?source:join(second.paths.tmp,staged[0]!);
+  const before=await real.stat(file);
+  const swap=file+".next";writeFileSync(swap,"forged");utimesSync(swap,before.atime,before.mtime);await real.rename(swap,file);
+  let reads=0;hook=(op,path)=>{if(op==="open"&&path.startsWith(source+"\0"))reads++;};
+  clock.ms+=60_000;
+  expect((await followOnceV1(second)).applied).toBe(sourceChanged?0:1);
+  expect(reads).toBe(1);
+  expect(readdirSync(second.paths.tmp)).toEqual([]);
+  if(sourceChanged)expect(existsSync(join(b.worktree,path))).toBe(false);
+  else expect(readFileSync(join(b.worktree,path),"utf8")).toBe(body);
+ }finally{hook=undefined;faults=[];await closeReplicaV1(first);if(!closed)await closeReplicaV1(second);}
+},60000);
+
+
+test("concurrent queue turns cannot spend the same retained PUT twice",async()=>{
+ const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b),path="one-owner.txt";
+ let release!:()=>void,entered!:()=>void,attempts=0,active:Promise<unknown>|undefined;
+ const barrier=new Promise<void>(done=>{release=done;}),intoRename=new Promise<void>(done=>{entered=done;});
+ try{
+  put(a,path,"exact");await publishOnceV1(first);faults=[{op:"rename",match:path,code:"EBUSY",left:1}];
+  expect((await followOnceV1(second)).queued).toBe(1);
+  hook=async(op,args)=>{if(op==="rename"&&args.endsWith(path)){attempts++;entered();await barrier;}};
+  clock.ms+=60_000;
+  active=applyQueue(second,undefined);await intoRename;
+  expect(await applyQueue(second,undefined)).toMatchObject({applied:0,dropped:0});
+  expect(attempts).toBe(1);release();expect(await active).toMatchObject({applied:1,dropped:0});
+  expect(readFileSync(join(b.worktree,path),"utf8")).toBe("exact");expect(readdirSync(second.paths.tmp)).toEqual([]);
+ }finally{release();await active?.catch(()=>{});hook=undefined;faults=[];await closeReplicaV1(first);await closeReplicaV1(second);}
+},60000);
+
+test("incoming items renew the store guard on journal, byte and materialisation progress",async()=>{
  const {a,b,clock}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1(b);
  try{
   for(const {bytes,observations} of fixture.intakeProgress){
@@ -123,11 +218,49 @@ test("verified incoming fragments renew the store guard only when physical bytes
    let beats=0;second.beat=()=>{beats++;};
    expect(await followOnceV1(second)).toMatchObject({applied:1,queued:0});
    expect(readFileSync(join(b.worktree,name))).toEqual(content);
-   expect(beats,String(bytes)).toBe(observations);
+   expect(beats,String(bytes)).toBe(observations+2);
    expect(await followOnceV1(second)).toMatchObject({applied:0,queued:0});
-   expect(beats,String(bytes)).toBe(observations);clock.ms+=1000;
+   expect(beats,String(bytes)).toBe(observations+2);clock.ms+=1000;
   }
  }finally{await closeReplicaV1(first);await closeReplicaV1(second);}
+},60000);
+
+for(const {name,deadlineMs,completionMs,stallMs,status} of fixture.materialisationProgress)test(`the store guard follows completed small materialisations: ${name}`,async()=>{
+ const {a,b}=await pair(),first=await openReplicaV1(a),second=await openReplicaV1({...b,concurrency:1});
+ const probe=Promise.withResolvers<boolean>(),probing=Promise.withResolvers<void>(),release=Promise.withResolvers<void>();
+ let now=0,beats=0,renames=0;
+ const guard=createStoreGuardV1({probe:()=>{probing.resolve();return probe.promise;},deadlineMs,now:()=>now,changed:()=>{}});
+ second.beat=()=>{beats++;guard.beat();};
+ try{
+  const count=completionMs.length+(stallMs===null?0:1);
+  for(let i=0;i<count;i++)put(a,`small-${i}.txt`,"");
+  await publishOnceV1(first);
+  hook=async(op,path)=>{
+   if(op!=="rename"||!path.includes(`\0${join(b.worktree,"small-")}`))return;
+   await probing.promise;
+   const completedAt=completionMs[renames++];
+   if(completedAt===undefined&&stallMs!==null){now=stallMs;await release.promise;return;}
+   now=completedAt!;
+   await Bun.sleep(60);
+  };
+  const result=await guard.turn(signal=>followOnceV1(second,signal));
+  expect(result.status).toBe(status);
+  expect(beats).toBe(1+completionMs.length);
+  if(status==="done"){
+   expect(result).toMatchObject({value:{applied:count,queued:0}});
+   await followOnceV1(second);
+   expect(beats).toBe(1+completionMs.length);
+  }
+ }finally{
+  release.resolve();probe.resolve(true);
+  const until=Date.now()+2000;
+  while(guard.outstanding()>0&&Date.now()<until)await Bun.sleep(10);
+  hook=undefined;
+  await closeReplicaV1(first);await closeReplicaV1(second);
+ }
+ expect(guard.outstanding()).toBe(0);
+ expect(beats).toBe(1+completionMs.length);
+ if(stallMs!==null)expect(existsSync(join(b.worktree,`small-${completionMs.length}.txt`))).toBe(true);
 },60000);
 
 test("a slow verified download survives a stalled probe while an idle download expires",async()=>{
@@ -148,27 +281,32 @@ test("a slow verified download survives a stalled probe while an idle download e
     const until=Date.now()+2000;
     while(guard.outstanding()>0&&Date.now()<until)await Bun.sleep(10);
     expect(guard.outstanding()).toBe(0);
-    expect(beats).toBe(moving?6:0);readDelay=undefined;
+    expect(beats).toBe(moving?8:1);readDelay=undefined;
    }
    clock.ms+=1000;
   }
  }finally{await closeReplicaV1(first);await closeReplicaV1(second);}
 },60000);
 
-test("an apply whose rename onto a held file fails keeps the old content, leaves no staging file behind and succeeds after the release",async()=>{
+test("an apply whose rename onto a held file fails keeps the old content, keeps one verified private staging file until the release",async()=>{
  const {a,b,clock,events}=await pair();
  put(a,"doc.txt","one");
  const first=await openReplicaV1(a);await publishOnceV1(first);
  const second=await openReplicaV1(b,event=>events.push(event));await followOnceV1(second);
+ const visible=readdirSync(b.worktree);
  put(a,"doc.txt","two, a bit longer");await publishOnceV1(first);
  faults=[{op:"rename",match:"doc.txt",code:"EPERM",left:1000}];
  expect(await followOnceV1(second)).toMatchObject({applied:0,queued:1});
  expect(readFileSync(join(b.worktree,"doc.txt"),"utf8")).toBe("one");
- expect(readdirSync(join(b.worktree,".cache","f","tmp"))).toEqual([]);
+ expect(readdirSync(b.worktree)).toEqual(visible);
+ const staged=readdirSync(second.paths.tmp);
+ expect(staged).toHaveLength(1);
+ expect(readFileSync(join(second.paths.tmp,staged[0]!),"utf8")).toBe("two, a bit longer");
  expect(events.some(event=>event.event==="blocked"&&event.path==="doc.txt")).toBe(true);
  faults=[];clock.ms+=60_000;
  expect(await followOnceV1(second)).toMatchObject({applied:1,queued:0});
  expect(readFileSync(join(b.worktree,"doc.txt"),"utf8")).toBe("two, a bit longer");
+ expect(readdirSync(second.paths.tmp)).toEqual([]);
  await closeReplicaV1(first);await closeReplicaV1(second);
 },60000);
 
@@ -182,6 +320,7 @@ test("a write into the staging file that fails with EACCES is reported as blocke
  expect(events.filter(event=>event.event==="blocked"&&event.path==="new.txt").map(event=>event.reason)).toEqual(["EACCES"]);
  expect(second.failures.summary()).toContainEqual({kind:"blocked",count:1,lastMs:clock.ms});
  expect(second.failures.diagnostics()).toContainEqual({kind:"blocked-eacces",count:1,lastMs:clock.ms});
+ expect(second.failures.diagnostics().some(item=>item.kind==="blocked-incoming-worktree-sharing")).toBe(false);
  expect(events.filter(event=>event.event==="error")).toEqual([]);
  faults=[];clock.ms+=60_000;
  expect(await followOnceV1(second)).toMatchObject({applied:1,queued:0});
@@ -304,3 +443,121 @@ test("compact removes staging files older than six hours, also those of other or
  writeFileSync(join(tmp,`relay-${hex}`),"fresh");
  expect((await compactV1(store,"a",14,undefined,()=>{},()=>Date.now()+5*3600*1000)).staging).toBe(0);
 },60000);
+
+/** ⏩ Replays an explicit hint while a separate large local preparation is waiting on its first source probe. */
+for(const {replace} of outboundFixture.cases)test("an ordinary large outbound preparation cannot delay a fresh exact-path hint"+(replace?" or publish replaced bytes":""),async()=>{
+ const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(!artifactRoot)throw Error("Original ticket or process-test artifact root required");
+ const base=mkdtempSync(join(artifactRoot,"lr-"));scratch.push(base);
+ const store=join(base,"s"),worktree=join(base,"w");
+ mkdirSync(worktree);writeFileSync(join(worktree,"anchor.txt"),"initial");
+ const options={worktree,storeRoot:store,originId:"g1-server",groupId:"g1",watch:false,lock:false,pollMilliseconds:10,scanSeconds:3600,debounceMilliseconds:5,persistMilliseconds:0,hintMilliseconds:15};
+ await seedV1(options);
+ const position=await readHeadV1(store,options.originId),database=new Database(":memory:"),controller=new AbortController();
+ const gate=Promise.withResolvers<void>(),probe=Promise.withResolvers<void>();
+ const wait=async(predicate:()=>Promise<boolean>,milliseconds:number)=>{const end=Date.now()+milliseconds;do{if(await predicate())return true;await Bun.sleep(30);}while(Date.now()<end);return false;};
+ const {large,hint,sequence,replacement}=outboundFixture,lookup=()=>readEventsV1(store,options.originId,position??undefined);
+ const contentSha=(text:string)=>{const chunk=Buffer.alloc(1<<20),hash=createHash("sha256");chunk.write(text);for(let remaining=large.bytes;remaining>0;remaining-=chunk.length){hash.update(chunk.subarray(0,Math.min(remaining,chunk.length)));if(remaining===large.bytes)chunk.fill(0);}return hash.digest("hex");};
+ const original=contentSha(""),latest=replace?contentSha(replacement):original;
+ const daemon=runV1(options,controller.signal);
+ try{
+  expect(await wait(async()=>existsSync(join(worktree,".cache","f","health.json")),10000)).toBe(true);
+  const source=join(worktree,large.path);
+  writeFileSync(source,"");
+  await real.truncate(source,large.bytes);
+  const oldBlob=blobPathV1(store,original);
+  hook=async(op,path)=>{if(replace?op==="rename"&&path.endsWith("\0"+oldBlob):op==="stat"&&path===source){probe.resolve();await gate.promise;}};
+  await writeHintV1(worktree,[large.path]);
+  let held=false;void probe.promise.then(()=>{held=true;});
+  expect(await wait(async()=>held,10000)).toBe(true);
+  writeFileSync(join(worktree,hint.path),hint.text);
+  await writeHintV1(worktree,[hint.path]);
+  const reached=await wait(async()=>(await lookup()).events.some(row=>row.path===hint.path),3000);
+  const paths=(await lookup()).events.filter(item=>item.path===large.path||item.path===hint.path).map(item=>item.path);
+  const oracle=database.query("select value path from json_each(?1) where key<?2").all(JSON.stringify(sequence),1).map(row=>(row as {path:string}).path);
+  expect(reached).toBe(true);
+  expect(paths).toEqual(oracle);
+  const event=(await lookup()).events.find(row=>row.path===hint.path);
+  expect(event?.operation==="put"?event.sha256:null).toBe(createHash("sha256").update(hint.text).digest("hex"));
+  if(replace){const handle=await real.open(source,"r+");try{await handle.write(replacement,0,"utf8");}finally{await handle.close();}}
+  gate.resolve();
+  expect(await wait(async()=>(await lookup()).events.some(row=>row.path===large.path),10000)).toBe(true);
+  const resulting=(await lookup()).events.filter(row=>sequence.includes(row.path));
+  expect(resulting.map(row=>row.path)).toEqual(sequence);
+  const largeEvent=resulting.find(row=>row.path===large.path);
+  expect(largeEvent?.operation==="put"?largeEvent.sha256:null).toBe(latest);
+ }finally{
+  hook=undefined;gate.resolve();controller.abort();await daemon;database.close();
+ }
+},35000);
+
+/** 🧺 Enumerates exact Unicode spellings once per physical directory version during targeted publication. */
+for(const row of spellingFixture.cases)test("targeted publication shares an exact spelling snapshot for "+row.id,async()=>{
+ const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(!artifactRoot)throw Error("Original ticket or process-test artifact root required");
+ const base=mkdtempSync(join(artifactRoot,"ls-"));scratch.push(base);
+ const worktree=join(base,"w"),storeRoot=join(base,"s"),dir=join(worktree,spellingFixture.directory);
+ mkdirSync(worktree);writeFileSync(join(worktree,"anchor.txt"),"initial");
+ const options={worktree,storeRoot,originId:"g1-server",groupId:"g1",persistMilliseconds:0};
+ await seedV1(options);
+ const replica=await openReplicaV1(options),head=await readHeadV1(storeRoot,options.originId),database=new Database(":memory:");
+ let reads=0,created=false;
+ const files=Array.from({length:row.files},(_unused,i)=>spellingFixture.namePrefix+i+".txt");
+ const paths=files.map(file=>spellingFixture.directory+"/"+file),last=join(dir,files.at(-1)!);
+ try{
+  mkdirSync(dir);
+  for(const file of row.createLast?files.slice(0,-1):files)writeFileSync(join(dir,file),file);
+  hook=(op,path)=>{
+   if(op==="readdir"&&path===dir){
+    reads++;
+    if(row.firstReadFails&&reads===1)throw Object.assign(Error("Fixture listing refused"),{code:"EACCES"});
+   }
+   if(row.createLast&&op==="lstat"&&path.split("\0")[0]===last&&!created){created=true;writeFileSync(last,files.at(-1)!);}
+  };
+  const published=await publishOnceV1(replica,undefined,paths);
+  const oracle=database.query("select count(*) scans, sum(value) files from json_each(?1)").get(JSON.stringify(row.epochs)) as {scans:number;files:number};
+  expect(published.published).toBe(oracle.files);
+  const events=(await readEventsV1(storeRoot,options.originId,head??undefined)).events;
+  expect(events.map(event=>event.path).sort()).toEqual(paths.slice(row.firstReadFails?1:0).sort());
+  expect(events.every(event=>event.operation==="put"&&event.sha256===createHash("sha256").update(files[paths.indexOf(event.path)]!).digest("hex"))).toBe(true);
+  expect(reads).toBe(oracle.scans);
+ }finally{hook=undefined;await closeReplicaV1(replica);database.close();}
+},20000);
+
+/** 🧮️ Keeps an unchanged cooling queue's structural proof until a new register changes its authority. */
+test("a cooling incoming queue reuses a settled clash pass and rechecks a new winner",async()=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(!artifacts)throw Error("Original ticket or process-test artifact root required");
+ const root=mkdtempSync(join(artifacts,"qc-"));scratch.push(root);
+ const storeRoot=join(root,"s"),clock={ms:Date.now()},a={worktree:join(root,"a"),storeRoot,originId:"a",groupId:"g1",now:()=>clock.ms},b={...a,originId:"b",worktree:join(root,"b")};
+ mkdirSync(a.worktree);
+ put(a,"seed.txt","seed");
+ await seedV1(a);await joinV1(b);
+ const first=await openReplicaV1(a),second=await openReplicaV1(b),oracle=new Database(":memory:");
+ const sample=sharingQueue.settledClash,path=sample.path;
+ let queries=0;
+ const find=second.folds.find.bind(second.folds);
+ second.folds.find=(path)=>{queries++;return find(path);};
+ try{
+  put(a,path,sample.first);
+  await publishOnceV1(first,undefined,[path]);
+  faults=[{op:"rename",match:path.split("/").at(-1)!,code:"EBUSY",left:1000}];
+  expect(await followOnceV1(second)).toMatchObject({events:1,applied:0,queued:1});
+  expect(queries).toBeGreaterThan(0);
+  const kept=faults[0]!.left;
+  const frozen=oracle.query("select value as queued, 0 as reads from json_each(?1)").all(JSON.stringify(sample.cooling)) as {queued:number;reads:number}[];
+  for(const state of frozen){
+   queries=0;
+   expect(await followOnceV1(second)).toMatchObject({events:0,applied:0,queued:state.queued});
+   expect(queries).toBe(state.reads);
+   expect(faults[0]!.left).toBe(kept);
+  }
+  faults=[];clock.ms++;
+  put(a,path,sample.replacement);
+  await publishOnceV1(first,undefined,[path]);
+  queries=0;
+  expect(await followOnceV1(second)).toMatchObject({events:1,applied:1,queued:0});
+  expect(queries).toBeGreaterThan(0);
+  expect(readFileSync(join(b.worktree,path),"utf8")).toBe(sample.replacement);
+ }finally{faults=[];oracle.close();await closeReplicaV1(first);await closeReplicaV1(second);}
+},30000);

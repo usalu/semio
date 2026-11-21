@@ -1,0 +1,6 @@
+{
+  "folders": ["keep", "omit"],
+  "filesPerKind": 180,
+  "scanCopies": 10,
+  "patterns": ["tree/**/*.ts", "!tree/omit/**/*.ts", "tree/literal.txt"]
+}

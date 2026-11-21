@@ -1,0 +1,6 @@
+{
+  "header": "%PDF-1.7",
+  "body": "1 0 obj\n<< /Type /Catalog /Pages 9 0 R >>\nendobj\n",
+  "expectedNotice": "shell.documentTransfer.file-open-failed",
+  "pageCount": 2
+}

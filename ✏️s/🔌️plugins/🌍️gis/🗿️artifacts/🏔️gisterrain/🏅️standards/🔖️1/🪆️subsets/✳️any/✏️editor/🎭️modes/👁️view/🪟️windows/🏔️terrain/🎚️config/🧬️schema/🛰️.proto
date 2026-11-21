@@ -3,4 +3,11 @@ package semio.app.gis.gisterrain.window;
 message GisTerrainWindowConfig {
   // @state config @owner window
   string camera_json = 1;
+  // @state config @owner window
+  TerrainBrushSettings brush = 2;
+}
+message TerrainBrushSettings {
+  uint32 radius = 1;
+  uint32 elevation_step = 2;
+  uint32 smooth_strength = 3;
 }

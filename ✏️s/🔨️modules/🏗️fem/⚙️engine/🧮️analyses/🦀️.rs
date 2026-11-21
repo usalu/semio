@@ -25,8 +25,10 @@ use semio_s_fem_sparse::NumericalBatchEnd;
 use semio_s_fem_sparse::NumericalOutcomeDesk;
 use semio_s_fem_sparse::NumericalRun;
 use semio_s_fem_sparse_ldlt::ldlt_factor;
+pub use semio_s_fem_sparse_ldlt::LdltJob;
 use semio_s_fem_sparse::rcm_order;
 use semio_s_fem_sparse_subspace::subspace_iteration;
+pub use semio_s_fem_sparse_subspace::{SubspaceIterationJob, SubspaceSpectrum};
 use semio_s_fem_sparse::Coo;
 use semio_s_fem_sparse::Csr;
 use semio_s_fem_sparse_subspace::EigenPairs;
@@ -643,11 +645,14 @@ pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize, 
         let indices_new: Vec<usize> = indices_old.iter().map(|&old| system.inv_perm[old]).collect();
         for (local_row, &new_row) in indices_new.iter().enumerate() {
             let Some(compact_row) = system.compact_of_new[new_row] else { continue };
-            for (local_col, &new_col) in indices_new.iter().enumerate() {
+            for (local_col, &new_col) in indices_new.iter().enumerate().skip(local_row) {
                 let Some(compact_col) = system.compact_of_new[new_col] else { continue };
-                let v = kg.get(local_row, local_col);
+                let v = kg.get(local_row, local_col).midpoint(kg.get(local_col, local_row));
                 if v != 0.0 {
                     neg_kg_coo.add(compact_row, compact_col, -v);
+                    if local_row != local_col {
+                        neg_kg_coo.add(compact_col, compact_row, -v);
+                    }
                 }
             }
         }

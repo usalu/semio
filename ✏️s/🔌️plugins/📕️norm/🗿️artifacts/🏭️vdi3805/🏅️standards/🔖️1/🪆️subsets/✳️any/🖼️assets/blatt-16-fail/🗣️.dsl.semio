@@ -4,26 +4,12 @@ strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="
 extensions=fields={
 }
 products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
-  AT-100 {manufacturer-code=DEMO product-group=AT article-number=AT-100} [ {locale=de text=Luftdurchlass} {locale=en text="Air terminal"} ] 16 [ {family="100" fields=[ "100" DEMO AT AT-100 "16" ] extensions=fields={
+  FSD-100 {manufacturer-code=DEMO product-group=FSD article-number=FSD-100} [ {locale=de text="Brandschutzklappe"} {locale=en text="Fire damper"} ] 16 [ {family="100" fields=[ "100" DEMO FSD FSD-100 "16" ] extensions=fields={
   }
-  } {family="210" fields=[ "210" airflow_m3_s "-1" pressure_drop_pa "25" product_group AT type_code INVALID ] extensions=fields={
+  } {family="700" fields=[ "700" de "Brandschutzklappe" en "Fire damper" ] extensions=fields={
   }
-  } {family="700" fields=[ "700" de Luftdurchlass en "Air terminal" ] extensions=fields={
-  }
-  } ] {id=cfg.AT-100 attributes={
-    entries=[ {
-      key="product_group" unit=null value="AT"
-    }
- {
-      key="type_code" unit=null value="INVALID"
-    }
- {
-      key="airflow_m3_s" unit=null value="-1"
-    }
- {
-      key="pressure_drop_pa" unit=null value="25"
-    }
-    ] kind="generic"
+  } ] {id=cfg.FSD-100 attributes={
+    entries=[ ] kind="generic"
   }
   function-refs=[ ]} [ ] [ ] {fields={
   }
@@ -33,7 +19,7 @@ edition-profile={
 }
 correction-as-of=year=2024 month=1 index=
 entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
-  AT-100 16 [ Luftdurchlass "Air terminal" ] _
+  FSD-100 16 [ "Brandschutzklappe" "Fire damper" ] _
 }
 geometry={
 }

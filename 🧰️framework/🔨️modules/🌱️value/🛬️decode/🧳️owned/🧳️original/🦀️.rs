@@ -25,9 +25,32 @@ fn nested(mut d:RetirementDemand,copy:usize)->Result<RetirementDemand,ValueError
 impl<I:Sync+'static,T:NativeReceive<I>,A:RetireOwned+Sync> NativeReceivingOriginal<I,T,A>{
  pub fn new(original:RetainedCloneSource<I,A>)->Self{Self{original:ManuallyDrop::new(Some(OriginalInput::Source(original))),receiver:semio_framework_value_native_storage::NativeOwnedStorage::empty(),retired_header:None,output:ManuallyDrop::new(None),retirement:Default::default(),action:Default::default(),authority:ManuallyDrop::new(Some(OriginalEffectAuthority::new(NativeSlotProducer::new()))),backing:semio_framework_value_native_receiver_protocol::NativeReceiverBackingClose::vacant(),close_reply:ManuallyDrop::new(None),close_route:None,closing:false,nested:None}}
  pub fn borrow_input(&self)->Result<RetainedCloneRef<'_,I>,ValueError>{if self.closing{return Err(invalid())}self.original.as_ref().ok_or_else(invalid)?.try_borrow()}
- pub fn demands(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing||self.output.is_some(){return Err(invalid())}if let Some(d)=self.action.demand{return Ok(d)}if !self.receiver.reserved(){return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<T::Receiver>::reserve_demand())}if !self.receiver.initialized(){return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<T::Receiver>::seed_demand())}let receiver=self.receiver.get().ok_or_else(||ValueError::invariant("get target absent"))?;nested(if receiver.output_ready(){receiver.take_demand()?}else{receiver.demands(self.borrow_input()?,body,maximum_work_units)?},0)}
+ pub fn demands(&self,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing{return Err(invalid())}if let Some(d)=self.action.demand{return Ok(d)}if self.output.is_some(){return Err(invalid())}if !self.receiver.reserved(){return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<T::Receiver>::reserve_demand())}if !self.receiver.initialized(){return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<T::Receiver>::seed_demand())}let receiver=self.receiver.get().ok_or_else(||ValueError::invariant("get target absent"))?;nested(if receiver.output_ready(){receiver.take_demand()?}else{receiver.demands(self.borrow_input()?,body,maximum_work_units)?},0)}
  /// ⛽️ Quotes the exact work of the next resident action; a nested child action is quoted by the caller's ceiling because the child owns its own selection.
  pub fn advance_work_demand(&self,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{if self.closing||self.output.is_some(){return Err(invalid())}if let Some(work)=self.action.work{return Ok(work)}if !self.receiver.reserved(){return Ok(self.receiver.reserve_work_demand())}if !self.receiver.initialized(){return Ok(self.receiver.seed_work_demand())}let receiver=self.receiver.get().ok_or_else(||ValueError::invariant("get target absent"))?;if receiver.output_ready(){return receiver.take_work_demand()}match receiver.select_advance(self.borrow_input()?,body,maximum_work_units)?{NativeAdvanceSelection::Nested=>Ok(maximum_work_units),NativeAdvanceSelection::Local{work}=>Ok(work)}}
+ /// 🧮️ Quotes the physical items required to settle a nested schema acknowledgement atomically.
+ pub fn minimum_advance_items(&self,body:usize,maximum_work_units:u64)->Result<usize,ValueError>{
+  if self.closing{return Err(invalid())}
+  if let Some(grant)=self.nested{return Ok(grant.maximum_items)}
+  if self.action.pending(){return Ok(1)}
+  if self.output.is_some(){return Err(invalid())}
+  let Some(receiver)=self.receiver.get()else{return Ok(1)};
+  if receiver.output_ready(){return Ok(1)}
+  Ok(match receiver.select_advance(self.borrow_input()?,body,maximum_work_units)?{
+   NativeAdvanceSelection::Nested=>semio_framework_value_native_schema::NATIVE_SCHEMA_METADATA_ITEMS,
+   NativeAdvanceSelection::Local{..}=>1,
+  })
+ }
+ /// 🧭️ Quotes the nested child's exact current Work for a caller without a ceiling.
+ pub fn selected_advance_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if self.closing||self.output.is_some(){return Err(invalid())}
+  if let Some(work)=self.action.work{return Ok(work)}
+  if !self.receiver.reserved(){return Ok(self.receiver.reserve_work_demand())}
+  if !self.receiver.initialized(){return Ok(self.receiver.seed_work_demand())}
+  let receiver=self.receiver.get().ok_or_else(invalid)?;
+  if receiver.output_ready(){return receiver.take_work_demand()}
+  receiver.advance_work_demand(self.borrow_input()?,body)
+ }
  /// 🔁️ Reports whether the resident action awaits original recovery.
  pub fn pending_recovery_required(&self)->bool{self.advance_pending()}
  /// ⏯️ Performs resident receiving actions while the turn grant and work still admit the next exact quote; yields only on a denied quote, a real Pending, a ready output or a pending yield.
@@ -37,7 +60,9 @@ impl<I:Sync+'static,T:NativeReceive<I>,A:RetireOwned+Sync> NativeReceivingOrigin
   loop{
    let rem=RetainedCloneGrant{maximum_items:g.maximum_items.saturating_sub(total.copied_items),maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(total.copied_bytes),maximum_capacity_bytes:g.maximum_capacity_bytes.saturating_sub(total.retained_capacity_bytes),maximum_release_bytes:g.maximum_release_bytes.saturating_sub(total.released_bytes),..g};
    let left=maximum_work_units.saturating_sub(u64::try_from(work).unwrap_or(u64::MAX));
-   if !first&&(left==0||rem.maximum_items==0||self.output_ready()||control.checkpoint().is_err()){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(total)),work})}
+   if !first&&(left==0||rem.maximum_items==0||self.output_ready()||control.checkpoint().is_err()||self.selected_advance_work_demand(body).is_ok_and(|next|next>left)){
+    return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(total)),work})
+   }
    match self.advance_once(control,witness,body,maximum_work_units,g,rem,left){
     Pending{work:pending}=>return if first{Pending{work:pending}}else{Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(total)),work:work+pending})},
     Complete(turn)=>{

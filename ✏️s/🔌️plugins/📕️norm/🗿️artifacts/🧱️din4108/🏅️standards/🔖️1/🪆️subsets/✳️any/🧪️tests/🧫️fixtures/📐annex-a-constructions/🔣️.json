@@ -1,0 +1,462 @@
+{
+  "attic": [
+    {
+      "inputs": [
+        100,
+        0.2,
+        2,
+        100,
+        10,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        100,
+        0.199,
+        2,
+        100,
+        10,
+        0.2
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        2.001,
+        100,
+        10,
+        0.2
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        2,
+        100,
+        9.999,
+        0.2
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        2,
+        100,
+        10,
+        0.20001
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        25,
+        1500,
+        10,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        25.001,
+        1500,
+        10,
+        0.2
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        24,
+        1499.999,
+        10,
+        0.2
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        90,
+        0.18,
+        0,
+        0,
+        10,
+        0
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        90,
+        0,
+        0,
+        0,
+        10,
+        0
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        0,
+        0,
+        0,
+        0,
+        10,
+        0
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        100,
+        -0.1,
+        0,
+        0,
+        10,
+        0.1
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        -0.01,
+        100,
+        10,
+        0.1
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        0,
+        100,
+        10,
+        1.01
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        0,
+        -3,
+        10,
+        0.1
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        100,
+        0.2,
+        0,
+        100,
+        -1,
+        0.1
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        50,
+        0.1,
+        2,
+        1499.999,
+        10,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        50,
+        0.1,
+        2,
+        1500,
+        10,
+        1.0
+      ],
+      "outcome": false
+    }
+  ],
+  "slab": [
+    [
+      0,
+      false
+    ],
+    [
+      19.99,
+      false
+    ],
+    [
+      20,
+      true
+    ],
+    [
+      50,
+      true
+    ],
+    [
+      -0.01,
+      null
+    ]
+  ],
+  "perimeter": [
+    [
+      0,
+      true
+    ],
+    [
+      0.199,
+      true
+    ],
+    [
+      0.2,
+      true
+    ],
+    [
+      0.20001,
+      false
+    ],
+    [
+      1,
+      false
+    ],
+    [
+      1.001,
+      null
+    ],
+    [
+      -0.01,
+      null
+    ]
+  ],
+  "wall": [
+    [
+      0,
+      1,
+      null
+    ],
+    [
+      -0.01,
+      0.5,
+      null
+    ],
+    [
+      0.25,
+      null,
+      true
+    ],
+    [
+      0.5,
+      null,
+      true
+    ],
+    [
+      0.50001,
+      null,
+      null
+    ],
+    [
+      0.50001,
+      0.49999,
+      false
+    ],
+    [
+      0.50001,
+      0.5,
+      true
+    ],
+    [
+      0.75,
+      -0.01,
+      null
+    ],
+    [
+      1,
+      0.5,
+      true
+    ],
+    [
+      1,
+      0.499,
+      false
+    ],
+    [
+      1.00001,
+      null,
+      false
+    ],
+    [
+      8,
+      100,
+      false
+    ]
+  ],
+  "roof_table3": [
+    {
+      "inputs": [
+        0.0,
+        1,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        0.1,
+        1,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        0.1,
+        0.999,
+        0.2
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        0.1001,
+        1.999,
+        0.1
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        0.1001,
+        2,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        0.3,
+        2,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        0.3001,
+        1.9,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        0.3001,
+        1.8005,
+        0.2
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        1.25,
+        7.5,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        1.25,
+        7.4999,
+        0.2
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        2,
+        12,
+        0.2
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        2.0001,
+        30,
+        0.1
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        0.3,
+        2,
+        0.2001
+      ],
+      "outcome": false
+    },
+    {
+      "inputs": [
+        0.4,
+        3,
+        0
+      ],
+      "outcome": true
+    },
+    {
+      "inputs": [
+        -0.001,
+        15,
+        0.2
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        0.2,
+        -1,
+        0.2
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        0.2,
+        15,
+        -0.1
+      ],
+      "outcome": null
+    },
+    {
+      "inputs": [
+        0.2,
+        15,
+        1.1
+      ],
+      "outcome": null
+    }
+  ]
+}

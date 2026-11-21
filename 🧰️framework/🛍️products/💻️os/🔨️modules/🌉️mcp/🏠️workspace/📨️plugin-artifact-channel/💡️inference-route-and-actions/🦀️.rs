@@ -7,11 +7,16 @@ use super::*;
 impl PluginArtifactChannel {
     /// 🔁️ Lends the headless host root one admission turn at a time to `step` until it reports settled; Pending keeps the caller's state and an unchanged outcome over 65536 consecutive turns is a typed refusal; every Pending turn yields to the caller's executor.
     async fn drive_origin(&mut self,what:&str,mut step:impl FnMut(&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>)->Result<(),Fault>{
-        use semio_plugin_host::GuestRelayAdmissionCall;
+        use semio_plugin_host::{GuestRelayAdmissionCall, GuestRelayWakeDriver};
+        if self.inference_origin_driver.is_none() {
+            self.inference_origin_driver = Some(GuestRelayWakeDriver::new(self.host_driver_policy, semio_framework_job::default_now_us, Box::new(|| false))
+                .map_err(|error| Self::not_wired(what, error))?);
+        }
+        let driver = self.inference_origin_driver.as_ref().expect("inference origin driver admitted");
         for _ in 0..65536u32{
             let mut settled=false;
-            let turn=self.host_driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:step(cx).map(|done|{settled=done;}),execution:None});
-            match turn{Ok(_) if settled=>return Ok(()),Ok(_)=>semio_framework_async::yield_once().await,Err(error)=>{let fault=Self::not_wired(what,format!("{error:?}"));self.startup_failure=Some(error);return Err(fault)}}
+            let turn=driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:step(cx).map(|done|{settled=done;}),execution:None});
+            match turn{Ok(_) if settled=>return Ok(()),Ok(_)=>semio_framework_async::yield_once().await,Err(error)=>return Err(Self::not_wired(what,format!("{error:?}")))}
         }
         Err(Self::budget_fault(what))
     }
@@ -64,9 +69,7 @@ impl PluginArtifactChannel {
             .cloned()
             .collect();
         let roster_bytes = semio_framework_pack_json::to_json_string(&roster).into_bytes();
-        let policy=self.operation_policy;
-        let reserve=policy.cleanup;
-        let caps=semio_plugin_host::GuestRelayOperationCaps::project(self.host_driver_policy,semio_plugin_host::GuestRelayOperationReserve{retained:reserve.retained,work_fuel:reserve.work_fuel,execution_fuel:reserve.execution_fuel,maximum_microseconds:reserve.maximum_microseconds},semio_plugin_host::GuestRelayOperationTransit{retained:policy.transit.retained,work_fuel:policy.transit.work_fuel},semio_plugin_host::GuestRelayOperationInfrastructure{retained:policy.infrastructure.retained,work_fuel:policy.infrastructure.work_fuel,maximum_cleanup_microseconds:policy.infrastructure.maximum_cleanup_microseconds});
+        let caps=self.operation_caps();
         let requested=semio_plugin_host::GuestRelayOperationRequest{work_units:command.work_units,maximum_elapsed_microseconds:command.maximum_elapsed_milliseconds.saturating_mul(1000),retained:command.retained_policy};
         let request_bytes=semio_framework_pack_json::to_json_string(&request).into_bytes();
         let cancel=command.cancel.0.clone();
@@ -85,6 +88,7 @@ impl PluginArtifactChannel {
         };
         drop(router);
         let closed=self.drive_origin("inference origin retirement",|cx|semio_plugin_host::origin_registry::close_step(identity,&runtime,&compiled,cx)).await;
+        if closed.is_ok() { self.close_inference_origin_source(); }
         let result_bytes=match(result,closed){(Ok(bytes),Ok(()))=>bytes,(Err(fault),Ok(()))=>return Err(fault),(Ok(_),Err(fault))=>return Err(fault),(Err(mut fault),Err(close))=>{fault.message=format!("{}; {}",fault.message,close.message);return Err(fault)}};
         let result_text = std::str::from_utf8(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))?;
         semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Self::not_wired("decoding the inference result", error))

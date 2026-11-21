@@ -8,7 +8,7 @@ _s = _u.spec_from_file_location("kit", _o.path.join(_o.path.dirname(_o.path.absp
 K = _u.module_from_spec(_s)
 _s.loader.exec_module(K)
 
-AREAS = {"chassis": 38, "engine-bay": 4.8, "drum-drive": 2.6, "tyres": 27, "brakes": 6.2}
+AREAS = {"chassis": 38, "engine-bay": 4.8, "drum-drive": 2.6, "tyres": 32.27, "brakes": 6.2}
 NEW_REGIONS = [
     ("running-gear", {"en": "Axles, springs, rims and fenders", "de": "Achsen, Federn, Felgen und Kotflügel"}, 40, 1.0),
     ("superstructure", {"en": "Mixer subframe, pedestals, rear frame, water tank and ladder", "de": "Mischer-Hilfsrahmen, Lagerböcke, Heckrahmen, Wassertank und Leiter"}, 24, 1.2),
@@ -21,6 +21,18 @@ NOTES = {
     "en": "A 9 m3 truck mixer on an 8x4 heavy chassis (about 13.5 t unladen, 32 t gross, 330 kW diesel). Chassis geometry follows the MAN TGS 8x4 BB class (front overhang 1.475 m, axle spacing 1.795 + 2.505 + 1.400 m, 315/80 R 22.5 tyres, twin tyres on both rear axles), the mixer body the Liebherr HTM 905 class (drum of 16 m3 geometric capacity, diameter 2.3 m, 11 degree axis, 2.54 m above the chassis frame, so 3.65 m overall); the remaining machine numbers are authored estimates of that class, the width respects the 2.55 m limit of Directive 96/53/EC (mirrors excluded). The drum rotation is shown by a flight pattern that drifts along the drum axis (the rotation axis lies in the drawing plane); in transit the swivel chute is swung 90 degrees to the right and its folding section lies folded back on it, two loose extension chutes ride on the rear mudguards.",
     "de": "Ein 9-m3-Fahrmischer auf schwerem 8x4-Fahrgestell (etwa 13,5 t leer, 32 t Gesamtgewicht, 330-kW-Diesel). Die Fahrgestellgeometrie folgt der Klasse MAN TGS 8x4 BB (vorderer Überhang 1,475 m, Achsabstände 1,795 + 2,505 + 1,400 m, Reifen 315/80 R 22,5, Zwillingsreifen an beiden Hinterachsen), der Mischeraufbau der Klasse Liebherr HTM 905 (Trommel mit 16 m3 geometrischem Inhalt, Durchmesser 2,3 m, 11 Grad Achsneigung, 2,54 m über dem Fahrgestellrahmen, also 3,65 m Gesamthöhe); die übrigen Maschinenzahlen sind Schätzungen dieser Klasse, die Breite hält die Grenze von 2,55 m der Richtlinie 96/53/EG ein (ohne Spiegel). Die Trommeldrehung wird durch ein längs der Trommelachse wanderndes Wendelmuster gezeigt (die Drehachse liegt in der Zeichenebene); in Fahrt ist die Schwenkschurre um 90 Grad nach rechts geschwenkt, ihr Klappteil liegt zurückgeklappt darauf, zwei lose Verlängerungsschurren liegen auf den hinteren Kotflügeln.",
 }
+
+
+def tyre_exposure(asset):
+    region=next(r for r in asset["thermal"]["regions"] if r["id"]=="tyres")
+    region["areaM2"]=32.27
+    for pose in asset["poses"]:
+        tyre=pose["thermal"]["regions"]["tyres"]
+        tyre["exposedFraction"]=round(26.71/32.27,6)
+        weight=asset["dimensions"]["massKg"]*9.80665-sum(load.get("fyN",0) for load in pose["loads"] if load["kind"]=="carried")
+        tyre["contact"]["fraction"]=round(weight/(850000*26.71),6)
+    note={"en":"The twelve tyres have 32.27 m² of rubber surface. Their rim-covered bead seats account for 5.56 m². The road contact patch is estimated from the supported weight in each pose and a mean contact pressure of 0.85 MPa.","de":"Die zwölf Reifen haben 32,27 m² Gummioberfläche. Davon liegen 5,56 m² an den Felgensitzen. Die Aufstandsfläche auf der Fahrbahn wird aus der jeweiligen Gewichtskraft und einem mittleren Kontaktdruck von 0,85 MPa geschätzt."}
+    if note not in asset["thermal"]["assumptions"]:asset["thermal"]["assumptions"].append(note)
 
 
 def bone(asset, id):
@@ -100,6 +112,7 @@ def apply(asset):
         pr = p["thermal"]["regions"]
         if "running-gear" not in pr:
             p["thermal"]["regions"] = {k: v for key, val in pr.items() for k, v in ([(key, val)] + ([("running-gear", json.loads(json.dumps(val))), ("superstructure", json.loads(json.dumps(val)))] if key == "chassis" else []))}
+    tyre_exposure(asset)
     for b in asset["rig"]["bones"]:
         if b["id"] == "chute-swivel":
             b["title"] = {"en": "Chute swivel bearing under the discharge funnel", "de": "Schurren-Drehlager unter dem Auslauftrichter"}

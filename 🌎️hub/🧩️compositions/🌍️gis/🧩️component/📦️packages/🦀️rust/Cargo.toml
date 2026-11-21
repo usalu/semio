@@ -19,6 +19,7 @@ component-kind = "plugin"
 
 [[package.metadata.semio.playground]]
 variant = "gis2d"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🗺️map.json"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 mcpHost = { cratePath = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust", project = "@semio-tech/s-gis-services-native", package = "semio-s-dev-gis-services", binary = "semio-s-gis-services-mcp", target = "mcp-build" }
 nativeHost = { cratePath = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust", project = "@semio-tech/s-gis-services-native", package = "semio-s-dev-gis-services", binary = "semio-s-gis-services-native", target = "native-build" }
@@ -29,6 +30,7 @@ engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/�
 
 [[package.metadata.semio.playground]]
 variant = "gis3d"
+devContribution = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🏔️terrain.json"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 aliases = ["gis 3d"]
 app = "s.gis.gisterrain@1/*#editor"

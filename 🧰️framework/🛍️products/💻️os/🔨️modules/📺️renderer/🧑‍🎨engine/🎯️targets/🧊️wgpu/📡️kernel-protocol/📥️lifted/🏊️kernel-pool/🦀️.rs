@@ -12,7 +12,7 @@ pub struct KernelRequestQueue {
     pub state: Mutex<KernelRequestQueueState>,
 }
 
-struct KernelRequestQueueState {
+pub struct KernelRequestQueueState {
     slots: Box<[Option<(KernelRequest, Arc<ResponseSlot>)>; KERNEL_REQUEST_QUEUE_CAPACITY]>,
     read: usize,
     write: usize,

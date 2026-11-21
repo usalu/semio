@@ -2,8 +2,8 @@
 
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
-use semio_plugin::ArtifactView;
-use semio_framework::MediaPayload;
+use semio_plugin::{ArtifactEditor, ArtifactView};
+use semio_framework::{MediaError, MediaPayload};
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_pointer_up_direct_pick_selects_inline() {
@@ -27,7 +27,7 @@ async fn set_selected_opacity_reads_the_framework_interaction_selection() {
     let id = first_layer_id(&app);
     let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": id })]).unwrap();
     let admission = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("select");
-    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.expect("selection publication settles");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission, app.1.cx()).await.expect("selection publication settles");
     assert_eq!(selected_strokes(&app).await, vec![id.clone()], "the retained opacity command reads the framework-owned selection published for its canvas window");
     let (result, receipt) = settled(&mut app, DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &meta).await;
     assert!(result.mutations.is_empty(), "the migrated route retains its operation until publication");
@@ -67,14 +67,14 @@ async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() 
         for terminology in [semio_ui_locale::Terminology::Native,semio_ui_locale::Terminology::Reuse] {
             for row in law["cases"].as_array().unwrap() {
                 let (mut app,mut meta)=inline_selection_app().await;
-                let view=meta.view_state.as_mut().unwrap();view.locale=locale;view.terminology=terminology;
+                let view=std::sync::Arc::make_mut(meta.view_state.as_mut().unwrap());view.locale=locale;view.terminology=terminology;
                 let layers=(0..row["layers"].as_u64().unwrap()).map(|index|{let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Status")).to_string().into()).expect("nonempty authored identity"), "Status");semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).id=format!("layer-{index}").into();layer}).collect::<Vec<_>>();
                 let snapshot=DrawingSnapshot{id:"selection-status".into(),layers:layers.into_iter().collect(),..Default::default()};load_drawing_fixture(&mut app,&snapshot);
                 for (step,selection) in row["selections"].as_array().unwrap().iter().enumerate() {
                     let targets=selection.as_array().unwrap().iter().map(|index|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":format!("layer-{}",index.as_u64().unwrap())})).collect::<Vec<_>>();
                     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":serde_json::to_string(&targets).unwrap(),"merge":"replace","method":"pick"}));
                     let admission=semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
-                    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
+                    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission, app.1.cx()).await.unwrap();
                     assert_eq!(selected_strokes(&app).await.len(),selection.as_array().unwrap().len());
                     let engagements=app.window_engagements(meta.view_state.as_ref().unwrap()).await;
                     let engagement=engagements.get("drawing-canvas").expect("addressed canvas chrome");

@@ -142,6 +142,38 @@ pub fn check_fire(
             format!("μ_0 = {mu0:.3} gives θ_cr = {theta_cr:.0} °C; {tag_en}"),
             format!("μ_0 = {mu0:.3} ergibt θ_cr = {theta_cr:.0} °C; {tag_de}"), theta / theta_cr.max(1.0)),
     ];
+    let expansion = CheckResult::assess(format!("en1999.1-2.fire.thermal-elongation.{}", fire.id), "DIN EN 1999-1-2",
+        cl("3.3.1.1"), subject.clone(), loc("Free thermal elongation of the member", "Freie Wärmedehnung des Bauteils")).annex(annex);
+    out.push(match part_1_2::thermal_elongation(theta) {
+        Some(strain) => {
+            let length_change = member.length * strain;
+            expansion.minimum(q_length(length_change), q_length(length_change.min(0.0)))
+                .status(semio_s_plugin_norm_compliance::CheckStatus::Info)
+                .explanation(loc(&format!("At {theta:.1} °C, Δl/l = {strain:.6} and Δl = {:.2} mm for a reference length of {:.2} m at 20 °C.", length_change * 1e3, member.length),
+                    &format!("Bei {theta:.1} °C gilt Δl/l = {strain:.6} und Δl = {:.2} mm für eine Bezugslänge von {:.2} m bei 20 °C.", length_change * 1e3, member.length))).build()
+        }
+        None => expansion.not_applicable(loc("The fire elongation equation applies above 0 °C and below 500 °C.",
+            "Die Gleichung zur Wärmedehnung im Brandfall gilt oberhalb von 0 °C und unterhalb von 500 °C.")).build(),
+    });
+    let needs_creep = part_1_2::transient_creep_requires_model(fire.duration_s, |seconds| {
+        let uniform = temperature_at(seconds);
+        if field.as_ref().is_some_and(|f| f.theta_max > 170.0) {
+            part_1_2::temperature_field(section, alloy.f_o_pa, alloy.buckling_class_a, fire.theta_a, seconds, uniform)
+                .map_or(uniform, |f| uniform.max(f.theta_max))
+        } else {
+            uniform
+        }
+    });
+    let creep = CheckResult::assess(format!("en1999.1-2.fire.transient-creep.{}", fire.id), "DIN EN 1999-1-2",
+        cl("4.3.3"), subject.clone(), loc("Transient thermal creep in advanced analysis", "Instationäres Temperaturkriechen bei erweiterten Verfahren")).annex(annex);
+    out.push(if needs_creep {
+        creep.not_applicable(loc("The estimated metal temperature exceeds 170 °C for more than 30 min. Advanced resistance analysis requires explicit transient creep modeling.",
+            "Die geschätzte Metalltemperatur überschreitet 170 °C länger als 30 min. Ein erweitertes Rechenverfahren erfordert die ausdrückliche Berücksichtigung des instationären Kriechens.")).build()
+    } else {
+        creep.status(semio_s_plugin_norm_compliance::CheckStatus::Info)
+            .explanation(loc("The estimated metal temperature stays outside the combined limit of more than 30 min above 170 °C.",
+                "Die geschätzte Metalltemperatur erreicht die kombinierte Grenze von mehr als 30 min oberhalb von 170 °C nicht.")).build()
+    });
     if let Some(f) = &field {
         let en = format!("Strip temperatures from {:.0} °C to {:.0} °C after {:.0} min (uniform member temperature {theta:.0} °C): the strength retained is {:.0} % in tension and compression, {:.0} % about y and {:.0} % about z of the uniform estimate; the fire resistances above already contain these factors (EN 1999-1-2 Table 3.1 unverified)", f.theta_min, f.theta_max, fire.duration_s / 60.0, f.n_ratio * 100.0, f.m_y_ratio * 100.0, f.m_z_ratio * 100.0);
         let de = format!("Streifentemperaturen von {:.0} °C bis {:.0} °C nach {:.0} min (einheitliche Bauteiltemperatur {theta:.0} °C): die verbleibende Festigkeit beträgt {:.0} % bei Zug und Druck, {:.0} % um y und {:.0} % um z der einheitlichen Schätzung; die obigen Feuerwiderstände enthalten diese Faktoren bereits (EN 1999-1-2 Tabelle 3.1 ungeprüft)", f.theta_min, f.theta_max, fire.duration_s / 60.0, f.n_ratio * 100.0, f.m_y_ratio * 100.0, f.m_z_ratio * 100.0);

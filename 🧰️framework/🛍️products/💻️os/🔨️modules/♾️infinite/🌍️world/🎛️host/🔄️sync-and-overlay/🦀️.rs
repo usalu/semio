@@ -285,10 +285,13 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
 
 pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
     state.session.bounds = bounds;
+    state.terrain.set_terrain_json(scene.world_3d.as_ref().and_then(|world| world.terrain_json.as_deref()));
+    state.terrain.set_terrain_interaction(scene.world_3d.as_ref().and_then(|world| world.interaction_json.as_deref()));
     let Some(world) = scene.world_3d.as_ref() else {
         state.session.snapshot_fault = Some(World3dSnapshotFault::Unavailable);
         return;
     };
+    state.terrain.sync_terrain_camera_frame(&world.camera_json);
     state.session.bound_domain_id = world.domain_id.clone();
     state.session.bound_domain_granularity_id = world.domain_granularity_id.clone();
     state.session.presentation = world3d_presentation(world.presentation_json.as_deref());
@@ -360,7 +363,7 @@ pub fn world3d_tool_run_trace_cursor(trace_state: &WorldTraceState) -> Option<se
 /// 🧭️ Every `(window instance, cursor)` echo the given world surfaces owe their view state — surfaces without
 /// a bound window or without an applied trace lane echo nothing.
 pub fn world3d_tool_run_trace_cursors<'a>(states: impl IntoIterator<Item = &'a World3dState>) -> HashMap<String, semio_framework_tool_run::ToolRunTraceCursor> {
-    states.into_iter().filter_map(|state| Some((state.trace.tool_run_trace_window_id.clone()?, state.trace.tool_run_trace.cursor()?))).collect()
+    states.into_iter().filter_map(|state| Some((state.session.window_instance_id.clone()?, state.trace.tool_run_trace.cursor()?))).collect()
 }
 
 /// 🎨️ Appends the trace layer's instanced `(mesh, verdict)` draws; a mesh index with no published mesh
@@ -397,7 +400,8 @@ pub(super) fn append_tool_run_trace_draws(session_state: &mut WorldSessionState,
 pub fn apply_runtime_draw_flags(selection_state: &mut WorldSelectionState, interaction_state: &mut WorldInteractionState, scene_state: &mut WorldSceneState) {
     let granularity = selection_state.granularity.clone();
     let component_ids: HashSet<String> = selection_state.component_ids.iter().cloned().collect();
-    let local_hover_id = selection_state.local_hover_id.clone();
+    let projected_hover_ids = selection_state.projected_instance_hovers();
+    let local_hover_id = selection_state.local_hover_id.as_deref();
     let hovered_component_object_id = selection_state.hovered_component_object_id.clone();
     let selected_ids: HashSet<String> = selection_state.selected_ids.iter().cloned().collect();
     let interaction_ids = interaction_state.instance_interaction_ids.clone();
@@ -414,9 +418,12 @@ pub fn apply_runtime_draw_flags(selection_state: &mut WorldSelectionState, inter
         for instance in &mut draw.instances {
             let mesh_selected = granularity == "mesh" && object_index_map.get(&instance.id).is_some_and(|object_index| component_ids.contains(&object_index.to_string()));
             let target_id = interaction_ids.get(&instance.id).map_or(instance.id.as_str(), String::as_str);
-            let local_hovered = if component_mode { false } else { local_hover_id.as_deref() == Some(instance.id.as_str()) || local_hover_id.as_deref() == Some(target_id) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()) };
+            let instance_hovered = projected_hover_ids.map_or_else(
+                || local_hover_id == Some(instance.id.as_str()) || local_hover_id == Some(target_id) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()),
+                |ids| ids.contains(&instance.id),
+            );
             let local_selected = selected_ids.contains(&instance.id) || selected_ids.contains(target_id) || mesh_selected;
-            instance.hovered = local_hovered;
+            instance.hovered = !component_mode && instance_hovered;
             instance.selected = local_selected;
         }
     }

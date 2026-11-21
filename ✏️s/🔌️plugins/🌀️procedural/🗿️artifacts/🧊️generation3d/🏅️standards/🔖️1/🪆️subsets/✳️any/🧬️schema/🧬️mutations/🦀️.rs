@@ -136,17 +136,17 @@ pub fn generation3d_widget_removal(host_snapshot: &FlowHostSnapshot, id: &str) -
 
 /// 👆️ The leaves that delete a selection of wires and widgets: every selected wire is cut first, then every selected widget
 /// goes with the wires it still holds; an id the document does not hold is skipped and no wire is cut twice.
-pub fn generation3d_selection_removal(host_snapshot: &FlowHostSnapshot, selected: &[String]) -> Vec<Generation3dMutation> {
+pub fn generation3d_selection_removal(host_snapshot: &FlowHostSnapshot, selected_widgets: &[String], selected_wires: &[String]) -> Vec<Generation3dMutation> {
     let mut cut: Vec<String> = Vec::new();
     let mut leaves = Vec::new();
-    for id in selected {
+    for id in selected_wires {
         if synapse_index(host_snapshot, id).is_some() && !cut.contains(id) {
             cut.push(id.clone());
             leaves.push(Generation3dMutation::DisconnectSynapse(semio_s_artifact_procedural_3d_mut_synapses::disconnect_synapse::DisconnectSynapse { id: id.clone() }));
         }
     }
     let mut removed: Vec<&String> = Vec::new();
-    for id in selected {
+    for id in selected_widgets {
         if removed.contains(&id) {
             continue;
         }

@@ -1,5 +1,24 @@
 syntax = "proto3";
 package semio.s.norm_eurocode.en1998;
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
+}
+
 message En1998Artifact {
   // @state artifact
   string annex = 1;
@@ -45,6 +64,8 @@ message En1998Artifact {
   repeated En1998PierBase pier_bases = 21;
   // @state artifact
   repeated En1998CriticalRegion critical_regions = 22;
+  // @state artifact
+  repeated CaseRow cases = 23;
 }
 message En1998Site {
   double s_ap_r = 1;

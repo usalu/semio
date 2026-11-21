@@ -63,6 +63,11 @@ pub async fn replay_sync_state_retained(
                         head_edit_id = wal_command_id(bytes, &mut decode_control)?;
                         head_seq = head_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello head sequence"))?;
                     }
+                    Ok(db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::Outbox(bytes))) => {
+                        if let Some(group) = super::replica_sync_protocol::decode_atomic_wal_descriptor(bytes)? {
+                            head_edit_id = group.edit_id;
+                        }
+                    }
                     Ok(db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::SnapshotPub { frontier, .. })) => floor_head_seq = frontier.head_seq,
                     Ok(db_wal_log::WalCommittedRecordStep::Record(_)) => {}
                     Ok(db_wal_log::WalCommittedRecordStep::Yield) => {
@@ -248,6 +253,11 @@ async fn database_sync_hello_tail_reader(
                 }
                 Err(error) => return Err(error),
             };
+            let transaction_start = head_seq;
+            let prior_hash = *chain.clone().finalize().as_bytes();
+            let might_reach_replica = transaction_start.saturating_add(protocol::DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES as u64) > replica_head;
+            let mut transaction_rows = Vec::new();
+            let mut atomic_edit = None;
             loop {
                 transaction.replenish(std::time::Instant::now() + std::time::Duration::from_millis(DATABASE_SYNC_HELLO_TURN_MS), DATABASE_SYNC_HELLO_MAX_ITEMS)?;
                 decode_control.renew_step()?;
@@ -256,10 +266,15 @@ async fn database_sync_hello_tail_reader(
                     Ok(db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::Command(bytes))) => {
                         head_seq = head_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello tail head sequence"))?;
                         chain.update(&bytes.hash());
-                        if head_seq > replica_head {
-                            let envelope = decode_wal_command(bytes, &mut decode_control)?;
-                            head_edit_id.clone_from(&envelope.mutation_id.0);
-                            envelopes.push(envelope);
+                        if might_reach_replica || head_seq > replica_head {
+                            transaction_rows.push((head_seq, decode_wal_command(bytes, &mut decode_control)?));
+                        }
+                    }
+                    Ok(db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::Outbox(bytes))) => {
+                        if let Some(group) = super::replica_sync_protocol::decode_atomic_wal_descriptor(bytes)? {
+                            if atomic_edit.replace(group).is_some() {
+                                return Err(DbError::Corrupt("hello tail repeats an atomic WAL descriptor".into()));
+                            }
                         }
                     }
                     Ok(db_wal_log::WalCommittedRecordStep::Record(_)) => {}
@@ -281,12 +296,39 @@ async fn database_sync_hello_tail_reader(
             }
             transaction.finish()?;
             commit_seq = commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("database sync hello tail commit sequence"))?;
-            if envelopes.len() >= DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES || (head_seq >= end_head_seq && !envelopes.is_empty()) {
+            if let Some(group) = atomic_edit {
+                if head_seq <= replica_head { continue; }
+                if !envelopes.is_empty() {
+                    let prior = (transaction_start, std::mem::take(&mut head_edit_id), commit_seq - 1, prior_hash);
+                    DatabaseSyncHelloTailSlotFree(&handoff).await;
+                    database_sync_hello_control(&cancelled, &expired)?;
+                    handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page = Some((std::mem::take(&mut envelopes), prior));
+                }
+                let rows: Vec<_> = transaction_rows.into_iter().map(|(_, row)| row).collect();
+                if !group.admits(&rows) {
+                    return Err(DbError::Corrupt("hello tail cannot recover the whole authored edit".into()));
+                }
                 let frame_commit_seq = if head_seq >= end_head_seq { end_commit_seq } else { commit_seq };
-                let frontier = (head_seq, std::mem::take(&mut head_edit_id), frame_commit_seq, *chain.finalize().as_bytes());
+                let frontier = (head_seq, group.edit_id, frame_commit_seq, *chain.finalize().as_bytes());
                 DatabaseSyncHelloTailSlotFree(&handoff).await;
                 database_sync_hello_control(&cancelled, &expired)?;
-                handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page = Some((std::mem::take(&mut envelopes), frontier));
+                handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page = Some((rows, frontier));
+            } else {
+                for (ordinal, row) in transaction_rows {
+                    if ordinal <= replica_head { continue; }
+                    if row.transaction.as_ref().is_some_and(|tx| protocol::atomic_group::is_atomic_backbone_tool(&tx.tool)) {
+                        return Err(DbError::Corrupt("hello tail lost its atomic WAL descriptor".into()));
+                    }
+                    head_edit_id.clone_from(&row.mutation_id.0);
+                    envelopes.push(row);
+                }
+                if envelopes.len() >= DATABASE_SYNC_HELLO_TAIL_FRAME_ENVELOPES || (head_seq >= end_head_seq && !envelopes.is_empty()) {
+                    let frame_commit_seq = if head_seq >= end_head_seq { end_commit_seq } else { commit_seq };
+                    let frontier = (head_seq, std::mem::take(&mut head_edit_id), frame_commit_seq, *chain.finalize().as_bytes());
+                    DatabaseSyncHelloTailSlotFree(&handoff).await;
+                    database_sync_hello_control(&cancelled, &expired)?;
+                    handoff.lock().unwrap_or_else(std::sync::PoisonError::into_inner).page = Some((std::mem::take(&mut envelopes), frontier));
+                }
             }
             turn.step().await;
         }

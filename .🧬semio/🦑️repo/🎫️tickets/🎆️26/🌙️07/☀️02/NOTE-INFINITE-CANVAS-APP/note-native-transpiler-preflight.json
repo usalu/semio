@@ -1,0 +1,69 @@
+{
+  "schema": "component-driver.native-transpile-preflight.v1",
+  "cases": [
+    {
+      "facet": "browser",
+      "mode": "prototype",
+      "platform": "darwin",
+      "deployable": true,
+      "existing": "release",
+      "steps": [
+        "preflight",
+        "compiler"
+      ]
+    },
+    {
+      "facet": "browser",
+      "mode": "release",
+      "platform": "linux",
+      "deployable": true,
+      "existing": "prototype",
+      "steps": [
+        "preflight",
+        "compiler"
+      ]
+    },
+    {
+      "facet": "browser",
+      "mode": "prototype",
+      "platform": "win32",
+      "deployable": true,
+      "existing": "override",
+      "steps": [
+        "preflight",
+        "compiler"
+      ]
+    },
+    {
+      "facet": "model",
+      "mode": "prototype",
+      "platform": "linux",
+      "deployable": true,
+      "existing": "none",
+      "steps": [
+        "compiler"
+      ]
+    },
+    {
+      "facet": "browser",
+      "mode": "prototype",
+      "platform": "darwin",
+      "deployable": false,
+      "existing": "none",
+      "steps": [
+        "compiler"
+      ]
+    },
+    {
+      "facet": "browser",
+      "mode": "prototype",
+      "platform": "win32",
+      "deployable": true,
+      "existing": "none",
+      "fail": true,
+      "steps": [
+        "preflight"
+      ]
+    }
+  ]
+}

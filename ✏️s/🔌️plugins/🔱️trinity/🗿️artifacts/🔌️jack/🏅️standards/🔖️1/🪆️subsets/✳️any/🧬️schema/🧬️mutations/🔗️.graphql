@@ -1,6 +1,8 @@
 # 🧬️ Jack direct mutation aggregate.
 input SetQueryInput { value: String! }
+input SetRootInput { value: String }
 
 input JackMutationInput {
   setQuery: SetQueryInput
+  setRoot: SetRootInput
 }

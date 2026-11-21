@@ -13,6 +13,7 @@ use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::win
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::Fem2dMountedVisualLease;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::Fem2dVisualFreshness;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::Fem2dVisualJob;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::FemVisualState;
 use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::RegionVisualQuality;
 use semio_s_fem_mesh::MeshJob;
@@ -81,12 +82,16 @@ mod model_build_close;
 #[path = "🗂️mounted-state-and-preparation/🦀️.rs"]
 mod mounted_state_and_preparation;
 use mounted_state_and_preparation::{
-    child_end, session_child_failure, session_pending, ChildEnd, MountedState,
+    child_end, publish_visual_field, session_child_failure, session_pending, ChildEnd, MountedState,
     SESSION_CLOSE_COPY_BYTES, SESSION_CLOSE_DEPTH, SESSION_CLOSE_RELEASE_BYTES,
 };
 
 #[path = "🔁️mounted-state-step/🦀️.rs"]
 mod mounted_state_step;
+
+#[path = "🎼️eigen-stages/🦀️.rs"]
+mod eigen_stages;
+use eigen_stages::MountedEigen;
 
 #[path = "🧹️mounted-state-close/🦀️.rs"]
 mod mounted_state_close;
@@ -103,7 +108,7 @@ mod job_bridge_and_live_mount;
 #[cfg(test)]
 use job_bridge_and_live_mount::{decode_input, encode_input};
 pub use job_bridge_and_live_mount::{
-    close_demands, close_step, initialize, maintenance_step, prepare_snapshot_read, reconcile,
+    close_demands, close_step, initialize, maintenance_demands, maintenance_pending, maintenance_step, prepare_snapshot_read, reconcile,
     terminal_is_empty, with_live_visual, with_live_fields, MountedFieldsView, retain_result_windows, source_version,
 };
 #[cfg(test)]

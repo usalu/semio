@@ -12,14 +12,191 @@ fn funded<T>(caller:&mut OriginalJobFixtureCaller,grant:RetainedCloneGrant,run:i
 }
 
 #[test]
+fn bounded_actor_input_admission_uses_multiple_paid_steps_before_returning() {
+    with_input_decode_stack(check_bounded_actor_input);
+}
+
+fn with_input_decode_stack(check: fn()) {
+    let stack_mib = if cfg!(debug_assertions) { 16 } else { 8 };
+    let checked = std::thread::Builder::new()
+        .stack_size(stack_mib * 1024 * 1024)
+        .spawn(check)
+        .unwrap()
+        .join();
+    if let Err(failure) = checked {
+        std::panic::resume_unwind(failure);
+    }
+}
+
+fn check_bounded_actor_input() {
+    let rows: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🔁️persistent-local/📊️actor-input.json")).unwrap();
+    let poll = rows.as_array().unwrap().iter().find(|row| {
+        row["valid"] == true && row["wire"]["Poll"]["events"][0].get("instanceOpen").is_some()
+    }).unwrap();
+    let wire = serde_json::to_vec(&poll["wire"]).unwrap();
+    let expected_events = poll["wire"]["Poll"]["events"].as_array().unwrap().len();
+    let expected_open = &poll["wire"]["Poll"]["events"][0]["instanceOpen"];
+    let stock = RetainedCloneGrant { maximum_items: 1_000_000, maximum_copy_bytes: 32_000_000, maximum_capacity_bytes: 32_000_000, maximum_release_bytes: 32_000_000, maximum_depth: 128 };
+    let grant = RetainedCloneGrant { maximum_items: 256, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+    let initial = RetainedCloneGrant { maximum_copy_bytes: 131_072, maximum_capacity_bytes: 131_072, ..grant };
+    let calls = [true, false].map(|batch| {
+        let mut caller = OriginalJobFixtureCaller::admit(OperationId(945), Generation(2), stock, clock, 100_000_000, 10_000_000);
+        caller.retain_dispatch().unwrap();
+        let table = OriginalJobFixtureCaller::table_birth();
+        let short = RetainedCloneGrant { maximum_items: table.maximum_items - 1, ..table };
+        for _ in 0..4 {
+            assert!(!funded(&mut caller, short, |cx| Ok(cx.admit_original_return_table()?)));
+        }
+        assert_eq!(caller.receipt(), RetainedCloneProgress::default());
+        assert_eq!(caller.admit_return_table(), table.maximum_capacity_bytes);
+        let mut receiver = OriginalActorInputReceiving::new(
+            OriginalNativeDecodePolicy { maximum_owned_bytes: stock.maximum_capacity_bytes },
+            JsonReadLimits { maximum_bytes: wire.len() as u64, maximum_allocation_bytes: stock.maximum_capacity_bytes, maximum_depth: 64, maximum_items: 100_000 },
+        );
+        let mut checked_capacity = false;
+        let first_ready = (1..1000u32).find(|step| {
+            let turn_grant = if checked_capacity { grant } else { initial };
+            let admission = funded(&mut caller, turn_grant, |cx| {
+                if batch { receiver.advance_in_turn(&wire, cx) }
+                else { receiver.advance((!receiver.input_returned()).then_some(wire.as_slice()), cx) }
+            });
+            assert!(matches!(admission, InputAdmission::Pending | InputAdmission::Ready), "step {step}, batch {batch}, phase {:?}, value {:?}, receiving {:?}, settlement {:?}", receiver.decoder.receiver().map(|decoder| decoder.phase()), receiver.outcome().and_then(|raw| raw.value.as_ref().err()).map(|error| match error {
+                OriginalJsonOutputFailure::Refused(error) => error.message.as_ref(),
+                OriginalJsonOutputFailure::Stored(_) => receiver.decoder.failure().and_then(|failure| failure.primary().primary.as_ref().or(failure.primary().quote_refusal.as_ref()).or(failure.primary().allocation_refusal.as_ref())).map_or("stored", |error| error.message.as_ref()),
+            }), receiver.outcome().and_then(|raw| receiver.refusal(raw)).map(|error| error.primary.message()), receiver.settlement.as_ref().and_then(ControlledRetirement::original).and_then(|raw| raw.value.as_ref().err()).map(|error| error.message.as_ref()));
+            if !checked_capacity {
+                if let Some(demand) = receiver.decoder.receiver().and_then(|decoder| decoder.demands(&wire, grant.maximum_copy_bytes, u64::MAX).ok()).filter(|demand| demand.capacity_bytes > initial.maximum_capacity_bytes) {
+                    let exact = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes, ..grant };
+                    let short = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..exact };
+                    assert_eq!(funded(&mut caller, short, |cx| receiver.advance_in_turn(&wire, cx)), InputAdmission::Pending);
+                    let denied = caller.receipt();
+                    assert_eq!((denied.retained_capacity_bytes, denied.released_bytes), (0, 0));
+                    assert!(denied.copied_items < 32, "a denied decoder quote repeated capture bookkeeping");
+                    assert_eq!(receiver.decoder.receiver().unwrap().demands(&wire, grant.maximum_copy_bytes, u64::MAX).unwrap(), demand);
+                    assert_eq!(funded(&mut caller, exact, |cx| receiver.advance_in_turn(&wire, cx)), InputAdmission::Pending);
+                    assert_eq!(caller.receipt().retained_capacity_bytes, demand.capacity_bytes);
+                    checked_capacity = true;
+                }
+            }
+            admission == InputAdmission::Ready
+        }).expect("actual decoder should return its wire within the finite Source");
+        assert!(checked_capacity);
+        assert!(receiver.input_returned());
+        funded(&mut caller, grant, |cx| receiver.with_poll_step(cx, |poll, _, _| {
+            assert_eq!(poll.events.len(), expected_events);
+            let semio_framework::kernel::Event::InstanceOpen { app_id, actor, config, .. } = &poll.events[0] else { panic!("expected the instance-open event") };
+            assert_eq!(Some(app_id.0.as_str()), expected_open["appId"].as_str());
+            assert_eq!(Some(actor.as_str()), expected_open["actor"].as_str());
+            assert_eq!(config.len(), expected_open["config"].as_array().unwrap().len());
+            Ok(())
+        }));
+        assert!(funded(&mut caller, grant, |cx| cx.with_original_retirement(|cx| receiver.begin_close(None, cx))));
+        for _ in 0..1000 {
+            if receiver.terminal_is_empty() { break; }
+            funded(&mut caller, grant, |cx| cx.with_original_retirement(|cx| receiver.advance(None, cx)));
+        }
+        assert!(receiver.terminal_is_empty());
+        drop(receiver);
+        caller.retire(grant);
+        first_ready
+    });
+    assert!(calls[0] < calls[1], "batched {} turns, single-step {} turns", calls[0], calls[1]);
+}
+
+#[test]
+fn mcp_instance_open_admits_the_descriptor_grant() {
+    with_input_decode_stack(check_mcp_instance_open);
+}
+
+fn check_mcp_instance_open() {
+    let rows: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🔁️persistent-local/📊️actor-input.json")).unwrap();
+    let infrastructure = RetainedCloneGrant {
+        maximum_items: 65_536, maximum_copy_bytes: 16 << 20, maximum_capacity_bytes: 64 << 20,
+        maximum_release_bytes: 64 << 20, maximum_depth: 64,
+    };
+    let bounded = RetainedCloneGrant {
+        maximum_items: 256, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20,
+        maximum_release_bytes: 1 << 20, maximum_depth: 64,
+    };
+    let stock = RetainedCloneGrant {
+        maximum_items: 1_000_000, maximum_copy_bytes: 128 << 20, maximum_capacity_bytes: 128 << 20,
+        maximum_release_bytes: 128 << 20, maximum_depth: 64,
+    };
+    for app in ["s.note.note@1/*#editor", "s.wfc.bitmap@1/*#editor"] {
+        let vector = rows.as_array().unwrap().iter().map(|row| &row["wire"]).find(|wire| {
+            let event = &wire["Poll"]["events"][0]["instanceOpen"];
+            event["appId"] == app && event["capabilities"].get(0).is_some()
+        }).unwrap();
+        let typed: ActorInput = serde_json::from_value(vector.clone()).unwrap();
+        assert_eq!(serde_json::to_value(&typed).unwrap(), *vector);
+        let wire = serde_json::to_vec(&typed).unwrap();
+        let profiles = [("infrastructure", infrastructure), ("bounded", bounded)].map(|(scope, grant)| {
+            let mut caller = OriginalJobFixtureCaller::admit(OperationId(948), Generation(2), stock, clock, 10_000_000, 100_000);
+            caller.retain_dispatch().unwrap();
+            caller.admit_return_table();
+            let mut receiver = OriginalActorInputReceiving::new(
+                OriginalNativeDecodePolicy { maximum_owned_bytes: infrastructure.maximum_capacity_bytes },
+                JsonReadLimits {
+                    maximum_bytes: infrastructure.maximum_copy_bytes as u64,
+                    maximum_allocation_bytes: infrastructure.maximum_capacity_bytes,
+                    maximum_depth: infrastructure.maximum_depth,
+                    maximum_items: infrastructure.maximum_items as u64,
+                },
+            );
+            let mut receipt = RetainedCloneProgress::default();
+            let mut position = 0;
+            let start_fuel = caller.fuel_remaining();
+            let ready_turn = (1..=1024).find(|turn| {
+                let admission = funded(&mut caller, grant, |cx| receiver.advance_in_turn(&wire, cx));
+                receipt = receipt.checked_add(caller.receipt()).unwrap();
+                if let Some(decoder) = receiver.decoder.receiver() {
+                    assert!(decoder.bytes_read() >= position);
+                    position = decoder.bytes_read();
+                }
+                assert!(matches!(admission, InputAdmission::Pending | InputAdmission::Ready),
+                    "{app} {scope} turn {turn} at {position}/{}: {:?}, {:?}, {:?}, {receipt:?}",
+                    wire.len(), receiver.failure_kind(), receiver.decoder.receiver().map(|decoder| decoder.phase()),
+                    receiver.decoder.failure().map(NativeReceivingFailure::primary));
+                assert_eq!(receiver.input_returned(), admission == InputAdmission::Ready);
+                admission == InputAdmission::Ready
+            }).unwrap_or_else(|| panic!("{app} {scope} did not admit at {position}/{}: receipt {receipt:?}", wire.len()));
+            let work = start_fuel - caller.fuel_remaining();
+            assert_eq!(serde_json::to_value(receiver.input().unwrap()).unwrap(), *vector);
+            assert_eq!(position, wire.len());
+            assert!(work > 0 && receipt.copied_bytes > wire.len() && receipt.retained_capacity_bytes > 0);
+            if scope == "infrastructure" {
+                assert_eq!(ready_turn, 1);
+                assert!(receipt.fits(grant), "{app} spent {receipt:?}");
+            }
+            assert!(funded(&mut caller, grant, |cx| cx.with_original_retirement(|cx| receiver.begin_close(None, cx))));
+            for _ in 0..1024 {
+                if receiver.terminal_is_empty() { break; }
+                funded(&mut caller, grant, |cx| cx.with_original_retirement(|cx| receiver.advance(None, cx)));
+            }
+            assert!(receiver.terminal_is_empty());
+            caller.retire(grant);
+            (ready_turn, receipt.retained_capacity_bytes, receipt.released_bytes)
+        });
+        assert!(profiles[1].0 > profiles[0].0);
+        assert_eq!((profiles[0].1, profiles[0].2), (profiles[1].1, profiles[1].2));
+    }
+}
+
+#[test]
 fn borrowed_actor_input_keeps_identity_and_returns_wire_only_after_source_close(){
+    with_input_decode_stack(check_borrowed_actor_input);
+}
+
+fn check_borrowed_actor_input(){
     let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🔁️persistent-local/📊️actor-input.json")).unwrap();
     let stock=RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:32_000_000,maximum_capacity_bytes:32_000_000,maximum_release_bytes:32_000_000,maximum_depth:128};
-    let grant=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:131_072,maximum_capacity_bytes:131_072,maximum_release_bytes:131_072,maximum_depth:64};
+    let grant=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:1 << 20,maximum_capacity_bytes:1 << 20,maximum_release_bytes:1 << 20,maximum_depth:64};
     for row in rows.as_array().unwrap().iter().filter(|row|row["valid"]==true){
         let wire=serde_json::to_vec(&row["wire"]).unwrap();
         for cancel_at in [None,Some(0),Some(5)]{
             let mut caller=OriginalJobFixtureCaller::admit(OperationId(945),Generation(2),stock,clock,100_000_000,10_000_000);
+            caller.retain_dispatch().unwrap();
+            caller.admit_return_table();
             let mut receiver=OriginalActorInputReceiving::new(OriginalNativeDecodePolicy{maximum_owned_bytes:stock.maximum_capacity_bytes},JsonReadLimits{maximum_bytes:wire.len() as u64,maximum_allocation_bytes:stock.maximum_capacity_bytes,maximum_depth:64,maximum_items:100_000});
             let mut ready=false;
             for step in 0..100_000{
@@ -32,9 +209,10 @@ fn borrowed_actor_input_keeps_identity_and_returns_wire_only_after_source_close(
             }
             if cancel_at.is_none(){assert!(ready);assert!(receiver.input().is_some())}
             if ready&&row["wire"].get("Poll").is_some(){
+                let has_event = !row["wire"]["Poll"]["events"].as_array().unwrap().is_empty();
                 assert!(funded(&mut caller,grant,|cx|receiver.prepare_poll_event(cx)));
-                assert!(!receiver.poll_event_pending());
-                funded(&mut caller,grant,|cx|receiver.with_poll_step(cx,|poll,event,_|{assert!(poll.events.is_empty());assert!(event.is_none());Ok(())}));
+                assert_eq!(receiver.poll_event_pending(), has_event);
+                funded(&mut caller,grant,|cx|receiver.with_poll_step(cx,|poll,event,_|{assert!(poll.events.is_empty());assert_eq!(event.is_some(),has_event);Ok(())}));
             }
             if ready&&row["wire"].get("Job").is_some(){
                 let denied=RetainedCloneGrant{maximum_copy_bytes:0,..grant};
@@ -60,10 +238,16 @@ fn borrowed_actor_input_keeps_identity_and_returns_wire_only_after_source_close(
 
 #[test]
 fn poll_input_retains_an_unconsumed_event_until_paid_retirement(){
+    with_input_decode_stack(check_poll_event_retirement);
+}
+
+fn check_poll_event_retirement(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🔁️persistent-local/📊️actor-input.json")).unwrap();let mut wire=rows.as_array().unwrap().iter().find_map(|row|row["wire"].get("Poll").map(|_|row["wire"].clone())).unwrap();
  wire["Poll"]["events"]=serde_json::json!([{"instanceClose":{"lifetime":{"activationGeneration":"1","instanceId":0,"guestLifetime":"2"},"requestSequence":2}}]);let wire=serde_json::to_vec(&wire).unwrap();
  let stock=RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:32_000_000,maximum_capacity_bytes:32_000_000,maximum_release_bytes:32_000_000,maximum_depth:128};let grant=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:131_072,maximum_capacity_bytes:131_072,maximum_release_bytes:131_072,maximum_depth:64};
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(946),Generation(2),stock,clock,100_000_000,10_000_000);let mut receiver=OriginalActorInputReceiving::new(OriginalNativeDecodePolicy{maximum_owned_bytes:stock.maximum_capacity_bytes},JsonReadLimits{maximum_bytes:wire.len() as u64,maximum_allocation_bytes:stock.maximum_capacity_bytes,maximum_depth:64,maximum_items:100_000});
+ caller.retain_dispatch().unwrap();
+ caller.admit_return_table();
  for step in 0..100_000{if receiver.input_returned(){break}assert_ne!(funded(&mut caller,grant,|cx|receiver.advance(Some(&wire),cx)),InputAdmission::Failed);assert!(step<99_999)}assert!(receiver.input_returned());
  let low=RetainedCloneGrant{maximum_items:1,..grant};assert!(!funded(&mut caller,low,|cx|receiver.prepare_poll_event(cx)));assert!(receiver.poll_event_pending());assert!(matches!(receiver.input(),Some(ActorInput::Poll(poll)) if poll.events.len()==1));
  assert!(funded(&mut caller,grant,|cx|receiver.prepare_poll_event(cx)));assert!(receiver.poll_event_pending());funded(&mut caller,grant,|cx|receiver.with_poll_step(cx,|poll,event,_|{assert!(poll.events.is_empty());assert!(event.is_some());Ok(())}));assert!(receiver.poll_event_pending());

@@ -2,6 +2,7 @@
  * The 3D viewer runs on its software rasteriser here (jsdom has no WebGL2); the WebGL2 path is checked in a real browser.
  * @see ./🥒️.feature — the scenarios */
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VIEWS } from "@teaching/staffage";
 import type { Asset, Manifest } from "@teaching/staffage";
@@ -46,7 +47,7 @@ async function setup(hash = "#/playground", language: "en" | "de" = "en") {
   return { store, source };
 }
 
-const pointer = (element: Element, type: "pointerdown" | "pointermove" | "pointerup", x: number, y: number): void => {
+const pointer = (element: Element, type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel", x: number, y: number): void => {
   act(() => {
     element.dispatchEvent(new MouseEvent(type, { clientX: x, clientY: y, bubbles: true, cancelable: true }));
   });
@@ -98,6 +99,38 @@ describe("🧭️ the tabs", () => {
     expect(after.zM).toBeCloseTo(0.5, 6);
     await waitFor(() => expect(document.querySelector("[aria-live=polite]")!.textContent).toMatch(/Dropped Sample figure at x .* m, z .* m/u));
   });
+
+  it("selects a placed figure with Enter, Space or a click without selecting it on focus", async () => {
+    const user = userEvent.setup();
+    const { store } = await setup();
+    await place();
+    await place();
+    const [first, second] = placed(store).map(({ id }) => document.querySelector<HTMLElement>(`[data-placement="${id}"]`)!);
+    const selected = () => [first!, second!].map((figure) => figure.getAttribute("aria-pressed"));
+
+    act(() => first!.focus());
+    expect(selected()).toEqual(["false", "true"]);
+    await user.keyboard("{Enter}");
+    expect(selected()).toEqual(["true", "false"]);
+    act(() => second!.focus());
+    await user.keyboard(" ");
+    expect(selected()).toEqual(["false", "true"]);
+    fireEvent.click(first!);
+    expect(selected()).toEqual(["true", "false"]);
+  });
+
+  it("returns a figure to its original position when the pointer gesture is cancelled", async () => {
+    const { store } = await setup("#/playground/plan");
+    await place();
+    const before = placed(store)[0]!;
+    const hit = document.querySelector<HTMLElement>(`[data-placement="${before.id}"]`)!;
+    pointer(hit, "pointerdown", 100, 100);
+    pointer(hit, "pointermove", 125, 90);
+    expect(Number(hit.dataset.xM)).not.toBe(before.xM);
+    pointer(hit, "pointercancel", 125, 90);
+    expect(placed(store)[0]).toEqual(before);
+    expect(Number(hit.dataset.xM)).toBe(before.xM);
+  });
 });
 
 describe("🎛️ playback of one figure and of the timeline", () => {
@@ -106,7 +139,7 @@ describe("🎛️ playback of one figure and of the timeline", () => {
     await place();
     await place();
     const [first, second] = placed(store);
-    fireEvent.focus(document.querySelector<HTMLElement>(`[data-placement="${first!.id}"]`)!);
+    fireEvent.click(document.querySelector<HTMLElement>(`[data-placement="${first!.id}"]`)!);
     const panel = await waitFor(() => {
       const found = document.querySelector<HTMLElement>(`[data-asset-panel="${first!.id}"]`);
       expect(found).not.toBeNull();
@@ -174,7 +207,7 @@ describe("🔄️ a catalog that changes under the page", () => {
     const { store, source } = await setup();
     await place();
     store.dispatch({ type: "placement-changed", id: placed(store)[0]!.id, patch: { pick: { kind: "clip", clip: "bag-swing" } } });
-    fireEvent.focus(document.querySelector<HTMLElement>(`[data-placement="${placed(store)[0]!.id}"]`)!);
+    fireEvent.click(document.querySelector<HTMLElement>(`[data-placement="${placed(store)[0]!.id}"]`)!);
     const panel = await waitFor(() => {
       const found = document.querySelector<HTMLElement>("[data-asset-panel]");
       expect(found).not.toBeNull();

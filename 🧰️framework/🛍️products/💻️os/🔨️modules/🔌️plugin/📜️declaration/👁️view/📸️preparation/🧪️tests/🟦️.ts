@@ -5,6 +5,19 @@ import schema from "../🧬️schema/🔣️.json";
 import currencies from "../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { recordMountedSnapshotPreparation, sameArtifactPendingSourceVersion } from "../🟦️.ts";
+import { readFileSync } from "node:fs";
+
+test("partial mounted snapshot preparation keeps the live poll armed", () => {
+  const db = new Database(":memory:");
+  try {
+    const retain = db.query("SELECT (?1 = 0 AND (?2 > 0 OR ?3 > 0 OR ?4 > 0 OR ?5 > 0)) AS pending");
+    for (const row of fixture.cases.filter(row => !row.fault)) {
+      expect(retain.get(Number(row.ready), ...row.progress)).toEqual({ pending: Number(row.retainsPoll ?? false) });
+    }
+  } finally { db.close(); }
+  const render = readFileSync(new URL("../../../../🧵️instance/🖼️render/📥️staging/🪟️projections/🦀️.rs", import.meta.url), "utf8");
+  expect(render).toContain("if !ready && preparation.progress != Default::default() { return Ok(None); }");
+});
 
 /** 🧾️ Uses SQLite's independent conjunction arithmetic for the original receipt corpus. */
 export function mountedSnapshotPreparationOracle(): number {

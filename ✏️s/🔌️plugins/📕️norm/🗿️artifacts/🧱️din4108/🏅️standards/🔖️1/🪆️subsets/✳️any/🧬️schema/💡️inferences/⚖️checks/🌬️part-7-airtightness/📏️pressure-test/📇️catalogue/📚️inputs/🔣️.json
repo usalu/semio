@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
+  "artifact": "s.norm.din4108",
+  "inputs": [
+    {
+      "key": "test_protocol",
+      "scope": "",
+      "kind": "choice",
+      "en": "Measurement conditions",
+      "de": "Messbedingungen",
+      "confidence": "high",
+      "note": "DIN EN ISO 9972:2018-12 Annex NA",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Pre-completion test to DIN EN ISO 9972 Annex NA confirmed",
+          "de": "Prüfung vor Fertigstellung nach DIN EN ISO 9972 Anhang NA bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Test conditions unconfirmed",
+          "de": "Prüfbedingungen unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "test_ventilation",
+      "scope": "",
+      "kind": "choice",
+      "en": "Ventilation of the tested subject",
+      "de": "Lüftung im geprüften Bereich",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "mechanical",
+          "en": "With mechanical ventilation",
+          "de": "Mit raumlufttechnischer Anlage"
+        },
+        {
+          "value": "natural",
+          "en": "Without mechanical ventilation",
+          "de": "Ohne raumlufttechnische Anlage"
+        }
+      ],
+      "example": "mechanical"
+    },
+    {
+      "key": "test_volume",
+      "scope": "G26-01,G26-03,G26-04",
+      "kind": "number",
+      "en": "Heated or cooled air volume",
+      "de": "Beheiztes oder gekühltes Luftvolumen",
+      "confidence": "high",
+      "unit": "m³",
+      "unitId": "CubicMetre",
+      "min": 0.0,
+      "max": 10000000.0,
+      "example": 450.0
+    },
+    {
+      "key": "test_volume",
+      "scope": "G26-02",
+      "kind": "number",
+      "en": "Heated or cooled air volume",
+      "de": "Beheiztes oder gekühltes Luftvolumen",
+      "confidence": "high",
+      "unit": "m³",
+      "unitId": "CubicMetre",
+      "min": 0.0,
+      "max": 10000000.0,
+      "example": 2000.0
+    },
+    {
+      "key": "test_pressurisation",
+      "scope": "",
+      "kind": "number",
+      "en": "Measured airflow at +50 Pa",
+      "de": "Gemessener Volumenstrom bei +50 Pa",
+      "confidence": "high",
+      "unit": "m³/h",
+      "unitId": "CubicMetrePerHour",
+      "min": 0.0,
+      "max": 100000000.0,
+      "example": 650.0
+    },
+    {
+      "key": "test_depressurisation",
+      "scope": "",
+      "kind": "number",
+      "en": "Measured airflow at −50 Pa",
+      "de": "Gemessener Volumenstrom bei −50 Pa",
+      "confidence": "high",
+      "unit": "m³/h",
+      "unitId": "CubicMetrePerHour",
+      "min": 0.0,
+      "max": 100000000.0,
+      "example": 675.0
+    },
+    {
+      "key": "test_area",
+      "scope": "G26-02,G26-03",
+      "kind": "number",
+      "en": "Envelope area of the tested subject",
+      "de": "Hüllfläche des geprüften Bereichs",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre",
+      "min": 0.0,
+      "max": 10000000.0,
+      "example": 800.0
+    },
+    {
+      "key": "test_basis",
+      "scope": "G26-03",
+      "kind": "choice",
+      "en": "Normalisation method",
+      "de": "Bezugsgröße",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "volume",
+          "en": "Normalise by conditioned volume",
+          "de": "Bezug auf das konditionierte Luftvolumen"
+        },
+        {
+          "value": "area",
+          "en": "Normalise by envelope area when volume exceeds 1,500 m³",
+          "de": "Bezug auf die Hüllfläche bei Luftvolumen über 1.500 m³"
+        }
+      ],
+      "example": "volume"
+    },
+    {
+      "key": "test_zone_basis",
+      "scope": "G26-03",
+      "kind": "choice",
+      "en": "Basis for separate zone verification",
+      "de": "Grundlage des getrennten Zonennachweises",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "selected",
+          "en": "Non-residential building with selected tested zones",
+          "de": "Nichtwohngebäude mit Prüfung ausgewählter Zonen"
+        },
+        {
+          "value": "different",
+          "en": "Non-residential zones with different requirements",
+          "de": "Zonen eines Nichtwohngebäudes mit unterschiedlichen Anforderungen"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Zone eligibility unconfirmed",
+          "de": "Zulässigkeit der Zonenprüfung unbestätigt"
+        }
+      ],
+      "example": "selected"
+    },
+    {
+      "key": "test_sample_basis",
+      "scope": "G26-04",
+      "kind": "choice",
+      "en": "Basis for sampling units",
+      "de": "Grundlage der Stichprobe von Nutzeinheiten",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Identical units, exterior-only access and Annex NB sampling confirmed",
+          "de": "Gleichartige, nur von außen erschlossene Einheiten und Stichprobe nach Anhang NB bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Unit sampling eligibility unconfirmed",
+          "de": "Zulässigkeit der Stichprobe unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    }
+  ]
+}

@@ -23,7 +23,7 @@ semio_plugin::app_commands! {
     /// or its hosts) collapse onto the one surviving action id's command instead of keeping a dead
     /// synonym. Row order is the binary variant ordinal: appending is safe, reordering is a wire-format
     /// break.
-    pub enum NoteCommand for NoteSnapshot, NoteMutation, NoConfig, NoConfigMutation, ctx = NoteDispatchCtx {
+    pub enum NoteCommand for NoteSnapshot, NoteMutation, NoConfig, NoConfigMutation, ctx = NoteDispatchCtx<'_> {
         "setGridVisible" as "set-grid-visible" => set_grid_visible::SetGridVisible,
         "setGridSpacing" as "set-grid-spacing" => set_grid_spacing::SetGridSpacing,
         "setGridSubdivisions" as "set-grid-subdivisions" => set_grid_subdivisions::SetGridSubdivisions,

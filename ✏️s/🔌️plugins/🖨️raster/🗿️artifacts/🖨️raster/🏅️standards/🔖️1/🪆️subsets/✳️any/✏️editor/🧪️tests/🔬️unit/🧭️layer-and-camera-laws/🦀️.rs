@@ -243,3 +243,39 @@ async fn raster_import_media_appends_layer_from_incoming_image() {
     assert_eq!(layers, before + 1, "image:in must append one pixel layer");
     assert!(pixels, "the imported asset resolves to real pixels");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn raster_file_picker_imports_png_as_one_undoable_layer() {
+    let mut app = app().await;
+    let picker = dispatch(&mut app, RasterCommand::ImportPng(semio_s_artifact_raster_raster_editor::commands::import_png::ImportPng {})).await;
+    assert!(picker.requested_effects.iter().any(|effect| matches!(effect, semio_plugin::Effect::RequestFileOpen { import_action, .. } if import_action == "importPngFile")));
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🎞️reserved-import/🧪️structured-wire/image-cases.json")).unwrap();
+    let encoded = fixture["cases"][0]["base64"].as_str().unwrap();
+    let payload = format!("data:application/octet-stream;base64,{encoded}");
+    let boundary = payload.find(',').unwrap() + 1;
+    let chunks = [&payload[..boundary], &payload[boundary..]].into_iter().enumerate().map(|(chunk, payload)| {
+        semio_framework::kernel::ImportChunk { payload: payload.into(), chunk, chunk_count: 2 }
+    });
+    let meta = artifact_app_laws::meta("local");
+    let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    for chunk in chunks {
+        let args = semio_framework::kernel::import_chunk_arguments("example.png", &chunk, None);
+        artifact_app_laws::dispatch_fixture_action(&mut app.0, "importPngFile", Some(args), &meta, &mut artifact_app_laws::fixture_identity(), app.1.cx(), policy.close).await.expect("staged PNG callback dispatch");
+        if chunk.chunk == 0 {
+            let pending = app.snapshot().unwrap();
+            assert!(pending.layers.is_empty() && pending.assets.is_empty());
+            semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(pending);
+        }
+    }
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, policy, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained PNG publication");
+    let current = app.snapshot().unwrap();
+    let image = current.assets.keys().find_map(|key| semio_s_artifact_raster_raster_model::raster_image(&current.assets, key)).expect("image asset exists");
+    assert_eq!(image.frames[0].rgba8, vec![10, 20, 30, 255]);
+    assert_eq!(current.layers.len(), 1);
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(current);
+    history(&mut app, "undo").await;
+    let undone = app.snapshot().unwrap();
+    assert!(undone.layers.is_empty() && undone.assets.is_empty());
+    semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(undone);
+}

@@ -123,7 +123,8 @@ fn oracle_element(element: &model::EnvelopeElement, all: &[Diagram2d]) -> String
     let winter = checks::part_3::GLASER_WINTER;
     let layers: Vec<String> = element.layers.iter().map(|l| format!("{{\"d\":{},\"lambda\":{},\"mu\":{}}}", l.thickness_m, l.lambda, l.mu)).collect();
     let temperature = all.iter().find(|d| d.id == format!("temperature:{}", element.id)).expect("temperature diagram");
-    let glaser = all.iter().find(|d| d.id == format!("glaser:{}", element.id)).expect("glaser diagram");
+    let glaser = all.iter().find(|d| d.id == format!("glaser:{}", element.id));
+    let moisture_series = |id| glaser.map_or_else(|| "null".into(), |diagram| polyline_json(diagram, id));
     format!(
         "{{\"id\":\"{}\",\"r_si\":{r_si},\"r_se\":{r_se},\"t_int\":{},\"t_ext\":{},\"rh_int\":{},\"rh_ext\":{},\"layers\":[{}],\"temperature\":{},\"vapour\":{},\"saturation\":{}}}",
         element.id,
@@ -133,8 +134,8 @@ fn oracle_element(element: &model::EnvelopeElement, all: &[Diagram2d]) -> String
         winter.rh_ext,
         layers.join(","),
         polyline_json(temperature, "temperature"),
-        polyline_json(glaser, "vapour"),
-        polyline_json(glaser, "saturation"),
+        moisture_series("vapour"),
+        moisture_series("saturation"),
     )
 }
 

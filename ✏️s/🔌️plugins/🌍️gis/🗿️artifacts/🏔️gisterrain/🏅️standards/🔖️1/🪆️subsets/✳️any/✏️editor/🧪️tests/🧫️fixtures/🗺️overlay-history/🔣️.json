@@ -1,0 +1,72 @@
+{
+  "map": {
+    "positions": [{ "id": "existing", "lon": 5.55, "lat": 50.62, "note": "retain" }],
+    "routes": [{ "id": "route", "points": [[5.55, 50.62], [5.56, 50.63]] }],
+    "regions": [{ "id": "region", "ring": [[5.55, 50.62], [5.56, 50.62], [5.56, 50.63]], "holes": [[[5.554, 50.621], [5.556, 50.621], [5.556, 50.622]]] }],
+    "source": { "name": "Fixture" }
+  },
+  "edits": [
+    {
+      "action": "addOverlayPosition",
+      "args": { "id": "marker", "label": "Survey point", "longitude": 5.56, "latitude": 89, "elevation": 120.5 },
+      "ids": [["existing", "marker"], ["route"], ["region"]]
+    },
+    {
+      "action": "moveOverlayPosition",
+      "args": { "id": "marker", "longitude": 13.4, "latitude": 90 },
+      "ids": [["existing", "marker"], ["route"], ["region"]],
+      "check": { "role": "positions", "index": 1, "record": {"id": "marker", "lon": 13.4, "lat": 90.0, "label": "Survey point", "alt": 120.5} }
+    },
+    {
+      "action": "editOverlayShape",
+      "args": { "id": "cycle", "kind": "route", "mode": "replace", "label": "Cycle route", "coordinates": "[[13.3,88],[13.4,89]]" },
+      "ids": [["existing", "marker"], ["route", "cycle"], ["region"]],
+      "check": { "role": "routes", "index": 1, "record": {"id": "cycle", "label": "Cycle route", "points": [[13.3, 88.0], [13.4, 89.0]]} }
+    },
+    {
+      "action": "editOverlayShape",
+      "args": { "id": "cycle", "kind": "route", "mode": "append", "coordinates": "[[13.5,90]]" },
+      "ids": [["existing", "marker"], ["route", "cycle"], ["region"]],
+      "check": { "role": "routes", "index": 1, "record": {"id": "cycle", "label": "Cycle route", "points": [[13.3, 88.0], [13.4, 89.0], [13.5, 90.0]]} }
+    },
+    {
+      "action": "editOverlayShape",
+      "args": { "id": "region", "kind": "region", "mode": "replace", "coordinates": "[[5.55,50.62],[5.57,50.62],[5.57,50.64],[5.55,50.62]]" },
+      "ids": [["existing", "marker"], ["route", "cycle"], ["region"]],
+      "check": { "role": "regions", "index": 0, "record": {"id": "region", "ring": [[5.55, 50.62], [5.57, 50.62], [5.57, 50.64]], "holes": [[[5.554, 50.621], [5.556, 50.621], [5.556, 50.622]]]} }
+    },
+    {
+      "action": "editOverlayShape",
+      "args": { "id": "parcel", "kind": "region", "mode": "replace", "label": "New parcel", "coordinates": "[[13.1,88.5],[13.2,88.5],[13.2,89.5]]" },
+      "ids": [["existing", "marker"], ["route", "cycle"], ["region", "parcel"]],
+      "check": { "role": "regions", "index": 1, "record": {"id": "parcel", "label": "New parcel", "ring": [[13.1, 88.5], [13.2, 88.5], [13.2, 89.5]]} }
+    },
+    {
+      "action": "editOverlayShape",
+      "args": { "id": "parcel", "kind": "region", "mode": "append", "coordinates": "[[13.1,89.5],[13.1,88.5]]" },
+      "ids": [["existing", "marker"], ["route", "cycle"], ["region", "parcel"]],
+      "check": { "role": "regions", "index": 1, "record": {"id": "parcel", "label": "New parcel", "ring": [[13.1, 88.5], [13.2, 88.5], [13.2, 89.5], [13.1, 89.5]]} }
+    },
+    { "action": "removeOverlayFeature", "args": { "id": "route" }, "ids": [["existing", "marker"], ["cycle"], ["region", "parcel"]] },
+    { "action": "removeOverlayFeature", "args": { "id": "region" }, "ids": [["existing", "marker"], ["cycle"], ["parcel"]] },
+    { "action": "removeOverlayFeature", "args": { "id": "existing" }, "ids": [["marker"], ["cycle"], ["parcel"]] },
+    { "action": "clearOverlays", "args": {}, "ids": [[], [], []] }
+  ],
+  "marker": { "id": "marker", "lon": 5.56, "lat": 89.0, "label": "Survey point", "alt": 120.5 },
+  "invalid": [
+    {"id": "marker", "longitude": 5.56, "latitude": 90.0},
+    {"id": "marker", "longitude": 181.0, "latitude": 50.63},
+    {"id": "  ", "longitude": 5.56, "latitude": 50.63},
+    {"id": "existing", "longitude": 5.56, "latitude": 50.63}
+  ],
+  "invalidShapes": [
+    {"id": "route", "kind": "route", "mode": "replace", "coordinates": "[[5.56,89],[5.57,90]]"},
+    {"id": "route", "kind": "route", "mode": "replace", "coordinates": "[[5.56,50.63],[5.56,50.63]]"},
+    {"id": "region", "kind": "region", "mode": "replace", "coordinates": "[[5.56,50.63],[5.57,50.64]]"},
+    {"id": "missing", "kind": "route", "mode": "append", "coordinates": "[[5.56,50.63]]"},
+    {"id": "existing", "kind": "route", "mode": "replace", "coordinates": "[[5.56,50.63],[5.57,50.64]]"}
+  ],
+  "invalidAuthored": [
+    {"id": "marker", "longitude": 5.56, "latitude": 90.00000000000001}
+  ]
+}

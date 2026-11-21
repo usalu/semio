@@ -1,5 +1,5 @@
 //! 🗣️ Generic idiom hooks, language models and explicit registration.
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::{Mutex, OnceLock};
 use crate::{TextError,TextSpan,TokenClass};
 use crate::grammar::{GrammarFile,ProtocolFile,SemioDialect,parse_grammar,parse_protocol,verify_protocol_source};
@@ -158,15 +158,15 @@ impl LanguageSpec {
 /// 🪪 Pass-through [`IdiomHooks`] for binary facets (pack/spr) and text facets without a
 /// dedicated `DslIdiom` yet — canonicalize is identity; classify/complete are empty.
 
-static LANGUAGE_REGISTRY: OnceLock<Mutex<HashMap<&'static str, LanguageSpec>>> = OnceLock::new();
+static LANGUAGE_REGISTRY: OnceLock<Mutex<BTreeMap<&'static str, LanguageSpec>>> = OnceLock::new();
 
 // 🚫️async: E1 pure accessor — plain `OnceLock`/`Mutex` init, no suspension point — see R9. Its two
 // PUBLIC callers that cross into `🔌️plugin/🦀️.rs` (a live ATOMIC packet's file, not mine to
 // touch) stay `fn` themselves — see `preflight_languages`/`register_languages` below — so that
 // external `` call shape needs no change; only this private accessor and the purely-local
 // lookups (`language`/`language_for_extension`/…) revert to sync.
-fn language_registry() -> &'static Mutex<HashMap<&'static str, LanguageSpec>> {
-    LANGUAGE_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
+fn language_registry() -> &'static Mutex<BTreeMap<&'static str, LanguageSpec>> {
+    LANGUAGE_REGISTRY.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 
 /// ⚠️ Language registration rejects a distinct owner for an established language id.
@@ -203,7 +203,7 @@ fn same_language(left: LanguageSpec, right: LanguageSpec) -> bool {
 /// so per R9 rule 3 the external `` call shape wins over reverting it to match a leaf helper.
 #[must_use]
 pub fn preflight_languages(specs: &[LanguageSpec]) -> Result<(), LanguageRegistryError> {
-    let mut proposed = HashMap::new();
+    let mut proposed = BTreeMap::new();
     for spec in specs {
         match proposed.insert(spec.id, *spec) {
             Some(existing) if same_language(existing, *spec) => {}

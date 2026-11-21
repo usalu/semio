@@ -1,10 +1,12 @@
 //! 🧊️ Admits funded solid body transactions and commits their original live handles.
 
 use super::*;
-use super::certified_boolean::{BoreBoundary, OrthogonalBoundary};
+use super::certified_boolean::OrthogonalBoundary;
+use semio_framework_3d_brep_construction::primitives::BoxGeometry;
+use semio_framework_3d_brep_solid_topology::{spherical_axial_span,split_spherical_support};
 use semio_framework_3d_brep_representation::topology::history::LabelSource;
 use semio_framework_3d_brep_solid_transaction::SolidBoundary;
-pub use semio_framework_3d_brep_solid_transaction::SolidPublication;
+pub use semio_framework_3d_brep_solid_transaction::{SolidExchangeBoundary,SolidPublication};
 pub(super) use semio_framework_3d_brep_solid_transaction::{store_demand, store_insert, topology_slot_depth, remove_topology_slot};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step, RetirementDemand};
 use analytic_publication::primitive_handle;
@@ -12,49 +14,74 @@ use analytic_publication::primitive_handle;
 impl BrepRegistry {
     /// 📏️ Admits a finite analytic primitive and an independent range of stable topology labels.
     pub fn plan_solid_primitive(&mut self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> {
-        primitive.validate().map_err(|reason| ValueError::literal(ValueRefusalKind::InvalidValue, reason))?;
         self.plan_solid_boundary(SolidBoundary::Analytic(primitive))
-    }
-
-    pub(super) fn plan_bore_solid(&mut self, boundary: BoreBoundary) -> Result<SolidPublication, ValueError> {
-        self.plan_solid_boundary(SolidBoundary::Bore(boundary))
     }
 
     pub fn plan_orthogonal_solid(&mut self, boundary: OrthogonalBoundary) -> Result<SolidPublication, ValueError> {
         self.plan_solid_boundary(SolidBoundary::Orthogonal(boundary))
     }
 
-    pub(super) fn plan_prism_boundary(&mut self, boundary: prism_boundary::PrismBoundary) -> Result<SolidPublication, ValueError> {
-        self.plan_solid_boundary(SolidBoundary::Prism(boundary))
+    /// 📥️ Admits an exact boundary certified by a retained exchange cursor.
+    pub fn plan_exchange_boundary(&mut self, boundary: SolidExchangeBoundary) -> Result<SolidPublication, ValueError> {
+        self.plan_solid_boundary(boundary.into())
     }
 
-    /// 🪚️ Stages a new exact prism from one certified original box member.
-    pub fn plan_box_finish(&mut self, shape: &str, selected: &str, finish: BoxFinish) -> Result<SolidPublication, ValueError> {
+    /// 🪚️ Stages a solid finish from a certified box and any selected members.
+    pub fn plan_box_finish(&mut self, shape: &str, selected: &[&str], finish: BoxFinish) -> Result<SolidPublication, ValueError> {
         let unsupported = || ValueError::literal(ValueRefusalKind::UnsupportedOwner, finish.source_requirement());
-        let Entity::Solid(solid, Some(SolidProvenance::Primitive(proof))) = self.original_query_entity(shape)? else { return Err(unsupported()); };
+        let Entity::Solid(solid,Some(proof))=self.original_query_entity(shape)? else{return Err(unsupported());};
+        let record=self.body.solids.get(*solid).ok_or_else(unsupported)?;
+        let count = match finish { BoxFinish::ChamferAll(_) | BoxFinish::FilletAll(_) => 0..=0, BoxFinish::Fillet(_) => 1..=4, _ => 1..=1 };
+        if !count.contains(&selected.len()) { return Err(unsupported()); }
+        if let SolidProvenance::PlanarBoundary(Some(source))=proof {
+            if !matches!(finish,BoxFinish::Fillet(_)|BoxFinish::Chamfer(_)|BoxFinish::ChamferAll(_)){return Err(unsupported());}
+            let stock=source.rectangular().ok_or_else(unsupported)?;
+            let edge_count=BoxGeometry::EDGES.len() as u64;
+            let first=record.label.0.checked_sub(edge_count+BoxGeometry::FACES.len() as u64+1).ok_or_else(unsupported)?;
+            let mut edges=[0;4];
+            for (slot,handle) in edges.iter_mut().zip(selected){
+                let Entity::Edge(id)=self.original_query_entity(handle)? else{return Err(unsupported());};
+                let label=self.body.edges.get(*id).ok_or_else(unsupported)?.label.0;
+                *slot=label.checked_sub(first).filter(|&index|index<edge_count).ok_or_else(unsupported)? as usize;
+            }
+            let boundary=match finish{
+                BoxFinish::Fillet(radius)=>stock.fillet(&edges[..selected.len()],radius),
+                BoxFinish::Chamfer(distance)=>stock.chamfer(edges[0],distance),
+                BoxFinish::ChamferAll(distance)=>stock.chamfer_all(distance),
+                _=>unreachable!(),
+            }.ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,finish.geometry_requirement()))?;
+            return self.plan_solid_boundary(boundary);
+        }
+        let SolidProvenance::Primitive(proof)=proof else{return Err(unsupported());};
         let SolidPrimitive::Box { origin,width,depth,height } = &proof.primitive else { return Err(unsupported()); };
-        if !self.body.solids.contains(*solid) { return Err(unsupported()); }
         let primitive = SolidPrimitive::Box { origin:*origin,width:*width,depth:*depth,height:*height };
-        let (label, start, count) = match (finish,self.original_query_entity(selected)?) {
-            (BoxFinish::Chamfer(_),Entity::Edge(id)) => (self.body.edges.get(*id).ok_or_else(unsupported)?.label,primitive.vertex_count(),primitive.edge_count()),
-            (BoxFinish::Draft { .. },Entity::Face(id)) => (self.body.faces.get(*id).ok_or_else(unsupported)?.label,primitive.vertex_count()+primitive.edge_count(),primitive.ring_sizes().len()),
-            _ => return Err(unsupported()),
-        };
-        let first = proof.preview_first_label.ok_or_else(unsupported)? + start as u64;
-        let ordinal = label.0.checked_sub(first).filter(|&i|i < count as u64).ok_or_else(unsupported)?;
-        let boundary = finish.boundary(primitive,ordinal as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue,finish.geometry_requirement()))?;
-        self.plan_prism_boundary(boundary)
+        let mut ordinals=[0;4];
+        for (slot,handle) in ordinals.iter_mut().zip(selected) {
+            let (label, start, count) = match (finish,self.original_query_entity(handle)?) {
+                (BoxFinish::Chamfer(_) | BoxFinish::Fillet(_),Entity::Edge(id)) => (self.body.edges.get(*id).ok_or_else(unsupported)?.label,primitive.vertex_count(),primitive.edge_count()),
+                (BoxFinish::Draft { .. },Entity::Face(id)) => (self.body.faces.get(*id).ok_or_else(unsupported)?.label,primitive.vertex_count()+primitive.edge_count(),primitive.ring_sizes().len()),
+                _ => return Err(unsupported()),
+            };
+            let first=proof.preview_first_label.ok_or_else(unsupported)?+start as u64;
+            *slot=label.0.checked_sub(first).filter(|&i|i<count as u64).ok_or_else(unsupported)? as usize;
+        }
+        let boundary=finish.boundary(primitive,&ordinals[..selected.len()]).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,finish.geometry_requirement()))?;
+        self.plan_solid_boundary(boundary)
     }
 
     /// 🎟️ Quotes both original index paths and the selected native member record.
-    pub fn box_finish_depth(&self, shape: &str, selected: &str) -> Result<usize, ValueError> {
-        let depth = self.certified_solid_depth(shape)?.max(self.tessellation_source_depth_demand(selected)?);
-        let member = match self.original_query_entity(selected)? {
-            Entity::Edge(id) => self.body.edges.next_remove_depth_demand(*id)?,
-            Entity::Face(id) => self.body.faces.next_remove_depth_demand(*id)?,
-            _ => 0,
-        };
-        Ok(depth.max(member))
+    pub fn box_finish_depth(&self, shape: &str, selected: &[&str]) -> Result<usize, ValueError> {
+        if selected.len()>4{return Err(ValueError::invariant("box finish member count exceeds the fixed certificate"));}
+        let mut depth=self.certified_solid_depth(shape)?;
+        for handle in selected{
+            let member=match self.original_query_entity(handle)? {
+                Entity::Edge(id)=>self.body.edges.next_remove_depth_demand(*id)?,
+                Entity::Face(id)=>self.body.faces.next_remove_depth_demand(*id)?,
+                _=>0,
+            };
+            depth=depth.max(self.tessellation_source_depth_demand(handle)?).max(member);
+        }
+        Ok(depth)
     }
 
     /// 📦️ Admits the verified closed convex boundary for funded native publication.
@@ -62,19 +89,39 @@ impl BrepRegistry {
         self.plan_solid_boundary(SolidBoundary::Hull(draft.finish()?))
     }
 
-    fn plan_solid_boundary(&mut self, boundary: SolidBoundary) -> Result<SolidPublication, ValueError> {
+    pub(super) fn plan_solid_boundary(&mut self, boundary: SolidBoundary) -> Result<SolidPublication, ValueError> {
+        if let SolidBoundary::Analytic(primitive) = &boundary {
+        primitive.validate().map_err(|reason| ValueError::literal(ValueRefusalKind::InvalidValue, reason))?;
+        }
         let owner = std::ptr::from_ref(&*self) as usize;
         let item = SolidPublication::begin(owner, boundary, &mut self.body.labels, |label| primitive_handle(b"Solid:", label))?;
         self.unpublished_topology += 1;
         Ok(item)
     }
 
+    /// 〰️ Opens an independent spline representation of a live certified cuboid.
+    pub fn plan_nurbs_cuboid(&mut self, source: &str) -> Result<SolidPublication, ValueError> {
+        let primitive = self.live_solid_primitive(source).ok_or_else(|| ValueError::literal(ValueRefusalKind::UnsupportedOwner, "NURBS conversion requires a certified cuboid"))?;
+        self.plan_primitive_encoding(primitive, true)
+    }
+
+    /// 📥️ Plans a spline cuboid certified by an original exchange cursor.
+    pub fn plan_nurbs_cuboid_primitive(&mut self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> { self.plan_primitive_encoding(primitive, true) }
+    fn plan_primitive_encoding(&mut self, primitive: SolidPrimitive, nurbs: bool) -> Result<SolidPublication, ValueError> {
+        if !nurbs { return self.plan_solid_primitive(primitive); }
+        let owner = std::ptr::from_ref(&*self) as usize;
+        let plan = SolidPublication::begin_nurbs_cuboid(owner, primitive, &mut self.body.labels, |label| primitive_handle(b"Solid:", label))?;
+        self.unpublished_topology += 1;
+        Ok(plan)
+    }
+
     /// 🧭️ Plans an exact affine image when the result still fits a certified primitive recipe.
     pub fn plan_certified_solid_transform(&mut self, source: &str, transform: AnalyticTransform) -> Result<Option<SolidPublication>,ValueError> {
-        let Some(primitive) = self.live_solid_primitive(source) else { return Ok(None); };
-        if matches!(transform,AnalyticTransform::Copy) { return self.plan_solid_primitive(primitive).map(Some); }
-        let map = transform.map()?;
-        primitive.affinely_transformed(&map).map(|shape| self.plan_solid_primitive(shape)).transpose()
+        let Some(Entity::Solid(id, Some(proof))) = self.live.get(source) else { return Ok(None); };
+        if !self.body.solids.contains(*id) { return Ok(None); }
+        let Some((shape,nurbs))=proof.affine_image(&transform.map()?,matches!(transform,AnalyticTransform::Copy)) else { return Ok(None); };
+        if let (SolidBoundary::Analytic(primitive),true)=(&shape,nurbs){return self.plan_primitive_encoding(*primitive,true).map(Some);}
+        self.plan_solid_boundary(shape).map(Some)
     }
 
     /// ⤴️ Plans the exact axial extrusion of one live complete circular curve, wire, or face.
@@ -149,13 +196,19 @@ impl BrepRegistry {
         Ok(receipt)
     }
 
-    /// 🪓️ Admits both box halves without changing the live index.
-    pub fn plan_box_split(&mut self, source: &str, origin: EVec3, normal: EVec3) -> Result<[SolidPublication; 2], ValueError> {
-        let solid = self.live_solid_primitive(source).ok_or_else(|| ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original Split requires a certified box"))?;
-        let [positive, negative] = solid.split_by_axis_plane(origin, normal).map_err(|reason| ValueError::literal(ValueRefusalKind::InvalidValue, reason))?;
+    /// 🪓️ Admits both analytic halves without changing the live index.
+    pub fn plan_plane_split(&mut self, source: &str, origin: EVec3, normal: EVec3) -> Result<[SolidPublication; 2], ValueError> {
+        let (_,solid)=self.preview_provenance(source).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Split requires a certified analytic or box-derived solid"))?;
+        let [positive,negative]=match solid {
+            SolidProvenance::Primitive(PrimitiveProvenance{primitive:SolidPrimitive::Sphere{frame,radius},..})=>
+                split_spherical_support(*frame,*radius,None,origin,normal)?.map(SolidBoundary::SphericalCaps),
+            SolidProvenance::SphericalCaps(shape,_) if shape.is_disk(1)=>
+                split_spherical_support(shape.frame(0),shape.radius(0),spherical_axial_span(*shape),origin,normal)?.map(SolidBoundary::SphericalCaps),
+            _=>solid.split_by_plane(origin,normal)?,
+        };
         let owner = std::ptr::from_ref(&*self) as usize;
         let mut labels = semio_framework_3d_brep_representation::topology::history::LabelSource::from_next(self.body.labels.next());
-        let mut admit = |shape| SolidPublication::begin(owner, SolidBoundary::Analytic(shape), &mut labels, |label| primitive_handle(b"Solid:", label));
+        let mut admit = |shape| SolidPublication::begin(owner, shape, &mut labels, |label| primitive_handle(b"Solid:", label));
         let pair = [admit(positive)?, admit(negative)?];
         self.body.labels = labels;
         self.unpublished_topology += 2;

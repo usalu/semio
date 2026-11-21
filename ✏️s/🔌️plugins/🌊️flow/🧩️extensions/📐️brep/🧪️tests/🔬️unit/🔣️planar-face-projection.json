@@ -10,15 +10,30 @@
     [[11, 21, 31], [11, 22, 32], [12, 22, 32], [12, 21, 31]],
     [[16, 21, 31], [16, 22, 32], [17, 22, 32], [17, 21, 31]]
   ],
+  "area": 56.568542494923804,
   "cases": [
-    { "name": "interior plane foot", "target": [14, 20, 34], "point": [14, 22, 32] },
-    { "name": "outside finite outer edge", "target": [19, 22, 34], "point": [18, 23, 33] },
-    { "name": "outside in concave notch", "target": [14.75, 23, 35], "point": [15, 24, 34] },
-    { "name": "inside first hole", "target": [11.8, 20, 33], "point": [12, 21.5, 31.5] },
-    { "name": "hole distance in world units under skew basis", "target": [11.3, 20.15, 32.15], "point": [11.3, 21, 31] },
-    { "name": "inside second hole", "target": [16.2, 22, 31], "point": [16, 21.5, 31.5] },
-    { "name": "on inner edge", "target": [12, 21.5, 31.5], "point": [12, 21.5, 31.5] },
-    { "name": "above outer vertex", "target": [18, 18, 32], "point": [18, 20, 30] },
-    { "name": "outside nearest segment endpoint", "target": [19, 18, 30], "point": [18, 20, 30] }
+    { "name": "interior plane foot", "target": [14, 20, 34], "point": [14, 22, 32], "distance": 2.8284271247461903 },
+    { "name": "outside finite outer edge", "target": [19, 22, 34], "point": [18, 23, 33], "distance": 1.7320508075688772 },
+    { "name": "outside in concave notch", "target": [14.75, 23, 35], "point": [15, 24, 34], "distance": 1.4361406616345072 },
+    { "name": "inside first hole", "target": [11.8, 20, 33], "point": [12, 21.5, 31.5], "distance": 2.130727575266252 },
+    { "name": "hole distance in world units under skew basis", "target": [11.3, 20.15, 32.15], "point": [11.3, 21, 31], "distance": 1.430034964607509 },
+    { "name": "inside second hole", "target": [16.2, 22, 31], "point": [16, 21.5, 31.5], "distance": 0.7348469228349532 },
+    { "name": "on inner edge", "target": [12, 21.5, 31.5], "point": [12, 21.5, 31.5], "distance": 0.0 },
+    { "name": "above outer vertex", "target": [18, 18, 32], "point": [18, 20, 30], "distance": 2.8284271247461903 },
+    { "name": "outside nearest segment endpoint", "target": [19, 18, 30], "point": [18, 20, 30], "distance": 2.23606797749979 }
+  ],
+  "linearDistance": [
+    {"id":"finite line crosses the face interior","origin":[14,20,34],"direction":[0,1,-1],"distance":0,"range":[0,4]},
+    {"id":"plane hit is inside a hole and nearest point is on its side","origin":[11.5,21.5,31.5],"direction":[0,-1,1],"distance":0.5},
+    {"id":"trim excludes the plane hit and its endpoint foot lies inside","origin":[14,20,34],"direction":[0,1,-1],"distance":2.121320343559643,"range":[0,0.5]},
+    {"id":"parallel projected segment crosses the face with both endpoints outside","origin":[9,20,34],"direction":[1,0,0],"distance":2.8284271247461903,"range":[0,12]},
+    {"id":"parallel projected segment lies entirely inside the material","origin":[13,21,33],"direction":[1,0,0],"distance":1.4142135623730951,"range":[0,1]},
+    {"id":"parallel projected segment lies wholly in the hole","origin":[11.3,20,33],"direction":[1,0,0],"distance":2.142428528562855,"range":[0,0.4]},
+    {"id":"parallel segment outside the face projects to a finite outer edge","origin":[19,22,34],"direction":[1,0,0],"distance":1.7320508075688772,"range":[0,2]},
+    {"id":"nearest outside points are a line endpoint and a face vertex","origin":[19,18,30],"direction":[1,0,0],"distance":2.23606797749979,"range":[0,2]},
+    {"id":"unbounded coplanar line intersects the finite face","origin":[9,22,32],"direction":[1,0,0],"distance":0},
+    {"id":"unbounded parallel line has a finite outer edge limit","origin":[9,18,30],"direction":[1,0,0],"distance":2},
+    {"id":"antiparallel authored range keeps the same finite face distance","origin":[21,22,34],"direction":[-1,0,0],"distance":1.7320508075688772,"range":[0,2]},
+    {"id":"zero width bounded line acts as an authored point","origin":[14,20,34],"direction":[0,1,-1],"distance":1.4142135623730951,"range":[1,1]}
   ]
 }

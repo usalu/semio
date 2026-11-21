@@ -59,8 +59,7 @@ pub struct InkInteractionJob {
     pub(crate) camera: InkCameraF,
     pub(crate) drag: Option<SceneDragMode>,
     pub(super) stroke_update: Option<(String, InkOwnedRaw)>,
-    pub(super) pending_fragments: InkRawPages,
-    pub(super) pending_remove_id: Option<String>,
+    pub(super) pending_eraser_events: InkRawPages,
 }
 
 fn checked_ink_drag(surface_id: &str) -> Result<Option<SceneDragMode>, semio_ui_action::BoundedActionFault> {
@@ -154,8 +153,7 @@ impl InkInteractionJob {
             camera,
             drag,
             stroke_update: None,
-            pending_fragments: InkRawPages::default(),
-            pending_remove_id: None,
+            pending_eraser_events: InkRawPages::default(),
         }))
     }
 
@@ -188,21 +186,7 @@ impl InkInteractionJob {
     fn scan_one(&mut self, scene: &UiComponentSceneNode, inner: Rect) -> Result<bool, semio_ui_action::BoundedActionFault> {
         match self.event {
             InkInteractionEvent::PointerDown { x, y, button, .. } if button == 0 && (self.utility == "eraserStroke" || self.utility == "eraserPoint") => {
-                if self.push_pending_eraser_event()? {
-                    return Ok(false);
-                }
-                let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
-                let Some(block) = self.block_cursor.next(document)? else {
-                    self.events.seal()?;
-                    return Ok(true);
-                };
-                let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
-                let prepared = Self::prepare_eraser_block(&block, world_x, world_y, document.eraser_radius.unwrap_or(12.0), self.utility == "eraserPoint")?;
-                if let Some((remove_id, fragments)) = prepared {
-                    self.pending_remove_id = Some(remove_id);
-                    self.pending_fragments = fragments;
-                }
-                Ok(false)
+                self.scan_eraser(inner, x, y, self.utility == "eraserPoint")
             }
             InkInteractionEvent::PointerDown { x, y, button: 0, .. } if self.utility == "selectDirect" => self.scan_hit(inner, x, y),
             InkInteractionEvent::PointerMove { x, y } => {
@@ -233,51 +217,62 @@ impl InkInteractionJob {
         }
     }
 
-    fn push_pending_eraser_event(&mut self) -> Result<bool, semio_ui_action::BoundedActionFault> {
-        if let Some(remove_id) = self.pending_remove_id.as_deref() {
-            self.events.push(&json!({ "operation": "removeBlock", "blockId": remove_id }))?;
-            self.pending_remove_id = None;
+    /// ⏮️ Visits point-erased siblings right to left so edits preserve every earlier sibling index.
+    fn scan_eraser(&mut self, inner: Rect, x: f32, y: f32, points_only: bool) -> Result<bool, semio_ui_action::BoundedActionFault> {
+        if let Some(event) = self.pending_eraser_events.front()? {
+            self.events.push_raw(event)?;
+            self.pending_eraser_events.pop_front();
+            return Ok(false);
+        }
+        let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+        let offset = self.block_cursor.index;
+        if offset == document.span_len {
+            self.events.seal()?;
             return Ok(true);
         }
-        if let Some(fragment) = self.pending_fragments.front()? {
-            self.events.push_add_block_raw(fragment)?;
-            self.pending_fragments.pop_front();
-            return Ok(true);
+        let slot = if points_only { document.span_len - 1 - offset } else { offset };
+        let block = document.block(slot)?.ok_or(semio_ui_action::BoundedActionFault::Structure)?;
+        self.block_cursor.index += 1;
+        let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
+        let radius = document.eraser_radius.unwrap_or(12.0);
+        if ink_item_kind(&block) != "stroke" || (!points_only && !ink_hits_point(&block, world_x, world_y, radius)) {
+            return Ok(false);
         }
-        Ok(false)
-    }
-
-    fn prepare_eraser_block(block: &Value, x: f64, y: f64, radius: f64, points_only: bool) -> Result<Option<(String, InkRawPages)>, semio_ui_action::BoundedActionFault> {
-        if ink_item_kind(block) != "stroke" || !ink_hits_point(block, x, y, radius) {
-            return Ok(None);
+        let fragments = if points_only { erase_ink_stroke_points_in_item(&block, world_x, world_y, radius) } else { Vec::new() };
+        if matches!(fragments.as_slice(), [first] if first == &block) {
+            return Ok(false);
         }
-        let id = ink_item_id(block);
+        let id = ink_item_id(&block);
         if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
             return Err(semio_ui_action::BoundedActionFault::StringCredits);
         }
-        if !points_only {
-            return Ok(Some((id.to_owned(), InkRawPages::default())));
+        let mut fragments = fragments.into_iter();
+        let Some(first) = fragments.next() else {
+            self.events.push(&json!({ "operation": "removeBlock", "blockId": id }))?;
+            return Ok(false);
+        };
+        let mut nodes = 0;
+        validate_ink_value(&first, 0, &mut nodes)?;
+        self.events.push(&json!({ "operation": "updateBlock", "blockId": id, "block": first }))?;
+        if fragments.as_slice().is_empty() {
+            return Ok(false);
         }
-        let fragments = erase_ink_stroke_points_in_item(block, x, y, radius);
-        if fragments.len() == 1 && fragments[0] == *block {
-            return Ok(None);
+        let InkBlockPosition { parent, sibling, .. } = document.positions[slot];
+        let parent_id = parent.map(|parent_slot| document.block_id(parent_slot)?.ok_or(semio_ui_action::BoundedActionFault::Structure)).transpose()?;
+        if parent_id.as_ref().is_some_and(|id| id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY) {
+            return Err(semio_ui_action::BoundedActionFault::StringCredits);
         }
-        if fragments.len() > INK_INTERACTION_ITEM_CAPACITY {
-            return Err(semio_ui_action::BoundedActionFault::ItemCredits);
-        }
-        for fragment in &fragments {
-            let mut nodes = 0usize;
-            validate_ink_value(fragment, 0, &mut nodes)?;
-        }
-        let mut encoded = InkRawPages::default();
-        for fragment in fragments {
-            let raw = serde_json::to_string(&fragment).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
-            if raw.len() > INK_INTERACTION_DOCUMENT_BYTE_CAPACITY {
-                return Err(semio_ui_action::BoundedActionFault::ByteCredits);
+        for (offset, mut fragment) in fragments.enumerate() {
+            while document.contains_block_id(ink_item_id(&fragment))? {
+                fragment["id"] = json!(create_ink_host_id("stroke"));
             }
-            encoded.push(&raw)?;
+            let mut nodes = 0;
+            validate_ink_value(&fragment, 0, &mut nodes)?;
+            let event = json!({ "operation": "addBlock", "block": fragment, "parentId": parent_id, "index": sibling + offset + 1 });
+            let raw = serde_json::to_string(&event).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
+            self.pending_eraser_events.push(&raw)?;
         }
-        Ok(Some((id.to_owned(), encoded)))
+        Ok(false)
     }
 
     /// 🤏️ A block move's drag record — the moved ids and the world offset from the press — which the plugin yields as ONE
@@ -294,22 +289,8 @@ impl InkInteractionJob {
             return Ok(true);
         }
         if matches!(self.drag.as_ref(), Some(SceneDragMode::InkEraser { .. })) {
-            if self.push_pending_eraser_event()? {
-                return Ok(false);
-            }
-            let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
-            let Some(block) = self.block_cursor.next(document)? else {
-                self.events.seal()?;
-                return Ok(true);
-            };
-            let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
             let points_only = matches!(self.drag.as_ref(), Some(SceneDragMode::InkEraser { mode }) if mode == "eraserPoint");
-            let prepared = Self::prepare_eraser_block(&block, world_x, world_y, document.eraser_radius.unwrap_or(12.0), points_only)?;
-            if let Some((remove_id, fragments)) = prepared {
-                self.pending_remove_id = Some(remove_id);
-                self.pending_fragments = fragments;
-            }
-            return Ok(false);
+            return self.scan_eraser(inner, x, y, points_only);
         }
         let document = self.document.as_ref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let Some(block) = self.block_cursor.next(document)? else {

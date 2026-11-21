@@ -1,0 +1,9 @@
+# Retained Triangulation Surface Fidelity
+
+The original Triangulate operator had the source vertex and face provenance to copy authored surface data, but its topology rebuild generated replacement geometric vertex normals, cleared per-face smooth shading and zeroed raw corner UVs. The old native build reproduced the loss with a submitted normal of [0, 0.6, 0.8] becoming [0, 0, 1].
+
+Triangulate now retains one exact surface record per step before the generic attribute remap. The source corner index uses the existing paged index with an independent backing quote for each insertion. The next stages retain an original vertex normal, an original face shading flag or an original face/vertex UV per event. Existing seam and generic attribute remapping reuse the same original source corner index. Flow and the procedural Mesh adapter expose the new demand and settle actual Work and physical receipts.
+
+The neutral fixture combines a smooth quad and an adjacent flat triangle with distinct raw UVs on opposite seam sides, one face attribute and one point attribute. The pinned native witness observed 30 admitted remap events and 155 copied bytes, with no Work, receipt or progress when backing capacity was independently denied. It retained the exact vertex normals, shading flags, corner UVs, seam and point and face samples. Cancellation after eight remap events released 129,480 bytes without publishing. Actual native tessellation emitted a GLB with three triangles. Three.js independently checked area, raw UVs and shading normals in that GLB with 49 assertions.
+
+The portable Mesh suite passed all 17 tests with 4,015 assertions. Registered Flow coverage now exercises Construct, Triangulate and GLB export and cancels during the new surface stage. Its source parses, and its length and dependency source closures fit repository admission. The linked Flow target remains storage-gated.

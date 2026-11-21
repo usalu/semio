@@ -1,7 +1,9 @@
+import {concurrentEditV1,retryOnConcurrentEditSyncV1,type ChurnOptionsV1} from "../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {mkdirSync,readdirSync,readFileSync,renameSync,statSync,unlinkSync,writeFileSync} from "node:fs";
 import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
+import {leaseFileBusyV1} from "../../../../🔒️leases/🪟️windows/🟦️.ts";
 import {requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../🔒️leases/🎛️control/🟦️.ts";
 import {agedHostSampleV1,evaluateHostCapacityV1,hostBootAnchorV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,requireHostCapacityV1,withUnmanagedHostV1,type HostBootAnchorV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../📏️decision/🟦️.ts";
 import {currentHostProbeV1,readHostSampleV1,type HostSampleRecordV1} from "../../📡️sampling/🟦️.ts";
@@ -40,7 +42,21 @@ export const absentV1=(error:unknown):boolean=>["ENOENT","ENOTDIR"].includes((er
 export const readJson=(path:string):unknown=>{try{return JSON.parse(readFileSync(path,"utf8"));}catch(error){if(absentV1(error)||error instanceof SyntaxError)return undefined;throw error;}};
 export const remove=(path:string):void=>{try{unlinkSync(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}};
 export const modified=(path:string):number=>{try{return statSync(path).mtimeMs;}catch(error){if(absentV1(error))return 0;throw error;}};
-export const names=(directory:string,child:string):string[]=>readdirSync(join(directory,child)).filter(file=>file.endsWith(".json"));
+
+/** 🧹️ Reclaims a still-stale ledger record. A busy record stays eligible for the next admission pass. */
+function reclaimStale(path:string,observedAt:number):void{
+ if(observedAt===0||modified(path)!==observedAt)return;
+ try{remove(path);}catch(error){if(!leaseFileBusyV1(error))throw error;}
+}
+type HostRosterScanPortsV1=Readonly<{platform?:string;list?:(path:string)=>string[];retry?:Pick<ChurnOptionsV1,"signal"|"onRetry"|"sleepSync">}>;
+export function names(directory:string,child:string,ports:HostRosterScanPortsV1={}):string[]{
+ const path=join(directory,child),list=ports.list??readdirSync,platform=ports.platform??process.platform;
+ if(platform!=="win32")return list(path).filter(file=>file.endsWith(".json"));
+ return retryOnConcurrentEditSyncV1("read",()=>{
+  try{return list(path).filter(file=>file.endsWith(".json"));}
+  catch(error){if(!leaseFileBusyV1(error,platform))throw error;throw Object.assign(concurrentEditV1("busy",path),{cause:error});}
+ },{...ports.retry,retryable:error=>(error as {reason?:unknown}|null)?.reason==="busy"});
+}
 
 /** 📋️ What the gate currently knows. */
 export type HostCapacityStatusV1=Readonly<{host:HostSampleV1;grants:readonly HostGrantV1[];waiters:readonly HostWaiterV1[];evaluation:HostEvaluationV1}>;
@@ -69,24 +85,28 @@ export function hostGrantPidReusedV1(facts:Readonly<{grant:Pick<HostGrantV1,"adm
  return facts.heartbeatAgeMs>2*facts.heartbeatMs&&facts.startMs!==undefined&&facts.startMs>facts.grant.admittedAtMs+(facts.toleranceMs??5000);
 }
 
-export function readGrants(directory:string,now:number,policy:HostCapacityPolicyV1,startOf:(pid:number)=>number|undefined=processStartMillisecondsV1):HostGrantV1[]{
+export function readGrants(directory:string,now:number,policy:HostCapacityPolicyV1,startOf:(pid:number)=>number|undefined=processStartMillisecondsV1,signal?:AbortSignal,reclaim=true):HostGrantV1[]{
  const rows:HostGrantV1[]=[],boot=hostBootAtV1(directory,now);
- for(const name of names(directory,"grants")){
-  const path=join(directory,"grants",name),value=readJson(path);
-  if(!isHostCapacityV1("Grant",value)){if(now-modified(path)>policy.wait.lockStaleMilliseconds)remove(path);continue;}
+ for(const name of names(directory,"grants",{retry:{signal}})){
+  const path=join(directory,"grants",name),modifiedAtMs=modified(path),value=readJson(path);
+  if(!isHostCapacityV1("Grant",value)){if(reclaim&&now-modifiedAtMs>policy.wait.lockStaleMilliseconds)reclaimStale(path,modifiedAtMs);continue;}
   const grant=value as HostGrantV1;
-  if(!isCurrentHostGrantV1({grant,expectedId:name.slice(0,-5),pidAlive:alive(grant.pid)&&!(now-modified(path)>2*policy.wait.heartbeatMilliseconds&&hostGrantPidReusedV1({grant,heartbeatAgeMs:now-modified(path),heartbeatMs:policy.wait.heartbeatMilliseconds,startMs:startOf(grant.pid)})),nowMs:now,bootAtMs:boot,modifiedAtMs:modified(path)},policy))remove(path);else rows.push(grant);
+  const heartbeatAgeMs=now-modifiedAtMs;
+  const pidAlive=alive(grant.pid)&&!(heartbeatAgeMs>2*policy.wait.heartbeatMilliseconds&&hostGrantPidReusedV1({grant,heartbeatAgeMs,heartbeatMs:policy.wait.heartbeatMilliseconds,startMs:startOf(grant.pid)}));
+  if(isCurrentHostGrantV1({grant,expectedId:name.slice(0,-5),pidAlive,nowMs:now,bootAtMs:boot,modifiedAtMs},policy))rows.push(grant);
+  else if(reclaim)reclaimStale(path,modifiedAtMs);
  }
  return rows;
 }
 
-export function readWaiters(directory:string,now:number,policy:HostCapacityPolicyV1):HostWaiterV1[]{
+export function readWaiters(directory:string,now:number,policy:HostCapacityPolicyV1,signal?:AbortSignal,reclaim=true):HostWaiterV1[]{
  const rows:HostWaiterV1[]=[],stale=policy.wait.pollMilliseconds*30;
- for(const name of names(directory,"queue")){
-  const path=join(directory,"queue",name),value=readJson(path);
-  if(!isHostCapacityV1("Waiter",value)){if(now-modified(path)>policy.wait.lockStaleMilliseconds)remove(path);continue;}
+ for(const name of names(directory,"queue",{retry:{signal}})){
+  const path=join(directory,"queue",name),modifiedAtMs=modified(path),value=readJson(path);
+  if(!isHostCapacityV1("Waiter",value)){if(reclaim&&now-modifiedAtMs>policy.wait.lockStaleMilliseconds)reclaimStale(path,modifiedAtMs);continue;}
   const waiter=value as HostWaiterV1;
-  if(!alive(waiter.pid)||now-modified(path)>stale)remove(path);else rows.push(waiter);
+  if(alive(waiter.pid)&&now-modifiedAtMs<=stale)rows.push(waiter);
+  else if(reclaim)reclaimStale(path,modifiedAtMs);
  }
  return rows;
 }
@@ -104,6 +124,6 @@ export async function currentSample(directory:string,policy:HostCapacityPolicyV1
 
 /** 🚥️ Reads the gate without joining its queue: the sample, the live grants, the waiters and what the next request would get. */
 export async function readHostCapacityStatusV1(options:HostCapacityPortsV1&Readonly<{directory:string;policy:HostCapacityPolicyV1;control:ResourceLeaseControl;environment?:Readonly<Record<string,string|undefined>>}>):Promise<HostCapacityStatusV1>{
- const now=options.now??Date.now,directory=prepare(options.directory),host=await currentSample(directory,options.policy,options.control,options,options.environment),grants=readGrants(directory,now(),options.policy),waiters=readWaiters(directory,now(),options.policy);
+ const now=options.now??Date.now,directory=prepare(options.directory),host=await currentSample(directory,options.policy,options.control,options,options.environment),grants=readGrants(directory,now(),options.policy,undefined,options.control.signal,false),waiters=readWaiters(directory,now(),options.policy,options.control.signal,false);
  return Object.freeze({host,grants,waiters,evaluation:evaluateHostCapacityV1(options.policy,withUnmanagedHostV1(host,grants),grants,waiters,now())});
 }

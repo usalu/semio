@@ -6,7 +6,7 @@ use std::sync::Arc;
 pub use semio_framework_value_testing_presence_retirement::*;
 
 pub fn observed_box_close(owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> RetainedCloneStep {
-    semio_framework_value_testing_presence_retirement::observed_step(grant, |effect| settled(crate::artifact_retirement_box_close_step(owner, effect)))
+    semio_framework_value_testing_presence_retirement::observed_step(grant, |effect| settled(crate::artifact_retirement_box_close_step(owner, effect.grant().maximum_copy_bytes, effect)))
 }
 
 pub fn admit_returned_string(registry: &crate::SnapshotReadRegistryHandle, expected: &str) -> Option<Box<dyn ErasedSnapshotRetirement>> {

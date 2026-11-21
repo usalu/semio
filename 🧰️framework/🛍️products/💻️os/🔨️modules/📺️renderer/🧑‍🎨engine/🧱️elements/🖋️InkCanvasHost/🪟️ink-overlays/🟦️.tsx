@@ -33,7 +33,7 @@ export function InkTextEditorOverlay({ block, screenBounds, onCommit, onCancel }
     return () => editor.removeEventListener("keydown", onKeyDown);
   }, [onCancel]);
   return (
-    <SharedBorderRow orientation="vertical" className="bg-background/95 absolute z-30 shadow-sm" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
+    <SharedBorderRow data-ink-editor-overlay="" orientation="vertical" className="bg-background/95 absolute z-30 shadow-sm" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
       <SharedBorderRow className="shrink-0">
         <button
           type="button"
@@ -114,7 +114,7 @@ export function InkTableCellEditorOverlay({
     inputRef.current?.select();
   }, []);
   return (
-    <div className="absolute z-30 flex" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
+    <div data-ink-editor-overlay="" className="absolute z-30 flex" style={{ left: screenBounds.x, top: screenBounds.y, width: screenBounds.width, height: screenBounds.height }}>
       <Input
         id="ink-table-cell-editor"
         ref={inputRef}

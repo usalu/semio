@@ -4,20 +4,35 @@ use std::{borrow::Cow,collections::VecDeque};
 use semio_s_artifact_stdio_contract::part21::{Part21Instance,Part21Value,write_part21_header,write_part21_instance,write_part21_footer};
 use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::draughting::DraughtingWriter;
 use super::geometry::{MM,position,outline};
+use semio_framework_io_ports::VectorGraphSourceV1;
+use semio_s_artifact_layout_layout_model::DrawingSourceAddress;
 #[derive(Debug)]
 pub(crate) enum StepAdvance{Progress,Fragment(Vec<u8>),Done}
 #[derive(Debug)]
-pub(crate) struct StepExportSession{stage:u8,row:usize,text_offset:usize,text_x:f64,text_y:f64,run_index:usize,outline_done:bool,writer:Option<DraughtingWriter>,entities:VecDeque<Part21Instance>,background:super::background::StepBackground}
+pub(crate) struct StepExportSession{stage:u8,row:usize,text_offset:usize,text_x:f64,text_y:f64,run_index:usize,outline_done:bool,writer:Option<DraughtingWriter>,entities:VecDeque<Part21Instance>,background:super::background::StepBackground,background_index:u8}
 fn source_frame<'a>(doc:&'a LayoutSnapshot,page:&'a Page,parent:bool,index:usize)->Option<(Cow<'a,Frame>,bool)>{if parent{let source=doc.parent_pages.iter().find(|source|page.parent_page_id.as_ref()==Some(&source.id))?;let frame=source.frames.get(index)?;let visible=!source.layers.iter().any(|layer|layer.id==frame.layer_id()&&!layer.visible);if let Some(change)=page.overrides.iter().find(|change|change.object_id==frame.id()){let mut frame=frame.clone();semio_s_artifact_layout_layout_model::apply_page_override(&mut frame,change);Some((Cow::Owned(frame),visible))}else{Some((Cow::Borrowed(frame),visible))}}else{let frame=page.frames.get(index)?;Some((Cow::Borrowed(frame),!page.layers.iter().any(|layer|layer.id==frame.layer_id()&&!layer.visible)))}}
 fn rgb(value:Option<[f32;4]>)->Option<[f64;3]>{value.map(|color|[f64::from(color[0]),f64::from(color[1]),f64::from(color[2])])}
 fn value_heap(value:&Part21Value)->usize{match value{Part21Value::Str(value)|Part21Value::Enum(value)|Part21Value::Binary(value)=>value.capacity(),Part21Value::Real(value)=>value.coefficient.capacity(),Part21Value::List(values)=>values.capacity()*std::mem::size_of::<Part21Value>()+values.iter().map(value_heap).sum::<usize>(),Part21Value::Typed{name,items}=>name.capacity()+items.capacity()*std::mem::size_of::<Part21Value>()+items.iter().map(value_heap).sum::<usize>(),_=>0}}
 fn entity_heap(instance:&Part21Instance)->usize{instance.entities.capacity()*std::mem::size_of::<(String,Vec<Part21Value>)>()+instance.entities.iter().map(|(name,args)|name.capacity()+args.capacity()*std::mem::size_of::<Part21Value>()+args.iter().map(value_heap).sum::<usize>()).sum::<usize>()}
 impl StepExportSession{
-    pub(crate) fn new()->Self{Self{stage:0,row:0,text_offset:0,text_x:0.0,text_y:0.0,run_index:0,outline_done:false,writer:None,entities:VecDeque::new(),background:super::background::StepBackground::new()}}
+    pub(crate) fn new()->Self{Self{stage:0,row:0,text_offset:0,text_x:0.0,text_y:0.0,run_index:0,outline_done:false,writer:None,entities:VecDeque::new(),background:super::background::StepBackground::new(),background_index:0}}
     fn next_row(&mut self){self.row+=1;self.text_offset=0;self.text_x=0.0;self.text_y=0.0;self.run_index=0;self.outline_done=false;}
-    pub(crate) fn advance(&mut self,doc:&LayoutSnapshot,selected:Option<usize>)->Result<StepAdvance,String>{
+    fn background_source(&self,doc:&LayoutSnapshot,page_index:usize)->Option<DrawingSourceAddress>{
+        match self.background_index {
+            0 if doc.background_drawing.is_some()=>Some(DrawingSourceAddress::Document),
+            0|1 if doc.pages.get(page_index)?.background_drawing.is_some()=>Some(DrawingSourceAddress::Page(page_index)),
+            _=>None,
+        }
+    }
+    pub(crate) fn required_drawing(&self,doc:&LayoutSnapshot,selected:Option<usize>)->Option<DrawingSourceAddress>{
+        if self.stage!=1||!self.entities.is_empty(){return None;}
+        self.background_source(doc,selected.unwrap_or(0))
+    }
+    pub(crate) fn advance(&mut self,doc:&LayoutSnapshot,selected:Option<usize>,qualified:bool,drawing:Option<&dyn VectorGraphSourceV1>)->Result<StepAdvance,String>{
         if let Some(entity)=self.entities.pop_front(){return Ok(StepAdvance::Fragment(write_part21_instance(&entity).into_bytes()));}
-        let page=match selected{Some(index)=>doc.pages.get(index).ok_or("layout-export-page-missing")?,None=>{if doc.pages.len()!=1{return Err("layout.step.select-one-page".into());}&doc.pages[0]}};
+        let page_index=match selected{Some(index)=>index,None=>{if doc.pages.len()!=1{return Err("layout.step.select-one-page".into());}0}};
+        let page=doc.pages.get(page_index).ok_or("layout-export-page-missing")?;
+        if self.stage==0&&!qualified&&self.background_source(doc,page_index).is_some(){return Err("layout.step.original-drawing-read-required".into());}
         if self.stage==0{let graph=super::sheet_graph(page)?;let solid=graph.by_type("MANIFOLD_SOLID_BREP").last().ok_or("layout.step.page-solid")?.id;let(writer,initial)=DraughtingWriter::new(graph.next_id())?;self.writer=Some(writer);self.entities.extend(graph.instances);self.entities.extend(initial);self.entities.extend(self.writer.as_mut().unwrap().solid_representation(&format!("Page {}",page.id),solid));self.stage=1;return Ok(StepAdvance::Fragment(write_part21_header(&graph.header).into_bytes()));}
         if self.stage==2||self.stage==3{let Some((frame,layer_visible))=source_frame(doc,page,self.stage==2,self.row)else{self.stage+=1;self.row=0;return Ok(StepAdvance::Progress)};if !frame.visible()||!layer_visible{self.next_row();return Ok(StepAdvance::Progress);}let b=frame.bounds();
             match frame.as_ref(){
@@ -26,7 +41,18 @@ impl StepExportSession{
                 Frame::Image{id,link_id,..}=>{let link=doc.links.iter().find(|link|&link.id==link_id).ok_or("layout.step.missing-image")?;if !self.outline_done{self.writer.as_mut().unwrap().set_curve_width(MM)?;self.entities.extend(self.writer.as_mut().unwrap().path(id,&outline(b,page.height),Some([0.0,0.0,0.0]),None)?);self.outline_done=true;}else if self.text_offset<link.path.len(){let mut end=(self.text_offset+512).min(link.path.len());while !link.path.is_char_boundary(end){end-=1;}let name=format!("{} image@{}",id,self.text_offset);self.entities.extend(self.writer.as_mut().unwrap().text(&name,&link.path[self.text_offset..end],position(b,page.height,0.0,9.0+self.text_y),-b.rotation,b.width*MM,9.0*MM,9.0*MM,None)?);self.text_offset=end;self.text_y+=10.8;}else{self.next_row();}},
             }return Ok(StepAdvance::Progress);
         }
-        if self.stage==1{let(done,entities)=self.background.advance(doc,page,self.writer.as_mut().unwrap())?;self.entities.extend(entities);if done{self.stage=2;}return Ok(StepAdvance::Progress);}
+        if self.stage==1{
+            if let Some(source)=self.background_source(doc,page_index){
+                let graph=drawing.ok_or("layout.step.original-drawing-read-required")?;
+                let(done,entities)=self.background.advance(graph,page,self.writer.as_mut().unwrap())?;
+                self.entities.extend(entities);
+                if done{
+                    self.background_index=match source{DrawingSourceAddress::Document=>1,DrawingSourceAddress::Page(_)=>2};
+                    self.background.next_source();
+                }
+            }else{self.stage=2;}
+            return Ok(StepAdvance::Progress);
+        }
         if self.stage==4{self.stage=5;return Ok(StepAdvance::Fragment(write_part21_footer().as_bytes().to_vec()));}Ok(StepAdvance::Done)
     }
     pub(crate) fn next_release_bytes(&self)->usize{if let Some(entity)=self.entities.front(){entity_heap(entity)}else if self.entities.capacity()!=0{self.entities.capacity()*std::mem::size_of::<Part21Instance>()}else if !self.background.terminal_is_empty(){self.background.next_release_bytes()}else{0}}

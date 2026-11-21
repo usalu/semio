@@ -376,7 +376,7 @@ pub fn bind_inference_document(declared: &semio_framework::ContributedInferenceM
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
     /// 📖️ The guest session's live canonical `pack`/`spr` pair — one synchronous guest turn, no reply to wait on.
-    pub(crate) fn read_artifact_pair(&mut self, instance: u32) -> Result<(Vec<u8>, Vec<u8>), Fault> {
+    pub fn read_artifact_pair(&mut self, instance: u32) -> Result<(Vec<u8>, Vec<u8>), Fault> {
         match self.exchange_one_real(instance, store::AppCommand::ReadDocument { seq: 0 })? {
             store::AppFrame::Document { pack, spr, .. } => Ok((pack, spr)),
             store::AppFrame::Error { fault, .. } => Err(decode_guest_fault(&fault)),
@@ -426,7 +426,12 @@ impl ArtifactChannel for PluginArtifactChannel {
                     )? {
                         store::AppFrame::Emit { document_ops, config_ops, draft_ops, child_ops, output, .. } => {
                             let (ops, warnings) = headless_agent_ops(&capability_id, PreparedOps { document: ops_pack_lane(document_ops)?, config: ops_pack_lane(config_ops)?, draft: ops_pack_lane(draft_ops)?, children: child_ops })?;
-                            let output = if output.is_empty() { None } else { Some(serde_json::Value::from(store::pack_rt::decode_wire_value(&output).map_err(|error| Self::not_wired("decoding command output", error))?)) };
+                            let output = if output.is_empty() {
+                                None
+                            } else {
+                                let value = store::pack_rt::decode_wire_value(&output).map_err(|error| Self::not_wired("decoding command output", error))?;
+                                Some(value.into())
+                            };
                             AppFrame::Emit { ops, warnings, output }
                         }
                         store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),

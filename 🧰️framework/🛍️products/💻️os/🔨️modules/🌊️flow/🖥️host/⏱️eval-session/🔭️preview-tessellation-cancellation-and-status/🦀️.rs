@@ -82,7 +82,7 @@ impl FlowEvalSession {
         if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"preview cancellation requires an admitted item"))}
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"preview cancellation requires admitted depth"))}
         let count=self.state.pending_tessellate_by_hash.len();
-        self.state.preview_cancelled=true;self.state.tick_scheduled=false;self.state.pending_host_cancelled=self.state.pending_host.is_some();self.state.preview_cancellation_cursor=Some(0);self.state.preview_cancellation_phase=0;
+        self.state.preview_cancelled=true;self.state.tick_scheduled=false;self.state.pending_host_cancelled=self.tick_host().is_some();self.state.preview_cancellation_cursor=Some(0);self.state.preview_cancellation_phase=0;
         Ok((count,RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 

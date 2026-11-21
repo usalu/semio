@@ -11,6 +11,7 @@ import schema from "./🧬️.json" with { type: "json" };
 import receipt from "../../../⚛️reactor/🎟️context/🌉️call/📤️receipt/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { readPluginRuntimeSource } from "../../../⚛️reactor/🏃️runtime/📖️source-text/🟦️.ts";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { coreParameterVector } from "./core-signature.🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
 await Parser.init();
@@ -56,8 +57,7 @@ test("owned interpreter selects all six original WIT job exports", () => {
       expect(constants.get(row.constant)).toBe(JSON.stringify(row.core));
       expect(all.match(new RegExp("\\bSelf::" + row.variant + "\\b", "g"))?.length).toBe(1);
       const arm = typeArms.find(node => new RegExp("\\bSelf::" + row.variant + "\\b").test(node.text))!.text.replace(/\s+/gu, "");
-      const parameters = row.parameters[0] === "i32" ? "ValueType::I32,ValueType::I32" : "ValueType::I64;" + row.parameters.length;
-      expect(arm).toContain(row.parameters.length===21?"parameters:[vec![ValueType::I32,ValueType::I32],vec![ValueType::I64;19]].concat(),results:vec![ValueType::I64]":"parameters:vec![" + parameters + "],results:vec![ValueType::I64]");
+      expect(arm, row.core).toContain(`parameters:${coreParameterVector(row.parameters)},results:vec![ValueType::I64]`);
     }
   } finally { db.close(); runtimeTree.delete(); tree.delete(); }
 });

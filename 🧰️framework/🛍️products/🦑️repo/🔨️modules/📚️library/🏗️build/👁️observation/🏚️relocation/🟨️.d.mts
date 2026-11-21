@@ -20,3 +20,6 @@ export function recordedRootsV1(rows:ArrayLike<{kind:string;path:string}>):strin
 export function recordedRootsOfIndexV1(index:{rows:ArrayLike<{kind:string;path:string}>}):string[];
 /** 🏡️ Teaches the process every root a fact index was recorded under that is not `live`. */
 export function adoptRecordedRootsV1(index:{rows:ArrayLike<{kind:string;path:string}>},live:string|undefined):boolean;
+
+/** 🧩️ Keeps relocated row identity stable for one validation round under the current root mapping. */
+export function createRowRebaserV1():<Row extends {path:string;fact:unknown}>(rows:ArrayLike<Row>&Iterable<Row>)=>ArrayLike<Row>&Iterable<Row>;

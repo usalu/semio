@@ -167,15 +167,19 @@ impl RasterPixelSourceWork {
         Some(semio_framework_pixels::RasterImage { width: owned.descriptor.width, height: owned.descriptor.height, pixels })
     }
 
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        raster_owned_close_work(self.retirement.as_deref(), !self.terminal_is_empty(), body)
+    }
+
     pub fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
         if self.owned.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned); }
         Ok(Default::default())
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         self.closing = true;
-        if self.retirement.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.owned, &mut self.retirement, grant) }
+        raster_retire_owned(&mut self.owned, &mut self.retirement, effect)
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.owned.is_none() && self.retirement.is_none() }

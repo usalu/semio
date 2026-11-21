@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Generate Terrain Contours",
+  "description": "Replace the previously generated terrain contour routes with stitched WGS84 isolines at multiples of the interval in metres. Use the saved elevation source and its mesh triangulation.",
+  "type": "object",
+  "properties": {
+    "intervalMetres": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 65535
+    }
+  },
+  "required": [
+    "intervalMetres"
+  ],
+  "additionalProperties": false
+}

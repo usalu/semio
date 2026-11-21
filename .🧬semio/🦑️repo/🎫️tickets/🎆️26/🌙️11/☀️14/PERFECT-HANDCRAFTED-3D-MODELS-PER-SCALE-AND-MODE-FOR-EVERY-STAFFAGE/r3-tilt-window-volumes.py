@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import runpy
 
 T = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("kit", os.path.join(T, "r3-tilt-window-kit.py"))
@@ -283,7 +284,9 @@ def scale200():
 
 
 if __name__ == "__main__":
-    volumes = {"50": scale50(), "100": scale100(), "200": scale200(), "500": {"status": "unavailable", "denominator": 500}}
+    volumes = {"50": scale50(), "100": scale100(), "200": scale200()}
+    author = runpy.run_path(os.path.join(T,"equipment-digital.py"))["authored_scale"]
+    volumes["500"] = author("tilt-window",volumes,500)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump({"volumes": volumes}, f, ensure_ascii=False, indent=2)
         f.write("\n")

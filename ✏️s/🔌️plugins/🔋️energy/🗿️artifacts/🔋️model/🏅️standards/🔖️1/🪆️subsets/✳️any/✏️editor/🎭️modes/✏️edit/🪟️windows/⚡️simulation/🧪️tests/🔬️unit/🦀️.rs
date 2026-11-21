@@ -109,16 +109,23 @@ fn the_window_kind_and_body_key_equal_the_run_session_literal() {
 
 #[test]
 fn actual_weather_identity_and_native_select_clear_bindings_are_rendered(){
+ fn find<'a>(node:&'a serde_json::Value,key:&str)->Option<&'a serde_json::Value>{
+  if node["key"]==key{return Some(node);}
+  node["children"].as_array()?.iter().find_map(|child|find(child,key))
+ }
  let law:serde_json::Value=serde_json::from_str(include_str!("weather.json")).unwrap();
  let link=store::ArtifactLink { target:semio_framework_artifact_reference::ArtifactRef::parse_uri(law["target"].as_str().unwrap()).unwrap(),pin:store::LinkPin::Head,role:law["role"].as_str().unwrap().into() };
  let model=crate::model::Model::default();
- for locale in [Locale::En,Locale::De]{
+ for (tag,locale) in [("en",Locale::En),("de",Locale::De)]{
   let rendered=text(render(None,&EnergyModelConfig::default(),&model.run_period,Some(&link),locale));
   assert!(rendered.contains(law["target"].as_str().unwrap()));
   assert!(rendered.contains(law["selectAction"].as_str().unwrap()));
   assert!(rendered.contains(law["clearAction"].as_str().unwrap()));
-  assert!(rendered.contains("energy-weather-address-input"));
   assert!(rendered.contains("energy-weather-clear"));
+  let tree:serde_json::Value=serde_json::from_str(&rendered).unwrap();
+  let parent=find(&tree,"energy-weather-address").expect("weather address row");
+  let input=find(parent,"energy-weather-address-input").expect("weather address input");
+  assert_eq!(input["accessibility"]["label"],law["accessibleNames"][tag]);
  }
 }
 

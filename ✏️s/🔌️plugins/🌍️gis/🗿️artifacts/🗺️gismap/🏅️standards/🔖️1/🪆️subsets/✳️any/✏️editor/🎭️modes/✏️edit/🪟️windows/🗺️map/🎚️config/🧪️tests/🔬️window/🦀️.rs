@@ -68,9 +68,9 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
             use crate::editor::gis2d::commands::example::set_active_example;
             use crate::editor::gis2d::commands::view::{fit_world, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
             use crate::editor::gis2d::{create_gis2d_app, Gis2dCommand, Gis2dPlayApp};
-            type Gis2dApp = semio_plugin::VcsArtifactApp<EditorApp<Gis2dPlayApp>, SemioMembers>;
+            type Gis2dApp = semio_plugin::VcsArtifactApp<EditorApp<Gis2dPlayApp>, GisMapMembers>;
             use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowMeasure};
-            use semio_s_artifact_stdio_semio::SemioMembers;
+            use crate::GisMapMembers;
 
             async fn dispatch(
                 app: &mut Gis2dApp,
@@ -137,7 +137,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
             let left = view.for_window_instance("gis-map-left").unwrap();
             let right = view.for_window_instance("gis-map-right").unwrap();
             let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, GisMapMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
             app.bind_instance_id(86).await;
             let outcome: Result<(), String> = async {
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -198,7 +198,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 }
                 if app.snapshot().map_err(|error| format!("{error:?}"))?.positions.is_empty() { return Err("GIS Map reuse example did not restore document positions".into()); }
                 if render(&mut app, &left, scope.cx()).await?.camera_json == camera_before_example { return Err("GIS Map example camera was not captured by its caller window".into()); }
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, GisMapMembers>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(87).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_payloads = reopened

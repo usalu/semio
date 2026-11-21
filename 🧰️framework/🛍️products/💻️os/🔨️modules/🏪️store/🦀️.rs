@@ -515,6 +515,7 @@ pub use semio_os_store_space_member::lifted_store::{ArtifactRefs, BlobStore, Lin
 pub use semio_os_store_space::lifted_store::{SpaceHost, create_member_store, install_funded_member_store_owners, install_unscheduled_catalog, open_member_store, space_history_store_owners};
 pub(crate) use semio_os_store_space::lifted_store::{validate_member_history_identity};
 pub use semio_os_store_engine_core::lifted_store::{ArtifactEnvelopeView, CommandReceipt, HistoryColumn, StoreCursor, StoreLog, StoreMintToken, StoreOwners, StoreWire, build_history_columns};
+pub use semio_os_store_engine::AtomicStoreReceive;
 pub use semio_os_store_engine::lifted_store::{ArtifactStore, ConfigStore, DraftStore, HistoryFinalization, config_store_from_initialized_runtime_with_owners};
 pub use semio_os_store_engine_checkpoint_graph::{merge_base, reconcile_alternative, retract_history_transitions_from_spr};
 pub use semio_os_store_codec_factory::lifted_store::{ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS, artifact_codec, bare_artifact_codec, bare_artifact_codec_with_owners, ArtifactCodecOwnerSource, BoundedArtifactCodecOwners, codec_document_owners, replay_envelopes_onto_pair, native_artifact_codec};

@@ -8,7 +8,7 @@ use geometry_and_climate_checks::{check_heated_volume, check_climate_table, chec
 
 #[path = "🏠️envelope-and-heating-checks/🦀️.rs"]
 mod envelope_and_heating_checks;
-use envelope_and_heating_checks::{check_transmission_loss, check_monthly_heating_demand, check_ventilation_heat_recovery};
+use envelope_and_heating_checks::{check_transmission_loss, check_monthly_heating_demand, check_residential_internal_gains, check_ventilation_heat_recovery};
 
 #[path = "💡️lighting-water-cooling-checks/🦀️.rs"]
 mod lighting_hot_water_and_cooling_checks;
@@ -80,7 +80,8 @@ pub fn evaluate_scoped(doc: &Din18599Snapshot, scope: Scope<'_>) -> CheckReport 
     }
     check_element_zone_linkage(doc, &mut report, annex, scope);
     if scope.part("envelope") {
-        check_transmission_loss(doc, &mut report, annex, &derived);
+        check_transmission_loss(doc, &mut report, annex);
+        check_residential_internal_gains(doc, &mut report, annex);
         check_monthly_heating_demand(doc, &mut report, annex, &derived);
         check_ventilation_heat_recovery(doc, &mut report, annex, &derived);
     }
@@ -98,7 +99,7 @@ pub fn evaluate_scoped(doc: &Din18599Snapshot, scope: Scope<'_>) -> CheckReport 
     if scope.part("energy") {
         check_automation(doc, &mut report, annex);
         check_primary_energy(doc, &mut report, annex, &derived);
-        check_tabular_method(doc, &mut report, annex, &derived);
+        check_tabular_method(doc, &mut report, annex);
     }
     report
 }

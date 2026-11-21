@@ -1,0 +1,17 @@
+{
+  "mounted": [
+    {"controller": "pdf:first", "instance": 11, "document": "doc:first"},
+    {"controller": "pdf:second", "instance": 12, "document": "doc:second"}
+  ],
+  "issued": [
+    {"instance": 11, "operation": "0000000000000001"},
+    {"instance": 11, "operation": "0000000000000001"},
+    {"instance": 12, "operation": "0000000000000002"}
+  ],
+  "expected": {
+    "open": [11],
+    "cancelWhileOpen": [12],
+    "effectsWhileOpen": ["pdf:second"],
+    "openAfterSettlement": [11, 12]
+  }
+}

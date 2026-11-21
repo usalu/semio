@@ -84,13 +84,17 @@ fn journey_state() -> World3dState {
 /// 🏁️ Drives every queued intent — and the camera settle the drained queue owes — to idle, answering
 /// with the ORDERED action ids published along the way.
 fn journal(state: &mut World3dState) -> Vec<String> {
+    journal_actions(state).into_iter().map(|action| action.action).collect()
+}
+
+fn journal_actions(state: &mut World3dState) -> Vec<ActionDescriptor> {
     let mut input = semio_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut published = Vec::new();
     let mut turns = 0;
     while let Some(generation) = world3d_interaction_front_generation(&state.camera, &state.authority) {
         let step = with_world_step_context(1, |context| step_world3d_interaction(state, generation, &mut input, context));
         assert_ne!(step, WorldInteractionAuthorityStep::Fault, "a probe gesture never faults the authority");
-        published.extend(take_actions(&mut input).into_iter().map(|action| action.action));
+        published.extend(take_actions(&mut input));
         turns += 1;
         assert!(turns < 4096, "a bounded journey terminates");
         if step == WorldInteractionAuthorityStep::Idle {
@@ -102,6 +106,70 @@ fn journal(state: &mut World3dState) -> Vec<String> {
 
 fn enqueue(state: &mut World3dState, intent: WorldInteractionIntent) {
     enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).expect("the world interaction queue admits a probe intent");
+}
+
+#[test]
+fn engagement_pointer_uses_the_live_selection_camera_clip_and_window_address() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️engagement-pointer.json")).unwrap();
+    let surface = fixture["surfaceId"].as_str().unwrap();
+    let window = fixture["windowId"].as_str().unwrap();
+    let rect = |name: &str| {
+        let [x, y, w, h] = serde_json::from_value::<[f32; 4]>(fixture[name].clone()).unwrap();
+        Rect::new(x, y, w, h)
+    };
+    let vector = |value: &serde_json::Value| {
+        let [x, y, z] = serde_json::from_value::<[f32; 3]>(value.clone()).unwrap();
+        ui_scene::math::Vec3::new(x, y, z)
+    };
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut state = World3dState::new(surface.into(), "process3d".into());
+        state.session.window_instance_id = Some(window.into());
+        state.session.bounds = rect("viewport");
+        state.session.pick_bounds = rect("pickBounds");
+        state.session.active_utility = "select".into();
+        if case["declared"] == true {
+            state.session.declared_action_ids = vec!["worldPointerMove".into(), "worldPointerDown".into()];
+        }
+        let mut camera = state.camera.orbit.to_camera();
+        camera.position = vector(&case["camera"]);
+        camera.target = vector(&case["target"]);
+        camera.up = ui_scene::math::Vec3::new(0.0, 0.0, 1.0);
+        state.camera.orbit = ui_scene::math::OrbitController::from_camera(&camera);
+        let selection = serde_json::json!({ "engagementSessionActive": case["active"] });
+        semio_os_infinite_world_bridge::sync_world3d_scene_selection(&mut state.session, &mut state.selection, &mut state.gumball, &mut state.scene, &selection.to_string());
+        let [x, y] = serde_json::from_value::<[f32; 2]>(case["point"].clone()).unwrap();
+        let modifiers = PointerModifiers { shift: true, meta: true, ..PointerModifiers::default() };
+        enqueue(&mut state, WorldInteractionIntent::pointer_move(x + 1.0, y, 0.0, 0.0, false, 0, &modifiers));
+        enqueue(&mut state, WorldInteractionIntent::pointer_move(x, y, 0.0, 0.0, false, 0, &modifiers));
+        enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, true, 0, &modifiers));
+        let actions = journal_actions(&mut state).into_iter().filter(|action| matches!(action.action.as_str(), "worldPointerMove" | "worldPointerDown")).collect::<Vec<_>>();
+        let Some(expected) = case["position"].as_array() else {
+            assert!(actions.is_empty(), "{}", case["id"]);
+            continue;
+        };
+        assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["worldPointerMove", "worldPointerDown"], "{}", case["id"]);
+        for action in &actions {
+            assert_eq!(action.controller_id, "process3d");
+            let args = serde_json::to_value(action.args.as_ref().unwrap()).unwrap();
+            assert_eq!(args["windowId"], window);
+            assert_eq!(args["surfaceId"], surface);
+            assert_eq!(args["pane"], fixture["pane"]);
+            let position = args["position"].as_array().unwrap();
+            assert_eq!(position.len(), expected.len());
+            for (actual, target) in position.iter().zip(expected) {
+                assert!((actual.as_f64().unwrap() - target.as_f64().unwrap()).abs() < 0.001, "{}", case["id"]);
+            }
+            if action.action == "worldPointerDown" {
+                assert_eq!(args["shiftKey"], true);
+                assert_eq!(args["ctrlKey"], false);
+                assert_eq!(args["metaKey"], true);
+            }
+        }
+        semio_os_infinite_world_bridge::sync_world3d_scene_selection(&mut state.session, &mut state.selection, &mut state.gumball, &mut state.scene, "{}");
+        enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, false, 0, &modifiers));
+        assert_eq!(journal(&mut state), ["setCamera"], "release after a delivered engagement ends");
+    }
 }
 
 /// 🖱️ The probe's own drag: one move onto the aim point, a press, eight interpolated moves, a release.
@@ -126,6 +194,82 @@ fn click(state: &mut World3dState, button: i16) {
     enqueue(state, WorldInteractionIntent::pointer_move(at[0], at[1], 0.0, 0.0, false, 0, &modifiers));
     enqueue(state, WorldInteractionIntent::pointer_button(at[0], at[1], true, button, &modifiers));
     enqueue(state, WorldInteractionIntent::pointer_button(at[0], at[1], false, button, &modifiers));
+}
+
+#[test]
+fn native_terrain_brush_journals_one_typed_edit_only_for_a_complete_stroke() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/📜️journal-sequences/🏔️terrain-stroke.json")).unwrap();
+    let viewport = |value| serde_json::from_value::<[f32; 2]>(value).unwrap();
+    let dimensions = law["viewport"].clone();
+    let modifiers = PointerModifiers::default();
+    for case in law["cases"].as_array().unwrap() {
+        let mut state = journey_state();
+        let [w, h] = viewport(dimensions.clone());
+        state.session.bounds = Rect::new(0.0, 0.0, w, h);
+        state.session.pick_bounds = state.session.bounds;
+        state.session.window_instance_id = Some("gis-terrain-window".into());
+        let brush = |value| serde_json::json!({
+            "activeUtility": "raiseTerrain",
+            "terrainBrush": { "action": "editElevation", "arguments": { "operation": "raise-lower", "radius": law["radius"], "value": value } }
+        }).to_string();
+        state.terrain.set_terrain_interaction(Some(&brush(law["value"].as_i64().unwrap())));
+        let terrain = |height| serde_json::json!({
+            "elevationGrid": { "bounds": law["bounds"], "rows": vec![vec![height; 33]; 33] }
+        }).to_string();
+        state.terrain.set_terrain_json(Some(&terrain(0)));
+        semio_os_infinite_world_scene::apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
+        let mut camera = state.camera.orbit.to_camera();
+        camera.position = ui_scene::math::Vec3::new(0.0, 0.0, 500.0);
+        camera.target = ui_scene::math::Vec3::ZERO;
+        camera.up = ui_scene::math::Vec3::new(0.0, 1.0, 0.0);
+        camera.zoom = 1.0;
+        camera.projection = CameraProjection3d::Orthographic;
+        state.camera.orbit = ui_scene::math::OrbitController::from_camera(&camera);
+        state.camera.projection_spec = semio_ui_viewport::Viewport3dProjectionSpec {
+            mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {},
+            orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top },
+        };
+        let id = case["id"].as_str().unwrap();
+        let points = case["points"].as_array().unwrap();
+        let [x, y] = viewport(points[0].clone());
+        enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, true, 0, &modifiers));
+        assert!(journal_actions(&mut state).is_empty(), "{id} before movement");
+        let (mut x, mut y) = (x, y);
+        for point in points.iter().skip(1) {
+            let [next_x, next_y] = viewport(point.clone());
+            let intent = WorldInteractionIntent::pointer_move(next_x, next_y, next_x - x, next_y - y, true, 0, &modifiers);
+            semio_os_infinite_world_interaction::enqueue_world3d_events(&mut state.authority, [intent]).unwrap();
+            (x, y) = (next_x, next_y);
+        }
+        assert!(journal_actions(&mut state).is_empty(), "{id} before release");
+        match case["beforeRelease"].as_str() {
+            Some("captureLost") => enqueue(&mut state, WorldInteractionIntent::cancel(semio_os_infinite_world_model::WorldCancelReason::CaptureLost)),
+            Some("blur") => enqueue(&mut state, WorldInteractionIntent::cancel(semio_os_infinite_world_model::WorldCancelReason::Blur)),
+            Some("brushChange") => state.terrain.set_terrain_interaction(Some(&brush(12))),
+            Some("sourceChange") => state.terrain.set_terrain_json(Some(&terrain(1))),
+            None => {}
+            _ => panic!("unknown brush interruption"),
+        }
+        enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, false, 0, &modifiers));
+        let actions = journal_actions(&mut state);
+        if case["start"].is_null() {
+            assert!(actions.is_empty(), "{id} leaves no journal entry");
+            continue;
+        }
+        let [action] = actions.as_slice() else { panic!("{id} must publish one elevation edit") };
+        assert_eq!(action.action, "editElevation");
+        assert_eq!(action.controller_id, state.session.controller_id);
+        let args = serde_json::to_value(action.args.as_ref().unwrap()).unwrap();
+        assert_eq!(args["windowId"], "gis-terrain-window");
+        assert_eq!(args["surfaceId"].as_str(), Some(state.session.surface_id.as_str()));
+        assert_eq!(args["operation"], "raise-lower");
+        assert_eq!(args["radius"], law["radius"]);
+        assert_eq!(args["value"], law["value"]);
+        assert_eq!(args["column"], case["start"][0]);
+        assert_eq!(args["row"], case["start"][1]);
+        assert_eq!(args["stroke"], case["stroke"]);
+    }
 }
 
 #[test]
@@ -464,4 +608,49 @@ fn a_frame_driven_hover_clear_is_owed_once_and_never_saturates_the_queue() {
     assert_eq!(journal(&mut state), expected("modal-open", "wgpu"), "🚪️ and answering it publishes React's own single hover clear");
     assert!(!world3d_hover_clear_is_owed(&state.selection, &state.authority), "🚪️ after which nothing is owed and no later frame enqueues anything");
     assert_eq!(state.authority.interaction_authority.as_ref().expect("authority").queue.len, 0);
+}
+
+#[test]
+fn leaving_the_viewport_reveals_the_graph_hover_after_a_local_miss() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let mut state = journey_state();
+    state.selection.scene_hovered_ids = Some(["graph@geometry#0".into()].into_iter().collect());
+    state.selection.local_instance_hover = true;
+    let outside = state.session.bounds.x + state.session.bounds.w + 64.0;
+    enqueue(&mut state, WorldInteractionIntent::pointer_leave(outside, 4.0));
+    assert!(journal(&mut state).is_empty());
+    assert!(state.selection.projected_instance_hovers().unwrap().contains("graph@geometry#0"));
+
+    let at = point("aim");
+    let modifiers = PointerModifiers::default();
+    state.session.window_instance_id = Some("preview:1".into());
+    enqueue(&mut state, WorldInteractionIntent::pointer_move(at[0], at[1], 0.0, 0.0, false, 0, &modifiers));
+    let [hit]: [ActionDescriptor; 1] = journal_actions(&mut state).try_into().expect("one hover action");
+    assert_eq!(hit.args.unwrap()["windowId"].as_str(), Some("preview:1"));
+    enqueue(&mut state, WorldInteractionIntent::pointer_leave(outside, 4.0));
+    let [leave]: [ActionDescriptor; 1] = journal_actions(&mut state).try_into().expect("one clear action");
+    let args = leave.args.unwrap();
+    assert_eq!(args["windowId"].as_str(), Some("preview:1"));
+    assert_eq!(args["targets"].as_str(), Some("[]"));
+    assert!(state.selection.projected_instance_hovers().unwrap().contains("graph@geometry#0"));
+}
+
+#[test]
+fn leaving_before_a_queued_ray_finishes_still_clears_its_hover() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let mut state = journey_state();
+    let at = point("aim");
+    let modifiers = PointerModifiers::default();
+    for _ in 0..2 {
+        enqueue(&mut state, WorldInteractionIntent::pointer_move(at[0], at[1], 0.0, 0.0, false, 0, &modifiers));
+        assert!(world3d_hover_clear_is_owed(&state.selection, &state.authority));
+        enqueue(&mut state, WorldInteractionIntent::pointer_leave(-1.0, -1.0));
+        assert!(!world3d_hover_clear_is_owed(&state.selection, &state.authority));
+    }
+    let result = journal_actions(&mut state);
+    assert_eq!(result.len(), 4);
+    for (index, action) in result.iter().enumerate() {
+        assert_eq!(action.action, "interactionHover");
+        assert_eq!(action.args.as_ref().unwrap()["targets"].as_str() == Some("[]"), index % 2 == 1);
+    }
 }

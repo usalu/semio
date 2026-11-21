@@ -1,0 +1,9 @@
+# Fleet Cache Health
+
+Read-only check 2026-11-20 about 10:18 Pacific. `repo remote-cache status --lang=en` resolves fleet-facts generation 9 to `http://192.168.178.70:6094`, with a credential present; all three read-only protocol probes report unreachable, status null, and no server/store statistics. The local and group-store cache facts list exactly this one endpoint, so there is no already-configured alternate in those facts. The facts identify publisher host `ueli-mac.fritz.box` and local cache-server directory. Local daemon `.cache/f/health.json` reports `build-cache` and `build-scheduler` sidecars `off` while `build-agent` is running; this is consistent with the missing endpoint but does not establish why they are off or whether enabling them is safe. Group store itself is reported healthy.
+
+The status contract resolves instance `semio` whereas the published facts specify `main`; endpoint unreachability prevents establishing whether this difference is consequential. Unit-cache offload's recent declined memo reports `cache endpoint unreachable`. The client's source describes automatic facts refresh and endpoint retry; no additional configured endpoint appears for it to select. Do not start a server or change shared fleet settings on this evidence: assess the intended sidecar ownership/configuration with the fleet owner first, and verify service and exact-key hits before expecting a speedup. Continue the existing native local lanes without waiting. No jobs were submitted and no service configuration or sidecar state was changed.
+
+At 11:35 Pacific the managed status command again resolved the same endpoint and instance. All three read-only probes still reported unreachable. The release continued through the two local queues.
+
+The 15:53 Pacific status check again resolved generation 9. All three probes reported unreachable and returned no server or store statistics. The two native module queues continue independently.

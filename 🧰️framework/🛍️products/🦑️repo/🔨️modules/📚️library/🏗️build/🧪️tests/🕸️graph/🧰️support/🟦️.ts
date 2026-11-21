@@ -1,11 +1,11 @@
 /** 🧰️ Shared fixtures, issued invocations and one-time module warm-up for the build graph behaviour groups. */
 import storageSchema from "../../../📥️inputs/💾️storage/🧬️schema/🔣️.json";
 import {mkdtemp,rm} from "node:fs/promises";
-import {readFileSync} from "node:fs";
-import {dirname,join,resolve} from "node:path";
+import {join,resolve} from "node:path";
 import {tmpdir} from "node:os";
 import {spyOn,beforeAll} from "bun:test";
 import {createRequire} from "node:module";
+import {declareNxOracleNamespaceV1} from "./🔌️nx-oracle/🟦️.ts";
 import fixture from "../../🧫️fixtures/🕸️graph/🔣️.json";
 import {createNativeBuildCallerCapabilitiesV1} from "../../../📥️caller/🟦️.ts";
 import {readBuildGraphV1} from "../../../🕸️graph/🟦️.ts";
@@ -16,8 +16,7 @@ const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").defaul
 export const datasetSchema=storageSchema.definitions.InferenceDataset;
 /** 🌳️ The repository root every support law reads, independent of the working directory of the run. */
 const workspaceRootV1=resolve(import.meta.dir,"../../../../../../../../..");
-/** 🧭️ Declares the bounded Nx namespace of the repository (`nx.json` `cacheDirectory`) when the run carries none: the repository's patched Nx refuses to read that cache directory without `SEMIO_NX_FIXED_STORAGE` and `NX_CACHE_DIRECTORY`, so a law that loads Nx as its independent oracle names the same namespace under a bare `bun test ./file` as under the suite runner; a run that already declares either variable keeps its own. */
-export function declareNxOracleNamespaceV1(root:string,environment:NodeJS.ProcessEnv=process.env):void{const declared=JSON.parse(readFileSync(join(root,"nx.json"),"utf8")).cacheDirectory;if(typeof declared!=="string"||environment.SEMIO_NX_FIXED_STORAGE!==undefined||environment.NX_CACHE_DIRECTORY!==undefined)return;const cache=resolve(root,declared);environment.NX_CACHE_DIRECTORY=cache;environment.SEMIO_NX_FIXED_STORAGE=dirname(dirname(cache));}
+export {declareNxOracleNamespaceV1};
 declareNxOracleNamespaceV1(workspaceRootV1);
 export const nxOracleRequireV1=createRequire(resolve(workspaceRootV1,".nx/installation/package.json")),independentGlobV1=Object.assign((patterns:string|string[],options:Record<string,unknown>)=>nxOracleRequireV1("glob").glob(patterns,{...options,nodir:true}),{sync:(patterns:string|string[],options:Record<string,unknown>)=>nxOracleRequireV1("glob").globSync(patterns,{...options,nodir:true})});
 export const graph=()=>readBuildGraphV1(structuredClone(fixture.graph));

@@ -88,6 +88,8 @@ pub enum UseClass {
     Residential,
     Office,
     School,
+    ResidentialUpToTwoDwellings,
+    ResidentialMultifamily,
 }
 
 /// 🏷️ DIN V 18599-10 Nutzungsprofil for a thermal zone (typed; drives hours / outdoor-air defaults).
@@ -121,7 +123,7 @@ pub enum BuildingCategory {
     NonResidential,
 }
 
-/// 🧱 Attachment type for GEG Anlage 2 H′T limit table.
+/// 🧱 Attachment type describing the building’s relationship to its neighbours.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
@@ -162,6 +164,21 @@ pub enum ElementKind {
     Floor,
     Door,
     Window,
+    CurtainWall,
+    RoofGlazing,
+    RoofDome,
+    GlazedDoor,
+    GroundSlabPerimeter,
+    GroundSlabInterior,
+    RoofWindow,
+    RooflightStrip,
+}
+
+impl ElementKind {
+    /// ☀️ Components with glazing area for direct solar transmission.
+    pub fn transmits_solar_radiation(self) -> bool {
+        matches!(self, Self::Window | Self::CurtainWall | Self::RoofGlazing | Self::RoofDome | Self::GlazedDoor | Self::RoofWindow | Self::RooflightStrip)
+    }
 }
 
 /// 🌡️ Thermal adjacency for transmission weighting factor.
@@ -173,6 +190,7 @@ pub enum Adjacency {
     Ground,
     Unheated,
     Heated,
+    UnheatedAttic,
 }
 
 /// 🗺️ Thermal zone with part-10 usage profile and setpoints.
@@ -243,6 +261,7 @@ pub struct HeatingSystem {
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct DhwSystem {
+    pub dwelling_count: u32,
     pub specific_demand_kwh_person_a: f64,
     pub storage_loss_kwh_a: f64,
     pub distribution_loss_kwh_a: f64,
@@ -333,12 +352,15 @@ pub struct MonthlyClimate {
     pub g_h_w_m2: [f64; 12],
 }
 
+/// ☀️ Horizontal monthly mean irradiance for Potsdam, DIN V 18599-10 Table E.6.
+pub const POTSDAM_HORIZONTAL_IRRADIANCE_W_M2: [f64; 12] = [29.0, 44.0, 97.0, 189.0, 221.0, 241.0, 210.0, 180.0, 127.0, 77.0, 31.0, 17.0];
+
 impl MonthlyClimate {
-    /// 🌤️ Potsdam reference climate (DIN V 18599-10 / TRY-aligned monthly means).
+    /// 🌤️ Potsdam reference climate, DIN V 18599-10 Table E.6.
     pub fn potsdam_reference() -> Self {
         Self {
-            theta_e_c: [-0.4, 0.6, 4.1, 8.4, 13.4, 16.6, 18.4, 17.9, 14.0, 9.2, 4.4, 1.0],
-            g_h_w_m2: [25.0, 50.0, 95.0, 145.0, 185.0, 200.0, 195.0, 170.0, 120.0, 70.0, 35.0, 20.0],
+            theta_e_c: [1.0, 1.9, 4.7, 9.2, 14.1, 16.7, 19.0, 18.6, 14.3, 9.5, 4.1, 0.9],
+            g_h_w_m2: POTSDAM_HORIZONTAL_IRRADIANCE_W_M2,
         }
     }
 
@@ -426,7 +448,7 @@ pub mod subjects {
         Din18599Snapshot {
             building_category: BuildingCategory::Residential,
             attachment: Attachment::Detached,
-            use_class: UseClass::Residential,
+            use_class: UseClass::ResidentialUpToTwoDwellings,
             method: CalculationMethod::DetailedMonthly,
             net_floor_area_m2: 140.0,
             heated_volume_m3: 364.0,
@@ -467,6 +489,7 @@ pub mod subjects {
                 energy_carrier: if compliant { "natural_gas".into() } else { "heating_oil".into() },
             },
             dhw: DhwSystem {
+                dwelling_count: 1,
                 specific_demand_kwh_person_a: 500.0,
                 storage_loss_kwh_a: if compliant { 200.0 } else { 450.0 },
                 distribution_loss_kwh_a: if compliant { 150.0 } else { 300.0 },
@@ -543,7 +566,9 @@ pub mod subjects {
     /// ❄️ Non-residential office with cooling plant (scopes cooling leaves for perturbation).
     pub fn cooled_office_building() -> Din18599Snapshot {
         let mut doc = base_house(true);
+        doc.building_category = BuildingCategory::NonResidential;
         doc.use_class = UseClass::Office;
+        doc.dhw.dwelling_count = 0;
         doc.zones[0].usage_profile = UsageProfile::Office;
         doc.zones[0].lighting_power_w_m2 = 10.0;
         doc.zones[0].internal_gains_w_m2 = 6.0;

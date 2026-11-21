@@ -6,23 +6,16 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, PathSegment};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[allow(unused_imports)] use semio_plugin::plugin_app_close_prelude::{InputKind, Trigger};
-use semio_plugin::{Buildable, HasBase, HasChildren};
+use semio_s_artifact_draw_drawing_model::identity::DrawingIdentity;
+use semio_plugin::{Buildable, HasChildren};
 #[allow(unused_imports)] use semio_plugin::BuiltNode;
 #[allow(unused_imports)] use semio_plugin::TreeWindows;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor_interaction::panels::properties::*;
 use semio_s_artifact_draw_drawing_model::{create_drawing_shape_layer_rect, layer_base_mut};
 use semio_plugin::{artifact_app_laws::project_and_retire_fixture_tree, built_to_component_tree, ViewModel};
 
-fn retire_inspector_view(view:ViewModel){
-    use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-    let mut owner=ControlledRetirement::new(view).unwrap_or_else(|(_,original)|{let _original=std::mem::ManuallyDrop::new(original);panic!("original inspector view retirement was refused");});
-    for _ in 0..100000 {
-        if owner.terminal_is_empty(){return;}
-        let copy=owner.next_copy_byte_demand().unwrap().max(4096);
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
-        assert!(owner.step(grant).unwrap().progress().fits(grant));
-    }
-    panic!("original inspector view retained physical owners");
+fn retire_inspector_view(view: ViewModel) {
+    semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_wallet().close_owned(view);
 }
 
 #[test]
@@ -404,23 +397,27 @@ fn inspector_actions_respect_selection_eligibility() {
         let mut layers=Vec::new();
         let mut ids=Vec::new();
         for index in 0..count {
-            let mut layer=if convertible {create_drawing_shape_layer_rect("Shape")} else if ungroupable || row["name"]=="one unresolved composited group" {semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Group")} else {semio_s_artifact_draw_drawing_model::create_layer_by_kind("text")};
-            let id=format!("selected-{index}");
-            layer_base_mut(&mut layer).id=id.as_str().into();
+            let id = format!("selected-{index}");
+            let identity = DrawingIdentity::admit(id.clone().into()).expect("nonempty fixture identity");
+            let mut layer = if convertible {
+                create_drawing_shape_layer_rect(identity, "Shape")
+            } else if ungroupable || row["name"] == "one unresolved composited group" {
+                semio_s_artifact_draw_drawing_model::create_drawing_group_layer(identity, "Group")
+            } else {
+                semio_s_artifact_draw_drawing_model::create_layer_by_kind(identity, "text")
+            };
             if row["name"]=="one unresolved composited group" {layer_base_mut(&mut layer).opacity=0.5;}
             ids.push(id);
             layers.push(layer);
         }
         if locked {
-            let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Locked parent");
-            layer_base_mut(&mut parent).id="locked-parent".into();
+            let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(DrawingIdentity::admit("locked-parent".to_owned().into()).expect("nonempty fixture identity"), "Locked parent");
             layer_base_mut(&mut parent).locked=true;
             if let DrawingLayerNode::Group(group)=&mut parent {group.children=layers.into();}
             layers=vec![parent];
         }else if !same_parent {
             layers=layers.into_iter().enumerate().map(|(index,layer)|{
-                let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Parent");
-                layer_base_mut(&mut parent).id=format!("parent-{index}").into();
+                let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(DrawingIdentity::admit(format!("parent-{index}").into()).expect("nonempty fixture identity"), "Parent");
                 if let DrawingLayerNode::Group(group)=&mut parent {group.children=vec![layer].into();}
                 parent
             }).collect();
@@ -428,8 +425,7 @@ fn inspector_actions_respect_selection_eligibility() {
         let structure=row["structure"].as_str().unwrap_or("");
         match structure {
             "ancestorChild"|"ancestorChildSibling"=>{
-                let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Selected ancestor");
-                layer_base_mut(&mut group).id="selected-0".into();
+                let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(DrawingIdentity::admit("selected-0".to_owned().into()).expect("nonempty fixture identity"), "Selected ancestor");
                 let child=layers.remove(1);
                 if let DrawingLayerNode::Group(body)=&mut group {body.children=vec![child].into();}
                 layers[0]=group;
@@ -437,15 +433,13 @@ fn inspector_actions_respect_selection_eligibility() {
             "missing"=>ids.push("missing-layer".into()),
             "hidden"=>layer_base_mut(&mut layers[0]).visible=false,
             "inheritedHidden"=>{
-                let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Hidden parent");
-                layer_base_mut(&mut parent).id="hidden-parent".into();
+                let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(DrawingIdentity::admit("hidden-parent".to_owned().into()).expect("nonempty fixture identity"), "Hidden parent");
                 layer_base_mut(&mut parent).visible=false;
                 if let DrawingLayerNode::Group(group)=&mut parent {group.children=layers.into();}
                 layers=vec![parent];
             }
             "isolated"|"blended"=>{
-                let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Composited group");
-                layer_base_mut(&mut group).id="selected-0".into();
+                let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(DrawingIdentity::admit("selected-0".to_owned().into()).expect("nonempty fixture identity"), "Composited group");
                 if let DrawingLayerNode::Group(body)=&mut group {
                     body.isolation=structure=="isolated";
                     if structure=="blended" {body.base.blend_mode="multiply".into();}
@@ -473,7 +467,10 @@ fn inspector_actions_respect_selection_eligibility() {
         if !structure.is_empty() {
             for operation in ["alignLeft","distributeHorizontal","ungroup"] {
                 let expected=eligibility.allows(operation);
-                let actual=semio_s_artifact_draw_drawing_editor_commands::edit_selection::plan(&document,&ids,operation).is_ok();
+                let admission = semio_s_artifact_draw_drawing_editor::identity_test::operation();
+                let mut observer = |_| true;
+                let mut control = semio_framework_value::NativeEncodeControl::new(1 << 20, &mut observer);
+                let actual = semio_s_artifact_draw_drawing_editor_commands::edit_selection::plan(&document, &ids, operation, &admission, &mut control).is_ok();
                 assert_eq!(actual,expected,"{}: actual planner {operation}",row["name"]);
             }
         }

@@ -152,7 +152,32 @@ test("playground preparation shares native prerequisites and observes original c
  try{await put("Cargo.toml","[workspace]\nmembers=['components/a','components/b']\nresolver='2'\n");await put(wgpu+"/📋️project.json",JSON.stringify({name:"renderer",targets:{wasm:{configurations:{prototype:{env:{SEMIO_BUILD_MODE:"prototype"}},release:{env:{SEMIO_BUILD_MODE:"release"}}}}}}));await put(flow+"/📋️project.json",JSON.stringify({name:"flow",targets:{wasm:{}}}));for(const[index,owner]of frameworkOsEngineSourceOwnersV1("distribution").entries())await put(owner+"/📋️project.json",JSON.stringify({name:"engine"+index,targets:{wasm:{}}}));
   for(const component of row.components){const manifest={package:{name:component.id,version:"0.0.0",metadata:{component:{package:"semio:"+component.id},semio:{"component-kind":"plugin","depends-on":component.dependencies,playground:component.id==="a"?row.variants.map(variant=>({variant,ports:{wgpu:12345}})):[]}}},dependencies:Object.fromEntries(component.dependencies.map(id=>[id,{path:"../"+id}]))};await put("components/"+component.id+"/Cargo.toml",toml.stringify(manifest));expect(toml.parse(await readFile(join(root,"components/"+component.id+"/Cargo.toml"),"utf8"))).toEqual(manifest);}
   const expected:Record<string,string[]|undefined>={};for(const variant of row.variants){for(const profile of row.profiles)for(const item of row.rows)expected[template(item.name)({variant,profile})]=item.outputs?.map(output=>template(output)({variant,profile}));for(const renderer of ["react","wgpu"])expected[`prepare-${variant}-${renderer}`]=[];expected[`build-${variant}-react-release`]=[`{projectRoot}/.🧾️store/build-${variant}-react-release.json`];expected[`build-${variant}-react`]=[`{projectRoot}/.🧾️store/build-${variant}-react.json`];}
-  await withCommandSourceControlV1(root,"playground-preparation-test",10000,Error("unused positive stop"),async control=>{const targets=await api.playgroundPreparationTargets(files,root,row.owner,{generator:row.generator},contributions,{workspaceRoot:root,invocation:control.invocation,phaseControl:control.phaseControl});expect(Object.fromEntries(Object.entries(targets).map(([name,target])=>[name,target.outputs]))).toEqual(expected);expect(control.events.filter(name=>name==="build:playground-native").length).toBe(row.components.length);expect(control.events).toContain("build:playground-variants");for(const variant of row.variants)for(const profile of row.profiles){expect(testValueV1(targets[`prepare-${variant}-native-${profile}`]).dependsOn).toEqual([`@semio-tech/plugin-registry:session-${variant}`,...row.prerequisites]);const dependencies=testValueV1(targets[`prepare-${variant}-react-${profile}`]).dependsOn;assert.ok(dependencies);expect(dependencies.slice(-row.prerequisites.length)).toEqual(row.prerequisites);}});
+  await withCommandSourceControlV1(root,"playground-preparation-test",10000,Error("unused positive stop"),async control=>{
+   const targets=await api.playgroundPreparationTargets(files,root,row.owner,{generator:row.generator},contributions,{workspaceRoot:root,invocation:control.invocation,phaseControl:control.phaseControl});
+   expect(Object.fromEntries(Object.entries(targets).map(([name,target])=>[name,target.outputs]))).toEqual(expected);
+   expect(control.events.filter(name=>name==="build:playground-native").length).toBe(row.components.length);
+   expect(control.events).toContain("build:playground-variants");
+   for(const variant of row.variants)for(const profile of row.profiles){
+    expect(testValueV1(targets[`prepare-${variant}-native-${profile}`]).dependsOn).toEqual([`@semio-tech/plugin-registry:session-${variant}`,...row.prerequisites]);
+    const dependencies=testValueV1(targets[`prepare-${variant}-react-${profile}`]).dependsOn;
+    assert.ok(dependencies);
+    expect(dependencies.slice(-row.prerequisites.length)).toEqual(row.prerequisites);
+    for(const renderer of ["react","wgpu"] as const){
+     const suffix=`${variant}-${renderer}-${profile}`;
+     const activation=testValueV1(targets["activate-"+suffix]);
+     expect(testRecordV1(activation,"metadata","semio").sourceInputObservation).toBe(row.browserInputs.sourceInputObservation);
+     expect(activation.inputs).toContainEqual({dependentTasksOutputFiles:"**/*",transitive:true});
+     for(const component of row.components)expect(activation.inputs).toContain(`{workspaceRoot}/components/${component.id}/**/*`);
+     for(const operation of ["dev","serve"]){
+      const launch=testValueV1(targets[operation+"-"+suffix]);
+      const metadata=testRecordV1(launch,"metadata","semio");
+      expect(launch.inputs).toEqual([]);
+      expect(metadata.sourceInputObservation).toBe(row.browserInputs.sourceInputObservation);
+      expect(metadata.runtimeSourceEntries).toEqual(row.browserInputs.runtimeSourceEntries[renderer]);
+     }
+    }
+   }
+  });
   const cancellation=Error(row.cancellation);await expect(withCommandSourceControlV1(root,"playground-preparation-cancellation",10000,cancellation,async control=>{control.arm("build:playground-native");await api.playgroundPreparationTargets(files,root,row.owner,{generator:row.generator},contributions,{workspaceRoot:root,invocation:control.invocation,phaseControl:control.phaseControl});})).rejects.toThrow(row.cancellation);
   await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"playground-preparation-receiver",maximumElapsedMilliseconds:1000},{workspaceRoot:root},Date.now()),async invocation=>{const phaseControl=createRequestedIssuedResourceControlV1(createIssuedResourceControlV1(invocation,"graph:playground-receiver",0),10);await Bun.sleep(30);await expect(api.playgroundPreparationTargets(files,root,row.owner,{generator:row.generator},contributions,{workspaceRoot:root,invocation,phaseControl})).rejects.toThrow("Original resource loan deadline exhausted");});
  }finally{await rm(root,{recursive:true,force:true});}

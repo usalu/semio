@@ -132,6 +132,7 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
     seed_planner_meshes(document);
     let definition = run_definition();
     let request = ToolRunJobRequest::<EditorApp<Puzzle5dPlayApp>> {
+        receiving: &definition.receiving,
         tool_id: TOOL_ID,
         definition: &definition,
         purpose,
@@ -145,7 +146,7 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
         instance_owner: ArtifactInstanceOperationOwnerHandle::new(<EditorApp<Puzzle5dPlayApp> as ArtifactApp>::build_instance_operation_owner()),
         port: ToolRunJobPort::default(),
         host: None,
-        trace_keys: ToolRunTraceKeys::default(),
+        trace_keys: &ToolRunTraceKeys::default(),
         entity_marks: &[],
         children: semio_plugin::ChildContentView::default(),
         member_ops: &[],
@@ -337,9 +338,11 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let success_twins: Vec<[f32; 2]> = primaries.iter().filter(|(_, verdict, _, _)| *verdict == ToolRunVerdict::Success).map(|(key, _, _, _)| twins[&(key | twin_bit)].2).collect();
         assert_eq!(success_twins, placed_centers, "{id}: a placed part's board twin sits on the part");
 
+        let definition = fill3d::run_definition();
         let planner = fill3d::build_run_job::<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>(ToolRunJobRequest::<EditorApp<Puzzle3dPlayApp>> {
+            receiving: &definition.receiving,
             tool_id: semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID,
-            definition: &fill3d::run_definition(),
+            definition: &definition,
             purpose: ToolRunJobPurpose::Run,
             identity: identity(),
             snapshot: Arc::new(puzzle3d_snapshot(&document, None).expect("the 3d document builds")),
@@ -350,8 +353,8 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
             provisional: &[],
             instance_owner: ArtifactInstanceOperationOwnerHandle::new(<EditorApp<Puzzle3dPlayApp> as ArtifactApp>::build_instance_operation_owner()),
             port: ToolRunJobPort::default(),
-        host: None,
-            trace_keys: ToolRunTraceKeys::default(),
+            host: None,
+            trace_keys: &ToolRunTraceKeys::default(),
             entity_marks: &[],
             children: semio_plugin::ChildContentView::default(),
             member_ops: &[],

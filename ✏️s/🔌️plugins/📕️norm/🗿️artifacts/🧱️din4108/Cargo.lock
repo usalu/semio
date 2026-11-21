@@ -1802,6 +1802,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
  "semio-framework-replication-error",
@@ -3975,6 +3976,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -5270,7 +5272,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-replication-command-ingress",
  "semio-framework-value",
+ "semio-framework-value-persistent",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
  "serde_json",
@@ -7587,6 +7591,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-norm-din4108-checks",
  "semio-s-artifact-norm-din4108-diff",
  "semio-s-artifact-norm-din4108-model",
  "semio-s-plugin-norm-compliance",

@@ -79,9 +79,9 @@ impl RasterPixelMutationWork {
             },
             Phase::Root=>{
                 if self.ready()?.reuse_destination{self.phase=Phase::ReserveInverse;return Ok(false);}
-                let demand=RasterImagePayload::owned_birth_demands();if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth<demand.depth||raster_short(cx.retained_grant(),demand){return Ok(false);}
+                let demand=RasterImagePayload::owned_birth_demands();if cx.fuel_remaining()<RasterImagePayload::owned_birth_work()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth<demand.depth||raster_short(cx.retained_grant(),demand){return Ok(false);}
                 let data=self.owned.as_mut().unwrap();let image=data.result.as_mut().and_then(|result|result.image.take()).ok_or("raster-store.pixel-image-owner")?;let turn=RasterImagePayload::from_owned(image,cx.retained_grant());
-                cx.consume_fuel(turn.work);match turn.result{Ok((payload,receipt))=>{data.payload=Some(payload);cx.consume_retained(receipt).map_err(|_|"raster-store.pixel-root-receipt")?;self.phase=Phase::ReserveInverse;},Err((error,image))=>{data.result.as_mut().unwrap().image=Some(image);cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.pixel-root-error-receipt")?;return Err("raster-store.pixel-root-refused");}}
+                cx.consume_work(turn.work);match turn.result{Ok((payload,receipt))=>{data.payload=Some(payload);cx.consume_retained(receipt).map_err(|_|"raster-store.pixel-root-receipt")?;self.phase=Phase::ReserveInverse;},Err((error,image))=>{data.result.as_mut().unwrap().image=Some(image);cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.pixel-root-error-receipt")?;return Err("raster-store.pixel-root-refused");}}
             },
             Phase::ReserveInverse=>{
                 if !self.inverse{self.phase=Phase::ChildRoot;return Ok(false);}
@@ -92,7 +92,7 @@ impl RasterPixelMutationWork {
                 if self.detach{let bytes=self.ready()?.key.as_ref().ok_or("raster-store.pixel-key")?.len();if !Self::admit(cx,bytes,bytes){return Ok(false);}let key=copied(self.ready()?.key.as_ref().unwrap())?;let cap=key.capacity();self.owned.as_mut().unwrap().inverse.push(RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset{asset_id:key}));Self::receipt(cx,bytes,cap)?;}self.phase=Phase::AddRoot;
             },
             Phase::AddRoot=>{
-                if !self.release{self.phase=Phase::Restore;return Ok(false)}let demand=RasterImagePayload::alias_demands();if cx.fuel_remaining()<2||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth<demand.depth||raster_short(cx.retained_grant(),demand){return Ok(false)}let previous=self.data()?.previous.as_ref().ok_or("raster-store.pixel-previous")?;let owner=base.assets.get(previous).and_then(|child|child.local_owner::<semio_s_artifact_raster_raster_model::SemioImageSnapshot>()).ok_or("raster-store.pixel-inverse-source")?;cx.consume_fuel(1);let turn=RasterImagePayload::from_shared(owner,cx.retained_grant());cx.consume_fuel(turn.work);match turn.result{Ok((asset,receipt))=>{self.owned.as_mut().unwrap().inverse_payload=Some(asset);cx.consume_retained(receipt).map_err(|_|"raster-store.pixel-inverse-root-receipt")?;},Err((error,owner))=>{self.owned.as_mut().unwrap().inverse_payload=Some(<RasterImagePayload as semio_framework_value_native_owned::owned::NativeReceiveMap<std::sync::Arc<semio_s_artifact_raster_raster_model::SemioImageSnapshot>>>::from_native(owner));cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.pixel-inverse-root-error-receipt")?;return Err("raster-store.pixel-inverse-root")}}self.phase=Phase::Add;
+                if !self.release{self.phase=Phase::Restore;return Ok(false)}let demand=RasterImagePayload::alias_demands();if cx.fuel_remaining()<2||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth<demand.depth||raster_short(cx.retained_grant(),demand){return Ok(false)}let previous=self.data()?.previous.as_ref().ok_or("raster-store.pixel-previous")?;let owner=base.assets.get(previous).and_then(|child|child.local_owner::<semio_s_artifact_raster_raster_model::SemioImageSnapshot>()).ok_or("raster-store.pixel-inverse-source")?;cx.consume_fuel(1);let turn=RasterImagePayload::from_shared(owner,cx.retained_grant());cx.consume_work(turn.work);match turn.result{Ok((asset,receipt))=>{self.owned.as_mut().unwrap().inverse_payload=Some(asset);cx.consume_retained(receipt).map_err(|_|"raster-store.pixel-inverse-root-receipt")?;},Err((error,owner))=>{self.owned.as_mut().unwrap().inverse_payload=Some(<RasterImagePayload as semio_framework_value_native_owned::owned::NativeReceiveMap<std::sync::Arc<semio_s_artifact_raster_raster_model::SemioImageSnapshot>>>::from_native(owner));cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.pixel-inverse-root-error-receipt")?;return Err("raster-store.pixel-inverse-root")}}self.phase=Phase::Add;
             },
             Phase::Add=>{
                 let previous=self.data()?.previous.as_ref().ok_or("raster-store.pixel-previous")?;let bytes=previous.len()+size_of::<RasterMutation>();if !Self::admit(cx,bytes,previous.len()){return Ok(false)}let asset_id=copied(previous)?;let cap=asset_id.capacity();let data=self.owned.as_mut().unwrap();let asset=data.inverse_payload.take().ok_or("raster-store.pixel-inverse-payload")?;data.inverse.push(RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset{asset_id,asset}));Self::receipt(cx,bytes,cap)?;self.phase=Phase::Restore;
@@ -105,7 +105,7 @@ impl RasterPixelMutationWork {
                 let bytes=self.ready()?.key.as_ref().ok_or("raster-store.pixel-key")?.len();if !Self::admit(cx,bytes,bytes){return Ok(false);}let key=copied(self.ready()?.key.as_ref().unwrap())?;let cap=key.capacity();self.owned.as_mut().unwrap().inverse.push(RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset{asset_id:key}));Self::receipt(cx,bytes,cap)?;self.phase=Phase::ChildRoot;
             },
             Phase::ChildRoot=>{
-                if self.ready()?.reuse_destination{self.phase=Phase::Release;return Ok(false)}let copy=size_of::<(String,RasterAssetChild)>();if cx.fuel_remaining()<2||!Self::admit(cx,copy,0){return Ok(false)}let payload=self.data()?.payload.as_ref().ok_or("raster-store.pixel-payload")?;let turn=payload.owner(cx.retained_grant());cx.consume_fuel(turn.work);match turn.result{Ok((owner,mut receipt))=>{let child=RasterAssetChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}).with_local_owner(owner);self.owned.as_mut().unwrap().pending=Some((String::new(),child));receipt.copied_bytes=receipt.copied_bytes.checked_add(copy).ok_or("raster-store.pixel-child-root-copy-overflow")?;cx.consume_retained(receipt).map_err(|_|"raster-store.pixel-child-root-receipt")?;},Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.pixel-child-root-error-receipt")?;return Err("raster-store.pixel-child-root")}}self.phase=Phase::Child;
+                if self.ready()?.reuse_destination{self.phase=Phase::Release;return Ok(false)}let copy=size_of::<(String,RasterAssetChild)>();if cx.fuel_remaining()<2||!Self::admit(cx,copy,0){return Ok(false)}let payload=self.data()?.payload.as_ref().ok_or("raster-store.pixel-payload")?;let turn=payload.owner(cx.retained_grant());cx.consume_work(turn.work);match turn.result{Ok((owner,mut receipt))=>{let child=RasterAssetChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}).with_local_owner(owner);self.owned.as_mut().unwrap().pending=Some((String::new(),child));receipt.copied_bytes=receipt.copied_bytes.checked_add(copy).ok_or("raster-store.pixel-child-root-copy-overflow")?;cx.consume_retained(receipt).map_err(|_|"raster-store.pixel-child-root-receipt")?;},Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.pixel-child-root-error-receipt")?;return Err("raster-store.pixel-child-root")}}self.phase=Phase::Child;
             },
             Phase::Child=>{
                 if self.ready()?.reuse_destination{self.phase=Phase::Release;return Ok(false);}
@@ -143,8 +143,38 @@ impl RasterPixelMutationWork {
 
     pub(super) fn take_inverse(&mut self)->Option<Vec<RasterMutation>>{if self.phase!=Phase::Ready{return None;}Some(std::mem::take(&mut self.owned.as_mut()?.inverse))}
     pub(super) fn output_ready(&self)->bool{self.phase==Phase::Ready}
-    pub(super) fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(result)=self.result.as_ref(){return result.close_demands(body);}if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body);}if self.owned.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned);}Ok(Default::default())}
-    pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep>{self.closing=true;if grant.maximum_items==0||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}if let Some(result)=self.result.as_mut(){if result.terminal_is_empty(){self.result.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}return result.close_step(grant);}if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.owned,&mut self.retirement,grant)}}
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        if let Some(child) = self.result.as_ref() {
+            return if child.terminal_is_empty() { Ok(1) } else { child.close_work_demand(body) };
+        }
+        raster_owned_close_work(self.retirement.as_deref(), !self.terminal_is_empty(), body)
+    }
+
+    pub(super) fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(result)=self.result.as_ref(){if result.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()});}return result.close_demands(body);}if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body);}if self.owned.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned);}Ok(Default::default())}
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        self.closing = true;
+        let grant = effect.grant();
+        match effect.remaining_work_units() {
+            Ok(0) => return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 },
+            Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 },
+            Ok(_) => {}
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 };
+        }
+        if let Some(result) = self.result.as_mut() {
+            if !result.terminal_is_empty() {
+                return result.close_step(effect);
+            }
+            let boundary = effect.performed_work();
+            let result = raster_close_unit(effect).map(|()| {
+                self.result.take();
+                RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+            });
+            return RetainedWorkOutcome { result, work: effect.performed_work() - boundary };
+        }
+        raster_retire_owned(&mut self.owned, &mut self.retirement, effect)
+    }
     pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.result.is_none()&&self.owned.is_none()&&self.retirement.is_none()}
 }
 

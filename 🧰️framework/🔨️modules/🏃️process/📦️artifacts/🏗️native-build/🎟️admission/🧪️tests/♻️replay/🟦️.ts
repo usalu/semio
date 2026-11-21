@@ -1,13 +1,45 @@
 import{test,expect}from"bun:test";
 import{createConnection,type Socket}from"node:net";
 import{createInterface}from"node:readline";
+import{resolve}from"node:path";
 import Ajv from"ajv";
-import{startAdmissionBrokerV1,unitObservationsV1,compilerWrapperEnvironmentV1}from"../../🟦️.ts";
+import {Database} from "bun:sqlite";
+import{ADMISSION_POLICY_V1,startAdmissionBrokerV1,unitObservationsV1,compilerWrapperEnvironmentV1}from"../../🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
+import disconnect from"./🔣️.json"with{type:"json"};
 
 /** ♻️ A unit served from the unit cache is reported to the broker with the measurements recorded when it was built: it joins the unit list and the critical path, is marked as cached, never enters the scheduling history, and cannot be recalled as a fresh compile. */
 const ajv=new Ajv({strict:false});ajv.addSchema(schema,"admission");
 const validate=(name:string)=>ajv.getSchema("admission#/definitions/"+name)!;
+
+test("a disconnected recall client leaves the broker available for the next compiler", async () => {
+  const broker = await startAdmissionBrokerV1({ physicalBytes: 64 * 2 ** 30, history: new Map() });
+  const {request} = disconnect;
+  try {
+    expect(validate("RecallRequestV1")(request)).toBe(true);
+    await new Promise<void>((resolve, reject) => {
+      const peer = createConnection(broker.endpoint);
+      peer.once("error", reject);
+      peer.once("close", () => resolve());
+      peer.once("connect", () => peer.write(JSON.stringify(request) + "\n", () => peer.destroy()));
+    });
+    const reply = await new Promise<string>((resolve, reject) => {
+      const peer = createConnection(broker.endpoint);
+      let received = "";
+      peer.setEncoding("utf8");
+      peer.once("error", reject);
+      peer.on("data", chunk => {
+        received += chunk;
+        peer.setTimeout(2000, () => peer.destroy(Error("Completed recall still owns its pipe")));
+      });
+      peer.once("connect", () => peer.write(JSON.stringify(request) + "\n"));
+      peer.once("end", () => resolve(received));
+    });
+    expect(JSON.parse(reply)).toEqual(disconnect.afterDisconnect);
+  } finally {
+    await broker.close();
+  }
+});
 const key="a".repeat(64),unit=(crate:string,outDir:string)=>({v:1,pass:"p1",pid:4242,crate,package:crate,version:"0.1.0",target:"host",crateTypes:["lib"],outDir,extraFilename:"-1f",source:"/ws/"+crate+"/src/lib.rs",manifestDir:"/ws/"+crate,primary:false,buildScriptOutDir:null,externs:["/lane/b/deps/libdep-9.rmeta"]});
 function converse(endpoint:string,lines:readonly object[],replies:number):Promise<Record<string,unknown>[]>{
  return new Promise((done,fail)=>{
@@ -35,7 +67,7 @@ test("cached units are recorded with their measurements, marked, excluded from h
   const verdict=await converse(broker.endpoint,[cached],1);expect(verdict[0]).toEqual({v:1,op:"verdict",admitted:true});
   const units=broker.units();expect(units.length).toBe(2);
   const served=units[1]!;expect(served.cache).toEqual({key,recorded:true});expect(served.exit).toBe(0);expect(served.peakRssBytes).toBe(123456);expect(served.predictedBytes).toBe(0);expect(served.endMs-served.startMs).toBe(0);
-  expect(served.artifact.startsWith("/lane/b/deps/")).toBe(true);expect(served.dependencies[0]!.edge).toBe("rmeta");expect(units[0]!.cache??null).toBeNull();
+  expect(served.artifact).toBe(resolve("/lane/b/deps","alpha-1f"));expect(served.dependencies[0]!.edge).toBe("rmeta");expect(units[0]!.cache??null).toBeNull();
   expect(unitObservationsV1(units,new Map(),new Map([[units[0]!.artifact,10]]),5).length,"history keeps real compiles only").toBe(1);
   expect((await converse(broker.endpoint,[{v:1,op:"recall",pass:"p1",crate:"alpha",outDir:"/lane/b/deps",extraFilename:"-1f"}],1))[0]!.record,"a cached unit is not a compile").toBeNull();
 
@@ -52,4 +84,42 @@ test("the compiler chain of a build names the cache wrapper only when the enviro
  expect(compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_WRAPPER:"/w/rustc-wrapper",SEMIO_UNIT_CACHE:"off"})).toEqual({});
  const chain=compilerWrapperEnvironmentV1("/t/scheduler","/gen",{SEMIO_UNIT_CACHE_ROOT:"/m/u",SEMIO_UNIT_CACHE_WRAPPER:"/w/rustc-wrapper",RUSTC:"rustc-x",SEMIO_UNIT_CACHE_SLOTS:"3",SEMIO_UNIT_CACHE_TOOLCHAIN:"tc"});
  expect(chain.RUSTC_WRAPPER).toBe("/w/rustc-wrapper");expect("RUSTC" in chain,"the compiler stays the real one").toBe(false);expect(JSON.parse(chain.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc-x"]);expect(chain.SEMIO_UNIT_CACHE_LANE_ROOT).toBe("/gen");expect(chain.SEMIO_UNIT_CACHE_SLOTS).toBe("3");expect(chain.SEMIO_UNIT_CACHE_BUILD_SCRIPTS).toBe("on");expect(chain.SEMIO_UNIT_CACHE_BROKER_REPLAY).toBe("on");expect(chain.SEMIO_UNIT_CACHE_TOOLCHAIN).toBe("tc");
+});
+
+
+test("physical charge freezes broker admission independently of resident memory",async()=>{
+ const {budgetBytes,samples}=disconnect.physicalCharge,policy=ADMISSION_POLICY_V1;
+ const broker=await startAdmissionBrokerV1({physicalBytes:policy.reserveBytes+budgetBytes,history:new Map()});
+ broker.registerPass({id:"p1",profile:"release",target:"host"});
+ const peers:Socket[]=[];
+ const send=(socket:Socket,message:object)=>socket.write(JSON.stringify(message)+"\n");
+ const peer=(crate:string)=>{
+  const socket=createConnection(broker.endpoint),replies:Record<string,unknown>[]=[];peers.push(socket);
+  socket.on("error",()=>undefined);createInterface({input:socket}).on("line",text=>replies.push(JSON.parse(text)));
+  socket.once("connect",()=>send(socket,{...unit(crate,"/lane/b/deps"),op:"admit"}));return{socket,replies};
+ };
+ const until=async (predicate:()=>boolean)=>{
+  for(let attempt=0;attempt<200;attempt++){if(predicate())return;await Bun.sleep(5);}
+  throw Error("Compiler broker did not deliver its sampled state");
+ };
+ using oracle=new Database(":memory:");
+ const freeze=oracle.query("select (?1>?2) or (?3 and ?1>=?2*?4) frozen");
+ try{
+  const compiler=peer("physical_charge");await until(()=>compiler.replies.length===1);
+  expect(compiler.replies[0]).toMatchObject({admitted:true});
+  let waiting:ReturnType<typeof peer>|undefined;
+  for(const row of samples){
+   const report={v:1,op:"rss",bytes:row.rssBytes,chargedBytes:row.chargedBytes};
+   expect(validate("RssReportV1")(report)).toBe(true);
+   send(compiler.socket,report);
+   await until(()=>broker.stats().actualRunningBytes===row.rssBytes&&broker.stats().chargedRunningBytes===row.chargedBytes);
+   expect(freeze.get(row.chargedBytes,budgetBytes,+row.presetFrozen,policy.resumeFraction)).toEqual({frozen:+row.frozen});
+   expect(broker.stats()).toMatchObject({frozen:row.frozen,actualRunningBytes:row.rssBytes,chargedRunningBytes:row.chargedBytes});
+   waiting??=peer("waiting_for_charge");
+   await until(()=>waiting!.replies.some(reply=>reply.admitted===row.admitsPeer));
+   expect(waiting.replies.some(reply=>reply.admitted===true)).toBe(row.admitsPeer);
+  }
+ }finally{
+  for(const socket of peers)socket.destroy();await broker.close();
+ }
 });

@@ -37,12 +37,42 @@ async fn part_number_script_is_deterministic() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn ifc_step_export_contains_data_section() {
-    let doc = Iso16757Snapshot::default();
-    let ifc = part_5::build_ifc_catalogue(&doc.catalogue);
-    let step = part_5::export_ifc_step(&ifc);
-    assert!(step.contains("ENDSEC"));
-    assert!(step.contains("IFCPRODUCT") || step.contains("IfcProduct"));
+async fn ifc4_library_exports_catalogue_product_types_and_class_members() {
+    let mut doc = Iso16757Snapshot::default();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🔣️ifc-library.json")).unwrap();
+    let text = |key: &str| fixture[key].as_str().unwrap().to_owned();
+    doc.catalogue.id.0 = text("catalogueId");
+    doc.catalogue.metadata.names.preferred.text = text("catalogueName");
+    doc.catalogue.dictionary.id = text("dictionaryId");
+    doc.catalogue.dictionary.version = text("dictionaryVersion");
+    doc.catalogue.product_classes.truncate(1);
+    doc.catalogue.product_classes[0].id = text("classId");
+    doc.catalogue.product_classes[0].names.preferred.text = text("className");
+    doc.catalogue.product_series.truncate(1);
+    doc.catalogue.product_series[0].class_id = text("classId");
+    let product = doc.catalogue.products[0].clone();
+    doc.catalogue.products = fixture["products"].as_array().unwrap().iter().map(|row| {
+        let mut result = product.clone();
+        result.id = row["id"].as_str().unwrap().into();
+        result.series_id = doc.catalogue.product_series[0].id.clone();
+        result.names.preferred.text = row["name"].as_str().unwrap().into();
+        result
+    }).collect();
+    let step = part_5::export_ifc_step(&doc.catalogue).unwrap();
+    assert!(step.contains("FILE_SCHEMA(('IFC4'));"));
+    assert!(step.contains("=IFCPROJECTLIBRARY("));
+    assert!(step.contains("=IFCBUILDINGELEMENTPROXYTYPE("));
+    assert!(!step.contains("=IFCTYPEPRODUCT("));
+    assert!(step.contains("=IFCLIBRARYINFORMATION('bSDD building services','2025.1',"));
+    assert!(step.contains("=IFCRELASSOCIATESLIBRARY("));
+    assert!(step.contains("=IFCRELASSIGNSTOGROUP("));
+    assert!(step.contains("Heizung''s catalogue #99"));
+    assert!(step.contains("''s Ventil"));
+    doc.catalogue.products.reverse();
+    doc.catalogue.product_classes.reverse();
+    assert_eq!(step, part_5::export_ifc_step(&doc.catalogue).unwrap());
+    doc.catalogue.products.push(doc.catalogue.products[0].clone());
+    assert!(part_5::export_ifc_step(&doc.catalogue).is_err());
 }
 
 #[semio_framework_async_macros::async_test]

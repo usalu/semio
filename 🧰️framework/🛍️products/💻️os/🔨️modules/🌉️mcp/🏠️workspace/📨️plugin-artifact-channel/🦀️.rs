@@ -1,8 +1,6 @@
 //! 📨️ The plugin artifact channel: pending exchanges, budgets and the channel implementation.
 
 #[cfg(not(target_arch = "wasm32"))]
-use semio_plugin_host::GuestRuntime as _;
-#[cfg(not(target_arch = "wasm32"))]
 use semio_plugin_host::GuestRuntimes;
 #[cfg(not(target_arch = "wasm32"))]
 use std::collections::HashMap;
@@ -42,6 +40,10 @@ pub(crate) use budgets_and_limits::*;
 #[path = "📂️documents-and-backbone/🦀️.rs"]
 mod documents_and_backbone;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🧫️initial-document/🦀️.rs"]
+mod initial_document;
+
 #[path = "💡️inference-route-and-actions/🦀️.rs"]
 mod inference_route_and_actions;
 
@@ -50,3 +52,7 @@ mod instances;
 
 #[path = "🔁️exchange-turns/🦀️.rs"]
 mod exchange_turns;
+
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🔁️native-poll/🦀️.rs"]
+mod native_poll;

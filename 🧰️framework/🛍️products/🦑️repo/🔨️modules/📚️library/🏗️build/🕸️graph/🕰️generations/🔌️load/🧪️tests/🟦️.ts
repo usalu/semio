@@ -1,5 +1,6 @@
 /** 🔌️ Contract: the repository protocol of the graph generation. A shared reader serves a verified or current generation without ever entering the builder custody; only a stale generation under a fresh policy enters it, the facts resource is held only for the pointer swap, closures read only their own projects, texts come in English and German, and partial inference results are shaped into exactly the facts and edges each owner consumed. */
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
 import {writeFile} from "node:fs/promises";
@@ -8,11 +9,14 @@ import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
 import fixture from "./🔣️.json";
+import closureCustody from "./🚧️closure-custody/🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {GENERATION_MESSAGES_V1,extractGraphPolicyV1,implementationDigestV1,loadGenerationGraphV1,renderGenerationMessageV1,scopeImplementationRowsV1,sliceClosureV1,sliceViewV1,expandInChunksV1,shapeComputeResultV1,survivingStubsV1} from "../🟨️.mjs";
 const graphOfV1=async(...input:Parameters<typeof loadGenerationGraphV1>)=>(await loadGenerationGraphV1(...input)).graph;
-import {GENERATION_POLICY_V1,canonicalJsonV1,createGenerationStoreV1,type GenerationRowV1} from "../../🟨️.mjs";
+import {GENERATION_POLICY_V1,canonicalJsonV1,createNodeFilePortV1,createGenerationStoreV1,type GenerationRowV1} from "../../🟨️.mjs";
+import {createFileClaimLeasePortV1} from "../../🧩️claims/🟨️.mjs";
+import {createSliceCustodyV1} from "../../🔐️custody/🟨️.mjs";
 import {encodeGenerationPinV1,generationPinOpenV1,readGenerationPinV1} from "../../🧷️pin/🟨️.mjs";
 import {applyOps,createMockHost,ringFiles,seed} from "../../🧪️tests/🏃️world/🟦️.ts";
 
@@ -348,9 +352,13 @@ test("a prefetch that settles late delays the builder, and one that rejects fail
  try{
   await seed(dir,ringFiles(6));const mock=createMockHost(dir);(await loadGenerationGraphV1(mock.host)).graph;
   await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:'import "@syn/p4";\nexport const v=5;\n'}]);
-  let release!:()=>void;const late=new Promise<void>(resolve=>{release=resolve;});
-  const slow=createMockHost(dir,{prefetch:()=>late});const loading=graphOfV1(slow.host);
-  await sleep(150);expect(slow.events).toEqual(["shared","prefetch"]);release();await loading;expect(slow.events).toEqual(["shared","prefetch","builder:wait","builder:held","builder:released"]);
+  const entered=Promise.withResolvers<void>(),release=Promise.withResolvers<void>();
+  const slow=createMockHost(dir,{prefetch:()=>{entered.resolve();return release.promise;}}),loading=graphOfV1(slow.host);
+  try{
+   await Promise.race([entered.promise,loading.then(()=>{throw Error("Graph returned before prefetch entered");})]);
+   expect(slow.events).toEqual(["shared","prefetch"]);
+  }finally{release.resolve();await loading;}
+  expect(slow.events).toEqual(["shared","prefetch","builder:wait","builder:held","builder:released"]);
   await applyOps(dir,[{op:"write",path:"pkg/p3/src/index.ts",content:'import "@syn/p5";\nexport const v=6;\n'}]);
   const failing=createMockHost(dir,{prefetch:async()=>{throw new Error("cancelled");}});
   await expect(graphOfV1(failing.host)).rejects.toThrow("cancelled");expect(failing.events).toEqual(["shared","prefetch"]);
@@ -439,6 +447,65 @@ test("a build input closure that no longer exists is a miss: the generation is i
 const KEY_V1="d".repeat(64);
 const typed=(projects:string[])=>Object.assign(Error("closure-missing:"+KEY_V1+" build-input-closures leaf is not on this machine"),{code:"closure-missing",missingClosure:KEY_V1,missingNamespace:"build-input-closures",missingProjects:projects});
 
+for(const origin of ["live","archived","still-missing","refetched"] as const)test("closure recovery uses exact archived ownership from "+origin,async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(12));
+  const mock=createMockHost(dir),discover=mock.host.discoverPart,expand=mock.host.expand,marker="env:SEMIO_SOURCE_CLOSURE_"+KEY_V1;
+  using oracle=new Database(":memory:");
+  const expected=(oracle.query("SELECT value FROM json_each(?) ORDER BY value").all(JSON.stringify(["p2","p9"])) as {value:string}[]).map(row=>row.value);
+  let nameLeaf=true,available=true,unavailableProbes=0,refetches=0;
+  mock.host.discoverPart=async(...args)=>{
+   const part=await discover(...args);
+   for(const owner of part.owners)if(owner.node&&expected.includes(owner.name)&&nameLeaf)owner.node={...owner.node,closureProof:marker};
+   return part;
+  };
+  mock.host.expand=async projects=>{
+   const copy=Object.fromEntries(Object.entries(projects).map(([name,project])=>{const{closureProof,...rest}=project as Record<string,unknown>;if(closureProof===marker&&!available)throw typed([name]);return[name,rest];}));
+   return expand(copy);
+  };
+  const host={...mock.host,
+   settleClosure:async()=>"re-derived",
+   refetchClosure:async({key}:{key:string})=>{
+    expect(key).toBe(KEY_V1);refetches++;
+    if(origin!=="refetched")return false;
+    available=true;return true;
+   },
+   verifyClosure:async({key}:{key:string})=>{
+    if(key!==KEY_V1)throw Error("Unexpected test closure");
+    if(!available)unavailableProbes++;
+    return available;
+   }
+  };
+  const complete=await loadGenerationGraphV1(host);const before=readWorldPointer(dir);
+  if(origin==="archived"){
+   const engine=createGenerationStoreV1(host.storeOptions({root:join(dir,".gen")}));
+   await engine.invalidate({reason:"closure-missing",expected:(await engine.read())!.pointer});
+  }
+  available=false;nameLeaf=origin==="still-missing";mock.log.length=0;mock.events.length=0;
+  if(origin==="refetched"){
+   const repaired=await loadGenerationGraphV1(host);
+   expect(mock.events).toEqual(["shared","shared"]);
+   expect(mock.log).toEqual([]);
+   expect(refetches).toBe(1);
+   expect(readWorldPointer(dir)).toEqual(before);
+   expect(shape(repaired.graph)).toEqual(pythonGraph(dir));
+  }else if(origin==="still-missing"){
+   await expect(loadGenerationGraphV1(host)).rejects.toMatchObject({code:"GENERATION_CLOSURE_REPAIR_UNQUALIFIED"});
+   expect(readWorldPointer(dir).manifest).toBeNull();
+   expect(mock.log.flatMap(row=>row.full).length).toBeGreaterThan(expected.length);
+  }else{
+   const repaired=await loadGenerationGraphV1(host);
+   expect(mock.log.flatMap(row=>row.full).sort()).toEqual(expected);
+   expect(repaired.stats.ownersReinferred).toBe(expected.length);
+   expect(readWorldPointer(dir).generation).toBe(before.generation+2);
+   expect(shape(repaired.graph)).toEqual(shape(complete.graph));
+   expect(shape(repaired.graph)).toEqual(pythonGraph(dir));
+  }
+  if(origin!=="refetched")expect(unavailableProbes).toBeGreaterThan(0);
+ }finally{clean(dir);}
+},120000);
+
 test("a leaf that is absent in the request is settled by the host: the owners that name it are asked of the fleet first and derived again once, the graph completes and no failure is an ENOENT",async()=>{
  const dir=scratch();
  try{
@@ -484,7 +551,8 @@ test("a restored generation that names a leaf nobody holds is completed in the s
  const dir=scratch();
  try{
   await seed(dir,ringFiles(6));const mock=createMockHost(dir),settled:unknown[]=[];
-  (mock.host as any).exchange={upload:false,restore:async()=>({status:"restored",generation:1,owners:6,documents:3,bytes:10,ageSeconds:5,stale:1,closures:{named:3,sent:0,fetched:2,missing:[{key:KEY_V1,namespace:"build-input-closures",projects:["p1","p4"]}]}}),ahead:async()=>false,publish:async()=>({status:"current"}),leaf:async()=>undefined};
+  await loadGenerationGraphV1(mock.host);const restored=readWorldPointer(dir);let ahead=true;
+  (mock.host as any).exchange={upload:false,restore:async()=>({status:"restored",generation:restored.generation,localManifest:restored.manifest,owners:6,documents:3,bytes:10,ageSeconds:5,stale:1,closures:{named:3,sent:0,fetched:2,missing:[{key:KEY_V1,namespace:"build-input-closures",projects:["p1","p4"]}]}}),ahead:async()=>{const pending=ahead;ahead=false;return pending;},publish:async()=>({status:"current"}),leaf:async()=>undefined};
   (mock.host as any).settleClosure=async(input:unknown)=>{settled.push(input);return"re-derived";};
   const result=await loadGenerationGraphV1(mock.host);
   expect(settled).toEqual([{key:KEY_V1,namespace:"build-input-closures",projects:["p1","p4"]}]);
@@ -595,3 +663,127 @@ test("no ordering, shape or failure of progress reports can reject a report and 
  await progress({phase:"decisions",done:1,total:4});
  await progress({phase:"decisions",done:4,total:4});
 });
+
+const readWorldPointer=(dir:string)=>JSON.parse(readFileSync(join(dir,".gen",GENERATION_POLICY_V1.pointer),"utf8")) as {generation:number;manifest:string|null};
+
+for(const fixture of closureCustody)test("closure repair keeps the healthy head published during "+fixture.origin+" "+fixture.wait,async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir),peer=createMockHost(dir);
+  await loadGenerationGraphV1(peer.host);
+  const before=readWorldPointer(dir);
+  let healthy:ReturnType<typeof readWorldPointer>|undefined,settled=0,published=0;
+  const advance=async()=>{
+   published++;
+   await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:`import "@syn/p4";\nexport const peer = ${published};\n`}]);
+   await loadGenerationGraphV1(peer.host);
+   healthy=readWorldPointer(dir);
+  };
+  if(fixture.origin==="local"){
+   const expand=mock.host.expand;let remaining=2;
+   mock.host.expand=async projects=>{if(remaining-->0)throw typed(["p1"]);return expand(projects);};
+  }else{
+   let firstShared=true,firstRestore=true;
+   (mock.host as any).exchange={upload:false,ahead:async()=>firstShared&&(firstShared=false,true),restore:async()=>{
+    if(!firstRestore)return{status:"current"};
+    firstRestore=false;
+    await advance();const restored=healthy!;
+    if(fixture.wait==="restore")await advance();
+    return{status:"restored",generation:restored.generation,localManifest:restored.manifest,closures:{named:1,sent:0,fetched:0,missing:[{key:KEY_V1,namespace:"build-input-closures",projects:["p1"]}]}};
+   }};
+  }
+  (mock.host as any).settleClosure=async()=>{
+   settled++;
+   if(fixture.wait==="settle")await advance();
+   return fixture.wait==="refetch"?"refetched":"re-derived";
+  };
+  const result=await loadGenerationGraphV1(mock.host);
+  expect(healthy?.generation).toBeGreaterThan(before.generation);
+  expect(settled).toBe(fixture.settled);
+  expect(readWorldPointer(dir)).toEqual(healthy!);
+  expect(result.stats.ownersReinferred).toBe(0);
+  expect(shape(result.graph)).toEqual(pythonGraph(dir));
+ }finally{clean(dir);}
+},120000);
+
+
+test("a local missing closure reacquires live structural custody before it can invalidate the observed head",async()=>{
+ using model=new Database(":memory:");
+ const expected=model.query(`SELECT CASE WHEN $mode='cancel at swap' THEN 'ABORT_ERR' ELSE 'served' END AS status,
+  CASE WHEN $mode='peer wins' THEN 0 ELSE 1 END AS settled,
+  CASE WHEN $mode='cancel at swap' THEN 1 ELSE 0 END AS kept`);
+ for(const mode of ["repair","peer wins","cancel at swap"]){
+  const dir=scratch(),root=join(dir,".gen"),controller=new AbortController(),mock=createMockHost(dir,{signal:controller.signal}),peer=createMockHost(dir);
+  const files=createNodeFilePortV1(),custody=createSliceCustodyV1({root,fs:files,lease:createFileClaimLeasePortV1(join(dir,"claims"))});
+  let entries=0,settled=0,failures=2,armed=false;
+  const tokens=new Set<string>(),expand=mock.host.expand,options=mock.host.storeOptions;
+  const withClaim=async(body:Function,request?:{dirty:string[];structural:boolean})=>{
+   const claim=await custody.hold({owners:request?.dirty,structural:request?.structural??true,signal:controller.signal});
+   try{return await body({root},{published:mock.published},claim);}finally{await claim.release();}
+  };
+  try{
+   await seed(dir,ringFiles(6));await loadGenerationGraphV1(mock.host);
+   const observed=readWorldPointer(dir);
+   let healthy:ReturnType<typeof readWorldPointer>|undefined;
+   mock.host.expand=async projects=>{if(failures-->0)throw typed(["p1"]);return expand(projects);};
+   Object.assign(mock.host,{
+    async withBuilder(body:Function,request?:{dirty:string[];structural:boolean}){
+     expect(await custody.list()).toEqual([]);
+     entries++;
+     if(entries===2&&mode==="peer wins"){
+      await applyOps(dir,[{op:"write",path:"pkg/p2/src/index.ts",content:"export const peer = 1;"}]);
+      await loadGenerationGraphV1({...peer.host,withBuilder:withClaim} as never);
+      healthy=readWorldPointer(dir);
+     }
+     return withClaim(async (store:unknown,control:unknown,claim:{token:string})=>{tokens.add(claim.token);return body(store,control,claim);},request);
+    },
+    async settleClosure(){
+     settled++;
+     expect((await custody.list()).filter(row=>row.state==="held").map(row=>row.structural)).toEqual([true]);
+     armed=mode==="cancel at swap";
+     return"re-derived";
+    },
+    storeOptions:(store:{root:string})=>({...options(store),fs:{...files,async read(path:string){
+     const data=await files.read(path);
+     if(armed&&path===join(root,GENERATION_POLICY_V1.pointer)){
+      armed=false;controller.abort(Object.assign(Error("cancel at pointer exchange"),{code:"ABORT_ERR"}));
+     }
+     return data;
+    }}}),
+   });
+   const status=await loadGenerationGraphV1(mock.host).then(()=>"served",error=>error.code);
+   const after=readWorldPointer(dir);
+   expect({status,settled,kept:Number(after.manifest===observed.manifest)},mode).toEqual(expected.get({$mode:mode}));
+   expect(entries,mode).toBe(2);
+   expect(tokens.size,mode).toBe(2);
+   if(healthy)expect(after,mode).toEqual(healthy);
+   expect(await custody.list()).toEqual([]);
+  }finally{clean(dir);}
+ }
+},120000);
+
+test("cold fragment payloads leave memory before the source rows are consumed",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir),discover=mock.host.discoverPart,options=mock.host.storeOptions,events:string[]=[];
+  let payload:WeakRef<object>|undefined,released=false;
+  mock.host.discoverPart=async(...args)=>{
+   const part=await discover(...args),node=part.owners.find(owner=>owner.name==="p1")?.node;
+   if(node===undefined)throw Error("Original fixture owner payload required");
+   payload=new WeakRef(node);events.push("discovered");
+   return{...part,dispose:()=>{events.push("disposed");}};
+  };
+  mock.host.storeOptions=store=>({...options(store),stepped:async(step:string)=>{
+   events.push(step);
+   if(step!=="storing")return;
+   expect(events).not.toContain("disposed");
+   await sleep(0);Bun.gc(true);await sleep(0);Bun.gc(true);
+   released=payload?.deref()===undefined;
+  }});
+  const built=await loadGenerationGraphV1(mock.host);
+  expect(events).toEqual(["discovered","storing","disposed","indexing","sealing"]);
+  expect(released).toBe(true);
+  expect(built.stats.ownersReinferred).toBe(6);
+  expect(shape(built.graph)).toEqual(pythonGraph(dir));
+ }finally{clean(dir);}
+},120000);

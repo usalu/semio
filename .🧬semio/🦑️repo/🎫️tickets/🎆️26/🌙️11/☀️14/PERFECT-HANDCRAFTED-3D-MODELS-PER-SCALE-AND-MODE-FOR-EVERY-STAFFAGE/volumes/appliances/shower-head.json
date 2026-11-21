@@ -1063,8 +1063,8 @@
         -0.0003,
         0.0
        ],
-       "rx": 0.0131,
-       "ry": 0.0124,
+       "rx": 0.013,
+       "ry": 0.0122,
        "rotation": [
         0,
         -0.70711,
@@ -1074,11 +1074,11 @@
       },
       {
        "at": [
-        0.142,
-        -0.001,
+        0.14,
+        -0.0015,
         0.0
        ],
-       "rx": 0.017,
+       "rx": 0.0145,
        "ry": 0.0105,
        "rotation": [
         0,
@@ -1089,11 +1089,11 @@
       },
       {
        "at": [
-        0.156,
-        -0.0005,
+        0.152,
+        -0.003,
         0.0
        ],
-       "rx": 0.023,
+       "rx": 0.0155,
        "ry": 0.0085,
        "rotation": [
         0,
@@ -1104,11 +1104,11 @@
       },
       {
        "at": [
-        0.17,
-        -0.001,
+        0.162,
+        -0.0045,
         0.0
        ],
-       "rx": 0.027,
+       "rx": 0.014,
        "ry": 0.0065,
        "rotation": [
         0,
@@ -1119,27 +1119,12 @@
       },
       {
        "at": [
-        0.184,
-        -0.003,
+        0.172,
+        -0.0065,
         0.0
        ],
-       "rx": 0.026,
+       "rx": 0.01,
        "ry": 0.0045,
-       "rotation": [
-        0,
-        -0.70711,
-        0,
-        0.70711
-       ]
-      },
-      {
-       "at": [
-        0.196,
-        -0.006,
-        0.0
-       ],
-       "rx": 0.018,
-       "ry": 0.0025,
        "rotation": [
         0,
         -0.70711,
@@ -3086,8 +3071,8 @@
    ],
    "decisions": [
     {
-     "en": "Body: a 22 mm chrome rail between two end brackets, each a wall rosette of 44 mm, a round arm and a 30 mm end socket with a domed cap. The sliding holder is a 34 mm sleeve around the rail with a clamp button on the left and a forked arm of 55 by 20 mm; between its two cheeks the socket turns on two pivot pins: a conical clip of 34 to 38 mm with a slot of 14 mm at the front, through which the hose slips in. The hand shower sits with the cone of its handle in that clip, the conical hose nut hanging under it: a round handle of 25 to 29 mm, a neck that flattens and widens from 26 mm to a tongue of 54 mm lying on the back of the spray disc, and the disc of 110 mm, 26 mm thick, with a domed back, a rounded rim and the rubber nozzle field of 90 mm as a texture plate. The wall elbow is a 60 mm escutcheon, a 34 mm valve body with a domed end, the G 1/2 outlet pointing down with the conical hose nut, and a quarter-turn lever with its boss on the right side. The hose of 13 mm hangs as one bight of 1.2 m between the two nuts, lofted through 42 circles.",
-     "de": "Körper: eine verchromte Stange von 22 mm zwischen zwei Endhaltern, jeder mit Wandrosette von 44 mm, rundem Arm und Endhülse von 30 mm mit gewölbter Kappe. Der Gleithalter ist eine Hülse von 34 mm um die Stange mit Klemmknopf links und einem Gabelarm von 55 mal 20 mm; zwischen dessen zwei Wangen dreht die Aufnahme auf zwei Gelenkzapfen: eine konische Klammer von 34 bis 38 mm mit einem Schlitz von 14 mm an der Vorderseite, durch den der Schlauch eingelegt wird. Die Handbrause sitzt mit dem Konus ihres Griffs in dieser Klammer, die konische Schlauchmutter hängt darunter: ein runder Griff von 25 bis 29 mm, ein Hals, der sich von 26 mm zu einer Zunge von 54 mm abflacht und verbreitert und auf dem Rücken der Brausescheibe liegt, und die Scheibe von 110 mm, 26 mm dick, mit gewölbtem Rücken, gerundetem Rand und dem Gummidüsenfeld von 90 mm als Texturplatte. Der Wandanschluss ist eine Rosette von 60 mm, ein Ventilkörper von 34 mm mit gewölbtem Ende, der Abgang G 1/2 nach unten mit der konischen Schlauchmutter und ein Vierteldrehhebel mit Nabe auf der rechten Seite. Der Schlauch von 13 mm hängt als ein Bogen von 1,2 m zwischen den beiden Muttern, durch 42 Kreise geloftet."
+     "en": "Body: a 22 mm chrome rail between two end brackets, each a wall rosette of 44 mm, a round arm and a 30 mm end socket with a domed cap. The sliding holder is a 34 mm sleeve around the rail with a clamp button on the left and a forked arm of 55 by 20 mm; between its two cheeks the socket turns on two pivot pins: a conical clip of 34 to 38 mm with a slot of 14 mm at the front, through which the hose slips in. The hand shower sits with the cone of its handle in that clip, the conical hose nut hanging under it: a round handle of 25 to 29 mm, a neck that flattens and widens from 26 to 31 mm as it runs onto the lower back of the spray disc and sinks into its dome, and the disc of 110 mm, 26 mm thick, with a domed back, a rounded rim and the rubber nozzle field of 90 mm as a texture plate. The wall elbow is a 60 mm escutcheon, a 34 mm valve body with a domed end, the G 1/2 outlet pointing down with the conical hose nut, and a quarter-turn lever with its boss on the right side. The hose of 13 mm hangs as one bight of 1.2 m between the two nuts, lofted through 42 circles.",
+     "de": "Körper: eine verchromte Stange von 22 mm zwischen zwei Endhaltern, jeder mit Wandrosette von 44 mm, rundem Arm und Endhülse von 30 mm mit gewölbter Kappe. Der Gleithalter ist eine Hülse von 34 mm um die Stange mit Klemmknopf links und einem Gabelarm von 55 mal 20 mm; zwischen dessen zwei Wangen dreht die Aufnahme auf zwei Gelenkzapfen: eine konische Klammer von 34 bis 38 mm mit einem Schlitz von 14 mm an der Vorderseite, durch den der Schlauch eingelegt wird. Die Handbrause sitzt mit dem Konus ihres Griffs in dieser Klammer, die konische Schlauchmutter hängt darunter: ein runder Griff von 25 bis 29 mm, ein Hals, der sich von 26 auf 31 mm abflacht und verbreitert, auf den unteren Rücken der Brausescheibe läuft und in ihrer Wölbung aufgeht, und die Scheibe von 110 mm, 26 mm dick, mit gewölbtem Rücken, gerundetem Rand und dem Gummidüsenfeld von 90 mm als Texturplatte. Der Wandanschluss ist eine Rosette von 60 mm, ein Ventilkörper von 34 mm mit gewölbtem Ende, der Abgang G 1/2 nach unten mit der konischen Schlauchmutter und ein Vierteldrehhebel mit Nabe auf der rechten Seite. Der Schlauch von 13 mm hängt als ein Bogen von 1,2 m zwischen den beiden Muttern, durch 42 Kreise geloftet."
     },
     {
      "en": "Thermal: every region has one layer, so each surface is its body solid: the rail with brackets and holder, the valve with its outlet nut and lever, the hose, the handle with its hose nut, and the head with the neck that runs into its back. The rail tube is dry; its 1.2 mm wall is the hollow tube of the structure list. The water path of the hidden spray region runs as a core through the valve bore, the outlet, the hose (9 mm bore in the 13 mm hose), the handle and neck, and the chamber behind the nozzle plate. The spray-mist emitter is the nozzle field as a plate 1 mm proud of the face; the vapour plume leaves from a patch on the upper rim of the head.",

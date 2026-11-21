@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {randomBytes} from "node:crypto";
 import {lstatSync,mkdirSync,mkdtempSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
-import {join} from "node:path";
+import {join,sep} from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
 import {withBuildTestInvocationV1,declareBuildTestEnvelopeV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
@@ -55,8 +55,8 @@ test("the Rust wait uses the real fair writer, requalifies after release and iss
   WHEN $fault IN ('platform','lease-failed') THEN $fault END AS reason`);
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Private reclaim fixture directory required");
  for(const row of fixture){
-  const area=mkdtempSync(join(artifacts,"rw-")),directory=join(area,"r"),root=join(directory,"m"),image=join(directory,"fixed.dmg"),catalog=join(area,"l"),resource="native-fixed-image:"+directory;
-  mkdirSync(root,{recursive:true});mkdirSync(catalog);writeFileSync(image,"private reclaim model");
+  const area=mkdtempSync(artifacts.endsWith(sep)?artifacts:artifacts+sep),directory=join(area,"r"),root=join(directory,"m"),image=join(directory,"fixed.dmg"),catalog=area,resource="native-fixed-image:"+directory;
+  mkdirSync(root,{recursive:true});writeFileSync(image,"private reclaim model");
   const backing=lstatSync(image),mounted=lstatSync(root,{bigint:true}),filesystemBytes=42948624384,capacityBytes=42949672960;
   writeFileSync(join(directory,"image.json"),JSON.stringify({version:1,filesystemBytes,maximumPhysicalBytes:capacityBytes,dev:backing.dev,ino:backing.ino,size:backing.size,mountDirectory:{dev:String(backing.dev),ino:String(mounted.ino),mode:Number(mounted.mode)},bootSession:"00000000-0000-4000-8000-000000000001",ancestry:readNativeImageAncestryV1(directory)}));
   const stop=new AbortController(),control=routing.createRequestedIssuedResourceControlV1(routing.createIssuedResourceControlV1(original,"test:rust-wait-"+row.fault,12000),0,stop.signal),waiting=Promise.withResolvers<void>();
@@ -68,6 +68,7 @@ test("the Rust wait uses the real fair writer, requalifies after release and iss
     callerRepositoryRootV1:(cap:unknown)=>{expect(cap).toBe(original.capabilities);return area;},repositoryCacheBudgetV1:()=>({partitions:{rust:{directory,filesystemBytes,capacityBytes}}}),nativeImageRootV1:()=>root,repositoryLeaseDirectoryV1:()=>catalog,nativeRecomputableRetirementPendingV1:()=>row.fault==="retiring",
     lstatSync:(path:string)=>{const stat=lstatSync(path,{bigint:true});if(path===root)stat.dev+=1n;if(path===image)stat.blocks=42888224768n/512n;return stat;},
     statfsSync:(path:string)=>path===directory?{bsize:1,bavail:free,blocks:1e12}:{bsize:1,blocks:1e11,bfree:1e11-used},
+    nativeImageVolumeUsedBytesSyncV1:()=>used,
     acquireQueuedResourceLease:async(options:leases.QueuedLeaseOptions)=>{expect(options.control).toBe(control);expect(options.resource).toBe(resource);expect(options.mode).toBe("exclusive");expect(options.yielding).toBe(false);expect(options.timeoutMs).toBe(120000);if(row.fault==="lease-failed")throw Error("Private catalog read failed");const lease=await leases.acquireQueuedResourceLease({...options,timeoutMs:row.fault==="timeout"?300:options.timeoutMs,onWait:async event=>{blocked=true;if(row.fault==="lost-while-waiting")free=60000000000;waiting.resolve();await options.onWait?.(event);}});granted=true;return lease;},
     captureOwnedCommandV1:async(program:string,args:string[])=>{expect(granted).toBe(true);expect(program).toBe("/usr/bin/hdiutil");if(args[0]==="detach"){reclaimed=true;return "";}return "private kernel inventory";},
     nativeImageInventoryV1:()=>({images:[{"image-path":image,"system-entities":[{"dev-entry":"/dev/disk1"},{"dev-entry":"/dev/disk1s1","mount-point":row.fault==="mapping"?area:root}]}]}),
@@ -76,7 +77,7 @@ test("the Rust wait uses the real fair writer, requalifies after release and iss
    });
    const attempt=leases.withLeaseTaskV1(()=>route(original,control)).then(value=>({value}),error=>({error}));
    if(!["pressure","not-due","retiring","platform","lease-failed"].includes(row.fault)){
-    const first=await Promise.race([waiting.promise.then(()=>"waiting"),attempt.then(()=>"ended")]);expect(first,row.fault).toBe("waiting");
+    const first=await Promise.race([waiting.promise.then(()=>"waiting"),attempt.then(value=>JSON.stringify(value,(_,field)=>field instanceof Error?field.message:field))]);expect(first,row.fault).toBe("waiting");
     expect(blocked).toBe(true);expect(granted).toBe(false);expect(reclaimed).toBe(false);
     if(row.fault==="none"){
      expect(await tryPrivateSharedDescendant(catalog,resource,true)).toBe("held");

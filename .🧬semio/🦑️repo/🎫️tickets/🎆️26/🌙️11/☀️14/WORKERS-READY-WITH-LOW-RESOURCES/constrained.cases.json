@@ -1,4 +1,22 @@
 {
+  "ownedMount": {
+    "path": "/private/tmp/lv-123abc",
+    "backing": "/ticket/generated/l-123/lab.sparseimage",
+    "expectedArguments": ["attach", "-plist", "-mount", "required", "-nobrowse", "-owners", "on", "-mountpoint", "/private/tmp/lv-123abc", "/ticket/generated/l-123/lab.sparseimage"],
+    "table": [
+      {"entry": "/dev/disk23s1 on /private/tmp/lv-123abc (apfs, local, journaled, noowners, nobrowse)", "point": "/private/tmp/lv-123abc", "owners": false, "accepted": false},
+      {"entry": "/dev/disk23s1 on /private/tmp/lv-123abc (apfs, local, journaled, nobrowse)", "point": "/private/tmp/lv-123abc", "owners": true, "accepted": true},
+      {"entry": "/dev/disk23s1 on /private/tmp (apfs, local, journaled, nobrowse)", "point": "/private/tmp", "owners": true, "accepted": false}
+    ]
+  },
+  "nestedImageInventory": [
+    {"backing": "/private/tmp/lv-123abc/m1/fixed.dmg", "mounts": [], "canonicalPaths": ["/private/tmp/lv-123abc/m1/fixed.dmg"], "retainsOuter": true},
+    {"backing": "/Volumes/Other/external.dmg", "mounts": ["/private/tmp/lv-123abc/m1/m"], "canonicalPaths": ["/Volumes/Other/external.dmg", "/private/tmp/lv-123abc/m1/m"], "retainsOuter": true},
+    {"backing": "/tmp/lv-123abc/m1/fixed.dmg", "mounts": ["/Volumes/Other"], "canonicalPaths": ["/private/tmp/lv-123abc/m1/fixed.dmg", "/Volumes/Other"], "retainsOuter": true},
+    {"backing": "/Volumes/Other/external.dmg", "mounts": ["/Volumes/Other/external", "/tmp/lv-123abc/m1/m"], "canonicalPaths": ["/Volumes/Other/external.dmg", "/Volumes/Other/external", "/private/tmp/lv-123abc/m1/m"], "retainsOuter": true},
+    {"backing": "/tmp/lv-123abcd/m1/fixed.dmg", "mounts": ["/private/tmp/lv-123abc-other"], "canonicalPaths": ["/private/tmp/lv-123abcd/m1/fixed.dmg", "/private/tmp/lv-123abc-other"], "retainsOuter": false},
+    {"backing": "/Volumes/Other/external.dmg", "mounts": ["/private/tmp/first/../lv-123abc/m"], "canonicalPaths": ["/Volumes/Other/external.dmg", "/private/tmp/lv-123abc/m"], "retainsOuter": true}
+  ],
   "diskAdmission": {
     "physical": [
       {"admitted": false, "freeBytes": 40, "requiredFreeBytes": 60},

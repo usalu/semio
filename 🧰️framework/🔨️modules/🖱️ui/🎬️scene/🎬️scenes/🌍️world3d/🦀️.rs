@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 mod world3d_snapshot;
 pub use world3d_snapshot::{
     world3d_snapshot_abort_write, world3d_snapshot_abort_write_step, world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_claim_draw_permit, world3d_snapshot_close_step, world3d_snapshot_recover_lease,
-    world3d_snapshot_recover_page, world3d_snapshot_recover_write, world3d_snapshot_recovery_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page, world3d_snapshot_write_terminal_is_empty,
+    world3d_snapshot_recover_page, world3d_snapshot_recover_write, world3d_snapshot_recovery_close_step, world3d_snapshot_recovery_pending, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page, world3d_snapshot_write_terminal_is_empty,
     World3dRejectedSnapshotPage, World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken,
     WORLD3D_SNAPSHOT_CAPACITY, WORLD3D_SNAPSHOT_DRAW_BYTE_CAPACITY, WORLD3D_SNAPSHOT_DRAW_CAPACITY, WORLD3D_SNAPSHOT_DRAW_INSTANCE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
 };

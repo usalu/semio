@@ -277,7 +277,7 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && winit.contains(".admit_next_frame(||match frame_build.poll_runtime_on_original_caller")
         && winit.contains("observe_presentation_input_generation(build_generation.0)")
         && !winit.contains("begin_present(frame).is_err()")
-        && host.contains("presenter.close_world_owners_step()")
+        && host.contains("presenter.close_world_owners_step(cx)")
         && host.contains("presenter.world_owners_terminal_is_empty()")
         && draw.contains("pub const MESH_GPU_TABLE_CAPACITY: usize = 256")
         && draw.contains("slots: [Option<MeshGpuEntry<T>>; MESH_GPU_TABLE_CAPACITY]")
@@ -364,7 +364,7 @@ const PRESENTER_RETIREMENT_MUTATIONS: &[(PresenterContractSource, &str, &str, bo
     (PresenterContractSource::Laws, "fn mesh_gpu_retirement_preserves_acknowledged_versions()", "fn mesh_gpu_retirement_drops_everything()", false),
     (PresenterContractSource::Laws, "fn fixed_mesh_gpu_registry_rejects_capacity_plus_one_and_returns_exact_owner()", "fn fixed_mesh_gpu_registry_grows()", false),
     (PresenterContractSource::Host, "presenter.world_owners_terminal_is_empty()", "true", false),
-    (PresenterContractSource::Host, "presenter.close_world_owners_step()", "drop(presenter)", false),
+    (PresenterContractSource::Host, "presenter.close_world_owners_step(cx)", "drop(presenter)", false),
     (PresenterContractSource::Winit, ".admit_next_frame(||match frame_build.poll_runtime_on_original_caller", "", false),
     (PresenterContractSource::Winit, "self.runtime.observe_presentation_input_generation(build_generation.0);", "", false),
 ];

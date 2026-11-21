@@ -3,6 +3,19 @@ use super::*;
 type Demand=semio_framework_value::RetirementDemand;
 fn quote(copy:usize,capacity:usize,release:usize)->Demand{Demand{copy_bytes:copy,capacity_bytes:capacity,release_bytes:release,depth:1,..Default::default()}}
 impl RasterMutationCandidateAuthority{
+ fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+  if !self.retirement.is_empty() { return self.retirement.close_work_demand(body); }
+  if let Some(pixel) = self.pixel.as_ref() {
+   return if pixel.terminal_is_empty() { Ok(1) } else { pixel.close_work_demand(body) };
+  }
+  if let Some(clone) = self.layer_clone.as_ref() {
+   return if clone.terminal_is_empty() { Ok(1) } else { clone.close_work_demand(body) };
+  }
+  if let Some(clone) = self.clone.as_ref() {
+   return if clone.terminal_is_empty() { Ok(1) } else { clone.close_work_demand(body) };
+  }
+  Ok(u64::from(!self.terminal_is_empty()))
+ }
  fn forward_demands(&self,operation:&RasterMutation)->Result<Demand,&'static str>{
   let(copy,capacity)=match operation{
    RasterMutation::RenameLayer(value)=>(2*size_of::<String>()+value.new_name.len(),value.new_name.len()),
@@ -33,6 +46,10 @@ impl RasterMutationCandidateAuthority{
  }
 }
 impl RasterOneItemApply{
+ /// ⛽️ Quotes the next retirement frontier of the original mutation candidate.
+ pub fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+  self.candidate.as_ref().map_or(Ok(0), |candidate| candidate.close_work_demand(body))
+ }
  /// 🎟️ Quotes one current effect; CPU-only cursor turns request no fabricated payload capacity.
  pub fn advance_demands(&self,base:&RasterSnapshot,operation:&RasterMutation,body:usize)->Result<Demand,ValueError>{if let Some((_,source,mutation))=self.binding{if source!=base as*const RasterSnapshot as usize||mutation!=operation as*const RasterMutation as usize{return Err(invariant("raster-store.one-item-original-source-changed"))}}else{return Ok(Self::binding_demands())}self.candidate.as_ref().ok_or_else(||invariant("raster-store.demand-candidate"))?.demands(base,operation,body).map_err(invariant)}
 }

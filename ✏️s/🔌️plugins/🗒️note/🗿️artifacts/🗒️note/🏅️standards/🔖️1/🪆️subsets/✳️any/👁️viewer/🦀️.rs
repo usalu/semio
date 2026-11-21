@@ -69,6 +69,14 @@ impl ArtifactViewer for NoteViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_s_artifact_note_note_mutations::host::owned::note_store_owners_source_demands()
+    }
+
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<semio_s_artifact_note_note_mutations::host::owned::NoteStoreOwnersAdmission> {
+        Some(semio_s_artifact_note_note_mutations::host::owned::admit_note_store_owners(grant))
+    }
+
     /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the
     /// very same `NoteSnapshot` envelope and must allocate and retire it the same way. Read-only
     /// says nothing about ownership.

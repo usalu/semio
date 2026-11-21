@@ -1,0 +1,192 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "budget": 8,
+      "requested": 17,
+      "fields": [],
+      "expect": {
+        "index": 0,
+        "total": 1,
+        "first": 0,
+        "last": 0,
+        "nodes": 0
+      }
+    },
+    {
+      "name": "exact budget",
+      "budget": 8,
+      "requested": 0,
+      "fields": [
+        {
+          "nodes": 2,
+          "count": 4
+        }
+      ],
+      "expect": {
+        "index": 0,
+        "total": 1,
+        "first": 0,
+        "last": 4,
+        "nodes": 8
+      }
+    },
+    {
+      "name": "long scalar form",
+      "budget": 102,
+      "requested": 1,
+      "fields": [
+        {
+          "nodes": 2,
+          "count": 70
+        }
+      ],
+      "expect": {
+        "index": 1,
+        "total": 2,
+        "first": 51,
+        "last": 70,
+        "nodes": 38
+      }
+    },
+    {
+      "name": "retained image sources",
+      "budget": 102,
+      "requested": 1,
+      "fields": [
+        {
+          "nodes": 4,
+          "count": 40
+        }
+      ],
+      "expect": {
+        "index": 1,
+        "total": 2,
+        "first": 25,
+        "last": 40,
+        "nodes": 60
+      }
+    },
+    {
+      "name": "large vector page",
+      "budget": 8,
+      "requested": 1,
+      "fields": [
+        {
+          "nodes": 2,
+          "count": 1
+        },
+        {
+          "nodes": 7,
+          "count": 1
+        },
+        {
+          "nodes": 2,
+          "count": 2
+        }
+      ],
+      "expect": {
+        "index": 1,
+        "total": 3,
+        "first": 1,
+        "last": 2,
+        "nodes": 7
+      }
+    },
+    {
+      "name": "changed visibility clamps page",
+      "budget": 8,
+      "requested": 6,
+      "fields": [
+        {
+          "nodes": 2,
+          "count": 5
+        }
+      ],
+      "expect": {
+        "index": 1,
+        "total": 2,
+        "first": 4,
+        "last": 5,
+        "nodes": 2
+      }
+    },
+    {
+      "name": "continued section repeats heading",
+      "budget": 8,
+      "requested": 1,
+      "fields": [
+        {
+          "section": 0,
+          "nodes": 2,
+          "count": 2
+        },
+        {
+          "section": 1,
+          "nodes": 2,
+          "count": 3
+        }
+      ],
+      "expect": {
+        "index": 1,
+        "total": 2,
+        "first": 3,
+        "last": 5,
+        "nodes": 5
+      }
+    },
+    {
+      "name": "section heading stays beside vector",
+      "budget": 8,
+      "requested": 0,
+      "fields": [
+        {
+          "section": 0,
+          "nodes": 2,
+          "count": 1
+        },
+        {
+          "section": 1,
+          "nodes": 7,
+          "count": 1
+        }
+      ],
+      "expect": {
+        "index": 0,
+        "total": 2,
+        "first": 0,
+        "last": 1,
+        "nodes": 3
+      }
+    },
+    {
+      "name": "unsplittable field",
+      "budget": 6,
+      "requested": 0,
+      "fields": [
+        {
+          "section": 1,
+          "nodes": 6,
+          "count": 1
+        }
+      ],
+      "rejected": 0
+    },
+    {
+      "name": "unsplittable field after a valid page",
+      "budget": 3,
+      "requested": 0,
+      "fields": [
+        {
+          "nodes": 2,
+          "count": 2
+        },
+        {
+          "nodes": 4,
+          "count": 1
+        }
+      ],
+      "rejected": 2
+    }
+  ]
+}

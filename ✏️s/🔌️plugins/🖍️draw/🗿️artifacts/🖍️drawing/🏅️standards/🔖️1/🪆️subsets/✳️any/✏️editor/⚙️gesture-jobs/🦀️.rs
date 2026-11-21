@@ -1,31 +1,17 @@
-//! ⚙️ Drawing gesture jobs: the gesture operation payload, the retained command decoder, the interactive gesture job and its tool job factory.
+//! ⚙️ Retained Drawing gesture job and factory.
 
 use super::*;
 
 //#region 🧵️GestureOperationJobs
-pub(super) struct DrawingGestureOperationPayload {
+type GestureRequest = semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<DrawingPlayApp>>;
+
+pub struct DrawingGestureOperationPayload {
     pub(super) source_identity: SceneIdentity,
-    pub(super) command: DrawingCommand,
-    pub(super) snapshot: std::sync::Arc<DrawingSnapshot>,
-    pub(super) config: std::sync::Arc<NoConfig>,
-    pub(super) window_config: DrawingCanvasWindowConfig,
-    pub(super) window_transient: DrawingCanvasWindowTransient,
-    pub(super) view_state: semio_plugin::ViewModel,
-    pub(super) history: std::sync::Arc<semio_plugin::HistoryView>,
-    pub(super) interaction_state: std::sync::Arc<protocol::InteractionState>,
-    pub(super) instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle,
-    pub(super) operation_context: semio_plugin::AppOperationContext,
-    pub(super) active_utility_id: String,
-    pub(super) completion: semio_plugin::ArtifactToolCompletion<semio_plugin::EditorApp<DrawingPlayApp>>,
+    pub(super) original: Option<GestureRequest>,
 }
 
-/// 📦️ Validates the retained wire pages of one gesture against the typed command the host already
-/// decoded: the pages are the command's OWN binary op encoding (`app_commands!` `OpBinary`, the same
-/// bytes `ArtifactRetainedCommandJob` decodes for the bounded lane — since 09-15 the host crosses a
-/// pack, not `["verb", {...}]` JSON text). Fail-closed exactly like the framework lane: the bytes
-/// must decode to a command whose id is the registered verb, so truncation and a variant swap reject
-/// before dispatch. No byte-equal re-encode: the host's pack encoder is not obliged to emit the
-/// Rust encoder's canonical layout (float/int spelling, defaulted fields).
+/// 📦️ Decodes bounded pages of the original binary drawing command and checks its registered verb.
+/// The host may encode equivalent values with a different Pack layout.
 pub struct DrawingRetainedCommandDecoder {
     expected_verb: &'static str,
     pub(super) raw: Vec<u8>,
@@ -58,6 +44,7 @@ impl DrawingRetainedCommandDecoder {
 
 pub struct DrawingGestureOperationJob {
     pub(super) payload: Option<DrawingGestureOperationPayload>,
+    retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<GestureRequest>>,
     pub pending_completion_rejection: Option<semio_plugin::app::ArtifactToolCompletionRejection<semio_plugin::EditorApp<DrawingPlayApp>>>,
     pub(super) raw_input: Option<semio_framework_action_bus::RetainedToolWireInput>,
     pub(super) raw_page_cursor: usize,
@@ -71,11 +58,11 @@ pub struct DrawingGestureOperationJob {
 
 impl DrawingGestureOperationJob {
     pub(super) fn new(payload: DrawingGestureOperationPayload) -> Self {
-        DrawingGestureOperationJob { payload: Some(payload), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false, outcomes: semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes::new() }
+        DrawingGestureOperationJob { payload: Some(payload), retirement: Default::default(), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false, outcomes: semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes::new() }
     }
 
     pub(super) fn from_wire(payload: DrawingGestureOperationPayload, input: semio_framework_action_bus::RetainedToolWireInput) -> Self {
-        let expected_verb = payload.command.command_id();
+        let expected_verb = payload.original.as_ref().expect("original gesture request").command.command_id();
         let mut job = Self::new(payload);
         job.raw_input = Some(input);
         job.decoder = Some(DrawingRetainedCommandDecoder::new(expected_verb));
@@ -121,7 +108,9 @@ impl DrawingGestureOperationJob {
         }
         if !self.completed {
             let Some(payload) = self.payload.as_ref() else { return self.outcomes.fault("drawing.gesture-payload-missing") };
-            let emit = payload.instance_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| owner.dispatch(payload,context));
+            let Some(original) = payload.original.as_ref() else { return self.outcomes.fault("drawing.gesture-payload-missing") };
+            let view = original.context.view_state.as_deref().expect("admitted original Drawing Canvas view");
+            let emit = original.instance_operation_owner.with_mut::<DrawingInstanceOperationOwner, _>(|owner| owner.dispatch(payload,context));
             let (emit, transient) = match emit {
                 Ok(Some(output)) => output,
                 Ok(None) => {
@@ -129,26 +118,30 @@ impl DrawingGestureOperationJob {
                     return DrawingJobTurn::Yield;
                 }
                 Err(error) => {
-                    if let Err(rejected) = payload.completion.complete(Err(error), semio_plugin::EphemeralEmit::default()) {
+                    if let Err(rejected) = original.completion.complete(Err(error), semio_plugin::EphemeralEmit::default()) {
                         self.pending_completion_rejection = Some(rejected);
                     }
                     return self.outcomes.fault("drawing.gesture-dispatch-refused");
                 }
             };
-            let window_transient = (transient != payload.window_transient)
-                .then(|| canvas_window::transient::addressed(&payload.view_state, transient))
+            let default_transient = DrawingCanvasWindowTransient::default();
+            let previous_transient = original.context.window_transient.as_ref()
+                .and_then(|snapshot| snapshot.get::<canvas_window::transient::DrawingCanvasWindowTransientOwner>())
+                .unwrap_or(&default_transient);
+            let window_transient = (&transient != previous_transient)
+                .then(|| canvas_window::transient::addressed(view, transient))
                 .transpose();
             let ephemeral = match window_transient {
                 Ok(Some(mutation)) => semio_plugin::EphemeralEmit { window_transient: vec![mutation], ..Default::default() },
                 Ok(None) => semio_plugin::EphemeralEmit::default(),
                 Err(error) => {
-                    if let Err(rejected) = payload.completion.complete(Err(error), semio_plugin::EphemeralEmit::default()) {
+                    if let Err(rejected) = original.completion.complete(Err(error), semio_plugin::EphemeralEmit::default()) {
                         self.pending_completion_rejection = Some(rejected);
                     }
                     return self.outcomes.fault("drawing.gesture-transient-refused");
                 }
             };
-            if let Err(rejected) = payload.completion.complete(Ok(emit), ephemeral) {
+            if let Err(rejected) = original.completion.complete(Ok(emit), ephemeral) {
                 self.pending_completion_rejection = Some(rejected);
                 return self.outcomes.fault("drawing.gesture-completion-rejected");
             }
@@ -174,7 +167,10 @@ impl DrawingGestureOperationJob {
         if let Some(input) = self.raw_input.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: input.next_close_copy_byte_demand()?, capacity_bytes: input.next_close_capacity_byte_demand(body)?, release_bytes: input.next_close_release_byte_demand()?, depth: input.next_close_depth_demand()? });
         }
-        if self.payload.is_some() {
+        if let Some(payload) = self.payload.as_ref() {
+            if payload.original.is_some() || self.retirement.is_some() {
+                return semio_plugin::app::plugin_typed_owner_demand(&payload.original, &self.retirement, body);
+            }
             return Ok(unit);
         }
         if let Some(decoder) = self.decoder.as_ref() {
@@ -185,7 +181,6 @@ impl DrawingGestureOperationJob {
 }
 
 impl DrawingGestureOperationJob {
-    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
     fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
         let turn = self.turn(context);
         self.outcomes.lend(turn, context)
@@ -225,9 +220,17 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
                 }
             }
         }
+        if self.closing && self.pending_completion_rejection.is_none() && self.raw_input.is_none() {
+            if let Some(payload) = self.payload.as_mut().filter(|payload| payload.original.is_some() || self.retirement.is_some()) {
+                let demand = semio_plugin::app::plugin_typed_owner_demand(&payload.original, &self.retirement, grant.maximum_copy_bytes)?;
+                return semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                    semio_plugin::app::plugin_typed_owner_original(&mut payload.original, &mut self.retirement, effect)
+                });
+            }
+        }
         semio_framework_job::close_original_granted_step(cx,|grant|{
             let mut work=0;
-            let result=(||{
+            let result=(||->Result<_, semio_framework_value::ValueError>{
             let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
             let pending=|copied_items,released_bytes|semio_framework_job::InteractiveJobCloseStep::Pending {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items,released_bytes,..Default::default()}};
             if !self.closing {
@@ -246,7 +249,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
             }
             if let Some(input) = self.raw_input.as_mut() {
                 let step = input.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,..grant})?;
-                work=u64::from(step.progress().copied_items>0);
+                work=u128::from(step.progress().copied_items>0);
                 if input.terminal_is_empty() {
                     self.raw_input = None;
                 }
@@ -278,7 +281,7 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
     fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(self.close_demands(0)?.depth)}
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.pending_completion_rejection.is_none() && self.payload.is_none() && self.raw_input.is_none() && self.decoder.is_none() && self.outcomes.terminal_is_empty()
+        self.closing && self.pending_completion_rejection.is_none() && self.payload.is_none() && self.retirement.is_none() && self.raw_input.is_none() && self.decoder.is_none() && self.outcomes.terminal_is_empty()
     }
 }
 
@@ -322,10 +325,13 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingGestureOperationJobFac
     const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = DRAWING_GESTURE_PUBLICATION_CONTRACTS;
 }
 
-/// 🏗️ The gesture half of `DrawingPlayApp::build_tool_job` — the Canvas window's live view, config and transient plus the retained wire owner of the command enter one gesture job.
-pub(super) fn drawing_gesture_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<DrawingPlayApp>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+/// 🏗️ Admits the gesture job on the original Canvas request.
+pub(super) fn drawing_gesture_tool_job(request: &mut Option<GestureRequest>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
     use semio_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
     let original = request.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Drawing gesture request is absent"))?;
+    if !original.source_binding.matches(cx) {
+        return Err(ValueError::invariant("Drawing gesture construction requires its original source").into());
+    }
     if original.command.command_id() != original.tool_id {
         return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Drawing gesture command does not match its exact registered tool").into());
     }
@@ -335,42 +341,29 @@ pub(super) fn drawing_gesture_tool_job(request: &mut Option<semio_plugin::Artifa
     if original.checkpoint.is_some() || original.input.as_ref().is_some_and(|input| input.declared_bytes() > DRAWING_GESTURE_RAW_BYTES) {
         return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Drawing gesture retained ingress rejects a checkpoint or oversized wire owner").into());
     }
-    let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: std::mem::size_of::<DrawingGestureOperationJob>() + std::mem::size_of::<DrawingGestureOperationPayload>(), release_bytes: 0, depth: 1 };
-    semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
-        let mut request = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Drawing gesture request is absent"))?.into_inputs();
-        let view_state = request.context.view_state.clone().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "Drawing gesture commands require one concrete Canvas window instance"))?;
-        let window_config = canvas_window::config::from_snapshot(request.context.window_config.as_ref());
-        let window_transient = canvas_window::transient::from_snapshot(request.context.window_transient.as_ref());
+    if let Some(input) = original.input.as_ref() {
+        original.command.admitted_encoded_bytes(input, cx)?;
+    }
+    let capacity = std::mem::size_of::<DrawingGestureOperationJob>();
+    let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: capacity, release_bytes: 0, depth: 1 };
+    let owner = request.as_mut().ok_or_else(|| ValueError::invariant("original Drawing gesture request is absent"))?;
+    let built = owner.admit_tool(cx, demand, |inputs, scope| {
+        scope.admit_owner(semio_plugin::__value::RetirementDemand { capacity_bytes: capacity, depth: 1, ..Default::default() })?;
+        let mut request = inputs.take().expect("admitted original Drawing gesture request");
         let input = request.input.take();
-        let operation_context = semio_plugin::AppOperationContext {
-            app_instance_id: request.app_instance_id,
-            parent_document_id: request.parent_document_id,
-            operation_id: request.operation.operation.0,
-            generation: request.operation.generation.0,
-            canonical_base_revision: request.canonical_base_revision,
-            retained: request.retained,
-            authoring_seed: request.authoring_seed.clone(),
-        };
         let payload = DrawingGestureOperationPayload {
             source_identity: SceneIdentity { instance: request.app_instance_id, base: request.operation.base_revision.0, generation: request.operation.generation.0, revision: request.canonical_base_revision },
-            command: *request.command,
-            snapshot: request.snapshot,
-            config: request.config,
-            window_config,
-            window_transient,
-            view_state,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            instance_owner: request.instance_operation_owner,
-            operation_context,
-            active_utility_id: request.context.view_state.as_deref().map_or(DRAWING_DEFAULT_UTILITY, drawing_active_utility).to_owned(),
-            completion: request.completion,
+            original: Some(GestureRequest::new(request)),
         };
         let job = match input {
             Some(input) => DrawingGestureOperationJob::from_wire(payload, input),
             None => DrawingGestureOperationJob::new(payload),
         };
-        Ok((semio_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: std::mem::size_of::<DrawingGestureOperationJob>(), ..Default::default() }))
-    })
+        Ok((semio_plugin::ErasedToolJob::from_owned(Box::new(job)), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: capacity, ..Default::default() }))
+    })?;
+    if built { semio_plugin::ArtifactOwnedToolJobRequest::finish_tool(request, output, cx) } else { Ok(false) }
 }
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
 //#endregion 🧵️GestureOperationJobs

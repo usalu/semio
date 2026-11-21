@@ -1,4 +1,5 @@
 #!/usr/bin/env repo
+import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withProducedWasmPackageTaskV1, buildAdmittedWasmWebV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
@@ -19,7 +20,7 @@ import { runtimeTestArgumentsV1 } from "../../../⚙️runtime/🚀️process/�
 /** 🗺️ Every surface producer crate, bottom up; the facade last. */
 const SURFACE_PACKAGES = ["semio-framework-surface-terrain", "semio-framework-surface-paint", "semio-framework-surface-node-graph", "semio-framework-surface"];
 
-class WasmScript extends BundleScript {
+export class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await buildAdmittedWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:package_=>withProducedWasmPackageTaskV1(package_,async view=>{await view.recheck();await runOwnedCommand(runtimeExecutableV1(),runtimeTestArgumentsV1([join(this.root,"../../🧪️tests/🕸️browser/🟦️.ts")]),this.repoRoot,"tool:owner",cmdBudgetMs(),{env:{...process.env,SEMIO_SURFACE_WASM_PACKAGE:JSON.stringify([...view.files])}});}),control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
       rsDir: this.root,
@@ -65,4 +66,4 @@ class SceneWireNativeScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dirname).register("wasm", WasmScript).register("test", TestScript).register("test-source",SourceScript).register("test-scene-wire-source", SceneWireSourceScript).register("test-scene-wire-native",SceneWireNativeScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "wasm" }) }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "wasm" }) }));

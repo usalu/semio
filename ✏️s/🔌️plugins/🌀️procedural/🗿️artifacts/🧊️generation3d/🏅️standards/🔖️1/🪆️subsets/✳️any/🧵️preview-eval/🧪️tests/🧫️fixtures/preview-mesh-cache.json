@@ -1,0 +1,130 @@
+{
+  "evaluation": {
+    "shape": {
+      "out": {
+        "result": {
+          "$schema": "geometry",
+          "handle": "solid-work",
+          "kind": "solid"
+        }
+      }
+    }
+  },
+  "target": "h:shape@result",
+  "instance": "shape@result#0",
+  "sessions": {
+    "first": {
+      "owner": 113,
+      "epoch": 1,
+      "meshes": {
+        "solid-work": [
+          0,
+          0,
+          0
+        ],
+        "solid-fallback": [
+          40,
+          0,
+          0
+        ]
+      }
+    },
+    "second": {
+      "owner": 114,
+      "epoch": 1,
+      "meshes": {
+        "solid-work": [
+          4,
+          0,
+          0
+        ],
+        "solid-fallback": [
+          80,
+          0,
+          0
+        ]
+      }
+    }
+  },
+  "steps": [
+    {
+      "session": "first",
+      "position": 0,
+      "conversions": 1
+    },
+    {
+      "session": "first",
+      "position": 0,
+      "conversions": 1,
+      "hover": true
+    },
+    {
+      "session": "second",
+      "position": 4,
+      "conversions": 2,
+      "hover": true
+    },
+    {
+      "session": "second",
+      "position": 4,
+      "conversions": 2
+    },
+    {
+      "session": "first",
+      "position": 0,
+      "conversions": 3
+    },
+    {
+      "session": "first",
+      "position": 8,
+      "conversions": 4,
+      "replace": [
+        8,
+        0,
+        0
+      ]
+    },
+    {
+      "session": "first",
+      "position": 8,
+      "conversions": 5,
+      "mode": "wireframe"
+    },
+    {
+      "session": "first",
+      "position": 8,
+      "conversions": 5,
+      "mode": "wireframe",
+      "hover": true
+    },
+    {
+      "session": "first",
+      "position": 8,
+      "conversions": 6,
+      "mode": "wireframe",
+      "detail": 0.15
+    },
+    {
+      "session": "first",
+      "position": 40,
+      "conversions": 7,
+      "mode": "wireframe",
+      "detail": 0.15,
+      "fallback": true
+    },
+    {
+      "session": "first",
+      "conversions": 7,
+      "mode": "wireframe",
+      "detail": 0.15,
+      "fallback": true,
+      "current": true
+    },
+    {
+      "session": "first",
+      "conversions": 7,
+      "hidden": true,
+      "current": true
+    }
+  ]
+}

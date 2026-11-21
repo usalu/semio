@@ -1,0 +1,232 @@
+{
+  "title": "GIS Terrain and Overlays End to End",
+  "emoji": "🏔️",
+  "status": "open",
+  "description": "Render real 3D elevation data and georeferenced GIS positions, routes and regions in the GIS Terrain app, with end-to-end verification.",
+  "summary": "Implemented streamed GIS elevation and draped pins, routes, and region boundaries. The registered editor, live Chrome viewport, and focused native terrain host checks passed. Full Play and wider renderer build limitations are recorded in terrain-results.md.",
+  "goal": "runninggisterrain",
+  "sessions": [
+    "ca5d3cd0-9034-411d-8fbd-935573b0384e",
+    "b229e699-3def-4bd5-974e-07ad6796e9b8"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-20 23:53:33",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "prompt": "Render real 3D elevation data and georeferenced GIS positions, routes and regions in the GIS Terrain app, with end-to-end verification.",
+      "llm": "codex",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-21 01:36:01",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "summary": "Implemented streamed GIS elevation and draped pins, routes, and region boundaries. The registered editor, live Chrome viewport, and focused native terrain host checks passed. Full Play and wider renderer build limitations are recorded in terrain-results.md.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/emit-terrain-demo.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/native-terrain.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/run-terrain-descriptor-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/terrain-descriptor-probe.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/terrain-elevation-verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/terrain-overlay-production.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/terrain-results.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/validate-terrain-scene.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/verify-terrain-browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/GIS-TERRAIN-AND-OVERLAYS-END-TO-END/verify-terrain-transport.mjs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧪️tests/🧫️fixtures/🔬️window/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🌍️scenery.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️relocated-engine/🔣️overlays.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️relocated-engine/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️terrain-descriptor/🎞️scene/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️terrain-descriptor/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️terrain-descriptor/🗺️overlays/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧭️terrain-descriptor/🦀️.rs"
+        },
+        {
+          "path": "🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🧫️fixtures/🏔️terrarium-tile/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🧩️component/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🕸️browser/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🎬️render/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/📥️snapshot-and-input/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🔄️sync-and-overlay/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/🔭️unit-2/🥽️brush-environment-and-hover-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/🔭️unit-2/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🧬️scene-records/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🏔️environment-and-terrain/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🌪️vortex-relocate-and-terrain/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🔁️spawn-recovery/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🚫️request-refusal/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/📥️renderer-asset-steps/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🖼️asset-decode-pump-and-reference-images/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🧮️frame-transaction/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-wasm/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📋️panel-hosting/🟠️mode-windows/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/📖️stories/🧪️.story.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🗺️overlays/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-21 02:13:15",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "prompt": "Start and show an interactive GIS Terrain development preview for manual testing.",
+      "llm": "codex"
+    }
+  ]
+}

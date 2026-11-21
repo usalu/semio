@@ -95,6 +95,13 @@ impl PdfFlateCursor {
         }
     }
 
+    /// 🧺️ Quotes the next unit only when it reserves the empty inflate history.
+    pub(crate) fn next_reserves_history(&self) -> bool {
+        self.lifecycle == Lifecycle::Decoding && self.inflater.as_ref().is_some_and(|inflater| {
+            inflater.retained_allocated_bytes() == 0 && inflater.next_retained_allocation_bytes().is_some()
+        })
+    }
+
     /// ➡️ Advances against the same admitted source on each turn and fills caller-owned staging space.
     /// The caller may publish the output after a checksum-verified completion.
     pub fn advance(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant, cancelled: bool) -> FlateStep {

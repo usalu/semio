@@ -85,3 +85,38 @@ Seen: `r3-sheet` body 1:50 (six views, before and after the caster fix), 1:50 ri
 - Feet area: 0.072 is the honest 1:50 caster; at 1:200 (blocks) and 1:500 (band) the feet region is far larger, only the totals are compared there (0.003, 0.215).
 - Thermal regions have no internal heat sources (server internals); the regions are the asset's six surfaces and were not changed.
 - The repo test suites were not run; only the checks of the brief.
+
+## Round 5 handcraft (2026-11-21)
+
+Process (all assets of E03; final `r3-validate.ts <asset> --catalog-only --volumes` VALID for all five after the splice): `r5-appliances-render.sh` rendered every list at every scale, every pose and both clips at 1:50 (t 0.5 s) and the 2D of every drawn scale into `🗑️generated/r5-<slug>/before` and `/after`; `r5-seated-montage.ts` laid them out for reading; every sheet named below was opened with the Read tool. `r5-appliances-measure.ts` measured the body extents per scale in the default pose (numbers below). Grades: body / thermal / structure.
+
+### Reference and model (1:50, default pose `full-load`)
+
+| quantity | reference | source | model 1:50 | deviation |
+|---|---|---|---|---|
+| width x height x depth | 600 x 2000 x 1000 mm | Rittal TS IT DK 5509.161 (800 x 2000 x 1000), DK 5529.110 (600 x 2000 x 600); asset dimensions | 600 x 2000 x 1015 mm (handle 15 mm proud of the door) | 0 / 0 / +1.5 % (handle only; carcass 1000) |
+| 19-inch front | 482.6 mm | IEC 60297-3-100 | 482.6 mm | 0 % |
+| 12U server block | 12 x 44.45 = 533.4 mm | IEC 60297-3-100 | 532.6 mm | -0.15 % |
+| caster wheel | 50 mm | StarTech RKCASTER2 | 50 mm | 0 % |
+| door field | 537 x 1864 mm in a 600 x 2000 leaf | Rittal TS IT door (product knowledge) | 537 x 1864 mm | - |
+| coarse scales | same envelope | - | 1:100 0.600 x 2.000 x 1.015, 1:200 and 1:500 0.600 x 2.000 x 1.000 | 0 % |
+
+### Grades
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A / A- / A- | A / A- / A- (unchanged) |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | A- / A- / A- | unchanged |
+| 1:500 | B+ / A- / B+ | unchanged |
+| poses `idle`, `off`, clips `load-ramp`, `power-up` (t 0.5) | A (rigid frame, nothing moves) | unchanged |
+
+Seen: body 1:50 (six views, a close three-quarter from the door side turn 300 and from the side turn 70), 1:100, 1:200, 1:500; structure and thermal cut at all four scales; the three poses and both clip frames at 1:50; 2D 1:50, 1:100, 1:200, 1:500. The 1:50 rack reads as a Rittal-class cabinet at first sight: perforated door with handle, lock and three hinges, divided side panels with louvres, split vented rear door, roof with two guarded fans and a brush slot, swivel casters with fork and wheel; the structure is the welded frame with corner joints, 19-inch angles, the unit masses on the angles and the wheel contact ring. No change was needed for this round.
+
+### Open points
+
+- 1:500 door face with two windows (top group and server block 10 mm behind the door plane) follows its own 2D; at 2 x 4 mm on paper it reads as a vented cabinet, but a single perforated field would read more like a rack. Left as drawn (2D and 3D agree, the change would be cosmetic at the 75 mm feature).
+- Cabinet mass sphere sits at the empty centre of the frame (physically right, touches nothing); fine 6 x 6 mm sight lines through both perforated doors in the open units (stated in round 3).
+- `r3-sheet` shades the flat caps of extrudes with holes with streaks (renderer, filed in round 3).
+
+The four 19-inch equipment rails, the paired 1.65 m power strips, the top crossmember, folded side returns and four swivelling casters retain their working sections across the four scales. Each 1.5 mm door sheet retains a 70% open area through 240 front and 120 rear apertures per wing. An independent geometry check exercised all twelve sheets and the three service axes. The 1:50 elevation and side view reached silhouette overlaps of 0.9960 and 0.9989. The final 12-scene GLB occupies 2,245,752 bytes.

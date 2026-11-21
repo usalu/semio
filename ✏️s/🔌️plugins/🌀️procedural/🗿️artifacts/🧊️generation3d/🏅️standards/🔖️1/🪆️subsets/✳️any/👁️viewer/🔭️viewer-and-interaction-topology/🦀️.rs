@@ -6,8 +6,8 @@ use super::*;
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
 fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
-    let dag = semio_os_flow::FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
-    let (graph_nodes, _) = semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&dag);
+    let dag = semio_os_flow::FlowHost::project_registered_dag_snapshot(host_snapshot);
+    let (graph_nodes, _) = semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&dag, &host_snapshot.synapses);
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 //#endregion 🔖️InteractionTopology
@@ -102,12 +102,8 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
     /// 🪟️ Every route of the preview chain that may publish — the dispatched hop and both
     /// window-addressed folds, which now continue the chain inline and therefore publish the
     /// intermediate geometry and the advanced status pill the hop used to.
-    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
-        let (window_id, window_kind_id) = generation3d_view_flow_eval_window_address(command)?;
-        if window_id.is_empty() {
-            return None;
-        }
-        preview_eval::preview_kind(window_kind_id, GENERATION3D_VIEW_PREVIEW_KINDS).map(|kind| (window_id, kind))
+    fn retained_window_transient_target<'a>(command: &'a Self::Command, _view: Option<&'a semio_plugin::ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        Ok(generation3d_view_flow_eval_window_address(command).filter(|(window_id, _)| !window_id.is_empty()).and_then(|(window_id, window_kind_id)| preview_eval::preview_kind(window_kind_id, GENERATION3D_VIEW_PREVIEW_KINDS).map(|kind| (window_id, kind))))
     }
 
     /// ⏯️ Starts, finalizes or wakes the `previewEval` run for the attached preview window
@@ -299,52 +295,21 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
         command.dispatch(doc, cfg)
     }
 
-    /// 🕸️ The same `graph` topology the sibling surface declares — every top-level widget is a
-    /// `node`, each of its visible ports a `handle` parented to it, each synapse an `edge`, and each
-    /// `Cluster`'s nested neurons `node`s parented to their cluster (the transitive-hover source).
-    /// Without this a world pick would be pruned by `validate_state` and nothing would ever light up.
+    /// 🕸️ Publishes the viewed generation's namespaced graph topology.
     fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
- Ok((||{
-        fn walk_neuron(neuron: &semio_framework_artifact_flow_flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
-            ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
-            if let Some(tree) = &neuron.tree {
-                for child in &tree.neurons {
-                    walk_neuron(child, neuron.id.clone(), ordered);
-                }
-            }
-        }
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let host_snapshot = &viewed.snapshot().host_snapshot;
-        let mut ordered = Vec::new();
-        let ports_by_node = generation3d_view_port_ids_by_node(host_snapshot);
-        for widget in &host_snapshot.widgets {
-            let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
-            ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
-            for port in ports_by_node.get(&id).into_iter().flatten() {
-                ordered.push(TopologyNode { id: port.clone(), granularity: "handle".into(), parent: Some(id.clone()) });
-            }
-            if let semio_framework_artifact_flow_flow::Widget::Cluster { tree, .. } = widget {
-                for child in &tree.neurons {
-                    walk_neuron(child, id.clone(), &mut ordered);
-                }
-            }
-        }
-        for synapse in &host_snapshot.synapses {
-            ordered.push(TopologyNode { id: synapse.id.clone(), granularity: "edge".into(), parent: None });
-        }
-        let mut domains = std::collections::BTreeMap::new();
-        domains.insert("graph".to_string(), DomainTopology { ordered });
+        let host = &viewed.snapshot().host_snapshot;
+        let ports = generation3d_view_port_ids_by_node(host);
+        let topology = semio_s_artifact_procedural_3d_preview_eval::graph_interaction_topology(host, &ports);
         viewed.retire();
-        InteractionTopology { domains }
-    
-})())
-}
+        Ok(topology)
+    }
 
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state), view_state);
+        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state), view_state, &mut None);
         viewed.retire();
         tree
     }
@@ -374,7 +339,16 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
         let marks = preview::Generation3dViewMarks::from_interaction(interaction);
         let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run(), &marks, labels, view_state)));
+        let window_id = view_state.window_id.as_deref().unwrap_or(body_key);
+        let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
+            owner.preview_hover.retain_windows(|id| id == window_id || view_state.window_instances.is_empty() || view_state.window_instances.iter().any(|window| window.id == id));
+            let mut hover_groups = None;
+            let tree = owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run(), &marks, labels, view_state, &mut hover_groups));
+            if let (Ok(Ok(_)), Some(groups)) = (&tree, hover_groups) {
+                owner.preview_hover.publish(window_id, groups);
+            }
+            tree
+        });
         viewed.retire();
         tree.map_err(|original|semio_plugin::OriginalRenderFailure::from(semio_framework_job::OriginalTurnFailure::from(original)))?.map(Some).map_err(Into::into)
     }
@@ -399,9 +373,10 @@ fn generation3d_view_render_body(
     marks: &preview::Generation3dViewMarks,
     labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels,
     view_state: &semio_plugin::ViewModel,
+    hover_groups: &mut Option<preview_eval::PreviewHoverGroups>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let node = match body_key {
-        preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De),
+        preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De, hover_groups),
         _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;
     Ok(semio_plugin::built_to_component_tree(node))

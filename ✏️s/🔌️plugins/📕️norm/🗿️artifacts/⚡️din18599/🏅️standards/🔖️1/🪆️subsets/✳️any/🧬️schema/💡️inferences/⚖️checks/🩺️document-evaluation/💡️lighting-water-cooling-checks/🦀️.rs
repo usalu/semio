@@ -76,7 +76,31 @@ pub(super) fn check_heating_system_efficiency(doc: &Din18599Snapshot, report: &m
 /// 🚿 Checks the hot water demand and the loss allowances.
 pub(super) fn check_hot_water(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice, derived: &BalanceDerived) {
     {
+        let residential = doc.building_category == BuildingCategory::Residential;
+        let residential_profile = residential_dhw_profile_kwh_a(doc);
         let q_w = derived.q_w_kwh;
+        let useful = derived.q_w_useful_kwh;
+        let design = CheckResult::assess(
+            "din18599.10.residential-dhw", "DIN V 18599-10",
+            ClauseId::new("DIN V 18599", "10", "Tabelle 4"),
+            SubjectRef::new("", "dhw.dwellingCount", copy("Number of dwellings", "Anzahl der Wohneinheiten")),
+            copy("Residential useful hot-water demand", "Trinkwarmwasser-Nutzenergie im Wohngebäude"),
+        ).annex(annex);
+        let design = match (residential, residential_profile) {
+            (_, Some(value)) => design.status(CheckStatus::Info).explanation(copy(
+                &format!("Useful annual hot-water energy is {value:.1} kWh/a for {:.1} m² and {} dwellings. Monthly demand is weighted by the number of days.", doc.net_floor_area_m2, doc.dhw.dwelling_count),
+                &format!("Die jährliche Trinkwarmwasser-Nutzenergie beträgt {value:.1} kWh/a für {:.1} m² und {} Wohneinheiten. Der Monatsbedarf wird nach Kalendertagen gewichtet.", doc.net_floor_area_m2, doc.dhw.dwelling_count),
+            )),
+            (true, None) => design.status(CheckStatus::UnverifiedBasis).explanation(copy(
+                "Enter a positive net floor area and dwelling count to apply the residential profile.",
+                "Für das Wohngebäudeprofil sind eine positive Nettogrundfläche und die Anzahl der Wohneinheiten erforderlich.",
+            )),
+            (false, None) => design.not_applicable(copy(
+                "Non-residential buildings use their own usage profiles.",
+                "Nichtwohngebäude verwenden eigene Nutzungsprofile.",
+            )),
+        };
+        report.push(design.build());
         let n = occupants(doc) as f64;
         let profile = dhw_profile_specific_kwh_person_a(doc.use_class);
         let limit = dhw_limit_kwh_a(doc);
@@ -85,22 +109,24 @@ pub(super) fn check_hot_water(doc: &Din18599Snapshot, report: &mut CheckReport, 
             "DIN V 18599-8",
             ClauseId::new("DIN V 18599", "8", "6"),
             SubjectRef::new("", "dhw.specificDemandKwhPersonA", copy("DHW specific demand", "TWW-spezifischer Bedarf")),
-            copy("Domestic hot water demand", "Trinkwarmwasserbedarf"),
+            copy("Domestic hot-water system screening", "Vorprüfung der Trinkwarmwasseranlage"),
         )
         .utilization(energy(q_w), energy(limit))
         .annex(annex)
         .explanation(copy(
             &format!(
-                "Q_W = {q_w:.0} kWh/a (= {n:.0}·{:.0} + storage {:.0} + distribution {:.0}); limit {limit:.0} from DIN V 18599-10 profile {profile:.0} kWh/(Person·a) plus -8 loss caps.",
-                doc.dhw.specific_demand_kwh_person_a, doc.dhw.storage_loss_kwh_a, doc.dhw.distribution_loss_kwh_a
+                "Q_W = {q_w:.0} kWh/a (useful {useful:.0} + storage {:.0} + distribution {:.0}); modelled screening threshold {limit:.0} kWh/a.",
+                doc.dhw.storage_loss_kwh_a, doc.dhw.distribution_loss_kwh_a
             ),
             &format!(
-                "Q_W = {q_w:.0} kWh/a (= {n:.0}·{:.0} + Speicher {:.0} + Verteilung {:.0}); Grenzwert {limit:.0} aus DIN-V-18599-10-Profil {profile:.0} kWh/(Person·a) zuzüglich -8-Verlustgrenzen.",
-                doc.dhw.specific_demand_kwh_person_a, doc.dhw.storage_loss_kwh_a, doc.dhw.distribution_loss_kwh_a
+                "Q_W = {q_w:.0} kWh/a (Nutzenergie {useful:.0} + Speicher {:.0} + Verteilung {:.0}); modellierte Prüfschwelle {limit:.0} kWh/a.",
+                doc.dhw.storage_loss_kwh_a, doc.dhw.distribution_loss_kwh_a
             ),
         ));
-        if q_w > limit {
-            if doc.dhw.specific_demand_kwh_person_a > profile + 1e-9 {
+        if residential && residential_profile.is_none() {
+            b = b.status(CheckStatus::UnverifiedBasis);
+        } else if q_w > limit {
+            if !residential && doc.dhw.specific_demand_kwh_person_a > profile + 1e-9 {
                 b = b.remedy(Remedy::at_most(
                     SubjectRef::new("", "dhw.specificDemandKwhPersonA", copy("DHW specific demand", "TWW-spezifischer Bedarf")),
                     energy(doc.dhw.specific_demand_kwh_person_a),
@@ -111,7 +137,8 @@ pub(super) fn check_hot_water(doc: &Din18599Snapshot, report: &mut CheckReport, 
                     ),
                 ));
             }
-            let room = (limit - n * doc.dhw.specific_demand_kwh_person_a.min(profile) - doc.dhw.distribution_loss_kwh_a).max(0.0);
+            let screened_useful = residential_profile.unwrap_or_else(|| n * doc.dhw.specific_demand_kwh_person_a.min(profile));
+            let room = (limit - screened_useful - doc.dhw.distribution_loss_kwh_a).max(0.0);
             if doc.dhw.storage_loss_kwh_a > room + 1e-9 {
                 b = b.remedy(Remedy::at_most(
                     SubjectRef::new("", "dhw.storageLossKwhA", copy("DHW storage loss", "TWW-Speicherverlust")),
@@ -123,7 +150,7 @@ pub(super) fn check_hot_water(doc: &Din18599Snapshot, report: &mut CheckReport, 
                     ),
                 ));
             }
-            let room_dist = (limit - n * doc.dhw.specific_demand_kwh_person_a.min(profile) - doc.dhw.storage_loss_kwh_a.min(room)).max(0.0);
+            let room_dist = (limit - screened_useful - doc.dhw.storage_loss_kwh_a.min(room)).max(0.0);
             if doc.dhw.distribution_loss_kwh_a > room_dist + 1e-9 {
                 b = b.remedy(Remedy::at_most(
                     SubjectRef::new("", "dhw.distributionLossKwhA", copy("DHW distribution loss", "TWW-Verteilverlust")),
@@ -192,7 +219,7 @@ pub(super) fn check_cooling_demand(doc: &Din18599Snapshot, report: &mut CheckRep
         .annex(annex)
         .explanation(copy(&format!("Q_C,nd = {q_c:.0} kWh/a (limit 0.5 · Q_H,nd)."), &format!("Q_C,nd = {q_c:.0} kWh/a (Grenzwert 0,5 · Q_H,nd).")));
         if q_c > limit {
-            if let Some(el) = doc.elements.iter().filter(|e| e.kind == ElementKind::Window).max_by(|a, b| a.g_value.partial_cmp(&b.g_value).unwrap()) {
+            if let Some(el) = doc.elements.iter().filter(|e| e.kind.transmits_solar_radiation()).max_by(|a, b| a.g_value.partial_cmp(&b.g_value).unwrap()) {
                 let g_req = (el.g_value * din_v_18599_7_g_remedy::REDUCE_FACTOR).max(din_v_18599_7_g_remedy::FLOOR);
                 b = b.remedy(Remedy::at_most(
                     element_ref(el, &element_g_path(el)),

@@ -315,5 +315,5 @@ geo_operation!(HelicalSweep, "solid", |k, i| k.helical_sweep(
     read_channel_number(i, "radius")?,
     read_channel_number(i, "pitch")?,
     read_channel_number(i, "turns")?,
-));
+), HelicalSweep);
 // #endregion 🔖️Sweeps

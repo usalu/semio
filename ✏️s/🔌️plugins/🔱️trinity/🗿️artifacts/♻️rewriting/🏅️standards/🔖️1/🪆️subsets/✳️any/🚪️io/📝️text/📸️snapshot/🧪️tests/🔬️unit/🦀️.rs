@@ -25,8 +25,9 @@ async fn nakagin_label_core_example_dsl_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn rewrite_rule_state_parse_dsl_errors_on_unknown_keyword() {
-    let err = RewritingSnapshot::parse_dsl("bogus line").unwrap_err();
-    assert!(err.message.contains("expected"));
+    let input = format!("{}\nbogus line", sample_rule_state().print_dsl());
+    let err = RewritingSnapshot::parse_dsl(&input).unwrap_err();
+    assert!(err.message.contains("bogus"));
 }
 
 #[semio_framework_async_macros::async_test]

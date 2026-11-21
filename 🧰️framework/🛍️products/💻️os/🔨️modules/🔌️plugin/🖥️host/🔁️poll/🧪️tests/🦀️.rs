@@ -16,7 +16,7 @@ fn core_bytes(component: &[u8]) -> &[u8] { let mut at = 9; let mut len = 0; let 
 fn every_poll_crossing_requires_the_actual_enclosing_and_purpose_reserves(){let stock=grant();let mut caller=OriginalJobFixtureCaller::admit(OperationId(97),Generation(1),stock,clock,100_000_000,1_000_000);caller.turn(stock,|cx|{cx.bind_original_source_epoch(1)?;let input=RetainedTurnInput::borrow_original(cx)?;let budget=OriginalJobBudget::borrow_original(input,cx)?;for header in[144,152,184,200]{let(items,demand,work)=semio_plugin_guest_contract::original_actor_context::original_core_first_response_reserve(header)?;assert!(require_core_wire_reserve(budget,header).is_ok());let mut denied=budget;denied.input.grant.maximum_items=items-1;assert!(require_core_wire_reserve(denied,header).is_err());let mut denied=budget;denied.retained_policy.maximum_depth=0;assert!(require_core_wire_reserve(denied,header).is_err());let mut denied=budget;denied.input.grant.maximum_copy_bytes=demand.copy_bytes-1;assert!(require_core_wire_reserve(denied,header).is_err());let mut denied=budget;denied.retained_policy.maximum_copy_bytes=demand.copy_bytes-1;assert!(require_core_wire_reserve(denied,header).is_err());let mut denied=budget;denied.input.work.fuel=work-1;assert!(require_core_wire_reserve(denied,header).is_err());let mut denied=budget;denied.fuel=work-1;assert!(require_core_wire_reserve(denied,header).is_err());}Ok(())}).unwrap();caller.retire(stock);}
 
 #[test]
-fn actual_poll_source_captures_and_retires_the_wasmtime_result() { exercise_poll(false); }
+fn actual_poll_source_captures_and_retires_the_wasmtime_result() { exercise_poll_on_stack(PollExercise::Deliver); }
 
 #[test]
 fn bootstrap_and_source_ready_reserves_are_alternatives_on_one_actual_loan(){
@@ -37,9 +37,47 @@ fn bootstrap_and_source_ready_reserves_are_alternatives_on_one_actual_loan(){
 }
 
 #[test]
-fn actual_poll_callback_failure_keeps_input_until_real_receivers_accept() { exercise_poll(true); }
+fn actual_poll_callback_failure_keeps_input_until_real_receivers_accept() { exercise_poll_on_stack(PollExercise::RefuseCallback); }
 
-fn exercise_poll(callback_fails: bool) {
+#[test]
+fn actual_poll_retires_interrupted_input_and_hands_back_returned_input() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️input-retirement.json")).unwrap();
+    for row in law["cases"].as_array().unwrap() {
+        let completed = match row["input"].as_str().unwrap() {
+            "suspended" => false,
+            "returned" => true,
+            _ => panic!("unknown input retirement frontier"),
+        };
+        exercise_poll_on_stack(PollExercise::CloseInput(completed, row["closeGuestContext"].as_bool().unwrap()));
+    }
+}
+
+#[test]
+fn actual_poll_refuses_an_unfundable_ordinary_acknowledgment() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️acknowledgment-stock.json")).unwrap();
+    for frontier in law["frontiers"].as_array().unwrap() {
+        let pending_progress = match frontier.as_str().unwrap() {
+            "beforeInput" => false,
+            "inputProgressReceipt" => true,
+            _ => panic!("unknown acknowledgment frontier"),
+        };
+        exercise_poll_on_stack(PollExercise::ExhaustAcknowledgment(pending_progress));
+    }
+}
+
+#[derive(Clone, Copy)]
+enum PollExercise { Deliver, RefuseCallback, CloseInput(bool, bool), ExhaustAcknowledgment(bool) }
+
+fn exercise_poll_on_stack(exercise: PollExercise) {
+    std::thread::Builder::new().stack_size(8 * 1024 * 1024)
+        .spawn(move || exercise_poll(exercise)).unwrap()
+        .join().unwrap_or_else(|panic| std::panic::resume_unwind(panic));
+}
+
+fn exercise_poll(exercise: PollExercise) {
+    let callback_fails = matches!(exercise, PollExercise::RefuseCallback);
+    let close_input = match exercise { PollExercise::CloseInput(completed, close) => Some((completed, close)), _ => None };
+    let exhaust_acknowledgment = match exercise { PollExercise::ExhaustAcknowledgment(progress) => Some(progress), _ => None };
     let bytes = channel_fixture::owned_poll_guest(semio_os_kernel::CHANNEL_VERSION);
     let engine = wasmtime::Engine::default();
     let module = wasmtime::Module::new(&engine, core_bytes(&bytes)).unwrap();
@@ -56,73 +94,294 @@ fn exercise_poll(callback_fails: bool) {
     let OriginalActorFixedKind::TurnOutput{ready:true,captured:true,pointer,length,..}=header.kind else{panic!("Poll returns the actual ready capsule extent")};
     assert!(serde_json::from_slice::<bool>(&memory[pointer as usize..pointer as usize+length as usize]).unwrap());
 
-    let runtime = GuestRuntimes::Owned(OwnedRuntime::new(clock));
+    use semio_plugin_host_post_turn_relay::origin_registry;
+    let runtime = std::sync::Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(clock)));
     let package = PackageRef { package: semio_framework_actor::PackageId("poll-fixture".into()), hash: semio_framework_actor::PackageHash([8; 32]) };
     let compiled = semio_framework_async::block_on(runtime.compile(&package, &bytes)).unwrap();
     let actor = semio_framework_async::block_on(semio_framework_actor::ActorId::new(8, 1, 3, 0));
     let stock = grant();
-    let mut caller = OriginalJobFixtureCaller::admit(OperationId(98), Generation(1), stock, clock, 100_000_000, 1_000_000);
-    let mut epoch = 1;
-    let mut opening = caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; runtime.begin_original_actor_step(&compiled, actor, cx) }).unwrap();
+    let mut cache_source = OriginalJobFixtureCaller::admit(OperationId(98), Generation(1), stock, clock, 100_000_000, 1_000_000);
+    let identity = origin_registry::next_identity();
+    let mut origin = None;
     for _ in 0..4096 {
-        if opening.as_ref().unwrap().ready() { break; }
-        epoch += 1;
-        caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; let owner = opening.as_mut().unwrap(); let input = RetainedTurnInput::borrow_original(cx)?; let execution = owner.requires_execution().then(|| OriginalGuestExecutionBudget { input, fuel: 1000, deadline_us: cx.deadline_us() }); runtime.advance_original_actor_step(owner, &compiled, execution, cx)?.result?; Ok(()) }).unwrap();
+        if cache_source.turn(stock, |cx| origin_registry::register_step(identity, &runtime, &compiled, &mut origin, cx)).unwrap() {
+            break;
+        }
     }
-    assert!(opening.as_ref().unwrap().ready());
-    let mut instance = None;
+    let origin = origin.expect("fixture registry admits the original compiled parent");
+    let mut session = GuestPollSession::<bool, GuestPollNoReceiverState>::new(
+        fixture_operation_driver(stock, if close_input.is_some() { 8 } else { 10_000 }),
+        actor,
+        origin,
+        OriginalNativeDecodePolicy { maximum_owned_bytes: stock.maximum_capacity_bytes },
+        JsonReadLimits { maximum_bytes: 1024, maximum_allocation_bytes: stock.maximum_capacity_bytes, maximum_depth: 16, maximum_items: 1024 },
+        GuestPollNoReceiverState::new(),
+    );
+    let mut opened = false;
     for _ in 0..4096 {
-        if instance.is_some() { break; }
-        epoch += 1;
-        instance = caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; let input = RetainedTurnInput::borrow_original(cx)?; runtime.take_original_actor_step(&mut opening, &compiled, input, cx) }).unwrap();
+        match session.open_step() {
+            GuestPollSessionStatus::Ready => { opened = true; break; }
+            GuestPollSessionStatus::Pending => {}
+            status => panic!("Poll fixture opening {status:?}: {:?}", session.failure()),
+        }
     }
-    let mut instance = instance.unwrap();
-    let input = DslValue::Bool(true);
-    let mut poll = GuestPoll::<bool,GuestPollNoReceiverState>::new(OriginalNativeDecodePolicy { maximum_owned_bytes: stock.maximum_capacity_bytes }, JsonReadLimits { maximum_bytes: 1024, maximum_allocation_bytes: stock.maximum_capacity_bytes, maximum_depth: 16, maximum_items: 1024 },GuestPollNoReceiverState::new());
-    let mut observed = false;
+    assert!(opened);
+    let events = DslValue::Bool(true);
+    let input = std::pin::pin!(session.input(&events).unwrap());
     let mut callback_count = 0;
     let mut failure_observed = false;
-    let mut failure: Option<ControlledRetirement<OriginalTurnFailure>> = None;
+    let mut delivered = false;
+    let mut complete = false;
+    let mut origin_lookup_delayed = false;
+    let mut input_calls = 0;
+    let mut before_input_execution = 0;
+    let mut was_executing = false;
+    let mut interrupted_input = false;
+    let mut refused_acknowledgment = false;
     for _ in 0..100_000 {
-        if poll.terminal_is_empty() && failure.is_none() { break; }
-        epoch += 1;
-        caller.turn(stock, |cx| {
-            cx.bind_original_source_epoch(epoch)?;
-            if let Some(owner) = failure.as_mut() { if owner.terminal_is_empty() { failure.take(); } else { let result = owner.step(cx.retained_grant()); let work = owner.last_turn_work(); semio_framework_job::receive_original_retained_work(cx, RetainedWorkOutcome { result, work })?; } return Ok(()); }
-            if poll.transport_failure().is_some() { poll.take_transport_failure_step(cx, |original, _, _| { failure_observed = true; failure = Some(ControlledRetirement::retain(original.take().unwrap())); Ok(()) })?; return Ok(()); }
-            if poll.input_progress_pending() { poll.acknowledge_input_progress_step(cx)?; return Ok(()); }
-            if poll.scalar_progress().is_some() { poll.acknowledge_scalar_progress_step(cx)?; return Ok(()); }
-            if poll.scalar_result().is_some() { poll.acknowledge_scalar_result_step(cx)?; return Ok(()); }
-            if poll.fixed_receipt().is_some() { poll.acknowledge_fixed_step(cx)?; return Ok(()); }
-            if poll.raw_word().is_some() { poll.take_raw_word_step(cx)?; return Ok(()); }
-            if poll.decoding_outcome().is_some() || poll.settlement_outcome().is_some() { poll.retire_outcome_step(cx)?; return Ok(()); }
-            if !poll.prepare_step(&runtime, &mut instance, cx)? { return Ok(()); }
-            let needs_execution = poll.requires_execution(&runtime, &instance)?;
-            let original = RetainedTurnInput::borrow_original(cx)?;
-            let budget = OriginalJobBudget::borrow_original(original, cx)?;
-            let mut execution_input = original;
-            execution_input.grant = cx.retained_grant();
-            let execution = needs_execution.then(|| OriginalGuestExecutionBudget { input: execution_input, fuel: 1000, deadline_us: cx.deadline_us() });
-            match poll.advance_step(&runtime, &mut instance, &input, Some(budget), execution, cx)? {
-                GuestPollStatus::Output => { let delivered = poll.deliver_step(cx, |value, _, _| { assert!(*value); observed = true; callback_count += 1; if callback_fails && callback_count==1 { Err(ValueError::literal(ValueRefusalKind::WorkLimit, "fixture callback refused").into()) } else { Ok(true) } })?; if callback_fails&&callback_count==1 {assert!(!delivered);assert!(poll.captured.is_some());assert!(poll.deliver_step(cx, |_,_,_| panic!("unreceived callback failure prevents retry")).is_err());} }
-                GuestPollStatus::AwaitBudget => { poll.repeat_input_step(&runtime, &mut instance, budget, cx)?; }
-                GuestPollStatus::Refused => panic!("actual Poll unexpectedly refused"),
-                _ => {}
+        if let Some(pending_progress) = exhaust_acknowledgment {
+            if let Some((native_step, issued, request)) = session.fixture_guest_request().filter(|(_, _, request)| request.header_bytes == 144) {
+                let armed = if pending_progress {
+                    let mut observed = None;
+                    let status = session.receive_state_step(|poll, _| {
+                        observed = Some(poll.input_progress_pending() && poll.execution_receipt().is_some_and(|receipt| receipt.submitted));
+                        Ok(())
+                    });
+                    assert_ne!(status, GuestPollSessionStatus::Refused, "{:?}", session.cleanup_failure());
+                    let Some(observed) = observed else { continue };
+                    observed
+                } else {
+                    native_step
+                };
+                if armed {
+                    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️acknowledgment-stock.json")).unwrap();
+                    let target = control_bytes() - law["copyBytesBelowMinimum"].as_u64().unwrap() as usize;
+                    let owner = session.fixture_guest_owner();
+                    if !pending_progress {
+                        let status = while_origin_is_borrowed(origin, || session.drive_step(input.as_ref(), &mut |_, _, _| {
+                            panic!("Input cannot deliver Poll output");
+                        }));
+                        assert_eq!(status, GuestPollSessionStatus::Pending);
+                    }
+                    spend_to_acknowledgment_limit(&mut session, stock.maximum_copy_bytes, target);
+                    for _ in 0..4096 {
+                        let status = session.drive_step(input.as_ref(), &mut |_, _, _| panic!("unfundable acknowledgment cannot deliver output"));
+                        if status == GuestPollSessionStatus::Pending { continue; }
+                        assert_eq!(format!("{status:?}"), law["ordinaryStatus"].as_str().unwrap());
+                        let (_, retained, retained_request) = session.fixture_guest_request().unwrap();
+                        assert_eq!(serde_json::json!({
+                            "loanUnchanged": retained == issued,
+                            "epochUnchanged": retained.input.epoch == issued.input.epoch,
+                            "requestUnchanged": retained_request == request,
+                            "ownerUnchanged": session.fixture_guest_owner() == owner,
+                        }), law["pendingLoan"]);
+                        let original = session.failure().unwrap().primary.as_ref().unwrap().primary_value().unwrap();
+                        assert_eq!(original.kind, ValueRefusalKind::WorkLimit);
+                        assert_eq!(Some(original.message.as_ref()), law["refusal"].as_str());
+                        refused_acknowledgment = true;
+                        break;
+                    }
+                    break;
+                }
+            }
+        }
+        if let Some((wait_for_result, _)) = close_input {
+            if session.fixture_guest_request().is_some_and(|(_, _, request)| request.header_bytes == 144) {
+                let mut executing = None;
+                let status = session.with_native_step(|runtime, instance, _, _| {
+                    executing = Some(runtime.original_unit_requires_execution(instance)?);
+                    Ok(())
+                });
+                assert_ne!(status, GuestPollSessionStatus::Refused, "{:?}", session.failure());
+                let Some(executing) = executing else { continue };
+                if executing && !was_executing {
+                    input_calls += 1;
+                    if input_calls == 2 { before_input_execution = session.fixture_execution_spent(); }
+                }
+                was_executing = executing;
+                if input_calls == 2 && executing != wait_for_result && session.fixture_execution_spent() > before_input_execution {
+                    interrupted_input = true;
+                    break;
+                }
+            }
+        }
+        if !origin_lookup_delayed && matches!(exercise, PollExercise::Deliver) {
+            if let Some((true, issued, request)) = session.fixture_guest_request() {
+                let law: serde_json::Value = serde_json::from_str(include_str!("🧫️origin-retry.json")).unwrap();
+                assert_eq!(Some(request.header_bytes as u64), law["headerBytes"].as_u64());
+                let status = while_origin_is_borrowed(origin, || session.drive_step(input.as_ref(), &mut |_, _, _| {
+                    panic!("a blocked Boot lookup cannot deliver output");
+                }));
+                let (retrying_native, retained, retained_request) = session.fixture_guest_request().unwrap();
+                assert_eq!(serde_json::json!({
+                    "status": format!("{status:?}"),
+                    "inputUnchanged": retained == issued,
+                    "requestUnchanged": retained_request == request,
+                }), law["duringContention"]);
+                assert!(!retrying_native);
+                origin_lookup_delayed = true;
+            }
+        }
+        let status = session.drive_step(input.as_ref(), &mut |value, _, _| {
+            assert!(*value);
+            callback_count += 1;
+            if callback_fails && callback_count == 1 {
+                return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "fixture callback refused").into());
+            }
+            Ok(true)
+        });
+        if callback_fails && callback_count == 1 && !failure_observed {
+            observe_and_retire_callback_failure(&mut session);
+            failure_observed = true;
+        }
+        match status {
+            GuestPollSessionStatus::Delivered => delivered = true,
+            GuestPollSessionStatus::Complete => { complete = true; break; }
+            GuestPollSessionStatus::Ready | GuestPollSessionStatus::Pending => {}
+            status => panic!("actual Poll fixture {status:?}: {:?} {:?}", session.failure(), session.cleanup_failure()),
+        }
+    }
+    if exhaust_acknowledgment.is_some() {
+        assert!(refused_acknowledgment);
+        assert_eq!(callback_count, 0);
+    } else if close_input.is_some() {
+        assert!(interrupted_input);
+        assert_eq!(callback_count, 0);
+    } else {
+        assert!(delivered && complete);
+        assert_eq!(origin_lookup_delayed, !callback_fails);
+        assert_eq!(callback_count, if callback_fails { 2 } else { 1 });
+        assert_eq!(failure_observed, callback_fails);
+    }
+    let mut closed_context = false;
+    for _ in 0..100_000 {
+        closed_context |= session.fixture_guest_request().is_some_and(|(_, budget, request)| budget.cancelled && request.header_bytes == 200);
+        match session.close_step(&mut |_, _, _| panic!("Poll must not deliver during close")) {
+            GuestPollSessionStatus::Closed => break,
+            GuestPollSessionStatus::Pending => {}
+            status => panic!("actual Poll fixture cleanup {status:?}: {:?} {:?}", session.failure(), session.cleanup_failure()),
+        }
+    }
+    assert!(session.terminal_is_empty());
+    if let Some((_, expected_context_close)) = close_input {
+        assert_eq!(closed_context, expected_context_close);
+    }
+    for _ in 0..4096 {
+        let closed = cache_source.turn(stock, |cx| cx.with_original_retirement(|cx| {
+            origin_registry::close_step(identity, &runtime, &compiled, cx)
+        })).unwrap();
+        if closed {
+            cache_source.retire(stock);
+            return;
+        }
+    }
+    panic!("fixture registry must receive the native home before closing");
+}
+
+fn spend_to_acknowledgment_limit(session: &mut GuestPollSession<bool, GuestPollNoReceiverState>, maximum_slice: usize, target: usize) {
+    let bytes = vec![1; maximum_slice];
+    let mut copied = vec![0; maximum_slice];
+    for _ in 0..64 {
+        if session.fixture_drive_copy() == target { return; }
+        let status = session.with_native_step(|_, _, _, cx| {
+            let count = cx.retained_grant().maximum_copy_bytes.saturating_sub(target);
+            if count == 0 { return Ok(()); }
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: count, ..Default::default() })?;
+            cx.consume_fuel(1);
+            copied[..count].copy_from_slice(&bytes[..count]);
+            assert_eq!(copied[count - 1], 1);
+            Ok(())
+        });
+        assert_ne!(status, GuestPollSessionStatus::Refused, "{:?}", session.failure());
+    }
+    assert_eq!(session.fixture_drive_copy(), target);
+}
+
+fn while_origin_is_borrowed<T>(origin: semio_plugin_host_post_turn_relay::GuestRelayNativeOrigin, observe: impl FnOnce() -> T) -> T {
+    std::thread::scope(|scope| {
+        let (acquired, await_acquire) = std::sync::mpsc::sync_channel(0);
+        let (release, await_release) = std::sync::mpsc::sync_channel(0);
+        scope.spawn(move || {
+            loop {
+                let borrowed = (origin.resolve)(origin.cache_identity, origin.package_hash, &mut |_, _| {
+                    acquired.send(()).unwrap();
+                    let _ = await_release.recv();
+                    Ok(())
+                }).unwrap();
+                if borrowed { break; }
+                std::thread::yield_now();
+            }
+        });
+        await_acquire.recv().unwrap();
+        let observed = observe();
+        release.send(()).unwrap();
+        observed
+    })
+}
+
+fn fixture_operation_driver(slice: RetainedCloneGrant, turn_execution_fuel: u64) -> semio_plugin_host_wake::GuestRelayWakeDriver {
+    use semio_plugin_host_wake::{GuestRelayDriverPolicy, GuestRelayOperationCaps, GuestRelayOperationInfrastructure, GuestRelayOperationRequest, GuestRelayOperationReserve, GuestRelayOperationTransit, GuestRelayRootPolicy};
+    let stock = RetainedCloneGrant {
+        maximum_items: 10 * slice.maximum_items,
+        maximum_copy_bytes: 10 * slice.maximum_copy_bytes,
+        maximum_capacity_bytes: 10 * slice.maximum_capacity_bytes,
+        maximum_release_bytes: 10 * slice.maximum_release_bytes,
+        ..slice
+    };
+    let policy = GuestRelayDriverPolicy {
+        admission: slice,
+        drive: slice,
+        wake: slice,
+        operation: stock,
+        root: GuestRelayRootPolicy {
+            operation: 98, generation: 1,
+            turn_fuel: 100_000, operation_fuel: 20_000_000,
+            turn_execution_fuel, operation_execution_fuel: 2_000_000,
+            maximum_turn_microseconds: 4_000_000, maximum_lifetime_microseconds: 10_000_000,
+            max_effects: 256, max_patch_bytes: 1024, max_frames: 256,
+        },
+    };
+    let cleanup = GuestRelayOperationReserve { retained: slice, work_fuel: 1_000_000, execution_fuel: 200_000, maximum_microseconds: 2_000_000 };
+    let transit = GuestRelayOperationTransit { retained: slice, work_fuel: 1_000_000 };
+    let infrastructure = GuestRelayOperationInfrastructure { retained: slice, work_fuel: 1_000_000, maximum_cleanup_microseconds: 1_000_000 };
+    GuestRelayOperationCaps::project(policy, cleanup, transit, infrastructure)
+        .issue(GuestRelayOperationRequest { work_units: 2_000_000, maximum_elapsed_microseconds: 10_000_000, retained: slice }, clock, Box::new(|| false))
+        .unwrap()
+}
+
+fn observe_and_retire_callback_failure(session: &mut GuestPollSession<bool, GuestPollNoReceiverState>) {
+    let mut failure = None;
+    let mut observed = false;
+    for _ in 0..4096 {
+        let status = session.receive_state_step(|poll, cx| {
+            if !observed {
+                assert_eq!(poll.captured, Some(true));
+                assert!(poll.deliver_step(cx, |_, _, _| panic!("unreceived callback failure permits retry")).is_err());
+                observed = poll.take_transport_failure_step(cx, |original, _, _| {
+                    let original = original.take().expect("retained callback refusal");
+                    let primary = original.primary_value().unwrap();
+                    assert_eq!(primary.kind, ValueRefusalKind::WorkLimit);
+                    assert_eq!(primary.message, "fixture callback refused");
+                    failure = Some(ControlledRetirement::retain(original));
+                    Ok(())
+                })?;
+            } else if let Some(owner) = failure.as_mut() {
+                if owner.terminal_is_empty() {
+                    failure.take();
+                } else {
+                    let body = cx.retained_grant().maximum_copy_bytes;
+                    let demand = owner.next_demand(body)?;
+                    semio_framework_job::close_original_effect_step(cx, demand, |effect| owner.step(body, effect))?;
+                }
             }
             Ok(())
-        }).unwrap();
+        });
+        assert_ne!(status, GuestPollSessionStatus::Refused, "{:?}", session.cleanup_failure());
+        if observed && failure.is_none() {
+            return;
+        }
     }
-    assert!(observed && poll.terminal_is_empty());
-    assert_eq!(callback_count,if callback_fails{2}else{1});
-    assert_eq!(failure_observed, callback_fails);
-    drop(poll);
-    let mut closed = false;
-    for _ in 0..4096 {
-        epoch += 1;
-        if caller.turn(stock, |cx| { cx.bind_original_source_epoch(epoch)?; runtime.close_original_instance_step(&mut instance, &compiled, cx) }).unwrap() { closed = true; break; }
-    }
-    assert!(closed);
-    caller.retire(stock);
+    panic!("callback failure did not complete its Source handback");
 }
 
 use semio_plugin_interpreter_runtime::OwnedGuestInstance;
@@ -162,12 +421,49 @@ fn actual_poll_receiver_state_blocks_native_terminal_until_source_retirement(){
 }
 
 #[test]
-fn actual_failure_control_owners_prevent_false_terminal_retirement(){let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️failure-retirement.json")).unwrap();for row in corpus["cases"].as_array().unwrap(){let mut poll=GuestPoll::<bool,GuestPollNoReceiverState>::new(OriginalNativeDecodePolicy{maximum_owned_bytes:1024},JsonReadLimits{maximum_bytes:1024,maximum_allocation_bytes:1024,maximum_depth:16,maximum_items:1024},GuestPollNoReceiverState::new());poll.phase=Phase::Complete;for held in row["held"].as_array().unwrap(){match held.as_str().unwrap(){"born"=>poll.failure_born=Some(false),"active"=>poll.failure_active=true,"releasing"=>poll.failure_releasing=true,"pointer"=>poll.failure_pointer=1,"length"=>poll.failure_length=1,"plan"=>poll.failure_plan=Some(semio_plugin_host_actor_failure::ActorFailurePlan{kind:semio_framework_actor::ActorFailureCallKind::ReadActorFailure,prefix:[0;4],prefix_length:2,scoped:true}),_=>panic!("unknown neutral retained owner")}}assert_eq!(poll.terminal_is_empty(),row["empty"].as_bool().unwrap());poll.failure_born=None;poll.failure_active=false;poll.failure_releasing=false;poll.failure_pointer=0;poll.failure_length=0;poll.failure_plan=None;assert!(poll.terminal_is_empty())}}
+fn actual_failure_control_owners_prevent_false_terminal_retirement(){
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️failure-retirement.json")).unwrap();
+ let stock=grant();
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(109),Generation(1),stock,clock,100_000_000,1_000_000);
+ let mut poll=GuestPoll::<bool,GuestPollNoReceiverState>::new(OriginalNativeDecodePolicy{maximum_owned_bytes:1024},JsonReadLimits{maximum_bytes:1024,maximum_allocation_bytes:1024,maximum_depth:16,maximum_items:1024},GuestPollNoReceiverState::new());
+ finish_poll_payload(&mut poll,&mut caller);
+ for row in corpus["cases"].as_array().unwrap(){
+  for held in row["held"].as_array().unwrap(){
+   match held.as_str().unwrap(){
+    "born"=>poll.failure_born=Some(false),
+    "active"=>poll.failure_active=true,
+    "releasing"=>poll.failure_releasing=true,
+    "pointer"=>poll.failure_pointer=1,
+    "length"=>poll.failure_length=1,
+    "plan"=>poll.failure_plan=Some(semio_plugin_host_actor_failure::ActorFailurePlan{kind:semio_framework_actor::ActorFailureCallKind::ReadActorFailure,prefix:[0;4],prefix_length:2,scoped:true}),
+    _=>panic!("unknown neutral retained owner"),
+   }
+  }
+  assert_eq!(poll.terminal_is_empty(),row["empty"].as_bool().unwrap(),"{row}");
+  poll.failure_born=None;
+  poll.failure_active=false;
+  poll.failure_releasing=false;
+  poll.failure_pointer=0;
+  poll.failure_length=0;
+  poll.failure_plan=None;
+  assert!(poll.terminal_is_empty());
+ }
+ drop(poll);
+ caller.retire(stock);
+}
+
+fn finish_poll_payload(poll:&mut GuestPoll<bool,GuestPollNoReceiverState>,caller:&mut OriginalJobFixtureCaller){
+ for _ in 0..128{
+  if caller.turn(grant(),|cx|cx.with_original_retirement(|cx|poll.close_unopened(cx))).unwrap(){return}
+ }
+ panic!("funded Poll fixture payload did not settle");
+}
 
 #[test]
 fn next_round_component_preserves_its_original_source_and_denied_frontiers(){
  let law:serde_json::Value=serde_json::from_str(include_str!("rounds.json")).unwrap();let stock=grant();let mut caller=OriginalJobFixtureCaller::admit(OperationId(108),Generation(1),stock,clock,100_000_000,1_000_000);
- let mut poll=Box::new(GuestPoll::<bool,GuestPollNoReceiverState>::new(OriginalNativeDecodePolicy{maximum_owned_bytes:1024},JsonReadLimits{maximum_bytes:1024,maximum_allocation_bytes:1024,maximum_depth:16,maximum_items:1024},GuestPollNoReceiverState::new()));poll.phase=Phase::Complete;
+ let mut poll=Box::new(GuestPoll::<bool,GuestPollNoReceiverState>::new(OriginalNativeDecodePolicy{maximum_owned_bytes:1024},JsonReadLimits{maximum_bytes:1024,maximum_allocation_bytes:1024,maximum_depth:16,maximum_items:1024},GuestPollNoReceiverState::new()));
+ finish_poll_payload(&mut poll,&mut caller);
  caller.turn(stock,|cx|{
   assert!(poll.begin_next_step(cx).is_err());let bytes=std::mem::size_of_val(&poll.origin_binding)+std::mem::size_of_val(&poll.origin_address);assert!(charge_metadata(cx,false,bytes)?);poll.origin_binding=Some(OriginalSourceBinding::borrow(cx));poll.origin_address=Some(poll.as_ref()as*const _ as usize);
   let address=poll.as_ref()as*const _;let receiver=&poll.receiver as*const _;let denied=RetainedCloneGrant{maximum_items:0,..cx.retained_grant()};assert!(!cx.with_retained_loan(denied,|cx|poll.begin_next_step(cx))?);let denied=RetainedCloneGrant{maximum_copy_bytes:0,..cx.retained_grant()};assert!(!cx.with_retained_loan(denied,|cx|poll.begin_next_step(cx))?);let deadline=cx.deadline_us();assert!(!cx.with_original_work_loan(0,deadline,|cx|poll.begin_next_step(cx))?);
@@ -177,8 +473,8 @@ fn next_round_component_preserves_its_original_source_and_denied_frontiers(){
  let mut captured=false;for _ in 0..128{if caller.turn(stock,|cx|{let address=(&mut poll.transport_failure as*mut Option<OriginalTurnFailure>)as usize;let bytes=std::mem::size_of_val(&poll.transport_failure);if !poll.return_place.admit_sized(cx,address,bytes)?{return Ok(false)}poll.transport_failure=None;poll.return_place.record_sized_return(address,bytes)?;assert!(!poll.begin_next_step(cx)?);Ok(true)}).unwrap(){captured=true;break}}assert!(captured);for _ in 0..128{if poll.return_place.terminal_is_empty(){break}caller.turn(stock,|cx|poll.return_place.settle_return(cx)).unwrap();}assert!(poll.return_place.terminal_is_empty());
  let address=poll.as_ref()as*const _;let mut work=0u64;let mut births=0usize;
  for _ in 0..law["rounds"].as_u64().unwrap(){caller.turn(stock,|cx|{
-  assert!(poll.origin_binding.unwrap().matches(cx));let before=cx.fuel_remaining();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||poll.begin_next_step(cx));assert!(result?);work+=before-cx.fuel_remaining();births+=heap.requested_bytes;assert_eq!(heap.released_bytes,0);assert!(poll.phase==Phase::Encode);assert_eq!(poll.as_ref()as*const _,address);assert!(!poll.begin_next_step(cx)?);assert!(charge_frame(cx,std::mem::size_of::<Phase>())?);poll.phase=Phase::Complete;Ok(())
- }).unwrap();}
+  assert!(poll.origin_binding.unwrap().matches(cx));let before=cx.fuel_remaining();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||poll.begin_next_step(cx));assert!(result?);work+=before-cx.fuel_remaining();births+=heap.requested_bytes;assert_eq!(heap.released_bytes,0);assert!(poll.phase==Phase::Encode);assert_eq!(poll.as_ref()as*const _,address);assert!(!poll.begin_next_step(cx)?);Ok(())
+ }).unwrap();finish_poll_payload(&mut poll,&mut caller);}
  assert_eq!(serde_json::json!({"births":births,"work":work}),serde_json::json!({"births":law["births"],"work":law["work"].as_u64().unwrap()*law["rounds"].as_u64().unwrap()}));caller.cancel().cancel_now();caller.turn(stock,|cx|{assert!(!poll.begin_next_step(cx)?);Ok(())}).unwrap();assert!(poll.terminal_is_empty());drop(poll);caller.retire(stock);
 }
 

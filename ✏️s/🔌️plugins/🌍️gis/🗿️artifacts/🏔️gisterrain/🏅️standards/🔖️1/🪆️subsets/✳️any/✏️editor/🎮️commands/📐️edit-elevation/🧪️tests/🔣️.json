@@ -1,0 +1,45 @@
+{
+  "size": 33,
+  "bounds": [5.555, 50.585, 5.608333333333333, 50.638333333333335],
+  "height": 100,
+  "seed": [[16, 16, 190]],
+  "cases": [
+    {"command":{"operation":"set-sample","column":16,"row":16,"radius":4,"value":201},"changed":1,"samples":[[16,16,201],[17,16,100]]},
+    {"command":{"operation":"raise-lower","column":16,"row":16,"radius":1,"value":-20},"changed":9,"samples":[[16,16,170],[17,16,85],[17,17,90],[18,16,100]]},
+    {"command":{"operation":"flatten","column":16,"row":16,"radius":1,"value":120},"changed":9,"samples":[[16,16,120],[17,16,115],[17,17,110],[18,16,100]]},
+    {"command":{"operation":"smooth","column":16,"row":16,"radius":1,"value":100},"changed":9,"samples":[[16,16,110],[17,16,108],[17,17,105],[18,16,100]]},
+    {"command":{"operation":"offset","column":0,"row":0,"radius":0,"value":-300},"changed":1089,"samples":[[16,16,-110],[0,0,-200],[32,32,-200]]},
+    {"command":{"operation":"raise-lower","column":0,"row":0,"radius":1,"value":7},"changed":4,"samples":[[0,0,107],[1,0,105],[1,1,104],[2,0,100]]},
+    {"command":{"operation":"offset","column":0,"row":0,"radius":0,"value":0},"changed":0,"samples":[[16,16,190],[0,0,100]]}
+  ],
+  "refused": [
+    {"operation":"offset","column":0,"row":0,"radius":0,"value":32767},
+    {"operation":"smooth","column":16,"row":16,"radius":1,"value":101},
+    {"operation":"set-sample","column":33,"row":16,"radius":0,"value":200}
+  ],
+  "strokeGestures": [
+    {"id": "click", "radius": 4, "down": [16, 16], "moves": [], "up": [16, 16], "anchors": [[16, 16]], "stamps": [[16, 16]]},
+    {"id": "radius-spacing", "radius": 4, "down": [1, 1], "moves": [[2, 1], [5, 4]], "up": [6, 4], "anchors": [[1, 1], [5, 4], [6, 4]], "stamps": [[1, 1], [3, 3], [5, 4], [6, 4]]},
+    {"id": "reverse-diagonal", "radius": 2, "down": [4, 4], "moves": [[4, 4]], "up": [2, 1], "anchors": [[4, 4], [2, 1]], "stamps": [[4, 4], [3, 3], [3, 2], [2, 1]]},
+    {"id": "missing-surface", "radius": 4, "down": [1, 1], "moves": [[6, 1], null], "up": [9, 1], "anchors": null},
+    {"id": "cancelled", "radius": 4, "down": [1, 1], "moves": [[6, 1]], "cancel": true, "up": [9, 1], "anchors": null},
+    {"id": "over-limit", "radius": 1, "down": [0, 0], "moves": [[32, 0]], "up": [0, 0], "anchors": null}
+  ],
+  "strokeEdits": [
+    {"command": {"operation": "raise-lower", "column": 8, "row": 8, "radius": 0, "value": 7, "stroke": [[8, 8], [11, 8]]}, "changed": 4, "samples": [[8, 8, 107], [9, 8, 107], [10, 8, 107], [11, 8, 107], [12, 8, 100]]},
+    {"command": {"operation": "raise-lower", "column": 8, "row": 8, "radius": 0, "value": -7, "stroke": [[8, 8], [11, 8]]}, "changed": 4, "samples": [[8, 8, 93], [9, 8, 93], [10, 8, 93], [11, 8, 93], [12, 8, 100]]},
+    {"command": {"operation": "smooth", "column": 16, "row": 16, "radius": 0, "value": 100, "stroke": [[16, 16], [17, 16]]}, "changed": 2, "samples": [[16, 16, 110], [17, 16, 101], [18, 16, 100]]}
+  ],
+  "refusedStrokes": [
+    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0], [32, 0], [0, 0]]},
+    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[1, 0]]},
+    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0], [33, 0]]},
+    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0], [1.5, 0]]},
+    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": []},
+    {"operation": "set-sample", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0], [1, 0]]},
+    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0, 0]]}
+  ],
+  "overflowStroke": [
+    {"seed": [1, 0, 32767], "command": {"operation": "raise-lower", "column": 0, "row": 0, "radius": 0, "value": 1, "stroke": [[0, 0], [1, 0]]}}
+  ]
+}

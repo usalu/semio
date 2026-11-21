@@ -1,9 +1,10 @@
 import {afterEach,expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {createHash} from "node:crypto";
-import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {brotliCompressSync} from "node:zlib";
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,truncateSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join,relative,sep} from "node:path";
 import Ajv from "ajv";
 import {createNodeFilePortV1,readGenerationManifestV1,readGenerationPointerV1} from "../../../🟨️.mjs";
 import {CLOSURE_POLICY_V1} from "../../../../🩹️closure-repair/🟨️.mjs";
@@ -12,10 +13,13 @@ import {applyOps,createMockHost,ringFiles,seed} from "../../../🧪️tests/🏃
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../../../🌐️remote-cache/🖥️server/🟦️.ts";
 import {httpRemoteExecutionContentV1} from "../../../../../🌐️remote-execution/🗄️content/🟦️.ts";
 import {REAPI_V1,decodeProtobufV1,encodeProtobufV1} from "../../../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
-import {remoteGenerationExchangeV1,type ClosurePortV1} from "../../🟦️.ts";
+import {remoteGenerationExchangeV1,workspaceClosurePortV1,type ClosurePortV1} from "../../🟦️.ts";
+import {closureEntryV1,encodeClosureMemoV1,inventoryFragmentClosuresV1,readClosureMemoV1} from "../../🧲️closure-shards/🟦️.ts";
+import transportSchema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import currentCases from "./🔣️.json";
 import currentSchema from "./🧬️schema/🔣️.json";
 import boundedCases from "./📏️bounded.json";
+import transportCases from "./🕓️transport.json";
 import boundedSchema from "./🧬️schema/📏️bounded.json";
 
 /** 🧲️ Contract (one real cache server on a free port with a temporary store, never a production identity): the build input closure leaves a generation names travel with it. An upload sends each named leaf the cache misses once, a restore fetches the named leaves this machine lacks and verifies them against their names, and a leaf nobody holds is reported with the owners that name it (they are stale) without failing the restore. */
@@ -39,6 +43,26 @@ async function produce(server:RemoteCacheServerV1,workspace:string,closures:Clos
  return mock;
 }
 const consumer=(server:RemoteCacheServerV1,workspace:string,closures:ClosurePortV1,identity:string)=>remoteGenerationExchangeV1({environment:environment(server),workspace,identity:async()=>identity,platform,closures})!;
+
+test("workspace closure verification hashes bounded chunks and reports an unknown entry kind safely",async()=>{
+ const workspace=scratch(),store=workspaceClosurePortV1(workspace)!;
+ const directory=store.directory(NAMESPACE),inside=relative(workspace,directory);
+ expect(inside.startsWith(".cache"+sep)).toBe(true);
+ const bytes=Buffer.alloc(2**17+11,41),key=sha(bytes),path=join(directory,key+".json");
+ const verify=store.verify!;
+ await expect(verify(NAMESPACE,key)).resolves.toBe(false);
+ await expect(verify(NAMESPACE,"../elsewhere")).resolves.toBeUndefined();
+ mkdirSync(directory,{recursive:true});
+ writeFileSync(path,bytes);
+ await expect(verify(NAMESPACE,key)).resolves.toBe(true);
+ bytes[bytes.length-1]=42;
+ writeFileSync(path,bytes);
+ await expect(verify(NAMESPACE,key)).resolves.toBe(false);
+ truncateSync(path,CLOSURE_POLICY_V1.maximumLeafBytes+1);
+ await expect(verify(NAMESPACE,key)).resolves.toBe(false);
+ const reason=Error("cancel closure proof"),signal=AbortSignal.abort(reason);
+ await expect(verify(NAMESPACE,key,signal)).rejects.toBe(reason);
+});
 
 test("an upload sends each named leaf once and a restore fetches the leaves this machine lacks, verified by name",async()=>{
  const server=await serve(),one=leaf("a.ts"),two=leaf("b.ts"),mother=scratch(),motherLeaves=port(scratch());
@@ -68,6 +92,51 @@ test("the leaf is taken from the fleet cache by the exchange and an absent leaf 
  await content.write("main",{hash:good.key,size:good.bytes.length},good.bytes);
  expect(Buffer.from((await exchange.leaf({namespace:NAMESPACE,key:good.key}))!).equals(good.bytes)).toBe(true);
  expect(await exchange.leaf({namespace:NAMESPACE,key:sha("absent")})).toBeUndefined();
+});
+
+test("an exact leaf fetch cancels oversized bytes before the request deadline",async()=>{
+ const one=leaf("strict.ts"),chunk=new Uint8Array(1048576),stopped=Promise.withResolvers<void>();
+ const receiver=Bun.serve({hostname:"127.0.0.1",port:0,fetch(){
+  let left=CLOSURE_POLICY_V1.maximumLeafBytes+1;
+  return new Response(new ReadableStream({
+   pull(controller){if(left>0){const size=Math.min(left,chunk.length);controller.enqueue(chunk.subarray(0,size));left-=size;}},
+   cancel(){stopped.resolve();}
+  }));
+ }});
+ try{
+  const signal=AbortSignal.timeout(1500),workspace=scratch();
+  const exchange=remoteGenerationExchangeV1({environment:{SEMIO_REMOTE_CACHE_ENDPOINT:receiver.url.origin},workspace,identity:async()=>sha("x"),platform,closures:port(scratch())})!;
+  expect(await exchange.leaf({namespace:NAMESPACE,key:one.key,signal})).toBeUndefined();
+  expect(signal.aborted).toBe(false);
+  await Promise.race([stopped.promise,Bun.sleep(1000).then(()=>{throw Error("oversized exact leaf download was not cancelled");})]);
+ }finally{await receiver.stop(true);}
+});
+
+test("a graph exchange probes the same cache after a transient restore transport failure",async()=>{
+ using oracle=new Database(":memory:");
+ const server=await serve(),mother=scratch(),mock=await produce(server,mother,port(scratch()),{}),root=join(scratch(),".gen"),identity=await mock.host.identity();
+ const source=join(mother,".gen"),pointer=readGenerationPointerV1((await files.read(join(source,"current.json")))!);
+ const manifest=readGenerationManifestV1((await files.read(join(source,"m",pointer.manifest+".json")))!);
+ let unavailable=true,clock=0,requests=0;
+ const proxy=Bun.serve({hostname:"127.0.0.1",port:0,fetch(request){
+  requests++;
+  return unavailable?new Response(null,{status:503}):fetch(new URL(new URL(request.url).pathname,server.url));
+ }});
+ try{
+  const exchange=remoteGenerationExchangeV1({environment:{SEMIO_REMOTE_CACHE_ENDPOINT:proxy.url.origin},workspace:scratch(),identity:async()=>identity,platform,closures:port(scratch()),now:()=>clock})!;
+  const request={root,fs:files,implementation:manifest.implementation,requireComplete:true as const};
+  expect((await exchange.restore(request)).status).toBe("failed");
+  unavailable=false;
+  const initial=requests,observed=[];
+  for(const offset of transportCases.observations){
+   clock=offset;
+   const look=await exchange.look(request);
+   observed.push(Number(look.state==="complete"&&look.candidate!==undefined));
+  }
+  const expected=oracle.query("select value >= ?1 as available from json_each(?2) order by key").values(transportCases.retryMilliseconds,JSON.stringify(transportCases.observations)).flat();
+  expect(observed).toEqual(expected);
+  expect(requests-initial).toBe(1);
+ }finally{await proxy.stop(true);}
 });
 
 test("whole current fetch follows the independent policy model across head and closure changes",async()=>{
@@ -183,4 +252,31 @@ test("strict restore verifies installed closure bytes and cancels an oversized r
    }
   }
  }finally{await receiver.stop(true);}
+});
+
+test("a bounded closure memo retains a verified fragment inventory across publications",async()=>{
+ const closure=leaf("shared input"),entry=closureEntryV1(NAMESPACE,closure.key);
+ const compressed=brotliCompressSync(Buffer.from(JSON.stringify(tokens({owner:closure.key}))));
+ const fragment=sha(compressed),memo=readClosureMemoV1();
+ let reads=0;
+ const first=await inventoryFragmentClosuresV1([fragment],async()=>{reads++;return compressed;},undefined,memo);
+ expect(first.get(entry)?.fragments.has(fragment)).toBe(true);
+ expect(reads).toBe(1);
+ const encoded=encodeClosureMemoV1([fragment],memo);
+ expect(encoded).toBeDefined();
+ const validator=new Ajv({strict:true}).compile(transportSchema.definitions.ClosureMemo);
+ const payload=JSON.parse(encoded!);
+ expect(validator(payload)).toBe(true);
+ expect(payload.fragments).toEqual([[fragment,[entry]]]);
+ const recovered=readClosureMemoV1(Buffer.from(encoded!));
+ const second=await inventoryFragmentClosuresV1([fragment],async()=>{reads++;return undefined;},undefined,recovered);
+ expect(second).toEqual(first);
+ expect(reads).toBe(1);
+ const duplicate=JSON.stringify({version:1,fragments:[[fragment,[entry,entry]]]});
+ expect(readClosureMemoV1(Buffer.from(duplicate)).size).toBe(0);
+ const unsorted=[entry,closureEntryV1(NAMESPACE,leaf("other input").key)].sort().reverse();
+ const outOfOrder={version:1,fragments:[[fragment,unsorted]]};
+ expect(validator(outOfOrder)).toBe(true);
+ expect(readClosureMemoV1(Buffer.from(JSON.stringify(outOfOrder))).size).toBe(0);
+ expect(encodeClosureMemoV1([sha("absent fragment")],memo)).toBeUndefined();
 });

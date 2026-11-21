@@ -1,0 +1,9 @@
+# Authorized Pack Retirement at Receiver
+
+The full replica suite initially passed 245 tests and failed the authorized archive-repack convergence case. The same private case failed in isolation. The diagnostic run confirmed that the receiver could read the replacement commit, HEAD matched the author, and the new pack, index and reverse index were all present. The old pack, index and reverse index stayed on disk. Each had a winning deletion and was refused as ignored, then left the apply queue.
+
+Journal intake installs the winning tombstone before filesystem apply. The normal pack-publication filter correctly treats the stem as no longer live at that point. Applying a retirement requires a different proof. The receiver now accepts a strictly newer winning deletion of a recognized, normally shared Git pack path when it holds an exact previously published PUT for that path. The loose-object and pack-completeness fences still run in their original order. The publishing and rescue predicate still requires a live pack PUT, and the sender's explicit retirement grants retain their separate authority.
+
+The authorized archive case passed unchanged. The replacement-index-first case still keeps the old pack until its replacement reaches the worker. A separate private fixture gave the receiver a winning tombstone for an unheld local-only Git pack and index. SQLite independently selected the paths that should survive. Both artifacts remained byte-for-byte intact and Git could still read the private packed commit.
+
+The focused run passed three tests and 16 assertions. The generated transcripts are `replica-archive-repack-isolated.log`, `replica-archive-repack-debug.log`, and `replica-archive-repack-green.log`. Temporary diagnostic code was removed. Git activity was confined to disposable private repositories.

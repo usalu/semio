@@ -1,0 +1,14 @@
+{
+  "headerBytes": 48,
+  "rowBytes": 184,
+  "maximumRows": 32,
+  "cases": [
+    { "pointer": 3000, "length": 48, "accepted": true },
+    { "pointer": 3000, "length": 4280, "accepted": true },
+    { "pointer": 3000, "length": 4400, "accepted": false },
+    { "pointer": 3000, "length": 4464, "accepted": true },
+    { "pointer": 3000, "length": 5936, "accepted": true },
+    { "pointer": 3000, "length": 6120, "accepted": false },
+    { "pointer": 0, "length": 0, "accepted": false }
+  ]
+}

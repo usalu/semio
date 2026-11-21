@@ -5,7 +5,7 @@ const root = resolve(import.meta.dirname, "../../../../../../..");
 const play = join(root, "🏢️semio-tech/🎡️play");
 const port = Number(process.env.SEMIO_TECH_PLAY_PORT ?? "6034");
 Object.assign(process.env, {
-  SEMIO_TECH_PLAY_SCOPE:"standards", SEMIO_TECH_PLAY_FROZEN:"true", SEMIO_BUILD_MODE:"prototype",
+  SEMIO_TECH_PLAY_SCOPE:process.env.SEMIO_TECH_PLAY_SCOPE ?? "standards", SEMIO_TECH_PLAY_FROZEN:"true", SEMIO_BUILD_MODE:"prototype",
   SEMIO_VITE_CACHE_DIRECTORY:join(root, ".cache/b/p/m/vite", "play-standards-native-" + port)
 });
 const server = await createServer({

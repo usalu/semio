@@ -1,10 +1,9 @@
 //! 📹️ Record wire vocabulary: the field and element tags, shape navigation and the canonical schema graph hash every encoder, decoder and cursor of a Pack record shares.
 
-use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_pack_error::PackRefusal;
 use semio_framework_dsl_record::{FieldSpec, RecordSpec, RecordSpecProducer, Shape};
 use semio_framework_replication_codec::write_varint_u64;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[path = "../🏭️schema/🦀️.rs"]
 pub mod controlled_schema;
@@ -117,7 +116,7 @@ pub fn elem_tag_for_shape(shape: &Shape) -> u8 {
 /// 🧭️ One field value shape of a [`PackSchemaGraph`]: `Shape` with every lazy nested record
 /// resolved to the index of its canonical record, enum and statement tables sorted by their
 /// schema-declared ordinal/keyword, and unit/ref/language refinements carried by name.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PackSchemaShape {
     Bool,
     Int,
@@ -151,7 +150,7 @@ pub enum PackSchemaShape {
 /// 🪪️ One field of a [`PackSchemaGraph`] record: everything that decides what the pack bytes
 /// of that field mean. Text-only presentation (`keyword`, `layout`, `position`, `call_name`,
 /// `defines`) is not part of the pack identity.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PackSchemaField {
     pub id: u16,
     pub key: String,
@@ -323,7 +322,7 @@ impl PackSchemaGraph {
     pub fn of(spec: &RecordSpec) -> Self {
         let mut nodes: Vec<(Vec<PackSchemaField>, Vec<usize>)> = Vec::new();
         let mut pending: Vec<RecordSpec> = Vec::new();
-        let mut seen: HashMap<usize, usize> = HashMap::new();
+        let mut seen = BTreeMap::new();
         let mut cursor = 0usize;
         loop {
             let current = if cursor == 0 { spec } else if let Some(next) = pending.get(cursor - 1) { next } else { break };
@@ -345,14 +344,14 @@ impl PackSchemaGraph {
             nodes.push((fields, targets));
             cursor += 1;
         }
-        let mut labels: HashMap<&Vec<PackSchemaField>, u32> = HashMap::new();
+        let mut labels: BTreeMap<&[PackSchemaField], u32> = BTreeMap::new();
         let mut class: Vec<u32> = nodes.iter().map(|(fields, _)| {
             let next = labels.len() as u32;
             *labels.entry(fields).or_insert(next)
         }).collect();
         let mut count = labels.len();
         loop {
-            let mut signatures: HashMap<(u32, Vec<u32>), u32> = HashMap::new();
+            let mut signatures: BTreeMap<(u32, Vec<u32>), u32> = BTreeMap::new();
             let refined: Vec<u32> = nodes.iter().enumerate().map(|(node, (_, targets))| {
                 let next = signatures.len() as u32;
                 *signatures.entry((class[node], targets.iter().map(|target| class[*target]).collect())).or_insert(next)

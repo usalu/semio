@@ -1,0 +1,11 @@
+# Retained Mesh Orientation Across Disconnected Shells
+
+Orient Mesh Faces previously copied winding parity from an arbitrary root in each adjacency component. A fully inward closed component could remain inward after repair and its signed volume could cancel a neighbouring component’s volume. Previously visited neighbours also skipped parity verification.
+
+The retained component cursor now keeps each face’s component identity, checks winding parity on both directions of every adjacency, and accumulates signed volume one fan triangle per Work event. The accumulator uses a component-local origin and compensated summation. Closed shells with negative volume reverse after propagation. Open components keep their seed face direction, and zero-volume components keep their consistent winding. Each disconnected shell is treated independently, including geometrically nested shells. Inferring nested cavity semantics is outside this operation.
+
+The new component and sign arrays have separate physical admission. The Flow resolver exposes the orientation stage demands, and both registered adapters settle performed Work and physical receipts. The existing rebuild preserves source corner identity through a winding reversal. Explicit Flip remains a selected-face edit.
+
+The shared fixture models two tetrahedral shells, with a translated inward shell, and supplies distinct authored normal and UV channels. A pinned native build observed 60 separately paid component events, four flips, zero flips on reapplication, an inert zero Work turn, the preserved open seed, and contradictory parity refusal for a twisted strip. Cancellation after eight component events retired 60,746 bytes without publication. The independent Manifold and Three oracle measured the positive volume of each native shell, checked all face normals point outward, and matched the authored normals and UVs against the reversed topology.
+
+The portable Mesh suite passed 16 tests with 3,966 assertions, including 68 checks in the new fixture. The registered Flow workbench exercises Construct, Orient and Analyze and cancellation. Flow and procedural adapter source parsing and admission size checks passed. Full linked Cargo coverage remains storage-gated.

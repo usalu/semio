@@ -24,6 +24,8 @@ pub struct DagViewportState {
 pub struct DagGraphState {
     pub host_snapshot: DagHostSnapshot,
     pub engine: DagBoardEngine,
+    /// ✨️ Sorted physical handle identities for companion hover marks.
+    pub hover_ports: Vec<HandleId>,
     pub node_id_map: HistoryFoldIndex<NodeId, usize>,
     pub handle_key_map: HistoryFoldIndex<HandleId, String>,
     pub handle_port_shape: HistoryFoldIndex<HandleId, PortShape>,

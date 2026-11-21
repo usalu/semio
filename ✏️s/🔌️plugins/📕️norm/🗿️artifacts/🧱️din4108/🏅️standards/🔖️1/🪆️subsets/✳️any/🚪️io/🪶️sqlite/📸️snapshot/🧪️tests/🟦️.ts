@@ -2,6 +2,9 @@ import * as sqliteOwner from "../🟦️.ts";
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
 import fixture from"./🧫️fixtures/🔣️.json";
+import pressureCases from "./🧫️fixtures/📏️pressure-cases.json";
+import moistureCases from "./🧫️fixtures/💧annex-a-cases.json";
+import {parseDin4108Snapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import {Database} from "bun:sqlite";
 import {Buffer} from "node:buffer";
@@ -34,7 +37,7 @@ for(const text of words.ieee754Binary64Bits)test(`DIN4108 every numeric field re
 });
 test("DIN4108 JSON schema preserves the four closed climate choices",()=>{const ajv=new Ajv({strict:false});for(const climateZone of choices.climateZone)expect(ajv.validate(schema,{...fixture,climateZone})).toBe(true);expect(ajv.validate(schema,{...fixture,climateZone:"unknown"})).toBe(false)});
 for(const climateZone of choices.climateZone)test(`DIN4108 retains climate choice ${climateZone}`,async()=>{const expected={...ownedFixture(),climateZone} as Din4108SqliteSnapshot;expect(await din4108SnapshotFromSqliteDatabase(await importSqliteDatabase(await exportSqliteDatabase(await din4108SnapshotToSqliteDatabase(expected))))).toEqual(expected)});
-test("DIN4108 empty collections retain seven independent domain tables",async()=>{const expected={...ownedFixture(),zones:[],elements:[],thermalBridges:[]},database=await din4108SnapshotToSqliteDatabase(expected);expect(database.tables.length).toBe(7);expect(await din4108SnapshotFromSqliteDatabase(await importSqliteDatabase(await exportSqliteDatabase(database)))).toEqual(expected)});
+test("DIN4108 empty collections retain ten independent domain tables",async()=>{const expected={...ownedFixture(),zones:[],elements:[],thermalBridges:[]},database=await din4108SnapshotToSqliteDatabase(expected);expect(database.tables.length).toBe(10);expect(await din4108SnapshotFromSqliteDatabase(await importSqliteDatabase(await exportSqliteDatabase(database)))).toEqual(expected)});
 test("DIN4108 rejects malformed closed choices booleans structural parents ordinals and exact word companions",async()=>{
  const database=await din4108SnapshotToSqliteDatabase(ownedFixture());for(const sql of ["UPDATE din4108_document SET climate_zone='unknown'","UPDATE din4108_document SET has_mechanical_ventilation=2","UPDATE din4108_document SET bb2_details_conform=-1","UPDATE din4108_zone SET document_id=99 WHERE id=1","UPDATE din4108_window SET zone_id=99 WHERE id=1","UPDATE din4108_element SET document_id=99 WHERE id=1","UPDATE din4108_layer SET element_id=99 WHERE id=1","UPDATE din4108_segment SET layer_id=99 WHERE id=1","UPDATE din4108_thermal_bridge SET document_id=99 WHERE id=1","UPDATE din4108_zone SET ordinal=0 WHERE id=2","UPDATE din4108_window SET ordinal=0 WHERE id=2","UPDATE din4108_layer SET ordinal=0 WHERE id=2","UPDATE din4108_segment SET ordinal=0 WHERE id=2","UPDATE din4108_element SET ordinal=99 WHERE id=1","UPDATE din4108_document SET t_int_c_ieee754_class='nan'","DELETE FROM din4108_document"]){const db=Database.deserialize(await exportSqliteDatabase(database));try{db.run("PRAGMA ignore_check_constraints=ON");db.run(sql);await expect(din4108SnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow()}finally{db.close()}}
  await expect(din4108SnapshotToSqliteDatabase(ownedFixture(),{maxRows:1})).rejects.toThrow();await expect(din4108SnapshotFromSqliteDatabase(database,{maxValueBytes:0})).rejects.toThrow();
@@ -52,8 +55,37 @@ import {din4108SnapshotToSqliteDatabase as normSemanticProject,din4108SnapshotFr
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
 import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("DIN4108 complete independent cells preserve copied limits and required empty metadata",async()=>{
- expect(normSemanticContract["schemaBytes"]).toEqual(4374);expect(normSemanticContract["tableWidths"]).toEqual({"din4108_document":14,"din4108_element":25,"din4108_layer":22,"din4108_segment":17,"din4108_thermal_bridge":11,"din4108_window":17,"din4108_zone":9});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":13,"valueBytes":1764},{"id":"emptyCollections","rows":1,"valueBytes":126}]);
- for(const item of normSemanticContract.cases){const source=ownedFixture();if(item.id==="emptyCollections"){source.zones=[];source.elements=[];source.thermalBridges=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:7,maxColumns:25};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
-  for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:6},{...limits,maxColumns:24}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
+ expect(normSemanticContract["schemaBytes"]).toEqual(5125);expect(normSemanticContract["tableWidths"]).toEqual({"din4108_case":7,"din4108_case_number":7,"din4108_case_text":5,"din4108_document":14,"din4108_element":25,"din4108_layer":22,"din4108_segment":17,"din4108_thermal_bridge":11,"din4108_window":17,"din4108_zone":9});expect(normSemanticContract["cases"]).toEqual([{"id":"full","rows":13,"valueBytes":1764},{"id":"emptyCollections","rows":1,"valueBytes":126}]);
+ for(const item of normSemanticContract.cases){const source=ownedFixture();if(item.id==="emptyCollections"){source.zones=[];source.elements=[];source.thermalBridges=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:10,maxColumns:25};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
+  for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:9},{...limits,maxColumns:24}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
  }
+});
+
+test("DIN4108 pressure cases survive the TypeScript snapshot and independent SQLite reader", async () => {
+ const source = {...fixture, cases: pressureCases};
+ expect(new Ajv({strict:false}).validate(schema,source)).toBe(true);
+ expect(parseDin4108Snapshot(source)).toEqual(source);
+ const expected:Din4108SqliteSnapshot={...ownedFixture(),cases:pressureCases.map(row=>({...row,numbers:row.numbers.map(number=>({...number,value:binary64(number.value)}))}))};
+ const bytes=await exportSqliteDatabase(await din4108SnapshotToSqliteDatabase(expected));
+ const independent=Database.deserialize(bytes,{safeIntegers:true});
+ try {
+  const rows=independent.query("SELECT c.logical_id AS id, n.value FROM din4108_case c JOIN din4108_case_number n ON c.id=n.case_id WHERE n.logical_id='test_depressurisation' ORDER BY c.ordinal").all();
+  expect(rows).toEqual([{id:"whole-volume-test",value:440},{id:"zone-pressure-test",value:2020}]);
+ } finally {independent.close()}
+ expect(await din4108SnapshotFromSqliteDatabase(await importSqliteDatabase(bytes))).toEqual(expected);
+});
+
+test("DIN4108 preserves period inputs and prescriptive construction cases in the archive", async () => {
+  const neutral = {...fixture, cases: moistureCases};
+  expect(new Ajv({strict:false}).validate(schema, neutral)).toBe(true);
+  expect(parseDin4108Snapshot(neutral)).toEqual(neutral);
+  const expected:Din4108SqliteSnapshot={...ownedFixture(),cases:moistureCases.map(row=>({...row,numbers:row.numbers.map(number=>({...number,value:binary64(number.value)}))}))};
+  const database=await din4108SnapshotToSqliteDatabase(expected);
+  const bytes=await exportSqliteDatabase(database);
+  const copied=await din4108SnapshotFromSqliteDatabase(await importSqliteDatabase(bytes));
+  expect(copied.cases).toEqual(expected.cases);
+  const open=Database.deserialize(bytes);
+  try {
+   expect(open.query("SELECT n.value FROM din4108_case_number n JOIN din4108_case c ON n.case_id=c.id WHERE c.entry_id='DINA-01' AND n.logical_id='site_elevation'").get()).toEqual({value:700});
+  } finally {open.close()}
 });

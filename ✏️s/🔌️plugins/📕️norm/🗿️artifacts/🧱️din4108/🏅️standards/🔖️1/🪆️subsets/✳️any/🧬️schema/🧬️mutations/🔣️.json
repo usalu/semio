@@ -518,6 +518,90 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-compressive-class/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "InsertCase"
+      ],
+      "properties": {
+        "InsertCase": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/insert-case/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RemoveCase"
+      ],
+      "properties": {
+        "RemoveCase": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/remove-case/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCaseNumber"
+      ],
+      "properties": {
+        "ChangeCaseNumber": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-case-number/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCaseText"
+      ],
+      "properties": {
+        "ChangeCaseText": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-case-text/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCaseLabelEn"
+      ],
+      "properties": {
+        "ChangeCaseLabelEn": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-case-label-en/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCaseLabelDe"
+      ],
+      "properties": {
+        "ChangeCaseLabelDe": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-case-label-de/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ChangeCaseEntryId"
+      ],
+      "properties": {
+        "ChangeCaseEntryId": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-case-entry-id/schema.json"
+        }
+      }
     }
   ]
 }

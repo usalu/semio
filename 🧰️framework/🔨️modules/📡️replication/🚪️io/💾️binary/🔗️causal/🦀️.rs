@@ -129,6 +129,11 @@ pub fn encode_envelopes(envelopes: &[MutationEnvelope]) -> Vec<u8> {
     out
 }
 
+#[path = "🧩️atomic-group.rs"]
+pub mod atomic_group;
+#[path = "🏪️atomic-hub.rs"]
+pub mod atomic_hub;
+
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES: usize = 262_144;
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES: usize = 8_192;
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES: usize = 8_192;
@@ -197,7 +202,69 @@ fn read_document_backbone_text(bytes:&(impl ByteReadSource+?Sized),position:&mut
 /// 🪢️ Decodes one terminal canonical causal batch under the shared hot-port limits,
 /// checking every count and length before allocating its retained owner.
 pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &(impl ByteReadSource+?Sized), limits: DocumentBackboneBatchLimitsV1) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
-    let ceiling = DocumentBackboneBatchLimitsV1::default();
+    decode_document_backbone_envelopes_bounded(bytes, limits, Default::default())
+}
+
+/// 🧷️ Decodes a separately sealed original group while preserving the ordinary per-operation limits.
+pub fn decode_verified_atomic_backbone(
+    bytes: &atomic_group::VerifiedAtomicBackbone<'_>, document: &str, actor: &str,
+) -> Result<VerifiedAtomicEdit, semio_framework_replication_error::ProtocolError> {
+    decode_atomic_backbone(bytes, document, Some(actor))
+}
+
+/// 📡️ Opens a sealed edit on a port whose remote authors were authenticated by the native Hub.
+pub fn decode_verified_atomic_backbone_at_document(
+    bytes: &atomic_group::VerifiedAtomicBackbone<'_>, document: &str,
+) -> Result<VerifiedAtomicEdit, semio_framework_replication_error::ProtocolError> {
+    decode_atomic_backbone(bytes, document, None)
+}
+
+fn decode_atomic_backbone(
+    bytes: &(impl ByteReadSource + ?Sized), document: &str, actor: Option<&str>,
+) -> Result<VerifiedAtomicEdit, semio_framework_replication_error::ProtocolError> {
+    if !atomic_group::AtomicBackboneSender::matches_prepared(bytes) {
+        return Err(document_backbone_batch_malformed(0, "atomic-group-prefix"));
+    }
+    let mut position = atomic_group::PREPARED_ATOMIC_EDIT_TAG.len();
+    let edit_id = read_document_backbone_text(bytes, &mut position, DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES, "edit-id")?;
+    if edit_id.is_empty() { return Err(document_backbone_batch_malformed(0, "atomic-group-edit")); }
+    let batch = semio_framework_value::paged::ByteReadRange::new(bytes, position, bytes.byte_len() - position)
+        .ok_or_else(|| document_backbone_batch_malformed(position, "atomic-group-range"))?;
+    let ceiling = DocumentBackboneBatchLimitsV1 {
+        maximum_bytes: atomic_group::ATOMIC_BACKBONE_MAXIMUM_BYTES,
+        maximum_payload_bytes: atomic_group::ATOMIC_BACKBONE_MAXIMUM_BYTES,
+        ..Default::default()
+    };
+    let events = decode_document_backbone_envelopes_bounded(&batch, ceiling, ceiling)?;
+    let Some((author, transaction)) = events.first().and_then(|event| event.transaction.as_ref().map(|tx| (&event.actor, tx))) else {
+        return Err(document_backbone_batch_malformed(0, "atomic-group-transaction"));
+    };
+    let mut ids = std::collections::HashSet::with_capacity(events.len());
+    if author.0.is_empty() || actor.is_some_and(|expected| author.0.as_str() != expected) || transaction.id.is_empty() ||
+        !atomic_group::is_atomic_backbone_tool(&transaction.tool) || events.iter().any(|event|
+        event.document_id.0 != document || &event.actor != author || event.transaction.as_ref() != Some(transaction)
+        || event.mutation_id.0.is_empty() || !ids.insert(event.mutation_id.0.as_str())
+    ) {
+        return Err(document_backbone_batch_malformed(0, "atomic-group-binding"));
+    }
+    Ok(VerifiedAtomicEdit { edit_id, events })
+}
+
+/// 📜️ Preserves the authoring Store edit identity with its complete operation sequence.
+pub struct VerifiedAtomicEdit {
+    edit_id: String,
+    events: Vec<MutationEnvelope>,
+}
+
+impl VerifiedAtomicEdit {
+    pub fn edit_id(&self) -> &str { &self.edit_id }
+    pub fn events(&self) -> &[MutationEnvelope] { &self.events }
+    pub fn into_parts(self) -> (String, Vec<MutationEnvelope>) { (self.edit_id, self.events) }
+}
+
+fn decode_document_backbone_envelopes_bounded(
+    bytes: &(impl ByteReadSource+?Sized), limits: DocumentBackboneBatchLimitsV1, ceiling: DocumentBackboneBatchLimitsV1,
+) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
     if limits.maximum_bytes > ceiling.maximum_bytes
         || limits.maximum_envelopes > ceiling.maximum_envelopes
         || limits.maximum_dependencies_per_envelope > ceiling.maximum_dependencies_per_envelope
@@ -248,10 +315,11 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &(impl ByteRe
             target.push(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
         }
         let diff_schema = semio_framework_replication_ids::SchemaId(read_document_backbone_text(bytes, &mut position, limits.maximum_schema_bytes, "schema-bytes")?);
-        let diff_payload = read_document_backbone_payload(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes))?;
+        let operation_limit = DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES.min(limits.maximum_payload_bytes.saturating_sub(total_payload_bytes));
+        let diff_payload = read_document_backbone_payload(bytes, &mut position, operation_limit)?;
         total_payload_bytes += diff_payload.len();
         let inverse_schema = semio_framework_replication_ids::SchemaId(read_document_backbone_text(bytes, &mut position, limits.maximum_schema_bytes, "schema-bytes")?);
-        let inverse_payload = read_document_backbone_payload(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes))?;
+        let inverse_payload = read_document_backbone_payload(bytes, &mut position, operation_limit - diff_payload.len())?;
         total_payload_bytes += inverse_payload.len();
         let timestamp = semio_framework_replication_ids::HybridLogicalTimestamp { actor: read_document_backbone_u64(bytes, &mut position)?, physical_ms: read_document_backbone_u64(bytes, &mut position)?, logical: read_document_backbone_u64(bytes, &mut position)? };
         let flags_at = position;

@@ -186,6 +186,10 @@ pub fn extension_invocation(pending: semio_framework_artifact_flow_flow::neural:
 /// 🧮️ ONE evaluation hop over `host_snapshot` into `session`, for the window it names. `retained_eval` is
 /// the evaluation text the caller already published, so an unmoved evaluation republishes nothing.
 pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut FlowEvalSession, retained_eval: Option<&str>, retained_grant: semio_framework_value::RetainedCloneGrant) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
+    evaluate_tick_with_seeds(window_id, window_kind_id, host_snapshot, session, retained_eval, retained_grant, |_| {})
+}
+
+pub fn evaluate_tick_with_seeds(window_id: &str, window_kind_id: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut FlowEvalSession, retained_eval: Option<&str>, retained_grant: semio_framework_value::RetainedCloneGrant, project: impl FnOnce(&mut std::collections::HashMap<String, semio_framework_artifact_flow_flow::neural::Dictionary>)) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
     session.begin_window_tick(window_id, retained_grant)?;
     let mut host = match host_with_session(host_snapshot, session, retained_grant) {
         Ok(host) => host,
@@ -194,7 +198,7 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semi
             return Err(error);
         }
     };
-    let more = session.tick_cold(&mut host, None);
+    let more = session.tick_cold_with_seeds(&mut host, None, project);
     let pending_extension_evals = host.take_pending_extension_evals();
     semio_s_artifact_procedural_2d_model::close_host(host)?;
     let extension_invocations: Vec<ExtensionInvocation> = pending_extension_evals.into_iter().map(|pending| {
@@ -247,7 +251,7 @@ pub use tool_run::*;
 //#endregion 🧪️Tests
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
+    semio_os_infinite_directed_presentation::split_dag_endpoint(endpoint)
 }
 
 pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {

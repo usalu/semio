@@ -31,6 +31,16 @@ The third describe-tool attempt in run `wCsXqmg` recorded 501 workspace unit adm
 
 The rolling metadata scan covers every candidate considered under the 4,096-entry limit. At the configured cadence, 2,950 distinct paths would take about 47 seconds per pass plus filesystem latency. The native watches still accelerate named events inside the first 128 selected directories. Both mechanisms require an exact observation before the child can be stopped. The census read the retained receipt and phase log without running Cargo.
 
+## Live diagnostic
+
+Both the retained Cargo and WASM compiler owners now publish one `cargo:running-source-digest-mismatch:` activity when their monitor accepts a stable byte change and cancels its child. The closed payload has a version, the admitted path bounded to 256 characters and the two exact SHA-256 digests. It uses the existing issued progress stream inside the bounded job log. Final receipt mismatches have a different activity name. Cancellation starts immediately and the already-started progress publication settles during cleanup. A progress delivery failure leaves the original concurrent-edit outcome intact.
+
+The existing native monitor and synthetic Flow fixtures verify a single exact record for proven drift and no record for same-byte rewrites, an ordinary compiler failure or a parent-side cancellation. Invalid, oversized and equal-digest records are rejected by the publisher. No Cargo or release process was started.
+
 ## Live release retry timings
 
 Generation `wqJ4HZO` recorded two exit-75 descriptor retries for changed Store Rust inputs. The first recorded 1,234.331 seconds in Cargo. The second recorded 23.760 seconds in Cargo and 52.999 seconds total. Neither log shows a completed provenance receipt. The third job began compiling on the fresh plan. These attempt logs report the changed paths and retry, while the synthetic test independently verifies early watcher cancellation.
+
+## Live digest record
+
+Generation `wAzFtU9`, descriptor attempt five, emitted exactly one `cargo:running-source-digest-mismatch:` activity before exit 75. Its retained log names the Store composition open-operation record. The admitted SHA-256 was `72a1ad2b7953ab35fd4d494e6c8fcbbcdf18bc9f861e1967139981c4ae9df093` and the monitor observed `1789bf4f3d744f3a3c548ca2ea45460d23f4f5c1090f373c542e21c847c44636`. The driver then started attempt six. This verifies the live Cargo-monitor path. Verification of live WASM recovery remains pending.

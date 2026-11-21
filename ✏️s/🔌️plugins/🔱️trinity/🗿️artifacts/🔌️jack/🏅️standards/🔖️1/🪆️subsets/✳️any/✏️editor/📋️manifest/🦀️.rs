@@ -103,7 +103,7 @@ pub fn create_trinity_jack_app() -> semio_plugin::AppDefinition {
             ])
             .action_args("runQuery", vec![
                 ActionArgDef::text("query", LocalizedLabel::native("Query", "Abfrage")),
-                ActionArgDef::text("resultsWindowId", LocalizedLabel::native("Results window", "Ergebnisfenster")).required(),
+                ActionArgDef::text("resultsWindowId", LocalizedLabel::native("Results window ID", "Ergebnisfenster-ID")),
             ])
             .action_args("loadExampleQuery", vec![
                 ActionArgDef::select("query", LocalizedLabel::native("Example", "Beispiel"), vec![
@@ -116,7 +116,7 @@ pub fn create_trinity_jack_app() -> semio_plugin::AppDefinition {
                     ActionArgOption::new("MATCH (n:Piece) WHERE n.name = 'b' DELETE n", LocalizedLabel::native("Delete Leaf", "Blatt löschen")),
                     ActionArgOption::new("MERGE (x:Piece)-[:Connection]->(y:Piece)", LocalizedLabel::native("Merge Edge", "Kante zusammenführen")),
                 ]).required(),
-                ActionArgDef::text("resultsWindowId", LocalizedLabel::native("Results window", "Ergebnisfenster")).required(),
+                ActionArgDef::text("resultsWindowId", LocalizedLabel::native("Results window ID", "Ergebnisfenster-ID")),
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")

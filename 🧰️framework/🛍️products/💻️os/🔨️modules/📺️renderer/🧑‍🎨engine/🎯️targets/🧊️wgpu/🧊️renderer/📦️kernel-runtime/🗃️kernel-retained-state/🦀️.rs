@@ -5,13 +5,13 @@ use super::*;
 //#region 🎠️KernelRuntime
 //#region 🔖️KernelPoolState
 //#region 📄️RetainedDocumentExchange
-enum RetainedPatchApply {
+pub enum RetainedPatchApply {
     Applying(UiPatchApplyProducer),
     Ready(UiPatchApplyOutcome),
     Rejected(UiPatchApplyRejected),
 }
 
-struct RetainedDocumentBuild {
+pub struct RetainedDocumentBuild {
     revision: UiRevision,
     cursor: usize,
     builder: Option<UiDocumentBuilder>,
@@ -567,7 +567,7 @@ impl MountedJobReplay {
 }
 
 #[derive(Clone, Copy)]
-struct MountedReplayRecoveryToken {
+pub struct MountedReplayRecoveryToken {
     pub index: usize,
     pub epoch: u64,
 }

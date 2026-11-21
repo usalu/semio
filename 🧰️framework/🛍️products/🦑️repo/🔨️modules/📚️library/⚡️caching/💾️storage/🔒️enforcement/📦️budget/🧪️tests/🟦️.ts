@@ -105,7 +105,7 @@ for row in rows:
 print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(fixture.elasticProductsCapacity)]);
  expect(run.exitCode,run.stderr.toString()).toBe(0);
  const independent=JSON.parse(run.stdout.toString());
- for(const row of fixture.elasticProductsCapacity){expect(validate(row),row.id).toBe(true);expect(elasticCapacityV1(rule,row.minimumBytes,row.hostFreeBytes),row.id).toBe(row.capacityBytes);expect(independent[row.id],row.id).toBe(row.capacityBytes);expect(row.capacityBytes%1048576).toBe(0);expect(row.capacityBytes).toBeGreaterThanOrEqual(row.minimumBytes);}
+ for(const row of fixture.elasticProductsCapacity){expect(validate(row),row.id).toBe(true);const minimum=row.usesPolicyMinimum?rule.minimumBytes:row.minimumBytes;expect(elasticCapacityV1(rule,minimum,row.hostFreeBytes),row.id).toBe(row.capacityBytes);expect(independent[row.id],row.id).toBe(row.capacityBytes);expect(row.capacityBytes%1048576).toBe(0);expect(row.capacityBytes).toBeGreaterThanOrEqual(row.minimumBytes);}
  expect(elasticCapacityV1(rule,declared,0)).toBe(declared);
  const grown=structuredClone(policy);grown.partitions.products.capacityBytes=31*2**30;grown.partitions.products.maximumLogicalBytes=31*2**30-1048576;grown.maximumBytes+=31*2**30-declared;
  const budget=readRepositoryCacheBudgetV1(grown);expect(budget.partitions.products.filesystemBytes).toBe(31*2**30-1048576);expect(budget.partitionBytes).toBe(readRepositoryCacheBudgetV1(policy).partitionBytes+31*2**30-declared);expect(budget.headroomBytes).toBe(readRepositoryCacheBudgetV1(policy).headroomBytes);

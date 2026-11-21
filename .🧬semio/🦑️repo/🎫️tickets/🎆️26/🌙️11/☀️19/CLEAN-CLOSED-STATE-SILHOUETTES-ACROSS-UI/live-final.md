@@ -1,7 +1,7 @@
 # 🧪 Latest Live Silhouette Matrix
 
-48 expected cells across eight surfaces in English and German at height 900. 47 pass · 1 findings · 0 incomplete · 0 error · 0 cancelled · 0 pending · 0 missing.
-6329 targets, 6286 focus-visible checks, 10 findings in the validated cells.
+48 expected cells across eight surfaces in English and German at height 900. 48 pass · 0 findings · 0 incomplete · 0 error · 0 cancelled · 0 pending · 0 missing.
+6331 targets, 6286 focus-visible checks, 0 findings in the validated cells.
 
 ## Results
 
@@ -21,7 +21,7 @@
 | course | de | 375 | 12 | 12 | 0 | 1 | Pass | 2026-11-20T02:25:06.292Z |
 | os | en | 1440 | 548 | 549 | 0 | 72 | Pass | 2026-11-20T03:10:00.564Z |
 | os | en | 768 | 548 | 549 | 0 | 72 | Pass | 2026-11-20T03:11:15.063Z |
-| os | en | 375 | 454 | 455 | 10 | 72 | Findings | 2026-11-20T03:12:07.713Z |
+| os | en | 375 | 454 | 455 | 0 | 72 | Pass | 2026-11-20T16:15:27.252Z |
 | os | de | 1440 | 548 | 549 | 0 | 72 | Pass | 2026-11-20T03:13:18.430Z |
 | os | de | 768 | 548 | 549 | 0 | 72 | Pass | 2026-11-20T03:14:28.714Z |
 | os | de | 375 | 454 | 455 | 0 | 72 | Pass | 2026-11-20T03:15:21.832Z |
@@ -44,7 +44,7 @@
 | demo | de | 768 | 15 | 15 | 0 | 1 | Pass | 2026-11-20T02:26:50.542Z |
 | demo | de | 375 | 15 | 15 | 0 | 1 | Pass | 2026-11-20T02:27:04.758Z |
 | staffage | en | 1440 | 39 | 39 | 0 | 1 | Pass | 2026-11-20T03:06:56.860Z |
-| staffage | en | 768 | 33 | 33 | 0 | 1 | Pass | 2026-11-20T02:57:31.911Z |
+| staffage | en | 768 | 35 | 33 | 0 | 1 | Pass | 2026-11-20T15:50:11.516Z |
 | staffage | en | 375 | 9 | 9 | 0 | 1 | Pass | 2026-11-20T03:10:02.915Z |
 | staffage | de | 1440 | 39 | 39 | 0 | 1 | Pass | 2026-11-20T03:10:26.897Z |
 | staffage | de | 768 | 34 | 33 | 0 | 1 | Pass | 2026-11-20T03:10:45.687Z |
@@ -58,18 +58,7 @@
 
 ## Findings and gaps
 
-### os en at 375 × 900
-
-- window-rich-folded / hover / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-folded / focus / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-utility / hover / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-utility / focus / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-actions / hover / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-actions / focus / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-open / hover / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-open / focus / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-many / hover / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
-- window-rich-many / focus / button#framework.window.a.measures.unfold &quot;Window Options&quot; · left open 30.4–52.8
+No findings recorded in the available cells.
 
 ## Scope
 
@@ -79,4 +68,4 @@
 - The probe checks the rendered viewport, simulates pointer transitions and records focus-visible checks. Clipped controls and unvisited app states remain outside the measured scope.
 - Target limits are 30 per Elements story, 20 per OS story and 50 in Staffage.
 
-Generated 2026-11-20T03:34:55+00:00.
+Generated 2026-11-20T16:15:57+00:00.

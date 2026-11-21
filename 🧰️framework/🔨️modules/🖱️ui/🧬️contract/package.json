@@ -13,6 +13,7 @@
     "./builder/retirement/testing/built-tree-retirement": "./🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts",
     "./caret-cadence/testing/fixtures.json": "./⌨️caret-cadence/🧪️tests/🧫️fixtures/🔣️.json",
     "./component": "./🧩️component/🟦️.ts",
+    "./window-resource": "./🚚️window-resource/🟦️.ts",
     "./limits": "./🛡️limits/🟦️.ts",
     "./presentation/accessibility": "./🖼️presentation/♿️accessibility/🟦️.ts",
     "./presentation/host-temporal-format": "./🖼️presentation/🕰️host-temporal-format/🟦️.ts",

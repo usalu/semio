@@ -1994,7 +1994,8 @@
               "w": 0.44,
               "h": 0.04,
               "region": "sump",
-              "material": "water"
+              "material": "water",
+              "penMm": 0.18
             },
             {
               "id": "bulkhead",
@@ -2080,7 +2081,8 @@
               "w": 0.4,
               "h": 0.04,
               "region": "sump",
-              "material": "water"
+              "material": "water",
+              "penMm": 0.18
             },
             {
               "id": "pad",
@@ -2142,7 +2144,8 @@
               "kind": "path",
               "d": "M -0.22 -0.2 L -0.15 -0.2 L -0.15 0.2 L -0.22 0.2 Z M 0.12 -0.2 L 0.22 -0.2 L 0.22 0.2 L 0.12 0.2 Z",
               "region": "sump",
-              "material": "water"
+              "material": "water",
+              "penMm": 0.18
             },
             {
               "id": "bulkhead",
@@ -3813,7 +3816,7 @@
             "material": "cellulose",
             "role": "body",
             "tone": 0.7,
-            "radii": [0.03, 0.06, 0.1],
+            "radii": [0.01, 0.01, 0.01],
             "transform": {
               "translation": [0.1, 0.2, 0.0]
             },
@@ -3827,7 +3830,7 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.35,
-            "radii": [0.045, 0.045, 0.045],
+            "radii": [0.01, 0.01, 0.01],
             "transform": {
               "translation": [0.25, 0.26, 0.0]
             },
@@ -4575,7 +4578,7 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.35,
-            "radii": [0.05, 0.05, 0.05],
+            "radii": [0.02, 0.02, 0.02],
             "transform": {
               "translation": [0.25, 0.26, 0.0]
             },
@@ -4985,7 +4988,7 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.35,
-            "radii": [0.055, 0.055, 0.055],
+            "radii": [0.03, 0.03, 0.03],
             "transform": {
               "translation": [0.25, 0.26, 0.0]
             },
@@ -5548,9 +5551,9 @@
             "role": "body",
             "tone": 0.35,
             "radii": [
-              0.055,
-              0.055,
-              0.055
+              0.03,
+              0.03,
+              0.03
             ],
             "transform": {
               "translation": [

@@ -9,3 +9,15 @@ type LayoutWindowConfig {
   activeUtility: String!
   camera: LayoutWindowCamera!
 }
+
+input LayoutWindowCameraInput {
+  x: Float!
+  y: Float!
+  zoom: Float!
+}
+
+input LayoutWindowConfigPatch {
+  activePageId: String
+  activeUtility: String
+  camera: LayoutWindowCameraInput
+}

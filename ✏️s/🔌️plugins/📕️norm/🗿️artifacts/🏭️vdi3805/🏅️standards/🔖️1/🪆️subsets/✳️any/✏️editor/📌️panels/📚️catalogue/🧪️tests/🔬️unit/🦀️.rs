@@ -32,12 +32,5 @@ fn renders_reference_tables_with_examples() {
             table.id
         );
     }
-    let cop = tables.iter().find(|t| t.id == "heat-pump-cop").expect("COP table");
-    let max_cell = cop.rows.iter().find(|r| r.id == "max").expect("max row").cells.get(1).expect("value");
-    match max_cell {
-        semio_s_plugin_norm_app_surface::CatalogueCell::Number { value, .. } => {
-            assert!((*value - semio_s_artifact_norm_vdi3805_model::SHEET_NUMERIC_BOUNDS_53_COP.1).abs() < 1e-12, "catalogue COP max must equal evaluate const");
-        }
-        _ => panic!("COP max must be numeric"),
-    };
+    assert!(tables.iter().all(|table| table.id != "heat-pump-cop" && table.id != "axial-force-domain"));
 }

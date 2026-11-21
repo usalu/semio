@@ -93,7 +93,7 @@ pub struct XlsxXmlPart {
 /// 📄️ Classifies XML-bearing package parts independently from their relationship role.
 pub fn xlsx_part_is_xml(path: &str, content_type: &str) -> bool {
     let lower_path = path.to_ascii_lowercase();
-    let lower_type = content_type.to_ascii_lowercase();
+    let lower_type = content_type.split(';').next().unwrap_or_default().to_ascii_lowercase();
     lower_path.ends_with(".xml") || lower_path.ends_with(".vml") || lower_type.ends_with("+xml") || lower_type.ends_with("/xml") || lower_type.contains("vmldrawing")
 }
 //#endregion 🔖️XmlParts
@@ -147,7 +147,7 @@ impl XlsxSnapshot {
     /// 🛡️ Refuses duplicate, mismatched, or unresolved XML/package authority.
     pub fn validate_authority(&self) -> Result<(), crate::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError> {
         use crate::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;
-        use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT;
+        use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{workbook_media_type_matches, REL_TYPE_OFFICE_DOCUMENT_STRICT};
         fn valid_path(path: &str) -> bool {
             !path.is_empty() && !path.starts_with('/') && !path.contains('\\') && path.split('/').all(|segment| !segment.is_empty() && segment != "." && segment != "..")
         }
@@ -194,8 +194,11 @@ impl XlsxSnapshot {
             return Err(XlsxError::MissingWorkbookRelationship);
         }
         let main_path = resolve_relationship_target("", &main[0].target);
-        if self.xml_part(&main_path).is_none() {
+        let Some(workbook) = self.xml_part(&main_path) else {
             return Err(XlsxError::MissingPart(main_path));
+        };
+        if !workbook_media_type_matches(&workbook.content_type) {
+            return Err(XlsxError::Malformed(format!("workbook content type does not identify an XLSX document: {main_path}")));
         }
         self.project_workbook()?;
         Ok(())

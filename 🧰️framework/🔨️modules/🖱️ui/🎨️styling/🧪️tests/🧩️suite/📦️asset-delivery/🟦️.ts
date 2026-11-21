@@ -5,17 +5,20 @@ import { assetPathFromRequest, assetTransportUrl, parseAssetDeliveryAuthority, S
 import { resolveSemioAssetRoot, semioAssetsVitePlugin, SEMIO_ASSET_ROOT } from "../../../🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
 import type { OwnedBuildMiddleware } from "@semio-tech/ui-react/build-tooling";
 import { createServer } from "node:http";
+import { EventEmitter, once } from "node:events";
 import { createHash } from "node:crypto";
 import { semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, SEMIO_FAVICON_HEAD_HTML } from "../../../🏗️builder/🌐️vite/🔖️favicon/🟦️.ts";
 import { tmpdir } from "node:os";
 import { semioEmojiIndexHtmlVitePlugin, semioBrandHtmlVitePlugins } from "../../../🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
 import { meshCollectionVitePlugin } from "../../../🏗️builder/🌐️vite/🗺️mesh-collection/🟦️.ts";
 import { tileProxyVitePlugin } from "../../../🏗️builder/🌐️vite/🛰️tile-proxy/🟦️.ts";
-import { staticDirVitePlugin, staticDirMountVitePlugins } from "../../../🏗️builder/🌐️vite/🟦️.ts";
+import { staticDirVitePlugin, staticDirMountVitePlugins, TILE_PROXY_ASSET_PROVIDER_V1 } from "../../../🏗️builder/🌐️vite/🟦️.ts";
+import { createAssetHttpServerV1 } from "@semio-tech/assets/resolver/dispatch";
 import { PassThrough } from "node:stream";
 import { serveFileWithValidatorsV1 } from "../../../🏗️builder/🌐️vite/📤️file-serving/🟦️.ts";
 import { parseFontCatalog, fontCatalogSources, resolveFontSource, parseGoogleFontWoff2Map, resolveFontFaceUrl } from "../../../🔤️fonts/🟦️.ts";
 import { ownedServer, paletteCss, repoRoot, uiCss } from "../🧰️suite-build-server/🟦️.ts";
+import tileProxyFixture from "../../🧫️fixtures/🧪️tile-proxy-status.json";
 
 describe("scrollbar selector", () => {
   it("uses the hovered owner for the WebKit thumb", () => {
@@ -170,6 +173,131 @@ describe("declared HTML entry", () => {
   });
 });
 
+describe("tile proxy upstream responses", () => {
+  it.each(["vite", "native"] as const)("preserves definitive and transient HTTP status on %s", async (delivery) => {
+    const fixture = tileProxyFixture;
+    const sandbox = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "tile-status-"));
+    let upstreamStatus = 200;
+    let upstreamRequests = 0;
+    let proxy: ReturnType<typeof createServer> | undefined;
+    const upstream = createServer((_request, response) => {
+      upstreamRequests++;
+      response.writeHead(upstreamStatus, { "Set-Cookie": fixture.setCookie, "RateLimit-Remaining": fixture.rateLimit, "Retry-After": fixture.retryAfter });
+      response.end(upstreamStatus === 200 ? fixture.tileBody : undefined);
+    }).listen(0, "127.0.0.1");
+    const origin = async (server: ReturnType<typeof createServer>): Promise<string> => {
+      if (!server.listening) await once(server, "listening");
+      const address = server.address();
+      if (address === null || typeof address === "string") throw new Error("Expected test server TCP address");
+      return `http://127.0.0.1:${address.port}`;
+    };
+    try {
+      const tileSpec = { kind: "tile-proxy", route: "/tiles", cache: "cache", upstream: `${await origin(upstream)}/{z}/{x}/{y}.png`, userAgent: "Fixture/1" } as const;
+      if (delivery === "vite") {
+        let middleware: OwnedBuildMiddleware | undefined;
+        tileProxyVitePlugin(sandbox, tileSpec)[0]!.configureServer!(ownedServer((value) => { middleware = value; }));
+        proxy = createServer((request, response) => middleware!(request, response, () => response.writeHead(404).end())).listen(0, "127.0.0.1");
+      } else {
+        proxy = createAssetHttpServerV1(sandbox, 0, [tileSpec], [TILE_PROXY_ASSET_PROVIDER_V1]);
+      }
+      const url = `${await origin(proxy)}/tiles/${fixture.tile}`;
+      const ask = async () => {
+        const response = await fetch(url);
+        expect(response.headers.get("Set-Cookie")).toBeNull();
+        expect(response.headers.get("RateLimit-Remaining")).toBeNull();
+        expect(response.headers.get("Retry-After")).toBeNull();
+        return { status: response.status, cacheControl: response.headers.get("Cache-Control"), body: await response.text() };
+      };
+      for (const status of fixture.statuses) {
+        upstreamStatus = status;
+        expect(await ask()).toEqual({ status, cacheControl: status === 200 ? "no-cache" : "no-store", body: status === 200 ? fixture.tileBody : "" });
+      }
+      expect(upstreamRequests).toBe(fixture.statuses.length);
+      expect(await ask()).toEqual({ status: 200, cacheControl: "no-cache", body: fixture.tileBody });
+      expect(upstreamRequests).toBe(fixture.statuses.length);
+    } finally {
+      for (const server of [proxy, upstream]) {
+        if (!server?.listening) continue;
+        await new Promise<void>((done, fail) => server.close((error) => error ? fail(error) : done()));
+      }
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  it.each(tileProxyFixture.concurrent.cases)("shares or retires a cold tile when $name", async ({ cancelSibling, upstreamRequests: expectedRequests }) => {
+    const fixture = tileProxyFixture;
+    const sandbox = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "tile-cold-"));
+    const cacheFile = join(sandbox, "cache", fixture.tile);
+    const events = new EventEmitter();
+    const finishUpstream = Promise.withResolvers<void>();
+    const client = new AbortController();
+    const siblingClient = new AbortController();
+    let upstreamRequests = 0;
+    let proxyRequests = 0;
+    let proxy: ReturnType<typeof createServer> | undefined;
+    const upstream = createServer((_request, response) => {
+      upstreamRequests++;
+      response.once("close", () => events.emit("upstreamClose"));
+      response.write(fixture.concurrent.chunks[0]);
+      events.emit("upstreamStarted");
+      void finishUpstream.promise.then(() => response.end(fixture.concurrent.chunks[1]));
+    }).listen(0, "127.0.0.1");
+    const deadline = AbortSignal.timeout(3500);
+    try {
+      if (!upstream.listening) await once(upstream, "listening", { signal: deadline });
+      const address = upstream.address();
+      if (!address || typeof address === "string") throw new Error("Missing upstream TCP address");
+      const spec = { kind: "tile-proxy", route: "/tiles", cache: "cache", upstream: `http://127.0.0.1:${address.port}/{z}/{x}/{y}.png`, userAgent: "Fixture/1" } as const;
+      let middleware: OwnedBuildMiddleware | undefined;
+      tileProxyVitePlugin(sandbox, spec)[0]!.configureServer!(ownedServer((value) => { middleware = value; }));
+      proxy = createServer((request, response) => {
+        middleware!(request, response, () => response.writeHead(404).end());
+        if (++proxyRequests === 2) events.emit("siblingAdmitted");
+      }).listen(0, "127.0.0.1");
+      if (!proxy.listening) await once(proxy, "listening", { signal: deadline });
+      const proxyAddress = proxy.address();
+      if (!proxyAddress || typeof proxyAddress === "string") throw new Error("Missing proxy TCP address");
+      const url = `http://127.0.0.1:${proxyAddress.port}/tiles/${fixture.tile}`;
+      const started = once(events, "upstreamStarted", { signal: deadline });
+      const first = fetch(url, { signal: AbortSignal.any([deadline, client.signal]) }).catch((error: unknown) => error);
+      await started;
+      const admitted = once(events, "siblingAdmitted", { signal: deadline });
+      const sibling = fetch(url, { signal: AbortSignal.any([deadline, siblingClient.signal]) }).catch((error: unknown) => error);
+      await admitted;
+      client.abort();
+      expect(await first).toMatchObject({ name: "AbortError" });
+      expect(existsSync(cacheFile)).toBe(false);
+      if (cancelSibling) {
+        const closed = once(events, "upstreamClose", { signal: deadline });
+        siblingClient.abort();
+        expect(await sibling).toMatchObject({ name: "AbortError" });
+        await closed;
+        expect(upstreamRequests).toBe(1);
+        expect(existsSync(cacheFile)).toBe(false);
+      }
+      finishUpstream.resolve();
+      const response = cancelSibling ? await fetch(url, { signal: deadline }) : await sibling;
+      expect(response).toBeInstanceOf(Response);
+      if (!(response instanceof Response)) throw response;
+      expect(response.status).toBe(200);
+      const body = fixture.concurrent.chunks.join("");
+      expect(await response.text()).toBe(body);
+      expect(readFileSync(cacheFile, "utf8")).toBe(body);
+      expect(upstreamRequests).toBe(expectedRequests);
+      expect(await (await fetch(url, { signal: deadline })).text()).toBe(body);
+      expect(upstreamRequests).toBe(expectedRequests);
+    } finally {
+      client.abort();
+      siblingClient.abort();
+      finishUpstream.resolve();
+      for (const server of [proxy, upstream]) {
+        if (server?.listening) await new Promise<void>((done, fail) => server.close((error) => error ? fail(error) : done()));
+      }
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  }, 5000);
+});
+
 describe("build output write authority", () => {
   it("preserves every retained byte in all seven adapters and writes only declared outputs", async () => {
     const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🛡️build-writes.json"), "utf8"));
@@ -182,6 +310,7 @@ describe("build output write authority", () => {
       put(resolve(sandbox, "📥️input/🖼️icon.ico"), fixture.payload);
       put(resolve(sandbox, SEMIO_ASSET_ROOT, "🔤️fonts/🔤️font.ttf"), fixture.payload);
       put(resolve(sandbox, "tiles/0/0/0.png"), fixture.payload);
+      for (const path of Object.values(fixture.tiles) as string[]) put(resolve(sandbox, path), fixture.payload);
       put(resolve(sandbox, "📇️catalog.json"), JSON.stringify({ $schema: "../🧬️schema/🔣️.json", version: 1, collections: [], entries: [{ url: "/mesh/🧊️model.glb", source: "📥️input/🧊️model.glb", path: "🧊️model.glb" }] }));
       for (const mode of fixture.modes) {
         const brand = semioBrandHtmlVitePlugins(sandbox, { windowTitle: "fixture", logoSvg: fixture.markup, faviconIcoPath: "📥️input/🖼️icon.ico", cnameHost: fixture.cname });
@@ -204,6 +333,12 @@ describe("build output write authority", () => {
           await item.plugin.closeBundle?.();
           if (!mode.emits && JSON.stringify(await snapshot(output)) !== JSON.stringify(before)) failures.push(key);
           if (mode.emits) for (const [path, content] of Object.entries(item.expected)) expect(readFileSync(resolve(output, path), "utf8")).toBe(content);
+          if (key === "tile" && mode.emits) {
+            expect(existsSync(resolve(output, dirname(fixture.tiles.privateStage)))).toBe(false);
+            for (const path of [fixture.tiles.retainedFile, fixture.tiles.retainedDirectory, fixture.tiles.retainedOutsideCoordinates]) {
+              expect(readFileSync(resolve(output, path), "utf8")).toBe(fixture.payload);
+            }
+          }
           expect(readFileSync(resolve(output, "📌️retained.bin"), "utf8")).toBe(fixture.payload);
         }
       }

@@ -48,7 +48,7 @@ const T200: Tables = {
   gaskin: [[-0.02, -0.006, 0.028, 0.019, 0.046], [0.03, -0.008, 0.026, 0.019, 0.045], [0.09, -0.006, 0.0175, 0.0165, 0.041], [0.145, -0.005, 0.0165, 0.0165, 0.038]],
   hindCannon: [[-0.015, -0.006, 0.0165, 0.0165, 0.038], [0.09, 0.002, 0.0165, 0.0165, 0.036]],
   paw: [[-0.006, -0.002, 0.0165, 0.0165], [0.02, -0.003, 0.02, 0.02], [0.05, 0.015, 0.0165, 0.0165]],
-  forearm: [[-0.07, -0.004, 0.029, 0.02, 0.044], [-0.02, -0.007, 0.027, 0.019, 0.042], [0.03, 0, 0.0175, 0.0165, 0.038], [0.124, 0, 0.0165, 0.0165, 0.034]],
+  forearm: [[-0.02, -0.008, 0.022, 0.0165, 0.04], [0.03, -0.002, 0.021, 0.0165, 0.038], [0.124, 0, 0.0185, 0.0165, 0.034]],
   foreCannon: [[-0.01, 0, 0.0165, 0.0165, 0.034], [0.068, 0.002, 0.0165, 0.0165, 0.033]],
   shoulder: true,
   brush: ["brush", "brush-2", "brush-tip"],
@@ -112,7 +112,7 @@ export function structure(K: Fox, fl: number, ribs: readonly number[], fine: boo
     const n = side(sd);
     const k = sx(sd);
     mem(ear(K, `${n}-ear-cartilage`, sd, BONE, 0.086, [[0.02, r(0.014), fl], [0.4, r(0.02), fl], [0.78, r(0.011), 0.65 * fl], [1, 0.005, 0.005]]), `ear-${k}`);
-    for (const i of ribs) mem(Object.assign(K.run(`${n}-rib-${i + 1}`, "thorax", ribPath(i, sd, 0.0025), BONE, { floor: 0.0025 }), { slender: true }), "thorax");
+    for (const i of ribs) mem(Object.assign(K.run(`${n}-rib-${i + 1}`, "thorax", ribPath(i, sd, i === 0 ? 0.0018 : 0.0025), BONE, { floor: 0.0018 }), { slender: true }), "thorax");
     bar(`${n}-femur`, `thigh-h${k}`, len(`thigh-h${k}`), 0.04, sd, 0.0095, 0.0095);
     bar(`${n}-tibia`, `shank-h${k}`, len(`shank-h${k}`), 0.042, sd, 0.0095, 0.007);
     bar(`${n}-metatarsals`, `metatarsus-h${k}`, len(`metatarsus-h${k}`), 0.037, sd, 0.0075, 0.007, fine ? -0.006 : 0);

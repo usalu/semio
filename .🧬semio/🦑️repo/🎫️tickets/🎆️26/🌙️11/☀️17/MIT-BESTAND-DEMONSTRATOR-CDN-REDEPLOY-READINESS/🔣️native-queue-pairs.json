@@ -1,0 +1,217 @@
+{
+  "pairs": [
+    {
+      "roots": [
+        "a",
+        "b"
+      ],
+      "status": 0,
+      "summaries": [
+        [
+          2,
+          0
+        ]
+      ],
+      "receipts": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "roots": [
+        "c",
+        "d"
+      ],
+      "status": 75,
+      "summaries": [
+        [
+          2,
+          0
+        ]
+      ],
+      "receipts": [
+        "c",
+        "d"
+      ]
+    },
+    {
+      "roots": [
+        "e",
+        "f"
+      ],
+      "status": 75,
+      "summaries": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "receipts": [
+        "e",
+        "f"
+      ]
+    },
+    {
+      "roots": [
+        "g",
+        "h"
+      ],
+      "status": 0,
+      "summaries": [
+        [
+          1,
+          0
+        ]
+      ],
+      "receipts": [
+        "g",
+        "h"
+      ]
+    },
+    {
+      "roots": [
+        "i",
+        "j"
+      ],
+      "status": 0,
+      "summaries": [
+        [
+          2,
+          0
+        ]
+      ],
+      "receipts": [
+        "i"
+      ]
+    },
+    {
+      "roots": [
+        "k",
+        "l"
+      ],
+      "status": 2,
+      "summaries": [
+        [
+          2,
+          0
+        ]
+      ],
+      "receipts": [
+        "k",
+        "l"
+      ]
+    },
+    {
+      "roots": [
+        "n",
+        "o"
+      ],
+      "status": 0,
+      "summaries": [
+        [
+          2,
+          0
+        ]
+      ],
+      "receipts": [
+        "n",
+        "o"
+      ],
+      "uncertified": [
+        "o"
+      ]
+    }
+  ],
+  "singleFailures": [
+    "f"
+  ],
+  "tail": "m",
+  "expect": {
+    "attempts": [
+      [
+        "a",
+        "b"
+      ],
+      [
+        "c",
+        "d"
+      ],
+      [
+        "e",
+        "f"
+      ],
+      [
+        "e"
+      ],
+      [
+        "f"
+      ],
+      [
+        "f"
+      ],
+      [
+        "g",
+        "h"
+      ],
+      [
+        "g"
+      ],
+      [
+        "h"
+      ],
+      [
+        "i",
+        "j"
+      ],
+      [
+        "i"
+      ],
+      [
+        "j"
+      ],
+      [
+        "k",
+        "l"
+      ],
+      [
+        "k"
+      ],
+      [
+        "l"
+      ],
+      [
+        "n",
+        "o"
+      ],
+      [
+        "n"
+      ],
+      [
+        "o"
+      ],
+      [
+        "m"
+      ]
+    ],
+    "confirmed": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o"
+    ]
+  }
+}

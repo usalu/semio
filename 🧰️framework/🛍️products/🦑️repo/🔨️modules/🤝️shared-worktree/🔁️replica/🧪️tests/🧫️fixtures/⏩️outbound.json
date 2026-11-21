@@ -1,0 +1,23 @@
+{
+  "large": {
+    "path": "large.bin",
+    "bytes": 67108864
+  },
+  "hint": {
+    "path": "fresh.txt",
+    "text": "independent exact source"
+  },
+  "sequence": [
+    "fresh.txt",
+    "large.bin"
+  ],
+  "replacement": "current exact content",
+  "cases": [
+    {
+      "replace": false
+    },
+    {
+      "replace": true
+    }
+  ]
+}

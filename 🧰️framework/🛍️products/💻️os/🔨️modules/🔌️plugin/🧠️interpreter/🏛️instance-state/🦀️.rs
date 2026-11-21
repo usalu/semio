@@ -13,6 +13,7 @@ pub struct CoreInstance {
     pub(super) elements: Vec<Option<Vec<Option<u32>>>>,
     pub(super) machine: Option<Machine>,
     pub(super) next_host_call: u64,
+    pub(super) preparation_storage: Option<usize>,
 }
 
 #[derive(Clone, Debug)]
@@ -81,6 +82,16 @@ impl CoreModule{
 
 impl CoreInstance {
     pub fn instantiate(module: Arc<CoreModule>) -> Result<Self, CoreError> {
+        Self::instantiate_with_storage(module, None)
+    }
+
+    pub(super) fn instantiate_preparing(module: Arc<CoreModule>, storage: usize) -> Result<Self, CoreError> {
+        let remaining = remaining_preparation_storage(&module, storage)
+            .ok_or_else(|| CoreError::State("actor preparation initial storage exceeds its budget".into()))?;
+        Self::instantiate_with_storage(module, Some(remaining))
+    }
+
+    fn instantiate_with_storage(module: Arc<CoreModule>, preparation_storage: Option<usize>) -> Result<Self, CoreError> {
         let mut instance = Self {
             memories: module
                 .memories
@@ -104,6 +115,7 @@ impl CoreInstance {
             module,
             machine: None,
             next_host_call: 1,
+            preparation_storage,
         };
         for declaration in &instance.module.globals {
             let value = instance.evaluate_const(&declaration.initializer)?;
@@ -261,6 +273,19 @@ impl CoreInstance {
         }
         Ok(())
     }
+}
+
+fn remaining_preparation_storage(module: &CoreModule, mut remaining: usize) -> Option<usize> {
+    let mut reserve = |count: usize, width: usize| {
+        remaining = remaining.checked_sub(count.checked_mul(width)?)?;
+        Some(())
+    };
+    for memory in &module.memories { reserve(pages_to_bytes(memory.minimum_pages).ok()?, 1)?; }
+    for table in &module.tables { reserve(usize::try_from(table.minimum).ok()?, size_of::<Option<u64>>())?; }
+    for segment in &module.data { reserve(segment.bytes.len(), 1)?; }
+    for segment in &module.elements { reserve(segment.values.len(), size_of::<Option<u32>>())?; }
+    reserve(module.globals.len(), size_of::<GlobalState>())?;
+    Some(remaining)
 }
 
 #[derive(Clone, Debug)]

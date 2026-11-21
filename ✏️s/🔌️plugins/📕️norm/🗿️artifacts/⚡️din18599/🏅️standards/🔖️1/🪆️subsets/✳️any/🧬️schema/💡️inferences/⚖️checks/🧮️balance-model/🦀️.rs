@@ -7,14 +7,30 @@ const RHO_CA: f64 = DIN_V_18599_1_RHO_CA;
 /// ⚡️ GEG Annex 4 / DIN V 18599-10 primary energy factors f_p (non-renewable).
 pub fn primary_energy_factor(carrier: &str) -> f64 {
     use geg_anlage4_primary_energy_factors as f;
+    let code = annex_energy_carrier(carrier);
+    f::ROWS.iter()
+        .find(|row| row.carrier == code)
+        .and_then(|row| row.factor)
+        .unwrap_or(if code == "district_heating" { 0.7 } else { f::NATURAL_GAS })
+}
+
+fn annex_energy_carrier(carrier: &str) -> &str {
     match carrier {
-        "natural_gas" | "gas" => f::NATURAL_GAS,
-        "heating_oil" | "oil" => f::HEATING_OIL,
-        "electricity" | "heat_pump_electric" => f::ELECTRICITY_GRID,
-        "district_heating" => f::DISTRICT_HEATING,
-        "biomass" | "wood" => f::BIOMASS,
-        _ => f::NATURAL_GAS,
+        "gas" => "natural_gas",
+        "oil" => "heating_oil",
+        "heat_pump_electric" => "electricity",
+        "wood" => "biomass",
+        _ => carrier,
     }
+}
+
+/// 🔎 The supplied carrier supports an Annex 4 screening value without plant or network-specific evidence.
+pub fn has_direct_primary_energy_factor(carrier: &str) -> bool {
+    matches!(annex_energy_carrier(carrier), "heating_oil" | "natural_gas" | "lpg" | "hard_coal" | "lignite" | "biogas" | "bio_oil" | "biomass" | "electricity")
+}
+
+pub(super) fn uses_grid_electricity(carrier: &str) -> bool {
+    annex_energy_carrier(carrier) == "electricity"
 }
 
 /// 🎛️ DIN V 18599-11 automation / BACS factor on final energy.
@@ -33,16 +49,26 @@ pub(super) fn adjacency_factor(a: Adjacency) -> f64 {
     match a {
         Adjacency::Outdoor => f::OUTDOOR,
         Adjacency::Ground => f::GROUND,
-        Adjacency::Unheated => f::UNHEATED,
+        Adjacency::Unheated | Adjacency::UnheatedAttic => f::UNHEATED,
         Adjacency::Heated => f::HEATED,
     }
 }
 
-/// 🧱 Transmission heat transfer coefficient H_T [W/K] from envelope + ΔU_WB surcharge.
+pub(super) fn heat_transferring_envelope_area(elements: &[EnvelopeElement]) -> f64 {
+    elements.iter().filter(|e| e.adjacency != Adjacency::Heated).map(|e| e.area_m2).sum()
+}
+
+fn transmission_coefficient(elements: &[EnvelopeElement], area_m2: f64, delta_u: f64, u: impl Fn(&EnvelopeElement) -> f64) -> f64 {
+    elements
+        .iter()
+        .filter(|e| e.adjacency != Adjacency::Heated)
+        .map(|e| adjacency_factor(e.adjacency) * u(e) * e.area_m2)
+        .sum::<f64>() + delta_u * area_m2
+}
+
+/// 🧱 Transmission heat transfer coefficient H_T [W/K] from the heat-transferring envelope and thermal bridges.
 pub fn transmission_loss_coefficient(doc: &Din18599Snapshot) -> f64 {
-    let sum_ua: f64 = doc.elements.iter().map(|e| adjacency_factor(e.adjacency) * e.u_value_w_m2k * e.area_m2).sum();
-    let a_env: f64 = doc.elements.iter().map(|e| e.area_m2).sum();
-    sum_ua + doc.delta_u_wb_w_m2k * a_env
+    transmission_coefficient(&doc.elements, heat_transferring_envelope_area(&doc.elements), doc.delta_u_wb_w_m2k, |e| e.u_value_w_m2k)
 }
 
 /// 🌬️ Ventilation heat transfer coefficient H_V [W/K] (DIN V 18599-6).
@@ -50,53 +76,33 @@ pub fn ventilation_loss_coefficient(doc: &Din18599Snapshot) -> f64 {
     zone_balances(doc, &doc.elements, doc.delta_u_wb_w_m2k).iter().map(|z| z.h_v).sum()
 }
 
-/// 🏠️ Specific transmission heat loss H′T [W/(m²·K)] — H_T / A with A = heat-transferring envelope area (GEG).
+/// 🏠️ Specific transmission heat loss H′T [W/(m²·K)] through the heat-transferring envelope.
 pub fn h_t_prime(doc: &Din18599Snapshot) -> f64 {
-    let a_env: f64 = doc.elements.iter().map(|e| e.area_m2).sum::<f64>().max(1e-9);
-    transmission_loss_coefficient(doc) / a_env
+    let area_m2 = heat_transferring_envelope_area(&doc.elements);
+    transmission_coefficient(&doc.elements, area_m2, doc.delta_u_wb_w_m2k, |e| e.u_value_w_m2k) / area_m2.max(1e-9)
 }
 
-/// 📏 GEG §16 / Anlage 2 H′T limit for residential by attachment and A_N.
-pub fn geg_ht_prime_limit(attachment: Attachment, a_n: f64) -> f64 {
-    use geg_anlage2_ht_prime_limits as lim;
-    let small = a_n <= lim::AN_THRESHOLD_M2;
-    match attachment {
-        Attachment::Detached => if small { lim::DETACHED_AN_LE_350 } else { lim::DETACHED_AN_GT_350 },
-        Attachment::SemiDetached | Attachment::EndTerrace => if small { lim::SEMI_OR_END_AN_LE_350 } else { lim::SEMI_OR_END_AN_GT_350 },
-        Attachment::MidTerrace => lim::MID_TERRACE,
+/// 📏 GEG § 16 limit H′T for the same-geometry residential reference envelope under Annex 1.
+pub fn geg_ht_prime_limit(doc: &Din18599Snapshot) -> Option<f64> {
+    let area_m2 = heat_transferring_envelope_area(&doc.elements);
+    if !area_m2.is_finite() || area_m2 <= 0.0 {
+        return None;
     }
+    let reference_ht = transmission_coefficient(&doc.elements, area_m2, GEG_ANLAGE1_DELTA_U_WB_REF, reference_u);
+    Some(GEG_SECTION_16_HT_PRIME_RATIO * reference_ht / area_m2)
 }
 
-/// 🧱 GEG Anlage 2 reference U-values by element kind.
-pub fn reference_u(kind: ElementKind) -> f64 {
-    use geg_anlage2_reference_u as u;
-    match kind {
-        ElementKind::Wall => u::WALL,
+/// 🪟️ GEG Annex 1 reference transmittance for a represented residential envelope component.
+pub fn reference_u(element: &EnvelopeElement) -> f64 {
+    use geg_anlage1_reference_u as u;
+    match element.kind {
+        ElementKind::Wall | ElementKind::Floor if element.adjacency == Adjacency::Outdoor => u::WALL_AND_FLOOR_TO_OUTDOORS,
+        ElementKind::Wall | ElementKind::Floor | ElementKind::GroundSlabPerimeter | ElementKind::GroundSlabInterior => u::WALL_AND_FLOOR_TO_GROUND_OR_UNHEATED,
         ElementKind::Roof => u::ROOF,
-        ElementKind::Floor => u::FLOOR,
-        ElementKind::Window => u::WINDOW,
+        ElementKind::Window | ElementKind::GlazedDoor | ElementKind::CurtainWall => u::WINDOW,
+        ElementKind::RoofGlazing | ElementKind::RoofWindow | ElementKind::RooflightStrip => u::ROOF_GLAZING,
+        ElementKind::RoofDome => u::ROOF_DOME,
         ElementKind::Door => u::DOOR,
-    }
-}
-
-/// 📊 Mean U for non-residential GEG Anlage 3 (by element kind groups).
-pub fn mean_u_for_kind(doc: &Din18599Snapshot, kind: ElementKind) -> Option<(f64, f64)> {
-    let (area, ua) = doc
-        .elements
-        .iter()
-        .filter(|e| e.kind == kind)
-        .fold((0.0, 0.0), |(a, ua), e| (a + e.area_m2, ua + e.u_value_w_m2k * e.area_m2));
-    if area <= 0.0 {
-        None
-    } else {
-        let limit = match kind {
-            ElementKind::Wall => geg_anlage3_mean_u::WALL,
-            ElementKind::Roof => geg_anlage3_mean_u::ROOF,
-            ElementKind::Floor => geg_anlage3_mean_u::FLOOR,
-            ElementKind::Window => geg_anlage3_mean_u::WINDOW,
-            ElementKind::Door => geg_anlage3_mean_u::DOOR,
-        };
-        Some((ua / area, limit))
     }
 }
 
@@ -151,11 +157,12 @@ pub struct ZoneBalance {
     pub q_l_kwh: f64,
     pub area_m2: f64,
     pub volume_m3: f64,
+    pub months: Vec<HeatingMonth>,
 }
 
-fn zone_transmission(elements: &[&EnvelopeElement], delta_u: f64, volume_share: f64, a_env_total: f64) -> f64 {
-    let sum_ua: f64 = elements.iter().map(|e| adjacency_factor(e.adjacency) * e.u_value_w_m2k * e.area_m2).sum();
-    sum_ua + delta_u * a_env_total * volume_share
+fn zone_transmission(elements: &[&EnvelopeElement], thermal_bridge_w_k: f64) -> f64 {
+    let sum_ua: f64 = elements.iter().filter(|e| e.adjacency != Adjacency::Heated).map(|e| adjacency_factor(e.adjacency) * e.u_value_w_m2k * e.area_m2).sum();
+    sum_ua + thermal_bridge_w_k
 }
 
 fn zone_ventilation_hv(zone: &ThermalZone, doc: &Din18599Snapshot, volume_share: f64) -> f64 {
@@ -181,8 +188,10 @@ pub struct HeatingMonth {
 }
 
 /// 📅 The twelve monthly balances of `zone` against `climate`.
-pub fn heating_months(zone: &ThermalZone, z_elems: &[&EnvelopeElement], climate: &MonthlyClimate, h_t: f64, h_v: f64) -> Vec<HeatingMonth> {
+fn heating_months(doc: &Din18599Snapshot, zone: &ThermalZone, z_elems: &[&EnvelopeElement], h_t: f64, h_v: f64) -> Vec<HeatingMonth> {
+    let climate = &doc.climate;
     let a = utilization_parameter(zone, h_t + h_v);
+    let internal_gains = internal_gains_w_m2(doc, zone);
     (0..12)
         .map(|m| {
             let hours = 24.0 * DIN_V_18599_1_DAYS_PER_MONTH[m];
@@ -190,9 +199,8 @@ pub fn heating_months(zone: &ThermalZone, z_elems: &[&EnvelopeElement], climate:
             let dt = (zone.theta_i_heat_c - te).max(0.0);
             let q_t = h_t * dt * hours / 1000.0;
             let q_v = h_v * dt * hours / 1000.0;
-            let q_i = zone.internal_gains_w_m2 * zone.area_m2 * hours / 1000.0;
-            let g_h = climate.g_h_w_m2[m];
-            let q_s: f64 = z_elems.iter().filter(|e| e.g_value > 0.0).map(|e| g_h * orientation_solar_factor(e.orientation_deg, e.tilt_deg) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * hours / 1000.0).sum();
+            let q_i = internal_gains * zone.area_m2 * hours / 1000.0;
+            let q_s: f64 = z_elems.iter().filter(|e| e.kind.transmits_solar_radiation() && e.g_value > 0.0).map(|e| solar_irradiance_for_element(climate, m, e) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * hours / 1000.0).sum();
             let loss = q_t + q_v;
             let gain = q_i + q_s;
             let gamma = if loss <= 1e-9 { 1e9 } else { gain / loss };
@@ -208,17 +216,24 @@ pub fn heating_months(zone: &ThermalZone, z_elems: &[&EnvelopeElement], climate:
 
 /// 🧮 Zone-level balances; building totals aggregate these.
 pub fn zone_balances(doc: &Din18599Snapshot, elements: &[EnvelopeElement], delta_u: f64) -> Vec<ZoneBalance> {
-    let climate = &doc.climate;
-    let a_env_total: f64 = elements.iter().map(|e| e.area_m2).sum::<f64>().max(1e-9);
+    let a_env_total = heat_transferring_envelope_area(elements);
+    zone_balances_with_bridges(doc, elements, |_, _, share| delta_u * a_env_total * share)
+}
+
+pub(super) fn zone_balances_with_bridges(
+    doc: &Din18599Snapshot,
+    elements: &[EnvelopeElement],
+    thermal_bridge_w_k: impl Fn(&ThermalZone, &[&EnvelopeElement], f64) -> f64,
+) -> Vec<ZoneBalance> {
     let v_net: f64 = doc.zones.iter().map(|z| z.volume_m3).sum::<f64>().max(1e-9);
     let mut out = Vec::with_capacity(doc.zones.len());
     for zone in &doc.zones {
         let z_elems = elements_for_zone(elements, &zone.id);
         let share = zone.volume_m3 / v_net;
-        let h_t = zone_transmission(&z_elems, delta_u, share, a_env_total);
+        let h_t = zone_transmission(&z_elems, thermal_bridge_w_k(zone, &z_elems, share));
         let h_v = zone_ventilation_hv(zone, doc, share);
         let row = usage_profile_row(zone.usage_profile);
-        let months = heating_months(zone, &z_elems, climate, h_t, h_v);
+        let months = heating_months(doc, zone, &z_elems, h_t, h_v);
         let q_h: f64 = months.iter().map(|m| m.q_h_kwh).sum();
         let q_c: f64 = months.iter().map(|m| m.q_c_kwh).sum();
         let q_l = zone.lighting_power_w_m2 * zone.area_m2 * row.lighting_hours_a * doc.lighting.control_factor / 1000.0;
@@ -231,6 +246,7 @@ pub fn zone_balances(doc: &Din18599Snapshot, elements: &[EnvelopeElement], delta
             q_l_kwh: q_l,
             area_m2: zone.area_m2,
             volume_m3: zone.volume_m3,
+            months,
         });
     }
     out
@@ -239,29 +255,23 @@ pub fn zone_balances(doc: &Din18599Snapshot, elements: &[EnvelopeElement], delta
 /// 📅 The monthly heating balance of every zone of the actual building, by zone id.
 pub fn zone_heating_months(doc: &Din18599Snapshot) -> Vec<(String, Vec<HeatingMonth>)> {
     zone_balances(doc, &doc.elements, doc.delta_u_wb_w_m2k)
-        .iter()
-        .zip(&doc.zones)
-        .map(|(balance, zone)| (zone.id.clone(), heating_months(zone, &elements_for_zone(&doc.elements, &zone.id), &doc.climate, balance.h_t, balance.h_v)))
+        .into_iter()
+        .map(|balance| (balance.zone_id, balance.months))
         .collect()
 }
 
-fn orientation_solar_factor(orientation_deg: f64, tilt_deg: f64) -> f64 {
-    use din_v_18599_2_solar_geometry_factors as s;
-    let az = orientation_deg.rem_euclid(360.0);
-    let from_south = (az - 180.0).abs().min(360.0 - (az - 180.0).abs());
-    let horiz = s::NORTH_HORIZ + (s::SOUTH_HORIZ - s::NORTH_HORIZ) * (1.0 - from_south / 180.0);
-    let t = tilt_deg.clamp(0.0, 90.0) / 90.0;
-    let tilt = s::LOW_TILT + (s::STEEP_TILT - s::LOW_TILT) * t;
-    horiz * tilt
+fn solar_irradiance_for_element(climate: &MonthlyClimate, month: usize, element: &EnvelopeElement) -> f64 {
+    let horizontal_reference = semio_s_artifact_norm_din18599_model::schema::snapshot::POTSDAM_HORIZONTAL_IRRADIANCE_W_M2[month];
+    potsdam_irradiance_w_m2(month, element.orientation_deg, element.tilt_deg)
+        .map_or(0.0, |plane| climate.g_h_w_m2[month] * (plane / horizontal_reference))
 }
 
 /// ☀️ Monthly solar gains Q_S,m [kWh] from fenestration (DIN V 18599-2).
 pub fn solar_gains_month_kwh(doc: &Din18599Snapshot, climate: &MonthlyClimate, month: usize) -> f64 {
-    let irr = climate.g_h_w_m2[month];
     doc.elements
         .iter()
-        .filter(|e| e.g_value > 0.0)
-        .map(|e| irr * orientation_solar_factor(e.orientation_deg, e.tilt_deg) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * 24.0 * DIN_V_18599_1_DAYS_PER_MONTH[month] / 1000.0)
+        .filter(|e| e.kind.transmits_solar_radiation() && e.g_value > 0.0)
+        .map(|e| solar_irradiance_for_element(climate, month, e) * e.area_m2 * e.g_value * e.fc.clamp(0.0, 1.0) * 24.0 * DIN_V_18599_1_DAYS_PER_MONTH[month] / 1000.0)
         .sum()
 }
 
@@ -309,6 +319,14 @@ pub fn cooling_utilization(gamma: f64, a: f64) -> f64 {
     }
 }
 
+/// ☀️ Modelled renewable electricity generation, eligible electricity demand and bounded credit for a month.
+#[derive(Clone, Copy, Debug)]
+pub struct RenewableElectricityMonth {
+    pub generation_kwh: f64,
+    pub eligible_electricity_kwh: f64,
+    pub credit_kwh: f64,
+}
+
 /// 🧮 Derived monthly / annual balance quantities.
 #[derive(Clone, Debug)]
 pub struct BalanceDerived {
@@ -318,6 +336,7 @@ pub struct BalanceDerived {
     pub a_over_v_e: f64,
     pub q_h_nd_kwh: f64,
     pub q_c_nd_kwh: f64,
+    pub q_w_useful_kwh: f64,
     pub q_w_kwh: f64,
     pub q_l_kwh: f64,
     pub q_f_heat_kwh: f64,
@@ -326,6 +345,7 @@ pub struct BalanceDerived {
     pub q_f_light_kwh: f64,
     pub q_f_aux_kwh: f64,
     pub q_pv_kwh: f64,
+    pub renewable_electricity_months: [RenewableElectricityMonth; 12],
     pub q_p_kwh: f64,
     pub q_p_ref_kwh: f64,
     pub q_p_limit_kwh: f64,

@@ -288,7 +288,7 @@ pub struct CanvasGradientStopJson {
 
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CanvasStrokeJson {
+pub struct CanvasStrokeJson {
     #[serde(default)]
     pub color: Option<Vec<f64>>,
     #[serde(default)]
@@ -307,7 +307,7 @@ pub(crate) struct CanvasStrokeJson {
 
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CanvasImageFieldJson {
+pub struct CanvasImageFieldJson {
     #[serde(default)]
     pub src: Option<String>,
     #[serde(default)]
@@ -318,7 +318,7 @@ pub(crate) struct CanvasImageFieldJson {
 
 #[derive(Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CanvasTextFieldJson {
+pub struct CanvasTextFieldJson {
     #[serde(default)]
     pub content: Option<String>,
     #[serde(default)]

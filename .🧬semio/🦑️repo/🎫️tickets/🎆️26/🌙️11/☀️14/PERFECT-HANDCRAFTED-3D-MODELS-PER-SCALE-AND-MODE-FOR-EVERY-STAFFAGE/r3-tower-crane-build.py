@@ -75,7 +75,7 @@ def slewing_members(part, body, sc):
 
 def scaled(s, sc):
     """📏 Joint, mass and support markers of the structure sized for the scale: grown by half a smallest feature so that each scale states its own (B3, B5)."""
-    if s.get("part") not in ("joint", "mass", "support") or "of" in s:
+    if s.get("part") not in ("joint", "mass", "support") or "of" in s or s["id"].startswith("joint-counter-heel"):
         return s
     f = K.FEAT[sc] / 2
     s = copy.deepcopy(s)
@@ -160,6 +160,10 @@ def roots(vols, views):
         g = a["representations"][str(sc)]["geometry"]
         for v in ("elevation", "front", "plan"):
             g[v] = [s for s in g[v] if kept_shape(s, sc)] + views[sc][v]
+        if sc == 50:
+            for s in g["elevation"]:
+                if s["kind"] == "member" and (s["id"].startswith(("mast-chord-", "counter-chord-", "jib-rail-")) or s["id"] == "jib-chord"):
+                    s.update(filled=True, penMm=0.18)
     sym = a["symbols"][0]["geometry"]
     fix = {
         "elevation-ballast": {"x": -3.5, "y": 0, "w": 7, "h": 1.5},

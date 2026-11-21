@@ -1,0 +1,8 @@
+# Ready Workspace Mirror at 14:22 UTC
+
+Read-only observations on 2026-11-21 from `/Users/Shared/semio-store/v1/origins`, with no process or state changes. All four sampled `ready.json` records report the same digest `31932145c00730a8d8f62d7f14f953b36d38dbf596a5a39595467f0113d1492c`, `state=running`, `ready=false`, `stage=workspace` (5/5), `exit=null`, and adopted existing work. These are in progress, not terminal Ready or failure; old non-null `readyMs` is not current readiness.
+
+- m03: workspace log transitions between elapsed slice 7332 s, leader `owners done (pass 9) 66 of 66`, and 7368 s, leader `checking the file inventory` with 181372 source observations, 22 completed owner checks and 245120 verified memo rows. The Ready workspace process remains waiting behind this leader; this is a leader phase transition, not Ready completion.
+- m07: elapsed slice 1559 to 1633 s advances from 814 owner checks and 572672 verified memo rows to 1297 checks and 1013888 rows. The verified row count remains 1013888 from 1577 through 1633 s while owner checks advance 1271 to 1297. This is a verified-prefix plateau, not evidence that the overall work stopped.
+- m12: pass 2 taken advances from 117/600 at slice 19763 s to 133/600 at 20138 s; the displayed prefix is 133/600 from 20070 through 20138 s. It remains running. Slow owner acquisition across a >20000 s graph slice is a concrete next bottleneck to investigate, without inferring its underlying cause from this mirror.
+- m02: taken advances 223/600 at slice 7393 s to 225/600 at 7447 s. Its adopted supervisor PID changed from 57920 to 64901 between reads, but the stage stayed running and the slice advanced; this alone is not a stage failure or completion.

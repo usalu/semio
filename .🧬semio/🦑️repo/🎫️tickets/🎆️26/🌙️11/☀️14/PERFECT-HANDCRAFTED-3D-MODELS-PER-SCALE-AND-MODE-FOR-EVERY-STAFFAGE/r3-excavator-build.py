@@ -57,7 +57,7 @@ def rig():
         {"id": "slew-ring", "parent": "undercarriage", "title": T("Slew ring (vertical axis)", "Drehkranz (senkrechte Achse)"), "x": 0, "y": 0.94, "angleDeg": 90, "lengthM": 0.12, "joint": rev(0, 0)},
         {"id": "upper", "parent": "slew-ring", "title": T("Upper structure with cab (turns on the slew ring)", "Oberwagen mit Kabine (dreht auf dem Drehkranz)"), "x": 0.12, "y": 0, "angleDeg": -90, "lengthM": 3.82, "joint": {"type": "fixed"}, "mass": mass(5300, -0.35, 0.62)},
         {"id": "counterweight", "parent": "upper", "title": T("Counterweight", "Gegengewicht"), "x": -F.TAIL, "y": 0, "angleDeg": 0, "lengthM": F.CW_FRONT, "joint": {"type": "fixed"}, "mass": mass(4200, 0.32, 0.58)},
-        {"id": "engine", "parent": "upper", "title": T("Diesel engine and pumps", "Dieselmotor und Pumpen"), "x": -2.15, "y": 0.40, "angleDeg": 0, "lengthM": 0.72, "joint": {"type": "fixed"}, "mass": mass(900, 0.36, 0.33)},
+        {"id": "engine", "parent": "upper", "title": T("Diesel engine and pumps", "Dieselmotor und Pumpen"), "x": -2.03, "y": 0.40, "angleDeg": 0, "lengthM": 0.72, "joint": {"type": "fixed"}, "mass": mass(900, 0.36, 0.33)},
         {"id": "boom", "parent": "upper", "title": T("Boom", "Ausleger"), "x": A[0], "y": A[1], "angleDeg": REST[0], "lengthM": K.BOOM, "joint": rev(math.ceil((LIM["boom"][0] - REST[0]) * 10) / 10, math.floor((LIM["boom"][1] - REST[0]) * 10) / 10), "mass": mass(1750, 2.55, 0.42)},
         {"id": "stick", "parent": "boom", "title": T("Stick", "Löffelstiel"), "x": K.BOOM, "y": 0, "angleDeg": REST[1], "lengthM": K.STICK, "joint": rev(math.ceil((LIM["stick"][0] - REST[1]) * 10) / 10, math.floor((LIM["stick"][1] - REST[1]) * 10) / 10), "mass": mass(900, 1.05, 0.10)},
         {"id": "bucket", "parent": "stick", "title": T("Bucket", "Löffel"), "x": K.STICK, "y": 0, "angleDeg": REST[2], "lengthM": K.TIP, "joint": rev(math.ceil((LIM["bucket"][0] - REST[2]) * 10) / 10, math.floor((LIM["bucket"][1] - REST[2]) * 10) / 10), "mass": mass(820, 0.62, 0.36)},
@@ -96,12 +96,18 @@ def bucket_low(th, sg, be):
     return min(K.add(p["G"], K.rot(q, th + sg + be))[1] for q in pts) + K.DECK
 
 
+def linkage_low(th, sg, be):
+    """Lowest point of the bucket and of its link pins with their bosses above the ground."""
+    p = K.chain(th, sg, be)
+    return min(bucket_low(th, sg, be), min(p["K"][1], p["J"][1], p["I"][1]) + K.DECK - 0.11)
+
+
 def stowed():
-    sg, be = -136.0, -100.0
-    lo, hi = 0.0, 30.0
+    sg, be = -139.0, -140.0
+    lo, hi = -10.0, 30.0
     for _ in range(50):
         m = (lo + hi) / 2
-        if bucket_low(m, sg, be) < 0.12:
+        if linkage_low(m, sg, be) < 0.01:
             lo = m
         else:
             hi = m
@@ -147,7 +153,7 @@ def roots(asset):
         if an["id"].startswith("track-"):
             an["z"] = F.GAUGE if an["z"] > 0 else -F.GAUGE
         if an["id"] == "stack-mouth":
-            an.update({"x": -1.80, "y": 1.74, "z": -1.02})
+            an.update({"x": -1.68, "y": 1.74, "z": -1.02})
         if an["id"] == "bucket-cog":
             an.update({"x": 0.62, "y": 0.36})
     poses = {"stowed": stowed(), "digging": at(6.6, 0.0, -100), "raised-boom": (40.0, -40.0, -140.0)}
@@ -157,7 +163,7 @@ def roots(asset):
     cog = K.add(raised["G"], K.rot((0.62, 0.36), sum(poses["raised-boom"])))
     reach, height = round(cog[0], 1), round(cog[1] + K.DECK, 1)
     by = {p["id"]: p for p in a["poses"]}
-    by["stowed"]["description"] = T("Parked for transport: boom lowered, stick folded under the boom and the curled bucket just above the ground; engine and hydraulics cold.", "Für den Transport abgestellt: Ausleger gesenkt, Stiel unter den Ausleger geklappt, der eingerollte Löffel knapp über dem Boden; Motor und Hydraulik kalt.")
+    by["stowed"]["description"] = T("Parked for transport: boom lowered, stick folded under the boom and the fully curled bucket with its links resting just above the ground; engine and hydraulics cold.", "Für den Transport abgestellt: Ausleger gesenkt, Stiel unter den Ausleger geklappt, der ganz eingerollte Löffel mit seinen Laschen knapp über dem Boden; Motor und Hydraulik kalt.")
     by["digging"]["description"] = T("Bucket teeth on the ground 6.6 m from the swing axis with 1.3 t of soil in the bucket; engine at 80 % load.", "Löffelzähne auf dem Boden 6,6 m von der Schwenkachse mit 1,3 t Boden im Löffel; Motor bei 80 % Last.")
     by["raised-boom"]["description"] = T("Boom raised to 40 degrees with the stick stretched out level: the loaded bucket hangs %s m from the swing axis and %s m above the ground with 1.3 t, the tipping-critical lever arm; the rear track patches unload." % (reach, height), "Ausleger auf 40 Grad gehoben, Stiel waagerecht ausgestreckt: der beladene Löffel hängt %s m von der Schwenkachse und %s m über dem Boden mit 1,3 t, der kippkritische Hebelarm; die hinteren Kettenstandflächen werden entlastet." % (str(reach).replace(".", ","), str(height).replace(".", ",")))
     clips = {c["id"]: c for c in a["clips"]}

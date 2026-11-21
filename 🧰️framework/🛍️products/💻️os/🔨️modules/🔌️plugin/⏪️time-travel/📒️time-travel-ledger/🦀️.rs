@@ -24,6 +24,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     pub closing: bool,
     pub ui_dirty: bool,
     pub document_dirty: bool,
+    pub preview_due: bool,
     pub refreshed_ms: u64,
     pub refreshed_done: u32,
     pub patch_due: bool,
@@ -75,6 +76,7 @@ impl<A: ArtifactApp> Default for TimeTravelLedger<A> {
             closing: false,
             ui_dirty: false,
             document_dirty: false,
+            preview_due: false,
             refreshed_ms: 0,
             refreshed_done: 0,
             patch_due: false,
@@ -94,7 +96,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
 
     /// 🧾️ The document's field inventory is flattened into the ledger's retained cursor.
-    pub const INITIAL_FIELDS: usize = 26 + TimeTravelStoreState::<A::Snapshot, A::Mutation>::INITIAL_FIELDS;
+    pub const INITIAL_FIELDS: usize = 27 + TimeTravelStoreState::<A::Snapshot, A::Mutation>::INITIAL_FIELDS;
 
     /// 📏️ The same caller pays each selected field or absent-value byte page.
     pub fn initial_field_demands(field: usize, byte: usize, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -130,6 +132,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             23 => semio_framework_value::initialization::absent_chunk_bytes(semio_framework_value::initialization::absent_field_bytes::<SupersedeAuthoring<A::Snapshot, A::Mutation>>(), byte, body.max(1))?,
             24 => 2 * size_of::<bool>(),
             25 => 2 * size_of::<fn() -> Option<u64>>(),
+            26 => 2 * size_of::<bool>(),
             _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial ledger field cursor exceeds its inventory")),
         };
         Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
@@ -172,6 +175,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             23 => semio_framework_value::initialization::initialize_absent_field_at::<SupersedeAuthoring<A::Snapshot, A::Mutation>>(std::ptr::addr_of_mut!((*target).authoring), byte, count),
             24 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).history_unavailable).write(false); Ok(true) },
             25 => { if byte != 0 || count < 2 * size_of::<fn() -> Option<u64>>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).turn_clock).write(semio_framework_job::default_now_us); Ok(true) },
+            26 => { if byte != 0 || count < 2 * size_of::<bool>() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial field requires its complete admitted extent")); } std::ptr::addr_of_mut!((*target).preview_due).write(false); Ok(true) },
             _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "initial ledger field cursor exceeds its inventory")),
         } }
     }
@@ -296,7 +300,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     /// 🏃️ Whether a driver turn has work: a live replay, an undo or redo of a finalize being authored, retirement, an owed
     /// UI scope or an owed history patch.
     pub fn has_pending_work(&self) -> bool {
-        if self.finalize_outcome.is_some(){return true}
+        if self.finalize_outcome.is_some() || self.preview_due { return true; }
         let replaying = self.session.stage == TimeTravelStage::Replaying && self.owners().any(TimeTravelOwners::replaying);
         self.member.as_ref().is_some_and(|_|self.closing||self.session.stage==TimeTravelStage::Inactive) || self.review_children_pending() || self.command_receipt.is_some() || self.pending_command.is_some() || self.discard_cursor.is_some() || !self.command_retirements.terminal_is_empty() || replaying || self.authoring.is_some() || self.owners().any(TimeTravelOwners::has_pending_work) || self.is_ui_dirty() || self.patch_due || self.patch.is_some()
     }
@@ -386,6 +390,23 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         if self.retiring.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.retiring.capacity()*size_of::<Box<dyn TimeTravelOwners>>(),depth:1,..Default::default()});}
         Ok(Default::default())
     }
+    pub fn selected_preview_source_return(&self, body: usize) -> Result<bool, ValueError> {
+        if self.pending_command_retirement_demands(body)? != RetirementDemand::default()
+            || self.session_retirement_demands(body)? != RetirementDemand::default()
+        {
+            return Ok(false);
+        }
+        let stores = std::iter::once(&self.document as &dyn TimeTravelOwners)
+            .chain(self.member.iter().filter_map(|member| member.owners.as_deref()))
+            .chain(self.retiring.last().map(|owners| owners.as_ref()));
+        for store in stores {
+            if store.retirement_demands(body)? != RetirementDemand::default() {
+                return Ok(store.has_selected_preview_source_return());
+            }
+        }
+        Ok(false)
+    }
+
     pub fn requires_original_control(&self)->bool{self.document.requires_original_control()||self.member.as_ref().and_then(|member|member.owners.as_ref()).is_some_and(|owners|owners.requires_original_control())||self.retiring.iter().any(|owners|owners.requires_original_control())}
     pub fn retire_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneStep>,Fault>{self.retire_step_with_control(effect,None)}
     pub fn retire_step_controlled(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>{self.retire_step_with_control(effect,Some(control))}
@@ -408,11 +429,11 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
 
     /// 🚪️ Document close, instance retirement or reload: the session vanishes with every draft (ephemeral state). The
     /// typed owners settle at the runtime's close step, which reaches their stores.
-    pub fn begin_close(&mut self) { self.closing = true; }
+    pub fn begin_close(&mut self) { self.closing = true; self.preview_due = false; }
 
     /// 🔎️ Names the first field that keeps the ledger from being terminal-empty; `None` when it is.
     pub fn residue(&self) -> Option<&'static str> {
-        let held=[(self.finalize_outcome.is_some(),"finalize outcome"),(self.closing&&!self.session_retired,"unretired closing session"),(self.command_receipt.is_some(),"command receipt"),(self.pending_command.is_some(),"pending command"),(self.discard_cursor.is_some(),"discard cursor"),(!self.command_retirements.terminal_is_empty(),"command retirements"),(self.session_retirement.is_some(),"session retirement"),(self.is_active(),"active session"),(self.session.accepted.capacity()!=0,"accepted rows"),(self.session.pending.is_some(),"pending row"),(self.session.report.is_some(),"replay report"),(self.session.fault.is_some(),"session fault"),(self.editor.is_some(),"editor"),(self.member.is_some(),"member"),(self.authoring.is_some(),"authoring frontier"),(self.patch.is_some(),"patch"),(self.reprojection_fault.is_some(),"reprojection fault"),(self.deferred_history_row.is_some(),"deferred history row"),(self.retiring.capacity()!=0,"retiring owners"),(!self.owners().all(TimeTravelOwners::terminal_is_empty),"typed owners")];
+        let held=[(self.finalize_outcome.is_some(),"finalize outcome"),(self.closing&&!self.session_retired,"unretired closing session"),(self.command_receipt.is_some(),"command receipt"),(self.pending_command.is_some(),"pending command"),(self.discard_cursor.is_some(),"discard cursor"),(!self.command_retirements.terminal_is_empty(),"command retirements"),(self.session_retirement.is_some(),"session retirement"),(self.is_active(),"active session"),(self.session.accepted.capacity()!=0,"accepted rows"),(self.session.pending.is_some(),"pending row"),(self.preview_due,"pending preview"),(self.session.report.is_some(),"replay report"),(self.session.fault.is_some(),"session fault"),(self.editor.is_some(),"editor"),(self.member.is_some(),"member"),(self.authoring.is_some(),"authoring frontier"),(self.patch.is_some(),"patch"),(self.reprojection_fault.is_some(),"reprojection fault"),(self.deferred_history_row.is_some(),"deferred history row"),(self.retiring.capacity()!=0,"retiring owners"),(!self.owners().all(TimeTravelOwners::terminal_is_empty),"typed owners")];
         held.into_iter().find_map(|(held,name)|held.then_some(name))
     }
 
@@ -436,7 +457,9 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             TimeTravelStage::Choosing => HistoryTimeTravelStage::Choosing,
             TimeTravelStage::Finalizing => HistoryTimeTravelStage::Finalizing,
         };
-        let preview_progress = (session.stage == TimeTravelStage::Editing).then(|| self.preview_progress()).flatten();
+        let preview_progress = (session.stage == TimeTravelStage::Editing).then(|| {
+            self.preview_progress().or_else(|| self.preview_due.then_some(store::os_store::replay::ReplayProgress { done: 0, total: 0 }))
+        }).flatten();
         Some(HistoryTimeTravel {
             session_id: session.id.to_string(),
             generation: session.generation,

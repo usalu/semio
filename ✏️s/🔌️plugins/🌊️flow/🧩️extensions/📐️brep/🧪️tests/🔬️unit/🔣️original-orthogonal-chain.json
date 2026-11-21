@@ -1,0 +1,398 @@
+{
+  "cases": [
+    {
+      "name": "fuse fills the original cavity",
+      "operation": "fuse",
+      "a": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "b": {
+        "stock": {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "volume": 480,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          8,
+          6
+        ]
+      ],
+      "shells": 1,
+      "genus": 0
+    },
+    {
+      "name": "intersection opens a clipped cavity",
+      "operation": "intersect",
+      "a": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "b": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            5,
+            8,
+            6
+          ]
+        }
+      },
+      "volume": 192,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          5,
+          8,
+          6
+        ]
+      ],
+      "shells": 1,
+      "genus": 0
+    },
+    {
+      "name": "difference of two previously cut solids exposes their original material",
+      "operation": "cut",
+      "a": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "b": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            4,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "volume": 32,
+      "bounds": [
+        [
+          6,
+          2,
+          1
+        ],
+        [
+          8,
+          6,
+          5
+        ]
+      ],
+      "shells": 1,
+      "genus": 0
+    },
+    {
+      "name": "intersecting two orthogonal results preserves the cavity shell",
+      "operation": "intersect",
+      "a": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "b": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            3,
+            2,
+            1
+          ],
+          "size": [
+            2,
+            4,
+            4
+          ]
+        }
+      },
+      "volume": 416,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          8,
+          6
+        ]
+      ],
+      "shells": 2,
+      "genus": 0
+    }
+  ],
+  "refused": [
+    {
+      "name": "a tool contained in the existing void has no intersection",
+      "operation": "intersect",
+      "a": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "b": {
+        "stock": {
+          "origin": [
+            3,
+            3,
+            2
+          ],
+          "size": [
+            2,
+            2,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "name": "a slab divides the remaining stock into two solids",
+      "operation": "cut",
+      "a": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "b": {
+        "stock": {
+          "origin": [
+            4,
+            -1,
+            -1
+          ],
+          "size": [
+            1,
+            10,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "two distinct cavities exceed four material planes along X",
+      "operation": "cut",
+      "a": {
+        "stock": {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            10,
+            8,
+            6
+          ]
+        },
+        "void": {
+          "origin": [
+            2,
+            2,
+            1
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        }
+      },
+      "b": {
+        "stock": {
+          "origin": [
+            7,
+            2,
+            1
+          ],
+          "size": [
+            1,
+            4,
+            4
+          ]
+        }
+      }
+    }
+  ]
+}

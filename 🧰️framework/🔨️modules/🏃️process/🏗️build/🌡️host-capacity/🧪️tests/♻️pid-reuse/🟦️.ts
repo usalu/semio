@@ -33,9 +33,10 @@ test("the verdict: stale heartbeat and a process that started after the admissio
 });
 
 test("a ledger read removes the grant of a dead process, the grant of a reused pid and keeps the live ones, however old their heartbeat",()=>{
- const world=ledger(),dead=spawnSync("true").pid!,own=process.pid,ownStart=world.now-Math.round(process.uptime()*1000);
+ const world=ledger(),dead=spawnSync(process.execPath,["--eval","0"]),own=process.pid,ownStart=world.now-Math.round(process.uptime()*1000);
+ expect(dead.status).toBe(0);
  const paths={
-  dead:world.add("deadgrant",dead,world.now-60_000,1000),
+  dead:world.add("deadgrant",dead.pid!,world.now-60_000,1000),
   fresh:world.add("freshgrant",own,ownStart+1000,1000),
   blocked:world.add("blockedgrant",own,ownStart+1000,10*beat),
   reused:world.add("reusedgrant",own,ownStart-3_600_000,10*beat),
@@ -46,8 +47,10 @@ test("a ledger read removes the grant of a dead process, the grant of a reused p
 });
 
 test("the start of a real process is told to within two seconds, and an unknown pid has none",()=>{
- const started=processStartMillisecondsV1(process.pid)!,expected=Date.now()-process.uptime()*1000;
- expect(Math.abs(started-expected)).toBeLessThan(2500);
- expect(processStartMillisecondsV1(spawnSync("true").pid!)).toBeUndefined();
+ const started=processStartMillisecondsV1(process.pid);
+ if(process.platform==="win32")expect(started).toBeUndefined();
+ else expect(Math.abs(started!-(Date.now()-process.uptime()*1000))).toBeLessThan(2500);
+ const dead=spawnSync(process.execPath,["--eval","0"]);
+ expect(dead.status).toBe(0);expect(processStartMillisecondsV1(dead.pid!)).toBeUndefined();
  expect(processStartMillisecondsV1(0)).toBeUndefined();expect(processStartMillisecondsV1(process.pid,"win32")).toBeUndefined();
 });

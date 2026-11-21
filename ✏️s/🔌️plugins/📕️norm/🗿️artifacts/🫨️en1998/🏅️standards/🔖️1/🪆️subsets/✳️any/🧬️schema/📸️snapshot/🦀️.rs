@@ -10,6 +10,8 @@ extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
 use semio_s_plugin_norm_compliance::AnnexChoice;
+pub use semio_s_plugin_norm_compliance::design_case;
+pub use semio_s_plugin_norm_compliance::design_case::{CaseNumber, CaseRow, CaseText};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1998 project snapshot.
@@ -84,6 +86,9 @@ pub struct En1998Snapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub critical_regions: Vec<En1998CriticalRegion>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub cases: Vec<CaseRow>,
 }
 //#endregion 🔖️Snapshot
 
@@ -243,6 +248,7 @@ impl En1998Snapshot {
             isolation_systems: vec![],
             pier_bases: vec![],
             critical_regions: vec![],
+            cases: vec![],
         }
     }
 

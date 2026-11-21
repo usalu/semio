@@ -193,6 +193,21 @@ impl KernelClient {
         }
     }
 
+    /// 🎞️ Submits one authorized original-media control, fixed page or continuation.
+    pub async fn exchange_original_media(&self, instance: u32, event: Event) -> Result<ExchangeOutcome, ProgramFault> {
+        let event = match QueuedKernelEvent::try_from_original_media(instance, event) {
+            Ok(event) => event,
+            Err(owner) => {
+                self.queue.enqueue_retained(KernelRequest::CloseRejectedEvents { owner }, Arc::new(ResponseSlot::default())).await;
+                return Err("kernel: invalid original-media crossing".into());
+            }
+        };
+        match self.submit(KernelRequest::Exchange { instance, event }).await {
+            KernelOutcome::Exchanged(result) => result,
+            _ => Err("kernel: unexpected response for original-media exchange".into()),
+        }
+    }
+
     pub async fn advance_retained(&self, instance: u32, surface: SurfaceId) -> Result<ExchangeOutcome, ProgramFault> {
         match self.submit(KernelRequest::AdvanceRetained { instance, surface }).await {
             KernelOutcome::Exchanged(result) => result,

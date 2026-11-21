@@ -1,0 +1,13 @@
+{
+  "args": {
+    "windowId": "process-workpiece",
+    "camera": {
+      "position": [1.25, -2.5, 3.75],
+      "target": [0.5, 0.25, 0.125],
+      "zoom": 1,
+      "up": [0, 0, 1]
+    }
+  },
+  "retainedFieldOfView": 37,
+  "malformedCamera": { "position": [1, 2], "target": [0, 0, 0] }
+}

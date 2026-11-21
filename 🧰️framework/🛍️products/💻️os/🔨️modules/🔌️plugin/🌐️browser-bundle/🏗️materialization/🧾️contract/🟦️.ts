@@ -1,5 +1,6 @@
 /** 🧾️ Contract of the plugin web materialization: the generated file names, the shard worker byte, heartbeat, diagnostics and drive declarations that the generated worker interpolates, and the materialization context. */
 import type { CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import type { BuildMode } from "@semio-tech/process/build-mode";
 import { SHARD_LIVENESS_POLICY } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🫀️liveness/🟦️.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
@@ -54,6 +55,7 @@ export const SHARD_TURN_DRIVE_STEP_CEILING = 512;
 
 export type PluginWebMaterializeContext = {
   readonly repoRoot: string;
+  readonly mode?: BuildMode;
   readonly environment?: Readonly<Record<string, string | undefined>>;
   readonly preview2VendorDir: string;
   readonly signal?: AbortSignal;

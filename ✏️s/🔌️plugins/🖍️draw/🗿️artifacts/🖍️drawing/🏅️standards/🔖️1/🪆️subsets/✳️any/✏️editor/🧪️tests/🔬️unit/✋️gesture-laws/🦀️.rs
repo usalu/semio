@@ -134,14 +134,14 @@ pub(super) async fn inline_selection_app() -> (DrawingAppFixture, semio_plugin::
         window_instances: vec![ViewWindowInstance { id: "drawing-canvas".into(), window_kind_id: semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::config::DrawingCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }],
         ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
-    let meta = semio_plugin::ActionMeta { view_state: Some(view.for_window_instance("drawing-canvas").expect("canvas window instance")), ..artifact_laws::meta("local") };
+    let meta = semio_plugin::ActionMeta { view_state: Some(view.for_window_instance("drawing-canvas").expect("canvas window instance").into()), ..artifact_laws::meta("local") };
     (app, meta)
 }
 
 /// 🔁️ One dispatch settled the way the plugin host settles it; the receipt's `effects` are exactly
 /// what the host would have been handed.
 pub(super) async fn settled(app: &mut DrawingAppFixture, command: DrawingCommand, meta: &semio_plugin::ActionMeta) -> (semio_plugin::InvocationResult, artifact_laws::TypedOperationFixtureReceipt) {
-    settle_drawing_geometry(app,meta.view_state.as_ref()).await;
+    settle_drawing_geometry(app,meta.view_state.as_deref()).await;
     let command_id = command.command_id();
     let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("dispatch {command_id}: {fault:?}"));
     let receipt = artifact_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("retained publication of {command_id} settles: {fault:?}"));
@@ -177,7 +177,7 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
     assert_eq!(law["publishedOnCancel"][0]["cancelled"], true);
     for cancelled in [true, false] {
         let (mut app, mut meta) = inline_selection_app().await;
-        meta.view_state.as_mut().unwrap().active_utility_id = Some("selectDirect".into());
+        std::sync::Arc::make_mut(meta.view_state.as_mut().unwrap()).active_utility_id = Some("selectDirect".into());
         let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Drag target")).to_string().into()).expect("nonempty authored identity"), "Drag target");
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill=Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});
         let id = layer_id(&layer).to_string();
@@ -240,13 +240,16 @@ pub(super) fn assert_artifact_publication_units(receipt: &artifact_laws::TypedOp
 fn drawing_composite_shape_meta() -> semio_plugin::ActionMeta {
     use semio_plugin::{ViewSessionIdentity, ViewWindowInstance};
     let view = ViewModel {
-        active_utility_by_window_id: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([(DRAWING_PLAY_WINDOW_CANVAS.to_string(), Some("shapeRect".to_string()))]),
+        active_utility_by_window_id: [(DRAWING_PLAY_WINDOW_CANVAS.to_string(), Some("shapeRect".to_string()))].into(),
+        window_id: Some(DRAWING_PLAY_WINDOW_CANVAS.into()),
+        active_window_kind_id: Some(DRAWING_PLAY_WINDOW_CANVAS.into()),
+        active_utility_id: Some("shapeRect".into()),
         focused_window_id: Some(DRAWING_PLAY_WINDOW_CANVAS.into()),
         window_instances: vec![ViewWindowInstance { id: DRAWING_PLAY_WINDOW_CANVAS.into(), window_kind_id: DRAWING_PLAY_WINDOW_CANVAS.into() }],
         session_identity: Some(ViewSessionIdentity { user_id: "draw-repeat-owner".into(), display_name: "Draw Repeat Owner".into() }),
         ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
-    semio_plugin::ActionMeta { view_state: view.for_window_instance(DRAWING_PLAY_WINDOW_CANVAS), ..artifact_laws::meta("local") }
+    semio_plugin::ActionMeta { view_state: Some(view.into()), ..artifact_laws::meta("local") }
 }
 
 fn drawing_gesture_observation(meta: &semio_plugin::ActionMeta, receipt: &artifact_laws::TypedOperationFixtureReceipt) -> String {
@@ -381,6 +384,9 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
 
     let projection = app.snapshot().expect("three-times-published Drawing snapshot");
     artifact_laws::close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
+    retire_owned_fixture_view(first_meta);
+    retire_owned_fixture_view(second_meta);
+    retire_owned_fixture_view(third_meta);
     assert_eq!(first_layer_count, before + 1, "first rectangle publication: {first_observation}");
     assert!(first_reset, "first PointerUp returns its exact drawing-composite utility to Direct Select: {first_observation}");
     assert!(second_reset, "second PointerUp returns its exact drawing-composite utility to Direct Select: {second_observation}");

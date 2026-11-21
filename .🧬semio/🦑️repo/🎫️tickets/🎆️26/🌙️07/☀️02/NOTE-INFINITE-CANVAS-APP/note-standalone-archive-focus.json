@@ -1,0 +1,10 @@
+{
+  "predecessor": 1,
+  "candidate": 2,
+  "cases": [
+    { "id": "loaded-archive", "replaceCurrent": true, "quiet": true, "candidateCurrent": true, "result": "switched", "visible": 2 },
+    { "id": "ordinary-same-app", "replaceCurrent": false, "quiet": true, "candidateCurrent": true, "result": "unchanged", "visible": 1 },
+    { "id": "predecessor-busy", "replaceCurrent": true, "quiet": false, "candidateCurrent": true, "result": "draining", "visible": 1 },
+    { "id": "candidate-cancelled", "replaceCurrent": true, "quiet": true, "candidateCurrent": false, "result": "cancelled", "visible": 1 }
+  ]
+}

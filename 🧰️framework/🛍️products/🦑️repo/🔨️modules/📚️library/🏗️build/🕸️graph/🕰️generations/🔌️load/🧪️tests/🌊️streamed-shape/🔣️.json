@@ -1,0 +1,48 @@
+{
+  "workspaceRoot": "/ws",
+  "owner": "workspace",
+  "ownerRoot": ".",
+  "positions": {
+    "owner": [
+      0
+    ],
+    "head": [
+      0,
+      1,
+      2
+    ],
+    "tail": [
+      1,
+      3,
+      3,
+      4
+    ],
+    "explicit": [
+      0,
+      4,
+      4
+    ],
+    "implementation": [
+      5
+    ],
+    "environmentImplementation": [
+      6
+    ]
+  },
+  "expected": {
+    "environment": [
+      0,
+      4,
+      1,
+      2,
+      3,
+      5,
+      6
+    ],
+    "owner": [
+      0,
+      5
+    ],
+    "shapeReads": 0
+  }
+}

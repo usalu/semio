@@ -100,7 +100,7 @@ def scale50():
     body += jamb_seals()
     body.append(prism("track", TR, STL, T_PORTAL, K.track_profile(), "yz", K.TRACK_X0 + K.CAP_T, K.TRACK_X1 - K.CAP_T))
     body.append(repeat(prism("track-end-caps", TR, STL, T_PORTAL, K.rounded_rect(-H, -H, H, H, K.R_OUT), "yz", K.TRACK_X0, K.TRACK_X0 + K.CAP_T), 2, [K.TRACK_X1 - K.TRACK_X0 - K.CAP_T, 0, 0]))
-    body.append(repeat(flag(box("track-slot-brush", TR, SEAL, T_SEAL, [K.TRACK_X1 - K.TRACK_X0 - 2 * K.CAP_T, 0.016, K.SLOT], [1.5, -H + 0.008, -K.SLOT / 2], role="detail")), 2, [0, 0, K.SLOT]))
+    body.append(repeat(flag(box("track-slot-brush", TR, SEAL, T_SEAL, [K.TRACK_X1 - K.TRACK_X0 - 2 * K.CAP_T, 0.016, K.SLOT - 0.001], [1.5, -H + 0.008, -K.SLOT / 2], role="detail")), 2, [0, 0, K.SLOT]))
     body.append(prism("floor-guide", TR, STL, T_DARK, guide_profile(), "yz", K.GUIDE_X[0], K.GUIDE_X[1], role="detail"))
     body += stiles("leaf-", K.U_TOP, K.U_RAIL_BOT, True, False)
     body += rails("leaf-", True, False)

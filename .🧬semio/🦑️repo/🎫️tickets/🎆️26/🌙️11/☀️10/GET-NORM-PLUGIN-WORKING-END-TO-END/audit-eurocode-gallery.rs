@@ -1,7 +1,12 @@
 use audited_diagrams::diagrams2d::{render_diagrams, DiagramsWindowSpec};
 use pack::snapshot::ArtifactDsl;
-use semio_plugin::{BuiltNode, TreeWindowRequest, TreeWindows, ViewModel};
+use semio_plugin::{BuiltNode, TreeWindowRequest, ViewModel};
+#[cfg(not(feature = "gallery-cohort"))]
+use semio_plugin::{PanelTreeBuilder, TreeWindows};
+#[cfg(feature = "gallery-cohort")]
+use semio_plugin_window_kits_rich::tree_kit::{PanelTreeBuilder, TreeWindows};
 use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_plugin_norm_structural_scene::Diagram2d;
 use semio_ui_contract::{Component, SurfaceKind, UI_DOCUMENT_NODES};
 use semio_ui_locale::{Locale, Terminology};
 
@@ -34,6 +39,10 @@ macro_rules! families {
 }
 
 families!(
+    ("en1990", "norm-eurocode", En1990Snapshot),
+    ("en1991", "norm-eurocode", En1991Snapshot),
+    ("en1992", "norm-eurocode-structural", En1992Snapshot),
+    ("en1993", "norm-eurocode-structural", En1993Snapshot),
     ("en1994", "norm-eurocode-structural", En1994Snapshot),
     ("en1995", "norm-eurocode-materials", En1995Snapshot),
     ("en1996", "norm-eurocode-materials", En1996Snapshot),
@@ -41,6 +50,13 @@ families!(
     ("en1998", "norm-eurocode", En1998Snapshot),
     ("en1999", "norm-eurocode-materials", En1999Snapshot)
 );
+
+fn diagrams(document: &Snapshot, report: &semio_s_plugin_norm_compliance::CheckReport, focus: Option<&str>) -> Vec<Diagram2d> {
+    #[cfg(feature = "en1990")]
+    return audited_scene::diagrams(document, report, focus, None);
+    #[cfg(not(feature = "en1990"))]
+    return audited_scene::diagrams(document, report, focus);
+}
 
 fn census(node: &BuiltNode, canvases: &mut Vec<String>) -> usize {
     if matches!(&node.component, Component::Surface(surface) if surface.kind == SurfaceKind::Canvas2d) {
@@ -54,6 +70,92 @@ fn portable(node: &BuiltNode) -> serde_json::Value {
         "key": node.key, "component": node.component, "layout": node.layout, "style": node.style,
         "accessibility": node.accessibility, "children": node.children.iter().map(portable).collect::<Vec<_>>(),
     })
+}
+
+fn matrix_ledger(diagrams: &[Diagram2d], spec: &DiagramsWindowSpec, locale: Locale, offset: Option<u32>, nested: Option<(&str, u32)>) {
+    use semio_ui_contract::{Buildable, HasBase, HasChildren, Label, column, tree_item};
+    let namespace = format!("{BODY}.gallery");
+    let section = format!("{BODY}.cards");
+    let categories = Label::try_from(if locale == Locale::En { "Diagrams" } else { "Diagramme" }).expect("section label");
+    let mut view = ViewModel::new(locale, Terminology::Native);
+    view.tree_windows = offset.into_iter().map(|offset| TreeWindowRequest { body_key: BODY.into(), node_key: section.clone(), open: Some(true), offset, rows: 1 }).collect();
+    if let Some((kind, nested_offset)) = nested {
+        let diagram = &diagrams[0];
+        let base = format!("{BODY}.{}", diagram.id.replace(':', "."));
+        for section_kind in ["markers", "rows"] {
+            view.tree_windows.push(TreeWindowRequest {
+                body_key: BODY.into(),
+                node_key: format!("{section}{}{base}.{section_kind}", semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR),
+                open: Some(section_kind == kind || kind == "both"),
+                offset: nested_offset,
+                rows: 1,
+            });
+        }
+    }
+    let windows = TreeWindows::for_body(&view, BODY);
+    let scene = PanelTreeBuilder::indexed_body(&namespace, &windows, &section, categories, diagrams.len(), |index| {
+        let diagram = &diagrams[index];
+        let items = windows.items_remaining();
+        let one = render_diagrams(BODY, std::slice::from_ref(diagram), spec, &windows, locale)?;
+        let base = format!("{BODY}.{}", diagram.id.replace(':', "."));
+        let costs: Vec<_> = one.children.iter().skip(1).map(|child| (child.key.as_str(), census(child, &mut Vec::new()), semio_ui_runtime::surface_subtree_items(child))).collect();
+        let after_table = windows.items_remaining();
+        println!("[DEBUG] nested {locale:?} {offset:?} {index} limit={nested:?} budget={items} after_table={after_table} children={costs:?}");
+        if let Some(table) = one.children.iter().last() {
+            let pages: Vec<_> = table.children.iter().map(|section| (section.key.as_str(), section.children.iter().map(|row| row.key.as_str()).collect::<Vec<_>>())).collect();
+            println!("[DEBUG] pages {locale:?} {nested:?} {pages:?}");
+        }
+        let card = column().try_id(format!("{base}.card")).ok().expect("card id").try_children(one.children.into_iter().skip(1).filter(|child| !nested.is_some_and(|(kind, _)| kind == "both") || !child.key.as_str().ends_with(".basis"))).ok().expect("card children").try_build().expect("card");
+        let label = Label::try_from(if locale == Locale::En { diagram.title.en.as_str() } else { diagram.title.de.as_str() }).expect("chart title");
+        let row = tree_item(label).try_id(format!("{base}.item")).ok().expect("row id").try_child(card).ok().expect("row child").try_build().expect("row");
+        println!("[DEBUG] row {locale:?} {offset:?} {index} limit={nested:?} nodes={} items={:?}", census(&row, &mut Vec::new()), semio_ui_runtime::surface_subtree_items(&row));
+        Ok(row)
+    }).expect("gallery header");
+    println!("[DEBUG] body {locale:?} {offset:?} limit={nested:?} nodes={} items={:?} remaining={}", census(&scene, &mut Vec::new()), semio_ui_runtime::surface_subtree_items(&scene), windows.items_remaining());
+}
+
+fn matrix_pages(diagrams: &[Diagram2d], spec: &DiagramsWindowSpec, locale: Locale) -> bool {
+    let gallery_key = format!("{BODY}.cards");
+    let Some((index, chart)) = diagrams.iter().enumerate().find(|(_, diagram)| diagram.id == "matrix:document") else {
+        println!("[DEBUG] FAIL matrix-pair {locale:?} missing authored matrix");
+        return false;
+    };
+    let base = format!("{BODY}.{}", chart.id.replace(':', "."));
+    let mut passed = true;
+    for (name, offset, rows, markers, data) in [
+        ("first", 0, 48, "m0", "1"),
+        ("last", u32::MAX, 1, "m128", "72"),
+    ] {
+        let mut view = ViewModel::new(locale, Terminology::Native);
+        view.tree_windows.push(TreeWindowRequest { body_key: BODY.into(), node_key: gallery_key.clone(), open: Some(true), offset: index as u32, rows: 1 });
+        for section in ["markers", "rows"] {
+            view.tree_windows.push(TreeWindowRequest {
+                body_key: BODY.into(),
+                node_key: format!("{gallery_key}{}{base}.{section}", semio_ui_contract::TREE_WINDOW_PATH_SEPARATOR),
+                open: Some(true), offset, rows,
+            });
+        }
+        let tree = TreeWindows::for_body(&view, BODY);
+        let body = render_diagrams(BODY, diagrams, spec, &tree, locale).expect("render matrix pages");
+        let mut canvases = Vec::new();
+        let nodes = census(&body, &mut canvases);
+        let items = semio_ui_runtime::surface_subtree_items(&body).expect("matrix item census");
+        let mut keys = Vec::new();
+        let mut pending = vec![&body];
+        while let Some(node) = pending.pop() {
+            keys.push(node.key.as_str());
+            pending.extend(node.children.iter());
+        }
+        let marker_key = format!("{base}.marker.{markers}");
+        let row_key = format!("{base}.row.{data}");
+        let accepted = canvases.contains(&base) && keys.contains(&marker_key.as_str()) && keys.contains(&row_key.as_str()) && nodes <= UI_DOCUMENT_NODES && items < semio_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS;
+        let status = if accepted { "OK" } else { "FAIL" };
+        println!("[DEBUG] {status} matrix-pair {locale:?} {name} nodes={nodes} items={items} canvas={} marker={} data={}", canvases.contains(&base), keys.contains(&marker_key.as_str()), keys.contains(&row_key.as_str()));
+        passed &= accepted;
+        drop(body);
+        arena::drain();
+    }
+    passed
 }
 
 #[cfg(feature = "en1994")]
@@ -109,6 +211,9 @@ fn main() -> std::process::ExitCode {
     let mut passed = true;
     let mut args = std::env::args().skip(1).peekable();
     let emit = args.next_if(|argument| argument == "--emit").is_some();
+    let ledger = args.next_if(|argument| argument == "--matrix-ledger").is_some();
+    let every = args.next_if(|argument| argument == "--every").is_some();
+    let verify_matrix_pages = args.next_if(|argument| argument == "--matrix-pages").is_some();
     #[cfg(feature = "en1994")]
     let measure = args.next_if(|argument| argument == "--measure-viewport").is_some();
     for path in args {
@@ -121,32 +226,62 @@ fn main() -> std::process::ExitCode {
             .filter(|check| check.status != CheckStatus::NotApplicable && !check.subject.entity_id.is_empty())
             .max_by(|a, b| a.utilization.total_cmp(&b.utilization))
             .map(|check| check.subject.entity_id.as_str());
-        let diagrams = audited_scene::diagrams(&document, &report, None);
-        let focused = audited_scene::diagrams(&document, &report, worst);
+        let focused = diagrams(&document, &report, worst);
+        let diagrams = diagrams(&document, &report, None);
         let focused = if focused.is_empty() { &diagrams } else { &focused };
         for locale in [Locale::En, Locale::De] {
+            if verify_matrix_pages && std::path::Path::new(&path).components().any(|part| part.as_os_str().to_string_lossy().ends_with("road-bridge-showcase")) {
+                passed &= matrix_pages(&diagrams, &spec, locale);
+            }
+            if ledger {
+                for offset in [None, Some(0)] {
+                    matrix_ledger(&diagrams, &spec, locale, offset, None);
+                    arena::drain();
+                }
+                for kind in ["markers", "rows", "both"] {
+                    for nested_offset in [0, u32::MAX] {
+                        matrix_ledger(&diagrams, &spec, locale, Some(0), Some((kind, nested_offset)));
+                        arena::drain();
+                    }
+                }
+            }
             #[cfg(feature = "en1994")]
             { passed &= verify_viewport(&path, &document, &report, locale); }
             let mut view = ViewModel::new(locale, Terminology::Native);
             let mut cases = vec![("focus", focused, None), ("first", &diagrams, None)];
             if diagrams.len() > 1 {
                 let offset = (diagrams.len() - 1) as u32;
-                view.tree_windows = vec![TreeWindowRequest { body_key: BODY.into(), node_key: format!("{BODY}.cards"), open: Some(true), offset, rows: 1 }];
+                if every {
+                    cases.extend((0..offset).map(|index| ("requested", &diagrams, Some(index))));
+                }
                 cases.push(("last", &diagrams, Some(offset)));
             }
             for (variant, diagrams, offset) in cases {
+                view.tree_windows = offset.into_iter().map(|offset| TreeWindowRequest { body_key: BODY.into(), node_key: format!("{BODY}.cards"), open: Some(true), offset, rows: 1 }).collect();
                 let tree = if offset.is_some() { TreeWindows::for_body(&view, BODY) } else { TreeWindows::unhosted() };
                 match render_diagrams(BODY, diagrams, &spec, &tree, locale) {
                     Ok(node) => {
                         let mut canvases = Vec::new();
                         let nodes = census(&node, &mut canvases);
-                        let correct_canvas = offset.map_or(diagrams.is_empty() == canvases.is_empty(), |index| {
-                            canvases == [format!("{BODY}.{}", diagrams[index as usize].id.replace(':', "."))]
-                        });
-                        let accepted = nodes <= UI_DOCUMENT_NODES && correct_canvas;
+                        let start = offset.unwrap_or_default() as usize;
+                        let correct_canvas = diagrams.is_empty() == canvases.is_empty()
+                            && (offset.is_none() || canvases.len() == 1)
+                            && canvases.len() <= diagrams.len().saturating_sub(start)
+                            && canvases.iter().zip(diagrams.iter().skip(start)).all(|(key, diagram)| *key == format!("{BODY}.{}", diagram.id.replace(':', ".")));
+                        let items = semio_ui_runtime::surface_subtree_items(&node).expect("price retained body");
+                        let accepted = nodes <= UI_DOCUMENT_NODES && items < semio_ui_runtime::SURFACE_RECONCILE_MAX_ITEMS && correct_canvas;
                         let status = if accepted { "OK" } else { "FAIL" };
-                        println!("[DEBUG] {status} {path} {locale:?} {variant} nodes={nodes} canvases={} total={}", canvases.len(), diagrams.len());
-                        if emit && locale == Locale::En && variant != "focus" {
+                        println!("[DEBUG] {status} {path} {locale:?} {variant} offset={offset:?} nodes={nodes} items={items} canvases={} total={}", canvases.len(), diagrams.len());
+                        if let (false, None, Some(first)) = (accepted, offset, diagrams.first()) {
+                            let id = &first.id;
+                            let single = render_diagrams(BODY, std::slice::from_ref(first), &spec, &TreeWindows::unhosted(), locale);
+                            let census = single.map(|node| {
+                                let child_items: Vec<_> = node.children.iter().map(|child| (child.key.as_str().to_owned(), semio_ui_runtime::surface_subtree_items(child))).collect();
+                                (census(&node, &mut Vec::new()), semio_ui_runtime::surface_subtree_items(&node), child_items)
+                            });
+                            println!("[DEBUG] first diagram {id} payload ({}, {}, {}) nodes/items={census:?}", first.series.len(), first.markers.len(), first.annotations.len());
+                        }
+                        if emit && locale == Locale::En && matches!(variant, "first" | "last") {
                             let variant = if variant == "first" { "all-diagrams" } else { "last-diagram" };
                             println!("[DEBUG] diagram-window {}", serde_json::json!({"variant": variant, "root": portable(&node)}));
                         }
@@ -164,3 +299,4 @@ fn main() -> std::process::ExitCode {
     arena::close(owner);
     if passed { std::process::ExitCode::SUCCESS } else { std::process::ExitCode::FAILURE }
 }
+

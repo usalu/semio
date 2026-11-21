@@ -412,7 +412,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                     let place = window.filter(|_| is_row).map(|window| ((window.offset as usize).saturating_add(row).saturating_add(1), window.total as usize));
                     let field_label = match &record.component {
                         ui_contract::Component::Container(props) if props.role == ui_contract::ContainerRole::Field => {
-                            document.record(*child).filter(|child| child.key.as_str().strip_suffix(".control") == Some(record.key.as_str())).and(props.label.clone())
+                            document.record(*child).filter(|child| record.children.len() == 1 || child.key.as_str().strip_suffix(".control") == Some(record.key.as_str())).and(props.label.clone())
                         }
                         _ => None,
                     };

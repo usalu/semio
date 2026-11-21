@@ -145,3 +145,7 @@ pub fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg
     }
 }
 
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

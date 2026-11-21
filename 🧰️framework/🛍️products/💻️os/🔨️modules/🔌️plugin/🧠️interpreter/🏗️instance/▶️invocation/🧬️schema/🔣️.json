@@ -7,7 +7,8 @@
     "expected",
     "expectedInstructions",
     "physicalCloseSeparately",
-    "deniedFrameKeepsOperands"
+    "deniedFrameKeepsOperands",
+    "stackGrowth"
   ],
   "properties": {
     "version": {
@@ -28,6 +29,33 @@
     },
     "deniedFrameKeepsOperands": {
       "const": true
+    },
+    "stackGrowth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moduleHex",
+        "expected",
+        "operandPeak",
+        "framePeak"
+      ],
+      "properties": {
+        "moduleHex": {
+          "type": "string",
+          "pattern": "^(?:[a-f0-9]{2})+$"
+        },
+        "expected": {
+          "type": "integer"
+        },
+        "operandPeak": {
+          "type": "integer",
+          "minimum": 3
+        },
+        "framePeak": {
+          "type": "integer",
+          "minimum": 3
+        }
+      }
     }
   }
 }

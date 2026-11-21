@@ -24,6 +24,8 @@ impl OriginalReturnGuardPermit{
 }
 impl Drop for OriginalReturnGuardPermit{fn drop(&mut self){assert!(std::thread::panicking()||self.phase==3,"guard permit requires actual Source observation")}}
 impl OriginalReturnEscrowTable{
+ /// 📐️ Recognizes a fixed Core receipt extent before minting its exact guard.
+ pub const fn supports_core_header_extent(length:usize)->bool{matches!(length,144|152|184|200)}
  /// 📏️ Quotes actual no-context metadata writes funded by the held SRE row.
  pub fn guard_hold()->OriginalReturnEscrowAmounts{OriginalReturnEscrowAmounts{items:2,copy_bytes:(Self::guard_check_copy_bytes()+Self::guard_finish_copy_demand())as u64,work:3,release_bytes:0,capacity_bytes:0}}
  pub fn guard_check_copy_bytes()->usize{size_of::<OriginalReturnEscrowAmounts>()+size_of::<u64>()+size_of::<bool>()+2*size_of::<u8>()}
@@ -38,7 +40,7 @@ impl OriginalReturnEscrowTable{
  pub fn guard_mint_copy_demand()->usize{size_of::<super::OriginalReturnEscrowRow>()+size_of::<Option<OriginalReturnGuardPermit>>()+size_of::<u32>()+3*size_of::<u64>()+2*size_of::<u8>()+2*size_of::<usize>()}
  /// 🌱️ Reserves one exact work-only claim and its sole permit as one checked table transition.
  pub fn reserve_guard(&mut self,identity:OriginalReturnEscrowIdentity,out:&mut Option<OriginalReturnGuardPermit>)->Result<bool,ValueError>{
-  if out.is_some()||self.stage.is_some()||identity.source==0||identity.source_birth==0||identity.recipient==0||identity.destination==0||identity.serial==0||identity.origin_epoch==0||!matches!(identity.extent,144|152|184)||self.row_after(identity.serial.saturating_sub(1)).is_some_and(|row|row.identity.serial==identity.serial){return Err(invalid())}
+  if out.is_some()||self.stage.is_some()||identity.source==0||identity.source_birth==0||identity.recipient==0||identity.destination==0||identity.serial==0||identity.origin_epoch==0||!usize::try_from(identity.extent).is_ok_and(Self::supports_core_header_extent)||self.row_after(identity.serial.saturating_sub(1)).is_some_and(|row|row.identity.serial==identity.serial){return Err(invalid())}
   let Some(slot)=self.states.iter().position(|state|*state==0)else{return Ok(false)};if self.guard_issued&(1u32<<slot)!=0{return Err(invalid())}let revision=self.revision.checked_add(1).ok_or_else(invalid)?;let destination=out as *mut Option<OriginalReturnGuardPermit> as usize;let table=self as *mut Self as usize;self.rows[slot]=super::OriginalReturnEscrowRow{identity,held:Self::guard_hold(),redeemed:OriginalReturnEscrowAmounts::zero(),released:OriginalReturnEscrowAmounts::zero(),tombstone:false};self.states[slot]=2;self.guard_issued|=1u32<<slot;self.revision=revision;*out=Some(OriginalReturnGuardPermit{table,identity,slot,destination,phase:0});Ok(true)
  }
  /// 🔎️ Checks the exact live table, receipt address and stable preborn owner slot.
@@ -61,6 +63,35 @@ impl OriginalReturnEscrowTable{
 #[cfg(test)]
 mod tests{
  use super::*;
+ #[test]
+ fn every_fixed_core_extent_mints_observes_and_reclaims_its_exact_guard(){
+  let law:serde_json::Value=serde_json::from_str(include_str!("case.json")).unwrap();
+  for row in law["extentCases"].as_array().unwrap(){
+   let extent=row["extent"].as_u64().unwrap();
+   let expected=row["accepted"].as_bool().unwrap();
+   let identity=OriginalReturnEscrowIdentity{source:1,source_birth:2,recipient:3,destination:4,extent,serial:5,origin_epoch:6};
+   let mut table=Box::new(OriginalReturnEscrowTable::empty());
+   let mut permit=None;
+   let admitted=table.reserve_guard(identity,&mut permit);
+   if !expected{
+    assert!(admitted.is_err());
+    assert!(permit.is_none());
+    assert!(table.is_empty());
+    continue
+   }
+   assert!(admitted.unwrap());
+   assert_eq!(permit.as_ref().unwrap().identity(),identity);
+   assert!(table.qualify_guard(&permit,5).is_err());
+   table.qualify_guard(&permit,4).unwrap();
+   table.begin_guard_check(&mut permit,4).unwrap();
+   table.finish_guard(&mut permit).unwrap();
+   let revision=table.revision();
+   table.borrow_snapshot(revision).unwrap();
+   table.hand_back_snapshot(revision).unwrap();
+   assert!(table.reclaim_one().unwrap());
+   assert!(table.is_empty());
+  }
+ }
  #[test]
  fn guard_spends_only_its_exact_held_table_row_and_waits_for_observation(){
   let identity=OriginalReturnEscrowIdentity{source:1,source_birth:2,recipient:3,destination:4,extent:144,serial:5,origin_epoch:6};let mut table=Box::new(OriginalReturnEscrowTable::empty());let mut permit=None;assert!(table.reserve_guard(identity,&mut permit).unwrap());let slot=table.slot_for(identity.serial).unwrap();let revision=table.revision();table.borrow_snapshot(revision).unwrap();assert!(table.begin_guard_check(&mut permit,5).is_err());assert!(permit.as_ref().unwrap().pending().is_none());table.begin_guard_check(&mut permit,4).unwrap();assert_eq!(permit.as_ref().unwrap().pending(),Some((RetainedCloneProgress{copied_items:1,copied_bytes:OriginalReturnEscrowTable::guard_check_copy_bytes(),..Default::default()},2)));assert!(table.begin_guard_check(&mut permit,4).is_err());table.hand_back_snapshot(revision).unwrap();assert!(!table.has_reclaimable());table.finish_guard(&mut permit).unwrap();assert!(permit.is_none());let row=table.row_at(slot,identity.serial).unwrap();assert_eq!(row.redeemed.copy_bytes+row.released.copy_bytes,row.held.copy_bytes);assert_eq!(row.redeemed.items+row.released.items,row.held.items);assert_eq!(row.redeemed.work+row.released.work,row.held.work);assert!(!table.has_reclaimable());let next=table.revision();table.borrow_snapshot(next).unwrap();table.hand_back_snapshot(next).unwrap();assert!(table.reclaim_one().unwrap());assert!(table.is_empty());

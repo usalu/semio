@@ -1,0 +1,29 @@
+{
+  "phase": "dependencies:Source-aliases",
+  "series": [
+    {
+      "counters": [
+        8742,
+        8868,
+        9016
+      ],
+      "eligible": true
+    },
+    {
+      "counters": [
+        9016,
+        9016,
+        9016
+      ],
+      "eligible": false
+    },
+    {
+      "counters": [
+        8742,
+        9016,
+        8868
+      ],
+      "eligible": false
+    }
+  ]
+}

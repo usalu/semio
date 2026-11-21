@@ -4,17 +4,13 @@ use super::*;
 
 // #region 🔖️Params
 /// 🎛️ Every knob the staged pipeline needs, bundled with sane defaults: ingestion policy, the assumed
-/// pinhole focal-length ratio (no calibration stage exists yet, so intrinsics are derived from frame
-/// dimensions), feature/matching/SfM/dense/mesh sub-configs (reusing each domain crate's own config type
+/// fallback focal-length ratio for uncalibrated frames, feature/matching/SfM/dense/mesh sub-configs (reusing each domain crate's own config type
 /// directly rather than re-declaring their fields), and toggles for the optional motion/geo analyses.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct EngineParams {
     pub ingest: IngestParams,
     pub assumed_focal_ratio: f64,
-    /// 🌀️ Lens distortion of the (single) calibrated camera, applied by every unprojection. A
-    /// calibrated capture that is reconstructed as if undistorted carries a systematic pixel error
-    /// at the image borders that the bundle adjustment cannot explain and that accumulates into
-    /// drift around a closed orbit.
+    /// 🌀️ Fallback distortion for frames without an explicit capture calibration.
     pub distortion: remodeling_camera::Distortion,
     /// 🧭️ Which bounded detector scores keypoints. The interactive engine runs an AKAZE request as
     /// ORB: the nonlinear scale space's diffusion passes cannot be sliced into the worker's
@@ -74,8 +70,7 @@ impl Default for EngineParams {
 }
 
 /// 📷️ Default pinhole intrinsics assumed for uncalibrated input: `fx = fy = focal_ratio *
-/// max(width, height)`, principal point at the image center, no distortion — a documented
-/// simplification standing in for the calibration stage the base plan scopes separately.
+/// max(width, height)` with the principal point at the image center.
 pub(super) fn default_intrinsics(width: u32, height: u32, focal_ratio: f64, distortion: remodeling_camera::Distortion) -> remodeling_camera::Intrinsics {
     let f = focal_ratio * f64::from(width.max(height));
     remodeling_camera::Intrinsics { fx: f, fy: f, cx: f64::from(width) / 2.0, cy: f64::from(height) / 2.0, skew: 0.0, distortion }

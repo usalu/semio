@@ -103,3 +103,15 @@ Check (`volumes-check.ts --product`, all ok):
 - **Clamp knob side.** The front 2D draws the collar knob at x = −0.061. The mirror sense of the front x axis against world z was not cross-checked with `r3-project2d`. It is a 0.3 mm detail, but it may be on the wrong side.
 - **Rib profile.** The ribs are 16 × 10 mm boxes, not open U-profiles.
 - **Underside area.** The canopy-underside shells measure 5.0 m² against the declared 5.3 m² (−5.7 %). This is within tolerance and was not changed.
+
+### Actual cloth and folding, 21 November
+
+The cloth now spans 0.5 mm at every digital scale. Each gore has a 12 mm tension cut along its outer hem in the fine drawing and progressively fewer profile stations at smaller scales. Its two 0.25 mm exchange layers meet at the cloth mid-plane. All eight 16 × 10 mm ribs and eight stretchers physically carry the canopy at all scales.
+
+The paper projection, volume inspector and GLB use the paired fold joints. The Three.js oracle carries the vertices by the two independent joint transforms. Across the four scales, it measured more than 2.4 m of cloth when open and less than 0.65 m when gathered. The body and both thermal faces agreed to 1 µm in space. The open and furled elevation outlines agreed to 1 mm. All twelve scenes exported and independently reloaded at 2,302,780 bytes, with zero geometry findings. The complete schema and base checks passed. The revised 1:200 and 1:500 models passed all volume rules. The finer scales passed before the latest change to the paper cloth projection.
+
+## Sewn cloth in the released rig
+
+The earlier blended skin pulled neighbouring hems about 88 mm apart when furled. Each of the eight gores now has three radial pleats. Forty-eight stiff facets rotate around their shared seams. The six faces of each gore preserve their cut area as the ribs open, the mast tilts and the runner moves. Both 0.25 mm thermal layers follow the same surface. Each of the eight rib clevises and eight stretcher clevises sets its own radial bearing. The four digital scales discretise the shallow hem cut differently.
+
+Three.js checked the continuity of the outer seams to 1 mm and fabric-area change below 0.1% through all three poses, both wind and tilt clips, and 25 positions across the full opening stroke. The compact model passed normative schema, normal asset validation and all measured rules at all scales. An independent reader opened all twelve scenes in 3,770,756 bytes.

@@ -11,7 +11,7 @@ pub fn close_original_quoted_retained_step<E:Into<crate::OriginalTurnPrimary>>(c
  cx.original_source_parent()?.validate_borrowed_context(cx)?;
  let remaining=cx.retained_grant();if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
  if remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.original_total_retained_grant(),demand){return Err(OriginalTurnFailure::from(ValueError::new(ValueRefusalKind::WorkLimit,format!("original close demand exceeds the whole grant of its turn and can never fit: demand {demand:?}; whole grant {:?}; remaining {:?}",cx.original_total_retained_grant(),cx.retained_grant()))))}
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.original_source_total_grant(),demand){return Err(OriginalTurnFailure::from(ValueError::new(ValueRefusalKind::WorkLimit,format!("original close demand exceeds the remaining Source grant: demand {demand:?}; Source grant {:?}; issued remaining {:?}",cx.original_source_total_grant(),cx.original_total_retained_grant()))))}
   return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})
  }
  if cx.fuel_remaining()<work&&!cx.fuel_turn_untouched(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
@@ -39,7 +39,7 @@ fn close_original_admission(cx:&mut StepContext<'_>,demand:RetirementDemand)->Re
  cx.original_source_parent()?.validate_borrowed_context(cx)?;
  let remaining=cx.retained_grant();if cx.retirement_should_yield()||remaining.maximum_items==0{return Ok(None)}
  if remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.original_total_retained_grant(),demand){return Err(OriginalTurnFailure::from(ValueError::new(ValueRefusalKind::WorkLimit,format!("original close demand exceeds the whole grant of its turn and can never fit: demand {demand:?}; whole grant {:?}; remaining {:?}",cx.original_total_retained_grant(),cx.retained_grant()))))}
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.original_source_total_grant(),demand){return Err(OriginalTurnFailure::from(ValueError::new(ValueRefusalKind::WorkLimit,format!("original close demand exceeds the remaining Source grant: demand {demand:?}; Source grant {:?}; issued remaining {:?}",cx.original_source_total_grant(),cx.original_total_retained_grant()))))}
   return Ok(None)
  }
  Ok(Some(remaining))

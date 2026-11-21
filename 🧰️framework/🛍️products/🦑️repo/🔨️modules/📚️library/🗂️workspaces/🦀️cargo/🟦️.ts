@@ -1,4 +1,5 @@
-import{concurrentEditV1,retryOnConcurrentEditV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import {isRepoErrorV1} from "../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
+import{ConcurrentEditErrorV1,concurrentEditV1,retryOnConcurrentEditV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import selectionSchema from"./🧬️schema/🎯️selection.json"with{type:"json"};
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,requireMaterializedPathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -9,7 +10,7 @@ import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./�
 import type {CargoPreparationControlV1,CargoWorkspaceControlV1,CargoWorkspaceProgressV1} from "./🛠️preparation/🎛️control/🟦️.ts";
 import {createHash} from "node:crypto";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {readCargoPreparationProgramContextV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1,cargoPreparationProgramSourcesV1,type CargoPreparationObservationV1} from "./🛠️preparation/🧾️custody/🟦️.ts";
+import {readCargoPreparationProgramContextV1,readCargoPreparationSourceEditV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1,cargoPreparationProgramSourcesV1,type CargoPreparationObservationV1} from "./🛠️preparation/🧾️custody/🟦️.ts";
 import {cargoPreparationWitnessHoldsV1,observeCargoPhysicalV1,type CargoPhysicalObservationsV1,type CargoPhysicalOperationKindV1} from "./🛠️preparation/👁️witness/🟦️.ts";
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
@@ -460,29 +461,58 @@ export function cargoPreparationInvocationCurrentV1(storage:CargoPreparationStor
 export async function prepareCargoWorkspaceInvocation(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<void>{
  const request=cargoWorkspacePreparationInvocationV1(storage,root,args,cwd,environment);if(!request||cargoPreparationInvocationCurrentV1(storage,root,request))return;
  const result=await captureOwnedCommandResultV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});
+ control.signal.throwIfAborted();
  if(result.status!==0||result.signal!==null){
+  const sourceEdit=readCargoPreparationSourceEditV1(result,root);if(sourceEdit)throw sourceEdit;
   const encoding=readOwnedCommandEncodingContextV1(result.stderr)||readOwnedCommandEncodingContextV1(result.stdout),program=readCargoPreparationProgramContextV1(result.stderr)||readCargoPreparationProgramContextV1(result.stdout);throw Error("Native Cargo owner preparation failed status="+result.status+" signal="+result.signal+(encoding?" encoding="+JSON.stringify(encoding):"")+(program?" preparation="+JSON.stringify(program):"")+": "+(result.stderr||result.stdout).slice(-2048));
  }
 }
 
-export interface CargoWorkspaceSelectionViewV1{readonly scope:CargoWorkspaceScope;readonly control:ResourceLeaseControl;readonly inputs:readonly Readonly<{path:string;digest:string;bytes:number}>[];recheck():Promise<void>}
+export interface CargoWorkspaceSelectionViewV1{readonly scope:CargoWorkspaceScope;readonly control:ResourceLeaseControl;readonly inputs:readonly Readonly<{path:string;digest:string;bytes:number}>[];workspaceManifestText():string;recheck():Promise<void>}
 const selectionLimits=Object.freeze({...selectionSchema.definitions.Protocol.const});
 const stampFieldsV1=["dev","ino","mode","kind","nlink","size","mtimeMs","ctimeMs","birthtimeMs"];
 /** 🔬️ Names the stat facts of a workspace Source observation that differ between two observations. */
 function stampDifferenceV1(before:string,after:string):string{try{const left:unknown=JSON.parse(before),right:unknown=JSON.parse(after);if(Array.isArray(left)&&Array.isArray(right))return stampFieldsV1.filter((_,index)=>left[index]!==right[index]).map(name=>{const index=stampFieldsV1.indexOf(name);return name+" "+String(left[index])+" -> "+String(right[index]);}).join(", ")||"no stat fact";return String(left)+" -> "+String(right);}catch{return "unreadable";}}
-/** ♻️ Reuses actual workspace selection with bounded original Source reads and retained callback observations. */
-export function withCargoWorkspaceSelectionV1<T>(root:string,manifest:string,control:ResourceLeaseControl,body:(view:CargoWorkspaceSelectionViewV1)=>Promise<T>):Promise<T>{return retryOnConcurrentEditV1("snapshot",()=>withCargoWorkspaceSelectionOnceV1(root,manifest,control,body),{signal:control?.signal});}
+/** ♻️ Reuses actual workspace selection with bounded original Source reads and retained callback observations.
+ * Captured Source drift leaves the selection loan before entering the bounded snapshot retry. */
+export function withCargoWorkspaceSelectionV1<T>(root:string,manifest:string,control:ResourceLeaseControl,body:(view:CargoWorkspaceSelectionViewV1)=>Promise<T>):Promise<T>{return retryOnConcurrentEditV1("snapshot",()=>withCargoWorkspaceSelectionOnceV1(root,manifest,control,body),{signal:control?.signal,retryable:error=>error instanceof ConcurrentEditErrorV1});}
 async function withCargoWorkspaceSelectionOnceV1<T>(root:string,manifest:string,control:ResourceLeaseControl,body:(view:CargoWorkspaceSelectionViewV1)=>Promise<T>):Promise<T>{
  requireIssuedResourceControlV1(control);root=requireMaterializedPathV1(root);requireMaterializedPathV1(resolve(root,manifest));if(typeof body!=="function")throw Error("Actual bounded workspace selection body required");
  const texts=new Map<string,Buffer>(),observations=new Map<string,{operation:"state"|"presence";path:string;value:string}>();let bytes=0,published=0,live=true,accepting=true,pending=0,refusal:Promise<never>|undefined;
  const guard=(phase:ResourceLeaseControl)=>{if(!live)throw Error("Original Cargo workspace selection released");checkResourceLeaseControl(phase);},stamp=(value:ReturnType<typeof lstatSync>|boolean)=>{if(value===undefined)throw Error("Actual Cargo workspace Source observation required");return JSON.stringify(typeof value==="boolean"?value:value.isDirectory()?[String(value.dev),String(value.ino),String(value.mode),"directory"]:[value.isFile()?"file":value.isSymbolicLink()?"symlink":"other"]);},advance=async(phase:ResourceLeaseControl)=>{const now=Date.now();if(now-published>=250){published=now;await phase.publish({resource:"cargo:workspace-selection",mode:"shared",elapsedMs:0});}await phase.yieldContinuation();guard(phase);};
- const read=async(path:string,phase:ResourceLeaseControl)=>{guard(phase);const previous=texts.get(path);if(!previous&&texts.size>=selectionLimits.maximumDocuments)throw Error("Cargo workspace Source document capacity exceeded");const value=await readPhysicalCargoSourceV1(path,{version:1,root,expectedBytes:previous?.length??null,maximumBytes:Math.min(selectionLimits.maximumManifestBytes,selectionLimits.maximumAggregateBytes-bytes+(previous?.length??0)),remainingFiles:1},phase);guard(phase);if(!value)throw concurrentEditV1("vanished",path,"Original Cargo workspace Source disappeared","snapshot");const result=Buffer.from(value);if(previous&&!previous.equals(result))throw concurrentEditV1("bytes",path,"Original Cargo workspace Source changed","snapshot");if(!previous){texts.set(path,result);bytes+=result.length;}return result;};
+ const read=async(path:string,phase:ResourceLeaseControl)=>{
+  guard(phase);const previous=texts.get(path);if(!previous&&texts.size>=selectionLimits.maximumDocuments)throw Error("Cargo workspace Source document capacity exceeded");
+  const value=await readPhysicalCargoSourceV1(path,{version:1,root,expectedBytes:previous?.length??null,maximumBytes:Math.min(selectionLimits.maximumManifestBytes,selectionLimits.maximumAggregateBytes-bytes+(previous?.length??0)),remainingFiles:1},phase).catch(error=>{
+   if(previous&&isRepoErrorV1(error)&&error.key==="process.source.read-extent-mismatched")throw concurrentEditV1("length",path,"Original Cargo workspace Source length changed","snapshot");
+   throw error;
+  });
+  guard(phase);if(!value)throw concurrentEditV1("vanished",path,"Original Cargo workspace Source disappeared","snapshot");const result=Buffer.from(value);if(previous&&!previous.equals(result))throw concurrentEditV1("bytes",path,"Original Cargo workspace Source changed","snapshot");if(!previous){texts.set(path,result);bytes+=result.length;}return result;
+ };
  const observe=(step:CargoPhysicalOperationV1)=>{if(step.operation!=="state"&&step.operation!=="presence")throw Error("Closed Cargo workspace selection observation required");requireMaterializedPathV1(step.path);const value=operate(step),key=step.operation+":"+step.path,identity=stamp(value),previous=observations.get(key);if(previous&&previous.value!==identity){if(!texts.has(step.path))throw concurrentEditV1("identity",step.path,"Original Cargo workspace topology changed ("+stampDifferenceV1(previous.value,identity)+")","snapshot");observations.set(key,{...previous,value:identity});}if(!previous){if(observations.size>=selectionLimits.maximumObservations)throw Error("Cargo workspace Source observation capacity exceeded");observations.set(key,{operation:step.operation,path:step.path,value:identity});}return value;};
  const recheck=async(phase:ResourceLeaseControl)=>{guard(phase);for(const row of observations.values()){guard(phase);observe({...row,root});await advance(phase);}for(const path of texts.keys()){await read(path,phase);await advance(phase);}};
+ let replayChange:ConcurrentEditErrorV1|undefined;
  try{const result=await withRequestedIssuedResourceControlV1(control,0,async phase=>{
   const plan=selectPlan(root,manifest,function*(path){const full=yield* physicalPlan(root,path);return object(runtimeParseTomlV1(yield{operation:"text",path:full,root}));},new Map());let step=plan.next();let selected:CargoWorkspaceScope;
   try{while(!step.done){guard(phase);const operation=step.value,value=operation.operation==="text"?new TextDecoder("utf-8",{fatal:true}).decode(await read(operation.path,phase)):observe(operation);await advance(phase);step=plan.next(value);}selected=step.value;}finally{plan.return(undefined as never);}
-  const scope=Object.freeze({...selected,contribution:Object.freeze({...selected.contribution,members:Object.freeze([...selected.contribution.members]),exclude:Object.freeze([...selected.contribution.exclude])}),memberManifests:Object.freeze([...selected.memberManifests])}),inputs=Object.freeze([...texts].map(([path,value])=>Object.freeze({path:slash(relative(root,path)),digest:createHash("sha256").update(value).digest("hex"),bytes:value.length}))),replay=()=>{if(!live||!accepting)return Promise.reject(Error("Original Cargo workspace selection released"));if(pending>=selectionLimits.maximumPending){refusal??=withIssuedResourceOperationV1(phase,async()=>{throw Error("Cargo workspace pending Source recheck capacity exceeded");});return refusal;}pending++;let task:Promise<void>;try{task=withIssuedResourceOperationV1(phase,()=>recheck(phase));}catch(error){pending--;return Promise.reject(error);}void task.then(()=>{pending--;},()=>{pending--;});return task;};
-  try{return await body(Object.freeze({scope,control:phase,inputs,recheck:replay}));}finally{accepting=false;}
- });await recheck(control);return result;}finally{accepting=false;live=false;}
+  const scope=Object.freeze({...selected,contribution:Object.freeze({...selected.contribution,members:Object.freeze([...selected.contribution.members]),exclude:Object.freeze([...selected.contribution.exclude])}),memberManifests:Object.freeze([...selected.memberManifests])}),inputs=Object.freeze([...texts].map(([path,value])=>Object.freeze({path:slash(relative(root,path)),digest:createHash("sha256").update(value).digest("hex"),bytes:value.length})));
+  const replay=():Promise<void>=>{
+   if(!live||!accepting)return Promise.reject(Error("Original Cargo workspace selection released"));
+   if(pending>=selectionLimits.maximumPending){refusal??=withIssuedResourceOperationV1(phase,async()=>{throw Error("Cargo workspace pending Source recheck capacity exceeded");});return refusal;}
+   pending++;
+   let task:Promise<void>;
+   try{task=withIssuedResourceOperationV1(phase,async()=>{
+    try{await recheck(phase);}catch(error){if(!(error instanceof ConcurrentEditErrorV1))throw error;replayChange??=error;}
+    return replayChange;
+   }).then(change=>{if(change)throw change;});}catch(error){pending--;return Promise.reject(error);}
+   void task.then(()=>{pending--;},()=>{pending--;});
+   return task;
+  };
+  const workspaceManifestText=()=>{guard(phase);if(!accepting)throw Error("Original Cargo workspace selection released");const value=texts.get(resolve(root,scope.manifest));if(!value)throw Error("Captured selected Cargo workspace Source required");return new TextDecoder("utf-8",{fatal:true}).decode(value);};
+  try{return{kind:"current"as const,value:await body(Object.freeze({scope,control:phase,inputs,workspaceManifestText,recheck:replay}))};}
+  catch(error){if(replayChange===undefined||error!==replayChange)throw error;return{kind:"changed"as const,change:replayChange};}
+  finally{accepting=false;}
+ });
+ if(result.kind==="changed")throw result.change;
+ if(replayChange)throw replayChange;
+ await recheck(control);return result.value;}finally{accepting=false;live=false;}
 }

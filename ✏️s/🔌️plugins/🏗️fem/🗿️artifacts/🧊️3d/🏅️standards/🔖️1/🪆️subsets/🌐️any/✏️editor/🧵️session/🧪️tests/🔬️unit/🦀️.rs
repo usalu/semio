@@ -48,7 +48,7 @@ fn close_child(child: &mut Fem3dNumericalChild, grant: RetainedCloneGrant) -> bo
 
 
 fn numerical_bank() -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1 << 36, maximum_copy_bytes: 1 << 40, maximum_capacity_bytes: 1 << 40, maximum_release_bytes: 1 << 40, maximum_depth: 1 << 12 }
+    semio_s_fem_receiving::testkit::numerical_stock()
 }
 
 fn close_in(caller: &mut semio_framework_job::OriginalJobFixtureCaller, child: &mut Fem3dNumericalChild, grant: RetainedCloneGrant) -> bool {
@@ -136,6 +136,42 @@ fn fem3d_retained_results_close_uses_original_retirement_and_preserves_foreign_a
     assert_eq!(registry.retiring_app[3], app_instance_id);
     assert!(registry.retire_retained_results(app_instance_id, slot));
     assert_eq!(registry.retiring_count[slot], 1);
+}
+
+#[test]
+fn fem3d_live_maintenance_finishes_without_releasing_the_app() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
+    let expected = &corpus["maintenance"];
+    let app = 9283;
+    let identity = recovery_identity(app, 3);
+    MOUNTED.with(|registry| {
+        let mut registry = registry.borrow_mut();
+        let (shell, recovery) = reserve_recovery_state(&mut registry, identity);
+        *registry.shells[shell as usize].borrow_mut() = Some(recoverable_state(identity, recovery));
+        registry.maintenance_cursor = (usize::from(shell) + 1) % SHELL_CAPACITY;
+    });
+    let observe = || serde_json::json!({ "pending": maintenance_pending(app), "terminal": terminal_is_empty(app) });
+    assert_eq!(observe(), expected["live"]);
+    assert_eq!(maintenance_demands(app).unwrap(), RetirementDemand::default());
+    let step = with_context(TEST_GRANT, |cx| maintenance_step(app, cx, TEST_GRANT)).unwrap();
+    assert!(matches!(step, PluginLifecycleStep::Complete(_)));
+    assert_eq!(current_identity(app), Some(identity));
+
+    MOUNTED.with(|registry| {
+        assert!(registry.borrow_mut().requests.remove_one_scoped_consumer(app).is_some());
+    });
+    assert_eq!(observe(), expected["detached"]);
+    for _ in 0..128 {
+        if !maintenance_pending(app) { break; }
+        let step = with_context(TEST_GRANT, |cx| maintenance_step(app, cx, TEST_GRANT)).unwrap();
+        assert!(step.progress().is_some_and(|progress| progress.copied_items != 0));
+    }
+    assert_eq!(observe(), expected["idleAfterRetirement"]);
+    for _ in 0..128 {
+        if terminal_is_empty(app) { break; }
+        let _ = lifecycle_close(app, TEST_GRANT);
+    }
+    assert_eq!(observe(), expected["closed"]);
 }
 
 #[test]
@@ -561,9 +597,7 @@ fn assert_mounted_example(name: &str, text: &str) {
     let bank = numerical_bank();
     let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation, operation.generation, bank, || Some(1000), 1 << 40, 1 << 40);
     let mut outcome = None;
-    let trace = std::env::var_os("SEMIO_FEM_MOUNT_TRACE").is_some();
-    let mut previous_stage = child.stage;
-    for turn in 0..16_000_000 {
+    for _ in 0..16_000_000 {
         caller.turn(TEST_GRANT, |context| {
             match child.step(&doc, &mut fields, &mut backing, freshness(3), operation, context) {
                 Ok(false) => {},
@@ -572,10 +606,6 @@ fn assert_mounted_example(name: &str, text: &str) {
             }
             Ok(())
         }).unwrap();
-        if trace && (turn % 100_000 == 0 || child.stage != previous_stage) {
-            eprintln!("[DEBUG] {name} turn {turn} stage {:?}", child.stage);
-            previous_stage = child.stage;
-        }
         if outcome.is_some() { break; }
     }
     let converged = fields.ready();

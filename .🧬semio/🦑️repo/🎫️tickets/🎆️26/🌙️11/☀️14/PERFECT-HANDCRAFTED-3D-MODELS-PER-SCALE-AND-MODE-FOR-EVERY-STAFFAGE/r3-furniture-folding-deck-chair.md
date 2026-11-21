@@ -65,3 +65,43 @@ Final checks (2026-11-20): `volumes-check.ts furniture/folding-deck-chair --prod
 - The canvas is 7.5 / 15 / 30 / 40 mm thick instead of 0.7 mm (the print floor of each scale); its edges add about 5 % to the measured canvas areas.
 - The rig is an open tree: the notch closure and the ground contact are exact at the five poses and interpolated between clip keys. In `folded` the four feet stay listed as contacts (supports are permanent) while the chair really lies on the head ends and the foot rail; the rear foot rounds are 7 mm above the ground there.
 - The mass 4.85 kg is 10 % above the heaviest cited plain beech chair (4.4 kg); it is the honest volume of 20 x 40 mm rails.
+
+## Round 5 handcraft (2026-11-21)
+
+No new script: the round-3 model was judged against the reference again and left unchanged (catalog VALID, `volumes` equal to `volumes/furniture/folding-deck-chair.json`).
+
+### Reference (beech deck chairs: Harbour Housewares, Wimborne, colonial beech, Donner, DIY.com; traditional construction)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+| --- | --- | --- | --- |
+| Head-end height by notch | 0.78-1.06 m | 0.86-0.97 m, default 0.936 m | inside |
+| Knee-rail height | 0.33-0.44 m | 0.38-0.43 m, default 0.41 m | inside |
+| Length unfolded | 0.90-1.08 m | 1.016 m | inside |
+| Width | 0.56-0.66 m | 0.58 m (0.597 over the nuts) | inside |
+| Rails | about 20 x 40 mm beech on edge, rounded ends | 20 x 40 mm, half-round ends | 0 % |
+| Sling | about 0.43 m wide, length = rail distance folded | 0.42 m, 1.265 m (four canvas bones) | -2.3 % |
+| Mass | 4.0-4.4 kg | 4.85 kg (honest timber volume) | +10 % to the heaviest cited chair |
+
+Rig: seat frame from the rear foot round, back frame hinged at the scissor pivot, prop hinged on the back frame with its dowel in a notch, four inextensible canvas bones (unchanged since round 3, checked against the solids and poses).
+
+### Grades (opened with the Read tool)
+
+| Scale | Body | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | A- (crossed frames, notched rails, prop and dowel, striped sling lapped round head and knee rails) | A- | A- |
+| 1:100 | A- | A- | A- |
+| 1:200 | B+ | B+ | B+ |
+| 1:500 | B+ (crisp square bars, the sling four straight sheets) | B+ | B+ |
+| pose `folded` | B (the sling panels keep their unloaded catenary sag and lie in 18 mm waves on the flat frames) | - | - |
+
+Opened: 1:50 body, a low three-quarter close view at 1:50, 1:500 body, the `folded` pose. Rendered, not opened: the other poses, the `fold-chair` frame at 3 s, thermal cuts and structure of every scale, the 2D (`🗑️generated/r5-folding-deck-chair/before/`).
+
+`volumes-check.ts furniture/folding-deck-chair --product`: PASS (0 fail).
+
+### Remaining
+
+- Folded and half-folded: the canvas panels are rigid lofts on their bones, so the catenary sag of the open chair shows as waves when the cloth is taut (needs a deformable sling or per-pose panel shapes).
+- Canvas thickness at the print floor of each scale (7.5 / 15 / 30 / 40 mm instead of 0.7 mm); arrises, tacks and hems below the feature.
+- Mass 10 % above the heaviest cited chair.
+
+All four digital chairs retain the paired 20 × 32 mm folding props and the turned cross dowel, 580 mm long with 19 mm ends and a 22 mm shaft. The rear and foot rails have separate thermal and structural members. The 1:200 and 1:500 paper views now project the same working sections as the digital model. Three.js independently measured all four scales.

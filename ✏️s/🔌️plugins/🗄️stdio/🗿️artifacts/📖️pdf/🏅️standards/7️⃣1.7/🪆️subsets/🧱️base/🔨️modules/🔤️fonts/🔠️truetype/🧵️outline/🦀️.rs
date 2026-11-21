@@ -11,6 +11,7 @@ pub enum TrueTypeOutlineSegment {
     MoveTo([f64; 2]),
     LineTo([f64; 2]),
     QuadraticTo { control: [f64; 2], to: [f64; 2] },
+    CubicTo { first: [f64; 2], second: [f64; 2], to: [f64; 2] },
     Close,
 }
 

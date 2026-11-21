@@ -1,0 +1,9 @@
+# Mesh Difference With Disconnected Material
+
+The convex Mesh Difference continuation now validates the real exterior shells instead of inferring their count and genus from the orientation of the tool planes. Every published shell has reciprocal directed edges, one cyclic face fan at each vertex, a finite positive signed volume, and an orientable Euler characteristic. Stock-to-cutter edges form complete openings with degree two at every rim vertex. This accepts multiple closed shells and through-openings while preserving the explicit nested-cavity and separated-slab paths.
+
+The diamond cutter divides the stock into four triangular prisms. Each has volume 0.25, area 3.664213562373095 and Euler characteristic 2. The skew reflected-stock case retains the same three volumes, areas and Euler characteristics measured for the independent retained BRep Cut. It required sewing edge subdivisions when equivalent f32 calculations put a live subdivision point slightly off its ideal trim line. The subdivision tolerance is half the existing convex Difference epsilon. The complete directed incidence and fan checks still run before publication.
+
+The eight registered Clipping Rust tests passed. Independent Manifold measurements ran inside the 16-test Mesh Clipping and packaging suite with 4,677 assertions. The two authored native facade cases passed, including one-item UV and material projection and closed tessellated reimport. The scoped Generation3d proof passed the 33 existing cases, both new component fixtures at fuels 1, 7 and 1,024, and its two cancellation laws. All 13 retained Flow CombineSource checks passed, including both new fixtures. Scoped whitespace and source-owner audits passed.
+
+Arbitrary nonconvex input still needs an end-to-end supported Boolean path. The canonical React and WGPU actors have yet to be mounted in the current run.

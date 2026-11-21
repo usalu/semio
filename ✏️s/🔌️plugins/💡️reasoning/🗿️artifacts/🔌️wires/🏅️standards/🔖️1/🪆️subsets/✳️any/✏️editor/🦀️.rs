@@ -608,7 +608,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Wires command does not match its exact retained tool registration").into());
         }
         if wires_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
-            return Err(Fault::from("wires-command-payload-too-large"));
+            return Err(Fault::from("wires-command-payload-too-large").into());
         }
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, WiresCommand::command_id, WIRES_RETAINED_RAW_BYTES, WIRES_RETAINED_WORK_ITEMS, false, |request| -> Box<dyn ArtifactCommandWork<EditorApp<Self>>> { match *request.command {
             WiresCommand::SetActiveExample(_) | WiresCommand::AddNode(_) | WiresCommand::AddRelationship(_) | WiresCommand::DeleteSelection(_) => {

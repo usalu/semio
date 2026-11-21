@@ -1,0 +1,111 @@
+{
+  "loan": {
+    "operationId": "000000000000f112",
+    "generation": "0000000000000007",
+    "instanceId": 42,
+    "documentId": "pdf/document-0009",
+    "baseRevision": "25566e5e6a847f778403cd7fa67dcb6f789be3c58e6ab2ab779455fbd29dbb57"
+  },
+  "cases": [
+    {
+      "name": "full",
+      "size": 1572881,
+      "limit": 4194304,
+      "acknowledged": 385,
+      "result": "complete"
+    },
+    {
+      "name": "single-byte-final",
+      "size": 4097,
+      "limit": 4097,
+      "acknowledged": 2,
+      "result": "complete"
+    },
+    {
+      "name": "over-limit",
+      "size": 4097,
+      "limit": 4096,
+      "acknowledged": 0,
+      "result": "refused"
+    },
+    {
+      "name": "empty",
+      "size": 0,
+      "limit": 4096,
+      "acknowledged": 0,
+      "result": "refused"
+    },
+    {
+      "name": "cancel-after-first-page",
+      "size": 8193,
+      "limit": 8193,
+      "cancelAfter": 1,
+      "acknowledged": 1,
+      "result": "cancel"
+    },
+    {
+      "name": "revision-changed",
+      "size": 8193,
+      "limit": 8193,
+      "staleAfter": 1,
+      "acknowledged": 1,
+      "result": "cancel"
+    },
+    {
+      "name": "short-source-read",
+      "size": 8193,
+      "limit": 8193,
+      "shortAt": 1,
+      "acknowledged": 1,
+      "result": "cancel"
+    },
+    {
+      "name": "rejected-second-page",
+      "size": 8193,
+      "limit": 8193,
+      "rejectAt": 1,
+      "acknowledged": 1,
+      "result": "cancel"
+    },
+    {
+      "name": "missing-filename",
+      "size": 1,
+      "limit": 4096,
+      "filename": "",
+      "acknowledged": 0,
+      "result": "refused"
+    },
+    {
+      "name": "oversized-utf8-filename",
+      "size": 1,
+      "limit": 4096,
+      "filename": "演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演演",
+      "acknowledged": 0,
+      "result": "refused"
+    },
+    {
+      "name": "unsafe-mime",
+      "size": 20,
+      "limit": 4096,
+      "mediaType": "image/JPEG; invalid",
+      "acknowledged": 0,
+      "result": "refused"
+    },
+    {
+      "name": "missing-document",
+      "size": 1,
+      "limit": 4096,
+      "documentId": "",
+      "acknowledged": 0,
+      "result": "refused"
+    },
+    {
+      "name": "empty-native-mime",
+      "size": 1,
+      "limit": 4096,
+      "mediaType": "",
+      "acknowledged": 1,
+      "result": "complete"
+    }
+  ]
+}

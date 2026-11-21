@@ -444,7 +444,7 @@
         "operation": "build"
       },
       "role": "component",
-      "optLevel": "1",
+      "optLevel": "s",
       "debug": 0
     },
     {

@@ -5,7 +5,7 @@ use super::*;
 impl Fem3dNumericalChild {
     /// 📦 Reserves the right hand side storage.
     pub(super) fn step_reserve_rhs(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
-        if self.rhs.admit_in(self.free_order, context).map_err(|_| b"fem3d.numerical-rhs-admission".to_vec())? {
+        if self.equation_values.admit_in(self.free_order, context).map_err(|_| b"fem3d.numerical-rhs-admission".to_vec())? {
             self.stage = Fem3dNumericalStage::InitializeRhs;
         }
         Ok(self.stage == Fem3dNumericalStage::Complete)
@@ -13,8 +13,8 @@ impl Fem3dNumericalChild {
 
     /// 🧹 Initializes the right hand side storage.
     pub(super) fn step_initialize_rhs(&mut self) -> Result<bool, Fem3dNumericalFailure> {
-        if self.rhs.len() < self.free_order {
-            self.rhs.push(0.0).map_err(|_| b"fem3d.numerical-rhs-slot".to_vec())?;
+        if self.equation_values.len() < self.free_order {
+            self.equation_values.push(0.0).map_err(|_| b"fem3d.numerical-rhs-slot".to_vec())?;
         } else {
             self.node_cursor = 0;
             self.stage = Fem3dNumericalStage::ResolveSourceCase;
@@ -205,18 +205,12 @@ impl Fem3dNumericalChild {
         let [p0, p1, p2] = [p0, p1, p2].map(|point| source.axis.to_world(point[0], point[1], source.base_z + source.height));
         let area = (0.5 * ((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))).abs();
         let point = triangle[self.load_vertex_cursor] as usize;
-        let node_id = solid.node_ids.get(solid.top_offset + point).ok_or_else(|| b"fem3d.numerical-area-load-node".to_vec())?;
-        let Some(candidate) = self.analysis_node_ids.get(self.load_node_cursor) else { return Err((b"fem3d.numerical-area-load-node".to_vec()).into()) };
-        if candidate == node_id {
-            self.apply_rhs_value(self.load_node_cursor, Dof::Tz.index(), -*pressure * area / 3.0)?;
-            self.load_node_cursor = 0;
-            self.load_vertex_cursor += 1;
-            if self.load_vertex_cursor == 3 {
-                self.load_vertex_cursor = 0;
-                self.load_triangle_cursor += 1;
-            }
-        } else {
-            self.load_node_cursor += 1;
+        let node = *solid.node_indices.get(solid.top_offset + point).ok_or_else(|| b"fem3d.numerical-area-load-node".to_vec())?;
+        self.apply_rhs_value(node, Dof::Tz.index(), -*pressure * area / 3.0)?;
+        self.load_vertex_cursor += 1;
+        if self.load_vertex_cursor == 3 {
+            self.load_vertex_cursor = 0;
+            self.load_triangle_cursor += 1;
         }
         Ok(self.stage == Fem3dNumericalStage::Complete)
     }
@@ -324,29 +318,23 @@ impl Fem3dNumericalChild {
         let triangle = *meshed.tris.get(self.load_triangle_cursor).ok_or_else(|| b"fem3d.numerical-self-weight-solid-triangle".to_vec())?;
         let ranks = Self::footprint_ranks(meshed.points.len(), |index| meshed.points.get(index).copied(), triangle)?;
         let indices = Self::tet_indices(meshed.points.len(), triangle, ranks, self.point_cursor, self.tet_phase);
-        let node_id = meshed.node_ids.get(indices[self.load_vertex_cursor]).ok_or_else(|| b"fem3d.numerical-self-weight-solid-node".to_vec())?;
-        let Some(candidate) = self.analysis_node_ids.get(self.load_node_cursor) else { return Err((b"fem3d.numerical-self-weight-solid-node".to_vec()).into()) };
-        if candidate == node_id {
-            let position = |index: usize| -> Result<[f64; 3], Vec<u8>> {
-                let layer = index / meshed.points.len();
-                let point = *meshed.points.get(index % meshed.points.len()).ok_or_else(|| b"fem3d.numerical-self-weight-solid-point".to_vec())?;
-                Ok(solid.axis.to_world(point[0], point[1], solid.base_z + solid.height * layer as f64 / solid.layers as f64))
-            };
-            let p0 = position(indices[0])?;
-            let p1 = position(indices[1])?;
-            let p2 = position(indices[2])?;
-            let p3 = position(indices[3])?;
-            let a = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
-            let b = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
-            let c = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
-            let volume = (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])).abs() / 6.0;
-            let material = (*doc.materials).get(self.solid_materials[meshed.solid_index]).ok_or_else(|| b"fem3d.numerical-self-weight-material".to_vec())?;
-            self.apply_rhs_value(self.load_node_cursor, Dof::Tz.index(), -material.rho * volume * 9.81 / 4.0)?;
-            self.load_vertex_cursor += 1;
-            self.load_node_cursor = 0;
-        } else {
-            self.load_node_cursor += 1;
-        }
+        let node = *meshed.node_indices.get(indices[self.load_vertex_cursor]).ok_or_else(|| b"fem3d.numerical-self-weight-solid-node".to_vec())?;
+        let position = |index: usize| -> Result<[f64; 3], Vec<u8>> {
+            let layer = index / meshed.points.len();
+            let point = *meshed.points.get(index % meshed.points.len()).ok_or_else(|| b"fem3d.numerical-self-weight-solid-point".to_vec())?;
+            Ok(solid.axis.to_world(point[0], point[1], solid.base_z + solid.height * layer as f64 / solid.layers as f64))
+        };
+        let p0 = position(indices[0])?;
+        let p1 = position(indices[1])?;
+        let p2 = position(indices[2])?;
+        let p3 = position(indices[3])?;
+        let a = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+        let b = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+        let c = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
+        let volume = (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])).abs() / 6.0;
+        let material = (*doc.materials).get(self.solid_materials[meshed.solid_index]).ok_or_else(|| b"fem3d.numerical-self-weight-material".to_vec())?;
+        self.apply_rhs_value(node, Dof::Tz.index(), -material.rho * volume * 9.81 / 4.0)?;
+        self.load_vertex_cursor += 1;
         Ok(self.stage == Fem3dNumericalStage::Complete)
     }
 }

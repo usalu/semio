@@ -30,9 +30,12 @@
     outline-offset: -2px;
   }
 
-  .course-drop-active {
-    outline: 2px dashed Highlight;
-    outline-offset: -2px;
+  .course-drop-active > h3,
+  .course-drop-active > h4,
+  .course-drop-active > .course-row-label {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
   }
 
   .course-online,

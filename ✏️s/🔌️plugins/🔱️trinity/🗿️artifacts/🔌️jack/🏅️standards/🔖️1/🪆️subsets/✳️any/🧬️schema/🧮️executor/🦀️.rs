@@ -3,11 +3,10 @@
 
 use crate::standards::v1::subsets::any::schema::graph::{Edge, EntityRef, GraphEffect, Node};
 use crate::standards::v1::subsets::any::schema::memory::Graph;
-use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
-use crate::standards::v1::subsets::any::schema::ast::{Clause, Expr, JackQueryGraphSnapshot, Pattern, Query, QueryResult, ReturnItem};
+use crate::standards::v1::subsets::any::schema::ast::{Clause, Expr, Pattern, Query, QueryResult, ReturnItem};
 
 /// 🎯️ Variable binding in a match row.
 #[derive(Clone, Debug, Default)]
@@ -19,161 +18,14 @@ pub struct Binding {
 #[path = "🪜️execution/🦀️.rs"]
 pub mod execution;
 pub use execution::{QueryExecution, QueryExecutionPreparation, QueryPreparationStep, QUERY_RESULT_MAXIMUM_OWNED_BYTES};
-use execution::{emit_create_operations_from_graph, emit_set_operation_from_graph};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// #endregion 🔖️Executor
-// #region 🔖️Tests
-// #endregion 🔖️Tests
-
-
-
+/// ▶️ Runs the same evaluator used by retained artifact query jobs.
 pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<GraphEffect>), String> {
-    let mut view = graph.clone();
-    let mut bindings: Vec<Binding> = vec![Binding::default()];
-    let mut return_items: Option<Vec<ReturnItem>> = None;
-    let mut effects = Vec::new();
-    let apply = |view: &mut Graph, batch: Vec<GraphEffect>, effects: &mut Vec<GraphEffect>| -> Result<(), String> {
-        crate::standards::v1::subsets::any::schema::operations::apply_graph_effects(view, &batch).map_err(|e| e.to_string())?;
-        effects.extend(batch);
-        Ok(())
-    };
-    for clause in &query.clauses {
-        match clause {
-            Clause::Match(patterns) => {
-                bindings = match_patterns(&view, patterns)?;
-            }
-            Clause::Where(expr) => {
-                bindings.retain(|b| eval_expr(&view, b, expr));
-            }
-            Clause::Return(items) => {
-                return_items = Some(items.clone());
-            }
-            Clause::Create(pattern) => {
-                let batch = emit_create_operations_from_graph(&view, pattern).map_err(|e| e.into_message())?;
-                apply(&mut view, batch, &mut effects)?;
-            }
-            Clause::Delete(vars) => {
-                for var in vars {
-                    if let Some(id) = bindings.first().and_then(|b| b.nodes.get(var).cloned()) {
-                        apply(&mut view, vec![GraphEffect::DeleteNode(id)], &mut effects)?;
-                    }
-                }
-            }
-            Clause::Set(items) => {
-                let b = bindings.first().cloned().unwrap_or_default();
-                for item in items {
-                    if let Some(node_id) = b.nodes.get(&item.var) {
-                        let effect = emit_set_operation_from_graph(&view, node_id, &item.prop, item.value.clone()).map_err(|e| e.into_message())?;
-                        apply(&mut view, vec![effect], &mut effects)?;
-                    }
-                }
-            }
-            Clause::Merge(pattern) => {
-                if match_patterns(&view, std::slice::from_ref(pattern))?.is_empty() {
-                    let batch = emit_create_operations_from_graph(&view, pattern).map_err(|e| e.into_message())?;
-                    apply(&mut view, batch, &mut effects)?;
-                }
-            }
+    let mut execution = QueryExecution::new(graph.clone(), query.clone());
+    loop {
+        if let Some(result) = execution.step().map_err(|error| error.into_message())? {
+            return Ok(result);
         }
     }
-    if let Some(items) = return_items {
-        return Ok((build_return(&view, &bindings, &items), effects));
-    }
-    Ok((QueryResult::table(vec![], vec![]), effects))
-}
-
-pub(crate) fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
-    let mut bindings = vec![Binding::default()];
-    for pattern in patterns {
-        let mut next = Vec::new();
-        for binding in &bindings {
-            next.extend(match_pattern(graph, pattern, binding)?);
-        }
-        bindings = next;
-    }
-    Ok(bindings)
-}
-
-pub(crate) fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, String> {
-    let left = pattern.nodes.first().ok_or_else(|| "empty pattern".to_string())?;
-    if let Some(edge_pat) = &pattern.edge {
-        let mut out = Vec::new();
-        for (node_id, node) in &graph.nodes {
-            if node.kind != left.kind {
-                continue;
-            }
-            if binding_conflicts(base, &left.var, node_id) {
-                continue;
-            }
-            for (edge_id, edge) in &graph.edges {
-                if edge_pat.kind.as_ref().is_some_and(|k| *k != edge.kind) {
-                    continue;
-                }
-                let src = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.source);
-                let tgt = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.target);
-                if src != Some(node_id.as_str()) {
-                    continue;
-                }
-                let Some(tgt_id) = tgt else { continue };
-                let Some(tgt_node) = graph.nodes.get(tgt_id) else { continue };
-                if tgt_node.kind != edge_pat.right.kind {
-                    continue;
-                }
-                let mut b = base.clone();
-                b.nodes.insert(left.var.clone(), node_id.clone());
-                if let Some(ev) = &edge_pat.var {
-                    b.edges.insert(ev.clone(), edge_id.clone());
-                }
-                if binding_conflicts(base, &edge_pat.right.var, tgt_id) {
-                    continue;
-                }
-                b.nodes.insert(edge_pat.right.var.clone(), tgt_id.to_string());
-                out.push(b);
-            }
-        }
-        return Ok(out);
-    }
-    let mut out = Vec::new();
-    for (node_id, node) in &graph.nodes {
-        if node.kind != left.kind {
-            continue;
-        }
-        if binding_conflicts(base, &left.var, node_id) {
-            continue;
-        }
-        let mut b = base.clone();
-        b.nodes.insert(left.var.clone(), node_id.clone());
-        out.push(b);
-    }
-    Ok(out)
-}
-
-pub(crate) fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
-    base.nodes.get(var).is_some_and(|existing| existing != node_id)
 }
 
 pub(crate) fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
@@ -186,71 +38,30 @@ pub(crate) fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
 }
 
 pub(crate) fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
-    let node_id = binding.nodes.get(var)?;
-    let node = graph.node(node_id)?;
+    if let Some(id) = binding.nodes.get(var) {
+        let node = graph.node(id)?;
+        return match prop {
+            "id" => Some(PropertyValue::String(node.id.clone())),
+            "name" => Some(PropertyValue::String(node.name.clone())),
+            "kind" => Some(PropertyValue::String(node.kind.clone())),
+            "x" => Some(PropertyValue::Number(node.x)),
+            "y" => Some(PropertyValue::Number(node.y)),
+            _ => node.properties.get(prop).cloned(),
+        };
+    }
+    let edge = graph.edge(binding.edges.get(var)?)?;
     match prop {
-        "id" => Some(PropertyValue::String(node.id.clone())),
-        "name" => Some(PropertyValue::String(node.name.clone())),
-        "kind" => Some(PropertyValue::String(node.kind.clone())),
-        _ => node.properties.get(prop).cloned(),
+        "id" => Some(PropertyValue::String(edge.id.clone())),
+        "kind" => Some(PropertyValue::String(edge.kind.clone())),
+        "source" => Some(PropertyValue::String(edge.source.clone())),
+        "target" => Some(PropertyValue::String(edge.target.clone())),
+        _ => edge.properties.get(prop).cloned(),
     }
 }
 
-pub(crate) fn binding_has_entity(binding: &Binding, var: &str) -> bool {
-    binding.nodes.contains_key(var) || binding.edges.contains_key(var)
-}
-
-pub(crate) fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
-    items.iter().any(|item| {
-        let ReturnItem::Var(v) = item else { return false };
-        bindings.iter().any(|b| binding_has_entity(b, v))
-    })
-}
-
-pub(crate) fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
-    let mut node_ids = BTreeSet::new();
-    let mut edge_ids = BTreeSet::new();
-    for binding in bindings {
-        for item in items {
-            if let ReturnItem::Var(v) = item {
-                if let Some(id) = binding.nodes.get(v) {
-                    node_ids.insert(id.clone());
-                }
-                if let Some(id) = binding.edges.get(v) {
-                    edge_ids.insert(id.clone());
-                }
-            }
-        }
-    }
-    (node_ids, edge_ids)
-}
-
-pub(crate) fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
-    let columns: Vec<String> = items
-        .iter()
-        .map(|item| match item {
-            ReturnItem::Var(v) => v.clone(),
-            ReturnItem::Property { var, prop } => format!("{var}.{prop}"),
-        })
-        .collect();
-    if return_items_want_graph(items, bindings) {
-        let (node_ids, edge_ids) = collect_graph_entities(bindings, items);
-        let graph_snapshot = graph.subgraph_snapshot(&node_ids, &edge_ids);
-        return QueryResult::graph(columns, graph_snapshot);
-    }
-    let mut rows = Vec::new();
-    for binding in bindings {
-        let mut row = Vec::new();
-        for item in items {
-            let val = match item {
-                ReturnItem::Var(v) => binding.nodes.get(v).and_then(|id| graph.node(id)).map_or(PropertyValue::Null, |n| PropertyValue::String(n.name.clone())),
-                ReturnItem::Property { var, prop } => binding_value(graph, binding, var, prop).unwrap_or(PropertyValue::Null),
-            };
-            row.push(val);
-        }
-        rows.push(row);
-    }
-    QueryResult::table(columns, rows)
+pub(crate) fn binding_has_entity(graph: &Graph, binding: &Binding, var: &str) -> bool {
+    binding.nodes.get(var).is_some_and(|id| graph.nodes.contains_key(id))
+        || binding.edges.get(var).is_some_and(|id| graph.edges.contains_key(id))
 }
 
 #[cfg(any(test, feature = "testkit"))]

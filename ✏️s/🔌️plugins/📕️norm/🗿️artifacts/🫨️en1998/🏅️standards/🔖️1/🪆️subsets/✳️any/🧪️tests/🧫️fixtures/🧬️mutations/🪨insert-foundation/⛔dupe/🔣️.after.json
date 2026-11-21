@@ -418,5 +418,6 @@
   "slopes": [],
   "isolationSystems": [],
   "pierBases": [],
-  "criticalRegions": []
+  "criticalRegions": [],
+  "cases": []
 }

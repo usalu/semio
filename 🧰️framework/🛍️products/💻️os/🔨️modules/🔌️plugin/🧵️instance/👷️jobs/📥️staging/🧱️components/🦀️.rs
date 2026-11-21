@@ -249,9 +249,13 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// 📋️ Enabled fields form one retained initialization inventory.
     pub const EFFECT_OUTBOX_FIELD:usize=7;
     /// 📋️ Every enabled runtime field has one retained cursor entry.
-    pub const INITIAL_FIELDS:usize=39+(if cfg!(test){1}else{0});
+    const LATEST_WINS_KEY_FIELD:usize=36;
+    const AFTER_LATEST_WINS_KEYS:usize=Self::LATEST_WINS_KEY_FIELD+ToolLatestWinsRegistry::INITIAL_FIELDS;
+    pub const INITIAL_FIELDS:usize=38+ToolLatestWinsRegistry::INITIAL_FIELDS+(if cfg!(test){1}else{0});
     /// 📏️ Quotes one bounded absent chunk or one atomic live field and its actual backing.
-    pub fn initial_field_demands(field:usize,byte:usize,body:usize,backing:bool)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(match field{
+    pub fn initial_field_demands(field:usize,byte:usize,body:usize,backing:bool)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if (Self::LATEST_WINS_KEY_FIELD..Self::AFTER_LATEST_WINS_KEYS).contains(&field){return ToolLatestWinsRegistry::initial_field_demands(field-Self::LATEST_WINS_KEY_FIELD,byte,body)}
+     let field=if field>=Self::AFTER_LATEST_WINS_KEYS{field-(ToolLatestWinsRegistry::INITIAL_FIELDS-1)}else{field};
+     Ok(match field{
   0=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.pending_tool_lease_admission);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   1=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.original_tool_follow),depth:1,..Default::default()},
   2=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_scrub_dispatch);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
@@ -288,7 +292,6 @@ impl<A: ArtifactApp> ToolOperations<A> {
   33=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.typed_result_cursor),capacity_bytes:if backing{0}else{0},depth:1,..Default::default()},
   34=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_commands),capacity_bytes:if backing{semio_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.latest_wins_commands,64)?}else{0},depth:1,..Default::default()},
   35=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_order),capacity_bytes:if backing{semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.latest_wins_order,ARTIFACT_LIVE_OUTPUT_SLOTS)?}else{0},depth:1,..Default::default()},
-  36=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_keys),capacity_bytes:if backing{0}else{0},depth:1,..Default::default()},
   37=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_turn),capacity_bytes:if backing{0}else{0},depth:1,..Default::default()},
   38=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_emission_construction);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   #[cfg(test)]
@@ -298,7 +301,11 @@ impl<A: ArtifactApp> ToolOperations<A> {
     /// 🖋️ Copies one funded static absent chunk or initializes one selected live field in place.
     /// # Safety
     /// The target is exclusive caller-funded storage; the retained cursor advances only after successful entry.
-    pub unsafe fn initialize_field_at(target:*mut Self,source:&mut Option<OriginalToolOperationsInitialization>,field:usize,byte:usize,count:usize,backing:bool)->Result<bool,semio_framework_value::ValueError>{match field{
+    pub unsafe fn initialize_field_at(target:*mut Self,source:&mut Option<OriginalToolOperationsInitialization>,field:usize,byte:usize,count:usize,backing:bool)->Result<bool,semio_framework_value::ValueError>{if (Self::LATEST_WINS_KEY_FIELD..Self::AFTER_LATEST_WINS_KEYS).contains(&field){
+      return unsafe{ToolLatestWinsRegistry::initialize_field_at(std::ptr::addr_of_mut!((*target).latest_wins_keys),field-Self::LATEST_WINS_KEY_FIELD,byte,count)}
+     }
+     let field=if field>=Self::AFTER_LATEST_WINS_KEYS{field-(ToolLatestWinsRegistry::INITIAL_FIELDS-1)}else{field};
+     match field{
   0=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).pending_tool_lease_admission),byte,count)},
   1=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.original_tool_follow){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).original_tool_follow).write(semio_plugin_tool_machine::OriginalToolMachineFollowSlot::vacant());}Ok(true)},
   2=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).original_scrub_dispatch),byte,count)},
@@ -335,7 +342,6 @@ impl<A: ArtifactApp> ToolOperations<A> {
   33=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.typed_result_cursor){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).typed_result_cursor).write(0);}Ok(true)},
   34=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_commands){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_commands).write(if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)});}Ok(true)},
   35=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_order){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_order).write(if backing{ArtifactFixedQueue::new(ARTIFACT_LIVE_OUTPUT_SLOTS)}else{ArtifactFixedQueue::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)});}Ok(true)},
-  36=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_keys){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_keys).write(ToolLatestWinsRegistry::new());}Ok(true)},
   37=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_turn){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_turn).write(true);}Ok(true)},
   38=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).original_emission_construction),byte,count)},
   #[cfg(test)]
@@ -351,6 +357,29 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn framework_registration(&self,id:&str)->Option<&ArtifactToolRegistration>{self.framework_registrations().find_map(|(key,row)|(key==id).then_some(row))}
     pub fn bounded_proof(&self,id:&str)->Option<&QualifiedBoundedFirstStepProof>{self.bounded_tool_proofs.get(id).or_else(||self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).and_then(|catalog|catalog.bounded(id)))}
     pub fn bounded_contracts(&self)->impl Iterator<Item=&ArtifactToolPublicContract>{self.bounded_tool_contracts.iter().chain(self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).into_iter().flat_map(|catalog|catalog.bounded_contracts.iter()))}
+    /// 📚️ Lists this tool owner's registered public contracts in their declared order.
+    pub fn public_tool_contracts(&self) -> Vec<ArtifactToolPublicContract> {
+        self.bounded_contracts()
+            .cloned()
+            .chain(self.framework_registrations().map(|(_,row)|row).map(|registration| ArtifactToolPublicContract {
+                owner: registration.owner,
+                controller_id: registration.key.controller_id.clone(),
+                tool_id: registration.key.tool_id.clone(),
+                schema_id: registration.schema_id.clone(),
+                max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
+                publication_lanes: registration.publication_lanes,
+            }))
+            .chain(self.app_registrations().map(|(_,row)|row).map(|registration| ArtifactToolPublicContract {
+                owner: registration.owner,
+                controller_id: registration.key.controller_id.clone(),
+                tool_id: registration.key.tool_id.clone(),
+                schema_id: registration.schema_id.clone(),
+                max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
+                publication_lanes: registration.publication_lanes,
+            }))
+            .collect()
+    }
+
     /// 🔭️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: semio_framework::ActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, mut bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
         bounded_tool_contracts.sort_by(|left,right|left.tool_id.cmp(&right.tool_id));

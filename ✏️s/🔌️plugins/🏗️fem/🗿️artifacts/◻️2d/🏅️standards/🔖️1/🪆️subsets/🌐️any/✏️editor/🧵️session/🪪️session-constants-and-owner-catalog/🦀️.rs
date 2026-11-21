@@ -40,6 +40,8 @@ pub const SESSION_MAXIMUM_FAULT_BYTES: usize = 4_096;
 
 pub const SESSION_OWNER_PAGE_BYTES: usize = 16_384;
 
+pub const SESSION_EIGEN_OWNER_BYTES: usize = 256 * 1_024 * 1_024;
+
 pub const SESSION_MAXIMUM_STRING_BYTES: usize = SESSION_OWNER_PAGE_BYTES;
 
 /// 🧮️ Census units one snapshot-read opportunity may charge before it yields to the next refresh —
@@ -92,6 +94,7 @@ pub enum MountedOwnerClass {
     VisualStrings,
     OutputPages,
     FaultPages,
+    EigenWorkingStorage,
 }
 
 #[derive(Clone, Copy)]
@@ -103,7 +106,7 @@ pub struct MountedOwnerClaim {
 
 #[derive(Clone, Copy)]
 pub struct MountedProcessOwnerCatalog {
-    pub claims: [MountedOwnerClaim; 30],
+    pub claims: [MountedOwnerClaim; 31],
 }
 
 impl MountedProcessOwnerCatalog {
@@ -142,7 +145,7 @@ impl MountedProcessOwnerCatalog {
                 MountedOwnerClaim { class: MountedOwnerClass::PcgVectors, roots: 10, items: 512 },
                 MountedOwnerClaim {
                     class: MountedOwnerClass::VisualVectors,
-                    roots: 5,
+                    roots: 5 + (SESSION_MAXIMUM_NODES * size_of::<(String, [f64; 9])>()).div_ceil(4096),
                     items: 2 * (SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS + SESSION_MAXIMUM_ELEMENTS + SESSION_MAXIMUM_MESH_TRIANGLES)
                         + 64
                         + SESSION_MAXIMUM_ELEMENTS
@@ -153,6 +156,11 @@ impl MountedProcessOwnerCatalog {
                 MountedOwnerClaim { class: MountedOwnerClass::VisualStrings, roots: 64 + SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS + SESSION_MAXIMUM_ELEMENTS + SESSION_MAXIMUM_MESH_TRIANGLES + 1, items: 0 },
                 MountedOwnerClaim { class: MountedOwnerClass::OutputPages, roots: 3 * semio_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY + 3 * (SESSION_MAXIMUM_OUTPUT_BYTES / SESSION_OWNER_PAGE_BYTES), items: 6 },
                 MountedOwnerClaim { class: MountedOwnerClass::FaultPages, roots: 2, items: 0 },
+                MountedOwnerClaim {
+                    class: MountedOwnerClass::EigenWorkingStorage,
+                    roots: SESSION_EIGEN_OWNER_BYTES / SESSION_OWNER_PAGE_BYTES,
+                    items: SESSION_EIGEN_OWNER_BYTES / size_of::<f64>(),
+                },
             ],
         }
     }

@@ -3828,6 +3828,7 @@ name = "semio-framework-graph-manifest"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
@@ -4912,6 +4913,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
  "semio-framework-replication-error",
@@ -7248,6 +7250,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -8617,7 +8620,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-replication-command-ingress",
  "semio-framework-value",
+ "semio-framework-value-persistent",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
  "serde_json",
@@ -9702,6 +9707,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-job",
  "semio-framework-value",
+ "semio-plugin-interpreter-numeric",
 ]
 
 [[package]]
@@ -9714,6 +9720,10 @@ dependencies = [
  "semio-plugin-guest-contract",
  "semio-plugin-interpreter",
 ]
+
+[[package]]
+name = "semio-plugin-interpreter-numeric"
+version = "0.1.0"
 
 [[package]]
 name = "semio-plugin-interpreter-runtime"
@@ -13867,7 +13877,14 @@ version = "0.1.0"
 name = "semio-s-artifact-stdio-pdf-editor-document"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-hash",
+ "semio-framework-pixels",
+ "semio-framework-value",
+ "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
 ]
@@ -13969,6 +13986,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-pixels",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
@@ -15176,6 +15194,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-pdf-native-save"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-publication",
+ "semio-framework-value",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-artifact-stdio-pdf-schema-4",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-pdf-page-coordinates"
 version = "0.1.0"
 
@@ -15408,6 +15437,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-pdf-schema-5"
 version = "0.1.0"
 dependencies = [
+ "semio-s-artifact-stdio-pdf-native-save",
  "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-async",
@@ -15430,6 +15460,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-pdf-diff",
+ "semio-s-artifact-stdio-pdf-editor-document",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
  "semio-s-artifact-stdio-pdf-mut-base",

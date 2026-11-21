@@ -61,9 +61,7 @@ fn a_loading_text_node_paints_skeleton_blocks_instead_of_its_glyphs() {
 //#endregion 🦴️SkeletonPaint
 
 //#region 🎉️CelebratePaint
-// 🎉️ W2k: a celebrating element used to paint a STATIC `theme.accent` hairline ring, because `Theme`
-// carried no primary/secondary/tertiary triad and no frame clock reached paint. Both now exist, so
-// the ring spins through React's own conic stops and bursts to `--stroke-focus` at React's timing.
+// 🎉️ The celebrating ring cycles through the theme colors at a fixed hairline.
 
 #[test]
 fn the_celebrate_cycle_wraps_once_per_react_duration_and_never_divides_by_zero() {
@@ -78,13 +76,22 @@ fn the_celebrate_cycle_wraps_once_per_react_duration_and_never_divides_by_zero()
 }
 
 #[test]
-fn the_ring_thickness_bursts_from_hairline_to_the_focus_stroke_and_back() {
+fn introducing_and_celebrating_borders_remain_hairline_throughout_the_cycle() {
     let theme = Theme::default();
-    assert!(theme.stroke_focus > theme.stroke_hairline, "React's `--stroke-focus` is three hairlines");
-    assert!((celebrate_stroke(&theme, 0.0) - theme.stroke_hairline).abs() < 1e-5, "0 % is hairline");
-    assert!((celebrate_stroke(&theme, 0.5) - theme.stroke_focus).abs() < 1e-5, "50 % is the focus stroke");
-    assert!((celebrate_stroke(&theme, 1.0) - theme.stroke_hairline).abs() < 1e-5, "100 % is hairline again");
-    assert!(celebrate_stroke(&theme, 0.25) > theme.stroke_hairline && celebrate_stroke(&theme, 0.25) < theme.stroke_focus, "the ramp is eased, not stepped");
+    for state in [UiState::Introducing, UiState::Celebrating] {
+        for turns in [0.0, 0.25, 0.5, 0.75] {
+            let mut draw = DrawList::default();
+            draw.set_clock_seconds(turns * theme.celebrate_duration_seconds);
+            let presence = UiPresence { state, ..UiPresence::default() };
+            presence_overlay(&mut draw, Rect::new(0.0, 0.0, 40.0, 20.0), &theme, &presence, false);
+            settle_borders(&mut draw);
+            let instances: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.ui_instances)
+                .filter(|item| item.params[2] == semio_ui_draw_contract::KIND_INTRODUCING_BORDER)
+                .collect();
+            assert!(!instances.is_empty());
+            assert!(instances.iter().all(|item| item.params[1] == theme.stroke_hairline));
+        }
+    }
 }
 
 #[test]
@@ -115,7 +122,7 @@ fn a_celebrating_element_paints_a_different_ring_as_the_clock_advances_while_an_
         paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
         draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| (instance.color, instance.params)).collect::<Vec<_>>()
     };
-    assert_ne!(ring(UiState::Celebrating, 0.0), ring(UiState::Celebrating, 0.6), "the celebrate ring is time-varying — that IS the spin and the burst");
+    assert_ne!(ring(UiState::Celebrating, 0.0), ring(UiState::Celebrating, 0.6), "the celebrate ring cycles through the theme colors");
     assert_eq!(ring(UiState::Introducing, 0.0), ring(UiState::Introducing, 0.6), "the introduce pulse is shader-side, so paint emits the same instance at any clock");
 }
 //#endregion 🎉️CelebratePaint
@@ -226,5 +233,50 @@ fn a_native_card_stack_lays_out_gapless_and_paints_each_shared_line_once() {
     }
     let glyphs = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|item| (item.params[2] - KIND_GLYPH).abs() < 0.01).count();
     assert!(glyphs >= "Question oneSubmit quizQuestion two".chars().filter(|c| !c.is_whitespace()).count(), "both title chips and the footer chip are drawn as text");
+
+    tree.node_mut(first).unwrap().flags.set(NodeFlags::HOVER_OWNER, true);
+    let mut hovered = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    settle_borders(&mut hovered);
+    let matching = |draw: &DrawList, color: Rgba| {
+        draw.layers.iter().flat_map(|layer| &layer.ui_instances)
+            .filter(|item| item.params[2] == semio_ui_draw_contract::KIND_SOLID && item.rect[2] > 0.0 && item.rect[3] > 0.0 && item.color == [color.r, color.g, color.b, color.a])
+            .map(|item| item.rect)
+            .collect::<Vec<_>>()
+    };
+    let idle = matching(&draw, theme.border_normal);
+    let normal = matching(&hovered, theme.border_normal);
+    let emphasized = matching(&hovered, theme.border_emphasized);
+    assert!(!normal.is_empty() && !emphasized.is_empty());
+    assert_eq!(idle.len(), normal.len() + emphasized.len());
+    assert!(idle.iter().all(|rect| normal.contains(rect) || emphasized.contains(rect)));
+    assert!(emphasized.iter().any(|rect| rect[1] < b.y && rect[3] == theme.stroke_hairline));
+    assert!(emphasized.iter().any(|rect| rect[1] >= b.y && rect[3] == theme.stroke_hairline), "the upper card's footer stays part of its highlighted silhouette");
+
+    tree.node_mut(first).unwrap().flags.set(NodeFlags::HOVER_OWNER, false);
+    tree.node_mut(second).unwrap().flags.set(NodeFlags::HOVER_OWNER, true);
+    tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVERED, true);
+    let shared_y = b.y + theme.control_height * 0.5;
+    for (x, upper) in [(b.x + 1.0, false), (b.x + b.width - 1.0, true)] {
+        let mut hovered = paint_retained_node_with_pointer_for_test(&tree, root, &theme, &mut atlas, Some((x, shared_y)));
+        settle_borders(&mut hovered);
+        let emphasized = matching(&hovered, theme.border_emphasized);
+        let normal = matching(&hovered, theme.border_normal);
+        assert_eq!(idle.len(), normal.len() + emphasized.len());
+        assert!(idle.iter().all(|rect| normal.contains(rect) || emphasized.contains(rect)));
+        assert_eq!(emphasized.iter().any(|rect| rect[1] < b.y - theme.stroke_hairline), upper, "the pointer selects the visible card within the shared band");
+        assert!(!emphasized.is_empty());
+    }
+    let mut gap = paint_retained_node_with_pointer_for_test(&tree, root, &theme, &mut atlas, Some((b.x + b.width * 0.5, shared_y)));
+    settle_borders(&mut gap);
+    assert!(matching(&gap, theme.border_emphasized).is_empty());
+
+    tree.node_mut(second).unwrap().flags.set(NodeFlags::HOVER_OWNER, false);
+    tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVERED, false);
+    let mut obscured = paint_retained_node_with_pointer_for_test(&tree, root, &theme, &mut atlas, Some((b.x + b.width - 1.0, shared_y)));
+    settle_borders(&mut obscured);
+    assert_eq!(matching(&obscured, theme.border_normal), idle, "the router's hover chain excludes a stack beneath another hit target");
+    let mut exited = paint_retained_node_for_test(&tree, root, &theme, &mut atlas);
+    settle_borders(&mut exited);
+    assert_eq!(matching(&exited, theme.border_normal), idle);
 }
 //#endregion 🃏️CardStackPaint

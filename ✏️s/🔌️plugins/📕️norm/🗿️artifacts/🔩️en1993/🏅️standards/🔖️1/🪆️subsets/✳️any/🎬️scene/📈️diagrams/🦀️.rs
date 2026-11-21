@@ -3,7 +3,7 @@
 
 use super::checks::{part_1_1, part_1_2, part_1_9, AnnexParams};
 use super::model::{En1993Snapshot, FatigueDetail, FireExposure, SteelMaterial, SteelMember, SteelSection};
-use super::norm::{CheckReport, CheckResult};
+use super::norm::{AnnexChoice, CheckReport, CheckResult};
 use super::scene::diagram_kit::{curves, interaction_polygon, sn_curves, Xy};
 use super::scene::*;
 use super::scene::projection_kit::diagram_parts::{column, stroke, axis};
@@ -263,11 +263,11 @@ fn classification(d: &En1993Snapshot, member: &SteelMember) -> Option<Diagram2d>
     })
 }
 
-fn fatigue(report: &CheckReport, detail: &FatigueDetail) -> Option<Diagram2d> {
+fn fatigue(report: &CheckReport, detail: &FatigueDetail, annex: AnnexChoice) -> Option<Diagram2d> {
     let category = part_1_9::detail_category_pa(detail.category) / 1.0e6;
     let curve = sn_curves::sn_curve(category, 1.0e4, 1.0e8);
     let spectrum: Vec<(f64, f64)> = super::fatigue_views::blocks(detail).into_iter().map(|(range, cycles)| (range * 1.0e6, cycles)).collect();
-    let gamma = part_1_9::gamma_mf(part_1_9::parse_method(detail.method.as_str()));
+    let gamma = part_1_9::gamma_mf(detail.method, detail.consequence, annex);
     let damage = part_1_9::miner_damage(&spectrum, category * 1.0e6, gamma);
     let check = worst(report, &detail.id, "en1993.1-9.fat.");
     let points: Vec<ScatterPoint> = spectrum.iter().map(|(ds, n)| ScatterPoint { at: Vec2::new(*n, ds / 1.0e6), tone: utilisation_tone(damage), label: Some(loc(&format!("Δσ = {:.0} MPa, n = {n:.2e}", ds / 1.0e6), &format!("Δσ = {:.0} MPa, n = {n:.2e}", ds / 1.0e6))) }).collect();
@@ -391,7 +391,7 @@ fn diagrams_unbased(document: &En1993Snapshot, report: &CheckReport, focus: Opti
             out.extend(classification(document, member));
         }
         for detail in document.fatigue_details.iter().filter(|f| f.member_id == member.id && focus.is_none_or(|x| x == f.id || x == member.id)) {
-            out.extend(fatigue(report, detail));
+            out.extend(fatigue(report, detail, document.annex));
         }
         for exposure in document.fire_exposures.iter().filter(|f| f.member_id == member.id && focus.is_none_or(|x| x == f.id || x == member.id)) {
             out.extend(fire(document, report, exposure).into_iter().flatten());

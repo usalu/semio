@@ -539,6 +539,10 @@
    ]
   }
  ],
+ "materialisationProgress": [
+  {"name": "steady", "deadlineMs": 200, "completionMs": [80, 160, 240, 320, 400, 480], "stallMs": null, "status": "done"},
+  {"name": "stalled", "deadlineMs": 200, "completionMs": [80, 160], "stallMs": 380, "status": "stalled"}
+ ],
  "intakeProgress": [
   {
    "bytes": 0,

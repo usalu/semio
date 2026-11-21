@@ -1,0 +1,37 @@
+{
+  "signatureMoves": [{"change":"stat","published":true},{"change":"content","published":false}],
+  "staged": {
+    "path": "a.txt",
+    "text": "stage candidate\n"
+  },
+  "unrelated": {
+    "path": "unrelated.txt",
+    "text": "worktree payload\n"
+  },
+  "order": [
+    "git-object",
+    "stage",
+    "worktree"
+  ],
+  "packedObjects": [
+    {"path": "loose.txt", "text": "loose stage prerequisite\n", "storage": "loose"},
+    {"path": "packed.txt", "text": "packed stage prerequisite\n", "storage": "packed"}
+  ],
+  "observations": [
+    {"object": "present", "treeKnown": true},
+    {"object": "missing", "treeKnown": false}
+  ],
+  "journal": {
+    "path": "journal-link.txt",
+    "spans": [
+      {
+        "target": "b.txt",
+        "count": 1024
+      },
+      {
+        "target": "a.txt",
+        "count": 1
+      }
+    ]
+  }
+}

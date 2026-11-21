@@ -34,10 +34,10 @@ Feature: DIN EN 16798-1 comfort and ventilation closed forms reproduce the indep
   @id-adaptive-band
   @level-quick
   @mode-differential
-  Scenario: the adaptive comfort bands follow theta_c = 0.33 theta_rm + 18.8 and the category half widths 2, 3, 4 and 5 K
+  Scenario: the adaptive comfort bands follow Figure B.1 within its outdoor temperature interval
     Given the section "adaptive"
     When the lower limit, the comfort temperature and the upper limit are evaluated
-    Then every value equals the oracle value within the absolute tolerance 1e-9
+    Then every applicable value equals the oracle within 1e-9 and outside the scope the limits are absent
 
   @id-ventilation-components
   @level-quick
@@ -50,7 +50,7 @@ Feature: DIN EN 16798-1 comfort and ventilation closed forms reproduce the indep
   @id-co2-limit
   @level-quick
   @mode-differential
-  Scenario: the CO2 excess limit follows the category and, under the German annex, the absolute limit of the usage
+  Scenario: the CO2 excess design value follows the category and the annex
     Given the section "co2"
     When the permitted excess above the outdoor concentration is evaluated
     Then every value equals the oracle value within the absolute tolerance 1e-9

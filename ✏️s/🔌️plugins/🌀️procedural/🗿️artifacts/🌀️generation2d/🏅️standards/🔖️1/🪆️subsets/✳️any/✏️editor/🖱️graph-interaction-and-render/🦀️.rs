@@ -82,7 +82,7 @@ pub(super) fn generation2d_render_body(
             view_state.terminology,
             &semio_plugin::TreeWindows::for_body(view_state, generations::GENERATION2D_PLAY_BODY_GENERATIONS),
         ),
-        form::GENERATION2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, labels),
+        form::GENERATION2D_PLAY_BODY_GENERATE_FORM => form::render(document, &document.generation, view_state, labels),
         generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW => {
             let window_config = generate_preview::config::current(cfg);
             generate_preview::render(&window_config, None, labels)

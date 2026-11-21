@@ -1,6 +1,8 @@
 //! 🪣️ Pending raster upload queues, surfaces, upload cursors and authority close.
 
 use super::*;
+use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, RetainedCloneGrant, StepContext, close_original_quoted_retained_step};
+use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError};
 
 //#region SceneRuntime
 const RASTER_SURFACE_CAPACITY: usize = 256;
@@ -90,10 +92,12 @@ impl PendingRasterQueue {
     }
 
     #[cfg(any(test, feature = "testkit"))]
-    pub fn close_all(&mut self) {
+    pub fn close_all(&mut self, grant: RetainedCloneGrant) {
         while let Some(mut producer) = self.pop_front_for_close() {
             producer.begin_close();
-            while !producer.close_step() {}
+            while !producer.terminal_is_empty() {
+                producer.close_step(grant).expect("funded fixture raster close");
+            }
         }
     }
 }
@@ -136,14 +140,51 @@ impl PendingRasterSurface {
     }
 
     /// 🖼️ One bounded retirement step of the first parked refusal; `false` when the ring is empty.
-    pub fn retire_refusal_step(&mut self) -> bool {
-        let Some(slot) = self.refused.iter_mut().find(|slot| slot.is_some()) else { return false };
-        if slot.as_mut().is_some_and(PreparedRasterRejected::close_step) {
-            debug_assert!(slot.as_ref().is_some_and(PreparedRasterRejected::terminal_is_empty), "a retired refusal is terminal-empty");
-            *slot = None;
-        }
-        true
+    pub fn retire_refusal_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        let Some(slot) = self.refused.iter_mut().find(|slot| slot.is_some()) else { return Ok(false) };
+        close_raster_refusal(slot, cx)?;
+        Ok(true)
     }
+}
+
+fn close_raster_slot<O>(
+    slot: &mut Option<O>,
+    cx: &mut StepContext<'_>,
+    terminal: fn(&O) -> bool,
+    demands: fn(&O, usize) -> Result<RetainedCloneGrant, ValueError>,
+    close: fn(&mut O, RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError>,
+) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+    let Some(owner) = slot.as_mut() else {
+        return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+    };
+    if terminal(owner) {
+        let copy_bytes = std::mem::size_of::<Option<O>>();
+        let step = close_original_quoted_retained_step(cx, RetirementDemand { copy_bytes, depth: 1, ..Default::default() }, 1, |_| {
+            *slot = None;
+            RetainedWorkOutcome::<RetainedCloneStep, ValueError> {
+                result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })),
+                work: 1,
+            }
+        })?;
+        return Ok(if slot.is_none() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step });
+    }
+    let quote = demands(owner, cx.retained_grant().maximum_copy_bytes)?;
+    let demand = RetirementDemand { copy_bytes: quote.maximum_copy_bytes, capacity_bytes: quote.maximum_capacity_bytes, release_bytes: quote.maximum_release_bytes, depth: quote.maximum_depth };
+    close_original_quoted_retained_step(cx, demand, 1, |grant| {
+        let result = close(owner, grant);
+        let work = result.as_ref().map_or(0, |step| step.progress().copied_items as u128);
+        let result = result.and_then(|step| step.admit(grant, terminal(owner))).map(|step| RetainedCloneStep::Progress(step.progress()));
+        RetainedWorkOutcome { result, work }
+    })
+}
+
+/// ♻️ Retires one raster owner and unlinks its slot only after its terminal witness.
+pub fn close_pending_raster_producer(slot: &mut Option<PreparedRasterProducer>, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+    close_raster_slot(slot, cx, PreparedRasterProducer::terminal_is_empty, PreparedRasterProducer::next_close_demands, PreparedRasterProducer::close_step)
+}
+
+fn close_raster_refusal(slot: &mut Option<PreparedRasterRejected>, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+    close_raster_slot(slot, cx, PreparedRasterRejected::terminal_is_empty, PreparedRasterRejected::next_close_demands, PreparedRasterRejected::close_step)
 }
 
 pub enum PendingRasterUploadStep {
@@ -185,61 +226,53 @@ pub struct PendingRasterUploadCursor {
 }
 
 impl PendingRasterUploadCursor {
-    pub fn step(&mut self) -> PendingRasterUploadStep {
-        if let Some(producer) = self.closing.as_mut() {
-            if !producer.close_step() {
-                return PendingRasterUploadStep::Pending;
+    pub fn step(&mut self, cx: &mut StepContext<'_>) -> Result<PendingRasterUploadStep, OriginalTurnFailure> {
+        if self.closing.is_some() {
+            if !matches!(close_pending_raster_producer(&mut self.closing, cx)?, InteractiveJobCloseStep::Complete { .. }) {
+                return Ok(PendingRasterUploadStep::Pending);
             }
-            self.closing = None;
-            return PendingRasterUploadStep::Fault("raster producer handoff was rejected");
+            return Ok(PendingRasterUploadStep::Fault("raster producer handoff was rejected"));
         }
         PENDING_RASTER_STATE.with(|cell| {
             let mut states = cell.borrow_mut();
             if states.len() > RASTER_SURFACE_CAPACITY {
-                return PendingRasterUploadStep::Fault("raster surface credits exceeded");
+                return Ok(PendingRasterUploadStep::Fault("raster surface credits exceeded"));
             }
             if let Some(fault) = states.take_fault() {
-                return PendingRasterUploadStep::Fault(fault);
+                return Ok(PendingRasterUploadStep::Fault(fault));
             }
-            let Some(surface_id) = states.id_at(self.surface_index).map(str::to_owned) else { return PendingRasterUploadStep::Complete };
-            let Some(surface_token) = states.token(&surface_id) else { return PendingRasterUploadStep::Fault("raster surface token lost ownership") };
-            let Some(state) = states.get_mut(&surface_id) else { return PendingRasterUploadStep::Fault("raster surface order lost ownership") };
+            let Some(surface_id) = states.id_at(self.surface_index).map(str::to_owned) else { return Ok(PendingRasterUploadStep::Complete) };
+            let Some(surface_token) = states.token(&surface_id) else { return Ok(PendingRasterUploadStep::Fault("raster surface token lost ownership")) };
+            let Some(state) = states.get_mut(&surface_id) else { return Ok(PendingRasterUploadStep::Fault("raster surface order lost ownership")) };
             if let Some(reservation) = state.admission.take() {
                 state.rejected = Some(reservation.reject("raster reservation was abandoned before publication", Vec::new()));
-                return PendingRasterUploadStep::Pending;
+                return Ok(PendingRasterUploadStep::Pending);
             }
-            if state.retire_refusal_step() {
-                return PendingRasterUploadStep::Pending;
+            if state.retire_refusal_step(cx)? {
+                return Ok(PendingRasterUploadStep::Pending);
             }
-            if let Some(retiring) = state.retiring.as_mut() {
-                if !retiring.close_step() {
-                    return PendingRasterUploadStep::Pending;
-                }
-                assert!(retiring.terminal_is_empty(), "retired raster reservation must be terminal-empty");
-                state.retiring = None;
-                return PendingRasterUploadStep::Pending;
+            if state.retiring.is_some() {
+                close_raster_refusal(&mut state.retiring, cx)?;
+                return Ok(PendingRasterUploadStep::Pending);
             }
-            if let Some(rejected) = state.rejected.as_mut() {
+            if let Some(rejected) = state.rejected.as_ref() {
                 let fault = rejected.fault();
-                if !rejected.close_step() {
-                    return PendingRasterUploadStep::Pending;
+                if !matches!(close_raster_refusal(&mut state.rejected, cx)?, InteractiveJobCloseStep::Complete { .. }) {
+                    return Ok(PendingRasterUploadStep::Pending);
                 }
-                assert!(rejected.terminal_is_empty(), "rejected raster reservation must be terminal-empty");
-                state.rejected = None;
-                return PendingRasterUploadStep::Fault(fault);
+                return Ok(PendingRasterUploadStep::Fault(fault));
             }
-            if let Some(producer) = state.closing.as_mut() {
-                if !producer.close_step() {
-                    return PendingRasterUploadStep::Pending;
+            if state.closing.is_some() {
+                if !matches!(close_pending_raster_producer(&mut state.closing, cx)?, InteractiveJobCloseStep::Complete { .. }) {
+                    return Ok(PendingRasterUploadStep::Pending);
                 }
-                state.closing = None;
-                return PendingRasterUploadStep::Fault("raster producer admission changed before FIFO publication");
+                return Ok(PendingRasterUploadStep::Fault("raster producer admission changed before FIFO publication"));
             }
             if let Some(queue) = state.queue.checkout_front() {
-                return PendingRasterUploadStep::Upload(PendingRasterCheckedOut { surface: surface_token, queue, active: true });
+                return Ok(PendingRasterUploadStep::Upload(PendingRasterCheckedOut { surface: surface_token, queue, active: true }));
             }
             self.surface_index += 1;
-            PendingRasterUploadStep::Pending
+            Ok(PendingRasterUploadStep::Pending)
         })
     }
 
@@ -252,13 +285,8 @@ impl PendingRasterUploadCursor {
         Ok(())
     }
 
-    pub fn close_step(&mut self) -> bool {
-        let Some(producer) = self.closing.as_mut() else { return true };
-        if !producer.close_step() {
-            return false;
-        }
-        self.closing = None;
-        true
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+        close_pending_raster_producer(&mut self.closing, cx)
     }
 }
 
@@ -275,58 +303,46 @@ impl PendingRasterSurfaceRetirement {
         Self { id: owner.id, surface: owner.value, producer: None, id_released: false, scalars_released: false }
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
-        if let Some(producer) = self.producer.as_mut() {
-            if !producer.close_step() {
-                return false;
-            }
-            assert!(producer.terminal_is_empty(), "realm-retired raster producer must be terminal-empty");
-            self.producer = None;
-            return false;
+    pub(crate) fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        if self.producer.is_some() {
+            close_pending_raster_producer(&mut self.producer, cx)?;
+            return Ok(false);
         }
-        if let Some(retiring) = self.surface.retiring.as_mut() {
-            if !retiring.close_step() {
-                return false;
-            }
-            assert!(retiring.terminal_is_empty(), "realm-retired raster reservation must be terminal-empty");
-            self.surface.retiring = None;
-            return false;
+        if self.surface.retiring.is_some() {
+            close_raster_refusal(&mut self.surface.retiring, cx)?;
+            return Ok(false);
         }
         if let Some(reservation) = self.surface.admission.take() {
             self.surface.retiring = Some(reservation.reject("realm closed pending raster reservation", Vec::new()));
-            return false;
+            return Ok(false);
         }
-        if self.surface.retire_refusal_step() {
-            return false;
+        if self.surface.retire_refusal_step(cx)? {
+            return Ok(false);
         }
-        if let Some(rejected) = self.surface.rejected.as_mut() {
-            if !rejected.close_step() {
-                return false;
-            }
-            assert!(rejected.terminal_is_empty(), "realm-rejected raster reservation must be terminal-empty");
-            self.surface.rejected = None;
-            return false;
+        if self.surface.rejected.is_some() {
+            close_raster_refusal(&mut self.surface.rejected, cx)?;
+            return Ok(false);
         }
         if let Some(mut producer) = self.surface.closing.take() {
             producer.begin_close();
             self.producer = Some(producer);
-            return false;
+            return Ok(false);
         }
         if self.surface.queue.checked_out.is_some() {
-            return false;
+            return Ok(false);
         }
         if let Some(mut producer) = self.surface.queue.pop_front_for_close() {
             producer.begin_close();
             self.producer = Some(producer);
-            return false;
+            return Ok(false);
         }
         if self.id.pop().is_some() {
-            return false;
+            return Ok(false);
         }
         if !self.id_released {
             self.id = String::new();
             self.id_released = true;
-            return false;
+            return Ok(false);
         }
         if !self.scalars_released {
             self.surface.queue.head = 0;
@@ -334,9 +350,9 @@ impl PendingRasterSurfaceRetirement {
             self.surface.queue.checked_out = None;
             self.surface.queue.epochs = [0; RASTER_UPLOADS_PER_SURFACE_CAPACITY];
             self.scalars_released = true;
-            return false;
+            return Ok(false);
         }
-        true
+        Ok(true)
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
@@ -366,22 +382,22 @@ pub fn begin_pending_raster_authority_close() -> PendingRasterAuthorityClose {
 }
 
 impl PendingRasterAuthorityClose {
-    pub fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         if self.complete {
-            return true;
+            return Ok(true);
         }
-        let active = PENDING_RASTER_CLOSE_OWNER.with(|cell| {
+        let active = PENDING_RASTER_CLOSE_OWNER.with(|cell| -> Result<bool, OriginalTurnFailure> {
             let mut owner = cell.borrow_mut();
-            let Some(surface) = owner.as_mut() else { return false };
-            if !surface.close_step() {
-                return true;
+            let Some(surface) = owner.as_mut() else { return Ok(false) };
+            if !surface.close_step(cx)? {
+                return Ok(true);
             }
             assert!(surface.terminal_is_empty(), "pending raster surface must be terminal-empty before realm release");
             *owner = None;
-            true
-        });
+            Ok(true)
+        })?;
         if active {
-            return false;
+            return Ok(false);
         }
         let owner = PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().close_step());
         if let Some(owner) = owner {
@@ -390,14 +406,32 @@ impl PendingRasterAuthorityClose {
                 assert!(retained.is_none(), "one pending raster close owner is admitted at a time");
                 *retained = Some(PendingRasterSurfaceRetirement::new(owner));
             });
-            return false;
+            return Ok(false);
         }
         self.complete = PENDING_RASTER_STATE.with(|cell| cell.borrow().terminal_is_empty()) && PENDING_RASTER_CLOSE_OWNER.with(|cell| cell.borrow().is_none());
-        self.complete
+        Ok(self.complete)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
         self.complete && PENDING_RASTER_STATE.with(|cell| cell.borrow().terminal_is_empty()) && PENDING_RASTER_CLOSE_OWNER.with(|cell| cell.borrow().is_none())
     }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+pub const RASTER_FIXTURE_GRANT: RetainedCloneGrant = RetainedCloneGrant {
+    maximum_items: 1_000_000,
+    maximum_copy_bytes: 32_000_000,
+    maximum_capacity_bytes: 32_000_000,
+    maximum_release_bytes: 32_000_000,
+    maximum_depth: 128,
+};
+
+/// 🧪️ Funds raster ownership laws through an actual original caller.
+#[cfg(any(test, feature = "testkit"))]
+pub fn pending_raster_fixture_caller() -> semio_framework_job::OriginalJobFixtureCaller {
+    semio_framework_job::OriginalJobFixtureCaller::admit(
+        semio_framework_trace::allocate_operation_id(), semio_framework_trace::Generation(1),
+        RASTER_FIXTURE_GRANT, || Some(1), u64::MAX, 10_000_000,
+    )
 }
 //#endregion SceneRuntime

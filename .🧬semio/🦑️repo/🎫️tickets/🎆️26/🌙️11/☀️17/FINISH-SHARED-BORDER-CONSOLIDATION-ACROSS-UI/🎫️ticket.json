@@ -3,10 +3,11 @@
   "emoji": "🧱",
   "status": "closed",
   "description": "Finish the migration from individual element borders to the consolidated shared border design system end to end (continues 26/11/05/CONSOLIDATE-NEIGHBORING-UI-BORDERS). Remove all remaining duplicated borders on both sides of a seam: navbar toggles bottom border shared with navbar bottom border; questions, steps, challenge choices and task lists in the Architecture and Technology course; and every other gap across products.",
-  "summary": "Shared-border consolidation finished end to end: every seam between bordered things is one line. Card interlock is inset-aware with device-pixel snapping and seam re-reads (single Rust/TS function, bands.cases.json source of truth); chips within two insets of a card side reach it (chip-span cases); chips of a row closer than 40 px abut (React, cross-pane, TUI, Rust vectors); keyboard focus recolours seams instead of rings (layered, no !important, forced-colours, contrast 3.22-5.86:1); course divider overrides replaced by --shared-border-flow; OS shell footer credits fold into a popover cell on phone/tablet; native CardStack/OverviewCard retained nodes with cardStack/card container roles, React Interpreter mapping and a conformance case. Unrelated fixes: course proctor revive loop starving the event loop during outages, Diagram suite harness order, stale ContextMenu/TUI assertions, Rust arena test fixture (central UiFixture). Live gate: border-gap probe 0 at 1440x900, 768x1024, 375x812 across elements, OS, CAD, staffage, demonstrator, play, presentation, hub admin, course en/de (false-positive classes documented). Tests: course 1135/1135, OS 158/158, interpreter 196/196, UI component suites 127/127, Rust tui-unit-laws 100/100, tui-laws, hosting 44/44, light, paint-laws, draw-contract green. Open outside scope (see SUMMARY.md): stale Rust crates after API removals, 9 wgpu-laws paint/layout laws, 5 size-derived conformance fixtures, clipboard admission laws; Playwright browser tests not run (Chromium not installed). Reports: SUMMARY.md, round3-*.md, round4-*.md.",
+  "summary": "Consolidated fixed-width shared UI borders in React and wgpu. Restored card and shell hover, held permanent centerlines under state changes, and joined the Course, table, CAD, panel-tab, and OS dialog seams. Passed 263 targeted UI tests, 14 Rust border-presentation tests, 192 native laws, and the wgpu engine compile. Live Chromium verified German dark-mode Course at 375 and 1920, shell and product views across desktop, tablet, and phone, and all 34 presentation slides. Evidence in borders-2026-11-21.md.",
   "goal": "runningframework",
   "sessions": [
-    "5a8e47cd-522a-4f77-8006-0f96c38024dc"
+    "5a8e47cd-522a-4f77-8006-0f96c38024dc",
+    "920d0c8e-f318-4176-8fef-fd334a2a2e34"
   ],
   "interactions": [
     {
@@ -647,6 +648,305 @@
         },
         {
           "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🧱️elements🗃️🃏️overviewcard💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-20 23:58:41",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "prompt": "Resolve remaining near-seams, restore parent silhouette hover and keep border geometry stable across interaction states."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-21 00:35:24",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "summary": "Consolidated fixed-width shared UI borders in React and wgpu. Restored card and shell hover, held permanent centerlines under state changes, and joined the Course, table, CAD, panel-tab, and OS dialog seams. Passed 263 targeted UI tests, 14 Rust border-presentation tests, 192 native laws, and the wgpu engine compile. Live Chromium verified German dark-mode Course at 375 and 1920, shell and product views across desktop, tablet, and phone, and all 34 presentation slides. Evidence in borders-2026-11-21.md.",
+      "files": [
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.test.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/compositor.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/focus-boxes.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/focus-seam.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/shared-border.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/shared-border.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/state-boxes.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowSilhouette/junctions.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowSilhouette/junctions.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowSilhouette/shared-border.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowSilhouette/shared-border.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🧪️tests/🧩️row-menu/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪢️SharedBorderRow/round2-static.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧫️fixtures/🔁️animation-scope/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🔁️animation-scope/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🌳️owned-locale-detector-retirement-and-more/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧪️tests/🧩️component/shell-borders.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/shared-border.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/trailing-space.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🚪️close-guard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/💾️saved-state/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📝️staging/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📝️staging/dialog-borders.test.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧱️notice-bands/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧱️notice-bands/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/⚖️footer-and-forced-colors/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🎚️challenge-keys/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🏠️chrome-and-home/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/📊️plots-and-crowd/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🤏️drag-and-spider/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🧩️task-layouts/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🏠️home/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🐾️pets/🎪️stage/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🗳️crowd/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧩️task/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🧱️shared-borders/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🧱️shared-borders/🥒️.feature"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🟢️home-overview/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/💭️crowd-client/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🌗️contrast-states/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🧫️fixtures/🌗️contrast-states/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📐️adaptive-layout/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/🎨️.css"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/borders-2026-11-21.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/check-live-borders.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/check-pet-borders.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/pet-border-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/course.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/os-web-borders.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/shell-borders.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/shell-browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/vite-round3-os.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/📓️native-borders.md"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/🍃️nodes/🧩️node-model/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/stack.test.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/🎯️targets/🧊️wgpu/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-events-unit/✍️edit-state-and-hover-reveal-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🦴️skeleton-celebrate-and-chrome-paint-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🧱️paint-fixtures-and-loading-border-laws/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📊️table-row-grid/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🧭️event-model-and-focus/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🏗️router-construction-and-intents/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🧲️overlays-drag-and-commands/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🖱️accessibility-and-pointer-dispatch/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎞️frame-step/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🖥️frame-into-step-and-frame/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📶️progress-celebrate-and-widget-painters/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🌲️retained-tree-node-painting/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🎨️node-painting-with-driver/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🎨️node-painting-with-driver/📝️text-and-structure-nodes/🦀️.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/vite-play-border-check.config.ts"
         }
       ]
     }

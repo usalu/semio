@@ -72,11 +72,23 @@
       }
     },
     "admittedStreamRoles": {
+      "x-semio-ui": {
+        "label": {
+          "en": "Admitted stream roles",
+          "de": "Übernommene Stream-Rollen"
+        }
+      },
       "anyOf": [
         {
           "type": "object",
           "properties": {
             "removed": {
+              "x-semio-ui": {
+                "label": {
+                  "en": "Removed roles",
+                  "de": "Entfernte Rollen"
+                }
+              },
               "type": "array",
               "items": {
                 "type": "integer",
@@ -84,6 +96,12 @@
               }
             },
             "modified": {
+              "x-semio-ui": {
+                "label": {
+                  "en": "Modified roles",
+                  "de": "Geänderte Rollen"
+                }
+              },
               "type": "array",
               "items": {
                 "type": "object",
@@ -104,6 +122,12 @@
               }
             },
             "added": {
+              "x-semio-ui": {
+                "label": {
+                  "en": "Added roles",
+                  "de": "Hinzugefügte Rollen"
+                }
+              },
               "type": "array",
               "items": {
                 "type": "object",

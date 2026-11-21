@@ -1,0 +1,7 @@
+# Hover Reference Expansion Hook
+
+The host's staged `RenderCtx` owns `self.tools: &mut ToolOperations<A>`, whose `instance_operation_owner` is the exact handle constructed from `A::build_instance_operation_owner()` at instance ingress and passed to app render. The handle wraps the live erased `dyn ArtifactInstanceOperationOwner: Any + Send` in a shared mounted owner cell. Its current `with_mut<T: Any>` uses `try_lock` and typed downcast; no borrowed data may outlive that synchronous lock.
+
+A narrow generic hook on the erased owner trait, defaulting to ordinary-target pass-through, can resolve domain/window-scoped hover references. A corresponding handle method can lock, invoke the virtual method and return an owned result or existing busy/poison failure, without introducing `ArtifactApp`, `ArtifactEditor` and `ArtifactViewer` forwarding. The concrete Generation3d editor and viewer owner overrides consult their `preview_hover` publication. In the host Hover arm, call it immediately after `parse_interaction_hover_targets` and before topology resolution/`next_hover`; extract the originating window from `meta.view_state`. Match the exact published source window, reject unknown/stale references and preserve direct targets and authoritative empty batches. Never hold the cell guard across an await.
+
+Expanded targets are typed in-memory data at this stage; this does not prove later graph companion payloads are free of size bounds. Add host-dispatch validation and two-window, stale-token and clear cases. No build or production edit was made.

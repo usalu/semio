@@ -13,7 +13,8 @@ mod asset_decode_pump_and_reference_images;
 #[path = "🌐️native-asset-pumps/🦀️.rs"]
 mod native_asset_pumps;
 
-    #[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
+impl<R: MailboxRuntime> RuntimeMailbox<R> {
     pub fn recover_original_frame_step(&self, runtime: &mut R, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let Ok(mut slot) = self.0.original_recovery.try_lock() else { return Ok(false); };
         if slot.is_none() {
@@ -73,11 +74,12 @@ mod native_asset_pumps;
             }).unwrap_or(Ok(false)),
         }
     }
+}
 
 #[path = "⏳️pending-work-deadlines-and-spawns/🦀️.rs"]
 mod pending_work_deadlines_and_spawns;
 
-impl RuntimeMailbox<AppRuntime> {
+impl<R: MailboxRuntime> RuntimeMailbox<R> {
     /// 📮️ Every completion remains queue-owned across child pending turns and complete original failures.
     pub fn apply_pending_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if cx.should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_depth == 0 { return Ok(false); }
@@ -89,7 +91,7 @@ impl RuntimeMailbox<AppRuntime> {
         let available = runtime.interaction_available();
         let head = queue.head_requires_interaction();
         let owner = queue.interaction_owner_outstanding();
-        let admission = runtime.checkout.admit(head, available, owner);
+        let admission = runtime.interaction_checkout_mut().admit(head, available, owner);
         let Some(index) = queue.first_applicable(available) else {
             if admission == runtime_mailbox_core::InteractionCheckoutStep::Abandoned {
                 return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original interaction checkout has no return owner").into());
@@ -136,8 +138,8 @@ impl RuntimeMailbox<AppRuntime> {
         let Ok(queue) = self.0.completions.try_lock() else { return PresenterInteractionStep::RuntimeLock };
         let owner = queue.interaction_owner_outstanding();
         #[cfg(not(target_arch = "wasm32"))]
-        let owner = owner || !self.0.original_recovery.try_lock().is_ok_and(|owner| owner.is_none()) || runtime.pending_frame_maintenance_refusal.is_some() || self.0.frame_maintenance_executions.state.load(Ordering::Acquire) != 0 || self.0.frame_deferred_executions.state.load(Ordering::Acquire) != 0;
-        if owner { PresenterInteractionStep::Waiting { site: runtime.checkout.site().unwrap_or("unknown"), request: semio_renderer_wgpu_host_base::host_io_request_trace_label() } } else { PresenterInteractionStep::Abandoned }
+        let owner = owner || !self.0.original_recovery.try_lock().is_ok_and(|owner| owner.is_none()) || runtime.pending_frame_maintenance_refusal().is_some() || self.0.frame_maintenance_executions.state.load(Ordering::Acquire) != 0 || self.0.frame_deferred_executions.state.load(Ordering::Acquire) != 0;
+        if owner { PresenterInteractionStep::Waiting { site: runtime.interaction_checkout().site().unwrap_or("unknown"), request: semio_renderer_wgpu_host_base::host_io_request_trace_label() } } else { PresenterInteractionStep::Abandoned }
     }
 
     /// 🤝️ Restores the actual interaction in place while its remaining cursor stays in the same bounded queue.

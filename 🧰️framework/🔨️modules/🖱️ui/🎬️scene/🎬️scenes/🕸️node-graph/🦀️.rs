@@ -4,7 +4,7 @@
 
 use protocol::value::{DslValue, FromValue, ToValue, ValueError};
 use semio_ui_scene_doc::{
-    deserialize_non_empty_interaction_domain_text, scene_lane_hash, value_decode, value_decode_default, value_decode_option, value_push, value_push_if_nonempty, value_push_option, SceneDoc, SceneLanePayload, SceneLaneRef,
+    deserialize_non_empty_interaction_domain_text, scene_lane_hash, value_decode, value_decode_default, value_decode_option, value_field, value_push, value_push_if_nonempty, value_push_option, SceneDoc, SceneLanePayload, SceneLaneRef,
 };
 use semio_ui_viewport::Viewport2d;
 use serde::{Deserialize, Serialize};
@@ -93,6 +93,15 @@ pub struct NodeGraphHover {
     /// `"{nodeId}@{portId}"` pick id (see `nodeGraphPickChannel`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub port_id: Option<String>,
+    /// 🔌️ Additional channel marks with canonical node and side-specific port ids.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub port_ids: Vec<String>,
+    #[serde(default, deserialize_with = "deserialize_hover_source_window", skip_serializing_if = "Option::is_none")]
+    pub hover_source_window_id: Option<Option<String>>,
+}
+
+fn deserialize_hover_source_window<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<Option<String>>, D::Error> {
+    Option::<String>::deserialize(deserializer).map(Some)
 }
 
 /// ➕️ Variadic input/output slot on an operator catalogue entry.
@@ -356,7 +365,9 @@ impl ToValue for NodeGraphHover {
         let mut entries = Vec::new();
         value_push_option(&mut entries, "nodeId", &self.node_id);
         value_push_option(&mut entries, "portId", &self.port_id);
+        value_push_if_nonempty(&mut entries, "portIds", &self.port_ids);
         value_push_option(&mut entries, "edgeId", &self.edge_id);
+        value_push_option(&mut entries, "hoverSourceWindowId", &self.hover_source_window_id);
         DslValue::Object(entries)
     }
 }
@@ -364,7 +375,8 @@ impl ToValue for NodeGraphHover {
 impl FromValue for NodeGraphHover {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
-        Ok(Self { node_id: value_decode_option(&entries, "nodeId")?, port_id: value_decode_option(&entries, "portId")?, edge_id: value_decode_option(&entries, "edgeId")? })
+        let hover_source_window_id = value_field(&entries, "hoverSourceWindowId").map(Option::<String>::from_value).transpose()?;
+        Ok(Self { node_id: value_decode_option(&entries, "nodeId")?, port_id: value_decode_option(&entries, "portId")?, port_ids: value_decode_default(&entries, "portIds", Vec::new)?, edge_id: value_decode_option(&entries, "edgeId")?, hover_source_window_id })
     }
 }
 
@@ -494,6 +506,8 @@ pub struct NodeGraphScene {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub selection: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selection_granularity: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hover: Option<NodeGraphHover>,
     /// ✨️ Ids — nodes, edges, or `"{nodeId}@{portId}"` ports — the plugin wants highlighted, e.g.
     /// because they are transitively hovered from another window.
@@ -555,6 +569,7 @@ impl NodeGraphScene {
             operators: Vec::new(),
             find_items: Vec::new(),
             selection: Vec::new(),
+            selection_granularity: None,
             hover: None,
             highlighted: Vec::new(),
             preview_off_json: None,
@@ -583,6 +598,7 @@ impl ToValue for NodeGraphScene {
         value_push_if_nonempty(&mut entries, "operators", &self.operators);
         value_push_if_nonempty(&mut entries, "findItems", &self.find_items);
         value_push_if_nonempty(&mut entries, "selection", &self.selection);
+        value_push_option(&mut entries, "selectionGranularity", &self.selection_granularity);
         value_push_option(&mut entries, "hover", &self.hover);
         value_push_if_nonempty(&mut entries, "highlighted", &self.highlighted);
         value_push_option(&mut entries, "previewOffJson", &self.preview_off_json);
@@ -612,6 +628,7 @@ impl FromValue for NodeGraphScene {
             operators: value_decode_default(&entries, "operators", Vec::new)?,
             find_items: value_decode_default(&entries, "findItems", Vec::new)?,
             selection: value_decode_default(&entries, "selection", Vec::new)?,
+            selection_granularity: value_decode_option(&entries, "selectionGranularity")?,
             hover: value_decode_option(&entries, "hover")?,
             highlighted: value_decode_default(&entries, "highlighted", Vec::new)?,
             preview_off_json: value_decode_option(&entries, "previewOffJson")?,

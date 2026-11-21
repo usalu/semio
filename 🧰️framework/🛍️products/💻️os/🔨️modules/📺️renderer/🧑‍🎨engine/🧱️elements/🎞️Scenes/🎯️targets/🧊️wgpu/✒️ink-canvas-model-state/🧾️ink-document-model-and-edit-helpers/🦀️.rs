@@ -116,8 +116,8 @@ pub(crate) fn ink_item_bounds(block: &Value) -> InkBoundsF {
                 let mut max_x = f64::NEG_INFINITY;
                 let mut max_y = f64::NEG_INFINITY;
                 for point in points {
-                    let px = point.get(0).and_then(Value::as_f64).unwrap_or(0.0);
-                    let py = point.get(1).and_then(Value::as_f64).unwrap_or(0.0);
+                    let px = ink_item_num_at(point, 0);
+                    let py = ink_item_num_at(point, 1);
                     min_x = min_x.min(px);
                     min_y = min_y.min(py);
                     max_x = max_x.max(px);
@@ -295,52 +295,110 @@ pub fn ink_hits_point(block: &Value, x: f64, y: f64, threshold: f64) -> bool {
     points.windows(2).any(|w| point_segment_distance(x, y, w[0].0, w[0].1, w[1].0, w[1].1) <= threshold + stroke_width / 2.0)
 }
 
-pub fn erase_ink_stroke_points_in_item(block: &Value, x: f64, y: f64, radius: f64) -> Vec<Value> {
-    let bx = ink_item_num(block, "x");
-    let by = ink_item_num(block, "y");
-    let points = block.get("points").and_then(Value::as_array).cloned().unwrap_or_default();
-    let mut kept_indices = Vec::new();
-    for (index, point) in points.iter().enumerate() {
-        let px = bx + point.get(0).and_then(Value::as_f64).unwrap_or(0.0);
-        let py = by + point.get(1).and_then(Value::as_f64).unwrap_or(0.0);
-        if ((px - x).powi(2) + (py - y).powi(2)).sqrt() > radius {
-            kept_indices.push(index);
+fn ink_item_num_at(point: &Value, index: usize) -> f64 {
+    point.get(index).and_then(Value::as_f64).unwrap_or(0.0)
+}
+
+fn ink_erased_segment_interval(start: [f64; 2], direction: [f64; 2], length: f64, center: [f64; 2], radius: f64) -> Option<(f64, f64)> {
+    let [dx, dy] = direction;
+    let ox = center[0] - start[0];
+    let oy = center[1] - start[1];
+    let perpendicular = (dx * oy - dy * ox).abs();
+    if perpendicular >= radius {
+        return None;
+    }
+    let projection = ox * dx + oy * dy;
+    let reach = (radius - perpendicular).sqrt() * (radius + perpendicular).sqrt();
+    let enter = (projection - reach).max(0.0);
+    let exit = (projection + reach).min(length);
+    let tolerance = 8.0 * f64::EPSILON * length.max(projection.abs()).max(radius);
+    (exit - enter > tolerance).then(|| {
+        (if enter > tolerance { enter } else { 0.0 }, if length - exit > tolerance { exit } else { length })
+    })
+}
+
+fn ink_append_segment(run: &mut Vec<[f64; 2]>, start: [f64; 2], end: [f64; 2]) {
+    if run.last() != Some(&start) {
+        run.push(start);
+    }
+    if start != end {
+        run.push(end);
+    }
+}
+
+fn clip_ink_polyline(points: &[[f64; 2]], center: [f64; 2], radius: f64) -> Option<Vec<Vec<[f64; 2]>>> {
+    let first = points.first()?;
+    if radius < 0.0 {
+        return None;
+    }
+    let mut changed = false;
+    let mut has_segment = false;
+    let mut runs = Vec::new();
+    let mut current = Vec::new();
+    for pair in points.windows(2) {
+        let [start, end] = [pair[0], pair[1]];
+        let dx = end[0] - start[0];
+        let dy = end[1] - start[1];
+        let length = dx.hypot(dy);
+        if length == 0.0 {
+            continue;
         }
-    }
-    if kept_indices.len() == points.len() {
-        return vec![block.clone()];
-    }
-    if kept_indices.is_empty() {
-        return Vec::new();
-    }
-    let mut runs: Vec<Vec<Value>> = Vec::new();
-    let mut current: Vec<Value> = vec![points[kept_indices[0]].clone()];
-    for window in kept_indices.windows(2) {
-        if window[1] - window[0] > 1 {
-            if current.len() >= 2 {
-                runs.push(current);
-            }
-            current = vec![points[window[1]].clone()];
+        has_segment = true;
+        let direction = [dx / length, dy / length];
+        let Some((enter, exit)) = ink_erased_segment_interval(start, direction, length, center, radius) else {
+            ink_append_segment(&mut current, start, end);
+            continue;
+        };
+        changed = true;
+        let at = |distance| [start[0] + distance * direction[0], start[1] + distance * direction[1]];
+        if enter > 0.0 {
+            ink_append_segment(&mut current, start, at(enter));
+        }
+        if current.len() >= 2 {
+            runs.push(std::mem::take(&mut current));
         } else {
-            current.push(points[window[1]].clone());
+            current.clear();
         }
+        if exit < length {
+            ink_append_segment(&mut current, at(exit), end);
+        }
+    }
+    if !has_segment && (first[0] - center[0]).hypot(first[1] - center[1]) <= radius {
+        return Some(Vec::new());
+    }
+    if !changed {
+        return None;
     }
     if current.len() >= 2 {
         runs.push(current);
     }
-    let name = ink_item_str(block, "name").to_string();
+    Some(runs)
+}
+
+pub fn erase_ink_stroke_points_in_item(block: &Value, x: f64, y: f64, radius: f64) -> Vec<Value> {
+    let center = [x - ink_item_num(block, "x"), y - ink_item_num(block, "y")];
+    let points: Vec<[f64; 2]> = block
+        .get("points")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .map(|point| [ink_item_num_at(point, 0), ink_item_num_at(point, 1)])
+        .collect();
+    let Some(runs) = clip_ink_polyline(&points, center, radius) else { return vec![block.clone()] };
     runs.into_iter()
         .enumerate()
-        .map(|(index, pts)| {
-            let mut cloned = block.clone();
-            if let Some(obj) = cloned.as_object_mut() {
-                if index > 0 {
-                    obj.insert("id".into(), json!(create_ink_host_id("stroke")));
-                    obj.insert("name".into(), json!(format!("{name} fragment")));
+        .map(|(index, points)| {
+            let mut fragment = block.clone();
+            if index > 0 {
+                let mut id = create_ink_host_id("stroke");
+                while id == ink_item_id(block) {
+                    id = create_ink_host_id("stroke");
                 }
-                obj.insert("points".into(), Value::Array(pts));
+                fragment["id"] = json!(id);
+                fragment["name"] = json!(format!("{} fragment", ink_item_str(block, "name")));
             }
-            cloned
+            fragment["points"] = json!(points);
+            fragment
         })
         .collect()
 }

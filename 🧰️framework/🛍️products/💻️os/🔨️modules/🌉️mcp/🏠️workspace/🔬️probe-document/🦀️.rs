@@ -237,6 +237,35 @@ impl store::OpBinary for ProbeMutation {
 
 pub type ProbeStore = store::ArtifactStore<ProbeSnapshot, ProbeMutation>;
 
+struct ProbeIdentityWork(semio_framework_job::OriginalRetirementTurn);
+
+impl store::os_vcs::io::binary::entity_identity::control::IdentityWorkLender for ProbeIdentityWork {
+    fn lend(
+        &mut self,
+        control: &mut semio_framework_value::NativeEncodeControl<'_>,
+        operation: &mut dyn FnMut(&mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), semio_framework_value::ValueError>,
+    ) -> Result<(), semio_framework_value::ValueError> {
+        self.0.with_native_encoder_work(control, operation)
+    }
+}
+
+/// 🪪️ Funds local probe authoring with one bounded original host turn.
+pub fn probe_authoring_identity<'a>(
+    observer: &'a mut store::os_vcs::io::binary::entity_identity::control::Observer<'a>,
+    grant: semio_framework_value::RetainedCloneGrant,
+    fuel: u64,
+    maximum_microseconds: u64,
+) -> Result<store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'a>, semio_framework_value::ValueError> {
+    use semio_framework_job::{OriginalRetirementPump, default_now_us};
+    use semio_framework_value::ValueError;
+    use store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
+
+    let deadline = default_now_us().and_then(|now| now.checked_add(maximum_microseconds))
+        .ok_or_else(|| ValueError::invariant("probe authoring requires an admitted host deadline"))?;
+    let work = OriginalRetirementPump::new().turn(fuel, deadline, default_now_us, grant)?;
+    Ok(EntityIdentityAuthority::new(grant.maximum_capacity_bytes, observer)?.with_work_lender(Box::new(ProbeIdentityWork(work))))
+}
+
 /// 🔒️ Registers the probe codec exactly once per process — mirrors
 /// `🏪️store/🔄️sync/🦀️.rs`'s own test-only `ensure_demo_codec_registered`, but real (not
 /// `#[cfg(test)]`): the backbone actor needs the registered `ArtifactCodec` to turn a local `Edit`

@@ -6,7 +6,8 @@
     "demand",
     "events",
     "detach",
-    "readReturn"
+    "readReturn",
+    "closeWork"
   ],
   "additionalProperties": false,
   "properties": {
@@ -154,6 +155,42 @@
             "preserved": {
               "const": true
             }
+          }
+        }
+      }
+    },
+    "closeWork": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "performed",
+          "copiedItems",
+          "releasedBytes",
+          "spent"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "performed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copiedItems": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "releasedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "spent": {
+            "type": "integer",
+            "minimum": 0
           }
         }
       }

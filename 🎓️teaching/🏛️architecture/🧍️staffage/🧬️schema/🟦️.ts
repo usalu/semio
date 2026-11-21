@@ -125,11 +125,12 @@ export const JOINT_TYPES = ["fixed", "revolute", "prismatic"] as const;
 /** 🔗️ One of {@link JOINT_TYPES}. */
 export type JointType = (typeof JOINT_TYPES)[number];
 
-/** 🦾️ A joint and its limits; revolute limits are angle offsets from rest, prismatic limits are offsets along `axisDeg` (bone-parent frame). */
+/** 🦾️ A joint and its limits; revolute limits are angle offsets from rest, prismatic limits are offsets along `axisDeg` (bone-parent frame). A continuous twist denotes a shaft whose only degree of freedom is unlimited longitudinal rotation. */
 export type Joint = {
   readonly type: JointType;
   readonly minDeg?: number;
   readonly maxDeg?: number;
+  readonly continuousTwist?: true;
   readonly twistMinDeg?: number;
   readonly twistMaxDeg?: number;
   readonly axisDeg?: number;
@@ -165,10 +166,19 @@ export type Bone = {
   readonly y: number;
   readonly z?: number;
   readonly angleDeg: number;
+  readonly abductionDeg?: number;
   readonly lengthM: number;
   readonly joint: Joint;
   readonly mass?: SegmentMass;
   readonly section?: Section;
+};
+
+/** 🪭 Ordered rigid facets between two moving rays. Each successive pair shares a crease and preserves its flat cut angle. */
+export type RadialFold = {
+  readonly left: Slug;
+  readonly right: Slug;
+  readonly facets: readonly Slug[];
+  readonly cutAngleDeg: number;
 };
 
 /** 🌳️ A transform hierarchy with exactly one root. `kind` names the articulation family. */
@@ -176,6 +186,7 @@ export type Rig = {
   readonly kind: "anatomical" | "botanical" | "mechanical" | "structural";
   readonly root: Slug;
   readonly bones: readonly Bone[];
+  readonly radialFolds?: readonly RadialFold[];
 };
 //#endregion 🦴️Rig
 
@@ -247,8 +258,8 @@ export type ShapeGeometry = CapsuleShape | EllipseShape | RectShape | PolyShape 
 
 /** 🌀️ How a shape of any viewpoint is a solid of its rig-plane profile, authored in the bone's local frame like a side elevation shape and placed with the full 3D frame of its bone (spread, twist and sagittal rotation) and projected to the viewpoint (side elevation, front elevation or plan), so one 3D definition reads right in all three views at every pose and clip instant.
  * `revolved`: an axisymmetric part (umbrella canopy, rib, lid, drum) about an axis through the rest origin of `axisBone` along its bone-local direction `axis` (`u` along the bone, `v` its normal in the sagittal plane, `w` the lateral axis), through the point translated from that origin by `axisX` along world x and `axisZ` along world z (default 0) at rest, the axis then carried with that bone; `axisBone` is the shape's own bone or one of its ancestors, so the solid moves rigidly with its bone; the optional `lateralScale` (> 0, default 1, a physical circle) scales the lateral radius to an elliptic cross-section; the front paper x is the lateral distance from the axis (`mirror` also draws the reflection, so a half profile reads as the whole body), the plan is the circle of the widest lateral reach about the axis.
- * `extruded`: a prismatic part swept along the bone-local axis `sweep` (`w` lateral, with the profile in the (u, v) plane; `v` along the bone normal, with the profile in the (u, w) plane; required, never defaulted), here described for the lateral sweep: a part (blind slat, damper flap, door panel, boom, board) spanning `z0`..`z1` (left is +); the front is `z0`..`z1` by the height range of the profile, the plan the forward range of the profile by `z0`..`z1`. The optional `zTip` is the span at the bone tip in the same order as `z0`..`z1` (`zTip[0] < zTip[1]`); the span interpolates linearly along the bone from `z0`..`z1` at its origin, so a tapered limb, blade or branch is one extruded solid. */
-export type Solid = { readonly kind: "revolved"; readonly axisBone: Slug; readonly axis: "u" | "v" | "w"; readonly axisX: number; readonly axisZ?: number; readonly lateralScale?: number; readonly mirror?: boolean } | { readonly kind: "extruded"; readonly sweep: "v" | "w"; readonly z0: number; readonly z1: number; readonly zTip?: readonly [number, number] };
+ * `extruded`: a prismatic part swept along the bone-local axis `sweep` (`u` along the bone, with the profile in the (v, w) plane; `w` lateral, with the profile in the (u, v) plane; `v` along the bone normal, with the profile in the (u, w) plane; required, never defaulted), here described for the lateral sweep: a part (blind slat, damper flap, door panel, boom, board) spanning `z0`..`z1` (left is +); the front is `z0`..`z1` by the height range of the profile, the plan the forward range of the profile by `z0`..`z1`. The optional `zTip` is the span at the bone tip in the same order as `z0`..`z1` (`zTip[0] < zTip[1]`); the span interpolates from `z0`..`z1` along the first profile coordinate divided by bone length (u for v and w sweeps, v for a u sweep), so a tapered limb, blade or branch is one extruded solid. */
+export type Solid = { readonly kind: "revolved"; readonly axisBone: Slug; readonly axis: "u" | "v" | "w"; readonly axisX: number; readonly axisZ?: number; readonly lateralScale?: number; readonly mirror?: boolean } | { readonly kind: "extruded"; readonly sweep: "u" | "v" | "w"; readonly z0: number; readonly z1: number; readonly zTip?: readonly [number, number]; readonly weights?: VolumeSolidBase["weights"] };
 
 /** ✏️ An authored shape of one representation, bound to a bone. `region` binds it to one thermal region; a shape that merges several
  * surfaces at a small scale lists them in `regions` instead and is painted with their area-weighted value (labelled as merged). `hatch`
@@ -281,7 +292,7 @@ export type Vector3 = readonly [number, number, number];
 export type Quaternion = readonly [number, number, number, number];
 
 /** 🌟️ The six kinds of a {@link VolumeSolid}. */
-export const VOLUME_SOLID_KINDS = ["box", "ellipsoid", "capsule", "revolve", "extrude", "loft"] as const;
+export const VOLUME_SOLID_KINDS = ["box", "ellipsoid", "capsule", "revolve", "extrude", "loft", "polyhedron"] as const;
 
 /** 🧬️ One of {@link VOLUME_SOLID_KINDS}. */
 export type VolumeSolidKind = (typeof VOLUME_SOLID_KINDS)[number];
@@ -332,6 +343,7 @@ export type VolumeSolid = VolumeSolidBase &
     | { readonly kind: "capsule"; readonly p0: Vector3; readonly p1: Vector3; readonly r0: number; readonly r1: number; readonly lateralScale?: number }
     | { readonly kind: "revolve"; readonly profile: readonly Vector2[]; readonly axis: Vector3; readonly origin: Vector3; readonly sweepRad?: number; readonly lateralScale?: number }
     | { readonly kind: "extrude"; readonly profile: readonly Vector2[]; readonly holes?: readonly (readonly Vector2[])[]; readonly plane: (typeof VOLUME_PLANES)[number]; readonly from: number; readonly to: number; readonly taperTo?: readonly [number, number] }
+    | { readonly kind: "polyhedron"; readonly vertices: readonly Vector3[]; readonly triangles: readonly (readonly [number, number, number])[] }
     | { readonly kind: "loft"; readonly sections: readonly { readonly at: Vector3; readonly rx: number; readonly ry: number; readonly exponent?: number; readonly rotation?: Quaternion }[]; readonly capStart: boolean; readonly capEnd: boolean }
   );
 
@@ -388,6 +400,10 @@ export type ScaleDenominator = (typeof SCALE_DENOMINATORS)[number];
 
 /** 🔑️ The key of a representation in {@link Asset.representations}: the denominator as a string. */
 export type RepresentationKey = `${ScaleDenominator}`;
+
+/** 🎚️ The denominator band each preset scale stands for, `[from, to]`: together they tile the promised drawing range 1:20…1:1000 without a hole. The authored `validRange`s of an asset must cover the union of the bands of its authored presets without a hole (rule `valid-range-gap`); the boundary between two authored neighbours may move, the outer ends may not shrink. Mirrors `$defs.ScaleBands` of the JSON Schema.
+ * @see ../🔨️modules/🗂️catalog/🟦️.ts — `uncoveredDenominators` */
+export const SCALE_BANDS: Readonly<Record<RepresentationKey, readonly [number, number]>> = { "50": [20, 75], "100": [75, 150], "200": [150, 350], "500": [350, 1000] };
 
 /** ✒️ The pens of a representation per role, in paper millimetres; `null` means the role is not drawn at this scale. */
 export type PenSet = { readonly body: number; readonly detail: number | null; readonly texture: number | null; readonly glazing: number | null; readonly ground: number };
@@ -668,7 +684,7 @@ export type ThermalRegion = {
   readonly model: ThermalModelKind;
   readonly material: Slug;
   readonly areaM2: number;
-  readonly areaBasis?: "exchange";
+  readonly areaBasis?: "exchange" | "total";
   readonly characteristicLengthM: number;
   readonly geometry: "cylinder" | "sphere" | "vertical-plate" | "horizontal-plate-up" | "horizontal-plate-down";
   readonly skyViewFactor: number;
@@ -771,6 +787,7 @@ export type OperatingKey = { readonly id: Slug; readonly title: Text; readonly l
 
 /** 🌡️ The thermal model of an asset. */
 export type ThermalModel = {
+  readonly minimumAirPassageM?: number;
   readonly environment: Environment;
   readonly referenceEnvironment?: Slug | Environment;
   readonly baseMet?: number;

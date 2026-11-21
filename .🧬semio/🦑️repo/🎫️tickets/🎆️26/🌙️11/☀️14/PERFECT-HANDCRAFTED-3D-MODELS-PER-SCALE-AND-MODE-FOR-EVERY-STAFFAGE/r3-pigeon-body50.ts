@@ -122,11 +122,11 @@ export function shield(S: Bench, id: string, bone: string, sd: Side, hand: reado
   }), look);
 }
 
-export function blade(S: Bench, id: string, bone: string, sd: Side, st: readonly Blade[], look: Look): void {
+export function blade(S: Bench, id: string, bone: string, sd: Side, st: readonly Blade[], look: Look, carrier = bone): void {
   const wrist = S.J(bone);
   const d = S.frame(bone).u as V3;
   const up: V3 = [d[1], -d[0], 0];
-  S.loft(id, bone, st.map(([q, c, h, th, z, roll]): Station => {
+  S.loft(id, carrier, st.map(([q, c, h, th, z, roll]): Station => {
     const p = add(add(wrist, mul(d, q)), mul(up, c));
     const zc = z > 0 ? z : S.flank(p[0], p[1]) + 0.0025 + z;
     const b: V3 = [up[0] * Math.cos(roll), up[1] * Math.cos(roll), -sd * Math.sin(roll)];

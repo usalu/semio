@@ -17,15 +17,16 @@ use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 
 trait JackChildOwnerOracle {
-    fn expected() -> semio_framework_pack_json::Value;
+    fn assert_matches(observed: &semio_framework_pack_json::Value);
 }
 
 struct SerdeJsonJackChildOwnerOracle;
 
 impl JackChildOwnerOracle for SerdeJsonJackChildOwnerOracle {
-    fn expected() -> semio_framework_pack_json::Value {
-        let oracle:serde_json::Value=serde_json::from_str(include_str!("../../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("independent serde JSON owner oracle");
-        semio_framework_pack_json::parse(&serde_json::to_string(&oracle).expect("independent oracle output"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral Jack child-owner oracle output")
+    fn assert_matches(observed: &semio_framework_pack_json::Value) {
+        let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🧪️tests/🧫️fixtures/🧫️child-owner-isolation/🔣️.json")).expect("independent serde JSON owner oracle");
+        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(observed)).expect("independent parse of the Jack child owner result");
+        assert_eq!(actual, expected);
     }
 }
 
@@ -40,7 +41,7 @@ async fn working_scene_belongs_to_the_exact_content_child() {
         "wireHasScene": reconstructed.local_owner::<jack::standards::v1::subsets::any::schema::content::JackContentOwner>().is_some(),
     });
 
-    assert_eq!(observed, SerdeJsonJackChildOwnerOracle::expected());
+    SerdeJsonJackChildOwnerOracle::assert_matches(&observed);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -135,14 +136,36 @@ async fn remove_node_cascades_edges() {
 
 #[semio_framework_async_macros::async_test]
 async fn graph_effects_create_a_node_and_its_content_leaf_undoes_it() {
+    use jack::standards::v1::subsets::any::schema::content::{jack_self_funded_grant, retire_owned_to_terminal};
+    use semio_framework_value::RetirementDemand;
+    use semio_plugin::app::OwnedChildEmit;
+
     let fixture = mini_fixture();
     let mut graph = Graph::from_snapshot(fixture.clone()).unwrap();
     let effect = GraphEffect::CreateNode(Node { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] });
     apply_graph_effects(&mut graph, std::slice::from_ref(&effect)).expect("create");
     assert_eq!(graph.nodes.len(), 3);
     let base = super::rich_snapshot(&fixture);
-    let leaves = graph_leaves(&base, &[effect]);
+    let mut preparations = prepare_graph_effects(&base, &fixture.content.child_id, &[effect]).expect("admitted owner effects");
+    assert_eq!(preparations.len(), 1);
+    let mut preparation = preparations.pop().unwrap();
+    let (source, _, _) = preparation.source_window_identity::<SemioGraphMutation>().expect("original typed operation");
+    let pump = semio_framework_job::OriginalRetirementPump::new();
+    for _ in 0..128 {
+        if preparation.preparation_is_ready() { break; }
+        let demand = preparation.step_demands().expect("child operation demand");
+        let (step, _) = pump.turn(1024, u64::MAX, || Some(0), jack_self_funded_grant(demand)).unwrap()
+            .with_effect(|effect| preparation.step(effect)).unwrap().expect("admitted child operation preparation");
+        step.expect("prepare original operation");
+    }
+    let grant = jack_self_funded_grant(RetirementDemand { capacity_bytes: preparation.next_owned_capacity_byte_demand(), depth: 1, ..Default::default() });
+    let (metadata, batch, _) = preparation.take_ready_owned(grant).unwrap().expect("original typed batch");
+    assert_eq!(metadata.child_id, fixture.content.child_id);
+    assert!(metadata.ops.is_empty());
+    let owned = OwnedChildEmit::new(metadata, batch);
+    let leaves = owned.mutations::<SemioGraphMutation>().expect("existing typed graph operations");
     assert_eq!(leaves.len(), 1);
+    assert_eq!(leaves.as_ptr() as usize, source);
     let mut child = base.clone();
     let inverse = <SemioGraphMutation as protocol::ColdMutation<SemioGraphSnapshot>>::inverse(&leaves[0], &child).expect("inverse");
     child = protocol::apply_diff_cold(<SemioGraphMutation as protocol::ColdMutation<SemioGraphSnapshot>>::diff(&leaves[0], &child).diff(), &child).expect("leaf applies");
@@ -151,6 +174,8 @@ async fn graph_effects_create_a_node_and_its_content_leaf_undoes_it() {
         child = protocol::apply_diff_cold(<SemioGraphMutation as protocol::ColdMutation<SemioGraphSnapshot>>::diff(step, &child).diff(), &child).expect("inverse step applies");
     }
     assert_eq!(child, base);
+    retire_owned_to_terminal(owned).expect("original child emission retires");
+    retire_owned_to_terminal(preparation).expect("empty preparation retires");
 }
 
 #[semio_framework_async_macros::async_test]

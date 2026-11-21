@@ -196,7 +196,8 @@ fn sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and
 #[test]
 fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {
     use store::sqlite_snapshot::*;
-    let codec = store::bare_artifact_codec::<JackSnapshot, crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation>(crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA).snapshot_sqlite.expect("Jack absent parent capability");
+    use crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA;
+    let codec = store::bare_artifact_codec::<JackSnapshot, crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA).snapshot_sqlite.expect("Jack absent parent capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.trinity.jack".into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(0, 0));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -204,10 +205,13 @@ fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {
             SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
             SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
         };
-        let db = original_owners::with_decoding(|native_owner|(codec.export)(crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let mut progress = |_| true;
+        let mut control = SqliteSnapshotControl::new(&mut progress, SqliteDatabaseLimits::default());
+        let db = original_owners::export_sqlite(&codec, TRINITY_GRAPH_SCHEMA, &dialect, &native, &mut control).unwrap().value;
         assert_eq!(db.tables.len(), 13);
         assert_eq!(db.table("jack_document").unwrap().single_row().unwrap().text(2).unwrap(), expected.name);
-        let native = original_owners::with_encoding(|native_owner|(codec.import)(crate::standards::v1::subsets::any::schema::graph::TRINITY_GRAPH_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let mut control = SqliteSnapshotControl::new(&mut progress, SqliteDatabaseLimits::default());
+        let native = original_owners::import_sqlite(&codec, TRINITY_GRAPH_SCHEMA, &dialect, db, encoding, &mut control).unwrap().value;
         let actual = Owned::new(match native {
             store::io_schema::IoPayload::Text(v) => JackSnapshot::parse_dsl(&v).unwrap(),
             store::io_schema::IoPayload::Binary(v) => JackSnapshot::decode_pack(&v).unwrap(),
@@ -269,7 +273,6 @@ fn sqlite_snapshot_jack_independently_malformed_semantic_entities_are_refused() 
 #[test]
 fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phases() {
     use store::sqlite_snapshot::*;
-    use store::os_store::serialization::ArtifactSqliteSnapshotHost;
     let value = Owned::new(full(0, 0));
     let mut cb = |_| true;
     let exact = SqliteDatabaseLimits { max_rows: 153, ..Default::default() };
@@ -277,8 +280,8 @@ fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phas
     assert!(original_owners::with_sqlite_recipient(exact,&mut cb,|sqlite_control|value.to_sqlite_database(sqlite_control)).is_ok());
     assert!(original_owners::with_sqlite_recipient(short,&mut cb,|sqlite_control|value.to_sqlite_database(sqlite_control)).is_err());
     let payload = store::io_schema::IoPayload::Binary(value.encode_pack());
-    assert!(original_owners::with_decoding(|native_owner|JackSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut cb, short), native_owner)).is_err());
-    assert!(original_owners::with_encoding(|native_owner|value.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut cb, short), native_owner)).is_err());
+    assert!(original_owners::decode_native::<JackSnapshot>(&payload, &mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
+    assert!(original_owners::encode_native(&*value, SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
     let mut large = Owned::new(full(0, 0));
     large.0.as_mut().unwrap().manifest.node_kinds[0].properties[0].expr = Some("引用😀".repeat(20000));
     let db = original_owners::with_sqlite_recipient(Default::default(),&mut cb,|sqlite_control|large.to_sqlite_database(sqlite_control)).unwrap();
@@ -297,8 +300,8 @@ fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phas
         let refused = match phase {
             SqliteSnapshotPhase::ProjectSnapshot => large.to_sqlite_database(&mut c).is_err(),
             SqliteSnapshotPhase::ReconstructSnapshot => JackSnapshot::from_sqlite_database(&db, &mut c).is_err(),
-            SqliteSnapshotPhase::DecodeNative => original_owners::with_decoding(|native_owner|JackSnapshot::decode_sqlite_snapshot_native(&payload, &mut c, native_owner)).is_err(),
-            SqliteSnapshotPhase::EncodeNative => original_owners::with_encoding(|native_owner|large.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut c, native_owner)).is_err(),
+            SqliteSnapshotPhase::DecodeNative => original_owners::decode_native::<JackSnapshot>(&payload, &mut c).is_err(),
+            SqliteSnapshotPhase::EncodeNative => original_owners::encode_native(&*large, SnapshotEncoding::Binary, &mut c).is_err(),
             _ => unreachable!(),
         };
         assert!(refused);

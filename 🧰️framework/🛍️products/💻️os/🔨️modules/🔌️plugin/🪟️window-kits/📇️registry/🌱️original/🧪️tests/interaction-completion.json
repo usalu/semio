@@ -1,0 +1,13 @@
+{
+  "canonical": ["interactionSelect", "interactionHover", "clearSelection", "selectAll", "setSelectionMode", "setInteractionGranularity"],
+  "cases": [
+    {"id": "complete-across-app-and-window", "hasInteractions": true,
+     "app": ["interactionSelect", "selectAll"], "window": ["interactionHover", "clearSelection", "setSelectionMode", "setInteractionGranularity"], "append": []},
+    {"id": "partial-with-custom-actions", "hasInteractions": true,
+     "app": ["InteractionHover", "setSelectionMode", "custom"], "window": ["interactionSelect", "setSelectionMode"],
+     "append": ["interactionHover", "clearSelection", "selectAll", "setInteractionGranularity"]},
+    {"id": "empty-application-actions", "hasInteractions": true, "app": [], "window": [],
+     "append": ["interactionSelect", "interactionHover", "clearSelection", "selectAll", "setSelectionMode", "setInteractionGranularity"]},
+    {"id": "no-declared-interactions", "hasInteractions": false, "app": ["custom"], "window": ["interactionSelect"], "append": []}
+  ]
+}

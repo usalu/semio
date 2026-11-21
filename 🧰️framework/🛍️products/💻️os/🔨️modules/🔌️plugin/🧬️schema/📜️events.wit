@@ -145,6 +145,31 @@ interface events {
     params: request-params,
   }
 
+  record original-media-loan {
+    operation-id: string,
+    generation: string,
+    instance-id: instance-id,
+    document-id: string,
+    base-revision: string,
+  }
+  record original-media-begin {
+    name: string,
+    media-type: string,
+  }
+  variant original-media-control {
+    begin(original-media-begin),
+    complete,
+    cancel,
+  }
+  record original-media-control-event {
+    loan: original-media-loan,
+    owner: u64,
+    seq: u64,
+    kind: u8,
+    extent: u32,
+    control: original-media-control,
+  }
+
   variant event {
     instance-open(instance-open-event),
     instance-close(close-request),
@@ -168,5 +193,6 @@ interface events {
     timer(timer-event),
     wake,
     request(request-event),
+    original-media-control(original-media-control-event),
   }
 }

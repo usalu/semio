@@ -1,7 +1,7 @@
 //! 🧪️ Aggregated unit tests of the `commands` leaves, one module per leaf.
 
 mod example {
-use crate::mutations::change_exaggeration::ChangeExaggeration;
+use crate::mutations::{ReplaceElevationSource, change_exaggeration::ChangeExaggeration, change_imported_features::ChangeImportedFeatures};
 use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
 use semio_plugin::{ArtifactView, ConfigView, NoConfig};
 use super::super::example::*;
@@ -20,7 +20,7 @@ async fn the_example_catalogue_resolves_declared_ids_and_faults_on_the_rest() {
     let none = example_document("").expect("the empty id is the catalogue's none arm");
     assert_eq!(none, crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot(), "the none arm is the flat unimported terrain");
     let demo = example_document(crate::examples::demo::ID).expect("the declared example resolves");
-    assert_eq!(demo, crate::schema::default_terrain_document(), "the demo id resolves to the bundled reuse terrain itself");
+    assert_eq!(demo, crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document(), "the demo id resolves to the bundled reuse terrain itself");
     assert_eq!(demo.exaggeration, 1.5, "the resolved example carries the authored relief, not the flat default");
     assert!(example_document("reuse-terrain").is_err(), "an id outside the catalogue faults instead of loading the demo");
 }
@@ -91,8 +91,14 @@ async fn the_reducer_emits_only_the_fields_that_differ() {
     assert!(same.artifact_mutations.is_empty(), "the boot document already IS the demo, so re-selecting it changes no field");
 
     let cleared = set_active_example::handle(&set_active_example::SetActiveExample { example_id: String::new() }, &doc, &cfg).expect("the none arm reduces");
-    assert_eq!(cleared.artifact_mutations.len(), 1, "only `exaggeration` differs between the demo and the flat terrain; `importedMap` is empty in both");
-    assert!(matches!(cleared.artifact_mutations.first(), Some(crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation::ChangeExaggeration(_))), "the differing field is emitted through its own authored leaf: {:?}", cleared.artifact_mutations);
+    assert_eq!(
+        cleared.artifact_mutations,
+        vec![
+            GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 1.0 }),
+            GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: None }),
+            GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource { new_elevation_source: None }),
+        ],
+    );
 }
 }
 
@@ -114,7 +120,8 @@ async fn seeds_exaggeration_from_the_terrain_fixture() {
 //#region 🎚️Scrub
 /// 🎚️ The dispatching Terrain window's meta, the window a slider press belongs to.
 fn window_meta() -> semio_plugin::ActionMeta {
-    semio_plugin::ActionMeta { view_state: Some(main_window_view()), ..meta("local") }
+    let view = semio_plugin::artifact_app_laws::receive_view_fixture(main_window_view(), semio_plugin::artifact_app_laws::OriginalWorkFixture::stock());
+    semio_plugin::ActionMeta { view_state: Some(view), ..meta("local") }
 }
 
 fn number(value: f64) -> semio_framework_value::DslValue {
@@ -124,11 +131,20 @@ fn number(value: f64) -> semio_framework_value::DslValue {
 /// 🎚️ One dispatch of the exaggeration slider as the hosts send it: `{value, gesture, commit}`, or a host cancel
 /// `{gesture, abort}` that carries no value and is settled by the runtime itself.
 async fn slide(app: &mut Gis3dApp, args: Vec<(&str, semio_framework_value::DslValue)>) {
-    let aborting = args.iter().any(|(key, _)| *key == "abort");
+    let transient = args.iter().any(|(key, value)| match (*key, value) {
+        ("abort", _) | ("commit", semio_framework_value::DslValue::Bool(false)) => true,
+        _ => false,
+    });
     let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setExaggeration", Some(args.clone()), &window_meta(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the slider dispatch is admitted");
-    if !aborting {
-        settle_registered_typed_operation(&mut app.0, window_meta().instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the slider dispatch settles");
+    let meta = window_meta();
+    let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
+    let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    app.renew_turn();
+    semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app.0, "setExaggeration", Some(args), &meta, &mut identity, app.1.cx(), policy.close).await.expect("the slider dispatch is admitted");
+    app.renew_turn();
+    let receipt = settle_registered_typed_operation(&mut *app.0, meta.instance_id, policy, &mut identity, app.1.cx()).await.expect("the slider turn and its projection settle");
+    if transient {
+        assert!(!receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Artifact), "preview and cancel carry only transient work");
     }
 }
 
@@ -159,12 +175,14 @@ fn exaggeration(app: &Gis3dApp) -> f64 {
 async fn a_slider_press_is_one_transaction_one_edit_and_one_row() {
     let mut app = app().await;
     let rows_before = edit_rows(&mut app).await.len();
-    let resting = render(&mut app, terrain::GIS3D_PLAY_BODY_COMPOSITE).await;
     tick(&mut app, "terrain.exaggeration:1", 2.0).await;
     tick(&mut app, "terrain.exaggeration:1", 2.5).await;
     assert_eq!(exaggeration(&app), 1.5, "ticks never touch the committed document");
     assert_eq!(edit_rows(&mut app).await.len(), rows_before, "ticks are no history");
-    assert_ne!(render(&mut app, terrain::GIS3D_PLAY_BODY_COMPOSITE).await, resting, "the render previews the scrubbed value");
+    let preview: serde_json::Value = serde_json::from_str(&render(&mut app, terrain::GIS3D_PLAY_BODY_COMPOSITE).await).expect("projected Terrain tree");
+    let terrain_node = preview["children"].as_array().unwrap().iter().find(|node| node["key"] == "framework.scene.world3d.terrain").expect("Terrain scene projection");
+    let terrain_json: serde_json::Value = serde_json::from_str(terrain_node["children"][0]["component"]["value"].as_str().unwrap()).expect("Terrain scene descriptor");
+    assert_eq!(terrain_json["exaggeration"], 2.5, "the render previews the last scrubbed value");
     release(&mut app, "terrain.exaggeration:1", 3.0).await;
     assert_eq!(exaggeration(&app), 3.0);
     let rows = edit_rows(&mut app).await;
@@ -217,27 +235,6 @@ async fn two_presses_are_two_transactions() {
     close(&mut app);
 }
 
-async fn history_edit(app: &mut Gis3dApp, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) {
-    let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args.clone()), &window_meta(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
-    assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
-}
-
-async fn time_travel_stage(app: &mut Gis3dApp) -> Option<semio_framework::kernel::HistoryTimeTravelStage> {
-    app.history_snapshot().await.expect("history").time_travel.map(|status| status.stage)
-}
-
-async fn pump_time_travel(app: &mut Gis3dApp, done: impl Fn(Option<semio_framework::kernel::HistoryTimeTravelStage>) -> bool) {
-    for _ in 0..10_000 {
-        if done(time_travel_stage(app).await) {
-            return;
-        }
-        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
-        while app.take_typed_operation_ui_progress().is_some() {}
-    }
-    panic!("the history edit never settled: {:?}", time_travel_stage(app).await);
-}
-
 /// ⚖️ LAW: time travel edits the press's committed value, never the slider: the absolute leaf superseded with another
 /// value replays deterministically — the later press, itself absolute, still wins at the head, and withdrawing nothing
 /// else the overwrite leaves exactly the head a fresh run of the edited presses reaches.
@@ -246,15 +243,11 @@ async fn a_committed_press_edited_in_history_replays_deterministically() {
     let mut app = app().await;
     release(&mut app, "terrain.exaggeration:5", 3.0).await;
     let edited = edit_rows(&mut app).await.last().and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the press's mutation");
-    history_edit(&mut app, "historyEditBegin", vec![("mutationId", semio_framework_value::DslValue::String(edited))]).await;
-    history_edit(&mut app, "historyEditInput", vec![("path", semio_framework_value::DslValue::String("/newExaggeration".into())), ("value", number(2.0))]).await;
-    history_edit(&mut app, "historyEditAccept", Vec::new()).await;
-    pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
-    assert_eq!(time_travel_stage(&mut app).await, Some(semio_framework::kernel::HistoryTimeTravelStage::Reviewing));
-    assert_eq!(exaggeration(&app), 3.0, "reviewing never touches the committed document");
-    history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
-    history_edit(&mut app, "historyEditCommit", vec![("choice", semio_framework_value::DslValue::String("overwrite".into()))]).await;
-    pump_time_travel(&mut app, |stage| stage.is_none()).await;
+    assert_eq!(exaggeration(&app), 3.0, "the press committed before History opens");
+    app.renew_turn();
+    semio_plugin::app::history_edit_acceptance::assert_mounted_history_overwrite(
+        &mut *app.0, &edited, "/newExaggeration", number(2.0), app.1.cx(),
+    ).await;
     assert_eq!(exaggeration(&app), 2.0, "the overwrite folds the edited value");
     let mut fresh = crate::editor::gis3d::unit_tests::context::app().await;
     release(&mut fresh, "terrain.exaggeration:6", 2.0).await;

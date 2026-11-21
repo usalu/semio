@@ -1,0 +1,281 @@
+[
+  {
+    "id": "first-reply-publishes-without-another-move",
+    "steps": [
+      [
+        "move",
+        1
+      ],
+      [
+        "resolve",
+        1,
+        "shape@mesh"
+      ]
+    ],
+    "events": [
+      "hover:shape@mesh"
+    ],
+    "requests": [
+      1
+    ],
+    "aborted": []
+  },
+  {
+    "id": "older-hit-cannot-paint-over-a-newer-pointer-position",
+    "steps": [
+      [
+        "move",
+        1
+      ],
+      [
+        "move",
+        2
+      ],
+      [
+        "resolve",
+        1,
+        "old@out"
+      ],
+      [
+        "resolve",
+        2,
+        "new@out"
+      ]
+    ],
+    "events": [
+      "hover:new@out"
+    ],
+    "requests": [
+      1,
+      2
+    ],
+    "aborted": [
+      1
+    ]
+  },
+  {
+    "id": "leave-clears-and-cancels-pending-pick",
+    "steps": [
+      [
+        "move",
+        1
+      ],
+      [
+        "leave"
+      ],
+      [
+        "resolve",
+        1,
+        "shape@mesh"
+      ]
+    ],
+    "events": [
+      "hover:"
+    ],
+    "requests": [
+      1
+    ],
+    "aborted": [
+      1
+    ]
+  },
+  {
+    "id": "click-settles-even-if-the-pointer-moves",
+    "steps": [
+      [
+        "down",
+        1
+      ],
+      [
+        "up",
+        1
+      ],
+      [
+        "move",
+        2
+      ],
+      [
+        "resolve",
+        1,
+        "shape@mesh"
+      ]
+    ],
+    "events": [
+      "hover:",
+      "select:shape@mesh"
+    ],
+    "requests": [
+      1
+    ],
+    "aborted": []
+  },
+  {
+    "id": "drag-cancels-hover-and-does-not-pick",
+    "steps": [
+      [
+        "move",
+        1
+      ],
+      [
+        "down",
+        1
+      ],
+      [
+        "move",
+        9
+      ],
+      [
+        "up",
+        9
+      ],
+      [
+        "resolve",
+        1,
+        "shape@mesh"
+      ]
+    ],
+    "events": [],
+    "requests": [
+      1
+    ],
+    "aborted": [
+      1
+    ]
+  },
+  {
+    "id": "unmount-cancels-and-does-not-publish",
+    "steps": [
+      [
+        "move",
+        1
+      ],
+      [
+        "unmount"
+      ],
+      [
+        "resolve",
+        1,
+        "shape@mesh"
+      ]
+    ],
+    "events": [],
+    "requests": [
+      1
+    ],
+    "aborted": [
+      1
+    ]
+  },
+  {
+    "id": "refused-native-pick-does-not-clobber-current-hover",
+    "steps": [
+      [
+        "move",
+        1
+      ],
+      [
+        "resolve",
+        1,
+        "shape@mesh"
+      ],
+      [
+        "move",
+        2
+      ],
+      [
+        "reject",
+        2
+      ],
+      [
+        "move",
+        3
+      ],
+      [
+        "resolve",
+        3,
+        "other@wire"
+      ]
+    ],
+    "events": [
+      "hover:shape@mesh",
+      "hover:other@wire"
+    ],
+    "requests": [
+      1,
+      2,
+      3
+    ],
+    "aborted": []
+  },
+  {
+    "id": "cancelled-drag-allows-the-next-hover",
+    "steps": [
+      [
+        "move",
+        1
+      ],
+      [
+        "down",
+        1
+      ],
+      [
+        "cancel"
+      ],
+      [
+        "move",
+        2
+      ],
+      [
+        "resolve",
+        1,
+        "old@out"
+      ],
+      [
+        "resolve",
+        2,
+        "new@out"
+      ]
+    ],
+    "events": [
+      "hover:",
+      "hover:new@out"
+    ],
+    "requests": [
+      1,
+      2
+    ],
+    "aborted": [
+      1
+    ]
+  },
+  {
+    "id": "cancelled-click-cannot-select",
+    "steps": [
+      [
+        "down",
+        1
+      ],
+      [
+        "up",
+        1
+      ],
+      [
+        "cancel"
+      ],
+      [
+        "resolve",
+        1,
+        "shape@mesh"
+      ]
+    ],
+    "events": [
+      "hover:"
+    ],
+    "requests": [
+      1
+    ],
+    "aborted": [
+      1
+    ]
+  }
+]

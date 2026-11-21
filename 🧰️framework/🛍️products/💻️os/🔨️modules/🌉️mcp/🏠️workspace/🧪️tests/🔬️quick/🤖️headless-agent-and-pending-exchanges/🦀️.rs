@@ -92,6 +92,24 @@ fn guest_fault_wire_decodes_through_the_first_party_value_codec() {
     assert_eq!(fault.message, fixture["guestFault"]["expected"]["message"].as_str().expect("fixture fault message"));
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn activation_preserves_the_channel_fault_on_the_gateway_wire() {
+    use semio_framework_value::ToValue as _;
+    use semio_os_mcp_plugin_runtime::compiled_components::activation_fault;
+
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text("../../🧪️tests/🧫️fixtures/🔣️first-party-codecs.json")).expect("language-neutral fault fixture parses");
+    for case in fixture["activationFaults"].as_array().expect("activation fault cases") {
+        let fault = Fault {
+            code: case["fault"]["code"].as_str().expect("channel fault code").to_string(),
+            message: case["fault"]["message"].as_str().expect("channel fault message").to_string(),
+        };
+        let actual = activation_fault(fault);
+        assert_eq!(serde_json::Value::from(actual.to_value()), case["wire"]);
+        assert_eq!(serde_json::to_value(actual).expect("serde fault oracle"), case["wire"]);
+    }
+}
+
 /// 🪲️ Regression law for the two-frame `to_value` → `to_dsl_value` → `to_value` recursion that
 /// aborted every probe-committing test with `fatal runtime error: stack overflow`: reaching an
 /// assertion at all proves the cycle is gone, and the fixture pins the exact wire shape so the

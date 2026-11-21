@@ -157,6 +157,7 @@ impl Ui {
                     self.driver_drag,
                     window.router.flow().block.is_reversed(),
                     window.router.flow().inline,
+                    window.router.hover_pointer(),
                     &mut frame.candidate,
                     &mut frame.node_paint,
                 );

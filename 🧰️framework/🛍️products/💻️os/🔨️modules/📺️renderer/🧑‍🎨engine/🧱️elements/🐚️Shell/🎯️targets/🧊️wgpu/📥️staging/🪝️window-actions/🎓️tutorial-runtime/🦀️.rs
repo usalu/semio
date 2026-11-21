@@ -282,7 +282,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
         let ui = tutorial_capture_ui_snapshot(self);
         let mut cameras = Vec::new();
         for (window_id, world) in self.surfaces.world3d_states.iter() {
-            cameras.push(semio_framework::onboarding::TutorialCameraKeyframe { at: 0, window_id: window_id.clone(), camera: orbit_to_tutorial_camera(&world.orbit), easing: semio_framework::onboarding::TutorialEasing::Hold });
+            cameras.push(semio_framework::onboarding::TutorialCameraKeyframe { at: 0, window_id: window_id.clone(), camera: orbit_to_tutorial_camera(&world.camera.orbit), easing: semio_framework::onboarding::TutorialEasing::Hold });
         }
         let now = chrome_now_ms();
         let definition = semio_framework::onboarding::TutorialDefinition {

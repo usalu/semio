@@ -203,8 +203,8 @@ export function hostEffectsRewriteGuestRenderInputsV1(effects: readonly unknown[
   return effects.some((effect) => typeof effect === "object" && effect !== null && HOST_EFFECTS_REWRITING_GUEST_RENDER_INPUTS.some((key) => key in effect));
 }
 
-export function hostEffectRefreshScopeV1(effects: readonly unknown[], declared: UiDirtyScope, windowBodyKeys: readonly string[]): UiDirtyScope {
-  if (!hostEffectsRewriteGuestRenderInputsV1(effects)) return declared;
+export function hostEffectRefreshScopeV1(effects: readonly unknown[], declared: UiDirtyScope, windowBodyKeys: readonly string[], viewInputsChanged = false): UiDirtyScope {
+  if (!viewInputsChanged && !hostEffectsRewriteGuestRenderInputsV1(effects)) return declared;
   const rewriting = effects.filter((effect) => typeof effect === "object" && effect !== null && HOST_EFFECTS_REWRITING_GUEST_RENDER_INPUTS.some((key) => key in effect));
   const widest = rewriting.some((effect) => "setPanel" in (effect as object) || "loadDocument" in (effect as object));
   const earned: UiDirtyScope = widest

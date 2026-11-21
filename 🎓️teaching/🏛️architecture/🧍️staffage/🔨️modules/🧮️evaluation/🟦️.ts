@@ -447,12 +447,24 @@ export function memberSections(member: MemberShape, frameOf: (id: Slug) => Frame
   return [offsets.map((o) => corner(a, o)), offsets.map((o) => corner(b, o))];
 }
 
-/** 🔭️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile swept from `z0` to `z1` along the lateral axis of the frame (`sweep` `w`: the profile in the (u, v) plane, `z` measured from the rest origin of the bone in world z) or along the bone normal (`sweep` `v`: the profile in the (u, w) plane, `z` measured from the bone origin along v), the span tapering linearly along u to `zTip` at the bone length (clamped to the bone), as ONE outline, the union of the profile at both ends and the sweep of every edge; a revolved part is revolved about the longitudinal axis of its axis bone (its own rest direction, whatever its rest tilt, carried to the current frame), one outline, the union of the hulls of the projected circles of the two ends of every profile edge; without `mirror` the half profile itself is drawn: each profile point keeps its signed distance along the forward direction of the axis bone and its height along the axis, moved into the lateral direction of the view (front) or left in the sagittal plane (elevation). */
+/** 🔭️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile swept from `z0` to `z1` along the lateral axis of the frame (`sweep` `w`: the profile in the (u, v) plane, `z` measured from the rest origin of the bone in world z) or longitudinally (`sweep` `u`: transverse (v, w) profile) or along the bone normal (`sweep` `v`: the profile in the (u, w) plane, `z` measured from the bone origin along v), the span tapering along the first profile coordinate to `zTip` at the bone length (clamped to that interval), as ONE outline, the union of the profile at both ends and the sweep of every edge; a revolved part is revolved about the longitudinal axis of its axis bone (its own rest direction, whatever its rest tilt, carried to the current frame), one outline, the union of the hulls of the projected circles of the two ends of every profile edge; without `mirror` the half profile itself is drawn: each profile point keeps its signed distance along the forward direction of the axis bone and its height along the axis, moved into the lateral direction of the view (front) or left in the sagittal plane (elevation). */
 function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: PlanarViewpoint, length: number): Point[][] {
   const rings = profile.map((ring) => simplifyRing(ring, 0.0003));
   const now = kin.now[bone]!.frame;
   const rest = kin.rest[bone]!.frame;
-  const place = (a: number, b: number, c: number): Vec3 => [now.o[0] + a * now.u[0] + b * now.v[0] + c * now.w[0], now.o[1] + a * now.u[1] + b * now.v[1] + c * now.w[1], now.o[2] + a * now.u[2] + b * now.v[2] + c * now.w[2]];
+  const atFrame = (f: typeof rest, a: number, b: number, c: number): Vec3 => [
+    f.o[0] + a*f.u[0] + b*f.v[0] + c*f.w[0], f.o[1] + a*f.u[1] + b*f.v[1] + c*f.w[1], f.o[2] + a*f.u[2] + b*f.v[2] + c*f.w[2],
+  ];
+  const place = (a: number, b: number, c: number): Vec3 => {
+    if (solid.kind !== "extruded" || !solid.weights?.length) return atFrame(now, a, b, c);
+    const bind = atFrame(rest, a, b, c);
+    const result: [number, number, number] = [0, 0, 0];
+    for (const joint of solid.weights) {
+      const q = carry(kin.rest[joint.bone]!.frame, kin.now[joint.bone]!.frame, bind);
+      for (let i = 0; i < 3; i++) result[i]! += joint.weight * q[i]!;
+    }
+    return result;
+  };
   if (solid.kind === "extruded") {
     const lateral = solid.sweep === "w";
     const base = lateral ? rest.o[2] : 0;
@@ -461,7 +473,7 @@ function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain
       const t = length > 0 ? Math.min(Math.max(a / length, 0), 1) : 0;
       return [solid.z0 + (solid.zTip[0] - solid.z0) * t - base, solid.z1 + (solid.zTip[1] - solid.z1) * t - base];
     };
-    const at = (p: Point, c: number): Point => projected(viewpoint, lateral ? place(p.x, p.y, c) : place(p.x, c, p.y));
+    const at = (p: Point, c: number): Point => projected(viewpoint, solid.sweep === "u" ? place(c, p.x, p.y) : lateral ? place(p.x, p.y, c) : place(p.x, c, p.y));
     return rings.flatMap((ring) => {
       const low = ring.map((p) => at(p, span(p.x)[0]));
       const high = ring.map((p) => at(p, span(p.x)[1]));
@@ -663,7 +675,7 @@ export class SolidSweepError extends Error {
   readonly viewpoint: PlanarViewpoint;
 
   constructor(asset: string, shape: string, viewpoint: PlanarViewpoint) {
-    super(`extruded solid of shape "${shape}" (${viewpoint}) of asset "${asset}" has no sweep: state "w" (lateral) or "v" (along the bone normal), there is no default`);
+    super(`extruded solid of shape "${shape}" (${viewpoint}) of asset "${asset}" has no sweep: state "u" (longitudinal), "v" (normal) or "w" (lateral), there is no default`);
     this.name = "SolidSweepError";
     this.asset = asset;
     this.shape = shape;
@@ -672,7 +684,7 @@ export class SolidSweepError extends Error {
 
   /** 🌍️ The refusal in both languages. */
   get reason(): Text {
-    return { en: this.message, de: `Der extrudierte Körper der Form "${this.shape}" (${this.viewpoint}) des Assets "${this.asset}" hat keinen sweep: "w" (seitlich) oder "v" (entlang der Knochennormalen) angeben, es gibt keinen Standardwert.` };
+    return { en: this.message, de: `Der extrudierte Körper der Form "${this.shape}" (${this.viewpoint}) des Assets "${this.asset}" hat keinen sweep: "u" (längs), "v" (normal) oder "w" (seitlich) angeben, es gibt keinen Standardwert.` };
   }
 }
 
@@ -688,7 +700,7 @@ function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Aff
   }
   if (kin !== undefined && shape.solid !== undefined) {
     const sweep = shape.solid.kind === "extruded" ? (shape.solid as { sweep?: string }).sweep : "w";
-    if (sweep !== "v" && sweep !== "w") throw new SolidSweepError(asset.id, shape.id, viewpoint);
+    if (sweep !== "u" && sweep !== "v" && sweep !== "w") throw new SolidSweepError(asset.id, shape.id, viewpoint);
   }
   if (kin !== undefined && shape.solid !== undefined) return { shape, rings: solid3(shape.solid, flat.rings, kin, shape.bone, viewpoint, boneOf(asset, shape.bone).lengthM), closed: true };
   if (viewpoint === "elevation" || kin === undefined) return { shape, rings: flat.rings.map((ring) => ring.map((p) => apply(matrix, p.x, p.y))), closed: flat.closed };
@@ -877,6 +889,20 @@ function sampleQuery(asset: Asset, query: EvaluationQuery): { readonly sample: S
 /** 🎬️ The sample every view of a query is placed from: pose, clip or transition offsets and root with the respiration offsets added. */
 export function sampleOf(asset: Asset, query: EvaluationQuery): Sample {
   return withRespiration(asset, query, sampleQuery(asset, query).sample).sample;
+}
+
+/** 📏 Projects authored solid profiles for geometric measurements, sharing one pair of rest and posed skeletons across all views. */
+export function solidDrawingProjector(asset: Asset, query: EvaluationQuery) {
+  const sample = sampleOf(asset, query);
+  const kin: Chain3 = { now: solveChain(asset.rig, sample.offsets, sample.root), rest: restOf(asset) };
+  const lengths = new Map(asset.rig.bones.map(bone => [bone.id, bone.lengthM]));
+  return (shape: Shape, profile: readonly (readonly Point[])[], view: PlanarViewpoint): readonly (readonly Point[])[] => {
+    const solid = shape.solid;
+    const length = lengths.get(shape.bone);
+    if (!solid || length === undefined) return profile;
+    if (solid.kind === "revolved" ? !lengths.has(solid.axisBone) : solid.weights?.some(joint => !lengths.has(joint.bone))) return profile;
+    return solid3(solid, profile, kin, shape.bone, view, length);
+  };
 }
 
 /** ▶️ The state of the asset at the query on the absolute timeline: the pose, the clip at a time (the pose wraps for looping clips, `cycle` counts the loops, planted root advance and respiration continue) or the transition between two poses, with the geometry of the selected representation. `frame = floor(t · fps + 1e-9)` with the clip's fps; `timeS` is the absolute query time (never wrapped, 0 for a pose without time) and `clipTimeS` the wrapped or clamped clip phase (0 for poses). Throws {@link RepresentationError} when the selected scale is unavailable and clear errors for unknown poses, clips, symbols, anchors, bones or loads without placement. */

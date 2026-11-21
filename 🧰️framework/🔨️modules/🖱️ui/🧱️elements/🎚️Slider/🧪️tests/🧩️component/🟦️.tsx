@@ -373,7 +373,7 @@ for (const key of exactEntry.keys) it(`opens slider exact entry with ${key} and 
   const readout = view.container.querySelector<HTMLElement>('[data-slot="slider-value"]')!;
   const thumb = view.getByRole("slider");
   expect(readout.tabIndex).toBe(0);
-  expect(thumb.className).toContain("focus-visible:ring-2");
+  expect(thumb.className).toContain("focus-visible:border-emphasized");
   readout.focus();
   fireEvent.keyDown(readout, { key });
   const editor = view.getByRole("spinbutton");

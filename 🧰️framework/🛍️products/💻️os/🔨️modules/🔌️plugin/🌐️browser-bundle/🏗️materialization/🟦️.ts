@@ -22,14 +22,15 @@ import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentAssetUrlsAt } from "
 export function rewritePreview2ShimImports(componentJsPath: string, preview2VendorDir: string): void {
   const outDir = dirname(componentJsPath);
   const rel = relative(outDir, preview2VendorDir).replace(/\\/g, "/");
-  const prefix = rel.endsWith("/") ? rel : `${rel}/`;
+  const relativeUrl = rel === ".." || rel.startsWith("../") ? rel : `./${rel}`;
+  const prefix = relativeUrl.endsWith("/") ? relativeUrl : `${relativeUrl}/`;
   const content = readFileSync(componentJsPath, "utf8");
   const rewritten = rewritePreview2ShimImportSource(content, prefix);
   if (rewritten !== content) writeFileSync(componentJsPath, rewritten);
 }
 
 export function transpilePluginComponent(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
-  if (runCmdStatus(nativeTranspileBinaryV1(ctx.repoRoot), [...nativeTranspileArgsV1(artifact, outDir, componentBase, PLUGIN_COMPONENT_IMPORT_MAPS_V1)], { cwd: ctx.repoRoot }) !== 0) {
+  if (runCmdStatus(nativeTranspileBinaryV1(ctx.repoRoot, ctx.mode, ctx.environment), [...nativeTranspileArgsV1(artifact, outDir, componentBase, PLUGIN_COMPONENT_IMPORT_MAPS_V1)], { cwd: ctx.repoRoot }) !== 0) {
     throw new Error(`native transpile failed for ${artifact}`);
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
@@ -45,10 +46,11 @@ export async function transpilePluginComponentModulesAsync(artifact: string, out
   const slim = join(dirname(outDir), `${componentBase}.nodebug.wasm`);
   try {
     writeFileSync(slim, stripWasmDebugSectionsV1(readFileSync(artifact)));
-    await captureOwnedCommandV1(nativeTranspileBinaryV1(ctx.repoRoot, ctx.environment ?? process.env), [...nativeTranspileArgsV1(slim, outDir, componentBase, PLUGIN_COMPONENT_IMPORT_MAPS_V1)], ctx.repoRoot, { env: { ...(ctx.environment ?? process.env) }, ...(ctx.signal ? { signal: ctx.signal } : {}), ...(ctx.control ? { control: ctx.control } : {}) });
+    await captureOwnedCommandV1(nativeTranspileBinaryV1(ctx.repoRoot, ctx.mode, ctx.environment), [...nativeTranspileArgsV1(slim, outDir, componentBase, PLUGIN_COMPONENT_IMPORT_MAPS_V1)], ctx.repoRoot, { env: { ...(ctx.environment ?? process.env) }, ...(ctx.signal ? { signal: ctx.signal } : {}), ...(ctx.control ? { control: ctx.control } : {}) });
   } catch (cause) {
     ctx.signal?.throwIfAborted();
-    throw new Error(`native transpile failed for ${artifact}`, { cause });
+    const diagnostic = cause instanceof Error ? cause.message : String(cause);
+    throw new Error(`native transpile failed for ${artifact}\n${diagnostic}`, { cause });
   } finally {
     rmSync(slim, { force: true });
   }

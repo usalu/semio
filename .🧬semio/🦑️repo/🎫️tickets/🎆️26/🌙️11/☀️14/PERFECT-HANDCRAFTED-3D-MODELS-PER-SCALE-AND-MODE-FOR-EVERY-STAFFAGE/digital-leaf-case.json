@@ -1,0 +1,10 @@
+{
+  "asset": "dining-table",
+  "dimensionsM": {"half": 0.80, "insert": 0.60, "board": 0.030},
+  "stationsX": [0.64, 0.96],
+  "bearingsZ": [-0.245, 0.245],
+  "strokeM": 0.030,
+  "requiredThreadEngagementM": 0.014,
+  "gapToleranceM": 0.00001,
+  "samples": 121
+}

@@ -14,7 +14,7 @@ fn direct_leaf_neutral_schema_codec_and_outcome_laws() {
 }
 #[test]
 fn sparse_camera_inverse_and_codecs_restore_the_base() {
-    let base = GisTerrainWindowConfig { camera_json: "default".into() };
+    let base = GisTerrainWindowConfig { camera_json: "default".into(), ..Default::default() };
     let mutation = GisTerrainWindowConfigMutation::SetCamera(SetCamera { camera_json: "next".into() });
     let next = protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("apply");
     assert_eq!(next.camera_json, "next");

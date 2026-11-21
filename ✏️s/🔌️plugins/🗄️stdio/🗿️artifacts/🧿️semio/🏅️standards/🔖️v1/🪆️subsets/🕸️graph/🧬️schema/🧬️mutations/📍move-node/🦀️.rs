@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct MoveNode {

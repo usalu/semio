@@ -1,0 +1,68 @@
+{
+  "schema": "semio.stdio.pdf.cff.outline.v1",
+  "font": "010004010001010109436f6e74726163740001010118cf0fd410dc111ea002ff8b8b1ea002ff8b8b0c078bf61200010101117370656369616c416c7465726e61746500000000220187810141010146018700030101020b140e959f15a98b729f050e959f15a98b729f050e",
+  "names": [
+    ".notdef",
+    "A",
+    "specialAlternate"
+  ],
+  "encoding": [
+    [
+      65,
+      "A"
+    ],
+    [
+      66,
+      "specialAlternate"
+    ],
+    [
+      70,
+      "specialAlternate"
+    ]
+  ],
+  "glyph": 2,
+  "outline": [
+    [
+      "moveTo",
+      [
+        [
+          20.0,
+          40.0
+        ]
+      ]
+    ],
+    [
+      "lineTo",
+      [
+        [
+          80.0,
+          40.0
+        ]
+      ]
+    ],
+    [
+      "lineTo",
+      [
+        [
+          30.0,
+          80.0
+        ]
+      ]
+    ],
+    [
+      "closePath",
+      []
+    ]
+  ],
+  "expertFont": "010004010001010109436f6e74726163740001010118cf0f8c10d4111ea002ff8b8b1ea002ff8b8b0c078bee1200010101117370656369616c416c7465726e61746500000000e5013900030101020b140e959f15a98b729f050e959f15a98b729f050e",
+  "expertEncoding": [
+    [
+      33,
+      "exclamsmall"
+    ],
+    [
+      175,
+      "Macronsmall"
+    ]
+  ]
+}

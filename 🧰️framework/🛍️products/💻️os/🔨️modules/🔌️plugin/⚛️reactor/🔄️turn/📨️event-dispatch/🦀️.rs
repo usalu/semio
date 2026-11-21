@@ -11,7 +11,7 @@ pub(super) fn select_turn_event<PA: PluginApp>(runtime: &PluginRuntime<PA>, even
         original_receiving::retain_completed(runtime,events,cx)?;
     }
     if matches!(events.as_ref(),Some(Event::StagedFormRequested { .. })) {original_receiving::forms::retain(runtime,events,cx)?;}
-    let selected_event = if matches!(events.as_ref(),Some(Event::Completed { .. }|Event::StagedFormRequested { .. })) {
+    let selected_event = if matches!(events.as_ref(),Some(Event::Completed { .. }|Event::StagedFormRequested { .. }|Event::OriginalMediaControl(_))) {
         None
     } else if events.is_some() {
         let grant=cx.retained_grant();
@@ -52,6 +52,7 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
                 }
             }
             Event::InstanceClose(_) | Event::InstanceLifecycleAck(_) => {}
+            Event::OriginalMediaControl(_) => unreachable!("raw event uses the original command prologue"),
             Event::CommandIngressPage { .. } => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument").into());
             }
@@ -117,6 +118,10 @@ pub(super) async fn dispatch_turn_event<PA: PluginApp>(runtime: &PluginRuntime<P
                 }
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } => {
+                if semio_os_kernel::os_store::backbone::atomic_transport::AtomicBackboneInbox::recognizes_hot(&payload) {
+                    semio_plugin_runtime_ops::ops_document::retains_atomic_document_backbone(runtime, &uri, payload)?;
+                    continue;
+                }
                 let output = semio_plugin_runtime_ops::ops_document::plugin_receive_document_backbone(runtime, &uri, &payload, identity, cx).await?;
                 if output.document_changed {
                     dirty_document_surfaces(runtime, output.instance_id, &mut *dirty).await?;

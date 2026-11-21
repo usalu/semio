@@ -39,3 +39,6 @@ elements [id:TEXT kind:TEXT zone-id:TEXT orientation-deg:NUM inclination-deg:NUM
 thermal-bridges [id:TEXT psi:NUM length-m:QTY bb2-type:TEXT] {
   tb-bad 0.4 50m detailed
 }
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+  pressure-building "Whole building pressure test" "Dichtheitsprüfung des Gesamtgebäudes" G26-01 [ {id=test_volume value=300} {id=test_pressurisation value=430} {id=test_depressurisation value=460} ] [ {id=test_protocol value=confirmed} {id=test_ventilation value=mechanical} ]
+}

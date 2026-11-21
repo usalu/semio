@@ -203,7 +203,7 @@ impl<J:InteractiveJob> OriginalWorkerJobAuthority<J>{
    let turn=cx.with_original_effect(cx.retained_grant(),|cx,effect|self.original.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn);let blocked=matches!(&turn.result,Ok(None)|Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)));let result=match turn.result{Ok(Some(step))=>Ok(step),Ok(None)|Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)};let step=receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;
    return Ok(if blocked{WorkerJobCloseStep::Blocked}else{WorkerJobCloseStep::Pending{progress:step.progress()}})
   }
-  if !self.original.child_custody_is_empty(){return self.original.close_step(cx)}if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let result=self.original.close_terminal_worker_authority(cx.retained_grant());receive_original_worker_close_result(cx,before,result)
+  if !self.original.child_custody_is_empty(){return self.original.close_step(cx)}if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=(cx.retained_progress(),cx.reserved_return_progress());let result=self.original.close_terminal_worker_authority(cx.retained_grant());receive_original_worker_close_result(cx,before,result)
  }
 }
 
@@ -280,7 +280,7 @@ impl<J:InteractiveJob> NativeWorkerAuthorityState<J>{
   Ok(terminal)
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-  if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let grant=cx.retained_grant();if self.retained_receipt_pending{return Ok(WorkerJobCloseStep::Blocked)}let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+  if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=(cx.retained_progress(),cx.reserved_return_progress());let grant=cx.retained_grant();if self.retained_receipt_pending{return Ok(WorkerJobCloseStep::Blocked)}let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
   if !self.outcome.is_empty(){let step=worker_work_step(cx,self.outcome.close_step(grant))?;return receive_original_worker_close_effects(cx,before,step)}
   if let Some(step)=self.close_original_worker_failure(cx,grant)?{return receive_original_worker_close_effects(cx,before,step)}
   if self.close_stage!=0&&!self.payload.terminal_is_empty(){let step=match self.payload.close_step(cx)?{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked};return receive_original_worker_close_effects(cx,before,step)}
@@ -374,13 +374,43 @@ fn receive_original_effect_poll(cx:&mut StepContext<'_>,poll:semio_framework_val
 fn worker_payload_step(step:RetainedCloneStep)->WorkerJobCloseStep{WorkerJobCloseStep::Pending{progress:step.progress()}}
 fn worker_work_step(cx:&mut StepContext<'_>,turn:semio_framework_value::RetainedWorkOutcome)->Result<WorkerJobCloseStep,OriginalTurnFailure>{receive_original_retained_work(cx,turn).map(worker_payload_step)}
 
-/// 📪️ Posts only original wrapper effects not already charged by its nested original caller.
-pub fn receive_original_worker_close_effects(cx:&mut StepContext<'_>,before:RetainedCloneProgress,step:WorkerJobCloseStep)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-    let after=cx.retained_progress();let report=step.progress();let subtract=|reported:usize,initial:usize,current:usize|current.checked_sub(initial).and_then(|posted|reported.checked_sub(posted)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker close reported fewer effects than its original recipient"));
-    let progress=RetainedCloneProgress{copied_items:subtract(report.copied_items,before.copied_items,after.copied_items)?,copied_bytes:subtract(report.copied_bytes,before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:subtract(report.retained_capacity_bytes,before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:subtract(report.released_bytes,before.released_bytes,after.released_bytes)?};cx.consume_fuel(progress.copied_items as u64);cx.consume_retained(progress)?;Ok(step)
+/// 📪️ Posts only current wrapper effects still owed by its nested original caller.
+pub fn receive_original_worker_close_effects(
+    cx: &mut StepContext<'_>,
+    (before, reserved_before): (RetainedCloneProgress, RetainedCloneProgress),
+    step: WorkerJobCloseStep,
+) -> Result<WorkerJobCloseStep, OriginalTurnFailure> {
+    let posted = original_worker_current_progress(
+        before, cx.retained_progress(), reserved_before, cx.reserved_return_progress(),
+    )?;
+    let reported = step.progress();
+    let unposted = |reported: usize, posted: usize| {
+        reported.checked_sub(posted).ok_or_else(|| ValueError::literal(
+            ValueRefusalKind::InvariantViolated,
+            "original worker close reported fewer effects than its original recipient",
+        ))
+    };
+    let progress = RetainedCloneProgress {
+        copied_items: unposted(reported.copied_items, posted.copied_items)?,
+        copied_bytes: unposted(reported.copied_bytes, posted.copied_bytes)?,
+        retained_capacity_bytes: unposted(reported.retained_capacity_bytes, posted.retained_capacity_bytes)?,
+        released_bytes: unposted(reported.released_bytes, posted.released_bytes)?,
+    };
+    cx.consume_fuel(progress.copied_items as u64);
+    cx.consume_retained(progress)?;
+    Ok(step)
 }
 
-pub fn receive_original_worker_close_result(cx:&mut StepContext<'_>,before:RetainedCloneProgress,result:Result<WorkerJobCloseStep,ValueError>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{match result{Ok(step)=>receive_original_worker_close_effects(cx,before,step),Err(error)=>{cx.consume_fuel(1);Err(OriginalTurnFailure::debit_original(error,cx))}}}
+pub fn receive_original_worker_close_result(
+    cx: &mut StepContext<'_>,
+    before: (RetainedCloneProgress, RetainedCloneProgress),
+    result: Result<WorkerJobCloseStep, ValueError>,
+) -> Result<WorkerJobCloseStep, OriginalTurnFailure> {
+    match result {
+        Ok(step) => receive_original_worker_close_effects(cx, before, step),
+        Err(error) => { cx.consume_fuel(1); Err(OriginalTurnFailure::debit_original(error, cx)) }
+    }
+}
 
 
 impl<J> NativeWorkerAuthorityState<J>{

@@ -1,16 +1,20 @@
 //! 🏔️ Complete GIS reconstruction pays actual indexes, output containers and iterative frames.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{GisTerrainSnapshot, ImportedMap, ImportedProperty, SCALAR};
+use crate::schema::snapshot::ElevationSource;
 use semio_framework_value::{DslValue, Number, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, artifact::FloatRow};
 use std::{cmp::Ordering, ops::Range};
 
-const TABLES: [&str; 17] = ["gis_terrain_document", "gis_terrain_parameters", "gis_terrain_mesh_child", "gis_terrain_imported_map", "gis_terrain_value", "gis_terrain_position", "gis_terrain_route", "gis_terrain_region", "gis_terrain_property", "gis_terrain_array", "gis_terrain_member", "gis_terrain_boolean", "gis_terrain_unsigned", "gis_terrain_signed", "gis_terrain_float", "gis_terrain_text", "gis_terrain_bytes"];
+const TABLES: [&str; 19] = ["gis_terrain_document", "gis_terrain_parameters", "gis_terrain_mesh_child", "gis_terrain_imported_map", "gis_terrain_value", "gis_terrain_position", "gis_terrain_route", "gis_terrain_region", "gis_terrain_property", "gis_terrain_array", "gis_terrain_member", "gis_terrain_boolean", "gis_terrain_unsigned", "gis_terrain_signed", "gis_terrain_float", "gis_terrain_text", "gis_terrain_bytes", "gis_terrain_elevation_source", "gis_terrain_elevation_sample"];
 const VALUE: usize = 4;
 const PROPERTY: usize = 8;
 const ARRAY: usize = 9;
 const MEMBER: usize = 10;
+const ELEVATION_SOURCE: usize = 17;
+const ELEVATION_SAMPLE: usize = 18;
+const ELEVATION_SIDE: usize = 33;
 fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 fn overflow() -> ValueError { ValueError::new(ValueRefusalKind::OwnershipLimit, "terrain relational ownership overflow") }
 
@@ -40,7 +44,7 @@ fn sort<T>(values: &mut [T], owner: &mut Owner<'_, '_>, compare: impl Fn(&T, &T)
 struct Entry<'a> { table: usize, row: &'a SqliteRow, consumed: bool }
 #[derive(Clone, Copy)]
 struct Relation { table: usize, parent: i64, ordinal: usize, entry: usize }
-struct Rows<'a> { entries: Vec<Entry<'a>>, relations: Vec<Relation>, tables: [Range<usize>; 17] }
+struct Rows<'a> { entries: Vec<Entry<'a>>, relations: Vec<Relation>, tables: [Range<usize>; TABLES.len()] }
 impl<'a> Rows<'a> {
  fn new(database: &'a SqliteDatabase, owner: &mut Owner<'_, '_>) -> Result<Self, ValueError> {
   let total = database.tables.iter().try_fold(0usize, |total, table| total.checked_add(table.rows.len()).ok_or_else(overflow))?;
@@ -49,9 +53,9 @@ impl<'a> Rows<'a> {
   sort(&mut entries, owner, |a, b| (a.table, a.row.rowid).cmp(&(b.table, b.row.rowid)))?;
   let mut tables = std::array::from_fn(|_| 0..0);
   for (index, entry) in entries.iter().enumerate() { owner.checkpoint()?; if index > 0 && entries[index - 1].table == entry.table && entries[index - 1].row.rowid == entry.row.rowid { return Err(invalid("GIS terrain duplicate SQL identity")); } if index == 0 || entries[index - 1].table != entry.table { tables[entry.table].start = index; } tables[entry.table].end = index + 1; }
-  let count = (5..=10).try_fold(0usize, |total, table| total.checked_add(tables[table].len()).ok_or_else(overflow))?;
+  let count = (5..=10).chain([ELEVATION_SAMPLE]).try_fold(0usize, |total, table| total.checked_add(tables[table].len()).ok_or_else(overflow))?;
   let mut relations = owner.allocate(count)?;
-  for (entry, row) in entries.iter().enumerate() { if !(5..=10).contains(&row.table) { continue; } owner.checkpoint()?; let ordinal = usize::try_from(row.row.integer(2)?).map_err(|_| invalid("GIS terrain ordinals must be dense"))?; relations.push(Relation { table: row.table, parent: row.row.integer(1)?, ordinal, entry }); }
+  for (entry, row) in entries.iter().enumerate() { if !(5..=10).contains(&row.table) && row.table != ELEVATION_SAMPLE { continue; } owner.checkpoint()?; let ordinal = usize::try_from(row.row.integer(2)?).map_err(|_| invalid("GIS terrain ordinals must be dense"))?; relations.push(Relation { table: row.table, parent: row.row.integer(1)?, ordinal, entry }); }
   sort(&mut relations, owner, |a, b| (a.table, a.parent, a.ordinal).cmp(&(b.table, b.parent, b.ordinal)))?;
   let mut ordinal = 0usize;
   for (index, relation) in relations.iter().enumerate() { owner.checkpoint()?; if index == 0 || (relations[index - 1].table, relations[index - 1].parent) != (relation.table, relation.parent) { ordinal = 0; } if relation.ordinal != ordinal { return Err(invalid("GIS terrain ordinals must be dense")); } ordinal = ordinal.checked_add(1).ok_or_else(overflow)?; }
@@ -98,6 +102,31 @@ fn intrinsic(rows: &mut Rows<'_>, mut id: i64, owner: &mut Owner<'_, '_>) -> Res
  }
 }
 
+fn elevation_source(rows: &mut Rows<'_>, id: i64, owner: &mut Owner<'_, '_>) -> Result<Option<ElevationSource>, ValueError> {
+ if rows.count(ELEVATION_SOURCE, owner)? == 0 { return Ok(None); }
+ let source = rows.take(ELEVATION_SOURCE, id, owner)?;
+ let mut bounds = [0.0; 4];
+ for (index, value) in bounds.iter_mut().enumerate() {
+  owner.scalar()?;
+  *value = f64::from_bits(source.integer(index + 1)? as u64);
+ }
+ let mut samples = rows.relation_range(ELEVATION_SAMPLE, id, owner)?;
+ if samples.len() != ELEVATION_SIDE * ELEVATION_SIDE { return Err(invalid("GIS elevation sample count differs")); }
+ let mut elevations = owner.allocate(ELEVATION_SIDE)?;
+ for _ in 0..ELEVATION_SIDE {
+  let mut row = owner.allocate(ELEVATION_SIDE)?;
+  for sample in samples.by_ref().take(ELEVATION_SIDE) {
+   owner.scalar()?;
+   let meters = rows.relation(sample, owner)?.integer(3)?;
+   row.push(i16::try_from(meters).map_err(|_| invalid("GIS elevation sample is outside the signed meter range"))?);
+  }
+  elevations.push(row);
+ }
+ let source = ElevationSource { bounds, rows: elevations };
+ if !source.is_valid() { return Err(invalid("invalid GIS elevation source")); }
+ Ok(Some(source))
+}
+
 fn snapshot(database: &SqliteDatabase, owner: &mut Owner<'_, '_>) -> Result<GisTerrainSnapshot, ValueError> {
  let mut rows = Rows::new(database, owner)?;
  let document = rows.one(0, owner)?; let id = document.rowid;
@@ -110,7 +139,8 @@ fn snapshot(database: &SqliteDatabase, owner: &mut Owner<'_, '_>) -> Result<GisT
   for index in relations { let row = rows.relation(index, owner)?; let name = row.text(3)?; if matches!(name, "positions" | "routes" | "regions") { return Err(invalid("reserved imported map property")); } map.properties.push(ImportedProperty { name: owner.text(name)?, value: intrinsic(&mut rows, row.integer(4)?, owner)? }); }
   Some(map)
  } else { None };
- rows.finish(owner)?; owner.native.checkpoint()?; Ok(GisTerrainSnapshot { exaggeration, imported_map, mesh })
+ let elevation_source = elevation_source(&mut rows, id, owner)?;
+ rows.finish(owner)?; owner.native.checkpoint()?; Ok(GisTerrainSnapshot { exaggeration, imported_map, mesh, elevation_source })
 }
 
 pub fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<GisTerrainSnapshot, ValueError> {

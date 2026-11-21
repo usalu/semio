@@ -84,6 +84,14 @@
       "expected": false
     }
   ],
+  "extentCases": [
+    {"extent": 144, "accepted": true},
+    {"extent": 152, "accepted": true},
+    {"extent": 184, "accepted": true},
+    {"extent": 199, "accepted": false},
+    {"extent": 200, "accepted": true},
+    {"extent": 201, "accepted": false}
+  ],
   "observer": {
     "items": 1,
     "copyBytes": 265,

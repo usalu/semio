@@ -15,7 +15,12 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[[test]]
+name = "mounted"
+path = "../../🧪️tests/🧩️mounted/🦀️.rs"
+
 [dependencies]
+semio-framework-geometry-primitives = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/📐️geometry/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }

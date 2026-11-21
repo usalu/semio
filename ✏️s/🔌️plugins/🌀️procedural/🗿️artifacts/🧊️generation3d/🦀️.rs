@@ -397,6 +397,7 @@ fn create_generation3d_app_part_4(builder: semio_plugin::app::EditorBuilder) -> 
                     "knifeMeshSelection".into(),
                     "setCamera".into(),
                     "setShowMode".into(),
+                    "setLodMode".into(),
                     "toggleSun".into(),
                     "setSunAzimuth".into(),
                     "setSunElevation".into(),
@@ -410,6 +411,7 @@ fn create_generation3d_app_part_4(builder: semio_plugin::app::EditorBuilder) -> 
                 .window_kind_action_refs(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW, vec![
                     "setCamera".into(),
                     "setShowMode".into(),
+                    "setLodMode".into(),
                     "toggleSun".into(),
                     "setSunAzimuth".into(),
                     "setSunElevation".into(),

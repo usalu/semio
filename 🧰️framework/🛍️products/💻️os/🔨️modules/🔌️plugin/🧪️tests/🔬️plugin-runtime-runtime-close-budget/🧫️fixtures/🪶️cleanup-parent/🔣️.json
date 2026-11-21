@@ -1,0 +1,6 @@
+[
+  { "child": "complete", "weakOwned": true, "receipt": [1, 0, 0, 128], "parent": "pending" },
+  { "child": "complete", "weakOwned": false, "receipt": [1, 0, 0, 128], "parent": "complete" },
+  { "child": "pending", "weakOwned": true, "receipt": [1, 64, 0, 0], "parent": "pending" },
+  { "child": "blocked", "weakOwned": true, "receipt": [0, 0, 0, 0], "parent": "blocked" }
+]

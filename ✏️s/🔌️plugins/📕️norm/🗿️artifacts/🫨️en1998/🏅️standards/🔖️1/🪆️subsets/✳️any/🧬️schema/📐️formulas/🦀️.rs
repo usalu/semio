@@ -70,6 +70,12 @@ pub mod na_de {
     }
 }
 
+#[path = "../🧱️horizontal/🦀️.rs"]
+pub mod horizontal;
+
+#[path = "📇️catalogue/🦀️.rs"]
+pub mod case_catalogue;
+
 pub mod part_1 {
     use semio_s_artifact_norm_en1998_model::T1Method;
 
@@ -1002,7 +1008,12 @@ pub mod part_1 {
     }
 }
 
+#[path = "🌉️spatial-variability/🦀️.rs"]
+pub mod spatial_variability;
+
 pub mod part_2 {
+    pub use super::spatial_variability::{spatial_combined_effect, spatial_set_a, spatial_set_b, spatial_variability_required};
+
     #[cfg(test)] use crate::*;
     /// 🌉 Capacity-design shear of a ductile pier V_CD = γ_0·M_Rd / L_s (EN 1998-2 §5.6.3.3 principle; γ_0 is the unverified NDP `en2.pier.gamma-0`).
     pub fn pier_capacity_design_shear_n(gamma_0: f64, m_rd_nm: f64, pier_height_m: f64) -> f64 {
@@ -1312,7 +1323,12 @@ pub mod part_3 {
     }
 }
 
+#[path = "🌊️pipe-wave/🦀️.rs"]
+pub mod pipe_wave;
+
 pub mod part_4 {
+    pub use super::pipe_wave::{PipeWaveInput, PipeWaveResponse, bonded_pipe_wave_response};
+
     /// 🫙 Housner impulsive mass ratio m_i/m = tanh(1.7·R/H)/(1.7·R/H) (EN 1998-4 Annex A.3).
     pub fn impulsive_mass_ratio(h_over_r: f64) -> f64 {
         let x = 1.7 / h_over_r.max(1e-9);
@@ -1813,6 +1829,50 @@ pub mod part_5 {
 }
 
 pub mod part_6 {
+    /// 📊 Damping ratios for structural, lining and foundation components of one mode.
+    /// See EN 1998-6:2005 Annex B and EN 1998-2:2005 §4.1.3.
+    pub const MODAL_DAMPING_RATIOS: [(&str, f64, f64); 11] = [
+        ("welded-steel", 0.02, 0.02),
+        ("bolted-steel", 0.04, 0.04),
+        ("reinforced-concrete", 0.05, 0.05),
+        ("prestressed-concrete", 0.02, 0.02),
+        ("ceramic-cladding", 0.015, 0.05),
+        ("masonry-liner", 0.03, 0.10),
+        ("steel-liner", 0.01, 0.04),
+        ("frp-liner", 0.015, 0.03),
+        ("horizontal-soil", 0.10, 0.20),
+        ("rocking-soil", 0.07, 0.15),
+        ("vertical-soil", 0.15, 0.20),
+    ];
+
+    /// 🧮 Equivalent modal damping from component strain energies and damping ratios, Eq. (B.1).
+    pub fn energy_weighted_modal_damping(energies: &[f64], ratios: &[f64]) -> Option<f64> {
+        if energies.len() != ratios.len()
+            || !energies.iter().all(|energy| energy.is_finite() && *energy >= 0.0)
+            || !ratios.iter().all(|ratio| (0.0..=1.0).contains(ratio)) {
+            return None;
+        }
+        let energy: f64 = energies.iter().sum();
+        if !energy.is_finite() || energy <= 0.0 { return None; }
+        Some(energies.iter().zip(ratios).map(|(e, xi)| e / energy * xi).sum())
+    }
+
+
+    /// 🪢 Horizontal guy-cable stiffness with the wrapping and sag corrections of EN 1998-6:2005.
+    /// The unit weight covers cable and ice, and tensile stress is taken at the assessed equilibrium.
+    pub fn guy_cable_stiffness_n_m(length: f64, area: f64, slope_deg: f64, material_modulus: f64, wrap_deg: f64, unit_weight: f64, tension: f64) -> Option<f64> {
+        let positive = [length, area, material_modulus, tension].iter().all(|v| v.is_finite() && *v > 0.0);
+        if !positive || !(0.0..90.0).contains(&slope_deg) || !(0.0..90.0).contains(&wrap_deg)
+            || !unit_weight.is_finite() || unit_weight < 0.0 {
+            return None;
+        }
+        let wrapped = material_modulus * wrap_deg.to_radians().cos().powi(3);
+        let sag = (unit_weight * length / tension).powi(2) * (wrapped / tension) / 12.0;
+        let equivalent = wrapped / (1.0 + sag);
+        let horizontal = slope_deg.to_radians().cos().powi(2) * area * equivalent / length;
+        (horizontal.is_finite() && horizontal > 0.0).then_some(horizontal)
+    }
+
     /// 🗼 Fundamental period of a uniform cantilever T = 2π / (3.516 √(EI / (μ H⁴))) = 1.787 √(M H³ / EI) with M the total mass; infinity without stiffness.
     pub fn uniform_cantilever_period_s(mass_kg: f64, height_m: f64, ei_nm2: f64) -> f64 {
         if ei_nm2 <= 0.0 || mass_kg <= 0.0 || height_m <= 0.0 { return f64::INFINITY; }

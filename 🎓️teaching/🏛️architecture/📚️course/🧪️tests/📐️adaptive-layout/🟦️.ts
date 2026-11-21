@@ -65,9 +65,39 @@ async function expectNoSidewaysScroll(page: Page, where: string): Promise<void> 
   expect(wider, `${where}: boxes that scroll sideways`).toEqual([]);
 }
 
+/** 🖱️ Reads the paths the compositor paints for the sorting result card before and after pointer entry. */
+async function expectStableResultHover(page: Page): Promise<void> {
+  const card = screen(page, "task-result").filter({ has: page.locator(".course-plot-mean") }).first();
+  const caption = card.getByText("Was alle geantwortet haben", { exact: true });
+  const border = card.locator('svg[data-window-silhouette-border]').first();
+  const paint = () => border.evaluate((svg) => {
+    const paths = [...svg.querySelectorAll("path[d]")].filter((path) => path.getAttribute("d"));
+    const { x, y, width, height } = svg.getBoundingClientRect();
+    return {
+      edges: paths.flatMap((path) => path.getAttribute("d")!.match(/M[^M]+/gu) ?? []).map((edge) => edge.trim()).sort(),
+      bounds: [x, y, width, height],
+      widths: [...new Set(paths.map((path) => getComputedStyle(path).strokeWidth))],
+      states: [...new Set(paths.map((path) => path.getAttribute("data-shared-border-state")))],
+    };
+  });
+  await caption.scrollIntoViewIfNeeded();
+  await page.mouse.move(0, 0);
+  await expect.poll(async () => (await paint()).states.includes("hover")).toBe(false);
+  await expect.poll(async () => (await paint()).edges.length).toBeGreaterThan(3);
+  const rest = await paint();
+  await caption.hover();
+  await expect.poll(async () => (await paint()).states).toEqual(["hover"]);
+  const hover = await paint();
+  expect(rest.widths).toEqual(["1px"]);
+  expect(hover.widths).toEqual(rest.widths);
+  expect(hover.edges).toEqual(rest.edges);
+  expect(hover.bounds).toEqual(rest.bounds);
+  expect(new Set(hover.edges).size).toBe(hover.edges.length);
+}
+
 for (const seen of vectors.devices) {
   test(`a ${seen.device} ${seen.width} px wide lays every part out for its room`, async ({ browser }, info) => {
-    const context = await browser.newContext({ viewport: { width: seen.width, height: seen.height }, isMobile: seen.touch, hasTouch: seen.touch, baseURL: info.project.use.baseURL, locale: "de-DE" });
+    const context = await browser.newContext({ viewport: { width: seen.width, height: seen.height }, isMobile: seen.touch, hasTouch: seen.touch, baseURL: info.project.use.baseURL, locale: "de-DE", colorScheme: "dark" });
     const page = await context.newPage();
     const problems: string[] = [];
     page.on("pageerror", (error) => problems.push(error.message));
@@ -124,7 +154,15 @@ for (const seen of vectors.devices) {
     const result = screen(page, "task-result").first().locator("table.course-fold").first();
     expect((await result.evaluate((table) => getComputedStyle(table).display)) === "table" ? "table" : "records", where("the table of a classification's result")).toBe(seen.results);
     await expect(result.getByRole("rowheader").first()).toBeVisible();
+    const answers = screen(page, "task-result").first().locator(".course-records:has(> .course-plot)").first();
+    await expect(answers).toBeVisible();
+    await expect(answers).not.toHaveAttribute("data-shared-border-cell", "");
+    const scores = screen(page, "results").locator(".course-histogram").first();
+    await expect(scores).toHaveCSS("border-bottom-width", "1px");
+    const columns = scores.locator(".course-column");
+    expect(await columns.evaluateAll((bins) => bins.map((bin) => getComputedStyle(bin).borderBottomWidth))).toEqual(Array.from({ length: 10 }, () => "0px"));
     await expectNoSidewaysScroll(page, where("the results"));
+    await expectStableResultHover(page);
 
     await way(page, "overview").click();
     await expect(page.locator("[data-layered-pane][data-opened]")).toHaveCount(0);

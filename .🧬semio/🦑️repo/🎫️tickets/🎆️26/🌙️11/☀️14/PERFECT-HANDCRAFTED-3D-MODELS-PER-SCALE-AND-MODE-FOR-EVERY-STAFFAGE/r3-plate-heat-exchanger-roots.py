@@ -263,3 +263,5 @@ def apply_roots(asset):
     rep = asset["representations"]["500"]
     rep["reason"] = T("At 1:500 the exchanger is only 1.2 mm wide on paper and its smallest parts, the 0.3 mm plates and the 1 mm spigot and flap sheet, are far below every print profile.", "Bei 1:500 ist der Übertrager auf Papier nur 1,2 mm breit, und seine kleinsten Teile, die 0,3 mm dicken Platten und das 1-mm-Blech von Stutzen und Klappe, liegen weit unter jedem Druckprofil.")
     rep["limitingFeature"] = T("The 0.3 mm plates and the 1 mm sheet of spigots and flap", "Die 0,3 mm dicken Platten und das 1-mm-Blech von Stutzen und Klappe")
+    import runpy
+    runpy.run_path(os.path.join(os.path.dirname(__file__), "equipment-fine-ink.py"))["apply"](asset)

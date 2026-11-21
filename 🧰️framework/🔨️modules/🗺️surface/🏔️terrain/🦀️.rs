@@ -17,12 +17,20 @@
 //! the full per-field table, the empty-dispatch rationale, and the placement recommendation for the
 //! sibling `paint`/`node-graph`/`tiled-map` lanes.
 
-// 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for
-// ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+#[path = "🗺️overlay/🦀️.rs"]
+pub mod overlay;
+
+#[path = "🎯️pick/🦀️.rs"]
+pub mod pick;
+
+#[path = "🖌️brush/🦀️.rs"]
+mod brush;
+pub use brush::{TerrainBrushAction, TerrainBrushArguments};
 
 //#region Projection
 /// 🧭️ Standard Web Mercator slippy-map tile math (Terrarium tiles are tiled this way), kept
@@ -86,13 +94,15 @@ pub mod tiles {
     /// 🔎️ Picks a DEM zoom level from camera-to-target distance (meters): closer camera -> higher
     /// zoom (finer DEM resolution), halving the reference distance per zoom level.
     pub fn pick_zoom(distance_m: f64) -> u32 {
-        const REFERENCE_DISTANCE_AT_MAX_ZOOM: f64 = 400.0;
-        if distance_m <= REFERENCE_DISTANCE_AT_MAX_ZOOM {
-            return TERRAIN_TILE_MAX_ZOOM;
-        }
-        let levels_down = (distance_m / REFERENCE_DISTANCE_AT_MAX_ZOOM).log2().floor() as i64;
-        let zoom = TERRAIN_TILE_MAX_ZOOM as i64 - levels_down;
-        zoom.clamp(TERRAIN_TILE_MIN_ZOOM as i64, TERRAIN_TILE_MAX_ZOOM as i64) as u32
+        pick_zoom_in_range(distance_m, TERRAIN_TILE_MIN_ZOOM, TERRAIN_TILE_MAX_ZOOM)
+    }
+
+    pub(super) fn pick_zoom_in_range(distance_m: f64, min_zoom: u32, max_zoom: u32) -> u32 {
+        const REFERENCE_DISTANCE_M: f64 = 400.0;
+        let max_zoom = max_zoom.min(u32::BITS - 1);
+        let min_zoom = min_zoom.min(max_zoom);
+        let levels_down = (distance_m.max(1.0) / REFERENCE_DISTANCE_M).log2().floor();
+        (f64::from(TERRAIN_TILE_MAX_ZOOM) - levels_down).clamp(f64::from(min_zoom), f64::from(max_zoom)) as u32
     }
 
     pub fn visible_tiles(center_lon: f64, center_lat: f64, zoom: u32) -> Vec<(u32, u32, u32)> {
@@ -111,6 +121,7 @@ pub mod tiles {
                 out.push((zoom, x as u32, y as u32));
             }
         }
+        out.sort_by_key(|&(_, x, y)| (i64::from(x) - cx).pow(2) + (i64::from(y) - cy).pow(2));
         out
     }
 }
@@ -177,14 +188,44 @@ struct DecodedElevationTile {
     image: semio_framework_pixels::RasterImage,
 }
 
-#[derive(Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-struct TerrainTileMeshJson {
-    positions: Vec<f32>,
-    normals: Vec<f32>,
-    indices: Vec<u32>,
-    uvs: Vec<f32>,
+pub struct TerrainTileMeshJson {
+    pub positions: Vec<f32>,
+    pub normals: Vec<f32>,
+    pub indices: Vec<u32>,
+    pub uvs: Vec<f32>,
+}
+
+/// 🏔️ Fixed-resolution WGS84 elevation grid. Bounds are west, south, east, north;
+/// rows start at the southwest corner and elevations are in meters.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub struct TerrainElevationGrid {
+    pub bounds: [f64; 4],
+    pub rows: Vec<Vec<i16>>,
+}
+
+impl TerrainElevationGrid {
+    /// 📐️ Checks geographic extent and the bounded raster shape before meshing.
+    pub fn is_valid(&self) -> bool {
+        let [west, south, east, north] = self.bounds;
+        let resolution = TERRAIN_GRID_RESOLUTION as usize;
+        (-180.0..east).contains(&west) && east <= 180.0
+            && (-90.0..north).contains(&south) && north <= 90.0
+            && self.rows.len() == resolution && self.rows.iter().all(|row| row.len() == resolution)
+    }
+
+    /// 🧊️ Builds the same grid triangles drawn in the viewport and published as artifact geometry.
+    pub fn mesh(&self, origin_lon: f64, origin_lat: f64, exaggeration: f64) -> Option<TerrainTileMeshJson> {
+        let maximum_exaggeration = f64::from(f32::MAX) / f64::from(i16::MIN.unsigned_abs());
+        if !self.is_valid() || !(-180.0..=180.0).contains(&origin_lon) || !(-90.0..=90.0).contains(&origin_lat)
+            || !(0.0..=maximum_exaggeration).contains(&exaggeration) {
+            return None;
+        }
+        let heights = self.rows.iter().rev().flatten().copied().map(f32::from).collect::<Vec<_>>();
+        Some(build_terrain_grid_mesh(&heights, self.bounds, origin_lon, origin_lat, exaggeration))
+    }
 }
 
 fn build_terrain_tile_mesh(tile: &DecodedElevationTile, origin_lon: f64, origin_lat: f64, exaggeration: f64) -> TerrainTileMeshJson {
@@ -193,73 +234,42 @@ fn build_terrain_tile_mesh(tile: &DecodedElevationTile, origin_lon: f64, origin_
     let (max_lon, min_lat) = projection::tile_xy_to_lonlat((tile.x + 1) as f64, (tile.y + 1) as f64, tile.z);
 
     let mut heights = vec![0.0f32; (n * n) as usize];
-    let mut min_elev = f32::INFINITY;
-    let mut max_elev = f32::NEG_INFINITY;
     for row in 0..n {
         for col in 0..n {
             let px = (col as f32 / (n - 1) as f32) * (TERRARIUM_TILE_PX - 1) as f32;
             let py = (row as f32 / (n - 1) as f32) * (TERRARIUM_TILE_PX - 1) as f32;
-            let elevation = sample_elevation(&tile.image, px, py);
-            heights[(row * n + col) as usize] = elevation;
-            min_elev = min_elev.min(elevation);
-            max_elev = max_elev.max(elevation);
+            heights[(row * n + col) as usize] = sample_elevation(&tile.image, px, py);
         }
     }
-    if !min_elev.is_finite() {
-        min_elev = 0.0;
-    }
-    if !max_elev.is_finite() || max_elev <= min_elev {
-        max_elev = min_elev + 1.0;
-    }
+    build_terrain_grid_mesh(&heights, [min_lon, min_lat, max_lon, max_lat], origin_lon, origin_lat, exaggeration)
+}
 
+#[path = "📐️grid-projection/🦀️.rs"]
+mod grid_projection;
+pub use grid_projection::TerrainGridMeshProjection;
+
+fn build_terrain_grid_mesh(heights: &[f32], bounds: [f64; 4], origin_lon: f64, origin_lat: f64, exaggeration: f64) -> TerrainTileMeshJson {
+    let n = TERRAIN_GRID_RESOLUTION;
+    let projection = TerrainGridMeshProjection::from_bounds(bounds, [origin_lon, origin_lat], exaggeration);
+    let height = |row, column| heights[(row * n + column) as usize];
+    let minimum = heights.iter().copied().fold(f32::INFINITY, f32::min);
+    let maximum = heights.iter().copied().fold(f32::NEG_INFINITY, f32::max);
     let mut positions = Vec::with_capacity((n * n * 3) as usize);
+    let mut normals = Vec::with_capacity((n * n * 3) as usize);
     let mut uvs = Vec::with_capacity((n * n * 2) as usize);
-    for row in 0..n {
-        for col in 0..n {
-            let u = col as f64 / (n - 1) as f64;
-            let v = row as f64 / (n - 1) as f64;
-            let lon = min_lon + (max_lon - min_lon) * u;
-            let lat = max_lat + (min_lat - max_lat) * v;
-            let (local_x, local_y) = projection::lonlat_to_local_meters(lon, lat, origin_lon, origin_lat);
-            let elevation = heights[(row * n + col) as usize] as f64 * exaggeration;
-            positions.push(local_x as f32);
-            positions.push(local_y as f32);
-            positions.push(elevation as f32);
-            let normalized_elevation = ((heights[(row * n + col) as usize] - min_elev) / (max_elev - min_elev)).clamp(0.0, 1.0);
-            uvs.push(0.5);
-            uvs.push(normalized_elevation);
-        }
-    }
-
-    let cell_size_x = (positions[3] - positions[0]).abs().max(1e-3);
-    let mut normals = vec![0.0f32; positions.len()];
-    for row in 0..n {
-        for col in 0..n {
-            let left = heights[(row * n + col.saturating_sub(1)) as usize];
-            let right = heights[(row * n + (col + 1).min(n - 1)) as usize];
-            let up = heights[(row.saturating_sub(1) * n + col) as usize];
-            let down = heights[((row + 1).min(n - 1) * n + col) as usize];
-            let dzdx = (right - left) as f64 * exaggeration / (2.0 * cell_size_x as f64);
-            let dzdy = (down - up) as f64 * exaggeration / (2.0 * cell_size_x as f64);
-            let normal = normalize3(-dzdx, -dzdy, 1.0);
-            let idx = ((row * n + col) * 3) as usize;
-            normals[idx] = normal.0 as f32;
-            normals[idx + 1] = normal.1 as f32;
-            normals[idx + 2] = normal.2 as f32;
-        }
-    }
-
     let mut indices = Vec::with_capacity(((n - 1) * (n - 1) * 6) as usize);
-    for row in 0..n - 1 {
-        for col in 0..n - 1 {
-            let i0 = row * n + col;
-            let i1 = row * n + col + 1;
-            let i2 = (row + 1) * n + col;
-            let i3 = (row + 1) * n + col + 1;
-            indices.extend_from_slice(&[i0, i2, i1, i1, i2, i3]);
+    for row in 0..n {
+        for column in 0..n {
+            positions.extend(projection.position(row, column, height(row, column)));
+            normals.extend(projection.normal(row, column, height));
+            uvs.extend(TerrainGridMeshProjection::uv(height(row, column), minimum, maximum));
         }
     }
-
+    for row in 0..n - 1 {
+        for column in 0..n - 1 {
+            indices.extend(projection.triangles(row, column));
+        }
+    }
     TerrainTileMeshJson { positions, normals, indices, uvs }
 }
 
@@ -270,13 +280,16 @@ fn normalize3(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
 //#endregion TerrainTileMesh
 
 //#region VisibleTileQuery
-#[derive(Deserialize, semio_framework_value::FromValue)]
+#[derive(Default, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
 struct CameraRecord {
     position: Option<[f64; 3]>,
     target: Option<[f64; 3]>,
+    min_zoom: Option<u32>,
+    max_zoom: Option<u32>,
 }
 
-#[derive(Serialize, semio_framework_value::ToValue)]
+#[derive(semio_framework_value::ToValue)]
 struct VisibleTileRow {
     z: u32,
     x: u32,
@@ -297,7 +310,7 @@ fn visible_tile_coords(camera: &CameraRecord, origin_lon: f64, origin_lat: f64) 
     let dy = position[1] - target[1];
     let dz = position[2] - target[2];
     let distance = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0);
-    let zoom = tiles::pick_zoom(distance);
+    let zoom = tiles::pick_zoom_in_range(distance, camera.min_zoom.unwrap_or(tiles::TERRAIN_TILE_MIN_ZOOM), camera.max_zoom.unwrap_or(tiles::TERRAIN_TILE_MAX_ZOOM));
     let (center_lon, center_lat) = projection::local_meters_to_lonlat(target[0], target[1], origin_lon, origin_lat);
     tiles::visible_tiles(center_lon, center_lat, zoom)
 }
@@ -331,13 +344,16 @@ pub struct TerrainSessionCore {
     origin_lat: f64,
     exaggeration: f64,
     elevation: TerrainElevationTiles,
+    elevation_grid: Option<TerrainElevationGrid>,
 }
 
 impl Default for TerrainSessionCore {
     fn default() -> Self {
-        Self { origin_lon: 0.0, origin_lat: 0.0, exaggeration: 1.0, elevation: TerrainElevationTiles::default() }
+        Self { origin_lon: 0.0, origin_lat: 0.0, exaggeration: 1.0, elevation: TerrainElevationTiles::default(), elevation_grid: None }
     }
 }
+
+const ELEVATION_GRID_TILE: (u32, u32, u32) = (0, 0, 0);
 
 impl TerrainSessionCore {
     /// 🪞 Mirrors `TerrainDescriptorJson.project_origin` (gis-owned artifact field, tier-a there —
@@ -356,13 +372,29 @@ impl TerrainSessionCore {
         self.exaggeration = exaggeration.max(0.0);
     }
 
+    /// 🗺️ Mirrors the scene's embedded elevation grid into this render cache.
+    pub fn set_elevation_grid(&mut self, grid: Option<TerrainElevationGrid>) -> bool {
+        if grid.as_ref().is_some_and(|grid| !grid.is_valid()) {
+            return false;
+        }
+        self.elevation_grid = grid;
+        true
+    }
+
+    /// 🌐️ Decodes the bounded scene grid at the browser component boundary.
+    pub fn set_elevation_grid_json(&mut self, json: &str) -> bool {
+        let Ok(grid) = from_json_str(json, JsonMemberPolicy::Reject) else { return false };
+        self.set_elevation_grid(Some(grid))
+    }
+
     /// 🔭️ JSON-wrapping shim over the tier-(e) [`visible_tile_coords`] — kept `&self` for API
     /// compatibility; the actual query is pure and argument-driven, not a method of this struct's
     /// mutable state.
     pub fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
-        let camera: CameraRecord = serde_json::from_str(camera_json).unwrap_or(CameraRecord { position: None, target: None });
-        let rows: Vec<VisibleTileRow> = visible_tile_coords(&camera, self.origin_lon, self.origin_lat).into_iter().map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) }).collect();
-        serde_json::to_string(&rows).unwrap_or_else(|_| "[]".to_string())
+        let camera: CameraRecord = from_json_str(camera_json, JsonMemberPolicy::Reject).unwrap_or_default();
+        let coordinates = if self.elevation_grid.is_some() { vec![ELEVATION_GRID_TILE] } else { visible_tile_coords(&camera, self.origin_lon, self.origin_lat) };
+        let rows: Vec<VisibleTileRow> = coordinates.into_iter().map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) }).collect();
+        to_json_string(&rows)
     }
 
     /// 📥️ Decodes and stores one externally-fetched DEM tile — see [`TerrainElevationTiles`] for
@@ -383,15 +415,25 @@ impl TerrainSessionCore {
         self.elevation.by_key.remove(&tiles::tile_key(z, x, y));
     }
 
+    /// 🧭 Check if a decoded elevation tile is ready to build.
+    pub fn has_elevation_tile(&self, z: u32, x: u32, y: u32) -> bool {
+        if self.elevation_grid.is_some() {
+            return (z, x, y) == ELEVATION_GRID_TILE;
+        }
+        self.elevation.by_key.contains_key(&tiles::tile_key(z, x, y))
+    }
+
+    fn tile_mesh(&self, z: u32, x: u32, y: u32) -> Option<TerrainTileMeshJson> {
+        if let Some(grid) = &self.elevation_grid {
+            return ((z, x, y) == ELEVATION_GRID_TILE).then(|| grid.mesh(self.origin_lon, self.origin_lat, self.exaggeration)).flatten();
+        }
+        let tile = self.elevation.by_key.get(&tiles::tile_key(z, x, y))?;
+        Some(build_terrain_tile_mesh(tile, self.origin_lon, self.origin_lat, self.exaggeration))
+    }
+
     /// 🕸️ Tier-(e) mesh build ([`build_terrain_tile_mesh`]) over a cached decoded tile, JSON-wrapped.
     pub fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
-        match self.elevation.by_key.get(&tiles::tile_key(z, x, y)) {
-            Some(tile) => {
-                let mesh = build_terrain_tile_mesh(tile, self.origin_lon, self.origin_lat, self.exaggeration);
-                serde_json::to_string(&mesh).unwrap_or_else(|_| "null".to_string())
-            }
-            None => "null".to_string(),
-        }
+        self.tile_mesh(z, x, y).map_or_else(|| "null".to_owned(), |mesh| to_json_string(&mesh))
     }
 }
 //#endregion TerrainSession

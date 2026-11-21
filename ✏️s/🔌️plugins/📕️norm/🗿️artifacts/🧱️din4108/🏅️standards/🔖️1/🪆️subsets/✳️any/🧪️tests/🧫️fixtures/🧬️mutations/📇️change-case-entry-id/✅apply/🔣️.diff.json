@@ -1,0 +1,54 @@
+{
+  "climateZone": null,
+  "usage": null,
+  "tIntC": null,
+  "rhInt": null,
+  "hasMechanicalVentilation": null,
+  "airtightnessN50": null,
+  "bb2DetailsConform": null,
+  "zones": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "elements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "thermalBridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "pressure-test",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "entryId": "G26-02",
+          "numbers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "texts": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  }
+}

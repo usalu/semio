@@ -1,3 +1,4 @@
+import { UI_DECIMAL_QUAD_COMMIT, uiDecimalQuad, uiInputCommitsOnBlur } from "@semio-tech/ui-contract/component";
 /** 🎛️ The declarative control boundary: control types, their disabled and activity rules, action dispatch and the slider and stepper controls.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
@@ -66,8 +67,11 @@ function dispatchDeclarativeControlAction(onAction: (action: ActionDescriptor) =
 export function renderUiControl(control: DeclarativeUiControl, onAction: (action: ActionDescriptor) => void, path?: string): ReactElement {
   switch (control.type) {
     case "input": {
-      const commitOnBlur = control.commit === "blur";
-      const commitValue = (raw: string) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: control.inputKind === "number" ? Number(raw) : raw });
+      const commitOnBlur = uiInputCommitsOnBlur(control.commit);
+      const commitValue = (raw: string) => {
+        const value = control.commit === UI_DECIMAL_QUAD_COMMIT ? uiDecimalQuad(raw) : control.inputKind === "number" ? Number(raw) : raw;
+        if (value !== undefined) dispatchDeclarativeControlAction(onAction, control.onChange, { value });
+      };
       if (control.inputKind === "longText") {
         return <Textarea id={control.id} data-ui-path={path} className="min-h-[4.5rem] w-full min-w-0" value={control.value} placeholder={control.placeholder} onChange={commitOnBlur ? undefined : (event) => commitValue(event.target.value)} onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined} />;
       }

@@ -26,11 +26,14 @@ impl SemanticProjection<RasterSnapshot> for ScratchProjection{
  fn take(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<(RasterSnapshot,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if self.closing||self.value.is_none()||!retained_clone_grant_admits(effect.grant(),d){return Ok(None)}perform(effect,1)?;Ok(self.value.take().map(|value|(value,progress(d))))}
  fn begin_close(&mut self){self.closing=true}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close.next_owner_demands::<RasterSnapshot>(self.value.is_some(),&None,body)}
- fn close_work_demand(&self,_:usize)->Result<Option<u64>,ValueError>{Ok(Some(u64::from(self.closing&&(self.value.is_some()||!self.close.is_empty()))))}
+ fn close_work_demand(&self, body:usize)->Result<Option<u64>,ValueError>{
+  if !self.closing {return Ok(Some(0))}
+  self.close.next_owner_work::<RasterSnapshot>(self.value.is_some(), &None, body).map(Some)
+ }
  fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
    if !self.closing{return Ok(RetainedCloneStep::Progress(Default::default()))}
-   if !self.close.is_empty(){return RetirementPollExit::resume(self.close.step_granted(effect))}
+   if !self.close.is_empty(){return RetirementPollExit::resume(self.close.step_granted(effect.grant().maximum_copy_bytes, effect))}
    Ok(self.close.begin_granted(&mut self.value,effect).result?.unwrap_or(RetainedCloneStep::Complete(Default::default())))
   })();
   RetirementPollExit::settle(effect,result)
@@ -50,21 +53,26 @@ impl SemanticEdit<RasterSnapshot,RasterMutation> for ReplayEdit{
  fn demands(&self,before:RetainedCloneRef<'_,RasterSnapshot>,input:RetainedCloneRef<'_,RasterMutation>,_:PagedOneItemPostRead<'_,RasterSnapshot>,body:usize)->Result<RetirementDemand,ValueError>{if self.prepared.is_some(){return Ok(header::<(RasterSnapshot,RasterSnapshot,Option<Vec<RasterMutation>>)>())}self.apply.as_ref().ok_or_else(||invalid("Raster replay semantic candidate is absent"))?.advance_demands(before.get(),input.get(),body)}
  fn advance(&mut self,before:RetainedCloneRef<'_,RasterSnapshot>,input:RetainedCloneRef<'_,RasterMutation>,post:PagedOneItemPost<'_,RasterSnapshot>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<SemanticEditStep<RasterMutation>,ValueError>{
   self.last_work=0;if self.closing||self.done{return Err(invalid("Raster replay semantic candidate is closed"))}
-  if self.prepared.is_none(){let apply=self.apply.as_mut().ok_or_else(||invalid("Raster replay semantic candidate is absent"))?;let d=apply.advance_demands(before.get(),input.get(),body)?;if !retained_clone_grant_admits(grant,d){return Ok(SemanticEditStep::Progress(Default::default()))}let turn=apply.advance_replay_controlled(before.get(),input.get(),self.context,grant,receiving);self.last_work=turn.work;let(output,receipt)=turn.result?;if let Some(output)=output{*self.prepared=Some(output)}return Ok(SemanticEditStep::Progress(receipt))}
+  if self.prepared.is_none(){let apply=self.apply.as_mut().ok_or_else(||invalid("Raster replay semantic candidate is absent"))?;let d=apply.advance_demands(before.get(),input.get(),body)?;if !retained_clone_grant_admits(grant,d){return Ok(SemanticEditStep::Progress(Default::default()))}let turn=apply.advance_replay_controlled(before.get(),input.get(),self.context,grant,receiving);self.last_work=u64::try_from(turn.work).map_err(|_|invalid("Raster replay work exceeds Store receipt"))?;let(output,receipt)=turn.result?;if let Some(output)=output{*self.prepared=Some(output)}return Ok(SemanticEditStep::Progress(receipt))}
   let d=header::<(RasterSnapshot,RasterSnapshot,Option<Vec<RasterMutation>>)>() ;if !retained_clone_grant_admits(grant,d)||!receiving.prepare_work(1)?{return Ok(SemanticEditStep::Progress(Default::default()))}if self.prepared.as_ref().is_none_or(|value|value.inverse.is_none()){return Err(invalid("Raster replay semantic inverse is absent"))}let post=post.mutable()?;let RasterPreparedMutation{snapshot,inverse}=self.prepared.take().unwrap();*self.old=Some(std::mem::replace(post,snapshot));self.done=true;self.last_work=1;let receipt=progress(d);receiving.commit_work(1).map_err(|error|error.with_retained_progress(receipt))?;Ok(SemanticEditStep::Complete(receipt,inverse.unwrap(),Vec::new(),false))
  }
  fn begin_close(&mut self){self.closing=true}
  fn close_demand(&self,_:&Arc<dyn ArtifactOwnedValueRetirementFactory<RasterMutation>>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(apply)=self.apply.as_ref(){return if apply.terminal_is_empty(){Ok(header::<Option<RasterOneItemApply>>())}else{apply.close_demands(body)}}if self.prepared.is_some(){return self.close.next_owner_demands::<RasterPreparedMutation>(true,&None,body)}self.close.next_owner_demands::<RasterSnapshot>(self.old.is_some(),&None,body)}
- fn close_work_demand(&self,_:&Arc<dyn ArtifactOwnedValueRetirementFactory<RasterMutation>>,_:usize)->Result<u64,ValueError>{Ok(u64::from(self.closing&&!self.terminal_is_empty()))}
+ fn close_work_demand(&self,_:&Arc<dyn ArtifactOwnedValueRetirementFactory<RasterMutation>>,body:usize)->Result<u64,ValueError>{
+  if !self.closing {return Ok(0)}
+  if let Some(apply) = self.apply.as_ref() {return if apply.terminal_is_empty() {Ok(1)} else {apply.close_work_demand(body)}}
+  if self.prepared.is_some() {return self.close.next_owner_work::<RasterPreparedMutation>(true, &None, body)}
+  self.close.next_owner_work::<RasterSnapshot>(self.old.is_some(), &None, body)
+ }
  fn close_step(&mut self,_:&Arc<dyn ArtifactOwnedValueRetirementFactory<RasterMutation>>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
    let grant=effect.grant();self.last_work=0;
    if !self.closing{return Ok(RetainedCloneStep::Progress(Default::default()))}
    if let Some(apply)=self.apply.as_mut(){
     if apply.terminal_is_empty(){let d=header::<Option<RasterOneItemApply>>();if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}RetirementPollExit::pay(effect,1)?;self.apply.take();self.last_work=1;return Ok(RetainedCloneStep::Progress(progress(d)))}
-    let turn=apply.close_step(grant);self.last_work=u64::try_from(turn.work).unwrap_or(u64::MAX);RetirementPollExit::pay(effect,turn.work)?;return Ok(turn.result?)
+    let turn=apply.close_step(effect);self.last_work=u64::try_from(turn.work).unwrap_or(u64::MAX);return Ok(turn.result?)
    }
-   if !self.close.is_empty(){return RetirementPollExit::resume(self.close.step_granted(effect))}
+   if !self.close.is_empty(){return RetirementPollExit::resume(self.close.step_granted(effect.grant().maximum_copy_bytes, effect))}
    let step=if self.prepared.is_some(){self.close.begin_granted(&mut self.prepared,effect)}else{self.close.begin_granted(&mut self.old,effect)}.result?;
    Ok(step.unwrap_or(RetainedCloneStep::Complete(Default::default())))
   })();

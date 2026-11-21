@@ -1,0 +1,17 @@
+{
+  "operator": "brep.measure.distance",
+  "stock": { "center": [0, 0, 0], "radius": 1, "height": 2 },
+  "cases": [
+    { "name": "axial", "center": [0, 0, 5], "radius": 1, "height": 2, "expected": 3 },
+    { "name": "radial", "center": [5, 0, 0], "radius": 1, "height": 2, "expected": 3 },
+    { "name": "diagonal-rims", "center": [5, 0, 6], "radius": 1, "height": 2, "expected": 5 },
+    { "name": "tangent-rims", "center": [2, 0, 2], "radius": 1, "height": 2, "expected": 0 },
+    { "name": "overlap", "center": [1, 0, 1], "radius": 1, "height": 2, "expected": 0 },
+    { "name": "opposing-axes", "center": [4, 0, 9], "radius": 0.5, "height": 4, "reverse": true, "expected": 3.905124837953327 }
+  ],
+  "boxes": [
+    { "name": "diagonal-box-rim", "box": { "origin": [0, 0, 0], "size": [2, 2, 2], "rotation": 0 }, "cylinder": { "center": [5, 6, 5], "radius": 1, "height": 2 }, "expected": 5 },
+    { "name": "tangent-box-cap", "box": { "origin": [0, 0, 0], "size": [2, 2, 2], "rotation": 0 }, "cylinder": { "center": [3, 1, 2], "radius": 1, "height": 2 }, "expected": 0 },
+    { "name": "rotated-box-rim", "box": { "origin": [1, 2, 3], "size": [2, 3, 4], "rotation": 0.9272952180016122 }, "cylinder": { "center": [0.6, 9.8, 8], "radius": 0.5, "height": 1 }, "expected": 4.096079106291823 }
+  ]
+}

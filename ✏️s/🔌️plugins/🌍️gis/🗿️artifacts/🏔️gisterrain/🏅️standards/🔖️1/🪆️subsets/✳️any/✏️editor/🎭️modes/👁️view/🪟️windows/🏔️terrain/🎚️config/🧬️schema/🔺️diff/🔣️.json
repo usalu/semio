@@ -18,6 +18,18 @@
               "string",
               "null"
             ]
+          },
+          "brush": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "brush": {
+                "anyOf": [
+                  {"$ref": "https://json.schemas.assets.semio-tech.com/app/gis/gisterrain/window/config/brush.json"},
+                  {"type": "null"}
+                ]
+              }
+            }
           }
         }
       }

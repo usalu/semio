@@ -1,6 +1,12 @@
 {
   "instances": [7, 511, 1023],
   "roundRobin": [7, 511, 1023, 7, 511, 1023],
+  "idlePickerScans": [
+    { "instances": [], "visits": [] },
+    { "instances": [7], "visits": [7] },
+    { "instances": [1023], "visits": [1023] },
+    { "instances": [2047, 511, 1025], "visits": [1025, 511, 2047] }
+  ],
   "command": { "target": "beam", "value": 42, "maximumTurns": 100000 },
   "effects": { "loadDocument": { "pack": [1, 2, 3], "spr": [4, 5] }, "download": ["beam.json", "application/json", "identity", 12] },
   "wire": {

@@ -1,0 +1,12 @@
+{
+  "create": "CREATE (n:Piece) RETURN n.name",
+  "reject": "CREATE (n:Piece) CREATE (m:NoSuchKind)",
+  "deleteRoot": "MATCH (n:Piece) WHERE n.name = 'b' DELETE n",
+  "kind": "Piece",
+  "initialRoot": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+  "initialNodes": 9,
+  "publishedNodes": 10,
+  "createdDepth": 0,
+  "afterRootDeletionNodes": 8,
+  "afterRootDeletionEdges": 4
+}

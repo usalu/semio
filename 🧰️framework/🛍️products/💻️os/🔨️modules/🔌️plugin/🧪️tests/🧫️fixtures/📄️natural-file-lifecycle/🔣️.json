@@ -669,7 +669,10 @@
     "maximumWorkUnitsPerStep": 64,
     "expectedMinimumTurns": 128,
     "expectedDecodedItems": 2048,
-    "completedDecodeStages": [2, 3]
+    "completedDecodeStages": [
+      2,
+      3
+    ]
   },
   "browserRead": {
     "chunkBytes": 3,
@@ -701,5 +704,30 @@
       "openedHistoryEntries": 0
     }
   },
-  "capabilityGaps": []
+  "openCancellation": {
+    "reason": "natural-file.import-cancelled",
+    "expectedOrder": [
+      "open",
+      "submit",
+      "cancel",
+      "retire",
+      "closed"
+    ],
+    "expectedCrossings": [
+      "media-in",
+      "acknowledge",
+      "read-document"
+    ]
+  },
+  "openFailure": {
+    "import": "natural-file.import-rejected",
+    "retirement": "natural-file.retirement-rejected"
+  },
+  "capabilityGaps": [],
+  "wireIngress": {
+    "formatKind": "s.stdio.pdf@1.7",
+    "commandBytes": 8388608,
+    "browserPayloadBytes": 8388482,
+    "nativePayloadBytes": 8388480
+  }
 }

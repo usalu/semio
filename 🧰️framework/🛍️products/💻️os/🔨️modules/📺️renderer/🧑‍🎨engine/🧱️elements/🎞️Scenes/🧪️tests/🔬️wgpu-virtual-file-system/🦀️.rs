@@ -1,7 +1,7 @@
 use semio_renderer_wgpu_scene_feeds::{accepted_vfs_accessibility_controls, acknowledge_vfs_accessibility_candidates, seal_vfs_accessibility_candidates, stage_vfs_accessibility_controls};
 use crate::scene_double_click_action;
 use semio_renderer_wgpu_scene_state::{SceneListHit, SceneModifiers, VfsAccessibilityControl, VfsAccessibilityControlKind, VfsAccessibilityFocusTarget};
-use semio_renderer_wgpu_scene_text_vfs::{VfsAccessibilityKeyOutcome, VfsDescriptorValue, VfsSchema, build_vfs_visible_rows, vfs_accessibility_activate, vfs_accessibility_apply_key, vfs_avatar_initials, vfs_descriptor_label, vfs_descriptor_value, vfs_double_click_action, vfs_glyph_icon, vfs_hit, vfs_row_id, vfs_temporal_request};
+use semio_renderer_wgpu_scene_text_vfs::{VfsAccessibilityKeyOutcome, VfsDescriptorValue, VfsSchema, build_vfs_visible_rows, vfs_accessibility_activate, vfs_accessibility_apply_key, vfs_avatar_initials, vfs_descriptor_label, vfs_descriptor_value, vfs_double_click_action, vfs_glyph_icon, vfs_hit, vfs_temporal_request};
 use serde_json::{Value, json};
 use std::collections::BTreeSet;
 use semio_ui_declaration::layout::ActionDescriptor;
@@ -112,7 +112,7 @@ fn raw_tree_expansion_and_navigation_match_the_shared_react_law() {
     for vector in fixture["visibility"].as_array().expect("visibility") {
         let expanded: BTreeSet<String> = vector["expandedRowIds"].as_array().expect("expanded ids").iter().filter_map(Value::as_str).map(str::to_string).collect();
         let visible = build_vfs_visible_rows(rows, &expanded);
-        let actual_ids: Vec<String> = visible.iter().map(|entry| vfs_row_id(&entry.row)).collect();
+        let actual_ids: Vec<String> = visible.iter().map(|entry| entry.id()).collect();
         let actual_levels: Vec<u32> = visible.iter().map(|entry| entry.level).collect();
         let expected_ids: Vec<String> = vector["visibleRowIds"].as_array().expect("visible ids").iter().filter_map(Value::as_str).map(str::to_string).collect();
         let expected_levels: Vec<u32> = vector["levels"].as_array().expect("levels").iter().filter_map(Value::as_u64).map(|level| level as u32).collect();

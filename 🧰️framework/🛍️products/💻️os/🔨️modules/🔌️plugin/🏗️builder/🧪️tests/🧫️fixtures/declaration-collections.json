@@ -1,0 +1,20 @@
+{
+  "actions": ["zeta", "alpha", "beta"],
+  "windowActions": ["alpha"],
+  "expectedAppActions": ["zeta", "beta"],
+  "duplicateActions": ["zeta", "beta", "zeta", "beta"],
+  "firstDuplicate": "zeta",
+  "terminologyIds": ["zeta", "alpha"],
+  "breadcrumbs": [
+    {"id": "zeta", "breadcrumb": "Old"},
+    {"id": "alpha", "breadcrumb": "Primary"},
+    {"id": "zeta", "breadcrumb": "Current"}
+  ],
+  "expectedTerminologies": ["zeta", "alpha"],
+  "expectedBreadcrumbs": [
+    {"id": "alpha", "breadcrumb": "Primary"},
+    {"id": "zeta", "breadcrumb": "Current"}
+  ],
+  "commands": ["zeta", "beta", "alpha"],
+  "expectedCommands": ["zeta", "beta", "alpha"]
+}

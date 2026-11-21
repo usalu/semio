@@ -115,7 +115,7 @@ impl Fem3dNumericalChild {
         if self.stage == Fem3dNumericalStage::SolidMeshRetire {
             let mesh = self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?;
             if !mesh.terminal_is_empty() {
-                InteractiveJob::close_step(mesh, context).map_err(|_| b"fem3d.numerical-solid-mesh-retire-refused".to_vec())?;
+                InteractiveJob::close_step(mesh, context)?;
                 return Ok(false);
             }
             semio_framework_job::close_original_retained_step(context, RetirementDemand { depth: 1, ..Default::default() }, |_| {
@@ -155,7 +155,6 @@ impl Fem3dNumericalChild {
                 | Fem3dNumericalStage::SolidTet
                 | Fem3dNumericalStage::SolidTetMass
                 | Fem3dNumericalStage::SolidTetCommit
-                | Fem3dNumericalStage::SolidIndicesRetire
                 | Fem3dNumericalStage::SolidCommit
                 | Fem3dNumericalStage::SupportDofReserve
                 | Fem3dNumericalStage::SupportDof
@@ -189,8 +188,10 @@ impl Fem3dNumericalChild {
             Fem3dNumericalStage::BeginPcg => return self.step_begin_pcg(operation, context),
             Fem3dNumericalStage::PreparePcg => return self.step_prepare_pcg(context),
             Fem3dNumericalStage::Pcg => return self.step_pcg(context),
+            Fem3dNumericalStage::ReserveReactionRows => return self.step_reserve_reaction_rows(context),
+            Fem3dNumericalStage::InitializeReactionRows => return self.step_initialize_reaction_rows(),
+            Fem3dNumericalStage::RecoverReaction => return self.step_recover_reaction(context),
             Fem3dNumericalStage::ReadNodeScalar => return self.step_read_node_scalar(),
-            Fem3dNumericalStage::RecoverReaction => return self.step_recover_reaction(),
             Fem3dNumericalStage::PublishNodeScalar => return self.step_publish_node_scalar(solver, freshness),
             Fem3dNumericalStage::RecoverStressElement => return self.step_recover_stress_element(),
             Fem3dNumericalStage::PublishStressScalar => return self.step_publish_stress_scalar(solver, freshness),

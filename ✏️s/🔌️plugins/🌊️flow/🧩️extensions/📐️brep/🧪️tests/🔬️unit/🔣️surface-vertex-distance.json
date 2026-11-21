@@ -1,0 +1,10 @@
+{"normal":[0,0,1],"cases":[
+  {"id":"translated infinite plane retains lateral coordinates","kind":"plane","target":[4,5,8],"point":[4,5,3],"distance":5.0,"origin":[1,2,3]},
+  {"id":"cylinder projection keeps unbounded axial coordinate","kind":"cylinder","target":[6,2,-4],"point":[3,2,-4],"distance":3.0,"origin":[1,2,3],"radius":2},
+  {"id":"sphere distance is to its surface from the inside","kind":"sphere","target":[2,2,3],"point":[3,2,3],"distance":1.0,"origin":[1,2,3],"radius":2},
+  {"id":"cone projects to a positive generator point","kind":"cone","target":[3,0,1],"point":[2,0,2],"distance":1.4142135623730951,"origin":[0,0,0],"halfAngle":0.7853981633974483},
+  {"id":"torus distance uses the tube boundary","kind":"torus","target":[5,0,0],"point":[4,0,0],"distance":1.0,"origin":[0,0,0],"major":3,"minor":1},
+  {"id":"closed elliptical face returns its interior plane foot","kind":"ellipse-face","target":[1,0.5,3],"point":[1,0.5,0],"distance":3.0,"origin":[0,0,0],"major":4,"minor":2},
+  {"id":"closed elliptical face returns its finite outer edge","kind":"ellipse-face","target":[0,7,4],"point":[0,4,0],"distance":5.0,"origin":[0,0,0],"major":4,"minor":2},
+  {"id":"closed disk distance outside its finite radius","kind":"circle-face","target":[3,0,4],"point":[2,0,0],"distance":4.123105625617661,"origin":[0,0,0],"radius":2}
+]}

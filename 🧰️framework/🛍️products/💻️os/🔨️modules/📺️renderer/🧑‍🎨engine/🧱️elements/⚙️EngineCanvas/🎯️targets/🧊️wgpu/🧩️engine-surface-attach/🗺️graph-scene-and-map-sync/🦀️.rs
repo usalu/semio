@@ -70,6 +70,11 @@ pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, window_id: &str, boun
             return None;
         };
         let cache = &mut entry.sync_cache;
+        let owner = EngineSurfaceId::try_from_str(window_id).ok();
+        if cache.window_id != owner {
+            cache.window_id = owner;
+            entry.published_graph_interaction.hover = 0;
+        }
         let mut changed = created;
         if cache.viewport_pixels != Some((width, height)) {
             match engine {
@@ -81,6 +86,9 @@ pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, window_id: &str, boun
         }
         if sync_node_graph_engine(engine, cache, graph) || changed {
             entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        }
+        if cache.scene_owns_hover && cache.hover_source_window_id.is_some_and(|source| source.is_none() || source != cache.window_id) {
+            entry.published_graph_interaction.hover = 0;
         }
         Some(created)
     });
@@ -125,7 +133,7 @@ fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &semio_ui_
     let mut changed = false;
     let size_key = format!("{width}x{height}");
     if cache.size_key.as_deref() != Some(size_key.as_str()) {
-        host.scene.set_size(width, height, 1.0);
+        host.set_size(width, height, 1.0);
         cache.size_key = Some(size_key);
         changed = true;
     }
@@ -173,7 +181,7 @@ fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &semio_ui_
     }
     if cache.camera_json.as_deref() != Some(map.camera_json.as_str()) {
         match engine_camera_from_json(&map.camera_json) {
-            Some((x, y, zoom)) => board_set_camera(&mut host.scene, &mut host.outbox, x, y, zoom),
+            Some((x, y, zoom)) => host.set_camera(x, y, zoom),
             None => host.fit_world_camera(),
         }
         cache.camera_json = Some(map.camera_json.clone());

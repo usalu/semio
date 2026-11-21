@@ -1,0 +1,29 @@
+[
+  {
+    "copyGrant": 0,
+    "expected": {
+      "demandCopyBytes": 1,
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "terminal": false
+    }
+  },
+  {
+    "copyGrant": 1,
+    "expected": {
+      "demandCopyBytes": 1,
+      "copiedItems": 1,
+      "copiedBytes": 1,
+      "terminal": true
+    }
+  },
+  {
+    "copyGrant": 0,
+    "expected": {
+      "demandCopyBytes": 0,
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "terminal": true
+    }
+  }
+]

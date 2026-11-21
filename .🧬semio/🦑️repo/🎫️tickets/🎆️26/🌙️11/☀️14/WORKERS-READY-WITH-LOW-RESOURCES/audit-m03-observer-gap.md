@@ -1,0 +1,7 @@
+# m03 Observer and Attestation Gap
+
+At the 09:08 UTC inspection on 2026-11-21, g1-m03 last reported readiness at 08:58:58: waiting for a sidecar restart, workspace inputs changed, ready=false. Its last attestation was at 08:58:55 and its last journal head at 08:58:47. The last workspace attempt had ended at 08:55:47 with no exit status and observed rather than exit-receipt evidence. The old observer reported PID reuse using an 18-second start offset, NaN tolerance and a 21-second process table read. This does not establish that the physical stage exited or that the process was reused.
+
+The m03 pool record last updated at 08:58:59 reported memory pressure, zero slots and a cache nonresponse. It is historical evidence rather than current host liveness. The sidecar sets restartPending when its watched closure changes and defers restart for busy work or its configured deferral period; readiness waits when that flag is set. That status is not proof that a restart succeeded. No fresh local origin record establishes why m03 stopped reporting; a physical peer observation is needed to distinguish host, process, network and store failure. No peer action was taken.
+
+In contrast, m04 last reported tools running at 23:53 on November 20 and m06 workspace running at 18:25 on November 20. Both records are stale, not evidence of current running processes. m09 has no readiness, attestation, timing or head record in the origin directory. These are distinct evidence gaps and do not establish a shared cause.

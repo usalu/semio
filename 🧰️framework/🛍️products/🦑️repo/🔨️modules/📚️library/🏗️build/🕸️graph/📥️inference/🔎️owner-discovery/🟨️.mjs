@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { dirname, isAbsolute, join, relative, resolve, posix } from "node:path";
 import { loadCatalogBuildProvidersV1, catalogBuildContributionForManifestV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
-import { importObservedModuleV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, recordRegistryOwnerV1, memoizedObservedComputationV1, observedFieldV1, registerFieldExtractorV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { importObservedModuleV1, observedSourceAnalysisPairV1, observedRequireResolve, observedTypeScriptHost, observedFs, recordRegistryOwnerV1, memoizedObservedComputationV1, observedFieldV1, registerFieldExtractorV1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { pathToFileURL } from "node:url";
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
 import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
@@ -128,14 +128,24 @@ export function projectAssemblyAuthorityV1(workspaceRoot,nativeRoot,projectsByRo
 /** 🚧️ The characters a generated import path may not hold, compiled once. */
 const UNSAFE_GENERATED_PATH_V1 = /[\\%*?#[\]{}]/u;
 
-/** 🗂️ The ignored output roots of the owned generator contracts, validated and listed once per contracts object: every import of every command closure asks, and a walk over all contracts with a path normalisation per root cost a third of an owner's inference. */
+/** 🗂️ Indexes ignored output roots once per owned generator contract snapshot. */
 const GENERATED_OUTPUT_INDEXES_V1 = new WeakMap();
 function generatedOutputIndexV1(contracts,safe){
  let index=GENERATED_OUTPUT_INDEXES_V1.get(contracts);
  if(index===undefined){
-  const rows=[],declared=new Set();
-  for(const contract of Object.values(contracts)){if(contract.ownership!=="owned")continue;for(const output of contract.outputRoots??[]){if(output.inclusion!=="ignored")continue;if(!safe(output.path))throw Error("Canonical generated output root required");declared.add(output.path);rows.push({output,producer:output.producer??contract});}}
-  index=Object.freeze({rows:Object.freeze(rows),declared});GENERATED_OUTPUT_INDEXES_V1.set(contracts,index);
+  index=new Map();
+  for(const contract of Object.values(contracts)){
+   if(contract.ownership!=="owned")continue;
+   for(const output of contract.outputRoots??[]){
+    if(output.inclusion!=="ignored")continue;
+    const path=output.path;
+    if(!safe(path))throw Error("Canonical generated output root required");
+    const producers=index.get(path)??[];
+    producers.push(output.producer??contract);
+    index.set(path,producers);
+   }
+  }
+  GENERATED_OUTPUT_INDEXES_V1.set(contracts,index);
  }
  return index;
 }
@@ -143,12 +153,22 @@ function generatedOutputIndexV1(contracts,safe){
 /** 🏭️ Resolves only one exact ignored output contract to its physical authored task owner. */
 export function readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,registry,context){
  const local=buildPath(relative(workspaceRoot,path)),safe=value=>typeof value==="string"&&value!=="."&&value!==""&&!isAbsolute(value)&&posix.normalize(value)===value&&!value.startsWith("../")&&!UNSAFE_GENERATED_PATH_V1.test(value);const refusal=()=>Error("Canonical generated import path required: "+JSON.stringify({path:local.slice(0,256),...(typeof context?.importer==="string"?{importer:context.importer.slice(0,256)}:{}),...(typeof context?.specifier==="string"?{specifier:context.specifier.slice(0,256)}:{})}));if(local==="."||local===""||isAbsolute(local)||posix.normalize(local)!==local||local.startsWith("../")||local.includes("\0"))throw refusal();const matches=[];
- const resolution=ownerAdmissionSchema.$defs.generatedImportResolution.const,extensionless=posix.extname(local)==="",{rows,declared:declaredRoots}=generatedOutputIndexV1(contracts,safe);
- for(const{output,producer}of rows){const exact=local===output.path||local.startsWith(output.path+"/"),inferred=extensionless&&resolution.files.some(suffix=>local+suffix===output.path);if(exact||inferred)matches.push({output,producer,inferred:!exact});}
- if(!matches.length)return undefined;if(!safe(local))throw refusal();if(matches.length!==1)throw Error("Ambiguous generated compile output producer");const {output,producer,inferred}=matches[0];if(inferred&&resolution.probes.some(suffix=>{const candidate=local+suffix;if(candidate===output.path)return false;const absolute=join(workspaceRoot,candidate);return declaredRoots.has(candidate)||existsSync(absolute)&&!lstatSync(absolute).isDirectory();}))throw Error("Ambiguous generated compile output resolution");const separator=producer.target?.lastIndexOf(":"),project=producer.target?.slice(0,separator),target=producer.target?.slice(separator+1);if(!project||!target||!safe(producer.ownerPath)&&producer.ownerPath!==".")throw Error("Exact generated task owner required");const manifest=buildPath(join(producer.ownerPath,PROJECT_BASENAME)),owner=registry?.owners.find(owner=>owner.name===project);if(registry)recordRegistryOwnerV1(workspaceRoot,project,owner);if(registry&&(!owner||owner.root!==producer.ownerPath||owner.manifest!==manifest))throw Error("Canonical generated task owner absent");const declaration=JSON.parse(readPhysicalSource(join(workspaceRoot,manifest)).toString("utf8"));if(declaration.name!==project||!declaration.targets?.[target])throw Error("Authored generated producer task absent");return Object.freeze({project,target:producer.target,manifest,output:output.path});
+ const resolution=ownerAdmissionSchema.$defs.generatedImportResolution.const,index=generatedOutputIndexV1(contracts,safe);
+ if(!index.size)return undefined;
+ const collect=(output,inferred)=>{
+  const producers=index.get(output);
+  if(producers)for(const producer of producers)matches.push({output,producer,inferred});
+ };
+ for(let candidate=local;candidate;){
+  collect(candidate,false);
+  const separator=candidate.lastIndexOf("/");
+  candidate=separator<0?"":candidate.slice(0,separator);
+ }
+ if(posix.extname(local)==="")for(const suffix of resolution.files)collect(local+suffix,true);
+ if(!matches.length)return undefined;if(!safe(local))throw refusal();if(matches.length!==1)throw Error("Ambiguous generated compile output producer");const {output,producer,inferred}=matches[0];if(inferred&&resolution.probes.some(suffix=>{const candidate=local+suffix;if(candidate===output)return false;const absolute=join(workspaceRoot,candidate);return index.has(candidate)||existsSync(absolute)&&!lstatSync(absolute).isDirectory();}))throw Error("Ambiguous generated compile output resolution");const separator=producer.target?.lastIndexOf(":"),project=producer.target?.slice(0,separator),target=producer.target?.slice(separator+1);if(!project||!target||!safe(producer.ownerPath)&&producer.ownerPath!==".")throw Error("Exact generated task owner required");const manifest=buildPath(join(producer.ownerPath,PROJECT_BASENAME)),owner=registry?.owners.find(owner=>owner.name===project);if(registry)recordRegistryOwnerV1(workspaceRoot,project,owner);if(registry&&(!owner||owner.root!==producer.ownerPath||owner.manifest!==manifest))throw Error("Canonical generated task owner absent");const declaration=JSON.parse(readPhysicalSource(join(workspaceRoot,manifest)).toString("utf8"));if(declaration.name!==project||!declaration.targets?.[target])throw Error("Authored generated producer task absent");return Object.freeze({project,target:producer.target,manifest,output});
 }
 
-/** 🧵️ Shares physical traversal while keeping each target's matching and exclusions separate. */
+/** 🧵️ Shares physical traversal and identical glob questions while keeping each target's input classification. */
 export async function readBuildSourceInputMatchesV1(scans,workspaceRoot,context){
  const matched=new Set(),compileMatched=new Set(),compileByTarget=new Map(),walked=new Map(),matchers=new Map();
  const globRoots=new Map(),recursiveRoots=new Set(),ignored=new Set([...POLICY.generatedDirectories,".git",".🧬semio",".nx",".cache",".r","node_modules","dist","target","🗑️generated"]);
@@ -161,6 +181,16 @@ export async function readBuildSourceInputMatchesV1(scans,workspaceRoot,context)
   globRoots.set(pattern,root);
   if(tail.includes("/")||tail.includes("**")||/[\[({]/u.test(tail))recursiveRoots.add(root);
  }
+ const questions=new Map(),plans=scans.map(scan=>{
+  const exclusions=scan.patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1)),repeats=new Map();
+  for(const pattern of scan.patterns){
+   if(!globRoots.has(pattern))continue;
+   const key=JSON.stringify([pattern,exclusions]),question=questions.get(key)??{remaining:0,paths:undefined};
+   question.remaining++;
+   questions.set(key,question);repeats.set(pattern,question);
+  }
+  return {scan,exclusions,repeats};
+ });
  const matches=(path,pattern)=>{
   let matcher=matchers.get(pattern);
   if(!matcher){matcher=loadedProjectInputs.createBuildInputPathMatcherV1(pattern);matchers.set(pattern,matcher);}
@@ -185,15 +215,18 @@ export async function readBuildSourceInputMatchesV1(scans,workspaceRoot,context)
   walked.set(root,found);
   return found;
  };
- for(const scan of scans){
-  const exclusions=scan.patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1));
+ for(const {scan,exclusions,repeats} of plans){
   for(const pattern of scan.patterns){
    if(pattern.startsWith("!"))continue;
    await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
-   const root=globRoots.get(pattern),candidates=root===undefined?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root);
+   const root=globRoots.get(pattern),question=repeats.get(pattern),shared=question?.paths;
+   if(question&&--question.remaining===0)question.paths=undefined;
+   const candidates=shared??(root===undefined?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root));
+   const remember=shared===undefined&&question?.remaining>0?(question.paths=[]):undefined;
    for(const path of candidates){
     await yieldInferenceV1(context,"build:selected-source-inputs",++visited);
-    if(isOpaqueSourcePathV1(path)||!matches(path,pattern)||exclusions.some(pattern=>matches(path,pattern)))continue;
+    if(shared===undefined&&(isOpaqueSourcePathV1(path)||!matches(path,pattern)||exclusions.some(pattern=>matches(path,pattern))))continue;
+    remember?.push(path);
     matched.add(path);
     if(scan.compile){
      compileMatched.add(path);
@@ -227,8 +260,8 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   const catalog=collectPlaygroundCatalog(catalogFiles,workspaceRoot,catalogContributions);json.targets={...json.targets,...playgroundSiteTargetsForAdmissionV1(owner.root,catalog,workspaceRoot,registry,targets),...authoredTargets};
  }
  const selected=Object.fromEntries(targets.map(name=>{if(!json.targets?.[name])throw Error("Unknown admitted build target: "+owner.name+":"+name);const target=targetWithDefaults(json.targets[name],owner.root,existsSync(join(workspaceRoot,owner.root,SCRIPT_BASENAME))),modes=loaded.targetBuildModes(name,target),configuration=(context.selection?.kind==="tasks"?context.selection.tasks.find(task=>task.project===owner.name&&task.target===name)?.configuration:undefined)??modes.defaultConfiguration,overrides=modes.configurations?.[configuration];if(!overrides)throw Error("Unknown selected build configuration: "+configuration);if(Object.keys(overrides).some(key=>["dependsOn","inputs","outputs","configurations","executor","metadata"].includes(key)))throw Error("Build configuration cannot change task identity");buildInputSourceRoleV1(true,false,[target.metadata?.semio?.sourceInputObservation]);return [name,target];})),files=new Set([owner.manifest]),observedFiles=new Set(),catalogProducers=new Set(),dependencies=new Set(),dependencyInputs=new Map(),caretInputs=new Set(),inputRole=buildInputSourceRoleV1(targets.length>0,false,Object.values(selected).map(target=>target.metadata?.semio?.sourceInputObservation));
- const {byPackage,byRoot,relativeProject}=registryOwnerIndexesV1(registry);
- const addFile=path=>files.add(path),addDependency=path=>{const name=relativeProject(path);if(name&&name!==json.name)dependencies.add(name);},addInput=(project,input)=>{if(!registry.owners.some(owner=>owner.name===project)||typeof input!=="string"||!input)throw Error("Canonical named input owner required");const selected=dependencyInputs.get(project)??new Set();selected.add(input);dependencyInputs.set(project,selected);};
+ const {byName,byPackage,byRoot,relativeProject}=registryOwnerIndexesV1(registry);
+ const addFile=path=>files.add(path),addDependency=path=>{const name=relativeProject(path);if(name&&name!==json.name)dependencies.add(name);},addInput=(project,input)=>{if(!byName.has(project)||typeof input!=="string"||!input)throw Error("Canonical named input owner required");const selected=dependencyInputs.get(project)??new Set();selected.add(input);dependencyInputs.set(project,selected);};
  for(const provider of providers)addFile(provider.sourcePath);for(const file of catalogFiles){readPhysicalSource(join(workspaceRoot,file));observedFiles.add(file);}for(const contribution of catalogContributions){for(const input of contribution.inputs)addFile(input);addFile(contribution.projectRoot+"/"+PROJECT_BASENAME);if(contribution.project!==json.name)catalogProducers.add(contribution.project);}
  await stage("command-sources");
  const commandModules=new Map(),commandResources=new Map();
@@ -271,7 +304,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  const compiler=parserTypescriptV1(),host=observedTypeScriptHost(compiler.sys),pending=[],demands=new Map(),visited=new Map(),enqueue=(target,file,role)=>{const rows=demands.get(target)??new Map(),next=buildSourceDemandV1(rows.get(file),role);if(next!==rows.get(file)){rows.set(file,next);demands.set(target,rows);pending.push({target,file});}};let index=0;
  for(const [target,files] of compileModules)for(const file of files)enqueue(target,file,roles.compileInput);for(const [target,files] of declaredCompileEntries)for(const file of files)enqueue(target,file,roles.declaredEntry);for(const [target,files] of commandModules)for(const file of files)enqueue(target,file,roles.command);
  await stage("compile-closure");
- while(pending.length){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const {target,file:absolute}=pending.pop(),phase=demands.get(target).get(absolute),seen=visited.get(target)??new Map();if(seen.get(absolute)===phase)continue;seen.set(absolute,phase);visited.set(target,seen);const path=buildPath(relative(workspaceRoot,absolute));readPhysicalSource(absolute);const facts=observedSourceAnalysisV1(prepareSourceAnalysesV1().module,absolute),imports=phase===roles.compileInput?facts.imports:facts.runtimeImports,runtime=observedSourceAnalysisV1(prepareSourceAnalysesV1().references,absolute).runtime;
+  while(pending.length){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const {target,file:absolute}=pending.pop(),phase=demands.get(target).get(absolute),seen=visited.get(target)??new Map();if(seen.get(absolute)===phase)continue;seen.set(absolute,phase);visited.set(target,seen);const path=buildPath(relative(workspaceRoot,absolute));readPhysicalSource(absolute);const {module,references}=prepareSourceAnalysesV1(),[facts,{runtime}]=observedSourceAnalysisPairV1(module,references,absolute),imports=phase===roles.compileInput?facts.imports:facts.runtimeImports;
   for(const specifier of imports){
    await yieldInferenceV1(context,"build:selected-compile-imports",++index);
    const relativeImport=specifier.startsWith(".");if(!relativeImport){const name=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0],dependency=byPackage.get(name);if(!dependency)continue;if(dependency!==json.name)dependencies.add(dependency);}

@@ -86,15 +86,15 @@
         }
       ],
       "notes": {
-        "en": "The tie is a tube strut hinged at both ends: a bilateral roller along the rod, so uplift is carried in compression. Beam spacing 1.0 m sets the line loads. The wall stub shows the three layers of an externally insulated wall (concrete 300 mm, mineral wool 180 mm, render 20 mm) with two steel anchor plates that are the canopy's thermal bridges. The glass cover is drawn but its weight is not part of the rig mass.",
-        "de": "Der Zugstab ist ein beidseitig gelenkig angeschlossenes Rohr: eine beidseitige Rolle entlang des Stabs, sodass Windsog auf Druck abgetragen wird. Trägerabstand 1,0 m legt die Linienlasten fest. Das Wandstück zeigt die drei Schichten einer außengedämmten Wand (Beton 300 mm, Mineralwolle 180 mm, Putz 20 mm) mit zwei Stahl-Ankerplatten, die die Wärmebrücken des Vordachs sind. Die Glasdeckung ist gezeichnet, ihr Gewicht gehört nicht zur Rigmasse."
+        "en": "The tie is a tube strut hinged at both ends: a bilateral roller along the rod, so uplift is carried in compression. Beam spacing 1.0 m sets the line loads. The wall stub shows the three layers of an externally insulated wall (concrete 300 mm, mineral wool 180 mm, render 20 mm) with two steel anchor plates that are the canopy's thermal bridges. The four panes transfer their permanent weight to the beam over their actual spans. The steady wind case is 0.50 kN/m² and the animated gust peaks at 0.75 kN/m².",
+        "de": "Der Zugstab ist ein beidseitig gelenkig angeschlossenes Rohr: eine beidseitige Rolle entlang des Stabs, sodass Windsog auf Druck abgetragen wird. Trägerabstand 1,0 m legt die Linienlasten fest. Das Wandstück zeigt die drei Schichten einer außengedämmten Wand (Beton 300 mm, Mineralwolle 180 mm, Putz 20 mm) mit zwei Stahl-Ankerplatten, die die Wärmebrücken des Vordachs sind. Die vier Scheiben tragen ihr Eigengewicht über ihre tatsächlichen Spannweiten in den Träger ein. Der stetige Windsog beträgt 0,50 kN/m², die animierte Böe erreicht 0,75 kN/m²."
       }
     },
     "dimensions": {
       "heightM": 5.35,
       "widthM": 6,
       "depthM": 1,
-      "massKg": 86.78
+      "massKg": 302.7745
     },
     "materials": [
       {
@@ -225,7 +225,7 @@
           },
           "section": {
             "areaM2": 0.00201,
-            "secondMomentM4": 0.000008693,
+            "secondMomentM4": 8.693e-06,
             "extremeFibreM": 0.08,
             "material": "steel",
             "title": {
@@ -1228,7 +1228,7 @@
               "kind": "rect",
               "x": 0.03,
               "y": 0.088,
-              "w": 1.3525,
+              "w": 1.3505,
               "h": 0.0168
             },
             {
@@ -1241,9 +1241,9 @@
               "region": "canopy-glass",
               "material": "glass",
               "kind": "rect",
-              "x": 1.4025,
+              "x": 1.4045,
               "y": 0.088,
-              "w": 1.3525,
+              "w": 1.3485,
               "h": 0.0168
             },
             {
@@ -1256,9 +1256,9 @@
               "region": "canopy-glass",
               "material": "glass",
               "kind": "rect",
-              "x": 2.775,
+              "x": 2.777,
               "y": 0.088,
-              "w": 1.3525,
+              "w": 1.3485,
               "h": 0.0168
             },
             {
@@ -1271,9 +1271,9 @@
               "region": "canopy-glass",
               "material": "glass",
               "kind": "rect",
-              "x": 4.1475,
+              "x": 4.1495,
               "y": 0.088,
-              "w": 1.3525,
+              "w": 1.3505,
               "h": 0.0168
             },
             {
@@ -1285,9 +1285,9 @@
               "tone": 0.15,
               "material": "epdm",
               "kind": "rect",
-              "x": 1.3825,
+              "x": 1.3805,
               "y": 0.088,
-              "w": 0.02,
+              "w": 0.024,
               "h": 0.0168
             },
             {
@@ -1299,9 +1299,9 @@
               "tone": 0.15,
               "material": "epdm",
               "kind": "rect",
-              "x": 2.755,
+              "x": 2.753,
               "y": 0.088,
-              "w": 0.02,
+              "w": 0.024,
               "h": 0.0168
             },
             {
@@ -1313,9 +1313,9 @@
               "tone": 0.15,
               "material": "epdm",
               "kind": "rect",
-              "x": 4.1275,
+              "x": 4.1255,
               "y": 0.088,
-              "w": 0.02,
+              "w": 0.024,
               "h": 0.0168
             },
             {
@@ -2352,7 +2352,7 @@
               "kind": "rect",
               "x": 0.03,
               "y": -0.5,
-              "w": 1.3525,
+              "w": 1.3505,
               "h": 1.0
             },
             {
@@ -2365,9 +2365,9 @@
               "region": "canopy-glass",
               "material": "glass",
               "kind": "rect",
-              "x": 1.4025,
+              "x": 1.4045,
               "y": -0.5,
-              "w": 1.3525,
+              "w": 1.3485,
               "h": 1.0
             },
             {
@@ -2382,11 +2382,11 @@
               "kind": "poly",
               "points": [
                 [
-                  2.775,
+                  2.777,
                   -0.5
                 ],
                 [
-                  2.775,
+                  2.777,
                   0.5
                 ],
                 [
@@ -2426,9 +2426,9 @@
               "region": "canopy-glass",
               "material": "glass",
               "kind": "rect",
-              "x": 4.1475,
+              "x": 4.1495,
               "y": -0.5,
-              "w": 1.3525,
+              "w": 1.3505,
               "h": 1.0
             },
             {
@@ -2440,9 +2440,9 @@
               "tone": 0.15,
               "material": "epdm",
               "kind": "rect",
-              "x": 1.3825,
+              "x": 1.3805,
               "y": -0.5,
-              "w": 0.02,
+              "w": 0.024,
               "h": 1.0
             },
             {
@@ -2454,9 +2454,9 @@
               "tone": 0.15,
               "material": "epdm",
               "kind": "rect",
-              "x": 2.755,
+              "x": 2.753,
               "y": -0.5,
-              "w": 0.02,
+              "w": 0.024,
               "h": 1.0
             },
             {
@@ -2468,9 +2468,9 @@
               "tone": 0.15,
               "material": "epdm",
               "kind": "rect",
-              "x": 4.1275,
+              "x": 4.1255,
               "y": -0.5,
-              "w": 0.02,
+              "w": 0.024,
               "h": 1.0
             },
             {
@@ -4333,7 +4333,7 @@
               "kind": "rect",
               "x": 0.03,
               "y": -0.5,
-              "w": 1.3525,
+              "w": 1.3625,
               "h": 1.0
             },
             {
@@ -4346,9 +4346,9 @@
               "region": "canopy-glass",
               "material": "glass",
               "kind": "rect",
-              "x": 1.4025,
+              "x": 1.3925,
               "y": -0.5,
-              "w": 1.3525,
+              "w": 1.3725,
               "h": 1.0
             },
             {
@@ -4363,19 +4363,19 @@
               "kind": "poly",
               "points": [
                 [
-                  2.775,
+                  2.765,
                   -0.5
                 ],
                 [
-                  2.775,
+                  2.765,
                   0.5
                 ],
                 [
-                  4.1275,
+                  4.1375,
                   0.5
                 ],
                 [
-                  4.1275,
+                  4.1375,
                   0.0125
                 ],
                 [
@@ -4387,11 +4387,11 @@
                   -0.0125
                 ],
                 [
-                  4.1275,
+                  4.1375,
                   -0.0125
                 ],
                 [
-                  4.1275,
+                  4.1375,
                   -0.5
                 ]
               ],
@@ -4407,9 +4407,9 @@
               "region": "canopy-glass",
               "material": "glass",
               "kind": "rect",
-              "x": 4.1475,
+              "x": 4.1375,
               "y": -0.5,
-              "w": 1.3525,
+              "w": 1.3625,
               "h": 1.0
             },
             {
@@ -4761,7 +4761,7 @@
               "tone": 0.9,
               "region": "canopy-glass",
               "material": "glass",
-              "penMm": 0.125,
+              "penMm": 0.2,
               "kind": "poly",
               "points": [
                 [
@@ -4906,7 +4906,7 @@
               "tone": 0.92,
               "region": "canopy-glass",
               "material": "glass",
-              "penMm": 0.1,
+              "penMm": 0.2,
               "kind": "rect",
               "x": -0.5,
               "y": 2.41,
@@ -5010,7 +5010,7 @@
               "tone": 0.92,
               "region": "canopy-glass",
               "material": "glass",
-              "penMm": 0.1,
+              "penMm": 0.2,
               "kind": "rect",
               "x": 0.0,
               "y": -0.5,
@@ -5443,7 +5443,98 @@
           },
           "emitters": {}
         },
-        "loads": []
+        "loads": [
+          {
+            "id": "glass-weight-1",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 1",
+              "de": "Eigenlast der Verglasung 1"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 0.03,
+              "toM": 1.3825,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-2",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 2",
+              "de": "Eigenlast der Verglasung 2"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 1.4025,
+              "toM": 2.755,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-3a",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 3a",
+              "de": "Eigenlast der Verglasung 3a"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 2.775,
+              "toM": 3.722,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-3b",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 3b",
+              "de": "Eigenlast der Verglasung 3b"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 3.722,
+              "toM": 4.1275,
+              "wxNPerM": 0,
+              "wyNPerM": -382.59
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-4",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 4",
+              "de": "Eigenlast der Verglasung 4"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 4.1475,
+              "toM": 5.5,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          }
+        ]
       },
       {
         "id": "snow-load",
@@ -5502,6 +5593,96 @@
             },
             "source": "authored-estimate",
             "reference": "en-1991-1-3"
+          },
+          {
+            "id": "glass-weight-1",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 1",
+              "de": "Eigenlast der Verglasung 1"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 0.03,
+              "toM": 1.3825,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-2",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 2",
+              "de": "Eigenlast der Verglasung 2"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 1.4025,
+              "toM": 2.755,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-3a",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 3a",
+              "de": "Eigenlast der Verglasung 3a"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 2.775,
+              "toM": 3.722,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-3b",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 3b",
+              "de": "Eigenlast der Verglasung 3b"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 3.722,
+              "toM": 4.1275,
+              "wxNPerM": 0,
+              "wyNPerM": -382.59
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-4",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 4",
+              "de": "Eigenlast der Verglasung 4"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 4.1475,
+              "toM": 5.5,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
           }
         ]
       },
@@ -5512,8 +5693,8 @@
           "de": "Windsog"
         },
         "description": {
-          "en": "Wind uplift of 0.5 kN/m2 over 1.0 m spacing; the tube strut carries the net uplift in compression.",
-          "de": "Windsog von 0,5 kN/m² bei 1,0 m Abstand; der Rohrstab trägt den Netto-Sog auf Druck."
+          "en": "At 0.50 kN/m² wind suction the glazing and beam still place the hinged strut in tension.",
+          "de": "Bei 0,50 kN/m² Windsog halten Glasdeckung und Träger den gelenkigen Rohrstab noch auf Zug."
         },
         "bones": {},
         "ground": "authored",
@@ -5562,6 +5743,96 @@
             },
             "source": "literature",
             "reference": "en-1991-1-4"
+          },
+          {
+            "id": "glass-weight-1",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 1",
+              "de": "Eigenlast der Verglasung 1"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 0.03,
+              "toM": 1.3825,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-2",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 2",
+              "de": "Eigenlast der Verglasung 2"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 1.4025,
+              "toM": 2.755,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-3a",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 3a",
+              "de": "Eigenlast der Verglasung 3a"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 2.775,
+              "toM": 3.722,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-3b",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 3b",
+              "de": "Eigenlast der Verglasung 3b"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 3.722,
+              "toM": 4.1275,
+              "wxNPerM": 0,
+              "wyNPerM": -382.59
+            },
+            "source": "authored-estimate"
+          },
+          {
+            "id": "glass-weight-4",
+            "kind": "carried",
+            "title": {
+              "en": "Glazing dead load 4",
+              "de": "Eigenlast der Verglasung 4"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 4.1475,
+              "toM": 5.5,
+              "wxNPerM": 0,
+              "wyNPerM": -392.4
+            },
+            "source": "authored-estimate"
           }
         ]
       }
@@ -5630,8 +5901,8 @@
           "de": "Windböe"
         },
         "description": {
-          "en": "An uplift gust rises and falls; the strut changes from tension to compression when net uplift exceeds the self-weight.",
-          "de": "Eine Sogböe steigt und fällt; der Stab wechselt von Zug zu Druck, sobald der Netto-Sog das Eigengewicht übersteigt."
+          "en": "Suction rises from zero to 0.75 kN/m² in three seconds and falls again. The strut changes from tension to compression and back when wind overcomes the glazing and beam dead load.",
+          "de": "Der Sog steigt binnen drei Sekunden auf 0,75 kN/m² und klingt wieder ab. Sobald der Windsog die Eigenlast von Glas und Träger überwindet, wechselt der Rohrstab von Zug zu Druck und beim Abklingen wieder zurück."
         },
         "durationS": 6,
         "fps": 30,
@@ -5663,11 +5934,19 @@
         ],
         "events": [
           {
-            "t": 2,
+            "t": 1.95925,
             "kind": "motion",
             "title": {
               "en": "Strut switches to compression",
-              "de": "Stab wechselt auf Druck"
+              "de": "Rohrstab wechselt auf Druck"
+            }
+          },
+          {
+            "t": 4.04075,
+            "kind": "motion",
+            "title": {
+              "en": "Strut returns to tension",
+              "de": "Rohrstab kehrt auf Zug zurück"
             }
           }
         ],
@@ -5682,7 +5961,7 @@
               },
               {
                 "t": 3,
-                "v": 1
+                "v": 1.5
               },
               {
                 "t": 6,
@@ -5931,8 +6210,8 @@
           "de": "Knicken des Stabs unter Druck bei Windsog ist nicht nachgewiesen; seine Dehnsteifigkeit ist nicht gemessen."
         },
         {
-          "en": "The glass cover (about 0.4 kN/m2) is drawn but not part of the beam mass; the snow pose carries only snow.",
-          "de": "Die Glasdeckung (etwa 0,4 kN/m²) ist gezeichnet, aber nicht Teil der Trägermasse; die Schneepose trägt nur Schnee."
+          "en": "Four panes of 2 × 8 mm glass weigh 215.995 kg. The 20 mm joints and 25 mm fork notch are deducted. The glazing is a permanent line load in all three poses, separate from the IPE 160 steel mass of 86.78 kg. The analytical assembly mass excludes the wall, idealised support strut, interlayer and fittings.",
+          "de": "Vier Scheiben aus 2 × 8 mm Glas wiegen 215,995 kg. Die 20-mm-Fugen und die 25-mm-Gabelaussparung sind abgezogen. Die Verglasung wirkt in allen drei Stellungen als ständige Linienlast, getrennt von den 86,78 kg des IPE 160. Wand, idealisierter Stützstab, Zwischenfolie und Beschläge sind in der rechnerischen Baugruppenmasse nicht enthalten."
         }
       ],
       "clinical": false
@@ -5949,9 +6228,17 @@
             "material": "concrete",
             "role": "body",
             "tone": 0.6,
-            "size": [0.3, 5.35, 1.0],
+            "size": [
+              0.3,
+              5.35,
+              1.0
+            ],
             "transform": {
-              "translation": [-0.35, 0.345, 0.0]
+              "translation": [
+                -0.35,
+                0.345,
+                0.0
+              ]
             }
           },
           {
@@ -5961,10 +6248,61 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.9,
-            "profile": [[-2.33, -0.5], [-2.33, 0.5], [3.02, 0.5], [3.02, -0.5]],
+            "profile": [
+              [
+                -2.33,
+                -0.5
+              ],
+              [
+                -2.33,
+                0.5
+              ],
+              [
+                3.02,
+                0.5
+              ],
+              [
+                3.02,
+                -0.5
+              ]
+            ],
             "holes": [
-              [[-0.12, -0.1], [-0.12, 0.1], [0.12, 0.1], [0.12, -0.1]],
-              [[2.76, -0.1], [2.76, 0.1], [3.0, 0.1], [3.0, -0.1]]
+              [
+                [
+                  -0.12,
+                  -0.1
+                ],
+                [
+                  -0.12,
+                  0.1
+                ],
+                [
+                  0.12,
+                  0.1
+                ],
+                [
+                  0.12,
+                  -0.1
+                ]
+              ],
+              [
+                [
+                  2.76,
+                  -0.1
+                ],
+                [
+                  2.76,
+                  0.1
+                ],
+                [
+                  3.0,
+                  0.1
+                ],
+                [
+                  3.0,
+                  -0.1
+                ]
+              ]
             ],
             "plane": "yz",
             "from": -0.2,
@@ -5977,10 +6315,61 @@
             "material": "render",
             "role": "body",
             "tone": 0.55,
-            "profile": [[-2.33, -0.5], [-2.33, 0.5], [3.02, 0.5], [3.02, -0.5]],
+            "profile": [
+              [
+                -2.33,
+                -0.5
+              ],
+              [
+                -2.33,
+                0.5
+              ],
+              [
+                3.02,
+                0.5
+              ],
+              [
+                3.02,
+                -0.5
+              ]
+            ],
             "holes": [
-              [[-0.12, -0.1], [-0.12, 0.1], [0.12, 0.1], [0.12, -0.1]],
-              [[2.76, -0.1], [2.76, 0.1], [3.0, 0.1], [3.0, -0.1]]
+              [
+                [
+                  -0.12,
+                  -0.1
+                ],
+                [
+                  -0.12,
+                  0.1
+                ],
+                [
+                  0.12,
+                  0.1
+                ],
+                [
+                  0.12,
+                  -0.1
+                ]
+              ],
+              [
+                [
+                  2.76,
+                  -0.1
+                ],
+                [
+                  2.76,
+                  0.1
+                ],
+                [
+                  3.0,
+                  0.1
+                ],
+                [
+                  3.0,
+                  -0.1
+                ]
+              ]
             ],
             "plane": "yz",
             "from": -0.02,
@@ -5993,12 +6382,33 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.006], [4.91, 0.006]],
-            "axis": [0.0, 1.0, 0.0],
-            "origin": [-0.45, -2.03, -0.45],
+            "profile": [
+              [
+                0.0,
+                0.006
+              ],
+              [
+                4.91,
+                0.006
+              ]
+            ],
+            "axis": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "origin": [
+              -0.45,
+              -2.03,
+              -0.45
+            ],
             "repeat": {
               "count": 7,
-              "translation": [0, 0, 0.15]
+              "translation": [
+                0,
+                0,
+                0.15
+              ]
             }
           },
           {
@@ -6008,12 +6418,33 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.006], [0.9, 0.006]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [-0.438, -2.03, -0.45],
+            "profile": [
+              [
+                0.0,
+                0.006
+              ],
+              [
+                0.9,
+                0.006
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              -0.438,
+              -2.03,
+              -0.45
+            ],
             "repeat": {
               "count": 33,
-              "translation": [0, 0.15, 0]
+              "translation": [
+                0,
+                0.15,
+                0
+              ]
             }
           },
           {
@@ -6023,12 +6454,33 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.006], [4.91, 0.006]],
-            "axis": [0.0, 1.0, 0.0],
-            "origin": [-0.25, -2.03, -0.45],
+            "profile": [
+              [
+                0.0,
+                0.006
+              ],
+              [
+                4.91,
+                0.006
+              ]
+            ],
+            "axis": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "origin": [
+              -0.25,
+              -2.03,
+              -0.45
+            ],
             "repeat": {
               "count": 7,
-              "translation": [0, 0, 0.15]
+              "translation": [
+                0,
+                0,
+                0.15
+              ]
             }
           },
           {
@@ -6038,12 +6490,33 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.2,
-            "profile": [[0.0, 0.006], [0.9, 0.006]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [-0.262, -2.03, -0.45],
+            "profile": [
+              [
+                0.0,
+                0.006
+              ],
+              [
+                0.9,
+                0.006
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              -0.262,
+              -2.03,
+              -0.45
+            ],
             "repeat": {
               "count": 33,
-              "translation": [0, 0.15, 0]
+              "translation": [
+                0,
+                0.15,
+                0
+              ]
             }
           },
           {
@@ -6053,9 +6526,17 @@
             "material": "anchor-pad",
             "role": "body",
             "tone": 0.7,
-            "size": [0.18, 0.24, 0.2],
+            "size": [
+              0.18,
+              0.24,
+              0.2
+            ],
             "transform": {
-              "translation": [-0.11, 0.0, 0.0]
+              "translation": [
+                -0.11,
+                0.0,
+                0.0
+              ]
             }
           },
           {
@@ -6065,9 +6546,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.02, 0.2, 0.16],
+            "size": [
+              0.02,
+              0.2,
+              0.16
+            ],
             "transform": {
-              "translation": [-0.01, 0.0, 0.0]
+              "translation": [
+                -0.01,
+                0.0,
+                0.0
+              ]
             }
           },
           {
@@ -6077,13 +6566,42 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[0.073, -0.04414], [0.060997, -0.05107], [0.060997, -0.06493], [0.073, -0.07186], [0.085003, -0.06493], [0.085003, -0.05107]],
+            "profile": [
+              [
+                0.073,
+                -0.04414
+              ],
+              [
+                0.060997,
+                -0.05107
+              ],
+              [
+                0.060997,
+                -0.06493
+              ],
+              [
+                0.073,
+                -0.07186
+              ],
+              [
+                0.085003,
+                -0.06493
+              ],
+              [
+                0.085003,
+                -0.05107
+              ]
+            ],
             "plane": "yz",
             "from": 0.0,
             "to": 0.013,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             }
           },
           {
@@ -6093,13 +6611,42 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[-0.073, -0.04414], [-0.085003, -0.05107], [-0.085003, -0.06493], [-0.073, -0.07186], [-0.060997, -0.06493], [-0.060997, -0.05107]],
+            "profile": [
+              [
+                -0.073,
+                -0.04414
+              ],
+              [
+                -0.085003,
+                -0.05107
+              ],
+              [
+                -0.085003,
+                -0.06493
+              ],
+              [
+                -0.073,
+                -0.07186
+              ],
+              [
+                -0.060997,
+                -0.06493
+              ],
+              [
+                -0.060997,
+                -0.05107
+              ]
+            ],
             "plane": "yz",
             "from": 0.0,
             "to": 0.013,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             }
           },
           {
@@ -6109,9 +6656,17 @@
             "material": "anchor-pad",
             "role": "body",
             "tone": 0.7,
-            "size": [0.18, 0.24, 0.2],
+            "size": [
+              0.18,
+              0.24,
+              0.2
+            ],
             "transform": {
-              "translation": [-0.11, 2.88, 0.0]
+              "translation": [
+                -0.11,
+                2.88,
+                0.0
+              ]
             }
           },
           {
@@ -6121,9 +6676,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.02, 0.2, 0.16],
+            "size": [
+              0.02,
+              0.2,
+              0.16
+            ],
             "transform": {
-              "translation": [-0.01, 2.88, 0.0]
+              "translation": [
+                -0.01,
+                2.88,
+                0.0
+              ]
             }
           },
           {
@@ -6133,13 +6696,42 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[2.953, -0.04414], [2.940997, -0.05107], [2.940997, -0.06493], [2.953, -0.07186], [2.965003, -0.06493], [2.965003, -0.05107]],
+            "profile": [
+              [
+                2.953,
+                -0.04414
+              ],
+              [
+                2.940997,
+                -0.05107
+              ],
+              [
+                2.940997,
+                -0.06493
+              ],
+              [
+                2.953,
+                -0.07186
+              ],
+              [
+                2.965003,
+                -0.06493
+              ],
+              [
+                2.965003,
+                -0.05107
+              ]
+            ],
             "plane": "yz",
             "from": 0.0,
             "to": 0.013,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             }
           },
           {
@@ -6149,13 +6741,42 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[2.807, -0.04414], [2.794997, -0.05107], [2.794997, -0.06493], [2.807, -0.07186], [2.819003, -0.06493], [2.819003, -0.05107]],
+            "profile": [
+              [
+                2.807,
+                -0.04414
+              ],
+              [
+                2.794997,
+                -0.05107
+              ],
+              [
+                2.794997,
+                -0.06493
+              ],
+              [
+                2.807,
+                -0.07186
+              ],
+              [
+                2.819003,
+                -0.06493
+              ],
+              [
+                2.819003,
+                -0.05107
+              ]
+            ],
             "plane": "yz",
             "from": 0.0,
             "to": 0.013,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             }
           },
           {
@@ -6166,36 +6787,126 @@
             "role": "body",
             "tone": 0.4,
             "profile": [
-              [0.08, 0.0],
-              [0.08, 0.041],
-              [0.0726, 0.041],
-              [0.0726, 0.0115],
-              [0.071915, 0.008056],
-              [0.069964, 0.005136],
-              [0.067044, 0.003185],
-              [0.0636, 0.0025],
-              [-0.0636, 0.0025],
-              [-0.067044, 0.003185],
-              [-0.069964, 0.005136],
-              [-0.071915, 0.008056],
-              [-0.0726, 0.0115],
-              [-0.0726, 0.041],
-              [-0.08, 0.041],
-              [-0.08, 0.0],
-              [-0.08, -0.041],
-              [-0.0726, -0.041],
-              [-0.0726, -0.0115],
-              [-0.071915, -0.008056],
-              [-0.069964, -0.005136],
-              [-0.067044, -0.003185],
-              [-0.0636, -0.0025],
-              [0.0636, -0.0025],
-              [0.067044, -0.003185],
-              [0.069964, -0.005136],
-              [0.071915, -0.008056],
-              [0.0726, -0.0115],
-              [0.0726, -0.041],
-              [0.08, -0.041]
+              [
+                0.08,
+                0.0
+              ],
+              [
+                0.08,
+                0.041
+              ],
+              [
+                0.0726,
+                0.041
+              ],
+              [
+                0.0726,
+                0.0115
+              ],
+              [
+                0.071915,
+                0.008056
+              ],
+              [
+                0.069964,
+                0.005136
+              ],
+              [
+                0.067044,
+                0.003185
+              ],
+              [
+                0.0636,
+                0.0025
+              ],
+              [
+                -0.0636,
+                0.0025
+              ],
+              [
+                -0.067044,
+                0.003185
+              ],
+              [
+                -0.069964,
+                0.005136
+              ],
+              [
+                -0.071915,
+                0.008056
+              ],
+              [
+                -0.0726,
+                0.0115
+              ],
+              [
+                -0.0726,
+                0.041
+              ],
+              [
+                -0.08,
+                0.041
+              ],
+              [
+                -0.08,
+                0.0
+              ],
+              [
+                -0.08,
+                -0.041
+              ],
+              [
+                -0.0726,
+                -0.041
+              ],
+              [
+                -0.0726,
+                -0.0115
+              ],
+              [
+                -0.071915,
+                -0.008056
+              ],
+              [
+                -0.069964,
+                -0.005136
+              ],
+              [
+                -0.067044,
+                -0.003185
+              ],
+              [
+                -0.0636,
+                -0.0025
+              ],
+              [
+                0.0636,
+                -0.0025
+              ],
+              [
+                0.067044,
+                -0.003185
+              ],
+              [
+                0.069964,
+                -0.005136
+              ],
+              [
+                0.071915,
+                -0.008056
+              ],
+              [
+                0.0726,
+                -0.0115
+              ],
+              [
+                0.0726,
+                -0.041
+              ],
+              [
+                0.08,
+                -0.041
+              ]
             ],
             "plane": "yz",
             "from": 0.0,
@@ -6208,9 +6919,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.4,
-            "size": [0.008, 0.16, 0.082],
+            "size": [
+              0.008,
+              0.16,
+              0.082
+            ],
             "transform": {
-              "translation": [5.496, 0.0, 0.0]
+              "translation": [
+                5.496,
+                0.0,
+                0.0
+              ]
             }
           },
           {
@@ -6220,9 +6939,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [3.686, 0.008, 0.06],
+            "size": [
+              3.686,
+              0.008,
+              0.06
+            ],
             "transform": {
-              "translation": [1.873, 0.084, 0.0]
+              "translation": [
+                1.873,
+                0.084,
+                0.0
+              ]
             }
           },
           {
@@ -6232,9 +6959,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [1.405, 0.008, 0.06],
+            "size": [
+              1.405,
+              0.008,
+              0.06
+            ],
             "transform": {
-              "translation": [4.7525, 0.084, 0.0]
+              "translation": [
+                4.7525,
+                0.084,
+                0.0
+              ]
             }
           },
           {
@@ -6244,7 +6979,24 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 0.03], [0.5, 0.03], [0.5, 1.3825], [-0.5, 1.3825]],
+            "profile": [
+              [
+                -0.5,
+                0.03
+              ],
+              [
+                0.5,
+                0.03
+              ],
+              [
+                0.5,
+                1.3825
+              ],
+              [
+                -0.5,
+                1.3825
+              ]
+            ],
             "plane": "zx",
             "from": 0.088,
             "to": 0.1048
@@ -6256,7 +7008,24 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 1.4025], [0.5, 1.4025], [0.5, 2.755], [-0.5, 2.755]],
+            "profile": [
+              [
+                -0.5,
+                1.4025
+              ],
+              [
+                0.5,
+                1.4025
+              ],
+              [
+                0.5,
+                2.755
+              ],
+              [
+                -0.5,
+                2.755
+              ]
+            ],
             "plane": "zx",
             "from": 0.088,
             "to": 0.1048
@@ -6268,7 +7037,40 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 2.775], [0.5, 2.775], [0.5, 4.1275], [0.0125, 4.1275], [0.0125, 3.722], [-0.0125, 3.722], [-0.0125, 4.1275], [-0.5, 4.1275]],
+            "profile": [
+              [
+                -0.5,
+                2.775
+              ],
+              [
+                0.5,
+                2.775
+              ],
+              [
+                0.5,
+                4.1275
+              ],
+              [
+                0.0125,
+                4.1275
+              ],
+              [
+                0.0125,
+                3.722
+              ],
+              [
+                -0.0125,
+                3.722
+              ],
+              [
+                -0.0125,
+                4.1275
+              ],
+              [
+                -0.5,
+                4.1275
+              ]
+            ],
             "plane": "zx",
             "from": 0.088,
             "to": 0.1048
@@ -6280,7 +7082,24 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 4.1475], [0.5, 4.1475], [0.5, 5.5], [-0.5, 5.5]],
+            "profile": [
+              [
+                -0.5,
+                4.1475
+              ],
+              [
+                0.5,
+                4.1475
+              ],
+              [
+                0.5,
+                5.5
+              ],
+              [
+                -0.5,
+                5.5
+              ]
+            ],
             "plane": "zx",
             "from": 0.088,
             "to": 0.1048
@@ -6292,9 +7111,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.03, 0.0168, 1.0],
+            "size": [
+              0.03,
+              0.0168,
+              1.0
+            ],
             "transform": {
-              "translation": [0.015, 0.0964, 0.0]
+              "translation": [
+                0.015,
+                0.0964,
+                0.0
+              ]
             }
           },
           {
@@ -6304,9 +7131,43 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "profile": [[-0.0125, 3.722], [0.0125, 3.722], [0.0125, 4.1275], [-0.0125, 4.1275]],
+            "profile": [
+              [
+                -0.0125,
+                3.722
+              ],
+              [
+                0.0125,
+                3.722
+              ],
+              [
+                0.0125,
+                4.1275
+              ],
+              [
+                -0.0125,
+                4.1275
+              ]
+            ],
             "holes": [
-              [[-0.0075, 3.731632], [0.0075, 3.731632], [0.0075, 3.977565], [-0.0075, 3.977565]]
+              [
+                [
+                  -0.0075,
+                  3.731632
+                ],
+                [
+                  0.0075,
+                  3.731632
+                ],
+                [
+                  0.0075,
+                  3.977565
+                ],
+                [
+                  -0.0075,
+                  3.977565
+                ]
+              ]
             ],
             "plane": "zx",
             "from": 0.088,
@@ -6319,9 +7180,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.02, 0.0168, 1.0],
+            "size": [
+              0.02,
+              0.0168,
+              1.0
+            ],
             "transform": {
-              "translation": [1.3925, 0.0964, 0.0]
+              "translation": [
+                1.3925,
+                0.0964,
+                0.0
+              ]
             }
           },
           {
@@ -6331,9 +7200,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.02, 0.0168, 1.0],
+            "size": [
+              0.02,
+              0.0168,
+              1.0
+            ],
             "transform": {
-              "translation": [2.765, 0.0964, 0.0]
+              "translation": [
+                2.765,
+                0.0964,
+                0.0
+              ]
             }
           },
           {
@@ -6343,9 +7220,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.02, 0.0168, 1.0],
+            "size": [
+              0.02,
+              0.0168,
+              1.0
+            ],
             "transform": {
-              "translation": [4.1375, 0.0964, 0.0]
+              "translation": [
+                4.1375,
+                0.0964,
+                0.0
+              ]
             }
           },
           {
@@ -6355,9 +7240,17 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "size": [0.06, 0.008, 0.08],
+            "size": [
+              0.06,
+              0.008,
+              0.08
+            ],
             "transform": {
-              "translation": [0.06, 0.1088, 0.0]
+              "translation": [
+                0.06,
+                0.1088,
+                0.0
+              ]
             }
           },
           {
@@ -6367,9 +7260,17 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "size": [0.06, 0.008, 0.08],
+            "size": [
+              0.06,
+              0.008,
+              0.08
+            ],
             "transform": {
-              "translation": [1.3925, 0.1088, 0.0]
+              "translation": [
+                1.3925,
+                0.1088,
+                0.0
+              ]
             }
           },
           {
@@ -6379,9 +7280,17 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "size": [0.06, 0.008, 0.08],
+            "size": [
+              0.06,
+              0.008,
+              0.08
+            ],
             "transform": {
-              "translation": [2.765, 0.1088, 0.0]
+              "translation": [
+                2.765,
+                0.1088,
+                0.0
+              ]
             }
           },
           {
@@ -6391,9 +7300,17 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "size": [0.06, 0.008, 0.08],
+            "size": [
+              0.06,
+              0.008,
+              0.08
+            ],
             "transform": {
-              "translation": [4.1375, 0.1088, 0.0]
+              "translation": [
+                4.1375,
+                0.1088,
+                0.0
+              ]
             }
           },
           {
@@ -6403,9 +7320,17 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.25,
-            "size": [0.06, 0.008, 0.08],
+            "size": [
+              0.06,
+              0.008,
+              0.08
+            ],
             "transform": {
-              "translation": [5.47, 0.1088, 0.0]
+              "translation": [
+                5.47,
+                0.1088,
+                0.0
+              ]
             }
           },
           {
@@ -6416,26 +7341,86 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [3.723889, 0.17],
-              [3.724231, 0.164779],
-              [3.735, 0.0775],
-              [3.995, 0.0775],
-              [3.783889, 0.204641],
-              [3.779196, 0.206955],
-              [3.774242, 0.208637],
-              [3.76911, 0.209658],
-              [3.763889, 0.21],
-              [3.758668, 0.209658],
-              [3.753536, 0.208637],
-              [3.748581, 0.206955],
-              [3.743889, 0.204641],
-              [3.739538, 0.201734],
-              [3.735605, 0.198284],
-              [3.732155, 0.194351],
-              [3.729248, 0.19],
-              [3.726934, 0.185307],
-              [3.725252, 0.180353],
-              [3.724231, 0.175221]
+              [
+                3.723889,
+                0.17
+              ],
+              [
+                3.724231,
+                0.164779
+              ],
+              [
+                3.735,
+                0.0775
+              ],
+              [
+                3.995,
+                0.0775
+              ],
+              [
+                3.783889,
+                0.204641
+              ],
+              [
+                3.779196,
+                0.206955
+              ],
+              [
+                3.774242,
+                0.208637
+              ],
+              [
+                3.76911,
+                0.209658
+              ],
+              [
+                3.763889,
+                0.21
+              ],
+              [
+                3.758668,
+                0.209658
+              ],
+              [
+                3.753536,
+                0.208637
+              ],
+              [
+                3.748581,
+                0.206955
+              ],
+              [
+                3.743889,
+                0.204641
+              ],
+              [
+                3.739538,
+                0.201734
+              ],
+              [
+                3.735605,
+                0.198284
+              ],
+              [
+                3.732155,
+                0.194351
+              ],
+              [
+                3.729248,
+                0.19
+              ],
+              [
+                3.726934,
+                0.185307
+              ],
+              [
+                3.725252,
+                0.180353
+              ],
+              [
+                3.724231,
+                0.175221
+              ]
             ],
             "plane": "xy",
             "from": -0.0075,
@@ -6449,32 +7434,93 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [3.74636, 0.145654],
-              [3.751446, 0.142702],
-              [3.757011, 0.140799],
-              [3.76284, 0.140018],
-              [3.768709, 0.14039],
-              [3.774393, 0.141899],
-              [3.779674, 0.144488],
-              [3.784347, 0.148058],
-              [3.788235, 0.152471],
-              [3.791187, 0.157557],
-              [3.79309, 0.163122],
-              [3.793871, 0.168951],
-              [3.793499, 0.17482],
-              [3.79199, 0.180504],
-              [3.789401, 0.185785],
-              [3.785831, 0.190458],
-              [3.781418, 0.194346],
-              [3.696207, 0.255698],
-              [3.661149, 0.207006]
+              [
+                3.74636,
+                0.145654
+              ],
+              [
+                3.751446,
+                0.142702
+              ],
+              [
+                3.757011,
+                0.140799
+              ],
+              [
+                3.76284,
+                0.140018
+              ],
+              [
+                3.768709,
+                0.14039
+              ],
+              [
+                3.774393,
+                0.141899
+              ],
+              [
+                3.779674,
+                0.144488
+              ],
+              [
+                3.784347,
+                0.148058
+              ],
+              [
+                3.788235,
+                0.152471
+              ],
+              [
+                3.791187,
+                0.157557
+              ],
+              [
+                3.79309,
+                0.163122
+              ],
+              [
+                3.793871,
+                0.168951
+              ],
+              [
+                3.793499,
+                0.17482
+              ],
+              [
+                3.79199,
+                0.180504
+              ],
+              [
+                3.789401,
+                0.185785
+              ],
+              [
+                3.785831,
+                0.190458
+              ],
+              [
+                3.781418,
+                0.194346
+              ],
+              [
+                3.696207,
+                0.255698
+              ],
+              [
+                3.661149,
+                0.207006
+              ]
             ],
             "plane": "xy",
             "from": 0.0085,
             "to": 0.0185,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, -0.027]
+              "translation": [
+                0,
+                0,
+                -0.027
+              ]
             }
           },
           {
@@ -6484,7 +7530,24 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[3.728668, 0.232326], [3.696207, 0.255698], [3.661149, 0.207006], [3.69361, 0.183634]],
+            "profile": [
+              [
+                3.728668,
+                0.232326
+              ],
+              [
+                3.696207,
+                0.255698
+              ],
+              [
+                3.661149,
+                0.207006
+              ],
+              [
+                3.69361,
+                0.183634
+              ]
+            ],
             "plane": "xy",
             "from": -0.0085,
             "to": 0.0085
@@ -6496,9 +7559,42 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.095, 0.0], [0.095, 0.018], [0.115, 0.018], [0.145, 0.03015], [0.16, 0.03015], [0.16, 0.0]],
-            "axis": [-0.811534, 0.584305, 0.0],
-            "origin": [3.763889, 0.17, 0.0]
+            "profile": [
+              [
+                0.095,
+                0.0
+              ],
+              [
+                0.095,
+                0.018
+              ],
+              [
+                0.115,
+                0.018
+              ],
+              [
+                0.145,
+                0.03015
+              ],
+              [
+                0.16,
+                0.03015
+              ],
+              [
+                0.16,
+                0.0
+              ]
+            ],
+            "axis": [
+              -0.811534,
+              0.584305,
+              0.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              0.0
+            ]
           },
           {
             "id": "pin-beam",
@@ -6507,9 +7603,50 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.1,
-            "profile": [[0.0, 0.0], [0.0, 0.018], [0.008, 0.018], [0.008, 0.012], [0.045, 0.012], [0.045, 0.018], [0.053, 0.018], [0.053, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [3.763889, 0.17, -0.0265]
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.018
+              ],
+              [
+                0.008,
+                0.018
+              ],
+              [
+                0.008,
+                0.012
+              ],
+              [
+                0.045,
+                0.012
+              ],
+              [
+                0.045,
+                0.018
+              ],
+              [
+                0.053,
+                0.018
+              ],
+              [
+                0.053,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              -0.0265
+            ]
           },
           {
             "id": "gusset-wall",
@@ -6519,28 +7656,94 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [-0.002, 2.785],
-              [0.084779, 2.775542],
-              [0.09, 2.7752],
-              [0.095221, 2.775542],
-              [0.100353, 2.776563],
-              [0.105307, 2.778245],
-              [0.11, 2.780559],
-              [0.11435, 2.783466],
-              [0.118284, 2.786916],
-              [0.121734, 2.79085],
-              [0.124641, 2.7952],
-              [0.126955, 2.799893],
-              [0.128637, 2.804847],
-              [0.129658, 2.809979],
-              [0.13, 2.8152],
-              [0.129658, 2.820421],
-              [0.128637, 2.825553],
-              [0.126955, 2.830507],
-              [0.124641, 2.8352],
-              [0.121734, 2.83955],
-              [0.118284, 2.843484],
-              [-0.002, 2.975]
+              [
+                -0.002,
+                2.785
+              ],
+              [
+                0.084779,
+                2.775542
+              ],
+              [
+                0.09,
+                2.7752
+              ],
+              [
+                0.095221,
+                2.775542
+              ],
+              [
+                0.100353,
+                2.776563
+              ],
+              [
+                0.105307,
+                2.778245
+              ],
+              [
+                0.11,
+                2.780559
+              ],
+              [
+                0.11435,
+                2.783466
+              ],
+              [
+                0.118284,
+                2.786916
+              ],
+              [
+                0.121734,
+                2.79085
+              ],
+              [
+                0.124641,
+                2.7952
+              ],
+              [
+                0.126955,
+                2.799893
+              ],
+              [
+                0.128637,
+                2.804847
+              ],
+              [
+                0.129658,
+                2.809979
+              ],
+              [
+                0.13,
+                2.8152
+              ],
+              [
+                0.129658,
+                2.820421
+              ],
+              [
+                0.128637,
+                2.825553
+              ],
+              [
+                0.126955,
+                2.830507
+              ],
+              [
+                0.124641,
+                2.8352
+              ],
+              [
+                0.121734,
+                2.83955
+              ],
+              [
+                0.118284,
+                2.843484
+              ],
+              [
+                -0.002,
+                2.975
+              ]
             ],
             "plane": "xy",
             "from": -0.0075,
@@ -6554,32 +7757,93 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [0.107529, 2.839546],
-              [0.102443, 2.842498],
-              [0.096878, 2.844401],
-              [0.091049, 2.845182],
-              [0.08518, 2.84481],
-              [0.079496, 2.843301],
-              [0.074215, 2.840712],
-              [0.069542, 2.837142],
-              [0.065654, 2.832729],
-              [0.062702, 2.827643],
-              [0.060799, 2.822078],
-              [0.060018, 2.816249],
-              [0.06039, 2.81038],
-              [0.061899, 2.804696],
-              [0.064488, 2.799415],
-              [0.068058, 2.794742],
-              [0.072471, 2.790854],
-              [0.157682, 2.729502],
-              [0.19274, 2.778194]
+              [
+                0.107529,
+                2.839546
+              ],
+              [
+                0.102443,
+                2.842498
+              ],
+              [
+                0.096878,
+                2.844401
+              ],
+              [
+                0.091049,
+                2.845182
+              ],
+              [
+                0.08518,
+                2.84481
+              ],
+              [
+                0.079496,
+                2.843301
+              ],
+              [
+                0.074215,
+                2.840712
+              ],
+              [
+                0.069542,
+                2.837142
+              ],
+              [
+                0.065654,
+                2.832729
+              ],
+              [
+                0.062702,
+                2.827643
+              ],
+              [
+                0.060799,
+                2.822078
+              ],
+              [
+                0.060018,
+                2.816249
+              ],
+              [
+                0.06039,
+                2.81038
+              ],
+              [
+                0.061899,
+                2.804696
+              ],
+              [
+                0.064488,
+                2.799415
+              ],
+              [
+                0.068058,
+                2.794742
+              ],
+              [
+                0.072471,
+                2.790854
+              ],
+              [
+                0.157682,
+                2.729502
+              ],
+              [
+                0.19274,
+                2.778194
+              ]
             ],
             "plane": "xy",
             "from": 0.0085,
             "to": 0.0185,
             "repeat": {
               "count": 2,
-              "translation": [0, 0, -0.027]
+              "translation": [
+                0,
+                0,
+                -0.027
+              ]
             }
           },
           {
@@ -6589,7 +7853,24 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.125221, 2.752874], [0.157682, 2.729502], [0.19274, 2.778194], [0.160279, 2.801566]],
+            "profile": [
+              [
+                0.125221,
+                2.752874
+              ],
+              [
+                0.157682,
+                2.729502
+              ],
+              [
+                0.19274,
+                2.778194
+              ],
+              [
+                0.160279,
+                2.801566
+              ]
+            ],
             "plane": "xy",
             "from": -0.0085,
             "to": 0.0085
@@ -6601,9 +7882,42 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.095, 0.0], [0.095, 0.018], [0.115, 0.018], [0.145, 0.03015], [0.16, 0.03015], [0.16, 0.0]],
-            "axis": [0.811534, -0.584305, 0.0],
-            "origin": [0.09, 2.8152, 0.0]
+            "profile": [
+              [
+                0.095,
+                0.0
+              ],
+              [
+                0.095,
+                0.018
+              ],
+              [
+                0.115,
+                0.018
+              ],
+              [
+                0.145,
+                0.03015
+              ],
+              [
+                0.16,
+                0.03015
+              ],
+              [
+                0.16,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.811534,
+              -0.584305,
+              0.0
+            ],
+            "origin": [
+              0.09,
+              2.8152,
+              0.0
+            ]
           },
           {
             "id": "pin-wall",
@@ -6612,9 +7926,50 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.1,
-            "profile": [[0.0, 0.0], [0.0, 0.018], [0.008, 0.018], [0.008, 0.012], [0.045, 0.012], [0.045, 0.018], [0.053, 0.018], [0.053, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.09, 2.8152, -0.0265]
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.018
+              ],
+              [
+                0.008,
+                0.018
+              ],
+              [
+                0.008,
+                0.012
+              ],
+              [
+                0.045,
+                0.012
+              ],
+              [
+                0.045,
+                0.018
+              ],
+              [
+                0.053,
+                0.018
+              ],
+              [
+                0.053,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.09,
+              2.8152,
+              -0.0265
+            ]
           },
           {
             "id": "strut-tube",
@@ -6623,9 +7978,38 @@
             "material": "steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.15, 0.0], [0.15, 0.03015], [4.37709, 0.03015], [4.37709, 0.0]],
-            "axis": [-0.811534, 0.584305, 0.0],
-            "origin": [3.763889, 0.17, 0.0]
+            "profile": [
+              [
+                0.15,
+                0.02695
+              ],
+              [
+                0.15,
+                0.03015
+              ],
+              [
+                4.37709,
+                0.03015
+              ],
+              [
+                4.37709,
+                0.02695
+              ],
+              [
+                0.15,
+                0.02695
+              ]
+            ],
+            "axis": [
+              -0.811534,
+              0.584305,
+              0.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              0.0
+            ]
           }
         ],
         "thermal": [
@@ -6646,7 +8030,13 @@
             "of": "wall-render",
             "region": "wall-face",
             "layer": "wall-render",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-concrete-beam",
@@ -6655,11 +8045,26 @@
             "material": "concrete",
             "role": "body",
             "tone": 0.6,
-            "size": [0.3, 0.24, 0.2],
+            "size": [
+              0.3,
+              0.24,
+              0.2
+            ],
             "transform": {
-              "translation": [-0.35, 0.0, 0.0]
+              "translation": [
+                -0.35,
+                0.0,
+                0.0
+              ]
             },
-            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-u",
+              "+u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-plate",
             "layer": "plate-concrete"
           },
@@ -6674,7 +8079,9 @@
             "of": "plate-beam",
             "region": "wall-plate",
             "layer": "plate-steel",
-            "sectionFaces": ["-u"]
+            "sectionFaces": [
+              "-u"
+            ]
           },
           {
             "id": "th-concrete-strut",
@@ -6683,11 +8090,26 @@
             "material": "concrete",
             "role": "body",
             "tone": 0.6,
-            "size": [0.3, 0.24, 0.2],
+            "size": [
+              0.3,
+              0.24,
+              0.2
+            ],
             "transform": {
-              "translation": [-0.35, 2.88, 0.0]
+              "translation": [
+                -0.35,
+                2.88,
+                0.0
+              ]
             },
-            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"],
+            "sectionFaces": [
+              "-u",
+              "+u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ],
             "region": "wall-plate",
             "layer": "plate-concrete"
           },
@@ -6702,7 +8124,9 @@
             "of": "plate-strut",
             "region": "wall-plate",
             "layer": "plate-steel",
-            "sectionFaces": ["-u"]
+            "sectionFaces": [
+              "-u"
+            ]
           },
           {
             "id": "th-beam",
@@ -6743,25 +8167,33 @@
             "id": "th-glass-0",
             "of": "glass-0",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-glass-1",
             "of": "glass-1",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-glass-2",
             "of": "glass-2",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-glass-3",
             "of": "glass-3",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-gusset-beam",
@@ -6815,8 +8247,40 @@
           },
           {
             "id": "th-strut-tube",
-            "of": "strut-tube",
-            "region": "rod-steel"
+            "region": "rod-steel",
+            "kind": "revolve",
+            "bone": "canopy",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [
+                0.15,
+                0.0
+              ],
+              [
+                0.15,
+                0.03015
+              ],
+              [
+                4.37709,
+                0.03015
+              ],
+              [
+                4.37709,
+                0.0
+              ]
+            ],
+            "axis": [
+              -0.811534,
+              0.584305,
+              0.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              0.0
+            ]
           }
         ],
         "structure": [
@@ -6833,9 +8297,38 @@
             "material": "steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.15, 0.02695], [0.15, 0.03015], [4.37709, 0.03015], [4.37709, 0.02695]],
-            "axis": [-0.811534, 0.584305, 0.0],
-            "origin": [3.763889, 0.17, 0.0],
+            "profile": [
+              [
+                0.15,
+                0.02695
+              ],
+              [
+                0.15,
+                0.03015
+              ],
+              [
+                4.37709,
+                0.03015
+              ],
+              [
+                4.37709,
+                0.02695
+              ],
+              [
+                0.15,
+                0.02695
+              ]
+            ],
+            "axis": [
+              -0.811534,
+              0.584305,
+              0.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              0.0
+            ],
             "member": "canopy",
             "part": "member"
           },
@@ -6924,12 +8417,41 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.0, 0.0], [0.0, 0.008], [0.463, 0.008], [0.463, 0.0]],
-            "axis": [1.0, 0.0, 0.0],
-            "origin": [-0.45, 0.073, -0.058],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.008
+              ],
+              [
+                0.463,
+                0.008
+              ],
+              [
+                0.463,
+                0.0
+              ]
+            ],
+            "axis": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "origin": [
+              -0.45,
+              0.073,
+              -0.058
+            ],
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -6941,12 +8463,41 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.0, 0.0], [0.0, 0.008], [0.463, 0.008], [0.463, 0.0]],
-            "axis": [1.0, 0.0, 0.0],
-            "origin": [-0.45, -0.073, -0.058],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.008
+              ],
+              [
+                0.463,
+                0.008
+              ],
+              [
+                0.463,
+                0.0
+              ]
+            ],
+            "axis": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "origin": [
+              -0.45,
+              -0.073,
+              -0.058
+            ],
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -6958,12 +8509,41 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.0, 0.0], [0.0, 0.008], [0.463, 0.008], [0.463, 0.0]],
-            "axis": [1.0, 0.0, 0.0],
-            "origin": [-0.45, 2.953, -0.058],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.008
+              ],
+              [
+                0.463,
+                0.008
+              ],
+              [
+                0.463,
+                0.0
+              ]
+            ],
+            "axis": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "origin": [
+              -0.45,
+              2.953,
+              -0.058
+            ],
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -6975,12 +8555,41 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.0, 0.0], [0.0, 0.008], [0.463, 0.008], [0.463, 0.0]],
-            "axis": [1.0, 0.0, 0.0],
-            "origin": [-0.45, 2.807, -0.058],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.008
+              ],
+              [
+                0.463,
+                0.008
+              ],
+              [
+                0.463,
+                0.0
+              ]
+            ],
+            "axis": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "origin": [
+              -0.45,
+              2.807,
+              -0.058
+            ],
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -6992,9 +8601,34 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.02], [0.2, 0.02], [0.2, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -0.1],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.02
+              ],
+              [
+                0.2,
+                0.02
+              ],
+              [
+                0.2,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              -0.1
+            ],
             "member": "canopy",
             "part": "support",
             "anchor": "wall-pin"
@@ -7006,9 +8640,34 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.02], [0.12, 0.02], [0.12, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [4.0, 0.0, -0.06],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.02
+              ],
+              [
+                0.12,
+                0.02
+              ],
+              [
+                0.12,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              4.0,
+              0.0,
+              -0.06
+            ],
             "member": "canopy",
             "part": "support",
             "anchor": "tie-rod"
@@ -7020,9 +8679,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.5,
-            "radii": [0.035, 0.035, 0.035],
+            "radii": [
+              0.035,
+              0.035,
+              0.035
+            ],
             "transform": {
-              "translation": [2.75, 0.0, 0.0]
+              "translation": [
+                2.75,
+                0.0,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "mass"
@@ -7058,9 +8725,17 @@
             "material": "concrete",
             "role": "body",
             "tone": 0.6,
-            "size": [0.3, 5.35, 1.0],
+            "size": [
+              0.3,
+              5.35,
+              1.0
+            ],
             "transform": {
-              "translation": [-0.35, 0.345, 0.0]
+              "translation": [
+                -0.35,
+                0.345,
+                0.0
+              ]
             }
           },
           {
@@ -7070,10 +8745,61 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.9,
-            "profile": [[-2.33, -0.5], [-2.33, 0.5], [3.02, 0.5], [3.02, -0.5]],
+            "profile": [
+              [
+                -2.33,
+                -0.5
+              ],
+              [
+                -2.33,
+                0.5
+              ],
+              [
+                3.02,
+                0.5
+              ],
+              [
+                3.02,
+                -0.5
+              ]
+            ],
             "holes": [
-              [[-0.12, -0.1], [-0.12, 0.1], [0.12, 0.1], [0.12, -0.1]],
-              [[2.76, -0.1], [2.76, 0.1], [3.0, 0.1], [3.0, -0.1]]
+              [
+                [
+                  -0.12,
+                  -0.1
+                ],
+                [
+                  -0.12,
+                  0.1
+                ],
+                [
+                  0.12,
+                  0.1
+                ],
+                [
+                  0.12,
+                  -0.1
+                ]
+              ],
+              [
+                [
+                  2.76,
+                  -0.1
+                ],
+                [
+                  2.76,
+                  0.1
+                ],
+                [
+                  3.0,
+                  0.1
+                ],
+                [
+                  3.0,
+                  -0.1
+                ]
+              ]
             ],
             "plane": "yz",
             "from": -0.2,
@@ -7086,9 +8812,17 @@
             "material": "anchor-pad",
             "role": "body",
             "tone": 0.7,
-            "size": [0.2, 0.24, 0.2],
+            "size": [
+              0.2,
+              0.24,
+              0.2
+            ],
             "transform": {
-              "translation": [-0.1, 0.0, 0.0]
+              "translation": [
+                -0.1,
+                0.0,
+                0.0
+              ]
             }
           },
           {
@@ -7098,9 +8832,17 @@
             "material": "anchor-pad",
             "role": "body",
             "tone": 0.7,
-            "size": [0.2, 0.24, 0.2],
+            "size": [
+              0.2,
+              0.24,
+              0.2
+            ],
             "transform": {
-              "translation": [-0.1, 2.88, 0.0]
+              "translation": [
+                -0.1,
+                2.88,
+                0.0
+              ]
             }
           },
           {
@@ -7111,22 +8853,70 @@
             "role": "body",
             "tone": 0.4,
             "profile": [
-              [0.08, 0.041],
-              [0.0726, 0.041],
-              [0.0726, 0.0115],
-              [0.0636, 0.0025],
-              [-0.0636, 0.0025],
-              [-0.0726, 0.0115],
-              [-0.0726, 0.041],
-              [-0.08, 0.041],
-              [-0.08, -0.041],
-              [-0.0726, -0.041],
-              [-0.0726, -0.0115],
-              [-0.0636, -0.0025],
-              [0.0636, -0.0025],
-              [0.0726, -0.0115],
-              [0.0726, -0.041],
-              [0.08, -0.041]
+              [
+                0.08,
+                0.041
+              ],
+              [
+                0.0726,
+                0.041
+              ],
+              [
+                0.0726,
+                0.0115
+              ],
+              [
+                0.0636,
+                0.0025
+              ],
+              [
+                -0.0636,
+                0.0025
+              ],
+              [
+                -0.0726,
+                0.0115
+              ],
+              [
+                -0.0726,
+                0.041
+              ],
+              [
+                -0.08,
+                0.041
+              ],
+              [
+                -0.08,
+                -0.041
+              ],
+              [
+                -0.0726,
+                -0.041
+              ],
+              [
+                -0.0726,
+                -0.0115
+              ],
+              [
+                -0.0636,
+                -0.0025
+              ],
+              [
+                0.0636,
+                -0.0025
+              ],
+              [
+                0.0726,
+                -0.0115
+              ],
+              [
+                0.0726,
+                -0.041
+              ],
+              [
+                0.08,
+                -0.041
+              ]
             ],
             "plane": "yz",
             "from": 0.0,
@@ -7139,7 +8929,24 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 0.03], [0.5, 0.03], [0.5, 1.3825], [-0.5, 1.3825]],
+            "profile": [
+              [
+                -0.5,
+                0.03
+              ],
+              [
+                0.5,
+                0.03
+              ],
+              [
+                0.5,
+                1.3825
+              ],
+              [
+                -0.5,
+                1.3825
+              ]
+            ],
             "plane": "zx",
             "from": 0.08,
             "to": 0.1048
@@ -7151,7 +8958,24 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 1.4025], [0.5, 1.4025], [0.5, 2.755], [-0.5, 2.755]],
+            "profile": [
+              [
+                -0.5,
+                1.4025
+              ],
+              [
+                0.5,
+                1.4025
+              ],
+              [
+                0.5,
+                2.755
+              ],
+              [
+                -0.5,
+                2.755
+              ]
+            ],
             "plane": "zx",
             "from": 0.08,
             "to": 0.1048
@@ -7163,7 +8987,40 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 2.775], [0.5, 2.775], [0.5, 4.1275], [0.0125, 4.1275], [0.0125, 3.722], [-0.0125, 3.722], [-0.0125, 4.1275], [-0.5, 4.1275]],
+            "profile": [
+              [
+                -0.5,
+                2.775
+              ],
+              [
+                0.5,
+                2.775
+              ],
+              [
+                0.5,
+                4.1275
+              ],
+              [
+                0.0125,
+                4.1275
+              ],
+              [
+                0.0125,
+                3.722
+              ],
+              [
+                -0.0125,
+                3.722
+              ],
+              [
+                -0.0125,
+                4.1275
+              ],
+              [
+                -0.5,
+                4.1275
+              ]
+            ],
             "plane": "zx",
             "from": 0.08,
             "to": 0.1048
@@ -7175,7 +9032,24 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 4.1475], [0.5, 4.1475], [0.5, 5.5], [-0.5, 5.5]],
+            "profile": [
+              [
+                -0.5,
+                4.1475
+              ],
+              [
+                0.5,
+                4.1475
+              ],
+              [
+                0.5,
+                5.5
+              ],
+              [
+                -0.5,
+                5.5
+              ]
+            ],
             "plane": "zx",
             "from": 0.08,
             "to": 0.1048
@@ -7187,9 +9061,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.03, 0.0248, 1.0],
+            "size": [
+              0.03,
+              0.0248,
+              1.0
+            ],
             "transform": {
-              "translation": [0.015, 0.0924, 0.0]
+              "translation": [
+                0.015,
+                0.0924,
+                0.0
+              ]
             }
           },
           {
@@ -7199,9 +9081,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.149935, 0.0248, 0.025],
+            "size": [
+              0.149935,
+              0.0248,
+              0.025
+            ],
             "transform": {
-              "translation": [4.052533, 0.0924, 0.0]
+              "translation": [
+                4.052533,
+                0.0924,
+                0.0
+              ]
             }
           },
           {
@@ -7211,9 +9101,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.02, 0.0248, 1.0],
+            "size": [
+              0.02,
+              0.0248,
+              1.0
+            ],
             "transform": {
-              "translation": [1.3925, 0.0924, 0.0]
+              "translation": [
+                1.3925,
+                0.0924,
+                0.0
+              ]
             }
           },
           {
@@ -7223,9 +9121,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.02, 0.0248, 1.0],
+            "size": [
+              0.02,
+              0.0248,
+              1.0
+            ],
             "transform": {
-              "translation": [2.765, 0.0924, 0.0]
+              "translation": [
+                2.765,
+                0.0924,
+                0.0
+              ]
             }
           },
           {
@@ -7235,9 +9141,17 @@
             "material": "epdm",
             "role": "detail",
             "tone": 0.15,
-            "size": [0.02, 0.0248, 1.0],
+            "size": [
+              0.02,
+              0.0248,
+              1.0
+            ],
             "transform": {
-              "translation": [4.1375, 0.0924, 0.0]
+              "translation": [
+                4.1375,
+                0.0924,
+                0.0
+              ]
             }
           },
           {
@@ -7248,26 +9162,86 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [3.723889, 0.17],
-              [3.724231, 0.164779],
-              [3.735, 0.0775],
-              [3.995, 0.0775],
-              [3.783889, 0.204641],
-              [3.779196, 0.206955],
-              [3.774242, 0.208637],
-              [3.76911, 0.209658],
-              [3.763889, 0.21],
-              [3.758668, 0.209658],
-              [3.753536, 0.208637],
-              [3.748581, 0.206955],
-              [3.743889, 0.204641],
-              [3.739538, 0.201734],
-              [3.735605, 0.198284],
-              [3.732155, 0.194351],
-              [3.729248, 0.19],
-              [3.726934, 0.185307],
-              [3.725252, 0.180353],
-              [3.724231, 0.175221]
+              [
+                3.723889,
+                0.17
+              ],
+              [
+                3.724231,
+                0.164779
+              ],
+              [
+                3.735,
+                0.0775
+              ],
+              [
+                3.995,
+                0.0775
+              ],
+              [
+                3.783889,
+                0.204641
+              ],
+              [
+                3.779196,
+                0.206955
+              ],
+              [
+                3.774242,
+                0.208637
+              ],
+              [
+                3.76911,
+                0.209658
+              ],
+              [
+                3.763889,
+                0.21
+              ],
+              [
+                3.758668,
+                0.209658
+              ],
+              [
+                3.753536,
+                0.208637
+              ],
+              [
+                3.748581,
+                0.206955
+              ],
+              [
+                3.743889,
+                0.204641
+              ],
+              [
+                3.739538,
+                0.201734
+              ],
+              [
+                3.735605,
+                0.198284
+              ],
+              [
+                3.732155,
+                0.194351
+              ],
+              [
+                3.729248,
+                0.19
+              ],
+              [
+                3.726934,
+                0.185307
+              ],
+              [
+                3.725252,
+                0.180353
+              ],
+              [
+                3.724231,
+                0.175221
+              ]
             ],
             "plane": "xy",
             "from": -0.0075,
@@ -7281,25 +9255,82 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [3.74636, 0.145654],
-              [3.751446, 0.142702],
-              [3.757011, 0.140799],
-              [3.76284, 0.140018],
-              [3.768709, 0.14039],
-              [3.774393, 0.141899],
-              [3.779674, 0.144488],
-              [3.784347, 0.148058],
-              [3.788235, 0.152471],
-              [3.791187, 0.157557],
-              [3.79309, 0.163122],
-              [3.793871, 0.168951],
-              [3.793499, 0.17482],
-              [3.79199, 0.180504],
-              [3.789401, 0.185785],
-              [3.785831, 0.190458],
-              [3.781418, 0.194346],
-              [3.696207, 0.255698],
-              [3.661149, 0.207006]
+              [
+                3.74636,
+                0.145654
+              ],
+              [
+                3.751446,
+                0.142702
+              ],
+              [
+                3.757011,
+                0.140799
+              ],
+              [
+                3.76284,
+                0.140018
+              ],
+              [
+                3.768709,
+                0.14039
+              ],
+              [
+                3.774393,
+                0.141899
+              ],
+              [
+                3.779674,
+                0.144488
+              ],
+              [
+                3.784347,
+                0.148058
+              ],
+              [
+                3.788235,
+                0.152471
+              ],
+              [
+                3.791187,
+                0.157557
+              ],
+              [
+                3.79309,
+                0.163122
+              ],
+              [
+                3.793871,
+                0.168951
+              ],
+              [
+                3.793499,
+                0.17482
+              ],
+              [
+                3.79199,
+                0.180504
+              ],
+              [
+                3.789401,
+                0.185785
+              ],
+              [
+                3.785831,
+                0.190458
+              ],
+              [
+                3.781418,
+                0.194346
+              ],
+              [
+                3.696207,
+                0.255698
+              ],
+              [
+                3.661149,
+                0.207006
+              ]
             ],
             "plane": "xy",
             "from": -0.0185,
@@ -7312,9 +9343,34 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.1,
-            "profile": [[0.0, 0.0], [0.0, 0.0125], [0.053, 0.0125], [0.053, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [3.763889, 0.17, -0.0265]
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0125
+              ],
+              [
+                0.053,
+                0.0125
+              ],
+              [
+                0.053,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              -0.0265
+            ]
           },
           {
             "id": "gusset-wall",
@@ -7324,28 +9380,94 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [-0.002, 2.785],
-              [0.084779, 2.775542],
-              [0.09, 2.7752],
-              [0.095221, 2.775542],
-              [0.100353, 2.776563],
-              [0.105307, 2.778245],
-              [0.11, 2.780559],
-              [0.11435, 2.783466],
-              [0.118284, 2.786916],
-              [0.121734, 2.79085],
-              [0.124641, 2.7952],
-              [0.126955, 2.799893],
-              [0.128637, 2.804847],
-              [0.129658, 2.809979],
-              [0.13, 2.8152],
-              [0.129658, 2.820421],
-              [0.128637, 2.825553],
-              [0.126955, 2.830507],
-              [0.124641, 2.8352],
-              [0.121734, 2.83955],
-              [0.118284, 2.843484],
-              [-0.002, 2.975]
+              [
+                -0.002,
+                2.785
+              ],
+              [
+                0.084779,
+                2.775542
+              ],
+              [
+                0.09,
+                2.7752
+              ],
+              [
+                0.095221,
+                2.775542
+              ],
+              [
+                0.100353,
+                2.776563
+              ],
+              [
+                0.105307,
+                2.778245
+              ],
+              [
+                0.11,
+                2.780559
+              ],
+              [
+                0.11435,
+                2.783466
+              ],
+              [
+                0.118284,
+                2.786916
+              ],
+              [
+                0.121734,
+                2.79085
+              ],
+              [
+                0.124641,
+                2.7952
+              ],
+              [
+                0.126955,
+                2.799893
+              ],
+              [
+                0.128637,
+                2.804847
+              ],
+              [
+                0.129658,
+                2.809979
+              ],
+              [
+                0.13,
+                2.8152
+              ],
+              [
+                0.129658,
+                2.820421
+              ],
+              [
+                0.128637,
+                2.825553
+              ],
+              [
+                0.126955,
+                2.830507
+              ],
+              [
+                0.124641,
+                2.8352
+              ],
+              [
+                0.121734,
+                2.83955
+              ],
+              [
+                0.118284,
+                2.843484
+              ],
+              [
+                -0.002,
+                2.975
+              ]
             ],
             "plane": "xy",
             "from": -0.0075,
@@ -7359,25 +9481,82 @@
             "role": "body",
             "tone": 0.3,
             "profile": [
-              [0.107529, 2.839546],
-              [0.102443, 2.842498],
-              [0.096878, 2.844401],
-              [0.091049, 2.845182],
-              [0.08518, 2.84481],
-              [0.079496, 2.843301],
-              [0.074215, 2.840712],
-              [0.069542, 2.837142],
-              [0.065654, 2.832729],
-              [0.062702, 2.827643],
-              [0.060799, 2.822078],
-              [0.060018, 2.816249],
-              [0.06039, 2.81038],
-              [0.061899, 2.804696],
-              [0.064488, 2.799415],
-              [0.068058, 2.794742],
-              [0.072471, 2.790854],
-              [0.157682, 2.729502],
-              [0.19274, 2.778194]
+              [
+                0.107529,
+                2.839546
+              ],
+              [
+                0.102443,
+                2.842498
+              ],
+              [
+                0.096878,
+                2.844401
+              ],
+              [
+                0.091049,
+                2.845182
+              ],
+              [
+                0.08518,
+                2.84481
+              ],
+              [
+                0.079496,
+                2.843301
+              ],
+              [
+                0.074215,
+                2.840712
+              ],
+              [
+                0.069542,
+                2.837142
+              ],
+              [
+                0.065654,
+                2.832729
+              ],
+              [
+                0.062702,
+                2.827643
+              ],
+              [
+                0.060799,
+                2.822078
+              ],
+              [
+                0.060018,
+                2.816249
+              ],
+              [
+                0.06039,
+                2.81038
+              ],
+              [
+                0.061899,
+                2.804696
+              ],
+              [
+                0.064488,
+                2.799415
+              ],
+              [
+                0.068058,
+                2.794742
+              ],
+              [
+                0.072471,
+                2.790854
+              ],
+              [
+                0.157682,
+                2.729502
+              ],
+              [
+                0.19274,
+                2.778194
+              ]
             ],
             "plane": "xy",
             "from": -0.0185,
@@ -7390,9 +9569,34 @@
             "material": "steel",
             "role": "detail",
             "tone": 0.1,
-            "profile": [[0.0, 0.0], [0.0, 0.0125], [0.053, 0.0125], [0.053, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.09, 2.8152, -0.0265]
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0125
+              ],
+              [
+                0.053,
+                0.0125
+              ],
+              [
+                0.053,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.09,
+              2.8152,
+              -0.0265
+            ]
           },
           {
             "id": "strut-tube",
@@ -7401,9 +9605,50 @@
             "material": "steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.095, 0.0], [0.095, 0.018], [0.115, 0.018], [0.145, 0.03015], [4.38209, 0.03015], [4.41209, 0.018], [4.43209, 0.018], [4.43209, 0.0]],
-            "axis": [-0.811534, 0.584305, 0.0],
-            "origin": [3.763889, 0.17, 0.0]
+            "profile": [
+              [
+                0.095,
+                0.0
+              ],
+              [
+                0.095,
+                0.018
+              ],
+              [
+                0.115,
+                0.018
+              ],
+              [
+                0.145,
+                0.03015
+              ],
+              [
+                4.38209,
+                0.03015
+              ],
+              [
+                4.41209,
+                0.018
+              ],
+              [
+                4.43209,
+                0.018
+              ],
+              [
+                4.43209,
+                0.0
+              ]
+            ],
+            "axis": [
+              -0.811534,
+              0.584305,
+              0.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              0.0
+            ]
           }
         ],
         "thermal": [
@@ -7411,25 +9656,50 @@
             "id": "th-wall-core",
             "of": "wall-core",
             "region": "wall-face",
-            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "+u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-wall-insulation",
             "of": "wall-insulation",
             "region": "wall-face",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-plate-beam",
             "of": "plate-beam",
             "region": "wall-plate",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-plate-strut",
             "of": "plate-strut",
             "region": "wall-plate",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-beam",
@@ -7440,25 +9710,33 @@
             "id": "th-glass-0",
             "of": "glass-0",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-glass-1",
             "of": "glass-1",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-glass-2",
             "of": "glass-2",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-glass-3",
             "of": "glass-3",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-gusset-beam",
@@ -7510,9 +9788,38 @@
             "material": "steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.145, 0.02695], [0.145, 0.03015], [4.38209, 0.03015], [4.38209, 0.02695]],
-            "axis": [-0.811534, 0.584305, 0.0],
-            "origin": [3.763889, 0.17, 0.0],
+            "profile": [
+              [
+                0.145,
+                0.02695
+              ],
+              [
+                0.145,
+                0.03015
+              ],
+              [
+                4.38209,
+                0.03015
+              ],
+              [
+                4.38209,
+                0.02695
+              ],
+              [
+                0.145,
+                0.02695
+              ]
+            ],
+            "axis": [
+              -0.811534,
+              0.584305,
+              0.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              0.0
+            ],
             "member": "canopy",
             "part": "member"
           },
@@ -7571,12 +9878,41 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.0, 0.0], [0.0, 0.008], [0.45, 0.008], [0.45, 0.0]],
-            "axis": [1.0, 0.0, 0.0],
-            "origin": [-0.45, 0.0, -0.058],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.008
+              ],
+              [
+                0.45,
+                0.008
+              ],
+              [
+                0.45,
+                0.0
+              ]
+            ],
+            "axis": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "origin": [
+              -0.45,
+              0.0,
+              -0.058
+            ],
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -7588,12 +9924,41 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "profile": [[0.0, 0.0], [0.0, 0.008], [0.45, 0.008], [0.45, 0.0]],
-            "axis": [1.0, 0.0, 0.0],
-            "origin": [-0.45, 2.88, -0.058],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.008
+              ],
+              [
+                0.45,
+                0.008
+              ],
+              [
+                0.45,
+                0.0
+              ]
+            ],
+            "axis": [
+              1.0,
+              0.0,
+              0.0
+            ],
+            "origin": [
+              -0.45,
+              2.88,
+              -0.058
+            ],
             "repeat": {
               "count": 2,
-              "translation": [0, 0, 0.116]
+              "translation": [
+                0,
+                0,
+                0.116
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -7605,9 +9970,34 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.02], [0.2, 0.02], [0.2, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -0.1],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.02
+              ],
+              [
+                0.2,
+                0.02
+              ],
+              [
+                0.2,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              -0.1
+            ],
             "member": "canopy",
             "part": "support",
             "anchor": "wall-pin"
@@ -7619,9 +10009,34 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.02], [0.12, 0.02], [0.12, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [4.0, 0.0, -0.06],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.02
+              ],
+              [
+                0.12,
+                0.02
+              ],
+              [
+                0.12,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              4.0,
+              0.0,
+              -0.06
+            ],
             "member": "canopy",
             "part": "support",
             "anchor": "tie-rod"
@@ -7633,9 +10048,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.5,
-            "radii": [0.035, 0.035, 0.035],
+            "radii": [
+              0.035,
+              0.035,
+              0.035
+            ],
             "transform": {
-              "translation": [2.75, 0.0, 0.0]
+              "translation": [
+                2.75,
+                0.0,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "mass"
@@ -7671,9 +10094,17 @@
             "material": "concrete",
             "role": "body",
             "tone": 0.6,
-            "size": [0.3, 5.35, 1.0],
+            "size": [
+              0.3,
+              5.35,
+              1.0
+            ],
             "transform": {
-              "translation": [-0.35, 0.345, 0.0]
+              "translation": [
+                -0.35,
+                0.345,
+                0.0
+              ]
             }
           },
           {
@@ -7683,9 +10114,17 @@
             "material": "mineral-wool",
             "role": "body",
             "tone": 0.8,
-            "size": [0.2, 5.35, 1.0],
+            "size": [
+              0.2,
+              5.35,
+              1.0
+            ],
             "transform": {
-              "translation": [-0.1, 0.345, 0.0]
+              "translation": [
+                -0.1,
+                0.345,
+                0.0
+              ]
             }
           },
           {
@@ -7696,18 +10135,54 @@
             "role": "body",
             "tone": 0.4,
             "profile": [
-              [0.08, 0.041],
-              [0.0726, 0.041],
-              [0.0726, 0.0025],
-              [-0.0726, 0.0025],
-              [-0.0726, 0.041],
-              [-0.08, 0.041],
-              [-0.08, -0.041],
-              [-0.0726, -0.041],
-              [-0.0726, -0.0025],
-              [0.0726, -0.0025],
-              [0.0726, -0.041],
-              [0.08, -0.041]
+              [
+                0.08,
+                0.041
+              ],
+              [
+                0.0726,
+                0.041
+              ],
+              [
+                0.0726,
+                0.0025
+              ],
+              [
+                -0.0726,
+                0.0025
+              ],
+              [
+                -0.0726,
+                0.041
+              ],
+              [
+                -0.08,
+                0.041
+              ],
+              [
+                -0.08,
+                -0.041
+              ],
+              [
+                -0.0726,
+                -0.041
+              ],
+              [
+                -0.0726,
+                -0.0025
+              ],
+              [
+                0.0726,
+                -0.0025
+              ],
+              [
+                0.0726,
+                -0.041
+              ],
+              [
+                0.08,
+                -0.041
+              ]
             ],
             "plane": "yz",
             "from": 0.0,
@@ -7720,9 +10195,43 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 0.0], [0.5, 0.0], [0.5, 5.5], [-0.5, 5.5]],
+            "profile": [
+              [
+                -0.5,
+                0.0
+              ],
+              [
+                0.5,
+                0.0
+              ],
+              [
+                0.5,
+                5.5
+              ],
+              [
+                -0.5,
+                5.5
+              ]
+            ],
             "holes": [
-              [[-0.02, 3.719948], [-0.02, 3.990847], [0.02, 3.990847], [0.02, 3.719948]]
+              [
+                [
+                  -0.02,
+                  3.719948
+                ],
+                [
+                  -0.02,
+                  3.990847
+                ],
+                [
+                  0.02,
+                  3.990847
+                ],
+                [
+                  0.02,
+                  3.719948
+                ]
+              ]
             ],
             "plane": "zx",
             "from": 0.08,
@@ -7735,7 +10244,28 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[3.665206, 0.204084], [3.735, 0.0775], [3.995, 0.0775], [3.786112, 0.203259], [3.700265, 0.252777]],
+            "profile": [
+              [
+                3.665206,
+                0.204084
+              ],
+              [
+                3.735,
+                0.0775
+              ],
+              [
+                3.995,
+                0.0775
+              ],
+              [
+                3.786112,
+                0.203259
+              ],
+              [
+                3.700265,
+                0.252777
+              ]
+            ],
             "plane": "xy",
             "from": -0.02,
             "to": 0.02
@@ -7747,7 +10277,24 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[-0.002, 2.785], [0.153624, 2.732423], [0.188683, 2.781115], [-0.002, 2.975]],
+            "profile": [
+              [
+                -0.002,
+                2.785
+              ],
+              [
+                0.153624,
+                2.732423
+              ],
+              [
+                0.188683,
+                2.781115
+              ],
+              [
+                -0.002,
+                2.975
+              ]
+            ],
             "plane": "xy",
             "from": -0.02,
             "to": 0.02
@@ -7759,9 +10306,34 @@
             "material": "steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.08, 0.0], [0.08, 0.03015], [4.44709, 0.03015], [4.44709, 0.0]],
-            "axis": [-0.811534, 0.584305, 0.0],
-            "origin": [3.763889, 0.17, 0.0],
+            "profile": [
+              [
+                0.08,
+                0.0
+              ],
+              [
+                0.08,
+                0.03015
+              ],
+              [
+                4.44709,
+                0.03015
+              ],
+              [
+                4.44709,
+                0.0
+              ]
+            ],
+            "axis": [
+              -0.811534,
+              0.584305,
+              0.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              0.0
+            ],
             "slender": true
           }
         ],
@@ -7770,13 +10342,26 @@
             "id": "th-wall-core",
             "of": "wall-core",
             "region": "wall-face",
-            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "+u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-wall-outer",
             "of": "wall-outer",
             "region": "wall-face",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-anchor-beam",
@@ -7785,12 +10370,26 @@
             "material": "anchor-pad",
             "role": "body",
             "tone": 0.7,
-            "size": [0.2, 0.24, 0.2],
+            "size": [
+              0.2,
+              0.24,
+              0.2
+            ],
             "transform": {
-              "translation": [-0.1, 0.0, 0.0]
+              "translation": [
+                -0.1,
+                0.0,
+                0.0
+              ]
             },
             "region": "wall-plate",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-anchor-strut",
@@ -7799,12 +10398,26 @@
             "material": "anchor-pad",
             "role": "body",
             "tone": 0.7,
-            "size": [0.2, 0.24, 0.2],
+            "size": [
+              0.2,
+              0.24,
+              0.2
+            ],
             "transform": {
-              "translation": [-0.1, 2.88, 0.0]
+              "translation": [
+                -0.1,
+                2.88,
+                0.0
+              ]
             },
             "region": "wall-plate",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-beam",
@@ -7815,7 +10428,9 @@
             "id": "th-glass-roof",
             "of": "glass-roof",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-strut-tube",
@@ -7847,9 +10462,38 @@
             "material": "steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.08, 0.02695], [0.08, 0.03015], [4.44709, 0.03015], [4.44709, 0.02695]],
-            "axis": [-0.811534, 0.584305, 0.0],
-            "origin": [3.763889, 0.17, 0.0],
+            "profile": [
+              [
+                0.08,
+                0.02695
+              ],
+              [
+                0.08,
+                0.03015
+              ],
+              [
+                4.44709,
+                0.03015
+              ],
+              [
+                4.44709,
+                0.02695
+              ],
+              [
+                0.08,
+                0.02695
+              ]
+            ],
+            "axis": [
+              -0.811534,
+              0.584305,
+              0.0
+            ],
+            "origin": [
+              3.763889,
+              0.17,
+              0.0
+            ],
             "slender": true,
             "member": "canopy",
             "part": "member"
@@ -7873,9 +10517,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "size": [0.2, 0.2, 0.16],
+            "size": [
+              0.2,
+              0.2,
+              0.16
+            ],
             "transform": {
-              "translation": [-0.1, 0.0, 0.0]
+              "translation": [
+                -0.1,
+                0.0,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -7887,9 +10539,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "size": [0.2, 0.2, 0.16],
+            "size": [
+              0.2,
+              0.2,
+              0.16
+            ],
             "transform": {
-              "translation": [-0.1, 2.88, 0.0]
+              "translation": [
+                -0.1,
+                2.88,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -7901,9 +10561,34 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.03], [0.2, 0.03], [0.2, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [0.0, 0.0, -0.1],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.03
+              ],
+              [
+                0.2,
+                0.03
+              ],
+              [
+                0.2,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              -0.1
+            ],
             "member": "canopy",
             "part": "support",
             "anchor": "wall-pin"
@@ -7915,9 +10600,34 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.03], [0.12, 0.03], [0.12, 0.0]],
-            "axis": [0.0, 0.0, 1.0],
-            "origin": [4.0, 0.0, -0.06],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.03
+              ],
+              [
+                0.12,
+                0.03
+              ],
+              [
+                0.12,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              4.0,
+              0.0,
+              -0.06
+            ],
             "member": "canopy",
             "part": "support",
             "anchor": "tie-rod"
@@ -7929,9 +10639,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.5,
-            "radii": [0.04, 0.04, 0.04],
+            "radii": [
+              0.04,
+              0.04,
+              0.04
+            ],
             "transform": {
-              "translation": [2.75, 0.0, 0.0]
+              "translation": [
+                2.75,
+                0.0,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "mass"
@@ -7963,9 +10681,17 @@
             "material": "concrete",
             "role": "body",
             "tone": 0.7,
-            "size": [0.5, 5.35, 1.0],
+            "size": [
+              0.5,
+              5.35,
+              1.0
+            ],
             "transform": {
-              "translation": [-0.25, 0.345, 0.0]
+              "translation": [
+                -0.25,
+                0.345,
+                0.0
+              ]
             }
           },
           {
@@ -7975,7 +10701,24 @@
             "material": "steel",
             "role": "body",
             "tone": 0.4,
-            "profile": [[0.08, 0.041], [-0.08, 0.041], [-0.08, -0.041], [0.08, -0.041]],
+            "profile": [
+              [
+                0.08,
+                0.041
+              ],
+              [
+                -0.08,
+                0.041
+              ],
+              [
+                -0.08,
+                -0.041
+              ],
+              [
+                0.08,
+                -0.041
+              ]
+            ],
             "plane": "yz",
             "from": 0.0,
             "to": 5.5
@@ -7987,7 +10730,24 @@
             "material": "glass",
             "role": "glazing",
             "tone": 0.92,
-            "profile": [[-0.5, 0.0], [0.5, 0.0], [0.5, 5.5], [-0.5, 5.5]],
+            "profile": [
+              [
+                -0.5,
+                0.0
+              ],
+              [
+                0.5,
+                0.0
+              ],
+              [
+                0.5,
+                5.5
+              ],
+              [
+                -0.5,
+                5.5
+              ]
+            ],
             "plane": "zx",
             "from": 0.08,
             "to": 0.1048
@@ -7999,9 +10759,34 @@
             "material": "steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.03015], [4.749576, 0.03015], [4.749576, 0.0]],
-            "axis": [0.811534, -0.584305, 0.0],
-            "origin": [0.0, 2.88, 0.0],
+            "profile": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.03015
+              ],
+              [
+                4.749576,
+                0.03015
+              ],
+              [
+                4.749576,
+                0.0
+              ]
+            ],
+            "axis": [
+              0.811534,
+              -0.584305,
+              0.0
+            ],
+            "origin": [
+              0.0,
+              2.88,
+              0.0
+            ],
             "slender": true
           }
         ],
@@ -8010,13 +10795,26 @@
             "id": "th-wall",
             "of": "wall",
             "region": "wall-face",
-            "sectionFaces": ["-u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-wall-anchors",
             "of": "wall",
             "region": "wall-plate",
-            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"]
+            "sectionFaces": [
+              "-u",
+              "+u",
+              "-v",
+              "+v",
+              "-w",
+              "+w"
+            ]
           },
           {
             "id": "th-beam",
@@ -8027,7 +10825,9 @@
             "id": "th-roof",
             "of": "roof",
             "region": "canopy-glass",
-            "sectionFaces": ["-v"]
+            "sectionFaces": [
+              "-v"
+            ]
           },
           {
             "id": "th-strut-tube",
@@ -8049,9 +10849,38 @@
             "material": "steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0, 0.02695], [0.0, 0.03015], [4.749576, 0.03015], [4.749576, 0.02695]],
-            "axis": [0.811534, -0.584305, 0.0],
-            "origin": [0.0, 2.88, 0.0],
+            "profile": [
+              [
+                0.0,
+                0.02695
+              ],
+              [
+                0.0,
+                0.03015
+              ],
+              [
+                4.749576,
+                0.03015
+              ],
+              [
+                4.749576,
+                0.02695
+              ],
+              [
+                0.0,
+                0.02695
+              ]
+            ],
+            "axis": [
+              0.811534,
+              -0.584305,
+              0.0
+            ],
+            "origin": [
+              0.0,
+              2.88,
+              0.0
+            ],
             "slender": true,
             "member": "canopy",
             "part": "member"
@@ -8063,9 +10892,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "size": [0.075, 0.075, 0.075],
+            "size": [
+              0.075,
+              0.075,
+              0.075
+            ],
             "transform": {
-              "translation": [3.763889, 0.17, 0.0]
+              "translation": [
+                3.763889,
+                0.17,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -8077,9 +10914,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.35,
-            "size": [0.075, 0.075, 0.075],
+            "size": [
+              0.075,
+              0.075,
+              0.075
+            ],
             "transform": {
-              "translation": [0.0375, 2.88, 0.0]
+              "translation": [
+                0.0375,
+                2.88,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "joint"
@@ -8091,9 +10936,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.075, 0.075, 0.1],
+            "size": [
+              0.075,
+              0.075,
+              0.1
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0.0,
+                0.0,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "support",
@@ -8106,9 +10959,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.075, 0.075, 0.1],
+            "size": [
+              0.075,
+              0.075,
+              0.1
+            ],
             "transform": {
-              "translation": [4.0, 0.0, 0.0]
+              "translation": [
+                4.0,
+                0.0,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "support",
@@ -8121,9 +10982,17 @@
             "material": "steel",
             "role": "body",
             "tone": 0.5,
-            "size": [0.075, 0.075, 0.075],
+            "size": [
+              0.075,
+              0.075,
+              0.075
+            ],
             "transform": {
-              "translation": [2.75, 0.0, 0.0]
+              "translation": [
+                2.75,
+                0.0,
+                0.0
+              ]
             },
             "member": "canopy",
             "part": "mass"

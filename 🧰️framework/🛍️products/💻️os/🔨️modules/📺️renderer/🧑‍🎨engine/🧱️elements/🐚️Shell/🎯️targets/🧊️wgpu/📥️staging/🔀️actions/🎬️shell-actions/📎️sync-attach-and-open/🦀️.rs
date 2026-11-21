@@ -112,10 +112,10 @@ impl<'ctx> ActionsCtx<'ctx> {
     pub async fn finish_document_open(&mut self, prepared: ShellPreparedDocumentOpen) -> Result<(), String> {
         let ShellPreparedDocumentOpen { document_id, schema, bindings, backbone_uri, plugin, session, .. } = prepared;
         let actor_uri = format!("actor://{document_id}");
+        let binding_generation = self.sync.mint_sync_binding_generation()?;
         let actor = self.directory.current_shell_actor(session.instance_id);
         let channels = self.sync.document_host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: document_id.clone(), schema, bindings, watch_external: true, actor }).await;
         let events = self.sync.document_host.subscribe_key(&channels.document_key).await;
-        let binding_generation = self.sync.mint_sync_binding_generation()?;
         let binding_effects = match plugin.bind_document_backbone(session.instance_id, binding_generation, &actor_uri).await {
             Ok(effects) => effects,
             Err(error) => {

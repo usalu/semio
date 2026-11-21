@@ -1,3 +1,4 @@
+import Ajv from "ajv";
 /** 🏷️ Typed-wire vocabulary the suite annotates against; the destructured `OwnedUiPayload` value shadows its class name inside the body. */
 import type { OwnedUiPayload as OwnedUiPayloadOf, Profile, RetainedUiTypedValues } from "../../🟦️.ts";
 
@@ -39,6 +40,22 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
     cursor.beginClose();
     while (cursor.closeStep({ maxItems: 1, maxBytes: 4096 }).kind !== "complete") {}
+  });
+
+  it("preserves the retained image source byte count and inline image default", () => {
+    const oracle = new Ajv().compile({ type: "object", required: ["type", "src"], additionalProperties: false, properties: { type: { const: "image" }, src: { type: "string" }, sourceBodyBytes: { type: "integer", minimum: 0, maximum: 4294967295 } } });
+    for (const row of typedFixture.components.filter(candidate => candidate.wire.type === "image")) {
+      expect(oracle(row.wire)).toBe(true);
+      const owner = prepared("component", row.wire);
+      expect(owner.value).toEqual(row.expected);
+      const retirement = owner.beginClose();
+      while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
+    }
+    for (const sourceBodyBytes of [-1, 0.5, 4294967296]) {
+      const wire = { type: "image", src: "carrier", sourceBodyBytes };
+      expect(oracle(wire)).toBe(false);
+      expect(() => prepared("component", wire)).toThrow("UI integer exceeds its exact domain");
+    }
   });
 
   it("TypedNodeFields preflights every capture before transfer under private reference saturation", () => {

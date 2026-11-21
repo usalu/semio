@@ -3,12 +3,10 @@ use super::*;
 use semio_framework_replication as protocol;
 use protocol::{OpBinary,OpBinaryReceiving,OpBinaryReceivingCursor};
 use semio_framework_value::{AuthoringWallet, OriginalRetirementPoll, RetainedAllocationEffect, ORIGINAL_INVOCATION_WORK, retirement::controlled::ControlledRetirement};
-use semio_framework_value_native_owned::{OriginalSourceTurnIssuer, native_decoding::{
-    OriginalConstructionAccept, OriginalConstructionAcceptComplete, OriginalConstructionAuthority,
-    OriginalConstructionGrant, OriginalConstructionGrantComplete, OriginalConstructionRecipient,
-    OriginalSourceTurnIdentity, OriginalWorkAuthority, OriginalWorkPartialCheck,
-    OriginalWorkPartialCheckComplete, OriginalWorkQuote, OriginalWorkQuoteComplete, OriginalWorkRecipient,
-}};
+use semio_framework_value_native_owned::OriginalSourceTurnIssuer;
+#[path="🧰️bank.rs"]
+mod bank;
+use bank::OperationBank;
 #[derive(Clone,Debug,PartialEq,semio_framework_dsl_record_derive::DslEnum,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
 enum OriginalMutation{Rename{text:String,items:Vec<String>}}
 impl OpBinary for OriginalMutation{
@@ -21,10 +19,83 @@ fn original_command_receiving_operation_original_record_and_owned_fields_resume_
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=OriginalMutation::Rename{text:serde_json::from_value(fixture["text"].clone()).unwrap(),items:serde_json::from_value(fixture["items"].clone()).unwrap()};let encoded=expected.encode_op().unwrap();let mut source:Vec<u8>=serde_json::from_value(fixture["source"]["prefix"].clone()).unwrap();let start=source.len();source.extend_from_slice(&encoded);let end=source.len();source.extend(serde_json::from_value::<Vec<u8>>(fixture["source"]["suffix"].clone()).unwrap());let f=&fixture["turn"];let grant=RetainedCloneGrant{maximum_items:f["items"].as_u64().unwrap()as usize,maximum_copy_bytes:f["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:f["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:f["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:f["depth"].as_u64().unwrap()as usize};
  let dispatch=OriginalSourceTurnIssuer::new().issue().unwrap();let mut bank=OperationBank::fixture(grant,dispatch.identity());let mut callback=|_|true;let mut native=NativeDecodeControl::new(bank.left.maximum_capacity_bytes,&mut callback);
  native.with_source_witness(Some(dispatch.witness()),|native|{let turn=OriginalMutation::admit_receiving(&source,(start,end),bank.grant());let(mut cursor,admitted)=turn.result.unwrap().unwrap();bank.debit(admitted,turn.work);assert_eq!(admitted.copied_items,1);let wrong=source.clone();assert!(cursor.demands(&wrong,grant.maximum_copy_bytes).is_err());let mut turns=0;let mut original_text=None;
- while !cursor.is_ready(){assert!(turns<10000);if cursor.phase()==5&&original_text.is_none(){if let Some(FieldValue::Record(record))=cursor.generic_value(){if let Some(FieldValue::Text(text))=record.get(0){original_text=Some(text.as_ptr()as usize);}}}let progress=bank.normal(native,|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g)).result.unwrap();assert_eq!(progress.copied_items,1);assert!(progress.fits(grant));turns+=1;}
+ while !cursor.is_ready(){assert!(turns<10000);if cursor.phase()==5&&original_text.is_none(){if let Some(FieldValue::Record(record))=cursor.generic_value(){if let Some(FieldValue::Text(text))=record.get(0){original_text=Some(text.as_ptr()as usize);}}}let progress=bank.normal(native,cursor.step_work_demand(&source,grant.maximum_copy_bytes).unwrap(),|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g)).result.unwrap();assert_eq!(progress.copied_items,1);assert!(progress.fits(grant));turns+=1;}
  let mut output=None;let turn=cursor.take_into(&mut output,bank.grant());let p=turn.result.unwrap();bank.debit(p,turn.work);assert_eq!(p.copied_items,1);assert_eq!(output.as_ref(),Some(&expected));let OriginalMutation::Rename{text,..}=output.as_ref().unwrap();assert_eq!(original_text,Some(text.as_ptr()as usize));
  while !cursor.terminal_is_empty(){let turn=bank.close(|effect|cursor.close_step(effect));if matches!(&turn.result,Ok(RetainedCloneStep::Complete(_))){assert!(cursor.terminal_is_empty())}turn.result.unwrap();}let mut output=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !output.terminal_is_empty(){bank.close(|effect|output.step(effect.grant().maximum_copy_bytes,effect)).result.unwrap();}
  });
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+enum CloseWorkMutation { Clear {} }
+
+impl OpBinary for CloseWorkMutation {
+ fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { semio_os_kernel::os_dsl::variants_binary::encode_op(self) }
+ fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { semio_os_kernel::os_dsl::variants_binary::decode_op(bytes) }
+}
+semio_os_kernel::original_ordinal_operation_receiving!(CloseWorkMutation);
+
+struct CloseWorkBinding { open: bool, work: u64 }
+
+impl DslOwnedReceivingVariants for CloseWorkMutation {
+ type Cursor = CloseWorkBinding;
+ fn receiving_cursor(_: &str) -> Result<Self::Cursor, ValueError> { Err(invalid("test binding must be seeded after receiving")) }
+}
+
+impl OwnedFieldReceiving<CloseWorkMutation> for CloseWorkBinding {
+ fn demands(&self, _: &Option<FieldValue>, _: usize) -> Result<RetirementDemand, ValueError> { unreachable!() }
+ fn select_advance(&self, _: &Option<FieldValue>, _: usize, _: u64) -> Result<OwnedAdvanceSelection, ValueError> { unreachable!() }
+ fn advance_local(&mut self, _: &mut Option<FieldValue>, _: usize, _: &mut RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedPoll { unreachable!() }
+ fn is_ready(&self) -> bool { false }
+ fn take_into(&mut self, _: &mut Option<CloseWorkMutation>, _: &mut RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedTake { unreachable!() }
+ fn close_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(metadata::<()>()) }
+ fn close_work_demand(&self, _: usize) -> Result<u64, ValueError> { Ok(self.work) }
+ fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedClose {
+  let result = perform(effect, u128::from(self.work)).map(|()| {
+   self.open = false;
+   receipt(metadata::<()>())
+  }).map_err(Into::into);
+  RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: effect.performed_work() })
+ }
+ fn terminal_is_empty(&self) -> bool { !self.open }
+}
+
+#[test]
+fn original_operation_close_quotes_and_funds_the_selected_binding_after_take() {
+ let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let child_work = fixture["closeBindingWork"].as_u64().unwrap();
+ let grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: 2, ..Default::default() };
+ let expected = CloseWorkMutation::Clear {};
+ let source = expected.encode_op().unwrap();
+ let (mut cursor, _) = CloseWorkMutation::admit_receiving(&source, (0, source.len()), grant).result.unwrap().unwrap();
+ cursor.phase = 6;
+ *cursor.output.value = Some(expected.clone());
+ cursor.binding = Some(CloseWorkBinding { open: true, work: child_work });
+ let mut output = None;
+ cursor.take_into(&mut output, grant).result.unwrap();
+ assert_eq!(output, Some(CloseWorkMutation::decode_op(&source).unwrap()));
+ let run = |cursor: &mut OriginalOperationReceiving<CloseWorkMutation>, work: u64| {
+  let mut wallet = AuthoringWallet::new(grant, u128::from(work + ORIGINAL_INVOCATION_WORK));
+  wallet.run_settled(grant, work, |effect| cursor.close_step(effect)).unwrap().unwrap().0
+ };
+ let start = cursor.close_work_demand(0).unwrap();
+ assert_eq!(start, 1);
+ run(&mut cursor, start).result.unwrap();
+ let quoted = cursor.close_work_demand(0).unwrap();
+ assert_eq!(quoted, child_work);
+ let denied = run(&mut cursor, quoted - 1);
+ assert_eq!(denied.work, 0);
+ assert_eq!(denied.result.unwrap().progress(), RetainedCloneProgress::default());
+ assert!(cursor.binding.as_ref().unwrap().open);
+ let paid = run(&mut cursor, quoted);
+ assert_eq!(paid.work, u128::from(quoted));
+ paid.result.unwrap();
+ for _ in 0..2 {
+  let work = cursor.close_work_demand(0).unwrap();
+  assert_eq!(work, 1);
+  run(&mut cursor, work).result.unwrap();
+ }
+ assert!(cursor.terminal_is_empty());
+ assert_eq!(cursor.close_work_demand(0).unwrap(), 0);
 }
 
 #[derive(Clone,Debug,PartialEq,semio_framework_dsl_record_derive::DslEnum,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
@@ -35,125 +106,15 @@ semio_os_kernel::original_tagged_operation_receiving!(OriginalTaggedMutation,ORI
 #[test]
 fn original_command_receiving_operation_authored_tagged_header_resumes_each_original_item(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🏷️tagged.json")).unwrap();let expected=OriginalTaggedMutation::Rename{text:fixture["text"].as_str().unwrap().into()};let source=expected.encode_op().unwrap();let tag=fixture["tag"].as_u64().unwrap();assert_eq!(&source[..3],&[1,(tag as u8&127)|128,(tag>>7)as u8]);let f=&fixture["turn"];let grant=RetainedCloneGrant{maximum_items:f["items"].as_u64().unwrap()as usize,maximum_copy_bytes:f["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:f["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:f["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:f["depth"].as_u64().unwrap()as usize};let dispatch=OriginalSourceTurnIssuer::new().issue().unwrap();let mut bank=OperationBank::fixture(grant,dispatch.identity());let mut callback=|_|true;let mut native=NativeDecodeControl::new(bank.left.maximum_capacity_bytes,&mut callback);
- native.with_source_witness(Some(dispatch.witness()),|native|{let turn=OriginalTaggedMutation::admit_receiving(&source,(0,source.len()),bank.grant());let(mut cursor,p)=turn.result.unwrap().unwrap();bank.debit(p,turn.work);let mut turns=0;let mut selections=0;while !cursor.is_ready(){assert!(turns<10000);if cursor.phase()==2{selections+=1;}let mut denied=grant;denied.maximum_items=0;let turn=bank.native(native,denied,0,|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap(),Default::default());let progress=bank.normal(native,|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g)).result.unwrap();assert_eq!(progress.copied_items,1);assert!(progress.fits(grant));turns+=1;}assert_eq!(selections,2);let mut output=None;let turn=cursor.take_into(&mut output,bank.grant());bank.debit(turn.result.unwrap(),turn.work);assert_eq!(output.as_ref(),Some(&expected));while !cursor.terminal_is_empty(){let turn=bank.close(|effect|cursor.close_step(effect));if matches!(&turn.result,Ok(RetainedCloneStep::Complete(_))){assert!(cursor.terminal_is_empty())}turn.result.unwrap();}let mut output=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !output.terminal_is_empty(){bank.close(|effect|output.step(effect.grant().maximum_copy_bytes,effect)).result.unwrap();}
+ native.with_source_witness(Some(dispatch.witness()),|native|{let turn=OriginalTaggedMutation::admit_receiving(&source,(0,source.len()),bank.grant());let(mut cursor,p)=turn.result.unwrap().unwrap();bank.debit(p,turn.work);let mut turns=0;let mut selections=0;while !cursor.is_ready(){assert!(turns<10000);if cursor.phase()==2{selections+=1;}let mut denied=grant;denied.maximum_items=0;let turn=bank.native(native,denied,0,|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap(),Default::default());let progress=bank.normal(native,cursor.step_work_demand(&source,grant.maximum_copy_bytes).unwrap(),|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g)).result.unwrap();assert_eq!(progress.copied_items,1);assert!(progress.fits(grant));turns+=1;}assert_eq!(selections,2);let mut output=None;let turn=cursor.take_into(&mut output,bank.grant());bank.debit(turn.result.unwrap(),turn.work);assert_eq!(output.as_ref(),Some(&expected));while !cursor.terminal_is_empty(){let turn=bank.close(|effect|cursor.close_step(effect));if matches!(&turn.result,Ok(RetainedCloneStep::Complete(_))){assert!(cursor.terminal_is_empty())}turn.result.unwrap();}let mut output=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !output.terminal_is_empty(){bank.close(|effect|output.step(effect.grant().maximum_copy_bytes,effect)).result.unwrap();}
  });
 }
 
-struct OperationBank {
-    left: RetainedCloneGrant,
-    fuel: u64,
-    quantum: RetainedCloneGrant,
-    source: OriginalSourceTurnIdentity,
-    work: OriginalWorkAuthority<OperationWorkDriver>,
-    physical: OriginalConstructionAuthority<OperationPhysicalDriver>,
-}
 
-struct OperationWorkDriver;
-impl OriginalWorkRecipient for OperationWorkDriver {
-    type Context<'turn, 'source> = (u64, OriginalSourceTurnIdentity) where 'source: 'turn;
-    fn validate_context<'turn, 'source>(&self, _: &Self::Context<'turn, 'source>) -> Result<(), ValueError> where 'source: 'turn { Ok(()) }
-    fn source_turn<'turn, 'source>(&self, context: &Self::Context<'turn, 'source>) -> Option<OriginalSourceTurnIdentity> where 'source: 'turn { Some(context.1) }
-    fn admits<'reply, 'turn, 'source>(&mut self, context: &mut Self::Context<'turn, 'source>, quote: OriginalWorkQuote<'reply>, observed: u64, additional: u64) -> OriginalWorkQuoteComplete<'reply> where 'source: 'turn {
-        quote.complete(Ok(observed.checked_add(additional).is_some_and(|work| work <= context.0)))
-    }
-    fn settle_partial<'reply, 'turn, 'source>(&mut self, _: &mut Self::Context<'turn, 'source>, check: OriginalWorkPartialCheck<'reply>) -> OriginalWorkPartialCheckComplete<'reply> where 'source: 'turn { check.complete(Ok(())) }
-    fn recover_partial<'reply, 'turn, 'source>(&mut self, _: &mut Self::Context<'turn, 'source>, check: OriginalWorkPartialCheck<'reply>) -> OriginalWorkPartialCheckComplete<'reply> where 'source: 'turn { check.pending() }
-}
-struct OperationPhysicalLoan {
-    submitted: RetainedCloneProgress,
-    left: RetainedCloneGrant,
-    source: OriginalSourceTurnIdentity,
-}
-struct OperationPhysicalDriver;
-impl OriginalConstructionRecipient for OperationPhysicalDriver {
-    type Context<'turn, 'source> = OperationPhysicalLoan where 'source: 'turn;
-    fn validate_context<'turn, 'source>(&self, _: &OperationPhysicalLoan) -> Result<(), ValueError> where 'source: 'turn { Ok(()) }
-    fn source_turn<'turn, 'source>(&self, loan: &OperationPhysicalLoan) -> Option<OriginalSourceTurnIdentity> where 'source: 'turn { Some(loan.source) }
-    fn grant<'reply, 'turn, 'source>(&mut self, loan: &mut OperationPhysicalLoan, quote: OriginalConstructionGrant<'reply>) -> OriginalConstructionGrantComplete<'reply> where 'source: 'turn { quote.complete(Ok(loan.left)) }
-    fn accept<'reply, 'turn, 'source>(&mut self, loan: &mut OperationPhysicalLoan, receipt: OriginalConstructionAccept<'reply>) -> OriginalConstructionAcceptComplete<'reply> where 'source: 'turn {
-        let progress = receipt.progress();
-        assert!(progress.fits(receipt.grant()));
-        debit_grant(&mut loan.left, progress);
-        receipt.complete(loan.submitted.checked_add(progress).map(|total| loan.submitted = total))
-    }
-    fn submitted<'turn, 'source>(&self, loan: &OperationPhysicalLoan) -> RetainedCloneProgress where 'source: 'turn { loan.submitted }
-}
-
-fn debit_grant(left: &mut RetainedCloneGrant, progress: RetainedCloneProgress) {
-    assert!(progress.fits(*left));
-    left.maximum_items -= progress.copied_items;
-    left.maximum_copy_bytes -= progress.copied_bytes;
-    left.maximum_capacity_bytes -= progress.retained_capacity_bytes;
-    left.maximum_release_bytes -= progress.released_bytes;
-}
-
-impl OperationBank {
-    fn new(quantum: RetainedCloneGrant, left: RetainedCloneGrant, fuel: u64, source: OriginalSourceTurnIdentity) -> Self {
-        Self {
-            left, fuel, quantum, source,
-            work: OriginalWorkAuthority::new(OperationWorkDriver),
-            physical: OriginalConstructionAuthority::new(OperationPhysicalDriver),
-        }
-    }
-
-    fn fixture(quantum: RetainedCloneGrant, source: OriginalSourceTurnIdentity) -> Self {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🎟️work/📐️.json")).unwrap();
-        let stock = &fixture["originalStock"];
-        Self::new(quantum, RetainedCloneGrant {
-            maximum_items: stock["items"].as_u64().unwrap() as usize,
-            maximum_copy_bytes: stock["copyBytes"].as_u64().unwrap() as usize,
-            maximum_capacity_bytes: stock["capacityBytes"].as_u64().unwrap() as usize,
-            maximum_release_bytes: stock["releaseBytes"].as_u64().unwrap() as usize,
-            maximum_depth: stock["depth"].as_u64().unwrap() as usize,
-        }, stock["fuel"].as_u64().unwrap(), source)
-    }
-
-    fn grant(&self) -> RetainedCloneGrant {
-        let grant = self.quantum.restricted_by(self.left);
-        RetainedCloneGrant { maximum_items: if self.fuel == 0 { 0 } else { grant.maximum_items }, ..grant }
-    }
-
-    fn debit(&mut self, progress: RetainedCloneProgress, work: u128) {
-        debit_grant(&mut self.left, progress);
-        self.fuel = self.fuel.checked_sub(u64::try_from(work).unwrap()).unwrap();
-    }
-
-    fn native(
-        &mut self, native: &mut NativeDecodeControl<'_>, grant: RetainedCloneGrant, maximum_work: u64,
-        operation: impl FnOnce(&mut NativeDecodeControl<'_>, RetainedCloneGrant) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary>,
-    ) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
-        let mut work = (self.fuel.min(maximum_work), self.source);
-        let mut physical = OperationPhysicalLoan { submitted: Default::default(), left: grant, source: self.source };
-        let before = native.actual_work();
-        let turn = self.work.with_loan(&mut work, |work| native.with_work_recipient(work, |native| {
-            self.physical.with_loan(&mut physical, |physical| {
-                native.with_construction_recipient(physical, |native| Ok::<_, ValueError>(operation(native, grant)))
-            })?
-        })).unwrap().unwrap();
-        let progress = turn.result.as_ref().copied().unwrap_or_else(|error| error.retained_progress());
-        self.debit(progress, native.actual_work().checked_sub(before).unwrap());
-        turn
-    }
-
-    fn normal(
-        &mut self, native: &mut NativeDecodeControl<'_>,
-        operation: impl FnOnce(&mut NativeDecodeControl<'_>, RetainedCloneGrant) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary>,
-    ) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
-        self.native(native, self.grant(), 1 + ORIGINAL_INVOCATION_WORK, operation)
-    }
-
-    fn close(&mut self, operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll) -> RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
-        let mut wallet = AuthoringWallet::new(self.left, u128::from(self.fuel));
-        let (turn, _) = wallet.run_settled(self.grant(), self.fuel, operation).unwrap().unwrap();
-        let progress = turn.result.as_ref().map_or_else(|error| error.retained_progress(), |step| step.progress());
-        self.debit(progress, u128::from(self.fuel) - wallet.remaining_work());
-        turn
-    }
-}
 #[test]fn original_operation_failure_preserves_real_probe_cpu_independently_of_physical_progress(){
  let f:serde_json::Value=serde_json::from_str(include_str!("../🎟️work/📐️.json")).unwrap();let s=&f["stock"];let left=RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:s["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize};let dispatch=OriginalSourceTurnIssuer::new().issue().unwrap();let mut bank=OperationBank::new(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,..left},left,s["fuel"].as_u64().unwrap(),dispatch.identity());let source:Vec<u8>=serde_json::from_value(f["source"].clone()).unwrap();assert!(OriginalMutation::decode_op(&source).is_err());let g=bank.grant();let(turn,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(||OriginalMutation::admit_receiving(&source,(0,source.len()),g));assert_eq!((h.requested_bytes,h.released_bytes),(0,0));assert_eq!(turn.work,u128::from(f["admissionWork"].as_u64().unwrap()));let(mut cursor,p)=turn.result.unwrap().unwrap();assert_eq!(p.copied_bytes,f["admissionCopyBytes"].as_u64().unwrap()as usize);bank.debit(p,turn.work);let mut callback=|_|true;let mut native=NativeDecodeControl::new(bank.left.maximum_capacity_bytes,&mut callback);
  native.with_source_witness(Some(dispatch.witness()),|native|{
- let g=bank.grant();let denied=RetainedCloneGrant{maximum_items:0,..g};let turn=bank.native(native,denied,0,|native,g|cursor.step(&source,native,4096,g));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap(),Default::default());let turn=bank.normal(native,|native,g|cursor.step(&source,native,4096,g));assert_eq!(turn.work,u128::from(f["failureWork"].as_u64().unwrap()));let fault=turn.result.unwrap_err();assert_eq!(fault.primary.as_ref().unwrap().kind,ValueRefusalKind::InvalidValue);assert!(fault.quote_refusal.is_none()&&fault.allocation_refusal.is_none());assert_eq!(fault.retained_progress().copied_items,f["failureItems"].as_u64().unwrap()as usize);
+ let g=bank.grant();let denied=RetainedCloneGrant{maximum_items:0,..g};let turn=bank.native(native,denied,0,|native,g|cursor.step(&source,native,4096,g));assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap(),Default::default());let turn=bank.normal(native,cursor.step_work_demand(&source,4096).unwrap(),|native,g|cursor.step(&source,native,4096,g));assert_eq!(turn.work,u128::from(f["failureWork"].as_u64().unwrap()));let fault=turn.result.unwrap_err();assert_eq!(fault.primary.as_ref().unwrap().kind,ValueRefusalKind::InvalidValue);assert!(fault.quote_refusal.is_none()&&fault.allocation_refusal.is_none());assert_eq!(fault.retained_progress().copied_items,f["failureItems"].as_u64().unwrap()as usize);
  let mut fault=ControlledRetirement::new(fault).unwrap_or_else(|_|panic!("actual native failure has original retirement"));for _ in 0..10000{if fault.terminal_is_empty(){break}bank.close(|effect|fault.step(effect.grant().maximum_copy_bytes,effect)).result.unwrap();}assert!(fault.terminal_is_empty());for _ in 0..10000{if cursor.terminal_is_empty(){break}let turn=bank.close(|effect|cursor.close_step(effect));if matches!(&turn.result,Ok(RetainedCloneStep::Complete(_))){assert!(cursor.terminal_is_empty())}turn.result.unwrap();}assert!(cursor.terminal_is_empty());assert_eq!(bank.close(|effect|cursor.close_step(effect)).work,0);
  });
 }
@@ -221,7 +182,7 @@ fn original_pack_value_receiving_decodes_the_same_value_as_the_pack_rt_oracle(){
   let turn=PackValueMutation::admit_receiving(&source,(start,end),bank.grant());let(mut cursor,admitted)=turn.result.unwrap().unwrap();bank.debit(admitted,turn.work);
   let wrong=source.clone();assert!(cursor.demands(&wrong,grant.maximum_copy_bytes).is_err());
   let mut turns=0;
-  while !cursor.is_ready(){assert!(turns<10000);let progress=bank.normal(native,|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g)).result.unwrap();assert!(progress.fits(grant));turns+=1;}
+  while !cursor.is_ready(){assert!(turns<10000);let progress=bank.normal(native,cursor.step_work_demand(&source,grant.maximum_copy_bytes).unwrap(),|native,g|cursor.step(&source,native,grant.maximum_copy_bytes,g)).result.unwrap();assert!(progress.fits(grant));turns+=1;}
   let mut output=None;let turn=cursor.take_into(&mut output,bank.grant());let p=turn.result.unwrap();bank.debit(p,turn.work);assert_eq!(output.as_ref(),Some(&oracle));
   while !cursor.terminal_is_empty(){let turn=bank.close(|effect|cursor.close_step(effect));turn.result.unwrap();}
   let mut output=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !output.terminal_is_empty(){bank.close(|effect|output.step(effect.grant().maximum_copy_bytes,effect)).result.unwrap();}

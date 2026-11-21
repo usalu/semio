@@ -49,5 +49,196 @@
       {"scene": {"nodeId": "profile"}, "write": {"hoveredId": "profile"}, "live": "profile"},
       {"scene": null, "write": {}, "live": null}
     ]
+  },
+  {
+    "id": "a newer graph ray ignores its own delayed echo",
+    "window": "graph:1",
+    "steps": [
+      {
+        "local": true,
+        "read": {
+          "hoveredId": "profile",
+          "portId": "surface"
+        },
+        "publish": true,
+        "localNode": "profile",
+        "live": "profile"
+      },
+      {
+        "local": true,
+        "read": {
+          "hoveredId": "extrude",
+          "portId": "mesh"
+        },
+        "publish": true,
+        "localNode": "extrude",
+        "live": "extrude"
+      },
+      {
+        "scene": {
+          "nodeId": "profile",
+          "portId": "surface",
+          "hoverSourceWindowId": "graph:1"
+        },
+        "write": null,
+        "live": "extrude"
+      },
+      {
+        "scene": {
+          "nodeId": "profile",
+          "portId": "surface",
+          "hoverSourceWindowId": "preview:1"
+        },
+        "write": {
+          "hoveredId": "profile",
+          "portId": "surface"
+        },
+        "live": "profile"
+      },
+      {
+        "read": {
+          "hoveredId": "extrude",
+          "portId": "mesh"
+        },
+        "stale": true,
+        "publish": false,
+        "live": "profile"
+      },
+      {
+        "local": true,
+        "read": {
+          "hoveredId": "profile",
+          "portId": "surface"
+        },
+        "publish": true,
+        "localNode": "profile",
+        "live": "profile"
+      }
+    ]
+  },
+  {
+    "id": "a foreign owner takes over the same graph mark",
+    "window": "graph:1",
+    "steps": [
+      {
+        "local": true,
+        "read": {
+          "hoveredId": "box"
+        },
+        "publish": true
+      },
+      {
+        "scene": {
+          "nodeId": "box",
+          "hoverSourceWindowId": "graph:1"
+        },
+        "write": null
+      },
+      {
+        "scene": {
+          "nodeId": "box",
+          "hoverSourceWindowId": null
+        },
+        "write": {
+          "hoveredId": "box"
+        }
+      },
+      {
+        "scene": null,
+        "write": {}
+      }
+    ]
+  },
+  {
+    "id": "same primary with a different projected port group",
+    "window": "flow",
+    "steps": [
+      {
+        "scene": {
+          "nodeId": "axis@named",
+          "portId": "!ivector",
+          "hoverSourceWindowId": "preview",
+          "portIds": [
+            "axis@named@!ivector",
+            "axis@named@vector"
+          ]
+        },
+        "write": {
+          "hoveredId": "axis@named",
+          "portId": "!ivector",
+          "portIds": [
+            "axis@named@!ivector",
+            "axis@named@vector"
+          ]
+        }
+      },
+      {
+        "scene": {
+          "nodeId": "axis@named",
+          "portId": "!ivector",
+          "hoverSourceWindowId": "preview",
+          "portIds": [
+            "axis@named@!ivector",
+            "reference@vector"
+          ]
+        },
+        "write": {
+          "hoveredId": "axis@named",
+          "portId": "!ivector",
+          "portIds": [
+            "axis@named@!ivector",
+            "reference@vector"
+          ]
+        }
+      },
+      {
+        "scene": {
+          "nodeId": "axis@named",
+          "portId": "!ivector",
+          "hoverSourceWindowId": "preview",
+          "portIds": [
+            "axis@named@!ivector",
+            "reference@vector"
+          ]
+        }
+      },
+      {
+        "scene": null,
+        "write": {}
+      }
+    ]
+  },
+  {
+    "id": "same raw channel moves between native directions",
+    "window": "flow",
+    "steps": [
+      {
+        "local": true,
+        "read": {
+          "hoveredId": "shape",
+          "portId": "mesh",
+          "portDirection": "in"
+        },
+        "publish": true
+      },
+      {
+        "local": true,
+        "read": {
+          "hoveredId": "shape",
+          "portId": "mesh",
+          "portDirection": "out"
+        },
+        "publish": true
+      },
+      {
+        "local": true,
+        "read": {
+          "hoveredId": "shape",
+          "portId": "mesh",
+          "portDirection": "out"
+        },
+        "publish": false
+      }
+    ]
   }
 ]

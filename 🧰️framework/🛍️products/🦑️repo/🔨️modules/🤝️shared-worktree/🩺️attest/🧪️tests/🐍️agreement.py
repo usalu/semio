@@ -114,9 +114,11 @@ def compare(left,right,now,windows):
     if first and second and recent(now,first["wallMs"]) and recent(now,second["wallMs"]):
         gap=gap_between(span_of(first),span_of(second),windows)
         if gap is not None and not gap["git"]:
-            known.add("git")
             items.append({"field":"head.commit","bucket":-1,"left":first["head"] or "-","right":second["head"] or "-","same":first["head"]==second["head"]})
-            items.append({"field":"indexTree","bucket":-1,"left":first["indexTree"] or "-","right":second["indexTree"] or "-","same":first["indexTree"]==second["indexTree"]})
+            stages_known=all(checkpoint["head"] is None or checkpoint["indexTree"] is not None for checkpoint in (first,second))
+            if stages_known:
+                known.add("git")
+                items.append({"field":"indexTree","bucket":-1,"left":first["indexTree"] or "-","right":second["indexTree"] or "-","same":first["indexTree"]==second["indexTree"]})
     above,below=left.get("view"),right.get("view")
     if above is None or below is None: known.add("view")
     elif recent(now,above["wallMs"]) and recent(now,below["wallMs"]):

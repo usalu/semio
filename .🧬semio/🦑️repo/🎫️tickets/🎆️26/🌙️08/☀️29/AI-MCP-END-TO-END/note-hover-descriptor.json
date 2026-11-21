@@ -1,0 +1,12 @@
+{
+  "artifactPackage": "semio:note",
+  "action": "interactionHover",
+  "windows": ["note-composite", "note-navigator"],
+  "arguments": [
+    { "id": "domainId", "required": true },
+    { "id": "channel", "required": true },
+    { "id": "targets", "required": false },
+    { "id": "targetId", "required": false },
+    { "id": "granularityId", "required": false }
+  ]
+}

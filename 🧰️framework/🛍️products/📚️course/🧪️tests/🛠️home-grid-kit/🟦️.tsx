@@ -115,14 +115,15 @@ export function stubSession() {
 //#endregion 🏗️State
 
 /** 📱️ Emulates a viewport `width` px wide and `height` px high (by default high enough for every grid) for the size
- * media queries (`min-`/`max-` `width`/`height` in px, joined by `and`); every other query is false. */
-export function atViewport(width: number, height = 1200): void {
+ * and optionally coarse-pointer media queries. Every unknown condition is false. */
+export function atViewport(width: number, height = 1200, coarsePointer = false): void {
   vi.stubGlobal("matchMedia", (query: string) => ({
-    matches: query.split(" and ").every((part) => {
+    matches: query.split(",").some((alternative) => alternative.split(" and ").every((part) => {
+      if (part.trim() === "(pointer: coarse)") return coarsePointer;
       const found = /^\((min|max)-(width|height):\s*(\d+)px\)$/u.exec(part.trim());
       const size = found?.[2] === "height" ? height : width;
       return found !== null && (found[1] === "min" ? size >= Number(found[3]) : size <= Number(found[3]));
-    }),
+    })),
     media: query,
     onchange: null,
     addEventListener: () => undefined,

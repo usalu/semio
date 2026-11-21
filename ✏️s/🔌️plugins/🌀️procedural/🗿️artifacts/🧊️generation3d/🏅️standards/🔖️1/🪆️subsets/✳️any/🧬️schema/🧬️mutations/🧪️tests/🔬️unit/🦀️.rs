@@ -169,7 +169,7 @@ fn widget_removal_spells_its_cascade() {
 #[test]
 fn selection_removal_cuts_every_wire_once() {
     let before = document("s", vec![note("a", ""), note("b", "")], vec![wire("ab", "a", "b"), wire("ba", "b", "a")], vec![("a", 0.0)], &[], None, None);
-    let leaves = generation3d_selection_removal(&before.host_snapshot, &["a".into(), "ab".into(), "ghost".into(), "a".into()]);
+    let leaves = generation3d_selection_removal(&before.host_snapshot, &["a".into(), "ab".into(), "ghost".into(), "a".into()], &["a".into(), "ab".into()]);
     assert_eq!(leaves, vec![
         Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: "ab".into() }),
         Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: "ba".into() }),

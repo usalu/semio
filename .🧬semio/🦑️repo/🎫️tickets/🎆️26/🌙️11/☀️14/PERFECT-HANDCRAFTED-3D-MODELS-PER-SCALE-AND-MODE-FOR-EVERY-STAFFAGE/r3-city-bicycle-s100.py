@@ -37,7 +37,7 @@ def wheel(S, bone, c, shell):
     outer, inner = pt.ring(c, 0.3175, 0.296, 40)
     S.swept(f"rim-{tag}", bone, outer, -0.0125, 0.0125, "body", 0.78, "rims-spokes", ALLOY, pen=PEN, holes=[inner], tol=0.0006, views=SIDE)
     z0, z1, r = shell
-    S.put(S.rev(f"hub-{tag}", bone, [(z0, 0.0075), (z0, r - 0.008), (z0 + 0.006, r), (z1 - 0.006, r), (z1, r - 0.008), (z1, 0.0075)], c, [0, 0, 1], CHROME, STEEL), "hub-brakes")
+    S.put(S.annulus(f"hub-{tag}", bone, [(z0, 0.0075), (z0, r - 0.008), (z0 + 0.006, r), (z1 - 0.006, r), (z1, r - 0.008), (z1, 0.0075)], c, [0, 0, 1], CHROME, STEEL), "hub-brakes")
     S.struct_of(f"hub-{tag}", bone)
     S.disc(f"hub-{tag}", bone, c, 2 * r, z0, z1, "detail", STEEL, "hub-brakes", CHROME, pen=PEN)
     half = max(abs(z0), abs(z1)) + 0.022

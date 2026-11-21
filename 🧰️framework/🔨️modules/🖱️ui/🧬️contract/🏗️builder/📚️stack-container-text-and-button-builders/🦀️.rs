@@ -107,6 +107,11 @@ pub fn sheet(label: crate::Label) -> ContainerBuilder {
     ContainerBuilder::new(crate::ContainerRole::Sheet, label)
 }
 
+/// 📝️ A named form landmark containing semantic fields and controls.
+pub fn form(label: crate::Label) -> ContainerBuilder {
+    ContainerBuilder::new(crate::ContainerRole::Form, label)
+}
+
 /// 🔖️ A labeled form field — `Component::Container(role: Field)`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn field(label: crate::Label) -> ContainerBuilder {

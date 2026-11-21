@@ -7,9 +7,9 @@ use semio_framework_value::ValueError;
 impl Brep {
     pub fn heal_solid_sync(&mut self, shape: &GeometryHandle, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.native.solid_id(shape)?;
-        self.native.invalidate_solid_primitive(shape);
         let mut rec = OpRecorder::new();
-        let _ = heal_solid(&mut self.native.body, solid, tolerance, &mut rec).map_err(|error| map_err(&error))?;
+        let report = heal_solid(&mut self.native.body, solid, tolerance, &mut rec).map_err(|error| map_err(&error))?;
+        if report.total_repairs() != 0 { self.native.invalidate_solid_primitive(shape); }
         Ok(shape.clone())
     }
     pub fn convert_to_nurbs_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
@@ -199,7 +199,7 @@ impl Brep {
         use semio_framework_3d_brep_tessellation::PlanarPreviewRoot;
         let entity=self.native.live.get(source).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation source handle is not live"))?;
         match entity{
-            Entity::Solid(id,provenance)=>Ok((TessellationJob::for_planar_shape(PlanarPreviewRoot::Solid(*id),self.native.shape_mutation_revision,deflection),!matches!(provenance,Some(SolidProvenance::PlanarBoundary)))),
+            Entity::Solid(id,provenance)=>Ok((TessellationJob::for_planar_shape(PlanarPreviewRoot::Solid(*id),self.native.shape_mutation_revision,deflection),!matches!(provenance,Some(SolidProvenance::PlanarBoundary(..) | SolidProvenance::Orthogonal(_) | SolidProvenance::PlacedOrthogonal(..) | SolidProvenance::ClippedBox(_))))),
             Entity::Shell(id)=>Ok((TessellationJob::for_planar_shape(PlanarPreviewRoot::Shell(*id),self.native.shape_mutation_revision,deflection),true)),
             Entity::Compound(_,label)=>Ok((TessellationJob::for_planar_shape(PlanarPreviewRoot::Compound(label.0),self.native.shape_mutation_revision,deflection),true)),
             Entity::Face(face)=>{

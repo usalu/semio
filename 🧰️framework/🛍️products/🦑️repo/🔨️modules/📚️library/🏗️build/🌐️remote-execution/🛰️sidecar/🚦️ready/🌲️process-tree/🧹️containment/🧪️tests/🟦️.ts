@@ -58,7 +58,7 @@ test("the Python oracle derives the same verdicts",()=>{
 
 test("Windows branch: the table row carries the program name, every recorded member is ended with taskkill /PID <pid> /T /F only while its creation time matches, and the stop is proven by a second table",async()=>{
  expect(readyParseWindowsTableV1("812\t4\t1794000001500\t639000000015000000\t\t\t\tnode.exe\r\n900\t812\t1794000002000\t639000000020000000\r\nnot a row\r\n")).toEqual([{pid:812,ppid:4,startMs:1794000001500,name:"node.exe",windows:{birth:"639000000015000000"}},{pid:900,ppid:812,startMs:1794000002000,windows:{birth:"639000000020000000"}}]);
- expect(readyParseUnixTableV1("  10     1    05:30 /usr/bin/sleep\n 11 10 1-02:03:04 node\n 12 10 03:04\n",1_000_000_000_000).map(row=>row.name)).toEqual(["sleep","node",undefined]);
+ expect(readyParseUnixTableV1("  10  1 Sat Nov  7 08:50:07 2026 /usr/bin/sleep\n 11 10 Sat Nov  7 08:50:08 2026 node\n 12 10 Sat Nov  7 08:50:09 2026\n").map(row=>row.name)).toEqual(["sleep","node",undefined]);
  const start=1_794_000_000_000;
  let rows:ReadyProcessV1[]=[{pid:500,ppid:4,startMs:start,name:"wrapper.exe"},{pid:501,ppid:500,startMs:start+100,name:"repo.exe"},{pid:600,ppid:9999,startMs:start+5000,name:"bun.exe"},{pid:601,ppid:9999,startMs:start+9_000_000,name:"unrelated.exe"},{pid:99,ppid:4,startMs:start-1000,name:"self.exe"}];
  const calls:{command:string;args:readonly string[]}[]=[],ports={platform:"win32" as const,self:99,sleep:async()=>undefined,table:async()=>rows,run:async(command:string,args:readonly string[])=>{calls.push({command,args});rows=rows.filter(row=>String(row.pid)!==args[1]);}};

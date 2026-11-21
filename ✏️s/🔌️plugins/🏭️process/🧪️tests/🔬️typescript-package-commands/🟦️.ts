@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { runCmd } from "@semio-tech/process/execution";
 
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
-type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "child" | "host-only";
+type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "window-transient" | "child" | "host-only";
 type Group = { status: "migrated"; execution: "bounded" | "file-import" | "resumable"; lanes: Lane[]; routes: string[] };
 type Fixture = {
   schema: string;

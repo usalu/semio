@@ -1,8 +1,12 @@
 fn prepare_test(render:AppRenderOperationContext,snapshot:&Fem2dSnapshot)->bool{let windows=semio_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("fem2d-preparation-test".into()));let steps=128+snapshot.nodes.len()*64+snapshot.elements.len()*64+snapshot.regions.iter().map(|region|(region.outline.len()+region.holes.iter().map(Vec::len).sum::<usize>())*32+128).sum::<usize>()+snapshot.load_cases.len()*128+snapshot.combinations.len()*128;for _ in 0..steps{let step=prepare_snapshot_read(render,snapshot,&windows,None,render.mounted_policy.preparation);assert!(step.progress.fits(render.mounted_policy.preparation));if step.ready{return true;}if step.progress==Default::default(){return false;}}false}
 use super::*;
+use semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::{Fem2dSnapshotRetiring, Fem2dSnapshotValue};
+use semio_s_fem_payload_turns::NumericalStep;
+use semio_s_fem_test_support::OriginalNumericalFixture;
 
-fn persist(value: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue) -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
-    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(value.clone()).expect("fixture loads as a persistent snapshot"))
+fn persist(value: &Fem2dSnapshotValue) -> Fem2dSnapshotRetiring {
+    Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(value.clone()).expect("fixture loads as a persistent snapshot"))
 }
 
 fn fixture() -> serde_json::Value {
@@ -10,15 +14,16 @@ fn fixture() -> serde_json::Value {
 }
 
 fn lifecycle_context<R>(grant: RetainedCloneGrant, run: impl FnOnce(&mut StepContext<'_>) -> R) -> R {
-    let operation = mounted_test_operation();
-    let mut sequence = 0;
-    let mut receipt = RetainedCloneProgress::default();
-    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(64, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    run(&mut context)
+    let mut caller = OriginalNumericalFixture::new(mounted_test_operation());
+    let result = caller.turn(grant, 64, u64::MAX, |cx| Ok(run(cx))).expect("original fixture turn");
+    caller.finish();
+    result
 }
 
 fn close(app: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
-    lifecycle_context(grant, |cx| close(app, cx, grant)).expect("lifecycle close step")
+    lifecycle_context(grant, |cx| {
+        cx.with_original_retirement(|cx| close_step(app, cx, grant).map_err(Into::into))
+    }).expect("lifecycle close step")
 }
 
 fn maintenance(app: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
@@ -50,7 +55,7 @@ fn mounted_static_sources_use_physical_rhs_and_canonical_identity() {
         let wire = semio_s_fem_analyses_model::encode_result_source_identity(&source).unwrap();
         assert_eq!(semio_s_fem_analyses_model::decode_result_source_identity(&wire).unwrap(), source);
     }
-    let source = include_str!("../../🦀️.rs");
+    let source = session_source();
     assert!(source.contains("PcgJobConstruction::new_with_mounted_rhs"));
     assert!(source.contains("AssemblyCsrBuild::new_free"));
     assert!(!source.contains("snapshot.regions.first()"));
@@ -61,21 +66,26 @@ fn mounted_test_operation() -> Operation {
     Operation::new(OperationId(791), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 4)
 }
 
-fn drain_mounted_job(job: &mut impl InteractiveJob) {
-    let operation = mounted_test_operation();
-    let mut sequence = 0;
-    let grant = RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 32768, maximum_capacity_bytes: 4 * 1024 * 1024, maximum_release_bytes: 32768, maximum_depth: 4096 };
+fn drain_mounted_job(job: &mut impl NumericalStep) -> OriginalNumericalFixture {
+    let mut caller = OriginalNumericalFixture::new(mounted_test_operation());
     for _ in 0..100_000 {
-        let mut receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(64, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-        match child_end(job.step(&mut context)) {
-            ChildEnd::Complete(_) => return,
+        match caller.turn(drain_grant(), 64, u64::MAX, |cx| child_end(job.step_plain(cx))).expect("original numerical step") {
+            ChildEnd::Complete(_) => return caller,
             ChildEnd::Fault(detail) => panic!("mounted job fault: {:?}", detail.map(|detail| String::from_utf8_lossy(&detail).into_owned())),
             ChildEnd::Cancelled => panic!("unexpected cancellation"),
             _ => {}
         }
     }
     panic!("mounted job did not complete its bounded opportunities");
+}
+
+fn drain_mounted_assembly(assembly: &mut AssemblyJob<'static>) {
+    let mut caller = drain_mounted_job(assembly);
+    caller.turn(drain_grant(), 64, u64::MAX, |cx| {
+        assembly.retire_outcome(cx);
+        Ok(())
+    }).expect("return the original assembly outcome");
+    caller.finish();
 }
 
 #[test]
@@ -105,7 +115,7 @@ fn mounted_admission_exceeds_old_demo_caps_without_synthetic_forcing() {
     let mut construction = AssemblyJobConstruction::new_mounted(model, mounted_test_operation(), 1);
     assert!((0..100_000).any(|_| construction.step_one().unwrap()));
     let mut assembly = construction.take_complete().unwrap();
-    drain_mounted_job(&mut assembly);
+    drain_mounted_assembly(&mut assembly);
     let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:"tip"})).unwrap());
     assert!((0..100_000).any(|_| lifecycle_context(drain_grant(), |cx| loads.step_one(&doc, &assembly, cx)).unwrap()));
     let mut csr = AssemblyCsrBuild::new_free(assembly).ok().unwrap();
@@ -113,13 +123,15 @@ fn mounted_admission_exceeds_old_demo_caps_without_synthetic_forcing() {
     let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();
     assert!((0..100_000).any(|_| construction.step_one().unwrap()));
     let mut pcg = construction.take_complete().unwrap();
-    drain_mounted_job(&mut pcg);
+    let mut caller = drain_mounted_job(&mut pcg);
     let free = csr.visual_equation_indices("n49", semio_s_fem_model::Dof::Tx).unwrap().1.unwrap();
     let actual = pcg.visual_scalar(free).unwrap().displacement;
     let fixture = fixture();
     let expected = fixture["axialChain"]["tipX"].as_f64().unwrap();
     assert!((actual - expected).abs() < 1e-12);
     assert!(pcg.visual_progress().4);
+    caller.close(&mut pcg);
+    caller.finish();
 }
 
 #[test]
@@ -154,7 +166,7 @@ fn mounted_cantilever_sources_match_committed_oracle() {
             let mut construction = AssemblyJobConstruction::new_mounted(builder.take_complete().unwrap(), mounted_test_operation(), 1);
             assert!((0..100_000).any(|_| construction.step_one().unwrap()));
             let mut assembly = construction.take_complete().unwrap();
-            drain_mounted_job(&mut assembly);
+            drain_mounted_assembly(&mut assembly);
             let tip_y = assembly.visual_equation_indices("tip", semio_s_fem_model::Dof::Ty).unwrap().1.unwrap();
             let tip_rz = assembly.visual_equation_indices("tip", semio_s_fem_model::Dof::Rz).unwrap().1.unwrap();
             let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:source.kind(),id:source.id()})).unwrap());
@@ -164,12 +176,14 @@ fn mounted_cantilever_sources_match_committed_oracle() {
             let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();
             assert!((0..100_000).any(|_| construction.step_one().unwrap()));
             let mut pcg = construction.take_complete().unwrap();
-            drain_mounted_job(&mut pcg);
+            let mut caller = drain_mounted_job(&mut pcg);
             let y = pcg.visual_scalar(tip_y).unwrap().displacement;
             let rz = pcg.visual_scalar(tip_rz).unwrap().displacement;
             assert!((y - row["tipY"].as_f64().unwrap()).abs() < 1e-12);
             assert!((rz - row["tipRz"].as_f64().unwrap()).abs() < 1e-12);
             assert!(pcg.visual_progress().4);
+            caller.close(&mut pcg);
+            caller.finish();
         }
     }
 }
@@ -219,7 +233,7 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
         let mut construction = AssemblyJobConstruction::new_mounted(model, mounted_test_operation(), 1);
         assert!((0..100_000).any(|_| construction.step_one().unwrap()));
         let mut assembly = construction.take_complete().unwrap();
-        drain_mounted_job(&mut assembly);
+        drain_mounted_assembly(&mut assembly);
         let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:"area"})).unwrap());
         assert!((0..100_000).any(|_| lifecycle_context(drain_grant(), |cx| loads.step_one(&doc, &assembly, cx)).unwrap()));
         let mut csr = AssemblyCsrBuild::new_free(assembly).ok().unwrap();
@@ -227,7 +241,7 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
         let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();
         assert!((0..100_000).any(|_| construction.step_one().unwrap()));
         let mut pcg = construction.take_complete().unwrap();
-        drain_mounted_job(&mut pcg);
+        let mut caller = drain_mounted_job(&mut pcg);
         for (node_index, node) in free_nodes.iter().enumerate() {
             for (axis, dof) in [semio_s_fem_model::Dof::Tx, semio_s_fem_model::Dof::Ty].into_iter().enumerate() {
                 let index = csr.visual_equation_indices(node, dof).unwrap().1.unwrap();
@@ -236,17 +250,19 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
                 assert!((actual - expected).abs() < 1e-14);
             }
         }
+        caller.close(&mut pcg);
+        caller.finish();
     }
 }
 
-const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: SESSION_CLOSE_COPY_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: SESSION_CLOSE_DEPTH };
+const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: SESSION_CLOSE_COPY_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: SESSION_CLOSE_RELEASE_BYTES, maximum_depth: SESSION_CLOSE_DEPTH };
 
 /// 🎫️ Independent app instances keep exact pending leases through sibling close and slot reuse.
 #[test]
 fn mounted_app_admission_isolates_colliding_ids_until_original_children_return() {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 };
     let render = |app_instance_id| AppRenderOperationContext { app_instance_id, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32], mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
-    let snapshot = Fem2dSnapshot::default();
+    let snapshot = persist(&Fem2dSnapshotValue::default());
     for app in [1, 33] { let mut ready=false;for _ in 0..128{if prepare_test(render(app), &snapshot){ready=true;break;}}assert!(ready); }
     let (first, second, retained) = MOUNTED.with(|registry| {
         let registry = registry.borrow();
@@ -278,8 +294,18 @@ fn mounted_app_admission_isolates_colliding_ids_until_original_children_return()
 #[semio_framework_async_macros::async_test]
 async fn mounted_app_close_keeps_borrowed_original_child_and_full_digest_authority() {
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-    let snapshot = Fem2dSnapshot::default();
-    let mut document = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "mounted-child-affinity", snapshot.clone(), None, &semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+    let snapshot = persist(&Fem2dSnapshotValue::default());
+    let envelope = store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA,
+        "mounted-child-affinity",
+        Fem2dSnapshot::default(),
+        None,
+        &ArtifactPackGenesisProducer,
+    );
+    let mut document = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new::<ArtifactPackGenesisProducer>(
+        envelope,
+        protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),
+    ).await.unwrap();
     document.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().unwrap()).unwrap_or_else(|(error, _)| panic!("original owners refused: {error}"));
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 };
     let render = AppRenderOperationContext { app_instance_id: 101, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(document.generation()), canonical_base_revision: document.content_revision(), mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
@@ -312,16 +338,145 @@ async fn mounted_app_close_keeps_borrowed_original_child_and_full_digest_authori
     assert!(!terminal_is_empty(render.app_instance_id));
     assert!(MOUNTED.with(|registry| registry.borrow().app_slots.lookup(render.app_instance_id).is_some()));
     drop(borrowed);
-    for _ in 0..4096 { if terminal_is_empty(render.app_instance_id) { break } assert!(!matches!(close(render.app_instance_id, grant), PluginLifecycleStep::Blocked { .. })); }
-    assert!(terminal_is_empty(render.app_instance_id));
     let mut disposer = semio_plugin::bounded_document_store_disposer::<Fem2dSnapshot, Fem2dMutation>();
     for _ in 0..4096 {
-        if disposer.terminal_is_empty(&document) { break }
+        if !terminal_is_empty(render.app_instance_id) {
+            match close(render.app_instance_id, grant) {
+                PluginLifecycleStep::AwaitingInput { .. } => {}
+                PluginLifecycleStep::Blocked { reason } => panic!("mounted child blocked after restoring its borrow: {reason}"),
+                _ => continue,
+            }
+        }
+        if disposer.terminal_is_empty(&document) { break; }
         let demand = disposer.retirement_demands(&document, 1 << 20).unwrap();
         let funded = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(1 << 20), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        disposer.close_step(&mut document, funded).unwrap();
+        lifecycle_context(funded, |cx| {
+            semio_plugin::app::original_lifecycle_effect_step(cx, funded, demand, |_, effect| {
+                let step = disposer.close_step(&mut document, effect)?;
+                Ok((step, disposer.terminal_is_empty(&document)))
+            })
+        }).unwrap();
     }
+    assert!(terminal_is_empty(render.app_instance_id));
     assert!(disposer.terminal_is_empty(&document));
+}
+
+/// 🎬️ The authored demo publishes a converged static Live Load reaction after mounted meshing and PCG.
+#[semio_framework_async_macros::async_test]
+async fn mounted_demo_static_publishes_live_load_reaction() {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
+    use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+
+    let fixture = fixture();
+    let law = &fixture["demoStatic"];
+    let source = semio_s_fem_analyses_model::ResultSource::from_parts(
+        law["kind"].as_str().unwrap(), law["id"].as_str().unwrap().to_owned(),
+    ).expect("typed Live Load identity");
+    let expected_node = law["supportNode"].as_str().unwrap();
+    let expected = law["reactionTy"].as_f64().unwrap();
+    let tolerance = law["absoluteTolerance"].as_f64().unwrap();
+    let demo = Fem2dSnapshotRetiring::new(default_fem2d_snapshot().expect("bundled demo loads"));
+    let source = job_bridge_and_live_mount::resolved_source(&demo, Some(
+        semio_s_fem_analyses_model::ResultSourceIdentity { kind: source.kind(), id: source.id() },
+    )).expect("authored Live Load");
+    let envelope = store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(
+        FEM_2D_SCHEMA, "mounted-demo-static", default_fem2d_snapshot().expect("demo genesis"), None, &ArtifactPackGenesisProducer,
+    );
+    let mut document = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new::<ArtifactPackGenesisProducer>(
+        envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),
+    ).await.expect("original demo store");
+    document.install_document_store_owners_exact(
+        store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().unwrap(),
+    ).unwrap_or_else(|(error, _)| panic!("original owners refused: {error}"));
+    let grant = drain_grant();
+    let lifecycle_grant = RetainedCloneGrant { maximum_items: 1, ..grant };
+    let app = 102;
+    let render = AppRenderOperationContext {
+        app_instance_id: app,
+        base_revision: semio_framework_job::RevisionId(17),
+        generation: semio_framework_job::Generation(document.generation()),
+        canonical_base_revision: document.content_revision(),
+        mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: lifecycle_grant, maintenance: lifecycle_grant, close: lifecycle_grant },
+    };
+    assert!((0..16).any(|_| prepare_test(render, &demo)), "the original demo snapshot must be admitted");
+    let read = document.snapshot_read().expect("original demo snapshot lease");
+    let (owner, identity) = MOUNTED.with(|registry| {
+        let mut registry = registry.borrow_mut();
+        let app_slot = registry.app_slots.lookup(app).unwrap().index();
+        let slot = registry.snapshot_owners[app_slot].unwrap().index();
+        let pending = registry.pending[slot].take().unwrap();
+        let owner = registry.shells[pending.shell as usize].clone();
+        let mut state = MountedState::new(pending.identity, read, pending.admitted_items);
+        state.source = source;
+        *owner.borrow_mut() = Some(state);
+        registry.current[slot] = Some(CurrentSession { app_instance_id: app, shell: pending.shell, identity: pending.identity, previous_valid: None });
+        (owner, pending.identity)
+    });
+    let mut original = OriginalNumericalFixture::new(identity.operation());
+    let (stage, validated, published, reaction, stages, mut last, fault) = {
+        let mut mounted = owner.borrow_mut();
+        let state = mounted.as_mut().expect("admitted mounted owner");
+        let mut stages = vec![state.stage];
+        let mut last = None;
+        let mut fault = None;
+        for _ in 0..250_000 {
+            let turn = original.turn(grant, 128, u64::MAX, |cx| state.step(cx));
+            if stages.last() != Some(&state.stage) { stages.push(state.stage); }
+            match turn {
+                Ok(JobStep::Done(_)) => break,
+                Ok(JobStep::Running(Some(progress))) => last = Some(progress),
+                Ok(JobStep::Failed(detail)) => {
+                    fault = Some(String::from_utf8_lossy(&detail).into_owned());
+                    break;
+                }
+                Err(error) => {
+                    fault = Some(format!("{error:?}"));
+                    break;
+                }
+                _ => {}
+            }
+        }
+        let reaction = state.visual.fields.iter().find(|field| field.node_id == expected_node).map(|field| field.reaction[1]);
+        (state.stage, state.visual.validated_final, state.visual_current.is_some(), reaction, stages, last, fault)
+    };
+    let mut disposer = semio_plugin::bounded_document_store_disposer::<Fem2dSnapshot, Fem2dMutation>();
+    let mut last_close = None;
+    let mut last_store_close = None;
+    for _ in 0..32_768 {
+        if !terminal_is_empty(app) {
+            let step = original.turn(lifecycle_grant, 128, u64::MAX, |cx| {
+                cx.with_original_retirement(|cx| close_step(app, cx, lifecycle_grant).map_err(Into::into))
+            }).expect("demo mounted close turn");
+            let awaiting_store = matches!(step, PluginLifecycleStep::AwaitingInput { .. });
+            last_close = Some(step);
+            if !awaiting_store { continue; }
+        }
+        if disposer.terminal_is_empty(&document) { break; }
+        let demand = disposer.retirement_demands(&document, lifecycle_grant.maximum_copy_bytes).expect("demo store close demand");
+        let step = original.turn(lifecycle_grant, 128, u64::MAX, |cx| {
+            Ok(semio_plugin::app::original_lifecycle_effect_step(cx, lifecycle_grant, demand, |_, effect| {
+                let step = disposer.close_step(&mut document, effect)?;
+                Ok((step, disposer.terminal_is_empty(&document)))
+            }).expect("demo store retires"))
+        }).expect("demo store close turn");
+        last_store_close = Some((demand, step));
+    }
+    let app_empty = terminal_is_empty(app);
+    let store_empty = disposer.terminal_is_empty(&document);
+    assert!(app_empty && store_empty,
+        "demo owners must retire after {stage:?}, fault {fault:?}, final validated {validated}, published {published}, {expected_node} Ty {reaction:?} N, mounted terminal {app_empty}, last close {last_close:?}, mounted close (cursor, mesh, model) {:?}, store terminal {store_empty}, phase {}, displaced {}, last Store close {last_store_close:?}",
+        owner.borrow().as_ref().map(|state| (state.close_cursor, state.mesh.is_some(), state.model_build.is_some())),
+        document.close_owned_phase_witness(),
+        document.close_displaced_witness(),
+    );
+    original.finish();
+    if let Some(progress) = last.as_mut() { progress.truncate(160); }
+    let last = last.as_deref().map(String::from_utf8_lossy);
+    assert_eq!(stage, MountedStage::Complete, "demo stages {stages:?}, last progress {last:?}, fault {fault:?}");
+    assert!(stages.contains(&MountedStage::Mesh) && stages.contains(&MountedStage::CommitReady));
+    assert!(validated && published, "demo final result must replace the preview");
+    assert!(reaction.is_some_and(|actual| (actual - expected).abs() <= tolerance), "{expected_node} Ty: {reaction:?}, expected {expected} N");
 }
 
 #[test]
@@ -355,9 +510,35 @@ fn mounted_close_and_capacity_are_fixed_and_terminal_witnessed() {
 }
 
 #[test]
+fn mounted_idle_maintenance_completes_without_releasing_the_live_app() {
+    let fixture = fixture();
+    let expected = &fixture["idleMaintenance"];
+    let app = 2_000_000_008;
+    let lease = MOUNTED.with(|registry| registry.borrow_mut().app_slots.claim(app).unwrap());
+    for _ in 0..expected["opportunities"].as_u64().unwrap() {
+        assert_eq!(maintenance_pending(app), expected["livePending"].as_bool().unwrap());
+        assert_eq!(terminal_is_empty(app), expected["liveTerminal"].as_bool().unwrap());
+        assert_eq!(maintenance_demands(app).unwrap(), RetirementDemand::default());
+        let outcome = match maintenance(app, TEST_GRANT) {
+            PluginLifecycleStep::Complete(progress) if progress == Default::default() => "complete",
+            actual => panic!("unexpected live maintenance step: {actual:?}"),
+        };
+        assert_eq!(outcome, expected["liveOutcome"].as_str().unwrap());
+        assert_eq!(MOUNTED.with(|registry| registry.borrow().app_slots.lookup(app)), Some(lease));
+    }
+    close(app, TEST_GRANT);
+    assert!(terminal_is_empty(app));
+    let outcome = match maintenance(app, TEST_GRANT) {
+        PluginLifecycleStep::Complete(progress) if progress == Default::default() => "complete",
+        actual => panic!("unexpected terminal maintenance step: {actual:?}"),
+    };
+    assert_eq!(outcome, expected["closedOutcome"].as_str().unwrap());
+}
+
+#[test]
 fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reuses_it() {
     let render = AppRenderOperationContext { app_instance_id: 2_000_000_007, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32], mounted_policy: semio_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } };
-    let snapshot = Fem2dSnapshot::default();
+    let snapshot = persist(&Fem2dSnapshotValue::default());
     assert!((0..64).any(|_| prepare_test(render, &snapshot)), "empty schema census completes incrementally");
     let first = MOUNTED.with(|registry| { let registry = registry.borrow(); registry.pending[registry.app_slots.lookup(render.app_instance_id).unwrap().index()].expect("pending admission") });
     for _ in 0..1_025 {
@@ -404,7 +585,7 @@ fn snapshot_census_completes_within_one_opportunity_and_rejects_exact_plus_one_w
 #[test]
 fn process_owner_inventory_admits_exact_maximum_and_returns_exact_credit() {
     let catalog = MountedProcessOwnerCatalog::fixed();
-    let mut seen = [false; 30];
+    let mut seen = [false; MountedProcessOwnerCatalog::fixed().claims.len()];
     for claim in catalog.claims {
         let index = claim.class as usize;
         assert!(!seen[index], "every simultaneous owner class is inventoried exactly once");
@@ -526,4 +707,19 @@ fn mounted_region_generated_element_identity_collision_is_refused() {
 
 fn drain_grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 4 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 }
+}
+
+#[test]
+fn shell_credit_checks_actual_reserved_bytes_on_each_target() {
+    let law = &fixture()["shellCredit"];
+    let mut registry = MountedRegistry::new();
+    let expected = law[if usize::BITS == 32 { "admitted32" } else { "admitted64" }].as_array().unwrap();
+    assert_eq!(expected.len(), law["slots"].as_u64().unwrap() as usize);
+    for (shell, row) in expected.iter().enumerate() {
+        let admitted = registry.reserve_credit(shell as u16, 1, SESSION_MAXIMUM_BYTES);
+        assert_eq!(admitted, row.as_bool().unwrap());
+        assert_eq!(registry.credit_bytes[shell], if admitted { SESSION_MAXIMUM_BYTES } else { 0 });
+    }
+    registry.release_credit(0);
+    assert!(registry.reserve_credit(0, 1, SESSION_MAXIMUM_BYTES));
 }

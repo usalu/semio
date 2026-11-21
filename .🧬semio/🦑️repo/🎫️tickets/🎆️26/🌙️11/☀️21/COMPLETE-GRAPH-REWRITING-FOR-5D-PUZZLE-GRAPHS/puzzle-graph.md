@@ -1,0 +1,9 @@
+# Puzzle graph projection and mutation admission
+
+The Puzzle editor projects placed parts, grips and fasteners into Jack. It uses the authored or inferred Puzzle kind IDs, including IDs with spaces or punctuation. Untyped parts, grips and fasteners have the graph kinds `Part`, `Grip` and `Fastener`. Jack executes the typed rule in steps over an owned projection. The ordered effects become native Puzzle 5D mutations after the Puzzle mutation protocol admits them on a private snapshot.
+
+Each Puzzle grip supplies outgoing and incoming Jack ports. Both aliases resolve to the original `part:grip` key when creating a fastener. The editor's fastener rules require existing and distinct grips, forbid another fastener for the same unordered pair, and use the document's directed compatibility table if it declares one. The published target is the Puzzle editor's mutation aggregate. The import job passes the ordered vector to its standard completion, which stages it through `admit_apply_batch_with_pages` on the document history lane.
+
+The shipped DSL rows were checked for graph identifiers and endpoint references. Capsule Dream has 2,880 parts, 5,824 grips and 2,864 fasteners. Concrete Forest has 1 part and 11 grips. Nakagin Capsule Tower has 180 parts, 358 grips and 179 fasteners. Every fastener endpoint resolved to an authored grip. Several concrete kind identifiers have spaces, including those in Concrete Forest and Nakagin Capsule Tower.
+
+The bridge's JSON fixture covers transformation of an existing part and fastener, preservation of 3D appearance and unrelated document fields, and creation and follow-up edits on a new part and fastener. The Rust tests also cover rejection of an effect batch with a missing endpoint and creation from an inferred catalog kind. The reference transformation of the fixture uses `serde_json`.

@@ -95,7 +95,7 @@ impl IconExportPreparedScene {
         let copy=context.retained_grant().maximum_copy_bytes;
         self.closing = true;
         if let Some(packet) = self.packet.as_mut() {
-            if !close_prepared(context,packet.next_close_demands(copy),|grant|packet.close_step(grant))? {
+            if !close_prepared(context,packet.next_close_demands(copy),|effect| packet.close_step(effect))? {
                 return Ok(false);
             }
             self.packet = None;
@@ -345,11 +345,13 @@ impl IconExportScenePreparation {
     }
 
     fn prepare_step(&mut self, context: &mut StepContext<'_>) -> Result<(), super::IconExportFault> {
-        if self.job_outcome.is_some() { self.acknowledge_outcome(context)?; return Ok(()); }
+        if self.job_outcome.is_none() {
+            let job = self.job.as_mut().ok_or("icon export prepared job was missing")?;
+            self.job_outcome = job.step_on_original_caller(context)?;
+            return Ok(());
+        }
+        let Some(kind) = self.acknowledge_outcome(context)? else { return Ok(()) };
         let job = self.job.as_mut().ok_or("icon export prepared job was missing")?;
-        let Some(outcome) = job.step(context)?.map(|outcome|outcome.into_descriptor()) else { return Ok(()); };
-        let kind=outcome.kind();
-        self.job_outcome=Some(outcome);
         match kind {
             JobOutcomeKind::Yield => Ok(()),
             JobOutcomeKind::Complete => {
@@ -370,16 +372,19 @@ impl IconExportScenePreparation {
         }
     }
 
-    fn acknowledge_outcome(&mut self, context: &mut StepContext<'_>) -> Result<bool, super::IconExportFault> {
-        let Some(outcome)=self.job_outcome.as_mut() else { return Ok(true); };
-        semio_framework_job::close_original_retained_step(context,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|Ok(outcome.acknowledge(grant)))?;
-        if !outcome.is_acknowledged() { return Ok(false); }
-        self.job_outcome=None;
-        Ok(true)
+    fn acknowledge_outcome(&mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeKind>, super::IconExportFault> {
+        let Some(outcome) = self.job_outcome.as_mut() else { return Ok(None) };
+        if !outcome.is_acknowledged() {
+            semio_framework_job::close_original_retained_step(
+                context, semio_framework_value::RetirementDemand { depth: 1, ..Default::default() },
+                |grant| outcome.acknowledge(grant),
+            )?;
+            return Ok(None);
+        }
+        Ok(self.job_outcome.take().map(|outcome| outcome.kind()))
     }
 
     fn close_job_step(&mut self, context: &mut StepContext<'_>) -> Result<(), super::IconExportFault> {
-        if self.job_outcome.is_some() { self.acknowledge_outcome(context)?; return Ok(()); }
         if let Some(job) = self.job.as_mut() {
             if !matches!(InteractiveJob::close_step(job,context)?,semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
                 return Ok(());
@@ -414,7 +419,7 @@ impl IconExportScenePreparation {
         let copy=context.retained_grant().maximum_copy_bytes;
         if self.job_outcome.is_some() { self.acknowledge_outcome(context)?; return Ok(false); }
         if let Some(packet) = self.packet.as_mut() {
-            if !close_prepared(context,packet.next_close_demands(copy),|grant|packet.close_step(grant))? {
+            if !close_prepared(context,packet.next_close_demands(copy),|effect| packet.close_step(effect))? {
                 return Ok(false);
             }
             self.packet = None;
@@ -429,28 +434,33 @@ impl IconExportScenePreparation {
             return Ok(false);
         }
         if let Some(rejected) = self.job_rejected.as_mut() {
-            if !close_prepared(context,rejected.next_close_demands(copy),|grant|rejected.close_step(grant))? {
+            if !close_prepared(context,rejected.next_close_demands(copy),|effect| rejected.close_step(effect))? {
                 return Ok(false);
             }
             self.job_rejected = None;
             return Ok(false);
         }
         if let Some(input) = self.input.as_mut() {
-            if !close_prepared(context,input.next_close_demands(copy),|grant|input.close_step(grant))? {
+            if !close_prepared(context,input.next_close_demands(copy),|effect| input.close_step(effect))? {
                 return Ok(false);
             }
             self.input = None;
             return Ok(false);
         }
         if let Some(rejected) = self.input_rejected.as_mut() {
-            if !close_prepared(context,rejected.next_close_demands(copy),|grant|rejected.close_step(grant))? {
+            if !close_prepared(context, rejected.next_close_demands(copy), |effect| {
+                if !effect.performed(1)? {
+                    return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+                }
+                rejected.close_step(effect.grant()).map_err(Into::into)
+            })? {
                 return Ok(false);
             }
             self.input_rejected = None;
             return Ok(false);
         }
         if let Some(rejected) = self.world_rejected.as_mut() {
-            if !close_prepared(context,rejected.next_close_demands(copy),|grant|rejected.close_step(grant))? {
+            if !close_prepared(context,rejected.next_close_demands(copy),|effect| rejected.close_step(effect))? {
                 return Ok(false);
             }
             self.world_rejected = None;
@@ -542,10 +552,12 @@ pub(super) fn validate_request(request_json: &str) -> Result<ValidatedIconExport
     Ok(ValidatedIconExportRequest { request, dimensions: (width, height), format })
 }
 
-pub fn close_prepared(context:&mut StepContext<'_>,quote:Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>,close:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>)->Result<bool,super::IconExportFault>{
-    let quote=quote.map_err(|error|OriginalTurnFailure::debit_original(error,context))?;
-    let demand=semio_framework_value::RetirementDemand{copy_bytes:quote.maximum_copy_bytes,capacity_bytes:quote.maximum_capacity_bytes,release_bytes:quote.maximum_release_bytes,depth:quote.maximum_depth};
-    let mut complete=false;
-    semio_framework_job::close_original_retained_step(context,demand,|grant|close(grant).map(|step|match step{semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{complete=true;semio_framework_value::RetainedCloneStep::Complete(progress)},semio_framework_job::InteractiveJobCloseStep::Pending{progress}=>semio_framework_value::RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>semio_framework_value::RetainedCloneStep::Progress(Default::default())}))?;
-    Ok(complete)
+pub fn close_prepared(
+    context: &mut StepContext<'_>,
+    quote: Result<semio_framework_value::RetainedCloneGrant, semio_framework_value::ValueError>,
+    close: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_ui_prepared::retirement::PreparedClose,
+) -> Result<bool, super::IconExportFault> {
+    let quote = quote.map_err(|error| OriginalTurnFailure::debit_original(error, context))?;
+    let step = semio_ui_prepared::retirement::prepared_close_turn(context, quote, close)?;
+    Ok(matches!(step, semio_framework_job::InteractiveJobCloseStep::Complete { .. }))
 }

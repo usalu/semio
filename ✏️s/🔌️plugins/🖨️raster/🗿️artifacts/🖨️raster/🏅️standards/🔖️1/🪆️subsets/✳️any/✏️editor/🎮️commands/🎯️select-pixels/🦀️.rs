@@ -8,9 +8,12 @@ use semio_plugin::{ArtifactView,ConfigView,Emit,Fault};
 use semio_framework_pixels::editing::{PixelSelectionJob,PixelFloodSelectionJob,SelectionShape,SelectionMerge,SelectionCombineJob};
 use semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::RasterSelectionSpan;
 use semio_s_artifact_raster_raster_host::RasterPixelSourceWork;
-use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
-use std::sync::Arc;
+use semio_framework_pixels::RasterImage;
+use semio_framework_value::retirement::allocation_return::shared_allocation_work_demand;
+use semio_framework_value::retirement::arc_custody::{ArcLease,admit_shared_allocation,shared_allocation_value_demand};
+use std::mem::ManuallyDrop;
 use std::mem::size_of;
 
 #[path="📦️coverage/🦀️.rs"]
@@ -18,7 +21,7 @@ mod coverage;
 use coverage::SelectionSpanWriter;
 
 #[derive(semio_framework_value::RetireOwned)]
-struct SelectionGarbage {request:Option<SelectPixels>,publication:Vec<RasterConfigMutation>,points:Vec<[f64;2]>,shape_points:Vec<[f64;2]>,coverage:Vec<u8>,mask:Vec<u8>,flood_mask:Vec<u8>,intersections:Vec<f64>,seen:Vec<bool>,queue:Vec<u32>,source:Option<Arc<semio_framework_pixels::RasterImage>>}
+struct SelectionGarbage {request:Option<SelectPixels>,publication:Vec<RasterConfigMutation>,points:Vec<[f64;2]>,shape_points:Vec<[f64;2]>,coverage:Vec<u8>,mask:Vec<u8>,flood_mask:Vec<u8>,intersections:Vec<f64>,seen:Vec<bool>,queue:Vec<u32>,source:Option<ArcLease<RasterImage>>,pending_flood_image:Option<RasterImage>,pending_flood_source:Option<ArcLease<RasterImage>>}
 
 #[derive(Clone,Debug,Default,PartialEq,semio_framework_value::ToValue,semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase")]
@@ -120,7 +123,8 @@ pub struct SelectPixelsWork {
     temporary_bytes:usize,
     pixel_writes:Option<usize>,
     cpu_units:usize,
-    source_arc_bytes:usize,
+    pending_flood_image:ManuallyDrop<Option<RasterImage>>,
+    pending_flood_source:ManuallyDrop<Option<ArcLease<RasterImage>>>,
     vertices:usize,
     garbage:std::mem::ManuallyDrop<Option<SelectionGarbage>>,
     retirement:std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
@@ -129,7 +133,7 @@ pub struct SelectPixelsWork {
 impl SelectPixelsWork {
     fn count(&self)->usize{self.request.as_ref().map_or(0,|request|request.width as usize*request.height as usize)}
     fn point_capacity(&self)->usize{self.request.as_ref().map_or(0,|request|match request.method.as_str(){"lasso"=>4096,"rectangle"|"ellipse"=>2,"wand"=>1,_=>0})}
-    fn capacity(&self)->usize{self.source_arc_bytes+self.points.capacity()*size_of::<[f64;2]>()+self.coverage.capacity()+self.shape.as_ref().map_or(0,PixelSelectionJob::storage_capacity_bytes)+self.flood.as_ref().map_or(0,PixelFloodSelectionJob::storage_capacity_bytes)}
+    fn capacity(&self)->usize{self.points.capacity()*size_of::<[f64;2]>()+self.coverage.capacity()+self.shape.as_ref().map_or(0,PixelSelectionJob::storage_capacity_bytes)+self.flood.as_ref().map_or(0,PixelFloodSelectionJob::storage_capacity_bytes)}
     fn initialized(&self)->usize{self.points.len()*size_of::<[f64;2]>()+self.coverage.len()+self.shape.as_ref().map_or(0,PixelSelectionJob::initialized_bytes)+self.flood.as_ref().map_or(0,PixelFloodSelectionJob::initialized_bytes)}
     fn path_step(&mut self,maximum_work:usize,continue_work:&mut dyn FnMut()->bool)->Result<bool,OriginalTurnFailure>{
         let capacity=self.point_capacity();let request=self.request.as_ref().ok_or_else(||refused("raster-selection-request-missing"))?;let path=request.path.as_bytes();
@@ -178,15 +182,16 @@ impl SelectPixelsWork {
         if request.expected_image_key.is_none(){self.flood=Some(PixelFloodSelectionJob::uniform(request.width,request.height,if request.target=="mask"{[255;4]}else{[0;4]},first[0].floor() as u32,first[1].floor() as u32,tolerance).map_err(|_|refused("raster-selection-flood-invalid"))?);self.flood.as_mut().unwrap().reserve_queue().map_err(|_|refused("raster-selection-reservation-failed"))?;self.stage=3;}else{self.stage=2;}
         Ok(())
     }
-    fn advance(&mut self,snapshot:&RasterSnapshot,config:&RasterConfig,grant:semio_framework_value::RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),OriginalTurnFailure>{
-        self.advance_controlled(snapshot,config,grant,1024,&mut||true)
+    fn validate_work_roots(&self,snapshot:&RasterSnapshot,config:&RasterConfig)->Result<(),OriginalTurnFailure>{
+        if self.snapshot_binding!=0&&(self.snapshot_binding!=snapshot as *const RasterSnapshot as usize||self.config_binding!=config as *const RasterConfig as usize){return Err(refused("raster-selection-source-changed"));}
+        Ok(())
     }
     fn advance_controlled(&mut self,snapshot:&RasterSnapshot,config:&RasterConfig,grant:semio_framework_value::RetainedCloneGrant,maximum_work:usize,continue_work:&mut dyn FnMut()->bool)->Result<(bool,RetainedCloneProgress),OriginalTurnFailure>{
         if self.closing||self.spent{return Err(refused("raster-selection-work-closed"));}
         self.temporary_bytes=0;
         self.pixel_writes=None;
         self.cpu_units=1;
-        if self.snapshot_binding!=0&&(self.snapshot_binding!=snapshot as *const RasterSnapshot as usize||self.config_binding!=config as *const RasterConfig as usize){return Err(refused("raster-selection-source-changed"));}
+        self.validate_work_roots(snapshot,config)?;
         let mut receipt=RetainedCloneProgress::default();
         match self.stage {
             0=>self.initialize(snapshot,config)?,
@@ -238,18 +243,62 @@ impl SelectPixelsWork {
                 }self.combined=end;if end==count{self.stage=6;}
             }
             6=>{self.writer=Some(SelectionSpanWriter::new(self.run_count,self.count())?);self.pixel_writes=Some(size_of::<SelectionSpanWriter>());self.stage=7;}
-            7=>{
-                let writer=self.writer.as_mut().ok_or_else(||refused("selection page writer missing"))?;let(done,progress)=writer.advance(&self.coverage,grant,maximum_work,continue_work)?;self.cpu_units=writer.work;receipt=progress;if done{self.stage=8;}
-            }
-            9=>{
-                let source=self.source.as_mut().and_then(RasterPixelSourceWork::take_pixels).ok_or_else(||refused("raster-selection-source-missing"))?;let first=self.points[0];
-                self.source_arc_bytes=size_of::<semio_framework_pixels::RasterImage>()+2*size_of::<usize>();
-                let mut job=PixelFloodSelectionJob::new(Arc::new(source),first[0].floor() as u32,first[1].floor() as u32,config.fill_tolerance.min(255) as u8).map_err(|_|refused("raster-selection-flood-invalid"))?;
-                job.reserve_queue().map_err(|_|refused("raster-selection-reservation-failed"))?;self.flood=Some(job);self.stage=3;
-            }
             10=>self.initialize_raster(config.fill_tolerance.min(255) as u8)?,
             _=>return Ok((true,receipt)),
         }Ok((self.stage==8,receipt))
+    }
+    fn flood_source_demand(&self)->Result<RetirementDemand,ValueError>{
+        if self.pending_flood_source.is_some(){
+            return Ok(RetirementDemand{copy_bytes:size_of::<Option<PixelFloodSelectionJob>>()+size_of::<Option<ArcLease<RasterImage>>>(),capacity_bytes:self.count()*6,depth:1,..Default::default()});
+        }
+        let mut demand=shared_allocation_value_demand::<RasterImage>()?;
+        demand.copy_bytes+=size_of::<Option<RasterImage>>()+size_of::<Option<ArcLease<RasterImage>>>();
+        Ok(demand)
+    }
+    fn advance_flood_source(&mut self,snapshot:&RasterSnapshot,config:&RasterConfig,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+        self.validate_work_roots(snapshot,config)?;
+        let demand=self.flood_source_demand()?;
+        let grant=cx.retained_grant();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(())}
+        if let Some(source)=self.pending_flood_source.as_ref(){
+            if cx.fuel_remaining()==0{return Ok(())}
+            let first=self.points[0];
+            let mut job=PixelFloodSelectionJob::new(source.0.as_ref().ok_or_else(||value_refused("raster-selection-source-missing"))?.clone(),first[0].floor() as u32,first[1].floor() as u32,config.fill_tolerance.min(255) as u8).map_err(|_|refused("raster-selection-flood-invalid"))?;
+            let reserved=job.reserve_queue();
+            let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:job.storage_capacity_bytes(),..Default::default()};
+            self.flood=Some(job);
+            self.pending_flood_source.take();
+            cx.consume_fuel(1);cx.consume_retained(progress)?;
+            reserved.map_err(|_|refused("raster-selection-reservation-failed"))?;
+            self.stage=3;return Ok(());
+        }
+        if cx.fuel_remaining()<shared_allocation_work_demand(){return Ok(())}
+        let Some((turn,performed))=cx.with_original_source_effect(grant,|_,effect|{
+            let image=self.pending_flood_image.take().or_else(||self.source.as_mut().and_then(RasterPixelSourceWork::take_pixels)).ok_or_else(||value_refused("raster-selection-source-missing"))?;
+            let turn=admit_shared_allocation(image,effect.grant(),effect.actual());
+            let result=match turn.result{
+                Ok((source,mut receipt))=>{*self.pending_flood_source=Some(ArcLease::new(source));receipt.copied_bytes=demand.copy_bytes;Ok(receipt)},
+                Err((error,image))=>{*self.pending_flood_image=Some(image);Err(error)},
+            };
+            let work=turn.work as u64;
+            if work!=0&&!effect.performed(work)?{return Err(value_refused("raster selection shared source work limit"))}
+            result
+        })?else{return Ok(())};
+        cx.consume_work(performed);
+        let receipt=turn.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
+        cx.consume_retained(receipt)?;
+        Ok(())
+    }
+    fn advance_spans(&mut self,snapshot:&RasterSnapshot,config:&RasterConfig,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        self.validate_work_roots(snapshot,config)?;
+        let grant=cx.retained_grant();
+        let writer=self.writer.as_mut().ok_or_else(||refused("selection page writer missing"))?;
+        let Some((result,performed))=cx.with_original_source_effect(grant,|same,effect|writer.advance(&self.coverage,effect,&mut||!same.should_yield()&&!same.is_cancelled()))?else{return Ok(false)};
+        cx.consume_work(performed);
+        let (done,progress)=result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
+        cx.consume_retained(progress)?;
+        if done{self.stage=8;}
+        Ok(done)
     }
     fn take_result(&mut self)->Result<Option<RasterPixelSelection>,OriginalTurnFailure>{
         if self.stage!=8||self.closing||self.spent{return Err(refused("raster-selection-result-incomplete"));}self.spent=true;
@@ -267,16 +316,16 @@ impl SelectPixelsWork {
     fn begin_closing(&mut self){
         if self.closing{return;}self.closing=true;
         let (mask,intersections,extra_points)=self.shape.take().map(|job|{let storage=job.into_storage();(storage.mask,storage.intersections,storage.points)}).unwrap_or_default();
-        let (flood_mask,seen,queue,source)=self.flood.take().map(|job|{let storage=job.into_storage();(storage.mask,storage.seen,storage.queue,storage.source)}).unwrap_or_default();
-        self.garbage.replace(SelectionGarbage {request:self.request.take(),publication:std::mem::take(&mut self.publication),points:std::mem::take(&mut self.points),shape_points:extra_points,coverage:std::mem::take(&mut self.coverage),mask,flood_mask,intersections,seen,queue,source});
+        let (flood_mask,seen,queue,source)=self.flood.take().map(|job|{let storage=job.into_storage();(storage.mask,storage.seen,storage.queue,storage.source.map(ArcLease::new))}).unwrap_or_default();
+        self.garbage.replace(SelectionGarbage {request:self.request.take(),publication:std::mem::take(&mut self.publication),points:std::mem::take(&mut self.points),shape_points:extra_points,coverage:std::mem::take(&mut self.coverage),mask,flood_mask,intersections,seen,queue,source,pending_flood_image:self.pending_flood_image.take(),pending_flood_source:self.pending_flood_source.take()});
     }
-    fn close_one(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+    fn close_one(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let grant=effect.grant();
         self.begin_closing();
-        if let Some(owner)=self.source.as_mut(){if !owner.terminal_is_empty(){return owner.close_step(grant)}let bytes=size_of::<Option<RasterPixelSourceWork>>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.source=None;return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1};}
-        if let Some(owner)=self.writer.as_mut(){if !owner.empty(){return owner.close_step(grant)}let bytes=size_of::<Option<SelectionSpanWriter>>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.writer=None;return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1};}
-        if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.garbage,&mut self.retirement,grant)}
+        if let Some(owner)=self.source.as_mut(){if !owner.terminal_is_empty(){let turn=owner.close_step(effect);return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})}let bytes=size_of::<Option<RasterPixelSourceWork>>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return semio_framework_value::RetirementPollExit::settle(effect,Ok(RetainedCloneStep::Progress(Default::default())))}self.source=None;return semio_framework_value::RetirementPollExit::settle(effect,Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})));}
+        if let Some(owner)=self.writer.as_mut(){if !owner.empty(){return owner.close_step(body,effect)}let bytes=size_of::<Option<SelectionSpanWriter>>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return semio_framework_value::RetirementPollExit::settle(effect,Ok(RetainedCloneStep::Progress(Default::default())))}self.writer=None;return semio_framework_value::RetirementPollExit::settle(effect,Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})));}
+        if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,body,effect)}else{let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.garbage,&mut self.retirement,effect);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})}
     }
-    fn empty(&self)->bool{self.closing&&self.request.is_none()&&self.source.is_none()&&self.writer.is_none()&&self.shape.is_none()&&self.flood.is_none()&&self.garbage.is_none()&&self.retirement.is_none()}
+    fn empty(&self)->bool{self.closing&&self.request.is_none()&&self.source.is_none()&&self.writer.is_none()&&self.shape.is_none()&&self.flood.is_none()&&self.pending_flood_image.is_none()&&self.pending_flood_source.is_none()&&self.garbage.is_none()&&self.retirement.is_none()}
 }
 
 impl<A:RasterWorkApp> ArtifactCommandWork<A> for SelectPixelsWork {
@@ -289,9 +338,10 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for SelectPixelsWork {
     fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_plugin::app::ArtifactOwnedToolJobContext<A>>)->Option<usize>{matches!(command,RasterCommand::SelectPixels(_)).then_some(1)}
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,A>,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{
         if self.stage==8{return Ok(RetirementDemand{copy_bytes:size_of::<Vec<RasterConfigMutation>>()+size_of::<RasterConfigMutation>(),capacity_bytes:if self.publication.capacity()==0{size_of::<RasterConfigMutation>()}else{0},depth:4,..Default::default()});}
+        if self.stage==9{return self.flood_source_demand();}
         if self.stage==7{return self.writer.as_ref().ok_or_else(||value_refused("selection writer missing"))?.demands(maximum_copy_bytes);}
         if matches!(self.stage,2|11){if let Some(source)=&self.source{return if self.stage==11{source.geometry_demands(maximum_copy_bytes)}else{source.demands(maximum_copy_bytes)};}let request=self.request.as_ref().ok_or_else(||value_refused("selection request missing"))?;return RasterPixelSourceWork::begin_demands(input.snapshot,&request.layer_id,&request.target);}
-        let capacity=match self.stage{1 if self.points.capacity()==0=>self.point_capacity()*size_of::<[f64;2]>(),4 if self.coverage.capacity()==0=>self.count(),5=>32768,9=>self.count()*6+size_of::<semio_framework_pixels::RasterImage>()+2*size_of::<usize>(),10=>self.count()*6+self.points.len()*size_of::<f64>(),_=>0};
+        let capacity=match self.stage{1 if self.points.capacity()==0=>self.point_capacity()*size_of::<[f64;2]>(),4 if self.coverage.capacity()==0=>self.count(),5=>32768,10=>self.count()*6+self.points.len()*size_of::<f64>(),_=>0};
         let copy=32768;
         let depth=if self.stage==4{input.config.pixel_selection.as_ref().filter(|selection|self.previous_span<selection.spans.len()).map_or(Ok(4),|selection|selection.spans.rank_observation_demand(self.previous_span).map(|demand|demand.depth.max(4)))?}else{4};
         Ok(RetirementDemand {copy_bytes:copy,capacity_bytes:capacity,release_bytes:if self.stage==5{32768}else{0},depth})
@@ -314,7 +364,9 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for SelectPixelsWork {
             cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RasterConfigMutation>()+size_of::<Vec<RasterConfigMutation>>(),..Default::default()})?;
             return Ok(ArtifactCommandWorkStep::Complete(Emit::config(std::mem::take(&mut self.publication))));
         }
-        let before=self.capacity();let initialized=self.initialized();let source_step=matches!(self.stage,2|7|11);
+        if self.stage==9{self.advance_flood_source(input.snapshot,input.config,cx)?;return Ok(ArtifactCommandWorkStep::Progress{stage:"selection-source",preview:b""})}
+        if self.stage==7{self.advance_spans(input.snapshot,input.config,cx)?;return Ok(ArtifactCommandWorkStep::Progress{stage:"selection-spans",preview:b""})}
+        let before=self.capacity();let initialized=self.initialized();let source_step=matches!(self.stage,2|11);
         let maximum_work=cx.fuel_remaining().min(1024)as usize;
         let advanced=self.advance_controlled(input.snapshot,input.config,cx.retained_grant(),maximum_work,&mut||!cx.should_yield()&&!cx.is_cancelled());cx.consume_fuel(self.cpu_units as u64);
         let (done,receipt)=advanced?;cx.consume_retained(receipt)?;
@@ -324,8 +376,8 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for SelectPixelsWork {
     }
     fn begin_close(&mut self){self.begin_closing();}
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,OriginalTurnFailure>{
-        let turn=self.close_one(cx.retained_grant());cx.consume_fuel(turn.work);let result=turn.result?;
-        let progress=match result{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};
+        let body=cx.retained_grant().maximum_copy_bytes;let demand=self.close_demands(body)?;let result=semio_framework_job::close_original_effect_step(cx,demand,|effect|self.close_one(body,effect))?;
+        let progress=result.progress();
         Ok(if self.empty(){semio_framework_job::InteractiveJobCloseStep::Complete {progress}}else{semio_framework_job::InteractiveJobCloseStep::Pending {progress}})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(32768)?.copy_bytes)}

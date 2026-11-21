@@ -6,5 +6,6 @@
     {"path": "release/build/owner/unit/data", "bytes": "original release"}
   ],
   "cancelAfterMs": 30,
+  "pruneContention": {"busy": {"deferred": true, "calls": 0}, "released": {"deferred": false, "calls": 1}},
   "expected": {"beforeRelease": 2, "afterPrune": 0, "separateProfiles": true}
 }

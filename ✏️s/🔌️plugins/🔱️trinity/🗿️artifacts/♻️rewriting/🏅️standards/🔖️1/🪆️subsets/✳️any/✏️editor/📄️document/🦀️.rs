@@ -26,10 +26,7 @@ use crate::standards::v1::subsets::any::schema::mutations::remove_parameter_bind
     changed.chain(removed).collect()
 }
 
-/// 🆕️ A new editor begins with the canonical empty rule and graph.
-pub fn default_rule_state() -> RewritingSnapshot {
-    RewritingSnapshot::default()
-}
+pub use crate::standards::v1::subsets::any::content::empty_rule_state as default_rule_state;
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `resetRule` builds a `Effect::LoadDocument`
 /// (outside undo history) instead of an `artifact_mutations` entry.

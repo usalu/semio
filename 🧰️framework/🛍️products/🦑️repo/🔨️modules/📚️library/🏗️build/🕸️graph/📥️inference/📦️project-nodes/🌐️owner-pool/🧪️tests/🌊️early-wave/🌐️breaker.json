@@ -1,0 +1,17 @@
+[
+  {
+    "id": "advisory-head-times-out",
+    "headTimeout": true,
+    "requiredTimeout": null
+  },
+  {
+    "id": "required-blob-times-out",
+    "headTimeout": false,
+    "requiredTimeout": "cas"
+  },
+  {
+    "id": "required-result-times-out",
+    "headTimeout": false,
+    "requiredTimeout": "ac"
+  }
+]

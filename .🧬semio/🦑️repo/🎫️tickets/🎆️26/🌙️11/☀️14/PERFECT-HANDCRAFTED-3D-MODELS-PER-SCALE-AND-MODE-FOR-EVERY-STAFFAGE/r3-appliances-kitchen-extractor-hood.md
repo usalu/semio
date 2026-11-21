@@ -87,3 +87,51 @@ Final check: `volumes-check.ts appliances/kitchen-extractor-hood --product` PASS
 - `volumes/appliances/kitchen-extractor-hood.json`
 - Catalog: `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🔌️appliances/kitchen-extractor-hood/🔣️.json`
 - Renders: `🗑️generated/r3-sheet/appliances/kitchen-extractor-hood.*`, `🗑️generated/r3-2d/appliances/kitchen-extractor-hood.*`, `🗑️generated/r3-kitchen-extractor-hood/`
+
+## Round 5 handcraft
+
+Scripts: `r5-kitchen-extractor-hood-model.py` (keeps the hand-stated lists of the round-3 model, restates the back sheet at 1:100 to 1:500, the coarse rim slab, the 1:200 and 1:500 canopy load path and the coarse thermal markers), `r5-kitchen-extractor-hood-texts.json` (1:200 and 1:500 structure decisions). Renders in `🗑️generated/r5-kitchen-extractor-hood/{before,after}/` (opened: body, structure and thermal cut at every scale, poses `off`, `low`, clips `switch-on-warm-up` t 300 and `step-down-and-off` t 150 at 1:50, close-ups of the 1:200 and 1:500 wall side).
+
+### Reference and measurement (1:50)
+
+| Quantity | Reference (Bosch DWP96BC50B) | Model | Deviation |
+|---|---|---|---|
+| Canopy W x D | 900 x 500 mm | 900 x 500 | 0 % |
+| Canopy height | 246 mm | 246 | 0 % |
+| Chimney W x D | 250 x 190 mm | 250 x 190 (upper 244 x 187) | 0 % |
+| Total height | 799-975 mm | 915 | in range |
+| Outlet | 150 mm at 85 mm from the wall | 150 at 85 | 0 % |
+| Hanging screws | 270 mm apart at 190 mm | 270 at 190 | 0 % |
+| Net weight | 10.3 kg | 10.3 | 0 % |
+| Slopes | follow from the above | front 34 deg, sides 32 deg | exact |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | unchanged (re-opened) |
+| 1:100 | A- (faint stripes along the wall in side view) / A- / A- | A- / A- / A- |
+| 1:200 | B (stripe band along the wall in side and plan: the back sheet's edges coplanar with the slopes; spots on the wall face) / A- / B (no rim frame, no hips: only back sheet, top plate, channels) | A- / A- / A- |
+| 1:500 | B (same stripes, larger) / B+ / C+ (hanger, channels and fan only; the canopy carried nothing) | A- / A- / A- |
+| Poses/clips | A- (no bone moves) | unchanged |
+
+### Changes
+
+- Back sheet at 1:100, 1:200, 1:500 set 2 mm inside the side slopes and under the top face of the top plate, its wall face 0.5 mm proud of the slope ends; the closed rim slab of 1:200 and 1:500 likewise 0.5 mm proud: no coplanar faces left (side, plan and wall views clean).
+- Structure 1:200 and 1:500: rim band as a closed frame (30 / 50 mm) and the two folded hips from the top plate corners down to it.
+- Thermal 1:100 to 1:500: the canopy shell is closed at these scales, so the inward `sectionFaces` stand-ins are removed (C31 g); the flood measures canopy at -0.8 % (1:100) and the totals at 6 % / 1 %. At 1:50 they stay: removing them reads 1.73 m2 against 0.97, because the open duct lets air into the shell through the top plate opening (real: extract air does pass through); this is the area reviewers' question whether `canopy` counts the inside of the extract path.
+- `volumes-check.ts --product` PASS, `r3-validate.ts --volumes` VALID; spliced.
+
+### Remaining
+
+- 1:50 canopy inner faces still carry `sectionFaces` (see above).
+- Poses move no bone (fan speed only in thermal).
+- Fan unit only as a structural mass.
+
+### Enclosure and blower working dimensions, 21 November
+
+The released model uses 0.6 mm stainless sheet, a pierced top plate, an open telescopic chimney, a horizontal blower shaft and 24 curved vanes. A four-section transition joins the rectangular blower discharge to the round outlet. Two semicircular backdraft leaves rotate on their shared spindle at 0°, 46°, 67° and 80°. The inspection clip turns the impeller through a full revolution. The fixture measured the independent clearance of the wheel, case, motor, outlet and flaps at all four digital scales. Schema, asset and all measured digital geometry rules passed.
+
+The manufacturer reports a 900 × 500 mm footprint, a 246 mm canopy, a 150 mm outlet, 626 m³/h at full extraction, 220 W connected load and two 1.5 W LED lamps. The material gauges, internal wheel dimensions, intermediate airflow settings and partition of the remaining 217 W between shell and exhaust are authored engineering estimates. At full load the model delivers 3 W at the lamps, 21.7 W to the shell and 195.3 W to the exhaust. [Bosch product data sheet](https://media3.bosch-home.com/Documents/specsheet/en-SG/DWP96BC50B.pdf)
+
+An independent reader opened all twelve shipped GLB scenes in 1,590,348 bytes. All 39 sampled print sizes passed across the three available paper bands. The 1:500 digital scenes remain available.

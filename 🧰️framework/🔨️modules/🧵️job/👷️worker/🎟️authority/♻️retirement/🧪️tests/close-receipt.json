@@ -1,0 +1,105 @@
+[
+  {
+    "name": "reserved redemption only",
+    "posted": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "reserved": [
+      2,
+      11,
+      17,
+      29
+    ],
+    "reported": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "unposted": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "mixed with one unposted current effect",
+    "posted": [
+      1,
+      5,
+      7,
+      9
+    ],
+    "reserved": [
+      2,
+      11,
+      17,
+      29
+    ],
+    "reported": [
+      2,
+      8,
+      7,
+      10
+    ],
+    "unposted": [
+      1,
+      3,
+      0,
+      1
+    ]
+  },
+  {
+    "name": "current effect without redemption",
+    "posted": [
+      1,
+      5,
+      7,
+      9
+    ],
+    "reserved": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "reported": [
+      1,
+      5,
+      7,
+      9
+    ],
+    "unposted": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "current underreport with redemption",
+    "posted": [
+      1,
+      5,
+      7,
+      9
+    ],
+    "reserved": [
+      2,
+      11,
+      17,
+      29
+    ],
+    "reported": [
+      1,
+      4,
+      7,
+      9
+    ],
+    "unposted": null
+  }
+]

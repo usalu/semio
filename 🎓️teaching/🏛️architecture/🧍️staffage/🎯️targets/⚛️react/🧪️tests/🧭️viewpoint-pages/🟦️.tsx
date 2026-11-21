@@ -130,7 +130,7 @@ describe("🧪️ playground selector, position and yaw", () => {
       expect(node).not.toBeNull();
       return node!;
     });
-    fireEvent.focus(hit);
+    fireEvent.click(hit);
     fireEvent.keyDown(hit, { key: "ArrowUp" });
     expect(store.getSnapshot().playground.placements[0]!.zM).toBeCloseTo(0.1, 9);
     fireEvent.keyDown(document.querySelector<HTMLElement>('[data-placement="w"]')!, { key: "PageUp" });

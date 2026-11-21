@@ -3,6 +3,12 @@
   "wideSourceLength": 6500,
   "wideWindowLength": 300,
   "appIds": [1, 33, 65],
+  "maintenance": {
+    "live": { "pending": false, "terminal": false },
+    "detached": { "pending": true, "terminal": false },
+    "idleAfterRetirement": { "pending": false, "terminal": false },
+    "closed": { "pending": false, "terminal": true }
+  },
   "requestWindows": [{"window":"case-a","family":0,"namespace":0,"source":"a","index":0},{"window":"case-a-shared","family":0,"namespace":0,"source":"a","index":0},{"window":"case-b","family":0,"namespace":0,"source":"b","index":0},{"window":"combination-a","family":0,"namespace":1,"source":"a","index":0},{"window":"mode-one","family":1,"namespace":0,"source":"","index":0},{"window":"mode-two","family":1,"namespace":0,"source":"","index":1},{"window":"buckling-a","family":2,"namespace":0,"source":"a","index":0}],
   "closeOrder": [33, 1, 65],
   "cases": [

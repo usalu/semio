@@ -64,6 +64,8 @@ pub enum ShellDocumentOpenAnswer {
         checkpoint: semio_os_kernel::os_directory::DocumentOpenCheckpointV1,
     },
     Instantiated(u32),
+    #[cfg(not(target_arch = "wasm32"))]
+    NativeFile(Option<NativeOpenedFile>),
     Seeded(Option<semio_os_kernel::os_directory::CanonicalCheckpointPairV1>),
 }
 

@@ -82,3 +82,61 @@ Final check line: `PASS` (silhouette IoU elevation / front / plan 0.996 / 0.994 
 - Structure: no support solids because `structure.supports` is empty in the asset; bones use the material `short-coat` because the asset has no bone material; ribs are full elliptic hoops (no costal arch), the sweep direction of the ten open hoops was not verified from below.
 - Pose `standing-rest` (head bone 104 deg below horizontal, behind the vertical) looked implausible on paper; I did not render or change it.
 - Not run: `repo` test targets and model export.
+
+## Round 5 handcraft (2026-11-21)
+
+State: spliced; `r3-validate.ts animals/horse --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); `volumes-check.ts animals/horse --product` green at every scale. Scripts: `r5-horse-rig.py` (root fix of rig, anchors, masses, limits, elevation 2D frames, every pose and clip key), `r5-horse-body.py` (body of every scale, every station by hand), `r5-horse-model.py` (lists, skeleton on the new spine, thermal, decisions), `r5-horse-details.py`, `r5-horse-draw2d.ts` (ruling E1 redraw), `r5-candidate.py`, chain `r5-horse-ship.sh [--apply]`.
+
+### Reference (model to)
+
+Warmblood 550 kg, withers 1.61 m (Ellenberger/Dittrich/Baum, Goldfinger, Buchner 1997 segment data, studbook measures; from knowledge, about ±3 cm; no web lookup). Heights above ground, x ahead of the hip joint.
+
+| landmark | reference | rig / model round 5 | round 4 |
+|---|---|---|---|
+| withers top; croup top; back low point | 1.60-1.61; 1.58-1.60; 1.50 | 1.612; 1.598; 1.50 | same |
+| lumbosacral joint (centre of vertebral body) | 0.10-0.15 below the croup skin | (0.17, 1.46) | spine bone at 1.314 (hip height, mid-body) |
+| thoracolumbar joint (T18/L1) | 0.10-0.13 below the back skin | (0.50, 1.39) | (0.50, 1.314) |
+| C7/T1 (neck pivot) | between the shoulder blades, about 0.35 below the withers | (1.36, 1.245) | (1.34, 1.444) at the top of the shoulder |
+| thoracic / lumbar spine length | 0.85-0.90 / 0.30-0.33 | 0.872 / 0.337 | 0.88 / 0.30 |
+| scapula pivot; shoulder joint; scapula slope | dorsal third of the blade under the withers; 1.05-1.10; 50-60 deg | (1.12, 1.50); 1.10; 56 deg | withers top 1.614; 1.155; 62 deg |
+| elbow joint; carpus centre; fore fetlock | 0.85-0.90 under the shoulder; 0.48-0.50; 0.18 (joint centre) | 0.86; 0.485; 0.181 | 0.876; 0.476; 0.181 |
+| humerus; radius; fore cannon (carpus to fetlock) | 0.30-0.33; 0.36-0.40; 0.30 | 0.326; 0.375; 0.303 | 0.34; 0.40; 0.295 |
+| stifle joint; hock (talocrural) centre; point of hock | 0.93-0.98; 0.54-0.58; 0.62-0.66 | 0.93; 0.545; 0.63 | 0.95; 0.524; 0.615 |
+| femur; tibia (joint to joint); hind cannon (hock to fetlock) | 0.40-0.44; 0.42-0.46; 0.34-0.37 | 0.42; 0.434; 0.356 | 0.42; 0.52 (+15 %); 0.34 |
+| hind cannon from vertical in stance | 0-3 deg | 0.2 deg | 10 deg forward (sickle hocked) |
+| chest floor; chest depth; barrel width; hip width | 0.85; 0.75; 0.56-0.60; 0.56 | 0.853; 0.76; 0.592; 0.556 | same |
+| neck width at the shoulders / mid / throat | 0.30-0.38 / 0.20-0.22 / 0.15-0.17 | 0.39 / 0.21 / 0.16 | 0.34 / 0.18 / 0.14 |
+| head length; width at the brows; muzzle width | 0.55-0.60; 0.21-0.24; 0.12-0.14 | 0.59; 0.244; 0.144 | 0.59; 0.234; 0.14 |
+| hoof: toe angle; toe height; heel height; length x width | 50-55 deg; 0.08-0.09; 0.03-0.045; 0.13 x 0.125 | 53 deg; 0.084; 0.043; 0.133 x 0.128 | cone 58 deg, coronet level all round |
+| tail: dock length; hair end | 0.25-0.45; at or above the hock | 0.22 dock + hair; 0.60 | same |
+
+All model values are within 3 % of the reference band except the elbow joint (0.86 against 0.85-0.90, inside) and the C7/T1 position, which has no sharp reference (placed between the scapulae by anatomy).
+
+### Grades (my eye, opened renders)
+
+| scale | body before → after | thermal before → after | structure before → after | 2D before → after |
+|---|---|---|---|---|
+| 1:50 | C+ → A- | B → A- | C → B+ | B → A- |
+| 1:100 | B- → A- | B → A- | C+ → B+ | B → A- (not opened at 1:100) |
+| 1:200 | B → A- | B → B+ (not opened) | C+ → B+ (not opened) | B → B+ (not opened) |
+| 1:500 | C+ → B+ | B → B+ (not opened) | C → B+ | C+ → B+ (not opened) |
+
+Before = the round 4 catalog state as I saw it on 2026-11-20 (body 1:50 sheet, structure 1:50 sheet) and the orchestrator's findings in r4-queue.md.
+
+### Changes
+
+- Rig (root): pelvis 0 → 40.7 deg towards the lumbosacral joint, lumbar and thorax along the dorsal vertebral column (thorax -9.6 deg sinking to T1), neck-1 pivot at C7/T1 (length 0.34 → 0.48), fore legs: scapula pivot in the dorsal third of the blade, shoulder joint 5.5 cm lower, elbow under the shoulder, forearm vertical; hind legs: tibia 0.52 → 0.434, cannon 0.34 → 0.356 and vertical, stifle and hock at their joint centres. Fetlocks, pasterns and hooves untouched. Every pose and the 58 clip keys solved again (legs by IK onto the old fetlock with cannon and forearm keeping their deviation from rest; neck by IK onto the old poll, or, where the poll is out of reach of the longer neck base (grazing, standing-rest), with the muzzle kept on its old height): residual at every hoof, tail and ear 0.0 mm. Joint limits shifted by the mean change of the solved offsets and widened where a pose needs it (scapula). Masses, anchors and 160 elevation shapes carried into the new frames. Pose `standing-rest`: head -18 → -1 deg (the face hung 14 deg behind the vertical).
+- Body, every scale anew: one trunk skin from the buttocks to the breast on the lumbar bone, blended over pelvis, loin and thorax (no seam along the back; no pose or clip bends the trunk), withers ridge over the thoracic processes; neck 0.39 m wide at the base with a blended neck-root (thorax/neck-1) and a blended throatlatch (neck-3/head) so that grazing and resting stay closed; shoulder, arm and point of elbow as flat muscle masses lying on the chest; forearm with chestnut, flat-fronted knee with the accessory carpal, cannon with tendons, fetlock with ergot, pastern, hoof with sloping coronet, coronary band and heel bulbs; thigh with stifle, gaskin covering the tibia, Achilles tendon to the point of the hock, hock; mane as a crest band plus a hair fall lying on the near side of the neck; tail as dock plus four overlapping, bowed hair pieces. 1:500 got its withers back and a jowl.
+- Structure: vertebral column, processes, ribs and sternum on the dorsal spine line (ribs from the rig spine down, rotated with the new thorax angle), cervical vertebrae along the new neck bones, limb bones, tarsus, calcaneus, patella, olecranon at the new joint centres; iliac crests no longer leave the body.
+- Thermal: references follow the new body; eyes reduced to the area band (1:50, 1:100).
+- 2D (ruling E1): every filled shape redrawn from the new body; the plan croup shape on the pelvis removed (the pelvis carries no body solid); thorax shapes take the trunk skin so no false seam line is drawn; at 1:200 the mane is three shapes (neck-1, neck-2, neck-3) instead of one; ears and tail are `solid: revolved` about their own bone (leaf and tube in front and plan instead of rectangles); detail strokes redrawn on the new forms (hip, shoulder, stifle, knee, hock, coronets).
+
+### Renders opened
+
+1:50 body (six views, several iterations), right side alone, top alone, three-quarter alone; grazing-head-down (six views and left side, three iterations), standing-rest (right side), walk-cycle t = 0.3 s (right side); 1:50 structure; 1:50 thermal cut; 1:100, 1:200, 1:500 body; 1:500 structure; 2D 1:50 (candidate, twice).
+
+### Remaining, with reason
+
+- Rigid segments: in grazing a small flat facet stays at the crest behind the withers and the shoulder slab shows its edge when the scapula rotates (no per-vertex skinning in the schema; the blended fillers close the gaps but cannot stretch).
+- Ribs are elliptic hoops (the kit has no curved rib profile); from the side they read as straight bars sloping back.
+- Not opened: 2D at 1:100, 1:200, 1:500; thermal and structure at 1:100 and 1:200; thermal at 1:500; the graze-and-swish clip.

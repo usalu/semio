@@ -15,12 +15,11 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
     let catalog_kinds: Vec<_> = mutation_catalog["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("string kind")).collect();
     assert_eq!(descriptor_kinds, catalog_kinds);
     let vectors = mutation_catalog["vectors"].as_array().expect("catalog vectors");
-    {
-        let kind = "set-query";
-        let aggregate_variant = "SetQuery";
-        let directory = "🔎️set-query";
-        let binary_tag = 0;
-        let owner = mutation_root.join("🔎️set-query");
+    for (kind, aggregate_variant, directory, binary_tag) in [
+        ("set-query", "SetQuery", "🔎️set-query", 0),
+        ("set-root", "SetRoot", "🎯️set-root", 1),
+    ] {
+        let owner = mutation_root.join(directory);
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
         let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&descriptor_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("direct descriptor must be valid JSON");
@@ -54,11 +53,11 @@ fn direct_owners_descriptors_and_language_neutral_catalog_correspond() {
             assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("📝️text/🦀️.rs")).expect("direct mutation surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/📝️text/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct mutation surface");
             assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
         }
         {
-            let surface_source = std::fs::read_to_string(owner.join("💾️binary/🦀️.rs")).expect("direct mutation surface");
+            let surface_source = std::fs::read_to_string(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations").join(directory).join("🦀️.rs")).expect("direct mutation surface");
             assert!(surface_source.contains(kind) || surface_source.contains(aggregate_variant));
         }
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory), "direct owner {directory} must correspond to the JSON catalog");

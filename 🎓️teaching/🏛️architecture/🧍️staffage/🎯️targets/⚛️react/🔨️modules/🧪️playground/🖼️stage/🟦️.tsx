@@ -14,7 +14,6 @@ import { useArchive } from "../../🧭️context/🟦️.tsx";
 import type { Placement, Playground } from "../../💾️persistence/🟦️.ts";
 import { PlacedFigure } from "../../📍️placed/🟦️.tsx";
 import type { Row } from "../../🔎️search/🟦️.ts";
-import { cn } from "../../🪟️chrome/🟦️.tsx";
 import { linePosition } from "../🧱️compose/🟦️.ts";
 import { PAD_PX, dragPosition, extentM, hitBox } from "../📐️geometry/🟦️.ts";
 
@@ -31,7 +30,7 @@ export function planTurn(yawDeg: number, mirrored: boolean): string {
   return `rotate(${-yawDeg}deg)${mirrored ? " scaleY(-1)" : ""}`;
 }
 
-function Placed(props: { readonly placement: Placement; readonly row: Row | undefined; readonly xM: number; readonly zM: number; readonly selected: boolean; readonly reaction: Reaction | null; readonly playful: boolean; readonly pg: Playground; readonly viewpoint: PlanarViewpoint; readonly sizes: StageSizes; readonly clock: StaffageClock; readonly timelineS: number; readonly onTimeline: boolean; readonly interactive: boolean; readonly onSelect: () => void; readonly onKey: (event: ReactKeyboardEvent) => void; readonly onDown: (event: ReactPointerEvent) => void; readonly onMove: (event: ReactPointerEvent) => void; readonly onUp: (event: ReactPointerEvent) => void }): ReactElement {
+function Placed(props: { readonly placement: Placement; readonly row: Row | undefined; readonly xM: number; readonly zM: number; readonly selected: boolean; readonly reaction: Reaction | null; readonly playful: boolean; readonly pg: Playground; readonly viewpoint: PlanarViewpoint; readonly sizes: StageSizes; readonly clock: StaffageClock; readonly timelineS: number; readonly onTimeline: boolean; readonly interactive: boolean; readonly onSelect: () => void; readonly onKey: (event: ReactKeyboardEvent) => void; readonly onDown: (event: ReactPointerEvent) => void; readonly onMove: (event: ReactPointerEvent) => void; readonly onUp: (event: ReactPointerEvent) => void; readonly onCancel: (event: ReactPointerEvent) => void }): ReactElement {
   const { placement, row, xM, zM, selected, reaction, playful, pg, viewpoint, sizes, interactive } = props;
   const { language, t } = useArchive();
   const hop = useRef<HTMLDivElement>(null);
@@ -55,22 +54,20 @@ function Placed(props: { readonly placement: Placement; readonly row: Row | unde
         <span ref={pat} aria-hidden="true" className="absolute h-1.5 w-12 -translate-x-1/2 rounded-[50%] bg-current opacity-0" style={{ left: xPx, top: groundPx - 3 }} />
       </div>
       {interactive ? (
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           aria-pressed={selected}
           aria-label={t(viewpoint === "plan" ? "playground.placementLabelPlan" : "playground.placementLabel", { title, x: formatNumber(xM, 2, language), z: formatNumber(zM, 2, language) })}
           data-placement={placement.id}
           data-x-m={xM}
           data-z-m={zM}
-          onFocus={props.onSelect}
+          onClick={props.onSelect}
           onKeyDown={props.onKey}
           onPointerDown={props.onDown}
           onPointerMove={props.onMove}
           onPointerUp={props.onUp}
-          onPointerCancel={props.onUp}
-          data-shared-border-frame="" data-shared-border-edges=""
-          className="absolute cursor-grab touch-none outline-none active:cursor-grabbing"
+          onPointerCancel={props.onCancel}
+          className="absolute cursor-grab touch-none border-0 bg-transparent p-0 text-inherit active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current focus-visible:outline-solid"
           style={{ left: xPx + box.left, top: groundPx + box.top, width: box.width, height: box.height, zIndex: order + 1 }}
         />
       ) : null}
@@ -97,26 +94,32 @@ export function PlanarStage(props: {
   const { pg, viewpoint, byId, sizes, interactive, selected, reaction, playful } = props;
   const { t, language } = useArchive();
   const [drag, setDrag] = useState<{ readonly id: string; readonly xM?: number; readonly zM?: number } | null>(null);
-  const gesture = useRef<{ readonly id: string; readonly startX: number; readonly startY: number; readonly xM: number; readonly zM: number; moved: boolean } | null>(null);
+  const gesture = useRef<{ readonly id: string; readonly pointerId: number; readonly startX: number; readonly startY: number; readonly xM: number; readonly zM: number; moved: boolean } | null>(null);
   const { acrossM, downM } = extentM(viewpoint, pg);
   const down = (placement: Placement) => (event: ReactPointerEvent): void => {
+    if (event.button !== 0 || gesture.current !== null) return;
     props.onSelect(placement.id);
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    gesture.current = { id: placement.id, startX: event.clientX, startY: event.clientY, xM: placement.xM, zM: placement.zM, moved: false };
+    gesture.current = { id: placement.id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, xM: placement.xM, zM: placement.zM, moved: false };
   };
   const move = (event: ReactPointerEvent): void => {
     const g = gesture.current;
-    if (g === null) return;
+    if (g === null || g.pointerId !== event.pointerId) return;
     g.moved ||= Math.abs(event.clientX - g.startX) > 2 || Math.abs(event.clientY - g.startY) > 2;
     if (g.moved) setDrag({ id: g.id, ...dragPosition(viewpoint, g, { x: event.clientX - g.startX, y: event.clientY - g.startY }, sizes.metrePx, pg) });
   };
+  const cancel = (event: ReactPointerEvent): void => {
+    if (gesture.current === null || gesture.current.pointerId !== event.pointerId) return;
+    gesture.current = null;
+    setDrag(null);
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
   const up = (event: ReactPointerEvent): void => {
     const g = gesture.current;
-    gesture.current = null;
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
-    const result = drag;
-    setDrag(null);
-    if (g === null || !g.moved || result === null) return;
+    if (g === null || g.pointerId !== event.pointerId) return;
+    cancel(event);
+    if (!g.moved) return;
+    const result = dragPosition(viewpoint, g, { x: event.clientX - g.startX, y: event.clientY - g.startY }, sizes.metrePx, pg);
     const placement = pg.placements.find((candidate) => candidate.id === g.id);
     if (placement === undefined) return;
     const changed = (result.xM !== undefined && result.xM !== placement.xM) || (result.zM !== undefined && result.zM !== placement.zM);
@@ -144,7 +147,7 @@ export function PlanarStage(props: {
         ))}
       </div>
       {pg.placements.map((placement) => (
-        <Placed key={placement.id} placement={placement} row={byId.get(placement.asset)} xM={drag?.id === placement.id && drag.xM !== undefined ? drag.xM : placement.xM} zM={drag?.id === placement.id && drag.zM !== undefined ? drag.zM : placement.zM} selected={selected === placement.id} reaction={reaction} playful={playful} pg={pg} viewpoint={viewpoint} sizes={sizes} clock={props.clock} timelineS={props.timelineS} onTimeline={interactive} interactive={interactive} onSelect={() => props.onSelect(placement.id)} onKey={props.onKey(placement)} onDown={down(placement)} onMove={move} onUp={up} />
+        <Placed key={placement.id} placement={placement} row={byId.get(placement.asset)} xM={drag?.id === placement.id && drag.xM !== undefined ? drag.xM : placement.xM} zM={drag?.id === placement.id && drag.zM !== undefined ? drag.zM : placement.zM} selected={selected === placement.id} reaction={reaction} playful={playful} pg={pg} viewpoint={viewpoint} sizes={sizes} clock={props.clock} timelineS={props.timelineS} onTimeline={interactive} interactive={interactive} onSelect={() => props.onSelect(placement.id)} onKey={props.onKey(placement)} onDown={down(placement)} onMove={move} onUp={up} onCancel={cancel} />
       ))}
     </div>
   );

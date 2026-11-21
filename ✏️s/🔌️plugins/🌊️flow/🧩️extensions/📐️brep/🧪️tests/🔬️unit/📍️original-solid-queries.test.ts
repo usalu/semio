@@ -22,6 +22,29 @@ const triangle = new Triangle();
 const query = new Vector3();
 const nearest = new Vector3();
 
+function expectClassifications(shape: ReturnType<typeof Manifold.cube>, name: string, probes: (number | number[])[][]) {
+  const mesh = shape.getMesh();
+  const copy = (dest: Vector3, index: number) => {
+    const start = mesh.triVerts[index] * mesh.numProp;
+    dest.set(mesh.vertProperties[start], mesh.vertProperties[start + 1], mesh.vertProperties[start + 2]);
+  };
+  for (const [point, expected] of probes) {
+    query.fromArray(point as number[]);
+    let onBoundary = false;
+    for (let i = 0; i < mesh.triVerts.length; i += 3) {
+      copy(triangle.a, i);
+      copy(triangle.b, i + 1);
+      copy(triangle.c, i + 2);
+      if (triangle.closestPointToPoint(query, nearest).distanceTo(query) <= fixture.tolerance) {
+        onBoundary = true;
+        break;
+      }
+    }
+    const actual = onBoundary ? 2 : shape.rayCast(point as Vec3, [18.037, -18.712, 20.322]).length % 2 === 1 ? 0 : 1;
+    expect(actual, `${name} ${point}`).toBe(expected as number);
+  }
+}
+
 test("Manifold meshes agree with primitive and bore point classifications", () => {
   const { cylinder: cylinderData } = bounds;
   const tube = Manifold.cylinder(Math.hypot(...cylinderData.vector), cylinderData.radius, cylinderData.radius, 256);
@@ -43,29 +66,73 @@ test("Manifold meshes agree with primitive and bore point classifications", () =
     bore: outer.subtract(drill),
   };
   for (const [name, shape] of Object.entries(shapes)) {
-    const mesh = shape.getMesh();
-    const copy = (dest: Vector3, index: number) => {
-      const start = mesh.triVerts[index] * mesh.numProp;
-      dest.set(mesh.vertProperties[start], mesh.vertProperties[start + 1], mesh.vertProperties[start + 2]);
-    };
-    for (const [point, expected] of fixture.cases[name as keyof typeof shapes]) {
-      query.fromArray(point as number[]);
-      let onBoundary = false;
-      for (let i = 0; i < mesh.triVerts.length; i += 3) {
-        copy(triangle.a, i);
-        copy(triangle.b, i + 1);
-        copy(triangle.c, i + 2);
-        if (triangle.closestPointToPoint(query, nearest).distanceTo(query) <= fixture.tolerance) {
-          onBoundary = true;
-          break;
-        }
-      }
-      const actual = onBoundary ? 2 : shape.rayCast(point as Vec3, [18.037, -18.712, 20.322]).length % 2 === 1 ? 0 : 1;
-      expect(actual, `${name} ${point}`).toBe(expected as number);
-    }
+    expectClassifications(shape, name, fixture.cases[name as keyof typeof shapes]);
     shape.delete();
   }
   for (const item of [drill, cutter, outer, turned, toroidal, radial, circle, tilted, tube]) item.delete();
+});
+
+test("Manifold classifies the closed material of orthogonal Boolean results", () => {
+  for (const row of fixture.orthogonalClassify) {
+    const { a, b } = booleans[row.source as "orthogonal" | "cavity"];
+    const stock = translatedBox(a.size, a.origin);
+    const tool = translatedBox(b.size, b.origin);
+    const result = row.operator === "brep.bool.fuse" ? stock.add(tool) : stock.subtract(tool);
+    try {
+      if (row.clip) {
+        const clip = translatedBox(row.clip.size, row.clip.origin);
+        const clipped = result.intersect(clip);
+        try {
+          expectClassifications(clipped, row.name, row.points);
+        } finally {
+          clipped.delete();
+          clip.delete();
+        }
+      } else {
+        expectClassifications(result, row.name, row.points);
+      }
+    } finally {
+      result.delete();
+      tool.delete();
+      stock.delete();
+    }
+  }
+});
+
+type CurvedOperand = { kind: string; origin: number[]; size?: number[]; radius?: number; height?: number };
+type CurvedBoolean = { name: string; operator: string; a: CurvedOperand; b: CurvedOperand; points: (number | number[])[][] };
+
+function expectCurvedClassifications(rows: CurvedBoolean[]) {
+  const build = (spec: CurvedOperand) => {
+    if (spec.kind === "box") return translatedBox(spec.size!, spec.origin);
+    const canonical = spec.kind === "sphere"
+      ? Manifold.sphere(spec.radius!, 128)
+      : Manifold.cylinder(spec.height!, spec.radius!, spec.radius!, 256);
+    const placed = canonical.translate(spec.origin as Vec3);
+    canonical.delete();
+    return placed;
+  };
+  for (const row of rows) {
+    const a = build(row.a);
+    const b = build(row.b);
+    const result = row.operator === "brep.bool.intersect" ? a.intersect(b)
+      : row.operator === "brep.bool.fuse" ? a.add(b) : a.subtract(b);
+    try {
+      expectClassifications(result, row.name, row.points);
+    } finally {
+      result.delete();
+      b.delete();
+      a.delete();
+    }
+  }
+}
+
+test("Manifold agrees on the boundaries and material of spherical Boolean results", () => {
+  expectCurvedClassifications(fixture.sphericalClassify);
+});
+
+test("Manifold agrees on the boundaries and material of cylindrical Boolean results", () => {
+  expectCurvedClassifications(fixture.cylindricalClassify);
 });
 
 test("Manifold confirms Euclidean separation and zero overlap distance", () => {

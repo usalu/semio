@@ -143,6 +143,7 @@ fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
         source,
         spans,
         span_len,
+        positions: Box::new(std::array::from_fn(|_| Default::default())),
         schema: header.schema,
         id: header.id,
         camera: header.camera,

@@ -1,0 +1,10 @@
+{
+  "owners": 4631,
+  "lanes": 9,
+  "baseCost": 1,
+  "mediumCost": 100,
+  "heavyCost": 900,
+  "mediumEvery": 17,
+  "heavyEvery": 131,
+  "repeatKeyEvery": 19
+}

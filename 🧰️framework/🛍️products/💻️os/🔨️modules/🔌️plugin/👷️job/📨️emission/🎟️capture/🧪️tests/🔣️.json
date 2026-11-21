@@ -26,7 +26,12 @@
   "mountedHeader": {
     "copyPolicyBytes": 32768,
     "privateFreshBox": true,
-    "sameBackingThroughClose": true
+    "sameBackingThroughClose": true,
+    "captureRetirement": {
+      "foreignDecoderAccepted": false,
+      "pendingAfterHandoff": true,
+      "terminalAfterOwnerClose": true
+    }
   },
   "producer": {
     "cancelAfter": [

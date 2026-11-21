@@ -102,3 +102,46 @@ Final check line: `volumes-check.ts machinery/scissor-lift --product`: PASS (40.
 - Guard-rail tubes and arm tubes are closed square-edged bars (arm edges rounded 6 mm); rail tube corner radii are not modelled.
 - `arms` and `tyres` `areaM2` were changed by more than factor 1.5 (see `area-review.md`); the reviewer has to confirm.
 - 1:200 front and plan keep the pivot tubes of the inner arms (needed for cross-scale agreement with 1:100).
+
+## Round 5 handcraft
+
+Round-5 author (M02), 2026-11-21. Scripts: `r5-machinery-ranges.py` (band ends), `r5-machinery-range.ts` (print suitability walked over the denominators of a band), `r5-scissor-lift-tempo.py` (clip timing). Renders: `🗑️generated/r5-scissor-lift/before/` (every sheet of `r5-sheets.sh`, montages `m1`-`m3`).
+
+### Reference and model against it (1:50)
+
+Reference: Genie GS-1932 metric specification sheet (S1, table in section 1). The rig and the solids are stated from it, so the comparison is exact where the sheet gives the number:
+
+| quantity | reference (S1) | model | deviation |
+|---|---|---|---|
+| platform height stowed / raised | 1.00 / 5.79 m | 1.00 / 5.79 m (pin top 0.90 / 5.69 + 0.10 deck) | 0 % |
+| height stowed with rails | 2.11 m | 2.11 m (`dimensions`, 2D dimension line) | 0 % |
+| length / width | 1.83 / 0.813 m | 1.83 / 0.81 m | 0 / -0.4 % |
+| platform length / slide-out | 1.63 / 0.91 m | 1.63 / 0.91 m | 0 % |
+| wheelbase / tyre diameter | 1.32 / 0.305 m | 1.32 / 0.305 m | 0 % |
+| ground clearance | 0.06 m | 0.06 m | 0 % |
+| guard rail / toe board | 1.10 / 0.15 m | 1.10 / 0.15 m | 0 % |
+| raise / lower time | 16 / 29 s | before 6 / 5.5 s; now 16 / 29 s | fixed |
+| arm length, stage pitch, arm angle | K: 1.46 m, 0.11 m, 4.32 to 63.6 degrees | same, closed linkage in every pose and clip frame | - |
+
+### Grades (before -> after; body / thermal / structure)
+
+- 1:50: A- / A- / A- -> A- / A- / A-. Seen: six-view sheets stowed, `mid-raise`, `raised-working`, `lowering`, clip `raise-cycle` (frame at 5.25 s before re-timing); thermal cut; structure; 2D. Linkage closed and platform level in every pose; rails 40 mm, tyres with rim, cap and nuts, ladder, trays, pothole guards, cylinder between stages 1 and 2.
+- 1:100: A- / A- / A- (unchanged). 1:200: A- / A- / A- (unchanged). 1:500 (3D only, the 2D is unavailable by design): B+ / A- / A- (wheels plain discs, stack merged; reads as the same lift).
+- 2D 1:50, 1:100, 1:200: A- (true projections of the bodies, E1). 1:500: unavailable (`representations.500` reason stands).
+
+### Changes
+
+- Catalog INVALID before (PRINT `range-end-feature` at the 1:200 band end 1:350: `deck-ext` 0.190 mm; then `tyre-rl/rr` 0.196 mm at 1:330, `ext-post-rear` 0.190 mm at 1:300). Walking the band with `r5-machinery-range.ts` showed the 1:200 drawing is suitable at 1:150 to 1:200 but refused at 1:210 (`tube-b4-mid` 0.191 mm) and from 1:260 on, so the band end was set honestly: `representations.200.validRange.maxDenominator` 350 -> 200.
+- Clip tempo at the root (`r5-scissor-lift-tempo.py`): both clips re-timed to the data sheet by a piecewise-linear time map over keys, phases, events, tracks and contacts; the solved linkage keys are kept (spacing 1.3 s raising, 2.4 s lowering; between keys the slide error stays about 1 mm). `raise-cycle` 24 -> 57.5 s (raise 3-19 s, work 19-24.5 s, lower 24.5-53.5 s), `start-lift-stop` 22 -> 55.5 s (key off 54.5 s); descriptions en/de rewritten.
+- Volumes unchanged (already A-; nothing to remodel that the brief's bar finds wrong).
+
+### Check
+
+`r3-validate.ts machinery/scissor-lift --volumes`: VALID, schema 0, validateAsset 0, checkVolumes 0 (after the band fix; re-run after the re-timing below).
+
+### Remaining
+
+- The thermal and structure cut sheets show a speckled cap where a solid block is cut (chassis tub); it is the sheet renderer's cap shading on large solid sections (also on the diesel-generator walls at 1:100/1:200), not a coincident face of the model.
+- Number of stages, arm section, cylinder mounting and the platform mass marker in the deck remain class knowledge (round 3, section 7). 1:500 wheels are discs without tyre shoulders (75 mm feature).
+
+The extension deck’s outer edge remains printable across the 1:200 representation’s range through 1:350. The whole-model paper check passed.

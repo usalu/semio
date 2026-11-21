@@ -362,7 +362,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -1647,7 +1681,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1719,7 +1753,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1825,7 +1859,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1879,7 +1913,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1934,7 +1968,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1980,7 +2014,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2025,7 +2059,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2071,7 +2105,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4607,6 +4641,42 @@
             },
             "iconId": "rotate-cw",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": true,
               "rebase": "restart",
               "reconfigure": "resume",
@@ -6207,5 +6277,34 @@
         "direction": "import"
       }
     ]
-  }
+  },
+  "assets": [
+    {
+      "name": "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/🔤️NotoColorEmoji-subset.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 152308,
+      "sha256": "ec69d141e4276776e952ecc10a5bd02f9282c96928de1787c25012fb2a18fb02"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 26772,
+      "sha256": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f"
+    },
+    {
+      "name": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🔤️shortcodes/🔣️.json",
+      "mediaType": {
+        "class": "text",
+        "form": "document"
+      },
+      "sizeBytes": 853838,
+      "sha256": "d350329a912b3904c8fc32b4c1ef4c01a6d28508c194f4679013243769307a6a"
+    }
+  ]
 }

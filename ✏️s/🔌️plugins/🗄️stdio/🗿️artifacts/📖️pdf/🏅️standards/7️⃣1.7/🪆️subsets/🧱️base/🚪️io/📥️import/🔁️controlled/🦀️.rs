@@ -172,25 +172,26 @@ impl NaturalPdfDecoder {
     fn copy_body(&self) -> usize {
         match self.phase {
             Phase::TransferFile => size_of::<PreparedPdfFile>(),
-            Phase::TransferLift | Phase::Publish => size_of::<PdfSnapshot>(),
+            Phase::TransferLift => size_of::<PdfSnapshot>(),
+            Phase::Publish => size_of::<PreparedPdfFile>() + size_of::<PdfSnapshot>(),
             _ => COPY_PER_WORK,
         }.max(COPY_PER_WORK)
     }
 
     fn reserves_empty_output(&self) -> bool {
         match self.phase {
-            Phase::PrepareFile => self.preparing.as_ref().is_some_and(|owner| owner.reserving_empty_objects()),
+            Phase::PrepareFile => self.preparing.as_ref().is_some_and(|owner| owner.reserving_empty_backing()),
             Phase::Lift => self.lifting.as_ref().is_some_and(|owner| owner.reserving_empty_slots()),
             _ => false,
         }
     }
 
-    fn record(&mut self, step: &PdfByteGraphReceipt, copy_body: usize, inline_annotation: bool, empty_output: bool, context: &mut StepContext<'_>) -> Result<(), MediaError> {
+    fn record(&mut self, step: &PdfByteGraphReceipt, copy_body: usize, inline_item: bool, empty_output: bool, context: &mut StepContext<'_>) -> Result<(), MediaError> {
         let grant = context.retained_grant();
         let allocation_copy = if empty_output { 0 } else { step.allocated_bytes };
         let copied = allocation_copy.saturating_add(step.work.saturating_mul(copy_body));
         let copied_items = usize::from(step.allocated_bytes != 0
-            || inline_annotation && step.work != 0 && matches!(step.event, Ok(PdfByteGraphEvent::More))
+            || inline_item && step.work != 0 && matches!(step.event, Ok(PdfByteGraphEvent::More))
             || matches!(step.event, Ok(PdfByteGraphEvent::Object | PdfByteGraphEvent::Complete)));
         if copied > grant.maximum_copy_bytes {
             return Err(failure("PDF decoder exceeded its admitted copy grant"));
@@ -273,14 +274,14 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
         let max_work = self.contract.max_work_units_per_step;
         while !context.should_yield() && !context.is_cancelled() && self.progress.completed_work_units - start < max_work {
             let grant = context.retained_grant();
-            let annotation_body = self.lifting.as_ref().map_or(0, |owner| owner.next_annotation_body_bytes());
-            let copy_body = self.copy_body().max(annotation_body);
+            let inline_body = self.lifting.as_ref().map_or(0, |owner| owner.next_inline_body_bytes());
+            let copy_body = self.copy_body().max(inline_body);
             if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copy_body { break; }
             let empty_output = self.reserves_empty_output();
             let allocation_boundary = if empty_output { grant.maximum_release_bytes } else { grant.maximum_copy_bytes - copy_body };
             let grant = CosGrant { work: 1, allocation_bytes: grant.maximum_capacity_bytes.min(allocation_boundary), release_bytes: grant.maximum_release_bytes };
             let step = self.next(grant)?;
-            self.record(&step, copy_body, annotation_body != 0, empty_output, context)?;
+            self.record(&step, copy_body, inline_body != 0, empty_output, context)?;
             if step.work != 0 { self.blocked = None; }
             match step.event {
                 Ok(Event::Object) => self.progress.decoded_items += 1,

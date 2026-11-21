@@ -1,0 +1,30 @@
+{
+  "format": 1,
+  "tag": 6,
+  "length": [137, 1],
+  "json": "{\"mutation\":\"insertObject\",\"id\":{\"num\":5,\"gen\":0},\"value\":{\"kind\":\"null\"},\"admittedStreamRoles\":{\"removed\":[0],\"modified\":[],\"added\":[]}}",
+  "largeImage": {
+    "tag": 26,
+    "width": 2048,
+    "height": 2048,
+    "sample": 0,
+    "hostMaximumItems": 64,
+    "hostMaximumCopyBytes": 32768,
+    "hostMaximumCapacityBytes": 16777216
+  },
+  "cancelAfterPaidTurns": [0, 1, 2, 3, 4, 5, 32, 150, 180, 350, 470, 473, 474, 475, 1024],
+  "refusals": [
+    {"name": "version", "header": [2, 6, 137, 1]},
+    {"name": "undeclared tag", "header": [1, 255, 137, 1]},
+    {"name": "nonminimal length", "header": [1, 6, 137, 129, 0], "coldAccepts": true},
+    {"name": "overlong length", "header": [1, 6, 128, 128, 128, 128, 128, 128, 128, 128, 128, 2]},
+    {"name": "truncated payload", "header": [1, 6, 138, 1]},
+    {"name": "trailing byte", "header": [1, 6, 136, 1]},
+    {"name": "payload over 64 MiB", "header": [1, 6, 129, 128, 128, 32], "kind": "work-limit"},
+    {"name": "tag mismatch", "header": [1, 7, 137, 1]},
+    {"name": "duplicate member", "tag": 6, "json": "{\"mutation\":\"insertObject\",\"id\":{\"num\":5,\"num\":4,\"gen\":0},\"value\":{\"kind\":\"null\"}}"},
+    {"name": "typed payload mismatch", "tag": 6, "json": "{\"mutation\":\"insertObject\",\"id\":{\"num\":\"five\",\"gen\":0},\"value\":{\"kind\":\"null\"}}"},
+    {"name": "extra JSON", "tag": 6, "json": "{\"mutation\":\"insertObject\"} {}"},
+    {"name": "missing discriminator", "tag": 6, "json": "{\"id\":{\"num\":5,\"gen\":0},\"value\":{\"kind\":\"null\"}}"}
+  ]
+}

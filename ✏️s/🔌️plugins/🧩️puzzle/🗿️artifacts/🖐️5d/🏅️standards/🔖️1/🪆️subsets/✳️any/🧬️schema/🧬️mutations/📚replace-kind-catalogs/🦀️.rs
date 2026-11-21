@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCa
 
 //#region 🔖️Mutation
 /// 📚 `replace-kind-catalogs` payload — `None` clears the catalogs.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]

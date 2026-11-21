@@ -54,6 +54,7 @@ fn native_page_edit_places_the_first_draft_with_a_bound_font() {
 
 #[test]
 fn page_inspector_edits_and_clears_pdf_boundaries() {
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use crate::editor::page::{canvas_layers, render_inspector};
     use crate::standards::v1_7::subsets::base::io::{export::encode_pdf, import::decode_pdf, mutation_bridge::apply_pdf_mutation};
     use semio_framework_value::DslValue;
@@ -95,11 +96,25 @@ fn page_inspector_edits_and_clears_pdf_boundaries() {
     let panel = render_inspector(&snapshot, Some("p0:paper"), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::En).unwrap();
     let mut names = Vec::new();
     let mut shown = Vec::new();
-    super::collect_inspector(&panel, &mut names, &mut shown);
+    let policies = semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(panel), |panel| {
+        super::collect_inspector(panel, &mut names, &mut shown);
+        panel.children.iter().filter(|node| matches!(&node.component,
+            semio_ui_contract::Component::Input(input) if input.commit.as_ref().is_some_and(|mode| mode.as_str() == "blurDecimalQuad"))).count()
+    });
     assert_eq!(names.iter().filter(|name| *name == "set-page-extra").count(), 5);
     for definition in case["edits"].as_array().unwrap() {
         assert!(shown.iter().any(|value| value == definition["coordinates"].as_str().unwrap()));
     }
+    assert_eq!(policies, 5);
+    let movement = &case["decimalDrafts"]["move"];
+    assert_eq!(snapshot.pages[0].trim_box.unwrap()[2], 145.0);
+    let edit = edit_from_action("set-page-extra", Some(&DslValue::from(box_args(movement)))).unwrap();
+    let edits = apply_payload(&snapshot, &edit.action, &edit.payload).unwrap();
+    assert_eq!(edits.len(), 1);
+    apply_pdf_mutation(&mut snapshot, &edits[0]);
+    let moved = &after_edit(&snapshot).pages[0];
+    let expected: [f64; 4] = serde_json::from_value(movement["value"].clone()).unwrap();
+    assert_eq!(moved.trim_box, Some(expected));
     let malformed = edit_from_action("set-page-extra", Some(&DslValue::from(json!({"page": 0, "object": "box.crop", "field": "text", "value": "0 1 NaN 4"})))).unwrap();
     assert!(apply_payload(&snapshot, &malformed.action, &malformed.payload).is_err());
     apply(&mut snapshot, "set-page-extra", box_args(&case["clear"]));

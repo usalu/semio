@@ -31,9 +31,14 @@ use super::{MeshOperatorJob};
 pub const LIMIT: usize = 100_000;
 pub fn invalid(message: impl Into<String>) -> EvalError { EvalError::InvalidInput(message.into()) }
 /// 🎟️ Advances a kernel modeling job by up to `budget` units inside the caller's own turn: the turn's grant and fuel fund one original effect.
-pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize, cx: &mut semio_framework_job::StepContext<'_>) -> Result<MeshModelingStep, MeshKernelError> {
+pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize, cx: &mut semio_framework_job::StepContext<'_>, receipt: &mut RetainedCloneProgress) -> Result<MeshModelingStep, MeshKernelError> {
     let grant = cx.retained_grant();
-    let Some((step, _)) = cx.with_original_effect(grant, |_, effect| job.step(budget, effect, &mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? else { return Ok(MeshModelingStep::Working(job.progress())) };
+    let mut modeled = RetainedCloneProgress::default();
+    let Some((step, work)) = cx.with_original_effect(grant, |_, effect| job.step(budget, effect, &mut modeled)).map_err(MeshKernelError::Retained)? else {
+        return Ok(MeshModelingStep::Working(job.progress()));
+    };
+    cx.consume_work(work);
+    *receipt = receipt.checked_add(modeled).map_err(MeshKernelError::Retained)?;
     step
 }
 
@@ -41,7 +46,7 @@ pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize, cx: &mut semio_f
 pub fn modeling_cold(job: &mut MeshModelingJob, budget: usize) -> Result<MeshModelingStep, MeshKernelError> {
     let grant = RetainedCloneGrant { maximum_items: budget.max(1), maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 10 };
     let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 1_000_000_000_000);
-    match wallet.run(grant, 1 << 20, |effect| job.step(budget, effect, &mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? { Some(done) => done.output, None => Err(MeshKernelError::InvalidInput("modeling quote refused".into())) }
+    match wallet.run_invoked(grant, 1 << 20, |effect| job.step(budget, effect, &mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? { Some(done) => done.output, None => Err(MeshKernelError::InvalidInput("modeling quote refused".into())) }
 }
 
 /// 🎟️ Advances a kernel tessellation by up to `events` producer events, each inside the caller's own turn.
@@ -95,6 +100,11 @@ pub fn selection(input: &Dictionary, name: &str, bound: usize) -> Result<Vec<u32
         if !seen.insert(id) && name != "edges" && name != "selection" { return Err(invalid("duplicate selection index")); }
         Ok(id)
     }).collect()
+}
+pub(crate) fn bridge_anchors(input:&Dictionary,bound:usize)->Result<[EdgeId;2],EvalError>{
+    let ids=selection(input,"edges",bound)?;
+    let [a,b]=ids.as_slice() else {return Err(invalid("bridge requires exactly two directed boundary edges"));};
+    Ok([EdgeId(*a),EdgeId(*b)])
 }
 pub fn component_vertices(input: &Dictionary, mesh: &HalfedgeMesh) -> Result<Vec<VertexId>, EvalError> {
     let mode = read_text(input, "mode")?;

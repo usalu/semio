@@ -172,3 +172,48 @@ Tools: `r3-sheet.ts`, `volumes-render.ts` overlays, `r3-2d.ts`, and two own clos
 - `🗑️generated/r3-shower-head/` is removed; `python3 r3-shower-head-model.py && python3 r3-shower-head-roots.py` rebuilds the candidate.
 
 State: finished and in the catalog, with the one failing area line of section 6 and the limits of section 9.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-shower-head-model.py` (imports the round-3 model, replaces the 1:50 neck, writes the volumes source). No root change outside `volumes`.
+
+### Reference and model against it
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| spray disc | 110 mm (hansgrohe Croma Select S 110, 26560400) | 110 mm | 0 % |
+| rail tube | 22 mm (Unica'Croma 0.65 m, 26503000) | 22 mm | 0 % |
+| bracket axes | 0.686 m | 0.686 m | 0 % |
+| rail centre from wall | 60 mm | 60 mm | 0 % |
+| hose | 13 mm, 1.25 m (Isiflex 28272000) | 13 mm, 1.20 m bight between the nuts | -4 % length (the nuts take the rest) |
+| handle | 25 to 29 mm | 25 to 29 mm | 0 % |
+| neck to disc | flows onto the lower back of the head | 26 to 31 mm, sinks into the dome | - |
+
+`volumes-bounds` 1:50: 1.4 / 0.6 / 0 mm.
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | B+ (neck a flat 54 mm tongue plate lying 6 mm proud on the back of the disc, polygon outline visible) / A- / A- | A- / A- / A- |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | B+ (hose at 30 mm as thick as the pole) / A- / B+ | unchanged |
+| 1:500 | B+ / B+ / B+ | unchanged |
+
+### Changes
+
+- 1:50 neck: six stations stated against the back surface of the disc (dome at v -0.0017 at u 0.139, 0.0 at 0.152, -0.0008 at 0.169): it widens from 26 to 31 mm, flattens to 9 mm and ends 2 mm under the dome, so it runs onto the lower back and sinks in. Decision text en/de updated.
+
+### Looked at (opened)
+
+Before: every scale's body, thermal cut, structure, poses off and eco, clips turn-on-and-run t 150 s, eco-and-off t 400 s, 1:50 close-ups of hand shower and elbow. After: 1:50 close-up (four directions), 1:50 pose off, 1:50 thermal cut. 2D unchanged (round-3 enlargements; `volumes-silhouette` 1:50 0.973 / 0.989 / 0.986).
+
+### Checks
+
+`volumes-check.ts --product`: FAIL on one line only, `volumes-thermal-coverage` 1:50 `head` 0.0252 against 0.0303 (16.9 %; C16 cap of round 3, proposal 0.0252 in `area-review.md`). `r3-validate.ts --catalog-only --volumes`: schema 0, validateAsset 0, checkVolumes 1 (the same line). Spliced.
+
+### Remaining
+
+- Rig: bone `rail` runs along the wall plane, 60 mm behind the tube axis (the sliding `holder` joint is on the axis, so motion is right); moving the root bone onto the axis means re-framing every rail solid and 2D shape, not done.
+- Hose 15 mm at 1:100 and 30 mm at 1:200 (slender centre-line tool defect, round 3 section 7); hose rigid when the holder slides.
+- `head` area (area reviewers).

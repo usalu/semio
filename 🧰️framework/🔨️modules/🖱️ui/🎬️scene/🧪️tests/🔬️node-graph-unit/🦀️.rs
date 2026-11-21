@@ -5,20 +5,31 @@ use serde_json::Value;
 
 #[test]
 fn node_graph_hover_port_id_round_trips_as_camel_case_and_omits_when_none() {
-    let hover = NodeGraphHover { edge_id: None, node_id: Some("combine".into()), port_id: Some("b".into()) };
+    let hover = NodeGraphHover { edge_id: None, node_id: Some("combine".into()), port_id: Some("b".into()), port_ids: Vec::new(), hover_source_window_id: None };
     let value = serde_json::to_value(&hover).expect("serialize");
     assert_eq!(value.get("nodeId").and_then(Value::as_str), Some("combine"));
     assert_eq!(value.get("portId").and_then(Value::as_str), Some("b"));
     let back: NodeGraphHover = serde_json::from_value(value).expect("deserialize");
     assert_eq!(back, hover);
 
-    let bare = NodeGraphHover { edge_id: None, node_id: Some("combine".into()), port_id: None };
+    let bare = NodeGraphHover { edge_id: None, node_id: Some("combine".into()), port_id: None, port_ids: Vec::new(), hover_source_window_id: None };
     let bare_value = serde_json::to_value(&bare).expect("serialize");
     assert!(bare_value.get("portId").is_none());
-    let edge=NodeGraphHover{node_id:None,port_id:None,edge_id:Some("wire-1".into())};
+    let edge=NodeGraphHover{node_id:None,port_id:None,edge_id:Some("wire-1".into()), hover_source_window_id: None };
     let wire=serde_json::to_value(&edge).unwrap();
     assert_eq!(wire,serde_json::json!({"edgeId":"wire-1"}));
     assert_eq!(NodeGraphHover::from_value(edge.to_value()).unwrap(),edge);
+}
+
+#[test]
+fn node_graph_hover_round_trips_missing_panel_and_window_source() {
+    for source in [None, Some(None), Some(Some("preview:1".into()))] {
+        let hover = NodeGraphHover { edge_id: None, node_id: Some("combine".into()), port_id: Some("b".into()), port_ids: Vec::new(), hover_source_window_id: source.clone() };
+        let json = serde_json::to_value(&hover).unwrap();
+        assert_eq!(json.get("hoverSourceWindowId"), source.as_ref().map(|window| serde_json::json!(window)).as_ref());
+        assert_eq!(serde_json::from_value::<NodeGraphHover>(json).unwrap(), hover);
+        assert_eq!(NodeGraphHover::from_value(hover.to_value()).unwrap(), hover);
+    }
 }
 
 #[test]

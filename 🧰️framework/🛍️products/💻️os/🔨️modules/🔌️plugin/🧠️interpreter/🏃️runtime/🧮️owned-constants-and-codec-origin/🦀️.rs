@@ -28,11 +28,44 @@ pub(super) const OWNED_CODEC_ORIGIN_WAIT_POLL: std::time::Duration = std::time::
 pub struct OwnedCompiledGuest {
     pub(super) artifact: Arc<OwnedSemioArtifact>,
     pub(super) codec_origin: Arc<OwnedCodecOriginCell>,
+    pub(super) actor_preparation: Option<Arc<semio_plugin_interpreter::PreparedCoreInstance>>,
 }
 
 impl OwnedCompiledGuest {
     /// 🪪️ Both handles must borrow the same actual artifact and codec-origin owner.
-    pub fn same_origin(&self,other:&Self)->bool{Arc::ptr_eq(&self.artifact,&other.artifact)&&Arc::ptr_eq(&self.codec_origin,&other.codec_origin)}
+    pub fn same_origin(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.artifact, &other.artifact)
+            && Arc::ptr_eq(&self.codec_origin, &other.codec_origin)
+            && match (&self.actor_preparation, &other.actor_preparation) {
+                (Some(left), Some(right)) => Arc::ptr_eq(left, right),
+                (None, None) => true,
+                _ => false,
+            }
+    }
+
+    /// 🌱️ Prepares a component before it is published as an immutable original actor origin.
+    pub fn prepare_actor(&mut self, fuel: u64, progress: impl FnMut(u64) -> bool) -> Result<bool, PluginHostError> {
+        if self.actor_preparation.is_none() {
+            self.actor_preparation = self.artifact.prepare_actor(fuel, progress)
+                .map_err(|error| PluginHostError::Plugin(error.to_string()))?.map(Arc::new);
+        }
+        Ok(self.actor_preparation.is_some())
+    }
+
+    /// 📦️ Streams the already sealed actor's portable image under its actual component digest.
+    pub fn write_actor_preparation(&self, component_sha256: [u8; 32], maximum_bytes: usize, mut write: impl FnMut(&[u8]) -> std::io::Result<()>) -> Result<(), PluginHostError> {
+        let image = self.actor_preparation.as_ref().ok_or_else(|| PluginHostError::Plugin("no prepared actor image".into()))?;
+        image.write_image(component_sha256, maximum_bytes, |bytes| write(bytes).map_err(|error| semio_plugin_interpreter::CoreError::State(error.to_string())))
+            .map_err(|error| PluginHostError::Plugin(error.to_string()))
+    }
+
+    /// 🌱️ Attaches a verified portable preparation to this fresh exact compiled actor module.
+    pub fn restore_actor_preparation(&mut self, component_sha256: [u8; 32], image: &[u8], maximum_bytes: usize, checkpoint: impl FnMut() -> bool) -> Result<(), PluginHostError> {
+        let prepared = self.artifact.restore_actor_preparation(component_sha256, image, maximum_bytes, maximum_bytes, checkpoint)
+            .map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        self.actor_preparation = Some(Arc::new(prepared));
+        Ok(())
+    }
     /// 📏️ The bytes this compiled guest holds beyond its parsed component: its codec origin once a codec call assembled it
     /// ([`OwnedCodecOriginCell`]), else none. A residency budget charges a compiled guest this on top of its component.
     pub fn codec_origin_bytes(&self) -> u64 {

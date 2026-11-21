@@ -69,6 +69,9 @@ impl PageProgramCursor {
         }
     }
 
+    /// 👀️ Borrows a ready operator before the collector accepts its page resource binding.
+    pub fn pending_operator(&self) -> Option<&PdfOp> { self.source.peek_operator() }
+
     /// 🫴️ Transfers the native page content vector after all input and migration backing settles.
     pub fn take_program(&mut self) -> Option<Vec<PdfOp>> {
         if !matches!(self.stage, Stage::Ready) { return None; }
@@ -93,7 +96,8 @@ impl PageProgramCursor {
 
     fn collect(&mut self, fonts: &dyn FontTable, grant: CosGrant) -> PageContentReceipt {
         let operator = self.source.peek_operator().expect("ready native page operator");
-        let unmapped_text = text_operator(operator) && self.source.selected_font().and_then(|name| fonts.controlled_type1(name)).is_none();
+        let unmapped_text = text_operator(operator) && !self.source.selected_font()
+            .is_some_and(|name| fonts.controlled_type1(name).is_some() || fonts.controlled_code_width(name).is_some());
         if unmapped_text || operator_bytes(operator).is_none() {
             return self.begin_fallback(PageContentBarrier::ResourceContext, worked());
         }

@@ -12,3 +12,6 @@ mod unit_tests;
 
 #[cfg(test)]
 use semio_framework_value_testing_allocator as _;
+
+/// 🧾 Receives one entire verified original edit on the canonical Store frontier.
+pub use semio_os_store_engine_bundle::AtomicStoreReceive;

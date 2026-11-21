@@ -11,7 +11,7 @@ import { playgroundCompositionPathV1 } from "../../../../../🔌️plugin/📇�
 import { isMainModuleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🌐️ Owns one browser listener consuming build-completed WGPU artifacts. */
-class ServeScript extends BundleScript {
+export class ServeScript extends BundleScript {
   async run([variant, profile, ...args]: string[]): Promise<void> {
     if (variant === undefined || (profile !== "prototype" && profile !== "release")) throw new Error("serve <variant> <prototype|release> [--port <port>] [--host <host>]");
     let composition = process.env.SEMIO_WGPU_COMPOSITION_PATH === undefined ? join(import.meta.dirname, "🎚️config/🟦️.ts") : resolve(this.repoRoot, playgroundCompositionPathV1(process.env.SEMIO_WGPU_COMPOSITION_PATH));

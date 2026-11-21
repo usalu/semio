@@ -1,3 +1,8 @@
+use semio_s_artifact_stdio_pdf_schema_5::standards;
+use standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+use standards::v1_7::subsets::vt::io::{CODE_DPART_ROOT, CODE_DPM, check_vt_conformance};
+use semio_framework_diagnostic::Severity;
+
 mod tests {
     use super::*;
 

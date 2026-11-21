@@ -1,0 +1,15 @@
+# CAS Pin Expiry and Renewal
+
+The controlled expiry interleaving in [CAS Pin Publication Ordering](audit-cas-pin-publication.md) produced this sequence: a collector parsed an expired holder record, a same-holder renewal published a valid receipt by atomic rename, and the collector unlinked that path using its earlier observation. Rechecking the file identity or bytes cannot make the subsequent pathname unlink conditional on that identity.
+
+## Callers and Ownership
+
+The CAS defaults to a host-local root shared by all workspaces for the user. Graph closure holders use `graph-closures.<pid>` and call the coalesced process-lifetime hold entry. The isolated revision helper makes a randomized holder per revision pin and exposes release and renewal. Derived graph nodes use a deterministic holder from the graph identity and can have publishers in different processes. Existing readers enumerate visible JSON pins under `v1/p`. Existing release unlinks `<holder>.json`.
+
+## Portable Designs
+
+- Unique immutable JSON names ensure that expiry of an observed pathname cannot delete a future renewal. Existing collectors can parse immutable records. Immediate removal of a superseded file introduces a visibility gap for an already-running collector that listed the old name before the rename and opens it after removal. A controlled interleaving against the existing reader returned an empty pin map although the replacement was present and valid. Existing readers do not retry a pin-directory enumeration at that boundary. Keeping old records until the whole lease expires avoids the early removal gap and makes superseded digests continue to protect objects. Generation retention increases scan and storage cost for large graph pin sets. Existing release cannot remove a newly named immutable record.
+- A stable commit pointer plus immutable bodies gives upgraded readers a single current generation per holder. Concurrent direct pin, release and cleanup still require publication and reclamation rules, including mixed process versions, an atomic release boundary, failed publication recovery, and directory-stamp invalidation. The steady path incurs an additional atomic write, and older release does not follow the pointer.
+- A cross-process custody primitive around the existing stable file could preserve the current layout once every participant honored it. The CAS collector lock governs cooperating collectors, allows lockless collection during space failures, and uses a check-then-unlink repair. It cannot serve as exact pin custody, and the older readers and publishers do not acquire it.
+
+The PID-scoped graph holder narrows writer overlap but cannot repair the reader's listed-old-name race or fulfill old release against immutable filenames. No expiry code was changed. The separately verified hold-write coalescing remains in place. A durable expiry fix needs a single versioned publication/reclamation protocol verified against pin visibility, cleanup and release during worker overlap.

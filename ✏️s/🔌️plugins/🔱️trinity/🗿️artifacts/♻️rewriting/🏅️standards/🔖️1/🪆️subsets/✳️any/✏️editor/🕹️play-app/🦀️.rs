@@ -5,6 +5,9 @@ use semio_framework_2d_compute::EngineHandles;
 use crate::editor::rewriting::window_config;
 use crate::editor::rewriting::modes::edit;
 use semio_s_artifact_trinity_jack_semio_content::SemioJackContentOwner;
+use semio_s_artifact_trinity_rewriting_inferences::rule_media::{RewriteInvocation, encode_invocation_value};
+
+const RULE_OUTPUT: &str = "rule:out";
 
 //#region 🔖️TrinityRewritingPlayApp
 /// ♻️ Trinity Rewriting play app — a parametric-rewriting editor over a {@link RewritingSnapshot} projection.
@@ -33,6 +36,14 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         crate::standards::v1::subsets::any::schema::snapshot::rewriting_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
+
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::io::binary::mutations::build_document_store_owners(grant))
+    }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
         Some(semio_plugin::no_config_store_disposer())
@@ -106,8 +117,11 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     }
 
     /// 🎯️ Host-action bridge into the closed `TrinityRewritingCommand` enum — see `args_bridge`.
-    fn command_from_action(action: &str, args: Option<&semio_plugin::DslValue>) -> Result<Self::Command, Fault> {
-        args_bridge::command_from_action(action, args)
+    fn command_from_action(action: &str, args: &mut Option<semio_plugin::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() {
+            return Err(fault);
+        }
+        args_bridge::command_from_action(action, args.as_ref())
     }
 
     fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -151,6 +165,11 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     /// 🔌️ `"graph:out"` re-emits the rule-applied result graph, alongside the implicit `"artifact:out"`.
     fn export_media(port: &str, doc: &ArtifactView<'_, RewritingSnapshot>) -> Result<Media, MediaError> {
         match port {
+            RULE_OUTPUT => {
+                let invocation = RewriteInvocation { rule: build_rule_from_state(doc.snapshot), bindings: doc.snapshot.parameter_bindings.clone() };
+                let value = encode_invocation_value(&invocation).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                Ok(Media { media_type: REWRITE_MEDIA_TYPE, payload: MediaPayload::Intrinsic { schema: REWRITE_MEDIA_SCHEMA.into(), value } })
+            }
             "graph:out" => {
                 let state = crate::standards::v1::subsets::any::content::composed(doc.snapshot, &doc.children).map_err(|fault| MediaError::Payload(port.to_string(), fault.message))?;
                 let snapshot = rewritten_graph(&state).map_err(|error| MediaError::Payload(port.to_string(), error))?;

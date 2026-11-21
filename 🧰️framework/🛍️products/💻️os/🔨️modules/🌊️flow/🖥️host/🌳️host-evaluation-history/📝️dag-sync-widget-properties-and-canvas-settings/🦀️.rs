@@ -43,8 +43,10 @@ impl FlowHost {
             .edges
             .iter()
             .map(|edge| {
-                let (from, from_port) = parse_port_endpoint(&edge.source, "");
-                let (to, to_port) = parse_port_endpoint(&edge.target, "");
+                let endpoint = |text: &str| semio_os_infinite_directed_presentation::parse_dag_endpoint(text)
+                    .map_or_else(|| (text.to_owned(), String::new()), |(node, port)| (node.to_owned(), port.into_owned()));
+                let (from, from_port) = endpoint(&edge.source);
+                let (to, to_port) = endpoint(&edge.target);
                 SynapseSpec { id: edge.id.clone(), from, to, from_port, to_port }
             })
             .collect();
@@ -55,6 +57,11 @@ impl FlowHost {
 
     /// 🪞️ Projects the same graph and resolved ports without constructing an evaluation or history owner.
     pub fn project_dag_snapshot(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>)->DagHostSnapshot{let mut graph=Self::raw_dag_snapshot(host_snapshot,kind_infos);for node in &mut graph.nodes{fit_node_size(node);}graph}
+
+    /// 📚️ Projects a graph with its registered ports under a borrowed catalogue read.
+    pub fn project_registered_dag_snapshot(host_snapshot: &dyn FlowSnapshotSource) -> DagHostSnapshot {
+        semio_os_flow_operators::with_flow_neuron_kind_info_map(|infos| Self::project_dag_snapshot(host_snapshot, infos))
+    }
 
     /// 🔍️ Frames original projected node bounds without an evaluation or history owner.
     pub fn project_focus_selection_camera(source:&dyn FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,selected:&[String],width:u32,height:u32,pad:f64)->Option<CameraJson>{
@@ -77,7 +84,7 @@ impl FlowHost {
                 }
                 let from_port = resolve_synapse_port(&syn.from, &syn.from_port, PortSide::Output, host_snapshot.widgets(), host_snapshot.synapses(), kind_infos).unwrap_or_else(|| syn.from_port.clone());
                 let to_port = resolve_synapse_port(&syn.to, &syn.to_port, PortSide::Input, host_snapshot.widgets(), host_snapshot.synapses(), kind_infos).unwrap_or_else(|| syn.to_port.clone());
-                Some(DagHostSnapshotEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, from_port), target: format!("{}@{}", syn.to, to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
+                Some(DagHostSnapshotEdge { id: syn.id.clone(), source: semio_os_infinite_directed_presentation::dag_endpoint(&syn.from, &from_port), target: semio_os_infinite_directed_presentation::dag_endpoint(&syn.to, &to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             })
             .collect();
         DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_os_infinite_directed_presentation::DagCamera { x: host_snapshot.camera().x, y: host_snapshot.camera().y, zoom: host_snapshot.camera().zoom }, nodes, edges }

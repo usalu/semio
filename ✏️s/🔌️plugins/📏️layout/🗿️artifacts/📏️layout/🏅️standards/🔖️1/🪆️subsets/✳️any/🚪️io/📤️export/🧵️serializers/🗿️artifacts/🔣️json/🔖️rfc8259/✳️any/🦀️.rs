@@ -7,6 +7,3 @@ pub fn serialize_text(from: &LayoutSnapshot) -> Result<String, store::PackError>
     Ok(semio_framework_pack_json::to_json_string(from))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

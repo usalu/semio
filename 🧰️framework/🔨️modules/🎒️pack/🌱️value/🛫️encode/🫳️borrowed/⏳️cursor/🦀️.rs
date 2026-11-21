@@ -125,6 +125,18 @@ impl BorrowedProjectedPackCursor {
     pub fn is_complete(&self) -> bool { self.phase == Phase::Complete && self.pending_offset == self.pending_length }
     pub fn terminal_is_empty(&self) -> bool { self.phase == Phase::Closed && self.symbols.terminal_is_empty() && self.frames.terminal_is_empty()&&self.chunks.terminal_is_empty()&&self.expression.terminal_is_empty() }
     pub fn next_capacity_byte_demand(&self) -> Result<usize, ValueError> { if self.phase==Phase::Expression&&self.expression_state.mode!=1{return self.expression.next_capacity_byte_demand();}if self.phase==Phase::Initialize&&!self.frames.has_reserved_slot(){self.frames.next_allocation_bytes().map_err(page_error)}else if self.phase==Phase::ChunkReserve&&!self.replaying&&!self.chunks.has_reserved_slot(){self.chunks.next_allocation_bytes().map_err(page_error)}else if self.phase == Phase::Reserve { self.symbols.next_allocation_bytes().map_err(page_error) } else { Ok(0) } }
+    /// 🪙️ Quotes the intrinsic cursor step and any delegated page reservation.
+    pub fn next_intrinsic_advance_work_demand(&self) -> Result<u64, ValueError> {
+        let reservation = match self.phase {
+            Phase::Initialize => self.frames.reserve_one_work_demand(),
+            Phase::Reserve => self.symbols.reserve_one_work_demand(),
+            Phase::ChunkReserve if !self.replaying => self.chunks.reserve_one_work_demand(),
+            Phase::Expression => return Err(invalid("intrinsic Pack cannot contain an expression cursor")),
+            _ => Ok(0),
+        }.map_err(page_error)?;
+        reservation.checked_add(1).ok_or_else(|| invalid("intrinsic Pack work demand overflow"))
+    }
+
     /// 🪜️ Quotes the actual next original source path or symbol backing without pricing authority.
     pub fn next_advance_depth_demand(&self) -> Result<usize,ValueError> {
         let source_depth=self.depth.checked_add(1).ok_or_else(||invalid("Pack source depth overflow"))?;

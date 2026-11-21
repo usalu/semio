@@ -32,23 +32,22 @@ impl ArtifactCommandWork<App> for Work {
         (!self.complete&&path.segments.len()<=65536&&snapshot.layers.len()+snapshot.assets.len()<=4096&&interaction.selection.values().all(|value|value.ids.len()<=4096)).then_some(1)
     }
     fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>, semio_framework_job::OriginalTurnFailure> {
-        let original: Result<_, Fault> = (|| {
-        if self.complete||self.closing {return Err(Fault::from("drawing-path-work-terminal"));}
-        if cx.is_cancelled() {return Err(Fault::from("Path simplification cancelled"));}
-        let DrawingCommand::EditPath(payload)=input.command else {return Err(Fault::from("drawing-path-command-required"));};
+        if self.complete||self.closing {return Err(Fault::from("drawing-path-work-terminal").into());}
+        if cx.is_cancelled() {return Err(Fault::from("Path simplification cancelled").into());}
+        let DrawingCommand::EditPath(payload)=input.command else {return Err(Fault::from("drawing-path-command-required").into());};
         let PathEdit::Simplify {tolerance}=payload.edit.as_ref() else {
             let mut work=DrawingWindowCommandWork::new("editPath");
             let result=work.step(input,cx)?;self.complete=true;return Ok(result);
         };
         let identity=input.snapshot as*const DrawingSnapshot as usize;
-        if self.identity.is_some_and(|previous|previous!=identity) {return Err(Fault::from("Path simplification source changed"));}
+        if self.identity.is_some_and(|previous|previous!=identity) {return Err(Fault::from("Path simplification source changed").into());}
         self.identity=Some(identity);
-        if semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(input.snapshot,&payload.layer_id) {return Err(Fault::from("Unlock the path before editing"));}
-        let Some(DrawingLayerNode::Path(path))=semio_s_artifact_draw_drawing_model::find_drawing_layer(input.snapshot,&payload.layer_id) else {return Err(Fault::from("Select a path to edit"));};
+        if semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(input.snapshot,&payload.layer_id) {return Err(Fault::from("Unlock the path before editing").into());}
+        let Some(DrawingLayerNode::Path(path))=semio_s_artifact_draw_drawing_model::find_drawing_layer(input.snapshot,&payload.layer_id) else {return Err(Fault::from("Select a path to edit").into());};
         let owner=self.workspace.get_or_insert_with(||ControlledRetirement::new(Workspace {source:Default::default(),job:None}).unwrap_or_else(|_|unreachable!()));
         let workspace=owner.original_mut().ok_or_else(||Fault::from("drawing-path-retirement-started"))?;
         while !cx.should_yield() {
-            if cx.is_cancelled() {return Err(Fault::from("Path simplification cancelled"));}
+            if cx.is_cancelled() {return Err(Fault::from("Path simplification cancelled").into());}
             if workspace.job.is_none() {
                 if workspace.source.len()<path.segments.len() {
                     cx.set_stage("path-copy");
@@ -74,9 +73,6 @@ impl ArtifactCommandWork<App> for Work {
             return Ok(ArtifactCommandWorkStep::Complete(emit));
         }
         Ok(ArtifactCommandWorkStep::Progress {stage:"path-simplify",preview:b""})
-    
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self) {self.closing=true;}
     fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {

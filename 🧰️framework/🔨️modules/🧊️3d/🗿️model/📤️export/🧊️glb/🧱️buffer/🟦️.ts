@@ -22,13 +22,46 @@ export type BufferView = { buffer: 0; byteOffset: number; byteLength: number; ta
 /** 🪪️ A glTF accessor. */
 export type Accessor = { bufferView: number; componentType: number; count: number; type: ElementType; min?: number[]; max?: number[] };
 
-/** 🧰️ Accumulates buffer views and accessors; every view starts on a 4-byte boundary. Writing every value counts as work of the optional `pace`, so one huge accessor stays cancellable. */
+/** 🧰️ Accumulates buffer views and accessors; every view starts on a 4-byte boundary. Equal payloads of at least 1 KiB share one typed accessor after an exact comparison with the encoded bytes. Tiny payloads avoid indexing overhead. Writing every value counts as work of the optional `pace`, so one huge accessor stays cancellable. */
 export class BufferBuilder {
   readonly views: BufferView[] = [];
   readonly accessors: Accessor[] = [];
   private readonly writer = new ByteWriter();
 
+  private readonly shared = new Map<string, number[]>();
+  private readonly float = new Float32Array(1);
+  private readonly bits = new Uint32Array(this.float.buffer);
+
   constructor(private readonly pace: Pace = new Pace()) {}
+
+  private key(values: ArrayLike<number>, component: ComponentCode, type: ElementType, target: number | undefined, bounds: boolean): string | undefined {
+    const width = component === ComponentType.UnsignedByte ? 1 : component === ComponentType.UnsignedShort ? 2 : 4;
+    if (values.length * width < 1024) return undefined;
+    let hash = 2166136261;
+    for (let i = 0; i < values.length; i++) {
+      this.pace.tick();
+      const value = values[i]!;
+      if (!Number.isFinite(value)) throw new Error(`non-finite value at ${i} of an accessor of ${type}`);
+      if (component === ComponentType.Float) this.float[0] = value;
+      hash = Math.imul(hash ^ (component === ComponentType.Float ? this.bits[0]! : value), 16777619);
+    }
+    return `${component}/${type}/${target}/${bounds}/${values.length}/${hash}`;
+  }
+
+  private matches(index: number, values: ArrayLike<number>, component: ComponentCode): boolean {
+    const stored = this.views[this.accessors[index]!.bufferView]!;
+    const bytes = new DataView(this.writer.bytes.buffer, stored.byteOffset, stored.byteLength);
+    const read = component === ComponentType.Float ? (i: number) => bytes.getFloat32(i * 4, true)
+      : component === ComponentType.UnsignedInt ? (i: number) => bytes.getUint32(i * 4, true)
+      : component === ComponentType.UnsignedShort ? (i: number) => bytes.getUint16(i * 2, true)
+      : (i: number) => bytes.getUint8(i);
+    for (let i = 0; i < values.length; i++) {
+      this.pace.tick();
+      const value = component === ComponentType.Float ? Math.fround(values[i]!) : values[i]!;
+      if (!Object.is(read(i), value)) return false;
+    }
+    return true;
+  }
 
   /** 📐️ The byte length of the buffer so far, padding included. */
   get byteLength(): number {
@@ -39,6 +72,10 @@ export class BufferBuilder {
   add(values: ArrayLike<number>, componentType: ComponentCode, type: ElementType, options: { target?: number; bounds?: boolean } = {}): number {
     const components = ElementCount[type];
     if (values.length % components !== 0) throw new Error(`accessor of ${type} needs a multiple of ${components} values, got ${values.length}`);
+    const key = this.key(values, componentType, type, options.target, options.bounds === true);
+    const candidates = key === undefined ? undefined : this.shared.get(key);
+    const match = candidates?.find((index) => this.matches(index, values, componentType));
+    if (match !== undefined) return match;
     const byteOffset = this.writer.length;
     const write = componentType === ComponentType.Float ? (v: number) => this.writer.f32(v) : componentType === ComponentType.UnsignedInt ? (v: number) => this.writer.u32(v) : componentType === ComponentType.UnsignedShort ? (v: number) => this.writer.u16(v) : (v: number) => this.writer.u8(v);
     for (let i = 0; i < values.length; i += 1) {
@@ -65,8 +102,12 @@ export class BufferBuilder {
       accessor.min = min;
       accessor.max = max;
     }
-    this.accessors.push(accessor);
-    return this.accessors.length - 1;
+    const index = this.accessors.push(accessor) - 1;
+    if (key !== undefined) {
+      if (candidates === undefined) this.shared.set(key, [index]);
+      else candidates.push(index);
+    }
+    return index;
   }
 
   /** 📦️ The buffer bytes (a multiple of four long). */

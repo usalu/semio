@@ -1,5 +1,5 @@
 /** 🔀️ Shell plumbing, example switching: the active-example action id, whether an app switches or offers examples, the active-example action builder and the remembered and navbar example ids read back from dispatches and history upserts. */
-import { type ActionDescriptor } from "@semio-tech/framework";
+import { type ActionDescriptor, type HistoryEntry } from "@semio-tech/framework";
 import { undeclaredActionDiagnostic, type WindowKindActionDeclaration } from "../🆔️action-ids/🟦️.ts";
 
 //#region ShellHelpers
@@ -66,17 +66,18 @@ export function exampleSelectionAfterInputV1(
   return focused ? { memory, visibleExampleId: requested || bootExampleId } : { memory };
 }
 
-/** 🎨️ Navbar example id implied by a history upsert batch. Chrome-only rows leave the label alone
- * (`undefined`). A live Set Active Example row restores `rememberedExampleId`; a popped row returns
- * `bootExampleId`. */
+/** 🎨️ Restores the picker from the applied state of example edits. Whole-document load commands
+ * record a history row without an edit, so their settled input supplies the example label. */
 export function navbarExampleIdFromHistoryUpserts(
-  upserts: readonly { readonly actionId?: string; readonly revertible?: boolean }[] | undefined,
+  upserts: readonly Pick<HistoryEntry, "actionId" | "applied" | "editId" | "transitionId" | "transaction" | "opCount">[] | undefined,
   rememberedExampleId: string,
   bootExampleId: string,
 ): string | undefined {
-  const rows = (upserts ?? []).filter((entry) => entry.actionId === SET_ACTIVE_EXAMPLE_ACTION_ID);
+  const rows = (upserts ?? []).filter((entry) => entry.actionId === SET_ACTIVE_EXAMPLE_ACTION_ID
+    && entry.applied !== undefined
+    && (entry.editId !== undefined || entry.transitionId !== undefined || entry.transaction !== undefined || (entry.opCount ?? 0) > 0));
   if (rows.length === 0) return undefined;
-  if (rows.some((entry) => entry.revertible !== false)) return rememberedExampleId || undefined;
+  if (rows.some((entry) => entry.applied)) return rememberedExampleId || undefined;
   return bootExampleId;
 }
 //#endregion ShellHelpers

@@ -1,0 +1,20 @@
+{
+  "inverseTag": 7,
+  "priorRole": {
+    "identity": {"owner": {"num": 2, "gen": 0}, "path": []},
+    "dependencies": [],
+    "value": {"kind": "metadataText", "text": "Neutral restored role."}
+  },
+  "inverseJson": "{\"mutation\":\"removeObject\",\"id\":{\"num\":5,\"gen\":0},\"admittedStreamRoles\":{\"added\":[{\"index\":0,\"value\":{\"identity\":{\"owner\":{\"num\":2,\"gen\":0},\"path\":[]},\"dependencies\":[],\"value\":{\"kind\":\"metadataText\",\"text\":\"Neutral restored role.\"}}}]}}",
+  "invalidForward": [
+    ["\"gen\":0", "\"gen\":65536"],
+    ["\"num\":5", "\"num\":5.0"],
+    ["\"removed\":[0]", "\"removed\":[0.0]"],
+    ["\"modified\":[]", "\"modified\":null"]
+  ],
+  "invalidInverse": [
+    ["\"index\":0", "\"index\":0.0"],
+    ["\"dependencies\":[]", "\"dependencies\":null"],
+    ["\"text\":\"Neutral restored role.\"", "\"text\":18"]
+  ]
+}

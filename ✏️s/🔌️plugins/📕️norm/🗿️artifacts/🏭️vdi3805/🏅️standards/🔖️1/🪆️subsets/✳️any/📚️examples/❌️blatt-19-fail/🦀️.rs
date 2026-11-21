@@ -1,11 +1,11 @@
-//! 📚️ Example failing Blatt 19.
+//! 📚️ Solar catalogue with incorrect record count.
 
 use semio_plugin::ExampleSource;
 use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "blatt-19-fail";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Blatt 19 nonconforming", "Blatt 19 nicht konform")
+    LocalizedLabel::native("Solar catalogue with incorrect record count", "Solarkatalog mit falscher Datensatzanzahl")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/blatt-19-fail/🗣️.dsl.semio");

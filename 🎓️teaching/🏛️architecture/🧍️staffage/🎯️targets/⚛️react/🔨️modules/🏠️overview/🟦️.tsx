@@ -5,21 +5,21 @@
  * @see ../🥞️levels/🟦️.tsx — the layered grid
  * @see ../📍️placed/🟦️.tsx — figures on a ground line
  */
-import { useEffect, useId, useMemo, type ReactElement, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, type ReactElement, type ReactNode } from "react";
 import { CATEGORIES, CSS_PX_PER_MM } from "@teaching/staffage";
 import type { Asset, CategoryId, PlanarViewpoint } from "@teaching/staffage";
 import { APP_CONFIG } from "../⚙️config/🟦️.ts";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
-import { ArchiveCard, CardButton, Icon, Notice, Tag, cn, type IconName } from "../🪟️chrome/🟦️.tsx";
-import { Level, PointerProvider, tracks, useBreakpoint, useSize, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
+import { ArchiveCard, CardButton, Icon, Notice, PageFrame, SharedBorderRow, Tag, cn, type IconName } from "../🪟️chrome/🟦️.tsx";
+import { Level, PointerProvider, tracks, useSize, type Breakpoint, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
 import { RowPreview, surfaceView, useDarkSurface } from "../🖼️previews/🟦️.tsx";
 import { usePreviewViewpoint } from "../🔭️viewpoints/🪝️preference/🟦️.tsx";
 import { VIEWPOINT_PHRASES, viewpointWord } from "../🔭️viewpoints/🟦️.ts";
 import { PlacedFigure } from "../📍️placed/🟦️.tsx";
 import { defaultQuery, evaluateState } from "../🧮️pipeline/🟦️.ts";
-import { formatAddress, openedChain, parentRoute, useAddress, type Route } from "../🗺️routing/🟦️.ts";
+import { formatAddress, openedChain, parentRoute, routePath, useAddress, type Route } from "../🗺️routing/🟦️.ts";
 import { completionCounts, type Row } from "../🔎️search/🟦️.ts";
-import { BrowsePage, CategoryPage } from "../🗃️browse/🟦️.tsx";
+import { BrowsePage, CategoryPage, PhoneAssetPage, PhoneBrowsePage } from "../🗃️browse/🟦️.tsx";
 import { CollectionsPage } from "../⭐️collections/🟦️.tsx";
 import { ComparePage } from "../⚖️compare/🟦️.tsx";
 import { PlaygroundPage } from "../🧪️playground/🟦️.tsx";
@@ -280,9 +280,9 @@ function PlaygroundCard(props: { readonly card: { readonly revealed: boolean; re
   );
 }
 
-const COLUMNS = { desktop: 3, tablet: 2, mobile: 1 } as const;
+const COLUMNS = { desktop: 3, tablet: 2 } as const;
 const ROW_MIN_PX = 150;
-const ROW_WEIGHTS = { desktop: [1.5, 1, 1, 0.9], tablet: [1.4, 1, 1, 1, 1, 1], mobile: [1] } as const;
+const ROW_WEIGHTS = { desktop: [1.5, 1, 1, 0.9], tablet: [1.4, 1, 1, 1, 1, 1] } as const;
 
 type Placement = { readonly column: number; readonly row: number; readonly span: number };
 
@@ -308,36 +308,83 @@ function RootPageContent(props: { readonly id: string; readonly view: PaneView }
 }
 
 /** 🌳️ The root grid: its opened page is derived from the address, and under it pages open their own nested grids. */
-export function RootLevel(): ReactElement {
+export function RootLevel({ breakpoint, route }: { readonly breakpoint: Breakpoint; readonly route: Route }): ReactElement {
+  const path = routePath(route);
+  const outlet = useRef<HTMLDivElement>(null);
+  const positions = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const page = outlet.current?.firstElementChild;
+    if (page instanceof HTMLElement) page.scrollTop = positions.current.get(path) ?? 0;
+  }, [path, breakpoint]);
+  if (breakpoint !== "mobile") return <LayeredPages breakpoint={breakpoint} />;
+  return (
+    <div ref={outlet} className="h-full min-h-0" onScrollCapture={(event) => {
+      const page = outlet.current?.firstElementChild;
+      if (event.target === page && page instanceof HTMLElement) positions.current.set(path, page.scrollTop);
+    }}>
+      <PhonePages route={route} />
+    </div>
+  );
+}
+
+function PhonePages({ route }: { readonly route: Route }): ReactElement {
+  if (route.page === "overview") return <PhoneOverview />;
+  if (route.page === "category") return <PhoneBrowsePage key={route.category} category={route.category} />;
+  if (route.page === "all") return <PhoneBrowsePage />;
+  if (route.page === "asset") return <PhoneAssetPage key={`${route.category}/${route.asset}`} id={route.asset} category={route.category} />;
+  return <RootPageContent id={route.page} view={{ opened: true, revealed: false }} />;
+}
+
+function PhoneOverview(): ReactElement {
+  const { language, t } = useArchive();
+  const { manifest } = useRows();
+  return (
+    <PageFrame page="overview" title={t("brand.title")}>
+      <SharedBorderRow as="nav" orientation="vertical" aria-label={t("overview.label")}>
+        {ROOT_PAGES.flatMap((id) => {
+          const category = manifest?.categories.find((entry) => entry.id === id);
+          if (isCategory(id) && category === undefined) return [];
+          const title = category?.title[language] ?? (id === "all" ? t("all.title") : id === "collections" ? t("collections.title") : id === "compare" ? t("compare.title") : t("playground.title"));
+          const icon = isCategory(id) ? CATEGORY_ICONS[id] : id === "all" ? "layout-grid" : id === "collections" ? "folder" : id === "compare" ? "combine" : "move";
+          return (
+            <a key={id} href={formatAddress(routeOfRootPage(id))} data-shared-border-cell="" className="staffage-phone-link flex min-w-0 items-center gap-double px-double py-double text-sm font-medium text-foreground no-underline hover:bg-hover-panel">
+              <Icon icon={icon} size="small" className="shrink-0" />
+              <span className="min-w-0 flex-1 break-words">{title}</span>
+              <Icon icon="chevron-right" size="small" className="shrink-0" />
+            </a>
+          );
+        })}
+      </SharedBorderRow>
+    </PageFrame>
+  );
+}
+
+function LayeredPages({ breakpoint }: { readonly breakpoint: Exclude<Breakpoint, "mobile"> }): ReactElement {
   const { t, language } = useArchive();
   const { manifest } = useRows();
   const { route, navigate } = useAddress();
-  const breakpoint = useBreakpoint();
   const [attach, size] = useSize({ width: 1280, height: 800 });
   const chain = openedChain(route);
   const depth = route.page === "category" || route.page === "asset" ? 1 : 0;
   const columns = COLUMNS[breakpoint];
   const weights = ROW_WEIGHTS[breakpoint];
-  const mode = breakpoint === "mobile" ? "swipe" : "strip";
   const compact = size.height < 760;
   const labels = useMemo(() => Object.fromEntries([["all", t("all.title")], ["collections", t("collections.title")], ["compare", t("compare.title")], ["playground", t("playground.title")], ...(manifest?.categories ?? []).map((category) => [category.id, category.title[language]])]) as Readonly<Record<string, string>>, [t, language, manifest]);
   const pages: readonly LevelPage[] = useMemo(() => ROOT_PAGES.map((id): LevelPage => ({ id, label: labels[id] ?? id, render: (view) => <RootPageContent id={id} view={view} /> })), [labels]);
   const cells = useMemo(() => Object.fromEntries(ROOT_PAGES.map((id) => { const p = placementOf(id, columns); return [id, { column: p.column - 1, row: p.row - 1 }]; })), [columns]);
   const renderCard = (page: LevelPage, card: { readonly revealed: boolean; readonly opened: boolean; readonly open: () => void }): ReactNode => {
-    const content: ReactNode = isCategory(page.id) ? <CategoryCard category={page.id} card={card} compact={compact || mode === "swipe" ? compact : false} /> : page.id === "all" ? <HeroCard card={card} /> : page.id === "collections" ? <CollectionsCard card={card} /> : page.id === "compare" ? <CompareCard card={card} /> : <PlaygroundCard card={card} />;
+    const content: ReactNode = isCategory(page.id) ? <CategoryCard category={page.id} card={card} compact={compact} /> : page.id === "all" ? <HeroCard card={card} /> : page.id === "collections" ? <CollectionsCard card={card} /> : page.id === "compare" ? <CompareCard card={card} /> : <PlaygroundCard card={card} />;
     const place = placementOf(page.id, columns);
-    return mode === "strip" ? (
+    return (
       <div className="staffage-cell" data-card-grid-cell="" style={{ gridColumn: `${place.column} / span ${place.span}`, gridRow: place.row }}>
         <div className="staffage-card">{content}</div>
       </div>
-    ) : (
-      <div className="staffage-entry staffage-card">{content}</div>
     );
   };
   return (
     <div ref={attach} className="relative h-full min-h-0 w-full">
       <PointerProvider>
-        <Level label={t("overview.label")} pages={pages} cells={cells} openedId={chain[0] ?? null} interactive={depth === 0} mode={mode} onOpen={(id) => navigate(id === null ? { page: "overview" } : routeOfRootPage(id))} renderCard={renderCard} columns={tracks(Array.from({ length: columns }, () => 1))} rows={tracks(weights, ROW_MIN_PX)} budget={breakpoint === "mobile" ? 1 : 5} />
+        <Level label={t("overview.label")} pages={pages} cells={cells} openedId={chain[0] ?? null} interactive={depth === 0} mode="strip" onOpen={(id) => navigate(id === null ? { page: "overview" } : routeOfRootPage(id))} renderCard={renderCard} columns={tracks(Array.from({ length: columns }, () => 1))} rows={tracks(weights, ROW_MIN_PX)} budget={5} />
       </PointerProvider>
     </div>
   );

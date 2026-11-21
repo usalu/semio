@@ -12,6 +12,8 @@ pub use geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle,
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub(crate) use renderer::vello_backend::usvg;
 pub use renderer::draw_list;
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub use renderer::canvas_2d_session;
 #[path = "../♻️retirement/➰️path/🦀️.rs"]
 mod path_retirement;
 pub use path_retirement::CanvasPathRetirement;

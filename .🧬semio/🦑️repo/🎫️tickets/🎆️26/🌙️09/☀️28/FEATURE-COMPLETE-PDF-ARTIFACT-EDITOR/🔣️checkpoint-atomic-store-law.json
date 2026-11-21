@@ -1,0 +1,32 @@
+{
+  "document": "demo",
+  "schema": "demo/v1",
+  "baseline": 0,
+  "values": [
+    1,
+    7
+  ],
+  "transaction": {
+    "id": "checkpoint-original-demo",
+    "tool": "demo#original-media"
+  },
+  "expected": {
+    "after": 7,
+    "undo": 0,
+    "rows": 2,
+    "edits": 1
+  },
+  "draft": {
+    "transactionId": "checkpoint-local-draft",
+    "missingDependency": "unknown-authored-predecessor",
+    "value": 19,
+    "expected": {
+      "gapValue": 19,
+      "gapRevision": 0,
+      "mergedDraft": 19,
+      "abortedDraft": 7,
+      "committedEdits": 1
+    },
+    "actor": "checkpoint-local-device"
+  }
+}

@@ -11,6 +11,7 @@ VARIANTS="aggregator aussuchen bearbeiten energy fem3d generation3d generator ko
 step() { local name="$1" cwd="$2"; shift 2
   if [ -f "$G/done/$name" ] && [ -z "${FORCE:-}" ]; then echo "[skip] $name"; return 0; fi
   echo "[run] $name"; ( cd "$ROOT/$cwd" && repo "$T/native-launch.ts" "${cwd:-.}" "$@" ) >"$G/$name.log" 2>&1; local rc=$?
+  printf '[native-lanes] step exited %s\n' "$rc" >> "$G/$name.log"
   if [ $rc -eq 0 ]; then touch "$G/done/$name"; echo "[ok] $name"; else echo "[FAIL $rc] $name (see $G/$name.log)"; fi; return $rc; }
 FW="🧰️framework"; OSM="$FW/🛍️products/💻️os/🔨️modules"
 prereqs() {

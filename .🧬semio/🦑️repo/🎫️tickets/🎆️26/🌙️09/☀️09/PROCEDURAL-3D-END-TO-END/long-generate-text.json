@@ -1,0 +1,41 @@
+{
+  "cases": [
+    {
+      "id": "last-inline-byte",
+      "prefix": "",
+      "unit": "a",
+      "repeat": 512,
+      "suffix": "",
+      "bytes": 512
+    },
+    {
+      "id": "first-retained-byte",
+      "prefix": "",
+      "unit": "a",
+      "repeat": 513,
+      "suffix": "",
+      "bytes": 513
+    },
+    {
+      "id": "split-non-bmp",
+      "prefix": "",
+      "unit": "a",
+      "repeat": 511,
+      "suffix": "🧭",
+      "bytes": 515
+    },
+    {
+      "id": "unicode-pages",
+      "prefix": "﻿",
+      "unit": "Grüße 👩‍🔬 ",
+      "repeat": 300,
+      "suffix": "\n終わり"
+    }
+  ],
+  "edit": {
+    "prefix": "Ändern ",
+    "unit": "漢é🧭",
+    "repeat": 470,
+    "suffix": ""
+  }
+}

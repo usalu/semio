@@ -279,65 +279,42 @@
               "bone": "front-frame",
               "role": "body",
               "z": 2.5,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.2,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.19112, 0.00541], [0.18806, -0.00198]],
-              "closed": false
-            },
-            {
-              "id": "tread-2",
-              "bone": "front-frame",
-              "role": "body",
-              "z": 2.5,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
-              "region": "treads",
-              "kind": "poly",
-              "points": [[0.42059, 0.00541], [0.41752, -0.00198]],
-              "closed": false
+              "points": [[0.21644, 0.03389], [0.18583, -0.04002], [0.20893, -0.04959], [0.23954, 0.02432]],
+              "closed": true
             },
             {
               "id": "tread-3",
               "bone": "front-frame",
               "role": "body",
               "z": 2.5,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.2,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.65005, 0.00541], [0.64699, -0.00198]],
-              "closed": false
-            },
-            {
-              "id": "tread-4",
-              "bone": "front-frame",
-              "role": "body",
-              "z": 2.5,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
-              "region": "treads",
-              "kind": "poly",
-              "points": [[0.87952, 0.00541], [0.87646, -0.00198]],
-              "closed": false
+              "points": [[0.67538, 0.03389], [0.64476, -0.04002], [0.66786, -0.04959], [0.69847, 0.02432]],
+              "closed": true
             },
             {
               "id": "platform",
               "bone": "front-frame",
               "role": "body",
               "z": 2.4,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.2,
               "region": "platform",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[1.17909, 0.17464], [1.11212, 0.01296]],
-              "closed": false
+              "points": [[1.20406, 0.20489], [1.10839, -0.02608], [1.13241, -0.03603], [1.22808, 0.19494]],
+              "closed": true
             },
             {
               "id": "spreader",
@@ -385,10 +362,11 @@
               "z": 2.95,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[1.39738, -0.04806], [1.36982, 0.04806], [1.29772, 0.02739], [1.32529, -0.06874]],
+              "points": [[1.39462, -0.03845], [1.37368, 0.03461], [1.32951, 0.02538], [1.34406, -0.02538]],
               "closed": true
             },
             {
@@ -398,10 +376,11 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.01913, 0.04619], [-0.01913, -0.04619], [0.05016, -0.0749], [0.08843, 0.01749]],
+              "points": [[0.01646, 0.03973], [-0.01722, -0.04157], [0.04055, -0.03277], [0.06769, 0.03277]],
               "closed": true
             }
           ],
@@ -439,10 +418,11 @@
               "z": 2.2,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.16, 0.0], [0.235, 0.0], [0.235, 0.075], [0.16, 0.075]],
+              "points": [[0.182, 0.0], [0.214, 0.0], [0.214, 0.045], [0.182, 0.045]],
               "closed": true
             },
             {
@@ -452,10 +432,11 @@
               "z": 2.2,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[-0.235, 0.0], [-0.16, 0.0], [-0.16, 0.075], [-0.235, 0.075]],
+              "points": [[-0.214, 0.0], [-0.182, 0.0], [-0.182, 0.045], [-0.214, 0.045]],
               "closed": true
             },
             {
@@ -488,79 +469,57 @@
               "id": "tread-1",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.2,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.17289, 0.1745], [0.17289, 0.1745]],
-              "closed": false
-            },
-            {
-              "id": "tread-2",
-              "bone": "front-frame",
-              "role": "body",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
-              "region": "treads",
-              "kind": "poly",
-              "points": [[-0.16608, 0.3865], [0.16608, 0.3865]],
-              "closed": false
+              "points": [[-0.20059, 0.187], [0.20059, 0.187], [0.20059, 0.212], [-0.20059, 0.212]],
+              "closed": true
             },
             {
               "id": "tread-3",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.2,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.15926, 0.5985], [0.15926, 0.5985]],
-              "closed": false
-            },
-            {
-              "id": "tread-4",
-              "bone": "front-frame",
-              "role": "body",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
-              "region": "treads",
-              "kind": "poly",
-              "points": [[-0.15245, 0.8105], [0.15245, 0.8105]],
-              "closed": false
+              "points": [[-0.18696, 0.611], [0.18696, 0.611], [0.18696, 0.636], [-0.18696, 0.636]],
+              "closed": true
             },
             {
               "id": "platform",
               "bone": "front-frame",
               "role": "body",
               "z": 3.3,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.2,
               "region": "platform",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.1075, 1.0225], [0.1075, 1.0225]],
-              "closed": false
+              "points": [[-0.145, 1.034], [0.145, 1.034], [0.145, 1.06], [-0.145, 1.06]],
+              "closed": true
             },
             {
               "id": "grab-bar",
               "bone": "front-frame",
               "role": "body",
               "z": 3.1,
-              "filled": false,
+              "filled": true,
               "tone": 0.5,
-              "penMm": 0.15,
+              "penMm": 0.2,
               "region": "front-rails",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.12635, 1.6225], [0.12635, 1.6225]],
-              "closed": false
+              "points": [[-0.15609, 1.601], [0.15609, 1.601], [0.15609, 1.629], [-0.15609, 1.629]],
+              "closed": true
             },
             {
               "id": "foot-front-l",
@@ -569,10 +528,11 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.16, 0.0], [0.235, 0.0], [0.235, 0.075], [0.16, 0.075]],
+              "points": [[0.197, 0.0], [0.235, 0.0], [0.235, 0.05], [0.197, 0.05]],
               "closed": true
             },
             {
@@ -582,10 +542,11 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[-0.235, 0.0], [-0.16, 0.0], [-0.16, 0.075], [-0.235, 0.075]],
+              "points": [[-0.235, 0.0], [-0.197, 0.0], [-0.197, 0.05], [-0.235, 0.05]],
               "closed": true
             }
           ],
@@ -594,13 +555,14 @@
               "id": "foot-rear-l",
               "bone": "rear-frame",
               "role": "body",
-              "z": 1.0,
+              "z": 1.1,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[-0.51868, 0.16], [-0.41868, 0.16], [-0.41868, 0.235], [-0.51868, 0.235]],
+              "points": [[-0.50868, 0.182], [-0.42937, 0.182], [-0.42937, 0.214], [-0.50868, 0.214]],
               "closed": true
             },
             {
@@ -610,23 +572,25 @@
               "z": 1.1,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.4136, 0.16], [0.5136, 0.16], [0.5136, 0.235], [0.4136, 0.235]],
+              "points": [[0.40742, 0.197], [0.5086, 0.197], [0.5086, 0.235], [0.40742, 0.235]],
               "closed": true
             },
             {
               "id": "foot-rear-r",
               "bone": "rear-frame",
               "role": "body",
-              "z": 1.0,
+              "z": 1.1,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[-0.51868, -0.235], [-0.41868, -0.235], [-0.41868, -0.16], [-0.51868, -0.16]],
+              "points": [[-0.50868, -0.214], [-0.42937, -0.214], [-0.42937, -0.182], [-0.50868, -0.182]],
               "closed": true
             },
             {
@@ -636,10 +600,11 @@
               "z": 1.1,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.4136, -0.235], [0.5136, -0.235], [0.5136, -0.16], [0.4136, -0.16]],
+              "points": [[0.40742, -0.235], [0.5086, -0.235], [0.5086, -0.197], [0.40742, -0.197]],
               "closed": true
             },
             {
@@ -695,58 +660,6 @@
               "closed": false
             },
             {
-              "id": "tread-1",
-              "bone": "front-frame",
-              "role": "body",
-              "z": 3.0,
-              "filled": true,
-              "tone": 0.6,
-              "region": "treads",
-              "material": "alu-mill",
-              "kind": "poly",
-              "points": [[0.34165, -0.19939], [0.42946, -0.19939], [0.42946, 0.19939], [0.34165, 0.19939]],
-              "closed": true
-            },
-            {
-              "id": "tread-2",
-              "bone": "front-frame",
-              "role": "body",
-              "z": 3.01,
-              "filled": true,
-              "tone": 0.6,
-              "region": "treads",
-              "material": "alu-mill",
-              "kind": "poly",
-              "points": [[0.25384, -0.19258], [0.34165, -0.19258], [0.34165, 0.19258], [0.25384, 0.19258]],
-              "closed": true
-            },
-            {
-              "id": "tread-3",
-              "bone": "front-frame",
-              "role": "body",
-              "z": 3.02,
-              "filled": true,
-              "tone": 0.6,
-              "region": "treads",
-              "material": "alu-mill",
-              "kind": "poly",
-              "points": [[0.16602, -0.18576], [0.25384, -0.18576], [0.25384, 0.18576], [0.16602, 0.18576]],
-              "closed": true
-            },
-            {
-              "id": "tread-4",
-              "bone": "front-frame",
-              "role": "body",
-              "z": 3.03,
-              "filled": true,
-              "tone": 0.6,
-              "region": "treads",
-              "material": "alu-mill",
-              "kind": "poly",
-              "points": [[0.08602, -0.17895], [0.16602, -0.17895], [0.16602, 0.17895], [0.08602, 0.17895]],
-              "closed": true
-            },
-            {
               "id": "platform",
               "bone": "front-frame",
               "role": "body",
@@ -797,6 +710,20 @@
               "kind": "poly",
               "points": [[-0.20846, -0.12635], [-0.20846, 0.12635]],
               "closed": false
+            },
+            {
+              "id": "tread-bank",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.2,
+              "region": "treads",
+              "material": "alu-mill",
+              "kind": "poly",
+              "points": [[0.08602, -0.18014], [0.42946, -0.20059], [0.42946, 0.20059], [0.08602, 0.18014]],
+              "closed": true
             }
           ]
         },
@@ -810,16 +737,16 @@
             "de": "Beide Rahmen in wahrer Neigung, vier Stufen und die Plattform in wahrer Höhe, Haltebügel, Spreizen, vier Füße, die Standlänge 1,02 m."
           },
           "merged": {
-            "en": "The near and far frame coincide; in the front view the rear rails merge into the stile strokes.",
-            "de": "Naher und ferner Rahmen fallen zusammen; in der Vorderansicht gehen die Hinterholme in den Holmstrichen auf."
+            "en": "Alternating treads give two separated marks across the full print band. All four aluminium treads remain in the digital model.",
+            "de": "Zwei sichtbare Wechselstufen bleiben im ganzen Druckbereich getrennt. Das digitale Modell enthält alle vier Aluminiumstufen."
           },
           "omitted": {
             "en": "Hinge, braces, rest tube, caps, rivets, grooves.",
             "de": "Gelenk, Traversen, Auflagerohr, Kappen, Nieten, Rillen."
           },
           "thinElements": {
-            "en": "Treads, platform and grab bar are thickened to 75 mm (0.15 mm strokes), the shoes to 100 x 75 mm blocks; stiles and rear rails are strokes of 0.12 mm in the side elevation and 0.1 mm otherwise, the spreader a 0.1 mm stroke: pen inflation up to 6 times.",
-            "de": "Stufen, Plattform und Haltebügel sind auf 75 mm verdickt (0,15-mm-Striche), die Schuhe zu Blöcken 100 x 75 mm; Holme und Hinterholme sind Striche von 0,12 mm in der Seitenansicht und sonst 0,1 mm, die Spreize ein 0,1-mm-Strich: Stiftaufblähung bis 6-fach."
+            "en": "Four 80 × 25 mm treads, the 26 mm platform rim and the 28 mm round grab tube retain their physical sections. The rubber front and rear shoe soles are 38 and 32 mm wide. The paper outline carries the thin sections at this scale.",
+            "de": "Vier 80 × 25 mm große Trittstufen, der 26-mm-Plattformrand und das 28-mm-Griffrohr behalten ihre Querschnitte. Vordere und hintere Gummisohlen sind 38 und 32 mm breit. Im Druck macht die Kontur die dünnen Querschnitte lesbar."
           },
           "hatching": {
             "en": "None.",
@@ -857,65 +784,70 @@
               "bone": "front-frame",
               "role": "body",
               "z": 2.5,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.21994, 0.0162], [0.20081, -0.02999]],
-              "closed": false
+              "points": [[0.21644, 0.03389], [0.18812, -0.03448], [0.19137, -0.04232], [0.20893, -0.04959], [0.23954, 0.02432]],
+              "closed": true
             },
             {
               "id": "tread-2",
               "bone": "front-frame",
               "role": "body",
               "z": 2.5,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.44941, 0.0162], [0.43027, -0.02999]],
-              "closed": false
+              "points": [[0.44591, 0.03389], [0.41759, -0.03448], [0.42084, -0.04232], [0.43839, -0.04959], [0.46901, 0.02432]],
+              "closed": true
             },
             {
               "id": "tread-3",
               "bone": "front-frame",
               "role": "body",
               "z": 2.5,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.67888, 0.0162], [0.65974, -0.02999]],
-              "closed": false
+              "points": [[0.67538, 0.03389], [0.64706, -0.03448], [0.65031, -0.04232], [0.66786, -0.04959], [0.69847, 0.02432]],
+              "closed": true
             },
             {
               "id": "tread-4",
               "bone": "front-frame",
               "role": "body",
               "z": 2.5,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.90834, 0.0162], [0.88921, -0.02999]],
-              "closed": false
+              "points": [[0.90484, 0.03389], [0.87653, -0.03448], [0.87977, -0.04232], [0.89733, -0.04959], [0.92794, 0.02432]],
+              "closed": true
             },
             {
               "id": "platform",
               "bone": "front-frame",
               "role": "body",
               "z": 2.4,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "platform",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[1.20848, 0.18682], [1.12429, -0.01643]],
-              "closed": false
+              "points": [[1.20406, 0.20489], [1.10839, -0.02608], [1.13241, -0.03603], [1.22808, 0.19494]],
+              "closed": true
             },
             {
               "id": "spreader",
@@ -965,10 +897,11 @@
               "z": 2.95,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[1.396, -0.04326], [1.37119, 0.04326], [1.32794, 0.03085], [1.35275, -0.05566]],
+              "points": [[1.39462, -0.03845], [1.37368, 0.03461], [1.3656, 0.03229], [1.36384, 0.02538], [1.32951, 0.02538], [1.34406, -0.02538], [1.37839, -0.02538], [1.38655, -0.04077]],
               "closed": true
             },
             {
@@ -978,10 +911,11 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.01722, 0.04157], [-0.01722, -0.04157], [0.02435, -0.0588], [0.0588, 0.02435]],
+              "points": [[0.01646, 0.03973], [-0.01722, -0.04157], [-0.00946, -0.04479], [-0.00059, -0.03277], [0.04055, -0.03277], [0.06769, 0.03277], [0.02656, 0.03277], [0.02422, 0.03651]],
               "closed": true
             }
           ],
@@ -1032,10 +966,11 @@
               "z": 2.2,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.1755, 0.0], [0.2205, 0.0], [0.2205, 0.045], [0.1755, 0.045]],
+              "points": [[0.182, 0.0], [0.214, 0.0], [0.214, 0.045], [0.182, 0.045]],
               "closed": true
             },
             {
@@ -1045,10 +980,11 @@
               "z": 2.2,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[-0.2205, 0.0], [-0.1755, 0.0], [-0.1755, 0.045], [-0.2205, 0.045]],
+              "points": [[-0.214, 0.0], [-0.182, 0.0], [-0.182, 0.045], [-0.214, 0.045]],
               "closed": true
             },
             {
@@ -1081,79 +1017,85 @@
               "id": "tread-1",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.19467, 0.197], [0.19467, 0.197]],
-              "closed": false
+              "points": [[-0.20059, 0.187], [0.20059, 0.187], [0.20059, 0.212], [-0.20059, 0.212]],
+              "closed": true
             },
             {
               "id": "tread-2",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.18785, 0.409], [0.18785, 0.409]],
-              "closed": false
+              "points": [[-0.19377, 0.399], [0.19377, 0.399], [0.19377, 0.424], [-0.19377, 0.424]],
+              "closed": true
             },
             {
               "id": "tread-3",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.18104, 0.621], [0.18104, 0.621]],
-              "closed": false
+              "points": [[-0.18696, 0.611], [0.18696, 0.611], [0.18696, 0.636], [-0.18696, 0.636]],
+              "closed": true
             },
             {
               "id": "tread-4",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.1,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.17422, 0.833], [0.17422, 0.833]],
-              "closed": false
+              "points": [[-0.18014, 0.823], [0.18014, 0.823], [0.18014, 0.848], [-0.18014, 0.848]],
+              "closed": true
             },
             {
               "id": "platform",
               "bone": "front-frame",
               "role": "body",
               "z": 3.3,
-              "filled": false,
-              "tone": 0.3,
-              "penMm": 0.15,
+              "filled": true,
+              "tone": 0.6,
+              "penMm": 0.13,
               "region": "platform",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.13, 1.045], [0.13, 1.045]],
-              "closed": false
+              "points": [[-0.145, 1.034], [0.145, 1.034], [0.145, 1.06], [-0.145, 1.06]],
+              "closed": true
             },
             {
               "id": "grab-bar",
               "bone": "front-frame",
               "role": "body",
               "z": 3.1,
-              "filled": false,
+              "filled": true,
               "tone": 0.5,
-              "penMm": 0.15,
+              "penMm": 0.13,
               "region": "front-rails",
+              "material": "alu-mill",
               "kind": "poly",
-              "points": [[-0.14813, 1.645], [0.14813, 1.645]],
-              "closed": false
+              "points": [[-0.15609, 1.601], [0.15609, 1.601], [0.15609, 1.629], [-0.15609, 1.629]],
+              "closed": true
             },
             {
               "id": "foot-front-l",
@@ -1162,10 +1104,11 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.19, 0.0], [0.235, 0.0], [0.235, 0.045], [0.19, 0.045]],
+              "points": [[0.197, 0.0], [0.235, 0.0], [0.235, 0.05], [0.197, 0.05]],
               "closed": true
             },
             {
@@ -1175,10 +1118,11 @@
               "z": 3.4,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[-0.235, 0.0], [-0.19, 0.0], [-0.19, 0.045], [-0.235, 0.045]],
+              "points": [[-0.235, 0.0], [-0.197, 0.0], [-0.197, 0.05], [-0.235, 0.05]],
               "closed": true
             }
           ],
@@ -1187,13 +1131,14 @@
               "id": "foot-rear-l",
               "bone": "rear-frame",
               "role": "body",
-              "z": 1.0,
+              "z": 1.1,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[-0.51368, 0.1755], [-0.42368, 0.1755], [-0.42368, 0.2205], [-0.51368, 0.2205]],
+              "points": [[-0.50868, 0.182], [-0.42937, 0.182], [-0.42937, 0.214], [-0.50868, 0.214]],
               "closed": true
             },
             {
@@ -1203,23 +1148,25 @@
               "z": 1.1,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.4186, 0.19], [0.5086, 0.19], [0.5086, 0.235], [0.4186, 0.235]],
+              "points": [[0.40742, 0.197], [0.5086, 0.197], [0.5086, 0.235], [0.40742, 0.235]],
               "closed": true
             },
             {
               "id": "foot-rear-r",
               "bone": "rear-frame",
               "role": "body",
-              "z": 1.0,
+              "z": 1.1,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[-0.51368, -0.2205], [-0.42368, -0.2205], [-0.42368, -0.1755], [-0.51368, -0.1755]],
+              "points": [[-0.50868, -0.214], [-0.42937, -0.214], [-0.42937, -0.182], [-0.50868, -0.182]],
               "closed": true
             },
             {
@@ -1229,10 +1176,11 @@
               "z": 1.1,
               "filled": true,
               "tone": 0.12,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [[0.4186, -0.235], [0.5086, -0.235], [0.5086, -0.19], [0.4186, -0.19]],
+              "points": [[0.40742, -0.235], [0.5086, -0.235], [0.5086, -0.197], [0.40742, -0.197]],
               "closed": true
             },
             {
@@ -1304,52 +1252,56 @@
               "id": "tread-1",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.0,
+              "z": 2.5,
               "filled": true,
               "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.34165, -0.19867], [0.42946, -0.19867], [0.42946, 0.19867], [0.34165, 0.19867]],
+              "points": [[0.34946, -0.20059], [0.42946, -0.20059], [0.42946, 0.20059], [0.34946, 0.20059]],
               "closed": true
             },
             {
               "id": "tread-2",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.01,
+              "z": 2.5,
               "filled": true,
               "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.25384, -0.19185], [0.34165, -0.19185], [0.34165, 0.19185], [0.25384, 0.19185]],
+              "points": [[0.26165, -0.19377], [0.34165, -0.19377], [0.34165, 0.19377], [0.26165, 0.19377]],
               "closed": true
             },
             {
               "id": "tread-3",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.02,
+              "z": 2.5,
               "filled": true,
               "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.16602, -0.18504], [0.25384, -0.18504], [0.25384, 0.18504], [0.16602, 0.18504]],
+              "points": [[0.17384, -0.18696], [0.25384, -0.18696], [0.25384, 0.18696], [0.17384, 0.18696]],
               "closed": true
             },
             {
               "id": "tread-4",
               "bone": "front-frame",
               "role": "body",
-              "z": 3.03,
+              "z": 2.5,
               "filled": true,
               "tone": 0.6,
+              "penMm": 0.13,
               "region": "treads",
               "material": "alu-mill",
               "kind": "poly",
-              "points": [[0.08602, -0.17822], [0.16602, -0.17822], [0.16602, 0.17822], [0.08602, 0.17822]],
+              "points": [[0.08602, -0.18014], [0.16602, -0.18014], [0.16602, 0.18014], [0.08602, 0.18014]],
               "closed": true
             },
             {
@@ -1424,8 +1376,8 @@
             "de": "Gelenk, obere Traverse, Nieten, Rillen und Rippen."
           },
           "thinElements": {
-            "en": "Treads, platform, grab bar and brace are thickened from 25 to 28 mm to 30 mm (0.15 mm strokes); stiles (22 mm) and rear rails (20 mm) are 0.11 and 0.1 mm strokes in front view and plan, the spreader a 0.1 mm stroke.",
-            "de": "Stufen, Plattform, Haltebügel und Traverse sind von 25 bis 28 mm auf 30 mm verdickt (0,15-mm-Striche); Holme (22 mm) und Hinterholme (20 mm) sind in Vorderansicht und Draufsicht 0,11- und 0,1-mm-Striche, die Spreize ein 0,1-mm-Strich."
+            "en": "Four 80 × 25 mm treads, the 26 mm platform rim and the 28 mm round grab tube retain their physical sections. The rubber front and rear shoe soles are 38 and 32 mm wide. The paper outline carries the thin sections at this scale.",
+            "de": "Vier 80 × 25 mm große Trittstufen, der 26-mm-Plattformrand und das 28-mm-Griffrohr behalten ihre Querschnitte. Vordere und hintere Gummisohlen sind 38 und 32 mm breit. Im Druck macht die Kontur die dünnen Querschnitte lesbar."
           },
           "hatching": {
             "en": "None.",
@@ -1591,16 +1543,7 @@
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [
-                [1.39462, -0.03845],
-                [1.37368, 0.03461],
-                [1.36358, 0.03171],
-                [1.36072, 0.02538],
-                [1.32951, 0.02538],
-                [1.34406, -0.02538],
-                [1.37527, -0.02538],
-                [1.38453, -0.04134]
-              ],
+              "points": [[1.39462, -0.03845], [1.37368, 0.03461], [1.36358, 0.03171], [1.36072, 0.02538], [1.32951, 0.02538], [1.34406, -0.02538], [1.37527, -0.02538], [1.38453, -0.04134]],
               "closed": true
             },
             {
@@ -1614,16 +1557,7 @@
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
-              "points": [
-                [0.01646, 0.03973],
-                [-0.01722, -0.04157],
-                [-0.00752, -0.04559],
-                [0.00266, -0.03277],
-                [0.04055, -0.03277],
-                [0.06769, 0.03277],
-                [0.02981, 0.03277],
-                [0.02616, 0.03571]
-              ],
+              "points": [[0.01646, 0.03973], [-0.01722, -0.04157], [-0.00752, -0.04559], [0.00266, -0.03277], [0.04055, -0.03277], [0.06769, 0.03277], [0.02981, 0.03277], [0.02616, 0.03571]],
               "closed": true
             }
           ],
@@ -1689,7 +1623,7 @@
               "z": 2.2,
               "filled": true,
               "tone": 0.12,
-              "penMm": 0.18,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
@@ -1703,7 +1637,7 @@
               "z": 2.2,
               "filled": true,
               "tone": 0.12,
-              "penMm": 0.18,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
@@ -1859,7 +1793,7 @@
               "z": 1.0,
               "filled": true,
               "tone": 0.12,
-              "penMm": 0.18,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
@@ -1887,7 +1821,7 @@
               "z": 1.0,
               "filled": true,
               "tone": 0.12,
-              "penMm": 0.18,
+              "penMm": 0.2,
               "region": "feet",
               "material": "rubber-black",
               "kind": "poly",
@@ -6824,20 +6758,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.55,
-            "profile": [
-              [0.03, 0.007],
-              [0.028828, 0.009828],
-              [0.026, 0.011],
-              [-0.026, 0.011],
-              [-0.028828, 0.009828],
-              [-0.03, 0.007],
-              [-0.03, -0.007],
-              [-0.028828, -0.009828],
-              [-0.026, -0.011],
-              [0.026, -0.011],
-              [0.028828, -0.009828],
-              [0.03, -0.007]
-            ],
+            "profile": [[0.03, 0.007], [0.028828, 0.009828], [0.026, 0.011], [-0.026, 0.011], [-0.028828, 0.009828], [-0.03, 0.007], [-0.03, -0.007], [-0.028828, -0.009828], [-0.026, -0.011], [0.026, -0.011], [0.028828, -0.009828], [0.03, -0.007]],
             "plane": "xy",
             "from": 0.0,
             "to": 1.793773,
@@ -6854,20 +6775,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [0.0225, 0.006],
-              [0.021328, 0.008828],
-              [0.0185, 0.01],
-              [-0.0185, 0.01],
-              [-0.021328, 0.008828],
-              [-0.0225, 0.006],
-              [-0.0225, -0.006],
-              [-0.021328, -0.008828],
-              [-0.0185, -0.01],
-              [0.0185, -0.01],
-              [0.021328, -0.008828],
-              [0.0225, -0.006]
-            ],
+            "profile": [[0.0225, 0.006], [0.021328, 0.008828], [0.0185, 0.01], [-0.0185, 0.01], [-0.021328, 0.008828], [-0.0225, 0.006], [-0.0225, -0.006], [-0.021328, -0.008828], [-0.0185, -0.01], [0.0185, -0.01], [0.021328, -0.008828], [0.0225, -0.006]],
             "plane": "xy",
             "from": 0.0,
             "to": 1.361515,
@@ -6884,20 +6792,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.55,
-            "profile": [
-              [0.03, 0.007],
-              [0.028828, 0.009828],
-              [0.026, 0.011],
-              [-0.026, 0.011],
-              [-0.028828, 0.009828],
-              [-0.03, 0.007],
-              [-0.03, -0.007],
-              [-0.028828, -0.009828],
-              [-0.026, -0.011],
-              [0.026, -0.011],
-              [0.028828, -0.009828],
-              [0.03, -0.007]
-            ],
+            "profile": [[0.03, 0.007], [0.028828, 0.009828], [0.026, 0.011], [-0.026, 0.011], [-0.028828, 0.009828], [-0.03, 0.007], [-0.03, -0.007], [-0.028828, -0.009828], [-0.026, -0.011], [0.026, -0.011], [0.028828, -0.009828], [0.03, -0.007]],
             "plane": "xy",
             "from": 0.0,
             "to": 1.793773,
@@ -6914,20 +6809,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [0.0225, 0.006],
-              [0.021328, 0.008828],
-              [0.0185, 0.01],
-              [-0.0185, 0.01],
-              [-0.021328, 0.008828],
-              [-0.0225, 0.006],
-              [-0.0225, -0.006],
-              [-0.021328, -0.008828],
-              [-0.0185, -0.01],
-              [0.0185, -0.01],
-              [0.021328, -0.008828],
-              [0.0225, -0.006]
-            ],
+            "profile": [[0.0225, 0.006], [0.021328, 0.008828], [0.0185, 0.01], [-0.0185, 0.01], [-0.021328, 0.008828], [-0.0225, 0.006], [-0.0225, -0.006], [-0.021328, -0.008828], [-0.0185, -0.01], [0.0185, -0.01], [0.021328, -0.008828], [0.0225, -0.006]],
             "plane": "xy",
             "from": 0.0,
             "to": 1.361515,
@@ -6944,25 +6826,12 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [0.015, 0.009],
-              [0.013243, 0.013243],
-              [0.009, 0.015],
-              [-0.009, 0.015],
-              [-0.013243, 0.013243],
-              [-0.015, 0.009],
-              [-0.015, -0.009],
-              [-0.013243, -0.013243],
-              [-0.009, -0.015],
-              [0.009, -0.015],
-              [0.013243, -0.013243],
-              [0.015, -0.009]
-            ],
+            "profile": [[0.014, 0.0], [0.012124, 0.007], [0.007, 0.012124], [0.0, 0.014], [-0.007, 0.012124], [-0.012124, 0.007], [-0.014, 0.0], [-0.012124, -0.007], [-0.007, -0.012124], [-0.0, -0.014], [0.007, -0.012124], [0.012124, -0.007]],
             "plane": "xy",
             "from": 0.0,
             "to": 0.312179,
             "transform": {
-              "translation": [1.780535, 0.0, -0.156089],
+              "translation": [1.748063, 0.0, -0.156089],
               "rotation": [0.0, 0.0, -0.83147, 0.55557]
             }
           },
@@ -6973,10 +6842,10 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.211824, 0.035799], [0.181209, -0.038111], [0.208926, -0.049592], [0.23954, 0.024319]],
+            "profile": [[0.216443, 0.033886], [0.188125, -0.034481], [0.191372, -0.042321], [0.208926, -0.049592], [0.23954, 0.024319]],
             "plane": "xy",
-            "from": -0.200668,
-            "to": 0.200668
+            "from": -0.200588,
+            "to": 0.200588
           },
           {
             "id": "tread-2",
@@ -6985,10 +6854,10 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.441291, 0.035799], [0.410676, -0.038111], [0.438393, -0.049592], [0.469007, 0.024319]],
+            "profile": [[0.44591, 0.033886], [0.417592, -0.034481], [0.420839, -0.042321], [0.438393, -0.049592], [0.469007, 0.024319]],
             "plane": "xy",
-            "from": -0.193854,
-            "to": 0.193854
+            "from": -0.193773,
+            "to": 0.193773
           },
           {
             "id": "tread-3",
@@ -6997,10 +6866,10 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.670758, 0.035799], [0.640143, -0.038111], [0.66786, -0.049592], [0.698475, 0.024319]],
+            "profile": [[0.675378, 0.033886], [0.647059, -0.034481], [0.650306, -0.042321], [0.66786, -0.049592], [0.698475, 0.024319]],
             "plane": "xy",
-            "from": -0.187039,
-            "to": 0.187039
+            "from": -0.186959,
+            "to": 0.186959
           },
           {
             "id": "tread-4",
@@ -7009,10 +6878,10 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.900225, 0.035799], [0.869611, -0.038111], [0.897327, -0.049592], [0.927942, 0.024319]],
+            "profile": [[0.904845, 0.033886], [0.876526, -0.034481], [0.879773, -0.042321], [0.897327, -0.049592], [0.927942, 0.024319]],
             "plane": "xy",
-            "from": -0.180225,
-            "to": 0.180225
+            "from": -0.180145,
+            "to": 0.180145
           },
           {
             "id": "platform",
@@ -7021,7 +6890,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[1.200366, 0.206419], [1.104695, -0.024551], [1.132411, -0.036031], [1.228082, 0.194939]],
+            "profile": [[1.112086, -0.027612], [1.109538, -0.02331], [1.129864, -0.031729], [1.223238, 0.193698], [1.202913, 0.202117], [1.204061, 0.204888], [1.228082, 0.194939], [1.133559, -0.03326], [1.129639, -0.034883]],
             "plane": "xy",
             "from": -0.145,
             "to": 0.145
@@ -7033,20 +6902,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [0.015, 0.011],
-              [0.013828, 0.013828],
-              [0.011, 0.015],
-              [-0.011, 0.015],
-              [-0.013828, 0.013828],
-              [-0.015, 0.011],
-              [-0.015, -0.011],
-              [-0.013828, -0.013828],
-              [-0.011, -0.015],
-              [0.011, -0.015],
-              [0.013828, -0.013828],
-              [0.015, -0.011]
-            ],
+            "profile": [[0.015, 0.011], [0.013828, 0.013828], [0.011, 0.015], [-0.011, 0.015], [-0.013828, 0.013828], [-0.015, 0.011], [-0.015, -0.011], [-0.013828, -0.013828], [-0.011, -0.015], [0.011, -0.015], [0.013828, -0.013828], [0.015, -0.011]],
             "plane": "xy",
             "from": 0.0,
             "to": 0.362694,
@@ -7062,20 +6918,7 @@
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [
-              [0.01, 0.002],
-              [0.009414, 0.003414],
-              [0.008, 0.004],
-              [-0.008, 0.004],
-              [-0.009414, 0.003414],
-              [-0.01, 0.002],
-              [-0.01, -0.002],
-              [-0.009414, -0.003414],
-              [-0.008, -0.004],
-              [0.008, -0.004],
-              [0.009414, -0.003414],
-              [0.01, -0.002]
-            ],
+            "profile": [[0.01, 0.002], [0.009414, 0.003414], [0.008, 0.004], [-0.008, 0.004], [-0.009414, 0.003414], [-0.01, 0.002], [-0.01, -0.002], [-0.009414, -0.003414], [-0.008, -0.004], [0.008, -0.004], [0.009414, -0.003414], [0.01, -0.002]],
             "plane": "xy",
             "from": 0.0,
             "to": 0.584767,
@@ -7092,9 +6935,9 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[0.017221, 0.041575], [-0.017221, -0.041575], [0.024354, -0.058795], [0.058795, 0.024354]],
+            "profile": [[0.016455, 0.039727], [-0.017221, -0.041575], [-0.00946, -0.044789], [-0.000586, -0.032772], [0.040545, -0.032772], [0.067694, 0.032772], [0.026563, 0.032772], [0.024216, 0.036512]],
             "plane": "xy",
-            "from": 0.19,
+            "from": 0.197,
             "to": 0.235
           },
           {
@@ -7104,10 +6947,10 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[1.396002, -0.043257], [1.371195, 0.043257], [1.327938, 0.030853], [1.352745, -0.05566]],
+            "profile": [[1.394624, -0.03845], [1.373675, 0.034605], [1.365601, 0.03229], [1.363836, 0.025384], [1.329506, 0.025384], [1.344063, -0.025384], [1.378393, -0.025384], [1.386549, -0.040766]],
             "plane": "xy",
-            "from": 0.1755,
-            "to": 0.2205
+            "from": 0.182,
+            "to": 0.214
           },
           {
             "id": "spreader-r",
@@ -7116,20 +6959,7 @@
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [
-              [0.01, 0.002],
-              [0.009414, 0.003414],
-              [0.008, 0.004],
-              [-0.008, 0.004],
-              [-0.009414, 0.003414],
-              [-0.01, 0.002],
-              [-0.01, -0.002],
-              [-0.009414, -0.003414],
-              [-0.008, -0.004],
-              [0.008, -0.004],
-              [0.009414, -0.003414],
-              [0.01, -0.002]
-            ],
+            "profile": [[0.01, 0.002], [0.009414, 0.003414], [0.008, 0.004], [-0.008, 0.004], [-0.009414, 0.003414], [-0.01, 0.002], [-0.01, -0.002], [-0.009414, -0.003414], [-0.008, -0.004], [0.008, -0.004], [0.009414, -0.003414], [0.01, -0.002]],
             "plane": "xy",
             "from": 0.0,
             "to": 0.584767,
@@ -7146,10 +6976,10 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[0.017221, 0.041575], [-0.017221, -0.041575], [0.024354, -0.058795], [0.058795, 0.024354]],
+            "profile": [[0.016455, 0.039727], [-0.017221, -0.041575], [-0.00946, -0.044789], [-0.000586, -0.032772], [0.040545, -0.032772], [0.067694, 0.032772], [0.026563, 0.032772], [0.024216, 0.036512]],
             "plane": "xy",
             "from": -0.235,
-            "to": -0.19
+            "to": -0.197
           },
           {
             "id": "shoe-rear-r",
@@ -7158,10 +6988,10 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[1.396002, -0.043257], [1.371195, 0.043257], [1.327938, 0.030853], [1.352745, -0.05566]],
+            "profile": [[1.394624, -0.03845], [1.373675, 0.034605], [1.365601, 0.03229], [1.363836, 0.025384], [1.329506, 0.025384], [1.344063, -0.025384], [1.378393, -0.025384], [1.386549, -0.040766]],
             "plane": "xy",
-            "from": -0.2205,
-            "to": -0.1755
+            "from": -0.214,
+            "to": -0.182
           }
         ],
         "thermal": [
@@ -7359,9 +7189,9 @@
             "material": "rubber-black",
             "role": "ground",
             "tone": 0.15,
-            "size": [0.088, 0.03, 0.038],
+            "size": [0.088, 0.006, 0.038],
             "transform": {
-              "translation": [0.013858, -0.00574, 0.2125],
+              "translation": [0.002772, -0.001148, 0.216],
               "rotation": [0.0, 0.0, -0.83147, 0.55557]
             },
             "member": "front-frame",
@@ -7375,9 +7205,9 @@
             "material": "rubber-black",
             "role": "ground",
             "tone": 0.15,
-            "size": [0.076, 0.03, 0.032],
+            "size": [0.076, 0.006, 0.032],
             "transform": {
-              "translation": [1.369179, -0.004135, 0.198],
+              "translation": [1.380714, -0.000827, 0.198],
               "rotation": [0.0, 0.0, 0.798636, 0.601815]
             },
             "member": "rear-frame",
@@ -7391,9 +7221,9 @@
             "material": "rubber-black",
             "role": "ground",
             "tone": 0.15,
-            "size": [0.088, 0.03, 0.038],
+            "size": [0.088, 0.006, 0.038],
             "transform": {
-              "translation": [0.013858, -0.00574, -0.2125],
+              "translation": [0.002772, -0.001148, -0.216],
               "rotation": [0.0, 0.0, -0.83147, 0.55557]
             },
             "member": "front-frame",
@@ -7407,9 +7237,9 @@
             "material": "rubber-black",
             "role": "ground",
             "tone": 0.15,
-            "size": [0.076, 0.03, 0.032],
+            "size": [0.076, 0.006, 0.032],
             "transform": {
-              "translation": [1.369179, -0.004135, -0.198],
+              "translation": [1.380714, -0.000827, -0.198],
               "rotation": [0.0, 0.0, 0.798636, 0.601815]
             },
             "member": "rear-frame",
@@ -7475,8 +7305,8 @@
         ],
         "decisions": [
           {
-            "en": "Body: authored anew for 1:200: stiles, rear rails and spreader straps are slender parts at their true size from the floor to their ends (drawn as strokes); the grab bar is a 30 mm bar, the treads are 80 x 30 mm slabs with their tops at the true heights, the platform a 30 mm slab, one 30 mm brace low on the rear frame and four 90 x 45 x 45 mm shoe blocks; hinge, rest tube, upper brace and rivets are omitted.",
-            "de": "Körper: für 1:200 neu verfasst: Holme, Hinterholme und Spreizbänder sind schlanke Teile in wahrer Größe vom Boden bis zu ihren Enden (als Striche gezeichnet); der Haltebügel ist ein 30-mm-Stab, die Stufen sind Platten 80 x 30 mm mit der Oberkante in wahrer Höhe, die Plattform eine 30-mm-Platte, eine 30-mm-Traverse unten am Stützrahmen und vier Schuhblöcke 90 x 45 x 45 mm; Gelenk, Auflagerohr, obere Traverse und Nieten entfallen."
+            "en": "Four 80 × 25 mm treads, the 26 mm platform rim and the 28 mm round grab tube retain their physical sections. The rubber front and rear shoe soles are 38 and 32 mm wide. The paper outline carries the thin sections at this scale.",
+            "de": "Vier 80 × 25 mm große Trittstufen, der 26-mm-Plattformrand und das 28-mm-Griffrohr behalten ihre Querschnitte. Vordere und hintere Gummisohlen sind 38 und 32 mm breit. Im Druck macht die Kontur die dünnen Querschnitte lesbar."
           },
           {
             "en": "Thermal: each region is the skin of its body solids by reference; only the sum of the areas is compared at this scale.",
@@ -7499,20 +7329,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.55,
-            "profile": [
-              [0.03, 0.007],
-              [0.028828, 0.009828],
-              [0.026, 0.011],
-              [-0.026, 0.011],
-              [-0.028828, 0.009828],
-              [-0.03, 0.007],
-              [-0.03, -0.007],
-              [-0.028828, -0.009828],
-              [-0.026, -0.011],
-              [0.026, -0.011],
-              [0.028828, -0.009828],
-              [0.03, -0.007]
-            ],
+            "profile": [[0.03, 0.007], [0.028828, 0.009828], [0.026, 0.011], [-0.026, 0.011], [-0.028828, 0.009828], [-0.03, 0.007], [-0.03, -0.007], [-0.028828, -0.009828], [-0.026, -0.011], [0.026, -0.011], [0.028828, -0.009828], [0.03, -0.007]],
             "plane": "xy",
             "from": 0.0,
             "to": 1.793773,
@@ -7529,20 +7346,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [0.0225, 0.006],
-              [0.021328, 0.008828],
-              [0.0185, 0.01],
-              [-0.0185, 0.01],
-              [-0.021328, 0.008828],
-              [-0.0225, 0.006],
-              [-0.0225, -0.006],
-              [-0.021328, -0.008828],
-              [-0.0185, -0.01],
-              [0.0185, -0.01],
-              [0.021328, -0.008828],
-              [0.0225, -0.006]
-            ],
+            "profile": [[0.0225, 0.006], [0.021328, 0.008828], [0.0185, 0.01], [-0.0185, 0.01], [-0.021328, 0.008828], [-0.0225, 0.006], [-0.0225, -0.006], [-0.021328, -0.008828], [-0.0185, -0.01], [0.0185, -0.01], [0.021328, -0.008828], [0.0225, -0.006]],
             "plane": "xy",
             "from": 0.0,
             "to": 1.361515,
@@ -7559,20 +7363,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.55,
-            "profile": [
-              [0.03, 0.007],
-              [0.028828, 0.009828],
-              [0.026, 0.011],
-              [-0.026, 0.011],
-              [-0.028828, 0.009828],
-              [-0.03, 0.007],
-              [-0.03, -0.007],
-              [-0.028828, -0.009828],
-              [-0.026, -0.011],
-              [0.026, -0.011],
-              [0.028828, -0.009828],
-              [0.03, -0.007]
-            ],
+            "profile": [[0.03, 0.007], [0.028828, 0.009828], [0.026, 0.011], [-0.026, 0.011], [-0.028828, 0.009828], [-0.03, 0.007], [-0.03, -0.007], [-0.028828, -0.009828], [-0.026, -0.011], [0.026, -0.011], [0.028828, -0.009828], [0.03, -0.007]],
             "plane": "xy",
             "from": 0.0,
             "to": 1.793773,
@@ -7589,20 +7380,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [0.0225, 0.006],
-              [0.021328, 0.008828],
-              [0.0185, 0.01],
-              [-0.0185, 0.01],
-              [-0.021328, 0.008828],
-              [-0.0225, 0.006],
-              [-0.0225, -0.006],
-              [-0.021328, -0.008828],
-              [-0.0185, -0.01],
-              [0.0185, -0.01],
-              [0.021328, -0.008828],
-              [0.0225, -0.006]
-            ],
+            "profile": [[0.0225, 0.006], [0.021328, 0.008828], [0.0185, 0.01], [-0.0185, 0.01], [-0.021328, 0.008828], [-0.0225, 0.006], [-0.0225, -0.006], [-0.021328, -0.008828], [-0.0185, -0.01], [0.0185, -0.01], [0.021328, -0.008828], [0.0225, -0.006]],
             "plane": "xy",
             "from": 0.0,
             "to": 1.361515,
@@ -7619,25 +7397,12 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [0.0375, 0.0315],
-              [0.035743, 0.035743],
-              [0.0315, 0.0375],
-              [-0.0315, 0.0375],
-              [-0.035743, 0.035743],
-              [-0.0375, 0.0315],
-              [-0.0375, -0.0315],
-              [-0.035743, -0.035743],
-              [-0.0315, -0.0375],
-              [0.0315, -0.0375],
-              [0.035743, -0.035743],
-              [0.0375, -0.0315]
-            ],
+            "profile": [[0.014, 0.0], [0.009899, 0.009899], [0.0, 0.014], [-0.009899, 0.009899], [-0.014, 0.0], [-0.009899, -0.009899], [-0.0, -0.014], [0.009899, -0.009899]],
             "plane": "xy",
             "from": 0.0,
             "to": 0.312179,
             "transform": {
-              "translation": [1.756181, 0.0, -0.156089],
+              "translation": [1.748063, 0.0, -0.156089],
               "rotation": [0.0, 0.0, -0.83147, 0.55557]
             }
           },
@@ -7648,10 +7413,10 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.170249, 0.05302], [0.139635, -0.02089], [0.208926, -0.049592], [0.23954, 0.024319]],
+            "profile": [[0.216443, 0.033886], [0.185829, -0.040025], [0.208926, -0.049592], [0.23954, 0.024319]],
             "plane": "xy",
-            "from": -0.201391,
-            "to": 0.201391
+            "from": -0.200588,
+            "to": 0.200588
           },
           {
             "id": "tread-2",
@@ -7660,10 +7425,10 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.399716, 0.05302], [0.369102, -0.02089], [0.438393, -0.049592], [0.469007, 0.024319]],
+            "profile": [[0.44591, 0.033886], [0.415296, -0.040025], [0.438393, -0.049592], [0.469007, 0.024319]],
             "plane": "xy",
-            "from": -0.194577,
-            "to": 0.194577
+            "from": -0.193773,
+            "to": 0.193773
           },
           {
             "id": "tread-3",
@@ -7672,10 +7437,10 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.629184, 0.05302], [0.598569, -0.02089], [0.66786, -0.049592], [0.698475, 0.024319]],
+            "profile": [[0.675378, 0.033886], [0.644763, -0.040025], [0.66786, -0.049592], [0.698475, 0.024319]],
             "plane": "xy",
-            "from": -0.187762,
-            "to": 0.187762
+            "from": -0.186959,
+            "to": 0.186959
           },
           {
             "id": "tread-4",
@@ -7684,10 +7449,10 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.858651, 0.05302], [0.828036, -0.02089], [0.897327, -0.049592], [0.927942, 0.024319]],
+            "profile": [[0.904845, 0.033886], [0.87423, -0.040025], [0.897327, -0.049592], [0.927942, 0.024319]],
             "plane": "xy",
-            "from": -0.180948,
-            "to": 0.180948
+            "from": -0.180145,
+            "to": 0.180145
           },
           {
             "id": "platform",
@@ -7696,7 +7461,7 @@
             "material": "alu-mill",
             "role": "body",
             "tone": 0.6,
-            "profile": [[1.158791, 0.22364], [1.06312, -0.00733], [1.132411, -0.036031], [1.228082, 0.194939]],
+            "profile": [[1.204061, 0.204888], [1.20253, 0.201193], [1.222856, 0.192774], [1.130246, -0.030805], [1.109921, -0.022386], [1.10839, -0.026082], [1.132411, -0.036031], [1.228082, 0.194939]],
             "plane": "xy",
             "from": -0.145,
             "to": 0.145
@@ -7708,20 +7473,7 @@
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [
-              [0.01, 0.002],
-              [0.009414, 0.003414],
-              [0.008, 0.004],
-              [-0.008, 0.004],
-              [-0.009414, 0.003414],
-              [-0.01, 0.002],
-              [-0.01, -0.002],
-              [-0.009414, -0.003414],
-              [-0.008, -0.004],
-              [0.008, -0.004],
-              [0.009414, -0.003414],
-              [0.01, -0.002]
-            ],
+            "profile": [[0.01, 0.002], [0.009414, 0.003414], [0.008, 0.004], [-0.008, 0.004], [-0.009414, 0.003414], [-0.01, 0.002], [-0.01, -0.002], [-0.009414, -0.003414], [-0.008, -0.004], [0.008, -0.004], [0.009414, -0.003414], [0.01, -0.002]],
             "plane": "xy",
             "from": 0.0,
             "to": 0.584767,
@@ -7738,9 +7490,9 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[0.019134, 0.046194], [-0.019134, -0.046194], [0.050157, -0.074895], [0.088425, 0.017493]],
+            "profile": [[0.016455, 0.039727], [-0.017221, -0.041575], [0.040545, -0.032772], [0.067694, 0.032772]],
             "plane": "xy",
-            "from": 0.16,
+            "from": 0.197,
             "to": 0.235
           },
           {
@@ -7750,10 +7502,10 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[1.39738, -0.048063], [1.369816, 0.048063], [1.297722, 0.02739], [1.325285, -0.068736]],
+            "profile": [[1.394624, -0.03845], [1.373675, 0.034605], [1.329506, 0.025384], [1.344063, -0.025384]],
             "plane": "xy",
-            "from": 0.16,
-            "to": 0.235
+            "from": 0.182,
+            "to": 0.214
           },
           {
             "id": "spreader-r",
@@ -7762,20 +7514,7 @@
             "material": "steel-zinc",
             "role": "body",
             "tone": 0.35,
-            "profile": [
-              [0.01, 0.002],
-              [0.009414, 0.003414],
-              [0.008, 0.004],
-              [-0.008, 0.004],
-              [-0.009414, 0.003414],
-              [-0.01, 0.002],
-              [-0.01, -0.002],
-              [-0.009414, -0.003414],
-              [-0.008, -0.004],
-              [0.008, -0.004],
-              [0.009414, -0.003414],
-              [0.01, -0.002]
-            ],
+            "profile": [[0.01, 0.002], [0.009414, 0.003414], [0.008, 0.004], [-0.008, 0.004], [-0.009414, 0.003414], [-0.01, 0.002], [-0.01, -0.002], [-0.009414, -0.003414], [-0.008, -0.004], [0.008, -0.004], [0.009414, -0.003414], [0.01, -0.002]],
             "plane": "xy",
             "from": 0.0,
             "to": 0.584767,
@@ -7792,10 +7531,10 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[0.019134, 0.046194], [-0.019134, -0.046194], [0.050157, -0.074895], [0.088425, 0.017493]],
+            "profile": [[0.016455, 0.039727], [-0.017221, -0.041575], [0.040545, -0.032772], [0.067694, 0.032772]],
             "plane": "xy",
             "from": -0.235,
-            "to": -0.16
+            "to": -0.197
           },
           {
             "id": "shoe-rear-r",
@@ -7804,10 +7543,10 @@
             "material": "rubber-black",
             "role": "body",
             "tone": 0.12,
-            "profile": [[1.39738, -0.048063], [1.369816, 0.048063], [1.297722, 0.02739], [1.325285, -0.068736]],
+            "profile": [[1.394624, -0.03845], [1.373675, 0.034605], [1.329506, 0.025384], [1.344063, -0.025384]],
             "plane": "xy",
-            "from": -0.235,
-            "to": -0.16
+            "from": -0.214,
+            "to": -0.182
           }
         ],
         "thermal": [
@@ -7994,9 +7733,9 @@
             "material": "rubber-black",
             "role": "ground",
             "tone": 0.15,
-            "size": [0.088, 0.075, 0.038],
+            "size": [0.088, 0.008, 0.038],
             "transform": {
-              "translation": [0.034645, -0.014351, 0.1975],
+              "translation": [0.003696, -0.001531, 0.216],
               "rotation": [0.0, 0.0, -0.83147, 0.55557]
             },
             "member": "front-frame",
@@ -8010,9 +7749,9 @@
             "material": "rubber-black",
             "role": "ground",
             "tone": 0.15,
-            "size": [0.076, 0.075, 0.032],
+            "size": [0.076, 0.008, 0.032],
             "transform": {
-              "translation": [1.347551, -0.010336, 0.1975],
+              "translation": [1.379753, -0.001103, 0.198],
               "rotation": [0.0, 0.0, 0.798636, 0.601815]
             },
             "member": "rear-frame",
@@ -8026,9 +7765,9 @@
             "material": "rubber-black",
             "role": "ground",
             "tone": 0.15,
-            "size": [0.088, 0.075, 0.038],
+            "size": [0.088, 0.008, 0.038],
             "transform": {
-              "translation": [0.034645, -0.014351, -0.1975],
+              "translation": [0.003696, -0.001531, -0.216],
               "rotation": [0.0, 0.0, -0.83147, 0.55557]
             },
             "member": "front-frame",
@@ -8042,9 +7781,9 @@
             "material": "rubber-black",
             "role": "ground",
             "tone": 0.15,
-            "size": [0.076, 0.075, 0.032],
+            "size": [0.076, 0.008, 0.032],
             "transform": {
-              "translation": [1.347551, -0.010336, -0.1975],
+              "translation": [1.379753, -0.001103, -0.198],
               "rotation": [0.0, 0.0, 0.798636, 0.601815]
             },
             "member": "rear-frame",
@@ -8110,8 +7849,8 @@
         ],
         "decisions": [
           {
-            "en": "Body: authored anew for 1:500: stiles, rear rails and spreader straps stay slender parts at their true size; the treads are 80 x 75 mm bars, the platform a 75 mm slab, the grab bar a 75 mm bar and the shoes four 100 x 75 x 75 mm blocks, each with its top or sole at the true height; braces, hinge and rest tube are omitted.",
-            "de": "Körper: für 1:500 neu verfasst: Holme, Hinterholme und Spreizbänder bleiben schlanke Teile in wahrer Größe; die Stufen sind Stäbe 80 x 75 mm, die Plattform eine 75-mm-Platte, der Haltebügel ein 75-mm-Stab und die Schuhe vier Blöcke 100 x 75 x 75 mm, jeweils mit Oberkante oder Sohle in wahrer Höhe; Traversen, Gelenk und Auflagerohr entfallen."
+            "en": "Four 80 × 25 mm treads, the 26 mm platform rim and the 28 mm round grab tube retain their physical sections. The rubber front and rear shoe soles are 38 and 32 mm wide. The paper outline carries the thin sections at this scale.",
+            "de": "Vier 80 × 25 mm große Trittstufen, der 26-mm-Plattformrand und das 28-mm-Griffrohr behalten ihre Querschnitte. Vordere und hintere Gummisohlen sind 38 und 32 mm breit. Im Druck macht die Kontur die dünnen Querschnitte lesbar."
           },
           {
             "en": "Thermal: each region is the skin of its body solids by reference; only the sum of the areas is compared at this scale.",

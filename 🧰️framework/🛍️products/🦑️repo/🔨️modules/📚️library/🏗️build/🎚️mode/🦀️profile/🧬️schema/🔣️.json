@@ -428,6 +428,13 @@
             "incremental": true,
             "lto": "off"
           },
+          "prototype-component": {
+            "optLevel": "s",
+            "debug": 0,
+            "codegenUnits": 16,
+            "incremental": false,
+            "lto": "thin"
+          },
           "prototype-wasm": {
             "optLevel": "1",
             "debug": 0,

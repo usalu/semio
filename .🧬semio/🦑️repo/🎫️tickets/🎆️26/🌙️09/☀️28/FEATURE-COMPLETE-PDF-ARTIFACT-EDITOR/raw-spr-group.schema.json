@@ -1,0 +1,10 @@
+{
+  "tagHex": "80004701",
+  "byteOrder": "littleEndian",
+  "header": [["tag", 4], ["sha256", 32], ["completeExtent", 4], ["ordinal", 2]],
+  "partPayloadBytes": 65536,
+  "maximumFrameBytes": 65578,
+  "maximumBytes": 2097152,
+  "payload": ["prepared edit tag 80004700", "nonempty authoring Store edit identifier as canonical length-prefixed UTF-8, maximum 256 bytes", "same canonical causal mutation-group bytes"],
+  "completeWhen": "all exact original slices are present and ordered SHA-256 matches"
+}

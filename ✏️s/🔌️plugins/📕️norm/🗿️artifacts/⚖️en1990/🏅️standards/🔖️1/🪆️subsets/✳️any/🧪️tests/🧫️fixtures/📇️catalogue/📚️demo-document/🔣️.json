@@ -339,7 +339,16 @@
           "value": 0.1
         }
       ],
-      "texts": []
+      "texts": [
+        {
+          "id": "g_value_basis",
+          "value": "normal-bounds"
+        },
+        {
+          "id": "q_value_basis",
+          "value": "annual-gumbel"
+        }
+      ]
     },
     {
       "id": "case-e90-09",

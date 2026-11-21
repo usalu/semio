@@ -352,9 +352,6 @@ impl MountedRegistry {
         }
         let Some(items) = self.reserved_items.checked_add(admitted_items) else { return false };
         let Some(bytes) = self.reserved_bytes.checked_add(admitted_bytes) else { return false };
-        if items > SESSION_SHELL_CAPACITY * SESSION_MAXIMUM_ITEMS || bytes > SESSION_SHELL_CAPACITY * SESSION_MAXIMUM_BYTES {
-            return false;
-        }
         self.credit_items[shell as usize] = admitted_items;
         self.credit_bytes[shell as usize] = admitted_bytes;
         self.reserved_items = items;

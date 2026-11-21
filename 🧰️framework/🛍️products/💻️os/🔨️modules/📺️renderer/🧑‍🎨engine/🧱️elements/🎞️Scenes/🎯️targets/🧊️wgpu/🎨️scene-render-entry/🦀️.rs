@@ -1,6 +1,8 @@
 //! 🎨️ Scene surface context menu and the component scene render entry.
 
 use super::*;
+use semio_renderer_wgpu_engine_board::paint2d::{advance_paint2d_pixel_selection_into, paint2d_pixel_selection_progress};
+use semio_ui_wgpu_widget_kit::draw_text;
 
 //#region 🖱️SurfaceContextMenu
 /** 🖱️ One component scene's answer to a right-click: the `surface` half of the context-menu
@@ -113,7 +115,7 @@ fn vfs_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, y: f32, th
         let scroll = scroll_offset(&scene.host_id, "vfs");
         if let Ok(index) = usize::try_from(((y - metrics.body.y + scroll) / metrics.row_h.max(1.0)).floor() as i64) {
             if let Some(entry) = visible.get(index) {
-                hits.push(semio_ui_declaration::ui::ContextMenuHit { domain: "row".into(), id: vfs_row_id(&entry.row), label: None });
+                hits.push(semio_ui_declaration::ui::ContextMenuHit { domain: "row".into(), id: entry.id(), label: None });
             }
         }
     }
@@ -315,12 +317,12 @@ pub fn render_component_scene_step(
         }
         5 => {
             if scene.component_kind==SurfaceKind::Paint2d {
-                match semio_framework_os_renderer_wgpu_engine_board::paint2d::advance_paint2d_pixel_selection_into(scene,hosts.window_id,ctx.input){
+                match advance_paint2d_pixel_selection_into(scene,hosts.window_id,ctx.input){
                     Err(_)=>return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault,
                     _=>{}
                 }
             }
-            let progress = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::advance_raster_composite(scene);
+            let progress = advance_raster_composite(scene);
             if cursor.observe_external_progress(progress.completed).is_err() {
                 return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
@@ -367,9 +369,12 @@ pub fn render_component_scene_step(
             }
             if scene.component_kind == SurfaceKind::Paint2d {
                 ctx.draw.push_scissor(bounds);
-                semio_framework_os_renderer_wgpu_engine_graph::node_graph::paint_paint2d_overlays(ctx, scene, bounds);
-                if let Some((completed,total))=semio_framework_os_renderer_wgpu_engine_board::paint2d::paint2d_pixel_selection_progress(&scene.host_id){
-                    if ctx.draw.try_reserve_retained_items(128).is_err(){return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;}
+                paint_paint2d_overlays(ctx, scene, bounds);
+                if let Some((completed,total))=paint2d_pixel_selection_progress(&scene.host_id){
+                    if ctx.draw.try_reserve_retained_items(128).is_err() {
+                        ctx.draw.pop_scissor();
+                        return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
+                    }
                     let width=(bounds.w-24.0).clamp(0.0,220.0);let x=bounds.x+12.0;let y=bounds.y+12.0;
                     let fraction=if total==0{0.0}else{completed as f32/total as f32};
                     ctx.draw.push_rounded([x,y,width,32.0],ctx.theme.panel,ctx.theme.border_radius);
@@ -548,8 +553,8 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     let Some(state) = hosts.world3d_states.get_or_insert_with(scene.host_id.clone(), || infinite_world::world::World3dState::new(surface_id, controller_id)) else {
         return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
     };
-    if state.trace.tool_run_trace_window_id.as_deref() != Some(hosts.window_id) {
-        state.trace.tool_run_trace_window_id = Some(hosts.window_id.to_string());
+    if state.session.window_instance_id.as_deref() != Some(hosts.window_id) {
+        state.session.window_instance_id = Some(hosts.window_id.to_string());
     }
     state.set_modelling_locale(hosts.chrome_labels.german);
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources, infinite_world::world::World3dShadowProfile::World);

@@ -1,4 +1,7 @@
 //! 🔌️ The runtime app contract every hosted app instance satisfies, closed per plugin by `dyn_enum_close!`.
+
+#[path = "📟️atomic-document.rs"]
+pub mod atomic_document;
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
 #[path="🌱️construction/🦀️.rs"]
@@ -31,6 +34,7 @@ use semio_framework::MediaWireFormat;
 use semio_framework::Media;
 use semio_framework::MediaError;
 use semio_framework::MediaFingerprint;
+
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
@@ -64,6 +68,14 @@ use semio_plugin_decl_app::TransactionPrepareOutcome;
 use semio_plugin_decl_app::document_load_fault;
 use semio_plugin_decl_app::whole_document_archive;
 use semio_plugin_document_media::lifted_app::whole_document_media;
+
+/// 🎞️ Retains the exact media operation and its terminal publication while the input command stays open.
+#[derive(Default)]
+pub struct OriginalMediaImport {
+    pub operation: Option<semio_framework_job::Operation>,
+    pub terminal: Option<Result<(), semio_plugin_decl_app::tool_contract::ArtifactBoundedToolFault>>,
+    pub complete: bool,
+}
 
 /// 🚪️ Which births an instance has paid so far; the runtime opening and the fixtures advance the same value through [`PluginApp::advance_instance_birth`].
 #[derive(Default)]
@@ -221,6 +233,10 @@ pub trait PluginApp: Send + 'static {
     fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault>;
     /// 📤️ Drains one effect already accepted by the typed-operation host receiver.
     fn take_typed_operation_effect(&mut self) -> Option<Effect>;
+    /// 📪️ Borrows the exact pending file-open effect until the picker adopts its source.
+    fn original_picker_effect(&mut self) -> Option<&mut Effect> { None }
+    /// 🚮️ Removes a refused picker effect after the caller accounts for its retained bytes.
+    fn discard_original_picker_effect(&mut self) {}
     /// 📤️ Drains one event already accepted by the typed-operation host receiver.
     fn take_typed_operation_event(&mut self) -> Option<AppEvent>;
     /// 📤️ Drains one UI scope already accepted by the typed-operation host receiver.
@@ -412,6 +428,10 @@ pub trait PluginApp: Send + 'static {
     fn begin_document_archive_merge(&mut self, _operation:u64, _archive:&mut protocol::DocumentArchivePack, _admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission, _cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, "recursive document archive merging is unavailable for this app").into())
     }
+    /// 🚦️ Reports retained archive work the reactor can drive with its original stock.
+    fn document_archive_maintenance_is_runnable(&self, _stock: RetainedCloneGrant) -> Result<bool, ValueError> {
+        Ok(false)
+    }
     /// 📬️ Advances and observes one exact retained recursive archive operation.
     async fn poll_document_archive_load(&mut self, operation: u64, _identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
         Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, format!("recursive document archive operation {operation} is unavailable for this app")))
@@ -473,6 +493,23 @@ pub trait PluginApp: Send + 'static {
     async fn attach_backbone(&mut self, backbone: store::os_store::backbone::Backbones) -> Result<(), Fault>;
     async fn attach_hot_backbone(&mut self, backbone: store::os_store::backbone::Backbones) -> Result<(), Fault>;
     async fn tick_backbone(&mut self, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<protocol::MergeReport>, Fault>;
+    /// 🔌️ Advances only the original group held by the addressed document receiver.
+    async fn advance_original_atomic_backbone(
+        &mut self,
+        _inbox: &mut semio_os_kernel::os_store::backbone::atomic_transport::AtomicBackboneInbox,
+        _original: &mut Option<Vec<u8>>,
+        _binding: [u8; 32],
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<Option<protocol::MergeReport>, semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("plugin.atomic-backbone-unsupported"), "this app has no original atomic document receiver").into())
+    }
+    fn original_atomic_outbound_pending(&self) -> bool { false }
+    fn advance_original_atomic_outbound(
+        &mut self,
+        _delivery: &mut Option<semio_os_kernel::os_store::backbone::atomic_transport::AtomicBackboneDelivery>,
+        _binding: [u8; 32],
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<(), semio_framework_job::OriginalTurnFailure> { Ok(()) }
     async fn detach_backbone(&mut self) -> Result<(), Fault>;
     /// 🕰️ `view_state` supplies wrapper chrome and the OS-owned render context.
     /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
@@ -504,7 +541,10 @@ pub trait PluginApp: Send + 'static {
     async fn app_catalogue_json(&mut self) -> String {
         String::from("{}")
     }
-    /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects`. `Ok(None)` is the retained answer: the original turn yielded or the snapshot-read preparation is not admitted yet, so the runtime keeps the instance armed and polls again with the next original epoch; it is never flattened into an empty effect list.
+    /// 🚧️ A document owner must make progress before the armed effects owner can borrow its snapshot.
+    fn pending_effects_waits_for_document(&self) -> bool { false }
+
+    /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects`. `Ok(None)` keeps the owner armed across a document change, turn yield or retained snapshot-read preparation.
     async fn pending_effects(&mut self, _view: Option<&ViewModel>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<Vec<Effect>>, semio_framework_job::OriginalTurnFailure> {
         Ok(Some(Vec::new()))
     }
@@ -542,6 +582,17 @@ pub trait PluginApp: Send + 'static {
     async fn take_segmented_download_chunk(&mut self, _operation_id: u64) -> Result<Option<Vec<u8>>, Fault> {
         Err(plugin_sdk_fault("segmented download not implemented"))
     }
+    /// 🎟️ Borrows the live document identity and exact revision for the picker lease.
+    fn original_media_live_document(&self) -> Option<semio_plugin_decl_media::original_media::runtime::RawLiveDocument<'_>> { None }
+    /// 🚪️ Whether the app has returned all owners of a picker format operation.
+    fn original_media_format_closed(&self) -> bool { true }
+    /// 🧾️ Posts the original publication receipt once the document edit commits.
+    fn observe_original_media_commit(&mut self, _picker: &mut semio_plugin_decl_media::original_media::RawMediaPicker, _cx: &semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> { Ok(()) }
+    /// 🗂️ Advances one retained picker format operation on its original source.
+    async fn advance_original_media_format(&mut self, _picker: &mut semio_plugin_decl_media::original_media::RawMediaPicker, _identity: &mut store::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original picker has no mounted format owner").into())
+    }
+
     /// 🎞️ Object-safe counterpart to `ArtifactApp::import_media` — dispatches through the same
     /// `ArtifactStore` as `handle_action`, so a headless import is an ordinary, undoable edit.
     /// 🎟️ Phases original cancellation admission while the receiving command still owns its media source.
@@ -550,8 +601,8 @@ pub trait PluginApp: Send + 'static {
     fn accepts_original_structured_media(&self,_port:&str,_schema:&str,_media_type:&semio_framework::MediaType)->bool{false}
     /// 📄️ Borrows the media type under which the app's mounted natural-file codec imports bytes of this format; `None` when the codec is absent or foreign.
     fn original_natural_file_media_type(&self,_port:&str,_format_kind:&str)->Option<semio_framework::MediaType>{None}
-    /// 🎞️ Advances one original intrinsic media input until its actual producer is mounted.
-    async fn advance_original_media_import(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_completed:&mut bool,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original media import is not implemented").into())}
+    /// 🎟️ Keeps an original media command open while its exact producer publishes and retires.
+    async fn advance_original_media_import(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_progress:&mut OriginalMediaImport,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original media import is not implemented").into())}
     async fn import_media(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()).into())
     }

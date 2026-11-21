@@ -37,6 +37,27 @@
     "minimumChange": 20,
     "minimumChangedFraction": 0.95
   },
+  "largeSheetPreview": {
+    "fixture": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🧫️fixtures/📄️large-sheet/🔣️.json",
+    "steps": [
+      {
+        "step": "large-sheet-authoring",
+        "values": {
+          "valid": true,
+          "width": 8192,
+          "height": 4096,
+          "rectangleCount": 32
+        }
+      },
+      {
+        "step": "large-sheet-viewport",
+        "values": {
+          "valid": true,
+          "documentUnchanged": true
+        }
+      }
+    ]
+  },
   "steps": [
     {
       "step": "boot",
@@ -251,7 +272,9 @@
       "originalFrameId": "frame-chart",
       "rowKey": "layout-catalogue.link.chart-preview",
       "rowLabel": "chart-preview.png",
-      "linkId": "chart-preview"
+      "linkId": "chart-preview",
+      "proxyColorTolerance": 16,
+      "minimumProxyColorPixels": 16
     },
     "steps": [
       {
@@ -275,7 +298,8 @@
       {
         "step": "physical-linked-placement",
         "values": {
-          "valid": true
+          "valid": true,
+          "proxyVisible": true
         }
       }
     ],

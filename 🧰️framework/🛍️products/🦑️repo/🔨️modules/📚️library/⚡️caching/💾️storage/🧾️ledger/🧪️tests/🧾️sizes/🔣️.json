@@ -1,0 +1,91 @@
+{
+  "records": [
+    {
+      "key": "fleet-state",
+      "usedBytes": 3580506112,
+      "category": "area",
+      "area": "fleet-state"
+    },
+    {
+      "key": "scratch",
+      "usedBytes": 8192,
+      "category": "area",
+      "area": "scratch"
+    },
+    {
+      "key": "old-fleet-state",
+      "usedBytes": 16384,
+      "category": "area",
+      "area": "old-fleet-state"
+    },
+    {
+      "key": "undeclared:native:f",
+      "usedBytes": 3400609792,
+      "category": "undeclared",
+      "root": "native",
+      "path": "f"
+    },
+    {
+      "key": "undeclared:native:f/graph-server",
+      "usedBytes": 32768,
+      "category": "undeclared",
+      "root": "native",
+      "path": "f/graph-server"
+    },
+    {
+      "key": "undeclared:native:f-old",
+      "usedBytes": 4096,
+      "category": "undeclared",
+      "root": "native",
+      "path": "f-old"
+    },
+    {
+      "key": "undeclared:native:b",
+      "usedBytes": 65536,
+      "category": "undeclared",
+      "root": "native",
+      "path": "b"
+    },
+    {
+      "key": "undeclared:native:f/../f-old",
+      "usedBytes": 131072,
+      "category": "undeclared",
+      "root": "native",
+      "path": "f/../f-old"
+    },
+    {
+      "key": "undeclared:native:.DS_Store",
+      "usedBytes": 8192,
+      "category": "undeclared",
+      "root": "native",
+      "path": ".DS_Store"
+    },
+    {
+      "key": "undeclared:unknown:f-old",
+      "usedBytes": 8192,
+      "category": "undeclared",
+      "root": "unknown",
+      "path": "f-old"
+    },
+    {
+      "key": "retired:repository:build-lock-closures",
+      "usedBytes": 2048,
+      "category": "retired",
+      "root": "repository",
+      "path": "build-lock-closures"
+    },
+    {
+      "key": "retired:native:old-store",
+      "usedBytes": 3072,
+      "category": "retired",
+      "root": "native",
+      "path": "old-store"
+    }
+  ],
+  "expected": [
+    "fleet-state",
+    "retired:repository:build-lock-closures",
+    "scratch",
+    "undeclared:native:f-old"
+  ]
+}

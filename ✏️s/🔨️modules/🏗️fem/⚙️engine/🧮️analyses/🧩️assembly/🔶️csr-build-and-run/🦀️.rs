@@ -36,7 +36,9 @@ impl AssemblyCsrBuild {
     pub fn step_one_in(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(bool, RetainedCloneProgress), &'static [u8]> { self.csr.step_one_in(effect) }
     pub fn take_demands(&self) -> Option<RetirementDemand> { self.csr.take_demands() }
     pub fn take_complete(&mut self, grant: RetainedCloneGrant) -> Option<(Csr, RetainedCloneProgress)> { self.csr.take_complete(grant) }
-    /// ⚖️ Borrows one original full-system triplet for constrained-reaction recovery.
+    /// 📐 Returns the full equation count, including constrained equations.
+    pub fn visual_full_order(&self) -> Option<usize> { Some(self.assembly.as_ref()?.visual_full_order()) }
+    /// ⚖️ Borrows one original full-system triplet for reaction recovery.
     pub fn visual_full_entry(&self, index: usize) -> Option<(usize, usize, f64)> {
         let entry = self.assembly.as_ref()?.state.merged_full.get(index)?;
         Some((entry.row as usize, entry.col as usize, entry.value))

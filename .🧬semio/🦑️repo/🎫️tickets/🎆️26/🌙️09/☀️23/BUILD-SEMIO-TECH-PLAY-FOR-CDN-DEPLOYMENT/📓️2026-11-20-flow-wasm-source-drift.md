@@ -39,3 +39,15 @@ Source admission now returns a read-only roster of the already admitted workspac
 The monitor uses the existing directory, roster, queue, physical-read and polling bounds. A stable digest mismatch cancels a child-only issued control with the typed concurrent-edit error. The owned stream runner drains the compiler process before the adapter rethrows. It stops and joins the monitor on success, failure or cancellation. Existing package custody and validation rules remain in force. The monitor does not prove an immutable source epoch or read the recipe's projected lock or manifest inputs.
 
 The synthetic fixture used the production wasm-pack argument builder, a real received child capsule, and the actual restart classifier. A digest-changing edit stops and joins the synthetic compiler and yields 75. With unchanged source a compiler status 101 stays an ordinary failure, and a parent-side cancellation keeps its original reason. None of the cases aborts the original compiler control. The production job retry runner saw exits 75 and 0 across two synthetic process births, and the second attempt admitted the digest of the newly edited bytes. This proof did not start Cargo, wasm-pack, describe or a release build.
+
+## Independent rerun
+
+The live-drift, Cargo monitor, and diagnostic fixtures passed all four cases in three fresh Bun processes. An initial invocation in one Bun process failed when the diagnostics suite tried to declare a second Original test envelope. Each fixture declares its own process test owner, so separate invocations are required for this verification. The release build did not run as part of this check.
+
+## Live Flow recovery
+
+Play generation `w4L9aOU` reached the real Flow WASM job after the jobserver recovery. The first attempt emitted the monitor diagnostic for the Infinite scene bridge `🦀️.rs`. The admitted SHA-256 began `126d3bf23d19` and the observed digest began `39d2e74a404d`. The owned compiler process tree received SIGTERM. The driver recorded exit 75 and started `job-flow-wasm.log.2` in the same generation after the 250 ms delay. The second process reached Cargo source selection and compilation. This verifies early detection and restart on a real source edit. The release was still building, with browser verification pending.
+
+## Further live retries
+
+The second attempt admitted the earlier observed digest for the same Infinite scene bridge and then observed a third digest, beginning `4141e4c2e236`. The third attempt reached the final Flow component Rust compile. It then stopped on a different source, the plugin artifact app trait, where the admitted digest began `bbb433c01b73` and the observed digest began `fedf4459d7ac`. The supervisor retained the generation and started a fourth attempt. The [Flow dependency audit](flow-infinite-scene-dependency.md) traces the bridge through the broad Infinite facade and records the narrow board providers and affected manifests. The third failure shows that a bridge dependency change alone would leave other live edits in the compile closure.

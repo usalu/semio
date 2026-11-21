@@ -118,7 +118,7 @@ fn a_cancel_in_any_binding_phase_is_answered_within_the_ceiling_and_leaves_no_ha
         let cancel_at = row["cancelAt"].as_str().map(phase);
         let component_phase = cancel_at.is_some_and(|phase| phase != ActivationPhase::ReadingDocument);
         if !component_phase && created.is_none() {
-            created = Some(workspace.create_plugin_artifact("binding-law-wfc", &kind, &ActivationScope::detached()).expect("genesis artifact"));
+            created = Some(workspace.create_plugin_artifact("binding-law-wfc", &kind, None, &ActivationScope::detached()).expect("genesis artifact"));
         }
         let target = if component_phase { Target::Session("wfc") } else { Target::Artifact("binding-law-wfc") };
         let (result, case, answered) = run(&workspace, target, cancel_at);
@@ -184,6 +184,6 @@ fn create(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str, kind: &Installe
             cancel.cancel_now();
         }
     });
-    let result = workspace.create_plugin_artifact_cancellably(artifact_id, kind, scope);
+    let result = workspace.create_plugin_artifact_cancellably(artifact_id, kind, None, scope);
     (result, case, Instant::now())
 }

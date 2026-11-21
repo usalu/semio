@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/surface/terrain/grid-pick/schema.json",
+  "$defs": {
+    "point": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+    "ray": {
+      "type": "object",
+      "required": ["origin", "direction"],
+      "additionalProperties": false,
+      "properties": {
+        "origin": { "$ref": "#/$defs/point" },
+        "direction": { "$ref": "#/$defs/point" }
+      }
+    },
+    "hit": {
+      "type": "object",
+      "required": ["position", "coordinates", "sample"],
+      "additionalProperties": false,
+      "properties": {
+        "position": { "$ref": "#/$defs/point" },
+        "coordinates": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+        "sample": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 32 }, "minItems": 2, "maxItems": 2 }
+      }
+    }
+  }
+}

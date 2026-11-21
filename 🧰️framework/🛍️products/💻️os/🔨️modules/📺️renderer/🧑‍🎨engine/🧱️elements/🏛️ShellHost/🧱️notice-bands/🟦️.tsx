@@ -28,7 +28,7 @@ export function FloatingPane({ className, scrollClassName, children, ...props }:
 export function NoticeActionRow({ text, action, icon = "x", actionProps, children, ...props }: Omit<ComponentProps<"div">, "children"> & { readonly text: ReactNode; readonly action: { readonly label: string; readonly onPress: () => void } | null; readonly icon?: ButtonProps["icon"]; readonly actionProps?: Readonly<Record<`data-${string}` | "id", string>>; readonly children?: ReactNode }): ReactElement {
   return (
     <SharedBorderRow {...props}>
-      <NoticeCell className="flex-row items-center">{text}{children}</NoticeCell>
+      <NoticeCell className="flex-1 flex-row items-center">{text}{children}</NoticeCell>
       {action === null ? null : <Button icon={icon} type="button" variant="outline" {...actionProps} onClick={action.onPress}>{action.label}</Button>}
     </SharedBorderRow>
   );

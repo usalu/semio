@@ -1,0 +1,6 @@
+[
+  {"case":"dead", "accepted":true},
+  {"case":"live", "accepted":false},
+  {"case":"malformed", "accepted":false},
+  {"case":"unknown-status", "accepted":false}
+]

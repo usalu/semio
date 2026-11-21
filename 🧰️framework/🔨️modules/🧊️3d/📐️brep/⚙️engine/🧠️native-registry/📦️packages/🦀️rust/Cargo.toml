@@ -17,12 +17,14 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-3d-brep-analysis.workspace = true
+semio-framework-3d-brep-queries.workspace = true
 semio-framework-3d-brep-boolean.workspace = true
 semio-framework-3d-brep-construction.workspace = true
 semio-framework-3d-brep-curve.workspace = true
 semio-framework-3d-brep-kernel-contract.workspace = true
 semio-framework-3d-brep-mesh-io.workspace = true
 semio-framework-3d-brep-representation.workspace = true
+semio-framework-3d-brep-solid-topology.workspace = true
 semio-framework-3d-brep-solid-transaction.workspace = true
 semio-framework-3d-brep-spline-construction.workspace = true
 semio-framework-3d-brep-spline-trim.workspace = true

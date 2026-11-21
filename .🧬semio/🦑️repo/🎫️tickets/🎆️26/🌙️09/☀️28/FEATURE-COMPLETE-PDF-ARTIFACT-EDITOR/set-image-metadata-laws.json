@@ -1,0 +1,17 @@
+{
+  "allocations": [
+    {"field": "decode", "element": "f64", "count": 2},
+    {"field": "mask.ranges", "element": "u32", "count": 6},
+    {"field": "matte", "element": "f64", "count": 3},
+    {"field": "extra", "element": "PdfDictEntry", "count": 1}
+  ],
+  "ordinaryGrammar": [
+    "{\"mutation\":\"setImage\",\"image\":{\"id\":\"Calibrated\",\"width\":1,\"height\":1,\"colorSpace\":{\"kind\":\"calGray\",\"whitePoint\":[1.0,1.0,1.0]},\"body\":{\"kind\":\"samples\",\"values\":[9]}}}"
+  ],
+  "invalid": [
+    ["\"width\":64", "\"width\":64.0"],
+    ["\"decode\":[0.5,1.0]", "\"decode\":[0.5,\"1.0\"]"],
+    ["\"ranges\":[1,2,3,4,5,6]", "\"ranges\":[1,2,3,4,5,6.0]"],
+    ["\"kind\":\"int\",\"value\":7", "\"kind\":\"int\",\"value\":7.0"]
+  ]
+}

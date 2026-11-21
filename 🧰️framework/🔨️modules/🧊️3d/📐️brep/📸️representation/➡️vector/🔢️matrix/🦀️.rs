@@ -433,6 +433,22 @@ impl Frame3 {
     pub fn to_local_vector(&self, world: Vec3) -> Vec3 {
         Vec3::new(world.dot(self.x), world.dot(self.y), world.dot(self.z))
     }
+    /// 🧪️ Certifies unit orthogonal axes, world point round trips and nondegenerate mapped segments.
+    pub fn preserves_orthogonal_geometry(
+        &self,mut points:impl Iterator<Item=Pnt3>,mut segments:impl Iterator<Item=[Pnt3;2]>,tolerance:f64,
+    )->bool{
+        let basis=[self.x,self.y,self.z];
+        let eps=64.*f64::EPSILON;
+        basis.iter().all(|axis|(axis.norm()-1.).abs()<=eps)
+            && [(0,1),(1,2),(0,2)].iter().all(|&(a,b)|basis[a].dot(basis[b]).abs()<=eps)
+            && points.all(|point|(self.to_local(self.to_world(point))-point).norm()<=tolerance/4.)
+            && segments.all(|edge|{
+                let [a,b]=edge.map(|point|self.to_world(point));
+                let length=(b-a).norm();
+                length.is_finite()&&length>tolerance
+            })
+    }
+
     /// 🧭️ Maps every axis of `self` directly through `map`'s linear part under a similarity of
     /// uniform factor `scale` (dividing the mapped axis by `scale` so it stays unit), rather than
     /// re-deriving `z` from `x × y` — a mirror flips handedness (`z` no longer equals `x × y`),

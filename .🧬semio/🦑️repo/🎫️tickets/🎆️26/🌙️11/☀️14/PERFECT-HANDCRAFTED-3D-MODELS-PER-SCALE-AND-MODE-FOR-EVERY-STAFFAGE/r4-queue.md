@@ -37,9 +37,9 @@ Independent visual review (grade per scale and list) of the 112 assets with fini
 - [x] G10 humans/wheelchair-user, humans/runner-with-blade-prosthesis, humans/kneeling-gardener
 - [x] G11 humans/cyclist, humans/child-on-kick-scooter, humans/skateboarder
 - [x] G12 humans/courier-with-hand-truck, humans/worker-carrying-box, humans/person-cooking
-- [ ] G13 humans/leaning-person, humans/standing-phone-user, humans/tour-guide
-- [ ] G14 vehicles/city-car, vehicles/vintage-car-1929, vehicles/delivery-van
-- [ ] G15 vehicles/city-bus, vehicles/tram, vehicles/electric-kick-scooter
+- [x] G13 humans/leaning-person, humans/standing-phone-user, humans/tour-guide
+- [x] G14 vehicles/city-car, vehicles/vintage-car-1929, vehicles/delivery-van
+- [x] G15 vehicles/city-bus, vehicles/tram, vehicles/electric-kick-scooter
 - [ ] G16 vehicles/cargo-bike, vehicles/city-bicycle, vehicles/motor-scooter
 - [ ] G17 machinery/excavator, machinery/wheel-loader, machinery/forklift
 - [ ] G18 machinery/concrete-mixer-truck, machinery/tower-crane, machinery/scissor-lift

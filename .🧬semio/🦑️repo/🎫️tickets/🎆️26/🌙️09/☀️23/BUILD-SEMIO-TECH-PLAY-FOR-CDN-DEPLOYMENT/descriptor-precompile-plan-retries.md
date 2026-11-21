@@ -1,0 +1,21 @@
+# Descriptor Precompile Plan Retries
+
+The retry message names the descriptor manifest as a plan owner, not necessarily the edited file. In `native-build/🟦️.ts`, `withCargoArtifactPlanLedgeredV1` computes an identity from the admitted graph and recipe, and its `recheck` throws `concurrentEditV1("input", manifest, "Admitted Cargo artifact plan Source changed", "build")` if the full identity differs. `captureCargoArtifactPlanFactsV1` hashes the whole graph, including unit data and source inputs, as well as the recipe. The message therefore does not establish that the manifest itself changed or identify a particular differing input.
+
+In w4rbJuJ describe attempts 5 and 7, the phase ledgers show initial plan facts and one complete recheck of recipe, graph, sources and facts; neither reached target lease or `lock-current`/Cargo compile. In wNdCiMf attempt 2, the ledger shows two complete rechecks and a target lease, but no `lock-current` or compile. These ledgers are aggregate over inner retries; the exact differing field is not logged. The inner retry repeats planning after the mismatch, and the outer job retries after exhaustion. Counts and serialized byte lengths of the plan facts match within each listed attempt, which does not prove the content hashes match.
+
+The explicit repository `synchronize` completes before the captured artifact plan. Attempt 5 logs `cargo:update` as locking zero packages. Each planning capture itself calls `ensureCargoLockCurrentV1(force:false)` before metadata/unit-graph and may force refresh if Cargo reports a stale lock; the separate pre-compile lock-current check occurs after both plan rechecks and was not reached in these failures. The available logs do not establish a lock write, its timing, or a specific graph difference. A self-induced change remains possible but is not proven; suppressing the identity guard or assuming the lock refresh is harmless would weaken the build's input contract.
+
+The smallest justified diagnostic improvement is bounded structured difference reporting for the plan facts and, if `source` differs, a bounded unit/source path and digest comparison; distinguish graph metadata from workspace source and recipe fields without logging source content. A fix should follow evidence of a non-semantic or self-induced field, preserving actual source, recipe and cancellation checks. No build or production edit was performed in this audit.
+
+## Bounded Pre-Spawn Diagnostic
+
+The retained plan recheck emits one `[cargo-plan-drift]` JSON line after finding a full identity mismatch. It reports the first changed plan fact in identity order. For a source graph difference, it compares captured roots, units and file records. A changed file record reports the path, SHA-256 digests and byte lengths. A roster difference reports the first relative position and the two captured entries. Unit metadata differences report the changed digest field. The manifest remains the retry owner.
+
+The comparison performs at most 16,384 checks over already captured data and limits graph labels to 256 UTF-16 units. The diagnostic records digest pairs for top-level facts, including recipe and configuration, and reports a generic graph category if a captured difference exceeds the comparison limit or falls outside the projected fields. Diagnostic output is best effort. The identity, retry decision, and cancellation control remain in the recheck.
+
+Nineteen focused Bun tests passed through the repository tool, including a language-neutral fixture with SQLite and Lodash oracles and an extracted production recheck test for matching and differing plans. The scoped whitespace check passed. No Cargo or describe process was run for verification.
+
+## Live Pre-Cargo Mismatch
+
+The second descriptor attempt in `wTxgqdA` emitted one `source-file` record before Cargo. The plan owner was the descriptor manifest. The actual changed input was the Job outcome continuation guard in `semio-framework-job-return`. Its observed extent changed from 6,663 to 6,722 bytes, and its SHA-256 changed from `a332f1ecf747` to `62ccdb5bc215`. The supervisor restarted the descriptor within the same generation. This establishes a real source edit for this retry. The earlier manifest-only events remain unresolved.

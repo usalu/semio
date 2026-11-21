@@ -295,30 +295,67 @@ fn only_the_innermost_interactive_node_owns_the_hover_while_the_chain_stays_hove
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 500.0, y: 500.0, modifiers: Default::default() });
     assert_eq!([root, group, first, second].map(|id| owner(&tree, id)), [false; 4]);
 }
+#[test]
+fn a_card_owns_its_silhouette_while_its_control_owns_hover() {
+    use semio_ui_declaration::ui::{UiCardStackNode, UiOverviewCardNode};
+    let mut tree = UiTree::new();
+    let stack = UiNode::CardStack(UiCardStackNode { id: "stack".into(), presence: Default::default(), menu: None, children: Vec::new() });
+    let root = leaf(&mut tree, None, 0, stack, (0.0, 0.0, 200.0, 100.0));
+    let card = UiNode::OverviewCard(UiOverviewCardNode { id: "card".into(), title: semio_ui_locale::Label::data("Card"), footer: None, presence: Default::default(), menu: None, children: Vec::new() });
+    let card = leaf(&mut tree, Some(root), 1, card, (0.0, 0.0, 200.0, 100.0));
+    let control = leaf(&mut tree, Some(card), 1, button_ui("first"), (0.0, 0.0, 100.0, 24.0));
+    let owner = |tree: &UiTree, id| tree.node(id).unwrap().flags.contains(NodeFlags::HOVER_OWNER);
+    let mut router = EventRouter::new("main");
+    for (x, expected) in [(10.0, [false, true, true]), (20.0, [false, true, true]), (150.0, [false, true, false]), (300.0, [false; 3])] {
+        tree.node_mut(root).unwrap().flags.set(NodeFlags::DIRTY_PAINT, false);
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x, y: 10.0, modifiers: Default::default() });
+        assert_eq!([root, card, control].map(|id| owner(&tree, id)), expected);
+        assert_eq!(router.hover_pointer(), (x < 200.0).then_some((x, 10.0)));
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::DIRTY_PAINT), "the stack owns the card's draw commands");
+    }
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerLeave);
+    assert_eq!(router.hover_pointer(), None);
+}
 //#endregion 🔖️HoverOwnerTests
 
 #[test]
 fn retained_row_hover_dispatches_and_clears_the_authored_pointer_target() {
-    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/tree-hover.json")).unwrap();
-    let mut tree = UiTree::new();
-    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
-    let row = leaf(&mut tree, Some(root), 1, input_ui("row", ""), (0.0, 0.0, 80.0, 20.0));
-    let action = ui_contract::ActionId::try_v1("outliner", "interactionHover").unwrap();
-    let targets = law["enter"].to_string();
-    let args = DslValue::Object(vec![
-        ("targets".into(), DslValue::String(targets)),
-        ("channel".into(), DslValue::String(law["channel"].as_str().unwrap().into())),
-        ("domainId".into(), DslValue::String(law["domain"].as_str().unwrap().into())),
-    ]);
-    tree.node_mut(row).unwrap().intent = Some(semio_ui_action::UiIntentBindings {
-        bindings: vec![(Trigger::HoverPreview, action)], args: vec![(Trigger::HoverPreview, args.clone())], ..Default::default()
-    });
-    let mut router = EventRouter::new("main");
-    let over = UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() };
-    let entered = router.dispatch(&mut tree, root, &over);
-    assert!(matches!(entered.as_slice(), [UiCommand::App { intent, .. }] if intent.args.as_ref() == Some(&args) && intent.input.is_none()));
-    assert!(router.dispatch(&mut tree, root, &over).is_empty());
-    let left = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0, modifiers: Default::default() });
-    let clear = DslValue::Object(vec![("targets".into(), DslValue::String(law["leave"].to_string()))]);
-    assert!(matches!(left.as_slice(), [UiCommand::App { intent, .. }] if intent.args.as_ref() == Some(&args) && intent.input.as_ref() == Some(&clear)));
+    let batch: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/tree-hover.json")).unwrap();
+    let exact: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🕹️interaction-selection-laws/👆️hover-targets.json")).unwrap();
+    let direct = &exact["cases"][0]["args"];
+    let batch_binding = vec![("targets".into(), DslValue::String(batch["enter"].to_string()))];
+    let direct_binding = vec![
+        ("targetId".into(), DslValue::String(direct["targetId"].as_str().unwrap().into())),
+        ("granularityId".into(), DslValue::String(direct["granularityId"].as_str().unwrap().into())),
+    ];
+    for (law, mut fields) in [(&batch, batch_binding), (&exact, direct_binding)] {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let row = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 80.0, 20.0));
+        leaf(&mut tree, Some(row), 2, input_ui("first-axis", ""), (0.0, 0.0, 40.0, 20.0));
+        leaf(&mut tree, Some(row), 3, input_ui("second-axis", ""), (40.0, 0.0, 40.0, 20.0));
+        let action = ui_contract::ActionId::try_v1("outliner", "interactionHover").unwrap();
+        fields.push(("channel".into(), DslValue::String(law["channel"].as_str().unwrap().into())));
+        fields.push(("domainId".into(), DslValue::String(law["domain"].as_str().unwrap().into())));
+        let args = DslValue::Object(fields);
+        tree.node_mut(row).unwrap().intent = Some(semio_ui_action::UiIntentBindings {
+            bindings: vec![(Trigger::HoverPreview, action)], args: vec![(Trigger::HoverPreview, args.clone())], ..Default::default()
+        });
+        let mut router = EventRouter::new("main");
+        let over = UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() };
+        let entered = router.dispatch(&mut tree, root, &over);
+        let [UiCommand::App { intent, .. }] = entered.as_slice() else { panic!("missing enter intent"); };
+        assert_eq!(intent.descriptor().args.as_ref(), Some(&args));
+        assert!(router.dispatch(&mut tree, root, &over).is_empty());
+        let other_axis = UiEvent::PointerMove { x: 60.0, y: 10.0, modifiers: Default::default() };
+        assert!(router.dispatch(&mut tree, root, &other_axis).is_empty());
+        let left = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0, modifiers: Default::default() });
+        let [UiCommand::App { intent, .. }] = left.as_slice() else { panic!("missing leave intent"); };
+        let cleared = intent.descriptor().args.unwrap();
+        assert_eq!(cleared.get("targets").and_then(DslValue::as_str), Some("[]"));
+        assert_eq!(cleared.get("targetId"), args.get("targetId"));
+        assert_eq!(cleared.get("channel"), args.get("channel"));
+        assert_eq!(cleared.get("domainId"), args.get("domainId"));
+    }
 }

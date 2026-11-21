@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/note/note/1/table/mutation/edit-table-cell/schema.json",
+  "title": "EditTableCell",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "row",
+    "column",
+    "content"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "editTableCell"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Table",
+          "de": "Tabelle"
+        },
+        "description": {
+          "en": "The table block this mutation addresses.",
+          "de": "Der Tabellenblock, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "block",
+          "domain": "blocks",
+          "granularity": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "row": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "column": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "content": {
+      "type": "string"
+    }
+  }
+}

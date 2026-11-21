@@ -9,6 +9,8 @@
  */
 
 import { describe, expect, test } from "bun:test";
+import sharp from "sharp";
+import pngImport from "../🧫️fixtures/📷️png-import.json";
 import { bmpBytesToHex, rasterCanvasToBmpV3 } from "../../📤️export/🧵️serializers/🗿️artifacts/🪟️bmp/🔖️v3/✳️any/🟦️";
 import { bmpHexToBytes, bmpV3ToRasterCanvas } from "../../📥️import/🧩️deserializers/🗿️artifacts/🪟️bmp/🔖️v3/✳️any/🟦️";
 
@@ -51,4 +53,14 @@ describe("raster io — bmp v3 parity", () => {
     bytes[28] = 32;
     expect(() => bmpV3ToRasterCanvas(bytes)).toThrow("unsupported bit depth 32");
   });
+});
+
+test("the PNG import fixture decodes to the same RGBA8 pixels in Sharp", async () => {
+  const image = sharp(Buffer.from(pngImport.sourceBase64, "base64"));
+  const metadata = await image.metadata();
+  expect([metadata.width, metadata.height, metadata.bitsPerSample, metadata.channels]).toEqual([
+    pngImport.width, pngImport.height, pngImport.sourceBitDepth, pngImport.sourceChannels,
+  ]);
+  expect(metadata.comments).toContainEqual({ keyword: "Description", text: pngImport.caption });
+  expect(Array.from(await image.toColourspace("srgb").ensureAlpha().raw().toBuffer())).toEqual(pngImport.rgba8);
 });

@@ -355,10 +355,11 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     ///
     /// Framing the flow graph is an app-declared action (`zoomToFlow`), not shell overlay chrome.
     pub fn surface_overlay_controls(&mut self, theme: &Theme) -> Vec<(ShellNavbarControl, [f32; 2])> {
+        let floating_panels = self.open_floating_panel_rects(theme);
         let graphs: Vec<(&str, Rect)> = self.surfaces.node_graph_states.iter().map(|(surface_id, surface)| (surface_id.as_str(), surface.bounds)).collect();
         let worlds = self.surfaces.world3d_status_rows();
         let worlds: Vec<(&str, Rect, Option<&str>)> = worlds.iter().map(|(id, bounds, status)| (*id, *bounds, *status)).collect();
-        surface_overlay_controls_for(&graphs, &worlds, &self.open_floating_panel_rects(theme), theme, self.prefs.locale_id == "de")
+        surface_overlay_controls_for(&graphs, &worlds, &floating_panels, theme, self.prefs.locale_id == "de")
     }
 
     /// 🛟️ The boxes this frame's OPEN floating panels occupy, in the same screen space the dock lays its
@@ -375,9 +376,10 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// reader's language, its `unitsDone/unitsTotal` count and the fraction the bar fills to, painted
     /// exactly while the scene's own status document is unsettled.
     pub fn surface_status_pills(&mut self, theme: &Theme) -> Vec<(World3dStatusPill, Rect)> {
+        let floating_panels = self.open_floating_panel_rects(theme);
         let worlds = self.surfaces.world3d_status_rows();
         let worlds: Vec<(&str, Rect, Option<&str>)> = worlds.iter().map(|(id, bounds, status)| (*id, *bounds, *status)).collect();
-        let pills = surface_status_pills_for(&worlds, &self.open_floating_panel_rects(theme), theme, self.prefs.locale_id == "de");
+        let pills = surface_status_pills_for(&worlds, &floating_panels, theme, self.prefs.locale_id == "de");
         let live: Vec<&str> = pills.iter().map(|(pill, _)| pill.surface_id.as_str()).collect();
         for (pill, rect) in &pills {
             let label = pill.label();

@@ -36,7 +36,7 @@
   "anchors": [
     { "selection": [], "anchor": null, "why": "Nothing selected: a forward step enters at the first node, a backward step at the last." },
     { "selection": ["extrude"], "anchor": "extrude", "why": "One node selected is the anchor." },
-    { "selection": ["extrude@wire"], "anchor": "extrude", "why": "A port handle steps from the node that owns it." },
+    { "granularity": "handle", "selection": ["extrude@wire"], "anchor": "extrude", "why": "A port handle steps from the node that owns it." },
     { "selection": ["profile", "extrude"], "anchor": "profile", "why": "A multi-selection steps from its FIRST member in reading order, never from whichever id the set happened to hold first." },
     { "selection": ["ghost"], "anchor": null, "why": "An id the document no longer holds is no anchor at all; the step re-enters the graph rather than refusing." }
   ],
@@ -90,7 +90,7 @@
     },
     {
       "name": "walking from an opened node's port closes it back onto a node",
-      "start": ["extrude@wire"],
+      "granularity": "handle", "start": ["extrude@wire"],
       "steps": [
         { "step": "next", "expected": ["column-preview"] },
         { "step": "previous", "expected": ["extrude"] }

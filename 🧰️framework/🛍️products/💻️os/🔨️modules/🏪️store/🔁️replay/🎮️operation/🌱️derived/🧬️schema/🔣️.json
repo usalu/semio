@@ -7,7 +7,8 @@
     "contracts",
     "cases",
     "independentAxes",
-    "retirementCustody"
+    "retirementCustody",
+    "sourceCancellation"
   ],
   "properties": {
     "contracts": {
@@ -105,6 +106,37 @@
         },
         "preservesProgress": {
           "const": true
+        }
+      }
+    },
+    "sourceCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fundedFrontiers",
+        "expected"
+      ],
+      "properties": {
+        "fundedFrontiers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "terminal",
+            "issuerAliases"
+          ],
+          "properties": {
+            "terminal": {
+              "type": "boolean"
+            },
+            "issuerAliases": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         }
       }
     }

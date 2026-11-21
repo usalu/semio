@@ -1,6 +1,7 @@
 /** 🧪️ Third-party oracles of the owned GLB encoder (`../../🟦️.ts`), tests only: the Khronos `gltf-validator` must report zero errors for every vector,
  * and two independent loaders (glTF-Transform and three's `GLTFLoader`) read the bytes back and must agree with the source document on geometry, skin, animation, material and variant content.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { WebIO } from "@gltf-transform/core";
@@ -27,6 +28,120 @@ const near = (actual: ArrayLike<number>, expected: ArrayLike<number>, digits = 6
 };
 
 describe("🧪️ GLB oracles", () => {
+  it("shares identical positions while retaining different geometry across meshes", async () => {
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/♊️shared-positions/🔣️.json", import.meta.url), "utf8"));
+    const template = vectors.find((vector) => vector.name === "minimal-triangle")!;
+    const xyz = Array.from({ length: fixture.vertexCount }, (_, i) => fixture.positions[i % 3] as number[]).flat();
+    const variant = xyz.slice();
+    variant.splice(-2, 2, ...fixture.collidingFloat32Suffix);
+    const inputs = [xyz, xyz.slice(), variant];
+    const primitive = template.document.meshes[0]!.primitives[0]!;
+    const primitives = inputs.map((positions) => ({ ...primitive, positions, indices: Array.from({ length: fixture.vertexCount }, (_, i) => i) }));
+    const document = { ...template.document, meshes: [{ ...template.document.meshes[0]!, primitives }] };
+    const bytes = encodeGlb(document, template.options, quiet);
+    const io = new WebIO();
+    const json = await io.binaryToJSON(bytes);
+    const ids = json.json.meshes![0]!.primitives.map((p) => p.attributes.POSITION);
+    expect(new Set(ids).size).toBe(fixture.distinctPositionAccessors);
+    expect(ids[0]).toBe(ids[1]);
+    expect(ids[2]).not.toBe(ids[1]);
+    const decoded = await io.readBinary(bytes);
+    const actual = decoded.getRoot().listMeshes()[0]!.listPrimitives();
+    for (const [i, item] of actual.entries()) expect(Array.from(item.getAttribute("POSITION")!.getArray()!)).toEqual(inputs[i]);
+    expect((await validator.validateBytes(bytes, { uri: "shared.glb", maxIssues: 0 })).issues.numErrors).toBe(0);
+  });
+
+  it("shares rigid part geometry across material batches and retains every corner, line, binding and animation", async () => {
+    const f = JSON.parse(readFileSync(new URL("./🧫️fixtures/🧱️shared-rigid-parts/🔣️.json", import.meta.url), "utf8")) as {
+      trianglesPerPart: number; triangle: number[][]; partOrders: string[][]; partOffsetsM: number[][]; materials: string[]; sharedParts: string[]; weightedMesh: string; rotatingJoint: string;
+    };
+    const template = vectors.find((v) => v.name === "rig-full")!;
+    const count = f.trianglesPerPart * 3;
+    const batches = f.partOrders.map((ids, batch) => {
+      const positions = f.partOffsetsM[batch]!.flatMap((offset) => Array.from({ length: f.trianglesPerPart }, (_, i) => f.triangle.flatMap(([x, y, z]) => [x! + 2 * i, y!, z! + offset])).flat());
+      const indices = Array.from({ length: 2 * count }, (_, i) => i);
+      const normals = indices.flatMap(() => [0, 0, 1]);
+      const colors = indices.flatMap((i) => [1, (i % 3) / 2, 0, 1]);
+      const solids = ids.map((id, i) => ({ id, first: i * count, count }));
+      const triangles = { mode: "triangles" as const, positions, indices, normals, colors, material: f.materials[batch]!, solids };
+      const lines = { mode: "lines" as const, positions, indices: [0, 1, count, count + 1], material: f.materials[batch]!, solids: ids.map((id, i) => ({ id, first: 2 * i, count: 2 })) };
+      return [triangles, lines];
+    });
+    const document = { ...template.document, meshes: template.document.meshes.map((m) => m.id === "outline" ? { ...m, primitives: batches.flat() } : m) };
+    const bytes = encodeGlb(document, template.options, quiet);
+    const io = new WebIO().registerExtensions([KHRMaterialsUnlit, KHRMaterialsVariants]);
+    const out = (await io.readBinary(bytes)).getRoot();
+    const json = (await io.binaryToJSON(bytes)).json;
+    const mesh = out.listMeshes().find((m) => m.getName() === "outline")!;
+    const decoded = mesh.listPrimitives();
+    const one = (id: string, mode: number) => decoded.find((p) => p.getMode() === mode && (p.getExtras().solids as { id: string }[])[0]?.id === id)!;
+    const [left, right] = f.sharedParts.map((id) => one(id, 4));
+    expect(left!.getAttribute("POSITION")).toBe(right!.getAttribute("POSITION"));
+    expect(left!.getAttribute("POSITION")).toBe(one(f.sharedParts[0]!, 1).getAttribute("POSITION"));
+    for (const [batch, slices] of batches.entries()) for (const original of slices) {
+      const mode = original.mode === "triangles" ? 4 : 1;
+      for (const range of original.solids) {
+        const primitive = one(range.id, mode);
+        expect(primitive.getMaterial()!.getName()).toBe(f.materials[batch]);
+        const slots = primitive.getIndices()!.getArray()!;
+        const actual = Array.from(slots).flatMap((i) => primitive.getAttribute("POSITION")!.getElement(i, []));
+        const wanted = original.indices.slice(range.first, range.first + range.count).flatMap((i) => original.positions.slice(3 * i, 3 * i + 3));
+        expect(actual).toEqual(wanted);
+        if (original.mode === "triangles") for (const [attribute, values, width] of [["NORMAL", original.normals, 3], ["COLOR_0", original.colors, 4]] as const) {
+          const read = Array.from(slots).flatMap((i) => primitive.getAttribute(attribute)!.getElement(i, []));
+          expect(read).toEqual(original.indices.slice(range.first, range.first + range.count).flatMap((i) => values.slice(width * i, width * i + width)));
+        }
+      }
+    }
+    const weighted = out.listMeshes().find((m) => m.getName() === f.weightedMesh)!.listPrimitives()[0]!;
+    const referenceBytes = encode(template);
+    const referenceRoot = (await io.readBinary(referenceBytes)).getRoot();
+    const originalSkin = referenceRoot.listMeshes().find((m) => m.getName() === f.weightedMesh)!.listPrimitives()[0]!;
+    for (const name of ["POSITION", "NORMAL", "JOINTS_0", "WEIGHTS_0"]) expect(weighted.getAttribute(name)!.getArray()).toEqual(originalSkin.getAttribute(name)!.getArray());
+    expect(weighted.getIndices()!.getArray()).toEqual(originalSkin.getIndices()!.getArray());
+    expect(out.listSkins()[0]!.getInverseBindMatrices()!.getArray()).toEqual(referenceRoot.listSkins()[0]!.getInverseBindMatrices()!.getArray());
+    for (const [index, animation] of out.listAnimations().entries()) {
+      const original = referenceRoot.listAnimations()[index]!;
+      for (const [i, sampler] of animation.listSamplers().entries()) {
+        const before = original.listSamplers()[i]!;
+        expect(sampler.getInput()!.getArray()).toEqual(before.getInput()!.getArray());
+        expect(sampler.getOutput()!.getArray()).toEqual(before.getOutput()!.getArray());
+        expect(sampler.getInterpolation()).toBe(before.getInterpolation());
+      }
+    }
+    const reference = (await io.binaryToJSON(referenceBytes)).json;
+    const channels = (j: typeof json) => j.animations!.flatMap((a) => a.channels.map((c) => [j.nodes![c.target.node ?? 0]!.name, c.target.path]));
+    expect(channels(json)).toEqual(channels(reference));
+    expect(channels(json)).toContainEqual([f.rotatingJoint, "rotation"]);
+    expect((await validator.validateBytes(bytes, { uri: "rigid-parts.glb", maxIssues: 0 })).issues.numErrors).toBe(0);
+  });
+
+  it("exports feature lines with the same vertex accessor as their source triangles", async () => {
+    const template = vectors.find((v) => v.name === "minimal-triangle")!;
+    const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/♊️shared-positions/🔣️.json", import.meta.url), "utf8"));
+    const positions = Array.from({ length: fixture.vertexCount }, (_, i) => {
+      const [x, y, z] = fixture.positions[i % 3];
+      return [x + 2 * Math.floor(i / 3), y, z];
+    }).flat();
+    const indices = Array.from({ length: fixture.vertexCount }, (_, i) => i);
+    const mesh = template.document.meshes[0]!;
+    const triangles = { ...mesh.primitives[0]!, indices, positions };
+    const source = { ...template.document, meshes: [{ ...mesh, primitives: [triangles] }] };
+    const compact = await featureEdges(source, 0.5, {}, quiet);
+    const shared = await featureEdges(source, 0.5, { shareVertices: true }, quiet);
+    const io = new WebIO();
+    const decoded = await io.readBinary(encodeGlb(shared, template.options, quiet));
+    const [faces, edges] = decoded.getRoot().listMeshes()[0]!.listPrimitives();
+    expect(edges!.getAttribute("POSITION")).toBe(faces!.getAttribute("POSITION"));
+    const original = compact.meshes[0]!.primitives[1]!;
+    const actual = edges!.getIndices()!.getArray()!;
+    expect(actual.length).toBe(original.indices.length);
+    for (let i = 0; i < actual.length; i++) {
+      const v = original.indices[i]! * 3;
+      expect(edges!.getAttribute("POSITION")!.getElement(actual[i]!, [])).toEqual(original.positions.slice(v, v + 3));
+    }
+  });
+
   it.each(vectors.map((vector) => [vector.name, vector] as const))("%s validates with zero errors and zero warnings (Khronos gltf-validator)", async (_name, vector) => {
     const report = await validator.validateBytes(encode(vector), { uri: `${vector.name}.glb`, maxIssues: 0 });
     expect(report.issues.messages.filter((message: { severity: number }) => message.severity === 0)).toEqual([]);

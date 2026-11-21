@@ -1,6 +1,6 @@
 import * as React from "react";
 import { borderStatePriority, boxDrawnSides, resolveBorderSegments, resolveBoxStates, type BorderSide, type BorderState, type StateBox } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
-import { type SharedBorderClip, type SharedBorderTransform, createSharedBorderSnap, sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments, visibleSharedOutlineSegments, createSharedBorderJunctionResolver, type SharedOutlineSegment } from "../🔲️WindowSilhouette/shared-border.ts";
+import { type SharedBorderClip, type SharedBorderTransform, createSharedBorderSnap, sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments, visibleSharedOutlineSegments, createSharedBorderJunctionResolver, leadingSharedOutlineSegments, sharedBorderPaintPoints, type SharedOutlineSegment } from "../🔲️WindowSilhouette/shared-border.ts";
 import { windowSilhouetteOutline, type WindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 
@@ -29,8 +29,8 @@ interface Measure {
   readonly offsetWidth: number;
   readonly offsetHeight: number;
 }
-const MARKER_ATTRIBUTES = new Set(["role", "tabindex", "data-shared-border-frame", "data-shared-border-edges", "data-shared-border-cells", "data-shared-border-cell", "data-shared-border-group", "data-shared-border-interactive"]);
-const GEOMETRIC_ATTRIBUTES = new Set(["class", "style", "role", "tabindex", "data-shared-border-frame", "data-shared-border-edges", "data-shared-border-cells", "data-shared-border-cell", "data-shared-border-group", "data-shared-border-interactive"]);
+const MARKER_ATTRIBUTES = new Set(["role", "tabindex", "data-shared-border-frame", "data-shared-border-edges", "data-shared-border-cells", "data-shared-border-cell", "data-shared-border-group", "data-shared-border-interactive", "data-shared-border-delegate"]);
+const GEOMETRIC_ATTRIBUTES = new Set(["class", "style", ...MARKER_ATTRIBUTES]);
 const implicitBorderless = '[data-slot="mode-dock-tab"]';
 const selector = `[data-shared-border-frame], [data-shared-border-edges], ${implicitBorderless}`;
 const groupSelector = "[data-shared-border-cells], [data-shared-border-group]";
@@ -251,7 +251,7 @@ export class BorderCompositor {
       else if (geometric) this.scheduleGeometry();
       else if (changed) this.scheduleState();
     });
-    this.observer?.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "data-active", "data-selected", "data-state", "aria-selected", "aria-pressed", "aria-invalid", "data-invalid", "role", "tabindex", "data-shared-border-group", "data-shared-border-cell", "data-shared-border-interactive", "data-shared-border-state", "data-shared-border-frame", "data-shared-border-edges", "data-shared-border-cells", "data-introduced", "data-celebrated", "disabled", "aria-disabled"] });
+    this.observer?.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: [...GEOMETRIC_ATTRIBUTES, "data-active", "data-selected", "data-state", "aria-selected", "aria-pressed", "aria-invalid", "data-invalid", "data-shared-border-state", "data-shared-border-hover", "data-introduced", "data-celebrated", "disabled", "aria-disabled"] });
     this.resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(entries => {
       let moved = false;
       for (const entry of entries) {
@@ -343,7 +343,7 @@ export class BorderCompositor {
     if (box.element.matches(interactiveSelector)) found = box.element;
     else if (box.element.matches(implicitBorderless) && box.element.querySelector('[role="tab"]')) found = box.element;
     else if (box.kind === "window") { const card = box.element.closest<HTMLElement>("[data-overview-card]"); found = card?.matches(interactiveSelector) ? card : null; }
-    else if (childless) { const candidates = box.element.querySelectorAll<HTMLElement>(interactiveSelector); found = candidates.length === 1 ? candidates[0]! : null; }
+    else if (childless && box.element.getAttribute("data-shared-border-delegate") !== "self") { const candidates = box.element.querySelectorAll<HTMLElement>(interactiveSelector); found = candidates.length === 1 ? candidates[0]! : null; }
     this.delegates.set(box.element, found);
     return found;
   }
@@ -449,7 +449,8 @@ export class BorderCompositor {
       if (box.entry && box.entry.state !== "normal") marks.push(box.entry.state);
       const disabled = target.matches(":disabled") || target.closest('[aria-disabled="true"]') !== null;
       if (disabled) disabledBoxes.add(box.id);
-      return { id: box.id, parent: box.parent?.id ?? null, interactive: holder !== null || (box.kind === "chip" && box.element.querySelector(interactiveSelector) !== null), disabled, marks };
+      const hover = box.element.getAttribute("data-shared-border-hover");
+      return { id: box.id, parent: box.parent?.id ?? null, interactive: holder !== null || (box.kind === "chip" && box.element.querySelector(interactiveSelector) !== null), hoverWithin: hover === "declared" || hover === "silhouette", disabled, marks };
     });
     const tracked = new Set<Element>();
     for (const box of boxes) for (let element: Element | null = box.element; element && !tracked.has(element); element = element.parentElement) tracked.add(element);
@@ -534,7 +535,7 @@ export class BorderCompositor {
       const xs = window.vertical.filter(line => line.top < bottom && line.bottom > top).map(line => line.x);
       const [l, r] = [snapToLine(left + 1, xs), snapToLine(right - 1, xs)], [t, b] = [snapToLine(top + 1, window.ys), snapToLine(bottom - 1, window.ys)];
       const paint = [{ x: l, y: t }, { x: r, y: t }, { x: r, y: b }, { x: l, y: b }];
-      sources.push(...sharedOutlineSegments(window.id, logical, paint, state, window, snap, box.id));
+      sources.push(...sharedOutlineSegments(window.id, logical, paint, state, window, snap, box.id).map(edge => ({ ...edge, follows: true as const })));
     }
     const borderOf = (element: Element, side: BorderSide): number => parseFloat(element.ownerDocument.defaultView?.getComputedStyle(element).getPropertyValue(`border-${side}-width`) ?? "") || 0;
     const flushRect = (box: Box, rect: { left: number; top: number; right: number; bottom: number }) => {
@@ -546,7 +547,6 @@ export class BorderCompositor {
       }
       return out;
     };
-    const followers = new Set<string>();
     const windowOf = (box: Box) => {
       for (let parent = box.parent; parent; parent = parent.parent) if (parent.kind === "chip" && parent.paint) return windowTransforms.get(parent.paint) ?? null;
       return null;
@@ -565,10 +565,13 @@ export class BorderCompositor {
       const logical = [{ x: left, y: top }, { x: right, y: top }, { x: right, y: bottom }, { x: left, y: bottom }];
       const paint = [{ x: left + inset.x, y: top + inset.y }, { x: right - inset.x, y: top + inset.y }, { x: right - inset.x, y: bottom - inset.y }, { x: left + inset.x, y: bottom - inset.y }];
       const outer = flushParent(box);
-      const drawn = boxDrawnSides({ id: box.id, parent: outer?.id ?? null, owner: frame.id, rect, edges: declared(box), state }, outer ? { id: outer.id, parent: null, owner: outer.id, rect: this.measure(outer.element).snapped, edges: declared(outer), state: "normal" } : undefined);
+      const normalBox = { id: box.id, parent: outer?.id ?? null, owner: frame.id, rect, edges: declared(box), state: "normal" } as const;
+      const parentBox = outer ? { id: outer.id, parent: null, owner: outer.id, rect: this.measure(outer.element).snapped, edges: declared(outer), state: "normal" } as const : undefined;
+      const normalSides = boxDrawnSides(normalBox, parentBox);
+      const declaredHover = state === "hover" && box.element.getAttribute("data-shared-border-hover") === "declared";
+      const drawn = state === "normal" || declaredHover ? normalSides : allSides;
       const chipWindow = windowOf(box);
       if (chipWindow) {
-        followers.add(box.id);
         const top = (rect.top - chipWindow.top) / chipWindow.scaleY;
         const bottom = (rect.bottom - chipWindow.top) / chipWindow.scaleY;
         const xs = chipWindow.vertical.filter(line => line.top < bottom && line.bottom > top).map(line => line.x);
@@ -578,7 +581,11 @@ export class BorderCompositor {
         }
       }
       const edges = sharedOutlineSegments(frame.id, logical, paint, state, { left: geo.rect.left, top: geo.rect.top, scaleX: geo.scaleX, scaleY: geo.scaleY }, snap, box.id);
-      const kept = edges.filter(edge => drawn.includes(allSides[Number(edge.id.slice(edge.id.lastIndexOf(":") + 1))]!));
+      const kept = edges.flatMap(edge => {
+        const side = allSides[Number(edge.id.slice(edge.id.lastIndexOf(":") + 1))]!;
+        if (!drawn.includes(side)) return [];
+        return [chipWindow || !normalSides.includes(side) ? { ...edge, follows: true as const } : edge];
+      });
       sources.push(...(state === "normal" ? this.visibleSources(box.kind === "cell" ? box.element : box.paint, kept, box.paint) : kept));
     }
     sources = visibleSharedOutlineSegments(sources);
@@ -594,7 +601,7 @@ export class BorderCompositor {
       if (start.x !== t.left + source.paintFrom.x * t.scaleX || start.y !== t.top + source.paintFrom.y * t.scaleY || end.x !== t.left + source.paintTo.x * t.scaleX || end.y !== t.top + source.paintTo.y * t.scaleY) interacting.add(source.owner);
     }
     const lineOf = new Map<string, number>();
-    const leadingOf = (ids: readonly string[]): readonly string[] => { const lead = ids.filter(id => !followers.has(id.split(":")[0]!)); return lead.length ? lead : ids; };
+    const leadingOf = (ids: readonly string[]): readonly string[] => leadingSharedOutlineSegments(ids.map(id => byId.get(id)!)).map(edge => edge.id);
     const normalValue = (id: string, horizontal: boolean): number => { const edge = byId.get(id)!, t = edge.transform; return (horizontal ? t.top : t.left) + edge.paintFrom[horizontal ? "y" : "x"] * (horizontal ? t.scaleY : t.scaleX); };
     for (const segment of resolved) {
       const lead = leadingOf(segment.contributors);
@@ -620,9 +627,10 @@ export class BorderCompositor {
       const from = junction(segment.from), to = junction(segment.to);
       const originalNormal = (horizontal ? source.transform.top : source.transform.left) + source.paintFrom[normal] * (horizontal ? source.transform.scaleY : source.transform.scaleX);
       if (centerline !== originalNormal || from[normal] !== centerline || to[normal] !== centerline) interacting.add(segment.owner);
-      const points = [from, { ...from, [normal]: centerline }, { ...to, [normal]: centerline }, to].filter((point, index, all) => index === 0 || point.x !== all[index - 1]!.x || point.y !== all[index - 1]!.y).map(local);
+      const points = sharedBorderPaintPoints(from, to, normal, centerline);
+      if (points.length === 0) { interacting.add(segment.owner); continue; }
       const list = output.get(segment.owner) ?? [];
-      const paintSegment: SharedBorderPaintSegment = { d: points.map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`).join(" "), state: segment.state, ...disabledBoxes.has(segment.id.split(":")[0]!) ? { disabled: true as const } : {} };
+      const paintSegment: SharedBorderPaintSegment = { d: points.map(local).map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`).join(" "), state: segment.state, ...disabledBoxes.has(segment.id.split(":")[0]!) ? { disabled: true as const } : {} };
       list.push(paintSegment);
       output.set(segment.owner, list);
       if (chipIds.has(segment.id.split(":")[0]!)) chipOutput.set(segment.owner, [...chipOutput.get(segment.owner) ?? [], paintSegment]);

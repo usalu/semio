@@ -3,13 +3,37 @@
 use super::*;
 
 // #region 🔖️Geometry
-fn segment_geometry(ctx: &ElementContext) -> (f64, f64, f64) {
-    let p1 = ctx.positions[0];
-    let p2 = ctx.positions[1];
+fn segment_geometry(positions: &[[f64; 3]]) -> (f64, f64, f64) {
+    let p1 = positions[0];
+    let p2 = positions[1];
     let dx = p2[0] - p1[0];
     let dy = p2[1] - p1[1];
     let l = (dx * dx + dy * dy).sqrt();
     (l, dx / l, dy / l)
+}
+
+fn checked_segment_geometry(positions: &[[f64; 3]]) -> Option<(f64, f64, f64)> {
+    if positions.len() != 2 {
+        return None;
+    }
+    let geometry = segment_geometry(positions);
+    (geometry.0.is_finite() && geometry.0 > 0.0).then_some(geometry)
+}
+
+fn axial_force(stiffness: f64, cosine: f64, sine: f64, start: &[f64], end: &[f64]) -> f64 {
+    stiffness * ((end[0] - start[0]) * cosine + (end[1] - start[1]) * sine)
+}
+
+fn square_matrix(side: usize, cell: impl Fn(usize, usize) -> f64) -> MatD {
+    let mut matrix = MatD::zeros(side, side);
+    for row in 0..side {
+        for column in 0..=row {
+            let value = cell(row, column);
+            matrix.set(row, column, value);
+            matrix.set(column, row, value);
+        }
+    }
+    matrix
 }
 // #endregion 🔖️Geometry
 
@@ -22,6 +46,39 @@ pub struct Bar2 {
     pub e: f64,
     pub area: f64,
     pub density: f64,
+}
+
+impl Bar2 {
+    /// 🦾 Evaluates one axial prestress cell from fixed planar positions and displacements.
+    pub fn mounted_geometric_cell(&self, positions: &[[f64; 3]], displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        if row >= 4 || column >= 4 || displacement.len() != 4 || displacement.iter().any(|value| !value.is_finite()) {
+            return None;
+        }
+        let (length, cosine, sine) = checked_segment_geometry(positions)?;
+        let axial = axial_force(self.e * self.area / length, cosine, sine, &displacement[..2], &displacement[2..]);
+        let value = bar_geometric_cell(axial / length, cosine, sine, row, column);
+        value.is_finite().then_some(value)
+    }
+}
+
+fn bar_mass_cell(coefficient: f64, row: usize, column: usize) -> f64 {
+    if row % 2 != column % 2 {
+        0.0
+    } else if row == column {
+        2.0 * coefficient
+    } else {
+        coefficient
+    }
+}
+
+fn bar_geometric_cell(coefficient: f64, cosine: f64, sine: f64, row: usize, column: usize) -> f64 {
+    let projection = match (row % 2, column % 2) {
+        (0, 0) => 1.0 - cosine * cosine,
+        (1, 1) => 1.0 - sine * sine,
+        _ => -cosine * sine,
+    };
+    let value = coefficient * projection;
+    if row / 2 == column / 2 { value } else { -value }
 }
 
 impl Element for Bar2 {
@@ -58,7 +115,7 @@ impl Element for Bar2 {
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let (l, cx, cy) = segment_geometry(ctx);
+        let (l, cx, cy) = segment_geometry(&ctx.positions);
         let k = self.e * self.area / l;
         let mut m = MatD::zeros(4, 4);
         let terms = [[cx * cx, cx * cy, -cx * cx, -cx * cy], [cx * cy, cy * cy, -cx * cy, -cy * cy]];
@@ -72,22 +129,18 @@ impl Element for Bar2 {
     }
 
     fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
-        if row >= 4 || column >= 4 || ctx.positions.len() != 2 {
+        if row >= 4 || column >= 4 {
             return None;
         }
-        let (length, cosine, sine) = segment_geometry(ctx);
-        if !length.is_finite() || length <= 0.0 {
-            return None;
-        }
+        let (length, cosine, sine) = checked_segment_geometry(&ctx.positions)?;
         let direction = [cosine, sine];
         let sign = if row / 2 == column / 2 { 1.0 } else { -1.0 };
         Some(self.e * self.area / length * sign * direction[row % 2] * direction[column % 2])
     }
 
     fn recover(&self, ctx: &ElementContext, u_local: &VecD, _udl: Option<&MemberUdl>) -> ElementResult {
-        let (l, cx, cy) = segment_geometry(ctx);
-        let k = self.e * self.area / l;
-        let n = k * ((u_local.get(2) - u_local.get(0)) * cx + (u_local.get(3) - u_local.get(1)) * cy);
+        let (l, cx, cy) = segment_geometry(&ctx.positions);
+        let n = axial_force(self.e * self.area / l, cx, cy, &u_local.0[..2], &u_local.0[2..]);
         ElementResult::Bar { n }
     }
 
@@ -95,24 +148,25 @@ impl Element for Bar2 {
     /// stiffness to give mass a preferred orientation. `m = ρAL/6`, block form `[[2m,0,m,0],[0,2m,0,m],
     /// [m,0,2m,0],[0,m,0,2m]]` (node-major `[u1,v1,u2,v2]`).
     fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
-        let (l, _, _) = segment_geometry(ctx);
+        let (l, _, _) = segment_geometry(&ctx.positions);
         let m = self.density * self.area * l / 6.0;
-        let mut out = MatD::zeros(4, 4);
-        for i in 0..4 {
-            out.set(i, i, 2.0 * m);
+        Some(square_matrix(4, |row, column| bar_mass_cell(m, row, column)))
+    }
+
+    fn mounted_mass_cell(&self, positions: &[[f64; 3]], row: usize, column: usize) -> Option<f64> {
+        if row >= 4 || column >= 4 {
+            return None;
         }
-        out.set(0, 2, m);
-        out.set(2, 0, m);
-        out.set(1, 3, m);
-        out.set(3, 1, m);
-        Some(out)
+        let (length, _, _) = checked_segment_geometry(positions)?;
+        let value = bar_mass_cell(self.density * self.area * length / 6.0, row, column);
+        value.is_finite().then_some(value)
     }
 
     /// 🌬️ Consistent end-load `wL/2` at each node from a global member UDL `(wx,wy)` — a 2-node
     /// linear axial element has no bending stiffness to redistribute the load unevenly, so the
     /// lumped-consistent split is exact.
     fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
-        let (l, _, _) = segment_geometry(ctx);
+        let (l, _, _) = segment_geometry(&ctx.positions);
         let half = l / 2.0;
         Some(VecD::from_vec(vec![udl.wx * half, udl.wy * half, udl.wx * half, udl.wy * half]))
     }
@@ -123,22 +177,13 @@ impl Element for Bar2 {
     /// "Theory of Matrix Structural Analysis") that only destabilizes displacement PERPENDICULAR to
     /// the bar's own axis, vanishing identically for a rigid translation (which the projector kills).
     fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
-        let (l, cx, cy) = segment_geometry(ctx);
-        let k = self.e * self.area / l;
-        let n = k * ((u_element.get(2) - u_element.get(0)) * cx + (u_element.get(3) - u_element.get(1)) * cy);
-        let coeff = n / l;
-        let proj = [[1.0 - cx * cx, -cx * cy], [-cx * cy, 1.0 - cy * cy]];
-        let mut kg = MatD::zeros(4, 4);
-        for (row, projection) in proj.iter().enumerate() {
-            for (col, &projection) in projection.iter().enumerate() {
-                let v = coeff * projection;
-                kg.set(row, col, v);
-                kg.set(row, col + 2, -v);
-                kg.set(row + 2, col, -v);
-                kg.set(row + 2, col + 2, v);
-            }
-        }
-        Some(kg)
+        let (l, cx, cy) = segment_geometry(&ctx.positions);
+        let n = axial_force(self.e * self.area / l, cx, cy, &u_element.0[..2], &u_element.0[2..]);
+        Some(square_matrix(4, |row, column| bar_geometric_cell(n / l, cx, cy, row, column)))
+    }
+
+    fn mounted_geometric_stiffness_cell(&self, ctx: &ElementContext, displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        self.mounted_geometric_cell(&ctx.positions, displacement, row, column)
     }
 }
 // #endregion 🔖️Bar2
@@ -221,6 +266,28 @@ fn beam_transform_cell(cosine: f64, sine: f64, row: usize, column: usize) -> f64
     }
 }
 
+fn beam_global_cell(cosine: f64, sine: f64, row: usize, column: usize, local_cell: impl Fn(usize, usize) -> f64) -> f64 {
+    let (row, column) = (row.max(column), row.min(column));
+    let row_block = row / 3 * 3;
+    let column_block = column / 3 * 3;
+    let mut value = 0.0;
+    for local_column in column_block..column_block + 3 {
+        let right = beam_transform_cell(cosine, sine, local_column, column);
+        if right == 0.0 {
+            continue;
+        }
+        let mut left_product = 0.0;
+        for local_row in row_block..row_block + 3 {
+            let left = beam_transform_cell(cosine, sine, local_row, row);
+            if left != 0.0 {
+                left_product += left * local_cell(local_row, local_column);
+            }
+        }
+        value += left_product * right;
+    }
+    value
+}
+
 /// 🌬️ Local fixed-end load vector `[u1,v1,θ1,u2,v2,θ2]` for a local-frame UDL `(wx_local, wy_local)`.
 fn beam_local_udl(l: f64, wx_local: f64, wy_local: f64) -> VecD {
     VecD::from_vec(vec![wx_local * l / 2.0, wy_local * l / 2.0, wy_local * l * l / 12.0, wx_local * l / 2.0, wy_local * l / 2.0, -wy_local * l * l / 12.0])
@@ -230,41 +297,42 @@ fn beam_local_udl(l: f64, wx_local: f64, wy_local: f64) -> VecD {
 /// `(0,3)`, standard Euler-Bernoulli consistent bending mass at `[1,2,4,5]` (rotary inertia of the
 /// cross-section neglected — see Cook/Malkus/Plesha "Concepts and Applications of Finite Element
 /// Analysis" for the closed form).
-fn beam_local_mass(l: f64, area: f64, density: f64) -> MatD {
-    let mut m = MatD::zeros(6, 6);
-    let axial = density * area * l / 6.0;
-    m.set(0, 0, 2.0 * axial);
-    m.set(0, 3, axial);
-    m.set(3, 0, axial);
-    m.set(3, 3, 2.0 * axial);
-
+fn beam_local_mass(l: f64, mass: f64) -> impl Fn(usize, usize) -> f64 {
+    let axial = mass / 6.0;
+    let factor = mass / 420.0;
     let l2 = l * l;
-    let factor = density * area * l / 420.0;
-    let idx = [1usize, 2, 4, 5];
-    let block = [[156.0, 22.0 * l, 54.0, -13.0 * l], [22.0 * l, 4.0 * l2, 13.0 * l, -3.0 * l2], [54.0, 13.0 * l, 156.0, -22.0 * l], [-13.0 * l, -3.0 * l2, -22.0 * l, 4.0 * l2]];
-    for (bi, &gi) in idx.iter().enumerate() {
-        for (bj, &gj) in idx.iter().enumerate() {
-            m.set(gi, gj, factor * block[bi][bj]);
-        }
+    let bending = [
+        [156.0, 22.0 * l, 54.0, -13.0 * l],
+        [22.0 * l, 4.0 * l2, 13.0 * l, -3.0 * l2],
+        [54.0, 13.0 * l, 156.0, -22.0 * l],
+        [-13.0 * l, -3.0 * l2, -22.0 * l, 4.0 * l2],
+    ];
+    move |row, column| match (BEAM_BENDING_INDEX[row], BEAM_BENDING_INDEX[column]) {
+        (None, None) if row == column => 2.0 * axial,
+        (None, None) => axial,
+        (Some(row), Some(column)) => factor * bending[row][column],
+        _ => 0.0,
     }
-    m
 }
+
+const BEAM_BENDING_INDEX: [Option<usize>; 6] = [None, Some(0), Some(1), None, Some(2), Some(3)];
 
 /// 🌀️ Local geometric ("stress") stiffness for a 2D Euler-Bernoulli beam-column under axial force `n`
 /// (tension-positive, same convention `recover` reports), bending block `[v1,θ1,v2,θ2]` only — no
 /// axial/geometric coupling at this scope. Standard textbook beam-column geometric stiffness.
-fn beam_local_geometric_stiffness(l: f64, n: f64) -> MatD {
-    let mut kg = MatD::zeros(6, 6);
+fn beam_local_geometric_stiffness(l: f64, n: f64) -> impl Fn(usize, usize) -> f64 {
     let l2 = l * l;
     let coeff = n / l;
-    let idx = [1usize, 2, 4, 5];
-    let block = [[6.0 / 5.0, l / 10.0, -6.0 / 5.0, l / 10.0], [l / 10.0, 2.0 * l2 / 15.0, -l / 10.0, -l2 / 30.0], [-6.0 / 5.0, -l / 10.0, 6.0 / 5.0, -l / 10.0], [l / 10.0, -l2 / 30.0, -l / 10.0, 2.0 * l2 / 15.0]];
-    for (bi, &gi) in idx.iter().enumerate() {
-        for (bj, &gj) in idx.iter().enumerate() {
-            kg.set(gi, gj, coeff * block[bi][bj]);
-        }
+    let bending = [
+        [6.0 / 5.0, l / 10.0, -6.0 / 5.0, l / 10.0],
+        [l / 10.0, 2.0 * l2 / 15.0, -l / 10.0, -l2 / 30.0],
+        [-6.0 / 5.0, -l / 10.0, 6.0 / 5.0, -l / 10.0],
+        [l / 10.0, -l2 / 30.0, -l / 10.0, 2.0 * l2 / 15.0],
+    ];
+    move |row, column| match (BEAM_BENDING_INDEX[row], BEAM_BENDING_INDEX[column]) {
+        (Some(row), Some(column)) => coeff * bending[row][column],
+        _ => 0.0,
     }
-    kg
 }
 
 /// 🏗️ 2-node Euler-Bernoulli frame element — DOFs `[Tx, Ty, Rz]` per node.
@@ -280,6 +348,17 @@ pub struct BeamEb2 {
 
 
 impl BeamEb2 {
+    /// 🏹 Evaluates one Euler-Bernoulli prestress cell without allocating transformed matrices.
+    pub fn mounted_geometric_cell(&self, positions: &[[f64; 3]], displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        if row >= 6 || column >= 6 || displacement.len() != 6 || displacement.iter().any(|value| !value.is_finite()) {
+            return None;
+        }
+        let (length, cosine, sine) = checked_segment_geometry(positions)?;
+        let axial = axial_force(self.e * self.area / length, cosine, sine, &displacement[..3], &displacement[3..]);
+        let value = beam_global_cell(cosine, sine, row, column, beam_local_geometric_stiffness(length, axial));
+        value.is_finite().then_some(value)
+    }
+
     /// 🍃️ Integrates linear and Hermite member-load rows including consistent translational gravity.
     pub fn mounted_load_row(&self, positions: &[[f64; 3]], row: usize, udl: &MemberUdl, gravity: [f64; 2]) -> Option<f64> {
         if row >= 6 { return None; }
@@ -328,7 +407,7 @@ impl Element for BeamEb2 {
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let (l, c, s) = segment_geometry(ctx);
+        let (l, c, s) = segment_geometry(&ctx.positions);
         let axial_k = self.e * self.area / l;
         let bend_k = self.e * self.iy / l;
         let k_local = beam_local_stiffness(l, axial_k, bend_k);
@@ -337,22 +416,21 @@ impl Element for BeamEb2 {
     }
 
     fn mounted_stiffness_cell(&self, ctx: &ElementContext, row: usize, column: usize) -> Option<f64> {
-        if row >= 6 || column >= 6 || ctx.positions.len() != 2 {
+        if row >= 6 || column >= 6 {
             return None;
         }
-        let (length, cosine, sine) = segment_geometry(ctx);
-        if !length.is_finite() || length <= 0.0 {
-            return None;
-        }
+        let (length, cosine, sine) = checked_segment_geometry(&ctx.positions)?;
         let axial = self.e * self.area / length;
         let bending = self.e * self.iy / length;
+        let row_block = row / 3 * 3;
+        let column_block = column / 3 * 3;
         let mut value = 0.0;
-        for local_row in 0..6 {
+        for local_row in row_block..row_block + 3 {
             let left = beam_transform_cell(cosine, sine, local_row, row);
             if left == 0.0 {
                 continue;
             }
-            for local_column in 0..6 {
+            for local_column in column_block..column_block + 3 {
                 let right = beam_transform_cell(cosine, sine, local_column, column);
                 if right != 0.0 {
                     value += left * beam_local_stiffness_cell(length, axial, bending, local_row, local_column) * right;
@@ -363,7 +441,7 @@ impl Element for BeamEb2 {
     }
 
     fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
-        let (l, c, s) = segment_geometry(ctx);
+        let (l, c, s) = segment_geometry(&ctx.positions);
         let wx_local = udl.wx * c + udl.wy * s;
         let wy_local = -udl.wx * s + udl.wy * c;
         let f_local = beam_local_udl(l, wx_local, wy_local);
@@ -372,7 +450,7 @@ impl Element for BeamEb2 {
     }
 
     fn recover(&self, ctx: &ElementContext, u_local: &VecD, udl: Option<&MemberUdl>) -> ElementResult {
-        let (l, c, s) = segment_geometry(ctx);
+        let (l, c, s) = segment_geometry(&ctx.positions);
         let axial_k = self.e * self.area / l;
         let bend_k = self.e * self.iy / l;
         let t = beam_transform(c, s);
@@ -400,25 +478,33 @@ impl Element for BeamEb2 {
     }
 
     fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
-        let (l, c, s) = segment_geometry(ctx);
-        let m_local = beam_local_mass(l, self.area, self.density);
-        let t = beam_transform(c, s);
-        Some(t.transpose().matmul(&m_local).matmul(&t))
+        let (l, c, s) = segment_geometry(&ctx.positions);
+        let local = beam_local_mass(l, self.density * self.area * l);
+        Some(square_matrix(6, |row, column| beam_global_cell(c, s, row, column, &local)))
+    }
+
+    fn mounted_mass_cell(&self, positions: &[[f64; 3]], row: usize, column: usize) -> Option<f64> {
+        if row >= 6 || column >= 6 {
+            return None;
+        }
+        let (length, cosine, sine) = checked_segment_geometry(positions)?;
+        let local = beam_local_mass(length, self.density * self.area * length);
+        let value = beam_global_cell(cosine, sine, row, column, local);
+        value.is_finite().then_some(value)
     }
 
     /// 🌀️ Buckling geometric stiffness from the member's own axial force under `u_element` — same
-    /// sign convention as `recover`'s `n` (tension-positive): `n = -k_local.mul_vec(u_loc).get(0)`.
+    /// sign convention as `recover`'s `n` (tension-positive).
     fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
-        let (l, c, s) = segment_geometry(ctx);
-        let axial_k = self.e * self.area / l;
-        let bend_k = self.e * self.iy / l;
-        let t = beam_transform(c, s);
-        let u_loc = t.mul_vec(u_element);
-        let k_local = beam_local_stiffness(l, axial_k, bend_k);
-        let f_end = k_local.mul_vec(&u_loc);
-        let n = -f_end.get(0);
-        let kg_local = beam_local_geometric_stiffness(l, n);
-        Some(t.transpose().matmul(&kg_local).matmul(&t))
+        assert_eq!(u_element.len(), 6, "beam displacement count");
+        let (l, c, s) = segment_geometry(&ctx.positions);
+        let axial = axial_force(self.e * self.area / l, c, s, &u_element.0[..3], &u_element.0[3..]);
+        let local = beam_local_geometric_stiffness(l, axial);
+        Some(square_matrix(6, |row, column| beam_global_cell(c, s, row, column, &local)))
+    }
+
+    fn mounted_geometric_stiffness_cell(&self, ctx: &ElementContext, displacement: &[f64], row: usize, column: usize) -> Option<f64> {
+        self.mounted_geometric_cell(&ctx.positions, displacement, row, column)
     }
 }
 // #endregion 🔖️BeamEb2

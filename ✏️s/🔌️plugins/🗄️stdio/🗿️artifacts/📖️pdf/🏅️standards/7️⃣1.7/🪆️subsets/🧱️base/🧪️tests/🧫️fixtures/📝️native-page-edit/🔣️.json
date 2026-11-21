@@ -81,6 +81,98 @@
       "object": "box.crop",
       "coordinates": ""
     },
+    "decimalDrafts": {
+      "policy": "blurDecimalQuad",
+      "spellings": [
+        {
+          "raw": " \t-10.0 +2e1 170.0000 +280. \r",
+          "values": [
+            -10,
+            20,
+            170,
+            280
+          ]
+        },
+        {
+          "raw": "-0 +0 .25 5e-324",
+          "values": [
+            0,
+            0,
+            0.25,
+            5e-324
+          ]
+        },
+        {
+          "raw": "+1.25e21 -2E-90 1.2500000000000002e21 4e-87",
+          "values": [
+            1.25e+21,
+            -2e-90,
+            1.2500000000000003e+21,
+            4e-87
+          ]
+        },
+        {
+          "raw": "-1e-999 2 3 4",
+          "values": [
+            0,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "raw": " \u00a0\u0085",
+          "values": []
+        },
+        {
+          "raw": "1 2 3",
+          "values": null
+        },
+        {
+          "raw": "1 2 3 4 5",
+          "values": null
+        },
+        {
+          "raw": "1 NaN 3 4",
+          "values": null
+        },
+        {
+          "raw": "1 2 3 1e999",
+          "values": null
+        },
+        {
+          "raw": "1 2 0x10 4",
+          "values": null
+        },
+        {
+          "raw": "1 2 3 4\u00a0",
+          "values": null
+        },
+        {
+          "raw": "1 2 3 4\u2028",
+          "values": null
+        },
+        {
+          "raw": "1\u000b2 3 4",
+          "values": null
+        },
+        {
+          "raw": "1,2 3 4 5",
+          "values": null
+        }
+      ],
+      "move": {
+        "object": "box.trim",
+        "before": "15 45 145 255",
+        "coordinates": "  +1.5e2  45.1250  +175.125  255.0 ",
+        "value": [
+          150,
+          45.125,
+          175.125,
+          255
+        ]
+      }
+    },
     "clearedViewSize": [
       500,
       750

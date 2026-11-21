@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["original", "replacement", "nested", "providers", "expectedResults"],
+  "properties": {
+    "original": { "type": "string" },
+    "replacement": { "type": "string" },
+    "nested": { "type": "string" },
+    "providers": { "const": ["head", "length"] },
+    "expectedResults": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        { "type": "object", "additionalProperties": false, "required": ["head"], "properties": { "head": { "type": "string" } } },
+        { "type": "object", "additionalProperties": false, "required": ["length"], "properties": { "length": { "type": "integer", "minimum": 0 } } }
+      ]
+    }
+  }
+}

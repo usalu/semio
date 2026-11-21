@@ -25,6 +25,9 @@ impl CoreInstance {
                 Ok(Some(call))
             }
             FunctionDecl::Defined { locals, body, .. } => {
+                if self.preparation_storage.is_some() && machine.frames.len() >= 1024 {
+                    return Err(CoreError::State("actor preparation exceeds its call depth".into()));
+                }
                 let stack_base = machine.values.len();
                 let mut all_locals = arguments;
                 all_locals.extend(locals.iter().copied().map(ValueType::zero));

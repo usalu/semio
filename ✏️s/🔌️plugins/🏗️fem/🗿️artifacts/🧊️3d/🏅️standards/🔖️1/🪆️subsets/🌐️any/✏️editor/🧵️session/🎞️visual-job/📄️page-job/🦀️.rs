@@ -20,11 +20,12 @@ const FEM3D_RECOVERED_BACKING_CAPACITY: usize = SHELL_CAPACITY * FEM3D_PROCESS_B
 
 struct Fem3dBackingRecovery {
     owners: [Option<Fem3dRecoveredBacking>; FEM3D_RECOVERED_BACKING_CAPACITY],
+    pending: usize,
 }
 
 impl Fem3dBackingRecovery {
     pub(super) const fn new() -> Self {
-        Self { owners: [const { None }; FEM3D_RECOVERED_BACKING_CAPACITY] }
+        Self { owners: [const { None }; FEM3D_RECOVERED_BACKING_CAPACITY], pending: 0 }
     }
 }
 
@@ -37,13 +38,20 @@ pub(super) fn recover_fem3d_backing(owner: Fem3dRecoveredBacking) -> bool {
         let Ok(mut recovery) = recovery.try_borrow_mut() else { return false };
         let Some(slot) = recovery.owners.iter_mut().find(|slot| slot.is_none()) else { return false };
         *slot = Some(owner);
+        recovery.pending += 1;
         true
     })
+}
+
+/// 🧺 Reports detached backing pages awaiting a funded release.
+pub fn recovered_fem3d_backing_pending() -> bool {
+    FEM3D_BACKING_RECOVERY.with(|recovery| recovery.borrow().pending != 0)
 }
 
 pub fn close_recovered_fem3d_backing(maximum_bytes: usize) -> Option<(usize, usize)> {
     FEM3D_BACKING_RECOVERY.with(|recovery| {
         let mut recovery = recovery.borrow_mut();
+        if recovery.pending == 0 { return None; }
         let owner = recovery.owners.iter_mut().find(|slot| slot.is_some())?;
         let bytes = match owner.as_ref()? {
             Fem3dRecoveredBacking::SolverScalar(_) => FEM3D_SOLVER_SCALAR_PAGE_BYTES,
@@ -55,6 +63,7 @@ pub fn close_recovered_fem3d_backing(maximum_bytes: usize) -> Option<(usize, usi
             return Some((0, 0));
         }
         let owner = owner.take()?;
+        recovery.pending -= 1;
         match owner {
             Fem3dRecoveredBacking::SolverScalar(owner) => drop(owner),
             Fem3dRecoveredBacking::SolverInitialized(owner) => drop(owner),

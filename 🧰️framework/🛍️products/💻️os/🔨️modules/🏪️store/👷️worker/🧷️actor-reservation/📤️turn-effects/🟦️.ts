@@ -1,10 +1,11 @@
+import { parseDocumentBackboneTransportMessage } from "../../../../../../../🔨️modules/🛰️backbone/🔀️message/🟦️.ts";
 import type { ReservationSession } from "../🗃️state/🟦️.ts";
 import type { ReservationHub } from "../🧩️hub/🟦️.ts";
 import { documentBackboneEffectV1 } from "@semio-tech/framework/backbone/binding";
 import { type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1, encodeBrowserActorHostEffectV1, decodeBrowserActorIntentPublicationV1, decodeBrowserActorCommandPublicationV1, decodeBrowserActorUnsolicitedPublicationV1, requireBrowserActorCommandBackboneProjectionV1 } from "@semio-tech/framework/browser-bundle/action-handoff/publication";
 import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
 import { wireSpawnJob, typedOperationResult, typedOperationPageAnswerV1 } from "@semio-tech/framework-actor/wire-turn";
-import { faultDisplayMessage, decodePackValue, parseDocumentBackboneMessage } from "../../../../../🟦️";
+import { faultDisplayMessage, decodePackValue } from "../../../../../🟦️";
 import { BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, parseBrowserActorHostEffectBytesV1 } from "@semio-tech/framework/browser-bundle/action-handoff";
 import { HISTORY_TRANSITION_DIFF_SCHEMA } from "@semio-tech/framework-replication";
 import { type BrowserActorActionPublication, type BrowserActorSpawnedJob, browserActorBytes, browserActorRecord, browserActorTurnResult } from "../../🧩️actor-wire-helpers/🟦️.ts";
@@ -111,11 +112,11 @@ export class ReservationTurnEffects {
       const binding = this.session.documentBinding;
       if (binding === null || target.val !== binding.port.uri) throw new Error("actor-document-port.foreign-uri");
       const kind = documentBackboneEffectV1(payload),
-        parsed = kind === "mutations" ? parseDocumentBackboneMessage(payload) : null,
-        messageMutations = parsed?.envelopes.length ?? 0;
+        parsed = kind === "mutations" ? parseDocumentBackboneTransportMessage(payload) : null,
+        messageMutations = parsed?.kind === "batch" ? parsed.envelopes.length : 0;
       mutations += messageMutations;
       if (mutations > BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM) throw new Error("document browser actor: mutation effect limit");
-      if (typeof mode !== "string" && mode.kind === "app-command" && parsed !== null) commandEnvelopes.push(...parsed.envelopes);
+      if (typeof mode !== "string" && mode.kind === "app-command" && parsed?.kind === "batch") commandEnvelopes.push(...parsed.envelopes);
       messages.push({ payload });
     }
     if (typeof mode !== "string" && mode.kind === "app-command") {

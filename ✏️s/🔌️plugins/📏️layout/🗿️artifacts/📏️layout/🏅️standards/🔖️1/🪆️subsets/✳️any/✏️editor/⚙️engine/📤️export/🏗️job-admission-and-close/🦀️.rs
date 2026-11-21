@@ -1,6 +1,7 @@
 //! 🏗️ Job admission and close of the layout export job: the job record, its admission from the reserved request, the bounded close of its buffers, the close and publication steps and the publication helpers. See [`super`].
 
 use super::*;
+use semio_s_artifact_layout_layout_engine_export_primitives::frame_planning::FramePlanState;
 
 //#region 🧩️Job
 pub struct LayoutExportJob {
@@ -47,7 +48,7 @@ pub struct LayoutExportJob {
     pub(super) drawing: Option<DrawingCompositionState>,
     pub(super) drawing_source:Option<DrawingSourceAddress>,
     pub(super) drawing_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-    pub(super) frame_plan: Option<super::semio_s_artifact_layout_layout_engine_export_primitives::frame_planning::FramePlanState>,
+    pub(super) frame_plan: Option<FramePlanState>,
     pub(super) frame_plan_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pub(super) text: Option<ExportTextState>,
     pub(super) plan_work_demand:semio_framework_value::RetirementDemand,

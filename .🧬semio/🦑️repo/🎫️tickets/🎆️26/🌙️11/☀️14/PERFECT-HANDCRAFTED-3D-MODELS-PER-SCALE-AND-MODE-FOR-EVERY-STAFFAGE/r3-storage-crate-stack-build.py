@@ -105,39 +105,20 @@ def body50(k):
     ]
 
 
-def body100(k):
-    """🧺 1:100: floor, one drafted wall from the floor to the flange, rim skirt of 25 mm and flange of 15 mm, three stacking ledges."""
-    p, n = K.FINE, ARCS["100"]
-    b, r, _ = tones(k)
+def body_reduced(k, scale):
+    """🧺 The reinforced floor and three nesting channels, with scale-specific corner faceting and rim sections."""
+    p, n = K.FINE, ARCS[scale]
+    b, r, f = tones(k)
     wall = lambda inset: K.wall_outline(p, inset, n=n)
+    foot = ext(f"foot-{k}", k, wall(0.005), 0, 0.014, f, holes=[wall(0.009)], taper=False)
+    floor = ext(f"floor-{k}", k, wall(K.T - 0.0008), K.U0, 0.020, b)
+    shell = walls(k, p, n, K.U0, 0.295, b) if scale != "500" else [ext(f"wall-{k}", k, wall(0), K.U0, 0.295, b, holes=[wall(K.T)])]
     sk_o, sk_i = ring(0.30, 0.20, 0.03, 0.297, 0.197, 0.027, n)
     fl_o, fl_i = ring(0.30, 0.20, 0.03, *FLANGE, n)
-    return [
-        ext(f"floor-{k}", k, wall(K.T - 0.0008), 0, 0.016, b),
-        *walls(k, p, n, 0, 0.295, b),
-        ext(f"skirt-{k}", k, sk_o, 0.275, K.PITCH, r, holes=sk_i, taper=False),
-        ext(f"flange-{k}", k, fl_o, 0.285, K.PITCH, r, holes=fl_i, taper=False),
-        *ledges(k, p, r, p["ledge_u"]),
-    ]
-
-
-def body_coarse(k, scale):
-    """🧺 1:200 and 1:500: floor slab of the scale's feature, one drafted wall, the rim as one collar of the scale's feature, three stacking ledges (1:500: 75 mm ledges in 80 mm channels, 2 mm wall so that the deep channels still nest)."""
-    p = K.FINE if scale == "200" else K.TINY
-    n = ARCS[scale]
-    t = K.T if scale == "200" else 0.002
-    feature = 0.03 if scale == "200" else 0.075
-    uc = K.COLLAR[scale]
-    top = 0.295 if scale == "200" else K.PITCH
-    b, r, _ = tones(k)
-    wall = lambda inset: K.wall_outline(p, inset, n=n)
-    co_o, co_i = ring(0.30, 0.20, 0.03, *FLANGE, n)
-    return [
-        ext(f"floor-{k}", k, wall(t - 0.0008), 0, feature, b),
-        *(walls(k, p, n, 0, top, b) if scale == "200" else [ext(f"wall-{k}", k, wall(0), 0, top, b, holes=[wall(t)])]),
-        ext(f"collar-{k}", k, co_o, uc, K.PITCH, r if scale == "200" else b, holes=co_i, taper=False),
-        *ledges(k, p, r if scale == "200" else b, p["ledge_u"]),
-    ]
+    skirt_id = "skirt" if scale == "100" else "collar"
+    skirt = ext(f"{skirt_id}-{k}", k, sk_o, 0.262, K.PITCH, r, holes=sk_i, taper=False)
+    flange = ext(f"flange-{k}", k, fl_o, 0.292, K.PITCH, r, holes=fl_i, taper=False)
+    return [foot, floor, *shell, skirt, flange, *ledges(k, p, r, p["ledge_u"])]
 
 
 def th(sid, k, profile, u0, u1, taper=True):
@@ -151,13 +132,11 @@ def th(sid, k, profile, u0, u1, taper=True):
 def thermal(scale, k):
     """🌡️ Envelope of the outer wall surface of crate k at the scale: wall, rim band and (1:50) foot ring."""
     n = ARCS[scale]
-    p = K.TINY if scale == "500" else K.FINE
+    p = K.FINE
     rim_o = K.outline(0.30, 0.20, 0.03, n=n)
-    if scale == "50":
-        return [th(f"th-envelope-{k}", k, K.wall_outline(p, 0, n=n), K.U0, 0.295), th(f"th-rim-edge-{k}", k, rim_o, 0.262, K.PITCH, taper=False), th(f"th-foot-edge-{k}", k, K.wall_outline(p, 0.005, n=n), 0, 0.014, taper=False)]
-    u_rim = {"100": 0.275, "200": K.COLLAR["200"], "500": K.COLLAR["500"]}[scale]
-    top = K.PITCH if scale == "500" else 0.295
-    return [th(f"th-envelope-{k}", k, K.wall_outline(p, 0, n=n), 0, top), th(f"th-rim-edge-{k}", k, rim_o, u_rim, K.PITCH, taper=False)]
+    return [th(f"th-envelope-{k}", k, K.wall_outline(p, 0, n=n), K.U0, 0.295),
+            th(f"th-rim-edge-{k}", k, rim_o, 0.262, K.PITCH, taper=False),
+            th(f"th-foot-edge-{k}", k, K.wall_outline(p, 0.005, n=n), 0, 0.014, taper=False)]
 
 
 def st(solid, part, k, **extra):
@@ -200,36 +179,28 @@ def structure(scale, k):
             st(ext(f"member-wall-{k}", k, wall(0), K.U0, 0.295, 0.5, holes=[wall(K.T)]), "member", k),
             of(f"member-floor-{k}", f"floor-{k}", k),
             of(f"member-foot-{k}", f"foot-{k}", k),
-            st(ext(f"member-rim-{k}", k, fl_o, 0.262, K.PITCH, 0.55, holes=fl_i, taper=False), "member", k),
+            of(f"member-rim-{k}", f"skirt-{k}", k),
+            of(f"member-flange-{k}", f"flange-{k}", k),
             of(f"member-ledge-a-{k}", f"ledge-a-{k}", k), of(f"member-ledge-b-{k}", f"ledge-b-{k}", k), of(f"member-ledge-c-{k}", f"ledge-c-{k}", k),
         ]
-        out += joints(k, 0.0075, 0.26, 0.16)
+        out += joints(k, 0.004, 0.26, 0.16)
         if k == 1:
-            out.append(st(ext("support-base-contact", 1, wall(0.005), 0, 0.0075, 0.1, holes=[wall(0.009)], taper=False), "support", 1, anchor="base-contact"))
+            out.append(st(ext("support-base-contact", 1, wall(0.005), 0, 0.004, 0.1, holes=[wall(0.009)], taper=False), "support", 1, anchor="base-contact"))
         out.append(st({"id": f"mass-{k}", "kind": "ellipsoid", "bone": f"crate-{k}", "material": MAT, "role": "body", "tone": 0.5, "radii": [0.03, 0.03, 0.03], "transform": {"translation": [K.COM_U, 0, 0]}}, "mass", k))
         return out
-    feature = {"100": 0.015, "200": 0.03, "500": 0.075}[scale]
-    p = K.TINY if scale == "500" else K.FINE
+    p = K.FINE
+    wall = lambda inset: K.wall_outline(p, inset, n=n)
     if scale == "500":
         out.append(of(f"member-wall-{k}", f"wall-{k}", k))
     else:
-        out.append(st(ext(f"member-wall-{k}", k, K.wall_outline(p, 0, n=n), 0, 0.295, 0.5, holes=[K.wall_outline(p, K.T, n=n)]), "member", k))
-    out.append(of(f"member-floor-{k}", f"floor-{k}", k))
-    if scale == "100":
-        fl_o, fl_i = ring(0.30, 0.20, 0.03, *FLANGE, n)
-        out.append(st(ext(f"member-rim-{k}", k, fl_o, 0.275, K.PITCH, 0.55, holes=fl_i, taper=False), "member", k))
-    else:
-        out.append(of(f"member-rim-{k}", f"collar-{k}", k))
-    out += [of(f"member-ledge-a-{k}", f"ledge-a-{k}", k), of(f"member-ledge-b-{k}", f"ledge-b-{k}", k), of(f"member-ledge-c-{k}", f"ledge-c-{k}", k)]
-    if scale == "500":
-        if k > 1:
-            out.append(st(box(f"joint-{k}", k, [feature, feature, feature], [feature / 2, 0, 0], 0.7), "joint", k))
-    else:
-        fv = (K.HV - 0.0008) * K.f(0)
-        fw = (K.HW - 0.0008) * K.f(0)
-        out += joints(k, feature, fv, fw)
+        out.append(st(ext(f"member-wall-{k}", k, wall(0), K.U0, 0.295, 0.5, holes=[wall(K.T)]), "member", k))
+    rim_id = "skirt" if scale == "100" else "collar"
+    out += [of(f"member-floor-{k}", f"floor-{k}", k), of(f"member-foot-{k}", f"foot-{k}", k),
+            of(f"member-rim-{k}", f"{rim_id}-{k}", k), of(f"member-flange-{k}", f"flange-{k}", k)]
+    out += [of(f"member-ledge-{side}-{k}", f"ledge-{side}-{k}", k) for side in ("a", "b", "c")]
+    out += joints(k, 0.004, 0.26, 0.16)
     if k == 1:
-        out.append(st(ext("support-base-contact", 1, K.wall_outline(p, 0.003, n=n), 0, feature, 0.1, taper=False), "support", 1, anchor="base-contact"))
+        out.append(st(ext("support-base-contact", 1, wall(0.005), 0, 0.004, 0.1, holes=[wall(0.009)], taper=False), "support", 1, anchor="base-contact"))
     radius = 0.04 if scale == "500" else 0.03
     out.append(st({"id": f"mass-{k}", "kind": "ellipsoid", "bone": f"crate-{k}", "material": MAT, "role": "body", "tone": 0.5, "radii": [radius] * 3, "transform": {"translation": [K.COM_U, 0, 0]}}, "mass", k))
     return out
@@ -241,33 +212,19 @@ DECISIONS = {
              "Körper: fünf Drehstapelbehälter, jeder so gebaut wie das Spritzgussteil: ein 14 mm hoher Fußring (4 mm Wand, 0,52 x 0,32 m), ein 8 mm Boden, die 3 mm Wand mit Formschräge von 0,53 x 0,33 m am Boden auf 0,59 x 0,37 m am Flansch (gleichmäßige Konizität 1,10), im Griffband in zwei Teile geteilt, die in beiden Stirnwänden echte Öffnungen von 120 x 35 mm lassen, der nach außen offene U-Rand aus 38 mm Schürze und 8 mm Flansch (0,60 x 0,40 m, Eckradius 30 mm), drei Stapelleisten oben innen (zwei in den Stirnwänden, eine in der hinteren Längswand) und unter jeder Leiste eine Nut, die vom Fuß bis zur Leiste in die Wand gestuft ist (40 mm tief in den Stirnseiten, 32 mm in der Längsseite). Um eine halbe Drehung gedreht steht die nächste Kiste auf den Leisten; in gleicher Ausrichtung gleiten die Leisten durch ihre Nuten und sie stellt sich mit 0,6 bis 4 mm Spiel hinein. Die Bodenrippen sind Textur (6 mm, unter der Mindestbreite)."),
         text("Thermal: the declared 0.6 m2 per crate is the outer wall area (2 x (0.6 + 0.4) x 0.3 m), so each region is the outer envelope of its crate (drafted wall with its channels, rim band, foot ring) with the horizontal faces as section faces, as the area reviewer ruled (area-decisions.md, sectionFaces table); the inside of the open crate and its floor are not counted. The honest outer area of the open moulding (both faces of wall and floor, C29/C31) is about 1.6 m2 per crate and is listed for the area reviewer in area-review.md, not applied (factor above 1.5).",
              "Thermik: die angegebenen 0,6 m2 je Kiste sind die äußere Wandfläche (2 x (0,6 + 0,4) x 0,3 m), daher ist jede Region die Außenhülle ihrer Kiste (Wand mit Formschräge und Nuten, Randband, Fußring) mit den waagrechten Flächen als Schnittflächen, wie die Flächenprüfung entschieden hat (area-decisions.md, Tabelle sectionFaces); Innenseite und Boden der offenen Kiste zählen nicht. Die ehrliche Außenfläche des offenen Formteils (beide Seiten von Wand und Boden, C29/C31) beträgt etwa 1,6 m2 je Kiste und ist für die Flächenprüfung in area-review.md eingetragen, nicht angewendet (Faktor über 1,5)."),
-        text("Structure: each crate is a monocoque: the drafted wall is a closed box section (member), the floor plate carries the goods to the wall, the foot ring carries the crate, the rim is a ring beam, the three stacking ledges carry the crate above; the joint of each upper crate is three 7.5 mm bearing pads under its foot where it stands on the ledges of the crate below (turned by half a turn); the support is the foot ring of the lowest crate on the floor; one 2.15 kg mass at the moulding's centre 0.13 m above the foot.",
-             "Tragwerk: jede Kiste ist eine Schale: die Wand mit Formschräge ist ein geschlossener Kastenquerschnitt (Stab), die Bodenplatte gibt die Ware an die Wand, der Fußring trägt die Kiste, der Rand ist ein Ringbalken, die drei Stapelleisten tragen die obere Kiste; das Gelenk jeder oberen Kiste sind drei 7,5-mm-Auflagerflächen unter ihrem Fuß, wo sie auf den Leisten der um eine halbe Drehung gedrehten unteren Kiste steht; das Auflager ist der Fußring der untersten Kiste auf dem Boden; eine Masse von 2,15 kg im Schwerpunkt des Formteils 0,13 m über dem Fuß."),
+        text("Structure: each crate is a monocoque: the drafted wall is a closed box section (member), the floor plate carries the goods to the wall, the foot ring carries the crate, the rim is a ring beam, the three stacking ledges carry the crate above; the joint of each upper crate is three 4 mm bearing pads under its foot where it stands on the ledges of the crate below (turned by half a turn); the support is the foot ring of the lowest crate on the floor; one 2.15 kg mass at the moulding's centre 0.13 m above the foot.",
+             "Tragwerk: jede Kiste ist eine Schale: die Wand mit Formschräge ist ein geschlossener Kastenquerschnitt (Stab), die Bodenplatte gibt die Ware an die Wand, der Fußring trägt die Kiste, der Rand ist ein Ringbalken, die drei Stapelleisten tragen die obere Kiste; das Gelenk jeder oberen Kiste sind drei 4-mm-Auflagerflächen unter ihrem Fuß, wo sie auf den Leisten der um eine halbe Drehung gedrehten unteren Kiste steht; das Auflager ist der Fußring der untersten Kiste auf dem Boden; eine Masse von 2,15 kg im Schwerpunkt des Formteils 0,13 m über dem Fuß."),
     ],
-    "100": [
-        text("Body: per crate a 16 mm floor, one drafted 3 mm wall from the floor to the flange with its three stacking channels, a rim skirt of 25 mm and a flange of 15 mm (as drawn at 1:100), and the three stacking ledges. The wall keeps the open hand holes of 120 x 35 mm (the band under the rim split into two halves). Merged against 1:50: the foot ring into the floor (14 mm, below the 15 mm feature); the floor ribs are left out.",
-             "Körper: je Kiste ein 16 mm Boden, eine Wand von 3 mm mit Formschräge vom Boden bis zum Flansch mit ihren drei Stapelnuten, eine Randschürze von 25 mm und ein Flansch von 15 mm (wie in 1:100 gezeichnet) und die drei Stapelleisten. Die Wand behält die offenen Grifflöcher von 120 x 35 mm (das Band unter dem Rand in zwei Hälften geteilt). Gegenüber 1:50 zusammengefasst: der Fußring im Boden (14 mm, unter der Mindestbreite von 15 mm); die Bodenrippen entfallen."),
-        text("Thermal: as at 1:50, the envelope of the outer wall (drafted wall with channels and rim band) with section faces top and bottom; the foot ring is part of the wall envelope.",
-             "Thermik: wie in 1:50 die Hülle der Außenwand (Wand mit Formschräge und Nuten sowie Randband) mit Schnittflächen oben und unten; der Fußring gehört zur Wandhülle."),
-        text("Structure: the drafted wall as a closed box section (member), the floor plate (reference), the rim a ring beam of 25 mm, the three ledges, three 15 mm bearing pads under each upper crate, the floor pad of the lowest crate as support, one mass per crate.",
-             "Tragwerk: die Wand mit Formschräge als geschlossener Kastenquerschnitt (Stab), die Bodenplatte (Verweis), der Rand ein Ringbalken von 25 mm, die drei Leisten, drei 15-mm-Auflagerflächen unter jeder oberen Kiste, die Bodenfläche der untersten Kiste als Auflager, eine Masse je Kiste."),
-    ],
-    "200": [
-        text("Body: per crate a 30 mm floor slab, the drafted wall with its stacking channels and the open hand holes of 120 x 35 mm (above the 30 mm feature), the rim as one collar of 30 mm (flange and skirt merged, 0.60 x 0.40 m) and the three stacking ledges (30 mm and more), corners with three segments. The crates still turn to stack and nest into each other at this scale.",
-             "Körper: je Kiste eine Bodenplatte von 30 mm, die Wand mit Formschräge, Stapelnuten und den offenen Grifflöchern von 120 x 35 mm (über der Mindestbreite von 30 mm), der Rand als ein Kragen von 30 mm (Flansch und Schürze zusammengefasst, 0,60 x 0,40 m) und die drei Stapelleisten (30 mm und mehr), Ecken mit drei Segmenten. Die Kisten werden auch in diesem Maßstab zum Stapeln gedreht und passen ineinander."),
-        text("Thermal: the envelope of wall and collar per crate with section faces top and bottom (the total of the five regions is compared).",
-             "Thermik: die Hülle von Wand und Kragen je Kiste mit Schnittflächen oben und unten (verglichen wird die Summe der fünf Regionen)."),
-        text("Structure: the drafted wall as a closed box section (member), floor slab, collar and ledges (references), three 30 mm bearing pads under each upper crate, the floor slab of the lowest crate as support, one mass per crate.",
-             "Tragwerk: die Wand mit Formschräge als geschlossener Kastenquerschnitt (Stab), Bodenplatte, Kragen und Leisten (Verweise), drei 30-mm-Auflagerflächen unter jeder oberen Kiste, die Bodenplatte der untersten Kiste als Auflager, eine Masse je Kiste."),
-    ],
-    "500": [
-        text("Body: per crate a 75 mm floor slab, the drafted wall (2 mm here so that the 80 mm channels still nest with play), the rim as a 75 mm collar of 0.60 x 0.40 m and three stacking ledges of 75 mm in channels of 80 and 75 mm; corners with two segments. Nothing smaller than 75 mm is modelled except the wall itself (C30).",
-             "Körper: je Kiste eine Bodenplatte von 75 mm, die Wand mit Formschräge (hier 2 mm, damit die 80-mm-Nuten noch mit Spiel ineinanderpassen), der Rand als Kragen von 75 mm mit 0,60 x 0,40 m und drei Stapelleisten von 75 mm in Nuten von 80 und 75 mm; Ecken mit zwei Segmenten. Kleiner als 75 mm ist nur die Wand selbst modelliert (C30)."),
-        text("Thermal: the envelope of wall and collar per crate with section faces top and bottom (the total of the five regions is compared).",
-             "Thermik: die Hülle von Wand und Kragen je Kiste mit Schnittflächen oben und unten (verglichen wird die Summe der fünf Regionen)."),
-        text("Structure: wall, floor slab, collar and ledges are the members (references), one 75 mm joint block at the seat of each upper crate, a 75 mm pad of the lowest crate as support, one mass per crate.",
-             "Tragwerk: Wand, Bodenplatte, Kragen und Leisten sind die Stäbe (Verweise), ein 75-mm-Gelenkblock am Sitz jeder oberen Kiste, eine 75-mm-Fläche der untersten Kiste als Auflager, eine Masse je Kiste."),
-    ],
+    **{d: [
+        text("Each tub has an 8 mm floor on a 14 mm foot ring, a 3 mm drafted wall, a 38 mm skirt and an 8 mm top flange. Three 68 mm tall bearing ledges clear the three moulded channels in the nested position. " + detail,
+             "Jede Kiste hat einen 8-mm-Boden auf einem 14-mm-Fußring, eine 3 mm starke Wand mit Formschräge, eine 38-mm-Schürze und einen 8-mm-Flansch. Drei 68 mm hohe Auflager passen beim Einstellen in die drei eingeformten Nuten. " + de),
+        text("The exterior-wall exchange area follows the tapered shell, moulded lip and foot.", "Die Wärmeübertragung der Außenwand folgt der konischen Wand, dem Rand und dem Fuß."),
+        text("Each upper foot bears on three separate seats. The bottom ring transmits their combined loads into the supporting floor.", "Jeder obere Fuß steht auf drei einzelnen Auflagern. Der unterste Ring leitet die Gesamtlast in den Boden ein.")
+    ] for d, detail, de in [
+        ("100", "The wall retains the two 120 × 35 mm hand openings and four facets per rounded corner.", "Die Wand enthält beide Grifföffnungen von 120 × 35 mm. Vier Facetten bilden jede gerundete Ecke."),
+        ("200", "The three-facet corners and hand openings remain visible.", "Die Ecken haben drei Facetten. Beide Grifföffnungen bleiben sichtbar."),
+        ("500", "Two facets describe each corner. The end walls read as continuous faces at this scale.", "Zwei Facetten beschreiben jede Ecke. Die Stirnwände erscheinen in diesem Maßstab als geschlossene Flächen.")
+    ]}
 }
 
 
@@ -275,7 +232,7 @@ def volume(scale):
     """📐 One authored scale: body, thermal, structure and decisions of the five crates."""
     body = []
     for k in range(1, N + 1):
-        body += body50(k) if scale == "50" else body100(k) if scale == "100" else body_coarse(k, scale)
+        body += body50(k) if scale == "50" else body_reduced(k, scale)
     return {"status": "authored", "denominator": int(scale), "body": body,
             "thermal": [s for k in range(1, N + 1) for s in thermal(scale, k)],
             "structure": [s for k in range(1, N + 1) for s in structure(scale, k)],

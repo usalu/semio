@@ -114,6 +114,19 @@ impl<T:RetireOwned+Send+Sync+'static> PersistentList<T>{
   if let Some(root)=self.root.take(){cold_drain(root)}
   self.len=0;self.height=0;
  }
+ /// ⛽️ Quotes the immutable root publication and its retained alias.
+ pub fn retained_alias_work_demand(&self) -> Result<u64,ValueError> {
+  let alias=self.root.as_ref().map_or(Ok(0),SealedShared::duplicate_work_demand)?;
+  alias.checked_add(1).ok_or_else(||ValueError::invariant("persistent alias work overflow"))
+ }
+
+ /// 🔗️ Keeps the same packed pages through an independently funded root alias.
+ pub fn retained_alias(&self,effect:&mut crate::RetainedAllocationEffect<'_>)->Result<Option<Self>,ValueError>{
+  if !fits(Self::projection_demand(),effect.grant())||effect.remaining_work_units()?<self.retained_alias_work_demand()?{return Ok(None)}
+  if !effect.performed(1)?{return Ok(None)}
+  let root=self.root.as_ref().map(|root|root.try_duplicate(effect).result.map(|(aliased,_)|aliased)).transpose()?;
+  Ok(Some(Self{root,len:self.len,height:self.height}))
+ }
  /// 🧷️ A genuine original list source lends an independent immutable candidate root.
  pub fn project(original:RetainedCloneRef<'_,Self>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>,ValueError>{let grant=effect.grant();let mut work=0;let result=(||{
   let demand=Self::projection_demand();if !fits(demand,grant){return Ok(None);}

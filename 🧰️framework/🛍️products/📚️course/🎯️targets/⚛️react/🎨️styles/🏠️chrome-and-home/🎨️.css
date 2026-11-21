@@ -188,3 +188,38 @@
 [data-ui-device="tablet"] .course-task :is([data-course-grip], button.course-target) {
   min-inline-size: var(--layout-touch-min);
 }
+
+.course-page-picker {
+  display: flex;
+  flex: none;
+  background: var(--base);
+  color: var(--foreground);
+}
+
+.course-page-picker > :is(select, button) {
+  min-block-size: max(44px, 2.75rem);
+  padding-inline: var(--spacing-double);
+  font-size: 1rem;
+}
+
+.course-page-picker > select {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.course-page-picker > button {
+  background: var(--active-base);
+  color: var(--active-foreground);
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .course-app [data-slot="navbar"] {
+    min-block-size: 44px;
+  }
+
+  .course-app [data-course-nav] {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
+}

@@ -1,6 +1,7 @@
 //! 🖱️ Hover, rect and pick targets of the DAG graph: the minimap pointer hover, world to screen points, the hovered node, entity screen rects and the pick targets at a screen point. See [`super`].
 
 use super::*;
+use super::world_snap_engine_sync_and_hit_tests::channel_row_handle_hit;
 
 pub fn sync_minimap_pointer_hover(viewport: &mut DagViewportState, graph: &mut DagGraphState, world_x: f64, world_y: f64) {
     if !matches!(draw_lod_for_frame(viewport, graph), DagDrawLod::Minimap) {
@@ -53,7 +54,7 @@ pub fn entity_screen_rect(viewport: &DagViewportState, graph: &DagGraphState, do
     Some([read(0)?, read(1)?, read(2)?, read(3)?])
 }
 
-/// 🎯️ All pick targets under a screen point as JSON (`domain`, `id`, `generality`).
+/// 🎯️ All pick targets under a screen point as JSON with typed channel identity for handle rows.
 pub fn dag_pick_targets_at_screen_json(viewport: &DagViewportState, graph: &DagGraphState, sx: f64, sy: f64) -> String {
     #[derive(ToValue, FromValue)]
     struct Row {
@@ -62,25 +63,30 @@ pub fn dag_pick_targets_at_screen_json(viewport: &DagViewportState, graph: &DagG
         generality: u32,
         #[value(default, skip_serializing_if = "Option::is_none")]
         label: Option<String>,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        channel: Option<DagChannelRef>,
     }
     let world = screen_to_world_point(viewport, graph, sx, sy);
     let targets = graph.engine.hit_test_pick_targets(world);
-    let rows: Vec<Row> = targets
-        .into_iter()
-        .filter_map(|target| {
-            let row = match target.domain.as_str() {
-                "node" => graph.widget_id_for_node_id(target.id).map(|id| Row { domain: target.domain, id, generality: target.generality, label: None }),
-                "edge" => graph.edge_id_map.get(&target.id).cloned().map(|id| Row { domain: target.domain, id, generality: target.generality, label: None }),
-                "handle" => graph.decode_channel_ref(target.id).map(|channel| Row {
-                    domain: "handle".into(),
-                    id: format!("{}@{}", channel.widget_id, channel.port),
-                    generality: target.generality,
-                    label: Some(format!("{} · {}", channel.widget_id, channel.port)),
-                }),
-                _ => None,
-            };
-            row
+    let channel_row = if targets.iter().any(|target| target.domain == "handle") {
+        None
+    } else {
+        channel_row_handle_hit(viewport, graph, world.x, world.y)
+    };
+    let handle_row = |id, generality| graph.decode_channel_ref(id).map(|channel| Row {
+        domain: "handle".into(),
+        id: format!("{}@{}", channel.widget_id, channel.port),
+        generality,
+        label: Some(format!("{} · {}", channel.widget_id, channel.port)),
+        channel: Some(channel),
+    });
+    let rows: Vec<Row> = channel_row.and_then(|id| handle_row(id, 2)).into_iter().chain(
+        targets.into_iter().filter_map(|target| match target.domain.as_str() {
+            "node" => graph.widget_id_for_node_id(target.id).map(|id| Row { domain: target.domain, id, generality: target.generality, label: None, channel: None }),
+            "edge" => graph.edge_id_map.get(&target.id).cloned().map(|id| Row { domain: target.domain, id, generality: target.generality, label: None, channel: None }),
+            "handle" => handle_row(target.id, target.generality),
+            _ => None,
         })
-        .collect();
+    ).collect();
     semio_framework_pack_json::to_json_string(&rows)
 }

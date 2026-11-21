@@ -1,0 +1,8 @@
+[
+  {"name":"unadmitted expired quote","args":[8,3,12,false]},
+  {"name":"completed effect with billed work","args":[8,3,13,false]},
+  {"name":"completed effect with no arithmetic work","args":[8,0,13,false]},
+  {"name":"unperformed action cancellation","args":[8,null,13,false]},
+  {"name":"refusal after an over-ceiling callback","args":[8,9,13,false]},
+  {"name":"retirement quote after the normal deadline","args":[8,3,12,true]}
+]

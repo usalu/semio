@@ -70,7 +70,7 @@ export async function withCompilerSharedHeadroomV1<T>(image:Pick<NativeImageStor
 export function withCompilerWorkspaceSharedWriteV1<T>(storage:NativeStorageReservationV1,leaseDirectory:string,control:ResourceLeaseControl,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{const owner=workspaceOwner(storage,control),current=writers.getStore(),write=(actual:ResourceLeaseControl)=>withCompilerWorkspaceBorrowV1(storage,actual,phase=>withCompilerSharedHeadroomV1({root:storage.backing.root,maximumPhysicalBytes:storage.backing.maximumPhysicalBytes,recheck:storage.recheck},leaseDirectory,phase,storage.allocation.bytes,{version:1,wait:true},body,owner.recover,undefined,owner.relieve));return current?.root===owner.root?writerOperation(current,control,write):write(control);}
 
 /** 📤️ Guards a reserved generation's staged write independently of the compiler's CPU scope by taking an immediate shared writer alongside the active compiler. */
-export function withCompilerWorkspaceStageWriteV1<T>(storage:NativeStorageReservationV1,leaseDirectory:string,control:ResourceLeaseControl,body:()=>Promise<T>):Promise<T>{
+export function withCompilerWorkspaceStageWriteV1<T>(storage:NativeStorageReservationV1,leaseDirectory:string,control:ResourceLeaseControl,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
  return withCompilerWorkspaceBorrowV1(storage,control,actual=>withCompilerWriterCustodyV1({root:storage.backing.root,maximumPhysicalBytes:storage.backing.maximumPhysicalBytes,recheck:storage.recheck},leaseDirectory,actual,{version:1,wait:false,mode:"shared"},body));
 }
 

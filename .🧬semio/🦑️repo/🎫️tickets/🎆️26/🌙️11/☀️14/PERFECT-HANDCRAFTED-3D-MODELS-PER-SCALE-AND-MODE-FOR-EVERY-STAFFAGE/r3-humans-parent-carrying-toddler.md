@@ -95,3 +95,59 @@ Red at 1:50 / 1:100 (outer area against `areaM2`): `scarf` 0.146 / 0.128 vs 0.07
 - Faces are plain (no eyelids, nostrils, philtrum); garments have no drape folds beyond the trouser break and the caps' slack; the toddler's suit seams show as ragged intersection lines where limbs enter the trunk.
 - Not run: the staffage test suites and model exports; fixtures embedding this asset may need regenerating after the rig change.
 - Grades as I see them: 1:50 body B+ (A- for the carry and proportions), thermal A-, structure A-; 1:100 B+; 1:200 B+; 1:500 B.
+
+## Round 5 handcraft
+
+Scripts (ticket folder): `r5-parent-carrying-toddler-forms.py` (every changed statement stated in full, old -> new, written into `r3-parent-carrying-toddler-lists50.ts`, `-s50.ts`, `-coarse.ts`), the asset's `r3-parent-carrying-toddler-run.sh` / `-commit.sh`, `r5-parent-look.ts`, `r5-parent-suit.ts`, `r5-parent-measure.ts`; root range fix in `r3-parent-carrying-toddler-roots.py` (`RANGES`).
+
+### Model vs reference, 1:50 (reference table: section 1)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| parent stature with boots and beanie | 1.70 + 0.022 + 0.010 = 1.732 m | 1.732 m (body bounds) | 0 % |
+| head (skin) height / length / breadth | 0.227 / 0.19–0.20 / 0.15 m | 0.225 / 0.201 / 0.144 m | −0.9 / +0.5 / −4 % (breadth under the beanie, ears separate) |
+| upper arm / forearm / hand (rig) | 0.316 / 0.248 / 0.184 m | 0.316 / 0.248 / 0.184 m; hanging glove 0.187 m | 0 / 0 / +1.6 % |
+| thigh / shank (rig) | 0.40 / 0.418 m | 0.40 / 0.418 m | 0 % |
+| shoulder over the coat sleeves | biacromial 0.39 m + sleeves | 0.518 m | — |
+| seat (jeans) breadth | 0.35 m | 0.356 m | +1.7 % |
+| ankle boot EU 41 | 0.28 x 0.10 m | 0.289 x 0.106 m | +3.2 / +6 % (welt and toe spring) |
+| toddler head length / breadth | 0.165 / 0.135 m (circumference 0.48) | 0.167 / 0.136 m | +1 / +1 % |
+| toddler head height (vertex to chin) | 0.17–0.18 m | 0.191 m extent along the tilted head bone (includes the chin–neck taper in that frame) | +6 % on the frame extent, see open points |
+| toddler thigh / shank (rig) | 0.18 / 0.17 m | 0.18 / 0.17 m | 0 % |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B+ (nape hair a dark slab narrower than the head, sides of the skull bare under the beanie) -> A− | A− -> A− | B (nine rib hoops and the toddler's four exactly horizontal like a ladder, scapulae oval discs, ilia ellipses) -> A− |
+| 1:100 | B+ -> B+ | A− -> A− | B+ -> B+ |
+| 1:200 | B+, catalog INVALID (print: `glove-r` 0.178 mm at 1:350) -> B+ | B+ | B+ |
+| 1:500 | B (catalog INVALID: mitten band at 1:900) -> B+ | B+ | B+ (75 mm stick skeleton, right abstraction) |
+| poses | `hoisting` C+ (coat skirt halves swing out with the thighs as stiff panels), `walk-3` B | | |
+
+### Changes
+
+- Structure 1:50: every rib hoop of parent and toddler now lies in a plane falling 24 degrees to the front (axis from `RIB_NORMAL` through `D(bone, …)`), the upper two parent hoops re-centred so their fronts meet the sternum and their backs the spine (rib 2: centre x 0.003, depth radius 0.064; rib 1 0.058); scapulae as triangular plates (inferior angle 12 mm, superior border 0.10 m wide, 14 mm thick) in the old placement, with a scapular spine to the acromion; ilia as fanned plates (crest 0.14 m long, 17 mm thick) in the old placement.
+- Body 1:50: nape hair restated (four sections from the hairline at 1.575 m into the beanie at 1.66 m) as a shell 6 to 10 mm over the occiput that wraps to the ears, instead of a 5 cm block behind the head.
+- Body 1:200: carrying glove 48 mm thick (palm and fingers closed under the toddler's thighs) instead of 32 mm.
+- Root fix: `representations.200.validRange.maxDenominator` 350 -> 300 and `representations.500.validRange.minDenominator` 350 -> 300: the 1:200 drawing's visible band of the carrying glove (under the toddler's thighs) is 0.188 mm at 1:350; the old catalog failed the product's print check at both range ends.
+- 2D of all scales redrawn by `r3-parent-carrying-toddler-draw2d.ts` from the new bodies.
+
+### Checks
+
+`r3-validate.ts humans/parent-carrying-toddler --catalog-only`: `VALID ... schema 0, validateAsset 0`, no `PRINT` lines. `--volumes` on the identical candidate: every geometric volume rule green; `volumes-thermal-coverage` reports the twelve known body-share areas (scarf, coat-torso, jeans, boots, toddler-face, toddler-boots at 1:50 and 1:100; C18/C27, in `area-review.md`). Committed with `r3-parent-carrying-toddler-commit.sh` (root members, then `volumes-insert.py`). Solids body / thermal / structure 1:50 113 / 155 / 189, 1:100 53 / 57 / 55, 1:200 42 / 48 / 52, 1:500 35 / 41 / 37.
+
+### What I opened
+
+Before: 1:50 body sheet, zoomed heads (five directions), 1:50 structure zoom. After: 1:50 structure zoom, zoomed heads, 1:100 body sheet, 1:500 structure sheet, 1:50 `hoisting` sheet, 1:50 thermal cut, 2D 1:50. Rendered without `NOT DRAWN` but not opened: 1:50 body sheet after the change (seen as zooms), 1:100/1:200 structure and thermal, 1:200 and 1:500 body, `walk-3`, 2D 1:100 to 1:500.
+
+### Still not A
+
+- `hoisting` and swing-leg frames: the coat skirt halves are rigid on the thighs and swing out as panels (round-3 open point); a draped skirt needs solid weights, which the round-3 tools do not read.
+- Coarse scales (1:100 to 1:500) were not remodelled this round beyond the 1:200 glove; they read as the same carry but stay B+.
+- The toddler suit shows ragged intersection lines where limbs enter the trunk; faces are plain; scarf ends are flat knit panels.
+- Twelve body-share areas wait for the area reviewers.
+
+## Child articulation
+
+The carried two-year-old has a 60.86 mm lower cervical segment, a 0.21 kg neck mass, and paired occipital joints 17 mm apart. The head and neck retain their combined 1.83 kg mass and neutral centre of mass. The nose, mouth, eyes and wool hat follow the skull. The warm neck surface ends at the collar. [Child passenger anatomy and motion](digital-passenger-review.md)

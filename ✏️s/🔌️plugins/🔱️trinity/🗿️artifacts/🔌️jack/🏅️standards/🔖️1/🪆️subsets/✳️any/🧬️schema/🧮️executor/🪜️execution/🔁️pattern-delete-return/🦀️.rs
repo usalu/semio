@@ -13,8 +13,8 @@ pub(super) struct PatternExecution {
 }
 
 impl PatternExecution {
-    pub(super) fn new() -> Self {
-        Self { pattern: 0, bindings: vec![Binding::default()], binding: 0, next: Vec::new(), node: None, edge: None, node_active: false }
+    pub(super) fn new(bindings: Vec<Binding>) -> Self {
+        Self { pattern: 0, bindings, binding: 0, next: Vec::new(), node: None, edge: None, node_active: false }
     }
 
     pub(super) fn step(&mut self, graph: &Graph, patterns: &[Pattern]) -> Result<Option<Vec<Binding>>, ValueError> {
@@ -37,7 +37,7 @@ impl PatternExecution {
                 return Ok(None);
             };
             self.node = Some(id.clone());
-            if node.kind != left.kind || binding_conflicts(base, &left.var, id) {
+            if node.kind != left.kind || base.edges.contains_key(&left.var) || base.nodes.get(&left.var).is_some_and(|bound| bound != id) {
                 return Ok(None);
             }
             self.node_active = true;
@@ -54,11 +54,21 @@ impl PatternExecution {
                 return Ok(None);
             };
             self.edge = Some(edge_id.clone());
-            if edge_pattern.kind.as_ref().is_some_and(|kind| *kind != edge.kind) || crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.source) != Some(node_id.as_str()) {
+            if edge_pattern.kind.as_ref().is_some_and(|kind| *kind != edge.kind) || endpoint_node(&edge.source) != node_id {
                 return Ok(None);
             }
-            let Some(target) = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.target) else { return Ok(None) };
-            if !graph.nodes.get(target).is_some_and(|node| node.kind == edge_pattern.right.kind) || binding_conflicts(base, &edge_pattern.right.var, target) {
+            if let Some(var) = &edge_pattern.var {
+                if var == &left.var || var == &edge_pattern.right.var || base.nodes.contains_key(var) || base.edges.get(var).is_some_and(|bound| bound != edge_id) {
+                    return Ok(None);
+                }
+            }
+            let target = endpoint_node(&edge.target);
+            let right = &edge_pattern.right;
+            if !graph.nodes.get(target).is_some_and(|node| node.kind == right.kind)
+                || (right.var == left.var && target != node_id)
+                || base.edges.contains_key(&right.var)
+                || base.nodes.get(&right.var).is_some_and(|bound| bound != target)
+            {
                 return Ok(None);
             }
             if self.next.len() >= QUERY_ENTITY_MAXIMUM {
@@ -176,7 +186,7 @@ impl ReturnExecution {
                     }
                 } else {
                     if let ReturnItem::Var(var) = &items[self.item] {
-                        self.graph_result |= binding_has_entity(&bindings[self.binding], var);
+                        self.graph_result |= binding_has_entity(graph, &bindings[self.binding], var);
                     }
                     self.advance_pair(items);
                 }
@@ -189,8 +199,10 @@ impl ReturnExecution {
                         if let Some(id) = bindings[self.binding].nodes.get(var) {
                             self.node_ids.insert(id.clone());
                         }
-                        if let Some(id) = bindings[self.binding].edges.get(var) {
+                        if let Some((id, edge)) = bindings[self.binding].edges.get(var).and_then(|id| graph.edges.get_key_value(id)) {
                             self.edge_ids.insert(id.clone());
+                            self.node_ids.insert(endpoint_node(&edge.source).to_owned());
+                            self.node_ids.insert(endpoint_node(&edge.target).to_owned());
                         }
                     }
                     self.advance_pair(items);

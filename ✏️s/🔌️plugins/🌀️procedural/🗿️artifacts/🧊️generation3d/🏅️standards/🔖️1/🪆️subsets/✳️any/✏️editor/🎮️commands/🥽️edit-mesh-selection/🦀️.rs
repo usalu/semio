@@ -121,24 +121,25 @@ pub(crate) fn mesh_operation_rows(host_snapshot: &FlowHostSnapshot, operation: &
 fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granularity: &str, target: &semio_s_artifact_procedural_3d_editor_selection::ComponentTarget<'_>) -> Result<(String, String), String> {
     if target.granularity != granularity || !matches!(operation, "filletEdges" | "chamferEdges" | "shell" | "draft" | "defeature") { return Err("The B-Rep operation requires matching edge or face selection".into()); }
     let infos = semio_os_flow::flow_neuron_kind_info_map();
+    let channel = target.channel();
     let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()), _ => None }).ok_or("The selected geometry no longer exists")?;
-    let source = infos.get().get(&source_kind).and_then(|info| info.outputs.iter().find(|port| port.name == target.channel)).ok_or("The selected geometry output is unavailable")?;
+    let source = infos.get().get(&source_kind).and_then(|info| info.outputs.iter().find(|port| port.name == channel.as_ref())).ok_or("The selected geometry output is unavailable")?;
     let collection = source.cardinality.is_collection() || source.value_types.iter().any(|kind| kind == "list") && !source.value_types.iter().any(|kind| kind == "geometry");
     if !source.value_types.iter().any(|kind| matches!(kind.as_str(), "geometry" | "list")) || !collection && target.index != 0 { return Err("Select components of one current B-Rep geometry output".into()); }
     let feature_kind = format!("brep.solid.{operation}");
     let output = infos.get().get(&feature_kind).and_then(|info| info.outputs.first()).ok_or("The B-Rep operation is unavailable")?;
     let source_output = infos.get().get("brep.brep").and_then(|info| info.outputs.iter().find(|port| port.value_types == ["geometry"])).ok_or("The topology source output is unavailable")?;
-    let consumers: Vec<_> = editor.snapshot().synapses.iter().filter(|wire| wire.from == target.widget && wire.from_port == target.channel).map(|wire| (wire.to.clone(), wire.to_port.clone())).collect();
+    let consumers: Vec<_> = editor.snapshot().synapses.iter().filter(|wire| wire.from == target.widget && wire.from_port == channel.as_ref()).map(|wire| (wire.to.clone(), wire.to_port.clone())).collect();
     let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     let selector = add_edit_widget(editor, &format!("{}__selected", target.widget), "brep.brep", x + 220.0, y)?;
     let feature = add_edit_widget(editor, &format!("{}__{operation}", target.widget), &feature_kind, x + 440.0, y)?;
-    editor.connect_ports(target.widget, target.channel, &selector, "brep")?;
+    editor.connect_ports(target.widget, channel.as_ref(), &selector, "brep")?;
     editor.connect_ports(&selector, &source_output.name, &feature, "geometry")?;
     let (selection, input) = if granularity == "edge" { ("selectedEdges", "edges") } else { ("selectedFaces", if operation=="shell"{"openFaces"}else{"faces"}) };
     editor.connect_ports(&selector, selection, &feature, input)?;
     let replacement = if collection {
         let id = add_edit_widget(editor, &format!("{}__replace", target.widget), "list.set", x + 660.0, y)?;
-        editor.connect_ports(target.widget, target.channel, &id, "list")?;
+        editor.connect_ports(target.widget, channel.as_ref(), &id, "list")?;
         editor.connect_ports(&selector, "sourceIndex", &id, "index")?;
         editor.connect_ports(&feature, &output.name, &id, "value")?;
         let channel = infos.get().get("list.set").and_then(|info| info.outputs.first()).ok_or("The collection replacement operation is unavailable")?.name.clone();
@@ -161,12 +162,13 @@ fn add_edit_widget(editor: &mut GraphEditor<'_>, base: &str, kind: &str, x: f64,
 /// 🧩️ Splices one typed mesh operation, with its default params, into the selected output and reconnects its consumers.
 fn insert_mesh_operation(editor: &mut GraphEditor<'_>, operation: &str, granularity: &str, ids: &[String]) -> Result<String, String> {
     let (target, _) = component_group(ids)?;
+    let channel = target.channel();
     if target.granularity != granularity { return Err("The operation requires matching face, edge, or vertex selection".into()); }
     if target.index != 0 { return Err("Extract one mesh from the list before editing its components".into()); }
     let infos = semio_os_flow::flow_neuron_kind_info_map();
     let kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()), _ => None }).ok_or("The selected mesh no longer exists")?;
     let source = infos.get().get(&kind).ok_or("The selected mesh operator is unavailable")?;
-    if !source.outputs.iter().any(|port| port.name == target.channel && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) { return Err("Select a single indexed mesh output; convert B-Rep geometry to a mesh first".into()); }
+    if !source.outputs.iter().any(|port| port.name == channel.as_ref() && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) { return Err("Select a single indexed mesh output; convert B-Rep geometry to a mesh first".into()); }
     let next_kind = format!("brep.mesh.{operation}");
     let output = infos.get().get(&next_kind).and_then(|info| info.outputs.first()).ok_or("The mesh operation is unavailable")?;
     let base = format!("{}__{}", target.widget, operation);
@@ -175,7 +177,7 @@ fn insert_mesh_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
     while editor.snapshot().widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
     let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     editor.add_widget_json(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y)?;
-    editor.insert_between(target.widget, target.channel, &id, "mesh", &output.name)?;
+    editor.insert_between(target.widget, channel.as_ref(), &id, "mesh", &output.name)?;
     editor.set_preview(&id, true);
     editor.set_preview(target.widget, false);
     Ok(id)
@@ -201,7 +203,7 @@ pub(crate) fn mesh_edit_emit(verb: &str, doc: &ArtifactView<'_, Generation3dSnap
 
 pub fn apply_selected(verb: &str, payload: &EditMeshSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, ids: &[String]) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let (id, rows) = edit_rows(payload, &doc.snapshot.host_snapshot, ids).map_err(Fault::from)?;
-    Ok(Emit { interaction_writes: vec![InteractionWrite::replace(DOMAIN, payload.granularity(), std::iter::empty::<String>()), InteractionWrite::replace("graph", "node", [id])], ..mesh_edit_emit(verb, doc, rows) })
+    Ok(Emit { interaction_writes: vec![InteractionWrite::replace(DOMAIN, payload.granularity(), std::iter::empty::<String>()), InteractionWrite::replace("graph", "node", [semio_s_artifact_procedural_3d_model::GraphTargetKind::Node.target(&id)])], ..mesh_edit_emit(verb, doc, rows) })
 }
 
 pub fn handle(payload: &EditMeshSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

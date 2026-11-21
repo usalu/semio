@@ -8,7 +8,7 @@ export function createChunkInternerV1():ChunkInternerV1;
 /** ✂️ Cuts one owner's distinct row numbers into runs and interns them. */
 export function addOwnerRunsV1(interner:ChunkInternerV1,numbers:Uint32Array,count:number,owner:number):void;
 /** 🗃️ The classes of an index over `rowCount` rows from interned runs. */
-export function classesOfChunksV1(rowCount:number,interner:ChunkInternerV1,options?:{typed?:boolean}):{r:number[];o:number[]|Uint32Array}[];
+export function classesOfChunksV1(rowCount:number,runs:{readonly chunks:readonly Uint32Array[];readonly holders:readonly (readonly number[]|Uint32Array)[]},options?:{ownerCount?:number}):{r:number[];o:number[]|Uint32Array}[];
 /** 📥️ Pushes the classes of a bulk upsert onto `classes`. */
 export function bulkUpsertClassesV1(input:{upserts:ReadonlyMap<string,readonly unknown[]>;ownerIds:ReadonlyMap<string,number>;idOfRow:(row:never)=>number;rowCount:number;classes:{r:number[];o:number[]}[]}):void;
 

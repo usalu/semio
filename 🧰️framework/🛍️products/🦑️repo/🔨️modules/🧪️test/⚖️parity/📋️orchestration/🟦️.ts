@@ -1,5 +1,5 @@
 import { resolveTestLevel, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { selectCases, selectImplementations } from "../../🔍️discovery/🎛️selection/🟦️.ts";
+import { caseSelectionProblem, selectCases, selectImplementations } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { ownerShipsImplementation } from "../../🖥️host/🏗️materialization/🟦️.ts";
 import { executeOne } from "../../🏃️execution/🎬️scenario/🟦️.ts";
 import { readImplementationCoverage, reportsDir } from "../../📊️reporting/📋️orchestration/🟦️.ts";
@@ -57,6 +57,8 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
   const cases = selectCases(repoRoot, rest);
   const allResults: TestResult[] = [];
   const problems: string[] = [];
+  const selectionProblem = caseSelectionProblem(rest, cases.length);
+  if (selectionProblem !== undefined) problems.push(selectionProblem);
   const parity: { testId: string; profile: ComparisonProfile; equal: boolean; diffs: number }[] = [];
   const oracleUnavailable: { caseDir: string; oracle: string; missing: readonly string[] }[] = [];
   const profiles = profileTable(loadOracleRegistry(repoRoot));

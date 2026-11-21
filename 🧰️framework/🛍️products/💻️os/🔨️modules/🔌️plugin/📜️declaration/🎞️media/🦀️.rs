@@ -1,4 +1,6 @@
 //! 🎞️ The media export contract an app producer writes into: output chunks, results, completions, credits and handles.
+#[path = "📥️original-media/🦀️.rs"]
+pub mod original_media;
 #[path="⚠️turn/🦀️.rs"]
 pub mod media_operation_refusal;
 #[path="🛫️intrinsic/🦀️.rs"]
@@ -15,7 +17,9 @@ use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_plugin_ownership::bounded_ownership::ArtifactFixedQueue;
+#[path="🗃️slots/🦀️.rs"]
+mod output_slots;
+use output_slots::ArtifactOutputPages;
 use semio_plugin_decl_views::history_view::HistoryView;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseLease;
@@ -59,7 +63,7 @@ const ARTIFACT_SEGMENTED_HANDLE_ENCODING: &str = "semio-segmented-handle-v1";
 #[derive(Debug)]
 #[doc(hidden)]
 pub struct ArtifactOutputChunksState {
-    chunks: ArtifactFixedQueue<Vec<u8>>,
+    chunks: ArtifactOutputPages,
 }
 
 #[doc(hidden)]
@@ -81,10 +85,10 @@ pub struct ArtifactOutputChunks {
 }
 
 impl semio_framework_value::retirement::RetireOwned for ArtifactOutputChunksState{
-    type RetirementCursor=<std::collections::VecDeque<Vec<u8>> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
-    fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.chunks.items)}
-    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.chunks.items)}
-    fn controlled_retirement_supported()->bool{<std::collections::VecDeque<Vec<u8>> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
+    type RetirementCursor=<Vec<Vec<Option<Vec<u8>>>> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.chunks.into_pages())}
+    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(self.chunks.pages())}
+    fn controlled_retirement_supported()->bool{<Vec<Vec<Option<Vec<u8>>>> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 gated_arc_owner!(ArtifactOutputChunks,inner,ArtifactOutputChunksInner,state,ArtifactOutputChunksState);
 
@@ -124,10 +128,22 @@ impl ArtifactOutputChunks {
     }
 
     pub fn new(maximum: usize) -> Self {
-        let slots = maximum / ARTIFACT_OUTPUT_CHUNK_BYTES + usize::from(!maximum.is_multiple_of(ARTIFACT_OUTPUT_CHUNK_BYTES));
+        let slots = maximum.div_ceil(Self::CHUNK_BYTES);
+        let chunks = if maximum == 0 || maximum > Self::MAXIMUM_TOTAL_BYTES {
+            ArtifactOutputPages::unavailable(slots)
+        } else {
+            ArtifactOutputPages::try_new(slots).and_then(|mut chunks| {
+                chunks.reserve_tail()?;
+                Ok(chunks)
+            }).unwrap_or_else(|_| ArtifactOutputPages::unavailable(slots))
+        };
+        Self::with_chunk_queue(maximum, slots, chunks)
+    }
+
+    fn with_chunk_queue(maximum: usize, slots: usize, chunks: ArtifactOutputPages) -> Self {
         Self {
             inner: std::sync::Arc::new(ArtifactOutputChunksInner {
-                state: semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ArtifactOutputChunksState { chunks: ArtifactFixedQueue::new(slots) }),
+                state: semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ArtifactOutputChunksState { chunks }),
                 bytes: std::sync::atomic::AtomicUsize::new(0),
                 bytes_remaining: std::sync::atomic::AtomicUsize::new(0),
                 remaining: std::sync::atomic::AtomicUsize::new(0),
@@ -145,9 +161,10 @@ impl ArtifactOutputChunks {
         let mut state = self.inner.state.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-output-busy"), "segmented output slot authority is busy or poisoned"))?;
         let bytes = self.inner.bytes.load(std::sync::atomic::Ordering::Acquire);
         let next = bytes.checked_add(chunk.len()).filter(|next| *next <= self.inner.maximum);
-        if self.inner.sealed.load(std::sync::atomic::Ordering::Acquire) || state.chunks.len() >= self.inner.slots || next.is_none() {
+        if self.inner.sealed.load(std::sync::atomic::Ordering::Acquire) || !state.chunks.can_push() || next.is_none() {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-output-limit"), "segmented output is sealed, empty, oversized, has no pre-admitted slot, or exceeds its exact byte cap"));
         }
+        state.chunks.reserve_tail().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-output-capacity"), "segmented output page allocation refused"))?;
         state.chunks.push(chunk).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-output-capacity"), "segmented output fixed slot allocation was not admitted"))?;
         self.inner.remaining.store(state.chunks.len(), std::sync::atomic::Ordering::Release);
         let next = next.expect("validated segmented byte total");

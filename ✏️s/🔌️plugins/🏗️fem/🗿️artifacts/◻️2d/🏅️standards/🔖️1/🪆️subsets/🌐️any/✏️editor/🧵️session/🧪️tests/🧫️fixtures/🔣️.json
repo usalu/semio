@@ -1,4 +1,6 @@
 {
+  "shellCredit": {"slots": 4, "wasmShellBytes": 1507885056, "admitted32": [true, true, false, false], "admitted64": [true, true, true, true]},
+  "demoStatic": {"kind": "loadCase", "id": "live", "supportNode": "p8", "reactionTy": 12000.0, "absoluteTolerance": 0.1},
   "cantilever": {
     "length": 2.0,
     "young": 210000000000.0,
@@ -80,6 +82,13 @@
     ]
   },
   "oracle": "NumPy direct equilibrium; plane-stress CST matrices; cantilever closed form",
+  "idleMaintenance": {
+    "opportunities": 257,
+    "livePending": false,
+    "liveTerminal": false,
+    "liveOutcome": "complete",
+    "closedOutcome": "complete"
+  },
   "generatedIdentityCollision": {
     "regionId": "area",
     "authoredElementId": "area_t0",

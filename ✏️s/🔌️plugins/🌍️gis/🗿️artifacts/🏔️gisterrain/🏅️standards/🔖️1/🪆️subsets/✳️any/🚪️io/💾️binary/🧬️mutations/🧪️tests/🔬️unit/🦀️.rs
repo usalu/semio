@@ -3,6 +3,21 @@ use crate::schema::mutations::change_exaggeration::ChangeExaggeration;
 use crate::schema::mutations::change_imported_features::ChangeImportedFeatures;
 use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 
+#[test]
+fn authored_elevation_operation_and_snapshot_round_trip() {
+    let authored = crate::schema::snapshot::ElevationSource {
+        bounds: [7.1, 46.0, 7.2, 46.1],
+        rows: vec![vec![1250; 33]; 33],
+    };
+    let operation = |new_elevation_source| GisTerrainMutation::ReplaceElevationSource(
+        crate::mutations::ReplaceElevationSource { new_elevation_source }
+    );
+    store::os_store::test_support::assert_op_text_binary_equivalence(&operation(Some(authored.clone())));
+    store::os_store::test_support::assert_op_text_binary_equivalence(&operation(None));
+    let snapshot = GisTerrainSnapshot { elevation_source: Some(authored), ..Default::default() };
+    store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
     let operation = GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 2.0 });

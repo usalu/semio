@@ -1,7 +1,7 @@
 """📏 Root data of the round 3 excavator that the drawings and the model do not carry themselves: the overall dimensions of the transport pose, the outer surface areas of the thermal regions measured on the 1:50 model (each within a factor 1.5 of the former value, design C16 and C29) and the drawing decisions of every scale."""
 
 T = lambda en, de: {"en": en, "de": de}
-DIMENSIONS = {"heightM": 3.44, "widthM": 9.64, "depthM": 2.98}
+DIMENSIONS = {"heightM": 3.25, "widthM": 9.63, "depthM": 2.98}
 AREAS = {"house": 45.3, "counterweight": 9.25, "cab-glazing": 5.47, "tracks": 57.4}
 DECISIONS = {
     "50": {

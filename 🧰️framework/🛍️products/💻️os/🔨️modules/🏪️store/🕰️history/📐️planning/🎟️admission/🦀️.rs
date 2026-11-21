@@ -30,7 +30,7 @@ impl<P,Mu> PreparedHistoryReadRetirement<P,Mu> where P:Send+Sync+'static,Mu:semi
     /// ⏪️ Installs the same original replay without allocating or closing any owner.
     pub fn install_replay(&mut self,original:&mut Option<crate::ArtifactDerivedReplay<P,Mu>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
         if grant.maximum_items>0&&grant.maximum_depth>0&&original.as_ref().is_some_and(|owner|self.registry.is_some_and(|registry|registry!=owner.registry.identity())){return Err(refusal("foreign original replay cannot enter prepared Store retirement"))}
-        self.install(original,grant,|owner,original|*owner.replay=Some(original))
+        self.install(original,grant,|owner,original|owner.replay.install_original(original))
     }
     /// 📋️ Installs the same original completed review without allocating or closing any owner.
     pub fn install_derived_snapshot(&mut self,original:&mut Option<crate::ArtifactDerivedSnapshot<P>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
@@ -69,7 +69,7 @@ where P:Send+Sync+'static,Mu:semio_os_spr::Mutation<P>+Send+'static {
     let layout=std::alloc::Layout::new::<ArtifactHistoryReadRetirement<P,Mu>>();
     if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<layout.size(){return Ok(None)}
     let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<ArtifactHistoryReadRetirement<P,Mu>>())else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"prepared history frame allocation failed"))};
-    let owner=ArtifactHistoryReadRetirement{derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None),preview:ManuallyDrop::new(None),replay:ManuallyDrop::new(None),finished:ManuallyDrop::new(None),loaded_replay:ManuallyDrop::new(None),active:ManuallyDrop::new(None),plan_retirement:ManuallyDrop::new(None),draft_retirement:ManuallyDrop::new(None),registry_retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(snapshots))),mutations:ManuallyDrop::new(Some(Arc::clone(mutations))),factory_retirement:std::array::from_fn(|_|None)};
+    let owner=ArtifactHistoryReadRetirement{derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None),preview:ManuallyDrop::new(None),replay:Default::default(),finished:ManuallyDrop::new(None),loaded_replay:ManuallyDrop::new(None),active:ManuallyDrop::new(None),plan_retirement:ManuallyDrop::new(None),draft_retirement:ManuallyDrop::new(None),registry_retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(snapshots))),mutations:ManuallyDrop::new(Some(Arc::clone(mutations))),factory_retirement:std::array::from_fn(|_|None)};
     let owner=unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())};
     Ok(Some((PreparedHistoryReadRetirement{owner:ManuallyDrop::new(Some(owner)),closing:false,registry:None},RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()})))
 }
@@ -80,7 +80,7 @@ pub fn admit_history_read_retirement<P,Mu,T>(original:&mut Option<T>,snapshots:&
 where P:Send+Sync+'static,Mu:semio_os_spr::Mutation<P>+Send+'static {
     if original.is_none(){return Ok(None);}
     admit_artifact_retirement((),grant,|()|{
-        let mut owner=ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None),preview:ManuallyDrop::new(None),replay:ManuallyDrop::new(None),finished:ManuallyDrop::new(None),loaded_replay:ManuallyDrop::new(None),active:ManuallyDrop::new(None),plan_retirement:ManuallyDrop::new(None),draft_retirement:ManuallyDrop::new(None),registry_retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(snapshots))),mutations:ManuallyDrop::new(Some(Arc::clone(mutations))),factory_retirement:std::array::from_fn(|_|None)};
+        let mut owner=ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None),preview:ManuallyDrop::new(None),replay:Default::default(),finished:ManuallyDrop::new(None),loaded_replay:ManuallyDrop::new(None),active:ManuallyDrop::new(None),plan_retirement:ManuallyDrop::new(None),draft_retirement:ManuallyDrop::new(None),registry_retirement:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(snapshots))),mutations:ManuallyDrop::new(Some(Arc::clone(mutations))),factory_retirement:std::array::from_fn(|_|None)};
         install(&mut owner,original.take().expect("observed original history cursor"));owner
     }).map(Some).map_err(|(error,())|error)
 }

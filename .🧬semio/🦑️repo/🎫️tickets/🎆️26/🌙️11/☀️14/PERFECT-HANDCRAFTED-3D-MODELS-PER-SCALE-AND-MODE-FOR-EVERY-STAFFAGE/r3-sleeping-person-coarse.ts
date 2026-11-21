@@ -83,10 +83,11 @@ export function body500(k: Kit): void {
   for (const side of ["l", "r"] as const) k.loft(`ankle-${side}`, `shank-${side}`, "skin", T.skin, [[0.3, 0, 0, 0.0385, 0.0385], [0.45, -0.008, 0, 0.0385, 0.0385]], "feet-skin");
   for (const side of ["l", "r"] as const) blob(k, `foot-${side}`, `foot-${side}`, "skin", T.skin, [0.06, -0.012, 0], [0.13, 0.045, 0.0425], "feet-skin");
   k.wloft("pillow", "pillow", "duvet-cover", T.pillow, [[0.27, Y0 + 0.04, -0.4, 0.17, 0.04, 2.5], [0.27, Y0 + 0.06, -0.3, 0.2, 0.06, 2.5], [0.27, Y0 + 0.06, 0.3, 0.2, 0.06, 2.5], [0.27, Y0 + 0.04, 0.4, 0.17, 0.04, 2.5]], "pillow", { along: [0, 0, 1], xHint: [1, 0, 0] });
-  k.mound("duvet-trunk", "torso", "duvet-cover", T.duvet, [[0.594, 0], [0.605, 0.195], [0.66, 0.243], [0.72, 0.25], [0.95, 0.218], [1.15, 0.21], [1.17, 0]], Y0, MOUND_Z, 0.98, "top");
-  k.mound("duvet-legs", "thigh-r", "duvet-cover", T.duvet, [[1.12, 0], [1.13, 0.245], [1.215, 0.29], [1.3, 0.283], [1.6, 0.239], [1.76, 0.22], [1.8, 0]], Y0, 0, 0.8, "bottom");
+  k.mound("duvet-trunk", "torso", "duvet-cover", T.duvet, [[0.594, 0], [0.605, 0.2], [0.66, 0.255], [0.72, 0.262], [0.84, 0.248], [0.95, 0.224], [1.15, 0.21], [1.17, 0]], Y0, MOUND_Z, 1, "top");
+  k.mound("duvet-legs", "thigh-r", "duvet-cover", T.duvet, [[1.12, 0], [1.13, 0.245], [1.215, 0.29], [1.3, 0.283], [1.46, 0.2525], [1.50, 0.2225], [1.52, 0]], Y0, 0, 0.8, "bottom");
+  k.mound("duvet-calves", "shank-r", "duvet-cover", T.duvet, [[1.434, 0], [1.456, 0.20375], [1.495, 0.2525], [1.61, 0.23875], [1.747, 0.2225], [1.782, 0.1875], [1.8, 0]], Y0, 0, 0.8, "bottom");
   const t = 0.075;
-  const pts: [number, number][] = [[t, -0.45 - t], [t, 0.45 + t], [-0.09, 0.45 + t], [-0.09, 0.45], [0, 0.45], [0, -0.45], [-0.09, -0.45], [-0.09, -0.45 - t]];
+  const pts: [number, number][] = [[t, -0.45 - t], [t, 0.45 + t], [-0.115, 0.45 + t], [-0.115, 0.45], [0, 0.45], [0, -0.45], [-0.115, -0.45], [-0.115, -0.45 - t]];
   k.ext("duvet-slab", "duvet", "duvet-cover", T.duvet, "yz", pts, 0, x1 - x0, "duvet-edge");
   void W;
 }

@@ -291,8 +291,8 @@ pub fn fem3d_load_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
     Ok(instances)
 }
 
-/// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry (flat per-face normals, one
-/// duplicated vertex triple per triangle) plus its one identity-transform instance keyed by the
+/// 🧱️ Every `FemSolid`'s boundary surface as a custom `meshes_json` entry with indexed vertices and
+/// flat face normals, plus its identity-transform instance keyed by the
 /// solid's own id — `nodal_stress`, when present, colors each vertex by
 /// `semio_s_fem_app_surface::von_mises_color` (min/max taken across ALL solids' averaged values), driving
 /// the react renderer's vertex-color contour (see `PaintTexturedMesh`). `displacements` deforms vertex
@@ -309,11 +309,13 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
         _ => (0.0, 1.0),
     };
 
-    for solid in &solid_meshes {
-        let mut positions: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
-        let mut normals: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
-        let mut colors: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
+    for mut solid in solid_meshes {
+        solid.boundary_tris.sort_unstable();
+        let mut positions: Vec<f64> = Vec::new();
+        let mut normals = Vec::with_capacity(solid.boundary_tris.len());
+        let mut colors: Vec<f64> = Vec::new();
         let mut indices: Vec<u32> = Vec::with_capacity(solid.boundary_tris.len() * 3);
+        let mut boundary_index = vec![None; solid.points.len()];
 
         let vertex_pos = |idx: u32| -> [f64; 3] { fem3d_deformed_position(solid.points[idx as usize], &solid.node_ids[idx as usize], displacements, deform_scale) };
         let vertex_color = |idx: u32| -> (f64, f64, f64) {
@@ -322,25 +324,33 @@ pub fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&Hash
             hex_to_rgb01(von_mises_color(value, min, max))
         };
 
-        for &[a, b, c] in &solid.boundary_tris {
-            let (pa, pb, pc) = (vertex_pos(a), vertex_pos(b), vertex_pos(c));
+        for face in &solid.boundary_tris {
+            let [pa, pb, pc] = face.map(|point| {
+                let index = *boundary_index[point as usize].get_or_insert_with(|| {
+                    let index = (positions.len() / 3) as u32;
+                    positions.extend_from_slice(&vertex_pos(point));
+                    let (r, g, b) = vertex_color(point);
+                    colors.extend_from_slice(&[r, g, b, 1.0]);
+                    index
+                });
+                indices.push(index);
+                let offset = index as usize * 3;
+                [positions[offset], positions[offset + 1], positions[offset + 2]]
+            });
             let e0 = [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]];
             let e1 = [pc[0] - pa[0], pc[1] - pa[1], pc[2] - pa[2]];
             let raw = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
-            let raw_len = (raw[0] * raw[0] + raw[1] * raw[1] + raw[2] * raw[2]).sqrt().max(1e-12);
-            let n = [raw[0] / raw_len, raw[1] / raw_len, raw[2] / raw_len];
-            let base = (positions.len() / 3) as u32;
-            for (idx, p) in [(a, pa), (b, pb), (c, pc)] {
-                positions.extend_from_slice(&p);
-                normals.extend_from_slice(&n);
-                let (r, g, bl) = vertex_color(idx);
-                colors.extend_from_slice(&[r, g, bl]);
-            }
-            indices.extend_from_slice(&[base, base + 1, base + 2]);
+            let length = (raw[0] * raw[0] + raw[1] * raw[1] + raw[2] * raw[2]).sqrt();
+            normals.push(if length > 0.0 { raw.map(|value| value / length) } else { [0.0, 0.0, 1.0] });
         }
 
         let mesh_id = format!("solid-{}", solid.solid_id);
-        meshes.push(semio_framework_pack_json::json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
+        meshes.push(semio_framework_pack_json::json!({ "id": mesh_id, "data": {
+            "positions": positions,
+            "indices": indices,
+            "colors": colors,
+            "attributes": { "normal": { "domain": "face", "semantic": "normal", "interpolation": "constant", "values": normals } }
+        } }));
         instances.push(instance(&solid.solid_id, FEM3D_GRANULARITY_SOLID, &mesh_id, [0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0], &solid.solid_id)?);
     }
     Ok((meshes, instances))

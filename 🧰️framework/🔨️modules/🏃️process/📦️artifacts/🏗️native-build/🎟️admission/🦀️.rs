@@ -3,7 +3,7 @@
 //! Every rustc invocation that compiles a crate asks the driver's broker for memory admission with its
 //! unit identity, keeps the jobserver token Cargo gave its job while it waits (handing it back would let Cargo's
 //! helper thread spend it on another unit while this one can never reacquire it), runs rustc, streams the
-//! child's resident memory every second and reports the measured peak, CPU time and rmeta time. Any
+//! child's resident memory and pressure charge every second and reports peak RSS, CPU time and rmeta time. Any
 //! other invocation (version and print probes) and any build without a broker runs rustc unchanged.
 //! The wire protocol is the `🎟️admission/🧬️schema/🔣️.json` `$defs` `AdmitRequestV1`, `VerdictV1`,
 //! `RssReportV1` and `DoneReportV1`.
@@ -169,14 +169,15 @@ mod unix {
         pub rest: [i64; 13],
     }
 
-    /// 🍎️ `struct rusage_info_v2` (`<libproc.h>`), read for live resident bytes on macOS.
+    /// 🍎️ `struct rusage_info_v2` (`<libproc.h>`), read for live resident and charged bytes on macOS.
     #[cfg(target_os = "macos")]
     #[repr(C)]
     pub struct RusageInfoV2 {
         pub uuid: [u8; 16],
         pub head: [u64; 6],
         pub resident_size: u64,
-        pub tail: [u64; 11],
+        pub phys_footprint: u64,
+        pub tail: [u64; 10],
     }
 
     unsafe extern "C" {
@@ -216,7 +217,19 @@ mod windows {
     }
 }
 
-/// 🧮️ A copyable handle that reads a running child's live resident bytes from another thread.
+struct ProcessMemorySample {
+    resident_bytes: u64,
+    charged_bytes: u64,
+}
+
+impl ProcessMemorySample {
+    #[cfg(not(target_os = "macos"))]
+    fn resident(bytes: u64) -> Self {
+        Self { resident_bytes: bytes, charged_bytes: bytes }
+    }
+}
+
+/// 🧮️ A copyable handle that reads a running child's live memory from another thread.
 #[derive(Clone, Copy)]
 struct ProcessProbe {
     #[cfg(unix)]
@@ -239,23 +252,26 @@ impl ProcessProbe {
         }
     }
 
-    /// 💻️ The live resident bytes, `None` when the platform refuses the query.
-    fn resident_bytes(&self) -> Option<u64> {
+    /// 💻️ The live resident and pressure-accounted bytes, `None` when the platform refuses the query.
+    fn memory(&self) -> Option<ProcessMemorySample> {
         #[cfg(target_os = "macos")]
         {
             let mut info = std::mem::MaybeUninit::<unix::RusageInfoV2>::zeroed();
-            (unsafe { unix::proc_pid_rusage(self.pid as i32, 2, info.as_mut_ptr()) } == 0).then(|| unsafe { info.assume_init() }.resident_size)
+            (unsafe { unix::proc_pid_rusage(self.pid as i32, 2, info.as_mut_ptr()) } == 0).then(|| {
+                let info = unsafe { info.assume_init() };
+                ProcessMemorySample { resident_bytes: info.resident_size, charged_bytes: info.phys_footprint }
+            })
         }
         #[cfg(all(unix, not(target_os = "macos")))]
         {
             let statm = std::fs::read_to_string(format!("/proc/{}/statm", self.pid)).ok()?;
             let pages: u64 = statm.split_whitespace().nth(1)?.parse().ok()?;
-            Some(pages * unsafe { unix::sysconf(30) }.max(1) as u64)
+            Some(ProcessMemorySample::resident(pages * unsafe { unix::sysconf(30) }.max(1) as u64))
         }
         #[cfg(windows)]
         {
             let mut counters = windows::MemoryCounters { cb: std::mem::size_of::<windows::MemoryCounters>() as u32, ..Default::default() };
-            (unsafe { windows::K32GetProcessMemoryInfo(self.handle, &mut counters, counters.cb) } != 0).then_some(counters.working_set_size as u64)
+            (unsafe { windows::K32GetProcessMemoryInfo(self.handle, &mut counters, counters.cb) } != 0).then_some(ProcessMemorySample::resident(counters.working_set_size as u64))
         }
     }
 }
@@ -524,7 +540,9 @@ fn scheduled(rustc: &OsString, args: &[OsString], unit: &Unit, endpoint: &str, p
         let (broker, finished, probe) = (Arc::clone(&broker), Arc::clone(&finished), ProcessProbe::of(&child));
         std::thread::spawn(move || {
             while !finished.load(Ordering::Acquire) {
-                if let Some(bytes) = probe.resident_bytes() { let _ = broker.send(&format!("{{\"v\":1,\"op\":\"rss\",\"bytes\":{bytes}}}\n")); }
+                if let Some(sample) = probe.memory() {
+                    let _ = broker.send(&format!("{{\"v\":1,\"op\":\"rss\",\"bytes\":{},\"chargedBytes\":{}}}\n", sample.resident_bytes, sample.charged_bytes));
+                }
                 for _ in 0..10 {
                     if finished.load(Ordering::Acquire) { break; }
                     std::thread::sleep(Duration::from_millis(100));

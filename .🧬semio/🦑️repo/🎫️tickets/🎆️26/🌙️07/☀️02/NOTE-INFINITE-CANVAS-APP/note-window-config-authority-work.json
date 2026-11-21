@@ -1,0 +1,64 @@
+{
+  "phase": 5,
+  "selectedCloseCopyBytes": 53,
+  "previousQuote": 3,
+  "observedRequiredWork": 4,
+  "cases": [
+    {
+      "sourceEmpty": false,
+      "required": 4,
+      "available": 3,
+      "quote": 4,
+      "advanced": false,
+      "copyAvailable": 53
+    },
+    {
+      "sourceEmpty": false,
+      "required": 4,
+      "available": 4,
+      "quote": 4,
+      "advanced": true,
+      "copyAvailable": 53
+    },
+    {
+      "sourceEmpty": false,
+      "required": 4,
+      "available": 4,
+      "quote": 4,
+      "advanced": false,
+      "copyAvailable": 52
+    },
+    {
+      "sourceEmpty": false,
+      "required": 9,
+      "available": 8,
+      "quote": 9,
+      "advanced": false,
+      "copyAvailable": 53
+    },
+    {
+      "sourceEmpty": false,
+      "required": 9,
+      "available": 9,
+      "quote": 9,
+      "advanced": true,
+      "copyAvailable": 53
+    },
+    {
+      "sourceEmpty": true,
+      "required": 0,
+      "available": 0,
+      "quote": 1,
+      "advanced": false,
+      "copyAvailable": 53
+    },
+    {
+      "sourceEmpty": true,
+      "required": 0,
+      "available": 1,
+      "quote": 1,
+      "advanced": true,
+      "copyAvailable": 53
+    }
+  ]
+}

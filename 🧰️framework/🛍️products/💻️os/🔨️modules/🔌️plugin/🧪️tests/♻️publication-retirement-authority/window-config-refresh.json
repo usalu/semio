@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"id":"initial authority requires a replacement snapshot","generation":4,"accepted":5,"pending":false,"ready":false},
+    {"id":"snapshot capture alone leaves the original owned","generation":4,"accepted":5,"pending":true,"ready":false},
+    {"id":"completed transfer exposes the accepted generation","generation":5,"accepted":5,"pending":false,"ready":true},
+    {"id":"another pending snapshot keeps custody active","generation":5,"accepted":5,"pending":true,"ready":false},
+    {"id":"a newer committed authority covers the receipt","generation":6,"accepted":5,"pending":false,"ready":true}
+  ]
+}

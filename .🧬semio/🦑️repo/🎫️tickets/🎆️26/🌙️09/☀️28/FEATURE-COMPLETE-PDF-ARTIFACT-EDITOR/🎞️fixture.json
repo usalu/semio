@@ -1,0 +1,130 @@
+{
+  "schema": "semio.stdio.pdf-controlled-images.v1",
+  "minimumByteLength": 32768,
+  "pageSize": [
+    112,
+    112
+  ],
+  "imageSize": [
+    72,
+    72
+  ],
+  "imageOrigin": [
+    20,
+    20
+  ],
+  "images": [
+    {
+      "name": "Im0",
+      "object": 5,
+      "space": "DeviceRGB",
+      "filter": "FlateDecode",
+      "samples": [
+        [
+          220,
+          35,
+          62
+        ],
+        [
+          24,
+          178,
+          85
+        ],
+        [
+          34,
+          88,
+          208
+        ],
+        [
+          242,
+          207,
+          34
+        ]
+      ]
+    },
+    {
+      "name": "Im1",
+      "object": 8,
+      "space": "DeviceRGB",
+      "filter": null,
+      "samples": [
+        [
+          32,
+          135,
+          122
+        ],
+        [
+          239,
+          93,
+          23
+        ],
+        [
+          121,
+          59,
+          183
+        ],
+        [
+          184,
+          196,
+          99
+        ]
+      ]
+    },
+    {
+      "name": "Im2",
+      "object": 11,
+      "space": "DeviceGray",
+      "filter": null,
+      "samples": [
+        [
+          16
+        ],
+        [
+          74
+        ],
+        [
+          154
+        ],
+        [
+          228
+        ]
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "image": 0,
+      "resources": "inherited"
+    },
+    {
+      "image": 1,
+      "resources": "direct"
+    },
+    {
+      "image": 2,
+      "resources": "indirect"
+    },
+    {
+      "image": 0,
+      "resources": "inherited"
+    }
+  ],
+  "pixelLocations": [
+    [
+      38,
+      38
+    ],
+    [
+      74,
+      38
+    ],
+    [
+      38,
+      74
+    ],
+    [
+      74,
+      74
+    ]
+  ]
+}

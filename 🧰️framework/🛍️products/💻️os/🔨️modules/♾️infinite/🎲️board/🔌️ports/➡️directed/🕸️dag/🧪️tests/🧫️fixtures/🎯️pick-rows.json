@@ -1,0 +1,14 @@
+{
+  "schema": "dag.portRowPickLaws",
+  "reference": { "row": [0, 0, 100, 20], "anchor": [0, 10], "anchorHitRadius": 12, "rowFractionFromAnchor": 0.75 },
+  "cases": [
+    {"lod":"detail","widget":"combine","port":"b","side":"input","probe":"row","handle":"combine@b","rowAddition":true},
+    {"lod":"micro","widget":"scale","port":"out","side":"output","probe":"row","handle":"scale@out","rowAddition":true},
+    {"lod":"normal","widget":"combine","port":"b","side":"input","probe":"row","handle":null,"rowAddition":false},
+    {"lod":"compact","widget":"scale","port":"out","side":"output","probe":"row","handle":null,"rowAddition":false},
+    {"lod":"minimap","widget":"combine","port":"b","side":"input","probe":"row","handle":null,"rowAddition":false},
+    {"lod":"detail","widget":"combine","port":"b","side":"input","probe":"anchor","handle":"combine@b","rowAddition":false},
+    {"lod":"micro","widget":"scale","port":"out","side":"output","probe":"anchor","handle":"scale@out","rowAddition":false},
+    {"lod":"detail","widget":"combine","port":"b","side":"input","probe":"title","handle":null,"rowAddition":false}
+  ]
+}

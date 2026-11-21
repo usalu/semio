@@ -1,0 +1,119 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "case",
+      "matched"
+    ],
+    "properties": {
+      "case": {
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "matched": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "if": {
+      "properties": {
+        "case": {
+          "type": "string"
+        }
+      }
+    },
+    "then": {
+      "properties": {
+        "case": {
+          "type": "string",
+          "pattern": "^(?!--).+$"
+        },
+        "matched": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "a broad empty result",
+      "arguments": [
+        "--owner-root",
+        "unmatched"
+      ],
+      "selection": {
+        "case": null,
+        "matched": 0
+      },
+      "accepted": true
+    },
+    {
+      "name": "an exact named case",
+      "arguments": [
+        "--case",
+        "🔀️mutate-xlsx-ecma-376"
+      ],
+      "selection": {
+        "case": "🔀️mutate-xlsx-ecma-376",
+        "matched": 1
+      },
+      "accepted": true
+    },
+    {
+      "name": "a name that omits its prefix",
+      "arguments": [
+        "--case",
+        "mutate-xlsx-ecma-376"
+      ],
+      "selection": {
+        "case": "mutate-xlsx-ecma-376",
+        "matched": 0
+      },
+      "accepted": false,
+      "problem": "matched no authored test case"
+    },
+    {
+      "name": "an exact name outside the owner",
+      "arguments": [
+        "--owner-root",
+        "unmatched",
+        "--case",
+        "🔀️mutate-xlsx-ecma-376"
+      ],
+      "selection": {
+        "case": "🔀️mutate-xlsx-ecma-376",
+        "matched": 0
+      },
+      "accepted": false,
+      "problem": "matched no authored test case"
+    },
+    {
+      "name": "a missing name",
+      "arguments": [
+        "--case"
+      ],
+      "selection": {
+        "case": "",
+        "matched": 0
+      },
+      "accepted": false,
+      "problem": "requires an exact authored test case name"
+    },
+    {
+      "name": "a flag in place of a name",
+      "arguments": [
+        "--case",
+        "--metrics"
+      ],
+      "selection": {
+        "case": "--metrics",
+        "matched": 0
+      },
+      "accepted": false,
+      "problem": "requires an exact authored test case name"
+    }
+  ]
+}

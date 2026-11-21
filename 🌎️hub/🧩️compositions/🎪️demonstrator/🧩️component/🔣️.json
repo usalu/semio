@@ -4587,7 +4587,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -6710,6 +6744,61 @@
                 }
               },
               {
+                "id": "setLodMode",
+                "label": {
+                  "native": {
+                    "en": "Set Lod Mode",
+                    "de": "LOD-Modus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Lod Mode",
+                    "de": "LOD-Modus festlegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "layers",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": true,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the level of detail the 3D preview draws the generated result with; only the view changes.",
+                      "de": "Legt die Detailstufe fest, mit der die 3D-Vorschau das erzeugte Ergebnis zeichnet; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the level of detail the 3D preview draws the generated result with; only the view changes.",
+                      "de": "Legt die Detailstufe fest, mit der die 3D-Vorschau das erzeugte Ergebnis zeichnet; nur die Ansicht ändert sich."
+                    }
+                  }
+                }
+              },
+              {
                 "id": "toggleSun",
                 "label": {
                   "native": {
@@ -7380,7 +7469,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -9157,7 +9280,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -10762,7 +10919,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -12128,6 +12319,61 @@
                 }
               },
               {
+                "id": "setLodMode",
+                "label": {
+                  "native": {
+                    "en": "Set Lod Mode",
+                    "de": "LOD-Modus festlegen"
+                  },
+                  "reuse": {
+                    "en": "Set Lod Mode",
+                    "de": "LOD-Modus festlegen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "layers",
+                "args": [],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": true,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the level of detail the 3D preview draws the generated result with; only the view changes.",
+                      "de": "Legt die Detailstufe fest, mit der die 3D-Vorschau das erzeugte Ergebnis zeichnet; nur die Ansicht ändert sich."
+                    },
+                    "reuse": {
+                      "en": "Sets the level of detail the 3D preview draws the generated result with; only the view changes.",
+                      "de": "Legt die Detailstufe fest, mit der die 3D-Vorschau das erzeugte Ergebnis zeichnet; nur die Ansicht ändert sich."
+                    }
+                  }
+                }
+              },
+              {
                 "id": "toggleSun",
                 "label": {
                   "native": {
@@ -12798,7 +13044,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -19817,7 +20097,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -20708,7 +21022,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -21599,7 +21947,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -22490,7 +22872,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -28540,7 +28956,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -38243,7 +38693,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -39132,7 +39616,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -40021,7 +40539,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -40908,7 +41460,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -46142,7 +46728,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -47867,12 +48487,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Edits one inspector field of the stock or a workshop machine (a label, a stock position or a capability parameter) with a number or text value.",
-                  "de": "Bearbeitet ein Inspektorfeld des Rohteils oder einer Werkstattmaschine (Bezeichnung, Rohteilposition oder Fähigkeitsparameter) mit einem Zahlen- oder Textwert."
+                  "en": "Edits one inspector field of the stock, a process step or a workshop machine with a number or text value.",
+                  "de": "Bearbeitet ein Inspektorfeld des Rohteils, eines Prozessschritts oder einer Werkstattmaschine mit einem Zahlen- oder Textwert."
                 },
                 "reuse": {
-                  "en": "Edits one inspector field of the stock or a workshop machine (a label, a stock position or a capability parameter) with a number or text value.",
-                  "de": "Bearbeitet ein Inspektorfeld des Rohteils oder einer Werkstattmaschine (Bezeichnung, Rohteilposition oder Fähigkeitsparameter) mit einem Zahlen- oder Textwert."
+                  "en": "Edits one inspector field of the stock, a process step or a workshop machine with a number or text value.",
+                  "de": "Bearbeitet ein Inspektorfeld des Rohteils, eines Prozessschritts oder einer Werkstattmaschine mit einem Zahlen- oder Textwert."
                 }
               }
             }
@@ -52617,7 +53237,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,

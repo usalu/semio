@@ -1,0 +1,6 @@
+{
+  "vertexCount": 384,
+  "positions": [[0, 0, 0], [1, 0, 0], [0, 1, 0]],
+  "collidingFloat32Suffix": [1.0000001192092896, 2.352061255489169e-38],
+  "distinctPositionAccessors": 2
+}

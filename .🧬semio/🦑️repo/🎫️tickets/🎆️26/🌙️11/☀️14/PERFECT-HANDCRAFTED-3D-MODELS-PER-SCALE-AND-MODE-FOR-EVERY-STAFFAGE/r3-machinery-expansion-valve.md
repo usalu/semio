@@ -105,3 +105,46 @@ The liquid line and outlet pipe lengths (28 mm each visible) were chosen so that
 - At 1:100 the coil is a solid 60 mm disc, not a ring, so the element is hidden in the plan.
 - The capillary diameter (1.6 mm) and the element diameter (42 mm, scaled from a figure) are not printed dimensions.
 - The suction line piece is a second cut sample beside the valve, tied to it only by the capillary; structurally it has its own roller, but the rig still treats bulb and valve as one rigid body.
+
+## Round 5 handcraft
+
+Script: `r5-expansion-valve-model.py` (`--apply` writes the two root edits and the volumes source; then `volumes-insert.py`). 1:50 kept as round 3 built it; 1:100, 1:200 and 1:500 re-authored by hand. The 1:200 and 1:500 scales exist in 3D only (the coordinator's digital scales, `equipment-digital.py`); their drawings stay unavailable.
+
+### Reference (Danfoss T 2 / TE 2, data sheet AI241486443133en-001401) and model at 1:50
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| outlet axis to element top | 30 mm | 30 mm | 0 % |
+| outlet axis to inlet end | 35 mm | 35 mm | 0 % |
+| axis to solder outlet end | 54 mm | 54 mm | 0 % |
+| axis to spindle cap | 35 mm | 34.6 mm | -1.1 % |
+| element diameter | 42 mm (scaled from fig. 2) | 42 mm | 0 % |
+| liquid line | 3/8 in = 9.52 mm | 9.52 mm | 0 % |
+| outlet | 12 mm solder (1/2 in stub) | 12.7 mm stub, 12 mm socket | 0 % |
+| capillary length | 1.5 m | 1.47 m | -2 % |
+| bulb | 14.5 x 50 mm | 14.5 x 50 mm | 0 % |
+| suction line | 16 mm (asset) | 16 mm | 0 % |
+
+### Grades (body / thermal / structure), before -> after
+
+| scale | before | after | what changed |
+|---|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- | unchanged; all poses are geometrically identical (nothing moves outside), `closed` and `open` sheets and clip `modulate` t 1.5 opened |
+| 1:100 | B / B+ / A- | A- / A- / A- | the coil was a closed 60 mm puck hiding the element; now an 18 mm ring band with a 30 mm opening, carried by the capillary which rises from the nipple into the band (one slender tube nipple-band-bulb); 2D plan coil redrawn as the same ring (path with hole) |
+| 1:200 | B- / B / B | B+ / A- / A- | was the 1:100 list with a tapered inlet; now its own abstraction: straight liquid line with the flare nut as a chamfered collar, element lens with the coil as one closed drum seated on the cap, round-ended bulb, joint as a sphere at the valve centre |
+| 1:500 | C+ / C+ / B- | B+ / A- / A- | carrot-shaped inlet, puck, no spindle in the body (stem only in thermal and structure); now a straight tee, element and coil one turned head, spindle stub restored in the body, thermal by reference only, structure column stepped to the barrel |
+
+### Root edits
+
+- `thermal.regions[inlet].areaM2` 0.0032 -> 0.00215 (the 1:50 model's outer area under C31; factor 1.49, within C16).
+- `representations.100.geometry.plan[capillary-coil]`: filled circle r 30 mm -> ring path r 30 / 15 mm.
+
+### Checks
+
+`volumes-check.ts machinery/expansion-valve --product`: PASS (was FAIL on the inlet area). `r3-validate.ts machinery/expansion-valve`: VALID.
+
+### Remaining
+
+- 1:50 coil is a tidy helix stacked over the element; real surplus capillary is coiled more loosely (kept: it is the drawn form).
+- 1:500 head (lens under drum) is a convention for the coil; the 1:200/1:500 2D are unavailable, so only the 3D carries these scales.
+- The 1:100 2D is 1.2 mm tall on paper; I judged it through the plan/elevation shapes, not by eye at print size.

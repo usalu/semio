@@ -2211,9 +2211,9 @@
           "role": "body",
           "tone": 0.7,
           "radii": [
-            0.03,
-            0.06,
-            0.1
+            0.01,
+            0.01,
+            0.01
           ],
           "transform": {
             "translation": [
@@ -2233,9 +2233,9 @@
           "role": "body",
           "tone": 0.35,
           "radii": [
-            0.045,
-            0.045,
-            0.045
+            0.01,
+            0.01,
+            0.01
           ],
           "transform": {
             "translation": [
@@ -3703,9 +3703,9 @@
           "role": "body",
           "tone": 0.35,
           "radii": [
-            0.05,
-            0.05,
-            0.05
+            0.02,
+            0.02,
+            0.02
           ],
           "transform": {
             "translation": [
@@ -4472,9 +4472,9 @@
           "role": "body",
           "tone": 0.35,
           "radii": [
-            0.055,
-            0.055,
-            0.055
+            0.03,
+            0.03,
+            0.03
           ],
           "transform": {
             "translation": [
@@ -5050,9 +5050,9 @@
           "role": "body",
           "tone": 0.35,
           "radii": [
-            0.055,
-            0.055,
-            0.055
+            0.03,
+            0.03,
+            0.03
           ],
           "transform": {
             "translation": [

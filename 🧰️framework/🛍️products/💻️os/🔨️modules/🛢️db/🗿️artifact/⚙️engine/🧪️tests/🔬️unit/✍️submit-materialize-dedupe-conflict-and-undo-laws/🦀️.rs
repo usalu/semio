@@ -299,8 +299,8 @@ async fn undo_applies_the_recorded_inverse_and_produces_a_fresh_commit() {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::from(&serde_json::json!({ "x": 1 }))).await },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::from(&serde_json::json!({ "x": null }))).await },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap_payload(&DslValue::from(&serde_json::json!({ "x": 1 }))).await.unwrap() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap_payload(&DslValue::from(&serde_json::json!({ "x": null }))).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         transaction: None, verb: None, line: None,
     };

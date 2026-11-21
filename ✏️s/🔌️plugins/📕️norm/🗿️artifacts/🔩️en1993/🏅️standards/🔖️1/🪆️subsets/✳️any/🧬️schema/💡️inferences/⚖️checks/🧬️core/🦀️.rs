@@ -78,6 +78,9 @@ impl<'a> Scope<'a> {
 }
 
 pub use semio_s_artifact_norm_en1993_clauses as clauses;
+
+#[path = "../📇️catalogue/🦀️.rs"]
+pub mod case_catalogue;
 pub use semio_s_artifact_norm_en1993_parts::*;
 
 #[path = "../🧰️structure-helpers/🦀️.rs"]

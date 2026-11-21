@@ -12,6 +12,39 @@ fn paid(cx:&mut StepContext<'_>,admission:&mut OriginalConstructionAdmission,mar
 pub struct OriginalHostEventRoutes{slots:ManuallyDrop<[Option<ActionMeta>;WINDOWS]>,stamp:[u64;WINDOWS],next:u64,upper:usize,source:Option<(usize,u32)>,phase:u8,index:usize,roster:usize,byte:usize,empty:Option<usize>,selected:Option<usize>,retirement:RetainedCloneClose,construction:OriginalConstructionAdmission,unit:Option<()>,replacement:ManuallyDrop<Option<ActionMeta>>,turn:bool,pub pending_base:bool,pub delivering:bool,pub cursor:usize,pub completed:bool,live_cursor:usize,live_byte:usize,live:Option<bool>,lookup:usize,lookup_byte:usize,lookup_match:Option<usize>,pub delivered_epoch:u64,pub epoch:u64,pub metadata:ManuallyDrop<Option<ActionMeta>>,pub event:ManuallyDrop<Option<crate::HostEvent>>,pub outcome:ManuallyDrop<Option<semio_framework::kernel::InvocationResult>>}
 impl Default for OriginalHostEventRoutes{fn default()->Self{Self{slots:ManuallyDrop::new(std::array::from_fn(|_|None)),stamp:[0;WINDOWS],next:0,upper:0,source:None,phase:0,index:0,roster:0,byte:0,empty:None,selected:None,retirement:Default::default(),construction:Default::default(),unit:None,replacement:ManuallyDrop::new(None),turn:false,pending_base:false,delivering:false,cursor:0,completed:false,live_cursor:0,live_byte:0,live:None,lookup:0,lookup_byte:0,lookup_match:None,delivered_epoch:0,epoch:0,metadata:ManuallyDrop::new(None),event:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None)}}}
 impl OriginalHostEventRoutes{
+ semio_framework_value::initialization::original_empty_fields!(INITIAL_FIELDS, initial_field_demands, initialize_field_at;
+    slots = ManuallyDrop::new(std::array::from_fn(|_|None)),
+    stamp = [0;WINDOWS],
+    next = 0,
+    upper = 0,
+    source = None,
+    phase = 0,
+    index = 0,
+    roster = 0,
+    byte = 0,
+    empty = None,
+    selected = None,
+    retirement = Default::default(),
+    construction = Default::default(),
+    unit = None,
+    replacement = ManuallyDrop::new(None),
+    turn = false,
+    pending_base = false,
+    delivering = false,
+    cursor = 0,
+    completed = false,
+    live_cursor = 0,
+    live_byte = 0,
+    live = None,
+    lookup = 0,
+    lookup_byte = 0,
+    lookup_match = None,
+    delivered_epoch = 0,
+    epoch = 0,
+    metadata = ManuallyDrop::new(None),
+    event = ManuallyDrop::new(None),
+    outcome = ManuallyDrop::new(None),
+ );
  /// 📥️ Remote base movement enqueues only an allocation-free marker; fanout is performed by funded background turns.
  pub fn base_moved(&mut self){self.epoch=self.epoch.wrapping_add(1);self.pending_base=true;}
  pub fn pending(&self)->bool{self.pending_base||self.delivering||self.metadata.is_some()||self.event.is_some()||self.outcome.is_some()}

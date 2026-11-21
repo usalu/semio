@@ -17,6 +17,10 @@ mod layouts;
 #[path = "🧩️plugins-chat/🦀️.rs"]
 mod plugins_chat;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "📂️open.rs"]
+mod native_file_open;
+
 //#region ShellActions
 impl<'ctx> ActionsCtx<'ctx> {
     /** 🪪️ One action a live ENGINE SURFACE derived from raw pointer/wheel input — the world pane's
@@ -175,6 +179,12 @@ impl<'ctx> ActionsCtx<'ctx> {
             if action.action == semio_framework::FOCUS_WINDOW_ACTION_ID {
                 return self.framework_focus_window(&action);
             }
+            if action.controller_id == "framework" && action.action == "setImageSourcePage" {
+                return self.framework_set_image_source_page(&action);
+            }
+            if action.controller_id == "framework" && action.action == "setFormPage" {
+                return self.framework_set_form_page(&action);
+            }
             if action.action == semio_framework::FOCUS_ROW_CONTROL_ACTION_ID {
                 return self.framework_focus_row_control(&action);
             }
@@ -190,6 +200,31 @@ impl<'ctx> ActionsCtx<'ctx> {
             }
             if let Some(result) = self.as_session().apply_host_panel_selection(&action) {
                 return result;
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            if action.action == semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID {
+                return self.start_native_open(&action);
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            if matches!(action.action.as_str(), semio_framework::manifest::EXPORT_MEDIA_FILE_ACTION_ID | semio_framework::manifest::EXPORT_SNAPSHOT_FILE_ACTION_ID | semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID) {
+                let session = self.docs.action_session(&action, &self.plugins).ok_or("media-export.document-owner")?;
+                if let Some(window_id) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str) {
+                    let spawned = window_id == "spawned" && self.plugins.space_mode && self.docs.spawned_session.as_ref().is_some_and(|current| current.instance_id == session.instance_id);
+                    if !spawned && !session.view_state.window_instances.iter().any(|window| window.id == window_id) {
+                        return Err("media-export.window-owner".into());
+                    }
+                }
+                let program = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id)
+                    .cloned().ok_or("media-export.program-unavailable")?;
+                if let Some(declaration) = program.declared_native_media_save(&session.app.id, &action.action) {
+                    if !self.opening.start_media_save(program, session.app.id.clone(), session.instance_id, declaration) {
+                        return Err("media-export.transfer-busy".into());
+                    }
+                    return Ok(());
+                }
+                if action.action != semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID {
+                    return Err("media-export.declaration-unavailable".into());
+                }
             }
             if !record_tutorial_after_acceptance && action.controller_id != "framework" {
                 if let Some(session) = self.docs.action_session(&action, &self.plugins).cloned() {
@@ -231,6 +266,8 @@ impl<'ctx> ActionsCtx<'ctx> {
                     "setActionExpanded" => return self.framework_set_action_expanded(&action).await,
                     IMPORT_TRANSFER_CANCEL_ACTION => {
                         if let Some(transfer) = action.args.as_ref().map(dsl_value_as_json).and_then(|args| args.get("transfer").and_then(Value::as_u64)) {
+                            #[cfg(not(target_arch = "wasm32"))]
+                            if self.opening.cancel_media_save(transfer) || self.opening.cancel_original_media(transfer) { return Ok(()); }
                             self.as_session().cancel_import_transfer(transfer);
                         }
                         return Ok(());
@@ -300,8 +337,8 @@ impl<'ctx> ActionsCtx<'ctx> {
             let Some(session) = self.docs.action_session(&action, &self.plugins).cloned() else {
                 return Err("action has no mounted app owner".into());
             };
-            let program = self.plugins.plugins.iter().find(|p| p.plugin_id == session.plugin_id).ok_or("action program missing")?;
             let live_view_state = self.as_session().live_view_state(&session);
+            let program = self.plugins.plugins.iter().find(|p| p.plugin_id == session.plugin_id).ok_or("action program missing")?;
             let invocation = self.prefs.session_action_invocation(&session, &action, &live_view_state)?;
             let action_json = semio_framework_pack_json::to_json_string(&invocation);
             let answer = program.handle_action(session.instance_id, &action_json, &live_view_state).await;

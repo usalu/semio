@@ -1,0 +1,2 @@
+
+The cupped leaf blades and their petioles now retain their measured widths, curvature and front-to-back order in the 1:50 front and 1:200 front and side views. Each drawing station follows its leaf bone, including the raised central crease. All three affected silhouettes, all nine paper endpoints and nominal scales, and whole-document semantics passed. The independent GLB contained twelve scenes and measured 7,441,416 bytes.

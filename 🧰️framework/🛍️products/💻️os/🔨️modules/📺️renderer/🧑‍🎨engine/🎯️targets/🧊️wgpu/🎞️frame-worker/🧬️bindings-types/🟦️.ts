@@ -22,7 +22,7 @@ export type BrowserRendererWorkerHandle = OriginalBrowserFrameNative & {
   sealAssetResponse(): boolean;
   abortAssetResponse(): boolean;
   rejectAssetResponse(retryable: boolean): boolean;
-  resetWorldAssetResponseStep(): boolean;
+  resetAssetResponseStep(): boolean;
   closeStep(): boolean;
 };
 

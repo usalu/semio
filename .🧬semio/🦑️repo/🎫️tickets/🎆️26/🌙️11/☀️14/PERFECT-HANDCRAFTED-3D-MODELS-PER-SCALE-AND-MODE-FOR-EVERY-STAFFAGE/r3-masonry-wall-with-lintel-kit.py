@@ -270,7 +270,7 @@ def ks_blocks(j):
         else:
             rest.append(p)
     for i, (a, n, v0, v1) in enumerate(whole):
-        out.append(repeated(box(f"block-{j}-{i}", (a, a + KS_L), (v0, v1), w, "block"), n, KS_L))
+        out.append(repeated(box(f"block-{j}-{i}", (a + 0.001, a + KS_L - 0.001), (v0, v1), w, "block"), n, KS_L))
     for i, (a, b, v0, v1) in enumerate(rest):
         if j == 3 and b > KS_OPEN[0] + 1e-9 and a < KS_OPEN[1] - 1e-9:
             if a >= KS_OPEN[0] - 1e-9 and b <= KS_OPEN[1] + 1e-9:

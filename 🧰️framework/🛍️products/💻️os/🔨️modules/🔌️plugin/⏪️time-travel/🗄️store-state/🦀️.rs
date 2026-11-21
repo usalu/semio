@@ -95,6 +95,8 @@ pub trait TimeTravelOwners: Send {
     fn has_pending_work(&self) -> bool;
     fn terminal_is_empty(&self) -> bool;
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
+    fn close_handoff_demand(&self) -> Option<RetirementDemand>;
+    fn has_selected_preview_source_return(&self) -> bool;
     fn command_pending(&self)->bool;
     fn finalizing(&self)->bool;
     fn cancel_prepared_command(&mut self);
@@ -212,7 +214,7 @@ pub enum TimeTravelStoreCommand {
     StepPreview { deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant },
     StartReplay { drafts: protocol::HistoryInputDrafts, from: MutationId },
     CancelReplay,
-    CloseOriginalSources { grant: RetainedCloneGrant },
+    CloseOriginalSources { grant: RetainedCloneGrant, terminal: bool },
     StepReplay { deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant },
     StepCommit,
     Read(TimeTravelStage),
@@ -224,11 +226,12 @@ pub enum TimeTravelStoreOutput {
     Opened(Result<(TimeTravelEditor, protocol::InputReplacement), TimeTravelActionRefusal>),
     Rebuilt(Result<protocol::InputReplacement, String>),
     Previewed(TimeTravelPreviewStep),
+    PreviewDeferred,
     ReplayStarted(bool),
     Stepped(TimeTravelReplayStep),
     Committed(TimeTravelCommit),
     CommitRefused(semio_framework_job::OriginalTurnFailure),
-    OriginalProgress(RetainedCloneProgress),
+    OriginalProgress { progress: RetainedCloneProgress, preview_closing: bool },
     Read(Option<(store::os_store::snapshot_read::ErasedSnapshotRead, [u8; 32])>),
     Done,
 }
@@ -250,6 +253,8 @@ pub enum TimeTravelQueryOutput {
     Positions(Option<Vec<TimeTravelTarget>>),
     Value(Option<DslValue>),
 }
+
+enum OriginalCloseHandoff { Snapshot, Preview, Replay, Mutation }
 
 impl<P, Mu> TimeTravelStoreState<P, Mu>
 where
@@ -347,7 +352,10 @@ where
     fn cancel_preview(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
         self.preview_cancelled=true;
         if let Some(owner)=self.preview_derived.as_mut(){owner.cancel();}
-        let base=self.preview_base.take();self.retire(store,base)?;
+        if self.preview_base.is_some() && self.snapshot_aliases.iter().any(Option::is_none) {
+            let base = self.preview_base.take();
+            self.retire(store, base)?;
+        }
         if self.preview_original.is_some()&&self.discarded_factory.is_none(){self.discarded_factory=Some(Arc::clone(store.owned_mutation_retirement_factory().map_err(ValueError::into_fault)?));}
         Ok(())
     }
@@ -418,10 +426,16 @@ where
             }
             TimeTravelStoreCommand::Rebuild(candidate) => TimeTravelStoreOutput::Rebuilt(self.rebuild(store, candidate)),
             TimeTravelStoreCommand::Preview { target, replacement, drafts, deadline_us, clock } => {
-                if self.preview_job.is_some()||self.preview_derived.is_some()||self.preview_original.is_some()||self.preview_source.is_some()||self.preview_native_input.is_some()||self.preview_input_close.is_some()||self.preview_original_close.is_some(){self.cancel_preview(store)?;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original preview cancellation must settle before another selected input").into_fault());}
-                self.cancel_preview(store)?;
+                if self.preview_job.is_some() || self.preview_base.is_some() || self.preview_derived.is_some()
+                    || self.preview_original.is_some() || self.preview_source.is_some() || self.preview_native_input.is_some()
+                    || self.preview_input.is_some() || self.preview_input_close.is_some() || self.preview_original_close.is_some()
+                {
+                    self.cancel_preview(store)?;
+                    return Ok(TimeTravelStoreOutput::PreviewDeferred);
+                }
                 self.preview_job = Some(store.begin_derived_history_preview(target, drafts).map_err(|error| error.into_fault())?);
-                self.preview_cancelled=false;
+                self.preview_cancelled = false;
+                self.preview_job_closing = false;
                 self.preview_input = Some(replacement);
                 TimeTravelStoreOutput::Previewed(TimeTravelPreviewStep::Pending)
             }
@@ -446,13 +460,32 @@ where
                     Err(_) => TimeTravelStoreOutput::ReplayStarted(false),
                 }
             }
-            TimeTravelStoreCommand::CloseOriginalSources { grant } => {
+            TimeTravelStoreCommand::CloseOriginalSources { grant, terminal } => {
                 let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history source closure requires its original Job receiving context").into_fault())?;
                 let needs=self.store_sources_require_original_control();
-                let outcome=cx.with_original_effect(grant,|cx,effect|if needs{cx.with_native_retirement(|control|self.close_original_store_sources_with_control(store,effect,Some(control)))}else{self.close_original_store_sources_with_control(store,effect,None)}).map_err(ValueError::into_fault)?;
+                let selected_history_source = self.closing_store_history_source();
+                let run = |cx: &mut semio_framework_job::StepContext<'_>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>| {
+                    if terminal {
+                        let staged = self.stage_original_close(store, effect.grant())?;
+                        if staged != RetainedCloneProgress::default() { return Ok(staged); }
+                    }
+                    if needs {
+                        cx.with_native_retirement(|control| self.close_original_store_sources_with_control(store, effect, Some(control)))
+                    } else {
+                        self.close_original_store_sources_with_control(store, effect, None)
+                    }
+                };
+                let outcome = if selected_history_source {
+                    cx.with_original_source_effect(grant, run)
+                } else {
+                    cx.with_original_effect(grant, run)
+                }.map_err(ValueError::into_fault)?;
                 let work=self.preview_job.as_mut().and_then(|owner|owner.take_preparation_work()).or_else(||self.replay.as_mut().and_then(|owner|owner.take_preparation_work()));
                 let result=match outcome{Some((result,performed))=>{if performed==0{if let Some(work)=work{cx.consume_fuel(work)}}else{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX))}result},None=>Ok(Default::default())};
-                TimeTravelStoreOutput::OriginalProgress(result.map_err(ValueError::into_fault)?)
+                TimeTravelStoreOutput::OriginalProgress {
+                    progress: result.map_err(ValueError::into_fault)?,
+                    preview_closing: self.preview_job.is_some() && (self.preview_cancelled || self.preview_job_closing),
+                }
             },
             TimeTravelStoreCommand::CancelReplay => {
                 self.cancel_replay(store)?;
@@ -548,7 +581,71 @@ where
         Ok(protocol::InputReplacement::Input { schema: store.envelope().schema.clone(), payload: encoded.map_err(|error| error.to_string())? })
     }
 
+    /// 🗝️ Quotes the next original Store handoff during terminal close.
+    fn original_close_handoff(&self) -> Option<(OriginalCloseHandoff, RetirementDemand)> {
+        let (handoff, copy_bytes) = if (self.preview_base.is_some() || self.preview.is_some() || self.head.is_some())
+            && self.snapshot_issuer_close.iter().all(Option::is_none) && self.snapshot_aliases.iter().any(Option::is_none)
+        {
+            (OriginalCloseHandoff::Snapshot, 2 * size_of::<Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>>() + size_of_val(&*self.snapshot_issuers))
+        } else if !self.preview_cancelled && self.preview_input.is_some()
+            && (self.preview_original.is_none() || self.discarded_factory_close.is_none())
+        {
+            (OriginalCloseHandoff::Preview, 3 * size_of::<bool>() + size_of_val(&self.discarded_factory))
+        } else if (!self.replay_cancelled && self.replay.is_some()) || (!self.finished_cancelled && self.finished.is_some()) {
+            (OriginalCloseHandoff::Replay, 2 * size_of::<bool>())
+        } else if self.discarded_pending.is_none() && (self.kind.is_some() || self.staged.is_some()) && self.discarded_factory_close.is_none() {
+            (OriginalCloseHandoff::Mutation, 2 * size_of::<Option<Mu>>() + size_of_val(&self.discarded_factory))
+        } else {
+            return None;
+        };
+        Some((handoff, RetirementDemand { copy_bytes, depth: 1, ..Default::default() }))
+    }
+
+    pub(super) fn original_close_handoff_demand(&self) -> Option<RetirementDemand> {
+        self.original_close_handoff().map(|(_, demand)| demand)
+    }
+
+    fn stage_original_close(&mut self, store: &ArtifactStore<P, Mu>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+        let Some((handoff, demand)) = self.original_close_handoff() else { return Ok(Default::default()); };
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(Default::default()); }
+        match handoff {
+            OriginalCloseHandoff::Snapshot => {
+                if self.snapshot_issuers.is_none() {
+                    *self.snapshot_issuers = Some((Arc::clone(store.owned_snapshot_retirement_factory()?), Arc::clone(store.owned_mutation_retirement_factory()?)));
+                }
+                let slot = self.snapshot_aliases.iter_mut().find(|slot| slot.is_none()).expect("quoted snapshot retirement slot");
+                *slot = self.preview_base.take().or_else(|| self.preview.take()).or_else(|| self.head.take());
+            }
+            OriginalCloseHandoff::Preview => {
+                if self.preview_original.is_some() && self.discarded_factory.is_none() {
+                    self.discarded_factory = Some(Arc::clone(store.owned_mutation_retirement_factory()?));
+                }
+                self.preview_cancelled = true;
+                if let Some(owner) = self.preview_derived.as_mut() { owner.cancel(); }
+            }
+            OriginalCloseHandoff::Replay => {
+                self.replay_cancelled = self.replay.is_some();
+                self.finished_cancelled = self.finished.is_some();
+            }
+            OriginalCloseHandoff::Mutation => {
+                if self.discarded_factory.is_none() {
+                    self.discarded_factory = Some(Arc::clone(store.owned_mutation_retirement_factory()?));
+                }
+                self.discarded_pending = self.kind.take().or_else(|| self.staged.take());
+            }
+        }
+        Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })
+    }
+
     /// ♻️ Returns genuine history loans to the same Store ledger under original incoming cleanup grants.
+    fn closing_store_history_source(&self) -> bool {
+        if self.finished_cancelled && self.finished.is_some() { return false; }
+        if let Some(preview) = self.preview_job.as_ref().filter(|_| self.preview_cancelled || self.preview_job_closing) {
+            return preview.history_source.is_some();
+        }
+        self.replay_cancelled && self.replay.as_ref().is_some_and(|replay| replay.history_source.is_some())
+    }
+
     fn store_sources_require_original_control(&self)->bool{self.preview_job.as_ref().is_some_and(|preview|preview.history_source.is_some()||preview.derived_operation.as_ref().is_some_and(|owner|owner.requires_original_control()))||self.replay.as_ref().is_some_and(|replay|replay.history_source.is_some()||replay.replacement_operation.is_some()||replay.failed_operation.as_ref().is_some_and(|owner|owner.requires_original_control())||replay.replay.as_ref().is_some_and(|owner|owner.requires_original_control()))}
     fn close_original_store_sources_with_control(&mut self,store:&mut ArtifactStore<P,Mu>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<RetainedCloneProgress,ValueError>{
       let grant=effect.grant();

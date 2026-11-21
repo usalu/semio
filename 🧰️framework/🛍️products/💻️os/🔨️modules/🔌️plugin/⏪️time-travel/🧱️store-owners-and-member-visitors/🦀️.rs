@@ -13,7 +13,13 @@ where
     }
 
     fn preview_progress(&self) -> Option<store::os_store::replay::ReplayProgress> {
-        self.preview_job.as_ref().map(store::os_store::snapshot_read::ArtifactDerivedHistoryPreview::progress).or_else(||self.preview_derived.as_ref().filter(|owner|!owner.is_closing()).map(|owner|store::os_store::replay::ReplayProgress{done:u32::try_from(owner.progress().items).unwrap_or(u32::MAX),total:0}))
+        if self.preview_cancelled { return None; }
+        self.preview_job.as_ref().map(store::os_store::snapshot_read::ArtifactDerivedHistoryPreview::progress).or_else(|| {
+            self.preview_base.as_ref().map(|_| store::os_store::replay::ReplayProgress {
+                done: self.preview_derived.as_ref().map_or(0, |owner| u32::try_from(owner.progress().items).unwrap_or(u32::MAX)),
+                total: 0,
+            })
+        })
     }
 
     fn processed(&self) -> Option<u32> {
@@ -21,7 +27,7 @@ where
     }
 
     fn has_pending_work(&self) -> bool {
-        self.finalizing()||self.finished_cancelled&&self.finished.is_some()||self.snapshot_aliases.iter().any(Option::is_some) || self.snapshot_close.is_some() || self.snapshot_issuers.is_some() || self.snapshot_issuer_close.iter().any(Option::is_some) || self.discard_effects.as_ref().is_some_and(|owner|owner.closing) || self.preview_job.is_some()||self.preview_derived.as_ref().is_some_and(|owner|owner.is_closing())||self.preview_cancelled&&(self.preview_original.is_some()||self.preview_input.is_some()||self.preview_source.is_some()||self.preview_native_input.is_some())||self.preview_input_close.is_some()||self.preview_original_close.is_some() || self.retirements.capacity()!=0 || !self.discarded.is_empty() || self.discarded_has_physical_capacity() || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
+        self.finalizing()||self.finished_cancelled&&self.finished.is_some()||self.snapshot_aliases.iter().any(Option::is_some) || self.snapshot_close.is_some() || self.snapshot_issuers.is_some() || self.snapshot_issuer_close.iter().any(Option::is_some) || self.discard_effects.as_ref().is_some_and(|owner|owner.closing) || self.preview_job.is_some()||self.preview_base.is_some()||self.preview_derived.as_ref().is_some_and(|owner|owner.is_closing())||self.preview_cancelled&&(self.preview_original.is_some()||self.preview_input.is_some()||self.preview_source.is_some()||self.preview_native_input.is_some())||self.preview_input_close.is_some()||self.preview_original_close.is_some() || self.retirements.capacity()!=0 || !self.discarded.is_empty() || self.discarded_has_physical_capacity() || self.discarded_pending.is_some() || self.discarded_active.is_some() || self.discarded_factory.is_some() || self.discarded_factory_close.is_some()
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -29,6 +35,12 @@ where
     }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.original_retirement_demands(body) }
+    fn close_handoff_demand(&self) -> Option<RetirementDemand> { self.original_close_handoff_demand() }
+    fn has_selected_preview_source_return(&self) -> bool {
+        self.preview_cancelled && self.preview_source.is_some() && self.preview_native_input.is_none()
+            && !self.preview_derived.as_ref().is_some_and(|owner| owner.is_closing())
+            && !self.discard_effects.as_ref().is_some_and(|owner| owner.closing)
+    }
     fn command_pending(&self)->bool{self.discard_effects.is_some()||self.finalizing()}
     fn finalizing(&self)->bool{TimeTravelStoreState::finalizing(self)}
     fn cancel_prepared_command(&mut self){self.commit_closing=self.finalizing();if let Some(owner)=self.discard_effects.as_mut(){owner.closing=true}}

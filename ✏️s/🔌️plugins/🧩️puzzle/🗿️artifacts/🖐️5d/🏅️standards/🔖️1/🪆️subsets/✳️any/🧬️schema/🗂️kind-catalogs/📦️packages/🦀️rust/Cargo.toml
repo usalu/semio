@@ -9,6 +9,10 @@ description = "Component crate of semio-s-artifact-puzzle-5d: kind-catalogs"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.preparation]
+script = "../../../../../../../../📦️packages/🦀️rust/📜️script.ts"
+command = ["graph-generate"]
+
 [lints]
 workspace = true
 
@@ -66,6 +70,7 @@ semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+semio-s-artifact-stdio-semio-base = { path = "../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-kit = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }

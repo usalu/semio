@@ -1,5 +1,9 @@
 //! 🔌️ The assembled plugin program and its app instances.
 #![allow(async_fn_in_trait)]
+#[cfg(test)]
+#[path = "../🧪️tests/program-declaration-collections.rs"]
+mod declaration_collections;
+
 use semio_plugin_job::original_steps::retired;
 extern crate semio_os_kernel as store;
 
@@ -25,7 +29,7 @@ use semio_framework::AppDefinition;
 use semio_plugin_decl_registry::plugin_program::AppFactory;
 use semio_framework::manifest::{CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
 use semio_framework::{kernel::{ActorId, ArtifactKind, CapabilityRequirement, InvocationResult, Rights, Scope}, ActionKind, CommandDefinition, Fault, PluginManifest};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 /// 🗂️ `OsMediaCapability`/`ArtifactKindSpec` now live in `semio-framework-core` (both this crate and
 /// `semio-os` already depend on it) the same way the legacy format enum used to — re-exported
 /// here verbatim instead of duplicated, so `AppBuilder::artifact_kind(...)` and
@@ -83,8 +87,8 @@ pub struct Plugin<PA: PluginApp = NoPluginApp> {
     /// collected at `register_app_factory`, where the leaf and its dialect are both in hand, and
     /// merged into the descriptor by `plugin_runtime::plugin_descriptor_extras`.
     deferred_example_assets: Vec<semio_framework::AssetDeclaration>,
-    apps: HashMap<String, AppFactory<PA>>,
-    command_handlers: HashMap<String, PluginCommandHandler>,
+    apps: BTreeMap<String, AppFactory<PA>>,
+    command_handlers: BTreeMap<String, PluginCommandHandler>,
     runtime: PluginRuntimeRegistry,
 }
 
@@ -106,8 +110,8 @@ impl<PA: PluginApp> Plugin<PA> {
                 dependencies: Vec::new(),
                 contributions: Vec::new(),
             },
-            apps: HashMap::new(),
-            command_handlers: HashMap::new(),
+            apps: BTreeMap::new(),
+            command_handlers: BTreeMap::new(),
             runtime: PluginRuntimeRegistry::empty(),
             descriptor_extras: crate::plugin_runtime::PluginDescriptorExtras::default(),
             deferred_example_assets: Vec::new(),
@@ -201,7 +205,7 @@ impl<PA: PluginApp> Plugin<PA> {
     pub fn plugin_command(mut self, command: CommandDefinition, handler: PluginCommandHandler) -> Self {
         assert!(!command.id.trim().is_empty(), "plugin {} command id must be non-empty", self.manifest.plugin_id);
         assert!(!self.command_handlers.contains_key(&command.id), "plugin {} duplicate command id {}", self.manifest.plugin_id, command.id);
-        let mut arg_ids = HashSet::new();
+        let mut arg_ids = BTreeSet::new();
         for arg in &command.args {
             assert!(!arg.id.trim().is_empty(), "plugin {} command {} has an empty arg id", self.manifest.plugin_id, command.id);
             assert!(arg_ids.insert(arg.id.clone()), "plugin {} command {} declares duplicate arg id {}", self.manifest.plugin_id, command.id, arg.id);

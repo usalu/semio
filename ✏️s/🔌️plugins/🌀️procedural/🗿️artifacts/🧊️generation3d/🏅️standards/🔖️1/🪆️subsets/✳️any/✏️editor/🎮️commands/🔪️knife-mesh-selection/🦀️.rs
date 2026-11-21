@@ -42,7 +42,7 @@ pub fn cut_rows(payload: &KnifeMeshSelection, host_snapshot: &semio_framework_ar
 /// 🔪️ ONE knife cut as ONE tool transaction of `<app>#knifeMeshSelection` ([`mesh_edit_emit`]).
 pub fn apply_selected(payload: &KnifeMeshSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, ids: &[String]) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     let (id, rows) = cut_rows(payload, &doc.snapshot.host_snapshot, ids).map_err(Fault::from)?;
-    Ok(Emit { interaction_writes: vec![InteractionWrite::replace(DOMAIN, "face", std::iter::empty::<String>()), InteractionWrite::replace("graph", "node", [id])], ..mesh_edit_emit("knifeMeshSelection", doc, rows) })
+    Ok(Emit { interaction_writes: vec![InteractionWrite::replace(DOMAIN, "face", std::iter::empty::<String>()), InteractionWrite::replace("graph", "node", [semio_s_artifact_procedural_3d_model::GraphTargetKind::Node.target(&id)])], ..mesh_edit_emit("knifeMeshSelection", doc, rows) })
 }
 
 pub fn handle(payload: &KnifeMeshSelection, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

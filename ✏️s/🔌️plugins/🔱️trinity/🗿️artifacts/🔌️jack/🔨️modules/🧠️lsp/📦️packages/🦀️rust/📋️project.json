@@ -3,8 +3,13 @@
   "$schema": "../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
-      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🤖️generated\"" }, "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/**/*",
-      "{projectRoot}/**/*"
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🤖️generated\"" },
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/**/*.rs",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/**/Cargo.toml",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/🧪️tests/**/*.json",
+      "{projectRoot}/📋️project.json",
+      "{projectRoot}/📜️script.ts",
+      "{projectRoot}/package.json"
     ]
   },
   "targets": {
@@ -22,7 +27,19 @@
         "semio": {
           "wasmPackageSourceV1": {
             "version": 1,
-            "sourceOwner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust"
+            "sourceOwner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust",
+            "compileOutputs": [
+              {
+                "specifier": "@semio-tech/trinity-jack-lsp",
+                "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust/pkg/trinity_jack_lsp.js",
+                "declarations": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust/pkg/trinity_jack_lsp.d.ts"
+              },
+              {
+                "specifier": "@semio-tech/trinity-jack-lsp/trinity_jack_lsp.js",
+                "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust/pkg/trinity_jack_lsp.js",
+                "declarations": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🧠️lsp/📦️packages/🦀️rust/pkg/trinity_jack_lsp.d.ts"
+              }
+            ]
           }
         }
       }

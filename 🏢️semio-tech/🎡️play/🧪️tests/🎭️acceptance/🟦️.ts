@@ -389,6 +389,7 @@ test.describe("semio-tech play", () => {
     await page.keyboard.press("Escape");
     await expect(page.locator("[data-layered-card]")).toHaveCount(panes.length);
     await expect(page.locator('[data-slot="play-app-count"]')).toHaveText(`${panes.length} apps`);
+    await expect(page.getByRole("navigation", { name: "semio Play" })).toHaveClass(/ui-chrome-tint/);
     for (const pane of panes) await expect(page.locator(`[data-layered-card="${pane.variant}"] [data-overview-card]`)).toHaveAttribute("aria-label", new RegExp(`^Open ${pane.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}: `));
     errors.stop();
     expect(errors.pageErrors).toEqual([]);
@@ -862,6 +863,57 @@ test.describe("semio-tech play", () => {
       await expect(page.locator('[data-slot="play-language-choice"]')).toHaveCount(0);
       await expect(page.locator("html")).toHaveAttribute("lang", "de");
     });
+  });
+
+  test("renders GIS Terrain relief and geographic overlays in editor and viewer", async ({ page }) => {
+    test.setTimeout(TEST_TIMEOUT_MS);
+    const heightmap = new PNG({ width: 256, height: 256 });
+    for (let row = 0; row < heightmap.height; row += 1) {
+      for (let col = 0; col < heightmap.width; col += 1) {
+        const height = 155 + Math.round(25 * Math.sin(row / 18) * Math.cos(col / 24));
+        heightmap.data.set([128, height, 0, 255], (row * heightmap.width + col) * 4);
+      }
+    }
+    let tileRequests = 0;
+    const dem = PNG.sync.write(heightmap);
+    await page.route("https://s3.amazonaws.com/elevation-tiles-prod/terrarium/**/*.png", async route => {
+      tileRequests += 1;
+      await route.fulfill({ body: dem, contentType: "image/png", headers: { "access-control-allow-origin": "*" } });
+    });
+    await page.goto("./#gis3d");
+    expect(await waitForPaneShellOutcome(page, "gis3d")).toBe("ready");
+    await dismissPaneIntroduction(page, { variant: "gis3d", label: "Terrain" });
+    const shell = page.locator('[data-shell-id="gis3d"]');
+    const world = shell.locator(".semio-world-3d-host");
+    const checkTerrain = async () => {
+      await expect(world.getByRole("link", { name: "Mapzen Terrain Tiles" })).toBeVisible();
+      await expect(world.locator('[data-slot="terrain-feature-list"] li')).toHaveText(["Institut de Botanique", "Lycée Block 3000", "Sart Tilman", "Sart Tilman"]);
+      await expect.poll(() => tileRequests).toBeGreaterThan(0);
+      const canvas = world.locator("canvas").first();
+      await expect.poll(async () => {
+        const { data } = PNG.sync.read(await canvas.screenshot());
+        let pin = false;
+        let route = false;
+        let boundary = false;
+        let terrain = 0;
+        for (let index = 0; index < data.length; index += 4) {
+          const [red, green, blue] = [data[index]!, data[index + 1]!, data[index + 2]!];
+          pin ||= red > 230 && green > 185 && blue < 120;
+          route ||= Math.abs(red - 247) <= 2 && Math.abs(green - 244) <= 2 && Math.abs(blue - 232) <= 2;
+          boundary ||= red < 145 && green > 175 && blue > 195;
+          if (green > red + 8 && red > blue + 8) terrain += 1;
+        }
+        return pin && route && boundary && terrain > 100;
+      }, { timeout: 30_000 }).toBe(true);
+    };
+    await checkTerrain();
+    const viewer = roleContract.steps.find(step => step.role === "viewer");
+    if (!viewer) throw new Error("Viewer role is missing");
+    await shell.locator(`[id="${viewer.controlId}"]`).click();
+    await expect(shell.locator('[data-slot="surface-role-chip"]')).toHaveAttribute("data-role", "viewer");
+    await waitForSurfaceSettlement(page, { variant: "gis3d", label: "Terrain" });
+    await dismissPaneIntroduction(page, { variant: "gis3d", label: "Terrain" });
+    await checkTerrain();
   });
 
   for (const pane of playPanes()) {

@@ -1,9 +1,4 @@
-//! 🩺️ Staged slice of the `maintenance-ladder` band of the mounted artifact instance: its `instance-app` members (WP6 step S0 of the instance family).
-//!
-//! 🪜️ The live-maintenance rotation of one hosted app: priority and pressure units first, then a fair fixed round robin
-//! in which an empty stage never consumes the call. Every unit quotes its next demand on all axes and spends the caller's
-//! unchanged grant on exactly one owner; the same module drives the envelope-ingress, store-replacement and archive-load
-//! frontiers for both the live rotation and the close ladder.
+//! 🪜️ Runs pressure units first, then visits live owners in round-robin order. The close ladder shares the ingress, store-replacement, and archive-load units.
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
@@ -54,8 +49,9 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             let archive=matches!(unit,MaintenanceUnit::Stage(24));
             let available_items=loan.maximum_items.min(cx.retained_grant().maximum_items);
             if archive_pending{
-                if archive&&available_items<DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS{cx.consume_fuel(1);continue}
-                if !archive&&available_items<=DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS{cx.consume_fuel(1);continue}
+                let archive_dependency = matches!(unit, MaintenanceUnit::Stage(8 | 14 | 15));
+                if archive && available_items < DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS { cx.consume_fuel(1); continue; }
+                if !archive && !archive_dependency && available_items <= DOCUMENT_ARCHIVE_STEP_MINIMUM_ITEMS { cx.consume_fuel(1); continue; }
             }
             let Some(demand)=self.ladder_ref().maintenance_unit_demand(unit,grant.maximum_copy_bytes,cx.fuel_remaining())?else{cx.consume_fuel(1);continue};
             if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){cx.consume_fuel(1);continue}

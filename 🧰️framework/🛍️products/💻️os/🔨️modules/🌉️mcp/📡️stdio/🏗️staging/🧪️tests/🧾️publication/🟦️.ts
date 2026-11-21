@@ -5,8 +5,12 @@ import { Database } from "bun:sqlite";
 import ts from "typescript";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { posix, win32 } from "node:path";
 import vectors from "./🧫️fixtures/🔣️.json";
+import componentCustody from "../🧫️fixtures/component-custody.json";
+import stagingSchema from "../../🧬️schema/🔣️.json";
+import componentSchema from "../../../📦️component-models/🔣️.json";
 
 const mcp = readFileSync(new URL("../../../../🟦️.ts", import.meta.url), "utf8");
 const binary = readFileSync(new URL("../../../../📦️binary/🟦️.ts", import.meta.url), "utf8");
@@ -16,6 +20,7 @@ const ast = ts.createSourceFile("mcp.ts", mcp, ts.ScriptTarget.Latest, true);
 const buildAst = ts.createSourceFile("build.ts", producer, ts.ScriptTarget.Latest, true);
 const declarations = (names: readonly string[]) => ast.statements.filter(node => ts.isFunctionDeclaration(node) ? names.includes(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some(value => ts.isIdentifier(value.name) && names.includes(value.name.text)));
 const compile = (text: string) => ts.transpileModule(text.replace(/^export /gmu, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
+const noModels = (_root: string, _invocation: unknown, _phase: unknown, env: NodeJS.ProcessEnv, consume: (env: NodeJS.ProcessEnv) => Promise<unknown>) => consume(env);
 const binaryAst = ts.createSourceFile("binary.ts", binary, ts.ScriptTarget.Latest, true);
 const binaryCode = compile(binaryAst.statements.filter(node => ts.isFunctionDeclaration(node) ? ["pathApi", "resolveMcpBinaryPath"].includes(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some(value => ts.isIdentifier(value.name) && ["MCP_ARTIFACT_REL", "MCP_BINARY_NAME"].includes(value.name.text))).map(node => node.getText(binaryAst)).join("\n"));
 const publicationAst = ts.createSourceFile("published.ts", projection, ts.ScriptTarget.Latest, true);
@@ -69,13 +74,14 @@ for (const row of vectors.cases) test("normal MCP consumer selects its producer 
 
 for(const row of vectors.cases)test("actual launcher builds before acquiring its exact reader on "+row.id,async()=>{
  const owner=declarations(["servePublishedMcpStdioV1"])[0];if(!owner)throw Error("Actual publication owner required");
- const source=owner.getText(ast).replace(/^\s*const \{[^\n]+await import\([^\n]+$/gmu,""),trace:string[]=[],original={},control={},controller=new AbortController(),path=row.platform==="win32"?win32:posix;
+ const source=owner.getText(ast).replace(/^\s*const \{[^\n]+await import\([^\n]+$/gmu,""),trace:string[]=[],original={capabilities:{buildMode:row.mode}},control={},controller=new AbortController(),path=row.platform==="win32"?win32:posix;
  const reader=async(manifest:string,name:string,root:string,mode:string,invocation:unknown,phase:{signal:AbortSignal},consume:(artifact:{path:string})=>Promise<number>)=>{
   expect(trace).toEqual(["build"]);expect(path.resolve(root,manifest)).toBe(row.manifest);expect(name).toBe(row.binary);expect(mode).toBe(row.mode);expect(invocation).toBe(original);trace.push("reader-enter");try{return await consume({path:path.join(row.publication,row.binary)});}finally{expect(phase.signal.aborted).toBe(false);trace.push("reader-leave");}
  };
  const gateway=async(launch:{stage:(progress:(line:string)=>void,signal:AbortSignal)=>Promise<number>;command:()=>string;onStop:()=>void})=>{expect(await launch.stage(()=>{},controller.signal)).toBe(0);trace.push("serve");expect(launch.command()).toBe(path.join(row.publication,row.binary));trace.push("served");launch.onStop();return 0;};
- const actual=new Function("withAdmittedPublishedCargoExecutableV1","readBuildMode","createRequestedIssuedResourceControlV1","serveWarmMcpGateway","withMcpHostDriverPolicy","MCP_MANIFEST_REL","MCP_BINARY_NAME","MCP_BINARY_TARGET","MCP_STDIO_BUILD_MODE_V1","process",compile(source)+";return servePublishedMcpStdioV1;")(reader,(mode:string)=>mode,(_parent:unknown,_time:number,signal:AbortSignal)=>({signal}),gateway,(args:string[])=>args,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml","semio-os-mcp",row.target,"prototype",{platform:row.platform,stdin:undefined,stdout:undefined});
+ const actual=new Function("withAdmittedPublishedCargoExecutableV1","readBuildMode","createRequestedIssuedResourceControlV1","serveWarmMcpGateway","withMcpHostDriverPolicy","MCP_MANIFEST_REL","MCP_BINARY_NAME","MCP_BINARY_TARGET","MCP_STDIO_BUILD_MODE_V1","process","withMcpComponentEnvironmentV1",compile(source)+";return servePublishedMcpStdioV1;")(reader,(mode:string)=>mode,(_parent:unknown,_time:number,signal:AbortSignal)=>({signal}),gateway,(args:string[])=>args,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml","semio-os-mcp",row.target,"prototype",{platform:row.platform,stdin:undefined,stdout:undefined},noModels);
  expect(await actual(row.repoRoot,[],original,control,row.mode==="prototype"?{}:{SEMIO_BUILD_MODE:row.mode},undefined,async(target:string)=>{expect(target).toBe(row.target);trace.push("build");return 0;})).toBe(0);expect(trace).toEqual(["build","reader-enter","serve","served","reader-leave"]);
+ await expect(actual(row.repoRoot,[],original,control,{SEMIO_BUILD_MODE:row.mode==="prototype"?"release":"prototype"})).rejects.toThrow("MCP launch mode differs from the issued invocation");
 });
 
 test("warm stdio begins serving before compiler storage is ready and stages catalog after binary", async () => {
@@ -87,6 +93,56 @@ test("warm stdio begins serving before compiler storage is ready and stages cata
  expect(entered).toBe(true);expect(targets).toEqual([]);release("published/semio-os-mcp");expect(await result).toBe(0);expect(targets).toEqual(["@semio-tech/framework-os-mcp-rs:build","@semio-tech/s-dev-composition:generate"]);
 });
 
+test("catalog component custody stays live through native stdio with either binary source", async () => {
+  expect(new Ajv({ strict: false }).validate(stagingSchema.definitions.ComponentCustody, componentCustody)).toBe(true);
+  const owner = declarations(["servePublishedMcpStdioV1"])[0];
+  if (!owner) throw Error("Actual publication owner required");
+  const source = owner.getText(ast).replace(/^\s*const \{[^\n]+await import\([^\n]+$/gmu, "");
+  const db = new Database(":memory:");
+  const modelEnv = componentSchema.definitions.Protocol.const.environment;
+  try {
+    for (const row of componentCustody) {
+      const oracle = db.query("select (select json_group_array(target) from (select 'mcp:build' target where ?1 is null union all select 'catalog:generate' where ?2 is not null)) staged, (select json_group_array(reader) from (select 'native' reader where ?1 is null union all select 'models' where ?3)) active").get(row.binaryOverride, row.catalog, Number(row.modelsAvailable)) as { staged: string; active: string };
+      expect(row.staged).toEqual(JSON.parse(oracle.staged));
+      expect(row.active).toEqual(JSON.parse(oracle.active));
+      const original = {}, staged: string[] = [], readers = new Set<string>(), controls = new Set<unknown>();
+      const hold = async (name: string, phase: { signal: AbortSignal }, consume: () => Promise<unknown>) => {
+        expect(staged).toEqual(row.staged);
+        controls.add(phase);
+        readers.add(name);
+        await consume();
+        expect(phase.signal.aborted).toBe(false);
+        readers.delete(name);
+      };
+      const native = (_manifest: string, _name: string, _root: string, _mode: string, invocation: unknown, phase: { signal: AbortSignal }, consume: (artifact: { path: string }) => Promise<unknown>) => {
+        expect(invocation).toBe(original);
+        return hold("native", phase, () => consume({ path: "published/semio-os-mcp" }));
+      };
+      const components = (_root: string, invocation: unknown, phase: { signal: AbortSignal }, env: NodeJS.ProcessEnv, consume: (env: NodeJS.ProcessEnv) => Promise<unknown>) => {
+        expect(invocation).toBe(original);
+        const child = { ...env };
+        delete child[modelEnv];
+        if (!row.modelsAvailable) return consume(child);
+        return hold("models", phase, () => consume({ ...child, [modelEnv]: "held" }));
+      };
+      const gateway = async (launch: { stage: (progress: () => void, signal: AbortSignal) => Promise<number>; command: () => string; env: NodeJS.ProcessEnv; onStop: () => void }) => {
+        expect(await launch.stage(() => {}, new AbortController().signal)).toBe(0);
+        expect([...readers]).toEqual(row.active);
+        expect(controls.size).toBe(row.active.length);
+        expect(launch.env[modelEnv]).toBe(row.modelsAvailable ? "held" : undefined);
+        expect(launch.command()).toBe(row.binaryOverride ?? "published/semio-os-mcp");
+        launch.onStop();
+        return 0;
+      };
+      const actual = new Function("withAdmittedPublishedCargoExecutableV1", "withMcpComponentEnvironmentV1", "readBuildMode", "createRequestedIssuedResourceControlV1", "serveWarmMcpGateway", "withMcpHostDriverPolicy", "requireMcpBinary", "MCP_MANIFEST_REL", "MCP_BINARY_NAME", "MCP_BINARY_TARGET", "MCP_STDIO_BUILD_MODE_V1", "process", compile(source) + ";return servePublishedMcpStdioV1;")(native, components, (mode: string) => mode, (_parent: unknown, _time: number, signal: AbortSignal) => ({ signal }), gateway, (args: string[]) => args, () => row.binaryOverride, "owner/Cargo.toml", "semio-os-mcp", "mcp:build", "prototype", { platform: "linux" });
+      const env = { SEMIO_OS_MCP_BIN: row.binaryOverride ?? undefined, SEMIO_PLUGIN_CATALOG: row.catalog ?? undefined, [modelEnv]: "ambient" };
+      expect(await actual("repo", [], original, {}, env, row.catalog ? "catalog:generate" : undefined, async (target: string) => { staged.push(target); return 0; })).toBe(0);
+      expect(readers.size).toBe(0);
+      expect(env[modelEnv]).toBe("ambient");
+    }
+  } finally { db.close(); }
+});
+
 test("client EOF cancels blocked publication admission and drains its owner",async()=>{
  const vector=JSON.parse(readFileSync(new URL("../🧫️fixtures/lifetime.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:false}).validate(schema.definitions.Lifetime,vector)).toBe(true);
  const db=new Database(":memory:");try{expect(db.query("select 0 exitCode,0 ready,1 cancelled").get()).toEqual({exitCode:vector.exitCode,ready:Number(vector.ready),cancelled:Number(vector.cancelled)});}finally{db.close();}
@@ -94,7 +150,7 @@ test("client EOF cancels blocked publication admission and drains its owner",asy
  let cancelled=false,drained=false,entered!:()=>void;const admitted=new Promise<void>(resolve=>{entered=resolve;});
  const reader=async(_manifest:unknown,_name:unknown,_root:unknown,_mode:unknown,_original:unknown,control:{signal:AbortSignal})=>{entered();try{await new Promise((_,reject)=>control.signal.addEventListener("abort",()=>{cancelled=true;reject(control.signal.reason);},{once:true}));}finally{drained=true;}};
  const gateway=async(launch:{stage:(progress:(line:string)=>void,signal:AbortSignal)=>Promise<number>;onStop:()=>void})=>{const pending=launch.stage(()=>{},new AbortController().signal);await admitted;launch.onStop();await pending.catch(()=>{});return vector.exitCode;};
- const actual=new Function("withAdmittedPublishedCargoExecutableV1","readBuildMode","createRequestedIssuedResourceControlV1","serveWarmMcpGateway","withMcpHostDriverPolicy","MCP_MANIFEST_REL","MCP_BINARY_NAME","MCP_BINARY_TARGET","MCP_STDIO_BUILD_MODE_V1","process",compile(source)+";return servePublishedMcpStdioV1;")(reader,(mode:string)=>mode,(_parent:unknown,_time:number,signal:AbortSignal)=>({signal}),gateway,(args:string[])=>args,"owner/Cargo.toml","semio-os-mcp","mcp:build","prototype",{platform:"linux",stdin:undefined,stdout:undefined});
+ const actual=new Function("withAdmittedPublishedCargoExecutableV1","readBuildMode","createRequestedIssuedResourceControlV1","serveWarmMcpGateway","withMcpHostDriverPolicy","MCP_MANIFEST_REL","MCP_BINARY_NAME","MCP_BINARY_TARGET","MCP_STDIO_BUILD_MODE_V1","process","withMcpComponentEnvironmentV1",compile(source)+";return servePublishedMcpStdioV1;")(reader,(mode:string)=>mode,(_parent:unknown,_time:number,signal:AbortSignal)=>({signal}),gateway,(args:string[])=>args,"owner/Cargo.toml","semio-os-mcp","mcp:build","prototype",{platform:"linux",stdin:undefined,stdout:undefined},noModels);
  expect(await actual("repo",[],{},{},{},undefined,async()=>0)).toBe(vector.exitCode);expect(cancelled).toBe(vector.cancelled);expect(drained).toBe(true);
 });
 
@@ -117,13 +173,20 @@ test("actual native dev transports hold publication custody and inject authored 
  const vectors=JSON.parse(readFileSync(new URL("../🧫️fixtures/transports.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:false}).validate(schema.definitions.Transports,vectors)).toBe(true);
  const owner=buildAst.statements.find(node=>ts.isClassDeclaration(node)&&node.name?.text==="DevScript");if(!owner)throw Error("Actual native DevScript required");const helper=buildAst.statements.find(node=>ts.isClassDeclaration(node)&&node.name?.text==="PublishedMcpScript");if(!helper)throw Error("Shared native publication consumer required");const source=[helper,owner].map(node=>node.getText(buildAst)).join("\n").replace(/^\s*const \{[^\n]+await import\([^\n]+$/gmu,"");
  const policy=declarations(["withMcpHostDriverPolicy"])[0];if(!policy)throw Error("Authored policy projection required");const hostPolicy=new Function("MCP_HOST_DRIVER_POLICY_PATH","MCP_HOST_OPERATION_POLICY_PATH",compile(policy.getText(ast))+";return withMcpHostDriverPolicy;")("authored-policy","authored-inference-policy");
+ const catalog=declarations(["takeMcpPluginCatalog"])[0];if(!catalog)throw Error("Authored catalog projection required");const takeCatalog=new Function("resolve",compile(catalog.getText(ast))+";return takeMcpPluginCatalog;")(posix.join);
+ const modelEnv=componentSchema.definitions.Protocol.const.environment;
  for(const row of vectors.cases){
-  const trace:string[]=[],original={capabilities:{buildMode:"prototype"}},controller=new AbortController(),environment={SENTINEL:"caller",SEMIO_BUILD_MODE:"prototype"};class Bundle{repoRoot="workspace";root="crate";invocation=original;}
-  const reader=async(_manifest:unknown,_name:unknown,root:string,_mode:unknown,invocation:unknown,_control:unknown,consume:(artifact:{path:string;environment:object},control:unknown)=>Promise<void>)=>{expect(root).toBe("workspace");expect(invocation).toBe(original);trace.push("reader-enter");await consume({path:"published/semio-os-mcp",environment:{ARTIFACT:"owned"}},{signal:controller.signal});trace.push("reader-leave");};
-  const run=async(command:string,args:string[],cwd:string,_label:unknown,_budget:unknown,options:{env:object;signal:AbortSignal;stdout:string})=>{expect(command).toBe("published/semio-os-mcp");expect(args).toEqual(row.expected);expect(cwd).toBe("crate");expect(options.env).toEqual({...environment,ARTIFACT:"owned",ORIGINAL:original});expect(options.signal).toBe(controller.signal);expect(options.stdout).toBe("inherit");expect(trace).toEqual(["reader-enter"]);trace.push("run");};
-  const actual=new Function("BundleScript","withAdmittedPublishedCargoExecutableV1","readBuildMode","MCP_MANIFEST_REL","MCP_BINARY_NAME","MCP_STDIO_BUILD_MODE_V1","withIssuedResourceControlV1","withMcpHostDriverPolicy","runOwnedCommand","scriptInvocationBudget","scriptInvocationEnvironment","process",compile(source)+";return new DevScript();")(Bundle,reader,(mode:string)=>mode,"owner/Cargo.toml","semio-os-mcp","prototype",(_inv:unknown,_label:unknown,_time:unknown,consume:(control:unknown)=>Promise<void>)=>consume({}),hostPolicy,run,()=>({maximumElapsedMilliseconds:0}),(invocation:unknown,env:object)=>({...env,ORIGINAL:invocation}),{env:environment,platform:"linux"});
-  const db=new Database(":memory:");try{const oracle=db.query("with recursive policy(n,flag,path) as (select 0,?4,?5 union all select 1,'--operation-policy','authored-inference-policy'), steps(n,args) as (select 0,case when json_array_length(?1)=0 then json_array(?2) else ?1 end union all select steps.n+1,case when exists(select 1 from json_each(steps.args) where value=policy.flag) then steps.args else json_insert(steps.args,?3,policy.flag,?3,policy.path) end from steps join policy on policy.n=steps.n) select args arguments from steps where n=2").get(JSON.stringify(row.args),"stdio","$[#]","--host-driver-policy","authored-policy")as{arguments:string};expect(row.expected).toEqual(JSON.parse(oracle.arguments));}finally{db.close();}
-  await actual.run(row.args);expect(trace).toEqual(["reader-enter","run","reader-leave"]);
+  const trace:string[]=[],original={capabilities:{buildMode:"prototype"}},controller=new AbortController(),environment={SENTINEL:"caller",SEMIO_BUILD_MODE:"prototype"},nativeScope=new AsyncLocalStorage<boolean>();class Bundle{repoRoot="workspace";root="crate";invocation=original;}
+  const reader=async(_manifest:unknown,_name:unknown,root:string,_mode:unknown,invocation:unknown,_control:unknown,consume:(artifact:{path:string;environment:object},control:unknown)=>Promise<void>)=>{expect(root).toBe("workspace");expect(invocation).toBe(original);trace.push("reader-enter");await nativeScope.run(true,()=>consume({path:"published/semio-os-mcp",environment:{ARTIFACT:"owned"}},{signal:controller.signal}));trace.push("reader-leave");};
+  const models=async(root:string,invocation:unknown,control:unknown,env:NodeJS.ProcessEnv,consume:(env:NodeJS.ProcessEnv,control:unknown)=>Promise<unknown>)=>{
+   expect(nativeScope.getStore()).toBeUndefined();expect(root).toBe("workspace");expect(invocation).toBe(original);expect(env.SEMIO_PLUGIN_CATALOG).toBe(row.catalog??undefined);
+   trace.push("models-enter");const child={...env};delete child[modelEnv];if(row.catalog)child[modelEnv]="held";await consume(child,control);trace.push("models-leave");
+  };
+  const run=async(command:string,args:string[],cwd:string,_label:unknown,_budget:unknown,options:{env:object;signal:AbortSignal;stdout:string})=>{expect(command).toBe("published/semio-os-mcp");expect(args).toEqual(row.expected);expect(cwd).toBe("crate");expect(options.env).toEqual({...environment,ARTIFACT:"owned",ORIGINAL:original,...(row.catalog?{SEMIO_PLUGIN_CATALOG:row.catalog,[modelEnv]:"held"}:{})});expect(options.signal).toBe(controller.signal);expect(options.stdout).toBe("inherit");expect(trace).toEqual(["reader-enter","models-enter"]);trace.push("run");};
+  const issued=(_inv:unknown,_label:unknown,_time:unknown,consume:(control:unknown)=>Promise<void>,signal?:AbortSignal)=>consume({signal});
+  const actual=new Function("BundleScript","withAdmittedPublishedCargoExecutableV1","readBuildMode","MCP_MANIFEST_REL","MCP_BINARY_NAME","MCP_STDIO_BUILD_MODE_V1","withIssuedResourceControlV1","withMcpHostDriverPolicy","runOwnedCommand","scriptInvocationBudget","scriptInvocationEnvironment","process","withMcpComponentEnvironmentV1","takeMcpPluginCatalog","AsyncLocalStorage",compile(source)+";return new DevScript();")(Bundle,reader,(mode:string)=>mode,"owner/Cargo.toml","semio-os-mcp","prototype",issued,hostPolicy,run,()=>({maximumElapsedMilliseconds:0}),(invocation:unknown,env:object)=>({...env,ORIGINAL:invocation}),{env:{...environment,[modelEnv]:"ambient"},platform:"linux"},models,takeCatalog,AsyncLocalStorage);
+  const db=new Database(":memory:");try{const oracle=db.query("with recursive supplied as (select key,value from json_each(?1)), catalog as (select key from supplied where value='--catalog'), flags(n,flag,path) as (select 0,?4,?5 union all select 1,'--operation-policy','authored-inference-policy'), steps(n,args) as (select 0,case when json_array_length(?1)=0 then json_array(?2) else (select json_group_array(value) from supplied where key not in (select key from catalog union all select key+1 from catalog)) end union all select steps.n+1,case when exists(select 1 from json_each(steps.args) where value=flags.flag) then steps.args else json_insert(steps.args,?3,flags.flag,?3,flags.path) end from steps join flags on flags.n=steps.n) select args arguments from steps where n=2").get(JSON.stringify(row.args),"stdio","$[#]","--host-driver-policy","authored-policy")as{arguments:string};expect(row.expected).toEqual(JSON.parse(oracle.arguments));}finally{db.close();}
+  await actual.run(row.args);expect(trace).toEqual(["reader-enter","models-enter","run","models-leave","reader-leave"]);
  }
 });
 

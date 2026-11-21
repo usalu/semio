@@ -35,7 +35,7 @@ pub(super) const IMAGE_PROPS: SchemaMetadata = SchemaMetadata {
     typescript: r####"/**
  * 🖼️ Props for `Component::Image`.
  */
-export type ImageProps = { src: string, alt: Label | null, };"####,
+export type ImageProps = { src: string, alt: Label | null, sourceBodyBytes?: number, };"####,
 };
 
 pub(super) const INPUT_KIND: SchemaMetadata = SchemaMetadata {

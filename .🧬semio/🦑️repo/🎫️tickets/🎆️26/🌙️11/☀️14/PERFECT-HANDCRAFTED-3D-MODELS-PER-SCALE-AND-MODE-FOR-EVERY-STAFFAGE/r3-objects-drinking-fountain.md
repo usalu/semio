@@ -72,3 +72,36 @@ Final lines: `volumes-check.ts objects/drinking-fountain --product` PASS; `r3-va
 - The jet keeps its true 12 to 6 mm at 1:100 to 1:500 by the `texture` flag (it is 14 diameters long, so not `slender`); the emitter patch is exempt from the feature rule through its `layer`.
 - `bubbler-brass` and `water-jet` sit at the C16 limit, 7 % above the measured areas; values beyond factor 1.5 were not applied.
 - The hollow castings count their cavity in the product's area measure (no C31 flood): filled thermal skins instead, noted in `tool-requests.md`.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-drinking-fountain-print.py` (1:500 pens, `--apply`), shared `r5_o02_lib.py`, `r5-o02-sheets.sh`, `r5-o02-montage.sh`, `r5-o02-measure.ts`. Renders under `🗑️generated/r5-drinking-fountain/{before,after}/` (every scale body, thermal cut, structure, 2D; poses idle-sun, drinking, idle-shade; clip press-and-drink 4 s), all opened.
+
+### Model against reference (default pose, `r5-o02-measure.ts`)
+
+| quantity | reference (section 1: Murdock / Haws 3500 class, EN 1717) | model | deviation |
+|---|---|---|---|
+| overall height | 0.95 to 1.05 m (asset 1.00) | 1.000 m (1:50), 0.996 m (1:500) | 0 % / -0.4 % |
+| bowl diameter | 0.30 to 0.45 m (asset 0.40) | 0.399 m | -0.2 % |
+| rim height | 0.85 to 0.95 m | 0.899 m | inside |
+| free outlet above the rim | at least 20 mm (EN 1717) | 57 mm | complies |
+| base flange | 0.35 to 0.45 m | 0.400 m | inside |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | unchanged |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | A- / A- / A- | unchanged |
+| 1:500 | A- (base mouldings generalised to a cone, true silhouette) / A- / A- | unchanged; 2D prints over the whole band |
+
+Catalog before: INVALID (`range-end-feature` at 1:1000: button 0.169 mm, bubbler 0.183 mm). After: VALID with volumes, `volumes-check --product` PASS.
+
+### Change
+
+- 1:500 2D: `button` and `bubbler` drawn with the 0.18 mm pen in every view, so they print to 1:1000 without narrowing the band (20-75-150-350-1000 stays gapless).
+
+### Remaining
+
+Section 6 items stand (no supply pipe or drain inside, jet hidden by sinking into the die, bubbler and jet areas at the C16 limit).

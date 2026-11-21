@@ -7,7 +7,38 @@ use semio_framework_value::{RetainedCloneGrant,ValueError,ValueRefusalKind};
 /// 🧳️ A live process owner remains in the error until process entry chooses explicit fatal termination.
 pub struct ProcessRunFailure{pub error:GatewayError,owner:Option<ProcessUiArena>}
 impl From<GatewayError> for ProcessRunFailure{fn from(error:GatewayError)->Self{Self{error,owner:None}}}
-impl ProcessRunFailure{pub fn with_failures_step(&mut self,mut receive:impl FnMut(&GuestRelayAdmissionFailure,&mut semio_framework_job::StepContext<'_>)->Result<(),OriginalTurnFailure>)->bool{let Some(owner)=self.owner.as_mut()else{return true};if owner.diagnostic_failure.is_some(){return false}let pending=&owner.failures;let extra=&owner.capture_failure;let leases=&mut owner.faults;let result=owner.driver.dispatch_cleanup_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:(||{for index in 0..2{if let Some(failure)=pending[index].as_ref(){receive(failure,cx)?;}else if let Some(lease)=leases[index].as_mut(){if lease.terminal_is_empty(){cx.with_original_native_root_step::<GuestRelayFaultHome>(lease.recipient_identity(),|home,cx|if home.has_failure(){home.with_failure(cx,|failure,cx|receive(failure,cx))}else{Ok(())})?;}else{lease.with_native(cx,|home,cx|if home.has_failure(){home.with_failure(cx,|failure,cx|receive(failure,cx))}else{Ok(())})?;}}}if let Some(failure)=extra{receive(failure,cx)?;}Ok(())})(),execution:None});match result{Ok(ready)=>ready,Err(failure)=>{owner.diagnostic_failure=Some(failure);false}}}pub fn requires_process_exit(&self)->bool{self.owner.is_some()}pub fn exit(mut self)->!{self.with_failures_step(|failure,cx|{let mut writer=FailureWriter{cx,refusal:None};if std::fmt::write(&mut writer,format_args!("{failure:?}\n")).is_err(){return Err(writer.refusal.unwrap_or_else(||invalid("process failure diagnostic was not completely written")))}Ok(())});eprintln!("[semio-os-mcp] {:?}: {}",self.error.code,self.error.message);std::process::exit(1)}}
+impl ProcessRunFailure {
+ pub fn with_failures_step(&mut self, mut receive: impl FnMut(&GuestRelayAdmissionFailure, &mut semio_framework_job::StepContext<'_>) -> Result<(), OriginalTurnFailure>) -> bool {
+  let Some(owner) = self.owner.as_mut() else { return true };
+  if owner.diagnostic_failure.is_some() { return false; }
+  let pending = &owner.failures;
+  let extra = &owner.capture_failure;
+  let leases = &mut owner.faults;
+  let result = owner.driver.dispatch_cleanup_admission_step(false, |_, cx| GuestRelayAdmissionCall {
+   result: (|| {
+    for (failure, lease) in pending.iter().zip(leases.iter_mut()) {
+     if let Some(failure) = failure {
+      receive(failure, cx)?;
+     } else if let Some(lease) = lease {
+      lease.with_native(cx, |home, cx| {
+       if home.has_failure() { home.with_failure(cx, |failure, cx| receive(failure, cx))?; }
+       Ok(())
+      })?;
+     }
+    }
+    if let Some(failure) = extra { receive(failure, cx)?; }
+    Ok(())
+   })(),
+   execution: None,
+  });
+  match result {
+   Ok(ready) => ready,
+   Err(failure) => { owner.diagnostic_failure = Some(failure); false }
+  }
+ }
+ pub fn requires_process_exit(&self)->bool{self.owner.is_some()}
+ pub fn exit(mut self)->!{self.with_failures_step(|failure,cx|{let mut writer=FailureWriter{cx,refusal:None};if std::fmt::write(&mut writer,format_args!("{failure:?}\n")).is_err(){return Err(writer.refusal.unwrap_or_else(||invalid("process failure diagnostic was not completely written")))}Ok(())});eprintln!("[semio-os-mcp] {:?}: {}",self.error.code,self.error.message);std::process::exit(1)}
+}
 struct FailureWriter<'a,'cx>{cx:&'a mut semio_framework_job::StepContext<'cx>,refusal:Option<OriginalTurnFailure>}
 impl std::fmt::Write for FailureWriter<'_,'_>{fn write_str(&mut self,text:&str)->std::fmt::Result{use std::io::Write;let mut bytes=text.as_bytes();while !bytes.is_empty(){let grant=self.cx.retained_grant();if self.cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes.len()||grant.maximum_depth==0||self.cx.fuel_remaining()<bytes.len()as u64{self.refusal=Some(invalid("process diagnostic requires its remaining funded output slice"));return Err(std::fmt::Error)}let n=match std::io::stderr().write(bytes){Ok(n)if n>0=>n,_=>{self.refusal=Some(invalid("process diagnostic stderr refused the original bytes"));return Err(std::fmt::Error)}};self.cx.consume_fuel(n as u64);if let Err(error)=self.cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:n,..Default::default()}){self.refusal=Some(error.into());return Err(std::fmt::Error)}bytes=&bytes[n..];}Ok(())}}
 struct ProcessUiArena{driver:GuestRelayWakeDriver,input:Option<UiArenaLifetime>,arena:Option<OriginalNativeLease<UiArenaLifetime>>,fault_inputs:[Option<GuestRelayFaultHome>;2],faults:[Option<OriginalNativeLease<GuestRelayFaultHome>>;2],failures:[Option<GuestRelayAdmissionFailure>;2],capture_failure:Option<GuestRelayAdmissionFailure>,diagnostic_failure:Option<GuestRelayAdmissionFailure>}

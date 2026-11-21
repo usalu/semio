@@ -1,0 +1,20 @@
+{
+  "common": {
+    "loan": {
+      "operationId": "0000000000000001",
+      "generation": "0000000000000002",
+      "instanceId": 4294967295,
+      "documentId": "fixture-with-media",
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000007"
+    },
+    "owner": 18446744073709551615,
+    "seq": 9007199254740993,
+    "kind": 7,
+    "extent": 4294967295
+  },
+  "cases": [
+    { "tag": "begin", "val": { "name": "fixture.png", "mediaType": "image/png" } },
+    { "tag": "complete" },
+    { "tag": "cancel" }
+  ]
+}

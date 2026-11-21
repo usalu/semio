@@ -13,6 +13,13 @@ where
         if self.terminal_is_empty_unbounded() { return Ok(Default::default()); }
         if self.original_failure.is_some()||self.original_context_failure.is_some()||!self.mutation_domain.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"hydration retains its complete unreceived original failure"));}
         if !self.fold_protocol.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fold protocol cause requires its actual original receiver"))}
+        if self.requires_original_close() && !self.mutation_admission.terminal_is_empty() {
+            if self.mutation_admission.failure_untaken() {
+                let demand = self.mutation_admission.take_failure_demand();
+                return Ok(RetirementDemand { copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth });
+            }
+            return Ok(self.mutation_admission.close_demand());
+        }
         if self.mutation_refusal.is_some()&&self.active.is_none(){return semio_os_store_read::artifact_retirement_owned_birth_demands(&self.mutation_refusal)}
         if !self.fold_output.terminal_is_empty(){return self.fold_output.close_demands(body)}
         if !self.empty_messages.terminal_is_empty(){return self.empty_messages.close_demands(body)}

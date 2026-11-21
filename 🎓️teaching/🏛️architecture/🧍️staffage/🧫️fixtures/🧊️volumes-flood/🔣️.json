@@ -1,5 +1,5 @@
 {
- "description": "C31: the outer area of a region is the surface the air from outside reaches. Every case lists solids in one frame in metres (a `tube` is a regular prism around the z axis from `from` to `to` with `segments` sides, a disc when `innerRadiusM` is 0; a `box` spans `min` to `max`), the region whose outer area is measured against all solids as walls, the hand value `areaM2` (circles, not polygons) and, where C31 changes it, the value without the flood `unfloodedM2`. Tube: CHS 48.3 x 3.2, 0.669 m long; caps: discs of 52 mm, 6 mm thick, 3 mm into the tube. The smallest feature is that of 1:50; the flood cell is a quarter of it. The oracle (`🧪️tests/🧊️volumes-flood/🐍️.py`: trimesh voxelisation, scipy connected components) measures the same triangles.",
+ "description": "C31: the outer area of a region is the surface the air from outside reaches. Every case lists solids in one frame in metres (a `tube` is a regular prism around the z axis from `from` to `to` with `segments` sides, a disc when `innerRadiusM` is 0; a `box` spans `min` to `max`), the region whose outer area is measured against all solids as walls, the hand value `areaM2` (circles, not polygons) and, where C31 changes it, the value without the flood `unfloodedM2`. E3 (glazed cavities): a region whose faces looking into a closed cavity, with no wall of its own between them and the air, outweigh its faces that the air reaches or another region covers is contents of the cavity and counts its whole surface; `transparent` names the regions that are glazing, `seenM2` is the area of the target that can be seen from outside through them (`opaqueSeenM2` with no region transparent). The glazed box is the casing of six panels whose lid is glass (region g). Tube: CHS 48.3 x 3.2, 0.669 m long; caps: discs of 52 mm, 6 mm thick, 3 mm into the tube. The smallest feature is that of 1:50; the flood cell is a quarter of it. The oracle (`🧪️tests/🧊️volumes-flood/🐍️.py`: trimesh voxelisation, scipy connected components) measures the same triangles.",
  "featureM": 0.0075,
  "cellM": 0.001875,
  "probeM": 0.00015,
@@ -617,7 +617,7 @@
   },
   {
    "name": "the core enclosed in a casing",
-   "hand": "no air from outside reaches the enclosed core; only its underside, which stands on the floor panel (a solid of another region that the air reaches outside), counts as covered (C29): 0.1 x 0.1 (a region that is inside is declared `hidden` and then counts its full mesh)",
+   "hand": "E3: no air from outside reaches the enclosed core; its underside stands on the floor panel (covered, C29) and its other faces look into the closed cavity with no wall of its own behind them, so it is contents and counts its whole surface 6 x 0.01 like a `hidden` region; no glazing lets one see it, so the rule asks to declare it `hidden`",
    "solids": [
     {
      "region": "a",
@@ -719,8 +719,642 @@
     }
    ],
    "target": "b",
-   "areaM2": 0.01,
-   "unfloodedM2": 0.06
+   "areaM2": 0.06,
+   "unfloodedM2": 0.06,
+   "transparent": [],
+   "seenM2": 0
+  },
+  {
+   "name": "an absorber plate under a glass lid",
+   "hand": "E3: a plate 0.3 x 0.2 x 0.005 m floating in the glazed box (the casing of six panels whose lid is glass, region g) is contents of the closed cavity and counts its whole surface 2 (0.3 x 0.2) + 2 (0.3 + 0.2) 0.005; with the glass clear every face of it can be seen, with the lid opaque none",
+   "solids": [
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "g",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "p",
+     "kind": "box",
+     "min": [
+      -0.15,
+      -0.1,
+      0.0
+     ],
+     "max": [
+      0.15,
+      0.1,
+      0.005
+     ]
+    }
+   ],
+   "target": "p",
+   "areaM2": 0.125,
+   "unfloodedM2": 0.125,
+   "transparent": [
+    "g"
+   ],
+   "seenM2": 0.125,
+   "opaqueSeenM2": 0
+  },
+  {
+   "name": "the glass lid over the plate",
+   "hand": "E3: the lid is part of the closure: its top 0.4 x 0.3, its edges 2 (0.4 + 0.3) 0.01 and the rim of its underside on the side panels (covered by region h, C29) 0.4 x 0.3 - 0.38 x 0.28 count; the underside over the cavity is the inside of the closure",
+   "solids": [
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "g",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "p",
+     "kind": "box",
+     "min": [
+      -0.15,
+      -0.1,
+      0.0
+     ],
+     "max": [
+      0.15,
+      0.1,
+      0.005
+     ]
+    }
+   ],
+   "target": "g",
+   "areaM2": 0.1476
+  },
+  {
+   "name": "the housing of the glazed box",
+   "hand": "E3: floor and four sides of region h are the closure: the casing of six panels 0.52 less the lid top and edges 0.12 + 0.014, plus the tops of the side panels under the glass (covered, C29) 2 (0.4 + 0.28) 0.01; the inside faces do not count",
+   "solids": [
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "g",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "p",
+     "kind": "box",
+     "min": [
+      -0.15,
+      -0.1,
+      0.0
+     ],
+     "max": [
+      0.15,
+      0.1,
+      0.005
+     ]
+    }
+   ],
+   "target": "h",
+   "areaM2": 0.3996
+  },
+  {
+   "name": "a plate resting on the floor of the glazed box",
+   "hand": "E3: the same plate lying on the floor panel: its underside is covered by the floor (C29), its top and edges look into the cavity; it is contents and counts its whole surface",
+   "solids": [
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "g",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "p",
+     "kind": "box",
+     "min": [
+      -0.15,
+      -0.1,
+      -0.09
+     ],
+     "max": [
+      0.15,
+      0.1,
+      -0.085
+     ]
+    }
+   ],
+   "target": "p",
+   "areaM2": 0.125
+  },
+  {
+   "name": "a header through the floor of the glazed box",
+   "hand": "E3: a rod of 22 mm from 20 mm below the floor to 50 mm above the middle: most of it lies in the cavity, so it is contents and counts its whole surface 2 pi R 0.17 + 2 pi R^2, the part outside and in the floor included",
+   "solids": [
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "g",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "k",
+     "kind": "tube",
+     "outerRadiusM": 0.011,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": -0.12,
+     "to": 0.05
+    }
+   ],
+   "target": "k",
+   "areaM2": 0.01251
+  },
+  {
+   "name": "a spigot reaching into the glazed box",
+   "hand": "E3: a rod of 22 mm from 150 mm below the floor to 30 mm above it: most of it is outside, so it is no contents and counts only what the air reaches and the floor covers, 2 pi R (0.15 + 0.01) + pi R^2; the 30 mm in the cavity and its end disc do not count",
+   "solids": [
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.1
+     ],
+     "max": [
+      0.2,
+      0.15,
+      -0.09
+     ]
+    },
+    {
+     "region": "g",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.1
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.15,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      -0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.15,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      -0.2,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      -0.19,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "h",
+     "kind": "box",
+     "min": [
+      0.19,
+      -0.14,
+      -0.09
+     ],
+     "max": [
+      0.2,
+      0.14,
+      0.09
+     ]
+    },
+    {
+     "region": "k",
+     "kind": "tube",
+     "outerRadiusM": 0.011,
+     "innerRadiusM": 0,
+     "segments": 64,
+     "from": -0.25,
+     "to": -0.06
+    }
+   ],
+   "target": "k",
+   "areaM2": 0.011439
   }
  ],
  "sample": {

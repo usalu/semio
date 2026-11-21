@@ -15,6 +15,6 @@ test("every fixture case states a fault or at least one measure", () => {
   for (const { name, outputs, fault } of fixture.cases) expect(fault !== undefined || Object.keys((outputs?.shape ?? {}) as object).length > 1, name).toBe(true);
 });
 
-test("manifold-3d recomputes the volume, area and bounding box of every boolean case on the same operands", () => {
+test("Manifold-3D recomputes the stated mass properties and bounds from the same operands", () => {
   expect(disagreements(fixture.cases, oracleCase, fixture.tolerance)).toEqual([]);
 }, { timeout: 120000 });

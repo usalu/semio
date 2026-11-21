@@ -126,13 +126,19 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
 /// MECHANISM design.md §2, fleet-trinity-recipe) — replaces the old `declaration()`
 /// (`ArtifactDeclaration::builder(...).schema(...).inferences(...).composers(...).languages(...)
 /// .document_codec(...)` chain, deleted outright, no dual channel) as the ONLY registration channel
-/// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows, above)
-/// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
-/// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
+/// for schema, IO, viewer and editor rows.
 pub fn artifact<PA: ArtifactApps<C>,C:JackComposition>() -> semio_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_plugin::app::declarations::ArtifactDeclaration;
-    use {semio_framework_artifact_reference::ArtifactKindId};
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA,C>()] }
+    use semio_plugin::ArtifactLocale;
+    use semio_framework_artifact_reference::ArtifactKindId;
+    use std::sync::OnceLock;
+
+    static LABELS: OnceLock<[(ArtifactLocale, &'static str); 2]> = OnceLock::new();
+    let localization = LABELS.get_or_init(|| [
+        (ArtifactLocale::parse("en").expect("English locale"), "Jack"),
+        (ArtifactLocale::parse("de").expect("German locale"), "Buchse"),
+    ]);
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization, standards: vec![crate::standards::v1::standard::<PA,C>()] }
 }
 /// 🎯️ `ArtifactKindSpec` identity shared by every `jack`-family app that mounts this artifact.
 pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {

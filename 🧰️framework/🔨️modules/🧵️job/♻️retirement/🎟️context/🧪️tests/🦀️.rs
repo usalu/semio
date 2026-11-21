@@ -106,3 +106,71 @@ fn an_explicit_zero_work_receipt_settles_and_leaves_fuel_untouched() {
 
     caller.retire(bank());
 }
+
+#[test]
+fn archive_close_defers_a_narrow_child_turn_without_spending_the_source() {
+    use semio_framework_job::OriginalCallerChildSource;
+    use semio_framework_value::{RetainedCloneStep, RetirementDemand};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let row = &fixture["issuedArchiveClose"];
+    let number = |key: &str| row[key].as_u64().unwrap() as usize;
+    let demand = RetirementDemand {
+        copy_bytes: number("copyBytesRequired"),
+        capacity_bytes: number("capacityBytesRequired"),
+        depth: number("depthRequired"),
+        ..Default::default()
+    };
+    let stock = RetainedCloneGrant { maximum_copy_bytes: 4194304, maximum_capacity_bytes: 4194304, maximum_release_bytes: 8388608, ..bank() };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(77), Generation(3), stock, clock, 12345, 100000);
+    caller.admit_return_table();
+    let mut child = caller.refreshed_turn(stock, |cx| Ok(OriginalCallerChildSource::new(cx.original_source_parent()?, cx, OperationId(78), Generation(3))?)).unwrap();
+    assert!((0..64).any(|_| caller.refreshed_turn(stock, |cx| child.admit_step(cx.original_source_parent()?, cx)).unwrap()));
+
+    for quoted in [false, true] {
+        let mut calls = 0;
+        for width in [number("copyBytesAvailable"), demand.copy_bytes] {
+            let grant = RetainedCloneGrant { maximum_copy_bytes: width, ..stock };
+            caller.refreshed_turn(stock, |cx| {
+                let returned = child.with_context(cx.original_source_parent()?, cx, grant, |original| {
+                    let before = original.retained_progress();
+                    let work = original.original_work_units_spent();
+                    let advance = |_| {
+                        calls += 1;
+                        RetainedWorkOutcome {
+                            result: Ok::<_, ValueError>(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })),
+                            work: 1,
+                        }
+                    };
+                    let step = if quoted {
+                        close_original_quoted_retained_step(original, demand, 1, advance)?
+                    } else {
+                        close_original_retained_step(original, demand, advance)?
+                    };
+                    assert_eq!(step.progress(), delta(original.retained_progress(), before));
+                    if width < demand.copy_bytes {
+                        assert_eq!(row["expectedWhenSourceCanFund"], "pending");
+                        assert_eq!(original.original_total_retained_grant().maximum_copy_bytes, width);
+                        assert!(original.original_source_total_grant().maximum_copy_bytes >= demand.copy_bytes);
+                        assert_eq!(step, InteractiveJobCloseStep::Pending { progress: Default::default() });
+                        assert_eq!(original.original_work_units_spent(), work);
+                        assert_eq!(calls, 0);
+                    } else {
+                        assert_eq!(step.progress().copied_bytes, demand.copy_bytes);
+                        assert_eq!(calls, 1);
+                    }
+                    Ok(())
+                })?;
+                returned.into_original().unwrap_or_else(|_| panic!("close child returned an invalid receipt"))?;
+                Ok(())
+            }).unwrap();
+        }
+    }
+
+    for _ in 0..4096 {
+        if child.terminal_is_empty() { break; }
+        caller.refreshed_turn(stock, |cx| child.close_step(cx.original_source_parent()?, cx)).unwrap();
+    }
+    assert!(child.terminal_is_empty());
+    drop(child);
+    caller.retire(stock);
+}

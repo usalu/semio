@@ -43,6 +43,12 @@ pub enum PluginLifecycleStep {
 }
 
 impl PluginLifecycleStep {
+    pub fn with_progress(self, progress: RetainedCloneProgress) -> Self {
+        match self {
+            Self::Complete(_) => Self::Complete(progress),
+            _ => Self::Progress(progress),
+        }
+    }
     pub fn progress(self)->Option<RetainedCloneProgress>{match self{Self::Progress(progress)|Self::Complete(progress)=>Some(progress),Self::AwaitingInput{..}|Self::Blocked{..}=>None}}
     pub fn retained(step:RetainedCloneStep,parent_terminal_is_empty:bool)->Self{match step{RetainedCloneStep::Complete(progress)if parent_terminal_is_empty=>Self::Complete(progress),RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>Self::Progress(progress)}}
 }

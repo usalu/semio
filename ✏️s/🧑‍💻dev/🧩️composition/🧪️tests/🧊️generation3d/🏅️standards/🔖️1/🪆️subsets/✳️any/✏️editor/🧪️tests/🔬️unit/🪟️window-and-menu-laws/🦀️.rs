@@ -213,7 +213,7 @@ fn graph_selection_splits_into_node_and_edge_domains() {
     let mut fixture = semio_framework_artifact_flow_flow::FlowHostSnapshot::default();
     fixture.widgets.push(semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text: "n".into() });
     fixture.synapses.push(semio_framework_artifact_flow_flow::SynapseSpec { id: "wire".into(), from: "note".into(), to: "note".into(), from_port: String::new(), to_port: String::new() });
-    let marks = PreviewInteractionMarks { source_revision: None, components: Default::default(), hovered: Default::default(), selected: ["note@out#2".to_string(), "wire".to_string()].into_iter().collect() };
+    let marks = PreviewInteractionMarks { hovered: Default::default(), selected: ["note@out#2".to_string(), "wire".to_string()].into_iter().collect(), ..Default::default() };
     assert_eq!(marks.graph_selection_domains(&fixture), (vec!["note".to_string()], vec!["wire".to_string()]));
 }
 
@@ -332,4 +332,49 @@ async fn sun_measures_are_exposed_on_preview_windows() {
     let measures = app.window_measures(&view).await;
     assert!(measures.contains_key(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW));
     assert!(measures.contains_key(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn shared_preview_detail_follows_the_editor_config_in_both_locales() {
+    use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
+    use semio_s_artifact_procedural_3d_editor_commands::set_lod_mode::SetLodMode;
+
+    let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::repo_text!("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎛️generate-mode-interactions.json")).unwrap();
+    let detail = &fixture["previewDetail"];
+    let mut app = app().await;
+    let document_before = context::snapshot(&app);
+    for current in ["medium", "fine", "coarse"] {
+        if current != detail["default"].as_str().unwrap() {
+            context::dispatch(&mut app, Generation3dCommand::SetLodMode(SetLodMode { value: current.into() })).await;
+        }
+        for (language, locale) in [("en", semio_ui_locale::Locale::En), ("de", semio_ui_locale::Locale::De)] {
+            let windows = fixture["previewParity"].as_array().unwrap();
+            let view = semio_plugin::ViewModel {
+                window_instances: windows.iter().map(|id| {
+                    let id = id.as_str().unwrap();
+                    semio_plugin::ViewWindowInstance { id: id.into(), window_kind_id: id.into() }
+                }).collect(),
+                ..semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native)
+            };
+            let measures = app.window_measures(&view).await;
+            for window in windows {
+                let kind = window.as_str().unwrap();
+                let id = detail["id"].as_str().unwrap();
+                let measure = measures[kind].iter().find(|measure| matches!(measure, semio_plugin::WindowMeasure::Select { id: actual, .. } if actual == id));
+                let Some(semio_plugin::WindowMeasure::Select { label, value, items, on_change, .. }) = measure else { panic!("missing {id} in {kind}"); };
+                assert_eq!(label.as_deref(), detail[language].as_str());
+                assert_eq!(value, current);
+                assert_eq!(on_change.action, detail["action"].as_str().unwrap());
+                let presets = detail["presets"].as_array().unwrap();
+                assert_eq!(items.len(), presets.len());
+                for (item, preset) in items.iter().zip(presets) {
+                    assert_eq!(item.value, preset["value"].as_str().unwrap());
+                    assert_eq!(item.label, preset[language].as_str().unwrap());
+                    assert_eq!(semio_s_artifact_procedural_3d_preview_eval::preview_tolerance(&item.value), preset["tolerance"].as_f64().unwrap());
+                }
+            }
+        }
+    }
+    assert_eq!(context::snapshot(&app), document_before);
 }

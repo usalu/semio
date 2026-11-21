@@ -130,11 +130,17 @@ impl MountedPlanarDomain {
     }
 
     pub fn admit_hole_point_one(&mut self, hole: usize, target: usize) -> Result<bool, MountedDomainFault> {
-        self.holes.get_mut(hole).ok_or(MountedDomainFault::InvalidHole { index: hole })?.admit_one(target)
+        if hole >= self.hole_count {
+            return Err(MountedDomainFault::InvalidHole { index: hole });
+        }
+        self.holes[hole].admit_one(target)
     }
 
     pub fn push_hole_point(&mut self, hole: usize, point: [f64; 2]) -> Result<(), [f64; 2]> {
-        self.holes.get_mut(hole).ok_or(point)?.push(point)
+        if hole >= self.hole_count {
+            return Err(point);
+        }
+        self.holes[hole].push(point)
     }
 
     pub(super) fn outer(&self) -> &[[f64; 2]] {

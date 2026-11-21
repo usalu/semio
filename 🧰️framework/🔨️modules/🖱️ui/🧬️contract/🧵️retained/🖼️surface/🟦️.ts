@@ -1,6 +1,6 @@
 //#region 🧬️SurfaceContract
 import { NumericIndex, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
-import type { UiDocumentLimits } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
+import type { UiContractViolation, UiDocumentLimits } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { RetainedUiNumericTable } from "../🧮️tables/🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";
 import { OwnedUiOperation, OwnedUiOperationCursor } from "../🩹️operations/🟦️.ts";
@@ -30,6 +30,18 @@ type Cell = {
 };
 const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const MINT = Object.freeze({});
+function graphViolationMessage(violation: UiContractViolation): string {
+  const prefix = "Owned UI graph invariants violated (" + violation.type + ")";
+  switch (violation.type) {
+    case "nodeQuota": return prefix + " count=" + violation.count + " max=" + violation.max;
+    case "orphanChild": return prefix + " parent=" + violation.parent + " child=" + violation.child;
+    case "duplicateSiblingKey": return prefix + " parent=" + violation.parent;
+    case "invalidTreeInlineToolbar":
+    case "invalidTreeSectionHeaderToolbar": return prefix + " node=" + violation.node + " toolbar=" + violation.toolbar;
+    case "invalidTreeDetail": return prefix + " node=" + violation.node + " detail=" + violation.detail;
+    default: return prefix + " node=" + violation.node;
+  }
+}
 const state = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 const validWork = (current: { readonly items: number; readonly bytes: number }, grant: NumericIndexGrant): boolean => Number.isSafeInteger(current.items) && current.items >= 0 && current.items <= 1 && Number.isSafeInteger(current.bytes) && current.bytes >= 0 && current.bytes <= grant.maxBytes;
 function childStep(current: RetainedUiWireStep, grant: NumericIndexGrant): RetainedUiWireStep { if (!validWork(current, grant)) return { ...current, kind: "rejected" }; return current.kind === "complete" ? { ...current, kind: "pending" } : current; }
@@ -267,7 +279,7 @@ export class OwnedUiSurfacePatch {
   #operationTouched: RetainedUiNumericTable<true> | null = null;
   #touched: RetainedUiNumericTable<true>;
   #validation: OwnedUiValidationCursor | null = null;
-  #violations: RetainedUiNumericTable<unknown> | null = null;
+  #violations: RetainedUiNumericTable<UiContractViolation> | null = null;
   #hash: OwnedUiSnapshotHashCursor | null = null;
   #retirement: OwnedUiNodeIndexRetirement | null = null;
   #reader: OwnedUiNodeIndexReader | null = null;
@@ -367,8 +379,11 @@ export class OwnedUiSurfacePatch {
     this.#bindings = this.#source!.bindings.capture(); yield 64;
     this.#phase = "validation"; this.#validation = new OwnedUiValidationCursor(this.#nodes!, this.#root, this.#limits, this.#shapePreserving ? this.#touched : null); yield 256;
     for (;;) { const step = this.#validation.advance(this.#grant); yield step.bytes; if (step.kind === "rejected") throw new Error(this.#validation.failure ?? "Owned UI validation failed"); if (step.kind === "ready") break; }
-    const violations = this.#validation.takeResult()!; const valid = violations.size === 0; this.#violations = new RetainedUiNumericTable<unknown>(violations, () => this.#grant); this.#validation.beginClose(); yield 64;
-    if (!valid) throw new Error("Owned UI graph invariants violated");
+    this.#violations = new RetainedUiNumericTable(this.#validation.takeResult()!, () => this.#grant); this.#validation.beginClose(); yield 64;
+    if (this.#violations.size > 0) {
+      const first = yield* this.#violations.lookup(0);
+      throw new Error(first ? graphViolationMessage(first) : "Owned UI graph invariants violated");
+    }
     while (this.#validation) { const step = this.#validation.closeStep(this.#grant); if (step.kind === "complete") this.#validation = null; yield step.bytes; }
     while (this.#violations) { const step = this.#violations.closeStep(this.#grant); if (step.complete) this.#violations = null; yield step.bytes; }
     yield* this.#prepareBindings();

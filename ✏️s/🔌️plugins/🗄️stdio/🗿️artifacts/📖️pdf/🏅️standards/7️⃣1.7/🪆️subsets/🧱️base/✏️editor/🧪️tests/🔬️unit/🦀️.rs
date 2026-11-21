@@ -46,7 +46,7 @@ fn natural_file_route_profile_checks_refuse_decrypted_security_state() {
 }
 
 async fn open_registered_pdf(input: Vec<u8>, page_count: usize, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope) -> semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>> {
-    use semio_plugin::{artifact_app_laws as laws, EditorApp};
+    use semio_plugin::{artifact_app_laws as laws, EditorApp, PluginApp};
     use semio_plugin::app::{MediaArtifact, MediaArtifactDescriptor, MediaWireFormat};
     let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
     let meta = laws::meta("local");
@@ -63,7 +63,29 @@ async fn open_registered_pdf(input: Vec<u8>, page_count: usize, scope: &mut semi
         },
         data: input,
     };
-    laws::consume_media(&mut app, semio_plugin::NATURAL_FILE_PORT, artifact, scope.cx()).await.unwrap();
+    let cx = scope.cx();
+    let fuel = laws::OriginalFixtureCaller::turn_fuel();
+    let grant = cx.retained_grant();
+    laws::ensure_fixture_cancellation_issuer(&mut app, cx).expect("mounted PDF instance is born");
+    app.render_ctx().refresh_cache().await.expect("mounted PDF head is projected");
+    let mut artifact = Some(artifact);
+    let mut consumed = false;
+    let mut idle = 0;
+    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+        laws::fixture_renew_turn(cx, fuel, grant).expect("mounted PDF import turn is funded");
+        let before = (cx.original_work_units_spent(), cx.retained_progress());
+        if PluginApp::consume_media(&mut app, semio_plugin::NATURAL_FILE_PORT, &mut artifact, cx)
+            .await.expect("mounted PDF consumes original bytes").is_some()
+        {
+            consumed = true;
+            break;
+        }
+        app.maintenance_step(cx, policy.close).expect("mounted PDF upkeep is funded");
+        let after = (cx.original_work_units_spent(), cx.retained_progress());
+        idle = if before == after { idle + 1 } else { 0 };
+        if idle >= laws::OriginalFixtureCaller::maximum_idle_turns() { break }
+    }
+    assert!(consumed, "mounted PDF media intake stalled after {idle} idle turns: {:?}, {}", cx.retained_grant(), app.typed_operation_diagnostic());
     let receipt = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
         &mut app, meta.instance_id, policy, &mut identity, scope.cx()
     ).await).unwrap();
@@ -105,11 +127,43 @@ async fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_o
     let index = action["page"].as_u64().unwrap() as usize;
     let rotation = action["x"].as_u64().unwrap() as u16;
     assert_eq!(snapshot.pages[0], original.pages[0], "an unedited page remains unchanged");
-    let artifact = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |owner| {
-        PluginApp::produce_media(&mut app, semio_plugin::NATURAL_FILE_PORT, owner, scope.cx()).await
-    }).await.expect("registered PDF editor saves").expect("natural PDF media is present");
-    assert_eq!(artifact.descriptor.kind_id.as_deref(), Some(codec.format_kind));
-    let bytes = artifact.data;
+    let revision = app.document_base_revision().expect("edited document revision");
+    let document = app.document_identity().expect("edited document identity");
+    app.bind_instance_id(meta.instance_id).await;
+    let mut submitted = None;
+    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+        if app.submit_media_export_checked(semio_plugin::NATURAL_FILE_PORT, &document, revision, None, &mut submitted, scope.cx()).await.expect("checked PDF Save submission") { break }
+        app.maintenance_step(scope.cx(), policy.close).expect("PDF Save admission maintenance");
+    }
+    let handle = submitted.expect("registered PDF Save handle");
+    assert_eq!(handle.parent_document_id.as_str(), document.as_str());
+    let mut completed = None;
+    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+        match laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.expect("registered PDF Save poll") {
+            semio_plugin::ArtifactMediaExportPoll::Running { .. } => {},
+            semio_plugin::ArtifactMediaExportPoll::Complete(result) => { completed = Some(result); break },
+            other => panic!("registered PDF Save did not produce its segmented output: {other:?}"),
+        }
+    }
+    let result = completed.expect("registered PDF Save completes");
+    assert_eq!(result.schema, codec.format_kind);
+    assert_eq!(result.mime_type, codec.media_type);
+    let status = laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx()).await.expect("PDF Save publishes download status");
+    assert_eq!(status.port, semio_plugin::NATURAL_FILE_PORT);
+    let mut bytes = Vec::new();
+    let mut terminal = false;
+    type Output = semio_plugin::ArtifactOutputChunks;
+    for _ in 0..=(Output::MAXIMUM_TOTAL_BYTES / Output::CHUNK_BYTES) {
+        if let Some(chunk) = laws::take_fixture_media_export_chunk(&mut app, &handle, &mut terminal, scope.cx()).await.expect("PDF Save download page") {
+            assert!(!chunk.is_empty() && chunk.len() <= Output::CHUNK_BYTES);
+            bytes.extend_from_slice(&chunk);
+        }
+        if terminal { break }
+    }
+    assert!(terminal, "PDF Save downloads a terminal page sequence");
+    assert_eq!(bytes.len() as u64, status.total_bytes);
+    assert_eq!(app.document_base_revision().unwrap(), revision);
+    assert_eq!(app.document_identity().as_deref(), Some(document.as_str()));
     let reference_spec = semio_repo_test_host::parse_json(&fixture["mutation"].to_string()).unwrap();
     let reference = oracle::oracle_apply_mutation(input, &reference_spec).expect("lopdf independently edits the input");
     let observed = oracle::project_pdf_1_7(&bytes).expect("lopdf reads natural output");
@@ -168,6 +222,11 @@ fn large_pdf(spec: &serde_json::Value) -> Vec<u8> {
         }
         rows.push(pdf_fixture_stream(&content));
     }
+    pdf_fixture_file(rows)
+}
+
+fn pdf_fixture_file(rows: Vec<Vec<u8>>) -> Vec<u8> {
+    use std::io::Write;
     let mut output = b"%PDF-1.7\n".to_vec();
     let positions: Vec<_> = rows.into_iter().enumerate().map(|(index, row)| {
         let position = output.len();
@@ -380,7 +439,7 @@ async fn registered_pdf_page_edit_publishes_and_undoes_redoes() {
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
-semio_plugin::history_edit_acceptance_law!("stdio", Pdf17Editor, || semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio", Pdf17Editor, || semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() }, "../../../../../..");
 
 fn qpdf_accepts(bytes: &[u8], name: &str) {
     let path = std::env::temp_dir().join(format!("semio-{name}-{}.pdf", std::process::id()));
@@ -421,7 +480,7 @@ fn every_pdf_17_subset_editor_opens_and_saves_the_same_natural_file() {
 #[test]
 fn text_layer_lists_a_real_document_in_reading_order_with_localized_labels() {
     use semio_ui_locale::Locale;
-    let snapshot = <Pdf17Editor as ArtifactEditor>::decode_natural_file(fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf")).expect("natural PDF opens");
+    let snapshot = <Pdf17Editor as ArtifactEditor>::decode_natural_file(fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/🔀️move-page/⬅️before.pdf")).expect("natural PDF opens");
     let english = crate::editor::page::text_layer_lines(&snapshot, Locale::En);
     let german = crate::editor::page::text_layer_lines(&snapshot, Locale::De);
     assert_eq!(english.len(), german.len());
@@ -436,11 +495,456 @@ fn text_layer_lists_a_real_document_in_reading_order_with_localized_labels() {
     let page_one_text = snapshot.pages[0].text();
     let found = english.iter().position(|line| line.starts_with("Text: ") && page_one_text.contains(line.trim_start_matches("Text: "))).expect("page one text is listed");
     assert!(first < found && found < second, "page one text sits between the page headings");
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let panel = crate::editor::page::render_text_layer(&snapshot, "s.stdio.pdf@1.7/*#editor", Locale::De).unwrap();
-    let page_two = &panel.children[second];
-    let binding = &page_two.bindings[0];
-    assert_eq!(binding.action.scope.as_str(), "s.stdio.pdf@1.7/*#editor");
-    assert_eq!(binding.action.name.as_str(), semio_plugin::INTERACTION_SELECT_ACTION_ID);
-    let Some(semio_ui_contract::UiValue::Map(args)) = &binding.args else { panic!("accessible page selection") };
-    assert!(args.iter().any(|(key, value)| key.as_str() == "targets" && matches!(value, semio_ui_contract::UiValue::Text(text) if text.as_str().contains("p1:paper"))));
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(panel), |panel| {
+        let page_two = &panel.children[second];
+        let binding = &page_two.bindings[0];
+        assert_eq!(binding.action.scope.as_str(), "s.stdio.pdf@1.7/*#editor");
+        assert_eq!(binding.action.name.as_str(), semio_plugin::INTERACTION_SELECT_ACTION_ID);
+        let Some(semio_ui_contract::UiValue::Map(args)) = &binding.args else { panic!("accessible page selection") };
+        assert!(args.iter().any(|(key, value)| key.as_str() == "targets" && matches!(value, semio_ui_contract::UiValue::Text(text) if text.as_str().contains("p1:paper"))));
+    });
+}
+
+//#region 🧪️Controlled image natural file
+
+fn sampled_fixture_bytes(spec: &serde_json::Value, mixed: bool) -> (Vec<u8>, Vec<(u32, Vec<u8>)>) {
+    use serde_json::Value;
+    let dimensions = |key| serde_json::from_value::<[usize; 2]>(spec[key].clone()).unwrap();
+    let [width, height] = dimensions("imageSize");
+    let [page_width, page_height] = dimensions("pageSize");
+    let [x, y] = dimensions("imageOrigin");
+    let images = spec["images"].as_array().unwrap();
+    let samples = |image: &Value| {
+        let quadrants: [Vec<u8>; 4] = serde_json::from_value(image["samples"].clone()).unwrap();
+        let row = |index: usize| [quadrants[index].repeat(width / 2), quadrants[index + 1].repeat(width / 2)].concat();
+        [row(0).repeat(height / 2), row(2).repeat(height / 2)].concat()
+    };
+    let source_samples: Vec<_> = images.iter().map(|image| (8, samples(image))).collect();
+    let resources = |image: &Value| {
+        let name = image["name"].as_str().unwrap();
+        let object = image["object"].as_u64().unwrap();
+        let font = if mixed { "/Font << /F1 15 0 R >> " } else { "" };
+        format!("<< {font}/XObject << /{name} {object} 0 R >> >>")
+    };
+    let page = |contents, entry: &str| {
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {page_width} {page_height}] /Contents {contents} 0 R{entry} >>").into_bytes()
+    };
+    let stream = |fields: &str, body: &[u8]| {
+        let mut stream = format!("<< /Length {}{fields} >>\nstream\n", body.len()).into_bytes();
+        stream.extend_from_slice(body);
+        stream.extend_from_slice(b"\nendstream");
+        stream
+    };
+    let content = |image: &Value, index: usize| {
+        let name = image["name"].as_str().unwrap();
+        let mut body = format!("q {width} 0 0 {height} {x} {y} cm /{name} Do Q\n");
+        if mixed {
+            let text = spec["mixedText"][index].as_str().unwrap();
+            body.push_str(&format!("BT /F1 12 Tf 20 102 Td ({text}) Tj ET\n"));
+        }
+        stream("", body.as_bytes())
+    };
+    let picture = |index: usize| {
+        let image = &images[index];
+        let space = image["space"].as_str().unwrap();
+        let mut fields = format!(" /Type /XObject /Subtype /Image /Width {width} /Height {height} /ColorSpace /{space} /BitsPerComponent 8");
+        let samples = &source_samples[index].1;
+        let body = if let Some(filter) = image["filter"].as_str() {
+            fields.push_str(&format!(" /Filter /{filter}"));
+            fixture_stored_zlib(samples)
+        } else { samples.clone() };
+        stream(&fields, &body)
+    };
+    let mut rows = vec![
+        b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
+        format!("<< /Type /Pages /Kids [3 0 R 6 0 R 9 0 R 13 0 R] /Count 4 /Resources {} >>", resources(&images[0])).into_bytes(),
+        page(4, ""), content(&images[0], 0), picture(0),
+        page(7, &format!(" /Resources {}", resources(&images[1]))), content(&images[1], 1), picture(1),
+        page(12, " /Resources 10 0 R"), resources(&images[2]).into_bytes(), picture(2), content(&images[2], 2),
+        page(14, ""), content(&images[0], 3),
+    ];
+    if mixed {
+        rows.push(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>".to_vec());
+    }
+    (pdf_fixture_file(rows), source_samples)
+}
+
+fn fixture_stored_zlib(samples: &[u8]) -> Vec<u8> {
+    let length = u16::try_from(samples.len()).unwrap();
+    let mut out = vec![0x78, 0x01, 0x01];
+    out.extend_from_slice(&length.to_le_bytes());
+    out.extend_from_slice(&(!length).to_le_bytes());
+    out.extend_from_slice(samples);
+    let (a, b) = samples.iter().fold((1u32, 0u32), |(a, b), byte| {
+        let a = (a + u32::from(*byte)) % 65_521;
+        (a, (b + a) % 65_521)
+    });
+    out.extend_from_slice(&((b << 16) | a).to_be_bytes());
+    out
+}
+
+#[semio_framework_async_macros::async_test]
+async fn natural_file_route_opens_reexports_and_reopens_large_sampled_images() {
+    use crate::standards::v1_7::subsets::base::{
+        io::import::decode_pdf, schema::{snapshot::{ObjRef, PdfOp}, stream_roles::PdfStreamRoleValue},
+    };
+    use semio_plugin::{artifact_app_laws as laws, PluginApp};
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::{project_pdf_1_7, reference_image_sample_streams};
+
+    let spec: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎞️controlled-images/🔣️.json")).unwrap();
+    for mixed in [false, true] {
+        let (input, samples) = sampled_fixture_bytes(&spec, mixed);
+        assert!(input.len() > spec["minimumByteLength"].as_u64().unwrap() as usize);
+        assert_eq!(reference_image_sample_streams(&input).unwrap(), samples);
+        let verify_text = |data: &[u8]| {
+            if mixed {
+                let projected: serde_json::Value = serde_json::from_str(&project_pdf_1_7(data).unwrap().to_string()).unwrap();
+                for (page, text) in projected["pages"].as_array().unwrap().iter().zip(spec["mixedText"].as_array().unwrap()) {
+                    assert_eq!(page["text"].as_array().unwrap().as_slice(), std::slice::from_ref(text));
+                }
+            }
+        };
+        verify_text(&input);
+        let cold = decode_pdf(&input).unwrap();
+        let pages = spec["pages"].as_array().unwrap();
+        let mut scope = laws::OriginalFixtureScope::admit();
+        let mut app = open_registered_pdf(input, pages.len(), &mut scope).await;
+        let mounted = app.snapshot().unwrap();
+        assert_eq!(mounted.pages, cold.pages);
+        assert_eq!(mounted.images, cold.images);
+        assert_eq!(mounted.fonts, cold.fonts);
+        assert_eq!(mounted.objects, cold.objects);
+        assert_eq!(mounted.trailer, cold.trailer);
+        assert_eq!(mounted.admitted_stream_roles, cold.admitted_stream_roles);
+        for (image, role) in mounted.images.iter().zip(&mounted.admitted_stream_roles) {
+            let spec = spec["images"].as_array().unwrap().iter().find(|spec| spec["name"].as_str() == Some(image.id.as_str())).unwrap();
+            assert_eq!(role.identity.owner, ObjRef { num: spec["object"].as_u64().unwrap() as u32, gen: 0 });
+            assert!(role.identity.path.is_empty());
+            assert_eq!(role.dependencies.as_slice(), std::slice::from_ref(&role.identity));
+            assert!(matches!(&role.value, PdfStreamRoleValue::Image { image: owned } if owned == image));
+        }
+        for (page, expected) in mounted.pages.iter().zip(pages) {
+            let image = expected["image"].as_u64().unwrap() as usize;
+            let name = spec["images"][image]["name"].as_str().unwrap();
+            assert!(matches!(&page.content[1..3], [PdfOp::Transform { matrix }, PdfOp::PaintXObject { name: actual }]
+                if actual == name && *matrix == [72., 0., 0., 72., 20., 20.]));
+        }
+
+        let artifact = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |owner| {
+            PluginApp::produce_media(&mut app, semio_plugin::NATURAL_FILE_PORT, owner, scope.cx()).await
+        }).await.expect("mounted PDF reexports").expect("natural PDF output");
+        assert_eq!(reference_image_sample_streams(&artifact.data).unwrap(), samples);
+        verify_text(&artifact.data);
+        let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+        laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("original image editor closes");
+        let mut reopened = open_registered_pdf(artifact.data, pages.len(), &mut scope).await;
+        assert_eq!(reopened.snapshot().unwrap().images, cold.images);
+        assert_eq!(reopened.snapshot().unwrap().pages, cold.pages);
+        laws::close_registered_fixture_app(&mut reopened, policy, scope.cx()).expect("reopened image editor closes");
+    }
+}
+
+//#endregion 🧪️Controlled image natural file
+
+#[semio_framework_async_macros::async_test]
+async fn registered_pdf_font_change_preserves_encoded_text_and_the_next_line() {
+    use crate::editor::page::{objects, ObjectKind};
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfTextArrayItem};
+    use semio_plugin::{artifact_app_laws as laws, PluginApp};
+    use semio_framework_value::DslValue;
+    use serde_json::json;
+
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📄️natural-file-edit/🔣️.json")).unwrap();
+    let case = &fixture["fontReassignment"];
+    let size = &fixture["fontSize"];
+    let byte = case["sourceCode"].as_u64().unwrap();
+    let adjust = case["kerning"].as_f64().unwrap();
+    let alternate = case["sourceAlternateCode"].as_u64().unwrap();
+    let program = format!("BT /Fsrc {} Tf 10 50 Td 24 TL [<{byte:02X}> {adjust} <{byte:02X}>] TJ [<{}> -20] TJ T* ({}) Tj ET", size["before"], size["sameLineCode"].as_str().unwrap(), size["followingLine"].as_str().unwrap());
+    let input = pdf_fixture_file(vec![
+        b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_vec(),
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 180 90] /Resources << /Font << /Fsrc 5 0 R /Fdst 6 0 R >> >> /Contents 4 0 R >>".to_vec(),
+        pdf_fixture_stream(program.as_bytes()),
+        format!("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding << /BaseEncoding /WinAnsiEncoding /Differences [{alternate} /eacute] >> >>").into_bytes(),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman /Encoding /MacRomanEncoding >>".to_vec(),
+    ]);
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut app = open_registered_pdf(input, 1, &mut scope).await;
+    let text_objects = |snapshot: &PdfSnapshot| objects(snapshot).into_iter().filter(|object| object.kind == ObjectKind::Text).collect::<Vec<_>>();
+    let before = text_objects(&app.snapshot().unwrap());
+    assert_eq!(before[0].text.as_str(), case["firstLine"].as_str().unwrap());
+    assert_eq!(before[1].text.as_str(), size["sameLine"].as_str().unwrap());
+    assert_eq!(before[2].text.as_str(), size["followingLine"].as_str().unwrap());
+    let first = before[0].id.as_str();
+    let original_same_line = app.snapshot().unwrap().pages[0].content[before[1].end].clone();
+    for (action, args) in [
+        ("set-font", json!({"page": 0, "object": first, "text": case["targetFont"]})),
+        ("set-font-size", json!({"page": 0, "object": first, "field": "size", "value": size["after"]})),
+    ] {
+        semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+            &mut app, action, Some(DslValue::from(args.clone())), &meta, &mut identity, scope.cx(), policy.close
+        ).await).unwrap();
+        semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+            &mut app, meta.instance_id, policy, &mut identity, scope.cx()
+        ).await).unwrap();
+    }
+
+    let verify = |snapshot: &PdfSnapshot, from_original: bool| {
+        let after = text_objects(snapshot);
+        assert_eq!(after[0].text, before[0].text);
+        assert_eq!((after[0].x, after[0].y), (before[0].x, before[0].y));
+        assert_eq!(after[0].font_size, size["after"].as_f64().unwrap());
+        assert_eq!(after.len(), before.len());
+        assert_eq!(snapshot.pages[0].content[after[1].end], original_same_line);
+        for (after, before) in after[1..].iter().zip(&before[1..]) {
+            assert_eq!((&after.text, after.font_size), (&before.text, before.font_size));
+            assert!((after.x - before.x).abs() < 1e-5 && (after.y - before.y).abs() < 1e-5);
+        }
+        for (object, expected) in after.iter().zip(["targetFont", "sourceFont", "sourceFont"]) {
+            assert_eq!(snapshot.font(&object.font).unwrap().base_font(), case[expected].as_str().unwrap());
+        }
+        let PdfOp::ShowTextArray { items } = &snapshot.pages[0].content[after[0].end] else { panic!("the edited text array retains its spacing"); };
+        assert!(items.iter().any(|item| matches!(item, PdfTextArrayItem::Adjust { amount } if *amount == adjust)));
+        if from_original {
+            assert!(matches!(&items[0], PdfTextArrayItem::Text { text } if text == "é"));
+        }
+    };
+    verify(&app.snapshot().unwrap(), true);
+    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |owner| {
+        PluginApp::produce_media(&mut app, semio_plugin::NATURAL_FILE_PORT, owner, scope.cx()).await
+    }).await.unwrap().unwrap();
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).unwrap();
+    let mut reopened = open_registered_pdf(saved.data, 1, &mut scope).await;
+    verify(&reopened.snapshot().unwrap(), false);
+    laws::close_registered_fixture_app(&mut reopened, policy, scope.cx()).unwrap();
+}
+
+#[semio_framework_async_macros::async_test]
+async fn registered_pdf_png_picker_publishes_an_atomic_revision_guarded_image_edit() {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfFormXObject, PdfImage, PdfOp, PdfPage};
+    use semio_framework_value::DslValue;
+    use semio_plugin::{artifact_app_laws as laws, EditorApp, Effect, PluginApp};
+
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🖼️local-png/🔣️.json")).unwrap();
+    let samples = |key: &str| fixture[key].as_array().unwrap().iter().map(|sample| u8::try_from(sample.as_u64().unwrap()).unwrap()).collect::<Vec<_>>();
+    let matrix: [f64; 6] = std::array::from_fn(|index| fixture["existing"]["insertPlacement"][index].as_f64().unwrap());
+    let source_id = fixture["existing"]["images"][0].as_str().unwrap();
+    let form_id = fixture["existing"]["forms"][0].as_str().unwrap();
+    let image_id = fixture["expected"]["image"].as_str().unwrap();
+    let mask_id = fixture["expected"]["mask"].as_str().unwrap();
+
+    let mut original = PdfSnapshot::default();
+    let mut first = PdfPage::new(160.0, 120.0);
+    first.content.push(PdfOp::PaintXObject { name: source_id.into() });
+    original.pages = vec![first.clone(), first];
+    original.images.push(PdfImage::gray8(source_id, 1, 1, vec![127]));
+    original.forms.push(PdfFormXObject::new(form_id, [0.0, 0.0, 1.0, 1.0], Vec::new()));
+
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let meta = laws::meta("local");
+    let mut app = semio_plugin::with_authoring_identity!(|identity| laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(
+        async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } },
+        semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), policy, &mut identity
+    ).await);
+    let Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else {
+        panic!("the seed PDF can produce a document load");
+    };
+    semio_plugin::with_authoring_identity!(|identity| laws::load_document(
+        &mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()
+    ).await).unwrap();
+    let loaded = app.snapshot().unwrap().clone();
+    let request = DslValue::object([
+        ("page".into(), DslValue::float(0.0)),
+        ("x".into(), DslValue::float(matrix[4])),
+        ("y".into(), DslValue::float(matrix[5])),
+        ("width".into(), DslValue::float(matrix[0])),
+        ("height".into(), DslValue::float(matrix[3])),
+    ]);
+    semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+        &mut app, "insert-image", Some(request), &meta, &mut identity, scope.cx(), policy.close
+    ).await).unwrap();
+    let picker = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+        &mut app, meta.instance_id, policy, &mut identity, scope.cx()
+    ).await).unwrap();
+    let [Effect::RequestFileOpen { accept, read_as, import_action, multiple, args: Some(args), max_file_bytes, .. }] = picker.effects.as_slice() else {
+        panic!("the registered action emits exactly one local file picker");
+    };
+    assert_eq!(accept, "image/png,.png");
+    assert_eq!(read_as.as_deref(), Some("dataUrl"));
+    assert_eq!(import_action, "import-local-image");
+    assert!(!*multiple);
+    assert_eq!(max_file_bytes.map(|bytes| bytes as u64), fixture["bounds"]["maxFileBytes"].as_u64());
+    assert_eq!(args.get("page").and_then(DslValue::as_u64), Some(0));
+    assert_eq!(args.get("operator").and_then(DslValue::as_u64), Some(u64::from(u32::MAX)));
+    let revision = args.get("revision").and_then(DslValue::as_str).expect("exact picker revision");
+    assert_eq!(revision.len(), 64);
+    assert!(revision.bytes().all(|byte| byte.is_ascii_hexdigit()));
+    assert_eq!(app.snapshot().unwrap(), loaded);
+
+    let mut callback = args.as_object().unwrap().to_vec();
+    callback.extend([
+        ("name".into(), DslValue::String("sample.png".into())),
+        ("chunk".into(), DslValue::uint(0)),
+        ("chunkCount".into(), DslValue::uint(1)),
+        ("payload".into(), DslValue::String(format!("data:application/octet-stream;base64,{}", fixture["png"].as_str().unwrap()))),
+    ]);
+    let callback = DslValue::object(callback);
+    semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+        &mut app, import_action, Some(callback.clone()), &meta, &mut identity, scope.cx(), policy.close
+    ).await).unwrap();
+    assert_eq!(app.snapshot().unwrap(), loaded, "dispatch leaves the retained import private");
+    let receipt = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+        &mut app, meta.instance_id, policy, &mut identity, scope.cx()
+    ).await).unwrap();
+    assert_eq!(receipt.completions, 1);
+
+    let published = app.snapshot().unwrap().clone();
+    let width = u32::try_from(fixture["width"].as_u64().unwrap()).unwrap();
+    let height = u32::try_from(fixture["height"].as_u64().unwrap()).unwrap();
+    let mut image = PdfImage::rgb8(image_id, width, height, samples("rgb"));
+    image.soft_mask = Some(mask_id.into());
+    let mask = PdfImage::gray8(mask_id, width, height, samples("softMask"));
+    assert_eq!(published.images.len(), loaded.images.len() + 2);
+    assert_eq!(published.image(image_id), Some(&image));
+    assert_eq!(published.image(mask_id), Some(&mask));
+    assert_eq!(published.image(source_id), loaded.image(source_id));
+    assert_eq!(published.forms, loaded.forms);
+    assert_eq!(published.pages[1], loaded.pages[1]);
+    assert!(published.pages[0].content.starts_with(&loaded.pages[0].content));
+    assert!(matches!(
+        &published.pages[0].content[loaded.pages[0].content.len()..],
+        [PdfOp::Save, PdfOp::Transform { matrix: applied }, PdfOp::PaintXObject { name }, PdfOp::Restore]
+            if applied == &matrix && name == image_id
+    ));
+
+    semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+        &mut app, import_action, Some(callback), &meta, &mut identity, scope.cx(), policy.close
+    ).await).unwrap();
+    let stale = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+        &mut app, meta.instance_id, policy, &mut identity, scope.cx()
+    ).await);
+    assert!(format!("{:?}", stale.err().expect("the completed picker revision is stale")).contains("PDF changed while the image picker was open"));
+    assert_eq!(app.snapshot().unwrap(), published);
+
+    semio_plugin::with_authoring_identity!(|identity| laws::settle_history_verb(
+        &mut app, "undo", meta.instance_id, policy, &mut identity, scope.cx()
+    ).await);
+    assert_eq!(app.snapshot().unwrap(), loaded);
+    semio_plugin::with_authoring_identity!(|identity| laws::settle_history_verb(
+        &mut app, "redo", meta.instance_id, policy, &mut identity, scope.cx()
+    ).await);
+    assert_eq!(app.snapshot().unwrap(), published);
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PNG fixture closes");
+}
+
+#[test]
+fn controlled_pdf_terminal_publication_requires_both_owned_headers() {
+    use crate::standards::v1_7::subsets::base::io::import::retained_graph::PreparedPdfFile;
+    use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, RetirementPollExit};
+    use semio_plugin::artifact_app_laws::OriginalWorkFixture;
+    use semio_plugin::{NaturalFileDecodeOwner, NaturalFileDecodeStep, ToolExecutionContract};
+    use std::mem::{size_of, size_of_val};
+
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let contract = ToolExecutionContract::resumable(input.len(), 16_384, 1, 16 << 20, 7_500, 1, 1);
+    let quote = size_of::<PreparedPdfFile>() + size_of::<PdfSnapshot>();
+    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+    assert_eq!(quote, 964);
+    let stock = OriginalWorkFixture::stock();
+    let run = |constrained_at: Option<usize>| {
+        let mut scope = OriginalWorkFixture::new();
+        let mut source = Some(input.to_vec());
+        let mut claimed = None;
+        assert!(scope.turn(stock, |cx| Pdf17Editor::admit_natural_file_decode_owner(&mut source, contract, &mut claimed, cx)).unwrap());
+        assert!(source.is_none(), "the exact original PDF bytes transferred");
+        let Some(NaturalFileDecodeOwner::Controlled(decoder)) = claimed else {
+            panic!("one-unit file contract must use the real controlled PDF decoder");
+        };
+        let mut decoder = Some(decoder);
+        let mut complete = None;
+        for turn in 0..200_000 {
+            let owner = decoder.as_mut().unwrap();
+            if constrained_at == Some(turn) {
+                let short = RetainedCloneGrant { maximum_copy_bytes: quote - 1, ..stock };
+                for _ in 0..2 {
+                    scope.turn(short, |cx| {
+                        let before = (cx.retained_progress(), cx.original_work_units_spent());
+                        assert!(matches!(owner.advance(cx).unwrap(), NaturalFileDecodeStep::Yield));
+                        assert_eq!((cx.retained_progress(), cx.original_work_units_spent()), before);
+                        Ok(())
+                    }).unwrap();
+                }
+            }
+            let grant = RetainedCloneGrant { maximum_copy_bytes: if constrained_at == Some(turn) { quote } else { stock.maximum_copy_bytes }, ..stock };
+            let (step, copied, items) = scope.turn(grant, |cx| {
+                let before = cx.retained_progress();
+                let step = owner.advance(cx).unwrap();
+                let after = cx.retained_progress();
+                Ok((step, after.copied_bytes - before.copied_bytes, after.copied_items - before.copied_items))
+            }).unwrap();
+            if let NaturalFileDecodeStep::Complete { snapshot, progress } = step {
+                assert_eq!((copied, items), (quote, 1));
+                if let Some(expected) = constrained_at { assert_eq!(turn, expected); }
+                complete = Some((snapshot, progress, turn));
+                break;
+            }
+            assert_ne!(Some(turn), constrained_at, "the exact quote must publish after the two refusals");
+        }
+        let (snapshot, progress, terminal_turn) = complete.expect("the original controlled PDF reached publication");
+        let owner = decoder.as_mut().unwrap();
+        owner.begin_close();
+        for _ in 0..200_000 {
+            if owner.terminal_is_empty() { break; }
+            scope.turn(stock, |cx| {
+                let demand = owner.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+                semio_plugin::__job::close_original_effect_step(cx, demand, |effect| {
+                    let result = owner.close_step(effect).map(|step| RetainedCloneStep::Progress(step.progress().unwrap_or_default())).map_err(Into::into);
+                    RetirementPollExit::settle(effect, result)
+                })?;
+                Ok(())
+            }).unwrap();
+        }
+        assert!(owner.terminal_is_empty());
+        let demand = RetirementDemand {
+            release_bytes: size_of_val(&**owner),
+            copy_bytes: size_of_val(&decoder),
+            depth: 1,
+            ..Default::default()
+        };
+        scope.turn(stock, |cx| {
+            semio_plugin::__job::close_original_retained_step(cx, demand, |_| {
+                drop(decoder.take());
+                RetainedWorkOutcome {
+                    work: 1,
+                    result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress {
+                        copied_items: 1,
+                        copied_bytes: demand.copy_bytes,
+                        released_bytes: demand.release_bytes,
+                        ..Default::default()
+                    })),
+                }
+            })?;
+            Ok(())
+        }).unwrap();
+        assert!(decoder.is_none());
+        (snapshot, progress, terminal_turn, scope)
+    };
+
+    let (reference, reference_progress, terminal_turn, mut reference_scope) = run(None);
+    let (published, progress, _, mut scope) = run(Some(terminal_turn));
+    assert_eq!(published, reference);
+    assert_eq!(progress, reference_progress);
+    assert_eq!(published.pages.len(), 2);
+    assert!(!published.objects.is_empty());
+    assert!(!published.trailer.is_empty());
+    scope.retire_owned(published, stock);
+    scope.finish();
+    reference_scope.retire_owned(reference, stock);
+    reference_scope.finish();
 }

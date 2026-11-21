@@ -114,22 +114,22 @@
     {
       "stack": "dev-shared",
       "phase": "boot",
-      "directory": "dsb"
+      "directory": "sb"
     },
     {
       "stack": "dev-shared",
       "phase": "shared",
-      "directory": "dss"
+      "directory": "ss"
     },
     {
       "stack": "dev-exclusive",
       "phase": "boot",
-      "directory": "dxb"
+      "directory": "xb"
     },
     {
       "stack": "dev-exclusive",
       "phase": "exclusive",
-      "directory": "dxx"
+      "directory": "xx"
     },
     {
       "stack": "rehearsal",
@@ -168,7 +168,7 @@
       },
       {
         "platform": "darwin",
-        "root": "/Users/anna/semio"
+        "root": "/Users/anna1/semio"
       }
     ]
   },

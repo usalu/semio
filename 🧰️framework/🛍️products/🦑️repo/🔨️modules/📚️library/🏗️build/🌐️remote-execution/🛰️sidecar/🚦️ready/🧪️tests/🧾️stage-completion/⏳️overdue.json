@@ -1,0 +1,14 @@
+[
+  {
+    "seconds": 10711,
+    "bound": 3600,
+    "limit": 4200,
+    "quietMs": 753541
+  },
+  {
+    "seconds": 4199,
+    "bound": 3600,
+    "limit": 4200,
+    "quietMs": 753541
+  }
+]

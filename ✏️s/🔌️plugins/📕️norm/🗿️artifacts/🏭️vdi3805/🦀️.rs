@@ -325,6 +325,9 @@ mod examples_blatt_16_example;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-19/🧪️tests/🎩️example/🦀️.rs"]
 mod examples_blatt_19_example;
 #[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-22/🧪️tests/🎩️example/🦀️.rs"]
+mod examples_blatt_22_example;
+#[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-3/🧪️tests/🎩️example/🦀️.rs"]
 mod examples_blatt_3_example;
 #[cfg(test)]

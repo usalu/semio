@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::clauses::{bridge_fatigue, fatigue_fire, stress_range as sr};
-use semio_s_artifact_norm_en1993_model::{FatigueDetail, FatigueStress, StressRelief};
+use semio_s_artifact_norm_en1993_model::{FatigueStress, StressRelief};
 
 const CATEGORIES: [u8; 14] = [36, 40, 45, 50, 56, 63, 71, 80, 90, 100, 112, 125, 140, 160];
 
@@ -26,10 +26,6 @@ fn actions(document: &En1993Snapshot, member_id: &str, case_id: &str) -> Option<
     (!rows.is_empty()).then(|| rows.iter().fold((0.0, 0.0, 0.0), |s, a| (s.0 + a.action.n, s.1 + a.action.my, s.2 + a.action.mz)))
 }
 
-fn gamma_mf(detail: &FatigueDetail) -> f64 {
-    part_1_9::gamma_mf(part_1_9::parse_method(detail.method.as_str()))
-}
-
 /// ⏳️ The range of `s` against its detail, `None` while the detail, the member, the section or one of the two load cases is missing.
 pub fn derive(document: &En1993Snapshot, s: &FatigueStress, annex: AnnexChoice) -> Option<Range> {
     let detail = document.fatigue_details.iter().find(|d| d.id == s.detail_id)?;
@@ -41,7 +37,7 @@ pub fn derive(document: &En1993Snapshot, s: &FatigueStress, annex: AnnexChoice) 
     let concentration = if s.concentration > 0.0 { s.concentration } else { 1.0 };
     let gamma_ff = semio_s_plugin_norm_compliance::ndp_number_opt("ndp.en1993.1-9.gamma-ff", annex)?;
     let size_effect = if s.thickness > 0.0 { bridge_fatigue::size_effect(s.thickness * 1e3) } else { 1.0 };
-    let (design, strength, gamma_mf) = (gamma_ff * concentration * raw, part_1_9::detail_category_pa(detail.category) * size_effect, gamma_mf(detail));
+    let (design, strength, gamma_mf) = (gamma_ff * concentration * raw, part_1_9::detail_category_pa(detail.category) * size_effect, part_1_9::gamma_mf(detail.method, detail.consequence, annex));
     let damage = fatigue_fire::miner_damage(&[(design / 1e6, s.cycles)], strength / 1e6, gamma_mf, 1.0);
     Some(Range { sigma_max: high.max(low), sigma_min: high.min(low), raw, design, strength, concentration, size_effect, gamma_ff, gamma_mf, damage })
 }
@@ -67,7 +63,7 @@ pub fn check_stress_ranges(document: &En1993Snapshot, annex: AnnexChoice, scope:
                 &format!("σ_max={:.1} MPa, σ_min={:.1} MPa ({}): Δσ={:.1} MPa, γ_Ff k_f Δσ={:.1} MPa against k_s Δσ_C/γ_Mf={:.1} MPa (category {}, k_s={:.3}, γ_Mf={}); D=n/N_R={:.3} over {:.3e} cycles.", r.sigma_max / 1e6, r.sigma_min / 1e6, relief.0, r.raw / 1e6, r.design / 1e6, r.strength / r.gamma_mf / 1e6, detail.category, r.size_effect, r.gamma_mf, r.damage, s.cycles),
                 &format!("σ_max={:.1} MPa, σ_min={:.1} MPa ({}): Δσ={:.1} MPa, γ_Ff k_f Δσ={:.1} MPa gegenüber k_s Δσ_C/γ_Mf={:.1} MPa (Kerbfall {}, k_s={:.3}, γ_Mf={}); D=n/N_R={:.3} bei {:.3e} Lastspielen.", r.sigma_max / 1e6, r.sigma_min / 1e6, relief.1, r.raw / 1e6, r.design / 1e6, r.strength / r.gamma_mf / 1e6, detail.category, r.size_effect, r.gamma_mf, r.damage, s.cycles),
             ))
-            .ndps(&[AnnexParams::GAMMA_MF])
+            .ndp(part_1_9::gamma_mf_id(detail.method, detail.consequence))
             .ndp_reads();
         if r.damage > 1.0 {
             let options: Vec<String> = CATEGORIES.iter().filter(|c| fatigue_fire::miner_damage(&[(r.design / 1e6, s.cycles)], part_1_9::detail_category_pa(**c) * r.size_effect / 1e6, r.gamma_mf, 1.0) <= 1.0).map(|c| c.to_string()).collect();

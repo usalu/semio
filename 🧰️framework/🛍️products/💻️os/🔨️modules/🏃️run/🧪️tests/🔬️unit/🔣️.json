@@ -1,0 +1,14 @@
+{
+  "sourcePort": "rule:out",
+  "targetPort": "rewrite:in",
+  "unusedPort": "preview:out",
+  "schema": "trinity.rewrite.invocation",
+  "value": "rename",
+  "externalPort": "report:out",
+  "cacheEviction": {
+    "upstream": {"step": "source"},
+    "evicted": {"step": "intermediate", "generation": 1},
+    "recomputed": {"step": "intermediate", "generation": 2},
+    "unconnected": {"step": "side output"}
+  }
+}

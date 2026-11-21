@@ -95,7 +95,7 @@ function resolvePluginDescriptorAndRegistry(pluginId: string, moduleUrl: string,
 
 /** 🧬️ Phase 8 of {@link loadPluginModule}: the kernel `PluginWasmHandle` this module constructs — instance creation,
  * retirement, the `enqueue`/`outcomes` turn ABI and disposal. */
-function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, ui: ReturnType<typeof createRetainedUiIntake>, requestActors: ReturnType<typeof createRequestActor>, turns: ReturnType<typeof createTurnPump>): KernelPluginWasmHandle {
+function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, ui: ReturnType<typeof createRetainedUiIntake>, requestActors: ReturnType<typeof createRequestActor>, turns: ReturnType<typeof createTurnPump>, mediaImportSignals: ReadonlyMap<number, AbortSignal>): KernelPluginWasmHandle {
   const { pluginId, manifest, registry, shardClient, turnOutcomes, state, actorIdByInstance, appIdByInstance, closingInstances, openingInstances, retiringInstances, documentBindings, lifecycleByInstance, uiOwnerByInstance, uiSurfaceByInstance, uiIntakesByInstance, uiReadsByInstance } = scope;
   const { requireActorId, releaseInstanceMaps } = instances;
   const { acceptUiPatches, retireInstanceLifecycle } = ui;
@@ -193,7 +193,7 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
     takeSegmentedDownloadChunk: (instanceId, operationId) => shardClient.takeSegmentedDownloadChunk(requireActorId(instanceId), instanceId, operationId),
     enqueue: (instanceId, events, dispatch) => {
       requireActorId(instanceId);
-      void runQueuedTurn(instanceId, events, dispatch);
+      void runQueuedTurn(instanceId, events, dispatch, mediaImportSignals.get(instanceId));
     },
     outcomes: turnOutcomes.stream,
     dispose: () => {
@@ -487,15 +487,29 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const requestActors = createRequestActor(scope);
   const jobs = createSpawnedJobDriver(scope, instances, ui, { drainTypedOperations: (instanceId) => turns.drainTypedOperations(instanceId) });
   const turns = createTurnPump(scope, instances, ui, jobs);
-  const handle = createKernelHandle(scope, instances, ui, requestActors, turns);
+  const mediaImportSignals = new Map<number, AbortSignal>();
+  const handle = createKernelHandle(scope, instances, ui, requestActors, turns, mediaImportSignals);
 
   const richHandle = await adaptPluginHandle(pluginId, { handle, release: handle.dispose });
+  const importAppMedia = richHandle.importAppMedia;
+  /** 📥️ Supplies cancellation only during MediaIn's synchronous enqueue. The queued turn retains the signal until it settles. */
+  const importMedia: typeof importAppMedia = importAppMedia && (async (instanceId, port, descriptor, data, signal) => {
+    if (signal === undefined) return importAppMedia(instanceId, port, descriptor, data);
+    signal.throwIfAborted();
+    if (mediaImportSignals.has(instanceId)) throw new Error("natural-file.import-admission-busy");
+    mediaImportSignals.set(instanceId, signal);
+    try {
+      return importAppMedia(instanceId, port, descriptor, data);
+    } finally {
+      mediaImportSignals.delete(instanceId);
+    }
+  });
 
   const refreshUi = createRefreshUi(scope, instances, ui, jobs);
   const captureExtensionCompletion = createExtensionCompletionCapture(scope, instances, ui, jobs);
   const invoke = createInboundInvoke(scope, instances, requestActors);
   const bindDocumentPort = createDocumentPortBinder(scope, instances, ui, jobs);
 
-  return { ...richHandle, refreshUi, captureExtensionCompletion, invoke, bindDocumentPort, subscribeSpawnedJobProgress: jobs.subscribeSpawnedJobProgress,acquireOwnedUiSurface:ui.acquireOwnedUiSurface };
+  return { ...richHandle, importAppMedia: importMedia, openOriginalMediaIngress: turns.openOriginalMediaIngress, refreshUi, captureExtensionCompletion, invoke, bindDocumentPort, subscribeSpawnedJobProgress: jobs.subscribeSpawnedJobProgress,acquireOwnedUiSurface:ui.acquireOwnedUiSurface };
 }
 //#endregion 🔖️plugin-runtime

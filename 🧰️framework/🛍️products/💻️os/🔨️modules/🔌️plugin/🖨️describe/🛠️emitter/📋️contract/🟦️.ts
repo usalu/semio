@@ -14,5 +14,18 @@ export function descriptorEmitterRequestV1(productsRoot:string,value:unknown):Re
 /** 🏷️ Gives Windows its actual executable suffix while retaining the same declared tool identity. */
 export function descriptorEmitterBinaryNameV1(value:unknown):string{const intent=readDescriptorEmitterIntentV1(value);return schema.definitions.Protocol.const.binary+(intent.platform==="win32"?".exe":"");}
 
+/** 📋️ Declares the fixed emitter and compiler receipt files required before opening the validated reader. */
+export function descriptorEmitterPublicationFilesV1(value:unknown):readonly string[]{
+ const compilation=schema.definitions.Protocol.const.compilation;
+ return Object.freeze([".semio-artifact.json",descriptorEmitterBinaryNameV1(value),compilation+"/receipt.json",compilation+"/index.json"]);
+}
+
 /** 🦀️ Declares the emitter's exact neutral Cargo selection before paid configuration consumption. */
 export function descriptorEmitterCargoArgumentsV1(mode:unknown):readonly string[]{return Object.freeze(["--profile",readBuildMode(mode),"--bin",schema.definitions.Protocol.const.binary]);}
+
+/** 🧾️ Requires the emitter to report the exact authored actor-preparation capability. */
+export function requireDescriptorEmitterCapabilitiesV1(stdout:string):void{
+ let observed:unknown;
+ try{observed=JSON.parse(stdout);}catch{throw Error("Descriptor emitter did not report JSON capabilities");}
+ if(validateJsonSchemaSubset(schema.definitions.Capabilities,observed).length)throw Error("Descriptor emitter does not support the required actor preparation protocol");
+}

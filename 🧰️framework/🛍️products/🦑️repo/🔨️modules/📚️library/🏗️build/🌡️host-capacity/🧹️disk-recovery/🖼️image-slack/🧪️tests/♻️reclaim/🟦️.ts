@@ -9,11 +9,103 @@ import fixture from "./🔣️receipts.json" with{type:"json"};
 import{readImageReclaimReceiptV1}from"../../../🔌️real/🟦️.ts";
 import project from"../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/📋️project.json"with{type:"json"};
 import{IMAGE_SLACK_V1,collectImageSlackV1,describeImageSlackV1,type ImageOutcomeV1,type ImageReclaimOutcomeV1,type ImageRowV1}from"../../🟦️.ts";
-import{createNativeImageDarwinReclaimPortV1,reclaimNativeImageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
+import{createNativeImageDarwinReclaimPortV1,nativeImageReclaimDueV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/♻️reclaim/🟦️.ts";
+
+import {Database} from "bun:sqlite";
+import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
+import ts from "typescript";
+import {isImageRecoveryStillDueV1} from "../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts";
+import {repositoryPartitionReclaimRuleV1} from "../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 
 const GIB=1024**3,MIB=1024**2,roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const row=(id:string,allocatedGiB:number,usedGiB:number,mounted=true):ImageRowV1=>({id,directory:"/ws/.cache/b/"+id,mounted,allocatedBytes:allocatedGiB*GIB,usedBytes:usedGiB*GIB,slackBytes:mounted?Math.max(0,(allocatedGiB-usedGiB)*GIB-IMAGE_SLACK_V1.filesystemOverheadBytes):0});
+
+test("mounted APFS occupancy is independent of host-limited statfs availability",async()=>{
+ const tree=ts.createSourceFile("measure.ts",readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true);
+ const method=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="measureImagesV1")!.getText(tree).replace(/^export /u,"");
+ const code=ts.transpileModule(method,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ const measure=new Function("machinePathV1","lstatSync","statfsSync","nativeImageVolumeUsedBytesSyncV1","join",code+";return measureImagesV1;");
+ const data=fixture.apfsOccupancy,root="/cache/r/m",directory="/cache/r";
+ const statfs={bsize:GIB,blocks:data.volumeGiB,bfree:data.hostFreeGiB,bavail:data.hostFreeGiB};
+ expect(nativeImageVolumeUsedBytesSyncV1(root,statfs,"linux",()=>{throw Error("non-Darwin must use native statfs");})).toBe((data.volumeGiB-data.hostFreeGiB)*GIB);
+ using oracle=new Database(":memory:");
+ const expected=oracle.query("select coalesce(?1=?2 and ?3='apfs' and ?4 between 1 and ?5 and ?6-?4-0.0625>=max(1,?6/10.0),0) accepted");
+ for(const sample of data.cases){
+  const plist=sample.reportedMount===null?undefined:'<?xml version="1.0"?><plist version="1.0"><dict>'
+   +'<key>MountPoint</key><string>'+sample.reportedMount+'</string><key>FilesystemType</key><string>'+sample.filesystem+'</string>'
+   +'<key>CapacityInUse</key><integer>'+String(sample.usedGiB*GIB)+'</integer></dict></plist>';
+  const occupied=(path:string,volume:typeof statfs)=>nativeImageVolumeUsedBytesSyncV1(path,volume,"darwin",(program,args)=>{
+   expect(program).toBe("/usr/sbin/diskutil");expect(args).toEqual(["info","-plist",root]);return plist;
+  });
+  const observations=measure((_workspace:string,path:string)=>path,(path:string)=>({
+   dev:path===root?9:4,nlink:1,blocks:data.allocatedGiB*GIB/512,isDirectory:()=>!path.endsWith("fixed.dmg"),isFile:()=>path.endsWith("fixed.dmg"),isSymbolicLink:()=>false,
+  }),()=>statfs,occupied,join)("/repo",IMAGE_SLACK_V1,{rust:{directory}}) as ImageRowV1[];
+  const sql=expected.get(sample.reportedMount,root,sample.filesystem,sample.usedGiB,data.volumeGiB,data.allocatedGiB) as {accepted:number};
+  expect(Boolean(sql.accepted)).toBe(sample.expected);
+  expect(observations[0]?.mounted).toBe(true);
+  let effects=0,free=data.hostFreeGiB*GIB;
+  const result=await collectImageSlackV1({rows:observations,targetFreeBytes:data.pressureTargetGiB*GIB,freeBytes:()=>free,language:"en",pressureDevice:4,reclaim:async()=>{effects++;free=data.pressureTargetGiB*GIB;return{kind:"reclaimed"};},retire:async()=>({kind:"held"})});
+  expect(effects).toBe(sql.accepted);
+  expect(result.reclaimed).toEqual(sample.expected?["rust"]:[]);
+ }
+});
+
+test("the pressured planner and non-waiting executor agree on current mounted slack",async()=>{
+ const source=readFileSync(new URL("../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",import.meta.url),"utf8");
+ const tree=ts.createSourceFile("reclaim.ts",source,ts.ScriptTarget.Latest,true);
+ const body=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="reclaimImageIfQuiescentV1")!.getText(tree).replace(/^export /u,"");
+ const code=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+ using oracle=new Database(":memory:");
+ const admissible=oracle.query("select case when ?1 then ?2 < 24 and ?3 - ?4 - 0.0625 >= max(1,?3/10.0) and not (?5 or ?6 or ?7 or ?8 or ?9) else ?3 >= 3*?4 end as yes");
+ const directory="/cache/r",root=directory+"/m",image=directory+"/fixed.dmg";
+ for(const sample of fixture.pressureCases){
+  const {pressure,allocated,used,free}=sample;
+  const expected=admissible.get(+pressure,free,allocated,used,+!!sample.busy,+!!sample.wrongDevice,+!!sample.detached,+!!sample.retiring,+!!sample.cancel) as {yes:number};
+  expect(Boolean(expected.yes),sample.name).toBe(sample.effect);
+  const stop=new AbortController(),control={signal:stop.signal};
+  const backingDevice=sample.wrongDevice?7:4,mountDevice=sample.detached?backingDevice:9;
+  const entry=(dev:number,file:boolean)=>({dev,nlink:1,blocks:allocated*GIB/512,isFile:()=>file,isDirectory:()=>!file,isSymbolicLink:()=>false});
+  let effects=0,held=false,requests=0,released=0,routine=0,reported: number=14*GIB;
+  const ports={
+   process:{platform:"darwin"},join,nativeImageReclaimMechanismV1,isImageRecoveryStillDueV1,
+   imageSlack:IMAGE_SLACK_V1,requireIssuedResourceControlInvocationV1:()=>undefined,checkResourceLeaseControl:()=>stop.signal.throwIfAborted(),
+   callerRepositoryRootV1:()=>"/repo",repositoryCacheBudgetV1:()=>({partitions:{rust:{directory}}}),repositoryLeaseDirectoryV1:()=>"/leases",
+   nativeRecomputableRetirementPendingV1:()=>held&&sample.retiring,repositoryPartitionReclaimDueV1:()=>{
+    routine++;return nativeImageReclaimDueV1(repositoryPartitionReclaimRuleV1("rust"),allocated*GIB,used*GIB,free*GIB);
+   },
+   acquireResourceLease:async(options:Record<string,unknown>)=>{
+    requests++;expect(options).toMatchObject({resource:"native-fixed-image:"+directory,mode:"exclusive",timeoutMs:0,signal:stop.signal});
+    if(sample.busy)throw Error("busy");
+    held=true;if(sample.cancel)stop.abort();
+    return{release(){held=false;released++;}};
+   },
+   nativeImageRootV1:()=>root,lstatSync:(name:string)=>name===image?entry(backingDevice,true):entry(name===root?mountDevice:backingDevice,false),
+   statfsSync:(name:string)=>name===root?{blocks:100,bfree:free,bsize:GIB}:{blocks:100,bavail:free,bsize:GIB},
+   nativeImageVolumeUsedBytesSyncV1:(name:string,volume:{blocks:number;bfree:number;bsize:number})=>nativeImageVolumeUsedBytesSyncV1(name,volume,"darwin",()=>
+    `<plist version="1.0"><dict><key>MountPoint</key><string>${root}</string><key>FilesystemType</key><string>apfs</string><key>CapacityInUse</key><integer>${used*GIB}</integer></dict></plist>`),
+   existsSync:()=>true,createNativeImageReclaimPortV1:()=>({}),
+   reclaimNativeImageV1:async()=>{
+    expect(held).toBe(true);effects++;reported=24*GIB;
+    return{beforeBytes:allocated*GIB,afterBytes:used*GIB,settled:true};
+   },
+  };
+  const run=new Function(...Object.keys(ports),code+";return reclaimImageIfQuiescentV1;")(...Object.values(ports));
+  if(pressure){
+   const result=collectImageSlackV1({
+    rows:[{...row("rust",66,35),device:4}],pressureDevice:4,targetFreeBytes:24*GIB,freeBytes:()=>reported,language:"en",signal:stop.signal,
+    reclaim:async id=>await run({},control,id,undefined,{version:1,device:4,requiredFreeBytes:24*GIB})?{kind:"reclaimed"}:{kind:"skipped"},
+    retire:async()=>({kind:"held"}),
+   });
+   if(sample.cancel)await expect(result).rejects.toThrow();
+   else expect((await result).reclaimed).toEqual(sample.effect?["rust"]:[]);
+  }else await run({},control,"rust");
+  expect(effects,sample.name).toBe(+sample.effect);
+  expect(routine,sample.name).toBe(+!pressure);
+  expect(released,sample.name).toBe(requests-(sample.busy?1:0));
+  expect(held).toBe(false);
+ }
+});
 
 test("the policy names a declared reclaim target for every reclaim profile and the retire profiles are among them",()=>{
  for(const profile of IMAGE_SLACK_V1.reclaimProfiles){expect(IMAGE_SLACK_V1.reclaimCommand.replace("{partition}",profile)).toBe("repo run repo-cache-reset:cache-reclaim-"+profile);expect(Object.keys(project.targets)).toContain("cache-reclaim-"+profile);}

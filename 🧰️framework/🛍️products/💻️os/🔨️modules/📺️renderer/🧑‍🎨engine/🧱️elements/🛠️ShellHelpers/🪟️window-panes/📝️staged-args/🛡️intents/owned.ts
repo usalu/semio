@@ -1,3 +1,4 @@
+import { uiInputCommitsOnBlur } from "@semio-tech/ui-contract/component";
 /** 🪢️ Synchronous staged edits borrow original issued controls without projecting an owned surface. */
 import type { UiNodeRecord, UiValue } from "../../../../../../../../../../🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts";
 import type { UiControlPort } from "../../../../🗣️Interpreter/🎛️control-port/🟦️.ts";
@@ -47,7 +48,7 @@ function resident(record: UiNodeRecord, trigger: string): StagedResidentControl<
   if (binding.capability != null || !data(binding.action) || !data(binding.args) || !stagedFormToken(binding.args.token)) return;
   const page = binding.action.name === STAGED_FORM_PAGE_ACTION;
   if (page ? !closed(binding.args, ["token", "page"]) : binding.action.name !== STAGED_FORM_EVENT_ACTION || !closed(binding.args, ["token", "layout", "edits"]) || !["preserve", "replace"].includes(binding.args.layout as string) || !edits(binding.args.edits)) return;
-  const input = record.component.type === "input" && ["text", "longText"].includes(record.component.kind) && record.component.commit !== "blur" ? "text" : record.component.type === "select" ? "choice" : record.component.type === "button" ? "none" : undefined;
+  const input = record.component.type === "input" && ["text", "longText"].includes(record.component.kind) && !uiInputCommitsOnBlur(record.component.commit) ? "text" : record.component.type === "select" ? "choice" : record.component.type === "button" ? "none" : undefined;
   if (input === undefined) return;
   return { node: record.id, key: record.key, trigger, disabled: record.disabled, editable: true, input, action: binding.action, binding: binding.args as unknown as StagedFormBinding | StagedFormPageBinding } as StagedResidentControl<number>;
 }

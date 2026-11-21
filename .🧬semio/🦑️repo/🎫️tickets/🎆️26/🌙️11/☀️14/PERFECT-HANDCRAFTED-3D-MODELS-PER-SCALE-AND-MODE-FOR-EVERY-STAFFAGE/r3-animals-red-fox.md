@@ -104,3 +104,63 @@ Final check line: `PASS`. Silhouette IoU elevation / front / plan: 0.990 / 0.990
 - `mousing-crouch` and the pounce poses were re-solved from the old ones, not re-authored; the near foreleg of the crouch folds very tightly.
 - Reference values are from memory (±1 cm), not from a measured specimen or a web lookup.
 - Not run: `repo` test targets and the model export.
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: `r5-red-fox-50.ts` (1:50 body, thermal, structure), `r5-red-fox-coarse.ts <100|200|500>` (own tables per scale), `r5-red-fox-poses.py --apply` (curled-sleeping authored anew), then the round-3 2D redraw `r3-red-fox-2d.ts` + `r3-red-fox-2d.py --apply` (ruling E1, all 202 shapes from the new bodies), `volumes-check.ts --product`, `r3-validate.ts --volumes`, `volumes-insert.py`. Shared helpers written for this round: `r5-fauna-render.sh` (all review sheets of one animal), `r5-fauna-outside.ts` (structure solids outside the body silhouette), `r5-fauna-measure.ts` (world extents per solid). Inputs kept: `🗑️generated/r5-red-fox/asset-before.json`, `volumes-before.json`.
+
+### Reference (adult *Vulpes vulpes*, 6 kg, autumn coat)
+
+Unchanged from section 1 (Larivière and Pasitschniak-Arts 1996; Lloyd, The Red Fox; canid osteology after Miller's Anatomy of the Dog), plus the coat pattern used for the tones: white lips, chin, throat and chest bib, black ear backs, black stockings on the fore cannons and paws and the front of the hind cannons, white brush tip.
+
+### Model against reference at 1:50 (`r5-fauna-measure.ts`, default pose)
+
+| measure | reference | model | deviation |
+|---|---|---|---|
+| height to ear tips | 0.587 (dimensions; 0.58 to 0.62) | 0.584 | -0.5 % |
+| length nose to brush tip | 1.100 (dimensions) | 1.090 | -0.9 % |
+| width over coat | 0.152 | 0.152 | 0 |
+| withers top | 0.44 | 0.441 | +0.2 % |
+| chest depth with coat | 0.20 to 0.22 | 0.224 | +1.8 % over the upper end |
+| chest width with coat | 0.14 to 0.15 | 0.149 | in range |
+| head width over the cheek ruffs | 0.10 to 0.11 | 0.106 | in range |
+| skull with nose pad | 0.155 | head bone 0.155, coat to 0.169 along the bone | in range |
+| ear length x breadth | 0.085 to 0.10 x 0.05 | 0.092 x 0.054 | breadth +7 % over 0.05 (Lloyd gives up to 0.055) |
+| brush diameter | 0.11 to 0.13 | 0.117 | in range |
+| hind paw length x width | 0.05 to 0.06 x 0.035 to 0.04 | 0.056 x 0.034 | width -3 % |
+| fore paw width | 0.035 to 0.04 | 0.036 | in range |
+| cannon diameter mid | 0.021 to 0.025 | 0.021 to 0.024 | in range |
+| hip / stifle / hock / shoulder / elbow / carpus height | 0.375 / 0.257 / 0.123 / 0.328 / 0.217 / 0.099 | rig unchanged from round 3 (section 1 table) | 0 |
+
+Rig audit: the round-3 rig is anatomically right (dorsal column descending 14 degrees to C7/T1 between the scapulae, scapula at 57 degrees, joints at the landmarks of section 1, round-4 lateral joint positions); not changed.
+
+### Grades (my eye, sheets opened)
+
+| scale | list | before | after |
+|---|---|---|---|
+| 1:50 | body | C+ (close three-quarter: far ear a stick edge-on, cheek ruffs as flaps, shoulder and upper arm as a slab with hard edges, a flap at the stifle, the brush root a knob above the croup, paws long slabs with bead toes, mouth reads open, black leg from the stifle down) | A- |
+| 1:50 | thermal | B | A- |
+| 1:50 | structure | B (lumbar and thoracic spine as plates and rods) | A- |
+| 1:100 | body / thermal / structure | B- / B- / B | A- / A- / B+ |
+| 1:200 | body / thermal / structure | C+ / C+ / B- | B+ / B+ / B+ |
+| 1:500 | body / thermal / structure | C+ / C+ / C (three loose rib sticks) | B+ / B+ / B+ |
+| 1:50 | curled-sleeping | D (body intersecting itself, legs stretched as sticks, an open C) | B+ |
+| 1:50 | mousing-crouch, pounce-flight, pounce-land, trot t 0.3, mousing-pounce t 1.5 | B to A- | B to A- (body only changed) |
+
+### What changed
+
+- 1:50 body (50 solids): new trunk table with the lofts tapering inside each other over 0.17 to 0.30 m (the curl stays closed); shoulder blade and upper arm one rounded path loft per side that rises 5 to 7 mm out of the chest; thigh as a ham that wraps the stifle; gaskin red like the thigh, only cannons and paws dark; head one red mass with cheek ruffs (no flap solids), a white lower jaw meeting it along the lips and reaching nearly under the nose pad; white throat bib; eyes almond and sunk; ears 19 to 9.5 mm thick at the base with a white inner face set proud of the cup; brush root growing out of the croup (offset sign corrected), white tip; compact oval paws with four knuckle lobes resting on the ground.
+- 1:50 structure (201 solids): vertebral column vertebra by vertebra (C7 with atlas wings, T13 with the withers' spinous processes leaning back, L7 with transverse processes, sacral crest, 20 caudal vertebrae), scapular spine; the rest as round 3. Processes at the 7.5 mm print floor.
+- 1:100 (27 / 30 / 76), 1:200 (25 / 28 / 69), 1:500 (23 / 26 / 57): new tables with the same corrections in their abstraction (bib and white jaw only at 1:100; 1:200 sternum stroke raised 24 mm so its pen-widened stroke stays inside the chest; 1:500 ribcage of five ribs per side and the costal arch instead of three loose ribs, shoulders merged into the chest).
+- Pose `curled-sleeping` re-authored from world angles: lying on the belly (hip 0.152 m), hind legs folded under (thigh down-forward, shank back along the ground, metatarsus forward), forelegs forward and turned into the ring by humerus twist, spine bent left 32 + 22 degrees, neck 92 and head 58 degrees round onto the left flank, brush wrapped round the left side to the nose; description rewritten (en, de).
+- 2D: all 202 shapes of 1:50, 1:100, 1:200 redrawn from the new bodies (ruling E1, round-3 tool).
+- Checks: `volumes-check.ts animals/red-fox --product` PASS; `r3-validate.ts animals/red-fox --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); spliced.
+
+### Remaining issues, with reason
+
+- Coarse scales render faceted in the sheets: the product tessellates by scale; the facets are below the printable feature.
+- 1:200 legs and ears stand at the 30 mm floor, stouter than real; 1:200 sternum sits 24 mm above its anatomical place so that its pen-widened stroke (rule `volumes-structure-coverage`) stays inside the chest.
+- The curled pose is a sternal curl, not the side-lying ring: the rig has no roll at the root. Seams of the trunk overlap show as a grey crease on the outer side of the bend.
+- Vertebral processes, the sacral crest and the scapular spine are thickened to the 7.5 mm print floor (real 2 to 4 mm).
+- Thermal remains one fur layer per region (the asset declares no skin layer); no area changed.
+- `mousing-crouch` and the pounce poses were not re-authored (their body only changed); the crouch folds the near foreleg tightly.

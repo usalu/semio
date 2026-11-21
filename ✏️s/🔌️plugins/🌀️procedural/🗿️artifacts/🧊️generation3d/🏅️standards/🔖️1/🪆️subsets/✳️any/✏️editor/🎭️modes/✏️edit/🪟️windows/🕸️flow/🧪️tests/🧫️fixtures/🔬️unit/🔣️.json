@@ -22,26 +22,26 @@
   },
   "expected": {
     "hoverSources": [
-      {"target": "wire-height", "sources": ["height@out"]},
-      {"target": "result@in", "sources": ["caption@out", "height@out"]},
-      {"target": "wire-whole", "sources": ["height"]},
-      {"target": "result@", "sources": ["height"]},
-      {"target": "caption@text", "sources": []},
-      {"target": "result", "sources": []}
+      {"target":"e:wire-height","ports":["height@out","result@!iin"],"inputWidgets":[],"outputWidgets":[]},
+      {"target":"h:result@!iin","ports":["caption@out","height@out"],"inputWidgets":[],"outputWidgets":[]},
+      {"target":"e:wire-whole","ports":[],"inputWidgets":["result"],"outputWidgets":["height"]},
+      {"target":"h:result@!i","ports":[],"inputWidgets":[],"outputWidgets":["height"]},
+      {"target":"h:caption@text","ports":[],"inputWidgets":[],"outputWidgets":[]},
+      {"target":"n:result","ports":[],"inputWidgets":[],"outputWidgets":[]}
     ],
     "componentHovers": [
       {"mode": "vertex", "id": "height@number#0.vertex.1", "node": "height", "port": "number"},
       {"mode": "edge", "id": "height@number#1.edge.0", "node": "height", "port": "number"},
       {"mode": "face", "id": "height@number#2.face.2", "node": "height", "port": "number"},
       {"mode": "vertex", "id": "height@number#2.face.2"},
-      {"mode": "face", "id": "height@number#2.face.2", "graphHover": "caption@text", "node": "caption", "port": "text"},
-      {"mode": "edge", "id": "height@number#1.edge.0", "graphHover": "wire-height", "node": "wire-height"}
+      {"mode": "face", "id": "height@number#2.face.2", "graphHover": "h:caption@text", "node": "caption", "port": "text"},
+      {"mode": "edge", "id": "height@number#1.edge.0", "graphHover": "e:wire-height", "edge": "wire-height"}
     ],
     "hoverGranularities": {"nodes": "node", "ports": "handle", "wires": "edge"},
     "nodes": [
       { "id": "height", "label": "Height", "ports": ["height@number"] },
       { "id": "caption", "label": "Note", "ports": ["caption@text"] },
-      { "id": "result", "label": "Preview", "ports": ["result@"] }
+      { "id": "result", "label": "Preview", "ports": ["result@!i"] }
     ],
     "wires": [{ "id": "wire-height" }, { "id": "wire-caption" }, { "id": "wire-whole" }]
   }

@@ -1,0 +1,35 @@
+{
+  "source":{
+    "vertices":[[0,0,0],[1,0,0],[2,0,0],[3,0,0],[0,1,0],[1,1,0],[2,1,0],[3,1,0]],
+    "faces":[[0,1,5,4],[1,2,6,5],[2,3,7,6]],
+    "surface":[
+      {"kind":"vertexNormal","index":1,"normal":[0.6,0,0.8]},
+      {"kind":"vertexNormal","index":2,"normal":[0,0.6,0.8]},
+      {"kind":"cornerUv","index":0,"uv":[0.125,0.125]},
+      {"kind":"cornerUv","index":1,"uv":[0.375,0.125]},
+      {"kind":"cornerUv","index":2,"uv":[0.375,0.625]},
+      {"kind":"cornerUv","index":3,"uv":[0.125,0.625]},
+      {"kind":"cornerUv","index":4,"uv":[0.375,0.125]},
+      {"kind":"cornerUv","index":5,"uv":[0.625,0.125]},
+      {"kind":"cornerUv","index":6,"uv":[0.625,0.625]},
+      {"kind":"cornerUv","index":7,"uv":[0.375,0.625]},
+      {"kind":"cornerUv","index":8,"uv":[0.25,0.25]},
+      {"kind":"cornerUv","index":9,"uv":[0.75,0.25]},
+      {"kind":"cornerUv","index":10,"uv":[0.75,0.75]},
+      {"kind":"cornerUv","index":11,"uv":[0.25,0.75]},
+      {"kind":"smoothFace","index":0},
+      {"kind":"smoothFace","index":1},
+      {"kind":"smoothFace","index":2},
+      {"kind":"seamEdge","index":4}
+    ]
+  },
+  "expected":{
+    "faceCount":2,
+    "cornerCounts":[6,4],
+    "area":3,
+    "uvVertex":2,
+    "uvSamples":[[0.625,0.125],[0.25,0.25]],
+    "markedEdge":[1,2],
+    "cannotDissolve":5
+  }
+}

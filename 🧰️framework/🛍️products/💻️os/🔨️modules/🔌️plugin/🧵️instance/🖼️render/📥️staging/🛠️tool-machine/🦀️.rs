@@ -165,6 +165,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
     }
 
+    /// 🪢️ Live retirement waits for the foreground caller's retained overlay sources.
+    pub fn tool_overlay_waits_for_foreground(&self) -> bool {
+        self.tools.original_tool_follow.as_ref().is_none() && self.shared().tool_overlay_action_source_pending()
+    }
+
     /// 🧵️ The same mounted original caller drives native preparation and retires its actual retained source before shell release.
     pub fn tool_overlay_retirement_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
         if closing{if let Some(owner)=self.tools.original_tool_tag_capture.as_mut(){if !owner.matches_context(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tag source close changed its receiver").into())}let before=cx.retained_progress();if owner.terminal_is_empty(){let d=owner.shell_close_demands();semio_framework_job::close_original_retained_turn(cx,d,|_|{self.tools.original_tool_tag_capture.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;}else{cx.with_retained_loan(grant,|same|owner.close_step(same))?;}return Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}}
@@ -197,7 +202,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress());
             return Ok(RetainedCloneStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?))
         }
-        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if self.shared().tool_overlay_action_source_pending(){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if self.shared().tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending(){return self.tool_overlay_alias_retirement_step(cx,grant).map_err(Into::into)}
         if self.tool_machines.refold_owed{
             if (closing||cx.is_cancelled())&&!self.tools.original_tool_follow.is_some(){
@@ -331,8 +336,16 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         self.gesture_retirement_pending()||self.tool_machines.pending_overlay_aliases.is_some()||self.tool_machines.overlay_alias_retirement.is_some()||self.tool_machines.pending_config_aliases.is_some()||self.tool_machines.config_alias_retirement.is_some()
     }
 
+    fn tool_overlay_action_source_pending(&self) -> bool {
+        self.tools.original_tool_tag_capture.is_some()
+            || self.tools.original_tool_tag_retirement.is_some()
+            || self.tools.original_scrub_dispatch.is_some()
+            || self.tools.original_press_settlement.is_some()
+            || self.tools.original_typing_settlement.is_some()
+    }
+
     pub fn tool_overlay_retirement_pending(&self)->bool{
-        self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some()||self.tool_machines.refold_owed||self.tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending()
+        self.tool_overlay_action_source_pending()||self.tools.original_tool_follow.is_some()||self.tool_machines.refold_owed||self.tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending()
     }
 
     fn tool_overlay_refold_owed(&self)->bool{self.tool_machines.refold_owed}
@@ -347,7 +360,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         if closing{if let Some(owner)=self.tools.original_typing_settlement.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else{owner.close_demands(body)}}}
         if let Some(owner)=self.tools.original_tool_follow.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else if closing{owner.close_demands(&self.stores.store,&self.stores.config_store,&self.stores.window_config_store,&self.tool_machines)}else{owner.demands(&self.stores.store,&self.stores.config_store,&self.stores.window_config_store,&self.tool_machines,maximum_work_units.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"active tool projection requires its actual remaining work"))?)}}
 
-        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some(){return Ok(Default::default())}
+        if self.tool_overlay_action_source_pending(){return Ok(Default::default())}
         if self.gesture_retirement_pending(){return self.gesture_retirement_demand(body);}
         if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ToolOriginalAliasBatch<A::Snapshot>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes())};}
         if self.tool_machines.pending_overlay_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Snapshot>::constructor_demand());}

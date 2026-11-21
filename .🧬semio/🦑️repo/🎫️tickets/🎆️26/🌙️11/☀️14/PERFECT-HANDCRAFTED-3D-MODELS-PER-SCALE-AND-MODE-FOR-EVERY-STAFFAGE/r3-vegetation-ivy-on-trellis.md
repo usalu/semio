@@ -151,3 +151,36 @@ Rendered but not opened: `s100.structure.three-quarter`, `s50.thermal.right`, `s
 - **Width.** The body is 1.90 to 1.914 m wide against `widthM` 1.92 (within the 2 % rule); the leaves reach 1.916 m but are texture.
 - **Size.** The catalog file grew from 0.5 to 4.7 MB (2268 + 1093 leaf and spray solids with references).
 - **Shoe area.** `post-shoes` 0.33 m² is met by modelling the thermal sleeve as a closed shell; the honest hollow sleeve measures 0.496 m² under C29. Not listed in `area-review.md`.
+
+## Round 5 handcraft (2026-11-21)
+
+### Reference (modelled to)
+
+| quantity | reference | source | model 1:50 | deviation |
+|---|---|---|---|---|
+| leaf blade | 4-10 cm, 3-5 lobed, distichous | Metcalfe 2005 | 58-88 mm, five lobes, alternate rows | within |
+| woody stems | 1-3 cm at the base after 5-10 years | Metcalfe 2005 | 20 mm tapering to 7 mm | within |
+| leaf mat per face | 10-15 cm | Metcalfe 2005; Jones 2014 | 0.25 m total depth | 0 % against `depthM` |
+| posts | 90 x 90 mm C24 | EN 338, joinery practice | 90 x 90 x 2100 mm | 0 % |
+| lattice laths | about 20 x 10 mm at 15-20 cm | joinery practice | 20 x 10 mm at 189 / 200 mm | within |
+| post shoe | sleeve with base plate and bolts | manufacturer practice | 98 mm sleeve, 100 x 180 x 8 mm plate | within |
+
+### Grades (opened this round: 1:50 body, 1:50 structure, 1:50 thermal cut, 1:200 body, 1:500 body)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | A- (leaf mosaic with tips down, ragged fringe over the open lattice, posts in bolted shoes; smooth cushion visible at the right flank) | A- (upper and lower leaf regions meet cleanly at 1.3 m, stems inside, timber and shoes tidy) | A- (posts, rails, full lattice, woven stems with laterals, shoes as supports) |
+| 1:100 | B+ (round 3) | B+ | B+ |
+| 1:200 | B+ (dense ragged wall of leaf sprays on the frame, four stems, open foot) | B+ | B+ |
+| 1:500 | B- (130 star-shaped leaf flakes of 0.33 m read as confetti rather than a crisp ragged screen) | B | B+ |
+
+### Changes
+
+None this round (time spent on the lime and the birch, whose defects were larger).
+
+### Remaining issues
+
+- 1:500 should be a few lobed ragged mats instead of star flakes; 1:200 the same in finer lobes.
+- Wind poses lean the screen in its own plane (planar rig).
+- Cushions show at the flanks at 1:50; leaves rigid to their mat bone.
+- Grade A not reached at the coarse scales.

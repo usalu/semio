@@ -358,12 +358,18 @@ fn real_settings_fields_inherit_labels_and_explicit_control_names_win() {
         let node = projection.iter().find(|node| Some(node.key.as_str()) == control["key"].as_str()).unwrap();
         assert_eq!(node.label.as_deref(), control["label"].as_str());
     }
-    law["document"]["nodes"][2]["key"] = serde_json::json!("differently-named-control");
-    let unmatched = accessibility_projection(&mounted_tree(&law));
-    assert!(unmatched.iter().find(|node| node.node_id == 2).unwrap().label.is_none());
-    law["document"]["nodes"][2]["accessibility"]["label"] = serde_json::json!("Explicit control name");
-    let projection = accessibility_projection(&mounted_tree(&law));
-    assert_eq!(projection.iter().find(|node| node.node_id == 2).unwrap().label.as_deref(), Some("Explicit control name"));
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/field-association.json")).unwrap();
+    law["document"]["nodes"][1]["key"] = fixture["field"].clone();
+    law["document"]["nodes"][2]["key"] = fixture["replacement"].clone();
+    for row in fixture["labelRows"].as_array().unwrap() {
+        law["document"]["nodes"][1]["component"]["label"] = row["label"].clone();
+        law["document"]["nodes"][2]["accessibility"]["label"] = serde_json::Value::Null;
+        let renamed = accessibility_projection(&mounted_tree(&law));
+        assert_eq!(renamed.iter().find(|node| node.node_id == 2).unwrap().label.as_deref(), row["label"].as_str());
+        law["document"]["nodes"][2]["accessibility"]["label"] = row["explicit"].clone();
+        let explicit = accessibility_projection(&mounted_tree(&law));
+        assert_eq!(explicit.iter().find(|node| node.node_id == 2).unwrap().label.as_deref(), row["explicit"].as_str());
+    }
 }
 
 /// ➡️ LAW (live fault F18): a tree row whose own click is its target's activation (`RowTarget::activation`, never a record

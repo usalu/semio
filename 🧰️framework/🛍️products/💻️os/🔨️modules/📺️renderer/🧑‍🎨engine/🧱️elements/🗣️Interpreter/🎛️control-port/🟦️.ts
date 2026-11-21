@@ -1,6 +1,8 @@
 /** 🎛️ The source authority ordinary controls use without owning a document projection. */
 import type { ActionBinding, SurfaceId, UiIntent, UiNodeId, UiNodeRecord, Trigger as UiTrigger, UiValue } from "../../../../../../../../🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts";
 import type { LocalDocumentOwnerV1 } from "../🧭️local-document-owner/🟦️.ts";
+import { UI_RETAINED_TEXT_BODY_COMMIT } from "@semio-tech/ui-contract/component";
+import { retainedTextBody } from "../🚚️surface-scene-lanes/🟦️.ts";
 import type { InputOutcomeV1 } from "../../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 
 export type UiControlCompletion = void | Promise<void | InputOutcomeV1>;
@@ -40,17 +42,31 @@ export interface UiControlDocument {
 /** 📃️ Adapts the real document's reads, publication and intent mint without copying its nodes. */
 export function documentControlContext(context: { readonly store: UiControlDocument; readonly onIntent: (intent: UiIntent) => UiControlCompletion; readonly localDocumentOwner?: LocalDocumentOwnerV1 | null; readonly domScope?: string }): UiControlContext {
   const source = context.store;
-  const disabled = (record: UiNodeRecord) => record.disabled === true || source.getNodeSnapshot(record.id) !== record;
+  const read = (id: UiNodeId) => source.getNodeSnapshot(id);
+  const hasBody = (record: UiNodeRecord) => record.component.type === "input" && record.component.commit === UI_RETAINED_TEXT_BODY_COMMIT;
+  const bodies = new WeakMap<UiNodeRecord, string>();
+  const value = (record: UiNodeRecord): string | undefined => {
+    if (record.component.type !== "input" || !hasBody(record)) return undefined;
+    const ready = bodies.get(record);
+    if (ready !== undefined) return ready;
+    const key = record.component.value;
+    const descriptor = /^framework\.input\.value\.(0|[1-9][0-9]*)\.[0-9a-f]{16}$/.exec(key);
+    const bytes = Number(descriptor?.[1]);
+    const body = Number.isSafeInteger(bytes) ? retainedTextBody(read, record, key, bytes) : undefined;
+    if (body !== undefined) bodies.set(record, body);
+    return body;
+  };
+  const disabled = (record: UiNodeRecord) => record.disabled === true || read(record.id) !== record || (hasBody(record) && value(record) === undefined);
   return {
     localDocumentOwner: context.localDocumentOwner,
     domScope: context.domScope,
     controls: {
       identity: source,
       surface: () => source.getState().surface,
-      read: (id) => source.getNodeSnapshot(id),
+      read,
       subscribe: (listener) => source.subscribeRevision(listener),
       disabled,
-      value: () => undefined,
+      value,
       dispatch: (record, trigger, input) => {
         if (disabled(record)) return;
         let binding: ActionBinding | undefined;

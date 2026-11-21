@@ -1,0 +1,6 @@
+{
+  "window": "note-composite",
+  "utility": "pencil",
+  "phases": ["ingress", "reservedCommit", "retired"],
+  "expectedOwners": [2, 1, 0]
+}

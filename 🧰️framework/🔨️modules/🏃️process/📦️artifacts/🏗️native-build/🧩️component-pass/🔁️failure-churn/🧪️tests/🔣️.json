@@ -2,6 +2,60 @@
   "version": 1,
   "consumed": "pub struct Original;",
   "replacement": "pub struct Renamed_;",
+  "watchLifecycle": {
+    "changes": ["handled.rs", "independent.rs", "after-close.rs"],
+    "handled": ["handled.rs"],
+    "warmAccepted": "independent.rs",
+    "standaloneAccepted": "handled.rs"
+  },
+  "earlyDrift": [
+    { "name": "active unlinked child stops on new admitted drift", "active": true, "linked": false, "cancelled": false, "remaining": true, "repeated": false, "stopped": true },
+    { "name": "linked child preserves its source witness", "active": true, "linked": true, "cancelled": false, "remaining": true, "repeated": false, "stopped": false },
+    { "name": "exited child keeps its outcome", "active": false, "linked": false, "cancelled": false, "remaining": true, "repeated": false, "stopped": false },
+    { "name": "cancelled pass keeps original cancellation", "active": true, "linked": false, "cancelled": true, "remaining": true, "repeated": false, "stopped": false },
+    { "name": "last attempt keeps its compiler outcome", "active": true, "linked": false, "cancelled": false, "remaining": false, "repeated": false, "stopped": false },
+    { "name": "repeated proof keeps its compiler outcome", "active": true, "linked": false, "cancelled": false, "remaining": true, "repeated": true, "stopped": false }
+  ],
+  "uncodedDiagnostic": {
+    "cargoWorkspace": "hub",
+    "target": "hub/components/note/packages/rust/lib.rs",
+    "manifest": "hub/components/note/packages/rust/Cargo.toml",
+    "span": "components/note/packages/rust/../../lib.rs",
+    "expected": ["hub/components/note/packages/rust/Cargo.toml", "hub/components/note/packages/rust/lib.rs", "hub/components/note/lib.rs"],
+    "outcomes": [
+      {"name":"an unchanged nested Cargo diagnostic remains a compiler failure","vanished":null},
+      {"name":"a vanished nested Cargo diagnostic source triggers retry","vanished":"hub/components/note/lib.rs"}
+    ]
+  },
+  "retryEligibility": [
+    {"generation":"warm","passes":[{"profile":"prototype","components":1}],"enabled":true},
+    {"generation":"warm","passes":[{"profile":"release","components":1}],"enabled":true},
+    {"generation":"fresh","passes":[{"profile":"prototype","components":1}],"enabled":false},
+    {"generation":"fresh","passes":[{"profile":"release","components":1}],"enabled":false},
+    {"generation":"warm","passes":[{"profile":"prototype","components":2}],"enabled":true},
+    {"generation":"warm","passes":[{"profile":"prototype","components":1},{"profile":"prototype","components":1}],"enabled":false},
+    {"generation":"warm","passes":[{"profile":"prototype","components":0}],"enabled":false},
+    {"generation":"warm","passes":[],"enabled":false}
+  ],
+  "successiveChanges": [
+    {"name":"a second dependency changes during the first retry","sources":["curve","mesh"],"exit":0,"suffixes":["","-retry","-retry-2"]},
+    {"name":"the same unchanged proof cannot buy a third compilation","sources":["curve","curve"],"exit":101,"suffixes":["","-retry"]},
+    {"name":"three independent compiler corrections settle in one held lane","sources":["annular","box-section","pdf"],"exit":0,"suffixes":["","-retry","-retry-2","-retry-3"]},
+    {"name":"four different edits stop at the admitted attempt limit","sources":["curve","mesh","spatial","pdf"],"exit":101,"suffixes":["","-retry","-retry-2","-retry-3"]}
+  ],
+  "secondSourceCorrections": [
+    {"name":"the held native lane recovers two distinct dependency edits for two components","source":"dependency","code":"E0599"},
+    {"name":"the held native lane recovers a corrected diagnostic source after a dependency edit","source":"diagnostic","code":"E0425"},
+    {"name":"the held native lane reports its original and enlarged graph bounds","source":"growth","code":"E0599","heldBytes":4311744512,"replacementBytes":4328521728}
+  ],
+  "driverReplacement": {"application":"a","secondary":"d","prior":"b","replacement":"c","source":"pub struct Original;","editedSource":"pub struct Renamed_;","originalExit":101,"finalExit":0,"artifacts":2,"storageBytes":5368709120},
+  "warmGraph": [
+    {"name":"unchanged graph uses its prior reservation","previous":"a","planned":"a","admitted":"a","replacementBytes":9,"heldBytes":8,"freeBytes":8,"result":"a","checkReplacement":false},
+    {"name":"stable replacement fits the existing lane","previous":"a","planned":"b","admitted":"b","replacementBytes":8,"heldBytes":8,"freeBytes":9,"result":"b","checkReplacement":true},
+    {"name":"replacement exceeds held footprint","previous":"a","planned":"b","admitted":"b","replacementBytes":9,"heldBytes":8,"freeBytes":10,"result":null,"checkReplacement":true},
+    {"name":"replacement exceeds current headroom","previous":"a","planned":"b","admitted":"b","replacementBytes":8,"heldBytes":9,"freeBytes":7,"result":null,"checkReplacement":true},
+    {"name":"graph changes while sources are admitted","previous":"a","planned":"b","admitted":"c","replacementBytes":1,"heldBytes":9,"freeBytes":9,"result":null,"checkReplacement":false}
+  ],
   "cases": [
     {"name":"same-length dependency change","changed":"direct","code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":2,"exit":0},
     {"name":"stale transitive metadata","changed":"transitive","code":"E0599","initialExit":101,"retryExit":101,"graphStable":true,"attempts":2,"exit":101},
@@ -10,6 +64,11 @@
     {"name":"other variant of the same package","changed":"host","code":"E0432","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
     {"name":"unchanged source error classification","changed":"direct","code":"E0382","initialExit":101,"retryExit":0,"graphStable":true,"attempts":1,"exit":101},
     {"name":"successful first compile","changed":"direct","code":"E0432","initialExit":0,"retryExit":101,"graphStable":true,"attempts":1,"exit":0},
-    {"name":"graph changed before retry","changed":"direct","code":"E0432","initialExit":101,"retryExit":0,"graphStable":false,"attempts":1,"exit":null}
+    {"name":"a graph that fails re-admission refuses retry","changed":"direct","code":"E0432","initialExit":101,"retryExit":0,"graphStable":false,"attempts":1,"exit":null}
+  ],
+  "graphObservations": [
+    {"stderr":"error: cannot update the lock file /workspace/Cargo.lock because --locked was passed to prevent this", "replan":true},
+    {"stderr":"error: no matching package named `registry-package` found", "replan":false},
+    {"stderr":"error: option --unit-graph requires unstable options", "replan":false}
   ]
 }

@@ -2,7 +2,7 @@
  * @see ./r3-runner-figure.ts */
 import { RIG } from "./r3-runner-rig.ts";
 import { Kit, inset, parts, type Json, type Row, type V3 } from "./r3-runner-kit.ts";
-import { ADAPTER_Y, FOOT, M, SIDES, T, TOE, m } from "./r3-runner-body50.ts";
+import { ADAPTER_Y, FOOT, M, SIDES, T, TOE, m } from "./r5-runner-with-blade-prosthesis-body50.ts";
 
 /* ------------------------------------------------------------------ thermal */
 
@@ -38,7 +38,7 @@ export function thermal(asset: Json, k: Kit, scale: number): Json[] {
   out.push({ ...t.loft("th-face", "head", M.skin, T.skin, FACE[scale]!), region: "face-skin" });
   if (scale === 500) {
     out.splice(out.findIndex((x) => x.id === "th-singlet"), 1);
-    out.push({ ...t.loft("th-singlet", "torso", M.singlet, T.singlet, [[-0.078, 0.014, 0, 0.174, 0.127, 2.3], [0.09, -0.002, 0, 0.144, 0.101, 2.3], [0.3, -0.007, 0, 0.162, 0.116, 2.3], [0.42, 0.005, 0, 0.162, 0.094, 2.2], [0.47, 0.007, 0, 0.115, 0.076, 2]]), region: "singlet" });
+    out.push({ ...t.loft("th-singlet", "torso", M.singlet, T.singlet, [[-0.078, 0.01, 0, 0.17, 0.122, 2.3], [0.09, -0.005, 0, 0.143, 0.097, 2.3], [0.33, -0.002, 0, 0.17, 0.122, 2.3], [0.44, 0.002, 0, 0.186, 0.104, 2.2], [0.475, 0.004, 0, 0.142, 0.08, 2.1]]), region: "singlet" });
     out.push({ ...t.loft("th-neck", "head", M.skin, T.skin, [[-0.135, 0.016, 0, 0.064, 0.064], [-0.07, -0.004, 0, 0.056, 0.062]]), region: "face-skin" });
     out.splice(out.findIndex((x) => x.id === "th-thigh-r"), 1);
     out.push({ ...t.loft("th-thigh-r", "thigh-r", M.skin, T.skin, [[0.117, 0.0095, -0.001, 0.0815, 0.0925], [0.2, 0.011, 0, 0.078, 0.088], [0.35, 0.009, 0, 0.064, 0.072]]), region: "leg-skin" });

@@ -13,6 +13,16 @@
         "dependencyCalls": {"type": "integer", "minimum": 0, "maximum": 4},
         "refused": {"type": "boolean"}
       }
+    },
+    "ImplementationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after", "reason"],
+      "properties": {
+        "before": {"type": "string", "minLength": 1},
+        "after": {"type": ["string", "null"]},
+        "reason": {"enum": ["bytes", "vanished"]}
+      }
     }
   }
 }

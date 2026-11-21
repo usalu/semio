@@ -11,7 +11,7 @@
 
 use crate::editor::note::window::schema::{NoteInkToolEntry, NoteInkToolState};
 use crate::op::NoteMutation;
-use crate::schema::mutations::{apply_note_mutation, change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, drag_blocks, edit_block_ink_stroke, move_block, rename_block, replace_asset_payload, resize_block};
+use crate::schema::mutations::{apply_note_mutation, change_block_font_size, change_block_ink_width, change_block_locked, change_block_visible, create_asset, create_block, delete_block, drag_blocks, edit_block_ink_stroke, edit_block_math, edit_block_text, edit_table_cell, move_block, rename_block, replace_asset_payload, resize_block};
 use crate::schema::{block_bounds, block_id, block_locked, block_name, block_visible, find_block, find_block_location, insert_block, remove_block_from_tree, update_block_in_tree};
 use crate::{NoteBlockNode, NoteCamera, NoteImageAsset};
 use semio_s_artifact_note_note_schema::NoteSnapshot;
@@ -67,6 +67,29 @@ fn block_update_mutations(id: &str, before: &NoteBlockNode, after: &NoteBlockNod
         if (bw, bh) != (aw, ah) {
             ops.push(resize_block(id.to_string(), aw, ah));
         }
+    }
+    match (before, after) {
+        (NoteBlockNode::Text { content: previous, font_size: previous_size, .. }, NoteBlockNode::Text { content: current, font_size: current_size, .. }) => {
+            if previous.paragraphs != current.paragraphs {
+                ops.push(edit_block_text(id.to_owned(), current.paragraphs.clone()));
+            }
+            if previous_size != current_size {
+                ops.push(change_block_font_size(id.to_owned(), *current_size));
+            }
+        }
+        (NoteBlockNode::Table { rows: previous, .. }, NoteBlockNode::Table { rows: current, .. }) => {
+            for (row, (previous, current)) in previous.iter().zip(current).enumerate() {
+                for (column, (previous, current)) in previous.iter().zip(current).enumerate() {
+                    if previous != current {
+                        ops.push(edit_table_cell(id.to_owned(), row, column, current.content.clone()));
+                    }
+                }
+            }
+        }
+        (NoteBlockNode::Math { tex: previous, .. }, NoteBlockNode::Math { tex: current, .. }) if previous != current => {
+            ops.push(edit_block_math(id.to_owned(), current.clone()));
+        }
+        _ => {}
     }
     if block_visible(before) != block_visible(after) {
         ops.push(change_block_visible(id.to_string(), block_visible(after)));
@@ -461,7 +484,7 @@ pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _c
     let mut window_config_mutations = Vec::new();
     for event in &events {
         if let NoteCanvasEvent::SetCamera { camera } = event {
-            let view = ctx.view_state.as_deref().ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
+            let view = ctx.view_state.ok_or_else(|| Fault::from("note-composite-window-context-required"))?;
             window_config_mutations.push(crate::editor::note::window::addressed_config(view, crate::editor::note::window::NoteCompositeWindowConfig { camera: camera.clone() })?);
         }
     }
@@ -478,5 +501,8 @@ pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _c
 }
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "inline-edits-tests.rs"]
+mod inline_edits_tests;
 
 //#endregion 🧪️Tests

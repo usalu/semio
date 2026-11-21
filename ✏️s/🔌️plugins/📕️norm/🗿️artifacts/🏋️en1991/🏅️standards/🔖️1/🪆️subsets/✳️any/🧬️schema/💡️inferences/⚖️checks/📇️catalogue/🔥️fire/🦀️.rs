@@ -17,6 +17,7 @@ fn e12_01(c: &Case) -> R {
 }
 
 fn e12_02(c: &Case) -> R {
+    if c.de() { return Err("The German National Annex uses Annex AA for a fully developed compartment fire".into()); }
     let (af, at, av, heq) = (c.pos("a_f")?, c.pos("a_t")?, c.pos("a_v")?, c.pos("h_eq")?);
     let b = c.n("b")?;
     if !(100.0..=2200.0).contains(&b) { return Err("input b must lie within 100 to 2200 J/m²s^½K".into()); }
@@ -34,9 +35,9 @@ fn e12_02(c: &Case) -> R {
         let th = part_1_2::parametric_theta_c(&p, t / 60.0);
         out.push(Outcome::info("theta_g", "Gas temperature θ_g(t)", "Gastemperatur θ_g(t)", QuantityKind::Temperature, kelvin(th)).steps(format!("θ_g({t:.1} min) = {th:.2} °C.")).basis(&["ndp.en1991.e12.annex-a"]));
     }
-    out.push(Outcome::warn("validity_q", "q_t,d within 50 to 1000 MJ/m²", "q_t,d innerhalb 50 bis 1000 MJ/m²", QuantityKind::Dimensionless, if p.q_td_mj < 50.0 { 50.0 / p.q_td_mj } else { p.q_td_mj / 1000.0 }, 1.0).steps(format!("q_t,d = {:.2} MJ/m².", p.q_td_mj)).basis(&["ndp.en1991.e12.annex-a"]));
-    out.push(Outcome::warn("validity_o", "O within 0.02 to 0.20", "O innerhalb 0,02 bis 0,20", QuantityKind::Dimensionless, if p.o < 0.02 { 0.02 / p.o } else { p.o / 0.20 }, 1.0).steps(format!("O = {:.4}.", p.o)).basis(&["ndp.en1991.e12.annex-a"]));
-    out.push(Outcome::warn("validity_geometry", "A_f ≤ 500 m², h ≤ 4 m", "A_f ≤ 500 m², h ≤ 4 m", QuantityKind::Dimensionless, (af / 500.0).max(heq / 4.0), 1.0).steps(format!("A_f = {af:.1} m², h_eq = {heq:.2} m.")).basis(&["ndp.en1991.e12.annex-a"]));
+    out.push(Outcome::warn("validity_q", "q_t,d within 50 to 1000 MJ/m²", "q_t,d innerhalb 50 bis 1000 MJ/m²", QuantityKind::Dimensionless, if p.q_td_mj < 50.0 { 50.0 / p.q_td_mj } else { p.q_td_mj / 1000.0 }, 1.0).steps(format!("q_t,d = {:.2} MJ/m².", p.q_td_mj)));
+    out.push(Outcome::warn("validity_o", "O within 0.02 to 0.20", "O innerhalb 0,02 bis 0,20", QuantityKind::Dimensionless, if p.o < 0.02 { 0.02 / p.o } else { p.o / 0.20 }, 1.0).steps(format!("O = {:.4}.", p.o)));
+    out.push(Outcome::warn("validity_geometry", "A_f ≤ 500 m², h ≤ 4 m", "A_f ≤ 500 m², h ≤ 4 m", QuantityKind::Dimensionless, (af / 500.0).max(heq / 4.0), 1.0).steps(format!("A_f = {af:.1} m², h_eq = {heq:.2} m.")));
     Ok(out)
 }
 
@@ -47,6 +48,7 @@ fn delta_n(c: &Case) -> Result<f64, String> {
 }
 
 fn e12_03(c: &Case) -> R {
+    if c.de() { return german_fire_load(c); }
     let area = c.pos("area")?;
     let (qfk, source) = match c.opt("q_fk_mj") {
         Some(v) if v > 0.0 => (v * 1e6, "given".to_string()),
@@ -67,7 +69,82 @@ fn e12_03(c: &Case) -> R {
     ])
 }
 
+fn german_fire_load(c: &Case) -> R {
+    let gamma = c.pos("bb_gamma")?;
+    let (qfd, steps) = match c.s("bb_source")? {
+        "typical_use" => {
+            let occupancy = c.s("occupancy")?;
+            let q_occ = part_1_2::characteristic_fire_load_j_m2(AnnexChoice::De, occupancy)
+                .ok_or_else(|| format!("No typical-use row in Table BB.1 for {occupancy}"))? / 1.0e6;
+            let chi = c.pos("bb_use_chi")?;
+            let construction = c.n("bb_construction_mj")?;
+            if chi > 1.0 || construction < 0.0 {
+                return Err("BB.3.2 requires combustion efficiency at most 1 and nonnegative construction fire load".into());
+            }
+            let load = gamma * (chi * q_occ + construction);
+            (load, format!("BB.1 · {occupancy} · q_f,d = {gamma:.3} ({chi:.2} × {q_occ:.0} + {construction:.1}) = {load:.1} MJ/m²."))
+        }
+        "survey" => {
+            let survey = c.n("bb_survey_mj")?;
+            if survey < 0.0 {
+                return Err("BB.2 requires a nonnegative effective surveyed fire load".into());
+            }
+            let load = (gamma * survey).max(50.0);
+            (load, format!("BB.2 · q_f,d = max(50, {gamma:.3} × {survey:.1}) = {load:.1} MJ/m²."))
+        }
+        source => return Err(format!("unknown fire load basis {source}")),
+    };
+    Ok(vec![Outcome::info("q_fd", "Design fire load q_f,d", "Bemessungsbrandlast q_f,d", QuantityKind::Energy, qfd * 1.0e6)
+        .steps(steps)])
+}
+
+/// 🔢 Annual and conditional structural fire reliability under German Annex BB.5.
+fn e12_03_1(c: &Case) -> R {
+    use crate::annex_bb_reliability::{annual_failure_target, brigade_failure, ignition_model, ignition_probability, suppression_failure, CompartmentReliability};
+
+    if !c.de() { return Err("Use the German annex for the Annex BB.5 reliability method".into()); }
+    let area = c.pos("area")?;
+    let occupancy = c.s("bb_ignition_use")?;
+    let (coefficient, exponent, average) = ignition_model(occupancy).ok_or("Select an occupancy covered by Table BB.3")?;
+    let area_probability = ignition_probability(area, coefficient, exponent);
+    let p1 = match c.s("bb_probability_method")? {
+        "area" => area_probability,
+        "average" => average,
+        "conservative" => area_probability.max(average),
+        _ => return Err("Select a supported Table BB.3 probability method".into()),
+    };
+
+    let occupants = c.n("bb_occupant_failure")?;
+    if !(occupants > 0.0 && occupants <= 1.0) { return Err("The occupant response failure probability must lie within (0, 1]".into()); }
+    let brigade = brigade_failure(c.s("bb_brigade")?, c.n("bb_response_min")?, c.n("bb_brigade_project")?)
+        .ok_or("Supply an applicable brigade response time or a substantiated project failure probability")?;
+    let automatic = suppression_failure(c.s("bb_suppression")?).ok_or("Select a supported suppression system")?;
+    let target = annual_failure_target(c.s("bb_failure_group")?, c.s("bb_consequence")?, c.n("bb_project_failure")?)
+        .ok_or("Select the applicable Table BB.5 class or a substantiated project target probability")?;
+    let manual = occupants * brigade;
+    let reliability = CompartmentReliability::evaluate(p1, manual, automatic, target)
+        .ok_or("The ratio of target to fire probability must permit a finite positive fire design factor")?;
+
+    Ok(vec![
+        Outcome::info("p1", "Annual probability of an initial fire", "Jährliche Wahrscheinlichkeit eines Entstehungsbrandes", QuantityKind::Dimensionless, p1)
+            .steps(format!("BB.10: p₁(A_f) = {area_probability:.5e}, Table BB.3 average = {average:.5e}.")),
+        Outcome::info("p2", "Manual response failure probability", "Ausfallwahrscheinlichkeit der manuellen Brandbekämpfung", QuantityKind::Dimensionless, manual)
+            .steps(format!("BB.11: p₂ = {occupants:.5e} × {brigade:.5e}.")),
+        Outcome::info("pfi", "Annual probability of a damaging fire", "Jährliche Wahrscheinlichkeit eines Schadenfeuers", QuantityKind::Dimensionless, reliability.damaging_fire)
+            .steps(format!("BB.9: p_fi = p₁·p₂·p₃, p₃ = {automatic:.5e}.")),
+        Outcome::info("conditional_failure", "Conditional target failure probability", "Bedingte Ziel-Versagenswahrscheinlichkeit", QuantityKind::Dimensionless, reliability.conditional_failure)
+            .steps(format!("BB.13: p_f,fi = p_f / p_fi, p_f = {target:.5e}.")),
+        Outcome::info("beta", "Conditional reliability index", "Bedingter Zuverlässigkeitsindex", QuantityKind::Dimensionless, reliability.beta)
+            .steps("BB.14: β_fi = −Φ⁻¹(p_f,fi)."),
+        Outcome::info("gamma_classified", "Partial factor for classified fire load", "Teilsicherheitsbeiwert für klassifizierte Brandlast", QuantityKind::Dimensionless, reliability.classified_fire_load_factor)
+            .steps("BB.15: V = 0.3, α = 0.6."),
+        Outcome::info("gamma_surveyed", "Partial factor for surveyed fire load or heat release", "Teilsicherheitsbeiwert für erhobene Brandlast oder Wärmefreisetzung", QuantityKind::Dimensionless, reliability.surveyed_fire_load_factor)
+            .steps("BB.15: V = 0.2, α = 0.6."),
+    ])
+}
+
 fn e12_04(c: &Case) -> R {
+    if c.de() { return Err("The German National Annex excludes Annex F for equivalent fire duration".into()); }
     let (qfd, h) = (c.pos("q_fd_mj")?, c.pos("height")?);
     let av = c.n("alpha_v")?;
     if !(0.025..=0.25).contains(&av) { return Err("input alpha_v must lie within 0.025 to 0.25".into()); }
@@ -136,7 +213,8 @@ fn e12_10(c: &Case) -> R {
 pub(super) const ENTRIES: &[Entry] = &[
     Entry { id: "E12.01", standard: "EN 1991-1-2", clause: "3.2.1", en: "Nominal temperature-time curves", de: "Einheits-Temperaturzeitkurven", inputs: &["curve", "t_min"], eval: e12_01 },
     Entry { id: "E12.02", standard: "EN 1991-1-2", clause: "3.3 / A", en: "Parametric temperature-time curve", de: "Parametrische Temperaturzeitkurve", inputs: &["a_f", "a_t", "a_v", "h_eq", "b", "q_fd_mj", "t_lim_min", "t_min"], eval: e12_02 },
-    Entry { id: "E12.03", standard: "EN 1991-1-2", clause: "3.3.2 / E", en: "Design fire load density", de: "Brandlastdichte", inputs: &["area", "occupancy", "q_fk_mj", "delta_q2", "sprinkler", "water_supplies", "heat_detection", "smoke_detection", "alarm", "onsite_brigade", "offsite_brigade", "safe_access"], eval: e12_03 },
+    Entry { id: "E12.03", standard: "EN 1991-1-2", clause: "3.3.2 / E / NA BB.3", en: "Design fire load density", de: "Brandlastdichte", inputs: &["area", "occupancy", "q_fk_mj", "delta_q2", "sprinkler", "water_supplies", "heat_detection", "smoke_detection", "alarm", "onsite_brigade", "offsite_brigade", "safe_access", "bb_source", "bb_gamma", "bb_use_chi", "bb_construction_mj", "bb_survey_mj"], eval: e12_03 },
+    Entry { id: "E12.03.1", standard: "EN 1991-1-2", clause: "DIN NA BB.5", en: "Reliability and partial factors for a German compartment fire", de: "Zuverlässigkeit und Teilsicherheitsbeiwerte für einen Brandabschnitt nach deutschem NA", inputs: &["area", "bb_ignition_use", "bb_probability_method", "bb_occupant_failure", "bb_brigade", "bb_response_min", "bb_brigade_project", "bb_suppression", "bb_failure_group", "bb_consequence", "bb_project_failure"], eval: e12_03_1 },
     Entry { id: "E12.04", standard: "EN 1991-1-2", clause: "F", en: "Equivalent fire duration", de: "Äquivalente Branddauer", inputs: &["q_fd_mj", "height", "alpha_v", "alpha_h", "k_b", "b", "resistance_min"], eval: e12_04 },
     Entry { id: "E12.05", standard: "EN 1991-1-2", clause: "C", en: "Localised fires", de: "Lokale Brände", inputs: &["d", "fire_area", "q_w", "z", "ceiling_height", "r", "l_h", "z_prime"], eval: e12_05 },
     Entry { id: "E12.06", standard: "EN 1991-1-2", clause: "3.1 / 3.2", en: "Net heat flux", de: "Netto-Wärmestrom", inputs: &["theta_g_c", "theta_m_c", "alpha_c", "eps_m"], eval: e12_06 },

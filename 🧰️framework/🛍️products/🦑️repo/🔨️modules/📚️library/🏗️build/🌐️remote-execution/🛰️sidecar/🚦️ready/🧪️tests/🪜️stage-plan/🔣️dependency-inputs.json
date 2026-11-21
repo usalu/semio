@@ -1,0 +1,19 @@
+{
+  "files": {
+    "package.json": {"name":"root","workspaces":["main"],"semio":{"workspace":{"owners":["*/package.json"]}}},
+    "main/package.json": {"name":"main","dependencies":{"one":"1.0.0"}},
+    "owner/package.json": {"name":"owner","workspaces":["member","../shared/borrowed"]},
+    "owner/member/package.json": {"name":"member","dependencies":{"one":"1.0.0"}},
+    "shared/borrowed/package.json": {"name":"borrowed","dependencies":{"one":"1.0.0"}}
+  },
+  "locks": ["bun.lock","owner/bun.lock"],
+  "changes": [
+    {"path":"owner/bun.lock","content":"changed","affects":["dependencies"]},
+    {"path":"owner/member/package.json","content":{"name":"member","dependencies":{"one":"1.0.1"}},"affects":["dependencies"]},
+    {"path":"shared/borrowed/package.json","content":{"name":"borrowed","dependencies":{"one":"1.0.1"}},"affects":["dependencies"]},
+    {"path":"main/package.json","content":{"name":"main","dependencies":{"one":"1.0.1"}},"affects":["dependencies"]},
+    {"path":"package.json","content":{"name":"root","workspaces":["main"],"semio":{"workspace":{"owners":["*/package.json"]}},"dependencies":{"one":"1.0.1"}},"affects":["dependencies"]},
+    {"path":"owner/elsewhere/package.json","content":{"name":"unowned"},"affects":[]},
+    {"path":"owner/package.json","content":{"name":"owner","workspaces":["member","elsewhere","../shared/borrowed"]},"affects":["dependencies"]}
+  ]
+}

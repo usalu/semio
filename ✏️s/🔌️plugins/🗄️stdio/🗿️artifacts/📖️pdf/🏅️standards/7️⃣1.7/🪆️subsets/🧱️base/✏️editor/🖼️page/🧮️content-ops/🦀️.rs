@@ -3,12 +3,21 @@
 use super::*;
 
 //#region 🧮️ContentOps
-pub(super) fn ensure_font(snapshot: &PdfSnapshot) -> (String, Option<PdfMutation>) {
-    if let Some(font) = snapshot.fonts.first() {
-        return (font.id.clone(), None);
+pub(super) fn ensure_font(snapshot: &PdfSnapshot, text: &str) -> Result<(String, Option<PdfMutation>), Fault> {
+    let mut fonts = FontMeasurements::new(snapshot);
+    let encodes = |codec: &semio_s_artifact_stdio_pdf_fonts::standards::v1_7::subsets::base::modules::fonts::FontCodec| text.split('\n').all(|line| codec.shows_text(line.strip_suffix('\r').unwrap_or(line)));
+    for font in &snapshot.fonts {
+        if fonts.codec(&font.id).is_some_and(encodes) { return Ok((font.id.clone(), None)); }
     }
-    let font = PdfFont::standard("F1", "Helvetica");
-    ("F1".into(), Some(PdfMutation::SetFont(SetFont { font, index: None })))
+    let font = new_standard_font(snapshot, "Helvetica");
+    if !fonts.font_codec(&font).as_ref().is_some_and(encodes) { return Err(fault("no admitted PDF font can show the requested text")); }
+    Ok((font.id.clone(), Some(PdfMutation::SetFont(SetFont { font, index: None }))))
+}
+
+pub(super) fn new_standard_font(snapshot: &PdfSnapshot, base_font: &str) -> PdfFont {
+    let occupied: std::collections::HashSet<_> = snapshot.fonts.iter().map(|font| font.id.as_str()).collect();
+    let id = (1..).map(|index| format!("F{index}")).find(|id| !occupied.contains(id.as_str())).expect("available PDF font id");
+    PdfFont::standard(id, base_font)
 }
 
 pub(super) fn replace_shown_text(content: &mut Vec<PdfOp>, object: &PageObject, text: &str) -> Result<(), Fault> {
@@ -170,6 +179,16 @@ fn show_with_explicit_line(op: PdfOp, replacement: &mut Vec<PdfOp>) -> PdfOp {
     }
 }
 
+pub(super) fn restyle_text(content: &mut Vec<PdfOp>, object: &PageObject, paint: PdfOp, name: String, size: f64) -> Result<(), Fault> {
+    let mut replacement = Vec::new();
+    let paint = show_with_explicit_line(paint, &mut replacement);
+    replacement.extend([PdfOp::SetFont { name, size }, paint]);
+    if !object.font.is_empty() { replacement.push(PdfOp::SetFont { name: object.font.clone(), size: object.font_size }); }
+    replacement.extend(text_cursor_after(content, object)?);
+    content.splice(object.end..=object.end, replacement);
+    Ok(())
+}
+
 pub(super) fn delete_text(content: &mut Vec<PdfOp>, object: &PageObject) -> Result<(), Fault> {
     let placement = object.text_placement.as_ref().ok_or_else(|| fault("text placement is missing"))?;
     let inverse = invert(placement.matrix).ok_or_else(|| fault("cannot restore a singular text matrix"))?;
@@ -178,15 +197,6 @@ pub(super) fn delete_text(content: &mut Vec<PdfOp>, object: &PageObject) -> Resu
     show_with_explicit_line(content[object.end].clone(), &mut replacement);
     append_advance(&mut replacement, advance, object.font_size, placement.horizontal_scale)?;
     content.splice(object.end..=object.end, replacement);
-    Ok(())
-}
-
-fn append_advance(content: &mut Vec<PdfOp>, advance: f64, size: f64, scale: f64) -> Result<(), Fault> {
-    if advance != 0.0 {
-        if size * scale == 0.0 { return Err(fault("cannot restore an advance with zero text scale")); }
-        let amount = -advance * 100_000.0 / (size * scale);
-        content.push(PdfOp::ShowTextArray { items: vec![PdfTextArrayItem::Adjust { amount }] });
-    }
     Ok(())
 }
 

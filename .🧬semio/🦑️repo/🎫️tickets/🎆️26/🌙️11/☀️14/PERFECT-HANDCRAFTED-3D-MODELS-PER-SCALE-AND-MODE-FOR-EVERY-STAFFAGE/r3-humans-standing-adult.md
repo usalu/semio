@@ -111,3 +111,56 @@ Final check line: `PASS (10.9 s)`. Silhouette IoU elevation / front / plan (befo
 - Front cuff lines at 1:100 and the second side-view drawstring were dropped; in the side elevation a twisted arm is drawn as a prism.
 - Not run: the staffage test suites. Tests and fixtures that embed this asset (`structure-projection`, `multiview-coverage`, `multiview-sheet`, `dimension-leader`, `cast-export`, `transport-field`) may need regenerating after the rig, dimension and 2D change.
 - `r3-standing-adult-roots.py` applies the rig and relative clip changes only once (guarded by the old hip height); a later rig change needs absolute values there.
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts (ticket folder, every section stated by hand): `r5_standing_adult_body50.py` (new 1:50 body), `r5_standing_adult_s50.py` (thermal inner layers on the new garment, hand skeleton of three phalanges, acromion), `r5_standing_adult_s100.py`, `_s200.py`, `_s500.py` (coarse bodies stated anew), `r5-standing-adult-model.py`, `r5-standing-adult-build.py`, `r5-standing-adult-2d.ts` (the round-3 redraw with the new hand ids, the 1:500 toe merged into the shoe and the 1:500 hand drawn in elevation and front only). Rig, poses and clips are unchanged (round-3 root values re-measured below and kept).
+
+### Reference and model (barefoot stature H = 1.690 m; the figure stands on a 20 mm sole)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| head, chin to vertex | H / 7.5 = 0.225 m (ANSUR II 0.222 to 0.232) | 0.222 m | -1.5 % |
+| head breadth / length | 0.147 / 0.192 m (ANSUR II, DIN 33402-2) | 0.147 / 0.192 m | 0 % |
+| bony biacromial breadth | 0.225 H = 0.380 m (DIN 33402-2 / ANSUR II, sex-neutral; brief ~0.23 H) | 0.380 m (acromion carried out from 0.366 in round 5) | 0 % (-2.2 % against 0.23 H) |
+| bideltoid, clothed | 0.449 m nude (ANSUR II) + 2 x 8 mm fleece | 0.468 m | +0.7 % |
+| hip breadth at the trochanters, clothed | about 0.21 H = 0.355 m | 0.352 m | -0.8 % |
+| shoulder joint height | 0.818 H = 1.382 m (Winter 2009) | 1.3775 m | -0.3 % |
+| elbow height / natural waist | 0.630 H = 1.065 m / about 1.06 to 1.08 m | 1.064 m / 1.06 m (narrowest hoodie section) | 0 % (elbow at the waist) |
+| wrist height / crotch | 0.485 H = 0.820 m / 0.47 H = 0.794 m | 0.817 m / 0.78 m (jeans crotch 0.80 shod) | -0.4 % (wrist at the crotch) |
+| hip joint height | 0.52 to 0.53 H = 0.879 to 0.896 m | 0.883 m | in range |
+| knee joint height | 0.285 H = 0.482 m | 0.470 m (de Leva female shank kept) | -2.5 % |
+| ankle joint height | 0.039 H = 0.066 m | 0.066 m | 0 % |
+| hand length (wrist joint to straightened middle fingertip) / breadth / thickness | 0.108 H = 0.1825 m / 0.079 / 0.027 m (ANSUR II) | 0.182 / 0.080 / 0.030 m | -0.3 % / +1 % / +11 % (palm with thenar) |
+| palm (wrist joint to knuckle) / middle finger | about 0.10 / 0.080 m | 0.098 / 0.084 m | -2 % / +5 % |
+| foot length | 0.15 H = 0.2535 m | 0.255 m inside the shoe | +0.6 % |
+| low-top canvas sneaker | 0.275 to 0.285 m long, 0.10 m wide, sole 25 mm heel / 18 to 20 mm ball, toe spring 10 to 15 mm | 0.281 x 0.100 m, sole 26 / 20 mm, toe spring 12 mm (toe tip lifted 14 mm) | in range |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B (stick rig in a sack: hands of splayed sausages under a box palm, a lumpy ring in plan from ball-shaped sleeve caps on a narrow trunk, flat slab sneakers, helmet hair standing off the occiput 27 mm, a crescent "diaper" at the crotch, kneecaps without a knee) -> A | A- -> A | A- -> A |
+| 1:100 | B (the same sleeve caps, slab shoes) -> A | B+ -> A | A- -> A |
+| 1:200 | B -> A | B+ -> A | B+ -> A- |
+| 1:500 | B (boxy figure, shoe and toe two bands that do not print at the range end) -> A- | B+ -> A- | B -> A- |
+
+### Changes
+
+- 1:50 body rebuilt: drop-shoulder sweatshirt whose yoke carries the shoulder slope from the collar out over the deltoid (half breadth 0.203 m at 1.398 m) with the sleeve set in below the shoulder line, so front, back and plan show one continuous shoulder; sleeves bunching above the rib cuffs; hands hanging relaxed with the palm towards the thigh: a palm loft rounded over the knuckles, thenar, a three-bone thumb lying along the index finger, four grouped fingers of three phalanges touching side by side and flexed 7 to 10 / 15 to 21 / 10 to 12 degrees; hair rebuilt as a shell 13 mm over the crown, 6 mm over temples and occiput and 4 mm at the nape that hugs the skull section by section (no more helmet edge); lips and chin as flush masses; jeans seat lowered to a 0.995 m waistband, crotch set back, thighs tapering 0.084 x 0.094 to 0.054 x 0.058 at the knee, calf with the gastrocnemius bulge, straight hem; sneaker with heel counter and collar, instep, vamp, toe box with 12 mm toe spring, sole 26 / 20 mm, laces on the instep line; drawstrings now follow the sweatshirt front.
+- 1:50 thermal: T-shirt shell 4 mm inside the new sweatshirt, short tee sleeves under the new sleeve caps, hand skin over the 23 new hand solids; 1:50 structure: hand skeleton of carpus, five metacarpals, 14 phalanges along the new fingers and thumb (radii >= 3.75 mm), acromion out to 0.183 m.
+- 1:100 / 1:200 / 1:500 bodies stated anew with the same shoulder yoke, skull-hugging hair, tapered jeans with calf and sneakers with toe spring; 1:500: one sneaker from heel to toe tip on the foot bone (the toe box is below 75 mm and its band did not print at 1:1000), hand mass 72 mm with its outer face where the 1:50 hand lies (the narrowest band that prints at 1:350 and 1:1000); 1:500 thermal without the toe references.
+- 2D redrawn at every scale from the new bodies by `r5-standing-adult-2d.ts` (ruling E1); 1:500 has no toe band and no hand in plan (it lies under the sleeve from above).
+- Catalog file before round 5 was INVALID (6 `PRINT range-end-feature` lines on 1:500 hands and toes); now `VALID ... schema 0, validateAsset 0`; candidate with `--volumes`: `checkVolumes 0`.
+
+### What I saw (opened)
+
+`r3-sheet` 1:50 body (before and after), close-ups of head, hands and feet (`r3-standing-adult-view.ts`, before and after each step), every pose at 1:50 (relaxed, arms-crossed, pointing, hands-warming) and the `fanning` frame at 0.4 s: closed at shoulder, elbow, wrist, hip and knee, no part through the body. 1:50 structure (spine dorsal with lordosis and kyphosis, rib cage, scapulae, pelvis, femur neck, feet and hands), 1:50 thermal cut (tee, briefs and socks nested). 1:100, 1:200, 1:500 body; 1:100, 1:200, 1:500 structure; 1:200 and 1:500 thermal cut; `r3-2d` 1:50, 1:100, 1:500 of the candidate. Rendered, not opened: 1:100 thermal cut, `r3-2d` 1:200, the `shiver` frame.
+
+### Still not A, with the reason
+
+- The rig has one trunk bone from the lumbosacral joint to C7 (a chord through the vertebral bodies, 35 mm behind the hip joints); the curvature lives in the structure solids. A segmented spine would change every pose, clip and 2D shape of the trunk and is not needed by any pose of this figure.
+- Elbow and knee are two garment lofts meeting in a fold line (reads as cloth, not as a seam); the face is plain at 1:50 (nose, brows, eyes, lips as small masses; the face itself is below 4.5 mm on paper).
+- `pointing` points with the whole arm; the rig has no finger bones, so the index finger cannot extend.
+- 1:500: the hand is a 72 mm mass because the print rule needs a 0.2 mm band at 1:1000; the structure is a slender-wire skeleton (C2) with mass spheres.
+- `jeans` area: the round-5 body is inside the C18 band again after the waistband was lowered (round 3 measured +28 %); the value itself stays with the area reviewers (`area-review.md`, the jeans row of standing-phone-user refers to it).

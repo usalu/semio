@@ -1,0 +1,21 @@
+{
+  "mixed": [
+    [
+      "shared",
+      "withdrawn"
+    ],
+    [
+      "retained",
+      "shared"
+    ]
+  ],
+  "queued": [
+    [
+      "established"
+    ],
+    [
+      "established",
+      "pending"
+    ]
+  ]
+}

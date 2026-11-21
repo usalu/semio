@@ -187,6 +187,7 @@
         "capacityBytes"
       ],
       "properties": {
+        "usesPolicyMinimum": {"type": "boolean"},
         "id": {
           "type": "string",
           "minLength": 1

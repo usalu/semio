@@ -7,10 +7,10 @@
       "v": 0.1,
       "met": 1.2,
       "clo": 0.5,
-      "pmvIapwsVapour": -0.10016867034502765,
-      "pmvIso7730Vapour": -0.10040264163845568,
+      "pmvIapwsVapour": -0.10016867034502988,
+      "pmvIso7730Vapour": -0.10040264163845793,
       "ppd": 5.208769299539142,
-      "vapourModelDelta": 0.00023397129342803136
+      "vapourModelDelta": 0.00023397129342804523
     },
     {
       "t_op": 22.0,
@@ -547,18 +547,6 @@
     },
     {
       "season": "winter",
-      "category": 1,
-      "edge": "upper",
-      "t_op": 23.0,
-      "clo": 1.0,
-      "rh": 50,
-      "v": 0.1,
-      "met": 1.2,
-      "pmv": 0.31585626179691234,
-      "pmvLimit": 0.2
-    },
-    {
-      "season": "winter",
       "category": 2,
       "edge": "lower",
       "t_op": 20.0,
@@ -567,18 +555,6 @@
       "v": 0.1,
       "met": 1.2,
       "pmv": -0.3370153562514045,
-      "pmvLimit": 0.5
-    },
-    {
-      "season": "winter",
-      "category": 2,
-      "edge": "upper",
-      "t_op": 24.0,
-      "clo": 1.0,
-      "rh": 50,
-      "v": 0.1,
-      "met": 1.2,
-      "pmv": 0.5367726899491391,
       "pmvLimit": 0.5
     },
     {
@@ -595,18 +571,6 @@
     },
     {
       "season": "winter",
-      "category": 3,
-      "edge": "upper",
-      "t_op": 25.0,
-      "clo": 1.0,
-      "rh": 50,
-      "v": 0.1,
-      "met": 1.2,
-      "pmv": 0.759413017720681,
-      "pmvLimit": 0.7
-    },
-    {
-      "season": "winter",
       "category": 4,
       "edge": "lower",
       "t_op": 18.0,
@@ -616,30 +580,6 @@
       "met": 1.2,
       "pmv": -0.7644712162460742,
       "pmvLimit": 1.0
-    },
-    {
-      "season": "winter",
-      "category": 4,
-      "edge": "upper",
-      "t_op": 25.0,
-      "clo": 1.0,
-      "rh": 50,
-      "v": 0.1,
-      "met": 1.2,
-      "pmv": 0.759413017720681,
-      "pmvLimit": 1.0
-    },
-    {
-      "season": "summer",
-      "category": 1,
-      "edge": "lower",
-      "t_op": 23.5,
-      "clo": 0.5,
-      "rh": 50,
-      "v": 0.1,
-      "met": 1.2,
-      "pmv": -0.3621917356110125,
-      "pmvLimit": 0.2
     },
     {
       "season": "summer",
@@ -656,18 +596,6 @@
     {
       "season": "summer",
       "category": 2,
-      "edge": "lower",
-      "t_op": 23.0,
-      "clo": 0.5,
-      "rh": 50,
-      "v": 0.1,
-      "met": 1.2,
-      "pmv": -0.5095007559358856,
-      "pmvLimit": 0.5
-    },
-    {
-      "season": "summer",
-      "category": 2,
       "edge": "upper",
       "t_op": 26.0,
       "clo": 0.5,
@@ -680,18 +608,6 @@
     {
       "season": "summer",
       "category": 3,
-      "edge": "lower",
-      "t_op": 22.0,
-      "clo": 0.5,
-      "rh": 50,
-      "v": 0.1,
-      "met": 1.2,
-      "pmv": -0.8116814885920559,
-      "pmvLimit": 0.7
-    },
-    {
-      "season": "summer",
-      "category": 3,
       "edge": "upper",
       "t_op": 27.0,
       "clo": 0.5,
@@ -700,18 +616,6 @@
       "met": 1.2,
       "pmv": 0.6848084767887203,
       "pmvLimit": 0.7
-    },
-    {
-      "season": "summer",
-      "category": 4,
-      "edge": "lower",
-      "t_op": 21.0,
-      "clo": 0.5,
-      "rh": 50,
-      "v": 0.1,
-      "met": 1.2,
-      "pmv": -1.1231700434429974,
-      "pmvLimit": 1.0
     },
     {
       "season": "summer",
@@ -732,19 +636,19 @@
       "volumeM3": 30.0,
       "flowM3H": 25.0,
       "outdoorPpm": 400.0,
-      "generationLs": 0.005,
-      "steadyAboveOutdoorPpm": 719.9999999812135,
-      "closedFormPpm": 720.0,
-      "rustMethod2OutdoorAirM3H": 25.0
+      "generationLs": 0.005555555555555556,
+      "steadyAboveOutdoorPpm": 799.9999999201068,
+      "closedFormPpm": 800.0000000000001,
+      "rustMethod2OutdoorAirM3H": 24.999999999999996
     },
     {
       "occupants": 20,
       "volumeM3": 200.0,
       "flowM3H": 180.0,
       "outdoorPpm": 400.0,
-      "generationLs": 0.005,
-      "steadyAboveOutdoorPpm": 1999.999999974386,
-      "closedFormPpm": 2000.0,
+      "generationLs": 0.005555555555555556,
+      "steadyAboveOutdoorPpm": 2222.2222222070122,
+      "closedFormPpm": 2222.222222222222,
       "rustMethod2OutdoorAirM3H": 180.0
     },
     {
@@ -752,10 +656,10 @@
       "volumeM3": 150.0,
       "flowM3H": 400.0,
       "outdoorPpm": 400.0,
-      "generationLs": 0.005,
-      "steadyAboveOutdoorPpm": 1349.9999999599188,
-      "closedFormPpm": 1350.0,
-      "rustMethod2OutdoorAirM3H": 400.0
+      "generationLs": 0.005555555555555556,
+      "steadyAboveOutdoorPpm": 1499.9999999605209,
+      "closedFormPpm": 1500.0000000000002,
+      "rustMethod2OutdoorAirM3H": 399.99999999999994
     }
   ],
   "saturation": [
@@ -816,51 +720,45 @@
   ],
   "adaptive": [
     {
-      "thetaRm": 10.0,
-      "comfort": 22.1,
+      "thetaRm": 10.1,
+      "comfort": 22.133000000000003,
       "rustLower": {
-        "1": 20.1,
-        "2": 19.1,
-        "3": 18.1,
-        "4": 17.1
+        "1": 19.133000000000003,
+        "2": 18.133000000000003,
+        "3": 17.133000000000003
       },
       "rustUpper": {
-        "1": 24.1,
-        "2": 25.1,
-        "3": 26.1,
-        "4": 27.1
+        "1": 24.133000000000003,
+        "2": 25.133000000000003,
+        "3": 26.133000000000003
       }
     },
     {
       "thetaRm": 20.0,
       "comfort": 25.400000000000002,
       "rustLower": {
-        "1": 23.400000000000002,
-        "2": 22.400000000000002,
-        "3": 21.400000000000002,
-        "4": 20.400000000000002
+        "1": 22.400000000000002,
+        "2": 21.400000000000002,
+        "3": 20.400000000000002
       },
       "rustUpper": {
         "1": 27.400000000000002,
         "2": 28.400000000000002,
-        "3": 29.400000000000002,
-        "4": 30.400000000000002
+        "3": 29.400000000000002
       }
     },
     {
-      "thetaRm": 30.0,
-      "comfort": 28.700000000000003,
+      "thetaRm": 29.9,
+      "comfort": 28.667,
       "rustLower": {
-        "1": 26.700000000000003,
-        "2": 25.700000000000003,
-        "3": 24.700000000000003,
-        "4": 23.700000000000003
+        "1": 25.667,
+        "2": 24.667,
+        "3": 23.667
       },
       "rustUpper": {
-        "1": 30.700000000000003,
-        "2": 31.700000000000003,
-        "3": 32.7,
-        "4": 33.7
+        "1": 30.667,
+        "2": 31.667,
+        "3": 32.667
       }
     }
   ],
@@ -892,42 +790,6 @@
   ],
   "divergences": [
     {
-      "id": "din16798.band-pmv.winter.cat1.upper",
-      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
-      "inputs": "t_op 23.0 C, 50 % rh, 0.1 m/s, 1.2 met, 1.0 clo",
-      "rust": 23.0,
-      "reference": 0.31585626179691234,
-      "relative": null,
-      "note": "informational: PMV at the tabulated band edge is 0.316 against limit +-0.2"
-    },
-    {
-      "id": "din16798.band-pmv.winter.cat2.upper",
-      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
-      "inputs": "t_op 24.0 C, 50 % rh, 0.1 m/s, 1.2 met, 1.0 clo",
-      "rust": 24.0,
-      "reference": 0.5367726899491391,
-      "relative": null,
-      "note": "informational: PMV at the tabulated band edge is 0.537 against limit +-0.5"
-    },
-    {
-      "id": "din16798.band-pmv.winter.cat3.upper",
-      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
-      "inputs": "t_op 25.0 C, 50 % rh, 0.1 m/s, 1.2 met, 1.0 clo",
-      "rust": 25.0,
-      "reference": 0.759413017720681,
-      "relative": null,
-      "note": "informational: PMV at the tabulated band edge is 0.759 against limit +-0.7"
-    },
-    {
-      "id": "din16798.band-pmv.summer.cat1.lower",
-      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
-      "inputs": "t_op 23.5 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
-      "rust": 23.5,
-      "reference": -0.3621917356110125,
-      "relative": null,
-      "note": "informational: PMV at the tabulated band edge is -0.362 against limit +-0.2"
-    },
-    {
       "id": "din16798.band-pmv.summer.cat1.upper",
       "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
       "inputs": "t_op 25.5 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
@@ -935,42 +797,6 @@
       "reference": 0.23263383731395113,
       "relative": null,
       "note": "informational: PMV at the tabulated band edge is 0.233 against limit +-0.2"
-    },
-    {
-      "id": "din16798.band-pmv.summer.cat2.lower",
-      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
-      "inputs": "t_op 23.0 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
-      "rust": 23.0,
-      "reference": -0.5095007559358856,
-      "relative": null,
-      "note": "informational: PMV at the tabulated band edge is -0.510 against limit +-0.5"
-    },
-    {
-      "id": "din16798.band-pmv.summer.cat3.lower",
-      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
-      "inputs": "t_op 22.0 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
-      "rust": 22.0,
-      "reference": -0.8116814885920559,
-      "relative": null,
-      "note": "informational: PMV at the tabulated band edge is -0.812 against limit +-0.7"
-    },
-    {
-      "id": "din16798.band-pmv.summer.cat4.lower",
-      "clause": "EN 16798-1 Table B.2 band vs ISO 7730 PMV limit",
-      "inputs": "t_op 21.0 C, 50 % rh, 0.1 m/s, 1.2 met, 0.5 clo",
-      "rust": 21.0,
-      "reference": -1.1231700434429974,
-      "relative": null,
-      "note": "informational: PMV at the tabulated band edge is -1.123 against limit +-1.0"
-    },
-    {
-      "id": "din16798.adaptive.lower-limits",
-      "clause": "EN 16798-1 Annex B adaptive model (to verify against the clause text)",
-      "inputs": "theta_rm 20 C, category II",
-      "rust": "theta_c - 3.0 K",
-      "reference": "theta_c - 4.0 K (EN 16798-1 Figure B.? asymmetric lower limits -3/-4/-5 K, unverified)",
-      "relative": null,
-      "note": "the Rust band is symmetric +-2/3/4/5 K as in EN 15251; verify before changing"
     }
   ]
 }

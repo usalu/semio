@@ -1,0 +1,6 @@
+{
+  "selection": [
+    { "name": "guarded idle slot", "hold": true, "pools": [{ "idle": 1, "busy": 1 }, { "idle": 1, "busy": 0 }], "expected": 1 },
+    { "name": "available idle slot", "hold": false, "pools": [{ "idle": 1, "busy": 1 }, { "idle": 1, "busy": 0 }], "expected": 0 }
+  ]
+}

@@ -79,3 +79,58 @@ The rider stands across the board, so every body bone leaves the rig plane by up
 5. Elevation and front IoU 0.94 (other figures reach 0.97-0.99): revolved limbs are envelopes of garment sections that are not round, and swept hands and shoes are slightly larger than the model from the side.
 6. The ribcage is one closed form at every scale; the trousers have no modelled folds beyond the break over the shoe.
 7. `sectionFaces` on the thermal face rim is my reading of C25 a (cut through skin that continues under the beanie); if the reviewer disagrees the rim cap counts as well and the face area reads higher than 0.143 (not measured).
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: `r5-skateboarder-measure.ts` (rig and per-bone body extents in a pose; also used for the child), `r5-skateboarder-body.py` (reads the round 4 source kept as `🗑️generated/r5-skateboarder/volumes.before.json`, writes `volumes/humans/skateboarder.json`). Spliced; `r3-validate.ts humans/skateboarder --catalog-only` VALID (schema 0, validateAsset 0, print-suitable).
+
+### Reference (modelled to) and model against it, 1:50, pose cruising
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| stature H | 1.78 m (man, 19 y; DIN 33402 / ANSUR II P50) | 1.78 m (rig sum: 0.926 hip + 0.094 + 0.513 trunk + 0.249 head, minus the sole) | 0 % |
+| thigh (hip to knee joint) | 0.235 H = 0.418 m | 0.418 | 0 % |
+| shank (knee to ankle) | 0.246 H = 0.438 m | 0.438 | 0 % |
+| upper arm | 0.188 H = 0.335 m | 0.335 | 0 % |
+| forearm | 0.145 H = 0.258 m | 0.258 | 0 % |
+| hand | 0.108 H = 0.192 m | 0.190 bone, 0.174 body (fingers flexed 8/24/38 degrees) | -1 % |
+| foot | 0.152 H = 0.271 m | 0.271 bone path, shoe 0.29 m over all | 0 % / shoe +7 % (sole and toe box) |
+| head (chin to vertex) | H / 7.5 = 0.237 m | 0.231 (head loft 0.016 to 0.2474 above C7) | -2.5 % |
+| biacromial / shoulder joints | 0.405 m / 2 x 0.178 m | 2 x 0.178 m joints, hoodie 0.41 m, over the sleeves 0.48 m | 0 % |
+| hip breadth (clothed) | 0.355 m + 2 x 6 mm twill | 0.368 m | +0.3 % |
+| thigh breadth at the crotch (clothed) | 0.17-0.19 m (loose twill) | 0.19 m | in range |
+| shank breadth (clothed) | 0.12-0.13 m | 0.124 m | in range |
+| knee breadth (clothed) | 0.11-0.13 m | 0.122-0.128 m | in range |
+| deck | 0.81 x 0.203 m, top 0.091 m | 0.812 x 0.210 m (concave rails), top 0.091 | +0.2 % |
+| wheelbase / wheel | 0.41 m / 54 x 32 mm | 0.41 / 54 x 32 | 0 % |
+
+The rig was already right (round 3); every length lies within 1 % of the reference, so no root change of the rig, poses, clips or 2D was needed.
+
+### Grades (before -> after; body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | B+ / A- / B+ | A- / A- / A- |
+| 1:100 | B+ / A- / A- | A- / A- / A- |
+| 1:200 | B+ / B+ / A- | B+ / B+ / A- (unchanged) |
+| 1:500 | B / B+ / B | B / B+ / B (unchanged) |
+
+Defects seen before (sheets opened: 1:50 body six views and the right view alone, 1:50 structure, 1:50 thermal cut, 1:100, 1:200, 1:500 body, 1:500 structure, 1:50 crouch, 2D 1:500): fingers hooked 70 degrees into claws; a ball at every knee (thigh end wider than the shank top and 70 mm past the joint, both surfaces coincident above the joint); a brief-shaped seat panel bulging in front of the thighs; the mandible of the structure hanging below the chin (structure 7.7 mm outside the body in elevation, a round 4 regression).
+
+### Changes
+
+- 1:50 hands: four fingers grouped side by side (radii 8.8-10 mm, 19 mm apart, so they touch), flexed 8 / 24 / 38 degrees (relaxed hand), phalanges 47 / 29 / 23 mm; thumb along the index, 13.5 to 7 mm.
+- 1:50 and 1:100 knee: thigh 63 mm at u 0.40, 61 mm at the joint line, tapering inside the shank to 16 mm 64 mm past it; shank 20 mm at 50 mm above the joint, 56 mm at 14 mm above, 62-63 mm at the joint: one clean seam ring, no ball, closed in the crouch (101 degrees).
+- 1:50 trouser seat: crotch narrowed (18 / 52 / 98 mm half width at 116 / 104 / 88 mm below the hip joint), front reach pulled back 6-16 mm so the thighs carry the front line; the back (buttocks) unchanged.
+- Structure, every scale: skull re-seated (cranial base 4 mm higher and 5 mm further back, axis 10 degrees from the head bone instead of 16.4, facial skeleton 0.88): mandible inside the chin, `outsideBodyM:elevation` 0.0077 -> 0.0038 m.
+- Thermal: the nested leg shells (leg-air, twill) of thigh, shank and seat redrawn from the new body at their own depth (`r4-g11-kit.edit`); hands are `{ of }` references and follow.
+
+### Checks after
+
+`volumes-check.ts --product`: every rule ok at every scale except `volumes-thermal-coverage` areaDeviation trousers 0.44 (1:50, 1:100) and shoes 0.64 (1:50), unchanged C18 physiological values that an author may not change (already in `area-review.md`); silhouette IoU elevation / front / plan 1:50 0.942 / 0.939 / 0.956, 1:100 0.946 / 0.934 / 0.948. Opened after: 1:50 right view (crotch, knees, hands), 1:50 crouch six views, 1:50 thermal cut, 1:50 structure head crop.
+
+### Remaining (with reason)
+
+- 1:200 and 1:500 not remodelled in this round: 1:500 board is a 75 mm slab from the ground to the deck top (the floor of 75 mm makes a 11.5 mm deck impossible; it reads as a board with kicks, not as wheels); torso and limbs at 1:200 are faceted lofts of 5-6 sections. Grade B+ / B.
+- The crotch seam of the seat still shows as a narrow U between the thighs (two solids meeting); the hoodie has no cloth folds.
+- Trouser and shoe areas (C18, area reviewer).

@@ -15,7 +15,7 @@
   "properties": {
     "code": {
       "type": "string",
-      "pattern": "^en[0-9]{4}$"
+      "pattern": "^(?:en[0-9]{4}|din(?:4108|16798|18599)|iso16757|vdi3805)$"
     },
     "standard": {
       "type": "string",

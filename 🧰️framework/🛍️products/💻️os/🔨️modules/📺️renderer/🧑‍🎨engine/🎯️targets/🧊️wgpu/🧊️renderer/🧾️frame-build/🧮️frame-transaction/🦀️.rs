@@ -276,12 +276,12 @@ impl FrameTransaction {
                 }
             },
             AppFrameTransactionPhase::BrushMesh => {
-                let Some(surface) = app.shell.world3d_states.keys().nth(self.brush_mesh_cursor).cloned() else {
+                let Some(surface) = app.shell.surfaces.world3d_states.keys().nth(self.brush_mesh_cursor).cloned() else {
                     self.phase = AppFrameTransactionPhase::Build;
                     return AppFrameTransactionStep::Pending;
                 };
                 self.brush_mesh_cursor = self.brush_mesh_cursor.saturating_add(1);
-                let action = app.shell.world3d_states.get_mut(surface.as_str()).and_then(|world| infinite_world::world::step_world3d_brush_mesh_announce(&mut world.session, &mut world.scene, &mut world.assets));
+                let action = app.shell.surfaces.world3d_states.get_mut(surface.as_str()).and_then(|world| infinite_world::world::step_world3d_brush_mesh_announce(&mut world.session, &mut world.scene, &mut world.assets));
                 if let Some(action) = action {
                     if let Err(_action) = app.frame_actions.try_push(action) {
                         runtime.record_frame_fault("frame brush mesh action credits exceeded");
@@ -414,7 +414,7 @@ impl FrameTransaction {
             AppFrameTransactionPhase::FrameDeferred => {
                 let mut deferred = app.pending_frame_deferred.take();
                 if deferred.is_some() {
-                    let original = RuntimeApply::start_frame_deferred(&mut deferred, &mut app, handle, context);
+                    let original = RuntimeApply::start_frame_deferred(&mut deferred, &mut *app, handle, context);
                     app.pending_frame_deferred = deferred;
                     match original { Ok(true) => {}, Ok(false) => return AppFrameTransactionStep::Pending, Err(failure) => return AppFrameTransactionStep::CloseFailure(failure) }
                 }
@@ -423,7 +423,7 @@ impl FrameTransaction {
             }
             AppFrameTransactionPhase::BoardAuthority => {
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
-                let Some(surface_id) = interaction.shell.board2d_states.id_at(self.board_authority_cursor) else {
+                let Some(surface_id) = interaction.shell.surfaces.board2d_states.id_at(self.board_authority_cursor) else {
                     self.board_authority_cursor = 0;
                     self.phase = AppFrameTransactionPhase::World3dSnapshot;
                     return AppFrameTransactionStep::Pending;
@@ -434,7 +434,7 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Fault;
                 }
                 let surface_id = surface_id.to_owned();
-                let Some(surface) = interaction.shell.board2d_states.get(&surface_id) else {
+                let Some(surface) = interaction.shell.surfaces.board2d_states.get(&surface_id) else {
                     runtime.record_frame_fault("board authority surface order lost ownership");
                     self.phase = AppFrameTransactionPhase::Terminal;
                     return AppFrameTransactionStep::Fault;
@@ -505,7 +505,7 @@ impl FrameTransaction {
                 let Some(interaction) = app.interaction.as_mut() else {
                     return AppFrameTransactionStep::Pending;
                 };
-                let Some(surface_id) = interaction.shell.world3d_states.id_at(self.world3d_authority_cursor) else {
+                let Some(surface_id) = interaction.shell.surfaces.world3d_states.id_at(self.world3d_authority_cursor) else {
                     self.world3d_authority_cursor = 0;
                     self.phase = AppFrameTransactionPhase::World3dAuthority;
                     return AppFrameTransactionStep::Pending;
@@ -516,21 +516,43 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Fault;
                 }
                 let surface_id = surface_id.to_owned();
-                let Some(state) = interaction.shell.world3d_states.get_mut(&surface_id) else {
+                let Some(state) = interaction.shell.surfaces.world3d_states.get_mut(&surface_id) else {
                     runtime.record_frame_fault("world3d snapshot surface order lost ownership");
                     self.phase = AppFrameTransactionPhase::Terminal;
                     return AppFrameTransactionStep::Fault;
                 };
                 world3d_ingest_trace(&surface_id, state, "phase-entry");
-                let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-                let terrain=infinite_world::world::step_world3d_terrain(&mut state.session, &mut state.interaction, &mut state.authority, &mut state.scene, &mut state.terrain,terrain_grant,context);
-                if !terrain.ownership.fits(terrain_grant) {
-                    runtime.record_frame_fault("world3d terrain ownership receipt exceeded caller grants");
-                    self.phase=AppFrameTransactionPhase::Terminal;return AppFrameTransactionStep::Fault;
-                }
-                if let infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=terrain.step {
-                    runtime.record_frame_fault(&format!("world3d terrain ownership faulted: {fault:?}"));
-                    self.phase=AppFrameTransactionPhase::Terminal;return AppFrameTransactionStep::Fault;
+                const TERRAIN_WRITES_PER_FRAME: usize = 512;
+                let mut terrain_budget = semio_framework_value::RetainedCloneGrant {
+                    maximum_items: TERRAIN_WRITES_PER_FRAME,
+                    maximum_copy_bytes: 16 * TERRAIN_WRITES_PER_FRAME,
+                    maximum_capacity_bytes: 65536,
+                    maximum_release_bytes: 16 * 1024 * 1024,
+                    maximum_depth: 64,
+                }.restricted_by(context.retained_grant());
+                for _ in 0..TERRAIN_WRITES_PER_FRAME {
+                    if context.should_yield() || terrain_budget.maximum_items == 0 {
+                        break;
+                    }
+                    let terrain_grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, ..terrain_budget }.restricted_by(context.retained_grant());
+                    let terrain = infinite_world::world::step_world3d_terrain(&mut state.session, &mut state.interaction, &mut state.authority, &mut state.scene, &mut state.terrain, terrain_grant, context);
+                    if !terrain.ownership.fits(terrain_grant) {
+                        runtime.record_frame_fault("world3d terrain ownership receipt exceeded caller grants");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    if let infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault) = terrain.step {
+                        runtime.record_frame_fault(&format!("world3d terrain ownership faulted: {fault:?}"));
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    if !matches!(terrain.step, infinite_world::world::WorldTerrainMeshPublicationStep::Pending) || terrain.ownership == Default::default() {
+                        break;
+                    }
+                    terrain_budget.maximum_items -= terrain.ownership.copied_items;
+                    terrain_budget.maximum_copy_bytes -= terrain.ownership.copied_bytes;
+                    terrain_budget.maximum_capacity_bytes -= terrain.ownership.retained_capacity_bytes;
+                    terrain_budget.maximum_release_bytes -= terrain.ownership.released_bytes;
                 }
 
                 if retire_cancelled_world3d_asset_step(&mut state.assets) {
@@ -582,7 +604,7 @@ impl FrameTransaction {
             }
             AppFrameTransactionPhase::World3dAuthority => {
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
-                let Some(surface_id) = interaction.shell.world3d_states.id_at(self.world3d_authority_cursor) else {
+                let Some(surface_id) = interaction.shell.surfaces.world3d_states.id_at(self.world3d_authority_cursor) else {
                     self.world3d_authority_cursor = 0;
                     self.stage = FrameTransactionStage::ReconcileTree;
                     self.phase = AppFrameTransactionPhase::RasterUploads;
@@ -596,12 +618,12 @@ impl FrameTransaction {
                 let surface_id = surface_id.to_owned();
                 let AppInteractionState { shell, input, .. } = interaction;
                 let modal = shell.input.pointer_input_is_modal();
-                let Some(state) = shell.world3d_states.get_mut(&surface_id) else {
+                let Some(state) = shell.surfaces.world3d_states.get_mut(&surface_id) else {
                     runtime.record_frame_fault("world3d authority surface order lost ownership");
                     self.phase = AppFrameTransactionPhase::Terminal;
                     return AppFrameTransactionStep::Fault;
                 };
-                if modal && world3d_hover_clear_is_owed(&state.selection, &state.authority) && enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_leave(state.bounds.x - 1.0, state.bounds.y - 1.0)).is_err() {
+                if modal && world3d_hover_clear_is_owed(&state.selection, &state.authority) && enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_leave(state.session.bounds.x - 1.0, state.session.bounds.y - 1.0)).is_err() {
                     input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
                 }
                 let Some(generation) = world3d_interaction_front_generation(&state.camera, &state.authority) else {
@@ -635,7 +657,15 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Pending;
                 }
                 let cursor = self.raster_uploads.get_or_insert_with(Default::default);
-                match cursor.step() {
+                let step = match cursor.step(context) {
+                    Ok(step) => step,
+                    Err(_) => {
+                        runtime.record_frame_fault("frame raster owner could not retire under its admitted turn");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                };
+                match step {
                     semio_renderer_wgpu_scene_state::PendingRasterUploadStep::Pending => AppFrameTransactionStep::Pending,
                     semio_renderer_wgpu_scene_state::PendingRasterUploadStep::Upload(checked_out) => {
                         let Ok(mut producer) = checked_out.take() else {
@@ -737,6 +767,19 @@ impl FrameTransaction {
     pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
         if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let grant=cx.retained_grant();
+        if self.raster_rejected.is_some() {
+            return frame_received_child(semio_renderer_wgpu_scene_state::close_pending_raster_producer(&mut self.raster_rejected, cx), grant, self.raster_rejected.is_none());
+        }
+        if let Some(cursor) = self.raster_uploads.as_mut() {
+            let step = cursor.close_step(cx)?;
+            if step != (InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }) {
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+            }
+            let bytes = std::mem::size_of::<Option<semio_renderer_wgpu_scene_state::PendingRasterUploadCursor>>();
+            if let Some(step) = frame_inline_gate(grant, bytes).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))? { return Ok(step); }
+            self.raster_uploads = None;
+            return frame_receive_close(frame_inline_progress(bytes), cx);
+        }
         if let Some(camera) = self.scene_camera_cursor.as_mut() {
             if !camera.terminal_is_empty() { return frame_receive_close(frame_child_step(camera.close_step(grant),grant,camera.terminal_is_empty()),cx); }
             let bytes = std::mem::size_of::<Option<semio_renderer_wgpu_scene_state::SceneCameraDispatchCursor>>();
@@ -902,23 +945,7 @@ pub async fn boot_runtime(
         #[cfg(not(target_arch = "wasm32"))]
         native_reload_pending: false,
     });
-    let presenter = AppPresenter {
-        gpu,
-        engine: semio_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter::default(),
-        gate: semio_ui_prepared::PreparedRenderGate::default(),
-        runtime: runtime.clone(),
-        presentation_authority: runtime.presentation_authority(),
-        raster_operation_authority: runtime.raster_operation_authority(),
-        window: Some(window.clone()),
-        #[cfg(target_arch = "wasm32")]
-        offscreen_token: None,
-        last_cursor: None,
-        pending: None,
-        retirement: None,
-        retained_fault: None,
-        surface_resize: None,
-        stall: AppPresentStallWatch::default(),
-    };
+    let presenter = AppPresenter::for_window(gpu, runtime.clone(), window.clone());
 
     log_debug("wgpu renderer booted");
     Ok((runtime, presenter))

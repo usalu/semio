@@ -2,6 +2,60 @@
 use super::*;
 use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 static REGISTRY:UiArenaRegistry=UiArenaRegistry::new();
+#[test]
+fn funded_arena_rows_keep_exact_storage_and_settle_the_same_total_as_single_rows(){
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../row-batches.json")).unwrap();
+ let stock=Bank::new(&corpus).left;
+ let mut opening=UiArenaOpening::new();
+ let mut total=RetainedCloneProgress::default();
+ let mut work=0u128;
+ let mut record=|turn:RetainedWorkOutcome,heap:(usize,usize)|{
+  let progress=turn.result.unwrap().progress();
+  assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));
+  work+=turn.work;
+  total=total.checked_add(progress).unwrap();
+ };
+ for _ in 0..2{
+  let(turn,heap)=observe(||opening.advance_funded(stock,100));
+  assert_eq!(turn.work,1);
+  record(turn,heap);
+ }
+ assert_eq!(opening.phase(),"pageInitialization");
+ let row_bytes=opening.demands().unwrap().copy_bytes;
+ for case in cases.as_array().unwrap(){
+  let number=|key:&str|case[key].as_u64().unwrap()as usize;
+  let grant=RetainedCloneGrant{maximum_items:number("items"),maximum_copy_bytes:number("copyRows")*row_bytes,..stock};
+  let before=opening.pages.len();
+  let(turn,heap)=observe(||opening.advance_funded(grant,number("work")as u64));
+  assert_eq!(opening.phase(),"pageInitialization");
+  assert_eq!(opening.pages.len()-before,number("rows"));
+  assert_eq!(turn.work,number("rows")as u128);
+  assert_eq!(turn.result.as_ref().unwrap().progress(),RetainedCloneProgress{copied_items:number("rows"),copied_bytes:number("rows")*row_bytes,..Default::default()});
+  assert_eq!(heap,(0,0));
+  record(turn,heap);
+ }
+ while !opening.ready(){
+  let(turn,heap)=observe(||opening.advance_funded(stock,100));
+  assert!(turn.work>0&&turn.work<=32);
+  record(turn,heap);
+ }
+ let(turn,heap)=observe(||opening.take(stock));
+ let(mut backing,progress)=turn.result.unwrap().unwrap();
+ assert_eq!(heap,(0,0));
+ work+=turn.work;
+ total=total.checked_add(progress).unwrap();
+ let(items,demand,quoted_work)=UiArenaOpening::opening_reserve().unwrap();
+ let constructor=UiArenaOpening::constructor_demand();
+ assert_eq!((total.copied_items+1,total.copied_bytes+constructor.copy_bytes,total.retained_capacity_bytes,work+1),(items,demand.copy_bytes,demand.capacity_bytes,u128::from(quoted_work)));
+ let mut released=0;
+ while !backing.terminal_is_empty(){
+  let(turn,heap)=observe(||backing.close_step(stock));
+  assert_eq!(heap,(0,turn.result.unwrap().progress().released_bytes));
+  released+=heap.1;
+ }
+ assert_eq!(total.retained_capacity_bytes,released);
+}
 struct Bank{left:RetainedCloneGrant,work:u64,born:usize,freed:usize}
 impl Bank{
  fn new(c:&serde_json::Value)->Self{let s=&c["stock"];Self{left:RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:s["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize},work:s["fuel"].as_u64().unwrap(),born:0,freed:0}}

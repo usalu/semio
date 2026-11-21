@@ -7,8 +7,10 @@ import {join} from "node:path";
 import {newHostCapacityIdV1,readHostCapacityPolicyV1,withHostCapacityV1,type HostCapacityWaitV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
 import {graphPlanObserverV1,reserveGraphPlanCapacityV1} from "../../🟦️.ts";
+import {createSlicePoolV1} from "../../../🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
+import custody from "./🧫️fixtures/🔣️custody.json" with {type:"json"};
 
-const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(realpathSync(tmpdir()),"plan-capacity-"));roots.push(root);return root;};
+const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"plan-capacity-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const host=(over:Partial<HostSampleV1>={}):HostSampleV1=>({version:1,atMs:Date.now(),platform:"darwin",cores:10,totalMegabytes:32768,availableMegabytes:30000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:1,openFiles:8000,openFilesMaximum:245760,attachedImages:10,...over});
 const fast=readHostCapacityPolicyV1({...buildPolicy.hostCapacity,wait:{...buildPolicy.hostCapacity.wait,pollMilliseconds:10,progressMilliseconds:20,sampleMaximumAgeMilliseconds:0}});
@@ -48,6 +50,76 @@ test("a plan that waits for memory is cancelled by its signal, rejects with the 
  const waiting=reserveGraphPlanCapacityV1({megabytes:6000,environment,directory,policy:fast,write:()=>undefined,signal:controller.signal,sample:async()=>({host:host({availableMegabytes:300,pressure:"critical"}),swappedOutMegabytes:0})}).then(()=>undefined,error=>error);
  expect(await until(()=>queue(directory).length===1)).toBe(true);controller.abort(new Error("plan cancelled"));
  expect((await waiting).message).toBe("plan cancelled");expect(queue(directory)).toEqual([]);expect(grants(directory)).toEqual([]);
+},60000);
+
+
+const deferred=<T>()=>{let resolve!:(value:T)=>void;const promise=new Promise<T>(done=>{resolve=done;});return {promise,resolve};};
+const inertReaper={reap:async()=>0,killNow:()=>undefined};
+
+test("a running cancelled slice keeps a conflicting native booking waiting until worker cleanup",async()=>{
+ const directory=fresh(),controller=new AbortController(),started=deferred<void>(),terminating=deferred<void>(),reaped=deferred<void>(),db=new Database(":memory:");
+ const reason=Error(custody.cancelled),environment={LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:directory};
+ const fits=db.query("select ?1 + ?2 <= ?3 as possible").get(custody.planMegabytes,custody.competingMegabytes,custody.hostMegabytes) as {possible:number};
+ const pool=createSlicePoolV1({
+  workerUrl:new URL("file:///unused.mjs"),maximum:1,hostMegabytes:custody.hostMegabytes,unlearnedMegabytes:custody.planMegabytes,reaper:inertReaper,
+  reserve:({megabytes,minimumMegabytes,signal}:Parameters<typeof reserveGraphPlanCapacityV1>[0])=>reserveGraphPlanCapacityV1({megabytes,minimumMegabytes,signal,environment,directory,policy:fast,write:()=>undefined,sample}),
+  createWorker:()=>{queueMicrotask(()=>started.resolve());return{pid:process.pid,on:()=>undefined,terminate:async()=>{terminating.resolve();await reaped.promise;return 0;}};},
+ });
+ let competitor:Promise<void>|undefined,admitted=false;
+ const run=pool.run({root:directory},{signal:controller.signal}).catch(error=>error);
+ try{
+  await started.promise;
+  expect(grants(directory)).toHaveLength(1);
+  competitor=build(directory,custody.competingMegabytes,async()=>{admitted=true;});
+  expect(await until(()=>queue(directory).length===1)).toBe(true);
+  controller.abort(reason);
+  await terminating.promise;
+  expect(await until(()=>admitted,custody.observeWhileReapingMilliseconds)).toBe(Boolean(fits.possible));
+  expect(grants(directory)).toHaveLength(1);
+  reaped.resolve();
+  expect(await run).toBe(reason);
+  await competitor;
+  expect(admitted).toBe(true);
+ }finally{
+  controller.abort(reason);reaped.resolve();
+  await run;await competitor;await pool.close();db.close();
+ }
+},60000);
+
+test("cancellation during limiter creation releases both allocations before any worker starts",async()=>{
+ const opened=deferred<void>(),limitReady=deferred<void>(),controller=new AbortController(),reason=Error(custody.cancelled);
+ let starts=0,releases=0,limitReleases=0;
+ const pool=createSlicePoolV1({
+  workerUrl:new URL("file:///unused.mjs"),maximum:1,hostMegabytes:custody.hostMegabytes,unlearnedMegabytes:custody.planMegabytes,reaper:inertReaper,
+  headroom:()=>({limitBytes:custody.hostMegabytes*1048576,currentBytes:0}),
+  reserve:async({megabytes}:{megabytes:number})=>({megabytes,attach:()=>undefined,release:()=>{releases++;}}),
+  limiter:{create:async()=>{opened.resolve();await limitReady.promise;return{attach:async()=>undefined,onBreach:()=>undefined,release:async()=>{limitReleases++;}};}},
+  createWorker:()=>{starts++;return{pid:process.pid,on:(event:string,fn:(value:unknown)=>void)=>{if(event==="message")queueMicrotask(()=>fn({type:"done",graph:{}}));},terminate:async()=>0};},
+ });
+ const run=pool.run({root:"/tmp/plan-start-cancel"},{signal:controller.signal}).catch(error=>error);
+ try{
+  await opened.promise;
+  controller.abort(reason);limitReady.resolve();
+  expect(await run).toBe(reason);
+  await pool.close();
+  expect({starts,releases,limitReleases}).toEqual({starts:0,releases:1,limitReleases:1});
+ }finally{controller.abort(reason);limitReady.resolve();await run;await pool.close();}
+},60000);
+
+test("a synchronous slice worker startup failure releases the untransferred allocations",async()=>{
+ const reason=Error(custody.spawnFailure);
+ let releases=0,limitReleases=0;
+ const pool=createSlicePoolV1({
+  workerUrl:new URL("file:///unused.mjs"),maximum:1,hostMegabytes:custody.hostMegabytes,unlearnedMegabytes:custody.planMegabytes,reaper:inertReaper,
+  headroom:()=>({limitBytes:custody.hostMegabytes*1048576,currentBytes:0}),
+  reserve:async({megabytes}:{megabytes:number})=>({megabytes,attach:()=>undefined,release:()=>{releases++;}}),
+  limiter:{create:async()=>({attach:async()=>undefined,onBreach:()=>undefined,release:async()=>{limitReleases++;}})},
+  createWorker:()=>{throw reason;},
+ });
+ try{
+  await expect(pool.run({root:"/tmp/plan-start-error"})).rejects.toBe(reason);
+  expect({releases,limitReleases}).toEqual({releases:1,limitReleases:1});
+ }finally{await pool.close();}
 },60000);
 
 test("the actual graph reservation gate reports fair queue ordering even when a plan fits",async()=>{

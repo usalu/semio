@@ -22,6 +22,7 @@ const SECTION_FIELDS: &[&str] = &[
     "tieBeams",
     "slopes",
     "placements",
+    "cases",
 ];
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -52,7 +53,8 @@ impl En1998Outline {
             + snapshot.joints.len()
             + snapshot.tie_beams.len()
             + snapshot.slopes.len()
-            + snapshot.placements.len()) as u32;
+            + snapshot.placements.len()
+            + snapshot.cases.len()) as u32;
         Self {
             section_outline: SECTION_FIELDS.iter().map(|s| (*s).to_string()).collect(),
             field_count: SECTION_FIELDS.len() as u32,

@@ -14,7 +14,7 @@ import { PLANAR_VIEWPOINTS, type Asset, type AuthoredRepresentation, type PrintP
 import type { DrawingScale, RepresentationResolution, RepresentationSelector, Suitability, Violation } from "../🔗️contracts/🟦️.ts";
 import { outlineRuns, prepare, sourceOf } from "../🎨️depiction/🧩️shapes/🟦️.ts";
 import { pointInside } from "../🎨️depiction/📐️geometry/🟦️.ts";
-import { evaluate } from "../🧮️evaluation/🟦️.ts";
+import { evaluateDrawing } from "../🧮️evaluation/🟦️.ts";
 import { type PaperShape, featureWidthMm, gapsBetween, releaseMeasureScratch, visibleFeatureWidthMm, whiteSliver } from "./📐️measure/🟦️.ts";
 import { RepresentationError, pickRepresentation, scaleAlternatives, supportedScales } from "./🧭️pick/🟦️.ts";
 
@@ -94,63 +94,66 @@ function measureDrawn(asset: Asset, rep: Drawn, selector: RepresentationSelector
   const featureWorst = new Map<Slug, Violation>();
   const k = 1000 / requested;
   const poses = asset.poses.filter((pose) => !pose.key);
-  for (const { pose, viewpoint } of poses.flatMap((pose) => PLANAR_VIEWPOINTS.map((viewpoint) => ({ pose, viewpoint })))) {
-    const state = evaluate(asset, { kind: "pose", pose: pose.id }, selector);
-    const prepared = prepare(state, viewpoint, sourceOf(state), k);
-    const filled = prepared.filter((p) => p.closed && p.shape.filled && p.shape.role !== "ground");
-    const byId = new Map(prepared.map((p) => [p.shape.id, p]));
-    const boxMinOf = (p: (typeof prepared)[number]): number => Math.min(p.box.maxX - p.box.minX, p.box.maxY - p.box.minY);
-    const measured = profile.minFeatureMm > 0 ? prepared.filter((p) => p.closed && p.shape.filled && p.shape.role !== "ground") : [];
-    for (const p of measured.sort((a, b) => boxMinOf(a) - boxMinOf(b))) {
-      const covers = prepared.flatMap((q) => (q.occluder !== null && q.order > p.order && q.box.minX <= p.box.maxX && p.box.minX <= q.box.maxX && q.box.minY <= p.box.maxY && p.box.minY <= q.box.maxY ? [{ rings: q.occluder.rings, penMm: q.weightMm }] : []));
-      const atLeast = Math.max(minFeature, profile.minFeatureMm) - p.weightMm + 1e-9;
-      let raw: number;
-      let boxMin: number;
-      if (covers.length === 0) {
-        raw = featureWidthMm(p.rings, profile.minFeatureMm, atLeast);
-        boxMin = boxMinOf(p);
-      } else {
-        const visible = visibleFeatureWidthMm(p.rings, covers, profile.minFeatureMm, atLeast);
-        if (visible === null) continue;
-        raw = visible.widthMm;
-        boxMin = visible.boxMinMm;
+  for (const pose of poses) {
+    const state = evaluateDrawing(asset, { kind: "pose", pose: pose.id }, selector);
+    const source = sourceOf(state);
+    for (const viewpoint of PLANAR_VIEWPOINTS) {
+      const prepared = prepare(state, viewpoint, source, k);
+      const filled = prepared.filter((p) => p.closed && p.shape.filled && p.shape.role !== "ground");
+      const byId = new Map(prepared.map((p) => [p.shape.id, p]));
+      const boxMinOf = (p: (typeof prepared)[number]): number => Math.min(p.box.maxX - p.box.minX, p.box.maxY - p.box.minY);
+      const measured = profile.minFeatureMm > 0 ? prepared.filter((p) => p.closed && p.shape.filled && p.shape.role !== "ground") : [];
+      for (const p of measured.sort((a, b) => boxMinOf(a) - boxMinOf(b))) {
+        const covers = prepared.flatMap((q) => (q.occluder !== null && q.order > p.order && q.box.minX <= p.box.maxX && p.box.minX <= q.box.maxX && q.box.minY <= p.box.maxY && p.box.minY <= q.box.maxY ? [{ rings: q.occluder.rings, penMm: q.weightMm }] : []));
+        const atLeast = Math.max(minFeature, profile.minFeatureMm) - p.weightMm + 1e-9;
+        let raw: number;
+        let boxMin: number;
+        if (covers.length === 0) {
+          raw = featureWidthMm(p.rings, profile.minFeatureMm, atLeast);
+          boxMin = boxMinOf(p);
+        } else {
+          const visible = visibleFeatureWidthMm(p.rings, covers, profile.minFeatureMm, atLeast);
+          if (visible === null) continue;
+          raw = visible.widthMm;
+          boxMin = visible.boxMinMm;
+        }
+        const width = Math.max(raw, Math.min(boxMin, profile.minFeatureMm)) + p.weightMm;
+        minFeature = Math.min(minFeature, width);
+        if (width < profile.minFeatureMm - 1e-9) {
+          const previous = featureWorst.get(p.shape.id);
+          if (previous === undefined || width < previous.measuredMm) featureWorst.set(p.shape.id, { check: "feature", shapes: [p.shape.id], measuredMm: width, requiredMm: profile.minFeatureMm });
+        }
       }
-      const width = Math.max(raw, Math.min(boxMin, profile.minFeatureMm)) + p.weightMm;
-      minFeature = Math.min(minFeature, width);
-      if (width < profile.minFeatureMm - 1e-9) {
-        const previous = featureWorst.get(p.shape.id);
-        if (previous === undefined || width < previous.measuredMm) featureWorst.set(p.shape.id, { check: "feature", shapes: [p.shape.id], measuredMm: width, requiredMm: profile.minFeatureMm });
+      const grouped = new Map<Slug, { rings: (readonly { readonly x: number; readonly y: number }[])[]; penMm: number }>();
+      for (const { p, run } of outlineRuns(prepared, true)) {
+        if (p.shape.role === "ground") continue;
+        let entry = grouped.get(p.shape.id);
+        if (entry === undefined) grouped.set(p.shape.id, (entry = { rings: [], penMm: p.weightMm }));
+        entry.rings.push(run.closed && run.points.length > 2 ? [...run.points, run.points[0]!] : run.points);
       }
-    }
-    const grouped = new Map<Slug, { rings: (readonly { readonly x: number; readonly y: number }[])[]; penMm: number }>();
-    for (const { p, run } of outlineRuns(prepared, true)) {
-      if (p.shape.role === "ground") continue;
-      let entry = grouped.get(p.shape.id);
-      if (entry === undefined) grouped.set(p.shape.id, (entry = { rings: [], penMm: p.weightMm }));
-      entry.rings.push(run.closed && run.points.length > 2 ? [...run.points, run.points[0]!] : run.points);
-    }
-    const paper: PaperShape[] = [...grouped.entries()].map(([id, v]) => ({ id, rings: v.rings, closed: false, penMm: v.penMm }));
-    if (filled.length === 1 && paper.length === 1) {
-      const f = filled[0]!;
-      const sliver = whiteSliver([f.rings], f.rings.map((pts) => ({ points: pts, closed: true, penMm: f.weightMm })), profile.minGapMm);
-      if (sliver !== null) {
-        minGap = Math.min(minGap, sliver.widthMm);
-        const previous = gapWorst.get("negative-space");
-        if (previous === undefined || sliver.widthMm < previous.measuredMm) gapWorst.set("negative-space", { check: "gap", shapes: ["negative-space"], measuredMm: sliver.widthMm, requiredMm: profile.minGapMm, at: { xMm: sliver.at.x, yMm: sliver.at.y } });
+      const paper: PaperShape[] = [...grouped.entries()].map(([id, v]) => ({ id, rings: v.rings, closed: false, penMm: v.penMm }));
+      if (filled.length === 1 && paper.length === 1) {
+        const f = filled[0]!;
+        const sliver = whiteSliver([f.rings], f.rings.map((pts) => ({ points: pts, closed: true, penMm: f.weightMm })), profile.minGapMm);
+        if (sliver !== null) {
+          minGap = Math.min(minGap, sliver.widthMm);
+          const previous = gapWorst.get("negative-space");
+          if (previous === undefined || sliver.widthMm < previous.measuredMm) gapWorst.set("negative-space", { check: "gap", shapes: ["negative-space"], measuredMm: sliver.widthMm, requiredMm: profile.minGapMm, at: { xMm: sliver.at.x, yMm: sliver.at.y } });
+        }
       }
-    }
-    for (const gap of gapsBetween(paper, GAP_SEARCH_MM)) {
-      const pa = byId.get(gap.a);
-      const pb = byId.get(gap.b);
-      if (pa === undefined || pb === undefined) continue;
-      if (pa.shape.bone !== pb.shape.bone || pa.shape.z !== pb.shape.z || !pa.closed || !pb.closed || !pa.shape.filled || !pb.shape.filled) continue;
-      if (pa.box.minX <= pb.box.maxX && pb.box.minX <= pa.box.maxX && pa.box.minY <= pb.box.maxY && pb.box.minY <= pa.box.maxY) continue;
-      if (filled.some((f) => pointInside(gap.at, f.rings))) continue;
-      minGap = Math.min(minGap, gap.gapMm);
-      if (gap.gapMm < profile.minGapMm - 1e-9) {
-        const key = [gap.a, gap.b].sort().join("|");
-        const previous = gapWorst.get(key);
-        if (previous === undefined || gap.gapMm < previous.measuredMm) gapWorst.set(key, { check: "gap", shapes: [gap.a, gap.b], measuredMm: gap.gapMm, requiredMm: profile.minGapMm, at: { xMm: gap.at.x, yMm: gap.at.y } });
+      for (const gap of gapsBetween(paper, GAP_SEARCH_MM)) {
+        const pa = byId.get(gap.a);
+        const pb = byId.get(gap.b);
+        if (pa === undefined || pb === undefined) continue;
+        if (pa.shape.bone !== pb.shape.bone || pa.shape.z !== pb.shape.z || !pa.closed || !pb.closed || !pa.shape.filled || !pb.shape.filled) continue;
+        if (pa.box.minX <= pb.box.maxX && pb.box.minX <= pa.box.maxX && pa.box.minY <= pb.box.maxY && pb.box.minY <= pa.box.maxY) continue;
+        if (filled.some((f) => pointInside(gap.at, f.rings))) continue;
+        minGap = Math.min(minGap, gap.gapMm);
+        if (gap.gapMm < profile.minGapMm - 1e-9) {
+          const key = [gap.a, gap.b].sort().join("|");
+          const previous = gapWorst.get(key);
+          if (previous === undefined || gap.gapMm < previous.measuredMm) gapWorst.set(key, { check: "gap", shapes: [gap.a, gap.b], measuredMm: gap.gapMm, requiredMm: profile.minGapMm, at: { xMm: gap.at.x, yMm: gap.at.y } });
+        }
       }
     }
   }
@@ -164,7 +167,12 @@ export function measureSuitability(asset: Asset, representation: AuthoredReprese
   if (byKey === undefined) CACHE.set(asset, (byKey = new Map()));
   const key = `${representation.denominator}|${thresholdKey(requested, profile)}|${fingerprint(JSON.stringify([representation, asset.rig, asset.poses]))}`;
   let result = byKey.get(key);
-  if (result === undefined) byKey.set(key, (result = measureOnce(asset, representation, { kind: "scale", scale: { denominator: requested } }, requested, profile)));
+  if (result === undefined) {
+    const denominator = representation.denominator;
+    const drawingAsset = asset.representations[denominator] === representation ? asset : { ...asset, representations: { ...asset.representations, [denominator]: representation } };
+    result = measureOnce(drawingAsset, representation, { kind: "scale", scale: { denominator } }, requested, profile);
+    byKey.set(key, result);
+  }
   return result;
 }
 

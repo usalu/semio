@@ -15,10 +15,11 @@ fn direct_import_and_coplanar_job_consume_the_same_reconstruction_owner(){
     let mut source=None;for _ in 0..10000{if let Some(mesh)=import.advance().unwrap(){source=Some(mesh);break;}}
     assert!(import.advance().is_err());
     let mut merge=MeshMergeJob::new(source.expect("bounded import"),MeshMergeIntent::Coplanar).unwrap();let mut output=None;assert!(merge.transfer_remaining_assets(&mut HalfedgeMesh::empty()).is_err());
+    let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:128,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:128};
     for _ in 0..10000{
         if let Some(snapshot)=merge.snapshot_frontier_mut(){if !snapshot.complete(){let demand=snapshot.preparation_demands().unwrap();snapshot.advance(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},&mut RetainedCloneProgress::default()).unwrap();continue;}}
-        if let Some(mesh)=merge.advance().unwrap(){output=Some(mesh);break;}
-    }let mesh=output.expect("bounded merge");assert_eq!(mesh.vertex_count(),4);assert_eq!(mesh.face_count(),1);assert!(merge.transfer_remaining_assets(&mut HalfedgeMesh::empty()).is_ok());assert_eq!(merge.coplanar_merge_count(),Some(1));assert!(merge.advance().is_err());
+        if let Some(mesh)=merge.advance(grant,&mut RetainedCloneProgress::default()).unwrap(){output=Some(mesh);break;}
+    }let mesh=output.expect("bounded merge");assert_eq!(mesh.vertex_count(),4);assert_eq!(mesh.face_count(),1);assert!(merge.transfer_remaining_assets(&mut HalfedgeMesh::empty()).is_ok());assert_eq!(merge.coplanar_merge_count(),Some(1));assert!(merge.advance(grant,&mut RetainedCloneProgress::default()).is_err());
 }
 
 #[test]

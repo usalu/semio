@@ -72,6 +72,55 @@ export function changedPaintPixels(before, after, rect, threshold) {
   return changed;
 }
 
+/** 🟦️ Reads the distinct chart colors from the exact linked PNG. */
+export async function linkedProxyColors(bytes) {
+  const { data, info: { channels } } = await rgb(bytes);
+  assert.equal(channels, 3);
+  const distinct = new Map();
+  for (let offset = 0; offset < data.length; offset += channels) {
+    const color = [...data.subarray(offset, offset + channels)];
+    if (Math.max(...color) - Math.min(...color) >= 48) distinct.set(color.join(","), color);
+  }
+  assert.equal(distinct.size, 2, "the Linked Asset has two distinct chart colors");
+  return [...distinct.values()];
+}
+
+export function countLinkedProxyColors(paint, rect, colors, tolerance, before) {
+  const { width, height, channels } = paint.info;
+  const [left, top, w, h] = rect;
+  const counts = colors.map(() => 0);
+  const matches = (data, at, color) => color.every((value, channel) => Math.abs(value - data[at + channel]) <= tolerance);
+  if (before) assert.deepEqual([before.info.width, before.info.height, before.info.channels], [width, height, channels]);
+  for (let y = Math.max(0, Math.ceil(top)); y < Math.min(height, Math.floor(top + h)); y++) {
+    for (let x = Math.max(0, Math.ceil(left)); x < Math.min(width, Math.floor(left + w)); x++) {
+      const at = (y * width + x) * channels;
+      for (const [index, color] of colors.entries()) {
+        if (matches(paint.data, at, color) && (!before || !matches(before.data, at, color))) counts[index]++;
+      }
+    }
+  }
+  return counts;
+}
+
+export async function observeLinkedProxy({ page, owner, bytes, tolerance, minimumColorPixels }) {
+  const palette = await linkedProxyColors(bytes);
+  const rect = await sceneBounds(page, owner);
+  const capture = async () => rgb(await page.screenshot());
+  const enough = counts => counts.every(count => count >= minimumColorPixels);
+  const before = await until(page, "original linked chart is visible in Blueprint", async () => {
+    const paint = await capture();
+    return { paint, counts: countLinkedProxyColors(paint, rect, palette, tolerance) };
+  }, ({ counts }) => enough(counts));
+  return async ([x, y]) => {
+    assert.deepEqual(await sceneBounds(page, owner), rect, "placement keeps the measured Blueprint viewport");
+    const [left, top, width, height] = rect;
+    const target = [x, y, left + width - x, top + height - y];
+    const placed = await until(page, "placed linked chart colors are visible in Blueprint", async () =>
+      countLinkedProxyColors(await capture(), target, palette, tolerance, before.paint), enough);
+    return { palette, original: before.counts, placed };
+  };
+}
+
 const scopeActions = (chrome, cursor, verb) => chrome.actions.filter(row => row.seq > cursor && row.action === verb);
 function actionPayload(row) {
   assert.equal(typeof row.args, "string", "renderer publishes native arguments");
@@ -101,14 +150,15 @@ export async function verifyFrameHover({ page, owner, frameId, locateHorizontal,
   const capture = async () => rgb(await page.screenshot());
   const move = async point => {
     const cursor = (await readChrome(page)).actions.at(-1)?.seq ?? 0;
+    const started = performance.now();
     await page.mouse.move(...point);
     const chrome = await until(page, "live Blueprint pointer move", () => readChrome(page), value => scopeActions(value, cursor, "canvasPointerMove").length > 0);
-    return scopeActions(chrome, cursor, "canvasPointerMove").at(-1).seq;
+    return { seq: scopeActions(chrome, cursor, "canvasPointerMove").at(-1).seq, started };
   };
 
   await page.mouse.click(neutral[0], neutral[1] + 2);
   await until(page, "unselected Layout frame", readSelection, selected => selected.length === 0);
-  const beforeHover = await move(neutral);
+  const { seq: beforeHover } = await move(neutral);
   let before = await capture();
   before = await until(page, "settled unselected canvas paint", async () => {
     const next = await capture();
@@ -119,12 +169,14 @@ export async function verifyFrameHover({ page, owner, frameId, locateHorizontal,
 
   const enter = await move(pivot);
   const changed = await until(page, "hover stroke painted", async () => changedPaintPixels(before, await capture(), crop, spec.pixelThreshold), value => value >= spec.minimumChangedPixels);
+  const enterPaintMs = performance.now() - enter.started;
   assert.deepEqual(await readSelection(), [], "entering the frame keeps selection empty");
   const leave = await move(neutral);
   const restored = await until(page, "hover stroke cleared", async () => changedPaintPixels(before, await capture(), crop, spec.pixelThreshold), value => value <= spec.maximumRestoredDifference);
+  const leavePaintMs = performance.now() - leave.started;
   assert.deepEqual(await readSelection(), [], "leaving the frame keeps selection empty");
   assert.equal(scopeActions(await readChrome(page), beforeHover, "canvasPointerDown").length, 0, "hover transition sends no pointer click");
-  return { valid: true, frameId, pivot, neutral, enter, leave, changed, restored };
+  return { valid: true, frameId, pivot, neutral, enter: enter.seq, leave: leave.seq, changed, restored, enterPaintMs, leavePaintMs };
 }
 
 /** 🕹️ Drives a physical X-gumball drag and checks the committed inspector geometry and history. */

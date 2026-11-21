@@ -24,7 +24,7 @@ use semio_os_store_engine_owners::member_producer::MemberStoreProducer;
 use semio_framework_value::{FromValue, ToValue};
 use semio_os_spr::{ColdMutation, Mutation};
 use semio_os_pack::{OpBinary, OpText};
-use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFailure, OriginalCallerSourceParent, OriginalCallerSourceLoan};
+use semio_framework_job::{StepContext, OriginalTurnFailure, OriginalCallerSourceParent, OriginalCallerSourceLoan};
 use std::{marker::PhantomData, mem::ManuallyDrop};
 
 
@@ -106,8 +106,6 @@ where
     constructor_error: ManuallyDrop<Option<ValueError>>,
     pub member: ManuallyDrop<Option<Box<ArtifactStore<P, M>>>>,
     pub active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
-    pub operation: OperationId,
-    pub generation: Generation,
     pub replacement: Option<semio_framework_job::ReplacementIdentity>,
     pub expires_at_us: u64,
     pub phase: Phase,
@@ -269,7 +267,7 @@ where
         let request=admission.request.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?;
         request.check_step_authority(cx).map_err(member_admission_diagnostic)?;
         admission.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
-        let operation=request.operation();let generation=request.generation();let replacement=request.replacement();let expires_at_us=request.expires_at_us();
+        let replacement=request.replacement();let expires_at_us=request.expires_at_us();
         let required=Self::begin_birth_demand(request,&producer).map_err(member_admission_diagnostic)?;
         if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Err(member_admission_diagnostic(MemberOpenDiagnostic::Capacity).into())}
         let snapshot_birth=C::SnapshotOpen::begin_birth_bytes(request).map_err(member_admission_diagnostic)?;
@@ -319,8 +317,6 @@ where
             constructor_error: ManuallyDrop::new(constructor_error),
             member: ManuallyDrop::new(None),
             active: ManuallyDrop::new(None),
-            operation,
-            generation,
             replacement,
             expires_at_us,
             phase: if diagnostic.is_some() { Phase::Rejected } else { Phase::Snapshot },
@@ -568,8 +564,8 @@ where
                     owner,
                     schema.to_string(),
                     self.owners.take().expect("original admitted member owner catalog remains retained"),
-                    self.operation,
-                    self.generation,
+                    cx.operation(),
+                    cx.generation(),
                     self.expires_at_us,
                     semio_os_store_document::persisted_document_hydration::PersistedDocumentHydrationTarget::Store { generation: 0 },
                     actor,

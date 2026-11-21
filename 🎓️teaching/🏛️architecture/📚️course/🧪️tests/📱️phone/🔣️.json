@@ -1,0 +1,16 @@
+{
+  "width": 320,
+  "height": 640,
+  "minimumTouchTarget": 44,
+  "rootGrids": 1,
+  "maximumClipCardPosters": 1,
+  "visibleClip": "clip-physical-fundamentals",
+  "directClip": "clip-optimization-algorithms",
+  "assignment": "parametrization",
+  "pdfPattern": "^/assignments/.+\\.pdf$",
+  "idleCrowdRequests": 0,
+  "landscape": {
+    "width": 812,
+    "height": 375
+  }
+}

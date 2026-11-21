@@ -20,6 +20,12 @@ pub static GEOMETRY: &[GeometryRow] = &[
     row("C94-10", CaseForm::Member, "sec_b", "l_ltb", "sec_h", "m_ed", &[]),
     row("C94-11", CaseForm::Member, "b_eff", "l_span", "sec_h", "q_line", &[]),
     row("C94-12", CaseForm::Gauge, "", "", "", "t_fire", &[]),
+    row("C94-13", CaseForm::Column, "fire_col_width", "fire_col_depth", "l_col", "", &[]),
+    row("C94-14", CaseForm::Column, "fire_col_width", "fire_col_depth", "l_col", "", &[]),
+    row("C94-15", CaseForm::Column, "fire_col_width", "fire_col_depth", "l_col", "", &[]),
+    row("C94-16", CaseForm::Gauge, "", "", "", "fire_ins_cover", &[]),
+    row("C94-17", CaseForm::Column, "fire_col_width", "fire_col_depth", "l_col", "", &[]),
+    row("C94-18", CaseForm::Member, "fire_beam_width", "", "fire_beam_depth", "fire_beam_load_level", &[]),
 ];
 
 /// 🔎 The geometry declared for `entry_id`.

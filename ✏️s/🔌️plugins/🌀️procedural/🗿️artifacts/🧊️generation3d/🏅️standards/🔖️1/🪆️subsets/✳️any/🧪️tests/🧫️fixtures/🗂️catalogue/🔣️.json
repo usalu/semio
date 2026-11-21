@@ -557,6 +557,30 @@
       "kind": "mesh.edit.deleteFaces"
     },
     {
+      "operation": "bridge",
+      "kind": "mesh.edit.bridge"
+    },
+    {
+      "operation": "extrudeBoundary",
+      "kind": "mesh.edit.extrudeBoundary"
+    },
+    {
+      "operation": "combine",
+      "kind": "mesh.edit.combine"
+    },
+    {
+      "operation": "intersect",
+      "kind": "mesh.edit.intersect"
+    },
+    {
+      "operation": "difference",
+      "kind": "mesh.edit.difference"
+    },
+    {
+      "operation": "union",
+      "kind": "mesh.edit.union"
+    },
+    {
       "operation": "triangulate",
       "kind": "mesh.edit.triangulate"
     },

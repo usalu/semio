@@ -234,6 +234,14 @@ AUTHORS = {
 }
 
 
+def authored_scale(name, volumes, scale):
+    """📐 Build one asset-specific drawing level from its nearest finer volume in the same rig."""
+    fine = max(int(k) for k,v in volumes.items() if int(k)<scale and v["status"]=="authored")
+    model = Volume(volumes[str(fine)], scale)
+    dict(AUTHORS[name])[scale](model)
+    return model.finish()
+
+
 def write_scale(path, scale, value):
     text = path.read_text()
     marker = re.compile(r'(?m)^([ ]*)"'+str(scale)+r'": \{\s*"status": "unavailable",\s*"denominator": '+str(scale)+r'\s*\}')
@@ -275,10 +283,7 @@ if __name__ == "__main__":
         source_path = TICKET / "volumes" / category / (slug+".json")
         for scale, author in scales:
             volumes = json.loads(path.read_text())["asset"]["volumes"]
-            fine = max(int(k) for k in volumes if int(k)<scale and volumes[k]["status"]=="authored")
-            v = Volume(volumes[str(fine)],scale)
-            author(v)
-            result = v.finish()
+            result = authored_scale(slug,volumes,scale)
             write_scale(path,scale,result)
             write_scale(source_path,scale,result)
             print(slug,scale,*(len(result[k]) for k in LISTS))

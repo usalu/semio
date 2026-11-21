@@ -176,7 +176,7 @@ pub fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme
     let body_end = targets.len();
 
     let mut py = palette_rect.y + pad;
-    for entry in &palette {
+    for entry in palette {
         let palette_row = Rect::new(palette_rect.x + pad, py, (palette_rect.w - pad * 2.0).max(0.0), row_h);
         let palette_handle_rect = block_list_handle_rect(palette_row, theme);
         targets.push(BlockListTarget {

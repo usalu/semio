@@ -65,4 +65,40 @@ describe("InkCanvas text and table-cell editing", () => {
     expect(root.querySelector('[contenteditable="true"]')).toBeNull();
     expect(actionEvents(actions)).toHaveLength(beforeCancel);
   });
+
+  it("keeps the text editor and selection active through a formatting pointerdown", () => {
+    const actions: unknown[] = [];
+    const node = { type: "componentScene", ...law.scene, inkCanvas: { ...law.scene.inkCanvas, documentJson: JSON.stringify(law.document) } };
+    const rendered = render(createElement(InkCanvasHost, { node, onAction: (action: unknown) => actions.push(action) } as any));
+    const root = rendered.container.querySelector(`[data-surface-id="${law.scene.surfaceId}"]`) as HTMLDivElement;
+    fireEvent.doubleClick(root, { clientX: law.gestures.text.x, clientY: law.gestures.text.y });
+    const editor = root.querySelector('[contenteditable="true"]') as HTMLDivElement;
+    editor.innerHTML = `<div>${law.gestures.text.replacement}</div>`;
+    expect(document.activeElement).toBe(editor);
+
+    fireEvent.pointerDown(rendered.getByRole("button", { name: "B" }), { pointerId: 1, button: 0 });
+
+    expect({
+      editorOwnsFocus: document.activeElement === editor,
+      committedEvents: actionEvents(actions).length,
+    }).toEqual(law.expected.formattingPointer);
+    fireEvent.blur(editor);
+    expect(actionEvents(actions)).toEqual([{ phase: law.expected.phase, events: [law.expected.textEvent] }]);
+  });
+
+  it("opens the delivered body cell when the rendered table differs from its world hit box", () => {
+    const actions: unknown[] = [];
+    const node = { type: "componentScene", ...law.scene, inkCanvas: { ...law.scene.inkCanvas, documentJson: JSON.stringify(law.document) } };
+    const rendered = render(createElement(InkCanvasHost, { node, onAction: (action: unknown) => actions.push(action) } as any));
+    const table = rendered.container.querySelector('[data-ink-block-id="table-b"] table') as HTMLTableElement;
+    const cell = table.tBodies[0]!.rows[0]!.cells[0]!;
+    expect(cell.textContent).toBe("b");
+    fireEvent.doubleClick(cell, { clientX: law.gestures.blur.x, clientY: law.gestures.blur.y });
+    const editor = rendered.container.querySelector("#ink-table-cell-editor") as HTMLInputElement | null;
+    expect(editor?.value).toBe(cell.textContent);
+    expect(actionEvents(actions)).toHaveLength(0);
+    fireEvent.change(editor!, { target: { value: law.gestures.table.replacement } });
+    fireEvent.blur(editor!);
+    expect(actionEvents(actions)).toEqual([{ phase: law.expected.phase, events: [law.expected.tableEvent] }]);
+  });
 });

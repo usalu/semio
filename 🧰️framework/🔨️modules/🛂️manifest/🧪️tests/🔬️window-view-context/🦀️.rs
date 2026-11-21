@@ -77,3 +77,31 @@ fn window_utility_uses_exact_instance_ownership() {
         assert_eq!(actual, view.window_utility(case["windowId"].as_str()));
     }
 }
+
+/// 🛟️ A section's window reads return both exact map aliases even when a request exits early.
+#[test]
+fn scoped_window_section_returns_its_original_map_aliases() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️window-view-context/🔣️.json")).unwrap();
+    let view = Retiring::new(serde_json::from_value::<ViewModel>(fixture["view"].clone()).unwrap());
+    let utilities = view.active_utility_by_window_id.original_root_identity().unwrap();
+    let trace = view.tool_run_trace_cursor_by_window_id.original_root_identity().unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let id = case["windowId"].as_str().unwrap();
+        let read = || {
+            let projected = view.scope_window_instance(id)?;
+            assert_eq!(projected.active_utility_by_window_id.original_root_identity(), Some(utilities));
+            assert_eq!(projected.tool_run_trace_cursor_by_window_id.original_root_identity(), Some(trace));
+            assert_eq!(projected.window_id.as_deref(), Some(id));
+            assert_eq!(projected.focused_window_id, view.focused_window_id);
+            assert_eq!(projected.active_utility_id.as_deref(), case["activeUtilityId"].as_str());
+            if view.active_utility_by_window_id.get(id) == Some(&None) {
+                return Some(None);
+            }
+            Some(projected.tool_run_trace_cursor_by_window_id.get(id).map(|cursor| cursor.run))
+        };
+        assert_eq!(read(), (case["absent"] != true).then(|| case["traceRun"].as_u64()));
+        assert_eq!(view.active_utility_by_window_id.original_root_identity(), Some(utilities));
+        assert_eq!(view.tool_run_trace_cursor_by_window_id.original_root_identity(), Some(trace));
+        assert_eq!(view.window_id.as_deref(), Some("left"));
+    }
+}

@@ -70,7 +70,10 @@ async fn a_pack_wider_than_the_ordinary_runtime_wire_reaches_its_command() {
     semio_framework_job::testkit::retained_grant_mut(cx).maximum_depth = maximum_depth;
     assert_eq!(cx.retained_grant().maximum_depth, maximum_depth);
     let args: semio_framework_value::DslValue = serde_json::json!({ "json": json, "page": 0, "pageCount": 1 }).into();
-    let policy = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    let mut policy = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
+    policy.preparation.maximum_depth = maximum_depth;
+    policy.maintenance.maximum_depth = maximum_depth;
+    policy.close.maximum_depth = maximum_depth;
     let address = CommandAddress {
         owner: CommandOwnerAddress::App {
             plugin_id: "procedural".into(),
@@ -81,9 +84,8 @@ async fn a_pack_wider_than_the_ordinary_runtime_wire_reaches_its_command() {
     dispatch_fixture_command(&mut app.0, &address, Some(args), None, &action_meta, &mut fixture_identity(), app.1.cx(), policy.close)
         .await
         .expect("the wide contribution pack is admitted");
-    let receipt = settle_registered_typed_operation(&mut app.0, action_meta.instance_id, policy, &mut fixture_identity(), app.1.cx())
-        .await
-        .expect("the wide contribution pack settles");
-    assert_eq!(receipt.completions, fixture["expectedCompletions"].as_u64().expect("expected completions") as usize);
+    let settlement = settle_registered_typed_operation(&mut app.0, action_meta.instance_id, policy, &mut fixture_identity(), app.1.cx()).await;
     semio_framework_job::testkit::retained_grant_mut(app.1.cx()).maximum_depth = previous_depth;
+    let receipt = settlement.expect("the wide contribution pack settles");
+    assert_eq!(receipt.completions, fixture["expectedCompletions"].as_u64().expect("expected completions") as usize);
 }

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { createElement } from "react";
+import { act, createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { InkCanvasHost } from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx";
@@ -12,7 +12,7 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
 const fixture = JSON.parse(readFileSync(resolve(engineRoot, "🧪️tests/🧫️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json"), "utf8")) as any;
 
-function mountHost(activeUtility = "selectDirect", interactive = true) {
+function mountHost(activeUtility = "selectDirect", interactive = true, viewMode = "composite", selectionJson = fixture.scene.selectionJson) {
   const actions: any[] = [];
   const node = {
     type: "componentScene",
@@ -21,10 +21,10 @@ function mountHost(activeUtility = "selectDirect", interactive = true) {
     componentKind: "ink-canvas",
     inkCanvas: {
       documentJson: JSON.stringify(fixture.document),
-      selectionJson: fixture.scene.selectionJson,
+      selectionJson,
       hoveredId: fixture.scene.hoveredId,
       activeUtility,
-      viewMode: "composite",
+      viewMode,
       interactive,
       interactionDomain: fixture.scene.interactionDomain,
     },
@@ -52,6 +52,24 @@ function caseById(id: string): any {
 afterEach(() => cleanup());
 
 describe("InkCanvas canonical interaction domain", () => {
+  it("cancels scrolling only on the canvas and dispatches its anchored zoom", () => {
+    const canvas = mountHost();
+    const wheel = new WheelEvent("wheel", fixture.wheel.event);
+    act(() => { canvas.root.dispatchEvent(wheel); });
+    expect(wheel.defaultPrevented).toBe(true);
+    expect(canvas.actions).toHaveLength(1);
+    const { action, args, controllerId } = canvas.actions[0];
+    expect(action).toBe(fixture.wheel.action);
+    expect(controllerId).toBe(fixture.scene.controllerId);
+    expect(args.surfaceId).toBe(fixture.scene.surfaceId);
+    for (const coordinate of ["x", "y", "zoom"]) expect(args.camera[coordinate]).toBeCloseTo(fixture.wheel.camera[coordinate]);
+    const navigator = mountHost("selectDirect", false, "navigator");
+    const navigatorWheel = new WheelEvent("wheel", fixture.wheel.event);
+    act(() => { navigator.root.dispatchEvent(navigatorWheel); });
+    expect(navigatorWheel.defaultPrevented).toBe(false);
+    expect(navigator.actions).toEqual([]);
+  });
+
   it("validates the neutral cross-renderer contract and forbids removed app-private selection verbs", () => {
     expect(fixture.identity).toEqual({ requiresInteractionId: true, missingInteractionId: "refuse-target", rawIdFallback: false, incomingPaintIds: "raw" });
     expect(fixture.forbiddenActions).toEqual(["setHover", "setSelection"]);
@@ -80,6 +98,16 @@ describe("InkCanvas canonical interaction domain", () => {
     expect(actions).toEqual([expectedAction(hover), expectedAction(caseById("pointer-leave"))]);
   });
 
+  it("publishes only changes of the pointer hover target", () => {
+    const { actions, root } = mountHost();
+    for (const id of fixture.hoverSequence.inputs) {
+      const { gesture } = caseById(id);
+      if (id === "pointer-leave") fireEvent.pointerLeave(root, { pointerId: 7 });
+      else fireEvent.pointerMove(root, { clientX: gesture.x, clientY: gesture.y, pointerId: 7 });
+    }
+    expect(actions).toEqual(fixture.hoverSequence.published.map((id: string) => expectedAction(caseById(id))));
+  });
+
   it("does not publish pointer hover from a read-only scene", () => {
     const { actions, root } = mountHost("selectDirect", false);
     fireEvent.pointerLeave(root, { pointerId: 7 });
@@ -96,6 +124,44 @@ describe("InkCanvas canonical interaction domain", () => {
       expect(actions.at(-1)).toEqual(expectedAction(testCase));
       cleanup();
     }
+  });
+
+  it("draws through a rendered block while Pencil owns the pointer", () => {
+    const law = fixture.blockPointer;
+    const { actions, root } = mountHost(law.drawUtility);
+    const block = root.querySelector(`[data-ink-block-id="${law.renderedTarget}"]`)!;
+    fireEvent.pointerDown(block, { button: 0, pointerId: 19, clientX: law.down.x, clientY: law.down.y });
+    fireEvent.pointerMove(block, { buttons: 1, pointerId: 19, clientX: law.move.x, clientY: law.move.y });
+    fireEvent.pointerUp(block, { button: 0, pointerId: 19, clientX: law.move.x, clientY: law.move.y });
+    expect(actions.filter(({ action }) => action === "interactionSelect")).toEqual([]);
+    expect(actions.filter(({ action }) => action === "inkApplyEvents").map(({ args }) => args.phase)).toEqual(law.drawPhases);
+  });
+
+  it("moves the selected group without replacing its selection", () => {
+    const law = fixture.blockPointer;
+    const { actions, root } = mountHost(law.moveUtility, true, "composite", JSON.stringify(law.selectedGroup));
+    const block = root.querySelector(`[data-ink-block-id="${law.renderedTarget}"]`)!;
+    fireEvent.pointerDown(block, { button: 0, pointerId: 21, clientX: law.down.x, clientY: law.down.y });
+    fireEvent.pointerMove(block, { buttons: 1, pointerId: 21, clientX: law.move.x, clientY: law.move.y });
+    fireEvent.pointerUp(block, { button: 0, pointerId: 21, clientX: law.move.x, clientY: law.move.y });
+    expect(actions.filter(({ action }) => action === "interactionSelect")).toEqual([]);
+    const committed = actions.find(({ action, args }) => action === "inkApplyEvents" && args.phase === "commit");
+    expect(committed).toBeDefined();
+    expect(JSON.parse(committed.args.gestureJson)).toEqual(law.moveSemantic);
+  });
+
+  it("scales from the original bounds on every resize pointer sample", () => {
+    const law = fixture.resizePointer;
+    const { actions, root } = mountHost();
+    const handle = [...root.querySelectorAll('[style*="nwse-resize"]')].at(law.handle === "se" ? -1 : 0)!;
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 23, clientX: law.down.x, clientY: law.down.y });
+    for (const move of law.moves) fireEvent.pointerMove(root, { buttons: 1, pointerId: 23, clientX: move.x, clientY: move.y });
+    const terminal = law.moves.at(-1);
+    fireEvent.pointerUp(root, { button: 0, pointerId: 23, clientX: terminal.x, clientY: terminal.y });
+    const commit = actions.find(({ action, args }) => action === "inkApplyEvents" && args.phase === "commit");
+    expect(commit).toBeDefined();
+    const { block } = JSON.parse(commit.args.eventsJson).at(-1);
+    expect([block.width, block.height]).toEqual(law.committedSize);
   });
 
   it("maps a completed rectangle to canonical topology ids", () => {

@@ -1,0 +1,26 @@
+{
+  "operator": "brep.measure.distance",
+  "spherePairs": [
+    { "name": "separated", "left": { "center": [0, 0, 0], "radius": 2 }, "right": { "center": [6, 8, 0], "radius": 1 }, "expected": 7 },
+    { "name": "tangent", "left": { "center": [0, 0, 0], "radius": 2 }, "right": { "center": [3, 0, 0], "radius": 1 }, "expected": 0 },
+    { "name": "overlapping", "left": { "center": [0, 0, 0], "radius": 2 }, "right": { "center": [2, 0, 0], "radius": 1 }, "expected": 0 },
+    { "name": "nested", "left": { "center": [0, 0, 0], "radius": 2 }, "right": { "center": [0, 0, 0], "radius": 0.5 }, "expected": 0 }
+  ],
+  "sphereBoxes": [
+    { "name": "separated-edge", "origin": [0, 0, 0], "size": [2, 2, 2], "rotation": 0, "sphere": { "center": [3, 4, 2], "radius": 1 }, "expected": 1.2360679774997897 },
+    { "name": "tangent-face", "origin": [0, 0, 0], "size": [2, 2, 2], "rotation": 0, "sphere": { "center": [2.5, 1, 1], "radius": 0.5 }, "expected": 0 },
+    { "name": "overlapping-face", "origin": [0, 0, 0], "size": [2, 2, 2], "rotation": 0, "sphere": { "center": [2.25, 1, 1], "radius": 0.5 }, "expected": 0 },
+    { "name": "nested", "origin": [0, 0, 0], "size": [2, 2, 2], "rotation": 0, "sphere": { "center": [1, 1, 1], "radius": 0.5 }, "expected": 0 },
+    { "name": "rotated-corner", "origin": [1, 2, 3], "size": [2, 3, 4], "rotation": 0.9272952180016122, "sphere": { "center": [0.6, 9.8, 8], "radius": 0.5 }, "expected": 4.08257569495584 }
+  ],
+  "curvedSolids": [
+    { "name": "translated-cylinder-rim", "kind": "cylinder", "origin": [1, -2, 3], "parameters": { "radius": 2, "height": 4 }, "sphere": { "center": [6, -2, 11], "radius": 0.5 }, "expected": 4.5 },
+    { "name": "cylinder-tangent", "kind": "cylinder", "origin": [1, -2, 3], "parameters": { "radius": 2, "height": 4 }, "sphere": { "center": [3.5, -2, 5], "radius": 0.5 }, "expected": 0 },
+    { "name": "cone-side", "kind": "cone", "origin": [0, 0, 0], "parameters": { "radius": 2, "height": 4 }, "sphere": { "center": [3, 0, 2], "radius": 0.5 }, "expected": 1.2888543819998317 },
+    { "name": "cone-apex", "kind": "cone", "origin": [0, 0, 0], "parameters": { "radius": 2, "height": 4 }, "sphere": { "center": [0, 0, 6], "radius": 0.5 }, "expected": 1.5 },
+    { "name": "cone-base", "kind": "cone", "origin": [0, 0, 0], "parameters": { "radius": 2, "height": 4 }, "sphere": { "center": [0, 0, -1], "radius": 0.25 }, "expected": 0.75 },
+    { "name": "torus-hole", "kind": "torus", "origin": [0, 0, 0], "parameters": { "major": 3, "minor": 1 }, "sphere": { "center": [0, 0, 0], "radius": 0.5 }, "expected": 1.5 },
+    { "name": "torus-tangent", "kind": "torus", "origin": [0, 0, 0], "parameters": { "major": 3, "minor": 1 }, "sphere": { "center": [3, 0, 1.5], "radius": 0.5 }, "expected": 0 },
+    { "name": "torus-overlap", "kind": "torus", "origin": [0, 0, 0], "parameters": { "major": 3, "minor": 1 }, "sphere": { "center": [3, 0, 0], "radius": 0.5 }, "expected": 0 }
+  ]
+}

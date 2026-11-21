@@ -36,3 +36,9 @@ The neutral 513-equation assembly law now limits construction to 32 turns per eq
 ## Commands
 
 The repository Cargo ingress made no Cargo progress during source admission and lease sweeps, so the verification uses private native build directories. The job crate belongs to the framework workspace and the plugin companions to the root workspace. The FEM 3D snapshot tests use the FEM 3D workspace and the native build directory shared with the solver investigation. The PCG and original-emission private C: build lanes were cleared with Cargo after the PCG run, and the current assembly and original-emission builds use E:.
+
+## Pending numerical outcome retirement
+
+The numerical outcome desk could retain a completion marker after the original payload had moved. Its retirement quote and its actual close step now agree when only this marker remains. The native regression uses a one-item original source grant and checks the accepted progress and terminal emptiness against the language-neutral pending-outcome fixture. The TypeScript PCG wire oracle reproduces the marker removal with fast-json-patch and passed on November 20. The broader sparse native suite was also updated to issue real original turns and to observe cancellation when a page is partially restored.
+The refreshed native sparse library run passed all 12 tests, including the pending outcome, publication, partial restore and cancellation cases.
+The Windows Cargo scheduler tests passed 18 cases with four platform skips and 223 assertions using the scheduler from the running component build. See the Windows host capacity report for the native fixture setup.

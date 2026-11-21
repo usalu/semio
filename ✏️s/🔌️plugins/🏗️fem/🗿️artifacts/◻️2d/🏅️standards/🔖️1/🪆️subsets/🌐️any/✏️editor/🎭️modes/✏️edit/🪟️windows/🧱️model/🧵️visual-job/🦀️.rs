@@ -109,6 +109,13 @@ impl Fem2dVisualJob {
         self.output.write_str(separator).map_err(|_| b"fem2d.visual-output-capacity".to_vec())
     }
 
+    fn text_layer(&mut self, id: std::fmt::Arguments<'_>, y: u8, content: std::fmt::Arguments<'_>) -> Result<(), Vec<u8>> {
+        let [r, g, b, a] = CANVAS_TEXT_COLOR;
+        self.layer_prefix()?;
+        write!(self.output, r#"{{"kind":"text","id":"{id}","x":10,"y":{y},"fill":{{"color":[{r},{g},{b},{a}]}},"text":{{"content":"{content}","size":11,"fontFamily":"{CANVAS_TEXT_FONT}"}}}}"#)
+            .map_err(|_| b"fem2d.visual-output-capacity".to_vec())
+    }
+
     fn advance(&mut self, stage: Fem2dVisualJobStage) {
         self.stage = stage;
         self.cursor = 0;
@@ -228,8 +235,7 @@ impl Fem2dVisualJob {
                     self.advance(Fem2dVisualJobStage::BuildLoadGlyph);
                     return Ok(false);
                 };
-                self.layer_prefix()?;
-                write!(self.output, "{{\"kind\":\"text\",\"id\":\"assembling-{id}\",\"x\":10,\"y\":36,\"text\":{{\"content\":\"assembling {id}\",\"size\":11}}}}").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                self.text_layer(format_args!("assembling-{id}"), 36, format_args!("assembling {id}"))?;
                 self.cursor += 1;
             }
             Fem2dVisualJobStage::BuildLoadGlyph => return self.visual_build_load_glyph(doc),
@@ -513,20 +519,12 @@ impl Fem2dVisualJob {
                 return Ok(false);
             }
         };
-        self.layer_prefix()?;
-        write!(
-            self.output,
-            "{{\"kind\":\"text\",\"id\":\"{stable_id}-{locale}-{}-{}\",\"x\":10,\"y\":18,\"text\":{{\"content\":\"{text}: {}; {}/{}; residual {}; tolerance {}; {}\",\"size\":11}}}}",
-            visual.state.id(),
-            self.cursor,
-            visual.state.id(),
-            visual.progress_completed,
-            visual.progress_total,
-            visual.residual_norm,
-            visual.tolerance,
-            if visual.validated_final { "validated" } else { "provisional" }
-        )
-        .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+        let cursor = self.cursor;
+        self.text_layer(
+            format_args!("{stable_id}-{locale}-{}-{cursor}", visual.state.id()),
+            18,
+            format_args!("{text}: {}; {}/{}; residual {}; tolerance {}; {}", visual.state.id(), visual.progress_completed, visual.progress_total, visual.residual_norm, visual.tolerance, if visual.validated_final { "validated" } else { "provisional" }),
+        )?;
         self.cursor += 1;
         Ok(false)
     }

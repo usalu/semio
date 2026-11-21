@@ -39,7 +39,8 @@ export type NoteTableEdit =
   | { edit: "insertRow"; index: number; cells: NoteTableCell[] }
   | { edit: "removeRow"; index: number; cells: NoteTableCell[] }
   | { edit: "insertColumn"; index: number; name: string; cells: NoteTableCell[] }
-  | { edit: "removeColumn"; index: number; name: string; cells: NoteTableCell[] };
+  | { edit: "removeColumn"; index: number; name: string; cells: NoteTableCell[] }
+  | { edit: "setCell"; row: number; column: number; before: string; after: string };
 export interface NoteBlockPatch {
   name?: string | null; x?: Binary64 | null; y?: Binary64 | null; width?: Binary64 | null; height?: Binary64 | null; rotation?: Binary64 | null; visible?: boolean | null; locked?: boolean | null;
   content?: NoteTextChild | null; fontSize?: Binary64 | null; fontWeight?: string | null; align?: string | null; imageKey?: string | null;
@@ -59,8 +60,11 @@ const kind = <T extends string>(members: readonly T[]): NoteValueParser => (valu
 const assigned = (parse: NoteValueParser): NoteValueParser => (value, at) => parseNoteRecord(value, { value: noteNullable(parse) }, ["value"], at);
 const pair: NoteValueParser = (value, at) => noteArray(noteNumber)(value, at);
 
-/** 📊️ Parses one ordered structural edit of a table block's grid. */
+/** 📊️ Parses one ordered edit of a table block's grid. */
 export function parseNoteTableEdit(value: unknown, at = "$"): NoteTableEdit {
+  if (value && typeof value === "object" && "edit" in value && value.edit === "setCell") {
+    return parseNoteRecord(value, { edit: kind(["setCell"] as const), row: index, column: index, before: noteString, after: noteString }, ["edit", "row", "column", "before", "after"], at) as unknown as NoteTableEdit;
+  }
   const row = parseNoteRecord(value, { edit: kind(["insertRow", "removeRow", "insertColumn", "removeColumn"] as const), index, name: noteString, cells: noteArray(parseNoteTableCell) }, ["edit", "index"], at);
   return row as unknown as NoteTableEdit;
 }

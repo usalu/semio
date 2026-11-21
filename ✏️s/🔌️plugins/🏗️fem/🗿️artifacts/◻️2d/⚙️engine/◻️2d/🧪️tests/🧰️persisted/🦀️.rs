@@ -13,7 +13,8 @@ pub fn drain<T: RetireOwned>(value: T) {
     let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().expect("controlled retirement admits the value");
     let grant = RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 256 * 1048576, maximum_capacity_bytes: 256 * 1048576, maximum_release_bytes: 256 * 1048576, maximum_depth: 128 };
     while !owner.terminal_is_empty() {
-        owner.step(grant).expect("funded retirement step");
+        let (step, _) = semio_framework_value::AuthoringWallet::new(grant, 65536).run_settled(grant, 65536, |effect| owner.step(grant.maximum_copy_bytes, effect)).expect("fund retirement step").expect("retirement step admitted");
+        step.result.expect("funded retirement step");
     }
 }
 

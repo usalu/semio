@@ -212,14 +212,18 @@
         "volume": {
           "out": {
             "solid": {
-              "handle": "solid-1"
+              "$schema": "geometry",
+              "handle": "solid-1",
+              "kind": "solid"
             },
             "faces": {
               "$schema": "list",
               "0": {
+                "$schema": "face",
                 "handle": "face-1"
               },
               "1": {
+                "$schema": "face",
                 "handle": "face-2"
               }
             }
@@ -228,14 +232,18 @@
         "shell": {
           "out": {
             "solid": {
-              "handle": "solid-9"
+              "$schema": "geometry",
+              "handle": "solid-9",
+              "kind": "solid"
             }
           }
         },
         "rect": {
           "out": {
             "wire": {
-              "handle": "wire-1"
+              "$schema": "geometry",
+              "handle": "wire-1",
+              "kind": "wire"
             }
           }
         }
@@ -277,7 +285,9 @@
         "volume": {
           "out": {
             "solid": {
-              "handle": "solid-1"
+              "$schema": "geometry",
+              "handle": "solid-1",
+              "kind": "solid"
             }
           }
         }
@@ -313,7 +323,9 @@
         "volume": {
           "out": {
             "solid": {
-              "handle": "solid-1"
+              "$schema": "geometry",
+              "handle": "solid-1",
+              "kind": "solid"
             }
           }
         }
@@ -374,7 +386,9 @@
         "profile": {
           "out": {
             "wire": {
-              "handle": "wire-1"
+              "$schema": "geometry",
+              "handle": "wire-1",
+              "kind": "wire"
             }
           }
         },
@@ -391,7 +405,9 @@
         "extrude": {
           "out": {
             "solid": {
-              "handle": "solid-1"
+              "$schema": "geometry",
+              "handle": "solid-1",
+              "kind": "solid"
             }
           }
         }
@@ -436,6 +452,7 @@
         "axis": {
           "out": {
             "pointOut": {
+              "$schema": "point",
               "x": 1.0,
               "y": 2.0,
               "z": 3.0
@@ -445,7 +462,9 @@
         "extrude": {
           "out": {
             "solid": {
-              "handle": "solid-1"
+              "$schema": "geometry",
+              "handle": "solid-1",
+              "kind": "solid"
             }
           }
         }

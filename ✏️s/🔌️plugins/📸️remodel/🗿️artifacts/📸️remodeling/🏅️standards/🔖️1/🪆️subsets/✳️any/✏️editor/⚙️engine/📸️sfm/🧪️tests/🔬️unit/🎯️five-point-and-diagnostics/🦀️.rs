@@ -205,7 +205,7 @@ fn estimate_init_pair_essential_prefers_five_point_on_planar_scene() {
     }
     let truth = relative_pose(&pose_a, &pose_b);
 
-    let chosen = estimate_init_pair_essential(&corr, &intr, 5).expect("switcher should recover a model on the planar scene");
+    let chosen = estimate_init_pair_essential(&corr, &intr, &intr, 5).expect("switcher should recover a model on the planar scene");
     let TwoViewModel::Fundamental(e) = chosen.model else { panic!("expected a fundamental/essential model") };
     let inlier_rays: Vec<([f64; 2], [f64; 2])> = chosen
         .inliers
@@ -298,7 +298,7 @@ fn bundle_adjustment_converges_near_noise_floor() {
             observations.insert((ci, bi), px);
         }
     }
-    let problem = SfmBundleProblem { intrinsics: scene.cameras[0].0, num_cameras: scene.cameras.len(), num_points: point_ids.len(), terms, observations, fixed_cameras: Vec::new() };
+    let problem = SfmBundleProblem { intrinsics: scene.cameras.iter().map(|&(intrinsics, _)| intrinsics).collect(), num_cameras: scene.cameras.len(), num_points: point_ids.len(), terms, observations, fixed_cameras: Vec::new() };
 
     let a0: Vec<VecD> = scene
         .cameras
@@ -328,7 +328,7 @@ fn bundle_adjustment_converges_near_noise_floor() {
         let xi: [f64; 6] = std::array::from_fn(|k| result.a_params[ci].get(k));
         let point: [f64; 3] = std::array::from_fn(|k| result.b_params[bi].get(k));
         let pose = CameraPose(Se3::exp(xi));
-        if let Some(pred) = reproject(&problem.intrinsics, &pose, point) {
+        if let Some(pred) = reproject(&problem.intrinsics[ci], &pose, point) {
             sq_sum += (pred[0] - obs_px[0]).powi(2) + (pred[1] - obs_px[1]).powi(2);
             count += 1;
         }
@@ -419,12 +419,12 @@ fn diagnose_pair_verification_unit_cost_split() {
         let Some(candidate) = candidate else { continue };
         let started = std::time::Instant::now();
         let raw_inliers = candidate.inliers.len();
-        let polished = polish_essential(candidate, &corr, intr0, threshold);
+        let polished = polish_essential(candidate, &corr, intr0, intr0, threshold);
         polishes.push(started.elapsed());
         polished_inliers.push(polished.inliers.len());
         if polished.inliers.len() > 20 {
             let started = std::time::Instant::now();
-            let again = polish_essential(polished.clone(), &corr, intr0, threshold);
+            let again = polish_essential(polished.clone(), &corr, intr0, intr0, threshold);
             println!("[COST] polish of a true model: raw inliers {raw_inliers} → {} in {:?}; re-polish from {} inliers {:?}", polished.inliers.len(), polishes[polishes.len() - 1], polished.inliers.len(), started.elapsed());
             let _ = again;
         }

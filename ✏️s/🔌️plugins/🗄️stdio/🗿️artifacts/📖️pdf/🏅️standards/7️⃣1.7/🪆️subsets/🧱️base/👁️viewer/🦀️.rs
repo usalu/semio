@@ -54,6 +54,19 @@ impl ArtifactViewer for Pdf17Viewer {
     const DIALECT: Dialect = PDF17_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(
+        grant: semio_plugin::__value::RetainedCloneGrant,
+    ) -> Option<Result<(
+        protocol::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>,
+        semio_plugin::__value::RetainedCloneProgress,
+    ), protocol::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+    }
+
     fn reference_birth()->Option<fn()->Result<PdfSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::v1_7::subsets::base::io::export::blank_pdf_snapshot())
     })}

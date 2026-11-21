@@ -97,6 +97,7 @@ type Din18599DhwPatch {
   specificDemandKwhPersonA: Float
   storageLossKwhA: Float
   distributionLossKwhA: Float
+  dwellingCount: Int
   energyCarrier: String
 }
 

@@ -24,19 +24,23 @@ const TOL: Record<number, number> = { 50: 0.0009, 100: 0.0018, 200: 0.0035, 500:
 const PLATE = 0.0004;
 const FIXED = /^(bed-surface|pillow|duvet|hip-lift|hip-shift)$/;
 const MOUND = /^(duvet-(trunk|hips|thighs|shins|legs)|fold-(thighs|shins|legs))$/;
-const FRONT_HIDDEN = /^(trunk|collar|neck|head|hair|hair-spread|nose|eyelid-[lr]|lips|ankle-[lr]|shoulders)$/;
-const HIDDEN = /^(shorts|thigh-[lr]|shank-[lr]|(sleeve|foresleeve|cuff|palm|thenar|thumb|thumb-tip)-l|finger-\d(-tip)?-l)$/;
+const FRONT_HIDDEN = /^(trunk|collar|neck|head|hair|hair-spread|nose|eyelid-[lr]|lips|lips-lower|brow|chin|ala-[lr]|cheek-[lr]|ankle-[lr]|shoulders)$/;
+const HIDDEN = /^(shorts|thigh-[lr]|shank-[lr])$/;
 
 /** 🧩️ The drawn shape a body solid belongs to in a view (`null`: not drawn there). */
 function groupOf(solid: Json, view: View, scale: number): string | null {
   const id = solid.id as string;
   if (HIDDEN.test(id)) return null;
   if (view === "front" && FRONT_HIDDEN.test(id)) return null;
+  if (view === "front" && /^(cloth-.*|(sleeve|foresleeve|cuff|palm|thenar|finger-\d|finger-\d-tip|thumb|thumb-tip)-l)$/.test(id)) return null;
   const hand = /^(palm|thenar|finger-\d|finger-\d-tip|thumb|thumb-tip)-([lr])$/.exec(id);
   if (hand) return `hand-${hand[2]}`;
   if (id === "thumb-r") return "hand-r";
-  if (id === "nose") return view === "elevation" || scale > 50 ? "head" : "nose";
+  if (/^(nose|ala-[lr])$/.test(id)) return view === "elevation" || scale > 50 ? "head" : "nose";
+  if (/^(brow|chin|cheek-[lr])$/.test(id)) return "head";
+  if (id === "lips-lower") return "lips";
   if (/^eyelid-l$/.test(id) && view === "elevation") return null;
+  if (/^eyelid-r$/.test(id) && view === "elevation") return "head";
   const mall = /^malleolus-(in|out)-([lr])$/.exec(id);
   if (mall) return `foot-${mall[2]}`;
   const toe = /^toe-\d-([lr])$/.exec(id);
@@ -112,7 +116,7 @@ for (const scale of SCALES) {
         for (let k = 0; k < 3; k++) middle[k]! += m.world[i + k]!;
         n++;
       }
-      const near = sum / n + (LIFT.find(([re]) => re.test(id))?.[1] ?? 0);
+      const near = sum / n + (LIFT.find(([re]) => re.test(id))?.[1] ?? 0) - (/^cloth-/.test(id) ? (view === "front" ? 1 : 0.06) : 0);
       const role = ROLE_DETAIL.test(id) ? "detail" : "body";
       const onDuvet = MOUND.test(id);
       const affected = !onDuvet && !FIXED.test(own.bone);

@@ -42,8 +42,8 @@ fn document_error(scope: &'static str) -> PluginAssemblyError {
 /// keyboard and screen-reader users traverse nodes, ports and wires (ticket 26/09/14).
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, labels: &Generation3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<semio_plugin::BuiltNode> {
     let host_snapshot = &document.host_snapshot;
-    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
-    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
+    let dag = FlowHost::project_registered_dag_snapshot(host_snapshot);
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag, &host_snapshot.synapses);
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     graph_outline(windows, &nodes, &edges, flow_extras.status_json.as_ref(), labels).map_err(|_| document_error("outline"))
 }

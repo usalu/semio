@@ -1,6 +1,7 @@
 /** 🔶️ The active utility phase of useWorldPointerAndDrop. */
 import * as React from "../../../⚛️react-port/🟦️.ts";
-import { useCallback } from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
+import { createCoalescingActionDispatcher } from "../../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { world3dComponentInteractionTarget, world3dInstanceInteractionTargets } from "../../🔗️instance-selection/🟦️.ts";
 import { paneSuffixFromSurfaceId, raycastGroundPoint, world3dMarqueePointerCaptureArmed } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { world3dVolumeBrushCommits } from "../../🗂️catalogue-drop/🟦️.tsx";
@@ -9,7 +10,12 @@ import type { WorldCore6 } from "../../🎛️marquee-and-gumball/🟦️.ts";
 
 /** 🔷 Builds activeUtility, beginRelocateDrag, cameraRef, cameraState of useWorldPointerAndDrop. */
 export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
-  const { activeUtility, beginHandleDrag, beginRelocateDrag, cameraRef, cameraState, catalogueDragDepthRef, catalogueDragEncodedRef, connectDropConsumedRef, contextMenu, dismissContextMenu, dispatch, endHandleDrag, endRelocateDrag, engagementPointerMoveInFlightRef, engagementPointerMoveLastPointRef, faceDragSession, gestureRecognizer, gridFactor, gridSnapEnabled, handleConnectDragCancel, handleInstancePointerDown, handleSuggestionClose, handleVoxelPlace, hostRef, hoveredInstanceInteractionTargetRef, instances, instancesRef, interaction, interactionDomainId, interactionGranularity, marqueeDown, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, marqueeStartRef, meshesRef, method, node, paintMode, pendingCelebrateCatalogueDropIdsRef, persistentSelectionMode, publishWorldPresenceView, relocateMode, scene, selection, selectionMode, setFaceDragSession, setMarqueeCommitHold, setMarqueeModifiers, setMarqueePath, setVortexPointerArm, setVoxelHoverOrigin, stepPaintGesture, toLocalPoint, updateHandleDrag, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt, wasMarqueeDragRef, windowInstanceId, yieldToPinch } = core;
+  const { activeUtility, beginHandleDrag, beginRelocateDrag, cameraRef, cameraState, catalogueDragDepthRef, catalogueDragEncodedRef, connectDropConsumedRef, contextMenu, dismissContextMenu, dispatch, dispatchSettled, endHandleDrag, endRelocateDrag, faceDragSession, gestureRecognizer, gridFactor, gridSnapEnabled, handleConnectDragCancel, handleInstancePointerDown, handleSuggestionClose, handleVoxelPlace, hostRef, hoveredInstanceInteractionTargetRef, instances, instancesRef, interaction, interactionDomainId, interactionGranularity, marqueeDown, marqueeDragActiveRef, marqueeFinalizeOnceRef, marqueePreviewRef, marqueeStartRef, meshesRef, method, node, paintMode, pendingCelebrateCatalogueDropIdsRef, persistentSelectionMode, publishWorldPresenceView, relocateMode, scene, selection, selectionMode, setFaceDragSession, setMarqueeCommitHold, setMarqueeModifiers, setMarqueePath, setVortexPointerArm, setVoxelHoverOrigin, stepPaintGesture, toLocalPoint, updateHandleDrag, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt, wasMarqueeDragRef, windowInstanceId, yieldToPinch } = core;
+  const sendEngagementPointerMove = useMemo(() => createCoalescingActionDispatcher<readonly [number, number, number]>(
+    position => dispatchSettled("worldPointerMove", { pane: paneSuffixFromSurfaceId(node.surfaceId), position }),
+    (left, right) => left[0] === right[0] && left[1] === right[1] && left[2] === right[2],
+  ), [dispatchSettled, node.surfaceId]);
+  useEffect(() => sendEngagementPointerMove.clearPending, [activeUtility, selection.engagementSessionActive, sendEngagementPointerMove]);
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX, y: event.clientY });
@@ -30,6 +36,7 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
         const rect = hostRef.current.getBoundingClientRect();
         const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
         if (point) {
+          sendEngagementPointerMove.clearPending();
           dispatch("worldPointerDown", {
             pane: paneSuffixFromSurfaceId(node.surfaceId),
             position: point,
@@ -47,7 +54,7 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
       marqueeStartRef.current = start;
       setMarqueePath([start]);
     },
-    [beginHandleDrag, beginRelocateDrag, dispatch, gestureRecognizer, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, stepPaintGesture, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
+    [beginHandleDrag, beginRelocateDrag, dispatch, gestureRecognizer, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, sendEngagementPointerMove, stepPaintGesture, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
   );
 
   const handlePointerMove = useCallback(
@@ -70,16 +77,7 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
       if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
         const rect = hostRef.current.getBoundingClientRect();
         const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
-        const last = engagementPointerMoveLastPointRef.current;
-        const unchanged = point && last && point[0] === last[0] && point[1] === last[1] && point[2] === last[2];
-        if (point && !unchanged && !engagementPointerMoveInFlightRef.current) {
-          engagementPointerMoveInFlightRef.current = true;
-          engagementPointerMoveLastPointRef.current = point;
-          requestAnimationFrame(() => {
-            engagementPointerMoveInFlightRef.current = false;
-            dispatch("worldPointerMove", { pane: paneSuffixFromSurfaceId(node.surfaceId), position: point });
-          });
-        }
+        if (point) sendEngagementPointerMove(point);
         return;
       }
       if (!marqueeDown) return;
@@ -93,7 +91,7 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore6 }) {
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
       setMarqueePath((path) => [...path, local]);
     },
-    [gestureRecognizer, cameraState.position, cameraState.target, dispatch, marqueeDown, node.surfaceId, publishWorldPresenceView, selection.engagementSessionActive, toLocalPoint, updateHandleDrag, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt],
+    [gestureRecognizer, cameraState.position, cameraState.target, marqueeDown, publishWorldPresenceView, selection.engagementSessionActive, sendEngagementPointerMove, toLocalPoint, updateHandleDrag, updateRelocateDrag, volumeBrushMode, voxelGroundOriginAt],
   );
 
   const finalizeMarqueeSelection = useCallback(() => {

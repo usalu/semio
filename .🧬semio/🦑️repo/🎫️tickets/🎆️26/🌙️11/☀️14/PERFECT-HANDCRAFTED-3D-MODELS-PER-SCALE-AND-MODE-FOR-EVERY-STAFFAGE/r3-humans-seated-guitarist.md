@@ -161,3 +161,65 @@ My own changes to the geometry this session: the 1:50 machine heads floated 6.5 
 - **Right-arm residual.** The solver leaves 10–13 mm rms on the right arm, mostly on the soft elbow goal. In the renders the forearm lies on the lower bout without a visible gap or penetration.
 - **Print suitability at 1:1000.** At the far end of the 1:500 representation's range, the hair shape's smallest feature measures 0.193 mm against 0.2 mm. The catalog before round 3 also failed there (a stool leg gap of 0.046 mm). `validateAsset` does not report it. Not fixed.
 - **Guitar outline.** The body is lofted on 14 stations with 9 points of rounding, so at 1:50 close-ups the bouts show faint facets. This is not visible at print size.
+
+## Round 5 handcraft
+
+Round 5 author, 2026-11-20/21. Scripts: the round 3 pipeline (`r3-seated-guitarist-*`) extended in place (roots, s50, coarse, lists, ref), plus `r5-seated-guitarist-measure.ts` (model-vs-reference table). Output under `🗑️generated/r5-seated-guitarist/` and `🗑️generated/r3-seated-guitarist/`.
+
+### Reference and model vs reference (1:50, H = 1.76 m man; `bun r5-seated-guitarist-measure.ts`)
+
+| quantity | reference mm | model mm | deviation | source |
+|---|---|---|---|---|
+| thigh (hip-knee joint) | 431 | 430 | -0.3 % | Drillis-Contini 0.245 H |
+| shank (knee-ankle joint) | 433 | 435 | 0.5 % | Drillis-Contini 0.246 H |
+| upper arm (shoulder-elbow joint) | 327 | 327 | -0.1 % | Drillis-Contini 0.186 H |
+| forearm (elbow-wrist joint) | 257 | 257 | 0.0 % | Drillis-Contini 0.146 H |
+| hand bone | 190 | 190 | -0.0 % | Drillis-Contini 0.108 H |
+| hip joint to shoulder joint | 524 | 530 | 1.1 % | 0.818 H - 0.52 H |
+| shoulder joint spacing | 380 | 380 | 0.1 % | biacromial 0.23 H less 2 x 12.5 mm to the joint centres |
+| hip joint spacing | 180 | 180 | 0.0 % | Bell et al. 1990, about 0.17-0.18 m |
+| head chin-vertex (head + hair solids, u) | 235 | 238 | 1.2 % | H / 7.5 |
+| head breadth (w) | 152 | 152 | 0.0 % | ANSUR II bitragion/head breadth 152 mm |
+| head length (v) | 197 | 194 | -1.5 % | ANSUR II glabella-opisthocranion 197 mm |
+| hand length (palm + middle finger, u) | 190 | 150 | -21.3 % | 0.108 H (strumming hand flexed, so shorter) |
+| boot length (heel to toe cap) | 298 | 305 | 2.5 % | foot 0.152 H + 30 mm of boot |
+| guitar overall length | 1030 | 1030 | 0.0 % | Martin D-28: 1029 mm |
+| guitar lower bout | 397 | 397 | 0.0 % | Martin D-28: 397 mm |
+| guitar body depth at the tail | 124 | 124 | 0.0 % | Martin D-28: 124 mm |
+| stool seat height | 610 | 610 | 0.0 % | 24 inch guitar stool |
+
+The hand length line measures the strumming hand as posed (fingers flexed round the pick); stretched it is palm 100 mm + middle finger 43 + 26 + 21 mm = 190 mm (0.108 H). Head length 194 mm is the skull loft without the nose and the hair. Everything else is within 3 %.
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B (upper arm 5 % short, forearm 5 % long, hand 5 % short, boot toe 7 % long, guitar outline faceted on 14 stations, ear low on the jaw) -> A | A -> A | A- (bone lengths followed the short arm) -> A |
+| 1:100 | B (same arm lengths, long boots) -> A | A -> A | A- -> A |
+| 1:200 | B (same) -> A | A -> A | A- -> A |
+| 1:500 | B- (same; hair a thin crescent below the printable feature at 1:1000; flat cut discs at elbow and knee ends) -> A- | A- -> A- | B (toe bones 44 mm, below the feature) -> A |
+| poses | strumming, tuning (1:50), chord-change t 0.6 s: A -> A (re-solved on the new arm, closed) | | |
+
+### Changes (root first)
+
+- Rig (catalog): `upper-arm-l/r` 0.3101 -> 0.327 m (0.186 H), centre of mass 0.179 -> 0.1887 (de Leva 57.7 %); `forearm-l/r` x 0.3101 -> 0.327, length 0.27 -> 0.257 (0.146 H), centre of mass 0.1235 -> 0.1176; `hand-l/r` x 0.27 -> 0.257, length 0.18 -> 0.19 (0.108 H), centre of mass 0.09 -> 0.095. All five poses re-solved with the product's `solveChain` (left hand rms 0.8–2.2 mm, right arm 11.6–14.8 mm with its soft elbow goal; legs and guitar exact). Clips unchanged (they key the same bones).
+- 1:50 body: sleeve restated on the new humerus with a deltoid cap (0.057 lateral at the shoulder, 0.056/0.051 down to the deltoid insertion, biceps belly forward), elbow fold at 0.266–0.304, forearm, cuff and wrist restated on the 0.257 m forearm, the palm lengthened to 0.108 with the knuckles at 0.1 so the hand is 0.19 m; ear moved up and back to the level between brow and nose base; dreadnought outline restated from the D-28 template at 29 stations (lower bout 397, waist 273, upper bout 292 mm, tail and shoulders rounded into the end blocks) instead of 14 faceted stations; boot toe cap 14 mm shorter (boot 305 mm over a 268 mm foot).
+- 1:100 / 1:200 / 1:500 bodies: sleeves, forearms and hands restated on the new segment lengths; boots shortened the same; 1:500 hair restated as a full cap (domed, 5 sections) so it is a printable mass at 1:1000; 1:500 sleeve, forearm, thigh and shank ends rounded (no flat discs at elbow and knee).
+- Structure: humerus 0.311 + condyles at 0.32, radius/ulna to 0.253/0.251, metacarpals to 0.098, masses at the de Leva centres of the new segments; 1:500 toe bones 78 mm (were 44 mm thin).
+- 2D: every view of every scale redrawn by `r3-seated-guitarist-draw2d.ts` from the new bodies (ruling E1).
+
+### Checks
+
+- `r3-validate.ts --file <candidate> --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0); catalog after write and splice: VALID.
+- `volumes-check.ts humans/seated-guitarist --product`: PASS (47.9 s). Silhouette IoU elevation 0.973 / 0.978 / 0.978 / 0.982 (1:50 … 1:500).
+
+### Seen (opened)
+
+1:50 body sheet and three-quarter close-up, 1:200 body, 1:500 body (sheet and close-up after the hair and joint ends), 1:50 structure, 1:50 thermal cut, pose `tuning` at 1:50, 2D 1:50 (catalog) and 1:500 (candidate). Rendered without error and not opened in this round: 1:100 body, structure 1:100–1:500, thermal cut 1:100–1:500, clip `chord-change` t 0.6 s.
+
+### Still not perfect
+
+- Shirt sleeves read as loose tubes from the elbow down (true to a flannel shirt, but the forearm form is hidden).
+- 1:500: the guitar neck is a 76 mm bar (the smallest feature of the scale forces it), so it reads heavier than a real neck.
+- Right forearm on the lower bout: the solver leaves 12–15 mm rms (soft elbow goal); no visible gap or penetration in the opened views.
+- The ribcage at 1:50 structure is a stack of tilted hoops; it reads as ribs but the hoops are uniform in section.

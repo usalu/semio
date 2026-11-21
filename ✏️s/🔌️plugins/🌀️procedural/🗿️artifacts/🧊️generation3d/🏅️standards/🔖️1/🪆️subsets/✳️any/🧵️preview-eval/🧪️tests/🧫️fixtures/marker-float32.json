@@ -1,0 +1,151 @@
+{
+  "cases": [
+    {
+      "id": "point-world",
+      "kind": "point",
+      "value": [
+        1.25,
+        -2.5,
+        3
+      ],
+      "positions": 1,
+      "segments": 3
+    },
+    {
+      "id": "point-float-limit",
+      "kind": "point",
+      "value": [
+        3.4028234663852886e+38,
+        -3.4028234663852886e+38,
+        0
+      ],
+      "positions": 1,
+      "segments": 3
+    },
+    {
+      "id": "point-float-overflow",
+      "kind": "point",
+      "value": [
+        4e+38,
+        0,
+        0
+      ],
+      "positions": 0,
+      "segments": 0
+    },
+    {
+      "id": "point-finite-double",
+      "kind": "point",
+      "value": [
+        10,
+        -1e+220,
+        1
+      ],
+      "positions": 0,
+      "segments": 0
+    },
+    {
+      "id": "vector-zero",
+      "kind": "vector",
+      "value": [
+        0,
+        0,
+        0
+      ],
+      "positions": 1,
+      "segments": 3
+    },
+    {
+      "id": "vector-rounds-to-zero",
+      "kind": "vector",
+      "value": [
+        1e-50,
+        -1e-65,
+        0
+      ],
+      "positions": 1,
+      "segments": 3
+    },
+    {
+      "id": "vector-smallest-buffer-value",
+      "kind": "vector",
+      "value": [
+        1.401298464324817e-45,
+        0,
+        0
+      ],
+      "positions": 6,
+      "segments": 5
+    },
+    {
+      "id": "vector-float-limit",
+      "kind": "vector",
+      "value": [
+        3.4028234663852886e+38,
+        3.4028234663852886e+38,
+        -3.4028234663852886e+38
+      ],
+      "positions": 6,
+      "segments": 5
+    },
+    {
+      "id": "vector-float-overflow",
+      "kind": "vector",
+      "value": [
+        0,
+        0,
+        -4e+38
+      ],
+      "positions": 0,
+      "segments": 0
+    },
+    {
+      "id": "plane-double-normal",
+      "kind": "plane",
+      "value": [
+        1,
+        2,
+        3
+      ],
+      "normal": [
+        1e+306,
+        -1e+306,
+        0
+      ],
+      "positions": 10,
+      "segments": 9
+    },
+    {
+      "id": "plane-tiny-normal",
+      "kind": "plane",
+      "value": [
+        -2,
+        2,
+        3
+      ],
+      "normal": [
+        0,
+        1e-305,
+        0
+      ],
+      "positions": 10,
+      "segments": 9
+    },
+    {
+      "id": "plane-origin-overflow",
+      "kind": "plane",
+      "value": [
+        0,
+        4e+38,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "positions": 0,
+      "segments": 0
+    }
+  ]
+}

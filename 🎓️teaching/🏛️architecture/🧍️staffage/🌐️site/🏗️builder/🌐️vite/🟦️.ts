@@ -12,6 +12,7 @@ import { semioReferencedAssetsVitePlugin } from "../../../../../../🧰️framew
 import { semioServeCloseVitePlugin, semioServeUpgradeVitePlugin } from "../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 import { staffageAssetVitePlugin } from "../../../🎯️targets/⚛️react/🌐️vite/🟦️.ts";
 // #endregion 🔌️Adapters
+import { STALE_CHUNK_BOOT_SCRIPT, STALE_CHUNK_ENTRY_ID } from "../../🛟️recovery/🟦️.ts";
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const bundleRoot = resolve(siteRoot, "📦️packages/🟦️typescript");
@@ -80,10 +81,8 @@ export const staffageHostDocument: SemioHostHtmlSpec = {
 /** 🧊️ The modules of the 3D model pipeline: the volume module, the GLB, FBX, model and bundle exporters of the library and the neutral model kernel with its viewer. The archive reaches them only through dynamic imports (the viewer chunk and the lazy exporters), but the library's barrel re-exports them, so a release build declares them free of import-time side effects: Rollup then drops what the entry does not use and the 2D-only path never downloads them. */
 export const staffageModelPipeline = (id: string): boolean => /\/(?:🧊volume|📤export\/(?:🧊glb|🎬fbx|🗿model|🗜zip\/📦models)|🧊3d\/🗿model)\//u.test(id.replaceAll("\\", "/").replaceAll("\uFE0F", ""));
 
-/** 🪪️ Vite: a release document names the manifest, both appearance colours, and a sealed policy, then writes `robots.txt`, `manifest.webmanifest` and `_headers`. */
-function staffageReleaseDocumentVitePlugin(): OwnedBuildPlugin {
-  let outDir = resolve(bundleRoot, "dist");
-  let written = true;
+/** 🪪️ Seals the release document's inline scripts and installs recovery before the generated entry. */
+export function staffageReleaseHtml(html: string): string {
   const head = [
     `<meta name="description" lang="en" content="An archive of handcrafted architectural staffage with dimensions, motion and physical models." />`,
     `<meta name="description" lang="de" content="Ein Archiv handgefertigter architektonischer Staffage mit Maßen, Bewegung und physikalischen Modellen." />`,
@@ -91,16 +90,24 @@ function staffageReleaseDocumentVitePlugin(): OwnedBuildPlugin {
     `<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#001117" />`,
     `<link rel="manifest" href="/manifest.webmanifest" />`,
   ].join("\n    ");
+  const described = html.replace("</title>", `</title>\n    ${head}`);
+  const tagged = described.replace(/<script(?=\s)(?=[^>]*\stype="module")(?=[^>]*\ssrc=)/u, `<script id="${STALE_CHUNK_ENTRY_ID}"`);
+  if (tagged === described) throw new Error("Staffage release document has no module entry");
+  const armed = tagged.replace(/<meta charset="[^"]*" \/>/u, (charset) => `${charset}\n    <script>${STALE_CHUNK_BOOT_SCRIPT}</script>`);
+  return armed.replace(/<meta charset="[^"]*" \/>/u, (charset) => `${charset}\n    <meta http-equiv="Content-Security-Policy" content="${staffageContentSecurityPolicy(armed)}" />`);
+}
+
+/** 📦️ Vite: seals the release document and writes `robots.txt`, `manifest.webmanifest` and `_headers`. */
+function staffageReleaseDocumentVitePlugin(): OwnedBuildPlugin {
+  let outDir = resolve(bundleRoot, "dist");
+  let written = true;
   return {
     name: "architecture-staffage-release-document",
     apply: "build",
     enforce: "post",
     transformIndexHtml: {
       order: "post",
-      handler(html) {
-        const described = html.replace("</title>", `</title>\n    ${head}`);
-        return described.replace(/(<meta charset="[^"]*" \/>)/u, `$1\n    <meta http-equiv="Content-Security-Policy" content="${staffageContentSecurityPolicy(described)}" />`);
-      },
+      handler: staffageReleaseHtml,
     },
     configResolved(config) {
       outDir = resolve(config.root, config.build.outDir);
@@ -119,7 +126,7 @@ function staffageReleaseDocumentVitePlugin(): OwnedBuildPlugin {
 /** 🧍️ Vite: the staffage archive site, a static React and Tailwind bundle without a backend. Assets resolve from the domain root and land in the package's `dist`; a release build is what `https://${STAFFAGE_SITE_HOST}` serves. Vite's dependency cache is the one the repository issues for the build mode, and `TEACHING_ARCHITECTURE_STAFFAGE_WATCH=off` stops the dev server watching the sources.
  * @see ../../🟦️.ts — the entry
  * @see ../../📦️packages/🟦️typescript/📜️script.ts — the `dev-site` and `build` verbs */
-export default defineOwnedBuildConfigFactory(({ mode }) => ({
+export default defineOwnedBuildConfigFactory(({ command, mode }) => ({
   root: siteRoot,
   base: "/",
   publicDir: false,
@@ -135,7 +142,7 @@ export default defineOwnedBuildConfigFactory(({ mode }) => ({
         return null;
       },
     },
-    staffageAssetVitePlugin(),
+    staffageAssetVitePlugin(command === "build" && readBuildMode(mode) === "release"),
     semioServeCloseVitePlugin(),
     semioServeUpgradeVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, staffageHostDocument),

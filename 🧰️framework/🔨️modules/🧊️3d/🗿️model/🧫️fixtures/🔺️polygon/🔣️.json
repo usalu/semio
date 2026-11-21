@@ -1,5 +1,6 @@
 {
  "areaTolerance": 1e-09,
+ "perforatedPanel": { "columns": 32, "rows": 32, "pitch": 3, "opening": 2, "border": 1, "expectedArea": 5313 },
  "cases": [
   {
    "name": "square-midpoints",

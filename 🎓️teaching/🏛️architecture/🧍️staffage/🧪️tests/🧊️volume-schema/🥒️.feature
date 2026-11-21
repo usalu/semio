@@ -1,10 +1,10 @@
 @capability-staffage-volume
 Feature: The declarative 3D volume of an asset is a schema contract with semantic rules
   `asset.volumes` (`🧬️schema/🔣️.json`, `semio.staffage/v2`, one `body`, `thermal` and `structure` list per scale) lists solids bound to the bones of the rig, in the bone-local rest frame in metres: box, ellipsoid, capsule,
-  revolve, extrude and loft, each with a material, a role, a tone, optional weights over bones, a transform and a repeat; thermal solids name a region and layer, structural solids a member and a part, either may be an `{ of }` reference.
+  revolve, extrude, loft and indexed polyhedron, each with a material, a role, a tone, optional weights over bones, a transform and a repeat; thermal solids name a region and layer, structural solids a member and a part, either may be an `{ of }` reference.
   The schema judges the shape; the owned validator judges the meaning with one stable rule id per rule: the bone, the material and the regions exist, weights name bones and
   sum to 1, sizes and radii are positive, an extrusion runs from a smaller to a larger coordinate, profiles are simple polygons with their holes strictly inside and apart,
-  a loft has two sections, a repeat count is between 1 and 256, `of` references resolve and solid ids are unique per list.
+  a polyhedron is a connected, outward-facing closed triangular shell without crossing faces, a loft has two sections, a repeat count is between 1 and 256, `of` references resolve and solid ids are unique per list.
 
   THE REFERENCES are ajv for the schema, shapely for the validity of every profile, the exact predicates of robust-predicates for every segment intersection, and the
   hand-computed bounding box of the sample figure from the rest frames of its rig.

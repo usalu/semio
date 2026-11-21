@@ -1,0 +1,11 @@
+# Live Raw Image Attachment Audit
+
+The live interfaces do not yet provide an atomic paged attachment with PDF rows. The smallest existing entry is the Original one-item/batch publication authority, extended with an owned domain installation payload and a receiving PDF operation. The existing wire override is necessary but insufficient.
+
+- Plugin declaration emission/🦀️.rs: Emit owns typed mutation vectors or artifact_mutation_pages; it has no paired original resource owner.
+- Store one-item publication input-pages/🦀️.rs: ArtifactMutationPages admits ordered typed mutations only.
+- Store one-item publication/🦀️.rs: the preparation factory operation_wire_source projects a mutation onto the retained Original Pack wire; batch authority holds the exact 32-byte base revision and stages rows. Neither provides resource installation or its lifetime. ArtifactStoreOneItemAdvance::Published is the irreversible acknowledgment boundary.
+- The PDF 1.7 mutation aggregate and receiving operation must register the sealed PNG install record and decode its typed image/paint rows; the staged DCT tag 61 and borrowed source hook are not live registration. The PDF authoring document owns Pack and row preparation; the registered Save planner/resource resolver must borrow verified matching role planes.
+- Store event/history custody must retain the installed paged Original, index it by verified paired digest, and rebuild the index from durable retained events on reopen. Undo removes visible bindings while the reachable forward event retains the owner; redo and Save borrow it under a close lease. Release last ownership through paid retirement. A stale full revision, cancellation or failed admission must expose neither resource nor any row.
+
+A minimal mounted law should exercise masked and opaque fixtures, insertion and replacement; assert exact source owner and no partial visibility under stale revision and denied grants; persist, close and reopen; Save through the registered writer and independently decode both planes; undo and redo while checking the same retained bytes and roles; finally reconcile paid allocations. Existing staged Pack/history and writer probes establish components, not this mounted law. No product code or build was changed in this audit.

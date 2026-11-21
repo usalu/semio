@@ -89,3 +89,50 @@ Final check line: `volumes-check.ts appliances/thermostatic-radiator-valve --pro
 - `head` areaM2 is 7 % above the measured surface because of the factor 1.5 rule; the coupling nut (brass) is bound to the head region, whose material is ABS.
 - Head diameter and length (53, 80 mm) and the spanner widths rest on search excerpts, not on a drawing I opened.
 - `🧪️tests/📐️dimension-leader` names this asset (label lifted clear at 1:50); the asset became shorter, so the condition should still hold, but I did not run the test.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-thermostatic-radiator-valve-build.py` (the round-3 build with the changes below; writes the volumes source). No root change outside `volumes`.
+
+### Reference and model against it
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| centre to inlet face l3 | 29 mm (IMI Heimeier V-exact II, angle DN 15) | 29 mm (inlet socket face) | 0 % |
+| centre to tailpiece end l4 | 58 mm (same) | 58 mm | 0 % |
+| head contact face H1 | 23.5 mm (same) | 23.5 mm | 0 % |
+| head diameter | 53 mm (Heimeier K) | 53 mm | 0 % |
+| head length from contact face | about 70 mm (80 mm overall incl. nut) | 69.5 mm (-23.5 to -93) | -0.7 % |
+| coupling nut | M30 x 1.5, about 34 mm | 34 mm | 0 % |
+| pipe | 15 x 1 mm copper (EN 1057) | 15 mm, bore 13 mm | 0 % |
+
+`volumes-bounds` 1:50: 0 / 0 / 0.02 mm.
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- |
+| 1:100 | A- / A- / B (pin and roller as pairs of balls crossing pipe and tailpiece) | A- / A- / A- |
+| 1:200 | C+ (head a flared bottle: cone from 26 to 53 mm over 22 mm) / B / A- | A- / A- / A- |
+| 1:500 | C (inlet a horn from 16 to 29 mm, head a double cone) / C / B+ | B+ / B+ / B+ |
+
+### Changes
+
+- 1:100 structure: supports are 15 mm rings round the pipe at the compression fitting (pin) and round the tailpiece at the union (roller), instead of two capsules.
+- 1:200 body: head turned with the true steps of the reference (34 mm nut to -25, 44 mm base ring to -34.5, 53 mm barrel tapering 2 mm to -71, rounded cap to 28 mm at -93); thermal head and cap split at -71 on the same profile.
+- 1:500 body: inlet = 15 mm pipe stepping into the 29 mm column, outlet = 28 mm union stepping to the 20 mm tailpiece, head = 38 mm neck, 53 mm barrel, chamfered cap; no cones. Thermal split follows. Decisions rewritten en/de.
+
+### Looked at (opened)
+
+Before: every scale's body, thermal cut, structure; poses open, part-open, closed; clips close-down t 4 s, open-up t 6 s. After: 1:100 structure, 1:200 body, 1:500 body and thermal cut; 2D 1:50 enlarged (all three views consistent with the body). 2D 1:200 and 1:500 do not exist.
+
+### Checks
+
+`volumes-check.ts --product`: PASS. `r3-validate.ts ... --catalog-only --volumes`: VALID. Spliced.
+
+### Remaining
+
+- Rig: `head` and `knob` lie along +x with their joint on the head axis, turning about world z (the head axis); a bone along the head axis would need bone `z` offsets, which the 2D front and plan placement ignores (round 3, section 6).
+- 1:500 still a minimal three-solid massing (B+).
+- Hexagons without chamfers, knurling and numerals below the feature.

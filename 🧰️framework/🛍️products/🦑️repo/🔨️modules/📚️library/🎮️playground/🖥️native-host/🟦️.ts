@@ -1,5 +1,7 @@
 import {lstatSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {parseStoreReceiptV1,storeReceiptOutputV1} from "../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import { admitPlaygroundNativeHostV1 as admit, parsePlaygroundNativeHostV1 as parse, nativeHostSourceFactsV1 as facts,nativeHostArtifactPathV1 as artifact, declaredPlaygroundHostInputPathsV1 as inputs,nativeHostScriptAdmissionV1 } from "./🟨️.mjs";
 
@@ -25,6 +27,29 @@ export function nativeHostTextSourceViewV1(view:Pick<NativeHostSourceViewV1,"kin
 /** 📂 Supplies local source facts while refusing filesystem indirection. */
 export function nativeHostFilesystemViewV1(repoRoot:string):NativeHostSourceViewV1 {
   return nativeHostTextSourceViewV1({kind:(path)=>{try {const stat=lstatSync(resolve(repoRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return null;throw error;}},readText:(path)=>new TextDecoder("utf-8",{fatal:true}).decode(readFileSync(resolve(repoRoot,path)))});
+}
+
+/** 🏗️ Resolves the authored self-contained host task without expanding a graph or interpreting a shell command. */
+export function nativeHostTaskV1(value:unknown,mode:"prototype"|"release",view:NativeHostSourceViewV1){
+  let projectSource:string|undefined;
+  const host=admitPlaygroundNativeHostV1(value,{...view,readText:path=>{
+    const source=view.readText(path);
+    if(path.endsWith("/📋️project.json"))projectSource=source;
+    return source;
+  }});
+  if(!host||!projectSource)throw Error("Declared native host source required");
+  const target=JSON.parse(projectSource).targets[host.target],configuration=target.configurations[mode];
+  const recipe={command:target.options.command,arguments:configuration?.args??target.options.args??[],environment:{...target.options.env,...configuration?.env}};
+  const outputs=configuration?.outputs??target.outputs;
+  const hasDependencies=(value:unknown)=>value!==undefined&&(!Array.isArray(value)||value.length!==0);
+  if(!configuration||configuration.command!==undefined||configuration.cwd!==undefined||configuration.options!==undefined||
+    hasDependencies(configuration.dependsOn)||hasDependencies(target.dependsOn)||recipe.environment.SEMIO_BUILD_MODE!==mode||
+    target.options.forwardAllArgs===false&&recipe.arguments.length>0||
+    validateJsonSchemaSubset(schema.$defs.NativeHostTaskV1,recipe).length||
+    !Array.isArray(outputs)||outputs.length!==1||outputs[0]!==storeReceiptOutputV1(host.target)){
+    throw Error("Authored native host task requires a self-contained profiled script and its sole receipt");
+  }
+  return Object.freeze({host,script:host.cratePath+"/📜️script.ts",arguments:Object.freeze([...recipe.command.split(" ").slice(2),...recipe.arguments]),outputs:Object.freeze([outputs[0]])});
 }
 
 /** 🚀 Selects the declared producer artifact through the store receipt its last build recorded; a producer that was not built has no receipt and is refused. */

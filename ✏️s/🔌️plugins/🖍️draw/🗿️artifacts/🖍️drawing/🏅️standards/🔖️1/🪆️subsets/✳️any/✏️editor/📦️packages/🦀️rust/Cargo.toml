@@ -27,6 +27,7 @@ semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
@@ -61,6 +62,7 @@ semio-s-artifact-draw-drawing-write = { workspace = true }
 semio-framework-interaction = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🕹️interaction/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
 semio-plugin-job = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📦️packages/🦀️rust" }
 semio-framework-job-registry = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }

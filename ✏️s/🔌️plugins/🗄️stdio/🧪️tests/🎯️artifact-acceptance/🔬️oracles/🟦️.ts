@@ -64,7 +64,7 @@ function spreadsheetPackage(bytes: Uint8Array): OracleVerdict {
   const extension = path.split(".").pop()?.toLowerCase();
   const fallback = types?.Default?.find((entry: Record<string, string>) => entry["@_Extension"]?.toLowerCase() === extension);
   const workbookType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
-  const declared = (override ?? fallback)?.["@_ContentType"] === workbookType;
+  const declared = (override ?? fallback)?.["@_ContentType"]?.split(";", 1)[0]?.toLowerCase() === workbookType;
   return verdict(declared && Object.hasOwn(part(path.slice(1)), "workbook"), "SpreadsheetML workbook relationship, content type and XML root");
 }
 

@@ -27,7 +27,7 @@ pub(super) struct DenseStereoPreparation {
     pub(super) phase: DenseStereoPhase,
     reference_frame: usize,
     reference_camera: (remodeling_camera::CameraPose, remodeling_camera::Intrinsics),
-    source_frames: Vec<(usize, remodeling_camera::CameraPose)>,
+    source_frames: Vec<(usize, remodeling_camera::CameraPose, remodeling_camera::Intrinsics)>,
     pub reference_gray: remodeling_image::ImageGray,
     pub source_grays: Vec<(remodeling_image::ImageGray, remodeling_camera::CameraPose, remodeling_camera::Intrinsics)>,
     pub(super) source: usize,
@@ -192,8 +192,11 @@ impl ReconstructionEngine {
             let ci = self.dense_camera_indices[slot];
             let reconstruction = self.reconstruction.as_ref().expect("dense requires reconstruction");
             let (reference_frame, pose) = reconstruction.cameras[ci];
-            let intrinsics = reconstruction.intrinsics;
-            let source_frames = neighbor_camera_indices(ci, reconstruction.cameras.len(), self.params.dense_source_views.min(8)).into_iter().map(|neighbor| reconstruction.cameras[neighbor]).collect();
+            let intrinsics = reconstruction.intrinsics[&reference_frame];
+            let source_frames = neighbor_camera_indices(ci, reconstruction.cameras.len(), self.params.dense_source_views.min(8)).into_iter().map(|neighbor| {
+                let (frame, pose) = reconstruction.cameras[neighbor];
+                (frame, pose, reconstruction.intrinsics[&frame])
+            }).collect();
             let reference = &self.frames[reference_frame].image;
             let (depth_min, depth_max) = sparse_depth_range(&reconstruction.points, &pose, &self.params.dense);
             let dense = remodeling_dense::PatchMatchConfig { depth_min, depth_max, ..self.params.dense };
@@ -222,10 +225,10 @@ impl ReconstructionEngine {
                 if preparation.source == preparation.source_frames.len() {
                     preparation.phase = DenseStereoPhase::PatchMatch;
                 } else {
-                    let (frame, pose) = preparation.source_frames[preparation.source];
+                    let (frame, pose, intrinsics) = preparation.source_frames[preparation.source];
                     if preparation.source_grays.len() == preparation.source {
                         let image = &self.frames[frame].image;
-                        preparation.source_grays.push((remodeling_image::ImageGray { width: image.width, height: image.height, data: Vec::with_capacity(image.width as usize * image.height as usize) }, pose, preparation.reference_camera.1));
+                        preparation.source_grays.push((remodeling_image::ImageGray { width: image.width, height: image.height, data: Vec::with_capacity(image.width as usize * image.height as usize) }, pose, intrinsics));
                     }
                     let complete = append_luma_slice(&self.frames[frame].image, &mut preparation.source_grays[preparation.source].0, &mut preparation.pixel, LUMA_PIXELS_PER_STEP);
                     if complete {
@@ -304,7 +307,8 @@ impl ReconstructionEngine {
             let recon = self.reconstruction.as_ref().expect("fusion requires reconstruction");
             if self.fusion_views.len() < n_dense {
                 let camera = self.dense_camera_indices[self.fusion_views.len()];
-                self.fusion_views.push((recon.cameras[camera].1, recon.intrinsics));
+                let (frame, pose) = recon.cameras[camera];
+                self.fusion_views.push((pose, recon.intrinsics[&frame]));
                 return true;
             }
             let config = self.fusion_config();
@@ -337,8 +341,8 @@ impl ReconstructionEngine {
             let ci = self.dense_camera_indices[slot];
             let (pose, intrinsics) = {
                 let recon = self.reconstruction.as_ref().expect("fusion requires reconstruction");
-                let (_, pose) = recon.cameras[ci];
-                (pose, recon.intrinsics)
+                let (frame, pose) = recon.cameras[ci];
+                (pose, recon.intrinsics[&frame])
             };
             let preparation = self.tsdf_preparation.get_or_insert_with(remodeling_dense::TsdfIntegrationPreparation::new);
             let mask = self.consistency_masks.get(slot).map(Vec::as_slice);
@@ -396,7 +400,7 @@ impl ReconstructionEngine {
                     if preparation.active_view.is_none() {
                         let source = &self.frames[frame].image;
                         preparation.active_view =
-                            Some(TextureViewPreparation { pose, intrinsics: reconstruction.intrinsics, image: remodeling_image::ImageRgba8 { width: source.width, height: source.height, data: Vec::with_capacity(source.data.len()) }, cursor: 0 });
+                            Some(TextureViewPreparation { pose, intrinsics: reconstruction.intrinsics[&frame], image: remodeling_image::ImageRgba8 { width: source.width, height: source.height, data: Vec::with_capacity(source.data.len()) }, cursor: 0 });
                     }
                     let active = preparation.active_view.as_mut().expect("active texture view");
                     let source = &self.frames[frame].image.data;

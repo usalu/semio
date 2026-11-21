@@ -205,7 +205,7 @@ impl KernelPoolState {
     /// (`set_capabilities` below) so the intersection mechanism is exercised end-to-end and
     /// ready the moment a broker starts populating `parent_grants` for real.
     async fn activate_extensions_of(&mut self, owner: &CreateAppRequestOwner, plugin_id: &str, parent: ActorId, modules_root: &std::path::Path) {
-        let extensions = extension_index().extensions_of(plugin_id);
+        let extensions = extensions_of(plugin_id);
         if extensions.is_empty() {
             return;
         }

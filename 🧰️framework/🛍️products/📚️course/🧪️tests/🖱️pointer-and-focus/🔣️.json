@@ -1,0 +1,13 @@
+{
+  "edgeScroll": [
+    { "name": "hold at the bottom edge", "from": 200, "pointer": 397, "scrolls": "down" },
+    { "name": "hold at the bottom edge of an inner quiz page", "from": 200, "pointer": 397, "scrolls": "down", "inner": true },
+    { "name": "hold at the top edge", "from": 200, "pointer": 3, "scrolls": "up" },
+    { "name": "hold in the middle", "from": 200, "pointer": 250, "scrolls": "none" },
+    { "name": "hold at the end of the scroll range", "from": 800, "pointer": 397, "scrolls": "none" }
+  ],
+  "touchMove": [
+    { "target": "grip", "prevented": true },
+    { "target": "page", "prevented": false }
+  ]
+}

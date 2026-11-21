@@ -7,9 +7,10 @@
 //! typed media I/O surface (`map:in` overlay, ports, scene media) below in `🔖️Io` — relocated from
 //! the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 
-use crate::editor::gis3d::commands::{example, exaggeration, view};
+use crate::editor::gis3d::commands::{contours, edit_elevation, elevation_source, example, exaggeration, grade_region, view};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
+use crate::editor::gis3d::terrain_data;
 use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
 use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
@@ -52,28 +53,35 @@ use semio_plugin::NoDraftMutation;
 use semio_plugin::SelectionMethod;
 use semio_plugin::SelectionMode;
 use semio_plugin::SelectionSpec;
-use serde_json::Value;
+use semio_framework_pack_json::{parse as parse_json, to_json_string, JsonMemberPolicy};
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
 
+#[path = "📥️media-import/🦀️.rs"]
+mod media_import;
+#[path = "📤️media-export/🦀️.rs"]
+mod media_export;
+
 //#region 🔖️Constants
 pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";
+const GIS_ELEVATION_GRID_SCHEMA: &str = "gis.elevation-grid";
+const GIS_ELEVATION_MEDIA_TYPE: MediaType = MediaType { class: MediaClass::Data, form: MediaForm::Value };
+const GIS_ELEVATION_JSON_MAX_BYTES: usize = 8_192;
+const GIS_MAP_MEDIA_TYPE: MediaType = MediaType { class: MediaClass::TwoD, form: MediaForm::Vector };
 //#endregion 🔖️Constants
 
 //#region 🔖️Io
-/// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this app's typed media I/O surface
-/// (`AppDefinition.io`), plus the two app-specific workflow ports
-/// (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE Wave 2 port recipe): `map:in`
-/// (a `2d.map` producer — gis2d's `map:out` — feeds an overlay pin layer, see
-/// `GisTerrainSnapshot::imported_map`) and `scene:out` (this terrain as `3d.mesh`).
-/// `document_media_type` is Data×Value (the document is a scalar "exaggeration + imported overlay"
-/// record, not itself mesh geometry — `scene:out` is the actual renderable mesh/terrain surface).
+/// 🧭️ Declares the Semio document medium and the typed map, elevation, and mesh workflow ports.
 pub fn gis3d_io() -> AppIo {
     AppIo {
         artifact_schema: GIS_3D_TERRAIN_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
-        ports: vec![gis3d_map_in_port(), gis3d_scene_out_port()],
+        ports: vec![
+            gis3d_map_in_port(),
+            gis3d_elevation_port("elevation:in", semio_plugin::MediaPortDirection::In, semio_framework::PortMultiplicity::One),
+            gis3d_elevation_port("elevation:out", semio_plugin::MediaPortDirection::Out, semio_framework::PortMultiplicity::Many),
+            gis3d_scene_out_port(),
+        ],
         export_formats: Vec::new(),
         import_formats: Vec::new(),
         artifact: semio_plugin::ArtifactPresentation { id: crate::GISTERRAIN_DIALECT.artifact_kind.into(), name: "GIS Terrain".into(), dimension: "3d".into(), component_kind: "gisterrain".into() },
@@ -95,38 +103,62 @@ pub fn gis3d_map_in_port() -> semio_plugin::MediaPortSpec {
     }
 }
 
-/// 🎭️ `scene:out` — this terrain as `3d.mesh` (kind already registered by lowpoly; reused verbatim,
-/// not redeclared — WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). `Many`/optional: several
-/// downstream consumers may fan out from one terrain, and a terrain with no downstream edge is valid.
+fn gis3d_elevation_port(id: &str, direction: semio_plugin::MediaPortDirection, multiplicity: semio_framework::PortMultiplicity) -> semio_plugin::MediaPortSpec {
+    semio_plugin::MediaPortSpec {
+        id: id.into(),
+        label: LocalizedLabel::native("Elevation source", "Höhenquelle"),
+        direction,
+        media_type: GIS_ELEVATION_MEDIA_TYPE,
+        kind_id: Some(GIS_ELEVATION_GRID_SCHEMA.into()),
+        required: false,
+        multiplicity,
+    }
+}
+
+/// 🎭️ Publishes terrain geometry to the workflow mesh media class.
 pub fn gis3d_scene_out_port() -> semio_plugin::MediaPortSpec {
     semio_plugin::MediaPortSpec {
         id: "scene:out".into(),
         label: LocalizedLabel::native("Scene", "Szene"),
         direction: semio_plugin::MediaPortDirection::Out,
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-        kind_id: Some("3d.mesh".into()),
+        kind_id: None,
         required: false,
         multiplicity: semio_framework::PortMultiplicity::Many,
     }
 }
 
-/// 🎞️ `scene:out`'s `Media` value. First pass (mirrors this app's own "deliberately minimal" module
-/// doc): gis3d has no CPU-side heightmap tessellator yet (rendering is scene-descriptor driven, see the
-/// 🏔️terrain window's `render`/`build_terrain_scene_json`), so this exports the same terrain descriptor
-/// fields (exaggeration + imported overlay) as a structured `3d.mesh` payload rather than a real
-/// triangulated mesh — an honest placeholder for the day a tessellator lands, not a silent fake.
-pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Media {
-    Media {
+/// 🎞️ Publishes tessellated terrain using the shared workflow mesh document carrier.
+pub fn gis3d_scene_media(document: &GisTerrainSnapshot) -> Result<Media, MediaError> {
+    use semio_framework_value::{DslValue, ToValue};
+    let surface = crate::schema::imported_map::gis_terrain_mesh_buffers(document)
+        .map_err(|error| MediaError::Payload("scene:out".into(), error.into()))?;
+    let mesh = semio_plugin::MeshData {
+        positions: surface.positions,
+        normals: surface.normals,
+        indices: surface.indices,
+        uvs: surface.uvs,
+        ..Default::default()
+    };
+    let schema = "mesh.document";
+    let payload = DslValue::object([("schema".into(), schema.to_value()), ("mesh".into(), mesh.to_value())]);
+    Ok(Media {
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
         payload: MediaPayload::Structured {
-            schema: "3d.mesh".into(),
-            json: serde_json::json!({
-                "exaggeration": document.exaggeration,
-                "importedFeatures": document.imported_map.as_ref().and_then(|map|map.to_json().ok()).and_then(|text|serde_json::from_str::<Value>(&text).ok()).unwrap_or(serde_json::json!(null)),
-            })
-            .to_string(),
+            schema: schema.into(),
+            json: semio_framework_pack_json::to_json_string(&payload),
         },
-    }
+    })
+}
+
+fn gis3d_elevation_media(document: &GisTerrainSnapshot) -> Result<Media, MediaError> {
+    use semio_framework_value::ToValue;
+    let source = document.elevation_source.as_ref().filter(|source| source.is_valid())
+        .ok_or_else(|| MediaError::Payload("elevation:out".into(), "no authored elevation source".into()))?;
+    Ok(Media {
+        media_type: GIS_ELEVATION_MEDIA_TYPE,
+        payload: MediaPayload::Intrinsic { schema: GIS_ELEVATION_GRID_SCHEMA.into(), value: source.to_value() },
+    })
 }
 //#endregion 🔖️Io
 
@@ -139,13 +171,34 @@ semio_plugin::app_commands! {
         "setExaggeration" as "exaggeration" => set_exaggeration::SetExaggeration,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
+        "clearElevationSource" as "clear-elevation-source" => clear_elevation_source::ClearElevationSource,
+        "editElevation" as "edit-elevation" => edit_elevation::EditElevation,
+        "addOverlayPosition" as "add-overlay-position" => add_overlay_position::AddOverlayPosition,
+        "removeOverlayFeature" as "remove-overlay-feature" => remove_overlay_feature::RemoveOverlayFeature,
+        "clearOverlays" as "clear-overlays" => clear_overlays::ClearOverlays,
+        "importElevationGrid" as "import-elevation-grid" => import_elevation::ImportElevationGrid,
+        "importElevationGridFile" as "import-elevation-grid-file" => import_elevation_file::ImportElevationGridFile,
+        "editOverlayShape" as "edit-overlay-shape" => edit_overlay_shape::EditOverlayShape,
+        "moveOverlayPosition" as "move-overlay-position" => move_overlay_position::MoveOverlayPosition,
+        "createElevationGrid" as "create-elevation-grid" => create_elevation_grid::CreateElevationGrid,
+        "exportElevationGrid" as "export-elevation-grid" => export_elevation_grid::ExportElevationGrid,
+        "gradeTerrainRegion" as "grade-terrain-region" => grade_region::GradeTerrainRegion,
+        "importGeoJson" as "import-geojson" => geojson::ImportGeoJson,
+        "importGeoJsonFile" as "import-geojson-file" => import_geojson_file::ImportGeoJsonFile,
+        "exportGeoJson" as "export-geojson" => export_geojson::ExportGeoJson,
+        "generateTerrainContours" as "generate-terrain-contours" => contours::GenerateTerrainContours,
+        "configureTerrainBrush" as "configure-terrain-brush" => configure_terrain_brush::ConfigureTerrainBrush,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier.
 use example::set_active_example;
 use exaggeration::set_exaggeration;
-use view::set_camera;
+use elevation_source::{clear_elevation_source, create_elevation_grid};
+use crate::editor::gis3d::commands::overlays::{self, add_overlay_position, clear_overlays, edit_overlay_shape, move_overlay_position, remove_overlay_feature};
+use crate::editor::gis3d::commands::import_elevation::{self, export as export_elevation_grid, file as import_elevation_file};
+use crate::editor::gis3d::commands::{geojson::{self, export as export_geojson, file as import_geojson_file}, local_file};
+use view::{configure_terrain_brush, set_camera};
 //#endregion 🔖️Commands
 
 //#region 🔖️Gis3dPlayApp
@@ -162,20 +215,50 @@ pub const GIS3D_EXAGGERATION_MINIMUM: f64 = 0.5;
 pub const GIS3D_EXAGGERATION_MAXIMUM: f64 = 5.0;
 pub const GIS3D_EXAGGERATION_STAGED_DEFAULT: f64 = 2.5;
 
-pub const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera", "setActiveExample"];
+pub const GIS3D_RETAINED_TOOL_IDS: &[&str] = &[
+    "setExaggeration", "setCamera", "setActiveExample", "clearElevationSource", "editElevation",
+    "addOverlayPosition", "removeOverlayFeature", "clearOverlays",
+    "importElevationGrid", "editOverlayShape", "moveOverlayPosition", "createElevationGrid", "exportElevationGrid", "gradeTerrainRegion",
+    "importGeoJson", "generateTerrainContours", "configureTerrainBrush",
+];
 const GIS3D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.terrain.tool-command.v1";
 pub const GIS3D_RETAINED_RAW_BYTES: usize = 8_192;
 pub const GIS3D_RETAINED_WORK_ITEMS: usize = 1;
 
 fn gis3d_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(GIS3D_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)
+    ToolExecutionContract::bounded_first_step(
+        GIS3D_RETAINED_RAW_BYTES, 32,
+        semio_s_artifact_gis_gisterrain_inferences::elevation_edit::MAX_STROKE_WORK,
+        16_384, 7_500,
+    )
 }
 
 pub fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
         Gis3dCommand::SetExaggeration(payload) if payload.exaggeration.is_finite() => 0,
-        Gis3dCommand::SetCamera(payload) if serde_json::from_str::<Value>(&payload.camera_json).is_ok_and(|camera| camera.is_object()) => payload.camera_json.len(),
+        Gis3dCommand::SetCamera(payload) if payload.camera_json.len() <= GIS3D_RETAINED_RAW_BYTES
+            && parse_json(&payload.camera_json, JsonMemberPolicy::Reject).is_ok_and(|camera| camera.as_object().is_some()) => payload.camera_json.len(),
         Gis3dCommand::SetActiveExample(payload) => payload.example_id.len(),
+        Gis3dCommand::ClearElevationSource(_) => 0,
+        Gis3dCommand::CreateElevationGrid(payload) if payload.is_valid() => 0,
+        Gis3dCommand::GradeTerrainRegion(payload) if !payload.id.trim().is_empty() && payload.id.len() <= 128 => payload.id.len(),
+        Gis3dCommand::GenerateTerrainContours(payload) if payload.is_valid() => 0,
+        Gis3dCommand::ConfigureTerrainBrush(payload) if payload.settings().is_ok() => 0,
+        Gis3dCommand::AddOverlayPosition(payload) => payload.id.len() + payload.label.as_ref().map_or(0, String::len),
+        Gis3dCommand::RemoveOverlayFeature(payload) => payload.id.len(),
+        Gis3dCommand::ClearOverlays(_) => 0,
+        Gis3dCommand::EditOverlayShape(payload) if payload.coordinates.len() <= overlays::MAX_COORDINATES_JSON_BYTES => {
+            payload.id.len() + payload.kind.len() + payload.mode.len() + payload.coordinates.len() + payload.label.as_ref().map_or(0, String::len)
+        }
+        Gis3dCommand::MoveOverlayPosition(payload) => payload.id.len(),
+        Gis3dCommand::ImportElevationGrid(_) => 0,
+        Gis3dCommand::ExportElevationGrid(_) => 0,
+        Gis3dCommand::ImportGeoJson(_) | Gis3dCommand::ExportGeoJson(_) => 0,
+        Gis3dCommand::ImportElevationGridFile(file) => return local_file::valid_length(&file.payload).then_some(GIS3D_RETAINED_WORK_ITEMS),
+        Gis3dCommand::ImportGeoJsonFile(file) => return local_file::valid_length(&file.payload).then_some(GIS3D_RETAINED_WORK_ITEMS),
+        Gis3dCommand::EditElevation(payload) if payload.is_valid() => {
+            payload.operation.len() + payload.stroke.as_ref().map_or(0, |samples| samples.len() * std::mem::size_of::<[u32; 2]>())
+        }
         _ => return None,
     };
     (bytes <= GIS3D_RETAINED_RAW_BYTES).then_some(GIS3D_RETAINED_WORK_ITEMS)
@@ -192,11 +275,23 @@ fn gis3d_retained_reduce(
     context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<GisTerrainMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    if let Gis3dCommand::SetCamera(payload) = command {
-        let view = context.and_then(|context| context.view_state.as_deref()).ok_or_else(|| Fault::from("gis-terrain-window-context-required"))?;
-        return Ok(Emit { window_config_mutations: vec![terrain::config::addressed(view, terrain::config::GisTerrainWindowConfigMutation::SetCamera(terrain::config::SetCamera { camera_json: payload.camera_json.clone() }))?], ..Default::default() });
+    if let Some(mutation) = gis3d_window_mutation(command, snapshot, context.and_then(|context| context.view_state.as_deref()))? {
+        return Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() });
     }
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) })
+}
+
+fn gis3d_window_mutation(command: &Gis3dCommand, snapshot: &GisTerrainSnapshot, view: Option<&semio_plugin::ViewModel>) -> Result<Option<semio_plugin::WindowConfigMutation>, Fault> {
+    use terrain::config::{GisTerrainWindowConfigMutation, SetTerrainBrush};
+    let view = || view.ok_or_else(terrain::config::missing_window);
+    let mutation = match command {
+        Gis3dCommand::SetCamera(payload) => terrain::config::addressed_camera(view()?, snapshot, &payload.camera_json)?,
+        Gis3dCommand::ConfigureTerrainBrush(payload) => {
+            terrain::config::addressed(view()?, GisTerrainWindowConfigMutation::SetTerrainBrush(SetTerrainBrush { brush: Some(payload.settings()?) }))?
+        }
+        _ => return Ok(None),
+    };
+    Ok(Some(mutation))
 }
 
 pub struct Gis3dCommandJobFactory {
@@ -206,6 +301,22 @@ pub struct Gis3dCommandJobFactory {
 impl Gis3dCommandJobFactory {
     fn new(controller_id: &str) -> Self {
         Self { keys: GIS3D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+
+    semio_plugin::bounded_first_step_tool_proofs! {
+        owner: EditorApp<Gis3dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.gis.gisterrain@1/*#editor",
+        artifact_schema: "gis.terrain",
+        factory: "Gis3dCommandJobFactory",
+        factory_type: Gis3dCommandJobFactory,
+        contract: gis3d_retained_contract(),
+        tools: [
+            "setExaggeration", "setCamera", "setActiveExample", "clearElevationSource", "editElevation",
+            "addOverlayPosition", "removeOverlayFeature", "clearOverlays", "editOverlayShape",
+            "moveOverlayPosition", "importElevationGrid", "createElevationGrid", "exportElevationGrid", "gradeTerrainRegion",
+            "importGeoJson", "generateTerrainContours", "configureTerrainBrush",
+        ]
     }
 }
 
@@ -242,200 +353,62 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFactory {
             ArtifactToolPublicationContract { tool_id: "setExaggeration", lanes: &[ArtifactToolPublicationLane::Artifact] },
             ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
             ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "clearElevationSource", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "createElevationGrid", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "gradeTerrainRegion", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "addOverlayPosition", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "removeOverlayFeature", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "clearOverlays", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "editOverlayShape", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "moveOverlayPosition", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "editElevation", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "importElevationGrid", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+            ArtifactToolPublicationContract { tool_id: "exportElevationGrid", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+            ArtifactToolPublicationContract { tool_id: "importGeoJson", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+            ArtifactToolPublicationContract { tool_id: "generateTerrainContours", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "configureTerrainBrush", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ];
 }
 //#endregion 🧵️RetainedCommands
 
-//#region 📬️StorePreparation
-const GIS3D_STORE_MAXIMUM_BYTES: usize = 32_768;
-
-type Gis3dPrepareOne<P, M> = fn(&P, &M) -> Result<(P, Vec<M>, usize), semio_framework_value::ValueError>;
-
-struct Gis3dOneItemPreparation<P: 'static, M: 'static> {
-    owners: store::OneItemOwners<P, M>,
-    candidate_bytes: usize,
-    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
-    prepare: Gis3dPrepareOne<P, M>,
-    phase: u8,
-    cancelled: bool,
-    last_work: u64,
+fn media_import_emit(port: &str, media: &Media) -> Result<Emit<GisTerrainMutation, NoConfigMutation>, MediaError> {
+    if port == "elevation:in" {
+        use semio_framework_value::FromValue;
+        let source = match &media.payload {
+            MediaPayload::Intrinsic { schema, value } if Gis3dPlayApp::accepts_original_structured_media(port, schema, &media.media_type) =>
+                crate::schema::snapshot::ElevationSource::from_value(value.clone()),
+            MediaPayload::Structured { schema, json } if Gis3dPlayApp::accepts_original_structured_media(port, schema, &media.media_type) && json.len() <= GIS_ELEVATION_JSON_MAX_BYTES =>
+                semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject),
+            _ => return Err(MediaError::Payload(port.into(), "elevation media identity or size differs".into())),
+        }.map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+        return Ok(Emit::mutations(vec![GisTerrainMutation::ReplaceElevationSource(crate::mutations::ReplaceElevationSource { new_elevation_source: Some(source) })]));
+    }
+    if port != "map:in" {
+        return Err(MediaError::NotImplemented);
+    }
+    use crate::schema::imported_map::ImportedMap;
+    let maximum = store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+    let imported_map = match &media.payload {
+        MediaPayload::Intrinsic { schema, value } if Gis3dPlayApp::accepts_original_structured_media(port, schema, &media.media_type)
+            && semio_framework_pack_json::to_json_string(value).len() <= maximum => ImportedMap::from_media_value(value),
+        MediaPayload::Structured { schema, json } if Gis3dPlayApp::accepts_original_structured_media(port, schema, &media.media_type)
+            && json.len() <= maximum => ImportedMap::from_json(json),
+        _ => return Err(MediaError::Payload(port.into(), "map media identity or size differs".into())),
+    };
+    let imported_map = imported_map.map_err(|error| MediaError::Payload(port.into(), error))?;
+    use crate::mutations::change_imported_features::ChangeImportedFeatures;
+    Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(imported_map) })]))
 }
-
-fn gis3d_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<usize, semio_framework_value::ValueError> {
-    let bytes = semio_framework_pack_json::to_json_string(value).len();
-    if bytes > GIS3D_STORE_MAXIMUM_BYTES {
-        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS terrain Store root exceeds its fixed envelope"));
-    }
-    Ok(bytes)
-}
-
-fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: &GisTerrainMutation) -> Result<(GisTerrainSnapshot, Vec<GisTerrainMutation>, usize), semio_framework_value::ValueError> {
-    use protocol::ColdMutation as _;
-    if !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite()) {
-        return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS terrain Artifact preparation only admits ChangeExaggeration"));
-    }
-    let retained_bytes = gis3d_bounded_serialized_bytes(base)?;
-    let inverse = mutation.inverse(base)?;
-    let post = protocol::apply_diff_cold(&mutation.diff(base).into_parts().0, base).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS terrain Artifact mutation could not produce its post root"))?;
-    Ok((post, inverse, retained_bytes))
-}
-
-impl<P, M> Gis3dOneItemPreparation<P, M>
-where
-    P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
-{
-    fn advance_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        self.last_work = 0;
-        if !grant.permits_one() || self.cancelled {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.owners.refused.is_some() {
-            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
-        }
-        self.last_work = 1;
-        if self.owners.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
-        }
-        match self.phase {
-            0 => {
-                let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation lost its exact base root"))?;
-                let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation lost its mutation owner"))?;
-                let (post, inverse, completed_bytes) = (self.prepare)(base.get(), mutation)?;
-                let mutation = self.owners.mutation.take().expect("observed original mutation owner");
-                *self.owners.candidate = Some((post, inverse, mutation));
-                self.candidate_bytes = completed_bytes;
-                self.phase = 1;
-                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
-                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()))
-            }
-            1 => {
-                let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation lost its Store authority"))?;
-                let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation lost its semantic candidate"))?;
-                let prepared = match authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post)) {
-                    Ok(prepared) => prepared,
-                    Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
-                };
-                self.phase = 2;
-                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.candidate_bytes as u64, digest: prepared.edit_digest() };
-                *self.owners.prepared = Some(prepared);
-                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
-            }
-            _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())),
-        }
-    }
-}
-
-impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for Gis3dOneItemPreparation<P, M>
-where
-    P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
-{
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
-        self.last_work = 0;
-        if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.owners.refused.is_some() || self.owners.prepared.is_some() || self.phase >= 2 { return self.advance_step(grant).map_err(Into::into); }
-        if !receiving.prepare_work(1)? { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
-        let result = self.advance_step(grant);
-        receiving.commit_work(u128::from(self.last_work))?;
-        result.map_err(Into::into)
-    }
-    fn has_pending_receiving_recovery(&self) -> bool { false }
-    fn pending_receiving_demand(&self) -> Option<semio_framework_value::RetirementDemand> { None }
-    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> { None }
-    fn finish_receiving_recovery(&mut self, _control: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::OriginalReceivingPrimary> { semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 } }
-
-    fn last_turn_work(&self) -> u64 {
-        self.last_work
-    }
-    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
-        self.checkpoint
-    }
-    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> {
-        self.owners.prepared.as_ref()
-    }
-    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> {
-        self.owners.prepared.take()
-    }
-    fn cancel(&mut self) {
-        self.cancelled = true;
-    }
-    fn begin_close(&mut self) {
-        self.owners.begin_close();
-    }
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
-        self.owners.close_step(effect)
-    }
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
-    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
-    fn terminal_is_empty(&self) -> bool {
-        self.owners.terminal_is_empty()
-    }
-}
-
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct Gis3dArtifactStorePreparationFactory;
-
-fn begin_gis3d_preparation<P, M>(request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, prepare: Gis3dPrepareOne<P, M>) -> Result<Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)>
-where
-    P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
-{
-    if request.lane != store::os_store::store_schema::HistoryLane::Document
-        || request.operation != request.authority.operation()
-        || request.generation != request.authority.generation()
-        || request.base_revision != request.authority.base_revision()
-        || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-    {
-        return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS terrain preparation rejected original publication authority"), request));
-    }
-    Ok(Box::new(Gis3dOneItemPreparation {
-        owners: store::OneItemOwners::from_request(request),
-        candidate_bytes: 0,
-        checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
-        prepare,
-        phase: 0,
-        cancelled: false,
-        last_work: 0,
-    }))
-}
-
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrainMutation> for Gis3dArtifactStorePreparationFactory {
-    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<GisTerrainMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<GisTerrainMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
-        store::admit_artifact_batch_digest(edit, grant)
-    }
-    fn preflight(&self, mutation: &GisTerrainMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::os_store::store_schema::HistoryLane::Document || !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite())
-        {
-            return Err("GIS terrain Artifact preparation rejected its lane or mutation".into());
-        }
-        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, 8))
-    }
-    fn begin_demand(&self, _mutation: &GisTerrainMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Gis3dOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>(), depth: 1 })
-    }
-
-    fn begin_copy_byte_demand(&self, mutation: &GisTerrainMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<usize, semio_framework_value::ValueError> {
-        self.begin_demand(mutation, lane)?;
-        size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation, GisTerrainMutation>>().checked_add(size_of::<Gis3dOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original preparation header quote overflow"))
-    }
-    fn begin(
-        &self,
-        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation, GisTerrainMutation>,
-        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation, GisTerrainMutation>)> {
-        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
-        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
-        let preparation = begin_gis3d_preparation(request, prepare_gis3d_artifact)?;
-        Ok((preparation, progress))
-    }
-}
-
-//#endregion 📬️StorePreparation
 
 impl ArtifactEditor for Gis3dPlayApp {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
+            import_elevation::fault_notices().iter().chain(geojson::fault_notices()).chain(contours::fault_notices())
+                .cloned().chain(configure_terrain_brush::fault_notices()).collect()
+        });
+        NOTICES.as_slice()
+    }
+
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
@@ -457,7 +430,7 @@ impl ArtifactEditor for Gis3dPlayApp {
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(Gis3dArtifactStorePreparationFactory))
+        Some(store::os_store::cold_mutation_apply_preparation_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
@@ -468,28 +441,45 @@ impl ArtifactEditor for Gis3dPlayApp {
         registry.register::<terrain::config::GisTerrainWindowConfigOwner>()
     }
 
-    semio_plugin::bounded_first_step_tool_proofs! {
-        owner: EditorApp<Gis3dPlayApp>,
-        owner_file: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.gis.gisterrain@1/*#editor",
-        artifact_schema: "gis.terrain",
-        factory: "Gis3dCommandJobFactory",
-        factory_type: Gis3dCommandJobFactory,
-        tools: {
-            "setExaggeration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-        }
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+        let mut proofs = Gis3dCommandJobFactory::bounded_first_step_tool_proofs();
+        proofs.extend(local_file::LocalFileImportJobFactory::proofs());
+        proofs.extend(export_geojson::GeoJsonExportFactory::proofs());
+        proofs
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(Gis3dCommandJobFactory::new(&controller))
+        registry.register(Gis3dCommandJobFactory::new(&controller))?;
+        registry.register(local_file::LocalFileImportJobFactory::new(&controller))?;
+        registry.register(export_geojson::GeoJsonExportFactory::new(&controller))?;
+        registry.register(media_export::Factory::new(&controller))
+    }
+
+    fn build_media_export_job(request: &mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>, output: &mut Option<Box<dyn semio_plugin::ArtifactReservedJob + Send>>, construction: &mut semio_plugin::MediaConstruction, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        media_export::Export::admit(request, output, construction, cx)
+    }
+
+    fn accepts_original_structured_media(port: &str, schema: &str, media_type: &MediaType) -> bool {
+        match port {
+            "elevation:in" => schema == GIS_ELEVATION_GRID_SCHEMA && *media_type == GIS_ELEVATION_MEDIA_TYPE,
+            "map:in" => schema == "2d.map" && *media_type == GIS_MAP_MEDIA_TYPE,
+            _ => false,
+        }
+    }
+
+    fn build_reserved_tool_job(request: &mut Option<semio_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>>, output: &mut Option<Box<dyn semio_plugin::ArtifactReservedJob + Send>>, construction: &mut semio_plugin::__job::OriginalConstructionAdmission, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        if output.is_none() && request.as_ref().is_none_or(|request| request.tool_id != "import-media") {
+            return Ok(false);
+        }
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>, media_import::MediaImport>(request, output, construction, cx)
     }
 
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
-        if !GIS3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
+        let file_import = local_file::FILE_ACTIONS.contains(&original.tool_id.as_str());
+        let geojson_export = original.tool_id == export_geojson::ACTION;
+        if !file_import && !geojson_export && !GIS3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
@@ -499,7 +489,17 @@ impl ArtifactEditor for Gis3dPlayApp {
             return Err(Fault::from("gis3d-command-payload-too-large").into());
         }
         let tool_id = original.command.command_id();
-        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent))
+        if geojson_export {
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |_| export_geojson::Work::default());
+        }
+        if matches!(&*original.command, Gis3dCommand::EditElevation(payload) if payload.stroke.is_some()) {
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |_| edit_elevation::StrokeWork::default());
+        }
+        let maximum_raw_bytes = if file_import { local_file::MAX_WIRE_BYTES } else { GIS3D_RETAINED_RAW_BYTES };
+        if tool_id == contours::ACTION {
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, maximum_raw_bytes, GIS3D_RETAINED_WORK_ITEMS, false, |_| contours::Work::default());
+        }
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, maximum_raw_bytes, GIS3D_RETAINED_WORK_ITEMS, false, |_| BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent))
     }
 
     fn reference_birth()->Option<fn()->Result<GisTerrainSnapshot,semio_plugin::Fault>>{Some(||{
@@ -517,7 +517,8 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
         match port {
-            "scene:out" => Ok(gis3d_scene_media(doc.snapshot)),
+            "scene:out" => gis3d_scene_media(doc.snapshot),
+            "elevation:out" => gis3d_elevation_media(doc.snapshot),
             "artifact:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
                 let bytes = doc.snapshot.encode_pack();
@@ -528,24 +529,13 @@ impl ArtifactEditor for Gis3dPlayApp {
     }
 
     /// ✔️ `map:in` validates and owns the incoming first-party `2d.map` values in
-    /// `GisTerrainSnapshot::imported_map` (rendered as an extra pin layer, see the
+    /// `GisTerrainSnapshot::imported_map` (rendered as terrain overlays, see the
     /// 🏔️terrain window) via `change-imported-features`. `document:in` (whole-document replace) is
     /// deliberately unimplemented — per the semantic-mutations taxonomy, whole-document replace has
     /// no in-history mutation; it goes through `ArtifactStore::reset` (file-open/import/load-example),
     /// entirely outside this method.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Emit<GisTerrainMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
-        match port {
-            "map:in" => {
-                let MediaPayload::Intrinsic { schema, value } = &media.payload else {
-                    return Err(MediaError::Payload(port.to_string(), "map:in requires intrinsic map values".into()));
-                };
-                if schema!="2d.map" || media.media_type!=(MediaType { class:MediaClass::TwoD, form:MediaForm::Vector }) { return Err(MediaError::Payload(port.to_string(),"map media identity differs".into())); }
-                let imported_map=crate::schema::imported_map::ImportedMap::from_media_value(value).map_err(|error|MediaError::Payload(port.to_string(),error))?;
-                use crate::mutations::change_imported_features::ChangeImportedFeatures;
-                Ok(Emit::mutations(vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(imported_map) })]))
-            }
-            _ => Err(MediaError::NotImplemented),
-        }
+        media_import_emit(port, media)
     }
 
     fn command_id(command: &Gis3dCommand) -> &'static str {
@@ -557,20 +547,72 @@ impl ArtifactEditor for Gis3dPlayApp {
     /// bytes directly. Mirrors `crate::editor::gis2d`'s arg-key tolerance (camelCase + snake_case + the
     /// nested `camera` object form).
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        use semio_framework_value::DslValue;
+
         if let Some(fault) = original_fault.take() { return Err(fault); }
-        let args = args.as_ref();
-        let args = args.map_or(Value::Null, Value::from);
-        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        if action == import_elevation::FILE_ACTION {
+            return import_elevation_file::ImportElevationGridFile::receive(args).map(Gis3dCommand::ImportElevationGridFile);
+        }
+        if action == geojson::FILE_ACTION {
+            return import_geojson_file::ImportGeoJsonFile::receive(args).map(Gis3dCommand::ImportGeoJsonFile);
+        }
+        let args = args.as_ref().unwrap_or(&DslValue::Null);
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(DslValue::as_str).map(str::to_string)) };
+        let number = |key| args.get(key).and_then(DslValue::as_f64).ok_or_else(|| Fault::from(format!("Missing or invalid {key}")));
+        let feature_id = || str_arg(&["id"]).ok_or_else(|| Fault::from("Missing overlay identifier"));
+        let label = || -> Result<Option<String>, Fault> {
+            let Some(value) = args.get("label").filter(|value| !matches!(value, DslValue::Null)) else { return Ok(None); };
+            let label = value.as_str().ok_or_else(|| Fault::from("Invalid overlay label"))?.trim();
+            Ok((!label.is_empty()).then(|| label.to_owned()))
+        };
         match action {
-            "setExaggeration" => Ok(Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: ["exaggeration", "value"].iter().find_map(|key| args.get(key).and_then(Value::as_f64)).unwrap_or(1.0) })),
+            "setExaggeration" => Ok(Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: ["exaggeration", "value"].iter().find_map(|key| args.get(key).and_then(DslValue::as_f64)).unwrap_or(1.0) })),
             "setCamera" => {
-                let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() })).unwrap_or_else(|| "{}".into());
+                let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| args.get("camera").map(|value| {
+                    value.as_str().map_or_else(|| to_json_string(value), str::to_owned)
+                })).unwrap_or_else(|| "{}".into());
                 if camera_json.len() > GIS3D_RETAINED_RAW_BYTES {
                     return Err(Fault::from("gis3d-command-payload-too-large").into());
                 }
                 Ok(Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json }))
             }
             "setActiveExample" => Ok(Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
+            "clearElevationSource" => Ok(Gis3dCommand::ClearElevationSource(clear_elevation_source::ClearElevationSource {})),
+            "createElevationGrid" => Ok(Gis3dCommand::CreateElevationGrid(create_elevation_grid::CreateElevationGrid::from_action(args)?)),
+            "gradeTerrainRegion" => Ok(Gis3dCommand::GradeTerrainRegion(grade_region::GradeTerrainRegion::from_action(args)?)),
+            "generateTerrainContours" => Ok(Gis3dCommand::GenerateTerrainContours(contours::GenerateTerrainContours::from_action(args)?)),
+            "configureTerrainBrush" => Ok(Gis3dCommand::ConfigureTerrainBrush(configure_terrain_brush::ConfigureTerrainBrush::from_action(args)?)),
+            "addOverlayPosition" => {
+                Ok(Gis3dCommand::AddOverlayPosition(add_overlay_position::AddOverlayPosition {
+                    id: feature_id()?,
+                    longitude: number("longitude")?,
+                    latitude: number("latitude")?,
+                    label: label()?,
+                    elevation: match args.get("elevation") {
+                        None | Some(DslValue::Null) => None,
+                        Some(_) => Some(number("elevation")?),
+                    },
+                }))
+            }
+            "removeOverlayFeature" => Ok(Gis3dCommand::RemoveOverlayFeature(remove_overlay_feature::RemoveOverlayFeature {
+                id: feature_id()?,
+            })),
+            "clearOverlays" => Ok(Gis3dCommand::ClearOverlays(clear_overlays::ClearOverlays {})),
+            "editOverlayShape" => Ok(Gis3dCommand::EditOverlayShape(edit_overlay_shape::EditOverlayShape {
+                id: feature_id()?,
+                kind: str_arg(&["kind"]).unwrap_or_else(|| "route".into()),
+                mode: str_arg(&["mode"]).unwrap_or_else(|| "replace".into()),
+                coordinates: str_arg(&["coordinates"]).ok_or_else(|| Fault::from("Missing WGS84 vertices"))?,
+                label: label()?,
+            })),
+            "moveOverlayPosition" => Ok(Gis3dCommand::MoveOverlayPosition(move_overlay_position::MoveOverlayPosition {
+                id: feature_id()?, longitude: number("longitude")?, latitude: number("latitude")?,
+            })),
+            "importElevationGrid" => Ok(Gis3dCommand::ImportElevationGrid(import_elevation::ImportElevationGrid {})),
+            "exportElevationGrid" => Ok(Gis3dCommand::ExportElevationGrid(export_elevation_grid::ExportElevationGrid {})),
+            "importGeoJson" => Ok(Gis3dCommand::ImportGeoJson(geojson::ImportGeoJson {})),
+            "exportGeoJson" => Ok(Gis3dCommand::ExportGeoJson(export_geojson::ExportGeoJson {})),
+            "editElevation" => Ok(Gis3dCommand::EditElevation(edit_elevation::EditElevation::from_action(args)?)),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -583,16 +625,12 @@ impl ArtifactEditor for Gis3dPlayApp {
         doc: &ArtifactView<'_, GisTerrainSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<GisTerrainMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        if let Gis3dCommand::SetCamera(payload) = command {
-            let view = _view_state.ok_or_else(|| Fault::from("gis-terrain-window-context-required"))?;
-            return Ok(Emit {
-                window_config_mutations: vec![terrain::config::addressed(view, terrain::config::GisTerrainWindowConfigMutation::SetCamera(terrain::config::SetCamera { camera_json: payload.camera_json.clone() }))?],
-                ..Default::default()
-            });
+        if let Some(mutation) = gis3d_window_mutation(command, doc.snapshot, view_state)? {
+            return Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() });
         }
         command.dispatch(doc, cfg)
     }
@@ -602,9 +640,10 @@ impl ArtifactEditor for Gis3dPlayApp {
         semio_plugin::ConfigSpec::default()
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, terrain::config::current(cfg)).map(semio_plugin::built_to_component_tree),
+            terrain::GIS3D_PLAY_BODY_COMPOSITE => terrain::render(doc.snapshot, terrain::config::current(cfg), view_state).map(semio_plugin::built_to_component_tree),
+            terrain_data::BODY => terrain_data::render(doc.snapshot, view_state).map(semio_plugin::built_to_component_tree),
             _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -613,7 +652,7 @@ impl ArtifactEditor for Gis3dPlayApp {
 
 //#region 🔖️Manifest
 pub fn create_gis3d_app() -> semio_plugin::AppDefinition {
-    Editor::builder(crate::GISTERRAIN_DIALECT)
+    let mut editor = Editor::builder(crate::GISTERRAIN_DIALECT)
             .document(["semio", "gis", "3d"])
             .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
             .media_input(gis3d_map_in_port())
@@ -621,7 +660,15 @@ pub fn create_gis3d_app() -> semio_plugin::AppDefinition {
             .icon_id("gis3d")
             .mode_def(view_mode::definition())
             .default_mode_id(view_mode::GIS3D_PLAY_MODE_VIEW)
-            .window_kind_def(terrain::definition())
+            .window_kind_def(terrain::definition());
+    for (id, en, de, icon) in terrain::UTILITIES {
+        let mut utility = semio_plugin::UtilityDefinition::new(id, LocalizedLabel::native(en, de), icon);
+        utility.allows_actions_while_active = true;
+        utility.cursor = (id != "select").then(|| "crosshair".into());
+        editor = editor.utility(utility);
+    }
+    editor.window_kind_utilities(terrain::GIS3D_PLAY_WINDOW_MAIN, terrain::UTILITIES.iter().map(|utility| utility.0.into()).collect())
+            .panel_tab_def(terrain_data::definition())
             .default_layout(view_mode::layout())
             .interaction(InteractionDefinition {
                 id: "features".into(),
@@ -639,7 +686,35 @@ pub fn create_gis3d_app() -> semio_plugin::AppDefinition {
             })
             .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
             .action_with(semio_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_plugin::ActionKind::View, "camera"))
+            .action_with(semio_plugin::ActionDefinition::new("configureTerrainBrush", LocalizedLabel::native("Configure Terrain Brush", "Geländepinsel einstellen"), semio_plugin::ActionKind::View, "configure-terrain-brush"))
+            .action_args("configureTerrainBrush", configure_terrain_brush::action_arguments())
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
+            .mutation("clearElevationSource", LocalizedLabel::native("Clear Elevation Source", "Höhenquelle entfernen"))
+            .mutation("createElevationGrid", LocalizedLabel::native("Create Flat Grid", "Flaches Höhenraster erstellen"))
+            .action_args("createElevationGrid", create_elevation_grid::action_arguments())
+            .mutation("gradeTerrainRegion", LocalizedLabel::native("Grade Region", "Region nivellieren"))
+            .action_args("gradeTerrainRegion", grade_region::action_arguments())
+            .mutation("generateTerrainContours", LocalizedLabel::native("Generate Terrain Contours", "Geländehöhenlinien erzeugen"))
+            .action_args("generateTerrainContours", contours::action_arguments())
+            .mutation("addOverlayPosition", LocalizedLabel::native("Add Position", "Position hinzufügen"))
+            .mutation("removeOverlayFeature", LocalizedLabel::native("Remove Map Feature", "Kartenobjekt entfernen"))
+            .mutation("clearOverlays", LocalizedLabel::native("Clear Map Features", "Kartenobjekte entfernen"))
+            .mutation("editOverlayShape", LocalizedLabel::native("Edit Route or Region", "Route oder Fläche bearbeiten"))
+            .mutation("moveOverlayPosition", LocalizedLabel::native("Move Position", "Position verschieben"))
+            .mutation("editElevation", LocalizedLabel::native("Edit Elevation", "Höhe bearbeiten"))
+            .shell_action(import_elevation::REQUEST_ACTION, LocalizedLabel::native("Import Elevation Grid…", "Höhenraster importieren…"))
+            .shell_action(export_elevation_grid::ACTION, LocalizedLabel::native("Export Elevation Grid…", "Höhenraster exportieren…"))
+            .shell_action(geojson::REQUEST_ACTION, LocalizedLabel::native("Import GeoJSON Overlays…", "GeoJSON-Overlays importieren…"))
+            .shell_action(export_geojson::ACTION, LocalizedLabel::native("Export GeoJSON Overlays…", "GeoJSON-Overlays exportieren…"))
+            .action_with(semio_plugin::ActionDefinition {
+                in_palette: false,
+                ..semio_plugin::ActionDefinition::bounded_catalog(geojson::FILE_ACTION, LocalizedLabel::native("Load GeoJSON Overlays", "GeoJSON-Overlays laden"), semio_plugin::ActionKind::Mutation)
+            })
+            .action_with(semio_plugin::ActionDefinition {
+                in_palette: false,
+                ..semio_plugin::ActionDefinition::bounded_catalog(import_elevation::FILE_ACTION, LocalizedLabel::native("Load Elevation Grid", "Höhenraster laden"), semio_plugin::ActionKind::Mutation)
+            })
+            .action_args("editElevation", edit_elevation::action_arguments())
             .action_with(semio_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_args("setActiveExample", vec![
@@ -648,9 +723,30 @@ pub fn create_gis3d_app() -> semio_plugin::AppDefinition {
             .action_args("setExaggeration", vec![
                 semio_plugin::ActionArgDef::slider("value", LocalizedLabel::native("Exaggeration", "Überhöhung"), GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM).default_value(&GIS3D_EXAGGERATION_STAGED_DEFAULT),
             ])
+            .action_args("addOverlayPosition", overlays::add_args())
+            .action_args("removeOverlayFeature", vec![overlays::id_arg()])
+            .action_args("editOverlayShape", overlays::shape_args())
+            .action_args("moveOverlayPosition", overlays::move_args())
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+            .action_interactive_job("configureTerrainBrush", InteractiveJobClassification::Migrated)
             .action_interactive_job("setExaggeration", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearElevationSource", InteractiveJobClassification::Migrated)
+            .action_interactive_job("createElevationGrid", InteractiveJobClassification::Migrated)
+            .action_interactive_job("gradeTerrainRegion", InteractiveJobClassification::Migrated)
+            .action_interactive_job("generateTerrainContours", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addOverlayPosition", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeOverlayFeature", InteractiveJobClassification::Migrated)
+            .action_interactive_job("clearOverlays", InteractiveJobClassification::Migrated)
+            .action_interactive_job("editOverlayShape", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveOverlayPosition", InteractiveJobClassification::Migrated)
+            .action_interactive_job("editElevation", InteractiveJobClassification::Migrated)
+            .action_interactive_job(import_elevation::REQUEST_ACTION, InteractiveJobClassification::Migrated)
+            .action_interactive_job(import_elevation::FILE_ACTION, InteractiveJobClassification::Migrated)
+            .action_interactive_job(export_elevation_grid::ACTION, InteractiveJobClassification::Migrated)
+            .action_interactive_job(geojson::REQUEST_ACTION, InteractiveJobClassification::Migrated)
+            .action_interactive_job(geojson::FILE_ACTION, InteractiveJobClassification::Migrated)
+            .action_interactive_job(export_geojson::ACTION, InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .config(Gis3dPlayApp::config_spec())
@@ -658,6 +754,18 @@ pub fn create_gis3d_app() -> semio_plugin::AppDefinition {
             .interactive_jobs(InteractiveJobClassification::Migrated)
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole terrain with one of the plugin's bundled terrain examples, by example id.", "Ersetzt das gesamte Gelände durch eines der mitgelieferten Geländebeispiele, anhand der Beispiel-Id."))
             .action_describe("setExaggeration", LocalizedLabel::native("Sets the vertical exaggeration factor the terrain surface is drawn with.", "Legt den Überhöhungsfaktor fest, mit dem die Geländeoberfläche gezeichnet wird."))
+            .action_describe("clearElevationSource", LocalizedLabel::native("Clears the saved elevation grid.", "Entfernt das gespeicherte Höhenraster."))
+            .action_describe("addOverlayPosition", LocalizedLabel::native("Adds a position using WGS84 coordinates.", "Fügt eine Position mit WGS84-Koordinaten hinzu."))
+            .action_describe("removeOverlayFeature", LocalizedLabel::native("Removes a position, route or region by its feature ID.", "Entfernt eine Position, Route oder Fläche anhand ihrer Objekt-ID."))
+            .action_describe("clearOverlays", LocalizedLabel::native("Clears the map's positions, routes and regions.", "Entfernt die Positionen, Routen und Flächen der Karte."))
+            .action_describe("editElevation", LocalizedLabel::native("Edits stored heights in meters. Use a negative value to lower terrain or enter 0–100 to smooth.", "Bearbeitet gespeicherte Höhen in Metern. Negative Werte senken das Gelände ab. Zum Glätten 0–100 eingeben."))
+            .action_describe("gradeTerrainRegion", LocalizedLabel::native("Sets terrain samples inside an existing GIS region to one height and preserves the holes.", "Setzt Rasterpunkte in einer vorhandenen GIS-Region auf eine Höhe und erhält die Aussparungen."))
+            .action_describe("generateTerrainContours", LocalizedLabel::native("Replaces generated contours with lines at multiples of the interval in metres, using the saved elevation grid.", "Ersetzt erzeugte Höhenlinien durch Linien in Vielfachen des Höhenabstands in Metern, anhand des gespeicherten Höhenrasters."))
+            .action_describe("configureTerrainBrush", LocalizedLabel::native("Sets the radius, elevation step and smoothing strength for this terrain window.", "Legt Radius, Höhenänderung und Glättungsstärke für dieses Geländefenster fest."))
+            .action_describe(import_elevation::REQUEST_ACTION, LocalizedLabel::native("Imports a WGS84 Esri ASCII Grid (.asc, up to 24 KiB) with elevations in metres. Replaces the current elevation grid.", "Importiert ein WGS84-Esri-ASCII-Raster (.asc, bis zu 24 KiB) mit Höhen in Metern. Ersetzt das aktuelle Höhenraster."))
+            .action_describe(export_elevation_grid::ACTION, LocalizedLabel::native("Downloads the saved heights as a WGS84 Esri ASCII Grid (.asc). Requires equal latitude and longitude spacing.", "Lädt die gespeicherten Höhen als WGS84-Esri-ASCII-Raster (.asc) herunter. Die Abstände in Längen- und Breitengraden müssen gleich sein."))
+            .action_describe(geojson::REQUEST_ACTION, LocalizedLabel::native("Replaces the current overlays with points, lines, and polygons from a GeoJSON FeatureCollection (up to 24 KiB).", "Ersetzt die aktuellen Overlays durch Punkte, Linien und Polygone aus einer GeoJSON-FeatureCollection mit höchstens 24 KiB."))
+            .action_describe(export_geojson::ACTION, LocalizedLabel::native("Downloads the current overlay features and their properties as GeoJSON.", "Lädt die aktuellen Overlay-Objekte und ihre Eigenschaften als GeoJSON herunter."))
             .action_audience("setCamera", semio_plugin::CapabilityAudience::Chrome)
             .build_definition()
 }

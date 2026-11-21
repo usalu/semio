@@ -1,0 +1,16 @@
+{
+  "accepted": [
+    {"action":"editElevation","arguments":{"operation":"raise-lower","radius":3,"value":-12}},
+    {"action":"surface.brush_v1","arguments":{"operation":"smooth","radius":32,"value":100}},
+    {"action":"editElevation","arguments":{"operation":"flatten","radius":0,"value":-32768}}
+  ],
+  "refused": [
+    {"action":"terrain edit","arguments":{"operation":"smooth","radius":4,"value":40}},
+    {"action":"editElevation","arguments":{"operation":"","radius":4,"value":40}},
+    {"action":"editElevation","arguments":{"operation":"smooth","radius":33,"value":40}},
+    {"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":32768}},
+    {"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":4.1}},
+    {"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":40,"column":7}},
+    {"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":40},"windowId":"foreign"}
+  ]
+}

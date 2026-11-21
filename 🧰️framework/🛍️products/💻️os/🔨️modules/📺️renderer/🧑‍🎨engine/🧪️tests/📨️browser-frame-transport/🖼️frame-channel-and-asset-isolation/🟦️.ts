@@ -113,6 +113,27 @@ describe("browser frame worker transport", () => {
     await expect(interrupted).rejects.toMatchObject({ name: "AbortError" });
   });
 
+  it("retries map tile transport on the same owner without another frame", async () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const fixture = JSON.parse(readFileSync(join(root, "../../🧫️fixtures/📄️native-asset-response/🔣️.json"), "utf8"));
+    for (const row of fixture.failureIsolation.retry.mapTiles) {
+      const delays: number[] = [];
+      let attempts = 0;
+      const outcome = await retryBrowserAssetResponse(async () => {
+        const status = row.statuses[attempts++];
+        if (status === 200) return "sealed";
+        throw new BrowserAssetTransportFailure(String(status), browserAssetHttpStatusRetryable(status));
+      }, async delay => { delays.push(delay); }).catch(error => browserAssetFailureDisposition(error, false));
+      expect({ attempts, delays, outcome }).toEqual({ attempts: row.attempts, delays: row.delaysMs, outcome: row.outcome });
+    }
+
+    const workerSource = readFrameWorkerSource(root);
+    const rustSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"), "utf8");
+    expect(rustSource).toContain('"transportRetry": owner.allows_transport_retry()');
+    expect(workerSource).toContain("request.transportRetry ? async delayMs");
+    expect(workerSource).toContain("runtime!.resetAssetResponseStep()");
+  });
+
   it("streams decoded references as cancellable row-aligned strips before the exact seal", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const workerSource = readFrameWorkerSource(root);

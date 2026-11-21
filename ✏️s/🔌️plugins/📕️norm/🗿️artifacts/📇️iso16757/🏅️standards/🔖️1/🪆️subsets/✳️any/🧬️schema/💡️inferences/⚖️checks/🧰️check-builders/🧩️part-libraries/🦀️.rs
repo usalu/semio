@@ -315,6 +315,9 @@ pub mod part_4 {
 }
 // #endregion Part4
 
+#[path = "🏛️ifc-library/🦀️.rs"]
+mod ifc_library;
+
 // #region Part5
 pub mod part_5 {
     use crate::part_libraries::*;
@@ -464,82 +467,8 @@ pub mod part_5 {
         }
     }
 
-    pub fn build_ifc_catalogue(catalogue: &semio_s_artifact_norm_iso16757_model::part_1::Catalogue) -> IfcCatalogue {
-        let metadata = IfcCatalogueNode {
-            entity_type: "IfcBuildingServicesCatalogue".into(),
-            global_id: catalogue.id.0.clone(),
-            name: catalogue.metadata.names.preferred.text.clone(),
-            attributes: HashMap::from([("dictionaryId".into(), catalogue.dictionary.id.clone()), ("dictionaryVersion".into(), catalogue.dictionary.version.clone())]),
-            children: Vec::new(),
-        };
-        let product_classes = catalogue
-            .product_classes
-            .iter()
-            .map(|class| IfcCatalogueNode { entity_type: "IfcProductClass".into(), global_id: class.id.clone(), name: class.names.preferred.text.clone(), attributes: HashMap::from([("groupId".into(), class.group_id.clone())]), children: Vec::new() })
-            .collect();
-        let products = catalogue
-            .products
-            .iter()
-            .map(|product| IfcCatalogueNode {
-                entity_type: "IfcProduct".into(),
-                global_id: product.id.clone(),
-                name: product.names.preferred.text.clone(),
-                attributes: HashMap::from([("seriesId".into(), product.series_id.clone())]),
-                children: Vec::new(),
-            })
-            .collect();
-        IfcCatalogue { schema: "IFC4".into(), metadata, product_classes, products, unknown_entities: Vec::new() }
-    }
+    pub use super::ifc_library::{IfcLibraryError, export_ifc_step};
 
-    pub fn export_ifc_step(catalogue: &IfcCatalogue) -> String {
-        let mut lines = vec![format!("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ISO 16757-5'),'2;1');\nFILE_NAME('{}.ifc','',(''),(''),'norm_iso_16757','','');\nENDSEC;\nDATA;", catalogue.metadata.global_id)];
-        let mut id = 1u32;
-        let write_node = |node: &IfcCatalogueNode, id: &mut u32| -> String {
-            let current = *id;
-            *id += 1;
-            format!("#{}={}('{}','{}','{}',({}));", current, node.entity_type, node.global_id, node.name, node.name, node.attributes.values().map(|v| format!("'{v}'")).collect::<Vec<_>>().join(","))
-        };
-        lines.push(write_node(&catalogue.metadata, &mut id));
-        for class in &catalogue.product_classes {
-            lines.push(write_node(class, &mut id));
-        }
-        for product in &catalogue.products {
-            lines.push(write_node(product, &mut id));
-        }
-        lines.push("ENDSEC;\nEND-ISO-10303-21;".into());
-        lines.join("\n")
-    }
-
-    pub fn validate_exchange(catalogue: &semio_s_artifact_norm_iso16757_model::part_1::Catalogue, ifc: &IfcCatalogue) -> Vec<String> {
-        use std::collections::HashSet;
-        let mut issues = Vec::new();
-        if ifc.schema.is_empty() {
-            issues.push("missing IFC schema declaration".into());
-        }
-        if ifc.products.len() != catalogue.products.len() {
-            issues.push(format!("IFC product count {} != catalogue {}", ifc.products.len(), catalogue.products.len()));
-        }
-        let ifc_ids: HashSet<_> = ifc.products.iter().map(|p| p.global_id.clone()).collect();
-        for product in &catalogue.products {
-            if !ifc_ids.contains(&product.id) {
-                issues.push(format!("catalogue product '{}' missing IFC entity globalId", product.id));
-            }
-        }
-        for node in &ifc.products {
-            if node.entity_type.trim().is_empty() {
-                issues.push(format!("IFC node '{}' missing entity_type", node.global_id));
-            }
-            if node.global_id.trim().is_empty() {
-                issues.push("IFC product node missing global_id".into());
-            }
-            for child in &node.children {
-                if child.global_id.trim().is_empty() || child.entity_type.trim().is_empty() {
-                    issues.push(format!("IFC node '{}' has incomplete child entity", node.global_id));
-                }
-            }
-        }
-        issues
-    }
 }
 // #endregion Part5
 

@@ -33,7 +33,7 @@ Feature: EN 1991 check outcome of committed documents
       | pass-v2-17 | shared://🚦️check-outcome/actions-all-pass/🔣️.json | en1991.1-1.partitions.archive-l2 | pass | 0.7 | 1e-3 |
       | pass-v2-18 | shared://🚦️check-outcome/actions-all-pass/🔣️.json | en1991.1-2.gas-temperature | pass | 0.7 | 1e-3 |
       | pass-v2-19 | shared://🚦️check-outcome/actions-all-pass/🔣️.json | en1991.1-2.h-net | pass | 0.8 | 1e-3 |
-      | pass-v2-20 | shared://🚦️check-outcome/actions-all-pass/🔣️.json | en1991.1-2.fire-load | pass | 0.55 | 1e-3 |
+      | pass-v2-20 | shared://🚦️check-outcome/actions-all-pass/🔣️.json | en1991.1-2.fire-load | notApplicable | 0 | 1e-3 |
       | pass-v2-21 | shared://🚦️check-outcome/actions-all-pass/🔣️.json | en1991.1-5.thermal | pass | 0.7 | 1e-3 |
       | pass-v2-22 | shared://🚦️check-outcome/actions-all-pass/🔣️.json | en1991.1-6.construction | pass | 0.8 | 1e-3 |
       | pass-v2-23 | shared://🚦️check-outcome/actions-all-pass/🔣️.json | en1991.1-7.impact.impact-1.0 | pass | 0.9 | 1e-3 |
@@ -52,7 +52,7 @@ Feature: EN 1991 check outcome of committed documents
       | fail-v2-36 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-1.partitions.archive-l2 | fail | 1.6 | 1e-3 |
       | fail-v2-37 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-2.gas-temperature | fail | 1.6 | 1e-3 |
       | fail-v2-38 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-2.h-net | fail | 2 | 1e-3 |
-      | fail-v2-39 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-2.fire-load | fail | 1.3 | 1e-3 |
+      | fail-v2-39 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-2.fire-load | notApplicable | 0 | 1e-3 |
       | fail-v2-40 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-5.thermal | fail | 1.6 | 1e-3 |
       | fail-v2-41 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-6.construction | fail | 2 | 1e-3 |
       | fail-v2-42 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-7.impact.impact-1.0 | fail | 1.15 | 1e-3 |
@@ -62,16 +62,16 @@ Feature: EN 1991 check outcome of committed documents
       | fail-v2-46 | shared://🚦️check-outcome/actions-all-fail/🔣️.json | en1991.1-4.dyn-cscd.stack | fail | 1.3 | 1e-3 |
       | pass-v2-47 | shared://🚦️check-outcome/parametric-fire-pass/🔣️.json | en1991.1-2.gas-temperature | pass | 0.7 | 1e-3 |
       | pass-v2-48 | shared://🚦️check-outcome/parametric-fire-pass/🔣️.json | en1991.1-2.h-net | pass | 0.8 | 1e-3 |
-      | pass-v2-49 | shared://🚦️check-outcome/parametric-fire-pass/🔣️.json | en1991.1-2.fire-load | pass | 0.55 | 1e-3 |
+      | pass-v2-49 | shared://🚦️check-outcome/parametric-fire-pass/🔣️.json | en1991.1-2.fire-load | unverifiedBasis | 0.55 | 1e-3 |
       | pass-v2-50 | shared://🚦️check-outcome/parametric-fire-pass/🔣️.json | en1991.1-2.opening-factor | pass | 0.5 | 1e-3 |
       | fail-v2-51 | shared://🚦️check-outcome/parametric-fire-fail/🔣️.json | en1991.1-2.gas-temperature | fail | 1.6 | 1e-3 |
       | fail-v2-52 | shared://🚦️check-outcome/parametric-fire-fail/🔣️.json | en1991.1-2.h-net | fail | 2 | 1e-3 |
       | fail-v2-53 | shared://🚦️check-outcome/parametric-fire-fail/🔣️.json | en1991.1-2.fire-load | fail | 1.3 | 1e-3 |
       | fail-v2-54 | shared://🚦️check-outcome/parametric-fire-fail/🔣️.json | en1991.1-2.opening-factor | fail | 1.5 | 1e-3 |
       | fail-v2-55 | shared://🚦️check-outcome/fire-table-office-mean/🔣️.json | en1991.1-2.fire-load | fail | 1.217252608887294 | 1e-3 |
-      | pass-v2-56 | shared://🚦️check-outcome/fire-table-entered-above/🔣️.json | en1991.1-2.fire-load | pass | 0.804494397918711 | 1e-3 |
-      | pass-v2-57 | shared://🚦️check-outcome/fire-user-specified-below-table/🔣️.json | en1991.1-2.fire-load | pass | 0.7508614380574635 | 1e-3 |
-      | pass-v2-58 | shared://🚦️check-outcome/fire-table-ignores-user-value/🔣️.json | en1991.1-2.fire-load | pass | 0.45677404148495704 | 1e-3 |
+      | pass-v2-56 | shared://🚦️check-outcome/fire-table-entered-above/🔣️.json | en1991.1-2.fire-load | unverifiedBasis | 0.804494397918711 | 1e-3 |
+      | pass-v2-57 | shared://🚦️check-outcome/fire-user-specified-below-table/🔣️.json | en1991.1-2.fire-load | unverifiedBasis | 0.7508614380574635 | 1e-3 |
+      | pass-v2-58 | shared://🚦️check-outcome/fire-table-ignores-user-value/🔣️.json | en1991.1-2.fire-load | unverifiedBasis | 0.45677404148495704 | 1e-3 |
       | pass-v2-59 | shared://🚦️check-outcome/collections-pass/🔣️.json | en1991.3.hoist-release.hoist-ok | unverifiedBasis | 0 | 1e-3 |
       | pass-v2-60 | shared://🚦️check-outcome/collections-pass/🔣️.json | en1991.3.hoist-test-static.hoist-ok | unverifiedBasis | 0 | 1e-3 |
       | pass-v2-61 | shared://🚦️check-outcome/collections-pass/🔣️.json | en1991.3.hoist-test-dynamic.hoist-ok | pass | 0 | 1e-3 |

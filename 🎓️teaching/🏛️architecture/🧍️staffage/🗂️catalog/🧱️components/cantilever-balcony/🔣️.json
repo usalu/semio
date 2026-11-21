@@ -5874,6 +5874,20 @@
             "region": "wall-face"
           },
           {
+            "id": "th-break-core",
+            "kind": "box",
+            "bone": "slab",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.62,
+            "size": [0.18, 0.2, 1.0],
+            "transform": {
+              "translation": [-0.21, 0.0, 0.0]
+            },
+            "sectionFaces": ["-u", "+v", "-v", "-w", "+w"],
+            "region": "thermal-break"
+          },
+          {
             "id": "th-break-module",
             "of": "break-module",
             "region": "thermal-break",
@@ -5960,8 +5974,8 @@
             "de": "Körper: neu gezeichnet für 30 mm. Die Wand ist eine L-förmige Masse (Kern, Wolle und Putz sind nicht zu unterscheiden), das Dämmelement bleibt als dunkle Fuge, die Platte behält ihren Keil. Das Geländer ist ein voller Pfosten von 50 mm bis zum vollen Handlauf von 60 mm; das Stabfeld zwischen den Gurten ist eine dünne, als Textur markierte Scheibe, wie die Zeichnung es als Tonfläche zeigt."
           },
           {
-            "en": "Thermal: three plain skins, one wall block above the slab for the layered wall, the break module, post and handrail; the baluster panel carries no surface here.",
-            "de": "Thermisch: drei einfache Häute, ein Wandblock über der Platte für die geschichtete Wand, das Dämmelement, Pfosten und Handlauf; das Stabfeld trägt hier keine Fläche."
+            "en": "Thermal: three plain skins, one wall block above the slab for the layered wall, the thermal bridge as the wall concrete band in slab height plus the break module, post and handrail; the baluster panel carries no surface here.",
+            "de": "Thermisch: drei einfache Häute, ein Wandblock über der Platte für die geschichtete Wand, die Wärmebrücke als Wandbetonband in Plattenhöhe und das Dämmelement, Pfosten und Handlauf; das Stabfeld trägt hier keine Fläche."
           },
           {
             "en": "Structure: slab member, wall core as the fixed support, and the connection as its two layers across the insulation, a steel tension layer on top and a concrete pressure layer at the bottom, so the path slab, joint, wall reads; post and handrail are the railing member.",
@@ -6056,6 +6070,20 @@
             "region": "slab-edge"
           },
           {
+            "id": "th-break-core",
+            "kind": "box",
+            "bone": "slab",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.62,
+            "size": [0.18, 0.2, 1.0],
+            "transform": {
+              "translation": [-0.21, 0.0, 0.0]
+            },
+            "sectionFaces": ["-u", "+v", "-v", "-w", "+w"],
+            "region": "thermal-break"
+          },
+          {
             "id": "th-break",
             "kind": "box",
             "bone": "slab",
@@ -6144,6 +6172,12 @@
             "of": "railing-post",
             "member": "railing",
             "part": "member"
+          },
+          {
+            "id": "railing-handrail-member",
+            "of": "railing-handrail",
+            "member": "railing",
+            "part": "member"
           }
         ],
         "decisions": [
@@ -6152,12 +6186,12 @@
             "de": "Körper: neu gezeichnet für 75 mm. Wand, Anschluss und Platte sind eine L-förmige Poché-Masse mit ebener Oberseite; das Geländer ist ein Pfosten von 75 mm unter einem Holm von 75 mm über den Streifen, das Geringste, was Pfosten und Holm in diesem Maßstab sein können."
           },
           {
-            "en": "Thermal: every region keeps its own piece inside the mass, top, soffit and edge skins of 80 mm, the break module, the wall block above the slab, and the railing as post and rail.",
-            "de": "Thermisch: jede Region behält ihr eigenes Stück in der Masse, Häute von 80 mm für Oberseite, Unterseite und Stirn, das Dämmelement, den Wandblock über der Platte und das Geländer als Pfosten und Holm."
+            "en": "Thermal: every region keeps its own piece inside the mass, top, soffit and edge skins of 80 mm, the thermal bridge as wall concrete band in slab height and break module, the wall block above the slab, and the railing as post and rail.",
+            "de": "Thermisch: jede Region behält ihr eigenes Stück in der Masse, Häute von 80 mm für Oberseite, Unterseite und Stirn, die Wärmebrücke als Wandbetonband in Plattenhöhe und Dämmelement, den Wandblock über der Platte und das Geländer als Pfosten und Holm."
           },
           {
-            "en": "Structure: three blocks in a row carry the load, the slab member, the connection in the insulation plane and the wall core as the fixed support; the post is the railing member. This is the minimal model.",
-            "de": "Tragwerk: drei Blöcke in Reihe tragen die Last, der Plattenstab, der Anschluss in der Dämmebene und der Wandkern als festes Auflager; der Pfosten ist der Geländerstab. Dies ist das minimale Modell."
+            "en": "Structure: three blocks in a row carry the load, the slab member, the connection in the insulation plane and the wall core as the fixed support; post and rail are the railing member that takes the barrier load. This is the minimal model.",
+            "de": "Tragwerk: drei Blöcke in Reihe tragen die Last, der Plattenstab, der Anschluss in der Dämmebene und der Wandkern als festes Auflager; Pfosten und Holm sind der Geländerstab, der die Holmlast trägt. Dies ist das minimale Modell."
           }
         ]
       }

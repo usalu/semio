@@ -173,6 +173,7 @@ impl RetainedValueCursor {
     fn control(&mut self, value: Expect) -> Result<Option<RetainedValueToken>, PackRefusal> {
         match value {
             Expect::End(kind) => Ok(Some(RetainedValueToken::End(kind))),
+            Expect::Finish if self.pending.is_some() => Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-value", offset: self.offset, detail: "trailing bytes after value" }),
             Expect::Finish if self.sealed => Ok(Some(RetainedValueToken::Complete { bytes: self.offset })),
             Expect::Finish => {
                 self.push(Expect::Finish)?;

@@ -211,6 +211,14 @@
     "fuel": 100000,
     "maximumTurns": 100000
   },
+  "issuedArchiveClose": {
+    "copyBytesAvailable": 932,
+    "copyBytesRequired": 1584,
+    "capacityBytesRequired": 792,
+    "depthRequired": 7,
+    "expectedWhenSourceCanFund": "pending",
+    "expectedWhenSourceCannotFund": "refused"
+  },
   "freshRootPerTurn": false,
   "readOnlyCallbackWork": 0,
   "genuineCaller": {

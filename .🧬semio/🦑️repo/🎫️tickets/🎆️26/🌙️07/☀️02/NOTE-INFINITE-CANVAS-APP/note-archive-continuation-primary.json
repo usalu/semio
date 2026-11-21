@@ -1,0 +1,32 @@
+[
+  {
+    "variant": "Value",
+    "message": "original callback receipt differs from its issued authority or posted effects",
+    "expected": "original callback receipt differs from its issued authority or posted effects"
+  },
+  {
+    "variant": "Fault",
+    "message": "archive initialization fault",
+    "expected": "archive initialization fault"
+  },
+  {
+    "variant": "Retirement",
+    "message": "original replay input can never fit its Source stock",
+    "expected": "original replay input can never fit its Source stock"
+  },
+  {
+    "variant": "NativeReceiving",
+    "message": "Archivabschluss wartet auf die europäische Quelle",
+    "expected": "Archivabschluss wartet auf die europäische Quelle"
+  },
+  {
+    "variant": "SourceClose",
+    "message": "original native archive close message carries enough characters beyond its existing bounded reply capacity",
+    "expected": "original native archive close message carries enough characters beyond its existing bounded repl"
+  },
+  {
+    "variant": null,
+    "message": null,
+    "expected": "initializer-continuation-without-detail"
+  }
+]

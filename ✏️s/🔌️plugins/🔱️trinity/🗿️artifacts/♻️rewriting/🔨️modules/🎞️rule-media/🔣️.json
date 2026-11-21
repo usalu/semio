@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/invocation.json",
+  "title": "Trinity Rewrite Invocation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rule", "bindings"],
+  "properties": {
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "lhs", "rhs"],
+      "properties": {
+        "name": {"type": "string"},
+        "lhs": {"$ref": "#/$defs/Match"},
+        "rhs": {"$ref": "#/$defs/Rewrite"}
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/Value"}
+    }
+  },
+  "$defs": {
+    "Match": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pattern"],
+      "properties": {
+        "pattern": {"$ref": "#/$defs/Pattern"},
+        "whereClause": {"type": "string"}
+      }
+    },
+    "Pattern": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leftVar", "leftKind"],
+      "properties": {
+        "leftVar": {"type": "string"},
+        "leftKind": {"type": "string"},
+        "edgeVar": {"type": "string"},
+        "edgeKind": {"type": "string"},
+        "rightVar": {"type": "string"},
+        "rightKind": {"type": "string"}
+      }
+    },
+    "Rewrite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["create", "delete", "merge", "set", "parameters"],
+      "properties": {
+        "create": {"type": "array", "items": {"$ref": "#/$defs/Pattern"}},
+        "delete": {"type": "array", "items": {"type": "string"}},
+        "merge": {"type": "array", "items": {"$ref": "#/$defs/Pattern"}},
+        "set": {"type": "array", "items": {"$ref": "#/$defs/Assignment"}},
+        "parameters": {"type": "array", "items": {"$ref": "#/$defs/Parameter"}}
+      }
+    },
+    "Assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["var", "prop", "value"],
+      "properties": {
+        "var": {"type": "string"},
+        "prop": {"type": "string"},
+        "value": {"$ref": "#/$defs/Value"}
+      }
+    },
+    "Parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "default"],
+      "properties": {
+        "name": {"type": "string"},
+        "kind": {"enum": ["string", "number", "boolean"]},
+        "default": {"$ref": "#/$defs/Value"}
+      }
+    },
+    "Value": {
+      "oneOf": [
+        {"type": ["null", "boolean", "number", "string"]},
+        {"type": "array", "items": {"$ref": "#/$defs/Value"}},
+        {"type": "object", "additionalProperties": {"$ref": "#/$defs/Value"}}
+      ]
+    }
+  }
+}

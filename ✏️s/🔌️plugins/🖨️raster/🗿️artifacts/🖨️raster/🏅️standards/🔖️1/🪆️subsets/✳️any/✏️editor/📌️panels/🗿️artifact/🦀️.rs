@@ -59,11 +59,13 @@ enum LayersRow<'a> {
     Add(&'static str, LabelText, &'static str),
     Layer(&'a RasterLayerNode),
     Flatten(LabelText,LabelText),
+    Import(LabelText),
     Export(LabelText),
 }
 
 fn layers_rows<'a>(document: &'a RasterDocument, labels: &RasterPlayLabels) -> Vec<LayersRow<'a>> {
     let mut rows = vec![LayersRow::Add("pixel", labels.add_pixel, "image"), LayersRow::Add("group", labels.add_group, "folder-plus"), LayersRow::Add("adjustment",labels.add_adjustment,"sliders-horizontal")];
+    rows.push(LayersRow::Import(labels.import_png));
     if !document.layers.is_empty() {rows.push(LayersRow::Flatten(labels.flatten_image,labels.flattened_image));rows.push(LayersRow::Export(labels.export_png));}
     rows.extend(document.layers.iter().map(LayersRow::Layer));
     rows
@@ -118,6 +120,7 @@ pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &Raste
     PanelTreeBuilder::new(RASTER_TREE_PREFIX)?
         .window_section(windows, RASTER_TREE_PREFIX, Some(ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, &rows, |row| match row {
             LayersRow::Add(kind, label, icon) => add_row(kind, *label, icon),
+            LayersRow::Import(label) => tree_item_with_action(format!("{RASTER_TREE_PREFIX}.import-png"), ui_label(label.as_str())?, None, raster_action("importPng", None)?),
             LayersRow::Export(label)=>tree_item_with_action(format!("{RASTER_TREE_PREFIX}.export-png"),ui_label(label.as_str())?,None,raster_action("exportPng",None)?),
             LayersRow::Flatten(label,name) => {
                 let mut item=tree_item_with_action(format!("{RASTER_TREE_PREFIX}.flatten"),ui_label(label.as_str())?,None,raster_action("flattenLayers",Some(ui_value_map([("name",ui_value_text(name.as_str())?)])?))?)?;

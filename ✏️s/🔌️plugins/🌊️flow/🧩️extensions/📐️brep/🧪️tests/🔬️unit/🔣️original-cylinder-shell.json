@@ -1,0 +1,348 @@
+{
+  "operator": "brep.solid.shell",
+  "stock": {
+    "origin": [
+      2,
+      -1,
+      4
+    ],
+    "radius": 3,
+    "height": 5,
+    "rotateY": 0.6435011087932844
+  },
+  "thickness": 0.75,
+  "cases": [
+    {
+      "name": "closed cavity",
+      "open": [],
+      "height": 5,
+      "levels": [
+        0.75,
+        4.25
+      ],
+      "volume": 85.70657458074655,
+      "area": 232.08515728394596,
+      "shells": 2,
+      "euler": 4,
+      "classify": [
+        [
+          [
+            0,
+            0,
+            2.5
+          ],
+          1
+        ],
+        [
+          [
+            2.8,
+            0,
+            2.5
+          ],
+          0
+        ],
+        [
+          [
+            2.25,
+            0,
+            2.5
+          ],
+          2
+        ],
+        [
+          [
+            0,
+            0,
+            0.3125
+          ],
+          0
+        ],
+        [
+          [
+            0,
+            0,
+            4.6875
+          ],
+          0
+        ]
+      ]
+    },
+    {
+      "name": "open top",
+      "open": [
+        "top"
+      ],
+      "height": 5,
+      "levels": [
+        0.75,
+        5
+      ],
+      "volume": 73.7783399741478,
+      "area": 210.87940687221487,
+      "shells": 1,
+      "euler": 2,
+      "classify": [
+        [
+          [
+            0,
+            0,
+            2.5
+          ],
+          1
+        ],
+        [
+          [
+            2.8,
+            0,
+            2.5
+          ],
+          0
+        ],
+        [
+          [
+            2.25,
+            0,
+            2.5
+          ],
+          2
+        ],
+        [
+          [
+            0,
+            0,
+            0.3125
+          ],
+          0
+        ],
+        [
+          [
+            0,
+            0,
+            4.6875
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "name": "open bottom",
+      "open": [
+        "bottom"
+      ],
+      "height": 5,
+      "levels": [
+        0,
+        4.25
+      ],
+      "volume": 73.7783399741478,
+      "area": 210.87940687221487,
+      "shells": 1,
+      "euler": 2,
+      "classify": [
+        [
+          [
+            0,
+            0,
+            2.5
+          ],
+          1
+        ],
+        [
+          [
+            2.8,
+            0,
+            2.5
+          ],
+          0
+        ],
+        [
+          [
+            2.25,
+            0,
+            2.5
+          ],
+          2
+        ],
+        [
+          [
+            0,
+            0,
+            0.3125
+          ],
+          1
+        ],
+        [
+          [
+            0,
+            0,
+            4.6875
+          ],
+          0
+        ]
+      ]
+    },
+    {
+      "name": "open both caps",
+      "open": [
+        "bottom",
+        "top"
+      ],
+      "height": 5,
+      "levels": [
+        0,
+        5
+      ],
+      "volume": 61.850105367549055,
+      "area": 189.67365646048376,
+      "shells": 1,
+      "euler": 0,
+      "classify": [
+        [
+          [
+            0,
+            0,
+            2.5
+          ],
+          1
+        ],
+        [
+          [
+            2.8,
+            0,
+            2.5
+          ],
+          0
+        ],
+        [
+          [
+            2.25,
+            0,
+            2.5
+          ],
+          2
+        ],
+        [
+          [
+            0,
+            0,
+            0.3125
+          ],
+          1
+        ],
+        [
+          [
+            0,
+            0,
+            4.6875
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "name": "short tube",
+      "open": [
+        "bottom",
+        "top"
+      ],
+      "height": 1,
+      "levels": [
+        0,
+        1
+      ],
+      "volume": 12.370021073509811,
+      "area": 57.72676500971245,
+      "shells": 1,
+      "euler": 0,
+      "classify": [
+        [
+          [
+            0,
+            0,
+            0.5
+          ],
+          1
+        ],
+        [
+          [
+            2.8,
+            0,
+            0.5
+          ],
+          0
+        ],
+        [
+          [
+            2.25,
+            0,
+            0.5
+          ],
+          2
+        ],
+        [
+          [
+            0,
+            0,
+            0.0625
+          ],
+          1
+        ],
+        [
+          [
+            0,
+            0,
+            0.9375
+          ],
+          1
+        ]
+      ]
+    }
+  ],
+  "refused": [
+    {
+      "name": "zero thickness",
+      "height": 5,
+      "thickness": 0,
+      "open": []
+    },
+    {
+      "name": "radial collapse",
+      "height": 5,
+      "thickness": 3,
+      "open": [
+        "bottom",
+        "top"
+      ]
+    },
+    {
+      "name": "closed axial collapse",
+      "height": 1,
+      "thickness": 0.75,
+      "open": []
+    },
+    {
+      "name": "one-cap axial collapse",
+      "height": 0.5,
+      "thickness": 0.75,
+      "open": [
+        "bottom"
+      ]
+    },
+    {
+      "name": "curved wall selection",
+      "height": 5,
+      "thickness": 0.75,
+      "open": [
+        "side"
+      ]
+    },
+    {
+      "name": "foreign source cap",
+      "height": 5,
+      "thickness": 0.75,
+      "open": [
+        "foreign"
+      ]
+    }
+  ]
+}

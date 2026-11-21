@@ -77,7 +77,7 @@ pub fn worker_job_retirement_phase(maximum_sessions:usize)->Option<WorkerJobClos
 }
 
 pub fn pump_worker_job_retirements(maximum_sessions:usize,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-    if cx.should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let mut inspected=0;
+    if cx.should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=(cx.retained_progress(),cx.reserved_return_progress());let mut inspected=0;
     for slot in &WORKER_JOB_RETIREMENT_SLOTS{
         if inspected==maximum_sessions{break}let pointer=slot.load(Ordering::Acquire);if pointer.is_null()||pointer==WORKER_JOB_RETIREMENT_RESERVED{continue}inspected+=1;
         if slot.compare_exchange(pointer,WORKER_JOB_RETIREMENT_RESERVED,Ordering::AcqRel,Ordering::Acquire).is_err(){continue}
@@ -109,7 +109,7 @@ pub(super) unsafe fn worker_job_retirement_node_phase<J:InteractiveJob+'static>(
 }
 
 pub(super) unsafe fn pump_worker_job_retirement_node<J:InteractiveJob+'static>(pointer:*mut WorkerJobRetirementHeader,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-    let before=cx.retained_progress();let grant=cx.retained_grant();let node=unsafe{&mut *pointer.cast::<WorkerJobRetirementNode<J>>()};
+    let before=(cx.retained_progress(),cx.reserved_return_progress());let grant=cx.retained_grant();let node=unsafe{&mut *pointer.cast::<WorkerJobRetirementNode<J>>()};
     let Some(inner)=node.inner.as_ref()else{let released_bytes=size_of::<WorkerJobRetirementNode<J>>();return Ok(if grant.maximum_items>0&&grant.maximum_release_bytes>=released_bytes&&grant.maximum_depth>0{WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}}else{WorkerJobCloseStep::Pending{progress:Default::default()}})};
     if matches!(worker_job_begin_close(inner),WorkerJobCloseStep::Blocked){return Ok(WorkerJobCloseStep::Blocked)}
     let step=match worker_job_close_step(inner,cx)?{

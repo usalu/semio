@@ -92,24 +92,72 @@ export type OriginalJobOutputHold = Map<bigint,{parts:Uint8Array[];length:bigint
 /** 🎛️ The caller's levers on one job request: cancellation, the held output and a progress sink fed per output page. */
 export interface OriginalJobControl {readonly signal?:AbortSignal;readonly held?:OriginalJobOutputHold;readonly onProgress?:(progress:{readonly job:bigint;readonly bytes:bigint;readonly expected:bigint})=>void}
 
+type OriginalJobCrossing = <T extends OriginalWireReceipt & { readonly workUnitsSpent: bigint; readonly refusal?: unknown }>(
+  call: (budget: OriginalJobBudgetWit) => Promise<T>, output: boolean,
+) => Promise<T>;
+
 /** 💼️ Funds of one guest job request: a retained turn (self-issued, or issued by the actor's Kernel source) whose bounded loan and work credit each crossing settles, like the native `JobFunds` (`🔌️plugin/🖥️host/🎭️guest-runtime/💼️job-crossing/🦀️.rs`). */
 export class OriginalJobFunds {
- readonly #input:OriginalTurnInputWit;#granted:OriginalWireGrant;#policy:OriginalWireGrant;#work:bigint;readonly #fuel:bigint;readonly #clock:(()=>bigint)|undefined;
- constructor(operation:bigint,nowUs:bigint,wallUs:bigint,clock?:()=>bigint,turn?:OriginalOperationTurn){this.#clock=clock;if(turn===undefined){const grant=originalGrantWit(ORIGINAL_SELF_ISSUED_GRANT);this.#input={operation:operation>0n?operation:1n,generation:1n,epoch:1n,work:{clockBinding:1n,absoluteDeadlineUs:nowUs+wallUs,fuel:BigInt(ORIGINAL_JOB_WORK_FUEL)},grant};this.#work=BigInt(ORIGINAL_JOB_WORK_FUEL)}else{const wit=originalTurnWit(turn),wall=nowUs+wallUs;this.#input={...wit,work:{...wit.work,absoluteDeadlineUs:wall<wit.work.absoluteDeadlineUs?wall:wit.work.absoluteDeadlineUs}};this.#work=BigInt(turn.fuel)}this.#fuel=this.#work;this.#granted=this.#input.grant;this.#policy={...this.#input.grant}}
- crossing():OriginalJobBudgetWit{if(this.#work===0n)throw Error("original-job.work-exhausted");return {input:this.#input,retainedPolicy:this.#policy,fuel:this.#work,deadlineUs:this.#input.work.absoluteDeadlineUs,cancelled:false}}
+ readonly #input:OriginalTurnInputWit;readonly #deadlineUs:bigint;#granted:OriginalWireGrant;#policy:OriginalWireGrant;#work:bigint;readonly #fuel:bigint;readonly #clock:(()=>bigint)|undefined;readonly #drive:OriginalJobCrossing|undefined;
+ constructor(operation:bigint,nowUs:bigint,wallUs:bigint,clock?:()=>bigint,turn?:OriginalOperationTurn,drive?:OriginalJobCrossing){this.#clock=clock;this.#drive=drive;if(turn===undefined){const grant=originalGrantWit(ORIGINAL_SELF_ISSUED_GRANT);this.#input={operation:operation>0n?operation:1n,generation:1n,epoch:1n,work:{clockBinding:1n,absoluteDeadlineUs:nowUs+wallUs,fuel:BigInt(ORIGINAL_JOB_WORK_FUEL)},grant};this.#work=BigInt(ORIGINAL_JOB_WORK_FUEL)}else{this.#input=originalTurnWit(turn);this.#work=BigInt(turn.fuel)}const wall=nowUs+wallUs,issuedDeadline=this.#input.work.absoluteDeadlineUs;this.#deadlineUs=wall<issuedDeadline?wall:issuedDeadline;this.#fuel=this.#work;this.#granted=this.#input.grant;this.#policy={...this.#input.grant}}
+ crossing():OriginalJobBudgetWit{if(this.#work===0n)throw Error("original-job.work-exhausted");return {input:this.#input,retainedPolicy:this.#policy,fuel:this.#work,deadlineUs:this.#deadlineUs,cancelled:false}}
  /** 📃️ Narrows only the copy axis, so the guest pages by what the host grants while the loan still settles the real spend. */
  outputCrossing():OriginalJobBudgetWit{const budget=this.crossing(),page=BigInt(ORIGINAL_JOB_OUTPUT_PAGE_BYTES),policy=budget.retainedPolicy;return {...budget,retainedPolicy:{...policy,maximumCopyBytes:policy.maximumCopyBytes<page?policy.maximumCopyBytes:page}}}
  /** 🧾️ The one receipt the issuing source receives for everything this request spent. */
  receipt(turn:OriginalOperationTurn):OriginalOperationReceipt{const spent=(axis:keyof OriginalWireGrant):number=>Number(this.#granted[axis]-this.#policy[axis]);return {input:turn.input,spent:{copiedItems:spent("maximumItems"),copiedBytes:spent("maximumCopyBytes"),retainedCapacityBytes:spent("maximumCapacityBytes"),releasedBytes:spent("maximumReleaseBytes")},workUnitsSpent:Number(this.#fuel-this.#work)}}
- settle(call:any):void{const input=this.#input;if(call.input.operation!==input.operation||call.input.generation!==input.generation||call.input.epoch!==input.epoch)throw Error("original-job.foreign-receipt");const next:{-readonly [K in keyof OriginalWireGrant]:bigint}={...this.#policy};for(const [axis,spent] of currencies){const used=call.spent[spent];if(typeof used!=="bigint"||used>next[axis])throw Error("original-job.receipt-refused");next[axis]-=used}if(typeof call.workUnitsSpent!=="bigint"||call.workUnitsSpent>this.#work)throw Error("original-job.receipt-refused");this.#policy=next;this.#work-=call.workUnitsSpent;if(optionValue(call.refusal)!==undefined)throw Object.assign(Error("original-job.call-refused"),{refusal:call.refusal})}
- async start(guest:OriginalGuestExports,job:bigint,kind:string,input:Uint8Array):Promise<void>{const admitted=await guest.reactor.admitActorInput(actorInputWire.encode({operation:"start-job",source:{job,kind,input,checkpoint:null}}),this.crossing());this.settle(admitted);if(!admitted.ready||admitted.disposition==="returned")throw Error("original-job.input-refused");const call=await guest.jobs.startJob(job,this.crossing());this.settle(call);if(!call.admitted)throw Error("original-job.start-refused")}
- async step(jobs:OriginalGuestJobs,job:bigint,control:OriginalJobControl={}):Promise<{status:string;progress?:Uint8Array;value?:Uint8Array}>{const call=await jobs.stepJob(job,this.crossing());this.settle(call);const outcome=optionValue(call.outcome);if(outcome===undefined)return {status:"running"};const bytes=await this.#collect(jobs,job,outcome.byteLength,control);if(outcome.state==="running")return {status:"running",progress:bytes.length>0?bytes:undefined};if(outcome.state==="done")return {status:"done",value:bytes};if(outcome.state==="failed")return {status:"failed",value:bytes};throw Error("original-job.outcome-state")}
- async cancel(jobs:OriginalGuestJobs,job:bigint,control:OriginalJobControl={}):Promise<void>{const call=await jobs.cancelJob(job,this.crossing());this.settle(call);control.held?.delete(job);if(!call.admitted)throw Error("original-job.cancel-refused")}
- async #collect(jobs:OriginalGuestJobs,job:bigint,expected:bigint,control:OriginalJobControl):Promise<Uint8Array>{const held=control.held?.get(job)??{parts:[],length:0n};control.held?.set(job,held);let pending=0;for(;;){if(control.signal?.aborted)throw Error("original-job.aborted");const call=await jobs.readJobOutput(job,this.outputCrossing());this.settle(call);const chunk=optionValue(call.chunk);if(chunk===undefined)break;const page=optionValue(chunk.bytes);if(page!==undefined){if(chunk.offset!==held.length)throw Error("original-job.output-offset");held.parts.push(page);held.length+=BigInt(page.length);pending=0;control.onProgress?.({job,bytes:held.length,expected})}if(chunk.outputClosed)break;if(page===undefined){pending+=1;if(pending>ORIGINAL_JOB_PENDING_PAGES||(this.#clock!==undefined&&this.#clock()>=this.#input.work.absoluteDeadlineUs))throw Error("original-job.output-stalled")}}if(held.length!==expected)throw Error("original-job.output-length");const ack=await jobs.acknowledgeJobOutput(job,this.crossing());this.settle(ack);if(!ack.acknowledged)throw Error("original-job.output-ack-refused");const bytes=new Uint8Array(Number(held.length));let at=0;for(const part of held.parts){bytes.set(part,at);at+=part.length}control.held?.delete(job);return bytes}
+ settle(call:any,policy:OriginalWireGrant=this.#policy):void{const input=this.#input;if(call.input.operation!==input.operation||call.input.generation!==input.generation||call.input.epoch!==input.epoch||call.input.work?.clockBinding!==input.work.clockBinding||call.input.work?.absoluteDeadlineUs!==input.work.absoluteDeadlineUs||call.input.work?.fuel!==input.work.fuel||call.input.grant?.maximumDepth!==input.grant.maximumDepth||currencies.some(([axis])=>call.input.grant?.[axis]!==input.grant[axis]))throw Error("original-job.foreign-receipt");const next:{-readonly [K in keyof OriginalWireGrant]:bigint}={...this.#policy};for(const [axis,spent] of currencies){const used=call.spent[spent];if(typeof used!=="bigint"||used<0n||used>policy[axis]||used>next[axis])throw Error("original-job.receipt-refused");next[axis]-=used}if(typeof call.workUnitsSpent!=="bigint"||call.workUnitsSpent<0n||call.workUnitsSpent>this.#work)throw Error("original-job.receipt-refused");this.#policy=next;this.#work-=call.workUnitsSpent;if(optionValue(call.refusal)!==undefined)throw Object.assign(Error("original-job.call-refused"),{refusal:call.refusal})}
+ #pending(attempt:number,message:string):void {
+  if(attempt>=ORIGINAL_JOB_PENDING_PAGES||(this.#clock!==undefined&&this.#clock()>=this.#deadlineUs))throw Error(message);
+ }
+ async #request<T extends OriginalWireReceipt & {readonly workUnitsSpent:bigint;readonly refusal?:unknown}>(call:(budget:OriginalJobBudgetWit)=>Promise<T>,output=false):Promise<T>{
+  if(this.#drive!==undefined)return this.#drive(call,output);
+  const budget=output?this.outputCrossing():this.crossing();
+  const reply=await call(budget);
+  this.settle(reply,budget.retainedPolicy);
+  return reply;
+ }
+ async start(guest:OriginalGuestExports,job:bigint,kind:string,input:Uint8Array):Promise<void>{
+  let source:{job:bigint;kind:string;input:Uint8Array;checkpoint:null}|null={job,kind,input,checkpoint:null};
+  for(let pending=0;;pending++){
+   const wire=actorInputWire.encode({operation:"start-job",source});
+   const admission=await this.#request((budget)=>guest.reactor.admitActorInput(wire,budget));
+   if(!admission.ready||admission.disposition==="returned")throw Error("original-job.input-refused");
+   const reply=await this.#request((budget)=>guest.jobs.startJob(job,budget));
+   if(reply.admitted)return;
+   this.#pending(pending,"original-job.start-stalled");
+   source=null;
+  }
+ }
+ async step(jobs:OriginalGuestJobs,job:bigint,control:OriginalJobControl={}):Promise<{status:string;progress?:Uint8Array;value?:Uint8Array}>{const call=await this.#request((budget)=>jobs.stepJob(job,budget));const outcome=optionValue(call.outcome);if(outcome===undefined)return {status:"running"};const bytes=await this.#collect(jobs,job,outcome.byteLength,control);if(outcome.state==="running")return {status:"running",progress:bytes.length>0?bytes:undefined};if(outcome.state==="done")return {status:"done",value:bytes};if(outcome.state==="failed")return {status:"failed",value:bytes};throw Error("original-job.outcome-state")}
+ async cancel(jobs:OriginalGuestJobs,job:bigint,control:OriginalJobControl={}):Promise<void>{const call=await this.#request((budget)=>jobs.cancelJob(job,budget));control.held?.delete(job);if(!call.admitted)throw Error("original-job.cancel-refused")}
+ async #collect(jobs:OriginalGuestJobs,job:bigint,expected:bigint,control:OriginalJobControl):Promise<Uint8Array>{const held=control.held?.get(job)??{parts:[],length:0n};control.held?.set(job,held);let pending=0;for(;;){if(control.signal?.aborted)throw Error("original-job.aborted");const call=await this.#request((budget)=>jobs.readJobOutput(job,budget),true);const chunk=optionValue(call.chunk);if(chunk===undefined)break;const page=optionValue(chunk.bytes);if(page!==undefined){if(chunk.offset!==held.length)throw Error("original-job.output-offset");held.parts.push(page);held.length+=BigInt(page.length);pending=0;control.onProgress?.({job,bytes:held.length,expected})}if(chunk.outputClosed)break;if(page===undefined)this.#pending(pending++,"original-job.output-stalled")}if(held.length!==expected)throw Error("original-job.output-length");for(let pending=0;;pending++){const ack=await this.#request((budget)=>jobs.acknowledgeJobOutput(job,budget));if(ack.acknowledged)break;this.#pending(pending,"original-job.output-ack-stalled")}const bytes=new Uint8Array(Number(held.length));let at=0;for(const part of held.parts){bytes.set(part,at);at+=part.length}control.held?.delete(job);return bytes}
 }
 
-/** 🏛️ Runs one job request on funds issued by the actor's own Kernel-admitted source, like the native `ShardLoop::job_funds`: the request spends the source's remaining stock and its one aggregate receipt is received and reported, even when the request fails (the first failure always wins). */
-export async function originalSourceJob<T>(source:OriginalOperationSource,report:(receipt:OriginalOperationReceipt)=>void,wallUs:bigint,run:(funds:OriginalJobFunds)=>Promise<T>):Promise<T>{const turn=source.issue(),funds=new OriginalJobFunds(source.operation,source.operationClockUs(),wallUs,()=>source.operationClockUs(),turn);let value:T|undefined,failure:unknown,failed=false;try{value=await run(funds)}catch(error){failed=true;failure=error}try{const receipt=funds.receipt(turn);source.receive(receipt);report(receipt)}catch(error){if(!failed)throw error}if(failed)throw failure;return value as T}
+/** 🏛️ Issues a new actor turn for each guest crossing while preserving the job request deadline. */
+export async function originalSourceJob<T>(source:OriginalOperationSource,report:(receipt:OriginalOperationReceipt)=>void,wallUs:bigint,run:(funds:OriginalJobFunds)=>Promise<T>):Promise<T>{
+ const clock=()=>source.operationClockUs(),started=clock();
+ const drive:OriginalJobCrossing=async(call,output)=>{
+  if(source.fuelRemaining===0)throw Error("original-job.work-exhausted");
+  const turn=source.issue();
+  const funds=new OriginalJobFunds(source.operation,started,wallUs,clock,turn);
+  const budget=output?funds.outputCrossing():funds.crossing();
+  let reply;
+  try{reply=await call(budget)}
+  catch(failure){source.holdNativeRefusal(failure);throw failure}
+  let refusal:unknown;
+  try{funds.settle(reply,budget.retainedPolicy)}
+  catch(failure){
+   if(!(failure instanceof Error)||failure.message!=="original-job.call-refused"){source.holdNativeRefusal(reply);throw failure}
+   refusal=failure;
+  }
+  const receipt=funds.receipt(turn);
+  source.receive(receipt);
+  report(receipt);
+  if(refusal!==undefined)throw refusal;
+  return reply;
+ };
+ return run(new OriginalJobFunds(source.operation,started,wallUs,clock,undefined,drive));
+}
 
 /** 🏭️ Drives a guest that has no Kernel grant (the document browser actor child): one self-issued original source whose finite stock the guest's retained-turn custody conserves from turn to turn, so exhaustion is a typed fault (the recovery path re-reserves a child with a fresh source) and a failure keeps its own error and holds the source with it as the cause. Job requests are standalone self-issued funds, like the native relay (`relay_job_funds`). */
 export class OriginalSelfIssuedTurns {
@@ -121,10 +169,9 @@ export class OriginalSelfIssuedTurns {
  async #context():Promise<void>{while(!this.#ready){this.#stock();const turn=this.#source.issue();let call:any;try{call=await this.#guest.reactor.admitActorContext(originalContextBudgetWit(turn))}catch(failure){this.#hold(failure);throw failure}this.#receive(call,call.workUnitsSpent);if(optionValue(call.refusal)!==undefined)throw Object.assign(Error("original-turn.context-refused"),{originalCall:call});this.#ready=call.ready;if(!this.#ready&&call.spent.copiedItems===0n&&call.spent.copiedBytes===0n&&call.spent.retainedCapacityBytes===0n&&call.spent.releasedBytes===0n)throw Object.assign(Error("original-turn.context-held"),{originalCall:call})}}
  async #admit(value:unknown):Promise<void>{this.#stock();const turn=this.#source.issue();let call:any;try{call=await this.#guest.reactor.admitActorInput(actorInputWire.encode(value),originalContextBudgetWit(turn))}catch(failure){this.#hold(failure);throw failure}this.#receive(call,call.workUnitsSpent);if(optionValue(call.refusal)!==undefined||!call.ready||call.disposition==="returned")throw Object.assign(Error("original-turn.input-refused"),{originalCall:call})}
  async poll(events:readonly unknown[],shape:OriginalTurnShape):Promise<any>{if(events.length>1)throw Error("actor-poll.event-count: a reactor turn admits at most one event");await this.#context();await this.#admit({operation:"poll",events:events.map(actorInputWire.event),shape});this.#stock();const turn=this.#source.issue();let result;try{result=await this.#guest.reactor.poll(originalContextBudgetWit(turn))}catch(failure:any){try{if(failure&&failure.input&&failure.spent&&typeof failure.workUnitsSpent==="bigint")this.#receive(failure,failure.workUnitsSpent)}catch{}this.#hold(failure);throw failure}this.#receive(result.retainedReceipt,result.retainedReceipt.workUnitsSpent);return result}
- #funds(wallUs:bigint):OriginalJobFunds{return new OriginalJobFunds(this.#source.operation,this.#clock(),wallUs,this.#clock)}
- startJob(job:bigint,kind:string,input:Uint8Array):Promise<void>{return this.#funds(originalJobWallUs()).start(this.#guest,job,kind,input)}
- stepJob(job:bigint,budget:{readonly deadlineMs:number},control:OriginalJobControl={}):Promise<{status:string;progress?:Uint8Array;value?:Uint8Array}>{return this.#funds(originalJobWallUs(budget)).step(this.#guest.jobs,job,{...control,held:this.#held})}
- cancelJob(job:bigint):Promise<void>{return this.#funds(originalJobWallUs()).cancel(this.#guest.jobs,job,{held:this.#held})}
+ async startJob(job:bigint,kind:string,input:Uint8Array):Promise<void>{await this.#context();return originalSourceJob(this.#source,()=>{},originalJobWallUs(),(funds)=>funds.start(this.#guest,job,kind,input))}
+ stepJob(job:bigint,budget:{readonly deadlineMs:number},control:OriginalJobControl={}):Promise<{status:string;progress?:Uint8Array;value?:Uint8Array}>{return originalSourceJob(this.#source,()=>{},originalJobWallUs(budget),(funds)=>funds.step(this.#guest.jobs,job,{...control,held:this.#held}))}
+ cancelJob(job:bigint):Promise<void>{return originalSourceJob(this.#source,()=>{},originalJobWallUs(),(funds)=>funds.cancel(this.#guest.jobs,job,{held:this.#held}))}
 }
 
 /** 🌐️ Embeds the same defining original source into the actual component worker without a second implementation. */

@@ -1,0 +1,21 @@
+{
+  "tolerance": 1e-08,
+  "output": "wire",
+  "cases": [
+    {"id": "support-line circle secant", "line": {"start": [0, 0, 0], "end": [1, 0, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [[-2, 0, 0], [2, 0, 0]]},
+    {"id": "reversed operands keep supporting-line order", "line": {"start": [1, 0, 0], "end": [0, 0, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [[2, 0, 0], [-2, 0, 0]], "swap": true},
+    {"id": "circle tangency", "line": {"start": [0, 2, 0], "end": [1, 2, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [[0, 2, 0]], "tangent": true},
+    {"id": "circle outside line", "line": {"start": [0, 3, 0], "end": [1, 3, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": []},
+    {"id": "line parallel to conic plane", "line": {"start": [0, 0, 1], "end": [1, 0, 1]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": []},
+    {"id": "transverse line hits circle at its plane crossing", "line": {"start": [2, 0, -1], "end": [2, 0, 1]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [[2, 0, 0]]},
+    {"id": "transverse line crosses circle interior only", "line": {"start": [0, 0, -1], "end": [0, 0, 1]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": []},
+    {"id": "transverse line has a projected planar secant only", "line": {"start": [0, 0, -1], "end": [1, 0, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": []},
+    {"id": "shifted ellipse secant", "line": {"start": [3, -1, 2], "end": [4, -1, 2]}, "conic": {"center": [3, -1, 2], "normal": [0, 0, 1], "radii": [4, 2], "axis": [0, 1, 0]}, "points": [[1, -1, 2], [5, -1, 2]]},
+    {"id": "rotated world plane secant", "line": {"start": [1, 2, 3], "end": [2, 2, 3]}, "conic": {"center": [1, 2, 3], "normal": [0, 1, 0], "radii": [4, 2], "axis": [0, 0, -1]}, "points": [[-1, 2, 3], [3, 2, 3]]},
+    {"id": "support-line hit outside a trimmed edge", "line": {"start": [0, 0, 0], "end": [1, 0, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [], "lineRange": [0, 1]},
+    {"id": "closed line endpoint retained", "line": {"start": [0, 0, 0], "end": [1, 0, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [[2, 0, 0]], "lineRange": [0, 2]},
+    {"id": "trimmed support line and conic at the angular seam", "line": {"start": [0, 0, 0], "end": [0, 1, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [[0, 2, 0]], "lineRange": [0, 3], "conicRange": [5.5, 7.0]},
+    {"id": "conic trim excludes the nearer support intersection", "line": {"start": [0, 0, 0], "end": [0, 1, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [[0, -2, 0]], "conicRange": [1.5, 4.5]},
+    {"id": "conic trim retains an angular endpoint", "line": {"start": [0, 2, 0], "end": [1, 2, 0]}, "conic": {"center": [0, 0, 0], "normal": [0, 0, 1], "radii": [2, 2], "axis": [0, 1, 0]}, "points": [[0, 2, 0]], "conicRange": [-0.5, 0.0], "tangent": true}
+  ]
+}

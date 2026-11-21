@@ -48,5 +48,5 @@ async fn create_trinity_jack_viewer_builds_a_definition_for_the_viewer_role() {
 
 #[semio_framework_async_macros::async_test]
 async fn viewer_dialect_matches_the_artifact_coordinate() {
-    assert_eq!(<TrinityJackViewer as ArtifactViewer>::DIALECT, TRINITY_JACK_DIALECT);
+    assert_eq!(<TrinityJackViewer<crate::test_support::FixtureComposition> as ArtifactViewer>::DIALECT, TRINITY_JACK_DIALECT);
 }

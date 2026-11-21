@@ -8,8 +8,10 @@ use crate::WiresSnapshot;
 
 //#region 🔖️Aggregate
 /// 🕳️ The uninhabited parent vocabulary of a document whose whole board is its composed child.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub enum WiresMutation {}
+
+semio_os_kernel::original_ordinal_operation_receiving!(WiresMutation);
 
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for WiresMutation {
     fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {

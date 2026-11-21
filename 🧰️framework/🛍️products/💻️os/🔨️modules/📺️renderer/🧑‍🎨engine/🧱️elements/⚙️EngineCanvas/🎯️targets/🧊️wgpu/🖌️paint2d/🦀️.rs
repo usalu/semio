@@ -89,7 +89,7 @@ pub fn node_graph_context_menu_target(surface_id: &str, sx: f64, sy: f64) -> (Ve
             let engine = map.get(surface_id)?.node_graph.as_ref()?;
             let (picks, domains) = match engine {
                 NodeGraphEngine::Flow(host) => (host.pick_targets_at_screen_json(sx, sy), host.selection_domains()),
-                NodeGraphEngine::Dag(host) => (host.pick_targets_at_screen_json(sx, sy), host.dag.selection_domains()),
+                NodeGraphEngine::Dag(host) => (host.pick_targets_at_screen_json(sx, sy), host.dag.graph.selection_domains()),
             };
             let (nodes,edges,handles)=(domains.nodes,domains.edges,domains.handles);
             let mut selection = Vec::new();

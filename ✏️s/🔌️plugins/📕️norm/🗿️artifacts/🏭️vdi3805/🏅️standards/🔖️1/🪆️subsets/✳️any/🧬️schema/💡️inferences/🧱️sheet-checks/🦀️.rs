@@ -2,6 +2,10 @@
 
 use super::*;
 
+#[path = "🌡️air-to-air-heat-pump/🦀️.rs"]
+mod air_to_air_heat_pump;
+
+
 //#region 🔖️ComplianceReport
 fn check_attributes_records_sync(product: &CatalogueProduct) -> Vec<CheckResult> {
     let article = product.id.as_str();
@@ -44,7 +48,7 @@ fn check_attributes_records_sync(product: &CatalogueProduct) -> Vec<CheckResult>
         }
         _ => false,
     };
-    let typed_sheet = matches!(product.sheet.0, 2 | 3 | 5 | 6);
+    let typed_sheet = matches!(product.sheet.0, 2 | 3 | 4 | 6);
     let configured_typed = matches!(
         configured,
         SheetAttributes::ValveHeating(_) | SheetAttributes::Radiator(_) | SheetAttributes::PumpHeating(_) | SheetAttributes::HeatGenerator(_)
@@ -190,6 +194,56 @@ use valve_radiator_and_pump_checks::*;
 mod heat_generator_and_operative_sheet_checks;
 use heat_generator_and_operative_sheet_checks::*;
 
+/// 🧩 Checks the component links of a system package.
+/// See [VDI 3805 Blatt 100:2018-06, §1](https://www.vdi.de/fileadmin/pages/vdi_de/redakteure/richtlinien/inhaltsverzeichnisse/2810323.pdf).
+fn check_system_component_references(product: &CatalogueProduct) -> CheckResult {
+    let article = &product.id;
+    let valid = !product.components.is_empty()
+        && product.components.iter().all(|link| {
+            let id = link.component_id.trim();
+            !id.is_empty() && id != article.as_str()
+        });
+    let check = CheckResult::assess(
+        format!("vdi3805.100.componentReferences.{article}"),
+        part_label(100),
+        clause("100", "1"),
+        subject_product(product),
+        copy("System component references", "Systemkomponentenreferenzen"),
+    )
+    .annex(ANNEX);
+    if valid {
+        return check.status(CheckStatus::Pass).explanation(copy(
+            "The system declares references to its component products.",
+            "Das System deklariert Referenzen auf seine Einzelprodukte.",
+        )).build();
+    }
+    check.status(CheckStatus::Fail).explanation(copy(
+        "The system needs component product references. Empty references and links to the system itself do not identify components.",
+        "Das System benötigt Referenzen auf Einzelprodukte. Leere Referenzen und Selbstverweise identifizieren keine Komponenten.",
+    )).remedy(Remedy::advisory(
+        SubjectRef::new(article, product_path(article, "components"), copy("Component references", "Komponentenreferenzen")),
+        copy("Add references to the separate component products.", "Referenzen auf die einzelnen Komponentenprodukte hinzufügen."),
+    )).build()
+}
+
+fn unverified_sheet_records(product: &CatalogueProduct, section: &str) -> CheckResult {
+    let sheet = product.sheet.0;
+    CheckResult::assess(
+        format!("vdi3805.{sheet}.recordSchema.{}", product.id),
+        part_label(sheet),
+        clause(&sheet.to_string(), section),
+        subject_product(product),
+        copy("Product-sheet record requirements", "Datensatzanforderungen des Produktblatts"),
+    )
+    .annex(ANNEX)
+    .status(CheckStatus::UnverifiedBasis)
+    .explanation(copy(
+        "The product-sheet record definitions still need conformance verification.",
+        "Die Datensatzdefinitionen des Produktblatts müssen noch auf Konformität geprüft werden.",
+    ))
+    .build()
+}
+
 pub(super) fn check_sheet_product(document: &Vdi3805Snapshot, product: &CatalogueProduct) -> Vec<CheckResult> {
     let mut out = check_attributes_records_sync(product);
     match product.sheet.0 {
@@ -197,17 +251,31 @@ pub(super) fn check_sheet_product(document: &Vdi3805Snapshot, product: &Catalogu
             let attrs = valve_attrs_from_product(product);
             out.extend(check_valve(document, product, &attrs));
         }
-        3 => {
+        6 => {
             let attrs = radiator_attrs_from_product(product);
             out.extend(check_radiator(product, &attrs));
+            out.push(unverified_sheet_records(product, "5"));
         }
-        5 => {
+        4 => {
             let attrs = pump_attrs_from_product(product);
             out.extend(check_pump(document, product, &attrs));
+            out.push(unverified_sheet_records(product, "5"));
         }
-        6 => {
+        3 => {
             let attrs = heat_attrs_from_product(product);
             out.extend(check_heat_generator(product, &attrs));
+            out.push(unverified_sheet_records(product, "5"));
+        }
+        22 => {
+            out.extend(air_to_air_heat_pump::check_records(document, product));
+            out.push(unverified_sheet_records(product, "5"));
+        }
+        5 | 7 | 9 | 10 | 16 | 19 | 29 => out.push(unverified_sheet_records(product, "5")),
+        8 | 60 | 65 | 66 => out.push(unverified_sheet_records(product, "4")),
+        53 | 61..=64 => out.push(unverified_sheet_records(product, "1")),
+        100 => {
+            out.push(check_system_component_references(product));
+            out.push(unverified_sheet_records(product, "5"));
         }
         _ => out.extend(check_operative_sheet(document, product)),
     }

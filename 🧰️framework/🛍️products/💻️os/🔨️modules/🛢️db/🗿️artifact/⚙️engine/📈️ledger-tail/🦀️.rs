@@ -39,6 +39,7 @@ impl ArtifactLedgerPoint {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ArtifactLedgerCommit {
     pub point: ArtifactLedgerPoint,
+    pub original_edit: Option<protocol::atomic_hub::AtomicWalEdit>,
     pub envelopes: Vec<protocol::MutationEnvelope>,
 }
 
@@ -81,6 +82,7 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
             let mut envelopes = Vec::new();
             let mut frontier = None;
             let mut decision = None;
+            let mut original_edit = None;
             loop {
                 let record = match transaction.next_record_step()? {
                     db_wal_log::WalCommittedRecordStep::Record(record) => record,
@@ -104,6 +106,13 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
                         }
                         frontier = Some(committed.clone());
                     }
+                    db_wal_log::WalRecord::Outbox(bytes) => {
+                        if let Some(group) = db_sync::decode_atomic_wal_descriptor(bytes)? {
+                            if original_edit.replace(group).is_some() {
+                                return Err(DbError::Corrupt("ledger transaction repeats its original edit".into()));
+                            }
+                        }
+                    }
                     db_wal_log::WalRecord::Event(bytes) => {
                         let mut canonical_pack = Vec::with_capacity(bytes.len());
                         for fragment in bytes.fragments() {
@@ -119,6 +128,13 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
                 turn.step().await;
             }
             transaction.finish()?;
+            if let Some(group) = &original_edit {
+                if !group.admits(&envelopes) || decision.is_some() || frontier.is_none() {
+                    return Err(DbError::Corrupt("ledger transaction lost exact original edit grouping".into()));
+                }
+            } else if envelopes.iter().any(|row| row.transaction.as_ref().is_some_and(|tx| protocol::atomic_group::is_atomic_backbone_tool(&tx.tool))) {
+                return Err(DbError::Corrupt("ledger original edit lost its WAL descriptor".into()));
+            }
             let next = match (decision, frontier, envelopes.last()) {
                 (Some(record), None, None) => {
                     if !decisions.insert(record.decision_sha256().to_string()) {
@@ -134,7 +150,7 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
                         head_edit_id: Some(protocol::MutationId(record.parent_edit_id().to_string())),
                     }
                 }
-                (None, Some(frontier), Some(last)) => ArtifactLedgerPoint { head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash, head_edit_id: Some(last.mutation_id.clone()) },
+                (None, Some(frontier), Some(last)) => ArtifactLedgerPoint { head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash, head_edit_id: Some(original_edit.as_ref().map(|group| protocol::MutationId(group.edit_id.clone())).unwrap_or_else(|| last.mutation_id.clone())) },
                 (None, None, None) => continue,
                 _ => return Err(DbError::Corrupt("ledger transaction is neither one command batch with its frontier nor one durable group decision".to_string())),
             };
@@ -157,7 +173,7 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
             if !reached && point.commit_seq >= through.commit_seq {
                 return Err(DbError::NotFound("ledger tail end is not a committed ledger point".to_string()));
             }
-            commits.push(ArtifactLedgerCommit { point: point.clone(), envelopes });
+            commits.push(ArtifactLedgerCommit { point: point.clone(), original_edit, envelopes });
             if reached {
                 return Ok(commits);
             }

@@ -3,6 +3,8 @@ export type TakePolicyV1 = Readonly<{ concurrency: number; pollFirstMilliseconds
 export type TakeCountsV1 = Readonly<{ total: number; present: number; fetched: number; here: number; stale: number; running: number; wanted: number; done: number; missing: number }>;
 /** ⚙️ The authored numbers of the take pass. */
 export const TAKE_POLICY_V1: TakePolicyV1;
+/** 🪢️ Waits for another lane without taking custody of its look. */
+export function joinTakeLookV1<Outcome>(running: Promise<Outcome>, signal: AbortSignal): Promise<Outcome>;
 /** ⏱️ The pause before look number `round` at the cache. */
 export function takePollWaitV1(round: number, policy?: TakePolicyV1): number;
 /** 📒️ What a reader knows about its owners while it resolves them. */

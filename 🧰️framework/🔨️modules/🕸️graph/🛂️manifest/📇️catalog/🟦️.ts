@@ -75,9 +75,9 @@ export function parseGraphOutputCatalog(input: unknown, manifestIds: readonly st
   return Object.freeze({ ...(root.$schema === undefined ? {} : { $schema: root.$schema as string }), contractId: root.contractId, version: 1, inputAreas, policy, shared: outputShared, manifests: Object.freeze(manifests) });
 }
 
-export function readGraphOutputCatalog(path:string): GraphOutputCatalog {
+export function readGraphOutputCatalog(path: string, read: (path: string) => string = (path) => readFileSync(path, "utf8")): GraphOutputCatalog {
   try {
-    const input = JSON.parse(readFileSync(path, "utf8"));
+    const input = JSON.parse(read(path));
     if (!Array.isArray(input?.manifests)) throw new Error("graph output manifests must be an array");
     return parseGraphOutputCatalog(input,input.manifests.map((row:{id:string})=>row.id));
   } catch (error) {

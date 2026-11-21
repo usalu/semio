@@ -56,7 +56,7 @@ def orientation(azimuth, tilt):
 def months(doc):
     theta = np.array(doc["climate"]["thetaEC"], dtype=float)
     irradiance = np.array(doc["climate"]["gHWM2"], dtype=float)
-    envelope = sum(e["areaM2"] for e in doc["elements"]) or 1e-9
+    envelope = sum(e["areaM2"] for e in doc["elements"] if e["adjacency"] != "Heated")
     total_volume = sum(z["volumeM3"] for z in doc["zones"]) or 1e-9
     eta_recovery = min(max(doc["ventilation"]["heatRecoveryEta"], 0.0), 1.0)
     out = []
@@ -73,7 +73,13 @@ def months(doc):
         over = np.maximum(theta - zone["thetaICoolC"], 0.0)
         q_t = h_t * heat * DAY_HOURS / 1000.0
         q_v = h_v * heat * DAY_HOURS / 1000.0
-        q_i = zone["internalGainsWM2"] * zone["areaM2"] * DAY_HOURS / 1000.0
+        daily_gains = (
+            {"ResidentialUpToTwoDwellings": 45, "ResidentialMultifamily": 90}.get(doc["useClass"])
+            if (doc["buildingCategory"], doc["method"], zone["usageProfile"]) == ("Residential", "DetailedMonthly", "WFH")
+            else None
+        )
+        gain_wh_m2 = zone["internalGainsWM2"] * DAY_HOURS if daily_gains is None else daily_gains * DAY_HOURS / 24
+        q_i = gain_wh_m2 * zone["areaM2"] / 1000.0
         q_s = sum((irradiance * orientation(e["orientationDeg"], e["tiltDeg"]) * e["areaM2"] * e["gValue"] * min(max(e["fc"], 0.0), 1.0) * DAY_HOURS / 1000.0 for e in elements if e["gValue"] > 0), np.zeros(12))
         loss, gain = q_t + q_v, q_i + q_s
         eta = eta_gain(np.where(loss <= 1e-9, 1e9, gain / np.where(loss <= 1e-9, 1.0, loss)), a)

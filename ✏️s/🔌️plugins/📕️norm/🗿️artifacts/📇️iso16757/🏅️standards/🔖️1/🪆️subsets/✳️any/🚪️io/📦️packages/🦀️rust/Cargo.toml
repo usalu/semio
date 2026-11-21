@@ -28,6 +28,7 @@ semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-iso16757-checks-common = { workspace = true }
 semio-s-artifact-norm-iso16757-diff = { workspace = true }
 semio-s-artifact-norm-iso16757-model = { workspace = true }
 semio-s-artifact-norm-iso16757-mut-catalogue = { workspace = true }

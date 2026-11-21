@@ -32,6 +32,7 @@ macro_rules! shared_root{($root:ty)=>{impl<T:crate::retirement::RetireOwned+Send
 }}}
 shared_root!(SealedShared<T>);
 shared_root!(crate::retirement::arc_custody::original::SharedOriginalStorage<T>);
+shared_root!(crate::retirement::arc_custody::ArcLease<T>);
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum RelayKind{Backing,Capture,Take}
 #[derive(Clone,Copy,PartialEq,Eq)]

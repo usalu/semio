@@ -378,6 +378,72 @@ const waitMeshes = async (page: Page): Promise<Snapshot> => {
   return last;
 };
 
+let exactHoverFailure: string | null = null;
+
+async function verifyShellHover(page: Page): Promise<void> {
+  const graph = '[data-surface-id="window:procedural-main"][data-selection-json]';
+  const preview = '[data-surface-id="window:procedural-preview"][data-selection-json]';
+  const handle = "shell@solid";
+  const evidence = { graphToPreview: false, previewToGraph: false, cleared: false };
+  try {
+    const point = await (await page.waitForFunction(({ graph, handle }) => {
+      const node = document.querySelector(graph);
+      const id = node?.getAttribute("data-surface-id");
+      if (!id) return null;
+      const probes = (window as unknown as { __semioFlowGraphProbe?: Record<string, {
+        entity(domain: string, key: string): { point?: { x: number; y: number } } | null;
+      }> }).__semioFlowGraphProbe;
+      const selected = probes?.[id]?.entity("handle", handle)?.point;
+      return selected && node?.contains(document.elementFromPoint(selected.x, selected.y)) ? selected : null;
+    }, { graph, handle }, { timeout: 15000, polling: 180 })).jsonValue();
+    if (!point) throw Error("Box Shell output handle is outside the mounted graph viewport");
+    await page.mouse.move(point.x, point.y);
+    await page.waitForFunction(({ preview, handle }) => {
+      const paint = document.querySelector(preview)?.getAttribute("data-hover-paint-id");
+      return paint === handle || !!paint && paint.startsWith(handle + "#");
+    }, { preview, handle }, { timeout: 15000 });
+    evidence.graphToPreview = true;
+
+    await page.mouse.move(1, 1);
+    await page.waitForFunction(preview =>
+      !document.querySelector(preview)?.hasAttribute("data-hover-paint-id"), preview, { timeout: 10000 });
+    const canvas = await page.locator(preview).locator("canvas").first().boundingBox();
+    if (!canvas) throw Error("Box Shell Preview canvas has no viewport");
+    const fractions = [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8];
+    for (const y of fractions) {
+      for (const x of fractions) {
+        await page.mouse.move(canvas.x + x * canvas.width, canvas.y + y * canvas.height);
+        const picked = await page.waitForFunction(({ preview, handle }) => {
+          const paint = document.querySelector(preview)?.getAttribute("data-hover-paint-id");
+          return paint === handle || !!paint && paint.startsWith(handle + "#");
+        }, { preview, handle }, { timeout: 300, polling: 50 }).catch(() => null);
+        if (!picked) continue;
+        await page.waitForFunction(graph => {
+          const selection = document.querySelector(graph)?.getAttribute("data-selection-json");
+          const hover = selection && JSON.parse(selection).hoverTarget;
+          return hover?.nodeId === "shell" && (hover.portId === "solid" || hover.portId === "shell@solid");
+        }, graph, { timeout: 15000 });
+        evidence.previewToGraph = true;
+        break;
+      }
+      if (evidence.previewToGraph) break;
+    }
+    if (!evidence.previewToGraph) throw Error("No real preview hit reached the Box Shell output");
+    await page.mouse.move(1, 1);
+    await page.waitForFunction(({ graph, preview }) => {
+      const selection = document.querySelector(graph)?.getAttribute("data-selection-json");
+      return !!selection && JSON.parse(selection).hoverTarget === null
+        && !document.querySelector(preview)?.hasAttribute("data-hover-paint-id");
+    }, { graph, preview }, { timeout: 10000 });
+    evidence.cleared = true;
+  } catch (error) {
+    exactHoverFailure = String(error);
+    throw error;
+  } finally {
+    writeJson("bidirectional-hover.json", { ...evidence, error: exactHoverFailure });
+  }
+}
+
 const interact = async (page: Page) => {
   if (steps.some((s) => ["hover", "select", "orbit"].includes(s))) await waitMeshes(page);
   if (preDelaySec > 0) {
@@ -415,6 +481,10 @@ const interact = async (page: Page) => {
   }
   if (steps.includes("hover")) {
     await runStep(page, "hover", async () => {
+      if (example === "box-shell-preview") {
+        await verifyShellHover(page);
+        return;
+      }
       const c = previewCanvas(page);
       if (!(await c.count())) throw new Error("no preview canvas for hover");
       const box = await c.boundingBox();
@@ -508,6 +578,7 @@ const faultTexts = [
   ...(snap?.visibleFaults ?? []),
 ].filter((t, i, a) => t && a.indexOf(t) === i);
 
+if (exactHoverFailure !== null) exitCode = 1;
 const summary = {
   schema: "semio.procedural3d.browser-probe/1",
   observedAt,

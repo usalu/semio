@@ -12,6 +12,14 @@
       "type": "string",
       "x-semio-state": "config",
       "x-semio-owner": "window"
+    },
+    "brush": {
+      "anyOf": [
+        {"$ref": "https://json.schemas.assets.semio-tech.com/app/gis/gisterrain/window/config/brush.json"},
+        {"type": "null"}
+      ],
+      "x-semio-state": "config",
+      "x-semio-owner": "window"
     }
   }
 }

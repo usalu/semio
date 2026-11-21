@@ -1,10 +1,13 @@
 //! 🧬️ Transparent GIS 3D configuration mutation roster.
-use super::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff};
+use super::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff, TerrainBrushSettings};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🧬️Leaves
 #[path = "🎥️camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
+#[path = "🖌️brush/🦀️.rs"]
+mod set_terrain_brush;
+pub use set_terrain_brush::SetTerrainBrush;
 //#endregion 🧬️Leaves
 //#region 🧬️Aggregate
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -13,16 +16,24 @@ pub use set_camera::SetCamera;
 #[mutations(snapshot = GisTerrainWindowConfig, diff = GisTerrainWindowConfigDiff, schema = "gis.gisterrainwindowcfg", reference = GisTerrainWindowConfig, reference_diff = GisTerrainWindowConfigDiff)]
 pub enum GisTerrainWindowConfigMutation {
     SetCamera(SetCamera),
+    SetTerrainBrush(SetTerrainBrush),
 }
 impl store::snapshot_clone_preparation::ConfigApplyMutation<GisTerrainWindowConfig> for GisTerrainWindowConfigMutation {
     fn exchange(self, post: &mut GisTerrainWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         Ok(match self {
             Self::SetCamera(SetCamera { camera_json }) => Self::SetCamera(SetCamera { camera_json: std::mem::replace(&mut post.camera_json, camera_json) }),
+            Self::SetTerrainBrush(payload) => {
+                if let Err(error) = payload.brush.map(TerrainBrushSettings::validate).transpose() {
+                    return Err((error, Self::SetTerrainBrush(payload)));
+                }
+                Self::SetTerrainBrush(SetTerrainBrush { brush: std::mem::replace(&mut post.brush, payload.brush) })
+            }
         })
     }
     fn payload_bytes(&self) -> usize {
         match self {
             Self::SetCamera(SetCamera { camera_json }) => camera_json.len(),
+            Self::SetTerrainBrush(payload) => payload.brush.map_or(0, |_| std::mem::size_of::<TerrainBrushSettings>()),
         }
     }
 }

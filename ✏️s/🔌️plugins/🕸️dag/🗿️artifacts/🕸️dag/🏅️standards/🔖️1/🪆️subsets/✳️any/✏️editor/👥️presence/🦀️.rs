@@ -6,7 +6,7 @@ use pack::snapshot::ArtifactPack;
 /// 👥️ Shareable live node-graph view state — viewport camera only; peer selection/hover now ride the
 /// framework's own typed `PresenceInteraction` for the `graph` domain (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), not this app-opaque facet.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

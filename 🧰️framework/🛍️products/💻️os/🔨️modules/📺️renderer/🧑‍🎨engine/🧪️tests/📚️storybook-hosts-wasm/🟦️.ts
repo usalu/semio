@@ -11,6 +11,8 @@
 // #endregion 🧲️Header
 
 import { expect, test, type Page } from "../../../../../../../../.storybook/🧪️tests/🎭️playwright/🟦️.ts";
+import { PNG } from "pngjs";
+import terrariumFixture from "../../../../../../../🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🧫️fixtures/🏔️terrarium-tile/🔣️.json";
 
 //#region Helpers
 function significantConsoleErrors(messages: string[]): string[] {
@@ -99,5 +101,27 @@ test("World3dHost terrain viewport: mounts WorldTerrainLayer against the real Te
 //#region WorldTerrainLayer
 test("WorldTerrainLayer hypsometric ramp: boots the real TerrainSession WASM engine inside a standalone r3f Canvas", async ({ page }) => {
   await expectHostStory(page, "🛠️framework🔌️hosts-worldterrainlayer--hypsometric-ramp");
+});
+
+test("WorldTerrainLayer retries a failed elevation request for the visible camera target", async ({ page }) => {
+  const png = new PNG({ width: 256, height: 256 });
+  for (let offset = 0; offset < png.data.length; offset += 4) png.data.set(terrariumFixture.pixel, offset);
+  const bytes = PNG.sync.write(png);
+  const { data } = PNG.sync.read(bytes);
+  expect((data.readUInt16BE(0) + data[2] / 256 - 32768) * terrariumFixture.exaggeration).toBe(terrariumFixture.expectedMeshHeight);
+  const centerPath = "/storybook-missing-dem/14/8635/5383.png";
+  let attempts = 0;
+  await page.route("**/storybook-missing-dem/**/*.png", async (route) => {
+    if (new URL(route.request().url()).pathname !== centerPath) {
+      await route.fulfill({ status: 404 });
+      return;
+    }
+    attempts += 1;
+    await route.fulfill(attempts === 1 ? { status: 503 } : { contentType: "image/png", body: bytes });
+  });
+  const response = page.waitForResponse((result) => result.ok() && new URL(result.url()).pathname === centerPath);
+  await page.goto("iframe.html?id=🛠️framework🔌️hosts-worldterrainlayer--hypsometric-ramp&viewMode=story", { waitUntil: "domcontentloaded" });
+  expect((await response).headers()["content-type"]).toBe("image/png");
+  expect(attempts).toBe(2);
 });
 //#endregion WorldTerrainLayer

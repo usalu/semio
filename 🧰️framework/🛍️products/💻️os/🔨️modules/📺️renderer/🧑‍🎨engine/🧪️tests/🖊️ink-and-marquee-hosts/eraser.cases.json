@@ -1,0 +1,15 @@
+[
+  {"title":"a sparse segment crosses the eraser","origin":[0,0],"center":[40,0],"radius":5,"points":[[0,0],[80,0]],"fragments":[[[0,0],[35,0]],[[45,0],[80,0]]]},
+  {"title":"two segments meet inside the eraser","origin":[0,0],"center":[40,0],"radius":5,"points":[[0,0],[40,0],[80,0]],"fragments":[[[0,0],[35,0]],[[45,0],[80,0]]]},
+  {"title":"existing samples outside the cut are retained","origin":[0,0],"center":[40,0],"radius":5,"points":[[0,0],[10,0],[40,0],[70,0],[80,0]],"fragments":[[[0,0],[10,0],[35,0]],[[45,0],[70,0],[80,0]]]},
+  {"title":"an offset chord clips in local stroke coordinates","origin":[100,200],"center":[110,203],"radius":5,"points":[[0,0],[20,0]],"fragments":[[[0,0],[6,0]],[[14,0],[20,0]]]},
+  {"title":"a reverse segment keeps its direction","origin":[0,0],"center":[5,0],"radius":3,"points":[[10,0],[0,0]],"fragments":[[[10,0],[8,0]],[[2,0],[0,0]]]},
+  {"title":"a diagonal secant yields both exact endpoints","origin":[0,0],"center":[4,4],"radius":1.4142135623730951,"points":[[0,0],[8,8]],"fragments":[[[0,0],[3,3]],[[5,5],[8,8]]]},
+  {"title":"a tangent keeps the original stroke","origin":[0,0],"center":[10,5],"radius":5,"points":[[0,0],[20,0]],"fragments":[[[0,0],[20,0]]],"unchanged":true},
+  {"title":"an erased start leaves the first outside piece with the source ID","origin":[0,0],"center":[0,0],"radius":5,"points":[[0,0],[0,0],[20,0]],"fragments":[[[5,0],[20,0]]]},
+  {"title":"a fully erased path retains no degenerate pieces","origin":[0,0],"center":[0,0],"radius":5,"points":[[-5,0],[0,0],[5,0]],"fragments":[]},
+  {"title":"a dot outside the eraser keeps its sampling","origin":[0,0],"center":[5,5],"radius":2,"points":[[0,0],[0,0]],"fragments":[[[0,0],[0,0]]],"unchanged":true},
+  {"title":"a dot inside the eraser is removed","origin":[0,0],"center":[0,0],"radius":2,"points":[[0,0]],"fragments":[]},
+  {"title":"outside segments connect across the original joint","origin":[0,0],"center":[40,0],"radius":5,"points":[[0,0],[80,0],[80,20]],"fragments":[[[0,0],[35,0]],[[45,0],[80,0],[80,20]]]},
+  {"title":"a loop can leave and re-enter the circle","origin":[0,0],"center":[5,0],"radius":1,"points":[[0,0],[10,0],[0,0]],"fragments":[[[0,0],[4,0]],[[6,0],[10,0],[6,0]],[[4,0],[0,0]]]}
+]

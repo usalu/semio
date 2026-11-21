@@ -1,0 +1,30 @@
+{
+  "200": [
+    {
+      "en": "Body: as the 1:200 drawing merges the quarters in pairs, the jacket is a lower and an upper half of 0.66 m; base drum, cover of six facets, the outlet and one 50 mm nipple per side remain.",
+      "de": "Körper: da die Zeichnung 1:200 die Viertel paarweise zusammenfasst, ist der Mantel eine untere und eine obere Hälfte von 0,66 m; Basistrommel, Abdeckung mit sechs Facetten, der Abgang und je ein Nippel von 50 mm pro Seite bleiben."
+    },
+    {
+      "en": "Thermal: one solid cylinder slice per quarter (layers merged), the cover, the three nipples, and the plume outlet as a 4 mm skin on the crown of the cover (D2: an outlet patch on the surface, not a mass).",
+      "de": "Thermik: ein voller Zylinderabschnitt je Viertel (Schichten zusammengefasst), die Abdeckung, die drei Nippel und der Austritt der Wärmefahne als 4 mm dünne Haut auf dem Scheitel der Abdeckung (D2: eine Austrittsfläche auf der Oberfläche, keine Masse)."
+    },
+    {
+      "en": "Structure: the vessel courses with heads of three facets, the cover skin on its collar, three legs, two 60 mm pads, one bar per drawn nipple and the outlet pipe, four masses; no welds.",
+      "de": "Tragwerk: die Mantelschüsse mit Böden aus drei Facetten, die Abdeckungshaut auf ihrem Kragen, drei Beine, zwei Auflagerklötze von 60 mm, je ein Stab pro gezeichnetem Nippel und das Abgangsrohr, vier Massen; keine Nähte."
+    }
+  ],
+  "500": [
+    {
+      "en": "Body: the 1:500 drawing draws the feet as a 0.12 m base and the nipples as 110 mm squares at the 75 mm floor; the jacket halves stay, the cover has four facets, and the outlet and the two side nipples are round 110 mm stubs on their real axes.",
+      "de": "Körper: die Zeichnung 1:500 zeichnet die Füße als 0,12 m hohe Basis und die Nippel als Quadrate von 110 mm an der 75-mm-Grenze; die Mantelhälften bleiben, die Abdeckung hat vier Facetten, und Abgang und die beiden Seitennippel sind runde Stutzen von 110 mm auf ihren wirklichen Achsen."
+    },
+    {
+      "en": "Thermal: one slice per quarter, the cover, the three round stubs, and the plume outlet as a 4 mm skin on the crown of the cover.",
+      "de": "Thermik: ein Abschnitt je Viertel, die Abdeckung, die drei runden Stutzen und der Austritt der Wärmefahne als 4 mm dünne Haut auf dem Scheitel der Abdeckung."
+    },
+    {
+      "en": "Structure: the vessel courses with single-facet heads, the cover skin on its foam collar, three legs as 76 mm bars on two 75 mm round contact pads, the outlet pipe as one bar, four masses; the side nipples are below the scale.",
+      "de": "Tragwerk: die Mantelschüsse mit einfach facettierten Böden, die Abdeckungshaut auf ihrem Schaumkragen, drei Beine als 76-mm-Stäbe auf zwei runden Auflagerscheiben von 75 mm, das Abgangsrohr als ein Stab, vier Massen; die Seitennippel liegen unter dem Maßstab."
+    }
+  ]
+}

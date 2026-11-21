@@ -21,5 +21,117 @@
     {"name": "at the high share nothing is needed", "totalBytes": 1000, "freeBytes": 100, "need": 0},
     {"name": "above the high share the excess over the low share is needed", "totalBytes": 1000, "freeBytes": 50, "need": 150},
     {"name": "a full partition needs the whole excess over the low share", "totalBytes": 1000, "freeBytes": 0, "need": 200}
+  ],
+  "automaticCompletion": {
+    "capBytes": 1000,
+    "clock": 2000000000,
+    "minAgeMs": 600000,
+    "remainingBytes": 1600,
+    "rows": [
+      {
+        "name": "matching",
+        "advance": 1200,
+        "cap": 1000,
+        "priorBytes": 1600,
+        "scope": "same",
+        "timestamp": "valid",
+        "critical": false,
+        "collects": 0
+      },
+      {
+        "name": "minimum-age override",
+        "advance": 1200,
+        "cap": 1000,
+        "priorBytes": 1600,
+        "scope": "age",
+        "timestamp": "valid",
+        "critical": false,
+        "collects": 1
+      },
+      {
+        "name": "stricter cap",
+        "advance": 1200,
+        "cap": 950,
+        "priorBytes": 1600,
+        "scope": "same",
+        "timestamp": "valid",
+        "critical": false,
+        "collects": 1
+      },
+      {
+        "name": "canonical area changed",
+        "advance": 1200,
+        "cap": 1000,
+        "priorBytes": 1600,
+        "scope": "area",
+        "timestamp": "valid",
+        "critical": false,
+        "collects": 1
+      },
+      {
+        "name": "expired",
+        "advance": 600000,
+        "cap": 1000,
+        "priorBytes": 1600,
+        "scope": "same",
+        "timestamp": "valid",
+        "critical": false,
+        "collects": 1
+      },
+      {
+        "name": "future",
+        "advance": 1200,
+        "cap": 1000,
+        "priorBytes": 1600,
+        "scope": "same",
+        "timestamp": "future",
+        "critical": false,
+        "collects": 1
+      },
+      {
+        "name": "manual unscoped measurement",
+        "advance": 1200,
+        "cap": 1000,
+        "priorBytes": 1600,
+        "scope": "manual",
+        "timestamp": "valid",
+        "critical": false,
+        "collects": 1
+      },
+      {
+        "name": "ordinary growth crossed the cap",
+        "advance": 1200,
+        "cap": 1000,
+        "priorBytes": 990,
+        "scope": "same",
+        "timestamp": "valid",
+        "critical": false,
+        "collects": 1
+      },
+      {
+        "name": "critical",
+        "advance": 1200,
+        "cap": 1000,
+        "priorBytes": 1600,
+        "scope": "same",
+        "timestamp": "valid",
+        "critical": true,
+        "collects": 1
+      },
+      {"name":"becomes critical during verification","advance":1200,"cap":1000,"priorBytes":1600,"scope":"same","timestamp":"valid","critical":"transition","collects":1}
+    ]
+  },
+  "localCompletion": [
+    {"name":"same completed high scope","origin":"high","request":"high","owner":"same","result":"completed","expected":0,"refused":false},
+    {"name":"throw leaves later retry","origin":"high","request":"high","owner":"same","result":"throw","expected":1,"refused":false},
+    {"name":"locked leaves later retry","origin":"high","request":"high","owner":"same","result":"locked","expected":1,"refused":false},
+    {"name":"partial leaves later retry","origin":"high","request":"high","owner":"same","result":"partial","expected":1,"refused":false},
+    {"name":"dry leaves later retry","origin":"high","request":"high","owner":"same","result":"dry","expected":1,"refused":false},
+    {"name":"lockless leaves later retry","origin":"high","request":"high","owner":"same","result":"lockless","expected":1,"refused":false},
+    {"name":"changed critical pressure requires relief","origin":"high","request":"critical","owner":"same","result":"completed","expected":1,"refused":true},
+    {"name":"different policy guard requires relief","origin":"high","request":"high","owner":"other","result":"completed","expected":1,"refused":false},
+    {"name":"same completed critical scope","origin":"critical","request":"critical","owner":"same","result":"completed","expected":0,"refused":true},
+    {"name":"failed critical is finite per call","origin":"critical","request":"critical","owner":"same","result":"throw","expected":1,"refused":true},
+    {"name":"locked critical is finite per call","origin":"critical","request":"critical","owner":"same","result":"locked","expected":1,"refused":true}
   ]
 }

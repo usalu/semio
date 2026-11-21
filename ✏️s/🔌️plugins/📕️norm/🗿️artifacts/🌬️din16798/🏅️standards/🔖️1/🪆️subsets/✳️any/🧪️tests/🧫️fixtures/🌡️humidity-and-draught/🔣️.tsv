@@ -1,0 +1,17 @@
+annex	category	t_air_c	speed_m_s	turbulence_pct	rh_min_pct	rh_max_pct	draught_limit_pct	rate_scope
+de	I	20	0.05	40	40	50	10	yes
+de	II	24.5	0.35	40	30	60	15	yes
+de	III	26	0.20	60	20	70	30	yes
+de	IV	22	0.20	40	-	-	-	yes
+en	I	26	0.4999	10	30	50	10	yes
+en	II	24.5	0.35	40	25	60	20	yes
+en	III	23	0.04	40	20	70	30	yes
+en	IV	24	0.1	40	-	-	-	yes
+de	II	26.01	0.2	40	30	60	15	no
+de	II	19.99	0.2	40	30	60	15	no
+de	II	20	0.5	40	30	60	15	no
+de	II	20	0.1	9.99	30	60	15	no
+de	II	24	0.1	60.01	30	60	15	no
+de	II	24	-0.1	40	30	60	15	no
+en	III	24	0.48	60	20	70	30	yes
+en	I	22	0.425	60	30	50	10	yes

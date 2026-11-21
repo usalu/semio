@@ -12,7 +12,7 @@ use semio_s_artifact_raster_raster_mutations_pixels::{add_layer_asset, remove_la
 use semio_s_artifact_raster_raster_mutations_layers::{create_layer, delete_layer, move_layer, rename_layer, reorder_layers, resize_layer};
 use semio_s_artifact_raster_raster_mutations_layer_props::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible};
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
-use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_raster_raster_model::{RasterImagePayload, SemioImageSnapshot, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_host::{raster_document_store_owners, RasterOneItemApply};
 use semio_s_artifact_raster_raster_model::retire_raster_value_cold;
@@ -21,7 +21,16 @@ use semio_s_artifact_raster_raster_model::retire_raster_value_cold;
 const RASTER_TEST_FUEL: u64 = 64;
 
 fn raster_test_wallet() -> semio_framework_value::retained_clone::RetainedCloneGrant {
-    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 4_096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }
+}
+
+fn with_raster_effect<T>(grant: semio_framework_value::RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> T) -> T {
+    let mut turn = semio_framework_job::OriginalRetirementPump::new().turn(RASTER_TEST_FUEL, u64::MAX, semio_framework_job::default_now_us, grant).unwrap();
+    turn.with_effect(run).unwrap().expect("funded Raster law turn").0
+}
+
+fn raster_fixture_payload(image: SemioImageSnapshot) -> RasterImagePayload {
+    RasterImagePayload::from_owned(image, raster_test_wallet()).result.unwrap_or_else(|(error, _)| panic!("{error}")).0
 }
 
 #[semio_framework_async_macros::async_test]
@@ -87,7 +96,7 @@ fn drive_raster_candidate(base: &RasterSnapshot, operation: &RasterMutation, ope
     let generation = semio_framework_job::Generation(1);
     let mut apply = RasterOneItemApply::new();
     for _ in 0..200_000 {
-        let (post, _receipt) = apply.advance(base, operation, operation_id, generation, RASTER_TEST_FUEL, raster_test_wallet()).expect("retained Raster apply");
+        let (post, _receipt) = with_raster_effect(raster_test_wallet(), |effect| apply.advance(base, operation, operation_id, generation, effect)).expect("retained Raster apply");
         if let Some(post) = post {
             assert!(apply.terminal_is_empty(), "a published candidate has retired every displaced owner");
             if let Some(inverse)=post.inverse{retire_raster_value_cold(inverse);}
@@ -155,7 +164,7 @@ fn retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels() {
     let minted = semio_s_artifact_raster_raster_model::mint_raster_image_child("semio-emblem", &asset);
     let base = empty_raster_document();
     let layer_id = semio_s_artifact_raster_raster_model::layer_node_id(&base.layers[0]).to_string();
-    let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset });
+    let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset: raster_fixture_payload(asset) });
     let added = drive_raster_candidate(&base, &add, 880);
     assert_eq!(added.assets.get("semio-emblem").expect("the retained apply inserts the asset child").child_id, minted.child_id, "the retained apply mints this artifact's own canonical content-addressed child id");
     assert!(semio_s_artifact_raster_raster_io::raster_asset(&added.assets, "semio-emblem").is_some(), "the composite reads its pixels back out of the applied asset pool");
@@ -163,6 +172,8 @@ fn retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels() {
     let rename = RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id, new_name: "Backdrop".into() });
     let renamed = drive_raster_candidate(&added, &rename, 881);
     assert!(semio_s_artifact_raster_raster_io::raster_asset(&renamed.assets, "semio-emblem").is_some(), "every later mutation clones the snapshot and must carry its materialized assets across");
+    retire_raster_value_cold(add).unwrap();
+    retire_raster_value_cold(minted).unwrap();
     retirement::retire_raster_snapshot(renamed);
     retirement::retire_raster_snapshot(added);
     retirement::retire_raster_snapshot(base);
@@ -180,7 +191,7 @@ fn an_asset_over_one_retirement_grant_applies_and_its_operation_retires_within_e
     let bytes = asset.frames.iter().map(|frame| frame.rgba8.len()).sum::<usize>();
     assert!(bytes > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES * 4, "the demo emblem is real media, several grants long: {bytes} B");
     let base = empty_raster_document();
-    let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset });
+    let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset: raster_fixture_payload(asset) });
     let added = drive_raster_candidate(&base, &add, 882);
     assert!(semio_s_artifact_raster_raster_io::raster_asset(&added.assets, "semio-emblem").is_some(), "the applied pool resolves the emblem's pixels");
     retire_raster_value_cold(add);
@@ -457,7 +468,7 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
         RasterMutation::MoveLayer(move_layer::mutation::MoveLayer { layer_id: "pixel".into(), new_x: 1.0, new_y: 2.0 }),
         RasterMutation::ResizeLayer(resize_layer::mutation::ResizeLayer { layer_id: "pixel".into(), new_width: 2, new_height: 3 }),
         RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: "pixel".into(), new_adjustment_kind: "levels".into() }),
-        RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "asset".into(), asset: semio_s_artifact_raster_raster_model::semio_image_from_rgba8(1,1,vec![1,2,3,255]) }),
+        RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "asset".into(), asset: raster_fixture_payload(semio_s_artifact_raster_raster_model::semio_image_from_rgba8(1,1,vec![1,2,3,255])) }),
         RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id: "asset".into() }),
         RasterMutation::ChangeLayerPixels(semio_s_artifact_raster_raster_mutations_pixels::change_layer_pixels::ChangeLayerPixels { layer_id: "pixel".into(), expected_image_key: Some("previous".into()), content: semio_s_artifact_raster_raster_model::RasterPixelContent { image_key: Some("next".into()), width: None, height: None }, transform: None }),
         RasterMutation::ChangeLayerMask(semio_s_artifact_raster_raster_mutations_pixels::change_layer_mask::ChangeLayerMask {
@@ -600,11 +611,11 @@ fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
     let asset=semio_s_artifact_raster_raster_model::RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage {width:1,height:1,pixels:vec![1,2,3,255]}).unwrap()};
     for index in 0..semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {let key=format!("capacity-{index}");base.assets.insert(key.clone(),semio_s_artifact_raster_raster_io::mint_raster_asset_child(&key,&asset)).unwrap();}
     let before=base.clone();
-    let operation=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:"overflow".into(),asset:semio_s_artifact_raster_raster_io::semio_image_snapshot_from_raster_asset(&asset).unwrap()});
+    let operation=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:"overflow".into(),asset:raster_fixture_payload(semio_s_artifact_raster_raster_io::semio_image_snapshot_from_raster_asset(&asset).unwrap())});
     let mut apply=RasterOneItemApply::new();
     let mut refusal=None;
     for _ in 0..200_000 {
-        match apply.advance(&base,&operation,semio_framework_job::OperationId(980),semio_framework_job::Generation(1),RASTER_TEST_FUEL,raster_test_wallet()) {
+        match with_raster_effect(raster_test_wallet(), |effect| apply.advance(&base, &operation, semio_framework_job::OperationId(980), semio_framework_job::Generation(1), effect)) {
             Err(error)=>{refusal=Some(error.into_message());break;},
             Ok((Some(_),_))=>panic!("capacity overflow published"),
             Ok((None,_))=>{}
@@ -617,7 +628,7 @@ fn retained_asset_insertion_at_full_capacity_refuses_without_changing_source() {
         if apply.terminal_is_empty(){break;}
         let demand=apply.close_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap();
         let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:wallet.maximum_copy_bytes.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)};
-        apply.close_step(grant).unwrap();
+        with_raster_effect(grant, |effect| apply.close_step(effect)).result.unwrap();
     }
     assert!(apply.terminal_is_empty());
     drop(apply);
@@ -652,4 +663,127 @@ async fn raster_close_diagnosis_direct_store_add_layer_releases_all_owners() {
 fn runtime_fixture_text(relative: &str) -> &'static str {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
     Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
+}
+
+#[test]
+fn original_binary_replays_image_selection_and_pixel_samples() {
+    use semio_os_kernel::{original_receiving::{ReceivingStock,receive_to_completion},OpBinary,OpText};
+    use semio_s_artifact_raster_raster_mutations::text::{RasterMutationDsl,raster_mutation_to_dsl};
+    use semio_s_artifact_raster_raster_model::{RasterSelectionSpan,SemioColorspace,SemioImageFrame,SemioImageMetadataEntry};
+
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../receiving.json")).unwrap();
+    let stock=ReceivingStock {
+        stock:semio_framework_value::RetainedCloneGrant {
+            maximum_items:1<<20,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,
+            maximum_release_bytes:1<<30,maximum_depth:128,
+        },
+        quantum:raster_test_wallet(),fuel:1<<22,
+    };
+    let receive=|wire:&RasterMutationDsl,tag:u64| {
+        let encoded=wire.encode_op().expect("authored Raster binary");
+        assert_eq!(&encoded[..2],&[fixture["format"].as_u64().unwrap() as u8,tag as u8]);
+        let mut source=vec![0xa6,0x11,0x3c];
+        source.extend_from_slice(&encoded);
+        let end=source.len();
+        source.extend_from_slice(&[0xff,0x00]);
+        receive_to_completion::<RasterMutation>(&source,(3,end),stock)
+            .unwrap_or_else(|error|panic!("original Raster receiving: {}",error.message()))
+    };
+
+    let adjustment=&fixture["adjustment"];
+    let mut params=RasterOwnedMap::new();
+    let id=adjustment["id"].as_str().unwrap();
+    let tone=adjustment["tone"].as_str().unwrap();
+    let value=adjustment["value"].as_f64().unwrap();
+    params.insert(tone.into(),semio_framework_value::DslValue::float(value)).expect("fixture tone parameter");
+    let original=RasterMutationDsl::CreateLayer {
+        parent_id:None,index:0,layer:Box::new(RasterLayerNode::Adjustment {
+            id:id.into(),name:"Tone".into(),visible:true,locked:false,opacity:1.0,blend_mode:"normal".into(),
+            transform:RasterTransform::default(),adjustment_kind:"brightnessContrast".into(),params,
+        }),
+    };
+    let received=receive(&original,adjustment["tag"].as_u64().unwrap());
+    let RasterMutation::CreateLayer(create)=&received else {panic!("expected Raster adjustment layer");};
+    let RasterLayerNode::Adjustment {params,..}=&*create.layer else {panic!("expected Raster tone map");};
+    assert_eq!(params.get(tone),Some(&semio_framework_value::DslValue::float(value)));
+    assert_eq!(received.encode_op().unwrap(),original.encode_op().unwrap());
+    retire_raster_value_cold(received).expect("retire received Raster adjustment");
+    retire_raster_value_cold(original).expect("retire authored Raster adjustment");
+
+    let asset=&fixture["asset"];
+    let mut image=semio_s_artifact_raster_raster_model::semio_image_from_rgba8(
+        asset["width"].as_u64().unwrap() as u32,asset["height"].as_u64().unwrap() as u32,vec![],
+    );
+    image.colorspace=SemioColorspace::GrayscaleAlpha;
+    image.bit_depth=asset["depth"].as_u64().unwrap() as u8;
+    image.frames=asset["frameDelays"].as_array().unwrap().iter().zip(asset["frames"].as_array().unwrap()).map(|(delay,rgba)|{
+        SemioImageFrame {delay_ms:delay.as_u64().unwrap() as u32,rgba8:serde_json::from_value(rgba.clone()).unwrap()}
+    }).collect();
+    image.icc=Some(serde_json::from_value(asset["icc"].clone()).unwrap());
+    image.metadata=asset["metadata"].as_object().unwrap().iter().map(|(key,value)|{
+        SemioImageMetadataEntry {key:key.clone(),value:value.as_str().unwrap().into()}
+    }).collect();
+    let expected=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {
+        asset_id:asset["id"].as_str().unwrap().into(),asset:raster_fixture_payload(image),
+    });
+    let original=raster_mutation_to_dsl(&expected);
+    let text=original.print_op();
+    for octets in asset["frameBase64"].as_array().unwrap().iter().chain(std::iter::once(&asset["iccBase64"])) {
+        assert!(text.contains(&format!("\"{}\"",octets.as_str().unwrap())));
+    }
+    let received=receive(&original,asset["tag"].as_u64().unwrap());
+    assert_eq!(received,expected);
+    assert_eq!(received.encode_op().unwrap(),original.encode_op().unwrap());
+    retire_raster_value_cold(received).expect("retire received Raster mutation");
+    retire_raster_value_cold(original).expect("retire authored Raster mutation");
+    retire_raster_value_cold(expected).expect("retire expected Raster mutation");
+
+    let paged=&fixture["pagedFrame"];
+    let width=paged["width"].as_u64().unwrap() as u32;
+    let height=paged["height"].as_u64().unwrap() as u32;
+    let multiplier=paged["multiplier"].as_u64().unwrap() as usize;
+    let offset=paged["offset"].as_u64().unwrap() as usize;
+    let pixels=(0..width as usize*height as usize*4).map(|index|(index*multiplier+offset) as u8).collect::<Vec<_>>();
+    let byte_length=paged["byteLength"].as_u64().unwrap() as usize;
+    assert_eq!(pixels.len(),byte_length);
+    let expected=RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {
+        asset_id:"paged-fixture".into(),
+        asset:raster_fixture_payload(semio_s_artifact_raster_raster_model::semio_image_from_rgba8(width,height,pixels)),
+    });
+    let original=raster_mutation_to_dsl(&expected);
+    let encoded=original.encode_op().unwrap();
+    assert!((byte_length..byte_length+256).contains(&encoded.len()),"asset frame octets must remain compact");
+    let received=receive(&original,asset["tag"].as_u64().unwrap());
+    assert_eq!(received,expected);
+    assert_eq!(received.encode_op().unwrap(),encoded);
+    for value in [received,expected] {retire_raster_value_cold(value).expect("retire paged Raster image");}
+    retire_raster_value_cold(original).expect("retire authored paged Raster image");
+
+    let selection=&fixture["selection"];
+    let spans=selection["spans"].as_array().unwrap().iter().map(|row|RasterSelectionSpan {
+        start:row["start"].as_u64().unwrap() as u32,length:row["length"].as_u64().unwrap() as u32,
+        coverage:row["coverage"].as_u64().unwrap() as u32,
+    }).collect::<Vec<_>>();
+    let wire=RasterMutationDsl::FillSelection {
+        layer_id:selection["id"].as_str().unwrap().into(),target:selection["target"].as_str().unwrap().into(),
+        color:serde_json::from_value(selection["color"].clone()).unwrap(),
+        selection:Some(semio_framework_pack_json::to_json_string(&spans)),
+    };
+    let received=receive(&wire,selection["tag"].as_u64().unwrap());
+    let RasterMutation::FillSelection(fill)=&received else {panic!("expected received Raster fill");};
+    assert!(fill.selection.as_ref().unwrap().iter().eq(&spans));
+    assert_eq!(received.encode_op().unwrap(),wire.encode_op().unwrap());
+    retire_raster_value_cold(received).expect("retire received Raster mutation");
+
+    let samples=&fixture["samples"];
+    let wire=RasterMutationDsl::WritePixelRegion {
+        layer_id:"painted-fixture".into(),target:"pixels".into(),x:0,y:0,width:5,height:1,
+        samples:samples["hex"].as_str().unwrap().into(),
+    };
+    let received=receive(&wire,samples["tag"].as_u64().unwrap());
+    let RasterMutation::WritePixelRegion(region)=&received else {panic!("expected received Raster samples");};
+    let bytes:Vec<u8>=serde_json::from_value(samples["bytes"].clone()).unwrap();
+    assert_eq!(region.samples,bytes);
+    assert_eq!(received.encode_op().unwrap(),wire.encode_op().unwrap());
+    retire_raster_value_cold(received).expect("retire received Raster mutation");
 }

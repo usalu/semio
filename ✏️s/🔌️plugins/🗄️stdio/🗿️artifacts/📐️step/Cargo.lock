@@ -2487,6 +2487,7 @@ dependencies = [
  "semio-framework-3d-brep-kernel-contract",
  "semio-framework-3d-brep-mesh-io",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-solid-topology",
  "semio-framework-3d-brep-spline-construction",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tolerance",
@@ -2549,6 +2550,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-kernel-contract",
+ "semio-framework-3d-brep-native-registry",
  "semio-framework-3d-brep-representation",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tessellation",
@@ -2560,9 +2562,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-solid-topology"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-boolean",
+ "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-spline-construction"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
  "semio-framework-3d-brep-surface",
@@ -3265,6 +3282,7 @@ name = "semio-framework-graph-manifest"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
@@ -5429,6 +5447,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-os-spr",
  "semio-os-store-engine-core",
  "semio-os-store-engine-live",
@@ -6950,6 +6969,8 @@ dependencies = [
  "semio-framework",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-replication-command-ingress",
+ "semio-framework-value-persistent",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
  "semio-framework-value",
@@ -8838,6 +8859,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
  "semio-framework-replication-error",

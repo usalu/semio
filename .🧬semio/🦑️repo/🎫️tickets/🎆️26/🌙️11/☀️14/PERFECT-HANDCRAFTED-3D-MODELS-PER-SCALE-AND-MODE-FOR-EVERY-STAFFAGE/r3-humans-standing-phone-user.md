@@ -108,3 +108,55 @@ Final check line: `FAIL: 6 measurement(s) over 2 rule line(s)`, all six in `volu
 - Knee joint 12 mm below 0.285 H (de Leva segment lengths kept). Phone, headphone and sneaker dimensions are from memory, without a web lookup.
 - Structure solids use material `skin` (the asset has no bone material); at 1:500 the hand member is as thick as the hand (same finding as the standing adult).
 - Not run: the staffage test suites. Fixtures or tests that embed this asset may need regenerating after the rig, dimension and 2D change (only the catalog manifest refers to it by name).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts changed (re-runnable, absolute values): `r3_standing_phone_user_rig.py` (bone `ponytail`), `r3-standing-phone-user-roots.py` (bone insert, pose and clip keys of `ponytail`, `fix_ranges`), `r3_standing_phone_user_parts.py` (ponytail per scale on its own bone in the rest world, 1:500 hand masses and hand bones), `r3_standing_phone_user_body50.py` (shank, kneecap, ponytail), `r3_standing_phone_user_s100.py`, `_s200.py`, `_s500.py` (knee, 1:500 toe cap). Renders: `🗑️generated/r5-standing-phone-user/before|after|after1/`.
+
+### Reference (stature 1.69 m barefoot, slim woman, 20 mm sole) and model against it
+
+| quantity | reference | model (barefoot) | deviation |
+|---|---|---|---|
+| hip joint | 0.52 to 0.53 H = 0.879 to 0.896 m (Winter 2009) | 0.883 m = 0.522 H | in band |
+| knee joint | 0.285 H = 0.482 m (Winter) | 0.470 m = 0.278 H | -2.4 % |
+| ankle | 0.039 H = 0.066 m | 0.066 m | 0 % |
+| shoulder joint | 0.818 H = 1.382 m | 1.3775 m = 0.815 H | -0.3 % |
+| elbow | 0.630 H = 1.065 m | 1.064 m | -0.1 % |
+| wrist | 0.485 H = 0.820 m | 0.817 m | -0.4 % |
+| head height | H / 7.5 = 0.225 m | 0.222 m | -1.3 % |
+| hand | 0.108 H = 0.183 m | 0.1805 m | -1.2 % |
+| foot | 0.15 H = 0.254 m | 0.250 m | -1.6 % |
+| biacromial (female) | 0.224 H = 0.379 m (ANSUR II female 36.5 cm at 162.9 cm) | 0.375 m | -1.1 % |
+| ponytail | 0.12 to 0.18 m of tied shoulder-length hair, hangs from the tie under gravity | 0.15 m path, its own bone, every pose keeps it hanging | — |
+
+All within 3 %; the rig needed no proportion change. The brief's 0.23 H biacromial is a male value; the female ANSUR value is used.
+
+### Grades (as seen in the opened renders)
+
+| scale | body before / after | thermal before / after | structure before / after |
+|---|---|---|---|
+| 1:50 | B (knee blob and step, ponytail stuck out of the nape in phone-call and photo-pose, rigid) / A- | A- / A- | A- / A- |
+| 1:100 | B+ (knee step) / A- | A- / A- | A- / A- |
+| 1:200 | B+ (knee step) / A- | B+ / B+ (not re-opened) | B+ / B+ (not re-opened) |
+| 1:500 | B+ / A- (crisp massing, knee continuous, hands and toe caps a feature thicker) | B+ / B+ | B (stick figure, forced) / B |
+
+### Changes
+
+- Rig root: new bone `ponytail` (parent `head`, joint at the hair tie behind the occiput, 0.075 m, revolute -60..60, no mass of its own: the hair is in the de Leva head mass). Pose offsets that keep it falling under gravity and lying on the nape: `texting` 40, `phone-call` -1, `photo-pose` -3; clip keys `scroll-and-sway` 45 / 34.5 / 43, `answer-call` 16 / 5. The ponytail solids of 1:50, 1:100, 1:200 are restated on that bone in the upright rest world (from the tie down the back of the head, the end resting on the hood). Before, the ponytail was rigid on the head and stood out backwards or cut into the neck whenever the head was not bowed.
+- Knee at every scale: the shank top is now 0.5 to 1 mm fuller than the thigh end, so the thigh closes inside it without a step; the 1:50 kneecap is a flat relief (14 x 28 x 26 mm half axes, 2 mm proud) instead of a ball that stood 10 mm off the shin.
+- Print suitability (new `PRINT` rule, catalog was INVALID): 1:500 hands and toe caps drawn a little fuller, the 1:500 range ends at 1:650 (the visible width of the clasped hands behind the forearms falls under 0.2 mm beyond); the 1:500 hand bones grow to 49 mm (forced by `volumes-feature` through the thinnest hand drawing).
+- 2D redrawn by the pipeline from the new solids (ruling E1), ponytail shapes now on bone `ponytail`.
+
+### Checks
+
+`r3-validate.ts humans/standing-phone-user --catalog-only`: `VALID ... schema 0, validateAsset 0`. `volumes-check.ts --product`: every rule `ok` at every scale except `volumes-thermal-coverage` at 1:50 / 1:100 on `jeans` (+45 %), `sneakers` (+75 %), `headphones` (outer 0.078 against 0.0208): C18 / C16 values the author may not change, unchanged since round 3 and listed in `area-review.md` and `author-requests.md`.
+
+### Seen (opened)
+
+1:50 body sheet, three-quarter close-up, right side in `texting`, `phone-call`, `photo-pose`, `answer-call` at 1.5 s; 1:100, 1:200, 1:500 body sheets; 1:50 structure and thermal cut; 2D 1:50. Rendered, not opened: 1:100 to 1:500 structure and thermal sheets after the change, 2D 1:200 and 1:500.
+
+### Remaining
+
+- Hairline is a planar cut (reads slightly like a cap from the side); face plain; lofts are superellipses without cloth folds at elbows; fingers capsule chains. Grade A- not A at 1:50 for these reasons.
+- Knee joint 2.4 % below 0.285 H (de Leva segment lengths kept).
+- Three thermal areas red (C18, C16, area reviewer).

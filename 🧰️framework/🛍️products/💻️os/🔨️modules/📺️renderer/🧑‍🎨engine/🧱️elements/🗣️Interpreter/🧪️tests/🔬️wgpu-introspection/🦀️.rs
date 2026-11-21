@@ -31,6 +31,19 @@ fn path_segments_use_kind_index_and_declared_id() {
 }
 
 #[test]
+fn card_path_segments_use_the_declared_wire_tag_and_id() {
+    let stack = serde_json::json!({"type":"cardStack","id":"deck","children":[]});
+    let card = serde_json::json!({"type":"overviewCard","id":"summary","title":"Summary","children":[]});
+    for (index, wire) in [stack, card].into_iter().enumerate() {
+        let node: UiNode = serde_json::from_value(wire.clone()).expect("declared card wire format");
+        let kind = wire["type"].as_str().unwrap();
+        let id = wire["id"].as_str().unwrap();
+        assert_eq!(ui_node_kind_tag(&node), kind);
+        assert_eq!(ui_node_path_segment(&node, index), format!("{kind}[{index}]#{id}"));
+    }
+}
+
+#[test]
 fn walk_dump_accumulates_absolute_rects_and_builds_full_paths() {
     let mut tree = semio_ui_retained_tree::tree::UiTree::new();
     let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
@@ -48,6 +61,26 @@ fn walk_dump_accumulates_absolute_rects_and_builds_full_paths() {
     assert_eq!(nodes[0].rect, [10.0, 20.0, 200.0, 100.0]);
     assert_eq!(nodes[1].path, "stack[0]#root/text[0]");
     assert_eq!(nodes[1].rect, [15.0, 26.0, 50.0, 12.0], "child rect must be the root's absolute origin plus its own parent-relative offset");
+}
+
+#[test]
+fn walk_dump_projects_canonical_node_graph_hover_without_inventing_targets() {
+    use semio_ui_declaration::ui::{build_node_graph_scene, NodeGraphScene};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🖱️wgpu-graph-hover.json")).unwrap();
+    for row in fixture["surfaces"].as_array().unwrap() {
+        let mut scene = NodeGraphScene::base(Vec::new(), Vec::new(), serde_json::from_value(serde_json::json!({
+            "x": 0.0, "y": 0.0, "zoom": 1.0,
+        })).unwrap());
+        scene.hover = serde_json::from_value(row["hover"].clone()).unwrap();
+        let graph = build_node_graph_scene("procedural-main", "controller", scene);
+        let mut tree = semio_ui_retained_tree::tree::UiTree::new();
+        let id = tree.insert_child(None, Node::new(NodeKey::Explicit("graph".into()), WidgetSpec(graph)));
+        let (mut focus_path, mut nodes) = (None, Vec::new());
+        walk_dump(&tree, id, 0.0, 0.0, "", 0, &Theme::default(), &mut focus_path, &mut nodes);
+        let actual = serde_json::to_value(&nodes[0]).unwrap();
+        assert_eq!(actual["graphHover"], row["hover"], "{}", row["name"]);
+        assert_eq!(actual.get("graphHover").is_some(), !row["hover"].is_null());
+    }
 }
 
 #[test]
@@ -235,6 +268,8 @@ fn sibling_world_diagnostics_read_their_exact_host_camera_and_keep_the_public_su
 
 #[test]
 fn retiring_a_component_releases_its_exact_camera_diagnostic_owner() {
+    use semio_renderer_wgpu_scene_state::{RASTER_FIXTURE_GRANT, close_retired_scene_surface_one, pending_raster_fixture_caller};
+    let mut caller = pending_raster_fixture_caller();
     let mut owner = fixture_scene_pointer_target("diagnostic-close-window", "diagnostic-close-document", "camera-owner");
     owner.host_id = "diagnostic-close-host".into();
     owner.kind = semio_ui_declaration::ui::SurfaceKind::Canvas2d;
@@ -243,11 +278,12 @@ fn retiring_a_component_releases_its_exact_camera_diagnostic_owner() {
     assert!(semio_renderer_wgpu_scene_state::retire_scene_identity(&owner));
     let remaining = world_camera_ledger_row(&owner.host_id);
     for _ in 0..262_144 {
-        if !semio_renderer_wgpu_scene_state::close_retired_scene_surface_one() {
+        if !caller.refreshed_turn(RASTER_FIXTURE_GRANT, close_retired_scene_surface_one).unwrap() {
             break;
         }
     }
     WORLD_CAMERA_LEDGER.borrow_mut().remove(&owner.host_id);
+    caller.retire(RASTER_FIXTURE_GRANT);
     assert_eq!(remaining, None, "diagnostic ownership transfers to the component's bounded retirement cursor");
 }
 

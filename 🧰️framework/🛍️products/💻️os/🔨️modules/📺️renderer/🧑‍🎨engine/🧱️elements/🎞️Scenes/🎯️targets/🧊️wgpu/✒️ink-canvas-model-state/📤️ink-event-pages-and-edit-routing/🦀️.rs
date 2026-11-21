@@ -1,6 +1,7 @@
 //! 📤️ Ink event pages and edit routing: the event JSON and raw pages, the event action writers, the gesture abort, the selection and hover writers and the edit key, blur and cancel routing. See [`super`].
 
 use super::*;
+use std::io::Write;
 
 //#region InkCanvas
 //#region InkCanvasState
@@ -128,7 +129,7 @@ impl InkEventJsonPages {
         Ok(())
     }
 
-    pub(super) fn push_add_block_raw(&mut self, block: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
+    pub(super) fn push_raw(&mut self, event: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
         if self.sealed || self.items == INK_INTERACTION_ITEM_CAPACITY {
             return Err(semio_ui_action::BoundedActionFault::ItemCredits);
         }
@@ -137,9 +138,7 @@ impl InkEventJsonPages {
             if self.items != 0 {
                 self.write_all(b",").map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?;
             }
-            self.write_all(b"{\"operation\":\"addBlock\",\"block\":").map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?;
-            self.write_all(block.as_bytes()).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)?;
-            self.write_all(b"}").map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)
+            self.write_all(event.as_bytes()).map_err(|_| semio_ui_action::BoundedActionFault::ByteCredits)
         })();
         if let Err(fault) = result {
             self.len = checkpoint;

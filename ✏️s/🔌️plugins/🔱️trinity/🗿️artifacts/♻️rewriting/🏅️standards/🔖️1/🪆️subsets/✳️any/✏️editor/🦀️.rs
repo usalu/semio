@@ -82,12 +82,13 @@ use store::{snapshot::ArtifactPack};
 use crate::editor::rewriting::document::*;
 use crate::editor::rewriting::ids::*;
 use crate::editor::rewriting::ui::*;
+use semio_s_artifact_trinity_rewriting_inferences::rule_media::{REWRITE_MEDIA_SCHEMA, REWRITE_MEDIA_TYPE};
 
 //#region 🔖️Io
 /// 🔌️ Rewriting's typed media I/O surface (`AppDefinition.io`) — the implicit document in/out pair (a
 /// `trinity.rewrite.rule` document) plus a graph in/out pair: `graph:in` loads an incoming
 /// `trinity.graph` as this rule's `working_graph` working graph, and `graph:out` re-emits the
-/// rule-applied result graph.
+/// rule-applied result graph. `rule:out` supplies the executable invocation to a domain editor.
 pub fn rewriting_io() -> semio_plugin::AppIo {
     semio_plugin::AppIo {
         artifact_schema: REWRITE_RULE_SCHEMA.into(),
@@ -108,6 +109,15 @@ pub fn rewriting_io() -> semio_plugin::AppIo {
                 direction: semio_plugin::MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
                 kind_id: Some("graph.trinity".into()),
+                required: false,
+                multiplicity: semio_plugin::PortMultiplicity::Many,
+            },
+            semio_plugin::MediaPortSpec {
+                id: "rule:out".into(),
+                label: LocalizedLabel::native("Rewrite rule", "Umschreibregel"),
+                direction: semio_plugin::MediaPortDirection::Out,
+                media_type: REWRITE_MEDIA_TYPE,
+                kind_id: Some(REWRITE_MEDIA_SCHEMA.into()),
                 required: false,
                 multiplicity: semio_plugin::PortMultiplicity::Many,
             },

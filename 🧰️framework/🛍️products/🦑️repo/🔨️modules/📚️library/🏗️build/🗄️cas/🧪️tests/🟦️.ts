@@ -1,7 +1,7 @@
 import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🧪️ Tests for the host-wide content-addressed store, its access ledger, pins and least-recently-accessed collector. */
 import {spawn,spawnSync} from "node:child_process";
-import {appendFileSync,chmodSync,existsSync,realpathSync,symlinkSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
+import {appendFileSync,chmodSync,existsSync,realpathSync,symlinkSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
@@ -66,7 +66,7 @@ test("seeded random traces: the streaming planner equals the Python least-recent
 
 test("the policy is authored in both languages and rejects unordered watermarks",()=>{
  for(const key of Object.keys(CAS_MESSAGES_V1) as (keyof typeof CAS_MESSAGES_V1)[]){expect(casTextV1(key,"en").length,key).toBeGreaterThan(0);expect(casTextV1(key,"de").length,key).toBeGreaterThan(0);}
- expect(CAS_POLICY_V1.capBytes).toBe(32*1024**3);expect(CAS_POLICY_V1.areas.map(area=>area.id)).toEqual(["graph-memo","build-input-closures"]);
+ expect(CAS_POLICY_V1.capBytes).toBe(32*1024**3);expect(CAS_POLICY_V1.areas.map(area=>area.id)).toEqual(["graph-memo"]);
  expect(()=>requireCasPolicyV1({...CAS_POLICY_V1,lowWatermark:0.95})).toThrow();
  expect(casRootV1({},"linux","/h")).toBe("/h/.cache/semio/cas");expect(casRootV1({LOCALAPPDATA:"C:\\L"},"win32","C:\\u")).toContain("semio");expect(casRootV1({SEMIO_CAS_ROOT:"/x"},"linux","/h")).toBe("/x");
 });
@@ -167,27 +167,47 @@ await collectCasV1({root:${JSON.stringify(root)},policy:${JSON.stringify({...sma
  expect((await casUsageV1(root)).bytes).toBeLessThanOrEqual(small.capBytes*small.lowWatermark);
 });
 
-test("loose areas count against the host cap: closures and memo files age out and are capped, recent files and other data stay",async()=>{
+test("workspace source closures are accounted for while the host collector evicts separate CAS objects and graph memo files",async()=>{
+ const {casAreasOfWorkspaceV1}=await import("../📂️areas/🟦️.ts"),root=scratch("graph-custody"),workspace=scratch("graph-ws"),home=scratch("graph-home");
+ const areas=await casAreasOfWorkspaceV1(workspace,home),closures=areas[0]!.directory,memo=join(home,".cache","semio","repo","wt","journal","graph-memo");
+ mkdirSync(closures,{recursive:true});mkdirSync(memo,{recursive:true});
+ const after=Date.now(),old=new Date(after-9*86_400_000);
+ const put=(path:string,size:number)=>{writeFileSync(path,Buffer.alloc(size,1));utimesSync(path,old,old);return path;};
+ const leaf=put(join(closures,sha("closure")+".json"),2*MIB),oldMemo=put(join(memo,"memo.plan"),MIB);
+ const object=join(root,"v1","o","ab","c".repeat(62));mkdirSync(join(root,"v1","o","ab"),{recursive:true});put(object,MIB);
+ const policy={...CAS_POLICY_V1,capBytes:2*MIB,areas:[...CAS_POLICY_V1.areas,{id:"build-input-closures",capBytes:1,maxAgeMs:1}]};
+ const options={root,policy,now:()=>after,partition:{partition:"fixture",totalBytes:100*MIB,freeBytes:5*MIB}};
+ const found=await casAreasOfWorkspaceV1(workspace,home),preview=await collectCasV1({...options,areas:found,dryRun:true});
+ expect(preview.evicted).toBe(2);expect(existsSync(leaf)&&existsSync(object)&&existsSync(oldMemo)).toBe(true);
+ const collected=await collectCasV1({...options,areas:found});
+ expect(collected.totals).toMatchObject({totalBytes:4*MIB,protectedBytes:2*MIB,candidateBytes:2*MIB,keptBytes:2*MIB});
+ expect(collected.byReason).toEqual({age:1,area:0,host:1});expect(existsSync(leaf)).toBe(true);expect(existsSync(object)||existsSync(oldMemo)).toBe(false);
+ const idle=await collectCasV1({root,policy,now:()=>after,areas:found});
+ expect(idle.status).toBe("idle");expect(idle.totals.shortfallBytes).toBeGreaterThan(0);
+ for(const language of ["en","de"] as const)expect(formatCasCollectionV1(idle,policy,language)).toContain("repo cache gc --area=graph-inference");
+});
+
+test("loose areas count against the host cap: optional files age out and are capped, recent files and other data stay",async()=>{
  const root=scratch("areas"),memo=scratch("memo"),closures=scratch("closures"),clock={value:2_000_000_000_000},age=(path:string,ms:number)=>{const at=new Date(clock.value-ms);utimesSync(path,at,at);};
  mkdirSync(join(closures,"a"),{recursive:true});
  const day=86_400_000,make=(directory:string,name:string,size:number,old:number)=>{const path=join(directory,name);writeFileSync(path,Buffer.alloc(size,1));age(path,old);return path;};
  const oldMemo=make(memo,"x.plan",MIB,9*day),freshMemo=make(memo,"y.plan",MIB,day),records=[1,2,3,4].map(index=>make(memo,`r${index}.plan`,MIB,(10-index)*1000+60_000)),partial=make(memo,".z.tmp",MIB,9*day);
  const oldClosure=make(join(closures,"a"),"c.json.br",MIB,8*day),freshClosure=make(join(closures,"a"),"d.json.br",MIB,2*day);
  const bystander=join(root,"other.txt");mkdirSync(root,{recursive:true});writeFileSync(bystander,"user data");
- const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:30_000,areas:[{id:"graph-memo",capBytes:3*MIB,maxAgeMs:7*day},{id:"build-input-closures",capBytes:null,maxAgeMs:7*day}]};
- const result=await collectCasV1({root,policy,now:()=>clock.value,areas:[{id:"graph-memo",directory:memo},{id:"build-input-closures",directory:closures}]});
+ const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:30_000,areas:[{id:"graph-memo",capBytes:3*MIB,maxAgeMs:7*day},{id:"optional-files",capBytes:null,maxAgeMs:7*day}]};
+ const result=await collectCasV1({root,policy,now:()=>clock.value,areas:[{id:"graph-memo",directory:memo},{id:"optional-files",directory:closures}]});
  expect(result.byReason.age).toBe(2);expect(() => statSync(oldMemo)).toThrow();expect(() => statSync(oldClosure)).toThrow();
  expect(statSync(freshClosure).isFile()).toBe(true);expect(statSync(partial).isFile()).toBe(true);expect(statSync(bystander).isFile()).toBe(true);
  const remaining=[freshMemo,...records].filter(path=>{try{statSync(path);return true;}catch{return false;}});
  expect(remaining).toEqual([records[2]!,records[3]!]);expect(result.byReason.area).toBe(3);
- const host=await collectCasV1({root,policy:{...policy,capBytes:4*MIB},now:()=>clock.value,areas:[{id:"graph-memo",directory:memo},{id:"build-input-closures",directory:closures}],externalBytes:2*MIB});
+ const host=await collectCasV1({root,policy:{...policy,capBytes:4*MIB},now:()=>clock.value,areas:[{id:"graph-memo",directory:memo},{id:"optional-files",directory:closures}],externalBytes:2*MIB});
  expect(host.byReason.host).toBeGreaterThan(0);expect(statSync(bystander).isFile()).toBe(true);
 });
 
-test("build-input closures a live process pins survive an aged-out collection of their area, and fall to it once the pin is released",async()=>{
+test("loose files a live process pins survive an aged-out collection of their area, and fall to it once the pin is released",async()=>{
  const root=scratch("pinned-closures"),closures=scratch("pinned-closure-files"),home=scratch("pinned-home"),day=86_400_000,environment={HOME:home,SEMIO_CAS_ROOT:root};
  const digests=["a","b","c"].map(name=>sha("closure-"+name)),paths=digests.map(digest=>{const path=join(closures,digest+".json");writeFileSync(path,Buffer.alloc(1024,1));const at=new Date(Date.now()-9*day);utimesSync(path,at,at);return path;});
- const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:30_000,areas:[{id:"build-input-closures",capBytes:null,maxAgeMs:7*day}]},areas=[{id:"build-input-closures",directory:closures}];
+ const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:30_000,areas:[{id:"optional-files",capBytes:null,maxAgeMs:7*day}]},areas=[{id:"optional-files",directory:closures}];
  const alive=()=>paths.map(path=>existsSync(path));
  await casPinClosuresV1([digests[0]!],environment);
  const pinned=await collectCasV1({root,policy,areas});
@@ -215,6 +235,13 @@ test("the command reports and collects the host store and the workspace and memo
  expect((await casAreasOfWorkspaceV1(workspace,home)).map(area=>area.id)).toEqual(["build-input-closures","graph-memo"]);
  const context={workspace,home,partition:()=>undefined,environment:{SEMIO_CAS_ROOT:root},write:(line:string)=>{lines.push(line);}},ports={signal:new AbortController().signal,progress:async(stage:string)=>{stages.push(stage);}};
  expect(await runCasCommandV1(["status","--lang=de"],context,ports)).toBe(0);expect(lines.at(-1)).toContain("Objekte");
+ for(const [language,planned,adopted] of [["en","would remove 1","could share"],["de","Einträge zur Entfernung: 1","könnten"]] as const){
+  expect(await runCasCommandV1(["gc","--dry-run","--lang="+language],context,ports)).toBe(0);
+  expect(lines.at(-1)).toContain(planned);
+  expect(readFileSync(join(home,".cache","semio","repo","wt1","journal","graph-memo","old.plan"),"utf8")).toBe("x");
+  expect(await runCasCommandV1(["adopt","--dry-run","--lang="+language],context,ports)).toBe(0);
+  expect(lines.at(-1)).toContain(adopted);
+ }
  expect(await runCasCommandV1(["gc","--json"],context,ports)).toBe(0);expect(JSON.parse(lines.at(-1)!)).toMatchObject({version:1,status:"collected",evicted:1,byReason:{age:1}});
  expect(await runCasCommandV1(["gc"],context,ports)).toBe(0);expect(lines.at(-1)).toContain("nothing to collect");
  expect(await runCasCommandV1(["gc","--lang=de"],context,ports)).toBe(0);expect(lines.at(-1)).toContain("nichts zu bereinigen");
@@ -371,7 +398,7 @@ test("a collection frees the least recently accessed objects down to the low sha
  expect(formatCasCollectionV1(result,policy,"de")).toContain("Partition /volume war zu 95 % belegt (obere Marke 90 %, untere Marke 80 %)");
  const idle=await collectCasV1({root,policy,partition:{...partition,freeBytes:30*MIB},now:()=>clock.value});expect(idle.status).toBe("idle");
  const stuck=await collectCasV1({root,policy:{...policy,minAgeMs:3_600_000_000},partition,now:()=>clock.value});
- expect(stuck.evicted).toBe(0);expect(formatCasCollectionV1(stuck,policy,"en")).toContain("The partition stays");
+ expect(stuck.evicted).toBe(0);expect(formatCasCollectionV1(stuck,policy,"en")).toContain("15 MiB short of its low-water target");
 });
 
 test("a collection on a full disk deletes without creating its lock, and the lock-less run is reported",async()=>{
@@ -509,4 +536,134 @@ test("a shard view reads every segment once in batches, sees what live segments 
  await view.refresh();expect(view.latest(digest(7))).toBe(6000);expect(view.latest(digest(60))).toBe(6001);expect(view.latest(digest(3))).toBeLessThan(9999);
  writeFileSync(join(directory,"late.jsonl"),JSON.stringify({d:digest(61),t:7000})+"\n");await view.refresh();expect(view.latest(digest(61))).toBe(7000);
  const live=await openCasShardViewV1(root,"ab");expect(live.latest(digest(3))).toBe(9999);
+});
+
+test("a fresh guard reuses a recent matching automatic over-cap collection",async()=>{
+ const corpus=enforcement.automaticCompletion;
+ const expected=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️enforcement.py",import.meta.url))],{input:JSON.stringify({automaticCompletion:corpus}),encoding:"utf8"});
+ expect(expected.status,expected.stderr).toBe(0);
+ expect(JSON.parse(expected.stdout)).toEqual(corpus.rows.map(row=>row.collects));
+ for(const row of corpus.rows){
+  resetCasGuardsV1();
+  const root=scratch("scoped-gc"),home=scratch("scoped-home"),area=join(home,".cache","semio","repo","private","journal","graph-memo");
+  mkdirSync(area,{recursive:true});
+  const first={value:corpus.clock},policy={...CAS_POLICY_V1,capBytes:corpus.capBytes,minAgeMs:corpus.minAgeMs},partition={...critical,freeBytes:400*MIB};
+  const store=createCasStoreV1({root,policy,now:()=>first.value,guard:quietGuard(root,policy,()=>first.value)});
+  await store.put(Buffer.alloc(row.priorBytes,3));
+  writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes:row.priorBytes,atMs:first.value-1}));
+  const issuer=createCasGuardV1({root,home,policy,now:()=>first.value,partition:()=>partition});
+  await issuer.admit(0);await issuer.settle();
+  const persisted=JSON.parse(readFileSync(casUsageHintPathV1(root),"utf8"));
+  expect([persisted.version,persisted.bytes,persisted.atMs]).toEqual([1,row.priorBytes,first.value]);
+  expect(persisted.automaticScope).toMatch(/^[0-9a-f]{64}$/u);
+  if(row.name==="matching"){
+   const entry=new URL("../🚦️guard/🟦️.ts",import.meta.url).href,clock=first.value+row.advance;
+   const script=`import{createCasGuardV1}from${JSON.stringify(entry)};
+const guard=createCasGuardV1({root:${JSON.stringify(root)},home:${JSON.stringify(home)},policy:${JSON.stringify(policy)},partition:()=>(${JSON.stringify(partition)}),now:()=>${clock}});
+console.log(JSON.stringify(await guard.admit(0)));
+await guard.settle();`;
+   const child=Bun.spawn([process.execPath,"-e",script],{stdout:"pipe",stderr:"pipe",windowsHide:true});
+   const [out,err,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
+   expect(status,err).toBe(0);
+   expect(JSON.parse(out)).toEqual({action:"allow",reason:"fits"});
+   expect((await readCasUsageHintV1(root))?.atMs).toBe(first.value);
+  }
+  if(row.scope==="manual")delete persisted.automaticScope;
+  if(row.timestamp==="future")persisted.atMs=first.value+row.advance+1;
+  if(row.scope==="manual"||row.timestamp==="future")writeFileSync(casUsageHintPathV1(root),JSON.stringify(persisted));
+  if(row.scope==="area"){
+   const moved=area+"-old";renameSync(area,moved);mkdirSync(area,{recursive:true});
+  }
+  resetCasGuardsV1();
+  let calls=0,measures=0;
+  const reader=createCasGuardV1({root,home,policy:{...policy,capBytes:row.cap,minAgeMs:row.scope==="age"?policy.minAgeMs/2:policy.minAgeMs},now:()=>first.value+row.advance,partition:()=>row.critical==="transition"?++measures>1?critical:partition:row.critical?critical:partition,collect:async()=>{calls++;return stub;}});
+  if(row.priorBytes<row.cap){await reader.admit(0);await reader.settle();reader.account(row.cap-row.priorBytes+50);}
+  if(row.critical)expect((await refusal(reader.admit(0))).key,row.name).toBe("process.disk.low-space");
+  else expect((await reader.admit(0)).action,row.name).toBe("allow");
+  await reader.settle();
+  expect(calls,row.name).toBe(row.collects);
+  if(row.name==="matching"){
+   resetCasGuardsV1();
+   const sync=createCasGuardV1({root,home,policy,now:()=>first.value+row.advance,partition:()=>partition,collect:async()=>{calls++;return stub;},usage:async()=>{throw Error("receipt supplies usage");}});
+   expect(sync.admitSync(0).action).toBe("measure");
+   await sync.settle();expect(calls).toBe(0);
+   await sync.enforce();expect(calls).toBe(1);
+   sync.relieve(Object.assign(Error("disk full"),{code:"ENOSPC"}));await sync.settle();expect(calls).toBe(2);
+  }
+ }
+},60000);
+
+test("CAS admission only trusts a completed collection of its actual scope",async()=>{
+ const rows=enforcement.localCompletion;
+ const python=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️enforcement.py",import.meta.url))],{input:JSON.stringify({localCompletion:rows}),encoding:"utf8"});
+ expect(python.status,python.stderr).toBe(0);
+ expect(JSON.parse(python.stdout)).toEqual(rows.map(row=>row.expected));
+ for(const row of rows){
+  const root=hinted(scratch("scoped-local"),0),home=scratch("scoped-local-home");let pressure=row.origin,calls=0;
+  const partition=()=>pressure==="critical"?critical:{...critical,freeBytes:80*MIB};
+  const collect=()=>{
+   calls++;
+   if(row.result==="throw")throw Error("collector failed before it returned");
+   return Promise.resolve({...stub,status:row.result==="locked"?"locked":"collected",partial:row.result==="partial",dryRun:row.result==="dry",...row.result==="lockless"?{lockless:true as const}:{}});
+  };
+  const first=createCasGuardV1({root,home,partition,collect});
+  if(pressure==="critical")expect((await refusal(first.admit(0))).key,row.name).toBe("process.disk.low-space");
+  else await first.admit(0);
+  await first.settle();expect(calls,row.name).toBe(1);
+  pressure=row.request;
+  const guard=row.owner==="same"?first:createCasGuardV1({root,home,policy:{...CAS_POLICY_V1,capBytes:CAS_POLICY_V1.capBytes/2},partition,collect});
+  if(row.refused)expect((await refusal(guard.admit(0))).key,row.name).toBe("process.disk.low-space");
+  else await guard.admit(0);
+  await guard.settle();expect(calls,row.name).toBe(1+row.expected);
+ }
+},60000);
+
+test("critical admission waits for a different in-flight scope, then coalesces the needed relief",async()=>{
+ const root=hinted(scratch("critical-flight"),0);
+ let pressure=80*MIB,release=()=>undefined,overlap=0,active=0;
+ const stop=new Promise<void>(resolve=>{release=resolve;});
+ const measured:number[]=[];
+ const guard=createCasGuardV1({root,partition:()=>({...critical,freeBytes:pressure}),collect:async request=>{
+  active++;overlap=Math.max(overlap,active);
+  const free=request.partition!.freeBytes;measured.push(free);
+  if(free===80*MIB)await stop;
+  active--;return stub;
+ }});
+ await guard.admit(0);expect(measured).toEqual([80*MIB]);
+ pressure=10*MIB;
+ const pending=[refusal(guard.admit(0)),refusal(guard.admit(0))];
+ try{await new Promise(resolve=>setTimeout(resolve,20));expect(measured).toEqual([80*MIB]);}
+ finally{release();}
+ for(const error of await Promise.all(pending))expect(error.key).toBe("process.disk.low-space");
+ expect(measured).toEqual([80*MIB,10*MIB]);expect(overlap).toBe(1);
+});
+
+test("a native critical collection's local scope replaces an earlier high-pressure scan",async()=>{
+ const root=hinted(scratch("native-critical-scope"),0),home=scratch("native-critical-home");
+ let at=2_000_000_000,freeBytes=80*MIB;
+ const make=()=>createCasGuardV1({root,home,partition:()=>({...critical,freeBytes}),now:()=>at});
+ const high=make();await high.admit(0);await high.settle();
+ const first=await readCasUsageHintV1(root);expect(first?.atMs).toBe(at);
+ freeBytes=10*MIB;at++;
+ expect((await refusal(make().admit(0))).key).toBe("process.disk.low-space");
+ const second=await readCasUsageHintV1(root);expect(second?.atMs).toBe(at);
+ expect(second?.automaticScope).not.toBe(first?.automaticScope);
+ at++;
+ expect((await refusal(make().admit(0))).key).toBe("process.disk.low-space");
+ expect(await readCasUsageHintV1(root)).toEqual(second);
+});
+
+test("direct CAS relief is applied at the current pressure after an unrelated automatic scan",async()=>{
+ for(const mode of ["explicit","disk-full"] as const){
+  const root=hinted(scratch(mode),0);
+  let freeBytes=80*MIB,release=()=>undefined;
+  const blocked=new Promise<void>(resolve=>{release=resolve;}),scans:number[]=[];
+  const guard=createCasGuardV1({root,partition:()=>({...critical,freeBytes}),collect:async request=>{
+   scans.push(request.partition!.freeBytes);if(scans.length===1)await blocked;return stub;
+  }});
+  await guard.admit(0);expect(scans,mode).toEqual([80*MIB]);
+  freeBytes=10*MIB;
+  const done=mode==="explicit"?guard.enforce():(guard.relieve(Object.assign(Error("disk full"),{code:"ENOSPC"})),guard.settle());
+  release();await done;expect(scans,mode).toEqual([80*MIB,10*MIB]);
+ }
 });

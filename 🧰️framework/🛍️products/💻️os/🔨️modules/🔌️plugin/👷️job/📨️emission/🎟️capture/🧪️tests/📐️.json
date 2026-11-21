@@ -2,7 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "required": [
-    "ownedProducer"
+    "ownedProducer",
+    "mountedHeader"
   ],
   "properties": {
     "ownedProducer": {
@@ -60,6 +61,34 @@
               "const": true
             },
             "changedFrontierRefused": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "mountedHeader": {
+      "type": "object",
+      "required": [
+        "captureRetirement"
+      ],
+      "properties": {
+        "captureRetirement": {
+          "type": "object",
+          "required": [
+            "foreignDecoderAccepted",
+            "pendingAfterHandoff",
+            "terminalAfterOwnerClose"
+          ],
+          "properties": {
+            "foreignDecoderAccepted": {
+              "const": false
+            },
+            "pendingAfterHandoff": {
+              "const": true
+            },
+            "terminalAfterOwnerClose": {
               "const": true
             }
           },

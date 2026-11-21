@@ -8,7 +8,7 @@ use crate::evaluate;
 fn evaluate_emits_grouped_geg_and_part_checks() {
     let report = evaluate(&semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house());
     assert!(report.summary.total >= 8);
-    assert!(report.complies());
+    assert!(report.failing().next().is_none());
     assert!(report.checks.iter().any(|c| c.part.contains("GEG")));
     assert!(report.checks.iter().any(|c| c.title.en.contains("Primary energy") || c.id.contains("qp")));
 }

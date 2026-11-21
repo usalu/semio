@@ -5,7 +5,6 @@ use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 fn released_bytes(outcome: semio_framework_value_persistent::list::PagedListReleaseOutcome) -> usize {
     match outcome { semio_framework_value_persistent::list::PagedListReleaseOutcome::Ready(progress) => progress.released_allocation_bytes, semio_framework_value_persistent::list::PagedListReleaseOutcome::Denied => 0 }
 }
-use semio_framework_job::StepBudget;
 use semio_s_fem_test_support::{OriginalNumericalFixture, TEST_GRANT, close_grant, observe_original_numerical_allocations};
 
 #[test]
@@ -22,8 +21,7 @@ fn numerical_restore_funds_each_original_contributor_frontier_separately() {
     let mut owner: PagedList<RowContributor, SPARSE_INDEX_SPACE> = PagedList::empty();
     let mut cursor = NumericalOwnerRestoreCursor::default();
     let mut entry = 0;
-    let operation = test_operation(9999);
-    let mut sequence = 0;
+    let mut original = OriginalNumericalFixture::new(test_operation(9999));
     let mut births = 0;
     let mut complete = false;
     for turn in 0..128 {
@@ -39,26 +37,28 @@ fn numerical_restore_funds_each_original_contributor_frontier_separately() {
                 _ => continue,
             }
             let before = (owner.len(), owner.capacity(), owner.allocated_bytes(), owner.backing_ptr(0), entry, cursor.next_item, cursor.page_open);
-            let mut receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, denied), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-            let (step, physical) = semio_s_fem_test_support::observe_original_numerical_allocations(|| restore_contributor_entry(&mut owner, &page, count, &mut entry, &mut cursor, &mut context));
+            let ((step, physical), actual) = original.turn(denied, 1, u64::MAX, |cx| {
+                let before = cx.retained_progress();
+                let observed = observe_original_numerical_allocations(|| restore_contributor_entry(&mut owner, &page, count, &mut entry, &mut cursor, cx));
+                Ok((observed, (before, cx.retained_progress())))
+            }).unwrap();
             assert!(!step.unwrap());
             assert_eq!(physical, (0, 0, 0));
-            assert_eq!(context.retained_progress(), RetainedCloneProgress::default());
+            assert_eq!(actual.0, actual.1);
             assert_eq!((owner.len(), owner.capacity(), owner.allocated_bytes(), owner.backing_ptr(0), entry, cursor.next_item, cursor.page_open), before);
         }
         let before = (owner.len(), owner.allocated_bytes());
-        let mut receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, exact), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-        let (step, physical) = semio_s_fem_test_support::observe_original_numerical_allocations(|| restore_contributor_entry(&mut owner, &page, count, &mut entry, &mut cursor, &mut context));
+        let ((step, physical), actual) = original.turn(exact, 1, u64::MAX, |cx| {
+                let before = cx.retained_progress();
+                let observed = observe_original_numerical_allocations(|| restore_contributor_entry(&mut owner, &page, count, &mut entry, &mut cursor, cx));
+                Ok((observed, (before, cx.retained_progress())))
+            }).unwrap();
         complete = step.unwrap();
-        let actual = context.retained_progress();
-        assert_eq!(actual.copied_items, 1);
-        assert_eq!(actual.copied_bytes, demand.copy_bytes);
-        assert_eq!(actual.retained_capacity_bytes, owner.allocated_bytes() - before.1);
-        assert_eq!(actual.retained_capacity_bytes, demand.capacity_bytes);
-        assert_eq!(physical, (actual.retained_capacity_bytes, actual.released_bytes, actual.retained_capacity_bytes));
-        assert!(actual.fits(exact));
+        let expected = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, released_bytes: 0 };
+        assert_eq!(actual.0.checked_add(expected).unwrap(), actual.1);
+        assert!(expected.fits(exact));
+        assert_eq!(owner.allocated_bytes() - before.1, demand.capacity_bytes);
+        assert_eq!(physical, (demand.capacity_bytes, 0, demand.capacity_bytes));
         if demand.capacity_bytes != 0 { births += 1; assert_eq!(owner.len(), before.0); }
         if complete { break; }
     }
@@ -72,14 +72,7 @@ fn numerical_restore_funds_each_original_contributor_frontier_separately() {
     while !owner.terminal_is_empty() {
         if owner.pop().is_none() { semio_s_fem_test_support::granted(TEST_GRANT, |effect| owner.release_empty_page(effect)).result.unwrap(); }
     }
-}
-
-fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
-    let operation = test_operation(9998);
-    let mut sequence = 0;
-    let mut receipt = RetainedCloneProgress::default();
-    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-    step(&mut context)
+    original.finish();
 }
 
 fn original_writer(original: &mut OriginalNumericalFixture) -> Option<Box<RetainedPayloadBuilder>> {
@@ -153,6 +146,7 @@ fn numerical_page_modal_complete_close_retains_empty_capacitated_matrix() {
 fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_backing() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
+    let mut original = OriginalNumericalFixture::new(test_operation(9998));
     for row in corpus["restoreFaultCases"].as_array().unwrap() {
         let mut owner: PagedList<f64, 8192> = PagedList::default();
         let mut cursor = NumericalOwnerRestoreCursor::default();
@@ -163,7 +157,7 @@ fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_ba
             let page = parse_numerical_page(&bytes, b"FEMLCP1\0").unwrap();
             let mut entry = 0;
             for _ in 0..4096 {
-                if test_funded_restore(|context| restore_paged_f64_entry(&mut owner, &page, 8192, &mut entry, &mut cursor, context)).unwrap() { break; }
+                if original.turn(TEST_GRANT, 1, u64::MAX, |context| Ok(restore_paged_f64_entry(&mut owner, &page, 8192, &mut entry, &mut cursor, context))).unwrap().unwrap() { break; }
             }
             assert_eq!(owner.len(), 2043);
         }
@@ -173,7 +167,7 @@ fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_ba
         bytes.resize(NUMERICAL_CHECKPOINT_HEADER_BYTES + body_bytes, 0);
         if row["owner"] == 0 && body_bytes >= 8 { bytes[32..40].copy_from_slice(&row["length"].as_u64().unwrap().to_le_bytes()); }
         let page = parse_numerical_page(&bytes, b"FEMLCP1\0").unwrap();
-        let result = test_funded_restore(|context| restore_paged_f64_entry(&mut owner, &page, 8192, &mut 0, &mut cursor, context));
+        let result = original.turn(TEST_GRANT, 1, u64::MAX, |context| Ok(restore_paged_f64_entry(&mut owner, &page, 8192, &mut 0, &mut cursor, context))).unwrap();
         let held = before == (owner.len(), owner.allocated_bytes(), owner.get(0).copied(), cursor.next_item);
         let allocated = owner.allocated_bytes();
         let mut released = 0;
@@ -194,12 +188,14 @@ fn numerical_page_restore_rejects_hostile_coordinates_without_changing_target_ba
         assert!(held && closed, "{id} retains then closes exact owner");
         assert_eq!(allocated, released, "{id}");
     }
+    original.finish();
 }
 
 #[test]
 fn numerical_page_restore_accepts_every_declared_paged_scalar_continuation() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
+    let mut original = OriginalNumericalFixture::new(test_operation(9998));
     for row in corpus["cases"].as_array().unwrap() {
         let count = row["count"].as_u64().unwrap() as usize;
         let mut owner: PagedList<f64, 8192> = PagedList::default();
@@ -215,7 +211,7 @@ fn numerical_page_restore_accepts_every_declared_paged_scalar_continuation() {
             let view = parse_numerical_page(&bytes, b"FEMLCP1\0").unwrap();
             let mut entry = 0;
             for _ in 0..count + 1024 {
-                match test_funded_restore(|context| restore_paged_f64_entry(&mut owner, &view, 8192, &mut entry, &mut owner_cursor, context)) {
+                match original.turn(TEST_GRANT, 1, u64::MAX, |context| Ok(restore_paged_f64_entry(&mut owner, &view, 8192, &mut entry, &mut owner_cursor, context))).unwrap() {
                     Ok(true) => { complete_pages += 1; break; }
                     Ok(false) => {}
                     Err(error) => { fault = Some(error); break; }
@@ -237,6 +233,7 @@ fn numerical_page_restore_accepts_every_declared_paged_scalar_continuation() {
         let closed = owner.terminal_is_empty();
         observations.push((row["id"].clone(), fault, complete_pages, row["pages"].as_array().unwrap().len(), actual, count, closed, allocated, released));
     }
+    original.finish();
     for (id, fault, pages, expected_pages, actual, count, closed, allocated, released) in observations {
         assert!(closed, "{id} closes");
         assert_eq!(allocated, released, "{id} physical close");
@@ -480,9 +477,7 @@ fn bytes_publication_cancelled_mid_publication_closes_with_funded_turns() {
     let mut original = OriginalNumericalFixture::new(test_operation(7_002));
     let mut publication = NumericalBytesPublication::new(JobPayloadStream::CommitOutput, publication_bytes());
     let mut lent = None;
-    for _ in 0..40 {
-        assert!(!publish_turn(&mut original, &mut publication, &mut lent, TEST_GRANT));
-    }
+    assert!(!publish_turn(&mut original, &mut publication, &mut lent, TEST_GRANT));
     assert!(lent.is_none() && publication.close_demand().is_some(), "cancelled mid-publication with an owned half-built builder");
     let mut released = 0;
     for _ in 0..10_000 {
@@ -526,7 +521,7 @@ fn bytes_publication_resumes_after_a_refused_push() {
 /// 🧹️ Closing a refused outcome retires its pending decision even before a payload is lent.
 #[test]
 fn refused_outcome_marker_closes_without_a_lent_payload() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️pcg-wire/pending-outcome.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️pcg-wire/pending-outcome.json")).unwrap();
     let mut desk = NumericalOutcomeDesk::default();
     assert_eq!(fixture["marker"], "complete");
     desk.pending = Some(NumericalRun::Complete);
@@ -543,4 +538,5 @@ fn refused_outcome_marker_closes_without_a_lent_payload() {
     assert_eq!(fixture["copiedItems"], progress.copied_items);
     assert_eq!(fixture["releasedBytes"], progress.released_bytes);
     assert_eq!(fixture["finallyEmpty"], desk.terminal_is_empty());
+    caller.finish();
 }

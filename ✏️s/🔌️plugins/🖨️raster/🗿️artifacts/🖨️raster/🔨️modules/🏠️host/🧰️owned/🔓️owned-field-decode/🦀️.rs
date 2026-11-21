@@ -1,6 +1,8 @@
 //! 🔓️ raster owned field decode: the pack decoders, the macro-generated snapshot and mutation field decode authorities, the envelope owned-field catalog and the rejected conflict authority.
 
 use super::*;
+use semio_framework_value::RetainedWorkPoll;
+use store::os_store::owned_schema_decode::{ArtifactEnvelopeCloseExit, ArtifactEnvelopeClosePoll, artifact_envelope_close_resume_with, artifact_envelope_close_settle};
 
 fn decode_raster_snapshot_pack(bytes: &[u8]) -> Result<RasterSnapshot, ()> {
     <RasterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
@@ -54,7 +56,7 @@ macro_rules! raster_owned_field_authority {
 
             fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 if matches!(self.state, $state::Decode(_)) {
-                    return Ok(semio_framework_value::RetirementDemand { release_bytes: RASTER_OWNED_FIELD_BYTES, depth: 1, ..Default::default() });
+                    return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
                 }
                 let demand = match self.retirement.as_ref() {
                     Some(owner) => store::os_store::snapshot_read::artifact_retirement_box_demands(owner, maximum_copy_bytes),
@@ -142,41 +144,58 @@ macro_rules! raster_owned_field_authority {
                 self.close_demands(0).map(|demand| demand.depth)
             }
 
-            fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-                let empty = RetainedCloneProgress::default();
-                if self.terminal_is_empty() {
-                    return Ok(RetainedCloneStep::Complete(empty));
-                }
-                if grant.maximum_items == 0 {
-                    return Ok(RetainedCloneStep::Progress(empty));
-                }
-                let demand = self.close_demands(grant.maximum_copy_bytes)?;
-                if grant.maximum_depth < demand.depth {
-                    return Err(self.diagnostic(concat!("raster-envelope.", $kind, "-retirement-depth"), 0));
-                }
-                if raster_short(grant, demand) {
-                    return Ok(RetainedCloneStep::Progress(empty));
-                }
-                if let $state::Decode(authority) = &mut self.state {
-                    authority.cancel();
-                    self.state = $state::Closing;
-                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: RASTER_OWNED_FIELD_BYTES, ..empty }));
-                }
-                let attempt = if self.retirement.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)
-                } else if self.value.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)
-                } else {
-                    self.state = $state::Complete;
-                    return Ok(RetainedCloneStep::Complete(empty));
+            fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll {
+                let grant = effect.grant();
+                let path = self.path;
+                let work_refused = |error: ValueError| {
+                    let mut diagnostic = store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(concat!("raster-envelope.", $kind, "-retirement-work"), path);
+                    diagnostic.refusal_kind = error.kind;
+                    diagnostic
                 };
-                let step = attempt.result.map_err(|error| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: concat!("raster-envelope.", $kind, "-retirement-fault"), offset: 0, line: 0, column: 0, path: self.path, refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: error.retained_progress() })?;
-                self.state = $state::Closing;
-                if self.value.is_none() && self.retirement.is_none() {
-                    self.state = $state::Complete;
-                    return Ok(RetainedCloneStep::Complete(step.progress()));
-                }
-                Ok(RetainedCloneStep::Progress(step.progress()))
+                let result = (|| -> Result<RetainedCloneStep, ArtifactEnvelopeCloseExit> {
+                    let empty = RetainedCloneProgress::default();
+                    if self.terminal_is_empty() {
+                        return Ok(RetainedCloneStep::Complete(empty));
+                    }
+                    if grant.maximum_items == 0 || effect.remaining_work_units().map_err(work_refused)? == 0 {
+                        return Ok(RetainedCloneStep::Progress(empty));
+                    }
+                    let demand = self.close_demands(grant.maximum_copy_bytes)?;
+                    if grant.maximum_depth < demand.depth {
+                        return Err(self.diagnostic(concat!("raster-envelope.", $kind, "-retirement-depth"), 0).into());
+                    }
+                    if raster_short(grant, demand) {
+                        return Ok(RetainedCloneStep::Progress(empty));
+                    }
+                    if let $state::Decode(authority) = &mut self.state {
+                        raster_close_unit(effect).map_err(work_refused)?;
+                        authority.cancel();
+                        self.state = $state::Closing;
+                        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
+                    }
+                    let fault = |error: ValueError| {
+                        let mut diagnostic = store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(concat!("raster-envelope.", $kind, "-retirement-fault"), path);
+                        diagnostic.refusal_kind = error.kind;
+                        diagnostic.retained_progress = error.retained_progress();
+                        diagnostic
+                    };
+                    let step = if self.retirement.is_some() {
+                        let poll = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect);
+                        artifact_envelope_close_resume_with(poll, |failure| fault(store::os_store::snapshot_read::failure_value_error(failure)))?
+                    } else if self.value.is_some() {
+                        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect).result.map_err(fault)?
+                    } else {
+                        self.state = $state::Complete;
+                        return Ok(RetainedCloneStep::Complete(empty));
+                    };
+                    self.state = $state::Closing;
+                    if self.value.is_none() && self.retirement.is_none() {
+                        self.state = $state::Complete;
+                        return Ok(RetainedCloneStep::Complete(step.progress()));
+                    }
+                    Ok(RetainedCloneStep::Progress(step.progress()))
+                })();
+                artifact_envelope_close_settle(effect, result)
             }
 
             fn terminal_is_empty(&self) -> bool {
@@ -283,12 +302,18 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
         Ok(0)
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
-        if grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        self.terminal = true;
-        Ok(RetainedCloneStep::Complete(Default::default()))
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> ArtifactEnvelopeClosePoll {
+        let result = match effect.remaining_work_units() {
+            Ok(0) => Ok(RetainedCloneStep::Progress(Default::default())),
+            Ok(_) if effect.grant().maximum_items == 0 => Ok(RetainedCloneStep::Progress(Default::default())),
+            Ok(_) => { self.terminal = true; Ok(RetainedCloneStep::Complete(Default::default())) }
+            Err(error) => {
+                let mut diagnostic = store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before("raster-envelope.conflict-retirement-work", store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT);
+                diagnostic.refusal_kind = error.kind;
+                Err(diagnostic)
+            }
+        };
+        RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: 0 })
     }
 
     fn terminal_is_empty(&self) -> bool {

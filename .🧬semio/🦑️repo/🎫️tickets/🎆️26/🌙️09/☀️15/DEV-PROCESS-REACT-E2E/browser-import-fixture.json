@@ -1,15 +1,31 @@
 {
   "maximumRawFileBytes": 24576,
   "maximumFilenameUtf16Units": 255,
+  "demoPlacement": {
+    "tool": "cut",
+    "label": "Cut",
+    "positionMetres": [0.4, 0, 0],
+    "toolSizeMetres": [0.05, 0.5, 0.5],
+    "remainingVolumeMetresCubed": 0.1775
+  },
+  "demoAttachment": {
+    "replayFixture": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🪵️timber-replay/🔣️.json",
+    "step": "dowel-attach",
+    "label": "Insert Dowel",
+    "originalHeightMetres": 0.12,
+    "editedHeightMetres": 0.18,
+    "editedVolumeMetresCubed": 0.17400452389342117,
+    "reorderedVolumeMetresCubed": 0.17399899469035085
+  },
   "step": {
     "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/⚽️cut-sphere-from-box/🅰️operand-a.step",
     "rawFileBytes": 15447,
     "extentMetres": [0.02, 0.02, 0.02]
   },
   "workshop": [
-    { "catalog": "metal", "catalogLabel": "Metal", "machine": "chopSaw", "capability": "chop", "operation": "slab", "toolSizeMetres": [0.355, 0.355, 0.003], "remainingVolumeMetresCubed": 0.0000074 },
-    { "catalog": "concrete", "catalogLabel": "Concrete", "machine": "diamondSaw", "capability": "crosscut", "operation": "slab", "toolSizeMetres": [0.35, 0.35, 0.004], "remainingVolumeMetresCubed": 0.0000072 },
-    { "catalog": "wood", "catalogLabel": "Wood", "machine": "circularSaw", "capability": "crosscut", "operation": "slab", "toolSizeMetres": [0.184, 0.184, 0.002], "remainingVolumeMetresCubed": 0.0000072 },
-    { "catalog": "robotic", "catalogLabel": "Robotic", "machine": "sixAxisMill", "capability": "mill", "operation": "corner", "toolSizeMetres": [0.02, 0.02, 0.1], "remainingVolumeMetresCubed": 0.0000054 }
+    { "catalog": "metal", "catalogLabel": "Metal", "machine": "chopSaw", "capability": "chop", "stepLabel": "Chop", "operation": "slab", "toolSizeMetres": [0.355, 0.355, 0.003], "remainingVolumeMetresCubed": 0.0000074, "edit": { "field": "Height", "sizeMetres": 0.004, "remainingVolumeMetresCubed": 0.0000072 } },
+    { "catalog": "concrete", "catalogLabel": "Concrete", "machine": "diamondSaw", "capability": "crosscut", "stepLabel": "Crosscut", "operation": "slab", "toolSizeMetres": [0.35, 0.35, 0.004], "remainingVolumeMetresCubed": 0.0000072, "edit": { "field": "Height", "sizeMetres": 0.005, "remainingVolumeMetresCubed": 0.000007 } },
+    { "catalog": "wood", "catalogLabel": "Wood", "machine": "circularSaw", "capability": "crosscut", "stepLabel": "Crosscut", "operation": "slab", "toolSizeMetres": [0.184, 0.184, 0.002], "remainingVolumeMetresCubed": 0.0000072, "edit": { "field": "Height", "sizeMetres": 0.006, "remainingVolumeMetresCubed": 0.0000068 } },
+    { "catalog": "robotic", "catalogLabel": "Robotic", "machine": "sixAxisMill", "capability": "mill", "stepLabel": "Mill", "operation": "corner", "toolSizeMetres": [0.02, 0.02, 0.1], "remainingVolumeMetresCubed": 0.0000054, "edit": { "field": "Width", "sizeMetres": 0.01, "remainingVolumeMetresCubed": 0.0000063 } }
   ]
 }

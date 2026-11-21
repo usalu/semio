@@ -204,8 +204,17 @@ where
             }
             let owner = publication.preparation.as_mut().expect("validated batched publication item preparation");
             if owner.prepared().is_none() {
-                let result=owner.advance_with_turn_ceiling(body,item_grant,turn_ceiling,receiving).and_then(|step|validate_original_preparation_step(step,item_grant,owner.prepared().is_some()).map_err(Into::into));
-                publication.turn_work=owner.last_turn_work();
+                let result = match owner.minimum_advance_items(body) {
+                    Ok(items) if items > grant.maximum_items && items <= turn_ceiling.maximum_items => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
+                    Ok(items) if items > grant.maximum_items => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "preparation item requirement exceeds the original turn ceiling").into()),
+                    Ok(items) => {
+                        let preparation_grant = ArtifactStoreOneItemGrant { maximum_items: items, ..grant };
+                        let turn = owner.advance_with_turn_ceiling(body, preparation_grant, turn_ceiling, receiving);
+                        publication.turn_work = owner.last_turn_work();
+                        turn.and_then(|step| validate_original_preparation_step(step, preparation_grant, owner.prepared().is_some()).map_err(Into::into))
+                    }
+                    Err(error) => Err(error.into()),
+                };
                 let step=match result {Ok(step)=>step,Err(reason)=>{*publication.receiving_fault=Some(reason);publication.begin_close();return Ok(ArtifactStoreOneItemAdvance::PreparationRefused)}};
                 return match step {
                     ArtifactStoreOneItemPreparationStep::Progress(checkpoint, ownership) => Ok(ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership)),
@@ -636,6 +645,19 @@ where
         let worst = replayed.iter().flat_map(|entry| entry.messages.iter()).map(|message| message.level).max();
         return Ok(semio_os_spr::MergeReport { policy: store.log.merge_policy, accepted: true, insertion_index: store.log.applied_edit_ids.len() as u32, replayed, worst, conflict: None });
     }
+    commit_ready_remote_batch(store, candidate_dag, batch, ready_transitions, None).await
+}
+
+#[path = "🧩️atomic-ingest.rs"]
+mod atomic_ingest;
+pub use atomic_ingest::{AtomicStoreReceive, ingest_verified_atomic_edit, prepare_verified_atomic_edit};
+
+async fn commit_ready_remote_batch<P, Mutation>(
+    store: &mut StoreParts<'_, P, Mutation>, candidate_dag: semio_os_spr::MutationDag,
+    mut batch: Vec<Edit<Mutation>>, ready_transitions: Vec<semio_os_spr::MutationEnvelope>,
+    required_edit: Option<&str>,
+) -> Result<semio_os_spr::MergeReport, VcsError>
+where P: semio_os_spr::StoreState, Mutation: semio_os_spr::StoreMutationFor<P> {
     let edit_hlc = |edit: &Edit<Mutation>| edit.mutation_meta.first().map_or_else(|| HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp);
     batch.sort_by_key(|edit| edit_hlc(edit).cmp_key());
     let batch_keys: Vec<(u64, u64, u64)> = batch.iter().map(|edit| edit_hlc(edit).cmp_key()).collect();
@@ -696,6 +718,12 @@ where
             return refuse_with_candidate_dag(store, candidate_dag, error);
         }
     };
+    if required_edit.is_some_and(|id| !quarantined_ids.is_empty() || !committed_ids.iter().any(|known| known == id)) {
+        retire_shared_projection::<P, Mutation>(state);
+        retire_scratch_edits::<P, Mutation>(batch);
+        for (_, inverse) in rebased_inverse { retire_scratch_operations::<P, Mutation>(inverse); }
+        return refuse_with_candidate_dag(store, candidate_dag, VcsError::ValidationFailed("atomic Store replay refused its complete edit".into()));
+    }
     let document_id = ArtifactId(store.log.envelope.id.clone());
     let schema = SchemaId(store.log.envelope.schema.clone());
     let mut degraded_ids: Vec<String> = Vec::new();

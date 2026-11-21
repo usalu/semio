@@ -48,6 +48,7 @@ export interface En1998Snapshot {
   pierBases: En1998PierBase[];
   /** @state artifact */
   criticalRegions: En1998CriticalRegion[];
+  cases: CaseRow[];
 }
 
 export type AnnexChoice = "En" | "De";
@@ -498,7 +499,30 @@ export interface En1998CriticalRegion {
   restrainedBarSpacingM: number;
 }
 
-export const parseEn1998Snapshot: NormWireReader<En1998Snapshot> = normWireObject<En1998Snapshot>({ annex: normWireRequired(normWireLiteral("En", "De")), site: normWireRequired(normWireRef(() => parseEn1998Site)), buildings: normWireRequired(normWireArray(normWireRef(() => parseEn1998Building))), bridges: normWireRequired(normWireArray(normWireRef(() => parseEn1998Bridge))), assessments: normWireRequired(normWireArray(normWireRef(() => parseEn1998Assessment))), silos: normWireRequired(normWireArray(normWireRef(() => parseEn1998Silo))), tanks: normWireRequired(normWireArray(normWireRef(() => parseEn1998Tank))), foundations: normWireRequired(normWireArray(normWireRef(() => parseEn1998Foundation))), retainingWalls: normWireRequired(normWireArray(normWireRef(() => parseEn1998RetainingWall))), towers: normWireRequired(normWireArray(normWireRef(() => parseEn1998Tower))), soilLayers: normWireRequired(normWireArray(normWireRef(() => parseEn1998SoilLayer))), diaphragms: normWireRequired(normWireArray(normWireRef(() => parseEn1998Diaphragm))), accelerograms: normWireRequired(normWireArray(normWireRef(() => parseEn1998Accelerogram))), piers: normWireRequired(normWireArray(normWireRef(() => parseEn1998Pier))), bearings: normWireRequired(normWireArray(normWireRef(() => parseEn1998Bearing))), joints: normWireRequired(normWireArray(normWireRef(() => parseEn1998Joint))), placements: normWireRequired(normWireArray(normWireRef(() => parseEn1998Placement))), tieBeams: normWireRequired(normWireArray(normWireRef(() => parseEn1998TieBeam))), slopes: normWireRequired(normWireArray(normWireRef(() => parseEn1998Slope))), isolationSystems: normWireRequired(normWireArray(normWireRef(() => parseEn1998IsolationSystem))), pierBases: normWireRequired(normWireArray(normWireRef(() => parseEn1998PierBase))), criticalRegions: normWireRequired(normWireArray(normWireRef(() => parseEn1998CriticalRegion))) });
+export interface CaseNumber {
+  id: string;
+  value: number;
+}
+
+export interface CaseText {
+  id: string;
+  value: string;
+}
+
+export interface CaseRow {
+  id: string;
+  labelEn: string;
+  labelDe: string;
+  entryId: string;
+  numbers: CaseNumber[];
+  texts: CaseText[];
+}
+
+export const parseEn1998Snapshot: NormWireReader<En1998Snapshot> = normWireObject<En1998Snapshot>({ annex: normWireRequired(normWireLiteral("En", "De")), site: normWireRequired(normWireRef(() => parseEn1998Site)), buildings: normWireRequired(normWireArray(normWireRef(() => parseEn1998Building))), bridges: normWireRequired(normWireArray(normWireRef(() => parseEn1998Bridge))), assessments: normWireRequired(normWireArray(normWireRef(() => parseEn1998Assessment))), silos: normWireRequired(normWireArray(normWireRef(() => parseEn1998Silo))), tanks: normWireRequired(normWireArray(normWireRef(() => parseEn1998Tank))), foundations: normWireRequired(normWireArray(normWireRef(() => parseEn1998Foundation))), retainingWalls: normWireRequired(normWireArray(normWireRef(() => parseEn1998RetainingWall))), towers: normWireRequired(normWireArray(normWireRef(() => parseEn1998Tower))), soilLayers: normWireRequired(normWireArray(normWireRef(() => parseEn1998SoilLayer))), diaphragms: normWireRequired(normWireArray(normWireRef(() => parseEn1998Diaphragm))), accelerograms: normWireRequired(normWireArray(normWireRef(() => parseEn1998Accelerogram))), piers: normWireRequired(normWireArray(normWireRef(() => parseEn1998Pier))), bearings: normWireRequired(normWireArray(normWireRef(() => parseEn1998Bearing))), joints: normWireRequired(normWireArray(normWireRef(() => parseEn1998Joint))), placements: normWireRequired(normWireArray(normWireRef(() => parseEn1998Placement))), tieBeams: normWireRequired(normWireArray(normWireRef(() => parseEn1998TieBeam))), slopes: normWireRequired(normWireArray(normWireRef(() => parseEn1998Slope))), isolationSystems: normWireRequired(normWireArray(normWireRef(() => parseEn1998IsolationSystem))), pierBases: normWireRequired(normWireArray(normWireRef(() => parseEn1998PierBase))), criticalRegions: normWireRequired(normWireArray(normWireRef(() => parseEn1998CriticalRegion))) , cases: normWireRequired(normWireArray(normWireRef(() => parseCaseRow))) });
+
+export const parseCaseNumber: NormWireReader<CaseNumber> = normWireObject<CaseNumber>({ id: normWireRequired(normWireString), value: normWireRequired(normWireNumber) });
+export const parseCaseText: NormWireReader<CaseText> = normWireObject<CaseText>({ id: normWireRequired(normWireString), value: normWireRequired(normWireString) });
+export const parseCaseRow: NormWireReader<CaseRow> = normWireObject<CaseRow>({ id: normWireRequired(normWireString), labelEn: normWireRequired(normWireString), labelDe: normWireRequired(normWireString), entryId: normWireRequired(normWireString), numbers: normWireRequired(normWireArray(normWireRef(() => parseCaseNumber))), texts: normWireRequired(normWireArray(normWireRef(() => parseCaseText))) });
 export const parseAnnexChoice: NormWireReader<AnnexChoice> = normWireLiteral("En", "De");
 export const parseEnGroundType: NormWireReader<EnGroundType> = normWireLiteral("a", "b", "c", "d", "e");
 export const parseEnSpectrumType: NormWireReader<EnSpectrumType> = normWireLiteral("type1", "type2");

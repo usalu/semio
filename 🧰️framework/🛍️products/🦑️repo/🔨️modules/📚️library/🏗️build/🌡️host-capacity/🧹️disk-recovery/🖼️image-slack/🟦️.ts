@@ -1,3 +1,4 @@
+import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import {lstatSync,statfsSync} from "node:fs";
 import {join} from "node:path";
 import {machinePathV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
@@ -11,7 +12,7 @@ export type ImageSlackPolicyV1=Readonly<{version:1;minimumSlackBytes:number;mini
 export const IMAGE_SLACK_V1:ImageSlackPolicyV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.ImageSlack.const)));
 
 /** 📏️ One fixed image of the machine: the bytes it holds on the host volume, the bytes its filesystem uses inside, their difference less the filesystem overhead (the slack no collector inside the image can return) and whether it is attached. */
-export type ImageRowV1=Readonly<{id:string;directory:string;device?:number;mounted:boolean;allocatedBytes:number;usedBytes:number;slackBytes:number}>;
+export type ImageRowV1=Readonly<{id:string;directory:string;device?:number;mounted:boolean;allocatedBytes:number;usedBytes?:number;slackBytes:number}>;
 /** 🏁️ What the in-place reclaim of one image answered: `reclaimed` (the cycle reduced backing allocation), `skipped` (the image is held, retiring, not bloated or the platform has no such mechanism), `unchanged` (settled without reducing backing allocation), `unconfirmed` (no settled allocation evidence) or `failed`. */
 export type ImageReclaimOutcomeV1=Readonly<{kind:"reclaimed"|"skipped"|"unchanged"|"unconfirmed"|"failed";message?:string}>;
 /** 📏️ The slack below which an image is not worth a cycle: the larger of the bytes floor and the percentage of its allocation. */
@@ -21,7 +22,7 @@ export type ImageVerdictV1=Readonly<{id:string;slackBytes:number;action:"retire"
 /** 🏁️ What the product's regrow answered for one image: `retired` (a fresh image is born by the next opener), `held` (a command holds the image mapped, the exclusive non-waiting try ended silently), `journal` (the journal does not admit whole retirement) or `failed`. */
 export type ImageOutcomeV1=Readonly<{kind:"retired"|"held"|"journal"|"skipped"|"failed";message?:string}>;
 
-/** 📐️ Measures every fixed image below the cache root of a workspace by the product's own partition table: `statfs` of the mounted filesystem for the bytes inside, the allocated blocks of `fixed.dmg` for the bytes on the host; an absent image is left out, a detached one answers `mounted: false` with no slack. */
+/** 📐️ Measures every fixed image below the cache root of a workspace by the product's own partition table, pairing native occupied volume bytes with allocated blocks of `fixed.dmg`. A detached image or an unknown occupancy has no measurable slack. */
 export function measureImagesV1(workspace:string,policy:ImageSlackPolicyV1=IMAGE_SLACK_V1,partitions:Readonly<Record<string,Readonly<{directory:string}>>>=budgetPolicy.partitions):readonly ImageRowV1[]{
  const rows:ImageRowV1[]=[];
  for(const [id,declared] of Object.entries(partitions)){
@@ -34,8 +35,8 @@ export function measureImagesV1(workspace:string,policy:ImageSlackPolicyV1=IMAGE
   try{
    const mount=join(directory,"m");
    const root=lstatSync(mount);if(!root.isDirectory()||root.isSymbolicLink()||root.dev===device){rows.push({id,directory,device,mounted:false,allocatedBytes,usedBytes:0,slackBytes:0});continue;}
-   const inside=statfsSync(mount),usedBytes=(inside.blocks-inside.bfree)*inside.bsize;
-   rows.push({id,directory,device,mounted:true,allocatedBytes,usedBytes,slackBytes:Math.max(0,allocatedBytes-usedBytes-policy.filesystemOverheadBytes)});
+   const usedBytes=nativeImageVolumeUsedBytesSyncV1(mount,statfsSync(mount));
+   rows.push({id,directory,device,mounted:true,allocatedBytes,...(usedBytes===undefined?{}:{usedBytes}),slackBytes:usedBytes===undefined?0:Math.max(0,allocatedBytes-usedBytes-policy.filesystemOverheadBytes)});
   }catch{rows.push({id,directory,device,mounted:false,allocatedBytes,usedBytes:0,slackBytes:0});}
  }
  return Object.freeze(rows);

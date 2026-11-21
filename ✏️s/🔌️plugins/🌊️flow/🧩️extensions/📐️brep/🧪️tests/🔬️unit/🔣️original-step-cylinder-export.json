@@ -1,0 +1,80 @@
+{
+  "cases": [
+    {
+      "kind": "cylinder-reversed",
+      "base": [
+        3,
+        -4,
+        8
+      ],
+      "axis": [
+        0,
+        0,
+        -1
+      ],
+      "radial": [
+        0,
+        1,
+        0
+      ],
+      "radius": 2,
+      "height": 5,
+      "bounds": [
+        [
+          1,
+          -6,
+          3
+        ],
+        [
+          5,
+          -2,
+          8
+        ]
+      ],
+      "reimport": true,
+      "vertices": 2,
+      "edges": 3,
+      "faces": 3,
+      "area": 87.96459430051421,
+      "volume": 62.83185307179586
+    },
+    {
+      "kind": "cylinder-oblique",
+      "base": [
+        2,
+        3,
+        7
+      ],
+      "axis": [
+        0,
+        0.6,
+        0.8
+      ],
+      "radial": [
+        1,
+        0,
+        0
+      ],
+      "radius": 2,
+      "height": 5,
+      "bounds": [
+        [
+          0,
+          1.4,
+          5.8
+        ],
+        [
+          4,
+          7.6,
+          12.2
+        ]
+      ],
+      "reimport": false,
+      "vertices": 2,
+      "edges": 3,
+      "faces": 3,
+      "area": 87.96459430051421,
+      "volume": 62.83185307179586
+    }
+  ]
+}

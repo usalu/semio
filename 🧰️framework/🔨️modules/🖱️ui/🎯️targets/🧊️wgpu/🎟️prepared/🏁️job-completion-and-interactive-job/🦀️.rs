@@ -314,6 +314,12 @@ impl PreparedRenderJob {
         Ok(true)
     }
 
+    /// 🪆️ Advances an inline prepared render and returns the descriptor to its original caller for acknowledgement.
+    pub fn step_on_original_caller(&mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeDescriptor>, semio_framework_job::OriginalTurnFailure> {
+        cx.original_source_parent()?.validate_borrowed_context(cx)?;
+        Ok(self.step_callback(cx)?.map(JobOutcomeBorrow::into_descriptor))
+    }
+
     fn step_callback<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let grant = cx.retained_grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }

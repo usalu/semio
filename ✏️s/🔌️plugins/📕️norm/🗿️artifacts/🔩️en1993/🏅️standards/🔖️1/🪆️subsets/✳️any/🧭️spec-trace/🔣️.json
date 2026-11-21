@@ -103,6 +103,21 @@
   "V-504",
   "V-505",
   "V-506",
+  "V-507",
+  "V-508",
+  "V-509",
+  "V-510",
+  "V-511",
+  "V-512",
+  "V-513",
+  "V-514",
+  "V-515",
+  "V-516",
+  "V-517",
+  "V-518",
+  "V-519",
+  "V-520",
+  "V-521",
   "V-600",
   "V-601",
   "V-602",
@@ -1625,18 +1640,19 @@
   },
   {
    "id": "V-502",
-   "clause": "6.3",
+   "clause": "EN 1993-1-9:2005 §3(4), §3(7), Table 3.1",
    "entity": "fatigueDetails",
    "realisation": {
     "kind": "check",
     "checks": [
      "en1993.1-9.6.cafl",
-     "en1993.1-9.fat"
+     "en1993.1-9.fat",
+     "en1993.1-9.5.range"
     ]
    },
    "description": {
-    "en": "Fatigue assessment with partial factors gM,f for damage tolerant and safe life design per 6.3, realised by the checks en1993.1-9.6.cafl and en1993.1-9.fat",
-    "de": "Ermüdungsnachweis mit Teilsicherheitsbeiwerten gM,f für schadenstolerante und sichere Lebensdauer nach 6.3, umgesetzt durch die Nachweise en1993.1-9.6.cafl und en1993.1-9.fat"
+    "en": "Select the fatigue resistance partial factor γ_Mf by assessment method and consequence class. The factor is applied in the fatigue-limit, spectrum-damage and load-model stress-range checks.",
+    "de": "Teilsicherheitsbeiwert γ_Mf nach Nachweiskonzept und Schadensfolgeklasse wählen. Der Beiwert fließt in die Nachweise zur Dauerfestigkeit, Schadensakkumulation und Spannungsschwingbreite ein."
    }
   },
   {
@@ -1671,34 +1687,226 @@
   },
   {
    "id": "V-505",
-   "clause": "Table 8.1..8.10",
-   "entity": "fatigueDetails",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.1",
+   "entity": "plainAndFastenedFatigue",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "Tables 8.1 to 8.10 are neither in the repository nor in the spec; only the category series and the S-N curve are encoded",
-     "de": "Die Tabellen 8.1 bis 8.10 sind weder im Repository noch in der Spezifikation; nur die Kerbfallreihe und die Wöhlerlinie sind abgebildet"
-    }
+    "kind": "design-case",
+    "entry": "C93-31"
    },
    "description": {
-    "en": "Fatigue detail catalogue of Tables 8.1 to 8.10 with category and geometry constraints, modelled only as the detail ladder and the orthotropic detail table in bridge_fatigue (unverified values)",
-    "de": "Kerbfallkatalog der Tabellen 8.1 bis 8.10 mit Kategorie und Geometriebedingungen, nur als Kerbfallleiter und Tabelle orthotroper Kerbfälle in bridge_fatigue modelliert (ungeprüfte Werte)"
+    "en": "Nominal fatigue categories for unfastened members and mechanically fastened details, including weathering steel, hole spacing, bolt size and shear.",
+    "de": "Nennspannungs-Kerbfallklassen ungeschweißter Bauteile und mechanischer Verbindungen einschließlich wetterfesten Stahls, Lochabständen, Schraubengröße und Schub."
    }
   },
   {
    "id": "V-506",
-   "clause": "Annex C / D",
+   "clause": "EN 1993-1-9:2005 §3(2), §3(3), §3(7)",
    "entity": "fatigueDetails",
    "realisation": {
     "kind": "not-modelled",
     "reason": {
-     "en": "informational annex: Paris law constants and the crack geometry are not carried",
-     "de": "informativer Anhang: Konstanten des Paris-Gesetzes und die Risskontur werden nicht geführt"
+     "en": "The document records the assessment method and consequence class. It does not record the inspection and maintenance programme or the evidence supporting method eligibility.",
+     "de": "Das Dokument führt Nachweiskonzept und Schadensfolgeklasse. Inspektions- und Instandhaltungsprogramm sowie Nachweise zur Eignung des Konzepts werden nicht geführt."
     }
    },
    "description": {
-    "en": "Fracture mechanics assessment of damage tolerant design with Paris crack growth da/dN = C (ΔK)^m (Annexes C and D) is not implemented",
-    "de": "Bruchmechanische Bewertung der schadenstoleranten Bemessung mit Paris-Rissfortschritt da/dN = C (ΔK)^m (Anhänge C und D) ist nicht umgesetzt"
+    "en": "Damage-tolerant assessment relies on planned inspection and maintenance throughout the design life. Assess load redistribution and inspectability. Use safe-life assessment where local cracking can rapidly lead to structural failure.",
+    "de": "Der schadenstolerante Nachweis setzt geplante Inspektion und Instandhaltung über die Nutzungsdauer voraus. Lastumlagerung und Inspizierbarkeit beurteilen. Bei möglichem raschem Tragwerksversagen durch lokale Risse das Konzept der sicheren Lebensdauer anwenden."
+   }
+  },
+  {
+   "id": "V-507",
+   "clause": "EN 1993-1-9:2005 Annex B, Table B.1 / §8(1)–(2)",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-16"
+   },
+   "description": {
+    "en": "Weld toe structural-stress assessment for all seven Table B.1 details, with fabrication and misalignment confirmation, weld toe angle limits and frequent-load stress limits.",
+    "de": "Nachweis mit Strukturspannungen am Nahtübergang für alle sieben Details der Tabelle B.1 mit Bestätigung von Fertigung und Exzentrizität, Begrenzung des Nahtanstiegswinkels und Spannungsgrenzen bei häufigen Einwirkungen."
+   }
+  },
+  {
+   "id": "V-508",
+   "clause": "EN 1993-1-9:2005 + AC:2009 §4(2), §6.4 / Tables 4.1–4.2",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-17"
+   },
+   "description": {
+    "en": "Secondary-moment factors k₁ for circular and rectangular hollow sections, by joint and member type, with published geometry ranges and a supplied qualified Table 8.7 category.",
+    "de": "Faktoren k₁ für sekundäre Anschlussmomente bei Kreis- und Rechteckhohlprofilen nach Knoten- und Stabtyp mit veröffentlichten Geometriegrenzen und vorgegebenem Kerbfall nach Tabelle 8.7."
+   }
+  },
+  {
+   "id": "V-509",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.10 / §8(1)–(2)",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-18"
+   },
+   "description": {
+    "en": "All seven runway beam top flange-to-web details. The case verifies detail applicability, the stress location, the design fatigue resistance and the frequent direct stress limit.",
+    "de": "Alle sieben Obergurt-Steg-Details von Kranbahnträgern mit Prüfung des Anwendungsbereichs, des Spannungsermittlungsorts, der Bemessungsermüdungsfestigkeit und der Grenze für häufige Normalspannungen."
+   }
+  },
+  {
+   "id": "V-510",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.9(1) / §8(1)–(2)",
+   "entity": "bridgeFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-19"
+   },
+   "description": {
+    "en": "Open-stringer connection checked with the direct stress range in the stringer and thickness-dependent category 80 or 71.",
+    "de": "Nachweis des Anschlusses einer offenen Längsrippe mit der Normalspannungsschwingbreite in der Längsrippe und dem dickenabhängigen Kerbfall 80 oder 71."
+   }
+  },
+  {
+   "id": "V-511",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.9(2) / §8(1)–(2)",
+   "entity": "bridgeFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-20"
+   },
+   "description": {
+    "en": "Continuous open stringer checked with category 56 and coupled direct and shear stress ranges in the cross-girder web. The case includes the supplied EN 1993-2 utilization between stringers.",
+    "de": "Nachweis einer durchlaufenden offenen Längsrippe mit Kerbfall 56 aus Normal- und Schubspannungsschwingbreite im Querträgersteg. Die vorgegebene Ausnutzung zwischen den Längsrippen nach EN 1993-2 wird berücksichtigt."
+   }
+  },
+  {
+   "id": "V-512",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.8(1–4) / §8(1)–(2)",
+   "entity": "bridgeFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-21"
+   },
+   "description": {
+    "en": "Closed stringer connections and backed splices with web-thickness category selection and backing tack weld placement.",
+    "de": "Anschlüsse geschlossener Längsrippen und Stöße mit Badsicherung mit Kerbfallauswahl nach Stegdicke und Lage der Heftnaht."
+   }
+  },
+  {
+   "id": "V-513",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.8(6) / §8(1)–(2)",
+   "entity": "bridgeFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-22"
+   },
+   "description": {
+    "en": "Critical section of the cutout web using nominal Vierendeel stress or the EN 1993-2 stress procedure.",
+    "de": "Kritischer Schnitt im Querträgersteg mit Vierendeel-Nennspannung oder Spannungsermittlung nach EN 1993-2."
+   }
+  },
+  {
+   "id": "V-514",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.8(5) / §8(1)–(2)",
+   "entity": "bridgeFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-23"
+   },
+   "description": {
+    "en": "Unbacked, double-sided full-penetration rib splice qualified to the relevant Table 8.3 weld group and corrected for thickness.",
+    "de": "Beidseitig voll durchgeschweißter Rippenstoß ohne Badsicherung nach der betreffenden Nahtgruppe der Tabelle 8.3 mit Dickenkorrektur."
+   }
+  },
+  {
+   "id": "V-515",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.8(7–8) / §8(1)–(2)",
+   "entity": "bridgeFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-24"
+   },
+   "description": {
+    "en": "Rib-to-deck weld classification from the weld geometry and fit-up. The check converts the bending moments to the required stresses.",
+    "de": "Kerbfallzuordnung der Rippen-Deckblech-Naht nach Nahtgeometrie und Einpassmaßen mit Spannungsermittlung aus den Biegemomenten."
+   }
+  },
+  {
+   "id": "V-516",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.7, §6.4 and §8(1)–(2)",
+   "entity": "latticeJointFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-25"
+   },
+   "description": {
+    "en": "Checks the gap or overlap geometry, interpolates the detail category and verifies the selected chord or brace using its frequent and damage-equivalent direct stress ranges. The pinned model applies its qualified detail-specific factor.",
+    "de": "Prüft die Spalt- oder Überlappungsgeometrie, interpoliert den Kerbfall und prüft den gewählten Gurt oder die Strebe anhand der häufigen und schadensäquivalenten Normalspannungsschwingbreiten. Für das gelenkige Modell wird der zutreffende Beiwert angewendet."
+   }
+  },
+  {
+   "id": "V-517",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.6 and Table 8.5(8)",
+   "entity": "hollowSectionFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-26"
+   },
+   "description": {
+    "en": "Classifies the nine hollow-section details and verifies the direct stress ranges and the additional weld throat shear for the slotted tube detail.",
+    "de": "Ordnet die neun Hohlprofildetails den Kerbfällen zu und prüft die Normalspannungsschwingbreiten sowie die zusätzliche Schubspannung im Nahtquerschnitt des geschlitzten Rohres."
+   }
+  },
+  {
+   "id": "V-518",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.5",
+   "entity": "loadCarryingWeldFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-27"
+   },
+   "description": {
+    "en": "Load-carrying welded joints, with qualified geometry, separate weld throat and toe checks, and the reference to EN 1994-2 for studs.",
+    "de": "Tragende Schweißverbindungen mit nachgewiesener Geometrie, getrennten Nahtquerschnitts- und Nahtübergangsnachweisen sowie Verweis auf EN 1994-2 für Kopfbolzendübel."
+   }
+  },
+  {
+   "id": "V-519",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.4",
+   "entity": "weldAttachmentFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-28"
+   },
+   "description": {
+    "en": "Weld attachments and stiffeners using the corrected gusset radius-to-length ratio and the required stress basis.",
+    "de": "Angeschweißte Anschlüsse und Steifen mit korrigiertem Radius-Längen-Verhältnis und maßgebender Spannungsgrundlage."
+   }
+  },
+  {
+   "id": "V-520",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.3",
+   "entity": "transverseButtWeldFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-29"
+   },
+   "description": {
+    "en": "Transverse butt weld categories with thickness, eccentricity, convexity and taper rules, and separate perpendicular checks for intersecting flanges.",
+    "de": "Kerbfälle für quer laufende Stumpfnähte mit Dicken-, Exzentrizitäts-, Überhöhungs- und Neigungsregeln sowie getrennten Quernachweisen für sich kreuzende Gurte."
+   }
+  },
+  {
+   "id": "V-521",
+   "clause": "EN 1993-1-9:2005 + AC:2009 Table 8.2",
+   "entity": "builtUpWeldFatigue",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C93-30"
+   },
+   "description": {
+    "en": "Longitudinal weld categories for built-up and hollow sections, weld starts and stops, repair, intermittent welds and cope holes.",
+    "de": "Kerbfälle für Längsnähte in zusammengesetzten Querschnitten und Hohlprofilen mit Ansatzstellen, Reparaturen, unterbrochenen Nähten und Freischnitten."
    }
   },
   {

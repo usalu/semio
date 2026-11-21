@@ -2,6 +2,7 @@ use super::*;
 use semio_framework_3d_brep_construction::primitives::{make_box, make_cone, make_cylinder, make_sphere, make_torus};
 use semio_framework_3d_brep_curve::bspline::KnotVector;
 use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_queries::planar_section::{PlanarSection, planar_section, spherical_strip_section};
 use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Shell;
@@ -390,14 +391,133 @@ fn incremental_planar_measure_matches_box_mass_properties() {
     let mut body = Body::new();
     let solid = make_box(&mut body, 2.0, 3.0, 4.0, &mut OpRecorder::new()).unwrap();
     let mass = mass_properties(&body, &ShapeScope::solid(solid), MASS_TOLERANCE).unwrap();
-    for (measure_area, expected) in [(true, mass.area), (false, mass.volumetric.unwrap().volume)] {
-        let mut measure = PlanarMeasure::new(solid, measure_area);
+    let volumetric=mass.volumetric.unwrap();
+    for (measure_area, center, expected) in [(true, false, mass.area), (false, false, volumetric.volume), (false, true, volumetric.volume)] {
+        let measure=PlanarMeasure::new(PlanarMeasureSource::Solid(solid),measure_area);
+        let mut measure=if center{measure.with_centroid()}else{measure};
         let actual = (0..100).find_map(|_| {
             measure.next_demand(&body).unwrap();
             measure.step(&body).unwrap()
         }).expect("a box terminates within 100 turns");
-        assert!((actual - expected).abs() < MASS_TOLERANCE);
+        assert!((actual-expected).abs()<MASS_TOLERANCE);
+        if center{
+            let actual=measure.centroid().unwrap().to_array();
+            assert!(actual.into_iter().zip(volumetric.centroid).all(|(a,b)|(a-b).abs()<MASS_TOLERANCE));
+        }
     }
+}
+
+#[test]
+fn planar_region_section_keeps_a_machined_void_in_both_directions(){
+    let mut body=Body::new();
+    let solid=placed_box(&mut body,&serde_json::json!([4,4,4]),&serde_json::json!([0,0,0]));
+    let inner=placed_box(&mut body,&serde_json::json!([2,2,2]),&serde_json::json!([1,1,1]));
+    let shell=body.solids.get(inner).unwrap().outer;
+    for face in body.shells.get(shell).unwrap().faces.clone(){body.faces.get_mut(face).unwrap().flipped=true;}
+    body.solids.get_mut(solid).unwrap().inners.push(shell);
+    for sign in [-1.,1.]{
+        let PlanarSection::Region(region)=planar_section(&body,solid,[0.,0.,2.],[0.,0.,sign],1e-6).unwrap().unwrap() else{panic!("void section");};
+        let (outer,holes)=region.into_rings();
+        let signed=|ring:&semio_framework_3d_brep_representation::contract::SectionPolygon|{
+            let points=(0..ring.count()).map(|i|Pnt3::from_array(ring.point(i).unwrap())).collect::<Vec<_>>();
+            let mut twice=0.;
+            for (&a,&b) in points.iter().zip(points.iter().cycle().skip(1)){twice+=a.x*b.y-a.y*b.x;}
+            twice*sign/2.
+        };
+        assert_eq!(signed(&outer),16.);
+        let holes=holes.iter().flatten().map(signed).collect::<Vec<_>>();
+        assert_eq!(holes,[-4.]);
+    }
+    assert!(matches!(planar_section(&body,solid,[0.,0.,3.5],[0.,0.,1.],1e-6),Some(Ok(PlanarSection::Convex(_)))));
+    for z in [1.,3.] {
+        assert!(matches!(planar_section(&body,solid,[0.,0.,z],[0.,0.,1.],1e-6),Some(Ok(PlanarSection::Convex(_)))));
+    }
+}
+
+#[test]
+fn retained_closest_point_visits_each_original_solid_boundary() {
+    let mut body = Body::new();
+    let size = serde_json::json!([2, 3, 4]);
+    let solid = placed_box(&mut body, &size, &serde_json::json!([1, 2, 3]));
+    let other = placed_box(&mut body, &size, &serde_json::json!([8, 2, 3]));
+    let compound = PlanarMeasureSource::compound(&[solid, other]).unwrap();
+    for (source, target, expected) in [
+        (PlanarMeasureSource::Solid(solid), [1.2, 3.5, 5.0], [1.0, 3.5, 5.0]),
+        (compound, [6.4, 3.5, 5.0], [8.0, 3.5, 5.0]),
+        (compound, [9.8, 3.5, 5.0], [10.0, 3.5, 5.0]),
+        (compound, [10.4, 5.8, 7.5], [10.0, 5.0, 7.0]),
+    ] {
+        let mut cursor = SolidClosest::new(source, Pnt3::from_array(target));
+        let point = (0..1024).find_map(|_| {
+            let demand = cursor.next_demand(&body).unwrap();
+            assert!(demand.depth > 0 && demand.copy_bytes <= 128);
+            cursor.step(&body).unwrap()
+        }).expect("the bounded boundary traversal terminates");
+        assert!(point.distance(Pnt3::from_array(expected)) < 1e-10);
+    }
+}
+
+#[test]
+fn original_nearest_uses_derived_analytic_solid_boundaries() {
+    use semio_framework_3d_brep_representation::contract::{SphericalCaps,SphericalShell};
+    use nearest_analytic::{frustum_bounds,frustum_nearest,spherical_caps_bounds,spherical_caps_nearest,spherical_shell_bounds,spherical_shell_nearest};
+    let data:Value=serde_json::from_str(include_str!("../🧫️fixtures/derived-solid-nearest.json")).unwrap();
+    let p=|v:&Value|Pnt3::from_array(serde_json::from_value(v.clone()).unwrap());
+    let place=|v:&Value|Frame3{origin:p(v),..Frame3::WORLD};
+    let ss=&data["sphereShell"];
+    let bs=&data["boxShell"];
+    let sb=&data["band"];
+    let fr=&data["frustum"];
+    let outer=SphericalShell::from_spheres([place(&ss["outer"]),place(&ss["inner"])],
+        [number(&ss["outerRadius"]),number(&ss["innerRadius"])],1e-6).unwrap();
+    let boxed=SphericalShell::from_box(p(&bs["origin"]),serde_json::from_value(bs["size"].clone()).unwrap(),
+        place(&bs["inner"]),number(&bs["innerRadius"]),1e-6).unwrap();
+    let band=SphericalCaps::from_band(Frame3::WORLD,number(&sb["radius"]),serde_json::from_value(sb["span"].clone()).unwrap(),1e-6).unwrap();
+    let radii=serde_json::from_value(fr["radii"].clone()).unwrap();
+    let bounds=[spherical_shell_bounds(outer),spherical_shell_bounds(boxed),spherical_caps_bounds(band),frustum_bounds(Frame3::WORLD,radii,number(&fr["height"]))];
+    let place=&fr["placed"];
+    let axes:[[f64;3];3]=serde_json::from_value(place["axes"].clone()).unwrap();
+    let [x,y,z]=axes.map(Vec3::from_array);
+    let rotated=frustum_bounds(Frame3{origin:p(&place["origin"]),x,y,z},radii,number(&fr["height"]));
+    for (point,expected) in rotated.into_iter().zip(place["bounds"].as_array().unwrap()){assert!(point.distance(p(expected))<1e-10); }
+    for (kind,queries) in [ss,bs,sb,fr].into_iter().enumerate(){
+        for (point,expected) in bounds[kind].into_iter().zip(queries["bounds"].as_array().unwrap()){assert!(point.distance(p(expected))<1e-10); }
+        for row in queries["queries"].as_array().unwrap(){
+            let target=p(&row["target"]);
+            let nearest=match kind{
+                0=>spherical_shell_nearest(outer,target),
+                1=>spherical_shell_nearest(boxed,target),
+                2=>spherical_caps_nearest(band,target),
+                _=>frustum_nearest(Frame3::WORLD,radii,number(&fr["height"]),target),
+            }.unwrap();
+            assert!(nearest.distance(p(&row["point"]))<1e-10);
+        }
+    }
+}
+
+#[test]
+fn retained_nearest_on_a_weighted_planar_bilinear_patch() {
+    let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/rational-plane-nearest.json")).unwrap();
+    let knots = |axis: usize| {
+        let [low, high]: [f64; 2] = serde_json::from_value(fixture["domain"][axis].clone()).unwrap();
+        KnotVector::new(vec![low, low, high, high], 1, 2).unwrap()
+    };
+    let controls: Vec<Vec<[f64; 3]>> = serde_json::from_value(fixture["controls"].clone()).unwrap();
+    let controls = controls.into_iter().map(|row| row.into_iter().map(Pnt3::from_array).collect()).collect();
+    let mut surface = Surface::Nurbs { u_knots: knots(0), v_knots: knots(1), controls,
+        weights: serde_json::from_value(fixture["weights"].clone()).unwrap() };
+    let point = |v: &Value| Pnt3::from_array(serde_json::from_value(v.clone()).unwrap());
+    for row in fixture["queries"].as_array().unwrap() {
+        let target = point(&row["target"]);
+        let (uv, corner, distance) = nearest_analytic::surface_nearest(&surface, target).unwrap();
+        let expected: [f64; 2] = serde_json::from_value(row["uv"].clone()).unwrap();
+        assert!(uv.into_iter().zip(expected).all(|(value, wanted)| (value - wanted).abs() < 1e-10));
+        assert!(corner.distance(point(&row["point"])) < 1e-10);
+        assert!((distance - row["distance"].as_f64().unwrap()).abs() < 1e-10);
+    }
+    let Surface::Nurbs { controls, .. } = &mut surface else { unreachable!(); };
+    controls[1][1].z += 0.25;
+    assert!(nearest_analytic::surface_nearest(&surface, Pnt3::new(0., 0., 0.)).is_err());
 }
 
 #[test]
@@ -413,4 +533,113 @@ fn analytic_measure_reads_fixed_curve_and_surface_geometry() {
     let plane = Surface::Plane { frame: Frame3::WORLD };
     assert_eq!(analytic_surface_sample(&plane, 2.0, 3.0, false).unwrap(), [2.0, 3.0, 0.0]);
     assert_eq!(analytic_surface_sample(&plane, 2.0, 3.0, true).unwrap(), [0.0, 0.0, 1.0]);
+}
+
+#[test]
+fn spherical_strip_section_matches_exact_chords_and_parallel_disks() {
+    use std::f64::consts::{PI,TAU};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/spherical-strip-section.json")).unwrap();
+    let sphere_radius=number(&fixture["sphereRadius"]);
+    let frame=Frame3::from_normal(Pnt3::default(),Vec3::Z).unwrap();
+    for row in fixture["cases"].as_array().unwrap(){
+        let span=[number(&row["axial"][0]),number(&row["axial"][1])];
+        let plane=triple(&row["plane"]);
+        let normal=triple(&row["normal"]);
+        for normal in [normal,normal.map(|axis|-axis)]{
+            let (basis,radius,arcs)=spherical_strip_section(frame,sphere_radius,span,plane,normal,1e-6).unwrap();
+            assert!((basis.z-Vec3::from_array(normal)).norm()<1e-12);
+            assert!((radius-number(&row["radius"])).abs()<1e-12);
+            let arcs=arcs.into_iter().flatten().collect::<Vec<_>>();
+            assert_eq!(arcs.len(),row["arcs"].as_u64().unwrap() as usize);
+            let area=if arcs.is_empty(){PI*radius*radius}else{
+                let factor=(0..arcs.len()).map(|index|{
+                    let (start,end)=arcs[index];
+                    assert!(start>=0. && end<=TAU && end>start);
+                    let next=arcs[(index+1)%arcs.len()].0;
+                    end-start+(next-end).sin()
+                }).sum::<f64>()*0.5;
+                radius*radius*factor
+            };
+            assert!((area-number(&row["area"])).abs()<1e-9,"{} {area}",row["name"]);
+        }
+    }
+    for row in fixture["refused"].as_array().unwrap(){
+        let span=[number(&row["axial"][0]),number(&row["axial"][1])];
+        assert!(spherical_strip_section(frame,sphere_radius,span,triple(&row["plane"]),triple(&row["normal"]),1e-6).is_err());
+    }
+}
+
+#[test]
+fn planar_section_keeps_disconnected_material_faces() {
+    use semio_framework_3d_brep_construction::{
+        euler::make_vertex,
+        primitives::{attach_face, finish_solid, line_edge},
+        prism_boundary::{MAX_PRISM_CORNERS, PrismBoundary},
+    };
+
+    let fixture: serde_json::Value = serde_json::from_str(
+        include_str!("../🧫️fixtures/disconnected-planar-section.json"),
+    ).unwrap();
+    let profile = fixture["profile"].as_array().unwrap();
+    let mut corners = [Pnt3::default(); MAX_PRISM_CORNERS];
+    for (point, row) in corners.iter_mut().zip(profile) {
+        *point = Pnt3::new(number(&row[0]), number(&row[1]), 0.);
+    }
+    let recipe = PrismBoundary::from_planar_ring(
+        corners, profile.len(), Vec3::Z * number(&fixture["height"]), Vec3::Z,
+    ).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let mut body = Body::new();
+        let mut rec = OpRecorder::new();
+        let vertices: Vec<_> = (0..recipe.vertex_count()).map(|i| {
+            make_vertex(&mut body, recipe.vertex(i), Default::default(), &mut rec)
+        }).collect();
+        let edges: Vec<_> = (0..recipe.edge_count()).map(|i| {
+            let [a, b] = recipe.edge(i).vertices;
+            line_edge(&mut body, recipe.vertex(a), recipe.vertex(b), vertices[a], vertices[b],
+                Default::default(), &mut rec)
+        }).collect();
+        let faces = recipe.ring_sizes().iter().enumerate().map(|(face, &count)| {
+            let support = body.surfaces.insert(recipe.surface(face));
+            let members: Vec<_> = (0..count).map(|i| {
+                let trim = recipe.trim(face, i);
+                (edges[trim.edge], trim.forward)
+            }).collect();
+            attach_face(&mut body, support, &members, false, Default::default(), &mut rec)
+        }).collect();
+        let solid = finish_solid(&mut body, faces, &mut rec);
+        for hole in row["voids"].as_array().unwrap() {
+            let id = placed_box(&mut body, &hole["size"], &hole["origin"]);
+            let shell = body.solids.get(id).unwrap().outer;
+            for face in body.shells.get(shell).unwrap().faces.clone() {
+                body.faces.get_mut(face).unwrap().flipped = true;
+            }
+            body.solids.get_mut(solid).unwrap().inners.push(shell);
+        }
+        for sign in [-1., 1.] {
+            let origin = [0., number(&fixture["cut"]), 0.];
+            let normal = [0., sign, 0.];
+            let PlanarSection::Regions(regions) = planar_section(&body, solid, origin, normal, 1e-6).unwrap().unwrap()
+                else { panic!("disconnected section faces: {row}"); };
+            let signed = |ring: &semio_framework_3d_brep_representation::contract::SectionPolygon| {
+                let points: Vec<_> = (0..ring.count()).map(|i| Pnt3::from_array(ring.point(i).unwrap())).collect();
+                points.iter().zip(points.iter().cycle().skip(1))
+                    .map(|(a,b)| a.z * b.x - a.x * b.z).sum::<f64>() * sign / 2.
+            };
+            let mut faces = regions.into_regions().map(|region| {
+                let (outer, holes) = region.into_rings();
+                let rings: Vec<_> = std::iter::once(signed(&outer)).chain(holes.iter().flatten().map(signed)).collect();
+                serde_json::json!({ "area": rings.iter().sum::<f64>(), "rings": rings })
+            }).collect::<Vec<_>>();
+            faces.sort_by(|a,b| number(&a["area"]).total_cmp(&number(&b["area"])));
+            let expected = row["faces"].as_array().unwrap();
+            assert_eq!(faces.len(), expected.len());
+            for (actual, wanted) in faces.iter().zip(expected) {
+                assert_eq!(number(&actual["area"]), number(&wanted["area"]));
+                let (actual, wanted) = (actual["rings"].as_array().unwrap(), wanted["rings"].as_array().unwrap());
+                assert_eq!(actual.len(), wanted.len());
+                assert!(actual.iter().zip(wanted).all(|(a, b)| number(a) == number(b)));
+            }
+        }
+    }
 }

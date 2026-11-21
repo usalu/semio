@@ -74,116 +74,24 @@ pub use derived_composition::*;
 //#endregion ⚠️Errors
 
 //#region 🔖️MediaImportExport
-/// 🌉️ Layout's pages, frames and background trace become one neutral [`VectorScene`] (one translated group per page, each page boundary and each frame
-/// nested inside as a rect-shaped path); the codec bound to `LAYOUT_BACKGROUND_DRAWING` writes that scene as an external format and reads external documents back
-/// as the document's background child. Layout never names the owner of those formats.
+#[path = "📤️export/📐️vector-scene/🦀️.rs"]
+mod vector_scene;
+
 use semio_s_artifact_layout_layout_model::{Frame, GridSettings, Layer, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
-use semio_framework_io_ports::{VectorCanvas, VectorLayer, VectorNode, VectorPoint2, VectorPoint3, VectorRgba, VectorScene, VectorSegment, VectorStyle, VectorTransform};
-use semio_framework_value::DslValue as Value;
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
+pub use semio_s_artifact_layout_layout_model::snapshot::page_projection::{layout_snapshot_to_scene, rect_path_segments};
 
-/// 📐️ A closed axis-aligned rectangle as `MoveTo` + three `LineTo`s + `Close`, the "rects-as-paths" primitive the page and frame rects build on.
-pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<VectorSegment> {
-    vec![
-        VectorSegment::MoveTo { to: VectorPoint2 { x, y } },
-        VectorSegment::LineTo { to: VectorPoint2 { x: x + width, y } },
-        VectorSegment::LineTo { to: VectorPoint2 { x: x + width, y: y + height } },
-        VectorSegment::LineTo { to: VectorPoint2 { x, y: y + height } },
-        VectorSegment::Close,
-    ]
-}
-
-fn rgba_from_channels(channels: [f32; 4]) -> VectorRgba {
-    VectorRgba { r: channels[0], g: channels[1], b: channels[2], a: channels[3] }
-}
-
-fn drawing_codec() -> Result<&'static dyn semio_framework_io_ports::EmbeddedChildCodecV1, String> {
-    semio_s_artifact_layout_layout_model::drawing_codec().map_err(|error| error.to_string())
-}
-
-/// 🖍️ Printable page content becomes translated scene groups with actual text, image bytes and center rotations.
-/// Parent-page overrides and layer visibility are applied; imported background layers remain behind native content.
-pub fn layout_snapshot_to_scene(doc: &LayoutSnapshot) -> Result<VectorScene, String> {
-    const PAGE_GAP: f64 = 24.0;
-    let mut styles = Vec::new();
-    let mut layers = Vec::new();
-    if let Some(background) = semio_s_artifact_layout_layout_model::background_drawing_scene(doc).map_err(|error| error.to_string())? {
-        for mut layer in background.layers { layer.id = format!("background-{}", layer.id); layers.push(layer); }
-        styles.extend(background.styles);
-    }
-    let mut x_offset = 0.0f64;
-    let mut canvas_width = 0.0f64;
-    let mut canvas_height = 0.0f64;
-    for page in &doc.pages {
-        let mut children = Vec::new();
-        let parent = page.parent_page_id.as_ref().and_then(|id| doc.parent_pages.iter().find(|parent| &parent.id == id));
-        let frames = parent.into_iter().flat_map(|parent| &parent.frames).chain(&page.frames);
-        for frame in frames {
-            let inherited = parent.is_some_and(|parent| parent.frames.iter().any(|candidate| std::ptr::eq(candidate, frame)));
-            let override_value = inherited.then(|| page.overrides.iter().find(|value| value.object_id == frame.id())).flatten();
-            if !override_value.and_then(|value| value.visible).unwrap_or_else(|| frame.visible()) { continue; }
-            let visible_layer = page.layers.iter().chain(parent.into_iter().flat_map(|parent| &parent.layers)).find(|layer| layer.id == frame.layer_id()).is_none_or(|layer| layer.visible);
-            if !visible_layer { continue; }
-            let bounds = override_value.and_then(|value| value.bounds.as_ref()).unwrap_or_else(|| frame.bounds());
-            let style_name = format!("frame-{}-{}", page.id, frame.id());
-            let mut nodes = Vec::new();
-            match frame {
-                Frame::Rect { fill, stroke, .. } => {
-                    styles.push(VectorStyle { name: style_name.clone(), fill: fill.map(rgba_from_channels), stroke: stroke.map(rgba_from_channels), stroke_width: stroke.map(|_| 1.0), opacity: None });
-                    nodes.push(VectorNode::Path { segments: rect_path_segments(-bounds.width * 0.5, -bounds.height * 0.5, bounds.width, bounds.height), style: Some(style_name) });
-                },
-                Frame::Text { story_id, inset, .. } => {
-                    let story = doc.stories.iter().find(|story| &story.id == story_id).ok_or_else(|| format!("layout export: missing story {story_id}"))?;
-                    let paragraph = story.style_runs.first().and_then(|run| run.paragraph_style_id.as_ref()).and_then(|id| doc.paragraph_styles.iter().find(|style| &style.id == id));
-                    let size = paragraph.map_or(12.0, |style| style.font_size);
-                    let leading = paragraph.map_or(size * 1.2, |style| style.leading);
-                    let color = story.style_runs.first().and_then(|run| run.character_style_id.as_ref()).and_then(|id| doc.character_styles.iter().find(|style| &style.id == id)).and_then(|style| style.color).unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                    styles.push(VectorStyle { name: style_name.clone(), fill: Some(rgba_from_channels(color)), stroke: None, stroke_width: None, opacity: None });
-                    for (index, value) in story.content.split('\n').enumerate() {
-                        nodes.push(VectorNode::Text { value: value.into(), at: VectorPoint2 { x: -bounds.width * 0.5 + inset.x, y: -bounds.height * 0.5 + inset.y + size + index as f64 * leading }, style: Some(style_name.clone()) });
-                    }
-                },
-                Frame::Image { link_id, .. } => {
-                    let link = doc.links.iter().find(|link| &link.id == link_id).ok_or_else(|| format!("layout export: missing link {link_id}"))?;
-                    let data = link.proxy_data_url.as_deref().ok_or_else(|| format!("layout export: unresolved image {link_id}"))?;
-                    let (header, data) = data.split_once(",").ok_or("layout export: image data URL")?;
-                    let mime = header.strip_prefix("data:").and_then(|header| header.strip_suffix(";base64")).filter(|mime| matches!(*mime, "image/png" | "image/jpeg" | "image/gif" | "image/svg+xml")).ok_or("layout export: unsupported image data URL")?;
-                    let bytes = store::pack_rt::pack_value_from_base64(data).map_err(|error| error.to_string())?;
-                    nodes.push(VectorNode::Image { at: VectorPoint2 { x: -bounds.width * 0.5, y: -bounds.height * 0.5 }, width: bounds.width, height: bounds.height, mime: mime.into(), bytes });
-                },
-            }
-            let half = bounds.rotation * 0.5;
-            children.push(VectorNode::Group { transform: VectorTransform { translation: VectorPoint3 { x: bounds.x + bounds.width * 0.5, y: bounds.y + bounds.height * 0.5, z: 0.0 }, rotation: semio_framework_io_ports::VectorQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() }, scale: VectorPoint3 { x: 1.0, y: 1.0, z: 1.0 } }, children: nodes });
-        }
-        layers.push(VectorLayer { id: page.id.clone(), name: page.name.clone(), visible: true, root: VectorNode::Group { transform: VectorTransform { translation: VectorPoint3 { x: x_offset, y: 0.0, z: 0.0 }, ..VectorTransform::identity() }, children } });
-        canvas_width = (x_offset + page.width).max(canvas_width);
-        canvas_height = page.height.max(canvas_height);
-        x_offset += page.width + PAGE_GAP;
-    }
-    Ok(VectorScene { schema: String::new(), canvas: VectorCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(VectorRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) }, styles, layers })
-}
-
-/// 📤️ One scene written as one external document of `format` by the bound codec.
-pub fn export_scene(scene: &VectorScene, format: &str) -> Result<Vec<u8>, String> {
-    let codec = drawing_codec()?;
-    let content = codec.lift(scene).map_err(|error| error.to_string())?;
-    codec.export(format, &content)
-}
-
-/// 📤️ The pages laid side by side, written as one external document of `format` by the bound codec.
+/// 📤️ Writes the cold page projection through the standard drawing encoder.
 pub fn layout_snapshot_to_format(doc: &LayoutSnapshot, format: &str) -> Result<Vec<u8>, String> {
-    export_scene(&layout_snapshot_to_scene(doc)?, format)
-}
-
-pub fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let doc: LayoutSnapshot = LayoutSnapshot::from_value(value.clone()).map_err(|e| format!("layout document: {e}"))?;
-    let scene = layout_snapshot_to_scene(&doc)?;
-    let width = scene.canvas.width.round() as u32;
-    let height = scene.canvas.height.round() as u32;
-    let svg = String::from_utf8(export_scene(&scene, "svg")?).map_err(|error| format!("layout->svg: {error}"))?;
-    Ok((svg, width, height))
+    use semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat;
+    let format = match format {
+        "svg" => SemioDrawingFormat::Svg,
+        "png" => SemioDrawingFormat::Png,
+        "dxf" => SemioDrawingFormat::Dxf,
+        "dwg" => SemioDrawingFormat::Dwg,
+        _ => return Err("layout.export.drawing-format".into()),
+    };
+    vector_scene::encode_vector_scene(layout_snapshot_to_scene(doc)?, format)
 }
 
 /// 🧭️ Cold external analysis preserves original encoded bytes before identity, native decoding and publication.
@@ -245,35 +153,26 @@ pub mod io_registry {
     }
 
     const EXPORT_SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
-    fn compose_export_svg(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let text = crate::export::serializers::artifacts::svg::v1_1::any::serialize_text(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_SVG_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::Medium })
-        })
-    }
     const EXPORT_PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
-    fn compose_export_png(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_PNG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::Medium })
-        })
-    }
     const EXPORT_DXF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId("*") };
-    fn compose_export_dxf(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
+    const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
+
+    fn compose_page_projection<'a>(
+        sources: &'a [ErasedComposeSource],
+        format: &'static str,
+        dialect: Dialect,
+    ) -> semio_plugin::io::ComposeFuture<'a> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::export::serializers::artifacts::dxf::v_r12::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_DXF_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::Medium })
-        })
-    }
-    const EXPORT_DWG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
-    fn compose_export_dwg(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let bytes = crate::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_DWG_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::Medium })
+            let bytes = crate::layout_snapshot_to_format(&snapshot, format)
+                .map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+            let payload = if format == "svg" {
+                IoPayload::Text(String::from_utf8(bytes)
+                    .map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?)
+            } else {
+                IoPayload::Binary(bytes)
+            };
+            Ok(ComposedArtifact { dialect, payload, diagnostics: Vec::new(), confidence: semio_plugin::io::Confidence::Medium })
         })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -285,30 +184,14 @@ pub mod io_registry {
         })
     }
     const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
-    fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let result = crate::interchange::export_document("pdf", &snapshot, &mut |_| true).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
-            let diagnostics = result.diagnostics.into_iter().map(|diagnostic| semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(diagnostic.code), severity: semio_framework_diagnostic::Severity::Warning, span: semio_framework_diagnostic::TextSpan::at(1, 1), message: diagnostic.message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }).collect();
-            Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(result.value), diagnostics, confidence: semio_plugin::io::Confidence::Medium })
-        })
-    }
     const EXPORT_STEP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
-    fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
-        Box::pin(async move {
-            let snapshot = rebuild_native_snapshot(sources)?;
-            let result = crate::interchange::export_document("step", &snapshot, &mut |_| true).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
-            let diagnostics = result.diagnostics.into_iter().map(|diagnostic| semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(diagnostic.code), severity: semio_framework_diagnostic::Severity::Warning, span: semio_framework_diagnostic::TextSpan::at(1, 1), message: diagnostic.message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }).collect();
-            Ok(ComposedArtifact { dialect: EXPORT_STEP_DIALECT, payload: IoPayload::Binary(result.value), diagnostics, confidence: semio_plugin::io::Confidence::Medium })
-        })
-    }
     const EXPORT_IDML_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.idml", standard: StandardId("8.0"), subset: SubsetId("*") };
-    fn compose_export_idml(sources: &[ErasedComposeSource]) -> semio_plugin::io::ComposeFuture<'_> {
+    fn compose_binary_interchange<'a>(sources: &'a [ErasedComposeSource], format: &'static str, dialect: Dialect) -> semio_plugin::io::ComposeFuture<'a> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
-            let result = crate::interchange::export_document("idml", &snapshot, &mut |_| true).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+            let result = crate::interchange::export_document(format, &snapshot, &mut |_| true).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
             let diagnostics = result.diagnostics.into_iter().map(|diagnostic| semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(diagnostic.code), severity: semio_framework_diagnostic::Severity::Warning, span: semio_framework_diagnostic::TextSpan::at(1, 1), message: diagnostic.message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }).collect();
-            Ok(ComposedArtifact { dialect: EXPORT_IDML_DIALECT, payload: IoPayload::Binary(result.value), diagnostics, confidence: semio_plugin::io::Confidence::Medium })
+            Ok(ComposedArtifact { dialect, payload: IoPayload::Binary(result.value), diagnostics, confidence: semio_plugin::io::Confidence::Medium })
         })
     }
     //#endregion 🔖️ExportEntries
@@ -318,14 +201,14 @@ pub mod io_registry {
             .get_or_init(|| {
                 vec![
                     composer_entry_of::<LayoutAnyComposer>(),
-                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_pdf },
-                    ComposerEntry { writes: EXPORT_STEP_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_step },
-                    ComposerEntry { writes: EXPORT_IDML_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_idml },
-                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_svg },
+                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[LAYOUT_DIALECT], compose: |sources| compose_binary_interchange(sources, "pdf", EXPORT_PDF_DIALECT) },
+                    ComposerEntry { writes: EXPORT_STEP_DIALECT, reads: &[LAYOUT_DIALECT], compose: |sources| compose_binary_interchange(sources, "step", EXPORT_STEP_DIALECT) },
+                    ComposerEntry { writes: EXPORT_IDML_DIALECT, reads: &[LAYOUT_DIALECT], compose: |sources| compose_binary_interchange(sources, "idml", EXPORT_IDML_DIALECT) },
+                    ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[LAYOUT_DIALECT], compose: |sources| compose_page_projection(sources, "svg", EXPORT_SVG_DIALECT) },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_json },
-                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_png },
-                    ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_dxf },
-                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_dwg },
+                    ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[LAYOUT_DIALECT], compose: |sources| compose_page_projection(sources, "png", EXPORT_PNG_DIALECT) },
+                    ComposerEntry { writes: EXPORT_DXF_DIALECT, reads: &[LAYOUT_DIALECT], compose: |sources| compose_page_projection(sources, "dxf", EXPORT_DXF_DIALECT) },
+                    ComposerEntry { writes: EXPORT_DWG_DIALECT, reads: &[LAYOUT_DIALECT], compose: |sources| compose_page_projection(sources, "dwg", EXPORT_DWG_DIALECT) },
                 ]
             })
             .as_slice()
@@ -461,42 +344,10 @@ pub mod export {
         #[path = "."]
         pub mod artifacts {
             #[path = "."]
-            pub mod dwg {
-                #[path = "."]
-                pub mod v_ac1018 {
-                    #[path = "📤️export/🧵️serializers/🗿️artifacts/🏗️dwg/🔖️ac1018/✳️any/🦀️.rs"]
-                    pub mod any;
-                }
-            }
-            #[path = "."]
-            pub mod dxf {
-                #[path = "."]
-                pub mod v_r12 {
-                    #[path = "📤️export/🧵️serializers/🗿️artifacts/📐️dxf/🔖️r12/✳️any/🦀️.rs"]
-                    pub mod any;
-                }
-            }
-            #[path = "."]
             pub mod json {
                 #[path = "."]
                 pub mod v_rfc8259 {
                     #[path = "📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                    pub mod any;
-                }
-            }
-            #[path = "."]
-            pub mod png {
-                #[path = "."]
-                pub mod v1_2 {
-                    #[path = "📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
-                    pub mod any;
-                }
-            }
-            #[path = "."]
-            pub mod svg {
-                #[path = "."]
-                pub mod v1_1 {
-                    #[path = "📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs"]
                     pub mod any;
                 }
             }

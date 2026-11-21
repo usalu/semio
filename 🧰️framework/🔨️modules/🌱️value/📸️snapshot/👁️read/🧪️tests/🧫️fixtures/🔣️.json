@@ -1,4 +1,8 @@
 {
+  "ownedRetirementBirth": [
+    { "copyDelta": -1, "moved": false },
+    { "copyDelta": 0, "moved": true }
+  ],
   "duplicate": {
     "schema": "snapshot-read.original-duplicate.v1",
     "cases": [

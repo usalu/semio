@@ -1,0 +1,10 @@
+{
+  "points": [[0, 0, 2], [4, 0, 2], [0, 3, 2]],
+  "cases": [
+    {"kind": "offset", "delta": [0, 0, 5], "flipped": false},
+    {"kind": "offset", "delta": [0, 0, -5], "flipped": true},
+    {"kind": "diagonal", "scale": [-2, 3, 4], "flipped": true},
+    {"kind": "disconnected"},
+    {"kind": "collapsed"}
+  ]
+}

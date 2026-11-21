@@ -1,0 +1,38 @@
+[
+  {
+    "batch": false,
+    "funding": true,
+    "decoder": false,
+    "next": "construct"
+  },
+  {
+    "batch": false,
+    "funding": true,
+    "decoder": true,
+    "next": "construct"
+  },
+  {
+    "batch": false,
+    "funding": false,
+    "decoder": true,
+    "next": "wait"
+  },
+  {
+    "batch": true,
+    "funding": true,
+    "decoder": false,
+    "next": "wait"
+  },
+  {
+    "batch": true,
+    "funding": true,
+    "decoder": true,
+    "next": "receive"
+  },
+  {
+    "batch": true,
+    "funding": false,
+    "decoder": true,
+    "next": "wait"
+  }
+]

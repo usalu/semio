@@ -1,5 +1,5 @@
 //! 📥️ Bounded borrowed Event projection shares the canonical kernel wire contract.
-use semio_framework_kernel::{Event,MessageEndpoint,CommandPageCursor,ColdDocumentPairPage,ColdDocumentPairHeader,ColdDocumentPairFrontier};
+use semio_framework_kernel::{OriginalMediaControlEvent,OriginalMediaWireLoan,OriginalMediaWireControl,Event,MessageEndpoint,CommandPageCursor,ColdDocumentPairPage,ColdDocumentPairHeader,ColdDocumentPairFrontier};
 use semio_framework_actor::instance_lifetime::{ActorInstanceLifetime,ActorInstanceOpenRequest,ActorInstanceCloseRequest,ActorInstanceLifecycleReceipt,ActorInstanceLifecycleAck,ActorUiPatchReceipt};
 use semio_framework_kernel_identity::{ActivationEvent,BrokerCapabilityGrant,CapabilityChange,QuotaSchema,RequestOutcome};
 use semio_framework_pack_json::{JsonWriteNode,JsonWriteSource};
@@ -12,8 +12,38 @@ pub struct EventJsonSource<'a>(pub &'a[Event]);
 pub use semio_framework_kernel_identity::PollRequestLimits;
 pub struct PollJsonSource<'a>{pub events:&'a[Event],pub limits:&'a PollRequestLimits}
 
+#[derive(Clone, Copy)]
+pub(super) enum PollPage<'a> {
+    Empty,
+    Command(&'a CommandPageCursor, &'a [u8]),
+    Cold(&'a ColdDocumentPairPage),
+}
+
+impl PollPage<'_> {
+    fn at(&self, path: &[usize]) -> Result<Node<'_>, ValueError> {
+        match *self {
+            Self::Empty => at(Node::Null, path),
+            Self::Cold(page) => at(Node::ColdPage(page), path),
+            Self::Command(cursor, bytes) => match path.split_first() {
+                Some((0, path)) => at(Node::Cursor(cursor), path),
+                Some((1, path)) => at(Node::Bytes(bytes), path),
+                _ => Err(absent()),
+            },
+        }
+    }
+
+    pub(super) fn node(&self, path: &[usize]) -> Result<JsonWriteNode<'_>, ValueError> {
+        if matches!(self, Self::Command(..)) && path.is_empty() { return Ok(JsonWriteNode::Array(2)); }
+        Ok(self.at(path)?.view())
+    }
+
+    pub(super) fn key(&self, path: &[usize], index: usize) -> Result<&str, ValueError> {
+        self.at(path)?.field(index).map(|(key, _)| key).ok_or_else(absent)
+    }
+}
+
 #[derive(Clone,Copy)]
-enum Node<'a>{Poll(&'a PollJsonSource<'a>),Limits(&'a PollRequestLimits),Policy(semio_framework_value::RetainedCloneGrant),Null,Events(&'a[Event]),Event(&'a Event),Body(&'a Event),Bytes(&'a[u8]),Text(&'a str),UInt(u64),Quoted(u128),Bool(bool),Assets(&'a[(String,Vec<u8>)]),Asset(&'a(String,Vec<u8>)),Grants(&'a[BrokerCapabilityGrant]),Grant(&'a BrokerCapabilityGrant),Quota(&'a QuotaSchema),Activation(&'a ActivationEvent),ActivationBody(&'a ActivationEvent),Change(&'a CapabilityChange),ChangeBody(&'a CapabilityChange),Endpoint(&'a MessageEndpoint),EndpointBody(&'a MessageEndpoint),Outcome(&'a RequestOutcome),Open(ActorInstanceOpenRequest),Close(ActorInstanceCloseRequest),Lifetime(ActorInstanceLifetime),Receipt(ActorInstanceLifecycleReceipt),Ack(ActorInstanceLifecycleAck),Patch(ActorUiPatchReceipt),Cursor(&'a CommandPageCursor),ColdPage(&'a ColdDocumentPairPage),ColdHeader(&'a ColdDocumentPairHeader),Frontier(&'a ColdDocumentPairFrontier)}
+enum Node<'a>{Poll(&'a PollJsonSource<'a>),Limits(&'a PollRequestLimits),Policy(semio_framework_value::RetainedCloneGrant),Null,Events(&'a[Event]),Event(&'a Event),Body(&'a Event),Raw(&'a OriginalMediaControlEvent),RawLoan(&'a OriginalMediaWireLoan),RawControl(&'a OriginalMediaWireControl),RawBegin(&'a str,&'a str),Bytes(&'a[u8]),Text(&'a str),UInt(u64),Quoted(u128),Bool(bool),Assets(&'a[(String,Vec<u8>)]),Asset(&'a(String,Vec<u8>)),Grants(&'a[BrokerCapabilityGrant]),Grant(&'a BrokerCapabilityGrant),Quota(&'a QuotaSchema),Activation(&'a ActivationEvent),ActivationBody(&'a ActivationEvent),Change(&'a CapabilityChange),ChangeBody(&'a CapabilityChange),Endpoint(&'a MessageEndpoint),EndpointBody(&'a MessageEndpoint),Outcome(&'a RequestOutcome),Open(ActorInstanceOpenRequest),Close(ActorInstanceCloseRequest),Lifetime(ActorInstanceLifetime),Receipt(ActorInstanceLifecycleReceipt),Ack(ActorInstanceLifecycleAck),Patch(ActorUiPatchReceipt),Cursor(&'a CommandPageCursor),ColdPage(&'a ColdDocumentPairPage),ColdHeader(&'a ColdDocumentPairHeader),Frontier(&'a ColdDocumentPairFrontier)}
 
 fn absent()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed Event JSON path is absent")}
 fn uint<'a,T:Into<u64>>(value:T)->Node<'a>{Node::UInt(value.into())}
@@ -23,14 +53,15 @@ macro_rules! optional_fields{($index:expr;$($key:literal=>$value:expr),*$(,)?)=>
 
 impl<'a> Node<'a>{
  fn tag(self)->Option<&'static str>{Some(match self{
-  Self::Event(value)=>match value{Event::InstanceOpen{..}=>"instanceOpen",Event::InstanceClose(_)=>"instanceClose",Event::InstanceLifecycleAck(_)=>"instanceLifecycleAck",Event::Activate{..}=>"activate",Event::SuspendRequest=>"suspendRequest",Event::CapabilityChanged{..}=>"capabilityChanged",Event::QuotaChanged{..}=>"quotaChanged",Event::CommandIngressPage{..}=>"commandIngressPage",Event::ColdDocumentPairPage(_)=>"coldDocumentPairPage",Event::UiIntent{..}=>"uiIntent",Event::SurfaceVisible{..}=>"surfaceVisible",Event::StagedFormRequested{..}=>"stagedFormRequested",Event::SurfaceHidden{..}=>"surfaceHidden",Event::SurfaceResized{..}=>"surfaceResized",Event::PatchAck{..}=>"patchAck",Event::PatchRejected{..}=>"patchRejected",Event::Completed{..}=>"completed",Event::HttpChunk{..}=>"httpChunk",Event::JobProgress{..}=>"jobProgress",Event::JobCompleted{..}=>"jobCompleted",Event::Message{..}=>"message",Event::Timer{..}=>"timer",Event::Wake=>"wake",Event::Request{..}=>"request"},
+  Self::Event(value)=>match value{Event::InstanceOpen{..}=>"instanceOpen",Event::InstanceClose(_)=>"instanceClose",Event::InstanceLifecycleAck(_)=>"instanceLifecycleAck",Event::Activate{..}=>"activate",Event::SuspendRequest=>"suspendRequest",Event::CapabilityChanged{..}=>"capabilityChanged",Event::QuotaChanged{..}=>"quotaChanged",Event::CommandIngressPage{..}=>"commandIngressPage",Event::OriginalMediaControl(_)=>"originalMediaControl",Event::ColdDocumentPairPage(_)=>"coldDocumentPairPage",Event::UiIntent{..}=>"uiIntent",Event::SurfaceVisible{..}=>"surfaceVisible",Event::StagedFormRequested{..}=>"stagedFormRequested",Event::SurfaceHidden{..}=>"surfaceHidden",Event::SurfaceResized{..}=>"surfaceResized",Event::PatchAck{..}=>"patchAck",Event::PatchRejected{..}=>"patchRejected",Event::Completed{..}=>"completed",Event::HttpChunk{..}=>"httpChunk",Event::JobProgress{..}=>"jobProgress",Event::JobCompleted{..}=>"jobCompleted",Event::Message{..}=>"message",Event::Timer{..}=>"timer",Event::Wake=>"wake",Event::Request{..}=>"request"},
   Self::Activation(value)=>match value{ActivationEvent::OnCommand{..}=>"onCommand",ActivationEvent::OnViewVisible{..}=>"onViewVisible",ActivationEvent::OnFileType{..}=>"onFileType",ActivationEvent::OnArtifactKind{..}=>"onArtifactKind",ActivationEvent::OnExtensionRequest{..}=>"onExtensionRequest",ActivationEvent::OnStartupFinished=>"onStartupFinished"},
   Self::Change(value)=>match value{CapabilityChange::Granted{..}=>"granted",CapabilityChange::Revoked{..}=>"revoked",CapabilityChange::Narrowed{..}=>"narrowed"},
   Self::Endpoint(value)=>match value{MessageEndpoint::Shell{..}=>"shell",MessageEndpoint::Backbone{..}=>"backbone",MessageEndpoint::PluginInstance{..}=>"pluginInstance",MessageEndpoint::Extension{..}=>"extension",MessageEndpoint::Topic{..}=>"topic"},
+  Self::RawControl(value)=>match value{OriginalMediaWireControl::Begin{..}=>"begin",OriginalMediaWireControl::Complete=>"complete",OriginalMediaWireControl::Cancel=>"cancel"},
   Self::Outcome(value)=>match value{RequestOutcome::Ok(_)=>"ok",RequestOutcome::Err(_)=>"err"},_=>return None})}
- fn unit(self)->bool{matches!(self,Self::Event(Event::SuspendRequest|Event::Wake)|Self::Activation(ActivationEvent::OnStartupFinished))}
+ fn unit(self)->bool{matches!(self,Self::Event(Event::SuspendRequest|Event::Wake)|Self::Activation(ActivationEvent::OnStartupFinished)|Self::RawControl(OriginalMediaWireControl::Complete|OriginalMediaWireControl::Cancel))}
  fn field(self,index:usize)->Option<(&'static str,Self)>{
-  if let Some(tag)=self.tag(){if self.unit(){return None}return(index==0).then(||(tag,match self{Self::Event(Event::InstanceClose(v))=>Self::Close(*v),Self::Event(Event::InstanceLifecycleAck(v))=>Self::Ack(*v),Self::Event(Event::ColdDocumentPairPage(v))=>Self::ColdPage(v),Self::Event(v)=>Self::Body(v),Self::Activation(v)=>Self::ActivationBody(v),Self::Change(v)=>Self::ChangeBody(v),Self::Endpoint(v)=>Self::EndpointBody(v),Self::Outcome(RequestOutcome::Ok(v)|RequestOutcome::Err(v))=>Self::Bytes(v),_=>unreachable!()}))}
+  if let Some(tag)=self.tag(){if self.unit(){return None}return(index==0).then(||(tag,match self{Self::Event(Event::InstanceClose(v))=>Self::Close(*v),Self::Event(Event::InstanceLifecycleAck(v))=>Self::Ack(*v),Self::Event(Event::ColdDocumentPairPage(v))=>Self::ColdPage(v),Self::Event(Event::OriginalMediaControl(v))=>Self::Raw(v),Self::RawControl(OriginalMediaWireControl::Begin{name,media_type})=>Self::RawBegin(name,media_type),Self::Event(v)=>Self::Body(v),Self::Activation(v)=>Self::ActivationBody(v),Self::Change(v)=>Self::ChangeBody(v),Self::Endpoint(v)=>Self::EndpointBody(v),Self::Outcome(RequestOutcome::Ok(v)|RequestOutcome::Err(v))=>Self::Bytes(v),_=>unreachable!()}))}
   match self{
    Self::Poll(v)=>fields!(index;"events"=>Self::Events(v.events),"command_page"=>Self::Null,"cold_pair_page"=>Self::Null,"limits"=>Self::Limits(v.limits)),
    Self::Limits(v)=>fields!(index;"retainedPolicy"=>Self::Policy(v.retained_policy),"workFuel"=>uint(v.work_fuel),"fuel"=>uint(v.fuel),"deadlineUs"=>uint(v.deadline_us),"maxEffects"=>uint(v.max_effects),"maxPatchBytes"=>uint(v.max_patch_bytes),"maxFrames"=>uint(v.max_frames)),
@@ -47,7 +78,10 @@ impl<'a> Node<'a>{
     Event::PatchRejected{receipt,surface,revision,reason}=>fields!(index;"receipt"=>Self::Patch(*receipt),"surface"=>Self::Text(surface),"revision"=>uint(*revision),"reason"=>Self::Text(reason)),
     Event::Completed{req,result}=>fields!(index;"req"=>uint(req.0),"result"=>Self::Outcome(result)),Event::HttpChunk{req,bytes,done}=>fields!(index;"req"=>uint(req.0),"bytes"=>Self::Bytes(bytes),"done"=>Self::Bool(*done)),
     Event::JobProgress{job,progress}=>if index==0{Some(("job",uint(*job)))}else if index==1{progress.as_deref().map(|bytes|("progress",Self::Bytes(bytes)))}else{None},Event::JobCompleted{job,result}=>fields!(index;"job"=>uint(*job),"result"=>Self::Outcome(result)),
-    Event::Message{source,payload}=>fields!(index;"source"=>Self::Endpoint(source),"payload"=>Self::Bytes(payload)),Event::Timer{id}=>fields!(index;"id"=>uint(*id)),Event::Request{req,from,capability,payload}=>fields!(index;"req"=>uint(req.0),"from"=>Self::Endpoint(from),"capability"=>Self::Text(capability),"payload"=>Self::Bytes(payload)),Event::InstanceClose(_)|Event::InstanceLifecycleAck(_)|Event::ColdDocumentPairPage(_)|Event::SuspendRequest|Event::Wake=>None},
+    Event::Message{source,payload}=>fields!(index;"source"=>Self::Endpoint(source),"payload"=>Self::Bytes(payload)),Event::Timer{id}=>fields!(index;"id"=>uint(*id)),Event::Request{req,from,capability,payload}=>fields!(index;"req"=>uint(req.0),"from"=>Self::Endpoint(from),"capability"=>Self::Text(capability),"payload"=>Self::Bytes(payload)),Event::InstanceClose(_)|Event::InstanceLifecycleAck(_)|Event::ColdDocumentPairPage(_)|Event::OriginalMediaControl(_)|Event::SuspendRequest|Event::Wake=>None},
+   Self::Raw(v)=>fields!(index;"loan"=>Self::RawLoan(&v.loan),"owner"=>uint(v.owner),"seq"=>uint(v.seq),"kind"=>uint(v.kind),"extent"=>uint(v.extent),"control"=>Self::RawControl(&v.control)),
+   Self::RawLoan(v)=>fields!(index;"operationId"=>Self::Text(&v.operation_id),"generation"=>Self::Text(&v.generation),"instanceId"=>uint(v.instance_id),"documentId"=>Self::Text(&v.document_id),"baseRevision"=>Self::Text(&v.base_revision)),
+   Self::RawBegin(name,media_type)=>fields!(index;"name"=>Self::Text(name),"mediaType"=>Self::Text(media_type)),
    Self::Open(v)=>fields!(index;"activationGeneration"=>quoted(v.activation_generation),"instanceId"=>uint(v.instance_id),"requestSequence"=>uint(v.request_sequence)),
    Self::Close(v)=>fields!(index;"lifetime"=>Self::Lifetime(v.lifetime),"requestSequence"=>uint(v.request_sequence)),
    Self::Lifetime(v)=>fields!(index;"activationGeneration"=>quoted(v.activation_generation),"instanceId"=>uint(v.instance_id),"guestLifetime"=>quoted(v.guest_lifetime)),

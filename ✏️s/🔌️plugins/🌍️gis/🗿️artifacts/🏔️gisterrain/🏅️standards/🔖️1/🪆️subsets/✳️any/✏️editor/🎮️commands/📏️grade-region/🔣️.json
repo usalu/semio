@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Grade Terrain Region",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "height"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "height": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+  }
+}

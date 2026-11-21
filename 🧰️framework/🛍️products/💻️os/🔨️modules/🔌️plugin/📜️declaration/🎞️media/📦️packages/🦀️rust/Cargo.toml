@@ -26,6 +26,8 @@ semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-replication-command-ingress = { path = "../../../../../../../../🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-plugin-decl-views = { path = "../../../👁️view/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

@@ -28,6 +28,7 @@ semio-renderer-wgpu-engine-registry = { path = "../../../🗺️engine-registry/
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
 semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-os-infinite-board-normal-focus = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
 semio-os-infinite-board-normal-gestures = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
 semio-os-infinite-board-normal-host = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/📦️packages/🦀️rust" }

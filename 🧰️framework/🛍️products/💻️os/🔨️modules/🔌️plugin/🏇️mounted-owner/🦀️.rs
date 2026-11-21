@@ -151,8 +151,12 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         Ok(receipt.progress)
     }
 
-    /// 🏇️ Adopts an original lifecycle producer's posted receipt without debiting its caller twice.
-    pub fn advance_lifecycle<S:semio_framework_value::RetirementReceipt,E:From<ValueError>>(&mut self, producer: impl FnOnce(&mut StepContext<'context>, RetainedCloneGrant) -> Result<S,E>) -> Result<S,E> {
+    /// 🏇️ Adopts a producer's exact fresh or gross receipt and publishes the caller's full posted effects.
+    pub fn advance_lifecycle<S: semio_framework_value::RetirementReceipt, E: From<ValueError>>(
+        &mut self,
+        with_progress: impl FnOnce(S, RetainedCloneProgress) -> S,
+        producer: impl FnOnce(&mut StepContext<'context>, RetainedCloneGrant) -> Result<S, E>,
+    ) -> Result<S, E> {
         if self.scheduling_should_yield() || self.grant().maximum_items == 0 {
             return Ok(S::retirement_yield());
         }
@@ -163,10 +167,11 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
         let result = producer(self.context, grant);
         let (actual, current) = self.receive_posted(before, reserved_before)?;
         let step = result?;
-        if step.retirement_progress().unwrap_or_default() != actual || !current.fits(grant) || !self.current_progress.fits(self.grant) || current != RetainedCloneProgress::default() && self.context.original_turn_fuel_remaining() == before_fuel {
+        let reported = step.retirement_progress().unwrap_or_default();
+        if (reported != actual && reported != current) || !current.fits(grant) || !self.current_progress.fits(self.grant) || current != RetainedCloneProgress::default() && self.context.original_turn_fuel_remaining() == before_fuel {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original lifecycle receipt differs from its caller authority").with_retained_progress(actual).into());
         }
-        Ok(step)
+        Ok(if reported == actual { step } else { with_progress(step, actual) })
     }
 
     fn receive_posted(&mut self, before: RetainedCloneProgress, reserved_before: RetainedCloneProgress) -> Result<(RetainedCloneProgress, RetainedCloneProgress), ValueError> {

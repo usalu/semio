@@ -1,0 +1,8 @@
+[
+  ["identical-materialized-example","none","unchanged"],
+  ["same-layers-in-different-document","id","load"],
+  ["same-layers-with-edited-title","title","load"],
+  ["same-layers-with-replaced-image","asset","load"],
+  ["same-child-without-materialization","owner","load"],
+  ["locked-document","lock","refused"]
+]

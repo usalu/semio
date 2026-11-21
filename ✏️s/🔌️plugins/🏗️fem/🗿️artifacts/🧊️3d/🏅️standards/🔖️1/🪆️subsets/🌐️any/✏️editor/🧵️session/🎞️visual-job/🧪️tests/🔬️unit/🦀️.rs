@@ -113,7 +113,7 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     child.request.mode = Some(0);
     let mut backing = Fem3dBackingCredit::new();
     let mut fields = Fem3dSolverView::new(freshness(19), doc.nodes.len());
-    let bank = RetainedCloneGrant { maximum_items: 1 << 36, maximum_copy_bytes: 1 << 40, maximum_capacity_bytes: 1 << 40, maximum_release_bytes: 1 << 40, maximum_depth: 1 << 12 };
+    let bank = semio_s_fem_receiving::testkit::numerical_stock();
     let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation, operation.generation, bank, || Some(1000), 1 << 40, 1 << 40);
     let mut idle = 0usize;
     let mut terminal = false;

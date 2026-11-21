@@ -1,0 +1,9 @@
+# Retained Weld Surface Fidelity
+
+The prior native Weld build changed a submitted raw corner UV [0.125, 0.125] to [0, 0] and replaced its authored point normal [0.6, 0, 0.8] with [0, 0, 1]. Weld already tracked exact original corners and edges for generic attributes. Its topology rebuild discarded the raw surface fields.
+
+Grid Weld now transfers its existing corner index into the funded surface cursor. Each surviving corner reads its original raw UV. Each face retains its smooth flag. The built-in normal at a welded point follows the first source representative, the same point that supplies its position. Indexed corner-normal attributes preserve separate authored normals on the two faces that now share that point. A separate funded membership stage restores the source seam on both newly twinned halfedges when either originated from an authored seam. Point and face attributes still use their declared interpolation and existing provenance.
+
+The shared fixture welds two duplicated boundary points between a smooth front face and a flat return. The native trace publishes four vertices and two faces, preserving distinct side UVs, indexed hard normals, the selected face and point samples and both seam halfedges. It measured 24 surface events and 114 copied bytes. An insufficient seam backing grant performed no Work and moved no state. Cancelling after 17 surface turns retired 132,366 bytes without publishing. The same linked native dependency set reverified the Triangulate and Subdivide surface paths.
+
+Three.js GLTFLoader read the actual native mesh export and verified both corner streams at the shared positions. The full portable suite passed 20 tests and 4,248 assertions. The registered Flow workbench covers Construct, Weld, GLB export and cancellation. The relevant Rust sources parse and fit source admission. Free storage was 0.21 GiB for this pass, and the full linked Flow test remains gated.

@@ -14,7 +14,7 @@ use std::future::Future;
 use semio_plugin_reactor_app::PluginApp;
 use semio_ui_contract::*;
 use semio_plugin_time_travel::*;
-use semio_plugin_document_media::ActiveDocumentArchiveLoad;
+use semio_plugin_document_media::{ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoad};
 use semio_os_kernel::{MemberFactory, ReferenceSpaceMember};
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
@@ -28,5 +28,19 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             }
         });
         live
+    }
+
+    /// 🚧️ Whether pending effects must wait for the current document and its replacement custody to settle.
+    pub fn document_blocks_pending_effects(&self) -> bool {
+        let mut blocked = false;
+        self.document_archive_loads.each_id(|operation| {
+            blocked |= self.document_archive_loads.get(operation).is_some_and(|load| !load.merge && !load.terminal());
+        });
+        if !blocked {
+            self.store_replacement_jobs.each_id(|operation| {
+                blocked |= self.store_replacement_jobs.get(operation).is_some_and(|replacement| replacement.state != ActiveArtifactStoreReplacementState::Complete);
+            });
+        }
+        blocked
     }
 }

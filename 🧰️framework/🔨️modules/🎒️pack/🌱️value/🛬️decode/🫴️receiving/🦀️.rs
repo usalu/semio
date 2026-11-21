@@ -38,7 +38,7 @@ impl RetainedRecordReceiving{
  /// 🪪️ Retains source identity and immutable authored metadata without creating owned copies.
  pub fn admit<S:RetainedWireByteSource+?Sized>(source:&S,range:(usize,usize),spec:BorrowedRecordSpec,limits:PackLimits,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{let mut work=0;let result=(||{
   if range.0>range.1||range.1>source.original_source_identity().extent{return Err(invalid("original Record range escaped its source"))}if (range.1-range.0)as u64>limits.max_file_len{return Err(invalid("original Record range exceeds declared maximum"))}if !funded(grant,Self::birth_demand()){return Ok(None)}
-  work=1;let maximum=usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX);let frames=usize::from(limits.max_depth)+1;let length=range.1-range.0;let symbols=length.min(limits.max_symbols as usize);let cursor=RecordCursor::Body(RetainedRecordBodyCursor::try_new(limits,symbols,length,length,maximum).map_err(pack)?);
+  work=1;let maximum=limits.max_total_alloc.min(isize::MAX as u64) as usize;let frames=usize::from(limits.max_depth)+1;let length=range.1-range.0;let symbols=length.min(limits.max_symbols as usize);let cursor=RecordCursor::Body(RetainedRecordBodyCursor::try_new(limits,symbols,length,length,maximum).map_err(pack)?);
   Ok(Some((Self{source:source.original_source_identity(),range,cursor,spec,owned:ManuallyDrop::new(Owned::default()),retiring:None,maximum,allocated:0,frames,position:0,sealed:false,pending:None,copy:CopyPhase::None,dynamic:None,complete:false,closing:false,closed:false,failed:false},RetainedCloneProgress{copied_items:1,copied_bytes:Self::birth_demand().copy_bytes,..Default::default()})))
  })();RetainedWorkOutcome{result,work}}
  /// 🎟️ A cold Document header retains its declaration before separately funded fallible driver backing.
@@ -164,12 +164,27 @@ impl RetainedRecordReceiving{
   *output=Some(value);Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})
  })();RetainedWorkOutcome{result,work}}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closed{return Ok(Default::default())}if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if let Some(owned)=&self.retiring{if !owned.terminal_is_empty(){return owned.next_demand(body)}return Ok(RetirementDemand{depth:1,..Default::default()})}if !self.cursor.terminal_is_empty(){return self.cursor.source_close_demands().map_err(pack)}Ok(RetirementDemand{depth:1,..Default::default()})}
+ /// ⛽️ Quotes the resident record retirement action and its retained child.
+ pub fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+  if self.closed { return Ok(0); }
+  if self.closing {
+   if let Some(owned) = &self.retiring {
+    if !owned.terminal_is_empty() { return owned.next_computational_work(body); }
+   }
+  }
+  Ok(1)
+ }
  pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
   use semio_framework_value::RetainedWorkPoll::Complete;
   let grant=effect.grant();let done=|result:Result<RetainedCloneStep,ValueError>,work:u128|Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work});
   if self.closed{return done(Ok(RetainedCloneStep::Complete(Default::default())),0)}
   let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return done(Err(error),0)};
   if !funded(grant,demand){return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
+   match self.close_work_demand(body).and_then(|work| effect.remaining_work_units().map(|remaining| remaining >= work)) {
+    Ok(true) => {}
+    Ok(false) => return done(Ok(RetainedCloneStep::Progress(Default::default())), 0),
+    Err(error) => return done(Err(error), 0),
+   }
   if !self.closing{let original=std::mem::take(&mut*self.owned);let result=match ControlledRetirement::new(original){Ok(owned)=>{self.retiring=Some(owned);self.pending=None;self.closing=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))},Err((error,original))=>{*self.owned=original;Err(error)}};let recorded=match effect.performed(1){Ok(true)=>Ok(()),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};return done(result.and(recorded.map(|()|RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))),1)}
   if let Some(owned)=&mut self.retiring{if !owned.terminal_is_empty(){return owned.step(body,effect)}self.retiring=None;let recorded=match effect.performed(1){Ok(true)=>Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),Ok(false)=>Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Record close exceeded its original work")),Err(error)=>Err(error)};return done(recorded,1)}
   if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(effect);return Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|pack(error).into()),work:turn.work})}
@@ -190,7 +205,7 @@ impl ReceivingRetirement{
 }
 impl semio_framework_value::retirement::RetirementCursor for ReceivingRetirement{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demands(body)}
- fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.close_work_demand(body)}
  semio_framework_value::native_retirement_reply!();
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demands(usize::MAX)?.depth)}

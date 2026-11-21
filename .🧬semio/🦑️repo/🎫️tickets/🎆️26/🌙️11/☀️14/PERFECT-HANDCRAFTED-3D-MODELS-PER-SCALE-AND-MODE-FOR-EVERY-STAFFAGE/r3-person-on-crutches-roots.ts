@@ -33,13 +33,14 @@ export const TIP_Z = 0.0775;
 export const GRIP_AT: P = [0.05, -0.017];
 
 const THIGH = 0.4459;
-const SHANK = 0.4477;
-const FOOT = 0.1708;
-const FOOT_REST = 60.9252;
-const TOE_REST = 29.0748;
+/** 🦶 Shank, foot and toe in the sneaker: the ankle joint 95 mm above the sole plane (0.039 H + 25 mm heel stack), the knee kept at 0.53 m; the foot bone runs to the ball contact 149 mm ahead of the ankle. */
+const SHANK = 0.4357;
+const FOOT = 0.17693;
+const FOOT_REST = 57.5234;
+const TOE_REST = 32.4766;
 const ANKLE_Y = FOOT * Math.sin(rad(TOE_REST));
 const BALL_X = FOOT * Math.cos(rad(TOE_REST));
-const HEEL: P = [-0.0392, -0.1168];
+const HEEL: P = [-0.02579, -0.12902];
 const HIP_Y = 0.9766;
 const ADVANCE = 0.4;
 const T_LAND = 0.7;
@@ -84,6 +85,14 @@ function rigFix(asset: Json): void {
     grip.y = GRIP_AT[1];
     asset.anchors.find((a: Json) => a.id === `tip-${side}`).x = CRUTCH_L;
   }
+  for (const side of ["l", "r"]) {
+    bone(`shank-${side}`).lengthM = SHANK;
+    Object.assign(bone(`foot-${side}`), { x: SHANK, angleDeg: FOOT_REST, lengthM: FOOT });
+    Object.assign(bone(`toe-${side}`), { x: FOOT, angleDeg: TOE_REST });
+    Object.assign(asset.anchors.find((a: Json) => a.id === `heel-${side}`), { x: HEEL[0], y: HEEL[1] });
+    Object.assign(asset.anchors.find((a: Json) => a.id === `ball-${side}`), { x: FOOT, y: 0 });
+  }
+  asset.representations["500"].validRange.maxDenominator = 750;
   if (!asset.materials.some((m: Json) => m.id === "bone")) asset.materials.push({ id: "bone", title: { en: "Bone", de: "Knochen" }, emissivity: 0.9, solarAbsorptivity: 0.5, densityKgM3: 1900, source: "authored-estimate" });
   const anchor = (id: string): Json => asset.anchors.find((a: Json) => a.id === id);
   Object.assign(anchor("nose"), { x: -0.016, y: -0.1 });

@@ -1897,7 +1897,19 @@
      "glazing": 0.13,
      "ground": 0.25
     },
-    "hatches": [],
+    "hatches": [
+     {
+      "id": "louvres",
+      "title": {
+       "en": "Coil guard louvres",
+       "de": "Lamellen des Tauscherschutzes"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.45,
+      "penMm": 0.1
+     }
+    ],
     "geometry": {
      "elevation": [
       {
@@ -1932,7 +1944,7 @@
        "x": -0.215,
        "y": 0.15,
        "w": 0.43,
-       "h": 1.275
+       "h": 1.255
       },
       {
        "id": "base-tray",
@@ -1962,7 +1974,8 @@
        "x": -0.215,
        "y": 0.15,
        "w": 0.335,
-       "h": 1.275
+       "h": 1.255,
+       "hatch": "louvres"
       },
       {
        "id": "lid",
@@ -2060,7 +2073,7 @@
        "x": -0.55,
        "y": 0.15,
        "w": 1.1,
-       "h": 1.275
+       "h": 1.255
       },
       {
        "id": "compressor-panel",
@@ -2075,7 +2088,7 @@
        "x": 0.25,
        "y": 0.15,
        "w": 0.3,
-       "h": 1.275
+       "h": 1.255
       },
       {
        "id": "fan-guard",
@@ -2203,8 +2216,8 @@
       "de": "Gehäuseblock mit Bodenwanne, Füßen und Haubenplatte; die Gitterwölbung liegt unter der 60-mm-Grenze und ist in der Seitenansicht nicht gezeichnet."
      },
      "retained": {
-      "en": "Side: feet, base pan, casing, the dark coil face of the right side, cover. Front: feet, base pan, casing, compressor column panel, the dark fan disc with its hub, cover. Plan: casing under the cover.",
-      "de": "Seite: Füße, Bodenwanne, Gehäuse, die dunkle Tauscherfläche der rechten Seite, Haube. Front: Füße, Bodenwanne, Gehäuse, Blech der Verdichtersäule, die dunkle Lüfterscheibe mit Nabe, Haube. Draufsicht: Gehäuse unter der Haube."
+      "en": "Side: feet, base pan, casing, the louvred coil guard of the right side, cover. Front: feet, base pan, casing, compressor column panel, the dark fan disc with its hub, cover. Plan: casing under the cover.",
+      "de": "Seite: Füße, Bodenwanne, Gehäuse, der Lamellenschutz des Tauschers an der rechten Seite, Haube. Front: Füße, Bodenwanne, Gehäuse, Blech der Verdichtersäule, die dunkle Lüfterscheibe mit Nabe, Haube. Draufsicht: Gehäuse unter der Haube."
      },
      "merged": {
       "en": "Grille, blades and bell mouth are one disc; the louvres are the coil face; cover plate and skirt one slab; corner post into the coil face.",
@@ -2219,8 +2232,8 @@
       "de": "Haube 45 mm (0,23 mm)."
      },
      "hatching": {
-      "en": "None.",
-      "de": "Keine."
+      "en": "Coil guard of the side elevation: one line per louvre bar, 90 mm apart (0.45 mm on paper), as the 1:200 model has them.",
+      "de": "Tauscherschutz der Seitenansicht: eine Linie je Lamelle, 90 mm Abstand (0,45 mm auf dem Papier), wie das Modell 1:200 sie hat."
      },
      "styles": {
       "en": "Pens 0.18 / 0.13 mm.",
@@ -2251,6 +2264,7 @@
      "elevation": [
       {
        "id": "feet",
+       "penMm": 0.18,
        "bone": "unit",
        "role": "body",
        "z": 1.5,
@@ -2283,10 +2297,11 @@
        "x": -0.215,
        "y": 0.09,
        "w": 0.43,
-       "h": 1.335
+       "h": 1.315
       },
       {
        "id": "lid",
+       "penMm": 0.16,
        "bone": "lid",
        "role": "body",
        "z": 2.5,
@@ -2325,6 +2340,7 @@
      "front": [
       {
        "id": "foot-left",
+       "penMm": 0.165,
        "bone": "unit",
        "role": "body",
        "z": 1.5,
@@ -2340,6 +2356,7 @@
       },
       {
        "id": "foot-right",
+       "penMm": 0.165,
        "bone": "unit",
        "role": "body",
        "z": 1.5,
@@ -2370,7 +2387,7 @@
        "x": -0.55,
        "y": 0.09,
        "w": 1.1,
-       "h": 1.335
+       "h": 1.315
       },
       {
        "id": "fan-disc",
@@ -2389,6 +2406,7 @@
       },
       {
        "id": "lid",
+       "penMm": 0.16,
        "bone": "lid",
        "role": "body",
        "z": 2.5,
@@ -2442,6 +2460,7 @@
       },
       {
        "id": "lid",
+       "penMm": 0.16,
        "bone": "lid",
        "role": "body",
        "z": 2.5,
@@ -3731,7 +3750,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "powder-coat",
-     "areaM2": 4.6,
+     "areaM2": 3.75,
      "characteristicLengthM": 1.4,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.5,
@@ -3842,7 +3861,7 @@
      "kind": "heater",
      "model": "operating",
      "material": "galvanised-steel",
-     "areaM2": 1.2,
+     "areaM2": 1.0,
      "characteristicLengthM": 0.1,
      "geometry": "horizontal-plate-down",
      "skyViewFactor": 0.2,
@@ -4772,6 +4791,11 @@
           "region": "casing"
         },
         {
+          "id": "th-column-panel",
+          "of": "column-panel",
+          "region": "compressor-casing"
+        },
+        {
           "id": "th-side-strip",
           "of": "side-strip",
           "region": "casing"
@@ -4790,6 +4814,16 @@
           "id": "th-partition",
           "of": "partition",
           "region": "casing"
+        },
+        {
+          "id": "th-column-back",
+          "of": "column-back",
+          "region": "compressor-casing"
+        },
+        {
+          "id": "th-service-panel",
+          "of": "service-panel",
+          "region": "compressor-casing"
         },
         {
           "id": "th-service-grip",
@@ -4928,38 +4962,11 @@
           "material": "galvanised-steel",
           "role": "detail",
           "tone": 0.5,
-          "profile": [
-            [
-              0,
-              0
-            ],
-            [
-              0,
-              0.28
-            ],
-            [
-              0.0075,
-              0.28
-            ],
-            [
-              0.0075,
-              0
-            ]
-          ],
-          "axis": [
-            1,
-            0,
-            0
-          ],
-          "origin": [
-            0.2275,
-            0.8,
-            -0.15
-          ],
+          "profile": [[0, 0], [0, 0.28], [0.0075, 0.28], [0.0075, 0]],
+          "axis": [1, 0, 0],
+          "origin": [0.2275, 0.8, -0.15],
           "region": "fan-guard",
-          "tags": [
-            "discharge-heating"
-          ]
+          "tags": ["discharge-heating"]
         },
         {
           "id": "th-discharge-cooling",
@@ -4968,38 +4975,11 @@
           "material": "galvanised-steel",
           "role": "detail",
           "tone": 0.5,
-          "profile": [
-            [
-              0,
-              0
-            ],
-            [
-              0,
-              0.28
-            ],
-            [
-              0.0075,
-              0.28
-            ],
-            [
-              0.0075,
-              0
-            ]
-          ],
-          "axis": [
-            1,
-            0,
-            0
-          ],
-          "origin": [
-            0.22,
-            0.8,
-            -0.15
-          ],
+          "profile": [[0, 0], [0, 0.28], [0.0075, 0.28], [0.0075, 0]],
+          "axis": [1, 0, 0],
+          "origin": [0.22, 0.8, -0.15],
           "region": "fan-guard",
-          "tags": [
-            "discharge-cooling"
-          ]
+          "tags": ["discharge-cooling"]
         },
         {
           "id": "th-defrost-vapour",
@@ -5008,65 +4988,12 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.5,
-          "size": [
-            0.0075,
-            0.08,
-            0.55
-          ],
+          "size": [0.0075, 0.08, 0.55],
           "transform": {
-            "translation": [
-              -0.20875,
-              1.34,
-              -0.125
-            ]
+            "translation": [-0.20875, 1.34, -0.125]
           },
           "region": "coil-guard",
-          "tags": [
-            "defrost-vapour"
-          ]
-        },
-        {
-          "id": "th-compressor-envelope",
-          "kind": "extrude",
-          "bone": "unit",
-          "material": "powder-coat",
-          "role": "body",
-          "tone": 0.5,
-          "region": "compressor-casing",
-          "sectionFaces": [
-            "-v",
-            "+v",
-            "-w"
-          ],
-          "plane": "zx",
-          "profile": [
-            [
-              0.2425,
-              -0.215
-            ],
-            [
-              0.548,
-              -0.215
-            ],
-            [
-              0.55,
-              -0.213
-            ],
-            [
-              0.55,
-              0.213
-            ],
-            [
-              0.548,
-              0.215
-            ],
-            [
-              0.2425,
-              0.215
-            ]
-          ],
-          "from": 0.15,
-          "to": 1.425
+          "tags": ["defrost-vapour"]
         }
       ],
       "structure": [
@@ -5324,10 +5251,6 @@
         {
           "en": "Structure: the real frame, not the casing: four corner posts (folded angles, the rear right one is the body post), four top rails under the top panel, the base pan and the feet, the partition as shear plate, the motor bracket; the cover plate and skirt as the lid member; the knuckles as the hinge joint on both sides; the compressor as its own mass on the pan, the bone masses at their centres, two 7.5 mm pads at the foot contacts.",
           "de": "Tragwerk: der echte Rahmen, nicht die Verkleidung: vier Eckpfosten (Kantwinkel, der hintere rechte ist der Körperpfosten), vier Kopfriegel unter dem Deckblech, Bodenwanne und Füße, die Trennwand als Schubblech, der Motorhalter; Deckplatte und Schürze als Haubenglied; die Scharnierknoten auf beiden Seiten als Gelenk; der Verdichter als eigene Masse auf der Wanne, die Knochenmassen in ihren Schwerpunkten, zwei 7,5-mm-Auflager an den Fußkontakten."
-        },
-        {
-          "en": "The compressor compartment exchanges heat through its front, back and service cover. The envelope meets the base tray, roof and central partition on the three remaining faces.",
-          "de": "Das Verdichterabteil gibt Wärme über Front, Rückseite und Wartungsdeckel ab. An den drei übrigen Flächen schließen Bodenwanne, Dach und Mitteltrennwand an."
         }
       ]
     },
@@ -5843,6 +5766,11 @@
           "region": "casing"
         },
         {
+          "id": "th-column-panel",
+          "of": "column-panel",
+          "region": "compressor-casing"
+        },
+        {
           "id": "th-side-strip",
           "of": "side-strip",
           "region": "casing"
@@ -5858,9 +5786,19 @@
           "region": "casing"
         },
         {
+          "id": "th-column-back",
+          "of": "column-back",
+          "region": "compressor-casing"
+        },
+        {
           "id": "th-partition",
           "of": "partition",
           "region": "casing"
+        },
+        {
+          "id": "th-service-panel",
+          "of": "service-panel",
+          "region": "compressor-casing"
         },
         {
           "id": "th-water-connections",
@@ -5954,38 +5892,11 @@
           "material": "galvanised-steel",
           "role": "detail",
           "tone": 0.5,
-          "profile": [
-            [
-              0,
-              0
-            ],
-            [
-              0,
-              0.28
-            ],
-            [
-              0.015,
-              0.28
-            ],
-            [
-              0.015,
-              0
-            ]
-          ],
-          "axis": [
-            1,
-            0,
-            0
-          ],
-          "origin": [
-            0.22,
-            0.8,
-            -0.15
-          ],
+          "profile": [[0, 0], [0, 0.28], [0.015, 0.28], [0.015, 0]],
+          "axis": [1, 0, 0],
+          "origin": [0.22, 0.8, -0.15],
           "region": "fan-guard",
-          "tags": [
-            "discharge-heating"
-          ]
+          "tags": ["discharge-heating"]
         },
         {
           "id": "th-discharge-cooling",
@@ -5994,38 +5905,11 @@
           "material": "galvanised-steel",
           "role": "detail",
           "tone": 0.5,
-          "profile": [
-            [
-              0,
-              0
-            ],
-            [
-              0,
-              0.28
-            ],
-            [
-              0.015,
-              0.28
-            ],
-            [
-              0.015,
-              0
-            ]
-          ],
-          "axis": [
-            1,
-            0,
-            0
-          ],
-          "origin": [
-            0.205,
-            0.8,
-            -0.15
-          ],
+          "profile": [[0, 0], [0, 0.28], [0.015, 0.28], [0.015, 0]],
+          "axis": [1, 0, 0],
+          "origin": [0.205, 0.8, -0.15],
           "region": "fan-guard",
-          "tags": [
-            "discharge-cooling"
-          ]
+          "tags": ["discharge-cooling"]
         },
         {
           "id": "th-defrost-vapour",
@@ -6034,48 +5918,12 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.5,
-          "size": [
-            0.015,
-            0.08,
-            0.55
-          ],
+          "size": [0.015, 0.08, 0.55],
           "transform": {
-            "translation": [
-              -0.205,
-              1.34,
-              -0.125
-            ]
+            "translation": [-0.205, 1.34, -0.125]
           },
           "region": "coil-guard",
-          "tags": [
-            "defrost-vapour"
-          ]
-        },
-        {
-          "id": "th-compressor-envelope",
-          "kind": "box",
-          "bone": "unit",
-          "material": "powder-coat",
-          "role": "body",
-          "tone": 0.5,
-          "size": [
-            0.43,
-            1.275,
-            0.3075
-          ],
-          "transform": {
-            "translation": [
-              0,
-              0.7875,
-              0.39625
-            ]
-          },
-          "region": "compressor-casing",
-          "sectionFaces": [
-            "-v",
-            "+v",
-            "-w"
-          ]
+          "tags": ["defrost-vapour"]
         }
       ],
       "structure": [
@@ -6274,10 +6122,6 @@
         {
           "en": "Structure: three 30 mm corner posts and the body post, one top frame ring, base pan, feet, the partition as a 22.5 mm shear plate, the bracket bars, cover plate and skirt as lid members, the cover knuckles as hinge joint, the compressor and bone masses, 15 mm pads.",
           "de": "Tragwerk: drei 30-mm-Eckpfosten und der Körperpfosten, ein Kopfrahmen, Bodenwanne, Füße, die Trennwand als 22,5-mm-Schubblech, die Halterstäbe, Deckplatte und Schürze als Haubenglieder, die Haubenknoten als Gelenk, Verdichter- und Knochenmassen, 15-mm-Auflager."
-        },
-        {
-          "en": "The compressor compartment exchanges heat through its front, back and service cover. The envelope meets the base tray, roof and central partition on the three remaining faces.",
-          "de": "Das Verdichterabteil gibt Wärme über Front, Rückseite und Wartungsdeckel ab. An den drei übrigen Flächen schließen Bodenwanne, Dach und Mitteltrennwand an."
         }
       ]
     },
@@ -6320,7 +6164,7 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.55,
-          "profile": [[0.15, -0.55], [1.425, -0.55], [1.425, 0.2475], [0.15, 0.2475]],
+          "profile": [[0.15, -0.55], [1.405, -0.55], [1.405, 0.2475], [0.15, 0.2475]],
           "holes": [
             [
               [1.1, -0.15],
@@ -6363,7 +6207,7 @@
           "profile": [[0.2475, 0.215], [0.55, 0.215], [0.55, -0.215], [0.2425, -0.215], [0.2425, -0.185], [0.52, -0.185], [0.52, 0.185], [0.2475, 0.185]],
           "plane": "zx",
           "from": 0.15,
-          "to": 1.425
+          "to": 1.405
         },
         {
           "id": "side-strip",
@@ -6372,9 +6216,9 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.55,
-          "size": [0.065, 1.275, 0.03],
+          "size": [0.065, 1.255, 0.03],
           "transform": {
-            "translation": [0.1525, 0.7875, -0.535]
+            "translation": [0.1525, 0.7775, -0.535]
           }
         },
         {
@@ -6386,7 +6230,7 @@
           "tone": 0.55,
           "size": [0.43, 0.03, 1.07],
           "transform": {
-            "translation": [0, 1.41, -0.015]
+            "translation": [0, 1.39, -0.015]
           }
         },
         {
@@ -6396,9 +6240,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.37, 1.245, 0.03],
+          "size": [0.37, 1.225, 0.03],
           "transform": {
-            "translation": [0, 0.7725, 0.2575]
+            "translation": [0, 0.7625, 0.2575]
           }
         },
         {
@@ -6408,10 +6252,42 @@
           "material": "aluminium",
           "role": "detail",
           "tone": 0.22,
-          "profile": [[0.2425, -0.215], [-0.55, -0.215], [-0.55, 0.12], [-0.51, 0.12], [-0.51, -0.175], [0.2425, -0.175]],
+          "profile": [[0.2425, -0.215], [-0.52, -0.215], [-0.52, 0.12], [-0.48, 0.12], [-0.48, -0.175], [0.2425, -0.175]],
           "plane": "zx",
           "from": 0.15,
-          "to": 1.395
+          "to": 1.375
+        },
+        {
+          "id": "side-louvres",
+          "kind": "box",
+          "bone": "unit",
+          "material": "powder-coat",
+          "role": "detail",
+          "tone": 0.4,
+          "size": [0.335, 0.03, 0.03],
+          "transform": {
+            "translation": [-0.0475, 0.21, -0.535]
+          },
+          "repeat": {
+            "count": 13,
+            "translation": [0, 0.09, 0]
+          }
+        },
+        {
+          "id": "guard-frame",
+          "kind": "box",
+          "bone": "unit",
+          "material": "powder-coat",
+          "role": "detail",
+          "tone": 0.4,
+          "size": [0.335, 0.03, 0.03],
+          "transform": {
+            "translation": [-0.0475, 0.165, -0.535]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 1.195, 0]
+          }
         },
         {
           "id": "fan-guard",
@@ -6490,6 +6366,16 @@
           "region": "coil-guard"
         },
         {
+          "id": "th-side-louvres",
+          "of": "side-louvres",
+          "region": "coil-guard"
+        },
+        {
+          "id": "th-guard-frame",
+          "of": "guard-frame",
+          "region": "coil-guard"
+        },
+        {
           "id": "th-fan-guard",
           "of": "fan-guard",
           "region": "fan-guard"
@@ -6553,9 +6439,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.03, 1.275, 0.03],
+          "size": [0.03, 1.255, 0.03],
           "transform": {
-            "translation": [0.2, 0.7875, -0.535]
+            "translation": [0.2, 0.7775, -0.535]
           },
           "member": "unit",
           "part": "member"
@@ -6567,9 +6453,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.03, 1.275, 0.03],
+          "size": [0.03, 1.255, 0.03],
           "transform": {
-            "translation": [0.2, 0.7875, 0.535]
+            "translation": [0.2, 0.7775, 0.535]
           },
           "member": "unit",
           "part": "member"
@@ -6581,9 +6467,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.03, 1.275, 0.03],
+          "size": [0.03, 1.255, 0.03],
           "transform": {
-            "translation": [-0.2, 0.7875, -0.535]
+            "translation": [-0.2, 0.7775, -0.535]
           },
           "member": "unit",
           "part": "member"
@@ -6595,9 +6481,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.03, 1.275, 0.03],
+          "size": [0.03, 1.255, 0.03],
           "transform": {
-            "translation": [-0.2, 0.7875, 0.535]
+            "translation": [-0.2, 0.7775, 0.535]
           },
           "member": "unit",
           "part": "member"
@@ -6614,8 +6500,8 @@
             [[-0.52, -0.185], [0.52, -0.185], [0.52, 0.185], [-0.52, 0.185]]
           ],
           "plane": "zx",
-          "from": 1.395,
-          "to": 1.425,
+          "from": 1.375,
+          "to": 1.405,
           "member": "unit",
           "part": "member"
         },
@@ -6730,8 +6616,8 @@
       ],
       "decisions": [
         {
-          "en": "Authored for 30 mm: the casing becomes the fan chamber block and the compressor column block over the base pan on two rounded feet; the L coil is a 30 mm dark slab on the back and the right side with the front strip of the side panel; grille, blades and bell mouth are one dark disc 10 mm proud with the hub on it; the cover is one 45 mm slab.",
-          "de": "Für 30 mm erstellt: das Gehäuse wird zum Block der Lüfterkammer und zum Block der Verdichtersäule über der Bodenwanne auf zwei gerundeten Füßen; der L-Tauscher ist eine dunkle 30-mm-Platte an Rückseite und rechter Seite mit dem Frontstreifen des Seitenblechs; Gitter, Flügel und Düse sind eine dunkle Scheibe 10 mm vor der Front mit der Nabe darauf; die Haube ist eine 45-mm-Platte."
+          "en": "Authored for 30 mm: the casing becomes the fan chamber block and the compressor column block over the base pan on two feet, both ending under the cover; the fin pack is a 40 mm dark slab 30 mm behind the side face, seen between thirteen 30 mm louvre bars at 90 mm pitch in a top and bottom frame, and as a dark face on the back; grille, blades and bell mouth are one dark disc 10 mm proud with the hub on it; the cover is one 45 mm slab resting on the casing.",
+          "de": "Für 30 mm erstellt: das Gehäuse wird zum Block der Lüfterkammer und zum Block der Verdichtersäule über der Bodenwanne auf zwei Füßen, beide enden unter der Haube; das Lamellenpaket ist eine dunkle 40-mm-Platte 30 mm hinter der Seitenfläche, zwischen dreizehn 30-mm-Lamellen im Raster von 90 mm in einem oberen und unteren Rahmen sichtbar, und hinten eine dunkle Fläche; Gitter, Flügel und Einströmdüse sind eine dunkle Scheibe 10 mm vor der Front mit der Nabe; die Haube ist eine 45-mm-Platte, die auf dem Gehäuse aufliegt."
         },
         {
           "en": "Thermal: references per region and 30 mm outlet patches tagged with their emitters.",
@@ -6782,7 +6668,7 @@
           "material": "powder-coat",
           "role": "body",
           "tone": 0.55,
-          "profile": [[0.165, -0.55], [1.425, -0.55], [1.425, 0.55], [0.165, 0.55]],
+          "profile": [[0.165, -0.55], [1.405, -0.55], [1.405, 0.55], [0.165, 0.55]],
           "holes": [
             [
               [1.1, -0.15],
@@ -6817,7 +6703,7 @@
           "profile": [[0.25, -0.215], [0.55, -0.215], [0.55, 0.14], [0.475, 0.14], [0.475, -0.14], [0.25, -0.14]],
           "plane": "zx",
           "from": 0.165,
-          "to": 1.425
+          "to": 1.405
         },
         {
           "id": "top-panel",
@@ -6828,7 +6714,7 @@
           "tone": 0.55,
           "size": [0.28, 0.075, 0.95],
           "transform": {
-            "translation": [0, 1.3875, 0]
+            "translation": [0, 1.3675, 0]
           }
         },
         {
@@ -6841,7 +6727,7 @@
           "profile": [[0.25, -0.215], [-0.55, -0.215], [-0.55, 0.14], [-0.475, 0.14], [-0.475, -0.14], [0.25, -0.14]],
           "plane": "zx",
           "from": 0.165,
-          "to": 1.425
+          "to": 1.405
         },
         {
           "id": "fan-disc",
@@ -6957,9 +6843,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.075, 1.185, 0.075],
+          "size": [0.075, 1.165, 0.075],
           "transform": {
-            "translation": [0.1775, 0.7575, -0.5125]
+            "translation": [0.1775, 0.7475, -0.5125]
           },
           "member": "unit",
           "part": "member"
@@ -6971,9 +6857,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.075, 1.185, 0.075],
+          "size": [0.075, 1.165, 0.075],
           "transform": {
-            "translation": [0.1775, 0.7575, 0.5125]
+            "translation": [0.1775, 0.7475, 0.5125]
           },
           "member": "unit",
           "part": "member"
@@ -6985,9 +6871,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.075, 1.185, 0.075],
+          "size": [0.075, 1.165, 0.075],
           "transform": {
-            "translation": [-0.1775, 0.7575, -0.5125]
+            "translation": [-0.1775, 0.7475, -0.5125]
           },
           "member": "unit",
           "part": "member"
@@ -6999,9 +6885,9 @@
           "material": "galvanised-steel",
           "role": "body",
           "tone": 0.45,
-          "size": [0.075, 1.185, 0.075],
+          "size": [0.075, 1.165, 0.075],
           "transform": {
-            "translation": [-0.1775, 0.7575, 0.5125]
+            "translation": [-0.1775, 0.7475, 0.5125]
           },
           "member": "unit",
           "part": "member"
@@ -7035,8 +6921,8 @@
             [[-0.475, -0.14], [0.475, -0.14], [0.475, 0.14], [-0.475, 0.14]]
           ],
           "plane": "zx",
-          "from": 1.35,
-          "to": 1.425,
+          "from": 1.33,
+          "to": 1.405,
           "member": "unit",
           "part": "member"
         },

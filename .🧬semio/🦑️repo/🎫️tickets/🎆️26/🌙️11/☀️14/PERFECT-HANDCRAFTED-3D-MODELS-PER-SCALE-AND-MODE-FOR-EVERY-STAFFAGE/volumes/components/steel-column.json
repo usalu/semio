@@ -3591,7 +3591,7 @@
      ],
      "transform": {
       "translation": [
-       1.5,
+       1.4618,
        0.0,
        0.0
       ]
@@ -3610,8 +3610,8 @@
      "de": "Die Thermik folgt der angegebenen Aufteilung der Oberfläche. column-flange sind die zwei Flanschplatten mit Außenseite und Kanten (13-mm-Körper, deren Innenseite an der Innenhaut liegt) samt den Nahtabschnitten an Außenseiten und Flanschenden. column-web ist die Oberfläche der zwei Kammern als zwei Hälften, die sich auf der Stützenachse treffen: je der halbe Steg mit seinen Ausrundungen und eine 2-mm-Haut auf der Flanschinnenseite, dazu die Nahtabschnitte in den Kammern. base-plate ist die Platte (ihre Unterseite liegt auf dem Fundament und ist eine Auflagefläche), dazu Rippen, Scheiben, Muttern und Stangen per Verweis; cap-plate ist die Kopfplatte. Die Flächen, an denen der Schaft auf die Platten trifft, sind verschweißte Kontaktflächen."
     },
     {
-     "en": "Structure is the load path of a bare steel column, where every part bears and nothing is cladding: the bearing pad of the load in the head plate (it rides on the carrier bone, 0.1 m off the axis in the default pose), the head plate and its weld as joints, the rolled shaft as the member, the base weld, gussets and the four anchors as joints of the fixed base, the base plate as the fixed support on the footing, and the mass point of 184 kg at 1.5 m.",
-     "de": "Das Tragwerk ist der Lastpfad einer blanken Stahlstütze, an der jedes Teil trägt und nichts Verkleidung ist: das Lastlager in der Kopfplatte (es sitzt auf dem Trägerknochen, in der Standardpose 0,1 m außerhalb der Achse), Kopfplatte und ihre Naht als Knoten, der gewalzte Schaft als Stab, Fußnaht, Rippen und die vier Anker als Knoten des eingespannten Fußes, die Fußplatte als festes Auflager auf dem Fundament und der Massenpunkt von 184 kg bei 1,5 m."
+     "en": "Structure is the load path of a bare steel column, where every part bears and nothing is cladding: the bearing pad of the load in the head plate (it rides on the carrier bone, 0.1 m off the axis in the default pose), the head plate and its weld as joints, the rolled shaft as the member, the base weld, gussets and the four anchors as joints of the fixed base, the base plate as the fixed support on the footing, and the mass point of 203.6 kg (shaft, plates, gussets, anchor heads, welds) at 1.46 m.",
+     "de": "Das Tragwerk ist der Lastpfad einer blanken Stahlstütze, an der jedes Teil trägt und nichts Verkleidung ist: das Lastlager in der Kopfplatte (es sitzt auf dem Trägerknochen, in der Standardpose 0,1 m außerhalb der Achse), Kopfplatte und ihre Naht als Knoten, der gewalzte Schaft als Stab, Fußnaht, Rippen und die vier Anker als Knoten des eingespannten Fußes, die Fußplatte als festes Auflager auf dem Fundament und der Massenpunkt von 203,6 kg (Schaft, Platten, Rippen, Ankerköpfe, Nähte) bei 1,46 m."
     }
    ]
   },
@@ -4288,7 +4288,7 @@
      ],
      "transform": {
       "translation": [
-       1.5,
+       1.4618,
        0.0,
        0.0
       ]
@@ -4307,8 +4307,8 @@
      "de": "Thermik: die Flanschplatten mit Außenseite und Kanten, die Kammern als zwei Hälften des Stegs mit gefasten Wurzeln und je einer 2-mm-Haut auf der Flanschinnenseite (0,2 mm vor der Flanschplatte, damit die zwei Regionen nie eine Fläche teilen), Fußplatte (Unterseite auf dem Fundament), Rippen und Bolzen per Verweis, die Kopfplatte per Verweis."
     },
     {
-     "en": "Structure: the shaft as the member, the base plate as the fixed support, gussets, studs and head plate as joints, the bearing pad of the load on the carrier bone and the mass point at 1.5 m.",
-     "de": "Tragwerk: der Schaft als Stab, die Fußplatte als festes Auflager, Rippen, Bolzen und Kopfplatte als Knoten, das Lastlager auf dem Trägerknochen und der Massenpunkt bei 1,5 m."
+     "en": "Structure: the shaft as the member, the base plate as the fixed support, gussets, studs and head plate as joints, the bearing pad of the load on the carrier bone and the mass point at 1.46 m.",
+     "de": "Tragwerk: der Schaft als Stab, die Fußplatte als festes Auflager, Rippen, Bolzen und Kopfplatte als Knoten, das Lastlager auf dem Trägerknochen und der Massenpunkt bei 1,46 m."
     }
    ]
   },
@@ -4609,7 +4609,7 @@
      ],
      "transform": {
       "translation": [
-       1.5,
+       1.4618,
        0.0,
        0.0
       ]
@@ -4886,13 +4886,13 @@
      "role": "detail",
      "tone": 0.1,
      "radii": [
-      0.08,
-      0.08,
-      0.08
+      0.095,
+      0.095,
+      0.095
      ],
      "transform": {
       "translation": [
-       1.5,
+       1.4618,
        0.0,
        0.0
       ]

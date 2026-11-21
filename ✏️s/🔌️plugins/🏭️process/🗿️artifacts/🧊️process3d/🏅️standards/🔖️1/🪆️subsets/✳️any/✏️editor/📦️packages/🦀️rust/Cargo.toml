@@ -20,6 +20,10 @@ name = "process3d_bearbeiten_pane_smoke"
 path = "../../🧪️tests/🪧️pane-smoke-target/🦀️.rs"
 
 [[test]]
+name = "process3d_interaction_behavior"
+path = "../../🧪️tests/🎮️interaction-behavior/🦀️.rs"
+
+[[test]]
 name = "process3d_workpiece_window"
 path = "../../🎭️modes/✏️edit/🪟️windows/🪚️workpiece/🧪️tests/🔬️unit/🦀️.rs"
 

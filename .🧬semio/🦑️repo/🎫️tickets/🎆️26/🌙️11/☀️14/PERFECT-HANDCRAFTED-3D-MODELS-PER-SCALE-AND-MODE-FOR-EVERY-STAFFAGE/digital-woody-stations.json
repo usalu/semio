@@ -1,0 +1,9 @@
+{
+  "weeping-willow": {
+    "lengthsM": {"w1":6.05167,"w2":8.15106,"w3":7.40106,"w4":6.65106,"e1":6.05167,"e2":8.15106,"e3":7.40106,"e4":6.65106},
+    "basalRadiiM":{"w1":0.018,"w2":0.020,"w3":0.017,"w4":0.016,"e1":0.017,"e2":0.019,"e3":0.016,"e4":0.015},
+    "tipFraction":0.075
+  },
+  "scots-pine": {"scale":500,"leader":"pl-top-axis","bone":"pl-top","surface":"limb-bark"},
+  "date-palm":{"scale":500,"blades":32,"polygonWidthMinM":0.001}
+}

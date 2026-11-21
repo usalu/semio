@@ -119,3 +119,40 @@ Frame: x along the pipe, y up, z along the shaft; the motor points to -z, at the
 - **Masses at 1:50 and 1:100** sit inside the volute cup and the rotor pack and are therefore not visible from outside.
 - **1:200 front view** draws the 3 mm step between can and volute flush (the depiction otherwise turns it into a slanted edge); the decisions say so.
 - **Reference labels.** See the note under the sources: the four Grundfos sketch values were assigned by reasoning, not read off a labelled drawing.
+
+## Round 5 handcraft
+
+Process (round 5, 2026-11-21): rendered and opened with the Read tool, before and after: `r3-sheet` body, structure and `--list thermal --cut` at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50 and one clip frame, the `r3-2d` drawings of every drawn scale (1:500 has no drawing: its representation is unavailable, the 3D 1:500 is a digital scale). Coarse sheets were opened as 2 x 2 contact sheets (`r5-grid.ts`, half size). Measurements with `r5-e01-measure.ts` (world extents per solid in the default pose). Root edits through `r5-e01-roots.py` (candidate validated with `r3-validate.ts --file --volumes` before writing), volumes through the asset's `r5-<slug>-model.py` (which re-uses the hand-stated round-3 lists it keeps and states every new solid by hand), splice with `volumes-insert.py`. The round-3 reference table above stays the reference; the table below measures the model against it.
+
+### Model against reference (Grundfos UPS 25-60 180, G 1 1/2 unions)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+|---|---|---|---|
+| Port to port | 180 mm | 180 mm (thread faces at x +-0.09) | 0 % |
+| Overall length with nuts and tails | 220 mm (`dimensions`) | 220 mm | 0 % |
+| Height (75 above, 51 below the shaft) | 126 mm | 126 mm | 0 % |
+| Depth (32 behind, 102 in front of the pipe axis) | 134 mm | 134 mm | 0 % |
+| Volute drum | about 96 mm | 96 mm | 0 % |
+| Union nut | 52 mm across flats | 52 mm | 0 % |
+| 1:100 / 1:200 / 1:500 overall | 0.22 x 0.126 x 0.134 m | identical at every scale | 0 % |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- (unchanged, re-read: volute with necks and threads, hex unions, copper tails, square flanges with four screws, can with bezel and sight glass, terminal box with lid, gland and lamp; rotor in the open stator shell) |
+| 1:100 | A- / A- / A- | A- / A- / A- |
+| 1:200 | A- / A- / A- | A- / A- / A- |
+| 1:500 | C+ (inherited digital model: octagonal volute and motor, hexagonal hollow pipe with a bore below the feature, near copy of 1:200) / B / B | A- / A- / A- |
+| Poses off, low, high, clip run-high t 0.6 s | A- | A- (pointer turns in the glass) |
+| 2D 1:50 / 1:100 / 1:200 | A- | A- |
+
+### Changes
+
+- 1:500 authored anew (`r5-circulation-pump-model.py`): volute with flange as one round 16-sided 96 mm drum, motor head as a 16-sided 84 mm drum, pipe run as one solid 12-sided 44 mm bar (its 26 mm bore is below the 75 mm feature, C30), terminal box block; structure with the motor as one solid drum carrying the rotor shaft. Prisms keep the triangle count below 1:200 (`volumes-monotonic`) while reading round. Three bilingual decisions.
+- No root edits. Final: `r3-validate.ts --volumes` VALID, `volumes-check.ts --product` PASS.
+
+### Remaining issues
+
+- The sight glass with indicator is the asset's didactic simplification (a UPS has a name plate); kept, rig and clips depend on it.
+- Volute spiral is an offset drum (casting simplification); 1:50 revolves are 15-gons at the product tessellation.

@@ -17,7 +17,9 @@ const ATTACHMENT: &[NormFieldChoice] = &[
     choice("MidTerrace", "Mid-terrace", "Reihenmittelhaus"),
 ];
 const USE_CLASS: &[NormFieldChoice] = &[
-    choice("Residential", "Residential", "Wohnen"),
+    choice("Residential", "Residential · dwelling profile unspecified", "Wohnen · Wohngebäudeprofil offen"),
+    choice("ResidentialUpToTwoDwellings", "Residential · 1 or 2 dwellings", "Wohnen · 1 oder 2 Wohneinheiten"),
+    choice("ResidentialMultifamily", "Residential · 3 or more dwellings", "Wohnen · ab 3 Wohneinheiten"),
     choice("Office", "Office", "Büro"),
     choice("School", "School", "Schule"),
 ];
@@ -37,12 +39,21 @@ const ELEMENT_KIND: &[NormFieldChoice] = &[
     choice("Floor", "Floor", "Boden"),
     choice("Door", "Door", "Tür"),
     choice("Window", "Window", "Fenster"),
+    choice("CurtainWall", "Curtain wall", "Vorhangfassade"),
+    choice("RoofGlazing", "Roof glazing", "Dachverglasung"),
+    choice("RoofDome", "Rooflight dome", "Lichtkuppel"),
+    choice("GlazedDoor", "Glazed door", "Fenstertür"),
+    choice("GroundSlabPerimeter", "Ground slab within 5 m of the edge", "Bodenplatte bis 5 m zum Außenrand"),
+    choice("GroundSlabInterior", "Ground slab beyond 5 m from the edge", "Bodenplatte mehr als 5 m vom Außenrand"),
+    choice("RoofWindow", "Roof window", "Dachflächenfenster"),
+    choice("RooflightStrip", "Rooflight strip", "Lichtband"),
 ];
 const ADJACENCY: &[NormFieldChoice] = &[
     choice("Outdoor", "Outdoor air", "Außenluft"),
     choice("Ground", "Ground", "Erdreich"),
-    choice("Unheated", "Unheated space", "Unbeheizter Raum"),
+    choice("Unheated", "Unheated room other than attic", "Unbeheizter Raum außer Dachraum"),
     choice("Heated", "Heated space", "Beheizter Raum"),
+    choice("UnheatedAttic", "Unheated attic", "Unbeheizter Dachraum"),
 ];
 /// ⛽ GEG Anlage 4 energy carriers (wire value = subject string; labels localized).
 const ENERGY_CARRIER: &[NormFieldChoice] = &[
@@ -50,7 +61,12 @@ const ENERGY_CARRIER: &[NormFieldChoice] = &[
     choice("heating_oil", "Heating oil", "Heizöl"),
     choice("electricity", "Electricity (grid mix)", "Strom (Netzmix)"),
     choice("district_heating", "District heating", "Fernwärme"),
-    choice("biomass", "Biomass", "Biomasse"),
+    choice("biomass", "Wood", "Holz"),
+    choice("lpg", "Liquid petroleum gas", "Flüssiggas"),
+    choice("hard_coal", "Hard coal", "Steinkohle"),
+    choice("lignite", "Lignite", "Braunkohle"),
+    choice("biogas", "Biogas", "Biogas"),
+    choice("bio_oil", "Bio-oil", "Bioöl"),
 ];
 /// 🏷️ DIN V 18599-10 Nutzungsprofile (wire codes used in zone.usageProfile).
 const USAGE_PROFILE: &[NormFieldChoice] = &[
@@ -84,6 +100,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("heating.transferEfficiency", FieldSpec::new("Heating transfer efficiency", "Heizung Übergabewirkungsgrad")),
     ("heating.energyCarrier", FieldSpec::choice("Heating energy carrier", "Heizung Energieträger", ENERGY_CARRIER)),
     ("dhw", FieldSpec::new("Domestic hot water", "Trinkwarmwasser")),
+    ("dhw.dwellingCount", FieldSpec::new("Number of dwellings", "Anzahl der Wohneinheiten")),
     ("dhw.specificDemandKwhPersonA", FieldSpec::quantity("DHW specific demand", "TWW-spezifischer Bedarf", UnitId::KilowattHourPerPersonYear)),
     ("dhw.storageLossKwhA", FieldSpec::quantity("DHW storage loss", "TWW-Speicherverlust", UnitId::KilowattHourPerYear)),
     ("dhw.distributionLossKwhA", FieldSpec::quantity("DHW distribution loss", "TWW-Verteilverlust", UnitId::KilowattHourPerYear)),
@@ -134,7 +151,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("zones[].thetaIHeatC", FieldSpec::quantity("Indoor heating setpoint", "Heizsolltemperatur", UnitId::Celsius)),
     ("zones[].thetaICoolC", FieldSpec::quantity("Indoor cooling setpoint", "Kühlsolltemperatur", UnitId::Celsius)),
     ("zones[].occupants", FieldSpec::new("Occupants", "Personen")),
-    ("zones[].internalGainsWM2", FieldSpec::quantity("Internal gains", "Interne Gewinne", UnitId::WattPerSquareMetre)),
+    ("zones[].internalGainsWM2", FieldSpec::quantity("Entered internal gains", "Eingegebene interne Wärmegewinne", UnitId::WattPerSquareMetre)),
     ("zones[].lightingPowerWM2", FieldSpec::quantity("Zone lighting power", "Zonenbeleuchtungsleistung", UnitId::WattPerSquareMetre)),
     ("zones[].thermalMassClass", FieldSpec::choice("Thermal mass class", "Wärmespeicherklasse", THERMAL_MASS_CLASS)),
     ("zones[].cWirkWhM2k", FieldSpec::new("Custom effective heat capacity C_wirk [Wh/(m²·K)]", "Expliziter Wert C_wirk [Wh/(m²·K)]")),

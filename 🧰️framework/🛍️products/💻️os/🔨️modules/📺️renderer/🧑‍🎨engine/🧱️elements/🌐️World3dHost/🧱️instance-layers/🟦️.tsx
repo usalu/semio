@@ -75,6 +75,7 @@ export function WorldInstancesLayer({
   instances,
   meshes,
   selection,
+  windowInstanceId,
   persistentSelectionMode,
   palette,
   projectionSpec,
@@ -105,6 +106,7 @@ export function WorldInstancesLayer({
   readonly instances: readonly WorldInstanceRecord[];
   readonly meshes: readonly WorldMeshRecord[];
   readonly selection: WorldSelectionRecord;
+  readonly windowInstanceId?: string | null;
   /** 🐚️ This shell's own `SelectionModeStore` value — see `resolveWorldMergeMode`'s doc. */
   readonly persistentSelectionMode: MergeMode;
   readonly palette: MeshStylePalette;
@@ -207,15 +209,17 @@ export function WorldInstancesLayer({
   }, [instances, meshById, selection.gumballSelectionIds, selectionMode]);
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
   const selectedIds = selection.ids ?? [];
-  const instanceChromeStore = useMemo(() => createWorldInstanceChromeStore(), []);
+  const instanceChromeStore = useMemo(() => createWorldInstanceChromeStore(windowInstanceId), [windowInstanceId]);
   reactHostPort.useLayoutEffect(() => {
     instanceChromeStore.setSnapshot({
       selectedIds: new Set(selection.ids ?? []),
       hoveredId: selection.hoveredId ?? null,
+      hoveredIds: selection.hoveredIds ? new Set(selection.hoveredIds) : null,
+      hoverSourceWindowId: selection.hoverSourceWindowId,
       hoveredKindId: selection.hoveredKindId ?? null,
       previewInstanceIds: mergedInstanceIdsSet,
     });
-  }, [instanceChromeStore, mergedInstanceIdsSet, selection.hoveredId, selection.hoveredKindId, selection.ids]);
+  }, [instanceChromeStore, mergedInstanceIdsSet, selection.hoveredId, selection.hoveredIds, selection.hoverSourceWindowId, selection.hoveredKindId, selection.ids]);
   const handleLocalInstancePointerMove = useCallback(
     (id: string | null) => {
       instanceChromeStore.setLocalHover(id);

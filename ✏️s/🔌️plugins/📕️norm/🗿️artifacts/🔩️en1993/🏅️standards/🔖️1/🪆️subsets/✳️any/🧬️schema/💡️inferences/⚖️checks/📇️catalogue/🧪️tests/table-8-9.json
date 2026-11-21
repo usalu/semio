@@ -1,0 +1,17 @@
+{
+  "edition": "EN 1993-1-9:2005+AC:2009",
+  "clause": "Table 8.9 and §8(1)–(2)",
+  "columns": ["case", "basis", "inputs", "results"],
+  "resultColumns": ["demand", "capacity", "status"],
+  "cases": [
+    ["C93-19","confirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":100,"deck_open_thickness":12,"deck_open_range":50},[[62.5,64,"pass"],[100,532.5,"pass"]]],
+    ["C93-19","confirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":100,"deck_open_thickness":12.001,"deck_open_range":50},[[62.5,56.8,"fail"],[100,532.5,"pass"]]],
+    ["C93-19","confirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":100,"deck_open_thickness":0,"deck_open_range":50},[]],
+    ["C93-19","unconfirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":100,"deck_open_thickness":12,"deck_open_range":50},[]],
+    ["C93-20","confirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":100,"deck_cross_direct":30,"deck_cross_shear":20,"deck_cross_equivalence":1,"deck_cross_frequent_shear":40,"deck_between_utilization":0.6},[[50,44.8,"fail"],[100,532.5,"pass"],[40,307.4390183434757,"pass"],[0.6,1,"pass"]]],
+    ["C93-20","confirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":100,"deck_cross_direct":0,"deck_cross_shear":20,"deck_cross_equivalence":1.5,"deck_cross_frequent_shear":320,"deck_between_utilization":1.1},[[37.5,44.8,"pass"],[100,532.5,"pass"],[320,307.4390183434757,"fail"],[1.1,1,"fail"]]],
+    ["C93-20","confirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":540,"deck_cross_direct":30,"deck_cross_shear":0,"deck_cross_equivalence":1,"deck_cross_frequent_shear":40,"deck_between_utilization":0.6},[[37.5,44.8,"pass"],[540,532.5,"fail"],[40,307.4390183434757,"pass"],[0.6,1,"pass"]]],
+    ["C93-20","confirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":100,"deck_cross_direct":30,"deck_cross_shear":20,"deck_cross_equivalence":0,"deck_cross_frequent_shear":40,"deck_between_utilization":0.6},[]],
+    ["C93-20","unconfirmed",{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"deck_open_frequent_direct":100,"deck_cross_direct":30,"deck_cross_shear":20,"deck_cross_equivalence":1,"deck_cross_frequent_shear":40,"deck_between_utilization":0.6},[]]
+  ]
+}

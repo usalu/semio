@@ -95,3 +95,44 @@ Silhouette IoU elevation / front / plan: 1:50 0.998 / 0.996 / 0.997, 1:100 0.997
 - During the work a helper wrote one PNG into a wrongly named folder in the repository root (percent-encoded path); I moved the file and removed the empty folders within the same minute.
 
 Sources: [Elster BK-G4 compact data sheet](https://add-furnace.com/product-catalog/elster-thailand/bk-g4-gas-meter-manual.pdf), [Elster BK-G4 and BK-G4T data sheet 2012](https://www.dmsltd.com/upload/pdfs/4ba45f9e966741a7aa14d19d472e0cb6.pdf), [same sheet at sensors.nl](https://www.sensors.nl/wp-content/uploads/2022/11/BK-G4.pdf).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-gas-meter-scales.py` (all four scales from round 3 plus overrides), `r5-gas-meter-roots.py` (2D print roots, writes only `representations` in the file's own style).
+
+### Reference and model vs reference, 1:50 (Elster BK-G4 compact)
+
+| Quantity | Reference | Model | Deviation |
+|---|---|---|---|
+| W x H x D | 193 x 221 x 157 mm (110 mm spacing) | 193 x 221 x 157 mm (+ nut and tailpiece to 0.245 m) | 0.2 mm |
+| Connection spacing | 110 mm | 110 mm | 0 % |
+| Thread / stub | M30 x 2 | Ø30, bore 22 | 0 % |
+| Seam band | folded, ~9 mm | 9 mm, 4.5 mm proud | ok |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / B+ | A- / A- / B+ (unchanged) |
+| 1:100 | B+ / A- / B+ ; INVALID (needle 0.17 mm at 1:150) | B+ / A- / B+ ; printable |
+| 1:200 | B+ / B+ / B+ ; INVALID (needle 0.16 mm at 1:200, counter 0.19 mm and pin gap 0.07 mm at 1:350) | B+ / B+ / B+ ; printable |
+| 1:500 | C+ (round-1 octagon block, wedge shading) / C+ / C | A- / A- / B+ |
+
+Opened: body 1:50, 1:100, 1:200, 1:500 before; 1:500 body and structure after; 1:100 thermal cut, 1:200 structure after; pose `off` (right). Not opened after the change: 1:100/1:200 body (only the pointer blade removed), 1:500 thermal, 1:200 thermal, 1:100 structure, clip frames, 2D.
+
+### Changes (root)
+
+- `representations.100/200`: the test-dial pointer blade removed from the elevation (it cannot be printed at those scales); 1:200 band ends at 1:250 (was 1:350); silhouette, retained, thinElements and overlays texts corrected (en, de).
+- Volumes 1:100/1:200: needle solid removed, pointer spindle a member of the scale's feature (15 / 30 mm); decisions corrected.
+- 1:500 anew: rounded prism of the front outline across the depth, seam band, index head, Ø30 stubs; thermal case, index, stubs, hidden unit core; structure stubs, one sheet monocoque crown to crown, unit slab, spindle, supports, mass.
+
+### Checks
+
+`r3-validate.ts --volumes` VALID (was INVALID with 7 print findings); `volumes-check.ts --product` PASS; spliced.
+
+### Remaining
+
+- The pointer does not show at 1:100 and 1:200 (clip `run` animates nothing visible there); accepted, it is a hairline at those scales.
+- 1:100 housing has no seam band (5 mm proud, below the 15 mm feature); the 1:500 structure monocoque reads as the case (sheet monocoque).
+
+The released 1:200 case now has five formed sections and a separate folded seam. The envelope measures 195 mm in height and 193 mm over its seam. Its outline follows the drawn taper. All measured rules passed, and the twelve scenes independently reloaded at 1,181,712 bytes.

@@ -58,7 +58,9 @@ mask-block = "mask" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "
 param = IDENT "=" TEXT
 
 # `asset` carries the decoded image state as a nested record.
-asset = "{" "schema=" text "width=" uint "height=" uint "colorspace=" text "bit-depth=" uint "frames=" array ["icc=" array] "metadata=" array "}"
+asset = "{" "schema=" text "width=" uint "height=" uint "colorspace=" text "bit-depth=" uint "frames=" array ["icc=" octets] "metadata=" array "}"
+# The rgba8 field of each frame row and the optional ICC profile use the standard quoted base64 octet shape.
+octets = TEXT
 
 id = TEXT
 text = TEXT

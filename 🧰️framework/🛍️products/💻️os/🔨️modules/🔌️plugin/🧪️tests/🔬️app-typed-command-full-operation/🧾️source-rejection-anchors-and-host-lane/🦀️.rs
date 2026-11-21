@@ -143,11 +143,24 @@
         assert!(host.contains("&meta.actor"));
         assert!(host.contains("self.original_emission.host_base.as_ref()"));
         assert!(host.contains("finish_empty_host(action,metadata,cx)"));
+        assert!(host.contains("self.host_events.invocation_kind.replace(kind)"));
+        assert!(!host.contains("self.tools.registry.get("));
         assert!(host.contains("self.drive_original_emission(cx).await"));
         let action=source.find("async fn dispatch_action_received").expect("action driver");
-        let command=source[action..].find("async fn dispatch_command(").map(|offset|action+offset).expect("manifest command driver");
+        let owner=source[action..].find("async fn manifest_command_kind(").map(|offset|action+offset).expect("manifest owner lookup");
+        let command=source[owner..].find("async fn dispatch_command(").map(|offset|owner+offset).expect("manifest command driver");
+        let command_end=source[command..].find("async fn fill_agent_revisions(").map(|offset|command+offset).expect("manifest command driver end");
+        let ownership=&source[owner..command];
+        assert!(ownership.contains("app_id != &owner_app_id"));
+        assert!(ownership.contains("active_mode_id != Some(mode_id.as_str())"));
+        assert!(ownership.contains("registry.app_command(command_id)"));
+        assert!(ownership.contains("registry.mode_command(mode_id, command_id)"));
         assert!(source[action..command].contains("A::original_host_configuration(action).is_some()"));
-        assert!(source[command..].contains("A::original_host_configuration(command_id).is_some()"));
+        let addressed=&source[command..command_end];
+        assert!(addressed.contains("A::original_host_configuration(command_id).is_some()"));
+        assert_eq!(addressed.matches("self.drive_original_host_configuration(command_id,kind,").count(),2);
+        assert_eq!(addressed.matches("self.manifest_command_kind(address").count(),2);
+        assert!(!addressed.contains("self.tools.registry.get("));
         for cold in ["A::host_configuration_mutation(","admit_host_configuration_json(","OpBinary::encode_op(&config_mutation)","dispatch_emit(command_id, Emit::config"]{assert!(!source.contains(cold),"cold host producer route returned: {cold}");}
     }
 

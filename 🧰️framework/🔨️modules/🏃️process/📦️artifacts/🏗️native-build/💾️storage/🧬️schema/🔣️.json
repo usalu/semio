@@ -449,6 +449,10 @@
             "toleranceDivisor": 16,
             "correctionMilliseconds": 30000,
             "containerFreeKey": "APFSContainerFree",
+              "volumeUsedKey": "CapacityInUse",
+              "mountPointKey": "MountPoint",
+              "filesystemTypeKey": "FilesystemType",
+              "darwinFilesystemType": "apfs",
             "infoProgram": "/usr/sbin/diskutil",
             "infoArguments": ["info", "-plist"]
           }

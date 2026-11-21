@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Procedural Component Target",
   "type": "string",
-  "pattern": "^[^@#~]+@[^@#~]+#(0|[1-9][0-9]*)\\.(vertex|edge|face)\\.(0|[1-9][0-9]*)(~[0-9a-f]{64}~[1-9][0-9]{0,19}~[0-9a-f]{64})?(?![\\s\\S])",
+  "pattern": "^[\\s\\S]+@(?:!o(?:!(?:[^@#~%]|%(?:25|40|23|7E))*)?|(?![!])(?:[^@#~%]|%(?:25|40|23|7E))+)#(0|[1-9][0-9]*)\\.(vertex|edge|face)\\.(0|[1-9][0-9]*)(~[0-9a-f]{64}~[1-9][0-9]{0,19}~[0-9a-f]{64})?(?![\\s\\S])",
   "$defs": {
     "AnalyticComponentSource": {
       "type": "object",

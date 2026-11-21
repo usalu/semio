@@ -89,3 +89,43 @@ Final check `volumes-check.ts --product`: silhouette IoU elevation / front / pla
 - The trunk in `ramp-ascent` leans only about 12 degrees forward of vertical (the clip's trunk keys were kept).
 - Chair and garment dimensions are from my knowledge of products and standards, not a looked-up datasheet.
 - Tests and fixtures that embed this asset were not regenerated or run.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-wheelchair-user-edit.py` (edits the hand-stated rows of `r3-wheelchair-user-s50.ts` and `r3-wheelchair-user-coarse.ts`); renders `r5-sheets.sh`; rebuild, 2D redraw and splice with the round-3 pipeline (`r3-wheelchair-user-run.sh`, `r3-wheelchair-user-write.py` after checking that the candidate differs from the catalog only in the 2D geometry, `volumes-insert.py`).
+
+### Reference and model (1:50, seated-level; H = 1.75 m)
+
+| quantity | reference | model | dev. |
+|---|---|---|---|
+| upper arm / forearm / hand | 0.186 H = 0.326 / 0.146 H = 0.256 / 0.108 H = 0.189 | 0.323 / 0.255 / 0.186 | -0.8 / -0.4 / -1.6 % |
+| thigh / shank | 0.245 H = 0.429 / 0.246 H = 0.430 | 0.426 / 0.430 | -0.6 / 0 % |
+| head chin-vertex | H/7.5 = 0.233 | 0.233 | 0 |
+| shoulder joint spacing | biacromial 0.40-0.43 minus 2 x 3 cm = 0.34-0.37 | 0.352 | in range |
+| hip joint spacing / seated hip breadth | 0.17-0.18 / 0.38-0.40 | 0.175 / 0.394 | in range |
+| hip joint above cushion | 0.09-0.10 | 0.08 (rear) to 0.05 (front) plus 1-2 cm foam set | in range |
+| vertex above hip seated | 0.82 | 0.83 skull | +1.2 % |
+| rear wheel | 24 in, 37-540, outer r 0.305, hand rim Ø 0.53 30 mm outboard | same | 0 |
+| seat width / depth / rear height | 0.40-0.44 / 0.40-0.46 / 0.44-0.48 | 0.42 / 0.43 / 0.45 | in range |
+| folded hood on the back | 2-3 layers of 6-8 mm fleece, 20-35 mm proud | 27-34 mm (before 36-42 mm) | in range |
+
+### Grades (before -> after; body / thermal / structure)
+
+- 1:50: A- / A- / A- -> A- / A- / A- (hood no longer reads as a backpack). 1:100: A- / A- / B+ -> A- / A- / B+. 1:200: B+ / B+ / B+ -> B+ / B+ / B+. 1:500: B / B / B -> B / B / B (calf on the shank).
+- Opened before: 1:50 body (seated-level), 1:50 structure, 1:500 body, 1:50 push-cycle t = 0.5 s. Opened after: 1:50 body, 1:50 2D line and solid, 1:50 ramp-ascent. Rendered after and not opened: 1:100 to 1:500 sheets, hands-on-rims and push-end (the rig, poses and the parts moved by them are unchanged).
+
+### Changes
+
+- Hood folded on the upper back flattened at 1:50, 1:100 and 1:200 (centre moved onto the hoodie back, thickness 16-20 mm half instead of 24-28 mm); 1:500 shank with a calf station. 2D of all scales redrawn from the bodies by `r3-wheelchair-user-draw2d.ts`.
+
+### Checks
+
+- `r3-validate.ts humans/wheelchair-user --catalog-only`: `VALID ... schema 0, validateAsset 0`.
+- `--volumes`: 4 measurements red, unchanged from round 3 and pending with the area reviewer (`author-requests.md` 2026-11-20): `jeans` 0.847 against 0.6091 (+39 % 1:50, +38 % 1:100), `shoes` 0.185 against 0.1332 (+39 %, +34 %).
+
+### Remaining
+
+- Body-model areas `jeans` and `shoes` (C18/C27, reviewer).
+- No cloth folds beyond the stacked jeans hem and the rolled hoodie hem; superellipse sections without separate pectorals; 0 degree camber (one lateral axle in the rig); trunk lean in ramp-ascent only 12 degrees; 1:500 faceted by the product's coarse tessellation.
+
+Both castor forks now retain 0.20 mm paper outlines at the 1:350 endpoint. The complete paper document, 1:200 feature, silhouette and cross-scale checks passed. All four live heat checks and all twelve exported scenes passed.

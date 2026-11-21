@@ -13,6 +13,7 @@
 //! 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave W1-E.
 //!
 
+use semio_framework_3d_brep_representation::contract::SphericalShellBoundary;
 use std::collections::HashMap;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
@@ -168,7 +169,7 @@ pub fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
 
 #[path = "🧊️analytic-solids/🦀️.rs"]
 mod analytic_solids;
-pub use analytic_solids::{BoxSectionDraft, BoxSectionPolygon, PrimitiveEdge, PrimitiveTrim, SolidPrimitive};
+pub use analytic_solids::{BoxSectionDraft, SectionPolygon, PrimitiveEdge, PrimitiveTrim, SolidPrimitive};
 use analytic_solids::make_analytic_solid;
 
 // #region 🔖️Solids
@@ -756,3 +757,12 @@ fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
 
 // #endregion 🔖️CoplanarMerge
 
+
+impl From<SphericalShellBoundary> for SolidPrimitive {
+    fn from(source:SphericalShellBoundary)->Self {
+        match source {
+            SphericalShellBoundary::Sphere{frame,radius}=>Self::Sphere{frame,radius},
+            SphericalShellBoundary::Box{origin,size:[width,depth,height]}=>Self::Box{origin,width,depth,height},
+        }
+    }
+}

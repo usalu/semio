@@ -18,13 +18,16 @@ export function sysrootTargetsV1(sysroot:string):readonly string[]{
  try{return readdirSync(base).filter(name=>{try{return statSync(join(base,name)).isDirectory()&&existsSync(join(base,name,"lib"));}catch{return false;}}).sort();}catch{return[];}
 }
 
-/** 🔭️ Asks the compiler the machine would use in `cwd` (the pinned toolchain of that checkout) who it is: commit hash, host triple, sysroot and installed targets. `undefined` when there is no usable compiler, so the worker simply offers nothing for rustc. */
-export function detectWorkerRustcV1(cwd:string,environment:Environment=process.env,compiler:string="rustc"):OffloadWorkerOfferV1|undefined{
- const run=(args:readonly string[])=>spawnSync(compiler,[...args],{cwd,encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:60000});
+/** 🔭️ Probes the compiler pinned by `cwd` and offers the executable in the reported sysroot for its host triple. The target libraries determine the target properties. */
+export function detectWorkerRustcV1(cwd:string,environment:Environment=process.env,compiler:string|readonly [string,...string[]]="rustc"):OffloadWorkerOfferV1|undefined{
+ const [tool,...prefix]=typeof compiler==="string"?[compiler]:compiler;
+ const run=(args:readonly string[])=>spawnSync(tool,[...prefix,...args],{cwd,encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:60000});
  const identity=run(["-vV"]),sysroot=run(["--print","sysroot"]);
  if(identity.status!==0||sysroot.status!==0)return undefined;
- const parsed=parseRustcIdentityV1(identity.stdout),root=sysroot.stdout.trim(),path=join(root,"bin","rustc");
- if(!parsed||!existsSync(path))return undefined;
+ const parsed=parseRustcIdentityV1(identity.stdout),root=sysroot.stdout.trim();
+ if(!parsed||!root)return undefined;
+ const executable=parsed.host.split("-").includes("windows")?policy.tool.windowsExecutable:policy.tool.name,path=join(root,"bin",executable);
+ if(!existsSync(path))return undefined;
  const targets=sysrootTargetsV1(root),p=policy.property;
  return Object.freeze({
   tools:Object.freeze({[policy.tool.name]:Object.freeze({path,readable:Object.freeze([root])})}),

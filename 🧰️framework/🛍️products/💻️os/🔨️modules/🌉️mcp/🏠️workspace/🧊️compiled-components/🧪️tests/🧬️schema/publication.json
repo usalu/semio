@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["steps"],
+  "properties": {
+    "steps": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["runtime", "cancel", "result", "shared", "prepared"],
+        "properties": {
+          "runtime": {"enum": ["shared", "unrelated"]},
+          "cancel": {"enum": ["never", "before-publication", "at-cache-check"]},
+          "result": {"enum": ["cancelled", "local", "owner"]},
+          "shared": {"type": "boolean"},
+          "prepared": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

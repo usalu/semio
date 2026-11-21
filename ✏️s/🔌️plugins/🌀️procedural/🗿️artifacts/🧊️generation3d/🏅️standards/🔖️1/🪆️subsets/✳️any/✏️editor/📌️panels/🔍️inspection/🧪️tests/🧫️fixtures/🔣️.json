@@ -611,6 +611,7 @@
       "activateSelection"
     ],
     "controlKey": "procedural-play-inspector.value.input",
+    "rowHover": {"key": "procedural-play-inspector.value", "targetId": "h:height@number"},
     "control": {
       "type": "slider",
       "min": 0,

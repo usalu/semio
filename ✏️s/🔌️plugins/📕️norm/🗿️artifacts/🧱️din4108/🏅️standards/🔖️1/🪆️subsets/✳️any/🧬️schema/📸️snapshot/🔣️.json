@@ -13,7 +13,8 @@
     "bb2DetailsConform",
     "zones",
     "elements",
-    "thermalBridges"
+    "thermalBridges",
+    "cases"
   ],
   "properties": {
     "climateZone": {
@@ -53,6 +54,12 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/ThermalBridge"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CaseRow"
       }
     }
   },
@@ -760,6 +767,158 @@
       },
       "x-semio-formats": [
         "🔣️jsonschema"
+      ]
+    },
+    "CaseNumber": {
+      "title": "CaseNumber",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Input key",
+              "de": "Eingabeschlüssel"
+            }
+          }
+        },
+        "value": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            },
+            "widget": "stepper",
+            "precision": 6,
+            "step": 0.1
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "CaseText": {
+      "title": "CaseText",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Input key",
+              "de": "Eingabeschlüssel"
+            }
+          }
+        },
+        "value": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "CaseRow": {
+      "title": "CaseRow",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "entryId",
+        "numbers",
+        "texts"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "English label",
+              "de": "Englische Bezeichnung"
+            }
+          }
+        },
+        "labelDe": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "German label",
+              "de": "Deutsche Bezeichnung"
+            }
+          }
+        },
+        "entryId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Catalogue entry",
+              "de": "Katalogeintrag"
+            },
+            "description": {
+              "en": "Verification id C94-nn of the EN 1994 catalogue.",
+              "de": "Nachweis-Id C94-nn des EN-1994-Katalogs."
+            }
+          }
+        },
+        "numbers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaseNumber"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Numeric inputs",
+              "de": "Zahlenwerte"
+            }
+          }
+        },
+        "texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaseText"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text inputs",
+              "de": "Textwerte"
+            }
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
       ]
     }
   },

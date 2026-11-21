@@ -5,9 +5,12 @@ start line
 
 line = change-exaggeration
      / change-imported-features
+     / replace-elevation-source
 
 change-exaggeration = "change-exaggeration" SP number
 change-imported-features = "change-imported-features"
+replace-elevation-source = "replace-elevation-source" (SP payload)?
+payload = OCTET+
 
 id = OCTET+
 number = OCTET+

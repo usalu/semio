@@ -62,7 +62,7 @@ with open(sys.argv[1], "rb") as wasm, mmap.mmap(wasm.fileno(), 0, access=mmap.AC
         if base is not None:
             for marker in markers:
                 at = module.find(marker, start, offset)
-                if at != -1:
+                while at != -1:
                     address = base + at - start
                     values = [address]
                     pointer = address.to_bytes(4, "little")
@@ -70,8 +70,9 @@ with open(sys.argv[1], "rb") as wasm, mmap.mmap(wasm.fileno(), 0, access=mmap.AC
                     while reference != -1:
                         values.append(base + reference - start)
                         reference = module.find(pointer, reference + 1, offset)
-                    addresses[marker] = [b"\x41" + sleb(value, width) for value in values for width in (0, 5)]
+                    addresses.setdefault(marker, []).extend(b"\x41" + sleb(value, width) for value in values for width in (0, 5))
                     addresses[marker].extend(b"\x42" + sleb((size << 32) | address, width) for size in range(len(marker), len(marker) + 2) for width in (0, 10))
+                    at = module.find(marker, at + len(marker), offset)
     funcs, offset = read(module, parts[10][0])
     assert funcs == declared
     results = {marker: [] for marker in addresses}

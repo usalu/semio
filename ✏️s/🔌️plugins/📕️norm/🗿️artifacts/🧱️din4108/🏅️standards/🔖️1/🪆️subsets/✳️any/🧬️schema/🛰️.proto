@@ -59,6 +59,23 @@ message Din4108ThermalBridge {
   string bb2_type = 4;
 }
 
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
+}
+
 message Din4108Artifact {
   // @state artifact
   string climate_zone = 1;
@@ -80,4 +97,6 @@ message Din4108Artifact {
   repeated Din4108EnvelopeElement elements = 9;
   // @state artifact
   repeated Din4108ThermalBridge thermal_bridges = 10;
+  // @state artifact
+  repeated CaseRow cases = 11;
 }

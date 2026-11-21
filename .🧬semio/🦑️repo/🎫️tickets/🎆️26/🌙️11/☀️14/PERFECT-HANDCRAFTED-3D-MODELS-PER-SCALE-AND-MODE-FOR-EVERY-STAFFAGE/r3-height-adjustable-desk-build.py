@@ -5,6 +5,7 @@ Usage: python3 r3-height-adjustable-desk-build.py [--keep-2d]
 import importlib.util
 import json
 import os
+from runpy import run_path
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -115,6 +116,7 @@ def main():
             rep["geometry"] = D.geometry(int(key))
             rep["decisions"] = D.DECISIONS[int(key)]
     a["volumes"] = M.volumes()
+    run_path(os.path.join(HERE,"digital-monitor.py"))["author"](a)
     os.makedirs(OUT, exist_ok=True)
     json.dump(doc, open(os.path.join(OUT, "🔣️.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
     print(os.path.join(OUT, "🔣️.json"))

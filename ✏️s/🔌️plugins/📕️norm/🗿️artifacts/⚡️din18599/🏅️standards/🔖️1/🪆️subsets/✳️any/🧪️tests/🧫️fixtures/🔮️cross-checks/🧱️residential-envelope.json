@@ -1,0 +1,14 @@
+{
+  "source": "GEG § 16, § 15 (1) and Annex 1 items 1.1, 1.2 and 2",
+  "deltaUWbWM2k": 0.05,
+  "components": [
+    {"adjacency": "Outdoor", "areaM2": 50, "factor": 1, "referenceUWM2k": 0.28},
+    {"adjacency": "Ground", "areaM2": 20, "factor": 0.6, "referenceUWM2k": 0.35},
+    {"adjacency": "Heated", "areaM2": 30, "factor": 0, "referenceUWM2k": null}
+  ],
+  "limitWM2k": 0.31,
+  "cases": [
+    {"name": "matches Annex 1", "actualUWM2k": [0.28, 0.35, 0.9], "hTPrimeWM2k": 0.31, "status": "Pass"},
+    {"name": "below 0.40 but above reference", "actualUWM2k": [0.37, 0.45, 0.9], "hTPrimeWM2k": 0.39142857142857146, "status": "Fail"}
+  ]
+}

@@ -8,6 +8,11 @@ pub const R_NS_STRICT: &str = "http://purl.oclc.org/ooxml/officeDocument/relatio
 pub const WORKBOOK_PART: &str = "xl/workbook.xml";
 pub const SHARED_STRINGS_PART: &str = "xl/sharedStrings.xml";
 pub const WORKBOOK_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
+
+/// 🏷️ Matches the registered Workbook part media type by its case-insensitive name.
+pub fn workbook_media_type_matches(content_type: &str) -> bool {
+    content_type.split(';').next().is_some_and(|name| name.eq_ignore_ascii_case(WORKBOOK_CONTENT_TYPE))
+}
 pub const WORKSHEET_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml";
 pub const SHARED_STRINGS_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml";
 pub const REL_TYPE_WORKSHEET: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet";

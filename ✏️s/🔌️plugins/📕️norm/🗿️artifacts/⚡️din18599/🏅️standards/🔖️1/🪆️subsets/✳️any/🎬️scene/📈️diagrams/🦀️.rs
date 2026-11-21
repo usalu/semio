@@ -1,8 +1,8 @@
 //! 📈️ Diagrams: the monthly heating and cooling balance of each thermal zone (DIN V 18599-2), the useful-final-primary energy flow of the building (DIN V 18599-1, -5, -8, -10) and the U-value of each envelope element against the GEG reference.
 
-use super::checks::{derive_balance, primary_energy_factor, reference_u, zone_heating_months, HeatingMonth};
+use super::checks::{annex3_envelope_groups, derive_balance, Annex3EnvelopeGroup, primary_energy_factor, reference_u, zone_heating_months, BalanceDerived, HeatingMonth, RenewableElectricityMonth};
 use super::kit::{check_with, entity_ref, loc};
-use super::model::{Din18599Snapshot, ElementKind, EnvelopeElement};
+use super::model::{Adjacency, BuildingCategory, Din18599Snapshot, ElementKind, EnvelopeElement, UsageProfile};
 use super::norm::CheckReport;
 use super::scene::diagram_kit::Xy;
 use super::scene::projection_kit::diagram_parts::{axis, checked_marker_id, column, stroke};
@@ -13,7 +13,9 @@ pub const U_UNIT: &str = "W/(m²·K)";
 const BAR: f64 = 0.4;
 const ENERGY_CHECK: &str = "din18599.2.heating-demand";
 const PRIMARY_CHECK: &str = "din18599.geg.qp";
+const RENEWABLE_CHECK: &str = "din18599.geg.renewable-electricity";
 const HT_CHECK: &str = "din18599.geg.ht-prime";
+const RESIDENTIAL_GAINS_CHECK: &str = "din18599.10.residential-internal-gains";
 
 fn p(x: f64, y: f64) -> Vec2 {
     Vec2::new(x, y)
@@ -44,6 +46,11 @@ fn zone_balance(document: &Din18599Snapshot, report: &CheckReport, id: &str, mon
     let at = |f: fn(&HeatingMonth) -> f64| -> Vec<Xy> { months.iter().enumerate().map(|(m, v)| [m as f64 + 1.0, f(v)]).collect() };
     let loss = at(|m| m.q_t_kwh + m.q_v_kwh);
     let gain = at(|m| m.q_i_kwh + m.q_s_kwh);
+    let internal = at(|m| m.q_i_kwh);
+    let gain_source = zone
+        .filter(|z| z.usage_profile == UsageProfile::WFH)
+        .and_then(|_| check_with(report, RESIDENTIAL_GAINS_CHECK))
+        .map_or_else(|| loc("Includes the entered internal gains.", "Enthält die eingegebenen internen Wärmegewinne."), |check| check.explanation.clone());
     let top = months.iter().map(|m| (m.q_t_kwh + m.q_v_kwh).max(m.q_i_kwh + m.q_s_kwh).max(m.q_h_kwh).max(m.q_c_kwh)).fold(1.0, f64::max) * 1.1;
     let mut series = vec![line("loss", "Heat losses Q_T + Q_V", "Wärmesenken Q_T + Q_V", &loss, Tone::Neutral, Dash::Solid), line("gain", "Heat gains Q_i + Q_s", "Wärmequellen Q_i + Q_s", &gain, Tone::Neutral, Dash::Dashed)];
     for (m, v) in months.iter().enumerate() {
@@ -57,8 +64,8 @@ fn zone_balance(document: &Din18599Snapshot, report: &CheckReport, id: &str, mon
         id: format!("monthly-balance:{id}"),
         title: loc(&format!("Monthly balance – {en}"), &format!("Monatsbilanz – {de}")),
         description: loc(
-            &format!("Monthly heat balance of zone {en} (DIN V 18599-2): losses, gains and the net heating and cooling demand per month; annual heating {annual_h:.0} kWh, cooling {annual_c:.0} kWh."),
-            &format!("Monatliche Wärmebilanz der Zone {de} (DIN V 18599-2): Senken, Quellen sowie Nutzheiz- und Nutzkältebedarf je Monat; jährlich Heizen {annual_h:.0} kWh, Kühlen {annual_c:.0} kWh."),
+            &format!("Monthly heat balance of zone {en} (DIN V 18599-2): losses, gains and the net heating and cooling demand per month; annual heating {annual_h:.0} kWh, cooling {annual_c:.0} kWh. {}", gain_source.en),
+            &format!("Monatliche Wärmebilanz der Zone {de} (DIN V 18599-2): Senken, Quellen sowie Nutzheiz- und Nutzkältebedarf je Monat; jährlich Heizen {annual_h:.0} kWh, Kühlen {annual_c:.0} kWh. {}", gain_source.de),
         ),
         axes: vec![axis("Month", "Monat", QuantityKind::Dimensionless, "1", AxisScale::Linear, Some((0.5, 12.5))), axis("Energy", "Energie", QuantityKind::Energy, KWH, AxisScale::Linear, Some((0.0, top)))],
         series,
@@ -66,25 +73,28 @@ fn zone_balance(document: &Din18599Snapshot, report: &CheckReport, id: &str, mon
         annotations: Vec::new(),
         focus: Some(entity_ref(EntityKind::Solid, id, "zones")),
         legend: true,
-        table_twin: DataTable { columns: vec![column("Month", "Monat", "1", loss.iter().map(|q| q[0]).collect()), column("Losses Q_T + Q_V", "Senken Q_T + Q_V", KWH, loss.iter().map(|q| q[1]).collect()), column("Gains Q_i + Q_s", "Quellen Q_i + Q_s", KWH, gain.iter().map(|q| q[1]).collect()), column("Net heating demand", "Nutzheizwärmebedarf", KWH, months.iter().map(|m| m.q_h_kwh).collect()), column("Net cooling demand", "Nutzkältebedarf", KWH, months.iter().map(|m| m.q_c_kwh).collect())] },
+        table_twin: DataTable { columns: vec![column("Month", "Monat", "1", loss.iter().map(|q| q[0]).collect()), column("Losses Q_T + Q_V", "Senken Q_T + Q_V", KWH, loss.iter().map(|q| q[1]).collect()), column("Gains Q_i + Q_s", "Quellen Q_i + Q_s", KWH, gain.iter().map(|q| q[1]).collect()), column("Net heating demand", "Nutzheizwärmebedarf", KWH, months.iter().map(|m| m.q_h_kwh).collect()), column("Net cooling demand", "Nutzkältebedarf", KWH, months.iter().map(|m| m.q_c_kwh).collect()), column("Internal heat gains Q_i", "Interne Wärmegewinne Q_i", KWH, internal.iter().map(|q| q[1]).collect())] },
     }
 }
 
 /// 🔀️ The five services of the energy flow with their useful, final and primary energy in kWh: heating, domestic hot water, cooling, lighting and auxiliary (fans).
 pub fn flows(document: &Din18599Snapshot) -> [(&'static str, &'static str, [f64; 3]); 5] {
-    let d = derive_balance(document);
+    service_flows(document, &derive_balance(document))
+}
+
+fn service_flows(document: &Din18599Snapshot, d: &BalanceDerived) -> [(&'static str, &'static str, [f64; 3]); 5] {
     let el = primary_energy_factor("electricity");
     [
         ("Heating", "Heizung", [d.q_h_nd_kwh, d.q_f_heat_kwh, d.q_f_heat_kwh * primary_energy_factor(&document.heating.energy_carrier)]),
-        ("Hot water", "Warmwasser", [d.q_w_kwh, d.q_f_dhw_kwh, d.q_f_dhw_kwh * primary_energy_factor(&document.dhw.energy_carrier)]),
+        ("Hot water", "Warmwasser", [d.q_w_useful_kwh, d.q_f_dhw_kwh, d.q_f_dhw_kwh * primary_energy_factor(&document.dhw.energy_carrier)]),
         ("Cooling", "Kühlung", [d.q_c_nd_kwh, d.q_f_cool_kwh, d.q_f_cool_kwh * primary_energy_factor(document.cooling.energy_carrier())]),
         ("Lighting", "Beleuchtung", [d.q_l_kwh, d.q_f_light_kwh, d.q_f_light_kwh * el]),
         ("Auxiliary", "Hilfsenergie", [d.q_f_aux_kwh, d.q_f_aux_kwh, d.q_f_aux_kwh * el]),
     ]
 }
 
-fn energy_flow(document: &Din18599Snapshot, report: &CheckReport) -> Diagram2d {
-    let flows = flows(document);
+fn energy_flow(document: &Din18599Snapshot, report: &CheckReport, balance: &BalanceDerived) -> Diagram2d {
+    let flows = service_flows(document, balance);
     let mut offsets = [[0.0; 5]; 3];
     let mut totals = [0.0; 3];
     for stage in 0..3 {
@@ -107,17 +117,20 @@ fn energy_flow(document: &Din18599Snapshot, report: &CheckReport) -> Diagram2d {
             }
         }
     }
-    let pv = derive_balance(document).q_pv_kwh * primary_energy_factor("electricity");
+    let pv = balance.q_pv_kwh * primary_energy_factor("electricity");
     Diagram2d {
         id: "energy-flow:building".into(),
         title: loc("Energy flow: useful, final, primary", "Energiefluss: Nutz-, End-, Primärenergie"),
         description: loc(
-            &format!("Annual energy flow per service from useful through final to primary energy (DIN V 18599-1, -5, -8, -10): total useful {:.0} kWh, final {:.0} kWh, primary {:.0} kWh before the photovoltaic credit of {pv:.0} kWh.", totals[0], totals[1], totals[2]),
-            &format!("Jährlicher Energiefluss je Dienst von der Nutz- über die End- zur Primärenergie (DIN V 18599-1, -5, -8, -10): Nutzenergie gesamt {:.0} kWh, Endenergie {:.0} kWh, Primärenergie {:.0} kWh vor der Photovoltaik-Gutschrift von {pv:.0} kWh.", totals[0], totals[1], totals[2]),
+            &format!("Annual energy flow per service from useful through final to primary energy (DIN V 18599-1, -5, -8, -10): total useful {:.0} kWh, final {:.0} kWh, primary {:.0} kWh before the modelled photovoltaic credit of {pv:.0} kWh.", totals[0], totals[1], totals[2]),
+            &format!("Jährlicher Energiefluss je Dienst von der Nutz- über die End- zur Primärenergie (DIN V 18599-1, -5, -8, -10): Nutzenergie gesamt {:.0} kWh, Endenergie {:.0} kWh, Primärenergie {:.0} kWh vor der modellierten Photovoltaik-Gutschrift von {pv:.0} kWh.", totals[0], totals[1], totals[2]),
         ),
         axes: vec![axis("Stage (useful, final, primary)", "Stufe (Nutz-, End-, Primärenergie)", QuantityKind::Dimensionless, "1", AxisScale::Linear, Some((0.0, 2.0))), axis("Energy", "Energie", QuantityKind::Energy, KWH, AxisScale::Linear, Some((0.0, top)))],
         series,
-        markers: vec![marker("primary-energy", p(2.0, totals[2]), report, PRIMARY_CHECK, loc(&format!("Primary energy {:.0} kWh", totals[2]), &format!("Primärenergie {:.0} kWh", totals[2])))],
+        markers: vec![marker("primary-energy", p(2.0, balance.q_p_kwh), report, PRIMARY_CHECK, loc(
+            &format!("Primary energy after modelled credit {:.0} kWh", balance.q_p_kwh),
+            &format!("Primärenergie nach modellierter Anrechnung {:.0} kWh", balance.q_p_kwh),
+        ))],
         annotations: Vec::new(),
         focus: None,
         legend: true,
@@ -125,26 +138,95 @@ fn energy_flow(document: &Din18599Snapshot, report: &CheckReport) -> Diagram2d {
     }
 }
 
-fn element_u(document: &Din18599Snapshot, report: &CheckReport, element: &EnvelopeElement) -> Diagram2d {
-    let same: Vec<&EnvelopeElement> = document.elements.iter().filter(|e| e.kind == element.kind).collect();
-    let reference = reference_u(element.kind);
+fn renewable_electricity(balance: &BalanceDerived, report: &CheckReport) -> Diagram2d {
+    let months = &balance.renewable_electricity_months;
+    let at = |value: fn(&RenewableElectricityMonth) -> f64| -> Vec<Xy> {
+        months.iter().enumerate().map(|(m, row)| [m as f64 + 1.0, value(row)]).collect()
+    };
+    let generation = at(|m| m.generation_kwh);
+    let demand = at(|m| m.eligible_electricity_kwh);
+    let credit = at(|m| m.credit_kwh);
+    let peak = credit.iter().max_by(|a, b| a[1].total_cmp(&b[1])).copied().unwrap_or([1.0, 0.0]);
+    Diagram2d {
+        id: "renewable-electricity:building".into(),
+        title: loc("Monthly renewable electricity", "Monatlicher erneuerbarer Strom"),
+        description: loc(
+            "Compare estimated generation, eligible electricity demand and modelled credit for each month.",
+            "Vergleich von geschätztem Ertrag, anrechenbarem Strombedarf und modellierter Anrechnung je Monat.",
+        ),
+        axes: vec![
+            axis("Month", "Monat", QuantityKind::Dimensionless, "1", AxisScale::Linear, Some((0.5, 12.5))),
+            axis("Electricity", "Strom", QuantityKind::Energy, KWH, AxisScale::Linear, None),
+        ],
+        series: vec![
+            line("generation", "Estimated generation", "Geschätzter Ertrag", &generation, Tone::Neutral, Dash::Dashed),
+            line("demand", "Eligible demand", "Anrechenbarer Bedarf", &demand, Tone::Warning, Dash::Solid),
+            line("credit", "Modelled credit", "Modellierte Anrechnung", &credit, Tone::Info, Dash::Solid),
+        ],
+        markers: vec![marker("peak-credit", p(peak[0], peak[1]), report, RENEWABLE_CHECK, loc(
+            &format!("Largest monthly credit {:.0} kWh", peak[1]),
+            &format!("Höchste monatliche Anrechnung {:.0} kWh", peak[1]),
+        ))],
+        annotations: Vec::new(),
+        focus: None,
+        legend: true,
+        table_twin: DataTable { columns: vec![
+            column("Month", "Monat", "1", generation.iter().map(|row| row[0]).collect()),
+            column("Estimated generation", "Geschätzter Ertrag", KWH, generation.iter().map(|row| row[1]).collect()),
+            column("Eligible demand", "Anrechenbarer Bedarf", KWH, demand.iter().map(|row| row[1]).collect()),
+            column("Modelled credit", "Modellierte Anrechnung", KWH, credit.iter().map(|row| row[1]).collect()),
+        ] },
+    }
+}
+
+fn element_u(document: &Din18599Snapshot, report: &CheckReport, element: &EnvelopeElement, groups: &[Annex3EnvelopeGroup<'_>]) -> Diagram2d {
+    let (same, reference, check, description, limit_label) = match document.building_category {
+        BuildingCategory::Residential => {
+            let reference = reference_u(element);
+            let same: Vec<_> = document.elements.iter()
+                .filter(|e| e.adjacency != Adjacency::Heated && e.kind == element.kind && reference_u(e) == reference)
+                .collect();
+            let description = loc(
+                &format!("U-values of envelope elements sharing the Annex 1 reference of {reference:.2} W/(m²·K)."),
+                &format!("U-Werte von Hüllbauteilen mit demselben Referenzwert von {reference:.2} W/(m²·K) nach Anlage 1."),
+            );
+            (same, Some(reference), HT_CHECK.to_string(), description, loc("GEG reference U", "GEG-Referenz-U"))
+        }
+        BuildingCategory::NonResidential => {
+            let group = groups.iter().find(|group| group.elements.iter().any(|e| e.id == element.id));
+            let (same, reference, id) = match group {
+                Some(group) => (group.elements.clone(), Some(group.limit()), group.check_id()),
+                None => (vec![element], None, "din18599.geg.mean-u.basis".to_string()),
+            };
+            let description = check_with(report, &id).map_or_else(|| loc(
+                "Entered transmittance of this component.",
+                "Erfasster Wärmedurchgangskoeffizient des Bauteils.",
+            ), |check| check.explanation.clone());
+            (same, reference, id, description, loc("Annex 3 mean U limit", "Grenzwert des mittleren U-Werts nach Anlage 3"))
+        }
+    };
     let max_area = same.iter().map(|e| e.area_m2).fold(1.0, f64::max) * 1.15;
-    let max_u = same.iter().map(|e| e.u_value_w_m2k).fold(reference, f64::max) * 1.25;
-    let own = |e: &&EnvelopeElement| e.id == element.id;
-    let points = same.iter().map(|e| ScatterPoint { at: p(e.area_m2, e.u_value_w_m2k), tone: if own(e) { Tone::Warning } else { Tone::Neutral }, label: Some(loc(&e.label_en, &e.label_de)) }).collect();
-    let mean_id = format!("din18599.geg.mean-u.{:?}", element.kind).to_lowercase();
-    let check = if check_with(report, &mean_id).is_some() { mean_id } else { HT_CHECK.to_string() };
-    let mut mark = marker("element-u", p(element.area_m2, element.u_value_w_m2k), report, &check, loc(&format!("U = {:.2} W/(m²·K) against reference {reference:.2}", element.u_value_w_m2k), &format!("U = {:.2} W/(m²·K) gegen Referenz {reference:.2}", element.u_value_w_m2k)));
+    let max_u = same.iter().map(|e| e.u_value_w_m2k).fold(reference.unwrap_or(1.0), f64::max) * 1.25;
+    let points = same.iter().map(|e| ScatterPoint {
+        at: p(e.area_m2, e.u_value_w_m2k),
+        tone: if e.id == element.id { Tone::Warning } else { Tone::Neutral },
+        label: Some(loc(&e.label_en, &e.label_de)),
+    }).collect();
+    let mut mark = marker("element-u", p(element.area_m2, element.u_value_w_m2k), report, &check, loc(
+        &format!("Entered U = {:.2} W/(m²·K)", element.u_value_w_m2k),
+        &format!("Erfasster U-Wert = {:.2} W/(m²·K)", element.u_value_w_m2k),
+    ));
     mark.binding = Some(FieldBinding { path: format!("elements[id={}].uValueWM2k", element.id), map: Affine::IDENTITY, unit: U_UNIT.into(), quantise: None });
+    let mut series = vec![Series::Scatter { id: "elements".into(), label: loc("Envelope elements", "Hüllbauteile"), points }];
+    if let Some(value) = reference {
+        series.push(Series::Limit { id: "reference".into(), label: limit_label, axis: AxisRef::Y, value, style: stroke(Tone::Neutral, 1.5, Dash::Dashed) });
+    }
     Diagram2d {
         id: format!("element-u:{}", element.id),
         title: loc(&format!("U-value – {}", element.label_en), &format!("U-Wert – {}", element.label_de)),
-        description: loc(
-            &format!("U-values of all envelope elements of the same kind against the GEG reference U = {reference:.2} W/(m²·K); this element has U = {:.2} W/(m²·K) on {:.1} m².", element.u_value_w_m2k, element.area_m2),
-            &format!("U-Werte aller Hüllbauteile gleicher Art gegen den GEG-Referenzwert U = {reference:.2} W/(m²·K); dieses Bauteil hat U = {:.2} W/(m²·K) auf {:.1} m².", element.u_value_w_m2k, element.area_m2),
-        ),
+        description,
         axes: vec![axis("Area", "Fläche", QuantityKind::Area, "m²", AxisScale::Linear, Some((0.0, max_area))), axis("U-value", "U-Wert", QuantityKind::HeatTransferCoefficient, U_UNIT, AxisScale::Linear, Some((0.0, max_u)))],
-        series: vec![Series::Scatter { id: "elements".into(), label: loc("Envelope elements of this kind", "Hüllbauteile dieser Art"), points }, Series::Limit { id: "reference".into(), label: loc("GEG reference U", "GEG-Referenz-U"), axis: AxisRef::Y, value: reference, style: stroke(Tone::Neutral, 1.5, Dash::Dashed) }],
+        series,
         markers: vec![mark],
         annotations: Vec::new(),
         focus: Some(entity_ref(EntityKind::Solid, &element.id, "elements")),
@@ -158,7 +240,12 @@ pub fn diagrams(document: &Din18599Snapshot, report: &CheckReport, focus: Option
     let zone_of_focus = focus.and_then(|f| document.elements.iter().find(|e| e.id == f).map(|e| e.zone_id.as_str()));
     let wanted = |id: &str| focus.is_none_or(|f| f == id || zone_of_focus == Some(id));
     let mut out: Vec<Diagram2d> = zone_heating_months(document).iter().filter(|(id, _)| wanted(id)).map(|(id, months)| zone_balance(document, report, id, months)).collect();
-    out.push(energy_flow(document, report));
-    out.extend(document.elements.iter().filter(|e| wanted(&e.id)).map(|e| element_u(document, report, e)));
+    let balance = derive_balance(document);
+    out.push(energy_flow(document, report, &balance));
+    if document.renewables.pv_area_m2 > 0.0 {
+        out.push(renewable_electricity(&balance, report));
+    }
+    let groups = if document.building_category == BuildingCategory::NonResidential { annex3_envelope_groups(document).0 } else { Vec::new() };
+    out.extend(document.elements.iter().filter(|e| e.adjacency != Adjacency::Heated && wanted(&e.id)).map(|e| element_u(document, report, e, &groups)));
     out
 }

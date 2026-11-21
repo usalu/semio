@@ -94,6 +94,11 @@ impl RendererAssetFetchOwner {
         }
     }
 
+    /// 🔁️ HTTP assets eligible for bounded transport retries on the same admitted request.
+    pub fn allows_transport_retry(&self) -> bool {
+        matches!(self, Self::World { .. }) || matches!(self.kind(), WorldAssetRequestKind::MapTile { .. })
+    }
+
     pub fn owner_mut(&mut self) -> &mut WorldAssetFetchOwner {
         match self {
             Self::World { owner, .. } | Self::Shared(owner) => owner,

@@ -42,8 +42,22 @@ use semio_plugin_instance_docs::docs_instance_root::typed_operation_document_is_
 
 impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     fn advance_private_child_group(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant)->Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        use semio_plugin_ownership::bounded_ownership::{original_lifecycle_delta, original_lifecycle_net_after, original_lifecycle_step};
         if self.child_composition.private_child_groups.get(mounted.operation.operation.0).is_some_and(|owner|owner.phase>=9){return Ok(RetainedCloneStep::Complete(Default::default()))}
-        let step=semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,RetirementDemand{depth:1,..Default::default()},|same,grant|{let step=self.advance_private_child_group_granted(mounted,same,grant)?;Ok((PluginLifecycleStep::Progress(step.progress()),false))})?;
+        let step=cx.with_retained_loan(loan, |cx| original_lifecycle_step(cx,loan,RetirementDemand{depth:1,..Default::default()},|same,grant|{
+            let before=same.retained_progress();
+            let reserved=same.reserved_return_progress();
+            let progress=self.advance_private_child_group_granted(mounted,same,grant)?.progress();
+            let after=original_lifecycle_net_after(same.retained_progress(),reserved,same.reserved_return_progress());
+            let posted=original_lifecycle_delta(before,after)?;
+            let whole=RetainedCloneProgress{
+                copied_items:progress.copied_items.max(posted.copied_items),
+                copied_bytes:progress.copied_bytes.max(posted.copied_bytes),
+                retained_capacity_bytes:progress.retained_capacity_bytes.max(posted.retained_capacity_bytes),
+                released_bytes:progress.released_bytes.max(posted.released_bytes),
+            };
+            Ok((PluginLifecycleStep::Progress(whole),false))
+        }).map_err(Into::into))?;
         let ready=self.child_composition.private_child_groups.get(mounted.operation.operation.0).is_some_and(|owner|owner.phase>=9);
         Ok(if ready{RetainedCloneStep::Complete(step.progress().unwrap_or_default())}else{RetainedCloneStep::Progress(step.progress().unwrap_or_default())})
     }
@@ -112,16 +126,21 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static, X: Instan
         Ok(if ready{step}else{RetainedCloneStep::Progress(step.progress())})
     }
 
-    pub async fn publish_mounted_owned_child_operation_unit(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub async fn publish_mounted_owned_child_operation_unit(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut semio_framework_job::StepContext<'_>,remaining:RetainedCloneGrant)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let operation=mounted.owned_child_group.ok_or_else(||plugin_sdk_fault("mounted private publication lost its exact operation identity"))?;
         let Some(owner)=self.child_composition.private_child_groups.get(operation)else{mounted.owned_child_group=None;return Ok(());};
         let lease=mounted.cancellation_lease.as_ref().ok_or_else(||plugin_sdk_fault("mounted private publication requires its original cancellation lease"))?;
         let cancelled=lease.token.is_cancelled_now()||lease.publication_claim.is_cancelled()||lease.handle.publication_scope.is_cancelled()||lease.document_claim.as_ref().is_some_and(|claim|claim.is_cancelled());
         if cancelled||(owner.closing&&!mounted.owned_child_result_pending)||(mounted.owned_child_committed&&!mounted.owned_child_result_pending){
-            let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,self.mounted_policy.close);
+            let close = self.mounted_policy.close.restricted_by(remaining);
+            let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,close);
             let demand=self.child_composition.private_child_group_operation_close_demands(operation, grant.maximum_copy_bytes)?;
-            if demand.copy_bytes>grant.maximum_copy_bytes||demand.depth>grant.maximum_depth{return Err(plugin_sdk_fault("mounted retirement exceeds its original copy or depth admission").into());}
-            self.child_composition.close_private_child_group_operation_step(&mut *self.stores, operation, cx, grant)?;
+            if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(());}
+            let progressed = cx.with_retained_loan(close, |cx| {
+                self.child_composition.close_private_child_group_operation_step(&mut *self.stores, operation, cx, grant)
+                    .map(|step| step.progress() != RetainedCloneProgress::default()).map_err(Into::into)
+            })?;
+            if progressed { mounted.publication_progress = mounted.publication_progress.saturating_add(1); }
             if self.child_composition.private_child_groups.get(operation).is_none(){mounted.owned_child_group=None;if !mounted.owned_child_committed{mounted.reject_cancelled_publication()?;}}
             return Ok(());
         }
@@ -130,11 +149,11 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static, X: Instan
         let captured=mounted.captured_child_content.as_ref().ok_or_else(||plugin_sdk_fault("mounted child group lost its captured immutable child frontier"))?;
         let fresh=typed_operation_document_is_fresh(&mounted.operation,mounted.canonical_revision,self.stores.store.content_revision_now(),self.stores.store.generation_now())&&mounted.captured_child_content_generation==self.child_composition.child_content_generation&&captured.identity_digest()==self.child_composition.child_content_root.identity_digest();
         if !fresh{let fault=plugin_sdk_fault("mounted private group rejected its stale original parent or child frontier");self.child_composition.private_child_groups.get_mut(operation).unwrap().closing=true;mounted.terminal_fault=Some(ArtifactBoundedToolFault::from_fault(&fault));lease.cancel();return Err(fault.into());}
-        let step=match self.advance_private_child_group(mounted,cx,self.mounted_policy.maintenance){Ok(step)=>step,Err(failure)=>{self.child_composition.private_child_groups.get_mut(operation).unwrap().closing=true;mounted.cancellation_lease.as_ref().unwrap().cancel();return Err(failure);}};
+        let step=match self.advance_private_child_group(mounted,cx,remaining){Ok(step)=>step,Err(failure)=>{self.child_composition.private_child_groups.get_mut(operation).unwrap().closing=true;mounted.cancellation_lease.as_ref().unwrap().cancel();return Err(failure);}};
         if step.progress()!=Default::default(){mounted.publication_progress=mounted.publication_progress.saturating_add(1);}
         if !matches!(step,RetainedCloneStep::Complete(_)){return Ok(());}
         if cx.should_yield()||!self.tools.typed_composed_outbox.can_push(){return Ok(());}
-        let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,self.mounted_policy.maintenance);if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
+        let grant=semio_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,remaining);if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
         let generation=self.child_composition.child_content_generation.checked_add(1).ok_or_else(||plugin_sdk_fault("private child frontier generation exhausted"))?;
         if !self.child_composition.child_content_root.is_empty()&&!self.child_composition.child_content_retirements.can_insert(generation){return Ok(());}
         let sequence=self.history.next_command_seq.checked_add(1).ok_or_else(||plugin_sdk_fault("private command history sequence exhausted"))?;

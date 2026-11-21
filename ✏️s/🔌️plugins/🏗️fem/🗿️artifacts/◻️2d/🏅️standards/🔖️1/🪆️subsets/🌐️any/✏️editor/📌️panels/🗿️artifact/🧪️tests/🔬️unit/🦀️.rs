@@ -25,7 +25,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::{Fem2dSnapshot, Fem2dSnapshotRetiring, Fem2dSnapshotValue};
+use semio_s_fem_node::planar::FemNodeValue;
 use semio_plugin::plugin_app_close_prelude::Buildable;
 use semio_plugin::plugin_app_close_prelude::BuiltNode;
 use semio_plugin::plugin_app_close_prelude::HasBase;
@@ -157,16 +158,18 @@ fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
 }
 
 /// 🧱️ A document an order of magnitude past one viewport: 60 nodes and a 40-load wind case.
-fn oversized() -> Fem2dSnapshot {
-    let mut document = demo();
-    document.nodes = (0..60).map(|index| FemNodeValue { id: format!("g{index}"), x: index as f64, y: 0.0 }).collect();
-    document.load_cases.push(FemLoadCase {
-        id: "wind".into(),
-        name: "Wind".into(),
-        loads: (0..40).map(|index| FemLoad::Nodal { id: format!("wl{index}"), node_id: "g0".into(), dof: FemDof::Tx, value: 1000.0 }).collect(),
-        self_weight: false,
-    });
-    document
+fn oversized() -> Fem2dSnapshotRetiring {
+    let document = Fem2dSnapshotValue {
+        nodes: (0..60).map(|index| FemNodeValue { id: format!("g{index}"), x: index as f64, y: 0.0 }).collect(),
+        load_cases: vec![FemLoadCase {
+            id: "wind".into(),
+            name: "Wind".into(),
+            loads: (0..40).map(|index| FemLoad::Nodal { id: format!("wl{index}"), node_id: "g0".into(), dof: FemDof::Tx, value: 1000.0 }).collect(),
+            self_weight: false,
+        }],
+        ..Default::default()
+    };
+    Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(document).expect("60-node panel fixture"))
 }
 
 const SECTION_SUFFIXES: [&str; SECTIONS] = ["nodes", "elements", "regions", "supports", "load-cases", "combinations", "materials", "sections", "analysis"];
@@ -282,8 +285,12 @@ async fn scalars_and_overlong_labels_stay_inside_the_ui_text_envelope() {
     assert_eq!(fem2d_scalar(0.0), "0");
     assert_eq!(fem2d_coordinate(-4.0), "−4.00");
 
-    let mut document = Fem2dSnapshot::default();
-    document.regions.push(FemRegion { id: "r1".into(), name: "R".repeat(900), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], holes: Vec::new(), thickness: 0.2, material_id: "concrete".into(), mesh_size: 1.0 });
+    let document = Fem2dSnapshotValue {
+        regions: vec![FemRegion { id: "r1".into(), name: "R".repeat(900), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]], holes: Vec::new(), thickness: 0.2, material_id: "concrete".into(), mesh_size: 1.0 }],
+        materials: vec![semio_s_fem_material::planar::FemMaterialValue { id: "concrete".into(), name: "Concrete".into(), e: 30e9, nu: 0.2, rho: 2400.0 }],
+        ..Default::default()
+    };
+    let document = Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(document).expect("long-label panel fixture"));
     let tree = build(&document, labels);
     let clipped = row_labels(section_node(&tree, "regions")).remove(0);
     assert!(clipped.len() <= semio_ui_contract::UI_TEXT_MAX_BYTES, "clipped to {} bytes", clipped.len());
@@ -344,8 +351,9 @@ async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
     let tree = render(&document, &interaction, english(), &windows).expect("marked tree");
     let Component::Tree(props) = &tree.component else { panic!("panel tree") };
     assert_eq!(props.interaction_domain.as_ref().map(|domain| domain.as_str()), Some(FEM2D_INTERACTION_DOMAIN));
-    let wide: Vec<String> = (0..80).map(|index| format!("scope:1:4:node{}:n{index}", format!("n{index}").len())).collect();
-    assert_eq!(marked_ids(&wide).len(), MARKED_IDS_LIMIT, "a wider selection marks its first page rather than refusing the render");
+    let wide: Vec<String> = (0..=semio_ui_contract::UI_FIXED_LIST_ITEMS)
+        .map(|index| semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id("node", &format!("n{index}")).expect("node identity"))
+        .collect();
     let interaction = Fem2dInteractionSnapshot { selected_ids: wide, hovered_ids: Vec::new() };
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     render(&document, &interaction, english(), &windows).expect("an oversized selection never faults the panel");
@@ -432,7 +440,7 @@ async fn a_window_request_materialises_exactly_its_own_range() {
 /// 🌱️ An empty document is a readable tree of "(none)" placeholders, not a refusal.
 #[semio_framework_async_macros::async_test]
 async fn an_empty_document_renders_placeholders() {
-    let document = Fem2dSnapshot::default();
+    let document = Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(Fem2dSnapshotValue::default()).expect("empty panel fixture"));
     let tree = build(&document, english());
     for suffix in ["nodes", "elements", "regions", "supports", "load-cases", "combinations", "materials", "sections"] {
         assert_eq!(row_labels(section_node(&tree, suffix)), vec!["(none)".to_string()], "section {suffix}");

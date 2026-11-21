@@ -20,7 +20,7 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::{find_layer, layer_protection, layer_visible};
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
-use semio_framework_machine::Command;
+use semio_framework_machine::{self as machine, Command};
 use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_plugin::{ArtifactView, ConfigView, Emit, EphemeralEmit, Fault};
 use semio_framework_tool_machine::{drive_gesture, GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
@@ -59,7 +59,7 @@ pub fn raster_fault(code: &'static str) -> Fault {
 /// 📣️ The en/de notices of the raster tool refusals (design §20.12): strokes, fills, filters, transforms and the retained route.
 pub fn raster_fault_notices() -> &'static [(&'static str, semio_ui_locale::LocalizedLabel)] {
     use semio_ui_locale::LocalizedLabel;
-    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 16]> = std::sync::LazyLock::new(|| {
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 19]> = std::sync::LazyLock::new(|| {
         [
             ("raster.stroke.phase-invalid", LocalizedLabel::native("This stroke step is not known.", "Dieser Strichschritt ist unbekannt.")),
             ("raster.stroke.window-required", LocalizedLabel::native("A streamed stroke needs an open composite window.", "Ein gestreamter Strich braucht ein geöffnetes Kompositionsfenster.")),
@@ -76,6 +76,9 @@ pub fn raster_fault_notices() -> &'static [(&'static str, semio_ui_locale::Local
             ("raster.filter.pixels-only", LocalizedLabel::native("Filters change pixels; switch from painting the mask to the pixels.", "Filter ändern Pixel; vom Malen der Maske zu den Pixeln wechseln.")),
             ("raster.transform.invalid", LocalizedLabel::native("This rotation, size or crop is not valid for the image.", "Diese Drehung, Größe oder dieser Zuschnitt ist für das Bild ungültig.")),
             ("raster.transform.pixels-only", LocalizedLabel::native("Transforms change pixels; switch from painting the mask to the pixels.", "Transformationen ändern Pixel; vom Malen der Maske zu den Pixeln wechseln.")),
+            ("raster.import.png-file", LocalizedLabel::native("Choose a PNG within the import size limit.", "Eine PNG-Datei innerhalb der Importgrößengrenze wählen.")),
+            ("raster.import.base64", LocalizedLabel::native("The imported file bytes are invalid.", "Die importierten Dateibytes sind ungültig.")),
+            ("raster.import.png", LocalizedLabel::native("The file is not a supported PNG.", "Die Datei ist kein unterstütztes PNG.")),
             ("raster.document.too-large", LocalizedLabel::native("The image has too many layers and assets for this action.", "Das Bild hat zu viele Ebenen und Assets für diese Aktion.")),
         ]
     });
@@ -217,7 +220,7 @@ fn cancel_stream(context: &mut PaintToolContext, _event: Option<&paint_tool::Eve
 // 🎭️ The pixel tool's control flow (plain comment: rustdoc cannot document a macro invocation): a one-shot (and a commit
 // with nothing open) yields and commits at rest; a stream opens `painting`, whose ticks extend the one leaf and whose
 // finish commits ONE transaction; a cancel aborts it.
-semio_framework_machine::statechart! {
+machine::statechart! {
     machine paint_tool {
         context: PaintToolContext;
         event Event { Stroke(PaintToolRequest), Stream(PaintToolRequest), Finish(PaintToolRequest), Cancel }

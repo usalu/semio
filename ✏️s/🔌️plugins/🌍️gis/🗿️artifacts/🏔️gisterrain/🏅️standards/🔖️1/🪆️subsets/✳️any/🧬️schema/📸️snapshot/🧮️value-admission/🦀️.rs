@@ -15,8 +15,8 @@ impl Bytes{
  }
  fn field(&mut self,value:&FieldValue,native:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
   native.scoped_depth(32,|native|match value{
-   FieldValue::Absent=>Ok(()),FieldValue::Float(_)=>self.add(8),FieldValue::Text(text)=>self.add(text.len()),FieldValue::Value(value)=>self.intrinsic(value,0,native),
-   FieldValue::List(values)=>native.scoped_stage(|native|{native.begin_stage(values.len())?;for value in values{self.field(value,native)?;native.step()?;}Ok(())}),
+   FieldValue::Absent=>Ok(()),FieldValue::Float(_)|FieldValue::Int(_)=>self.add(8),FieldValue::Text(text)=>self.add(text.len()),FieldValue::Value(value)=>self.intrinsic(value,0,native),
+   FieldValue::List(values)|FieldValue::Tuple(values)=>native.scoped_stage(|native|{native.begin_stage(values.len())?;for value in values{self.field(value,native)?;native.step()?;}Ok(())}),
    FieldValue::Record(record)=>self.record(record,native),
    _=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"terrain native field is outside its authored literal domain")),
   })

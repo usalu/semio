@@ -3,7 +3,7 @@ import{parseArgs}from"node:util";
 import{runtimeActorCargoArgumentsV1}from"../../../../../🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts";
 import"@semio-tech/process/routing";
 import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
-import{createIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{createIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{mkdtempSync,mkdirSync,writeFileSync,rmSync,readFileSync,realpathSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join,dirname,resolve}from"node:path";
@@ -49,6 +49,38 @@ test("neutral consumed Cargo selectors refuse every unissued view before effects
 registerBuildTestLawV1("neutral consumed Cargo workspace selection uses bounded actual Original Source custody","sdk-fence",async original=>{
  const api=await import("../../../../../🗂️workspaces/🦀️cargo/🟦️.ts"),hold=Reflect.get(api,"withCargoWorkspaceSelectionV1");expect(typeof hold).toBe("function");if(typeof hold!=="function")throw Error("Actual bounded workspace selection owner required");const sink=realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());
  for(const row of corpus.workspaceSelection){const root=mkdtempSync(join(sink,"cps-")),database=new Database(":memory:");try{database.exec("create table owners(path text primary key)");for(const file of row.files){mkdirSync(dirname(join(root,file.path)),{recursive:true});writeFileSync(join(root,file.path),file.text);const parsed=TOML.parse(file.text)as{workspace?:unknown};expect(Bun.TOML.parse(file.text)).toEqual(parsed);if(parsed.workspace)database.query("insert into owners values(?)").run(file.path);}const leaf=TOML.parse(row.files.find(file=>file.path===row.manifest)!.text)as{package:{workspace?:string}},start=leaf.package.workspace===undefined?dirname(row.manifest):join(dirname(row.manifest),leaf.package.workspace),selected=database.query("select path from owners where path='Cargo.toml' or ?1=substr(path,1,length(path)-11) or ?1 like substr(path,1,length(path)-11)||'/%' order by length(path) desc limit 1").get(start)as{path:string};expect(selected.path).toBe(row.expected);await hold(root,row.manifest,createIssuedResourceControlV1(original,"profile:workspace-selection",0),async(view:{scope:{manifest:string};recheck():Promise<void>})=>{expect(view.scope.manifest).toBe(row.expected);await view.recheck();});}finally{database.close();rmSync(root,{recursive:true,force:true});}}
+});
+
+registerBuildTestLawV1("neutral consumed Cargo workspace selection retries a changed manifest extent and keeps captured text","sdk-fence",async original=>{
+ const {withCargoWorkspaceSelectionV1}=await import("../../../../../🗂️workspaces/🦀️cargo/🟦️.ts"),sink=realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir());
+ for(const row of corpus.workspaceSelectionChurn.cases){
+  const root=mkdtempSync(join(sink,"cps-")),manifest=join(root,"Cargo.toml"),database=new Database(":memory:");
+  const render=(generation:string,padding:number)=>'[workspace]\n[workspace.metadata]\ngeneration="'+generation+'"\n'+(padding?"#"+"x".repeat(padding)+"\n":"");
+  const before=render(row.before,row.beforePadding),after=render(row.after,row.afterPadding),control=createIssuedResourceControlV1(original,"profile:workspace-selection-churn",0);
+  let calls=0,escaped:(()=>string)|undefined;
+  try{
+   const oracle=database.query<{changed:number;attempts:number},[string,string,number]>("select length(cast(?1 as blob)) != length(cast(?2 as blob)) changed,case when ?1=?2 or length(cast(?2 as blob))>?3 then 1 else 2 end attempts").get(before,after,corpus.workspaceSelectionChurn.maximumManifestBytes)!;
+   expect(oracle).toEqual({changed:Number(row.extentChanged),attempts:row.expected==="retry"?2:1});
+   writeFileSync(manifest,before);
+   const selection=withCargoWorkspaceSelectionV1(root,"Cargo.toml",control,async view=>{
+    calls++;
+    if(calls===1)writeFileSync(manifest,after);
+    const read=view.workspaceManifestText,captured=read(),expected=calls===1?before:after;
+    if(escaped)expect(escaped).toThrow("Original Cargo workspace selection released");
+    escaped=read;
+    expect(captured).toBe(expected);
+    expect(TOML.parse(captured)).toEqual(Bun.TOML.parse(expected));
+    expect(view.inputs.find(input=>input.path===view.scope.manifest)).toEqual({path:"Cargo.toml",bytes:Buffer.byteLength(captured),digest:createHash("sha256").update(captured).digest("hex")});
+    if(row.expected==="retry")await view.recheck();
+    return calls;
+   });
+   if(row.expected==="retry")expect(await selection).toBe(2);
+   else await expect(selection).rejects.toMatchObject({key:"process.source.read-bytes-exceeded"});
+   expect(calls).toBe(oracle.attempts);
+   expect(await withIssuedResourceOperationV1(control,async()=>calls)).toBe(oracle.attempts);
+   expect(escaped).toThrow("Original Cargo workspace selection released");
+  }finally{database.close();rmSync(root,{recursive:true,force:true});}
+ }
 });
 
 /** 🔍️ Effective profile observations match every exact selector and refuse hidden package or host changes. */

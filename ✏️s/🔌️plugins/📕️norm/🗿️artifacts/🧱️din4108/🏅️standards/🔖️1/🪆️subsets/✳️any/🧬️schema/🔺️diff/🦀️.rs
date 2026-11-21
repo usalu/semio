@@ -168,6 +168,8 @@ pub struct Din4108Diff {
     pub elements: Din4108ElementDelta,
     #[state(artifact)]
     pub thermal_bridges: Din4108ThermalBridgeDelta,
+    #[state(artifact)]
+    pub cases: semio_s_plugin_norm_compliance::design_case::CaseRowDelta,
 }
 //#endregion 🔖️Diff
 
@@ -199,6 +201,7 @@ impl protocol::ColdMutationDiff<Din4108Snapshot> for Din4108Diff {
         self.zones.absorb(other.zones);
         self.elements.absorb(other.elements);
         self.thermal_bridges.absorb(other.thermal_bridges);
+        self.cases.absorb(other.cases);
     }
 
     fn apply(&self, unpublished: &mut Din4108Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
@@ -228,6 +231,7 @@ impl protocol::ColdMutationDiff<Din4108Snapshot> for Din4108Diff {
         next.zones = self.zones.commit_onto(&base.zones, capability).map_err(|error| error.under(["zones"]))?;
         next.elements = self.elements.commit_onto(&base.elements, capability).map_err(|error| error.under(["elements"]))?;
         next.thermal_bridges = self.thermal_bridges.commit_onto(&base.thermal_bridges, capability).map_err(|error| error.under(["thermalBridges"]))?;
+        next.cases = self.cases.commit_onto(&base.cases, capability).map_err(|error| error.under(["cases"]))?;
         *unpublished = next;
         Ok(())
     }
@@ -245,6 +249,7 @@ impl DiffAlgebra<Din4108Snapshot> for Din4108Diff {
             && self.zones.is_empty()
             && self.elements.is_empty()
             && self.thermal_bridges.is_empty()
+            && self.cases.is_empty()
     }
 }
 
@@ -261,6 +266,7 @@ impl protocol::ColdDiffAlgebra<Din4108Snapshot> for Din4108Diff {
             zones: self.zones.inverse(&base.zones),
             elements: self.elements.inverse(&base.elements),
             thermal_bridges: self.thermal_bridges.inverse(&base.thermal_bridges),
+            cases: self.cases.inverse(&base.cases),
         }
     }
 }

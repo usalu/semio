@@ -1,0 +1,9 @@
+# Cargo workspace manifest recheck
+
+Two FEM component attempts reported a captured workspace manifest of 96,163 bytes and a live manifest of 96,079 bytes. Their last workspace activity was `cargo:workspace-selection`. The original refusal stack ends in the physical source reader, so those logs alone leave the caller above the reader uncertain.
+
+A ticket fixture reproduced the dead owner with today's workspace selection code. It captures a real Cargo.toml through an issued process envelope, rewrites it to change its length, and awaits `view.recheck()`. Selection translates the physical extent mismatch to a snapshot churn error. The recheck's accepted operation recorded that rejection on all ancestors before the selection loan returned. The outer retry logged five attempts, while the callback ran once and each subsequent scope admission refused to open.
+
+The fix carries the selection's own observed churn through both tracked settlements before asking the existing snapshot retry policy to reacquire the file. The callback receives the failed recheck and cannot consume the stale result. Real byte, file, no-follow, cancellation, and other ownership failures retain their existing behavior. A closed ancestor does not keep triggering snapshot retries through its recorded cause. A failure propagated through an independent tracked consumer remains a failure of that consumer.
+
+The fixture now captures the new bytes on its second callback entry, then runs another tracked operation under the same original scope. An over-budget manifest still closes the original scope on the first attempt. The focused repository laws reuse the language-neutral fixture for growth, shrinkage, same-size changes, and over-budget input. This verification used small manifests through the repository Bun tool. It did not rebuild the FEM component.

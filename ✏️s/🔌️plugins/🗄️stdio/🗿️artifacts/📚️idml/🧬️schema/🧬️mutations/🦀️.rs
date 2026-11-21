@@ -19,8 +19,19 @@ const DESCRIPTORS: &[protocol::MutationLeafDescriptor] = &[
     protocol::MutationLeafDescriptor { schema_version: 1, owner: concat!("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧬️schema/🧬️mutations", "/📦️replace-package"), semantic_kind: "replace-package", display_name: "Replace IDML Package", emoji: "📦️", aggregate_variant: "ReplacePackage", payload_schema: "🧬️schema/🔣️.json", text_opcode: Some("replace-package"), binary_tag: Some(1), invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::Typescript, protocol::MutationLanguageSurface::Graphql, protocol::MutationLanguageSurface::JsonSchema, protocol::MutationLanguageSurface::Protobuf, protocol::MutationLanguageSurface::Text, protocol::MutationLanguageSurface::Binary] },
     protocol::MutationLeafDescriptor { schema_version: 1, owner: concat!("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧬️schema/🧬️mutations", "/📄️replace-part"), semantic_kind: "replace-part", display_name: "Replace IDML Part", emoji: "📄️", aggregate_variant: "ReplacePart", payload_schema: "🧬️schema/🔣️.json", text_opcode: Some("replace-part"), binary_tag: Some(2), invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::Typescript, protocol::MutationLanguageSurface::Graphql, protocol::MutationLanguageSurface::JsonSchema, protocol::MutationLanguageSurface::Protobuf, protocol::MutationLanguageSurface::Text, protocol::MutationLanguageSurface::Binary] },
 ];
+static SEMANTIC_DESCRIPTORS: &[protocol::SemanticDescriptor] = &[
+    protocol::SemanticDescriptor { verb: "replace", entity: "idml-package", kind: DESCRIPTORS[0].semantic_kind, record: DESCRIPTORS[0].aggregate_variant },
+    protocol::SemanticDescriptor { verb: "replace", entity: "idml-part", kind: DESCRIPTORS[1].semantic_kind, record: DESCRIPTORS[1].aggregate_variant },
+];
 
 impl IdmlMutation {
+    fn leaf_index(&self) -> usize {
+        match self {
+            Self::ReplacePackage { .. } => 0,
+            Self::ReplacePart { .. } => 1,
+        }
+    }
+
     fn candidate(&self, base: &IdmlSnapshot) -> Result<IdmlSnapshot, ValueError> {
         match self {
             Self::ReplacePackage { document } => { document.package()?; Ok(document.clone()) }
@@ -40,7 +51,7 @@ impl protocol::Mutation<IdmlSnapshot> for IdmlMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = DESCRIPTORS;
     const INPUT_SCHEMAS: &'static [&'static str] = &[PACKAGE_SCHEMA, PART_SCHEMA];
     const INPUT_SCHEMA_DOCUMENTS: &'static [&'static [&'static str]] = &[DOCUMENTS, DOCUMENTS];
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &DESCRIPTORS[match self { Self::ReplacePackage { .. } => 0, Self::ReplacePart { .. } => 1 }] }
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &DESCRIPTORS[self.leaf_index()] }
     fn input_schema(&self) -> Option<&'static str> { Some(match self { Self::ReplacePackage { .. } => PACKAGE_SCHEMA, Self::ReplacePart { .. } => PART_SCHEMA }) }
     fn conflict_target(&self) -> Vec<String> { match self { Self::ReplacePackage { .. } => Vec::new(), Self::ReplacePart { path, .. } => vec!["parts".into(), path.clone()] } }
     fn may_emit_foreign_steps(&self) -> bool { false }
@@ -57,6 +68,24 @@ impl protocol::Mutation<IdmlSnapshot> for IdmlMutation {
         Self::from_value(DslValue::object(fields))
     }
 }
+
+impl protocol::SemanticMutation<IdmlSnapshot> for IdmlMutation {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] { SEMANTIC_DESCRIPTORS }
+
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor { &Self::kinds()[self.leaf_index()] }
+
+    fn label(&self) -> semio_ui_locale::LocalizedLabel {
+        let english = protocol::Mutation::descriptor(self).display_name;
+        let german = match self {
+            Self::ReplacePackage { .. } => "IDML-Paket ersetzen",
+            Self::ReplacePart { .. } => "IDML-Teil ersetzen",
+        };
+        semio_ui_locale::LocalizedLabel::native(english, german)
+    }
+
+    fn target(&self) -> Vec<String> { protocol::Mutation::conflict_target(self) }
+}
+
 impl protocol::ColdMutation<IdmlSnapshot> for IdmlMutation {
     type ReferenceDiff = IdmlDiff;
     fn diff(&self, base: &IdmlSnapshot) -> protocol::MutationOutcome<IdmlDiff> {

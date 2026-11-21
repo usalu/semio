@@ -36,6 +36,7 @@ export interface Generation3dViewPreviewViewModel {
  * as marked when the domain names the instance, its channel, or its widget. */
 export interface Generation3dViewMarks {
   hovered: readonly string[];
+  hoverSourceWindowId?: string | null;
   selected: readonly string[];
 }
 

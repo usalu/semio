@@ -1,5 +1,6 @@
 /** ✅️ Structural and semantic validation of a `semio.model/v1` document; findings are bilingual issues with JSON-pointer paths.
  * @see ../🧬️schema/🔣️.json */
+import { polyhedronFault } from "./🪨️polyhedron/🟦️.ts";
 import type { Issue, ModelDocument, Operation, Slug, Text } from "../🧬️schema/🟦️.ts";
 import { Pace, silentOperation } from "../⏱️operation/🟦️.ts";
 import { revolveClosure, revolveOutline } from "../🔺️tessellation/🌀️revolved/🟦️.ts";
@@ -193,6 +194,11 @@ export function validateModel(document: ModelDocument, operation: Operation = si
           if (fault) add("warning", fault === "uniform" ? "taper-uniform" : "taper-degenerate", `${p}/taperTo`);
         }
         break;
+      case "polyhedron": {
+        const fault = polyhedronFault(s.vertices, s.triangles, pace);
+        if (fault !== null) error("bad-primitive", `${p}/${fault}`);
+        break;
+      }
       case "loft":
         if (!Array.isArray(s.sections) || s.sections.length < 2) error("invalid-dimension", `${p}/sections`);
         else s.sections.forEach((sec, k) => {

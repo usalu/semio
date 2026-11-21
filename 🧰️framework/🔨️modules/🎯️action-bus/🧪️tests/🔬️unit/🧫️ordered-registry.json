@@ -1,0 +1,5 @@
+{
+  "registration": [["z", "sort"], ["z", "read"], ["ä", "solve"], ["a", "read"]],
+  "alias": { "key": ["z", "find"], "target": ["z", "read"] },
+  "factoryOrder": [["a", "read"], ["z", "read"], ["z", "sort"], ["ä", "solve"]]
+}

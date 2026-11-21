@@ -37,8 +37,20 @@ impl<'ctx> WindowActionsCtx<'ctx> {
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let _ = session;
-            debug_log("[TRACE] contributions push skipped native-no-pack-sender");
+            if let Some(plugin) = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
+                if let Some((command, providers)) = self.plugins.native_contribution_command(&plugin, &session.app.id) {
+                    let mut view = self.as_session().live_view_state(&session);
+                    view.panel_json = None;
+                    let command_json = semio_framework_pack_json::to_json_string(&command);
+                    match plugin.handle_command(session.instance_id, &command_json, &view).await {
+                        Ok(result) => {
+                            debug_log(&format!("[TRACE] setContributions native settled {}", serde_json::json!({ "plugin": plugin.plugin_id, "app": session.app.id, "instanceId": session.instance_id, "providers": providers, "encoding": "pack", "effects": result.requested_effects.len() })));
+                            self.queue_host_effects(&session.app.controller_id, result.requested_effects);
+                        }
+                        Err(error) => debug_log(&format!("[TRACE] setContributions command failed {} {error}", plugin.plugin_id)),
+                    }
+                }
+            }
         }
         declare_boot_subphase("shell-boot:contributions-push", "leave", (instant_now_ms() - started).max(0.0));
         Ok(())

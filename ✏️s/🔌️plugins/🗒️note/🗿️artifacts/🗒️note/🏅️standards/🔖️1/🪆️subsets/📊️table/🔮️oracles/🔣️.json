@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution, split out of ✳️any's former note-1-any wildcard catalog in ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION so every s.note.note mutation has a non-wildcard subset owner. Table block row/column structure. The generic (whole-document) note-python-independent oracle and the three carrier-family third-party-library oracles (dxf/quick-xml/lopdf) this subset's fixtures cite by id stay registered once, in ✳️any/🔮️oracles/🔣️.json — the registry is global (semio.repository-test's loadOracleRegistry merges every subset's contribution), so this file references them by id without redeclaring them.",
+  "_comment": "🧩️ This subset's own contribution, split out of ✳️any's former note-1-any wildcard catalog in ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION so every s.note.note mutation has a non-wildcard subset owner. Table block structure and cell content. The generic (whole-document) note-python-independent oracle and the three carrier-family third-party-library oracles (dxf/quick-xml/lopdf) this subset's fixtures cite by id stay registered once, in ✳️any/🔮️oracles/🔣️.json — the registry is global (semio.repository-test's loadOracleRegistry merges every subset's contribution), so this file references them by id without redeclaring them.",
   "oracles": [],
   "probes": [],
   "noOracleDecisions": [],
@@ -15,7 +15,8 @@
         "insert-table-row",
         "remove-table-row",
         "insert-table-column",
-        "remove-table-column"
+        "remove-table-column",
+        "edit-table-cell"
       ],
       "vectors": [
         {
@@ -59,6 +60,17 @@
             {
               "id": "drops-the-trailing-blank-row",
               "directoryName": "⬆️drops"
+            }
+          ]
+        },
+        {
+          "mutationId": "edit-table-cell",
+          "sourceMutationDirectoryName": "✍️edit-table-cell",
+          "mutationDirectoryName": "✍️edit-table-cell",
+          "scenarios": [
+            {
+              "id": "changes-one-addressed-cell",
+              "directoryName": "🪶️changes"
             }
           ]
         }
@@ -149,6 +161,26 @@
             "operation": "remove-table-row",
             "bridgeVersion": 1,
             "variant": "RemoveTableRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-table-cell",
+          "capability": "note-1-table-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "edit-table-cell",
+            "bridgeVersion": 1,
+            "variant": "EditTableCell"
           },
           "oracleRequirements": [
             {

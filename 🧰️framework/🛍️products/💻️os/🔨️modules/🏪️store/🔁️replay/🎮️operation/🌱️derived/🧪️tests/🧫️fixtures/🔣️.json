@@ -89,5 +89,12 @@
     "copyBytes": 64,
     "ownershipCeiling": 65536,
     "admitted": true
+  },
+  "sourceCancellation": {
+    "fundedFrontiers": 29,
+    "expected": {
+      "terminal": true,
+      "issuerAliases": 1
+    }
   }
 }

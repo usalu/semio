@@ -24,7 +24,7 @@ test("the wire protocol and observations are schema-first and agree with Ajv", (
     for (const row of rows.invalid) expect(definition(name)(row), `${name} ${JSON.stringify(row)}`).toBe(false);
   }
   expect(definition("VerdictV1")({ v: 1, op: "verdict", admitted: false })).toBe(true);
-  expect(definition("RssReportV1")({ v: 1, op: "rss", bytes: 1 })).toBe(true);
+  expect(definition("RssReportV1")({ v: 1, op: "rss", bytes: 1, chargedBytes: 2 })).toBe(true);
 });
 
 test("unit keys, artifact identities and extern edges follow the vectors", () => {
@@ -91,23 +91,16 @@ test("both actual production broker inputs apply memory bounds and preserve expl
  for(const[index,path]of files.entries()){
   const tree=ts.createSourceFile(path,readFileSync(new URL(path,import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),expressions:ts.Expression[]=[];
   const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="startAdmissionBrokerV1"){const object=node.arguments[0];if(object&&ts.isObjectLiteralExpression(object))for(const property of object.properties)if(ts.isPropertyAssignment(property)&&property.name.getText(tree)==="physicalBytes")expressions.push(property.initializer);}ts.forEachChild(node,visit);};visit(tree);expect(expressions).toHaveLength(1);
-  const expression=ts.transpile(`(${expressions[0]!.getText(tree)})`,{target:ts.ScriptTarget.ESNext}),run=new Function("options","admissionMemoryBytesV1","admissionMemoryShareV1","tokens","availableParallelism",`return ${expression}`);
-  for(const row of fixture.memoryShares){const observed=run({},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism);expect(observed).toBe(index===0?row.effectiveBytes:row.bytes);if(index===0)expect(run({physicalBytes:123},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism)).toBe(123);}
+  const expression=ts.transpile(`(${expressions[0]!.getText(tree)})`,{target:ts.ScriptTarget.ESNext}),run=new Function("options","admissionMemoryBytesV1","admissionMemoryShareV1","tokens","availableParallelism","units","ADMISSION_POLICY_V1",`return ${expression}`);
+  for(const row of fixture.memoryShares){const observed=run({},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism);expect(observed).toBe(row.bytes);if(index===1)expect(run({},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism,{decision:{budgetMegabytes:0}},admission.ADMISSION_POLICY_V1)).toBe(Math.min(row.bytes,admission.ADMISSION_POLICY_V1.reserveBytes));if(index===0)expect(run({physicalBytes:123},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism)).toBe(123);}
  }
  const physical=8321515520,constraint=7516192768,effective=admission.admissionMemoryBytesV1(physical,constraint);expect(effective-admission.ADMISSION_POLICY_V1.reserveBytes).toBe(1073741824);expect(physical-effective).toBe(805322752);
 });
 
 test("the broker endpoint stays below the Unix socket path limit however long the temporary root is", () => {
-  const previous = process.env.TMPDIR;
-  try {
-    process.env.TMPDIR = "/" + "t".repeat(120);
-    expect(Buffer.byteLength(admission.brokerEndpointV1("linux"))).toBeLessThan(104);
-    process.env.TMPDIR = "/tmp/s";
-    expect(admission.brokerEndpointV1("linux").startsWith("/tmp/s/semio-broker-")).toBe(true);
-    expect(admission.brokerEndpointV1("win32").startsWith("\\\\.\\pipe\\semio-broker-")).toBe(true);
-  } finally {
-    if (previous === undefined) delete process.env.TMPDIR; else process.env.TMPDIR = previous;
-  }
+  expect(Buffer.byteLength(admission.brokerEndpointV1("linux", "/" + "t".repeat(120)))).toBeLessThan(104);
+  expect(admission.brokerEndpointV1("linux", "/tmp/s").startsWith("/tmp/s/semio-broker-")).toBe(true);
+  expect(admission.brokerEndpointV1("win32").startsWith("\\\\.\\pipe\\semio-broker-")).toBe(true);
 });
 
  test("scheduler input selection declares the complete locked host profile resolve before offline planning",()=>{

@@ -1,10 +1,10 @@
 //! 🖼️ Unit tests of the UI image loading of scene-canvas2d: inline SVG and data url admission, fetched bytes, object-contain fit and the inline image paint step.
 
-use crate::ui_image_loading::{apply_ui_image_bytes, current_ui_image_key, object_contain_rect, render_ui_image_step, resolve_ui_image, INLINE_SVG_PARSE_CALLS, UI_IMAGE_SIZES};
+use crate::ui_image_loading::{apply_ui_image_bytes, current_ui_image_key, decoded_ui_image_key, object_contain_rect, render_ui_image_step, resolve_ui_image, INLINE_SVG_PARSE_CALLS, UI_IMAGE_SIZES};
 use infinite_world::world::{WorldAssetMetadataId, WorldAssetRequestKind};
 use semio_renderer_wgpu_asset_authority::{retire_cancelled_renderer_asset_step, return_renderer_asset, take_next_renderer_asset};
 use semio_renderer_wgpu_contracts::framework_widget_context;
-use semio_renderer_wgpu_scene_state::{PendingRasterUploadCursor, PendingRasterUploadStep};
+use semio_renderer_wgpu_scene_state::{PendingRasterUploadCursor, PendingRasterUploadStep, RASTER_FIXTURE_GRANT, pending_raster_fixture_caller};
 use semio_ui_layout::layout::ActionDescriptor;
 use semio_ui_theme::geometry::Rect;
 
@@ -55,12 +55,16 @@ fn inline_svg_saturation_rejects_before_parse_or_source_copy() {
     INLINE_SVG_PARSE_CALLS.with(|calls| assert_eq!(calls.get(), 0, "source parse/copy must follow fixed reservation"));
     for reservation in reservations {
         let mut rejected = reservation.reject("test slot release", Vec::new());
-        while !rejected.close_step() {}
+        while !rejected.terminal_is_empty() { rejected.close_step(RASTER_FIXTURE_GRANT).unwrap(); }
     }
+    let mut caller = pending_raster_fixture_caller();
     let mut cursor = PendingRasterUploadCursor::default();
     for _ in 0..65_536 {
-        match cursor.step() {
-            PendingRasterUploadStep::Complete => return,
+        match caller.refreshed_turn(RASTER_FIXTURE_GRANT, |cx| cursor.step(cx)).unwrap() {
+            PendingRasterUploadStep::Complete => {
+                caller.retire(RASTER_FIXTURE_GRANT);
+                return;
+            }
             PendingRasterUploadStep::Fault(fault) => panic!("back-pressure retires without faulting the frame: {fault}"),
             _ => {}
         }
@@ -134,7 +138,7 @@ fn object_contain_rect_letterboxes_and_centers_narrower_content() {
 fn render_ui_image_step_paints_an_inline_data_url_instead_of_faulting() {
     use base64::Engine;
     let src = format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(tiny_png_bytes(3, 2, 1)));
-    let image = semio_ui_declaration::ui::UiImageNode { id: "inline-data-image".into(), src, alt: None, presence: semio_ui_layout::layout::UiPresence::default(), menu: None };
+    let image = semio_ui_declaration::ui::UiImageNode { source_page: None, id: "inline-data-image".into(), src, alt: None, presence: semio_ui_layout::layout::UiPresence::default(), menu: None };
     let bounds = Rect::new(0.0, 0.0, 80.0, 40.0);
     let mut draw = semio_ui_draw_contract::DrawList::default();
     let mut atlas = semio_ui_text::FontAtlas::builtin();
@@ -169,5 +173,8 @@ fn avatar_image_replacement_cannot_publish_the_previous_sources_pixels() {
     assert_eq!(current_ui_image_key(id, &first), Some(current.clone()));
     assert_eq!(current_ui_image_key(id, "data:image/svg+xml,invalid"), None);
     assert_eq!(current_ui_image_key(id, ""), None);
+    assert_eq!(decoded_ui_image_key(id, ""), None);
+    assert_eq!(decoded_ui_image_key(id, "data:image/svg+xml,invalid"), None);
+    assert_eq!(decoded_ui_image_key(id, &first), Some(current.clone()));
     assert_eq!(current_ui_image_key(id, &first), Some(current));
 }

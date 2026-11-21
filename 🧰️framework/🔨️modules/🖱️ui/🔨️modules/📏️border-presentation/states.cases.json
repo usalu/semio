@@ -1,5 +1,29 @@
 [
   {
+    "name": "hover emphasises enclosing silhouettes and the innermost control",
+    "boxes": [
+      { "id": "band", "parent": null, "interactive": false, "hoverWithin": true, "disabled": false, "marks": [] },
+      { "id": "card", "parent": "band", "interactive": false, "hoverWithin": true, "disabled": false, "marks": [] },
+      { "id": "group", "parent": "card", "interactive": true, "disabled": false, "marks": [] },
+      { "id": "control", "parent": "group", "interactive": true, "disabled": false, "marks": [] },
+      { "id": "sibling", "parent": "band", "interactive": false, "hoverWithin": true, "disabled": false, "marks": [] }
+    ],
+    "pointer": "control",
+    "focusVisible": null,
+    "expected": { "band": "hover", "card": "hover", "group": "normal", "control": "hover", "sibling": "normal" }
+  },
+  {
+    "name": "keyboard focus stays local and a disabled silhouette stays normal",
+    "boxes": [
+      { "id": "card", "parent": null, "interactive": false, "hoverWithin": true, "disabled": true, "marks": [] },
+      { "id": "control", "parent": "card", "interactive": true, "disabled": false, "marks": [] },
+      { "id": "sibling", "parent": null, "interactive": false, "hoverWithin": true, "disabled": false, "marks": [] }
+    ],
+    "pointer": "card",
+    "focusVisible": "control",
+    "expected": { "card": "normal", "control": "focus", "sibling": "normal" }
+  },
+  {
     "name": "hover belongs to the innermost interactive box only",
     "boxes": [
       {

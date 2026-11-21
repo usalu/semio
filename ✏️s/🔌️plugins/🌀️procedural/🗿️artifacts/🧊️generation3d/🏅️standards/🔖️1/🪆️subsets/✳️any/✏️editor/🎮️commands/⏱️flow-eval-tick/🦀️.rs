@@ -68,26 +68,33 @@ pub fn evaluate(
     effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
 ) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
     let generate = window_kind_id == semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
-    let mut patched = None;
-    if generate {
-        let mut state = doc.snapshot.generation.as_state().clone();
-        state.selected_generation_id.clone_from(&cfg.snapshot.selected_generation_id);
-        if semio_framework_artifact_playbook_playbook::selected_generation(&state).is_none() {
+    let state = doc.snapshot.generation.as_state();
+    let selected = if generate {
+        let generation = semio_s_artifact_procedural_3d_model::generation_by_id(state, cfg.snapshot.selected_generation_id.as_deref());
+        if generation.is_none() {
             session.begin_window_tick(window_id, effect.grant()).map_err(|error| Fault::from(error.to_string()))?;
             session.note_window_tick_outcome(window_id, false, effect.grant()).map_err(|error| Fault::from(error.to_string()))?;
-            return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, preview_eval::preview_eval_publication_for(session, &doc.snapshot.host_snapshot, retained_eval)));
+            return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, FlowEvalPublication::Changed(None)));
         }
-        patched = Some(semio_s_artifact_procedural_3d_model::generation_host_snapshot_for(&doc.snapshot.host_snapshot, &state, state.selected_generation_id.as_deref()));
-    }
+        generation
+    } else {
+        None
+    };
+    let patched = selected.map(|generation| semio_s_artifact_procedural_3d_model::generation_host_snapshot_for(&doc.snapshot.host_snapshot, state, Some(&generation.id)));
     let host_snapshot = patched.as_ref().unwrap_or(&doc.snapshot.host_snapshot);
-    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us, effect).map_err(|error| Fault::from(error.to_string()))?;
-    let publication = preview_eval::preview_eval_publication_for(session, host_snapshot, retained_eval);
+    let source = if generate { preview_eval::PreviewEvaluationSource::Current } else { preview_eval::PreviewEvaluationSource::WithFallback };
+    let outcome = preview_eval::evaluate_tick_with_seeds(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, source, turn_started_us, effect, |seeds| {
+        if let Some(generation) = selected {
+            semio_os_flow::forms_bridge::add_generation_variable_seeds(host_snapshot, |id| generation.values.get(id), seeds);
+        }
+    });
     if let Some(displaced) = patched {
         displaced.retire_cold();
     }
+    let outcome = outcome.map_err(|error| Fault::from(error.to_string()))?;
     Ok((
         Emit { extension_invocations: outcome.extension_invocations, ui_scope: chain_ui_scope(window_kind_id, outcome.census_moved), ..Default::default() },
-        publication,
+        outcome.publication,
     ))
 }
 

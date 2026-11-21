@@ -191,6 +191,8 @@ fn push_polygon(vertices: &[[f64; 3]], color: [f64; 3], positions: &mut Vec<f64>
         return;
     }
     let normal = normalized(crate::geometry::polygon_normal(vertices)).unwrap_or([0.0, 0.0, 1.0]);
+    let [red, green, blue] = color;
+    let color = [red, green, blue, 1.0];
     for corner in 1..vertices.len() - 1 {
         let triangle = [vertices[0], vertices[corner], vertices[corner + 1]];
         let base = (positions.len() / 3) as u32;

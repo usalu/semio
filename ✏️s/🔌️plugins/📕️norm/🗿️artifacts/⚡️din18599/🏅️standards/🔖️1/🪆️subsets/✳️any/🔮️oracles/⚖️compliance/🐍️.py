@@ -59,17 +59,15 @@ def orient_factor(az: float, tilt: float) -> float:
     return horiz * tilt_f
 
 
-def reference_u(kind: str) -> float:
-    return {"Wall": 0.28, "Roof": 0.20, "Floor": 0.35, "Window": 1.3, "Door": 1.8}.get(kind, 0.28)
+def reference_u(element: dict) -> float:
+    kind = element["kind"]
+    if kind in ("Wall", "Floor"):
+        return 0.28 if element["adjacency"] == "Outdoor" else 0.35
+    return {"Roof": 0.20, "Window": 1.3, "Door": 1.8}[kind]
 
 
-def ht_limit(attachment: str, a_n: float) -> float:
-    small = a_n <= 350.0
-    if attachment == "Detached":
-        return 0.40 if small else 0.50
-    if attachment in ("SemiDetached", "EndTerrace"):
-        return 0.45 if small else 0.50
-    return 0.50
+def envelope_area(elements: list) -> float:
+    return sum(e["areaM2"] for e in elements if e["adjacency"] != "Heated")
 
 
 def cooling_installed(cool: dict) -> bool:
@@ -97,7 +95,7 @@ def cooling_carrier(cool: dict) -> str:
 def zone_balances(doc: dict, elems: list, delta: float, climate: dict) -> list:
     theta = climate["thetaEC"]
     gh = climate["gHWM2"]
-    a_env = sum(e["areaM2"] for e in elems) or 1e-9
+    a_env = envelope_area(elems) or 1e-9
     v_net = sum(z["volumeM3"] for z in doc["zones"]) or 1e-9
     v_e = doc["heatedVolumeM3"]
     eta_hrv = max(0.0, min(1.0, doc["ventilation"]["heatRecoveryEta"]))
@@ -113,7 +111,11 @@ def zone_balances(doc: dict, elems: list, delta: float, climate: dict) -> list:
         h_v = RHO_CA * (v_mech * (1.0 - eta_hrv) + v_inf)
         theta_i = zone["thetaIHeatC"]
         theta_c = zone["thetaICoolC"]
-        qi_w = zone["internalGainsWM2"]
+        daily_gains = (
+            {"ResidentialUpToTwoDwellings": 45, "ResidentialMultifamily": 90}.get(doc["useClass"])
+            if (doc["buildingCategory"], doc["method"], profile) == ("Residential", "DetailedMonthly", "WFH")
+            else None
+        )
         q_h = 0.0
         q_c = 0.0
         capacity = zone["areaM2"] * (zone["cWirkWhM2k"] if zone["thermalMassClass"] == "Custom" else C_WIRK[zone["thermalMassClass"]])
@@ -123,7 +125,8 @@ def zone_balances(doc: dict, elems: list, delta: float, climate: dict) -> list:
             hours = DAY_HOURS[m]
             qt = h_t * max(theta_i - te, 0.0) * hours / 1000.0
             qv = h_v * max(theta_i - te, 0.0) * hours / 1000.0
-            qi = qi_w * zone["areaM2"] * hours / 1000.0
+            gain_wh_m2 = zone["internalGainsWM2"] * hours if daily_gains is None else daily_gains * (hours / 24)
+            qi = gain_wh_m2 * zone["areaM2"] / 1000.0
             qs = 0.0
             for e in z_elems:
                 if e["gValue"] > 0:
@@ -182,7 +185,7 @@ def balance(doc: dict, climate: dict, *, elements=None, delta_u=None, heat_eff=N
         + (q_f_light + q_f_aux) * fp("electricity")
         - q_pv * fp("electricity")
     )
-    a_env = sum(e["areaM2"] for e in elems) or 1e-9
+    a_env = envelope_area(elems) or 1e-9
     return {
         "hT": h_t,
         "hV": h_v,
@@ -203,7 +206,7 @@ def compare_to_report(doc: dict, climate: dict, report: dict) -> dict:
     ref_elems = []
     for e in doc["elements"]:
         r = dict(e)
-        r["uValueWM2k"] = reference_u(e["kind"])
+        r["uValueWM2k"] = reference_u(e)
         if e["kind"] == "Window":
             r["gValue"] = 0.60
             r["fc"] = 1.0
@@ -217,6 +220,8 @@ def compare_to_report(doc: dict, climate: dict, report: dict) -> dict:
     if ht_c and "computed" in ht_c:
         if not within(actual["hTPrime"], ht_c["computed"]["value"]):
             mismatches.append(("hTPrime", actual["hTPrime"], ht_c["computed"]["value"]))
+        if not within(reference["hTPrime"], ht_c["limit"]["value"]):
+            mismatches.append(("hTPrimeLimit", reference["hTPrime"], ht_c["limit"]["value"]))
     qp_c = checks.get("din18599.geg.qp")
     if qp_c and "computed" in qp_c:
         if not within(actual["qP"], qp_c["computed"]["value"]):
@@ -229,7 +234,7 @@ def compare_to_report(doc: dict, climate: dict, report: dict) -> dict:
 def main(argv: list[str]) -> int:
     if len(argv) == 1:
         assert abs(0.34 * 120.0 - 40.8) < 1e-9
-        assert ht_limit("Detached", 140.0) == 0.40
+        assert reference_u({"kind": "Wall", "adjacency": "Ground"}) == 0.35
         print("oracle_self_checks_ok")
         return 0
     doc = json.loads(Path(argv[1]).read_text())

@@ -274,6 +274,10 @@ framework_reserved_job!(FrameworkSetInteractionGranularityJob, FrameworkSetInter
 
 framework_reserved_job!(FrameworkSetSelectionModeJob, FrameworkSetSelectionModeJobFactory, "setSelectionMode", 19, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
 
+framework_reserved_job!(FrameworkSetActiveToolJob, FrameworkSetActiveToolJobFactory, "setActiveTool", 20, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
+
+framework_reserved_job!(FrameworkSetActiveUtilityJob, FrameworkSetActiveUtilityJobFactory, "setActiveUtility", 21, 16_384, 64, 1_024, 16_384, lanes: [HostOnly]);
+
 fn framework_reserved_route_job(action: &str, raw: Vec<u8>, work_items: usize) -> Result<ArtifactReservedToolJob, Fault> {
     Ok(match action {
         "undo" => ArtifactReservedToolJob::new(FrameworkUndoJob::new(raw, work_items)),
@@ -577,6 +581,8 @@ pub fn register_framework_reserved_factories<A: ArtifactApp>(registry: &mut Arti
     registry.register(FrameworkSelectAllJobFactory::<A>::new(&controller_id))?;
     registry.register(FrameworkSetInteractionGranularityJobFactory::<A>::new(&controller_id))?;
     registry.register(FrameworkSetSelectionModeJobFactory::<A>::new(&controller_id))?;
+    registry.register(FrameworkSetActiveToolJobFactory::<A>::new(&controller_id))?;
+    registry.register(FrameworkSetActiveUtilityJobFactory::<A>::new(&controller_id))?;
     registry.register(FrameworkConfigurationBinaryJobFactory::<A>::new(&controller_id))?;
     Ok(())
 }
@@ -852,7 +858,7 @@ pub struct PendingFrameworkReserved {
 pub struct FrameworkReservedCommit<P,M:store::Mutation<P>+Sync> {
     pub action: String,
     pub args: Option<DslValue>,
-    pub meta: ActionMeta,
+    pub meta: ReservedCommitMetadata,
     pub permit: FrameworkReservedCommitPermit,
     pub log_generation_before: u64,
     pub stage: FrameworkReservedCommitStage<P,M>,
@@ -860,6 +866,49 @@ pub struct FrameworkReservedCommit<P,M:store::Mutation<P>+Sync> {
     pub total: u64,
     /// 🏁️ `Some` once the route finished or was refused: the outcome owed to the host (if any) waits here until the permit's lease is retired.
     pub sealed: Option<Option<Result<InvocationResult, Fault>>>,
+}
+
+/// 📥️ The reserved commit retains its full action view until bounded retirement finishes.
+pub struct ReservedCommitMetadata {
+    meta: ManuallyDrop<Option<ActionMeta>>,
+    retirement: semio_framework_value::retained_clone::RetainedCloneClose,
+}
+
+impl ReservedCommitMetadata {
+    pub fn new(meta: ActionMeta) -> Self {
+        Self { meta: ManuallyDrop::new(Some(meta)), retirement: Default::default() }
+    }
+
+    pub fn get(&self) -> &ActionMeta {
+        self.meta.as_ref().expect("open reserved commit retains its action metadata")
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.meta.is_none() && self.retirement.is_empty()
+    }
+
+    pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        self.retirement.next_owner_demands::<ActionMeta>(self.meta.is_some(), &None, body)
+    }
+
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        cx.with_original_retirement(|cx| {
+            let body = cx.retained_grant().maximum_copy_bytes;
+            let demand = self.close_demands(body)?;
+            if self.meta.is_some() {
+                crate::original_steps::begun(cx, demand, |effect| self.retirement.begin_granted(&mut self.meta, effect))?;
+            } else if !self.retirement.is_empty() {
+                crate::original_steps::retired_poll(cx, demand, |effect| self.retirement.step_granted(body, effect))?;
+            }
+            Ok(())
+        })
+    }
+}
+
+impl Drop for ReservedCommitMetadata {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "reserved commit requires paid metadata retirement");
+    }
 }
 
 /// 🪜️ The next unit a [`FrameworkReservedCommit`] runs.
@@ -1007,9 +1056,10 @@ pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
         let registered = registrations.get(row.tool_id);
         let generic = row.factory == BOUNDED_FIRST_STEP_FACTORY && row.factory_type_id.is_none() && row.factory_type_name.is_none() && registered.is_none();
         let exact_registered = registered.is_some_and(|registration| {
+            let factory_path = registration.factory_type_name.split_once('<').map_or(registration.factory_type_name, |(path, _)| path);
             row.factory_type_id == Some(registration.factory_type_id)
                 && row.factory_type_name == Some(registration.factory_type_name)
-                && row.factory == registration.factory_type_name.rsplit("::").next().unwrap_or_default()
+                && row.factory == factory_path.rsplit("::").next().unwrap_or_default()
                 && registration.owner == owner
                 && registration.key.controller_id == runtime_controller_id
                 && registration.key.tool_id == row.tool_id
@@ -1073,3 +1123,7 @@ semio_framework_value::artifact_retire_leaf!(QualifiedBoundedFirstStepProof);
 
 #[path="📌️checkpoint/🦀️.rs"]
 pub mod original_checkpoint;
+
+#[cfg(test)]
+#[path = "metadata-tests.rs"]
+mod metadata_tests;

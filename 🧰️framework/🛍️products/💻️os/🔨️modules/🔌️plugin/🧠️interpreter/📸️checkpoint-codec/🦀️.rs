@@ -88,7 +88,7 @@ impl CoreInstance {
             globals.push(GlobalState { value, mutable: declaration.mutable });
         }
         validate_machine(&module, machine.as_ref())?;
-        Ok(Self { module, memories, tables, globals, data, elements, machine, next_host_call })
+        Ok(Self { module, memories, tables, globals, data, elements, machine, next_host_call, preparation_storage: None })
     }
 }
 
@@ -160,31 +160,15 @@ impl CheckpointWriter<'_> {
     }
 
     pub(super) fn value(&mut self, value: Value) {
+        let mut buffer = [0; 10];
+        let bytes = encode_checkpoint_value(value, &mut buffer);
+        self.bytes(&bytes[..1]);
         match value {
-            Value::I32(value) => {
-                self.byte(0);
-                self.u32(value as u32);
+            Value::FuncRef(_) | Value::ExternRef(_) => {
+                self.bytes(&bytes[1..2]);
+                if bytes.len() > 2 { self.bytes(&bytes[2..]); }
             }
-            Value::I64(value) => {
-                self.byte(1);
-                self.u64(value as u64);
-            }
-            Value::F32(value) => {
-                self.byte(2);
-                self.u32(value);
-            }
-            Value::F64(value) => {
-                self.byte(3);
-                self.u64(value);
-            }
-            Value::FuncRef(value) => {
-                self.byte(4);
-                self.option(value, Self::u32);
-            }
-            Value::ExternRef(value) => {
-                self.byte(5);
-                self.option(value, Self::u64);
-            }
+            _ => self.bytes(&bytes[1..]),
         }
     }
 
@@ -241,7 +225,38 @@ impl CheckpointWriter<'_> {
     }
 }
 
-struct CheckpointReader<'a>(Decoder<'a>);
+/// 🧮️ Encodes the canonical scalar bits for both checkpoint and quiescent image wire records.
+pub(super) fn encode_checkpoint_value(value: Value, bytes: &mut [u8; 10]) -> &[u8] {
+    let (tag, payload, length) = match value {
+        Value::I32(value) => (0, u64::from(value as u32), 4),
+        Value::I64(value) => (1, value as u64, 8),
+        Value::F32(value) => (2, u64::from(value), 4),
+        Value::F64(value) => (3, value, 8),
+        Value::FuncRef(value) => {
+            bytes[0] = 4;
+            bytes[1] = u8::from(value.is_some());
+            if let Some(value) = value {
+                bytes[2..6].copy_from_slice(&value.to_le_bytes());
+                return &bytes[..6];
+            }
+            return &bytes[..2];
+        }
+        Value::ExternRef(value) => {
+            bytes[0] = 5;
+            bytes[1] = u8::from(value.is_some());
+            if let Some(value) = value {
+                bytes[2..10].copy_from_slice(&value.to_le_bytes());
+                return bytes;
+            }
+            return &bytes[..2];
+        }
+    };
+    bytes[0] = tag;
+    bytes[1..1 + length].copy_from_slice(&payload.to_le_bytes()[..length]);
+    &bytes[..1 + length]
+}
+
+pub(super) struct CheckpointReader<'a>(Decoder<'a>);
 
 impl<'a> CheckpointReader<'a> {
     pub(super) fn new(bytes: &'a [u8]) -> Self {
@@ -250,6 +265,10 @@ impl<'a> CheckpointReader<'a> {
 
     pub(super) fn done(&self) -> bool {
         self.0.done()
+    }
+
+    pub(super) fn remaining(&self) -> usize {
+        self.0.remaining()
     }
 
     pub(super) fn byte(&mut self) -> Result<u8, CoreError> {

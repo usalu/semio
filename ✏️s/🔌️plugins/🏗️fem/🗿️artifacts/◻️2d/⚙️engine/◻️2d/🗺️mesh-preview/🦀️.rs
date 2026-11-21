@@ -3,7 +3,7 @@
 
 use crate::fem2d_engine::meshing::build_nodes_and_elements;
 use crate::fem2d_engine::Fem2dError;
-use semio_s_fem_model::Support;
+use semio_s_fem_model::{StaticResult, Support};
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use std::collections::HashMap;
 
@@ -46,16 +46,11 @@ pub fn fem2d_mesh_preview(doc: &Fem2dSnapshot) -> Result<Vec<RegionMesh>, Fem2dE
     Ok(out)
 }
 
-/// 🎨️ Nodal-averaged von Mises stress for `case_id`'s solved result (via `fem2d_solve_all`, so `case_id`
-/// may name either a `FemLoadCase` or a `FemCombination`), keyed by node id — the document-layer bridge
-/// to `semio_s_fem_analyses::nodal_averaged_scalar`, feeding the results window's banded contour
-/// rendering.
-pub fn fem2d_nodal_von_mises(doc: &Fem2dSnapshot, case_id: &str) -> Result<HashMap<String, f64>, Fem2dError> {
+/// 🎨️ Nodal-averaged von Mises stress for an already solved result of this document, keyed by node id.
+pub fn fem2d_nodal_von_mises(doc: &Fem2dSnapshot, result: &StaticResult) -> Result<HashMap<String, f64>, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();
     let model = semio_s_fem_analyses_model::AnalysisModel { nodes, elements, supports };
-    let results = crate::fem2d_engine::fem2d_solve_all(doc)?;
-    let result = results.get(case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
     Ok(semio_s_fem_analyses::nodal_averaged_scalar(&model, result, semio_s_fem_analyses::StressScalar::VonMises))
 }
 

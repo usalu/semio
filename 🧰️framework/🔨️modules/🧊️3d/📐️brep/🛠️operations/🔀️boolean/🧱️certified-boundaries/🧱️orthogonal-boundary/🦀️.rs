@@ -9,6 +9,10 @@ use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_vector::matrix::Frame3;
 use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
+#[path = "🧊️material-cells/🦀️.rs"]
+mod material_cells;
+pub use material_cells::OrthogonalCells;
+
 const CELL_COUNT: usize = 27;
 const VERTEX_COUNT: usize = 64;
 const EDGE_COUNT: usize = 144;
@@ -20,7 +24,9 @@ pub const MAX_ORTHOGONAL_ENTITIES: usize = VERTEX_COUNT + 2 * EDGE_COUNT + 11 * 
 struct Quad { vertices: [u8; 4], edges: [u8; 4], axis: u8, positive: bool }
 
 pub struct OrthogonalBoundary {
-    axes: [[f64; 4]; 3],
+    axes: Axes,
+    frame:Option<Frame3>,
+    occupied: u32,
     vertices: [u8; VERTEX_COUNT],
     edges: [[u8; 2]; EDGE_COUNT],
     faces: [Quad; FACE_COUNT],
@@ -34,6 +40,12 @@ pub struct OrthogonalBoundary {
 fn address([x,y,z]: [usize;3], length: usize) -> usize { x + length * (y + length * z) }
 fn decode(index: usize, length: usize) -> [usize;3] { [index % length, (index / length) % length, index / (length * length)] }
 
+fn adjacent_cell(mut cell: [usize; 3], axis: usize, positive: bool) -> Option<usize> {
+    let index = cell[axis];
+    cell[axis] = if positive { (index < 2).then_some(index + 1)? } else { index.checked_sub(1)? };
+    Some(address(cell, 3))
+}
+
 fn connected_cells(occupied: &[bool; CELL_COUNT]) -> bool {
     let Some(first) = occupied.iter().position(|active| *active) else { return false; };
     let mut pending = [0; CELL_COUNT];
@@ -44,10 +56,8 @@ fn connected_cells(occupied: &[bool; CELL_COUNT]) -> bool {
     while index < total {
         let cell = decode(pending[index],3);
         for axis in 0..3 {
-            for next in [cell[axis].checked_sub(1), (cell[axis] < 2).then_some(cell[axis]+1)].into_iter().flatten() {
-                let mut neighbor = cell;
-                neighbor[axis] = next;
-                let id = address(neighbor,3);
+            for positive in [false, true] {
+                let Some(id) = adjacent_cell(cell, axis, positive) else { continue; };
                 if occupied[id] && !seen[id] {
                     seen[id] = true;
                     pending[total] = id;
@@ -76,6 +86,23 @@ fn axis_count(axis: &[f64; 4]) -> usize {
 }
 
 impl OrthogonalBoundary {
+    /// 🎚️ Validates a finite cell selection over at most four exact coordinate planes per axis.
+    pub fn from_closed_cells(axes: [[f64;4];3], cells: u32) -> Result<Self, ValueError> {
+        let counts = axes.each_ref().map(axis_count);
+        for (axis,count) in axes.iter().zip(counts) {
+            if count < 2 || axis[..count].windows(2).any(|pair| pair[0] >= pair[1]) || axis[count..].iter().any(|v| !v.is_nan()) {
+                return Err(unsupported());
+            }
+        }
+        let selected = |slot: usize| cells & (1 << slot) != 0;
+        if cells >> CELL_COUNT != 0 || (0..CELL_COUNT).any(|slot| {
+            selected(slot) && decode(slot,3).into_iter().enumerate().any(|(axis,index)| index+1 >= counts[axis])
+        }) { return Err(unsupported()); }
+        let boundary = Self::from_cells(axes, |_, cell| selected(address(cell,3)))?;
+        if boundary.shell_sizes().len() != 1 { return Err(unsupported()); }
+        Ok(boundary)
+    }
+
     pub fn new(a: Bounds, b: Bounds, operation: BooleanOp) -> Result<Self, ValueError> {
         if !ordered(a) || !ordered(b) { return Err(unsupported()); }
         let axes = std::array::from_fn(|axis| {
@@ -131,8 +158,9 @@ impl OrthogonalBoundary {
         });
         if !occupied.contains(&true) { return Err(empty_result()); }
         if !connected_cells(&occupied) { return Err(unsupported()); }
+        let material = occupied.iter().enumerate().fold(0, |bits, (cell, &active)| bits | (u32::from(active) << cell));
         let mut result = Self {
-            axes, vertices:[0;VERTEX_COUNT], edges:[[0;2];EDGE_COUNT], faces:[Quad::default();FACE_COUNT],
+            occupied: material, axes, frame:None, vertices:[0;VERTEX_COUNT], edges:[[0;2];EDGE_COUNT], faces:[Quad::default();FACE_COUNT],
             vertices_used:0, edges_used:0, faces_used:0, shells:[0;SHELL_COUNT], shells_used:0,
         };
         let mut vertex_ids = [u8::MAX; VERTEX_COUNT];
@@ -147,12 +175,7 @@ impl OrthogonalBoundary {
             }) { return Err(unsupported()); }
             for axis in 0..3 {
                 for positive in [false, true] {
-                    let next = if positive { (cell[axis]+1 < lengths[axis]).then_some(cell[axis]+1) } else { cell[axis].checked_sub(1) };
-                    if next.is_some_and(|value| {
-                        let mut adjacent = cell;
-                        adjacent[axis] = value;
-                        occupied[address(adjacent,3)]
-                    }) { continue; }
+                    if adjacent_cell(cell, axis, positive).is_some_and(|neighbor| occupied[neighbor]) { continue; }
                     let (u,v) = ((axis+1)%3,(axis+2)%3);
                     let mut corners = [[0_u8;3];4];
                     let mut quad = Quad { axis:axis as u8, positive, ..Quad::default() };
@@ -250,13 +273,28 @@ impl OrthogonalBoundary {
         Ok(())
     }
 
+    /// 💎️ Captures exact source material for subsequent original Boolean operations.
+    pub fn material(&self) -> OrthogonalCells { OrthogonalCells::new(self.axes, self.occupied) }
+
+    /// 🧭️ Moves one exact local cell boundary into a finite orthonormal authored frame.
+    pub fn placed(mut self,frame:Frame3)->Option<Self>{
+        let points=(0..self.vertex_count()).map(|i|self.vertex(i));
+        let edges=self.edges[..self.edges_used].iter().map(|edge|edge.map(|i|self.vertex(usize::from(i))));
+        if self.frame.is_some()||!frame.preserves_orthogonal_geometry(points,edges,Tol::DEFAULT.value()){return None;}
+        self.frame=Some(frame);
+        Some(self)
+    }
+
+    pub fn placement(&self)->Option<Frame3>{self.frame}
+
     pub fn shell_sizes(&self) -> &[usize] { &self.shells[..self.shells_used] }
     pub fn vertex_count(&self) -> usize { self.vertices_used }
     pub fn edge_count(&self) -> usize { self.edges_used }
     pub fn ring_sizes(&self) -> &[usize] { &[4; FACE_COUNT][..self.faces_used] }
-    pub fn vertex(&self, i: usize) -> Pnt3 {
-        let [x,y,z] = decode(usize::from(self.vertices[i]),4);
-        Pnt3::new(self.axes[0][x],self.axes[1][y],self.axes[2][z])
+    pub fn vertex(&self,i:usize)->Pnt3{
+        let [x,y,z]=decode(usize::from(self.vertices[i]),4);
+        let local=Pnt3::new(self.axes[0][x],self.axes[1][y],self.axes[2][z]);
+        self.frame.map_or(local,|frame|frame.to_world(local))
     }
     pub fn edge(&self, i: usize) -> PrimitiveEdge {
         let vertices = self.edges[i].map(usize::from);
@@ -265,18 +303,18 @@ impl OrthogonalBoundary {
     }
     pub fn surface(&self, i: usize) -> Surface {
         let face = self.faces[i];
-        let axis = [Vec3::X,Vec3::Y,Vec3::Z][usize::from(face.axis)];
-        let normal = if face.positive { axis } else { -axis };
+        let axes=self.frame.map_or([Vec3::X,Vec3::Y,Vec3::Z],|frame|[frame.x,frame.y,frame.z]);
+        let normal=axes[usize::from(face.axis)]*if face.positive{1.}else{-1.};
         Surface::Plane { frame: Frame3::from_normal(self.vertex(usize::from(face.vertices[0])),normal).expect("grid normal") }
     }
     pub fn trim(&self, i: usize, member: usize) -> PrimitiveTrim {
-        let face = self.faces[i];
-        let edge = usize::from(face.edges[member]);
+        let face=self.faces[i];
+        let reversed=self.frame.is_some_and(|frame|frame.x.cross(frame.y).dot(frame.z)<0.);
+        let member=if reversed{3-member}else{member};
+        let edge=usize::from(face.edges[member]);
         let spec = self.edge(edge);
         let Surface::Plane { frame } = self.surface(i) else { unreachable!("planar orthogonal face") };
-        PrimitiveTrim {
-            edge, forward: spec.vertices[0] == usize::from(face.vertices[member]),
-            curve: planar_pcurve(&spec.curve, frame), range: spec.range,
-        }
+        let forward=(spec.vertices[0]==usize::from(face.vertices[member]))!=reversed;
+        PrimitiveTrim { edge, forward, curve:planar_pcurve(&spec.curve,frame), range:spec.range }
     }
 }

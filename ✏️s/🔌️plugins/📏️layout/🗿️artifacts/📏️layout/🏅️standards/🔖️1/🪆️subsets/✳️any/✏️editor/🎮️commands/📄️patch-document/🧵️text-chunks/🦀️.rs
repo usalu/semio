@@ -57,7 +57,7 @@ pub fn splice(content: &str, field: &str, value: &str, stamp: &str) -> Result<Op
     let span=guarded_range(field,"chunk",stamp,content.len())?;
     let old=content.get(span.clone()).ok_or_else(||semio_plugin::Fault::new(semio_framework_diagnostic::FaultOrigin::App,"layout.chunk.invalid","The editing span must follow UTF-8 boundaries."))?;
     let prefix=content[..span.start].chars().count();
-    Ok(crate::patch_frame::story_splice(old,value).map(|(offset,delete,insert)|(prefix+offset,delete,insert)))
+    Ok(semio_s_artifact_layout_layout_model::story_splice::replacement(old,value).map(|(offset,delete,insert)|(prefix+offset,delete,insert)))
 }
 
 /// 🧱️ Hex inputs expose every byte in aligned windows with insertion headroom.

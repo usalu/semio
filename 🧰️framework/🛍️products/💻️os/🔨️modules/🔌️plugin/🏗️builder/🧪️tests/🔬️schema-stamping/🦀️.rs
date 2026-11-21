@@ -1,5 +1,5 @@
 use semio_plugin_decl_registry::ArtifactInferenceServiceMetadata;
-use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::{OriginalMediaImport, PluginApp};
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_builder::PluginBuilder;
 use pack::snapshot::ArtifactSqliteSnapshot as _;

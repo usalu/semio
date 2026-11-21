@@ -5,6 +5,7 @@ use semio_renderer_wgpu_scene_canvas2d::{CANVAS2D_SELECTION_GLOW, CANVAS2D_SELEC
 use semio_renderer_wgpu_scene_render::{cancel_canvas_pointer_gesture_for, canvas_catalogue_drop_into, canvas_pointer_button_into, canvas_pointer_move_into, canvas_state_snapshot, canvas_wheel_into};
 use semio_renderer_wgpu_scene_state::{CANVAS_CATALOGUE_HOVER, CANVAS_GESTURE, CanvasCatalogueHover, CanvasGestureSlots, SCENE_CAMERA_DISPATCH_CAPACITY, SCENE_CAMERA_DISPATCH_DEADLINES_MS, SCENE_CAMERA_DISPATCH_FAULT, SCENE_STATE, SCENE_SURFACE_RETIREMENT, SceneCameraDispatchCursor, SceneCameraDispatchStep, SceneModifiers, Viewport, camera_fixture_grant, camera_fixture_lease, clear_camera_fixture, close_retired_scene_surface_one, mount_scene_identity, mutate_scene_state, retire_scene_identity, scene_camera_action, scene_state, schedule_scene_camera_dispatch, sweep_expired_scene_camera_dispatches};
 use semio_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drop;
+use semio_renderer_wgpu_scene_state::{RASTER_FIXTURE_GRANT, pending_raster_fixture_caller};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 use semio_ui_declaration::layout::ActionDescriptor;
@@ -15,6 +16,7 @@ use semio_ui_theme::Theme;
 #[test]
 fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_the_successor() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
+    let mut caller = pending_raster_fixture_caller();
     let mut owner = fixture_scene_pointer_target("nested-close-window", "nested-close-surface", "old-mount");
     owner.kind = SurfaceKind::Canvas2d;
     assert!(mount_scene_identity(&owner));
@@ -32,10 +34,10 @@ fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_t
     let mut successor = owner.clone();
     successor.component_generation += 1;
     assert!(!mount_scene_identity(&successor));
-    assert!(close_retired_scene_surface_one());
+    assert!(caller.refreshed_turn(RASTER_FIXTURE_GRANT, close_retired_scene_surface_one).unwrap());
     assert_eq!(SCENE_STATE.with(|cell| cell.borrow().external_reservations), 1);
     for _ in 0..262_144 {
-        if !close_retired_scene_surface_one() {
+        if !caller.refreshed_turn(RASTER_FIXTURE_GRANT, close_retired_scene_surface_one).unwrap() {
             break;
         }
     }
@@ -46,16 +48,18 @@ fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_t
     assert_eq!(SCENE_STATE.with(|cell| cell.borrow().get(&successor.surface_id).and_then(|state| state.mount_owner.clone())), Some(successor.clone()));
     assert!(retire_scene_identity(&successor));
     for _ in 0..262_144 {
-        if !close_retired_scene_surface_one() {
+        if !caller.refreshed_turn(RASTER_FIXTURE_GRANT, close_retired_scene_surface_one).unwrap() {
             break;
         }
     }
     assert!(!SCENE_STATE.with(|cell| cell.borrow().contains_key(&owner.surface_id)));
+    caller.retire(RASTER_FIXTURE_GRANT);
 }
 
 #[test]
 fn a_second_component_retirement_yields_before_detaching_its_live_owner() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
+    let mut caller = pending_raster_fixture_caller();
     let mut first = fixture_scene_pointer_target("retirement-window", "retirement-document-a", "scene-a");
     first.kind = SurfaceKind::Canvas2d;
     first.host_id = "retirement-host-a".into();
@@ -68,16 +72,17 @@ fn a_second_component_retirement_yields_before_detaching_its_live_owner() {
     assert!(!retire_scene_identity(&second));
     assert_eq!(SCENE_STATE.with(|cell| cell.borrow().get(&second.host_id).and_then(|state| state.mount_owner.clone())), Some(second.clone()));
     for _ in 0..262_144 {
-        if !close_retired_scene_surface_one() {
+        if !caller.refreshed_turn(RASTER_FIXTURE_GRANT, close_retired_scene_surface_one).unwrap() {
             break;
         }
     }
     assert!(retire_scene_identity(&second));
     for _ in 0..262_144 {
-        if !close_retired_scene_surface_one() {
+        if !caller.refreshed_turn(RASTER_FIXTURE_GRANT, close_retired_scene_surface_one).unwrap() {
             break;
         }
     }
+    caller.retire(RASTER_FIXTURE_GRANT);
 }
 
 fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {

@@ -1,0 +1,5 @@
+# Cold Index Retention Audit
+
+The cold generation retains the opened fact-index view during synchronous Brotli compression and subsequent metadata stores (`generations/🟨️.mjs:376–394`). Its binary document buffer is accompanied by retained typed arrays in `fact-codec/🟨️.mjs:340–472`: 16 bytes per string, 4 per fact, 11 per row, 8 per class, and 4 each per kind and owner. The view also retains decoded owner and kind strings, bounded caches, and proxy array backing; their actual size depends on the runtime and contents.
+
+The view `stats().bytes` reports only the document buffer length, and the generation index cache uses that value as its size (`generations/🟨️.mjs:144`). Consequently its accounting excludes these other retained allocations. This establishes a source-level accounting gap, not the actual memory consumed by the current graph or the cause of the 14,336 MiB admission wait. The reported roughly 14 MiB compressed fact index does not determine expanded bytes or entry counts. No graph rebuild or artifact decompression was performed.

@@ -8,6 +8,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framewor
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { nativeCommandPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { takeNativeHostSourceEditReporterV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🔁️churn/🟦️.ts";
 import { NativeScript } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { nativeServiceCompositionLaws } from "../../🧪️tests/🔌️service-composition/🟦️.ts";
 import { runBuildScript, runOsMcpLiveAgentLoopScript, runOsMcpHubAgentParticipantScript, runOsMcpPluginCoverageScript, runOsMcpUserPathScript, runOsMcpInferenceQuartetScript, runOsMcpSecurityScript, runOsMcpAgentReplyScript, runFixtureOwnershipCompositionScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
@@ -91,4 +92,7 @@ class CanonicalPairCompositionScript extends BundleScript {
 }
 
 const router=new ScriptRouter(import.meta.dir).register("source-check",SourceScript).register("native-check",TestScript).register("native",NativeScript).register("build",BuildScript).register("live-agent-loop-check",OsMcpLiveAgentLoopScript).register("hub-agent-participant-check",OsMcpHubAgentParticipantScript).register("plugin-coverage-check",OsMcpPluginCoverageScript).register("user-path-check",OsMcpUserPathScript).register("inference-quartet-check",OsMcpInferenceQuartetScript).register("security-check",OsMcpSecurityScript).register("agent-reply-check",OsMcpAgentReplyScript).register("untrusted-content-check",UntrustedContentScript).register("mcp-composition-source-check",McpCompositionSourceScript).register("fixture-ownership-check",FixtureOwnershipCompositionScript).register("canonical-pair-composition-check",CanonicalPairCompositionScript);
-if(import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "source-check" }));
+if(import.meta.main) {
+  const observeTerminalFailure = takeNativeHostSourceEditReporterV1(process.env,router.repoRoot);
+  await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "source-check" }), observeTerminalFailure);
+}

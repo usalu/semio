@@ -200,7 +200,7 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note has no shipped component under its crate's dist/components");
+        eprintln!("skipped: the launcher has no retained note component model");
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
@@ -276,7 +276,7 @@ fn a_real_app_command_is_answered_over_the_shell_message_lane_not_the_respond_la
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note has no shipped component under its crate's dist/components");
+        eprintln!("skipped: the launcher has no retained note component model");
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
@@ -321,7 +321,7 @@ fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note has no shipped component under its crate's dist/components");
+        eprintln!("skipped: the launcher has no retained note component model");
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
@@ -429,7 +429,7 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note has no shipped component under its crate's dist/components");
+        eprintln!("skipped: the launcher has no retained note component model");
         return;
     }
     let Some(capability_id) = note_mutation_capability_id() else {
@@ -530,7 +530,7 @@ fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previou
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note.wasm is not built");
+        eprintln!("skipped: the launcher has no retained note component model");
         return;
     }
     let Some(capability_id) = note_mutation_capability_id() else {

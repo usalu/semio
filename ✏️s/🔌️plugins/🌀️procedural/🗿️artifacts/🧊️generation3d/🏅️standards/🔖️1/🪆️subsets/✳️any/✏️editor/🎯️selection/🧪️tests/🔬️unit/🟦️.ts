@@ -1,3 +1,5 @@
+import graphPorts from "../../../../🧬️schema/🔌️graph-ports/🔣️.json";
+import { parseGraphInstanceId, parseGraphPortId } from "../../../../🧬️schema/🔌️graph-ports/🟦️.ts";
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🔣️.json";
@@ -100,3 +102,13 @@ test("selected geometry inputs use exact labels for analytic operations", () => 
 
 import {generation3dWidgetInputSelfTests} from "../../../🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🟦️.ts";
 test("widget input edits use the neutral public polygon parser",()=>{expect(generation3dWidgetInputSelfTests()).toBeGreaterThan(0);});
+
+test("graph handles and instances recover the authored directional channel", () => {
+  for (const row of graphPorts.cases) {
+    const expected = { widget: row.widget, channel: row.channel, input: row.input };
+    expect(parseGraphPortId(row.target)).toEqual(expected);
+    if ("instance" in row && row.instance !== undefined) {
+      expect(parseGraphInstanceId(row.instance)).toEqual({ port: expected, index: row.index });
+    }
+  }
+});

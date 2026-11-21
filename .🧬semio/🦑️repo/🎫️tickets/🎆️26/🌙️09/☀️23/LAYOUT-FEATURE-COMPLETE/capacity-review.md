@@ -25,3 +25,9 @@ String values now use bounded chunks, but a Bytes value is still converted in fu
 The character-span splitter preserves scalar boundaries and empty text, and story_splice computes character-based offsets without a UTF-8 byte split. Dynamic choice rows use indexed windows with full totals and selected flags. Shared parent controls carry an explicit parent prefix and shared-resource routes now resolve inherited frames. No new source-level blocker was established for these routes in this pass. Fault text is English-only, but whether app Fault messages are localized by a higher layer was not established, so this is not elevated as a separate finding. Parent::handle runs before lock checking; clarify intended editing policy and cover locked parent frames/layers in command tests if these edits should follow local frame lock behavior.
 
 This review makes source-level deductions only. Native compilation and runtime verification remain necessary.
+
+## Browser build capacity on 2026-11-21
+
+The genuine Layout WASIp2 invocation held its source and target leases while host pressure was warning. It stayed at 781 emitted units with one Rust unit running and two waiting at an approximately 2.9 GiB admission ceiling. It later resumed artifact emission without cancellation or a duplicate build. The fleet reported several compatible-platform Mac workers idle. The worker listing did not establish that any had the exact WASI or browser target sysroot.
+
+The existing fleet transport accepts eligible Rust library, procedure macro and simple binary units when compiler, host platform and target sysroot match. It leaves the final component and Rust cdylib links on the owner. `SEMIO_OFFLOAD=always` requests worker execution before local fallback when a new authorized publisher starts with the existing unit-cache transport. The mode is captured at launch. The current publishers kept their admitted lanes.

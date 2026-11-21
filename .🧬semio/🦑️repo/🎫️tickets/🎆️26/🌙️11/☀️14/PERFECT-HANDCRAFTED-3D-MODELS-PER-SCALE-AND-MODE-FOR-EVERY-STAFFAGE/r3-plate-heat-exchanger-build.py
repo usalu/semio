@@ -26,6 +26,8 @@ def main():
     cand = copy.deepcopy(doc)
     load("r3-plate-heat-exchanger-roots.py").apply_roots(cand["asset"])
     vols = load("r3-plate-heat-exchanger-volumes.py").volumes()
+    vols["500"] = load("equipment-digital.py").authored_scale("plate-heat-exchanger", vols, 500)
+    load("equipment-ink.py").style_band(cand["asset"])
     cand["asset"]["volumes"] = vols
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(cand, open(OUT, "w", encoding="utf-8"), indent=2, ensure_ascii=False)

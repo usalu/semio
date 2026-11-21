@@ -1,0 +1,14 @@
+[
+  {
+    "cause": "zero-progress",
+    "callbackUs": 0,
+    "stallUs": 8011,
+    "reportedUs": 8011
+  },
+  {
+    "cause": "clock-regression",
+    "callbackUs": 18,
+    "stallUs": 9366,
+    "reportedUs": 18
+  }
+]

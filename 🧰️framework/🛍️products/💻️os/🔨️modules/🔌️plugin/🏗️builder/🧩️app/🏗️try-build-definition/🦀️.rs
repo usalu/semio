@@ -38,7 +38,7 @@ impl AppBuilder {
         if !(!self.modes.is_empty()) {
             return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} must declare at least one mode", self.id)));
         }
-        let mut window_kind_ids = HashSet::new();
+        let mut window_kind_ids = BTreeSet::new();
         for window in &self.window_kinds {
             if !(!window.id.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind id must be non-empty", self.id)));
@@ -50,7 +50,7 @@ impl AppBuilder {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate window kind id {}", self.id, window.id)));
             }
         }
-        let mut panel_tab_ids = HashSet::new();
+        let mut panel_tab_ids = BTreeSet::new();
         for tab in &self.panel_tabs {
             validate_panel_tab_spec(&self.id, tab, &mut panel_tab_ids);
         }
@@ -89,7 +89,7 @@ impl AppBuilder {
         if !(self.modes.iter().any(|mode| mode.id == default_mode_id)) {
             return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} default_mode_id {} does not reference a declared mode", self.id, default_mode_id)));
         }
-        let mut declared_action_ids = HashSet::new();
+        let mut declared_action_ids = BTreeSet::new();
         for action in &self.actions {
             if !(declared_action_ids.insert(action.id.clone())) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate action id {}", self.id, action.id)));
@@ -105,7 +105,7 @@ impl AppBuilder {
                 ));
             }
         }
-        let mut declared_utility_ids = HashSet::new();
+        let mut declared_utility_ids = BTreeSet::new();
         for utility in &self.utilities {
             if !(!utility.id.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} utility id must be non-empty", self.id)));
@@ -114,7 +114,7 @@ impl AppBuilder {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate utility id {}", self.id, utility.id)));
             }
         }
-        let mut declared_interaction_ids = HashSet::new();
+        let mut declared_interaction_ids = BTreeSet::new();
         for interaction in &self.interactions {
             if !(!interaction.id.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction id must be non-empty", self.id)));
@@ -141,13 +141,13 @@ impl AppBuilder {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} interaction {} declares selection.transitive with HierarchyProvider::Flat (transitive requires a real hierarchy)", self.id, interaction.id)));
             }
         }
-        let entity_kinds = self.interactions.iter().flat_map(|interaction| interaction.granularities.iter().map(|granularity| semio_framework::interaction_entity_kind(&interaction.id, &granularity.id))).collect::<HashSet<_>>();
+        let entity_kinds = self.interactions.iter().flat_map(|interaction| interaction.granularities.iter().map(|granularity| semio_framework::interaction_entity_kind(&interaction.id, &granularity.id))).collect::<BTreeSet<_>>();
         for action in self.actions.iter().chain(self.window_kinds.iter().flat_map(|window| window.actions.iter())) {
             if let Some(entity_kind) = action.args.iter().flat_map(|arg| arg.schema.entity_kinds()).find(|entity_kind| !entity_kinds.contains(*entity_kind)) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} action {} names entity kind {entity_kind}, which no granularity of a declared interaction answers", self.id, action.id)));
             }
         }
-        let mut declared_tool_ids = HashSet::new();
+        let mut declared_tool_ids = BTreeSet::new();
         for tool in &self.tools {
             if !(!tool.id.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tool id must be non-empty", self.id)));
@@ -156,7 +156,7 @@ impl AppBuilder {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} duplicate tool id {}", self.id, tool.id)));
             }
         }
-        let mut declared_command_ids = HashSet::new();
+        let mut declared_command_ids = BTreeSet::new();
         for command in &self.commands {
             if !(!command.id.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} command id must be non-empty", self.id)));
@@ -195,7 +195,7 @@ impl AppBuilder {
         if declared_action_ids.insert(NOTE_SHELL_COMMAND_ACTION_ID.to_string()) {
             actions.push(note_shell_command_action_definition());
         }
-        let explicitly_owned_action_ids: HashSet<String> = self.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone()).chain(window.action_refs.iter().map(|action| action.as_str().to_string()))).collect();
+        let explicitly_owned_action_ids: BTreeSet<String> = self.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone()).chain(window.action_refs.iter().map(|action| action.as_str().to_string()))).collect();
         for window in &mut self.window_kinds {
             for action_ref in &window.action_refs {
                 let action = actions
@@ -204,7 +204,7 @@ impl AppBuilder {
                     .ok_or_else(|| PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} references undeclared action {}", self.id, window.id, action_ref.as_str())))?;
                 window.actions.push(action.clone());
             }
-            let mut window_action_ids = HashSet::new();
+            let mut window_action_ids = BTreeSet::new();
             for action in &window.actions {
                 if !(!action.id.trim().is_empty()) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} window kind {} action id must be non-empty", self.id, window.id)));
@@ -217,7 +217,7 @@ impl AppBuilder {
             }
         }
         let app_roster: Vec<ActionDefinition> = actions.iter().filter(|action| !explicitly_owned_action_ids.contains(&action.id)).cloned().collect();
-        let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
+        let mut bound_keys: BTreeSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
         let mut keybindings: Vec<Keybinding> =
             self.keybindings.into_iter().map(|binding| Keybinding { keys: binding.keys, action: KeybindingActionDescriptor { controller_id: binding.controller_id, action: binding.action, args: None } }).collect();
         for history_action in actions.iter().filter(|action| matches!(action.kind, ActionKind::History | ActionKind::Clipboard)) {
@@ -278,7 +278,7 @@ impl AppBuilder {
             }
         }
         for mode in &self.modes {
-            let mut mode_command_ids = HashSet::new();
+            let mut mode_command_ids = BTreeSet::new();
             for command in &mode.commands {
                 if !(!command.id.trim().is_empty()) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} mode {} command id must be non-empty", self.id, mode.id)));
@@ -295,7 +295,7 @@ impl AppBuilder {
                 }
             }
         }
-        let mode_referenced_tools: HashSet<&str> = self.modes.iter().flat_map(|mode| mode.tools.iter().map(|tool_ref| tool_ref.as_str())).collect();
+        let mode_referenced_tools: BTreeSet<&str> = self.modes.iter().flat_map(|mode| mode.tools.iter().map(|tool_ref| tool_ref.as_str())).collect();
         for tool in &self.tools {
             if !(mode_referenced_tools.contains(tool.id.as_str())) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tool {} is not referenced by any mode", self.id, tool.id)));
@@ -305,7 +305,7 @@ impl AppBuilder {
             if !(!introduction.steps.is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction must declare at least one step", self.id)));
             }
-            let mut step_ids = HashSet::new();
+            let mut step_ids = BTreeSet::new();
             for step in &introduction.steps {
                 if !(!step.id.trim().is_empty()) {
                     return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step id must be non-empty", self.id)));
@@ -354,7 +354,7 @@ impl AppBuilder {
                 }
             }
         }
-        let mut tutorial_ids = HashSet::new();
+        let mut tutorial_ids = BTreeSet::new();
         for tutorial in &self.tutorials {
             if !(!tutorial.id.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} tutorial id must be non-empty", self.id)));
@@ -423,7 +423,7 @@ impl AppBuilder {
                 }
             }
         }
-        let mut dialog_ids = HashSet::new();
+        let mut dialog_ids = BTreeSet::new();
         for dialog in &self.dialogs {
             if !(!dialog.id.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} dialog id must be non-empty", self.id)));
@@ -447,7 +447,7 @@ impl AppBuilder {
             }
             validate_arg_defs(&self.id, &format!("dialog {}", dialog.id), &dialog.args);
         }
-        let mut media_port_ids = HashSet::new();
+        let mut media_port_ids = BTreeSet::new();
         for port in self.media_inputs.iter().chain(self.media_outputs.iter()) {
             if !(!port.id.trim().is_empty()) {
                 return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} media port id must be non-empty", self.id)));

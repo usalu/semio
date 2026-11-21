@@ -1,0 +1,5 @@
+{
+  "probes": 12,
+  "latencyMilliseconds": 20,
+  "worktreePath": "healthy-heal-proof.txt"
+}

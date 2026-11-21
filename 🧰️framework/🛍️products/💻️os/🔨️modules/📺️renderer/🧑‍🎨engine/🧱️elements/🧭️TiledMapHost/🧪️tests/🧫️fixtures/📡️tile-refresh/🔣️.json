@@ -1,0 +1,16 @@
+{
+  "first": { "z": 3, "x": 1, "y": 2, "key": "3/1/2" },
+  "prefetch": { "z": 3, "x": 2, "y": 2, "key": "3/2/2" },
+  "latest": { "z": 3, "x": 5, "y": 2, "key": "3/5/2" },
+  "settleMs": 5000,
+  "pipeline": { "zoom": 4, "y": 3, "count": 15, "concurrency": 12, "completed": [1, 2] },
+  "deadline": { "stages": ["headers", "body"], "timeoutMs": 12000, "retryDelayMs": 250 },
+  "cases": [
+    { "name": "network failure", "mode": "image", "statuses": [null, 200], "upload": true },
+    { "name": "unavailable service", "mode": "vector", "statuses": [503, 200], "upload": true },
+    { "name": "rate limiting", "mode": "vector", "statuses": [429, 200], "upload": true },
+    { "name": "persistent outage", "mode": "image", "statuses": [503, 503, 503], "upload": false },
+    { "name": "missing tile", "mode": "image", "statuses": [404], "upload": false },
+    { "name": "removed tile", "mode": "vector", "statuses": [410], "upload": false }
+  ]
+}

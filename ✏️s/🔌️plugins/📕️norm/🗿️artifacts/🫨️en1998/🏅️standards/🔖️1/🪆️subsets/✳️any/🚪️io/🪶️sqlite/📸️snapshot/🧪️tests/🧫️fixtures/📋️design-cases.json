@@ -1,0 +1,86 @@
+[
+  {
+    "id": "buried-pipe",
+    "entryId": "C98-11",
+    "labelEn": "Welded steel pipe",
+    "labelDe": "Geschweißtes Stahlrohr",
+    "numbers": [
+      {
+        "id": "pipe_peak_velocity",
+        "value": 0.3
+      },
+      {
+        "id": "pipe_peak_a_long",
+        "value": 2.5
+      },
+      {
+        "id": "pipe_speed_long",
+        "value": 1200
+      },
+      {
+        "id": "pipe_peak_a_trans",
+        "value": 3.5
+      },
+      {
+        "id": "pipe_speed_trans",
+        "value": 600
+      },
+      {
+        "id": "pipe_radius",
+        "value": 0.4
+      },
+      {
+        "id": "pipe_thickness",
+        "value": 0.008
+      },
+      {
+        "id": "pipe_modulus",
+        "value": 210000000000
+      },
+      {
+        "id": "pipe_available_shear",
+        "value": 20000
+      }
+    ],
+    "texts": [
+      {
+        "id": "pipe_wave_basis",
+        "value": "stable-welded"
+      }
+    ]
+  },
+  {
+    "id": "bridge-spatial",
+    "entryId": "C98-12",
+    "labelEn": "Bridge Set A",
+    "labelDe": "Brücke Verschiebungssatz A",
+    "numbers": [
+      {
+        "id": "spatial_deck_length",
+        "value": 370
+      },
+      {
+        "id": "spatial_length_limit",
+        "value": 266.6666666666667
+      },
+      {
+        "id": "spatial_ground_displacement",
+        "value": 0.16
+      },
+      {
+        "id": "spatial_reference_distance",
+        "value": 180
+      },
+      {
+        "id": "spatial_decorrelation",
+        "value": 400
+      }
+    ],
+    "texts": [
+      {
+        "id": "spatial_ground_types",
+        "value": "uniform"
+      }
+    ]
+  }
+]

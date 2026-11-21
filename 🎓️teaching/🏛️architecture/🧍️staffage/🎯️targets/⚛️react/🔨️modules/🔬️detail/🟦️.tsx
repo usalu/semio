@@ -6,7 +6,7 @@
  * @see ../🎛️viewer/🟦️.tsx — the viewer
  * @see ./📐️dimensions/🟦️.tsx — and the other sections
  */
-import { useMemo, useRef, useState, type ReactElement } from "react";
+import { useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import type { Asset, EvaluationQuery } from "@teaching/staffage";
 import { useClock } from "../⏱️clock/🟦️.ts";
 import { ViewerBoundary } from "../🎛️viewer/🛡️boundary/🟦️.tsx";
@@ -37,9 +37,9 @@ function Timeline(props: { readonly asset: Asset; readonly frame: ViewerFrame | 
 }
 
 /** 🔭️ The asset page. */
-export function AssetPage({ row, view }: { readonly row: Row; readonly view: PaneView }): ReactElement {
+export function AssetPage({ row, view, progress }: { readonly row: Row; readonly view: PaneView; readonly progress?: ReactNode }): ReactElement {
   const { route, params } = useAddress();
-  return view.opened && route.page === "asset" && route.asset === row.entry.id ? <OpenedAssetPage row={row} params={params} /> : <AssetPreview row={row} />;
+  return view.opened && route.page === "asset" && route.asset === row.entry.id ? <OpenedAssetPage row={row} params={params} {...(progress === undefined ? {} : { progress })} /> : <AssetPreview row={row} />;
 }
 
 function AssetPreview({ row }: { readonly row: Row }): ReactElement {
@@ -54,7 +54,7 @@ function AssetPreview({ row }: { readonly row: Row }): ReactElement {
   );
 }
 
-function OpenedAssetPage({ row, params }: { readonly row: Row; readonly params: URLSearchParams }): ReactElement {
+function OpenedAssetPage({ row, params, progress }: { readonly row: Row; readonly params: URLSearchParams; readonly progress?: ReactNode }): ReactElement {
   const { t, language, store } = useArchive();
   const { manifest } = useRows();
   const { playground } = useLocal();
@@ -103,6 +103,7 @@ function OpenedAssetPage({ row, params }: { readonly row: Row; readonly params: 
   return (
     <PageFrame page={`asset:${row.entry.id}`} wide eyebrow={category} title={title} lede={asset?.summary[language] ?? row.entry.distinction[language]} actions={actions}>
       <p role="status" className="sr-only">{announce}</p>
+      {progress}
       {addressProblems(params, "asset").map((problem) => <Notice key={problem.en} kind="info" compact title={problem[language]} />)}
       {copied === "idle" ? null : <Notice kind="info" compact title={t(copied === "done" ? "detail.shareDone" : "detail.shareBlocked")} />}
       <Cell className="items-center">
@@ -113,7 +114,7 @@ function OpenedAssetPage({ row, params }: { readonly row: Row; readonly params: 
       </Cell>
       {asset === undefined ? (
         <>
-          <UnavailableNotice row={row} />
+          {progress === undefined ? <UnavailableNotice row={row} /> : null}
           <Notice kind="info" compact title={t("detail.planned")}>{row.entry.distinction[language]}</Notice>
         </>
       ) : (

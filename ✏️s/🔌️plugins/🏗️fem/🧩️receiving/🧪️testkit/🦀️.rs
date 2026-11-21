@@ -5,6 +5,11 @@ use semio_framework_value_testing_admission::{EffectBank,Wallet,bank_run,driven}
 const BODY:usize=4096;
 const STEPS:u32=1_000_000;
 thread_local!{static BANK:std::cell::RefCell<EffectBank>=std::cell::RefCell::new(EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<20},1<<40)));}
+/// 📊️ Funds the numerical fixtures up to their finite target-sized inventory.
+pub fn numerical_stock()->RetainedCloneGrant{
+ let bytes=usize::try_from(1_u64<<40).unwrap_or(usize::MAX);
+ RetainedCloneGrant{maximum_items:usize::try_from(1_u64<<36).unwrap_or(usize::MAX),maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:bytes,maximum_depth:1<<12}
+}
 /// 🎟️ Funds exactly one quoted demand.
 pub fn exact(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 /// 🏦️ Runs one body inside the original effect of the shared bank, funded with exactly `grant`.

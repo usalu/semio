@@ -25,12 +25,13 @@ describe("🏠️ the layout in the learner's text size", () => {
   });
 
   it("measures the breakpoints and the least grid heights in the text size", () => {
+    const shortTouch = "(pointer: coarse) and (max-width: 960px) and (max-height: 480px)";
     expect(homeLayoutQueries(1, PAGES)).toEqual({
-      narrow: `(max-width: ${UI_MOBILE_MAX_WIDTH_PX}px)`,
+      narrow: `(max-width: ${UI_MOBILE_MAX_WIDTH_PX}px), ${shortTouch}`,
       medium: `(min-width: ${UI_MOBILE_MAX_WIDTH_PX + 1}px) and (max-width: ${UI_TABLET_MAX_WIDTH_PX}px)`,
       short: { desktop: `(max-height: ${fixture.heights.minimum.desktop - 1}px)`, tablet: `(max-height: ${fixture.heights.minimum.tablet - 1}px)` },
     });
-    expect(homeLayoutQueries(1.5, PAGES)).toEqual({ narrow: "(max-width: 1150px)", medium: "(min-width: 1151px) and (max-width: 1534px)", short: { desktop: "(max-height: 563px)", tablet: "(max-height: 803px)" } });
+    expect(homeLayoutQueries(1.5, PAGES)).toEqual({ narrow: `(max-width: 1150px), ${shortTouch}`, medium: "(min-width: 1151px) and (max-width: 1534px)", short: { desktop: "(max-height: 563px)", tablet: "(max-height: 803px)" } });
   });
 
   for (const { width, height, scale, grid, mode } of fixture.heights.vectors) {

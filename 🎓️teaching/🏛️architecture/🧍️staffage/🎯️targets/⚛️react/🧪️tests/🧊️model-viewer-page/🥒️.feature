@@ -9,3 +9,9 @@ Feature: The 3D model in the viewer and the address
   Scenario: The viewer in 3D
     When the 3D model is chosen
     Then one patch changes the viewpoint, pose, time and scale stay, the stage and the shared transport are shown, the 2D zoom controls are not, and the camera is written back to the address
+  Scenario: The browser claims a touch gesture on the 2D stage
+    Given a touch drag has moved the drawing temporarily
+    And the stage allows native vertical scrolling and pinch zoom
+    When the browser cancels the pointer to scroll the page
+    Then the temporary transform clears and no pan is saved
+    And a subsequent completed drag saves its pan

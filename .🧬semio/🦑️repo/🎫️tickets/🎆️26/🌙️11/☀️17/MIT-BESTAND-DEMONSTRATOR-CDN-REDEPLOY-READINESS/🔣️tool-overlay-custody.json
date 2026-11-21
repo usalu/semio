@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "tool-tag-capture",
+      "actionSlot": 0,
+      "follower": false,
+      "expected": "awaiting"
+    },
+    {
+      "name": "tool-tag-retirement",
+      "actionSlot": 1,
+      "follower": false,
+      "expected": "awaiting"
+    },
+    {
+      "name": "scrub",
+      "actionSlot": 2,
+      "follower": false,
+      "expected": "awaiting"
+    },
+    {
+      "name": "press",
+      "actionSlot": 3,
+      "follower": false,
+      "expected": "awaiting"
+    },
+    {
+      "name": "typing",
+      "actionSlot": 4,
+      "follower": false,
+      "expected": "awaiting"
+    },
+    {
+      "name": "independent-follower",
+      "actionSlot": 4,
+      "follower": true,
+      "expected": "progress"
+    },
+    {
+      "name": "no-foreground-receiver",
+      "actionSlot": null,
+      "follower": false,
+      "expected": "stalled"
+    }
+  ]
+}

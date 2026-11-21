@@ -1,6 +1,6 @@
 # Round 3: components/glulam-beam
 
-Status: in progress (roots written to the catalog; volumes being modelled).
+Status: done (round 3 roots and volumes in the catalog; round 5 below).
 
 Scripts: `r3-glulam-beam-kit.py` (lamella lay-up shared by 2D and 3D), `r3-glulam-beam-roots.py` (root fixes, `--write`), `r3-glulam-beam-model.py` (volumes source). Output under `🗑️generated/r3-glulam-beam/`.
 
@@ -65,3 +65,47 @@ Solids (before)
 | decisions 1:50, 1:100, 1:200 | chamfers, 0.8 mm hatch, plate lines | rewritten (en, de) |
 
 Checked: candidate `VALID` (`r3-validate.ts --file`), 2D 1:50 and 1:200 looked at (`r3-2d.ts --file`), forces and moments at `point-load-midspan`: reactions 2.58 kN each, M,max 7.01 kNm (= 2 x 7.88 / 4 + 0.396 x 7.88^2 / 8), overhang moment 0.71 Nm at the bearings (0.396 kN/m x 0.06^2 / 2, physically right).
+
+## Round 5 handcraft
+
+Scripts: `r5-glulam-beam-model.py` (round 3 model plus the two fixes below, writes the volumes source), `r5-glulam-beam-roots.py` (modulus fix, text replacement, idempotent; `--write` for the catalog), `r5-c02-zoom.ts` (one view zoomed onto a world box, to see a bearing of an 8 m beam at full size). Backup of the source before: `🗑️generated/r5-glulam-beam/volumes-before.json`.
+
+### Reference (round 3 table, checked again)
+
+| item | reference | model | deviation |
+|---|---|---|---|
+| section | 160 x 600 mm GL24h | 160 x 600 mm | 0 % |
+| lamellae | 15 x 40 mm (EN 14080: at most 45 mm) | 15 x 40 mm | 0 % |
+| length / span | 8.00 m / 7.88 m between bearing centres | 8.00 m / 7.88 m (anchors 0.06, 7.94) | 0 % |
+| bearing plates | 120 x 20 x 160 mm steel | 120 x 20 x 160 mm | 0 % |
+| E0,mean GL24h | 11 500 MPa (EN 14080:2013 Table 5; 11 600 was EN 1194) | 11 600 MPa before, 11 500 MPa now | +0.9 % before, 0 % now |
+| mean density | 420 kg/m3 | 420 kg/m3, 322.56 kg | 0 % |
+| board length between finger joints | about 1.4 to 4.6 m | 25 joints in 15 lamellae, boards 0.95 to 4.6 m | inside |
+| storage depth | 36 mm (EN ISO 13786, 24 h) | 36 mm skins | 0 % |
+
+### Grades before (opened: all body, structure and thermal `--cut` sheets at 1:50, 1:100, 1:200, 1:500, the 2D of every scale, poses self-weight and point-load-midspan, clip moving-point-load t 0.5, and zoomed views of the left bearing at 1:50 in body, structure and thermal)
+
+- Body: 1:50 A (boards with finger joints, staggered; plates), 1:100 A (15 lamellae), 1:200 A, 1:500 A.
+- Thermal: 1:50 B, 1:100 B: the side skins and the top/soffit skins both filled the 36 x 36 mm arris prisms, so two regions occupied the same volume; in the zoom the top arris showed as a striped interpenetration band along the whole beam. 1:200 A, 1:500 A (face wedges).
+- Structure: 1:50 B, 1:100 B: the load shoe of the moving load (100 x 30 mm) sat inside the member, flush with the top face; it showed as a dark z-fighting patch in the top face instead of a part where the load enters. 1:200 A, 1:500 A.
+- Root data: E0,mean 11.6 GPa is the withdrawn EN 1194 value, EN 14080:2013 (cited by the asset) gives 11.5 GPa.
+
+### Changes
+
+- Thermal 1:50 and 1:100: sides, top and soffit are now mitred skins: the top and soffit keep their full 160 mm outer face, the sides their full 600 mm outer face, and they meet on one plane through each outer arris (inner corners 43.2 mm and 30 mm off the arris, so each mitre face lies within 45 degrees of the axis it is marked with: `-v` on the top, `+v` on the soffit, `±v` with the inner `∓w` on the sides). No volume belongs to two regions any more. Measured outer areas 1:50: sides 9.68 m2 (9.6, +0.9 %), top 1.288 (1.28, +0.7 %), soffit 1.288 (+0.7 %).
+- Structure 1:50: the slider of the moving load is a 100 x 160 x 7.5 mm steel load plate on the top face (it travels with the load carrier, seen at clip t 0.5). 1:100: the same plate 15 mm thick (one feature), bedded 2 mm into the timber so that it stays within one feature of the body outline (the product measures 16.1 mm against 15 mm otherwise).
+- Roots (`r5-glulam-beam-roots.py --write`): `materials[glulam].elasticModulusPa` 11 600 000 000 -> 11 500 000 000; `structure.assumptions[0]` "E0,mean = 11.6 GPa" -> "E0,mean = 11.5 GPa (EN 14080 Table 5)" (en, de); the en-14080 citation 11.6 -> 11.5 GPa. Midspan deflection under the live load rises by 0.9 %.
+- Decisions 1:50 and 1:100 (thermal, structure) rewritten (en, de).
+
+### Grades after
+
+Body A / A / A / A; thermal A / A / A / A; structure A / A / A / A (1:50 / 1:100 / 1:200 / 1:500). Zoomed bearing after: the thermal skins meet cleanly at the arris, the load plate sits on the top face.
+
+### Checks
+
+`volumes-check.ts components/glulam-beam --product` PASS (17.6 s); `r3-validate.ts components/glulam-beam --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); candidate validated with `--file` before the catalog was written; spliced with `volumes-insert.py`, `--catalog-only` VALID.
+
+### Remaining (with reason)
+
+- Lateral (fork) restraint at the bearings: EN 1995-1-1 assumes fork supports for a 600 mm deep beam; the asset is the beam on its two bearing plates and has no fork plates, angle cleats or fixings. Adding visible side plates would widen the asset (160 -> about 180 mm) and change `dimensions` and every 2D front and plan; no datum for the fixing is in the asset, so it is left as an open point for the component's definition.
+- Arris chamfers (a few mm) and the real finger profile (20 mm long, 6.2 mm pitch) are below the 7.5 mm feature; the 1:50 joints are the drawn two-finger symbol, as in round 3.

@@ -1,6 +1,6 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from "./🗄️.sql" with {type:"text"};
-import type {Din4108Snapshot,Din4108ThermalZone,Din4108ZoneWindow,Din4108EnvelopeElement,Din4108LayerDocument,Din4108LayerSegment,Din4108ThermalBridge} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type {Din4108Snapshot,Din4108ThermalZone,Din4108ZoneWindow,Din4108EnvelopeElement,Din4108LayerDocument,Din4108LayerSegment,Din4108ThermalBridge,CaseRow,CaseNumber} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 import {type Binary64} from "@semio-tech/framework/value/ieee754";
@@ -13,8 +13,10 @@ export type Din4108SqliteWindow=ExactFields<Din4108ZoneWindow,"inclinationDeg"|"
 export type Din4108SqliteZone=Omit<ExactFields<Din4108ThermalZone,"floorAreaM2">,"windows">&{windows:Din4108SqliteWindow[]};
 export type Din4108SqliteElement=Omit<ExactFields<Din4108EnvelopeElement,"orientationDeg"|"inclinationDeg"|"areaM2"|"deltaUG"|"deltaUF"|"deltaUR">,"layers">&{layers:Din4108SqliteLayer[]};
 export type Din4108SqliteThermalBridge=ExactFields<Din4108ThermalBridge,"psi"|"lengthM">;
-/** 🧱️ Complete envelope with exact words in all twenty-four numeric domains. */
-export type Din4108SqliteSnapshot=Omit<ExactFields<Din4108Snapshot,"tIntC"|"rhInt"|"airtightnessN50">,"climateZone"|"zones"|"elements"|"thermalBridges">&{climateZone:"Zone1"|"Zone2"|"Zone3"|"Zone4";zones:Din4108SqliteZone[];elements:Din4108SqliteElement[];thermalBridges:Din4108SqliteThermalBridge[]};
+export type Din4108SqliteCaseNumber=ExactFields<CaseNumber,"value">;
+export type Din4108SqliteCase=Omit<CaseRow,"numbers">&{numbers:Din4108SqliteCaseNumber[]};
+/** 🧱️ Envelope and test cases with exact number values. */
+export type Din4108SqliteSnapshot=Omit<ExactFields<Din4108Snapshot,"tIntC"|"rhInt"|"airtightnessN50">,"climateZone"|"zones"|"elements"|"thermalBridges"|"cases">&{climateZone:"Zone1"|"Zone2"|"Zone3"|"Zone4";zones:Din4108SqliteZone[];elements:Din4108SqliteElement[];thermalBridges:Din4108SqliteThermalBridge[];cases:Din4108SqliteCase[]};
 export const DIN4108_SQLITE_SCHEMA:string=sql;
 const DOCUMENT_FLOATS:readonly Ieee754Column[]=[3,4,6].map(index=>({index,width:64}));
 const ZONE_FLOATS:readonly Ieee754Column[]=[4].map(index=>({index,width:64}));
@@ -23,6 +25,7 @@ const ELEMENT_FLOATS:readonly Ieee754Column[]=[6,7,9,10,11,12].map(index=>({inde
 const LAYER_FLOATS:readonly Ieee754Column[]=[5,6,7,8].map(index=>({index,width:64}));
 const SEGMENT_FLOATS:readonly Ieee754Column[]=[5,6,7,8].map(index=>({index,width:64}));
 const BRIDGE_FLOATS:readonly Ieee754Column[]=[4,5].map(index=>({index,width:64}));
+const CASE_NUMBER:readonly Ieee754Column[]=[{index:4,width:64}];
 type Entities=Map<bigint,SqliteRow>;
 type Groups=Map<bigint,SqliteRow[]>;
 
@@ -38,7 +41,17 @@ export async function din4108SnapshotToSqliteDatabase(snapshot:Din4108SqliteSnap
  const out=await ArtifactSqliteProjection.create(sql,options);await write(out,"din4108_document",[climate(snapshot.climateZone),snapshot.usage,snapshot.tIntC,snapshot.rhInt,snapshot.hasMechanicalVentilation?1n:0n,snapshot.airtightnessN50,snapshot.bb2DetailsConform?1n:0n],DOCUMENT_FLOATS,options,1n);
  for(let position=0;position<snapshot.zones.length;position++){const z=snapshot.zones[position]!,zone=await write(out,"din4108_zone",[1n,BigInt(position),z.id,z.floorAreaM2,z.heaviness,z.nightVentilation],ZONE_FLOATS,options);for(let index=0;index<z.windows.length;index++){const w=z.windows[index]!;await write(out,"din4108_window",[zone,BigInt(index),w.id,w.orientation,w.inclinationDeg,w.areaM2,w.gValue,w.shadingFc],WINDOW_FLOATS,options)}}
  for(let position=0;position<snapshot.elements.length;position++){const e=snapshot.elements[position]!,element=await write(out,"din4108_element",[1n,BigInt(position),e.id,e.kind,e.zoneId,e.orientationDeg,e.inclinationDeg,e.adjacent,e.areaM2,e.deltaUG,e.deltaUF,e.deltaUR],ELEMENT_FLOATS,options);for(let index=0;index<e.layers.length;index++){const l=e.layers[index]!,layer=await write(out,"din4108_layer",[element,BigInt(index),l.id,l.materialId,l.thicknessM,l.lambda,l.mu,l.density,l.applicationType,l.compressiveClass,l.waterClass,l.tensileClass,l.acousticClass],LAYER_FLOATS,options);for(let ordinal=0;ordinal<l.segments.length;ordinal++){const s=l.segments[ordinal]!;await write(out,"din4108_segment",[layer,BigInt(ordinal),s.id,s.materialId,s.fraction,s.lambda,s.mu,s.density],SEGMENT_FLOATS,options)}}}
- for(let position=0;position<snapshot.thermalBridges.length;position++){const b=snapshot.thermalBridges[position]!;await write(out,"din4108_thermal_bridge",[1n,BigInt(position),b.id,b.psi,b.lengthM,b.bb2Type],BRIDGE_FLOATS,options)}return out.finish();
+ for(let position=0;position<snapshot.thermalBridges.length;position++){const b=snapshot.thermalBridges[position]!;await write(out,"din4108_thermal_bridge",[1n,BigInt(position),b.id,b.psi,b.lengthM,b.bb2Type],BRIDGE_FLOATS,options)}
+ for (const [index, row] of snapshot.cases.entries()) {
+  const parent=await write(out,"din4108_case",[1n,BigInt(index),row.id,row.labelEn,row.labelDe,row.entryId],[],options);
+  for (const [position, number] of row.numbers.entries()) {
+   await write(out,"din4108_case_number",[parent,BigInt(position),number.id,number.value],CASE_NUMBER,options);
+  }
+  for (const [position, text] of row.texts.entries()) {
+   await write(out,"din4108_case_text",[parent,BigInt(position),text.id,text.value],[],options);
+  }
+ }
+ return out.finish();
 }
 
 /** 📥️ Rebuilds the complete nested subject after exact fields, words, booleans, parents and dense ordinals agree. */
@@ -49,5 +62,24 @@ export async function din4108SnapshotFromSqliteDatabase(database:SqliteDatabase,
  const zones:Din4108SqliteZone[]=[];for(const z of zoneGroups.get(1n)??[]){await checkpoint(options,zones.length,0);const windows:Din4108SqliteWindow[]=[];for(const w of windowGroups.get(z.rowid)??[]){await checkpoint(options,windows.length,0);windows.push({id:artifactSqliteText(w,3),orientation:artifactSqliteText(w,4),inclinationDeg:readBinary64(w,5,WINDOW_FLOATS),areaM2:readBinary64(w,6,WINDOW_FLOATS),gValue:readBinary64(w,7,WINDOW_FLOATS),shadingFc:readBinary64(w,8,WINDOW_FLOATS)})}zones.push({id:artifactSqliteText(z,3),floorAreaM2:readBinary64(z,4,ZONE_FLOATS),heaviness:artifactSqliteText(z,5),nightVentilation:artifactSqliteText(z,6),windows})}
  const elements:Din4108SqliteElement[]=[];for(const e of elementGroups.get(1n)??[]){await checkpoint(options,elements.length,0);const layers:Din4108SqliteLayer[]=[];for(const l of layerGroups.get(e.rowid)??[]){await checkpoint(options,layers.length,0);const segments:Din4108SqliteLayerSegment[]=[];for(const s of segmentGroups.get(l.rowid)??[]){await checkpoint(options,segments.length,0);segments.push({id:artifactSqliteText(s,3),materialId:artifactSqliteText(s,4),fraction:readBinary64(s,5,SEGMENT_FLOATS),lambda:readBinary64(s,6,SEGMENT_FLOATS),mu:readBinary64(s,7,SEGMENT_FLOATS),density:readBinary64(s,8,SEGMENT_FLOATS)})}layers.push({id:artifactSqliteText(l,3),materialId:artifactSqliteText(l,4),thicknessM:readBinary64(l,5,LAYER_FLOATS),lambda:readBinary64(l,6,LAYER_FLOATS),mu:readBinary64(l,7,LAYER_FLOATS),density:readBinary64(l,8,LAYER_FLOATS),applicationType:artifactSqliteText(l,9),compressiveClass:artifactSqliteText(l,10),waterClass:artifactSqliteText(l,11),tensileClass:artifactSqliteText(l,12),acousticClass:artifactSqliteText(l,13),segments})}elements.push({id:artifactSqliteText(e,3),kind:artifactSqliteText(e,4),zoneId:artifactSqliteText(e,5),orientationDeg:readBinary64(e,6,ELEMENT_FLOATS),inclinationDeg:readBinary64(e,7,ELEMENT_FLOATS),adjacent:artifactSqliteText(e,8),areaM2:readBinary64(e,9,ELEMENT_FLOATS),deltaUG:readBinary64(e,10,ELEMENT_FLOATS),deltaUF:readBinary64(e,11,ELEMENT_FLOATS),deltaUR:readBinary64(e,12,ELEMENT_FLOATS),layers})}
  const thermalBridges:Din4108SqliteThermalBridge[]=[];for(const b of bridgeGroups.get(1n)??[]){await checkpoint(options,thermalBridges.length,0);thermalBridges.push({id:artifactSqliteText(b,3),psi:readBinary64(b,4,BRIDGE_FLOATS),lengthM:readBinary64(b,5,BRIDGE_FLOATS),bb2Type:artifactSqliteText(b,6)})}
- const snapshot:Din4108SqliteSnapshot={climateZone:climate(artifactSqliteText(d,1)),usage:artifactSqliteText(d,2),tIntC:readBinary64(d,3,DOCUMENT_FLOATS),rhInt:readBinary64(d,4,DOCUMENT_FLOATS),hasMechanicalVentilation:boolean(d,5),airtightnessN50:readBinary64(d,6,DOCUMENT_FLOATS),bb2DetailsConform:boolean(d,7),zones,elements,thermalBridges};await artifactSqliteCheckpoint(options,"reconstructSnapshot",1,1);return snapshot;
+ const caseRows=await entities(tables[7]!,7,[],options);
+ const caseGroups=await groups(caseRows,documents,options);
+ const numericGroups=await groups(await entities(tables[8]!,5,CASE_NUMBER,options),caseRows,options);
+ const textGroups=await groups(await entities(tables[9]!,5,[],options),caseRows,options);
+ const cases:Din4108SqliteCase[]=[];
+ for (const row of caseGroups.get(1n)??[]) {
+  await checkpoint(options,cases.length,caseRows.size);
+  const numbers:Din4108SqliteCaseNumber[]=[];
+  const texts:CaseRow["texts"]=[];
+  for (const number of numericGroups.get(row.rowid)??[]) {
+   await checkpoint(options,numbers.length,0);
+   numbers.push({id:artifactSqliteText(number,3),value:readBinary64(number,4,CASE_NUMBER)});
+  }
+  for (const text of textGroups.get(row.rowid)??[]) {
+   await checkpoint(options,texts.length,0);
+   texts.push({id:artifactSqliteText(text,3),value:artifactSqliteText(text,4)});
+  }
+  cases.push({id:artifactSqliteText(row,3),labelEn:artifactSqliteText(row,4),labelDe:artifactSqliteText(row,5),entryId:artifactSqliteText(row,6),numbers,texts});
+ }
+ const snapshot:Din4108SqliteSnapshot={climateZone:climate(artifactSqliteText(d,1)),usage:artifactSqliteText(d,2),tIntC:readBinary64(d,3,DOCUMENT_FLOATS),rhInt:readBinary64(d,4,DOCUMENT_FLOATS),hasMechanicalVentilation:boolean(d,5),airtightnessN50:readBinary64(d,6,DOCUMENT_FLOATS),bb2DetailsConform:boolean(d,7),zones,elements,thermalBridges,cases};await artifactSqliteCheckpoint(options,"reconstructSnapshot",1,1);return snapshot;
 }

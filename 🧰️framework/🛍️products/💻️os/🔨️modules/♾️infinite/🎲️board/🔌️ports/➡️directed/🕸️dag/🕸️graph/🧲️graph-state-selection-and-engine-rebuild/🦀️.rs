@@ -37,11 +37,13 @@ impl DagGraphState {
 
     /// 🖱️ Sets hover to a snapshot widget id, or clears hover.
     pub fn set_hover(&mut self,widget_id:Option<&str>) {
+        self.clear_hover_ports();
         self.engine.hover=widget_id.and_then(|id|self.node_id_for_widget_id(id).or_else(||self.hover_edge_engine_id(id)));
     }
 
     /// 🪢️ Applies a wire hover independently of the widget id namespace.
     pub fn set_hover_edge(&mut self,edge_id:Option<&str>) {
+        self.clear_hover_ports();
         self.engine.hover=edge_id.and_then(|id|self.hover_edge_engine_id(id));
     }
 
@@ -98,6 +100,7 @@ impl DagGraphState {
     }
 
     pub fn rebuild_engine_with_layout(&mut self, apply_layout: bool) {
+        self.clear_hover_ports();
         self.engine = DagBoardEngine::new();
         self.engine.enforce_acyclic = true;
         self.node_id_map.clear();
@@ -162,19 +165,19 @@ impl DagGraphState {
             .host_snapshot
             .edges
             .iter()
-            .filter_map(|e| {
-                let src = e.source.split('@').next()?.to_string();
-                let tgt = e.target.split('@').next()?.to_string();
-                Some((src, tgt))
+            .map(|edge| {
+                let (source, _) = dag_port_endpoint_parts(&edge.source);
+                let (target, _) = dag_port_endpoint_parts(&edge.target);
+                (source, target)
             })
             .collect();
         let mut eid = next_handle.max(100);
         for (edge_index, edge) in self.host_snapshot.edges.iter().enumerate() {
-            if would_create_cycle(&existing, edge.source.split('@').next().unwrap_or(""), edge.target.split('@').next().unwrap_or("")) {
-                continue;
-            }
             let (source_node, source_port) = dag_port_endpoint_parts(&edge.source);
             let (target_node, target_port) = dag_port_endpoint_parts(&edge.target);
+            if would_create_cycle(&existing, &source_node, &target_node) {
+                continue;
+            }
             let src = handle_map.get(&dag_port_handle_key(&source_node, &source_port, false)).copied();
             let tgt = handle_map.get(&dag_port_handle_key(&target_node, &target_port, true)).copied();
             if let (Some(s), Some(t)) = (src, tgt) {
@@ -210,10 +213,10 @@ impl DagGraphState {
         let mut edges = Vec::with_capacity(self.engine.edges.len());
         let mut edge_engine_ids = Vec::with_capacity(self.engine.edges.len());
         for (eid, edge) in &self.engine.edges {
-            let Some(source) = self.handle_key_map.get(&edge.source).cloned() else {
+            let Some(source) = self.channel_view(edge.source).map(|channel| semio_os_infinite_directed_presentation::dag_endpoint(channel.widget_id, channel.port)) else {
                 continue;
             };
-            let Some(target) = self.handle_key_map.get(&edge.target).cloned() else {
+            let Some(target) = self.channel_view(edge.target).map(|channel| semio_os_infinite_directed_presentation::dag_endpoint(channel.widget_id, channel.port)) else {
                 continue;
             };
             let id = self.edge_id_map.get(eid).cloned().unwrap_or_else(|| {

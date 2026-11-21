@@ -14,7 +14,7 @@ use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
 use semio_plugin_interaction::mutations::InteractionConfigMutation;
-use semio_plugin_decl_views::{InteractionHoverState, PeerPresenceRoot};
+use semio_plugin_decl_views::{HoverSurface, InteractionHoverState, PeerPresenceRoot};
 use std::mem::ManuallyDrop;
 use protocol::OpText;
 use semio_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication, PresenceRosterOutcome};
@@ -53,6 +53,18 @@ impl<A: ArtifactApp> ConstructorState<A> {
             constructor_lane: 0,
         }
     }
+
+    semio_framework_value::initialization::original_empty_fields!(INITIAL_FIELDS, initial_field_demands, initialize_field_at;
+        constructor_receipts = std::mem::MaybeUninit::uninit(),
+        constructor_recipient_admitted = false,
+        constructor_recipient_retired = false,
+        constructor_terminal_receipt = None,
+        constructor_document = OriginalCatalogConstructor::new(),
+        constructor_config = OriginalCatalogConstructor::new(),
+        constructor_draft = OriginalCatalogConstructor::new(),
+        constructor_interaction = OriginalCatalogConstructor::new(),
+        constructor_lane = 0,
+    );
 }
 
 /// 🪥️ The stores of the instance: document, config, draft, presence, transient, interaction and window owner registries with their one-item publication factories.
@@ -238,25 +250,6 @@ impl ActionIngress {
             pending_action_ingress_caller: std::mem::ManuallyDrop::new(None),
             pending_action_ingress_identity: None,
             pending_action_ingress_retirement: ManuallyDrop::new(None),
-        }
-    }
-}
-
-/// 🧭️ The interactive surface that owns the current local hover.
-pub enum HoverSurface {
-    Window(String),
-    Panel,
-}
-
-impl HoverSurface {
-    pub fn from_window(window: Option<&str>) -> Self {
-        window.map_or(Self::Panel, |id| Self::Window(id.to_owned()))
-    }
-
-    pub fn matches_window(&self, window: Option<&str>) -> bool {
-        match self {
-            Self::Window(id) => window == Some(id.as_str()),
-            Self::Panel => window.is_none(),
         }
     }
 }

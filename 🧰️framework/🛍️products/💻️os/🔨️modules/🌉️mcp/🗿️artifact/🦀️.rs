@@ -5,7 +5,7 @@
 use std::sync::Arc;
 use semio_os_mcp_capabilities::capability_declarations::artifact_capabilities;
 use semio_os_mcp_catalog::capability_tools::tool_from_capability;
-use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry};
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, load_registry_plugin_descriptor};
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_os_mcp_foundation::reports::RevisionStamp;
 use semio_os_mcp_port::channel_port::ActivationScope;
@@ -14,7 +14,7 @@ use semio_os_mcp_probe_document::probe_document::PROBE_SCHEMA;
 use semio_os_mcp_schema::schema::{UntrustedSource, untrusted_content};
 use semio_os_mcp_wire::job_registry::job_registry;
 use semio_os_mcp_wire::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry};
-use semio_os_mcp_workspace::headless_workspace_state::HeadlessWorkspace;
+use semio_os_mcp_workspace::headless_workspace_state::{HeadlessWorkspace, WorkspaceOrigin};
 
 //#region 🔖️Tiering
 
@@ -91,7 +91,7 @@ fn resolve_plugin_export_formats(plugin_id: &str) -> Result<Vec<String>, Gateway
     let repo_root = find_repo_root()?;
     let registry = load_plugin_registry(&repo_root)?;
     let entry = find_plugin_entry(&registry, plugin_id)?;
-    let descriptor = load_package_descriptor(&entry.owner_root)?;
+    let descriptor = load_registry_plugin_descriptor(&repo_root, entry)?;
     let mut formats = std::collections::BTreeSet::new();
     for app in &descriptor.manifest.apps {
         for artifact_kind in &app.artifact_kinds {
@@ -114,7 +114,7 @@ fn session_document_report(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str
     let write_path = match (&binding.backbone, &binding.backbone_blocked_by) {
         (Some(_), _) => "open".to_string(),
         (None, Some(reason)) => reason.clone(),
-        (None, None) if matches!(workspace.origin(), semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin::Folder { .. }) => "folder-event-log".to_string(),
+        (None, None) if matches!(workspace.origin(), WorkspaceOrigin::Folder { .. }) => "folder-event-log".to_string(),
         (None, None) => "this document has no open document actor".to_string(),
     };
     #[cfg(target_arch = "wasm32")]
@@ -195,6 +195,7 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
         }
         Ok(_) => {}
     }
+    let initial = arguments.get("initial").cloned();
     if kind != PROBE_SCHEMA {
         let installed = match workspace.installed_artifact_kinds() {
             Ok(kinds) => kinds,
@@ -218,7 +219,7 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
         let scope = ActivationScope::new(cancel, move |phase, fraction| {
             job_registry().report_progress(&reporter, ARTIFACT_CREATE_ACTIVATION_START + ARTIFACT_CREATE_ACTIVATION_SPAN * phase.at(fraction), Some(format!("creating: {}", phase.id())));
         });
-        return match workspace.create_plugin_artifact_cancellably(&artifact_id, declared, scope) {
+        return match workspace.create_plugin_artifact_cancellably(&artifact_id, declared, initial, scope) {
             Err(_) if jobs.is_cancel_requested(&job_id) => {
                 jobs.mark_cancelled(&job_id);
                 CallToolResult::ok(vec![ContentBlock::Text { text: format!("artifact_create job {job_id} was cancelled") }], Some(merge_fields(base, serde_json::json!({ "status": "CANCELLED" }))))
@@ -235,10 +236,10 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
             }
         };
     }
-    let initial = arguments.get("initial").cloned().unwrap_or_else(|| serde_json::json!({}));
+    let initial = initial.unwrap_or_else(|| serde_json::json!({}));
     let jobs = job_registry();
     let job_id = jobs.begin("artifact.create");
-    match ::semio_framework_async::poll::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, initial.into())) {
+    match ::semio_framework_async::poll::resolve_ready(workspace.create_probe_artifact(&artifact_id, initial.into())) {
         Ok(revision) => {
             let structured = serde_json::json!({ "jobId": job_id, "status": "SUCCEEDED", "artifactId": artifact_id, "kind": kind, "revision": revision });
             jobs.succeed(&job_id, structured.clone());

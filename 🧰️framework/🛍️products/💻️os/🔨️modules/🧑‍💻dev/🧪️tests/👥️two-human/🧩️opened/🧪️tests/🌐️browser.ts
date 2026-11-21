@@ -30,6 +30,14 @@ test("real browser port observes, interacts, chooses, downloads and aborts", asy
       await ui.click("#click");
       expect((await ui.observe("#click", []))[0]?.text).toBe("clicked");
       await ui.press("#key", "A");
+      await page.locator("#file").evaluate((element: HTMLInputElement) => {
+        element.addEventListener("cancel", event => { element.dataset.cancelled = String(event.isTrusted); }, { once: true });
+        element.addEventListener("change", () => { element.dataset.changed = "true"; }, { once: true });
+      });
+      await ui.cancelFilePicker!("#file");
+      await page.waitForSelector('#file[data-cancelled="true"]');
+      expect(await page.locator("#file").getAttribute("data-changed")).toBeNull();
+      expect(await page.locator("#file").evaluate((element: HTMLInputElement) => element.files?.length)).toBe(0);
       await ui.chooseFiles("#file", [resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🧩️opened/🧫️fixtures/🔣️.json")]);
       const file = await page.locator("#file").evaluate((element: HTMLInputElement) => element.files?.length);
       expect(file).toBe(1);

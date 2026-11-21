@@ -1,0 +1,43 @@
+{
+  "ownerCount": 4096,
+  "rowCount": 537,
+  "bands": [
+    {
+      "rows": [
+        0,
+        2
+      ],
+      "firstOwner": 0,
+      "endOwner": 4095,
+      "runs": 512,
+      "markerStart": 6
+    },
+    {
+      "rows": [
+        0,
+        2,
+        3
+      ],
+      "firstOwner": 2048,
+      "endOwner": 4096,
+      "runs": 19,
+      "markerStart": 518
+    },
+    {
+      "rows": [
+        1
+      ],
+      "firstOwner": 128,
+      "endOwner": 133,
+      "runs": 1
+    },
+    {
+      "rows": [
+        5
+      ],
+      "firstOwner": 0,
+      "endOwner": 4096,
+      "runs": 1
+    }
+  ]
+}

@@ -5,6 +5,10 @@
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 
+#[cfg(test)]
+#[path = "../../../../../../../../🧪️tests/🧰️support/🦀️.rs"]
+mod test_support;
+
 #[path = "."]
 pub mod standards {
     #[path = "."]

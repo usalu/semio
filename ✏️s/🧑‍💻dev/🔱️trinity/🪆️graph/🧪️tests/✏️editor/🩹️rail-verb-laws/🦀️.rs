@@ -1,7 +1,7 @@
 //! 🩹️ The rail verbs of the editor laws: patch nodes, undo and redo, select all and the text gesture verbs. See [`super`].
 
 use super::*;
-use semio_framework::Fault;
+use semio_plugin::{PluginLifecycleFailure, PluginLifecyclePrimary};
 
 //#region 🩹️RailVerbLaws
 /// 🕹️ Dispatches `action` with rail-staged text `args` (the Actions pane's own shape) and settles it.
@@ -70,7 +70,7 @@ async fn a_rail_patch_nodes_is_undone_and_redone_as_one_local_edit() {
 /// does: admission, its reserved job, then the typed publication.
 async fn framework_verb(app: &mut JackTestApp, action: &str,cx:&mut semio_framework_job::StepContext<'_>) {
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,action,None,&meta("local"),&mut semio_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
-    semio_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved job: {fault:?}"));
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted, cx).await.unwrap_or_else(|fault| panic!("{action} reserved job: {fault:?}"));
     artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(),cx).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
 }
 
@@ -172,7 +172,10 @@ async fn patch_nodes_refuses_what_it_cannot_apply_and_leaves_the_document_untouc
     let mut app = new_app().await;
     let first = node_id_at(&app, 0).await;
     let before = node_names(&app, None).await;
-    let refusal = |result: Result<(), Fault>| result.err().expect("refused").code.0;
+    let refusal = |result: Result<(), PluginLifecycleFailure>| match result.err().expect("refused").primary {
+        PluginLifecyclePrimary::Fault(fault) => fault.code.0,
+        other => panic!("rail action returned {other:?}"),
+    };
     assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", "no-such-node"), ("field", "name"), ("value", "x")],cx).await), "mutation.target-missing");
     assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "x")],cx).await), "app.command.targets-required");
     assert_eq!(refusal(dispatch_rail(&mut app, "patchNodes", &[("nodeIds", first.as_str()), ("field", "kind"), ("value", "x")],cx).await), "app.command.invalid-args");

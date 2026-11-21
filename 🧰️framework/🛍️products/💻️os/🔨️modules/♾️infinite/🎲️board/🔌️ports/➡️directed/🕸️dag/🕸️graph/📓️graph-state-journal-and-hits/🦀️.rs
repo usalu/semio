@@ -7,9 +7,9 @@ impl DagGraphState {
     /// keys every handle as `"{nodeId}@{portId}"` — the same grammar the pick-target/hover channel
     /// uses — so this is a lookup, never a second derivation of what a port is.
     pub(super) fn journal_connect(&mut self, source: HandleId, target: HandleId) {
-        let Some((source_node_id, source_port_id)) = self.handle_key_map.get(&source).and_then(|key| key.split_once('@')) else { return };
-        let Some((target_node_id, target_port_id)) = self.handle_key_map.get(&target).and_then(|key| key.split_once('@')) else { return };
-        let edit = DagGraphEdit::Connect { source_node_id: source_node_id.to_string(), source_port_id: source_port_id.to_string(), target_node_id: target_node_id.to_string(), target_port_id: target_port_id.to_string() };
+        let Some(source) = self.decode_channel_ref(source) else { return };
+        let Some(target) = self.decode_channel_ref(target) else { return };
+        let edit = DagGraphEdit::Connect { source_node_id: source.widget_id, source_port_id: source.port, target_node_id: target.widget_id, target_port_id: target.port };
         self.push_graph_edit(edit);
     }
 
@@ -107,25 +107,24 @@ impl DagGraphState {
     }
 
     pub(crate) fn handle_id_for_port(&self, node_id: &str, port_id: &str) -> Option<HandleId> {
-        let key = format!("{node_id}@{port_id}");
-        self.handle_key_map.iter().filter(|(_, k)| k.as_str() == key).map(|(&hid, _)| hid).min()
+        self.handle_id_for_channel(node_id, port_id, None)
     }
 
-    /// 🔌️ The handle on ONE side of a port. `handle_key_map` keys every handle as `"{nodeId}@{portId}"`,
-    /// and a node may carry an input AND an output under the same port id (`extrusion-axis` carries
-    /// `vector`, `x`, `y`, `z` on both sides): a name-only lookup then answers whichever handle came
-    /// first in the map, so a press on an OUTPUT could resolve to the input handle 40 world units away
-    /// on the other side of the node, snap there, and start a wire from the wrong end. The engine
-    /// already records the side as [`HandleRole`]; this reads it rather than keeping a second map.
+    /// 🔌️ Resolves the physical handle on the requested side of a raw port.
     pub(crate) fn handle_id_for_port_side(&self, node_id: &str, port_id: &str, input: bool) -> Option<HandleId> {
-        let key = format!("{node_id}@{port_id}");
-        let wanted = if input { HandleRole::Target } else { HandleRole::Source };
+        let direction = if input { DagChannelDirection::In } else { DagChannelDirection::Out };
+        self.handle_id_for_channel(node_id, port_id, Some(direction))
+    }
+
+    pub(super) fn handle_id_for_channel(&self, node_id: &str, port_id: &str, direction: Option<DagChannelDirection>) -> Option<HandleId> {
         self.handle_key_map
             .iter()
-            .filter(|(_, candidate)| candidate.as_str() == key)
-            .map(|(&hid, _)| hid)
-            .find(|hid| self.engine.handles.get(hid).is_some_and(|handle| handle.role == wanted))
-            .or_else(|| self.handle_id_for_port(node_id, port_id))
+            .filter(|(_, key)| key.strip_prefix(node_id).and_then(|suffix| suffix.strip_prefix('@')) == Some(port_id))
+            .filter_map(|(&id, _)| {
+                let channel = self.channel_view(id)?;
+                (channel.widget_id == node_id && direction.is_none_or(|side| side == channel.direction)).then_some(id)
+            })
+            .min()
     }
 
     pub(super) fn port_row_handle_hit(&self, world_x: f64, world_y: f64, inputs: bool, outputs: bool) -> Option<HandleId> {

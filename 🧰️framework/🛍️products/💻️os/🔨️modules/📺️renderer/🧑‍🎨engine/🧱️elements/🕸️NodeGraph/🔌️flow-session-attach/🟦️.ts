@@ -10,6 +10,7 @@ import { createFlowSession } from "@semio-tech/framework-os/modules/renderer/eng
 import { nodeGraphViewportActionArgs, parseNodeGraphSessionViewport } from "../🧰️graph-core/🟦️.ts";
 import { nodeGraphContentSignature } from "../🖼️dag-overlays/🟦️.tsx";
 import {
+  applyFlowSceneHover,
   applyFlowStartupCamera,
   cancelFlowTasks,
   observeFlowTask,
@@ -40,8 +41,7 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
         const session = sessionRef.current;
         if (!session) return;
         interactionLedger.beginLocalHover();
-        setFlowSessionHover(session, { hoveredId: nodeId ?? undefined });
-        emitInteractionState();
+        setFlowSessionHover(session, { hoveredId: nodeId ?? undefined }, emitInteractionState);
       },
       select: (nodeIds) => {
         const session = sessionRef.current;
@@ -78,8 +78,10 @@ export function useFlowSessionAttach(core: FlowCoreAfterFlowInteractionPublicati
   }, [interactionLedger, surfaceId]);
 
   const applySceneHover = useCallback((session: NonNullable<typeof sessionRef.current>) => {
-    const mark = interactionLedger.reconcileSceneHover(sceneRef.current.hover);
-    if (mark) setFlowSessionHover(session, mark);
+    const scene = sceneRef.current;
+    const mark = interactionLedger.reconcileSceneHover(scene.hover);
+    if (!mark) return;
+    applyFlowSceneHover(session, scene, mark);
   }, [interactionLedger, sceneRef]);
 
   useEffect(() => {

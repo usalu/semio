@@ -26,6 +26,16 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/mutation/change-imported-features/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ReplaceElevationSource"],
+      "properties": {
+        "ReplaceElevationSource": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/mutation/replace-elevation-source/schema.json"
+        }
+      }
     }
   ]
 }

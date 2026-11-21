@@ -4440,7 +4440,10 @@
        0.0
       ]
      },
-     "region": "housing"
+     "region": "housing",
+     "sectionFaces": [
+      "+v"
+     ]
     },
     {
      "id": "th-glass",
@@ -4462,7 +4465,10 @@
       ]
      },
      "region": "glazing",
-     "layer": "glazing-skin"
+     "layer": "glazing-skin",
+     "sectionFaces": [
+      "-v"
+     ]
     },
     {
      "id": "th-absorber",

@@ -100,7 +100,8 @@
         "specificDemandKwhPersonA",
         "storageLossKwhA",
         "distributionLossKwhA",
-        "energyCarrier"
+        "energyCarrier",
+        "dwellingCount"
       ],
       "properties": {
         "specificDemandKwhPersonA": {
@@ -114,6 +115,11 @@
         },
         "energyCarrier": {
           "type": "string"
+        },
+        "dwellingCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     },
@@ -569,13 +575,23 @@
       "enum": [
         "Residential",
         "Office",
-        "School"
+        "School",
+        "ResidentialUpToTwoDwellings",
+        "ResidentialMultifamily"
       ],
       "x-semio-ui": {
         "options": {
           "Residential": {
-            "en": "Residential",
-            "de": "Wohnen"
+            "en": "Residential · dwelling profile unspecified",
+            "de": "Wohnen · Wohngebäudeprofil offen"
+          },
+          "ResidentialUpToTwoDwellings": {
+            "en": "Residential · 1 or 2 dwellings",
+            "de": "Wohnen · 1 oder 2 Wohneinheiten"
+          },
+          "ResidentialMultifamily": {
+            "en": "Residential · 3 or more dwellings",
+            "de": "Wohnen · ab 3 Wohneinheiten"
           },
           "Office": {
             "en": "Office",
@@ -903,7 +919,8 @@
         "specificDemandKwhPersonA",
         "storageLossKwhA",
         "distributionLossKwhA",
-        "energyCarrier"
+        "energyCarrier",
+        "dwellingCount"
       ],
       "properties": {
         "specificDemandKwhPersonA": {
@@ -954,6 +971,11 @@
             },
             "widget": "text"
           }
+        },
+        "dwellingCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       },
       "x-semio-formats": [
@@ -1294,7 +1316,15 @@
         "Roof",
         "Floor",
         "Door",
-        "Window"
+        "Window",
+        "CurtainWall",
+        "RoofGlazing",
+        "RoofDome",
+        "GlazedDoor",
+        "GroundSlabPerimeter",
+        "GroundSlabInterior",
+        "RoofWindow",
+        "RooflightStrip"
       ],
       "x-semio-ui": {
         "options": {
@@ -1317,6 +1347,38 @@
           "Window": {
             "en": "Window",
             "de": "Fenster"
+          },
+          "CurtainWall": {
+            "en": "Curtain wall",
+            "de": "Vorhangfassade"
+          },
+          "RoofGlazing": {
+            "en": "Roof glazing",
+            "de": "Dachverglasung"
+          },
+          "RoofDome": {
+            "en": "Rooflight dome",
+            "de": "Lichtkuppel"
+          },
+          "GlazedDoor": {
+            "en": "Glazed door",
+            "de": "Fenstertür"
+          },
+          "GroundSlabPerimeter": {
+            "en": "Ground slab within 5 m of the edge",
+            "de": "Bodenplatte bis 5 m zum Außenrand"
+          },
+          "GroundSlabInterior": {
+            "en": "Ground slab beyond 5 m from the edge",
+            "de": "Bodenplatte mehr als 5 m vom Außenrand"
+          },
+          "RoofWindow": {
+            "en": "Roof window",
+            "de": "Dachflächenfenster"
+          },
+          "RooflightStrip": {
+            "en": "Rooflight strip",
+            "de": "Lichtband"
           }
         }
       },
@@ -1331,7 +1393,8 @@
         "Outdoor",
         "Ground",
         "Unheated",
-        "Heated"
+        "Heated",
+        "UnheatedAttic"
       ],
       "x-semio-ui": {
         "options": {
@@ -1344,12 +1407,16 @@
             "de": "Erdreich"
           },
           "Unheated": {
-            "en": "Unheated space",
-            "de": "Unbeheizter Raum"
+            "en": "Unheated room other than attic",
+            "de": "Unbeheizter Raum außer Dachraum"
           },
           "Heated": {
             "en": "Heated space",
             "de": "Beheizter Raum"
+          },
+          "UnheatedAttic": {
+            "en": "Unheated attic",
+            "de": "Unbeheizter Dachraum"
           }
         }
       },

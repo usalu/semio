@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot as dsl;
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_terrain_document_pack_agrees_with_dsl_for_bundled_reuse_example() {
-    let document = dsl::parse_dsl(dsl::REUSE_TERRAIN_EXAMPLE_TEXT).expect("parse reuse-terrain example");
+    let document = dsl::default_terrain_document();
     store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     assert_eq!(decode(&encode(&document)).expect("decode"), document);
 }

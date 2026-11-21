@@ -28,6 +28,8 @@ where
     match loaded {
         Ok(()) => Ok(reloaded),
         Err(reason) => {
+            let stage = semio_plugin_reactor_app::LAST_MAINTENANCE_STAGE.load(std::sync::atomic::Ordering::Relaxed);
+            eprintln!("[DEBUG] Archive reload failed before fixture close at maintenance stage {stage}: {reason}");
             Box::pin(acceptance_close(&mut reloaded,cx)).await;
             Err(reason)
         }

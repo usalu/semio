@@ -3,7 +3,6 @@ import {expect,test} from "bun:test";
 import {readFile,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {Database} from "bun:sqlite";
-import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {graphSnapshotDigestV1,graphSnapshotTemporaryNameV1,withRepositoryBuildGraphArtifactV1} from "../🟦️.ts";
 import {resourceLeasePathV1} from "@semio-tech/process/leases";
 import {dirname,join,sep} from "node:path";
@@ -13,7 +12,8 @@ import {repositoryBuildGraphDataDirectoryV1,withRepositoryBuildGraphFactStoreV1,
 import {cargoLockInput} from "../../../../../../🏗️build/📥️inputs/🟨️.mjs";
 import {rm} from "node:fs/promises";
 import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
-const repository=await privateRepositoryWorkspaceV1();
+const repository=await privateRepositoryWorkspaceV1("graph");
+const publicationMilliseconds=120_000,retentionMilliseconds=180_000;
 
 test("graph snapshot paths preserve publication and retention identities",()=>{
  const database=new Database(":memory:");
@@ -33,15 +33,15 @@ test("all graph fact namespaces use the finite authored graph partition",()=>{
 });
 
 test("synchronous fact publication requires live enforcing graph writer custody",async()=>{
- await withBuildTestInvocationV1(async original=>{
+ await repository.invoke(async original=>{
   const workspace=repository.root,manifest=fixture.writerManifest,source=JSON.stringify({version:1,manifest}),digest=createHash("sha256").update(source).digest("hex"),path=join(repositoryBuildGraphDataDirectoryV1(workspace,"build-lock-closures"),digest+".json");
   expect(()=>cargoLockInput(manifest,workspace)).toThrow("Original bounded graph writer custody");let release!:()=>void,escaped!:Promise<void>;
   await withRepositoryBuildGraphFactStoreV1(workspace,original,scriptCompilerAdmissionControlV1(original,"graph:fixture-writer",0),async(store,phaseControl)=>{try{escaped=new Promise<void>(accept=>{release=accept;}).then(()=>requireRepositoryBuildGraphWriterV1(workspace));expect(cargoLockInput(manifest,workspace)).toEqual({env:"SEMIO_CARGO_LOCK_"+digest});expect((await readFile(path)).toString()).toBe(source);await withRepositoryBuildGraphFactStoreV1(workspace,original,phaseControl,async nested=>{expect(nested).toBe(store);requireRepositoryBuildGraphWriterV1(workspace);});}finally{await store.recheck();await rm(path,{force:true});}});release();await expect(escaped).rejects.toThrow("Original bounded graph writer custody");expect(()=>requireRepositoryBuildGraphWriterV1(workspace)).toThrow("Original bounded graph writer custody");
- });
-},120000);
+ },{maximumElapsedMilliseconds:publicationMilliseconds});
+},publicationMilliseconds);
 
 test("actual bounded graph publication retains exact immutable bytes through original reader",async()=>{
- await withBuildTestInvocationV1(async original=>{
+ await repository.invoke(async original=>{
   const source=JSON.stringify(fixture.graph),database=new Database(":memory:");
   try{await withRepositoryBuildGraphArtifactV1(repository.root,fixture.graph as BuildGraphV1,original,scriptCompilerAdmissionControlV1(original,"graph:artifact-fixture",0),async(artifact,actualPhase)=>{
    const bytes=await readFile(artifact.path),manifest=JSON.parse(bytes.toString());
@@ -49,11 +49,11 @@ test("actual bounded graph publication retains exact immutable bytes through ori
    const contender=new Database(resourceLeasePathV1(join(repository.root,".cache/b/l/m/data"),"build-graph:"+artifact.path));try{expect(()=>contender.exec("BEGIN EXCLUSIVE")).toThrow("database is locked");}finally{contender.close();}
    await withRepositoryBuildGraphArtifactV1(repository.root,fixture.graph as BuildGraphV1,original,actualPhase,async again=>{expect(again).toEqual(artifact);});
   });}finally{database.close();}
- });
-},120000);
+ },{maximumElapsedMilliseconds:publicationMilliseconds});
+},publicationMilliseconds);
 
 test("a pin sweeps the retained snapshots only when it adds bytes and the last inventory is missing, old or near the budget",async()=>{
- await withBuildTestInvocationV1(async original=>{
+ await repository.invoke(async original=>{
   const graph=fixture.graph as BuildGraphV1,phase=(label:string)=>scriptCompilerAdmissionControlV1(original,label,0),grown=(name:string)=>({...graph,projects:{...graph.projects,[name]:{...graph.projects.fixture,name,root:name}}}) as BuildGraphV1;
   await withRepositoryBuildGraphArtifactV1(repository.root,graph,original,phase("graph:artifact-first"),async artifact=>{
    const directory=dirname(artifact.path),ledger=join(directory,"retained.ledger"),decoy=(label:string)=>join(directory,"f".repeat(64)+"~"+label),swept=async(label:string)=>readFile(decoy(label),"utf8").then(()=>false,()=>true);
@@ -81,5 +81,5 @@ test("a pin sweeps the retained snapshots only when it adds bytes and the last i
     expect(await swept("0badf00d"),"an inventory near the budget: sweep").toBe(true);
    }finally{for(const label of["deadbeef","cafebabe","0badf00d"])await rm(decoy(label),{force:true});}
   });
- });
-},180000);
+ },{maximumElapsedMilliseconds:retentionMilliseconds});
+},retentionMilliseconds);

@@ -15,7 +15,7 @@ async fn statik_pane_loads_applies_undoes_and_closes() {
         let language = semio_plugin::artifact_app_laws::PaneSmokeLanguage { body_key: semio_s_artifact_fem_3d_editor_panels::editor::fem3d::panels::artifact::BODY_KEY, catalog: vec![labels.nodes.as_str().into(), labels.elements.as_str().into()], view: view.for_panel() };
         let example = Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_3d_io::examples::concrete_forest::ID.into() });
         let command = Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 });
-        let (loaded, applied) = semio_plugin::artifact_app_laws::assert_pane_smoke_by_example(&mut app.0, &language, example, command, |app| app.snapshot().expect("snapshot"), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        let (loaded, applied) = semio_plugin::artifact_app_laws::assert_pane_smoke_by_example(&mut app.0, &language, example, command, |app| app.snapshot_ref().to_reference(), semio_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         assert!(!loaded.nodes.is_empty(), "the concrete forest carries its structure");
         assert_eq!(applied.nodes.len(), loaded.nodes.len() + 1);
     }
@@ -51,21 +51,30 @@ async fn statik_pane_body_renders_in_every_locale() {
 #[test]
 fn statik_pane_load_document_effect_retires_with_exact_receipts() {
     use semio_framework_value::{retained_clone::RetainedCloneGrant, retirement::controlled::ControlledRetirement};
-    let (mut pack, mut spr) = (Vec::<u8>::with_capacity(96), Vec::<u8>::with_capacity(40));
+    let cases: serde_json::Value = serde_json::from_str(include_str!("🧫️cases/🔣️.json")).expect("pane smoke case data");
+    let retirement = &cases["loadDocumentRetirement"];
+    let capacity = |field| usize::try_from(retirement[field].as_u64().expect("quoted payload capacity")).unwrap();
+    let (mut pack, mut spr) = (Vec::<u8>::with_capacity(capacity("packCapacity")), Vec::<u8>::with_capacity(capacity("sprCapacity")));
     pack.extend_from_slice(b"pack");
     spr.extend_from_slice(b"spr");
     let payload = pack.capacity() + spr.capacity();
+    assert_eq!(payload, capacity("payloadReleaseBytes"));
     let effect = semio_framework::Effect::LoadDocument { pack, spr };
     assert!(semio_plugin::CompletionEffect::supported(&effect));
     let quoted = semio_plugin::CompletionEffect::original_birth(&effect).expect("known effect quotes its birth");
-    let mut owner = ControlledRetirement::new(semio_plugin::CompletionEffect(effect)).unwrap_or_else(|(error, _)| panic!("allocated load-document admission refused: {error:?}"));
+    let effect = semio_plugin::CompletionEffect(effect);
+    assert_eq!(semio_framework_value::retirement::retirement_cursor_birth_demand(&effect).expect("quoted birth").capacity_bytes, quoted);
+    let mut owner = ControlledRetirement::new(effect).unwrap_or_else(|(error, _)| panic!("allocated load-document admission refused: {error:?}"));
+    let mut caller = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let (mut born, mut released, mut steps) = (0usize, 0usize, 0usize);
     while !owner.terminal_is_empty() {
         steps += 1;
         assert!(steps < 10_000, "load-document retirement must terminate");
         let demand = owner.selected_demand(4096).expect("quoted step");
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let progress = owner.step(grant).expect("funded step").progress();
+        let progress = caller.cx().with_retained_loan(grant, |cx| {
+            semio_framework_job::close_original_effect_step(cx, demand, |effect| owner.step(4096, effect))
+        }).expect("funded step").progress();
         assert!(progress.fits(grant));
         born += progress.retained_capacity_bytes;
         released += progress.released_bytes;

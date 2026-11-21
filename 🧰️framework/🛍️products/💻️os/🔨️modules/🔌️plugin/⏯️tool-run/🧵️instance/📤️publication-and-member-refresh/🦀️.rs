@@ -36,7 +36,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let entry=selected_entry_required!(self.tool_runs,"publication advance")?;
         let publication=entry.finalize.as_mut().and_then(|finalize|finalize.publication.as_mut()).ok_or_else(||tool_run_slot_lost("publication advance owner"))?;
         let mut out=None;let mut stepped=None;
-        if !cx.with_native_receiving(&mut out,|native,issued|{stepped=Some(self.stores.store.advance_apply_batch(publication,issued.maximum_copy_bytes,store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:issued.maximum_items.min(1),maximum_copy_bytes:issued.maximum_copy_bytes,maximum_capacity_bytes:issued.maximum_capacity_bytes,maximum_release_bytes:issued.maximum_release_bytes,maximum_depth:issued.maximum_depth},native));Ok(())})?{return Ok(())}
+        let turn_ceiling = cx.original_turn_ceiling().0;
+        if !cx.with_native_receiving(&mut out, |native, issued| {
+            let grant = store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(issued);
+            stepped = Some(self.stores.store.advance_apply_batch_with_turn_ceiling(
+                publication, issued.maximum_copy_bytes, grant, turn_ceiling, native,
+            ));
+            Ok(())
+        })? { return Ok(()); }
         let outcome=out.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original ToolRun publication receiving scope vanished"))?;cx.settle_receiving_scope()?;
         if outcome.source_refusal.is_some()||outcome.call.is_err(){return Err(semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::NativeSource(outcome)))}
         let result=stepped.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original ToolRun publication receiving step vanished"))?;

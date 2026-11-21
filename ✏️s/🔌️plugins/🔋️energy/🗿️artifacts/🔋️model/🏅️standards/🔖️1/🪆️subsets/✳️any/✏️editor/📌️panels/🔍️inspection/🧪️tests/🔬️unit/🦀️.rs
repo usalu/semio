@@ -102,6 +102,7 @@ async fn a_window_u_value_row_is_a_bound_number_input_inside_a_tree_row() {
     assert!(!bindings.contains("\"value\""), "the control's own value is merged by the host, never authored here: {bindings}");
     let row = node_at(&tree, "energy-model-inspection.fenestration.u-value").unwrap_or_else(|| panic!("{json}"));
     assert_eq!(row["component"]["type"].as_str(), Some("treeItem"), "the input sits inside its labelled tree row: {row}");
+    assert_eq!(control["accessibility"]["label"], row["component"]["label"]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -253,12 +254,25 @@ fn bridged(control: &serde_json::Value, value: &str) -> crate::editor_commands::
 /// `EntityId` and therefore has nowhere else to be edited from.
 #[semio_framework_async_macros::async_test]
 async fn nothing_selected_renders_the_document_summary_and_the_editable_site() {
-    let json = english(&[]);
-    assert!(json.contains("energy-model-inspection.summary.zones"), "{json}");
-    assert_eq!(component_at(&json, "energy-model-inspection.site.latitude.input"), "input", "the site is editable from the summary");
-    assert!(json.contains(SET_SITE_ACTION_ID));
-    assert!(!json.contains(SET_SURFACE_PROPERTY_ACTION_ID));
-    assert!(carries_a_tree(&json), "{json}");
+    let law: serde_json::Value = serde_json::from_str(include_str!("📋️control-names.json")).unwrap();
+    let snapshot = demo();
+    for (tag, locale) in [("en", Locale::En), ("de", Locale::De)] {
+        let json = panel(&snapshot, &[], locale);
+        assert!(json.contains("energy-model-inspection.summary.zones"), "{json}");
+        assert!(json.contains(SET_SITE_ACTION_ID));
+        assert!(!json.contains(SET_SURFACE_PROPERTY_ACTION_ID));
+        assert!(carries_a_tree(&json), "{json}");
+        let tree: serde_json::Value = serde_json::from_str(&json).unwrap();
+        for row in law["controls"].as_array().unwrap() {
+            let parent = format!("{ROOT}.{}", row["row"].as_str().unwrap());
+            let kind = row["suffix"].as_str().unwrap();
+            let key = format!("{parent}.{kind}");
+            let parent = node_at(&tree, &parent).expect("inspector control row");
+            let control = node_at(parent, &key).expect("inspector control");
+            assert_eq!(control["component"]["type"], kind, "{key}");
+            assert_eq!(control["accessibility"]["label"], row[tag], "{key} in {tag}");
+        }
+    }
 }
 
 #[semio_framework_async_macros::async_test]

@@ -24,7 +24,7 @@ pub use input::{MeshTranslationSource,MeshTranslationInput,MeshPlaneProduction,M
 
 #[path = "🧵️modeling-job/🦀️.rs"]
 mod modeling_job;
-use modeling_job::{Work, close_tessellation_handoff};
+use modeling_job::{Work, close_modeling_handoff};
 pub use modeling_job::MeshModelingJob;
 
 #[path = "🧰️modeling-operations/🦀️.rs"]
@@ -40,13 +40,20 @@ use transform_and_knife::{Knife, PositionPolicy, Transform, TransformSelection};
 mod inflate_orient_and_fill_holes;
 use inflate_orient_and_fill_holes::{FillHoles, Inflate, Orient};
 
+#[path="🌉️bridge/🦀️.rs"]
+mod bridge;
+use bridge::Bridge;
+#[path="📏️boundary-extrude/🦀️.rs"]
+mod boundary_extrude;
+use boundary_extrude::BoundaryExtrude;
+
 #[path = "🪢️loop-cut-mirror-and-subdivide/🦀️.rs"]
 mod loop_cut_mirror_and_subdivide;
 use loop_cut_mirror_and_subdivide::{LoopCut, Mirror, Subdivide};
 
 #[path = "📉️bevel-and-decimate/🦀️.rs"]
 mod bevel_and_decimate;
-use bevel_and_decimate::{Bevel, Candidate, Decimate};
+use bevel_and_decimate::{Bevel, Candidate, Decimate, DecimateDiscard};
 
 impl semio_framework_value::retirement::RetireOwned for TransformSelection {
     type RetirementCursor=semio_framework_value::retirement_fields_type!(Vec<VertexId>,Vec<EdgeId>,Vec<FaceId>,HistoryFoldSet<usize>);
@@ -70,8 +77,8 @@ impl semio_framework_value::retirement::RetireOwned for Inflate {
     fn controlled_retirement_supported()->bool {true}
 }
 impl semio_framework_value::retirement::RetireOwned for Orient {
-    type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<Vec<FaceId>>,Snapshot,Option<SourceAttributeRemap>,HistoryFoldIndex<(u32,u32),Vec<(usize,bool)>>,Vec<(u32,u32)>,Vec<Vec<(usize,bool)>>,Vec<bool>,Vec<bool>,Vec<usize>,Option<Build>);
-    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.input,self.snapshot,self.attributes,self.edges,self.keys,self.adjacency,self.oriented,self.flipped,self.stack,self.build)}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Option<Vec<FaceId>>,Snapshot,Option<SourceAttributeRemap>,HistoryFoldIndex<(u32,u32),Vec<(usize,bool)>>,Vec<(u32,u32)>,Vec<Vec<(usize,bool)>>,Vec<usize>,Vec<bool>,Vec<bool>,Vec<u8>,Vec<usize>,Option<Build>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.input,self.snapshot,self.attributes,self.edges,self.keys,self.adjacency,self.component,self.outward_flip,self.flipped,self.flip_incidence,self.stack,self.build)}
     fn controlled_retirement_supported()->bool {true}
 }
 impl semio_framework_value::retirement::RetireOwned for FillHoles {
@@ -101,8 +108,8 @@ impl semio_framework_value::retirement::RetireOwned for Bevel {
     fn controlled_retirement_supported()->bool {true}
 }
 impl semio_framework_value::retirement::RetireOwned for Decimate {
-    type RetirementCursor=semio_framework_value::retirement_fields_type!(Snapshot,HistoryFoldSet<(u32, u32)>,BinaryHeap<Reverse<Ranked>>,Option<Candidate>,Option<Build>,Vec<u32>,Vec<(u32,u32)>,Option<SourceAttributeRemap>);
-    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.snapshot,self.edges,self.ranked,self.candidate,self.build,self.source_faces,self.edge_sources,self.attributes)}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(Snapshot,HistoryFoldSet<(u32, u32)>,BinaryHeap<Reverse<Ranked>>,Option<Candidate>,Option<Build>,Vec<u32>,Vec<(u32,u32)>,Option<SourceAttributeRemap>,Option<semio_framework_value::retirement::controlled::ControlledRetirement<DecimateDiscard>>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.snapshot,self.edges,self.ranked,self.candidate,self.build,self.source_faces,self.edge_sources,self.attributes,self.discard)}
     fn controlled_retirement_supported()->bool {true}
 }
 impl semio_framework_value::retirement::RetireOwned for Candidate {

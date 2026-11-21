@@ -2,6 +2,7 @@
  * @see ./🥒️.feature — the scenarios */
 import { describe, expect, it } from "vitest";
 import { revisionOfText, type Asset, type Issue, type Manifest, type ManifestEntry } from "@teaching/staffage";
+import { testLevelBudgetMs } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import walkerDocument from "../../../../🧫️fixtures/🚶️reference-walker/🔣️.json";
 import { bundledCatalog, CatalogStore, type CatalogSource, type CategoryDocument } from "../../🔨️modules/📚️catalog/🟦️.ts";
 
@@ -95,7 +96,7 @@ describe("catalog store", () => {
     expect(counts, JSON.stringify(invalid)).toEqual({ ready: total });
     expect(snapshot.manifestIssues).toEqual([]);
     for (const id of ["cantilever-balcony", "glulam-beam", "steel-column"]) expect(snapshot.rows.find((row) => row.entry.id === id)?.status).toBe("ready");
-  }, 120_000);
+  }, testLevelBudgetMs("quick"));
 
   it("reports a failing file and a validator that throws without stopping", async () => {
     const failing = new CatalogStore({ manifest: async () => manifest, category: async () => { throw new Error("offline"); } }, reasons);

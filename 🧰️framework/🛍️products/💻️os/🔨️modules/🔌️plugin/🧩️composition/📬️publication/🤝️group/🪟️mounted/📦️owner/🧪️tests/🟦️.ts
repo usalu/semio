@@ -22,5 +22,5 @@ test("mounted private group frames retain every original owner on zero or underf
  expect(owner.includes("self.terminal_is_empty()")).toBe(true);
  expect(instance.includes("grant.maximum_capacity_bytes<bytes")).toBe(true);
  expect(owner.includes("StepContextOwner")).toBe(false);
- expect(instance.includes("owner.close_step(&mut stores.store,&mut self.children,")).toBe(true);
+ expect(instance.includes("owner.close_step(&mut *stores.store,&mut self.children,")).toBe(true);
 });

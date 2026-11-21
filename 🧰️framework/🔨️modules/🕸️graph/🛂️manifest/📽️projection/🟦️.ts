@@ -1,6 +1,6 @@
 /** 📽️ Rust and TypeScript projections of admitted graph manifests. */
 import { dirname, join, relative } from "node:path";
-import { readGraphManifestDocuments, type ManifestDocument, type ManifestKindRow } from "../📥️admission/🟦️.ts";
+import { readGraphManifestDocuments, type ManifestDiscoveryObserver, type ManifestDocument, type ManifestKindRow } from "../📥️admission/🟦️.ts";
 import { parseGraphOutputCatalog, type GraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 
 function pascalCase(id: string): string {
@@ -172,12 +172,13 @@ function emitTsManifest(doc: ManifestDocument, typesSpecifier: string): string {
 }
 
 export type GraphArtifact = { path: string; content: string };
+type GraphManifestInput = { read: (path: string) => string; observe: ManifestDiscoveryObserver };
 
 /** 🧾️ Renders the full graph catalog from lexically admitted manifest inputs without writes. */
-export function renderGraphArtifacts(root: string, outDir: string, catalog: GraphOutputCatalog, log = true): { artifacts: readonly GraphArtifact[]; manifestCount: number } {
+export function renderGraphArtifacts(root: string, outDir: string, catalog: GraphOutputCatalog, log = true, input?: GraphManifestInput): { artifacts: readonly GraphArtifact[]; manifestCount: number } {
     const artifacts: GraphArtifact[] = [];
     const declared = parseGraphOutputCatalog(catalog, catalog.manifests.map(doc => doc.id));
-    const docs = readGraphManifestDocuments(root, log, declared.inputAreas, declared.policy.excludedInputPaths);
+    const docs = readGraphManifestDocuments(root, log, declared.inputAreas, declared.policy.excludedInputPaths, input?.read, input?.observe);
     const outputs = parseGraphOutputCatalog(catalog, docs.map((doc) => doc.id));
     const byId = new Map(outputs.manifests.map((row) => [row.id, row]));
     const tsSpecifier = (from: string, to: string): string => {

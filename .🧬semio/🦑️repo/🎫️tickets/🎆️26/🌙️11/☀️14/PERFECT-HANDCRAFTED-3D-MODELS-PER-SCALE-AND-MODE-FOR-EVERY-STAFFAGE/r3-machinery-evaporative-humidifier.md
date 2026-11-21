@@ -163,3 +163,41 @@ Opened with the Read tool: `r3-sheet` body, body `--cut`, thermal `--cut`, struc
 - **1:200 base.** Support pad and base slab occupy the same 30 mm volume.
 - **Area corrections** casing 1.5 to 1.07 and trough 0.5 to 0.35 are within factor 1.5 and listed here for the area reviewers; `exposedFraction` of the poses was not touched (measured exposure of the casing 0.98 against the pose's 0.81).
 - **Not run:** the `repo` test targets of the staffage package and the model exports.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-evaporative-humidifier-build.py` (runs the round 3 build, then the round 5 fixes); apply and splice with `r3-evaporative-humidifier-apply.py` and `volumes-insert.py`. Sheets: `r5-m03-render.sh evaporative-humidifier`.
+
+### Reference vs model (1:50)
+
+| quantity | reference | source | model | deviation |
+|---|---|---|---|---|
+| cassette depth for 85-90 % saturation | 200 mm | Munters FA6 manual, dimension table | 200 mm | 0 |
+| pad face | 0.36 x 0.40 m class | asset, VDI 3803-1 | 0.36 x 0.40 m | 0 |
+| installation length | 630 mm (FA6 C) for the duct unit; this section 0.5 m | Munters FA6, asset | 0.50 m | 0 to asset |
+| face velocity | 1.5-3 m/s, no eliminator below 3 | ASHRAE, Munters | 1.9 m/s | in band |
+| tank water | 6 L | asset | 0.48 x 0.398 x 0.032 m = 6.1 L | +1.7 % |
+| envelope | 0.5 x 0.4 x 0.6 m | asset | 0.5 x 0.4 x 0.6 m | 0 |
+
+### Grades before -> after (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / B (two interpenetrating 90-200 mm mass ellipsoids hid the cassette seats) | A- / A- / A- (20 mm markers at the two centres of mass) |
+| 1:100 | A- / A- / B+ | A- / A- / A- |
+| 1:200 | B+ / B+ / B+ | B+ / B+ / A- |
+| poses | running (default), dry, wetting and `drip` t = 0.6 s opened: unchanged, closed | unchanged |
+
+Opened: r3-sheet body, thermal --cut, structure (before and after) at 1:50; body at 1:200. Rendered but not opened this round: the 1:100 sheets, 1:200 thermal and structure, poses dry and wetting and the `drip` t = 0.6 s frame (round 3 opened `dry` and `drip`).
+
+### Changes
+
+- `structure` masses: 1:50 `mass-pad` and `mass-casing` radius 10 mm (were 30 x 60 x 100 and 45 mm), 1:100 `mass-casing` 20 mm (50), 1:200 30 mm (55).
+- `representations.200.validRange.maxDenominator` 350 -> 280 (the 40 mm water slab prints at 0.2 mm there; 1:300 measured 0.198).
+
+Check: `r3-validate.ts machinery/evaporative-humidifier --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0).
+
+### Remaining
+
+- Drops are 20 mm marks on the pad faces (the asset's `drip` clip); real water runs inside the media.
+- The round 3 open points (casing mass 9 kg against 4 kg declared, sheet at the scale floor for bulkhead and reveal) stay.

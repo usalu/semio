@@ -8,6 +8,7 @@ use workflow::{WORKFLOW_SCHEMA, WorkflowMediaPort, placeholder_media_contract};
 #[derive(Default)]
 struct TestMediaCache {
     entries: HashMap<String, Media>,
+    capacity: Option<usize>,
 }
 
 impl MediaCache for TestMediaCache {
@@ -16,6 +17,9 @@ impl MediaCache for TestMediaCache {
     }
 
     fn put(&mut self, fingerprint: &MediaFingerprint, media: &Media) {
+        if self.capacity.is_some_and(|capacity| self.entries.len() >= capacity) {
+            self.entries.clear();
+        }
         self.entries.insert(fingerprint.0.clone(), media.clone());
     }
 }
@@ -360,18 +364,99 @@ async fn detects_cycles() {
     assert!(matches!(topological_order(&graph), Err(RunError::Cycle(_))));
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn native_media_exchange_reaches_node_resolution_and_respects_cancellation() {
+    std::thread::Builder::new()
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| semio_framework_async::block_on(exercise_native_media_exchange()))
+        .unwrap()
+        .join()
+        .unwrap_or_else(|panic| std::panic::resume_unwind(panic));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn exercise_native_media_exchange() {
+    let identity_policy = serde_json::from_str(include_str!("../../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).unwrap();
+    let policy = semio_framework_pack_json::from_json_str(
+        include_str!("../../../🔌️plugin/🖥️host/🔔️wake/📃️policy/🧪️tests/🧫️fixtures/🔣️.json"),
+        semio_framework_pack_json::JsonMemberPolicy::Reject,
+    ).unwrap();
+    let cancel = CancelToken::root_now();
+    let identity = semio_plugin_host::shard::native_identity_issuer(identity_policy, |_| Box::new(|_| true));
+    let blobs = Arc::new(InMemoryBlobStore::default());
+    let mut host = WasmtimeNodeHost::new(HashMap::new(), HashMap::new(), blobs, identity, policy, semio_framework_job::default_now_us, cancel.clone()).await.unwrap();
+    let context = OperationContext { actor: 1, generation: 0, trace: TraceId(1), lane: 0, deadline_ms: None, cancel: cancel.clone(), capability: None };
+    let command = || AppCommand::MediaOut { seq: 1, port: "rule:out".into(), request: Vec::new() };
+
+    assert!(matches!(host.exchange(&context, 1, vec![command()]).await, Err(RunError::Host(detail)) if detail == "unknown node handle 1"));
+    cancel.cancel().await;
+    assert!(matches!(host.exchange(&context, 1, vec![command()]).await, Err(RunError::Cancelled)));
+    for command in [
+        AppCommand::CancelDocumentArchiveLoad { seq: 2, operation: 1 },
+        AppCommand::PollDocumentArchiveLoad { seq: 3, operation: 1 },
+        AppCommand::AcknowledgeDocumentArchiveLoad { seq: 4, operation: 1 },
+    ] {
+        assert!(matches!(host.exchange(&context, 1, vec![command]).await, Err(RunError::Host(detail)) if detail == "unknown node handle 1"));
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn workflow_transfers_selected_media_using_guest_port_names() {
+    let vector: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let source = vector["sourcePort"].as_str().unwrap();
+    let target = vector["targetPort"].as_str().unwrap();
+    let unused = vector["unusedPort"].as_str().unwrap();
+    let external = vector["externalPort"].as_str().unwrap();
+    let schema = vector["schema"].as_str().unwrap();
+    let mut graph = two_node_graph().await;
+    graph.nodes[0].outputs = [source, unused, external].into_iter()
+        .map(|port| media_port("node-a", port, MediaPortDirection::Out, schema, PortMultiplicity::Many, false)).collect();
+    graph.nodes[0].inputs.push(media_port("node-a", "artifact:in", MediaPortDirection::In, schema, PortMultiplicity::One, true));
+    graph.nodes[1].inputs = vec![media_port("node-b", target, MediaPortDirection::In, schema, PortMultiplicity::One, false)];
+    let media_type = MediaType { class: MediaClass::Computation, form: MediaForm::Value };
+    graph.nodes[0].outputs[0].spec.media_type = media_type;
+    graph.nodes[1].inputs[0].spec.media_type = media_type;
+    graph.edges[0].source_port_id = graph.nodes[0].outputs[0].id.clone();
+    graph.edges[0].target_port_id = graph.nodes[1].inputs[0].id.clone();
+    let contract = semio_os::negotiate_media_contract(&graph.nodes[0].outputs[0], &graph.nodes[1].inputs[0]).unwrap();
+    assert_eq!(contract.wire, MediaWireFormat::Intrinsic { schema: schema.into() });
+    assert_eq!(contract.conversion, None);
+    graph.edges[0].contract = contract;
+    let external_output = workflow::WorkflowOutputBinding {
+        node_id: "node-a".into(), port_id: graph.nodes[0].outputs[2].id.clone(), path_template: "report.json".into(),
+    };
+    let invocation = Media { media_type, payload: MediaPayload::Intrinsic {
+        schema: schema.into(), value: semio_framework_value::DslValue::String(vector["value"].as_str().unwrap().into()),
+    } };
+    let mut host = FakeHost::default();
+    host.outputs.insert(("app-node-a".into(), source.into()), invocation.clone());
+    host.set_output("app-node-a", external, "\"report\"");
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(), semio_framework_async::CancelToken::root_now());
+    let mut sink = fresh_sink().await;
+    runner.run(&graph, &empty_documents(&graph), &empty_configs(&graph), &[], &[], &[external_output], &BTreeMap::new(), &mut TestMediaCache::default(), &mut sink).await.unwrap();
+    assert_eq!(runner.into_host().imported, vec![(2, target.to_owned(), invocation)]);
+    let records = prior_node_records_from(&sink.document);
+    let source_record = &records["node-a"];
+    assert_eq!(
+        source_record.output_fingerprints.iter().map(|entry| entry.port_id.as_str()).collect::<BTreeSet<_>>(),
+        BTreeSet::from([graph.nodes[0].outputs[0].id.as_str(), graph.nodes[0].outputs[2].id.as_str()]),
+    );
+    assert_eq!(records["node-b"].input_fingerprints[0].port_id, graph.edges[0].target_port_id);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn first_run_recomputes_every_node_second_run_is_a_no_operation() {
     let graph = two_node_graph().await;
     let mut host = FakeHost::default();
-    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    host.set_output("app-node-a", "out", "\"hello\"");
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
 
     let mut sink_1 = fresh_sink().await;
-    let report_1 = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
+    let report_1 = runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
     assert_eq!(report_1.recomputed, vec!["node-a".to_string(), "node-b".to_string()]);
     assert!(report_1.clean.is_empty());
     sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
@@ -381,30 +466,81 @@ async fn first_run_recomputes_every_node_second_run_is_a_no_operation() {
 
     let prior = prior_node_records_from(&sink_1.document);
     let mut sink_2 = fresh_sink().await;
-    let report_2 = runner.run(&graph, &documents, &configs, &[], &[], &prior, &mut cache, &mut sink_2).await.expect("second run");
+    let report_2 = runner.run(&graph, &documents, &configs, &[], &[], &[], &prior, &mut cache, &mut sink_2).await.expect("second run");
     assert!(report_2.recomputed.is_empty(), "unchanged documents must not re-trigger recompute: {:?}", report_2.recomputed);
     assert_eq!(report_2.clean, vec!["node-a".to_string(), "node-b".to_string()]);
     assert!(sink_2.document.node_records.iter().all(|record| record.status == RunNodeStatus::CacheHit), "every node on the second run must be a CacheHit: {:?}", sink_2.document.node_records);
 }
 
 #[semio_framework_async_macros::async_test]
+async fn evicted_intermediate_output_recomputes_with_inputs_and_retains_media_until_consumed() {
+    let vector: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
+    let case = &vector["cacheEviction"];
+    let mut graph = two_node_graph().await;
+    graph.nodes[1].outputs = ["out", "unused"].into_iter()
+        .map(|port| media_port("node-b", port, MediaPortDirection::Out, "data.value", PortMultiplicity::One, true)).collect();
+    graph.nodes.push(workflow_node("node-c", Vec::new(), vec![media_port("node-c", "in", MediaPortDirection::In, "data.value", PortMultiplicity::One, true)]));
+    graph.edges.push(WorkflowEdge {
+        id: "edge-2".into(), source_node_id: "node-b".into(), source_port_id: "node-b:out:out".into(),
+        target_node_id: "node-c".into(), target_port_id: "node-c:in:in".into(), contract: placeholder_media_contract("data.value").await,
+    });
+    let mut host = FakeHost::default();
+    host.set_output("app-node-a", "out", &case["upstream"].to_string());
+    host.set_output("app-node-b", "out", &case["evicted"].to_string());
+    host.set_output("app-node-b", "unused", &case["unconnected"].to_string());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(), CancelToken::root_now());
+    let mut cache = TestMediaCache::default();
+    let documents = empty_documents(&graph);
+    let configs = empty_configs(&graph);
+    let mut first = fresh_sink().await;
+    runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut first).await.expect("first run");
+    first.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
+    let prior = prior_node_records_from(&first.document);
+    let old_fingerprint = &prior["node-b"].output_fingerprints[0].fingerprint;
+    assert!(cache.entries.remove(old_fingerprint).is_some());
+    cache.capacity = Some(1);
+
+    let mut host = runner.into_host();
+    host.imported.clear();
+    host.set_output("app-node-b", "out", &case["recomputed"].to_string());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(), CancelToken::root_now());
+    let mut second = fresh_sink().await;
+    let report = runner.run(&graph, &documents, &configs, &[], &[], &[], &prior, &mut cache, &mut second).await.expect("run after eviction");
+    assert_eq!(report.clean, ["node-a"]);
+    assert_eq!(report.recomputed, ["node-b", "node-c"]);
+    let records = prior_node_records_from(&second.document);
+    let fresh_fingerprint = &records["node-b"].output_fingerprints[0].fingerprint;
+    assert_ne!(fresh_fingerprint, old_fingerprint);
+    assert_eq!(&records["node-c"].input_fingerprints[0].fingerprint, fresh_fingerprint);
+    assert!(!cache.entries.contains_key(fresh_fingerprint), "the last unconnected output evicted the connected output");
+
+    let host = runner.into_host();
+    let imports: Vec<_> = host.imported.iter().map(|(handle, _, media)| {
+        let MediaPayload::Structured { json, .. } = &media.payload else { panic!("expected structured media") };
+        let payload: serde_json::Value = serde_json::from_str(json).expect("wire payload");
+        (host.handle_app[handle].as_str(), payload)
+    }).collect();
+    assert_eq!(imports, [("app-node-b", case["upstream"].clone()), ("app-node-c", case["recomputed"].clone())]);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn editing_upstream_document_dirties_downstream_only_through_the_wire() {
     let graph = two_node_graph().await;
     let mut host = FakeHost::default();
-    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    host.set_output("app-node-a", "out", "\"hello\"");
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
     let mut sink_1 = fresh_sink().await;
-    runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
+    runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
     sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
 
     let mut documents_2 = documents.clone();
     documents_2.insert("artifacts/node-a".to_string(), (b"pack".to_vec(), b"edited".to_vec()));
     let prior = prior_node_records_from(&sink_1.document);
     let mut sink_2 = fresh_sink().await;
-    let report_2 = runner.run(&graph, &documents_2, &configs, &[], &[], &prior, &mut cache, &mut sink_2).await.expect("second run");
+    let report_2 = runner.run(&graph, &documents_2, &configs, &[], &[], &[], &prior, &mut cache, &mut sink_2).await.expect("second run");
     assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's own document changed, so node-a must recompute");
     assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed, so its output fingerprint is unchanged — node-b must stay clean (the early-cutoff this whole design exists for)");
 }
@@ -417,26 +553,26 @@ async fn editing_upstream_document_dirties_downstream_only_through_the_wire() {
 async fn changing_a_nodes_config_alone_dirties_it_without_touching_document_or_inputs() {
     let graph = two_node_graph().await;
     let mut host = FakeHost::default();
-    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    host.set_output("app-node-a", "out", "\"hello\"");
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs_1 = empty_configs(&graph);
     let mut sink_1 = fresh_sink().await;
-    runner.run(&graph, &documents, &configs_1, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
+    runner.run(&graph, &documents, &configs_1, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
     sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
     let prior = prior_node_records_from(&sink_1.document);
 
-    let plan_unchanged = plan(&graph, &documents, &configs_1, &[], &[], &prior).await.expect("plan with unchanged config");
+    let plan_unchanged = plan(&graph, &documents, &configs_1, &[], &[], &[], &prior).await.expect("plan with unchanged config");
     assert!(plan_unchanged.recomputed.is_empty(), "nothing changed, plan must report every node clean: {:?}", plan_unchanged.recomputed);
 
     let mut configs_2 = configs_1.clone();
     configs_2.insert("config/node-a".to_string(), (Vec::new(), b"threshold=2".to_vec()));
-    let plan_changed = plan(&graph, &documents, &configs_2, &[], &[], &prior).await.expect("plan with changed config");
+    let plan_changed = plan(&graph, &documents, &configs_2, &[], &[], &[], &prior).await.expect("plan with changed config");
     assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "only node-a's own config changed, so only node-a should be recomputed by the plan");
 
     let mut sink_2 = fresh_sink().await;
-    let report_2 = runner.run(&graph, &documents, &configs_2, &[], &[], &prior, &mut cache, &mut sink_2).await.expect("second run with changed config");
+    let report_2 = runner.run(&graph, &documents, &configs_2, &[], &[], &[], &prior, &mut cache, &mut sink_2).await.expect("second run with changed config");
     assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's config changed, so node-a must recompute even though its document and inputs did not");
     assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed regardless of config, so node-b must stay clean");
 }
@@ -449,7 +585,7 @@ async fn changing_a_nodes_config_alone_dirties_it_without_touching_document_or_i
 async fn parameter_overlay_alone_dirties_its_bound_node_without_changing_raw_config_bytes() {
     let graph = two_node_graph().await;
     let mut host = FakeHost::default();
-    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    host.set_output("app-node-a", "out", "\"hello\"");
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
@@ -457,19 +593,19 @@ async fn parameter_overlay_alone_dirties_its_bound_node_without_changing_raw_con
     let bindings = vec![WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "node-a".into(), field_path: "/threshold".into() }];
 
     let mut sink_1 = fresh_sink().await;
-    runner.run(&graph, &documents, &configs, &[], &bindings, &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
+    runner.run(&graph, &documents, &configs, &[], &bindings, &[], &BTreeMap::new(), &mut cache, &mut sink_1).await.expect("first run");
     sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
     let prior = prior_node_records_from(&sink_1.document);
 
-    let plan_unchanged = plan(&graph, &documents, &configs, &[], &bindings, &prior).await.expect("plan with no parameter values yet");
+    let plan_unchanged = plan(&graph, &documents, &configs, &[], &bindings, &[], &prior).await.expect("plan with no parameter values yet");
     assert!(plan_unchanged.recomputed.is_empty(), "no bound parameter value yet — nothing should be dirty: {:?}", plan_unchanged.recomputed);
 
     let parameter_values = vec![RunParameterValue { parameter_id: "p1".into(), value: "42".into() }];
-    let plan_changed = plan(&graph, &documents, &configs, &parameter_values, &bindings, &prior).await.expect("plan with a parameter value bound");
+    let plan_changed = plan(&graph, &documents, &configs, &parameter_values, &bindings, &[], &prior).await.expect("plan with a parameter value bound");
     assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "the bound node's fingerprint must change purely from the parameter overlay: {:?}", plan_changed);
 
     let mut sink_2 = fresh_sink().await;
-    let report_2 = runner.run(&graph, &documents, &configs, &parameter_values, &bindings, &prior, &mut cache, &mut sink_2).await.expect("second run with a param override");
+    let report_2 = runner.run(&graph, &documents, &configs, &parameter_values, &bindings, &[], &prior, &mut cache, &mut sink_2).await.expect("second run with a param override");
     assert_eq!(report_2.recomputed, vec!["node-a".to_string()]);
     assert_eq!(sink_2.node_configs.get("node-a"), Some(&configs["config/node-a"]), "raw config bytes sent to the app are untouched by the overlay — only the fingerprint changes");
 }
@@ -575,7 +711,7 @@ async fn space_runner_never_overlaps_exchange_for_the_same_node_across_a_real_ru
     let configs = empty_configs(&graph);
     let mut sink = fresh_sink().await;
 
-    runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await.expect("both solo nodes compute cleanly against RecorderHost");
+    runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await.expect("both solo nodes compute cleanly against RecorderHost");
 
     let state = recorder.0.borrow();
     assert!(!state.overlap_detected, "SpaceRunner must never issue two exchange calls for the same node concurrently");
@@ -600,7 +736,7 @@ async fn cancelling_the_run_token_stops_the_run_before_the_next_node() {
     let mut sink = fresh_sink().await;
 
     cancel.cancel().await;
-    let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
+    let result = runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
     assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled before its first node must fail with RunError::Cancelled, got {result:?}");
     assert!(recorder.0.borrow().completed_in_order.is_empty(), "no node's exchange should run once the token is cancelled before the run starts");
 }
@@ -625,7 +761,7 @@ fn sent_to(host: &FakeHost, handle: u32) -> Vec<&'static str> {
 async fn a_long_history_node_document_loads_through_polls_before_any_import() {
     let graph = two_node_graph().await;
     let mut host = FakeHost { fold_per_poll: 16, ..FakeHost::default() };
-    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    host.set_output("app-node-a", "out", "\"hello\"");
     let progress = Arc::new(Mutex::new(Vec::new()));
     let observer = Arc::clone(&progress);
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now()).with_document_load_progress(move |step: &NodeDocumentLoadProgress| observer.lock().expect("progress").push(step.clone()));
@@ -635,7 +771,7 @@ async fn a_long_history_node_document_loads_through_polls_before_any_import() {
     documents.insert("artifacts/node-a".to_string(), document.clone());
     let configs = empty_configs(&graph);
     let mut sink = fresh_sink().await;
-    runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await.expect("the run loads node-a's long document and computes both nodes");
+    runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await.expect("the run loads node-a's long document and computes both nodes");
 
     let progress = progress.lock().expect("progress").clone();
     assert!(progress.len() >= 2 && progress.iter().all(|step| step.node_id == "node-a"), "only node-a loads, over several polls: {progress:?}");
@@ -660,7 +796,7 @@ async fn cancelling_the_run_during_a_document_load_restores_the_node_document_an
     let graph = two_node_graph().await;
     let slot = Arc::new(Mutex::new(None));
     let mut host = FakeHost { fold_per_poll: 16, cancel_at_poll: Some(1), run_cancel: Arc::clone(&slot), ..FakeHost::default() };
-    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    host.set_output("app-node-a", "out", "\"hello\"");
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     *slot.lock().expect("run cancel slot") = Some(runner.cancel_token());
     let mut cache = TestMediaCache::default();
@@ -668,7 +804,7 @@ async fn cancelling_the_run_during_a_document_load_restores_the_node_document_an
     documents.insert("artifacts/node-a".to_string(), long_history_document(240));
     let configs = empty_configs(&graph);
     let mut sink = fresh_sink().await;
-    let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
+    let result = runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
     assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled mid-load stops with RunError::Cancelled, got {result:?}");
     assert!(sink.node_artifacts.is_empty(), "nothing was read back");
     let host = runner.into_host();
@@ -688,14 +824,14 @@ async fn cancelling_the_run_during_a_document_load_restores_the_node_document_an
 async fn a_faulted_document_load_restores_the_node_document_and_surfaces_the_guest_code() {
     let graph = two_node_graph().await;
     let mut host = FakeHost { fold_per_poll: 16, fault_at_poll: Some(2), ..FakeHost::default() };
-    host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
+    host.set_output("app-node-a", "out", "\"hello\"");
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let mut documents = empty_documents(&graph);
     documents.insert("artifacts/node-a".to_string(), long_history_document(240));
     let configs = empty_configs(&graph);
     let mut sink = fresh_sink().await;
-    let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
+    let result = runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
     let message = match result {
         Err(RunError::Host(message)) => message,
         other => panic!("a faulted load fails the run with the node's host error, got {other:?}"),
@@ -714,7 +850,7 @@ async fn a_faulted_document_load_restores_the_node_document_and_surfaces_the_gue
 async fn a_whole_document_input_loads_through_polls_before_any_export_or_read() {
     let graph = two_node_graph().await;
     let mut host = FakeHost { fold_per_poll: 16, ..FakeHost::default() };
-    host.set_document_output("app-node-a", "node-a:out:out", "\"source document\"");
+    host.set_document_output("app-node-a", "out", "\"source document\"");
     let progress = Arc::new(Mutex::new(Vec::new()));
     let observer = Arc::clone(&progress);
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now()).with_document_load_progress(move |step: &NodeDocumentLoadProgress| observer.lock().expect("progress").push(step.clone()));
@@ -722,7 +858,7 @@ async fn a_whole_document_input_loads_through_polls_before_any_export_or_read() 
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
     let mut sink = fresh_sink().await;
-    runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await.expect("node-b loads node-a's whole document through polls");
+    runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await.expect("node-b loads node-a's whole document through polls");
 
     let total = FAKE_MEDIA_DOCUMENT_HISTORY as u64 + 1;
     let progress = progress.lock().expect("progress").clone();
@@ -745,14 +881,14 @@ async fn cancelling_the_run_during_a_whole_document_input_restores_the_node_docu
     let graph = two_node_graph().await;
     let slot = Arc::new(Mutex::new(None));
     let mut host = FakeHost { fold_per_poll: 16, cancel_at_poll: Some(1), run_cancel: Arc::clone(&slot), ..FakeHost::default() };
-    host.set_document_output("app-node-a", "node-a:out:out", "\"source document\"");
+    host.set_document_output("app-node-a", "out", "\"source document\"");
     let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     *slot.lock().expect("run cancel slot") = Some(runner.cancel_token());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
     let mut sink = fresh_sink().await;
-    let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
+    let result = runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
     assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled mid-import stops with RunError::Cancelled, got {result:?}");
     assert!(!sink.node_artifacts.contains_key("node-b"), "node-b read nothing back");
     let host = runner.into_host();
@@ -766,10 +902,10 @@ async fn cancelling_the_run_during_a_whole_document_input_restores_the_node_docu
 async fn a_whole_document_carrier_crosses_a_run_edge_byte_for_byte() {
     let archive = protocol::DocumentArchivePack { parent_pack: vec![0x89, 0, 255, 7], parent_spr: vec![1, 2, 3], members: Vec::new() };
     let carrier = store::pack_rt::pack_value_to_base64(&protocol::encode_document_archive_bytes(&archive).expect("archive bytes")).into_bytes();
-    let descriptor = semio_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: Some("artifact:out".into()), kind_id: None, media_type: Some(fake_media_type()), wire: MediaWireFormat::Document { schema: FAKE_DOCUMENT_SCHEMA.into() }, blob_hash: None };
+    let descriptor = semio_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: Some("artifact:out".into()), kind_id: None, media_type: None, wire: MediaWireFormat::Document { schema: FAKE_DOCUMENT_SCHEMA.into() }, blob_hash: None };
     let descriptor_bytes = store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let blobs = InMemoryBlobStore::default();
-    let media = media_from_document(&descriptor_bytes, carrier.clone(), &blobs).await.expect("a text carrier is a structured media");
+    let media = super::media::media_from_document_with_type(&descriptor_bytes, carrier.clone(), &blobs, Some(fake_media_type())).await.expect("an implicit artifact output uses its declared media type");
     assert!(matches!(&media.payload, MediaPayload::Structured { schema, .. } if schema == FAKE_DOCUMENT_SCHEMA));
     let (wire_descriptor, data) = media_to_artifact(&media, &blobs).await.expect("the edge hands it on");
     assert_eq!(data, carrier, "the carrier arrives byte for byte");
@@ -789,7 +925,7 @@ async fn rejects_incompatible_edge_media_types() {
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
     let mut sink = fresh_sink().await;
-    let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
+    let result = runner.run(&graph, &documents, &configs, &[], &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
     assert!(matches!(result, Err(RunError::Incompatible { .. })));
 }
 
@@ -818,16 +954,32 @@ async fn validate_rejects_multiplicity_one_input_with_two_incoming_edges() {
 
 #[semio_framework_async_macros::async_test]
 async fn validate_rejects_unregistered_conversion() {
-    let source = workflow_node("src", vec![media_port("src", "out", MediaPortDirection::Out, "data.value", PortMultiplicity::One, true)], Vec::new());
-    let target = workflow_node("dst", Vec::new(), vec![media_port("dst", "in", MediaPortDirection::In, "data.value", PortMultiplicity::One, false)]);
-    let mut contract = placeholder_media_contract("data.value").await;
-    contract.conversion = Some((MediaForm::Trinity, MediaForm::Dag));
-    let graph = Workflow {
-        schema: WORKFLOW_SCHEMA.into(),
-        nodes: vec![source, target],
-        edges: vec![WorkflowEdge { id: "e1".into(), source_node_id: "src".into(), source_port_id: "src:out:out".into(), target_node_id: "dst".into(), target_port_id: "dst:in:in".into(), contract }],
-    };
+    let mut graph = two_node_graph().await;
+    graph.nodes[0].outputs[0].spec.media_type = MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep };
+    let accepted = MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh };
+    graph.nodes[1].inputs[0].spec.media_type = accepted;
+    graph.edges[0].contract.media_type = accepted;
+    graph.edges[0].contract.conversion = Some((MediaForm::Brep, MediaForm::Mesh));
     assert!(matches!(validate_edge_kinds(&graph).await, Err(RunError::UnregisteredConversion { .. })));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn validate_rejects_missing_or_mismatched_negotiated_conversion() {
+    register_builtin_converters();
+    let mut graph = two_node_graph().await;
+    let vector = MediaType { class: MediaClass::TwoD, form: MediaForm::Vector };
+    let raster = MediaType { class: MediaClass::TwoD, form: MediaForm::Raster };
+    graph.nodes[0].outputs[0].spec.media_type = vector;
+    graph.nodes[1].inputs[0].spec.media_type = raster;
+    graph.edges[0].contract.media_type = raster;
+    assert!(matches!(validate_edge_kinds(&graph).await, Err(RunError::InvalidMediaContract { .. })));
+
+    graph.edges[0].contract.conversion = Some((MediaForm::Vector, MediaForm::Raster));
+    graph.edges[0].contract.media_type = vector;
+    assert!(matches!(validate_edge_kinds(&graph).await, Err(RunError::InvalidMediaContract { .. })));
+
+    graph.edges[0].contract.media_type = raster;
+    validate_edge_kinds(&graph).await.expect("the stored conversion matches the ports");
 }
 
 #[semio_framework_async_macros::async_test]

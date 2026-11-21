@@ -183,6 +183,7 @@
           "enum": [
             "image",
             "control",
+            "fleet",
             "cargo",
             "nx",
             "nx-tooling",

@@ -121,12 +121,8 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🪟️ Every route of the preview chain that may publish — the dispatched hop and both
     /// window-addressed folds, which now continue the chain inline and therefore publish the
     /// intermediate geometry and the advanced status pill the hop used to.
-    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
-        let (window_id, window_kind_id) = generation3d_flow_eval_window_address(command)?;
-        if window_id.is_empty() {
-            return None;
-        }
-        generation3d_preview_kind(window_kind_id).map(|kind| (window_id, kind))
+    fn retained_window_transient_target<'a>(command: &'a Self::Command, _view: Option<&'a semio_plugin::ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        Ok(generation3d_flow_eval_window_address(command).filter(|(window_id, _)| !window_id.is_empty()).and_then(|(window_id, window_kind_id)| generation3d_preview_kind(window_kind_id).map(|kind| (window_id, kind))))
     }
 
     const DIALECT: Dialect = semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
@@ -321,7 +317,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                 Ok(Generation3dCommand::SetWidgetInput(set_widget_input::SetWidgetInput {
                 widget_id: str_arg(&["widgetId"]).ok_or_else(|| Fault::from("Choose a widget"))?,
                 channel: str_arg(&["channel"]).ok_or_else(|| Fault::from("Choose an input"))?,
-                value: args.get("value").map(|value| value.as_str().map(str::to_string).unwrap_or_else(|| semio_framework_pack_json::to_json_string(value))).ok_or_else(|| Fault::from("Input value is missing"))?,
+                value: set_widget_input::widget_input_action_value(args.get("value").ok_or_else(|| Fault::from("Input value is missing"))?).map_err(Fault::from)?,
                 component: str_arg(&["component"]),
                 operation,
                 index: index("index")?,
@@ -436,6 +432,8 @@ impl ArtifactEditor for Generation3dPlayApp {
                 Ok(Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
+                    field_index: args.get("fieldIndex").filter(|value| !matches!(value, semio_framework_value::DslValue::Null))
+                        .map(|value| semio_framework_artifact_playbook_playbook::generation_field_index(value).ok_or_else(|| Fault::from("Invalid generation field index"))).transpose()?,
                     value,
                 }))
             }
@@ -541,7 +539,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>, Fault> {
         with_scratch_session(|session| {
             let component_ids = &interaction.selection(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).ids;
-            if let Some(ids) = generation3d_component_targets(command, view_state, interaction.active_granularity(semio_s_artifact_procedural_3d_editor_selection::DOMAIN), component_ids, &interaction.selection("graph").ids).filter(|ids| !ids.is_empty()) {
+            if let Some(ids) = generation3d_component_targets(command, view_state, interaction.active_granularity(semio_s_artifact_procedural_3d_editor_selection::DOMAIN), component_ids).filter(|ids| !ids.is_empty()) {
                 semio_s_artifact_procedural_3d_editor_selection::validate_cached_components(&doc.snapshot.host_snapshot, session, ids, doc.operation().ok().map(|operation| &operation.canonical_base_revision), doc.retained_grant()?).map_err(Fault::from)?;
             }
             match command {
@@ -555,59 +553,22 @@ impl ArtifactEditor for Generation3dPlayApp {
                 let ids = semio_s_artifact_procedural_3d_transforms::gumball_ids(&doc.snapshot.host_snapshot, gesture.ids, components, &interaction.selection("graph").ids)?;
                 semio_s_artifact_procedural_3d_transforms::gumball_once(gesture.verb, ids, gesture.motion, doc)
             }
-            Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(doc, &interaction.selection("graph").ids)),
-            Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(doc, &interaction.selection("graph").ids)),
-            Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(doc, &interaction.selection("graph").ids)),
-            Generation3dCommand::SelectDownstreamNode(_payload) => Ok(select_downstream_node::apply_selected(doc, &interaction.selection("graph").ids)),
-            Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(doc, &generation3d_port_ids_by_node(&doc.snapshot.host_snapshot), &interaction.selection("graph").ids)),
+            Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(doc, &interaction.selection("graph").granularity, &interaction.selection("graph").ids)),
+            Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(doc, &interaction.selection("graph").granularity, &interaction.selection("graph").ids)),
+            Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(doc, &interaction.selection("graph").granularity, &interaction.selection("graph").ids)),
+            Generation3dCommand::SelectDownstreamNode(_payload) => Ok(select_downstream_node::apply_selected(doc, &interaction.selection("graph").granularity, &interaction.selection("graph").ids)),
+            Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(doc, &generation3d_port_ids_by_node(&doc.snapshot.host_snapshot), &interaction.selection("graph").granularity, &interaction.selection("graph").ids)),
             _ => command.dispatch(doc, cfg, session),
             }
         })
     }
 
-    /// 🕸️ `graph`'s `HierarchyProvider::Topology` — every widget's visible ports become `handle`
-    /// targets (`{nodeId}@{portId}`, byte-identical to the node-graph's own pick ids) parented to
-    /// their widget, which is what makes `HoverSpec { transitive: true }` light up every channel's
-    /// preview geometry from a single node hover, and resolve a preview-instance hover back to its
-    /// node. Every top-level widget is a "node" (root unless
-    /// nested in a `Widget::Cluster`'s own `tree.neurons`, where each nested `Neuron` becomes a "node"
-    /// parented to its owning cluster's widget id — the DAG-parent-links transitive-hover source: hovering
-    /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
-    /// "edge" targets, parented to nothing (edges are leaves, not containers).
+    /// 🕸️ Publishes the graph's namespaced widgets, handles and wires.
     fn interaction_topology(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
- let ports_by_node = generation3d_port_ids_by_node(&doc.snapshot.host_snapshot);
- Ok((||{
-        fn walk_neuron(neuron: &semio_framework_artifact_flow_flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
-            ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
-            if let Some(tree) = &neuron.tree {
-                for child in &tree.neurons {
-                    walk_neuron(child, neuron.id.clone(), ordered);
-                }
-            }
-        }
-        let host_snapshot = &doc.snapshot.host_snapshot;
-        let mut ordered = Vec::new();
-        for widget in &host_snapshot.widgets {
-            let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
-            ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
-            for port in ports_by_node.get(&id).into_iter().flatten() {
-                ordered.push(TopologyNode { id: port.clone(), granularity: "handle".into(), parent: Some(id.clone()) });
-            }
-            if let semio_framework_artifact_flow_flow::Widget::Cluster { tree, .. } = widget {
-                for child in &tree.neurons {
-                    walk_neuron(child, id.clone(), &mut ordered);
-                }
-            }
-        }
-        for synapse in &host_snapshot.synapses {
-            ordered.push(TopologyNode { id: synapse.id.clone(), granularity: "edge".into(), parent: None });
-        }
-        let mut domains = std::collections::BTreeMap::new();
-        domains.insert("graph".to_string(), DomainTopology { ordered });
-        InteractionTopology { domains }
-    
-})())
-}
+        let host = &doc.snapshot.host_snapshot;
+        let ports = generation3d_port_ids_by_node(host);
+        Ok(semio_s_artifact_procedural_3d_preview_eval::graph_interaction_topology(host, &ports))
+    }
 
     /// ⏯️ Starts, finalizes or wakes the `previewEval` run for the attached preview windows
     /// ([`crate::preview_eval::preview_eval_run_effects`]).
@@ -647,7 +608,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🆓️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
-        with_scratch_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, view_state, &PreviewInteractionMarks::default(), session, doc.tool_run()))
+        with_scratch_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, view_state, &PreviewInteractionMarks::default(), session, doc.tool_run(), &mut None))
     }
 
     /// 💚️ Resolves the live `graph` hover/selection once per render and threads it into every
@@ -665,16 +626,23 @@ impl ArtifactEditor for Generation3dPlayApp {
     ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let preview_eval_text = transient
             .window::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>()
-            .or_else(|| transient.window::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>())
-            .and_then(|state| state.preview_eval_text.as_deref());
+            .and_then(|state| state.evaluation_for(None))
+            .or_else(|| transient.window::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>()
+                .and_then(|state| state.evaluation_for(cfg.snapshot.selected_generation_id.as_deref())));
         let mut marks = PreviewInteractionMarks::from_interaction(interaction);
         marks.source_revision = doc.render_operation().map(|operation| operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect());
         let previews = matches!(body_key, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW | generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW);
+        let window_id = view_state.window_id.as_deref().unwrap_or(body_key);
         let rendered=owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
+                owner.preview_hover.retain_windows(|id| id == window_id || view_state.window_instances.is_empty() || view_state.window_instances.iter().any(|window| window.id == id));
                 let gesture = previews.then(|| generation3d_gumball_preview(doc.snapshot, &marks, &owner.gumball)).flatten();
                 let (document, marks) = gesture.as_ref().map_or((doc.snapshot, &marks), |(document, marks)| (document, marks));
-                let rendered = owner.with_session(|session| generation3d_render_body(body_key, document, cfg.snapshot, preview_eval_text, view_state, marks, session, doc.tool_run()));
+                let mut hover_groups = None;
+                let rendered = owner.with_session(|session| generation3d_render_body(body_key, document, cfg.snapshot, preview_eval_text, view_state, marks, session, doc.tool_run(), &mut hover_groups));
+                if let (Ok(Ok(_)), Some(groups)) = (&rendered, hover_groups) {
+                    owner.preview_hover.publish(window_id, groups);
+                }
                 if let Some((document, _)) = gesture {
                     document.retire_cold();
                 }
@@ -692,11 +660,10 @@ impl ArtifactEditor for Generation3dPlayApp {
     fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let is_de = view_state.locale == semio_ui_locale::Locale::De;
-        let measures = edit_preview::preview_window_measures(config, is_de, generation3d_action);
         HashMap::from([
             (flow_window::GENERATION_3D_PLAY_WINDOW_MAIN.to_string(), flow_window::window_measures(&config.lod_mode, is_de, generation3d_action)),
-            (edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.to_string(), measures.clone()),
-            (generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), measures),
+            (edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.to_string(), edit_preview::preview_window_measures(config, is_de, generation3d_action)),
+            (generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), generate_preview::window_measures(config, is_de, generation3d_action)),
         ])
     }
 

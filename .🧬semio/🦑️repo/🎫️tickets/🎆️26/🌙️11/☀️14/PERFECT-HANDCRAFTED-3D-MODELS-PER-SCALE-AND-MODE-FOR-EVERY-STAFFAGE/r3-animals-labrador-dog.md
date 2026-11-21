@@ -86,3 +86,60 @@ Final check lines: `PASS` at 1:50, 1:100, 1:200, 1:500. Silhouette IoU elevation
 - No coat texture in 3D, no eyelids, no dewclaws, no claws as separate solids (each toe ends in a point), no sex characteristics; the skull is one mass without eye sockets or teeth; the ear cartilage is the ear leather itself.
 - The lower jaw is a separate loft under the lips, so the mouth line shows as a seam around the muzzle in the closed mouth.
 - The 2D toe lines and fur strokes were placed by hand in world coordinates and checked only in the 1:50 standing and sitting sheets.
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: `r5-labrador-dog-rig.py`, `r5-labrador-dog-kit.ts`, `r5-labrador-dog-50.ts`, `r5-labrador-dog-50-lists.ts`, `r5-labrador-dog-coarse.ts`, `r5-labrador-dog-decisions.ts`, `r5-labrador-dog-draw2d.ts` (+ `r5-labrador-dog-rep-decisions.json`), `r5-labrador-dog-work.ts`, `r5-labrador-dog-sheet.ts`, `r5-labrador-dog-candidate.py`, `r5-labrador-dog-apply.py`, `r5-labrador-dog-build.sh` (whole rebuild + candidate validation), `r5-labrador-dog-run.sh`. Input kept: `🗑️generated/r3-labrador-dog/asset-before.json` (the rig script still re-targets every pose from it).
+
+### Reference table (adult male Labrador Retriever, 30 kg, standing alert)
+
+Sources: FCI standard No. 122 (withers 56-57 cm, broad skull with stop, deep wide barrel chest, otter tail "very thick towards the base, gradually tapering", clothed all round); AKC standard (point of shoulder to point of rump equal to or slightly longer than withers height, elbow at half the withers height, tail not beyond the hock); Evans and de Lahunta, Miller's Anatomy of the Dog (thoracic inlet bounded by T1, the first ribs and the manubrium; ribs leave the vertebral bodies and run caudoventrally; cervical column runs in the ventral half of the neck and meets T1 low; thoracic spinous processes tallest at T1-T5, forming the withers). Breed numbers as in section 1 of this report.
+
+| measure | reference | round 4 model | round 5 model |
+|---|---|---|---|
+| withers (skin over T3) | 0.56-0.57 m | 0.568 | 0.568 |
+| top of head, alert | 0.70-0.74 m | 0.707 | 0.708 (`heightM` 0.72 -> 0.71, the measured model, inside the reference) |
+| T1 vertebral body height (thoracic inlet: manubrium 0.39 m + inlet height 0.09-0.10 m) | 0.48-0.49 m | 0.448 (on the shoulder joint, 4 cm too low, -8 %) | 0.488 |
+| T13 vertebral body height (skin 0.555 m minus 5 cm) | 0.50-0.51 m | 0.502 | 0.505 |
+| thoracic column, T13 to T1 chord | 0.21-0.23 m | 0.231 | 0.211 |
+| cervical column, C7 to atlas | 0.21-0.24 m | 0.245 | 0.224 |
+| neck inclination at rest | 40-50 degrees | 54.6 (pointer carriage) | 45.5 |
+| neck girth at mid neck (fur) | 0.45-0.50 m | about 0.41 (0.135 x 0.122 m) | about 0.47 (0.15 x 0.144 m) |
+| rib slope, dorsal end to ventral end | caudoventral, 10-25 degrees from the vertical | vertical hoops, dorsal ends 4 cm above the vertebral bodies | 8 to 20 degrees, dorsal ends on the vertebral body line |
+| tail base thickness (fur) | 0.06-0.07 m | 0.056-0.062 | 0.066-0.072 |
+| tail at tip third | 0.03-0.04 m | 0.022-0.031 | 0.027-0.045 |
+| tail carriage at rest | from the croup slightly downward, a slight upward curve at the end, not over the back | straight, 4 degrees down (plank) | 16 degrees down, 6 degrees down, 4 degrees up |
+| muzzle width (fur) | 0.08-0.09 m | 0.072-0.08 | 0.082-0.094 |
+| forearm width mid (fur) | 0.055-0.06 m | 0.05 | 0.055 |
+| hind and fore limb joints | section 1 | unchanged | unchanged (hip 0.485, stifle 0.291, hock 0.155, shoulder 0.423, elbow 0.284, carpus 0.105; within 1 % of section 1) |
+
+### Grades (my eye, opened sheets)
+
+| scale | list | before | after |
+|---|---|---|---|
+| 1:50 | body | C+ (pointer neck, plank tail, thin muzzle) | A- |
+| 1:50 | structure | C (thoracic column dropping to the shoulder joint, ribs standing above the spine) | A- |
+| 1:50 | thermal | B (reference list over the old body) | A- (references of the new body, outlets unchanged) |
+| 1:100 | body / structure / thermal | C+ / C / B | A- / B+ / A- |
+| 1:200 | body / structure / thermal | B- / C / B (area total failing, 34 %) | A- / B+ / A- (total 16 %) |
+| 1:500 | body / structure / thermal | C / D / B | B+ / B / B+ |
+
+### Changes
+
+- Rig (root): `thorax` (0.245, 0.505) -> (0.455, 0.488), `neck` (0.455, 0.488) -> atlas (0.612, 0.648), `lumbar` end 0.502 -> 0.505; tail rest angles 184/180/176 -> 196/186/176 degrees; thorax centre of mass moved into the new barrel. All 19 poses re-solved by the round 3 solver with every pad contact kept (only `sitting-waiting` needed the scapula turned by -6 degrees, as before). Anchors recomputed on the new bones.
+- 1:50 body: neck rebuilt with a crest and a deeper throat (lateral half-width 0.084 -> 0.056 m along the neck); otter tail thick at the root and tapering in three overlapping pieces along the new curve; broader muzzle and lower jaw; ears hang against the cheeks (no plan-view flare); forearm with more bone.
+- 1:50 structure: `SPINE_Y` vertebral body line (kyphosis over the 8th rib, T1 low at the inlet), thoracic column as spinous process ridge plus bodies on that line, nine rib hoops from the vertebral bodies to the sternum sloping caudoventrally 8 to 20 degrees (`hoop` gained a slope), cervical column in its S curve meeting T1, cervical transverse process plate added, caudal bars on the new tail joints.
+- 1:100 / 1:200 / 1:500: same spine, rib, neck and tail corrections stated anew with the scale's own sections; 1:500 tail root lowered into the croup (no fin), 1:500 caudal rods kept inside the tail; 1:200 pad slabs sized to the honest pad area (thermal total 34 % -> 16 %).
+- 2D: every scale and view redrawn from the new bodies (`r5-labrador-dog-draw2d.ts`); the 1:200 lower legs are now drawn per bone (`hind-lower`/`fore-lower` + `hind-paw`/`forepaw`), the paw pad marks are one hull per paw (the two pad rings stood 1.75 mm apart, below the print gap).
+- Decisions of 1:50 structure rewritten (en + de).
+- Final: `r3-validate.ts animals/labrador-dog --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); `volumes-check.ts animals/labrador-dog --product` PASS at every scale.
+
+### Seen (opened)
+
+1:50 body six views (standing), `sitting-waiting`, `trot-cycle` t 0.1; 1:50 structure six views, three-quarter and right side alone (rib slope checked and corrected after a first wrong sign); 1:200 body six views; 1:100, 1:500 body and structure right side; 2D 1:50 of the candidate. Not opened this round: thermal cut sheets (thermal is by reference to the body solids), 1:100/1:500 2D sheets.
+
+### Remaining
+
+- 1:500 structure stays rods of 75 mm (feature rule, filed in round 3); 1:500 legs stouter than life for the same rule.
+- The scapula and upper-arm masses still show seams on the chest; the 1:50 lumbar spinous and transverse processes are continuous plates (one feature wide), not single vertebrae.
+- Plan view of `sitting-waiting`: a small notch between neck and shoulder mass.

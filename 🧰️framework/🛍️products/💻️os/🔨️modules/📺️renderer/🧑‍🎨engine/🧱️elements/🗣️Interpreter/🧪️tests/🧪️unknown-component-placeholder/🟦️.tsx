@@ -142,8 +142,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     const cases = loadCorpus();
-    it("loads all 77 corpus fixtures", () => {
-      expect(cases.length).toBe(77);
+    it("loads all 78 corpus fixtures", () => {
+      expect(cases.length).toBe(78);
     });
 
     for (const testCase of cases) {

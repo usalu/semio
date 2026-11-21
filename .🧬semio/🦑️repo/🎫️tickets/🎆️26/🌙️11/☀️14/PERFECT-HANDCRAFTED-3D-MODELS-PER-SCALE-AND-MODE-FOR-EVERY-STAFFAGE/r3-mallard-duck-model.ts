@@ -42,7 +42,7 @@ for (const s of S.body) {
 const headFrame = S.frame("head");
 if (scale !== 50) {
   const from = S.body.length;
-  const r = scale === 100 ? 0.0076 : scale === 200 ? 0.0083 : 0.0088;
+  const r = scale === 100 ? 0.0076 : scale === 200 ? 0.009 : 0.0088;
   S.ell("th-breath-nares", "head", S.J("head", 0.064, scale === 100 ? 0.0044 : scale === 200 ? 0.0036 : 0.003), [r, r, r], { material: "bill-keratin", tone: 0.2 });
   S.toThermal(from, "bill", ["emitter", "breath-nares"]);
 } else

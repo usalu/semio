@@ -10,6 +10,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct UpdateGenerationValues {
     pub generation_id: Option<String>,
     pub question_id: String,
+    pub field_index: Option<u32>,
     pub value: semio_framework_value::DslValue,
 }
 

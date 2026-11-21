@@ -180,7 +180,9 @@ impl EngineSurfaceRetirement {
     }
 
     fn close_node_graph_sync(cache: &mut NodeGraphSyncCache) -> bool {
-        if Self::close_string(&mut cache.snapshot_json)
+        if cache.window_id.take().is_some()
+            || Self::close_string(&mut cache.snapshot_json)
+            || cache.flow_ports.close_step()
             || cache.selection.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(retire_string_page))
             || cache.selection.as_mut().is_some_and(|ids| ids.pop().is_some())
             || Self::close_string(&mut cache.preview_off_json)
@@ -190,7 +192,10 @@ impl EngineSurfaceRetirement {
             || Self::close_string(&mut cache.lod_json)
             || cache.viewport.take().is_some()
             || cache.viewport_pixels.take().is_some()
+            || cache.hover_port_ids.last_mut().is_some_and(retire_string_page)
+            || cache.hover_port_ids.pop().is_some()
             || cache.hover.take().is_some()
+            || cache.hover_source_window_id.take().is_some()
             || cache.operator_ids.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(retire_string_page))
             || cache.operator_ids.as_mut().is_some_and(|ids| ids.pop().is_some())
             || Self::close_bytes(&mut cache.scene_pack)
@@ -199,6 +204,7 @@ impl EngineSurfaceRetirement {
             return false;
         }
         cache.selection = None;
+        cache.selection_granularity = None;
         cache.operator_ids = None;
         true
     }

@@ -122,3 +122,74 @@ Seen in the final or last-but-one state (the last edits were the brim inner radi
 - Mat, clog, trowel, tub and hat dimensions are from my knowledge, not from a looked-up catalogue.
 - Tests and fixtures that embed this asset (`structure-projection`, `multiview-coverage`, `model-catalog`, per `area-decisions.md`) were not regenerated or run; the rig, poses and drawings changed.
 - Structure solids use material `skin` (the asset has no bone material).
+
+## Round 5 handcraft (2026-11-21)
+
+State: catalog written (2D of 1:50 and 1:100 redrawn from the new bodies by the round 3 projector) and volumes spliced. `r3-validate.ts humans/kneeling-gardener --volumes`: `VALID ... schema 0, validateAsset 0, checkVolumes 0`; print suitability of 1:50 and 1:100 clean (`r3-kneeling-gardener-suit.ts`). Silhouette IoU elevation / front / plan 1:50 0.991 / 0.984 / 0.993, 1:100 0.995 / 0.980 / 0.988.
+
+Scripts (round 5, ticket folder): `r5-kneeling-gardener-body.ts` (1:50 body; new `SHIRT50`, `SLEEVE50`, `path` loft along a free path, right fist, weed leaves), `-lists.ts` (1:100 body, thermal, skeleton; thermal sleeve shells read `SLEEVE50`), `-coarse.ts` (1:200 and 1:500 figure masses), `-figure.ts`, `-draw2d.ts`, `-run.sh`; generic `r5-human-measure.ts` (rest-pose measurement against stature shares). Root fixes, writer and splicer of round 3 are reused unchanged.
+
+### Reference (woman of 58, stature 1.66 m in clogs)
+
+| quantity | reference | source |
+|---|---|---|
+| hip / knee / ankle joint height | 0.53 H / 0.285 H / 0.039 H (+ 20 mm clog sole) | Winter; DIN 33402-2 |
+| shoulder / elbow / wrist height | 0.818 H / 0.630 H / 0.485 H | Winter |
+| head chin to vertex | H / 7.5 = 0.221 m | ISO 7250 / ANSUR II women |
+| bideltoid breadth, clothed | 0.259 H = 0.43 m | ANSUR II women P50 |
+| hip breadth standing, clothed | 0.36 m | DIN 33402-2 women P50 |
+| hand length (glove) | 0.108 H + 10 mm | Winter |
+| foot length (clog) | 0.152 H + 30 mm | Winter; clog tables |
+| upper-arm girth, thigh girth (bare) | 0.29 m, 0.58 m | ANSUR II women P50 |
+
+### Model against reference (rest pose of the rig, `r5-human-measure.ts`)
+
+| quantity | 1:50 | 1:100 | 1:200 | 1:500 | reference | 1:50 deviation |
+|---|---|---|---|---|---|---|
+| stature | 1.660 | 1.660 | 1.657 | 1.656 | 1.660 | 0.0 % |
+| hip joint | 0.877 | 0.877 | 0.878 | 0.877 | 0.880 | -0.3 % |
+| knee joint | 0.472 | 0.471 | 0.472 | 0.471 | 0.473 | -0.3 % |
+| ankle joint (sole included) | 0.075 | 0.075 | 0.076 | 0.075 | 0.085 | -11 % (10 mm, see open points) |
+| shoulder joint | 1.358 | 1.358 | 1.359 | 1.358 | 1.358 | 0.0 % |
+| elbow | 1.066 | 1.066 | 1.066 | 1.066 | 1.046 | +1.9 % |
+| wrist | 0.811 | 0.811 | 0.812 | 0.811 | 0.805 | +0.8 % |
+| head chin to vertex | 0.215 | 0.215 | 0.256* | 0.256* | 0.221 | -2.9 % |
+| bideltoid breadth | 0.428 (was 0.442) | 0.442 | 0.422 | 0.424 | 0.430 | -0.5 % |
+| hip breadth | 0.356 | 0.344 (was 0.328) | 0.358 | 0.358 | 0.360 | -1.1 % |
+| hand length (glove) | 0.195 | 0.196 | 0.195 | 0.195 | 0.189 | +2.9 % |
+| foot length (clog) | 0.281 | 0.281 | 0.283 | 0.283 | 0.282 | -0.4 % |
+| upper-thigh girth (trousers) | 0.585 | | | | 0.58 + ease | +1 % |
+
+\* at 1:200 and 1:500 neck and head are one mass; the measure takes the neck root as the lowest point (the head part itself is 0.22 m).
+
+### Grades before -> after (my look at the sheets)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B -> A- | B+ -> A- | A- -> A- |
+| 1:100 | B -> A- | B+ -> A- | A- -> A- |
+| 1:200 | C+ -> B+ | B+ -> B+ | B+ -> B+ |
+| 1:500 | C+ -> B+ | B+ -> B+ | B+ -> B+ |
+
+Defects seen before: the right fist was an ellipsoid ball with eleven bead capsules for fingers and the trowel handle sticking out below it (1:50), an ellipsoid ball at 1:100 to 1:500; the weeds were domes with flat disc leaves; the trouser seat poked through the shirt above the hem and the gluteal masses showed as two spheres; the sleeves were 0.116 x 0.122 m (girth 0.37 m against 0.29 m + ease) and stood over the shoulder line as domes; the shirt back had no kyphosis; 1:200 and 1:500 had a box shirt of five or six sections with a sharp hem.
+
+### Changes
+
+- 1:50 shirt (`SHIRT50`, 15 stations): blouses over the trouser waistband at the back (0.12 m), bust (front 0.151 m), thoracic kyphosis (back 0.138 m over the shoulder blades), sloping shoulders; the hem covers the trouser seat in every pose. 1:100 shirt (10 stations) and 1:200 (9) / 1:500 (6) shirts follow the same stations.
+- Sleeves of a 0.29 m upper arm plus ease (max 0.102 x 0.108 m) with a lower deltoid cap; thermal shoulder and sleeve shells derive from the same rows.
+- Right fist (1:50): dorsum loft to the knuckles, thenar, four fingers as single lofts curled 220 degrees round the handle axis (sections perpendicular to the curl, width along the handle, rounded tips), thumb as one loft over the index finger. 1:100: dorsum, one finger roll, thumb. 1:200 / 1:500: one closed fist mass around the grip.
+- Gluteal masses embedded in the trouser seat (smaller, lower, turned); 1:100 seat widened to the real hip breadth.
+- Weeds (1:50): eleven lanceolate leaves (8 to 28 mm wide, arched over the heap onto the rim), three stalks with seed heads; 1:100: four leaves the same way.
+- 2D of 1:50 and 1:100 redrawn from the new bodies (projector of round 3); decisions texts unchanged in substance (they describe what is modelled).
+
+### Looked at (opened)
+
+1:50 body sheet, right side large, three-quarter from right front and from left behind, fist crop, poses `reaching-trug`, clip `dig-cycle` at 0.6 s (closed, no part through another), thermal cut, structure; 1:100 body sheet, right side and back large; 1:200 and 1:500 body sheets; `r3-2d` 1:50.
+
+### Open points
+
+- 1:200 and 1:500 2D stay `unavailable` (printability decision of the drawing); their 3D is authored and green. Authoring a generalised 2D for both scales would make the figure drawable there.
+- Ankle joint 10 mm lower than Winter's share plus a 20 mm clog sole: the clog sole is modelled 10 mm under the heel; the rig (knee on the mat, instep on the pad) was not moved.
+- 1:200 / 1:500 are faceted by the product's coarse tessellation; coarse head and neck one mass.
+- The 1:50 clog sole shows two stacked edges (sole and toe sole); stalk seed heads read as pins in plan.
+- Thermal and structure of 1:200 / 1:500 not remodelled; thermal and structure sheets of 1:100 to 1:500 not opened in this round.

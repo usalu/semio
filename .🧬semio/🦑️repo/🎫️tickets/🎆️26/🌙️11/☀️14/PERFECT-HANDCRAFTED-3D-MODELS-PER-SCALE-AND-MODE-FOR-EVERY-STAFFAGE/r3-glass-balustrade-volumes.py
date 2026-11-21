@@ -99,7 +99,7 @@ def body50():
             "elastomer",
             RUBBER,
             role="detail",
-            profile=[[-k.GLASS_HALF, k.BOLT_HOLE_R], [-k.GLASS_HALF, k.SLEEVE_R], [k.GLASS_HALF, k.SLEEVE_R], [k.GLASS_HALF, k.BOLT_HOLE_R]],
+            profile=[[-k.GLASS_HALF, k.BOLT_HOLE_R], [-k.GLASS_HALF, k.SLEEVE_R], [k.GLASS_HALF, k.SLEEVE_R], [k.GLASS_HALF, k.BOLT_HOLE_R], [-k.GLASS_HALF, k.BOLT_HOLE_R]],
             axis=[0, 1, 0],
             origin=[k.BOLT_U, 0, w0],
             repeat=along(7, 0.3),

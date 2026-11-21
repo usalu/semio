@@ -12,6 +12,11 @@ impl MountedState {
         }
         self.cancel.cancel_now();
         self.stage = MountedStage::Closing;
+        if let Some(eigen) = self.eigen.as_mut() {
+            if let Some(step) = eigen.close_step(cx, child)? { return Ok(step); }
+            self.eigen = None;
+            return Ok(session_pending(1, 0));
+        }
         if let Some(matrix) = self.rejected_pcg_matrix.as_mut() {
             let (terminal, items, bytes) = matrix.close_step(maximum_bytes);
             if terminal { self.rejected_pcg_matrix = None; }
@@ -258,13 +263,12 @@ impl MountedState {
             self.visual.fields.pop();
             return Ok(Some(session_pending(1, 0)));
         }
-        let bytes = self.visual.fields.capacity() * size_of::<semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField>();
-        if bytes != 0 {
-            if bytes > maximum_bytes {
-                return Ok(Some(session_pending(0, 0)));
-            }
-            self.visual.fields = Vec::new();
-            return Ok(Some(session_pending(1, bytes)));
+        if !self.visual.fields.terminal_is_empty() {
+            let progress = match self.visual.fields.release_empty_page_leased(maximum_bytes) {
+                Ok(progress) => progress,
+                Err(_) => return Ok(Some(session_pending(0, 0))),
+            };
+            return Ok(Some(session_pending(usize::from(progress.progressed), progress.released_allocation_bytes)));
         }
         self.close_cursor += 1;
         Ok(None)
@@ -392,7 +396,7 @@ impl MountedState {
             return Ok(Some(session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>>())));
         }
         if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
-            return Ok(Some(session_pending(0, 0)));
+            return Ok(Some(PluginLifecycleStep::AwaitingInput { reason: "FEM2D awaits the original snapshot return" }));
         }
         if self.snapshot_return.take().is_some() {
             return Ok(Some(session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotReadReturn>())));
@@ -432,6 +436,7 @@ impl MountedState {
             && self.csr_build.is_none()
             && self.load_build.is_none()
             && self.source.is_none()
+            && self.eigen.is_none()
             && self.rejected_pcg_matrix.is_none()
             && self.pcg_build.is_none()
             && self.pcg.is_none()
@@ -439,7 +444,7 @@ impl MountedState {
             && self.visual.region_quality.is_empty()
             && self.visual_region_owner.is_none()
             && self.visual.assembling_element_ids.is_empty()
-            && self.visual.fields.is_empty()
+            && self.visual.fields.terminal_is_empty()
             && self.visual_job_candidate.is_none()
             && self.visual_rejected.is_none()
             && self.visual_current.is_none()

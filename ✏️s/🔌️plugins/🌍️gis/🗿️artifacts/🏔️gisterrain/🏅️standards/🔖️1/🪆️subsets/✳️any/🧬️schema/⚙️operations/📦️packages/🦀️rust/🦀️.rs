@@ -59,6 +59,8 @@ pub mod standards {
                             #[path = "../../../🧬️mutations/📥change-imported-features/🧪️tests/📥️imports/🦀️.rs"]
                             pub mod tests_imports_a_single_harbor_position_descriptor;
                         }
+                        #[path = "../../../🧬️mutations/🏔️replace-elevation-source/🦀️.rs"]
+                        pub mod replace_elevation_source;
                     }
                 }
                 #[path = "."]
@@ -88,3 +90,7 @@ pub mod mutations {
     }
 
 }
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🧪️terrain-validation/🦀️.rs"]
+mod terrain_validation;

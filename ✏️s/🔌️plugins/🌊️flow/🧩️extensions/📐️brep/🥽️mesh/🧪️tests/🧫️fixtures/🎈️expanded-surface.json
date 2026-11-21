@@ -1,0 +1,24 @@
+{
+  "source": {
+    "vertices": [[0,0,0], [2,0,0], [2,2,0], [0,2,0]],
+    "faces": [[0,1,2,3]],
+    "surface": [
+      {"kind":"vertexNormal", "index":0, "normal":[0.6,0,0.8]},
+      {"kind":"vertexNormal", "index":1, "normal":[0,0,1]},
+      {"kind":"vertexNormal", "index":2, "normal":[0,0,1]},
+      {"kind":"vertexNormal", "index":3, "normal":[0,0,1]},
+      {"kind":"cornerUv", "index":0, "uv":[0.125,0.25]},
+      {"kind":"cornerUv", "index":1, "uv":[0.875,0.25]},
+      {"kind":"cornerUv", "index":2, "uv":[0.875,0.75]},
+      {"kind":"cornerUv", "index":3, "uv":[0.125,0.75]},
+      {"kind":"smoothFace", "index":0},
+      {"kind":"seamEdge", "index":0}
+    ]
+  },
+  "capUv": [[0.125,0.25], [0.875,0.25], [0.875,0.75], [0.125,0.75]],
+  "quadUv": [[0,0], [1,0], [1,1], [0,1]],
+  "operations": [
+    {"id":"extrude", "distance":1, "area":12, "cap":[[0,0,1],[2,0,1],[2,2,1],[0,2,1]], "smooth":[0]},
+    {"id":"inset", "amount":0.5, "area":4, "cap":[[0.5,0.5,0],[1.5,0.5,0],[1.5,1.5,0],[0.5,1.5,0]], "smooth":[0,1,2,3,4]}
+  ]
+}

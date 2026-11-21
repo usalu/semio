@@ -229,112 +229,7 @@
               "filled": true,
               "tone": 0.6,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0075,
-                  -0.08
-                ],
-                [
-                  0.0075,
-                  -0.08
-                ],
-                [
-                  0.0075,
-                  -0.046
-                ],
-                [
-                  0.01275,
-                  -0.046
-                ],
-                [
-                  0.01275,
-                  -0.019
-                ],
-                [
-                  0.011,
-                  -0.019
-                ],
-                [
-                  0.011,
-                  -0.0132
-                ],
-                [
-                  0.018,
-                  -0.0132
-                ],
-                [
-                  0.018,
-                  -0.015
-                ],
-                [
-                  0.032,
-                  -0.015
-                ],
-                [
-                  0.032,
-                  -0.01
-                ],
-                [
-                  0.058,
-                  -0.01
-                ],
-                [
-                  0.058,
-                  0.01
-                ],
-                [
-                  0.032,
-                  0.01
-                ],
-                [
-                  0.032,
-                  0.015
-                ],
-                [
-                  0.018,
-                  0.015
-                ],
-                [
-                  0.018,
-                  0.0132
-                ],
-                [
-                  0.006,
-                  0.0136
-                ],
-                [
-                  0.0,
-                  0.015
-                ],
-                [
-                  -0.0106,
-                  0.0106
-                ],
-                [
-                  -0.015,
-                  0.0
-                ],
-                [
-                  -0.011,
-                  -0.0102
-                ],
-                [
-                  -0.011,
-                  -0.019
-                ],
-                [
-                  -0.01275,
-                  -0.019
-                ],
-                [
-                  -0.01275,
-                  -0.046
-                ],
-                [
-                  -0.0075,
-                  -0.046
-                ]
-              ],
+              "points": [[-0.0075, -0.08], [0.0075, -0.08], [0.0075, -0.046], [0.01275, -0.046], [0.01275, -0.019], [0.011, -0.019], [0.011, -0.0132], [0.018, -0.0132], [0.018, -0.015], [0.032, -0.015], [0.032, -0.01], [0.058, -0.01], [0.058, 0.01], [0.032, 0.01], [0.032, 0.015], [0.018, 0.015], [0.018, 0.0132], [0.006, 0.0136], [0.0, 0.015], [-0.0106, 0.0106], [-0.015, 0.0], [-0.011, -0.0102], [-0.011, -0.019], [-0.01275, -0.019], [-0.01275, -0.046], [-0.0075, -0.046]],
               "closed": true,
               "region": "body",
               "material": "brass"
@@ -366,10 +261,7 @@
               "cy": 0,
               "rx": 0.0265,
               "ry": 0.0265,
-              "regions": [
-                "knob",
-                "head"
-              ],
+              "regions": ["knob", "head"],
               "material": "abs-plastic"
             },
             {
@@ -385,7 +277,8 @@
               "w": 0.011,
               "h": 0.0045,
               "region": "knob",
-              "material": "abs-plastic"
+              "material": "abs-plastic",
+              "penMm": 0.2
             }
           ],
           "plan": [
@@ -397,68 +290,7 @@
               "filled": true,
               "tone": 0.6,
               "kind": "poly",
-              "points": [
-                [
-                  -0.015,
-                  -0.0235
-                ],
-                [
-                  -0.015,
-                  0.013
-                ],
-                [
-                  -0.012,
-                  0.0155
-                ],
-                [
-                  0.012,
-                  0.0155
-                ],
-                [
-                  0.015,
-                  0.0132
-                ],
-                [
-                  0.018,
-                  0.0173
-                ],
-                [
-                  0.032,
-                  0.0173
-                ],
-                [
-                  0.032,
-                  0.01
-                ],
-                [
-                  0.058,
-                  0.01
-                ],
-                [
-                  0.058,
-                  -0.01
-                ],
-                [
-                  0.032,
-                  -0.01
-                ],
-                [
-                  0.032,
-                  -0.0173
-                ],
-                [
-                  0.018,
-                  -0.0173
-                ],
-                [
-                  0.015,
-                  -0.0132
-                ],
-                [
-                  0.015,
-                  -0.0235
-                ]
-              ],
+              "points": [[-0.015, -0.0235], [-0.015, 0.013], [-0.012, 0.0155], [0.012, 0.0155], [0.015, 0.0132], [0.018, 0.0173], [0.032, 0.0173], [0.032, 0.01], [0.058, 0.01], [0.058, -0.01], [0.032, -0.01], [0.032, -0.0173], [0.018, -0.0173], [0.015, -0.0132], [0.015, -0.0235]],
               "closed": true,
               "region": "body",
               "material": "brass"
@@ -471,40 +303,7 @@
               "filled": true,
               "tone": 0.8,
               "kind": "poly",
-              "points": [
-                [
-                  -0.017,
-                  -0.0255
-                ],
-                [
-                  -0.017,
-                  -0.0125
-                ],
-                [
-                  0.017,
-                  -0.0125
-                ],
-                [
-                  0.017,
-                  -0.0255
-                ],
-                [
-                  0.022,
-                  -0.0255
-                ],
-                [
-                  0.022,
-                  -0.035
-                ],
-                [
-                  -0.022,
-                  -0.035
-                ],
-                [
-                  -0.022,
-                  -0.0255
-                ]
-              ],
+              "points": [[-0.017, -0.0255], [-0.017, -0.0125], [0.017, -0.0125], [0.017, -0.0255], [0.022, -0.0255], [0.022, -0.035], [-0.022, -0.035], [-0.022, -0.0255]],
               "closed": true,
               "region": "head",
               "material": "abs-plastic"
@@ -522,7 +321,8 @@
               "w": 0.011,
               "h": 0.0085,
               "region": "head",
-              "material": "abs-plastic"
+              "material": "abs-plastic",
+              "penMm": 0.2
             },
             {
               "id": "knob",
@@ -576,80 +376,7 @@
               "filled": true,
               "tone": 0.6,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0075,
-                  -0.08
-                ],
-                [
-                  0.0075,
-                  -0.08
-                ],
-                [
-                  0.0075,
-                  -0.046
-                ],
-                [
-                  0.0147,
-                  -0.046
-                ],
-                [
-                  0.0147,
-                  -0.019
-                ],
-                [
-                  0.011,
-                  -0.019
-                ],
-                [
-                  0.011,
-                  -0.011
-                ],
-                [
-                  0.0173,
-                  0.0
-                ],
-                [
-                  0.0087,
-                  0.015
-                ],
-                [
-                  -0.0227,
-                  0.015
-                ],
-                [
-                  -0.0235,
-                  0.0142
-                ],
-                [
-                  -0.0235,
-                  -0.0142
-                ],
-                [
-                  -0.0227,
-                  -0.015
-                ],
-                [
-                  -0.011,
-                  -0.015
-                ],
-                [
-                  -0.011,
-                  -0.019
-                ],
-                [
-                  -0.0147,
-                  -0.019
-                ],
-                [
-                  -0.0147,
-                  -0.046
-                ],
-                [
-                  -0.0075,
-                  -0.046
-                ]
-              ],
+              "points": [[-0.0075, -0.08], [0.0075, -0.08], [0.0075, -0.046], [0.0147, -0.046], [0.0147, -0.019], [0.011, -0.019], [0.011, -0.011], [0.0173, 0.0], [0.0087, 0.015], [-0.0227, 0.015], [-0.0235, 0.0142], [-0.0235, -0.0142], [-0.0227, -0.015], [-0.011, -0.015], [-0.011, -0.019], [-0.0147, -0.019], [-0.0147, -0.046], [-0.0075, -0.046]],
               "closed": true,
               "region": "body",
               "material": "brass"
@@ -662,40 +389,7 @@
               "filled": true,
               "tone": 0.8,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0255,
-                  -0.017
-                ],
-                [
-                  -0.0125,
-                  -0.017
-                ],
-                [
-                  -0.0125,
-                  0.017
-                ],
-                [
-                  -0.0255,
-                  0.017
-                ],
-                [
-                  -0.0255,
-                  0.022
-                ],
-                [
-                  -0.035,
-                  0.022
-                ],
-                [
-                  -0.035,
-                  -0.022
-                ],
-                [
-                  -0.0255,
-                  -0.022
-                ]
-              ],
+              "points": [[-0.0255, -0.017], [-0.0125, -0.017], [-0.0125, 0.017], [-0.0255, 0.017], [-0.0255, 0.022], [-0.035, 0.022], [-0.035, -0.022], [-0.0255, -0.022]],
               "closed": true,
               "region": "head",
               "material": "abs-plastic"
@@ -804,100 +498,7 @@
               "filled": true,
               "tone": 0.6,
               "kind": "poly",
-              "points": [
-                [
-                  -0.011,
-                  -0.08
-                ],
-                [
-                  0.011,
-                  -0.08
-                ],
-                [
-                  0.011,
-                  -0.046
-                ],
-                [
-                  0.013,
-                  -0.046
-                ],
-                [
-                  0.013,
-                  -0.019
-                ],
-                [
-                  0.011,
-                  -0.019
-                ],
-                [
-                  0.011,
-                  -0.013
-                ],
-                [
-                  0.018,
-                  -0.013
-                ],
-                [
-                  0.018,
-                  -0.016
-                ],
-                [
-                  0.032,
-                  -0.016
-                ],
-                [
-                  0.032,
-                  -0.011
-                ],
-                [
-                  0.058,
-                  -0.011
-                ],
-                [
-                  0.058,
-                  0.011
-                ],
-                [
-                  0.032,
-                  0.011
-                ],
-                [
-                  0.032,
-                  0.016
-                ],
-                [
-                  0.018,
-                  0.016
-                ],
-                [
-                  0.018,
-                  0.013
-                ],
-                [
-                  0.0,
-                  0.015
-                ],
-                [
-                  -0.011,
-                  0.011
-                ],
-                [
-                  -0.011,
-                  -0.019
-                ],
-                [
-                  -0.013,
-                  -0.019
-                ],
-                [
-                  -0.013,
-                  -0.046
-                ],
-                [
-                  -0.011,
-                  -0.046
-                ]
-              ],
+              "points": [[-0.011, -0.08], [0.011, -0.08], [0.011, -0.046], [0.013, -0.046], [0.013, -0.019], [0.011, -0.019], [0.011, -0.013], [0.018, -0.013], [0.018, -0.016], [0.032, -0.016], [0.032, -0.011], [0.058, -0.011], [0.058, 0.011], [0.032, 0.011], [0.032, 0.016], [0.018, 0.016], [0.018, 0.013], [0.0, 0.015], [-0.011, 0.011], [-0.011, -0.019], [-0.013, -0.019], [-0.013, -0.046], [-0.011, -0.046]],
               "closed": true,
               "region": "body",
               "material": "brass"
@@ -914,10 +515,7 @@
               "cy": 0,
               "rx": 0.0265,
               "ry": 0.0265,
-              "regions": [
-                "head",
-                "knob"
-              ],
+              "regions": ["head", "knob"],
               "material": "abs-plastic"
             }
           ],
@@ -930,68 +528,7 @@
               "filled": true,
               "tone": 0.6,
               "kind": "poly",
-              "points": [
-                [
-                  -0.014,
-                  -0.0125
-                ],
-                [
-                  -0.014,
-                  0.011
-                ],
-                [
-                  -0.009,
-                  0.015
-                ],
-                [
-                  0.009,
-                  0.015
-                ],
-                [
-                  0.014,
-                  0.0135
-                ],
-                [
-                  0.018,
-                  0.016
-                ],
-                [
-                  0.032,
-                  0.016
-                ],
-                [
-                  0.034,
-                  0.011
-                ],
-                [
-                  0.058,
-                  0.011
-                ],
-                [
-                  0.058,
-                  -0.011
-                ],
-                [
-                  0.034,
-                  -0.011
-                ],
-                [
-                  0.032,
-                  -0.016
-                ],
-                [
-                  0.018,
-                  -0.016
-                ],
-                [
-                  0.014,
-                  -0.0135
-                ],
-                [
-                  0.014,
-                  -0.0125
-                ]
-              ],
+              "points": [[-0.014, -0.0125], [-0.014, 0.011], [-0.009, 0.015], [0.009, 0.015], [0.014, 0.0135], [0.018, 0.016], [0.032, 0.016], [0.034, 0.011], [0.058, 0.011], [0.058, -0.011], [0.034, -0.011], [0.032, -0.016], [0.018, -0.016], [0.014, -0.0135], [0.014, -0.0125]],
               "closed": true,
               "region": "body",
               "material": "brass"
@@ -1004,61 +541,9 @@
               "filled": true,
               "tone": 0.8,
               "kind": "poly",
-              "points": [
-                [
-                  -0.018,
-                  -0.0125
-                ],
-                [
-                  0.018,
-                  -0.0125
-                ],
-                [
-                  0.021,
-                  -0.035
-                ],
-                [
-                  0.0265,
-                  -0.035
-                ],
-                [
-                  0.0255,
-                  -0.071
-                ],
-                [
-                  0.0215,
-                  -0.088
-                ],
-                [
-                  0.015,
-                  -0.093
-                ],
-                [
-                  -0.015,
-                  -0.093
-                ],
-                [
-                  -0.0215,
-                  -0.088
-                ],
-                [
-                  -0.0255,
-                  -0.071
-                ],
-                [
-                  -0.0265,
-                  -0.035
-                ],
-                [
-                  -0.021,
-                  -0.035
-                ]
-              ],
+              "points": [[-0.018, -0.0125], [0.018, -0.0125], [0.021, -0.035], [0.0265, -0.035], [0.0255, -0.071], [0.0215, -0.088], [0.015, -0.093], [-0.015, -0.093], [-0.0215, -0.088], [-0.0255, -0.071], [-0.0265, -0.035], [-0.021, -0.035]],
               "closed": true,
-              "regions": [
-                "head",
-                "knob"
-              ],
+              "regions": ["head", "knob"],
               "material": "abs-plastic"
             }
           ],
@@ -1071,80 +556,7 @@
               "filled": true,
               "tone": 0.6,
               "kind": "poly",
-              "points": [
-                [
-                  -0.011,
-                  -0.08
-                ],
-                [
-                  0.011,
-                  -0.08
-                ],
-                [
-                  0.011,
-                  -0.046
-                ],
-                [
-                  0.0135,
-                  -0.046
-                ],
-                [
-                  0.0135,
-                  -0.019
-                ],
-                [
-                  0.011,
-                  -0.019
-                ],
-                [
-                  0.011,
-                  -0.0115
-                ],
-                [
-                  0.016,
-                  0.0
-                ],
-                [
-                  0.015,
-                  0.008
-                ],
-                [
-                  0.011,
-                  0.014
-                ],
-                [
-                  0.008,
-                  0.016
-                ],
-                [
-                  -0.0125,
-                  0.016
-                ],
-                [
-                  -0.0125,
-                  -0.015
-                ],
-                [
-                  -0.011,
-                  -0.015
-                ],
-                [
-                  -0.011,
-                  -0.019
-                ],
-                [
-                  -0.0135,
-                  -0.019
-                ],
-                [
-                  -0.0135,
-                  -0.046
-                ],
-                [
-                  -0.011,
-                  -0.046
-                ]
-              ],
+              "points": [[-0.011, -0.08], [0.011, -0.08], [0.011, -0.046], [0.0135, -0.046], [0.0135, -0.019], [0.011, -0.019], [0.011, -0.0115], [0.016, 0.0], [0.015, 0.008], [0.011, 0.014], [0.008, 0.016], [-0.0125, 0.016], [-0.0125, -0.015], [-0.011, -0.015], [-0.011, -0.019], [-0.0135, -0.019], [-0.0135, -0.046], [-0.011, -0.046]],
               "closed": true,
               "region": "body",
               "material": "brass"
@@ -1157,61 +569,9 @@
               "filled": true,
               "tone": 0.8,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0125,
-                  -0.018
-                ],
-                [
-                  -0.0125,
-                  0.018
-                ],
-                [
-                  -0.035,
-                  0.021
-                ],
-                [
-                  -0.035,
-                  0.0265
-                ],
-                [
-                  -0.071,
-                  0.0255
-                ],
-                [
-                  -0.088,
-                  0.0215
-                ],
-                [
-                  -0.093,
-                  0.015
-                ],
-                [
-                  -0.093,
-                  -0.015
-                ],
-                [
-                  -0.088,
-                  -0.0215
-                ],
-                [
-                  -0.071,
-                  -0.0255
-                ],
-                [
-                  -0.035,
-                  -0.0265
-                ],
-                [
-                  -0.035,
-                  -0.021
-                ]
-              ],
+              "points": [[-0.0125, -0.018], [-0.0125, 0.018], [-0.035, 0.021], [-0.035, 0.0265], [-0.071, 0.0255], [-0.088, 0.0215], [-0.093, 0.015], [-0.093, -0.015], [-0.088, -0.0215], [-0.071, -0.0255], [-0.035, -0.0265], [-0.035, -0.021]],
               "closed": true,
-              "regions": [
-                "head",
-                "knob"
-              ],
+              "regions": ["head", "knob"],
               "material": "abs-plastic"
             }
           ]
@@ -2654,30 +2014,28 @@
           },
           {
             "id": "support-pipe-joint",
-            "kind": "capsule",
+            "kind": "revolve",
             "bone": "body",
             "material": "brass",
             "role": "ground",
             "tone": 0.3,
-            "p0": [0.0, -0.039, -0.006],
-            "p1": [0.0, -0.039, 0.006],
-            "r0": 0.0075,
-            "r1": 0.0075,
+            "profile": [[-0.0465, 0.0075], [-0.0465, 0.013], [-0.0315, 0.013], [-0.0315, 0.0075], [-0.0465, 0.0075]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, -0.0],
             "member": "body",
             "part": "support",
             "anchor": "pipe-joint"
           },
           {
             "id": "support-radiator-union",
-            "kind": "capsule",
+            "kind": "revolve",
             "bone": "body",
             "material": "brass",
             "role": "ground",
             "tone": 0.3,
-            "p0": [0.051, 0.0, -0.003],
-            "p1": [0.051, 0.0, 0.003],
-            "r0": 0.0075,
-            "r1": 0.0075,
+            "profile": [[0.043, 0.01], [0.043, 0.013], [0.058, 0.013], [0.058, 0.01], [0.043, 0.01]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, -0.0],
             "member": "body",
             "part": "support",
             "anchor": "radiator-union"
@@ -2721,8 +2079,8 @@
             "de": "Thermik: die drei Messingmassen und der Kopfsockel verwenden die Körper mit Rohr- und Nippelende als Schnittflächen; das Handrad ist an der Kappenschulter in die Trommel (Kopfregion) und die Fühlerkappe (Knopfregion) geschnitten, die Schnittflächen zählen nicht zur Fläche."
           },
           {
-            "en": "Structure: the three brass tubes, one sleeve for nut and base, the handwheel hub, pin and roller at 15 mm and the two masses; the joints and the pressure pin are below the feature and merged into the members.",
-            "de": "Tragwerk: die drei Messingrohre, eine Hülse für Mutter und Sockel, die Handradnabe, Fest- und Rollenlager in 15 mm und die beiden Massen; Gelenke und Druckstift liegen unter der Strukturgröße und gehen in den Gliedern auf."
+            "en": "Structure: the three brass tubes, one sleeve for nut and base, the handwheel hub, pin and roller as 15 mm rings round the pipe at the compression fitting and round the tailpiece at the union, and the two masses; the joints and the pressure pin are below the feature and merged into the members.",
+            "de": "Tragwerk: die drei Messingrohre, eine Hülse für Mutter und Sockel, die Handradnabe, Fest- und Rollenlager als 15-mm-Ringe um das Rohr an der Klemmverschraubung und um den Schraubnippel an der Verschraubung und die beiden Massen; Gelenke und Druckstift liegen unter der Strukturgröße und gehen in den Gliedern auf."
           }
         ]
       },
@@ -2759,7 +2117,19 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.85,
-            "profile": [[-0.009, 0.0], [-0.009, 0.013], [-0.013, 0.0155], [-0.026, 0.019], [-0.035, 0.0265], [-0.072, 0.025], [-0.089, 0.0205], [-0.093, 0.014], [-0.093, 0.0]],
+            "profile": [
+              [-0.009, 0.0],
+              [-0.009, 0.017],
+              [-0.025, 0.017],
+              [-0.026, 0.022],
+              [-0.0345, 0.022],
+              [-0.036, 0.0265],
+              [-0.071, 0.0256],
+              [-0.086, 0.0225],
+              [-0.0915, 0.0185],
+              [-0.093, 0.014],
+              [-0.093, 0.0]
+            ],
             "axis": [0, 0, 1],
             "origin": [0, 0, 0]
           }
@@ -2786,7 +2156,7 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.85,
-            "profile": [[-0.009, 0.0], [-0.009, 0.013], [-0.013, 0.0155], [-0.026, 0.019], [-0.035, 0.0265], [-0.072, 0.025], [-0.072, 0.0]],
+            "profile": [[-0.009, 0.0], [-0.009, 0.017], [-0.025, 0.017], [-0.026, 0.022], [-0.0345, 0.022], [-0.036, 0.0265], [-0.071, 0.0256], [-0.071, 0.0]],
             "axis": [0, 0, 1],
             "origin": [0, 0, 0],
             "region": "head",
@@ -2800,7 +2170,7 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.95,
-            "profile": [[-0.072, 0.0], [-0.072, 0.025], [-0.089, 0.0205], [-0.093, 0.014], [-0.093, 0.0]],
+            "profile": [[-0.071, 0.0], [-0.071, 0.0256], [-0.086, 0.0225], [-0.0915, 0.0185], [-0.093, 0.014], [-0.093, 0.0]],
             "axis": [0, 0, 1],
             "origin": [0, 0, 0],
             "region": "knob",
@@ -2908,8 +2278,8 @@
         ],
         "decisions": [
           {
-            "en": "Body: three turned masses for a digital model at 1:200 (no printed drawing exists at this scale): the inlet column with the pipe and one collar up through the chamber, the outlet arm with its union collar, and the head from the valve to the sensor cap as one tapered body; nut, base ring, flutes and marks are merged.",
-            "de": "Körper: drei gedrehte Massen für ein digitales Modell 1:200 (eine gedruckte Zeichnung gibt es in diesem Maßstab nicht): die Eingangssäule mit Rohr und einem Bund bis durch die Kammer, der Ausgangsarm mit Verschraubungsbund und der Kopf vom Ventil bis zur Fühlerkappe als ein verjüngter Körper; Mutter, Sockelring, Griffmulden und Marken sind zusammengefasst."
+            "en": "Body: three turned masses for a digital model at 1:200 (no printed drawing exists at this scale): the inlet column with the pipe and one collar up through the chamber, the outlet arm with its union collar, and the head from the valve to the sensor cap as one turned body with the true steps of the reference (34 mm coupling nut, 44 mm base ring, 53 mm handwheel barrel tapering 2 mm, rounded sensor cap); nut, base ring, flutes and marks are merged.",
+            "de": "Körper: drei gedrehte Massen für ein digitales Modell 1:200 (eine gedruckte Zeichnung gibt es in diesem Maßstab nicht): die Eingangssäule mit Rohr und einem Bund bis durch die Kammer, der Ausgangsarm mit Verschraubungsbund und der Kopf vom Ventil bis zur Fühlerkappe als ein gedrehter Körper mit den wahren Stufen der Referenz (Überwurfmutter 34 mm, Sockelring 44 mm, Handradtrommel 53 mm mit 2 mm Verjüngung, gerundete Fühlerkappe); Mutter, Sockelring, Griffmulden und Marken sind zusammengefasst."
           },
           {
             "en": "Thermal: inlet and outlet carry the brass region, the head body the head region up to the cap shoulder and the front cap the knob region; only the sum of the areas is compared at this scale.",
@@ -2932,7 +2302,7 @@
             "material": "brass",
             "role": "body",
             "tone": 0.6,
-            "profile": [[-0.08, 0.0], [-0.08, 0.008], [-0.045, 0.0145], [0.014, 0.0145], [0.014, 0.0]],
+            "profile": [[-0.08, 0.0], [-0.08, 0.0075], [-0.046, 0.0075], [-0.044, 0.0145], [0.014, 0.0145], [0.014, 0.0]],
             "axis": [0, 1, 0],
             "origin": [0, 0, -0.0]
           },
@@ -2943,7 +2313,7 @@
             "material": "brass",
             "role": "body",
             "tone": 0.6,
-            "profile": [[0.006, 0.0], [0.006, 0.0125], [0.034, 0.0125], [0.058, 0.01], [0.058, 0.0]],
+            "profile": [[0.006, 0.0], [0.006, 0.014], [0.033, 0.014], [0.035, 0.01], [0.058, 0.01], [0.058, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, -0.0]
           },
@@ -2954,7 +2324,7 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.85,
-            "profile": [[-0.009, 0.0], [-0.009, 0.013], [-0.022, 0.016], [-0.035, 0.0265], [-0.074, 0.025], [-0.093, 0.015], [-0.093, 0.0]],
+            "profile": [[-0.009, 0.0], [-0.009, 0.019], [-0.03, 0.019], [-0.034, 0.0265], [-0.084, 0.0265], [-0.093, 0.018], [-0.093, 0.0]],
             "axis": [0, 0, 1],
             "origin": [0, 0, 0]
           }
@@ -2981,7 +2351,7 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.85,
-            "profile": [[-0.009, 0.0], [-0.009, 0.013], [-0.022, 0.016], [-0.035, 0.0265], [-0.074, 0.025], [-0.074, 0.0]],
+            "profile": [[-0.009, 0.0], [-0.009, 0.019], [-0.03, 0.019], [-0.034, 0.0265], [-0.074, 0.0265], [-0.074, 0.0]],
             "axis": [0, 0, 1],
             "origin": [0, 0, 0],
             "region": "head",
@@ -2995,7 +2365,7 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.95,
-            "profile": [[-0.074, 0.0], [-0.074, 0.025], [-0.093, 0.015], [-0.093, 0.0]],
+            "profile": [[-0.074, 0.0], [-0.074, 0.0265], [-0.084, 0.0265], [-0.093, 0.018], [-0.093, 0.0]],
             "axis": [0, 0, 1],
             "origin": [0, 0, 0],
             "region": "knob",
@@ -3107,12 +2477,12 @@
         ],
         "decisions": [
           {
-            "en": "Body: the valve is smaller than two features of 1:500, so the digital model keeps only what makes a corner angle valve: a tapered inlet column, a tapered outlet arm and the head as one double cone on the third axis; the model is minimal, the solid count cannot drop further without losing an axis.",
-            "de": "Körper: das Ventil ist kleiner als zwei Strukturgrößen von 1:500, daher behält das digitale Modell nur, was ein Winkeleckventil ausmacht: eine verjüngte Eingangssäule, einen verjüngten Ausgangsarm und den Kopf als einen Doppelkegel auf der dritten Achse; das Modell ist minimal, die Körperzahl kann nicht weiter sinken, ohne eine Achse zu verlieren."
+            "en": "Body: the valve is smaller than two features of 1:500, so the digital model keeps only what makes a corner angle valve: the 15 mm pipe stepping into the valve column, the outlet arm stepping from the union to the tailpiece, and the head as a 38 mm neck with the 53 mm barrel and a chamfered cap on the third axis (no tapers: a cone would read as a horn or a bottle); the model is minimal, the solid count cannot drop further without losing an axis.",
+            "de": "Körper: das Ventil ist kleiner als zwei Strukturgrößen von 1:500, daher behält das digitale Modell nur, was ein Winkeleckventil ausmacht: das 15-mm-Rohr, das in die Ventilsäule übergeht, den Ausgangsarm mit der Stufe von der Verschraubung zum Nippel und den Kopf als 38-mm-Hals mit der 53-mm-Trommel und gefaster Kappe auf der dritten Achse (keine Kegel: ein Kegel läse sich als Horn oder Flasche); das Modell ist minimal, die Körperzahl kann nicht weiter sinken, ohne eine Achse zu verlieren."
           },
           {
-            "en": "Thermal: the same split as at 1:200 on the simplified tapers; only the sum of the areas is compared.",
-            "de": "Thermik: dieselbe Teilung wie bei 1:200 auf den vereinfachten Kegeln; nur die Flächensumme wird verglichen."
+            "en": "Thermal: the same split as at 1:200 on the simplified steps; only the sum of the areas is compared.",
+            "de": "Thermik: dieselbe Teilung wie bei 1:200 auf den vereinfachten Stufen; nur die Flächensumme wird verglichen."
           },
           {
             "en": "Structure: four square bars along the three axes (inlet, outlet, head sleeve, handwheel hub), two block supports and one mass.",

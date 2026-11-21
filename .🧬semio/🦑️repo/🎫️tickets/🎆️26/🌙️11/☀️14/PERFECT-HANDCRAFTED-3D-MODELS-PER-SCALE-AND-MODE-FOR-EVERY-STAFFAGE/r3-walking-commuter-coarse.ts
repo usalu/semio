@@ -6,7 +6,7 @@
 import type { Json } from "./volumes-lib.ts";
 import { FRAMES, H, L, X, aboutU, aboutV, aboutW, boneDeg, box, capsule, compose, dense, dome, ellipsoid, loft, mirrored, part, revolve, st, thOf, toRight, tube, type St, type V3 } from "./r3-walking-commuter-kit.ts";
 import { axial, rod } from "./r4-g06-skeleton.ts";
-import { B, BAG, BONE, FACE_TOP, FIT, Hd, N, OUTER, P, R, STRAP, T, TONE, WRIST_W, breath, coatX, jointBall, legTubes, massBall, near, plume, ribbon, ring, type Row } from "./r3-walking-commuter-s50.ts";
+import { B, BAG, BONE, FACE_TOP, FIT, RIBS, acromion, coatParts, Hd, N, OUTER, P, R, STRAP, T, TONE, WRIST_W, breath, coatX, jointBall, legTubes, massBall, near, plume, ribbon, ring, type Row } from "./r3-walking-commuter-s50.ts";
 
 const pair = (out: Json[], solids: Json[]): void => {
   for (const s of solids) out.push(s);
@@ -45,7 +45,7 @@ const HAIR_100: readonly Row[] = [[1.624, -0.072, -0.03, 0.046, 2], [1.66, -0.08
 export function body100(): Json[] {
   const out: Json[] = [];
   out.push(loft(trouser("pelvis-trousers", "pelvis", TONE.trousers), hs("pelvis", [[0.842, -0.084, 0.07, 0.128, 2.3], [0.92, -0.12, 0.104, 0.17, 2.4], [1.0, -0.116, 0.115, 0.167, 2.3], [1.085, -0.1, 0.116, 0.156, 2.3]])));
-  out.push(loft(wool("coat"), dense(hs("torso", COAT_100), 2)));
+  out.push(...coatParts(COAT_100, 2));
   for (const side of [1, -1]) {
     const lapel: [number, number, number][] = [[1.368, 0.004, 0.024], [1.42, 0.027, 0.074], [1.452, 0.042, 0.104], [1.476, 0.052, 0.12], [1.514, 0.058, 0.094]];
     out.push(loft(wool(`lapel-${side > 0 ? "l" : "r"}`, "torso", 0.26, "detail"), lapel.map(([y, zin, zout]) => H("torso", y, coatX(y, zout, 1) - 0.012, coatX(y, zin, 1) + 0.008, (zout - zin) / 2, 5, (side * (zin + zout)) / 2))));
@@ -116,7 +116,7 @@ const bagMass = (k: number): Json => part(box({ id: "mass-bag", bone: "bag", mat
 export function structure100(): Json[] {
   const out: Json[] = [];
   const m = (solid: Json, member: string): void => { out.push(part(solid, member, "member")); };
-  for (const q of axial(FIT, 100)) m(q, q.bone);
+  for (const q of axial(FIT, 100)) m(acromion(q), q.bone);
   const side: Json[] = [];
   side.push(part(capsule({ id: "femur-neck-l", bone: "thigh-l", ...BONE }, [0, 0, 0], [0.036, -0.006, 0.058], 0.0165, 0.0175), "thigh-l", "member"));
   side.push(part(tube({ id: "femur-l", bone: "thigh-l", ...BONE }, [[0.04, -0.005, 0.062], [0.18, 0.01, 0.04], [0.32, 0.008, 0.017], [0.416, 0.0, 0.004]], [0.017, 0.014, 0.0142, 0.017]), "thigh-l", "member"));
@@ -165,7 +165,7 @@ const COAT_200: readonly Row[] = [
 export function body200(): Json[] {
   const out: Json[] = [];
   out.push(loft(trouser("pelvis-trousers", "pelvis", TONE.trousers), hs("pelvis", [[0.842, -0.084, 0.07, 0.128, 2.3], [0.93, -0.121, 0.106, 0.17, 2.4], [1.085, -0.1, 0.116, 0.156, 2.3]])));
-  out.push(loft(wool("coat"), hs("torso", COAT_200)));
+  out.push(...coatParts(COAT_200, 1));
   const leg: Json[] = [];
   leg.push(loft(trouser("thigh-l", "thigh-l"), dome([st(0.0, -0.005, 0.008, 0.09, 0.1, 2.1), st(0.2, 0.002, 0.004, 0.08, 0.089, 2), st(0.435, 0.004, 0, 0.061, 0.068, 2)], 1, 0.04, 2)));
   leg.push(loft(trouser("shank-l", "shank-l"), dome([st(0.0, 0.004, 0, 0.061, 0.068, 2), st(0.16, -0.008, 0, 0.058, 0.067, 2), st(0.428, 0.004, 0, 0.053, 0.063, 2)], -1, 0.04, 2)));
@@ -223,7 +223,7 @@ export function structure200(): Json[] {
 export function body500(): Json[] {
   const out: Json[] = [];
   out.push(loft(trouser("pelvis-trousers", "pelvis", TONE.trousers), hs("pelvis", [[0.85, -0.09, 0.076, 0.136, 2.3], [0.95, -0.12, 0.106, 0.168, 2.4], [1.08, -0.1, 0.116, 0.156, 2.3]])));
-  out.push(loft(wool("coat"), hs("torso", [[0.556, -0.15, 0.15, 0.212, 2.5], [0.95, -0.141, 0.136, 0.194, 2.4], [1.14, -0.116, 0.134, 0.174, 2.4], [1.36, -0.122, 0.143, 0.18, 2.35], [1.47, -0.11, 0.124, 0.22, 2.3], [1.52, -0.08, 0.094, 0.19, 2.2], [1.556, -0.05, 0.07, 0.1, 2]])));
+  out.push(...coatParts([[0.556, -0.15, 0.15, 0.212, 2.5], [0.95, -0.141, 0.136, 0.194, 2.4], [1.14, -0.116, 0.134, 0.174, 2.4], [1.36, -0.122, 0.143, 0.18, 2.35], [1.47, -0.11, 0.124, 0.22, 2.3], [1.52, -0.08, 0.094, 0.19, 2.2], [1.556, -0.05, 0.07, 0.1, 2]], 1, 0.0375));
   const leg: Json[] = [];
   leg.push(loft(trouser("thigh-l", "thigh-l"), dome([st(0.0, -0.004, 0.008, 0.09, 0.1, 2.1), st(0.435, 0.004, 0, 0.062, 0.069, 2)], 1, 0.04, 2)));
   leg.push(loft(trouser("shank-l", "shank-l"), dome([st(0.0, 0.004, 0, 0.062, 0.069, 2), st(0.428, 0.002, 0, 0.054, 0.064, 2)], -1, 0.04, 2)));
@@ -245,12 +245,32 @@ export function body500(): Json[] {
 }
 export const thermal500 = (body: readonly Json[]): Json[] => thermalOf(500, body, 5, 1);
 
+/** 🎗️ 1:500: one rib hoop of the commuter's rib table `[height at the spine, centre ahead, half depth, half breadth]` as a slender closed ring of a real rib's thickness, sinking 30 mm from the spine to the sternum. */
+function hoop500(id: string, [y, cx, hd, hw]: readonly [number, number, number, number]): Json {
+  const path: V3[] = Array.from({ length: 17 }, (_, k) => {
+    const a = Math.PI + (2 * Math.PI * k) / 16;
+    return T(cx + hd * Math.cos(a), y - 0.03 * (1 + Math.cos(a)) / 2, hw * Math.sin(a));
+  });
+  return tube({ id, bone: "torso", ...BONE }, path, [0.006], { slender: true });
+}
+/** 🪽 1:500: the shoulder girdle of the left side as one line, sternal end of the collar bone, acromion, spine of the shoulder blade, inferior angle (figure coordinates). */
+const GIRDLE_500: readonly V3[] = [[0.07, 1.48, 0.025], [0.062, 1.49, 0.1], [0.0, 1.51, 0.19], [-0.07, 1.49, 0.13], [-0.1, 1.33, 0.1]];
+/** 🦴 1:500: the left hip bone as one line, sacroiliac joint, iliac crest, anterior superior spine, acetabulum, pubic symphysis (figure coordinates). */
+const HIP_BONE_500: readonly V3[] = [[-0.07, 1.03, 0.045], [-0.03, 1.09, 0.135], [0.06, 1.04, 0.12], [0.0, 0.965, 0.09], [0.055, 0.92, 0.012]];
+
 export function structure500(): Json[] {
   const out: Json[] = [];
   const m = (solid: Json, member: string): void => { out.push(part(solid, member, "member")); };
   m(ellipsoid({ id: "skull", bone: "head", ...BONE }, [0.09, 0.09, 0.068], Hd(0.02, 1.706), level), "head");
   m(rod(FIT, "cervical-spine", "neck", N(-0.026, 1.54), N(0.014, 1.66), 0.012), "neck");
-  for (const q of axial(FIT, 500)) m(q, q.bone);
+  for (const q of axial(FIT, 500).filter((q) => q.id === "sk-spine")) m(q, q.bone);
+  for (const [k, i] of [[1, 7], [2, 4], [3, 1]] as const) m(hoop500(`rib-hoop-${k}`, RIBS[i]!), "torso");
+  m(rod(FIT, "sternum", "torso", T(0.07, 1.476), T(0.112, 1.262), 0.009), "torso");
+  for (const g of [1, -1]) {
+    const n = g > 0 ? "l" : "r";
+    m(tube({ id: `shoulder-girdle-${n}`, bone: "torso", ...BONE }, GIRDLE_500.map(([x, y, z]) => T(x, y, g * z)), [0.0065], { slender: true }), "torso");
+    m(tube({ id: `hip-bone-${n}`, bone: "pelvis", ...BONE }, HIP_BONE_500.map(([x, y, z]) => P(x, y, g * z)), [0.008], { slender: true }), "pelvis");
+  }
   const side: Json[] = [];
   const fz = FRAMES["foot-l"]!.o[2];
   side.push(part(rod(FIT, "femur-l", "thigh-l", [0, 0, 0.04], [0.435, 0, 0], 0.014), "thigh-l", "member"));

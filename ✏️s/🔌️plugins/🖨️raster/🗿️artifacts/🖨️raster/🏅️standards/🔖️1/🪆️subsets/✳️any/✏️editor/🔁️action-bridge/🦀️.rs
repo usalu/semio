@@ -112,6 +112,7 @@ pub fn command_from_action(action: &str, args: Option<&semio_framework_value::Ds
     let layer = || fold(args, LAYER);
     Ok(match action {
         "exportPng" => RasterCommand::ExportPng(decode(action, plain())?),
+        "importPng" => RasterCommand::ImportPng(decode(action, plain())?),
         "addLayer" => RasterCommand::AddLayer(decode(action, plain())?),
         "flattenLayers" => RasterCommand::FlattenLayers(decode(action, plain())?),
         "mergeDown" => RasterCommand::MergeDown(decode(action, plain())?),

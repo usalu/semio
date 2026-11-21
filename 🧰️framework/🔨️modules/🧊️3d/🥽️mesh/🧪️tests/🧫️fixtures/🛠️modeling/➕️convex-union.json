@@ -1,0 +1,314 @@
+{
+  "left": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      2,
+      2
+    ]
+  ],
+  "faces": [
+    [
+      0,
+      3,
+      2,
+      1
+    ],
+    [
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      0,
+      1,
+      5,
+      4
+    ],
+    [
+      2,
+      3,
+      7,
+      6
+    ],
+    [
+      0,
+      4,
+      7,
+      3
+    ],
+    [
+      1,
+      2,
+      6,
+      5
+    ]
+  ],
+  "cases": [
+    {
+      "name": "aligned overlap with authored seam",
+      "right": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          3,
+          2,
+          2
+        ]
+      ],
+      "volume": 12,
+      "area": 32,
+      "faces": 10
+    },
+    {
+      "name": "opposite direction overlap",
+      "right": [
+        [
+          -1,
+          0,
+          0
+        ],
+        [
+          1,
+          2,
+          2
+        ]
+      ],
+      "volume": 12,
+      "area": 32,
+      "faces": 10
+    },
+    {
+      "name": "right contained",
+      "right": [
+        [
+          0.5,
+          0.5,
+          0.5
+        ],
+        [
+          1.5,
+          1.5,
+          1.5
+        ]
+      ],
+      "volume": 8,
+      "area": 24,
+      "faces": 6,
+      "retained": 0
+    },
+    {
+      "name": "left contained",
+      "right": [
+        [
+          -1,
+          -1,
+          -1
+        ],
+        [
+          3,
+          3,
+          3
+        ]
+      ],
+      "volume": 64,
+      "area": 96,
+      "faces": 6,
+      "retained": 1
+    },
+    {
+      "name": "coincident",
+      "right": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          2,
+          2
+        ]
+      ],
+      "volume": 8,
+      "area": 24,
+      "faces": 6,
+      "retained": 0
+    },
+    {
+      "name": "strictly separated",
+      "right": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          5,
+          2,
+          2
+        ]
+      ],
+      "volume": 16,
+      "area": 48,
+      "faces": 12
+    },
+    {
+      "name": "face contact",
+      "right": [
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          4,
+          2,
+          2
+        ]
+      ],
+      "volume": 16,
+      "area": 40,
+      "faces": 10
+    },
+    {
+      "name": "nonconvex merged outline",
+      "right": [
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          3,
+          3,
+          2
+        ]
+      ],
+      "volume": 14,
+      "area": 38,
+      "faces": 20,
+      "partial": true,
+      "vertices": 24,
+      "edges": 42
+    },
+    {
+      "name": "wider right section",
+      "right": [
+        [
+          1,
+          -1,
+          0
+        ],
+        [
+          3,
+          3,
+          2
+        ]
+      ],
+      "volume": 20,
+      "area": 48,
+      "faces": 20,
+      "partial": true
+    },
+    {
+      "name": "partial face contact",
+      "right": [
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          4,
+          3,
+          2
+        ]
+      ],
+      "volume": 16,
+      "area": 44,
+      "refused": true
+    },
+    {
+      "name": "overlap across three axes",
+      "right": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ]
+      ],
+      "volume": 15,
+      "area": 42,
+      "faces": 24,
+      "partial": true
+    },
+    {
+      "name": "partially matched unit stitching face",
+      "left": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "right": [
+        [
+          0.5,
+          0.25,
+          0
+        ],
+        [
+          1.5,
+          1.25,
+          1
+        ]
+      ],
+      "volume": 1.625,
+      "area": 8.75,
+      "faces": 20,
+      "vertices": 24,
+      "edges": 42,
+      "partial": true
+    },
+    {
+      "name": "unequal stock crosses five support planes",
+      "right": [
+        [
+          1,
+          -0.5,
+          -0.5
+        ],
+        [
+          3,
+          2.5,
+          2.5
+        ]
+      ],
+      "volume": 22,
+      "area": 50,
+      "partial": true,
+      "faces": 22,
+      "vertices": 28,
+      "edges": 48
+    }
+  ]
+}

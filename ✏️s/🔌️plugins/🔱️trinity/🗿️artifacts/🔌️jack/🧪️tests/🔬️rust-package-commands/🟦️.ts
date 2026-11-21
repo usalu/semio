@@ -13,7 +13,10 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
   if(segments.length===1&&segments[0]==="jack-native-composition"){
     await runOwnedCommand(process.execPath,["test",resolve(context.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🟦️.ts"),resolve(context.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🚪️io/🧪️tests/🟦️.ts"),resolve(context.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📥️ingress/🧪️tests/🟦️.ts"),resolve(context.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔌️mutate-jack-1/🟦️.ts"),resolve(context.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts"),resolve(context.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🟦️.ts")],context.repoRoot,"jack-native-composition-oracle",scriptInvocationBudget(context.invocation,120_000),{signal:context.invocation.control.signal});
     const cargo=readCargoTestPolicyV1(process.env);
-    const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(context.invocation,"exact-cargo:caller",0),invocation:context.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(context.invocation,1_200_000)},manifestPaths:{"semio-s-dev-trinity-jack":resolve(context.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:context.repoRoot,groups:[{package:"semio-s-dev-trinity-jack",target:{kind:"lib"},laws:[
+    const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(context.invocation,"exact-cargo:caller",0),invocation:context.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(context.invocation,1_200_000)},manifestPaths:{
+      "semio-s-dev-trinity-jack":resolve(context.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.toml"),
+      "semio-s-artifact-trinity-jack-semio-content":resolve(context.root,"../../🪆️content/🧿️semio/📦️packages/🦀️rust/Cargo.toml"),
+    },env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:context.repoRoot,groups:[{package:"semio-s-dev-trinity-jack",target:{kind:"lib"},laws:[
 "tests::archive_laws::archive_carriers_preserve_original_octets_against_serde_json",
 "tests::archive_laws::archive_carriers_refuse_closed_schema_and_incomplete_octets",
 "tests::editor_laws::agent_lane_and_archive_laws::foreign_carriers_restore_the_edited_registered_rich_document",
@@ -66,6 +69,7 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
 "tests::editor_laws::lod_catalogue_and_examples::export_media_graph_out_matches_document_pack",
 "tests::editor_laws::lod_catalogue_and_examples::jack_io_declares_graph_out_fan_out_port",
 "tests::editor_laws::query_ownership_and_examples::query_ownership_runtime_publishes_transient_result_without_document_edit",
+"tests::editor_laws::query_ownership_and_examples::query_action_publishes_one_live_child_edit_and_undo_restores_it",
 "tests::editor_laws::query_ownership_and_examples::jack_query_is_document_content_shared_by_every_editor_while_results_stay_per_window",
 "tests::editor_laws::query_ownership_and_examples::window_kind_actions_scope_text_verbs_to_the_query_editor",
 "tests::editor_laws::query_ownership_and_examples::set_active_example_resolves_every_id_the_shell_can_send",
@@ -85,13 +89,16 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
 "tests::layout_laws::reorganize_step_stays_below_the_interactive_ceiling_on_the_nakagin_example",
 "tests::layout_laws::reorganize_start_complete_finalize_is_one_undo_entry",
 "tests::layout_laws::aborting_a_reorganize_run_leaves_the_document_byte_identical"
+]},{package:"semio-s-artifact-trinity-jack-semio-content",target:{kind:"lib"},laws:[
+  "owned::tests::the_owner_refuses_a_batch_with_a_duplicate_created_node",
+  "owned::tests::dependent_effects_invert_to_the_exact_original_child",
 ]}],progress:event=>{}});
     return;
   }
   if (segments.length === 1 && segments[0] === "jack-graph-query") {
     await runOwnedCommand(process.execPath,["test",resolve(context.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🟦️.ts"),resolve(context.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🟦️.ts")],context.repoRoot,"jack-graph-query-oracle",scriptInvocationBudget(context.invocation,120_000),{signal:context.invocation.control.signal});
     const cargo=readCargoTestPolicyV1(process.env);
-    const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(context.invocation,"exact-cargo:caller",0),invocation:context.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(context.invocation,1_200_000)},manifestPaths:{"semio-s-artifact-trinity-jack-graph-query":resolve(context.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:context.repoRoot,groups:[{package:"semio-s-artifact-trinity-jack-graph-query",target:{kind:"lib"},laws:["tests::graph_query_neutral_fixture_parity","tests::graph_query_checks_every_selected_coordinate_before_entity_read","tests::graph_query_refuses_duplicate_ids_endpoints_and_unretained_root","tests::rich_read_preserves_literal_components_and_presented_geometry"]}],progress:event=>{}});
+    const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(context.invocation,"exact-cargo:caller",0),invocation:context.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(context.invocation,1_200_000)},manifestPaths:{"semio-s-artifact-trinity-jack-graph-query":resolve(context.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:context.repoRoot,groups:[{package:"semio-s-artifact-trinity-jack-graph-query",target:{kind:"lib"},laws:["tests::graph_query_neutral_fixture_parity","tests::graph_query_checks_every_selected_coordinate_before_entity_read","tests::graph_query_refuses_duplicate_ids_endpoints_and_unretained_root","tests::flat_position_rejects_invalid_roots_and_numeric_overflow","tests::rich_read_preserves_literal_components_and_presented_geometry"]}],progress:event=>{}});
     return;
   }
   if (segments.length === 1 && segments[0] === "jack-child-selection") {

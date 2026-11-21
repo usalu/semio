@@ -9,7 +9,7 @@ fn original_drawing_catalog_prices_real_wire_and_shared_semantic_sources(){
 }
 
 use semio_framework_value::{
-    RetainedWorkPoll,
+    ErasedSnapshotRetirement, OriginalRetirementCloseLoan, OriginalRetirementFailure, RetainedAllocationEffect, RetainedWorkPoll,
     factory::owned::FactoryOwnedRetirement,
     retained_clone::{OriginalEffectReply, RetainedCloneSource, RetainedCloneStep, RetainedOwnedProjectionAdmission},
 };
@@ -20,7 +20,7 @@ use semio_framework_value_native_owned::{
 const BODY: usize = 1 << 16;
 const WORK: u64 = 1 << 12;
 const GRANT: RetainedCloneGrant = RetainedCloneGrant {
-    maximum_items: 1, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20,
+    maximum_items: 3, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20,
     maximum_release_bytes: 1 << 20, maximum_depth: 128,
 };
 
@@ -60,6 +60,7 @@ fn in_decoder<R>(run: impl FnOnce(&mut NativeDecodeControl<'_>) -> R) -> R {
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut control = NativeDecodeControl::new_retained(&mut accept);
     control.install_retirement_recipient(&mut recipient).unwrap();
+    control.admit_turn_capacity(GRANT.maximum_capacity_bytes).unwrap();
     let value = control.with_source_witness(Some(source.witness()), |control| {
         work.with_loan(&mut (), |work| control.with_work_recipient(work, |control| {
             construction.with_loan(&mut (), |construction| control.with_construction_recipient(construction, |control| {
@@ -68,7 +69,7 @@ fn in_decoder<R>(run: impl FnOnce(&mut NativeDecodeControl<'_>) -> R) -> R {
         })).unwrap().unwrap()
     });
     drop(control);
-    assert!(recipient.terminal_is_empty());
+    assert!(!recipient.has_owner());
     value
 }
 
@@ -85,6 +86,86 @@ fn close_catalog(
         if matches!(step, RetainedCloneStep::Complete(_)) { return }
     }
     panic!("actual Drawing catalog failed to close")
+}
+
+type MutationCloseReply<'reply> = OriginalEffectReply<'reply, RetainedCloneStep, OriginalRetirementFailure>;
+type MutationCloseComplete<'reply> = OriginalEffectReplyComplete<'reply, RetainedCloneStep, OriginalRetirementFailure>;
+
+struct ReceivedMutationClose;
+
+impl OriginalEffectProducer for ReceivedMutationClose {
+    type Output = RetainedCloneStep;
+    type Failure = OriginalRetirementFailure;
+    type Context<'turn, 'source> = (
+        &'turn mut dyn ErasedSnapshotRetirement,
+        Option<&'turn mut OriginalRetirementCloseLoan<'source>>,
+    ) where 'source: 'turn;
+
+    fn validate_context<'turn, 'source>(&self, _: &Self::Context<'turn, 'source>) -> Result<(), ValueError>
+    where 'source: 'turn { Ok(()) }
+
+    fn source_turn<'turn, 'source>(&self, _: &Self::Context<'turn, 'source>) -> Option<OriginalSourceTurnIdentity>
+    where 'source: 'turn { None }
+
+    fn receive<'reply, 'turn, 'source>(
+        &mut self, context: &mut Self::Context<'turn, 'source>, effect: &mut RetainedAllocationEffect<'_>,
+        reply: MutationCloseReply<'reply>,
+    ) -> Result<MutationCloseComplete<'reply>, ValueError> where 'source: 'turn {
+        match context.1.as_deref_mut() {
+            Some(original) => context.0.close_original_into(original, BODY, effect, reply),
+            None => context.0.close_into(BODY, effect, reply),
+        }
+    }
+
+    fn recover<'reply, 'turn, 'source>(
+        &mut self, context: &mut Self::Context<'turn, 'source>, effect: &mut RetainedAllocationEffect<'_>,
+        reply: MutationCloseReply<'reply>,
+    ) -> Result<MutationCloseComplete<'reply>, ValueError> where 'source: 'turn {
+        match context.1.as_deref_mut() {
+            Some(original) => context.0.recover_close_original_into(original, BODY, effect, reply),
+            None => context.0.recover_close_into(BODY, effect, reply),
+        }
+    }
+}
+
+fn close_received_mutation(control: &mut NativeDecodeControl<'_>, retirement: &mut dyn ErasedSnapshotRetirement) {
+    let mut effect_frame = NativeReceivingEffect::default();
+    let mut producer = OriginalEffectAuthority::new(ReceivedMutationClose);
+    for _ in 0..100000 {
+        if retirement.terminal_is_empty() {
+            assert!(producer.into_producer().is_ok());
+            return;
+        }
+        if retirement.requires_original_birth() {
+            let step = control.with_retirement(GRANT, |funding| funding.with_original_close(|loan| {
+                Ok::<_, ValueError>(retirement.close_original_birth_step(loan, GRANT))
+            })).unwrap();
+            if let RetainedWorkPoll::Complete(turn) = step { turn.result.unwrap(); }
+            continue;
+        }
+        let demand = retirement.next_demand(BODY).unwrap();
+        let work = retirement.next_computational_work(BODY).unwrap();
+        let borrow_original = retirement.requires_original_control();
+        let mut completed = false;
+        for _ in 0..1000 {
+            let poll = control.receive_original_effect(demand, work, &mut effect_frame, &mut producer, |control, effect, producer, action| {
+                if borrow_original {
+                    control.with_retirement(effect.grant(), |funding| funding.with_original_close(|loan| {
+                        producer.drive(&mut (&mut *retirement, Some(loan)), effect, action)
+                    }))
+                } else {
+                    producer.drive(&mut (&mut *retirement, None), effect, action)
+                }
+            }).unwrap();
+            if let NativeReceivingEffectPoll::Complete(turn) = poll {
+                turn.result.unwrap();
+                completed = true;
+                break;
+            }
+        }
+        assert!(completed, "original mutation close did not publish its reply");
+    }
+    panic!("original mutation retirement did not reach its terminal state");
 }
 
 fn receive(
@@ -134,26 +215,45 @@ fn receive(
         projection, issuer, b"op", |m| m, control, GRANT,
     ).map_err(|(error, _)| error).unwrap();
 
+    let mut acknowledged = false;
     for _ in 0..100000 {
         if receiver.ready() { break }
-        let witness = control.source_witness().unwrap();
-        if let RetainedWorkPoll::Complete(outcome) = receiver.advance(control, witness, BODY, WORK, GRANT) {
-            outcome.result.unwrap();
+        let items = receiver.minimum_advance_items(BODY, WORK).unwrap();
+        let before = control.construction_submitted().unwrap();
+        if items > 1 {
+            let witness = control.source_witness().unwrap();
+            let denied = receiver.advance(control, witness, BODY, WORK, RetainedCloneGrant { maximum_items: items - 1, ..GRANT });
+            assert_eq!(denied.work(), 0);
+            assert_eq!(control.construction_submitted().unwrap(), before);
+            assert_eq!(receiver.minimum_advance_items(BODY, WORK).unwrap(), items);
         }
+        let phase = receiver.phase;
+        let demand = receiver.demands(BODY).unwrap();
+        let witness = control.source_witness().unwrap();
+        if let RetainedWorkPoll::Complete(outcome) = receiver.advance(control, witness, BODY, WORK, RetainedCloneGrant { maximum_items: items, ..GRANT }) {
+            let step = outcome.result.unwrap_or_else(|failure| panic!("Draw JSON receiving failed in {phase:?} for {items} items with {demand:?}: {failure:?}"));
+            assert!(step.progress().copied_items <= items);
+        }
+        let copied = control.construction_submitted().unwrap().copied_items - before.copied_items;
+        assert!(copied <= items);
+        acknowledged |= items > 1 && copied == items;
     }
+    assert!(acknowledged);
     assert!(receiver.ready());
     let quote = receiver.take_original_demand(BODY).unwrap();
-    let denied = control.with_effect(GRANT, 0, |control, effect| receiver.take_original(control, BODY, effect)).unwrap();
-    if let Some(denied) = denied {
-        assert_eq!(denied.work, 0);
-        assert!(denied.result.is_err());
-    }
+    let work = receiver.take_original_work_demand(BODY, WORK).unwrap();
+    let before = control.construction_submitted().unwrap();
+    let denied = control.with_effect(GRANT, work - 1, |control, effect| receiver.take_original(control, BODY, effect));
+    assert!(matches!(denied, Err(error) if error.kind == semio_framework_value::ValueRefusalKind::WorkLimit));
+    assert_eq!(control.construction_submitted().unwrap(), before);
     assert!(receiver.ready());
     assert_eq!(receiver.take_original_demand(BODY).unwrap(), quote);
+    assert_eq!(receiver.take_original_work_demand(BODY, WORK).unwrap(), work);
 
     let mut received = None;
     for _ in 0..100000 {
-        let (_, value) = control.with_effect(GRANT, WORK, |control, effect| {
+        let work = receiver.take_original_work_demand(BODY, WORK).unwrap();
+        let (_, value) = control.with_effect(GRANT, work, |control, effect| {
             receiver.take_original(control, BODY, effect)
         }).unwrap().unwrap().result.unwrap();
         if let Some((value, exact_issuer)) = value {
@@ -164,6 +264,9 @@ fn receive(
         }
     }
     let (value, exact_issuer) = received.unwrap();
+    let assert_close = |step: semio_framework_value::OriginalRetirementPoll| {
+        if let RetainedWorkPoll::Complete(turn) = step { turn.result.unwrap(); }
+    };
 
     for _ in 0..100000 {
         if receiver.terminal_is_empty() { break }
@@ -191,27 +294,7 @@ fn receive(
             turn.result.unwrap();
         }
     }).unwrap().unwrap();
-    let mut retirement = retirement.unwrap();
-    for _ in 0..100000 {
-        if retirement.terminal_is_empty() { break }
-        let demand = retirement.next_demand(BODY).unwrap();
-        let work = retirement.next_computational_work(BODY).unwrap();
-        control.with_allocated_effect_reported(demand, work, |control, effect| {
-            if retirement.requires_original_control() {
-                control.with_retirement(GRANT, |original| original.with_original_close(|loan| {
-                    assert_close(retirement.close_original_step(loan, BODY, effect));
-                    Ok::<_, ValueError>(())
-                })).unwrap();
-            } else {
-                assert_close(retirement.close_step(BODY, effect));
-            }
-        }).unwrap().unwrap();
-    }
-    assert!(retirement.terminal_is_empty());
-}
-
-fn assert_close(poll: semio_framework_value::OriginalRetirementPoll) {
-    if let RetainedWorkPoll::Complete(turn) = poll { turn.result.unwrap(); }
+    close_received_mutation(control, retirement.unwrap().as_mut());
 }
 
 /// 📨️ Both paths publish native Drawing mutations through the original wire decoder and return their exact issuer.

@@ -22,6 +22,8 @@ import {environmentRowHoldsV1} from "../🕰️generations/🌍️environment/�
 import {createDirectoryStampsV1} from "../🕰️generations/🗂️directory-stamps/🟨️.mjs";
 import {createEpochDoubtV1} from "../🕰️generations/🔎️doubt/🟨️.mjs";
 import type {EnvironmentStoredPartsV1} from "../🕰️generations/🧵️edge-reads/🟨️.mjs";
+
+type PublishedGenerationV1<T>=Readonly<{available():Promise<boolean>;restore():Promise<T|undefined>}>;
 import {graphStringInternerV1,createMemoryPortsV1} from "../../🧠️memory/🟨️.mjs";
 import {journalGraphSeamsV1} from "../../🏡️resident/🕰️graph-hooks/🔌️host/🟨️.mjs";
 import {profileMarkV1,profilePhaseV1} from "../../⏱️profile/🟨️.mjs";
@@ -31,7 +33,7 @@ import {requireCurrentFormatStampsV1} from "../../🧷️format-stamps/🟨️.m
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {pendingCrateManifestV1,buildGraphGenerationIdentityV1} from "../🏷️retention/🟦️.ts";
-import {fleetOriginsV1,remoteGenerationExchangeV1} from "../🕰️generations/🌐️remote-exchange/🟦️.ts";
+import {fleetOriginsV1,remoteGenerationExchangeV1,workspaceClosurePortV1} from "../🕰️generations/🌐️remote-exchange/🟦️.ts";
 import {wholeReadGateOfHostV1} from "../🕰️generations/🤝️whole-gate/🟦️.ts";
 import {buildWalkDescendsV1,graphMemberPredicateV1,workspaceBuildFilesV1,buildGraphMembersV1,portableInputs} from "../📁️workspace/🟦️.ts";
 import {inventoryDirectoriesV1} from "../🕊️release/🟦️.ts";
@@ -118,6 +120,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
   const factDoubt=(store:RepositoryCacheStoreV1)=>{
     const epoch=createEpochDoubtV1({stamps:createDirectoryStampsV1({file:join(store.root,GENERATION_POLICY_V1.directoryStampsFile)})});let epochUsed=false;
     type Context={signal?:AbortSignal;progress?:(event:unknown)=>Promise<void>};
+    type StampRows={rows:readonly unknown[];index?:{rows:readonly unknown[];rowKindOf?(id:number):string|undefined};signal?:AbortSignal};
     const vouched=async(journal:Uint8Array|undefined,row:(at:number)=>unknown,count:number,context:Context)=>{
       if(!journal){epochUsed=true;return epoch.classify(Array.from({length:count},(_,at)=>row(at)) as never,context);}
       const unseen:number[]=[];for(let at=0;at<journal.length;at++)if(journal[at]===2)unseen.push(at);
@@ -129,8 +132,8 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     return {
       classify:(rows:readonly unknown[],context:Context)=>vouched(seams.doubtful(rows as never),at=>rows[at],rows.length,context),
       classifyIds:(index:{rows:readonly unknown[]},ids:readonly number[],context:Context)=>vouched(seams.doubtfulIds(index as never,ids),at=>index.rows[ids[at]!],ids.length,context),
-      settled:async(input:{rows:readonly unknown[];ids:readonly number[];stale:ReadonlySet<number>})=>{if(epochUsed)await profilePhaseV1("graph.host.stamps",()=>epoch.settled(input as never));journalPort.manifest.flushVerdicts();},
-      published:async(input:{rows:readonly unknown[];observedAt:number})=>epoch.published(input as never)
+      settled:async(input:StampRows&{ids:readonly number[];stale:ReadonlySet<number>})=>{if(epochUsed)await profilePhaseV1("graph.host.stamps",()=>epoch.settled(input as never));journalPort.manifest.flushVerdicts();},
+      published:async(input:StampRows&{observedAt:number})=>epoch.published(input as never)
     };
   };
   const membership=async(previous:Parameters<typeof seams.membership>[0],signal?:AbortSignal)=>{
@@ -140,12 +143,26 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     return live;
   };
   const wholeGate=wholeReadGateOfHostV1({root,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de",say:line=>{process.stderr.write(line+"\n");},origin:fleetOriginsV1(root).self});
-  const exchange=remoteGenerationExchangeV1({environment:process.env,workspace:root,identity:async()=>buildGraphGenerationIdentityV1(registry),...scope===undefined?{}:{scope},cursors:{
+  const closurePort=workspaceClosurePortV1(root);
+  const exchange=remoteGenerationExchangeV1({environment:process.env,workspace:root,closures:closurePort,identity:async()=>buildGraphGenerationIdentityV1(registry),...scope===undefined?{}:{scope},cursors:{
     snapshotFor:async generation=>{const entry=cursorStore.get("g"+generation);if(!entry||entry.carry)return undefined;const bytes=await journalPort.manifest.store.bytes(entry.instance);return bytes?{instance:entry.instance,bytes}:undefined;},
     install:async(generation,snapshot)=>{await journalPort.manifest.store.putBytes(snapshot.instance,snapshot.bytes);cursorStore.set("g"+generation,{instance:snapshot.instance,seq:0});},
     distance:async snapshot=>{await journalPort.manifest.store.putBytes(snapshot.instance,snapshot.bytes);const since=await journalPort.manifest.since({instance:snapshot.instance,seq:0});return since.complete?since.rows.length:undefined;}
   }});
+  const obtainClosure=async(namespace:"build-input-closures"|"build-lock-closures",key:string,signal=invocation.control.signal)=>{
+    if(!closurePort)return "missing" as const;
+    const {obtainClosureLeafV1}=await import("../🩹️closure-repair/🟨️.mjs"),verify=closurePort.verify;
+    return obtainClosureLeafV1({directory:closurePort.directory,namespace,key,fetch:exchange?(space,name,active)=>exchange.leaf({namespace:space,key:name,signal:active}):undefined,put:closurePort.put,verify:verify?(space,name)=>verify(space,name,signal):undefined,signal});
+  };
   const release=async(options?:{more?:boolean})=>{observationV1.releaseInferenceMemoryV1();(await import("../../📥️inputs/🟨️.mjs")).releaseInputMemoryV1();if(!state.carry&&options?.more!==true){(await import("../📥️inference/🧭️script-inputs/🟨️.mjs")).resetClosureEntriesV1();setupSharesV1.delete(invocation);}graphStringInternerV1.clear();createMemoryPortsV1().collect();if(options?.more===true)(await import("../../🧠️memory/🧽️settle/🟨️.mjs")).reportRetainedGraphMemoryV1();};
+  const prepareRebuild=async<T>(published?:PublishedGenerationV1<T>):Promise<{release?:()=>void;restored?:T}>=>{
+    for(;;){
+      let available=false;
+      const release=await upgradeBuildCapacityBeforeRebuildV1(process.env,phaseControl,published===undefined?undefined:async()=>available=await published.available());
+      if(!available||published===undefined)return{release};
+      const restored=await published.restore();if(restored!==undefined)return{restored};
+    }
+  };
   return {
     ...exchange?{exchange}:{},
     ...exchange&&wholeGate?{wholeGate}:{},
@@ -156,21 +173,22 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     async identity(){requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation","refuse");return buildGraphGenerationIdentityV1(registry);},
     async implementationRows(){const producer=await import("../📥️inference/🟨️.mjs");await producer.libraryBootstrap;const rows:{kind:"digest";path:string;fact:{sha256:string;size:number;mtimeMs:number}}[]=[];for(const row of [...loadedGraphImplementationRowsV1,...producer.loadedImplementationRowsV1]){const inside=relative(root,row.path);if(inside===""||inside.startsWith("..")||isAbsolute(inside))continue;rows.push({...row,path:inside.split(sep).join("/")});}return producer.classifyImplementationRowsV1(rows);},
     release,
+    prepareWholeRebuild:prepareRebuild,
     releaseCutoff:async()=>{observationV1.releaseInferenceMemoryV1();graphStringInternerV1.clear();createMemoryPortsV1().collect();if(leanSliceV1({residentMegabytes:process.memoryUsage().rss/1048576}).lean)await settleGraphMemoryV1({force:true,report:()=>undefined});},
     carryClosures:(on:boolean)=>{state.carry=on;},
     builderIdle:(request:GenerationPrefetchRequestV1)=>builderIdleV1({root,invocation,phaseControl,request}),
     attach:<T>(request:GenerationPrefetchRequestV1,recheck:()=>Promise<T|undefined>)=>attachToBuilderV1<T>({look:()=>builderLookV1({root,invocation,phaseControl,request}),recheck,say:(key,fields)=>{process.stderr.write(renderCustodyMessageV1(key,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de")+"\n");},signal:invocation.control.signal}),
     withShared:<T>(body:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>Promise<T>)=>withOwnerRegistryCustodyV1<T>(phaseControl.signal,contain=>withRepositoryCacheStoreV1(root,"graph",invocation,phaseControl,async(store,control)=>{await store.recheck();checkResourceLeaseControl(control);return contain(()=>body(store,control));})),
-    withBuilder:async<T>(build:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>Promise<T>,request?:{readonly dirty:readonly string[];readonly structural:boolean},peerWait?:(blocked:boolean)=>void,purpose:"build"|"restore"="build")=>{
+    withBuilder:async<T>(build:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>Promise<T>,request?:{readonly dirty:readonly string[];readonly structural:boolean},peerWait?:(blocked:boolean)=>void,purpose:"build"|"restore"="build",published?:PublishedGenerationV1<T>,funded?:true)=>{
       const rebuilding=purpose==="build";
       const body=async(store:RepositoryCacheStoreV1,control:ResourceLeaseControl,claim:SliceClaimV1)=>{if(rebuilding)await markBuildCapacityPhaseV1("rebuild");return build(store,control,claim);};
-      if(rebuilding)await profilePhaseV1("graph.host.capacity",()=>upgradeBuildCapacityBeforeRebuildV1());
       let image:string|undefined;
-      const result=await withOwnerRegistryCustodyV1<T>(phaseControl.signal,async contain=>{
-        const outcome=await profilePhaseV1("graph.host.custody",()=>withGenerationCustodyV1(root,invocation,phaseControl,request,(store,control,claim)=>{image=store.root;profileMarkV1("graph.host.custody-held");return contain(()=>body(store,control,claim));},peerWait));
-        if(rebuilding)await markBuildCapacityPhaseV1("plan");
-        return outcome;
-      }).catch(async error=>{if(isClosedOwnerRegistryInvalidationV1(error))await release();else if(error?.code==="SEMIO_STALE_IMPLEMENTATION")await release().catch(()=>undefined);throw error;});
+      let result:T,releaseCapacity:(()=>void)|undefined;
+      try{
+        if(rebuilding&&!funded){const prepared=await profilePhaseV1("graph.host.capacity",()=>prepareRebuild(published));releaseCapacity=prepared.release;if(prepared.restored!==undefined)return prepared.restored;}
+        result=await withOwnerRegistryCustodyV1<T>(phaseControl.signal,contain=>profilePhaseV1("graph.host.custody",()=>withGenerationCustodyV1(root,invocation,phaseControl,request,(store,control,claim)=>{image=store.root;profileMarkV1("graph.host.custody-held");return contain(()=>body(store,control,claim));},peerWait)));
+      }catch(error){if(isClosedOwnerRegistryInvalidationV1(error))await release();else if(error?.code==="SEMIO_STALE_IMPLEMENTATION")await release().catch(()=>undefined);throw error;}
+      finally{try{releaseCapacity?.();}finally{if(rebuilding)await markBuildCapacityPhaseV1("plan");}}
       if(rebuilding&&image!==undefined)await sweepSupersededBlocksV1(root,image,invocation,phaseControl,(key,fields)=>process.stderr.write(renderGenerationMessageV1(key as never,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language)+"\n"));
       return result;
     },
@@ -193,16 +211,21 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
      },
     expand:async(projects:Record<string,unknown>,control:ResourceLeaseControl)=>compact?projects:(await portableInputs(root,projects,invocation,control)) as Record<string,unknown>,
     repairClosure:async(key:string)=>{const{purgeClosureReferencesV1}=await import("../🩹️closure-repair/🟨️.mjs"),{repositoryCacheBudgetV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts"),{join}=await import("node:path"),removed=await purgeClosureReferencesV1({root:join(repositoryCacheBudgetV1(root).partitions.graph.directory,"m"),key,cancelled:()=>invocation.control.signal.aborted});process.stderr.write(renderCustodyMessageV1("closureRepaired",{key:key.slice(0,12),removed},resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de")+"\n");return removed;},
+    async verifyClosure({namespace,key}:import("../🕰️generations/🩹️closure-repair/🟨️.mjs").ClosureRepairReferenceV1,signal=invocation.control.signal){
+      return closurePort?.verify?.(namespace,key,signal);
+    },
+    async refetchClosure({namespace,key}:import("../🕰️generations/🩹️closure-repair/🟨️.mjs").ClosureRepairReferenceV1,signal=invocation.control.signal){
+      return await obtainClosure(namespace,key,signal)!=="missing";
+    },
     async settleClosure(input:{key:string;namespace:"build-input-closures"|"build-lock-closures";projects:readonly string[]}){
-      const closure=await import("../🩹️closure-repair/🟨️.mjs"),{workspaceClosurePortV1}=await import("../🕰️generations/🌐️remote-exchange/🟦️.ts"),port=workspaceClosurePortV1(root),put=closure.closureLeafPutterV1(root);
-      const obtain=async(namespace:"build-input-closures"|"build-lock-closures",key:string)=>port===undefined?"missing" as const:closure.obtainClosureLeafV1({directory:port.directory,namespace,key,fetch:exchange?async(space,name,signal)=>exchange.leaf({namespace:space,key:name,signal}):undefined,put,signal:invocation.control.signal});
+      const closure=await import("../🩹️closure-repair/🟨️.mjs");
       const heavy=async(names:readonly string[])=>{
         try{
           const cost=await import("../../🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts"),wanted=await import("../../🪪️graph-state/🙋️wanted/🟦️.ts"),memory=await import("../../🧠️memory/🟨️.mjs"),reading={hostMegabytes:memory.fleetHostReadingV1().hostMegabytes},context=cost.ownerCostContextV1(),table=cost.mergeOwnerCostTablesV1([cost.readOwnerCostFileV1(cost.ownerCostPathV1(root),context.ceilingMegabytes)]);
           return cost.classifyOwnersV1(names,name=>cost.estimateOwnerCostV1(table,name,undefined,undefined,context),cost.ownerGrantV1(wanted.fleetGrantMegabytesV1(reading),wanted.wantedPolicyV1)).heavy.length>0;
         }catch{return false;}
       };
-      return closure.settleClosureLeafV1({...input,obtain,purge:key=>this.repairClosure(key),heavy});
+      return closure.settleClosureLeafV1({...input,obtain:obtainClosure,purge:key=>this.repairClosure(key),heavy});
     },
     expansionLimits:{maximumProjects:32,maximumBytes:Math.floor(graphDeclarationV1("../👁️observation/📥️reuse/🧬️schema/🔣️.json").definitions.Policy.const.maximumTextBytes/4)},
     readLean:(value:unknown)=>readBuildGraphLeanV1(value),
@@ -214,7 +237,13 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     scope:(full:boolean)=>{seams.scope(full);},
     say:(key:string,fields:Record<string,string|number>)=>{process.stderr.write(renderGenerationMessageV1(key as never,fields,resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language)+"\n");},
     async fleetRead(request:GenerationPrefetchRequestV1){return fleetReadStaleGenerationV1({root,request,invocation,language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language as "en"|"de",infer:({names,skip,done})=>inferRunV1({request,names,skip,done,prefetch:(next,hooks)=>this.prefetch(next,{hooks}),release:closeProjectFarmsV1})});},
-    async prefetch(request:GenerationPrefetchRequestV1,continuous?:{hooks:OwnerHooksV1}){await upgradeBuildCapacityBeforeRebuildV1();return prefetchStaleGenerationV1({root,invocation,phaseControl,registry,files:()=>state.files,request,release:()=>this.release(),...continuous===undefined?{}:{hooks:continuous.hooks,chunk:Number.MAX_SAFE_INTEGER},language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,book:()=>markBuildCapacityPhaseV1("rebuild")});},
+    async prefetch<T>(request:GenerationPrefetchRequestV1,continuous?:{hooks:OwnerHooksV1},published?:PublishedGenerationV1<T>){
+      let releaseCapacity:(()=>void)|undefined;
+      try{
+        const prepared=await prepareRebuild(published);releaseCapacity=prepared.release;if(prepared.restored!==undefined)return prepared.restored;
+        return await prefetchStaleGenerationV1({root,invocation,phaseControl,registry,files:()=>state.files,request,release:()=>this.release(),...continuous===undefined?{}:{hooks:continuous.hooks,chunk:Number.MAX_SAFE_INTEGER},language:resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language,book:()=>markBuildCapacityPhaseV1("rebuild")});
+      }finally{try{releaseCapacity?.();}finally{await markBuildCapacityPhaseV1("plan");}}
+    },
   };
 }
 

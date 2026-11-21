@@ -9,7 +9,7 @@ use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
 use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
 use semio_s_plugin_norm_compliance::ClauseId;
-use semio_s_artifact_norm_vdi3805_model::{CONNECTION_TYPE_ROWS, FILTER_CLASS_ROWS, PRESSURE_CLASS_ROWS, SHEET_NUMERIC_BOUNDS_19_AIRFLOW, SHEET_NUMERIC_BOUNDS_53_COP, SHEET_NUMERIC_BOUNDS_DN, SHEET_NUMERIC_BOUNDS_VOLUME_M3, SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N, SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA};
+use semio_s_artifact_norm_vdi3805_model::{CONNECTION_TYPE_ROWS, FILTER_CLASS_ROWS, PRESSURE_CLASS_ROWS, SHEET_NUMERIC_BOUNDS_AIRFLOW, SHEET_NUMERIC_BOUNDS_DN, SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA};
 
 pub const BODY_CATALOGUE: &str = "norm.vdi3805.play.catalogue";
 
@@ -60,13 +60,13 @@ fn pressure_class_table() -> CatalogueTable {
     }
 }
 
-/// 📋 Filter classes for Blatt 19 (ISO 16890 / EN 779 legacy mapping used by VDI 3805-19).
+/// 📋 Air-filter classification examples used in manufacturer catalogues.
 fn filter_class_table() -> CatalogueTable {
     CatalogueTable {
         id: "filter-classes",
-        title_en: "Filter classes (Blatt 19)",
-        title_de: "Filterklassen (Blatt 19)",
-        clause: ClauseId::new("VDI 3805", "19", "4.1"),
+        title_en: "Air-filter classifications",
+        title_de: "Luftfilterklassen",
+        clause: ClauseId::new("VDI 3805", "10", "1"),
         columns: vec![
             CatalogueColumn { id: "code", label_en: "Class", label_de: "Klasse", unit: None },
             CatalogueColumn { id: "en", label_en: "Meaning", label_de: "Bedeutung", unit: None },
@@ -82,28 +82,9 @@ fn filter_class_table() -> CatalogueTable {
     }
 }
 
-/// 📋 Heat-pump COP domain (VDI 3805-53 §4.2) — same numbers evaluate() reads.
-fn heat_pump_cop_table() -> CatalogueTable {
-    let (min_v, max_v) = SHEET_NUMERIC_BOUNDS_53_COP;
-    CatalogueTable {
-        id: "heat-pump-cop",
-        title_en: "Heat-pump COP domain",
-        title_de: "Wärmepumpen-COP-Bereich",
-        clause: ClauseId::new("VDI 3805", "53", "4.2"),
-        columns: vec![
-            CatalogueColumn { id: "bound", label_en: "Bound", label_de: "Schranke", unit: None },
-            CatalogueColumn { id: "value", label_en: "COP", label_de: "COP", unit: None },
-        ],
-        rows: vec![
-            CatalogueRow { id: "min".into(), cells: vec![CatalogueCell::text("min"), CatalogueCell::number(min_v, 1)] },
-            CatalogueRow { id: "max".into(), cells: vec![CatalogueCell::text("max"), CatalogueCell::number(max_v, 1)] },
-        ],
-    }
-}
-
 /// 📋 Airflow domain (VDI 3805-16/19) — same numbers evaluate() reads.
 fn airflow_domain_table() -> CatalogueTable {
-    let (min_v, max_v) = SHEET_NUMERIC_BOUNDS_19_AIRFLOW;
+    let (min_v, max_v) = SHEET_NUMERIC_BOUNDS_AIRFLOW;
     CatalogueTable {
         id: "airflow-domain",
         title_en: "Airflow domain",
@@ -144,11 +125,8 @@ pub fn catalogue_tables() -> Vec<CatalogueTable> {
         connection_type_table(),
         pressure_class_table(),
         filter_class_table(),
-        heat_pump_cop_table(),
         airflow_domain_table(),
         bound_table("dn-domain", "DN domain", "DN-Bereich", "1", "6.1", None, SHEET_NUMERIC_BOUNDS_DN, 0),
-        bound_table("volume-domain", "Volume domain", "Volumen-Bereich", "7", "4.2", Some("m³"), SHEET_NUMERIC_BOUNDS_VOLUME_M3, 3),
-        bound_table("axial-force-domain", "Axial force domain", "Axialkraft-Bereich", "60", "4.2", Some("N"), SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N, 0),
         bound_table("pressure-drop-domain", "Pressure drop domain", "Druckverlust-Bereich", "16", "4.2", Some("Pa"), SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA, 0),
     ]
 }

@@ -111,8 +111,11 @@ pub(super) fn editor_sync_terminal(cache: &EditorSyncCache) -> bool {
 }
 
 pub(super) fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
-    cache.snapshot_json.is_none()
+    cache.window_id.is_none()
+        && cache.snapshot_json.is_none()
         && cache.selection.is_none()
+        && cache.selection_granularity.is_none()
+        && cache.flow_ports.is_empty()
         && cache.preview_off_json.is_none()
         && cache.computing_json.is_none()
         && cache.status_json.is_none()
@@ -122,6 +125,7 @@ pub(super) fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
         && cache.viewport_pixels.is_none()
         && cache.operator_ids.is_none()
         && cache.hover.is_none()
+        && cache.hover_source_window_id.is_none()
         && cache.scene_pack.is_none()
         && cache.interaction_domain.is_none()
 }

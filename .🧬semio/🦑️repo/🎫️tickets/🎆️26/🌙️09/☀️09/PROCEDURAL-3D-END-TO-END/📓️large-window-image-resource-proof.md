@@ -1,0 +1,19 @@
+# Oversized Generate Image Transfer
+
+## Window ownership
+
+Generate2d and Generate3d now publish a large authored data URI through the window body that owns its Image. The browser and native consumers request resource offsets through the same TreeWindow ledger as the existing form pager. The request key includes the window and semantic Image key, complete source digest and UTF-8 extent. A native queued request also carries the mounted generation. The producer publishes an at-most 128 KiB nominal slice and advances only on an exact body and resource request. A slice can include up to three extra bytes to preserve a Unicode boundary. Each reader requires contiguous offsets and verifies the complete extent and digest.
+
+Small sources use the inline Image. Sources that fit the ordinary retained form page use the existing content-addressed child carrier. Form pagination reserves only one carrier’s record budget per paged source. The complete paged source fits the established 4 MiB native source envelope.
+
+The browser decodes the validated source through its own Blob URL. Progress follows received bytes. Replacing or removing an Image cancels a partial read and revokes its display URL. A remounted reader that receives a late offset starts again at page one. Native progress spans receipt, maintenance decoding and tile staging. The final raster uses the existing fixed upload credits. Each RGBA tile is at most 512×512 with a one-pixel sampling overlap around its covered area. Tiles retain natural dimensions and divide the existing object-contain rectangle using the source coordinates. The window’s paint revision and generation scope retirement of hidden and closed image work.
+
+## Verification
+
+- The [neutral fixture](large-window-resource.json) generated a 2,360,852-byte PNG with a 1024×768 RGB image. Its source URI is larger than the entire retained document budget when published through one ordinary carrier.
+- The [compact Rust and TypeScript driver](large-window-resource-proof.ts) passed across 25 pages. It builds the production schema-owned reader, the extracted production Image page publisher and the production native resource receiver and tiler. Its native harness substitutes the renderer worker, GPU uploads and codec boundaries, using exact RGBA from PNGJS. It checks wrong body and window, order, duplicate reads, corrupt terminal bytes, UTF-8 cuts, unchanged small and ordinary retained source paths, exact mounted generation in actions, cancellation on replacement and hidden paint revision, exact native tile credits and six-tile pixel reconstruction. The TypeScript reader reconstructed the PNG and PNGJS independently verified every pixel.
+- The [mounted Chromium driver](large-image-browser-probe.ts) passed using the actual React Interpreter, retained store and TreeWindow scheduler with a fixture body publisher and Rust-authored descriptors. It started from a late retained page, requested pages 1 through 25, decoded the full image at its original size, matched the browser Blob’s SHA-256 and released the request. It verified that unmount revokes the Blob and cancels a restarted partial transfer.
+- The existing [short-form Chromium regression](form-browser-probe.ts) passed in English and German with named form controls, normal decoded images, scrolling and owned edits.
+- Offline locked Cargo metadata and the whitespace check passed. The full linked WGPU application and complete browser-to-plugin actor refresh remain outside these compact checks. ImageWindowKit continues to use its existing context-free image presenter. This slice binds the shared window-resource publisher to the two Generate form presenters.
+
+Run the compact driver before the Chromium driver through `repo tools exec --light bun --` from the checkout. The compact driver prepares the browser fixture’s native page descriptors in the ticket’s generated directory.

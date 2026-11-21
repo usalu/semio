@@ -164,7 +164,10 @@ def ell(id, bone, mat, role, tone, radii, at, rot=None, **kw):
     return s
 
 
-def rev(id, bone, mat, role, tone, profile, origin, axis=(0, 0, 1), **kw):
+def rev(id, bone, mat, role, tone, profile, origin, axis=(0, 0, 1), bore=False, **kw):
+    if bore:
+        assert profile[0][1] == profile[-1][1] and profile[0][1] > 0
+        profile = [*profile, profile[0]]
     s = _c(id, bone, mat, role, tone)
     s.update({"kind": "revolve", "profile": [[rr(a), rr(b)] for a, b in profile], "axis": list(axis), "origin": [rr(v) for v in origin]})
     s.update(kw)
@@ -173,7 +176,7 @@ def rev(id, bone, mat, role, tone, profile, origin, axis=(0, 0, 1), **kw):
 
 def cyl(id, bone, mat, role, tone, p0, axis, length, r, r_in=0.0, **kw):
     """a cylinder (a tube when r_in is given) from p0 along a coordinate axis"""
-    return rev(id, bone, mat, role, tone, [[0, r_in], [0, r], [length, r], [length, r_in]], p0, axis, **kw)
+    return rev(id, bone, mat, role, tone, [[0, r_in], [0, r], [length, r], [length, r_in]], p0, axis, bore=r_in > 0, **kw)
 
 
 def loft(id, bone, mat, role, tone, sections, caps=True, **kw):

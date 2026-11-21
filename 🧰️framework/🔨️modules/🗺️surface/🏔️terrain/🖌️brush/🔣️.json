@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Terrain Brush Action",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action", "arguments"],
+  "properties": {
+    "action": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_.-]+$" },
+    "arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "radius", "value"],
+      "properties": {
+        "operation": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[A-Za-z0-9_.-]+$" },
+        "radius": { "type": "integer", "minimum": 0, "maximum": 32 },
+        "value": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+      }
+    }
+  }
+}

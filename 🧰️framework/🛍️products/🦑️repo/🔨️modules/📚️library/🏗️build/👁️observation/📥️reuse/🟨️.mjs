@@ -74,7 +74,7 @@ function requireInventoryLeafAbsentV1(path,parents,control){recheckInventoryPare
 async function missingInventoryNamesV1(root,names,control,withdraw){
  const timings=presenceStateV1(root,control).timings,phase=timings.batch();phase("reader");
  try{
-  const result=await withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{
+  const result=await withRepositoryBuildGraphConsumerV1(root,control,(store,actual)=>inventoryNamesSettledV1(async names=>{
    if(withdraw?.aborted)return undefined;
    const parents=new Map(),missing=[],present=[];let bytes=0,done=0;
    const measure=(operation,run)=>{const finish=timings.body(operation);try{return run();}finally{finish();}};
@@ -123,7 +123,7 @@ async function missingInventoryNamesV1(root,names,control,withdraw){
     for(const row of present){recheckInventoryParentsV1(row.ancestry,actual);const after=lstatSync(row.path,{bigint:true});if(!after.isFile()||after.isSymbolicLink()||inventoryStampV1(after)!==row.stamp)throw inventoryChangedV1("Inference inventory leaf changed before delivery");}
    });
    checkResourceLeaseControl(actual);measure("implementationCheck",()=>requireCurrentInferenceInventoryReuseV1());return new Set(missing.map(row=>row.name));
-  },withdraw,phase,timings.native);
+  },names,{say:inventoryLogV1}),withdraw,phase,timings.native);
   return result??new Set(names);
  }finally{phase();}
 }
@@ -142,7 +142,7 @@ export async function inventoryNamesSettledV1(run,names,{attempts=policy.changeA
 
 /** 🧺️ The presence coalescers of this process, one per storage control and workspace root: every look that asks while a batch is running joins the next batch instead of taking a lease of its own. */
 const presenceStatesV1=new WeakMap(),inventoryLogV1=line=>{try{process.stderr.write("[inventory] "+line+"\n");}catch{}};
-const presenceStateV1=(root,control)=>{let byRoot=presenceStatesV1.get(control);if(byRoot===undefined){byRoot=new Map();presenceStatesV1.set(control,byRoot);}let state=byRoot.get(root);if(state===undefined){state={timings:createInferenceInventoryTimingsV1(),coalescer:createPresenceCoalescerV1({run:(names,withdraw)=>inventoryNamesSettledV1(list=>missingInventoryNamesV1(root,list,control,withdraw),names,{say:inventoryLogV1}),maximumNames:policy.maximumReferences>512?512:policy.maximumReferences})};byRoot.set(root,state);}return state;};
+const presenceStateV1=(root,control)=>{let byRoot=presenceStatesV1.get(control);if(byRoot===undefined){byRoot=new Map();presenceStatesV1.set(control,byRoot);}let state=byRoot.get(root);if(state===undefined){state={timings:createInferenceInventoryTimingsV1(),coalescer:createPresenceCoalescerV1({run:(names,withdraw)=>missingInventoryNamesV1(root,names,control,withdraw),maximumNames:policy.maximumReferences>512?512:policy.maximumReferences})};byRoot.set(root,state);}return state;};
 const presenceCoalescerV1=(root,control)=>presenceStateV1(root,control).coalescer;
 
 /** 📊️ How the inventory presence checks of `control` and `root` went: asked, answered from the memory of the round, batches that took a lease, names they checked, batches asked again caller by caller. */
@@ -152,6 +152,6 @@ const emptyPresenceTimingsV1=createInferenceInventoryTimingsV1();
 /** 📥️ Whether every inventory record `value` names is stored: the names are captured once, answered from the memory of the running validation round when they were found before, else checked with the other looks that ask at the same time under one storage consumer. */
 export async function inferenceInventoryReferencesHoldV1(root,value,control,withdraw){
  requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();if(withdraw?.aborted)return false;const names=captureInferenceInventoryReferencesV1(value);if(!names.length)return true;
- const holds=process.env.SEMIO_INVENTORY_COALESCE==="off"?(await inventoryNamesSettledV1(list=>missingInventoryNamesV1(root,list,control,withdraw),names,{say:inventoryLogV1})).size===0:await presenceCoalescerV1(root,control).ask(names,observationRoundV1(),withdraw);
+ const holds=process.env.SEMIO_INVENTORY_COALESCE==="off"?(await missingInventoryNamesV1(root,names,control,withdraw)).size===0:await presenceCoalescerV1(root,control).ask(names,observationRoundV1(),withdraw);
  checkResourceLeaseControl(control);requireCurrentInferenceInventoryReuseV1();return !withdraw?.aborted&&holds;
 }

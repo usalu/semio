@@ -1,9 +1,11 @@
 //! 📡️ Trinity graph mutation binary framing and registry surface.
 
 /// 🧾️ Direct-owner binary tags in aggregate declaration order.
-pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[("SetQuery", set_query::BINARY_TAG)];
+pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[("SetQuery", set_query::BINARY_TAG), ("SetRoot", set_root::BINARY_TAG)];
 
 pub use semio_s_artifact_trinity_jack_model::standards::v1::subsets::any::io::binary::mutations::set_query;
+#[path = "🎯️set-root/🦀️.rs"]
+pub mod set_root;
 
 
 //#region 📡️SemioProtocol
@@ -14,6 +16,9 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use protocol::OpBinary;
+
+dsl::original_tagged_operation_receiving!(TrinityGraphOperationDsl, COMPONENT_PROTOCOL_SEMIO);
+dsl::original_mirrored_operation_receiving!(TrinityGraphMutation, TrinityGraphOperationDsl, trinity_graph_operation_from_dsl);
 
 //#region 🔖️DslMirrors
 

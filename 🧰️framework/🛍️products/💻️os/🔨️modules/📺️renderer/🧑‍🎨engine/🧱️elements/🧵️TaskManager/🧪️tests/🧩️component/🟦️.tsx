@@ -374,6 +374,15 @@ describe("running tasks", () => {
     const region = screen.getByRole("region", { name: "Actors" });
     expect([region.getAttribute("tabindex"), region.classList.contains("overflow-x-auto"), region.querySelector("table") !== null]).toEqual(["0", true, true]);
   });
+
+  it("gives the actor action strip to the table's row boundaries", () => {
+    render(<TaskManagerPanel rows={[ROW]} onAction={vi.fn()} />);
+    const cell = screen.getByRole("button", { name: "Suspend: actor-1" }).closest("td")!;
+    const actions = cell.querySelector("[data-shared-border-cells]");
+    expect(cell.classList.contains("p-0")).toBe(true);
+    expect(actions?.getAttribute("data-shared-border-edges")).toBe("left right");
+    expect(actions?.querySelectorAll('button')).toHaveLength(3);
+  });
 });
 //#endregion 🔖️RunningTasks
 

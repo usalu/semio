@@ -10,6 +10,13 @@ where
 {
     /// 🧹 Retires the history runtime.
     pub(super) fn step_retire_history(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
+        if !self.mutation_admission.terminal_is_empty() {
+            if let Err(failure) = cx.with_retained_loan(grant, |cx| cx.with_original_retirement(|cx| self.mutation_admission.retire_step(cx))) {
+                *self.original_context_failure = Some(failure);
+                return self.reject(MemberOpenDiagnostic::Replay);
+            }
+            return PersistedDocumentHydrationStep::Pending(self.progress());
+        }
         macro_rules! retire {
             ($field:ident) => { if self.$field.is_some() { let step = owned_outcome(cx, grant, &mut self.$field, &mut self.active); return self.admitted_step(step.result, cx); } };
         }

@@ -54,9 +54,6 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
             let result = generation_command_result_for(input.command, input.snapshot, input.config).ok_or_else(|| Fault::from("generation3d-preview-command-unowned"))?;
             let mut emit = result.emit;
             self.owe_attached_previews(input.context.and_then(|context| context.view_state.as_deref()), servable, &mut emit, input.operation.retained)?;
-            if let Some(fixture) = result.preview_fixture {
-                fixture.retire_cold();
-            }
             self.emit = Some(emit);
             return self.complete();
         }
@@ -236,11 +233,13 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         if window.window_id() != payload_window_id || payload_window_kind_id != window.window_kind_id() || generation3d_preview_kind(window.window_kind_id()).is_none() {
             return Err(Fault::from("generation3d-flow-eval-window-owner-mismatch"));
         }
-        let retained_eval = window
+        let generate = window.window_kind_id() == generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
+        let generation_id = generate.then_some(input.config.selected_generation_id.as_deref()).flatten();
+        let retained = window
             .get::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>()
-            .map(|state| state.preview_eval_text.as_deref())
-            .or_else(|| window.get::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>().map(|state| state.preview_eval_text.as_deref()))
+            .or_else(|| window.get::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>())
             .ok_or_else(|| Fault::from("generation3d-flow-eval-window-owner-required"))?;
+        let retained_eval = retained.evaluation_for(generation_id);
         let cfg = ConfigView { snapshot: input.config, window: context.window_config.as_ref() };
         let grant = cx.retained_grant();
         let funded = cx.with_original_effect(grant, |_, effect| self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
@@ -269,7 +268,10 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         self.complete = true;
         let window_transient = match publication {
             semio_os_flow::FlowEvalPublication::Retained => Vec::new(),
-            semio_os_flow::FlowEvalPublication::Changed(eval_text) => vec![generation3d_addressed_preview_eval(window, eval_text)?],
+            semio_os_flow::FlowEvalPublication::Changed(eval_text) => {
+                let generation_id = eval_text.as_ref().and(generation_id).map(str::to_owned);
+                vec![generation3d_addressed_preview_eval(window, eval_text, generation_id)?]
+            }
         };
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
             emit,

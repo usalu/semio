@@ -36,11 +36,12 @@ pub fn parse_snapshot_edge_numeric_id(id: &str) -> Option<u64> {
 }
 
 pub fn dag_port_endpoint_parts(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), String::new()), |(node, port)| (node.to_string(), port.to_string()))
+    semio_os_infinite_directed_presentation::parse_dag_endpoint(endpoint)
+        .map_or_else(|| (endpoint.to_owned(), String::new()), |(node, port)| (node.to_owned(), port.into_owned()))
 }
 
 pub fn dag_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String {
-    format!("{}:{}:{}", node_id, if input { "in" } else { "out" }, port_id)
+    format!("{}:{node_id}{}{port_id}", node_id.len(), if input { 'i' } else { 'o' })
 }
 
 pub fn toggle_preview_tree_path(node: &mut DagNodeSpec, path: &str) {

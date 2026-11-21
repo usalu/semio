@@ -1,0 +1,13 @@
+# Linked Preview Fixture and Flow OBJ Verification
+
+The managed Preview Eval build linked both real test targets in 81 minutes and 57 seconds. Its library suite passed 16 of 19 tests before stopping. Direct execution of the linked channel-geometry binary with a 32 MiB test stack passed 9 of 11, including bidirectional viewport channels, oversized directional hover, coincident retained previews, and exact shape and component reconstruction.
+
+The failing run-effect and gesture fixtures owned synthetic ToolRunView aliases. These tests now explicitly retire the aliases after their final poll. The close-receipt fixture now supplies original caller stock sufficient for the fixed scheduler context. Its per-step payload grant and paired semantic-failure assertions retain the authored values. The painted-bounds check now deserializes its fixture to the same numeric type as the projection. The authored-ID collision fixture starts from an empty graph. FlowHostSnapshot default supplies three demonstration widgets and two wires, which previously increased the asserted topology count from five to ten. Both full Preview test targets have been queued for managed rerun.
+
+The managed Flow extension build reached the actual Mesh operator and refused a field lookup on MeshJobOutput. The OBJ grant path now matches the owned Mesh variant before inspecting its flag. The earlier failed attempt was stopped after it entered workspace recovery, and the refreshed integration build was started. The ordinary dispatch still handles other Mesh formats, inspections, and analyses.
+
+The second linked Preview run stopped during reactor lifecycle compilation. Its admitted manifest lacked the direct dependency for the current import of `semio-plugin-decl-media`. The shared tree now has the exact dependency at its lifecycle Cargo owner. The next official retry uses that tree and is waiting for managed capacity. Neither the corrected Preview assertions nor the split integration suite has returned a full managed pass yet.
+
+## Latest Preview source admission
+
+A managed retry built past the reactor media dependency and encountered a mixed snapshot of original Time Travel progress. The current live state and both callers consistently use the struct fields progress and preview_closing. The run then diagnosed an admitted build-profile contract of 19674 bytes that had become 19867 bytes in the live tree. A new invocation began after physical disk headroom reached 6.25 GiB. The linked Flow attempt subsequently reported a missing AtomicDocumentBackboneWork in reactor lifecycle. Live Store source already defines the type in atomic-inbox and explicitly reexports it through atomic_transport. A current managed check remains queued behind capacity.

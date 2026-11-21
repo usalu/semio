@@ -218,6 +218,7 @@ export interface WorldOrbitGatedProps {
   readonly constraints?: { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number };
   readonly onCamera?: (state: WorldCameraState) => void;
   readonly controlsGate?: boolean;
+  readonly reservePrimaryTouch?: boolean;
   readonly onCameraNavigate?: (active: boolean) => void;
   readonly controlsKey?: string | number;
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
@@ -284,6 +285,7 @@ const WORLD_ORBIT_KEY_ZOOM_FACTORS: Readonly<Record<string, number>> = { "+": 0.
 function WorldOrbitControlsBridge({
   camera,
   enabled,
+  reservePrimaryTouch,
   mouseButtons,
   constraints,
   controlsKey,
@@ -293,6 +295,7 @@ function WorldOrbitControlsBridge({
 }: {
   readonly camera: Camera;
   readonly enabled: boolean;
+  readonly reservePrimaryTouch: boolean;
   readonly mouseButtons: ReturnType<typeof resolveWorldOrbitMouseButtonsIdle>;
   readonly constraints?: { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number };
   readonly controlsKey?: string | number;
@@ -307,6 +310,9 @@ function WorldOrbitControlsBridge({
   const gestureRecognizerRef = reactHostPort.useRef<GestureRecognizer | null>(null);
   const enabledRef = reactHostPort.useRef(enabled);
   enabledRef.current = enabled;
+  const reserveTouchRef = reactHostPort.useRef(reservePrimaryTouch);
+  reserveTouchRef.current = reservePrimaryTouch;
+  const defaultSingleTouch = reactHostPort.useRef<ThreeOrbitControls["touches"]["ONE"]>(undefined);
   const callbacksRef = reactHostPort.useRef({ onChange, onStart, onEnd });
   callbacksRef.current = { onChange, onStart, onEnd };
   const resolvedConstraints = constraints ?? WORLD_ORBIT_CONSTRAINTS_DEFAULT;
@@ -317,6 +323,8 @@ function WorldOrbitControlsBridge({
     controls.enableZoom = true;
     controls.enabled = enabledRef.current;
     controls.mouseButtons = { ...mouseButtons };
+    defaultSingleTouch.current = controls.touches.ONE;
+    if (reserveTouchRef.current) delete controls.touches.ONE;
     const change = () => callbacksRef.current.onChange();
     const start = () => callbacksRef.current.onStart(controls);
     const end = () => callbacksRef.current.onEnd(controls);
@@ -330,15 +338,24 @@ function WorldOrbitControlsBridge({
       const rect = pointerTarget.getBoundingClientRect();
       return { pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top };
     };
+    let pinchOwnsReceipt = false;
     const onGestureDown = (event: PointerEvent) => {
-      if (gestures.down(gesturePoint(event)).kind === "pinchBegin") controls.enabled = false;
+      if (gestures.down(gesturePoint(event)).kind === "pinchBegin") {
+        pinchOwnsReceipt = reserveTouchRef.current && enabledRef.current;
+        if (pinchOwnsReceipt) callbacksRef.current.onStart(controls);
+        controls.enabled = false;
+      }
     };
     const onGestureMove = (event: PointerEvent) => {
       const verdict = gestures.move(gesturePoint(event));
       if (verdict.kind === "pinch" && enabledRef.current) applyWorldOrbitPinch(controls, camera, verdict.step, pointerTarget.clientHeight);
     };
     const onGestureUp = (event: PointerEvent) => {
-      if (gestures.up(event.pointerId).kind === "pinchEnd") controls.enabled = enabledRef.current;
+      if (gestures.up(event.pointerId).kind === "pinchEnd") {
+        controls.enabled = enabledRef.current;
+        if (pinchOwnsReceipt) callbacksRef.current.onEnd(controls);
+        pinchOwnsReceipt = false;
+      }
     };
     const gestureDocument = pointerTarget.ownerDocument;
     pointerTarget.addEventListener("pointerdown", onGestureDown, { capture: true });
@@ -392,11 +409,13 @@ function WorldOrbitControlsBridge({
     if (!controls) return;
     controls.enabled = enabled && !gestureRecognizerRef.current?.latched;
     controls.mouseButtons = { ...mouseButtons };
+    if (reservePrimaryTouch || defaultSingleTouch.current === undefined) delete controls.touches.ONE;
+    else controls.touches.ONE = defaultSingleTouch.current;
     controls.enableRotate = resolvedConstraints.rotate;
     controls.minPolarAngle = resolvedConstraints.minPolar ?? 0;
     controls.maxPolarAngle = resolvedConstraints.maxPolar ?? Math.PI;
     controls.update();
-  }, [enabled, mouseButtons, resolvedConstraints]);
+  }, [enabled, reservePrimaryTouch, mouseButtons, resolvedConstraints]);
   return null;
 }
 
@@ -452,6 +471,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
     <WorldOrbitControlsBridge
       camera={camera}
       enabled={!gate && !snapGate}
+      reservePrimaryTouch={props.reservePrimaryTouch ?? false}
       mouseButtons={mouseButtonsIdle}
       constraints={props.constraints}
       controlsKey={props.controlsKey}

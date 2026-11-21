@@ -7,7 +7,7 @@ fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:128,maximum_copy
 struct Work{posted:u64}
 impl OriginalWorkRecipient for Work{type Context<'turn,'source>=() where 'source:'turn;fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}fn source_turn<'turn,'source>(&self,_:&())->Option<crate::OriginalSourceTurnIdentity>where 'source:'turn{None}fn admits<'reply,'turn,'source>(&mut self,_:&mut (),quote:crate::OriginalWorkQuote<'reply>,_:u64,_:u64)->crate::OriginalWorkQuoteComplete<'reply>where 'source:'turn{quote.complete(Ok(true))}fn settle_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:crate::OriginalWorkPartialCheck<'reply>)->crate::OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{self.posted+=u64::try_from(check.delta()).unwrap();check.complete(Err(error("work post")))}fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut (),check:crate::OriginalWorkPartialCheck<'reply>)->crate::OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.pending()}}
 struct Physical{submitted:RetainedCloneProgress}
-impl OriginalConstructionRecipient for Physical{type Context<'turn,'source>=() where 'source:'turn;fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}fn source_turn<'turn,'source>(&self,_:&())->Option<crate::OriginalSourceTurnIdentity>where 'source:'turn{None}fn submitted<'turn,'source>(&self,_:&())->RetainedCloneProgress where 'source:'turn{self.submitted}fn grant<'a,'turn,'source>(&mut self,_:&mut (),quote:crate::OriginalConstructionGrant<'a>)->crate::OriginalConstructionGrantComplete<'a>where 'source:'turn{quote.complete(Ok(grant()))}fn accept<'a,'turn,'source>(&mut self,_:&mut (),receipt:crate::OriginalConstructionAccept<'a>)->crate::OriginalConstructionAcceptComplete<'a>where 'source:'turn{match self.submitted.checked_add(receipt.progress()){Ok(total)=>{self.submitted=total;receipt.complete(Err(error("physical post")))},Err(refusal)=>receipt.complete(Err(refusal))}}}
+impl OriginalConstructionRecipient for Physical{type Context<'turn,'source>=() where 'source:'turn;fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}fn source_turn<'turn,'source>(&self,_:&())->Option<crate::OriginalSourceTurnIdentity>where 'source:'turn{None}fn submitted<'turn,'source>(&self,_:&())->RetainedCloneProgress where 'source:'turn{self.submitted}fn grant<'a,'turn,'source>(&mut self,_:&mut (),quote:crate::OriginalConstructionGrant<'a>)->crate::OriginalConstructionGrantComplete<'a>where 'source:'turn{quote.complete(Ok(grant()))}fn accept<'a,'turn,'source>(&mut self,_:&mut (),receipt:crate::OriginalConstructionAccept<'a>)->crate::OriginalConstructionAcceptComplete<'a>where 'source:'turn{match self.submitted.checked_add(receipt.progress()){Ok(total)=>{self.submitted=total;receipt.complete(Ok(()))},Err(refusal)=>receipt.complete(Err(refusal))}}}
 fn close<T:RetireOwned>(value:T){crate::eff::close(value);}
 /// 🧪️ A denied quote and a quoted closure that never performs both retire their construction action without posting work.
 #[test]
@@ -24,8 +24,45 @@ fn zero_backing_does_not_invent_an_allocation_event(){
 
 #[test]
 fn borrowed_status_keeps_original_settlement_refusals_in_place(){
- let mut observer=|_|true;let mut port=|_:NativeAllocationEvent|Ok(());let mut allocation_issuer=NativeEncodeAllocationIssuer::new();let mut loan=allocation_issuer.scoped_loan(&mut port);let mut legacy_work=|_,_|Ok(());let mut native=NativeEncodeControl::new_scoped_source(0,16,&mut observer,&mut loan,&mut legacy_work);let mut payer=Work{posted:0};let mut physical=Physical{submitted:Default::default()};let mut work_issuer=NativeEncodeWorkIssuer::new();let mut physical_issuer=NativeEncodeConstructionIssuer::new();let mut work_loan=work_issuer.loan(&mut payer);let mut physical_loan=physical_issuer.loan(&mut physical);let mut state=NativeEncodeEffectState::default();let mut value=0u8;assert_eq!(state.settlement_status(),NativeEncodeEffectSettlementStatus::Absent);
- native.with_work_recipient(&mut work_loan,|native|native.with_construction_recipient(&mut physical_loan,|native|{native.begin_effect_settlement(&mut state.settlement,RetirementDemand{copy_bytes:1,depth:1,..Default::default()},1)?;assert_eq!(state.view().settlement_status(),NativeEncodeEffectSettlementStatus::Pending);value=1;state.settlement.as_mut().unwrap().record_effect(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?;native.settle_effect(&mut state.settlement)?;Ok::<(),ValueError>(())})).unwrap();drop(work_loan);drop(physical_loan);assert_eq!(value,1);assert_eq!(state.settlement_status(),NativeEncodeEffectSettlementStatus::Refused);let(work,physical,invariant)=state.settlement.as_ref().unwrap().failures();assert!(work.is_some());assert!(physical.is_some());assert!(invariant.is_none());close(state);
+ let mut payer=OriginalWorkAuthority::new(Accepting{posted:0});
+ let mut physical=OriginalConstructionAuthority::new(Physical{submitted:Default::default()});
+ let mut state=NativeEncodeEffectState::default();
+ assert_eq!(state.settlement_status(),NativeEncodeEffectSettlementStatus::Absent);
+ let progress=RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()};
+ payer.with_loan(&mut (),|work_loan|physical.with_loan(&mut (),|physical_loan|{
+  let mut work_loan=work_loan.reborrow();
+  let mut physical_loan=physical_loan.reborrow();
+  let construction_identity=physical_loan.identity();
+  let mut construction=Some(&mut physical_loan);
+  let mut work=OriginalWork::empty();
+  work.recipient=Some(&mut work_loan);
+  assert!(NativeEncodeEffectRecovery::new(&mut work,&mut construction,Some(construction_identity)).begin(&mut state.settlement,RetirementDemand{copy_bytes:1,depth:1,..Default::default()},1).unwrap());
+  assert_eq!(state.view().settlement_status(),NativeEncodeEffectSettlementStatus::Pending);
+  let mut marker=None;
+  let mut receipt=None;
+  let settlement=state.settlement.as_mut().unwrap();
+  let mut work_turn=OriginalWorkTurn::new(&mut work);
+  settlement.issue_performed(&mut work_turn,&mut receipt).unwrap();
+  assert!(RetainedAllocationEffect::new(grant(),1,&mut marker,receipt.as_mut().unwrap()).performed(1).unwrap());
+  settlement.claim_performed(&mut work_turn,&mut receipt).unwrap();
+  let mut partial=None;
+  assert!(settlement.settle_performed_into(&mut work_turn,&mut partial).unwrap());
+  assert!(partial.as_ref().unwrap().source_refusal().is_none());
+  assert!(settlement.record_performed_before_post(&mut work_turn,progress,false,None).unwrap());
+  assert!(NativeEncodeEffectRecovery::new(&mut work,&mut construction,Some(construction_identity)).settle(&mut state.settlement).unwrap());
+ }).unwrap()).unwrap();
+ assert_eq!(state.settlement_status(),NativeEncodeEffectSettlementStatus::Refused);
+ let message=state.settlement.as_ref().unwrap().marker_failure().unwrap().message.as_ptr();
+ assert_eq!(state.view().settlement_status(),NativeEncodeEffectSettlementStatus::Refused);
+ let mut failure=NativeEncodeEffectFailure::default();
+ assert!(NativeEncodeEffectSettlement::finish_into(&mut state.settlement,&mut failure).unwrap());
+ assert_eq!(failure.marker_failure.as_ref().unwrap().message.as_ptr(),message);
+ assert_eq!(state.settlement_status(),NativeEncodeEffectSettlementStatus::Absent);
+ assert_eq!(payer.inspect(|recipient|recipient.posted),1);
+ assert_eq!(physical.inspect(|recipient|recipient.submitted),progress);
+ assert!(payer.into_recipient().is_ok());
+ assert!(physical.into_recipient().is_ok());
+ close(failure);
 }
 
 #[test]

@@ -54,6 +54,119 @@ pub fn pointer_in_pick_rect(session_state: &WorldSessionState, x: f32, y: f32) -
     Some((x - viewport.x, y - viewport.y, viewport))
 }
 
+/// 🎯️ Intersects the live viewport ray with a horizontal world plane.
+pub fn world3d_ground_plane_pick(session: &WorldSessionState, camera: &WorldCameraState, x: f32, y: f32, plane_z: f32) -> Option<[f32; 3]> {
+    let (x, y, viewport) = pointer_in_pick_rect(session, x, y)?;
+    let (origin, direction) = ui_scene::math::projection_spec_ray_from_screen(&camera.orbit.to_camera(), camera.projection_spec, x, y, viewport.w, viewport.h);
+    let distance = (plane_z - origin.z) / direction.z;
+    if direction.z.abs() < 1e-5 || !distance.is_finite() || distance < 0.0 {
+        return None;
+    }
+    let position = origin.add(direction.scale(distance)).to_array();
+    position.iter().all(|axis| axis.is_finite()).then_some(position)
+}
+
+/// 📍️ Captures a bounded ground point with the explicit window and scene addresses.
+pub fn plan_world3d_engagement_pointer(session: &WorldSessionState, camera: &WorldCameraState, intent: &semio_os_infinite_world_model::WorldInteractionIntent) -> Option<WorldInteractionPlan> {
+    let (kind, action_id) = if intent.phase == semio_os_infinite_world_model::WorldInteractionPhase::PointerButton {
+        (WorldFlatActionKind::EngagementPointerDown, "worldPointerDown")
+    } else {
+        (WorldFlatActionKind::EngagementPointerMove, "worldPointerMove")
+    };
+    let window = session.window_instance_id.as_deref()?;
+    if !world3d_declares_action(session, action_id)
+        || [window, &session.surface_id, &session.controller_id].into_iter().any(|id| id.is_empty() || id.len() > WORLD_INTERACTION_ID_BYTE_CAPACITY)
+    {
+        return None;
+    }
+    let [x, y, _] = world3d_ground_plane_pick(session, camera, intent.x, intent.y, 0.0)?;
+    let mut plan = WorldInteractionPlan::new(session.interaction_revision, intent.generation);
+    let controller = plan.push_string(&session.controller_id)?;
+    let surface = plan.push_string(&session.surface_id)?;
+    let window = plan.push_string(window)?;
+    let mut numbers = [0.0; 10];
+    numbers[..5].copy_from_slice(&[x.into(), y.into(), u8::from(intent.shift).into(), u8::from(intent.ctrl).into(), u8::from(intent.meta).into()]);
+    plan.push_action(WorldFlatAction { kind, strings: [Some(controller), Some(surface), Some(window), None, None, None, None, None], numbers }).then_some(plan)
+}
+
+const _: () = assert!(semio_os_infinite_world_model::WORLD_TERRAIN_STROKE_CAPACITY * 3 + 9 <= semio_ui_action::ACTION_NODE_CAPACITY);
+
+/// 🏜️ Publishes one window-scoped elevation edit with an optional path of integer grid cells.
+pub fn publish_world3d_terrain_edit(plan: &WorldInteractionPlan, action: WorldFlatAction, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let controller = plan.string(action.strings[0].expect("terrain controller span"));
+    let action_id = plan.string(action.strings[1].expect("terrain action span"));
+    let operation = plan.string(action.strings[2].expect("terrain operation span"));
+    let window = plan.string(action.strings[3].expect("terrain window span"));
+    let surface = plan.string(action.strings[4].expect("terrain surface span"));
+    let samples = plan.terrain_stroke.as_ref().expect("terrain stroke accompanies its action").samples();
+    let fields = ["column", "row", "radius", "value"];
+    let stroke_key = if samples.len() > 1 { "stroke" } else { "" };
+    let bytes = semio_ui_action::checked_action_string_bytes(&[
+        controller, action_id, "operation", operation, fields[0], fields[1], fields[2], fields[3],
+        "windowId", window, "surfaceId", surface, stroke_key,
+    ])?;
+    let mut reservation = input.reserve_action(controller, action_id, bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("windowId"), window)?;
+    builder.string(Some("surfaceId"), surface)?;
+    builder.string(Some("operation"), operation)?;
+    for (field, value) in fields.into_iter().zip(action.numbers) {
+        builder.integer(Some(field), value as i64)?;
+    }
+    if samples.len() > 1 {
+        builder.begin_array(Some(stroke_key))?;
+        for &[column, row] in samples {
+            builder.begin_array(None)?;
+            builder.integer(None, i64::from(column))?;
+            builder.integer(None, i64::from(row))?;
+            builder.end_container()?;
+        }
+        builder.end_container()?;
+    }
+    builder.end_container()?;
+    reservation.publish()
+}
+
+/// 📮️ Publishes the flat engagement event if its source window and surface still own the action.
+pub fn publish_world3d_engagement_pointer(session: &WorldSessionState, selection: &WorldSelectionState, plan: &WorldInteractionPlan, action: WorldFlatAction, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    let controller = plan.string(action.strings[0].expect("engagement controller span"));
+    let surface = plan.string(action.strings[1].expect("engagement surface span"));
+    let window = plan.string(action.strings[2].expect("engagement window span"));
+    let pane = surface.rsplit('/').next().expect("engagement pane suffix");
+    let press = action.kind == WorldFlatActionKind::EngagementPointerDown;
+    let action_id = if press { "worldPointerDown" } else { "worldPointerMove" };
+    if !selection.engagement_session_active || session.window_instance_id.as_deref() != Some(window)
+        || session.surface_id != surface || session.controller_id != controller || !world3d_declares_action(session, action_id)
+    {
+        return Ok(false);
+    }
+    let modifiers = ["shiftKey", "ctrlKey", "metaKey"];
+    let mut bytes = semio_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "windowId", window, "pane", pane, "position"])?;
+    if press {
+        bytes += semio_ui_action::checked_action_string_bytes(&modifiers)?;
+    }
+    let mut reservation = input.reserve_action(controller, action_id, bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), surface)?;
+    builder.string(Some("windowId"), window)?;
+    builder.string(Some("pane"), pane)?;
+    builder.begin_array(Some("position"))?;
+    for value in [action.numbers[0], action.numbers[1], 0.0] {
+        builder.number(None, value)?;
+    }
+    builder.end_container()?;
+    if press {
+        for (key, value) in modifiers.into_iter().zip(&action.numbers[2..5]) {
+            builder.boolean(Some(key), *value != 0.0)?;
+        }
+    }
+    builder.end_container()?;
+    reservation.publish()?;
+    Ok(true)
+}
+
 //#region 🔖️WorldInteractionDomain
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the OS's own bare-board `world`
 /// domain — plain (non-component) 3D-world object picking/hover for a world3d window that binds NO
@@ -238,6 +351,8 @@ fn world_write_json_string(output: &mut impl std::fmt::Write, parts: &[&str]) ->
             '\n' => output.write_str("\\n")?,
             '\r' => output.write_str("\\r")?,
             '\t' => output.write_str("\\t")?,
+            '\u{0008}' => output.write_str("\\b")?,
+            '\u{000c}' => output.write_str("\\f")?,
             character if character < ' ' => write!(output, "\\u{:04x}", character as u32)?,
             character => output.write_char(character)?,
         }
@@ -251,6 +366,16 @@ pub fn world_write_interaction_target(output: &mut impl std::fmt::Write, granula
     output.write_str(",\"id\":")?;
     world_write_json_string(output, id)?;
     output.write_char('}')
+}
+
+pub fn world_hover_action_string_bytes(controller: &str, domain: &str, targets: &str, window: Option<&str>) -> Result<usize, semio_ui_action::BoundedActionFault> {
+    semio_ui_action::checked_action_string_bytes(&[controller, "interactionHover", "domainId", domain, "channel", "pointer", "targets", targets, window.map_or("", |_| "windowId"), window.unwrap_or_default()])
+}
+
+pub fn world_authored_hover_targets<'a>(session: &WorldSessionState, interaction: &'a WorldInteractionState, instance_id: &str) -> Option<&'a str> {
+    interaction.instance_hover_targets.get(instance_id).map(String::as_str).filter(|targets| {
+        world_hover_action_string_bytes(&session.controller_id, resolved_domain_id(session), targets, session.window_instance_id.as_deref()).is_ok()
+    })
 }
 
 #[path = "🔲️marquee/🦀️.rs"]

@@ -16,6 +16,7 @@ REST_SHIFT = {"stroller": -90}
 MASS = {"stroller-hood": {"comX": (0.22, 0.085), "comY": (0.08, 0.18)}, "child": {"comX": (0.18, 0.025), "comY": (0, 0.11)}}
 ANCHORS = {"mouth": {"x": (0.1134, 0.083), "y": (-0.0945, -0.092)}, "nose": {"x": (0.1547, 0.107), "y": (-0.1123, -0.1)}, "child-mouth": {"x": (0.06, 0.045), "y": (0.312, 0.288)}, "child-nose": {"x": (0.068, 0.056), "y": (0.337, 0.313)}}
 POSES = {"checking-child": {"stroller-hood": (95, 40)}}
+RANGES = {"500": {"maxDenominator": (1000, 800)}}
 
 
 def block(key, value):
@@ -61,6 +62,9 @@ def main():
     for p in asset["poses"]:
         for bone, pair in POSES.get(p["id"], {}).items():
             put(p["bones"][bone], "angleDeg", pair, log, "poses.%s.%s" % (p["id"], bone))
+    for scale, fields in RANGES.items():
+        for f, pair in fields.items():
+            put(asset["representations"][scale]["validRange"], f, pair, log, "representations.%s.validRange" % scale)
     if os.path.exists(EXTRA):
         extra = json.load(open(EXTRA, encoding="utf-8"))
         for scale, rep in extra.get("representations", {}).items():

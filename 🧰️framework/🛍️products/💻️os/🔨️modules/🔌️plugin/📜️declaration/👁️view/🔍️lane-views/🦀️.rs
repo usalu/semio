@@ -51,6 +51,26 @@ pub struct PresenceView<'a, P> {
     pub peers: PresencePeersView<'a, P>,
 }
 
+/// 🧭️ The interactive surface that owns the current local hover.
+#[derive(Clone)]
+pub enum HoverSurface {
+    Window(String),
+    Panel,
+}
+
+impl HoverSurface {
+    pub fn from_window(window: Option<&str>) -> Self {
+        window.map_or(Self::Panel, |id| Self::Window(id.to_owned()))
+    }
+
+    pub fn matches_window(&self, window: Option<&str>) -> bool {
+        match self {
+            Self::Window(id) => window == Some(id.as_str()),
+            Self::Panel => window.is_none(),
+        }
+    }
+}
+
 /// 🕹️ Read-only view of the framework-owned INTERACTION mechanism (hover + selection + active
 /// mode/granularity per domain) — threaded into `ArtifactApp::handle`/`copy_fragment`/
 /// `cut_operations` so an app reads its own current selection/hover instead of ever storing it
@@ -62,6 +82,7 @@ pub struct PresenceView<'a, P> {
 pub struct InteractionView<'a> {
     pub state: &'a protocol::InteractionState,
     pub hover: &'a InteractionHoverState,
+    hover_owners: Option<&'a BTreeMap<String, HoverSurface>>,
     /// 👥️ Every OTHER peer's last-adopted presence, keyed by actor — see
     /// `VcsArtifactApp::peer_presence`'s own doc comment. Sourced from `BTreeMap` iteration
     /// order, which is already sorted by actor.
@@ -73,7 +94,22 @@ pub struct InteractionView<'a> {
 
 impl<'a> InteractionView<'a> {
     /// 👁️ Borrows already admitted immutable interaction owners for one dispatch.
-    pub fn new(state: &'a protocol::InteractionState, hover: &'a InteractionHoverState, peers: &'a PeerPresenceRoot, draft_references: &'a BTreeMap<String, Vec<String>>) -> Self { Self { state, hover, peers, draft_references } }
+    pub fn new(state: &'a protocol::InteractionState, hover: &'a InteractionHoverState, peers: &'a PeerPresenceRoot, draft_references: &'a BTreeMap<String, Vec<String>>) -> Self { Self { state, hover, hover_owners: None, peers, draft_references } }
+
+    /// 🪟️ Includes the ephemeral ownership snapshot from the same interaction turn.
+    pub fn with_hover_owners(mut self, owners: &'a BTreeMap<String, HoverSurface>) -> Self {
+        self.hover_owners = Some(owners);
+        self
+    }
+
+    /// 🧭️ A known hover owner is either a named window or the app panel.
+    pub fn hover_source_window(&self, domain: &str, channel: &str) -> Option<Option<&str>> {
+        if self.hover(domain, channel).ids.is_empty() { return None; }
+        self.hover_owners?.get(domain).map(|owner| match owner {
+            HoverSurface::Window(id) => Some(id.as_str()),
+            HoverSurface::Panel => None,
+        })
+    }
     /// 🔗️ `domain`'s ids the open time-travel draft references — every id its `Reference` inputs of that domain
     /// hold, so a render highlights what the edited mutation acts on; empty while no draft editor is open.
     pub fn draft_references(&self, domain: &str) -> &[String] {

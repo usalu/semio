@@ -5465,6 +5465,7 @@ name = "semio-framework-graph-manifest"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
@@ -6703,6 +6704,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
  "semio-framework-replication-error",
@@ -7808,10 +7810,9 @@ dependencies = [
 name = "semio-framework-surface-terrain"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-value",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -10422,6 +10423,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-surface-terrain",
  "semio-framework-test-fixtures",
@@ -11835,6 +11837,7 @@ dependencies = [
  "semio-plugin",
  "semio-plugin-guest-contract",
  "semio-plugin-host",
+ "semio-plugin-host-poll",
  "serde_json",
 ]
 
@@ -12838,6 +12841,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -15213,7 +15217,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-replication-command-ingress",
  "semio-framework-value",
+ "semio-framework-value-persistent",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
  "serde_json",
@@ -16501,6 +16507,7 @@ dependencies = [
  "semio-plugin-command",
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
  "semio-plugin-decl-views",
  "semio-plugin-document-media",
  "semio-plugin-instance-children",
@@ -16671,6 +16678,7 @@ dependencies = [
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-plugin-interpreter-numeric",
  "serde",
  "serde_json",
  "wasmtime",
@@ -16706,6 +16714,10 @@ dependencies = [
  "serde_json",
  "wit-parser 0.252.0",
 ]
+
+[[package]]
+name = "semio-plugin-interpreter-numeric"
+version = "0.1.0"
 
 [[package]]
 name = "semio-plugin-interpreter-runtime"
@@ -17151,6 +17163,7 @@ dependencies = [
  "semio-plugin-abi",
  "semio-plugin-actor-host",
  "semio-plugin-decl-app",
+ "semio-plugin-decl-media",
  "semio-plugin-interaction",
  "semio-plugin-job",
  "semio-plugin-mounted-owner",
@@ -18448,6 +18461,7 @@ dependencies = [
  "semio-plugin-builder",
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
  "semio-plugin-decl-registry",
  "semio-plugin-decl-surface",
  "semio-plugin-decl-tool-contract",
@@ -18463,6 +18477,7 @@ dependencies = [
  "semio-plugin-reactor-app",
  "semio-plugin-reactor-lifecycle",
  "semio-plugin-reactor-turn",
+ "semio-plugin-retained-work",
  "semio-plugin-runtime-instances",
  "semio-plugin-test-support",
  "semio-plugin-testing-caller",
@@ -19028,6 +19043,7 @@ dependencies = [
  "semio-plugin-builder",
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
  "semio-plugin-decl-registry",
  "semio-plugin-decl-surface",
  "semio-plugin-decl-tool-contract",
@@ -20348,6 +20364,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework-actor",
+ "semio-framework-async",
  "semio-framework-job",
  "semio-framework-value",
  "semio-os-infinite",
@@ -20649,6 +20666,7 @@ dependencies = [
  "semio-framework-canvas",
  "semio-framework-job",
  "semio-framework-surface",
+ "semio-framework-value",
  "semio-os-infinite",
  "semio-os-infinite-board-normal-focus",
  "semio-os-infinite-board-normal-gestures",
@@ -20786,6 +20804,7 @@ dependencies = [
 name = "semio-renderer-wgpu-frame-actions"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
  "semio-framework-async",
  "semio-framework-job",
  "semio-framework-value",
@@ -21443,12 +21462,13 @@ dependencies = [
 name = "semio-renderer-wgpu-scene-canvas2d"
 version = "0.1.0"
 dependencies = [
- "base64",
  "image",
  "resvg",
  "semio-framework",
  "semio-framework-2d",
+ "semio-framework-async",
  "semio-framework-intrinsic-size",
+ "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-pixels",
  "semio-os-infinite",
@@ -21456,10 +21476,12 @@ dependencies = [
  "semio-renderer-wgpu-canvas2d-host",
  "semio-renderer-wgpu-canvas2d-paint",
  "semio-renderer-wgpu-contracts",
+ "semio-renderer-wgpu-host-base",
  "semio-renderer-wgpu-media-slots",
  "semio-renderer-wgpu-scene-state",
  "semio-renderer-wgpu-thread-isolation",
  "semio-ui-action",
+ "semio-ui-contract",
  "semio-ui-declaration",
  "semio-ui-draw-contract",
  "semio-ui-layout",
@@ -21609,6 +21631,7 @@ dependencies = [
  "semio-ui-wgpu-hosting",
  "semio-ui-wgpu-input",
  "semio-ui-wgpu-layout",
+ "semio-ui-wgpu-widget-kit",
  "serde_json",
  "wasm-bindgen",
  "web-sys",

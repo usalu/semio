@@ -1,0 +1,52 @@
+{
+  "imageBytes": 103079215104,
+  "initialFreeBytes": 14345412608,
+  "freeBeforeLaneGcBytes": 15368577024,
+  "freeAfterLaneGcBytes": 20604096512,
+  "timeAfterUnitGcMs": 1795201499172,
+  "requestClass": "component/6cfaad2b6ef6#warm",
+  "warmSamples": [
+    {
+      "bytes": 11847141333,
+      "wallMs": 6459905,
+      "atMs": 1794934250964
+    },
+    {
+      "bytes": 5802610363,
+      "wallMs": 2816100,
+      "atMs": 1794937197352
+    },
+    {
+      "bytes": 11145675330,
+      "wallMs": 5531262,
+      "atMs": 1794942357017
+    },
+    {
+      "bytes": 16546082816,
+      "wallMs": 5634675,
+      "atMs": 1794997200466
+    },
+    {
+      "bytes": 1178227124,
+      "wallMs": 3008397,
+      "atMs": 1795109221564
+    },
+    {
+      "bytes": 5177565418,
+      "wallMs": 3770803,
+      "atMs": 1795124900683
+    }
+  ],
+  "lanes": [
+    {
+      "id": "energy",
+      "bytes": 9296928768,
+      "live": true
+    },
+    {
+      "id": "procedural",
+      "bytes": 5338173440,
+      "live": false
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import{createHash}from"node:crypto";
+import graphSchema from"../../🕸️graph/🧬️schema/🔣️.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import type{GraphStateV1}from"../🟦️.ts";
 import{fetchGraphEntryV1,publishGraphEntryV1,type GraphFleetClientV1}from"../🛰️exchange/🟦️.ts";
@@ -147,6 +148,29 @@ export type ReadRecordV1=Readonly<{version:1;reason:"request"|"refresh";runner:n
 /** 📼️ The record of a graph read if it has the shape of the schema, else undefined. */
 export function readReadRecordV1(value:unknown):ReadRecordV1|undefined{
  return validateJsonSchemaSubset({$ref:"#/definitions/ReadRecord"},value,schema).length===0?value as ReadRecordV1:undefined;
+}
+
+
+/** 🗃️ The bounded progress evidence of an exact graph read at a complete log line. */
+export type ReadWatchObservationV1=Readonly<{progressAt:number;generation:number|null;registryRound?:number;phases:readonly Readonly<{name:string;done:number;total:number}>[];owners:readonly Readonly<{name:string;rows:number}>[]}>;
+export type ReadCapacityPauseV1=Readonly<{progressAtMs:number;throughMs:number;creditedMs:number;id:string;scope:string;arrivedAtMs:number}>;
+export type ReadWatchCheckpointV1=Readonly<{version:1;capacityPause?:ReadCapacityPauseV1;runner:number;read:number|null;startedMs:number;offset:number;device:string;inode:string;prefix:string;observation:ReadWatchObservationV1}>;
+
+/** 🔁️ Reads a numbered transition after the producer followed a changed owner registry. */
+export function readRegistryWatchRoundV1(line:string):number|undefined{
+ const marker="[graph-repair] ";
+ if(!line.startsWith(marker))return undefined;
+ let value:unknown;try{value=JSON.parse(line.slice(marker.length));}catch{return undefined;}
+ if(validateJsonSchemaSubset({$ref:"#/definitions/ReadWatchRegistryRound"},value,schema).length!==0)return undefined;
+ const {round}=value as {round:number};
+ return round<=graphSchema.definitions.Limits.const.repairRounds?round:undefined;
+}
+
+/** 🔐️ Parses the closed local graph watch handoff. */
+export function readReadWatchCheckpointV1(value:unknown):ReadWatchCheckpointV1|undefined{
+ if(validateJsonSchemaSubset({$ref:"#/definitions/ReadWatchCheckpoint"},value,schema).length!==0)return undefined;
+ const checkpoint=value as ReadWatchCheckpointV1;
+ return (checkpoint.observation.registryRound??0)<=graphSchema.definitions.Limits.const.repairRounds?checkpoint:undefined;
 }
 
 /** 📼️ The state if it has the shape of the schema, else undefined. */

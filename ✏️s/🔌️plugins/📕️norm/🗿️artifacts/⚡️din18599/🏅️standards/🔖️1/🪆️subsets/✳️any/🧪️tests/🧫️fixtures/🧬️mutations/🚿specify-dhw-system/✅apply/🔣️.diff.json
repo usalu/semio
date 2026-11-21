@@ -12,6 +12,7 @@
   "elements": null,
   "heating": null,
   "dhw": {
+    "dwellingCount": 2,
     "specificDemandKwhPersonA": 550.0,
     "storageLossKwhA": null,
     "distributionLossKwhA": null,

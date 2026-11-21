@@ -1,4 +1,4 @@
-import { MCP_BINARY_NAME, MCP_BINARY_TARGET, MCP_STDIO_BUILD_MODE_V1, mcpBinaryFreshness, resolveMcpBinaryPath, stageMcpBinaryAsync } from "./📦️binary/🟦️.ts";
+import { MCP_BINARY_NAME, MCP_BINARY_TARGET, MCP_STDIO_BUILD_MODE_V1, mcpBinaryFreshness, requireMcpBinary, resolveMcpBinaryPath, stageMcpBinaryAsync } from "./📦️binary/🟦️.ts";
 import {MCP_MANIFEST_REL} from "./📡️stdio/🏗️staging/🟦️.ts";
 import {readNativeCatalogV1} from "../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
@@ -19,10 +19,11 @@ import{type ResourceLeaseControl}from"../../../../🔨️modules/🏃️process/
  */
 
 import { type ChildProcessByStdio, spawn } from "node:child_process";
-import { createHash,randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { accessSync, constants as fsConstants, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, posix, resolve, win32 } from "node:path";
 import { createInterface } from "node:readline";
+import { setTimeout as delay } from "node:timers/promises";
 import { serveWarmMcpGateway } from "./📡️stdio/🚪️gateway/🟦️.ts";
 import type { Readable, Writable } from "node:stream";
 
@@ -72,27 +73,45 @@ export function serveWarmMcpStdio(repoRoot: string, extra: readonly string[], en
   return serveWarmMcpGateway({ stage: async (progress, signal) => { selected = await waitForMcpPublicationV1(binary, signal); signal.throwIfAborted(); const status = env.SEMIO_OS_MCP_BIN || mcpBinaryFreshness(selected, platform).fresh ? 0 : await stage(MCP_BINARY_TARGET, progress, signal); return status || (catalogTarget ? await stage(catalogTarget, progress, signal) : 0); }, command: () => { if (!statSync(selected).isFile()) throw Error("Published MCP executable required"); if (platform !== "win32") accessSync(selected, fsConstants.X_OK); return selected; }, args: withMcpHostDriverPolicy(["stdio", ...extra]), cwd: repoRoot, env, input: process.stdin, output: process.stdout, onStop });
 }
 
-/** 🗄️ Keeps the original compiler publication admitted throughout the stdio server lifetime. */
+/** 🗄️ Keeps the published executable and catalog components admitted throughout the stdio server lifetime. */
 export async function servePublishedMcpStdioV1(repoRoot:string,extra:readonly string[],invocation:ScriptInvocation,control:ResourceLeaseControl,env:NodeJS.ProcessEnv=process.env,catalogTarget?:string,stage:(target:string,progress:(line:string)=>void,signal:AbortSignal)=>Promise<number>=(target,progress,signal)=>stageMcpBinaryAsync(repoRoot,progress,signal,target),onStop?:(reason:unknown)=>void):Promise<number>{
  const {withAdmittedPublishedCargoExecutableV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts");
  const {readBuildMode}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts");
- const mode=readBuildMode(env.SEMIO_BUILD_MODE??MCP_STDIO_BUILD_MODE_V1);
- if(env.SEMIO_OS_MCP_BIN)return serveWarmMcpStdio(repoRoot,extra,env,process.platform,resolveMcpBinaryPath(repoRoot,env),catalogTarget,stage);
- const stopped=new AbortController(),phase=createRequestedIssuedResourceControlV1(control,0,stopped.signal);
- let selected:string,acquired=false,release!:()=>void,publication:Promise<number>|undefined,preparing:Promise<number>|undefined,stageSignal:AbortSignal|undefined;
+ const mode=readBuildMode((invocation.capabilities as Readonly<{buildMode?:unknown}>|undefined)?.buildMode??MCP_STDIO_BUILD_MODE_V1);
+ if(env.SEMIO_BUILD_MODE!==undefined&&readBuildMode(env.SEMIO_BUILD_MODE)!==mode)throw Error("MCP launch mode differs from the issued invocation");
+ const stopped=new AbortController(),launchEnv:NodeJS.ProcessEnv={},publications:Promise<unknown>[]=[];
+ const phase=()=>createRequestedIssuedResourceControlV1(control,0,stopped.signal);
+ let selected:string,acquired=false,release!:()=>void,preparing:Promise<number>|undefined,stageSignal:AbortSignal|undefined;
  const closed=new Promise<void>(resolve=>{release=resolve;});
+ const hold=<T>(read:(consume:(value:T)=>Promise<void>)=>Promise<unknown>):Promise<T>=>new Promise((ready,refuse)=>{
+  const publication=read(async value=>{stopped.signal.throwIfAborted();ready(value);await closed;});
+  publications.push(publication);
+  void publication.catch(refuse);
+ });
  const prepare=async(progress:(line:string)=>void,signal:AbortSignal):Promise<number>=>{
-  for(const target of[MCP_BINARY_TARGET,...(catalogTarget?[catalogTarget]:[])]){signal.throwIfAborted();const status=await stage(target,progress,signal);if(status!==0)return status;}
+  for(const target of[...(env.SEMIO_OS_MCP_BIN?[]:[MCP_BINARY_TARGET]),...(catalogTarget?[catalogTarget]:[])]){signal.throwIfAborted();const status=await stage(target,progress,signal);if(status!==0)return status;}
   signal.throwIfAborted();
-  return new Promise<number>((ready,refuse)=>{
-   publication=withAdmittedPublishedCargoExecutableV1(MCP_MANIFEST_REL,MCP_BINARY_NAME+(process.platform==="win32"?".exe":""),repoRoot,mode,invocation,phase,async artifact=>{
-    phase.signal.throwIfAborted();selected=artifact.path;acquired=true;ready(0);await closed;return 0;
-   }).catch(error=>{refuse(error);if(error!==stopped.signal.reason)throw error;return 0;});
-   void publication.catch(()=>{});
+  const binary=env.SEMIO_OS_MCP_BIN?requireMcpBinary(repoRoot,env):hold<string>(consume=>withAdmittedPublishedCargoExecutableV1(
+   MCP_MANIFEST_REL,MCP_BINARY_NAME+(process.platform==="win32"?".exe":""),repoRoot,mode,invocation,phase(),artifact=>consume(artifact.path)));
+  const components=hold<NodeJS.ProcessEnv>(async consume=>{
+   const {withMcpComponentEnvironmentV1}=await import("./📡️stdio/📦️component-models/🟦️.ts");
+   return withMcpComponentEnvironmentV1(repoRoot,invocation,phase(),env,consume);
   });
+  const [path,preparedEnv]=await Promise.all([binary,components]);
+  selected=path;
+  Object.assign(launchEnv,preparedEnv);
+  acquired=true;
+  return 0;
  };
- try{return await serveWarmMcpGateway({stage:(progress,signal)=>{stageSignal=signal;preparing=prepare(progress,signal);return preparing;},command:()=>selected,args:withMcpHostDriverPolicy(["stdio",...extra]),cwd:repoRoot,env,input:process.stdin,output:process.stdout,onStop:()=>{if(!acquired)stopped.abort(stageSignal?.reason);onStop?.(stageSignal?.reason);}});}
- finally{if(!acquired)stopped.abort();release();try{await preparing;}catch(error){if(error!==stageSignal?.reason&&error!==stopped.signal.reason)throw error;}await publication;}
+ try{return await serveWarmMcpGateway({stage:(progress,signal)=>{stageSignal=signal;preparing=prepare(progress,signal);return preparing;},command:()=>selected,args:withMcpHostDriverPolicy(["stdio",...extra]),cwd:repoRoot,env:launchEnv,input:process.stdin,output:process.stdout,onStop:()=>{if(!acquired)stopped.abort(stageSignal?.reason);onStop?.(stageSignal?.reason);}});}
+ finally{
+  if(!acquired)stopped.abort();
+  release();
+  const preparation=await Promise.allSettled([preparing]),readers=await Promise.allSettled(publications);
+  for(const result of[...preparation,...readers])if(result.status==="rejected"&&
+   !(stageSignal?.aborted&&result.reason===stageSignal.reason)&&
+   !(stopped.signal.aborted&&result.reason===stopped.signal.reason))throw result.reason;
+ }
 }
 //#endregion 🔖️BinaryPath
 
@@ -210,7 +229,7 @@ export function spawnRawMcp(bin: string, args: readonly string[] = ["stdio"], en
 //#region 🔖️ClientEndToEnd
 /** 🪪️ One `.mcp.json` server entry, read verbatim — the literal `command`/`args` a real MCP client
  * (Claude Code, Cursor, the VS Code MCP host) spawns, never a reconstruction of them. */
-export type McpServerEntry = { readonly command: string; readonly args: readonly string[] };
+export type McpServerEntry = { readonly command: string; readonly args: readonly string[]; readonly env?: Readonly<Record<string, string>> };
 
 /** 🧾️ One step of the client journey: what was attempted, whether it held, and the one-line
  * evidence the report table prints beside it. `wire` is the raw JSON-RPC result the step read. */
@@ -228,7 +247,7 @@ const MCP_CLIENT_PROTOCOL_VERSION = "2025-06-18";
 /** 🔬️ Harness variables a real Claude Code parent exports; kept here because the `semio` server's
  * process-entry credential seal must admit them (ticket 26/09/18 M1 R1) — an e2e client that spawned
  * a pristine environment would never re-prove that. */
-const MCP_CLIENT_HARNESS_ENVIRONMENT: Readonly<Record<string, string>> = { CLAUDE_CODE_SESSION_ID: "mcp-client-e2e", CLAUDE_CODE_MESSAGING_TOKEN: "mcp-client-e2e" };
+const MCP_CLIENT_HARNESS_ENVIRONMENT: Readonly<Record<string, string>> = { CLAUDE_CODE_SESSION_ID: "mcp-client-e2e", CLAUDE_CODE_MESSAGING_TOKEN: "mcp-client-e2e", SEMIO_SCRIPT_PROGRESS: "human" };
 
 /** 🚧️ A precondition an acceptance harness cannot run without — a hub origin, a credential, an admin capability file.
  * The harness records `blocked` (never `fail`) and names the environment variable that supplies it. */
@@ -317,46 +336,6 @@ export function inferenceCancellationVerdictV1(active:Readonly<Record<string,unk
  return ["ACCEPTED","RUNNING"].includes(String(active?.state??"").toUpperCase())&&Array.isArray(active?.progress)&&active.progress.length>0&&String(terminal?.state??"").toUpperCase()==="CANCELLED"&&terminal?.cancelRequested===true&&terminal?.commit==null&&unchanged;
 }
 
-/** 🧱️ Checks the selected publication's exact component mode against its actual descriptor digest. */
-export function verifyStagedPluginComponent(repoRoot: string, pluginId: string, catalogRoot: string, mode: "prototype"|"release"): StagedComponentVerdict {
-  const registryPath = join(catalogRoot, "🦀️catalog.json");
-  let rows: Array<{ pluginId?: string; cratePath?: string; wasmOut?: string }>;
-  try {
-    rows = [...readNativeCatalogV1(JSON.parse(readFileSync(registryPath, "utf8"))).plugins];
-  } catch (error) {
-    return { ok: false, detail: `the explicit native catalog ${registryPath} is unavailable: ${String(error)}` };
-  }
-  const row = rows.find((entry) => entry.pluginId === pluginId);
-  if (!row?.cratePath || !row.wasmOut) return { ok: false, detail: `\`${pluginId}\` is absent from the explicit native catalog ${registryPath}` };
-  const ownerRoot = posix.dirname(posix.dirname(posix.join(repoRoot, row.cratePath)));
-  const descriptorPath = posix.join(ownerRoot, "🔣️.json");
-  let declaredWasmSha256: string | undefined;
-  try {
-    declaredWasmSha256 = (JSON.parse(readFileSync(descriptorPath, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256;
-  } catch (error) {
-    return { ok: false, detail: `\`${pluginId}\` has no readable descriptor at ${descriptorPath}: ${String(error)}` };
-  }
-  if (!declaredWasmSha256) return { ok: false, detail: `\`${pluginId}\`'s committed descriptor declares no \`hashes.wasmSha256\`, so a staged component cannot be checked against it` };
-  const tried: string[] = [];
-  for (const profile of [`dist/components/${mode}`]) {
-    const candidate = posix.join(repoRoot, row.cratePath, profile, row.wasmOut);
-    tried.push(candidate);
-    let bytes: Buffer;
-    try {
-      bytes = readFileSync(candidate);
-    } catch {
-      continue;
-    }
-    const staged = createHash("sha256").update(bytes).digest("hex");
-    if (staged === declaredWasmSha256) return { ok: true, detail: `${pluginId}: ${profile}/${row.wasmOut} ${bytes.length} B, sha256 ${staged.slice(0, 12)}… matches its committed descriptor` };
-    return {
-      ok: false,
-      detail: `${pluginId}: ${profile}/${row.wasmOut} digest ${staged} differs from its descriptor ${declaredWasmSha256}; run its authored plugin producer with the explicit catalog`,
-    };
-  }
-  return { ok: false, detail: `${pluginId}: no compiled component is staged (tried ${tried.join(", ")}) — build its authored plugin target with the explicit catalog` };
-}
-
 /** 🔎️ The ranking properties a compiled capability catalog owes an agent, asserted over one
  * `capabilities_search` reply and NOTHING else — no guest, no component, no artifact. This is the
  * step that used to be implicit in "whatever hit 0 is": a search is a ranking, so what a permanent
@@ -432,9 +411,9 @@ function revisionOf(reply: McpToolReply): RevisionStampWire | undefined {
  * therefore asserted something the format can never deliver — it read identical across a commit
  * that landed perfectly (measured 2026-09-22, slice CE3). */
 function snapshotDocumentBase64(reply: McpToolReply): string {
-  const pack = String(untrustedContent(reply).packBase64 ?? "");
-  const spr = String(untrustedContent(reply).sprBase64 ?? "");
-  return pack.length === 0 && spr.length === 0 ? "" : `${pack}.${spr}`;
+  if (reply.isError === true) return "";
+  const { packBase64, sprBase64 } = untrustedContent(reply);
+  return typeof packBase64 === "string" && packBase64 && typeof sprBase64 === "string" && sprBase64 ? `${packBase64}.${sprBase64}` : "";
 }
 
 /** 🧷️ The document-authored content a reply carries — only ever inside its `untrusted` envelope
@@ -488,7 +467,7 @@ async function headRevision(session: McpClientSessionV1, capabilityId: string, i
 export async function runRepoMcpClientJourney(repoRoot: string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl): Promise<readonly McpClientStep[]> {
   const entry = mcpServerEntries(repoRoot).repo;
   if (!entry) return [mcpStepFailure("repo: .mcp.json entry", "`.mcp.json` declares no `repo` server")];
-  return withMcpClientSessionV1(invocation,phaseControl,{command:entry.command,args:[...entry.args,...[]],cwd:repoRoot,environment:{...process.env,...MCP_CLIENT_HARNESS_ENVIRONMENT}},async session=>{
+  return withMcpClientSessionV1(invocation,phaseControl,{command:entry.command,args:[...entry.args],cwd:repoRoot,environment:{...process.env,...entry.env,...MCP_CLIENT_HARNESS_ENVIRONMENT}},async session=>{
   const steps: McpClientStep[] = [];
     const initialized = await session.request("initialize", { protocolVersion: MCP_CLIENT_PROTOCOL_VERSION, capabilities: { roots: { listChanged: false } }, clientInfo: { name: "semio-mcp-client-e2e", title: "semio MCP client e2e", version: "1" } });
     if (initialized.error) return [...steps, mcpStepFailure("repo: initialize", JSON.stringify(initialized.error))];
@@ -516,12 +495,102 @@ export async function runRepoMcpClientJourney(repoRoot: string,invocation:Script
 export async function runOsMcpClientJourney(repoRoot: string, folder: string, pins: McpClientE2ePinsV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl): Promise<readonly McpClientStep[]> {
   const entry = mcpServerEntries(repoRoot).semio;
   if (!entry) return [mcpStepFailure("os: .mcp.json entry", "`.mcp.json` declares no `semio` server")];
-  return withMcpClientSessionV1(invocation,phaseControl,{command:entry.command,args:[...entry.args,...["--folder", folder, "--no-bridge"]],cwd:repoRoot,environment:{...process.env,...MCP_CLIENT_HARNESS_ENVIRONMENT}},async session=>{
+  return withMcpClientSessionV1(invocation,phaseControl,{command:entry.command,args:[...entry.args,"--folder",folder,"--no-bridge","--auto-approve","all"],cwd:repoRoot,environment:{...process.env,...entry.env,...MCP_CLIENT_HARNESS_ENVIRONMENT}},(session,control)=>driveOsMcpClientSessionV1(session,pins,async()=>{
+    const publication = takeMcpPluginCatalog(entry.args, repoRoot).env.SEMIO_PLUGIN_CATALOG;
+    if (!publication) throw Error("The client journey requires an explicit native catalog publication");
+    const nativeCatalog = readNativeCatalogV1(JSON.parse(readFileSync(join(publication, "🦀️catalog.json"), "utf8")));
+    const owner = nativeCatalog.plugins.find(row => row.pluginId === pins.pluginId);
+    if (!owner) throw Error("The selected plugin is absent from the native catalog");
+    const { readNativeCallerAuthorityV1 } = await import("@semio-tech/repo-lib/artifacts");
+    const { withComponentModelV1 } = await import("@semio-tech/framework-plugin/model/reading");
+    const mode = readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode;
+    return withComponentModelV1(repoRoot, invocation, { version: 1, mode, pluginId: pins.pluginId, cratePath: owner.cratePath }, control, async model => {
+      const descriptor = JSON.parse(readFileSync(model.descriptor, "utf8"));
+      return descriptor.manifest.apps.find((row: { id: string }) => row.id === pins.caller.appId);
+    });
+  }));
+}
+
+/** 🛑️ Requires live job progress before the SDK cancels and rereads both persisted document bytes. */
+export async function verifyActiveInferenceCancellationV1(session: Pick<McpClientSessionV1, "call">, pins: McpClientE2ePinsV1, artifactId: string, onStep: (step: McpClientStep) => void): Promise<void> {
+  const cancelArtifactId = `${artifactId}-active-cancel`;
+  const candidate = await session.call("artifact_create", { artifactId: cancelArtifactId, kind: pins.inferenceArtifactKind, initial: pins.inferenceCancellationInitial });
+  if (candidate.isError === true) {
+    onStep(mcpStepFailure("os: active inference cancellation problem", JSON.stringify(candidate.structuredContent)));
+    return;
+  }
+  const beforeCancel = await session.call("artifact_snapshot", { artifactId: cancelArtifactId });
+  const submit = parseInferenceSubmitInput({ documentId: cancelArtifactId, inferenceSchema: pins.inferenceSchema, pluginId: pins.inferencePluginId, ...pins.inferenceLimits, revision: 0, documentGeneration: 1, cancellationId: cancelArtifactId });
+  const submitted = await session.call("inference_submit", submit);
+  const jobHandle = submitted.structuredContent?.jobHandle;
+  if (submitted.isError === true || typeof jobHandle !== "string") {
+    onStep(mcpStepFailure("os: active inference cancellation submit", JSON.stringify(submitted.structuredContent)));
+    return;
+  }
+  const jobFrom = (reply: McpToolReply) => reply.structuredContent?.job as Record<string, unknown> | undefined;
+  const isActive = (job: Record<string, unknown> | undefined) => ["ACCEPTED", "RUNNING"].includes(String(job?.state ?? "").toUpperCase());
+  const progressRows = (job: Record<string, unknown> | undefined) => Array.isArray(job?.progress) ? job.progress.length : 0;
+  const observe = async (page: typeof submitted, waiting: (job: ReturnType<typeof jobFrom>) => boolean) => {
+    const deadline = performance.now() + submit.maximumElapsedMilliseconds;
+    for (let poll = 0; poll < 32 && page.isError !== true && waiting(jobFrom(page)); poll++) {
+      const remaining = deadline - performance.now();
+      if (remaining <= 0) break;
+      await delay(Math.min(remaining, 10 * 2 ** poll, 1_000));
+      if (performance.now() >= deadline) break;
+      page = await session.call("inference_events", { jobHandle });
+    }
+    return page;
+  };
+  const page = await observe(submitted, job => isActive(job) && progressRows(job) === 0);
+  const active = jobFrom(page);
+  const observedActive = page.isError !== true && isActive(active) && progressRows(active) > 0;
+  onStep({ step: "os: observe active progressing inference before cancel", ok: observedActive, detail: `state=${String(active?.state ?? "").toUpperCase()} progressRows=${progressRows(active)}`, wire: page.structuredContent });
+  const cancelled = await session.call("inference_cancel", { jobHandle });
+  const terminal = await observe(cancelled, isActive);
+  const cancelledJob = jobFrom(terminal);
+  const afterCancel = await session.call("artifact_snapshot", { artifactId: cancelArtifactId });
+  const originalDocument = snapshotDocumentBase64(beforeCancel);
+  const unchanged = beforeCancel.isError !== true && afterCancel.isError !== true && originalDocument.length > 0 && originalDocument === snapshotDocumentBase64(afterCancel);
+  onStep({
+    step: "os: active inference cancellation settles without committed effects",
+    ok: observedActive && cancelled.isError !== true && terminal.isError !== true && inferenceCancellationVerdictV1(active, cancelledJob, unchanged),
+    detail: `state=${cancelledJob?.state} cancelRequested=${cancelledJob?.cancelRequested} documentUnchanged=${unchanged}`,
+    wire: terminal.structuredContent,
+  });
+}
+
+export type McpClientDocumentPhaseV1 = "baseline" | "invoke" | "undo" | "redo" | "rollback";
+
+/** 🚀️ Measures the protocol journey through a held real stdio session and its selected app declaration. */
+export async function driveOsMcpClientSessionV1(
+  session: McpClientSessionV1,
+  pins: McpClientE2ePinsV1,
+  readApp: () => Promise<Parameters<typeof createHeadlessCallerSurfaceV1>[0] | undefined>,
+  observeDocument?: (phase: McpClientDocumentPhaseV1, artifactId: string, input: unknown, packAndSpr: string) => void,
+): Promise<readonly McpClientStep[]> {
   const steps: McpClientStep[] = [];
     const initialized = await session.request("initialize", { protocolVersion: MCP_CLIENT_PROTOCOL_VERSION, capabilities: { roots: { listChanged: false } }, clientInfo: { name: "semio-mcp-client-e2e", title: "semio MCP client e2e", version: "1" } });
     if (initialized.error) return [...steps, mcpStepFailure("os: initialize", JSON.stringify(initialized.error))];
     await session.notify("notifications/initialized", {});
     announce(steps, { step: "os: initialize", ok: true, detail: `server=${mcpJsonPathV1(initialized.result,["serverInfo","name"])}@${mcpJsonPathV1(initialized.result,["serverInfo","version"])} protocol=${initialized.result?.protocolVersion}`, wire: initialized.result });
+
+    const [tools, resources, prompts] = await Promise.all([
+      session.request("tools/list", {}),
+      session.request("resources/list", {}),
+      session.request("prompts/list", {}),
+    ]);
+    const toolNames = mcpJsonArrayV1(tools.result?.tools).map(tool => mcpJsonPathV1(tool, ["name"])).filter(name => typeof name === "string");
+    const requiredTools = ["action_invoke", "action_prepare", "artifact_create", "artifact_open", "artifact_snapshot", "capabilities_search", "context_resolve", "history_undo", "inference_run", "job_cancel"];
+    const missingTools = requiredTools.filter(name => !toolNames.includes(name));
+    const resourceUris = mcpJsonArrayV1(resources.result?.resources).map(resource => mcpJsonPathV1(resource, ["uri"]));
+    const promptNames = mcpJsonArrayV1(prompts.result?.prompts).map(prompt => mcpJsonPathV1(prompt, ["name"]));
+    const toolsReady = !tools.error && missingTools.length === 0;
+    const resourcesReady = !resources.error && resourceUris.includes("semio://workspace");
+    const promptsReady = !prompts.error && promptNames.includes("explore_workspace");
+    announce(steps, { step: "os: first tools/list", ok: toolsReady, detail: tools.error ? JSON.stringify(tools.error) : missingTools.length ? `Missing tools: ${missingTools.join(", ")}` : `${toolNames.length} tools, all ${requiredTools.length} required present`, wire: toolNames });
+    announce(steps, { step: "os: first resources/list", ok: resourcesReady, detail: resources.error ? JSON.stringify(resources.error) : `${resourceUris.length} resources; workspace resource ${resourcesReady ? "present" : "absent"}`, wire: resourceUris });
+    announce(steps, { step: "os: first prompts/list", ok: promptsReady, detail: prompts.error ? JSON.stringify(prompts.error) : `${promptNames.length} prompts; explore_workspace ${promptsReady ? "present" : "absent"}`, wire: promptNames });
+    if (!toolsReady || !resourcesReady || !promptsReady) return steps;
 
     const context = await session.call("context_resolve", { locale: pins.caller.locale });
     const resolvedChannel = String(context.structuredContent?.channel ?? "");
@@ -537,18 +606,6 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
       wire: context.structuredContent,
     });
     if (resolvedChannel !== "headless") return steps;
-
-    const catalogIndex=entry.args.indexOf("--catalog");
-    const configuredCatalog=catalogIndex<0?undefined:entry.args[catalogIndex+1];
-    const staged = configuredCatalog ? [pins.pluginId, pins.inferencePluginId].map((pluginId) => verifyStagedPluginComponent(repoRoot, pluginId,resolve(repoRoot,configuredCatalog),"prototype")) : [{ok:false,detail:"The configured journey requires an explicit --catalog publication"}];
-    announce(steps, { step: "os: every pinned component is staged and current", ok: staged.every((verdict) => verdict.ok), detail: staged.map((verdict) => verdict.detail).join(" | "), wire: staged });
-    if (!staged.every((verdict) => verdict.ok)) return steps;
-
-    const tools = await session.request("tools/list", {});
-    const toolNames = ((tools.result?.tools ?? []) as Array<{ name: string }>).map((tool) => tool.name).sort();
-    const requiredTools = ["action_invoke", "action_prepare", "artifact_create", "artifact_open", "artifact_snapshot", "capabilities_search", "history_undo", "inference_run", "job_cancel"];
-    const missingTools = requiredTools.filter((name) => !toolNames.includes(name));
-    announce(steps, { step: "os: tools/list", ok: missingTools.length === 0 && toolNames.length >= 9, detail: missingTools.length === 0 ? `${toolNames.length} tools, all ${requiredTools.length} required present` : `missing: ${missingTools.join(", ")}`, wire: toolNames });
 
     const walk = await paginationWalk(session, "tools/list", "tools", (tool: any) => String(tool.name));
     announce(steps, { step: "os: tools/list pagination walk", ok: walk.ok && walk.visited.join("\0") === toolNames.join("\0"), detail: walk.ok ? `${walk.pages} page(s), ${walk.visited.length} tool(s), order identical to the unpaged list` : walk.detail, wire: { pages: walk.pages, firstCursor: walk.firstCursor } });
@@ -596,18 +653,14 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
 
     const typedKind = pins.artifactKind;
     const typedArtifactId = `${artifactId}-typed`;
+    const observe = (phase: McpClientDocumentPhaseV1, packAndSpr: string) => observeDocument?.(phase, typedArtifactId, input, packAndSpr);
     const typedCreated = await session.call("artifact_create", { artifactId: typedArtifactId, kind: typedKind });
     announce(steps, { step: "os: artifact_create (a real plugin artifact kind)", ok: typedCreated.isError !== true && typedCreated.structuredContent?.kind === typedKind, detail: typedCreated.isError === true ? `kind=${typedKind}: ${JSON.stringify(typedCreated.structuredContent).slice(0, 260)}` : `artifactId=${typedArtifactId} kind=${typedCreated.structuredContent?.kind} pluginId=${typedCreated.structuredContent?.pluginId} sizeBytes=${typedCreated.structuredContent?.sizeBytes}`, wire: typedCreated.structuredContent });
 
     if (typedCreated.isError === true || typedCreated.structuredContent?.kind !== typedKind) return steps;
 
-    const publication=resolve(repoRoot,configuredCatalog!);
-    const nativeCatalog=readNativeCatalogV1(JSON.parse(readFileSync(join(publication,"🦀️catalog.json"),"utf8")));
-    const owner=nativeCatalog.plugins.find(row=>row.pluginId===pins.pluginId);
-    if(!owner)throw Error("Selected native catalog owner disappeared");
-    const descriptor=JSON.parse(readFileSync(join(repoRoot,owner.cratePath,"../..","🔣️.json"),"utf8"));
-    const app=descriptor.manifest?.apps?.find((row:{id:string})=>row.id===pins.caller.appId);
-    if(!app||descriptor.manifest.pluginId!==pins.pluginId)throw Error("Published app and plugin declaration required");
+    const app = await readApp();
+    if (!app) throw Error("Published caller app required");
     const surface=createHeadlessCallerSurfaceV1(app,{sessionId:String(context.structuredContent?.sessionId??""),principal:String(context.structuredContent?.principal??""),artifactId:typedArtifactId,pluginId:pins.pluginId,windowId:`mcp-caller-${randomUUID()}`},pins.caller);
     const target=surface.target;
     announce(steps,{step:"os: establish programmatic headless caller surface",ok:true,detail:`session=${surface.sessionId} artifact=${surface.artifactId} app=${app.id}; caller-owned virtual window ${surface.context.windowId}; no mounted UI asserted`,wire:surface});
@@ -620,6 +673,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     const beforeSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
     const packBefore = String(untrustedContent(beforeSnapshot).packBase64 ?? "");
     const documentBefore = snapshotDocumentBase64(beforeSnapshot);
+    observe("baseline", documentBefore);
 
     const prepared = await session.call("action_prepare", { capabilityId: pins.capabilityId, input,target,context:surface.context });
     const baselineRevision = revisionOf(prepared);
@@ -652,6 +706,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     const afterEnvelope = afterSnapshot.structuredContent?.untrusted as Record<string, any> | undefined;
     announce(steps, { step: "os: artifact_snapshot (the created artifact)", ok: afterSnapshot.isError !== true && Number(afterSnapshot.structuredContent?.packBytes ?? 0) > 0 && packAfter.length > 0, detail: afterSnapshot.isError === true ? `${typedArtifactId}: ${JSON.stringify(afterSnapshot.structuredContent).slice(0, 300)}` : `artifactId=${typedArtifactId} packBytes=${afterSnapshot.structuredContent?.packBytes} sprBytes=${afterSnapshot.structuredContent?.sprBytes} untrusted.source=${afterEnvelope?.provenance?.source} authors=${afterEnvelope?.provenance?.authors?.kind}`, wire: { ...afterSnapshot.structuredContent, untrusted: { provenance: afterEnvelope?.provenance, packBase64: `${packAfter.slice(0, 32)}…` } } });
     const documentAfter = snapshotDocumentBase64(afterSnapshot);
+    observe("invoke", documentAfter);
     announce(steps, { step: "os: the snapshot shows the mutation", ok: documentBefore.length > 0 && documentAfter.length > 0 && documentAfter !== documentBefore, detail: documentBefore.length === 0 ? `the pre-mutation snapshot answered no bytes: ${JSON.stringify(beforeSnapshot.structuredContent).slice(0, 200)}` : documentAfter === documentBefore ? `${typedArtifactId} is byte-identical across the commit (pack ${packAfter.length}, spr ${String(untrustedContent(afterSnapshot).sprBase64 ?? "").length} base64 chars) — the snapshot is reading a frozen row, not the document the mutation went to` : `${documentBefore.length} → ${documentAfter.length} base64 chars across the commit (pack ${packBefore.length} → ${packAfter.length}, spr ${String(untrustedContent(beforeSnapshot).sprBase64 ?? "").length} → ${String(untrustedContent(afterSnapshot).sprBase64 ?? "").length})`, wire: { before: documentBefore.slice(0, 24), after: documentAfter.slice(0, 24) } });
 
     const headAfterInvoke = await headRevision(session, pins.capabilityId, input,target,surface.context);
@@ -663,13 +718,19 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     }
     const undone = await session.call("history_undo", { undoToken });
     const headAfterUndo = await headRevision(session, pins.capabilityId, input,target,surface.context);
+    const documentAfterUndo = snapshotDocumentBase64(await session.call("artifact_snapshot", { artifactId: typedArtifactId }));
+    observe("undo", documentAfterUndo);
     const undoWarnings = (undone.structuredContent?.warnings ?? []) as string[];
-    announce(steps, { step: "os: history_undo (mutation reverted)", ok: undone.isError !== true && Number(undone.structuredContent?.members ?? 0) > 0 && undoWarnings.length === 0 && headAfterUndo?.headEditId === baselineRevision?.headEditId, detail: undone.isError === true ? JSON.stringify(undone.structuredContent).slice(0, 300) : `members=${undone.structuredContent?.members} warnings=${undoWarnings.length === 0 ? "none" : undoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterUndo)} (baseline ${stampText(baselineRevision)})`, wire: undone.structuredContent });
+    const undoJournalChanged = documentAfterUndo.length > 0 && documentAfterUndo !== documentAfter;
+    announce(steps, { step: "os: history_undo (mutation reverted)", ok: undone.isError !== true && Number(undone.structuredContent?.members ?? 0) > 0 && undoWarnings.length === 0 && headAfterUndo?.headEditId === baselineRevision?.headEditId && undoJournalChanged, detail: undone.isError === true ? JSON.stringify(undone.structuredContent).slice(0, 300) : `members=${undone.structuredContent?.members} warnings=${undoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterUndo)} (baseline ${stampText(baselineRevision)}) journalChanged=${undoJournalChanged}`, wire: undone.structuredContent });
 
     const redone = await session.call("history_redo", { undoToken });
     const headAfterRedo = await headRevision(session, pins.capabilityId, input,target,surface.context);
+    const documentAfterRedo = snapshotDocumentBase64(await session.call("artifact_snapshot", { artifactId: typedArtifactId }));
+    observe("redo", documentAfterRedo);
     const redoWarnings = (redone.structuredContent?.warnings ?? []) as string[];
-    announce(steps, { step: "os: history_redo (mutation restored)", ok: redone.isError !== true && Number(redone.structuredContent?.members ?? 0) > 0 && redoWarnings.length === 0 && headAfterRedo?.headEditId !== undefined && headAfterRedo.headEditId !== baselineRevision?.headEditId, detail: redone.isError === true ? JSON.stringify(redone.structuredContent).slice(0, 300) : `members=${redone.structuredContent?.members} warnings=${redoWarnings.length === 0 ? "none" : redoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterRedo)} (undone head was ${stampText(headAfterUndo)})`, wire: redone.structuredContent });
+    const redoJournalChanged = documentAfterRedo.length > 0 && documentAfterRedo !== documentAfterUndo;
+    announce(steps, { step: "os: history_redo (mutation restored)", ok: redone.isError !== true && Number(redone.structuredContent?.members ?? 0) > 0 && redoWarnings.length === 0 && headAfterRedo?.headEditId !== undefined && headAfterRedo.headEditId !== baselineRevision?.headEditId && redoJournalChanged, detail: redone.isError === true ? JSON.stringify(redone.structuredContent).slice(0, 300) : `members=${redone.structuredContent?.members} warnings=${redoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterRedo)} (undone head was ${stampText(headAfterUndo)}) journalChanged=${redoJournalChanged}`, wire: redone.structuredContent });
 
     const noChangePrepared = await session.call("action_prepare", { capabilityId: pins.noChangeCapabilityId, input: {},target,context:surface.context });
     const noChange = noChangePrepared.isError === true ? noChangePrepared : await session.call("action_invoke", { preparedActionHandle: noChangePrepared.structuredContent?.preparedHandle });
@@ -687,7 +748,10 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     announce(steps, { step: "os: transaction_begin", ok: began.isError !== true && typeof transactionHandle === "string", detail: began.isError === true ? JSON.stringify(began.structuredContent).slice(0, 300) : `transactionHandle=${transactionHandle} members=1`, wire: began.structuredContent });
     const rolledBack = await session.call("transaction_rollback", { transactionHandle });
     const headAfterRollback = await headRevision(session, pins.capabilityId, input,target,surface.context);
-    announce(steps, { step: "os: transaction_rollback (no change)", ok: rolledBack.isError !== true && headAfterRollback?.headEditId === headAfterRedo?.headEditId, detail: rolledBack.isError === true ? JSON.stringify(rolledBack.structuredContent).slice(0, 300) : `rolledBack=${rolledBack.structuredContent?.rolledBack} head ${stampText(headAfterRollback)} unchanged from ${stampText(headAfterRedo)}`, wire: rolledBack.structuredContent });
+    const documentAfterRollback = snapshotDocumentBase64(await session.call("artifact_snapshot", { artifactId: typedArtifactId }));
+    observe("rollback", documentAfterRollback);
+    const rollbackBytesUnchanged = documentAfterRedo.length > 0 && documentAfterRedo === documentAfterRollback;
+    announce(steps, { step: "os: transaction_rollback (no change)", ok: rolledBack.isError !== true && headAfterRollback?.headEditId === headAfterRedo?.headEditId && rollbackBytesUnchanged, detail: rolledBack.isError === true ? JSON.stringify(rolledBack.structuredContent).slice(0, 300) : `rolledBack=${rolledBack.structuredContent?.rolledBack} head ${stampText(headAfterRollback)} bytesUnchanged=${rollbackBytesUnchanged}`, wire: rolledBack.structuredContent });
 
     const listed = await session.call("inference_list", {});
     const declared = (listed.structuredContent?.declared ?? []) as Array<Record<string, any>>;
@@ -725,38 +789,8 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
       announce(steps, mcpStepFailure("os: inference job progress", "inference_run minted no jobId", inference.structuredContent));
     }
 
-    const cancelArtifactId=`${artifactId}-active-cancel`;
-    const candidate=await session.call("artifact_create",{artifactId:cancelArtifactId,kind:pins.inferenceArtifactKind,initial:pins.inferenceCancellationInitial});
-    if(candidate.isError===true){announce(steps,mcpStepFailure("os: active inference cancellation problem",JSON.stringify(candidate.structuredContent)));return steps;}
-    const beforeCancel=await session.call("artifact_snapshot",{artifactId:cancelArtifactId});
-    const submit=parseInferenceSubmitInput({documentId:cancelArtifactId,inferenceSchema:pins.inferenceSchema,pluginId:pins.inferencePluginId,...pins.inferenceLimits,revision:0,documentGeneration:1,cancellationId:`${artifactId}-active-cancel`});
-    const submitted=await session.call("inference_submit",submit);
-    const jobHandle=submitted.structuredContent?.jobHandle;
-    if(submitted.isError===true||typeof jobHandle!=="string"){announce(steps,mcpStepFailure("os: active inference cancellation submit",JSON.stringify(submitted.structuredContent)));return steps;}
-    let page=submitted;
-    for(let poll=0;poll<64;poll++){
-      const job=page.structuredContent?.job as Record<string,unknown>|undefined;
-      const state=String(job?.state??"").toUpperCase();
-      if(!["ACCEPTED","RUNNING"].includes(state)||Array.isArray(job?.progress)&&job.progress.length>0)break;
-      page=await session.call("inference_events",{jobHandle});
-    }
-    const active=page.structuredContent?.job as Record<string,unknown>|undefined;
-    const activeState=String(active?.state??"").toUpperCase();
-    const observedActive=page.isError!==true&&["ACCEPTED","RUNNING"].includes(activeState)&&Array.isArray(active?.progress)&&active.progress.length>0;
-    announce(steps,{step:"os: observe active progressing inference before cancel",ok:observedActive,detail:`state=${activeState} progressRows=${Array.isArray(active?.progress)?active.progress.length:0}`,wire:page.structuredContent});
-    const cancelled=await session.call("inference_cancel",{jobHandle});
-    let terminal=cancelled;
-    for(let poll=0;poll<64;poll++){
-      const job=terminal.structuredContent?.job as Record<string,unknown>|undefined;
-      if(!["ACCEPTED","RUNNING"].includes(String(job?.state??"").toUpperCase()))break;
-      terminal=await session.call("inference_events",{jobHandle});
-    }
-    const cancelledJob=terminal.structuredContent?.job as Record<string,unknown>|undefined;
-    const afterCancel=await session.call("artifact_snapshot",{artifactId:cancelArtifactId});
-    const unchanged=beforeCancel.isError!==true&&afterCancel.isError!==true&&snapshotDocumentBase64(beforeCancel).length>0&&snapshotDocumentBase64(beforeCancel)===snapshotDocumentBase64(afterCancel);
-    announce(steps,{step:"os: active inference cancellation settles without committed effects",ok:observedActive&&cancelled.isError!==true&&terminal.isError!==true&&inferenceCancellationVerdictV1(active,cancelledJob,unchanged),detail:`state=${cancelledJob?.state} cancelRequested=${cancelledJob?.cancelRequested} documentUnchanged=${unchanged}`,wire:terminal.structuredContent});
+    await verifyActiveInferenceCancellationV1(session, pins, artifactId, step => announce(steps, step));
     return steps;
-  });
 }
 
 /** 🏁️ Both `.mcp.json` servers, one report. Returns every step so a caller can print the table and

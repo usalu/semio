@@ -139,13 +139,7 @@ pub(super) fn retained_tree_node_step(
                     UiStatus::Finished => draw.push_shared_border_effect(row, ring_color, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Normal),
                     UiStatus::Idle => {}
                 }
-                if matches!(item.presence.state, UiState::Introducing | UiState::Celebrating) {
-                    let celebrating = item.presence.state == UiState::Celebrating;
-                    let turns = if celebrating { celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds) } else { 0.0 };
-                    let ring = if celebrating { celebrate_color(theme, turns) } else { theme.accent };
-                    let stroke = if celebrating { celebrate_stroke(theme, turns) } else { theme.stroke_hairline };
-                    draw.push_shared_border_effect(row, ring, theme.border_radius, stroke, if celebrating { semio_ui_draw_contract::SharedBorderState::Celebrated } else { semio_ui_draw_contract::SharedBorderState::Introduced });
-                }
+                paint_presence_accent_effect(draw, row, theme, item.presence.state);
                 let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
                 if item.items.as_ref().is_some_and(|items| !items.is_empty()) {
                     if let Some(icons) = icons {
@@ -360,6 +354,6 @@ pub fn paint_node_step(
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
 ) -> RetainedNodePaintStep {
-    paint_node_step_with_driver(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, draw, cursor)
+    paint_node_step_with_driver(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, None, draw, cursor)
 }
 // #endregion paint

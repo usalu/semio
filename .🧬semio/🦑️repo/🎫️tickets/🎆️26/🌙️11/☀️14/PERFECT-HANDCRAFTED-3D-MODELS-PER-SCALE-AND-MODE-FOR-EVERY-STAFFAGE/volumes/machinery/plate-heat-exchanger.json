@@ -2567,9 +2567,9 @@
           "role": "body",
           "tone": 0.7,
           "radii": [
-            0.06,
-            0.06,
-            0.06
+            0.015,
+            0.015,
+            0.015
           ],
           "transform": {
             "translation": [
@@ -2589,9 +2589,9 @@
           "role": "body",
           "tone": 0.35,
           "radii": [
-            0.04,
-            0.04,
-            0.04
+            0.015,
+            0.015,
+            0.015
           ],
           "transform": {
             "translation": [
@@ -4668,9 +4668,9 @@
           "role": "body",
           "tone": 0.7,
           "radii": [
-            0.07,
-            0.07,
-            0.07
+            0.02,
+            0.02,
+            0.02
           ],
           "transform": {
             "translation": [
@@ -4690,9 +4690,9 @@
           "role": "body",
           "tone": 0.35,
           "radii": [
-            0.05,
-            0.05,
-            0.05
+            0.02,
+            0.02,
+            0.02
           ],
           "transform": {
             "translation": [
@@ -6659,9 +6659,9 @@
           "role": "body",
           "tone": 0.7,
           "radii": [
-            0.09,
-            0.09,
-            0.09
+            0.03,
+            0.03,
+            0.03
           ],
           "transform": {
             "translation": [
@@ -6681,9 +6681,9 @@
           "role": "body",
           "tone": 0.35,
           "radii": [
-            0.06,
-            0.06,
-            0.06
+            0.03,
+            0.03,
+            0.03
           ],
           "transform": {
             "translation": [
@@ -7941,9 +7941,9 @@
           "role": "body",
           "tone": 0.35,
           "radii": [
-            0.06,
-            0.06,
-            0.06
+            0.03,
+            0.03,
+            0.03
           ],
           "transform": {
             "translation": [

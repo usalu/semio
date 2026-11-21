@@ -23,7 +23,7 @@ impl IncrementalSfm {
                 continue;
             }
             let cfg = RansacConfig { threshold: self.cfg.ransac_threshold_px, confidence: 0.999, max_iters: 2000, seed: frame as u64 ^ 0x9E37_79B9, scoring: RansacScoring::Msac };
-            if let Some((pose, _)) = pnp_ransac(&self.intrinsics, &world_pts, &obs, &cfg) {
+            if let Some((pose, _)) = pnp_ransac(&self.intrinsics[frame], &world_pts, &obs, &cfg) {
                 if let Some(slot) = self.cameras.iter_mut().find(|(f, _)| *f == frame) {
                     slot.1 = pose;
                 }
@@ -64,7 +64,8 @@ impl IncrementalSfm {
             .collect();
         let b0: Vec<VecD> = point_track_ids.iter().map(|&tid| VecD::from_vec(self.points[&tid].to_vec())).collect();
         let fixed_cameras = camera_frames.iter().map(|frame| fixed_frames.contains(frame)).collect();
-        let problem = SfmBundleProblem { intrinsics: self.intrinsics, num_cameras: camera_frames.len(), num_points: point_track_ids.len(), terms, observations, fixed_cameras };
+        let intrinsics = camera_frames.iter().map(|&frame| self.intrinsics[frame]).collect();
+        let problem = SfmBundleProblem { intrinsics, num_cameras: camera_frames.len(), num_points: point_track_ids.len(), terms, observations, fixed_cameras };
         (problem, a0, b0, point_track_ids)
     }
 
@@ -168,14 +169,14 @@ impl IncrementalSfm {
         let mut to_remove = Vec::new();
         for (&tid, &point) in &self.points {
             let track = &self.tracks.tracks[tid];
-            let views: Vec<(CameraPose, [f64; 2])> = track.iter().filter_map(|&(f, kp)| self.pose_of(f).map(|pose| (pose, self.obs_px(f, kp)))).collect();
+            let views: Vec<_> = track.iter().filter_map(|&(f, kp)| self.pose_of(f).map(|pose| (pose, self.obs_px(f, kp), &self.intrinsics[f]))).collect();
             if views.len() < 2 {
                 to_remove.push(tid);
                 continue;
             }
             let mut max_err = 0.0_f64;
-            for (pose, px) in &views {
-                match reproject(&self.intrinsics, pose, point) {
+            for (pose, px, intrinsics) in &views {
+                match reproject(intrinsics, pose, point) {
                     Some(pred) => max_err = max_err.max(((pred[0] - px[0]).powi(2) + (pred[1] - px[1]).powi(2)).sqrt()),
                     None => max_err = f64::MAX,
                 }
@@ -252,7 +253,7 @@ impl IncrementalSfm {
                         let Some(pose) = self.pose_of(frame) else { continue };
                         visible += 1;
                         let observed = self.obs_px(frame, keypoint);
-                        let Some(predicted) = reproject(&self.intrinsics, &pose, point) else {
+                        let Some(predicted) = reproject(&self.intrinsics[frame], &pose, point) else {
                             maximum = f64::INFINITY;
                             break;
                         };
@@ -287,7 +288,7 @@ impl IncrementalSfm {
         ReconstructionSnapshotPreparation {
             camera_cursor: 0,
             point_cursor: 0,
-            reconstruction: Reconstruction { cameras: Vec::with_capacity(self.cameras.len()), points: Vec::with_capacity(point_track_ids.len()), point_track_ids: Vec::with_capacity(point_track_ids.len()), intrinsics: self.intrinsics },
+            reconstruction: Reconstruction { cameras: Vec::with_capacity(self.cameras.len()), points: Vec::with_capacity(point_track_ids.len()), point_track_ids: Vec::with_capacity(point_track_ids.len()), intrinsics: std::collections::BTreeMap::new() },
             point_track_ids,
         }
     }
@@ -295,7 +296,9 @@ impl IncrementalSfm {
     pub fn advance_reconstruction_snapshot(&self, preparation: &mut ReconstructionSnapshotPreparation, item_budget: usize) -> bool {
         let mut remaining = item_budget.max(1);
         while preparation.camera_cursor < self.cameras.len() && remaining > 0 {
-            preparation.reconstruction.cameras.push(self.cameras[preparation.camera_cursor]);
+            let (frame, pose) = self.cameras[preparation.camera_cursor];
+            preparation.reconstruction.cameras.push((frame, pose));
+            preparation.reconstruction.intrinsics.insert(frame, self.intrinsics[frame]);
             preparation.camera_cursor += 1;
             remaining -= 1;
         }
@@ -324,7 +327,8 @@ impl IncrementalSfm {
         let mut point_track_ids: Vec<usize> = self.points.keys().copied().collect();
         point_track_ids.sort_unstable();
         let points = point_track_ids.iter().map(|tid| self.points[tid]).collect();
-        Reconstruction { cameras, points, point_track_ids, intrinsics: self.intrinsics }
+        let intrinsics = cameras.iter().map(|&(frame, _)| (frame, self.intrinsics[frame])).collect();
+        Reconstruction { cameras, points, point_track_ids, intrinsics }
     }
 
     /// 🚀️ Convenience end-to-end driver: [`init_pair`](Self::init_pair) on the first two frames of

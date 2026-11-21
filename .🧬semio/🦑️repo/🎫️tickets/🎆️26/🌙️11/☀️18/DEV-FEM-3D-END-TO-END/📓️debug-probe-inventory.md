@@ -145,3 +145,15 @@ Directory `🎭️actor` not found under `C:\semio\🧰️framework\🛍️produ
 ## 2026-11-20 WIT poll semantic cause
 
 - `⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs`, `poll_wit`. The temporary `inspect_err` logs `[DEBUG] FEM WIT poll semantic failure` once per Wasm instance, with the primary message, epoch and related receipt/context refusals before the WIT semantic tag discards the detail. Remove the complete `inspect_err` after diagnosing sequence 7.
+
+## Current Source Recheck — 2026-11-20
+
+The tables above describe an older snapshot and must not be used as a current deletion list: the earlier plugin DEBUG phase, ingress, manifest and receipt probes, their helper call sites, and the renderer warning were absent in the current source search. Shared worktree changes may continue during this audit; re-read each file immediately before edits.
+
+- Ticket-owned production probe: plugin `⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs:90`, `[DEBUG] FEM WIT poll semantic failure`. The surrounding `inspect_err` is once per Wasm instance; retain it while diagnosing sequence 7, then remove that full temporary probe. It should not flood per turn.
+- Ticket-local only: `native-actor/probe.rs:53` logs native actor failures; `native-preview.ts:22,27,29–46,76` intercepts guest console errors and posts sampled command traces. These are diagnostic inputs within the ticket, not production runtime probes. The first 24 commands are sampled; the proxy forwards matching semantic/refusal errors without a count limit and emits a delayed last-lines batch.
+- Current plugin test-only probe observed at `🧪️tests/🧪️history-edit-acceptance/🎛️acceptance-policy-pump-and-drive/🦀️.rs:148` is a seed-failure diagnostic; FEM 3D session `🧪️tests/🔬️unit/🦀️.rs:576` logs test child stages. Their ownership is not established by this audit; recheck because this shared worktree changes live.
+- Potential flood is an existing `[TRACE]` facility, not the old DEBUG probes: plugin `⚛️reactor/🔄️turn/🔦️more-work-sources-and-tracing/🦀️.rs:140` logs each phase and the subsequent guest-memory trace logs every turn when `runtime_diagnostics_enabled()`. On Wasm these go through the log import (`:149`), not native stderr. The source attributes this instrumentation to procedural-3D work; preserve it unless its owner requests removal. Disable diagnostics through the appropriate existing configuration for a quiet reproduction.
+- Plugin `⚛️reactor/🏃️runtime/🧰️ops/🧾️typed-operations/🦀️.rs:74` traces slot occupancy; its source attributes it to puzzle3d. It is bounded by peaks and drains unless runtime diagnostics are enabled. Other `[DEBUG]` hits in shared-worktree replica tests and repo debug-census code are unrelated to this ticket and are not cleanup candidates here.
+
+The runtime cleanup-turns file contains one temporary FEM cleanup semantic failure trace emitting the final stage and progress at a zero-progress verdict. Remove it with the WIT export probe after the browser passes.

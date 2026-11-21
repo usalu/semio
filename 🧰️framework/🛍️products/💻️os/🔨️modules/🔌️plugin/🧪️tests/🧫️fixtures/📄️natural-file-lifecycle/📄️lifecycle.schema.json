@@ -3,7 +3,8 @@
   "required": [
     "schema",
     "formats",
-    "capabilityGaps"
+    "capabilityGaps",
+    "wireIngress"
   ],
   "properties": {
     "schema": {
@@ -46,6 +47,55 @@
         }
       }
     },
+    "openCancellation": {
+      "type": "object",
+      "required": [
+        "reason",
+        "expectedOrder",
+        "expectedCrossings"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedOrder": {
+          "const": [
+            "open",
+            "submit",
+            "cancel",
+            "retire",
+            "closed"
+          ]
+        },
+        "expectedCrossings": {
+          "const": [
+            "media-in",
+            "acknowledge",
+            "read-document"
+          ]
+        }
+      }
+    },
+    "openFailure": {
+      "type": "object",
+      "required": [
+        "import",
+        "retirement"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "import": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retirement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "capabilityGaps": {
       "type": "array",
       "uniqueItems": true,
@@ -65,6 +115,34 @@
             "type": "string",
             "minLength": 1
           }
+        }
+      }
+    },
+    "wireIngress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "formatKind",
+        "commandBytes",
+        "browserPayloadBytes",
+        "nativePayloadBytes"
+      ],
+      "properties": {
+        "formatKind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commandBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "browserPayloadBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "nativePayloadBytes": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     }

@@ -119,7 +119,10 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
 impl<P,M> RetainedPersistedDocumentHydration<P,M>
 where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr::StoreState,M:semio_os_spr::StoreMutationFor<P>{
  /// 🧹️ Whether an Envelope-target fold job still needs its actual Source decoder to retire.
- pub fn requires_original_close(&self)->bool{self.target==PersistedDocumentHydrationTarget::Envelope&&self.fold_job.is_some()}
+ pub fn requires_original_close(&self) -> bool {
+    self.target == PersistedDocumentHydrationTarget::Envelope
+        && (self.fold_job.is_some() || self.mutation_constructing || !self.mutation_admission.terminal_is_empty())
+ }
  /// ♻️ Closes original fold control with its actual decoder before any grant-only data retirement.
  pub fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   cx.original_source_parent()?.validate_borrowed_context(cx)?;

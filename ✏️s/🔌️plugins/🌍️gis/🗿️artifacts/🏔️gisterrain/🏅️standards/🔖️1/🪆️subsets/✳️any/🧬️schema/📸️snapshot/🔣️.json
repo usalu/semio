@@ -16,6 +16,10 @@
       "$ref": "#/definitions/map",
       "x-semio-state": "artifact"
     },
+    "elevationSource": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/elevation.json",
+      "x-semio-state": "artifact"
+    },
     "mesh": {
       "anyOf": [
         {

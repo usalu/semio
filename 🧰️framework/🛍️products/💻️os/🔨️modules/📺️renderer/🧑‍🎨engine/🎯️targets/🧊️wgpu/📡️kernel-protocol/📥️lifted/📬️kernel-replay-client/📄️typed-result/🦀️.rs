@@ -190,7 +190,7 @@ pub enum KernelOutcome {
 
 //#region 🔖️KernelFuture — the leaf `Future` every `ProgramBridgeEntry` async method awaits
 #[derive(Default)]
-struct ResponseState {
+pub struct ResponseState {
     pub result: Option<KernelOutcome>,
     pub waker: Option<Waker>,
 }

@@ -38,9 +38,16 @@ pub async fn media_to_artifact<B: BlobStore>(media: &Media, blob_store: &B) -> R
 /// "binary payloads never carry bytes directly" invariant — the freshly computed hash supersedes
 /// whatever `blob_hash` the artifact's own descriptor claimed.
 pub async fn media_from_document<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B) -> Result<Media, RunError> {
+    media_from_document_with_type(descriptor, data, blob_store, None).await
+}
+
+pub(super) async fn media_from_document_with_type<B: BlobStore>(descriptor: &[u8], data: Vec<u8>, blob_store: &B, document_type: Option<MediaType>) -> Result<Media, RunError> {
     let value = store::pack_rt::decode_wire_value(descriptor).map_err(|error| RunError::Host(error.to_string()))?;
     let descriptor: semio_plugin::app::MediaArtifactDescriptor = semio_framework_value::FromValue::from_value(value).map_err(|error| RunError::Host(error.to_string()))?;
-    let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
+    let media_type = descriptor.media_type.or_else(|| match &descriptor.wire {
+        MediaWireFormat::Document { .. } => document_type,
+        _ => None,
+    }).ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
     let payload = match descriptor.wire {
         MediaWireFormat::Document { schema } => MediaPayload::Structured { schema, json: String::from_utf8(data).map_err(|error| RunError::Host(error.to_string()))? },
         MediaWireFormat::Intrinsic { schema } => {

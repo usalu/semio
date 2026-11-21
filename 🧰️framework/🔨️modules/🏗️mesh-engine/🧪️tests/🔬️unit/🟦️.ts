@@ -20,3 +20,18 @@ test("original attributed mesh fixture agrees with independent metadata publicat
   expect(geometry.getAttribute("position").count).toBe(1);
   geometry.dispose();
 });
+
+
+test("independent JSON export of authored polygons retains native binary32 widths and asset bytes",()=>{
+  const law=JSON.parse(readFileSync(join(import.meta.dir, "../../🚪️io/🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).authoredJson;
+  const source=structuredClone(law.source);
+  const geometry=new BufferGeometry();
+  geometry.setAttribute("position", new Float32BufferAttribute(source.vertices.flat(),3));
+  source.textures.tex.bytes=Array.from({length:law.textureRepeat},()=>source.textures.tex.bytes).flat();
+  const decoded=JSON.parse(JSON.stringify(source));
+  expect(decoded.vertices[0][0]).toBe(law.coordinate);
+  expect(Math.fround(decoded.vertices[0][0])).toBe(geometry.getAttribute("position").getX(0));
+  for(const key of ["faces","attributes","materials","surface"])expect(decoded[key]).toEqual(law.source[key]);
+  expect(decoded.textures.tex.bytes).toHaveLength(1536);
+  expect(decoded.textures.tex.bytes.slice(-3)).toEqual(law.source.textures.tex.bytes);
+});

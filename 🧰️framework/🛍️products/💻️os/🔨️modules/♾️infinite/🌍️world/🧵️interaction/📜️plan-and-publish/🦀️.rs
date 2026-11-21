@@ -13,12 +13,10 @@ use super::*;
  * bounded intent queue nothing once the hover is clear (React's canvas receives no move at all while
  * the pointer is over a DOM layer above it). */
 pub fn world3d_hover_is_published(selection_state: &WorldSelectionState) -> bool {
-    selection_state.local_hover_id.is_some() || selection_state.hovered_vortex_id.is_some() || selection_state.hovered_component_id.is_some() || selection_state.hovered_component_object_id.is_some() || selection_state.hovered_component_mode.is_some()
+    selection_state.has_published_pointer_instance_hover() || selection_state.hovered_vortex_id.is_some() || selection_state.hovered_component_id.is_some() || selection_state.hovered_component_object_id.is_some() || selection_state.hovered_component_mode.is_some()
 }
 
-/** 🚪️ Whether this surface OWES a hover clear that nothing has been enqueued for yet — the exact
- * predicate a per-FRAME caller must ask, as opposed to the per-EVENT
- * [`world3d_hover_is_published`] the renderer's move path asks.
+/** 🚪️ Whether this surface owes a pointer leave for its published or queued hover.
  *
  * 🩸️ Without the queued term, a frame-driven clear re-enqueues one leave per frame: the published
  * hover only goes clear when the leave is ANSWERED, and while the leave sits behind the rest of the
@@ -27,7 +25,14 @@ pub fn world3d_hover_is_published(selection_state: &WorldSelectionState) -> bool
  * `bounded frame input action authority faulted` and a dead page
  * (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `🗑️generated/w13c-parity-run-20`). */
 pub fn world3d_hover_clear_is_owed(selection_state: &WorldSelectionState, authority_state: &WorldAuthorityState) -> bool {
-    world3d_hover_is_published(selection_state) && authority_state.interaction_authority.as_ref().is_some_and(|authority| !authority.queue.holds_pointer_leave() && !authority.blocked.is_some_and(|intent| intent.phase == WorldInteractionPhase::PointerLeave))
+    let Some(authority) = authority_state.interaction_authority.as_ref() else { return false };
+    let queued = authority.blocked.filter(|intent| matches!(intent.phase, WorldInteractionPhase::PointerMove | WorldInteractionPhase::PointerLeave))
+        .map(|intent| intent.phase).or_else(|| authority.queue.latest_hover_boundary());
+    match queued {
+        Some(WorldInteractionPhase::PointerLeave) => false,
+        Some(WorldInteractionPhase::PointerMove) => true,
+        _ => selection_state.local_instance_hover || world3d_hover_is_published(selection_state),
+    }
 }
 
 /** 🚪️ The clear a [`WorldInteractionPhase::PointerLeave`] owes, in whichever hover lane this
@@ -54,13 +59,16 @@ pub(super) fn plan_world3d_pointer_leave(session_state: &WorldSessionState, sele
         let action = WorldFlatAction { kind: WorldFlatActionKind::VortexHover, strings: [Some(controller), Some(surface), None, None, None, None, None, None], numbers: [0.0; 10] };
         return plan.push_action(action).then_some(plan);
     }
-    if selection_state.local_hover_id.is_none() && selection_state.pick_hover_key.is_none() {
+    if !selection_state.has_published_pointer_instance_hover() && selection_state.pick_hover_key.is_none() {
         return None;
     }
     let domain = plan.push_string(resolved_domain_id(session_state))?;
-    let action = WorldFlatAction { kind: WorldFlatActionKind::Hover, strings: [Some(controller), None, None, Some(domain), None, None, None, None], numbers: [0.0; 10] };
+    let mut action = WorldFlatAction { kind: WorldFlatActionKind::Hover, strings: [Some(controller), None, None, Some(domain), None, None, None, None], numbers: [0.0; 10] };
+    action.numbers[WORLD_HOVER_LEAVE] = 1.0;
     plan.push_action(action).then_some(plan)
 }
+
+const WORLD_HOVER_LEAVE: usize = 4;
 
 pub fn plan_world3d_camera_settle(session_state: &WorldSessionState, camera_state: &WorldCameraState, generation: u64) -> Option<WorldInteractionPlan> {
     if !camera_state.camera_sync.owed {
@@ -195,6 +203,23 @@ pub fn plan_world3d_paint_abort(session_state: &WorldSessionState, selection_sta
 
 pub const INTERACTION_TARGETS_EMPTY: &str = "[]";
 
+pub(super) fn plan_world3d_terrain_edit(session: &WorldSessionState, generation: u64, brush: &semio_os_infinite_world_scene::TerrainBrushAction, stroke: semio_os_infinite_world_model::WorldTerrainStroke) -> Option<WorldInteractionPlan> {
+    let [column, row] = *stroke.samples().first()?;
+    let mut plan = WorldInteractionPlan::new(session.interaction_revision, generation);
+    let controller = plan.push_string(&session.controller_id)?;
+    let action_id = plan.push_string(&brush.action)?;
+    let operation = plan.push_string(&brush.arguments.operation)?;
+    let window = plan.push_string(session.window_instance_id.as_deref().unwrap_or(&session.surface_id))?;
+    let surface = plan.push_string(&session.surface_id)?;
+    plan.terrain_stroke = Some(stroke);
+    let action = WorldFlatAction {
+        kind: WorldFlatActionKind::TerrainEdit,
+        strings: [Some(controller), Some(action_id), Some(operation), Some(window), Some(surface), None, None, None],
+        numbers: [f64::from(column), f64::from(row), f64::from(brush.arguments.radius), f64::from(brush.arguments.value), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    };
+    plan.push_action(action).then_some(plan)
+}
+
 pub(crate) fn world_interaction_targets(surface: Option<&str>, object: Option<&str>, granularity: Option<&str>, bare_id: bool) -> Result<WorldInteractionText, semio_ui_action::BoundedActionFault> {
     use std::fmt::Write;
     let mut text = WorldInteractionText::default();
@@ -249,6 +274,7 @@ pub fn publish_world3d_plan_step(
     }
     if plan.cursor == plan.action_len {
         plan.byte_len = 0;
+        plan.terrain_stroke = None;
         return Ok(WorldInteractionStep::Complete);
     }
     let action = plan.actions[usize::from(plan.cursor)].expect("world interaction action cursor remains admitted");
@@ -374,6 +400,12 @@ pub fn publish_world3d_plan_step(
             builder.end_container()?;
             reservation.publish()?;
         }
+        WorldFlatActionKind::TerrainEdit => semio_os_infinite_world_cursors::publish_world3d_terrain_edit(plan, action, input)?,
+        WorldFlatActionKind::EngagementPointerDown | WorldFlatActionKind::EngagementPointerMove => {
+            if !publish_world3d_engagement_pointer(session_state, selection_state, plan, action, input)? {
+                return Ok(WorldInteractionStep::Stale);
+            }
+        }
         WorldFlatActionKind::SurfacePlace => {
             let controller = plan.string(action.strings[0].expect("surface controller span"));
             let surface = plan.string(action.strings[1].expect("surface span"));
@@ -446,14 +478,26 @@ pub fn publish_world3d_plan_step(
             let surface = action.strings[1].map(|span| plan.string(span));
             let granularity = action.strings[4].map(|span| plan.string(span));
             let action_id = "interactionHover";
-            let targets = world_interaction_targets(surface, object, granularity, action.numbers[0] != 0.0)?;
-            let bytes = semio_ui_action::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "channel", "pointer", "targets", targets.as_str()])?;
+            let window = session_state.window_instance_id.as_deref();
+            let group = action.strings[5].map(|span| plan.string(span)).and_then(|targets| {
+                world_hover_action_string_bytes(controller, domain, targets, window).ok().map(|bytes| (targets, bytes))
+            });
+            let singleton;
+            let (targets, bytes) = match group {
+                Some(group) => group,
+                None => {
+                    singleton = world_interaction_targets(surface, object, granularity, action.numbers[0] != 0.0)?;
+                    let targets = singleton.as_str();
+                    (targets, world_hover_action_string_bytes(controller, domain, targets, window)?)
+                }
+            };
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
             builder.string(Some("domainId"), domain)?;
             builder.string(Some("channel"), "pointer")?;
-            builder.string(Some("targets"), targets.as_str())?;
+            builder.string(Some("targets"), targets)?;
+            if let Some(window) = window { builder.string(Some("windowId"), window)?; }
             builder.end_container()?;
             let sub_object = action.numbers[1] != 0.0;
             let pick_key = match (sub_object, granularity, object) {
@@ -463,20 +507,28 @@ pub fn publish_world3d_plan_step(
             let component = action.numbers[2] != 0.0;
             let component_object = action.strings[7].map(|span| plan.string(span));
             reservation.publish_with(|| {
+                selection_state.local_hover_targets = group.map(|(targets, _)| targets.to_owned());
                 if component {
                     selection_state.hovered_component_id = component_object.map(|_| (action.numbers[3] as u32).to_string());
                     selection_state.hovered_component_object_id = component_object.map(str::to_owned);
                     selection_state.hovered_component_mode = component_object.and(granularity).map(str::to_owned);
                     selection_state.pick_hover_key = pick_key;
+                    selection_state.pointer_instance_hover_published = false;
                     if component_object.is_none() { selection_state.local_hover_id = None; selection_state.local_hover_granularity_id = None; }
+                } else if action.numbers[WORLD_HOVER_LEAVE] != 0.0 {
+                    selection_state.release_instance_pointer_hover();
                 } else { match (sub_object, object) {
                     (true, Some(_)) => selection_state.pick_hover_key = pick_key,
                     (true, None) => {
+                        selection_state.local_instance_hover = true;
+                        selection_state.pointer_instance_hover_published = false;
                         selection_state.pick_hover_key = None;
                         selection_state.local_hover_id = None;
                         selection_state.local_hover_granularity_id = None;
                     }
                     (false, _) => {
+                        selection_state.local_instance_hover = true;
+                        selection_state.pointer_instance_hover_published = object.is_some();
                         selection_state.local_hover_id = object.map(str::to_owned);
                         selection_state.local_hover_granularity_id = granularity.map(str::to_owned);
                         if object.is_none() {
@@ -561,6 +613,8 @@ pub struct WorldInteractionAuthority {
     pub active: Option<WorldInteractionActive>,
     pub right_press: Option<[f32; 2]>,
     pub(crate) right_dragged: bool,
+    pub(crate) terrain_press: Option<semio_os_infinite_world_model::WorldTerrainStroke>,
+    pub(crate) engagement_press: bool,
     pub marquee: Option<WorldMarqueeGesture>,
     pub gumball: Option<WorldGumballGesture>,
     /// 🧲️ The handle drag of this surface: its pickable handles, the bindings of its node and the drag in flight.
@@ -574,7 +628,7 @@ pub struct WorldInteractionAuthority {
 
 impl Default for WorldInteractionAuthority {
     fn default() -> Self {
-        Self { queue: WorldInteractionIntentQueue::default(), blocked: None, registry: None, active: None, right_press: None, right_dragged: false, marquee: None, gumball: None, handles: WorldHandleDrag::default(), gumball_swallow: false, next_generation: 1, faulted: false, closing: false }
+        Self { queue: WorldInteractionIntentQueue::default(), blocked: None, registry: None, active: None, right_press: None, right_dragged: false, terrain_press: None, engagement_press: false, marquee: None, gumball: None, handles: WorldHandleDrag::default(), gumball_swallow: false, next_generation: 1, faulted: false, closing: false }
     }
 }
 //#endregion 🧵️WorldInteractionTransaction

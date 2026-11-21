@@ -106,8 +106,8 @@ impl LayoutExportToolJob {
 
 }
 
-impl InteractiveJob for LayoutExportToolJob {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> LayoutExportTurn<'a> {
+impl LayoutExportToolJob {
+    fn step_turn<'a>(&'a mut self, context: &mut StepContext<'_>) -> LayoutExportTurn<'a> {
         if !self.slot.settle(context)? {
             return Ok(None);
         }
@@ -161,7 +161,15 @@ impl InteractiveJob for LayoutExportToolJob {
             }
             self.completed = true;
         }
-        inner.step(context)
+        inner.step_with_drawing_read(context, None)
+    }
+}
+
+impl InteractiveJob for LayoutExportToolJob {
+    fn step<'a>(
+        &'a mut self, context: &mut StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>,
+    ) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_turn(context))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -185,7 +193,17 @@ impl InteractiveJob for LayoutExportToolJob {
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};self.begin_close();
         if let Some(inner)=self.inner.as_mut(){if !inner.terminal_is_empty(){return inner.close_step(cx).map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}}
-        if self.inner.is_none()&&self.pending_request.is_none(){if let Some(input)=self.raw_input.as_mut(){let step=input.close_step(cx)?;if input.terminal_is_empty(){self.raw_input.take();}return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}}
+        if self.inner.is_none() && self.pending_request.is_none() {
+            if let Some(input) = self.raw_input.as_mut() {
+                let step = semio_framework_job::close_original_granted_step(cx, |grant| {
+                    let result = input.close_step(grant);
+                    let work = result.as_ref().map_or(0, |step| step.progress().copied_items as u128);
+                    semio_framework_value::RetainedWorkOutcome { result, work }
+                })?;
+                if input.terminal_is_empty() { self.raw_input.take(); }
+                return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+            }
+        }
         let source_identity=(cx.operation(),cx.generation());let demand=self.close_demand()?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{
             use semio_framework_value::RetirementPollExit as Exit;
             let result=(||->Result<RetainedCloneStep,Exit>{

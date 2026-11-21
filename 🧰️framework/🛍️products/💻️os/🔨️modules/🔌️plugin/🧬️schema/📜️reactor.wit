@@ -17,7 +17,7 @@ package semio:framework@1.0.0;
 interface reactor {
   use types.{plugin-error, pack, instance-id};
   use effects.{effect};
-  use events.{event};
+  use events.{event, original-media-loan};
   use ui.{ui-patch};
   use instance-lifetime.{lifetime, receipt, ui-patch-receipt};
 
@@ -139,7 +139,20 @@ interface reactor {
     item-count: u32,
     metadata: u32,
   }
+  enum original-media-phase { begin, page, complete, cancel }
+  enum original-media-result { retry, pending, accepted, stale, refused }
+  record original-media-ack {
+    loan: original-media-loan,
+    owner: u64,
+    seq: u64,
+    kind: u8,
+    extent: u32,
+    phase: original-media-phase,
+    page-index: option<u32>,
+    %result: original-media-result,
+  }
   record command-ingress-status {
+    original-media-ack: option<original-media-ack>,
     kind: u8,
     cursor: command-page-cursor,
     fault: list<u8>,

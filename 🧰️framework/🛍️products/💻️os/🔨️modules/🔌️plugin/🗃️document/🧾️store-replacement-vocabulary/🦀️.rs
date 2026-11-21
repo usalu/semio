@@ -37,8 +37,6 @@ pub(super) struct ArtifactStoreRefusalCode {
 }
 
 impl ArtifactStoreRefusalCode {
-    pub const EMPTY: Self = Self { bytes: [0; 96], len: 0 };
-
     pub(super) fn from_page(page: &[u8]) -> Self {
         let mut bytes = [0u8; 96];
         let len = page.len().min(bytes.len());
@@ -49,6 +47,12 @@ impl ArtifactStoreRefusalCode {
     pub fn text(&self) -> &str {
         std::str::from_utf8(&self.bytes[..self.len as usize]).unwrap_or("<non-utf8 refusal page>")
     }
+}
+
+pub(super) enum StoreInitializerOutcome {
+    Candidate,
+    Failed(ArtifactStoreRefusalCode),
+    Continuation(ArtifactStoreRefusalCode),
 }
 
 #[doc(hidden)]
@@ -183,7 +187,7 @@ where
     pub session: ManuallyDrop<Option<semio_framework_job_worker::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
     pub session_rejected: ManuallyDrop<Option<semio_plugin_ownership::reserved_job_session::RefusedWorkerSource<ArtifactStoreInitializationJob<P, Mutation>>>>,
     pub outcome_pending: bool,
-    pub(super) outcome_terminal: Option<(u8, ArtifactStoreRefusalCode)>,
+    pub(super) outcome_terminal: Option<StoreInitializerOutcome>,
     pub terminal_target: Option<ActiveArtifactStoreReplacementState>,
     pub resume_pending: bool,
     pub(super) initializer_step_demand: RetirementDemand,

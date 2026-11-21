@@ -1,7 +1,7 @@
 //! 🧱️ Handwritten complete envelope, window, layer, material-segment and bridge entities.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::Din4108Snapshot;
-use crate::{EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
+use crate::{CaseNumber, CaseRow, CaseText, EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
 use semio_s_plugin_norm_compliance::ClimateZoneDe;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
@@ -15,6 +15,7 @@ const ELEMENT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(6),FloatColumn::Bina
 const LAYER_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8)];
 const SEGMENT_FLOATS:&[FloatColumn]=LAYER_FLOATS;
 const BRIDGE_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(4),FloatColumn::Binary64(5)];
+const CASE_NUMBER:&[FloatColumn]=&[FloatColumn::Binary64(4)];
 type Entities<'a>=BTreeMap<i64,FloatRow<'a>>;
 type Groups<'a>=BTreeMap<i64,Vec<FloatRow<'a>>>;
 
@@ -33,22 +34,54 @@ impl Din4108Snapshot {
         for(position,z)in self.zones.iter().enumerate(){let zone=out.insert_float("din4108_zone",&[Cell::Integer(1),ordinal(position)?,Cell::Text(&z.id),Cell::Real(z.floor_area_m2),Cell::Text(&z.heaviness),Cell::Text(&z.night_ventilation)],ZONE_FLOATS)?;for(index,w)in z.windows.iter().enumerate(){out.insert_float("din4108_window",&[Cell::Integer(zone),ordinal(index)?,Cell::Text(&w.id),Cell::Text(&w.orientation),Cell::Real(w.inclination_deg),Cell::Real(w.area_m2),Cell::Real(w.g_value),Cell::Real(w.shading_fc)],WINDOW_FLOATS)?;}}
         for(position,e)in self.elements.iter().enumerate(){let element=out.insert_float("din4108_element",&[Cell::Integer(1),ordinal(position)?,Cell::Text(&e.id),Cell::Text(&e.kind),Cell::Text(&e.zone_id),Cell::Real(e.orientation_deg),Cell::Real(e.inclination_deg),Cell::Text(&e.adjacent),Cell::Real(e.area_m2),Cell::Real(e.delta_u_g),Cell::Real(e.delta_u_f),Cell::Real(e.delta_u_r)],ELEMENT_FLOATS)?;for(index,l)in e.layers.iter().enumerate(){let layer=out.insert_float("din4108_layer",&[Cell::Integer(element),ordinal(index)?,Cell::Text(&l.id),Cell::Text(&l.material_id),Cell::Real(l.thickness_m),Cell::Real(l.lambda),Cell::Real(l.mu),Cell::Real(l.density),Cell::Text(&l.application_type),Cell::Text(&l.compressive_class),Cell::Text(&l.water_class),Cell::Text(&l.tensile_class),Cell::Text(&l.acoustic_class)],LAYER_FLOATS)?;for(ordinal_value,s)in l.segments.iter().enumerate(){out.insert_float("din4108_segment",&[Cell::Integer(layer),ordinal(ordinal_value)?,Cell::Text(&s.id),Cell::Text(&s.material_id),Cell::Real(s.fraction),Cell::Real(s.lambda),Cell::Real(s.mu),Cell::Real(s.density)],SEGMENT_FLOATS)?;}}}
         for(position,b)in self.thermal_bridges.iter().enumerate(){out.insert_float("din4108_thermal_bridge",&[Cell::Integer(1),ordinal(position)?,Cell::Text(&b.id),Cell::Real(b.psi),Cell::Real(b.length_m),Cell::Text(&b.bb2_type)],BRIDGE_FLOATS)?;}
+        for (position, case) in self.cases.iter().enumerate() {
+            let id = out.insert_float("din4108_case", &[Cell::Integer(1), ordinal(position)?, Cell::Text(&case.id), Cell::Text(&case.label_en), Cell::Text(&case.label_de), Cell::Text(&case.entry_id)], &[])?;
+            for (index, number) in case.numbers.iter().enumerate() {
+                out.insert_float("din4108_case_number", &[Cell::Integer(id), ordinal(index)?, Cell::Text(&number.id), Cell::Real(number.value)], CASE_NUMBER)?;
+            }
+            for (index, text) in case.texts.iter().enumerate() {
+                out.insert_float("din4108_case_text", &[Cell::Integer(id), ordinal(index)?, Cell::Text(&text.id), Cell::Text(&text.value)], &[])?;
+            }
+        }
         Ok(())
     }
-    fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(Din4108Snapshot::SQLITE_SCHEMA,7,25,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
+    fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(Din4108Snapshot::SQLITE_SCHEMA,10,25,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
 }
 impl ArtifactSqliteSnapshotHost for Din4108Snapshot{
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(), &mut |record,snapshot_output,native| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control,output)}
     
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {let add=|count:usize,size:usize|count.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "Native semantic row count overflow"));let mut rows=1usize;if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{
-  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;for size in[self.zones.len(),self.elements.len(),self.thermal_bridges.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,zone)in self.zones.iter().enumerate(){rows=add(rows,zone.windows.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.zones.len())?}}for(index,element)in self.elements.iter().enumerate(){rows=add(rows,element.layers.len())?;control.check_rows(rows)?;for(index,layer)in element.layers.iter().enumerate(){rows=add(rows,layer.segments.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,element.layers.len())?}}if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.elements.len())?}}
+  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;for size in[self.zones.len(),self.elements.len(),self.thermal_bridges.len(),self.cases.len()]{rows=add(rows,size)?}control.check_rows(rows)?;for(index,zone)in self.zones.iter().enumerate(){rows=add(rows,zone.windows.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.zones.len())?}}for(index,element)in self.elements.iter().enumerate(){rows=add(rows,element.layers.len())?;control.check_rows(rows)?;for(index,layer)in element.layers.iter().enumerate(){rows=add(rows,layer.segments.len())?;control.check_rows(rows)?;if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,element.layers.len())?}}if(index+1)%256==0{control.checkpoint(SqliteSnapshotPhase::EncodeNative,index+1,self.elements.len())?}}
+  for (position, case) in self.cases.iter().enumerate() {
+      rows = add(rows, add(case.numbers.len(), case.texts.len())?)?;
+      control.check_rows(rows)?;
+      if (position + 1) % 256 == 0 {
+          control.checkpoint(SqliteSnapshotPhase::EncodeNative, position + 1, self.cases.len())?;
+      }
+  }
   self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(), &mut |native|self.__dsl_to_record_controlled(native),control,native_owner,output)}
 
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;
         let mut bound=NativeEncodingBound::file_only(control)?;bound.add(16384)?;bound.repeated(self.usage.len(),24)?;
         for zone in &self.zones{bound.add(16384)?;for text in [&zone.id,&zone.heaviness,&zone.night_ventilation]{bound.repeated(text.len(),24)?;}for window in &zone.windows{bound.add(16384)?;for text in [&window.id,&window.orientation]{bound.repeated(text.len(),24)?;}}}
         for element in &self.elements{bound.add(16384)?;for text in [&element.id,&element.kind,&element.zone_id,&element.adjacent]{bound.repeated(text.len(),24)?;}for layer in &element.layers{bound.add(16384)?;for text in [&layer.id,&layer.material_id,&layer.application_type,&layer.compressive_class,&layer.water_class,&layer.tensile_class,&layer.acoustic_class]{bound.repeated(text.len(),24)?;}for segment in &layer.segments{bound.add(16384)?;for text in [&segment.id,&segment.material_id]{bound.repeated(text.len(),24)?;}}}}
-        for bridge in &self.thermal_bridges{bound.add(16384)?;for text in [&bridge.id,&bridge.bb2_type]{bound.repeated(text.len(),24)?;}}bound.finish()
+        for bridge in &self.thermal_bridges{bound.add(16384)?;for text in [&bridge.id,&bridge.bb2_type]{bound.repeated(text.len(),24)?;}}
+        for case in &self.cases {
+            bound.add(16384)?;
+            for text in [&case.id, &case.label_en, &case.label_de, &case.entry_id] {
+                bound.repeated(text.len(), 24)?;
+            }
+            for number in &case.numbers {
+                bound.add(16384)?;
+                bound.repeated(number.id.len(), 24)?;
+            }
+            for text in &case.texts {
+                bound.add(16384)?;
+                bound.repeated(text.id.len(), 24)?;
+                bound.repeated(text.value.len(), 24)?;
+            }
+        }
+        bound.finish()
     }
 
     
@@ -65,7 +98,32 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
         let mut zones=Vec::new();for z in siblings(&zone_groups,1){checkpoint(control,zones.len(),0)?;let mut windows=Vec::new();for w in siblings(&window_groups,z.rowid){checkpoint(control,windows.len(),0)?;windows.push(ZoneWindow{id:reconstruct_text(control,w.text(3)?)?,orientation:reconstruct_text(control,w.text(4)?)?,inclination_deg:w.real(5)?,area_m2:w.real(6)?,g_value:w.real(7)?,shading_fc:w.real(8)?});}zones.push(ThermalZone{id:reconstruct_text(control,z.text(3)?)?,floor_area_m2:z.real(4)?,heaviness:reconstruct_text(control,z.text(5)?)?,night_ventilation:reconstruct_text(control,z.text(6)?)?,windows});}
         let mut elements=Vec::new();for e in siblings(&element_groups,1){checkpoint(control,elements.len(),0)?;let mut layers=Vec::new();for l in siblings(&layer_groups,e.rowid){checkpoint(control,layers.len(),0)?;let mut segments=Vec::new();for s in siblings(&segment_groups,l.rowid){checkpoint(control,segments.len(),0)?;segments.push(LayerSegment{id:reconstruct_text(control,s.text(3)?)?,material_id:reconstruct_text(control,s.text(4)?)?,fraction:s.real(5)?,lambda:s.real(6)?,mu:s.real(7)?,density:s.real(8)?});}layers.push(LayerDocument{id:reconstruct_text(control,l.text(3)?)?,material_id:reconstruct_text(control,l.text(4)?)?,thickness_m:l.real(5)?,lambda:l.real(6)?,mu:l.real(7)?,density:l.real(8)?,application_type:reconstruct_text(control,l.text(9)?)?,compressive_class:reconstruct_text(control,l.text(10)?)?,water_class:reconstruct_text(control,l.text(11)?)?,tensile_class:reconstruct_text(control,l.text(12)?)?,acoustic_class:reconstruct_text(control,l.text(13)?)?,segments});}elements.push(EnvelopeElement{id:reconstruct_text(control,e.text(3)?)?,kind:reconstruct_text(control,e.text(4)?)?,zone_id:reconstruct_text(control,e.text(5)?)?,orientation_deg:e.real(6)?,inclination_deg:e.real(7)?,adjacent:reconstruct_text(control,e.text(8)?)?,area_m2:e.real(9)?,delta_u_g:e.real(10)?,delta_u_f:e.real(11)?,delta_u_r:e.real(12)?,layers});}
         let mut thermal_bridges=Vec::new();for b in siblings(&bridge_groups,1){checkpoint(control,thermal_bridges.len(),0)?;thermal_bridges.push(ThermalBridge{id:reconstruct_text(control,b.text(3)?)?,psi:b.real(4)?,length_m:b.real(5)?,bb2_type:reconstruct_text(control,b.text(6)?)?});}
-        let snapshot=Self{climate_zone:read_climate(d.text(1)?)?,usage:reconstruct_text(control,d.text(2)?)?,t_int_c:d.real(3)?,rh_int:d.real(4)?,has_mechanical_ventilation:boolean(d,5)?,airtightness_n50:d.real(6)?,bb2_details_conform:boolean(d,7)?,zones,elements,thermal_bridges};control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)
+        let case_rows = entities(database, "din4108_case", 7, &[], control)?;
+        let case_numbers = groups(&entities(database, "din4108_case_number", 5, CASE_NUMBER, control)?, &case_rows, control)?;
+        let case_texts = groups(&entities(database, "din4108_case_text", 5, &[], control)?, &case_rows, control)?;
+        let case_groups = groups(&case_rows, &documents, control)?;
+        let mut cases = Vec::new();
+        for row in siblings(&case_groups, 1) {
+            checkpoint(control, cases.len(), case_rows.len())?;
+            let mut numbers = Vec::new();
+            for number in siblings(&case_numbers, row.rowid) {
+                checkpoint(control, numbers.len(), 0)?;
+                numbers.push(CaseNumber { id: reconstruct_text(control, number.text(3)?)?, value: number.real(4)? });
+            }
+            let mut texts = Vec::new();
+            for text in siblings(&case_texts, row.rowid) {
+                checkpoint(control, texts.len(), 0)?;
+                texts.push(CaseText { id: reconstruct_text(control, text.text(3)?)?, value: reconstruct_text(control, text.text(4)?)? });
+            }
+            cases.push(CaseRow {
+                id: reconstruct_text(control, row.text(3)?)?,
+                label_en: reconstruct_text(control, row.text(4)?)?,
+                label_de: reconstruct_text(control, row.text(5)?)?,
+                entry_id: reconstruct_text(control, row.text(6)?)?,
+                numbers, texts,
+            });
+        }
+        let snapshot=Self{climate_zone:read_climate(d.text(1)?)?,usage:reconstruct_text(control,d.text(2)?)?,t_int_c:d.real(3)?,rh_int:d.real(4)?,has_mechanical_ventilation:boolean(d,5)?,airtightness_n50:d.real(6)?,bb2_details_conform:boolean(d,7)?,zones,elements,thermal_bridges,cases};control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)
     }
 }
 

@@ -34,12 +34,12 @@ pub(crate) fn truetype_outline(
 ) -> Option<Vec<VectorSegment>> {
     let position = object.text_placement.as_ref()?;
     let codec = metrics.codec(&object.font)?;
-    let font = codec.outline_program()?;
+    let units_per_em = codec.outline_units()?;
     let pieces = text_pieces(operator?, *remaining)?;
     let mut outline_cache = HashMap::new();
     let mut segments = Vec::new();
     let size = object.font_size;
-    let scale = size / f64::from(font.units_per_em);
+    let scale = size / f64::from(units_per_em);
     let mut displacement = 0.0;
     let mut first = true;
     for piece in pieces {
@@ -56,7 +56,7 @@ pub(crate) fn truetype_outline(
         };
         for glyph in glyphs {
             first = false;
-            let outline = outline_cache.entry(glyph.glyph_id.unwrap_or(0)).or_insert_with_key(|&id| font.glyph_outline(id));
+            let outline = outline_cache.entry(glyph.glyph_id.unwrap_or(0)).or_insert_with_key(|&id| codec.glyph_outline(id));
             let outline = outline.as_ref()?;
             *remaining = remaining.checked_sub(outline.len() + 1)?;
             append_outline(&mut segments, outline, scale, displacement, &map);
@@ -85,6 +85,7 @@ fn append_outline(output: &mut Vec<VectorSegment>, outline: &[TrueTypeOutlineSeg
                 current = end;
                 VectorSegment::Cubic { first, second, end }
             }
+            CubicTo { first, second, to } => { current = point(to); VectorSegment::Cubic { first: point(first), second: point(second), end: current } }
             Close => { current = start; VectorSegment::Close }
         });
     }

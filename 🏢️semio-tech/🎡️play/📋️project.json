@@ -313,6 +313,23 @@
             },
             "jobs": [
               {
+                "id": "stdio-catalog-definition",
+                "root": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+                "command": [
+                  "repo",
+                  "./📜️script.ts",
+                  "composition",
+                  "prepare-catalog-definition"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "workerProtocol": "reserved",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
                 "id": "describe-tool",
                 "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
                 "command": [

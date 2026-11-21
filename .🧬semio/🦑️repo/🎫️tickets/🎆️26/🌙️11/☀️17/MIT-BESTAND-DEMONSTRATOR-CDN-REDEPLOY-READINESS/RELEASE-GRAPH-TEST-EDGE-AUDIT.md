@@ -1,0 +1,18 @@
+# Release Graph Test Edge Audit
+
+Scope: read-only inspection of `.cache/b/r/m/components/runs/wakSUm7/l/unit-graph-release-00.json` and representative first-party manifests and Rust sources. No builds or graph mutations. This is one component graph, not a measurement of all 32 builds.
+
+## Findings
+
+The graph has 1,469 reachable units rooted at `semio_hub_demonstrator_component`, including release `build` units named `*_tests`. Names alone do not imply removable test dependencies. The curation root [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs] re-exports `artifact_kind`, `SourcingApplication`, and production modules from its tests crate (lines 38–40, 56, 102, 172). The GIS root [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs] re-exports inference, editor, viewer, and host from its tests crate (lines 52, 312, 335, 358); its editor and viewer mirror files also use it. Deflate root [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️.rs] re-exports contribution, declaration, IO, and viewer from its tests crate (lines 34–40, 74–77, 116). Moving these to dev-dependencies would break production compilation; a structural refactor would first relocate production ownership.
+
+High-confidence unused direct extern candidates, subject to normal compile/test validation:
+
+- XML artifact [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust/Cargo.toml] line 27 lists `semio-s-artifact-stdio-xml-tests-3` under dependencies. Its complete root source [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs] contains no reference to this extern; its only direct graph dependent is the XML artifact. The test crate [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust/🦀️.rs] exposes mostly re-exports with its actual test module cfg-gated. Remove the unused dependency, or retain as a dev-dependency only if independently needed by tests.
+- ZIP artifact [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust/Cargo.toml] line 26 lists `semio-s-artifact-stdio-zip-tests` under dependencies. Its complete root source [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs] contains no reference to this extern; its only direct graph dependent is the ZIP artifact. The test crate [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️opc/🧪️tests/🔬️unit/📦️packages/🦀️rust/🦀️.rs] gates its actual test modules with `cfg(test)`. Remove the unused dependency, or retain as a dev-dependency only if independently needed by tests.
+
+Do not remove XML `semio-s-artifact-stdio-xml-tests` merely because the root has no extern use: XML schema-2 mirror [/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/📦️packages/🦀️rust/🪞️mirror/🦀️.rs] line 50 re-exports its binary IO. XML `tests-2` is also re-exported by the XML root (lines 116, 133, 170). Both own production-facing exports.
+
+## Impact and limits
+
+Measured from the existing graph by reachability: removing only the two candidate edges would remove exactly two of its 1,469 units; all their other dependencies remain reachable. This is graph structure, not observed compile time, and does not establish material latency savings or an effect across all 32 graphs. No build, runtime, cache, or benchmark was performed. Recommendation: treat these as small cleanup candidates, not a demonstrated throughput fix; profile actual release timings and address broader production dependency topology separately.

@@ -29,7 +29,7 @@ impl<M:RetireOwned+Send+Sync+'static> ArtifactOriginalEditMessage<M>{
     pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.closing{return self.close_demands(body)}
         let mut d=match self.phase{
-            0=>match self.admission.as_ref(){Some(admission)=>match admission.phase(){"ready"=>header::<Option<RetainedCloneSource<Box<Edit<M>>>>>(),"projectionStart"=>admission.owned_projection_demand()?,_=>admission.next_demand()?},None=>retained_alias_demand(self.edit_ref()?)?},
+            0=>match self.admission.as_ref(){Some(admission)=>match admission.phase(){"ready"=>admission.take_output_demand(),"projectionStart"=>admission.owned_projection_demand()?,_=>admission.next_demand()?},None=>retained_alias_demand(self.edit_ref()?)?},
             1=>{let mut d=ArtifactOriginalEditWire::<M>::birth_demands();d.capacity_bytes+=size_of::<ArtifactOriginalEditWire<M>>();d.copy_bytes+=size_of::<Option<Box<ArtifactOriginalEditWire<M>>>>();d},
             2=>self.writer.as_ref().ok_or_else(invalid)?.demands(body)?,
             3=>self.source.as_ref().ok_or_else(invalid)?.next_take_demand(body)?,
@@ -56,7 +56,11 @@ impl<M:RetireOwned+Send+Sync+'static> ArtifactOriginalEditMessage<M>{
     }
     pub fn begin_close(&mut self){self.closing=true;if let Some(writer)=self.writer.as_mut(){writer.begin_close()}}
     pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if let Some(admission)=self.admission.as_ref(){return admission.next_return_demand()}
+        if let Some(admission)=self.admission.as_ref(){return match admission.phase(){
+            "ready"=>Ok(admission.take_output_demand()),
+            "leaseInitialize"|"leasePublish"|"leaseFinish"|"publication"=>Ok(admission.discard_projection_demand()),
+            _=>admission.next_return_demand(),
+        }}
         if let Some(writer)=self.writer.as_ref(){return if writer.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<ArtifactOriginalEditWire<M>>(),..header::<Option<Box<ArtifactOriginalEditWire<M>>>>()})}else{writer.close_demands(body)}}
         if let Some(owner)=self.projection.as_ref(){return if owner.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<Edit<M>>>>())}else{owner.next_close_demand(body)}}
         if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<Box<Edit<M>>>>>())}else{source.next_close_demand(body)}}
@@ -65,7 +69,13 @@ impl<M:RetireOwned+Send+Sync+'static> ArtifactOriginalEditMessage<M>{
     pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
         let grant=effect.grant();if !self.closing{return Err(invalid())}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
         let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()};
-        if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((edit,()))=returned{*self.returned=Some(edit);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()))}
+        if let Some(admission)=self.admission.as_mut(){
+            match admission.phase(){
+                "ready"=>{let step=admission.take_output(&mut self.source,effect).result?;if admission.terminal_is_empty(){self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));},
+                "leaseInitialize"|"leasePublish"|"leaseFinish"|"publication"=>return admission.discard_projection(effect).result.map(|step|RetainedCloneStep::Progress(step.progress())),
+                _=>{},
+            }
+            let mut returned=None;let turn=admission.return_inputs(&mut returned,effect);if let Some((edit,()))=returned{*self.returned=Some(edit);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()))}
         if let Some(writer)=self.writer.as_mut(){if !writer.terminal_is_empty(){return writer.close_step(effect).map(|step|RetainedCloneStep::Progress(step.progress()))}drop(self.writer.take());return Ok(RetainedCloneStep::Progress(p))}
         if let Some(owner)=self.projection.as_mut(){if !owner.terminal_is_empty(){return completed(owner.close_step(body,effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}self.projection.take();return Ok(RetainedCloneStep::Progress(p))}
         if let Some(source)=self.source.as_mut(){if !source.terminal_is_empty(){return completed(source.close_step(body,effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}self.source.take();return Ok(RetainedCloneStep::Progress(p))}

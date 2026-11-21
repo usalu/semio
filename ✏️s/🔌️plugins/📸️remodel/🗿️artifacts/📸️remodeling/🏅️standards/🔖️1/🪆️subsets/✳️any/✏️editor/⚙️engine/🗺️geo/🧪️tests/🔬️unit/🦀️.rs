@@ -219,6 +219,7 @@ fn quality_report_populates_sane_fields_from_real_sfm_output() {
     let points = scene.points_world;
     let recon_cameras: Vec<(usize, CameraPose)> = scene.cameras.iter().enumerate().map(|(i, &(_, pose))| (i, pose)).collect();
     let intrinsics = scene.cameras[0].0;
+    let intrinsics = recon_cameras.iter().map(|&(frame, _)| (frame, intrinsics)).collect();
     let recon = Reconstruction { cameras: recon_cameras, points: points.clone(), point_track_ids: (0..points.len()).collect(), intrinsics };
 
     let observations: Vec<(usize, usize, [f64; 2])> = scene_obs.iter().map(|o| (o.camera_index, o.point_index, o.pixel)).collect();

@@ -8,7 +8,9 @@ fn original_output_birth_quote_matches_neutral_slot_bounds(){
   assert_eq!(demand.is_ok(),row["accepted"].as_bool().unwrap());
   if let Ok(demand)=demand{
    let slots=row["slots"].as_u64().unwrap()as usize;
-   assert_eq!(demand,RetirementDemand{copy_bytes:size_of::<ArtifactOutputChunks>(),capacity_bytes:slots*size_of::<Vec<u8>>()+semio_framework_value::shared_retirement_allocation_bytes::<ArtifactOutputChunksInner>(),depth:1,..Default::default()});
+   let table=slots.div_ceil(64)*size_of::<Vec<Option<Vec<u8>>>>()+if slots<=64 { slots*size_of::<Option<Vec<u8>>>() } else { 0 };
+   assert_eq!(demand,RetirementDemand{copy_bytes:size_of::<ArtifactOutputChunks>()+table,capacity_bytes:table+semio_framework_value::shared_retirement_allocation_bytes::<ArtifactOutputChunksInner>(),depth:1,..Default::default()});
+   assert!(demand.capacity_bytes<4096);
   }
  }
 }

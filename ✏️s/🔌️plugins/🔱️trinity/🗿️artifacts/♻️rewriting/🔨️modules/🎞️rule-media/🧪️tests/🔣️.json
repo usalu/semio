@@ -1,0 +1,14 @@
+{
+  "rule": {
+    "name": "Rename parts",
+    "lhs": {"pattern": {"leftVar": "part", "leftKind": "Part"}},
+    "rhs": {
+      "create": [],
+      "delete": [],
+      "set": [{"var": "part", "prop": "label", "value": "$label"}],
+      "merge": [],
+      "parameters": [{"name": "label", "kind": "string", "default": "Part"}]
+    }
+  },
+  "bindings": {"label": "Part \"A\" \\ B"}
+}

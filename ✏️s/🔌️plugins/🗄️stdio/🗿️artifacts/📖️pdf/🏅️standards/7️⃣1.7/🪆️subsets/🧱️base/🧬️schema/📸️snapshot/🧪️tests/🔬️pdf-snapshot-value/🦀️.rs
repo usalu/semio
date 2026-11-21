@@ -171,15 +171,42 @@ fn genuine_pdf_paged_snapshot_export_matches_reference_pack_and_digest() {
     let view = || snapshot.native_pack_source().unwrap();
     let original_identity = view().source.projection_identity();
     let reference = (PdfSnapshot::reference_snapshot_codec().unwrap().encode)(&snapshot).unwrap();
-    let mut caller = OriginalWorkFixture::new();
-    let grant = RetainedCloneGrant { maximum_items: 1,..OriginalWorkFixture::stock() };
+    const MAX_TURNS: usize = 2_000_000;
+    let stock = RetainedCloneGrant { maximum_items: 2 * MAX_TURNS, ..OriginalWorkFixture::stock() };
+    let mut caller = OriginalWorkFixture::with_source(
+        semio_plugin::__job::OperationId(991), semio_plugin::__job::Generation(17),
+        stock, || Some(1), u64::MAX, 4 * MAX_TURNS as u64,
+    );
+    let mut decoder_ready = false;
+    for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        decoder_ready = caller.turn(stock, |cx| {
+            let mut outcome = None;
+            if !cx.with_native_receiving(&mut outcome, |_, _| Ok(()))? { return Ok(false) }
+            let outcome = outcome.expect("snapshot export receives its original decoder");
+            assert!(outcome.source_refusal.is_none() && outcome.call.is_ok());
+            cx.settle_receiving_scope()?;
+            Ok(cx.native_receiving_identity().is_some())
+        }).unwrap();
+        if decoder_ready { break }
+    }
+    assert!(decoder_ready, "snapshot export requires a settled decoder");
+    let grant = RetainedCloneGrant { maximum_items: 1, ..stock };
     let mut export = None;
     assert!(caller.turn(grant,|cx|Export::admit(view(),17,reference.len(),cx,&mut export)).unwrap());
 
-    for _ in 0..1_000_000 {
+    for turn in 0..MAX_TURNS {
         let exporter = export.as_mut().unwrap();
         if exporter.ready() { break; }
-        caller.turn(grant,|cx|exporter.advance(view(),17,cx)).unwrap();
+        let demand = exporter.advance_demands().unwrap();
+        caller.turn(grant,|cx| {
+            let loan = cx.retained_grant();
+            let fuel = cx.fuel_remaining();
+            let before = cx.retained_progress();
+            let ready = exporter.advance(view(),17,cx)?;
+            assert!(ready || cx.retained_progress() != before || cx.fuel_remaining() < fuel,
+                "PDF Pack export stalled on turn {turn} with {fuel} fuel, demand {demand:?}, and loan {loan:?}");
+            Ok(())
+        }).unwrap();
     }
     assert_eq!(view().source.projection_identity(),original_identity);
     let exporter = export.as_mut().unwrap();
@@ -203,4 +230,97 @@ fn genuine_pdf_paged_snapshot_export_matches_reference_pack_and_digest() {
         Ok(())
     }).unwrap();
     assert!(export.is_none());
+    caller.finish();
+}
+
+#[test]
+fn controlled_annotations_match_cold_lift_and_retain_partial_pages() {
+    use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::{
+        io::text::snapshot::retained_text::admit_retained_text,
+        modules::{
+            lexer::{parse_indirect_at, CosGrant},
+            lift::{lift_document, ControlledLiftBarrier, ControlledLiftEvent, DocumentLiftCursor},
+        },
+        schema::graph_source::GraphSource,
+    };
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📌️controlled-annotations/🔣️.json")).unwrap();
+    let mut objects: Vec<_> = fixture["objects"].as_array().unwrap().iter().map(|row| {
+        let authored = format!("{} {} obj\n{}\nendobj\n", row[0], row[1], row[2].as_str().unwrap());
+        let (id, value) = parse_indirect_at(authored.as_bytes(), 0).unwrap();
+        PdfIndirectObject { id, value }
+    }).collect();
+    let mut root = [PdfDictEntry::new("Root", PdfObject::Ref(objects[0].id))];
+    admit_retained_text(&mut objects, &mut root, |id| (1..=8).contains(&id.num).then(|| id.num as usize - 1)).unwrap();
+    let cold = lift_document(&root, "1.7", &mut GraphSource::new(&objects)).unwrap();
+    assert_eq!(cold.pages.iter().map(|page| page.annotations.len()).collect::<Vec<_>>(), [2, 1]);
+    assert_eq!(cold.pages[0].annotations[0].contents.as_deref(), fixture["expected"]["note"]["contents"].as_str());
+    assert_eq!(cold.pages[0].annotations[0].name.as_deref(), fixture["expected"]["note"]["name"].as_str());
+
+    for mode in ["complete", "cancel", "appearance"] {
+        let mut graph = objects.clone();
+        if mode == "appearance" {
+            let PdfObject::Dict(entries) = &mut graph[5].value else { panic!("link dictionary"); };
+            entries.push(PdfDictEntry::new("AP", PdfObject::Dict(Vec::new())));
+        }
+        let expected = graph.clone();
+        let mut graph = BorrowedAnnotationGraph(graph);
+        let mut cursor = DocumentLiftCursor::controlled();
+        let mut grant = CosGrant { work: 1, ..Default::default() };
+        let mut events = 0;
+        let mut note_granted = false;
+        let mut slots_granted = false;
+        let mut ended = false;
+        for _ in 0..2048 {
+            let cancelled = mode == "cancel" && note_granted && grant.allocation_bytes == 0;
+            let receipt = cursor.advance(&root, "1.7", &mut graph, grant, cancelled);
+            assert!(receipt.work <= 1 && receipt.allocated_bytes <= grant.allocation_bytes && receipt.released_bytes <= grant.release_bytes);
+            match receipt.event.unwrap() {
+                ControlledLiftEvent::NeedsAllocation { bytes } => {
+                    slots_granted |= bytes == 2 * std::mem::size_of::<PdfAnnotation>();
+                    grant.allocation_bytes = bytes;
+                    assert_eq!(receipt.allocated_bytes, 0);
+                }
+                ControlledLiftEvent::NeedsRelease { bytes } => grant.release_bytes = bytes,
+                ControlledLiftEvent::More => {
+                    note_granted |= receipt.allocated_bytes == ["Review note", "review-1", "Comment", "Reviewer", "Plan"].iter().map(|s| s.len()).sum::<usize>() + 3 * std::mem::size_of::<f64>();
+                    grant.allocation_bytes = 0;
+                    grant.release_bytes = 0;
+                }
+                ControlledLiftEvent::Complete => {
+                    assert_eq!(mode, "complete");
+                    assert_eq!(cursor.take_result().unwrap(), cold);
+                    ended = true;
+                    break;
+                }
+                event @ (ControlledLiftEvent::Cancelled | ControlledLiftEvent::Deferred(ControlledLiftBarrier::Page)) => {
+                    assert_eq!(event, if mode == "cancel" { ControlledLiftEvent::Cancelled } else { ControlledLiftEvent::Deferred(ControlledLiftBarrier::Page) });
+                    assert!(cursor.take_result().is_none());
+                    let inspected = graph.0.clone();
+                    cursor.begin_close();
+                    let close = CosGrant { work: 1, allocation_bytes: 0, release_bytes: usize::MAX };
+                    while cursor.close_step(close).event != Ok(ControlledLiftEvent::Closed) {}
+                    assert_eq!(graph.0, inspected);
+                    let partial = cursor.take_partial();
+                    assert!(partial.snapshot.unwrap().pages.is_empty());
+                    assert_eq!(partial.page.unwrap().annotations, cold.pages[0].annotations[..1]);
+                    ended = true;
+                    break;
+                }
+                event => panic!("unexpected controlled annotation state {event:?}"),
+            }
+            events += receipt.work;
+        }
+        assert!(ended && slots_granted && note_granted && events > 10);
+        assert_eq!(graph.0, expected);
+    }
+}
+
+struct BorrowedAnnotationGraph(Vec<PdfIndirectObject>);
+
+impl semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::schema::graph_source::ObjectSource for BorrowedAnnotationGraph {
+    fn get(&mut self, _: ObjRef) -> Option<PdfObject> { panic!("controlled annotations must borrow PDF originals") }
+
+    fn inspect(&mut self, reference: ObjRef, read: &mut dyn FnMut(Option<&PdfObject>)) {
+        read(self.0.iter().find(|object| object.id == reference).map(|object| &object.value));
+    }
 }

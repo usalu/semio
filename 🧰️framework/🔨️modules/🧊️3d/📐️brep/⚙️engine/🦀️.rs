@@ -23,8 +23,9 @@ pub use semio_framework_3d_brep_shape_value::{ImportedShape, ShapeComponent, Sha
 pub use semio_framework_3d_brep_kernel_contract::{BrepError, BrepKernel, BrepOperation, BrepTopology, ClosestPoint, GeometryHandle, GeometryKind, SolidFaceLoops};
 use semio_framework_3d_brep_kernel_contract::map_err;
 
-pub use semio_framework_3d_brep_construction::primitives::{BoxSectionDraft, BoxSectionPolygon};
-pub use semio_framework_3d_brep_native_registry::{BoxShellDraft, HullDraft, LoftDraft, LoftPlan, PlanarExtrusion};
+pub use semio_framework_3d_brep_construction::prism_boundary::PrismBoundary;
+pub use semio_framework_3d_brep_construction::primitives::{BoxSectionDraft, SectionPolygon};
+pub use semio_framework_3d_brep_native_registry::{ShellDraft, HullDraft, LoftDraft, LoftPlan, PlanarExtrusion};
 pub use semio_framework_3d_brep_boolean::BooleanOp as BooleanOperation;
 use semio_framework_3d_brep_boolean::{boolean_job, boolean_solid, BooleanAdmission, BooleanJob, BooleanOp, BooleanProgress, BooleanStep};
 use semio_framework_3d_brep_construction::euler::make_vertex;
@@ -66,7 +67,7 @@ mod brep_session_state;
 pub use brep_session_state::{Brep, BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep};
 
 use semio_framework_3d_brep_native_registry::{analytic_arc_recipe, BrepRegistry, Entity, SolidProvenance, entity_roots, entity_tag, evec, label_of_entity, pnt, require_direction, require_finite_scalar, require_finite_vector, require_positive_size, require_scale_factor, vec3};
-pub use semio_framework_3d_brep_native_registry::{AnalyticCurveParameters, AnalyticPublication, AnalyticTransform, BooleanOperand, BooleanPreparation, BorePreviewSource, BoxFinish, HelixWireRecipe, PolygonWirePublication, PolygonWireRecipe, PolygonFacePublication, ConicFacePublication, CuboidSew, PrismDraft, SolidPublication, VertexPublication};
+pub use semio_framework_3d_brep_native_registry::{AnalyticCurveParameters, AnalyticPublication, AnalyticTransform, BooleanOperand, BooleanPreparation, CertifiedBooleanResult, BorePreviewSource, BoxFinish, HelixWireRecipe, PolygonWirePublication, PolygonWireRecipe, PolygonFacePublication, ConicFacePublication, CuboidSew, PolygonSectionSet, PrismDraft, SECTION_FACE_LIMIT, SectionPlan, SolidExchangeBoundary, SolidPublication, VertexPublication};
 
 #[path = "📮️native-publication/🦀️.rs"]
 mod native_publication;
@@ -89,6 +90,7 @@ mod boolean_transform_and_copy;
 #[path = "🔍️intersection-evaluation-and-measure/🦀️.rs"]
 mod intersection_evaluation_and_measure;
 pub use intersection_evaluation_and_measure::PlanarClosestJob;
+pub use semio_framework_3d_brep_analysis::PlanarClosestOutput;
 
 #[path = "📐️solid-pattern/🦀️.rs"]
 mod solid_pattern;

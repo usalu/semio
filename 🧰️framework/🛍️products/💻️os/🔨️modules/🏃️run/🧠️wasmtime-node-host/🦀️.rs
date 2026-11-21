@@ -191,6 +191,11 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
     }
 
+    fn retire_rejected_command_build(&mut self, operation: u64, rejected: semio_framework::kernel::RejectedCommandBuild) {
+        self.rejected_command_builds.insert_admitted(operation, rejected);
+        while !self.rejected_command_builds.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0 {}
+    }
+
     /// ⏳️ Yields to the next turn while the root is not admitted; an unchanged treasury over 65536 consecutive yields is a typed refusal, never a silent livelock.
     async fn admit_root(&self)->Result<(),RunError>{
         let mut idle=0u32;let mut last=None;
@@ -733,7 +738,16 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
     /// original position — fine while a real caller sends either an opening batch or a document batch,
     /// never both mixed in one call (today's only caller, the SDK's `OpeningCommandRelay`, never mixes
     /// them).
-    async fn exchange(&mut self, _ctx: &OperationContext, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError> {
+    async fn exchange(&mut self, ctx: &OperationContext, node: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, RunError> {
+        let check_cancellation = commands.iter().any(|command| !matches!(
+            command,
+            AppCommand::PollDocumentArchiveLoad { .. }
+                | AppCommand::CancelDocumentArchiveLoad { .. }
+                | AppCommand::AcknowledgeDocumentArchiveLoad { .. }
+        ));
+        if check_cancellation && ctx.cancel.is_cancelled_now() {
+            return Err(RunError::Cancelled);
+        }
         let mut frames = Vec::new();
         let mut passthrough = Vec::new();
         for command in commands {
@@ -783,9 +797,15 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
             let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
             for command in &passthrough {
                 let seq = app_command_seq(command);
-                let command = protocol::encode_app_command(command).await.map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
+                let command = match protocol::encode_app_command(command).await {
+                    Ok(command) => command,
+                    Err(fault) => {
+                        self.retire_rejected_command_build(operation, semio_framework::kernel::RejectedCommandBuild::from_admitted(envelopes));
+                        return Err(RunError::Host(format!("{}: {}", fault.code.0, fault.message)));
+                    }
+                };
                 if let Err((fault, rejected)) = envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance: node, seq, command }) {
-                    self.rejected_command_builds.insert_admitted(operation, semio_framework::kernel::RejectedCommandBuild::new(envelopes, rejected));
+                    self.retire_rejected_command_build(operation, semio_framework::kernel::RejectedCommandBuild::new(envelopes, rejected));
                     return Err(RunError::Host(format!("{}: {}", fault.code.0, fault.message)));
                 }
             }
@@ -793,38 +813,49 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
             let batch = match semio_framework::kernel::CommandBatch::try_new(generation, envelopes) {
                 Ok(batch) => batch,
                 Err((fault, owners)) => {
-                    self.rejected_command_builds.insert_admitted(operation, semio_framework::kernel::RejectedCommandBuild::from_admitted(owners));
+                    self.retire_rejected_command_build(operation, semio_framework::kernel::RejectedCommandBuild::from_admitted(owners));
                     return Err(RunError::Host(format!("{}: {}", fault.code.0, fault.message)));
                 }
             };
             self.retained_command_closes.insert_admitted(operation, generation, semio_framework::kernel::CommandBatchDriver::new(operation, batch));
             let mut effects = Vec::new();
-            loop {
-                let events = match self.retained_command_closes.with_driver_mut(operation, generation, |driver| driver.next_page()).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?.map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))? {
-                    Some((cursor, bytes)) => vec![Event::CommandIngressPage { cursor, bytes }],
-                    None => vec![Event::Wake],
-                };
-                self.retained_command_closes.prepare_suspend(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
-                let turn = self.run_turn(actor, events).await?;
-                self.retained_command_closes.resume(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
-                let progress = self
-                    .retained_command_closes
-                    .with_driver_mut(operation, generation, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
-                    .map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?
-                    .map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
-                effects.extend(turn.effects);
-                match progress {
-                    semio_framework::kernel::CommandBatchProgress::Complete => {
-                        self.retained_command_closes.remove_terminal(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
-                        break;
+            let completion = async {
+                let mut command_boundary = true;
+                loop {
+                    if command_boundary && check_cancellation && ctx.cancel.is_cancelled_now() {
+                        return Err(RunError::Cancelled);
                     }
-                    semio_framework::kernel::CommandBatchProgress::Faulted => {
-                        self.retained_command_closes.begin_close(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
-                        let (complete, _, _) = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
-                        return Err(RunError::Host(if complete { "command ingress faulted after terminal exact-owner cleanup".to_string() } else { "command ingress faulted; retained owner closed one exact page and awaits retry".to_string() }));
+                    let events = match self.retained_command_closes.with_driver_mut(operation, generation, |driver| driver.next_page()).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?.map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))? {
+                        Some((cursor, bytes)) => vec![Event::CommandIngressPage { cursor, bytes }],
+                        None => vec![Event::Wake],
+                    };
+                    self.retained_command_closes.prepare_suspend(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
+                    let turn = self.run_turn(actor, events).await?;
+                    self.retained_command_closes.resume(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
+                    command_boundary = matches!(turn.command_ingress, semio_framework::kernel::CommandIngressStatus::CommandComplete(_));
+                    let progress = self
+                        .retained_command_closes
+                        .with_driver_mut(operation, generation, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
+                        .map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?
+                        .map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
+                    effects.extend(turn.effects);
+                    match progress {
+                        semio_framework::kernel::CommandBatchProgress::Complete => {
+                            self.retained_command_closes.remove_terminal(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
+                            return Ok(());
+                        }
+                        semio_framework::kernel::CommandBatchProgress::Faulted => {
+                            return Err(RunError::Host("command ingress faulted".to_string()));
+                        }
+                        semio_framework::kernel::CommandBatchProgress::PageReady | semio_framework::kernel::CommandBatchProgress::Waiting => {}
                     }
-                    semio_framework::kernel::CommandBatchProgress::PageReady | semio_framework::kernel::CommandBatchProgress::Waiting => {}
                 }
+            }
+            .await;
+            if let Err(error) = completion {
+                self.retained_command_closes.begin_close(operation, generation).map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
+                while !self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0 {}
+                return Err(error);
             }
             for effect in effects {
                 if let Effect::Respond { req, result } = effect {
@@ -844,7 +875,8 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn persistent_command_completion_port_ready() -> bool {
-    false
+    use semio_framework::kernel::{COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_PAGE_MAXIMUM_BYTES};
+    COMMAND_MAXIMUM_PAGES != 0 && COMMAND_MAXIMUM_BYTES >= COMMAND_PAGE_MAXIMUM_BYTES
 }
 
 /// 🔢️ Every `AppCommand` variant's leading `seq: u64` field, used verbatim as the kernel envelope's

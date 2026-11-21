@@ -17,7 +17,7 @@ import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/�
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { interactiveActiveFillClass, interactiveControlTransitionClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { useUiDriverDragSurface, useNativeDragArm } from "../🚗️UiDriver/🟦️.tsx";
-import { sharedBorderlessBoxProps } from "../🗂️WindowChrome/shared-border.ts";
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import { DragHandle } from "../🧱️DragHandle/🟦️.tsx";
 import { ContextMenuTriggerButton } from "../🖱️ContextMenu/🔘️trigger/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -29,8 +29,8 @@ import { ContextMenuTriggerButton } from "../🖱️ContextMenu/🔘️trigger/�
 /** 📊️ Private interactive table-row presentation. */
 const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
 
-/** 🔲️ Interactive rows are borderless boxes whose state silhouette is painted by the border compositor. */
-const tableRowBoxProps = { ...sharedBorderlessBoxProps, "data-shared-border-interactive": "" } as const;
+/** 🔲️ Each table band owns its bottom seam and can share it with the state outline of the next row. */
+const tableBandBorder = { "data-shared-border-frame": "", "data-shared-border-edges": "bottom", "data-shared-border-delegate": "self" } as const;
 
 /** ☑️ Private selected table-row presentation. */
 const tableRowSelectedClass = interactiveActiveFillClass;
@@ -206,7 +206,8 @@ function TableHtml5DragRow<T>({
     <tr
       className={cn(baseRowClassName, dragClassName)}
       draggable={effectiveDraggable || undefined}
-      {...(onRowClick ? tableRowBoxProps : undefined)}
+      {...tableBandBorder}
+      data-shared-border-interactive={onRowClick ? "" : undefined}
       data-active={isSelected ? "true" : undefined}
       {...restDragProps}
       onClick={(e) => {
@@ -270,7 +271,8 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
       ref={combinedRef}
       style={style}
       className={`${baseRowClassName} ${customRowClassName} ${isDragging ? "opacity-50" : ""} ${onRowClick ? "cursor-selectable" : ""}`}
-      {...(onRowClick ? tableRowBoxProps : undefined)}
+      {...tableBandBorder}
+      data-shared-border-interactive={onRowClick ? "" : undefined}
       data-active={isSelected ? "true" : undefined}
       data-shared-border-state={isOver && !isSelected ? "active" : undefined}
       {...(canDragRow && driverSurfaceDrag ? { ...attributes, ...listeners } : canDragRow ? { ...attributes } : {})}
@@ -343,6 +345,7 @@ const Table = <T,>({
   const resolvedEmptyMessage = emptyMessage ?? noDataLabel;
   const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
   const scrollAreaRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const headerRef = useSharedBorderFrameRef<HTMLTableSectionElement>();
   const [activeId, setActiveId] = reactHostPort.useState<string | null>(null);
 
   const sensors = useSensors(
@@ -440,7 +443,7 @@ const Table = <T,>({
     return (
       <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
         <table className="w-full border-collapse">
-          <thead className={cn(surfaceClass, borderNormalBottomClass, stickyHeader && "sticky top-0 z-panel", headerClassName)}>
+          <thead ref={headerRef} {...tableBandBorder} className={cn(surfaceClass, borderNormalBottomClass, stickyHeader && "sticky top-0 z-panel", headerClassName)}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
                 <th

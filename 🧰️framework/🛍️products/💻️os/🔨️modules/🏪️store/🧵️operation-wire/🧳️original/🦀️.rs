@@ -71,7 +71,7 @@ impl<M:Sync> ArtifactOriginalOperationBytes<M>{
         let d=self.demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
         let metadata=size_of::<usize>()*2+size_of::<u8>();let child=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-metadata,..grant};
         let p=match self.phase{
-            0 if self.offset<self.length=>{let p=self.output.append(&self.pending[self.offset..self.length],&mut effect.nested(child))?;self.offset+=p.copied_bytes;p},
+            0 if self.offset<self.length=>{let before=self.output.len();let p=self.output.append(&self.pending[self.offset..self.length],&mut effect.nested(child))?;self.offset+=self.output.len()-before;p},
             0 if !self.cursor.complete=>{let original=self.original.as_ref().ok_or_else(invalid)?.borrow()?;let source=self.wire.source(original.get()).ok_or_else(invalid)?;let step=self.cursor.advance(source,&mut self.pending,&mut effect.nested(child)).map_err(|error|error.reason)?;self.length=step.written_bytes;self.offset=0;progress(step)},
             0=>{self.phase=1;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
             1=>{let step=self.cursor.close(&mut effect.nested(child)).map_err(|error|error.reason)?;if step.complete{self.phase=2}progress(step)},

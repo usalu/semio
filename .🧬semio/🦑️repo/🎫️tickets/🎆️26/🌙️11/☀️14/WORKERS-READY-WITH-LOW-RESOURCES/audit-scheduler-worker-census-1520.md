@@ -1,0 +1,7 @@
+# Scheduler Worker Census, 15:20 UTC
+
+The scheduler published execution facts again after its observed sidecar restart. The coordinator's ordinary role-authenticated load API returned its ten current machine records at 15:20 UTC. Those records cover the coordinator and the same nine currently attesting workers. The table expires records after 15 seconds. None of g1-m04, g1-m06 or g1-m09 had an entry, confirming the lack of fresh independent scheduler evidence after the earlier query found no published endpoint. The absence does not identify a physical host or network condition. [Earlier silent-origin mirror census](audit-silent-independent-1515.md)
+
+Windows worker g1-m05 had a three-second-old load report and reported no compiler worker, with reason `no-toolchain`. Its separate Ready and replica receipts were fresh. The toolchain reason is a distinct participation gate from the workspace Ready stage, which remained running. The macOS load table included healthy idle, active refusal for resource headroom, and a transient not-registered worker. No remote work was queued in the sampled scheduler table.
+
+A complete-only graph head lookup for retained generation 259's registry, platform and exact producer implementation found no candidate in the configured fleet endpoint. This is a compatibility-scoped observation for the retained implementation. The current local pointer was still generation 260 with a null manifest. [Exact remote leaf observation](audit-exact-graph-closure-recovery.md)

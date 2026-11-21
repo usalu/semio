@@ -29,9 +29,8 @@ impl Fem3dNumericalChild {
             && self.meshed_solids.terminal_is_empty()
             && self.solid_points.terminal_is_empty()
             && self.solid_tris.terminal_is_empty()
-            && self.solid_node_ids.terminal_is_empty()
             && self.solid_node_analysis_indices.terminal_is_empty()
-            && self.rhs.terminal_is_empty()
+            && self.equation_values.terminal_is_empty()
             && self.modal_free_mass.terminal_is_empty()
     }
 
@@ -43,13 +42,13 @@ impl Fem3dNumericalChild {
         let maximum_bytes = grant.maximum_release_bytes;
         let child = RetainedCloneGrant { maximum_items: 1, ..grant };
         if self.terminal_is_empty() { return Ok(Self::close_rung((true, 0, 0))); }
-        if maximum_bytes == 0 { return Ok(Self::close_rung((false, 0, 0))); }
+        if grant.maximum_items == 0 || maximum_bytes == 0 { return Ok(Self::close_rung((false, 0, 0))); }
         if let Some(matrix) = self.rejected_pcg_matrix.as_mut() {
             let step = matrix.close_step(maximum_bytes);
             if step.0 {
                 self.rejected_pcg_matrix = None;
             }
-            return Ok(Self::close_rung((false, step.1, step.2)));
+            return Ok(Self::close_rung((false, step.1.max(1), step.2)));
         }
         if let Some(rhs) = self.rejected_pcg_rhs.as_mut() {
             let step = rhs.close_step(maximum_bytes);
@@ -62,7 +61,7 @@ impl Fem3dNumericalChild {
             0 => {
                 let Some(job) = self.mesh.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 if !job.terminal_is_empty() {
                     let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
@@ -75,7 +74,7 @@ impl Fem3dNumericalChild {
             1 => {
                 let Some(job) = self.assembly_build.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 let step = job.close_step(maximum_bytes);
                 if step.0 {
@@ -86,7 +85,7 @@ impl Fem3dNumericalChild {
             2 => {
                 let Some(job) = self.assembly.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 if !InteractiveJob::terminal_is_empty(job) {
                     let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
@@ -99,7 +98,7 @@ impl Fem3dNumericalChild {
             3 => {
                 let Some(job) = self.csr_build.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 let step = job.close_step(maximum_bytes);
                 if step.0 {
@@ -110,7 +109,7 @@ impl Fem3dNumericalChild {
             4 => {
                 let Some(job) = self.pcg_build.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 if !job.terminal_is_empty() {
                     let step = cx.with_retained_loan(child, |same| job.close_step(same))?;
@@ -123,7 +122,7 @@ impl Fem3dNumericalChild {
             5 => {
                 let Some(job) = self.pcg.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 if !job.terminal_is_empty() {
                     let step = cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same))?;
@@ -136,7 +135,7 @@ impl Fem3dNumericalChild {
             6 => {
                 let Some(job) = self.modal_build.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 let step = job.close_step(maximum_bytes);
                 if step.0 {
@@ -149,7 +148,7 @@ impl Fem3dNumericalChild {
             9 => {
                 let Some(mass) = self.modal_mass.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 let step = mass.close_step(maximum_bytes);
                 if step.0 {
@@ -160,7 +159,7 @@ impl Fem3dNumericalChild {
             10 => {
                 let Some(domain) = self.solid_domain.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 if domain.close_step() {
                     self.solid_domain = None;
@@ -171,11 +170,11 @@ impl Fem3dNumericalChild {
             }
             11 => match self.close_lane_11(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             12 => match self.close_lane_12(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
-            13 => match self.close_lane_13(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
+            13 => self.solid_node_analysis_indices.close_step(maximum_bytes),
             14 => {
                 let Some(support) = self.pending_support.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 let step = support.close_step(maximum_bytes);
                 if step.0 {
@@ -191,14 +190,14 @@ impl Fem3dNumericalChild {
                 }
                 self.solid_points.close_step(maximum_bytes)
             }
-            17 => self.rhs.close_step(maximum_bytes),
+            17 => self.equation_values.close_step(maximum_bytes),
             18 => self.modal_free_mass.close_step(maximum_bytes),
             19 => match self.close_lane_19(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             20 => match self.close_lane_20(maximum_bytes)? { std::ops::ControlFlow::Continue(value) => value, std::ops::ControlFlow::Break(step) => return Ok(step) },
             21 => {
                 let Some(model) = self.model.as_mut() else {
                     self.close_lane += 1;
-                    return Ok(Self::close_rung((false, 0, 0)));
+                    return Ok(Self::close_rung((false, 1, 0)));
                 };
                 let step = model.close_step(maximum_bytes);
                 if step.0 {
@@ -225,7 +224,7 @@ impl Fem3dNumericalChild {
         Ok(std::ops::ControlFlow::Continue({
             let Some(job) = self.ldlt.as_mut() else {
                 self.close_lane += 1;
-                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
             };
             if self.close_started_jobs & 1 == 0 {
                 job.begin_close();
@@ -251,7 +250,7 @@ impl Fem3dNumericalChild {
         Ok(std::ops::ControlFlow::Continue({
             let Some(job) = self.subspace.as_mut() else {
                 self.close_lane += 1;
-                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
             };
             if self.close_started_jobs & 2 == 0 {
                 job.begin_close();
@@ -275,21 +274,9 @@ impl Fem3dNumericalChild {
     ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
         Ok(std::ops::ControlFlow::Continue({
             if let Some(solid) = self.meshed_solids.len().checked_sub(1).and_then(|index| self.meshed_solids.get_mut(index)) {
-                if let Some(value) = solid.node_ids.len().checked_sub(1).and_then(|index| solid.node_ids.get_mut(index)) {
-                    let bytes = value.capacity();
-                    if bytes != 0 {
-                        if bytes > maximum_bytes {
-                            return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
-                        }
-                        *value = String::new();
-                        return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, bytes))));
-                    }
-                    solid.node_ids.pop();
-                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
-                }
-                let ids = solid.node_ids.close_step(maximum_bytes);
-                if !ids.0 {
-                    return Ok(std::ops::ControlFlow::Break(Self::close_rung(ids)));
+                let indices = solid.node_indices.close_step(maximum_bytes);
+                if !indices.0 {
+                    return Ok(std::ops::ControlFlow::Break(Self::close_rung(indices)));
                 }
                 let tris = solid.tris.close_step(maximum_bytes);
                 if !tris.0 {
@@ -328,32 +315,6 @@ impl Fem3dNumericalChild {
         }))
     }
 
-    /// 🧲️ Closes lane 13 of the close ladder.
-    fn close_lane_13(
-        &mut self,
-        maximum_bytes: usize,
-    ) -> Result<std::ops::ControlFlow<(bool, RetainedCloneProgress), (bool, usize, usize)>, semio_framework_job::OriginalTurnFailure> {
-        Ok(std::ops::ControlFlow::Continue({
-            if let Some(value) = self.solid_node_ids.len().checked_sub(1).and_then(|index| self.solid_node_ids.get_mut(index)) {
-                let bytes = value.capacity();
-                if bytes != 0 {
-                    if bytes > maximum_bytes {
-                        return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
-                    }
-                    *value = String::new();
-                    return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, bytes))));
-                }
-                self.solid_node_ids.pop();
-                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
-            }
-            let ids = self.solid_node_ids.close_step(maximum_bytes);
-            if !ids.0 {
-                return Ok(std::ops::ControlFlow::Break(Self::close_rung(ids)));
-            }
-            self.solid_node_analysis_indices.close_step(maximum_bytes)
-        }))
-    }
-
     /// 🪛️ Closes lane 15 of the close ladder.
     fn close_lane_15(
         &mut self,
@@ -384,7 +345,7 @@ impl Fem3dNumericalChild {
         Ok(std::ops::ControlFlow::Continue({
             let Some(element) = self.pending_element.as_mut() else {
                 self.close_lane += 1;
-                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
             };
             if let Some(bytes) = element.mounted_next_string_bytes() {
                 if bytes > maximum_bytes {
@@ -406,7 +367,7 @@ impl Fem3dNumericalChild {
         Ok(std::ops::ControlFlow::Continue({
             let Some(element) = self.pending_tet.as_mut() else {
                 self.close_lane += 1;
-                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 0, 0))));
+                return Ok(std::ops::ControlFlow::Break(Self::close_rung((false, 1, 0))));
             };
             if let Some(bytes) = element.mounted_next_string_bytes() {
                 if bytes > maximum_bytes {

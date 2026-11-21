@@ -22,7 +22,7 @@ pub struct WriteOptions {
 }
 
 /// 🧾 The trailer-level identity of a document.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct DocumentTrailer {
     pub root: ObjRef,
     pub info: Option<ObjRef>,

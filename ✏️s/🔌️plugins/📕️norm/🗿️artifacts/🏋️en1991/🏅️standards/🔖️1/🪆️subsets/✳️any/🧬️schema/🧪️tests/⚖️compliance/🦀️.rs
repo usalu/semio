@@ -57,10 +57,17 @@ async fn imposed_reduction_factors_follow_the_annex() {
     near(part_1_1::alpha_a("C1", 40.0, AnnexChoice::En), 0.75, 1e-9);
     near(part_1_1::alpha_a("C1", 10.0, AnnexChoice::En), 1.0, 1e-9);
     near(part_1_1::alpha_a("C1", 200.0, AnnexChoice::En), 0.6, 1e-9);
-    near(part_1_1::alpha_a("C1", 40.0, AnnexChoice::De), 0.5 + 10.0 / 40.0_f64.sqrt(), 1e-9);
+    near(part_1_1::alpha_a("C1", 40.0, AnnexChoice::De), 0.95, 1e-12);
+    near(part_1_1::alpha_a("B1", 40.0, AnnexChoice::De), 0.75, 1e-12);
+    near(part_1_1::alpha_a("Z", 400.0, AnnexChoice::De), 0.525, 1e-12);
+    near(part_1_1::alpha_a("E1.1", 200.0, AnnexChoice::De), 0.75, 1e-12);
+    near(part_1_1::alpha_a("E1.2", 200.0, AnnexChoice::De), 1.0, 1e-12);
     assert!((part_1_1::alpha_a("C1", 40.0, AnnexChoice::De) - part_1_1::alpha_a("C1", 40.0, AnnexChoice::En)).abs() > 1e-3);
     near(part_1_1::alpha_n("B", 5, AnnexChoice::En), 0.82, 1e-9);
     near(part_1_1::alpha_n("B1", 2, AnnexChoice::De), 1.0, 1e-12);
+    near(part_1_1::alpha_n("B1", 5, AnnexChoice::De), 0.82, 1e-12);
+    near(part_1_1::alpha_n("Z", 3, AnnexChoice::De), 0.90, 1e-12);
+    near(part_1_1::alpha_n("E1.1", 5, AnnexChoice::De), 1.0, 1e-12);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -221,7 +228,7 @@ async fn snow_drift_cap_and_cylindrical_roofs() {
 #[semio_framework_async_macros::async_test]
 async fn fire_and_execution_constants_follow_the_review() {
     near(part_1_2::alpha_c_for_curve(semio_s_artifact_norm_en1991_model::part_1_2::FireCurve::Parametric), 35.0, 1e-12);
-    near(part_1_2::characteristic_fire_load_j_m2(AnnexChoice::De, "office").expect("office"), 511e6, 1e-12);
+    near(part_1_2::characteristic_fire_load_j_m2(AnnexChoice::De, "office").expect("office"), 584e6, 1e-12);
     near(part_1_6::construction_qk_pa("storage").expect("storage"), 200.0, 1e-12);
     assert!(part_1_2::characteristic_fire_load_j_m2(AnnexChoice::De, "warehouse").is_none());
 }
@@ -234,17 +241,17 @@ async fn design_fire_load_uses_the_occupancy_fractile_of_table_e4_from_the_regis
     near(part_1_2::delta_q1(250.0), 1.50, 1e-12);
     near(part_1_2::delta_q1(10000.0), 2.13, 1e-12);
     use FireLoadBasis::{OccupancyTable, UserSpecified};
-    near(part_1_2::design_fire_load_j_m2(OccupancyTable, 420e6, AnnexChoice::De, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("office"), 511e6 * 0.8 * dq1, 1e-9);
+    near(part_1_2::design_fire_load_j_m2(OccupancyTable, 420e6, AnnexChoice::En, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("office"), 511e6 * 0.8 * dq1, 1e-9);
     near(part_1_2::design_fire_load_j_m2(OccupancyTable, 420e6, AnnexChoice::En, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("office"), 548.14e6, 1e-3);
-    near(part_1_2::design_fire_load_j_m2(OccupancyTable, 900e6, AnnexChoice::De, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("the table basis ignores the entered value"), 511e6 * 0.8 * dq1, 1e-9);
-    near(part_1_2::design_fire_load_j_m2(UserSpecified, 420e6, AnnexChoice::De, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("user value"), 420e6 * 0.8 * dq1, 1e-9);
-    near(part_1_2::design_fire_load_j_m2(UserSpecified, 900e6, AnnexChoice::De, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("the user basis needs no occupancy row"), 900e6 * 0.8 * dq1, 1e-9);
-    near(part_1_2::design_fire_load_j_m2(OccupancyTable, 100e6, AnnexChoice::De, semio_s_artifact_norm_en1991_model::FireOccupancy::Dwelling, 25.0, 1.0).expect("dwelling alias"), 948e6 * 0.8 * 1.10, 1e-9);
+    near(part_1_2::design_fire_load_j_m2(OccupancyTable, 900e6, AnnexChoice::En, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("the table basis ignores the entered value"), 511e6 * 0.8 * dq1, 1e-9);
+    near(part_1_2::design_fire_load_j_m2(UserSpecified, 420e6, AnnexChoice::En, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("user value"), 420e6 * 0.8 * dq1, 1e-9);
+    near(part_1_2::design_fire_load_j_m2(UserSpecified, 900e6, AnnexChoice::En, semio_s_artifact_norm_en1991_model::FireOccupancy::Office, 100.0, 1.0).expect("the user basis needs no occupancy row"), 900e6 * 0.8 * dq1, 1e-9);
+    near(part_1_2::design_fire_load_j_m2(OccupancyTable, 100e6, AnnexChoice::En, semio_s_artifact_norm_en1991_model::FireOccupancy::Dwelling, 25.0, 1.0).expect("dwelling alias"), 948e6 * 0.8 * 1.10, 1e-9);
     assert_eq!(part_1_2::fire_load_ndp_ids(OccupancyTable, semio_s_artifact_norm_en1991_model::FireOccupancy::Shopping), vec!["ndp.en1991.1-2.combustion-factor".to_owned(), "ndp.en1991.1-2.fire-load-fractile.shopping".to_owned()]);
     assert_eq!(part_1_2::fire_load_ndp_ids(UserSpecified, semio_s_artifact_norm_en1991_model::FireOccupancy::Shopping), vec!["ndp.en1991.1-2.combustion-factor".to_owned()]);
-    let (en, de) = part_1_2::fire_load_source(OccupancyTable, 420e6, AnnexChoice::De, semio_s_artifact_norm_en1991_model::FireOccupancy::Office).expect("source");
+    let (en, de) = part_1_2::fire_load_source(OccupancyTable, 420e6, AnnexChoice::En, semio_s_artifact_norm_en1991_model::FireOccupancy::Office).expect("source");
     assert!(en.contains("Table E.4 row \"office\"") && en.contains("511 MJ/m²") && de.contains("Tabelle E.4 Zeile"));
-    assert!(part_1_2::fire_load_source(UserSpecified, 420e6, AnnexChoice::De, semio_s_artifact_norm_en1991_model::FireOccupancy::Office).expect("source").0.contains("user-specified q_f,k = 420 MJ/m²"));
+    assert!(part_1_2::fire_load_source(UserSpecified, 420e6, AnnexChoice::En, semio_s_artifact_norm_en1991_model::FireOccupancy::Office).expect("source").0.contains("user-specified q_f,k = 420 MJ/m²"));
 }
 
 #[semio_framework_async_macros::async_test]

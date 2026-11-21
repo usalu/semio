@@ -142,7 +142,7 @@ fn the_adaptive_bands_follow_the_closed_form() {
     let Series::Band { lower, upper, .. } = series(adaptive, "category-II") else { panic!("band") };
     for (low, high) in lower.iter().zip(upper) {
         let centre = 0.33 * low.x + 18.8;
-        assert!((low.y - (centre - 3.0)).abs() < 1e-9 && (high.y - (centre + 3.0)).abs() < 1e-9);
+        assert!((low.y - (centre - 4.0)).abs() < 1e-9 && (high.y - (centre + 3.0)).abs() < 1e-9);
     }
     let running_mean = adaptive.markers.iter().find(|m| m.id == "running-mean").expect("running-mean marker");
     assert_eq!(running_mean.binding.as_ref().map(|b| b.path.as_str()), Some("thetaRmC"));
@@ -163,6 +163,26 @@ fn the_ventilation_bars_stack_persons_and_building_components() {
     assert_eq!(rates.table_twin.columns.len(), 4);
     let supplied = rates.markers.iter().find(|m| m.id == "supplied").expect("supplied marker");
     assert_eq!(supplied.binding.as_ref().map(|b| b.path.as_str()), Some("zones[id=zone-office].outdoorAirSuppliedM3H"));
+}
+
+#[test]
+fn ventilation_diagrams_show_the_hygienic_minimum_and_system_demand() {
+    let mut document = Din16798Snapshot::compliant_office();
+    document.zones[0].occupants = 10;
+    document.zones[0].floor_area_m2 = 10.0;
+    document.zones[0].comfort_category = "IV".into();
+    document.zones[0].outdoor_air_supplied_m3_h = 100.0;
+    document.vent_systems[0].design_airflow_m3_h = 100.0;
+    let report = inferences::evaluate(&document);
+    let all = diagrams(&document, &report, None);
+    let rates = all.iter().find(|d| d.id == "ventilation:zone-office").unwrap();
+    let Series::Limit { value, .. } = series(rates, "hygienic-minimum") else { panic!("minimum") };
+    assert_eq!(*value, 144.0);
+    assert_eq!(rates.table_twin.columns[1].values[3], 144.0);
+    assert_eq!(rates.markers[0].tone, scene::Tone::Error);
+    let capacity = all.iter().find(|d| d.id == "capacity:building").unwrap();
+    assert_eq!(capacity.table_twin.columns[2].values[0], 144.0);
+    assert_eq!(capacity.markers[0].tone, scene::Tone::Error);
 }
 
 #[test]
@@ -223,10 +243,11 @@ fn the_independent_oracle_agrees() {
             let adaptive = all.iter().find(|d| d.id == format!("adaptive:{}", zone.id)).expect("adaptive diagram");
             let Series::Band { lower, upper, .. } = series(adaptive, &format!("category-{}", rooms::category_name(rooms::category_number(zone)))) else { panic!("band") };
             let ventilation = all.iter().find(|d| d.id == format!("ventilation:{}", zone.id)).expect("ventilation diagram");
-            let totals = &ventilation.table_twin.columns[3].values;
+            let categories = &ventilation.table_twin.columns[0].values;
+            let totals = &ventilation.table_twin.columns[1].values;
             let co2 = all.iter().find(|d| d.id == format!("co2:{}", zone.id)).expect("co2 diagram");
             rows.push(format!(
-                "{{\"category\":{},\"annex\":\"{}\",\"usage\":\"{}\",\"pollution\":\"{}\",\"occupants\":{},\"area\":{},\"outdoor_co2\":{},\"lower\":{},\"upper\":{},\"ventilation_totals\":{:?},\"co2_limits\":{:?}}}",
+                "{{\"category\":{},\"annex\":\"{}\",\"usage\":\"{}\",\"pollution\":\"{}\",\"occupants\":{},\"area\":{},\"outdoor_co2\":{},\"lower\":{},\"upper\":{},\"ventilation_method\":\"{}\",\"ventilation_categories\":{:?},\"ventilation_totals\":{:?},\"co2_limits\":{:?}}}",
                 rooms::category_number(zone),
                 if document.annex == norm::AnnexChoice::De { "de" } else { "en" },
                 zone.usage_type,
@@ -236,6 +257,8 @@ fn the_independent_oracle_agrees() {
                 document.outdoor_co2_ppm,
                 polyline_json(lower),
                 polyline_json(upper),
+                zone.vent_method,
+                categories,
                 totals,
                 co2.table_twin.columns[1].values,
             ));

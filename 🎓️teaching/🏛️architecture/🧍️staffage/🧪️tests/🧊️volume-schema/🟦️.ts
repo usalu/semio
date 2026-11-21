@@ -18,6 +18,8 @@ import { defaultDepictionOptions, depict, loadAxonometric } from "../../🔨️m
 import { parseArguments } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { holeInside, holesOverlap, profileVerdict, segmentsMeet, volumeIssues } from "../../🔨️modules/🗂️catalog/🧊️volume/🟦️.ts";
+import { compareSolidLists } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
+import { solidOf as neutralSolid, listOf } from "../../🔨️modules/🧊️volume/🧊️solids/🟦️.ts";
 import { restFrames } from "../../🔨️modules/🦴️rig/🟦️.ts";
 import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
 import { python } from "../🧰️support/🐍️.ts";
@@ -108,6 +110,9 @@ function localBox(solid: VolumeSolid): Box {
       range(axes[2]!, solid.from, solid.to);
       break;
     }
+    case "polyhedron":
+      for (const vertex of solid.vertices) cover(vertex);
+      break;
     case "loft":
       for (const section of solid.sections) cover(section.at, [0, section.ry, section.rx]);
       break;
@@ -183,7 +188,8 @@ describe("🧊️ volume schema and rules", () => {
     expect(assetSchema(sample), JSON.stringify(assetSchema.errors?.slice(0, 3))).toBe(true);
     expect(volumeIssues(sample)).toEqual([]);
     expect(validateAsset(sample).filter((issue) => issue.code.startsWith("volume-"))).toEqual([]);
-    expect(new Set(body50(sample).map((solid) => solid.kind))).toEqual(new Set(twin.VOLUME_SOLID_KINDS));
+    const variants = [sample, ...vectors.valid.map((c) => patch(sample, c.patch) as Asset)];
+    expect(new Set(variants.flatMap((asset) => body50(asset).map((solid) => solid.kind)))).toEqual(new Set(twin.VOLUME_SOLID_KINDS));
     expect(body50(sample).some((solid) => solid.weights !== undefined && solid.repeat === undefined)).toBe(true);
     expect(body50(sample).some((solid) => solid.repeat !== undefined)).toBe(true);
   });
@@ -204,6 +210,25 @@ describe("🧊️ volume schema and rules", () => {
       expect(sample.materials.some((material) => material.id === solid.material), solid.id).toBe(true);
     }
     expect(solidOf("arm-l").kind).toBe("capsule");
+  });
+
+  it("carries an indexed shell and its list bindings through the bone-space adapter", () => {
+    const variant = vectors.valid.find((record) => record.name === "closed indexed triangular shell")!;
+    const volume = patch(sample, variant.patch).volumes["50"] as AuthoredVolume;
+    const body = volume.body.find((solid) => solid.kind === "polyhedron")!;
+    const scaled: VolumeSolid = { ...body, vertices: body.vertices.map(([x, y, z]) => [2 * x, 2 * y, 2 * z]) };
+    expect(compareSolidLists([scaled], [body], 100, 50).kind).toBe("scaled");
+    const layers: AuthoredVolume = {
+      ...volume, thermal: [{ id: "tissue", of: body.id, region: "head" }],
+      structure: [{ id: "bearing", of: body.id, member: "skull", part: "member" }],
+    };
+    for (const list of ["body", "thermal", "structure"] as const) {
+      const surface = listOf(layers, list).find((solid) => solid.kind === "polyhedron")!;
+      const solid = neutralSolid(surface, body.material);
+      expect(solid).toMatchObject({ kind: "polyhedron", vertices: body.vertices, triangles: body.triangles, node: body.bone, transform: { scale: [1, 1, -1] } });
+      if (list === "thermal") expect(solid.tags).toContain("region-head");
+      if (list === "structure") expect(solid.tags).toContain("member-skull");
+    }
   });
 
   for (const c of vectors.valid)

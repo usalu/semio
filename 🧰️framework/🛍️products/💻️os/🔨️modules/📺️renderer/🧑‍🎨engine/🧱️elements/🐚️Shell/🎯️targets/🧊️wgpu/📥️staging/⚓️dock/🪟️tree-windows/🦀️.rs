@@ -11,6 +11,7 @@ use semio_ui_wgpu_light::tree_window::{served_requests, TreeWindowRequest, TreeW
 #[derive(Clone, Debug, Default)]
 pub struct TreeWindowBodyState {
     pub open: BTreeMap<String, bool>,
+    pub form_pages: BTreeMap<String, u32>,
     pub windows: BTreeMap<String, (u32, u32)>,
     pub measured: BTreeSet<String>,
 }
@@ -43,6 +44,24 @@ pub fn tree_window_sendable_identifier(identifier: &str) -> bool {
 }
 
 impl TreeWindowScheduler {
+    /// 📄️ Stores one explicit page for its live window independently of scroll measurements.
+    pub fn set_form_page(&mut self, body: &str, window_id: &str, page: u32) {
+        if !tree_window_sendable_identifier(body) || !tree_window_sendable_identifier(window_id) {
+            return;
+        }
+        let state = self.bodies.entry(body.to_owned()).or_default();
+        if state.form_pages.get(window_id).copied().unwrap_or(0) == page {
+            return;
+        }
+        if page == 0 {
+            state.form_pages.remove(window_id);
+        } else {
+            state.form_pages.insert(window_id.to_owned(), page);
+        }
+        self.pending.insert(body.to_owned());
+        self.open_now = true;
+    }
+
     /// 🪟️ Records the user opening or closing one container (`setOpen`) — due immediately, and opening forgets what the observer
     /// last measured for it so the first-paint allowance speaks for it again.
     pub fn set_open(&mut self, body: &str, node_key: &str, open: bool) {
@@ -135,10 +154,12 @@ impl TreeWindowScheduler {
     /// identifier (empty, over 256 code points, a control character) never crosses — it would take the whole crossing down.
     pub fn view_state_fields(&self) -> (Vec<semio_framework::TreeWindowRequest>, Option<u32>) {
         let mut flattened = Vec::new();
+        let mut pages = Vec::new();
         for (body, state) in &self.bodies {
+            pages.extend(state.form_pages.iter().map(|(window_id, page)| semio_framework::TreeWindowRequest { body_key: body.clone(), node_key: window_id.clone(), open: None, offset: *page, rows: 1 }));
             let keys: BTreeSet<&String> = state.open.keys().chain(state.windows.keys()).collect();
             for key in keys {
-                if !tree_window_sendable_identifier(key) || !tree_window_sendable_identifier(body) {
+                if state.form_pages.contains_key(key) || !tree_window_sendable_identifier(key) || !tree_window_sendable_identifier(body) {
                     continue;
                 }
                 let open = state.open.get(key).copied();
@@ -147,7 +168,9 @@ impl TreeWindowScheduler {
                 flattened.push(semio_framework::TreeWindowRequest { body_key: body.clone(), node_key: key.clone(), open, offset: window.map_or(0, |(offset, _)| offset), rows });
             }
         }
-        (flattened, self.viewport_rows)
+        pages.extend(flattened);
+        pages.truncate(semio_framework::VIEW_CONTEXT_TREE_WINDOWS);
+        (pages, self.viewport_rows)
     }
 }
 

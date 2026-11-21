@@ -91,3 +91,22 @@ async fn regenerate_mutation_fixtures_when_env_set() {
     }
     assert!(regenerated > 0, "expected to regenerate at least one fixture");
 }
+
+#[test]
+fn part22_native_records_are_preserved_when_editing_catalogue_titles() {
+    use semio_s_artifact_norm_vdi3805_model::{bilingual, conforming_blatt_dataset, sync_titles_into_records};
+
+    let mut document = conforming_blatt_dataset(22);
+    let product = &mut document.catalog.products[0];
+    let original = product.records.clone();
+    product.title = bilingual("Katalogtitel", "Catalogue title");
+    sync_titles_into_records(product);
+    assert_eq!(product.records, original);
+
+    let native = serialize_native_text(&document.catalog);
+    let restored = parse_native_text(&native, document.limits).expect("read Part 22 records");
+    let product = &restored.products[0];
+    assert_eq!(product.records, original);
+    assert_eq!(product.configuration.id, "cfg.HP-12");
+    assert!(product.configuration.geometry_ref.is_none());
+}

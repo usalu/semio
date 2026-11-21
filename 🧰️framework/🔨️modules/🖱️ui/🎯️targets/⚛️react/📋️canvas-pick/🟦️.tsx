@@ -93,12 +93,23 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
   );
 }
 
+type CanvasPoint = { readonly x: number; readonly y: number };
+type CanvasPickKind = "hover" | "click";
+
 export type UseCanvasPickInteractionOptions = {
-  readonly resolveTargetsAtClient: (client: { readonly x: number; readonly y: number }) => readonly CanvasPickTarget[];
   readonly onHoverFocus: (focus: CanvasHoverFocus) => void;
   readonly onSelectTarget: (target: CanvasPickTarget, request: CanvasPickRequest) => void;
   readonly clickThresholdPx?: number;
-};
+} & (
+  | {
+      readonly resolveTargetsAtClient: (client: CanvasPoint) => readonly CanvasPickTarget[];
+      readonly resolveTargetsAtClientAsync?: never;
+    }
+  | {
+      readonly resolveTargetsAtClient?: never;
+      readonly resolveTargetsAtClientAsync: (client: CanvasPoint, signal: AbortSignal) => Promise<readonly CanvasPickTarget[]>;
+    }
+);
 
 export type CanvasPickInteraction = {
   readonly pickMenu: CanvasPickRequest | null;
@@ -107,6 +118,7 @@ export type CanvasPickInteraction = {
   readonly onCanvasPointerDown: (client: { readonly x: number; readonly y: number }) => void;
   readonly onCanvasPointerMove: (client: { readonly x: number; readonly y: number }) => void;
   readonly onCanvasPointerLeave: () => void;
+  readonly onCanvasPointerCancel: () => void;
   readonly onCanvasPointerUp: (client: { readonly x: number; readonly y: number }, modifiers?: Readonly<Record<string, boolean>>) => void;
   readonly dismissPickMenu: () => void;
   readonly onMenuHoverKey: (key: string | null) => void;
@@ -114,70 +126,96 @@ export type CanvasPickInteraction = {
 };
 
 /** 🧭️ Shared pointer routing for canvas hover (most-specific) and click disambiguation menus. */
-export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus, onSelectTarget, clickThresholdPx = 4 }: UseCanvasPickInteractionOptions): CanvasPickInteraction {
+export function useCanvasPickInteraction({ resolveTargetsAtClient, resolveTargetsAtClientAsync, onHoverFocus, onSelectTarget, clickThresholdPx = 4 }: UseCanvasPickInteractionOptions): CanvasPickInteraction {
   const [pickMenu, setPickMenu] = React.useState<CanvasPickRequest | null>(null);
   const [menuHoveredKey, setMenuHoveredKey] = React.useState<string | null>(null);
-  const pointerDownRef = React.useRef<{ readonly x: number; readonly y: number } | null>(null);
+  const pointerDownRef = React.useRef<CanvasPoint | null>(null);
+  const pendingRef = React.useRef<{ readonly kind: CanvasPickKind; readonly controller: AbortController } | null>(null);
+
+  const cancelPending = React.useCallback(() => {
+    const previous = pendingRef.current;
+    pendingRef.current = null;
+    previous?.controller.abort();
+  }, []);
+  React.useEffect(() => cancelPending, [cancelPending]);
+
+  const resolvePick = React.useCallback((client: CanvasPoint, kind: CanvasPickKind, consume: (targets: readonly CanvasPickTarget[]) => void) => {
+    cancelPending();
+    if (resolveTargetsAtClient) {
+      consume(resolveTargetsAtClient(client));
+      return;
+    }
+    if (!resolveTargetsAtClientAsync) return;
+    const request = { kind, controller: new AbortController() };
+    pendingRef.current = request;
+    void resolveTargetsAtClientAsync(client, request.controller.signal).then((targets) => {
+      if (pendingRef.current !== request) return;
+      pendingRef.current = null;
+      consume(targets);
+    }, () => {
+      if (pendingRef.current === request) pendingRef.current = null;
+    });
+  }, [cancelPending, resolveTargetsAtClient, resolveTargetsAtClientAsync]);
 
   const dismissPickMenu = React.useCallback(() => {
+    cancelPending();
     setPickMenu(null);
     setMenuHoveredKey(null);
     onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_CANVAS, null));
-  }, [onHoverFocus]);
+  }, [cancelPending, onHoverFocus]);
 
   /** 🖱️ A move with a button held is a DRAG, not a hover: the surface under the pointer is being
    * orbited, panned, marquee'd or wired, and the board that owns the gesture already tracks whatever
    * chrome the drag needs. Resolving hover here instead published a hover target per pointer move —
    * on the flow node-graph one guest `interactionHover` round trip per move, 16–18 of them in a 1 s
    * drag-pan (`📓️flow-scroll-render-perf-2026-09-15.md` §2). */
-  const onCanvasPointerMove = React.useCallback(
-    (client: { readonly x: number; readonly y: number }) => {
-      if (pickMenu) return;
-      if (pointerDownRef.current) return;
-      const targets = resolveTargetsAtClient(client);
-      const specific = pickMostSpecificCanvasTarget(targets);
-      onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_CANVAS, specific));
-    },
-    [onHoverFocus, pickMenu, resolveTargetsAtClient],
-  );
+  const onCanvasPointerMove = React.useCallback((client: CanvasPoint) => {
+    if (pickMenu || pointerDownRef.current || pendingRef.current?.kind === "click") return;
+    resolvePick(client, "hover", (targets) => {
+      onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_CANVAS, pickMostSpecificCanvasTarget(targets)));
+    });
+  }, [onHoverFocus, pickMenu, resolvePick]);
 
   const onCanvasPointerLeave = React.useCallback(() => {
     if (pickMenu) return;
+    if (pendingRef.current?.kind === "hover") cancelPending();
     onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_CANVAS, null));
-  }, [onHoverFocus, pickMenu]);
+  }, [cancelPending, onHoverFocus, pickMenu]);
 
-  const onCanvasPointerDown = React.useCallback((client: { readonly x: number; readonly y: number }) => {
+  const onCanvasPointerCancel = React.useCallback(() => {
+    pointerDownRef.current = null;
+    cancelPending();
+    if (!pickMenu) onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_CANVAS, null));
+  }, [cancelPending, onHoverFocus, pickMenu]);
+
+  const onCanvasPointerDown = React.useCallback((client: CanvasPoint) => {
+    cancelPending();
     pointerDownRef.current = client;
-  }, []);
+  }, [cancelPending]);
 
-  const onCanvasPointerUp = React.useCallback(
-    (client: { readonly x: number; readonly y: number }, modifiers: Readonly<Record<string, boolean>> = {}) => {
-      const start = pointerDownRef.current;
-      pointerDownRef.current = null;
-      if (start) {
-        const dx = client.x - start.x;
-        const dy = client.y - start.y;
-        if (Math.hypot(dx, dy) > clickThresholdPx) return;
-      }
-      const targets = resolveTargetsAtClient(client);
+  const onCanvasPointerUp = React.useCallback((client: CanvasPoint, modifiers: Readonly<Record<string, boolean>> = {}) => {
+    const start = pointerDownRef.current;
+    pointerDownRef.current = null;
+    if (start && Math.hypot(client.x - start.x, client.y - start.y) > clickThresholdPx) return;
+
+    resolvePick(client, "click", (targets) => {
       if (targets.length === 0) {
         dismissPickMenu();
         return;
       }
+      const request: CanvasPickRequest = { targets, client, modifiers };
       if (targets.length === 1) {
         dismissPickMenu();
-        onSelectTarget(targets[0]!, { targets, client, modifiers });
+        onSelectTarget(targets[0]!, request);
         return;
       }
-      const request: CanvasPickRequest = { targets, client, modifiers };
       setPickMenu(request);
       const first = sortCanvasPickTargetsGeneralFirst(targets)[0]!;
       const key = canvasPickTargetKey(first);
       setMenuHoveredKey(key);
       onHoverFocus(canvasHoverFocusFromTarget(CANVAS_HOVER_SOURCE_PICK_MENU, first));
-    },
-    [clickThresholdPx, dismissPickMenu, onHoverFocus, onSelectTarget, resolveTargetsAtClient],
-  );
+    });
+  }, [clickThresholdPx, dismissPickMenu, onHoverFocus, onSelectTarget, resolvePick]);
 
   const onMenuHoverKey = React.useCallback(
     (key: string | null) => {
@@ -204,6 +242,7 @@ export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus,
     pickMenuOpen: pickMenu !== null,
     onCanvasPointerMove,
     onCanvasPointerLeave,
+    onCanvasPointerCancel,
     onCanvasPointerUp,
     dismissPickMenu,
     onMenuHoverKey,

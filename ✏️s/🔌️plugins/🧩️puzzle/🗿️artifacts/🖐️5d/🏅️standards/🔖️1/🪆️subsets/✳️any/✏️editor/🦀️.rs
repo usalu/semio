@@ -18,59 +18,20 @@ use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::p
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 
 use crate::Puzzle5dSnapshot;
-use crate::editor::puzzle5d::commands::apply_sun;
-use crate::editor::puzzle5d::commands::cycle_brush_candidate;
-use crate::editor::puzzle5d::commands::delete_selection;
-use crate::editor::puzzle5d::commands::duplicate_selection;
-use crate::editor::puzzle5d::commands::engagement_abort;
-use crate::editor::puzzle5d::commands::engagement_control_select;
-use crate::editor::puzzle5d::commands::engagement_input;
-use crate::editor::puzzle5d::commands::engagement_repeat_last;
-use crate::editor::puzzle5d::commands::engagement_submit;
-use crate::editor::puzzle5d::commands::register_brush_mesh;
-use crate::editor::puzzle5d::commands::rotate_selection;
-use crate::editor::puzzle5d::commands::scale_selection;
-use crate::editor::puzzle5d::commands::select_same_kind;
-use crate::editor::puzzle5d::commands::set_brush_placement_contact_tolerance;
-use crate::editor::puzzle5d::commands::set_camera;
-use crate::editor::puzzle5d::commands::set_camera_2d;
-use crate::editor::puzzle5d::commands::set_camera_3d;
-use crate::editor::puzzle5d::commands::focus_selection;
-use crate::editor::puzzle5d::commands::set_fill_count;
-use crate::editor::puzzle5d::commands::set_grid_factor;
-use crate::editor::puzzle5d::commands::set_grid_snap_enabled;
-use crate::editor::puzzle5d::commands::set_kind_weight;
-use crate::editor::puzzle5d::commands::set_lod_mode;
-use crate::editor::puzzle5d::commands::set_selection_flag;
-use crate::editor::puzzle5d::commands::set_suggestion_offset;
-use crate::editor::puzzle5d::commands::target_brush_suggestions;
-use crate::editor::puzzle5d::commands::translate_selection;
-use crate::editor::puzzle5d::commands::world_relocate;
-use crate::editor::puzzle5d::commands::set_grid_spacing;
-use crate::editor::puzzle5d::commands::set_grid_visible;
-use crate::editor::puzzle5d::commands::set_grip_direction;
-use crate::editor::puzzle5d::commands::set_grip_show;
-use crate::editor::puzzle5d::commands::set_lod_automatic;
-use crate::editor::puzzle5d::commands::set_lod_depth_variable;
-use crate::editor::puzzle5d::commands::set_lod_manual;
-use crate::editor::puzzle5d::commands::set_projection;
-use crate::editor::puzzle5d::commands::set_selectable_kind;
-use crate::editor::puzzle5d::commands::set_transform_gumball_flag;
-use crate::editor::puzzle5d::commands::add_target_volume;
-use crate::editor::puzzle5d::commands::delete_target_volume;
-use crate::editor::puzzle5d::commands::relocate_target_volume;
-use crate::editor::puzzle5d::commands::set_target_volume_flag;
-use crate::editor::puzzle5d::commands::set_voxel_dims;
-use crate::editor::puzzle5d::commands::set_chunk_size;
-use crate::editor::puzzle5d::commands::set_proximity_radius;
-use crate::editor::puzzle5d::commands::accept_suggestion;
-use crate::editor::puzzle5d::commands::close_vortex_suggestions;
-use crate::editor::puzzle5d::commands::hover_suggestion;
-use crate::editor::puzzle5d::commands::open_vortex_suggestions;
-use crate::editor::puzzle5d::commands::export_snapshot;
-use crate::editor::puzzle5d::commands::import_snapshot;
-use crate::editor::puzzle5d::commands::open_add_part_dialog;
-use crate::editor::puzzle5d::commands::open_import_snapshot;
+use crate::editor::puzzle5d::commands::{
+    accept_suggestion, add_target_volume, apply_sun, close_vortex_suggestions,
+    cycle_brush_candidate, delete_selection, delete_target_volume, duplicate_selection,
+    engagement_abort, engagement_control_select, engagement_input, engagement_repeat_last,
+    engagement_submit, export_snapshot, focus_selection, hover_suggestion, import_snapshot,
+    open_add_part_dialog, open_import_snapshot, open_vortex_suggestions, register_brush_mesh,
+    relocate_target_volume, rotate_selection, scale_selection, select_same_kind,
+    set_brush_placement_contact_tolerance, set_camera, set_camera_2d, set_camera_3d, set_chunk_size,
+    set_fill_count, set_grid_factor, set_grid_snap_enabled, set_grid_spacing, set_grid_visible,
+    set_grip_direction, set_grip_show, set_kind_weight, set_lod_automatic, set_lod_depth_variable,
+    set_lod_manual, set_lod_mode, set_projection, set_proximity_radius, set_selectable_kind,
+    set_selection_flag, set_suggestion_offset, set_target_volume_flag, set_transform_gumball_flag,
+    set_voxel_dims, target_brush_suggestions, translate_selection, world_relocate,
+};
 use crate::editor::puzzle5d::config::Puzzle5dCamera2d;
 use crate::editor::puzzle5d::config::Puzzle5dConfig;
 pub use crate::editor::puzzle5d::config::Puzzle5dKindWeights;
@@ -93,70 +54,27 @@ use crate::editor::puzzle5d::terminology::puzzle5d_labels;
 use crate::editor::puzzle5d::terminology::puzzle5d_localized;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::window as window_ownership;
-use semio_plugin::kernel::ClipboardError;
-use semio_plugin::kernel::ClipboardFragment;
-use semio_plugin::kernel::Effect;
-use semio_plugin::kernel::PasteAnchor;
-use semio_plugin::kernel::PastePlacement;
-use semio_plugin::kernel::UiDirtyScope;
-use semio_plugin::ActionArgDef;
-use semio_plugin::ActionArgOption;
-use semio_plugin::ActionDefinition;
-use semio_plugin::ActionDescriptor;
-use semio_plugin::ActionKind;
-use semio_plugin::AppIo;
-use semio_plugin::ArtifactEditor;
-use semio_plugin::ArtifactOwnedToolJobFactory;
-use semio_plugin::ArtifactPresentation;
-use semio_plugin::ArtifactReservedJob;
-use semio_plugin::ArtifactReservedToolInput;
-use semio_plugin::ArtifactReservedToolJob;
-use semio_plugin::ArtifactReservedToolJobRequest;
-use semio_plugin::ArtifactToolCompletion;
-use semio_plugin::ArtifactToolFactoryRegistry;
-use semio_plugin::ArtifactToolPublicationContract;
-use semio_plugin::ArtifactToolPublicationLane;
-use semio_plugin::ArtifactView;
-use semio_plugin::ConfigView;
-use semio_plugin::DraftView;
-use semio_plugin::Editor;
-use semio_plugin::EditorApp;
-use semio_plugin::Emit;
-use semio_plugin::EphemeralEmit;
-use semio_plugin::Fault;
-use semio_plugin::DialogDefinition;
-use semio_plugin::GranularityDefinition;
-use semio_plugin::HierarchyProvider;
-use semio_plugin::HoverSpec;
-use semio_plugin::InteractionDefinition;
-use semio_plugin::InteractionRef;
-use semio_plugin::InteractionTarget;
-use semio_plugin::InteractionWrite;
-use semio_plugin::InteractiveJobClassification;
+use semio_plugin::kernel::{
+    ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement, UiDirtyScope,
+};
+use semio_plugin::{
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo,
+    ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactReservedJob,
+    ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest,
+    ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ArtifactToolPublicationLane, ArtifactView, ConfigView, DialogDefinition, DraftView, Editor,
+    EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    InteractionDefinition, InteractionRef, InteractionTarget, InteractionWrite,
+    InteractiveJobClassification,
+};
 use semio_ui_locale::Label;
 use semio_ui_locale::LocalizedLabel;
-use semio_plugin::Media;
-use semio_plugin::MediaClass;
-use semio_plugin::MediaError;
-use semio_plugin::MediaForm;
-use semio_plugin::MediaPortDirection;
-use semio_plugin::MediaPortSpec;
-use semio_plugin::MediaType;
-use semio_plugin::MergeMode;
-use semio_plugin::NoDraft;
-use semio_plugin::NoDraftMutation;
-use semio_plugin::PortMultiplicity;
-use semio_plugin::ToolRef;
-use semio_plugin::SelectionMethod;
-use semio_plugin::SelectionMode;
-use semio_plugin::SelectionSpec;
-use semio_plugin::ToolExecutionContract;
-use semio_plugin::ToolFactoryKey;
-use semio_plugin::ToolJobFactory;
-use semio_plugin::ToolJobFactoryError;
-use semio_plugin::WindowEngagement;
-use semio_plugin::WindowMeasure;
-use semio_plugin::INTERACTION_SELECT_ACTION_ID;
+use semio_plugin::{
+    INTERACTION_SELECT_ACTION_ID, Media, MediaClass, MediaError, MediaForm, MediaPortDirection,
+    MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity,
+    SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey,
+    ToolJobFactory, ToolJobFactoryError, ToolRef, WindowEngagement, WindowMeasure,
+};
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️.rs's identical import comment (missing top-level
 // re-export from `semio_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_job::InteractiveJob;

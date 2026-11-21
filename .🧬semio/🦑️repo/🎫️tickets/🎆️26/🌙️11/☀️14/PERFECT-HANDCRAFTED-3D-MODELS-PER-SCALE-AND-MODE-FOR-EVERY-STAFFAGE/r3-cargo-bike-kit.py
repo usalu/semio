@@ -306,6 +306,11 @@ class Scale:
             secs.append(s)
         return self.solid(i, "loft", bone, material, tone, role, sections=secs, capStart=caps[0], capEnd=caps[1], **extra)
 
+    def annulus(self, i, bone, profile, *args, **kw):
+        """⭕ Close the meridian on the spindle bore."""
+        assert profile[0][1] == profile[-1][1] and profile[0][1] > 0
+        return self.rev(i, bone, [*profile, profile[0]], *args, **kw)
+
     def rev(self, i, bone, profile, origin, axis, material, tone, role="body", **extra):
         """🏺 A profile of [axial, radial] revolved about a world axis through a world point."""
         return self.solid(i, "revolve", bone, material, tone, role, profile=[[r5(a), r5(b)] for a, b in profile], axis=[round(q, 6) for q in unit(locd(bone, axis))], origin=vec(loc(bone, origin)), **extra)

@@ -84,14 +84,21 @@ fn parsed(json: &str) -> Value {
 
 #[test]
 fn a_quad_fan_triangulates_into_two_triangles() {
+    let law: Value = serde_json::from_str(include_str!("🔣️mesh-color.json")).expect("mesh color fixture");
     let mut model = Model { surfaces: vec![quad(7, SurfaceClass::ExteriorWall)], ..Model::default() };
     model.name = "quad".into();
-    let (meshes_json, _) = energy_model_scene_parts(&model, &EnergySceneStyle::default());
+    model.surfaces[0].vertices_m = serde_json::from_value(law["polygon"].clone()).unwrap();
+    let rgb: [f64; 3] = serde_json::from_value(law["rgb"].clone()).unwrap();
+    let overlay = HashMap::from([(7_u32, rgb)]);
+    let (meshes_json, _) = energy_model_scene_parts(&model, &EnergySceneStyle { overlay: Some(&overlay), ..EnergySceneStyle::default() });
     let meshes = parsed(&meshes_json);
     let data = &meshes[0]["data"];
     assert_eq!(data["indices"].as_array().expect("indices").len(), 6, "a quad is exactly two triangles: {meshes_json}");
     assert_eq!(data["positions"].as_array().expect("positions").len(), 18, "three corners per triangle, three floats per corner");
-    assert_eq!(data["colors"].as_array().expect("colors").len(), 18, "one colour triple per emitted corner");
+    let colors = data["colors"].as_array().expect("colors");
+    let rgba = law["rgba"].as_array().unwrap();
+    assert_eq!(colors.len(), law["vertexCount"].as_u64().unwrap() as usize * rgba.len());
+    assert!(colors.chunks_exact(rgba.len()).all(|sample| sample.iter().zip(rgba).all(|(actual, expected)| actual.as_f64() == expected.as_f64())));
     assert_eq!(data["normals"].as_array().expect("normals").len(), 18, "one flat normal per emitted corner");
 }
 
@@ -173,6 +180,7 @@ fn selection_and_hover_publish_instance_flags_and_an_overlay_replaces_the_class_
     assert_eq!(colors[0].as_f64(), Some(1.0), "the overlay replaces the base colour: {overlay_json}");
     assert_eq!(colors[1].as_f64(), Some(0.0));
     assert_eq!(colors[2].as_f64(), Some(0.0));
+    assert_eq!(colors[3].as_f64(), Some(1.0));
 }
 
 #[test]
@@ -230,6 +238,13 @@ fn the_bestest_600_example_renders_every_surface_and_every_window() {
         assert!(ids.contains(&energy_scene_target_id(window.id).as_str()), "window {} is missing", window.id.0);
     }
     assert!(meshes_json.contains(ENERGY_SCENE_FENESTRATION_MESH_PREFIX), "the two south windows carry their own meshes");
+    for mesh in parsed(&meshes_json).as_array().expect("meshes") {
+        let data = &mesh["data"];
+        let vertices = data["positions"].as_array().expect("positions").len() / 3;
+        let colors = data["colors"].as_array().expect("colors");
+        assert_eq!(colors.len(), vertices * 4, "one RGBA colour at every vertex of {}", mesh["id"]);
+        assert!(colors.chunks_exact(4).all(|rgba| rgba[3].as_f64() == Some(1.0)));
+    }
 }
 
 //#region 🧱️ZoneVolumes
@@ -257,7 +272,7 @@ fn a_zone_of_six_box_faces_draws_one_closed_translucent_unpickable_hull() {
     let indices = hull["data"]["indices"].as_array().expect("indices").len();
     assert_eq!(indices, 36, "a box hull is 12 triangles: {hull}");
     let colors = hull["data"]["colors"].as_array().expect("colors");
-    assert_eq!(colors.len(), indices * 3, "one colour triple per emitted corner");
+    assert_eq!(colors.len(), indices * 4, "one RGBA colour per emitted corner");
     assert_eq!(colors[0].as_f64(), Some(ENERGY_SCENE_ZONE_COLOR[0]), "the zone swatch is its own");
 }
 

@@ -115,7 +115,8 @@ pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>,
                 if chrome_blueprint {
                     rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, None, Some([0.85, 0.45, 0.2, 0.9])));
                 }
-                let deferred_drawing=!proxy_band&&proxy_data_url.is_none()&&doc.background_drawing.is_some()&&link.is_some_and(|link|drawing_kind(&link.artifact_kind));
+                let deferred_drawing = !proxy_band && proxy_data_url.is_none()
+                    && link.is_some_and(|link| link_references_document_drawing(doc, link));
                 let preview = if proxy_band || proxy_data_url.is_some() || deferred_drawing { String::new() } else { link.map(|link| preview_mark(&link.artifact_kind)).unwrap_or_default() };
                 images.push(DisplayImage { drawing_bounds:deferred_drawing.then_some([bounds.x,bounds.y,bounds.width,bounds.height,bounds.rotation]), object_id: id.clone(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, rotation: bounds.rotation as f32, placeholder, proxy_data_url: proxy_data_url.clone(), preview, stack: 0 });
                 if !deferred_drawing && !proxy_band && proxy_data_url.is_none() {

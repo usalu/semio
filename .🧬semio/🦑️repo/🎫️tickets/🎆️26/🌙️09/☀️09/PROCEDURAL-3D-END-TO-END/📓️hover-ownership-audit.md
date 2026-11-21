@@ -11,3 +11,5 @@ Suggested test: enter surface A, enter B, deliver A leave after B enter, verify 
 ## Implementation and verification
 
 The shared interaction reducer now associates the current local hover with its projected window or the panel role. A leave with another window, panel role or channel keeps the published hover intact, including when both surfaces point at the same target. Document revalidation retires the ownership entry when its hover disappears. A headless clear remains available for its requested channel. Browser and WGPU event integration tests remain pending. The neutral seven-case law was expanded to ten cases to cover both orderings between the inspector and a preview window.
+
+The actual Rust ownership predicate and the independent SQLite implementation both passed all ten rows. The framework’s native source reader kept the render and stores crates within their declared limits. The integration still needs a browser or WGPU event run through the addressed action route.

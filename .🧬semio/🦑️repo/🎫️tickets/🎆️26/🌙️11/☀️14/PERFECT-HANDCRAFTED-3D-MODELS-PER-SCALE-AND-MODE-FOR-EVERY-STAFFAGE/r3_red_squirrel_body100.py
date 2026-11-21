@@ -29,9 +29,9 @@ def ear(name, sign):
 
 
 def tail():
-    """The brush in its two links, each a flattened spindle; dome about the mid-tail joint."""
-    a = [st(-7, 2.6, 2.6), st(8, 13.4, 10.8), st(36, 23, 15.6, 3.2), st(62, 26.4, 17.2, 4.6), st(85, 27, 17.5, 3)] + dome(85, 17, 27, 17.5, 3)
-    b = dome(0, -17, 27, 17.5, 3) + [st(0, 27, 17.5, 3), st(44, 26, 16.8, 2.4), st(80, 20, 13.6, 5.6), st(100, 11, 8.6, 10.4), st(109, 1.8, 1.8, 16)]
+    """The brush in its two links: thin at the root, the full plume bowed towards the back, swinging over the crown and curling back at the tip; dome about the mid-tail joint."""
+    a = [st(-7, 2.6, 2.6), st(8, 13, 10, -1), st(36, 23.5, 17, -4.5), st(64, 27, 19.5, -5), st(85, 27.5, 20, -3)] + dome(85, 20, 27.5, 20, -3)
+    b = dome(0, -20, 27.5, 20, -3) + [st(0, 27.5, 20, -3), st(36, 27.5, 20.2, -4), st(66, 24, 17.8, 0.6), st(88, 16.5, 13, 7.5), st(102, 9, 7.8, 13.2), st(109.5, 1.8, 1.8, 17)]
     return [loft("tail-1", "tail-1", TAIL, 0.3, a), loft("tail-2", "tail-2", TAIL, 0.3, b)]
 
 

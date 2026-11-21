@@ -377,7 +377,7 @@ pub struct LayoutDropPreviewState {
 }
 
 /// 📷️ Per-window camera pose shared by the exact Blueprint and Preview config owner records.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::NativeReceive, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct LayoutCamera {
     pub x: f64,
@@ -391,7 +391,7 @@ impl Default for LayoutCamera {
     }
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -406,7 +406,7 @@ pub struct LayoutRect {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -422,7 +422,7 @@ pub struct LayoutBounds {
     pub rotation: f64,
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -433,7 +433,7 @@ pub struct PageMargins {
     pub left: f64,
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -442,7 +442,7 @@ pub struct PageColumns {
     pub gutter: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -457,7 +457,7 @@ pub struct Layer {
     pub object_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(tag = "kind"))]
@@ -580,7 +580,7 @@ pub fn layer_locked(document: &LayoutSnapshot, page: &Page, layer_id: &str) -> b
     page.parent_page_id.as_ref().and_then(|id| document.parent_pages.iter().find(|parent| parent.id == *id)).is_some_and(|parent| parent.layers.iter().any(|layer| layer.id == layer_id && layer.locked))
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -597,7 +597,7 @@ pub struct TextStyleRun {
     pub character_style_id: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -611,7 +611,7 @@ pub struct TextStory {
     pub style_runs: Vec<TextStyleRun>,
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -637,7 +637,7 @@ pub struct ParagraphStyle {
 /// {@link ParagraphStyle} via {@link TextStyleRun.character_style_id}. Unlike `ParagraphStyle`,
 /// every field besides `id` is optional: a character style typically overrides only one or two
 /// attributes and inherits the rest from the paragraph it's layered onto.
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -659,7 +659,7 @@ pub struct CharacterStyle {
     pub tracking: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -686,7 +686,7 @@ pub struct ImageLink {
     pub artifact_ref: String,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -701,7 +701,7 @@ pub struct PageOverride {
     pub locked: Option<bool>,
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -720,7 +720,7 @@ pub struct ParentPage {
     pub frames: Vec<Frame>,
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -757,7 +757,7 @@ pub struct Page {
     pub background_drawing: Option<LayoutDrawingMember>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
@@ -770,10 +770,10 @@ pub struct Spread {
     pub page_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_value::SnapshotProjection)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
-#[value(deny_unknown_fields)]
+#[value(deny_unknown_fields, by_value_projection)]
 pub struct GridSettings {
     #[cfg_attr(any(test, feature = "testkit"), serde(rename = "baselineGrid"))]
     #[value(rename = "baselineGrid")]

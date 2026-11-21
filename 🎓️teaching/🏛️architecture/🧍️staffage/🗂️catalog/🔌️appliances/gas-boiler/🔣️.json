@@ -411,16 +411,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  -0.09,
-                  0.728
-                ],
-                [
-                  -0.09,
-                  0.752
-                ]
-              ],
+              "points": [[-0.09, 0.728], [-0.09, 0.752]],
               "closed": false
             },
             {
@@ -431,16 +422,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  -0.03,
-                  0.728
-                ],
-                [
-                  -0.03,
-                  0.752
-                ]
-              ],
+              "points": [[-0.03, 0.728], [-0.03, 0.752]],
               "closed": false
             },
             {
@@ -451,16 +433,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.03,
-                  0.728
-                ],
-                [
-                  0.03,
-                  0.752
-                ]
-              ],
+              "points": [[0.03, 0.728], [0.03, 0.752]],
               "closed": false
             },
             {
@@ -471,16 +444,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.09,
-                  0.728
-                ],
-                [
-                  0.09,
-                  0.752
-                ]
-              ],
+              "points": [[0.09, 0.728], [0.09, 0.752]],
               "closed": false
             },
             {
@@ -492,118 +456,34 @@
               "tone": 0.4,
               "kind": "poly",
               "points": [
-                [
-                  0.205,
-                  0.743
-                ],
-                [
-                  0.20459,
-                  0.74611
-                ],
-                [
-                  0.20339,
-                  0.749
-                ],
-                [
-                  0.20149,
-                  0.75149
-                ],
-                [
-                  0.199,
-                  0.75339
-                ],
-                [
-                  0.19611,
-                  0.75459
-                ],
-                [
-                  0.193,
-                  0.755
-                ],
-                [
-                  -0.193,
-                  0.755
-                ],
-                [
-                  -0.19611,
-                  0.75459
-                ],
-                [
-                  -0.199,
-                  0.75339
-                ],
-                [
-                  -0.20149,
-                  0.75149
-                ],
-                [
-                  -0.20339,
-                  0.749
-                ],
-                [
-                  -0.20459,
-                  0.74611
-                ],
-                [
-                  -0.205,
-                  0.743
-                ],
-                [
-                  -0.205,
-                  0.237
-                ],
-                [
-                  -0.20459,
-                  0.23389
-                ],
-                [
-                  -0.20339,
-                  0.231
-                ],
-                [
-                  -0.20149,
-                  0.22851
-                ],
-                [
-                  -0.199,
-                  0.22661
-                ],
-                [
-                  -0.19611,
-                  0.22541
-                ],
-                [
-                  -0.193,
-                  0.225
-                ],
-                [
-                  0.193,
-                  0.225
-                ],
-                [
-                  0.19611,
-                  0.22541
-                ],
-                [
-                  0.199,
-                  0.22661
-                ],
-                [
-                  0.20149,
-                  0.22851
-                ],
-                [
-                  0.20339,
-                  0.231
-                ],
-                [
-                  0.20459,
-                  0.23389
-                ],
-                [
-                  0.205,
-                  0.237
-                ]
+                [0.205, 0.743],
+                [0.20459, 0.74611],
+                [0.20339, 0.749],
+                [0.20149, 0.75149],
+                [0.199, 0.75339],
+                [0.19611, 0.75459],
+                [0.193, 0.755],
+                [-0.193, 0.755],
+                [-0.19611, 0.75459],
+                [-0.199, 0.75339],
+                [-0.20149, 0.75149],
+                [-0.20339, 0.749],
+                [-0.20459, 0.74611],
+                [-0.205, 0.743],
+                [-0.205, 0.237],
+                [-0.20459, 0.23389],
+                [-0.20339, 0.231],
+                [-0.20149, 0.22851],
+                [-0.199, 0.22661],
+                [-0.19611, 0.22541],
+                [-0.193, 0.225],
+                [0.193, 0.225],
+                [0.19611, 0.22541],
+                [0.199, 0.22661],
+                [0.20149, 0.22851],
+                [0.20339, 0.231],
+                [0.20459, 0.23389],
+                [0.205, 0.237]
               ],
               "closed": true
             },
@@ -615,16 +495,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  -0.06,
-                  0.69
-                ],
-                [
-                  0.06,
-                  0.69
-                ]
-              ],
+              "points": [[-0.06, 0.69], [0.06, 0.69]],
               "closed": false
             },
             {
@@ -635,16 +506,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  -0.04,
-                  0.675
-                ],
-                [
-                  0.04,
-                  0.675
-                ]
-              ],
+              "points": [[-0.04, 0.675], [0.04, 0.675]],
               "closed": false
             },
             {
@@ -708,44 +570,7 @@
               "filled": true,
               "tone": 0.75,
               "kind": "poly",
-              "points": [
-                [
-                  -0.024,
-                  0
-                ],
-                [
-                  -0.022,
-                  0.011
-                ],
-                [
-                  -0.015,
-                  0.022
-                ],
-                [
-                  -0.009,
-                  0.011
-                ],
-                [
-                  0,
-                  0.032
-                ],
-                [
-                  0.009,
-                  0.011
-                ],
-                [
-                  0.015,
-                  0.022
-                ],
-                [
-                  0.022,
-                  0.011
-                ],
-                [
-                  0.024,
-                  0
-                ]
-              ],
+              "points": [[-0.024, 0], [-0.022, 0.011], [-0.015, 0.022], [-0.009, 0.011], [0, 0.032], [0.009, 0.011], [0.015, 0.022], [0.022, 0.011], [0.024, 0]],
               "closed": true,
               "region": "burner",
               "material": "burner-mesh"
@@ -758,44 +583,7 @@
               "filled": true,
               "tone": 0.95,
               "kind": "poly",
-              "points": [
-                [
-                  -0.018,
-                  0
-                ],
-                [
-                  -0.018,
-                  0.006
-                ],
-                [
-                  -0.012,
-                  0.014
-                ],
-                [
-                  -0.007,
-                  0.008
-                ],
-                [
-                  0,
-                  0.017
-                ],
-                [
-                  0.007,
-                  0.008
-                ],
-                [
-                  0.012,
-                  0.014
-                ],
-                [
-                  0.018,
-                  0.006
-                ],
-                [
-                  0.018,
-                  0
-                ]
-              ],
+              "points": [[-0.018, 0], [-0.018, 0.006], [-0.012, 0.014], [-0.007, 0.008], [0, 0.017], [0.007, 0.008], [0.012, 0.014], [0.018, 0.006], [0.018, 0]],
               "closed": true,
               "region": "burner",
               "material": "burner-mesh"
@@ -839,16 +627,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  -0.155,
-                  0.168
-                ],
-                [
-                  -0.08,
-                  0.168
-                ]
-              ],
+              "points": [[-0.155, 0.168], [-0.08, 0.168]],
               "closed": false
             },
             {
@@ -859,16 +638,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  -0.155,
-                  0.145
-                ],
-                [
-                  -0.11,
-                  0.145
-                ]
-              ],
+              "points": [[-0.155, 0.145], [-0.11, 0.145]],
               "closed": false
             },
             {
@@ -879,16 +649,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.00652,
-                  0.1341
-                ],
-                [
-                  -0.00136,
-                  0.13271
-                ]
-              ],
+              "points": [[0.00652, 0.1341], [-0.00136, 0.13271]],
               "closed": false
             },
             {
@@ -899,16 +660,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.04,
-                  0.174
-                ],
-                [
-                  0.04,
-                  0.182
-                ]
-              ],
+              "points": [[0.04, 0.174], [0.04, 0.182]],
               "closed": false
             },
             {
@@ -919,16 +671,7 @@
               "filled": false,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.074,
-                  0.14
-                ],
-                [
-                  0.082,
-                  0.14
-                ]
-              ],
+              "points": [[0.074, 0.14], [0.082, 0.14]],
               "closed": false
             },
             {
@@ -953,16 +696,7 @@
               "filled": false,
               "tone": 0.2,
               "kind": "poly",
-              "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0,
-                  0.022
-                ]
-              ],
+              "points": [[0, 0], [0, 0.022]],
               "closed": false
             },
             {
@@ -987,16 +721,7 @@
               "filled": false,
               "tone": 0.2,
               "kind": "poly",
-              "points": [
-                [
-                  0.12,
-                  0.14
-                ],
-                [
-                  0.12,
-                  0.154
-                ]
-              ],
+              "points": [[0.12, 0.14], [0.12, 0.154]],
               "closed": false
             },
             {
@@ -1021,16 +746,7 @@
               "filled": false,
               "tone": 0.2,
               "kind": "poly",
-              "points": [
-                [
-                  0.173,
-                  0.14
-                ],
-                [
-                  0.181,
-                  0.149
-                ]
-              ],
+              "points": [[0.173, 0.14], [0.181, 0.149]],
               "closed": false
             },
             {
@@ -1240,16 +956,7 @@
               "tone": 0.4,
               "kind": "poly",
               "closed": false,
-              "points": [
-                [
-                  -0.2185,
-                  0.155
-                ],
-                [
-                  0.2185,
-                  0.155
-                ]
-              ]
+              "points": [[-0.2185, 0.155], [0.2185, 0.155]]
             },
             {
               "id": "top-edge",
@@ -1388,16 +1095,7 @@
               "tone": 0.4,
               "kind": "poly",
               "closed": false,
-              "points": [
-                [
-                  0.155,
-                  0.0515
-                ],
-                [
-                  0.155,
-                  0.7685
-                ]
-              ]
+              "points": [[0.155, 0.0515], [0.155, 0.7685]]
             },
             {
               "id": "bezel",
@@ -1606,48 +1304,18 @@
               "tone": 0.75,
               "kind": "poly",
               "points": [
-                [
-                  -0.0264,
-                  0.0015
-                ],
-                [
-                  -0.0242,
-                  0.01415
-                ],
-                [
-                  -0.0165,
-                  0.0268
-                ],
-                [
-                  -0.0099,
-                  0.01415
-                ],
-                [
-                  0,
-                  0.0383
-                ],
-                [
-                  0.0099,
-                  0.01415
-                ],
-                [
-                  0.0165,
-                  0.0268
-                ],
-                [
-                  0.0242,
-                  0.01415
-                ],
-                [
-                  0.0264,
-                  0.0015
-                ]
+                [-0.0264, 0.0015],
+                [-0.0242, 0.01415],
+                [-0.0165, 0.0268],
+                [-0.0099, 0.01415],
+                [0, 0.0383],
+                [0.0099, 0.01415],
+                [0.0165, 0.0268],
+                [0.0242, 0.01415],
+                [0.0264, 0.0015]
               ],
               "closed": true,
-              "regions": [
-                "burner",
-                "sight-glass"
-              ],
+              "regions": ["burner", "sight-glass"],
               "material": "burner-mesh"
             },
             {
@@ -1658,49 +1326,9 @@
               "filled": true,
               "tone": 0.95,
               "kind": "poly",
-              "points": [
-                [
-                  -0.018,
-                  0
-                ],
-                [
-                  -0.018,
-                  0.006
-                ],
-                [
-                  -0.012,
-                  0.014
-                ],
-                [
-                  -0.007,
-                  0.008
-                ],
-                [
-                  0,
-                  0.017
-                ],
-                [
-                  0.007,
-                  0.008
-                ],
-                [
-                  0.012,
-                  0.014
-                ],
-                [
-                  0.018,
-                  0.006
-                ],
-                [
-                  0.018,
-                  0
-                ]
-              ],
+              "points": [[-0.018, 0], [-0.018, 0.006], [-0.012, 0.014], [-0.007, 0.008], [0, 0.017], [0.007, 0.008], [0.012, 0.014], [0.018, 0.006], [0.018, 0]],
               "closed": true,
-              "regions": [
-                "burner",
-                "sight-glass"
-              ],
+              "regions": ["burner", "sight-glass"],
               "material": "burner-mesh"
             },
             {
@@ -2071,11 +1699,7 @@
               "w": 0.44,
               "h": 0.72,
               "r": 0.014,
-              "regions": [
-                "casing",
-                "sight-glass",
-                "burner"
-              ],
+              "regions": ["casing", "sight-glass", "burner"],
               "material": "painted-steel"
             },
             {
@@ -2137,11 +1761,7 @@
               "y": -0.15,
               "w": 0.44,
               "h": 0.325,
-              "regions": [
-                "casing",
-                "sight-glass",
-                "burner"
-              ],
+              "regions": ["casing", "sight-glass", "burner"],
               "material": "painted-steel"
             },
             {
@@ -2155,7 +1775,7 @@
               "x": -0.2,
               "y": -0.165,
               "w": 0.4,
-              "h": 0.015,
+              "h": 0.03,
               "region": "controls",
               "material": "polycarbonate"
             },
@@ -2188,11 +1808,7 @@
               "y": 0.05,
               "w": 0.325,
               "h": 0.72,
-              "regions": [
-                "casing",
-                "sight-glass",
-                "burner"
-              ],
+              "regions": ["casing", "sight-glass", "burner"],
               "material": "painted-steel"
             },
             {
@@ -2205,7 +1821,7 @@
               "kind": "rect",
               "x": -0.165,
               "y": 0.065,
-              "w": 0.015,
+              "w": 0.03,
               "h": 0.145,
               "region": "controls",
               "material": "polycarbonate"
@@ -3112,7 +2728,7 @@
               "kind": "metal",
               "material": "painted-steel",
               "thicknessM": 0.0008,
-              "resistanceM2KW": 0.000016,
+              "resistanceM2KW": 1.6e-05,
               "heatCapacityJM2K": 3700,
               "source": "authored-estimate",
               "reference": "incropera-2018"
@@ -3225,7 +2841,7 @@
               "kind": "metal",
               "material": "burner-mesh",
               "thicknessM": 0.001,
-              "resistanceM2KW": 0.00007,
+              "resistanceM2KW": 7e-05,
               "heatCapacityJM2K": 800,
               "source": "authored-estimate",
               "reference": "incropera-2018"
@@ -3287,7 +2903,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "brass",
-          "areaM2": 0.04,
+          "areaM2": 0.035,
           "characteristicLengthM": 0.05,
           "geometry": "cylinder",
           "skyViewFactor": 0.4,
@@ -3301,7 +2917,7 @@
               "kind": "metal",
               "material": "brass",
               "thicknessM": 0.0015,
-              "resistanceM2KW": 0.000013,
+              "resistanceM2KW": 1.3e-05,
               "heatCapacityJM2K": 1300,
               "source": "authored-estimate",
               "reference": "incropera-2018"
@@ -3338,7 +2954,7 @@
               "kind": "metal",
               "material": "stainless-steel",
               "thicknessM": 0.001,
-              "resistanceM2KW": 0.000067,
+              "resistanceM2KW": 6.7e-05,
               "heatCapacityJM2K": 3950,
               "source": "authored-estimate",
               "reference": "incropera-2018"
@@ -3375,7 +2991,7 @@
               "kind": "metal",
               "material": "die-cast-aluminium",
               "thicknessM": 0.003,
-              "resistanceM2KW": 0.000025,
+              "resistanceM2KW": 2.5e-05,
               "heatCapacityJM2K": 7290,
               "source": "authored-estimate",
               "reference": "incropera-2018"
@@ -3412,7 +3028,7 @@
               "kind": "metal",
               "material": "painted-steel",
               "thicknessM": 0.0015,
-              "resistanceM2KW": 0.00003,
+              "resistanceM2KW": 3e-05,
               "heatCapacityJM2K": 5420,
               "source": "authored-estimate",
               "reference": "incropera-2018"
@@ -3449,7 +3065,7 @@
               "kind": "metal",
               "material": "brass",
               "thicknessM": 0.003,
-              "resistanceM2KW": 0.000025,
+              "resistanceM2KW": 2.5e-05,
               "heatCapacityJM2K": 9690,
               "source": "authored-estimate",
               "reference": "incropera-2018"
@@ -6102,7 +5718,7 @@
             "profile": [[0.2, 0.065], [0.2, 0.21], [-0.2, 0.21], [-0.2, 0.065]],
             "plane": "xy",
             "from": -0.165,
-            "to": -0.149
+            "to": -0.135
           },
           {
             "id": "collar",
@@ -6222,29 +5838,27 @@
           },
           {
             "id": "th-fan",
-            "kind": "box",
+            "kind": "revolve",
             "bone": "casing",
             "material": "die-cast-aluminium",
             "role": "body",
             "tone": 0.6,
-            "size": [0.07, 0.09, 0.09],
-            "transform": {
-              "translation": [-0.17, 0.6, -0.05]
-            },
+            "profile": [[0.0, 0.0], [0.0, 0.046], [0.07, 0.046], [0.07, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [-0.205, 0.6, -0.05],
             "region": "fan",
             "layer": "housing"
           },
           {
             "id": "th-vessel",
-            "kind": "box",
+            "kind": "revolve",
             "bone": "casing",
             "material": "painted-steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.31, 0.31, 0.08],
-            "transform": {
-              "translation": [0.0, 0.4, 0.105]
-            },
+            "profile": [[0.065, 0.0], [0.07, 0.09], [0.085, 0.14], [0.105, 0.158], [0.125, 0.14], [0.14, 0.09], [0.145, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.4, 0.0],
             "region": "expansion-vessel",
             "layer": "shell"
           },
@@ -6271,7 +5885,7 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.7,
-            "profile": [[0.155, -0.2185], [0.175, -0.2185], [0.175, 0.2185], [0.155, 0.2185], [0.155, 0.217], [0.1735, 0.217], [0.1735, -0.217], [0.155, -0.217]],
+            "profile": [[0.145, -0.2185], [0.175, -0.2185], [0.175, 0.2185], [0.145, 0.2185], [0.145, 0.217], [0.1735, 0.217], [0.1735, -0.217], [0.145, -0.217]],
             "plane": "zx",
             "from": 0.0515,
             "to": 0.7685,
@@ -6347,15 +5961,15 @@
           },
           {
             "id": "support-wall-bracket",
-            "kind": "extrude",
+            "kind": "box",
             "bone": "casing",
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.725, 0.1745], [0.755, 0.1745], [0.755, 0.158], [0.738, 0.158], [0.738, 0.162], [0.751, 0.162], [0.751, 0.171], [0.725, 0.171]],
-            "plane": "yz",
-            "from": -0.1,
-            "to": 0.1,
+            "size": [0.2, 0.03, 0.03],
+            "transform": {
+              "translation": [0.0, 0.74, 0.1595]
+            },
             "member": "casing",
             "part": "support",
             "anchor": "wall-bracket"
@@ -6367,9 +5981,9 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.3,
-            "size": [0.3, 0.03, 0.016],
+            "size": [0.3, 0.03, 0.03],
             "transform": {
-              "translation": [0.0, 0.075, 0.1665]
+              "translation": [0.0, 0.075, 0.1595]
             },
             "member": "casing",
             "part": "support",
@@ -6392,16 +6006,16 @@
         ],
         "decisions": [
           {
-            "en": "Body: a new abstraction for the 30 mm feature: the hood is one block with its rounded side edges, the control band stands 15 mm proud as drawn, the collar is one 125 mm drum, and the five stubs are one 0.34 m connection bar; window, flames and knobs are below what the scale can show and omitted as in the drawing.",
-            "de": "Körper: eine neue Abstraktion für die Strukturgröße 30 mm: die Haube ist ein Block mit gerundeten Seitenkanten, das Bedienband steht wie gezeichnet 15 mm vor, der Stutzen ist eine 125-mm-Trommel und die fünf Anschlüsse sind ein 0,34 m langer Anschlussbalken; Fenster, Flammen und Knöpfe liegen unter dem, was der Maßstab zeigen kann, und fehlen wie in der Zeichnung."
+            "en": "Body: a new abstraction for the 30 mm feature: the hood is one block with its rounded side edges, the control band is a 30 mm strip that stands 15 mm proud of the hood face as drawn, the collar is one 125 mm drum, and the five stubs are one 0.34 m connection bar; window, flames and knobs are below what the scale can show and omitted as in the drawing.",
+            "de": "Körper: eine neue Abstraktion für das Merkmal von 30 mm: die Haube ist ein Block mit ihren gerundeten Seitenkanten, das Bedienband ist ein Streifen von 30 mm, der wie gezeichnet 15 mm vor der Haubenfront steht, der Stutzen ist eine Trommel von 125 mm und die fünf Anschlüsse sind ein Anschlussbalken von 0,34 m; Fenster, Flammen und Knöpfe liegen unter dem, was der Maßstab zeigen kann, und entfallen wie in der Zeichnung."
           },
           {
-            "en": "Thermal: the hood (casing), the control band (controls), a flush window disc (sight glass), one merged burner block, the collar drum with its outlet patch, the connection bar, and one block or drum per hidden region (heat exchanger, fan, expansion vessel, hydraulic group): the hot core stays readable inside the casing.",
-            "de": "Thermik: die Haube (Gehäuse), das Bedienband (Regelung), eine bündige Fensterscheibe (Schauglas), ein zusammengefasster Brennerblock, die Stutzentrommel mit ihrer Austrittsfläche, der Anschlussbalken und je ein Block oder eine Trommel pro verborgener Region (Wärmeübertrager, Gebläse, Ausdehnungsgefäß, Hydraulikgruppe): der heiße Kern bleibt im Gehäuse lesbar."
+            "en": "Thermal: the hood (casing), the control band (controls), a flush window disc (sight glass), one merged burner block, the collar drum with its outlet patch, the connection bar, and the hidden regions in their real forms and places: the heat-exchanger drum with its collector, the premix fan drum, the expansion vessel as its 0.32 m lens of two dished shells, and the hydraulic group as one block: the hot core stays readable inside the casing.",
+            "de": "Thermik: die Haube (Gehäuse), das Bedienband (Bedienung), eine bündige Fensterscheibe (Schauglas), ein zusammengefasster Brennerblock, die Abgastrommel mit ihrer Austrittsfläche, der Anschlussbalken und die verborgenen Bereiche in ihrer wirklichen Form und Lage: die Wärmetauschertrommel mit ihrem Sammler, die Trommel des Vormischgebläses, das Ausdehnungsgefäß als seine Linse von 0,32 m aus zwei gewölbten Schalen und die Hydraulikgruppe als ein Block: der heiße Kern bleibt im Gehäuse lesbar."
           },
           {
-            "en": "Structure: the chassis channel, the bracket pair merged into one shelf, the heat exchanger drum with its collector, the collar drum, the connection bar, the rail and the mass.",
-            "de": "Tragwerk: das Chassis-U-Profil, das Konsolenpaar zu einer Konsole zusammengefasst, die Wärmeübertragertrommel mit Sammler, die Stutzentrommel, der Anschlussbalken, die Schiene und die Masse."
+            "en": "Structure: the chassis as a channel 30 mm deep at the wall, the bracket pair merged into one shelf under the heat-exchanger drum with its collector, the collar drum, the connection bar, the rail and the rest strip as 30 mm bars at their anchors, and the mass; every section is generalised to the 30 mm feature.",
+            "de": "Tragwerk: das Chassis als Kanal von 30 mm Tiefe an der Wand, das Konsolenpaar zu einer Konsole unter der Wärmetauschertrommel mit ihrem Sammler zusammengefasst, die Stutzentrommel, der Anschlussbalken, Schiene und Auflageleiste als Stäbe von 30 mm an ihren Ankern und die Masse; jeder Querschnitt ist auf das Merkmal von 30 mm verallgemeinert."
           }
         ]
       },
@@ -6411,101 +6025,38 @@
         "body": [
           {
             "id": "casing",
+            "kind": "extrude",
             "bone": "casing",
             "material": "painted-steel",
-            "tone": 0.88,
             "role": "body",
-            "kind": "extrude",
-            "plane": "yz",
-            "from": -0.22,
-            "to": 0.22,
-            "profile": [
-              [
-                0.05,
-                -0.148
-              ],
-              [
-                0.063,
-                -0.167
-              ],
-              [
-                0.735,
-                -0.167
-              ],
-              [
-                0.77,
-                -0.135
-              ],
-              [
-                0.77,
-                0.175
-              ],
-              [
-                0.05,
-                0.175
-              ]
-            ]
+            "tone": 0.88,
+            "profile": [[0.22, 0.05], [0.22, 0.77], [-0.22, 0.77], [-0.22, 0.05]],
+            "plane": "xy",
+            "from": -0.15,
+            "to": 0.175
           },
           {
             "id": "panel",
+            "kind": "box",
             "bone": "casing",
             "material": "polycarbonate",
-            "tone": 0.35,
             "role": "body",
-            "kind": "box",
-            "size": [
-              0.4,
-              0.145,
-              0.008
-            ],
-            "cornerRadius": 0,
+            "tone": 0.35,
+            "size": [0.4, 0.145, 0.016],
             "transform": {
-              "translation": [
-                0.0,
-                0.1375,
-                -0.168
-              ]
+              "translation": [0.0, 0.1375, -0.157]
             }
           },
           {
             "id": "collar",
+            "kind": "revolve",
             "bone": "collar",
             "material": "flue-pipe",
-            "tone": 0.6,
             "role": "body",
-            "kind": "revolve",
-            "origin": [
-              0.0,
-              0.0,
-              0.04
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "profile": [
-              [
-                0.0,
-                0.053
-              ],
-              [
-                0.05,
-                0.053
-              ],
-              [
-                0.05,
-                0.062
-              ],
-              [
-                0.0,
-                0.062
-              ],
-              [
-                0.0,
-                0.053
-              ]
-            ]
+            "tone": 0.6,
+            "profile": [[-0.002, 0.0], [-0.002, 0.0625], [0.05, 0.0625], [0.05, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.04]
           },
           {
             "id": "stubs",
@@ -6514,17 +6065,9 @@
             "material": "brass",
             "role": "body",
             "tone": 0.6,
-            "size": [
-              0.34,
-              0.054,
-              0.04
-            ],
+            "size": [0.34, 0.052, 0.04],
             "transform": {
-              "translation": [
-                0.0,
-                0.027,
-                0.07
-              ]
+              "translation": [0.0, 0.026, 0.07]
             }
           }
         ],
@@ -6548,41 +6091,10 @@
             "material": "sight-glass",
             "role": "glazing",
             "tone": 0.85,
-            "profile": [
-              [
-                -0.154,
-                0.0
-              ],
-              [
-                -0.154,
-                0.0365
-              ],
-              [
-                -0.15,
-                0.0365
-              ],
-              [
-                -0.15,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              0,
-              1
-            ],
-            "origin": [
-              0.0,
-              0.56,
-              0.0
-            ],
-            "sectionFaces": [
-              "+w",
-              "-u",
-              "+u",
-              "-v",
-              "+v"
-            ],
+            "profile": [[-0.154, 0.0], [-0.154, 0.0375], [-0.15, 0.0375], [-0.15, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0],
+            "sectionFaces": ["+w", "-u", "+u", "-v", "+v"],
             "region": "sight-glass",
             "layer": "glass"
           },
@@ -6593,17 +6105,9 @@
             "material": "burner-mesh",
             "role": "body",
             "tone": 0.9,
-            "size": [
-              0.06,
-              0.04,
-              0.03
-            ],
+            "size": [0.075, 0.04, 0.03],
             "transform": {
-              "translation": [
-                0.0,
-                0.55,
-                -0.11
-              ]
+              "translation": [0.0, 0.55, -0.11]
             },
             "region": "burner",
             "layer": "mesh"
@@ -6621,38 +6125,11 @@
             "material": "flue-pipe",
             "role": "detail",
             "tone": 0.5,
-            "profile": [
-              [
-                0.035,
-                0.0
-              ],
-              [
-                0.035,
-                0.03
-              ],
-              [
-                0.065,
-                0.03
-              ],
-              [
-                0.065,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.04
-            ],
+            "profile": [[0.046, 0.0], [0.046, 0.0375], [0.0505, 0.0375], [0.0505, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.04],
             "region": "flue-collar",
-            "tags": [
-              "flue-gas"
-            ]
+            "tags": ["flue-gas"]
           },
           {
             "id": "th-stubs",
@@ -6667,105 +6144,37 @@
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                -0.14,
-                0.0
-              ],
-              [
-                -0.14,
-                0.115
-              ],
-              [
-                0.043,
-                0.115
-              ],
-              [
-                0.043,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              0,
-              1
-            ],
-            "origin": [
-              0.0,
-              0.56,
-              0.0
-            ],
+            "profile": [[-0.14, 0.0], [-0.14, 0.115], [0.043, 0.115], [0.043, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0],
             "region": "heat-exchanger",
             "layer": "wall"
           },
           {
             "id": "th-fan",
-            "kind": "box",
+            "kind": "revolve",
             "bone": "casing",
             "material": "die-cast-aluminium",
             "role": "body",
             "tone": 0.6,
-            "size": [
-              0.07,
-              0.09,
-              0.09
-            ],
-            "transform": {
-              "translation": [
-                -0.17,
-                0.6,
-                -0.05
-              ]
-            },
+            "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [-0.21, 0.6, -0.05],
             "region": "fan",
             "layer": "housing"
           },
           {
             "id": "th-vessel",
+            "kind": "revolve",
             "bone": "casing",
             "material": "painted-steel",
-            "tone": 0.3,
             "role": "body",
+            "tone": 0.3,
+            "profile": [[0.066, 0.0], [0.075, 0.12], [0.105, 0.158], [0.135, 0.12], [0.144, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.36, 0.0],
             "region": "expansion-vessel",
-            "layer": "shell",
-            "kind": "extrude",
-            "plane": "xy",
-            "from": 0.066,
-            "to": 0.144,
-            "profile": [
-              [
-                -0.095,
-                0.245
-              ],
-              [
-                0.095,
-                0.245
-              ],
-              [
-                0.155,
-                0.305
-              ],
-              [
-                0.155,
-                0.495
-              ],
-              [
-                0.095,
-                0.555
-              ],
-              [
-                -0.095,
-                0.555
-              ],
-              [
-                -0.155,
-                0.495
-              ],
-              [
-                -0.155,
-                0.305
-              ]
-            ]
+            "layer": "shell"
           },
           {
             "id": "th-hydraulics",
@@ -6774,17 +6183,9 @@
             "material": "brass",
             "role": "body",
             "tone": 0.36,
-            "size": [
-              0.36,
-              0.12,
-              0.09
-            ],
+            "size": [0.38, 0.12, 0.09],
             "transform": {
-              "translation": [
-                0.0,
-                0.13,
-                0.04
-              ]
+              "translation": [0.0, 0.13, 0.04]
             },
             "region": "hydraulics",
             "layer": "body"
@@ -6798,40 +6199,7 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.7,
-            "profile": [
-              [
-                0.155,
-                -0.2185
-              ],
-              [
-                0.175,
-                -0.2185
-              ],
-              [
-                0.175,
-                0.2185
-              ],
-              [
-                0.155,
-                0.2185
-              ],
-              [
-                0.155,
-                0.217
-              ],
-              [
-                0.1735,
-                0.217
-              ],
-              [
-                0.1735,
-                -0.217
-              ],
-              [
-                0.155,
-                -0.217
-              ]
-            ],
+            "profile": [[0.155, -0.2185], [0.175, -0.2185], [0.175, 0.2185], [0.155, 0.2185], [0.155, 0.217], [0.1735, 0.217], [0.1735, -0.217], [0.155, -0.217]],
             "plane": "zx",
             "from": 0.0515,
             "to": 0.7685,
@@ -6845,17 +6213,9 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.7,
-            "size": [
-              0.22,
-              0.03,
-              0.13
-            ],
+            "size": [0.23, 0.02, 0.13],
             "transform": {
-              "translation": [
-                0.0,
-                0.462,
-                0.108
-              ]
+              "translation": [0.0, 0.437, 0.108]
             },
             "member": "casing",
             "part": "member"
@@ -6867,225 +6227,50 @@
             "material": "stainless-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                -0.14,
-                0.0
-              ],
-              [
-                -0.14,
-                0.115
-              ],
-              [
-                0.043,
-                0.115
-              ],
-              [
-                0.043,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              0,
-              1
-            ],
-            "origin": [
-              0.0,
-              0.56,
-              0.0
-            ],
-            "member": "casing",
-            "part": "member"
-          },
-          {
-            "id": "member-flue-collector",
-            "kind": "revolve",
-            "bone": "casing",
-            "material": "flue-pipe",
-            "role": "body",
-            "tone": 0.5,
-            "profile": [
-              [
-                0.66,
-                0.0
-              ],
-              [
-                0.66,
-                0.04
-              ],
-              [
-                0.77,
-                0.04
-              ],
-              [
-                0.77,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.04
-            ],
+            "profile": [[-0.14, 0.0], [-0.14, 0.118], [0.043, 0.118], [0.043, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.56, 0.0],
             "member": "casing",
             "part": "member"
           },
           {
             "id": "member-collar",
+            "kind": "revolve",
             "bone": "collar",
             "material": "flue-pipe",
-            "tone": 0.5,
             "role": "body",
+            "tone": 0.5,
+            "profile": [[-0.12, 0.0], [-0.12, 0.04], [0.0, 0.04], [0.0, 0.0625], [0.05, 0.0625], [0.05, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.04],
             "member": "collar",
-            "part": "member",
-            "kind": "extrude",
-            "plane": "zx",
-            "from": 0.0,
-            "to": 0.05,
-            "profile": [
-              [
-                0.096,
-                0.0
-              ],
-              [
-                0.079598,
-                0.039598
-              ],
-              [
-                0.04,
-                0.056
-              ],
-              [
-                0.00040200000000000104,
-                0.039598
-              ],
-              [
-                -0.016,
-                0.0
-              ],
-              [
-                0.00040200000000000104,
-                -0.039598
-              ],
-              [
-                0.04,
-                -0.056
-              ],
-              [
-                0.079598,
-                -0.039598
-              ]
-            ],
-            "holes": [
-              [
-                [
-                  0.093,
-                  0.0
-                ],
-                [
-                  0.077477,
-                  0.037476999999999996
-                ],
-                [
-                  0.04,
-                  0.053
-                ],
-                [
-                  0.002523000000000003,
-                  0.037476999999999996
-                ],
-                [
-                  -0.013,
-                  0.0
-                ],
-                [
-                  0.002523000000000003,
-                  -0.037476999999999996
-                ],
-                [
-                  0.04,
-                  -0.053
-                ],
-                [
-                  0.077477,
-                  -0.037476999999999996
-                ]
-              ]
-            ]
+            "part": "member"
           },
           {
             "id": "member-connections",
+            "kind": "box",
             "bone": "connections",
             "material": "brass",
-            "tone": 0.45,
             "role": "body",
-            "member": "connections",
-            "part": "member",
-            "kind": "box",
-            "size": [
-              0.335,
-              0.009,
-              0.037
-            ],
-            "cornerRadius": 0,
+            "tone": 0.34,
+            "size": [0.34, 0.06, 0.03],
             "transform": {
-              "translation": [
-                0.0,
-                0.049,
-                0.07
-              ]
-            }
+              "translation": [0.0, 0.03, 0.07]
+            },
+            "member": "connections",
+            "part": "member"
           },
           {
             "id": "support-wall-bracket",
-            "kind": "extrude",
+            "kind": "box",
             "bone": "casing",
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.3,
-            "profile": [
-              [
-                0.725,
-                0.1745
-              ],
-              [
-                0.755,
-                0.1745
-              ],
-              [
-                0.755,
-                0.158
-              ],
-              [
-                0.738,
-                0.158
-              ],
-              [
-                0.738,
-                0.162
-              ],
-              [
-                0.751,
-                0.162
-              ],
-              [
-                0.751,
-                0.171
-              ],
-              [
-                0.725,
-                0.171
-              ]
-            ],
-            "plane": "yz",
-            "from": -0.1,
-            "to": 0.1,
+            "size": [0.2, 0.03, 0.017],
+            "transform": {
+              "translation": [0.0, 0.74, 0.166]
+            },
             "member": "casing",
             "part": "support",
             "anchor": "wall-bracket"
@@ -7097,17 +6282,9 @@
             "material": "galvanised-steel",
             "role": "body",
             "tone": 0.3,
-            "size": [
-              0.3,
-              0.03,
-              0.016
-            ],
+            "size": [0.3, 0.03, 0.016],
             "transform": {
-              "translation": [
-                0.0,
-                0.075,
-                0.1665
-              ]
+              "translation": [0.0, 0.075, 0.166]
             },
             "member": "casing",
             "part": "support",
@@ -7115,40 +6292,31 @@
           },
           {
             "id": "mass-casing",
+            "kind": "ellipsoid",
             "bone": "casing",
             "material": "painted-steel",
             "role": "detail",
             "tone": 0.5,
+            "radii": [0.04, 0.04, 0.04],
+            "transform": {
+              "translation": [0.0, 0.42, 0.0]
+            },
             "member": "casing",
-            "part": "mass",
-            "kind": "extrude",
-            "plane": "zx",
-            "from": 0.385,
-            "to": 0.455,
-            "profile": [
-              [
-                0.035,
-                0.0
-              ],
-              [
-                0.0,
-                0.035
-              ],
-              [
-                -0.035,
-                0.0
-              ],
-              [
-                -0.0,
-                -0.035
-              ]
-            ]
+            "part": "mass"
           }
         ],
         "decisions": [
           {
-            "en": "A wall-hung casing encloses the burner and expansion vessel. The concentric flue rises separately above the shell.",
-            "de": "Im wandhängenden Mantel liegen Brenner und Ausdehnungsgefäß. Der konzentrische Abgasstutzen ragt über die Hülle."
+            "en": "Body: a digital miniature for the 75 mm feature: the hood is one crisp block of 0.44 x 0.72 x 0.325 m from the front face to the wall (edge radius and chassis band are far below the feature), the control strip lies 15 mm proud as at 1:200, the 80/125 flue adapter is one solid 125 mm drum and the five stubs are one connection bar; window, knobs and nuts are omitted.",
+            "de": "Körper: eine digitale Miniatur für das Merkmal von 75 mm: die Haube ist ein scharfkantiger Block von 0,44 x 0,72 x 0,325 m von der Front bis zur Wand (Kantenradius und Chassisband liegen weit unter dem Merkmal), die Bedienleiste steht wie bei 1:200 15 mm vor, der Abgasadapter 80/125 ist eine volle Trommel von 125 mm und die fünf Stutzen sind ein Anschlussbalken; Fenster, Knöpfe und Muttern entfallen."
+          },
+          {
+            "en": "Thermal: hood, control strip, the window as a flush disc, one burner block, the flue drum with the flue-gas outlet patch on its top face, the connection bar, and every hidden region as one solid in its real place: the heat-exchanger drum, the fan drum on the left, the expansion vessel as a coarse lens behind, the hydraulic block above the stubs.",
+            "de": "Thermik: Haube, Bedienleiste, das Fenster als bündige Scheibe, ein Brennerblock, die Abgastrommel mit der Austrittsfläche des Abgases auf ihrer Oberseite, der Anschlussbalken und jeder verborgene Bereich als ein Körper an seiner wirklichen Stelle: die Wärmetauschertrommel, die Gebläsetrommel links, das Ausdehnungsgefäß als grobe Linse dahinter, der Hydraulikblock über den Stutzen."
+          },
+          {
+            "en": "Structure: the real load path, generalised: the galvanised chassis channel to the wall, one bracket shelf under the heat-exchanger drum, collector and flue adapter as one stepped tube through the hood top, the connection bar on the bottom edge, the rail and the rest strip at the wall and the mass at the centre of mass; the hood is cladding and absent.",
+            "de": "Tragwerk: der wirkliche Lastpfad, verallgemeinert: der verzinkte Chassiskanal an der Wand, eine Konsole unter der Wärmetauschertrommel, Sammler und Abgasadapter als ein abgestuftes Rohr durch die Haubenoberseite, der Anschlussbalken an der Unterkante, Schiene und Auflageleiste an der Wand und die Masse im Schwerpunkt; die Haube ist Verkleidung und fehlt."
           }
         ]
       }

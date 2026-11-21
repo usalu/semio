@@ -56,7 +56,10 @@
   "C-51",
   "C-52",
   "C-53",
-  "C-54"
+  "C-54",
+  "C-55",
+  "C-56",
+  "C-57"
  ],
  "items": [
   {
@@ -539,8 +542,8 @@
     ]
    },
    "description": {
-    "en": "composite column fire: the simple calculation model (the tabulated data are C-46, not modelled)",
-    "de": "Verbundstütze im Brandfall: das einfache Rechenmodell (die tabellierten Daten sind C-46, nicht modelliert)"
+    "en": "Simple fire calculation model for partially encased composite columns. Separate design cases C94-13 to C94-15 use tabulated data, see C-46.",
+    "de": "Vereinfachtes Brandbemessungsverfahren für Verbundstützen mit Kammerbeton. Die Fälle C94-13 bis C94-15 verwenden Bemessungstabellen, siehe C-46."
    }
   },
   {
@@ -742,18 +745,15 @@
   },
   {
    "id": "C-46",
-   "clause": "F:4.2",
+   "clause": "F:4.2.3.3 / Table 4.6",
    "entity": "",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "the cells of Tables 4.1 to 4.3 are not in the repository spec text (only their structure), so none are transcribed and none are guessed; en1994.1-2.4.2.table-column reports not applicable until a human registers verified rows under en1994.1-2.tables (catalogue::column_fire::COLUMN_TABLE is empty); the slab insulation criterion en1994.1-2.slab.insulation stays a separate idealisation",
-     "de": "die Zellen der Tabellen 4.1 bis 4.3 stehen nicht im Spezifikationstext des Repositorys (nur ihre Struktur), daher sind keine übertragen und keine geraten; en1994.1-2.4.2.table-column meldet nicht anwendbar, bis ein Mensch verifizierte Zeilen unter en1994.1-2.tables einträgt (catalogue::column_fire::COLUMN_TABLE ist leer); das Deckendämmkriterium en1994.1-2.slab.insulation bleibt eine eigene Idealisierung"
-    }
+    "kind": "design-case",
+    "entry": "C94-13"
    },
    "description": {
-    "en": "Tabulated fire data: minimum dimensions of composite beams and columns by fire resistance class R30 to R180 and load level ηfi (F:4.2)",
-    "de": "Tabellierte Brandschutzdaten: Mindestabmessungen von Verbundträgern und -stützen nach Feuerwiderstandsklasse R30 bis R180 und Lastniveau ηfi (F:4.2)"
+    "en": "Table 4.6 for partially encased columns uses the next conservative load level and a supplied ambient reinforcement axis minimum. Table 4.7 for filled hollow sections and Table 4.4 for fully encased columns are available as C94-14 and C94-15. Cases C94-16 and C94-17 cover Tables 4.3 and 4.5. C94-18 covers Tables 4.1 and 4.2.",
+    "de": "Tabelle 4.6 für Verbundstützen mit Kammerbeton verwendet das nächsthöhere Lastniveau und den eingegebenen Mindestachsabstand bei Normaltemperatur. Tabelle 4.7 für gefüllte Hohlprofile und Tabelle 4.4 für vollständig einbetonierte Stützen sind als C94-14 und C94-15 verfügbar. C94-16 und C94-17 behandeln die Tabellen 4.3 und 4.5. C94-18 behandelt die Tabellen 4.1 und 4.2."
    }
   },
   {
@@ -881,6 +881,45 @@
    "description": {
     "en": "Bridge-specific stud detailing: transverse spacing, edge distance and end plates (2:6.6.5)",
     "de": "Brückenspezifische Dübelausbildung: Querabstand, Randabstand und Endplatten (2:6.6.5)"
+   }
+  },
+  {
+   "id": "C-55",
+   "clause": "F:4.2.2(10)–(11) / EN 1994-1-2 Table 4.3",
+   "entity": "Beam",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C94-16"
+   },
+   "description": {
+    "en": "Checks concrete cover and retaining mesh for concrete used only as fire insulation around a beam.",
+    "de": "Prüft Betondeckung und Betonstahlmatte für Beton als reine Brandschutzbekleidung eines Trägers."
+   }
+  },
+  {
+   "id": "C-56",
+   "clause": "F:4.2.3.2(5)–(6) / EN 1994-1-2 Table 4.5",
+   "entity": "Column",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C94-17"
+   },
+   "description": {
+    "en": "Checks concrete cover and retaining mesh for concrete used only as fire insulation around a column.",
+    "de": "Prüft Betondeckung und Betonstahlmatte für Beton als reine Brandschutzbekleidung einer Stütze."
+   }
+  },
+  {
+   "id": "C-57",
+   "clause": "F:4.2.2(1)–(9) / EN 1994-1-2 Tables 4.1–4.2",
+   "entity": "Beam",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "C94-18"
+   },
+   "description": {
+    "en": "Whole width, depth and reinforcement alternatives from Table 4.1 and the reinforcement-axis distances from Table 4.2.",
+    "de": "Zusammengehörige Breiten-, Höhen- und Bewehrungswerte aus Tabelle 4.1 sowie Bewehrungsachsabstände aus Tabelle 4.2."
    }
   }
  ]

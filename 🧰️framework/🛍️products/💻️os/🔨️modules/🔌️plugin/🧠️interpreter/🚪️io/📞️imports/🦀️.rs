@@ -63,7 +63,12 @@ mod original_host{
    if copy>0&&state.diagnostics.capacity()==0{let capacity=semio_plugin_guest_contract::GUEST_DIAGNOSTICS_CAPACITY_BYTES;if !charge(cx,size_of::<Vec<u8>>(),capacity,0,false)?{return Ok(false)}*state.diagnostics=Vec::with_capacity(capacity);return Ok(false)}
    let inspection=if let Request::Log{length,..}=request{length.saturating_add(level)}else{0};if !charge(cx,size_of::<Reply>()+copy+inspection,0,0,false)?{return Ok(false)}if let Request::Log{pointer,length,level}=request{std::str::from_utf8(borrow(core,memory,pointer,length)?).map_err(|_|refused("original log message has invalid UTF-8"))?;if let Some((pointer,length))=level{std::str::from_utf8(borrow(core,memory,pointer,length)?).map_err(|_|refused("original log level has invalid UTF-8"))?;}}let mut reply=Reply{value:None,pointer:0,bytes:[0;16],length:0,copied:0,completed:false,cleanup_clock:matches!(request,Request::SourceClock(..))};
    match request{
-    Request::SourceClock(binding,pointer)=>{reply.pointer=pointer;reply.length=16;if cx.original_clock_binding()==Some(binding){let now=cx.now_us().ok_or_else(||refused("original host clock has no actual observation"))?;reply.bytes[..4].copy_from_slice(&1u32.to_le_bytes());reply.bytes[8..].copy_from_slice(&now.to_le_bytes());}},
+    Request::SourceClock(binding,pointer)=>{
+     reply.pointer=pointer;reply.length=16;
+     let issued=cx.original_clock_binding();
+     if issued==Some(binding){let now=cx.now_us().ok_or_else(||refused("original host clock has no actual observation"))?;reply.bytes[..4].copy_from_slice(&1u32.to_le_bytes());reply.bytes[8..].copy_from_slice(&now.to_le_bytes());}
+     else if std::env::var_os("RUST_BACKTRACE").is_some(){eprintln!("[DEBUG] poll Source clock lookup did not match: requested {binding}, issued {issued:?}");}
+    },
     Request::Monotonic=>{let value=cx.now_us().and_then(|now|now.checked_mul(1000)).ok_or_else(||refused("original monotonic clock exceeds its unsigned ABI extent"))?;reply.value=Some(Value::I64(value as i64));},
     Request::WallClock(pointer)=>{let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_|refused("original wall clock precedes its declared epoch"))?;reply.pointer=pointer;reply.length=16;reply.bytes[..8].copy_from_slice(&now.as_secs().to_le_bytes());reply.bytes[8..12].copy_from_slice(&now.subsec_nanos().to_le_bytes());},
     Request::NowMs=>{let value=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok().and_then(|duration|i64::try_from(duration.as_millis()).ok()).ok_or_else(||refused("original wall clock exceeds its signed millisecond ABI extent"))?;reply.value=Some(Value::I64(value));},

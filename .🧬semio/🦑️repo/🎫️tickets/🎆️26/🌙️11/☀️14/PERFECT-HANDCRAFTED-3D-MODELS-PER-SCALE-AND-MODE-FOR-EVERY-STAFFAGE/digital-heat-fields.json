@@ -1,0 +1,1 @@
+{"shade":{"airTempC":14,"meanRadiantTempC":14,"skyTempC":14,"groundTempC":14,"solarWM2":0,"windMS":0.3},"constants":{"boltzmannJK":"1.380649e-23","planckJs":"6.62607015e-34","speedOfLightMS":"299792458","icePointK":"273.15"},"relativeRadianceTolerance":0.00000005,"absoluteFluxToleranceWM2":0.000001}

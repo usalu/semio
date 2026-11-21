@@ -106,6 +106,37 @@ fn write_text_editor_draft_value(builder: &mut semio_ui_action::BoundedActionBui
     }
 }
 
+fn write_draft_splice_argument(changes: &[semio_ui_declaration::ui::DraftChange]) -> Result<String, semio_ui_action::BoundedActionFault> {
+    use semio_os_kernel::{NativeEncodeControl, ValueError, ValueRefusalKind};
+    let cap = semio_ui_action::RETAINED_ACTION_STRING_BYTE_CAPACITY;
+    let mut argument = String::new();
+    let mut observe = |_| true;
+    let mut control = NativeEncodeControl::new(cap, &mut observe);
+    semio_ui_declaration::ui::write_draft_changes_json_into(
+        changes,
+        cap as u64,
+        3,
+        cap as u64,
+        &mut |part: &[u8], control: &mut NativeEncodeControl<'_>| -> Result<(), ValueError> {
+            let part = std::str::from_utf8(part).map_err(|_| ValueError::literal(ValueRefusalKind::InvariantViolated, "draft writer emitted a partial UTF-8 scalar"))?;
+            let needed = argument.len() + part.len();
+            if needed > argument.capacity() {
+                let target = needed.max(argument.capacity().saturating_mul(2)).min(cap);
+                control.charge(target - argument.capacity())?;
+                argument.try_reserve_exact(target - argument.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "draft wire allocation failed"))?;
+            }
+            argument.push_str(part);
+            Ok(())
+        },
+        &mut control,
+    )
+    .map_err(|error| match error.kind {
+        ValueRefusalKind::OwnershipLimit | ValueRefusalKind::WorkLimit | ValueRefusalKind::AllocationFailed => semio_ui_action::BoundedActionFault::ByteCredits,
+        _ => semio_ui_action::BoundedActionFault::Structure,
+    })?;
+    Ok(argument)
+}
+
 /// 💾 Publishes the current local draft through its configured artifact-owned action.
 pub fn text_editor_apply_explicit_draft_into(scene: &UiComponentSceneNode, _input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
     let Some(settings) = text_editor_explicit_draft_settings(scene) else { return Ok(false) };
@@ -116,8 +147,22 @@ pub fn text_editor_apply_explicit_draft_into(scene: &UiComponentSceneNode, _inpu
             return Ok(true);
         }
         let Some(host) = entry.editor.as_ref() else { return Err(semio_ui_action::BoundedActionFault::Structure) };
+        let wire = if settings.edit_argument == semio_ui_declaration::ui::DRAFT_SPLICES_ARGUMENT {
+            match write_draft_splice_argument(&entry.editor_delivery.explicit_changes) {
+                Ok(wire) => Some(wire),
+                Err(fault) => {
+                    entry.editor_delivery.explicit_error = Some(format!("{fault:?}"));
+                    return Err(fault);
+                }
+            }
+        } else {
+            None
+        };
         let text = entry.editor_delivery.explicit_snapshot.take().unwrap_or_else(|| host.text().to_owned());
-        let (source, restore) = if settings.edit_argument == semio_ui_declaration::ui::DRAFT_SPLICES_ARGUMENT { (entry.editor_delivery.explicit_changes.clone().unwrap_or_else(|| "[]".to_owned()), Some(text)) } else { (text, None) };
+        let (source, restore) = match wire {
+            Some(wire) => (wire, Some(text)),
+            None => (text, None),
+        };
         let args = settings.edit_arguments.iter().map(|(key, value)| (key.clone(), semio_framework::DslValue::from(value))).collect();
         let descriptor = ActionDescriptor { controller_id: scene.controller_id.clone(), action: settings.edit_action.clone(), args: Some(semio_framework::DslValue::Object(args)) };
         let action = match semio_ui_action::RetainedStringAction::new(descriptor, settings.edit_argument.clone(), source.len()) {
@@ -140,7 +185,7 @@ pub enum TextEditorRetainedActionStep {
     Ready(TextEditorRetainedActionBatch),
 }
 
-pub(crate) struct TextEditorRetainedActionBatch {
+pub struct TextEditorRetainedActionBatch {
     pub first: semio_ui_action::QueuedActionDescriptor,
     pub second: Option<semio_ui_action::QueuedActionDescriptor>,
 }
@@ -241,7 +286,7 @@ pub fn text_editor_cancel_explicit_publication(scene: &UiComponentSceneNode) -> 
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct TextEditorExplicitDraftStatus {
+pub struct TextEditorExplicitDraftStatus {
     pub pending: bool,
     pub cancellable: bool,
     pub progress: f32,
@@ -279,7 +324,7 @@ pub fn text_editor_discard_explicit_draft(scene: &UiComponentSceneNode) -> bool 
         }
         entry.editor_delivery.explicit_dirty = false;
         entry.editor_delivery.explicit_base = Some(editor.buffer.clone());
-        entry.editor_delivery.explicit_changes = None;
+        entry.editor_delivery.explicit_changes = Vec::new();
         entry.editor_delivery.explicit_conflict = false;
         entry.editor_delivery.explicit_past.clear();
         entry.editor_delivery.explicit_future.clear();
@@ -307,8 +352,8 @@ pub fn text_editor_move_explicit_draft_history(scene: &UiComponentSceneNode, red
         } else {
             entry.editor_delivery.explicit_future.push_back(current);
         }
-        let changes = entry.editor_delivery.explicit_changes.as_deref().and_then(|json| serde_json::from_str::<Vec<semio_ui_declaration::ui::DraftChange>>(json).ok()).unwrap_or_default();
-        entry.editor_delivery.explicit_changes = Some(ui_wgpu::wgpu::draft_changes_json(&semio_ui_declaration::ui::compose_draft_step(&changes, host.text(), &next)));
+        entry.editor_delivery.explicit_changes =
+            semio_ui_declaration::ui::compose_draft_step(&entry.editor_delivery.explicit_changes, host.text(), &next);
         host.set_text(next.clone());
         entry.editor_delivery.explicit_dirty = entry.editor_delivery.explicit_base.as_deref().is_some_and(|base| next != base);
         entry.editor_delivery.explicit_snapshot = Some(next);

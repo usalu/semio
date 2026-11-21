@@ -2,7 +2,13 @@
 
 use crate::schema::mutations::GisTerrainMutation;
 
-pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeExaggeration", change_exaggeration::TEXT_OPCODE), ("ChangeImportedFeatures", change_imported_features::TEXT_OPCODE)];
+#[path = "../../../🧬️schema/🧬️mutations/🏔️replace-elevation-source/📝️text/🦀️.rs"]
+mod replace_elevation_source;
+pub const TEXT_OPCODES: &[(&str, &str)] = &[
+    ("ChangeExaggeration", change_exaggeration::TEXT_OPCODE),
+    ("ChangeImportedFeatures", change_imported_features::TEXT_OPCODE),
+    ("ReplaceElevationSource", replace_elevation_source::TEXT_OPCODE),
+];
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

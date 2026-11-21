@@ -1,8 +1,8 @@
 import {describe,expect,test} from "bun:test";
 import Ajv from "ajv";
 import {createHash} from "node:crypto";
-import {existsSync,readFileSync} from "node:fs";
-import {chmod,mkdir,mkdtemp,readdir,rm,symlink,utimes,writeFile} from "node:fs/promises";
+import {closeSync,existsSync,openSync,readFileSync,renameSync,utimesSync,writeSync} from "node:fs";
+import {chmod,mkdir,mkdtemp,readdir,rm,symlink,truncate,utimes,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
@@ -132,6 +132,46 @@ test("sharedV1 combines ignore, .git and the path policy",()=>{
  expect(sharedV1("sub/.git/config",false,ignore)).toBe(false);
  expect(sharedV1("src/con.ts",false,ignore)).toBe(false);
  expect(sharedV1(".gitignore",false,ignore)).toBe(true);
+});
+
+for(const scenario of ["stable","replaced","modified","cancelled"] as const)test(`checked source hashing is bounded when the file is ${scenario}`,async()=>{
+ const root=await mkdtemp(join(tmpdir(),"boundary-mutable-")),file=join(root,"source"),replacement=join(root,"replacement");
+ const {bytes,chunkBytes,checkBytes,firstByte,sha256}=fixture.mutableHash;
+ const time=new Date("2020-01-01T00:00:00.000Z"),report:number[]=[],cancel=new AbortController(),reason=new Error("cancel source hash");
+ const create=async(path:string)=>{
+  await writeFile(path,Buffer.from([firstByte]));
+  await truncate(path,bytes);
+  await utimes(path,time,time);
+ };
+ try{
+  await create(file);
+  if(scenario==="replaced")await create(replacement);
+  const hashing=hashFileV1(file,{signal:cancel.signal,progress(done,total){
+   expect(total).toBe(bytes);
+   expect(done-(report.at(-1)??0)).toBeLessThanOrEqual(chunkBytes);
+   report.push(done);
+   if(report.length!==1)return;
+   if(scenario==="cancelled")cancel.abort(reason);
+   if(scenario==="replaced")renameSync(replacement,file);
+   if(scenario==="modified"){
+    const handle=openSync(file,"r+");
+    try{writeSync(handle,Buffer.from([1]),0,1,bytes-1);}finally{closeSync(handle);}
+    utimesSync(file,time,time);
+   }
+  }});
+  if(scenario==="stable"){
+   const oracle=new Bun.CryptoHasher("sha256").update(readFileSync(file)).digest("hex");
+   expect(oracle).toBe(sha256);
+   expect(await hashing).toEqual({stable:true,sha256:oracle,bytes});
+   expect(report).toEqual(Array.from({length:Math.ceil(bytes/chunkBytes)},(_,i)=>Math.min(bytes,(i+1)*chunkBytes)));
+  }else if(scenario==="cancelled"){
+   await expect(hashing).rejects.toBe(reason);
+   expect(report).toEqual([chunkBytes]);
+  }else{
+   expect(await hashing).toEqual({stable:false});
+   expect(report.at(-1)).toBe(checkBytes);
+  }
+ }finally{await rm(root,{recursive:true,force:true});}
 });
 
 test("hashFileV1 streams sha256 and reports a stable file",async()=>{

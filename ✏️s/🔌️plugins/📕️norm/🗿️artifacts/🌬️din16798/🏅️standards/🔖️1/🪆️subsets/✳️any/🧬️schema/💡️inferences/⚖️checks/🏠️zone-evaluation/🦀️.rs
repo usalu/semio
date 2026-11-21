@@ -14,10 +14,11 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     let linked_name = linked.map(|v| v.name.as_str()).unwrap_or("—");
     let linked_type = linked.map(|v| VentSystemType::parse(&v.system_type));
     check_zone_ventilation_link(doc, zone, &mut out, &path, linked, linked_name);
-    check_zone_temperatures(doc, zone, &mut out, cat, &path);
+    check_zone_temperatures(doc, zone, &mut out, cat, usage, &path);
     check_zone_clothing_insulation(doc, zone, &mut out, cat, &path);
     check_zone_air_quality(doc, zone, annex, &mut out, cat, usage, pollution, method, &path, linked_name, linked_type);
-    check_zone_humidity_light_noise_and_draught(doc, zone, annex, &mut out, cat, usage, &path);
+    check_zone_humidity(doc, zone, linked, &mut out, cat, &path);
+    check_zone_light_noise_and_draught(doc, zone, &mut out, cat, usage, &path);
     out
 }
 
@@ -76,62 +77,69 @@ fn check_zone_ventilation_link(
     }
 }
 
-/// 🪵️ Checks the operative and the adaptive temperature of a zone against its comfort category.
+/// 🪵️ Compares the zone's seasonal design temperatures with the relevant reference values.
 fn check_zone_temperatures(
     doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
     zone: &ZoneDocument,
     out: &mut Vec<CheckResult>,
     cat: ComfortCategory,
+    usage: OccupancyType,
     path: &dyn Fn(&str) -> String,
 ) {
     use part_1::*;
-    let (t_min, t_max) = operative_temp_band(cat, "summer");
-    let t = zone.t_op_summer_c;
-    let mut b = CheckResult::assess(
-        format!("din16798-1.top.summer.{}", zone.id), "DIN EN 16798-1",
-        ClauseId::new("EN 16798-1", "Table B.2", "θ_op"),
-        zone_subject(zone, path("tOpSummerC")),
-        loc("Summer operative temperature", "Operative Sommertemperatur"),
-    ).annex(doc.annex);
-    if t < t_min {
-        b = b.minimum(Quantity::new(QuantityKind::Temperature, t), Quantity::new(QuantityKind::Temperature, t_min))
-            .explanation(loc(format!("Summer θ_op={t:.1} °C is below the {t_min:.1} °C category floor."), format!("Operative Sommertemperatur θ_op={t:.1} °C unterschreitet die Kategorieuntergrenze {t_min:.1} °C.")))
-            .remedy(Remedy::at_least(zone_subject(zone, path("tOpSummerC")), Quantity::new(QuantityKind::Temperature, t), Quantity::new(QuantityKind::Temperature, t_min),
-                loc(format!("Raise summer operative temperature to at least {t_min:.1} °C."), format!("Operative Sommertemperatur auf mindestens {t_min:.1} °C erhöhen."))));
-    } else if t > t_max {
-        b = b.utilization(Quantity::new(QuantityKind::Temperature, t), Quantity::new(QuantityKind::Temperature, t_max))
-            .explanation(loc(format!("Summer θ_op={t:.1} °C exceeds the {t_max:.1} °C category ceiling."), format!("Operative Sommertemperatur θ_op={t:.1} °C überschreitet die Kategorieobergrenze {t_max:.1} °C.")))
-            .remedy(Remedy::at_most(zone_subject(zone, path("tOpSummerC")), Quantity::new(QuantityKind::Temperature, t), Quantity::new(QuantityKind::Temperature, t_max),
-                loc(format!("Lower summer operative temperature to at most {t_max:.1} °C."), format!("Operative Sommertemperatur auf höchstens {t_max:.1} °C senken."))));
-    } else {
-        b = b.utilization(Quantity::new(QuantityKind::Temperature, t), Quantity::new(QuantityKind::Temperature, t_max))
-            .explanation(loc(format!("Summer θ_op={t:.1} °C lies within {t_min:.1}–{t_max:.1} °C."), format!("Operative Sommertemperatur θ_op={t:.1} °C liegt im Band {t_min:.1}–{t_max:.1} °C.")));
+    let clause = if doc.annex == AnnexChoice::De { "Table NA.3" } else { "Table B.2" };
+    let limits = seasonal_design_temperatures(doc.annex, usage, cat);
+    for (summer, season, measure, value, label) in [
+        (true, "summer", "tOpSummerC", zone.t_op_summer_c, loc("Summer design temperature", "Auslegungstemperatur Sommer")),
+        (false, "winter", "tOpWinterC", zone.t_op_winter_c, loc("Winter design temperature", "Auslegungstemperatur Winter")),
+    ] {
+        let target = zone_subject(zone, path(measure));
+        let b = CheckResult::assess(
+            format!("din16798-1.top.{season}.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", clause, "θ_op"),
+            target.clone(), label,
+        ).annex(doc.annex);
+        if summer && ComfortModel::parse(&zone.comfort_model) == ComfortModel::Adaptive {
+            out.push(b.not_applicable(loc(
+                "Use the selected adaptive comfort assessment for summer.",
+                "Für den Sommer gilt die gewählte adaptive Komfortbewertung.",
+            )).build());
+            continue;
+        }
+        let Some((heating, cooling)) = limits else {
+            out.push(b.status(CheckStatus::UnverifiedBasis).explanation(loc(
+                "Confirm a room use and design basis covered by the temperature table.",
+                "Eine von der Temperaturtabelle erfasste Raumnutzung und Auslegungsgrundlage bestätigen.",
+            )).build());
+            continue;
+        };
+        let current = Quantity::new(QuantityKind::Temperature, value);
+        let result = if summer {
+            let limit = Quantity::new(QuantityKind::Temperature, cooling);
+            let b = b.utilization(current, limit).explanation(loc(
+                format!("Summer design temperature {value:.1} °C. Reference cooling maximum {cooling:.1} °C."),
+                format!("Auslegungstemperatur Sommer {value:.1} °C. Richtwert Kühlmaximum {cooling:.1} °C."),
+            ));
+            if value > cooling {
+                b.remedy(Remedy::at_most(target, current, limit, loc(
+                    format!("Lower the summer design temperature to at most {cooling:.1} °C."),
+                    format!("Auslegungstemperatur Sommer auf höchstens {cooling:.1} °C senken."),
+                )))
+            } else { b }
+        } else {
+            let limit = Quantity::new(QuantityKind::Temperature, heating);
+            let b = b.minimum(current, limit).explanation(loc(
+                format!("Winter design temperature {value:.1} °C. Reference heating minimum {heating:.1} °C."),
+                format!("Auslegungstemperatur Winter {value:.1} °C. Richtwert Heizminimum {heating:.1} °C."),
+            ));
+            if value < heating {
+                b.remedy(Remedy::at_least(target, current, limit, loc(
+                    format!("Raise the winter design temperature to at least {heating:.1} °C."),
+                    format!("Auslegungstemperatur Winter auf mindestens {heating:.1} °C erhöhen."),
+                )))
+            } else { b }
+        };
+        out.push(result.build());
     }
-    out.push(b.build());
-
-    let (tw_min, tw_max) = operative_temp_band(cat, "winter");
-    let tw = zone.t_op_winter_c;
-    let mut bw = CheckResult::assess(
-        format!("din16798-1.top.winter.{}", zone.id), "DIN EN 16798-1",
-        ClauseId::new("EN 16798-1", "Table B.2", "θ_op,w"),
-        zone_subject(zone, path("tOpWinterC")),
-        loc("Winter operative temperature", "Operative Wintertemperatur"),
-    ).annex(doc.annex);
-    if tw < tw_min {
-        bw = bw.minimum(Quantity::new(QuantityKind::Temperature, tw), Quantity::new(QuantityKind::Temperature, tw_min))
-            .explanation(loc(format!("Winter θ_op={tw:.1} °C is below the {tw_min:.1} °C category floor."), format!("Operative Wintertemperatur θ_op={tw:.1} °C unterschreitet die Kategorieuntergrenze {tw_min:.1} °C.")))
-            .remedy(Remedy::at_least(zone_subject(zone, path("tOpWinterC")), Quantity::new(QuantityKind::Temperature, tw), Quantity::new(QuantityKind::Temperature, tw_min),
-                loc(format!("Raise winter operative temperature to at least {tw_min:.1} °C."), format!("Operative Wintertemperatur auf mindestens {tw_min:.1} °C erhöhen."))));
-    } else if tw > tw_max {
-        bw = bw.utilization(Quantity::new(QuantityKind::Temperature, tw), Quantity::new(QuantityKind::Temperature, tw_max))
-            .explanation(loc(format!("Winter θ_op={tw:.1} °C exceeds the {tw_max:.1} °C category ceiling."), format!("Operative Wintertemperatur θ_op={tw:.1} °C überschreitet die Kategorieobergrenze {tw_max:.1} °C.")))
-            .remedy(Remedy::at_most(zone_subject(zone, path("tOpWinterC")), Quantity::new(QuantityKind::Temperature, tw), Quantity::new(QuantityKind::Temperature, tw_max),
-                loc(format!("Lower winter operative temperature to at most {tw_max:.1} °C."), format!("Operative Wintertemperatur auf höchstens {tw_max:.1} °C senken."))));
-    } else {
-        bw = bw.utilization(Quantity::new(QuantityKind::Temperature, tw), Quantity::new(QuantityKind::Temperature, tw_max))
-            .explanation(loc(format!("Winter θ_op={tw:.1} °C lies within {tw_min:.1}–{tw_max:.1} °C."), format!("Operative Wintertemperatur θ_op={tw:.1} °C liegt im Band {tw_min:.1}–{tw_max:.1} °C.")));
-    }
-    out.push(bw.build());
 }
 
 /// 🔩️ Checks the clothing insulation and the seasonal comfort bands of a zone.
@@ -161,23 +169,48 @@ fn check_zone_clothing_insulation(
                 "Adaptives Modell gewählt; PMV/PPD (ISO 7730) werden unter Anhang B.2 nicht bewertet.",
             )).build());
         }
-        let centre = adaptive_comfort_temperature_c(doc.theta_rm_c);
-        let band = adaptive_band_k(cat);
-        let deviation = (zone.t_op_summer_c - centre).abs();
-        let mut ba = CheckResult::assess(
-            format!("din16798-1.adaptive.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Annex B.2", "θ_c"),
-            zone_subject(zone, path("tOpSummerC")), loc("Adaptive comfort (running-mean)", "Adaptiver Komfort (Außenluftmittel)"),
-        ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Temperature, deviation), Quantity::new(QuantityKind::Temperature, band))
-        .explanation(loc(
-            format!("|θ_op−θ_c|={deviation:.2} K; Cat band ±{band:.1} K around θ_c={centre:.1} °C (θ_rm={:.1} °C)", doc.theta_rm_c),
-            format!("|θ_op−θ_c|={deviation:.2} K; Kat.-Band ±{band:.1} K um θ_c={centre:.1} °C (θ_rm={:.1} °C)", doc.theta_rm_c),
-        ));
-        if deviation > band {
-            let target = centre + band.copysign(zone.t_op_summer_c - centre);
-            ba = ba.remedy(Remedy::at_most(zone_subject(zone, path("tOpSummerC")), Quantity::new(QuantityKind::Temperature, zone.t_op_summer_c), Quantity::new(QuantityKind::Temperature, target),
-                loc(format!("Adjust operative temperature toward {centre:.1} °C (within ±{band:.1} K)."), format!("Operative Temperatur Richtung {centre:.1} °C anpassen (innerhalb ±{band:.1} K)."))));
+        let target = zone_subject(zone, path("tOpSummerC"));
+        let clause = if doc.annex == AnnexChoice::De { "NA.4.1" } else { "B.2.2 / Figure B.1" };
+        let b = CheckResult::assess(
+            format!("din16798-1.adaptive.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", clause, "θ_c"),
+            target.clone(), loc("Adaptive comfort (running-mean)", "Adaptiver Komfort (Außenluftmittel)"),
+        ).annex(doc.annex);
+        if doc.annex == AnnexChoice::De {
+            out.push(b.status(CheckStatus::UnverifiedBasis).explanation(loc(
+                "The German occupied-temperature assessment requires hourly outdoor and indoor data under NA.4.1.",
+                "Für die deutsche Temperaturbewertung während der Nutzung werden nach NA.4.1 stündliche Außen- und Innendaten benötigt.",
+            )).build());
+            return;
         }
-        out.push(ba.build());
+        let Some((lower, upper)) = adaptive_operative_bounds(doc.theta_rm_c, cat) else {
+            out.push(b.status(CheckStatus::UnverifiedBasis).explanation(loc(
+                "Figure B.1 defines categories I to III for a running-mean outdoor temperature strictly between 10 and 30 °C.",
+                "Bild B.1 definiert Kategorien I bis III für gleitende Außenluftmittelwerte größer als 10 und kleiner als 30 °C.",
+            )).build());
+            return;
+        };
+        let t = zone.t_op_summer_c;
+        let current = Quantity::new(QuantityKind::Temperature, t);
+        let minimum = Quantity::new(QuantityKind::Temperature, lower);
+        let maximum = Quantity::new(QuantityKind::Temperature, upper);
+        let explanation = loc(
+            format!("Operative temperature {t:.1} °C. Category {:?} design range {lower:.1}–{upper:.1} °C at running mean {:.1} °C.", cat, doc.theta_rm_c),
+            format!("Operative Temperatur {t:.1} °C. Auslegungsbereich für Kategorie {:?} {lower:.1}–{upper:.1} °C bei gleitendem Mittelwert {:.1} °C.", cat, doc.theta_rm_c),
+        );
+        let assessment = if t < lower {
+            b.minimum(current, minimum).remedy(Remedy::at_least(target, current, minimum, loc(
+                format!("Raise the operative temperature to at least {lower:.1} °C."),
+                format!("Operative Temperatur auf mindestens {lower:.1} °C erhöhen."),
+            )))
+        } else if t > upper {
+            b.utilization(current, maximum).remedy(Remedy::at_most(target, current, maximum, loc(
+                format!("Lower the operative temperature to at most {upper:.1} °C."),
+                format!("Operative Temperatur auf höchstens {upper:.1} °C senken."),
+            )))
+        } else {
+            b.utilization(current, maximum)
+        };
+        out.push(assessment.explanation(explanation).build());
     } else {
         out.push(CheckResult::assess(
             format!("din16798-1.adaptive.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Annex B.2", "θ_c"),
@@ -263,13 +296,35 @@ fn check_zone_air_quality(
     linked_type: Option<VentSystemType>,
 ) {
     use part_1::*;
-    let method_delta = co2_limit_above_outdoor_ppm(annex, usage, cat, doc.outdoor_co2_ppm);
-    let q_req = required_outdoor_air_for_method(method, zone.occupants, zone.floor_area_m2, cat, pollution, zone.metabolic_rate_met, method_delta);
+    let method_delta = co2_above_outdoor_ppm(annex.choice, cat);
+    let q_design = required_outdoor_air_for_method(annex.choice, method, zone.occupants, zone.floor_area_m2, cat, usage, pollution, method_delta);
+    let q_method = q_design.unwrap_or(0.0);
+    let q_hygiene = hygienic_outdoor_air_minimum_m3_h(zone.occupants, usage);
+    let q_req = q_method.max(q_hygiene);
+    let hygiene_clause = match annex.choice {
+        AnnexChoice::De => "NA.5.1.1",
+        AnnexChoice::En => "B.3.1.1",
+    };
     let q = zone.outdoor_air_supplied_m3_h;
-    let method_clause = match method {
-        VentMethod::Method1PerceivedAirQuality => ("Table B.6/B.7", "Method 1 perceived air quality", "Methode 1 empfundene Luftqualität"),
-        VentMethod::Method2LimitConcentration => ("§6.3 method 2", "Method 2 limit concentration", "Methode 2 Grenzkonzentration"),
-        VentMethod::Method3PredefinedRates => ("Annex B predefined", "Method 3 predefined rates", "Methode 3 vorgegebene Raten"),
+    let method_clause = match (method, usage, annex.choice) {
+        (VentMethod::Method3PredefinedRates, _, AnnexChoice::De)
+            => ("NA.5.1.4", "Applicability of Method 3", "Anwendbarkeit von Verfahren 3"),
+        (_, OccupancyType::Residential, AnnexChoice::De)
+            => ("NA.5.2", "Dwelling ventilation design basis", "Auslegungsgrundlage für Wohnungslüftung"),
+        (VentMethod::Method1PerceivedAirQuality, OccupancyType::Residential, _)
+            => ("Table B.11 (3)", "Method 1 residential supply", "Methode 1 Wohnraum-Zuluft"),
+        (VentMethod::Method1PerceivedAirQuality, _, AnnexChoice::De)
+            => ("Tables NA.6/NA.7", "Method 1 perceived air quality", "Methode 1 empfundene Luftqualität"),
+        (VentMethod::Method1PerceivedAirQuality, _, AnnexChoice::En)
+            => ("Tables B.6/B.7", "Method 1 perceived air quality", "Methode 1 empfundene Luftqualität"),
+        (VentMethod::Method2LimitConcentration, _, AnnexChoice::De)
+            => ("Table NA.9", "Method 2 CO₂ limit concentration", "Methode 2 CO₂-Grenzkonzentration"),
+        (VentMethod::Method2LimitConcentration, _, AnnexChoice::En)
+            => ("Table B.9", "Method 2 CO₂ limit concentration", "Methode 2 CO₂-Grenzkonzentration"),
+        (VentMethod::Method3PredefinedRates, OccupancyType::Residential, _)
+            => ("Table B.11 (2)", "Method 3 residential supply per person", "Methode 3 Wohnraum-Zuluft je Person"),
+        (VentMethod::Method3PredefinedRates, _, _)
+            => ("Table B.10", "Method 3 predefined office rates", "Methode 3 vorgegebene Büro-Luftvolumenströme"),
     };
     let system_note = match linked_type {
         Some(VentSystemType::Natural) => ("natural ventilation system", "natürliche Lüftung"),
@@ -277,14 +332,53 @@ fn check_zone_air_quality(
         Some(VentSystemType::CentralMech) => ("central mechanical system", "zentrale mechanische Lüftung"),
         None => ("unresolved system", "unaufgelöste Anlage"),
     };
+    let governing_clause = if q_hygiene > q_method { hygiene_clause } else { method_clause.0 };
+    let (mut explanation_en, mut explanation_de) = (
+        format!("Supplied {q:.1} m³/h. Required {q_req:.1} m³/h. Served by «{linked_name}» ({}).", system_note.0),
+        format!("Zugeführt {q:.1} m³/h. Erforderlich {q_req:.1} m³/h. Versorgt durch «{linked_name}» ({}).", system_note.1),
+    );
+    if q_hygiene > 0.0 && q_design.is_ok() {
+        explanation_en.push_str(&format!(" Design method {q_method:.1} m³/h. Hygienic minimum {q_hygiene:.1} m³/h at 4 L/s per person with complete mixing ({hygiene_clause})."));
+        explanation_de.push_str(&format!(" Auslegungsverfahren {q_method:.1} m³/h. Hygienischer Mindestwert {q_hygiene:.1} m³/h bei 4 l/s je Person und vollständiger Vermischung ({hygiene_clause})."));
+    }
+    if let Err(gap) = q_design {
+        let reason = match gap {
+            OutdoorAirBasisGap::OutsideDefaultTable => (
+                "The published default table does not define an airflow rate for these inputs. Use a verified project design basis.",
+                "Die veröffentlichte Standardtabelle enthält für diese Angaben keinen Luftvolumenstrom. Eine verifizierte Projektauslegung verwenden.",
+            ),
+            OutdoorAirBasisGap::GermanMethod3 => (
+                "The German national annex excludes Method 3. Use the design basis applicable to the building.",
+                "Der deutsche Nationale Anhang schließt Verfahren 3 aus. Die für das Gebäude geltende Auslegungsgrundlage verwenden.",
+            ),
+            OutdoorAirBasisGap::GermanResidentialBasis => (
+                "German dwelling design requires the entire unit's floor area. Apply DIN 1946-6 up to 250 m² and the non-residential design rules above 250 m².",
+                "Die deutsche Wohnungslüftung erfordert die Fläche der gesamten Nutzeinheit. Bis 250 m² gilt DIN 1946-6, oberhalb gelten die Auslegungsregeln für Nichtwohngebäude.",
+            ),
+            OutdoorAirBasisGap::GermanVeryLowPollutionEvidence => (
+                "NA.6.2 requires written client approval, product-selection documentation and an indoor-air acceptance plan for the very-low-pollution design class.",
+                "Für die Auslegung als sehr schadstoffarm nach NA.6.2 sind die schriftliche Zustimmung des Bauherrn, die Dokumentation der Bauproduktauswahl und ein Abnahmeplan für die Raumluft erforderlich.",
+            ),
+            OutdoorAirBasisGap::NoPositiveCo2Gradient => (
+                "The permitted indoor CO₂ concentration must be above the outdoor concentration for dilution to determine a flow.",
+                "Die zulässige CO₂-Innenkonzentration muss über der Außenkonzentration liegen, damit sich ein Verdünnungsvolumenstrom bestimmen lässt.",
+            ),
+        };
+        explanation_en = reason.0.into();
+        explanation_de = reason.1.into();
+        if q_hygiene > 0.0 {
+            explanation_en.push_str(&format!(" Complete-mixing hygienic minimum {q_hygiene:.1} m³/h."));
+            explanation_de.push_str(&format!(" Hygienischer Mindestwert bei vollständiger Vermischung {q_hygiene:.1} m³/h."));
+        }
+    }
     let mut bv = CheckResult::assess(
-        format!("din16798-1.vent.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", method_clause.0, "q"),
+        format!("din16798-1.vent.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", governing_clause, "q"),
         zone_subject(zone, path("outdoorAirSuppliedM3H")), loc(method_clause.1, method_clause.2),
     ).annex(doc.annex).minimum(Quantity::new(QuantityKind::VentilationRate, q), Quantity::new(QuantityKind::VentilationRate, q_req))
-    .explanation(loc(
-        format!("q={q:.1} m³/h; required {q_req:.1} m³/h via {}; served by «{linked_name}» ({})", method.as_str(), system_note.0),
-        format!("q={q:.1} m³/h; erforderlich {q_req:.1} m³/h nach {}; versorgt durch «{linked_name}» ({})", method.as_str(), system_note.1),
-    ));
+    .explanation(loc(explanation_en, explanation_de));
+    if q_design.is_err() && q >= q_req {
+        bv = bv.status(CheckStatus::UnverifiedBasis);
+    }
     if q < q_req {
         bv = bv.remedy(Remedy::at_least(zone_subject(zone, path("outdoorAirSuppliedM3H")), Quantity::new(QuantityKind::VentilationRate, q), Quantity::new(QuantityKind::VentilationRate, q_req),
             loc(
@@ -295,13 +389,30 @@ fn check_zone_air_quality(
     out.push(bv.build());
 
     let dco2 = (zone.co2_ppm - doc.outdoor_co2_ppm).max(0.0);
-    let effective_limit_above = co2_limit_above_outdoor_ppm(annex, usage, cat, doc.outdoor_co2_ppm);
+    let effective_limit_above = method_delta;
+    let co2_clause = match (annex.choice, usage) {
+        (AnnexChoice::De, OccupancyType::Residential) => "NA.5.2",
+        (AnnexChoice::De, _) => "Table NA.9",
+        (AnnexChoice::En, OccupancyType::Residential) => "Table B.12 (living rooms)",
+        (AnnexChoice::En, _) => "Table B.9",
+    };
+    let workplace_en = if annex.choice == AnnexChoice::De && usage != OccupancyType::Residential && zone.co2_ppm > 1000.0 {
+        " For German workplaces, review the measurement-based actions in ASR A3.6."
+    } else { "" };
+    let workplace_de = if workplace_en.is_empty() { "" } else {
+        " Für deutsche Arbeitsstätten die messwertbezogenen Maßnahmen der ASR A3.6 berücksichtigen."
+    };
     let mut bc = CheckResult::assess(
-        format!("din16798-1.co2.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", annex.choice.label(), "CO2"),
+        format!("din16798-1.co2.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", co2_clause, "CO2"),
         zone_subject(zone, path("co2Ppm")), loc("CO₂ above outdoor", "CO₂ über Außenluft"),
     ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, dco2), Quantity::new(QuantityKind::Dimensionless, effective_limit_above))
-    .explanation(loc(format!("ΔCO₂={dco2:.0} ppm; limit {effective_limit_above:.0} ppm (Cat {:?}, {})", cat, annex.choice.label()), format!("ΔCO₂={dco2:.0} ppm; Grenzwert {effective_limit_above:.0} ppm (Kat. {:?}, {})", cat, annex.choice.label())));
-    if dco2 > effective_limit_above {
+    .explanation(loc(format!("ΔCO₂={dco2:.0} ppm; limit {effective_limit_above:.0} ppm (Cat {:?}, {}).{workplace_en}", cat, annex.choice.label()), format!("ΔCO₂={dco2:.0} ppm; Grenzwert {effective_limit_above:.0} ppm (Kat. {:?}, {}).{workplace_de}", cat, annex.choice.label())));
+    if annex.choice == AnnexChoice::De && usage == OccupancyType::Residential {
+        bc = bc.status(CheckStatus::UnverifiedBasis).explanation(loc(
+            "Confirm the dwelling-unit design basis under NA.5.2 before applying a design criterion.",
+            "Vor Anwendung eines Auslegungskriteriums die Auslegungsgrundlage der Wohneinheit nach NA.5.2 bestätigen.",
+        ));
+    } else if dco2 > effective_limit_above {
         let target_ppm = doc.outdoor_co2_ppm + effective_limit_above;
         let q_boost = if dco2 > 0.0 { q * (dco2 / effective_limit_above) } else { q_req };
         let q_needed = q_boost.max(q_req);
@@ -328,85 +439,160 @@ fn check_zone_air_quality(
     out.push(bc.build());
 }
 
-/// 🧲️ Checks the humidity, illuminance, noise and draught of a zone.
-fn check_zone_humidity_light_noise_and_draught(
+/// 💧 Reports the humidity control design values and checks the known humidification equipment.
+fn check_zone_humidity(
     doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
     zone: &ZoneDocument,
-    annex: &annex_params::AnnexParams,
+    linked: Option<&VentSystemDocument>,
+    out: &mut Vec<CheckResult>,
+    cat: ComfortCategory,
+    path: &dyn Fn(&str) -> String,
+) {
+    let clause = if doc.annex == AnnexChoice::De { "Table NA.10" } else { "Table B.16" };
+    let subject = zone_subject(zone, path("rhPercent"));
+    let mut brh = CheckResult::assess(
+        format!("din16798-1.rh.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", clause, "RH"),
+        subject.clone(), loc("Humidity control design", "Auslegung der Luftfeuchteregelung"),
+    ).annex(doc.annex);
+    let Some((rh_min, rh_max)) = part_1::humidity_band(doc.annex, cat) else {
+        out.push(brh.status(CheckStatus::Info).explanation(loc(
+            "The table provides humidity-control design references for categories I through III.",
+            "Die Tabelle enthält Auslegungsrichtwerte für die Luftfeuchteregelung für die Kategorien I bis III.",
+        )).build());
+        return;
+    };
+    let rh = zone.rh_percent;
+    let humidifier = linked.is_some_and(|system| system.humidification_provided_kg_h > 0.0);
+    let current = Quantity::new(QuantityKind::Dimensionless, rh);
+    let minimum = Quantity::new(QuantityKind::Dimensionless, rh_min);
+    let maximum = Quantity::new(QuantityKind::Dimensionless, rh_max);
+    if rh <= rh_max && humidifier {
+        brh = brh.minimum(current, minimum);
+        if rh < rh_min {
+            brh = brh.remedy(Remedy::at_least(subject, current, minimum, loc(
+                format!("Raise the humidification design setpoint to at least {rh_min:.0} %."),
+                format!("Auslegungssollwert der Befeuchtung auf mindestens {rh_min:.0} % erhöhen."),
+            )));
+        }
+    } else {
+        brh = brh.utilization(current, maximum).status(CheckStatus::Info);
+    }
+    out.push(brh.explanation(loc(
+        format!("Design relative humidity {rh:.0} %. For installed humidity control, the humidification reference is {rh_min:.0} % and the dehumidification reference is {rh_max:.0} %."),
+        format!("Relative Auslegungsfeuchte {rh:.0} %. Bei vorhandener Luftfeuchteregelung beträgt der Richtwert für Befeuchtung {rh_min:.0} % und für Entfeuchtung {rh_max:.0} %."),
+    )).build());
+}
+
+/// 🔅️ Checks the available illuminance, sound and draught inputs.
+fn check_zone_light_noise_and_draught(
+    doc: &semio_s_artifact_norm_din16798_model::Din16798Snapshot,
+    zone: &ZoneDocument,
     out: &mut Vec<CheckResult>,
     cat: ComfortCategory,
     usage: OccupancyType,
     path: &dyn Fn(&str) -> String,
 ) {
     use part_1::*;
-    let (rh_min, rh_max) = humidity_band(cat);
-    let rh = zone.rh_percent;
-    let mut brh = CheckResult::assess(
-        format!("din16798-1.rh.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Table B.16", "RH"),
-        zone_subject(zone, path("rhPercent")), loc("Relative humidity", "Relative Feuchte"),
-    ).annex(doc.annex);
-    if rh < rh_min {
-        brh = brh.minimum(Quantity::new(QuantityKind::Dimensionless, rh), Quantity::new(QuantityKind::Dimensionless, rh_min))
-            .remedy(Remedy::at_least(zone_subject(zone, path("rhPercent")), Quantity::new(QuantityKind::Dimensionless, rh), Quantity::new(QuantityKind::Dimensionless, rh_min),
-                loc(format!("Raise relative humidity to at least {rh_min:.0} %."), format!("Relative Feuchte auf mindestens {rh_min:.0} % erhöhen."))));
-    } else if rh > rh_max {
-        brh = brh.utilization(Quantity::new(QuantityKind::Dimensionless, rh), Quantity::new(QuantityKind::Dimensionless, rh_max))
-            .remedy(Remedy::at_most(zone_subject(zone, path("rhPercent")), Quantity::new(QuantityKind::Dimensionless, rh), Quantity::new(QuantityKind::Dimensionless, rh_max),
-                loc(format!("Lower relative humidity to at most {rh_max:.0} %."), format!("Relative Feuchte auf höchstens {rh_max:.0} % senken."))));
-    } else {
-        brh = brh.utilization(Quantity::new(QuantityKind::Dimensionless, rh), Quantity::new(QuantityKind::Dimensionless, rh_max));
-    }
-    out.push(brh.explanation(loc(format!("RH={rh:.0} %; band {rh_min:.0}–{rh_max:.0} %"), format!("RF={rh:.0} %; Band {rh_min:.0}–{rh_max:.0} %"))).build());
-
-    let e_min = illuminance_min_lx(usage, cat);
+    let lighting_rule = if doc.annex == AnnexChoice::De { "NA.7 / DIN EN 12464-1" } else { "Table B.18" };
+    let light_target = zone_subject(zone, path("illuminanceLx"));
     let mut bi = CheckResult::assess(
-        format!("din16798-1.illuminance.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Annex B", "E"),
-        zone_subject(zone, path("illuminanceLx")), loc("Illuminance", "Beleuchtungsstärke"),
-    ).annex(doc.annex).minimum(Quantity::new(QuantityKind::Dimensionless, zone.illuminance_lx), Quantity::new(QuantityKind::Dimensionless, e_min))
-    .explanation(loc(format!("E={:.0} lx; min {:.0} lx", zone.illuminance_lx, e_min), format!("E={:.0} lx; min. {:.0} lx", zone.illuminance_lx, e_min)));
-    if zone.illuminance_lx < e_min {
-        bi = bi.remedy(Remedy::at_least(zone_subject(zone, path("illuminanceLx")), Quantity::new(QuantityKind::Dimensionless, zone.illuminance_lx), Quantity::new(QuantityKind::Dimensionless, e_min),
-            loc(format!("Raise design illuminance to at least {e_min:.0} lx."), format!("Beleuchtungsstärke auf mindestens {e_min:.0} lx erhöhen."))));
+        format!("din16798-1.illuminance.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", lighting_rule, "E_m"),
+        light_target.clone(), loc("Maintained task illuminance", "Wartungswert der Beleuchtungsstärke"),
+    ).annex(doc.annex);
+    if let Some(minimum) = illuminance_min_lx(usage) {
+        let reading = Quantity::new(QuantityKind::Dimensionless, zone.illuminance_lx);
+        let required = Quantity::new(QuantityKind::Dimensionless, minimum);
+        bi = bi.minimum(reading, required).explanation(loc(
+            format!("Maintained task illuminance {:.0} lx. Reference minimum {minimum:.0} lx.", zone.illuminance_lx),
+            format!("Wartungswert der Beleuchtungsstärke {:.0} lx. Referenzminimum {minimum:.0} lx.", zone.illuminance_lx),
+        ));
+        if zone.illuminance_lx < minimum {
+            bi = bi.remedy(Remedy::at_least(light_target, reading, required, loc(
+                format!("Raise the maintained task illuminance to at least {minimum:.0} lx."),
+                format!("Wartungswert der Beleuchtungsstärke auf mindestens {minimum:.0} lx erhöhen."),
+            )));
+        }
+    } else {
+        bi = bi.status(CheckStatus::UnverifiedBasis).explanation(loc(
+            "Select an applicable task-specific criterion for this room's lighting design.",
+            "Ein zutreffendes tätigkeitsbezogenes Kriterium für die Lichtplanung dieses Raums wählen.",
+        ));
     }
     out.push(bi.build());
 
-    let nlim = acoustic_limit_db(cat, usage, annex);
+    let sound_rule = if doc.annex == AnnexChoice::De { "Table NA.11" } else { "Table B.20" };
+    let sound_target = zone_subject(zone, path("noiseDb"));
     let mut bn = CheckResult::assess(
-        format!("din16798-1.noise.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Annex B", "L_Aeq"),
-        zone_subject(zone, path("noiseDb")), loc("Indoor noise level", "Innengeräuschpegel"),
-    ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, zone.noise_db), Quantity::new(QuantityKind::Dimensionless, nlim))
-    .explanation(loc(format!("L_Aeq={:.1} dB; limit {:.1} dB", zone.noise_db, nlim), format!("L_Aeq={:.1} dB; Grenzwert {:.1} dB", zone.noise_db, nlim)));
-    if zone.noise_db > nlim {
-        bn = bn.remedy(Remedy::at_most(zone_subject(zone, path("noiseDb")), Quantity::new(QuantityKind::Dimensionless, zone.noise_db), Quantity::new(QuantityKind::Dimensionless, nlim),
-            loc(format!("Reduce ventilation noise to at most {nlim:.1} dB(A)."), format!("Lüftungsgeräusch auf höchstens {nlim:.1} dB(A) senken."))));
+        format!("din16798-1.noise.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", sound_rule, "L_Aeq,nT"),
+        sound_target.clone(), loc("Indoor building-services noise", "Anlagenbedingter Innengeräuschpegel"),
+    ).annex(doc.annex);
+    if let Some(maximum) = acoustic_limit_db(doc.annex, usage, cat) {
+        let reading = Quantity::new(QuantityKind::Dimensionless, zone.noise_db);
+        let limit = Quantity::new(QuantityKind::Dimensionless, maximum);
+        let profile = match usage {
+            OccupancyType::Office => ("Small-office reference.", "Richtwert für kleine Büros."),
+            OccupancyType::Residential => ("Living-room reference.", "Richtwert für Wohnzimmer."),
+            OccupancyType::Retail => ("Shop reference.", "Richtwert für Ladengeschäfte."),
+            OccupancyType::Kitchen => ("Commercial kitchen reference.", "Richtwert für gewerbliche Küchen."),
+            _ => ("", ""),
+        };
+        bn = bn.utilization(reading, limit).explanation(loc(
+            format!("Equipment L_Aeq,nT {:.1} dB(A). Design maximum {maximum:.1} dB(A). {}", zone.noise_db, profile.0),
+            format!("Anlagenbedingter L_Aeq,nT {:.1} dB(A). Auslegungsmaximum {maximum:.1} dB(A). {}", zone.noise_db, profile.1),
+        ));
+        if zone.noise_db > maximum {
+            bn = bn.remedy(Remedy::at_most(sound_target, reading, limit, loc(
+                format!("Reduce building-services noise to at most {maximum:.1} dB(A)."),
+                format!("Anlagenbedingten Geräuschpegel auf höchstens {maximum:.1} dB(A) senken."),
+            )));
+        }
+    } else {
+        bn = bn.status(CheckStatus::UnverifiedBasis).explanation(loc(
+            "The building-services noise table specifies categories I through III.",
+            "Die Tabelle für anlagenbedingte Geräuschpegel enthält die Kategorien I bis III.",
+        ));
     }
     out.push(bn.build());
 
-    let dr = draught_rate_percent(zone.t_op_summer_c, zone.air_speed_m_s, zone.turbulence_intensity_percent);
-    let dr_lim = draught_limit_percent(cat);
+    let subject = zone_subject(zone, path("airSpeedMS"));
+    let clause = if doc.annex == AnnexChoice::De { "Table NA.4" } else { "Table B.3" };
     let mut bd = CheckResult::assess(
-        format!("din16798-1.draught.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "§7.2 / ISO 7730", "DR"),
-        zone_subject(zone, path("airSpeedMS")), loc("Draught rate (ISO 7730)", "Zugluftrate (ISO 7730)"),
-    ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, dr), Quantity::new(QuantityKind::Dimensionless, dr_lim))
-    .explanation(loc(
-        format!("DR={dr:.1} % at v={:.2} m/s, Tu={:.0} %, θ={:.1} °C; Cat limit {dr_lim:.0} %", zone.air_speed_m_s, zone.turbulence_intensity_percent, zone.t_op_summer_c),
-        format!("DR={dr:.1} % bei v={:.2} m/s, Tu={:.0} %, θ={:.1} °C; Kat.-Grenzwert {dr_lim:.0} %", zone.air_speed_m_s, zone.turbulence_intensity_percent, zone.t_op_summer_c),
-    ));
-    if dr > dr_lim {
-        let mut v_req = zone.air_speed_m_s;
-        for step in 0..40 {
-            let trial = (zone.air_speed_m_s * (1.0 - 0.025 * (step as f64 + 1.0))).max(0.05);
-            if draught_rate_percent(zone.t_op_summer_c, trial, zone.turbulence_intensity_percent) <= dr_lim {
-                v_req = trial;
-                break;
-            }
-            v_req = trial;
-        }
-        bd = bd.remedy(Remedy::at_most(zone_subject(zone, path("airSpeedMS")), Quantity::new(QuantityKind::Dimensionless, zone.air_speed_m_s), Quantity::new(QuantityKind::Dimensionless, v_req),
+        format!("din16798-1.draught.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", clause, "DR"),
+        subject.clone(), loc("Draught rate (ISO 7730)", "Zugluftrate (ISO 7730)"),
+    ).annex(doc.annex);
+    let t = zone.t_op_summer_c;
+    let speed = zone.air_speed_m_s;
+    let turbulence = zone.turbulence_intensity_percent;
+    let Some(limit) = draught_limit_percent(doc.annex, cat) else {
+        out.push(bd.not_applicable(loc(
+            "The local draught table contains limits for categories I through III.",
+            "Die Tabelle für lokale Zugluft enthält Grenzwerte für die Kategorien I bis III.",
+        )).build());
+        return;
+    };
+    let Some(dr) = draught_rate_percent(t, speed, turbulence) else {
+        out.push(bd.status(CheckStatus::UnverifiedBasis).explanation(loc(
+            "The draught equation requires local air temperature between 20 and 26 °C, speed below 0.5 m/s and turbulence from 10 to 60 %.",
+            "Die Zugluftgleichung erfordert eine örtliche Lufttemperatur von 20 bis 26 °C, Luftgeschwindigkeiten unter 0,5 m/s und einen Turbulenzgrad von 10 bis 60 %.",
+        )).build());
+        return;
+    };
+    bd = bd.utilization(Quantity::new(QuantityKind::Dimensionless, dr), Quantity::new(QuantityKind::Dimensionless, limit))
+        .explanation(loc(
+            format!("Estimated DR {dr:.1} % at v={speed:.2} m/s and turbulence {turbulence:.0} %, assuming local air temperature equals the operative design temperature of {t:.1} °C. Category limit {limit:.0} %."),
+            format!("Geschätzte Zugluftrate {dr:.1} % bei v={speed:.2} m/s und Turbulenzgrad {turbulence:.0} %, bei Übereinstimmung von örtlicher Lufttemperatur und operativer Auslegungstemperatur von {t:.1} °C. Kategoriegrenzwert {limit:.0} %."),
+        ));
+    if dr > limit {
+        let maximum_speed = maximum_air_speed_for_draught(t, speed, turbulence, limit);
+        bd = bd.remedy(Remedy::at_most(
+            subject,
+            Quantity::new(QuantityKind::Dimensionless, speed),
+            Quantity::new(QuantityKind::Dimensionless, maximum_speed),
             loc(
-                format!("Reduce local air speed to at most {v_req:.2} m/s so DR ≤ {dr_lim:.0} %."),
-                format!("Lokale Luftgeschwindigkeit auf höchstens {v_req:.2} m/s senken, damit DR ≤ {dr_lim:.0} %."),
-            )));
+                format!("Reduce local air speed to at most {maximum_speed:.3} m/s under the stated temperature and turbulence."),
+                format!("Lokale Luftgeschwindigkeit bei der angegebenen Temperatur und Turbulenz auf höchstens {maximum_speed:.3} m/s senken."),
+            ),
+        ));
     }
     out.push(bd.build());
 }

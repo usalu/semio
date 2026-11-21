@@ -371,7 +371,7 @@ export function resolveMarqueeComponentIds(
   coverage: SelectionMarqueeCoverage,
 ): readonly number[] {
   const active = instances.find((instance) => instance.id === activeObjectId) ?? instances.find((instance) => instance.interactionId === activeObjectId);
-  if (!active) return [];
+  if (!active || active.componentPickable === false) return [];
   const meshId = active.meshId ?? active.id;
   const meshData = meshes.find((mesh) => mesh.id === meshId)?.data;
   if (!meshData) return [];

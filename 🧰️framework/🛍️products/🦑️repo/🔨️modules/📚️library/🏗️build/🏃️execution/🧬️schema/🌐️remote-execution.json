@@ -1420,6 +1420,7 @@
             "no-toolchain",
             "provisioning",
             "sandbox-unavailable",
+            "action-unsupported",
             "disk-full",
             "policy-off",
             "not-registered",

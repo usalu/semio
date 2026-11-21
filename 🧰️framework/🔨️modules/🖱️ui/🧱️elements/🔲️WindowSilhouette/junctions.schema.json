@@ -1,12 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object", "required": ["cases"], "additionalProperties": false,
+  "type": "object", "required": ["cases", "paintSpans"], "additionalProperties": false,
   "properties": { "cases": { "type": "array", "items": {
     "type": "object", "required": ["name", "rectangles", "point", "expected"], "additionalProperties": false,
     "properties": {
       "name": { "type": "string" },
       "rectangles": { "type": "array", "items": { "type": "array", "items": { "type": "number" }, "minItems": 6, "maxItems": 6 } },
       "point": { "$ref": "#/$defs/point" }, "expected": { "$ref": "#/$defs/point" }
+    }
+  } }, "paintSpans": { "type": "array", "items": {
+    "type": "object", "required": ["name", "horizontal", "centerline", "from", "to", "expected"], "additionalProperties": false,
+    "properties": {
+      "name": { "type": "string" }, "horizontal": { "type": "boolean" }, "centerline": { "type": "number" },
+      "from": { "$ref": "#/$defs/point" }, "to": { "$ref": "#/$defs/point" }, "expected": { "type": "array", "items": { "$ref": "#/$defs/point" } }
     }
   } } },
   "$defs": { "point": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 } }

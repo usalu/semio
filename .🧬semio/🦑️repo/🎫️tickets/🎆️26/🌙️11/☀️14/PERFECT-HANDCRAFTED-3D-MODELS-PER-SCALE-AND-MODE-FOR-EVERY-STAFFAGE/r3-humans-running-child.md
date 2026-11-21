@@ -117,3 +117,56 @@ Resumed on 2026-11-19 23:24 after the first author was cut off at this section. 
 - The arm poses and arm clip keys were not retargeted (only legs and pelvis changed with the rig); they read right in every opened frame.
 
 Final state: catalog spliced, `VALID` and `PASS` at every scale (2026-11-19 23:30).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts (ticket folder): `r5-runners-kit.ts` (shared with the jogger), `r5-running-child-body.ts` (every key section of the body at 1:50, 1:100, 1:200, 1:500), `r5-running-child-lists.ts` (thermal and skeleton, from the round 3 lists), `r5-running-child-texts.ts`, `r5-running-child-figure.ts` (writes `volumes/humans/running-child.json`), `r5-running-child-draw2d.ts` + `r5-running-child-draw2d.py`, `r5-running-child-roots.py`, `r5-running-child-run.sh`, `r5-runners-candidate.py`, `r5-runners-print-probe.ts`.
+
+State: spliced. `r3-validate.ts humans/running-child`: `VALID ... schema 0, validateAsset 0` (the round 4 catalog was INVALID under the print rule: 10 findings). `volumes-check.ts humans/running-child --product`: `PASS`.
+
+### Reference
+
+The table of section 1 stands (Snyder 1977, WHO 2007, Winter, de Leva): stature 1.125 m barefoot, head 1/6 H, hip 0.50 H, knee 0.27 H, C7 0.82 H, shoulder joint 0.76 H, upper arm / forearm / hand 0.165 / 0.13 / 0.108 H, girths thigh 0.29 (mid), calf 0.235, ankle 0.155, upper arm 0.17, forearm 0.165, wrist 0.115 m, hand 0.12 x 0.056 m, sneaker EU 28 0.19 x 0.075 m.
+
+### Model against reference (1:50, rest pose, barefoot)
+
+| quantity | model | reference | deviation |
+|---|---|---|---|
+| hip / knee / ankle joint | 0.5625 / 0.306 / 0.044 m | 0.50 / 0.27 / 0.039 H = 0.5625 / 0.304 / 0.044 | 0 / +0.7 / 0 % |
+| C7 / shoulder joint | 0.9225 / 0.858 m | 0.82 / 0.76 H = 0.9225 / 0.855 | 0 / +0.4 % |
+| upper arm / forearm / hand | 0.1848 / 0.1456 / 0.120 m | 0.186 / 0.146 / 0.122 | -0.6 / -0.3 / -1.6 % |
+| head chin-vertex | 0.1845 m | 0.185-0.19 m | in range |
+| thigh mid / calf / ankle girth | 0.293 / 0.240 / 0.153 m | 0.29 / 0.235 / 0.155 | +1.0 / +2.1 / -1.3 % |
+| upper arm / forearm / wrist girth | 0.173 / 0.160 / 0.114 m (round 4 wrist 0.108) | 0.17 / 0.165 / 0.115 | +1.8 / -3.0 / -0.9 % |
+| hand breadth | 0.056 m | 0.056 m | 0 % |
+| sneaker | 0.19 x 0.075 m | 0.19 x 0.076 m | 0 / -1.3 % |
+
+### Grades (body / thermal / structure)
+
+| scale | before (round 4) | after |
+|---|---|---|
+| 1:50 | B- (faceted tube limbs with crease rings at knees and elbows, claw hands of separate capsule fingers with ball tips, seat balls, pad sleeves, nose peg) / B+ / A- | A- / A- / A- |
+| 1:100 | B / B+ / B+ | A- / A- / B+ |
+| 1:200 | B / B / B+ | B+ / B+ / B+ |
+| 1:500 | B- (arm and thigh one skin form, shorts read as briefs) / B / B | B+ / B+ / B |
+| 2D | B (catalog unprintable at 1:500 and at the 1:200/1:350 boundary) | A- (printable at every scale) |
+
+### Changes
+
+- Body rebuilt at all four scales with spline lofts through the stated key sections: T-shirt with the child's round belly standing forward of the chest, narrow sloping shoulders and shoulder caps continuing the trapezius slope; short neck with a trapezius base; nape hair; shorts with integrated small gluteal mass (seat balls gone); smooth thighs, soft knees with flat knee caps, calves set back; sneakers with sole, heel counter, collar and toe cap; slim arms, wrist to reference; loosely closed hand at 1:50 (palm, grouped curled fingers along a path, thumb along the index finger), curled mitten at 1:100 and 1:200; straps swept along a smoothed path; 1:500 split into shorts leg / thigh and sleeve / upper arm so shorts and sleeves read, and its thermal model takes those solids directly (no more re-cut solids).
+- Root: 1:500 `validRange.maxDenominator` 1000 -> 550 (forearm, toe cap and sock cuff fall below the 0.2 mm printable feature beyond 1:550). Print fixes in the forms: 1:200 shirt hem 10 mm higher and pack top 12 mm lower behind the shoulders (front-view slivers in `crouch` and at 1:350); 1:500 shirt hem 37 mm higher and shorts crotch 20 mm lower (front-view sliver in `crouch`), stated in the decisions.
+- Structure: 1:500 metatarsal rod ends at the ball (it stood 76 mm outside the toe-off shoe), radius 3.8 mm to stay slender.
+- 2D redrawn at every scale from the new bodies (section frames of path lofts honoured); hem strokes moved to the new hems.
+- Decisions rewritten (en/de) for the four bodies and the 1:500 thermal model.
+
+Silhouette IoU elevation / front / plan: 1:50 0.994 / 0.974 / 0.959, 1:100 0.995 / 0.971 / 0.964, 1:200 0.996 / 0.965 / 0.941, 1:500 0.985 / 0.961 / 0.916. Thermal area deviations 1:50: face 17 %, arms 26 %, legs 17 %, T-shirt 26 %, shorts 19 %, socks 27 %, shoes 26 %, backpack 14 % (all within the limits).
+
+### Looked at (opened)
+
+`r3-sheet` 1:50 body (full sheet, three-quarter close view and head/shoulder crop), 1:50 structure, 1:50 thermal cut, 1:100 and 1:500 body; `r3-2d` 1:50 and 1:500; poses at 1:50: toe-off (default), standing-ready, airborne, landing, crouch, jump-takeoff, jump-apex and `sprint-cycle` t 0.15 s. Rendered but not opened: mid-stride, flight-1..3, 1:200 body, thermal and structure of 1:100-1:500, `r3-2d` 1:100 and 1:200.
+
+### Remaining issues
+
+- Face stays a simple mask (no lips or modelled brows; 2D strokes carry them); hair a cap without strands.
+- 1:500 valid range now ends at 1:550 (slim child limbs below the printable feature beyond).
+- Neck reads slightly long in the three-quarter view because the rig neck (C7 to skull base 0.07 m) is kept; within the reference.

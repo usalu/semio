@@ -148,6 +148,8 @@ fn dsl_value_to_property_value(value: &semio_framework_value::DslValue) -> Prope
     }
 }
 
+semio_framework_dsl_record::native_field_receiving!(PropertyValue);
+
 impl semio_framework_dsl_record::BorrowedDslField for PropertyValue{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Value;}
 
 impl semio_framework_dsl_record::DslField for PropertyValue {
@@ -199,7 +201,7 @@ impl semio_framework_value::FromValue for PropertyValue {
 //#endregion 🔖️ToFromValue
 
 /// 🏷️ Compile-time property kind.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslReceiving)]
 #[value(rename_all = "camelCase")]
 pub enum PropertyKind {
     Data,
@@ -207,7 +209,7 @@ pub enum PropertyKind {
 }
 
 /// 📋️ Property definition on a kind.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslReceiving)]
 #[value(rename_all = "camelCase")]
 pub struct PropertyDef {
     pub name: String,
@@ -262,7 +264,7 @@ impl PropertyDef {
 
 // #region 🔖️Manifest
 /// 🔌️ Port direction on a node.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslReceiving)]
 #[value(rename_all = "camelCase")]
 pub enum PortDirection {
     In,

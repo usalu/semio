@@ -15,6 +15,22 @@ Feature: Three playgrounds over one scene, each placed figure and the whole time
     When the pointer moves one metre to the right and half a metre up
     Then the figure is one metre further ahead and half a metre to its left, and a polite status says so
 
+  Scenario: A placed figure can be selected by keyboard or click
+    Given two placed figures and the second is selected
+    When the first figure receives keyboard focus
+    Then a focus indicator appears on the first figure and the second stays selected
+    When the reader presses Enter
+    Then the first figure is selected
+    When the reader focuses the second figure and presses Space
+    Then the second figure is selected
+    When the reader clicks the first figure
+    Then the first figure is selected
+
+  Scenario: A cancelled drag preserves the placement
+    Given a placed figure in the floor plan
+    When the pointer moves the figure and the browser cancels the gesture
+    Then the figure returns to its original position without recording a move
+
   Scenario: Yaw and mirroring are drawn in the floor plan
     Given a placed figure in the floor plan turned by 90 degrees and mirrored
     Then the plan turns it about its ground point, a positive yaw turning the forward direction up the page, to the left, and flips it across its forward axis

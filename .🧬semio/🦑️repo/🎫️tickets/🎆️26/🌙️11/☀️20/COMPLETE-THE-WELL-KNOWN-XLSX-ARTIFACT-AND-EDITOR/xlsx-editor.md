@@ -19,3 +19,16 @@ Two redundant mounted-instance docstrings were shortened without changing execut
 That build stopped while compiling `semio-plugin-composition-publication`. Four E0599 errors reported that dependency artifacts lacked `preparation_refusal_progress` for store and window-config publications. The call sites and definitions were edited concurrently in the shared worktree and now agree. The single subsequent native rerun captures the full compiler output and exit status.
 
 The recorded rerun exited 101 after a concurrent edit introduced `artifact_mutation_pages` in both the `Emit` declaration and its dispatch consumer. The earlier dependency artifact lacked the new field and the later consumer expected it. The current source agrees. The revised rerun retains its own compiler output and exit status.
+
+## Editor source files
+
+Under `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets`, the following four paths were edited in each of `🧱️base`, `🔒️strict`, and `🌉️transitional`.
+
+- `✏️editor/🦀️.rs`
+- `✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs`
+- `👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs`
+
+The remaining editor changes are `🧱️base/✏️editor/🧪️tests/🧫️fixtures/📊️sheet-grid/🔣️.json`, `🧱️base/📦️packages/🦀️rust/Cargo.toml`, and the crate alias correction in `🧱️base/📚️examples/🎬️demo/🧪️tests/🔬️unit/🦀️.rs`.
+
+The source boundary fix shortened two docstrings in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs`.

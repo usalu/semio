@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "id": "empty",
+      "text": "",
+      "valid": false,
+      "global": null,
+      "keys": []
+    },
+    {
+      "id": "invalid",
+      "text": "{\"cut\":",
+      "valid": false,
+      "global": null,
+      "keys": []
+    },
+    {
+      "id": "duplicate-key",
+      "text": "{\"cut\":{\"out\":{\"edge\":1,\"edge\":2}}}",
+      "valid": false,
+      "global": null,
+      "keys": []
+    },
+    {
+      "id": "wrong-shape",
+      "text": "[{\"out\":{\"edge\":1}}]",
+      "valid": false,
+      "global": null,
+      "keys": []
+    },
+    {
+      "id": "global-error",
+      "text": "{\"error\":\"no graph\",\"cut\":{\"out\":{\"edge\":1}}}",
+      "valid": false,
+      "global": "no graph",
+      "keys": [
+        "cut@edge"
+      ]
+    },
+    {
+      "id": "partial-and-valid",
+      "text": "{\"cut\":{\"error\":\"workspaces unavailable\",\"in\":{\"edge\":-1},\"out\":{\"point\":{\"x\":1,\"y\":2,\"z\":3},\"edge\":1}},\"other\":{\"out\":{\"name\":\"ribbon\"}}}",
+      "valid": true,
+      "global": null,
+      "keys": [
+        "cut@!iedge",
+        "cut@edge",
+        "cut@point",
+        "other@name"
+      ]
+    },
+    {
+      "id": "same-port-both-sides",
+      "text": "{\"mirror\":{\"out\":{\"plane\":null},\"in\":{\"plane\":[1,2]}}}",
+      "valid": true,
+      "global": null,
+      "keys": [
+        "mirror@!iplane",
+        "mirror@plane"
+      ]
+    }
+  ]
+}

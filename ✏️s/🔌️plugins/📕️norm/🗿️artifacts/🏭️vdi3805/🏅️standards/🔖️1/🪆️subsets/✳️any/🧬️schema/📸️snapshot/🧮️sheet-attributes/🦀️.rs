@@ -49,7 +49,7 @@ pub fn attributes_from_records(sheet: SheetId, records: &[NativeRecord]) -> Shee
                 kv.get("authority_max").and_then(|s| parse_f64(s)).unwrap_or(0.0),
             ))
         }
-        3 => SheetAttributes::Radiator(RadiatorAttributes {
+        6 => SheetAttributes::Radiator(RadiatorAttributes {
             standard_output_w: kv.get("standard_output_w").or(kv.get("phi")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
             heat_exponent_n: kv.get("n").or(kv.get("heat_exponent_n")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
             length_m: kv.get("length_m").or(kv.get("l")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
@@ -57,16 +57,16 @@ pub fn attributes_from_records(sheet: SheetId, records: &[NativeRecord]) -> Shee
             depth_m: kv.get("depth_m").or(kv.get("d")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
             connection_type: kv.get("connection_type").cloned().unwrap_or_default(),
         }),
-        5 => SheetAttributes::PumpHeating(PumpHeatingAttributes {
+        4 => SheetAttributes::PumpHeating(PumpHeatingAttributes {
             dn_suction: kv.get("dn_suction").and_then(|s| s.parse().ok()).unwrap_or(0),
             dn_discharge: kv.get("dn_discharge").or(kv.get("dn")).and_then(|s| s.parse().ok()).unwrap_or(0),
-            nominal_flow_m3_s: kv.get("q").or(kv.get("nominal_flow_m3_s")).and_then(|s| parse_f64(s)).map(|q| if q > 1.0 { q / 3600.0 } else { q }).unwrap_or(0.0),
+            nominal_flow_m3_s: kv.get("nominal_flow_m3_s").or(kv.get("q")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
             nominal_head_m: kv.get("h").or(kv.get("nominal_head_m")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
             motor_power_w: kv.get("p").or(kv.get("motor_power_w")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
             hydraulic_efficiency: kv.get("eta").or(kv.get("hydraulic_efficiency")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
             qh_curve_ref: kv.get("qh_curve_ref").cloned(),
         }),
-        6 => SheetAttributes::HeatGenerator(HeatGeneratorAttributes {
+        3 => SheetAttributes::HeatGenerator(HeatGeneratorAttributes {
             nominal_heat_output_w: kv.get("qn").or(kv.get("nominal_heat_output_w")).and_then(|s| parse_f64(s)).unwrap_or(0.0),
             fuel_type: kv.get("fuel_type").cloned().unwrap_or_default(),
             flow_temp_max_c: kv.get("flow_temp_max_c").and_then(|s| parse_f64(s)).unwrap_or(0.0),
@@ -117,7 +117,7 @@ impl ValveHeatingAttributes {
     }
 }
 
-/// ♨️ Sheet-3 radiator / heating-surface attributes (VDI 3805 Blatt 3; Φ at 75/65/20 °C).
+/// ♨️ Sheet-6 radiator / heating-surface attributes (VDI 3805 Blatt 6; Φ at 75/65/20 °C).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
@@ -132,7 +132,7 @@ pub struct RadiatorAttributes {
     pub connection_type: String,
 }
 
-/// 💧 Sheet-5 heating pump attributes (VDI 3805 Blatt 5).
+/// 💧 Sheet-4 heating pump attributes (VDI 3805 Blatt 4).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
@@ -148,7 +148,7 @@ pub struct PumpHeatingAttributes {
     pub qh_curve_ref: Option<String>,
 }
 
-/// 🔥 Sheet-6 heat-generator attributes (VDI 3805 Blatt 6).
+/// 🔥 Sheet-3 heat-generator attributes (VDI 3805 Blatt 3).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]

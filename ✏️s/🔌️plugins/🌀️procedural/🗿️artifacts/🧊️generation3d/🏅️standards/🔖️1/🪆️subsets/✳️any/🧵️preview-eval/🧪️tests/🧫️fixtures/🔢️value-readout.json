@@ -2,7 +2,10 @@
   "eval": {
     "node": {
       "in": {
-        "source": true
+        "source": true,
+        "meta": {
+          "unit": "cm"
+        }
       },
       "out": {
         "number": 2.5,
@@ -37,6 +40,10 @@
       "→ [1, 2, 3, 4, …]"
     ],
     [
+      "node@!imeta",
+      "← {\"unit\": \"cm\"}"
+    ],
+    [
       "node@meta",
       "→ {\"unit\": \"m\"}"
     ],
@@ -49,7 +56,7 @@
       "→ 2.5"
     ],
     [
-      "node@source",
+      "node@!isource",
       "← true"
     ],
     [
@@ -60,5 +67,25 @@
       "node@vector",
       "→ {\"x\": 1, \"y\": 2, \"z\": 3}"
     ]
+  ],
+  "expanded": [
+    {
+      "path": "$.node.out.list[4]",
+      "containerPath": "$.node.out.list",
+      "value": 5,
+      "total": 5
+    },
+    {
+      "path": "$.node.out.meta.unit",
+      "containerPath": "$.node.out.meta",
+      "value": "m",
+      "total": 0
+    },
+    {
+      "path": "$.node.in.meta.unit",
+      "containerPath": "$.node.in.meta",
+      "value": "cm",
+      "total": 0
+    }
   ]
 }

@@ -48,12 +48,27 @@ fn sized_return_receipt_charges_only_the_original_captured_destination(){
   let mut source_extra=0;let mut admitted=false;let mut refused=false;for _ in 0..24{let result=caller.refreshed_turn(q,|cx|{admitted=place.admit_sized(cx,address,requested)?;Ok(())});source_extra+=caller.unborn_bytes();if result.is_err(){refused=true;break}if admitted{break}}
   assert_eq!(admitted,row["admitted"].as_bool().unwrap());assert_eq!(refused,!admitted);
   if admitted{
-   caller.refreshed_turn(q,|cx|{let snapshot=semio_framework_job_context::testkit::return_budget_snapshot(cx);assert!(snapshot.conserved());assert_eq!(snapshot.held_copy_bytes,requested+2*metadata+local_ack);Ok(())}).unwrap();
+   caller.refreshed_turn(q, |cx| {
+       use semio_framework_job_context::testkit::{renew_pinned_turn, return_budget_snapshot};
+       let snapshot = return_budget_snapshot(cx);
+       assert!(snapshot.conserved());
+       assert_eq!(snapshot.held_copy_bytes, requested + 2 * metadata + local_ack);
+       let fuel = cx.fuel_remaining();
+       let grant = cx.retained_grant();
+       assert!(fuel > 0);
+       renew_pinned_turn(cx, 0, RetainedCloneGrant::default())?;
+       assert!(cx.should_yield());
+       renew_pinned_turn(cx, fuel, grant)?;
+       assert_eq!(cx.fuel_remaining(), fuel);
+       assert_eq!(cx.retained_grant(), grant);
+       assert_eq!(return_budget_snapshot(cx), snapshot);
+       Ok(())
+   }).unwrap();
    let mut foreign=OriginalJobFixtureCaller::admit(OperationId(8899),Generation(4),stock,clock,10000,1024);
    foreign.refreshed_turn(q,|cx|{let progress=cx.retained_progress();assert!(place.qualify_sized(cx,address,requested).is_err());assert!(place.settle_return(cx).is_err());assert_eq!(cx.retained_progress(),progress);Ok(())}).unwrap();foreign.retire(stock);
    caller.refreshed_turn(q,|cx|{place.qualify_sized(cx,address,requested)?;assert!(place.qualify_sized(cx,address+1,requested).is_err());assert!(place.qualify_sized(cx,address,requested+1).is_err());Ok(())}).unwrap();assert!(place.record_sized_return(address+1,requested).is_err());
    if row["captured"].as_bool().unwrap(){place.record_sized_return(address,requested).unwrap();caller.refreshed_turn(q,|cx|place.qualify_sized(cx,address,requested)).unwrap();}else{caller.cancel().cancel_now();}
-   let mut copied=0;let return_grant=if row["captured"].as_bool().unwrap(){RetainedCloneGrant{maximum_copy_bytes:0,..q}}else{q};for _ in 0..8{if place.terminal_is_empty(){break}caller.refreshed_turn(return_grant,|cx|{let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();place.settle_return(cx)?;let actual=cx.retained_progress().copied_bytes-before.copied_bytes;let reserved=cx.reserved_return_progress().copied_bytes-reserved_before.copied_bytes;assert_eq!(actual,reserved);copied+=actual;Ok(())}).unwrap();}
+   let mut copied=0;let return_grant=if row["captured"].as_bool().unwrap(){RetainedCloneGrant{maximum_copy_bytes:0,..q}}else{q};for _ in 0..8{if place.terminal_is_empty(){break}caller.refreshed_turn(return_grant,|cx|{let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();place.settle_return(cx)?;assert_eq!(cx.fresh_retained_progress_since(before,reserved_before)?,RetainedCloneProgress::default());let actual=cx.retained_progress().copied_bytes-before.copied_bytes;let reserved=cx.reserved_return_progress().copied_bytes-reserved_before.copied_bytes;assert_eq!(actual,reserved);copied+=actual;Ok(())}).unwrap();}
    assert!(place.terminal_is_empty());assert_eq!(copied,row["spent"].as_u64().unwrap() as usize+if row["captured"].as_bool().unwrap(){2*metadata+local_ack}else{metadata+local_ack});
   }
   caller.fund_closure(measured.1,measured.2);retire_source(caller,stock,source_extra);

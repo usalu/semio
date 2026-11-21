@@ -73,6 +73,7 @@ if (segments[0] === "generation3d-preview-window-transient") {
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", ...["semio-s-artifact-procedural-3d-preview-eval", "semio-s-artifact-procedural-3d-mode-edit", "semio-s-artifact-procedural-3d-editor", "semio-s-artifact-procedural-3d-viewer"].flatMap((name) => ["-p", name]), "--lib", "preview_eval_", "--", "--nocapture"], this.repoRoot);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-3d-preview-eval", "--test", "preview-channel-geometry", "--", "--nocapture"], this.repoRoot);
       }
       return;
     }

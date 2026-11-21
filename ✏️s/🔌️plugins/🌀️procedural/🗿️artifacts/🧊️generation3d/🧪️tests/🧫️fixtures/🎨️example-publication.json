@@ -1,0 +1,5 @@
+{
+  "exampleId": "hexagonal-mushroom-column",
+  "lanes": ["Config", "Effect", "Terminal"],
+  "completions": 1
+}

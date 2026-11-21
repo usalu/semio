@@ -819,7 +819,7 @@ fn the_fire_compartment_is_a_room_volume_coloured_by_the_fire_load_of_the_chosen
             other => panic!("no instance field: {other:?}"),
         }
     };
-    let table = En1991Snapshot { fire_load_basis: model::FireLoadBasis::OccupancyTable, fire_load_density_qf: 100.0e6, fire_occupancy: semio_s_artifact_norm_en1991_model::FireOccupancy::Office, ..rich() };
+    let table = En1991Snapshot { annex: AnnexChoice::En, fire_load_basis: model::FireLoadBasis::OccupancyTable, fire_load_density_qf: 100.0e6, fire_occupancy: semio_s_artifact_norm_en1991_model::FireOccupancy::Office, ..rich() };
     let user = En1991Snapshot { fire_load_basis: model::FireLoadBasis::UserSpecified, fire_load_density_qf: 800.0e6, ..table.clone() };
     let design = |d: &En1991Snapshot| checks::part_1_2::design_fire_load_j_m2(d.fire_load_basis, d.fire_load_density_qf, d.annex, d.fire_occupancy, d.fire_compartment_area, 1.0).expect("basis satisfiable");
     assert!((load_of(&table) - design(&table)).abs() < 1.0);

@@ -79,6 +79,10 @@ impl<'a, S: ArtifactDsl + ToValue> DslSnapshotDetailsProvider<'a, S> {
         object_schema(root, schema, path, &mut read, &mut shape)
     }
 
+    fn path_read_only(&self, root: &DslValue, path: &[SnapshotDetailPathSegment]) -> bool {
+        schema_path_read_only(root, path, &mut |path| self.scalar(path), &mut |path| self.shape(path))
+    }
+
     fn creation_schema_at_path<'b>(&'b self, root: &'b DslValue, path: &[SnapshotDetailPathSegment]) -> Option<&'b DslValue> {
         let mut read = |path: &[SnapshotDetailPathSegment]| self.scalar(path);
         let mut shape = |path: &[SnapshotDetailPathSegment]| self.shape(path);
@@ -193,7 +197,7 @@ impl<S: ArtifactDsl + ToValue> SnapshotDetailsProvider for DslSnapshotDetailsPro
             .filter(|(key, schema)| {
                 let mut property = path.to_vec();
                 property.push(SnapshotDetailPathSegment::Key(key.clone()));
-                self.shape(&property).is_none() && template_from_schema(root, schema, 0).is_some()
+                (!schema_read_only(root, schema) && self.shape(&property).is_none()) && template_from_schema(root, schema, 0).is_some()
             })
             .count()
     }
@@ -207,7 +211,7 @@ impl<S: ArtifactDsl + ToValue> SnapshotDetailsProvider for DslSnapshotDetailsPro
             .filter_map(|(key, schema)| {
                 let mut property = path.to_vec();
                 property.push(SnapshotDetailPathSegment::Key(key.clone()));
-                self.shape(&property).is_none().then(|| template_from_schema(root, schema, 0).map(|value| (key.clone(), value))).flatten()
+                (!schema_read_only(root, schema) && self.shape(&property).is_none()).then(|| template_from_schema(root, schema, 0).map(|value| (key.clone(), value))).flatten()
             })
             .nth(index)
     }
@@ -248,7 +252,8 @@ impl<S: ArtifactDsl + ToValue> SnapshotDetailsProvider for DslSnapshotDetailsPro
 
     fn item_capabilities(&self, path: &[SnapshotDetailPathSegment]) -> SnapshotDetailItemCapabilities {
         let mut capabilities = SnapshotDetailItemCapabilities::for_path(path);
-        if matches!(path.last(), Some(SnapshotDetailPathSegment::Key(key)) if key == "schema") {
+        if matches!(path.last(), Some(SnapshotDetailPathSegment::Key(key)) if key == "schema")
+            || self.schema.as_deref().is_some_and(|root| self.path_read_only(root, path)) {
             return SnapshotDetailItemCapabilities { edit: false, rename: false, remove: false, reorder: false };
         }
         let Some((segment, parent)) = path.split_last() else {
@@ -292,6 +297,7 @@ impl<S: ArtifactDsl + ToValue> SnapshotDetailsProvider for DslSnapshotDetailsPro
 
     fn allows_collection_insert(&self, path: &[SnapshotDetailPathSegment]) -> bool {
         let Some(root) = self.schema.as_ref() else { return true };
+        if self.path_read_only(root, path) { return false; }
         let Some(schema) = self.schema_at_path(root, path) else { return true };
         let length = self.child_count(path);
         match self.shape(path) {

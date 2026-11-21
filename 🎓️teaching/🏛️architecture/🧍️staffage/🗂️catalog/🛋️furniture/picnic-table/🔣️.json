@@ -75,15 +75,15 @@
         }
       ],
       "notes": {
-        "en": "End elevation 1.52 x 0.75 m, length 1.80 m. Construction after the classic bolted A-frame picnic table of 45 mm pressure-treated pine: five 132 x 40 mm top planks with 10 mm gaps on two end cleats and a centre cleat, two A-frames 0.10 m from the plank ends with 95 x 45 mm legs raked 60 degrees and lapped 95 x 45 mm cleats and stretchers clamped by M10 carriage bolts, two 70 x 45 mm braces to the centre cleat. The two benches (two 145 x 40 mm planks each, 1.50 m long, seat at 0.44 m) hang between the A-frames on folded 8 mm steel gusset brackets that turn on M12 pivot bolts through leg and stretcher; a spring plunger on each gusset locks into a bearing plate on the leg in the seat position and in the stowed position, where the bench hangs plumb between the frames. Masses from the modelled volumes (pine 500, steel 7800 kg/m3) plus hardware. v3: rig, 2D and 3D rebuilt on this construction; the benches no longer swing through the legs.",
-        "de": "Stirnansicht 1,52 x 0,75 m, Länge 1,80 m. Konstruktion nach dem klassischen verschraubten A-Bock-Picknicktisch aus 45 mm kesseldruckimprägnierter Kiefer: fünf Tischbohlen 132 x 40 mm mit 10-mm-Fugen auf zwei Endriegeln und einem Mittelriegel, zwei A-Böcke 0,10 m von den Bohlenenden mit um 60 Grad geneigten Beinen 95 x 45 mm und aufgeblatteten Riegeln und Zangen 95 x 45 mm, mit M10-Schlossschrauben verspannt, zwei Streben 70 x 45 mm zum Mittelriegel. Die zwei Bänke (je zwei Bohlen 145 x 40 mm, 1,50 m lang, Sitz auf 0,44 m) hängen zwischen den A-Böcken an gekanteten 8-mm-Knotenblechkonsolen aus Stahl, die um M12-Drehbolzen durch Bein und Zange schwenken; ein Federrastbolzen an jedem Knotenblech rastet in eine Lagerplatte am Bein, in der Sitzstellung und in der Parkstellung, in der die Bank lotrecht zwischen den Böcken hängt. Massen aus den modellierten Volumen (Kiefer 500, Stahl 7800 kg/m3) plus Beschläge. v3: Rig, 2D und 3D auf dieser Konstruktion neu aufgebaut; die Bänke schwenken nicht mehr durch die Beine."
+        "en": "End elevation 1.52 x 0.75 m, length 1.80 m. Construction after the classic bolted A-frame picnic table of 45 mm pressure-treated pine: five 132 x 40 mm top planks with 10 mm gaps on two end cleats and an 89 x 45 mm centre cleat, two A-frames 0.10 m from the plank ends with 95 x 45 mm legs raked 60 degrees and lapped 95 x 45 mm cleats and stretchers clamped by M10 carriage bolts, two 70 x 45 mm braces to the centre cleat. The two benches (two 145 x 40 mm planks each, 1.50 m long, seat at 0.44 m) hang between the A-frames on folded 8 mm steel gusset brackets that turn on M12 pivot bolts through leg and stretcher; a spring plunger on each gusset locks into a bearing plate on the leg in the seat position and in the stowed position, where the bench hangs plumb between the frames. Masses from the modelled volumes (pine 500, steel 7800 kg/m3) plus hardware. v3: rig, 2D and 3D rebuilt on this construction; the benches no longer swing through the legs.",
+        "de": "Stirnansicht 1,52 x 0,75 m, Länge 1,80 m. Konstruktion nach dem klassischen verschraubten A-Bock-Picknicktisch aus 45 mm kesseldruckimprägnierter Kiefer: fünf Tischbohlen 132 x 40 mm mit 10-mm-Fugen auf zwei Endriegeln und einem Mittelriegel 89 x 45 mm, zwei A-Böcke 0,10 m von den Bohlenenden mit um 60 Grad geneigten Beinen 95 x 45 mm und aufgeblatteten Riegeln und Zangen 95 x 45 mm, mit M10-Schlossschrauben verspannt, zwei Streben 70 x 45 mm zum Mittelriegel. Die zwei Bänke (je zwei Bohlen 145 x 40 mm, 1,50 m lang, Sitz auf 0,44 m) hängen zwischen den A-Böcken an gekanteten 8-mm-Knotenblechkonsolen aus Stahl, die um M12-Drehbolzen durch Bein und Zange schwenken; ein Federrastbolzen an jedem Knotenblech rastet in eine Lagerplatte am Bein, in der Sitzstellung und in der Parkstellung, in der die Bank lotrecht zwischen den Böcken hängt. Massen aus den modellierten Volumen (Kiefer 500, Stahl 7800 kg/m3) plus Beschläge. v3: Rig, 2D und 3D auf dieser Konstruktion neu aufgebaut; die Bänke schwenken nicht mehr durch die Beine."
       }
     },
     "dimensions": {
       "heightM": 0.75,
       "widthM": 1.52,
       "depthM": 1.8,
-      "massKg": 72.1
+      "massKg": 72.4
     },
     "materials": [
       {
@@ -176,9 +176,9 @@
             "type": "fixed"
           },
           "mass": {
-            "kg": 25.0,
+            "kg": 25.3,
             "comX": 0.35,
-            "comY": 0.018,
+            "comY": 0.017,
             "distribution": "uniform",
             "source": "authored-estimate",
             "reference": "wood-handbook-2021"
@@ -1355,6 +1355,21 @@
               "h": 0.04
             },
             {
+              "id": "top-cleat",
+              "bone": "top",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "a-frame",
+              "material": "pine-timber",
+              "kind": "rect",
+              "x": -0.0225,
+              "y": 0.621,
+              "w": 0.045,
+              "h": 0.089
+            },
+            {
               "id": "leg-r",
               "bone": "frame",
               "role": "body",
@@ -2079,16 +2094,16 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Picnic table 7.6 x 3.8 mm: top slab, the A-frame with cleat, stretcher and legs, the brace, one board per bench with its bracket block. Long side: slab, the two A-frames, the braces, the bench board between them. Plan: slab, legs and stretchers, two bench boards.",
-            "de": "Picknicktisch 7,6 x 3,8 mm: Tischscheibe, der A-Bock mit Riegel, Zange und Beinen, die Strebe, je ein Brett pro Bank mit seinem Konsolblock. Längsseite: Scheibe, die zwei A-Böcke, die Streben, das Bankbrett dazwischen. Grundriss: Scheibe, Beine und Zangen, zwei Bankbretter."
+            "en": "Picnic table 7.6 x 3.8 mm: top slab, the A-frame with cleat, stretcher and legs, the brace, one board per bench with its bracket block. Long side: slab, the two A-frames, the braces meeting the centre cleat, the bench board between them. Plan: slab, legs and stretchers, two bench boards.",
+            "de": "Picknicktisch 7,6 x 3,8 mm: Tischscheibe, der A-Bock mit Riegel, Zange und Beinen, die Strebe, je ein Brett pro Bank mit seinem Konsolblock. Längsseite: Scheibe, die zwei A-Böcke, die Streben am Mittelriegel, das Bankbrett dazwischen. Grundriss: Scheibe, Beine und Zangen, zwei Bankbretter."
           },
           "retained": {
             "en": "Leg rake, the two layers of the frames, braces, the bench hanging between the frames.",
             "de": "Beinneigung, die zwei Lagen der Böcke, Streben, die zwischen den Böcken hängende Bank."
           },
           "merged": {
-            "en": "Planks into one slab and one board per bench; centre cleat into the slab; bracket into a 30 mm block.",
-            "de": "Bohlen zu einer Scheibe und einem Brett je Bank; Mittelriegel in die Scheibe; Konsole zu einem 30-mm-Block."
+            "en": "Planks into one slab and one board per bench; bracket into a 30 mm block.",
+            "de": "Bohlen zu einer Scheibe und einem Brett je Bank; Konsole zu einem 30-mm-Block."
           },
           "omitted": {
             "en": "Gaps, bevels, batten, bolts.",
@@ -2653,9 +2668,9 @@
               "material": "pine-timber",
               "kind": "rect",
               "x": -0.0225,
-              "y": 0.64,
+              "y": 0.621,
               "w": 0.045,
-              "h": 0.07
+              "h": 0.089
             },
             {
               "id": "leg-r",
@@ -4051,6 +4066,7 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-h",
+              "penMm": 0.13,
               "kind": "poly",
               "points": [
                 [
@@ -4058,59 +4074,59 @@
                   0.005
                 ],
                 [
-                  0.0007,
+                  0.000663,
                   0.0025
                 ],
                 [
-                  0.0025,
+                  0.002367,
                   0.0007
                 ],
                 [
-                  0.005,
+                  0.004735,
                   0.0
                 ],
                 [
-                  0.127,
+                  0.120265,
                   0.0
                 ],
                 [
-                  0.1295,
+                  0.122633,
                   0.0007
                 ],
                 [
-                  0.1313,
+                  0.124337,
                   0.0025
                 ],
                 [
-                  0.132,
+                  0.125,
                   0.005
                 ],
                 [
-                  0.132,
+                  0.125,
                   0.035
                 ],
                 [
-                  0.1313,
+                  0.124337,
                   0.0375
                 ],
                 [
-                  0.1295,
+                  0.122633,
                   0.0393
                 ],
                 [
-                  0.127,
+                  0.120265,
                   0.04
                 ],
                 [
-                  0.005,
+                  0.004735,
                   0.04
                 ],
                 [
-                  0.0025,
+                  0.002367,
                   0.0393
                 ],
                 [
-                  0.0007,
+                  0.000663,
                   0.0375
                 ],
                 [
@@ -4130,70 +4146,71 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-h",
+              "penMm": 0.13,
               "kind": "poly",
               "points": [
                 [
-                  0.142,
+                  0.149,
                   0.005
                 ],
                 [
-                  0.1427,
+                  0.149626,
                   0.0025
                 ],
                 [
-                  0.1445,
+                  0.151235,
                   0.0007
                 ],
                 [
-                  0.147,
+                  0.15347,
                   0.0
                 ],
                 [
-                  0.269,
+                  0.26253,
                   0.0
                 ],
                 [
-                  0.2715,
+                  0.264765,
                   0.0007
                 ],
                 [
-                  0.2733,
+                  0.266374,
                   0.0025
                 ],
                 [
-                  0.274,
+                  0.267,
                   0.005
                 ],
                 [
-                  0.274,
+                  0.267,
                   0.035
                 ],
                 [
-                  0.2733,
+                  0.266374,
                   0.0375
                 ],
                 [
-                  0.2715,
+                  0.264765,
                   0.0393
                 ],
                 [
-                  0.269,
+                  0.26253,
                   0.04
                 ],
                 [
-                  0.147,
+                  0.15347,
                   0.04
                 ],
                 [
-                  0.1445,
+                  0.151235,
                   0.0393
                 ],
                 [
-                  0.1427,
+                  0.149626,
                   0.0375
                 ],
                 [
-                  0.142,
+                  0.149,
                   0.035
                 ]
               ],
@@ -4209,70 +4226,71 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-h",
+              "penMm": 0.13,
               "kind": "poly",
               "points": [
                 [
-                  0.284,
+                  0.291,
                   0.005
                 ],
                 [
-                  0.2847,
+                  0.291626,
                   0.0025
                 ],
                 [
-                  0.2865,
+                  0.293235,
                   0.0007
                 ],
                 [
-                  0.289,
+                  0.29547,
                   0.0
                 ],
                 [
-                  0.411,
+                  0.40453,
                   0.0
                 ],
                 [
-                  0.4135,
+                  0.406765,
                   0.0007
                 ],
                 [
-                  0.4153,
+                  0.408374,
                   0.0025
                 ],
                 [
-                  0.416,
+                  0.409,
                   0.005
                 ],
                 [
-                  0.416,
+                  0.409,
                   0.035
                 ],
                 [
-                  0.4153,
+                  0.408374,
                   0.0375
                 ],
                 [
-                  0.4135,
+                  0.406765,
                   0.0393
                 ],
                 [
-                  0.411,
+                  0.40453,
                   0.04
                 ],
                 [
-                  0.289,
+                  0.29547,
                   0.04
                 ],
                 [
-                  0.2865,
+                  0.293235,
                   0.0393
                 ],
                 [
-                  0.2847,
+                  0.291626,
                   0.0375
                 ],
                 [
-                  0.284,
+                  0.291,
                   0.035
                 ]
               ],
@@ -4288,70 +4306,71 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-h",
+              "penMm": 0.13,
               "kind": "poly",
               "points": [
                 [
-                  0.426,
+                  0.433,
                   0.005
                 ],
                 [
-                  0.4267,
+                  0.433626,
                   0.0025
                 ],
                 [
-                  0.4285,
+                  0.435235,
                   0.0007
                 ],
                 [
-                  0.431,
+                  0.43747,
                   0.0
                 ],
                 [
-                  0.553,
+                  0.54653,
                   0.0
                 ],
                 [
-                  0.5555,
+                  0.548765,
                   0.0007
                 ],
                 [
-                  0.5573,
+                  0.550374,
                   0.0025
                 ],
                 [
-                  0.558,
+                  0.551,
                   0.005
                 ],
                 [
-                  0.558,
+                  0.551,
                   0.035
                 ],
                 [
-                  0.5573,
+                  0.550374,
                   0.0375
                 ],
                 [
-                  0.5555,
+                  0.548765,
                   0.0393
                 ],
                 [
-                  0.553,
+                  0.54653,
                   0.04
                 ],
                 [
-                  0.431,
+                  0.43747,
                   0.04
                 ],
                 [
-                  0.4285,
+                  0.435235,
                   0.0393
                 ],
                 [
-                  0.4267,
+                  0.433626,
                   0.0375
                 ],
                 [
-                  0.426,
+                  0.433,
                   0.035
                 ]
               ],
@@ -4367,34 +4386,35 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-h",
+              "penMm": 0.13,
               "kind": "poly",
               "points": [
                 [
-                  0.568,
+                  0.575,
                   0.005
                 ],
                 [
-                  0.5687,
+                  0.575663,
                   0.0025
                 ],
                 [
-                  0.5705,
+                  0.577367,
                   0.0007
                 ],
                 [
-                  0.573,
+                  0.579735,
                   0.0
                 ],
                 [
-                  0.695,
+                  0.695265,
                   0.0
                 ],
                 [
-                  0.6975,
+                  0.697633,
                   0.0007
                 ],
                 [
-                  0.6993,
+                  0.699337,
                   0.0025
                 ],
                 [
@@ -4406,31 +4426,31 @@
                   0.035
                 ],
                 [
-                  0.6993,
+                  0.699337,
                   0.0375
                 ],
                 [
-                  0.6975,
+                  0.697633,
                   0.0393
                 ],
                 [
-                  0.695,
+                  0.695265,
                   0.04
                 ],
                 [
-                  0.573,
+                  0.579735,
                   0.04
                 ],
                 [
-                  0.5705,
+                  0.577367,
                   0.0393
                 ],
                 [
-                  0.5687,
+                  0.575663,
                   0.0375
                 ],
                 [
-                  0.568,
+                  0.575,
                   0.035
                 ]
               ],
@@ -5162,9 +5182,9 @@
               "material": "pine-timber",
               "kind": "rect",
               "x": -0.0225,
-              "y": 0.64,
+              "y": 0.621,
               "w": 0.045,
-              "h": 0.07
+              "h": 0.089
             },
             {
               "id": "leg-r",
@@ -6086,10 +6106,11 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-l",
+              "penMm": 0.13,
               "kind": "rect",
               "x": -0.35,
               "y": -0.9,
-              "w": 0.132,
+              "w": 0.125,
               "h": 1.8
             },
             {
@@ -6102,10 +6123,11 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-l",
+              "penMm": 0.13,
               "kind": "rect",
-              "x": -0.208,
+              "x": -0.201,
               "y": -0.9,
-              "w": 0.132,
+              "w": 0.118,
               "h": 1.8
             },
             {
@@ -6118,10 +6140,11 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-l",
+              "penMm": 0.13,
               "kind": "rect",
-              "x": -0.066,
+              "x": -0.059,
               "y": -0.9,
-              "w": 0.132,
+              "w": 0.118,
               "h": 1.8
             },
             {
@@ -6134,10 +6157,11 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-l",
+              "penMm": 0.13,
               "kind": "rect",
-              "x": 0.076,
+              "x": 0.083,
               "y": -0.9,
-              "w": 0.132,
+              "w": 0.118,
               "h": 1.8
             },
             {
@@ -6150,10 +6174,11 @@
               "region": "table-top",
               "material": "pine-timber",
               "hatch": "grain-l",
+              "penMm": 0.13,
               "kind": "rect",
-              "x": 0.218,
+              "x": 0.225,
               "y": -0.9,
-              "w": 0.132,
+              "w": 0.125,
               "h": 1.8
             },
             {
@@ -6982,8 +7007,8 @@
             "de": "Bohlenschrauben (5-mm-Köpfe), Drehbolzenköpfe und Rastbolzen (in der Stirnansicht hinter den Beinen, in der Längsansicht 8 mm vorstehend), Riegel und Streben unter der Platte im Grundriss."
           },
           "thinElements": {
-            "en": "The 10 mm gaps are 0.2 mm on paper and stay open between the plank outlines; the 8 mm steel plates are 0.16 mm and drawn true.",
-            "de": "Die 10-mm-Fugen sind auf Papier 0,2 mm und bleiben zwischen den Bohlenumrissen offen; die 8-mm-Stahlbleche sind 0,16 mm und wahr gezeichnet."
+            "en": "The 10 mm construction joints between top planks are drawn 24 mm wide with 0.13 mm outlines so they stay open from 1:20 to 1:75; the 8 mm steel plates are 0.16 mm and drawn true.",
+            "de": "Die baulichen 10-mm-Fugen zwischen den Tischbohlen sind 24 mm breit und mit 0,13-mm-Umrissen gezeichnet, damit sie von 1:20 bis 1:75 offen bleiben; die 8-mm-Stahlbleche sind 0,16 mm und wahr gezeichnet."
           },
           "hatching": {
             "en": "Grain as lines every 0.6 mm: along the legs and horizontally on cleat, stretcher and plank ends in the end elevation, along the top planks in plan; steel plain tone.",
@@ -8243,7 +8268,7 @@
             "material": "pine-timber",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.07, -0.07], [0.63, -0.07], [0.66, -0.04], [0.66, 0.0], [0.04, 0.0], [0.04, -0.04]],
+            "profile": [[0.07, -0.089], [0.63, -0.089], [0.66, -0.059], [0.66, 0.0], [0.04, 0.0], [0.04, -0.059]],
             "plane": "xy",
             "from": -0.0225,
             "to": 0.0225
@@ -9844,8 +9869,8 @@
         ],
         "decisions": [
           {
-            "en": "Body, authored for 7.5 mm: five 132 x 40 mm top planks with 5 mm eased edges and 10 mm drainage gaps on two end cleats and a centre cleat; two A-frames, each of two 95 x 45 mm legs raked 60 degrees (level cuts at ground and top, eased toe) and, lapped on their outer faces, a 95 x 45 mm cleat with bevelled ends and a 95 x 45 mm stretcher; two 70 x 45 mm braces from the stretchers up to the centre cleat; the domed heads and nuts of the M10 carriage bolts in every lap and nut and washer of the M12 pivot bolts. Each bench: two 145 x 40 mm eased planks 1.50 m long with a centre batten, hanging between the frames on two folded 8 mm gusset brackets (web beside the plank ends, flange under the planks) that turn on the pivot bolts; an 8 mm bearing plate on each inner leg face with the open stow hole; pivot bolt heads and spring plungers on the gussets.",
-            "de": "Körper, für 7,5 mm gebaut: fünf Tischbohlen 132 x 40 mm mit 5 mm gebrochenen Kanten und 10-mm-Wasserfugen auf zwei Endriegeln und einem Mittelriegel; zwei A-Böcke, je aus zwei um 60 Grad geneigten Beinen 95 x 45 mm (waagerechte Schnitte am Boden und oben, gebrochene Zehe) und, außen aufgeblattet, einem Riegel 95 x 45 mm mit gefasten Enden und einer Zange 95 x 45 mm; zwei Streben 70 x 45 mm von den Zangen hinauf zum Mittelriegel; Rundköpfe und Muttern der M10-Schlossschrauben in jeder Überblattung sowie Mutter und Scheibe der M12-Drehbolzen. Jede Bank: zwei gefaste Bohlen 145 x 40 mm, 1,50 m lang, mit Mittelleiste, zwischen den Böcken an zwei gekanteten 8-mm-Knotenblechkonsolen (Steg neben den Bohlenenden, Flansch unter den Bohlen), die um die Drehbolzen schwenken; eine 8-mm-Lagerplatte auf jeder Beininnenseite mit dem offenen Rastloch der Parkstellung; Drehbolzenköpfe und Federrastbolzen auf den Knotenblechen."
+            "en": "Body, authored for 7.5 mm: five 132 x 40 mm top planks with 5 mm eased edges and 10 mm drainage gaps on two end cleats and an 89 x 45 mm centre cleat; two A-frames, each of two 95 x 45 mm legs raked 60 degrees (level cuts at ground and top, eased toe) and, lapped on their outer faces, a 95 x 45 mm cleat with bevelled ends and a 95 x 45 mm stretcher; two 70 x 45 mm braces from the stretchers up to the centre cleat; the domed heads and nuts of the M10 carriage bolts in every lap and nut and washer of the M12 pivot bolts. Each bench: two 145 x 40 mm eased planks 1.50 m long with a centre batten, hanging between the frames on two folded 8 mm gusset brackets (web beside the plank ends, flange under the planks) that turn on the pivot bolts; an 8 mm bearing plate on each inner leg face with the open stow hole; pivot bolt heads and spring plungers on the gussets.",
+            "de": "Körper, für 7,5 mm gebaut: fünf Tischbohlen 132 x 40 mm mit 5 mm gebrochenen Kanten und 10-mm-Wasserfugen auf zwei Endriegeln und einem Mittelriegel 89 x 45 mm; zwei A-Böcke, je aus zwei um 60 Grad geneigten Beinen 95 x 45 mm (waagerechte Schnitte am Boden und oben, gebrochene Zehe) und, außen aufgeblattet, einem Riegel 95 x 45 mm mit gefasten Enden und einer Zange 95 x 45 mm; zwei Streben 70 x 45 mm von den Zangen hinauf zum Mittelriegel; Rundköpfe und Muttern der M10-Schlossschrauben in jeder Überblattung sowie Mutter und Scheibe der M12-Drehbolzen. Jede Bank: zwei gefaste Bohlen 145 x 40 mm, 1,50 m lang, mit Mittelleiste, zwischen den Böcken an zwei gekanteten 8-mm-Knotenblechkonsolen (Steg neben den Bohlenenden, Flansch unter den Bohlen), die um die Drehbolzen schwenken; eine 8-mm-Lagerplatte auf jeder Beininnenseite mit dem offenen Rastloch der Parkstellung; Drehbolzenköpfe und Federrastbolzen auf den Knotenblechen."
           },
           {
             "en": "Thermal: every region is the surface of its body solids with its one layer (40 mm planks, 45 mm frame timber, 8 mm steel); no hidden regions, no emitters. Structure: planks, cleats, legs, stretchers, braces, bench planks, battens and gusset brackets are the members themselves; joints are the pivot bolts through gusset, bearing plate, leg and stretcher, the bearing plates, the lap bolts and one screw per plank and cleat; a pad under each of the four feet; masses of top and benches at their centres, the frame's mass in each stretcher.",
@@ -9880,7 +9905,7 @@
             "material": "pine-timber",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.04, -0.07], [0.66, -0.07], [0.66, 0.0], [0.04, 0.0]],
+            "profile": [[0.04, -0.089], [0.66, -0.089], [0.66, 0.0], [0.04, 0.0]],
             "plane": "xy",
             "from": -0.0225,
             "to": 0.0225
@@ -10739,6 +10764,18 @@
             "to": 0.9
           },
           {
+            "id": "top-cleat",
+            "kind": "extrude",
+            "bone": "top",
+            "material": "pine-timber",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.04, -0.089], [0.66, -0.089], [0.66, 0.0], [0.04, 0.0]],
+            "plane": "xy",
+            "from": -0.0225,
+            "to": 0.0225
+          },
+          {
             "id": "leg-r",
             "kind": "extrude",
             "bone": "frame",
@@ -10938,6 +10975,11 @@
             "region": "table-top"
           },
           {
+            "id": "th-top-cleat",
+            "of": "top-cleat",
+            "region": "a-frame"
+          },
+          {
             "id": "th-leg-r",
             "of": "leg-r",
             "region": "a-frame"
@@ -11022,6 +11064,12 @@
           {
             "id": "m-top-slab",
             "of": "top-slab",
+            "member": "top",
+            "part": "member"
+          },
+          {
+            "id": "m-top-cleat",
+            "of": "top-cleat",
             "member": "top",
             "part": "member"
           },
@@ -11334,8 +11382,8 @@
         ],
         "decisions": [
           {
-            "en": "Body, authored for 30 mm: the top as one 40 mm slab (gaps and centre cleat merged), each bench as one 300 x 40 mm board, legs, square cleats, stretchers and braces member by member at 45 mm, each bracket as a 30 mm block that fills the gap between board end and leg.",
-            "de": "Körper, für 30 mm gebaut: die Platte als eine 40-mm-Scheibe (Fugen und Mittelriegel aufgegangen), jede Bank als ein Brett 300 x 40 mm, Beine, kantige Riegel, Zangen und Streben Stab für Stab mit 45 mm, jede Konsole als 30-mm-Block, der die Lücke zwischen Brettende und Bein füllt."
+            "en": "Body, authored for 30 mm: the top as one 40 mm slab (gaps merged) on the 89 x 45 mm centre cleat that takes up both braces, each bench as one 300 x 40 mm board, legs, square cleats, stretchers and braces member by member at 45 mm, each bracket as a 30 mm block that fills the gap between board end and leg.",
+            "de": "Körper, für 30 mm gebaut: die Platte als eine 40-mm-Scheibe (Fugen aufgegangen) auf dem Mittelriegel 89 x 45 mm, der beide Streben aufnimmt, jede Bank als ein Brett 300 x 40 mm, Beine, kantige Riegel, Zangen und Streben Stab für Stab mit 45 mm, jede Konsole als 30-mm-Block, der die Lücke zwischen Brettende und Bein füllt."
           },
           {
             "en": "Thermal: one surface per region on the merged solids. Structure: slab on cleats, cleats and stretchers on legs, braces, boards on bracket blocks; pivot bolts 30 mm, the seat of the slab on each cleat as a joint block, 30 mm foot pads.",

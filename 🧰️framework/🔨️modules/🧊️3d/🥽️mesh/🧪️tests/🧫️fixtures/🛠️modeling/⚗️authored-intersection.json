@@ -1,0 +1,8 @@
+{
+  "faces": [[0,3,2,1],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,4,7,3],[1,2,6,5]],
+  "left": {"bounds": [[0,0,0],[2,2,2]], "uvBias": 0.25, "tone": 0.125, "material": "azure", "normal": [0,0,1]},
+  "right": {"bounds": [[1,0.5,0.25],[3,1.5,1.75]], "uvBias": 1.25, "tone": 0.25, "material": "ruby", "normal": [0,1,0]},
+  "expected": {"vertices": 8, "faces": 6, "leftFaces": 1, "rightFaces": 5, "area": 8, "volume": 1.5},
+  "contact": [[2,0,0],[4,2,2]],
+  "splitFace": 4
+}

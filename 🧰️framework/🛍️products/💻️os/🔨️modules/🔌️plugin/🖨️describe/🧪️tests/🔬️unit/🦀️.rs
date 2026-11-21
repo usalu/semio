@@ -8,8 +8,10 @@ async fn sha256_hex_matches_known_vector() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn describe_artifact_bound_admits_the_local_iterate_cap() {
-    assert_eq!(DESCRIBE_ARTIFACT_MAX_BYTES, 512 * 1024 * 1024);
+async fn describe_artifact_bound_admits_both_authored_profiles() {
+    let policy: serde_json::Value = serde_json::from_str(include_str!("../../🏷️component-receipt/🧬️schema/🔣️.json")).unwrap();
+    let caps = &policy["$defs"]["ComponentProfilePolicies"]["const"];
+    assert_eq!(DESCRIBE_ARTIFACT_MAX_BYTES, caps["release"]["maximumBytes"].as_u64().unwrap().max(caps["prototype"]["maximumBytes"].as_u64().unwrap()));
 }
 
 #[semio_framework_async_macros::async_test]

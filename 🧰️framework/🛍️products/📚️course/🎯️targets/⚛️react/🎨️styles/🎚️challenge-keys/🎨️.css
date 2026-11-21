@@ -25,14 +25,6 @@
 
 .course-slot > .course-guess {
   grid-area: card;
-  border-inline-start: 0;
-}
-
-@container course-rows (min-width: 30rem) {
-  .course-slot > .course-guess {
-    border-block-start: 0;
-    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
-  }
 }
 
 @container course-task (min-width: 64rem) {
@@ -114,18 +106,29 @@
 
   .course-clock[data-clock="thirty"],
   .course-clock[data-clock="ten"] {
-    outline: 2px solid CanvasText;
-    outline-offset: -2px;
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
   }
 
   .course-clock[data-clock="up"] {
-    outline: 2px dashed GrayText;
-    outline-offset: -2px;
+    forced-color-adjust: none;
+    background-color: CanvasText;
+    color: Canvas;
+  }
+
+  .course-clock[data-clock="up"] > .text-muted-foreground {
+    color: inherit;
   }
 
   .course-clock-bar {
     forced-color-adjust: none;
     background-color: CanvasText;
+  }
+
+  .course-clock[data-clock="thirty"] > .course-clock-bar,
+  .course-clock[data-clock="ten"] > .course-clock-bar {
+    background-color: HighlightText;
   }
 
   .course-miss {

@@ -21,7 +21,7 @@ use super::*;
 /// keyed `Stack` rows that arm builds (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️wgpu-document-reconcile-2026-09-12.md`).
 pub(super) fn record_consumes_subtree(record: &UiNodeRecord) -> bool {
-    matches!(record.component, ui_contract::Component::Surface(_))
+    matches!(record.component, ui_contract::Component::Surface(_) | ui_contract::Component::Input(_) | ui_contract::Component::Image(_))
 }
 
 /// 📐️ A record's [`ui_contract::SpaceToken`] as the legacy `UiStackNode` string. It stamps the
@@ -112,6 +112,7 @@ pub(super) fn record_presence(record: &UiNodeRecord) -> UiPresence {
         match record.transition {
             Some(ui_contract::TransitionHint::Introducing) => UiState::Introducing,
             Some(ui_contract::TransitionHint::Celebrating) => UiState::Celebrating,
+            None if record.style.highlighted => UiState::Previewed,
             None => UiState::Normal,
         }
     };
@@ -249,16 +250,16 @@ pub(super) fn surface_kind(kind: ui_contract::SurfaceKind) -> SurfaceKind {
 /// 🚚️ Depth-first concatenation of every packed `Text` leaf under `root` — the exact inverse of the
 /// plugin host's `paged_text_carrier`, and the Rust twin of the React Interpreter's
 /// `surfaceSceneLaneText`.
-fn lane_payload(document: &UiDocumentTree, root: &UiNodeRecord) -> String {
+fn lane_payload(document: &UiDocumentTree, root: &UiNodeRecord) -> Option<String> {
     let mut payload = String::new();
     let mut stack: Vec<UiNodeId> = root.children.iter().rev().copied().collect();
     let mut visited = 0usize;
     while let Some(id) = stack.pop() {
         visited += 1;
         if visited > UI_DOCUMENT_NODES {
-            break;
+            return None;
         }
-        let Some(record) = document.record(id) else { continue };
+        let record = document.record(id)?;
         if let ui_contract::Component::Text(text) = &record.component {
             payload.push_str(&text.packed_payload());
         }
@@ -266,7 +267,13 @@ fn lane_payload(document: &UiDocumentTree, root: &UiNodeRecord) -> String {
             stack.push(*child);
         }
     }
-    payload
+    Some(payload)
+}
+
+/// 📦️ Resolves a complete named carrier beneath this record.
+pub(super) fn retained_text_body(document: &UiDocumentTree, record: &UiNodeRecord, key: &str, bytes: usize) -> Option<String> {
+    let child = record.children.iter().filter_map(|id| document.record(*id)).find(|child| child.key.as_str() == key)?;
+    lane_payload(document, child).filter(|text| text.len() == bytes)
 }
 
 /// 🔀️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to.
@@ -282,7 +289,7 @@ pub(super) fn merge_scene_lanes<T: ui_scene::SceneDoc>(document: &UiDocumentTree
         let Some(child) = document.record(*child_id) else { continue };
         let Some(name) = lane_name(child.key.as_str()) else { continue };
         let Some(reference) = declared.iter().find(|entry| entry.lane == name) else { continue };
-        let payload = lane_payload(document, child);
+        let Some(payload) = lane_payload(document, child) else { continue };
         if payload.len() as u32 != reference.bytes {
             continue;
         }

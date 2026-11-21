@@ -599,6 +599,7 @@ fn page_window_declares_object_selection() {
 
 #[test]
 fn selected_object_fields_commit_through_the_value_argument() {
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let snapshot = sample();
     let text = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text).expect("text");
     let vector = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Vector).expect("vector");
@@ -611,7 +612,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     let node = render_inspector(&snapshot, Some(&text.id), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::En).expect("inspector");
     let mut names = Vec::new();
     let mut shown = Vec::new();
-    collect_inspector(&node, &mut names, &mut shown);
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node), |node| collect_inspector(node, &mut names, &mut shown));
     assert!(names.iter().any(|name| name == "set-text"));
     assert!(names.iter().any(|name| name == "set-font"));
     assert!(names.iter().any(|name| name == "delete"));
@@ -623,7 +624,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     let image_panel = render_inspector(&snapshot, Some(&image.id), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::En).expect("image inspector");
     let mut image_names = Vec::new();
     let mut image_shown = Vec::new();
-    collect_inspector(&image_panel, &mut image_names, &mut image_shown);
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(image_panel), |node| collect_inspector(node, &mut image_names, &mut image_shown));
     assert!(image_names.iter().any(|name| name == "set-resource-detail"));
     assert!(image_shown.iter().any(|value| value == "0"));
     apply(&mut edited, edit_from_action("set-resource-detail", Some(&args(vec![("object", semio_framework_value::DslValue::String(image.text.clone())), ("text", semio_framework_value::DslValue::String("image.interpolate".into())), ("field", semio_framework_value::DslValue::String("x".into())), ("value", semio_framework_value::DslValue::float(1.0))]))).unwrap());
@@ -631,7 +632,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     let empty = render_inspector(&snapshot, None, "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::De).expect("empty inspector");
     let mut empty_names = Vec::new();
     let mut empty_shown = Vec::new();
-    collect_inspector(&empty, &mut empty_names, &mut empty_shown);
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(empty), |node| collect_inspector(node, &mut empty_names, &mut empty_shown));
     assert!(empty_names.iter().any(|name| name == "set-page-size"));
     assert!(empty_names.iter().any(|name| name == "set-info-field"));
     assert!(empty_shown.iter().any(|value| value == "200"));
@@ -831,7 +832,10 @@ fn canvas_text_uses_a_catalog_face_and_pdf_baseline() {
     snapshot.fonts.push(PdfFont::standard("F1", fixture["baseFont"].as_str().unwrap()));
     let scene: Value = serde_json::from_str(&canvas_layers(&snapshot, None)).unwrap();
     let layer = &scene[1];
-    assert_eq!(layer["text"], expected["text"]);
+    for key in ["content", "fontFamily"] {
+        assert_eq!(layer["text"][key], expected["text"][key]);
+    }
+    assert_eq!(layer["text"]["size"].as_f64(), expected["text"]["size"].as_f64());
     for key in ["x", "y"] {
         assert_eq!(layer[key].as_f64(), expected[key].as_f64());
     }
@@ -1290,6 +1294,7 @@ fn skewed_image_pointer_hits_follow_its_painted_quadrilateral() {
 
 #[test]
 fn blank_second_page_selects_its_own_inspector_and_rotation() {
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let mut snapshot = sample();
     snapshot.info.subject = Some("Subject of the PDF".into());
     snapshot.pages.truncate(1);
@@ -1302,7 +1307,7 @@ fn blank_second_page_selects_its_own_inspector_and_rotation() {
     let inspector = render_inspector(&snapshot, Some("p1:paper"), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), Locale::En).unwrap();
     let mut shown = Vec::new();
     let mut bindings = Vec::new();
-    collect_inspector(&inspector, &mut bindings, &mut shown);
+    semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(inspector), |node| collect_inspector(node, &mut bindings, &mut shown));
     assert!(shown.iter().any(|value| value == "140"));
     assert!(shown.iter().any(|value| value == "Subject of the PDF"));
     for name in ["insert-page", "move-page", "remove-page"] { assert!(bindings.iter().any(|value| value == name)); }

@@ -72,12 +72,12 @@ async fn artifact_submit_item_cap_plus_one_and_nested_bytes_plus_one_return_owne
     for index in 0..=ARTIFACT_SUBMIT_BATCH_ITEMS {
         envelopes.push(envelope(&format!("credit-{index}"), &[], "credit-actor", &document, &[("x", serde_json::json!(index))]).await);
     }
-    let rejected = db_artifact_contract::CommandBatch { envelopes };
+    let rejected = db_artifact_contract::CommandBatch::unadmitted_envelopes_for_law(envelopes);
     assert!(artifact_submit_credit(&rejected).is_err());
 
     let mut oversize = envelope("credit-oversize", &[], "credit-actor", &document, &[("x", serde_json::json!(1))]).await;
     oversize.diff.payload = vec![0; ARTIFACT_SUBMIT_OPERATION_BYTES as usize + 1];
-    assert!(artifact_submit_credit(&db_artifact_contract::CommandBatch { envelopes: vec![oversize] }).is_err());
+    assert!(artifact_submit_credit(&db_artifact_contract::CommandBatch::unadmitted_envelopes_for_law(vec![oversize])).is_err());
 }
 
 #[test]

@@ -173,33 +173,69 @@ pub fn pinch_camera(current: [f64; 3], step: semio_framework::interaction::gestu
     [camera.x, camera.y, camera.zoom]
 }
 
-/// 🤏️ Transfers a map's first-touch lane to pinch ownership when contact two lands.
-pub fn tiled_map_touch_pointer_down(host_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
-    let (sx, sy) = semio_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
-    match touch_pointer_down(host_id, pointer_id, sx, sy) {
-        GestureVerdict::Single => false,
-        GestureVerdict::PinchBegin(_) => {
-            clear_tiled_map_interaction(host_id);
-            true
-        }
-        _ => true,
+/// 👆️ Starts a possible map tap or transfers the gesture to pinch when contact two lands.
+pub fn tiled_map_touch_pointer_down(owner: &crate::element_contracts::ScenePointerTarget, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, modifiers: &semio_ui_wgpu_input::PointerModifiers) -> bool {
+    let host_id = owner.host_id.as_str();
+    if tiled_map_camera(host_id).is_none() {
+        return false;
     }
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    match touch_pointer_down(host_id, pointer_id, sx, sy) {
+        GestureVerdict::Single => {
+            clear_tiled_map_interaction(host_id);
+            let merge_mode = map_marquee_mode(modifiers.shift, modifiers.ctrl_or_meta());
+            mutate_scene_state(host_id, |state| {
+                state.drag = Some(SceneDrag { mode: SceneDragMode::MapTouch { pointer_id, origin: [sx, sy], panning: false, merge_mode } });
+                state.map_interaction_owner = Some(owner.clone());
+            });
+            stamp_map_interaction_owner(host_id, owner);
+        }
+        GestureVerdict::PinchBegin(_) => {
+            mutate_scene_state(host_id, |state| state.drag = None);
+            semio_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(host_id, |host| host.cancel_interaction());
+        }
+        _ => {}
+    }
+    true
 }
 
-/// 🤏️ Applies one silent map pinch step; the single-pointer lane stays suppressed while latched.
+fn move_tiled_map_touch_pan(host_id: &str, pointer_id: ui_render::PointerId, sx: f64, sy: f64) -> Option<(bool, &'static str)> {
+    let (panning, merge_mode, start_pan) = SCENE_STATE.with(|cell| {
+        let mut states = cell.borrow_mut();
+        let drag = states.get_mut(host_id)?.drag.as_mut()?;
+        let SceneDragMode::MapTouch { pointer_id: active, origin, panning, merge_mode } = &mut drag.mode else { return None };
+        if *active != pointer_id {
+            return None;
+        }
+        let begins = !*panning && (sx - origin[0]).hypot(sy - origin[1]) >= f64::from(MAP_MARQUEE_THRESHOLD_PX);
+        *panning |= begins;
+        Some((*panning, *merge_mode, begins.then_some(*origin)))
+    })?;
+    if panning {
+        semio_renderer_wgpu_engine_board::tiled_map::with_map_host_mut(host_id, |host| {
+            if let Some([x, y]) = start_pan {
+                host.pointer_down_screen(x, y, 1);
+            }
+            host.pointer_move_screen(sx, sy);
+        })?;
+    }
+    Some((panning, merge_mode))
+}
+
+/// 🤏️ Applies a silent one-finger pan or pinch step.
 pub fn tiled_map_touch_pointer_move(host_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
-    let (sx, sy) = semio_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
+    let (sx, sy) = map_local_pointer(inner, x, y);
     match touch_pointer_move(host_id, pointer_id, sx, sy) {
-        GestureVerdict::Single => false,
+        GestureVerdict::Single => move_tiled_map_touch_pan(host_id, pointer_id, sx, sy).is_some(),
         GestureVerdict::Pinch(step) => {
-            if let Some(current) = semio_renderer_wgpu_engine_board::tiled_map::tiled_map_camera(host_id) {
+            if let Some(current) = tiled_map_camera(host_id) {
                 let next = pinch_camera(
                     current,
                     step,
                     [inner.w as f64, inner.h as f64],
                     ZoomBounds { min: semio_framework_surface::tiled_map::MAP_CAMERA_ZOOM_MIN, max: semio_framework_surface::tiled_map::MAP_CAMERA_ZOOM_MAX },
                 );
-                semio_renderer_wgpu_engine_board::tiled_map::tiled_map_set_camera_silent(host_id, next);
+                tiled_map_set_camera_silent(host_id, next);
             }
             true
         }
@@ -207,18 +243,62 @@ pub fn tiled_map_touch_pointer_move(host_id: &str, inner: Rect, pointer_id: ui_r
     }
 }
 
-/// 🏁️ Suppresses pinch lifts and publishes exactly one settled map camera on the final lift.
+/// 🏁️ Finishes a map touch gesture, picking on a tap and publishing one camera after a pan or pinch.
 pub fn tiled_map_touch_pointer_up_into(
     host_id: &str,
     controller_id: &str,
     pointer_id: ui_render::PointerId,
+    release: Option<(Rect, f32, f32)>,
     input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>,
 ) -> Result<bool, semio_ui_action::BoundedActionFault> {
     match touch_pointer_up(host_id, pointer_id) {
-        GestureVerdict::Single => Ok(false),
-        GestureVerdict::PinchEnd => semio_renderer_wgpu_engine_board::tiled_map::tiled_map_publish_camera_into(host_id, controller_id, input).map(|_| true),
+        GestureVerdict::Single => {
+            let Some((inner, x, y)) = release else {
+                return finish_tiled_map_touch_cancel(host_id, controller_id, pointer_id, input);
+            };
+            let (sx, sy) = map_local_pointer(inner, x, y);
+            let Some((panning, merge_mode)) = move_tiled_map_touch_pan(host_id, pointer_id, sx, sy) else { return Ok(false) };
+            if panning {
+                clear_tiled_map_interaction(host_id);
+                return tiled_map_publish_camera_into(host_id, controller_id, input);
+            }
+            let Some(surface_id) = SCENE_STATE.with(|cell| cell.borrow().get(host_id)?.map_interaction_owner.as_ref().map(|owner| owner.surface_id.clone())) else {
+                return Ok(false);
+            };
+            let ids = map_pick_feature(host_id, sx, sy)?;
+            write_tiled_map_selection(input, controller_id, &surface_id, &ids, merge_mode, "pick", || clear_tiled_map_interaction(host_id))?;
+            Ok(true)
+        }
+        GestureVerdict::PinchEnd => {
+            clear_tiled_map_interaction(host_id);
+            tiled_map_publish_camera_into(host_id, controller_id, input).map(|_| true)
+        }
         _ => Ok(true),
     }
+}
+
+fn finish_tiled_map_touch_cancel(host_id: &str, controller_id: &str, pointer_id: ui_render::PointerId, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    let panning = SCENE_STATE.with(|cell| {
+        let states = cell.borrow();
+        let SceneDragMode::MapTouch { pointer_id: active, panning, .. } = &states.get(host_id)?.drag.as_ref()?.mode else { return None };
+        (*active == pointer_id).then_some(*panning)
+    });
+    let Some(panning) = panning else { return Ok(false) };
+    clear_tiled_map_interaction(host_id);
+    if panning {
+        tiled_map_publish_camera_into(host_id, controller_id, input)?;
+    }
+    Ok(true)
+}
+
+fn map_pick_feature(host_id: &str, sx: f64, sy: f64) -> Result<Vec<String>, semio_ui_action::BoundedActionFault> {
+    #[derive(Deserialize)]
+    struct HitRow {
+        id: String,
+    }
+    let hit_json = with_map_host(host_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+    let hit = serde_json::from_str::<Option<HitRow>>(&hit_json).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
+    Ok(hit.into_iter().map(|row| row.id).collect())
 }
 
 pub fn tiled_map_pointer_down_into(
@@ -353,6 +433,7 @@ pub fn tiled_map_pointer_cancel_into(host_id: &str, controller_id: &str, inner: 
             clear_tiled_map_interaction(host_id);
             Ok(true)
         }
+        SceneDragMode::MapTouch { pointer_id, .. } => tiled_map_touch_pointer_up_into(host_id, controller_id, pointer_id, None, input),
         _ => Ok(false),
     }
 }
@@ -400,14 +481,7 @@ pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id:
                 let crossing = semio_renderer_wgpu_engine_board::tiled_map::map_marquee_crossing(method, *start_x, sx as f32);
                 ids = semio_renderer_wgpu_engine_board::tiled_map::with_map_host(host_id, |host| query_map_feature_hits(host, method, &points, crossing)).unwrap_or_default();
             } else if distance < MAP_MARQUEE_THRESHOLD_PX {
-                #[derive(Deserialize)]
-                struct HitRow {
-                    id: String,
-                }
-                let hit_json = semio_renderer_wgpu_engine_board::tiled_map::with_map_host(host_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
-                if let Some(hit) = serde_json::from_str::<Option<HitRow>>(&hit_json).map_err(|_| semio_ui_action::BoundedActionFault::Structure)? {
-                    ids.push(hit.id);
-                }
+                ids = map_pick_feature(host_id, sx, sy)?;
             }
             if ids.is_empty() && distance >= MAP_MARQUEE_THRESHOLD_PX && !state.map_marquee_active {
                 clear_tiled_map_interaction(host_id);
@@ -424,7 +498,7 @@ pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id:
 }
 
 pub fn tiled_map_drag_active(surface_id: &str) -> bool {
-    scene_state(surface_id).drag.as_ref().is_some_and(|drag| matches!(drag.mode, SceneDragMode::MapMarquee { .. } | SceneDragMode::MapPan))
+    scene_state(surface_id).drag.as_ref().is_some_and(|drag| matches!(drag.mode, SceneDragMode::MapMarquee { .. } | SceneDragMode::MapPan | SceneDragMode::MapTouch { .. }))
 }
 
 //#endregion TiledMap

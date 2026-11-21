@@ -17,7 +17,7 @@ import type { Asset, ExportFormat, Text, Vector2, VolumeList, VolumeSolid, Volum
 import type { Issue } from "../🟦️.ts";
 import { authoredVolumes, isReference } from "../🧊️volumes/🧱️lists/🟦️.ts";
 import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
-import { loftFault, revolveClosure, taperFault } from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+import { loftFault, polyhedronFault, revolveClosure, taperFault } from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 
 /** ➕️ Allowed deviation of the weights of one solid from a sum of 1. */
 export const WEIGHT_SUM_TOLERANCE = 1e-6;
@@ -184,6 +184,7 @@ const KIND_FIELDS: Readonly<Record<VolumeSolidKind, { readonly required: readonl
   capsule: { required: ["p0", "p1", "r0", "r1"], optional: ["lateralScale"] },
   revolve: { required: ["profile", "axis", "origin"], optional: ["sweepRad", "lateralScale"] },
   extrude: { required: ["profile", "plane", "from", "to"], optional: ["holes", "taperTo"] },
+  polyhedron: { required: ["vertices", "triangles"], optional: [] },
   loft: { required: ["sections", "capStart", "capEnd"], optional: [] },
 };
 
@@ -211,7 +212,7 @@ function fieldIssues(solid: object, list: VolumeList, p: string, label: string, 
   for (const key of required) if (entry[key] === undefined) add(`${p}.${key}`, "volume-field", `${label} lacks the member "${key}", which ${what} requires.`, `${bez} fehlt das Mitglied "${key}", das ${was} verlangt.`);
 }
 
-function weightIssues(solid: VolumeSolid, p: string, bones: ReadonlySet<string>, add: Add): void {
+export function weightIssues(solid: Pick<VolumeSolid, "id" | "weights">, p: string, bones: ReadonlySet<string>, add: Add): void {
   const weights = solid.weights;
   if (weights === undefined) return;
   const label = `Solid "${solid.id}"`;
@@ -295,6 +296,11 @@ function geometryIssues(solid: VolumeSolid, p: string, add: Add): void {
         for (let m = k + 1; m < holes.length; m++)
           if (simple[k] && simple[m] && holesOverlap(hole, holes[m]!)) add(`${p}.holes[${m}]`, "volume-holes-overlap", `Holes ${k} and ${m} of ${label.toLowerCase()} overlap or touch.`, `Löcher ${k} und ${m} von ${bez} überlappen oder berühren sich.`);
       });
+      break;
+    }
+    case "polyhedron": {
+      const fault = polyhedronFault(solid.vertices, solid.triangles);
+      if (fault !== null) size(fault, "needs one closed, outward triangular shell with valid vertex indices.", "benötigt eine geschlossene, nach außen orientierte Dreiecksfläche mit gültigen Punktindizes.");
       break;
     }
     case "loft": {

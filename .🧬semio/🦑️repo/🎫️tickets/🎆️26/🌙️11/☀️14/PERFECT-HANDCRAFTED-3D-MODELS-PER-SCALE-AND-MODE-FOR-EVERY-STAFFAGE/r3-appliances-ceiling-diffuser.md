@@ -163,3 +163,43 @@ Images: `🗑️generated/r3-sheet/appliances/ceiling-diffuser.s{50,100,200}.{bo
 - **Cones flatter than real.** The cone parts rise only 7.6 to 15 mm, flatter than Titus cones (about 30 degrees). The drawn 70 mm depth, the 12 mm frame and the 7.5 mm feature leave no more height below the ceiling.
 - **Mass versus layer thickness.** 3.2 kg agrees with the product class, but 0.8 mm sheet over the modelled area weighs about 5.2 kg. The layers `sheet` 0.8 mm / `tube` 0.7 mm look about 0.3 mm too thick for a 3.2 kg diffuser (about 0.5 mm in reality). This is not changed because it is thermal layer data; it is a point for the area and thermal reviewers.
 - **Small gap closed in the drawing.** At 1:50 the inner edge of cone 2 stops 0.4 mm below cone 1. The drawing closes this gap (under the pen), as its `merged` decision says. Elsewhere the side view is closed by the overlapping cones.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-ceiling-diffuser-coarse.py` (1:200 and 1:500 anew; uses the round-3 helper definitions without running the round-3 writer).
+
+### Reference and model vs reference, 1:50
+
+| Quantity | Reference (Titus TMS, Koolair 50-FR-4, CAS AQN) | Model | Deviation |
+|---|---|---|---|
+| Face | 595 x 595 mm | 0.595 x 0.595 m | 0 % |
+| Border | 33-35 mm | 35.5 mm | +1.4 % |
+| Neck | DN 250, 248-249 mm | 249 mm, bead 2.7 mm | 0 % |
+| Cone drop | 32 mm (TMS full face) to ~70 mm step-down | 70 mm (step-down, asset height 0.12 incl. neck) | ok |
+| Sheet | 0.6-1.0 mm | 0.8 mm | ok |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- (unchanged) |
+| 1:100 | B+ / B+ / B+ (plate wedges from the renderer) | A- / B+ / B+ |
+| 1:200 | B (spigot a closed disc) / B (jet blocks hanging in the air beside the cone, thermal plate thinner than the body) / C+ (one plate, joint, mass: the body as structure) | A- / A- / A- |
+| 1:500 | B (round-1 leftover) / B- (stand-in plates, area -45 %) / C+ | A- / A- / A- |
+
+Opened: body 1:50 (top and from below), 1:100, 1:200, 1:500 before and after; thermal cut and structure at every scale (from below); poses `off`, `half` (from below); 2D 1:50, 1:100, 1:200.
+
+### Changes
+
+- 1:200: spigot as its open 0.7 mm tube (C30, bore far above the feature); thermal is the 12 mm border frame, the plenum back and the discharge baffle as real 0.8 mm sheets (C20), cone and spigot by reference, the two jets as 30 mm outlet patches lying on the cone face under the outer slot (D2); structure: flange plate, four 30 mm corner posts carrying the cone pack, mass, pin and roller (joint merged).
+- 1:500 anew: sharp-cornered 12 mm plate with a 32-sided spigot hole, the cone as a square frustum (taper 1 -> 1.94), open spigot tube; thermal: plate and spigot by reference, plenum back, the frustum as its open pressed shell with the centre dish (the plenum under the spigot reaches its inside, as in reality), outlet patches; structure: plate, posts, mass, hangers.
+- Total thermal area at 1:200 and 1:500 now 27 % and 18 % from the declared sum (before: 48 % / 45 % failing).
+
+### Checks
+
+`volumes-check.ts --product` PASS; `r3-validate.ts --volumes` VALID; spliced.
+
+### Remaining
+
+- The cones are rounded squares; the Titus TMS has diagonal corner creases. Kept (other makes are rounded).
+- A small spacer face shows in one slot corner from below at 1:50 (a real spacer).

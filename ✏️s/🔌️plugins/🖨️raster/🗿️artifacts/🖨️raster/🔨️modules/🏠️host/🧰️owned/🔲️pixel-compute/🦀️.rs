@@ -1,6 +1,10 @@
 //! 🔲️ Six semantic pixel routes share source preparation, bounded coverage and pixel jobs, and explicit owner retirement.
 use super::*;
 use semio_framework_pixels::{RasterImage,editing::{PixelEditJob,PixelFloodSelectionJob,PixelOperation}};
+use semio_framework_value::retirement::{
+    allocation_return::{shared_allocation_bytes,shared_allocation_work_demand},
+    arc_custody::{ArcLease,admit_shared_allocation,shared_allocation_value_demand},
+};
 use semio_s_artifact_raster_raster_mutations_pixels::{apply_filter,fill_region,paint_stroke,transform_image};
 
 #[derive(Default,semio_framework_value::RetireOwned)]
@@ -12,7 +16,7 @@ struct ComputeOwned {
     operation: Option<PixelOperation>,
     edit: Option<PixelEditJob>,
     flood: Option<PixelFloodSelectionJob>,
-    flood_source: Option<std::sync::Arc<RasterImage>>,
+    flood_source: Option<ArcLease<RasterImage>>,
     seen: Vec<bool>,
     queue: Vec<u32>,
     points: Vec<[f64;2]>,
@@ -20,7 +24,7 @@ struct ComputeOwned {
 }
 
 #[derive(Clone,Copy,PartialEq,Eq)]
-enum Phase { Begin,Source,ReserveSelection,Selection,ReservePoints,Points,Operation,ReserveFloodQueue,Flood,EndFlood,AdmitEdit,Scratch,Edit,EndEdit,ReserveWrite,Write,Done }
+enum Phase { Begin,Source,ReserveSelection,Selection,ReservePoints,Points,Operation,StartFlood,ReserveFloodQueue,Flood,EndFlood,AdmitEdit,Scratch,Edit,EndEdit,ReserveWrite,Write,Done }
 
 /// 🧵️ No partially initialized or filtered image is observable before both prepared buffers are complete.
 pub(super) struct RasterPixelComputeWork {
@@ -108,10 +112,11 @@ impl RasterPixelComputeWork {
             Phase::Selection=>{let spans=selection(operation).ok_or_else(||compute_error("pixel selection disappeared"))?;if self.clip_span.is_none()&&self.selected_span<spans.len(){demand=spans.rank_observation_demand(self.selected_span)?;demand.copy_bytes=size_of::<paint_stroke::RasterSelectionSpan>();}else{let remaining=self.count()?-data.selection.as_ref().map_or(0,Vec::len);demand.copy_bytes=if remaining==0{0}else{remaining.min(body.min(32768)).max(1)};}},
             Phase::ReservePoints=>if let RasterMutation::PaintStroke(value)=operation{demand.capacity_bytes=value.points.len()*size_of::<[f64;2]>();},
             Phase::Points=>if let RasterMutation::PaintStroke(value)=operation{demand.copy_bytes=(value.points.len()-data.points.len()).min(body.min(32768)/size_of::<[f64;2]>()).max(1)*size_of::<[f64;2]>();},
-            Phase::Operation=>if matches!(operation,RasterMutation::FillRegion(_))&&!self.flood_complete{demand.capacity_bytes=self.count()?.saturating_mul(2)+size_of::<RasterImage>()+2*size_of::<usize>();},
+            Phase::Operation=>if matches!(operation,RasterMutation::FillRegion(_))&&!self.flood_complete{return shared_allocation_value_demand::<RasterImage>();},
+            Phase::StartFlood=>demand.capacity_bytes=self.count()?.saturating_mul(2),
             Phase::ReserveFloodQueue=>demand.capacity_bytes=self.count()?.saturating_mul(size_of::<u32>()),
             Phase::Flood=>demand.copy_bytes=if body<26{26}else{((body.min(32768)-5)/21).min(1024)*21+5},
-            Phase::EndFlood=>{demand.copy_bytes=size_of::<semio_framework_pixels::editing::PixelFloodStorage>()+size_of::<RasterImage>();demand.release_bytes=size_of::<RasterImage>()+2*size_of::<usize>();},
+            Phase::EndFlood=>{demand.copy_bytes=size_of::<semio_framework_pixels::editing::PixelFloodStorage>()+size_of::<RasterImage>();demand.release_bytes=shared_allocation_bytes::<RasterImage>();},
             Phase::AdmitEdit=>{let image=data.before.as_ref().ok_or_else(||compute_error("pixel input missing"))?;let editing=data.operation.as_ref().ok_or_else(||compute_error("pixel operation missing"))?;editing.validate(image,data.selection.is_some()).map_err(|_|compute_error("pixel operation is invalid for the image"))?;let(width,height)=editing.extent(image);demand.capacity_bytes=width as usize*height as usize*4;},
             Phase::Scratch=>demand.capacity_bytes=data.edit.as_ref().ok_or_else(||compute_error("pixel edit missing"))?.scratch_reservation_bytes(),
             Phase::Edit=>demand.copy_bytes=self.edit_budget(operation,body)?.1,
@@ -168,12 +173,66 @@ impl RasterPixelComputeWork {
             }
             Phase::Operation=>{
                 if let RasterMutation::WritePixelRegion(value)=operation{let image=data.before.as_ref().ok_or_else(||compute_error("write source missing"))?;if u64::from(value.x)+u64::from(value.width)>u64::from(image.width)||u64::from(value.y)+u64::from(value.height)>u64::from(image.height){return Err(compute_error("written region lies outside image"))}self.phase=Phase::ReserveWrite;}
-                else if let RasterMutation::FillRegion(value)=operation{if !self.flood_complete{let image=data.before.as_ref().ok_or_else(||compute_error("flood source missing"))?;if value.seed.x>=image.width||value.seed.y>=image.height{return Err(compute_error("flood seed lies outside image"))}data.flood_source=Some(std::sync::Arc::new(data.before.take().unwrap()));data.flood=Some(PixelFloodSelectionJob::new(data.flood_source.as_ref().unwrap().clone(),value.seed.x,value.seed.y,value.tolerance as u8).map_err(|_|compute_error("flood creation failed"))?);receipt.retained_capacity_bytes=data.flood.as_ref().unwrap().storage_capacity_bytes()+size_of::<RasterImage>()+2*size_of::<usize>();self.phase=Phase::ReserveFloodQueue;}else{data.operation=Some(fill_region::fill_operation(&value.target,&value.color));self.phase=Phase::AdmitEdit;}}
+                else if let RasterMutation::FillRegion(value)=operation {
+                    if self.flood_complete {
+                        data.operation=Some(fill_region::fill_operation(&value.target,&value.color));
+                        self.phase=Phase::AdmitEdit;
+                    } else {
+                        let image=data.before.as_ref().ok_or_else(||compute_error("flood source missing"))?;
+                        if value.seed.x>=image.width || value.seed.y>=image.height {return Err(compute_error("flood seed lies outside image"));}
+                        if work_budget<(shared_allocation_work_demand() as usize) {
+                            self.work_units=0;
+                            return Ok(RetainedCloneStep::Progress(Default::default()));
+                        }
+                        let mut actual=None;
+                        let turn=admit_shared_allocation(data.before.take().unwrap(),grant,&mut actual);
+                        self.work_units=turn.work as usize;
+                        match turn.result {
+                            Ok((owner,progress)) => {
+                                receipt.retained_capacity_bytes=progress.retained_capacity_bytes;
+                                debug_assert_eq!(actual,Some(receipt.retained_capacity_bytes));
+                                data.flood_source=Some(ArcLease::new(owner));
+                                self.phase=Phase::StartFlood;
+                            }
+                            Err((error,source)) => {
+                                data.before=Some(source);
+                                return Err(error);
+                            }
+                        }
+                    }
+                }
                 else{let editing=match operation{RasterMutation::PaintStroke(value)=>paint_stroke::operation_with_points(value,std::mem::take(&mut data.points)),RasterMutation::ApplyFilter(value)=>apply_filter::operation(value),RasterMutation::TransformImage(value)=>{let image=data.before.as_ref().ok_or_else(||compute_error("transform source missing"))?;if value.operation=="crop"&&(u64::from(value.x)+u64::from(value.width)>u64::from(image.width)||u64::from(value.y)+u64::from(value.height)>u64::from(image.height)){return Err(compute_error("crop lies outside image"))}transform_image::operation(value)},RasterMutation::FillSelection(value)=>fill_region::fill_operation(&value.target,&value.color),_=>return Err(compute_error("pixel operation missing"))};data.operation=Some(editing);self.phase=Phase::AdmitEdit;}
+            }
+            Phase::StartFlood=>{
+                let RasterMutation::FillRegion(value)=operation else{return Err(compute_error("flood operation missing"));};
+                let source=data.flood_source.as_ref().and_then(|lease|lease.0.as_ref()).ok_or_else(||compute_error("flood source missing"))?;
+                let flood=PixelFloodSelectionJob::new(source.clone(),value.seed.x,value.seed.y,value.tolerance as u8).map_err(|_|compute_error("flood creation failed"))?;
+                receipt.retained_capacity_bytes=flood.storage_capacity_bytes();
+                data.flood=Some(flood);
+                self.phase=Phase::ReserveFloodQueue;
             }
             Phase::ReserveFloodQueue=>{receipt.retained_capacity_bytes=data.flood.as_mut().ok_or_else(||compute_error("flood owner missing"))?.reserve_queue().map_err(|_|compute_error("flood queue reservation failed"))?;self.phase=Phase::Flood;}
             Phase::Flood=>{let budget=((grant.maximum_copy_bytes.min(32768)-5)/21).min(1024).min(work_budget);let flood=data.flood.as_mut().ok_or_else(||compute_error("flood owner missing"))?;let progress=flood.advance_selected(budget,data.selection.as_deref()).map_err(|_|compute_error("flood computation failed"))?;self.work_units=flood.last_work_units().max(1);receipt.copied_bytes=flood.last_write_bytes();if progress.done{self.phase=Phase::EndFlood;}}
-            Phase::EndFlood=>{let storage=data.flood.take().ok_or_else(||compute_error("flood owner missing"))?.into_storage();data.seen=storage.seen;data.queue=storage.queue;drop(storage.source);let source=data.flood_source.take().ok_or_else(||compute_error("flood source missing"))?;match std::sync::Arc::try_unwrap(source){Ok(source)=>data.before=Some(source),Err(source)=>{data.flood_source=Some(source);return Err(compute_error("flood source retained another alias"))}}data.retired_selection=data.selection.take();data.selection=Some(storage.mask);self.flood_complete=true;self.phase=Phase::Operation;}
+            Phase::EndFlood=>{
+                let source=data.flood_source.as_ref().and_then(|lease|lease.0.as_ref()).ok_or_else(||compute_error("flood source missing"))?;
+                if std::sync::Arc::strong_count(source)!=2 || std::sync::Arc::weak_count(source)!=0{return Err(compute_error("flood source retained another alias"));}
+                let storage=data.flood.take().ok_or_else(||compute_error("flood owner missing"))?.into_storage();
+                data.seen=storage.seen;
+                data.queue=storage.queue;
+                data.retired_selection=data.selection.take();
+                data.selection=Some(storage.mask);
+                drop(storage.source);
+                let source=data.flood_source.take().and_then(|lease|lease.0).expect("funded flood source lease");
+                match std::sync::Arc::try_unwrap(source) {
+                    Ok(source)=>data.before=Some(source),
+                    Err(source)=>{
+                        data.flood_source=Some(ArcLease::new(source));
+                        return Err(compute_error("flood source retained another alias"));
+                    }
+                }
+                self.flood_complete=true;
+                self.phase=Phase::Operation;
+            }
             Phase::AdmitEdit=>{let edit=PixelEditJob::admit(&mut data.before,&mut data.operation,&mut data.selection).map_err(|_|compute_error("pixel edit admission failed"))?;receipt.retained_capacity_bytes=edit.output.pixels.capacity();data.edit=Some(edit);self.phase=Phase::Scratch;}
             Phase::Scratch=>{receipt.retained_capacity_bytes=data.edit.as_mut().ok_or_else(||compute_error("pixel edit owner missing"))?.reserve_scratch().map_err(|_|compute_error("pixel scratch reservation failed"))?;self.phase=Phase::Edit;self.cursor=0;}
             Phase::Edit=>{let edit=data.edit.as_mut().ok_or_else(||compute_error("pixel edit owner missing"))?;let progress=edit.advance_controlled(edit_budget.unwrap(),demand.copy_bytes,work_budget.min(65536),&mut should_stop).map_err(|_|compute_error("pixel edit failed"))?;self.work_units=edit.last_work_units();receipt.copied_items=usize::from(self.work_units>0);receipt.copied_bytes=edit.last_write_bytes();self.cursor=progress.completed;if progress.done{self.phase=Phase::EndEdit;}}
@@ -189,9 +248,39 @@ impl RasterPixelComputeWork {
 
     pub(super) fn take(&mut self)->Option<(RasterImage,RasterImage)>{if self.closing||self.phase!=Phase::Done{return None}let data=self.owned.as_mut()?;Some((data.before.take()?,data.after.take()?))}
 
-    pub(super) fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(source)=self.source.as_ref(){return source.close_demands(body)}if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}if self.owned.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned)}Ok(Default::default())}
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        if let Some(child) = self.source.as_ref() {
+            return if child.terminal_is_empty() { Ok(1) } else { child.close_work_demand(body) };
+        }
+        raster_owned_close_work(self.retirement.as_deref(), !self.terminal_is_empty(), body)
+    }
 
-    pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep>{self.closing=true;if grant.maximum_items==0||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}return source.close_step(grant)}if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.owned,&mut self.retirement,grant)}}
+    pub(super) fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(source)=self.source.as_ref(){if source.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()});}return source.close_demands(body)}if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}if self.owned.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned)}Ok(Default::default())}
+
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        self.closing = true;
+        let grant = effect.grant();
+        match effect.remaining_work_units() {
+            Ok(0) => return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 },
+            Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 },
+            Ok(_) => {}
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 };
+        }
+        if let Some(source) = self.source.as_mut() {
+            if !source.terminal_is_empty() {
+                return source.close_step(effect);
+            }
+            let boundary = effect.performed_work();
+            let result = raster_close_unit(effect).map(|()| {
+                self.source.take();
+                RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+            });
+            return RetainedWorkOutcome { result, work: effect.performed_work() - boundary };
+        }
+        raster_retire_owned(&mut self.owned, &mut self.retirement, effect)
+    }
     pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.source.is_none()&&self.owned.is_none()&&self.retirement.is_none()}
 }
 

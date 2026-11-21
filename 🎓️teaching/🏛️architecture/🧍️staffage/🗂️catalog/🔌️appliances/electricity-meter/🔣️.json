@@ -264,39 +264,11 @@
               "filled": true,
               "tone": 0.45,
               "kind": "poly",
-              "points": [
-                [
-                  0.144,
-                  -0.008
-                ],
-                [
-                  0.156,
-                  -0.008
-                ],
-                [
-                  0.161657,
-                  -0.005657
-                ],
-                [
-                  0.164,
-                  -0.0
-                ],
-                [
-                  0.161657,
-                  0.005657
-                ],
-                [
-                  0.156,
-                  0.008
-                ],
-                [
-                  0.144,
-                  0.008
-                ]
-              ],
+              "points": [[0.144, -0.008], [0.156, -0.008], [0.161657, -0.005657], [0.164, -0.0], [0.161657, 0.005657], [0.156, 0.008], [0.144, 0.008]],
               "closed": true,
               "region": "casing",
-              "material": "steel-zinc"
+              "material": "steel-zinc",
+              "penMm": 0.2
             },
             {
               "id": "body",
@@ -344,7 +316,8 @@
               "h": 0.088,
               "r": 0.005,
               "region": "window",
-              "material": "polycarbonate"
+              "material": "polycarbonate",
+              "penMm": 0.2
             },
             {
               "id": "plate",
@@ -415,16 +388,7 @@
               "filled": false,
               "tone": 0.25,
               "kind": "poly",
-              "points": [
-                [
-                  0.088,
-                  0.032
-                ],
-                [
-                  0.088,
-                  -0.032
-                ]
-              ],
+              "points": [[0.088, 0.032], [0.088, -0.032]],
               "closed": false,
               "region": "plate",
               "material": "abs-plastic"
@@ -437,16 +401,7 @@
               "filled": false,
               "tone": 0.25,
               "kind": "poly",
-              "points": [
-                [
-                  0.079,
-                  0.032
-                ],
-                [
-                  0.079,
-                  -0.032
-                ]
-              ],
+              "points": [[0.079, 0.032], [0.079, -0.032]],
               "closed": false,
               "region": "plate",
               "material": "abs-plastic"
@@ -459,16 +414,7 @@
               "filled": false,
               "tone": 0.25,
               "kind": "poly",
-              "points": [
-                [
-                  0.07,
-                  0.032
-                ],
-                [
-                  0.07,
-                  -0.032
-                ]
-              ],
+              "points": [[0.07, 0.032], [0.07, -0.032]],
               "closed": false,
               "region": "plate",
               "material": "abs-plastic"
@@ -481,24 +427,7 @@
               "filled": true,
               "tone": 0.86,
               "kind": "poly",
-              "points": [
-                [
-                  0.0194,
-                  0.0
-                ],
-                [
-                  0.0194,
-                  0.042
-                ],
-                [
-                  0.0206,
-                  0.042
-                ],
-                [
-                  0.0206,
-                  0.0
-                ]
-              ],
+              "points": [[0.0192, 0.0], [0.0192, 0.042], [0.0208, 0.042], [0.0208, 0.0]],
               "closed": true,
               "region": "disc",
               "material": "aluminium-disc",
@@ -509,7 +438,8 @@
                 "axisX": 0,
                 "axisZ": 0,
                 "mirror": true
-              }
+              },
+              "penMm": 0.2
             },
             {
               "id": "hub",
@@ -519,32 +449,7 @@
               "filled": true,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.0164,
-                  0.0
-                ],
-                [
-                  0.0164,
-                  0.004
-                ],
-                [
-                  0.0194,
-                  0.005
-                ],
-                [
-                  0.0206,
-                  0.005
-                ],
-                [
-                  0.0236,
-                  0.004
-                ],
-                [
-                  0.0236,
-                  0.0
-                ]
-              ],
+              "points": [[0.0164, 0.0], [0.0164, 0.004], [0.0192, 0.005], [0.0208, 0.005], [0.0236, 0.004], [0.0236, 0.0]],
               "closed": true,
               "region": "disc",
               "material": "steel-zinc",
@@ -565,24 +470,7 @@
               "filled": true,
               "tone": 0.1,
               "kind": "poly",
-              "points": [
-                [
-                  0.0192,
-                  -0.006
-                ],
-                [
-                  0.0208,
-                  -0.006
-                ],
-                [
-                  0.0208,
-                  0.006
-                ],
-                [
-                  0.0192,
-                  0.006
-                ]
-              ],
+              "points": [[0.0192, -0.006], [0.0208, -0.006], [0.0208, 0.006], [0.0192, 0.006]],
               "closed": true,
               "region": "disc",
               "material": "aluminium-disc",
@@ -591,7 +479,8 @@
                 "sweep": "w",
                 "z0": -0.0422,
                 "z1": -0.0372
-              }
+              },
+              "penMm": 0.2
             },
             {
               "id": "magnet",
@@ -666,7 +555,8 @@
               "rx": 0.0045,
               "ry": 0.0045,
               "region": "casing",
-              "material": "steel-zinc"
+              "material": "steel-zinc",
+              "penMm": 0.2
             }
           ],
           "front": [
@@ -698,7 +588,8 @@
               "w": 0.002,
               "h": 0.012,
               "region": "casing",
-              "material": "steel-zinc"
+              "material": "steel-zinc",
+              "penMm": 0.2
             },
             {
               "id": "body",
@@ -708,56 +599,7 @@
               "filled": true,
               "tone": 0.88,
               "kind": "poly",
-              "points": [
-                [
-                  0.033,
-                  -0.046
-                ],
-                [
-                  -0.05,
-                  -0.0418
-                ],
-                [
-                  -0.0555,
-                  -0.0372
-                ],
-                [
-                  -0.0582,
-                  -0.032
-                ],
-                [
-                  -0.0582,
-                  -0.028
-                ],
-                [
-                  -0.059,
-                  -0.028
-                ],
-                [
-                  -0.059,
-                  0.076
-                ],
-                [
-                  -0.0582,
-                  0.076
-                ],
-                [
-                  -0.0582,
-                  0.08
-                ],
-                [
-                  -0.0555,
-                  0.0852
-                ],
-                [
-                  -0.05,
-                  0.0898
-                ],
-                [
-                  0.033,
-                  0.094
-                ]
-              ],
+              "points": [[0.033, -0.046], [-0.05, -0.0418], [-0.0555, -0.0372], [-0.0582, -0.032], [-0.0582, -0.028], [-0.059, -0.028], [-0.059, 0.076], [-0.0582, 0.076], [-0.0582, 0.08], [-0.0555, 0.0852], [-0.05, 0.0898], [0.033, 0.094]],
               "closed": true,
               "region": "casing",
               "material": "abs-plastic"
@@ -770,16 +612,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  0.033,
-                  -0.046
-                ],
-                [
-                  0.033,
-                  0.094
-                ]
-              ],
+              "points": [[0.033, -0.046], [0.033, 0.094]],
               "closed": false,
               "region": "casing",
               "material": "abs-plastic"
@@ -827,7 +660,8 @@
               "w": 0.004,
               "h": 0.009,
               "region": "casing",
-              "material": "steel-zinc"
+              "material": "steel-zinc",
+              "penMm": 0.2
             }
           ],
           "plan": [
@@ -854,56 +688,7 @@
               "filled": true,
               "tone": 0.88,
               "kind": "poly",
-              "points": [
-                [
-                  -0.066,
-                  0.033
-                ],
-                [
-                  -0.06204,
-                  -0.05
-                ],
-                [
-                  -0.0577,
-                  -0.0555
-                ],
-                [
-                  -0.0528,
-                  -0.0582
-                ],
-                [
-                  -0.05,
-                  -0.0582
-                ],
-                [
-                  -0.05,
-                  -0.059
-                ],
-                [
-                  0.05,
-                  -0.059
-                ],
-                [
-                  0.05,
-                  -0.0582
-                ],
-                [
-                  0.0528,
-                  -0.0582
-                ],
-                [
-                  0.0577,
-                  -0.0555
-                ],
-                [
-                  0.06204,
-                  -0.05
-                ],
-                [
-                  0.066,
-                  0.033
-                ]
-              ],
+              "points": [[-0.066, 0.033], [-0.06204, -0.05], [-0.0577, -0.0555], [-0.0528, -0.0582], [-0.05, -0.0582], [-0.05, -0.059], [0.05, -0.059], [0.05, -0.0582], [0.0528, -0.0582], [0.0577, -0.0555], [0.06204, -0.05], [0.066, 0.033]],
               "closed": true,
               "region": "casing",
               "material": "abs-plastic"
@@ -916,16 +701,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  -0.066,
-                  0.033
-                ],
-                [
-                  0.066,
-                  0.033
-                ]
-              ],
+              "points": [[-0.066, 0.033], [0.066, 0.033]],
               "closed": false,
               "region": "casing",
               "material": "abs-plastic"
@@ -943,7 +719,8 @@
               "w": 0.016,
               "h": 0.002,
               "region": "casing",
-              "material": "steel-zinc"
+              "material": "steel-zinc",
+              "penMm": 0.2
             }
           ]
         },
@@ -1023,35 +800,11 @@
               "filled": true,
               "tone": 0.45,
               "kind": "poly",
-              "points": [
-                [
-                  0.144,
-                  -0.008
-                ],
-                [
-                  0.158,
-                  -0.008
-                ],
-                [
-                  0.164,
-                  -0.004
-                ],
-                [
-                  0.164,
-                  0.004
-                ],
-                [
-                  0.158,
-                  0.008
-                ],
-                [
-                  0.144,
-                  0.008
-                ]
-              ],
+              "points": [[0.144, -0.008], [0.158, -0.008], [0.164, -0.004], [0.164, 0.004], [0.158, 0.008], [0.144, 0.008]],
               "closed": true,
               "region": "casing",
-              "material": "steel-zinc"
+              "material": "steel-zinc",
+              "penMm": 0.2
             },
             {
               "id": "body",
@@ -1083,7 +836,8 @@
               "h": 0.088,
               "r": 0.005,
               "region": "window",
-              "material": "polycarbonate"
+              "material": "polycarbonate",
+              "penMm": 0.2
             },
             {
               "id": "plate",
@@ -1123,24 +877,7 @@
               "filled": true,
               "tone": 0.86,
               "kind": "poly",
-              "points": [
-                [
-                  0.0194,
-                  0.0
-                ],
-                [
-                  0.0194,
-                  0.042
-                ],
-                [
-                  0.0206,
-                  0.042
-                ],
-                [
-                  0.0206,
-                  0.0
-                ]
-              ],
+              "points": [[0.0192, 0.0], [0.0192, 0.042], [0.0208, 0.042], [0.0208, 0.0]],
               "closed": true,
               "region": "disc",
               "material": "aluminium-disc",
@@ -1151,7 +888,8 @@
                 "axisX": 0,
                 "axisZ": 0,
                 "mirror": true
-              }
+              },
+              "penMm": 0.2
             },
             {
               "id": "mark",
@@ -1161,24 +899,7 @@
               "filled": true,
               "tone": 0.1,
               "kind": "poly",
-              "points": [
-                [
-                  0.0189,
-                  -0.006
-                ],
-                [
-                  0.0211,
-                  -0.006
-                ],
-                [
-                  0.0211,
-                  0.006
-                ],
-                [
-                  0.0189,
-                  0.006
-                ]
-              ],
+              "points": [[0.0189, -0.006], [0.0211, -0.006], [0.0211, 0.006], [0.0189, 0.006]],
               "closed": true,
               "region": "disc",
               "material": "aluminium-disc",
@@ -1187,7 +908,8 @@
                 "sweep": "w",
                 "z0": -0.0421,
                 "z1": -0.0381
-              }
+              },
+              "penMm": 0.2
             },
             {
               "id": "terminals",
@@ -1235,7 +957,8 @@
               "w": 0.002,
               "h": 0.012,
               "region": "casing",
-              "material": "steel-zinc"
+              "material": "steel-zinc",
+              "penMm": 0.2
             },
             {
               "id": "body",
@@ -1245,32 +968,7 @@
               "filled": true,
               "tone": 0.88,
               "kind": "poly",
-              "points": [
-                [
-                  0.033,
-                  -0.046
-                ],
-                [
-                  -0.05,
-                  -0.0418
-                ],
-                [
-                  -0.059,
-                  -0.0323
-                ],
-                [
-                  -0.059,
-                  0.0803
-                ],
-                [
-                  -0.05,
-                  0.0898
-                ],
-                [
-                  0.033,
-                  0.094
-                ]
-              ],
+              "points": [[0.033, -0.046], [-0.05, -0.0418], [-0.059, -0.0323], [-0.059, 0.0803], [-0.05, 0.0898], [0.033, 0.094]],
               "closed": true,
               "region": "casing",
               "material": "abs-plastic"
@@ -1315,32 +1013,7 @@
               "filled": true,
               "tone": 0.88,
               "kind": "poly",
-              "points": [
-                [
-                  -0.066,
-                  0.033
-                ],
-                [
-                  -0.062,
-                  -0.05
-                ],
-                [
-                  -0.053,
-                  -0.059
-                ],
-                [
-                  0.053,
-                  -0.059
-                ],
-                [
-                  0.062,
-                  -0.05
-                ],
-                [
-                  0.066,
-                  0.033
-                ]
-              ],
+              "points": [[-0.066, 0.033], [-0.062, -0.05], [-0.053, -0.059], [0.053, -0.059], [0.062, -0.05], [0.066, 0.033]],
               "closed": true,
               "region": "casing",
               "material": "abs-plastic"
@@ -1358,7 +1031,8 @@
               "w": 0.016,
               "h": 0.002,
               "region": "casing",
-              "material": "steel-zinc"
+              "material": "steel-zinc",
+              "penMm": 0.2
             }
           ]
         },
@@ -1443,7 +1117,8 @@
               "w": 0.092,
               "h": 0.088,
               "region": "window",
-              "material": "polycarbonate"
+              "material": "polycarbonate",
+              "penMm": 0.2
             },
             {
               "id": "plate",
@@ -1468,24 +1143,7 @@
               "filled": true,
               "tone": 0.86,
               "kind": "poly",
-              "points": [
-                [
-                  0.0194,
-                  0.0
-                ],
-                [
-                  0.0194,
-                  0.042
-                ],
-                [
-                  0.0206,
-                  0.042
-                ],
-                [
-                  0.0206,
-                  0.0
-                ]
-              ],
+              "points": [[0.0194, 0.0], [0.0194, 0.042], [0.0206, 0.042], [0.0206, 0.0]],
               "closed": true,
               "region": "disc",
               "material": "aluminium-disc",
@@ -1540,24 +1198,7 @@
               "filled": true,
               "tone": 0.88,
               "kind": "poly",
-              "points": [
-                [
-                  0.033,
-                  0.094
-                ],
-                [
-                  -0.059,
-                  0.0898
-                ],
-                [
-                  -0.059,
-                  -0.0418
-                ],
-                [
-                  0.033,
-                  -0.046
-                ]
-              ],
+              "points": [[0.033, 0.094], [-0.059, 0.0898], [-0.059, -0.0418], [0.033, -0.046]],
               "closed": true,
               "region": "casing",
               "material": "abs-plastic"
@@ -1603,24 +1244,7 @@
               "filled": true,
               "tone": 0.88,
               "kind": "poly",
-              "points": [
-                [
-                  -0.066,
-                  0.033
-                ],
-                [
-                  -0.062,
-                  -0.059
-                ],
-                [
-                  0.062,
-                  -0.059
-                ],
-                [
-                  0.066,
-                  0.033
-                ]
-              ],
+              "points": [[-0.066, 0.033], [-0.062, -0.059], [0.062, -0.059], [0.066, 0.033]],
               "closed": true,
               "region": "casing",
               "material": "abs-plastic"
@@ -3076,7 +2700,7 @@
             "material": "aluminium-disc",
             "role": "body",
             "tone": 0.86,
-            "profile": [[0.0194, 0.0], [0.0194, 0.042], [0.0206, 0.042], [0.0206, 0.0]],
+            "profile": [[0.0192, 0.0], [0.0192, 0.042], [0.0208, 0.042], [0.0208, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
@@ -3087,7 +2711,7 @@
             "material": "steel-zinc",
             "role": "detail",
             "tone": 0.4,
-            "profile": [[0.0164, 0.0], [0.0164, 0.004], [0.0194, 0.005], [0.0206, 0.005], [0.0236, 0.004], [0.0236, 0.0]],
+            "profile": [[0.0164, 0.0], [0.0164, 0.004], [0.0192, 0.005], [0.0208, 0.005], [0.0236, 0.004], [0.0236, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
@@ -3409,8 +3033,8 @@
             "de": "Body bei 1:50: ein einphasiger Ferraris-Zähler von 132 mal 212 mal 118 mm, wie er gebaut ist. Die Grundplatte ist eine 26 mm tiefe Wanne (3 mm Rückwand, Rand um den Messwerkraum), die hinter dem Klemmenblock nach unten läuft; die stählerne Aufhängeöse mit 5,5-mm-Loch steht 12 mm darüber. Die Zählerkappe ist eine hohle 2,5-mm-Schale: Seitenwände mit 2,8 Grad Formschräge, Schulter und Fase runden die Vorderkante in zwei Facetten, davor der erhabene Fensterrahmen und dahinter die 2 mm starke Scheibe; zwei Plombierschraubentürme steigen aus den unteren Vorderecken. Der Klemmendeckel ist eine Rinne mit Deckwand, unten für die Leitungen offen, vor dem Klemmenblock, mit seiner Plombierschraube; der Block hat seine vier 7,2-mm-Bohrungen von unten."
           },
           {
-            "en": "Behind the window: the dial plate with the register opening, five whole-kilowatt-hour rollers as one drum and the decimal roller, the register case, the die-cast frame (back plate on four posts, top and bottom shelf), the voltage electromagnet above and the current electromagnet with its two coils below the disc, the brake magnet as a C around the rim on its bracket, and the rotor on the disc bone: 84 mm disc of 1.2 mm aluminium, hub, 3 mm spindle from the lower bearing to the upper bearing, and the dark rim mark (texture). The disc is horizontal and turns about the upright spindle (twist).",
-            "de": "Hinter dem Fenster: das Zifferblatt mit der Zählwerksöffnung, fünf Rollen für ganze Kilowattstunden als eine Trommel und die Dezimalrolle, das Zählwerksgehäuse, der Druckgussrahmen (Rückplatte auf vier Stehbolzen, obere und untere Konsole), der Spannungsmagnet über und der Strommagnet mit seinen zwei Spulen unter der Scheibe, der Bremsmagnet als C um den Scheibenrand auf seinem Halter und der Läufer am Scheibenknochen: 84-mm-Scheibe aus 1,2 mm Aluminium, Nabe, 3-mm-Achse vom unteren zum oberen Lager und die dunkle Randmarke (Textur). Die Scheibe liegt waagrecht und dreht um die senkrechte Achse (Verdrehung)."
+            "en": "Behind the window: the dial plate with the register opening, five whole-kilowatt-hour rollers as one drum and the decimal roller, the register case, the die-cast frame (back plate on four posts, top and bottom shelf), the voltage electromagnet above and the current electromagnet with its two coils below the disc, the brake magnet as a C around the rim on its bracket, and the rotor on the disc bone: 84 mm disc of 1.6 mm aluminium (discs are 1 to 2 mm; the upper value keeps the edge-on drawing printable to 1:75, the end of the band), hub, 3 mm spindle from the lower bearing to the upper bearing, and the dark rim mark (texture). The disc is horizontal and turns about the upright spindle (twist).",
+            "de": "Hinter dem Fenster: das Zifferblatt mit der Zählwerksöffnung, fünf Rollen für ganze Kilowattstunden als eine Trommel und die Dezimalrolle, das Zählwerksgehäuse, der Druckgussrahmen (Rückplatte auf vier Stehbolzen, obere und untere Konsole), der Spannungsmagnet über und der Strommagnet mit seinen zwei Spulen unter der Scheibe, der Bremsmagnet als C um den Scheibenrand auf seinem Halter und der Läufer am Scheibenknochen: 84-mm-Scheibe aus 1,6 mm Aluminium (Scheiben sind 1 bis 2 mm dick; der obere Wert hält die Kantenansicht der Zeichnung bis 1:75, dem Bandende, druckbar), Nabe, 3-mm-Achse vom unteren zum oberen Lager und die dunkle Randmarke (Textur). Die Scheibe liegt waagrecht und dreht um die senkrechte Achse (Verdrehung)."
           },
           {
             "en": "Thermal of 1:50: the casing is the outer surface of the cover (wall and shoulder as closed forms, so that the sealed measuring chamber counts no area), bevel, window frame, base, terminal block and terminal cover; the window is the pane, its inner face marked as the face inside the sealed meter; the dial plate over the measuring system and the disc are the real parts behind the pane. Structure of 1:50: the load path is the lug, the base tray, the frame on its posts with both shelves and the spindle between its two bearings; the upper screw through the lug is the pin, the two lower screws beside the terminal block are the roller pair that bears against the board; the mass sits at the centre of mass of the housing bone.",
@@ -3674,7 +3298,7 @@
             "material": "aluminium-disc",
             "role": "body",
             "tone": 0.86,
-            "profile": [[0.0194, 0.0], [0.0194, 0.042], [0.0206, 0.042], [0.0206, 0.0]],
+            "profile": [[0.0192, 0.0], [0.0192, 0.042], [0.0208, 0.042], [0.0208, 0.0]],
             "axis": [1, 0, 0],
             "origin": [0, 0, 0]
           },
@@ -4044,9 +3668,9 @@
             "material": "steel-zinc",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[0.014, 0.0], [0.014, 0.015], [0.044, 0.015], [0.044, 0.0]],
+            "profile": [[0.017, 0.0], [0.017, 0.015], [0.044, 0.015], [0.044, 0.0]],
             "axis": [0, 0, 1],
-            "origin": [0.158, 0.0, 0],
+            "origin": [0.137, 0.0, 0],
             "member": "body",
             "part": "support",
             "anchor": "wall-screw-top"
@@ -4058,15 +3682,15 @@
             "material": "steel-zinc",
             "role": "detail",
             "tone": 0.25,
-            "profile": [[0.014, 0.0], [0.014, 0.015], [0.044, 0.015], [0.044, 0.0]],
+            "profile": [[0.017, 0.0], [0.017, 0.015], [0.044, 0.015], [0.044, 0.0]],
             "axis": [0, 0, 1],
-            "origin": [0.0, 0.0525, 0],
+            "origin": [0.0, 0.0505, 0],
             "member": "body",
             "part": "support",
             "anchor": "wall-screw-bottom",
             "repeat": {
               "count": 2,
-              "translation": [0, -0.105, 0]
+              "translation": [0, -0.101, 0]
             }
           },
           {
@@ -4090,8 +3714,8 @@
             "de": "Body bei 1:200, neu gezeichnet für ein 30-mm-Merkmal: Grundplatte, Klemmendeckel und Klemmenblock als ein zurückgesetzter Block, die Kappe als dicke hohle Schale mit ihrer Formschräge, vorn kantig, weil die 9-mm-Rundung unter dem Merkmal liegt, ihre Bohrung so weit wie die Fensteröffnung mit der Scheibe darin, und dahinter Zifferblatt mit Zählwerk und Messwerk als ein heller Block über der waagrechten Läuferscheibe. Öse, Schrauben, Randmarke, Rollen und die Einzelteile des Messwerks liegen unter dem Merkmal und entfallen."
           },
           {
-            "en": "Thermal of 1:200: casing from the closed cover form, base and terminal block; the pane; the disc; the dial plate as its own 2 mm sheet at the front of the block. Structure of 1:200: the base slab as the member between the upper screw (pin) and the pair of lower screws (roller), both as 30 mm studs, the slender spindle, and the mass at the centre of mass; the model is already minimal.",
-            "de": "Thermik bei 1:200: Gehäuse aus der geschlossenen Kappenform, Grundplatte und Klemmenblock; die Scheibe; die Läuferscheibe; das Zifferblatt als eigenes 2-mm-Blech an der Vorderseite des Blocks. Tragwerk bei 1:200: die Grundplatte als Stab zwischen der oberen Schraube (Festlager) und dem Paar unterer Schrauben (Rollenlager), beide als 30-mm-Bolzen, die schlanke Achse und die Masse im Schwerpunkt; das Modell ist bereits minimal."
+            "en": "Thermal of 1:200: casing from the closed cover form, base and terminal block; the pane; the disc; the dial plate as its own 2 mm sheet at the front of the block. Structure of 1:200: the base slab as the member between the upper screw (pin) and the pair of lower screws (roller), both as 30 mm pads through the 26 mm slab, the upper one at the top of the slab where the lug (merged at this scale) hangs, the slender spindle, and the mass at the centre of mass; the model is already minimal.",
+            "de": "Thermik bei 1:200: Gehäuse aus der geschlossenen Kappenform, Grundplatte und Klemmenblock; die Scheibe; die Läuferscheibe; das Zifferblatt als eigenes 2-mm-Blech an der Vorderseite des Blocks. Tragwerk bei 1:200: die Grundplatte als Stab zwischen der oberen Schraube (Festlager) und dem Paar unterer Schrauben (Rollenlager), beide als 30-mm-Teller durch die 26 mm starke Platte, der obere am oberen Plattenrand, wo die hier zusammengefasste Öse hängt, die schlanke Achse und die Masse im Schwerpunkt; das Modell ist bereits minimal."
           }
         ]
       },
@@ -4251,7 +3875,7 @@
             "tone": 0.25,
             "profile": [[0.032, 0.0], [0.032, 0.012], [0.044, 0.012], [0.044, 0.0]],
             "axis": [0, 0, 1],
-            "origin": [0.158, 0.0, 0],
+            "origin": [0.14, 0.0, 0],
             "member": "body",
             "part": "support",
             "anchor": "wall-screw-top"
@@ -4295,8 +3919,8 @@
             "de": "Body bei 1:500, ein digitaler Maßstab ohne gedruckte Zeichnung (der Zähler misst auf Papier 0,26 mm mal 0,42 mm), neu gezeichnet für ein 75-mm-Merkmal: Der Zähler ist in jeder Richtung kleiner als drei Merkmale, es bleiben nur seine drei Massen und das Fenster. Die Grundplatte ist eine kantige 26-mm-Platte an der Wand, Klemmendeckel und Klemmenblock sind ein Block in der Breite der Grundplatte, um 47 mm zurückgesetzt, die Kappe ist eine kantige hohle Schale ohne Formschräge, Rundung und Fase (alles unter dem Merkmal) mit der Fensteröffnung von 88 mal 92 mm und der Scheibe darin, und hinter der Scheibe sind Zifferblatt, Zählwerk, Messwerk und Läuferscheibe ein heller Block. Öse, Schrauben, die Scheibe als eigenes Teil und alle Rollen entfallen im Body."
           },
           {
-            "en": "Thermal of 1:500: casing from the closed cover form, base and terminal block; the pane with its inner face marked; the dial plate as its own 2 mm sheet at the front of the block; the rotor disc as the real 1 mm sheet inside the block, where it lies in the meter. Structure of 1:500: the base slab is the member between the upper screw (pin) and the pair of lower screws (roller), drawn as 24 mm pads let into the back of the base, the upper one standing 6 mm into the slab where the lug hangs, with the slender spindle of the rotor and the mass at the centre of mass; the model is already minimal.",
-            "de": "Thermik bei 1:500: Gehäuse aus der geschlossenen Kappenform, Grundplatte und Klemmenblock; die Scheibe mit markierter Innenseite; das Zifferblatt als eigenes 2-mm-Blech an der Vorderseite des Blocks; die Läuferscheibe als echtes 1-mm-Blech im Block, wo sie im Zähler liegt. Tragwerk bei 1:500: Die Grundplatte ist der Stab zwischen der oberen Schraube (Festlager) und dem Paar unterer Schrauben (Rollenlager), gezeichnet als 24-mm-Teller in der Rückseite der Grundplatte, der obere greift dort, wo die Öse hängt, 6 mm in die Platte, dazu die schlanke Achse des Läufers und die Masse im Schwerpunkt; das Modell ist bereits minimal."
+            "en": "Thermal of 1:500: casing from the closed cover form, base and terminal block; the pane with its inner face marked; the dial plate as its own 2 mm sheet at the front of the block; the rotor disc as the real 1 mm sheet inside the block, where it lies in the meter. Structure of 1:500: the base slab is the member between the upper screw (pin) and the pair of lower screws (roller), drawn as 24 mm pads let into the back of the base, the upper one at the top edge of the slab, under the merged lug, with the slender spindle of the rotor and the mass at the centre of mass; the model is already minimal.",
+            "de": "Thermik bei 1:500: Gehäuse aus der geschlossenen Kappenform, Grundplatte und Klemmenblock; die Scheibe mit markierter Innenseite; das Zifferblatt als eigenes 2-mm-Blech an der Vorderseite des Blocks; die Läuferscheibe als echtes 1-mm-Blech im Block, wo sie im Zähler liegt. Tragwerk bei 1:500: Die Grundplatte ist der Stab zwischen der oberen Schraube (Festlager) und dem Paar unterer Schrauben (Rollenlager), gezeichnet als 24-mm-Teller in der Rückseite der Grundplatte, der obere am oberen Plattenrand unter der zusammengefassten Öse, dazu die schlanke Achse des Läufers und die Masse im Schwerpunkt; das Modell ist bereits minimal."
           }
         ]
       }

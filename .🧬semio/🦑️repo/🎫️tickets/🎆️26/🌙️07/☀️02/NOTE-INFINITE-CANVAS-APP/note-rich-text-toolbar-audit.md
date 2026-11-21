@@ -1,0 +1,7 @@
+# Note Rich Text Toolbar Focus Audit
+
+The browser run added a text block and successfully edited and undid a table cell. The rich-text test reached editorVisible, filled the editor and selected the text. Its subsequent evaluate at 🐍️note-acceptance.mjs:388 timed out because the locator no longer resolved after the B button click; the log alone does not observe the focus transition.
+
+The source gives a concrete likely cause: InkCanvasHost/👆️ink-pointer/🔶️abort-gesture/🟦️.ts:61–65 receives bubbled pointerdown and unconditionally focuses the canvas root. That blurs the contenteditable and triggers InkCanvasHost/🪟️ink-overlays/🟦️.tsx:87–90 to commit; commit clears the text edit, unmounting the overlay. The toolbar preserves selection only in its later mouse down handler at lines 41–44, so preventDefault there cannot prevent the earlier pointerdown root focus. This is a product interaction defect as well as a brittle test assumption; validate the focusout in a fresh browser run.
+
+For ordinary mouse use, select text, press B without losing the editor or selection, then move focus to the canvas to commit. Exclude overlay interactive descendants from canvas gesture/focus handling, including capture as needed. In the harness, attach focusout observation before clicking, assert the editor remains mounted and the selected content becomes bold, then blur and assert the stored document. Bound the follow-up evaluate and report editor disappearance as an assertion. A keyboard Mod+B path is useful separately but does not cover the toolbar.

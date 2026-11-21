@@ -35,12 +35,12 @@ fn close_job(mut job: LayoutExportJob, caller: &mut OriginalJobFixtureCaller) {
 }
 
 /// 👣️ One hand-driven step of a job under a one-unit work loan; `None` while the step only advanced a retained frontier.
-fn step_one_unit<J: InteractiveJob>(caller: &mut OriginalJobFixtureCaller, job: &mut J) -> Option<LayoutExportObserved> {
+fn step_one_unit(caller: &mut OriginalJobFixtureCaller, job: &mut LayoutExportJob) -> Option<LayoutExportObserved> {
     let mut observed = None;
     caller
         .turn(LAYOUT_EXPORT_FIXTURE_TURN, |cx| {
             cx.with_original_work_loan(1, u64::MAX, |same| {
-                observed = job.step(same)?.as_ref().map(LayoutExportObserved::of_borrow);
+                observed = job.step_with_drawing_read(same, None)?.as_ref().map(LayoutExportObserved::of_borrow);
                 Ok(())
             })
         })
@@ -49,7 +49,7 @@ fn step_one_unit<J: InteractiveJob>(caller: &mut OriginalJobFixtureCaller, job: 
 }
 
 /// 👣️ Steps a job until it reports one outcome.
-fn next_outcome<J: InteractiveJob>(caller: &mut OriginalJobFixtureCaller, job: &mut J) -> LayoutExportObserved {
+fn next_outcome(caller: &mut OriginalJobFixtureCaller, job: &mut LayoutExportJob) -> LayoutExportObserved {
     for _ in 0..LAYOUT_EXPORT_FIXTURE_TURN_BUDGET {
         if let Some(observed) = step_one_unit(caller, job) {
             return observed;

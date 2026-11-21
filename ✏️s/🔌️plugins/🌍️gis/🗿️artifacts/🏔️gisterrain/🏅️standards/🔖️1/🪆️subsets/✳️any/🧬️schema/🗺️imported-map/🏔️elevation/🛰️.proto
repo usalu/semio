@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain;
+
+message ElevationRow { repeated sint32 height_meters = 1; }
+message ElevationSource {
+  repeated double bounds = 1;
+  repeated ElevationRow rows = 2;
+}
+message ElevationSourceChange { optional ElevationSource value = 1; }

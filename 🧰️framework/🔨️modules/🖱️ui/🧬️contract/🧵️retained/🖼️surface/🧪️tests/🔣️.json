@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "root": 7,
+  "privateKey": "private duplicate label 😀",
+  "cases": [
+    {"name":"first absent edge","children":[99,100],"leaves":[],"type":"orphanChild","identity":"parent=7 child=99"},
+    {"name":"duplicate key before absent edge","children":[8,9,99],"leaves":[8,9],"type":"duplicateSiblingKey","identity":"parent=7"},
+    {"name":"first unreachable node","children":[],"leaves":[8,9],"type":"danglingRoot","identity":"node=8"}
+  ]
+}

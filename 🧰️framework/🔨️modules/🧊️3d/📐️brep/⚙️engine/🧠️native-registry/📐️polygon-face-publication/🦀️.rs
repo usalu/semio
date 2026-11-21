@@ -4,8 +4,9 @@ use super::*;
 use semio_framework_3d_brep_representation::arena::{CoedgeId, LoopId};
 use semio_framework_3d_brep_representation::topology::{Coedge, Face, Loop, dummy_coedge};
 use semio_framework_3d_brep_curve::Curve2;
+use semio_framework_3d_brep_solid_transaction::CircularOpeningOffset;
 use semio_framework_3d_brep_spline_trim::QuadraticPcurve;
-use semio_framework_3d_brep_vector::{Pnt2, Vec2};
+use semio_framework_3d_brep_solid_topology::{PolygonOpening, line_pcurve, point2, segments_intersect};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 use solid_publication::{remove_topology_slot, store_demand, store_insert, topology_slot_depth};
@@ -13,7 +14,8 @@ use std::mem::{size_of, take};
 
 #[path = "🔁️mapped-boundary/🦀️.rs"]
 mod mapped_boundary;
-use mapped_boundary::MappedBoundary;
+use mapped_boundary::check_mapped_source;
+use semio_framework_3d_brep_solid_topology::mapped_boundary::MappedBoundary;
 
 #[derive(Clone, Copy)]
 enum Build {
@@ -34,8 +36,14 @@ enum Build {
     CloseLead,
     FinishRing,
     FinishFace,
+    Opening,
     ReleaseJournal,
     Ready,
+}
+
+pub(super) enum FaceOpening {
+    Circular(CircularOpeningOffset),
+    Polygon(PolygonOpening<4>),
 }
 
 /// 🛠️ Owns unpublished slots while validating and filling one original polygonal boundary.
@@ -45,6 +53,7 @@ pub struct PolygonFacePublication {
     wire_label: Option<PersistentLabel>,
     boundary: Option<PolygonWirePublication>,
     mapped: Option<MappedBoundary>,
+    pub(super) opening: Option<FaceOpening>,
     edges: usize,
     xy_only: bool,
     spline_index: Option<usize>,
@@ -64,6 +73,33 @@ pub struct PolygonFacePublication {
     open: bool,
 }
 
+/// 🔢️ Maximum number of original polygon faces one bounded Section may publish.
+pub const SECTION_FACE_LIMIT: usize = semio_framework_3d_brep_queries::planar_section::MAX_SECTION_REGIONS;
+
+/// 📑️ Owns every private polygon face and exact outer ring of a disconnected Section.
+#[derive(Default)]
+pub struct PolygonSectionSet {
+    faces: [Option<(PolygonFacePublication, semio_framework_3d_brep_construction::primitives::SectionPolygon)>; SECTION_FACE_LIMIT],
+    count: usize,
+}
+
+impl PolygonSectionSet {
+    pub(super) fn push(&mut self, face: (PolygonFacePublication, semio_framework_3d_brep_construction::primitives::SectionPolygon)) {
+        self.faces[self.count] = Some(face);
+        self.count += 1;
+    }
+
+    pub fn count(&self) -> usize { self.count }
+
+    pub fn face(&self, index: usize) -> &(PolygonFacePublication, semio_framework_3d_brep_construction::primitives::SectionPolygon) {
+        self.faces[index].as_ref().expect("original section face ordinal")
+    }
+
+    pub fn face_mut(&mut self, index: usize) -> &mut (PolygonFacePublication, semio_framework_3d_brep_construction::primitives::SectionPolygon) {
+        self.faces[index].as_mut().expect("original section face ordinal")
+    }
+}
+
 impl PolygonFacePublication {
     pub fn handle(&self) -> &str { std::str::from_utf8(&self.handle).expect("digest uses lowercase hexadecimal") }
     pub fn topology_ready(&self) -> bool { matches!(self.build, Build::Ready) }
@@ -79,7 +115,15 @@ impl PolygonFacePublication {
         else { Err(ValueError::invariant("polygon face requires its original unpublished session")) }
     }
 
-    fn journal_capacity(&self) -> usize { 3 + 2 * self.edges }
+    fn opening_close_demand(&self,body:&Body)->Result<Option<RetirementDemand>,ValueError>{
+        match (&self.opening,self.face) {
+            (Some(FaceOpening::Circular(opening)),Some(target)) if body.faces.contains(target)=>opening.close_demand(body,target),
+            (Some(FaceOpening::Polygon(_)),Some(target)) if body.faces.contains(target)=>PolygonOpening::<4>::close_demand(body,target),
+            _=>Ok(None),
+        }
+    }
+
+    fn journal_capacity(&self) -> usize { 3 + 2 * self.edges + match &self.opening { Some(FaceOpening::Polygon(opening)) => opening.journal_entries(), _ => 0 } }
 
     fn source<'a>(&'a self, kernel: &'a BrepRegistry, source: Option<&str>) -> Result<&'a Wire, ValueError> {
         if kernel.shape_mutation_revision != self.revision {
@@ -126,7 +170,7 @@ impl PolygonFacePublication {
 
     fn frame(&self) -> Frame3 { self.frame.expect("original polygon face has a validated plane") }
 
-    fn tolerance(&self) -> Tol { self.mapped.and_then(|boundary| boundary.plane).map_or(Tol::DEFAULT, |plane| plane.tol) }
+    fn tolerance(&self) -> Tol { self.mapped.and_then(|boundary| boundary.plane()).map_or(Tol::DEFAULT, |plane| plane.tol) }
 
     fn record(&mut self, entry: Option<EntityRef>, mut progress: Progress, next: Build) -> Progress {
         if let Some(entry) = entry {
@@ -143,7 +187,7 @@ impl PolygonFacePublication {
             if self.revision != kernel.shape_mutation_revision {
                 return Err(ValueError::invariant("mapped polygon face source changed during construction"));
             }
-            boundary.check_source(kernel, source)?;
+            check_mapped_source(boundary, kernel, source)?;
             if matches!(self.build, Build::MappedBoundary) {
                 let mut demand = boundary.scan_demand(&kernel.body)?;
                 demand.depth = demand.depth.max(source_depth);
@@ -209,6 +253,15 @@ impl PolygonFacePublication {
                 let depth = source_depth.max(body.coedges.next_remove_depth_demand(self.first_use.unwrap())?);
                 return Ok(RetirementDemand { depth, ..Default::default() });
             }
+            Build::Opening => {
+                let target=self.face.ok_or_else(invalid)?;
+                let mut demand=match self.opening.as_ref().ok_or_else(invalid)? {
+                    FaceOpening::Circular(opening)=>opening.demand(body,target)?,
+                    FaceOpening::Polygon(opening)=>opening.demand(body,target,&self.journal)?,
+                };
+                demand.depth=demand.depth.max(source_depth);
+                return Ok(demand);
+            }
             Build::Surface => store_demand(&body.surfaces)?,
             Build::Face => store_demand(&body.faces)?,
             Build::Ring => store_demand(&body.loops)?,
@@ -234,32 +287,6 @@ fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvalidValue, "face requires a simple closed coplanar boundary of supported curves")
 }
 
-fn planar_line_pcurve(curve: &Curve3, frame: Frame3) -> Result<Curve2, ValueError> {
-    let Curve3::Line { origin, dir } = *curve else { return Err(invalid()); };
-    let normal = frame.z.normalized().ok_or_else(invalid)?;
-    let u = frame.y.cross(normal);
-    let v = normal.cross(frame.x);
-    let u = u * frame.x.dot(u).recip();
-    let v = v * frame.y.dot(v).recip();
-    let shift = origin - frame.origin;
-    let uv = [shift.dot(u), shift.dot(v), dir.dot(u), dir.dot(v)];
-    if !uv.into_iter().all(f64::is_finite) { return Err(invalid()); }
-    Ok(Curve2::Line { origin: Pnt2::new(uv[0], uv[1]), dir: Vec2::new(uv[2], uv[3]) })
-}
-
-pub(super) fn point2(frame: Frame3, point: Pnt3) -> Pnt2 {
-    let local = frame.to_local(point);
-    Pnt2::new(local.x, local.y)
-}
-
-pub(super) fn intersects(a: Pnt2, b: Pnt2, c: Pnt2, d: Pnt2) -> bool {
-    use semio_framework_3d_brep_vector::predicates::{Orient, orient2d};
-    let overlap = |a: f64, b: f64, c: f64, d: f64| a.min(b).max(c.min(d)) <= a.max(b).min(c.max(d));
-    if !overlap(a.x, b.x, c.x, d.x) || !overlap(a.y, b.y, c.y, d.y) { return false; }
-    let separates = |first, second| first == second && first != Orient::Zero;
-    !separates(orient2d(a, b, c), orient2d(a, b, d)) && !separates(orient2d(c, d, a), orient2d(c, d, b))
-}
-
 impl BrepRegistry {
     /// 🎟️ Admits one closed wire with a stable source address and label.
     pub fn plan_polygon_face(&mut self, source: &str, xy_only: bool) -> Result<Option<PolygonFacePublication>, ValueError> {
@@ -280,11 +307,10 @@ impl BrepRegistry {
     }
 
     fn start_polygon_face(&mut self, edges: usize, xy_only: bool, wire_label: Option<PersistentLabel>, boundary: Option<PolygonWirePublication>) -> PolygonFacePublication {
-        let revision = self.shape_mutation_revision;
         let shape = self.body.new_label();
         self.unpublished_topology += 1;
         PolygonFacePublication {
-            owner: std::ptr::from_ref(&*self) as usize, revision, wire_label, boundary, mapped: None, edges, xy_only,
+            owner: std::ptr::from_ref(&*self) as usize, revision: self.shape_mutation_revision, wire_label, boundary, mapped: None, opening: None, edges, xy_only,
             spline_index: None, spline: None, pcurve: None,
             origin: None, normal: NativeVec3::ZERO, frame: None, shape,
             handle: analytic_publication::primitive_handle(b"Face:", shape.0),
@@ -301,10 +327,22 @@ impl BrepRegistry {
 
     /// 🧱️ Advances one source check or one exact planar topology record.
     pub fn step_polygon_face_topology(&mut self, plan: &mut PolygonFacePublication, source: Option<&str>, point: Option<EVec3>, effect: &mut RetainedAllocationEffect<'_>) -> Result<Progress, ValueError> {
-        plan.check_owner(self)?;
         let grant = effect.grant();
         let demand = self.polygon_face_topology_demand(plan, source)?;
         if matches!(plan.build, Build::MappedBoundary) { return self.step_mapped_polygon_boundary(plan, demand, effect); }
+        if matches!(plan.build,Build::Opening) {
+            if !retained_clone_grant_admits(grant,demand) { return Ok(Default::default()); }
+            let (target,plane,tolerance)=(plan.face.ok_or_else(invalid)?,plan.frame(),plan.tolerance());
+            let (receipt,ready)=match plan.opening.as_mut().ok_or_else(invalid)? {
+                FaceOpening::Circular(opening)=>{
+                    let offset=plan.mapped.ok_or_else(invalid)?.translation()?;
+                    (opening.step(&mut self.body,target,plane,offset,tolerance,effect)?,opening.ready())
+                }
+                FaceOpening::Polygon(opening)=>(opening.step(&mut self.body,target,plane,tolerance,&mut plan.journal,effect)?,opening.ready()),
+            };
+            if ready{plan.build=Build::Ready;}
+            return Ok(receipt);
+        }
         if let Some(boundary) = &mut plan.boundary {
             if !boundary.topology_ready() {
                 if grant.maximum_items == 0 || !retained_clone_grant_admits(grant, demand) { return Ok(Default::default()); }
@@ -358,7 +396,7 @@ impl BrepRegistry {
                     if plan.xy_only && frame.z.z.abs() < 1.0 - 1e-9 {
                         return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "planar face boundary must be parallel to the XY plane"));
                     }
-                    plan.frame = Some(plan.mapped.and_then(|boundary| boundary.plane).map_or(frame, |plane| plane.frame));
+                    plan.frame = Some(plan.mapped.and_then(|boundary| boundary.plane()).map_or(frame, |plane| plane.frame));
                     Build::Plane(0)
                 } else { Build::Normal(index + 1) };
             }
@@ -386,7 +424,7 @@ impl BrepRegistry {
                 let (_, _, a, b, _) = plan.member(self, source, first)?;
                 let (_, _, c, d, _) = plan.member(self, source, second)?;
                 let frame = plan.frame();
-                if intersects(point2(frame, a), point2(frame, b), point2(frame, c), point2(frame, d)) {
+                if segments_intersect(point2(frame, a), point2(frame, b), point2(frame, c), point2(frame, d)) {
                     return Err(invalid());
                 }
                 if second + 1 < plan.edges - usize::from(first == 0) {
@@ -434,7 +472,7 @@ impl BrepRegistry {
             Build::Face => {
                 let Some(EntityRef::Surface(surface)) = plan.journal.first().copied() else { return Err(ValueError::invariant("surface has not been admitted")); };
                 let (id, receipt) = store_insert(&mut self.body.faces, grant, || Face {
-                    surface, outer: None, inners: Vec::new(), flipped: plan.mapped.and_then(|boundary| boundary.plane).is_some_and(|plane| plane.flipped),
+                    surface, outer: None, inners: Vec::new(), flipped: plan.mapped.and_then(|boundary| boundary.plane()).is_some_and(|plane| plane.flipped),
                     tol: plan.tolerance(), label: plan.shape,
                 })?;
                 plan.face = id;
@@ -461,7 +499,7 @@ impl BrepRegistry {
                     if plan.spline_index.is_some() && !((curve.eval(range.0) - a).norm() <= tolerance
                         && (curve.eval(range.1) - b).norm() <= tolerance)
                     { return Err(invalid()); }
-                    planar_line_pcurve(curve, plan.frame())?
+                    line_pcurve(curve, plan.frame()).ok_or_else(invalid)?
                 };
                 let (id, receipt) = self.body.curves2.insert_reserved(trim, grant).map_err(|(error, trim)| {
                     if spline_trim { plan.pcurve = Some(trim); }
@@ -506,19 +544,23 @@ impl BrepRegistry {
             }
             Build::FinishFace => {
                 self.body.faces.get_mut(plan.face.unwrap()).ok_or_else(invalid)?.outer = plan.ring;
-                plan.build = Build::Ready;
+                plan.build = if plan.opening.is_some(){Build::Opening}else{Build::Ready};
             }
-            Build::MappedBoundary | Build::ReleaseJournal | Build::Ready => return Err(ValueError::invariant("polygon face does not have a topology step")),
+            Build::Opening | Build::MappedBoundary | Build::ReleaseJournal | Build::Ready => return Err(ValueError::invariant("polygon face does not have a topology step")),
         }
         Ok(item)
     }
 
-    /// 📦️ Recognizes one axis-aligned horizontal rectangular wire or face without copying topology.
+    /// 📦️ Recognizes a rectangular source with optional certified openings.
     pub fn plan_rectangular_extrusion(&mut self, source: &str, vector: EVec3) -> Result<Option<SolidPublication>, ValueError> {
         use semio_framework_3d_brep_solid_transaction::{RectangleProfile,rectangular_extrusion};
         let profile = match self.original_query_entity(source)? {
             Entity::Wire(wire,_) => RectangleProfile::Wire(wire),
-            Entity::Face(face) => RectangleProfile::Face(*face),
+            Entity::Face(face) => {
+                let face=*face;
+                if let Some(solid)=self.plan_perforated_profile_extrusion(face,vector)? {return Ok(Some(solid));}
+                RectangleProfile::Face(face)
+            }
             _ => return Ok(None),
         };
         rectangular_extrusion(&self.body,profile,vector)?.map(|primitive|self.plan_solid_primitive(primitive)).transpose()
@@ -551,6 +593,36 @@ impl BrepRegistry {
         Ok(receipt)
     }
 
+    /// 📤️ Publishes all certified planar section faces in one live index transaction.
+    pub fn publish_polygon_section(&mut self, section: &mut PolygonSectionSet, keys: &mut [String; SECTION_FACE_LIMIT], grant: Grant) -> Result<Progress, ValueError> {
+        let count = section.count();
+        for (index, key) in keys.iter().enumerate().take(count) {
+            let (face, _) = section.face(index);
+            face.check_owner(self)?;
+            if !face.topology_ready() || key != face.handle() || face.revision != self.shape_mutation_revision {
+                return Err(ValueError::invariant("invalid polygon section publication"));
+            }
+        }
+        let mut rows: [Option<(String, Entity)>; SECTION_FACE_LIMIT] = std::array::from_fn(|index| {
+            (index < count).then(|| (std::mem::take(&mut keys[index]), Entity::Face(section.face(index).0.face.expect("certified section face"))))
+        });
+        let receipt = match self.live.insert_vacant_batch_reserved(&mut rows[..count], grant) {
+            Ok(receipt) => receipt,
+            Err(error) => {
+                for (target, row) in keys.iter_mut().zip(rows.into_iter().flatten()) { *target = row.0; }
+                return Err(error);
+            }
+        };
+        for index in 0..count {
+            let (face, _) = section.face_mut(index);
+            if let Some(boundary) = &mut face.boundary { self.transfer_polygon_wire_boundary(boundary); }
+            self.unpublished_topology -= 1;
+            face.build = Build::ReleaseJournal;
+        }
+        self.advance_live_revision();
+        Ok(receipt)
+    }
+
     /// 🧹️ Quotes one unpublished native slot or the published cursor's journal release.
     pub fn polygon_face_close_demand(&self, face: &PolygonFacePublication) -> Result<RetirementDemand, ValueError> {
         if !face.open {
@@ -559,6 +631,7 @@ impl BrepRegistry {
         }
         face.check_owner(self)?;
         if !matches!(face.build, Build::ReleaseJournal) {
+            if let Some(demand)=face.opening_close_demand(&self.body)?{return Ok(demand);}
             if let Some(curve) = &face.pcurve {
                 return Ok(RetirementDemand { depth: 1, release_bytes: QuadraticPcurve::capacity(curve), ..Default::default() });
             }
@@ -587,6 +660,13 @@ impl BrepRegistry {
         }
         let progress = Progress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() };
         if !matches!(face.build, Build::ReleaseJournal) {
+            if face.opening_close_demand(&self.body)?.is_some() {
+                let target=face.face.ok_or_else(invalid)?;
+                return match face.opening.as_mut().ok_or_else(invalid)? {
+                    FaceOpening::Circular(opening)=>opening.close(&mut self.body,target,demand),
+                    FaceOpening::Polygon(_)=>PolygonOpening::<4>::close(&mut self.body,target,demand),
+                }.map(Step::Progress);
+            }
             if face.pcurve.take().is_some() { return Ok(Step::Progress(progress)); }
             if let Some(entity) = face.journal.pop() {
                 remove_topology_slot(&mut self.body, entity);

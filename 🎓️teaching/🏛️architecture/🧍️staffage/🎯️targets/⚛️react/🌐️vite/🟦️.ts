@@ -35,9 +35,9 @@ export function staffageAssetPayload(file: string): StaffageAssetPayload {
   }
 }
 
-/** 🧍️ Serves a revisioned, validated asset module in development, releases and Vitest. Editing the source invalidates the module.
+/** 🧍️ Serves a revisioned asset module. Releases reject validation findings, while development and Vitest expose them to the archive.
  * @see {@link staffageAssetPayload} */
-export function staffageAssetVitePlugin(): OwnedBuildPlugin {
+export function staffageAssetVitePlugin(release = false): OwnedBuildPlugin {
   let root = process.cwd();
   return {
     name: "staffage-asset-payload",
@@ -56,7 +56,12 @@ export function staffageAssetVitePlugin(): OwnedBuildPlugin {
       if (!id.startsWith(PREFIX)) return null;
       const file = id.slice(PREFIX.length, -SUFFIX.length);
       this?.addWatchFile(file);
-      return `export default ${JSON.stringify(staffageAssetPayload(file))};`;
+      const payload = staffageAssetPayload(file);
+      if (release && payload.issues.length) {
+        const findings = payload.issues.map(({ code, path, message }) => `${path} [${code}] ${message.en} / ${message.de}`);
+        throw new Error([file, ...findings].join("\n"));
+      }
+      return `export default ${JSON.stringify(payload)};`;
     },
   };
 }

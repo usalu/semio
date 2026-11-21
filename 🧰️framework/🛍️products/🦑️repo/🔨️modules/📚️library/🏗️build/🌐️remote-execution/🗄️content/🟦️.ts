@@ -12,8 +12,8 @@ export interface RemoteExecutionContentV1{
  writeActionResult(instance:string,hash:string,bytes:Uint8Array,signal?:AbortSignal):Promise<void>;
 }
 
-/** 🚧️ The store refused or could not take the request; `code` is a gRPC status code. */
-export class RemoteExecutionContentErrorV1 extends Error{readonly code:number;constructor(code:number,message:string){super(message);this.code=code;}}
+/** 🚧️ The store refused or could not take the request. `code` is a gRPC status code and `missingOutput` names a blob explicitly rejected during action-result validation. */
+export class RemoteExecutionContentErrorV1 extends Error{readonly code:number;constructor(code:number,message:string,readonly missingOutput?:string){super(message);this.code=code;}}
 
 /** ⚙️ How to reach the shared store over its HTTP protocol (`/<instance>/cas/<sha256>`, `/<instance>/ac/<sha256>`, bearer token). */
 export type RemoteExecutionHttpContentOptionsV1=Readonly<{endpoint:string;token?:string|undefined;fetch?:typeof fetch;concurrency?:number;timeoutSeconds?:number;retries?:number}>;
@@ -50,7 +50,8 @@ export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentO
  const settle=async(response:Response,what:string):Promise<void>=>{if(response.status===200){await response.body?.cancel();return;}refuse(response,what,await reasonOf(response));};
  const refuse=(response:Response,what:string,reason=""):never=>{
   const code=response.status===401?16:response.status===403?7:response.status===507?8:response.status===413?8:response.status===400?3:14;
-  throw new RemoteExecutionContentErrorV1(code,`Content store answered ${response.status} for ${what}${reason===""?"":": "+reason}`);
+  const missingOutput=response.status===400&&what.startsWith("ac/")?/^Invalid action result: (?:blob|tree) ([0-9a-f]{64})(?: of tree [0-9a-f]{64})? is not in the content store$/u.exec(reason)?.[1]:undefined;
+  throw new RemoteExecutionContentErrorV1(code,`Content store answered ${response.status} for ${what}${reason===""?"":": "+reason}`,missingOutput);
  };
  const content:RemoteExecutionContentV1={
   async has(instance,hash,signal){

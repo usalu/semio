@@ -3882,45 +3882,60 @@
             },
             {
               "at": [
-                0.664733,
-                -0.013702,
+                0.651473,
+                -0.00881,
                 0.0
               ],
               "rx": 0.02415,
               "ry": 0.02415,
               "rotation": [
-                0.270598,
-                0.653282,
+                0.218508,
+                0.672499,
                 0.0,
                 0.707107
               ]
             },
             {
               "at": [
-                0.723129,
-                -0.052721,
+                0.701651,
+                -0.034377,
                 0.0
               ],
               "rx": 0.02415,
               "ry": 0.02415,
               "rotation": [
-                0.5,
-                0.5,
+                0.415627,
+                0.572062,
                 0.0,
                 0.707107
               ]
             },
             {
               "at": [
-                0.762148,
-                -0.111117,
+                0.741473,
+                -0.074199,
                 0.0
               ],
               "rx": 0.02415,
               "ry": 0.02415,
               "rotation": [
-                0.653282,
-                0.270598,
+                0.572062,
+                0.415627,
+                0.0,
+                0.707107
+              ]
+            },
+            {
+              "at": [
+                0.76704,
+                -0.124377,
+                0.0
+              ],
+              "rx": 0.02415,
+              "ry": 0.02415,
+              "rotation": [
+                0.672499,
+                0.218508,
                 0.0,
                 0.707107
               ]
@@ -3957,45 +3972,60 @@
             },
             {
               "at": [
-                0.762148,
-                -0.590583,
+                0.76704,
+                -0.577323,
                 0.0
               ],
               "rx": 0.02415,
               "ry": 0.02415,
               "rotation": [
-                0.653282,
-                -0.270598,
+                0.672499,
+                -0.218508,
                 0.0,
                 0.707107
               ]
             },
             {
               "at": [
-                0.723129,
-                -0.648979,
+                0.741473,
+                -0.627501,
                 0.0
               ],
               "rx": 0.02415,
               "ry": 0.02415,
               "rotation": [
-                0.5,
-                -0.5,
+                0.572062,
+                -0.415627,
                 0.0,
                 0.707107
               ]
             },
             {
               "at": [
-                0.664733,
-                -0.687998,
+                0.701651,
+                -0.667323,
                 0.0
               ],
               "rx": 0.02415,
               "ry": 0.02415,
               "rotation": [
-                0.270598,
-                -0.653282,
+                0.415627,
+                -0.572062,
+                0.0,
+                0.707107
+              ]
+            },
+            {
+              "at": [
+                0.651473,
+                -0.69289,
+                0.0
+              ],
+              "rx": 0.02415,
+              "ry": 0.02415,
+              "rotation": [
+                0.218508,
+                -0.672499,
                 0.0,
                 0.707107
               ]
@@ -4176,8 +4206,8 @@
           "de": "Körper: das Rohr 48,3 mm ist auf dem Papier 0,1 mm breit, unter der Einzelheit 75 mm, daher ist es ein rundes Rohr von 75,2 mm an der Druckgrenze, vom wahren Außenrand nach innen verdickt (Außenmaß 0,75 x 0,80 m exakt, äußerer Biegeradius 204 mm behalten, innen 129 mm), Bögen als Tori mit Schnitten aus 12 Punkten, der Querholm zwischen den verdickten Beinen; Ansicht und Grundriss zeichnen es quer 63 mm (Regel der seitlichen Ausdehnung), 0,024 mm auf dem Papier weniger als das Modell."
         },
         {
-          "en": "Thermal: the hoop region is the true 48.3 mm tube along its real centre line, one slender loft inside the thickened body, because the region's area is that of the real tube; the cross rail references the body rail (the C15 total then reads the real hoop and the floor-size rail).",
-          "de": "Thermisch: die Bügelregion ist das wahre Rohr 48,3 mm entlang seiner wirklichen Mittellinie, eine schlanke Loft im verdickten Körper, weil die Fläche der Region die des realen Rohrs ist; der Querholm referenziert den Körperholm (die Summe nach C15 liest dann den realen Bügel und den Holm in Mindestgröße)."
+          "en": "Thermal: the hoop region is the true 48.3 mm tube along its real centre line, one slender loft with a section every 18 degrees in the bends inside the thickened body, because the region's area is that of the real tube; the cross rail references the body rail (the C15 total then reads the real hoop and the floor-size rail).",
+          "de": "Thermisch: die Bügelregion ist das wahre Rohr 48,3 mm entlang seiner wirklichen Mittellinie, eine schlanke Loft mit einem Schnitt alle 18 Grad in den Bögen im verdickten Körper, weil die Fläche der Region die des realen Rohrs ist; der Querholm referenziert den Körperholm (die Summe nach C15 liest dann den realen Bügel und den Holm in Mindestgröße)."
         },
         {
           "en": "Structure: the 75.2 mm body tubes are the members (referenced per bone), joints at the two welds as 120 mm nodes, fixed blocks 105 x 75 x 105 mm under the legs.",

@@ -230,3 +230,42 @@ The other rules:
 - **Vents in the plan.** The vent slots are 3 mm apart, below what 1:50 separates, so the plan draws their band as one detail stroke.
 - **Rig not exercised.** No pose or clip uses the tilt range. The corrected rig (neck upright, panel 5 degrees relative) was only exercised in the default pose and in the `standby` frames.
 - **Repo tests.** The repo test suites were not run; only the checks of the brief.
+
+## Round 5 handcraft (2026-11-21)
+
+Process (all assets of E03; final `r3-validate.ts <asset> --catalog-only --volumes` VALID for all five after the splice): `r5-appliances-render.sh` rendered every list at every scale, every pose and both clips at 1:50 (t 0.5 s) and the 2D of every drawn scale into `🗑️generated/r5-<slug>/before` and `/after`; `r5-seated-montage.ts` laid them out for reading; every sheet named below was opened with the Read tool. `r5-appliances-measure.ts` measured the body extents per scale in the default pose (numbers below). Grades: body / thermal / structure.
+
+### Reference and model (default pose `on`)
+
+| quantity | reference (Dell SE2422H) | model | deviation |
+|---|---|---|---|
+| height with stand | 420.3 mm | 410.9 mm (1:50, 1:100, 1:200), 413.9 mm (1:500) | -2.2 % (1:500 -1.5 %) |
+| width | 552.6 mm | 540 mm | -2.3 % |
+| depth with stand | 178.8 mm | 210 mm (asset `dimensions`, base plate 250 x 210 mm) | +17 % (defect, see open points) |
+| panel head height | 331.6 mm | 322.6 mm | -2.7 % |
+| active area 23.8 in | 527.0 x 296.5 mm | 527.0 x 296.1 mm | 0 / -0.1 % |
+| panel depth | 49.7 mm | 46.4 mm (housing) + glass, 37.6 mm slab | within the class |
+| stand base | 240.4 x 178.8 mm | 250 x 210 mm | +4 % / +17 % |
+
+### Grades
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / B+; catalog INVALID (print check: 2 mm pads 0.190 mm at 1:20) | A- / A- / B+; VALID |
+| 1:100 | A- / A- / B+ | unchanged |
+| 1:200 | A- / A- / B+ | unchanged |
+| 1:500 | B / B- / C+ (bulk copy: thermal lofts and structure copied from 1:200, lopsided base outline, one-sentence decision) | A- / A- / B+ |
+| poses `standby`, `off`, clips `power-on-warm-up`, `standby-cool-down` (t 0.5) | A (tilt hinge at the head of the riser) | unchanged |
+
+Seen before: body at all scales, structure and thermal cut at all scales, the three poses and both clip frames, 2D 1:50, 1:100, 1:200. After: 1:50 body and 2D, 1:500 body, thermal cut and structure.
+
+### Changes
+
+- Root, 1:50 (`r5-desktop-monitor-pads.py`, candidate validated before writing): the four 2 mm rubber pads were below the 7.5 mm feature and below 0.2 mm at the 1:20 end of the band, which refused the catalog asset (four `PRINT range-end-feature` lines). They now merge into the base plate in 2D (foot shapes of elevation and front removed, plate drawn down to the desk) and in 3D (pad solids and their thermal references removed, plate loft to the desk); the steel core, its mass and the contact pad are now 7.5 mm (the pad drawing no longer lowers the feature). The 1:50 representation decisions (silhouette, retained, thinElements, styles) and the volume decisions say so in en and de.
+- 1:500 (`r5-desktop-monitor-500.py`): authored anew. Body: panel prism of the true head outline 540 x 323 mm with the edge thickening from 14 to 35 mm, tapered riser, base plate 250 x 210 mm with even chamfers (was a trapezoid chamfered at the back only). Thermal: 2 mm front skin, the housing as the rest of the prism, plume outlet flush on the back, stand by reference (the 1:200 lofts copied into 1:500 are gone). Structure: plate and riser as members, the LCD frame as one plate across the VESA field, the tilt hinge as a joint, panel mass, contact pad. Decisions written for body, thermal and structure.
+- `volumes-check --product` PASS (9.7 s).
+
+### Open points
+
+- Depth 0.21 m against 0.1788 m of the SE2422H (+17 %) and base 250 x 210 against 240 x 179 mm: the asset declares a class estimate (round 3 kept it); correcting it changes `dimensions`, the base bone, the anchor, the 2D of three scales and the 3D of four. Not done in this round; it is the one measure outside 3 %.
+- Structure 1:50 to 1:200: the LCD module frame as a ring with rail and stile is an idealisation of the steel back tray (B+).

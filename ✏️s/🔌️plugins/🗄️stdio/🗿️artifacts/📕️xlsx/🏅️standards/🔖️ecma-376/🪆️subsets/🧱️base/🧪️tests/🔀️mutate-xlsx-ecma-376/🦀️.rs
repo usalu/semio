@@ -171,9 +171,8 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx;
     use semio_s_artifact_stdio_xlsx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
-    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::apply_xlsx_mutation;
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, insert_sheet::InsertSheet, XlsxMutation};
     use semio_s_artifact_stdio_contract::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use semio_s_artifact_stdio_xlsx_test_oracle::standards::v_ecma_376::subsets::base::{project_shared_string_pool, project_xlsx_workbook};
     use semio_repo_test_host::law::wire_operation;
@@ -191,13 +190,26 @@ mod subject {
         Ok(Outcome::with_raw(output, projection))
     }
 
-    /// 🦠️ The scenario's `{kind, params}` witness decoded generically: `params` IS the leaf's wire
-    /// payload, so the derive-generated `from_payload_value` is the only decoder, and re-emitting the
-    /// decoded payload must give back exactly `params`.
-    fn mutation_from_spec(spec: &Json) -> Result<XlsxMutation, String> {
+    /// 🦠️ Validates the neutral wire payload before binding any omitted insert-sheet slot to the subject workbook.
+    fn mutation_from_spec(spec: &Json, snapshot: &XlsxSnapshot) -> Result<XlsxMutation, String> {
         let kind = spec.str("kind");
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
-        wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)
+        let mutation = wire_operation(&kind, &params, mutation_from_payload_json, mutation_payload_json)?;
+        match mutation {
+            XlsxMutation::InsertSheet(InsertSheet { sheet, index, slot: None }) => {
+                InsertSheet::minted(snapshot, sheet, index).map(XlsxMutation::InsertSheet)
+            }
+            mutation => Ok(mutation),
+        }
+    }
+
+    /// 🛑️ Treats a refused mutation as a failed scenario before its projection is compared.
+    fn apply(snapshot: &mut XlsxSnapshot, mutation: &XlsxMutation) -> Result<(), String> {
+        let outcome = apply_xlsx_mutation(snapshot, mutation);
+        if !outcome.messages().is_empty() {
+            return Err(format!("XLSX mutation did not apply cleanly: {:?}", outcome.messages()));
+        }
+        Ok(())
     }
 
     fn decode(bytes: &[u8]) -> Result<XlsxSnapshot, String> {
@@ -207,8 +219,15 @@ mod subject {
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let mut snapshot = decode(&arranged_input(ctx, &spec)?)?;
-        apply_xlsx_mutation(&mut snapshot, &mutation_from_spec(&spec)?);
-        outcome_of(&spec.str("kind"), &snapshot)
+        let kind = spec.str("kind");
+        let mutation = mutation_from_spec(&spec, &snapshot)?;
+        let before = outcome_of(&kind, &snapshot)?;
+        apply(&mut snapshot, &mutation)?;
+        let after = outcome_of(&kind, &snapshot)?;
+        if before.projection == after.projection {
+            return Err(format!("mutate-{kind}: the subject mutation left the projection unchanged"));
+        }
+        Ok(after)
     }
 
     /// ↩️ The forward witness is undone by `XlsxMutation::inverse` itself — the vocabulary's own
@@ -216,12 +235,15 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let spec = ctx.doc_json()?;
         let base = decode(&arranged_input(ctx, &spec)?)?;
-        let mutation = mutation_from_spec(&spec)?;
-        let undo = mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
+        let mutation = mutation_from_spec(&spec, &base)?;
+        let undo = mutation_inverse(&mutation, &base).map_err(|error| error.to_string())?;
+        if undo.is_empty() {
+            return Err(format!("inverse-{}: the subject emitted no inverse mutation", spec.str("kind")));
+        }
         let mut snapshot = base;
-        apply_xlsx_mutation(&mut snapshot, &mutation);
+        apply(&mut snapshot, &mutation)?;
         for step in &undo {
-            apply_xlsx_mutation(&mut snapshot, step);
+            apply(&mut snapshot, step)?;
         }
         outcome_of(&spec.str("kind"), &snapshot)
     }

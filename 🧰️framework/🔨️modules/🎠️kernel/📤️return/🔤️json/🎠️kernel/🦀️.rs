@@ -288,7 +288,43 @@ pub enum TurnStatus {
 semio_framework_value::native_json_codec!{
 #[borrowed_json(protocol="crate::projection::KernelJson")]
 #[value(rename_all = "camelCase")]
+pub struct OriginalMediaWireLoan {
+    pub operation_id: String,
+    pub generation: String,
+    pub instance_id: u32,
+    pub document_id: String,
+    pub base_revision: String,
+}
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
+pub enum OriginalMediaWirePhase { Begin, Page, Complete, Cancel }
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
+pub enum OriginalMediaWireResult { Retry, Pending, Accepted, Stale, Refused }
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
+pub struct OriginalMediaWireAck {
+    pub loan: OriginalMediaWireLoan,
+    pub owner: u64,
+    pub seq: u64,
+    pub kind: u8,
+    pub extent: u32,
+    pub phase: OriginalMediaWirePhase,
+    pub page_index: Option<u32>,
+    pub result: OriginalMediaWireResult,
+}
+}
+semio_framework_value::native_json_codec!{
+#[borrowed_json(protocol="crate::projection::KernelJson")]
+#[value(rename_all = "camelCase")]
 pub enum CommandIngressStatus {
+    OriginalMediaAck(OriginalMediaWireAck),
     Idle,
     PageAccepted(CommandPageCursor),
     Backpressure(CommandPageCursor),

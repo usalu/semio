@@ -1,6 +1,7 @@
 //! 📇️ Directory and hub: the replay shell command, the directory events pump, the hub workspace actions and artifact creation, the open artifact relay and the document opening. See [`super`].
 
 use super::*;
+use semio_renderer_wgpu_shell_plugins::{relay_open_plan, RelayOpenPlan};
 
 //#region ShellActions
 impl<'ctx> ActionsCtx<'ctx> {
@@ -481,6 +482,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     document.checkpoint = Some(checkpoint);
                 }
                 self.continue_resolved_open(opening, program).await;
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            Ok(ShellDocumentOpenAnswer::NativeFile(imported)) => {
+                if opening.cancel_requested || imported.is_none() {
+                    opening.phase = ShellDocumentOpenPhase::Cancelled;
+                    self.opening.document_opening = Some(opening);
+                } else if let Err(error) = self.finish_native_open(&opening.app_id, imported.expect("checked imported file")).await {
+                    self.opening.document_opening = Some(opening);
+                    self.opening.fail_document_opening(error, &mut self.chrome, &self.prefs);
+                }
             }
             Ok(ShellDocumentOpenAnswer::Instantiated(instance_id)) => {
                 if opening.cancel_requested {

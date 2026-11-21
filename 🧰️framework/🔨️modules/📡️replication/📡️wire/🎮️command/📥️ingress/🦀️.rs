@@ -27,6 +27,10 @@ pub const COMMAND_MAXIMUM_PAGES: usize = COMMAND_MAXIMUM_BYTES / COMMAND_PAGE_MA
 pub const COMMAND_BATCH_MAXIMUM_ITEMS: usize = 64;
 pub const INVOCATION_RESULT_PACK_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 
+#[path = "🎞️original-media.rs"]
+mod original_media;
+pub use original_media::*;
+
 #[path = "📄️command-page-behavior/🦀️.rs"]
 mod command_page_behavior;
 
@@ -245,6 +249,7 @@ pub enum CommandIngressStatus {
     Backpressure(CommandPageCursor),
     CommandPending(CommandPageCursor),
     CommandComplete(CommandPageCursor),
+    OriginalMediaAck(OriginalMediaWireAck),
     Fault { cursor: CommandPageCursor, fault: Vec<u8> },
 }
 //#endregion 🔖️PagedCommandIngress

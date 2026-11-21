@@ -249,7 +249,7 @@ impl ActionAdapter {
     }
 
     /// 🖼️ Previews with the caller's exact resolved view context.
-    pub fn prepare_in_context(&self, catalog: &Catalog, principal: &AgentPrincipal, session: &SessionHandle, capability_id: &str, input: serde_json::Value, instance: u32, context: Option<semio_framework::ViewModel>, now_ms: u64) -> Result<PreparedActionReport, GatewayError> {
+    pub fn prepare_in_context(&self, catalog: &Catalog, principal: &AgentPrincipal, session: &SessionHandle, capability_id: &str, input: serde_json::Value, instance: u32, context: Option<semio_os_mcp_port::channel_port::ViewModel>, now_ms: u64) -> Result<PreparedActionReport, GatewayError> {
         let invocation_id = self.next_invocation_id();
 
         let capability = match catalog.get(capability_id) {

@@ -91,41 +91,41 @@ impl DagViewportState {
     }
 }
 
-/// 🔌️ Sets hover to a snapshot channel handle, falling back to node hover below channel LOD.
+/// 🔌️ Sets name-only channel hover at channel-row LOD.
 pub fn set_hover_channel(viewport: &mut DagViewportState, graph: &mut DagGraphState, widget_id: Option<&str>, port_id: Option<&str>) {
-    let Some(widget_id) = widget_id else {
-        graph.set_hover(None);
-        return;
-    };
-    if let Some(port_id) = port_id {
-        if draw_lod_for_frame(viewport, graph).uses_channel_row_pick() {
-            if let Some(hid) = graph.handle_id_for_port(widget_id, port_id) {
-                if graph.engine.hover != Some(hid) {
-                    graph.engine.hover = Some(hid);
-                }
-                return;
-            }
-        }
-    }
-    graph.set_hover(Some(widget_id));
+    set_hover_channel_direction(viewport, graph, widget_id, port_id, None);
 }
 
-/// 🔌️ Replaces typed channel selection, using node selection below channel LOD.
-pub fn set_selected_channels(viewport: &mut DagViewportState, graph: &mut DagGraphState, channels: &[DagChannelRef]) {
-    if draw_lod_for_frame(viewport, graph).uses_channel_row_pick() {
-        let mut selection = Selection::default();
-        for channel in channels {
-            if let Some(hid) = graph.handle_id_for_port(&channel.widget_id, &channel.port) {
-                selection.handle_ids.insert(hid);
-            }
+/// 🎯️ Sets hover to the physical channel on the requested side.
+pub fn set_hover_channel_direction(
+    viewport: &DagViewportState,
+    graph: &mut DagGraphState,
+    widget_id: Option<&str>,
+    port_id: Option<&str>,
+    direction: Option<DagChannelDirection>,
+) {
+    graph.clear_hover_ports();
+    let lod = draw_lod_for_frame(viewport, graph);
+    let can_hover_channel = if direction.is_some() { lod.allows_connection_hit_picking() } else { lod.uses_channel_row_pick() };
+    if let Some((widget, port)) = widget_id.zip(port_id).filter(|_| can_hover_channel) {
+        if let Some(handle) = graph.handle_id_for_channel(widget, port, direction) {
+            graph.engine.hover = Some(handle);
+            return;
         }
-        graph.engine.selection = selection;
-        graph.engine.preselect = Selection::default();
-        graph.engine.preselect_removed = Selection::default();
-        return;
     }
-    let widget_ids: Vec<String> = channels.iter().map(|channel| channel.widget_id.clone()).collect();
-    graph.set_selection(&widget_ids);
+    graph.set_hover(widget_id);
+}
+
+/// ✅️ Replaces the channel domain of selection using exact typed port identities.
+pub fn set_selected_channels(graph: &mut DagGraphState, channels: &[DagChannelRef]) {
+    graph.engine.selection.handle_ids.clear();
+    for channel in channels {
+        if let Some(handle) = graph.handle_id_for_channel(&channel.widget_id, &channel.port, Some(channel.direction)) {
+            graph.engine.selection.handle_ids.insert(handle);
+        }
+    }
+    graph.engine.preselect = Selection::default();
+    graph.engine.preselect_removed = Selection::default();
 }
 
 /// 🔍️ Pins draw LOD while the wheel gesture is active so chrome does not flicker across bands.

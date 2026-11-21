@@ -50,7 +50,9 @@ fn apply_rows(doc: &ArtifactView<'_, Generation3dSnapshot>, rows: &[NodeGraphEdi
             for row in rows {
                 let refused = |error: String| Fault::from(format!("nodeGraphEdit refusal: {error}"));
                 match row {
-                    NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => editor.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map(drop).map_err(refused)?,
+                    NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
+                        editor.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map(drop).map_err(refused)?;
+                    }
                     NodeGraphEditRow::Disconnect { synapse_id } => editor.disconnect(synapse_id).map_err(refused)?,
                     NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Input, index } => editor.add_input_port(node_id, *index as usize).map_err(refused)?,
                     NodeGraphEditRow::InsertPort { node_id, side: NodePortSide::Output, index } => editor.add_output_port(node_id, *index as usize).map_err(refused)?,

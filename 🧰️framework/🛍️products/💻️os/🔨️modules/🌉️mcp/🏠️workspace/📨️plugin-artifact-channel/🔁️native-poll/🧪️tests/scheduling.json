@@ -1,0 +1,10 @@
+{
+  "stepsPerYield": 32,
+  "cases": [
+    { "name": "pending and delivered callbacks share the cadence", "maximumSteps": 65, "deliverAt": 32, "observedSteps": 65, "yields": [32, 64], "ending": "pending" },
+    { "name": "cancellation before a batch boundary", "maximumSteps": 65, "cancelBeforeStep": 32, "observedSteps": 31, "yields": [], "ending": "cancelled" },
+    { "name": "deadline after a boundary callback", "maximumSteps": 65, "expiresAfterStep": 32, "observedSteps": 32, "yields": [], "ending": "deadline" },
+    { "name": "cancellation after a scheduler handoff", "maximumSteps": 65, "cancelBeforeStep": 33, "observedSteps": 32, "yields": [32], "ending": "cancelled" },
+    { "name": "completed result at a batch boundary", "maximumSteps": 65, "completeAt": 32, "observedSteps": 32, "yields": [], "ending": "complete" }
+  ]
+}

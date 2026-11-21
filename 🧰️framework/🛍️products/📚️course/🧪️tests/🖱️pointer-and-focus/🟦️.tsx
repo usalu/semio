@@ -10,8 +10,10 @@ import clamp from "lodash/clamp";
 import { describe, expect, it, vi } from "vitest";
 import { cursorProblem, learnerTag } from "@semio-tech/course";
 import { CoursePresence, cursorAt, viewportCursor, usePresencePointer } from "@semio-tech/course-react";
+import { startPointerDrag } from "../../🎯️targets/⚛️react/🔨️modules/🤏️drag/🟦️.ts";
 import vectors from "../🧫️fixtures/📡️presence-client/🔣️.json";
 import { ME, box, pointer } from "../🧰️presence-client-kit/🟦️.tsx";
+import dragCases from "./🔣️.json";
 
 describe("🖱️ pointer and focus", () => {
   function Harness(props: { readonly presence: CoursePresence }) {
@@ -134,4 +136,81 @@ describe("🖱️ pointer and focus", () => {
     expect(presence.focusOn).toHaveBeenLastCalledWith(undefined);
     for (const call of presence.point.mock.calls) if (call[0] !== undefined) expect(cursorProblem({ tag: learnerTag(ME), cursor: call[0], drag: { item: "glazing" } })).toBeUndefined();
   });
+});
+
+describe("🤏️ touch drag", () => {
+  const dragPointer = (type: string, y: number, id = 1): PointerEvent => {
+    const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: 30, clientY: y });
+    return Object.assign(event, { pointerId: id, pointerType: "touch" }) as PointerEvent;
+  };
+
+  it("prevents native panning only for touches that started on the held grip", () => {
+    render(<div className="course-app"><span data-testid="grip">⠿</span><span data-testid="page">Quiz instructions</span></div>);
+    const grip = screen.getByTestId("grip");
+    const abandon = startPointerDrag({ button: 0, clientX: 30, clientY: 200, pointerId: 1, pointerType: "touch", currentTarget: grip, preventDefault() {} }, vi.fn());
+    try {
+      for (const test of dragCases.touchMove) {
+        const move = new Event("touchmove", { bubbles: true, cancelable: true });
+        fireEvent(screen.getByTestId(test.target), move);
+        expect(move.defaultPrevented).toBe(test.prevented);
+      }
+    } finally {
+      abandon();
+    }
+    const after = new Event("touchmove", { bubbles: true, cancelable: true });
+    fireEvent(grip, after);
+    expect(after.defaultPrevented).toBe(false);
+  });
+
+  for (const test of dragCases.edgeScroll) {
+    it(test.name, () => {
+      const rendered = render(
+        <div className="course-app">
+          <div data-testid="quiz-page" style={test.inner ? { overflowY: "auto" } : undefined}>
+            <div data-course-drag=""><span data-testid="grip">⠿</span><input id="original-input" /></div>
+            <div data-course-drop="seen">Visible target</div>
+            <div data-course-drop="next">New target</div>
+          </div>
+        </div>,
+      );
+      const host = rendered.container.querySelector<HTMLElement>(".course-app")!;
+      const port = test.inner ? screen.getByTestId("quiz-page") : host;
+      Object.defineProperties(port, { clientHeight: { value: 400 }, scrollHeight: { value: 1200 } });
+      box(port, { left: 0, top: 0, width: 320, height: 400 });
+      port.scrollTop = test.from;
+      const scroll = vi.fn(({ top }: { top: number }) => { port.scrollTop = clamp(top, 0, 800); });
+      Object.defineProperty(port, "scrollTo", { value: scroll });
+      const find = vi.fn(() => host.querySelector(port.scrollTop === test.from ? '[data-course-drop="seen"]' : '[data-course-drop="next"]'));
+      Object.defineProperty(document, "elementFromPoint", { configurable: true, value: find });
+      let next: FrameRequestCallback | undefined;
+      const request = vi.spyOn(window, "requestAnimationFrame").mockImplementation((frame) => { next = frame; return 1; });
+      const cancelFrame = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => { next = undefined; });
+      const grip = screen.getByTestId("grip");
+      const drop = vi.fn();
+      const abandon = startPointerDrag({ button: 0, clientX: 30, clientY: 200, pointerId: 1, pointerType: "touch", currentTarget: grip, preventDefault() {} }, drop);
+      try {
+        fireEvent(grip, dragPointer("pointermove", test.pointer));
+        expect(host.querySelector(".course-drag-ghost")?.hasAttribute("inert")).toBe(true);
+        expect(document.querySelectorAll("#original-input")).toHaveLength(1);
+        fireEvent(grip, dragPointer("pointerup", test.pointer, 2));
+        expect(drop).not.toHaveBeenCalled();
+        const frame = next;
+        next = undefined;
+        frame?.(16);
+        const moved = port.scrollTop - test.from;
+        expect(moved === 0 ? "none" : moved < 0 ? "up" : "down").toBe(test.scrolls);
+        const target = moved === 0 ? "seen" : "next";
+        expect(host.querySelector(".course-drop-active")?.getAttribute("data-course-drop")).toBe(target);
+        fireEvent(grip, dragPointer("pointerup", test.pointer));
+        expect(drop).toHaveBeenCalledExactlyOnceWith(target);
+        expect(next).toBeUndefined();
+        expect(host.querySelector(".course-drag-ghost")).toBeNull();
+      } finally {
+        abandon();
+        request.mockRestore();
+        cancelFrame.mockRestore();
+        Reflect.deleteProperty(document, "elementFromPoint");
+      }
+    });
+  }
 });

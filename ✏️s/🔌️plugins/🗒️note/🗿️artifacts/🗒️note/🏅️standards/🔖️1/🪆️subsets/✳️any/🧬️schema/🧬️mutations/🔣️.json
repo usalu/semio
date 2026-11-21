@@ -101,6 +101,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/note/note/1/table/mutation/remove-table-column/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/note/note/1/table/mutation/edit-table-cell/schema.json"
     }
   ]
 }

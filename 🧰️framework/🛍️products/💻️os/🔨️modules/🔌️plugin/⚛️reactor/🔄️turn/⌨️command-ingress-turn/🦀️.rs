@@ -63,7 +63,12 @@ pub(super) async fn drive_command_ingress<PA: PluginApp>(runtime: &PluginRuntime
     turn.exchange_generic(runtime, effects, identity, cx).await?;
     if let Some((cursor,page)) = command_page.as_ref() {
         if command_page_invalid(runtime,cursor,page,&turn.close_instances){turn.status=CommandIngressStatus::Fault{cursor:cursor.clone(),fault:b"plugin.command-page-invalid".to_vec()};return turn.finish(cx)}
-        let admitted={let mut lifetimes=runtime.guest_lifetimes.try_borrow_mut().map_err(|_|reactor_close_fault("command Source lifetime is busy"))?;let slot=lifetimes.get_mut(cursor.instance).ok_or_else(||reactor_close_fault("command Source lifetime is missing"))?;slot.command_origin.admit_step(cx)?};
+        let key = native_close_key(runtime, cursor.instance)?;
+        let admitted = {
+            let mut lifetimes = runtime.guest_lifetimes.try_borrow_mut().map_err(|_| reactor_close_fault("command Source lifetime is busy"))?;
+            let slot = lifetimes.get_mut(cursor.instance).ok_or_else(|| reactor_close_fault("command Source lifetime is missing"))?;
+            slot.admit_command_origin(key, cx)?
+        };
         if !admitted{turn.status=CommandIngressStatus::Backpressure(cursor.clone());return turn.finish(cx)}
         turn.admit_page(runtime,command_page, effects, identity, cx).await?;
     }

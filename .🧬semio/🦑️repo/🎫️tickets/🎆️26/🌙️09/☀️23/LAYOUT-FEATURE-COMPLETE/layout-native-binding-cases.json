@@ -1,0 +1,16 @@
+{
+  "largeMutation": {
+    "kind": "RenameLayout",
+    "tag": 0,
+    "payloadKey": "newName",
+    "text": "Original Layout 漢 🌱️",
+    "repeat": 512,
+    "maximumCopyBytes": 4096,
+    "cancelAfterTypedTurns": [1, 8, 64]
+  },
+  "dictionaryMutation": {
+    "kind": "ChangeDataFields",
+    "tag": 2,
+    "payloadKey": "newFields"
+  }
+}

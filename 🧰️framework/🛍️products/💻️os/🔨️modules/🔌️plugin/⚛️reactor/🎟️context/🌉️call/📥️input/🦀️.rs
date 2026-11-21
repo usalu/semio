@@ -50,7 +50,7 @@ pub struct OriginalActorInputReceiving {
     event:ManuallyDrop<Option<semio_framework::kernel::Event>>,
     job:ManuallyDrop<Option<semio_framework_actor::OriginalJobSource>>,
     job_retirement:ManuallyDrop<Option<ControlledRetirement<semio_framework_actor::OriginalJobSource>>>, job_id:Option<u64>,
-    failed:bool, outcome_failed:bool, settlement_failed:bool, closing:bool, returning:bool, returned:bool,
+    failed:bool, closing:bool, returning:bool, returned:bool,
 }
 
 /// ♻️ Drives one paid retirement step of a retained owner through the caller's own original effect.
@@ -68,13 +68,13 @@ fn charge(cx:&mut StepContext<'_>,retiring:bool,bytes:usize)->Result<bool,Origin
 }
 impl OriginalActorInputReceiving {
     /// 🌱️ Construction declares limits but admits no parser, source loan or byte owner.
-    pub const fn new(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits)->Self{Self{binding:None,pointer:0,length:0,capture:OriginalCallerReturnPlace::empty(),decoder:ManuallyDrop::new(OriginalJsonOutputSource::new(policy,limits)),input:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None),settlement:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),event:ManuallyDrop::new(None),job:ManuallyDrop::new(None),job_retirement:ManuallyDrop::new(None),job_id:None,failed:false,outcome_failed:false,settlement_failed:false,closing:false,returning:false,returned:false}}
+    pub const fn new(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits)->Self{Self{binding:None,pointer:0,length:0,capture:OriginalCallerReturnPlace::empty(),decoder:ManuallyDrop::new(OriginalJsonOutputSource::new(policy,limits)),input:ManuallyDrop::new(None),outcome:ManuallyDrop::new(None),settlement:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),event:ManuallyDrop::new(None),job:ManuallyDrop::new(None),job_retirement:ManuallyDrop::new(None),job_id:None,failed:false,closing:false,returning:false,returned:false}}
     /// 🎟️ The containing Source pays the frame before binding its exact wire and caller.
     pub fn new_bound(policy:OriginalNativeDecodePolicy,limits:JsonReadLimits,wire:&[u8],cx:&StepContext<'_>)->Self{let mut owner=Self::new(policy,limits);owner.binding=Some(OriginalSourceBinding::borrow(cx));owner.pointer=wire.as_ptr() as usize;owner.length=wire.len();owner}
     fn validate(&self,wire:Option<&[u8]>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
         cx.original_source_parent()?.validate_borrowed_context(cx)?;
         if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(invalid())}
-        if self.returned{return if wire.is_none(){Ok(())}else{Err(invalid())}}
+        if self.input_returned(){return if wire.is_none(){Ok(())}else{Err(invalid())}}
         let wire=wire.ok_or_else(invalid)?;
         if self.binding.is_some()&&(self.pointer!=wire.as_ptr() as usize||self.length!=wire.len()){return Err(invalid())}Ok(())
     }
@@ -146,36 +146,49 @@ impl OriginalActorInputReceiving {
     /// 🧾️ The exact original decoder failure can move only into an explicitly supplied receiver.
     pub fn transfer_failure_step(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut Option<ControlledRetirement<OriginalJsonOutputOutcome>>,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{
         if self.binding.is_none_or(|binding|!binding.matches(cx)){return Err(invalid())}
-        if !self.outcome_failed||self.outcome.is_none(){return Ok(false)}
-        if !charge(cx,true,std::mem::size_of::<&mut Option<ControlledRetirement<OriginalJsonOutputOutcome>>>())?{return Ok(false)}receive(&mut *self.outcome,cx)?;if self.outcome.is_none(){self.outcome_failed=false;Ok(true)}else{Ok(false)}
+        if self.outcome.is_none(){return Ok(false)}
+        if !charge(cx,true,std::mem::size_of::<&mut Option<ControlledRetirement<OriginalJsonOutputOutcome>>>())?{return Ok(false)}receive(&mut *self.outcome,cx)?;Ok(self.outcome.is_none())
     }
     /// 🧾️ A failed close receipt remains original until its caller explicitly receives it.
     pub fn transfer_settlement_failure_step(&mut self,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{
-        if self.binding.is_none_or(|binding|!binding.matches(cx)){return Err(invalid())}if !self.settlement_failed||self.settlement.is_none(){return Ok(false)}
-        if !charge(cx,true,std::mem::size_of::<&mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>())?{return Ok(false)}receive(&mut *self.settlement,cx)?;if self.settlement.is_none(){self.settlement_failed=false;Ok(true)}else{Ok(false)}
+        if self.binding.is_none_or(|binding|!binding.matches(cx)){return Err(invalid())}if self.settlement.is_none(){return Ok(false)}
+        if !charge(cx,true,std::mem::size_of::<&mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>())?{return Ok(false)}receive(&mut *self.settlement,cx)?;Ok(self.settlement.is_none())
     }
     fn settlement_destination(&mut self)->(usize,usize){((&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize,std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>())}
     fn outcome_destination(&mut self)->(usize,usize){((&mut *self.outcome as *mut Option<ControlledRetirement<OriginalJsonOutputOutcome>>) as usize,std::mem::size_of::<Option<ControlledRetirement<OriginalJsonOutputOutcome>>>())}
-    fn retain_settlement(&mut self,raw:OriginalNativeDecodeOutcome<RetainedCloneStep>)->Result<(),OriginalTurnFailure>{self.settlement_failed=raw.value.is_err()||raw.receiving_refusal.is_some();self.failed|=self.settlement_failed;*self.settlement=Some(ControlledRetirement::retain(raw));let(address,bytes)=self.settlement_destination();self.capture.record_sized_return(address,bytes)?;Ok(())}
-    fn retire_outcome_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        if let Some(settlement)=self.settlement.as_mut(){
-            if self.settlement_failed{return Ok(false)}
-            if !settlement.terminal_is_empty(){retire_step(settlement,cx)?;return Ok(false)}
-            if !charge(cx,true,std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>())?{return Ok(false)}self.settlement.take();return Ok(false)
+    fn retain_settlement(&mut self,raw:OriginalNativeDecodeOutcome<RetainedCloneStep>)->Result<(),OriginalTurnFailure>{
+        if raw.value.is_ok() && raw.receiving_refusal.is_none() { return Ok(()); }
+        self.failed = true;
+        *self.settlement = Some(ControlledRetirement::retain(raw));
+        let (address, bytes) = self.settlement_destination();
+        self.capture.record_sized_return(address, bytes)?;
+        Ok(())
+    }
+    /// ⏩️ Drives consecutive paid decoder steps before publishing the enclosing input receipt.
+    pub fn advance_in_turn(&mut self, wire: &[u8], cx: &mut StepContext<'_>) -> Result<InputAdmission, OriginalTurnFailure> {
+        if self.closing || cx.original_retirement_active() || self.binding.is_some() && !self.owns_wire(wire) {
+            return Err(invalid());
         }
-        if let Some(outcome)=self.outcome.as_mut(){
-            if self.outcome_failed{return Ok(false)}
-            if !outcome.terminal_is_empty(){let address=(&mut *self.settlement as *mut Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>) as usize;let bytes=std::mem::size_of::<Option<ControlledRetirement<OriginalNativeDecodeOutcome<RetainedCloneStep>>>>();let admitted=if self.closing{cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?}else{self.capture.admit_sized(cx,address,bytes)?};if !admitted{return Ok(false)}let receipt=if self.closing{cx.with_original_retirement(|cx|self.decoder.close_owned_step(outcome,cx))?}else{self.decoder.close_owned_step(outcome,cx)?};if let Some(receipt)=receipt{self.retain_settlement(receipt)?}return Ok(false)}
-            if !charge(cx,true,std::mem::size_of::<Option<ControlledRetirement<OriginalJsonOutputOutcome>>>())?{return Ok(false)}self.outcome.take();
-        }Ok(true)
+        loop {
+            if cx.should_yield() || cx.is_cancelled() { return Ok(InputAdmission::Pending); }
+            let before = cx.original_work_units_spent();
+            let mut decoder_progress = true;
+            let admission = self.advance_step((!self.input_returned()).then_some(wire), cx, &mut decoder_progress)?;
+            if admission != InputAdmission::Pending || !decoder_progress || cx.original_work_units_spent() == before {
+                return Ok(admission);
+            }
+        }
     }
     /// 🪜️ Readiness follows actual parser, typed receiver and decoder Source closure.
     pub fn advance(&mut self,wire:Option<&[u8]>,cx:&mut StepContext<'_>)->Result<InputAdmission,OriginalTurnFailure>{
+        self.advance_step(wire,cx,&mut true)
+    }
+    fn advance_step(&mut self,wire:Option<&[u8]>,cx:&mut StepContext<'_>,decoder_progress:&mut bool)->Result<InputAdmission,OriginalTurnFailure>{
         self.validate(wire,cx)?;
         if self.capture.is_admitted(){if !self.capture.settle_return(cx)?{return Ok(InputAdmission::Pending)}if self.returned{return Ok(if self.closing{if self.terminal_is_empty(){InputAdmission::Closed}else{InputAdmission::Pending}}else if self.failed{InputAdmission::Failed}else{InputAdmission::Ready})}return Ok(InputAdmission::Pending)}
         if self.returned&&!self.closing{return Ok(if self.failed{InputAdmission::Failed}else{InputAdmission::Ready})}
         if self.binding.is_none(){if !charge(cx,false,std::mem::size_of::<(Option<OriginalSourceBinding>,usize,usize)>())?{return Ok(InputAdmission::Pending)}let wire=wire.ok_or_else(invalid)?;self.binding=Some(OriginalSourceBinding::borrow(cx));self.pointer=wire.as_ptr() as usize;self.length=wire.len();return Ok(InputAdmission::Pending)}
-        if !self.retire_outcome_step(cx)?{return Ok(if self.failed{InputAdmission::Failed}else{InputAdmission::Pending})}
+        if self.outcome.is_some() || self.settlement.is_some() { return Ok(InputAdmission::Failed); }
         if self.closing{
             if self.event.is_some(){let progress=RetainedCloneProgress{copied_items:2,copied_bytes:std::mem::size_of::<Option<semio_framework::kernel::Event>>()+std::mem::size_of::<usize>(),..Default::default()};if cx.retirement_should_yield()||cx.fuel_remaining()<2||cx.retained_grant().maximum_depth==0||!progress.fits(cx.retained_grant()){return Ok(InputAdmission::Pending)}cx.retained_progress().checked_add(progress)?;let Some(ActorInput::Poll(poll))=self.input.as_mut()else{return Err(invalid())};if poll.events.len()==poll.events.capacity(){return Err(invalid())}poll.events.push(self.event.take().ok_or_else(invalid)?);let posted=cx.consume_retained(progress);cx.consume_fuel(2);posted?;return Ok(InputAdmission::Pending)}
             if self.job_retirement.is_none()&&self.job.is_some(){if !charge(cx,true,std::mem::size_of::<Option<semio_framework_actor::OriginalJobSource>>()+std::mem::size_of::<Option<ControlledRetirement<semio_framework_actor::OriginalJobSource>>>())?{return Ok(InputAdmission::Pending)}*self.job_retirement=Some(ControlledRetirement::retain(self.job.take().ok_or_else(invalid)?));return Ok(InputAdmission::Pending)}
@@ -201,6 +214,7 @@ impl OriginalActorInputReceiving {
         if self.failed||self.input.is_some(){self.returning=true}
         if self.returning{
             let(address,bytes)=self.settlement_destination();let admitted=if self.closing{cx.with_original_retirement(|cx|self.capture.admit_sized(cx,address,bytes))?}else{self.capture.admit_sized(cx,address,bytes)?};if !admitted{return Ok(InputAdmission::Pending)}
+            let before=(cx.original_work_units_spent(),cx.retained_progress());
             let close=if self.closing{cx.with_original_retirement(|cx|self.decoder.close_step(cx))?}else{self.decoder.close_step(cx)?};
             match close{
                 OriginalJsonOutputClose::Producer(Some(raw))=>self.retain_settlement(raw)?,
@@ -208,10 +222,17 @@ impl OriginalActorInputReceiving {
                 OriginalJsonOutputClose::Source(_) if self.decoder.terminal_is_empty()=>{if charge(cx,true,std::mem::size_of::<bool>())?{self.returned=true}},
                 OriginalJsonOutputClose::Source(_)=>{},
             }
+            *decoder_progress=before!=(cx.original_work_units_spent(),cx.retained_progress());
         }else{
             let(address,bytes)=self.outcome_destination();if !self.capture.admit_sized(cx,address,bytes)?{return Ok(InputAdmission::Pending)}
+            let before=(cx.original_work_units_spent(),cx.retained_progress());
             let raw=if self.decoder.ready(){self.decoder.take_step(&mut *self.input,cx)?}else{self.decoder.receive_step(wire.ok_or_else(invalid)?,cx)?};
-            if let Some(raw)=raw{self.outcome_failed=raw.value.is_err()||raw.receiving_refusal.is_some();self.failed|=self.outcome_failed;*self.outcome=Some(ControlledRetirement::retain(raw));self.capture.record_sized_return(address,bytes)?;}
+            *decoder_progress=before!=(cx.original_work_units_spent(),cx.retained_progress());
+            if let Some(raw)=raw.filter(|raw| raw.value.is_err() || raw.receiving_refusal.is_some()){
+                self.failed = true;
+                *self.outcome = Some(ControlledRetirement::retain(raw));
+                self.capture.record_sized_return(address, bytes)?;
+            }
         }
         Ok(if self.returned&&self.capture.terminal_is_empty(){if self.closing{InputAdmission::Closed}else if self.failed{InputAdmission::Failed}else{InputAdmission::Ready}}else if self.failed{InputAdmission::Failed}else{InputAdmission::Pending})
     }

@@ -50,6 +50,7 @@ semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
+semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

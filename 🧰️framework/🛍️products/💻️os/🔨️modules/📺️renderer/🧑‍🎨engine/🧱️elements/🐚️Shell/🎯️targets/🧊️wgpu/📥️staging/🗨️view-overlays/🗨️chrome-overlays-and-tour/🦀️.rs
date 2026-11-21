@@ -193,7 +193,7 @@ fn introduction_control_hotkey(overrides: &HashMap<String, String>, control_id: 
 /// (`🖱️ui/🧱️elements/🔳️ButtonGroup/🟦️.tsx:110-118`), which is why React's footer reads `Next ↵ ›`
 /// with the chevron LAST. `leading_icon` is the one inversion React itself makes: `WindowChrome`'s
 /// `close` control paints its `CloseIcon` before the label, so Skip reads `✕ Skip`.
-struct ChromeTourChip {
+pub struct ChromeTourChip {
     pub rect: Rect,
     pub label: &'static str,
     pub hotkey: Option<String>,

@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 
 //#region 🧾️DerivedRegistry
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.
-pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("SetQuery", set_query::TEXT_OPCODE)];
+pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("SetQuery", set_query::TEXT_OPCODE), ("SetRoot", set_root::TEXT_OPCODE)];
 //#endregion 🧾️DerivedRegistry
 
 //#region 🌉️ExternalCodecBridge
@@ -42,11 +42,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 pub use semio_s_artifact_trinity_jack_model::standards::v1::subsets::any::io::text::mutations::set_query;
+#[path = "🎯️set-root/🦀️.rs"]
+pub mod set_root;
 
 #[allow(unused_imports)]
 mod operation_codec {
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use crate::standards::v1::subsets::any::schema::mutations::set_query;
+use crate::standards::v1::subsets::any::schema::mutations::{set_query, set_root};
 use crate::standards::v1::subsets::any::schema::graph::GraphEffect;
 use crate::standards::v1::subsets::any::schema::graph::{Edge, EntityRef, Node, Port};
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
@@ -56,10 +58,13 @@ use semio_framework_diagnostic::TextError;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 /// ⚡️ Local mirror of `TrinityGraphMutation` for `protocol::OpText`/`OpBinary`: each variant name IS its wire keyword
 /// (`SetQuery` -> `set-query`), and the real enum's variants wrap handcrafted payload structs that cannot derive the codec.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum TrinityGraphOperationDsl {
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving)]
+pub enum TrinityGraphOperationDsl {
     SetQuery {
         value: String,
+    },
+    SetRoot {
+        value: Option<String>,
     },
 }
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
@@ -83,12 +88,16 @@ impl OpText for TrinityGraphOperationDsl {
     }
 }
 pub(crate) fn trinity_graph_operation_to_dsl(operation: &TrinityGraphMutation) -> TrinityGraphOperationDsl {
-    let TrinityGraphMutation::SetQuery(payload) = operation;
-    TrinityGraphOperationDsl::SetQuery { value: payload.value.clone() }
+    match operation {
+        TrinityGraphMutation::SetQuery(payload) => TrinityGraphOperationDsl::SetQuery { value: payload.value.clone() },
+        TrinityGraphMutation::SetRoot(payload) => TrinityGraphOperationDsl::SetRoot { value: payload.value.clone() },
+    }
 }
 pub(crate) fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphMutation {
-    let TrinityGraphOperationDsl::SetQuery { value } = operation;
-    set_query(value)
+    match operation {
+        TrinityGraphOperationDsl::SetQuery { value } => set_query(value),
+        TrinityGraphOperationDsl::SetRoot { value } => set_root(value),
+    }
 }
 /// ⚡️ One-line textual notation for [`TrinityGraphMutation`] (`protocol::OpText`), delegating to the
 /// derive-generated `TrinityGraphOperationDsl` mirror.

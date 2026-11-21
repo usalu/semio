@@ -1,0 +1,174 @@
+{
+  "widget": "draw",
+  "evaluation": {
+    "draw": {
+      "out": {
+        "first": {
+          "$schema": "geometry",
+          "handle": "solid-first",
+          "kind": "solid"
+        },
+        "index": {
+          "$schema": "geometry",
+          "handle": "solid-index",
+          "kind": "solid"
+        },
+        "line": {
+          "$schema": "geometry",
+          "handle": "solid-line",
+          "kind": "solid"
+        },
+        "near": {
+          "$schema": "geometry",
+          "handle": "solid-near",
+          "kind": "solid"
+        },
+        "second": {
+          "$schema": "geometry",
+          "handle": "solid-second",
+          "kind": "solid"
+        }
+      }
+    }
+  },
+  "meshes": {
+    "solid-first": {
+      "positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "indices": [
+        0,
+        1,
+        2
+      ],
+      "edge_positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ]
+    },
+    "solid-second": {
+      "positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "indices": [
+        0,
+        1,
+        2
+      ],
+      "edge_positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ]
+    },
+    "solid-index": {
+      "positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "indices": [
+        0,
+        2,
+        1
+      ],
+      "edge_positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ]
+    },
+    "solid-line": {
+      "positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "indices": [
+        0,
+        1,
+        2
+      ],
+      "edge_positions": [
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ]
+    },
+    "solid-near": {
+      "positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0.0001
+      ],
+      "indices": [
+        0,
+        1,
+        2
+      ],
+      "edge_positions": [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0
+      ]
+    }
+  },
+  "expected": {
+    "group": [
+      "h:draw@first",
+      "h:draw@second"
+    ],
+    "meshes": 5,
+    "instances": 5
+  }
+}

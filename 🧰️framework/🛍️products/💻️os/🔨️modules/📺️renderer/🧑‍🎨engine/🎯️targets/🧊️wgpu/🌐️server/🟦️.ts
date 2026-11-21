@@ -12,6 +12,7 @@ import { repoCacheDirectory } from "@semio-tech/process/execution";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { semioEmojiIndexHtmlVitePlugin } from "@semio-tech/ui-styling/builder/vite/site-html";
+import { playgroundIframeEmbedHeadersPlugin } from "@semio-tech/ui-styling/iframe";
 import { staticDirVitePlugin } from "@semio-tech/ui-styling/builder/vite";
 import type { OwnedBuildConfig, OwnedBuildPlugin } from "@semio-tech/ui-react/build-tooling";
 import { semioAgentBridgeRendezvousVitePlugin } from "@semio-tech/framework-os-dev/vite-plugins/agent-bridge-rendezvous";
@@ -116,6 +117,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
     resolve: { alias: mounts.map(([find, replacement]) => ({ find, replacement })) },
     server: { watch: null, fs: { allow: [options.root, ...mounts.map(([, root]) => root)] }, ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}) },
     plugins: [
+      { ...playgroundIframeEmbedHeadersPlugin(), enforce: "pre" },
       semioEmojiIndexHtmlVitePlugin(options.root),
       semioAgentBridgeRendezvousVitePlugin({ shellKind: "wgpu-web" }),
       ...mounts.flatMap(([route, root]) => staticDirVitePlugin(options.workspace, { kind: "static-dir", route, root }).filter(plugin => plugin.apply !== "build")),

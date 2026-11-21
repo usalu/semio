@@ -1,4 +1,6 @@
 import{expect,test}from"bun:test";
+import{Database}from"bun:sqlite";
+import globalFixture from"./🔣️.json";
 import{mkdtempSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
@@ -47,4 +49,22 @@ test("shaping a row log keeps a few bytes per row, flat in the rows per owner",(
   expect(large.retained/large.rows,"bytes retained per row").toBeLessThan(24);
   expect(large.retained).toBeLessThan(Math.max(small.retained*4,4*1048576));
  }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("an unscoped streamed graph keeps ordered environment rows without rereading captured paths",()=>{
+ const directory=mkdtempSync(join(tmpdir(),"streamed-shape-global-")),log=createRowLogV1<Row>({path:join(directory,"rows")}),oracle=new Database(":memory:");
+ try{
+  const {positions,expected}=globalFixture,rows=Array.from({length:7},(_unused,at)=>({kind:"file",path:"/source/f"+at,fact:{size:at}})),take=(indices:readonly number[])=>indices.map(at=>rows[at]!);
+  const all=log.append(take(positions.head)).concat(take(positions.tail)),base=log.append(take(positions.owner)),before=log.stats().reads;
+  const selected=oracle.query(`WITH inputs AS (SELECT 0 AS band, CAST(key AS INT) AS slot, value AS id FROM json_each(?1)
+    UNION ALL SELECT 1, CAST(key AS INT), value FROM json_each(?2) WHERE value NOT IN (SELECT value FROM json_each(?4))
+    UNION ALL SELECT 2, CAST(key AS INT), value FROM json_each(?3) WHERE value NOT IN (SELECT value FROM json_each(?4))),
+    ranked AS (SELECT id, band, slot, row_number() OVER (PARTITION BY id ORDER BY band, slot) AS first FROM inputs)
+    SELECT id FROM ranked WHERE first=1 ORDER BY band, slot`).all(...[positions.explicit,positions.head,positions.tail,positions.owner].map(row=>JSON.stringify(row))) as {id:number}[];
+  expect([...selected.map(row=>row.id),...positions.implementation,...positions.environmentImplementation]).toEqual(expected.environment);
+  const shaped=shapeComputeResultV1({workspaceRoot:globalFixture.workspaceRoot,part:{owners:[{name:globalFixture.owner,root:globalFixture.ownerRoot,node:{},nodeRows:base}],edgeOnly:[],edges:[],rows:all,env:{digest:"e".repeat(64),rows:take(positions.explicit)}} as never,stubs:{},implementation:{all:take(positions.implementation),environment:take(positions.environmentImplementation)} as never});
+  expect(log.stats().reads-before).toBe(expected.shapeReads);
+  expect(listed(shaped.env.rows as never)).toEqual(take(expected.environment));
+  expect(listed(shaped.owners[0]!.rows as never)).toEqual(take(expected.owner));
+ }finally{oracle.close();log.close();rmSync(directory,{recursive:true,force:true});}
 });

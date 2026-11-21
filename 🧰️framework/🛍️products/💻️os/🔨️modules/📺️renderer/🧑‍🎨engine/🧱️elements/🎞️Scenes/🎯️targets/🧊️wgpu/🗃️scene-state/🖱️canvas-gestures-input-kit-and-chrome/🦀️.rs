@@ -323,6 +323,7 @@ pub fn retire_tiled_map_scene_identity(owner: &crate::element_contracts::ScenePo
             state.map_marquee_points.clear();
             state.map_marquee_active = false;
             state.map_interaction_owner = None;
+            state.touch_gesture = Default::default();
         }
         if hover {
             state.map_last_hover_json = None;

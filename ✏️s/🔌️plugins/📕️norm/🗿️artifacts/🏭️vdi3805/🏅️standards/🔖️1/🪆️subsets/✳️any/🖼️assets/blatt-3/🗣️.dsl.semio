@@ -4,20 +4,20 @@ strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="
 extensions=fields={
 }
 products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
-  RAD-600 {manufacturer-code=DEMO product-group=HV article-number=RAD-600} [ {locale=de text="Heizkörper 600"} {locale=en text="Radiator 600"} ] 3 [ {family="100" fields=[ "100" DEMO HV RAD-600 "3" ] extensions=fields={
+  HG-24 {manufacturer-code=DEMO product-group=HV article-number=HG-24} [ {locale=de text="Wärmeerzeuger 24 kW"} {locale=en text="Heat generator 24 kW"} ] 3 [ {family="100" fields=[ "100" DEMO HV HG-24 "3" ] extensions=fields={
   }
-  } {family="110" fields=[ "110" cfg.RAD-600 geom-valve-50 curve-kvs ] extensions=fields={
+  } {family="110" fields=[ "110" cfg.HG-24 geom-valve-50 curve-kvs ] extensions=fields={
   }
   } {family="200" fields=[ "200" geom-valve-50 "0.15" "0.20" "0.10" ] extensions=fields={
   }
-  } {family="210" fields=[ "210" standard_output_w "1200" n "1.3" length_m "0.6" height_m "0.6" depth_m "0.1" connection_type flange ] extensions=fields={
+  } {family="210" fields=[ "210" nominal_heat_output_w "24000" fuel_type gas flow_temp_max_c "80" return_temp_min_c "40" ] extensions=fields={
   }
   } {family="400" fields=[ "400" curve-kvs "0" "0" "100" "4.5" ] extensions=fields={
   }
-  } {family="700" fields=[ "700" de "Heizkörper 600" en "Radiator 600" ] extensions=fields={
+  } {family="700" fields=[ "700" de "Wärmeerzeuger 24 kW" en "Heat generator 24 kW" ] extensions=fields={
   }
-  } ] {id=cfg.RAD-600 attributes={
-    connectionType="flange" depthM=0.1 heatExponentN=1.3 heightM=0.6 kind="radiator" lengthM=0.6 standardOutputW=1200.0
+  } ] {id=cfg.HG-24 attributes={
+    flowTempMaxC=80.0 fuelType="gas" kind="heatGenerator" nominalHeatOutputW=24000.0 returnTempMinC=40.0
   }
   function-refs=[ ]} [ {accessory-id=ACT-01 required=true quantity=1} ] [ {component-id=ACT-01 quantity=1} ] {fields={
   }
@@ -40,7 +40,7 @@ edition-profile={
 correction-as-of=year=2024 month=1 index=
 entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
   ACT-01 2 [ Stellantrieb Actuator ] 50
-  RAD-600 3 [ "Heizkörper 600" "Radiator 600" ] _
+  HG-24 3 [ "Wärmeerzeuger 24 kW" "Heat generator 24 kW" ] _
 }
 geometry={
 }

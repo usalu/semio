@@ -1,7 +1,7 @@
 use semio_os_kernel as store;
 use crate::LayoutMutation;
 use crate::binary::*;
-use semio_s_artifact_layout_layout_mutations_content::{rename_layout, set_page_background_drawing};
+use semio_s_artifact_layout_layout_mutations_content::rename_layout;
 
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
@@ -13,13 +13,35 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[test]
 fn original_receiving_uses_the_layout_protocol_tag_for_the_page_drawing() {
-    let operation = LayoutMutation::SetPageBackgroundDrawing(set_page_background_drawing::SetPageBackgroundDrawing {
-        page_id: "📄 Front".into(),
-        drawing: None,
-    });
-    let bytes = encode_op(&operation).expect("encode Layout page Drawing operation");
-    assert_eq!(&bytes[..2], &[1, 59]);
-    store::os_dsl::original_receiving::check_receiving_round_trip(&[operation]).unwrap();
+    use semio_framework_value::{DslValue, FromValue, NativeReceive};
+    use store::os_dsl::original_receiving::{RetainedCloneGrant, ReceivingStock, receive_to_completion};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../🧬️schema/🧬️mutations/🖊️set-page-background-drawing/🧪️tests/🔣️transport.json"
+    )).unwrap();
+    let stock = RetainedCloneGrant {
+        maximum_items: 1 << 20,
+        maximum_copy_bytes: 1 << 28,
+        maximum_capacity_bytes: 1 << 28,
+        maximum_release_bytes: 1 << 28,
+        maximum_depth: 128,
+    };
+    let quantum = RetainedCloneGrant {
+        maximum_items: 64,
+        maximum_copy_bytes: 1 << 19,
+        maximum_capacity_bytes: 1 << 20,
+        maximum_release_bytes: 2 << 20,
+        maximum_depth: 128,
+    };
+    type Receiver = <LayoutMutation as NativeReceive<(String, DslValue)>>::Receiver;
+    let receiver_bytes = std::mem::size_of::<Receiver>();
+    assert!(receiver_bytes < quantum.maximum_copy_bytes, "Layout native receiver is {receiver_bytes} bytes");
+    for case in fixture["cases"].as_array().unwrap() {
+        let operation = LayoutMutation::from_value(DslValue::from(&case["input"])).unwrap();
+        let bytes = encode_op(&operation).expect("encode Layout page Drawing operation");
+        assert_eq!(&bytes[..2], &[1, 59]);
+        let budget = ReceivingStock { stock, quantum, fuel: 1 << 20 };
+        assert_eq!(receive_to_completion::<LayoutMutation>(&bytes, (0, bytes.len()), budget).unwrap(), operation, "{}", case["name"]);
+    }
 }
 
 #[semio_framework_async_macros::async_test]

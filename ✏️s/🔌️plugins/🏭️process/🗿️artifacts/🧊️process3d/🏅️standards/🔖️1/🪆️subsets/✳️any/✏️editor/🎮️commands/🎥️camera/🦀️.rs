@@ -17,11 +17,28 @@ pub mod set_camera {
         pub position: [f64; 3],
         #[dsl(coord)]
         pub target: [f64; 3],
-        pub fov: f64,
+        pub fov: Option<f64>,
     }
 
-    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        Ok(Emit::config(vec![Process3dConfigMutation::SetCamera(Process3dConfigSetCamera{ position: payload.position, target: payload.target, fov: payload.fov })]))
+    impl SetCamera {
+        /// 🧿️ Reads the renderer's camera record with an optional field of view.
+        pub fn from_viewport(camera: &semio_framework_value::DslValue) -> Option<Self> {
+            let vector = |key: &str| {
+                let [x, y, z] = camera.get(key)?.as_array()? else { return None };
+                let point = [x.as_f64()?, y.as_f64()?, z.as_f64()?];
+                point.iter().all(|coordinate| coordinate.is_finite()).then_some(point)
+            };
+            let fov = match camera.get("fov") {
+                Some(value) => Some(value.as_f64().filter(|fov| *fov > 0.0 && *fov < 180.0)?),
+                None => None,
+            };
+            Some(Self { position: vector("position")?, target: vector("target")?, fov })
+        }
+    }
+
+    pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
+        let fov = payload.fov.unwrap_or(cfg.snapshot.camera_fov);
+        Ok(Emit::config(vec![Process3dConfigMutation::SetCamera(Process3dConfigSetCamera{ position: payload.position, target: payload.target, fov })]))
     }
 }
 //#endregion 🔖️SetCamera

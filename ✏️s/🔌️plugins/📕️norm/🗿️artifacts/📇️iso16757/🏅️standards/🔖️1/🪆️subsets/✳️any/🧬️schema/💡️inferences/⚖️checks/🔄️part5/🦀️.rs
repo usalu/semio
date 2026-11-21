@@ -1,7 +1,7 @@
 //! 🔄 ISO 16757-5 exchange process, part numbers, IFC/STEP, script limits.
 
 use semio_s_artifact_norm_iso16757_checks_common::{Section, ALL_FACETS, assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
-use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, Remedy, RemedyBound};
+use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, CheckStatus, ClauseId, Remedy, RemedyBound};
 use semio_s_artifact_norm_iso16757_model::part_5::{ExchangeProcess, PartNumberRule};
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_5::ScriptRuntime;
 use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_5 as helpers;
@@ -162,133 +162,38 @@ fn check_exchange_process(doc: &Iso16757Snapshot, report: &mut CheckReport) {
 }
 
 fn check_ifc_exchange(doc: &Iso16757Snapshot, report: &mut CheckReport) {
-    let ifc = helpers::build_ifc_catalogue(&doc.catalogue);
-    let issues = helpers::validate_exchange(&doc.catalogue, &ifc);
-    if issues.is_empty() {
-        report.push(pass(
-            "iso16757.5.6.1.ifcStructure",
-            "5",
-            "6.1",
-            subject("catalogue", "catalogue", "Catalogue", "Katalog"),
-            copy("IFC catalogue structure", "IFC-Katalogstruktur"),
-            copy(
-                format!("IFC export covers {} products under schema '{}'.", ifc.products.len(), ifc.schema),
-                format!("IFC-Export deckt {} Produkte unter Schema '{}' ab.", ifc.products.len(), ifc.schema),
-            ),
-        ));
-    } else {
-        for issue in &issues {
-            report.push(fail(
-                format!("iso16757.5.6.1.ifc.{}", issue.chars().filter(|c| c.is_alphanumeric()).take(24).collect::<String>()),
-                "5",
-                "6.1",
-                subject("catalogue", "catalogue", "Catalogue", "Katalog"),
-                copy("IFC catalogue structure", "IFC-Katalogstruktur"),
-                copy(
-                    format!("IFC exchange mapping issue: {issue}"),
-                    format!("IFC-Austauschabbildungsproblem: {issue}"),
-                ),
-                vec![Remedy {
-                    target: subject("catalogue", format!("catalogue.products[id={}].id", doc.catalogue.products.first().map(|p| p.id.as_str()).unwrap_or("product")), "Products", "Produkte"),
-                    current: q_dim(ifc.products.len() as f64),
-                    required: q_dim(doc.catalogue.products.len() as f64),
-                    bound: RemedyBound::OneOf,
-                    options: doc.catalogue.products.iter().map(|p| p.id.clone()).collect(),
-                    action: copy(
-                        "Ensure every catalogue product id is present as an IFC product entity with a resolvable globalId.",
-                        "Sicherstellen, dass jede Katalogprodukt-Id als IFC-Produktentität mit auflösbarer globalId vorliegt.",
-                    ),
-                    applicable: true,
-                }],
-            ));
+    let count = doc.catalogue.products.len();
+    let product_subject = || subject("catalogue", "catalogue.products", "Products", "Produkte");
+    let projection = CheckResult::assess(
+        "iso16757.ifc4.catalogueProjection",
+        "IFC4 ADD2 TC1",
+        ClauseId::new("IFC4 ADD2 TC1", "IfcProjectLibrary", "IfcRelDeclares"),
+        product_subject(),
+        copy("IFC4 type-library projection", "Projektion als IFC4-Typbibliothek"),
+    );
+    let result = match helpers::export_ifc_step(&doc.catalogue) {
+        Ok(_) => projection.informative(q_dim(count as f64)).explanation(copy(
+            format!("The IFC4 projection contains {count} catalogue product types with their identifiers, names and class memberships."),
+            format!("Die IFC4-Projektion enthält {count} Katalogprodukttypen mit Kennungen, Namen und Klassenzuordnungen."),
+        )),
+        Err(error) => {
+            let (en, de) = error.messages();
+            projection.status(CheckStatus::UnverifiedBasis).explanation(copy(
+                format!("The catalogue could not be represented as an IFC4 type library. {en}"),
+                format!("Der Katalog konnte nicht als IFC4-Typbibliothek dargestellt werden. {de}"),
+            ))
         }
-    }
-
-    let step = helpers::export_ifc_step(&ifc);
-    let mut entity_ids = std::collections::HashSet::new();
-    let mut refs_ok = true;
-    let mut missing_entities = Vec::new();
-    for line in step.lines() {
-        let line = line.trim();
-        if let Some(rest) = line.strip_prefix('#') {
-            if let Some((num, body)) = rest.split_once('=') {
-                entity_ids.insert(num.trim().to_string());
-                for token in body.split(|c: char| !c.is_ascii_digit() && c != '#') {
-                    if let Some(r) = token.strip_prefix('#') {
-                        if !r.is_empty() && !entity_ids.contains(r) && !body.contains(&format!("#{r}")) {
-                        }
-                    }
-                }
-            }
-        }
-    }
-    let mut unresolved = Vec::new();
-    for line in step.lines() {
-        let body = line.trim();
-        if !body.starts_with('#') {
-            continue;
-        }
-        for part in body.split('#').skip(1) {
-            let digits: String = part.chars().take_while(|c| c.is_ascii_digit()).collect();
-            if !digits.is_empty() && !entity_ids.contains(&digits) {
-                unresolved.push(digits);
-            }
-        }
-    }
-    for product in &doc.catalogue.products {
-        let needle = product.id.as_str();
-        if !step.contains(needle) && !ifc.products.iter().any(|p| p.global_id == product.id || p.name.contains(needle)) {
-            missing_entities.push(product.id.clone());
-            refs_ok = false;
-        }
-    }
-    let expected = doc.catalogue.products.len();
-    if expected == 0 {
-        report.push(na(
-            "iso16757.5.6.1.step",
-            "5",
-            "6.1",
-            subject("catalogue", "catalogue.products", "Products", "Produkte"),
-            copy("IFC STEP entity integrity", "IFC-STEP-Entitätsintegrität"),
-            copy("No products to export to STEP.", "Keine Produkte für STEP-Export."),
-        ));
-    } else if refs_ok && unresolved.is_empty() && missing_entities.is_empty() && !entity_ids.is_empty() {
-        report.push(pass(
-            "iso16757.5.6.1.step",
-            "5",
-            "6.1",
-            subject("catalogue", "catalogue.products", "Products", "Produkte"),
-            copy("IFC STEP entity integrity", "IFC-STEP-Entitätsintegrität"),
-            copy(
-                format!("STEP export declares {} entities with resolvable references covering all catalogue products.", entity_ids.len()),
-                format!("STEP-Export deklariert {} Entitäten mit auflösbaren Referenzen für alle Katalogprodukte.", entity_ids.len()),
-            ),
-        ));
-    } else {
-        report.push(fail(
-            "iso16757.5.6.1.step",
-            "5",
-            "6.1",
-            subject("catalogue", "catalogue.products", "Products", "Produkte"),
-            copy("IFC STEP entity integrity", "IFC-STEP-Entitätsintegrität"),
-            copy(
-                format!("STEP export failed structural checks (unresolved refs {}, missing products {:?}).", unresolved.len(), missing_entities),
-                format!("STEP-Export strukturell fehlerhaft (unaufgelöste Refs {}, fehlende Produkte {:?}).", unresolved.len(), missing_entities),
-            ),
-            vec![Remedy {
-                target: subject("catalogue", format!("catalogue.products[id={}].id", doc.catalogue.products.first().map(|p| p.id.as_str()).unwrap_or("product")), "Products", "Produkte"),
-                current: q_dim((expected - missing_entities.len()) as f64),
-                required: q_dim(expected as f64),
-                bound: RemedyBound::OneOf,
-                options: doc.catalogue.products.iter().map(|p| p.id.clone()).collect(),
-                action: copy(
-                    "Repair IFC/STEP export so every product entity exists and all #id references resolve.",
-                    "IFC/STEP-Export so reparieren, dass jede Produktentität existiert und alle #id-Referenzen auflösen.",
-                ),
-                applicable: true,
-            }],
-        ));
-    }
+    };
+    report.push(result.build());
+    report.push(assess(
+        "iso16757.5.6.1.ifcView", "5", "6.1", product_subject(),
+        copy("ISO 16757-5 catalogue view", "Katalogsicht nach ISO 16757-5"),
+        copy(
+            "Assessment of the ISO 16757-5 catalogue view requires the representation and exchange rules in §6.",
+            "Die Bewertung der Katalogsicht nach ISO 16757-5 setzt die Darstellungs- und Austauschregeln in Abschnitt 6 voraus.",
+        ),
+        CheckStatus::UnverifiedBasis, q_dim(0.0), q_dim(0.0), Vec::new(),
+    ));
 }
 
 fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {

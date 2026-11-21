@@ -1,6 +1,19 @@
-//! 🌉️ EN 1991-2, 1991-3 and 1991-4 catalogue entries E2.01 … E2.17, E3.01 … E3.07 and E4.01 … E4.08: traffic loads on bridges, crane actions and silo and tank loads.
+//! 🌉️ EN 1991-2, 1991-3 and 1991-4 catalogue entries for traffic loads on bridges, crane actions and silo and tank loads.
 
 use super::*;
+
+#[path = "🚆️.rs"]
+mod fatigue;
+#[path = "🚄️.rs"]
+mod hslm;
+#[path = "🏗️.rs"]
+mod crane_classification;
+#[path = "🌡️.rs"]
+mod silo_thermal;
+#[path = "🛢️.rs"]
+mod tank_actions;
+#[path = "💨️.rs"]
+mod rail_aerodynamics;
 
 fn e2_01(c: &Case) -> R {
     let w = c.pos("width")?;
@@ -173,7 +186,10 @@ fn e3_01(c: &Case) -> R {
 }
 
 fn e3_02(c: &Case) -> R {
-    let (qc, qh, nw) = (c.pos("q_c")?, c.n("q_h")?, c.pos("wheels")?);
+    let (qc, qh, nw) = (c.n("q_c")?, c.n("q_h")?, c.pos("wheels")?);
+    if qc < 0.0 || qh < 0.0 || nw.fract() != 0.0 {
+        return Err("Crane loads must be nonnegative and the number of wheels must be a whole number".into());
+    }
     let class = c.s("hoist_class")?;
     let phi2 = part_3::phi_2(class, c.o("v_h", 0.0)).ok_or_else(|| format!("unknown hoist class {class}"))?;
     let q = (c.o("phi_1", 1.1) * qc + phi2 * qh) / nw;
@@ -208,9 +224,17 @@ fn e3_05(c: &Case) -> R {
 }
 
 fn e3_07(c: &Case) -> R {
-    let (m, e, rpm) = (c.pos("mass")?, c.pos("eccentricity")?, c.pos("rpm")?);
-    let omega = rpm * 2.0 * std::f64::consts::PI / 60.0;
-    Ok(vec![Outcome::info("F_dyn", "Rotating machine force m e ω²", "Fliehkraft rotierender Maschinen m e ω²", QuantityKind::Force, m * e * omega * omega).steps(format!("ω = {omega:.3} rad/s: F = {:.3} kN.", m * e * omega * omega / 1000.0)).steps_de(format!("ω = {omega:.3} rad/s: F = {:.3} kN.", m * e * omega * omega / 1000.0)).basis(&["ndp.en1991.e3.cranes"])])
+    let (mass, eccentricity, rpm) = (c.pos("mass")?, c.n("eccentricity")?, c.pos("rpm")?);
+    if !eccentricity.is_finite() || eccentricity < 0.0 {
+        return Err("input eccentricity must not be negative".into());
+    }
+    let force = part_3::machine_dynamic_force_n(mass, eccentricity, rpm / 60.0);
+    if !force.is_finite() {
+        return Err("F_s must be finite".into());
+    }
+    Ok(vec![Outcome::info("F_dyn", "Rotor free force m e ω²", "Freie Rotorkraft m e ω²", QuantityKind::Force, force)
+        .steps(format!("Equation 3.1: F_s = {:.3} kN.", force / 1000.0))
+        .steps_de(format!("Gleichung 3.1: F_s = {:.3} kN.", force / 1000.0))])
 }
 
 fn silo_inputs(c: &Case) -> Result<(f64, f64, f64, f64, f64), String> {
@@ -310,16 +334,31 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry { id: "E2.15", standard: "EN 1991-2", clause: "6.3.3", en: "Rail load models SW/0 and SW/2", de: "Eisenbahn-Lastmodelle SW/0 und SW/2", inputs: &["model", "alpha"], eval: e2_15 },
     Entry { id: "E2.16", standard: "EN 1991-2", clause: "6.4", en: "Rail dynamic factors", de: "Dynamische Beiwerte Eisenbahn", inputs: &["l_phi"], eval: e2_16 },
     Entry { id: "E2.17", standard: "EN 1991-2", clause: "6.5", en: "Rail horizontal forces: centrifugal, traction and braking", de: "Horizontale Eisenbahnlasten: Fliehkraft, Anfahren und Bremsen", inputs: &["v_kmh", "radius", "l_f", "q_vk", "loaded_length"], eval: e2_17 },
+    Entry { id: "E2.18", standard: "EN 1991-2", clause: "6.6.1–6.6.2", en: "Train-induced pressure on vertical surfaces", de: "Zuginduzierter Druck auf vertikale Flächen", inputs: &["rail_aero_q", "rail_aero_end", "rail_aero_train", "rail_aero_small_panel"], eval: rail_aerodynamics::vertical },
+    Entry { id: "E2.18.1", standard: "EN 1991-2", clause: "6.6.3", en: "Train-induced pressure above the tracks", de: "Zuginduzierter Druck oberhalb der Gleise", inputs: &["rail_aero_q", "rail_aero_end", "rail_aero_train", "rail_aero_q_other", "rail_aero_other_train", "rail_aero_edge"], eval: rail_aerodynamics::crossing_surface },
+    Entry { id: "E2.18.2", standard: "EN 1991-2", clause: "6.6.4", en: "Train-induced pressure on adjacent horizontal surfaces", de: "Zuginduzierter Druck auf seitliche horizontale Flächen", inputs: &["rail_aero_q", "rail_aero_end", "rail_aero_height", "rail_aero_q_other", "rail_aero_other_height"], eval: rail_aerodynamics::adjacent_surface },
+    Entry { id: "E2.18.3", standard: "EN 1991-2", clause: "6.6.5", en: "Train-induced pressure on multi-surface structures", de: "Zuginduzierter Druck auf mehrflächige Bauwerke", inputs: &["rail_aero_q", "rail_aero_end", "rail_aero_train", "rail_aero_small_panel", "rail_aero_clearance_min", "rail_aero_clearance_max"], eval: rail_aerodynamics::multiple_surfaces },
+    Entry { id: "E2.18.4", standard: "EN 1991-2", clause: "6.6.6", en: "Train-induced pressure on short track enclosures", de: "Zuginduzierter Druck auf kurze Gleiseinhausungen", inputs: &["rail_aero_q", "rail_aero_enclosed_overhead", "rail_aero_end", "rail_aero_enclosed_length", "rail_aero_enclosed_tracks"], eval: rail_aerodynamics::enclosure },
+    Entry { id: "E2.21", standard: "EN 1991-2", clause: "6.9 / D.2", en: "Static fatigue check for steel railway bridges", de: "Statischer Ermüdungsnachweis für stählerne Eisenbahnbrücken", inputs: &["l_phi", "rail_fatigue_lambda", "rail_fatigue_gamma_f", "rail_fatigue_gamma_m", "rail_fatigue_stress", "rail_fatigue_strength"], eval: fatigue::steel_bridge },
+    Entry { id: "E2.21.1", standard: "EN 1991-2", clause: "D.1", en: "Real-train fatigue amplification", de: "Dynamische Erhöhung für reale Züge bei Ermüdung", inputs: &["l_phi", "rail_fatigue_speed"], eval: fatigue::real_train },
+    Entry { id: "E2.21.3", standard: "EN 1991-2", clause: "6.9 / D.3", en: "Railway fatigue traffic mixes", de: "Verkehrsmischungen für Eisenbahnermüdung", inputs: &["rail_fatigue_mix"], eval: fatigue::traffic_mix },
+    Entry { id: "E2.22", standard: "EN 1991-2", clause: "6.4.6.1.1 / Table 6.3", en: "HSLM-A universal train axle layout", de: "Achsfolge der HSLM-A-Universalzüge", inputs: &["rail_hslm_a_train"], eval: hslm::universal_train },
+    Entry { id: "E2.22.1", standard: "EN 1991-2", clause: "6.4.6.1.1 / Figure 6.14", en: "HSLM-B universal train axle layout", de: "Achsfolge der HSLM-B-Universalzüge", inputs: &["rail_hslm_b_span", "rail_hslm_b_count", "rail_hslm_b_spacing"], eval: hslm::uniform_train },
+    Entry { id: "E2.22.2", standard: "EN 1991-2", clause: "6.4.6.1.1 / Table 6.4", en: "Application of HSLM-A and HSLM-B", de: "Anwendung von HSLM-A und HSLM-B", inputs: &["span", "rail_hslm_structure"], eval: hslm::load_model_selection },
     Entry { id: "E3.01", standard: "EN 1991-3", clause: "2.5", en: "Dynamic factors of cranes", de: "Dynamische Beiwerte von Kranen", inputs: &["hoist_class", "v_h", "dm_over_m", "beta_3"], eval: e3_01 },
     Entry { id: "E3.02", standard: "EN 1991-3", clause: "2.7", en: "Vertical wheel load of load group 1", de: "Vertikale Radlast Lastgruppe 1", inputs: &["q_c", "q_h", "wheels", "phi_1", "hoist_class", "v_h"], eval: e3_02 },
     Entry { id: "E3.03", standard: "EN 1991-3", clause: "2.7", en: "Horizontal crane forces", de: "Horizontale Kranlasten", inputs: &["sum_q_r", "runway_beams", "xi", "m_drive", "a", "skew_rad", "phi_7", "v_1", "m_c", "s_b"], eval: e3_03 },
     Entry { id: "E3.04", standard: "EN 1991-3", clause: "2.10", en: "Test loads", de: "Prüflasten", inputs: &["q_h"], eval: e3_04 },
     Entry { id: "E3.05", standard: "EN 1991-3", clause: "2.12", en: "Fatigue damage-equivalent load", de: "Schädigungsäquivalente Last", inputs: &["lambda", "q_max"], eval: e3_05 },
-    Entry { id: "E3.07", standard: "EN 1991-3", clause: "5", en: "Dynamic loads of machinery", de: "Dynamische Lasten von Maschinen", inputs: &["mass", "eccentricity", "rpm"], eval: e3_07 },
+    Entry { id: "E3.06", standard: "EN 1991-3", clause: "Annex B / Table B.1", en: "Crane fatigue and hoisting classification", de: "Ermüdungs- und Hubklassen für Krane", inputs: &["crane_duty"], eval: crane_classification::classify },
+    Entry { id: "E3.07", standard: "EN 1991-3", clause: "3.5(3)", en: "Dynamic loads of machinery", de: "Dynamische Lasten von Maschinen", inputs: &["mass", "eccentricity", "rpm"], eval: e3_07 },
     Entry { id: "E4.01", standard: "EN 1991-4", clause: "2.2", en: "Action assessment class and slenderness", de: "Auswirkungsklasse und Schlankheit", inputs: &["capacity_t", "hc", "dc", "gamma"], eval: e4_01 },
     Entry { id: "E4.02", standard: "EN 1991-4", clause: "E", en: "Bulk solid parameters", de: "Schüttgutkennwerte", inputs: &["phi"], eval: e4_02 },
     Entry { id: "E4.03", standard: "EN 1991-4", clause: "5.2", en: "Janssen filling loads", de: "Befüllungslasten nach Janssen", inputs: &["gamma", "phi", "mu", "k", "dc", "a_over_u", "z"], eval: e4_03 },
     Entry { id: "E4.04", standard: "EN 1991-4", clause: "5.3", en: "Discharge and patch loads", de: "Entleerungs- und Patchlasten", inputs: &["gamma", "phi", "mu", "k", "dc", "a_over_u", "z", "c_h", "c_w"], eval: e4_04 },
     Entry { id: "E4.05", standard: "EN 1991-4", clause: "5.2.4", en: "Patch load", de: "Patchlast", inputs: &["gamma", "phi", "mu", "k", "dc", "a_over_u", "z"], eval: e4_05 },
+    Entry { id: "E4.06", standard: "EN 1991-4", clause: "5.6.2 / C.10", en: "Circular silo wall cooling pressure", de: "Wanddruck durch Abkühlung eines Rundsilos", inputs: &["dc", "silo_wall_thickness", "silo_wall_expansion", "silo_wall_modulus", "silo_delta_cooling", "silo_solid_poisson", "silo_modulus_source", "silo_unloading_modulus", "silo_solid_weight", "silo_base_filling_stress"], eval: silo_thermal::wall_cooling },
     Entry { id: "E4.08", standard: "EN 1991-4", clause: "7", en: "Hydrostatic tank pressure", de: "Hydrostatischer Tankdruck", inputs: &["gamma", "z"], eval: e4_08 },
+    Entry { id: "E4.09", standard: "EN 1991-4", clause: "B.2.9", en: "Circular tank wind pressure", de: "Winddruck am kreiszylindrischen Tank", inputs: &["tank_wind_enclosure", "tank_wind_qe", "tank_wind_qi", "tank_wind_cpe"], eval: tank_actions::wind },
+    Entry { id: "E4.09.1", standard: "EN 1991-4", clause: "B.2.2", en: "Operating and test tank pressure", de: "Tankdruck in Betrieb und Prüfung", inputs: &["tank_pressure_situation", "tank_pressure_min", "tank_pressure_max"], eval: tank_actions::specified_pressure },
 ];

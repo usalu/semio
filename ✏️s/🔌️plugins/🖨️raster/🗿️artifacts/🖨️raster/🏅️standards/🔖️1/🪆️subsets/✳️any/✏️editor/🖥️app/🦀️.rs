@@ -3,6 +3,7 @@
 use super::*;
 #[path="🌱️ephemeral/🦀️.rs"]
 pub mod original_ephemeral;
+use pack::snapshot::ArtifactPack;
 use semio_plugin::ArtifactEditor;
 use semio_s_artifact_raster_raster_editor_commands::RasterCommand;
 use semio_s_artifact_raster_raster_editor_panels::panels;
@@ -58,7 +59,7 @@ impl RasterCommandProofs {
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
-            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "setBrushColor", "setBrushHardness", "setPaintTarget", "setMaskValue", "setFillTolerance", "setFilterKind", "setFilterAmount", "setImageGrid"
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "setBrushColor", "setBrushHardness", "setPaintTarget", "setMaskValue", "setFillTolerance", "setFilterKind", "setFilterAmount", "setImageGrid", "importPng"
         ]
     }
 
@@ -192,12 +193,13 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     fn bounded_first_step_tool_proofs()->Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
-        RasterCommandProofs::bounded_first_step_tool_proofs().into_iter().chain(RasterPixelEditProofs::bounded_first_step_tool_proofs()).chain(RasterDownloadProofs::bounded_first_step_tool_proofs()).chain(RasterSelectionProofs::bounded_first_step_tool_proofs()).chain(RasterMaskSelectionProofs::bounded_first_step_tool_proofs()).chain(RasterLayerBakeProofs::bounded_first_step_tool_proofs()).collect()
+        RasterCommandProofs::bounded_first_step_tool_proofs().into_iter().chain(RasterPixelEditProofs::bounded_first_step_tool_proofs()).chain(RasterDownloadProofs::bounded_first_step_tool_proofs()).chain(RasterSelectionProofs::bounded_first_step_tool_proofs()).chain(RasterMaskSelectionProofs::bounded_first_step_tool_proofs()).chain(RasterLayerBakeProofs::bounded_first_step_tool_proofs()).chain(file_import::proofs()).collect()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller_id = registry.controller_id().to_string();
         registry.register(RasterRetainedCommandJobFactory::new(&controller_id))?;
+        registry.register(file_import::RasterPngFileJobFactory::new(&controller_id))?;
         registry.register(RasterPixelEditJobFactory::new(&controller_id))?;
         registry.register(RasterSelectPixelsJobFactory::new(&controller_id))?;
         registry.register(RasterMaskSelectionJobFactory::new(&controller_id))?;
@@ -206,15 +208,16 @@ impl ArtifactEditor for RasterPlayApp {
         registry.register(media_export::RasterDownloadJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
-        if original.tool_id=="exportPng" {return media_export::build_download_job(request, output, cx);}
+        if original.tool_id=="exportPng" {return media_export::build_download_job(request, output, construction, cx);}
+        if original.tool_id == "importPngFile" { return file_import::build(request, output, cx); }
         if original.tool_id=="selectPixels"{
-            if !matches!(original.command,RasterCommand::SelectPixels(_)){return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"selection command does not match its registered tool").into());}
+            if !matches!(&*original.command,RasterCommand::SelectPixels(_)){return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"selection command does not match its registered tool").into());}
             return semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_SELECT_PIXELS_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|semio_s_artifact_raster_raster_editor_commands::commands::select_pixels::SelectPixelsWork::default());
         }
         if original.tool_id=="maskFromSelection"{
-            if !matches!(original.command,RasterCommand::MaskFromSelection(_)){return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"mask command does not match its registered tool").into());}
+            if !matches!(&*original.command,RasterCommand::MaskFromSelection(_)){return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated,"mask command does not match its registered tool").into());}
             return semio_plugin::retained_command::producer::admit_retained_tool_producer(request,output,cx,RasterCommand::command_id,RASTER_RETAINED_RAW_BYTES,RASTER_RETAINED_WORK_ITEMS,false,|_|mask_from_selection::MaskFromSelectionWork::default());
         }
         if RASTER_PIXEL_EDIT_TOOL_IDS.contains(&original.tool_id.as_str()){
@@ -373,12 +376,12 @@ impl ArtifactEditor for RasterPlayApp {
     /// through `dispatch_import_media` → `build_artifact_reserved_media_job`, which fails closed
     /// unless this builder hands back a concrete resumable importer — see [`RasterImportJob`].
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,output:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if output.is_some(){return semio_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,construction,cx)}
+        if output.is_some(){return semio_plugin::app::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,construction,cx)}
         let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("Raster original reserved request is absent"))?;
         if original.tool_id.as_str()!=RASTER_IMPORT_TOOL_ID{return Ok(false)}
         if !original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::invariant("Raster reserved import requires decoded media").into())}
         if !matches!(original.input.as_ref(),Some(ArtifactReservedToolInput::Media{..})){return Err(semio_framework_value::ValueError::invariant("Raster reserved import media is absent").into())}
-        semio_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,construction,cx)
+        semio_plugin::app::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,construction,cx)
     }
 
     fn command_id(command: &RasterCommand) -> &'static str {
@@ -388,6 +391,9 @@ impl ArtifactEditor for RasterPlayApp {
     /// 🎯️ See `args_bridge` — without this override the trait default refuses every shell action.
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
+        if action == "importPngFile" {
+            return crate::commands::import_png::file::ImportPngFile::receive(args).map(RasterCommand::ImportPngFile);
+        }
         if action=="selectPixels"{
             use semio_s_artifact_raster_raster_editor_commands::commands::select_pixels::SelectPixels;
             return SelectPixels::from_original_action_value(args).map(RasterCommand::SelectPixels).map_err(semio_framework::FaultFrom::into_fault);

@@ -73,6 +73,9 @@ pub struct ImageProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub alt: Option<Label>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub source_body_bytes: Option<u32>,
 }
 
 /// 🧩️ Props for `Component::Extension` — the old `ExternalSlot`. `params_json: String` becomes [Design notes](README.md#source-notes-85).

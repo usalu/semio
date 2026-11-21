@@ -16,6 +16,7 @@ use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_decl_app::tool_contract::{ArtifactToolFactoryRegistry, TypedOperationResultLane};
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_instance_app::VcsArtifactApp;
+pub use semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
 pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture, typing_run, TypingRun};

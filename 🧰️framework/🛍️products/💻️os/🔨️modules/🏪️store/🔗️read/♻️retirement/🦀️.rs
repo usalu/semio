@@ -49,7 +49,7 @@ impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
             if let Some(mut read)=self.read.take(){if let Some(mut lease)=read.lease.take(){lease.return_now();*self.registry=Some(crate::SnapshotReadRegistryAliasRetirement::new(lease.registry));}}
             return moved(work);
         }
-        if self.active_returned.is_some(){return artifact_retirement_box_close_step(&mut self.active_returned,body,&mut effect.nested(child));}
+        if self.active_returned.is_some(){return artifact_retirement_box_close_step(&mut self.active_returned,body,&mut effect.nested(child)).map(|step|RetainedCloneStep::Progress(step.progress()));}
         if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){
             let turn=registry.try_admit_one_returned::<T,_>(&mut effect.nested(child),|root,effect|{let turn=admit_arc_lease(root,effect);RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}});
             let result=match turn.result{Ok((owner,receipt))=>{*self.active_returned=owner;if !receipt.fits(child){Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained read constructor exceeded its original grant").into())}else{Ok(RetainedCloneStep::Progress(receipt))}},Err(SnapshotReadReturnedRefusal::Lease(SnapshotReadLeaseRefusal::Busy))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(reason)=>Err(reason.into_failure())};

@@ -10,5 +10,5 @@ pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let decoded = semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::decode_bmp(bytes)?;
     let image = semio_image_from_format(&decoded, BMP_DIALECT)?;
-    raster_document_from_semio_image(&image, "bmp-import", "Imported bmp")
+    raster_document_from_semio_image(image, "bmp-import", "Imported bmp")
 }

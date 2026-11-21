@@ -25,7 +25,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let Some(interaction_peers) = self.roster.peer_presence.as_ref() else { return HashMap::new(); };
         let interaction_peers = std::sync::Arc::clone(interaction_peers);
         let draft_references = self.time_travel.draft_references();
-        let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
+        let interaction_hover_owners = self.interaction.interaction_hover_owners.clone();
+        let interaction = InteractionView::new(&interaction_state, &interaction_hover, interaction_peers.as_ref(), &draft_references).with_hover_owners(&interaction_hover_owners);
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
         let RenderCtx { stores, history: command_history, child_composition, tool_runs, time_travel, tool_machines, .. } = self;
@@ -43,7 +44,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         .with_instance(self.tools.instance_operation_owner.clone());
         let mut engagements = HashMap::new();
         for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
-            let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
+            let Some(window_view_state) = view_state.scope_window_instance(&window.id) else { continue };
             let window_config = match stores.window_config_store.capture(Some(&window_view_state)).await {
                 Ok(snapshot) => snapshot,
                 Err(_) => continue,
@@ -72,7 +73,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let Some(interaction_peers) = self.roster.peer_presence.as_ref() else { return HashMap::new(); };
         let interaction_peers = std::sync::Arc::clone(interaction_peers);
         let draft_references = self.time_travel.draft_references();
-        let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
+        let interaction_hover_owners = self.interaction.interaction_hover_owners.clone();
+        let interaction = InteractionView::new(&interaction_state, &interaction_hover, interaction_peers.as_ref(), &draft_references).with_hover_owners(&interaction_hover_owners);
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
         let RenderCtx { stores, history: command_history, child_composition, tool_runs, time_travel, tool_machines, .. } = self;
@@ -90,7 +92,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         .with_instance(self.tools.instance_operation_owner.clone());
         let mut measures = HashMap::new();
         for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
-            let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
+            let Some(window_view_state) = view_state.scope_window_instance(&window.id) else { continue };
             let window_config = match stores.window_config_store.capture(Some(&window_view_state)).await {
                 Ok(snapshot) => snapshot,
                 Err(_) => continue,
@@ -133,11 +135,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
 
     /// 🔒️ Polls the retained operation owner and live run against the committed document snapshot.
     pub async fn pending_effects(&mut self,view:Option<&ViewModel>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<Effect>>,semio_framework_job::OriginalTurnFailure>{
-        if cx.should_yield(){return Ok(None)}
+        if self.ingest.document_blocks_pending_effects() || cx.should_yield() { return Ok(None); }
         self.refresh_cache().await?;
         let render_operation=self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let Some(grant)=semio_plugin_decl_views::MountedSnapshotReadPreparation::grant(self.mounted_policy.preparation,cx)else{return Ok(None)};
-        let snapshot_read={let(_,snapshot,_,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;let preparation=A::mounted_job_prepare_snapshot_read(render_operation,snapshot.as_ref(),&self.stores.window_config_store,view,grant);if preparation.record(grant,cx)?{Some(self.stores.store.snapshot_read().map_err(|error|error.into_fault())?)}else{None}};
+        let (_, snapshot, _, _) = self.history.cache.as_ref().ok_or_else(|| plugin_sdk_fault("pending poll cache unavailable"))?;
+        let preparation = A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref(), &self.stores.window_config_store, view, grant);
+        let ready = preparation.record(grant, cx)?;
+        if !ready && preparation.progress != Default::default() { return Ok(None); }
+        let snapshot_read = if ready { Some(self.stores.store.snapshot_read().map_err(|error| error.into_fault())?) } else { None };
         let effects={
             let(_,snapshot,config,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;
             let doc=semio_plugin_decl_views::ArtifactPendingView::new(snapshot.as_ref(),&self.child_composition.child_content_root,render_operation,&self.stores.store.envelope().id,snapshot_read,self.tool_runs.poll_view_for(view.and_then(|view|view.window_id.as_deref())),self.tool_machines.provisional_generation(),&self.tools.instance_operation_owner);
@@ -157,7 +163,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let Some(interaction_peers) = self.roster.peer_presence.as_ref() else { return Vec::new(); };
         let interaction_peers = std::sync::Arc::clone(interaction_peers);
         let draft_references = self.time_travel.draft_references();
-        let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
+        let interaction_hover_owners = self.interaction.interaction_hover_owners.clone();
+        let interaction = InteractionView::new(&interaction_state, &interaction_hover, interaction_peers.as_ref(), &draft_references).with_hover_owners(&interaction_hover_owners);
         let window_config = match self.stores.window_config_store.capture(Some(view_state)).await {
             Ok(snapshot) => snapshot,
             Err(_) => return Vec::new(),

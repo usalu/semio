@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-root",
+  "semanticKind": "set-root",
+  "displayName": "Set Root",
+  "emoji": "🎯️",
+  "aggregateVariant": "SetRoot",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-root",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": ["applied", "no-op"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+}

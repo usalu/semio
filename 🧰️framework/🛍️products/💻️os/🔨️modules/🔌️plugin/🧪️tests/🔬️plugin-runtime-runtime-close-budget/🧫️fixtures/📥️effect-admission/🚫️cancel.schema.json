@@ -1,0 +1,14 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["job", "occupant", "cancelled"],
+    "properties": {
+      "job": { "type": "integer", "minimum": 1 },
+      "occupant": { "type": ["integer", "null"], "minimum": 1 },
+      "cancelled": { "type": "boolean" }
+    }
+  }
+}

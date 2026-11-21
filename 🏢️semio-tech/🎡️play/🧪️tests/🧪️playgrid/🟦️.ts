@@ -37,7 +37,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const landing = readFileSync(new URL("../../🏠️play-landing.tsx", import.meta.url), "utf8");
       const card = readFileSync(new URL("../../⚛️play-card.tsx", import.meta.url), "utf8");
       expect(landing).not.toMatch(/justify-center overflow-x-hidden|overflow-y-auto px-single|pb-double|items-center"/);
-      expect(landing).toMatch(/paddingTop: "var\(--navbar-band-height\)"/);
+      expect(landing).toMatch(/paddingBlockStart: "var\(--navbar-band-height\)"/);
+      expect(landing).toMatch(/scrollPaddingBlockStart: "var\(--navbar-band-height\)"/);
       expect(landing).toMatch(/insets=\{PLAY_INSETS\}/);
       expect(landing).toMatch(/PLAY_INSETS = \{ top: "var\(--navbar-band-height\)" \}/);
       expect(card).not.toMatch(/max-w-/);

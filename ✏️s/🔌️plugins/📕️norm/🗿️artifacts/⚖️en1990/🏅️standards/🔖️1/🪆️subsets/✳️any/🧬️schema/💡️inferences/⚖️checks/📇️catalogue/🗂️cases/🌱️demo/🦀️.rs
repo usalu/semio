@@ -17,7 +17,7 @@ const DEMOS: &[Demo] = &[
     Demo { entry: "E90.05", numbers: &[("dsl", 2.0), ("il", 3.0), ("rc", 3.0)], texts: &[], vectors: &[] },
     Demo { entry: "E90.06", numbers: &[], texts: &[("situations", "persistent,accidental,seismic,fatigue")], vectors: &[] },
     Demo { entry: "E90.07", numbers: &[], texts: &[("spatial", "free"), ("variation", "variable")], vectors: &[] },
-    Demo { entry: "E90.08", numbers: &[("g_mean", 100.0), ("q_cov", 0.3), ("q_mean", 2.0), ("v_g", 0.1)], texts: &[], vectors: &[] },
+    Demo { entry: "E90.08", numbers: &[("g_mean", 100.0), ("q_cov", 0.3), ("q_mean", 2.0), ("v_g", 0.1)], texts: &[("g_value_basis", "normal-bounds"), ("q_value_basis", "annual-gumbel")], vectors: &[] },
     Demo { entry: "E90.09", numbers: &[], texts: &[("category", "B")], vectors: &[] },
     Demo { entry: "E90.10", numbers: &[("e_d", 250.0), ("eta", 0.9), ("x_k", 355.0)], texts: &[("material", "steel")], vectors: &[] },
     Demo { entry: "E90.11", numbers: &[("a_nom", 300.0), ("delta_a", -5.0)], texts: &[], vectors: &[] },

@@ -173,3 +173,44 @@ What the views show:
 - **Spigots at 1:200.** They are 90 mm in 2D and 3D (printability), not the real 98 mm.
 - **Mass.** 24 kg is above the 14 to 15 kg of the plastic references; it was kept because no cited steel-cased reference contradicts it.
 - **Test suites.** The repo test suites were not run; only the checks of the brief.
+
+## Round 5 handcraft
+
+Process (round 5, 2026-11-21): rendered and opened with the Read tool, before and after: `r3-sheet` body, structure and `--list thermal --cut` at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50 and one clip frame, the `r3-2d` drawings of every drawn scale (1:500 has no drawing: its representation is unavailable, the 3D 1:500 is a digital scale). Coarse sheets were opened as 2 x 2 contact sheets (`r5-grid.ts`, half size). Measurements with `r5-e01-measure.ts` (world extents per solid in the default pose). Root edits through `r5-e01-roots.py` (candidate validated with `r3-validate.ts --file --volumes` before writing), volumes through the asset's `r5-<slug>-model.py` (which re-uses the hand-stated round-3 lists it keeps and states every new solid by hand), splice with `volumes-insert.py`. The round-3 reference table above stays the reference; the table below measures the model against it.
+
+### Model against reference (Vent-Axia Kinetic 550 x 550 x 285; EnviroVent energiSava 260 560 x 635 x 260; DN100 / 125 spigots)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+|---|---|---|---|
+| Casing width x height | 550 to 560 x 550 to 635 mm | 600 x 600 mm (asset class estimate kept in round 3) | +7 % on the width of the references, inside the class height |
+| Depth incl. wall rail | 260 to 285 mm + rail | 285 mm + 15 mm rail = 300 mm | inside the class |
+| Overall height with spigots | 0.665 m (`dimensions`) | 0.662 m | -0.5 % |
+| Spigots | DN100 (98 mm OD) to 125 mm | 98 mm, 0.7 mm wall, 114 mm seals | 0 % against DN100 |
+| Supply impeller | about 190 mm (R3G190 class) | 190 mm shroud, 124 mm eye | 0 % |
+| 1:100 / 1:200 / 1:500 overall | 0.60 x 0.665 x 0.30 m | 0.60 x 0.662 x 0.302 / 0.302 / 0.301 m | within one feature |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- (unchanged, re-read: wrapper with bends, rounded cover, bezel and window, light, grip, spigots with seals, rail, hook and rest; steel and EPP shells, plate pack, extract scroll, filters; wrapper, tray, tubes, collars, impeller on its shaft) |
+| 1:100 | A- / A- / A- | A- / A- / A- |
+| 1:200 | A- / B+ (extract fan a 144 mm cube beside round parts) / A- | A- / A- / A- |
+| 1:500 | B (inherited: one generic decision sentence, 2 mm window and 0.7 mm hollow spigots copied from 1:200) / B / B+ | A- / A- / A- |
+| Poses off, normal, boost, clip boost-spin t 2 s | A- | A- |
+| 2D 1:50 / 1:100 / 1:200 | A- | A- |
+
+Catalog before round 5: INVALID (`PRINT range-end-gap` of the 1:200 spigots, 0.041 mm at 1:350).
+
+### Changes
+
+- Root: `representations.200.validRange.maxDenominator` 350 -> 210: the four 90 mm spigots stand 60 mm apart; with the pen the gap is 0.15 mm on paper only up to 1:214 (the spigots cannot be thinner without losing the DN100 reading).
+- 1:200 thermal: the extract fan is its 144 mm scroll drum as at 1:100.
+- 1:500 authored anew (`r5-mvhr-unit-model.py`): crisp casing block, flush window, impeller disc, the four spigots as solid 90 mm drums; thermal casing, window face, impeller, closed duct drums, plate pack, extract drum, filter slab, thin outlet patches on the spigot tops; structure wrapper ring, back plate, spigot tubes on collars, impeller shaft, hook, rest, mass. Three bilingual decisions.
+- Final: `r3-validate.ts --volumes` VALID, `volumes-check.ts --product` PASS.
+
+### Remaining issues
+
+- The inspection window is the asset's didactic feature; kept.
+- Casing 600 mm square is about 7 % wider than the cited 550 to 560 mm units (asset class estimate, not changed without a cited 600 mm reference).
+- At 1:100 and 1:200 the thermal cut shows hatch noise on the side faces where the casing and cover references meet in one plane (render artefact of coplanar faces); the casing region is grey in merged-layer scales (tool request of curtain-wall-bay applies).

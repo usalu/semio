@@ -1,0 +1,11 @@
+# Native Interactive GIS2D Audit
+
+2026-11-21; source inspection only. No native application or test was run.
+
+The existing interactive entry is `SEMIO_RUNTIME_DIAGNOSTICS=1 repo run @semio-tech/framework-os-dev:run-gis2d-native-prototype --lang=en`. `🪟️winit-app/🚀️native-winit-app/🦀️.rs` creates the 1280×800 native window, attaches the accessibility adapter, displays it, captures a GPU surface, then asynchronously boots the runtime. With diagnostics enabled it emits `[TRACE] native renderer boot ready` to stderr after runtime and presenter construction. The window is shown before that trace, and neither event proves a GIS map or tiles were presented. Observe the map in the real window, and exercise zoom and pan there; a screenshot before and after is direct pixel evidence, subject to the host's screen-capture permissions. No existing GIS-specific native screenshot, synthetic gesture, or end-to-end frame acceptance driver was found in the inspected renderer and GIS paths.
+
+The native accessibility bridge (`🎯️targets/🧊️wgpu/♿️native-accessibility/🦀️.rs`) projects the latest presented publication to NSAccessibility and maps focus, click, expand/collapse and set-value actions back to shell dispatch. It is attached before showing the window. This makes platform accessibility inspection potentially useful once launched, subject to local permissions and actual published nodes; it does not by itself prove map pixels, pointer pan, or zoom. No ready GIS-specific macOS accessibility client was found.
+
+`SEMIO_RUNTIME_DIAGNOSTICS=1` arms runtime timing collection (`⏱️frame-latency/🦀️.rs`) and diagnostic trace logging. Timing data is retained in an in-process registry with `snapshot()`; source inspection did not establish an exposed native RPC or command that exports it. The boot trace is readiness evidence for runtime construction, not frame completion or a performance measurement. The headless `smoke-gis2d-native-prototype` uses no GPU/window and is separate.
+
+The hub collaboration acceptance harness captures browser screenshots and launches a native ignored law for block2d with a hub, sign-in and staged native modules. It is not an existing interactive native GIS2D GPU gesture driver and would require different preconditions. Browser Playwright GIS device probes similarly do not test the native window.

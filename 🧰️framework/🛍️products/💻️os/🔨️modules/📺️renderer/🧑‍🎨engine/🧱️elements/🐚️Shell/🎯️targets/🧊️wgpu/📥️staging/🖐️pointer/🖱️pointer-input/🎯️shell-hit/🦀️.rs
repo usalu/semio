@@ -126,7 +126,7 @@ impl<'ctx> PointerCtx<'ctx> {
             id if id.starts_with("shell.world3d.cancel::") => {
                 let host_id = id.trim_start_matches("shell.world3d.cancel::").to_string();
                 let action = world3d_cancel_affordance(self.surfaces.world3d_status.get(&host_id).map(String::as_str));
-                let owner = self.surfaces.world3d_states.get(&host_id).map(|world| (world.controller_id.clone(), world.surface_id.clone()));
+                let owner = self.surfaces.world3d_states.get(&host_id).map(|world| (world.session.controller_id.clone(), world.session.surface_id.clone()));
                 if let (true, Some((controller_id, surface_id))) = (action.cancellable, owner) {
                     debug_log(&format!("[TRACE] shell world3d cancel {}", serde_json::json!({ "host": host_id, "surface": surface_id, "action": action.cancel_action })));
                     let mut args = action.cancel_args;

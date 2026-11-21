@@ -92,8 +92,6 @@ interface JackContentRead {
 interface JackOwnedContent {
   read: JackContentRead!
   genesisPack: JackBytes!
-  retirementBirthBytes: Int
-  retirement: JackOwnedRetirement!
 }
 
 interface JackComposition {

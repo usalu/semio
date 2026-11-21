@@ -1,7 +1,8 @@
 //! 🎯️ Stable references to evaluated mesh instances and their editable components.
 #![allow(clippy::result_large_err)]
 
-use std::collections::BTreeSet;
+use std::{borrow::Cow, collections::BTreeSet};
+use semio_s_artifact_procedural_3d_model::{graph_port_channel, parse_graph_instance_id};
 
 pub const DOMAIN: &str = "geometry";
 
@@ -17,7 +18,7 @@ pub struct AnalyticComponent<'a> {
 pub struct ComponentTarget<'a> {
     pub instance: &'a str,
     pub widget: &'a str,
-    pub channel: &'a str,
+    pub channel_code: &'a str,
     pub index: usize,
     pub granularity: &'a str,
     pub component: u32,
@@ -35,9 +36,15 @@ impl<'a> ComponentTarget<'a> {
         self.analytic.as_ref().map_or_else(|| id.clone(), |source| format!("{id}~{}~{}~{}", source.handle, source.label, source.revision))
     }
 
+    /// 🔤️ The author's output channel name.
+    pub fn channel(&self) -> Cow<'a, str> { graph_port_channel(self.channel_code) }
+
     pub fn parse(id: &'a str) -> Option<Self> {
-        let mut parts = id.split('~');
-        let id = parts.next()?;
+        let (prefix, suffix) = id.rsplit_once('.')?;
+        let (instance, granularity) = prefix.rsplit_once('.')?;
+        if !matches!(granularity, "vertex" | "edge" | "face") { return None; }
+        let mut parts = suffix.split('~');
+        let component = unsigned(parts.next()?)?;
         let analytic = if let Some(handle) = parts.next() {
             let label = parts.next()?;
             let revision = parts.next()?;
@@ -45,13 +52,11 @@ impl<'a> ComponentTarget<'a> {
             if parts.next().is_some() || !hex(handle) || !hex(revision) || label.is_empty() || label.starts_with('0') || !label.bytes().all(|byte| byte.is_ascii_digit()) || label.parse::<u64>().is_err() { return None; }
             Some(AnalyticComponent { handle, label, revision })
         } else { None };
-        let (prefix, component) = id.rsplit_once('.')?;
-        let (instance, granularity) = prefix.rsplit_once('.')?;
-        if !matches!(granularity, "vertex" | "edge" | "face") { return None; }
-        let (port, index) = instance.rsplit_once('#')?;
-        let (widget, channel) = port.split_once('@')?;
-        if widget.is_empty() || channel.is_empty() || widget.contains('#') || channel.contains(['@', '#']) { return None; }
-        Some(Self { instance, widget, channel, index: unsigned(index)? as usize, granularity, component: unsigned(component)?, analytic })
+        let address = parse_graph_instance_id(instance)?;
+        if address.port.input || address.index > u32::MAX as usize { return None; }
+        let widget = address.port.widget;
+        let (channel_code, _) = instance[widget.len() + 1..].rsplit_once('#')?;
+        Some(Self { instance, widget, channel_code, index: address.index, granularity, component, analytic })
     }
 }
 
@@ -141,9 +146,10 @@ pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow:
     if target.analytic.is_none() && target.index != 0 { return Err("Extract one mesh from the list before editing its components".into()); }
     semio_s_artifact_procedural_3d_model::with_host_session(snapshot, session, grant, |host, session| {
         let pending = host.evaluate_cold_step(semio_os_flow::neural::EvalStepBudget::PROBE,&|_|true).map_err(|error| error.to_string())?.into_iter().collect::<BTreeSet<_>>();
+        let authored_channel = target.channel();
         if let Some(source) = &target.analytic {
             if pending.contains(target.widget) { return Err("The selected geometry is still being evaluated".into()); }
-            let value = host.output_channels(target.widget).and_then(|output| output.get(target.channel)).and_then(|value| value.as_dictionary()).ok_or("The selected geometry no longer exists")?;
+            let value = host.output_channels(target.widget).and_then(|output| output.get(authored_channel.as_ref())).and_then(|value| value.as_dictionary()).ok_or("The selected geometry no longer exists")?;
             let value = if value.schema() == Some("list") { value.get(&target.index.to_string()).and_then(|value| value.as_dictionary()).ok_or("The selected geometry list item no longer exists")? } else if target.index == 0 { value } else { return Err("The selected geometry list item no longer exists".into()); };
             let handle = value.get("handle").and_then(|value| value.as_atom()).and_then(|value| value.as_str()).ok_or("The selected geometry has no analytic source")?;
             if handle != source.handle { return Err("The selected geometry has changed; select its current components".into()); }
@@ -153,7 +159,7 @@ pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow:
             return Ok(());
         }
         let mut widget = target.widget;
-        let mut channel = target.channel;
+        let mut channel = authored_channel.as_ref();
         let mut visited = BTreeSet::new();
         while visited.insert(widget) {
             if !pending.contains(widget) {
@@ -178,6 +184,7 @@ pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow:
 
 fn projected_target<'a>(mut target: ComponentTarget<'a>, instances: &semio_framework_pack_json::Value, meshes: &semio_framework_pack_json::Value) -> Option<ComponentTarget<'a>> {
     let instance = instances.as_array()?.iter().find(|item| item.get("id").and_then(|id| id.as_str()) == Some(target.instance))?;
+    if instance.get("componentPickable").and_then(semio_framework_pack_json::Value::as_bool) == Some(false) { return None; }
     if let Some(source) = &target.analytic {
         let current = instance.get("componentSource")?;
         if current.get("handle")?.as_str()? != source.handle || current.get("revision")?.as_str()? != source.revision { return None; }
@@ -224,6 +231,7 @@ impl ComponentSelection {
         value.insert("gumballSelectionIds", semio_framework_pack_json::Value::Array(selected.iter().map(|target| target.interaction_id()).collect::<BTreeSet<_>>().into_iter().map(semio_framework_pack_json::Value::String).collect()));
         let mut targets = semio_framework_pack_json::Object::new();
         for mode in ["mesh", "vertex", "edge", "face"] { targets.insert(mode, semio_framework_pack_json::Value::Bool(mode == self.granularity)); }
+        targets.insert("exclusive", semio_framework_pack_json::Value::Bool(true));
         value.insert("targets", semio_framework_pack_json::Value::Object(targets));
         if let Some(target) = hovered {
             let mut hover = semio_framework_pack_json::Object::new();

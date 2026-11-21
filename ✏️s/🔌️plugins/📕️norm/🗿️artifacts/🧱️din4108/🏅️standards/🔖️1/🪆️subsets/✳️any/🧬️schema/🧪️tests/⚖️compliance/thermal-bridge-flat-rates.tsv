@@ -1,0 +1,12 @@
+declared_categories	equivalence_confirmed	delta_u_w_m2_k
+categoryA	true	0.05
+categoryA,categoryA	true	0.05
+categoryB	true	0.03
+categoryB,categoryB	true	0.03
+categoryA,categoryB	true	0.05
+categoryB,detailed	true	0.10
+categoryA,detailed	true	0.10
+categoryB	false	0.10
+categoryA	false	0.10
+	true	0.10
+	false	0.10

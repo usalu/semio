@@ -1,0 +1,8 @@
+{
+ "cases":[{"path":"/admission/shared"},{"path":"/admission/first"},{"path":"/admission/second"}],
+ "batches":[[0,1],[0,2],[0]],
+ "initial":[true,true,true],
+ "sharedProbes":[1,1,1],
+ "removed":0,
+ "relocation":{"former":"/admission","live":"/admission-live","conflict":"/admission-conflict"}
+}

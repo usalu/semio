@@ -126,7 +126,7 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         ("s.layout.layout.composer.pdf", "composer", "s.stdio.pdf@1.7/*", &[("composition-route", "19:s.layout.layout@1/*17:s.stdio.pdf@1.7/*")], None),
         ("s.layout.layout.composer.step", "composer", "s.stdio.step@ap214/*", &[("composition-route", "19:s.layout.layout@1/*20:s.stdio.step@ap214/*")], None),
         ("s.layout.layout.composer.idml", "composer", "s.stdio.idml@8.0/*", &[("composition-route", "19:s.layout.layout@1/*18:s.stdio.idml@8.0/*")], None),
-        ("s.layout.layout.composer.dwg", "composer", "s.stdio.dwg@ac1018/*", &[("composition-route", "19:s.layout.layout@1/*20:s.stdio.dwg@ac1018/*")], None),
+        ("s.layout.layout.composer.dwg", "composer", "s.stdio.dwg@ac1024/*", &[("composition-route", "19:s.layout.layout@1/*20:s.stdio.dwg@ac1024/*")], None),
         ("s.layout.layout.grammar.document", "grammar", "layout.document", &[("grammar", "layout.document")], None),
         ("s.layout.layout.grammar.op", "grammar", "layout.op", &[("grammar", "layout.op")], None),
         ("s.layout.layout.grammar.diff", "grammar", "layout.diff", &[("grammar", "layout.diff")], None),

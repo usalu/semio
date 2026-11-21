@@ -350,7 +350,7 @@ fn failure(message: impl Into<String>) -> PluginAssemblyError {
     PluginAssemblyError::new("stdio.definition", message)
 }
 
-fn source(schema: &'static str) -> Result<Source, PluginAssemblyError> {
+fn source(schema: &str) -> Result<Source, PluginAssemblyError> {
     if schema.len() > 2 * 1024 * 1024 {
         return Err(failure("artifact definition exceeds 2 MiB"));
     }
@@ -778,6 +778,45 @@ pub fn definition_from_schema(schema: &'static str) -> Result<ArtifactDefinition
     definition_from_schema_with_executables(schema, [])
 }
 
+/// 🪶 Builds the semantic definition and its authored registration identities without binding executable addresses.
+pub fn catalog_definition_from_schema(schema: &str) -> Result<CatalogArtifactDefinition, PluginAssemblyError> {
+    let source = source(schema)?;
+    validate(&source)?;
+    let definition = build(&source, &BTreeMap::new())?;
+    let executable_ids = expected_executable_ids(&source);
+    let native_codecs = source.codecs.iter().filter_map(|codec| codec.native_factory.as_ref().map(|binding| (codec, binding))).map(|(codec, binding)| {
+        validate_native_codec_binding(&source, codec, binding)?;
+        Ok(CatalogNativeCodec {
+            factory_id: binding.factory_id.clone(),
+            descriptor_codec_id: codec.id.clone(),
+            runtime_capability_id: binding.runtime_capability_id.clone(),
+            artifact_kind: binding.artifact_kind.clone(),
+            schema: binding.artifact_schema.clone(),
+            extension: binding.extension.clone(),
+            pack_schema_hash: native_codec_hash(&binding.pack_schema_hash)?,
+        })
+    }).collect::<Result<_, PluginAssemblyError>>()?;
+    Ok(CatalogArtifactDefinition { definition, executable_ids, native_codecs })
+}
+
+/// 📖 The artifact semantics available from the authored definition alone.
+pub struct CatalogArtifactDefinition {
+    pub definition: ArtifactDefinition,
+    pub executable_ids: BTreeSet<String>,
+    pub native_codecs: Vec<CatalogNativeCodec>,
+}
+
+/// 🔖 The schema's native codec registration, without an executable factory.
+pub struct CatalogNativeCodec {
+    pub factory_id: String,
+    pub descriptor_codec_id: String,
+    pub runtime_capability_id: String,
+    pub artifact_kind: String,
+    pub schema: String,
+    pub extension: String,
+    pub pack_schema_hash: [u8; 32],
+}
+
 /// 🧷 Parses one schema and binds its complete declared executable set.
 pub fn definition_from_schema_with_executables(schema: &'static str, executables: impl IntoIterator<Item = ArtifactExecutable>) -> Result<ArtifactDefinition, PluginAssemblyError> {
     let source = validated_source(schema)?;
@@ -926,22 +965,27 @@ pub fn native_codec_hash(value: &str) -> Result<[u8; 32], PluginAssemblyError> {
     Ok(hash)
 }
 
-fn native_codec_binding<'a>(source: &'a Source, factory: &NativeCodecFactory) -> Result<(&'a Codec, &'a NativeCodecBinding), PluginAssemblyError> {
-    let item = source.codecs.iter().find(|codec| codec.native_factory.as_ref().is_some_and(|binding| binding.factory_id == factory.id)).ok_or_else(|| failure(format!("native factory {} has no schema binding", factory.id)))?;
-    let binding = item.native_factory.as_ref().expect("filtered native binding");
-    let kind = (factory.kind)();
-    let codec = (factory.codec)();
-    let hash = native_codec_hash(&binding.pack_schema_hash)?;
+fn validate_native_codec_binding(source: &Source, item: &Codec, binding: &NativeCodecBinding) -> Result<(), PluginAssemblyError> {
     let runtime = source.runtime_capabilities.iter().find(|capability| capability.id == binding.runtime_capability_id).ok_or_else(|| failure(format!("codec {} names missing runtime capability {}", item.id, binding.runtime_capability_id)))?;
     let extension_claim = ArtifactIdentityClaim::codec_extension(&binding.artifact_schema, &binding.extension).map_err(PluginAssemblyError::definition)?;
     let expected_claims = BTreeSet::from([("codec".to_owned(), binding.artifact_schema.clone()), (extension_claim.namespace().as_str().to_owned(), extension_claim.value().to_owned())]);
+    if runtime.category != "codec" || runtime_claims(runtime) != expected_claims {
+        return Err(failure(format!("codec {} native factory binding differs from its runtime capability", item.id)));
+    }
+    Ok(())
+}
+
+fn native_codec_binding<'a>(source: &'a Source, factory: &NativeCodecFactory) -> Result<(&'a Codec, &'a NativeCodecBinding), PluginAssemblyError> {
+    let item = source.codecs.iter().find(|codec| codec.native_factory.as_ref().is_some_and(|binding| binding.factory_id == factory.id)).ok_or_else(|| failure(format!("native factory {} has no schema binding", factory.id)))?;
+    let binding = item.native_factory.as_ref().expect("filtered native binding");
+    validate_native_codec_binding(source, item, binding)?;
+    let kind = (factory.kind)();
+    let codec = (factory.codec)();
     if factory.artifact != source.artifact
         || kind.id != binding.artifact_kind
-        || runtime.category != "codec"
-        || runtime_claims(runtime) != expected_claims
         || codec.schema != binding.artifact_schema
         || codec.extension != binding.extension
-        || codec.pack_schema_hash != hash
+        || codec.pack_schema_hash != native_codec_hash(&binding.pack_schema_hash)?
     {
         return Err(failure(format!("codec {} native factory binding does not exactly match its artifact kind, runtime capability, schema, extension, and pack hash", item.id)));
     }

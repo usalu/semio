@@ -1,0 +1,13 @@
+# Directory stamps from packed graph rows
+
+The generation store keeps a binary fact index whose row kind can be read without decoding its pathname or fact. Both directory stamp passes previously used the general row accessor. They decoded content-only file and digest rows even though those rows cannot affect directory stamps. Publication also retained a second set of content paths that was never read. Settlement created a new temporary directory and content set for every unverified row.
+
+The current paths pass the exact index view and signal to the stamp collector. The collector reads packed row kinds from the same view used by the caller and decodes the rows that may carry structural observations. Analysis rows still carry and traverse their nested observations. It collects no content-path set for a directory-only operation. Existing plain-row callers still use their actual rows. A cancellation is checked during the walk, passed to the directory measurement, and checked before any publication stamp save. The seal and its graph authority remain in the existing publication path.
+
+A native binary fixture with 1,024 content-only rows and five structural rows recorded all 1,029 row decodes before the change and five afterward. The settled pass decodes four when the verified listing is excluded from reconsideration. An independent SQLite oracle checked the exact directory sets, including relative resolution, existence and nested analysis. A second native regression confirmed the old publication pass could save after cancellation, while the revised pass receives the caller signal and refuses that save.
+
+The broader loader tests also uncovered an integration assertion from the earlier cold-row-log disposal change. It expected disposal after sealing. The updated test requires the source to remain live through the storing checkpoint and its output still agrees with the Python graph oracle. A separate prefetch assertion used a 150 ms sleep to infer a synchronization event and flaked under load. It now waits for the fixture's actual prefetch entry and releases the held fixture in a finally block. Neither test adjustment changes a production timeout.
+
+These private results measure native binary view work. They do not constitute a whole-workspace peak memory measurement. No capacity limit, cache storage, running service or worker process was changed for the regression.
+
+The final native cohort passed all 123 tests with 443 assertions across doubt, view release, and the generation loader. The last journal records for all six files in this change matched their exact worktree bytes through segment 182 byte 263,687.

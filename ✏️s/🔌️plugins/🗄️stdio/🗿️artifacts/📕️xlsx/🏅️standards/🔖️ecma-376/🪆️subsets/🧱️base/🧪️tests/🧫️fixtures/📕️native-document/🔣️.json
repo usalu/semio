@@ -1,0 +1,45 @@
+{
+  "implicitCoordinates": {
+    "sheet": "Positions",
+    "worksheet": "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData><row><c><v>1</v></c><!-- cell order skips comments --><c><v>2</v></c><c r=\"D1\"><v>4</v></c><c><v>5</v></c></row><row r=\"3\"><c><v>31</v></c></row><row><c r=\"B4\"><v>42</v></c><c><v>43</v></c></row><row r=\"5\"/></sheetData></worksheet>",
+    "cells": [[1, 0, 1], [1, 1, 2], [1, 3, 4], [1, 4, 5], [3, 0, 31], [4, 1, 42], [4, 2, 43]],
+    "edits": [
+      { "operation": "set", "row": 1, "column": 0, "value": 10, "cells": [[1, 0, 10], [1, 1, 2], [1, 3, 4], [1, 4, 5], [3, 0, 31], [4, 1, 42], [4, 2, 43]] },
+      { "operation": "remove", "row": 1, "column": 0, "cells": [[1, 1, 2], [1, 3, 4], [1, 4, 5], [3, 0, 31], [4, 1, 42], [4, 2, 43]] },
+      { "operation": "remove", "row": 3, "column": 0, "cells": [[1, 0, 1], [1, 1, 2], [1, 3, 4], [1, 4, 5], [4, 1, 42], [4, 2, 43]] },
+      { "operation": "insert", "row": 1, "column": 2, "value": 3, "cells": [[1, 0, 1], [1, 1, 2], [1, 2, 3], [1, 3, 4], [1, 4, 5], [3, 0, 31], [4, 1, 42], [4, 2, 43]] },
+      { "operation": "insert-implicit", "row": 1, "column": 2, "beforeColumn": 3, "node": "<c><v>3</v></c>", "cells": [[1, 0, 1], [1, 1, 2], [1, 2, 3], [1, 3, 4], [1, 4, 5], [3, 0, 31], [4, 1, 42], [4, 2, 43]] },
+      { "operation": "insert", "row": 2, "column": 1, "value": 22, "cells": [[1, 0, 1], [1, 1, 2], [1, 3, 4], [1, 4, 5], [2, 1, 22], [3, 0, 31], [4, 1, 42], [4, 2, 43]] },
+      { "operation": "insert", "row": 5, "column": 0, "value": 50, "cells": [[1, 0, 1], [1, 1, 2], [1, 3, 4], [1, 4, 5], [3, 0, 31], [4, 1, 42], [4, 2, 43], [5, 0, 50]] }
+    ]
+  },
+  "workbookContentType": {
+    "part": "xl/workbook.xml",
+    "cases": [
+      {
+        "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+        "accepted": true
+      },
+      {
+        "contentType": "APPLICATION/VND.OPENXMLFORMATS-OFFICEDOCUMENT.SPREADSHEETML.SHEET.MAIN+XML",
+        "accepted": true
+      },
+      {
+        "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml;charset=UTF-8",
+        "accepted": true
+      },
+      {
+        "contentType": "application/xml",
+        "accepted": false
+      },
+      {
+        "contentType": "application/x-spreadsheetml.sheet.main+xml",
+        "accepted": false
+      },
+      {
+        "contentType": "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
+        "accepted": false
+      }
+    ]
+  }
+}

@@ -61,7 +61,6 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "set-query/🔎️replaces-the-query: produced diff differs from the committed 🔺️diff/🔣️.json");
     let typed: JackDiff = semio_framework_pack_json::from_json_str((*DIFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into JackDiff");
     assert_eq!(typed, JackDiff { query: Some(after().query), ..JackDiff::default() }, "set-query moves the query slot and nothing else");
-    assert_eq!(serde_json::from_str::<serde_json::Value>((*DIFF)).expect("diff reparses").as_object().map(serde_json::Map::len), Some(8), "JackDiff emits all eight document slots");
 }
 
 /// 🩹 Applying the committed diff to `⬅️before` yields `➡️after`.

@@ -84,9 +84,13 @@ pub fn read_step(text: &str) -> Result<Body, StepError> {
 mod writer;
 use writer::*;
 
-#[path = "🧊️retained-box/🦀️.rs"]
-mod retained_box;
-pub use retained_box::{StepBox, StepBoxDecode};
+#[path = "📝️retained-write/🦀️.rs"]
+mod retained_write;
+pub use retained_write::{StepWrite, StepWriteSource};
+
+#[path = "📥️retained-read/🦀️.rs"]
+mod retained_read;
+pub use retained_read::{StepSolid, StepSolidDecode};
 
 #[path = "📖️entity-parsing/🦀️.rs"]
 mod entity_parsing;

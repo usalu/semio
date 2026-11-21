@@ -142,9 +142,9 @@ pub fn row_check<I: AsRef<str>, E: AsRef<str>>(report: &mut CheckReport, annex: 
     ));
 }
 
-/// ⚙️ One rotating machine (EN 1991-3, 5): the equivalent static force F_dyn = m e ω² with ω = 2π f; a non-positive mass, a negative eccentricity or a non-positive frequency is an invalid input without a fallback. The spec line gives no verdict criterion, so the force is reported as information.
+/// ⚙️ Rotor free force F_s = m e ω² with ω = 2π f according to EN 1991-3:2006 §3.5(3).
 pub fn check_rotating_machine(machine: &semio_s_artifact_norm_en1991_model::RotatingMachine, annex: AnnexChoice, report: &mut CheckReport) {
-    let clause = || ClauseId::new("EN 1991-3", "§5", "5");
+    let clause = || ClauseId::new("EN 1991-3", "§3.5(3)", "3.5(3)");
     for (leaf, ok, en, de, found) in [("mass", machine.mass.is_finite() && machine.mass > 0.0, "rotating mass m (positive)", "rotierende Masse m (positiv)", machine.mass), ("eccentricity", machine.eccentricity.is_finite() && machine.eccentricity >= 0.0, "eccentricity e (not negative)", "Exzentrizität e (nicht negativ)", machine.eccentricity), ("frequency", machine.frequency.is_finite() && machine.frequency > 0.0, "rotation frequency f (positive)", "Drehfrequenz f (positiv)", machine.frequency)] {
         if !ok {
             invalid(report, annex, format!("en1991.input.rotatingMachines.{}.{leaf}", machine.id), "DIN EN 1991-3", clause(), &machine.id, format!("rotatingMachines[id={}].{leaf}", machine.id), (en, de), &found.to_string(), vec!["valid".into()]);
@@ -152,9 +152,9 @@ pub fn check_rotating_machine(machine: &semio_s_artifact_norm_en1991_model::Rota
         }
     }
     let force_n = part_3::machine_dynamic_force_n(machine.mass, machine.eccentricity, machine.frequency);
-    let text = format!("F_dyn = m e ω² = {:.1} kg · {:.4} m · (2π · {:.2} Hz)² = {:.2} kN (formula from the spec line E3.07, unverified).", machine.mass, machine.eccentricity, machine.frequency, force_n / 1000.0);
-    let text_de = format!("F_dyn = m e ω² = {:.1} kg · {:.4} m · (2π · {:.2} Hz)² = {:.2} kN (Formel aus der Spezifikationszeile E3.07, ungeprüft).", machine.mass, machine.eccentricity, machine.frequency, force_n / 1000.0);
-    row_check(report, annex, ("EN 1991-3", "§5", "5"), ("rotatingMachines", &machine.id, "mass"), ("en1991.3.machine-force", force(force_n)), ("Rotating machine", "Rotierende Maschine"), ("Equivalent static force of the unbalanced mass", "Statische Ersatzkraft der Unwucht"), (&text, &text_de));
+    let text = format!("Equation 3.1: F_s = {:.1} kg · {:.4} m · (2π · {:.2} Hz)² = {:.2} kN.", machine.mass, machine.eccentricity, machine.frequency, force_n / 1000.0);
+    let text_de = format!("Gleichung 3.1: F_s = {:.1} kg · {:.4} m · (2π · {:.2} Hz)² = {:.2} kN.", machine.mass, machine.eccentricity, machine.frequency, force_n / 1000.0);
+    row_check(report, annex, ("EN 1991-3", "§3.5(3)", "3.5(3)"), ("rotatingMachines", &machine.id, "mass"), ("en1991.3.machine-force", force(force_n)), ("Rotating machine", "Rotierende Maschine"), ("Rotor free force", "Freie Rotorkraft"), (&text, &text_de));
 }
 
 /// 🌾 One bulk solid (EN 1991-4, Annex E): the lateral pressure ratio K = 1 − sin φ_i and its mean K_m = 1.1 K; an angle outside 0 to 90 degrees is an invalid input without a fallback.

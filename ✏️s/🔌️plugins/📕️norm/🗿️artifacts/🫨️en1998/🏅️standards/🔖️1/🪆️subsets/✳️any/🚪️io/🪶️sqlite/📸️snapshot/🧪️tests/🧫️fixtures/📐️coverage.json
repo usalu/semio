@@ -1,6 +1,6 @@
 {
-  "tableCount": 28,
-  "scalarWords": 217,
+  "tableCount": 31,
+  "scalarWords": 218,
   "scalarTables": [
     "site",
     "building",
@@ -28,7 +28,8 @@
     "slope",
     "isolation_system",
     "pier_base",
-    "critical_region"
+    "critical_region",
+    "case_number"
   ],
   "invalidAnnex": [
     "任意\u0000annex",
@@ -38,5 +39,10 @@
     "",
     "Wall",
     "任意\u0000role"
+  ],
+  "nonScalarTables": [
+    "document",
+    "case",
+    "case_text"
   ]
 }

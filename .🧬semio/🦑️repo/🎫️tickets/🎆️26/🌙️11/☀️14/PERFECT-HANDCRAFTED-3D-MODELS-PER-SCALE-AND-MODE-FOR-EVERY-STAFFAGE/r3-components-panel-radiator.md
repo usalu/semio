@@ -79,3 +79,65 @@ Final check line (`volumes-check.ts components/panel-radiator --product`): every
 - Fin sheets are texture (0.6 mm); the thermostat head has no grip flutes (4 mm, below the feature); the side covers are bound to region panel-rear as the 2D binds them.
 - The section `retained: near` keeps the -w half, against the description in `r3-tools.md`/C23 as I read it; I followed the product (the valve at -w is drawn and modelled), no tool request needed.
 - Tests of `@teaching/staffage` were not run by me (fixtures `front-projection` radiator-outline -0.5..0.5 / 0.11..0.71 and the band regions are unchanged).
+
+## Round 5 handcraft
+
+Scripts: `r5-panel-radiator-build.py` (imports the round-3 build, emitters flush, 1:200 connection column, digital 1:500 anew), `r5-panel-radiator-roots.py` (2D 1:200 connection column, decisions), `r5-valid-range.py` (generic valid-range tool; a narrowing of 1:200 to 1:300 was tried and reverted because the product forbids holes between bands, rule `valid-range-gap`). Output under `🗑️generated/r5-panel-radiator/`.
+
+### Reference (model to)
+
+| quantity | reference | source |
+|---|---|---|
+| panel height / overall length / depth | 600 / 1000 / 100 to 102 mm | Purmo Ventil Compact type 22 (`purmo-ventil-compact`) |
+| hub distance of the side tappings | height - 50 = 550 mm | idem |
+| bottom connections | 2 x G 1/2 at 50 mm centres, under the valve end | idem |
+| vertical water channels | about 33 mm pitch | catalogues |
+| thermostat head | 50 to 55 mm across, 80 to 95 mm long | Heimeier K, Danfoss RAW (`thermostat-heads`) |
+| wall distance | 25 mm minimum with the hook brackets; asset 35 mm | Purmo drawing; asset `dimensions.widthM` 0.135 |
+
+### Model against reference (1:50, measured from the source solids)
+
+| quantity | model | reference | deviation |
+|---|---|---|---|
+| panel + grille height | 600 mm (0.11 to 0.71 m) | 600 | 0 % |
+| length over panels | 1000 mm | 1000 | 0 % |
+| depth front panel to rear face | 100 mm | 100 to 102 | 0 to -2 % |
+| hub distance (plugs) | 550 mm | 550 | 0 % |
+| connection centres | 50 mm | 50 | 0 % |
+| channel pitch | 33.3 mm (30 channels) | about 33 | +1 % |
+| head diameter x length | 52 x 82 mm | 50-55 x 80-95 | within |
+| wall distance | 35 mm | 25 minimum | asset datum, kept (bracket type) |
+
+### Grades (opened sheets: body, structure, thermal --cut at 1:50, 1:100, 1:200, 1:500; poses night and leaned-on at 1:50 three-quarter, clip thermostat-cycle t 5 s at 1:50; 2D 1:50, 1:100, 1:200 after the root fixes, 1:100 body re-opened after the texture; poses off/comfort/rated rendered but not opened: they differ from night only by the head turning about its own axis)
+
+| scale | list | before | after |
+|---|---|---|---|
+| 1:50 | body | A- | A- (unchanged: channels, headers, fins, covers, slotted grille, brackets, head, H-block are right) |
+| 1:50 | thermal | B+ (outlet patches standing 7.5 mm proud like a lid on the grille) | A- (outlets sunk, 1.5 mm proud) |
+| 1:50 | structure | A- | A- |
+| 1:100 | body | B+ (flat slab front: correct reduction, but does not read as a profiled panel) | A- (pressed channels as texture strips at every second seam, drawn the same in the 1:100 front) |
+| 1:100 | thermal | B+ (outlet "hat" 15 mm proud) | A- |
+| 1:100 | structure | A- | A- |
+| 1:200 | body | B+ | A- (H-block and pipes as one connection column, as the drawing now draws it) |
+| 1:200 | thermal | B (30 mm outlet box on the top) | A- |
+| 1:200 | structure | A- | A- |
+| 1:500 | body | C+ (bulk sketch: box floating off the wall, no brackets, 52 mm head, 36 mm block) | A- (mass on four 75 mm bracket blocks at the wall, 75 mm head, 100 x 75 mm connection column) |
+| 1:500 | thermal | C (30 mm slabs copied from 1:200 with 30 mm brackets and outlet box) | B+ (layers kept, four bracket blocks, flush outlets; declared minimal) |
+| 1:500 | structure | C (two thin plates with a mass slab filling the gap) | A- (header-and-post ring of 75 mm bars, four 75 mm wall supports, spindle joint, compact mass) |
+| 2D 1:200 | print | INVALID (pipes 0.19 mm, block 0.18 mm at 1:350) | VALID (one connection column 100 x 110 mm) |
+
+### Changes
+
+- Emitters at 1:50, 1:100, 1:200, 1:500 are outlet patches sunk into the grille and the front face, 1.5 mm proud (D2), decisions updated.
+- 1:200: 2D front and elevation draw the H-block with unions and both pipes as one column from the floor (shape `pipes` removed, decisions `merged` en/de); body and thermal follow (`connection-column`).
+- 1:100: 2D front gains `panel-channels` (texture, every second seam between the header lines; decisions `retained`/`omitted` en/de); body gains the matching `panel-channels` texture strips (14).
+- 1:500 (digital) handcrafted anew: body 7, thermal 14, structure 10 solids; decisions en/de incl. "Minimal:" for the thermal list.
+- Checks: `volumes-check.ts components/panel-radiator --product` PASS (297 s, final state); `r3-validate.ts components/panel-radiator --catalog-only --volumes` VALID (checkVolumes 0, before the 1:100 texture; after it `--catalog-only` VALID); spliced with `volumes-insert.py`.
+
+### Remaining
+
+- 1:100 channels are drawn at every second seam (66.7 mm): every seam (33.3 mm) would leave 0.12 mm gaps between the 0.1 mm texture lines at 1:150, below the 0.15 mm printable gap.
+- Thermal cut renders of the coarse scales show stipple where adjacent region layers share a face (renderer z-fight on coincident faces, not a gap in the model).
+- Rated output 1.2 kW below catalogue (author-requests, thermal maintainer), unchanged.
+
+The section and front view now distinguish the two valve nuts at the 1:75 band boundary. The twin pipes remain distinguishable at 1:150. The independently measured printed geometry and the full document check passed.

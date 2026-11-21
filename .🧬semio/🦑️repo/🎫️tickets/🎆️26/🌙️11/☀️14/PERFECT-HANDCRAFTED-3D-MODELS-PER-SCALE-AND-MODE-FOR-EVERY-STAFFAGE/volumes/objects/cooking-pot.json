@@ -3006,7 +3006,7 @@
         {
           "id": "bubble-a",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -3031,7 +3031,7 @@
         {
           "id": "bubble-b",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -3056,7 +3056,7 @@
         {
           "id": "bubble-c",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -3081,7 +3081,7 @@
         {
           "id": "bubble-d",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -3106,7 +3106,7 @@
         {
           "id": "bubble-e",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -3131,7 +3131,7 @@
         {
           "id": "bubble-f",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -3156,7 +3156,7 @@
         {
           "id": "bubble-g",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -3181,7 +3181,7 @@
         {
           "id": "bubble-h",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -3206,7 +3206,7 @@
         {
           "id": "bubble-i",
           "kind": "ellipsoid",
-          "bone": "surface",
+          "bone": "bubbles",
           "material": "water",
           "role": "detail",
           "tone": 0.9,
@@ -5637,8 +5637,8 @@
       ],
       "decisions": [
         {
-          "en": "Body 1:50, every part of a 16 cm stainless stew pot at its real size: the 5 mm sandwich base (floor and encapsulated disc as one plate with a bevelled edge, 150 mm on the hob), the 8 mm base corner as a conical ring, the 0.8 mm deep-drawn wall, the 45 degree pouring rim out to 172 mm, 1 L of water to 55 mm whose top 8 mm are the boiling surface layer on the surface bone (it bobs by 4 mm into the water body below, so no pose opens a gap) with nine bubbles of 8 to 16 mm, and two loop handles of 6 mm round rod, each forged flat into two 12 x 18 mm pads that an 8 mm rivet holds on the wall (set heads inside the pot). All round parts are 72-sided prisms so that rim, wall and water stay round.",
-          "de": "Körper 1:50, jedes Teil eines 16-cm-Edelstahl-Kochtopfs in wahrer Größe: der 5-mm-Sandwichboden (Topfboden und Kapselscheibe als eine Platte mit gefaster Kante, 150 mm auf dem Kochfeld), die 8-mm-Bodenrundung als Kegelring, die 0,8 mm starke tiefgezogene Wand, der 45-Grad-Schüttrand bis 172 mm, 1 l Wasser bis 55 mm, dessen obere 8 mm die kochende Oberflächenschicht am Oberflächenknochen sind (sie wogt um 4 mm in den Wasserkörper darunter, sodass keine Pose eine Lücke öffnet) mit neun Blasen von 8 bis 16 mm, sowie zwei Bügelgriffe aus 6 mm Rundstahl, jeder zu zwei 12 x 18 mm großen Laschen flachgeschmiedet, die je eine 8-mm-Niete an der Wand hält (Schließköpfe im Topfinneren). Alle runden Teile sind 72-seitige Prismen, damit Rand, Wand und Wasser rund bleiben."
+          "en": "Body 1:50, every part of a 16 cm stainless stew pot at its real size: the 5 mm sandwich base (floor and encapsulated disc as one plate with a bevelled edge, 150 mm on the hob), the 8 mm base corner as a conical ring, the 0.8 mm deep-drawn wall, the 45 degree pouring rim out to 172 mm, 1 L of water to 55 mm whose top 8 mm are the boiling surface layer on the surface bone (it bobs by 4 mm into the water body below, so no pose opens a gap) with nine bubbles of 8 to 16 mm, and two loop handles of 6 mm round rod, each forged flat into two 12 x 18 mm pads that an 8 mm rivet holds on the wall (set heads inside the pot). All round parts are 72-sided prisms so that rim, wall and water stay round. The bubbles sit on their own bone that sinks them 12 mm into the water in the cold pose and lets only their tops break through while heating.",
+          "de": "Körper 1:50, jedes Teil eines 16-cm-Edelstahl-Kochtopfs in wahrer Größe: der 5-mm-Sandwichboden (Topfboden und Kapselscheibe als eine Platte mit gefaster Kante, 150 mm auf dem Kochfeld), die 8-mm-Bodenrundung als Kegelring, die 0,8 mm starke tiefgezogene Wand, der 45-Grad-Schüttrand bis 172 mm, 1 l Wasser bis 55 mm, dessen obere 8 mm die kochende Oberflächenschicht am Oberflächenknochen sind (sie wogt um 4 mm in den Wasserkörper darunter, sodass keine Pose eine Lücke öffnet) mit neun Blasen von 8 bis 16 mm, sowie zwei Bügelgriffe aus 6 mm Rundstahl, jeder zu zwei 12 x 18 mm großen Laschen flachgeschmiedet, die je eine 8-mm-Niete an der Wand hält (Schließköpfe im Topfinneren). Alle runden Teile sind 72-seitige Prismen, damit Rand, Wand und Wasser rund bleiben. Die Blasen sitzen an einem eigenen Knochen, der sie in der kalten Pose 12 mm ins Wasser absenkt und beim Aufheizen nur ihre Kuppen durchbrechen lässt."
         },
         {
           "en": "Thermal 1:50: the base is the 5 mm sandwich plate, the wall is the outer skin from the base corner to the lip of the pouring rim (its 0.054 m2 are the one face that exchanges with the room and, wetted to half its height, with the water), the water is the real 1 L body with its surface layer, whose faces against floor and wall count for no area so that the free surface of 0.0201 m2 remains, the handles are the two bows with their pads and rivet domes (the pad faces riveted onto the wall count for no area, the set heads inside belong to the wall), and the two emitters are outlets flush on the bobbing water surface: the steam leaves the outer ring, the plume rises from the 80 mm core.",
@@ -12997,11 +12997,39 @@
             ],
             [
               -0.025,
+              0.025
+            ],
+            [
+              -0.0231,
+              0.01543
+            ],
+            [
+              -0.01768,
+              0.00732
+            ],
+            [
+              -0.00957,
+              0.0019
+            ],
+            [
+              0.0,
               0.0
             ],
             [
+              0.00957,
+              0.0019
+            ],
+            [
+              0.01768,
+              0.00732
+            ],
+            [
+              0.0231,
+              0.01543
+            ],
+            [
               0.025,
-              0.0
+              0.025
             ],
             [
               0.025,
@@ -13026,11 +13054,39 @@
             ],
             [
               0.025,
+              0.225
+            ],
+            [
+              0.0231,
+              0.23457
+            ],
+            [
+              0.01768,
+              0.24268
+            ],
+            [
+              0.00957,
+              0.2481
+            ],
+            [
+              0.0,
               0.25
             ],
             [
+              -0.00957,
+              0.2481
+            ],
+            [
+              -0.01768,
+              0.24268
+            ],
+            [
+              -0.0231,
+              0.23457
+            ],
+            [
               -0.025,
-              0.25
+              0.225
             ],
             [
               -0.025,
@@ -14003,8 +14059,8 @@
       ],
       "decisions": [
         {
-          "en": "Body 1:500 (digital scale, the pot is a third of a millimetre on paper): the open vessel in five parts, a base disc, the straight 0.8 mm wall (the pouring rim is dropped), the water, and two square 50 x 10 mm lugs for the handles. Thermal: base, water and lugs by reference, the wall skin, two outlets; structure: base plate, wall and lugs as members, the water mass and the contact pad.",
-          "de": "Körper 1:500 (digitaler Maßstab, der Topf misst ein Drittel Millimeter auf Papier): das offene Gefäß in fünf Teilen, eine Bodenscheibe, die gerade 0,8-mm-Wand (der Schüttrand entfällt), das Wasser und zwei eckige 50 x 10 mm große Laschen für die Griffe. Thermik: Boden, Wasser und Laschen als Verweis, die Wandhaut, zwei Auslässe; Tragwerk: Bodenplatte, Wand und Laschen als Glieder, die Wassermasse und die Aufstandsfläche."
+          "en": "Body 1:500 (digital scale, the pot is a third of a millimetre on paper): the open vessel in five parts, a base disc, the straight 0.8 mm wall (the pouring rim is dropped), the water, and two 50 x 10 mm lugs with a round grip end for the loop handles. Thermal: base, water and lugs by reference, the wall skin, two outlets; structure: base plate, wall and lugs as members, the water mass and the contact pad.",
+          "de": "Körper 1:500 (digitaler Maßstab, der Topf misst ein Drittel Millimeter auf Papier): das offene Gefäß in fünf Teilen, eine Bodenscheibe, die gerade 0,8-mm-Wand (der Schüttrand entfällt), das Wasser und zwei 50 x 10 mm große Laschen mit rundem Griffende für die Bügelgriffe. Thermik: Boden, Wasser und Laschen als Verweis, die Wandhaut, zwei Auslässe; Tragwerk: Bodenplatte, Wand und Laschen als Glieder, die Wassermasse und die Aufstandsfläche."
         }
       ]
     }

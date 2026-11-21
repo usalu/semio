@@ -148,6 +148,8 @@ export interface TreeCheckboxProps {
   title?: UiLabel;
   disabled?: boolean;
   ariaLabel?: string;
+  ariaLabelledBy?: string;
+  ariaDescribedBy?: string;
   /** 🕰️ The value the state's AUTHORITY last published, when `checked` may still be an optimistic
    * draft — stamped as `data-published-value` so a reader outside React can tell a pending draft from a
    * landed change. See `WindowMeasureToggle`. */
@@ -165,7 +167,7 @@ export interface TreeCheckboxProps {
  *
  * @see https://html.spec.whatwg.org/multipage/input.html#checkbox-state-(type=checkbox)
  */
-export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheckedChange, title, disabled, ariaLabel, publishedValue }) => (
+export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheckedChange, title, disabled, ariaLabel, ariaLabelledBy, ariaDescribedBy, publishedValue }) => (
   <label data-slot="tree-action-checkbox-wrapper" className="inline-flex h-medium min-w-tiny flex-shrink-0 cursor-pointer items-center justify-center" title={title} onClick={(event) => event.stopPropagation()}>
     <input
       data-slot="tree-action-checkbox"
@@ -174,6 +176,8 @@ export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheck
       type="checkbox"
       className="m-0 size-tiny cursor-pointer accent-foreground"
       aria-label={ariaLabel ?? title ?? id}
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
       checked={checked}
       disabled={disabled}
       onChange={(event) => {

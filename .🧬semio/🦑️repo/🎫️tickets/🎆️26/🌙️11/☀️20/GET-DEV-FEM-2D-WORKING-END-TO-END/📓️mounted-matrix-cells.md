@@ -1,0 +1,9 @@
+# Mounted FEM 2D matrix cells
+
+The mounted FEM 2D model builder creates `Bar2`, `BeamEb2`, and `Tri3Cst` elements. Each now evaluates a consistent mass cell or a prestress geometric stiffness cell using only fixed-size local data. Prestress is computed from the reference displacement passed by the solve. A valid zero cell returns `Some(0.0)`. Index and geometry checks precede matrix evaluation. The three geometric kernels also accept borrowed position slices for assembly with a fixed inline buffer.
+
+The beam keeps the original Euler–Bernoulli coefficients and rotation. The bar retains the signed transverse projector. The CST retains the signed Jacobian used by the existing native assembly, with the closed-form integral equivalent to its degree-two mass quadrature. Native matrix assembly and bounded cell evaluation share these formulas. The mounted cells return identical values in both symmetric positions.
+
+The shared TSV corpus records 160 cells per matrix type across five cases. It covers an inclined bar in tension, an inclined beam in compression, both CST constitutive assumptions, clockwise orientation, and zero density. The independent NumPy oracle reproduced both matrices in all five cases using Gauss–Legendre quadrature, an affine triangle inverse, and tensor products. The native Rust test passed against the same corpus for the mounted and batch matrices, and checked symmetry, index and geometry rejection, and rejection of non-finite displacements.
+
+The repository graph reported a stale dependency-generation receipt. The direct locked Cargo probe also reported a stale workspace lockfile. The targeted native test used an isolated generated manifest with the actual repository sources and ran through `repo tools exec cargo` with the pinned native compiler. The shared lockfiles were left untouched.

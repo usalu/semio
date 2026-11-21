@@ -1,0 +1,44 @@
+{
+  "pageSize": [
+    264,
+    252
+  ],
+  "sampled": {
+    "name": "Sample",
+    "dimensions": [
+      32,
+      32
+    ],
+    "multipliers": [
+      13,
+      29,
+      47
+    ],
+    "sampleProbeIndex": 1024
+  },
+  "coded": {
+    "name": "Photo",
+    "dimensions": [
+      1024,
+      1024
+    ],
+    "encodedSha256": "6d5b851f905cd35e58ca36af0612e018ce1b40c9d0a3ce827a73fbbb90f54526"
+  },
+  "path": {
+    "width": 1.5,
+    "start": [
+      17,
+      18
+    ],
+    "end": [
+      180,
+      20
+    ],
+    "color": [
+      0.24,
+      0.15,
+      0.5
+    ]
+  },
+  "writerPage": 911
+}

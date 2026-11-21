@@ -1184,7 +1184,7 @@ pub(super) fn check_tension(document: &En1993Snapshot, annex: AnnexChoice, param
 }
 
 /// 🌉 EN 1993-2 §9.5 fatigue with λ factors from the traffic data and the orthotropic deck detail ladder.
-pub(super) fn check_bridge(annex: AnnexChoice, params: AnnexParams, bf: &BridgeFatigue, report: &mut CheckReport) {
+pub(super) fn check_bridge(annex: AnnexChoice, bf: &BridgeFatigue, report: &mut CheckReport) {
     if !(bf.heavy_vehicle_weight > 0.0 && bf.reference_weight > 0.0) {
         return;
     }
@@ -1198,7 +1198,8 @@ pub(super) fn check_bridge(annex: AnnexChoice, params: AnnexParams, bf: &BridgeF
     let ks = bridge_fatigue::size_effect(bf.plate_thickness * 1e3);
     let detail = bridge_fatigue::orthotropic_detail(&bf.detail_id);
     let delta_c = detail.map_or(f64::from(bf.category), |d| d.min(f64::from(bf.category))) * ks;
-    let u = bridge_fatigue::fatigue_utilisation(delta_e2, delta_c, 1.0, params.gamma_mf);
+    let gamma_mf = part_2::fatigue_factor(bf, annex);
+    let u = bridge_fatigue::fatigue_utilisation(delta_e2, delta_c, 1.0, gamma_mf);
     let case = Case {
         id: format!("en1993.2.9.5.{}", bf.id),
         part: "DIN EN 1993-2",
@@ -1209,9 +1210,9 @@ pub(super) fn check_bridge(annex: AnnexChoice, params: AnnexParams, bf: &BridgeF
         title: loc("Bridge fatigue damage equivalence", "Brückenermüdung Schadensäquivalenz"),
         demand: dimensionless(u),
         capacity: dimensionless(1.0),
-        explanation: bilingual(format!("λ1={:.2}, λ2={l2:.3}, λ3={l3:.3}, λ4={l4:.3} → λ={lam:.3}; Δσ_E,2={delta_e2:.1} MPa against Δσ_C/γMf={:.1} MPa (k_s={ks:.2}).", bf.lambda_1, delta_c / params.gamma_mf), format!("λ1={:.2}, λ2={l2:.3}, λ3={l3:.3}, λ4={l4:.3} → λ={lam:.3}; Δσ_E,2={delta_e2:.1} MPa gegen Δσ_C/γMf={:.1} MPa (k_s={ks:.2}).", bf.lambda_1, delta_c / params.gamma_mf)),
+        explanation: bilingual(format!("λ1={:.2}, λ2={l2:.3}, λ3={l3:.3}, λ4={l4:.3} → λ={lam:.3}; Δσ_E,2={delta_e2:.1} MPa against Δσ_C/γMf={:.1} MPa (k_s={ks:.2}).", bf.lambda_1, delta_c / gamma_mf), format!("λ1={:.2}, λ2={l2:.3}, λ3={l3:.3}, λ4={l4:.3} → λ={lam:.3}; Δσ_E,2={delta_e2:.1} MPa gegen Δσ_C/γMf={:.1} MPa (k_s={ks:.2}).", bf.lambda_1, delta_c / gamma_mf)),
         ndps: if detail.is_some() { &["ndp.en1993.v-880.1", "ndp.en1993.v-880.2"] } else { &["ndp.en1993.v-880.1"] },
-        gammas: &[AnnexParams::GAMMA_MF],
+        gammas: &[part_2::fatigue_factor_id(bf, annex)],
     };
     emit(report, annex, case, || {
         let needed = delta_c * u / ks;

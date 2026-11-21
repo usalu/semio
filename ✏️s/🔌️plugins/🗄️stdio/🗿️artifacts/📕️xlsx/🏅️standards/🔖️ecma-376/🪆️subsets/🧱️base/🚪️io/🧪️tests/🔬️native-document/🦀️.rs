@@ -12,6 +12,32 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
 use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip;
 
 const WORKBOOK: &[u8] = include_bytes!("../../../🧪️tests/🧫️fixtures/📕️reuse-marketplaces.xlsx");
+const NATIVE_DOCUMENT_FIXTURES: &str = include_str!("../../../🧪️tests/🧫️fixtures/📕️native-document/🔣️.json");
+
+#[test]
+fn physical_workbook_requires_its_registered_media_type() {
+    use semio_s_artifact_stdio_zip::opc::{decode_opc, encode_opc};
+
+    let fixtures: serde_json::Value = serde_json::from_str(NATIVE_DOCUMENT_FIXTURES).unwrap();
+    let fixture = &fixtures["workbookContentType"];
+    let part = fixture["part"].as_str().unwrap();
+    let package = decode_opc(WORKBOOK).unwrap();
+    let snapshot = decode_xlsx(WORKBOOK).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let content_type = case["contentType"].as_str().unwrap();
+        let accepted = case["accepted"].as_bool().unwrap();
+        let mut input = package.clone();
+        input.set_part(part, content_type, package.part_bytes(part).unwrap().to_vec());
+        let bytes = encode_opc(&input).unwrap();
+        assert_eq!(XlsxAnalyzer::sniff(&AnalyzeSource::Binary(&bytes)) == Confidence::High, accepted, "{content_type}");
+        assert_eq!(decode_xlsx(&bytes).is_ok(), accepted, "{content_type}");
+
+        let mut output = snapshot.clone();
+        output.opc.content_types.set_override(part, content_type);
+        output.xml_part_mut(part).unwrap().content_type = content_type.into();
+        assert_eq!(encode_xlsx(&output).is_ok(), accepted, "{content_type}");
+    }
+}
 
 #[test]
 fn physical_workbook_ingestion_and_export_preserve_the_document() {
@@ -75,7 +101,8 @@ fn implicit_worksheet_coordinates_edit_and_undo_without_moving_siblings() {
     };
     use semio_s_artifact_stdio_zip::opc::{decode_opc, encode_opc};
 
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📍️implicit-coordinates/🔣️.json")).unwrap();
+    let fixtures: serde_json::Value = serde_json::from_str(NATIVE_DOCUMENT_FIXTURES).unwrap();
+    let fixture = &fixtures["implicitCoordinates"];
     let sheet = fixture["sheet"].as_str().unwrap();
     let expected: Vec<(u32, u32, f64)> = serde_json::from_value(fixture["cells"].clone()).unwrap();
     let seed = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: sheet.into(), cells: vec![] }], shared_strings: vec![] });
@@ -162,5 +189,34 @@ fn implicit_worksheet_coordinates_edit_and_undo_without_moving_siblings() {
         assert_eq!(restored, snapshot);
         assert_eq!(redo.len(), 1);
         assert_eq!(protocol::apply_diff_cold(ColdMutation::diff(&redo[0], &restored).diff(), &restored).unwrap(), edited);
+    }
+}
+
+#[test]
+fn conflict_paths_lend_every_authored_mutation_segment() {
+    use protocol::SemanticMutation;
+
+    use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::demo_mutation_cases;
+
+    for mutation in demo_mutation_cases() {
+        let expected = mutation.target();
+        let Some(path) = mutation.original_conflict_target() else {
+            assert!(expected.is_empty());
+            continue;
+        };
+        assert_eq!(path.len(), expected.len());
+        assert!(path.segment_len(path.len()).is_err());
+        for (index, segment) in expected.iter().enumerate() {
+            assert_eq!(path.segment_len(index).unwrap(), segment.len());
+            let mut actual = Vec::new();
+            let mut chunk = [0; 2];
+            while actual.len() < segment.len() {
+                let copied = path.read_segment(index, actual.len(), &mut chunk).unwrap();
+                assert!(copied > 0);
+                actual.extend_from_slice(&chunk[..copied]);
+            }
+            assert_eq!(actual, segment.as_bytes());
+            assert!(path.read_segment(index, segment.len() + 1, &mut chunk).is_err());
+        }
     }
 }

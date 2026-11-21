@@ -9,7 +9,7 @@ test("the readiness CIM observation credits verified kernel and user CPU with ex
  const results=[];
  for(const row of fixture.samples){
   const abort=new AbortController();
-  const table=await readyReadTableV1(1000,"win32",()=>1794000000000+(row.elapsedMilliseconds??0),async (program,args)=>{
+  const table=await readyReadTableV1(1000,"win32",async (program,args)=>{
    calls++;
    expect(program).toBe("powershell.exe");
    expect(args.at(-1)?.match(/Get-CimInstance/g)).toHaveLength(1);
@@ -28,11 +28,11 @@ test("the readiness CIM observation credits verified kernel and user CPU with ex
  expect(oracle.status).toBe(0);expect(results).toEqual(JSON.parse(oracle.stdout));
 });
 
-test("non-Windows process observations retain the existing ps shape and add no Windows evidence",async()=>{
- const table=await readyReadTableV1(1000,"linux",()=>1794000000010,async(program,args)=>{
-  expect(program).toBe("ps");expect(args).toEqual(["-A","-o","pid=,ppid=,etime=,comm="]);return "100 5 00:00 /bin/repo\n";
+test("non-Windows absolute process births add no Windows evidence",async()=>{
+ const table=await readyReadTableV1(1000,"linux",async(program,args)=>{
+  expect(program).toBe("ps");expect(args).toEqual(["-A","-o","pid=,ppid=,lstart=,comm="]);return "100 5 Sat Nov  7 08:50:07 2026 /bin/repo\n";
  });
- expect(table).toEqual([{pid:100,ppid:5,startMs:1794000000010,name:"repo"}]);
+ expect(table).toEqual([{pid:100,ppid:5,startMs:Date.UTC(2026,10,7,8,50,7),name:"repo"}]);
  expect(readyWindowsTreeSampleV1({table,root:100,members:table,maximum:512,minimumCpuMilliseconds:500})).toBeUndefined();
 });
 

@@ -70,6 +70,7 @@ mod original_request_retirement;
 pub enum ArtifactReservedToolInput {
     Action { args: Option<DslValue>, interaction: store::os_store::snapshot_read::SnapshotRead<protocol::InteractionState> },
     Media { port: String, media: Media },
+    OriginalPicker { input: Box<semio_plugin_decl_media::original_media::RawMediaInput> },
 }
 
 /// 🧊️ Immutable app state plus an owned reserved-route input. Implementations only construct a

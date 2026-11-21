@@ -1,5 +1,6 @@
 # Zeek Spicy mirror (descriptive, not test-parsed — the real byte-level walker is
-# ../📡️.protocol.semio, walked by dsl::walk_protocol) for the SemioGraphMutation op frame.
+# 📡️.protocol.semio, walked by dsl::walk_protocol) for the SemioGraphMutation op frame.
+# All declared record tags fit in one canonical varint byte. The body is a typed Pack wire value.
 module StdioSemioGraphMutations;
 
 public type OpFrame = unit {

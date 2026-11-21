@@ -6,6 +6,10 @@
 use crate::standards::v1_7::subsets::base::modules::lexer::{Lexer, Token};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCidMapping, PdfCodespaceRange, PdfEmbeddedCMap, PdfObject, PdfToUnicode, PdfToUnicodeMapping};
 
+#[path = "🎚️controlled/🦀️.rs"]
+mod controlled;
+pub use controlled::PdfDirectToUnicodeCursor;
+
 //#region 🔖️Parsing
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn code_of(bytes: &[u8]) -> u32 {

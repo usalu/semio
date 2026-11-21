@@ -162,3 +162,43 @@ Sheets: `🗑️generated/r3-sheet/animals/domestic-cat.s{50,100,200}.body.png`;
 - **Eyes are smaller than life.** Real eyes are about 16 × 11 mm; these are 13.2 × 10.2 mm. The visible disc is bounded by two rules at once: the thermal `eyes` area (0.0005 m², ±30 %, measured on the full ellipsoid surface) and the smallest feature (7.5 mm thickness at 1:50, 7.8 mm at 1:100). A bigger visible eye needs a larger declared corneal area or an exposure-weighted measure. Left for `T/author-requests.md` if wanted; not filed now.
 - **Ear in exact side view.** The ears read as narrow blades because they are turned 33° outward. This is anatomically right, but less recognisable than a drawn cat ear.
 - **Not a separate muscle per head.** Whiskers and claws are below the 7.5 mm feature and left out. The thigh, calf, triceps and shoulder are each one loft per segment, shaped by their sections, not a separate solid per muscle.
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: `r5-domestic-cat-50.ts` (1:50 tables), `r5-domestic-cat-work.ts`, `r5-domestic-cat-draw2d.ts`, `r5-domestic-cat-candidate.ts`, `r5-domestic-cat-apply.py`; 1:100/1:200 stay `r3-domestic-cat-coarse.ts`, 1:500 stays `r4-domestic-cat-500.ts` (unchanged, re-checked).
+
+### Reference table and measurement
+
+The reference table of section 1 stands (cat 4.2 kg, withers 0.25 m). Model vs reference at 1:50, measured on the rig and the section tables: withers 0.25 (0.23-0.26), hip joint 0.235 (0.93 x withers = 0.233, +1 %), femur 98 mm (95-110), tibia 104 (100-115), humerus 90 (90-100), radius 84 (80-95), scapula 64 (60-70), skull 89.5 (85-95), ear 54 x 43 (45-60 x 35-45), tail 0.30 (0.25-0.30), nose to rump 0.47 (0.40-0.50); thigh depth with fur 86 mm, forearm 35 x 27 mm at the elbow, 24 x 26 mm at the carpus (real 25-30 / 20-25). Spine: thoracic column dorsal under the topline (T7 0.236, T13 0.246), T1 at 0.208 m in the lower half of the scapula (cat thoracic inlet lies low behind the shoulder blades, which stand above the spine): accepted as anatomical, not changed. Eye: visible 12 x 9 mm against real 16 x 11 mm (see below).
+
+### Grades
+
+| scale | list | before | after |
+|---|---|---|---|
+| 1:50 | body | B (shoulder blade a thin fin standing off the chest, thigh a flat plate, catalog INVALID: eye area 30 % against 15 %) | A- |
+| 1:50 | structure / thermal | A- / B+ | A- / A- |
+| 1:100 | body / structure / thermal | A- / B+ / A- (2D stale against the current bodies) | A- / B+ / A- (2D redrawn) |
+| 1:200 | body / structure / thermal | A- / B+ / A- (2D stale) | A- / B+ / A- (2D redrawn) |
+| 1:500 (digital only) | body / structure / thermal | B+ / B / B+ | unchanged |
+
+### Changes
+
+- 1:50 shoulder: sagittal half-depth +7 mm, lateral half-width +4 mm, lateral centre 7 mm further in, so the muscle mass over the blade lies on the ribcage instead of standing off it as a fin.
+- 1:50 thigh: lateral half-width +4 mm and centre 4 mm in: a rounded thigh joined to the flank, not a plate.
+- 1:50 eyes 3.75 x 5.1 x 6.6 -> 3.75 x 4.5 x 6.0 mm: the `eyes` region measures within the 15 % that now applies (was 30 %, the catalog was INVALID).
+- 2D of 1:50, 1:100 and 1:200 redrawn from the current bodies (the 1:100 and 1:200 drawings were still those of round 3 while their bodies had been changed in round 4).
+- Final: `r3-validate.ts animals/domestic-cat --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); `volumes-check.ts --product` see ledger line.
+
+### Seen (opened)
+
+1:50 body six views and the three-quarter close-up before and after; 1:50 structure six views; 1:200 and 1:500 body six views; `sitting-tail-wrapped` at 1:50; 2D 1:50 of the candidate.
+
+### Remaining
+
+- Eyes 12 x 9 mm visible against 16 x 11 mm real: the `eyes` area (0.0005 m²) is compared with the whole ellipsoid surface, and the 7.5 mm feature floor fixes its depth; entered in `area-review.md`.
+- Sitting tail lies straight forward between the paws (planar rig, section 6).
+- Tail segments show ring seams; legs below the hock and carpus are plain tubes at 1:50.
+
+## Seated tail and corneal profile reviewed November 21
+
+All five caudal segments now follow the floor around the near forepaw when seated. Their tips in millimetres from the posed model origin are (8,12,−43), (57,12,−85), (120,12,−82), (172,12,−55) and (210,19,−23). Each segment has a separate body, thermal surface and shaft at every scale. The 1:50 and 1:100 eyes measure 16 × 11 mm across the opening. Their slit pupils follow a curved cornea with 5.5 mm frontal depth. The thermal eye surface follows the lens at all four scales. The seated cat was rendered in body, temperature and structural views. The four strict scale checks and 12 independent scene exports passed. [Landmarks and geometry tests](digital-cat-anatomy-test.ts).

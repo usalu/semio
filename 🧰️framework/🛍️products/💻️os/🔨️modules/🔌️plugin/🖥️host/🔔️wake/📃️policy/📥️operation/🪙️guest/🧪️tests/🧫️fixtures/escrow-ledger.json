@@ -1,0 +1,80 @@
+{
+  "axes": ["items", "copy", "capacity", "release", "work"],
+  "settlements": [
+    {
+      "name": "reserve-capacity-and-release",
+      "held": [0, 0, 0, 0, 0],
+      "observed": [0, 0, 0, 0, 0],
+      "forfeited": [0, 0, 0, 0, 0],
+      "reserve": [0, 0, 25, 7, 0],
+      "redeem": [0, 0, 0, 0, 0],
+      "release": [0, 0, 0, 0, 0],
+      "fresh": [1, 5, 3, 2, 4],
+      "expected": {
+        "held": [0, 0, 25, 7, 0],
+        "observed": [0, 0, 0, 0, 0],
+        "total": [1, 5, 28, 9, 4]
+      }
+    },
+    {
+      "name": "redeem-under-origin-purpose-and-return-unused-stock",
+      "held": [7, 71, 211, 41, 11],
+      "observed": [2, 19, 11, 3, 5],
+      "forfeited": [1, 7, 13, 5, 3],
+      "reserve": [2, 11, 101, 23, 5],
+      "redeem": [3, 17, 119, 29, 7],
+      "release": [1, 9, 73, 19, 3],
+      "fresh": [1, 2, 3, 4, 5],
+      "expected": {
+        "held": [5, 56, 120, 16, 6],
+        "observed": [5, 36, 130, 32, 12],
+        "total": [12, 101, 266, 57, 26]
+      }
+    },
+    {
+      "name": "refuse-unfunded-capacity-redemption",
+      "held": [0, 0, 6, 9, 0],
+      "observed": [0, 0, 0, 0, 0],
+      "forfeited": [0, 0, 0, 0, 0],
+      "reserve": [0, 0, 1, 0, 0],
+      "redeem": [0, 0, 8, 0, 0],
+      "release": [0, 0, 0, 0, 0],
+      "fresh": [0, 0, 9, 0, 0],
+      "expected": null
+    },
+    {
+      "name": "refuse-return-of-already-redeemed-release-stock",
+      "held": [0, 0, 6, 9, 0],
+      "observed": [0, 0, 0, 0, 0],
+      "forfeited": [0, 0, 0, 0, 0],
+      "reserve": [0, 0, 0, 1, 0],
+      "redeem": [0, 0, 0, 8, 0],
+      "release": [0, 0, 0, 3, 0],
+      "fresh": [0, 0, 0, 9, 0],
+      "expected": null
+    }
+  ],
+  "retirements": [
+    {
+      "name": "forfeit-all-five-exact-journal-balances",
+      "held": [5, 56, 120, 16, 6],
+      "forfeited": [1, 7, 13, 5, 3],
+      "journal": [5, 56, 120, 16, 6],
+      "expected": [6, 63, 133, 21, 9]
+    },
+    {
+      "name": "refuse-different-journal-capacity",
+      "held": [5, 56, 120, 16, 6],
+      "forfeited": [1, 7, 13, 5, 3],
+      "journal": [5, 56, 119, 16, 6],
+      "expected": null
+    },
+    {
+      "name": "refuse-different-journal-release",
+      "held": [5, 56, 120, 16, 6],
+      "forfeited": [1, 7, 13, 5, 3],
+      "journal": [5, 56, 120, 15, 6],
+      "expected": null
+    }
+  ]
+}

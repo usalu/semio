@@ -84,7 +84,7 @@ pub struct TextEditorDeliveryState {
     pub selection_undeclared: bool,
     pub explicit_dirty: bool,
     pub explicit_base: Option<String>,
-    pub explicit_changes: Option<String>,
+    pub explicit_changes: Vec<semio_ui_declaration::ui::DraftChange>,
     pub explicit_conflict: bool,
     pub explicit_past: VecDeque<String>,
     pub explicit_future: VecDeque<String>,
@@ -195,10 +195,10 @@ impl TextEditorDeliveryState {
             return false;
         }
         self.explicit_base = None;
-        if self.explicit_changes.as_mut().is_some_and(Self::close_string) {
+        if self.explicit_changes.last_mut().is_some_and(|change| Self::close_string(&mut change.insert)) || self.explicit_changes.pop().is_some() {
             return false;
         }
-        self.explicit_changes = None;
+        self.explicit_changes = Vec::new();
         self.explicit_conflict = false;
         if self.explicit_past.back_mut().is_some_and(Self::close_string) || self.explicit_future.back_mut().is_some_and(Self::close_string) {
             return false;
@@ -230,6 +230,7 @@ impl TextEditorDeliveryState {
             && !self.selection_undeclared
             && !self.explicit_dirty
             && self.explicit_base.is_none()
+            && self.explicit_changes.capacity() == 0
             && !self.explicit_conflict
             && self.explicit_past.is_empty()
             && self.explicit_future.is_empty()

@@ -51,7 +51,7 @@ fn large_sheet_checkpoints_replay_and_cancellation_interrupts_planning() {
     for _ in 0..10_000 {
         let mut observed = None;
         caller.turn(LAYOUT_EXPORT_FIXTURE_TURN, |cx| cx.with_original_work_loan(1, u64::MAX, |same| {
-            observed = job.step(same)?.as_ref().map(LayoutExportObserved::of_borrow); Ok(())
+            observed = job.step_with_drawing_read(same, None)?.as_ref().map(LayoutExportObserved::of_borrow); Ok(())
         })).unwrap();
         if let Some(LayoutExportObserved::Checkpoint { state, .. }) = observed {
             if job.stage == ExportStage::Plan { checkpoint = Some(state); break; }
@@ -62,7 +62,7 @@ fn large_sheet_checkpoints_replay_and_cancellation_interrupts_planning() {
     caller.cancel().cancel_now();
     let mut cancelled = false;
     for _ in 0..64 {
-        let observed = caller.turn(LAYOUT_EXPORT_FIXTURE_TURN, |cx| Ok(job.step(cx)?.as_ref().map(LayoutExportObserved::of_borrow))).unwrap();
+        let observed = caller.turn(LAYOUT_EXPORT_FIXTURE_TURN, |cx| Ok(job.step_with_drawing_read(cx, None)?.as_ref().map(LayoutExportObserved::of_borrow))).unwrap();
         if observed == Some(LayoutExportObserved::Cancelled) { cancelled = true; break; }
     }
     assert!(cancelled, "planning cancellation must be observed before another page is shaped");

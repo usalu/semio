@@ -8,7 +8,7 @@ use semio_framework_value::{ReplyStash,retained_clone::RetainedOwnedProjectionAd
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeDecodeCloseControl,NativeRetirementDecodeControl,NativeConstructionStepOutcome,NativeConstructionStepResult,OriginalReceivingPrimary,NativeReceivingFailure};
 use semio_os_store_codec_registry::native_snapshot::OriginalArtifactPairFailure;
 use store::os_spr::history::{HistoryLog,HistoryEdit,HistoryOpMeta,HistoryMessage,RetainedHistoryFold};
-use std::mem::{size_of,ManuallyDrop};
+use std::mem::{size_of,ManuallyDrop,MaybeUninit};
 type FoldJob=protocol::HistoryFoldJob<'static,RetainedHistoryFold>;
 type OperationReceiver<M>=Box<dyn semio_os_store_operation_wire::ArtifactOriginalOperationReceiving<M>>;
 type Native<'a,'b>=NativeRetirementDecodeControl<'a,'b>;
@@ -130,13 +130,35 @@ impl Construction{
 }
 /// 🎟️ The caller keeps this resident from the first actor lease until the Window load is born and settled.
 #[derive(Default)]
-pub struct WindowConfigLoadAdmission{construction:Construction,actor:Option<protocol::ActorId>,actor_close:Option<ControlledRetirement<protocol::ActorId>>,settled:bool}
+pub struct WindowConfigLoadAdmission {
+    construction: Construction,
+    actor: Option<protocol::ActorId>,
+    actor_close: Option<ControlledRetirement<protocol::ActorId>>,
+    frame: Option<WindowLoadFrame>,
+    settled: bool,
+}
 impl WindowConfigLoadAdmission{
- pub fn terminal_is_empty(&self)->bool{self.construction.terminal_is_empty()&&self.actor.is_none()&&self.actor_close.is_none()}
- pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if self.actor.is_some()||self.actor_close.is_some(){close_owned(cx,&mut self.actor,&mut self.actor_close)?;return Ok(false)}
-  let closed=self.construction.close(cx)?;if closed{self.settled=false}Ok(closed)
- }
+    pub fn terminal_is_empty(&self) -> bool {
+        self.construction.terminal_is_empty() && self.actor.is_none() && self.actor_close.is_none() && self.frame.is_none()
+    }
+
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        if !self.construction.close(cx)? { return Ok(false); }
+        if let Some(frame) = self.frame.as_ref() {
+            if !frame.binding.matches(cx) {
+                return Err(invalid("saved Window frame close changed its original mounted source").into());
+            }
+            let demand = RetirementDemand { release_bytes: size_of_val(frame.storage.as_ref()), ..header::<Option<WindowLoadFrame>>() };
+            retire_unit(cx, demand, || { self.frame = None; Ok(()) })?;
+            return Ok(false);
+        }
+        if self.actor.is_some() || self.actor_close.is_some() {
+            close_owned(cx, &mut self.actor, &mut self.actor_close)?;
+            return Ok(false);
+        }
+        self.settled = false;
+        Ok(true)
+    }
 }
 #[derive(semio_framework_value::RetireOwned)]
 struct Pending<M:RetireOwned+Send+Sync+'static>{id:String,actor:Option<protocol::ActorId>,line:Option<String>,forwards:Vec<M>,inverse:semio_framework_value_persistent::list::PagedList<M,{usize::MAX}>,metadata:Vec<protocol::MutationMeta>,verb:Option<String>,started:String,finished:Option<String>,messages:Vec<protocol::MutationMessage>,message_id:String}
@@ -148,6 +170,103 @@ pub struct TypedWindowConfigPackLoad<O:WindowConfigOwner>{
  pub candidate_authority:Option<WindowConfigAuthorityIdentity>,pub candidate:ManuallyDrop<Option<WindowConfigPartition<O>>>,pub displaced:ManuallyDrop<Option<WindowConfigPartition<O>>>,
  pub window_id:ManuallyDrop<Option<String>>,pub window_kind_id:ManuallyDrop<Option<String>>,pub registry_lifetime:u64,pub partition_generation:Option<u64>,pub phase:WindowConfigPackLoadPhase,pub diagnostic:Option<WindowConfigPackLoadDiagnostic>,pub completed_bytes:u64,pub total_bytes:u64,pub registry_address:Option<semio_framework_value::SharedUtf8>,pub registry_inserting:bool,pub committed:bool,
  sources:ManuallyDrop<Sources<O::State,O::Mutation>>,sources_close:Option<ControlledRetirement<Sources<O::State,O::Mutation>>>,pair:Option<Box<dyn WindowConfigNativePairReceiving<O::State>>>,history_source:Option<WindowConfigHistorySource>,fold_job:Option<FoldJob>,initializer:Option<Box<WindowConfigInitialization<O>>>,outcome:JobOutcomeDescriptorSlot,construction:Construction,wire:Option<RetainedCloneSource<Vec<u8>>>,wire_admission:Option<semio_framework_value::retained_clone::RetainedCloneSourceAdmission<Vec<u8>,Vec<u8>,()>>,wire_projection:Option<RetainedOwnedProjection<Vec<u8>>>,wire_projecting:RetainedOwnedProjectionAdmission<Vec<u8>>,wire_reply:ReplyStash<ValueError>,wire_take_reply:ReplyStash<ValueError>,receiver:Option<OperationReceiver<O::Mutation>>,factory:Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<O::Mutation>>>,factory_close:Option<FactoryAuthority>,metadata_close:Option<ControlledRetirement<(Option<String>,Option<String>,Option<semio_framework_value::SharedUtf8>)>>,pair_failure_close:Option<ControlledRetirement<OriginalArtifactPairFailure>>,binding:OriginalSourceBinding,digest:Option<[u8;32]>,stage:u8,edit_index:usize,operation_index:usize,metadata_phase:u8,taking_operation:bool,dependency_index:usize,message_index:usize,ready:bool,closing:bool,terminal:bool,
+}
+
+/// The frame contains only empty fields until the final paid placement of the original inputs.
+struct WindowLoadFrame {
+    storage: Box<dyn Any + Send>,
+    binding: OriginalSourceBinding,
+    field: usize,
+    offset: usize,
+}
+
+impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
+    semio_framework_value::initialization::original_empty_fields!(
+        EMPTY_FIELDS, empty_field_demand, initialize_empty_field;
+        phase = WindowConfigPackLoadPhase::EnvelopeIdentity,
+        diagnostic = None,
+        completed_bytes = 0,
+        registry_address = None,
+        registry_inserting = false,
+        committed = false,
+        sources = ManuallyDrop::new(Sources::empty()),
+        pair = None,
+        history_source = None,
+        fold_job = None,
+        initializer = None,
+        outcome = JobOutcomeDescriptorSlot::empty(),
+        construction = Construction::default(),
+        wire = None,
+        wire_admission = None,
+        wire_projection = None,
+        wire_projecting = Default::default(),
+        wire_reply = Default::default(),
+        wire_take_reply = Default::default(),
+        receiver = None,
+        factory = None,
+        factory_close = None,
+        metadata_close = None,
+        pair_failure_close = None,
+        digest = None,
+        stage = 0,
+        edit_index = 0,
+        operation_index = 0,
+        metadata_phase = 0,
+        taking_operation = false,
+        dependency_index = 0,
+        message_index = 0,
+        ready = false,
+        closing = false,
+        terminal = false
+    );
+}
+
+impl WindowLoadFrame {
+    fn complete<O: WindowConfigOwner>(&self) -> bool {
+        self.field == 3 + TypedWindowConfigPackLoad::<O>::EMPTY_FIELDS
+    }
+
+    fn initialize_next<O: WindowConfigOwner>(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        use semio_framework_value::initialization::{absent_chunk_bytes, initialize_absent_field_at};
+        type Load<O> = TypedWindowConfigPackLoad<O>;
+        type LoadSources<O> = Sources<<O as WindowConfigOwner>::State, <O as WindowConfigOwner>::Mutation>;
+        let target = self.storage.downcast_mut::<MaybeUninit<Load<O>>>()
+            .ok_or_else(|| invalid("saved Window frame differs from its registered vocabulary"))?.as_mut_ptr();
+        let cursor_bytes = size_of::<(usize, usize)>();
+        let remaining = cx.retained_grant().maximum_copy_bytes.saturating_sub(cursor_bytes);
+        let absence_size = match self.field {
+            0 | 1 => Some(size_of::<Option<WindowConfigPartition<O>>>()),
+            2 => Some(size_of::<Option<ControlledRetirement<LoadSources<O>>>>()),
+            _ => None,
+        };
+        let copy_bytes = match absence_size {
+            Some(extent) => absent_chunk_bytes(extent, self.offset, remaining)?,
+            None => Load::<O>::empty_field_demand(self.field - 3)?.copy_bytes,
+        };
+        if remaining == 0 { return Ok(false); }
+        let demand = RetirementDemand { copy_bytes: copy_bytes + cursor_bytes, depth: 1, ..Default::default() };
+        if demand.copy_bytes > cx.original_turn_ceiling().0.maximum_copy_bytes {
+            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "saved Window field exceeds the mounted copy ceiling").into());
+        }
+        direct_unit(cx, demand, |_| {
+            // Each address is exclusive, and the retained cursor records all previously written bytes.
+            let complete = unsafe {
+                match self.field {
+                    0 => initialize_absent_field_at(std::ptr::addr_of_mut!((*target).candidate).cast::<Option<WindowConfigPartition<O>>>(), self.offset, copy_bytes),
+                    1 => initialize_absent_field_at(std::ptr::addr_of_mut!((*target).displaced).cast::<Option<WindowConfigPartition<O>>>(), self.offset, copy_bytes),
+                    2 => initialize_absent_field_at(std::ptr::addr_of_mut!((*target).sources_close), self.offset, copy_bytes),
+                    index => Load::<O>::initialize_empty_field(target, index - 3, self.offset, copy_bytes),
+                }?
+            };
+            if complete {
+                self.field += 1;
+                self.offset = 0;
+            } else {
+                self.offset += copy_bytes;
+            }
+            Ok(moved(demand))
+        })
+    }
 }
 fn close_fold(cx:&mut StepContext<'_>,job:&mut FoldJob,d:RetirementDemand)->Result<(),OriginalTurnFailure>{
  cx.with_native_retirement(|native|Ok::<_,ValueError>(job.validate_original(native)))??;
@@ -323,14 +442,105 @@ impl<O:WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackLo
 }
 impl<O:WindowConfigOwner> Drop for TypedWindowConfigPackLoad<O>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal,"native saved Window must close every original source under actual authority");if self.terminal{unsafe{ManuallyDrop::drop(&mut self.sources);ManuallyDrop::drop(&mut self.window_id);ManuallyDrop::drop(&mut self.window_kind_id);ManuallyDrop::drop(&mut self.candidate);ManuallyDrop::drop(&mut self.displaced);}}}}
 fn window_config_history_limits(spr_bytes:u32)->semio_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits{semio_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits{file_bytes:spr_bytes,frame_body_bytes:spr_bytes,records:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u32,maximum_fields:128,maximum_text_bytes:1_048_576,maximum_binary_bytes:1_048_576,maximum_json_bytes:1_048_576,maximum_json_allocation_bytes:8_388_608,maximum_json_items:65_536,maximum_json_depth:64}}
-/// 🎟️ The original mounted operation births the concrete retained frame only after leasing its actor and quoting every identifier and Box allocation; `true` means the frame is placed and its construction settled.
-pub fn admit_typed_window_config_pack_load<O:WindowConfigOwner>(registry_lifetime:u64,partition_generation:Option<u64>,pack:&mut Option<WindowConfigPack>,opened_actor:&protocol::ActorId,cx:&mut StepContext<'_>,admission:&mut WindowConfigLoadAdmission,output:&mut Option<WindowConfigPackLoad>)->Result<bool,OriginalTurnFailure>{
- if admission.settled{return Ok(output.is_some())}
- if output.is_some(){let done=admission.construction.run(cx,output,RetirementDemand::default(),|_,_|Err(invalid("original Window load construction resumed without its constructor")))?;admission.settled=done;return Ok(done)}
- let input=pack.as_ref().ok_or_else(||invalid("original Window pack source absent"))?;if input.window_kind_id!=O::WINDOW_KIND_ID||input.source.pair()?.0.len()>O::MAXIMUM_PUBLICATION_BYTES{return Err(invalid("original Window load vocabulary or Pack bound differs").into())}
- if admission.actor.is_none(){let actor=&mut admission.actor;effected(cx,RetirementDemand{copy_bytes:size_of::<Option<protocol::ActorId>>(),..semio_framework_value::SharedUtf8::lease_demand()},|_,effect|{*actor=Some(protocol::ActorId(opened_actor.0.admit_clone(effect).result?.0));Ok(())})?;return Ok(false)}
- let text=15usize.checked_add(O::WINDOW_KIND_ID.len()).and_then(|n|n.checked_add(input.window_id.len())).and_then(|n|n.checked_add(O::SCHEMA.len())).ok_or_else(||invalid("original Window load source metadata overflow"))?;let total_bytes={let pair=input.source.pair()?;(pair.0.len()+pair.1.len())as u64};
- let d=RetirementDemand{copy_bytes:size_of::<TypedWindowConfigPackLoad<O>>()+2*size_of::<WindowConfigPack>()+2*size_of::<WindowConfigPackLoad>()+text,capacity_bytes:size_of::<TypedWindowConfigPackLoad<O>>()+text,depth:1,..Default::default()};let binding=OriginalSourceBinding::borrow(cx);let actor=&mut admission.actor;
- let done=admission.construction.run(cx,output,d,|_,_|{let candidate_authority=WindowConfigAuthorityIdentity::issue().ok_or_else(||invalid("Window partition authority exhausted"))?;let actor=actor.take().ok_or_else(||invalid("original Window load actor lease absent"))?;let input=pack.take().ok_or_else(||invalid("original Window pack source absent"))?;let mut expected=String::with_capacity(15+O::WINDOW_KIND_ID.len()+input.window_id.len());expected.push_str("window-config:");expected.push_str(O::WINDOW_KIND_ID);expected.push(':');expected.push_str(&input.window_id);let sources=Sources{wire:Some(input.source),schema:Some(O::SCHEMA.to_owned()),expected:Some(expected),actor:Some(actor),..Sources::empty()};let storage=Box::<TypedWindowConfigPackLoad<O>>::new_uninit();let owner=Box::write(storage,TypedWindowConfigPackLoad::<O>{candidate_authority:Some(candidate_authority),candidate:ManuallyDrop::new(None),displaced:ManuallyDrop::new(None),window_id:ManuallyDrop::new(Some(input.window_id)),window_kind_id:ManuallyDrop::new(Some(input.window_kind_id)),registry_lifetime,partition_generation,phase:WindowConfigPackLoadPhase::EnvelopeIdentity,diagnostic:None,completed_bytes:0,total_bytes,registry_address:None,registry_inserting:false,committed:false,sources:ManuallyDrop::new(sources),sources_close:None,pair:None,history_source:None,fold_job:None,initializer:None,outcome:JobOutcomeDescriptorSlot::empty(),construction:Construction::default(),wire:None,wire_admission:None,wire_projection:None,wire_projecting:Default::default(),wire_reply:Default::default(),wire_take_reply:Default::default(),receiver:None,factory:None,factory_close:None,metadata_close:None,pair_failure_close:None,binding,digest:None,stage:0,edit_index:0,operation_index:0,metadata_phase:0,taking_operation:false,dependency_index:0,message_index:0,ready:false,closing:false,terminal:false});Ok((WindowConfigPackLoad{inner:ManuallyDrop::new(Some(owner)),closed_progress:WindowConfigPackLoadProgress{phase:WindowConfigPackLoadPhase::Complete,completed_bytes:0,total_bytes:0},closed_diagnostic:None},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;
- admission.settled=done;Ok(done)
+/// Allocates the loader in its final address and initializes it within the mounted copy allowance.
+pub fn admit_typed_window_config_pack_load<O: WindowConfigOwner>(
+    registry_lifetime: u64,
+    partition_generation: Option<u64>,
+    pack: &mut Option<WindowConfigPack>,
+    opened_actor: &protocol::ActorId,
+    cx: &mut StepContext<'_>,
+    admission: &mut WindowConfigLoadAdmission,
+    output: &mut Option<WindowConfigPackLoad>,
+) -> Result<bool, OriginalTurnFailure> {
+    type Load<O> = TypedWindowConfigPackLoad<O>;
+    if admission.settled { return Ok(output.is_some()); }
+    if output.is_some() {
+        admission.settled = admission.construction.settle(cx)?;
+        return Ok(admission.settled);
+    }
+    let input = pack.as_ref().ok_or_else(|| invalid("original Window pack source absent"))?;
+    let (pack_bytes, history_bytes) = input.source.pair()?;
+    if input.window_kind_id != O::WINDOW_KIND_ID || pack_bytes.len() > O::MAXIMUM_PUBLICATION_BYTES {
+        return Err(invalid("original Window load vocabulary or Pack bound differs").into());
+    }
+    let binding = OriginalSourceBinding::borrow(cx);
+    if admission.frame.as_ref().is_some_and(|frame| frame.binding != binding) {
+        return Err(invalid("saved Window frame changed its original mounted source").into());
+    }
+    if admission.actor.is_none() {
+        let actor = &mut admission.actor;
+        let demand = RetirementDemand { copy_bytes: size_of::<Option<protocol::ActorId>>(), ..semio_framework_value::SharedUtf8::lease_demand() };
+        effected(cx, demand, |_, effect| {
+            *actor = Some(protocol::ActorId(opened_actor.0.admit_clone(effect).result?.0));
+            Ok(())
+        })?;
+        return Ok(false);
+    }
+    if admission.frame.is_none() {
+        let demand = RetirementDemand { capacity_bytes: size_of::<Load<O>>(), ..header::<Option<WindowLoadFrame>>() };
+        admission.construction.run_unit(cx, demand, |_, _| {
+            admission.frame = Some(WindowLoadFrame { storage: Box::<Load<O>>::new_uninit(), binding, field: 0, offset: 0 });
+            Ok(((), moved(demand)))
+        })?;
+        return Ok(false);
+    }
+    if admission.construction.resume() {
+        admission.construction.settle(cx)?;
+        return Ok(false);
+    }
+    let frame = admission.frame.as_mut().expect("saved Window frame was allocated");
+    while !frame.complete::<O>() {
+        if !frame.initialize_next::<O>(cx)? { return Ok(false); }
+    }
+    let expected_bytes = 15usize.checked_add(O::WINDOW_KIND_ID.len()).and_then(|n| n.checked_add(input.window_id.len()))
+        .ok_or_else(|| invalid("original Window load source metadata overflow"))?;
+    let text = expected_bytes.checked_add(O::SCHEMA.len()).ok_or_else(|| invalid("original Window load source metadata overflow"))?;
+    let total_bytes = pack_bytes.len().checked_add(history_bytes.len()).ok_or_else(|| invalid("original Window load byte extent overflow"))? as u64;
+    let headers = header::<(
+        Option<WindowLoadFrame>, WindowConfigPack, WindowConfigPackLoad, Option<WindowConfigAuthorityIdentity>,
+        OriginalSourceBinding, u64, Option<u64>, u64, Option<protocol::ActorId>, Option<String>, Option<String>,
+    )>();
+    let demand = RetirementDemand {
+        copy_bytes: headers.copy_bytes.checked_add(text).ok_or_else(|| invalid("original Window load header extent overflow"))?,
+        capacity_bytes: text, ..headers
+    };
+    let frame = &mut admission.frame;
+    let actor = &mut admission.actor;
+    admission.settled = admission.construction.run_unit(cx, demand, |_, _| {
+        let candidate_authority = WindowConfigAuthorityIdentity::issue().ok_or_else(|| invalid("Window partition authority exhausted"))?;
+        let frame = frame.take().expect("completed saved Window frame");
+        let mut storage = frame.storage.downcast::<MaybeUninit<Load<O>>>()
+            .unwrap_or_else(|_| unreachable!("each initialized field checked the saved Window frame's vocabulary"));
+        let input = pack.take().expect("saved Window source was checked before placement");
+        let actor = actor.take().expect("saved Window actor lease was checked before placement");
+        let mut expected = String::with_capacity(expected_bytes);
+        expected.push_str("window-config:");
+        expected.push_str(O::WINDOW_KIND_ID);
+        expected.push(':');
+        expected.push_str(&input.window_id);
+        let target = storage.as_mut_ptr();
+        // The empty-field cursor covered all fields except the original input headers installed here.
+        let owner = unsafe {
+            std::ptr::addr_of_mut!((*target).candidate_authority).write(Some(candidate_authority));
+            std::ptr::addr_of_mut!((*target).window_id).write(ManuallyDrop::new(Some(input.window_id)));
+            std::ptr::addr_of_mut!((*target).window_kind_id).write(ManuallyDrop::new(Some(input.window_kind_id)));
+            std::ptr::addr_of_mut!((*target).registry_lifetime).write(registry_lifetime);
+            std::ptr::addr_of_mut!((*target).partition_generation).write(partition_generation);
+            std::ptr::addr_of_mut!((*target).total_bytes).write(total_bytes);
+            std::ptr::addr_of_mut!((*target).binding).write(binding);
+            let sources = &mut *std::ptr::addr_of_mut!((*target).sources);
+            sources.wire = Some(input.source);
+            sources.schema = Some(O::SCHEMA.to_owned());
+            sources.expected = Some(expected);
+            sources.actor = Some(actor);
+            storage.assume_init()
+        };
+        *output = Some(WindowConfigPackLoad {
+            inner: ManuallyDrop::new(Some(owner)),
+            closed_progress: WindowConfigPackLoadProgress { phase: WindowConfigPackLoadPhase::Complete, completed_bytes: 0, total_bytes: 0 },
+            closed_diagnostic: None,
+        });
+        Ok(((), moved(demand)))
+    })?;
+    Ok(admission.settled)
 }

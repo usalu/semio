@@ -65,25 +65,27 @@ async fn io_declaration_registers_every_declared_hop() {
 #[test]
 fn example_fixture_parses_and_solves() {
     use pack::snapshot::ArtifactDsl;
+    use semio_s_artifact_fem_2d_engine::fem2d_engine::{fem2d_solve, fem2d_solve_all, mesh_preview::fem2d_nodal_von_mises, modal_buckling::fem2d_buckling};
+    const DEAD: &str = "scope:1:8:loadCase4:dead";
     let doc: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("example fixture parses");
-    assert_eq!(doc.nodes.len(), 12);
-    assert_eq!(doc.elements.len(), 9);
-    assert_eq!(doc.regions.len(), 1);
-    assert_eq!(doc.combinations.len(), 1);
+    let counts = (doc.nodes.len(), doc.elements.len(), doc.regions.len(), doc.combinations.len());
+    let result = fem2d_solve(&doc, "dead");
+    let results = fem2d_solve_all(&doc);
+    let nodal_von_mises = results.as_ref().ok().and_then(|results| results.get(DEAD)).map(|result| fem2d_nodal_von_mises(&doc, result));
+    let buckling = fem2d_buckling(&doc, "dead");
+    semio_framework_value::FromValue::retire_decoded(doc);
 
-    let result = semio_s_artifact_fem_2d_engine::fem2d_engine::fem2d_solve(&doc, "dead").expect("example fixture solves");
-    assert!(result.checks.residual_norm < 1e-6);
+    assert_eq!(counts, (12, 9, 1, 1));
+    assert!(result.expect("example fixture solves").checks.residual_norm < 1e-6);
+    let results = results.expect("example fixture solves all");
+    assert!(results.contains_key("scope:1:8:loadCase4:live"), "missing live case result");
+    assert!(results.contains_key("scope:1:11:combination3:uls"), "missing uls combination result");
+    assert!(results[DEAD].checks.residual_norm < 1e-6);
 
-    let results = semio_s_artifact_fem_2d_engine::fem2d_engine::fem2d_solve_all(&doc).expect("example fixture solves all");
-    assert!(results.contains_key("dead"), "missing dead case result");
-    assert!(results.contains_key("live"), "missing live case result");
-    assert!(results.contains_key("uls"), "missing uls combination result");
-    assert!(results.get("dead").unwrap().checks.residual_norm < 1e-6);
-
-    let nodal_von_mises = semio_s_artifact_fem_2d_engine::fem2d_engine::mesh_preview::fem2d_nodal_von_mises(&doc, "dead").expect("nodal von mises resolves");
+    let nodal_von_mises = nodal_von_mises.expect("missing dead case result").expect("nodal von mises resolves");
     assert!(!nodal_von_mises.is_empty(), "the region carries a real area load in the dead case");
 
-    let buckling = semio_s_artifact_fem_2d_engine::fem2d_engine::modal_buckling::fem2d_buckling(&doc, "dead").expect("buckling resolves for the dead case's compressed column");
+    let buckling = buckling.expect("buckling resolves for the dead case's compressed column");
     assert!(buckling.factors[0].is_finite() && buckling.factors[0] > 1.0, "expected an illustrative (finite, >1) load factor: {:?}", buckling.factors);
 }
 // #endregion 🔖️ExampleFixture

@@ -14,3 +14,9 @@ The focused assets suite passed with the diagnostic hook. The full Play suite th
 ```
 
 An independent Node assertion checked that the registry custody wrapper recognizes the closed invalidation and keeps the original error object in both `fault` and `cause`. The successful custody branch returned its original value. The Play Vitest configuration and Bolt fallback remain in place.
+
+## November 21 regression and rerun
+
+Node again refused three test suites while loading retained Cargo source provenance. `CargoProvenanceSessionV1` and `CargoSourceWitnessV1` used constructor parameter properties. Both now declare and assign the same instance fields explicitly. The source witness and retention logic use the original argument values. The Play landing grid assertion was separately updated for the existing logical navbar padding. [Landing grid regression](play-landing-grid-test.md)
+
+After the two repairs all 81 Play Vitest tests passed in eight files. All 13 release routing tests passed, including the independent-client test for published status, MIME, body, cache and CORS. The CDN cohort and browser boot checks remained pending.

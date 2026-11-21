@@ -67,3 +67,7 @@ $BUN r3-project2d.ts <asset> --scale N --view elevation|front|plan [--bone ID] [
 ## 2026-11-20 16:55 — `r3-validate.ts` also checks print suitability
 
 Besides schema and `validateAsset`, it now runs the product's `validateRanges` and `measureSuitability` against the default print profile for every authored representation. New lines start with `PRINT` (`PRINT unsuitable $.representations.<scale>` = the product refuses to draw that scale; `PRINT range-end-feature ...` = the declared valid range ends below a printable feature). They count as `validateAsset` issues, so `VALID` now means the product also draws every scale.
+
+## 2026-11-21 — `valid-range-gap`: never narrow a band into a hole (R01, design E2)
+
+`validateAsset` (so `r3-validate.ts`) now reports `ASSET valid-range-gap representations.<scale>.validRange` when the valid ranges of the authored representations leave a hole in the promised bands of the authored presets (1:50 → 1:20…75, 1:100 → 75…150, 1:200 → 150…350, 1:500 → 350…1000; `SCALE_BANDS` in `S/🧬️schema`). Inner boundaries between two authored neighbours may move; the finest start and the coarsest end may not shrink. A `PRINT range-end-*` finding is fixed by redrawing the named shapes (and their 3D solids at that scale) so they are at least the profile minimum at the band end (0.2 mm on paper: 70 mm real at 1:350, 200 mm at 1:1000), never by narrowing. Sweep: `$BUN r5-range-gaps-sweep.ts`; what a widened band would violate: `$BUN r5-range-gaps-probe.ts <asset>`.

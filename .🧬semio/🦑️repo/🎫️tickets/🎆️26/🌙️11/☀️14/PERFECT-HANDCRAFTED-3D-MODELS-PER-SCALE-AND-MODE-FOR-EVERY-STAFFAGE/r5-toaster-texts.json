@@ -1,0 +1,32 @@
+{
+  "volumes": {
+    "200": [
+      {
+        "en": "Body: plinth, feet and wrap merge into one housing skin of six sections from the worktop to the top, closed below; the cap is a 30 mm deck with both slots, 32 mm wide so that the slices run free in them, and the slices are 30 mm thick so that they fill their slots; the lever is a 30 mm block on the long face, dial and button are below the scale.",
+        "de": "Körper: Sockel, Füße und Mantel gehen in einer Gehäusehaut aus sechs Schnitten von der Arbeitsplatte bis oben auf, unten geschlossen; die Haube ist ein Deck von 30 mm mit beiden Schlitzen, 32 mm breit, sodass die Scheiben frei darin laufen, und die Scheiben sind 30 mm dick, sodass sie ihre Schlitze füllen; der Hebel ist ein Block von 30 mm an der Längsseite, Drehknopf und Taste liegen unter dem Maßstab."
+      },
+      {
+        "en": "Thermal: housing, deck, slices and lever block by reference; the dial is a 3 mm skin of its real face on the long side, the feet two 8 mm runners in the housing bottom, and the slot air four outlet patches in the open slot ends beside the slices, flush with the deck.",
+        "de": "Thermik: Gehäuse, Deck, Scheiben und Hebelblock als Verweise; der Drehknopf ist eine 3-mm-Haut seiner wirklichen Fläche an der Längsseite, die Füße zwei 8-mm-Kufen im Gehäuseboden, und die Schlitzluft vier Auslassflächen in den offenen Schlitzenden neben den Scheiben, bündig mit dem Deck."
+      },
+      {
+        "en": "Structure: a 30 mm base frame on two 30 mm support runners, the chamber tube with 6 mm walls, the carriage as one angle with its upright, and lever arm and dial spindle as 30 mm bars, the spindle round so that it turns in place; the mass of the appliance at its centre.",
+        "de": "Tragwerk: ein Grundrahmen von 30 mm auf zwei Auflagerkufen von 30 mm, das Kammerrohr mit 6 mm Wand, der Schlitten als ein Winkel mit Steg sowie Hebelarm und Reglerachse als Stäbe von 30 mm, die Achse rund, damit sie sich am Ort dreht; die Masse des Geräts in ihrem Schwerpunkt."
+      }
+    ],
+    "500": [
+      {
+        "en": "Body: a digital model without a printable drawing: the housing is one closed mass of five sections with the shoulders rounding into the top, and both slices are one bread dome that stands in it and still rides the carriage.",
+        "de": "Körper: ein digitales Modell ohne druckbare Zeichnung: das Gehäuse ist eine geschlossene Masse aus fünf Schnitten, deren Schultern sich in die Oberseite runden, und beide Scheiben sind eine Brotkuppe, die darin steht und weiter mit dem Schlitten fährt."
+      },
+      {
+        "en": "Thermal: the housing and the dome by reference, the top plate as a 1 mm skin on the flat top, the controls as one 3 mm skin at the lever, the feet as two 8 mm runners and the slot air as two outlet patches at the ends of the dome, flush with the top.",
+        "de": "Thermik: Gehäuse und Kuppe als Verweise, die Deckplatte als 1-mm-Haut auf der flachen Oberseite, die Bedienung als eine 3-mm-Haut am Hebel, die Füße als zwei 8-mm-Kufen und die Schlitzluft als zwei Auslassflächen an den Enden der Kuppe, bündig mit der Oberseite."
+      },
+      {
+        "en": "Structure: the chamber tube stands directly on the two support runners, the carriage is one plate, the lever arm one upright bar from the carriage to the knob and the dial spindle a stub; the mass of the appliance at its centre.",
+        "de": "Tragwerk: das Kammerrohr steht direkt auf den zwei Auflagerkufen, der Schlitten ist eine Platte, der Hebelarm ein stehender Stab vom Schlitten zum Knopf und die Reglerachse ein Stumpf; die Masse des Geräts in ihrem Schwerpunkt."
+      }
+    ]
+  }
+}

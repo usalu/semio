@@ -1,0 +1,20 @@
+{
+  "fontSize": {
+    "before": "12",
+    "after": "16"
+  },
+  "fillRed": {
+    "before": "0.2",
+    "after": "0.7"
+  },
+  "language": {
+    "before": "",
+    "after": "de-CH"
+  },
+  "subject": {
+    "before": "",
+    "after": "Layout review"
+  },
+  "text": "Draft text",
+  "author": "Original Author"
+}

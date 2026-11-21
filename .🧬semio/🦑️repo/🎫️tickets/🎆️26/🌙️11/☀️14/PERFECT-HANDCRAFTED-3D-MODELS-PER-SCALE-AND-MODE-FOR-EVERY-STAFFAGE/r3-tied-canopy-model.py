@@ -86,7 +86,7 @@ def pin(id, p, tone=0.1, role="detail", r=k.PIN_R, head=k.PIN_HEAD_R, z0=k.PIN_Z
 
 def tube(id, origin, axis, t0, t1, r, hollow=None, **rest):
     """🧪 A round tube along an axis in the bone plane, solid or hollow."""
-    prof = [[t0, 0], [t0, r], [t1, r], [t1, 0]] if hollow is None else [[t0, r - hollow], [t0, r], [t1, r], [t1, r - hollow]]
+    prof = [[t0, 0], [t0, r], [t1, r], [t1, 0]] if hollow is None else [[t0, r - hollow], [t0, r], [t1, r], [t1, r - hollow], [t0, r - hollow]]
     return rev(id, "steel", "body", 0.45, prof, [axis[0], axis[1], 0], [origin[0], origin[1], 0], **rest)
 
 
@@ -125,9 +125,9 @@ def scale50():
         xy("clevis-bridge-wall", "steel", "body", 0.3, k.bridge(k.PW, k.AXIS_W), -k.CHEEK_IN, k.CHEEK_IN),
         rev("clevis-body-wall", "steel", "body", 0.35, k.FORK_BODY, [k.AXIS_W[0], k.AXIS_W[1], 0], [k.PW[0], k.PW[1], 0]),
         pin("pin-wall", k.PW),
-        tube("strut-tube", k.PB, k.AXIS_B, k.TUBE_FROM, k.L - k.TUBE_FROM, k.TUBE_R),
+        tube("strut-tube", k.PB, k.AXIS_B, k.TUBE_FROM, k.L - k.TUBE_FROM, k.TUBE_R, hollow=k.TUBE_WALL),
     ]
-    rod = ["gusset-beam", "clevis-beam", "clevis-bridge-beam", "clevis-body-beam", "pin-beam", "gusset-wall", "clevis-wall", "clevis-bridge-wall", "clevis-body-wall", "pin-wall", "strut-tube"]
+    rod = ["gusset-beam", "clevis-beam", "clevis-bridge-beam", "clevis-body-beam", "pin-beam", "gusset-wall", "clevis-wall", "clevis-bridge-wall", "clevis-body-wall", "pin-wall"]
     thermal = [
         ref("th-wall-concrete", "wall-core", region="wall-face", layer="wall-concrete"),
         ref("th-wall-wool", "wall-insulation", region="wall-face", layer="wall-wool"),
@@ -143,6 +143,7 @@ def scale50():
         *[ref(f"th-clamp-{i}", f"clamp-{i}", region="canopy-steel") for i in range(5)],
         *[ref(f"th-glass-{i}", f"glass-{i}", region="canopy-glass", sectionFaces=["-v"]) for i in range(4)],
         *[ref(f"th-{s}", s, region="rod-steel") for s in rod],
+        tube("th-strut-tube", k.PB, k.AXIS_B, k.TUBE_FROM, k.L - k.TUBE_FROM, k.TUBE_R, region="rod-steel"),
     ]
     structure = [
         ref("m-beam", "beam", member=BONE, part="member"),

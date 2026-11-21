@@ -54,7 +54,7 @@ impl<'c> NativeDecodeControl<'c>{
     frame.finish_allocation(self)?;if frame.phase()==Phase::EffectStarted{return Ok(NativeReceivingEffectState::Pending{work:frame.claim_child_work()})}
    }else if frame.child_work().is_some(){frame.finish_unallocated(self)?}else{return Ok(NativeReceivingEffectState::Pending{work:0})}
   }
-  if frame.phase()==Phase::EffectFinished{if frame.child_work().is_none(){frame.cancel_unperformed_work(self)?}frame.receipt(self)?}
+  if frame.phase()==Phase::EffectFinished{frame.receipt(self)?}
   if frame.phase()==Phase::ReceiptStarted&&!frame.recover_receipt(self)?{return Ok(NativeReceivingEffectState::Pending{work:frame.claim_child_work()})}
   if retain_receipt{if frame.finished_work_proof().is_none(){frame.finish_accepted_work_for_payout(self)?}}else if retain_work&&frame.child_work().is_some()&&frame.has_accepted_receipt(){frame.prepare_transfer_retaining_work(self)?}else{frame.prepare_transfer(self)?}Ok(NativeReceivingEffectState::Ready{work:frame.claim_child_work()})
  }

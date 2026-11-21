@@ -316,12 +316,25 @@ def catalogue(case):
             bits += idx << shift
         out["class-bits"] = info(bits)
     elif e == "E90.08":
-        if "g_mean" in num:
-            m, v = num["g_mean"], num["v_g"]
-            sup, inf = (m, m) if v <= 0.05 else (m * (1 + 1.64 * v), m * (1 - 1.64 * v))
-            out["g-k-sup"] = info(sup); out["g-k-inf"] = info(inf); out["v-g-bound"] = minimum(0.1, max(v, 1e-9))
-        if "q_mean" in num:
-            out["q-k"] = info(phi_pdf_fractile_gumbel(num["q_mean"], num["q_cov"]))
+        g_basis = text.get("g_value_basis")
+        if g_basis == "single-mean":
+            out["g-k"] = info(num["g_mean"])
+        elif g_basis == "normal-bounds":
+            mean = num["g_mean"]
+            sd = abs(mean) * num["v_g"]
+            for key, probability in (("g-k-sup", 0.95), ("g-k-inf", 0.05)):
+                out[key] = info(mean if sd == 0 else stats.norm.ppf(probability, loc=mean, scale=sd))
+        elif g_basis == "prescribed-bounds":
+            out["g-k-sup"] = info(num["g_prescribed_upper"])
+            out["g-k-inf"] = info(num["g_prescribed_lower"])
+        q_basis = text.get("q_value_basis")
+        if q_basis == "prescribed":
+            out["q-k"] = info(num["q_prescribed"])
+        elif q_basis == "annual-gumbel":
+            m, v = num["q_mean"], num["q_cov"]
+            scale = m * v * math.sqrt(6) / math.pi
+            location = m - np.euler_gamma * scale
+            out["q-k"] = info(m if scale == 0 else stats.gumbel_r.ppf(num.get("q_probability", 0.98), loc=location, scale=scale))
     elif e == "E90.09":
         row = psi_of(annex, category(text["category"], num.get("altitude", 0.0))) if "category" in text else (num["psi0"], num["psi1"], num["psi2"])
         out["psi0"], out["psi1"], out["psi2"] = info(row[0]), info(row[1]), info(row[2])

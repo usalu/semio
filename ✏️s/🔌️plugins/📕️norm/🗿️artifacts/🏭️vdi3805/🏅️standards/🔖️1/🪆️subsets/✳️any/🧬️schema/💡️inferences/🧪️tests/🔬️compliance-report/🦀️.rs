@@ -109,7 +109,7 @@ async fn multi_profile_part_check_not_applicable_without_product() {
 #[semio_framework_async_macros::async_test]
 async fn radiator_heat_exponent_bounds() {
     let mut doc = conforming_valve_dataset();
-    doc.catalog.products[0].sheet = SheetId(3);
+    doc.catalog.products[0].sheet = SheetId(6);
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Radiator(RadiatorAttributes {
         standard_output_w: 1200.0,
         heat_exponent_n: 0.5,
@@ -120,7 +120,7 @@ async fn radiator_heat_exponent_bounds() {
     });
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     let report = evaluate(&doc);
-    let n = report.checks.iter().find(|c| c.id.contains("vdi3805.3.n")).expect("n check");
+    let n = report.checks.iter().find(|c| c.id.contains("vdi3805.6.n")).expect("n check");
     assert_eq!(n.status, CheckStatus::Fail);
 }
 
@@ -300,7 +300,7 @@ async fn edition_profile_fail_remedy_is_applicable_on_attribute_leaf() {
 #[semio_framework_async_macros::async_test]
 async fn sheet_routing_uses_product_sheet_even_when_attributes_generic() {
     let mut doc = conforming_valve_dataset();
-    doc.catalog.products[0].sheet = SheetId(5);
+    doc.catalog.products[0].sheet = SheetId(4);
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Generic(GenericAttributes::default());
     doc.catalog.products[0].records = vec![
         semio_s_artifact_norm_vdi3805_model::NativeRecord {
@@ -324,7 +324,7 @@ async fn sheet_routing_uses_product_sheet_even_when_attributes_generic() {
         },
     ];
     let report = evaluate(&doc);
-    assert!(report.checks.iter().any(|c| c.id.contains("vdi3805.5.") && (c.id.contains(".q.") || c.id.contains(".eta.") || c.id.contains(".sync."))));
+    assert!(report.checks.iter().any(|c| c.id.contains("vdi3805.4.") && (c.id.contains(".q.") || c.id.contains(".eta.") || c.id.contains(".sync."))));
     assert!(report.checks.iter().any(|c| c.id.contains(".sync.") && c.status == CheckStatus::Fail), "Generic config vs pump 210 must sync-fail");
 }
 

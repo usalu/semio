@@ -211,39 +211,98 @@ export function eraseInkStrokeEventsAtPoint(doc: InkDocument, x: number, y: numb
   return hits.map((block) => ({ operation: "removeBlock", blockId: block.id }));
 }
 
-/** ✂️ Splits an ink stroke into surviving point-runs after removing points within `radius` of (x, y). */
+/** ✂️ Cuts the ink polyline at the eraser circle and preserves every outside run with length. */
 export function eraseInkStrokePointsInItem(block: InkStrokeItem, x: number, y: number, radius: number): InkStrokeItem[] {
-  const keptIndices: number[] = [];
-  for (let index = 0; index < block.points.length; index += 1) {
-    const point = block.points[index]!;
-    if (Math.hypot(block.x + point[0] - x, block.y + point[1] - y) > radius) keptIndices.push(index);
-  }
-  if (keptIndices.length === block.points.length) return [block];
-  if (!keptIndices.length) return [];
+  const first = block.points[0];
+  if (!first || !(radius >= 0)) return [block];
+  const centerX = x - block.x;
+  const centerY = y - block.y;
   const runs: Vec2[][] = [];
-  let current: Vec2[] = [block.points[keptIndices[0]!]!];
-  for (let index = 1; index < keptIndices.length; index += 1) {
-    if (keptIndices[index]! - keptIndices[index - 1]! > 1) {
-      if (current.length >= 2) runs.push(current);
-      current = [block.points[keptIndices[index]!]!];
-    } else {
-      current.push(block.points[keptIndices[index]!]!);
+  let run: Vec2[] = [];
+  let changed = false;
+  let hasSegment = false;
+
+  const append = (point: Vec2) => {
+    const last = run.at(-1);
+    if (!last || last[0] !== point[0] || last[1] !== point[1]) run.push(point);
+  };
+  for (let index = 1; index < block.points.length; index++) {
+    const start = block.points[index - 1]!;
+    const end = block.points[index]!;
+    const length = Math.hypot(end[0] - start[0], end[1] - start[1]);
+    if (length === 0) continue;
+    hasSegment = true;
+
+    const dx = (end[0] - start[0]) / length;
+    const dy = (end[1] - start[1]) / length;
+    const offsetX = centerX - start[0];
+    const offsetY = centerY - start[1];
+    const perpendicular = Math.abs(offsetX * dy - offsetY * dx);
+    const projection = offsetX * dx + offsetY * dy;
+    const halfChord = perpendicular < radius ? Math.sqrt(radius - perpendicular) * Math.sqrt(radius + perpendicular) : 0;
+    const enter = Math.max(0, projection - halfChord);
+    const exit = Math.min(length, projection + halfChord);
+    const tolerance = 8 * Number.EPSILON * Math.max(length, Math.abs(projection), radius);
+    if (exit - enter <= tolerance) {
+      append(start);
+      append(end);
+      continue;
+    }
+
+    changed = true;
+    if (enter > tolerance) {
+      append(start);
+      append([start[0] + dx * enter, start[1] + dy * enter]);
+    }
+    if (run.length > 1) runs.push(run);
+    run = [];
+    if (length - exit > tolerance) {
+      append([start[0] + dx * exit, start[1] + dy * exit]);
+      append(end);
     }
   }
-  if (current.length >= 2) runs.push(current);
-  return runs.map((points, index) => ({ ...block, id: index === 0 ? block.id : createInkHostId("stroke"), name: index === 0 ? block.name : `${block.name} fragment`, points }));
+
+  if (!hasSegment) return Math.hypot(centerX - first[0], centerY - first[1]) <= radius ? [] : [block];
+  if (!changed) return [block];
+  if (run.length > 1) runs.push(run);
+  return runs.map((points, index) => {
+    if (index === 0) return { ...block, points };
+    const id = createInkHostId("stroke");
+    return { ...block, id: id === block.id ? createInkHostId("stroke") : id, name: `${block.name} fragment`, points };
+  });
 }
 
-/** ✂️ Point-eraser events: removeBlock for the original stroke, addBlock for each surviving fragment (skipped if untouched). */
+/** 🪡️ Updates the original stroke in place and inserts new fragments directly after it in its parent. */
 export function eraseInkStrokePointEventsNearPoint(doc: InkDocument, x: number, y: number, radius: number): readonly InkCanvasEvent[] {
   const events: InkCanvasEvent[] = [];
-  const inkBlocks = flattenInkItems(doc.blocks).filter((block): block is InkStrokeItem => block.kind === "stroke");
-  for (const block of inkBlocks) {
-    const fragments = eraseInkStrokePointsInItem(block, x, y, radius);
-    if (fragments.length === 1 && fragments[0] === block) continue;
-    events.push({ operation: "removeBlock", blockId: block.id });
-    for (const fragment of fragments) events.push({ operation: "addBlock", block: fragment });
+  let occupiedIds: Set<string> | undefined;
+
+  function visit(blocks: readonly InkItem[], parentId: string | null): void {
+    let index = 0;
+    for (const block of blocks) {
+      if (block.kind === "group") visit(block.children, block.id);
+      if (block.kind !== "stroke") {
+        index++;
+        continue;
+      }
+      const [first, ...rest] = eraseInkStrokePointsInItem(block, x, y, radius);
+      if (!first) {
+        events.push({ operation: "removeBlock", blockId: block.id });
+        continue;
+      }
+      if (first !== block) events.push({ operation: "updateBlock", blockId: block.id, block: first });
+      index++;
+      for (const fragment of rest) {
+        occupiedIds ??= new Set(flattenInkItems(doc.blocks).map(({ id }) => id));
+        let id = fragment.id;
+        while (occupiedIds.has(id)) id = createInkHostId("stroke");
+        occupiedIds.add(id);
+        events.push({ operation: "addBlock", block: id === fragment.id ? fragment : { ...fragment, id }, parentId, index: index++ });
+      }
+    }
   }
+
+  visit(doc.blocks, null);
   return events;
 }
 //#endregion GeometryHelpers

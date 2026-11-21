@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "suffix": "🔣️.json", "expected": ["🔣️.json"] },
+    { "suffix": ".json", "expected": ["📁️discovery.json", "🔣️.json"] },
+    { "suffix": "manifest.json", "expected": [] }
+  ],
+  "invalidSuffixes": ["", "../manifest.json", "dir\\manifest.json"]
+}

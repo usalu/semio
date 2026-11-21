@@ -8,6 +8,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "@semio-tech/process/artifacts/native-build/lease/schema.json";
 import * as leaseApi from "@semio-tech/process/artifacts/native-build/lease";
 import * as pruneApi from "../../🟦️.ts";
+import {acquireResourceLease,ResourceLeaseTimeoutErrorV1,resourceLeasePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -35,4 +36,27 @@ test("Cargo cache maintenance excludes every live compiler profile and preserves
   expect(await nodeOracle()).toEqual({blocked:false});
   const reacquired=await leaseApi.acquireCargoBuildLeaseV1({directory:leases,buildDirectory:build,targetDirectory:build,args:["--profile",fixture.profiles[0]!],...lease()});reacquired.release();
  }finally{controller.abort();for(const lease of held)lease.release();await operation?.catch(()=>{});rmSync(root,{recursive:true,force:true});rmSync(leases,{recursive:true,force:true});}
+}),30000);
+
+test("opportunistic compiler recovery defers a busy prune lease",()=>withBuildTestInvocationV1(async original=>{
+ const leaseRoot=join(repository.root,".cache/b/l/m/data");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"p-")),build=join(leases,"b"),controller=new AbortController();
+ const control=createIssuedResourceControlV1(original,"cache:prune-recovery",30000,controller.signal),resource="cache-prune";
+ const options={buildDirectory:build,leaseDirectory:leases,control,wait:false},request={directory:leases,resource,mode:"exclusive" as const,control,signal:control.signal};
+ const holder=await acquireResourceLease(request);
+ const oracle=async()=>JSON.parse(await captureOwnedCommandV1("node",["--no-warnings","-e","const{DatabaseSync}=require('node:sqlite'),db=new DatabaseSync(process.argv[1]);let blocked=false;try{db.exec('PRAGMA busy_timeout=0');try{db.exec('BEGIN EXCLUSIVE');db.exec('ROLLBACK')}catch(error){if(error.errcode!==5)throw error;blocked=true}process.stdout.write(JSON.stringify(blocked))}finally{db.close()}",resourceLeasePathV1(leases,resource)],process.cwd(),{control,env:process.env}));
+ let calls=0;
+ const maintenance=async()=>{calls++;expect(await oracle()).toBe(true);};
+ try{
+  expect(await oracle()).toBe(true);
+  const busy=await pruneApi.withCargoCacheMaintenanceV1({...options,deferPruneContention:true},async()=>{await maintenance();return true;});
+  expect({deferred:busy===undefined,calls}).toEqual(fixture.pruneContention.busy);
+  await expect(pruneApi.withCargoCacheMaintenanceV1(options,maintenance)).rejects.toBeInstanceOf(ResourceLeaseTimeoutErrorV1);
+  expect(control.signal.aborted).toBe(false);
+  holder.release();
+  expect(await oracle()).toBe(false);
+  const released=await pruneApi.withCargoCacheMaintenanceV1({...options,deferPruneContention:true},async()=>{await maintenance();return true;});
+  expect({deferred:released===undefined,calls}).toEqual(fixture.pruneContention.released);
+  const failure=new ResourceLeaseTimeoutErrorV1(request,0);
+  await expect(pruneApi.withCargoCacheMaintenanceV1({...options,deferPruneContention:true},async()=>{throw failure;})).rejects.toBe(failure);
+ }finally{holder.release();controller.abort();rmSync(leases,{recursive:true,force:true});}
 }),30000);

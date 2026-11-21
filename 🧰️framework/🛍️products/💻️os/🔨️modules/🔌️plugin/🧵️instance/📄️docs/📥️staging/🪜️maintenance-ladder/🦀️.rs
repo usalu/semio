@@ -367,11 +367,15 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             }
             ActiveDocumentArchiveLoadPhase::AwaitingMembers => {
                 let handle = active.replacement.ok_or_else(|| missing("recursive document archive replacement handle is absent"))?;
-                let state = self.store_replacement_jobs.get(handle.operation.0).map(|replacement| replacement.state);
-                if let Some(fold) = self.store_replacement_jobs.get(handle.operation.0).map(|replacement| replacement.fold_progress) {
-                    active.fold = fold;
+                let replacement = self.store_replacement_jobs.get(handle.operation.0);
+                if let Some(replacement) = replacement {
+                    active.fold = replacement.fold_progress;
+                    if replacement.refusal.is_some() {
+                        active.phase = ActiveDocumentArchiveLoadPhase::AwaitReplacement;
+                        return Ok(PluginLifecycleStep::Progress(item));
+                    }
                 }
-                match state {
+                match replacement.map(|replacement| replacement.state) {
                     Some(ActiveArtifactStoreReplacementState::AwaitingMembers) => {
                         if !active.genesis_complete {
                             self.complete_document_archive_genesis(active, handle)?;

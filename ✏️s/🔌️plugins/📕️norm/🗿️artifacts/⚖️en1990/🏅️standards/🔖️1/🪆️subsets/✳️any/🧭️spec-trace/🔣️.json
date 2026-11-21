@@ -149,17 +149,15 @@
   },
   {
    "id": "E90.08",
-   "clause": "4.1.2",
-   "entity": "",
+   "clause": "4.1.2(2)–(4), (7)",
+   "entity": "Characteristic action values",
    "realisation": {
-    "kind": "check",
-    "checks": [
-     "en1990.sls."
-    ]
+    "kind": "design-case",
+    "entry": "E90.08"
    },
    "description": {
-    "en": "Characteristic values G_k,sup/G_k,inf = G_m(1 ± 1.64 V_G) of permanent actions and the 98 % fractile of variable actions (4.1.2), realised within the serviceability check family",
-    "de": "Charakteristische Werte G_k,sup/G_k,inf = G_m(1 ± 1,64 V_G) ständiger Einwirkungen und 98-%-Fraktile veränderlicher Einwirkungen (4.1.2), umgesetzt in der Gebrauchstauglichkeits-Nachweisfamilie"
+    "en": "Uses the qualified mean or the 5% and 95% Gaussian or supplied bounds for permanent actions. Accepts a prescribed variable action value or calculates a fractile of qualified Gumbel annual maxima, with 98% as the ordinary climatic default.",
+    "de": "Verwendet den bestätigten Mittelwert, die 5-%- und 95-%-Fraktilen der Normalverteilung oder vorgegebene Grenzen für ständige Einwirkungen. Übernimmt einen vorgegebenen Wert der veränderlichen Einwirkung oder berechnet ein Fraktil bestätigter Gumbel-Jahresmaxima mit 98 % als Regelwert für klimatische Einwirkungen."
    }
   },
   {

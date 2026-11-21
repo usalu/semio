@@ -2,6 +2,7 @@
 
 use crate::primitives::{PrimitiveEdge, PrimitiveTrim, planar_pcurve};
 use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_intersect::convex_box::{BoxSupportBoundary,BOX_BOUNDARY_VERTICES};
 use semio_framework_3d_brep_representation::contract::Vec3 as EVec3;
 use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_tolerance::Tol;
@@ -34,14 +35,15 @@ impl std::error::Error for HullRefusal {}
 #[derive(Clone, Copy, Default)]
 struct Facet {
     mask: u16,
+    support:Option<(Pnt3,NativeVec3)>,
     vertices: [u8; MAX_POINTS],
     edges: [u8; MAX_POINTS],
 }
 
-/// 🧱️ Fixed storage for the certified faces, edges, and points of a convex hull.
+/// 🧱️ Fixed storage for the certified faces, edges, and vertices of a planar boundary.
 pub struct HullBoundary {
-    points: [Pnt3; MAX_POINTS],
-    vertices: [u8; MAX_POINTS],
+    points: [Pnt3; BOX_BOUNDARY_VERTICES],
+    vertices: [u8; BOX_BOUNDARY_VERTICES],
     edges: [[u8; 2]; MAX_EDGES],
     uses: [[u8; 2]; MAX_EDGES],
     faces: [Facet; MAX_FACES],
@@ -49,14 +51,15 @@ pub struct HullBoundary {
     vertex_count: usize,
     edge_count: usize,
     face_count: usize,
+    inner_faces:usize,
 }
 
 impl Default for HullBoundary {
     fn default() -> Self {
         Self {
-            points: [Pnt3::default(); MAX_POINTS], vertices: [0; MAX_POINTS], edges: [[0; 2]; MAX_EDGES],
+            points: [Pnt3::default();BOX_BOUNDARY_VERTICES], vertices: [0;BOX_BOUNDARY_VERTICES], edges: [[0; 2]; MAX_EDGES],
             uses: [[0; 2]; MAX_EDGES], faces: [Facet::default(); MAX_FACES], rings: [0; MAX_FACES],
-            vertex_count: 0, edge_count: 0, face_count: 0,
+            vertex_count: 0, edge_count: 0, face_count: 0, inner_faces:0,
         }
     }
 }
@@ -104,6 +107,24 @@ fn convex_ring(points: &[Pnt3], mask: u16, axis: usize) -> ([u8; MAX_POINTS * 2]
 }
 
 impl HullBoundary {
+    /// 🏔️ Uses authored supports from a certified closed planar shell.
+    pub fn from_box_faces(plan:BoxSupportBoundary)->Option<Self>{
+        if !plan.certifies_shell_layout(){return None;}
+        let mut boundary=Self{points:plan.points,inner_faces:plan.inner_faces,..Self::default()};
+        for face in plan.faces(){
+            boundary.add_facet(0,&face.ring[..face.count]).ok()?;
+            boundary.faces[boundary.face_count-1].support=Some((face.origin,face.normal));
+        }
+        (boundary.vertex_count==plan.point_count).then_some(boundary)
+    }
+
+    fn is_closed(&self)->bool{
+        self.face_count>=4&&self.vertex_count+self.face_count==self.edge_count+2*self.shell_count()
+            &&self.uses[..self.edge_count].iter().all(|count|*count==[1,1])
+    }
+
+    pub fn shell_count(&self)->usize{1+usize::from(self.inner_faces!=0)}
+    pub fn shell_face_count(&self,index:usize)->usize{[self.face_count-self.inner_faces,self.inner_faces][index]}
     pub fn vertex_count(&self) -> usize { self.vertex_count }
     pub fn edge_count(&self) -> usize { self.edge_count }
     pub fn ring_sizes(&self) -> &[usize] { &self.rings[..self.face_count] }
@@ -116,9 +137,12 @@ impl HullBoundary {
     }
 
     pub fn surface(&self, index: usize) -> Surface {
-        let row = self.faces[index].vertices;
-        let [a, b, c] = [row[0], row[1], row[2]].map(|id| self.vertex(usize::from(id)));
-        Surface::Plane { frame: Frame3::from_normal(a, ordinary_normal(a, b, c)).expect("certified hull face frame") }
+        let face=&self.faces[index];
+        let (origin,normal)=face.support.unwrap_or_else(||{
+            let [a,b,c]=[face.vertices[0],face.vertices[1],face.vertices[2]].map(|id|self.vertex(usize::from(id)));
+            (a,ordinary_normal(a,b,c))
+        });
+        Surface::Plane { frame:Frame3::from_normal(origin,normal).expect("certified hull face frame") }
     }
 
     pub fn trim(&self, index: usize, member: usize) -> PrimitiveTrim {
@@ -145,6 +169,7 @@ impl HullBoundary {
     fn add_facet(&mut self, mask: u16, ring: &[u8]) -> Result<(), HullRefusal> {
         let failed = || HullRefusal::InvalidGeometry("convex hull boundary exceeded its planar topology limits");
         let mut face = Facet { mask, ..Facet::default() };
+        if !(3..=face.vertices.len()).contains(&ring.len()) { return Err(failed()); }
         for (index, &point) in ring.iter().enumerate() {
             face.vertices[index] = self.vertex_index(point);
         }
@@ -262,9 +287,7 @@ impl HullDraft {
         if self.has_candidate() || self.next_point().is_some() {
             return Err(HullRefusal::UnexpectedStep("convex hull must finish its support scan before publication"));
         }
-        let boundary = &self.boundary;
-        if boundary.face_count < 4 || boundary.vertex_count + boundary.face_count != boundary.edge_count + 2
-            || boundary.uses[..boundary.edge_count].iter().any(|count| *count != [1, 1]) {
+        if !self.boundary.is_closed() {
             return Err(HullRefusal::InvalidGeometry("points do not enclose a nondegenerate convex solid"));
         }
         Ok(take(&mut self.boundary))

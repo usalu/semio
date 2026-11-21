@@ -1,0 +1,21 @@
+# Selected Graph Owner Discovery
+
+The active scoped-discovery slice reported 3,181 completed owner checks and 909,248 verified memo rows. It repeatedly showed `@semio-tech/framework-os-dev` in command-source and compile-closure discovery. Those counters include distinct work and do not isolate its runtime cost. The checked-in registry had 4,807 owners, including 1,576 project declarations.
+
+Named-input expansion scanned every preceding registry row for each referenced name. The same lookup is used by command-source references, explicit named inputs, generated dependencies and caret-input expansion. It now uses the existing per-registry indexes, augmented with canonical name membership. Unknown names and empty input names still fail, and duplicate references still merge into the same input set. Registry validation, source and producer observations, and cache receipt semantics are preserved.
+
+The test runs the actual discovery function with the 4,807-row distribution. Before the change, four valid references visited 11,997 registry rows. After the change, the same references visit zero rows during membership checks and produce the same dependency inputs as an independent SQLite join. Additional cases cover unregistered owners and empty input names. The focused discovery and relative-owner suites passed eight tests and 183 assertions.
+
+A Bun lookup benchmark used the actual registry's names, 60,000 requests and 10% misses. The scan took 491.739–499.437 ms per run. Warm indexed runs took 0.484–1.288 ms and produced the same 54,000 hits. The full existing index with name membership took 7.485 ms to initialize. These measurements cover lookup only. The running slice kept its original code and no live process was interrupted.
+
+The Wasm compile index observes the physical project declarations needed to prove both the presence and absence of generated Wasm producers. Existing memoization shares index construction, row-array delivery and validity within a settlement round. Dropping its negative or inherited observations would change the source authority of owners that resolve imports.
+
+## Compile-Source Reads
+
+Selected compile discovery independently parsed the module and reference images of each visited Source file. Each parser call performed its own stat, read and source SHA-256 before checking the parser cache. Discovery now keeps the exact physical Source read and reuses one semantic byte image and digest for both registered parsers. It retains each provider's own identity, result digest and nested observations. A mutable first parser receives a copy only when its image is absent from the cache, so it cannot alter the second parser's bytes. The caches still retain parser images and row identities without retaining the Source buffers.
+
+The private regression observed two stat/read operations under the prior calls and one under the paired path. It compared the complete original and paired facts on an unchanged file, verified source and result digests with Python hashlib, and exercised a nested file, missing Source, parser failure and a concurrent physical write. The race returned two parser results from the original image and the existing final authority check refused that image after the edit. An extracted run of the actual owner compile discovery function exercised the paired reader and retained the exact physical Source row alongside both provider facts. The final observation and owner suites passed 18 tests and 231 assertions.
+
+A warm Bun benchmark made 4,000 synthetic pairs against the actual 15,746-byte framework OS development script. Separate observations took 358.983–426.906 ms per run, and paired observations took 201.570–221.561 ms. Each group produced the same result checksum and two retained parser rows. This benchmark isolates observation cost and does not measure the whole live graph slice.
+
+A standalone miniature graph probe did not provide a complete graph timing. Its first target omitted required execution metadata, and later attempts reached the existing physical authority checks for the framework command's real imports and project registry. All private probe files were removed. Verification of the actual compile-discovery branch used the bounded extracted run above rather than starting another full graph.

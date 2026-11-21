@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"name":"German dense office below minimum","annex":"De","usage":"office","method":"method_1_perceived_air_quality","category":"IV","occupants":10,"areaM2":10,"supplyM3H":100,"healthMinimumM3H":144,"designMinimumM3H":144,"passes":false},
+    {"name":"German dense office at minimum","annex":"De","usage":"office","method":"method_1_perceived_air_quality","category":"IV","occupants":10,"areaM2":10,"supplyM3H":144,"healthMinimumM3H":144,"designMinimumM3H":144,"passes":true},
+    {"name":"European dilution method below minimum","annex":"En","usage":"office","method":"method_2_limit_concentration","category":"IV","occupants":10,"areaM2":10,"supplyM3H":140,"healthMinimumM3H":144,"designMinimumM3H":144,"passes":false},
+    {"name":"European predefined method below minimum","annex":"En","usage":"office","method":"method_3_predefined_rates","category":"IV","occupants":10,"areaM2":10,"supplyM3H":140,"healthMinimumM3H":144,"designMinimumM3H":144,"passes":false},
+    {"name":"Higher category requirement governs","annex":"De","usage":"office","method":"method_1_perceived_air_quality","category":"II","occupants":10,"areaM2":10,"supplyM3H":200,"healthMinimumM3H":144,"designMinimumM3H":277.2,"passes":false},
+    {"name":"Zero occupants retain building flow","annex":"En","usage":"office","method":"method_1_perceived_air_quality","category":"IV","occupants":0,"areaM2":10,"supplyM3H":10.8,"healthMinimumM3H":0,"designMinimumM3H":10.8,"passes":true},
+    {"name":"Residential scope stays separate","annex":"De","usage":"residential","method":"method_1_perceived_air_quality","category":"IV","occupants":10,"areaM2":10,"supplyM3H":110,"healthMinimumM3H":0,"designMinimumM3H":100.8,"passes":true}
+  ]
+}

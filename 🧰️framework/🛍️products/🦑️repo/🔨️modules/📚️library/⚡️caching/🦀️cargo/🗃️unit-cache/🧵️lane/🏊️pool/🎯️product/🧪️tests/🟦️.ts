@@ -30,6 +30,20 @@ test("bounded exact product facts match an independent framework hash and preser
  expect(new Set(keys).size).toBe(keys.length);expect(await compilerProductKeyV1(fixture.intent as CompilerProductIntentV1,control)).toBe(keys[0]!);
 }));
 
+test("Cargo test execution policy reuses the compiler product lane",()=>withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"test:compiler-product-test-policy",maximumElapsedMilliseconds:30000},{workspaceRoot:process.cwd()},Date.now()),async original=>{
+ const control=createIssuedResourceControlV1(original,"test:product-test-policy",0),keys:string[]=[];
+ for(const row of fixture.testRunnerOptions){
+  const intent={...fixture.intent,command:row.command,arguments:row.arguments} as CompilerProductIntentV1;
+  const preimage="semio.cargo.product/v1\n"+[intent.version,intent.root,intent.manifest,intent.mode,intent.command,intent.producer,intent.toolchain,...row.productArguments].map(value=>JSON.stringify(value)+"\n").join("");
+  const actual=await compilerProductKeyV1(intent,control);
+  expect(actual).toBe(new Bun.CryptoHasher("sha256").update(preimage).digest("hex"));
+  expect(await compilerProductKeyV1({...intent,arguments:row.productArguments},control)).toBe(actual);
+  expect(intent.arguments).toEqual(row.arguments);
+  keys.push(actual);
+ }
+ expect(new Set(keys).size).toBe(keys.length);
+}));
+
 test("exact product claims serialize and cancel only the waiting caller while other products proceed",async()=>{
  const root=scratch(),signal=new AbortController().signal;
  try{

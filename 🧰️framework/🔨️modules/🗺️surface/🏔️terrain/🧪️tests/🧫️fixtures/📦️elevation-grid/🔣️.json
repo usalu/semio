@@ -1,0 +1,23 @@
+{
+  "bounds": [1.99, 2.99, 2.01, 3.01],
+  "origin": [2, 3],
+  "exaggeration": 2,
+  "samples": { "size": 33, "southwest": 40, "northwardStep": 2, "eastwardStep": 1 },
+  "expected": { "originHeight": 176, "northwestHeight": 208, "southeastHeight": 144, "triangleCount": 2048 },
+  "pick": {
+    "raisedSample": { "column": 16, "row": 16, "meters": 32 },
+    "rays": [
+      { "originSample": [16, 16, 1000], "direction": [0, 0, -2], "height": 240, "sample": [16, 16] },
+      { "originSample": [16.25, 16.6, 1000], "direction": [0, 0, -1], "height": 204.5, "sample": [16, 17] },
+      { "originSample": [15, 16, 500], "direction": [0.2, 0, -1] },
+      { "originSample": [16, 16, 1000], "direction": [0, 0, 1], "miss": true },
+      { "originSample": [-1, 16, 1000], "direction": [0, 0, -1], "miss": true },
+      { "originSample": [16, 16, 1000], "direction": [0, 0, 0], "miss": true }
+    ]
+  },
+  "overlays": {
+    "positions": [{"id": "center", "name": "Center", "coordinates": [2, 3]}],
+    "routes": [{"id": "east", "name": "East", "coordinates": [[1.991, 2.993], [2.009, 3.007]]}],
+    "regions": [{"id": "site", "name": "Site", "rings": [[[1.996, 2.996], [2.004, 2.996], [2.004, 3.004], [1.996, 3.004]]]}]
+  }
+}

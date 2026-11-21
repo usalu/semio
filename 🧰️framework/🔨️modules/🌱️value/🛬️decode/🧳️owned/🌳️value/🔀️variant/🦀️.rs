@@ -14,6 +14,13 @@ impl<I:NativeValueSource+?Sized>NativeVariantSelector<I>{
   let work=if !input.check_binding(&self.binding)?{input.binding_work_demand(&self.binding)?}else if let Some(matcher)=self.matcher.as_ref(){if self.phase==3{self.settlement_work_demand(body)?}else if matcher.result().is_none(){return matcher.select_advance(input,body,maximum_work_units)}else{1}}else{1};
   if work>maximum_work_units{return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native variant action exceeds its original work ceiling"))}Ok(crate::owned::NativeAdvanceSelection::Local{work})
  }
+ /// ⏲️ Quotes the matcher Work selected beneath this variant's original discriminator.
+ pub fn advance_work_demand(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<u64,ValueError>{
+  match self.select_advance(input,body,u64::MAX)?{
+   crate::owned::NativeAdvanceSelection::Local{work}=>Ok(work),
+   crate::owned::NativeAdvanceSelection::Nested=>self.matcher.as_ref().ok_or_else(invalid)?.nested_work_demand(input),
+  }
+ }
  /// 🪢️ Polls only the resident record matcher.
  pub fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:semio_framework_value_control_contract::OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->crate::RetainedWorkPoll<RetainedCloneStep,crate::native_decoding::NativeReceivingFailure>{
   match self.matcher.as_mut(){Some(matcher) if self.phase!=3&&matcher.result().is_none()=>matcher.advance_nested(input,control,witness,body,maximum_work_units,child_grant(g,0)).map(|s|RetainedCloneStep::Progress(s.progress())),_=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}

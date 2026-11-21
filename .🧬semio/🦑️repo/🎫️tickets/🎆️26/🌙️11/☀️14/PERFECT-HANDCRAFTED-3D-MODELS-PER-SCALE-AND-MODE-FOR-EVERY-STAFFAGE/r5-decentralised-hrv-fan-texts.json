@@ -1,0 +1,16 @@
+{
+  "500": [
+    {
+      "en": "Body: a digital miniature for the 75 mm feature: the base tray is one 260 x 260 x 20 mm plate with 20 mm corners and the 164 mm bore (rim, bosses, screws and terminal box are below the feature), fan housing, sleeve and outer collar merge into one 196 / 164 mm tube, the ceramic is a plain disc seated in it, the three struts merge into one upright bridge bar behind the 80 mm hub, and the five blades are three broad radial blades of 15 mm depth.",
+      "de": "Körper: eine digitale Miniatur für das Merkmal von 75 mm: die Grundschale ist eine Platte von 260 x 260 x 20 mm mit Ecken von 20 mm und der Bohrung von 164 mm (Rand, Dome, Schrauben und Klemmkasten liegen unter dem Merkmal), Lüftergehäuse, Hülse und Außenkragen verschmelzen zu einem Rohr von 196 / 164 mm, die Keramik ist eine glatte, darin sitzende Scheibe, die drei Streben verschmelzen zu einem senkrechten Brückensteg hinter der Nabe von 80 mm, und die fünf Schaufeln sind drei breite radiale Schaufeln von 15 mm Tiefe."
+    },
+    {
+      "en": "Thermal: every body solid in its single layer (tray, tube and bar as casing, the ceramic as core, the blades and the hub), and the supply and exhaust outlet patches as 5 mm skins on the two faces of the ceramic.",
+      "de": "Thermik: jeder Körper in seiner einzigen Schicht (Schale, Rohr und Steg als Gehäuse, die Keramik als Kern, die Schaufeln und die Nabe), und die Austrittsflächen von Zu- und Fortluft als 5 mm dünne Häute auf den beiden Seiten der Keramik."
+    },
+    {
+      "en": "Structure: tray, tube, bridge bar, ceramic and hub are the members themselves, one mass stands for the whole unit, and the unit hangs on the upper-left screw (pin into the wall plug) and leans on the lower-right one (roller on the wall face).",
+      "de": "Tragwerk: Schale, Rohr, Brückensteg, Keramik und Nabe sind selbst die Bauteile, eine Masse steht für das ganze Gerät, und das Gerät hängt an der Schraube oben links (Gelenk im Dübel) und lehnt an der unten rechts (Rolle an der Wandfläche)."
+    }
+  ]
+}

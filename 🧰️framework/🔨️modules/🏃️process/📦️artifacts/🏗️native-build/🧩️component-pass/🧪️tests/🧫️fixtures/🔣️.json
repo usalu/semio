@@ -1,12 +1,56 @@
 {
+  "componentCompileCapacity": {
+    "hostDecision": {"preferred": 5, "minimum": 3, "reason": "memory", "budgetMegabytes": 5120},
+    "request": {"kind": "available", "maximumParallelism": 5, "minimumParallelism": 1},
+    "grants": [{"slots": 0, "admitted": false}, {"slots": 1, "admitted": true}, {"slots": 5, "admitted": true}, {"slots": 6, "admitted": false}]
+  },
+  "mixedWarmDepInfo": {
+    "application": "mixed-app",
+    "dependency": "mixed-dep",
+    "sourceRevisions": ["pub const VALUE: u8 = 1;\n", "pub const VALUE: u8 = 22;\n", "pub const VALUE: u8 = 33;\n", "pub const VALUE: u8 = 44;\n"],
+    "retryLimit": 3,
+    "cases": [
+      {"name": "retries new and fresh mixed versions before staging", "claims": [[0, 1], [1, 2], [2, 2]], "attempts": 3, "staged": 3},
+      {"name": "refuses a repeated mixed proof before staging", "claims": [[0, 1], [1, 0], [2, 2]], "attempts": 2, "staged": null},
+      {"name": "stages after three distinct compiler corrections", "claims": [[0, 1], [1, 2], [2, 3], [3, 3]], "attempts": 4, "staged": 4},
+      {"name": "refuses distinct mixed proofs after the attempt limit", "claims": [[0, 1], [1, 2], [2, 3], [0, 3]], "attempts": 4, "staged": null},
+      {"name": "stages equal dep-info claims without retry", "claims": [[0, 0]], "attempts": 1, "staged": 1}
+    ],
+    "missingWitnessCases": [
+      {"name": "retries a linked component whose consumed source disappeared", "initialRevision": 2, "liveRevisions": [1, 1], "claims": [[0, 0], [1, 1]], "attempts": 2, "staged": 2},
+      {"name": "refuses a repeated missing source witness before staging", "initialRevision": 2, "liveRevisions": [1, 1, 1], "claims": [[0, 0], [0, 0], [1, 1]], "attempts": 2, "staged": null}
+    ]
+  },
+  "partialProvenance": {"components":["pdf","inspect","stdio"],"dependencies":["common","drift"],"edges":[[0,3],[1,3],[2,3],[2,5],[3,4],[4,7],[5,6],[6,8]],"roots":[0,1,2],"nodes":[["pdf","cdylib"],["inspect","cdylib"],["stdio","cdylib"],["common","lib"],["common","run-custom-build"],["drift","lib"],["drift","run-custom-build"],["common","custom-build"],["drift","custom-build"]],"rows":[{"name":"unrelated source","stale":5,"runStale":6,"missing":null,"linked":[0,1],"exit":101,"accepted":true},{"name":"consumed source","stale":3,"runStale":6,"missing":null,"linked":[0,1],"exit":101,"accepted":false},{"name":"missing dependency","stale":5,"runStale":6,"missing":3,"linked":[0,1],"exit":101,"accepted":false},{"name":"full success","stale":null,"runStale":null,"missing":null,"linked":[0,1,2],"exit":0,"accepted":true}],"original":"pub const VALUE: i32 = 1;\n","edited":"pub const VALUE: i32 = 2;\n","cargoError":"failed independent stdio stage","storageBytes":8589934592},
+  "optimizerDrain": {"root": "opt-drain", "failure": "model observation refused", "core": [0, 97, 115, 109, 1, 0, 0, 0], "events": ["cas-ready", "model-failed", "optimize-finished", "discard"]},
+  "optimizerParallel": {"pool": 3, "blocked": 2, "parallel": 2, "single": 1, "result": 44, "source": "(module (func $a (result i32) i32.const 17) (func $b (result i32) i32.const 27) (func (export \"result\") (result i32) call $a call $b i32.add))"},
   "provenanceSeal": {
+    "mixedOrders": [["retained", "current"], ["current", "retained"]],
+    "admittedSource": "pub const PROVENANCE: i32 = 0;\n",
     "originalSource": "pub const PROVENANCE: i32 = 1;\n",
     "editedSource": "pub const PROVENANCE: i32 = 2;\n",
+    "beforeAnnouncement": {
+      "watchMilliseconds": 1500,
+      "cases": [
+        {"retained": true, "attempts": 1},
+        {"retained": false, "attempts": 2}
+      ]
+    },
     "cases": [
       { "mutation": "source", "timing": "after-observation", "publishesReceipt": false },
+      { "mutation": "source", "timing": "after-compiler-checksum", "publishesReceipt": true },
+      { "mutation": "source", "timing": "after-announcement", "publishesReceipt": true },
+      { "mutation": "source", "timing": "after-announcement", "packages": ["seal-a", "seal-b"], "publishesReceipt": true },
       { "mutation": "source", "timing": "after-seal", "publishesReceipt": true },
       { "mutation": "artifact", "timing": "after-seal", "publishesReceipt": false }
     ]
+  },
+  "finalizerSettlement": {
+    "components": [
+      { "name": "comp-a", "assembleSucceeds": true },
+      { "name": "comp-b", "assembleSucceeds": false }
+    ],
+    "primaryError": "assembly refused"
   },
   "jobRetryDiagnostics": {
     "jobId": "restarting",

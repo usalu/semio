@@ -1,0 +1,9 @@
+{
+  "spanM":5.03,"drumLengthM":5.4,"turns":1.91,"spoutStartM":5.22,"spoutMaxRadiusM":0.31,"spoutOffsetM":0.08,
+  "barrelMassKg":3600,"barrelMassCentreM":[2.6,0,0],"fullTruckMassKg":35100,
+  "scaleStations":{"50":90,"100":79,"200":46,"500":30},
+  "exteriorMeridian":[[0.18,0.83],[1.1,1.15],[1.9,1.15],[5.4,0.56]],
+  "skinM":{"50":0.005,"100":0.005,"200":0.03,"500":0.075},
+  "clips":[{"id":"agitate-at-rest","states":[[0,0],[2.5,90],[7.5,270],[9.999,359.964],[10,360],[12.5,450]]},
+           {"id":"discharge-sequence","states":[[0,360],[2,360],[3.25,270],[7,0],[12,-360],[14,-504],[16,-504]]}]
+}

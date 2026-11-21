@@ -399,6 +399,7 @@ pub struct EventRouter {
     pub capture: CaptureState,
     pub focus: FocusState,
     pub hovered: Option<NodeId>,
+    pub(super) hover_pointer: Option<(f32, f32)>,
     /// 🫧️ Every node currently in the hover bubble chain (leaf-to-root from `hovered`), so an
     /// ancestor container (e.g. a `Stack`-based tree-item row, which `hit_test` never itself returns
     /// as the match — see 🔖️HitTest's `is_plain_container`) still observes `NodeFlags::HOVERED` for

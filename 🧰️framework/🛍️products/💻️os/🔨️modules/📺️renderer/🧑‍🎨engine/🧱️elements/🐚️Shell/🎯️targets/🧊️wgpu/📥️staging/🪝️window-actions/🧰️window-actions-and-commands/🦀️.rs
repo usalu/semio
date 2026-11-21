@@ -345,10 +345,17 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                 .filter(|action| &action_category_id(action) == category)
                 .map(|action| {
                     let label = action.label.resolve(terminology, locale).to_string();
-                    let staged = action_requires_staged_form(action);
-                    let disabled = gated && !FRAMEWORK_RESERVED_ACTION_IDS.contains(&action.id.as_str());
+                    let native_file = cfg!(not(target_arch = "wasm32")) &&
+                        matches!(action.id.as_str(), semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID | semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID);
+                    let staged = !native_file && action_requires_staged_form(action);
+                    let disabled = gated && !native_file && !FRAMEWORK_RESERVED_ACTION_IDS.contains(&action.id.as_str());
                     let open = expanded.as_deref() == Some(action.id.as_str());
-                    let dispatch = if staged {
+                    let dispatch = if native_file {
+                        ActionDescriptor {
+                            controller_id: session.app.controller_id.clone(), action: action.id.clone(),
+                            args: semio_renderer_wgpu_host_base::action_args_json!({ "windowId": window_id }),
+                        }
+                    } else if staged {
                         ActionDescriptor { controller_id: "framework".into(), action: "setActionExpanded".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": window_id.to_string(), "action": action.id.clone() }) }
                     } else {
                         ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action.id.clone(), args: None }

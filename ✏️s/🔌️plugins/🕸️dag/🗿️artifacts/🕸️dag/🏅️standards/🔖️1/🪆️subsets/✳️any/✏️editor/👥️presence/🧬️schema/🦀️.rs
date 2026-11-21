@@ -1,7 +1,7 @@
 //! 🧬️ schema leaf
 use framework_schema::ArtifactSchema;
 
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.dag.dag.presence")]

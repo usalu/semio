@@ -1,0 +1,30 @@
+{
+  "port": "kit:in",
+  "schema": "kit.catalog",
+  "slot": "kindCatalogs",
+  "dialect": {
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "kit"
+  },
+  "deliveries": [
+    {
+      "objectKinds": [
+        {
+          "id": "capsule",
+          "name": "Capsule",
+          "label": "Capsule"
+        }
+      ]
+    },
+    {
+      "objectKinds": [
+        {
+          "id": "bridge",
+          "name": "Bridge",
+          "label": "Bridge"
+        }
+      ]
+    }
+  ]
+}

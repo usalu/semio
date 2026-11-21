@@ -98,3 +98,48 @@ Forces view (1:50, hot-water): reaction at the rail 301 N (292 N up, 72.4 N towa
 - Not run: the staffage test suite (`caption-fit` uses gas-boiler at 1:200; the drawing is now 0.1 m taller).
 
 Tool output: `🗑️generated/r3-gas-boiler/` deleted; my renders in `🗑️generated/r3-sheet/` and `🗑️generated/r3-2d/` deleted.
+
+## Round 5 handcraft
+
+Process (round 5, 2026-11-21): rendered and opened with the Read tool, before and after: `r3-sheet` body, structure and `--list thermal --cut` at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50 and one clip frame, the `r3-2d` drawings of every drawn scale (1:500 has no drawing: its representation is unavailable, the 3D 1:500 is a digital scale). Coarse sheets were opened as 2 x 2 contact sheets (`r5-grid.ts`, half size). Measurements with `r5-e01-measure.ts` (world extents per solid in the default pose). Root edits through `r5-e01-roots.py` (candidate validated with `r3-validate.ts --file --volumes` before writing), volumes through the asset's `r5-<slug>-model.py` (which re-uses the hand-stated round-3 lists it keeps and states every new solid by hand), splice with `volumes-insert.py`. The round-3 reference table above stays the reference; the table below measures the model against it.
+
+### Model against reference (Vaillant ecoTEC plus 720 x 440 x 335 mm, 80/125 flue, 22 mm connections)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+|---|---|---|---|
+| Casing height | 720 mm | 720 mm (y 0.05 to 0.77) | 0 % |
+| Casing width | 440 mm | 440 mm | 0 % |
+| Casing depth (hood + chassis) | 335 mm | 330 mm (310 + 20) | -1.5 % |
+| Over the knobs | about 350 mm | 351 mm | 0 % |
+| Flue turret / spigot | 125 / 80 mm | 125 / 80 mm | 0 % |
+| Overall height with flue and stubs | 0.82 m (`dimensions`) | 0.820 m | 0 % |
+| Connections | 5 x 22 mm, 80 mm pitch | 5 x 22 mm, 80 mm pitch, nuts 31 mm AF | 0 % |
+| 1:100 / 1:200 / 1:500 overall | 0.44 x 0.82 x 0.35 m | 0.44 x 0.82 x 0.350 / 0.340 / 0.340 m | within one feature |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- (unchanged, re-read: hood, porthole, flame crowns, fascia, flue adapter, stubs with nuts; nested internals; chassis load path) |
+| 1:100 | A- / A- / A- | A- / A- / A- (unchanged) |
+| 1:200 | B+ / B (expansion vessel a square 0.31 m slab, fan a cube) / A- | A- / A- / A- |
+| 1:500 | C+ (inherited digital model: asymmetric 13/35 mm chamfers on the front edges, a 9 mm hollow ring as flue collar below the 75 mm feature, one generic decision sentence) / B / B | A- / A- / A- |
+| Poses off, heating, hot-water, clip heating-cycle t 2 s | A- | A- (flame crowns sink into the hood as designed; nothing torn) |
+| 2D 1:50 / 1:100 / 1:200 | A- | A- |
+
+Catalog before round 5: INVALID (`PRINT range-end-feature` of the 1:200 control band at 1:350; `connections` outer area 0.034 against 0.04 m2, 15 %).
+
+### Changes
+
+- 1:200 body: the control band is a 30 mm strip that stands 15 mm proud of the hood and runs 15 mm into it; the 1:200 front and plan drawings draw it 30 mm deep (root edit `representations.200.geometry.front/plan.panel`), so the band prints to the end of the range 1:350 (the 15 mm band printed 0.173 mm there).
+- 1:200 structure: because the thinnest 1:200 casing drawing is now 30 mm, the chassis is generalised to a channel 30 mm deep and the rail and rest strip to 30 mm bars at their anchors, offset 0.5 mm off the chassis back face (the first render showed z-fighting marks there).
+- 1:200 thermal: the expansion vessel is its real 0.32 m lens (revolve of two dished shells), the premix fan its drum.
+- 1:500 authored anew (`r5-gas-boiler-model.py`): crisp hood block 0.44 x 0.72 x 0.325 m, control strip, solid 125 mm flue drum, connection bar; thermal with flush window disc, burner block, outlet patch on the flue drum, exchanger drum, fan drum, vessel lens, hydraulic block; structure chassis channel, bracket shelf, heat-exchanger drum, collector and adapter as one stepped tube, connection bar, rail, rest, mass. Three bilingual decisions.
+- Root: `thermal.regions.connections.areaM2` 0.04 -> 0.035 (factor 1.14; measured 1:50 outer area of the five tubes and nuts 0.034 m2).
+- Final: `r3-validate.ts appliances/gas-boiler --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); `volumes-check.ts --product` PASS.
+
+### Remaining issues
+
+- The porthole with flames is the asset's didactic feature (real condensing boilers have no window); kept because rig, poses and clips are built on it.
+- Revolves are 12- to 16-gons at the product tessellation (knobs, bezel, collar); flat faces show the renderer's fan shading. Neither is in the geometry.
+- Condensate drain and pressure-relief outlet still not modelled (the 2D draws five connections).

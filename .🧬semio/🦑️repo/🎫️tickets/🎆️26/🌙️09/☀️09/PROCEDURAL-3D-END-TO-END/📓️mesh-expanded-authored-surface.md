@@ -1,0 +1,9 @@
+# Authored Surface Data in Retained Mesh Extrude and Inset
+
+Both original operators now carry authored raw normals and corner UVs through original and cap faces. Source smooth flags continue onto the cap. Extrusion walls are flat, and coplanar inset border faces inherit the source shading flag. Each generated quad receives its own unit-square UV chart. The surface stage preserves authored seams and marks new UV discontinuities at shared edges. Named attribute and material bindings continue through the existing provenance map.
+
+The common refinement cursor drives the raw surface using one physically quoted row or map reservation per turn. Short allocations leave the operation unchanged. A cancelled job retires the working halfedge mesh, original mesh and the partially projected channels before returning. The change applies to the registered Flow Mesh Extrude and Inset menu operations.
+
+The neutral fixture expands a painted and smooth quad by one unit and insets it by half a unit. The current native Mesh Document, Reconstruction and 3D facade were linked into the focused driver. Both operations carried 293 copied bytes across 66 funded surface turns and retained point normals, cap UVs, four unit charts and seam provenance. A one-byte-short quota was inert. Extrude cancellation after 12 surface turns released 117,466 bytes. Rerunning Mirror after sharing the seam lookup still passed, including exact progress and retirement.
+
+Three.js triangulated the cap and charted sides and matched the complete native surface against areas 12 and 4. All 25 portable Mesh tests passed with 3,982 assertions. Mesh Reconstruction admitted 1,364 active lines and 117,909 bytes. The 3D facade admitted 2,477 active lines and 216,784 bytes. The registered workbench includes both success cases and Extrude cancellation. The official linked Flow target remains storage-gated.

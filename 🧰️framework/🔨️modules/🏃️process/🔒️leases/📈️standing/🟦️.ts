@@ -36,12 +36,19 @@ export function leaseBoundComponentsV1(resource:string):readonly string[]{return
 /** 💽️ The bound component ids of a resource whose stamp on disk differs from the value this process loaded: what a holder re-reads itself instead of trusting a requester's claim. */
 export function leaseMovedBoundV1(resource:string):readonly string[]{try{return global[providerKey]?.moved?.(resource)??[];}catch{return [];}}
 
-const families=policy.progress.families.map(family=>({prefix:family.prefix,pattern:new RegExp(family.pattern,"u")})),counter=new RegExp(policy.progress.counter,"u");
+const families=policy.progress.families.map(family=>({prefix:family.prefix,pattern:new RegExp(family.pattern,"u")})),counter=new RegExp(policy.progress.counter,"u"),bindingTally=new RegExp(policy.progress.bindingTally.pattern,"u");
 /** 🔎️ Reads a progress line into phase and counters: the declared families first, then a trailing counter, else the resource name itself. */
 export function parseLeaseProgressV1(resource:string):Readonly<{phase:string;done?:number;total?:number}>|undefined{
  const rules=policy.progress;
  if(rules.ignoredPrefixes.some(prefix=>resource.startsWith(prefix)))return undefined;
  for(const family of families)if(resource.startsWith(family.prefix)){const match=family.pattern.exec(resource);if(match)return Object.freeze({phase:match[1]!,done:Number(match[2]),total:Number(match[3])});}
+ if(resource.startsWith(rules.bindingTally.prefix)){
+  const match=bindingTally.exec(resource);
+  if(match?.[0]!==resource)return;
+  const done=Number(match[2]),total=Number(match[3]),canonical=Number(match[4]),changed=Number(match[5]);
+  if(![done,total,canonical,changed].every(Number.isSafeInteger)||done>total||canonical+changed!==done)return;
+  return Object.freeze({phase:match[1]!,done,total});
+ }
  const match=counter.exec(resource);
  if(match)return Object.freeze({phase:match[1]!.slice(0,rules.maximumPhaseCharacters),done:Number(match[2])});
  return Object.freeze({phase:resource.slice(0,rules.maximumPhaseCharacters)});

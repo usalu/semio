@@ -1,0 +1,12 @@
+# Segmented PDF Output at the Declared Cap
+
+The published segmented contract admits 32 MiB in 8,192 data chunks of 4,096 bytes. Native producer completion sends an additional empty terminal reply. Before the renderer change, its checked download loop cancelled an otherwise complete export after the 8,192nd data chunk. The live renderer now probes one additional reply and requires it to be an empty terminal. It refuses an extra data chunk or a missing terminal and retires the operation without committing the sink. The red replay reproduced all three outcomes against live code before the fix. The green replay and Ajv validation passed. The three registered renderer suites passed all 66 tests, including all cap cases.
+
+The guest queue previously reserved all 8,192 Rust vector headers in one contiguous allocation. That exceeds the 65,536-byte guest request ceiling even with 32-bit vector headers. The staged queue reserves a small table and allocates one 64-slot page at a time on the Original turn. Each new page is separately funded before any vector is moved or credited. The tail page uses only its exact remaining slots. Push, take, and retirement continue to use the existing output queue and exact content credit authority. The archive remains private through the final host revision check.
+
+The focused Rust tests exercised every one of the 8,192 data slots and preserved each original vector pointer in order. The wraparound test reused all three pages in a 129-slot queue without new backing. A separate test moved a complete 2,126,390-byte PDF through the same staged queue. MuPDF reopened it without repair and matched both compressed image bytes and the raster. All six Rust candidates parsed. The staged actual declaration crate linked against the current native compiler lane and passed all nine original queue tests. The large law verifies exact birth backing, two independently charged slot reservations, one-byte-short capacity refusal, exact pointer donation, separately credited payload bytes and balanced controlled retirement. The previously stale test helpers were rebased to the repository's current Original caller and retained effect closure. The paged guest queue is still staged while both product gates compile.
+
+- [Live terminal-bound replay](📜️media-drain-bounds-probe.ts)
+- [Rust queue laws](📜️artifact-output-pages-test.rs)
+- [Native queue overlay](📜️artifact-output-queue-stage.ts)
+- [Native declaration link driver](📜️artifact-output-queue-link.py)

@@ -1,0 +1,80 @@
+[
+  {
+    "id": "terminal-input",
+    "mode": "prototype",
+    "status": 75,
+    "restored": true
+  },
+  {
+    "id": "terminal-exhausted-input",
+    "mode": "release",
+    "status": 75,
+    "restored": true
+  },
+  {
+    "id": "ordinary-75",
+    "mode": "prototype",
+    "status": 75,
+    "restored": false
+  },
+  {
+    "id": "attempt-diagnostic",
+    "mode": "prototype",
+    "status": 75,
+    "restored": false
+  },
+  {
+    "id": "wrong-request",
+    "mode": "prototype",
+    "status": 75,
+    "restored": false
+  },
+  {
+    "id": "malformed",
+    "mode": "prototype",
+    "status": 75,
+    "restored": false
+  },
+  {
+    "id": "duplicate",
+    "mode": "prototype",
+    "status": 75,
+    "restored": false
+  },
+  {
+    "id": "foreign-path",
+    "mode": "prototype",
+    "status": 75,
+    "restored": false
+  },
+  {
+    "id": "mixed-failure",
+    "mode": "prototype",
+    "status": 1,
+    "restored": false
+  },
+  {
+    "id": "success",
+    "mode": "prototype",
+    "status": 0,
+    "restored": false
+  },
+  {
+    "id": "ordinary-nonzero",
+    "mode": "prototype",
+    "status": 1,
+    "restored": false
+  },
+  {
+    "id": "cancelled",
+    "mode": "prototype",
+    "status": null,
+    "restored": false
+  },
+  {
+    "id": "wrong-stream",
+    "mode": "prototype",
+    "status": 75,
+    "restored": false
+  }
+]

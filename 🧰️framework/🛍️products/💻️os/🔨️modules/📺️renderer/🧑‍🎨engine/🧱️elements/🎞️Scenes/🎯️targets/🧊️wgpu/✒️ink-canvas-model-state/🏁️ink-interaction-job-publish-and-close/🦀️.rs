@@ -163,10 +163,7 @@ impl InkInteractionJob {
         if self.result_ids.pop().is_some() {
             return false;
         }
-        if self.pending_remove_id.take().is_some() {
-            return false;
-        }
-        if self.pending_fragments.pop_front() {
+        if self.pending_eraser_events.pop_front() {
             return false;
         }
         if self.stroke_update.take().is_some() {

@@ -2,7 +2,60 @@
 
 use super::*;
 
+use semio_os_infinite_world_model::WorldTerrainStroke;
+
+impl WorldAuthorityState {
+    /// 🖌️ Checks both an active brush stroke and a primary press still waiting in the intent queue.
+    pub fn terrain_stroke_armed(&self) -> bool {
+        self.interaction_authority.as_ref().is_some_and(|authority| {
+            authority.terrain_press.is_some() || authority.queue.primary_press_pending()
+                || authority.blocked.is_some_and(|intent| intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down)
+        })
+    }
+}
+
 impl WorldInteractionAuthority {
+    fn terrain_stroke(&mut self, session: &WorldSessionState, camera: &WorldCameraState, terrain: &WorldTerrainState, intent: &WorldInteractionIntent) -> Option<Option<WorldInteractionPlan>> {
+        if matches!(intent.phase, WorldInteractionPhase::PointerLeave | WorldInteractionPhase::Cancel | WorldInteractionPhase::Wheel | WorldInteractionPhase::Close)
+            || intent.button != 0
+        {
+            self.terrain_press = None;
+            return None;
+        }
+        let Some((brush, brush_digest)) = terrain.terrain_brush() else {
+            let captured = self.terrain_press.take().is_some();
+            return captured.then_some(None);
+        };
+        let pressed = intent.phase == WorldInteractionPhase::PointerButton && intent.down;
+        let released = intent.phase == WorldInteractionPhase::PointerButton && !intent.down;
+        let dragged = intent.down && matches!(intent.phase, WorldInteractionPhase::PointerMove | WorldInteractionPhase::PointerDrag);
+        if !pressed && !released && !dragged {
+            return None;
+        }
+        let stroke = self.terrain_press.take();
+        if !pressed && !stroke.as_ref().is_some_and(|stroke| stroke.is_current(terrain.terrain_revision, brush_digest)) {
+            return Some(None);
+        }
+        let Some((x, y, viewport)) = pointer_in_pick_rect(session, intent.x, intent.y) else { return Some(None) };
+        let (origin, direction) = ui_scene::math::projection_spec_ray_from_screen(
+            &camera.orbit.to_camera(), camera.projection_spec, x, y, viewport.w, viewport.h,
+        );
+        let Some(hit) = terrain.pick_terrain_sample(origin.to_array().map(f64::from), direction.to_array().map(f64::from)) else { return Some(None) };
+        if pressed {
+            self.terrain_press = Some(WorldTerrainStroke::new(hit, terrain.terrain_revision, brush_digest));
+            return Some(None);
+        }
+        let mut stroke = stroke.expect("a continued terrain stroke has a live press");
+        if !stroke.sample(hit, brush.arguments.radius, released) {
+            return Some(None);
+        }
+        if released {
+            return Some(plan_world3d_terrain_edit(session, intent.generation, brush, stroke));
+        }
+        self.terrain_press = Some(stroke);
+        Some(None)
+    }
+
     /// 🧭️ A DRAINED queue is this lane's settle point — React's `CAMERA_SYNC_DEBOUNCE_MS`
     /// trailing debounce without a timer, since the last answered intent of a gesture is
     /// exactly when that debounce would fire. See [`WorldCameraSync`].
@@ -61,11 +114,19 @@ impl WorldInteractionAuthority {
     /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 15).
     /// A stale aim retires like any other answered intent; a fault stays a fault for a point the
     /// surface DOES cover, which is a real refusal.
-    pub fn step(&mut self, session_state: &mut WorldSessionState, camera_state: &mut WorldCameraState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, interaction_state: &mut WorldInteractionState, scene_state: &mut WorldSceneState, generation: u64, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
+    pub fn step(&mut self, session_state: &mut WorldSessionState, camera_state: &mut WorldCameraState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, interaction_state: &mut WorldInteractionState, scene_state: &mut WorldSceneState, terrain_state: &WorldTerrainState, generation: u64, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
         if self.closing || context.should_yield() {
             return WorldInteractionAuthorityStep::Pending;
         }
-        if let Some(active) = self.active.take() {
+        if let Some(mut active) = self.active.take() {
+            if let WorldInteractionActive::Plan { plan, retirement } = &mut active {
+                if plan.cursor == 0 && plan.terrain_stroke.as_ref().is_some_and(|stroke| {
+                    terrain_state.terrain_style_pending()
+                        || terrain_state.terrain_brush().is_none_or(|(_, digest)| !stroke.is_current(terrain_state.terrain_revision, digest))
+                }) {
+                    *retirement = Some(WorldInteractionAuthorityStep::Stale);
+                }
+            }
             return self.step_active(active, session_state, camera_state, selection_state, gumball_state, interaction_state, scene_state, generation, input, context);
         }
         if self.faulted {
@@ -127,6 +188,9 @@ impl WorldInteractionAuthority {
                 context.consume_fuel(1);
                 return WorldInteractionAuthorityStep::Pending;
             }
+            if selection_state.engagement_session_active {
+                camera_state.camera_sync.hover_owed = false;
+            }
             if let (true, Some([x, y])) = (camera_state.camera_sync.hover_owed, camera_state.camera_sync.at) {
                 camera_state.camera_sync.hover_owed = false;
                 let mut hover = WorldInteractionIntent::pointer_move(x, y, 0.0, 0.0, false, 0, &PointerModifiers::default());
@@ -139,12 +203,6 @@ impl WorldInteractionAuthority {
             }
             return WorldInteractionAuthorityStep::Idle;
         };
-        if !matches!(intent.phase, WorldInteractionPhase::Close | WorldInteractionPhase::PointerLeave | WorldInteractionPhase::Cancel) {
-            camera_state.camera_sync.at = Some([intent.x, intent.y]);
-            if intent.phase == WorldInteractionPhase::PointerButton && !intent.down {
-                camera_state.camera_sync.owed = true;
-            }
-        }
         if intent.generation < generation {
             self.queue.retire_front(intent.generation);
             context.consume_fuel(1);
@@ -154,10 +212,25 @@ impl WorldInteractionAuthority {
             self.faulted = true;
             return WorldInteractionAuthorityStep::Fault;
         }
+        if let Some(plan) = self.terrain_stroke(session_state, camera_state, terrain_state, &intent) {
+            self.active = plan.map(|plan| WorldInteractionActive::Plan { plan, retirement: None });
+            if self.active.is_none() {
+                self.queue.retire_front(intent.generation);
+            }
+            context.consume_fuel(1);
+            return if self.active.is_some() { WorldInteractionAuthorityStep::Pending } else { WorldInteractionAuthorityStep::Complete };
+        }
+        if !matches!(intent.phase, WorldInteractionPhase::Close | WorldInteractionPhase::PointerLeave | WorldInteractionPhase::Cancel) {
+            camera_state.camera_sync.at = Some([intent.x, intent.y]);
+            if intent.phase == WorldInteractionPhase::PointerButton && !intent.down {
+                camera_state.camera_sync.owed = true;
+            }
+        }
         if let Some(step) = self.step_handle_drag(session_state, camera_state, &intent, input, context) {
             return step;
         }
         if intent.phase == WorldInteractionPhase::Cancel {
+            self.engagement_press = false;
             let reason = WorldCancelReason::from_button(intent.button);
             if let Some((phase, motion)) = self.gumball.as_ref().and_then(|gesture| gesture.cancel(reason)) {
                 let gesture = self.gumball.take().expect("cancelled live gumball gesture");
@@ -231,7 +304,7 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
         }
-        if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down && session_state.active_utility == "select" && self.gumball.is_none() && world3d_offers_transform_gumball(session_state) {
+        if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down && !selection_state.engagement_session_active && session_state.active_utility == "select" && self.gumball.is_none() && world3d_offers_transform_gumball(session_state) {
             self.active = Some(WorldInteractionActive::GumballPick { cursor: WorldGumballPickCursor::new(session_state, selection_state, generation, intent.x, intent.y), retirement: None });
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Pending;
@@ -273,6 +346,23 @@ impl WorldInteractionAuthority {
             self.queue.retire_front(intent.generation);
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
+        }
+        if !world3d_relocate_active(gumball_state) && !world3d_relocate_mode(session_state) && (selection_state.engagement_session_active || self.engagement_press) {
+            let button = intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0;
+            let motion = intent.phase == WorldInteractionPhase::PointerMove && (!intent.down || intent.button == 0);
+            if button || motion {
+                if button {
+                    self.engagement_press = intent.down && selection_state.engagement_session_active;
+                }
+                if selection_state.engagement_session_active && (motion || intent.down) {
+                    self.active = plan_world3d_engagement_pointer(session_state, camera_state, &intent).map(|plan| WorldInteractionActive::Plan { plan, retirement: None });
+                }
+                if self.active.is_none() {
+                    self.queue.retire_front(intent.generation);
+                }
+                context.consume_fuel(1);
+                return if self.active.is_some() { WorldInteractionAuthorityStep::Pending } else { WorldInteractionAuthorityStep::Complete };
+            }
         }
         if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && !intent.down && session_state.active_utility == "brush" {
             match WorldBrushCommitJob::new(session_state, gumball_state, intent.generation) {
@@ -334,7 +424,11 @@ impl WorldInteractionAuthority {
         }
         let active = match intent.phase {
             WorldInteractionPhase::Wheel => plan_world3d_wheel(session_state, camera_state, generation, intent.delta).map(|plan| WorldInteractionActive::Plan { plan, retirement: None }),
-            WorldInteractionPhase::PointerLeave => plan_world3d_pointer_leave(session_state, selection_state, generation).map(|plan| WorldInteractionActive::Plan { plan, retirement: None }),
+            WorldInteractionPhase::PointerLeave => {
+                camera_state.camera_sync.at = None;
+                camera_state.camera_sync.hover_owed = false;
+                plan_world3d_pointer_leave(session_state, selection_state, generation).map(|plan| WorldInteractionActive::Plan { plan, retirement: None })
+            }
             WorldInteractionPhase::PointerDrag => {
                 if world3d_relocate_active(gumball_state) {
                     world3d_update_relocate_drag(session_state, camera_state, gumball_state, scene_state, intent.x, intent.y);
@@ -448,6 +542,10 @@ impl WorldInteractionAuthority {
                 return WorldInteractionAuthorityStep::Pending;
             }
             if intent.phase == WorldInteractionPhase::PointerLeave {
+                if selection_state.local_instance_hover {
+                    selection_state.release_instance_pointer_hover();
+                    advance_world3d_view_revision(session_state, scene_state);
+                }
                 self.queue.retire_front(intent.generation);
                 context.consume_fuel(1);
                 return WorldInteractionAuthorityStep::Complete;

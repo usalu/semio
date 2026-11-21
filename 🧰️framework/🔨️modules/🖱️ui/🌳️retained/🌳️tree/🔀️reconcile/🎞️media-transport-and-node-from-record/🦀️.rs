@@ -186,7 +186,7 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
         ui_contract::Component::Text(props) => UiNode::Text(UiTextNode { value: contract_label(&props.value), emphasize: props.emphasize, data_attributes: data_attributes(props.data_attributes.as_ref()), presence, menu }),
         ui_contract::Component::Separator(_) => UiNode::Separator(UiSeparatorNode { presence, menu }),
         ui_contract::Component::Button(_) => button_node(record, controller),
-        ui_contract::Component::Input(_) => input_node(record, controller),
+        ui_contract::Component::Input(_) => input_node(document, record, controller),
         ui_contract::Component::Select(_) => select_node(record, controller),
         ui_contract::Component::Toggle(_) => toggle_node(record, controller),
         ui_contract::Component::KeyValueList(_) => key_value_node(record),
@@ -195,7 +195,13 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
         ui_contract::Component::Ring(_) => ring_node(record, controller),
         ui_contract::Component::IconSelect(_) => icon_select_node(record, controller),
         ui_contract::Component::Progress(props) => progress_node(record, props, presence, menu),
-        ui_contract::Component::Image(props) => UiNode::Image(UiImageNode { id: record.key.as_str().to_string(), src: props.src.as_str().to_string(), alt: optional_contract_label(props.alt.as_ref()), presence, menu }),
+        ui_contract::Component::Image(props) => {
+            let key = props.src.as_str();
+            let body = props.source_body_bytes.and_then(|bytes| super::record_routing_and_actions::retained_text_body(document, record, key, bytes as usize));
+            let paged = props.source_body_bytes.is_some() && ui_contract::window_resource::WindowResourcePage::parse(key).is_some();
+            let (src, source_page) = if paged { (key.to_owned(), body) } else if props.source_body_bytes.is_some() { (body.unwrap_or_default(), None) } else { (key.to_owned(), None) };
+            UiNode::Image(UiImageNode { id: record.key.as_str().to_string(), src, source_page, alt: optional_contract_label(props.alt.as_ref()), presence, menu })
+        }
         ui_contract::Component::Tree(props) => {
             let sections = record
                 .children

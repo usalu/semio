@@ -24,6 +24,8 @@ impl OriginalActorJobState{
  pub fn retained_chunk(&self)->Option<&[u8]>{self.chunk.as_ref().map(Vec::as_slice)}
  pub fn output_identity(&self)->Option<(u64,u64,u64)>{self.identity}
  pub fn has_source(&self)->bool{self.source.is_some()||self.source_retirement.is_some()}
+ /// 🔑️ Identifies the retained source that can resume an in-progress job start.
+ pub fn pending_start_job(&self)->Option<u64>{self.source.as_ref().map(|source|source.job)}
  pub fn has_output(&self)->bool{self.job_output_chunk_borrowed||self.ack||self.output.is_some()||self.output_retirement.is_some()||self.chunk.is_some()||self.chunk_retirement.is_some()}
  pub fn is_registered(&self)->bool{self.registered}
  pub fn source_is_retiring(&self)->bool{self.source_retirement.is_some()}

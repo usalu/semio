@@ -1,0 +1,7 @@
+{
+  "tool": "exportDocument",
+  "controller": "s.draw.drawing@1/*#editor",
+  "artifactSchema": "drawing.document",
+  "maximumInputBytes": 4096,
+  "maximumDownloadBytes": 33554432
+}

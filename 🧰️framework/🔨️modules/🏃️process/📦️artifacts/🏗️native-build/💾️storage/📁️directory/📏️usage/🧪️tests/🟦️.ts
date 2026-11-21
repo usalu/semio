@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {linkSync,mkdirSync,mkdtempSync,rmSync,symlinkSync,truncateSync,writeFileSync} from "node:fs";
-import {join,resolve} from "node:path";
+import {basename,dirname,join,resolve} from "node:path";
 import {tmpdir} from "node:os";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
@@ -172,4 +172,54 @@ test("the system walk preserves exact scalar metadata and required precision obs
 
 test("actual system stat observations replay neutral files against independent Python metadata",async()=>{
  const root=scratch();try{const files=fixture.trees[0]!.files.filter(([name])=>!String(name).includes("/"));for(const[name,bytes]of files)writeFileSync(join(root,String(name)),Buffer.alloc(Number(bytes)));const actual=await measureNativeDirectoryUsageAsyncV1(root);expect(actual.entries).toBe(files.length+1);expect(actual.logicalBytes).toBe(files.reduce((sum,[,bytes])=>sum+Number(bytes),0));expect(hasPython).toBe(true);const answer=sh(testPythonV1()??"python3","-c",python,root);expect(answer.exitCode,answer.stderr.toString()).toBe(0);expect(actual).toEqual(JSON.parse(answer.stdout.toString()));}finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("flat directory measurements use the existing bounded worker pool without duplicate allocation",async()=>{
+ const row=fixture.flatBatches,root=resolve("usage-flat-model"),db=new Database(":memory:"),names=Array.from({length:row.files},(_,index)=>String(index));
+ const directory={isFile:()=>false,isDirectory:()=>true,nlink:1n,blocks:BigInt(row.directoryBlocks),size:0n,dev:1n,ino:0n};
+ let release!:()=>void,calls=0,listed=0,replaced=false;
+ const gate=new Promise<void>(done=>{release=done;});
+ const port:NativeDirectoryWalkPortV1={
+  list:async path=>{expect(path).toBe(root);listed++;return names;},
+  stat:async path=>{if(path===root)return directory;calls++;await gate;const index=Number(path.slice(root.length+1));if(replaced&&index===row.vanish)throw Object.assign(Error("removed after listing"),{code:"ENOENT"});if(replaced&&index===row.replace.index)return {...directory,isDirectory:()=>false,isFile:()=>true,blocks:BigInt(row.replace.blocks),size:BigInt(row.replace.size),ino:BigInt(row.files+1)};return {...directory,isDirectory:()=>false,isFile:()=>true,blocks:BigInt(row.fileBlocks),size:BigInt(row.fileSize),nlink:index<row.links?BigInt(row.links):1n,ino:BigInt(index<row.links?1:index+1)};},
+ };
+ const work=measureNativeDirectoryUsageAsyncV1(root,{port});
+ try{
+  await new Promise<void>(done=>setImmediate(done));
+  const peak=calls;
+  replaced=true;release();
+  const result=await work;
+  const expected=db.query("select min(?1,?2*?3) peak,(?1-?4)*?5*512+(?6+?8)*512 allocatedBytes,(?1-?4)*?7+?9 logicalBytes,?1 entries").get(row.files,protocol.usage.batch,protocol.usage.concurrency,row.links,row.fileBlocks,row.directoryBlocks,row.fileSize,row.replace.blocks,row.replace.size) as {peak:number;allocatedBytes:number;logicalBytes:number;entries:number};
+  expect(peak).toBe(expected.peak);
+  expect(result).toEqual({allocatedBytes:expected.allocatedBytes,logicalBytes:expected.logicalBytes,entries:expected.entries});
+  expect(listed).toBe(1);expect(calls).toBe(row.files);
+ }finally{release();await work.catch(()=>undefined);db.close();}
+});
+
+test("parallel directory walks retain only the existing bounded number of active listings",async()=>{
+ const row=fixture.nestedBatches,root=resolve("usage-nested-model"),db=new Database(":memory:"),states=new Map<string,number>();
+ const folders=Array.from({length:row.directories},(_,index)=>"d"+index),leaves=Array.from({length:row.files},(_,index)=>"f"+index);
+ const directory={isFile:()=>false,isDirectory:()=>true,nlink:1n,blocks:0n,size:0n,dev:1n,ino:0n};
+ let release!:()=>void,peakListings=0,peakStats=0,stats=0;
+ const gate=new Promise<void>(done=>{release=done;});
+ const port:NativeDirectoryWalkPortV1={
+  list:async path=>{if(path===root)return folders;expect(states.has(path)).toBe(false);states.set(path,row.files);peakListings=Math.max(peakListings,states.size);return leaves;},
+  stat:async path=>{
+   if(path===root||basename(path).startsWith("d"))return directory;
+   const parent=dirname(path);peakStats=Math.max(peakStats,++stats);await gate;await new Promise<void>(done=>setImmediate(done));stats--;
+   const remaining=states.get(parent)!-1;
+   if(remaining)states.set(parent,remaining);else states.delete(parent);
+   return {...directory,isDirectory:()=>false,isFile:()=>true,blocks:1n,size:1n};
+  },
+ };
+ const work=measureNativeDirectoryUsageAsyncV1(root,{port});
+ try{
+  await new Promise<void>(done=>setImmediate(done));release();
+  const result=await work;
+  const expected=db.query("select min(?1,?3) listings,?3*?4 stats,?1*?2 logicalBytes,?1*?2*512 allocatedBytes,1+?1+?1*?2 entries").get(row.directories,row.files,protocol.usage.concurrency,protocol.usage.batch) as {listings:number;stats:number;logicalBytes:number;allocatedBytes:number;entries:number};
+  expect(peakListings).toBe(expected.listings);
+  expect(peakStats).toBeLessThanOrEqual(expected.stats);
+  expect(result).toEqual({logicalBytes:expected.logicalBytes,allocatedBytes:expected.allocatedBytes,entries:expected.entries});
+  expect(states.size).toBe(0);
+ }finally{release();await work.catch(()=>undefined);db.close();}
 });

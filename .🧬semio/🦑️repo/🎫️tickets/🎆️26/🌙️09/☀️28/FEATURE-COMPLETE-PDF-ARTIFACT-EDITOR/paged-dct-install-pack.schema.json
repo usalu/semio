@@ -1,0 +1,22 @@
+{
+  "schema": "s.stdio.pdf.dct-install.v1",
+  "container": "Pack",
+  "chunkCodec": "identity",
+  "record": {
+    "chunk": 0,
+    "layout": [
+      {"name": "length", "type": "u32le", "minimum": 4, "maximum": 4194304},
+      {"name": "width", "type": "u16le", "minimum": 1},
+      {"name": "height", "type": "u16le", "minimum": 1},
+      {"name": "components", "type": "u8", "values": [1, 3]},
+      {"name": "colorTransform", "type": "u8", "values": [0, 1, 255], "null": 255},
+      {"name": "dctDigest", "type": "raw32", "identity": "PDF JPEG typed-filter SHA-256"}
+    ]
+  },
+  "codestream": {
+    "firstChunk": 1,
+    "chunkBytes": 32768,
+    "lastChunk": "unaltered remaining octets",
+    "verification": ["Pack identity-chunk CRC32C", "Pack identity-chunk BLAKE3", "PDF JPEG typed-filter SHA-256"]
+  }
+}

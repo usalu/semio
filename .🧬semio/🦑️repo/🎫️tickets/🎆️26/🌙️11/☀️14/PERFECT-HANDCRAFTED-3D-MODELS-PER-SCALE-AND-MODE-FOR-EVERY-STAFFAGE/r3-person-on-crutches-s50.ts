@@ -4,7 +4,7 @@
  * @see ./r3-humans-person-on-crutches.md */
 import type { Json } from "./volumes-lib.ts";
 import { ASSET, H, L, aboutU, aboutV, aboutW, boneDeg, box, capsule, compose, dense, dome, ellipsoid, loft, mirrored, part, revolve, st, thOf, toRight, tube, type St, type V3 } from "./r3-person-on-crutches-kit.ts";
-import { CUFF, FORE, HAIR, HANDLE_DIR, HANDLE_L, HEAD, HOODIE, NECK, SEAT, SHANK, SHORTS_LEG, SLEEVE, THIGH, TONE, WRIST, ARM_LEAN, FORE_LEAN, SHAFT, around, bootSt, leanAt, shaft, crutchToForearm, footAt, footSt, grip, handToCrutch, mid, nearOf, rowsAt, surfaceX } from "./r3-person-on-crutches-parts.ts";
+import { CUFF, FORE, HAIR, HANDLE_DIR, HANDLE_L, HEAD, HOODIE, NECK, SEAT, SHANK, SHORTS_LEG, SLEEVE, THIGH, TONE, WRIST, ARM_LEAN, FORE_LEAN, SHAFT, around, ANKLE_H, SHANK_L, bootSt, leanAt, shaft, crutchToForearm, footAt, footSt, grip, handToCrutch, mid, nearOf, rowsAt, surfaceX } from "./r3-person-on-crutches-parts.ts";
 
 type C = { id: string; bone: string; material: string; tone: number; role?: string };
 const c = (id: string, bone: string, material: string, tone: number, role = "body"): C => ({ id, bone, material, tone, role });
@@ -82,10 +82,10 @@ export function boot(): Json[] {
   const fore: [number, number, number, number][] = [[0.14, -0.012, 0.016, 0.064], [0.185, -0.006, 0.016, 0.062], [0.21, 0.002, 0.017, 0.052], [0.222, 0.008, 0.02, 0.034]];
   out.push(loft(b("sole-l", "foot-l", 0.1), dense(sole.map(([x, bt, t, rw]) => footSt("foot", x, bt, t, rw, 3.4)), 2)));
   out.push(loft(b("sole-front-l", "toe-l", 0.1), dense(fore.map(([x, bt, t, rw]) => footSt("toe", x, bt, t, rw, 3.4)), 2)));
-  for (const side of [1, -1]) out.push(box(b(`boot-strut-${side > 0 ? "o" : "i"}-l`, "shank-l", 0.3, "detail"), [0.3, 0.036, 0.008], [0.4477 - (0.275 - 0.083), -0.004, side * 0.0735], undefined, 0.003));
+  for (const side of [1, -1]) out.push(box(b(`boot-strut-${side > 0 ? "o" : "i"}-l`, "shank-l", 0.3, "detail"), [0.3, 0.036, 0.008], [SHANK_L - (0.275 - ANKLE_H), -0.004, side * 0.0735], undefined, 0.003));
   const straps: [number, number][] = [[0.405, 0], [0.315, 1], [0.225, 2]];
   for (const [y, i] of straps) {
-    const k = (h: number): St => { const s = dense(leg.map(([yy, bk, fr, rw]) => bootSt(yy, bk, fr, rw)), 6).reduce((a2, q) => (Math.abs(q.at[0] - (0.4477 - (h - 0.083))) < Math.abs(a2.at[0] - (0.4477 - (h - 0.083))) ? q : a2)); return { ...s, at: [0.4477 - (h - 0.083), s.at[1], 0], rw: s.rw + 0.004, rv: s.rv + 0.004 }; };
+    const k = (h: number): St => { const s = dense(leg.map(([yy, bk, fr, rw]) => bootSt(yy, bk, fr, rw)), 6).reduce((a2, q) => (Math.abs(q.at[0] - (SHANK_L - (h - ANKLE_H))) < Math.abs(a2.at[0] - (SHANK_L - (h - ANKLE_H))) ? q : a2)); return { ...s, at: [SHANK_L - (h - ANKLE_H), s.at[1], 0], rw: s.rw + 0.004, rv: s.rv + 0.004 }; };
     out.push(loft(b(`boot-strap-${i}`, "shank-l", 0.6, "detail"), [k(y + 0.021), k(y), k(y - 0.021)]));
   }
   out.push(loft(b("boot-strap-3", "foot-l", 0.6, "detail"), [footSt("foot", 0.03, 0.011, 0.147, 0.0655, 2.8), footSt("foot", 0.05, 0.011, 0.137, 0.0655, 2.8), footSt("foot", 0.07, 0.011, 0.123, 0.0655, 2.8)]));
@@ -126,7 +126,7 @@ export function body50(): Json[] {
   const shankR = right([loft(skin("shank-g-l", "shank-l", TONE.legFar), dome(dense(SHANK, 3), -1, 0.045))]);
   out.push(loft(skin("shank-g-l", "shank-l", TONE.legFar), dome(dense([...SHANK.slice(0, 3), st(0.125, -0.009, -0.003, 0.056, 0.062, 2)], 3), -1, 0.045)));
   out.push(...shankR);
-  out.push(loft(c("sock-r", "shank-r", "cotton-sock", TONE.sock), [st(0.372, -0.004, 0, 0.0355, 0.0425), st(0.4, -0.003, 0, 0.0355, 0.042), st(0.43, -0.002, 0, 0.0385, 0.044, 2.1), st(0.452, 0.002, 0, 0.039, 0.0455, 2.2)]));
+  out.push(loft(c("sock-r", "shank-r", "cotton-sock", TONE.sock), [st(0.36, -0.004, 0, 0.0355, 0.0425), st(0.388, -0.003, 0, 0.0355, 0.042), st(0.418, -0.002, 0, 0.0385, 0.044, 2.1), st(0.44, 0.002, 0, 0.039, 0.0455, 2.2)]));
   out.push(...sneaker());
   out.push(...boot());
 
@@ -275,11 +275,11 @@ export function structure50(body: readonly Json[]): Json[] {
   lm(ellipsoid(b("femur-condyles-l", "thigh-l"), [0.022, 0.032, 0.042], [0.438, -0.004, 0]), "thigh-l");
   lm(ellipsoid(b("patella-l", "thigh-l"), [0.022, 0.01, 0.021], [0.436, 0.041, 0]), "thigh-l");
   lm(ellipsoid(b("tibia-plateau-l", "shank-l"), [0.016, 0.028, 0.04], [0.018, -0.002, 0]), "shank-l");
-  lm(loft(b("tibia-l", "shank-l"), [st(0.026, 0.003, -0.003, 0.022, 0.02, 2), st(0.065, 0.009, -0.004, 0.017, 0.0175, 1.8), st(0.15, 0.012, -0.004, 0.013, 0.015, 1.7), st(0.3, 0.008, -0.004, 0.012, 0.013, 1.8), st(0.395, 0.004, -0.003, 0.013, 0.013, 2), st(0.436, 0.002, -0.003, 0.018, 0.015, 2)]), "shank-l");
-  lm(ellipsoid(b("malleolus-l", "shank-l"), [0.015, 0.012, 0.0095], [0.44, 0, -0.026]), "shank-l");
-  lm(capsule(b("fibula-l", "shank-l"), [0.036, -0.02, 0.034], [0.444, -0.012, 0.027], 0.0065, 0.0075), "shank-l");
+  lm(loft(b("tibia-l", "shank-l"), [st(0.026, 0.003, -0.003, 0.022, 0.02, 2), st(0.065, 0.009, -0.004, 0.017, 0.0175, 1.8), st(0.15, 0.012, -0.004, 0.013, 0.015, 1.7), st(0.29, 0.008, -0.004, 0.012, 0.013, 1.8), st(0.383, 0.004, -0.003, 0.013, 0.013, 2), st(0.424, 0.002, -0.003, 0.018, 0.015, 2)]), "shank-l");
+  lm(ellipsoid(b("malleolus-l", "shank-l"), [0.015, 0.012, 0.0095], [0.428, 0, -0.026]), "shank-l");
+  lm(capsule(b("fibula-l", "shank-l"), [0.036, -0.02, 0.034], [0.432, -0.012, 0.027], 0.0065, 0.0075), "shank-l");
   lm(capsule(b("calcaneus-l", "foot-l"), footAt("foot", -0.052, 0.062), footAt("foot", 0.0, 0.068), 0.02, 0.018), "foot-l");
-  lm(ellipsoid(b("talus-l", "foot-l"), [0.026, 0.015, 0.02], footAt("foot", 0.012, 0.079), aboutW(29)), "foot-l");
+  lm(ellipsoid(b("talus-l", "foot-l"), [0.026, 0.015, 0.02], footAt("foot", 0.012, 0.089), aboutW(32)), "foot-l");
   lm(loft(b("metatarsals-l", "foot-l"), [footSt("foot", 0.03, 0.05, 0.082, 0.026, 2.2), footSt("foot", 0.075, 0.044, 0.072, 0.033, 2.2), footSt("foot", 0.12, 0.036, 0.056, 0.04, 2.2), footSt("foot", 0.158, 0.03, 0.046, 0.044, 2.2)]), "foot-l");
   lm(loft(b("phalanges-l", "toe-l"), [footSt("toe", 0.146, 0.03, 0.046, 0.044, 2.2), footSt("toe", 0.185, 0.03, 0.042, 0.04, 2.2), footSt("toe", 0.209, 0.03, 0.04, 0.03, 2.2)]), "toe-l");
   lm(ellipsoid(b("humerus-head-l", "arm-l"), [0.023, 0.023, 0.023], [0, 0, -0.012]), "arm-l");

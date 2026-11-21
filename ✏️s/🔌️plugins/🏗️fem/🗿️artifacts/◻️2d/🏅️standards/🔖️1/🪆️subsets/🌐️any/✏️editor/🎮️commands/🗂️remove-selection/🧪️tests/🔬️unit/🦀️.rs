@@ -43,7 +43,7 @@ async fn remove_selection_covers_nodes_elements_materials_sections_supports_load
 async fn remove_selection_covers_regions_2d() {
     let mut app = fem2d_empty_app();
     dispatch(&mut app, Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 })).await;
-    let material_id = app.snapshot().expect("snapshot").materials[0].id.clone();
+    let material_id = app.snapshot().expect("snapshot").materials[0].id.to_string();
     dispatch(&mut app, Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 1.0, height: 1.0, material_id, thickness: None, mesh_size: None })).await;
     let region_id = app.snapshot().expect("snapshot").regions[0].id.clone();
     dispatch(&mut app, Fem2dCommand::RemoveSelection(RemoveSelection { ids: vec![semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_target_id("region", &region_id).expect("region target")] })).await;

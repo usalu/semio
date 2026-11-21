@@ -23,7 +23,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioBinaryApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioBinaryApps>::builder("stdio-binary").label("Stdio Binary").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-binary").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioBinaryApps>::new("stdio-binary").label("Stdio Binary").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-binary").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_binary::declaration(semio_s_artifact_stdio_binary::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_deflate::declaration(semio_s_artifact_stdio_deflate::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_zip::declaration(semio_s_artifact_stdio_zip::definition()?).map_err(PluginAssemblyError::definition)?);

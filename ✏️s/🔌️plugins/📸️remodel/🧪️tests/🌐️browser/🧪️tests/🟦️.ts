@@ -17,6 +17,9 @@ import finalizationSchema from "../🧬️schema/🏁️finalization.json";
 import { DatabaseSync } from "node:sqlite";
 import mediaCases from "../🧫️fixtures/📥️media-observations.json";
 import mediaSchema from "../🧬️schema/📥️media-observations.json";
+import meshCase from "../../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧫️fixtures/🎞️mesh-export/🔣️.json";
+import qcCases from "../../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧾️export-qc-report/🧪️tests/🧫️cases/🔣️.json";
+import { packGlb } from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/📤️export/🧊️glb/🧱️buffer/🟦️.ts";
 import { inspectRemodelOpenedV1 } from "../🧭️journey/🟦️.ts";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -25,6 +28,32 @@ import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
 import scenarios from "../🧫️fixtures/🔣️.json";
 import { corruptImportObservedV1, archiveBytesEqualV1, archiveWitnessV1, abortObservedV1, undoRedoObservedV1, finalizationObservedV1, mediaImportObservedV1, initialRemodelBrowserReportV1, remodelEditorPresentV1, remodelBoundEditorV1, remodelAcceptanceSatisfiedV1, serializeRemodelBrowserReportV1, validateRemodelTwoHumanArgumentsV1, remodelInputsV1, remodelHostReadyV1 } from "../📋️report/🟦️.ts";
+
+test("downloads match the authored mesh and quality report formats", async () => {
+  const { meshDownloadWitnessV1, qcDownloadWitnessV1 } = await import("../📋️report/🟦️.ts");
+  const vertices = meshCase.positions.length / 3, triangles = meshCase.indices.length / 3;
+  const binary = new Uint8Array(44), geometry = new DataView(binary.buffer);
+  meshCase.positions.forEach((value, index) => geometry.setFloat32(index * 4, value, true));
+  meshCase.indices.forEach((value, index) => geometry.setUint16(36 + index * 2, value, true));
+  const document = { asset: { version: "2.0" }, buffers: [{ byteLength: 42 }], bufferViews: [{ buffer: 0, byteLength: 36 }, { buffer: 0, byteOffset: 36, byteLength: 6 }], accessors: [{ bufferView: 0, type: "VEC3", componentType: 5126, count: vertices }, { bufferView: 1, type: "SCALAR", componentType: 5123, count: triangles * 3 }], meshes: [{ primitives: [{ attributes: { POSITION: 0 }, indices: 1 }] }] };
+  const bytes = packGlb(JSON.stringify(document), binary), db = new DatabaseSync(":memory:");
+  try {
+    const expected = db.prepare("SELECT json_extract(?1, '$.accessors[0].count') vertices, json_extract(?1, '$.accessors[1].count') / 3 triangles").get(JSON.stringify(document));
+    expect(meshDownloadWitnessV1(meshCase.filename, bytes, meshCase.mimeType)).toMatchObject(expected!);
+    const truncated = bytes.subarray(0, bytes.length - 4);
+    expect(() => meshDownloadWitnessV1(meshCase.filename, truncated, meshCase.mimeType)).toThrow();
+    expect(() => meshDownloadWitnessV1(meshCase.filename, bytes, null)).toThrow();
+    const dangling = { ...document, meshes: [{ primitives: [{ attributes: { POSITION: 4 }, indices: 1 }] }] };
+    expect(() => meshDownloadWitnessV1(meshCase.filename, packGlb(JSON.stringify(dangling), binary), meshCase.mimeType)).toThrow();
+  } finally { db.close(); }
+  const oracle = new Ajv({ strict: true, allowUnionTypes: true }).compile(qcCases.reportSchema);
+  for (const { report, effects } of qcCases.cases) {
+    const text = new TextEncoder().encode(JSON.stringify(report));
+    expect(oracle(report)).toBe(effects === 1);
+    if (effects === 1) expect(qcDownloadWitnessV1(qcCases.filename, text, qcCases.mimeType).bytes).toBe(text.length);
+    else expect(() => qcDownloadWitnessV1(qcCases.filename, text, qcCases.mimeType)).toThrow();
+  }
+});
 
 test("the window observation plan covers three distinct kinds and controls", () => {
   expect(new Ajv().validate(windowSchema, windowCases)).toBe(true);
@@ -162,14 +191,17 @@ test("opened journey refuses mismatched documents and leaves all scenarios incom
   expect(clicks).toBe(0);
 });
 
-test("a matched scope does not turn absent controls or untouched scenarios into passes", async () => {
+test("only rendered content in a bound surface can pass identity", async () => {
   const attrs = { "data-surface-app-id": "s.remodel.remodeling@1/*#editor", "data-surface-role": "editor", "data-surface-session-instance-id": "1", "data-surface-window-id": "model", "data-surface-window-kind-id": "model", "data-surface-space-id": "space", "data-surface-document-id": "doc" };
   let clicks = 0;
-  const ui = { canvas: async () => null, observe: async (selector: string) => selector.includes("[data-ui-node-key]:not") ? [{ text: "content", visible: true, attributes: {} }] : selector === "[data-surface-app-id][data-surface-window-id]" ? [{ text: "", visible: true, attributes: attrs }] : [], click: async () => { clicks++; }, press: async () => {}, chooseFiles: async () => {}, download: async () => ({ name: "", mime: null, bytes: new Uint8Array() }) };
+  const port = (populated: boolean) => ({ canvas: async () => null, observe: async (selector: string) => selector.includes("[data-ui-node-key]:not") && (!selector.includes("[data-surface-window-id=") || populated) ? [{ text: "content", visible: true, attributes: {} }] : selector === "[data-surface-app-id][data-surface-window-id]" ? [{ text: "", visible: true, attributes: attrs }] : [], click: async () => { clicks++; }, press: async () => {}, chooseFiles: async () => {}, download: async () => ({ name: "", mime: null, bytes: new Uint8Array() }) });
+  const ui = port(true);
   const rows = await inspectRemodelOpenedV1({ spaceId: "space", documentId: "doc", locale: "en", signal: new AbortController().signal, a: ui, b: ui }, process.cwd());
   expect(rows).toHaveLength(15);
-  expect(rows.filter(row => row.status === "passed")).toEqual([]);
+  expect(rows.filter(row => row.status === "passed").map(row => row.id)).toEqual(["identity"]);
   expect(rows.find(row => row.id === "import-cancel")?.status).toBe("unexecuted");
+  const missing = await inspectRemodelOpenedV1({ spaceId: "space", documentId: "doc", locale: "en", signal: new AbortController().signal, a: ui, b: port(false) }, process.cwd());
+  expect(missing.find(row => row.id === "identity")?.status).toBe("failed");
   expect(clicks).toBe(0);
 });
 

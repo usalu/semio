@@ -3,9 +3,8 @@
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use crate::windows::preview::PreviewInteractionMarks;
-use crate::windows::preview::GENERATION_3D_INTERACTION_CHANNEL;
+use semio_s_artifact_procedural_3d_model::GraphTargetKind::{self, Edge, Handle, Node};
 use crate::windows::preview::GENERATION_3D_INTERACTION_DOMAIN;
-use crate::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
@@ -18,7 +17,6 @@ use semio_plugin::tree_window_item;
 use semio_plugin::ActionFactory;
 use semio_plugin::BuiltNode;
 use semio_ui_locale::LocalizedLabel;
-use semio_plugin::NodeGraphHover;
 use semio_plugin::NodeGraphScene;
 use semio_plugin::PanelTreeBuilder;
 use semio_plugin::PluginAssemblyError;
@@ -38,9 +36,7 @@ pub const GENERATION_3D_PLAY_OUTLINE_NODES: &str = "procedural-play-graph.nodes"
 pub const GENERATION_3D_PLAY_OUTLINE_WIRES: &str = "procedural-play-graph.wires";
 /// 🎯️ The `graph` domain granularity a node row picks into — the same one the canvas reports for a
 /// widget hit, so a row click and a canvas click are one selection.
-const GENERATION_3D_GRAPH_GRANULARITY_NODE: &str = "node";
 /// 🎯️ …and the one a wire row picks into: a synapse is an `edge` target.
-const GENERATION_3D_GRAPH_GRANULARITY_EDGE: &str = "edge";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -91,14 +87,11 @@ pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Opt
 //#endregion 🔖️Definition
 
 //#region 🔖️Outline
-/// 🎯️ One `graph`-domain target batch in the JSON shape `interactionSelect`/`interactionHover` decode
-/// (`parse_interaction_targets` in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) — a renderer
-/// serialises its whole pick/hover batch into the single `targets` text arg, and a semantic row is just
-/// a batch of one.
-pub fn graph_targets_json(granularity: &str, id: &str) -> String {
+/// 🎯️ Encodes one graph selection target in the interaction batch format.
+pub fn graph_targets_json(kind: GraphTargetKind, id: &str) -> String {
     let mut target = semio_framework_pack_json::Object::new();
-    target.insert("granularity", semio_framework_pack_json::Value::String(granularity.to_string()));
-    target.insert("id", semio_framework_pack_json::Value::String(id.to_string()));
+    target.insert("granularity", semio_framework_pack_json::Value::String(kind.granularity().into()));
+    target.insert("id", semio_framework_pack_json::Value::String(kind.target(id)));
     semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(vec![semio_framework_pack_json::Value::Object(target)]))
 }
 
@@ -117,67 +110,49 @@ fn node_status_label(statuses: Option<&semio_framework_pack_json::Value>, node_i
     })
 }
 
-/// 🔌️ A node's ports as one row apiece, keyed by the topology's own `{nodeId}@{portId}` handle id
-/// (`generation3d_port_ids_by_node`) so a port row and the canvas handle it mirrors are the same
-/// `graph`-domain target. A port id is unique per node, NOT per direction — the packaged column
-/// example's `extrusion-axis` carries `vector`/`x`/`y`/`z` as both an input and an output — so a port
-/// reached from both sides is ONE row carrying both directions, which is exactly how many targets the
-/// interaction topology has for it.
-fn node_ports<'a>(node: &'a NodeGraphNodeRecord, labels: &Generation3dLabels) -> Vec<(&'a NodeGraphPortRecord, String)> {
-    let mut ports: Vec<(&NodeGraphPortRecord, String)> = Vec::new();
-    for (port, direction) in node.inputs.iter().map(|port| (port, labels.graph_input_port.as_str())).chain(node.outputs.iter().map(|port| (port, labels.graph_output_port.as_str()))) {
-        match ports.iter_mut().find(|(known, _)| known.id == port.id) {
-            Some((_, directions)) if !directions.contains(direction) => {
-                directions.push_str(" · ");
-                directions.push_str(direction);
-            }
-            Some(_) => {}
-            None => ports.push((port, direction.to_string())),
-        }
-    }
-    ports
+/// 🔌️ A node's ports as one row per direction, keyed by the canvas handle id.
+fn node_ports<'a>(node: &'a NodeGraphNodeRecord, labels: &Generation3dLabels) -> Vec<(&'a NodeGraphPortRecord, &'static str)> {
+    node.inputs.iter().map(|port| (port, labels.graph_input_port.as_str()))
+        .chain(node.outputs.iter().map(|port| (port, labels.graph_output_port.as_str())))
+        .collect()
 }
 
-/// 🖱️ Publishes the same graph hover target from any retained tree row.
-pub fn bind_graph_row_hover(row: semio_ui_contract::TreeItemBuilder, factory: &ActionFactory, granularity: &str, id: &str) -> UiAssemblyResult<semio_ui_contract::TreeItemBuilder> {
-    let targets = graph_targets_json(granularity, id);
+/// 🖱️ Publishes the same graph hover target from a retained semantic control or row.
+pub fn bind_graph_hover<B: HasBase>(node: B, factory: &ActionFactory, kind: GraphTargetKind, id: &str) -> UiAssemblyResult<B> {
     let (hover, args) = factory.action(
         semio_plugin::INTERACTION_HOVER_ACTION_ID,
-        Some(semio_s_procedural_core_semantic_ui::ui_value_map([
-            ("channel", semio_s_procedural_core_semantic_ui::ui_value_text(GENERATION_3D_INTERACTION_CHANNEL)?),
-            ("domainId", semio_s_procedural_core_semantic_ui::ui_value_text(GENERATION_3D_INTERACTION_DOMAIN)?),
-            ("targets", semio_s_procedural_core_semantic_ui::ui_value_text(&targets)?),
-        ])?),
+        Some(semio_s_procedural_core_semantic_ui::graph_hover_args(&kind.target(id), kind.granularity())?),
     )?;
-    row.try_on_with(Trigger::HoverPreview, hover, args.ok_or_else(|| outline_error("row.hover-args"))?)
+    node.try_on_with(Trigger::HoverPreview, hover, args.ok_or_else(|| outline_error("row.hover-args"))?)
         .map_err(|_| outline_error("row.hover"))
 }
 
 /// 🎯️ A graph row picks through its tree and publishes hover for its own target.
-fn graph_row(factory: &ActionFactory, granularity: &str, id: &str, label: &str) -> UiAssemblyResult<semio_ui_contract::TreeItemBuilder> {
+fn graph_row(factory: &ActionFactory, kind: GraphTargetKind, id: &str, label: &str) -> UiAssemblyResult<semio_ui_contract::TreeItemBuilder> {
     let row = semio_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(label)?)
-        .try_id(id).map_err(|_| outline_error("row.id"))?
-        .granularity(semio_s_procedural_core_semantic_ui::ui_text(granularity)?);
-    bind_graph_row_hover(row, factory, granularity, id)
+        .try_id(&kind.target(id)).map_err(|_| outline_error("row.id"))?
+        .granularity(semio_s_procedural_core_semantic_ui::ui_text(kind.granularity())?);
+    bind_graph_hover(row, factory, kind, id)
 }
 
 fn node_row(windows: &TreeWindows<'_>, node: &NodeGraphNodeRecord, status: Option<&'static str>, labels: &Generation3dLabels, factory: &ActionFactory) -> UiAssemblyResult<BuiltNode> {
     let ports = node_ports(node, labels);
-    let mut builder = graph_row(factory, GENERATION_3D_GRAPH_GRANULARITY_NODE, &node.id, node.label.as_deref().unwrap_or(&node.id))?;
+    let mut builder = graph_row(factory, Node, &node.id, node.label.as_deref().unwrap_or(&node.id))?;
     if let Some(status) = status {
         builder = builder.description(semio_s_procedural_core_semantic_ui::ui_text(status)?);
     }
-    tree_window_item(windows, builder, &node.id, true, &ports, |(port, directions)| {
+    tree_window_item(windows, builder, &Node.target(&node.id), true, &ports, |(port, directions)| {
         let name = port.label.as_deref().filter(|label| !label.is_empty()).unwrap_or(&port.id);
-        graph_row(factory, GENERATION_3D_INTERACTION_GRANULARITY, &port.id, name)?
+        graph_row(factory, Handle, &port.id, name)?
             .description(semio_s_procedural_core_semantic_ui::ui_text(directions)?)
             .try_build().map_err(|_| outline_error("port-row"))
     })
 }
 
 fn wire_row(factory: &ActionFactory, edge: &NodeGraphEdgeRecord) -> UiAssemblyResult<BuiltNode> {
-    let label = format!("{}@{} → {}@{}", edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id);
-    graph_row(factory, GENERATION_3D_GRAPH_GRANULARITY_EDGE, &edge.id, &label)?
+    let raw = semio_s_artifact_procedural_3d_model::graph_port_channel;
+    let label = format!("{}@{} → {}@{}", edge.source_node_id, raw(&edge.source_port_id), edge.target_node_id, raw(&edge.target_port_id));
+    graph_row(factory, Edge, &edge.id, &label)?
         .try_build().map_err(|_| outline_error("wire-row"))
 }
 
@@ -205,11 +180,6 @@ fn outline_error(scope: &'static str) -> PluginAssemblyError {
 }
 //#endregion 🔖️Outline
 
-
-/// 🔌️ Channel code the operator catalogue speaks — `{nodeId}@{portId}` on a scene port, bare `portId` on a kind.
-fn operator_channel_code(port_id: &str) -> &str {
-    port_id.rsplit_once('@').map(|(_, code)| code).filter(|code| !code.is_empty()).unwrap_or(port_id)
-}
 
 fn operator_channel(code: &str, label: &str) -> NodeGraphOperatorChannelRecord {
     NodeGraphOperatorChannelRecord {
@@ -263,15 +233,15 @@ fn document_operator_records(dag: &semio_os_infinite_directed_presentation::DagH
                 }
                 let Some(node) = node_by_id.get(spec.id.as_str()) else { continue };
                 for port in &node.inputs {
-                    let code = operator_channel_code(&port.id).to_string();
-                    if seen_in.insert(code.clone()) {
-                        inputs.push(operator_channel(&code, port.label.as_deref().unwrap_or(&code)));
+                    let Some(code) = port.code.as_deref() else { continue; };
+                    if seen_in.insert(code) {
+                        inputs.push(operator_channel(code, port.label.as_deref().unwrap_or(code)));
                     }
                 }
                 for port in &node.outputs {
-                    let code = operator_channel_code(&port.id).to_string();
-                    if seen_out.insert(code.clone()) {
-                        outputs.push(operator_channel(&code, port.label.as_deref().unwrap_or(&code)));
+                    let Some(code) = port.code.as_deref() else { continue; };
+                    if seen_out.insert(code) {
+                        outputs.push(operator_channel(code, port.label.as_deref().unwrap_or(code)));
                     }
                 }
             }
@@ -303,23 +273,22 @@ fn graph_find_items(nodes: &[NodeGraphNodeRecord], category: &str) -> Vec<NodeGr
 //#region 🔖️Render
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
-    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
-    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
+    let dag = FlowHost::project_registered_dag_snapshot(host_snapshot);
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag, &host_snapshot.synapses);
     let operators = document_operator_records(&dag, &nodes);
     let viewport = Viewport2d { x: host_snapshot.camera.x, y: host_snapshot.camera.y, zoom: host_snapshot.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
-    let hover = marks.hovered_graph_target().map(|(id, port_id)| {
-        if port_id.is_none() && edges.iter().any(|edge|edge.id==id) {
-            NodeGraphHover {edge_id:Some(id),node_id:None,port_id:None}
-        } else {
-            NodeGraphHover {edge_id:None,node_id:Some(id),port_id}
-        }
-    });
     let surface = semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_MAIN,
         semio_ui_contract::SurfaceKind::NodeGraph,
         &NodeGraphScene {
             editable: Some(true),
+            interaction_domain: Some(semio_ui_declaration::ui::NodeGraphInteractionDomain {
+                id: GENERATION_3D_INTERACTION_DOMAIN.into(),
+                node_target_prefix: Node.prefix().into(),
+                edge_target_prefix: Edge.prefix().into(),
+                handle_target_prefix: Handle.prefix().into(),
+            }),
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
             host_snapshot_json: flow_extras.host_snapshot_json,
@@ -327,9 +296,14 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
             status_json: flow_extras.status_json,
             operators,
             find_items: graph_find_items(&nodes, labels.graph_nodes.as_str()),
-            selection: marks.graph_selection_ids(),
+            selection: marks.scene_selection_ids(),
+            selection_granularity: Some(match marks.selection_granularity.as_str() {
+                "edge" => "edge",
+                "handle" => "handle",
+                _ => "node",
+            }.into()),
             highlighted: marks.graph_highlight_ids(),
-            hover,
+            hover: marks.hovered_graph_target(),
             ..NodeGraphScene::base(nodes, edges, viewport)
         },
         labels.graph_canvas.as_str(),

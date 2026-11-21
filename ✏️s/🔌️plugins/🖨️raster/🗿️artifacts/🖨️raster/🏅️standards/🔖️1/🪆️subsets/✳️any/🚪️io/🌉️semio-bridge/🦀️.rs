@@ -189,8 +189,16 @@ pub fn raster_image_pack_asset(image: &SemioImageSnapshot) -> RasterImageAsset {
 }
 
 
+/// 🖼️ Encodes the first decoded frame for a layer preview.
 pub fn raster_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<RasterImageAsset, String> {
-    Ok(RasterImageAsset { mime: "image/png".into(), data: png_bytes_from_semio_image(image)? })
+    let pixel_count = validate_extent(image.width, image.height).map_err(|error| error.to_string())?;
+    let frame = image.frames.first().ok_or("a preview requires a decoded image frame")?;
+    if frame.rgba8.len() != pixel_count * 4 {
+        return Err("a preview frame must match the RGBA8 extent".into());
+    }
+    let preview = RasterImage { width: image.width, height: image.height, pixels: frame.rgba8.clone() };
+    let data = semio_framework_pixels::encode_png(&preview).map_err(|error| error.to_string())?;
+    Ok(RasterImageAsset { mime: "image/png".into(), data })
 }
 
 /// 🌉️🌉️ Round-trips raw PNG bytes through `s.stdio.semio/v1/image` (import then export) via the

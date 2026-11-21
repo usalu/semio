@@ -79,6 +79,7 @@ export const CORE_DE: Record<keyof typeof CORE_EN, string> = {
   "state.cancelled.body": "Einige Assets sind nicht geladen, daher können Schlagwörter, Zusammenfassungen, Massen oder die Fertigstellung in den Ergebnissen fehlen.",
   "state.noResults.title": "Nichts passt",
   "state.noResults.body": "Kein Asset passt zu dieser Suche und diesen Filtern. Setzen Sie sie zurück oder suchen Sie mit weniger Wörtern.",
+  "state.assetUnknown": "Dieses Asset ist nicht im Archiv.",
   "state.missing.title": "Noch nicht erstellt",
   "state.failed.short": "Nicht geladen",
   "state.missing.short": "Nicht erstellt",

@@ -6,15 +6,15 @@
  * @see ../🔎️search/🟦️.ts — the pure search, filter and sort
  * @see ../🥞️levels/🟦️.tsx — the nested grid of a category
  */
-import { useId, useLayoutEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useRef, useId, useLayoutEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { CATEGORIES, COMPLETION, formatNumber } from "@teaching/staffage";
 import type { CategoryId, Completion } from "@teaching/staffage";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
-import { ArchiveCard, Bar, CardGrid, CardGridCell, Button, CheckField, Column, Group, Notice, NumberField, PageFrame, ProgressNotice, SelectField, SharedBorderRowCell, StarIcon, Tag, TextField, cn } from "../🪟️chrome/🟦️.tsx";
-import { Level, rowMajorCells, tracks, useBreakpoint, useSize, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
+import { ArchiveCard, Bar, CardGrid, CardGridCell, Button, CheckField, Column, Group, Icon, Notice, NumberField, PageFrame, ProgressNotice, SelectField, SharedBorderRow, SharedBorderRowCell, StarIcon, Tag, TextField, cn } from "../🪟️chrome/🟦️.tsx";
+import { Level, rowMajorCells, tracks, useBreakpoint, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
 import { CatalogProblem, RowPreview } from "../🖼️previews/🟦️.tsx";
 import { PreviewViewpointSelector, usePreviewViewpoint } from "../🔭️viewpoints/🪝️preference/🟦️.tsx";
-import { navigate, recallParams, rememberParams, useAddress, type Route } from "../🗺️routing/🟦️.ts";
+import { formatAddress, navigate, recallParams, rememberParams, useAddress, type Route } from "../🗺️routing/🟦️.ts";
 import { ANALYTICS, NO_FILTERS, SORT_KEYS, activeFilterCount, filterAndSort, filtersFromParams, filtersToParams, needsAssets, rowCompletion, formatPowerW, rowHeightM, rowMassKg, rowPowerW, type Analytic, type Filters, type Row, type SortKey } from "../🔎️search/🟦️.ts";
 import { useAssetLoading } from "../📚️catalog/🟦️.ts";
 import { AssetPage } from "../🔬️detail/🟦️.tsx";
@@ -92,23 +92,27 @@ function toggle<T>(list: readonly T[], item: T): readonly T[] {
 }
 
 /** 🎚️ The search, filter and sort controls; every change goes through `onChange`. */
-export function FilterToolbar(props: { readonly filters: Filters; readonly onChange: (filters: Filters) => void; readonly fixedCategory?: CategoryId; readonly shown: number; readonly total: number; readonly compact?: boolean; readonly disabled?: boolean }): ReactElement {
-  const { filters, onChange, fixedCategory, shown, total, disabled } = props;
+export function FilterToolbar(props: { readonly filters: Filters; readonly onChange: (filters: Filters) => void; readonly fixedCategory?: CategoryId; readonly shown: number; readonly total: number; readonly phone?: boolean; readonly disabled?: boolean }): ReactElement {
+  const { filters, onChange, fixedCategory, shown, total, phone, disabled } = props;
   const { t, language } = useArchive();
   const { manifest } = useRows();
   const [open, setOpen] = useState(false);
   const panel = useId();
   const count = activeFilterCount(filters) - (fixedCategory === undefined || filters.categories.length === 0 ? 0 : 1);
   const patch = (next: Partial<Filters>): void => onChange({ ...filters, ...next });
+  const sort = <SelectField label={t("filters.sort")} value={filters.sort} onChange={(sort: SortKey) => patch({ sort })} options={SORT_KEYS.map((key) => ({ value: key, label: t(`sort.${key}`) }))} className="lg:max-w-60" />;
+  const direction = (
+    <Button grouped aria-pressed={filters.descending} onClick={() => patch({ descending: !filters.descending })} icon={filters.descending ? "arrow-down" : "arrow-up"}>
+      {t(filters.descending ? "sort.descending" : "sort.ascending")}
+    </Button>
+  );
   return (
-    <Column as="form" role="search" aria-label={t("filters.label")} onSubmit={(event) => event.preventDefault()} inert={disabled}>
+    <Column as="form" role="search" aria-label={t("filters.label")} onSubmit={(event) => event.preventDefault()} inert={disabled} data-staffage-filters={phone ? "" : undefined}>
       <Bar below="tablet">
-        <TextField type="search" className="min-w-48 flex-1" label={t("filters.search")} placeholder={t("filters.searchPlaceholder")} value={filters.q} onChange={(q) => patch({ q })} />
-        <SelectField label={t("filters.sort")} value={filters.sort} onChange={(sort: SortKey) => patch({ sort })} options={SORT_KEYS.map((key) => ({ value: key, label: t(`sort.${key}`) }))} className="lg:max-w-60" />
-        <PreviewViewpointSelector inline />
-        <Button grouped aria-pressed={filters.descending} onClick={() => patch({ descending: !filters.descending })} icon={filters.descending ? "arrow-down" : "arrow-up"}>
-          {t(filters.descending ? "sort.descending" : "sort.ascending")}
-        </Button>
+        <TextField type="search" className={cn("flex-1", !phone && "min-w-48")} label={t("filters.search")} placeholder={t("filters.searchPlaceholder")} value={filters.q} onChange={(q) => patch({ q })} />
+        {phone ? null : sort}
+        {phone ? null : <PreviewViewpointSelector inline />}
+        {phone ? null : direction}
         <Button grouped aria-expanded={open} aria-controls={panel} onClick={() => setOpen(!open)} icon="sliders-horizontal">
           {t("filters.toggle")}
           {count > 0 ? <Tag className="ml-single">{count}</Tag> : null}
@@ -124,6 +128,7 @@ export function FilterToolbar(props: { readonly filters: Filters; readonly onCha
       </Bar>
       {open ? (
         <Column id={panel}>
+          {phone ? <Bar>{sort}{direction}</Bar> : null}
           {fixedCategory === undefined ? (
             <Group legend={t("filters.category")} below="tablet">
               {CATEGORIES.map((category) => (
@@ -237,7 +242,80 @@ export function BrowsePage(props: { readonly view: PaneView }): ReactElement {
   );
 }
 
-const CATEGORY_COLUMNS = { desktop: 4, tablet: 3, mobile: 1 } as const;
+function PhoneAssetList({ rows }: { readonly rows: readonly Row[] }): ReactElement {
+  const { language } = useArchive();
+  return (
+    <Column as="ul" data-staffage-asset-list="" className="m-0 list-none p-0">
+      {rows.map((row) => (
+        <SharedBorderRow key={row.entry.id} as="li" className="staffage-asset-list-row">
+          <a href={formatAddress(assetRoute(row))} aria-label={row.entry.title[language]} data-shared-border-cell="" className="staffage-asset-list-link flex min-w-0 flex-1 items-center justify-between gap-double px-double py-single text-sm text-foreground no-underline hover:bg-hover-panel">
+            <span className="min-w-0 break-words">
+              <span className="block font-medium">{row.entry.title[language]}</span>
+              <span className="flex flex-wrap gap-single"><RowFacts row={row} /></span>
+            </span>
+            <Icon icon="chevron-right" size="small" className="shrink-0" />
+          </a>
+          <FavoriteButton grouped asset={row.entry.id} title={row.entry.title[language]} />
+        </SharedBorderRow>
+      ))}
+    </Column>
+  );
+}
+
+/** 📱️ A phone's catalog is a scrollable index backed by the manifest until a filter needs authored data. */
+export function PhoneBrowsePage({ category }: { readonly category?: CategoryId }): ReactElement {
+  const { catalog, language, t } = useArchive();
+  const { manifest, rows } = useRows();
+  const entry = manifest?.categories.find(({ id }) => id === category);
+  const route: Route = category === undefined ? { page: "all" } : { page: "category", category };
+  const { filters, set } = useAddressFilters(route, true, category);
+  const scope = filters.categories.length > 0 ? filters.categories : "all";
+  const loading = useAssetLoading(catalog, needsAssets(filters), scope);
+  const own = useMemo(() => category === undefined ? rows : rows.filter((row) => row.entry.category === category), [rows, category]);
+  const shown = useMemo(() => filterAndSort(own, filters, language), [own, filters, language]);
+  return (
+    <PageFrame page={category === undefined ? "all" : `category:${category}`} title={entry?.title[language] ?? (category ?? t("all.title"))} lede={entry?.description[language]}>
+      <FilterToolbar filters={filters} onChange={set} {...(category === undefined ? {} : { fixedCategory: category })} shown={shown.length} total={own.length} phone />
+      <LoadingNotice loading={loading} />
+      {manifest === null ? <CatalogProblem><Notice kind="loading" title={t("state.loading.title")} /></CatalogProblem>
+        : shown.length > 0 ? <PhoneAssetList rows={shown} />
+          : loading.busy ? null
+            : <Notice kind="empty" title={t("state.noResults.title")} actions={<Button onClick={() => set(NO_FILTERS)} icon="x">{t("filters.clear")}</Button>}>{t("state.noResults.body")}</Notice>}
+    </PageFrame>
+  );
+}
+
+/** 🔎️ Opens the requested asset directly and stops loading when the reader leaves or cancels. */
+export function PhoneAssetPage({ category, id }: { readonly category: CategoryId; readonly id: string }): ReactElement {
+  const { catalog, t } = useArchive();
+  const { manifest, rows } = useRows();
+  const row = rows.find((candidate) => candidate.entry.category === category && candidate.entry.id === id);
+  const entry = row?.entry;
+  const request = useRef<AbortController | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+  const [attempt, retry] = useState(0);
+  useEffect(() => {
+    if (entry === undefined || cancelled) return;
+    const run = new AbortController();
+    request.current = run;
+    void catalog.loadAsset(entry, run.signal);
+    return () => run.abort();
+  }, [catalog, entry, cancelled, attempt]);
+  if (row === undefined) return (
+    <PageFrame page={`asset:${id}`} title={t("nav.asset")}>
+      {manifest === null ? <CatalogProblem><Notice kind="loading" title={t("state.loading.title")} /></CatalogProblem> : <Notice kind="unavailable" title={t("state.assetUnknown")} />}
+    </PageFrame>
+  );
+  const pending = row.status === "pending";
+  const reload = () => { setCancelled(false); retry((count) => count + 1); };
+  const progress = cancelled
+    ? <Notice kind="info" compact title={t("state.cancelled.title")} actions={<Button onClick={reload}>{t("action.retry")}</Button>} />
+    : row.status === "failed"
+      ? <Notice kind="error" compact title={t("state.failed.short")} actions={<Button onClick={reload}>{t("action.retry")}</Button>} />
+      : pending ? <Notice kind="loading" title={t("state.loading.title")} actions={<Button onClick={() => { request.current?.abort(); setCancelled(true); }}>{t("action.cancel")}</Button>} /> : undefined;
+  return <AssetPage row={row} view={{ opened: true, revealed: false }} {...(progress === undefined ? {} : { progress })} />;
+}
+
 const CATEGORY_ROW_MIN_PX = 190;
 
 /** 🗂️ The page of one category: its filters and a nested grid of asset cards; an asset opens its page while the grid stays live behind it. */
@@ -247,7 +325,6 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
   const { rows, manifest } = useRows();
   const { route, navigate: go } = useAddress();
   const breakpoint = useBreakpoint();
-  const [attach] = useSize({ width: 1280, height: 640 });
   const here: Route = { page: "category", category };
   const inside = view.opened && (route.page === "category" || route.page === "asset") && route.category === category;
   const { filters, set } = useAddressFilters(here, inside, category);
@@ -257,9 +334,8 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
   const filtered = useMemo(() => filterAndSort(own, filters, language), [own, filters, language]);
   const withOpened = useMemo(() => (opened === null || filtered.some((row) => row.entry.id === opened) ? filtered : [...filtered, ...own.filter((row) => row.entry.id === opened)]), [filtered, own, opened]);
   const entry = manifest?.categories.find((candidate) => candidate.id === category);
-  const columns = CATEGORY_COLUMNS[breakpoint];
+  const columns = breakpoint === "tablet" ? 3 : 4;
   const rowCount = Math.max(1, Math.ceil(withOpened.length / columns));
-  const mode = breakpoint === "mobile" ? "swipe" : "strip";
   const pages: readonly LevelPage[] = useMemo(() => withOpened.map((row): LevelPage => ({ id: row.entry.id, label: row.entry.title[language], render: (pane) => <AssetPage row={row} view={pane} /> })), [withOpened, language]);
   const cells = useMemo(() => rowMajorCells(pages.map((page) => page.id), columns), [pages, columns]);
   const byId = useMemo(() => new Map(withOpened.map((row) => [row.entry.id, row])), [withOpened]);
@@ -273,10 +349,10 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
           </h1>
           <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{entry?.description[language]}</p>
         </SharedBorderRowCell>
-        {inside && opened === null ? <FilterToolbar filters={filters} onChange={set} fixedCategory={category} shown={filtered.length} total={own.length} compact /> : null}
+        {inside && opened === null ? <FilterToolbar filters={filters} onChange={set} fixedCategory={category} shown={filtered.length} total={own.length} /> : null}
         <LoadingNotice loading={loading} />
       </Column>
-      <div ref={attach} className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1">
         {pages.length === 0 ? (
           <Column>
             {own.length === 0 ? <CatalogProblem category={category}><Notice kind="loading" title={t("state.loading.title")} /></CatalogProblem> : (
@@ -292,24 +368,22 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
             cells={cells}
             openedId={opened}
             interactive={inside}
-            mode={mode}
+            mode="strip"
             onOpen={(id) => go(id === null ? here : assetRoute(byId.get(id)!), id === null ? recallParams(here) : undefined)}
             onEscape={() => go({ page: "overview" })}
             renderCard={(page, card) => {
               const row = byId.get(page.id)!;
               const place = index(page.id);
               const body = <AssetCard row={row} card={card} />;
-              return mode === "strip" ? (
+              return (
                 <div className="staffage-cell" data-card-grid-cell="" style={{ gridColumn: (place % columns) + 1, gridRow: Math.floor(place / columns) + 1 }}>
                   <div className="staffage-card">{body}</div>
                 </div>
-              ) : (
-                <div className="staffage-entry staffage-card">{body}</div>
               );
             }}
             columns={tracks(Array.from({ length: columns }, () => 1))}
             rows={tracks(Array.from({ length: rowCount }, () => 1), CATEGORY_ROW_MIN_PX)}
-            budget={breakpoint === "mobile" ? 1 : 4}
+            budget={4}
           />
         )}
       </div>

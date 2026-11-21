@@ -93,7 +93,7 @@ impl protocol::OpBinary for Pdf17AEditorCommand {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf17AEditorCommand, ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf17AEditorCommand, ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-font-size", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
@@ -119,6 +119,10 @@ impl ArtifactEditor for Pdf17AEditor {
 
     const SINGLE_TURN_NATURAL_DECODE: bool = true;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<PdfSnapshot, PdfMutation>()
+    }
+
     fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
         Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.pdf@1.7/a", extension: ".pdf", media_type: "application/pdf", binary: true })
     }
@@ -140,6 +144,7 @@ impl ArtifactEditor for Pdf17AEditor {
         controller: "s.stdio.pdf@1.7/a#editor",
         artifact_schema: "stdio.pdf.1.7",
         preparation: "stdio-pdf-1-7-a-snapshot-edit",
+        document_store_owners: PdfMutation::document_store_owners,
         bounded_native: true
     }
 
@@ -259,7 +264,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf17AE
 
 semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
     editor: Pdf17AEditor,
-    tools: ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"],
+    tools: ["set-page", "set-text", "move", "resize", "delete", "set-fill", "set-stroke", "insert-text", "insert-rectangle", "insert-line", "insert-image", "insert-page", "remove-page", "move-page", "set-page-size", "set-info", "set-annotation", "set-image", "set-font", "set-font-size", "set-outline", "set-page-rotation", "set-page-box", "set-page-user-unit", "set-language", "set-page-layout", "set-page-mode", "set-optional-content", "set-embedded-file", "remove-embedded-file", "set-named-destination", "remove-named-destination", "set-page-label", "set-mark-info", "set-metadata", "set-viewer-preferences", "set-encryption", "set-output-intent", "set-form-field", "set-open-action", "set-document-id", "set-font-reference", "set-graphics-state", "set-pattern", "set-color-space", "set-properties", "set-font-metrics", "set-image-mask", "set-form-content", "set-page-transition", "set-catalog-entry", "set-trailer-entry", "set-annotation-appearance", "set-glyph", "set-indirect-object", "set-mesh-reference", "set-info-field", "set-page-extra", "set-annotation-style", "set-annotation-border", "set-annotation-markup", "set-form-settings", "set-extra-entry", "set-annotation-kind", "set-field-data", "set-resource-detail", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"],
     payload_schema: "semio.stdio.document-text-edit-command.v1",
     reduce: |command, snapshot| {
         match command {

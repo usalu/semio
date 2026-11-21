@@ -67,7 +67,12 @@
     "retry": {
       "transientStatuses": [408, 429, 500, 502, 503, 504],
       "terminalStatuses": [200, 204, 301, 400, 401, 403, 404, 410, 422, 501],
-      "retryDelaysMs": [200, 800]
+      "retryDelaysMs": [200, 800],
+      "mapTiles": [
+        { "statuses": [503, 200], "attempts": 2, "delaysMs": [200], "outcome": "sealed" },
+        { "statuses": [404], "attempts": 1, "delaysMs": [], "outcome": "missing" },
+        { "statuses": [429, 502, 503], "attempts": 3, "delaysMs": [200, 800], "outcome": "missing" }
+      ]
     },
     "browser": [
       { "id": "http-status", "detail": "asset-fetch-status: 404", "errorType": "error", "referenceImage": false, "disposition": "missing" },

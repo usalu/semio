@@ -3,6 +3,34 @@ use semio_plugin_window_kits::{AppActionRegistry,RegisteredAppDefinition};
 use semio_framework_job::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 const TURN:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
+#[test]
+fn complete_native_interactions_preserve_authored_rows_without_building_throwaway_arguments(){
+ use semio_framework::{ActionDefinition,ActionKind,GranularityDefinition,HierarchyProvider,InteractionDefinition,InteractionVerb,SelectionSpec};
+ use semio_ui_locale::LocalizedLabel;
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("interaction-completion.json")).unwrap();
+ let ids=|value:&serde_json::Value|value.as_array().unwrap().iter().map(|id|id.as_str().unwrap().to_owned()).collect::<Vec<_>>();
+ assert_eq!(InteractionVerb::ALL.map(|verb|verb.action_id().to_owned()).to_vec(),ids(&corpus["canonical"]));
+ for row in corpus["cases"].as_array().unwrap(){
+  let mut definition=semio_framework_async::poll::resolve_ready(semio_framework_manifest_app_surface::testkit::app_with(Vec::new(),Vec::new()));
+  let authored=|id:String|ActionDefinition::resumable_framework(id,LocalizedLabel::native("Authored","Autorisiert"),ActionKind::Interaction,"pencil");
+  definition.actions=ids(&row["app"]).into_iter().map(authored).collect();
+  definition.window_kinds.first_mut().actions=ids(&row["window"]).into_iter().map(authored).collect();
+  if row["hasInteractions"].as_bool().unwrap(){
+   definition.interactions=vec![InteractionDefinition{
+    id:"fixture".into(),label:LocalizedLabel::data("Fixture"),
+    granularities:vec![GranularityDefinition{id:"node".into(),label:LocalizedLabel::data("Node"),icon_id:"circle".into()}],
+    hierarchy:HierarchyProvider::Flat,hover:Default::default(),
+    selection:SelectionSpec{modes:Vec::new(),methods:Vec::new(),merges:Vec::new(),transitive:false,broadcast:true},
+   }];
+  }
+  let(native,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||RegisteredAppDefinition::declared(definition,true));
+  let appended=ids(&row["append"]);
+  let expected=ids(&row["app"]).into_iter().chain(appended.iter().cloned()).collect::<Vec<_>>();
+  assert_eq!(native.actions.iter().map(|action|action.id.clone()).collect::<Vec<_>>(),expected);
+  assert_eq!(native.window_kinds.first().actions.iter().map(|action|action.id.clone()).collect::<Vec<_>>(),ids(&row["window"]));
+  if appended.is_empty(){assert_eq!(heap.released_bytes,0);}
+ }
+}
 struct Caller{caller:OriginalJobFixtureCaller,decoder:OriginalJobDecodeOwner}
 impl Caller{fn receipt(&self)->RetainedCloneProgress{self.caller.receipt()}fn cancel(&self)->&CancelToken{self.caller.cancel()}fn retire(mut self,grant:RetainedCloneGrant){while !self.decoder.terminal_is_empty(){self.caller.turn(grant,|cx|cx.with_original_retirement(|cx|{let d=self.decoder.retirement_demands(grant.maximum_copy_bytes)?;self.decoder.close_on_source(cx)?;Ok(())})).unwrap()}self.caller.retire(grant);}}
 fn caller()->Caller{Caller{decoder:OriginalJobDecodeOwner::empty(),caller:OriginalJobFixtureCaller::admit(OperationId(77821),Generation(17),RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<26,maximum_release_bytes:1<<27,maximum_depth:4096},default_now_us,u64::MAX,1<<24)}}

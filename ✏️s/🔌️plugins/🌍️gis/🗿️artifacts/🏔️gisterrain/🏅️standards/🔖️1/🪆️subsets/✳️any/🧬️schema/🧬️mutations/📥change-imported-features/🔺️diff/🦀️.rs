@@ -8,6 +8,11 @@ use crate::GisTerrainSnapshot;
 /// handcrafted construction, never apply-then-capture, never a snapshot clone. Warning `no-op`
 /// when `new_imported_map` already equals `base.imported_map`.
 pub fn diff(payload: &ChangeImportedFeatures, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
+    if let Some(map) = &payload.new_imported_map {
+        if let Err(message) = map.validate() {
+            return protocol::MutationOutcome::error("terrain.imported-map.invalid", message, ["importedMap"]);
+        }
+    }
     let identical=match(&base.imported_map,&payload.new_imported_map){(None,None)=>true,(Some(base),Some(requested))=>base.same(requested),_=>false};
     if identical {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Imported features are already identical to the requested replacement.");

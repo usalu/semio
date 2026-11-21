@@ -235,7 +235,7 @@ fn render_body(body_key: &str, doc: &ArtifactView<'_, Din4108Snapshot>, cfg: &Co
         diagrams::BODY_DIAGRAMS => diagrams::render(host.document(), host.report(), focus.as_deref().or(worst), &semio_plugin::TreeWindows::for_body(view_state, diagrams::BODY_DIAGRAMS), view_state.locale),
         checks::BODY_CHECKS => live.render_checks(&semio_plugin::TreeWindows::for_body(view_state, checks::BODY_CHECKS), view_state.locale, CONTROLLER_ID, checks::INTERACTION_DOMAIN),
         document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),
-        catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Din4108PlayApp::examples(), view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)),
+        catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Din4108PlayApp::examples(), view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)).and_then(|panel| semio_s_plugin_norm_app_surface::with_case_browser::<semio_s_artifact_norm_din4108_checks::design_cases::Din4108Cases>(panel, &host.document().cases, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE))),
         inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, selected, view_state.locale, Some(CONTROLLER_ID)),
         _ => semio_s_plugin_norm_app_surface::render_unknown_body(body_key, view_state.locale),
     }

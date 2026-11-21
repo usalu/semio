@@ -2,7 +2,7 @@
 use semio_framework_value::retained_clone::RetainedClone;
 use semio_framework_job::{OriginalConstructionAdmission,OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_framework_value::{OriginalRetirementFailure,RetainedCloneGrant,RetainedCloneStep,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{NativeAllocationIdentity,RetainedCloneSource,RetainedCloneOwner,RetainedCloneClose}};
-use crate::original_steps::{settled_grant,admission_demand,admission_return_demand,admission_settle,admission_step,adopted,begun,built,built_with,construction,fixed,funded,receipt,replied,retired,retired_native,retired_poll,scoped,unbuilt,unit};
+use crate::original_steps::{settled_grant,admission_demand,admission_return_demand,admission_settle,admission_step,adopted,begun,built,built_with,construction,fixed,funded,receipt,receiving_units,replied,retired,retired_native,retired_poll,scoped,unbuilt,unit};
 use std::{collections::VecDeque,mem::{ManuallyDrop,size_of}};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original typed metadata copies source changed")}
 /// 🪡️ Each resulting origin owns its actual bounded text copies and preserves the complete original metadata.
@@ -17,7 +17,7 @@ impl<T:RetainedClone> OriginalValueCopies<T>{
   0=>{if self.admission.is_none(){self.admission=Some(RetainedCloneSource::admission_owned(self.original.take().ok_or_else(invalid)?,()));return Ok(false)}let admission=self.admission.as_ref().unwrap();let d=if admission.phase()=="ready"{admission.take_output_demand()}else{admission_demand(admission)?};funded(cx,d,|effect|{let admission=self.admission.as_mut().unwrap();if admission.phase()!="ready"{return admission_step(admission,effect)}let turn=admission.take_output(&mut self.source,effect);if admission.terminal_is_empty(){self.admission=None;}RetainedWorkPoll::Complete(turn)})?;if self.admission.is_none(){self.phase=1}},
   1=>{let d=RetirementDemand{capacity_bytes:self.total.checked_mul(size_of::<T>()).ok_or_else(invalid)?,..fixed::<VecDeque<T>>()};built(cx,&mut self.construction,&mut self.values,construction(d),||{let mut values=VecDeque::new();values.try_reserve_exact(self.total).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original typed metadata copies rows could not be reserved"))?;let mut p=receipt(d);p.retained_capacity_bytes=values.capacity()*size_of::<T>();Ok((values,p))})?;if self.values.is_some(){self.phase=2}},
   2=>{if self.values.as_ref().ok_or_else(invalid)?.len()==self.total{self.next_phase(6,cx)?;return Ok(false)}let d=fixed::<RetainedCloneOwner<T>>();built(cx,&mut self.construction,&mut self.cursor,construction(d),||Ok((RetainedCloneOwner::default(),receipt(d))))?;if self.cursor.is_some(){self.phase=3}},
-  3=>{let source=self.source.as_ref().ok_or_else(invalid)?.try_borrow()?;let body=self.body;let cursor=self.cursor.as_mut().ok_or_else(invalid)?;let maximum=cx.fuel_remaining();let d=cursor.advance_demands(source,body,maximum)?;scoped(cx,d,|effect|replied::<OriginalRetirementFailure>(effect,|effect,reply|cursor.advance_into(source,body,maximum,effect,reply).map(drop)))?;if cursor.output_ready(){self.phase=4}},
+  3=>{let source=self.source.as_ref().ok_or_else(invalid)?.try_borrow()?;let body=self.body;let cursor=self.cursor.as_mut().ok_or_else(invalid)?;let maximum=receiving_units(cx.fuel_remaining());let d=cursor.advance_demands(source,body,maximum)?;scoped(cx,d,|effect|replied::<OriginalRetirementFailure>(effect,|effect,reply|cursor.advance_into(source,body,maximum,effect,reply).map(drop)))?;if cursor.output_ready(){self.phase=4}},
   4=>{let cursor=self.cursor.as_mut().ok_or_else(invalid)?;let d=cursor.take_demand()?;let mut value=None;scoped(cx,d,|effect|replied::<ValueError>(effect,|effect,reply|cursor.take(&mut value,effect,reply).map(drop)))?;if let Some(value)=value{self.values.as_mut().ok_or_else(invalid)?.push_back(value);self.phase=5}},
   5=>{if self.close_cursor(cx)?{self.next_phase(2,cx)?}},
   6=>{if self.close_source(cx)?{self.next_phase(7,cx)?}},
@@ -33,7 +33,7 @@ impl<T:RetainedClone> OriginalValueCopies<T>{
    0=>match self.admission.as_ref(){None=>Default::default(),Some(admission)=>if admission.phase()=="ready"{admission.take_output_demand()}else{admission_demand(admission)?}},
    1=>RetirementDemand{capacity_bytes:self.total.checked_mul(size_of::<T>()).ok_or_else(invalid)?,..fixed::<VecDeque<T>>()},
    2=>if self.values.as_ref().ok_or_else(invalid)?.len()==self.total{fixed::<u8>()}else{fixed::<RetainedCloneOwner<T>>()},
-   3=>self.cursor.as_ref().ok_or_else(invalid)?.advance_demands(self.source.as_ref().ok_or_else(invalid)?.try_borrow()?,self.body,fuel)?,
+   3=>self.cursor.as_ref().ok_or_else(invalid)?.advance_demands(self.source.as_ref().ok_or_else(invalid)?.try_borrow()?,self.body,receiving_units(fuel))?,
    4=>self.cursor.as_ref().ok_or_else(invalid)?.take_demand()?,
    5=>self.cursor_close_demands()?,
    6=>self.source_close_demands()?,

@@ -1,3 +1,4 @@
+import { parseGraphInstanceId } from "../../🧬️schema/🔌️graph-ports/🟦️.ts";
 import { componentVertexIds, parsePolygonMesh } from "@semio-tech/framework/mesh/polygon";
 
 /** 🎯️ The portable contract for a component picked in a procedural mesh preview. */
@@ -13,14 +14,15 @@ export interface ComponentTarget {
 }
 
 export function parseComponentTarget(id: string): ComponentTarget | undefined {
-  const match = /^([^@#~]+)@([^@#~]+)#(0|[1-9][0-9]*)\.(vertex|edge|face)\.(0|[1-9][0-9]*)(?:~([0-9a-f]{64})~([1-9][0-9]{0,19})~([0-9a-f]{64}))?$/.exec(id);
-  if (!match || match[0] !== id) return undefined;
-  const [, widget, channel, indexText, granularity, componentText, handle, label, revision] = match;
-  if(!widget||!channel||!indexText||!componentText||!["vertex","edge","face"].includes(granularity??"")||handle&&(!label||!revision))return undefined;
-  if(granularity!=="vertex"&&granularity!=="edge"&&granularity!=="face")return undefined;
-  const index = Number(indexText), component = Number(componentText);
-  if (index > 0xffffffff || component > 0xffffffff || label && BigInt(label) > 18446744073709551615n) return undefined;
-  return { id, instance: `${widget}@${channel}#${index}`, widget, channel, index, granularity, component, ...(handle&&label&&revision ? { analytic: { handle, label, revision } } : {}) };
+  const match = /^([\s\S]+)\.(vertex|edge|face)\.(0|[1-9][0-9]*)(?:~([0-9a-f]{64})~([1-9][0-9]{0,19})~([0-9a-f]{64}))?(?![\s\S])/u.exec(id);
+  if (!match) return undefined;
+  const [, instance, granularity, componentText, handle, label, revision] = match;
+  if (!instance || (granularity !== "vertex" && granularity !== "edge" && granularity !== "face")) return undefined;
+  const address = parseGraphInstanceId(instance);
+  const component = Number(componentText);
+  if (!address || address.port.input || address.index > 0xffffffff || component > 0xffffffff || label && BigInt(label) > 18446744073709551615n) return undefined;
+  const { port: { widget, channel }, index } = address;
+  return { id, instance, widget, channel, index, granularity, component, ...(handle && label && revision ? { analytic: { handle, label, revision } } : {}) };
 }
 
 export function componentGroup(ids: readonly string[]): { instance: string; granularity: ComponentTarget["granularity"]; components: number[] } {

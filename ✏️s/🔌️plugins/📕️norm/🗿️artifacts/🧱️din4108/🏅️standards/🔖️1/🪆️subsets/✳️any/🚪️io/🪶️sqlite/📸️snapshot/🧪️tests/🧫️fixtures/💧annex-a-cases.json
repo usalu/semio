@@ -1,0 +1,214 @@
+[
+  {
+    "id": "site",
+    "entryId": "DINA-01",
+    "labelEn": "Site conditions",
+    "labelDe": "Standortbedingungen",
+    "numbers": [
+      {
+        "id": "site_elevation",
+        "value": 700.0
+      }
+    ],
+    "texts": [
+      {
+        "id": "period_conditions",
+        "value": "confirmed"
+      }
+    ]
+  },
+  {
+    "id": "roof-exposure",
+    "entryId": "DINA-02",
+    "labelEn": "Roof exposure",
+    "labelDe": "Dachrandbedingung",
+    "numbers": [],
+    "texts": [
+      {
+        "id": "roof_element",
+        "value": "roof"
+      },
+      {
+        "id": "roof_exposure",
+        "value": "unshaded-dark"
+      }
+    ]
+  },
+  {
+    "id": "slab-case",
+    "entryId": "DINA-03",
+    "labelEn": "Insulated slab",
+    "labelDe": "Gedämmte Bodenplatte",
+    "numbers": [
+      {
+        "id": "slab_room_side_sd",
+        "value": 20.0
+      }
+    ],
+    "texts": [
+      {
+        "id": "slab_build_up",
+        "value": "confirmed"
+      }
+    ]
+  },
+  {
+    "id": "attic-case",
+    "entryId": "DINA-04",
+    "labelEn": "Attic ceiling",
+    "labelDe": "Dachgeschossdecke",
+    "numbers": [
+      {
+        "id": "attic_area",
+        "value": 100
+      },
+      {
+        "id": "attic_openings",
+        "value": 0.2
+      },
+      {
+        "id": "attic_upper_sd",
+        "value": 2
+      },
+      {
+        "id": "attic_insulation_sd",
+        "value": 100
+      },
+      {
+        "id": "attic_air_seal_sd",
+        "value": 10
+      },
+      {
+        "id": "attic_inboard_r_fraction",
+        "value": 0.2
+      }
+    ],
+    "texts": [
+      {
+        "id": "attic_build_up",
+        "value": "confirmed"
+      }
+    ]
+  },
+  {
+    "id": "perimeter",
+    "entryId": "DINA-05",
+    "labelEn": "Perimeter insulation",
+    "labelDe": "Perimeterdämmung",
+    "numbers": [
+      {
+        "id": "perimeter_inboard_r_fraction",
+        "value": 0.2
+      }
+    ],
+    "texts": [
+      {
+        "id": "perimeter_build_up",
+        "value": "confirmed"
+      }
+    ]
+  },
+  {
+    "id": "wall",
+    "entryId": "DINA-06",
+    "labelEn": "Internal insulation",
+    "labelDe": "Innendämmung",
+    "numbers": [
+      {
+        "id": "wall_insulation_r",
+        "value": 0.8
+      },
+      {
+        "id": "wall_inboard_sd",
+        "value": 0.5
+      }
+    ],
+    "texts": [
+      {
+        "id": "wall_build_up",
+        "value": "confirmed"
+      }
+    ]
+  },
+  {
+    "id": "roof-table3",
+    "entryId": "DINA-07",
+    "labelEn": "Unventilated roof",
+    "labelDe": "Nicht belüftetes Dach",
+    "numbers": [
+      {
+        "id": "table3_roof_outboard_sd",
+        "value": 1.25
+      },
+      {
+        "id": "table3_roof_inboard_sd",
+        "value": 7.5
+      },
+      {
+        "id": "table3_roof_inboard_r_fraction",
+        "value": 0.2
+      }
+    ],
+    "texts": [
+      {
+        "id": "table3_roof_build_up",
+        "value": "confirmed"
+      }
+    ]
+  },
+  {
+    "id": "condensate-materials",
+    "entryId": "DINA-08",
+    "labelEn": "Condensate materials",
+    "labelDe": "Baustoffe und Tauwasser",
+    "numbers": [
+      {
+        "id": "condensate_timber_increase",
+        "value": 5
+      },
+      {
+        "id": "condensate_wood_product_increase",
+        "value": 3
+      }
+    ],
+    "texts": [
+      {
+        "id": "condensate_element",
+        "value": "wall"
+      },
+      {
+        "id": "condensate_capillarity",
+        "value": "limited"
+      },
+      {
+        "id": "condensate_damage",
+        "value": "resistant"
+      }
+    ]
+  },
+  {
+    "id": "airtightness-concept",
+    "entryId": "DINL-01",
+    "labelEn": "Airtightness concept",
+    "labelDe": "Luftdichtheitskonzept",
+    "numbers": [],
+    "texts": [
+      {
+        "id": "plan_layer",
+        "value": "Section A-01: interior plaster to roof membrane at eaves"
+      },
+      {
+        "id": "plan_interfaces",
+        "value": "J-02 window perimeter and J-03 cable sleeve"
+      },
+      {
+        "id": "plan_materials",
+        "value": "Interior plaster, eaves membrane and specified transition tape"
+      },
+      {
+        "id": "plan_assurance",
+        "value": "Site supervisor inspects interfaces before linings are closed"
+      }
+    ]
+  }
+]

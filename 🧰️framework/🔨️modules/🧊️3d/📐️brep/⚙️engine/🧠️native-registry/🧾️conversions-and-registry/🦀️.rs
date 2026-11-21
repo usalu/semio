@@ -1,6 +1,7 @@
-//! 🧾️ Conversions and registry: the point and vector conversions with their finite and positive argument checks, the entity labels and roots and the entity registry of the session. See [`super`].
+//! 🧾️ Conversions and registry: the point and vector conversions with the native direction check, the entity labels and roots and the entity registry of the session. See [`super`].
 
 use super::*;
+use semio_framework_3d_brep_mesh_io::PrimitivePreviewJob;
 
 // #region 🧮Convert
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -18,15 +19,6 @@ pub fn vec3(v: EVec3) -> NativeVec3 {
     NativeVec3::new(v[0], v[1], v[2])
 }
 
-/// 🧭️ Refuses a non-finite point or vector argument of an affine transform, by its name.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn require_finite_vector(label: &str, value: EVec3) -> Result<(), BrepError> {
-    if value.iter().all(|component| component.is_finite()) {
-        return Ok(());
-    }
-    Err(BrepError::InvalidInput(format!("{label} must be finite, got {value:?}")))
-}
-
 /// 🧭️ Refuses a direction argument that has no direction (zero or non-finite length) instead of substituting one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn require_direction(label: &str, value: EVec3) -> Result<(), BrepError> {
@@ -35,32 +27,6 @@ pub fn require_direction(label: &str, value: EVec3) -> Result<(), BrepError> {
         return Ok(());
     }
     Err(BrepError::InvalidInput(format!("{label} must be a non-zero direction, got {value:?}")))
-}
-
-/// 🧭️ Refuses a non-finite scalar argument of an affine transform, by its name.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn require_finite_scalar(label: &str, value: f64) -> Result<(), BrepError> {
-    if value.is_finite() {
-        return Ok(());
-    }
-    Err(BrepError::InvalidInput(format!("{label} must be finite, got {value}")))
-}
-
-/// 📏️ Requires a finite positive size before a selected feature changes the body.
-pub fn require_positive_size(label: &str, value: f64) -> Result<(), BrepError> {
-    require_finite_scalar(label, value)?;
-    if value > 0.0 { return Ok(()); }
-    Err(BrepError::InvalidInput(format!("{label} must be positive, got {value}")))
-}
-
-/// 🧭️ Refuses a uniform scale factor that collapses the shape (zero) or is not a number.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn require_scale_factor(label: &str, value: f64) -> Result<(), BrepError> {
-    require_finite_scalar(label, value)?;
-    if value != 0.0 {
-        return Ok(());
-    }
-    Err(BrepError::InvalidInput(format!("{label} must be non-zero, got {value}")))
 }
 // #endregion 🧮Convert
 
@@ -101,41 +67,86 @@ impl BrepRegistry {
         self.mint(GeometryKind::Solid, Entity::Solid(solid, None))
     }
     pub fn register_solid_primitive(&mut self, solid: SolidId, primitive: SolidPrimitive) -> GeometryHandle {
-        self.mint(GeometryKind::Solid, Entity::Solid(solid, Some(SolidProvenance::Primitive(PrimitiveProvenance { primitive, preview_first_label: None }))))
+        self.mint(GeometryKind::Solid, Entity::Solid(solid, Some(SolidProvenance::Primitive(PrimitiveProvenance { primitive, preview_first_label: None, nurbs_cuboid: false }))))
     }
 
     /// 🧷️ Borrows proof that the original live geometry still has its constructor's exact topology.
     pub fn live_solid_primitive(&self, handle: &str) -> Option<SolidPrimitive> {
-        match self.live.get(handle) {
-            Some(Entity::Solid(id, Some(SolidProvenance::Primitive(primitive)))) if self.body.solids.contains(*id) => Some(primitive.primitive),
-            _ => None,
-        }
+        let (_,SolidProvenance::Primitive(source))=self.preview_provenance(handle)? else {return None;};
+        Some(source.primitive)
     }
 
     /// ⚖️ Borrows the exact measure certified for the original constructed solid.
     pub fn live_certified_volume(&self, handle: &str) -> Option<f64> {
-        match self.live.get(handle) {
-            Some(Entity::Solid(id, Some(provenance))) if self.body.solids.contains(*id) => match *provenance {
-                SolidProvenance::Primitive(primitive) => Some(primitive.primitive.volume()),
-                SolidProvenance::Bore(source) => Some(source.volume),
-                SolidProvenance::PlanarBoundary => None,
-            },
+        self.preview_provenance(handle)?.1.volume()
+    }
+
+    /// 🌗️ Returns exact boundary area and world centroid from live curved-solid proofs.
+    pub fn live_curved_solid_properties(&self, handle: &str) -> Option<(f64, Pnt3)> {
+        match *self.preview_provenance(handle)?.1 {
+            SolidProvenance::SphericalShell(shape, _) => Some((shape.area(), shape.center_of_mass())),
+            SolidProvenance::SphericalCaps(shape, _) => Some((shape.area(), shape.center_of_mass())),
+            SolidProvenance::RoundedBox(shape, _) => Some((shape.area(), Pnt3::from_array(shape.center()))),
+            SolidProvenance::Annular(shape, _) => Some((shape.area(), shape.center_of_mass())),
+            SolidProvenance::Frustum(shape, _) => Some((shape.area(), shape.center_of_mass())),
             _ => None,
+        }
+    }
+
+    /// 📐️ Returns the exact boundary area of a live circular prism.
+    pub fn live_circular_prism_area(&self,handle:&str)->Option<f64>{
+        match self.preview_provenance(handle)?.1 {
+            SolidProvenance::CircularPrism(shape,_)=>Some(shape.area()),
+            _=>None,
         }
     }
 
     /// 🔎️ Exposes the exact bore certificate only while the original native solid is live.
     pub fn live_bore_preview(&self, handle: &str) -> Option<(SolidId, BorePreviewSource)> {
-        match self.live.get(handle) {
-            Some(Entity::Solid(id, Some(SolidProvenance::Bore(source)))) if self.body.solids.contains(*id) => Some((*id, *source)),
-            _ => None,
-        }
+        let (id,SolidProvenance::Bore(source))=self.preview_provenance(handle)? else {return None;};
+        Some((id,*source))
     }
 
-    pub fn live_primitive_preview(&self, handle: &str) -> Option<(SolidId, PrimitiveProvenance)> {
-        match self.live.get(handle) {
-            Some(Entity::Solid(id, Some(SolidProvenance::Primitive(primitive)))) if primitive.preview_first_label.is_some() && self.body.solids.contains(*id) => Some((*id, *primitive)),
-            _ => None,
+    pub(super) fn preview_provenance(&self,handle:&str)->Option<(SolidId,&SolidProvenance)>{
+        let Entity::Solid(id,Some(proof))=self.live.get(handle)? else{return None;};
+        self.body.solids.contains(*id).then_some((*id,proof))
+    }
+
+    /// 🌉️ Uses the live constructor proof to select the funded native preview recipe.
+    pub fn admit_live_primitive_preview(&self,handle:&str,tolerance:f64)->Result<Option<PrimitivePreviewJob>,ValueError>{
+        let Some((id,proof))=self.preview_provenance(handle)else{return Ok(None);};
+        match *proof{
+            SolidProvenance::Primitive(source)=>match source.preview_first_label{
+                Some(label)=>PrimitivePreviewJob::new(id,source.primitive,label,tolerance),
+                None=>return Ok(None),
+            },
+            SolidProvenance::Bore(source)=>PrimitivePreviewJob::new_bore(id,source,tolerance),
+            SolidProvenance::CircularPrism(source,label)=>PrimitivePreviewJob::new_circular_prism(id,source,label,tolerance),
+            SolidProvenance::Frustum(source,label)=>PrimitivePreviewJob::new_frustum(id,source,label,tolerance),
+            SolidProvenance::TorusSector(source,label)=>PrimitivePreviewJob::new_sector(id,source,label,tolerance),
+            SolidProvenance::Annular(source,label)=>PrimitivePreviewJob::new_annular(id,source,label,tolerance),
+            SolidProvenance::SphericalShell(source,label)=>PrimitivePreviewJob::new_spherical_shell(id,source,label,tolerance),
+            SolidProvenance::SphericalCaps(source,label)=>PrimitivePreviewJob::new_spherical_caps(id,source,label,tolerance),
+            SolidProvenance::RoundedBox(source,label)=>PrimitivePreviewJob::new_rounded_box(id,source,label,tolerance),
+            _=>return Ok(None),
+        }.map(Some)
+    }
+
+    /// 🧷️ Checks that the charged preview still owns its original constructor proof.
+    pub fn live_primitive_preview_matches(&self,handle:&str,job:&PrimitivePreviewJob)->bool{
+        let Some((id,proof))=self.preview_provenance(handle)else{return false;};
+        if id!=job.source(){return false;}
+        match proof{
+            SolidProvenance::Primitive(source)=>source.preview_first_label.is_some()&&job.is_analytic_primitive(),
+            SolidProvenance::Bore(_)=>job.is_bore(),
+            SolidProvenance::CircularPrism(..)=>job.is_circular_prism(),
+            SolidProvenance::Frustum(..)=>job.is_frustum(),
+            SolidProvenance::TorusSector(..)=>job.is_sector(),
+            SolidProvenance::Annular(..)=>job.is_annular(),
+            SolidProvenance::SphericalShell(..)=>job.is_spherical_shell(),
+            SolidProvenance::SphericalCaps(..)=>job.is_spherical_caps(),
+            SolidProvenance::RoundedBox(..)=>job.is_rounded_box(),
+            _=>false,
         }
     }
 

@@ -294,7 +294,7 @@ impl WorldRayPickCursor {
         let Some(hit) = self.best else {
             return match self.purpose {
                 WorldRayPickPurpose::Hover => {
-                    if selection_state.local_hover_id.is_none() && selection_state.pick_hover_key.is_none() {
+                    if !(selection_state.has_instance_hover() || selection_state.has_published_pointer_instance_hover()) && selection_state.pick_hover_key.is_none() {
                         return Ok(None);
                     }
                     let mut plan = WorldInteractionPlan::new(self.revision, generation);
@@ -324,9 +324,21 @@ impl WorldRayPickCursor {
         let instance = draw.instances.get(usize::from(hit.instance)).ok_or(WorldInteractionStep::Fault)?;
         let target_id = instance_interaction_id(interaction_state, instance.id.as_str());
         let target_granularity_id = instance_interaction_granularity_id(session_state, interaction_state, instance.id.as_str());
-        if self.purpose == WorldRayPickPurpose::Hover && selection_state.local_hover_id.as_deref() == Some(target_id) && selection_state.local_hover_granularity_id.as_deref() == Some(target_granularity_id) {
-            return Ok(None);
-        }
+        let hover_targets = if self.purpose == WorldRayPickPurpose::Hover {
+            let bytes = session_state.controller_id.len() + session_state.surface_id.len() + target_id.len()
+                + resolved_domain_id(session_state).len() + target_granularity_id.len();
+            let targets = world_authored_hover_targets(session_state, interaction_state, &instance.id)
+                .filter(|targets| bytes + targets.len() <= WORLD_INTERACTION_BYTE_CAPACITY);
+            if selection_state.local_hover_id.as_deref() == Some(target_id)
+                && selection_state.local_hover_granularity_id.as_deref() == Some(target_granularity_id)
+                && selection_state.local_hover_targets.as_deref() == targets
+            {
+                return Ok(None);
+            }
+            targets
+        } else {
+            None
+        };
         let mut plan = WorldInteractionPlan::new(self.revision, generation);
         let controller = plan.push_string(&session_state.controller_id).ok_or(WorldInteractionStep::Fault)?;
         let surface = plan.push_string(&session_state.surface_id).ok_or(WorldInteractionStep::Fault)?;
@@ -355,9 +367,10 @@ impl WorldRayPickCursor {
             WorldRayPickPurpose::Hover => {
                 let domain = plan.push_string(resolved_domain_id(session_state)).ok_or(WorldInteractionStep::Fault)?;
                 let granularity = plan.push_string(target_granularity_id).ok_or(WorldInteractionStep::Fault)?;
+                let group = hover_targets.map(|targets| plan.push_string(targets).expect("authored hover targets fit plan"));
                 WorldFlatAction {
                     kind: WorldFlatActionKind::Hover,
-                    strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), None, None, None],
+                    strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), group, None, None],
                     numbers: [if session_state.bound_domain_id.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 }
             }
@@ -520,7 +533,7 @@ impl WorldObjectPickCursor {
             }
             WorldObjectPickPurpose::ReferenceHover => {
                 let hit = entry.map(|entry| plan.push_string(entry.id.as_str()).ok_or(WorldInteractionStep::Fault)).transpose()?;
-                if hit.is_none() && selection_state.local_hover_id.is_none() {
+                if hit.is_none() && !(selection_state.has_instance_hover() || selection_state.has_published_pointer_instance_hover()) {
                     return Ok(None);
                 }
                 let domain = plan.push_string(resolved_domain_id(session_state)).ok_or(WorldInteractionStep::Fault)?;
@@ -640,7 +653,7 @@ impl WorldComponentPickCursor {
             };
             self.slot += 1;
             if let Some(entry) = entry.as_ref().filter(|entry| entry.revision == self.revision && entry.kind == WorldInteractionObjectKind::Instance) {
-                if selection_state.active_object_id.as_deref().is_none_or(|active| active == entry.id.as_str()) {
+                if interaction_state.component_pickable(entry.id.as_str(), selection_state.active_object_id.as_deref()) {
                     self.current = Some(WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision });
                     self.topology = 0;
                 }

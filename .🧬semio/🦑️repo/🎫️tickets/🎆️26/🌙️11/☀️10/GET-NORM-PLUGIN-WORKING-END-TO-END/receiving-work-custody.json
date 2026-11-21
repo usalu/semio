@@ -1,0 +1,13 @@
+{
+  "issuedWork": 49999986,
+  "spentBeforeMember": 25851013,
+  "activeRowWork": 24402532,
+  "redeemedRowWork": 255584,
+  "otherHeldWork": 2,
+  "rowControlWork": 8,
+  "freshMemberWork": 4386,
+  "expectedLegacyFreeWork": 2023,
+  "expectedLegacyOverrun": 2363,
+  "expectedBoundedQuote": 1048576,
+  "expectedBoundedFreeWork": 23355971
+}

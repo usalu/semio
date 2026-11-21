@@ -1,0 +1,11 @@
+type ElevationSource {
+  bounds: [Float!]!
+  rows: [[Int!]!]!
+}
+
+input ElevationSourceInput {
+  bounds: [Float!]!
+  rows: [[Int!]!]!
+}
+
+type ElevationSourceChange { value: ElevationSource }

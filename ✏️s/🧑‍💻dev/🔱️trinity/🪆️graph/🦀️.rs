@@ -13,8 +13,7 @@ use semio_framework_schema_composition::ChildRefFields;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_plugin::{Fault,FaultOrigin,FaultCode,app::{ChildContentView,ChildEmitPreparation}};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
-use semio_s_artifact_stdio_semio_base::schema::geometry::read_binary64_lexeme;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 
 /// 🧩️ Every native Jack runtime installs this composition explicitly, including its actual member roster.
 #[derive(Default,Clone)]
@@ -33,8 +32,17 @@ impl JackContentFactory for SemioJackComposition{
 impl JackComposition for SemioJackComposition{
  type Members=semio_s_artifact_stdio_semio::SemioMembers;
  type Read<'a>=SemioJackPublishedRead<'a>;
+ type ContentSnapshot=SemioGraphSnapshot;
+ type ContentMutation=SemioGraphMutation;
+ fn child_editor() -> Option<(&'static semio_plugin::app::child_read::ChildReadRegistration<SemioGraphSnapshot>, &'static semio_plugin::app::child_editor::registration::ChildEditorRegistration<SemioGraphSnapshot>)> {
+  use semio_s_artifact_stdio_semio_graph::editor::{SEMIO_GRAPH_CHILD_APPLY_MUTATIONS, SEMIO_GRAPH_CHILD_READ};
+  Some((&SEMIO_GRAPH_CHILD_READ, &SEMIO_GRAPH_CHILD_APPLY_MUTATIONS))
+ }
+ fn child_mutations(snapshot:&SemioGraphSnapshot,effects:&[jack::standards::v1::subsets::any::schema::graph::GraphEffect])->Result<Vec<SemioGraphMutation>,ValueError>{
+  content::graph_leaves(snapshot,effects)
+ }
  fn initial_snapshot()->jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot{
-  let asset:semio_framework_pack_json::Value=semio_framework_pack_json::from_str(include_str!("🖼️assets/🎬️demo/🔣️.query.json")).expect("authored query scene JSON");
+  let asset=semio_framework_pack_json::parse(include_str!("🖼️assets/🎬️demo/🔣️.query.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored query scene JSON");
   let scene:jack::standards::v1::subsets::any::schema::ast::JackQueryGraphSnapshot=semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&asset)).expect("authored query scene schema");
   let mut snapshot=jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot::with_content::<Self>(scene.schema,scene.name,scene.manifest_id,scene.manifest,scene.camera,jack::standards::v1::subsets::any::schema::content::JackWorkingScene{nodes:scene.nodes,edges:scene.edges},scene.root_node_id);
   snapshot.query=scene.query;snapshot.resolve_manifest().expect("authored scene manifest");snapshot
@@ -90,7 +98,7 @@ impl JackContentLayout for SemioJackPublishedRead<'_>{
  fn move_codec(&self)->std::sync::Arc<dyn jack::standards::v1::subsets::any::schema::content_read::JackContentMoveCodec>{content::move_codec()}
 }
 impl JackContentRead for SemioJackPublishedRead<'_>{
- fn prepare_effects(&self,effects:&[jack::standards::v1::subsets::any::schema::graph::GraphEffect])->Result<Vec<ChildEmitPreparation>,ValueError>{let leaves=content::graph_leaves(&self.snapshot,effects);Ok(if leaves.is_empty(){Vec::new()}else{vec![ChildEmitPreparation::of::<SemioGraphSnapshot,_>("content",self.identity.child_id,leaves)]})}
+ fn prepare_effects(&self,effects:&[jack::standards::v1::subsets::any::schema::graph::GraphEffect])->Result<Vec<ChildEmitPreparation>,ValueError>{content::prepare_graph_effects(&self.snapshot,self.identity.child_id,effects)}
 }
 
 /// 🏗️ The S-owned native declaration installs its concrete content composition explicitly.

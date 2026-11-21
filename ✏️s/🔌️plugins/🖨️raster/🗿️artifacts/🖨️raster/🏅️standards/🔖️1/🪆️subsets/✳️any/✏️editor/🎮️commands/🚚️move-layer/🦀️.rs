@@ -48,3 +48,7 @@ pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg:
     })
 }
 
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

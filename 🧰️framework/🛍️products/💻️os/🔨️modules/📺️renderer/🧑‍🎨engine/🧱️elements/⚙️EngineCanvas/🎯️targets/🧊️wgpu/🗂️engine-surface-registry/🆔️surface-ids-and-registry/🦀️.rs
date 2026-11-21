@@ -1,6 +1,7 @@
 //! 🆔️ Surface ids and registry: the node graph engine and sync cache, the engine surface, the close page helpers, the surface id, token, identity, snapshot and freshness and the surface registry. See [`super`].
 
 use super::*;
+use flow::infinite::board::schema::dag_input::DagChannelDirection;
 
 //#region Registry
 pub enum NodeGraphEngine {
@@ -9,9 +10,53 @@ pub enum NodeGraphEngine {
 }
 
 #[derive(Default)]
+pub struct FlowPortAddresses(Vec<FlowPortAddress>);
+
+struct FlowPortAddress {
+    widget: String,
+    port: String,
+    semantic: String,
+    direction: DagChannelDirection,
+}
+
+impl FlowPortAddresses {
+    pub fn sync(&mut self, nodes: &[semio_ui_declaration::ui::NodeGraphNodeRecord]) -> bool {
+        use DagChannelDirection::{In, Out};
+        let entries = || nodes.iter().flat_map(|node| {
+            [(In, &node.inputs), (Out, &node.outputs)].into_iter().flat_map(move |(direction, ports)| {
+                ports.iter().map(move |port| (node.id.as_str(), port.code.as_deref().unwrap_or(&port.id), port.id.as_str(), direction))
+            })
+        });
+        if entries().eq(self.0.iter().map(|entry| (entry.widget.as_str(), entry.port.as_str(), entry.semantic.as_str(), entry.direction))) {
+            return false;
+        }
+        self.0 = entries().map(|(widget, port, semantic, direction)| FlowPortAddress { widget: widget.to_owned(), port: port.to_owned(), semantic: semantic.to_owned(), direction }).collect();
+        true
+    }
+
+    pub fn semantic(&self, widget: &str, port: &str, direction: DagChannelDirection) -> Option<&str> {
+        self.0.iter().find(|entry| entry.widget == widget && entry.port == port && entry.direction == direction).map(|entry| entry.semantic.as_str())
+    }
+
+    pub fn raw(&self, widget: &str, semantic: &str) -> Option<(&str, DagChannelDirection)> {
+        self.0.iter().find(|entry| entry.widget == widget && entry.semantic == semantic).map(|entry| (entry.port.as_str(), entry.direction))
+    }
+
+    pub(super) fn close_step(&mut self) -> bool {
+        let Some(entry) = self.0.last_mut() else { return false };
+        retire_string_page(&mut entry.widget) || retire_string_page(&mut entry.port) || retire_string_page(&mut entry.semantic) || self.0.pop().is_some()
+    }
+
+    pub(super) fn is_empty(&self) -> bool { self.0.is_empty() }
+}
+
+#[derive(Default)]
 pub struct NodeGraphSyncCache {
+    pub window_id: Option<EngineSurfaceId>,
     pub snapshot_json: Option<String>,
     pub selection: Option<Vec<String>>,
+    pub selection_granularity: Option<&'static str>,
+    pub flow_ports: FlowPortAddresses,
     pub preview_off_json: Option<String>,
     pub computing_json: Option<String>,
     pub status_json: Option<String>,
@@ -20,7 +65,10 @@ pub struct NodeGraphSyncCache {
     pub viewport: Option<semio_os_kernel::Viewport2d>,
     pub viewport_pixels: Option<(u32, u32)>,
     pub operator_ids: Option<Vec<String>>,
-    pub hover: Option<(String, String, String)>,
+    pub hover: Option<(String, Option<String>, String)>,
+    pub hover_port_ids: Vec<String>,
+    pub hover_source_window_id: Option<Option<EngineSurfaceId>>,
+    pub local_owns_hover: bool,
     /// 🖱️ Whether removing the scene hover should also clear the live graph mark.
     pub scene_owns_hover: bool,
     pub scene_pack: Option<Vec<u8>>,

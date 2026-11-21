@@ -32,9 +32,9 @@ pub mod context {
     use semio_plugin::app::TypedOperationResultLane;
     use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members};
     use semio_plugin::{EditorApp, Effect, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
-    use semio_s_artifact_stdio_semio::SemioMembers;
+    use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::map_composition::GisMapMembers;
 
-    pub type Gis2dApp = VcsArtifactApp<EditorApp<Gis2dPlayApp>, SemioMembers>;
+    pub type Gis2dApp = VcsArtifactApp<EditorApp<Gis2dPlayApp>, GisMapMembers>;
 
     /// 🧹️ Owning guard that drains the exact close ladder before `ArtifactStore` drop asserts.
     /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
@@ -67,7 +67,7 @@ pub mod context {
     /// 🧬️ Builds the real registered fixture and binds the instance addressed by [`meta`].
     pub async fn app() -> Gis2dTestApp {
         let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, SemioMembers>(gis2d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
+        let mut app = new_app_with_registry_and_members::<EditorApp<Gis2dPlayApp>, GisMapMembers>(gis2d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Gis2dTestApp(app, scope)
     }
@@ -496,6 +496,27 @@ async fn export_media_map_out_produces_a_2d_map_structured_payload() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn registered_map_out_exports_the_mounted_snapshot() {
+    use semio_plugin::artifact_app_laws::export_fixture_media;
+    let mut app = app().await;
+    let snapshot = app.snapshot().expect("map projection");
+    let close_loan = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close;
+    let media = export_fixture_media(&mut app.0, "map:out", app.1.cx(), close_loan).await.expect("registered map export");
+    let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected the registered structured map output") };
+    assert_eq!(schema, "2d.map");
+    assert!(json.len() > close_loan.maximum_copy_bytes, "the bundled map must exercise multiple output turns");
+    let value: serde_json::Value = serde_json::from_str(&json).expect("map media JSON");
+    for (role, features) in [("positions", &snapshot.positions), ("routes", &snapshot.routes), ("regions", &snapshot.regions)] {
+        let records = value[role].as_array().expect("complete map collection");
+        assert_eq!(records.len(), features.len());
+        for (record, feature) in records.iter().zip(features) {
+            assert_eq!(*record, serde_json::Value::from(&feature.data));
+        }
+    }
+    close(&mut app);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn import_media_features_in_adds_new_positions_as_operations() {
     let mut app = app().await;
     let document = app.snapshot().expect("projection");
@@ -542,6 +563,39 @@ async fn gis2d_map_media_exports_the_document_descriptor() {
     };
     assert_eq!(schema, "2d.map");
     assert!(value.get("positions").is_some());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mounted_map_export_preserves_the_original_document_descriptor() {
+    use semio_plugin::ArtifactMediaExportPoll;
+    use semio_plugin::artifact_app_laws::{poll_fixture_media_export, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk};
+
+    let mut app = app().await;
+    let original = app.snapshot().unwrap();
+    let MediaPayload::Intrinsic { schema, value } = gis2d_map_media(&original).payload else { unreachable!() };
+    let expected = semio_framework_pack_json::to_json_string(&value);
+    let handle = submit_fixture_media_export(&mut app.0, "map:out", app.1.cx()).await.unwrap();
+    let mut result = None;
+    let mut yields = 0;
+    for _ in 0..10_000 {
+        match poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.unwrap() {
+            ArtifactMediaExportPoll::Running { .. } => yields += 1,
+            ArtifactMediaExportPoll::Complete(media) => { result = Some(media); break; }
+            other => panic!("Map export failed: {other:?}"),
+        }
+    }
+    assert!(yields > 1);
+    let result = result.expect("mounted Map export must complete");
+    assert_eq!(result.schema, schema);
+    retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx()).await.unwrap();
+    let mut output = Vec::new();
+    let mut terminal = false;
+    while let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut terminal, app.1.cx()).await.unwrap() {
+        output.extend(chunk);
+    }
+    assert_eq!(output, expected.into_bytes());
+    assert_eq!(app.snapshot().unwrap(), original);
+    close(&mut app);
 }
 //#endregion 🔖️Media
 

@@ -1,5 +1,7 @@
 import {createHash,randomBytes} from "node:crypto";
-import {closeSync,createReadStream,fsyncSync,lstatSync,openSync,readlinkSync,watch,type Stats} from "node:fs";
+import {createReplicaProgressWatchV1,replicaProgressRestartDueV1,type ReplicaProgressScopeV1} from "./💓️progress/🟦️.ts";
+import {createStagedPutsV1,stagedPutStampV1} from "./📥️staged-put/🟦️.ts";
+import {closeSync,createReadStream,fsyncSync,lstatSync,openSync,readlinkSync,watch,type BigIntStats,type Stats} from "node:fs";
 import {chmod,copyFile,link,lstat,mkdir,mkdtemp,open,opendir,readdir,readFile,readlink,rename,rm,rmdir,stat,symlink,truncate,unlink,utimes,writeFile} from "node:fs/promises";
 import {homedir,tmpdir,uptime} from "node:os";
 import {spawnSync} from "node:child_process";
@@ -10,7 +12,7 @@ import {appendEventsV1,expiredHorizonV1,repairBlobV1,blobPathV1,copyVerifiedV1,t
 import {compileIgnoreV1,foldNameV1,gitPrivateV1,hashFileV1,linkRefusalV1,refusePathV1,scanSharedV1,sharedV1,type FleetIgnoreV1,type FleetScanEntryV1} from "../🚧️boundary/🟦️.ts";
 import {compactionDefaultsV1,cursorAheadV1,estimateEventsBehindV1,listSnapshotsV1,planRetirementV1,pruneSnapshotsV1,reclaimBlobsV1,reclaimLitterV1,requireCompactionShapeV1,retireSegmentsV1,scanSnapshotV1,snapshotSavesV1,storeReportV1,withCompactionLockV1,writeCompactionRecordV1,type CompactionSettingsV1,type ReclaimResultV1,type SnapshotRefV1,type StoreReportV1} from "../🗜️compaction/🟦️.ts";
 import {bucketsHexV1,digestHexV1,emptyBucketsV1,foldBucketV1,bucketOfV1,foldTermV1,manifestTermV1,createAttesterV1,fleetReportV1,readAttestationV1,readAttestationsV1,readRetirementV1,readRetirementsV1,repairableDriftV1,type AttesterGitV1,type AttesterViewV1,type FleetFallbackV1,type FleetGuardsV1,type FleetReportV1} from "../🩺️attest/🟦️.ts";
-import {sweepGitGarbageV1,repairGitConfigV1,applyIndexV1,branchRefV1,gitBrokenV1,linearizeRefV1,gitGuardsV1,gitStateV1,gitViewDeltaV1,gitViewV1,resolveGitV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,indexSignatureV1,normaliseGitConfigV1,publishIndexV1,stageHealthV1,stageRecordedV1,verifyIndexV1,type GitBrokenV1,type GitViewV1,type IndexHostV1,type StageReasonV1} from "../🌿️git/🟦️.ts";
+import {sweepGitGarbageV1,repairGitConfigV1,applyIndexV1,branchRefV1,gitBrokenV1,linearizeRefV1,gitGuardsV1,gitStageRetryDelayV1,gitStateV1,gitViewDeltaV1,gitViewV1,resolveGitV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,indexSignatureV1,normaliseGitConfigV1,publishIndexV1,stageHealthV1,stageObjectsForApplyV1,stageRecordedV1,verifyIndexV1,type GitBrokenV1,type GitViewV1,type IndexHostV1,type StageReasonV1} from "../🌿️git/🟦️.ts";
 import {DirectoryTableV1,HotSetV1,LatencyV1,nextDelayV1,takeHintsV1,ensureHintsV1,type LatencyReportV1} from "../🎣️tiers/🟦️.ts";
 import {StateCorruptV1,appendWalV1,bytesOfV1,checkpointPartsV1,decodeRecordsV1,partWidthV1,payloadsV1,readCheckpointV1,readWalV1,writeCheckpointV1,type CheckpointV1,type WalRecordV1} from "./💾️state/🟦️.ts";
 import {clashKeyV1,clashV1,staleRepublishV1,type ContentEventV1} from "./⚖️clash/🟦️.ts";
@@ -18,7 +20,7 @@ import {awaitWorktreeAccessV1,readAccessV1,type AccessRecordV1} from "../🔐️
 import {codeDigestV1,codeRootV1,type RestartCheckV1} from "../🩺️attest/🟦️.ts";
 import {admitEntryScriptV1,entryDirectoryV1,entryGuardedV1,maintainEntryV1,migrateAgentV1} from "./🥾️entry/🟦️.ts";
 import {ensureLauncherConsentV1} from "../../📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs";
-import {packLocalV1,packPartsV1,readPackAuthorisationV1,rescueLocalPacksV1} from "./🧷️packgate/🟦️.ts";
+import {packLocalV1,packPartsV1,prepareStagePackedObjectsV1,readPackAuthorisationV1,rescueLocalPacksV1} from "./🧷️packgate/🟦️.ts";
 import {createSidecarsV1,type SidecarSettingsV1} from "./🧷️sidecars/🟦️.ts";
 import {yieldingV1,activityV1,codeDirectoryV1,createFailuresV1,createStoreGuardV1,existingCompanionsV1,importClosureV1,installBootStageV1,listStoreCodeV1,moduleSourcesV1,pruneLostV1,pruneStoreCodeV1,publishCodeSnapshotV1,readBeatV1,readBlockedRestartV1,readHealthV1,StoreStalledV1,readRefusedPathsV1,readRunHistoryV1,recordRefusedV1,withdrawRefusedV1,recordRunV1,rotateLogV1,runSelfCheckV1,sealCodeV1,suspectCodeV1,writeHealthV1,writeRefusedPathsV1,noteRefusedPathV1,NO_REFUSED_PATHS_V1,type FailuresV1,type HealthV1,type RefusedPathsV1,type SealedCodeV1} from "../🛡️resilience/🟦️.ts";
 import {maintainKitV1} from "../🗺️topology/🥾️provision/🟦️.ts";
@@ -188,7 +190,6 @@ const linkless=(replica:ReplicaV1,id:number):boolean=>capable.get(replica)===fal
 const sleep=(milliseconds:number):Promise<void>=>new Promise(done=>{setTimeout(done,milliseconds);});
 const absolute=(root:string,path:string):string=>join(root,...path.split("/"));
 const listed=async(root:string,path:string):Promise<boolean>=>(await readdir(dirname(absolute(root,path))).catch(()=>[] as string[])).some(name=>name.normalize("NFC")===basename(path));
-const spelled=async(root:string,path:string):Promise<boolean>=>(await readdir(dirname(absolute(root,path))).catch(()=>[] as string[])).includes(basename(path));
 const asciiOnly=/^[\u0000-\u007f]*$/u;
 const segmentName=(segment:number):string=>`${String(segment).padStart(12,"0")}.jsonl`;
 const plain=(entry:FleetManifestEntryV1):FleetManifestEntryV1=>entry.operation==="put"?{hlc:entry.hlc,operation:"put",sha256:entry.sha256!,bytes:entry.bytes!,executable:entry.executable!}:entry.operation==="link"?{hlc:entry.hlc,operation:"link",target:entry.target!}:{hlc:entry.hlc,operation:"delete"};
@@ -207,7 +208,10 @@ function fleetHasPacks(replica:ReplicaV1):boolean{
  return has;
 }
 
-const fleetPack=(replica:ReplicaV1,pack:string):boolean=>replica.manifest.idOf(pack)!==undefined;
+const fleetPack=(replica:ReplicaV1,pack:string):boolean=>{
+ const id=replica.manifest.idOf(pack);
+ return id!==undefined&&replica.manifest.operationAt(id)==="put";
+};
 
 /** 🧷️ The pack gate of a replica: a pack the fleet does not hold, that the consolidator did not authorise, stays on its machine (never scanned, never published, its deletion never published); see `🧷️packgate`. */
 const packLocalOf=(replica:ReplicaV1):((path:string)=>boolean)=>path=>packLocalV1(path,pack=>fleetPack(replica,pack),()=>fleetHasPacks(replica),replica.settings.worktree);
@@ -263,10 +267,13 @@ export class ReplicaQueueV1{
 export class ReplicaFoldsV1{
  private slots:Int32Array=new Int32Array(2048);
  private used=0;
+ private revision=0;
  private dirs:Int32Array=new Int32Array(1<<20);
  private parents:Int32Array=new Int32Array(1<<20);
  constructor(readonly book:ReplicaBookV1){}
+ get writes():number{return this.revision;}
  private count(id:number,step:number):void{
+  this.revision++;
   const name=this.book.name(id),mask=this.dirs.length-1;
   let hash=2166136261,parent=hash;
   for(let index=0;index<name.length;index++){
@@ -287,10 +294,10 @@ export class ReplicaFoldsV1{
  reserve(count:number):void{
   let size=this.slots.length;
   while(size<count*2+2)size*=2;
-  if(size>this.slots.length)this.slots=new Int32Array(size);
+  if(size>this.slots.length){this.slots=new Int32Array(size);this.revision++;}
  }
  columns():Readonly<{slots:Int32Array;used:number;dirs:Int32Array;parents:Int32Array}>{return {slots:this.slots,used:this.used,dirs:this.dirs,parents:this.parents};}
- adopt(slots:Int32Array,used:number,dirs:Int32Array,parents:Int32Array):void{this.slots=slots;this.used=used;this.dirs=dirs;this.parents=parents;}
+ adopt(slots:Int32Array,used:number,dirs:Int32Array,parents:Int32Array):void{this.revision++;this.slots=slots;this.used=used;this.dirs=dirs;this.parents=parents;}
  find(path:string):string|undefined{
   const fold=foldNameV1(path),hash=hashText(fold),mask=this.slots.length-1;
   for(let slot=hash&mask;;slot=(slot+1)&mask){
@@ -885,9 +892,10 @@ function indexHost(replica:ReplicaV1):IndexHostV1{
  const host:IndexHostV1={
   worktree:settings.worktree,server:settings.originId===`${settings.groupId}-server`,archivist:`${settings.groupId}-server`,now:settings.now,
   base:()=>manifest.get(INDEX_BASE_V1),
-  each:visit=>{for(const id of manifest.ids()){const path=book.name(id);if(path.startsWith(INDEX_PREFIX_V1))visit(path,manifest.entryAt(id));}},
-  held:visit=>{for(const id of files.ids()){const path=book.name(id);if(indexRealmV1(path))visit(path,plain(files.entryAt(id)));}},
-  pending:()=>{const found=new Map<string,FleetManifestEntryV1>();for(const id of queue.snapshot()){const path=book.name(id);if(indexRealmV1(path))found.set(path,manifest.entryAt(id));}return found;},
+  prepareStageInputs:async(oids,paths,signal)=>(await publishStageInputs(replica,oids,paths,signal)).ready,
+  each:visit=>{const base=book.find(INDEX_BASE_V1);for(const id of book.stageIds())if(id!==base&&manifest.live(id))visit(book.name(id),manifest.entryAt(id));},
+  held:visit=>{for(const id of book.stageIds())if(files.live(id))visit(book.name(id),plain(files.entryAt(id)));},
+  pending:()=>{const found=new Map<string,FleetManifestEntryV1>();for(const id of book.stageIds())if(queue.hasId(id))found.set(book.name(id),manifest.entryAt(id));return found;},
   emit:async events=>{
    try{
     await ensureHome(replica);
@@ -926,9 +934,9 @@ function requeue(replica:ReplicaV1):void{
  for(const id of manifest.ids())if(!queue.hasId(id)&&(!files.live(id)||!files.sameHlcAs(manifest,id)))enqueueId(replica,id);
 }
 
-function noteOnce(replica:ReplicaV1,key:string,event:Omit<ReplicaEventV1,"version">):void{
+function noteOnce(replica:ReplicaV1,key:string,event:Omit<ReplicaEventV1,"version">,incomingWorktree?:boolean):void{
  if(event.event==="refused"&&event.path!==undefined){replica.refusedPaths.record=noteRefusedPathV1(replica.refusedPaths.record,event.path,event.reason??"-",replica.settings.now());replica.refusedPaths.dirty=true;}
- const {announce,count}=replica.failures.note(key,event.message??event.reason??key);
+ const {announce,count}=replica.failures.note(key,event.message??event.reason??key,incomingWorktree);
  replica.trust.failure(key);
  if(replica.noted.size>=noteCapacity)replica.noted.clear();
  replica.noted.add(key);
@@ -1158,6 +1166,7 @@ export async function flushRefusalsV1(replica:ReplicaV1):Promise<void>{
 /** 🔚️ Persists the clock, the pending delta of the state (appended to the log; a checkpoint is written only when the log has outgrown its limit), the cursors and the record of refused paths, then releases the daemon lock. */
 export async function closeReplicaV1(replica:ReplicaV1):Promise<void>{
  try{
+  await stagedPuts.get(replica)?.clear(true);
   const hot=replica.hot.snapshot(replica.settings.now());
   if(hot.length>0||replica.memo.has("hot"))rememberV1(replica,"hot",hot.length>0?encoder.encode(hot.join("\0")):undefined);
   keepHistory(replica,true);
@@ -1218,16 +1227,17 @@ const stagedExecutable=(replica:ReplicaV1,path:string):boolean=>{
  return staged?.operation==="link"&&staged.target!.startsWith("100755 ");
 };
 
-async function prepare(replica:ReplicaV1,job:Job,signal?:AbortSignal):Promise<Prepared|undefined>{
+async function prepare(replica:ReplicaV1,job:Job,signal?:AbortSignal,foreground=true):Promise<Prepared|undefined>{
  const {entry,current}=job;
  if(entry.kind==="link")return {job,touch:false};
  const target=absolute(replica.settings.worktree,entry.path),{storeRoot,originId}=replica.settings;
- const progress=entry.bytes>=largeBlobBytesV1?throttled((done,total)=>replica.say({event:"progress",stage:"publish-blob",path:entry.path,done,total})):undefined,alive=entry.bytes>=largeBlobBytesV1?()=>{replica.beat();}:undefined;
+ const progress=entry.bytes>=largeBlobBytesV1?throttled((done,total)=>replica.say({event:"progress",stage:"publish-blob",path:entry.path,done,total})):undefined,alive=foreground&&entry.bytes>=largeBlobBytesV1?()=>{replica.beat();}:undefined;
  const unstable=():undefined=>{noteOnce(replica,`unstable:${entry.path}`,{event:"unstable",path:entry.path});return undefined;};
  try{
   const recorded=current?.operation==="put"?current.executable!:undefined,decide=(sha256:string):boolean=>replica.settings.modeless?(recorded??stagedExecutable(replica,entry.path)):entry.executable||(recorded===true&&current!.sha256!==sha256);
   if(current?.operation==="put"&&current.bytes===entry.bytes){
-   const hash=await hashFileV1(target);
+   const hashing=progress===undefined?undefined:throttled((done,total)=>replica.say({event:"progress",stage:"publish-hash",path:entry.path,done,total}));
+   const hash=hashing===undefined?await hashFileV1(target):await hashFileV1(target,{signal,progress:(done,total)=>{alive?.();hashing(done,total);}});
    if(!hash.stable)return unstable();
    const executable=decide(hash.sha256);
    if(current.sha256===hash.sha256&&current.executable===executable)return {job,sha256:hash.sha256,bytes:hash.bytes,executable,touch:true};
@@ -1241,6 +1251,85 @@ async function prepare(replica:ReplicaV1,job:Job,signal?:AbortSignal):Promise<Pr
   if(sharing(error)){noteOnce(replica,`blocked:${entry.path}:${code(error)}`,{event:"blocked",path:entry.path,reason:code(error)});return undefined;}
   throw error;
  }
+}
+
+interface LargePublishV1 {
+ prepare(job:Job,signal?:AbortSignal):Promise<Prepared|undefined>;
+ retireAfter(paths?:readonly string[]):(()=>void)|undefined;
+ reset():void;
+}
+
+/** 🚛 Keeps one large file in preparation while the daemon continues ordered journal turns. */
+function largePublishV1(replica:ReplicaV1,signal:AbortSignal,ready:(path:string)=>void):LargePublishV1{
+ type Result={prepared:Prepared|undefined;source:string|undefined;blob:string|undefined}|{error:unknown};
+ type Slot={path:string;controller:AbortController;result?:Result};
+ let slot:Slot|undefined;
+ const stamp=(named:BigIntStats)=>[named.dev,named.ino,named.mode,named.nlink,named.size,named.mtimeNs,named.ctimeNs].join(":");
+ const physical=async(path:string):Promise<string|undefined>=>{
+  const named=await lstat(path,{bigint:true}).catch(error=>{if(!gone(error))throw error;return undefined;});
+  if(named?.isFile())return stamp(named);
+ };
+ const freshBlob=async(item:Prepared,observed:string|undefined):Promise<boolean>=>{
+  if(item.touch||item.sha256===undefined)return true;
+  const path=blobPathV1(replica.settings.storeRoot,item.sha256);
+  try{
+   const before=await lstat(path,{bigint:true});
+   if(!before.isFile()||before.size!==BigInt(item.bytes!)||stamp(before)!==observed)return false;
+   const now=new Date();await utimes(path,now,now);
+   const after=await lstat(path,{bigint:true});
+   return after.isFile()&&after.dev===before.dev&&after.ino===before.ino&&after.size===before.size;
+  }catch(error){if(gone(error)||sharing(error))return false;throw error;}
+ };
+ const reset=():void=>{
+  if(slot===undefined)return;
+  slot.controller.abort();
+  if(slot.result!==undefined)slot=undefined;
+ };
+ return {
+  reset,
+  retireAfter(paths){
+   const selected=slot;
+   if(selected?.result===undefined||paths!==undefined&&!paths.includes(selected.path))return;
+   return ()=>{if(slot===selected)slot=undefined;};
+  },
+  async prepare(job,turn){
+   const {entry}=job;
+   if(entry.kind==="link"||entry.bytes<largeBlobBytesV1)return prepare(replica,job,turn);
+   turn?.throwIfAborted();
+   const path=absolute(replica.settings.worktree,entry.path);
+   if(slot?.result!==undefined&&slot.path===entry.path){
+    const {result}=slot;slot=undefined;
+    if("error" in result)throw result.error;
+    const item=result.prepared;
+    if(item===undefined||result.source===undefined||!sharedV1(entry.path,false,replica.ignore))return undefined;
+    if(item.job.current?.hlc!==job.current?.hlc||item.job.entry.executable!==entry.executable)return undefined;
+    if(replica.settings.modeless&&job.current?.operation!=="put"&&item.executable!==stagedExecutable(replica,entry.path))return undefined;
+    if(replica.queue.has(entry.path)||await ancestryOf(replica.settings.worktree,entry.path,new Set())!=="ok"||
+     !await freshBlob(item,result.blob)||await physical(path)!==result.source)return undefined;
+    turn?.throwIfAborted();
+    return {...item,job};
+   }
+   if(slot!==undefined)return undefined;
+   const selected:Slot={path:entry.path,controller:new AbortController()};slot=selected;
+   const lifetime=AbortSignal.any([signal,selected.controller.signal]);
+   void (async()=>{
+    try{
+     const source=await physical(path);
+     lifetime.throwIfAborted();
+     const prepared=source===undefined?undefined:await prepare(replica,job,lifetime,false);
+     lifetime.throwIfAborted();
+     const blob=prepared?.sha256!==undefined&&!prepared.touch?await physical(blobPathV1(replica.settings.storeRoot,prepared.sha256)):undefined;
+     if(!lifetime.aborted)selected.result={prepared,source,blob};
+    }catch(error){
+     if(!lifetime.aborted)selected.result={error};
+    }finally{
+     if(lifetime.aborted){if(slot===selected)slot=undefined;}
+     else ready(entry.path);
+    }
+   })();
+   return undefined;
+  },
+ };
 }
 
 const parentOf=(path:string):string=>{const cut=path.lastIndexOf("/");return cut<0?"":path.slice(0,cut);};
@@ -1281,9 +1370,36 @@ async function relist(replica:ReplicaV1,directory:string,queue:Set<string>,shall
  }
 }
 
+
+/** 🧺 Reuses an exact sibling listing only while that physical directory still has the same identity and stamp. */
+function targetedSpellingV1(root:string,repeated:ReadonlySet<string>):(path:string)=>Promise<boolean>{
+ let cached:Readonly<{directory:string;info:BigIntStats;names:ReadonlySet<string>}>|undefined;
+ const namesOf=(directory:string)=>readdir(directory).catch(()=>undefined);
+ const same=(a:BigIntStats,b:BigIntStats)=>a.dev===b.dev&&a.ino===b.ino&&a.mode===b.mode&&a.mtimeNs===b.mtimeNs&&a.ctimeNs===b.ctimeNs;
+ const directoryAt=async(directory:string)=>{
+  const info=await lstat(directory,{bigint:true}).catch(()=>undefined);
+  return info?.isDirectory()?info:undefined;
+ };
+ return async path=>{
+  const directory=dirname(absolute(root,path)),name=basename(path);
+  if(!repeated.has(parentOf(path)))return (await namesOf(directory))?.includes(name)??false;
+  const before=await directoryAt(directory);
+  if(before===undefined)return false;
+  if(before.ino===0n)return (await namesOf(directory))?.includes(name)??false;
+  if(cached?.directory===directory&&same(cached.info,before))return cached.names.has(name);
+  const names=await namesOf(directory),after=await directoryAt(directory);
+  if(names===undefined||after===undefined)return false;
+  if(!same(before,after))return (await namesOf(directory))?.includes(name)??false;
+  cached={directory,info:after,names:new Set(names)};
+  return cached.names.has(name);
+ };
+}
+
 async function observe(replica:ReplicaV1,paths:readonly string[],flat:readonly string[]=[]):Promise<Readonly<{entries:FleetScanEntryV1[];missing:string[]}>>{
  const entries:FleetScanEntryV1[]=[],missing:string[]=[],root=replica.settings.worktree,queue=new Set(paths),expanded=new Set<string>(),shallow=new Set<string>(),vanished:string[]=[],reals=new Set<string>();
  for(const directory of flat)await relist(replica,directory,queue,shallow,vanished);
+ const seenParents=new Set<string>(),repeated=new Set<string>(),spelled=targetedSpellingV1(root,repeated);
+ for(const path of queue)if(!path.endsWith("/")&&!asciiOnly.test(path)){const parent=parentOf(path);if(seenParents.has(parent))repeated.add(parent);else seenParents.add(parent);}
  for(const marked of queue){
   const expand=marked.endsWith("/"),path=expand?marked.slice(0,-1):marked;
   if(unsafePath(path))continue;
@@ -1303,18 +1419,22 @@ async function observe(replica:ReplicaV1,paths:readonly string[],flat:readonly s
    if(!replica.files.has(path))vanished.push(path);
    continue;
   }
-  if(info.isDirectory()){
-   if(sharedV1(path,true,replica.ignore)){expanded.add(path);replica.dirs.set(path,info.mtimeMs);for(const child of await readdir(target)){const next=`${path}/${child.normalize("NFC")}`;queue.add(next);queue.add(`${next}/`);}}
-   continue;
-  }
-  if(expand)continue;
-  if(!sharedV1(path,false,replica.ignore)){
+  const directory=info.isDirectory();
+  if(expand&&!directory)continue;
+  if(!sharedV1(path,directory,replica.ignore)){
    const nestedGit=path.split("/").includes(".git")&&!path.startsWith(".git/")&&path!==".git";
-   const reason=gitPrivateV1(path)||nestedGit||replica.ignore.ignores(path,false)?undefined:refusePathV1(path);
+   const reason=gitPrivateV1(path)||nestedGit||replica.ignore.ignores(path,directory)?undefined:refusePathV1(path);
    if(reason!==undefined)noteOnce(replica,`refused:${path}:${reason}`,{event:"refused",path,reason});
    continue;
   }
-  if(!asciiOnly.test(path)&&!await spelled(root,path)){noteOnce(replica,`refused:${path}:not-nfc`,{event:"refused",path,reason:"not-nfc"});continue;}
+  if(directory){
+   expanded.add(path);replica.dirs.set(path,info.mtimeMs);
+   const names=await readdir(target);
+   if(names.length>1)repeated.add(path);
+   for(const child of names){const next=`${path}/${child.normalize("NFC")}`;queue.add(next);queue.add(`${next}/`);}
+   continue;
+  }
+  if(!asciiOnly.test(path)&&!await spelled(path)){noteOnce(replica,`refused:${path}:not-nfc`,{event:"refused",path,reason:"not-nfc"});continue;}
   const other=replica.folds.find(path);
   if(other!==undefined&&other!==path){
    if(await listed(root,other))continue;
@@ -1394,13 +1514,48 @@ export async function walkLocalV1(replica:ReplicaV1,signal?:AbortSignal):Promise
  return {changed,seen,universe,scanned,startedMs,refused};
 }
 
-/** 🎭️ Publishes the stage of this machine; a failure is a progress event, never an exception. A modeless replica does it before the files too, so that the staged mode of a new file is known when the file is published. */
-async function publishStage(replica:ReplicaV1,signal?:AbortSignal):Promise<void>{
- try{await publishIndexV1(indexHost(replica),signal);}
- catch(error){if(signal?.aborted)throw error;noteOnce(replica,`error:git:${messageOf(error)}`,{event:"error",stage:"git",message:messageOf(error)});}
+/** 🎭️ Publishes the stage, prioritising only incremental updates whose exact loose objects can be published first. */
+async function publishStage(replica:ReplicaV1,signal?:AbortSignal,prepare?:(oids:readonly string[],paths:readonly string[])=>Promise<boolean>):Promise<boolean>{
+ try{return !(await publishIndexV1(indexHost(replica),signal,prepare)).waiting;}
+ catch(error){if(signal?.aborted)throw error;noteOnce(replica,`error:git:${messageOf(error)}`,{event:"error",stage:"git",message:messageOf(error)});return false;}
 }
 
 const packPrefix=".git/objects/pack/",objectsPrefix=".git/objects/",midxPath=`${packPrefix}multi-pack-index`,packCompanion=/^\.git\/objects\/pack\/(.+)\.(?:idx|rev|mtimes|bitmap|promisor)$/u;
+
+/** 📦️ Publishes the exact loose prerequisites of an incremental author stage before its registers. */
+async function publishStageInputs(replica:ReplicaV1,oids:readonly string[],stagedPaths:readonly string[],signal:AbortSignal|undefined):Promise<Readonly<{ready:boolean;work?:PublishResultV1}>>{
+ const {worktree,concurrency}=replica.settings;
+ const pathOf=(oid:string)=>objectsPrefix+oid.slice(0,2)+"/"+oid.slice(2);
+ const published=(path:string)=>replica.manifest.get(path)?.operation==="put";
+ const unknown=oids.filter(oid=>!published(pathOf(oid))),loose=new Set<string>();
+ await pool(unknown,concurrency,async oid=>{
+  try{if((await lstat(absolute(worktree,pathOf(oid)))).isFile())loose.add(oid);}
+  catch(error){if(!gone(error))throw error;}
+ },signal);
+ const packed=unknown.filter(oid=>!loose.has(oid));
+ const heldPack=(path:string):boolean=>{
+  const winner=replica.manifest.get(path),held=replica.files.get(path);
+  return winner?.operation==="put"&&held?.operation==="put"&&winner.sha256===held.sha256&&winner.bytes===held.bytes;
+ };
+ const exact=packed.length===0?undefined:await prepareStagePackedObjectsV1(worktree,packed,heldPack,signal);
+ for(const oid of exact?.loose??[])loose.add(oid);
+ const covered=new Set(exact?.covered),paths=unknown.filter(oid=>loose.has(oid)).map(pathOf);
+ const work=await publishOnceV1(replica,signal,[...paths,...stagedPaths]);
+ return {ready:unknown.every(oid=>covered.has(oid)||published(pathOf(oid))),work};
+}
+
+/** ⚡️ Attempts author-stage publication using only its incremental dependencies. */
+async function publishPriorityStage(replica:ReplicaV1,signal?:AbortSignal):Promise<Readonly<{settled:boolean;attempted:boolean;work?:PublishResultV1}>>{
+ if(replica.settings.modeless||!indexHost(replica).server)return {settled:false,attempted:false};
+ let attempted=false,work:PublishResultV1|undefined;
+ const settled=await publishStage(replica,signal,async(oids,stagedPaths)=>{
+  attempted=true;
+  const result=await publishStageInputs(replica,oids,stagedPaths,signal);
+  work=result.work;
+  return result.ready;
+ });
+ return {settled,attempted,...work===undefined?{}:{work}};
+}
 
 /** 📦️ The shared pack files (`*.pack`) that lie in `.git/objects/pack` but that this replica has not published as a put: their index, reverse index and multi-pack-index must not reach the fleet before them, and no object file that an earlier pack held may be deleted for the fleet while one is missing, or a machine that applies the deletes first is left without the objects (the repack incident of 2026-11-14). */
 async function unpublishedPacks(replica:ReplicaV1):Promise<string[]>{
@@ -1424,11 +1579,17 @@ export function sweptDriftV1(replica:ReplicaV1,name:string,startedMs:number):boo
 }
 
 /** 📤️ One publish round: walks the shared tree (or only the given touched paths), compares by size and mtime and then by hash, writes blobs before events, appends batched events with `base` = the previous sha256, and updates state and clock; deletions are paths in state that are gone from disk. A `walked` result from `walkLocalV1` replaces the walk. */
-export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?:readonly string[],walked?:WalkV1,flat?:readonly string[],cold?:boolean):Promise<PublishResultV1>{
+export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?:readonly string[],walked?:WalkV1,flat?:readonly string[],cold?:boolean,large?:LargePublishV1):Promise<PublishResultV1>{
  if(replica.settings.modeless&&(paths===undefined||paths.includes(".git/index")))await publishStage(replica,signal);
  const {worktree,concurrency,storeRoot,originId}=replica.settings;
  await refreshIgnore(replica);
  if(!await stateReady(replica))return {scanned:0,published:0,deleted:0,touched:0,bytes:0,retry:[]};
+ const retireLarge=large?.retireAfter(paths);
+ const stagePriority=paths===undefined||paths.includes(".git/index")?await publishPriorityStage(replica,signal):undefined,stageWork=stagePriority?.work;
+ const combined=(result:PublishResultV1):PublishResultV1=>stageWork===undefined?result:{
+  scanned:result.scanned+stageWork.scanned,published:result.published+stageWork.published,deleted:result.deleted+stageWork.deleted,
+  touched:result.touched+stageWork.touched,bytes:result.bytes+stageWork.bytes,retry:[...new Set([...stageWork.retry,...result.retry])]
+ };
  let found:ReplicaFoundV1,candidates:string[],scanned:number;
  if(paths===undefined){
   activityV1("walk");
@@ -1443,7 +1604,7 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
   const seen=await observe(replica,paths,flat);
   found=new ReplicaFoundV1(replica.book);for(const entry of seen.entries)found.push(entry);scanned=found.length;candidates=[...new Set(seen.missing)].filter(path=>{const state=replica.files.get(path);return state!==undefined&&state.operation!=="delete"&&!replica.queue.has(path)&&!(state.operation==="link"&&capable.get(replica)===false);});
  }
- if(paths===undefined&&!await stormChecked(replica,found,signal))return {scanned,published:0,deleted:0,touched:0,bytes:0,retry:[]};
+ if(paths===undefined&&!await stormChecked(replica,found,signal))return combined({scanned,published:0,deleted:0,touched:0,bytes:0,retry:[]});
  const deletions:string[]=[];
  await pool(candidates,concurrency,async path=>{
   if(!sharedV1(path,false,replica.ignore)){forget(replica,path);return;}
@@ -1479,7 +1640,7 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
   const prepared:(Prepared|undefined)[]=new Array(slice.length).fill(undefined);
   const seenMs=replica.settings.now();
   activityV1("hash");
-  await pool(slice,concurrency,async (job,index)=>{prepared[index]=await prepare(replica,job,signal);},signal);
+  await pool(slice,concurrency,async (job,index)=>{prepared[index]=await(large===undefined?prepare(replica,job,signal):large.prepare(job,signal));},signal);
   activityV1("publish");
   const events:FleetEventV1[]=[],updates:[string,StateEntry,boolean][]=[],chmods:string[]=[];
   const packsHere=new Set(slice.filter((job,index)=>prepared[index]!==undefined&&!prepared[index]!.touch&&job.entry.path.startsWith(packPrefix)&&job.entry.path.endsWith(".pack")).map(job=>job.entry.path)),openPacks=slice.some(job=>job.entry.path===midxPath)?(await unpublishedPacks(replica)).filter(path=>!packsHere.has(path)):[];
@@ -1557,11 +1718,10 @@ export async function publishOnceV1(replica:ReplicaV1,signal?:AbortSignal,paths?
  if(published>0||deleted>0)replica.activity++;
  if(published>0)replica.say({event:"published",count:published,bytes});
  if(deleted>0)replica.say({event:"published",stage:"delete",count:deleted});
- if(paths===undefined||paths.includes(".git/index")){
-  await publishStage(replica,signal);
- }
+ if(stagePriority!==undefined&&(stagePriority.settled||!stagePriority.attempted||published>0))await publishStage(replica,signal);
  await persist(replica,false);
- return {scanned,published,deleted,touched,bytes,retry};
+ retireLarge?.();
+ return combined({scanned,published,deleted,touched,bytes,retry});
 }
 
 const BUSY=Symbol("busy");
@@ -1620,11 +1780,14 @@ async function prune(replica:ReplicaV1,directory:string):Promise<void>{
  }
 }
 
-function refusalOf(replica:ReplicaV1,path:string,entry:FleetManifestEntryV1):string|undefined{
+function refusalOf(replica:ReplicaV1,path:string,entry:FleetManifestEntryV1,known:StateEntry|undefined):string|undefined{
  if(unsafePath(path))return "unsafe-path";
  const refused=refusePathV1(path);
  if(refused!==undefined)return refused;
- if(!sharedV1(path,false,replica.ignore))return "ignored";
+ if(!sharedV1(path,false,replica.ignore)){
+  const retired=entry.operation==="delete"&&known?.operation==="put"&&entry.hlc>known.hlc&&!gitPrivateV1(path)?packPartsV1(path):undefined;
+  if(retired===undefined||retired.stem==="multi-pack-index")return "ignored";
+ }
  if(entry.operation==="link"){const unsafe=linkRefusalV1(path,entry.target!);if(unsafe!==undefined)return unsafe;}
  const other=replica.folds.find(path);
  if(other!==undefined&&other!==path&&entry.operation!=="delete")return "case-collision";
@@ -1666,9 +1829,23 @@ async function onlyDirectories(directory:string):Promise<boolean>{
  }catch{return false;}
 }
 
-async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntryV1,signal?:AbortSignal):Promise<Outcome>{
+const stagedPuts=new WeakMap<ReplicaV1,ReturnType<typeof createStagedPutsV1>>();
+const stagedPutCurrent=(replica:ReplicaV1,path:string,put:{hlc:string;sha256:string;bytes:number;executable:boolean})=>{
+ const current=replica.manifest.get(path);
+ return replica.queue.has(path)&&current?.operation==="put"&&current.hlc===put.hlc&&current.sha256===put.sha256&&current.bytes===put.bytes&&Boolean(current.executable)===put.executable;
+};
+
+async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntryV1,incomingWorktree:boolean,signal?:AbortSignal):Promise<Outcome>{
+ let stages=stagedPuts.get(replica);
+ if(!stages){stages=createStagedPutsV1();stagedPuts.set(replica,stages);}
+ if(!stages.begin(path))return "queued";
+ try{const outcome=await materialiseWork(replica,path,entry,stages,incomingWorktree,signal);if(outcome!=="queued")await stages.invalidate(path);return outcome;}
+ finally{await stages.end(path);}
+}
+
+async function materialiseWork(replica:ReplicaV1,path:string,entry:FleetManifestEntryV1,stages:ReturnType<typeof createStagedPutsV1>,incomingWorktree:boolean,signal?:AbortSignal):Promise<Outcome>{
  const {worktree,storeRoot}=replica.settings,target=absolute(worktree,path),known=replica.files.get(path),seenMs=replica.settings.now();
- const refusal=refusalOf(replica,path,entry);
+ const refusal=refusalOf(replica,path,entry,known);
  if(refusal!==undefined){noteOnce(replica,`refused:${path}:${refusal}`,{event:"refused",path,reason:refusal,hlc:entry.hlc});return refusal==="case-collision"?"queued":"dropped";}
  let here:Stats|undefined;
  const ancestry=await ancestryOf(worktree,path,verifiedDirectories(replica));
@@ -1686,7 +1863,7 @@ async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntr
    const lose=await differs(target,here,known).catch(error=>{if(gone(error))return false;throw error;});
    if(lose&&conflictWinnerV1(here.mtimeMs,entry.hlc)==="local")return keepNewer(replica,path,entry,here);
    if(lose)await keepLost(replica,path,target,here,entry.hlc);
-   if(await retrying(()=>unlink(target).catch(error=>{if(!gone(error))throw error;}),0)===BUSY){noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"});return "queued";}
+   if(await retrying(()=>unlink(target).catch(error=>{if(!gone(error))throw error;}),0)===BUSY){noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"},incomingWorktree);return "queued";}
    await prune(replica,dirname(target));
   }
   setFile(replica,path,{hlc:entry.hlc,operation:"delete",mtimeMs:0});
@@ -1753,51 +1930,68 @@ async function materialise(replica:ReplicaV1,path:string,entry:FleetManifestEntr
   setFile(replica,path,{...plain(entry),mtimeMs:(await lstat(target)).mtimeMs});
   return "applied";
  }
- const temporary=join(replica.paths.tmp,token());
- await mkdir(replica.paths.tmp,{recursive:true});
- let verdict:"ok"|"corrupt",observedBytes=0;
- const report=entry.bytes!>=largeBlobBytesV1?throttled((done,total)=>replica.say({event:"progress",stage:"apply-blob",path,done,total})):undefined;
+ const source=blobPathV1(storeRoot,entry.sha256!),put={hlc:entry.hlc,sha256:entry.sha256!,bytes:entry.bytes!,executable:Boolean(entry.executable)};
+ const retainable=!path.startsWith(".git/")&&!entryGuardedV1(path);
+ const cached=retainable?await stages.find(path,put,source,seenMs):undefined;
+ const temporary=cached?.file??join(replica.paths.tmp,token());
+ const current=(path:string,wanted:typeof put)=>stagedPutCurrent(replica,path,wanted);
+ let kept=false,installed=false,stamp=0;
  try{
-  verdict=await copyVerifiedV1(blobPathV1(storeRoot,entry.sha256!),temporary,entry.sha256!,{signal,mode:!replica.settings.modeless&&entry.executable?0o755:0o644,clone:true,progress:(done,total)=>{
-   signal?.throwIfAborted();
-   if(done>observedBytes){observedBytes=done;replica.beat();}
-   report?.(done,total);
-  }});
- }catch(error){
-  if(signal?.aborted)throw error;
-  if(!gone(error))throw error;
-  if(!await storeReachableV1(storeRoot))return "queued";
-  wantBlob(replica,path,entry.sha256!);
-  noteOnce(replica,`blob-wanted:${path}`,{event:"blob-missing",path,hlc:entry.hlc,reason:entry.sha256});
-  return "queued";
- }
- if(verdict==="corrupt"){wantBlob(replica,path,entry.sha256!);noteOnce(replica,`blob-wanted:${path}`,{event:"blob-missing",path,hlc:entry.hlc,reason:"blob-corrupt"});return "queued";}
- if(entryGuardedV1(path)){
-  const why=await admitEntryScriptV1(temporary);
-  if(why!==undefined){await rm(temporary,{force:true});noteOnce(replica,`entry-guard:${path}`,{event:"refused",path,reason:`entry-guard: ${why}`,hlc:entry.hlc});return "dropped";}
-  resolved(replica,`entry-guard:${path}`);
- }
- let stamp=0;
- try{
+  const original=cached?.original??(retainable&&stages.admits(put)?await stagedPutStampV1(source,put.bytes):undefined);
+  if(!cached){
+   await mkdir(replica.paths.tmp,{recursive:true});
+   let verdict:"ok"|"corrupt",observedBytes=0;
+   const report=entry.bytes!>=largeBlobBytesV1?throttled((done,total)=>replica.say({event:"progress",stage:"apply-blob",path,done,total})):undefined;
+   try{
+    verdict=await copyVerifiedV1(source,temporary,entry.sha256!,{signal,mode:!replica.settings.modeless&&entry.executable?0o755:0o644,clone:true,progress:(done,total)=>{
+     signal?.throwIfAborted();
+     if(done>observedBytes){observedBytes=done;replica.beat();}
+     report?.(done,total);
+    }});
+   }catch(error){
+    if(signal?.aborted)throw error;
+    if(!gone(error))throw error;
+    if(!await storeReachableV1(storeRoot))return "queued";
+    wantBlob(replica,path,entry.sha256!);
+    noteOnce(replica,`blob-wanted:${path}`,{event:"blob-missing",path,hlc:entry.hlc,reason:entry.sha256});
+    return "queued";
+   }
+   if(verdict==="corrupt"){wantBlob(replica,path,entry.sha256!);noteOnce(replica,`blob-wanted:${path}`,{event:"blob-missing",path,hlc:entry.hlc,reason:"blob-corrupt"});return "queued";}
+   if(entryGuardedV1(path)){
+    const why=await admitEntryScriptV1(temporary);
+    if(why!==undefined){noteOnce(replica,`entry-guard:${path}`,{event:"refused",path,reason:`entry-guard: ${why}`,hlc:entry.hlc});return "dropped";}
+    resolved(replica,`entry-guard:${path}`);
+   }
+  }
+  const image=original!==undefined&&cached===undefined?await stagedPutStampV1(temporary,put.bytes):undefined;
   stamp=(await lstat(temporary)).mtimeMs;
   if(lose)await keepLost(replica,path,target,here!,entry.hlc);
   for(let attempt=0;;attempt++){
    try{await mkdir(dirname(target),{recursive:true});}
    catch(error){
     if(attempt<3&&(code(error)==="ENOTDIR"||code(error)==="EEXIST"||code(error)==="EINVAL")){await sleep(5*2**attempt);continue;}
-    if(code(error)==="ENOTDIR"||code(error)==="EEXIST"){await rm(temporary,{force:true});noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"parent-is-a-file"});return "queued";}
+    if(code(error)==="ENOTDIR"||code(error)==="EEXIST"){noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"parent-is-a-file"});return "queued";}
     throw error;
    }
    try{
-    if(await retrying(()=>rename(temporary,target),0)===BUSY){await rm(temporary,{force:true});noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"});return "queued";}
-    break;
+    signal?.throwIfAborted();
+    if(cached&&(await stagedPutStampV1(temporary,put.bytes)!==cached.image||cached.invalid||!current(path,put)))return "queued";
+    signal?.throwIfAborted();
+    if(await retrying(()=>rename(temporary,target),0)===BUSY){
+     kept=cached!==undefined?current(path,put)&&!cached.invalid&&signal?.aborted!==true:original!==undefined&&image!==undefined&&image===await stagedPutStampV1(temporary,put.bytes)&&await stages.retain(path,put,temporary,source,original,image,seenMs,current,signal);
+     noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"sharing-violation"},incomingWorktree);return "queued";
+    }
+    installed=true;break;
    }catch(error){
     if((gone(error)||code(error)==="EINVAL")&&attempt<3){await sleep(5*2**attempt);continue;}
-    if(code(error)==="EISDIR"||code(error)==="ENOTEMPTY"){await rm(temporary,{force:true});noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"directory-in-the-way"});return "queued";}
+    if(code(error)==="EISDIR"||code(error)==="ENOTEMPTY"){noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:"directory-in-the-way"});return "queued";}
     throw error;
    }
   }
- }catch(error){await rm(temporary,{force:true});throw error;}
+ }finally{
+  if(cached){if(installed)stages.applied(path,cached);else if(!kept)await stages.invalidate(path);}
+  else if(!installed&&!kept)await rm(temporary,{force:true});
+ }
  setFile(replica,path,{...plain(entry),mtimeMs:stamp,seenMs:stamp%1000===0?seenMs:Math.max(seenMs,stamp+racyMilliseconds)});
  releaseBlob(replica,path,entry.sha256!);
  return "applied";
@@ -1884,10 +2078,15 @@ async function retire(replica:ReplicaV1,id:number,winnerId:number):Promise<void>
  replica.say({event:"superseded",path,hlc:manifest.hlcAt(id),winner,reason:key===other?"case-collision":other.startsWith(`${key}/`)?"directory-replaces-file":"file-replaces-directory"});
 }
 
+const settledClashes=new WeakMap<ReplicaV1,Readonly<{items:Int32Array<ArrayBuffer>;files:number;manifest:number;folds:number}>>();
+
 /** 🕸️ Applies the structural conflict rule (`retiredV1`) to the queue and to this machine's tree: the rivals of an entry are the live manifest entries that clash with it, found through the queued and retired entries (indexed by fold key), the local registers (`folds`) and the ancestors in the manifest. A queued entry that loses is retired without being materialised; a queued winner retires the local copies of its older rivals first, so that the later writes never meet them; a retired entry whose winner is gone is queued again. Returns the ids that still have to be materialised. */
 async function settleClashes(replica:ReplicaV1,items:Int32Array<ArrayBuffer>):Promise<Int32Array<ArrayBuffer>>{
  const {book,manifest,files,folds}=replica,retired=retiredIds(replica);
  if(items.length===0&&retired.size===0)return items;
+ const before={items,files:files.writes,manifest:manifest.writes,folds:folds.writes},cached=settledClashes.get(replica),noRetirements=retired.size===0;
+ const sameCatalog=(proof:typeof before)=>proof.files===files.writes&&proof.manifest===manifest.writes&&proof.folds===folds.writes;
+ if(noRetirements&&cached!==undefined&&sameCatalog(cached)&&cached.items.length===items.length&&items.every((id,at)=>id===cached.items[at]))return items;
  const keys=new Map<number,string>(),byKey=new Map<string,number[]>(),below=new Map<string,number[]>(),scans=new Map<string,number[]>(),rivals=new Map<number,number[]>(),beaten=new Map<number,number|undefined>(),turn=yieldingV1();
  const push=(map:Map<string,number[]>,key:string,id:number):void=>{const list=map.get(key);if(list===undefined)map.set(key,[id]);else list.push(id);};
  let ordered:{key:string;id:number}[]|undefined;
@@ -1963,12 +2162,15 @@ async function settleClashes(replica:ReplicaV1,items:Int32Array<ArrayBuffer>):Pr
   retired.delete(id);files.clearId(id);replica.changed.add(filesKey(id));replica.dirty=true;
   enqueueId(replica,id);remaining.push(id);
  }
+ if(noRetirements&&retired.size===0&&remaining.length===items.length&&sameCatalog(before)){settledClashes.set(replica,before);return items;}
+ settledClashes.delete(replica);
  return Int32Array.from(remaining);
 }
 
 type Applied=Readonly<{applied:number;dropped:number;kept:readonly string[]}>;
 
-const cooling=new WeakMap<ReplicaV1,Map<string,Readonly<{until:number;attempts:number}>>>();
+type QueueCooldown=Readonly<{hlc:string;operation:FleetManifestEntryV1["operation"];until:number;attempts:number}>;
+const cooling=new WeakMap<ReplicaV1,Map<string,QueueCooldown>>();
 
 
 const orphanIndexMilliseconds=600_000,packBackoffFirstMilliseconds=500,packBackoffCapMilliseconds=30_000,packWaits=new WeakMap<ReplicaV1,{until:number;step:number;size:number}>();
@@ -1977,10 +2179,9 @@ const orphanIndexMilliseconds=600_000,packBackoffFirstMilliseconds=500,packBacko
 function packsComplete(replica:ReplicaV1):boolean{
  const {manifest,files,queue,book}=replica;
  for(const id of queue.snapshot())if(manifest.operationAt(id)!=="delete"&&book.name(id).startsWith(objectsPrefix))return false;
- for(const id of manifest.ids()){
+ for(const id of book.packIndexIds()){
   if(manifest.operationAt(id)!=="put")continue;
   const path=book.name(id);
-  if(!path.startsWith(packPrefix)||!path.endsWith(".idx"))continue;
   const pack=book.find(`${path.slice(0,-4)}.pack`);
   if(pack!==undefined&&manifest.operationAt(pack)==="put"){if(files.live(pack))continue;return false;}
   if(replica.settings.now()-parseHlcV1(manifest.entryAt(id).hlc).ms>=orphanIndexMilliseconds)continue;
@@ -1992,49 +2193,105 @@ function packsComplete(replica:ReplicaV1):boolean{
 const smallSharedBytes=1_048_576;
 
 /** 🩹 Compares the disk with the registers for every shared `.git` path (`HEAD`, `packed-refs`, `shallow`, `refs/**`, `objects/**`) and queues what the fleet holds but the disk lacks or holds differently: a missing file of any of them, a pack file (`objects/pack/**`) of another size, a `HEAD`, `packed-refs`, `shallow` or ref file of another content when the disk still equals what this machine applied (a local change that is not published yet is left alone). Loose objects are checked for existence only: another git may compress the same object differently. Returns how many paths it queued; the next follow materialises them from the store. */
-export async function healGitV1(replica:ReplicaV1,signal?:AbortSignal):Promise<number>{
- const {manifest,files,queue,book,settings}=replica;
+type GitMetadataRead=<T>(read:()=>Promise<T>)=>Promise<T>;
+export async function healGitV1(replica:ReplicaV1,signal?:AbortSignal,metadata?:GitMetadataRead):Promise<number>{
  let count=0;
- for(const id of manifest.ids()){
-  const path=book.name(id);
-  if(!(path===".git/HEAD"||path===".git/packed-refs"||path===".git/shallow"||path.startsWith(".git/refs/")||path.startsWith(objectsPrefix))||queue.hasId(id)||manifest.operationAt(id)!=="put"||!sharedV1(path,false,replica.ignore))continue;
-  signal?.throwIfAborted();
-  const target=absolute(settings.worktree,path),info=await lstat(target).catch(()=>undefined),entry=manifest.entryAt(id);
-  let bad=info===undefined;
-  if(info!==undefined&&info.isFile()){
-   if(path.startsWith(packPrefix))bad=info.size!==entry.bytes;
-   else if(!path.startsWith(objectsPrefix)&&info.size<=smallSharedBytes&&files.live(id)&&entry.sha256!==undefined){
-    const hash=(await hashFileV1(target)).sha256;
-    bad=hash!==entry.sha256&&hash===files.entryAt(id).sha256;
-   }
-  }
-  if(!bad)continue;
-  forget(replica,path);enqueueId(replica,id);count++;
+ for(const id of replica.manifest.ids()){
+  const path=gitHealPathV1(replica,id);
+  if(path!==undefined&&await healGitPathV1(replica,id,path,signal,metadata))count++;
  }
  return count;
 }
 
+/** 🗺️ Selects the same shared Git metadata and object puts as immediate repair. */
+function gitHealPathV1(replica:ReplicaV1,id:number):string|undefined{
+ if(replica.manifest.operationAt(id)!=="put"||replica.queue.hasId(id))return;
+ const path=replica.book.name(id);
+ if((path===".git/HEAD"||path===".git/packed-refs"||path===".git/shallow"||path.startsWith(".git/refs/")||path.startsWith(objectsPrefix))&&sharedV1(path,false,replica.ignore))return path;
+}
+
+/** 🔎️ Repairs one eligible leaf under its current replica turn. */
+async function healGitPathV1(replica:ReplicaV1,id:number,path:string,signal?:AbortSignal,metadata:GitMetadataRead=read=>read()):Promise<boolean>{
+ const {manifest,files,settings}=replica;
+ signal?.throwIfAborted();
+ const target=absolute(settings.worktree,path),info=await metadata(()=>lstat(target).catch(()=>undefined));
+ signal?.throwIfAborted();
+ const entry=manifest.entryAt(id);
+ let bad=info===undefined;
+ if(info!==undefined&&info.isFile()){
+  if(path.startsWith(packPrefix))bad=info.size!==entry.bytes;
+  else if(!path.startsWith(objectsPrefix)&&info.size<=smallSharedBytes&&files.live(id)&&entry.sha256!==undefined){
+   const hash=(await hashFileV1(target)).sha256;
+   signal?.throwIfAborted();
+   bad=hash!==entry.sha256&&hash===files.entryAt(id).sha256;
+  }
+ }
+ if(!bad)return false;
+ forget(replica,path);enqueueId(replica,id);
+ return true;
+}
+
+type GitHealSweepV1={next:number;end:number;queued:number};
+const gitHealSliceRows=2048;
+
+/** 🧹️ Continues a healthy sweep in ID order without a full table snapshot or work left outside the turn. */
+async function healGitSliceV1(replica:ReplicaV1,sweep:GitHealSweepV1,signal:AbortSignal,metadata?:GitMetadataRead):Promise<boolean>{
+ const first=sweep.next,end=Math.min(sweep.end,first+gitHealSliceRows),started=performance.now();
+ while(sweep.next<end){
+  signal.throwIfAborted();
+  const id=sweep.next,path=gitHealPathV1(replica,id);
+  if(path!==undefined&&await healGitPathV1(replica,id,path,signal,metadata))sweep.queued++;
+  sweep.next++;
+  if((path!==undefined||((sweep.next-first)&63)===0)&&performance.now()-started>=sweepSliceMilliseconds)break;
+ }
+ return sweep.next===sweep.end;
+}
+
 export async function applyQueue(replica:ReplicaV1,signal:AbortSignal|undefined,stage?:string):Promise<Applied>{
  replica.applying++;
- try{return await applyQueueWork(replica,signal,stage);}finally{replica.applying--;}
+ try{
+  signal?.throwIfAborted();
+  await stagedPuts.get(replica)?.sweep(replica.settings.now(),(path,put)=>stagedPutCurrent(replica,path,put));
+  return await applyQueueWork(replica,signal,stage);
+ }finally{
+  replica.applying--;
+  if(signal?.aborted)await stagedPuts.get(replica)?.clear();
+ }
+}
+
+/** 🧩️ Applies author stage registers through their existing Git object and index custody checks. */
+async function applyStage(replica:ReplicaV1,signal:AbortSignal|undefined,hydrateStageObjects?:()=>Promise<void>):Promise<void>{
+ try{await applyIndexV1(indexHost(replica),signal,hydrateStageObjects);}
+ catch(error){if(signal?.aborted)throw error;noteOnce(replica,`error:git:${messageOf(error)}`,{event:"error",stage:"git",message:messageOf(error)});}
 }
 
 async function applyQueueWork(replica:ReplicaV1,signal:AbortSignal|undefined,stage?:string):Promise<Applied>{
  const waiting=packWaits.get(replica),paused=waiting!==undefined&&replica.settings.now()<waiting.until&&replica.queue.size===waiting.size;
  let items=replica.queue.snapshot().filter(id=>!indexRealmV1(replica.book.name(id))&&!(paused&&replica.manifest.operationAt(id)==="delete"&&replica.book.name(id).startsWith(objectsPrefix)));
- if(paused&&items.length===0)return {applied:0,dropped:0,kept:[]};
+ if(paused&&items.length===0){await applyStage(replica,signal);return {applied:0,dropped:0,kept:[]};}
  verifiedDirectories(replica).clear();
  const kept:string[]=[],appliedPaths:string[]=[];
  try{items=await settleClashes(replica,items);}
  catch(error){if(signal?.aborted)throw error;noteOnce(replica,`error:clash:${messageOf(error)}`,{event:"error",stage:"clash",message:messageOf(error)});}
- const removals=items.filter(id=>replica.manifest.operationAt(id)==="delete"),creations=items.filter(id=>replica.manifest.operationAt(id)!=="delete");
+ const stageInputs={removals:[] as number[],creations:[] as number[]},worktree={removals:[] as number[],creations:[] as number[]},later:number[]=[],otherObjects:number[]=[];
+ const host=indexHost(replica),pending=host.pending(),stageObjects=stageObjectsForApplyV1(host,pending),stagedPaths=new Set<string>();
+ for(const path of pending.keys())if(path.startsWith(INDEX_PREFIX_V1))stagedPaths.add(path.slice(INDEX_PREFIX_V1.length));
+ for(const id of items){
+  const path=replica.book.name(id),deleted=replica.manifest.operationAt(id)==="delete";
+  if(path.startsWith(objectsPrefix)){
+   if(deleted){later.push(id);continue;}
+   if(stageObjects!==undefined&&!stageObjects.has(path)){otherObjects.push(id);continue;}
+  }
+  const group=path.startsWith(".git/")||stagedPaths.has(path)?stageInputs:worktree;
+  (deleted?group.removals:group.creations).push(id);
+ }
  let applied=0,dropped=0,done=0;
- const work=async(id:number):Promise<void>=>{
-  const path=replica.book.name(id),entry=replica.manifest.entryAt(id),cool=cooling.get(replica)??new Map<string,Readonly<{until:number;attempts:number}>>(),wait=cool.get(path);
+ const attempt=(incomingWorktree:boolean)=>async(id:number):Promise<void>=>{
+  const path=replica.book.name(id),entry=replica.manifest.entryAt(id),cool=cooling.get(replica)??new Map<string,QueueCooldown>(),prior=cool.get(path),wait=prior?.hlc===entry.hlc&&prior.operation===entry.operation?prior:undefined;
   cooling.set(replica,cool);
   if(wait!==undefined&&replica.settings.now()<wait.until)return;
   let outcome:Outcome;
-  try{outcome=await materialise(replica,path,entry,signal);}
+  try{outcome=await materialise(replica,path,entry,incomingWorktree,signal);}
   catch(error){
    if(signal?.aborted)throw error;
    if(sharing(error))noteOnce(replica,`blocked:${path}`,{event:"blocked",path,reason:code(error)});
@@ -2042,16 +2299,29 @@ async function applyQueueWork(replica:ReplicaV1,signal:AbortSignal|undefined,sta
    else noteOnce(replica,`error:${path}:${messageOf(error)}`,{event:"error",path,message:messageOf(error)});
    outcome="queued";
   }
-  if(outcome==="queued"&&(replica.noted.has(`blocked:${path}`)||replica.noted.has(`blob-wanted:${path}`))){const attempts=(wait?.attempts??0)+1;cool.set(path,{attempts,until:replica.settings.now()+Math.min(30_000,250*2**attempts)});}
+  if(outcome==="queued"&&(replica.noted.has(`blocked:${path}`)||replica.noted.has(`blob-wanted:${path}`))){const attempts=(wait?.attempts??0)+1;cool.set(path,{hlc:entry.hlc,operation:entry.operation,attempts,until:replica.settings.now()+Math.min(30_000,250*2**attempts)});}
   else cool.delete(path);
-  if(outcome==="applied"){applied++;appliedPaths.push(path);if(parseHlcV1(entry.hlc).ms>=replica.startedMs)replica.latency.apply(replica.settings.now()-parseHlcV1(entry.hlc).ms);resolved(replica,`blocked:${path}`);dequeue(replica,path);}
+  if(outcome==="applied"){
+   const pending=replica.queue.hasId(id);
+   applied++;appliedPaths.push(path);if(parseHlcV1(entry.hlc).ms>=replica.startedMs)replica.latency.apply(replica.settings.now()-parseHlcV1(entry.hlc).ms);resolved(replica,`blocked:${path}`);dequeue(replica,path);
+   if(pending&&!signal?.aborted)replica.beat();
+  }
   else if(outcome==="dropped"){dropped++;dequeue(replica,path);}
   else if(outcome==="kept"){kept.push(path);dequeue(replica,path);}
   if(stage!==undefined&&++done%200===0)replica.say({event:"progress",stage,done,total:items.length});
  };
- const dependent=(id:number):boolean=>replica.book.name(id).startsWith(objectsPrefix),later=removals.filter(dependent);
- await pool(removals.filter(id=>!dependent(id)),replica.settings.concurrency,work,signal);
- await pool(creations,replica.settings.concurrency,work,signal);
+ const work=attempt(false),worktreeWork=attempt(true);
+ const hydrateOtherObjects=async():Promise<void>=>{
+  if(otherObjects.length===0)return;
+  await pool(otherObjects,replica.settings.concurrency,work,signal);
+  otherObjects.length=0;
+ };
+ await pool(stageInputs.removals,replica.settings.concurrency,work,signal);
+ await pool(stageInputs.creations,replica.settings.concurrency,work,signal);
+ await applyStage(replica,signal,otherObjects.length===0?undefined:hydrateOtherObjects);
+ await hydrateOtherObjects();
+ await pool(worktree.removals,replica.settings.concurrency,worktreeWork,signal);
+ await pool(worktree.creations,replica.settings.concurrency,worktreeWork,signal);
  if(later.length>0){
   if(packsComplete(replica)){packWaits.delete(replica);await pool(later,replica.settings.concurrency,work,signal);}
   else{
@@ -2062,8 +2332,6 @@ async function applyQueueWork(replica:ReplicaV1,signal:AbortSignal|undefined,sta
  }else if(!paused)packWaits.delete(replica);
  if(stage!==undefined)replica.say({event:"progress",stage,done:items.length,total:items.length});
  if(applied>0){replica.activity++;replica.hot.noteMany(appliedPaths,applied,replica.settings.now());noteViewDirtV1(replica,appliedPaths);replica.say({event:"applied",count:applied});}
- try{await applyIndexV1(indexHost(replica),signal);}
- catch(error){if(signal?.aborted)throw error;noteOnce(replica,`error:git:${messageOf(error)}`,{event:"error",stage:"git",message:messageOf(error)});}
  return {applied,dropped,kept};
 }
 
@@ -2217,16 +2485,13 @@ async function followHeads(replica:ReplicaV1,origins:readonly string[],signal?:A
  return heads;
 }
 
-async function followSlice(replica:ReplicaV1,signal?:AbortSignal,reuse:boolean=false):Promise<FollowResultV1&Readonly<{more:boolean}>>{
- const {storeRoot,originId}=replica.settings;
- await refreshIgnore(replica);
- const origins=(reuse?await originsOf(replica):await listOriginsV1(storeRoot)).filter(origin=>origin!==originId),heads=await followHeads(replica,origins,signal);
- await jumpIfFar(replica,heads);
+async function ingestFollowSlice(replica:ReplicaV1,origins:readonly string[],heads:ReadonlyMap<string,FleetHeadV1|undefined>,signal?:AbortSignal):Promise<Readonly<{events:number;more:boolean}>>{
+ const {storeRoot}=replica.settings;
  let events=0,more=false;
  for(const origin of origins){
   signal?.throwIfAborted();
   const head=heads.get(origin),cursor=replica.cursors[origin];
-  if(head===undefined||cursor!==undefined&&cursor.segment===head.segment&&cursor.bytes===head.bytes)continue;
+  if(head===undefined||!behind(cursor,head))continue;
   const wall=replica.settings.now(),until=replica.held.get(origin);
   if(until!==undefined&&wall<until)continue;
   let read:Spans|undefined;
@@ -2243,31 +2508,41 @@ async function followSlice(replica:ReplicaV1,signal?:AbortSignal,reuse:boolean=f
   }
   if(read===undefined)continue;
   resolved(replica,`rejoin:${origin}`);
-  const taken=admit(read,replica.cursors[origin],wall);
+  signal?.throwIfAborted();
+  const after=replica.cursors[origin],taken=admit(read,after,wall);
   if(taken.late===undefined){replica.held.delete(origin);resolved(replica,`skew:${origin}`);}
   else{replica.held.set(origin,parseHlcV1(taken.late.hlc).ms-futureMilliseconds);noteOnce(replica,`skew:${origin}`,skew(taken.late,origin,wall));}
   ingest(replica,origin,taken.events);
   const advanced=taken.cursor!==undefined&&(cursor===undefined||taken.cursor.segment!==cursor.segment||taken.cursor.bytes!==cursor.bytes);
-  if(taken.cursor!==undefined)replica.cursors[origin]=taken.cursor;
+  if(taken.cursor!==undefined){
+   replica.cursors[origin]=taken.cursor;
+   if(cursorAheadV1(taken.cursor,after??{segment:0,bytes:0})&&!signal?.aborted)replica.beat();
+  }
   events+=taken.events.length;
   if(taken.late===undefined&&advanced&&behind(replica.cursors[origin],head))more=true;
  }
- const {applied,dropped,kept}=await applyQueue(replica,signal);
- if(kept.length>0)await publishOnceV1(replica,signal,kept);
- await persist(replica,false);
- return {events,applied,dropped,kept:kept.length,queued:replica.queue.size,more};
+ return {events,more};
 }
 
-/** 📥️ One follow round: learns which origins published from the flat heads (one `stat` of `v1/heads` when idle, see `readFlatHeadsV1`; origins without a flat head and, every 10 seconds, all origins are polled through `head.json`), reads the new events of every other origin from its cursor (byte offset) and at most one segment and 1024 events per origin and slice, merges the clock, folds, and materialises each winner through `.cache/f/tmp` and a verified rename; overwritten unpublished local edits are kept in `.cache/f/lost/<hlc>/<path>`; state is updated so the observer never echoes a change. An origin that is far behind is consumed slice by slice: the round continues with the next slice only while less than half a second has passed, so the caller regains control (to publish local changes, to attest) after a bounded time whatever the backlog. An origin whose next event is more than 60 s ahead of the wall clock is consumed only up to that event (the cursor stays in front of it, `clock-skew` is reported once per outage, the local clock is not merged with it) and is read again once the wall clock has caught up. */
+/** 📥️ Folds bounded journal slices against one head snapshot before materialising their winners. An ignore-file change settles before the next intake pass. */
 export async function followOnceV1(replica:ReplicaV1,signal?:AbortSignal,reuse:boolean=false):Promise<FollowResultV1>{
- const started=Date.now();
- let events=0,applied=0,dropped=0,kept=0;
- for(;;){
-  const slice=await followSlice(replica,signal,reuse);
-  events+=slice.events;applied+=slice.applied;dropped+=slice.dropped;kept+=slice.kept;
-  if(!slice.more||Date.now()-started>=followBudgetMilliseconds)break;
- }
- return {events,applied,dropped,kept,queued:replica.queue.size};
+ const started=Date.now(),{storeRoot,originId}=replica.settings;
+ try{
+  signal?.throwIfAborted();
+  await refreshIgnore(replica);
+  const origins=(reuse?await originsOf(replica):await listOriginsV1(storeRoot)).filter(origin=>origin!==originId),heads=await followHeads(replica,origins,signal);
+  await jumpIfFar(replica,heads);
+  let events=0;
+  for(;;){
+   const slice=await ingestFollowSlice(replica,origins,heads,signal);
+   events+=slice.events;
+   if(!slice.more||replica.queue.has(".gitignore")||Date.now()-started>=followBudgetMilliseconds)break;
+  }
+  const {applied,dropped,kept}=await applyQueue(replica,signal);
+  if(kept.length>0)await publishOnceV1(replica,signal,kept);
+  await persist(replica,false);
+  return {events,applied,dropped,kept:kept.length,queued:replica.queue.size};
+ }catch(error){if(signal?.aborted)await stagedPuts.get(replica)?.clear();throw error;}
 }
 
 /** 🎲️ The wait until the next safety-net scan in milliseconds: `scanSeconds` spread uniformly over 75 % to 125 % (`random` in [0,1)), so that machines started together (a fleet-wide restart, a power cut) do not scan their trees in the same second for ever. */
@@ -2349,13 +2624,16 @@ async function maintain(replica:ReplicaV1,options:ReplicaOptionsV1):Promise<void
 }
 
 /** 🏃️ The long-running daemon. Changes are found by four tiers that never depend on operating-system file events: a drop directory of hints (`.cache/f/hints/`, polled every 50 ms, published at once), the hot set (every path published, applied, hinted or seen by the watcher in the last ten minutes, re-`lstat`ed about every 300 ms together with the directories that contain them and the stat signature of `.git/index`), the directory sweep (a duty-limited `lstat` of every known shared directory, about 12 % of one core at most and never more often than every 2 s, which re-lists only directories whose modification time moved and so finds creates, deletes and atomic-rename saves anywhere within seconds) and the full file sweep every `scanSeconds` (jittered, in the background; in-place edits of cold files), which also runs at start, after an outage, after `.gitignore` changes and after a hint or watcher overflow. The recursive native watch (when the platform has it and `watch` is not `false`) with a 150 ms debounce stays an accelerator. Every tier hands paths to one publish step per round, so a path found twice is published once, and each tier works in slices of a few milliseconds so follow and apply never wait for it. Follow runs every `pollMilliseconds`; the sync switch, the retirement record, repair requests, store reachability and the origin list are read at slower cadences; an unreachable store is reported once per outage while local work continues; every 5 s (and at most once a second when a value changed) it writes its attestation into the store, also while sync is off, and when the code on disk has differed from the code at start for 5 s it persists, reports `restarting` and returns so that the service manager starts the new code; while the own origin carries a retirement record with `retired: true` it reports one `retired` event, publishes and applies nothing and keeps attesting with sync off, until `retire --undo` re-admits it; `.gitignore` changes reload the matcher; `.cache/f/sync.json` with `enabled: false` holds publish and apply until the file is removed; cancelling the signal persists state and releases the lock.  Every store turn runs under a deadline guard: a store call that a hard mount blocks cannot be cancelled, so when the store has not answered a probe within `storeDeadlineMilliseconds` (10 s) the round is abandoned and aborted, `store-unreachable` is reported (reason `stalled`), no further store call is issued while one is outstanding, the loop, the hint channel, the attestation to memory and the state persistence keep running, and the daemon resumes by itself when the store answers again. New code is adopted only after a fresh process proved that it starts (`restart-refused` otherwise), after a deterministic per-origin delay of 0 to 60 s and while the incoming queue is empty. Recurring failures are counted per kind, announced at most once a minute and shown in `status`, the health file and the attestation. */
-export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:ReplicaSinkV1=()=>{}):Promise<void>{
+export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:ReplicaSinkV1=()=>{}):Promise<void>{
+ const restartSignal=new AbortController(),signal=AbortSignal.any([outer,restartSignal.signal]);
  await awaitWorktreeAccessV1({worktree:options.worktree,storeRoot:options.storeRoot,originId:options.originId},signal,(state,error)=>{sink({version:1,event:"blocked",reason:"worktree-access-denied",path:options.worktree,message:`${state} ${error}`});});
  const replica=await openReplicaV1(options,sink),settings=replica.settings,touched=new Set<string>(),hinted=new Set<string>();
  const hintEvery=options.hintMilliseconds??hintMilliseconds,hotEvery=options.hotMilliseconds??hotMilliseconds,sweepEvery=options.sweepMilliseconds??sweepMilliseconds,slow=Math.max(settings.pollMilliseconds,Math.min(1000,settings.pollMilliseconds*4));
- let rounds=0,walk:Promise<void>|undefined,walked:WalkV1|undefined,wake:(()=>void)|undefined,lastTouch=0,full=false,nextWalk=0,outage=false,recovering=true,watcher:ReturnType<typeof watch>|undefined,suspended=false,ignoreSeen=replica.ignoreHash,indexSeen:string|undefined,hinting=false,settledAt=-1,failed=0,healthAt=-Infinity,maintainedAt=-Infinity,tendedAt=-Infinity;
+ let rounds=0,walk:Promise<void>|undefined,walked:WalkV1|undefined,wake:(()=>void)|undefined,lastTouch=0,full=false,nextWalk=0,outage=false,recovering=true,watcher:ReturnType<typeof watch>|undefined,suspended=false,ignoreSeen=replica.ignoreHash,hinting=false,settledAt=-1,failed=0,healthAt=-Infinity,maintainedAt=-Infinity,tendedAt=-Infinity;
+ const stageWatch={signature:undefined as string|undefined,pollAt:0,retryAt:Infinity,attempts:0};
  const hot={list:[] as string[],dirs:[] as string[],cursor:0,active:false,spent:0,next:0},sweep={active:false,spent:0,next:0,startedMs:0},file={active:false,ids:new Int32Array(0),index:0,spent:0,next:0,startedMs:0,drift:false},walkEvery=options.walkSeconds??defaultWalkSeconds,walkNext=(cost:number):number=>{const delay=nextDelayV1(scanDelayV1(walkEvery),cost,walkDuty);replica.latency.tiers.record("walk",cost,delay);return settings.now()+delay;};
  if(replica.dirs.size>0)nextWalk=settings.now()+scanDelayV1(walkEvery);
+ const large=largePublishV1(replica,signal,path=>{if(hinted.size<hotLimit)hinted.add(path);else full=true;wake?.();});
  const pause=(milliseconds:number)=>new Promise<void>(done=>{
   const finish=()=>{clearTimeout(timer);signal.removeEventListener("abort",finish);wake=undefined;done();};
   const timer=setTimeout(finish,milliseconds);
@@ -2370,10 +2648,32 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
  replica.beat=()=>{guard.beat();};
  const baseDrift=options.driftMilliseconds??120_000,drift={at:settings.now()+baseDrift,wait:baseDrift,attempts:0};
  const sound={at:0,healAt:settings.now()+(options.gitHealMilliseconds??600_000),stageHeal:settings.now()+60_000,broken:null as GitBrokenV1|null};
- let rescueAt=0;
+ let rescueAt=0,gitHeal:GitHealSweepV1|undefined;
+ const armProgressExit=(globalThis as unknown as Record<symbol,unknown>)[Symbol.for("semio.fleet.gitProgressRestart")];
+ const progressFile=join(replica.paths.directory,"boot","git-progress-restart.json");
+ const progress=options.lock===false||typeof armProgressExit!=="function"?undefined:createReplicaProgressWatchV1({
+  pid:process.pid,signal,
+  probe:async()=>{
+   const [store,lock]=await Promise.all([(options.storeProbe??storeReachableV1)(settings.storeRoot),readLock(replica.paths.lock)]);
+   return {store:store&&guard.state()==="ok",local:lock?.pid===process.pid&&!lock.stale};
+  },
+  prepare:async receipt=>{
+   const row=await lstat(progressFile).catch(error=>{if(!gone(error))throw error;return undefined;});
+   if(row!==undefined&&(!row.isFile()||row.isSymbolicLink()||row.size>4096))return false;
+   if(!replicaProgressRestartDueV1(await readJson(progressFile),Date.now())||signal.aborted)return false;
+   await writeJson(replica.paths,progressFile,receipt);return true;
+  },
+  restart:()=>{
+   if(!armProgressExit())return;
+   restart=true;restartSignal.abort(Error("Owned Git metadata progress expired"));wake?.();
+  },
+ });
+ const metadata=(scope:ReplicaProgressScopeV1):GitMetadataRead=>read=>progress===undefined?read():progress.run(scope,read);
+ const healthMetadata=metadata("git-health-metadata"),healMetadata=metadata("git-heal-metadata");
  const watchGit=async(signal:AbortSignal):Promise<void>=>{
   const now=settings.now(),id=replica.manifest.idOf(".git/HEAD");
-  if(now<sound.at||id===undefined||replica.manifest.operationAt(id)!=="put")return;
+  if(id===undefined||replica.manifest.operationAt(id)!=="put"){gitHeal=undefined;return;}
+  if(now<sound.at)return;
   sound.at=now+(options.gitCheckMilliseconds??30_000);
   if(now>=rescueAt){
    rescueAt=now+(options.rescueMilliseconds??60_000);
@@ -2382,16 +2682,24 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
    if(rescued.objects>0||rescued.retired>0){replica.say({event:"repaired",stage:"git",reason:"local-packs",count:rescued.objects});if(rescued.objects>0)full=true;}
   }
   activityV1("git");
-  let reason=await gitBrokenV1(settings.worktree,signal);
-  if(reason==="config-unreadable"&&await repairGitConfigV1(settings.worktree,now,signal)){replica.say({event:"repaired",stage:"git",reason:"git-config"});reason=await gitBrokenV1(settings.worktree,signal);}
+  let reason=await gitBrokenV1(settings.worktree,signal,healthMetadata);signal.throwIfAborted();
+  if(reason==="config-unreadable"&&await repairGitConfigV1(settings.worktree,now,signal)){replica.say({event:"repaired",stage:"git",reason:"git-config"});reason=await gitBrokenV1(settings.worktree,signal,healthMetadata);signal.throwIfAborted();}
   if(sound.broken!==null&&sound.broken!==reason){resolved(replica,`git-broken-${sound.broken}`);replica.say({event:"repaired",stage:"git",reason:"git-sound"});}
   sound.broken=reason;
-  const unstaged=await lstat(join(settings.worktree,".git","index")).then(()=>false,()=>true),stage=await stageHealthV1(settings.worktree);
-  if(reason===null&&!unstaged&&now<sound.healAt&&!(stage.reason==="objects-missing"&&now>=sound.stageHeal)){return;}
+  const unstaged=await healthMetadata(()=>lstat(join(settings.worktree,".git","index")).then(()=>false,()=>true)),stage=await stageHealthV1(settings.worktree);
+  signal.throwIfAborted();
+  if(reason===null&&!unstaged&&!(stage.reason==="objects-missing"&&now>=sound.stageHeal)){
+   if(gitHeal===undefined&&now>=sound.healAt){
+    gitHeal={next:0,end:replica.book.count,queued:0};
+    sound.healAt=now+(options.gitHealMilliseconds??600_000);
+   }
+   return;
+  }
+  gitHeal=undefined;
   if(stage.reason==="objects-missing")sound.stageHeal=now+(options.gitHealMilliseconds??600_000);
   if(reason!==null)noteOnce(replica,`git-broken-${reason}`,{event:"blocked",path:".git/HEAD",reason:`git-broken-${reason}`});
   sound.healAt=now+(options.gitHealMilliseconds??600_000);
-  const queued=await healGitV1(replica,signal);
+  const queued=await healGitV1(replica,signal,healMetadata);
   if(unstaged)await publishIndexV1(indexHost(replica),signal);
   if(queued>0){replica.say({event:"repaired",stage:"git",count:queued,...reason===null?{}:{reason}});full=true;}
  };
@@ -2408,7 +2716,7 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
  };
  const switchOn=cached(slow,()=>syncEnabledV1(settings.worktree)),reachable=cached(slow,()=>guard.reachable()),retirement=cached(slow*2,()=>readRetirementV1(settings.storeRoot,settings.originId)),repairAsked=cached(slow,()=>repairRequestedV1(settings.worktree));
  let everUp=false;
- const down=()=>{if(!outage){outage=true;replica.say({event:"store-unreachable",path:settings.storeRoot,reason:everUp?guard.state():"waiting-for-mount"});}};
+ const down=()=>{large.reset();if(!outage){outage=true;replica.say({event:"store-unreachable",path:settings.storeRoot,reason:everUp?guard.state():"waiting-for-mount"});}};
  let syncOn=true,restart=false,parked=false,sidecarsAdmitted=false;
  const history={current:await readRunHistoryV1(settings.worktree)};
  const running=options.codeRoot??codeRootV1,watching=options.watchRoot??running;
@@ -2431,7 +2739,7 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
   finally{clearTimeout(timer);}
  };
  const admission=createAdmissionStateV1();
- const attester=createAttesterV1({storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,now:settings.now,heartbeatMilliseconds:options.attestMilliseconds,stableMilliseconds:options.restartStableMilliseconds,codeRoot:options.codeRoot,watchRoot:options.watchRoot,check:options.selfCheck??checkCode,admit:options.admit??(options.selfCheck===undefined?(digest,aborted)=>admitCodeV1(replica,{digest,running:attester.running(),moduleRoot:watching,bounded,signal:aborted,state:admission}):undefined),fallback:options.fallback,returnMilliseconds:options.returnMilliseconds,busy:()=>replica.queue.size>0||replica.applying>0,jitterSpanMilliseconds:options.restartJitterMilliseconds,minimumUptimeMilliseconds:options.minimumUptimeMilliseconds,refused:(digest,reason)=>{replica.say({event:"restart-refused",reason:digest,message:reason});if(blamesCheckV1(reason))void recordRefusedV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});if(blamesCheckV1(reason))void publishRefusalV1(settings.storeRoot,settings.originId,{digest,reason},settings.now()).catch(()=>{});},suspect:(digest,runningDigest)=>suspectCodeV1(history.current,runningDigest,digest),suspicious:(digest,reason)=>{replica.say({event:"code-reverted",reason:digest,message:reason});},ran:digest=>{void recordRunV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});},failures:()=>{const stage=stageRecordedV1(settings.worktree);return stage===null||stage.state==='shared'||stage.reason===null?replica.failures.diagnostics():[...replica.failures.diagnostics(7),{kind:`stage-${stage.reason}`,count:1,lastMs:settings.now()}];},store:work=>attestStore.call(work),git:signal=>(options.gitState??gitStateV1)(settings.worktree,signal),view:async(signal,request)=>{if(request!==undefined&&options.gitView===undefined){const next=await gitViewDeltaV1(settings.worktree,request.previous as GitViewV1,{paths:request.paths,restage:request.restage},signal);if(next!==null)return next;}return (options.gitView??gitViewV1)(settings.worktree,signal);},changes:()=>takeViewDirtV1(replica),unsettled:()=>[...touched,...hinted,...(full?[".gitignore"]:[])],viewMilliseconds:options.viewMilliseconds,viewDebounceMilliseconds:options.viewDebounceMilliseconds,deltaDebounceMilliseconds:options.deltaDebounceMilliseconds,deltaLimit:options.deltaLimit,guards:async signal=>{if(options.gitGuards!==undefined)return options.gitGuards(settings.worktree,signal);const found=await gitGuardsV1(settings.worktree,{signal,modeless:settings.modeless});if(found===null)return null;const {samples:_,...guards}=found;return guards;},guardsMilliseconds:options.guardsMilliseconds,guardsMinimumMilliseconds:options.guardsMinimumMilliseconds,reachable:()=>attestStore.reachable(),prepare:()=>ensureHome(replica),latency:()=>replica.latency.report(),timed:(name,cost,delay)=>{replica.latency.tiers.record(name,cost,delay);},viewSeed:()=>seedView(replica),onView:view=>{rememberV1(replica,"view",encoder.encode(JSON.stringify(view)));}});
+ const attester=createAttesterV1({storeRoot:settings.storeRoot,originId:settings.originId,groupId:settings.groupId,now:settings.now,heartbeatMilliseconds:options.attestMilliseconds,stableMilliseconds:options.restartStableMilliseconds,codeRoot:options.codeRoot,watchRoot:options.watchRoot,check:options.selfCheck??checkCode,admit:options.admit??(options.selfCheck===undefined?(digest,aborted)=>admitCodeV1(replica,{digest,running:attester.running(),moduleRoot:watching,bounded,signal:aborted,state:admission}):undefined),fallback:options.fallback,returnMilliseconds:options.returnMilliseconds,busy:()=>replica.queue.size>0||replica.applying>0,jitterSpanMilliseconds:options.restartJitterMilliseconds,minimumUptimeMilliseconds:options.minimumUptimeMilliseconds,refused:(digest,reason)=>{replica.say({event:"restart-refused",reason:digest,message:reason});if(blamesCheckV1(reason))void recordRefusedV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});if(blamesCheckV1(reason))void publishRefusalV1(settings.storeRoot,settings.originId,{digest,reason},settings.now()).catch(()=>{});},suspect:(digest,runningDigest)=>suspectCodeV1(history.current,runningDigest,digest),suspicious:(digest,reason)=>{replica.say({event:"code-reverted",reason:digest,message:reason});},ran:digest=>{void recordRunV1(settings.worktree,digest).then(next=>{history.current=next;}).catch(()=>{});},failures:()=>{const stage=stageRecordedV1(settings.worktree);return stage===null||stage.state==='shared'||stage.reason===null?replica.failures.diagnostics():[...replica.failures.diagnostics(7),{kind:`stage-${stage.reason}`,count:1,lastMs:settings.now()}];},store:work=>attestStore.call(work),git:signal=>(options.gitState??gitStateV1)(settings.worktree,signal),gitObservationFailed:reason=>{replica.failures.note(`stage-observe-${reason}`,reason);},view:async(signal,request)=>{if(request!==undefined&&options.gitView===undefined){const next=await gitViewDeltaV1(settings.worktree,request.previous as GitViewV1,{paths:request.paths,restage:request.restage},signal);if(next!==null)return next;}return (options.gitView??gitViewV1)(settings.worktree,signal);},changes:()=>takeViewDirtV1(replica),unsettled:()=>[...touched,...hinted,...(full?[".gitignore"]:[])],viewMilliseconds:options.viewMilliseconds,viewDebounceMilliseconds:options.viewDebounceMilliseconds,deltaDebounceMilliseconds:options.deltaDebounceMilliseconds,deltaLimit:options.deltaLimit,guards:async signal=>{if(options.gitGuards!==undefined)return options.gitGuards(settings.worktree,signal);const found=await gitGuardsV1(settings.worktree,{signal,modeless:settings.modeless});if(found===null)return null;const {samples:_,...guards}=found;return guards;},guardsMilliseconds:options.guardsMilliseconds,guardsMinimumMilliseconds:options.guardsMinimumMilliseconds,reachable:()=>attestStore.reachable(),prepare:()=>ensureHome(replica),latency:()=>replica.latency.report(),timed:(name,cost,delay)=>{replica.latency.tiers.record(name,cost,delay);},viewSeed:()=>seedView(replica),onView:view=>{rememberV1(replica,"view",encoder.encode(JSON.stringify(view)));}});
  options.opened?.(replica);
  replica.say({event:"started",originId:settings.originId,groupId:settings.groupId});
  const booted=attester.start(signal).catch(()=>{});
@@ -2505,11 +2813,12 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
  const attestController=new AbortController(),attestSignal=AbortSignal.any([signal,attestController.signal]);
  let attesting:Promise<void>|undefined;
  const attest=():void=>{
-  if(!attesterReady||attestSignal.aborted||restart)return;
+  if(attester.running()===""||attestSignal.aborted||restart)return;
   if(disowned){restart=true;wake?.();return;}
-  sidecars?.tick(sidecarsAdmitted&&!parked&&guard.state()==="ok"&&attester.running()!=="");
+  if(attesterReady)sidecars?.tick(sidecarsAdmitted&&!parked&&guard.state()==="ok");
   if(attesting!==undefined)return;
   attesting=attester.tick({sync:syncOn&&!parked,files:replica.files.shared,manifest:replica.files.manifestHex(),buckets:replica.files.bucketsHex(),cursors:{...replica.cursors},incoming:replica.queue.size,busy:replica.applying>0,hlc:formatHlcV1(replica.clock,settings.originId),activity:replica.activity},attestSignal).then(result=>{
+   if(result==="written")progress?.attested();
    if(result==="restart"&&!attestSignal.aborted){restart=true;wake?.();}
   }).catch(error=>{if(!attestSignal.aborted)noteOnce(replica,`attest:${messageOf(error)}`,{event:"error",message:messageOf(error)});}).finally(()=>{attesting=undefined;});
  };
@@ -2519,7 +2828,7 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
   while(!signal.aborted&&!restart){
    try{
     const enabled=await switchOn.get();syncOn=enabled;
-    if(!enabled){sidecarsAdmitted=true;if(!suspended){suspended=true;replica.say({event:"sync",reason:"off"});}}
+    if(!enabled){large.reset();sidecarsAdmitted=true;if(!suspended){suspended=true;replica.say({event:"sync",reason:"off"});}}
     else{
     if(suspended){suspended=false;full=true;replica.say({event:"sync",reason:"on"});}
     if(!await reachable.get(outage))down();
@@ -2530,24 +2839,64 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
      await options.storeGate?.();
      const stopped=await retirement.get();
      sidecarsAdmitted=true;
-     if(stopped?.retired===true){if(!parked){parked=true;replica.say({event:"retired",originId:settings.originId,origin:stopped.by,reason:"retired",message:stopped.reason});}}
+     if(stopped?.retired===true){large.reset();if(!parked){parked=true;replica.say({event:"retired",originId:settings.originId,origin:stopped.by,reason:"retired",message:stopped.reason});}}
      else{
      if(parked){parked=false;full=true;replica.say({event:"sync",reason:"on"});}
      const retry:string[]=[];
+     let followed=false;
+     const follow=async():Promise<void>=>{followed=true;activityV1("follow");await followOnceV1(replica,signal,true);};
+     const outbound=async<T>(work:()=>Promise<T>,requeue?:readonly string[]):Promise<T>=>{
+      try{return await work();}catch(error){
+       if(requeue!==undefined){for(const path of requeue)touched.add(path);lastTouch=settings.now();}
+       if(!followed&&!signal.aborted&&!(error instanceof OriginTakenV1)&&!(error instanceof StoreStalledV1)){
+        try{await follow();}catch(inbound){
+         if(inbound instanceof OriginTakenV1)throw inbound;
+         if(!signal.aborted)noteOnce(replica,`follow:${messageOf(inbound)}`,{event:"error",stage:"follow",message:messageOf(inbound)});
+        }
+       }
+       throw error;
+      }
+     };
+     if(!indexHost(replica).server){recovering=false;await follow();}
      activityV1("publish");
+     const stageNow=settings.now();
+     if(stageNow>=stageWatch.pollAt){
+      const signature=await indexSignatureV1(settings.worktree);
+      stageWatch.pollAt=stageNow+hotEvery;
+      if(signature!==stageWatch.signature){stageWatch.signature=signature;stageWatch.retryAt=stageNow;stageWatch.attempts=0;}
+      if(stageNow>=stageWatch.retryAt){
+       let settled=false;
+       if(await stateReady(replica)){
+        const priority=await publishPriorityStage(replica,signal);
+        if(priority.work!==undefined)retry.push(...priority.work.retry);
+        settled=priority.settled||!priority.attempted&&await publishStage(replica,signal);
+       }
+       stageWatch.retryAt=settled?Infinity:settings.now()+gitStageRetryDelayV1(++stageWatch.attempts);
+      }
+     }
      await watchGit(signal);
+     if(gitHeal!==undefined){
+      activityV1("git");
+      const sweep=gitHeal;
+      try{
+       if(await healGitSliceV1(replica,sweep,signal,healMetadata)){
+        gitHeal=undefined;
+        if(sweep.queued>0){replica.say({event:"repaired",stage:"git",count:sweep.queued});full=true;}
+       }
+      }catch(error){if(!signal.aborted)gitHeal=undefined;throw error;}
+     }
      const asked=await repairAsked.get(),apart=asked?[]:await drifted(signal);
      if(asked||apart.length>0){
       if(apart.length>0)replica.say({event:"drift",reason:apart.join(","),count:drift.attempts});
       replica.say({event:"repaired",count:await repairV1(replica,signal),...apart.length>0?{reason:"drift"}:{}});repairAsked.expire();full=true;
      }
      activityV1("publish");
-     if(recovering){recovering=false;activityV1("follow");await followOnceV1(replica,signal,true);activityV1("publish");}
+     if(recovering){recovering=false;await follow();activityV1("publish");}
      if(replica.ignoreHash!==ignoreSeen){ignoreSeen=replica.ignoreHash;full=true;}
      const now=settings.now();
-     if(full&&now>=nextWalk){full=false;walked=undefined;touched.clear();hinted.clear();const spent=cpuCost();retry.push(...(await publishOnceV1(replica,signal)).retry);nextWalk=walkNext(spent());file.next=settings.now()+scanDelayV1(settings.scanSeconds);}
+     if(full&&now>=nextWalk){full=false;walked=undefined;touched.clear();hinted.clear();const spent=cpuCost();retry.push(...(await outbound(()=>publishOnceV1(replica,signal,undefined,undefined,undefined,undefined,large))).retry);nextWalk=walkNext(spent());file.next=settings.now()+scanDelayV1(settings.scanSeconds);}
      else{
-      if(walked!==undefined){const scan=walked;walked=undefined;retry.push(...(await publishOnceV1(replica,signal,undefined,scan)).retry);}
+      if(walked!==undefined){const scan=walked;walked=undefined;retry.push(...(await outbound(()=>publishOnceV1(replica,signal,undefined,scan,undefined,undefined,large))).retry);}
       else if(walk===undefined&&now>=nextWalk){
        nextWalk=Infinity;
        const digest=replica.ignoreHash,spent=cpuCost();
@@ -2569,9 +2918,6 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
        hot.spent+=stop();
        if(hot.cursor>=total){
         hot.active=false;
-        const signature=await indexSignatureV1(settings.worktree);
-        if(indexSeen!==undefined&&signature!==indexSeen)batch.add(".git/index");
-        indexSeen=signature;
         const delay=nextDelayV1(hotEvery,hot.spent,hotDuty);
         hot.next=settings.now()+delay;replica.latency.tiers.record("hot",hot.spent,delay);
        }
@@ -2612,16 +2958,15 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
        file.spent+=stop();
        if(file.index>=file.ids.length){file.active=false;file.ids=new Int32Array(0);if(file.drift)replica.trust.lost("sweep-drift");else replica.trust.verified("file",file.startedMs);const delay=nextDelayV1(scanDelayV1(settings.scanSeconds),file.spent,fileDuty);file.next=settings.now()+delay;replica.latency.tiers.record("file",file.spent,delay);}
       }
-      if(cold.length>0)retry.push(...(await publishOnceV1(replica,signal,cold,undefined,undefined,true)).retry);
+      if(cold.length>0)retry.push(...(await outbound(()=>publishOnceV1(replica,signal,cold,undefined,undefined,true,large))).retry);
       if(batch.size>0||flat.size>0){
        const list=[...batch],directories=[...flat];
        if(directories.length>0){replica.activity++;replica.warm.noteMany(directories,directories.length,now);}
-       try{retry.push(...(await publishOnceV1(replica,signal,list,undefined,directories)).retry);}catch(error){for(const path of list)touched.add(path);lastTouch=settings.now();throw error;}
+       retry.push(...(await outbound(()=>publishOnceV1(replica,signal,list,undefined,directories,undefined,large),list)).retry);
       }
      }
      if(retry.length>0){for(const path of retry)touched.add(path);lastTouch=settings.now();}
-     activityV1("follow");
-     await followOnceV1(replica,signal,true);
+     if(!followed)await follow();
      }
      },signal);
      if(turn.status==="stalled")down();
@@ -2661,7 +3006,9 @@ export async function runV1(options:ReplicaOptionsV1,signal:AbortSignal,sink:Rep
    await pause(Math.max(hot.active||sweep.active||file.active?sliceGapMilliseconds:touched.size>0?Math.min(settings.pollMilliseconds,settings.debounceMilliseconds):settings.pollMilliseconds,failed===0?0:Math.min(30_000,250*2**Math.min(failed,7))));
   }
  }finally{
+  await progress?.close();
   clearInterval(heartbeat);
+  large.reset();
   attestController.abort();
   await attesting;
   if(restart)sidecars?.release();else await sidecars?.stop().catch(()=>{});
@@ -2929,7 +3276,7 @@ export async function verifyV1(options:ReplicaOptionsV1,signal?:AbortSignal,sink
  const settings=settle(options),paths=localPathsV1(settings.worktree),tables=tablesV1(),{book,files,manifest,queue}=tables;
  let packs:boolean|undefined;
  const fleetPacks=():boolean=>{if(packs===undefined){packs=false;for(const id of manifest.ids())if(manifest.operationAt(id)==="put"){const name=book.name(id);if(name.startsWith(".git/objects/pack/")&&name.endsWith(".pack")){packs=true;break;}}}return packs;};
- const ignore=guarded(compileIgnoreV1(await readIgnoreText(paths)),path=>packLocalV1(path,pack=>manifest.idOf(pack)!==undefined,fleetPacks,settings.worktree));
+ const ignore=guarded(compileIgnoreV1(await readIgnoreText(paths)),path=>packLocalV1(path,pack=>manifest.get(pack)?.operation==="put",fleetPacks,settings.worktree));
  await loadLocal(paths,tables);
  await foldInto(settings.storeRoot,manifest,signal,sink,settings.now);
  const found=new ReplicaFoundV1(book),seen=new Bits(),drifted=new Bits(),drift:Drift[]=[],links=settings.symlinks??await linksWork(paths.tmp);

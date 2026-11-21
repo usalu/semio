@@ -86,7 +86,12 @@ const PLAY_CELLS = Object.fromEntries(centeredLastRowCells(PLAY_PANES.length).ma
 
 /** 🔢️ The card grid mirrors the strip: one card per cell. */
 const PLAY_GRID = nearSquareGrid(PLAY_PANES.length);
-const PLAY_OVERLAY_STYLE = { paddingTop: "var(--navbar-band-height)", gridTemplateColumns: `repeat(${PLAY_GRID.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${PLAY_GRID.rows}, minmax(min(10rem, 100%), 1fr))` } as const;
+const PLAY_OVERLAY_STYLE = {
+  gridTemplateColumns: `repeat(${PLAY_GRID.columns}, minmax(0, 1fr))`,
+  gridTemplateRows: `repeat(${PLAY_GRID.rows}, minmax(min(10rem, 100%), 1fr))`,
+  paddingBlockStart: "var(--navbar-band-height)",
+  scrollPaddingBlockStart: "var(--navbar-band-height)",
+} as const;
 
 /** 🧮️ Four shells live at most (the least recently touched pristine one goes to its poster first); the first warm boot waits 4 s so the
  * introduction never fights a wasm boot, every later one a 35 s plugin-load budget; a pristine shell untouched for two minutes is released. */
@@ -175,7 +180,7 @@ export function PlayLanding({locale, renderPane}: {readonly locale: ShellLocale;
                 },
               ]}
               showFullscreenToggle={false}
-              className="bg-transparent"
+              className="ui-chrome-tint"
             />
           </div>
         )}

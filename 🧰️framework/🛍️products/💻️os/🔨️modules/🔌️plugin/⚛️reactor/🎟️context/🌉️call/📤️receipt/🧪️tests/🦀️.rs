@@ -1,7 +1,77 @@
 //! 🧪️ Actual inline scalar receipt bytes preserve failed effects and maximum-width original identities.
 use super::*;
 #[test]
-fn first_response_quote_refuses_an_insufficient_scope_before_source_or_producer_effects(){let stock=RetainedCloneGrant{maximum_items:128,maximum_copy_bytes:16*1024*1024,maximum_capacity_bytes:16*1024*1024,maximum_release_bytes:16*1024*1024,maximum_depth:64};for length in[144,152,184]{let(items,demand,work)=super::super::original_core_first_response_reserve(length).unwrap();assert_eq!((items,work),(91,3050));assert!(demand.copy_bytes<stock.maximum_copy_bytes&&demand.capacity_bytes<stock.maximum_capacity_bytes);assert_eq!(demand.depth,1);}let input=RetainedTurnInput{operation:1,generation:1,epoch:1,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:10000},grant:stock};for items in[0,32,89]{let mut entry=super::super::OriginalActorGuestEntry::new();let budget=super::super::StepBudget::new(4096,u64::MAX,RetainedCloneGrant{maximum_items:items,..stock});let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||entry.dispatch_poll_header_step(input,budget,||Some(1),|_|panic!("underfunded first response cannot enter its producer")));assert_eq!(result.unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(entry.terminal_is_empty());}}
+fn fixed_receipt_prices_this_dispatch_against_its_resident_baseline() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/dispatch-receipt.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let read = |field: &str| case[field].as_u64().unwrap() as usize;
+        let axis = read("axis");
+        let progress = |amount| {
+            let mut fields = [0; 4];
+            fields[axis] = amount;
+            RetainedCloneProgress {
+                copied_items: fields[0],
+                copied_bytes: fields[1],
+                retained_capacity_bytes: fields[2],
+                released_bytes: fields[3],
+            }
+        };
+        let aggregate = dispatch_retained_progress(progress(read("baseline")), progress(read("observed")))
+            .and_then(|receipt| receipt.checked_add(progress(read("completion"))))
+            .and_then(|receipt| receipt.checked_add(progress(read("carry"))))
+            .ok().map(|receipt| receipt.wire_fields()[axis].1 as u64);
+        assert_eq!(aggregate, case["aggregate"].as_u64(), "{}", case["name"]);
+        assert_eq!(aggregate.and_then(|amount| amount.checked_sub(read("redeemed") as u64)), case["fresh"].as_u64(), "{}", case["name"]);
+    }
+}
+
+#[test]
+fn first_response_quote_refuses_an_insufficient_scope_before_source_or_producer_effects() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("first-response.json")).unwrap();
+    let required_items = law["required"]["items"].as_u64().unwrap() as usize;
+    let required_work = law["required"]["work"].as_u64().unwrap();
+    let stock = RetainedCloneGrant {
+        maximum_items: 128,
+        maximum_copy_bytes: 16 * 1024 * 1024,
+        maximum_capacity_bytes: 16 * 1024 * 1024,
+        maximum_release_bytes: 16 * 1024 * 1024,
+        maximum_depth: 64,
+    };
+    for length in [144, 152, 184] {
+        let (items, demand, work) = super::super::original_core_first_response_reserve(length).unwrap();
+        assert_eq!((items, work), (required_items, required_work));
+        assert!(demand.copy_bytes < stock.maximum_copy_bytes);
+        assert!(demand.capacity_bytes < stock.maximum_capacity_bytes);
+        assert_eq!(demand.depth, 1);
+    }
+    let input = RetainedTurnInput {
+        operation: 1,
+        generation: 1,
+        epoch: 1,
+        work: semio_framework_actor::OriginalActorTurnWork {
+            clock_binding: 1,
+            absolute_deadline_us: u64::MAX,
+            fuel: 10000,
+        },
+        grant: stock,
+    };
+    for row in law["cases"].as_array().unwrap() {
+        let items = row["items"].as_u64().unwrap() as usize;
+        let work = row["work"].as_u64().unwrap();
+        let accepted = items >= required_items && work >= required_work;
+        assert_eq!(Some(accepted), row["accepted"].as_bool());
+        if accepted { continue; }
+        let mut entry = super::super::OriginalActorGuestEntry::new();
+        let budget = super::super::StepBudget::new(work, u64::MAX, RetainedCloneGrant { maximum_items: items, ..stock });
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
+            entry.dispatch_poll_header_step(input, budget, || Some(1), |_| panic!("underfunded first response cannot enter its producer"))
+        });
+        let kind = if items < required_items { ValueRefusalKind::OwnershipLimit } else { ValueRefusalKind::WorkLimit };
+        assert_eq!(result.unwrap_err().kind, kind);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert!(entry.terminal_is_empty());
+    }
+}
 fn escrow()->OriginalEscrowExtent{OriginalEscrowExtent{pointer:3000,length:48}}
 #[test]
 fn typed_actor_and_turn_codecs_emit_exact_sequential_work(){struct Sink{bytes:Vec<u8>,writes:usize}impl OriginalEscrowHeaderWrite for Sink{fn write(&mut self,bytes:&[u8])->Result<(),ValueError>{self.writes+=1;self.bytes.extend_from_slice(bytes);Ok(())}}let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let bytes:Vec<u8>=fixture["failureHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect();let(base,_)=OriginalActorFixedReceipt::read(&bytes).unwrap();let mut actor=Sink{bytes:Vec::new(),writes:0};OriginalActorFixedReceipt::write_to(&mut actor,base,escrow()).unwrap();assert_eq!(actor.bytes,bytes);assert_eq!(actor.writes,20);let call=OriginalActorFixedCall{kind:OriginalActorFixedKind::TurnOutput{ready:true,captured:true,input_pending:true,pointer:42,length:7},..base};let mut turn=Sink{bytes:Vec::new(),writes:0};OriginalActorTurnOutputReceipt::write_to(&mut turn,call,escrow()).unwrap();assert_eq!(turn.writes,22);assert_eq!(OriginalActorFixedReceipt::read(&turn.bytes).unwrap(),(call,escrow()));}

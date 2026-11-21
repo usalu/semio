@@ -11,7 +11,7 @@ import { TreeWindowContext } from "../../../🗣️Interpreter/🪟️tree-windo
 import { MediaTransportOwnerScope } from "../../../🎬️MediaTransportHost/🔗️owner-scope/🟦️.tsx";
 import type { MediaTransportOwnerV1 } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
 import { ShellFaultBoundary } from "../../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
-import { World3dWindowViewStoreContext } from "../../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
+import { allowsWorld3dCameraSync, World3dCameraSyncContext, World3dWindowViewStoreContext } from "../../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel, WindowInstanceIdContext } from "../../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { appBreadcrumb, appWindowLabel, resolveAppBreadcrumb, resolveFrameworkLayoutSeed, frameworkLayoutDeclaredInstances, resolveWindowEngagement, spawnedWindowChromeForKind, windowEngagementToSearchSpec, windowEngagementToSpec } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { introductionTargetsWindow } from "../../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
@@ -31,6 +31,7 @@ export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins
   const spawnedScope = activeSpawnedEntry === undefined || activeSpawnedEntry === null ? null : windowDocumentScopeV1(openDocumentSessionsRef.current.values(), { pluginId: activeSpawnedEntry.pluginId, appId: activeSpawnedEntry.appId, instanceId: activeSpawnedEntry.instanceId });
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
+    const cameraSync = allowsWorld3dCameraSync(session.app);
     const primaryMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
     const primaryMediaOwner = (windowId: string): MediaTransportOwnerV1 | null => primaryMediaHandle ? { instanceId: session.instanceId, controllerId: session.app.controllerId, windowId, port: primaryMediaHandle, apply: (action, args) => onActionStable({ controllerId: session.app.controllerId, action, args }) } : null;
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
@@ -49,6 +50,7 @@ export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins
     if (hostMode && activeSpawnedEntry && activeSpawnedApp && focusedSpawnedId !== null) {
       const spawned = activeSpawnedEntry;
       const spawnedApp = activeSpawnedApp;
+      const cameraSync = allowsWorld3dCameraSync(spawnedApp);
       const spawnedLocalDocumentOwner = localDocumentOwnerRegistry.acquire({ pluginId: spawned.pluginId, appId: spawned.appId, sessionInstanceId: spawned.instanceId, runtimeKey: `spawned:${spawned.id}`, clientInstanceId: spawned.id });
       const spawnedMediaHandle = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.handle;
       const spawnedMediaOwner = (windowId: string): MediaTransportOwnerV1 | null => spawnedMediaHandle ? { instanceId: spawned.instanceId, controllerId: spawnedApp.controllerId, windowId, port: spawnedMediaHandle, apply: (action, args) => onActionStable({ controllerId: spawnedApp.controllerId, action, args }) } : null;
@@ -67,7 +69,7 @@ export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins
         return {
           id: windowId,
           iconId: windowIconsById[windowId] ?? windowKind.iconId ?? "app-window",
-          title: wireLabel(declaredTitle !== undefined ? appWindowLabel(spawnedApp, uiTerminology, declaredTitle, uiLocale) : spawnedApp.windowKinds.length > 1 ? appWindowLabel(spawnedApp, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", windowKind.id, resolveManifestLabel(windowKind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale) : appBreadcrumb(resolveAppBreadcrumb(spawnedApp, uiTerminology))),
+          title: wireLabel(declaredTitle !== undefined ? appWindowLabel(spawnedApp, uiTerminology, declaredTitle, uiLocale) : spawnedApp.windowKinds.length > 1 ? appWindowLabel(spawnedApp, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", windowKind.id, resolveManifestLabel(windowKind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale) : appBreadcrumb(resolveAppBreadcrumb(spawnedApp, uiTerminology, uiLocale))),
           fill: true,
           controls: <><CurrentDocumentUnsavedMarker />{timeTravelIndicator}</>,
           measures: chrome.measures,
@@ -84,11 +86,13 @@ export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins
           children: (
             <ChromeAwareWindowScrollSurface {...windowIdentityAttributesV1({ app: spawnedApp.id, role: spawnedApp.role, instance: spawned.instanceId, window: windowId, kind: windowKind.id, document: spawnedScope })} id={childElementId("framework.window", windowId)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(spawnedApp, windowId)} {...windowHostEventHandlersV1(spawnedApp.controllerId, windowId, onActionStable)}>
               <World3dWindowViewStoreContext.Provider key={`${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`} value={spawnedWorld3dViews}>
+                <World3dCameraSyncContext.Provider value={cameraSync}>
                 <WindowInstanceIdContext.Provider value={windowId}>
                   <ShellFaultBoundary boundaryId={`window-${windowId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                     {bodyStore ? <MediaTransportOwnerScope owner={spawnedMediaOwner(windowId)}><InterpretedUiNode windowId={windowId} localDocumentOwner={spawnedLocalDocumentOwner} store={bodyStore} onAction={onActionStable} onIntent={onIntentStable} /></MediaTransportOwnerScope> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>
+                </World3dCameraSyncContext.Provider>
               </World3dWindowViewStoreContext.Provider>
             </ChromeAwareWindowScrollSurface>
           ),
@@ -121,6 +125,7 @@ export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins
         children: (
           <ChromeAwareWindowScrollSurface {...windowIdentityAttributesV1({ app: session.app.id, role: session.app.role, instance: session.instanceId, window: kind.id, kind: kind.id, document: primaryScope })} id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)} {...windowHostEventHandlersV1(session.app.controllerId, kind.id, onActionStable)}>
             <World3dWindowViewStoreContext.Provider key={primaryWorld3dOwner} value={world3dWindowViews}>
+              <World3dCameraSyncContext.Provider value={cameraSync}>
               <WindowInstanceIdContext.Provider value={kind.id}>
                 <ShellFaultBoundary boundaryId={`window-${kind.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                   {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
@@ -129,6 +134,7 @@ export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins
                   </TreeWindowContext.Provider>
                 </ShellFaultBoundary>
               </WindowInstanceIdContext.Provider>
+              </World3dCameraSyncContext.Provider>
             </World3dWindowViewStoreContext.Provider>
           </ChromeAwareWindowScrollSurface>
         ),
@@ -168,6 +174,7 @@ export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins
               {...windowHostEventHandlersV1(session.app.controllerId, instance.id, onActionStable)}
             >
               <World3dWindowViewStoreContext.Provider key={primaryWorld3dOwner} value={world3dWindowViews}>
+                <World3dCameraSyncContext.Provider value={cameraSync}>
                 <WindowInstanceIdContext.Provider value={instance.id}>
                   <ShellFaultBoundary boundaryId={`window-${instance.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
                     {instanceFault ? <WindowFaultStatus fault={instanceFault} /> : null}
@@ -176,6 +183,7 @@ export function useModeWindows({ openDocumentSessionsRef, session, loadedPlugins
                     </TreeWindowContext.Provider>
                   </ShellFaultBoundary>
                 </WindowInstanceIdContext.Provider>
+                </World3dCameraSyncContext.Provider>
               </World3dWindowViewStoreContext.Provider>
             </ChromeAwareWindowScrollSurface>
           ),

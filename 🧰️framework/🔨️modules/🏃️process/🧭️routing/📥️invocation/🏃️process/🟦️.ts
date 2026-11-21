@@ -282,7 +282,24 @@ const cleanAsyncContextV1=AsyncLocalStorage.snapshot();
 /** 📮️ Receives one forwarded request envelope inside a long-lived owner such as the Nx daemon: the exact live ambient parent is reused when it carries the same envelope, otherwise the request becomes its own root birth detached from every ambient lifetime of the owner, so a daemon service never has to pass for the parent of the client's request. */
 export function receiveScriptProcessRequestInvocationV1<T>(environment:Readonly<Record<string,string|undefined>>,run:(invocation:IssuedScriptInvocationV1)=>Promise<T>):Promise<T>{try{const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];if(wire===undefined)throw refuseProcessV1("missing", "routing.forwarded-request-invocation-required");const admitted=readScriptProcessEnvelope(readScriptProcessJsonWireV1(wire),Date.now()),incoming=context.getStore();if(incoming&&JSON.stringify(admitted)===JSON.stringify(birthOf(incoming).envelope))return withScriptProcessEnvelope(admitted,invocation=>withReceivedImplementationPinV1(()=>run(invocation)));return cleanAsyncContextV1(()=>withScriptProcessEnvelope(admitted,invocation=>withReceivedImplementationPinV1(()=>run(invocation))));}catch(error){return observe(Promise.reject(error));}}
 /** 📥️ Receives the real process envelope or reuses its exact live in-process parent, and runs under the pin of the implementation this process loaded. */
-export function receiveScriptProcessInvocation<T>(environment:Readonly<Record<string,string|undefined>>,run:(invocation:IssuedScriptInvocationV1)=>Promise<T>):Promise<T>{try{const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];if(wire===undefined)throw Error("Original parent Script process invocation required");const birth=!context.getStore();if(birth){if(wire!==process.env[SCRIPT_PROCESS_INVOCATION_ENV])throw Error("Actual process parent envelope required");if(received)throw Error("Original process birth already received");received=true;}const running=withScriptProcessEnvelope(readScriptProcessEnvelope(readScriptProcessJsonWireV1(wire),Date.now()),invocation=>withReceivedImplementationPinV1(()=>run(invocation),birth));return birth?running.catch(error=>{handleRestartableFailureV1(error);throw error;}):running;}catch(error){return observe(Promise.reject(error));}}
+export function receiveScriptProcessInvocation<T>(environment:Readonly<Record<string,string|undefined>>,run:(invocation:IssuedScriptInvocationV1)=>Promise<T>,observeTerminalFailure?:(error:unknown)=>void):Promise<T>{
+ try{
+  const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];
+  if(wire===undefined)throw Error("Original parent Script process invocation required");
+  const birth=!context.getStore();
+  if(birth){
+   if(wire!==process.env[SCRIPT_PROCESS_INVOCATION_ENV])throw Error("Actual process parent envelope required");
+   if(received)throw Error("Original process birth already received");
+   received=true;
+  }
+  const running=withScriptProcessEnvelope(readScriptProcessEnvelope(readScriptProcessJsonWireV1(wire),Date.now()),invocation=>withReceivedImplementationPinV1(()=>run(invocation),birth));
+  return birth?running.catch(error=>{
+   try{observeTerminalFailure?.(error);}catch{}
+   handleRestartableFailureV1(error);
+   throw error;
+  }):running;
+ }catch(error){return observe(Promise.reject(error));}
+}
 function remaining(original:ControlScope,maximumOnly=false):number|null{
  type Bound=number|null;
  type RowFrame={row:ControlScope;now:number;waited:number;value:Bound};

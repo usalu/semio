@@ -3,7 +3,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::gis3d::modes::view::windows::terrain::config::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff, GisTerrainWindowConfigMutation};
-use protocol::{ColdMutation, Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
+use protocol::{ColdMutation, ColdMutationKind, Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
 use protocol::ColdMutationDiff;
 use serde_json::Value;
 use std::fmt::Debug;
@@ -132,7 +132,7 @@ fn assert_operation_codecs(operation: &GisTerrainWindowConfigMutation, keyword: 
 /// 🧬️ Executes a leaf's exact neutral cases through its intrinsic and aggregate contracts.
 pub fn assert_leaf_contract<T>(key: &str, authored_descriptor: &str)
 where
-    T: MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> + MutationLeaf + semio_framework_dsl_record::DslField + Into<GisTerrainWindowConfigMutation> + PartialEq + Debug,
+    T: MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> + ColdMutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation> + MutationLeaf + semio_framework_dsl_record::DslField + Into<GisTerrainWindowConfigMutation> + PartialEq + Debug,
 {
     let fixture = vectors();
     let row = fixture["leaves"].as_array().expect("leaf roster").iter().find(|row| row["key"] == key).expect("leaf fixture");
@@ -177,7 +177,7 @@ where
         let expected_diff: GisTerrainWindowConfigDiff = decode(&law["diff"]);
         let leaf: T = decode(&law["payload"]);
         let operation: GisTerrainWindowConfigMutation = leaf.clone().into();
-        let outcome = <T as MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::diff(&leaf, &before);
+        let outcome = <T as ColdMutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::diff(&leaf, &before);
         assert_eq!(&T::DESCRIPTOR, operation.descriptor());
         assert_eq!(outcome.diff(), &expected_diff, "{}", law["id"]);
         assert_eq!(operation.diff(&before), outcome, "{}", law["id"]);
@@ -194,7 +194,7 @@ where
         let expected_inverse: Vec<GisTerrainWindowConfigMutation> = decode(&law["inverse"]);
         let stored = operation.inverse(&before).expect("valid retained mutation inverse fixture");
         assert_eq!(stored, expected_inverse, "{}", law["id"]);
-        assert_eq!(<T as MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::inverse(&leaf, &before).expect("valid retained mutation inverse fixture"), stored, "{}", law["id"]);
+        assert_eq!(<T as ColdMutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::inverse(&leaf, &before).expect("valid retained mutation inverse fixture"), stored, "{}", law["id"]);
         assert_eq!(serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&stored)).expect("stored inverse JSON"), law["inverse"]);
         let restored = stored.iter().rev().try_fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state)).expect("stored inverse application");
         assert_eq!(restored, before, "{}", law["id"]);

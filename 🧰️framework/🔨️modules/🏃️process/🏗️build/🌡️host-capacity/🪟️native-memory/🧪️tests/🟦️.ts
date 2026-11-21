@@ -36,14 +36,17 @@ test("the structure layout constants match the kernel32 headers",()=>{
 
 test("a fake kernel decodes the memory status and the process walk, counting unreadable processes and closing every handle",()=>{
  const closed:bigint[]=[];
- const memory=readWindowsMemoryV1({GlobalMemoryStatusEx:(buffer:Buffer)=>{const view=new DataView(buffer.buffer,buffer.byteOffset);expect(view.getUint32(0,true)).toBe(64);view.setUint32(4,48,true);view.setBigUint64(8,64n,true);view.setBigUint64(16,32n,true);view.setBigUint64(24,80n,true);view.setBigUint64(32,50n,true);return 1;}});
+ const memory=readWindowsMemoryV1({GlobalMemoryStatusEx:(buffer:Buffer)=>{const view=new DataView(buffer.buffer,buffer.byteOffset);expect(view.getUint32(0,true)).toBe(64);view.setUint32(4,48,true);view.setBigUint64(8,64n,true);view.setBigUint64(16,32n,true);view.setBigUint64(24,80n,true);view.setBigUint64(32,50n,true);return 1;},GetLastError:()=>0});
  expect(memory).toEqual({known:true,totalBytes:64,availableBytes:32,commitLimitBytes:80,commitAvailableBytes:50,loadPercent:48});
  expect(check("Facts",memory)).toBe(true);
+ const unavailable=readWindowsMemoryV1({GlobalMemoryStatusEx:()=>0,GetLastError:()=>87});
+ expect(unavailable).toMatchObject({known:false,reason:"host-call",call:"GlobalMemoryStatusEx",error:87});
  const procs=[{pid:4,parent:0,name:"System"},{pid:10,parent:4,name:"app.exe"}];let at=0;
  const put=(buffer:Buffer,index:number)=>{const view=new DataView(buffer.buffer,buffer.byteOffset),row=procs[index]!;view.setUint32(8,row.pid,true);view.setUint32(32,row.parent,true);[...row.name].forEach((char,offset)=>view.setUint16(44+offset*2,char.charCodeAt(0),true));view.setUint16(44+row.name.length*2,0,true);};
- const table=readWindowsProcessesV1({CreateToolhelp32Snapshot:()=>99n,Process32FirstW:(_h:bigint,buffer:Buffer)=>{at=0;put(buffer,0);return 1;},Process32NextW:(_h:bigint,buffer:Buffer)=>{at++;if(at>=procs.length)return 0;put(buffer,at);return 1;},OpenProcess:(_a:number,_i:number,pid:number)=>pid===4?0n:7n,K32GetProcessMemoryInfo:(_h:bigint,buffer:Buffer)=>{const view=new DataView(buffer.buffer,buffer.byteOffset);view.setBigUint64(16,4096n,true);view.setBigUint64(72,1024n,true);return 1;},CloseHandle:(handle:bigint)=>{closed.push(handle);return 1;},GetLastError:()=>18});
+ const kernel={CreateToolhelp32Snapshot:()=>99n,Process32FirstW:(_h:bigint,buffer:Buffer)=>{at=0;put(buffer,0);return 1;},Process32NextW:(_h:bigint,buffer:Buffer)=>{at++;if(at>=procs.length)return 0;put(buffer,at);return 1;},OpenProcess:(_a:number,_i:number,pid:number)=>pid===4?0n:7n,K32GetProcessMemoryInfo:(_h:bigint,buffer:Buffer)=>{const view=new DataView(buffer.buffer,buffer.byteOffset);view.setBigUint64(16,4096n,true);view.setBigUint64(72,1024n,true);return 1;},CloseHandle:(handle:bigint)=>{closed.push(handle);return 1;},GetLastError:()=>18};
+ const table=readWindowsProcessesV1(kernel);
  expect(table).toEqual({known:true,unreadable:1,rows:[{pid:4,parent:0,name:"System",workingSetBytes:null,privateBytes:null},{pid:10,parent:4,name:"app.exe",workingSetBytes:4096,privateBytes:1024}]});
  expect(check("Table",table)).toBe(true);expect(closed).toEqual([7n,99n]);
- const refused=readWindowsProcessesV1({CreateToolhelp32Snapshot:()=>BigInt(L.invalidHandle),GetLastError:()=>5});
+ const refused=readWindowsProcessesV1({...kernel,CreateToolhelp32Snapshot:()=>BigInt(L.invalidHandle),GetLastError:()=>5});
  expect(refused).toMatchObject({known:false,reason:"host-call",call:"CreateToolhelp32Snapshot",error:5});
 });

@@ -34,7 +34,7 @@ pub fn inverse_gis_terrain_mutation(snapshot: &GisTerrainSnapshot, mutation: &Gi
 /// (`../../🔣️oracle.json`) declares and the `🏔️mutate-gisterrain-1` exhaustive test case measures
 /// itself against. The framework never parses Rust, so `kinds_match_the_enum_and_the_catalog` below is
 /// what keeps this list honest in both directions.
-pub const KINDS: &[&str] = &["change-exaggeration", "change-imported-features"];
+pub const KINDS: &[&str] = &["change-exaggeration", "change-imported-features", "replace-elevation-source"];
 //#endregion 🔖️Kinds
 
 //#region 🌉️TestBridge

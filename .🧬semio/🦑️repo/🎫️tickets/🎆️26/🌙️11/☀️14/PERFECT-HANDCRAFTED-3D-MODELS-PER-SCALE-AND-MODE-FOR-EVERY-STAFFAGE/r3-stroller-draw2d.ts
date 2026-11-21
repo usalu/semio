@@ -27,7 +27,7 @@ function groupOf(s: Json): G | null {
   if (id === "handle-grip" || id === "footrest" || id === "bumper-bar") return { id };
   if (/^(seat-sling|seat-wing|seat$)/.test(id)) return { id: "seat-fabric" };
   if (/^basket/.test(id)) return { id: "basket" };
-  if (id === "canopy-rear") return { id: "hood-rear" };
+  if (id === "canopy-rear" || id === "canopy") return { id: "hood-rear" };
   if (/^(joint-hub|swivel|fork|caster|canopy-hinge|handle-clamp|seat-mount)/.test(id)) return { id: `fittings${sd}` };
   return { id: sd === "" ? "chassis-cross" : `chassis${sd}` };
 }

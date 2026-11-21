@@ -3,7 +3,7 @@ use semio_s_artifact_norm_vdi3805_inferences::evaluate;
 use semio_s_artifact_norm_vdi3805_model::*;
 
 pub(super) fn documents() -> Vec<Vdi3805Snapshot> {
-    vec![conforming_valve_dataset(), nonconforming_valve_dataset(), conforming_blatt_3_dataset(), nonconforming_blatt_3_dataset(), conforming_blatt_5_dataset(), conforming_blatt_6_dataset(), Vdi3805Snapshot::default()]
+    vec![conforming_valve_dataset(), nonconforming_valve_dataset(), conforming_radiator_dataset(), nonconforming_radiator_dataset(), conforming_pump_dataset(), conforming_heat_generator_dataset(), Vdi3805Snapshot::default()]
 }
 
 semio_s_plugin_norm_compliance::incremental_laws!(source = Vdi3805Family, full = evaluate, live = semio_s_artifact_norm_vdi3805_inferences::live::report, documents = documents());

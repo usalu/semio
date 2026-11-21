@@ -1,0 +1,43 @@
+{
+  "requests": [
+    [
+      "a"
+    ],
+    [
+      "b"
+    ],
+    [
+      "c"
+    ]
+  ],
+  "publications": [
+    [
+      "a"
+    ],
+    [
+      "a",
+      "b",
+      "c"
+    ]
+  ],
+  "final": [
+    "a",
+    "b",
+    "c"
+  ],
+  "failedWrite": {
+    "request": [
+      "d"
+    ],
+    "following": [
+      "e"
+    ],
+    "expectedFinal": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e"
+    ]
+  }
+}

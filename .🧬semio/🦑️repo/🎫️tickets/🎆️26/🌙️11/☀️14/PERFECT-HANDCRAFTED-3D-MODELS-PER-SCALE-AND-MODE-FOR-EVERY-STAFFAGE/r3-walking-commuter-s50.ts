@@ -5,7 +5,7 @@
  * @see ./r3-humans-walking-commuter.md */
 import { axial, type Fit } from "./r4-g06-skeleton.ts";
 import type { Json } from "./volumes-lib.ts";
-import { ASSET, FRAMES, H, L, X, aboutU, aboutV, aboutW, box, boneDeg, capsule, compose, dense, dome, ellipsoid, extrude, loft, mirrored, part, revolve, st, thOf, toRight, tube, type St, type V3 } from "./r3-walking-commuter-kit.ts";
+import { ASSET, FRAMES, H, L, X, aboutU, aboutV, aboutW, box, boneDeg, capsule, compose, dense, dome, ellipsoid, extrude, loft, mirrored, part, r5, revolve, st, thOf, toRight, tube, type St, type V3 } from "./r3-walking-commuter-kit.ts";
 
 export const TONE = { coat: 0.3, coatFar: 0.25, trousers: 0.42, trousersFar: 0.36, shoe: 0.2, shoeFar: 0.15, skin: 0.8, hand: 0.78, handFar: 0.71, hair: 0.14, scarf: 0.58, bag: 0.46, strap: 0.36, shirt: 0.9, sole: 0.1 } as const;
 export const near = (t: number): number => (t === TONE.coatFar ? TONE.coat : t === TONE.trousersFar ? TONE.trousers : t === TONE.shoeFar ? TONE.shoe : t === TONE.handFar ? TONE.hand : t);
@@ -34,6 +34,34 @@ export const COAT: readonly Row[] = [
   [1.556, -0.048, 0.068, 0.092, 2],
 ];
 export const coatStations = (table: readonly Row[] = COAT): St[] => table.map(([y, b, f, rw, e]) => H("torso", y, b, f, rw, e));
+
+/** 🧥 The overcoat as it is cut: the upper part on the trunk down to the seam at 0.975 m just above the hip joints, and below it the skirt in three hanging parts, a left and a right half that follow their thigh by 65 % (the cloth swings with the stride, the thigh pushes it instead of passing through it) and the buttoned front edge with the back vent as a narrow strip that hangs straight from the pelvis. In the standing pose the four parts make exactly the stated coat; `strip` is the half width of the strip. */
+export function coatParts(table: readonly Row[], k: number, strip = 0.03): Json[] {
+  const SEAM = 0.975;
+  const LAP = 0.03;
+  const TUCK = 0.02;
+  const INSET = 0.014;
+  const i = table.findIndex((r) => r[0] > SEAM);
+  const [a, b] = [table[i - 1]!, table[i]!];
+  const s = (SEAM - a[0]) / (b[0] - a[0]);
+  const at = [0, 1, 2, 3, 4].map((c) => a[c]! + (b[c]! - a[c]!) * s) as unknown as Row;
+  const up = table.findIndex((r) => r[0] > SEAM + TUCK);
+  const [c, d] = [table[up - 1]!, table[up]!];
+  const u = (SEAM + TUCK - c[0]) / (d[0] - c[0]);
+  const top = [0, 1, 2, 3, 4].map((k) => c[k]! + (d[k]! - c[k]!) * u) as unknown as Row;
+  const tucked: Row = [top[0], top[1] + INSET, top[2] - INSET, top[3] - INSET, top[4]];
+  const seam: Row = [at[0], at[1] + INSET / 3, at[2] - INSET / 3, at[3] - INSET / 3, at[4]];
+  const skirt = [...table.slice(0, i), seam, tucked];
+  const wool = (id: string, bone: string): { id: string; bone: string; material: string; tone: number; role: string } => ({ id, bone, material: "wool-coat", tone: TONE.coat, role: "body" });
+  const out: Json[] = [loft(wool("coat", "torso"), dense(coatStations([at, ...table.slice(i)]), k))];
+  for (const side of [1, -1]) {
+    const bone = side > 0 ? "thigh-l" : "thigh-r";
+    const rows = skirt.map(([y, back, front, rw]) => H(bone, y, back, front, rw / 2 + LAP, 1.9, side * (rw / 2 - LAP) - FRAMES[bone]!.o[2]));
+    out.push(loft(wool(`coat-skirt-${side > 0 ? "l" : "r"}`, bone), dense(rows, k), [true, true], { weights: [{ bone, weight: 0.65 }, { bone: "pelvis", weight: 0.35 }] }));
+  }
+  out.push(loft(wool("coat-centre", "pelvis"), dense(skirt.map(([y, back, front]) => H("pelvis", y, back + 0.004, front - 0.004, strip, 6)), k)));
+  return out;
+}
 /** 📏 The coat surface at the height `y` and the lateral position `z`: x of the front (+1) or of the back (-1). */
 export function coatX(y: number, z: number, side: 1 | -1): number {
   let i = 0;
@@ -186,22 +214,22 @@ function leftHand(tone: number): Json[] {
   const out: Json[] = [];
   const palm: St[] = [st(-0.01, 0, w0, 0.0205, 0.029), st(0.022, 0.002, w0, 0.018, 0.036), st(0.054, 0.002, w0 - 0.001, 0.0155, 0.043), st(0.088, 0.0, w0 - 0.003, 0.0135, 0.044), st(0.1, 0, w0 - 0.004, 0.012, 0.041)];
   out.push(loft(c("hand-l"), dome(dense(palm, 3), 1, 0.008, 2)));
-  out.push(ellipsoid(c("hand-l-thenar"), [0.032, 0.017, 0.012], [0.043, 0.03, w0 - 0.011]));
+  out.push(ellipsoid(c("hand-l-thenar"), [0.03, 0.016, 0.01], [0.043, 0.028, w0 - 0.014]));
   const fingers: [string, number, number, number][] = [["1", 0.096, 0.032, 1], ["2", 0.1, 0.011, 1.08], ["3", 0.096, -0.0105, 1], ["4", 0.088, -0.031, 0.8]];
   for (const [name, u, v, k] of fingers) {
     const dir = (deg: number, len: number, from: V3): V3 => [from[0] + len * Math.cos((deg * Math.PI) / 180), from[1], from[2] - len * Math.sin((deg * Math.PI) / 180)];
     const p0: V3 = [u, v, w0 - 0.003];
-    const p1 = dir(20, 0.045 * k * k0 * 0.94, p0);
-    const p2 = dir(48, 0.028 * k * k0 * 0.94, p1);
-    const p3 = dir(72, 0.021 * k * k0 * 0.94, p2);
+    const p1 = dir(12, 0.045 * k * k0 * 0.94, p0);
+    const p2 = dir(30, 0.028 * k * k0 * 0.94, p1);
+    const p3 = dir(46, 0.021 * k * k0 * 0.94, p2);
     const r = k < 0.9 ? 0.9 : 1;
     out.push(capsule(c(`hand-l-finger-${name}`), p0, p1, 0.0102 * r, 0.0095 * r));
     out.push(capsule(c(`hand-l-finger-${name}-mid`), p1, p2, 0.0093 * r, 0.0086 * r));
     out.push(capsule(c(`hand-l-finger-${name}-tip`), p2, p3, 0.0086 * r, 0.0079 * r));
   }
-  out.push(capsule(c("hand-l-thumb"), [0.021, 0.032, w0 - 0.01], [0.06, 0.055, w0 - 0.017], 0.0125, 0.0112));
-  out.push(capsule(c("hand-l-thumb-mid"), [0.06, 0.055, w0 - 0.017], [0.092, 0.065, w0 - 0.022], 0.011, 0.0099));
-  out.push(capsule(c("hand-l-thumb-tip"), [0.092, 0.065, w0 - 0.022], [0.113, 0.067, w0 - 0.027], 0.0099, 0.0086));
+  out.push(capsule(c("hand-l-thumb"), [0.021, 0.03, w0 - 0.01], [0.055, 0.044, w0 - 0.016], 0.0125, 0.0112));
+  out.push(capsule(c("hand-l-thumb-mid"), [0.055, 0.044, w0 - 0.016], [0.083, 0.05, w0 - 0.021], 0.011, 0.0099));
+  out.push(capsule(c("hand-l-thumb-tip"), [0.083, 0.05, w0 - 0.021], [0.104, 0.051, w0 - 0.025], 0.0099, 0.0086));
   return out;
 }
 
@@ -244,7 +272,7 @@ export function body50(): Json[] {
   const coat = (id: string, bone = "torso", tone: number = TONE.coat, role = "body"): { id: string; bone: string; material: string; tone: number; role: string } => ({ id, bone, material: "wool-coat", tone, role });
 
   out.push(loft({ id: "pelvis-trousers", bone: "pelvis", material: "wool-trouser", tone: TONE.trousers }, dense(SEAT.map(([y, b, f, rw, e]) => H("pelvis", y, b, f, rw, e)), 3)));
-  out.push(loft(coat("coat"), dense(coatStations(), 4)));
+  out.push(...coatParts(COAT, 4));
 
   const leg: Json[] = [];
   leg.push(loft({ id: "thigh-l", bone: "thigh-l", material: "wool-trouser", tone: TONE.trousersFar }, dome(dense(THIGH_L, 3), 1, 0.04)));
@@ -277,20 +305,20 @@ export function body50(): Json[] {
   out.push(loft({ id: "hair", bone: "head", material: "hair", tone: TONE.hair }, dome(dome(dense(HAIR.map(([y, b, f, rw, e]) => H("head", y, b, f, rw, e)), 3), -1, 0.008, 2), 1, 0.003, 2)));
   const nose: [number, number, number][] = [[1.706, 0.1185, 0.0075], [1.69, 0.1265, 0.0095], [1.675, 0.1345, 0.0125], [1.664, 0.1395, 0.0165], [1.656, 0.131, 0.0165]];
   out.push(loft(skin("head-nose"), dense(nose.map(([y, f, rw]) => H("head", y, 0.1, f, rw, 2)), 2).reverse()));
-  out.push(ellipsoid(skin("head-brow"), [0.0075, 0.008, 0.043], Hd(0.1085, 1.714), level));
+  out.push(ellipsoid(skin("head-brow"), [0.006, 0.0055, 0.04], Hd(0.1065, 1.715), level));
   out.push(ellipsoid(skin("head-lips", "head", 0.66), [0.0068, 0.0075, 0.023], Hd(0.1065, 1.6255), level));
-  out.push(ellipsoid(skin("head-chin"), [0.015, 0.014, 0.022], Hd(0.092, 1.583), level));
+  out.push(ellipsoid(skin("head-chin"), [0.0135, 0.012, 0.02], Hd(0.093, 1.586), level));
   for (const side of [1, -1]) {
     const n = side > 0 ? "l" : "r";
     out.push(ellipsoid(skin(`head-ear-${n}`, "head", 0.74), [0.031, 0.0155, 0.0062], Hd(0.008, 1.684, side * 0.0745), compose(level, aboutW(-10), aboutU(side * 16))));
-    out.push(ellipsoid(skin(`head-eye-${n}`, "head", 0.15, "detail"), [0.0052, 0.0052, 0.0115], Hd(0.1045, 1.694, side * 0.032), level));
+    out.push(ellipsoid(skin(`head-eye-${n}`, "head", 0.15, "detail"), [0.004, 0.005, 0.0112], Hd(0.0955, 1.694, side * 0.032), level));
   }
 
   for (const side of [1, -1]) {
     const n = side > 0 ? "l" : "r";
-    const py = 0.985;
+    const py = 1.022;
     const pz = 0.116;
-    out.push(box(coat(`coat-pocket-${n}`, "torso", 0.24, "detail"), [0.05, 0.009, 0.135], L("torso", [coatX(py, pz, 1) + 0.001, py, side * pz]), compose(aboutW(90 - boneDeg("torso")), aboutU(-side * coatYaw(py, pz))), 0.003));
+    out.push(box(coat(`coat-pocket-${n}`, "torso", 0.24, "detail"), [0.05, 0.008, 0.115], L("torso", [coatX(py, pz, 1) - 0.0005, py, side * pz]), compose(aboutW(90 - boneDeg("torso")), aboutU(-side * coatYaw(py, pz))), 0.003));
   }
   for (const side of [1, -1]) {
     const rows = LAPEL.map(([y, zin, zout]) => H("torso", y, coatX(y, zout, 1) - 0.01, coatX(y, zin, 1) + 0.0055, (zout - zin) / 2, 5, (side * (zin + zout)) / 2));
@@ -366,7 +394,7 @@ export function thermal50(body: readonly Json[]): Json[] {
   const sides = (ids: readonly string[]): string[] => ids.flatMap((id) => [id, toRight(id)]);
 
   for (const id of ["coat", "collar", ...sides(["sleeve-l", "forearm-l"])]) layered(id, "coat");
-  ref(["lapel-l", "lapel-r", "coat-pocket-l", "coat-pocket-r", "coat-button-1", "coat-button-2", "coat-button-3"], "coat", "overcoat");
+  ref(["coat-skirt-l", "coat-skirt-r", "coat-centre", "lapel-l", "lapel-r", "coat-pocket-l", "coat-pocket-r", "coat-button-1", "coat-button-2", "coat-button-3"], "coat", "overcoat");
   ref(sides(["shirt-cuff-l"]), "coat", "shirt");
   for (const id of sides(["thigh-l", "shank-l"])) out.push(...legTubes(by(id), true));
   for (const id of sides(["shoe-rear-l", "shoe-toe-l"])) layered(id, "shoes");
@@ -397,6 +425,12 @@ function L0(q: Json): number {
 export const BONE = { material: "bone", tone: 0.62 };
 /** 📐 The fit of the shared adult skeleton table to the commuter: trunk 0.97 of the reference man, the thorax 8 mm further forward under the coat, shoulder joints 0.42 m up the torso bone. */
 export const FIT: Fit = { ...BONE, ks: 0.9706, kv: 1, kw: 1, dv: -0.008, kp: 1, kpv: 1, drop: 1, shoulder: 0.42, torso: "torso", pelvis: "pelvis" };
+/** 🦴 The shared adult table carries the spine of the shoulder blade out to 0.184 m; the commuter's acromion reaches 0.196 m from the midline over his shoulder joints at 0.19 m, a bony biacromial breadth of 0.40 m (0.226 of stature, ANSUR II men). */
+export function acromion(solid: Json): Json {
+  if (!/^sk-scapular-spine-[lr]$/.test(solid.id)) return solid;
+  const n = solid.sections.length;
+  return { ...solid, sections: solid.sections.map((q: Json, i: number) => (i < n - 2 ? q : { ...q, at: [q.at[0], q.at[1], r5(Math.sign(q.at[2]) * (i === n - 1 ? 0.196 : 0.188))] })) };
+}
 export const kgOf = (bone: string): Json => (ASSET.rig.bones as Json[]).find((b) => b.id === bone).mass;
 export const T = (x: number, y: number, z = 0): V3 => L("torso", [x, y, z]);
 export const P = (x: number, y: number, z = 0): V3 => L("pelvis", [x, y, z]);
@@ -418,7 +452,7 @@ export const jointBall = (member: string, at: V3, r: number): Json => part(ellip
 export function structure50(body: readonly Json[]): Json[] {
   const out: Json[] = [];
   const m = (solid: Json, member: string): void => { out.push(part(solid, member, "member")); };
-  for (const s of axial(FIT, 50)) m(s, s.bone);
+  for (const s of axial(FIT, 50)) m(acromion(s), s.bone);
   const level = aboutW(90 - boneDeg("head"));
   m(ellipsoid({ id: "cranium", bone: "head", ...BONE }, [0.066, 0.094, 0.071], Hd(0.014, 1.727), level), "head");
   m(ellipsoid({ id: "face-bones", bone: "head", ...BONE }, [0.044, 0.034, 0.054], Hd(0.074, 1.662), level), "head");

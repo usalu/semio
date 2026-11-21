@@ -2,6 +2,19 @@
 
 use super::*;
 
+pub(super) const CANVAS_TEXT_FONT: &str = "Share Tech Mono";
+pub(super) const CANVAS_TEXT_COLOR: [f64; 4] = [0.43, 0.48, 0.55, 1.0];
+
+/// 📝️ Builds a painted text layer for the Canvas2d renderer's catalog font contract.
+pub fn fem2d_canvas_text_layer(id: &str, x: f64, y: f64, content: &str, size: f64) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::json!({
+        "id": id,
+        "transform": [1.0, 0.0, 0.0, 1.0, x, y],
+        "fill": { "color": CANVAS_TEXT_COLOR },
+        "text": { "content": content, "size": size, "fontFamily": CANVAS_TEXT_FONT },
+    })
+}
+
 //#region 👁️LiveVisualLanguage
 pub(super) fn vector_layer(id: &str, origin: (f64, f64), vector: [f64; 2], color: &str) -> semio_framework_pack_json::Value {
     semio_framework_pack_json::json!({
@@ -42,7 +55,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
         let (x1, y1) = screen_2d(b.x, b.y);
         layers.push(semio_framework_pack_json::json!({ "kind": "line", "id": format!("assembling-{id}"), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": "#a855f7" }));
     }
-    let mut fields = visual.fields.clone();
+    let mut fields: Vec<_> = visual.fields.iter().collect();
     fields.sort_by(|a, b| a.node_id.cmp(&b.node_id));
     for field in fields {
         let Some(node) = find_node_2d(&doc.nodes, &field.node_id) else { continue };
@@ -57,7 +70,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
     } else {
         "unconverged"
     };
-    layers.push(semio_framework_pack_json::json!({ "id": format!("solve-status-{status}"), "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 18.0], "text": { "content": status, "size": 11.0 } }));
+    layers.push(fem2d_canvas_text_layer(&format!("solve-status-{status}"), 10.0, 18.0, status, 11.0));
     layers
 }
 //#endregion 👁️LiveVisualLanguage
@@ -270,6 +283,16 @@ pub fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<Fem2dRegionMeshTr
     out
 }
 
+/// 💗️ Paints one projected deformation edge in the shared results overlay color.
+pub fn fem2d_deformed_edge_layer(id: String, start: (f64, f64), end: (f64, f64)) -> semio_framework_pack_json::Value {
+    semio_framework_pack_json::json!({
+        "kind": "polyline",
+        "id": id,
+        "points": [[start.0, start.1], [end.0, end.1]],
+        "color": "#f472b6",
+    })
+}
+
 /// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
 /// display scale — shared by the static, modal, and buckling results renders.
 pub fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<semio_framework_pack_json::Value> {
@@ -285,12 +308,7 @@ pub fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<Strin
         let dy0 = -d1[Dof::Ty.index()] * deform_scale * SCALE_2D;
         let dx1 = d2[Dof::Tx.index()] * deform_scale * SCALE_2D;
         let dy1 = -d2[Dof::Ty.index()] * deform_scale * SCALE_2D;
-        layers.push(semio_framework_pack_json::json!({
-            "kind": "polyline",
-            "id": format!("deformed-{}", element_id(element)),
-            "points": [[x0 + dx0, y0 + dy0], [x1 + dx1, y1 + dy1]],
-            "color": "#f472b6",
-        }));
+        layers.push(fem2d_deformed_edge_layer(format!("deformed-{}", element_id(element)), (x0 + dx0, y0 + dy0), (x1 + dx1, y1 + dy1)));
     }
     layers
 }

@@ -231,6 +231,24 @@ export const Mobile: Story = {
   },
 };
 
+export const ScrollingPage: Story = {
+  args: {
+    scrollCanvas: true,
+    navbar: <Navbar label="Page navigation" items={[{ key: "title", content: "Page navigation" }]} showFullscreenToggle={false} />,
+    footer: <Footer items={[{ key: "status", content: "Page footer" }]} />,
+    canvas: (
+      <main>
+        {Array.from({ length: 12 }, (_, index) => (
+          <section key={index} className="flex min-h-[8rem] items-center px-double odd:bg-accent/30">
+            <h2>Section {index + 1}</h2>
+          </section>
+        ))}
+      </main>
+    ),
+  },
+  render: (args) => <div className="h-screen"><Layout {...args} /></div>,
+};
+
 // #endregion 🪨️Layout
 
 // 💻️#region 🧭️Panel

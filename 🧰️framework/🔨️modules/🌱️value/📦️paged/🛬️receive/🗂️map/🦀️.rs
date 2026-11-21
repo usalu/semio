@@ -130,5 +130,8 @@ impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,cons
   self.recover_close_step(body,effect,reply)
  }
  fn terminal_is_empty(&self)->bool{!self.fault&&self.entries.is_none()&&self.child.is_none()&&self.output.is_none()&&self.index.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
+ fn native_terminal_release(&self)->Option<semio_framework_value_native_owned::native_decoding::owned::RetainedCursorRelease<Self>>{
+  self.terminal_is_empty().then(||unsafe{semio_framework_value_native_owned::native_decoding::owned::RetainedCursorRelease::native(|owner:&Self|owner.terminal_is_empty())})
+ }
 }
 impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize> Drop for PagedMapReceiver<I,V,N>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native original map receiving requires funded closure")}}

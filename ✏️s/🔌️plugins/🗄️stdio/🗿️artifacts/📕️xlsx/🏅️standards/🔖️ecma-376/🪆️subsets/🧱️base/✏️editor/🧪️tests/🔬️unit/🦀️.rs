@@ -435,3 +435,47 @@ async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens() {
 }
 
 semio_plugin::history_edit_acceptance_law!("stdio", super::XlsxEditor, || semio_plugin::App { definition: super::create_xlsx_editor(), examples: Vec::new() }, "../..");
+
+#[test]
+fn latest_preview_history_edits_end_to_end() {
+    use calamine::Reader;
+    use semio_framework_value::{DslValue, FromValue};
+    use semio_plugin::app::history_edit_acceptance::{assert_latest_history_preview, block_on_acceptance, __EditorApp};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️sheet-grid/🔣️.json")).unwrap();
+    let preview = &fixture["historyPreview"];
+    let edits = preview["inputs"].as_array().unwrap().iter().map(|input| {
+        (input["path"].as_str().unwrap(), DslValue::int(input["value"].as_i64().unwrap()))
+    }).collect::<Vec<_>>();
+    let fixtures = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell");
+    let latest = block_on_acceptance(assert_latest_history_preview::<__EditorApp<XlsxEditor>, <XlsxEditor as ArtifactEditor>::Members>(
+        || semio_plugin::App { definition: create_xlsx_editor(), examples: Vec::new() }, &fixtures, &edits,
+    ));
+    let snapshot = FromValue::from_value(latest).unwrap();
+    let bytes = XlsxEditor::encode_natural_file(&snapshot).unwrap();
+    let mut workbook: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).unwrap();
+    let worksheet = workbook.worksheet_range(preview["sheetName"].as_str().unwrap()).unwrap();
+    let expected = &preview["expected"];
+    let position = (expected["row"].as_u64().unwrap() as u32, expected["column"].as_u64().unwrap() as u32);
+    assert_eq!(worksheet.get_value(position), Some(&calamine::Data::Float(expected["value"].as_f64().unwrap())));
+    assert!(matches!(worksheet.get_value((position.0, position.1 - 1)), None | Some(calamine::Data::Empty)));
+}
+
+#[test]
+fn generated_edit_proofs_name_the_factory_and_keep_exact_editor_type() {
+    use semio_s_artifact_stdio_contract::editing::{BoundedNativeEditToolJobFactory, SnapshotEditToolJobFactory};
+    use std::any::{type_name, TypeId};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📊️sheet-grid/🔣️.json")).unwrap();
+    let proofs = <XlsxEditor as ArtifactEditor>::bounded_first_step_tool_proofs();
+    for row in fixture["genericToolProofs"].as_array().unwrap() {
+        let tool = row["tool"].as_str().unwrap();
+        let proof = proofs.iter().find(|proof| proof.tool_id() == tool).unwrap();
+        assert_eq!(proof.factory, row["factory"].as_str().unwrap());
+        let (type_id, name) = match tool {
+            "setSnapshotValue" => (TypeId::of::<SnapshotEditToolJobFactory<XlsxEditor>>(), type_name::<SnapshotEditToolJobFactory<XlsxEditor>>()),
+            "set-cell" => (TypeId::of::<BoundedNativeEditToolJobFactory<XlsxEditor>>(), type_name::<BoundedNativeEditToolJobFactory<XlsxEditor>>()),
+            _ => panic!("unexpected fixture tool"),
+        };
+        assert_eq!(proof.factory_type_id, Some(type_id));
+        assert_eq!(proof.factory_type_name, Some(name));
+    }
+}

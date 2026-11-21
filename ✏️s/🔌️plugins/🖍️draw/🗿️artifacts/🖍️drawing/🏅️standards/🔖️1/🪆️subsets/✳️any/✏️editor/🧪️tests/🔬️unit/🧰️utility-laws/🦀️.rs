@@ -3,11 +3,13 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_geometry::editing::SegmentType;
+use semio_framework::{ActionKind, HierarchyProvider, SelectionMethod};
 use semio_plugin::UtilityCategory;
 
 fn with_utility(meta: &semio_plugin::ActionMeta, utility: &str) -> semio_plugin::ActionMeta {
     let mut meta = meta.clone();
-    meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..meta.view_state.clone().unwrap_or_else(||ViewModel::new(semio_ui_locale::Locale::En,semio_ui_locale::Terminology::Native)) });
+    let view = meta.view_state.get_or_insert_with(|| ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native).into());
+    std::sync::Arc::make_mut(view).active_utility_id = Some(utility.into());
     meta
 }
 
@@ -118,7 +120,10 @@ async fn shape_conversion_restores_the_primitive_with_one_undo() {
     let before=DrawingSnapshot { id:"conversion-history".into(),layers:vec![layer].into(),..Default::default() };
     load_drawing_fixture(&mut app,&before);
     let mut after=before.clone();
-    for mutation in edit_selection::plan(&before,&[id.clone()],"toPath").unwrap() { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after,&mutation).unwrap(); }
+    let admission = semio_s_artifact_draw_drawing_editor::identity_test::operation();
+    let mut observer = |_| true;
+    let mut control = semio_framework_value::NativeEncodeControl::new(1 << 20, &mut observer);
+    for mutation in edit_selection::plan(&before,&[id.clone()],"toPath",&admission,&mut control).unwrap() { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after,&mutation).unwrap(); }
     artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::EditSelection(edit_selection::EditSelection { operation:"toPath".into(),ids:vec![id] }), |app|app.snapshot().unwrap(), before, after, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
@@ -226,7 +231,7 @@ async fn armed_canvas_utilities_retire_gestures_after_document_actions() {
     for row in fixture["cases"].as_array().unwrap() {
         let utility = row["utility"].as_str().unwrap();
         let (mut app, mut meta) = inline_selection_app().await;
-        meta.view_state.as_mut().unwrap().active_utility_id = Some(utility.into());
+        std::sync::Arc::make_mut(meta.view_state.as_mut().unwrap()).active_utility_id = Some(utility.into());
         let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Source")).to_string().into()).expect("nonempty authored identity"), "Source");
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).id = "source".into();
         semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill = Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] });
@@ -235,7 +240,7 @@ async fn armed_canvas_utilities_retire_gestures_after_document_actions() {
         settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
         let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": "source" })]).unwrap();
         let admission = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
-        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
+        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admission, app.1.cx()).await.unwrap();
         let press = &row["press"];
         let movement = &row["move"];
         settled(&mut app, DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: press[0].as_f64().unwrap(), y: press[1].as_f64().unwrap(), width: 800.0, height: 600.0, ..Default::default() }), &meta).await;

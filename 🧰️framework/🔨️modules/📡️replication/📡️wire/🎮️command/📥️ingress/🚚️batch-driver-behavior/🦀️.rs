@@ -38,6 +38,7 @@ impl CommandBatchDriver {
 
     pub fn observe(&mut self, status: &CommandIngressStatus, maximum_release_bytes: usize) -> Result<CommandBatchProgress, semio_framework_diagnostic::Fault> {
         let (cursor, shape) = match status {
+            CommandIngressStatus::OriginalMediaAck(_) => return Ok(CommandBatchProgress::Waiting),
             CommandIngressStatus::Idle => {
                 return Ok(if self.batch.commands.is_empty() {
                     CommandBatchProgress::Complete
@@ -119,7 +120,7 @@ impl CommandBatchDriver {
                 self.faulted = true;
                 Ok(CommandBatchProgress::Faulted)
             }
-            CommandIngressStatus::Idle => unreachable!(),
+            CommandIngressStatus::Idle | CommandIngressStatus::OriginalMediaAck(_) => unreachable!(),
         }
     }
 

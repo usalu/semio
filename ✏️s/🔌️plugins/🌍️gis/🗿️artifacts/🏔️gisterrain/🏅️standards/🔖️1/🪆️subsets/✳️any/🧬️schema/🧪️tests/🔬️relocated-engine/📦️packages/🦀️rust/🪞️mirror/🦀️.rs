@@ -109,6 +109,11 @@ pub mod examples {
     #[path = "."]
     pub mod demo {
         #[cfg(test)]
+        #[path = "../../../../../../📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        #[cfg(test)]
+        pub use component::source;
+        #[cfg(test)]
         #[path = "../../../../../../📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"]
         pub mod tests;
     }

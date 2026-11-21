@@ -1,0 +1,58 @@
+{
+  "manifest": "🌎️hub/🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+  "catalog": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
+  "variants": [
+    {
+      "variant": "gis2d",
+      "app": "s.gis.gismap@1/*#editor",
+      "routes": [
+        "/osm",
+        "/vt"
+      ],
+      "contribution": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🗺️map.json",
+      "viteConfig": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🏗️builder/🌐️vite/🗺️map.ts",
+      "browserEntry": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🚀️entry/🗺️map.ts",
+      "facet": "renderer",
+      "engines": [
+        "surface",
+        "editor",
+        "graph"
+      ],
+      "factoryModules": []
+    },
+    {
+      "variant": "gis3d",
+      "app": "s.gis.gisterrain@1/*#editor",
+      "routes": [
+        "/dem"
+      ],
+      "contribution": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🏔️terrain.json",
+      "viteConfig": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🏗️builder/🌐️vite/🏔️terrain.ts",
+      "browserEntry": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🚀️entry/🏔️terrain.ts",
+      "facet": "renderer",
+      "engines": [
+        "surface",
+        "editor",
+        "graph"
+      ],
+      "factoryModules": []
+    },
+    {
+      "variant": "s",
+      "app": null,
+      "contribution": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🔣️.json",
+      "viteConfig": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🏗️builder/🌐️vite/🟦️.ts",
+      "browserEntry": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🚀️entry/🟦️.ts",
+      "facet": "play",
+      "engines": [
+        "surface",
+        "editor",
+        "graph",
+        "puzzle"
+      ],
+      "factoryModules": [
+        "@semio-tech/puzzle-2d"
+      ]
+    }
+  ]
+}

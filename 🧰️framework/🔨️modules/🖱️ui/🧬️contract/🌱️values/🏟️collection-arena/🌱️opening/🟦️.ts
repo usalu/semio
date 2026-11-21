@@ -3,6 +3,17 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import corpus from "./🔣️.json";
 import schema from "./🧬️.json";
+import rowBatches from "./row-batches.json";
+import rowBatchSchema from "./row-batches.schema.json";
+
+test("arena row runs respect every actual limit and never admit more than 32 rows",()=>{
+ expect(new Ajv({strict:true}).compile(rowBatchSchema)(rowBatches)).toBe(true);
+ const db=new Database(":memory:");
+ try{
+  const cap=db.query<{rows:number},[number,number,number]>("SELECT min(?, ?, ?, 32) AS rows");
+  for(const row of rowBatches)expect(cap.get(row.items,row.copyRows,row.work)).toEqual({rows:row.rows});
+ }finally{db.close();}
+});
 test("native UI arena ownership permits detach only after every actual descendant and borrow returns",()=>{
  expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);const db=new Database(":memory:");
  for(const row of corpus.registrationCases){const actual=db.query("select (?=0 and ?=0 and ?=0 and ?=0) permitted").get(row.borrowers,row.collections,row.pages,row.handbacks)as{permitted:number};expect(Boolean(actual.permitted)).toBe(row.detach);}

@@ -47,6 +47,7 @@ import {
   treeWindowBodyRequestsV1,
   treeWindowContainersUnder,
   TreeWindowContext,
+  useTreeWindowContext,
   treeWindowRowHeightPx,
   treeWindowScrollViewport,
   treeWindowServedRequestsV1,
@@ -80,7 +81,17 @@ export const InterpretedUiNode = memo(function InterpretedUiNode({ store, window
   const surfaceActions = usePluginSurfaceActions();
   const root = useUiDocumentRoot(store);
   const ownedAction = useCallback((action: ShellInputActionV1, lifecycle?: ActionDispatchLifecycleV1) => onAction(windowId === undefined ? action : inputActionWithWindowV1(action, windowId), lifecycle), [onAction, windowId]);
-  const ownedIntent = useCallback((intent: UiIntent) => onIntent(intent, windowId), [onIntent, windowId]);
+  const treeWindows = useTreeWindowContext();
+  const ownedIntent = useCallback((intent: UiIntent) => {
+    if (intent.action.scope === "framework" && intent.action.name === "setFormPage") {
+      const args = intent.args as { readonly windowId?: unknown; readonly page?: unknown } | null;
+      if (intent.trigger === "activate" && intent.action.version === 1 && windowId !== undefined && args?.windowId === windowId && typeof args.page === "number") {
+        treeWindows?.setFormPage?.(windowId, args.page);
+      }
+      return;
+    }
+    return onIntent(intent, windowId);
+  }, [onIntent, treeWindows, windowId]);
   if (root === null) return null;
   return <LocalDocumentOwnerContext.Provider value={localDocumentOwner}><LocalDocumentWindowContext.Provider value={windowId ?? null}><UiNodeView store={store} id={root} context={{ store, localDocumentOwner, onAction: ownedAction, onIntent: ownedIntent, requestContextMenu: requestContextMenu ?? surfaceActions }} /></LocalDocumentWindowContext.Provider></LocalDocumentOwnerContext.Provider>;
 });

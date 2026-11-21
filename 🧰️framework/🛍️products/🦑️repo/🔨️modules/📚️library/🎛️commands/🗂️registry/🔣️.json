@@ -164,10 +164,10 @@
         "en": "The module reaches the TypeScript compiler and the JSON schema library.",
         "de": "Das Modul erreicht den TypeScript-Compiler und die JSON-Schema-Bibliothek."
       },
-      "synopsis": "dev storybook|time-travel|mcp …",
+      "synopsis": "dev playground <variant> <react|wgpu|native> <prototype|release> | dev storybook|time-travel|mcp …",
       "summary": {
-        "en": "Starts development servers and the time-travel browser gate.",
-        "de": "Startet Entwicklungsserver und die Zeitreise-Browserprüfung."
+        "en": "Starts browser and native playgrounds, development servers, and the time-travel browser gate.",
+        "de": "Startet Browser- und native Playgrounds, Entwicklungsserver und die Zeitreise-Browserprüfung."
       }
     },
     {

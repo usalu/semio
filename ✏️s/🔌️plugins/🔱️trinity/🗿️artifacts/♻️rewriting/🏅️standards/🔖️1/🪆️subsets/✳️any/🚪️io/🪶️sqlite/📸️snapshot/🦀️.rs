@@ -1,7 +1,7 @@
 //! ♻️ typed thirty-table Rewriting capability awaiting its owning assertion gate.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
-use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding}};
+use semio_os_kernel::{os_store::serialization::{ArtifactSqliteSnapshotHost, SnapshotReceivingOutcome, SnapshotReceivingOutput},sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding}};
 use semio_framework_value::ValueError;
 #[path="💰️backing/🦀️.rs"]
 mod backing;
@@ -13,8 +13,13 @@ impl ArtifactSqliteSnapshotHost for RewritingSnapshot {
  
  
  
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {
-  native::decode(payload,control,native_control)
+ fn decode_sqlite_snapshot_native(
+  payload: &store::io::IoPayload,
+  control: &mut SqliteSnapshotControl<'_>,
+  native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,
+  output: &mut Option<SnapshotReceivingOutput<Self>>,
+ ) -> SnapshotReceivingOutcome {
+  native::decode(payload, control, native_control, output)
  }
  fn encode_sqlite_snapshot_native(&self,format:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{
   encoding::preflight(self,control)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::encode_sqlite_snapshot_record_native(format,"trinity.rewriting",Self::__dsl_spec_producer(), &mut |native|self.__dsl_to_record_controlled(native),control,native_owner,output)}

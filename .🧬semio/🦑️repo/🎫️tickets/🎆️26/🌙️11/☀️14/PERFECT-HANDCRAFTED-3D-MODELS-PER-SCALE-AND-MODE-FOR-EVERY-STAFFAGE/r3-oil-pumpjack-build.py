@@ -16,7 +16,7 @@ CATALOG = "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍�
 SOURCE = os.path.join(T, "volumes", "machinery", "oil-pumpjack.json")
 OUT = os.path.join(T, "🗑️generated", "r3-oil-pumpjack")
 CANDIDATE = os.path.join(OUT, "🔣️.json")
-ROOTS = ["provenance", "rig", "representations", "thermal"]
+ROOTS = ["provenance", "dimensions", "materials", "rig", "representations", "thermal", "poses", "clips"]
 
 
 def _load(name, file):
@@ -163,6 +163,8 @@ def build(document):
         if reg["id"] in AREAS:
             reg["areaM2"] = AREAS[reg["id"]]
     a["volumes"] = {str(s): SO.volume(s) for s in (50, 100, 200, 500)}
+    import runpy
+    runpy.run_path(os.path.join(T, "pumpjack-rod.py"))["apply"](a)
     return document
 
 

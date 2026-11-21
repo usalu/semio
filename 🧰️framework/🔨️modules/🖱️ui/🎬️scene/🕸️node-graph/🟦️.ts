@@ -53,8 +53,11 @@ export type NodeGraphFindItem = {
 export type NodeGraphHover = {
   readonly edgeId?: string;
   readonly nodeId?: string;
+  readonly hoverSourceWindowId?: string | null;
   /** 🔆️ Hovered channel (port) id on `nodeId`, matching the `"{nodeId}@{portId}"` pick id. */
   readonly portId?: string;
+  /** 🔌️ Additional channel marks with canonical node and side-specific port ids. */
+  readonly portIds?: readonly string[];
 };
 
 /** ➕️ Variadic input/output slot on an operator catalogue entry. */
@@ -154,6 +157,7 @@ export type NodeGraphScene = {
   readonly operators?: readonly NodeGraphOperatorRecord[];
   readonly findItems?: readonly NodeGraphFindItem[];
   readonly selection?: readonly string[];
+  readonly selectionGranularity?: "node" | "edge" | "handle";
   readonly hover?: NodeGraphHover;
   /** ✨️ Ids — nodes, edges, or `"{nodeId}@{portId}"` ports — the plugin wants highlighted, e.g.
    * because they are transitively hovered from another window. */

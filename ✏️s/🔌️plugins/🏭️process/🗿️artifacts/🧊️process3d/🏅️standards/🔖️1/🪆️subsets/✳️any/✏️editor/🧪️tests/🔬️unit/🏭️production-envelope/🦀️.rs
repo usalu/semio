@@ -92,10 +92,22 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog");
     let funded = semio_s_artifact_process_process3d_host::process3d_demand_grant(owners.uninstalled_envelope_retirement_demands(&envelope));
     let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, funded).map_err(|(error, _, _)| error).expect("Process3d fixture envelope retirement admission");
+    let mut caller = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let page_bytes = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     for _ in 0..100_000 {
-        let demand = retirement.next_demand(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement demand");
-        let step = retirement.close_step(semio_s_artifact_process_process3d_host::process3d_demand_grant(demand)).result.expect("Process3d fixture envelope retirement");
-        if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) && retirement.terminal_is_empty() {
+        let demand = retirement.next_demand(page_bytes).expect("Process3d fixture envelope retirement demand");
+        let grant = semio_s_artifact_process_process3d_host::process3d_demand_grant(demand);
+        let mut complete = false;
+        caller.cx().with_retained_loan(grant, |cx| {
+            semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                let poll = retirement.close_step(page_bytes, effect);
+                use semio_framework_value::{RetainedCloneStep, RetainedWorkPoll};
+                complete = matches!(&poll, RetainedWorkPoll::Complete(turn) if matches!(&turn.result, Ok(RetainedCloneStep::Complete(_))));
+                poll
+            })
+        }).expect("Process3d fixture envelope retirement");
+        if complete {
+            assert!(retirement.terminal_is_empty());
             drop(retirement);
             return (wire, expected, expected_digest);
         }
@@ -116,16 +128,24 @@ fn admit_production_envelope(app: &mut super::context::Process3dApp, wire: &[u8]
     handle
 }
 
-fn drive_production_envelope(app: &mut super::context::Process3dApp, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
-    for _ in 0..200_000 {
+async fn drive_production_envelope(app: &mut super::context::Process3dApp, handle: semio_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_plugin::ArtifactEnvelopeDecodeOperationPoll {
+    use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, fixture_identity, fixture_renew_turn};
+    use semio_plugin::ArtifactEnvelopeDecodeOperationPoll::{Pending, Ready, Cancelled, Fault};
+    let mut identity = fixture_identity();
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let grant = app.1.cx().retained_grant();
+    let mut poll = Pending;
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(app.1.cx(), fuel, grant).expect("Process3d production caller renewal");
+        PluginApp::advance_typed_operation_publication(&mut app.0, &mut identity, app.1.cx()).await.expect("Process3d production publication turn");
         PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Process3d production maintenance turn");
-        let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Process3d production load advancement");
-        if matches!(poll, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+        poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Process3d production load advancement");
+        if matches!(poll, Ready | Cancelled | Fault) {
             return poll;
         }
-        std::thread::yield_now();
+        semio_framework_async::yield_once().await;
     }
-    panic!("Process3d production envelope load did not reach terminal")
+    panic!("Process3d production envelope load did not reach terminal ({poll:?}): {}", PluginApp::close_diagnostic(&app.0))
 }
 
 /// 🔐️ LAW: the real `VcsArtifactApp` maintenance branch publishes the complete deep Process3d document through the framework-minted publication token.
@@ -136,7 +156,7 @@ async fn vcs_artifact_app_production_maintenance_swap_publishes_the_deep_documen
     let base_generation = accepted.artifact_generation_now();
     let (accepted_wire, expected_snapshot, expected_digest) = production_envelope_wire(accepted_label);
     let accepted_handle = admit_production_envelope(&mut accepted, &accepted_wire);
-    assert_eq!(drive_production_envelope(&mut accepted, accepted_handle), semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    assert_eq!(drive_production_envelope(&mut accepted, accepted_handle).await, semio_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
     let accepted_snapshot = accepted.snapshot().expect("accepted Process3d production snapshot");
     assert_eq!(&accepted_snapshot, &expected_snapshot, "real maintenance replay must publish the complete deep semantic state");

@@ -1,63 +1,22 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_draw_drawing_editor_interaction::DRAWING_DEFAULT_UTILITY;
-use semio_s_artifact_draw_drawing_editor::{DRAWING_GESTURE_RAW_BYTES, DRAWING_GESTURE_RETAINED_BYTES, DrawingCommand, DrawingGestureOperationJob, DrawingGestureOperationOwner, DrawingInstanceOperationOwner, DrawingPlayApp, DrawingRetainedCommandDecoder};
+use semio_s_artifact_draw_drawing_editor::{DRAWING_GESTURE_RAW_BYTES, DRAWING_GESTURE_RETAINED_BYTES, DrawingCommand, DrawingGestureOperationOwner, DrawingInstanceOperationOwner, DrawingRetainedCommandDecoder};
 use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
-use semio_framework_job::{InteractiveJob as _, InteractiveJobCloseStep};
+use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, OriginalJobFixtureCaller};
+use semio_framework_job_registry::FixedOperationOwner as _;
+use semio_s_artifact_draw_drawing_scene::identity::SceneIdentity;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_plugin::Emit;
-use semio_framework_diagnostic::FaultOrigin;
-use semio_framework_diagnostic::FaultCode;
-use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
-use semio_plugin::NoConfigMutation;
-use semio_plugin::NoDraftMutation;
-use semio_plugin::Fault;
 
 fn grant(items: usize, bytes: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 32 }
 }
 
-fn released(items: usize, bytes: usize) -> InteractiveJobCloseStep {
-    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() } }
+fn original_caller() -> OriginalJobFixtureCaller {
+    OriginalJobFixtureCaller::admit(OperationId(1), Generation(1), grant(1 << 20, 1 << 30), || Some(0), u64::MAX, 1 << 20)
 }
 
-#[test]
-fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch() {
-    let mut emit: Emit<DrawingMutation, NoConfigMutation, NoDraftMutation> = Emit::default();
-    emit.child_emits.push(semio_plugin::app::ChildEmit::open("member","drawing-child",0));
-    let rejected = semio_plugin::app::ArtifactToolCompletionRejection::<semio_plugin::EditorApp<DrawingPlayApp>> {
-        emit: Ok(emit),
-        ephemeral: semio_plugin::EphemeralEmit::default(),
-        fault: Fault::new(FaultOrigin::Framework, FaultCode::new("test.completion-rejected"), "injected completion rejection"),
-    };
-    let mut job = DrawingGestureOperationJob {
-        payload: None,
-        pending_completion_rejection: Some(rejected),
-        raw_input: None,
-        raw_page_cursor: 0,
-        raw_byte_cursor: 0,
-        decoder: Some(DrawingRetainedCommandDecoder::new("canvasEscape")),
-        raw_validated: true,
-        completed: false,
-        closing: false,
-    };
-    job.begin_close();
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(0, 1), |cx| job.close_step(cx)).expect("original fixture close turn"), released(0, 0));
-    assert!(job.pending_completion_rejection.is_some());
-    assert!(job.decoder.is_some());
-    for _ in 0..128 {
-        if job.pending_completion_rejection.is_none() {
-            break;
-        }
-        let step = semio_framework_job::close_with_self_funded_context(grant(1, 4_096), |cx| job.close_step(cx)).expect("original fixture close turn");
-        if let InteractiveJobCloseStep::Pending { progress } = step {
-            assert!(progress.copied_items <= 1 && progress.released_bytes <= 4_096);
-        }
-    }
-    assert!(job.pending_completion_rejection.is_none());
-    assert!(job.decoder.is_some(), "normal decoder owner stays retained until the rejected output is terminal");
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, 4_096), |cx| job.close_step(cx)).expect("original fixture close turn"), released(1, 0));
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, 4_096), |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
-    assert!(job.terminal_is_empty());
+fn released(items: usize, bytes: usize) -> InteractiveJobCloseStep {
+    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: items, released_bytes: bytes, ..Default::default() } }
 }
 
 fn decode_retained(expected: &'static str, wire: &[u8]) -> bool {
@@ -75,16 +34,18 @@ fn key(operation: u64, generation: u64) -> semio_framework_job_registry::FixedOp
 }
 
 fn drain(registry: &mut semio_framework_job_registry::FixedOperationRegistry<DrawingGestureOperationOwner, 64>) {
-    for operation in 0..64 {
-        registry.cancel(key(operation, 0));
+    let mut caller = original_caller();
+    for _ in 0..64 {
+        registry.begin_close_step();
     }
     for _ in 0..256 {
         if registry.is_empty() {
-            return;
+            break;
         }
-        let _ = semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
+        caller.turn(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
     }
     assert!(registry.is_empty());
+    caller.retire_exact();
 }
 
 #[test]
@@ -104,13 +65,16 @@ fn drawing_gesture_maximum_plus_one_returns_the_exact_owner() {
     let mut owner = rejected.owner;
     owner.cancel();
     owner.begin_close();
-    assert_eq!(owner.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES)), released(1, DRAWING_GESTURE_RETAINED_BYTES));
+    let mut caller = original_caller();
+    assert_eq!(caller.turn(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).unwrap(), released(1, DRAWING_GESTURE_RETAINED_BYTES));
     assert!(owner.terminal_is_empty());
+    caller.retire_exact();
     drain(&mut registry);
 }
 
 #[test]
 fn drawing_gesture_stale_generation_and_aba_are_exact() {
+    let mut caller = original_caller();
     let mut registry = semio_framework_job_registry::FixedOperationRegistry::<DrawingGestureOperationOwner, 64>::new(DRAWING_GESTURE_RETAINED_BYTES);
     assert!(registry.admit(key(7, 1), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     for _ in 0..64 {
@@ -122,7 +86,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
         if registry.is_empty() {
             break;
         }
-        let _ = semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
+        let _ = caller.turn(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
     }
     assert!(registry.is_empty());
     assert!(registry.admit(key(7, 2), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok(), "the new generation owns the retired slot");
@@ -131,21 +95,24 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
         if registry.is_empty() {
             break;
         }
-        let _ = semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
+        let _ = caller.turn(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
     }
     assert!(registry.is_empty());
+    caller.retire_exact();
 }
 
 #[test]
 fn drawing_gesture_interrupted_and_repeated_close_is_terminal_empty() {
+    let mut caller = original_caller();
     let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.cancel();
     owner.begin_close();
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(0, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
-    assert_eq!(semio_framework_job::close_with_self_funded_context(RetainedCloneGrant { maximum_release_bytes: 0, ..grant(1, DRAWING_GESTURE_RETAINED_BYTES) }, |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), released(1, DRAWING_GESTURE_RETAINED_BYTES));
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(caller.turn(grant(0, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
+    assert_eq!(caller.turn(RetainedCloneGrant { maximum_release_bytes: 0, ..grant(1, DRAWING_GESTURE_RETAINED_BYTES) }, |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
+    assert_eq!(caller.turn(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), released(1, DRAWING_GESTURE_RETAINED_BYTES));
+    assert_eq!(caller.turn(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(owner.terminal_is_empty());
+    caller.retire_exact();
 }
 
 /// 🧾️ The framework's close and maintenance pumps grant one `ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES`
@@ -153,15 +120,16 @@ fn drawing_gesture_interrupted_and_repeated_close_is_terminal_empty() {
 /// declared budget handed back page by page, never a page over the grant.
 #[test]
 fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
+    let mut caller = original_caller();
     let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.begin_close();
-    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, page), |cx| owner.close_step(cx)).expect("original fixture close turn"), released(1, page));
+    assert_eq!(caller.turn(grant(1, page), |cx| owner.close_step(cx)).expect("original fixture close turn"), released(1, page));
     assert!(owner.session.is_none(), "the session is dropped on the first granted page");
     let mut released = page;
     let mut steps = 1;
     loop {
-        match semio_framework_job::close_with_self_funded_context(grant(1, page), |cx| owner.close_step(cx)).expect("original fixture close turn") {
+        match caller.turn(grant(1, page), |cx| owner.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Pending { progress } => {
                 assert_eq!(progress.copied_items, 0);
                 assert!(progress.released_bytes > 0 && progress.released_bytes <= page);
@@ -175,6 +143,7 @@ fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
     }
     assert_eq!(released, DRAWING_GESTURE_RETAINED_BYTES, "the whole declared budget is handed back");
     assert!(owner.terminal_is_empty());
+    caller.retire_exact();
 }
 
 #[test]
@@ -191,6 +160,7 @@ fn drawing_retained_decoder_is_incremental_exact_and_fail_closed() {
 
 #[test]
 fn drawing_preview_rejects_a_stale_revision_and_cancels_the_owner() {
+    let mut caller = original_caller();
     let mut owner = DrawingInstanceOperationOwner::new();
     let operation = key(9, 4);
     assert!(owner.operations.admit(operation, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
@@ -202,9 +172,10 @@ fn drawing_preview_rejects_a_stale_revision_and_cancels_the_owner() {
         if owner.operations.is_empty() {
             break;
         }
-        let _ = owner.operations.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
+        caller.turn(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.operations.close_step(cx)).expect("original registry close turn");
     }
     assert!(owner.operations.is_empty());
+    caller.retire_exact();
 }
 
 #[test]
@@ -221,7 +192,7 @@ fn mounted_vector_gesture_preview_requires_all_captured_full_width_source_lanes(
 #[test]
 fn drawing_instance_owner_close_reaches_every_slot_parity() {
     use semio_plugin::ArtifactInstanceOperationOwner as _;
-    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut caller = original_caller();
     let mut owner = DrawingInstanceOperationOwner::new();
     for operation in 0..3u64 {
         assert!(owner.operations.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
@@ -231,13 +202,15 @@ fn drawing_instance_owner_close_reaches_every_slot_parity() {
         if owner.terminal_is_empty() {
             break;
         }
-        let step = owner.close_step(scope.cx(), grant(1, page)).expect("instance owner close step");
+        let turn = grant(1, page);
+        let step = caller.turn(turn, |cx| Ok(owner.close_step(cx, turn))).unwrap().expect("instance owner close step");
         if let semio_plugin::PluginLifecycleStep::Progress(progress) = step {
             assert!(progress.copied_items <= 1 && progress.released_bytes <= page, "one page per step: {step:?}");
         }
     }
     assert!(owner.terminal_is_empty(), "three owners across both cursor parities close under the page grant");
     assert!(owner.operations.is_empty());
+    caller.retire_exact();
 }
 
 /// 🎰️ The framework mints every tool operation id into the first vacant residue class of its own
@@ -246,22 +219,24 @@ fn drawing_instance_owner_close_reaches_every_slot_parity() {
 /// retired must retire it and admit, never answer `saturated`.
 #[test]
 fn drawing_gesture_admission_retires_the_retiring_owner_in_its_residue_class() {
+    let mut caller = original_caller();
     let mut owner = DrawingInstanceOperationOwner::new();
     let first = key(256, 2);
     assert!(owner.operations.admit(first, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     owner.operations.cancel(first);
     let second = key(320, 3);
     assert!(!owner.operations.can_admit(second, DRAWING_GESTURE_RETAINED_BYTES), "the retiring predecessor still holds the residue class");
-    for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS * 2 {
+    for _ in 0..128 {
         if owner.operations.can_admit(second, DRAWING_GESTURE_RETAINED_BYTES) {
             break;
         }
-        let _ = owner.operations.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
+        caller.turn(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.operations.close_step(cx)).expect("original registry close turn");
     }
     assert!(owner.operations.can_admit(second, DRAWING_GESTURE_RETAINED_BYTES), "one bounded sweep retires the predecessor");
     assert!(owner.operations.admit(second, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     owner.operations.cancel(second);
     drain(&mut owner.operations);
+    caller.retire_exact();
 }
 
 /// 🔁️ A cancelled owner retires within a handful of maintenance steps under the page grant, not one
@@ -269,7 +244,7 @@ fn drawing_gesture_admission_retires_the_retiring_owner_in_its_residue_class() {
 #[test]
 fn drawing_gesture_maintenance_retires_a_cancelled_owner_promptly() {
     use semio_plugin::ArtifactInstanceOperationOwner as _;
-    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut caller = original_caller();
     let mut owner = DrawingInstanceOperationOwner::new();
     let live = key(448, 3);
     assert!(owner.operations.admit(live, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
@@ -277,8 +252,32 @@ fn drawing_gesture_maintenance_retires_a_cancelled_owner_promptly() {
     let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     let mut steps = 0;
     while !owner.operations.is_empty() {
-        owner.maintenance_step(scope.cx(), grant(1, page)).expect("gesture maintenance step");
+        let turn = grant(1, page);
+        caller.turn(turn, |cx| Ok(owner.maintenance_step(cx, turn))).unwrap().expect("gesture maintenance step");
         steps += 1;
         assert!(steps <= DRAWING_GESTURE_RETAINED_BYTES / page + 2, "the owner retires page by page without idle laps: {steps} steps");
     }
+    caller.retire_exact();
+}
+
+#[test]
+fn drawing_empty_instance_owner_records_its_paid_close_transition() {
+    use semio_plugin::ArtifactInstanceOperationOwner as _;
+    let rows: Vec<serde_json::Value> = serde_json::from_str(fixture_text!("🧫️fixtures/🚪️empty-close/🔣️.json")).unwrap();
+    let mut caller = original_caller();
+    let mut owner = DrawingInstanceOperationOwner::new();
+    for row in rows {
+        let copy = row["copyGrant"].as_u64().unwrap() as usize;
+        let demand = owner.retirement_demands(copy).unwrap();
+        let turn = grant(1, copy);
+        let step = caller.turn(turn, |cx| cx.with_original_retirement(|cx| owner.close_step(cx, turn).map_err(Into::into))).unwrap();
+        let progress = step.progress().unwrap_or_default();
+        assert_eq!(serde_json::json!({
+            "demandCopyBytes": demand.copy_bytes,
+            "copiedItems": progress.copied_items,
+            "copiedBytes": progress.copied_bytes,
+            "terminal": owner.terminal_is_empty(),
+        }), row["expected"]);
+    }
+    caller.retire_exact();
 }

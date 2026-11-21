@@ -1,0 +1,9 @@
+# Host escrow snapshot reconciliation
+
+The native Note Input reached the host history with a valid frozen receipt and a new claim. The host selected only empty slots and required every previous claim in every later snapshot. Once the guest reclaimed settled claims after actual header handback, the guest could publish newer serials while the host still retained the old settlements. A full local book then rejected further snapshots, including the cleanup attempt.
+
+The complete SRE1 validator binds every row to one producer and Source and requires strictly increasing serials. The host journals rows in that order. At the first incoming serial beyond the committed high-water mark, every old serial that survived into the current snapshot has already reserved its slot. The host may reuse an unreserved slot when its previous row was settled and the frozen snapshot authenticates physical handback of the previous publication. The new row starts with zero cumulative currency. An existing serial uses the prior row for immutable-field and cumulative checks. A previously published serial with no matching slot is rejected.
+
+The coverage pass marks omitted, acknowledged settlements that did not supply replacement slots. It rejects omitted live rows and unacknowledged settlements. Ledger application reads the prior book's claim count before any mutation and uses the new snapshot's count as before. The subsequent Source-paid journal removes marked rows, writes validated replacements and commits the new publication and its serial high-water mark. Intermediate validation and retries leave the prior book intact until ledger application.
+
+The language-neutral fixture covers a 32-slot search, settled and live rows, current and stale acknowledgment, reserved and retained identities, and serial replay after removal. The independent Bun SQLite oracle passes all ten cases. The Rust unit test consumes the same fixture and exercises the bounded slot search.

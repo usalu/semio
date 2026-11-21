@@ -121,7 +121,9 @@ use step::{add_step, move_step, remove_selected_step, remove_step, set_step_enab
 use stock::set_stock;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
-use world::{world_face_drag_end, world_pointer_down};
+use world::{world_face_drag_end, world_pointer_down, world_pointer_move};
+#[path = "🫧️transient/👆️placement/🦀️.rs"]
+mod placement_hover;
 //#endregion 🔖️Commands
 
 //#region 🔖️Commands
@@ -163,6 +165,7 @@ semio_plugin::app_commands! {
         "setContributions" as "contributions" => set_contributions::SetContributions,
         "exportModel" as "export-model" => export_model::ExportModel,
         "loadModelRequest" as "load-model-request" => load_model_request::LoadModelRequest,
+        "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove,
     }
 }
 //#endregion 🔖️Commands
@@ -217,6 +220,7 @@ impl Process3dBoundedProofs {
             "patchInspector" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "engagementSubmit" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "worldPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+            "worldPointerMove" => process3d_bounded_contract(),
             "worldFaceDragEnd" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "exportModel" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
             "setCursor" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
@@ -329,6 +333,10 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_with(internal_action("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::Mutation, "mouse-pointer") })
             .action_audience("worldPointerDown", semio_plugin::CapabilityAudience::Input)
+            .action_args("worldPointerDown", vec![ActionArgDef::vector("position", LocalizedLabel::native("Position", "Position"), 3).required()])
+            .action_with(internal_action("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"), ActionKind::View))
+            .action_audience("worldPointerMove", semio_plugin::CapabilityAudience::Input)
+            .action_args("worldPointerMove", vec![ActionArgDef::vector("position", LocalizedLabel::native("Position", "Position"), 3).required()])
             .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Mutation))
             .action_audience("worldFaceDragEnd", semio_plugin::CapabilityAudience::Input)
             .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::View))
@@ -340,6 +348,13 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
+            .action_args("setCamera", vec![ActionArgDef::object("camera", LocalizedLabel::native("Camera", "Kamera"), vec![
+                ActionArgDef::vector("position", LocalizedLabel::native("Position", "Position"), 3).required(),
+                ActionArgDef::vector("target", LocalizedLabel::native("Target", "Ziel"), 3).required(),
+                ActionArgDef::vector("up", LocalizedLabel::native("Up", "Oben"), 3),
+                ActionArgDef::number("zoom", LocalizedLabel::native("Zoom", "Zoom")),
+                ActionArgDef::number("fov", LocalizedLabel::native("Field of View", "Sichtfeld")),
+            ]).required()])
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun") })

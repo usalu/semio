@@ -41,16 +41,27 @@ pub fn owned_channel_guest(channel: u32) -> Vec<u8> {
                 (2, body)
             }
             OwnedSemioExport::Checkpoint | OwnedSemioExport::Describe => (2, vec![0x00, 0x00, 0x0b]),
-            OwnedSemioExport::StepJob|OwnedSemioExport::ReadJobOutput|OwnedSemioExport::AcknowledgeJobOutput|OwnedSemioExport::CancelJob=>(4,vec![0x00,0x00,0x0b]),
-            OwnedSemioExport::CloseJobs=>(5,vec![0x00,0x00,0x0b]),
-            OwnedSemioExport::BorrowJobOutput=>(6,vec![0x00,0x00,0x0b]),
-            OwnedSemioExport::AcknowledgeJobOutputChunk=>(7,vec![0x00,0x00,0x0b]),
-            _ => (3, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::StartJob | OwnedSemioExport::StepJob | OwnedSemioExport::ReadJobOutput | OwnedSemioExport::AcknowledgeJobOutput | OwnedSemioExport::CancelJob => (4, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::CloseJobs | OwnedSemioExport::Poll | OwnedSemioExport::AdmitActorContext | OwnedSemioExport::CloseActorContext | OwnedSemioExport::CloseActorOutput => (5, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::BorrowJobOutput => (6, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::AcknowledgeJobOutputChunk => (7, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::PublishActorFailure | OwnedSemioExport::ReadActorFailure | OwnedSemioExport::AcknowledgeActorFailure => (8, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::BorrowActorFailure => (9, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::AcknowledgeActorFailureChunk => (10, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::AdmitActorInput => (11, vec![0x00, 0x00, 0x0b]),
+            OwnedSemioExport::Restore | OwnedSemioExport::PackSchemaHash | OwnedSemioExport::Genesis | OwnedSemioExport::PrintMirror | OwnedSemioExport::ApplyOps | OwnedSemioExport::ReplayEnvelopes | OwnedSemioExport::SqliteSchema | OwnedSemioExport::SqliteExport | OwnedSemioExport::SqliteImport | OwnedSemioExport::SqliteRetirement | OwnedSemioExport::SqliteClose | OwnedSemioExport::SqliteTakeFile | OwnedSemioExport::SqliteTakePayload => (3, vec![0x00, 0x00, 0x0b]),
         })
         .unzip();
     let mut core = b"\0asm\x01\0\0\0".to_vec();
-    let mut signatures=vec![8,0x60,1,0x7f,1,0x7f,0x60,2,0x7f,0x7f,0,0x60,0,1,0x7e,0x60,2,0x7f,0x7f,1,0x7e];
-    for count in [12,11,5,14]{signatures.extend([0x60,count]);signatures.extend(std::iter::repeat_n(0x7e,count as usize));signatures.extend([1,0x7e]);}
+    let mut signatures = vec![12, 0x60, 1, 0x7f, 1, 0x7f, 0x60, 2, 0x7f, 0x7f, 0, 0x60, 0, 1, 0x7e, 0x60, 2, 0x7f, 0x7f, 1, 0x7e];
+    for count in [20, 19, 5, 22, 21, 6, 23] {
+        signatures.extend([0x60, count]);
+        signatures.extend(std::iter::repeat_n(0x7e, count as usize));
+        signatures.extend([1, 0x7e]);
+    }
+    signatures.extend([0x60, 21, 0x7f, 0x7f]);
+    signatures.extend(std::iter::repeat_n(0x7e, 19));
+    signatures.extend([1, 0x7e]);
     section(1,signatures,&mut core);
     let mut functions = Vec::new();
     uleb(types.len() as u64, &mut functions);

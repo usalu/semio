@@ -130,7 +130,7 @@ impl RasterMutationCandidateAuthority {
         if cx.should_yield() {
             return Ok(true);
         }
-        let turn = self.retirement.close(RetainedCloneGrant{maximum_items:1,..cx.retained_grant()});cx.consume_fuel(turn.work);let step=match turn.result{Ok(step)=>step,Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.mutation-retirement-error-receipt")?;return Err("raster-store.mutation-retirement-fault");}};
+        let step=match cx.close_owned(&mut |effect| self.retirement.close(effect)){Ok(step)=>step,Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.mutation-retirement-error-receipt")?;return Err("raster-store.mutation-retirement-fault");}};
         cx.consume_retained(step.progress()).map_err(|_| "raster-store.mutation-retirement-receipt")?;
         Ok(true)
     }
@@ -444,7 +444,7 @@ impl RasterMutationCandidateAuthority {
         }
         if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false);}
         if pixel.terminal_is_empty(){let bytes=size_of::<RasterRetainedMutationWork>();let demand=semio_framework_value::RetirementDemand{release_bytes:bytes,depth:1,..Default::default()};if raster_short(cx.retained_grant(),demand){return Ok(false);}cx.consume_fuel(1);drop(self.pixel.take());cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}).map_err(|_|"raster-store.pixel-frame-release")?;self.phase=RasterMutationCandidatePhase::Drain;return Ok(false);}
-        let demand=pixel.close_demands(cx.retained_grant().maximum_copy_bytes).map_err(|_|"raster-store.pixel-close-demand")?;if cx.retained_grant().maximum_depth<demand.depth||raster_short(cx.retained_grant(),demand){return Ok(false);}let turn=pixel.close_step(RetainedCloneGrant{maximum_items:1,..cx.retained_grant()});cx.consume_fuel(turn.work);let step=match turn.result{Ok(step)=>step,Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.pixel-close-error-receipt")?;return Err("raster-store.pixel-close");}};cx.consume_retained(step.progress()).map_err(|_|"raster-store.pixel-close-receipt")?;
+        let demand=pixel.close_demands(cx.retained_grant().maximum_copy_bytes).map_err(|_|"raster-store.pixel-close-demand")?;if cx.retained_grant().maximum_depth<demand.depth||raster_short(cx.retained_grant(),demand){return Ok(false);}let step=match cx.close_owned(&mut |effect| pixel.close_step(effect)){Ok(step)=>step,Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.pixel-close-error-receipt")?;return Err("raster-store.pixel-close");}};cx.consume_retained(step.progress()).map_err(|_|"raster-store.pixel-close-receipt")?;
         Ok(false)
     }
 
@@ -508,20 +508,22 @@ impl RasterMutationCandidateAuthority {
         Ok(Default::default())
     }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep> {
-        let mut work=0;let result=(||{
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let grant = effect.grant();
+        let boundary = effect.performed_work();
+        let result=(||{
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        if grant.maximum_items == 0 {
+        if grant.maximum_items == 0 || effect.remaining_work_units()? == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         self.phase = RasterMutationCandidatePhase::Closing;
         if self.retirement.is_empty() {
-            if let Some(pixel)=self.pixel.as_mut(){if pixel.terminal_is_empty(){let bytes=size_of::<RasterRetainedMutationWork>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}drop(self.pixel.take());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}));}let demand=pixel.close_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth||raster_short(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}let turn=pixel.close_step(grant);work=turn.work;return turn.result;}
+            if let Some(pixel)=self.pixel.as_mut(){if pixel.terminal_is_empty(){let bytes=size_of::<RasterRetainedMutationWork>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}raster_close_unit(effect)?;drop(self.pixel.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}));}let demand=pixel.close_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth||raster_short(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}return pixel.close_step(effect).result;}
             if let Some(clone) = self.layer_clone.as_mut() {
-                if clone.terminal_is_empty(){let bytes=size_of::<RasterLayerCloneAuthority>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}drop(self.layer_clone.take());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}));}
+                if clone.terminal_is_empty(){let bytes=size_of::<RasterLayerCloneAuthority>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}raster_close_unit(effect)?;drop(self.layer_clone.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}));}
                 let demand = raster_nested(clone.close_demands(grant.maximum_copy_bytes)?)?;
                 if grant.maximum_depth < demand.depth {
                     return Err(invariant("Raster candidate layer clone exceeds admitted depth"));
@@ -529,11 +531,11 @@ impl RasterMutationCandidateAuthority {
                 if raster_short(grant, demand) {
                     return Ok(RetainedCloneStep::Progress(empty));
                 }
-                let turn=clone.close_step(raster_child_grant(grant));work=turn.work;let step=turn.result?;
+                let step = clone.close_step(&mut effect.nested(raster_child_grant(grant))).result?;
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             if let Some(clone) = self.clone.as_mut() {
-                if clone.terminal_is_empty(){let bytes=size_of::<RasterSnapshotCloneAuthority>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}drop(self.clone.take());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}));}
+                if clone.terminal_is_empty(){let bytes=size_of::<RasterSnapshotCloneAuthority>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}raster_close_unit(effect)?;drop(self.clone.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}));}
                 let demand = raster_nested(clone.close_demands(grant.maximum_copy_bytes)?)?;
                 if grant.maximum_depth < demand.depth {
                     return Err(invariant("Raster candidate snapshot clone exceeds admitted depth"));
@@ -541,7 +543,7 @@ impl RasterMutationCandidateAuthority {
                 if raster_short(grant, demand) {
                     return Ok(RetainedCloneStep::Progress(empty));
                 }
-                let turn=clone.close_step(raster_child_grant(grant));work=turn.work;let step=turn.result?;
+                let step = clone.close_step(&mut effect.nested(raster_child_grant(grant))).result?;
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             if let Some(layer) = self.pending_layer.take() {
@@ -552,10 +554,11 @@ impl RasterMutationCandidateAuthority {
                 self.retirement.put(RasterDisplaced::Mutations(inverse));
             }
         }
-        let turn=self.retirement.close(grant);work=turn.work;let step=turn.result?;
+        let step = self.retirement.close(effect).result?;
         self.terminal = self.terminal_is_empty();
         Ok(raster_finish(step, self.terminal))
-        })();semio_framework_value::RetainedWorkOutcome{result,work}
+        })();
+        RetainedWorkOutcome { result, work: effect.performed_work() - boundary }
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {
@@ -592,16 +595,35 @@ pub struct RasterOneItemApply {
 }
 
 #[derive(Clone,Copy,PartialEq,Eq)]
-enum RasterApplyIdentity{Publication(semio_framework_job::OperationId,semio_framework_job::Generation),Replay(store::os_store::ArtifactReplayPreparationContext,u64,Option<u64>)}
+enum RasterApplyIdentity{Publication(semio_framework_job::OperationId,semio_framework_job::Generation),Replay(store::os_store::ArtifactReplayPreparationContext,semio_framework_value_native_owned::NativeAllocationIdentity,Option<u64>)}
 
-struct RasterGrantedWork<'probe>{grant:RetainedCloneGrant,fuel:u64,spent:RetainedCloneProgress,work:u64,stopped:bool,stop:&'probe mut dyn FnMut()->bool}
-impl RasterWork for RasterGrantedWork<'_>{
+struct RasterGrantedWork<'turn, 'effect> {
+    grant: RetainedCloneGrant,
+    fuel: u64,
+    spent: RetainedCloneProgress,
+    work: u64,
+    stopped: bool,
+    stop: &'turn mut dyn FnMut() -> bool,
+    effect: &'turn mut RetainedAllocationEffect<'effect>,
+}
+
+impl RasterWork for RasterGrantedWork<'_, '_> {
     fn should_yield(&mut self)->bool{self.stopped|=(self.stop)();self.stopped||self.work>=self.fuel||self.spent.copied_items>=self.grant.maximum_items}
     fn is_cancelled(&self)->bool{self.stopped}
     fn retained_grant(&self)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:self.grant.maximum_items.saturating_sub(self.spent.copied_items),maximum_copy_bytes:self.grant.maximum_copy_bytes.saturating_sub(self.spent.copied_bytes),maximum_capacity_bytes:self.grant.maximum_capacity_bytes.saturating_sub(self.spent.retained_capacity_bytes),maximum_release_bytes:self.grant.maximum_release_bytes.saturating_sub(self.spent.released_bytes),maximum_depth:self.grant.maximum_depth}}
     fn consume_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{self.spent=self.spent.checked_add(progress)?;if !self.spent.fits(self.grant){return Err(invariant("raster-store.raw-work-receipt-exceeded").with_retained_progress(self.spent));}Ok(())}
     fn consume_fuel(&mut self,work:u64){self.work=self.work.saturating_add(work);}
     fn fuel_remaining(&self)->u64{self.fuel.saturating_sub(self.work)}
+
+    fn close_owned(&mut self, close: &mut dyn FnMut(&mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome) -> Result<RetainedCloneStep, ValueError> {
+        let mut grant = self.retained_grant();
+        grant.maximum_items = grant.maximum_items.min(1);
+        let remaining = self.fuel_remaining();
+        let boundary = self.effect.performed_work();
+        let turn = close(&mut self.effect.nested_within(grant, remaining));
+        self.consume_work(self.effect.performed_work() - boundary);
+        turn.result
+    }
 }
 
 /// 📬️ The private post-state and its already prepared semantic inverse transfer together.
@@ -616,27 +638,59 @@ impl RasterOneItemApply {
         Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), binding:None }
     }
 
-    /// ▶️ Spends up to `fuel` units under the supplied retained grant; the first value is the post
-    /// snapshot once the candidate has produced it, and the second is the exact physical receipt.
-    pub fn advance(&mut self,base:&RasterSnapshot,operation:&RasterMutation,operation_id:semio_framework_job::OperationId,generation:semio_framework_job::Generation,fuel:u64,grant:RetainedCloneGrant)->Result<(Option<RasterPreparedMutation>,RetainedCloneProgress),ValueError>{
-        self.advance_controlled(base,operation,operation_id,generation,fuel,grant,||false).result
+    /// ▶️ Advances a publication under its original work effect.
+    pub fn advance(&mut self, base: &RasterSnapshot, operation: &RasterMutation, operation_id: semio_framework_job::OperationId, generation: semio_framework_job::Generation, effect: &mut RetainedAllocationEffect<'_>) -> Result<(Option<RasterPreparedMutation>, RetainedCloneProgress), ValueError> {
+        self.advance_controlled(base, operation, operation_id, generation, effect, || false).result
     }
 
-    /// 🎟️ Raw workers spend only the supplied primitive budget and physical loan; the caller retains all source authority.
-    pub fn advance_controlled(&mut self,base:&RasterSnapshot,operation:&RasterMutation,operation_id:semio_framework_job::OperationId,generation:semio_framework_job::Generation,fuel:u64,grant:RetainedCloneGrant,mut should_stop:impl FnMut()->bool)->semio_framework_value::RetainedWorkOutcome<(Option<RasterPreparedMutation>,RetainedCloneProgress)>{
-        self.advance_original(base,operation,RasterApplyIdentity::Publication(operation_id,generation),fuel,grant,&mut should_stop)
+    /// 🎟️ Advances a publication with the caller's cancellation probe.
+    pub fn advance_controlled(&mut self, base: &RasterSnapshot, operation: &RasterMutation, operation_id: semio_framework_job::OperationId, generation: semio_framework_job::Generation, effect: &mut RetainedAllocationEffect<'_>, mut should_stop: impl FnMut() -> bool) -> RetainedWorkOutcome<(Option<RasterPreparedMutation>, RetainedCloneProgress)> {
+        self.advance_original(base, operation, RasterApplyIdentity::Publication(operation_id, generation), effect, &mut should_stop)
     }
 
     /// 📽️ Replay borrows its actual decoder/retirement recipient and keeps the genuine replay context.
-    pub fn advance_replay_controlled(&mut self,base:&RasterSnapshot,operation:&RasterMutation,context:store::os_store::ArtifactReplayPreparationContext,grant:RetainedCloneGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->semio_framework_value::RetainedWorkOutcome<(Option<RasterPreparedMutation>,RetainedCloneProgress)>{
-        let mut budget=256;loop{match control.prepare_work(budget){Ok(true)=>break,Ok(false)if budget>1=>budget=(budget/2).max(1),Ok(false)=>return semio_framework_value::RetainedWorkOutcome{result:Ok((None,Default::default())),work:0},Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}}}
-        let identity=RasterApplyIdentity::Replay(context,control.ledger_identity(),control.retirement_recipient_identity());let mut stopped=None;let turn=self.advance_original(base,operation,identity,budget,grant,&mut||match control.checkpoint(){Ok(())=>false,Err(error)=>{stopped=Some(error);true}});let receipt=turn.result.as_ref().map(|(_,progress)|*progress).unwrap_or_else(|error|error.retained_progress());let result=match control.commit_work(turn.work){Err(error)=>Err(error.with_retained_progress(receipt)),Ok(())=>if let Some(error)=stopped{Err(error.with_retained_progress(receipt))}else{turn.result}};semio_framework_value::RetainedWorkOutcome{result,work:turn.work}
+    pub fn advance_replay_controlled(&mut self, base: &RasterSnapshot, operation: &RasterMutation, context: store::os_store::ArtifactReplayPreparationContext, grant: RetainedCloneGrant, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> RetainedWorkOutcome<(Option<RasterPreparedMutation>, RetainedCloneProgress)> {
+        let identity = RasterApplyIdentity::Replay(context, control.ledger_identity(), control.retirement_recipient_identity());
+        let binding = (identity, base as *const RasterSnapshot as usize, operation as *const RasterMutation as usize);
+        if self.binding.is_some_and(|original| original != binding) {
+            return RetainedWorkOutcome { result: Err(invariant("raster-store.one-item-original-source-changed")), work: 0 };
+        }
+        let mut budget = 256;
+        loop {
+            let turn = control.with_effect_reported(grant, budget, |control, effect| {
+                let mut stopped = None;
+                let turn = self.advance_original(base, operation, identity, effect, &mut || match control.checkpoint() {
+                    Ok(()) => false,
+                    Err(error) => { stopped = Some(error); true }
+                });
+                let result = match stopped {
+                    Some(error) => {
+                        let receipt = turn.result.as_ref().map(|(_, progress)| *progress).unwrap_or_else(|error| error.retained_progress());
+                        Err(error.with_retained_progress(receipt))
+                    }
+                    None => turn.result,
+                };
+                RetainedWorkOutcome { result, work: turn.work }
+            });
+            match turn {
+                Ok(Some((turn, work))) => return RetainedWorkOutcome { result: turn.result, work },
+                Ok(None) if budget > 1 => budget /= 2,
+                Ok(None) => return RetainedWorkOutcome { result: Ok((None, Default::default())), work: 0 },
+                Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 },
+            }
+        }
     }
 
     fn binding_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<(RasterApplyIdentity,usize,usize)>>(),depth:1,..Default::default()}}
 
-    fn advance_original(&mut self,base:&RasterSnapshot,operation:&RasterMutation,identity:RasterApplyIdentity,fuel:u64,grant:RetainedCloneGrant,should_stop:&mut dyn FnMut()->bool)->semio_framework_value::RetainedWorkOutcome<(Option<RasterPreparedMutation>,RetainedCloneProgress)>{
-        let mut work=RasterGrantedWork{grant,fuel,spent:Default::default(),work:0,stopped:false,stop:should_stop};
+    fn advance_original(&mut self, base: &RasterSnapshot, operation: &RasterMutation, identity: RasterApplyIdentity, effect: &mut RetainedAllocationEffect<'_>, should_stop: &mut dyn FnMut() -> bool) -> RetainedWorkOutcome<(Option<RasterPreparedMutation>, RetainedCloneProgress)> {
+        let grant = effect.grant();
+        let fuel = match effect.remaining_work_units() {
+            Ok(fuel) => fuel,
+            Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 },
+        };
+        let boundary = effect.performed_work();
+        let mut work = RasterGrantedWork { grant, fuel, spent: Default::default(), work: 0, stopped: false, stop: should_stop, effect };
         let result=(||{
             if work.should_yield()||grant.maximum_depth==0{return Ok((None,Default::default()));}
             let binding=(identity,base as *const RasterSnapshot as usize,operation as *const RasterMutation as usize);
@@ -653,17 +707,26 @@ impl RasterOneItemApply {
                     Err(code)=>return Err(invariant(code)),
                 }
             }
-        })().map_err(|error:ValueError|error.with_retained_progress(work.spent));
-        semio_framework_value::RetainedWorkOutcome{result,work:work.work}
+        })().map_err(|error: ValueError| error.with_retained_progress(work.spent));
+        let spent = work.spent;
+        let reported_work = u128::from(work.work);
+        let local_work = reported_work.saturating_sub(effect.performed_work() - boundary);
+        let settlement = if local_work == 0 { Ok(true) } else { effect.performed(u64::try_from(local_work).expect("local work is bounded by the original fuel")) };
+        let result = match settlement {
+            Ok(true) => result,
+            Ok(false) => Err(ValueError::literal(ValueRefusalKind::WorkLimit, "Raster apply exceeded its work grant").with_retained_progress(spent)),
+            Err(error) => Err(error.with_retained_progress(spent)),
+        };
+        RetainedWorkOutcome { result, work: effect.performed_work() - boundary }
     }
 
     pub fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         self.candidate.as_ref().map_or(Ok(Default::default()), |candidate| candidate.close_demands(body))
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         let Some(candidate) = self.candidate.as_mut() else { return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),work:0} };
-        let turn = candidate.close_step(grant);
+        let turn = candidate.close_step(effect);
         if candidate.terminal_is_empty() {
             drop(self.candidate.take());
         }

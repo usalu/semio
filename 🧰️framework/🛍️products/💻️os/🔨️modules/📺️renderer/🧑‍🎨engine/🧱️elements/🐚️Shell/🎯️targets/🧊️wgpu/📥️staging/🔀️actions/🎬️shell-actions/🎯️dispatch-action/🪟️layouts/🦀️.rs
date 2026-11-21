@@ -1,6 +1,7 @@
 //! 🪟️ Layout and window actions: layouts, display windows and conflict resolution. See [`super`].
 
 use super::*;
+use semio_renderer_wgpu_shell_input::PendingRowControlFocus;
 
 /// 🔊️ Notice code of a focused or opened window announcement.
 pub const WINDOW_FOCUS_ANNOUNCED_CODE: &str = "shell.window-focus.announced";
@@ -39,6 +40,43 @@ impl<'ctx> ActionsCtx<'ctx> {
                 Err(reason)
             }
         }
+    }
+
+    /// 📄️ Changes a semantic form page on its live window without invoking a guest action.
+    pub(super) fn framework_set_form_page(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        let args = action.args.as_ref().ok_or("Form page needs an address")?;
+        let window_id = args.get("windowId").and_then(semio_framework_value::DslValue::as_str).ok_or("Form page needs a window")?;
+        let page = args.get("page").and_then(semio_framework_value::DslValue::as_f64)
+            .filter(|page| page.fract() == 0.0 && (0.0..=f64::from(u32::MAX)).contains(page))
+            .ok_or("Form page must be a nonnegative integer in range")?;
+        if self.dock.dock.window_kind_id(window_id).is_none() {
+            return Err("Form page window is no longer mounted".into());
+        }
+        let body = self.dock.document_body_key(window_id, &self.docs).ok_or("Form page window has no body")?;
+        self.dock.tree_windows.set_form_page(&body, window_id, page as u32);
+        Ok(())
+    }
+
+    /// 🖼️ Requests a page from the live window body for its exact image and source revision.
+    pub(super) fn framework_set_image_source_page(&mut self, action: &ActionDescriptor) -> Result<(), String> {
+        use ui_contract::window_resource::WindowResourcePage;
+        let args = action.args.as_ref().ok_or("Image source page needs an address")?;
+        let text = |key| args.get(key).and_then(semio_framework_value::DslValue::as_str);
+        let window_id = text("windowId").ok_or("Image source page needs a window")?;
+        let generation: u64 = text("windowGeneration").and_then(|value| value.parse().ok()).ok_or("Image source page needs a mounted generation")?;
+        let image_id = text("imageId").ok_or("Image source page needs an image")?;
+        let key = text("resourceKey").ok_or("Image source page needs a resource")?;
+        let resource = WindowResourcePage::parse(&format!("{key}.1")).ok_or("Invalid image source resource")?.resource;
+        let page = args.get("page").and_then(semio_framework_value::DslValue::as_f64)
+            .filter(|page| page.fract() == 0.0 && (0.0..=f64::from(resource.pages())).contains(page))
+            .ok_or("Image source page is out of range")? as u32;
+        if !resource.matches_owner(window_id, image_id) || self.dock.dock.window_kind_id(window_id).is_none()
+            || semio_renderer_wgpu_ui_engine::retained_document_consumer::ui_document_window_generation(window_id) != Some(generation) {
+            return Err("Image source page owner is no longer mounted".into());
+        }
+        let body = self.dock.document_body_key(window_id, &self.docs).ok_or("Image source page window has no body")?;
+        self.dock.tree_windows.set_form_page(&body, key, page);
+        Ok(())
     }
 
     /// ✏️ Runs [`semio_framework::FOCUS_ROW_CONTROL_ACTION_ID`]: plans the first editable cell of the named tree row with the shared rule ([`semio_framework::plan_row_control_focus`]) and queues it as the pending keyboard focus, which the pointer context applies with the input state in hand. A row nobody presents, or one without an editable cell, is announced politely as a refusal in the interface language and returned as the error. A successful focus is not announced: the focused field announces itself through the accessibility tree.

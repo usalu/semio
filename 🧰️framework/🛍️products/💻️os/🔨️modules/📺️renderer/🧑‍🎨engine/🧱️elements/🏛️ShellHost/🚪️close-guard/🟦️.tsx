@@ -2,7 +2,7 @@ import * as React from "../../⚛️react-port/🟦️.ts";
 import { localizedLabelTextV1 } from "../📣️replay-refusal/🟦️.ts";
 import { isUnsavedV1, saveFailureTextV1, type SavedStateV1 } from "../../🛠️ShellHelpers/💾️saved-state/🟦️.ts";
 
-import { sharedBorderlessBoxProps } from "@semio-tech/ui-react";
+import { SharedBorderRow, sharedBorderlessBoxProps, useSharedBorderFrameRef } from "@semio-tech/ui-react";
 export const CLOSE_GUARD_LABELS_V1 = {
   title: { en: "Unsaved changes", de: "Nicht gespeicherte Änderungen" },
   body: { en: "“{name}” has changes that were not saved. Close anyway and lose them?", de: "„{name}“ hat Änderungen, die nicht gespeichert wurden. Trotzdem schließen und sie verlieren?" },
@@ -22,27 +22,35 @@ export function closeGuardTextV1(key: keyof typeof CLOSE_GUARD_LABELS_V1, locale
 /** 🚪️ Accessible confirmation shown when a close could lose edits the store never acknowledged; focus starts on the safe choice and Escape keeps the document. */
 export function DocumentCloseDialog(props: Readonly<{ name: string; locale: string; failure: Readonly<{ code: string }> | null; saving?: boolean; onKeep(): void; onDiscard(): void }>): React.ReactElement {
   const keepRef = React.useRef<HTMLButtonElement>(null);
+  const frameRef = useSharedBorderFrameRef<HTMLDivElement>();
   const uid = React.useId();
   const titleId = `${uid}-title`;
   const bodyId = `${uid}-body`;
   React.useEffect(() => keepRef.current?.focus(), []);
   return (
     <div
+      ref={frameRef}
       role="alertdialog"
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={bodyId}
       data-semio-close-guard=""
+      data-shared-border-frame=""
+      data-shared-border-edges="top right bottom left"
       onKeyDown={(event) => { if (event.key === "Escape") props.onKeep(); }}
-      className="pointer-events-auto absolute left-1/2 top-1/3 z-50 -translate-x-1/2 rounded-sm border bg-base px-double py-double text-sm shadow-sm"
+      className="pointer-events-auto absolute left-1/2 top-1/3 z-50 -translate-x-1/2 bg-base text-sm shadow-sm"
     >
-      <p id={titleId} className="font-semibold">{closeGuardTextV1("title", props.locale)}</p>
-      <p id={bodyId} aria-busy={props.saving === true}>
-        {props.saving === true ? closeGuardTextV1("saving", props.locale, props.name) : closeGuardTextV1("body", props.locale, props.name)}
-        {props.failure === null || props.saving === true ? null : ` ${saveFailureTextV1(props.failure, props.locale)}`}
-      </p>
-      <button {...sharedBorderlessBoxProps} type="button" ref={keepRef} onClick={props.onKeep}>{closeGuardTextV1(props.saving === true ? "cancel" : "keep", props.locale)}</button>
-      {props.saving === true ? null : <button {...sharedBorderlessBoxProps} type="button" className="ml-single" onClick={props.onDiscard}>{closeGuardTextV1("discard", props.locale)}</button>}
+      <div className="p-double">
+        <p id={titleId} className="font-semibold">{closeGuardTextV1("title", props.locale)}</p>
+        <p id={bodyId} aria-busy={props.saving === true}>
+          {props.saving === true ? closeGuardTextV1("saving", props.locale, props.name) : closeGuardTextV1("body", props.locale, props.name)}
+          {props.failure === null || props.saving === true ? null : ` ${saveFailureTextV1(props.failure, props.locale)}`}
+        </p>
+      </div>
+      <SharedBorderRow edges={["top"]}>
+        <button data-shared-border-cell="" className="min-h-medium flex-1 px-double py-single" type="button" ref={keepRef} onClick={props.onKeep}>{closeGuardTextV1(props.saving === true ? "cancel" : "keep", props.locale)}</button>
+        {props.saving === true ? null : <button data-shared-border-cell="" className="min-h-medium flex-1 px-double py-single" type="button" onClick={props.onDiscard}>{closeGuardTextV1("discard", props.locale)}</button>}
+      </SharedBorderRow>
     </div>
   );
 }

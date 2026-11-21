@@ -198,6 +198,12 @@ pub fn text_document(pages: &[(f64, f64, &str)]) -> PdfSnapshot {
     }
     snapshot
 }
+/// 🏷️ Embeds the authored canvas label font in a standalone PDF.
+pub fn embedded_map_label_font(snapshot: &mut PdfSnapshot, id: &str, text: Option<&str>) -> Result<PdfFont, String> {
+    const FONT: &[u8] = include_bytes!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf");
+    embedded_true_type_font(snapshot, id, FONT, "MapLabelSans", text)
+}
+
 /// 🔤 An embedded TrueType font as a Type 0 / CIDFontType2 (Identity-H, glyph ids as CIDs) with
 /// widths and a ToUnicode map for every character of `text` (the whole cmap when `None`) — the
 /// font shape any consumer with a `.ttf` in hand wants.

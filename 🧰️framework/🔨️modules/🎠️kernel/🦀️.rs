@@ -649,7 +649,8 @@ pub enum MessageEndpoint {
 }
 
 pub use ::replication::wire::command_ingress::{
-    FixedCommandPage, CommandPageSet, PagedCommand, PagedCommandReader, CommandEnvelope, CommandBatch, CommandEnvelopeSet, RejectedCommandBuild, RejectedCommandBuildRegistry, CommandBatchProgress, CommandBatchDriver, CommandDriverRegistry, CommandPageCursor, CommandIngressStatus, COMMAND_PAGE_MAXIMUM_BYTES, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_BATCH_MAXIMUM_ITEMS, INVOCATION_RESULT_PACK_MAXIMUM_BYTES
+    FixedCommandPage, CommandPageSet, PagedCommand, PagedCommandReader, CommandEnvelope, CommandBatch, CommandEnvelopeSet, RejectedCommandBuild, RejectedCommandBuildRegistry, CommandBatchProgress, CommandBatchDriver, CommandDriverRegistry, CommandPageCursor, CommandIngressStatus, COMMAND_PAGE_MAXIMUM_BYTES, COMMAND_MAXIMUM_BYTES, COMMAND_MAXIMUM_PAGES, COMMAND_BATCH_MAXIMUM_ITEMS, INVOCATION_RESULT_PACK_MAXIMUM_BYTES,
+    OriginalMediaWireLoan, OriginalMediaWireControl, OriginalMediaControlEvent, OriginalMediaWirePhase, OriginalMediaWireResult, OriginalMediaWireAck, ORIGINAL_MEDIA_COMMAND_KIND
 };
 
 /// 📬️ Everything the host delivers into a guest's `reactor::poll` — the full inbound contract
@@ -702,6 +703,7 @@ pub enum Event {
     },
 
     ColdDocumentPairPage(ColdDocumentPairPage),
+    OriginalMediaControl(OriginalMediaControlEvent),
 
     /// 🎬️ `wit-flip` (26/08/20) — a user action against a UI node, `pack`-encoded
     /// `semio_ui_contract::UiIntent`. Separate from paged command ingress so the host can

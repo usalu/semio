@@ -110,6 +110,10 @@ impl ArtifactEditor for Pdf14XEditor {
 
     const SINGLE_TURN_NATURAL_DECODE: bool = true;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<PdfSnapshot, PdfMutation>()
+    }
+
     fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
         Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.pdf@1.4/x", extension: ".pdf", media_type: "application/pdf", binary: true })
     }
@@ -131,6 +135,7 @@ impl ArtifactEditor for Pdf14XEditor {
         controller: "s.stdio.pdf@1.4/x#editor",
         artifact_schema: "stdio.pdf",
         preparation: "stdio-pdf-1-4-x-snapshot-edit",
+        document_store_owners: PdfMutation::document_store_owners,
         bounded_native: true
     }
 

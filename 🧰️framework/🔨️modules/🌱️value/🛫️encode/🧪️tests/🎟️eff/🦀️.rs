@@ -9,14 +9,48 @@ impl OriginalWorkRecipient for Producer{
  fn settle_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}
  fn recover_partial<'reply,'turn,'source>(&mut self,context:&mut (),check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply>where 'source:'turn{check.complete(self.validate_context(context))}
 }
+struct Invoked<F,R>{operation:Option<F>,output:Option<R>}
+impl<F:FnOnce(&mut RetainedAllocationEffect<'_>)->R,R> OriginalEffectProducer for Invoked<F,R>{
+ type Output=();
+ type Failure=ValueError;
+ type Context<'turn,'source>=() where 'source:'turn;
+ fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}
+ fn source_turn<'turn,'source>(&self,_:&())->Option<OriginalSourceTurnIdentity>where 'source:'turn{None}
+ fn receive<'reply,'turn,'source>(&mut self,_:&mut (),effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,(),ValueError>)->Result<OriginalEffectReplyComplete<'reply,(),ValueError>,ValueError>where 'source:'turn{
+  let operation=self.operation.take().ok_or_else(||ValueError::invariant("encoder law effect ran twice"))?;
+  self.output=Some(operation(effect));
+  Ok(reply.complete(Ok(())))
+ }
+ fn recover<'reply,'turn,'source>(&mut self,_:&mut (),_:&mut RetainedAllocationEffect<'_>,_:OriginalEffectReply<'reply,(),ValueError>)->Result<OriginalEffectReplyComplete<'reply,(),ValueError>,ValueError>where 'source:'turn{
+  Err(ValueError::invariant("encoder law effect has no pending reply"))
+ }
+}
+fn invoke<R>(effect:&mut RetainedAllocationEffect<'_>,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->R{
+ let mut authority=OriginalEffectAuthority::new(Invoked{operation:Some(operation),output:None});
+ let mut action=None;
+ assert!(authority.drive(&mut (),effect,&mut action).unwrap());
+ let mut reply=None;
+ assert!(action.as_mut().unwrap().transfer_reply(&mut reply).unwrap());
+ authority.finish(&mut action).unwrap();
+ assert!(reply.unwrap().is_ok());
+ authority.into_producer().ok().unwrap().output.unwrap()
+}
 /// 🪢️ Runs one operation inside one actual original Work effect over the caller's allocation marker.
 pub fn with_effect<R>(grant:RetainedCloneGrant,maximum:u64,actual:&mut Option<usize>,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->R{
  let mut authority=OriginalWorkAuthority::new(Producer{maximum});
- let result=authority.with_loan(&mut (),|loan|{let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let mut action=None;let mut proof=None;assert_eq!(work.prepare_for_action(maximum,&mut action).unwrap(),Some(true));let mut receipt=None;work.issue_performed_for_action(action,&mut receipt).unwrap();let output={let mut effect=RetainedAllocationEffect::new(grant,maximum,actual,receipt.as_mut().unwrap());operation(&mut effect)};let performed=OriginalWorkSink::observed_work(receipt.as_ref().unwrap());work.claim_performed_for_action(action,&mut receipt).unwrap();if performed==0{work.cancel_for_action(&mut action).unwrap()}else{let mut partial=None;assert!(work.settle_partial_for_action_into(action,&mut partial).unwrap());let partial=partial.take().unwrap();assert_eq!(partial.total(),performed);assert!(work.commit_for_action(performed,action,&mut proof).unwrap());work.finish_for_action(&mut proof,&mut action).unwrap()}output}).unwrap();
+ let result=authority.with_loan(&mut (),|loan|{let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let mut action=None;let mut proof=None;assert_eq!(work.prepare_for_action(maximum,&mut action).unwrap(),Some(true));let mut receipt=None;work.issue_performed_for_action(action,&mut receipt).unwrap();let output={let mut effect=RetainedAllocationEffect::new(grant,maximum,actual,receipt.as_mut().unwrap());invoke(&mut effect,operation)};let performed=OriginalWorkSink::observed_work(receipt.as_ref().unwrap());work.claim_performed_for_action(action,&mut receipt).unwrap();if performed==0{work.cancel_for_action(&mut action).unwrap()}else{let mut partial=None;assert!(work.settle_partial_for_action_into(action,&mut partial).unwrap());let partial=partial.take().unwrap();assert_eq!(partial.total(),performed);assert!(work.commit_for_action(performed,action,&mut proof).unwrap());work.finish_for_action(&mut proof,&mut action).unwrap()}output}).unwrap();
  assert!(!authority.has_live_actions());result
 }
 /// 🏁️ Fixtures drive every retirement turn to completion.
 pub fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("original fixture turn stayed pending")}}
+/// 📥️ Reads the typed cursor's actual borrowed close reply.
+pub fn close_cursor(cursor:&mut impl retirement::RetirementCursor,effect:&mut RetainedAllocationEffect<'_>)->retirement::RetirementStep{
+ use retirement::RetirementStep;
+ let mut output=None;
+ let reply=semio_framework_value_control_contract::OriginalEffectReply::borrow(&mut output).unwrap();
+ drop(cursor.close_into(65536,effect,reply).unwrap());
+ output.expect("fixture cursor returned without recording its reply").unwrap_or_else(|failure|RetirementStep::Failure(failure,0))
+}
 /// 🔎️ Names the one cause that a native call failure retains.
 pub fn cause<T>(failure:semio_framework_value_call::NativeCallFailure<T,ValueError>)->ValueError{failure.operation.or(failure.context).expect("native call failure retains its cause")}
 /// 🧾️ Generous per-turn stock for closing fixture-owned results.
@@ -24,7 +58,7 @@ pub fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1024,maximum
 /// ♻️ Closes one typed owner through controlled retirement turns inside original effects.
 pub fn close<T:retirement::RetireOwned>(value:T){
  let mut owner=retirement::controlled::ControlledRetirement::new(value).map_err(|(error,_)|error).expect("fixture owner supports typed retirement");
- for _ in 0..4096{if owner.terminal_is_empty(){return}let mut actual=None;let turn=settled(with_effect(stock(),1<<20,&mut actual,|effect|owner.step(effect)));turn.result.expect("fixture close step refused");}
+ for _ in 0..4096{if owner.terminal_is_empty(){return}let mut actual=None;let turn=settled(with_effect(stock(),1<<20,&mut actual,|effect|owner.step(65536,effect)));turn.result.expect("fixture close step refused");}
  panic!("fixture close exhausted its turns")
 }
 /// 🛂️ Adapts one recording closure to the original allocation authority port.
@@ -75,7 +109,7 @@ impl OriginalRecordedProducer for Span{
 /// 🧭️ Runs one operation against a control bound to every actual recorded Source authority.
 pub fn with_recorded_source<R>(maximum:usize,depth:usize,operation:impl FnOnce(&mut NativeEncodeControl<'_>)->R)->R{
  let issuer=OriginalSourceTurnIssuer::new();let turn=issuer.issue().unwrap();let mut allocation=NativeAllocationAuthority::new(Source(turn.identity()));let mut span=OriginalRecordedAuthority::new(Span(turn.identity()));let mut checkpoint=OriginalRecordedAuthority::new(Check(turn.identity()));let(mut a,mut s,mut c)=(&turn,&turn,&turn);
- let result=allocation.with_send_loan(&mut a,|allocation|span.with_send_loan(&mut s,|span|checkpoint.with_send_loan(&mut c,|checkpoint|{let mut control=NativeEncodeControl::new_recorded_source(maximum,depth,turn.identity(),allocation,span,checkpoint).unwrap();operation(&mut control)}).unwrap()).unwrap()).unwrap();
+ let result=allocation.with_send_loan(&mut a,|allocation|span.with_send_loan(&mut s,|span|checkpoint.with_send_loan(&mut c,|checkpoint|{let mut control=NativeEncodeControl::new_recorded_source(maximum,depth,turn.witness(),allocation,span,checkpoint).unwrap();operation(&mut control)}).unwrap()).unwrap()).unwrap();
  assert!(allocation.into_port().is_ok());assert!(span.into_port().is_ok());assert!(checkpoint.into_port().is_ok());result
 }
 /// 🔎️ Names the one cause that an allocation failure retains.

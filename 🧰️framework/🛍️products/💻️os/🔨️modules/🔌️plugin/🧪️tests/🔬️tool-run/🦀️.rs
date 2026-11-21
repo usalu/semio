@@ -70,6 +70,10 @@ use crate::tool_run_support_1::original_toy_unit::OriginalToyUnit;
 use crate::tool_run_support_1::original_toy_emission::OriginalToyEmission;
 
 
+#[cfg(test)]
+#[path = "🪝️boxed-work/🦀️.rs"]
+mod boxed_work;
+
 #[doc(hidden)]
 #[path="🌱️operation/🦀️.rs"]
 pub mod original_toy_operation;

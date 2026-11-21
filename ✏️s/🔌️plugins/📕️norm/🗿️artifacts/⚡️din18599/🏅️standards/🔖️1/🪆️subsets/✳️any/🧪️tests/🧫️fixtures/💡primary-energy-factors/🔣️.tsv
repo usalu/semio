@@ -1,0 +1,17 @@
+annex_row	carrier	factor
+1	heating_oil	1.1
+2	natural_gas	1.1
+3	lpg	1.1
+4	hard_coal	1.1
+5	lignite	1.2
+6	biogas	1.1
+7	bio_oil	1.1
+8	biomass	0.2
+9	electricity	1.8
+10	local_renewable_electricity	0.0
+11	cogeneration_displacement_mix	2.8
+12	environmental_heat	0.0
+13	environmental_cooling	0.0
+14	waste_heat	0.0
+15	cogeneration_heat	Method B
+16	municipal_waste	0.0

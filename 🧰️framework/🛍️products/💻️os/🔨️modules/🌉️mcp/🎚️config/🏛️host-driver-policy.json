@@ -7,7 +7,7 @@
     "maximumDepth": 64
   },
   "drive": {
-    "maximumItems": 128,
+    "maximumItems": 4096,
     "maximumCopyBytes": 1048576,
     "maximumCapacityBytes": 134217728,
     "maximumReleaseBytes": 536870912,
@@ -21,10 +21,10 @@
     "maximumDepth": 64
   },
   "operation": {
-    "maximumItems": 1000000,
-    "maximumCopyBytes": 1073741824,
-    "maximumCapacityBytes": 1073741824,
-    "maximumReleaseBytes": 1073741824,
+    "maximumItems": 48000000,
+    "maximumCopyBytes": 3000000000,
+    "maximumCapacityBytes": 2147483648,
+    "maximumReleaseBytes": 2147483648,
     "maximumDepth": 64
   },
   "root": {

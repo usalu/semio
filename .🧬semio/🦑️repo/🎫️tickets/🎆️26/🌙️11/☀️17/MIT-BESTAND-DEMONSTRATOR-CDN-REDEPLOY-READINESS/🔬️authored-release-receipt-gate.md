@@ -1,0 +1,19 @@
+# Authored Descriptor Verification at the Release Gate
+
+The final receipt gate now checks the current authored semantic descriptor of each recorded Demonstrator root before accepting its recorded or deployed release. It selects IDs from the runtime release roster and resolves owners through production component discovery. A single Bun process verifies the requested pairs with the production descriptor verifier. That verifier rejects divergent JSON, noncanonical Pack and placeholders, and computes the receipt digest from the canonical Pack. Owner plugin, package and role must also match. Formatting-only JSON edits preserve the semantic digest.
+
+The queue record path and paired confirmation rules retain their existing behavior. The scheduler continues to use its staged-versus-recorded comparison and explicit retry requests. The authored digest check is mandatory in the final release and site verification entry points. This confines current authoring validation to the release gate and keeps repeated scheduler polls free of discovery and schema work.
+
+An initial two-root reproduction showed that the old verifier accepted stale Energy with identical staged and confirmed receipts. The updated verifier refused stale Energy and accepted exact current Energy and FEM receipts against live authored pairs, whose Pack digests were independently calculated with Python hashlib. The neutral descriptor cases passed stale, unchanged, and equivalent-JSON-formatting checks against Web Crypto SHA-256. The native queue test retained its staged file and extension import checks and added matching staged, deployed and recorded stale digests. The paired queue and roster scheduler regressions passed.
+
+Current real confirmations refuse Energy against the authored digest `847b72debdc98091de1f0bbeae5f37323258c763977aa3920fa50d0c73753f06`. The recorded release digest is `f42992705c59a41853f9f4cbbea455d88a7ec2f8791ca468e4508f7a115facb8`. FEM's recorded and authored digest is `0af30e1828a9031a0a3f852c5e22afe8fc26d35b25da4b283c0688b32efd259d`.
+
+## Flow Extension Brep
+
+The first full-roster check verified 31 pairs and identified this owner as the sole split pair. Four copies of the same embedded `manifestJson` diverged across the descriptor's manifest and contribution mirrors. The JSON had 12 additional mesh operators and the current orient summary. The source-backed projection in [reconcile-brep-descriptor.ts](reconcile-brep-descriptor.ts) independently builds all 12 records from the current mesh registration and channel metadata and requires full agreement of the remaining parsed descriptor fields. It follows the current producer's schema and operator ID ordering and decimal spellings, then writes the authored JSON and canonical Pack through the production component descriptor writer. The final 32-root audit passed.
+
+The authored pair lives in `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧩️component`. The prior Pack SHA-256 was `3dddacf3bbd10a5b92c8fe008ebfedcfbfc9c19558ef59123578ee444269ca0b`. The updated Pack SHA-256 is `58916427243671dd24e6ff06defa55d1535e175eeff3aecd837ac2a4844e57c3`. The prior JSON SHA-256 was `13e0cf56cd2acf712d6f283e998b7e0c859bdeb89fc8f742c82e537cf166257d`. The updated JSON SHA-256 is `3c85953bed16fa59f8a0697e0029380e7bae47d21701003566aebd1326f2761e`.
+
+The pair passed production release settlement and the final authored descriptor gate. Flow Extension Brep has no confirmation. Its existing native release attempt stopped at the unrelated spatial-kernel session source admission limit before emitting a guest descriptor, so the source-projected pair awaits a direct guest emission check.
+
+The release gate also checks recorded optimized browser cores against staged and deployed files. See [Optimized Browser Core Custody](🔬️optimized-browser-core-custody.md).

@@ -1,0 +1,143 @@
+[
+  {
+    "label": "i32 signed divide",
+    "op": 109,
+    "args": [
+      "i32",
+      "i32"
+    ],
+    "result": "i32",
+    "values": [
+      -21,
+      4
+    ],
+    "expected": -5
+  },
+  {
+    "label": "i32 division by zero",
+    "op": 109,
+    "args": [
+      "i32",
+      "i32"
+    ],
+    "result": "i32",
+    "values": [
+      33,
+      0
+    ],
+    "trap": "Division"
+  },
+  {
+    "label": "i32 signed overflow",
+    "op": 109,
+    "args": [
+      "i32",
+      "i32"
+    ],
+    "result": "i32",
+    "values": [
+      -2147483648,
+      -1
+    ],
+    "trap": "Overflow"
+  },
+  {
+    "label": "i32 unsigned divide",
+    "op": 110,
+    "args": [
+      "i32",
+      "i32"
+    ],
+    "result": "i32",
+    "values": [
+      -1,
+      2
+    ],
+    "expected": 2147483647
+  },
+  {
+    "label": "i32 wrap",
+    "op": 106,
+    "args": [
+      "i32",
+      "i32"
+    ],
+    "result": "i32",
+    "values": [
+      2147483647,
+      1
+    ],
+    "expected": -2147483648
+  },
+  {
+    "label": "f64 ties-even",
+    "op": 158,
+    "args": [
+      "f64"
+    ],
+    "result": "f64",
+    "values": [
+      2.5
+    ],
+    "expected": 2
+  },
+  {
+    "label": "f64 max signed zero",
+    "op": 165,
+    "args": [
+      "f64",
+      "f64"
+    ],
+    "result": "f64",
+    "values": [
+      0,
+      0
+    ],
+    "negative": [
+      0
+    ],
+    "expected": 0
+  },
+  {
+    "label": "f64 min signed zero",
+    "op": 164,
+    "args": [
+      "f64",
+      "f64"
+    ],
+    "result": "f64",
+    "values": [
+      0,
+      0
+    ],
+    "negative": [
+      1
+    ],
+    "expected": 0,
+    "negativeResult": true
+  },
+  {
+    "label": "float NaN truncation",
+    "op": 170,
+    "args": [
+      "f64"
+    ],
+    "result": "i32",
+    "values": [
+      "NaN"
+    ],
+    "trap": "Conversion"
+  },
+  {
+    "label": "f32 naive reinterp",
+    "op": 188,
+    "args": [
+      "f32"
+    ],
+    "result": "i32",
+    "values": [
+      1.5
+    ],
+    "expected": 1069547520
+  }
+]

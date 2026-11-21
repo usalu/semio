@@ -1,0 +1,16 @@
+# Local Graph Closure Repair Custody
+
+The graph loader released its builder claim before expanding the assembled graph. When expansion found a missing closure, the error path then asked that released claim to fence invalidation. The real custody adapter returned `CUSTODY_RELEASED` without advancing the pointer. The existing healthy-head race fixture uses a mock that provides no claim, so it covered conditional invalidation but could not reproduce the released-claim error.
+
+Expansion now records a repair intent containing the exact observed pointer, missing key, namespace and named projects. The ordinary loader loop passes that intent into its next structural builder round, after the original writer has exited. The new holder checks the generation number and manifest digest before settling the leaf and fences invalidation against the same pointer. A newer seal wins both if it arrives before that round and if it advances during settling. When strict remote restoration succeeds before the round, the loop returns that restored result without invoking the repair. If restoration changes the pointer but the loop later proceeds, the exact pointer check discards the old intent. Fetch-only assembly returns its closure error without creating a repair intent.
+
+The normal assembly still releases the writer early. The pointer publisher checks cancellation again after reading the pointer for the compare-and-swap, before writing it. A SQLite-backed regression acquires real structural claims and checks that each round starts with no existing holder. It verifies two distinct tokens, preservation of a peer's newer seal, and absence of pointer changes if cancellation arrives while the writer reads the expected pointer. Existing restored-closure settlement still runs under its original live writer.
+
+The 12-owner causal harness initially observed 12 owner computations with no claim, a zero-computation `CUSTODY_RELEASED` failure with a real claim, and 12 owner computations when the missing reference came from a restored generation. Both real-claim paths now serve successfully. The rebuilds still compute all 12 owners for a two-owner loss.
+
+The loader and strict-current suites passed 113 tests and 393 assertions. The focused generation pointer and cancellation suite passed 5 tests and 46 assertions. The dedicated claim-progress suite passed 5 of 6 on each of two runs. The same duplicate `ask` event moved between the stale-code handover variants, with and without parent cancellation during drain. Both runs passed the expired-writer publication fence and parent-cancellation tests. The duplicated event occurs during cold discovery, before the changed closure expansion repair path.
+
+- [Load and repair loop](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs:586)
+- [Generation pointer publisher](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs:261)
+- [Real custody regression](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🟦️.ts:651)
+- [Causal harness](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/targeted-closure-repair.ts)

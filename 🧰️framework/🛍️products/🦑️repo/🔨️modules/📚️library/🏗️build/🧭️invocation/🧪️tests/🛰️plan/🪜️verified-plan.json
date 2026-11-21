@@ -1,0 +1,22 @@
+[
+  {
+    "language": "en",
+    "valid": true,
+    "phase": "executing"
+  },
+  {
+    "language": "de",
+    "valid": true,
+    "phase": "executing"
+  },
+  {
+    "language": "en",
+    "valid": false,
+    "phase": "reading"
+  },
+  {
+    "language": "de",
+    "valid": false,
+    "phase": "reading"
+  }
+]

@@ -1,0 +1,122 @@
+{
+  "phase": "javascript-selected-payload",
+  "between": "dependencies:selected-postorder",
+  "high": 379206,
+  "renewed": [
+    1024,
+    1088,
+    1152
+  ],
+  "cases": [
+    {
+      "name": "strictly newer baseline and two advances",
+      "series": [
+        120,
+        470,
+        470,
+        470
+      ],
+      "registry": [
+        460,
+        480,
+        490,
+        500
+      ],
+      "counts": [
+        379206,
+        1024,
+        1088,
+        1152
+      ],
+      "allowed": true
+    },
+    {
+      "name": "newer baseline and one advance",
+      "series": [
+        120,
+        470,
+        470,
+        470
+      ],
+      "registry": [
+        460,
+        480,
+        490,
+        500
+      ],
+      "counts": [
+        379206,
+        1024,
+        1088,
+        1088
+      ],
+      "allowed": false
+    },
+    {
+      "name": "same-series regression",
+      "series": [
+        120,
+        120,
+        120,
+        120
+      ],
+      "registry": [
+        460,
+        480,
+        490,
+        500
+      ],
+      "counts": [
+        379206,
+        1024,
+        1088,
+        1152
+      ],
+      "allowed": false
+    },
+    {
+      "name": "older-series regression",
+      "series": [
+        120,
+        119,
+        119,
+        119
+      ],
+      "registry": [
+        460,
+        480,
+        490,
+        500
+      ],
+      "counts": [
+        379206,
+        1024,
+        1088,
+        1152
+      ],
+      "allowed": false
+    },
+    {
+      "name": "replayed registry timestamp",
+      "series": [
+        120,
+        459,
+        459,
+        459
+      ],
+      "registry": [
+        460,
+        460,
+        460,
+        460
+      ],
+      "counts": [
+        379206,
+        1024,
+        1088,
+        1152
+      ],
+      "allowed": false
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# key|scope|kind|unit|example|flags|en|de|confidence|note
+@choice test_protocol|confirmed|Pre-completion test to DIN EN ISO 9972 Annex NA confirmed|Prüfung vor Fertigstellung nach DIN EN ISO 9972 Anhang NA bestätigt
+@choice test_protocol|unconfirmed|Test conditions unconfirmed|Prüfbedingungen unbestätigt
+@choice test_ventilation|mechanical|With mechanical ventilation|Mit raumlufttechnischer Anlage
+@choice test_ventilation|natural|Without mechanical ventilation|Ohne raumlufttechnische Anlage
+@choice test_basis|volume|Normalise by conditioned volume|Bezug auf das konditionierte Luftvolumen
+@choice test_basis|area|Normalise by envelope area when volume exceeds 1,500 m³|Bezug auf die Hüllfläche bei Luftvolumen über 1.500 m³
+@choice test_zone_basis|selected|Non-residential building with selected tested zones|Nichtwohngebäude mit Prüfung ausgewählter Zonen
+@choice test_zone_basis|different|Non-residential zones with different requirements|Zonen eines Nichtwohngebäudes mit unterschiedlichen Anforderungen
+@choice test_zone_basis|unconfirmed|Zone eligibility unconfirmed|Zulässigkeit der Zonenprüfung unbestätigt
+@choice test_sample_basis|confirmed|Identical units, exterior-only access and Annex NB sampling confirmed|Gleichartige, nur von außen erschlossene Einheiten und Stichprobe nach Anhang NB bestätigt
+@choice test_sample_basis|unconfirmed|Unit sampling eligibility unconfirmed|Zulässigkeit der Stichprobe unbestätigt
+test_protocol||c||confirmed||Measurement conditions|Messbedingungen|high|DIN EN ISO 9972:2018-12 Annex NA
+test_ventilation||c||mechanical||Ventilation of the tested subject|Lüftung im geprüften Bereich|high|
+test_volume|G26-01,G26-03,G26-04|n|m3|450|r0:10000000|Heated or cooled air volume|Beheiztes oder gekühltes Luftvolumen|high|
+test_volume|G26-02|n|m3|2000|r0:10000000|Heated or cooled air volume|Beheiztes oder gekühltes Luftvolumen|high|
+test_pressurisation||n|m3_h|650|r0:100000000|Measured airflow at +50 Pa|Gemessener Volumenstrom bei +50 Pa|high|
+test_depressurisation||n|m3_h|675|r0:100000000|Measured airflow at −50 Pa|Gemessener Volumenstrom bei −50 Pa|high|
+test_area|G26-02,G26-03|n|m2|800|r0:10000000|Envelope area of the tested subject|Hüllfläche des geprüften Bereichs|high|
+test_basis|G26-03|c||volume||Normalisation method|Bezugsgröße|high|
+test_zone_basis|G26-03|c||selected||Basis for separate zone verification|Grundlage des getrennten Zonennachweises|high|
+test_sample_basis|G26-04|c||confirmed||Basis for sampling units|Grundlage der Stichprobe von Nutzeinheiten|high|

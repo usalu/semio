@@ -266,12 +266,16 @@
           "additionalProperties": false,
           "required": [
             "name",
+            "windowsExecutable",
             "environment",
             "placeholder"
           ],
           "properties": {
             "name": {
               "type": "string"
+            },
+            "windowsExecutable": {
+              "const": "rustc.exe"
             },
             "environment": {
               "type": "string"
@@ -545,6 +549,7 @@
     },
     "tool": {
       "name": "rustc",
+      "windowsExecutable": "rustc.exe",
       "environment": "SEMIO_TOOL_RUSTC",
       "placeholder": "@tool"
     },

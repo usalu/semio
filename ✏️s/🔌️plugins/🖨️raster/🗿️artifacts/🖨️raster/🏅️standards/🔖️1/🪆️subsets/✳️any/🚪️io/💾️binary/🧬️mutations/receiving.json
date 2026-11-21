@@ -1,0 +1,105 @@
+{
+  "format": 1,
+  "asset": {
+    "tag": 10,
+    "id": "imported-fixture",
+    "width": 2,
+    "height": 1,
+    "colorspace": "grayscaleAlpha",
+    "depth": 16,
+    "frameDelays": [
+      40,
+      70
+    ],
+    "frames": [
+      [
+        25,
+        25,
+        25,
+        255,
+        180,
+        180,
+        180,
+        128
+      ],
+      [
+        90,
+        90,
+        90,
+        255,
+        200,
+        200,
+        200,
+        16
+      ]
+    ],
+    "icc": [
+      1,
+      5,
+      9
+    ],
+    "metadata": {
+      "Description": "Grüße ↔ Raster"
+    },
+    "frameBase64": [
+      "GRkZ/7S0tIA=",
+      "Wlpa/8jIyBA="
+    ],
+    "iccBase64": "AQUJ"
+  },
+  "selection": {
+    "tag": 21,
+    "id": "painted-fixture",
+    "target": "pixels",
+    "color": [
+      1,
+      0,
+      0,
+      1
+    ],
+    "spans": [
+      {
+        "start": 0,
+        "length": 2,
+        "coverage": 255
+      },
+      {
+        "start": 3,
+        "length": 1,
+        "coverage": 127
+      }
+    ],
+    "dense": [
+      255,
+      255,
+      0,
+      127,
+      0
+    ]
+  },
+  "samples": {
+    "tag": 22,
+    "hex": "01020fa0ff",
+    "bytes": [
+      1,
+      2,
+      15,
+      160,
+      255
+    ]
+  },
+  "adjustment": {
+    "tag": 0,
+    "id": "adjustment-fixture",
+    "tone": "brightness",
+    "value": 0.25
+  },
+  "pagedFrame": {
+    "width": 64,
+    "height": 64,
+    "multiplier": 29,
+    "offset": 173,
+    "byteLength": 16384,
+    "sha256": "de82cdfd897ae84409e997331083cd697224111a2cc18cdf771bc6a976db6c32"
+  }
+}

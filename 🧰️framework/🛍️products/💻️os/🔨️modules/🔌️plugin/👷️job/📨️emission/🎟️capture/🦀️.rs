@@ -15,6 +15,28 @@ pub struct OriginalEmissionInput<A:ArtifactApp>{pub verb:String,pub meta:ActionM
 pub struct OriginalEmissionSource<A:ArtifactApp>{pub input:ManuallyDrop<Option<OriginalEmissionInput<A>>>,pub host:ManuallyDrop<Option<Box<OriginalHostConfiguration<A::ConfigMutation>>>>,host_mutation:ManuallyDrop<Option<A::ConfigMutation>>,pub host_emit:ManuallyDrop<Option<Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>>>,pub host_base:Option<[u8;32]>,host_metadata:Option<(usize,usize,u32)>,host_finished:bool,verb:ManuallyDrop<Option<String>>,offset:usize,verb_source:Option<(usize,usize)>,retirement:RetainedCloneClose,construction:OriginalConstructionAdmission,body:Option<usize>,caller:ManuallyDrop<Option<OriginalCallerSourceLoan>>,binding:Option<OriginalSourceBinding>,decoder:Option<(NativeAllocationIdentity,u64)>,frame:OriginalConstructionAdmission,failure:ManuallyDrop<Option<OriginalConstructionFailure>>,bound:bool,bind_slot:Option<()>}
 impl<A:ArtifactApp> Default for OriginalEmissionSource<A>{fn default()->Self{Self{input:ManuallyDrop::new(None),host:ManuallyDrop::new(None),host_mutation:ManuallyDrop::new(None),host_emit:ManuallyDrop::new(None),host_base:None,host_metadata:None,host_finished:false,verb:ManuallyDrop::new(None),offset:0,verb_source:None,retirement:Default::default(),construction:Default::default(),body:None,caller:ManuallyDrop::new(None),binding:None,decoder:None,frame:Default::default(),failure:ManuallyDrop::new(None),bound:false,bind_slot:None}}}
 impl<A:ArtifactApp> OriginalEmissionSource<A>{
+ semio_framework_value::initialization::original_empty_fields!(INITIAL_FIELDS, initial_field_demands, initialize_field_at;
+    input = ManuallyDrop::new(None),
+    host = ManuallyDrop::new(None),
+    host_mutation = ManuallyDrop::new(None),
+    host_emit = ManuallyDrop::new(None),
+    host_base = None,
+    host_metadata = None,
+    host_finished = false,
+    verb = ManuallyDrop::new(None),
+    offset = 0,
+    verb_source = None,
+    retirement = Default::default(),
+    construction = Default::default(),
+    body = None,
+    caller = ManuallyDrop::new(None),
+    binding = None,
+    decoder = None,
+    frame = Default::default(),
+    failure = ManuallyDrop::new(None),
+    bound = false,
+    bind_slot = None,
+ );
  fn bind(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let d=fixed::<Self>();let body=cx.retained_grant().maximum_copy_bytes;let binding=OriginalSourceBinding::borrow(cx);
   let Self{frame,failure,bind_slot,body:body_slot,binding:binding_slot,decoder,..}=self;
@@ -92,10 +114,10 @@ impl<A:ArtifactApp> OriginalEmissionCapture<A>{
  pub fn borrow(&self)->Option<&OriginalEmissionInput<A>>{self.input.as_ref()}
  /// 🎯️ The original funded capture fixes its body policy before any close selection.
  pub fn original_body(&self)->usize{self.body}
- /// 📤️ The actual mounted constructor receives the original bodies and caller loan inside its admitted construction action.
- pub fn handoff_into<T>(&mut self,cx:&mut StepContext<'_>,output:&mut Option<T>,demand:RetirementDemand,build:impl FnOnce(OriginalEmissionInput<A>,OriginalCallerSourceLoan,OriginalSourceBinding)->(T,RetainedCloneProgress))->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.closing||self.input.is_none()||self.caller.is_none()||output.is_some(){return Err(refusal().into())}let minimum=2*size_of::<OriginalEmissionInput<A>>()+size_of::<OriginalCallerSourceLoan>()+size_of::<OriginalSourceBinding>();if demand.copy_bytes<minimum||demand.depth==0{return Err(refusal().into())}built(cx,&mut self.construction,output,original(demand),||{let input=self.input.take().unwrap();let caller=self.caller.take().unwrap();let binding=self.binding.take().unwrap();Ok(build(input,caller,binding))})}
+ /// 📤️ The mounted constructor takes the original bodies and caller loan. The capture keeps its binding for paid construction retirement.
+ pub fn handoff_into<T>(&mut self,cx:&mut StepContext<'_>,output:&mut Option<T>,demand:RetirementDemand,build:impl FnOnce(OriginalEmissionInput<A>,OriginalCallerSourceLoan,OriginalSourceBinding)->(T,RetainedCloneProgress))->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.closing||self.input.is_none()||self.caller.is_none()||output.is_some(){return Err(refusal().into())}let minimum=2*size_of::<OriginalEmissionInput<A>>()+size_of::<OriginalCallerSourceLoan>()+size_of::<OriginalSourceBinding>();if demand.copy_bytes<minimum||demand.depth==0{return Err(refusal().into())}built(cx,&mut self.construction,output,original(demand),||{let input=self.input.take().unwrap();let caller=self.caller.take().unwrap();let binding=self.binding.unwrap();Ok(build(input,caller,binding))})}
  /// 📏️ Quotes the actual input retirement or original caller return without mutating its selection.
- pub fn close_demands(&self,_body:usize)->Result<RetirementDemand,ValueError>{let body=self.body;if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.input.is_some(){return self.retirement.next_owner_demands::<OriginalEmissionInput<A>>(true,&None,body)}if let Some(caller)=self.caller.as_ref(){return Ok(caller.retirement_demands())}if self.binding.is_some(){return Ok(fixed::<Option<OriginalSourceBinding>>())}Ok(Default::default())}
+ pub fn close_demands(&self,_body:usize)->Result<RetirementDemand,ValueError>{let body=self.body;if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.input.is_some(){return self.retirement.next_owner_demands::<OriginalEmissionInput<A>>(true,&None,body)}if !self.construction.terminal_is_empty(){return Ok(self.construction.close_demand())}if let Some(caller)=self.caller.as_ref(){return Ok(caller.retirement_demands())}if self.binding.is_some(){return Ok(fixed::<Option<OriginalSourceBinding>>())}Ok(Default::default())}
  /// ♻️ Cancellation closes the original metadata and emission before returning the same caller loan.
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.terminal_is_empty(){return Ok(true)}self.validate(cx)?;self.closing=true;if !self.retirement.is_empty(){let d=self.retirement.demands(self.body)?;let body=self.body;retired_poll(cx,d,|effect|self.retirement.step_granted(body,effect))?;return Ok(false)}if self.input.is_some(){let d=self.retirement.next_owner_demands::<OriginalEmissionInput<A>>(true,&None,self.body)?;retired(cx,d,|effect|Ok(self.retirement.begin_granted(&mut self.input,effect).result?.unwrap_or(RetainedCloneStep::Progress(Default::default()))))?;return Ok(false)}if !self.construction.terminal_is_empty(){unbuilt(cx,&mut self.construction)?;return Ok(false)}if let Some(caller)=self.caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(false)}let d=fixed::<Option<OriginalSourceBinding>>();retired(cx,d,|_|{self.binding=None;Ok(RetainedCloneStep::Complete(progress(d)))})?;Ok(self.terminal_is_empty())}
  /// 🈳️ Both the original payload and its actual caller authority have returned.

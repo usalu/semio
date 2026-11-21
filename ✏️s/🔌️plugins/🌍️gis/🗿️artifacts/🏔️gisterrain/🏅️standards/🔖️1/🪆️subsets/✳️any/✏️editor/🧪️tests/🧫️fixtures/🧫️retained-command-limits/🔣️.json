@@ -5,11 +5,40 @@
   "toolIds": [
     "setExaggeration",
     "setCamera",
-    "setActiveExample"
+    "setActiveExample",
+    "clearElevationSource",
+    "editElevation",
+    "addOverlayPosition",
+    "removeOverlayFeature",
+    "clearOverlays",
+    "importElevationGrid",
+    "editOverlayShape",
+    "moveOverlayPosition",
+    "createElevationGrid",
+    "exportElevationGrid",
+    "gradeTerrainRegion",
+    "importGeoJson",
+    "generateTerrainContours",
+    "configureTerrainBrush"
   ],
   "publicationLanes": {
     "setExaggeration": ["artifact", "ui", "terminal"],
     "setCamera": ["window-config", "ui", "terminal"],
-    "setActiveExample": ["artifact", "ui", "terminal"]
+    "setActiveExample": ["artifact", "ui", "terminal"],
+    "clearElevationSource": ["artifact", "ui", "terminal"],
+    "editElevation": ["artifact", "ui", "terminal"],
+    "addOverlayPosition": ["artifact", "ui", "terminal"],
+    "removeOverlayFeature": ["artifact", "ui", "terminal"],
+    "clearOverlays": ["artifact", "ui", "terminal"],
+    "importElevationGrid": ["host-only", "terminal"],
+    "editOverlayShape": ["artifact", "ui", "terminal"],
+    "moveOverlayPosition": ["artifact", "ui", "terminal"],
+    "createElevationGrid": ["artifact", "ui", "terminal"],
+    "exportElevationGrid": ["terminal"],
+    "gradeTerrainRegion": ["artifact", "ui", "terminal"],
+    "importGeoJson": ["terminal"],
+    "exportGeoJson": ["terminal"],
+    "generateTerrainContours": ["artifact", "ui", "terminal"],
+    "configureTerrainBrush": ["window-config", "ui", "terminal"]
   }
 }

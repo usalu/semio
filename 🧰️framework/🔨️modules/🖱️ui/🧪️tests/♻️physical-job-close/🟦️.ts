@@ -22,7 +22,7 @@ test("both actual native clipboard jobs hold outcomes and expose original borrow
  try{for(const[file,type]of [["🎯️targets/🧊️wgpu/🏃️host/🦀️.rs","ClipboardIoJob"],["🖥️host/🪟️window/🦀️.rs","NativeClipboardJob"]]){
   const source=readModuleTreeSource(resolve(import.meta.dir,"../..",file!)),ast=parser.parse(source)!;
   const implementations:Parser.SyntaxNode[]=[];const visit=(node:Parser.SyntaxNode):void=>{if(node.type==="impl_item"&&node.childForFieldName("trait")?.text==="semio_framework_job::InteractiveJob"&&node.childForFieldName("type")?.text===type)implementations.push(node);for(const child of node.namedChildren)visit(child);};visit(ast.rootNode);
-  expect(implementations).toHaveLength(1);expect(implementations[0]!.text).toContain("JobOutcomeBorrow");expect(implementations[0]!.text).toContain("fn borrow_outcome");expect(source).not.toContain("StepOutcome");expect(source).not.toContain("RetainedJobPayload::empty");expect(source).toContain("RetainedPayloadBuilder");ast.delete();
+  expect(implementations).toHaveLength(1);expect(compact(implementations[0]!.text)).toContain("fnborrow_outcome<'a>(&'aself,descriptor:&'asemio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,");expect(source).not.toContain("StepOutcome");expect(source).not.toContain("RetainedJobPayload::empty");expect(source).toContain("RetainedPayloadBuilder");ast.delete();
  }}finally{parser.delete();}
 });
 
@@ -62,7 +62,23 @@ test("clipboard dispatch source remains owned across asynchronous intent handbac
 test("clipboard original preparation preserves portable phases and final storage metadata under the original policy",async()=>{
  const law=await Bun.file(new URL("../📋️clipboard-ingress/🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL("../../📋️clipboard/🎟️invocation/🏗️preparation/🧬️schema/🔣️.json",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);expect(validateJsonSchemaSubset(schema,law)).toEqual([]);
  const db=new Database(":memory:");try{db.run("CREATE TABLE custody(stage TEXT,source INTEGER,producer INTEGER,descriptor INTEGER)");for(const stage of law.stages){const source=["original-source","denied-copy","destination-paid"].includes(stage)?1:0,producer=["producer-fields","semantic-owned","original-outcome","acknowledged"].includes(stage)?1:0,descriptor=stage==="original-outcome"?1:0;db.query("INSERT INTO custody VALUES(?,?,?,?)").run(stage,source,producer,descriptor)}expect(db.query("SELECT source,producer,descriptor FROM custody WHERE stage='denied-copy'").get()).toEqual({source:1,producer:0,descriptor:0});expect(db.query("SELECT source,producer,descriptor FROM custody WHERE stage='original-outcome'").get()).toEqual({source:0,producer:1,descriptor:1});expect(db.query("SELECT source+producer+descriptor AS live FROM custody WHERE stage='original-root-return'").get()).toEqual({live:0})}finally{db.close()}
- const job=readFileSync(new URL("../../🎯️targets/🧊️wgpu/🏃️host/🦀️.rs",import.meta.url),"utf8");expect(job).toContain("WorkerJobInitializer<ClipboardIoJob>");expect(job).toContain("initialize_empty_at");expect(job).not.toContain("write_bytes(target");const source=readModuleTreeSource(resolve(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs"));expect(source).toContain("WorkerJobSessionPreparation::try_begin");expect(source).toContain("try_step_on_original_caller(cx)");expect(source).toContain("acknowledge_outcome(cx.retained_grant())");expect(source).not.toContain("WorkerJobSession::try_new");expect(source).not.toContain("owner.take_outcome()");
+ const job=readFileSync(new URL("../../🎯️targets/🧊️wgpu/🏃️host/🦀️.rs",import.meta.url),"utf8");
+ expect(job).toContain("WorkerJobInitializer<ClipboardIoJob>");
+ expect(job).toContain("initialize_empty_at");
+ expect(job).not.toContain("write_bytes(target");
+ const interpreter=resolve(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs");
+ const admission=compact(sliceModuleTreeSource(interpreter,"struct MountedClipboardIo","pub fn deliver_clipboard_recipient("));
+ expect(admission).toContain("job:Option<ClipboardJob>");
+ expect(admission).toContain("Some(text)=>ClipboardJob::write(text)");
+ const pump=compact(sliceModuleTreeSource(interpreter,"pub fn pump_clipboard_io_one(","pub fn write_owned_os_clipboard("));
+ expect(pump).toMatch(/let(\w+)=cx\.admit_original_cancel_alias\(&mutcancel\);owner\.params=cancel\.map[\s\S]*?;\1\?;/u);
+ expect(pump).toContain("owner.admission.advance(&mutowner.job,&mutowner.params,&mutowner.session,cx)");
+ expect(pump).toContain("owner.admission.close_step(cx)");
+ expect(pump).toContain("receive_original_retained_work(cx,RetainedWorkOutcome{result,work:turn.work})");
+ expect(pump).toContain("try_step_on_original_caller(cx)");
+ expect(pump).toContain("outcome.acknowledge_outcome(cx)?");
+ expect(pump).not.toContain("WorkerJobSession::try_new");
+ expect(pump).not.toContain("owner.take_outcome()");
 });
 
 test("clipboard original interaction retirement preserves its live owner and full failure through the genuine context",async()=>{

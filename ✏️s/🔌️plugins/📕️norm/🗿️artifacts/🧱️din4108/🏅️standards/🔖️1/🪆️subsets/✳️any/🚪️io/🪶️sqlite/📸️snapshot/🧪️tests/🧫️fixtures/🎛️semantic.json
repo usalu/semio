@@ -1,6 +1,9 @@
 {
-  "schemaBytes": 4374,
+  "schemaBytes": 5125,
   "tableWidths": {
+    "din4108_case": 7,
+    "din4108_case_number": 7,
+    "din4108_case_text": 5,
     "din4108_document": 14,
     "din4108_element": 25,
     "din4108_layer": 22,

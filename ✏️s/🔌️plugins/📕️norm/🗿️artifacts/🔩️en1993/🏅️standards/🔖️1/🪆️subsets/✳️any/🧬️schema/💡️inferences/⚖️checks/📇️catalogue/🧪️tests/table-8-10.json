@@ -1,0 +1,18 @@
+{
+  "edition": "EN 1993-1-9:2005+AC:2009",
+  "clause": "Table 8.10 and §8(1)–(2)",
+  "columns": ["detail","location","basis","equivalentRangeMpa","frequentRangeMpa","yieldMpa","gammaFf","gammaMf","fatigueDemandMpa","fatigueCapacityMpa","fatigueStatus","frequentStatus"],
+  "cases": [
+    ["rolled","web","confirmed",80,100,355,1.25,1.25,100,128,"pass","pass"],
+    ["full-tee","web","confirmed",50,100,355,1.25,1.25,62.5,56.8,"fail","pass"],
+    ["partial-tee","throat","confirmed",10,100,355,1.25,1.25,12.5,28.8,"pass","pass"],
+    ["fillet","throat","confirmed",10,540,355,1.25,1.25,12.5,28.8,"pass","fail"],
+    ["t-full","web","confirmed",10,100,355,1.25,1.25,12.5,56.8,"pass","pass"],
+    ["t-partial","throat","confirmed",10,100,355,1.25,1.25,12.5,28.8,"pass","pass"],
+    ["t-fillet","throat","confirmed",28.8,532.5,355,1,1.25,28.8,28.8,"pass","pass"],
+    ["fillet","web","confirmed",10,100,355,1.25,1.25,null,null,"not-applicable","not-applicable"],
+    ["rolled","throat","confirmed",10,100,355,1.25,1.25,null,null,"not-applicable","not-applicable"],
+    ["partial-tee","throat","unconfirmed",10,100,355,1.25,1.25,null,null,"not-applicable","not-applicable"],
+    ["rolled","web","confirmed",0,0,355,1,1,0,160,"pass","pass"]
+  ]
+}

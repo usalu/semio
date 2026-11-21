@@ -10,5 +10,5 @@ pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let decoded = semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::decode_tiff(bytes)?;
     let image = semio_image_from_format(&decoded, TIFF_DIALECT)?;
-    raster_document_from_semio_image(&image, "tiff-import", "Imported tiff")
+    raster_document_from_semio_image(image, "tiff-import", "Imported tiff")
 }

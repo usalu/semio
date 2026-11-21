@@ -405,6 +405,15 @@ async fn the_run_matches_the_language_neutral_fixture() {
         assert_eq!(commits, case["commitReconstructionOps"].as_u64().expect("commits"), "{document}: commit ops");
         assert!(mirror.ops.iter().all(|op| matches!(op, RemodelingMutation::AppendContent(_) | RemodelingMutation::CommitReconstruction(_))), "{document}: a run only appends content and commits the result");
         assert!(commits == 0 || matches!(mirror.ops.last(), Some(RemodelingMutation::CommitReconstruction(_))), "{document}: the commit is the last provisional op");
+        if let Some(RemodelingMutation::CommitReconstruction(commit)) = mirror.ops.last() {
+            let expected = case["registeredFrameRatio"].as_f64().expect("registered frame ratio");
+            let ratio = f64::from(commit.qc.as_ref().expect("published quality report").registered_frame_ratio);
+            let counters = &case["counters"];
+            let registered = counters["cameras"].as_f64().expect("registered cameras");
+            let accepted = counters["framesAccepted"].as_f64().expect("accepted frames");
+            assert_eq!(expected, registered / accepted, "{document}: fixture registration ratio");
+            assert_eq!(ratio, expected, "{document}: published registration ratio");
+        }
         let (kind, reason, args) = mirror.steps.last().expect("a last step");
         assert_eq!(step_kind_id(*kind), case["lastStep"]["kind"], "{document}: last step kind");
         assert_eq!(reason_id(*reason), case["lastStep"]["reason"], "{document}: last step reason");
@@ -557,14 +566,18 @@ async fn a_resumed_run_replays_silently_to_its_checkpoint_and_ends_with_the_same
 
 #[semio_framework_async_macros::async_test]
 async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_it_when_inputs_changed() {
-    let document = imported_document("orbit-short").await;
+    let law = &fixture()["revalidation"];
+    let document = imported_document(law["document"].as_str().expect("revalidation example")).await;
     let mut run = fresh_run(Arc::clone(&document));
     let whole = run_to_end(&mut run, whole_turns());
     let checkpoint = whole.checkpoints.last().expect("a final checkpoint").clone();
     let provisional = whole.ops.len() as u32;
-    let unrelated = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_gcp(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
+    let mut unrelated = (*document).clone();
+    unrelated.id.push_str("-renamed");
+    let added_gcp = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_gcp(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
     let changed = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { frame_sample_stride: 2, ..document.params.ingest.clone() })).expect("params apply"));
-    for (head, withdrawn) in [(unrelated, false), (changed, true)] {
+    for (edit, head) in [("documentIdentity", Arc::new(unrelated)), ("groundControlPresence", added_gcp), ("ingestStride", changed)] {
+        let withdrawn = law["withdrawn"][edit].as_bool().expect("revalidation verdict");
         let mut job = ReconstructionRevalidateJob::new(identity(), head, Some(&checkpoint), provisional);
         let mut sequence = RunDriver::new(never);
         let Turn::Tick(tick) = turn(&mut job, whole_turns(), &mut sequence) else { panic!("revalidation reports one tick") };

@@ -40,7 +40,7 @@ use layout_engine_and_views::{LayoutEngine, build_display_list_for_page, default
 
 #[path = "🖌️drawing-strokes-and-paths/🦀️.rs"]
 mod drawing_strokes_and_paths;
-pub use drawing_strokes_and_paths::drawing_kind;
+pub use drawing_strokes_and_paths::{drawing_kind, link_references_document_drawing};
 use drawing_strokes_and_paths::paint_display_stroke;
 
 #[path = "🧩️assemble-display-list/🦀️.rs"]

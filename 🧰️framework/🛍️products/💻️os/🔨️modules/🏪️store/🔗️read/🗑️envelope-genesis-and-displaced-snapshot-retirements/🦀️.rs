@@ -299,6 +299,11 @@ impl ArtifactStoreDisplacedRetirements {
         self.owners.is_empty() && self.owner_reservations.iter().all(Option::is_none)
     }
 
+    /// 🚦️ Reports whether live maintenance has a displaced owner it can advance.
+    pub fn has_queued_owners(&self) -> bool {
+        !self.owners.is_empty()
+    }
+
     pub fn backing_release_byte_demand(&self) -> Result<usize, ValueError> {
         if !self.terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced backing remains occupied by original owners or reservations")); }
         std::alloc::Layout::array::<Box<dyn ErasedSnapshotRetirement>>(self.owners.capacity()).map(|layout| layout.size()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "displaced original queue backing extent overflow"))

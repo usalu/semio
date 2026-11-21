@@ -82,3 +82,100 @@ Final check: `PASS (109.0 s)`; silhouette IoU 0.997 / 0.993 / 0.995 (1:50), 0.99
 7. In pose `harvest-laden` one apple mark of the plan lies 5 cm outside the crown outline (the foliage bones turn by different angles).
 8. Not looked at: the 1:100 and 1:200 thermal sheets, the 1:200 structure sheet and the 1:100 and 1:500 drawings were rendered but not opened; the check and the validator cover their containment, coverage and extents.
 9. 1:500 structure: members are prisms of the declared sections without taper (stepped at the joints).
+
+## Round 5 handcraft
+
+State 2026-11-21: crown rebuilt by hand at all four scales, fork smoothed, apples hung under the clumps. Catalog `r3-validate.ts vegetation/apple-tree --volumes`: VALID, schema 0, validateAsset 0, checkVolumes 0. `volumes-check.ts vegetation/apple-tree --product`: **PASS**. Scripts: `r5-apple-tree-model.ts` (the round-3 wood is kept; the crown is new), `r5-apple-tree-ship.sh` (model, validate candidate, roots `anchors representations`, splice, validate catalog).
+
+### Reference and model against it (1:50)
+
+| quantity | reference | source | model | dev. |
+|---|---|---|---|---|
+| height | 6–8 m, mature Hochstamm of about 30 years | Pretzsch et al. 2015; orchard practice | 6.35 m | in range |
+| crown spread x / z | 6–9 m; `dimensions` 6.789 / 6.2 m | Pretzsch 2015 | 6.80 / 6.17 m | +0.2 % / −0.5 % |
+| clear stem to the first scaffold | ≥ 1.6 m (Hochstamm), 1.8 m nursery standard | German Hochstamm definition | 1.55–1.60 m | −3 % to 0 % |
+| stem diameter at 1 m | 0.30–0.45 m | orchard practice | 0.38 m | in range |
+| root flare at the ground | about 1.5 × the stem | arboricultural practice | 0.60 m (1.58 ×) | ok |
+| scaffolds | 3–4 in two tiers, 45–60° from the vertical, then arching out | Oeschberg training | 4 in two tiers: 50° and 52°, then 78° and 74°; 27° and 26.5°, then 44° and 42° | ok |
+| crown base (skirt) | 1.8–2.4 m | orchard practice | 2.28 m | in range |
+| foliage habit | a dense summer crown of leaf clusters on the fruit wood and scaffold ends; rounded, wider than high, with a drooping skirt | botany | 21 clumps (a main mass plus 2–5 bosses) in a skirt, a widest tier, a mid tier, an upper tier and a crown top, around 6 shade cores | — |
+| apple | 7–8 cm | `provenance.notes` | 8 cm spheres hanging under the clumps | 0 % |
+
+### Grades
+
+| list | before (round 4) | after |
+|---|---|---|
+| body 1:50 | B− | A− |
+| body 1:100 | B (per the round-3 report) | A− |
+| body 1:200 | B | A− |
+| body 1:500 | B | A− |
+| structure 1:50–1:200 | B+ | A− (the wood is unchanged; the joints now stay inside the bark) |
+| structure 1:500 | B | B+ |
+| thermal (all scales) | B+ | A− |
+| poses and clip | B+ | A− |
+| 2D | B+ | A− (1:200 B+) |
+
+- Before, at 1:50 I looked only at the body sheet. A batch render of the before-state was cut off when the new source was written, so the before grades of the other lists come from the round-3 report.
+- The before body was a closed cauliflower of 83 lobes of nearly the same size on a strict ring envelope: bubbles everywhere and no branch structure readable from outside. A flat lens-shaped cap sat on top (round 3), and in plan one big disc dominated.
+
+### What changed
+
+- **Crown, rebuilt.** It is now clumps carried on their bones:
+  - six clumps in the widest tier on the lower scaffolds (`fol-w1`, `fol-e1`), four drooping skirt clumps, and two mid clumps;
+  - six upper clumps on `fol-w2` and `fol-e2`, staggered 30° against the lower tier so that no waist forms;
+  - two top clumps at the ends of the upper scaffolds (143° and 323°, on their own bones) and two more on `fol-top`;
+  - a crown top of a cap and five bosses, and six shade cores.
+- **How a clump is made.** Each clump is one main mass with bosses from a hand table of seven directions (outward, up-out, down-out, left, right, up, oblique). Clump size, height, reach factor, droop and the bosses it carries are stated per clump.
+- **Envelope.** Unchanged (dims within 0.5 %). The scaffolds now show under the skirt from every side.
+- **Coarser scales.** They are generalised from the same clumps:
+  - 1:100 keeps the bosses that shape the plan and elevation outlines (1, 2, 3, 4, 5, 7) and drops the upward bosses (6) and the side cores;
+  - 1:200 keeps the main mass plus the outward and upward boss;
+  - 1:500 keeps the main masses only, widened, bound to `ld` as the drawing binds them.
+- **Fruit.** Apples hang under the clumps (−40° on the outward boss) instead of sitting on the equator. This also stops them adding 6 cm to the drawn width.
+- **Fork.** The leader starts at r 0.20 m instead of 0.165 m, so the trunk flows into it without the ledge seen in front. At 1:50 a structure joint is capped at its bark radius.
+- **Roots.** `anchors` (12 transpiration anchors moved to their new lobe faces, same bones) and `representations` (all 2D redrawn by `r3-apple-tree-draw.ts` as true views; fruit marks follow).
+
+### Measured
+
+- Silhouette IoU, elevation / front / plan:
+
+  | scale | IoU |
+  |---|---|
+  | 1:50 | 0.997 / 0.992 / 0.990 |
+  | 1:100 | 0.998 / 0.993 / 0.991 |
+  | 1:200 | 0.997 / 0.990 / 0.997 |
+  | 1:500 | 0.996 / 0.996 / 0.997 |
+
+- Cross-scale p95 in m, elevation / front / plan:
+
+  | pair | p95 |
+  |---|---|
+  | 1:100 | 0.056 / 0.049 / 0.026 |
+  | 1:200 | 0.143 / 0.128 / 0.12 |
+  | 1:500 | 0.19 / 0.15 / 0.22 |
+
+- Bark area deviation:
+
+  | scale | trunk | limb |
+  |---|---|---|
+  | 1:50 | 0.004 | 0.047 |
+  | 1:100 | 0.085 | 0.083 |
+  | 1:200 | 0.073 | 0.24 |
+  | 1:500 | 0.016 | 0.26 |
+
+### Seen (opened)
+
+- **1:50 body, six views:** distinct leaf clumps with lobed bosses, the scaffolds visible under the skirt, a rounded top and an irregular scalloped plan.
+- **1:100, 1:200, 1:500 bodies:** the same silhouette with fewer and broader masses. 1:500 is a crisp lobed dome on its stem.
+- **Structure sheets at all four scales:** wood along the limbs, the root plate and masses inside. 1:500 members are prisms (telescoped).
+- **Thermal cut at all four scales:** sun lobes around the shade cores, bark red and green, nothing poking out.
+- **Poses** `breeze-with-fruit`, `harvest-laden`, `gale-windfall` and clip `gust` t = 1 s: closed, clumps follow their limbs.
+- **2D at all four scales:** clean clump outlines, the hatched shade cores at 1:50, apples as small circles.
+
+### Open
+
+- **Foliage abstraction.** It stays ellipsoid lobes (C8). Close up the clumps still read as bubbles; no leaves.
+- **Scaffold azimuths.** They stay at 9 / 143 / 189 / 323° because of the planar rig (round-3 remark 2).
+- **1:500 structure.** The members are prisms of the declared sections, so the stem steps at each joint.
+- **1:200 drawing.** It is 6.43 m high (+1.3 %, within 2 %). Its plan shows the core outline as a small figure-eight inside the crown.
+- **Limb-bark area at 1:200 and 1:500.** The deviation is 0.24 and 0.26, within those scales' limits.

@@ -62,6 +62,23 @@ type Din4108ThermalBridge {
   bb2Type: String!
 }
 
+type CaseNumber {
+  id: String!
+  value: Float!
+}
+type CaseText {
+  id: String!
+  value: String!
+}
+type CaseRow {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  entryId: String!
+  numbers: [CaseNumber!]!
+  texts: [CaseText!]!
+}
+
 type Din4108Snapshot {
   climateZone: String! @state(class: ARTIFACT)
   usage: String! @state(class: ARTIFACT)
@@ -73,4 +90,5 @@ type Din4108Snapshot {
   zones: [Din4108ThermalZone!]! @state(class: ARTIFACT)
   elements: [Din4108EnvelopeElement!]! @state(class: ARTIFACT)
   thermalBridges: [Din4108ThermalBridge!]! @state(class: ARTIFACT)
+  cases: [CaseRow!]! @state(class: ARTIFACT)
 }

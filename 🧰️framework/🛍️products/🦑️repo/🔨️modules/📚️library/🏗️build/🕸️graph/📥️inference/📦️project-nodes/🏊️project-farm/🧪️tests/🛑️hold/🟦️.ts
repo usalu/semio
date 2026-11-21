@@ -1,9 +1,12 @@
 /** 🛑️ Contract: while the process tree stands at the hard share of its memory ceiling (`hold` answers true) a farm dispatches no job beside a running one, yet the first job always runs and every queued job finishes, so a held farm slows down and never stops; without a hold the same farm runs jobs side by side.
  * @see ../../🏊️pool/🟨️.mjs */
 import{expect,test}from"bun:test";
+import{Database}from"bun:sqlite";
+import{existsSync,mkdirSync,mkdtempSync,rmSync,writeFileSync}from"node:fs";
+import fixture from"./🔣️.json"with{type:"json"};
 import{dirname,join}from"node:path";
 import{fileURLToPath,pathToFileURL}from"node:url";
-import{GRAPH_FARM_POLICY_V1,createFarmV1}from"../../🏊️pool/🟨️.mjs";
+import{GRAPH_FARM_POLICY_V1,choosePoolV1,createFarmV1}from"../../🏊️pool/🟨️.mjs";
 import{farmHeldV1}from"../../🟨️.mjs";
 import{FOOTPRINT_POLICY_V1}from"../../../../../../🧠️memory/🦶️footprint/🟨️.mjs";
 import{PLAN_STAGE_POLICY_V1}from"../../../../../../🧠️memory/🪜️plan-stage/🟨️.mjs";
@@ -42,3 +45,48 @@ test("the farm holds when the tree plus the child it would admit passes the hard
  expect(farmHeldV1({grantBytes:()=>undefined} as never,allowance,{bytes:()=>9999*MiB} as never)).toBe(false);
  expect(GRAPH_FARM_POLICY_V1.holdMeterMilliseconds).toBeLessThan(5000);expect(GRAPH_FARM_POLICY_V1.holdMeterMilliseconds).toBeGreaterThan(0);
 });
+
+
+for(const vector of fixture.selection)test(`the native farm ranks the ${vector.name} by actual dispatch eligibility`,async()=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(artifacts===undefined)throw Error("Owned test artifacts directory required");
+ mkdirSync(artifacts,{recursive:true});
+ const root=mkdtempSync(join(artifacts,"farm-")),started=join(root,"started"),release=join(root,"release");
+ let samples=0,held=vector.hold;
+ const pools=[farm({workers:2,hold:()=>{samples++;return held;},footprintOf:()=>0}),farm({workers:1,hold:()=>vector.hold,footprintOf:()=>0})];
+ const until=async(check:()=>boolean)=>{const end=Date.now()+10000;while(!check()){if(Date.now()>=end)throw Error("Farm fixture did not reach the expected state");await Bun.sleep(10);}};
+ const slots=(pool:typeof pools[number])=>(pool as typeof pool&{snapshot:{idle:number;busy:number}}).snapshot;
+ try{
+  expect(await Promise.all(pools.map(pool=>pool.ready))).toEqual([true,true]);
+  await until(()=>slots(pools[0]!).idle===2);
+  const active=pools[0]!.run({n:1,started,release});
+  await until(()=>existsSync(started));
+  const native=pools.map(pool=>({idle:slots(pool).idle,busy:slots(pool).busy}));
+  expect(native).toEqual(vector.pools);
+  const sqlite=new Database(":memory:");
+  try{
+   const oracle=sqlite.query(`SELECT cast(key AS integer) AS chosen FROM json_each(?)
+    WHERE json_extract(value,'$.idle')>0 AND (NOT ? OR json_extract(value,'$.busy')=0)
+    ORDER BY cast(key AS integer) LIMIT 1`).get(JSON.stringify(native),Number(vector.hold)) as {chosen:number};
+   const select=(candidates:typeof pools)=>choosePoolV1(candidates.map(pool=>({ready:true,usable:pool.usable,idle:pool.idle,pending:pool.pending,width:pool.width})));
+   const observed=samples,selected=select(pools);
+   expect(samples).toBe(observed);
+   expect(selected).toBe(vector.expected);
+   expect(selected).toBe(oracle.chosen);
+   expect((await pools[selected]!.run({n:2})).reply).toMatchObject({n:2});
+   expect(existsSync(release)).toBe(false);
+   if(vector.hold){
+    held=false;
+    const heldPool=pools[0]!,before=samples;
+    expect(heldPool.idle).toBe(false);
+    expect(select([heldPool])).toBe(0);
+    expect(samples).toBe(before);
+    expect((await heldPool.run({n:3})).reply).toMatchObject({n:3});
+    expect(samples).toBeGreaterThan(before);
+    expect(existsSync(release)).toBe(false);
+   }
+  }finally{sqlite.close();}
+  writeFileSync(release,"release");
+  expect((await active).reply).toMatchObject({n:1});
+ }finally{writeFileSync(release,"release");await Promise.all(pools.map(pool=>pool.close()));rmSync(root,{recursive:true,force:true});}
+},30000);

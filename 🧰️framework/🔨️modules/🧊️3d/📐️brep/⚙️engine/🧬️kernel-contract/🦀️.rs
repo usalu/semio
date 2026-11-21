@@ -90,6 +90,41 @@ impl std::fmt::Display for BrepError {
 }
 
 impl std::error::Error for BrepError {}
+
+/// 🧭️ Refuses a non-finite point or vector argument of an affine transform, by its name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn require_finite_vector(label: &str, value: Vec3) -> Result<(), BrepError> {
+    if value.iter().all(|component| component.is_finite()) {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be finite, got {value:?}")))
+}
+
+/// 🧭️ Refuses a non-finite scalar argument of an affine transform, by its name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn require_finite_scalar(label: &str, value: f64) -> Result<(), BrepError> {
+    if value.is_finite() {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be finite, got {value}")))
+}
+
+/// 📏️ Requires a finite positive size before a selected feature changes the body.
+pub fn require_positive_size(label: &str, value: f64) -> Result<(), BrepError> {
+    require_finite_scalar(label, value)?;
+    if value > 0.0 { return Ok(()); }
+    Err(BrepError::InvalidInput(format!("{label} must be positive, got {value}")))
+}
+
+/// 🧭️ Refuses a uniform scale factor that collapses the shape (zero) or is not a number.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn require_scale_factor(label: &str, value: f64) -> Result<(), BrepError> {
+    require_finite_scalar(label, value)?;
+    if value != 0.0 {
+        return Ok(());
+    }
+    Err(BrepError::InvalidInput(format!("{label} must be non-zero, got {value}")))
+}
 // #endregion ⚠️ Errors
 
 // #region 🔖️Kernel

@@ -18,5 +18,24 @@
         "zoom": { "type": "number", "exclusiveMinimum": 0 }
       }
     }
+  },
+  "$defs": {
+    "Update": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "patch"],
+      "properties": {
+        "kind": { "const": "update" },
+        "patch": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "activePageId": { "anyOf": [{ "$ref": "#/properties/activePageId" }, { "type": "null" }] },
+            "activeUtility": { "anyOf": [{ "$ref": "#/properties/activeUtility" }, { "type": "null" }] },
+            "camera": { "anyOf": [{ "$ref": "#/properties/camera" }, { "type": "null" }] }
+          }
+        }
+      }
+    }
   }
 }

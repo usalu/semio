@@ -13,11 +13,15 @@ pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 
 //#region 🔖️Aggregate
 /// 🕳️ The uninhabited parent vocabulary of a document whose whole content is its composed child.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 pub enum DagMutation {}
 
+semio_os_kernel::original_ordinal_operation_receiving!(DagMutation);
+
 impl semio_framework_value::retirement::RetireOwned for DagMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+    type RetirementCursor = semio_framework_value::retirement::Leaf<()>;
+
+    fn retirement_seed(self) -> Self::RetirementCursor {
         match self {}
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {

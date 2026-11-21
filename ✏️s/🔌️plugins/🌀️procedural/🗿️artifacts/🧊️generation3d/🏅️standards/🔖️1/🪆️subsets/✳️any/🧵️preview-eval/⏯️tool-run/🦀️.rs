@@ -220,7 +220,7 @@ pub fn observe_preview_eval(status_json: &str, eval_json: &str, preview_widget_i
             _ => PreviewEvalRunReason::Queued,
         };
         if reason == PreviewEvalRunReason::Evaluated && preview_widget_ids.iter().any(|id| id == widget_id) {
-            let states: Vec<PreviewEvalMeshState> = preview_channel_items_for_widget(&eval, widget_id).into_iter().map(|item| if item.handle.is_empty() { PreviewEvalMeshState::Ready } else { mesh_state(&item.handle) }).collect();
+            let states: Vec<PreviewEvalMeshState> = preview_viewport_items_for_widget(&eval, widget_id).into_iter().map(|item| if item.handle.is_empty() { PreviewEvalMeshState::Ready } else { mesh_state(&item.handle) }).collect();
             observation.meshes += states.len() as u64;
             observation.tessellated += states.iter().filter(|state| **state == PreviewEvalMeshState::Ready).count() as u64;
             reason = if states.is_empty() {

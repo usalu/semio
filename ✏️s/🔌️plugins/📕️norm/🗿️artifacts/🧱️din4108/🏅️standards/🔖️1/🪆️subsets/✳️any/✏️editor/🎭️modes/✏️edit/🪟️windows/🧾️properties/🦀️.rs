@@ -2,8 +2,8 @@
 
 use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
 use semio_ui_locale::{Locale, LocalizedLabel};
-use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
-use semio_s_plugin_norm_app_surface::{render_inspector, NormSelection};
+use semio_s_artifact_norm_din4108_checks::design_cases::Din4108Cases;
+use semio_s_plugin_norm_app_surface::{render_inspector_with_cases, NormSelection};
 
 //#region 🔖️Constants
 pub const WINDOW_PROPERTIES: &str = "norm-din4108-properties";
@@ -21,7 +21,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🧾️ Typed properties and outliner; the selection opens its rows and marks the field paths of the selected check.
 pub fn render(host: &crate::Host, selection: &NormSelection, locale: Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let options = selection.inspector_options();
-    render_inspector(host, locale, controller_id, Some(crate::field_meta::din4108_field_meta), windows, &options)
+    render_inspector_with_cases::<crate::Din4108Family, Din4108Cases>(host, locale, controller_id, Some(crate::field_meta::din4108_field_meta), windows, &options)
 }
 //#endregion 🔖️Render
 

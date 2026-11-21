@@ -20,25 +20,51 @@ use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schem
 use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::schema::snapshot::model::PdfPage;
 
 #[test]
-fn sampled_function_neutral_words_preserve_native_twelve_bit_extent() {
+fn sampled_function_neutral_words_preserve_native_sample_extent() {
+    use crate::standards::v1_7::subsets::base::{schema::graph_source::GraphSource, schema::snapshot::ObjRef};
+
+    struct FunctionObject(Option<PdfObject>);
+    impl ObjectSink for FunctionObject {
+        fn add(&mut self, value: PdfObject) -> ObjRef {
+            self.0 = Some(value);
+            ObjRef { num: 1, gen: 0 }
+        }
+    }
+
+    let lower = |bits, samples: &[u32]| {
+        let function = PdfFunction::Sampled {
+            domain: vec![0.0, 1.0], range: vec![0.0, 1.0], size: vec![samples.len() as u32],
+            bits_per_sample: bits, order: None, encode: None, decode: None, samples: samples.to_vec(),
+        };
+        let mut sink = FunctionObject(None);
+        lower_function(&function, &mut sink)?;
+        Ok::<_, PdfEngineError>((function, sink.0.unwrap()))
+    };
+    let read_case = |case: &serde_json::Value, bits| {
+        let words: Vec<u32> = serde_json::from_value(case["sampleWords"].clone()).unwrap();
+        let bytes: Vec<u8> = serde_json::from_value(case["nativeBytes"].clone()).unwrap();
+        let (function, object) = lower(bits, &words).unwrap();
+        let PdfObject::Stream { data, .. } = &object else { panic!("expected sampled stream") };
+        assert_eq!(data, &bytes);
+        assert_eq!(lift_function(&object, &mut GraphSource::new(&[])), Some(function));
+        (words, bytes, object)
+    };
+
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    let case = &fixture["sampled12"];
-    let words: Vec<u32> = serde_json::from_value(case["sampleWords"].clone()).unwrap();
-    let bytes: Vec<u8> = serde_json::from_value(case["nativeBytes"].clone()).unwrap();
-    assert_eq!(pack_sample_words(&words, 12).unwrap(), bytes);
-    assert_eq!(unpack_sample_words(&bytes, 12, words.len()).unwrap(), words);
-    let physical = bytes.clone();
-    let physical_words = vec![(u32::from(physical[0]) << 4) | (u32::from(physical[1]) >> 4), ((u32::from(physical[1]) & 15) << 8) | u32::from(physical[2])];
-    assert_eq!(physical_words, words);
-    assert!(pack_sample_words(&[4096], 12).is_err());
-    assert!(unpack_sample_words(&bytes[..2], 12, 2).is_err());
-    assert_eq!(unpack_sample_words(&pack_sample_words(&[u32::MAX], 32).unwrap(), 32, 1).unwrap(), vec![u32::MAX]);
+    let (words, bytes, mut short) = read_case(&fixture["sampled12"], 12);
+    let physical_words = [
+        (u32::from(bytes[0]) << 4) | (u32::from(bytes[1]) >> 4),
+        ((u32::from(bytes[1]) & 15) << 8) | u32::from(bytes[2]),
+    ];
+    assert_eq!(words, physical_words);
+    assert!(lower(12, &[4096]).is_err());
+    let PdfObject::Stream { data, .. } = &mut short else { panic!("expected sampled stream") };
+    data.truncate(2);
+    assert!(lift_function(&short, &mut GraphSource::new(&[])).is_none());
+    let (max, object) = lower(32, &[u32::MAX]).unwrap();
+    assert_eq!(lift_function(&object, &mut GraphSource::new(&[])), Some(max));
     for case in fixture["sampleWidths"].as_array().unwrap() {
-        let bits=case["bitsPerSample"].as_u64().unwrap() as u32;
-        let words:Vec<u32>=serde_json::from_value(case["sampleWords"].clone()).unwrap();
-        let bytes:Vec<u8>=serde_json::from_value(case["nativeBytes"].clone()).unwrap();
-        assert_eq!(pack_sample_words(&words,bits).unwrap(),bytes);
-        assert_eq!(unpack_sample_words(&bytes,bits,words.len()).unwrap(),words);
+        read_case(case, case["bitsPerSample"].as_u64().unwrap() as u32);
     }
 }
 

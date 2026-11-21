@@ -7,7 +7,7 @@ use super::*;
 impl SyncState {
     /// 🗂️ The document a folder or file binding holds now: the document actor's on the native build, the host-route
     /// mirror's on the browser build.
-    pub fn attached_document_id(&self, history: &HistoryState) -> Option<&str> {
+    pub fn attached_document_id<'a>(&'a self, history: &'a HistoryState) -> Option<&'a str> {
         #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
         if let Some(folder) = history.host_route_folder.as_ref() {
             return Some(folder.document_id.as_str());

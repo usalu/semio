@@ -804,19 +804,18 @@ fn read_only_context_keeps_actual_media_identity_and_denies_entity_authoring() {
 
 #[semio_framework_async_macros::async_test]
 async fn original_media_export_handoff_preserves_snapshot_and_closes_completed_or_cancelled_custody() {
-    use semio_plugin::artifact_app_laws::{submit_fixture_media_export,poll_fixture_media_export,fixture_close_grant};
+    use semio_plugin::artifact_app_laws::{submit_fixture_media_export,poll_fixture_media_export};
     use semio_plugin::ArtifactMediaExportPoll;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎥️media-export-job-and-factories/🧪️fixture.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let mut app=layout_app().await;
         let before=app.snapshot().expect("original projection");
-        let close=fixture_close_grant(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-        let handle=submit_fixture_media_export(&mut app.0,fixture["port"].as_str().unwrap(),app.1.cx(),close).await.expect("real media request admission");
+        let handle=submit_fixture_media_export(&mut app.0,fixture["port"].as_str().unwrap(),app.1.cx()).await.expect("real media request admission");
         let cancelled=row["cancel"].as_bool().unwrap();
         if cancelled{app.0.cancel_media_export(&handle).await.expect("cancel actual media handle")}
         let mut terminal=false;
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-            match poll_fixture_media_export(&mut app.0,&handle,app.1.cx(),close).await.expect("actual media poll"){
+            match poll_fixture_media_export(&mut app.0,&handle,app.1.cx()).await.expect("actual media poll"){
                 ArtifactMediaExportPoll::Running{..}=>{},
                 ArtifactMediaExportPoll::Cancelled=>{assert!(cancelled);println!("[media-handoff] {}",serde_json::json!({"name":row["name"],"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));terminal=true;break},
                 ArtifactMediaExportPoll::Complete(result)=>{assert!(!cancelled);assert_eq!(result.schema,fixture["schema"].as_str().unwrap());assert_eq!(result.mime_type,fixture["mime"].as_str().unwrap());let media=result.into_batch_media().expect("actual original chunks");let MediaPayload::Structured{schema,json}=media.payload else{panic!("real vector text payload")};let projection:serde_json::Value=serde_json::from_str(&json).expect("actual vector projection JSON");assert_eq!(projection["schema"],fixture["projectionSchema"]);assert_eq!(projection["source"]["documentId"],handle.parent_document_id);let revision=projection["source"]["frontierRevision"].as_str().unwrap();assert_eq!(revision.len(),64);assert!(revision.bytes().all(|byte|byte.is_ascii_hexdigit()&&!byte.is_ascii_uppercase()));assert!(projection["svg"].as_str().unwrap().contains("<svg"));println!("[media-handoff] {}",serde_json::json!({"name":row["name"],"schema":schema,"mime":fixture["mime"],"text":json,"cancelled":false,"unchanged":app.snapshot().unwrap()==before}));terminal=true;break},
@@ -834,7 +833,7 @@ use semio_s_artifact_layout_layout_host::LayoutDrawingMembers;
 #[semio_framework_async_macros::async_test]
 async fn original_media_projection_reads_the_genuinely_registered_drawing_child() {
     use semio_plugin::{App,EditorApp};
-    use semio_plugin::artifact_app_laws::{new_app_with_registry_and_members,OriginalFixtureScope,fixture_close_grant,submit_fixture_media_export,poll_fixture_media_export,close_registered_fixture_app};
+    use semio_plugin::artifact_app_laws::{new_app_with_registry_and_members,OriginalFixtureScope,submit_fixture_media_export,poll_fixture_media_export,close_registered_fixture_app};
     use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
     use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
     fn manifest()->App{App{definition:create_layout_app(),examples:Vec::new()}}
@@ -856,9 +855,9 @@ async fn original_media_projection_reads_the_genuinely_registered_drawing_child(
     let mut child=store::ArtifactStore::new::<store::os_store::ArtifactSnapshotPublication>(envelope,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     store::install_funded_member_store_owners(&mut child,&semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer).expect("actual Drawing owner catalog");
     assert_eq!(child_id,child_law["childId"].as_str().unwrap());app.register_child(child_law["slot"].as_str().unwrap().to_string(),child_id.clone(),dialect,LayoutDrawingMembers::Drawing(Box::new(child)),&mut identity).await.unwrap_or_else(|_|panic!("real parent reference admits its actual child"));
-    let before=app.snapshot().unwrap();let close=fixture_close_grant(policy);
-    let handle=submit_fixture_media_export(&mut app,"layout:out",caller.cx(),close).await.unwrap();let mut complete=false;let mut cancellation_bytes=None;
-    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){match poll_fixture_media_export(&mut app,&handle,caller.cx(),close).await.unwrap(){semio_plugin::ArtifactMediaExportPoll::Running{..}=>{if cancel_after_output&&cancellation_bytes.is_none(){let bytes=app.media.media_exports.get(handle.operation_id.0).map_or(0,|active|active.output_credit.bytes());if bytes>=child_law["cancelAfterOutputBytes"].as_u64().unwrap()as usize{cancellation_bytes=Some(bytes);app.cancel_media_export(&handle).await.unwrap()}}},semio_plugin::ArtifactMediaExportPoll::Cancelled=>{assert!(cancel_after_output);let bytes=cancellation_bytes.expect("cancel only after actual child export output was credited");println!("[media-child-cancel] {}",serde_json::json!({"childId":child_id,"creditedBytes":bytes,"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},semio_plugin::ArtifactMediaExportPoll::Complete(result)=>{assert!(!cancel_after_output,"cancellation cut must occur after actual child source use and before completion");let media=result.into_batch_media().unwrap();let MediaPayload::Structured{json,..}=media.payload else{panic!("actual projection JSON")};let value:serde_json::Value=serde_json::from_str(&json).unwrap();assert_eq!(value["source"]["documentId"],handle.parent_document_id);assert!(value["svg"].as_str().unwrap().contains(child_law["expectedSvgCommand"].as_str().unwrap()),"genuine child quadratic marker must survive composition");println!("[media-child] {}",serde_json::json!({"childId":child_id,"documentId":handle.parent_document_id,"projection":value,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},other=>panic!("actual Drawing media unexpectedly terminated: {other:?}")}}
+    let before=app.snapshot().unwrap();
+    let handle=submit_fixture_media_export(&mut app,"layout:out",caller.cx()).await.unwrap();let mut complete=false;let mut cancellation_bytes=None;
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){match poll_fixture_media_export(&mut app,&handle,caller.cx()).await.unwrap(){semio_plugin::ArtifactMediaExportPoll::Running{..}=>{if cancel_after_output&&cancellation_bytes.is_none(){let bytes=app.media.media_exports.get(handle.operation_id.0).map_or(0,|active|active.output_credit.bytes());if bytes>=child_law["cancelAfterOutputBytes"].as_u64().unwrap()as usize{cancellation_bytes=Some(bytes);app.cancel_media_export(&handle).await.unwrap()}}},semio_plugin::ArtifactMediaExportPoll::Cancelled=>{assert!(cancel_after_output);let bytes=cancellation_bytes.expect("cancel only after actual child export output was credited");println!("[media-child-cancel] {}",serde_json::json!({"childId":child_id,"creditedBytes":bytes,"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},semio_plugin::ArtifactMediaExportPoll::Complete(result)=>{assert!(!cancel_after_output,"cancellation cut must occur after actual child source use and before completion");let media=result.into_batch_media().unwrap();let MediaPayload::Structured{json,..}=media.payload else{panic!("actual projection JSON")};let value:serde_json::Value=serde_json::from_str(&json).unwrap();assert_eq!(value["source"]["documentId"],handle.parent_document_id);assert!(value["svg"].as_str().unwrap().contains(child_law["expectedSvgCommand"].as_str().unwrap()),"genuine child quadratic marker must survive composition");println!("[media-child] {}",serde_json::json!({"childId":child_id,"documentId":handle.parent_document_id,"projection":value,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},other=>panic!("actual Drawing media unexpectedly terminated: {other:?}")}}
     assert!(complete);assert_eq!(app.snapshot().unwrap(),before);
     close_registered_fixture_app(&mut app,policy,caller.cx()).unwrap();caller.retire();
     }

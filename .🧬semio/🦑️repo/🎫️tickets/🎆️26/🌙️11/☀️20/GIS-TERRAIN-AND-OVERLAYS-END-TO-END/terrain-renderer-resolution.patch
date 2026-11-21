@@ -1,0 +1,801 @@
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🦀️.rs
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🦀️.rs
+@@ -20,7 +20,9 @@
+ use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
+ use semio_framework_value::FromValue;
+ use semio_framework_value::ToValue;
++use std::borrow::Cow;
+ use std::collections::HashMap;
++use std::sync::OnceLock;
+ 
+ #[path = "🗺️overlay/🦀️.rs"]
+ pub mod overlay;
+@@ -188,7 +190,7 @@
+     image: semio_framework_pixels::RasterImage,
+ }
+ 
+-#[derive(semio_framework_value::ToValue, semio_framework_value::FromValue)]
++#[derive(Clone, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+ #[cfg_attr(test, derive(serde::Deserialize))]
+ #[value(rename_all = "camelCase")]
+ pub struct TerrainTileMeshJson {
+@@ -198,33 +200,45 @@
+     pub uvs: Vec<f32>,
+ }
+ 
+-/// 🏔️ Fixed-resolution WGS84 elevation grid. Bounds are west, south, east, north;
+-/// rows start at the southwest corner and elevations are in meters.
++/// 🏔️ Rectangular WGS84 sample-centre bounds in west, south, east, north order.
++/// Elevation rows run south to north, with each row ordered west to east in signed millimetres.
+ #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
++#[value(rename_all = "camelCase", deny_unknown_fields)]
+ pub struct TerrainElevationGrid {
+     pub bounds: [f64; 4],
+-    pub rows: Vec<Vec<i16>>,
++    pub rows_millimetres: Vec<Vec<i32>>,
+ }
+ 
+ impl TerrainElevationGrid {
+-    /// 📐️ Checks geographic extent and the bounded raster shape before meshing.
++    /// 📐️ Returns validated sample dimensions in column, row order.
++    pub fn dimensions(&self) -> Option<[u32; 2]> {
++        let height = self.rows_millimetres.len();
++        let width = self.rows_millimetres.first()?.len();
++        if !(2..=65).contains(&width) || !(2..=65).contains(&height)
++            || self.rows_millimetres.iter().any(|row| row.len() != width) {
++            return None;
++        }
++        Some([width as u32, height as u32])
++    }
++
++    /// 🗺️ Validates geographic extent and the bounded rectangular sample shape.
+     pub fn is_valid(&self) -> bool {
+         let [west, south, east, north] = self.bounds;
+-        let resolution = TERRAIN_GRID_RESOLUTION as usize;
+         (-180.0..east).contains(&west) && east <= 180.0
+             && (-90.0..north).contains(&south) && north <= 90.0
+-            && self.rows.len() == resolution && self.rows.iter().all(|row| row.len() == resolution)
++            && self.dimensions().is_some()
+     }
+ 
+     /// 🧊️ Builds the same grid triangles drawn in the viewport and published as artifact geometry.
+     pub fn mesh(&self, origin_lon: f64, origin_lat: f64, exaggeration: f64) -> Option<TerrainTileMeshJson> {
+-        let maximum_exaggeration = f64::from(f32::MAX) / f64::from(i16::MIN.unsigned_abs());
++        let maximum_exaggeration = f64::from(f32::MAX) / (f64::from(i32::MIN.unsigned_abs()) / 1_000.0);
+         if !self.is_valid() || !(-180.0..=180.0).contains(&origin_lon) || !(-90.0..=90.0).contains(&origin_lat)
+             || !(0.0..=maximum_exaggeration).contains(&exaggeration) {
+             return None;
+         }
+-        let heights = self.rows.iter().rev().flatten().copied().map(f32::from).collect::<Vec<_>>();
+-        Some(build_terrain_grid_mesh(&heights, self.bounds, origin_lon, origin_lat, exaggeration))
++        let dimensions = self.dimensions()?;
++        let heights = self.rows_millimetres.iter().rev().flatten().map(|&sample| f64::from(sample) / 1_000.0).collect::<Vec<_>>();
++        Some(build_terrain_grid_mesh(&heights, self.bounds, [origin_lon, origin_lat], exaggeration, dimensions))
+     }
+ }
+ 
+@@ -233,40 +247,40 @@
+     let (min_lon, max_lat) = projection::tile_xy_to_lonlat(tile.x as f64, tile.y as f64, tile.z);
+     let (max_lon, min_lat) = projection::tile_xy_to_lonlat((tile.x + 1) as f64, (tile.y + 1) as f64, tile.z);
+ 
+-    let mut heights = vec![0.0f32; (n * n) as usize];
++    let mut heights = vec![0.0_f64; (n * n) as usize];
+     for row in 0..n {
+         for col in 0..n {
+             let px = (col as f32 / (n - 1) as f32) * (TERRARIUM_TILE_PX - 1) as f32;
+             let py = (row as f32 / (n - 1) as f32) * (TERRARIUM_TILE_PX - 1) as f32;
+-            heights[(row * n + col) as usize] = sample_elevation(&tile.image, px, py);
+-        }
+-    }
+-    build_terrain_grid_mesh(&heights, [min_lon, min_lat, max_lon, max_lat], origin_lon, origin_lat, exaggeration)
++            heights[(row * n + col) as usize] = f64::from(sample_elevation(&tile.image, px, py));
++        }
++    }
++    build_terrain_grid_mesh(&heights, [min_lon, min_lat, max_lon, max_lat], [origin_lon, origin_lat], exaggeration, [n, n])
+ }
+ 
+ #[path = "📐️grid-projection/🦀️.rs"]
+ mod grid_projection;
+ pub use grid_projection::TerrainGridMeshProjection;
+ 
+-fn build_terrain_grid_mesh(heights: &[f32], bounds: [f64; 4], origin_lon: f64, origin_lat: f64, exaggeration: f64) -> TerrainTileMeshJson {
+-    let n = TERRAIN_GRID_RESOLUTION;
+-    let projection = TerrainGridMeshProjection::from_bounds(bounds, [origin_lon, origin_lat], exaggeration);
+-    let height = |row, column| heights[(row * n + column) as usize];
+-    let minimum = heights.iter().copied().fold(f32::INFINITY, f32::min);
+-    let maximum = heights.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+-    let mut positions = Vec::with_capacity((n * n * 3) as usize);
+-    let mut normals = Vec::with_capacity((n * n * 3) as usize);
+-    let mut uvs = Vec::with_capacity((n * n * 2) as usize);
+-    let mut indices = Vec::with_capacity(((n - 1) * (n - 1) * 6) as usize);
+-    for row in 0..n {
+-        for column in 0..n {
++fn build_terrain_grid_mesh(heights: &[f64], bounds: [f64; 4], origin: [f64; 2], exaggeration: f64, dimensions: [u32; 2]) -> TerrainTileMeshJson {
++    let [width, rows] = dimensions;
++    let projection = TerrainGridMeshProjection::from_bounds(bounds, origin, exaggeration, dimensions);
++    let height = |row, column| heights[(row * width + column) as usize];
++    let minimum = heights.iter().copied().fold(f64::INFINITY, f64::min);
++    let maximum = heights.iter().copied().fold(f64::NEG_INFINITY, f64::max);
++    let mut positions = Vec::with_capacity(heights.len() * 3);
++    let mut normals = Vec::with_capacity(heights.len() * 3);
++    let mut uvs = Vec::with_capacity(heights.len() * 2);
++    let mut indices = Vec::with_capacity(((width - 1) * (rows - 1) * 6) as usize);
++    for row in 0..rows {
++        for column in 0..width {
+             positions.extend(projection.position(row, column, height(row, column)));
+             normals.extend(projection.normal(row, column, height));
+             uvs.extend(TerrainGridMeshProjection::uv(height(row, column), minimum, maximum));
+         }
+     }
+-    for row in 0..n - 1 {
+-        for column in 0..n - 1 {
++    for row in 0..rows - 1 {
++        for column in 0..width - 1 {
+             indices.extend(projection.triangles(row, column));
+         }
+     }
+@@ -345,11 +359,12 @@
+     exaggeration: f64,
+     elevation: TerrainElevationTiles,
+     elevation_grid: Option<TerrainElevationGrid>,
++    elevation_grid_mesh: OnceLock<Option<TerrainTileMeshJson>>,
+ }
+ 
+ impl Default for TerrainSessionCore {
+     fn default() -> Self {
+-        Self { origin_lon: 0.0, origin_lat: 0.0, exaggeration: 1.0, elevation: TerrainElevationTiles::default(), elevation_grid: None }
++        Self { origin_lon: 0.0, origin_lat: 0.0, exaggeration: 1.0, elevation: TerrainElevationTiles::default(), elevation_grid: None, elevation_grid_mesh: OnceLock::new() }
+     }
+ }
+ 
+@@ -362,14 +377,21 @@
+     /// `♾️infinite/🌍️world` consumer, which this file does not own; see the report's recommended
+     /// target shape (drop the setter, pass origin as a parameter) as a `sharedFileRequests` patch.
+     pub fn set_project_origin(&mut self, lon: f64, lat: f64) {
+-        self.origin_lon = lon;
+-        self.origin_lat = lat;
++        if [lon, lat] != [self.origin_lon, self.origin_lat] {
++            self.elevation_grid_mesh.take();
++            self.origin_lon = lon;
++            self.origin_lat = lat;
++        }
+     }
+ 
+     /// 🪞 Mirrors `TerrainDescriptorJson.exaggeration` (gis-owned, tier-a there) — same rationale as
+     /// [`Self::set_project_origin`].
+     pub fn set_exaggeration(&mut self, exaggeration: f64) {
+-        self.exaggeration = exaggeration.max(0.0);
++        let exaggeration = exaggeration.max(0.0);
++        if self.exaggeration != exaggeration {
++            self.elevation_grid_mesh.take();
++            self.exaggeration = exaggeration;
++        }
+     }
+ 
+     /// 🗺️ Mirrors the scene's embedded elevation grid into this render cache.
+@@ -377,7 +399,10 @@
+         if grid.as_ref().is_some_and(|grid| !grid.is_valid()) {
+             return false;
+         }
+-        self.elevation_grid = grid;
++        if self.elevation_grid != grid {
++            self.elevation_grid_mesh.take();
++            self.elevation_grid = grid;
++        }
+         true
+     }
+ 
+@@ -423,17 +448,26 @@
+         self.elevation.by_key.contains_key(&tiles::tile_key(z, x, y))
+     }
+ 
+-    fn tile_mesh(&self, z: u32, x: u32, y: u32) -> Option<TerrainTileMeshJson> {
++    fn tile_mesh(&self, z: u32, x: u32, y: u32) -> Option<Cow<'_, TerrainTileMeshJson>> {
+         if let Some(grid) = &self.elevation_grid {
+-            return ((z, x, y) == ELEVATION_GRID_TILE).then(|| grid.mesh(self.origin_lon, self.origin_lat, self.exaggeration)).flatten();
++            if (z, x, y) != ELEVATION_GRID_TILE {
++                return None;
++            }
++            let mesh = self.elevation_grid_mesh.get_or_init(|| grid.mesh(self.origin_lon, self.origin_lat, self.exaggeration));
++            return mesh.as_ref().map(Cow::Borrowed);
+         }
+         let tile = self.elevation.by_key.get(&tiles::tile_key(z, x, y))?;
+-        Some(build_terrain_tile_mesh(tile, self.origin_lon, self.origin_lat, self.exaggeration))
+-    }
+-
+-    /// 🕸️ Tier-(e) mesh build ([`build_terrain_tile_mesh`]) over a cached decoded tile, JSON-wrapped.
++        Some(Cow::Owned(build_terrain_tile_mesh(tile, self.origin_lon, self.origin_lat, self.exaggeration)))
++    }
++
++    /// 🏗️ Supplies owned renderer buffers for native mesh publication.
++    pub fn terrain_tile_mesh(&self, z: u32, x: u32, y: u32) -> Option<TerrainTileMeshJson> {
++        self.tile_mesh(z, x, y).map(Cow::into_owned)
++    }
++
++    /// 🕸️ Publishes terrain buffers across the browser WASM boundary.
+     pub fn terrain_tile_mesh_json(&self, z: u32, x: u32, y: u32) -> String {
+-        self.tile_mesh(z, x, y).map_or_else(|| "null".to_owned(), |mesh| to_json_string(&mesh))
++        self.tile_mesh(z, x, y).map_or_else(|| "null".to_owned(), |mesh| to_json_string(mesh.as_ref()))
+     }
+ }
+ //#endregion TerrainSession
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/📐️grid-projection/🦀️.rs
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/📐️grid-projection/🦀️.rs
+@@ -1,59 +1,61 @@
+-use super::{normalize3, projection, TERRAIN_GRID_RESOLUTION};
++use super::{normalize3, projection};
+ /// 🎯️ Projects one sample of a rectangular elevation grid in the renderer's local coordinates.
+ #[derive(Clone, Copy)]
+ pub struct TerrainGridMeshProjection {
+     bounds: [f64; 4],
+     origin: [f64; 2],
+     exaggeration: f64,
+-    cell_size: [f32; 2],
++    cells: [u32; 2],
++    cell_size: [f64; 2],
+ }
+ 
+ impl TerrainGridMeshProjection {
+-    pub fn from_bounds(bounds: [f64; 4], origin: [f64; 2], exaggeration: f64) -> Self {
+-        let mut projection = Self { bounds, origin, exaggeration, cell_size: [0.0; 2] };
+-        let [x, y] = projection.local_position(0, 0);
+-        projection.cell_size = [
+-            (projection.local_position(0, 1)[0] - x).abs().max(1e-3),
+-            (y - projection.local_position(1, 0)[1]).abs().max(1e-3),
+-        ];
+-        projection
++    pub fn from_bounds(bounds: [f64; 4], origin: [f64; 2], exaggeration: f64, [width, height]: [u32; 2]) -> Self {
++        let [west, south, east, north] = bounds;
++        let cells = [width - 1, height - 1];
++        let (west_x, south_y) = projection::lonlat_to_local_meters(west, south, origin[0], origin[1]);
++        let (east_x, north_y) = projection::lonlat_to_local_meters(east, north, origin[0], origin[1]);
++        let (span_x, span_y) = (east_x - west_x, north_y - south_y);
++        let cell_size = [(span_x / f64::from(cells[0])).abs().max(1e-3), (span_y / f64::from(cells[1])).abs().max(1e-3)];
++        Self { bounds, origin, exaggeration, cells, cell_size }
+     }
+ 
+     pub fn local_position(&self, row: u32, column: u32) -> [f32; 2] {
+         let [west, south, east, north] = self.bounds;
+-        let u = f64::from(column) / f64::from(TERRAIN_GRID_RESOLUTION - 1);
+-        let v = f64::from(row) / f64::from(TERRAIN_GRID_RESOLUTION - 1);
++        let u = f64::from(column) / f64::from(self.cells[0]);
++        let v = f64::from(row) / f64::from(self.cells[1]);
+         let lon = west + (east - west) * u;
+         let lat = north + (south - north) * v;
+         let (x, y) = projection::lonlat_to_local_meters(lon, lat, self.origin[0], self.origin[1]);
+         [x as f32, y as f32]
+     }
+ 
+-    pub fn position(&self, row: u32, column: u32, height: f32) -> [f32; 3] {
++    pub fn position(&self, row: u32, column: u32, height: f64) -> [f32; 3] {
+         let [x, y] = self.local_position(row, column);
+-        [x, y, (f64::from(height) * self.exaggeration) as f32]
++        [x, y, (height * self.exaggeration) as f32]
+     }
+ 
+-    pub fn normal(&self, row: u32, column: u32, height: impl Fn(u32, u32) -> f32) -> [f32; 3] {
++    pub fn normal(&self, row: u32, column: u32, height: impl Fn(u32, u32) -> f64) -> [f32; 3] {
+         let west = column.saturating_sub(1);
+-        let east = (column + 1).min(TERRAIN_GRID_RESOLUTION - 1);
++        let east = (column + 1).min(self.cells[0]);
+         let north = row.saturating_sub(1);
+-        let south = (row + 1).min(TERRAIN_GRID_RESOLUTION - 1);
+-        let x = f64::from(height(row, east) - height(row, west)) * self.exaggeration
+-            / (f64::from(east - west) * f64::from(self.cell_size[0]));
+-        let y = f64::from(height(north, column) - height(south, column)) * self.exaggeration
+-            / (f64::from(south - north) * f64::from(self.cell_size[1]));
++        let south = (row + 1).min(self.cells[1]);
++        let x = (height(row, east) - height(row, west)) * self.exaggeration
++            / (f64::from(east - west) * self.cell_size[0]);
++        let y = (height(north, column) - height(south, column)) * self.exaggeration
++            / (f64::from(south - north) * self.cell_size[1]);
+         let (x, y, z) = normalize3(-x, -y, 1.0);
+         [x as f32, y as f32, z as f32]
+     }
+ 
+-    pub fn uv(height: f32, minimum: f32, maximum: f32) -> [f32; 2] {
++    pub fn uv(height: f64, minimum: f64, maximum: f64) -> [f32; 2] {
+         let range = if maximum > minimum { maximum - minimum } else { 1.0 };
+-        [0.5, ((height - minimum) / range).clamp(0.0, 1.0)]
++        [0.5, ((height - minimum) / range).clamp(0.0, 1.0) as f32]
+     }
+ 
+     pub fn triangles(&self, row: u32, column: u32) -> [u32; 6] {
+-        let i = row * TERRAIN_GRID_RESOLUTION + column;
+-        [i, i + TERRAIN_GRID_RESOLUTION, i + 1, i + 1, i + TERRAIN_GRID_RESOLUTION, i + TERRAIN_GRID_RESOLUTION + 1]
++        let stride = self.cells[0] + 1;
++        let i = row * stride + column;
++        [i, i + stride, i + 1, i + 1, i + stride, i + stride + 1]
+     }
+ }
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🎯️pick/🦀️.rs
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🎯️pick/🦀️.rs
+@@ -1,6 +1,6 @@
+ //! 🎯 Ray queries against an editable elevation grid.
+ 
+-use super::{projection, TerrainSessionCore, ELEVATION_GRID_TILE, TERRAIN_GRID_RESOLUTION};
++use super::{projection, TerrainSessionCore, ELEVATION_GRID_TILE};
+ use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
+ 
+ #[derive(semio_framework_value::FromValue)]
+@@ -19,7 +19,7 @@
+ }
+ 
+ impl TerrainSessionCore {
+-    /// 🌄 Returns the nearest forward intersection with one of the embedded grid's 2,048 rendered triangles.
++    /// 🌄 Returns the nearest forward intersection with the embedded grid's rendered triangles.
+     pub fn pick_elevation_grid(&self, origin: [f64; 3], direction: [f64; 3]) -> Option<TerrainGridHit> {
+         let grid = self.elevation_grid.as_ref()?;
+         if !origin.into_iter().chain(direction).all(f64::is_finite) {
+@@ -62,12 +62,15 @@
+             .min_by(f64::total_cmp)?;
+         let position = std::array::from_fn(|axis| direction[axis].mul_add(distance, origin[axis]));
+         let (lon, lat) = projection::local_meters_to_lonlat(position[0], position[1], self.origin_lon, self.origin_lat);
+-        let cells = f64::from(TERRAIN_GRID_RESOLUTION - 1);
+-        let sample_index = |fraction: f64| (fraction * cells).round().clamp(0.0, cells) as u32;
++        let [width, height] = grid.dimensions()?;
++        let sample_index = |fraction: f64, extent| {
++            let cells = f64::from(extent - 1);
++            (fraction * cells).round().clamp(0.0, cells) as u32
++        };
+         Some(TerrainGridHit {
+             position,
+             coordinates: [lon.clamp(west, east), lat.clamp(south, north)],
+-            sample: [sample_index((lon - west) / (east - west)), sample_index((lat - south) / (north - south))],
++            sample: [sample_index((lon - west) / (east - west), width), sample_index((lat - south) / (north - south), height)],
+         })
+     }
+ 
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🦀️.rs
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🦀️.rs
+@@ -58,29 +58,32 @@
+     pub segments: Vec<[[f32; 3]; 2]>,
+ }
+ 
++#[cfg(test)]
+ const GRID: usize = TERRAIN_GRID_RESOLUTION as usize;
+-const CELLS: f64 = (GRID - 1) as f64;
+ 
+ struct OverlayGrid<'a> {
+     positions: &'a [f32],
+     origin_lon: f64,
+     origin_lat: f64,
+     inline_bounds: Option<[f64; 4]>,
++    width: usize,
++    cells: [f64; 2],
+ }
+ 
+ impl OverlayGrid<'_> {
+     /// 📐️ The authored grid's local-meter mesh is affine in WGS84 degrees. Normalize from its
+     /// original bounds so a rounded mesh corner cannot move a feature across the grid boundary.
+     fn coordinates(&self, [lon, lat]: [f64; 2]) -> [f64; 2] {
++        let [columns, rows] = self.cells;
+         if let Some([west, south, east, north]) = self.inline_bounds {
+-            return [(lon - west) / (east - west) * CELLS, (lat - north) / (south - north) * CELLS];
++            return [(lon - west) / (east - west) * columns, (lat - north) / (south - north) * rows];
+         }
+         let (x, y) = super::projection::lonlat_to_local_meters(lon, lat, self.origin_lon, self.origin_lat);
+         let first = self.positions.first_chunk::<3>().unwrap();
+         let last = self.positions.last_chunk::<3>().unwrap();
+         [
+-            (x - f64::from(first[0])) / (f64::from(last[0]) - f64::from(first[0])) * CELLS,
+-            (y - f64::from(first[1])) / (f64::from(last[1]) - f64::from(first[1])) * CELLS,
++            (x - f64::from(first[0])) / (f64::from(last[0]) - f64::from(first[0])) * columns,
++            (y - f64::from(first[1])) / (f64::from(last[1]) - f64::from(first[1])) * rows,
+         ]
+     }
+ 
+@@ -88,21 +91,22 @@
+         if let Some([west, south, east, north]) = self.inline_bounds {
+             return (west..=east).contains(&lon) && (south..=north).contains(&lat);
+         }
+-        coordinate.into_iter().all(|axis| (0.0..CELLS).contains(&axis))
++        coordinate.into_iter().zip(self.cells).all(|(axis, extent)| (0.0..extent).contains(&axis))
+     }
+ 
+     fn point(&self, [x, y]: [f64; 2]) -> [f32; 3] {
+-        let x = x.clamp(0.0, CELLS);
+-        let y = y.clamp(0.0, CELLS);
+-        let column = (x.floor() as usize).min(GRID - 2);
+-        let row = (y.floor() as usize).min(GRID - 2);
+-        let index = row * GRID + column;
++        let [columns, rows] = self.cells;
++        let x = x.clamp(0.0, columns);
++        let y = y.clamp(0.0, rows);
++        let column = (x.floor() as usize).min(columns as usize - 1);
++        let row = (y.floor() as usize).min(rows as usize - 1);
++        let index = row * self.width + column;
+         let u = x - column as f64;
+         let v = y - row as f64;
+         let (vertices, weights) = if u + v <= 1.0 {
+-            ([index, index + 1, index + GRID], [1.0 - u - v, u, v])
++            ([index, index + 1, index + self.width], [1.0 - u - v, u, v])
+         } else {
+-            ([index + 1, index + GRID, index + GRID + 1], [1.0 - v, 1.0 - u, u + v - 1.0])
++            ([index + 1, index + self.width, index + self.width + 1], [1.0 - v, 1.0 - u, u + v - 1.0])
+         };
+         std::array::from_fn(|axis| {
+             vertices.iter().zip(weights).map(|(vertex, weight)| weight * f64::from(self.positions[3 * vertex + axis])).sum::<f64>() as f32
+@@ -120,17 +124,20 @@
+             let start = self.coordinates(start);
+             let end = self.coordinates(end);
+             let delta = [end[0] - start[0], end[1] - start[1]];
+-            let Some([enter, leave]) = clip_segment(start, delta) else {
++            let Some([enter, leave]) = clip_segment(start, delta, self.cells) else {
+                 continue;
+             };
+             let at = |t: f64| [start[0] + delta[0] * t, start[1] + delta[1] * t];
+             let mut stops = vec![enter, leave];
+-            for (offset, slope) in [(start[0], delta[0]), (start[1], delta[1]), (start[0] + start[1], delta[0] + delta[1])] {
+-                if slope == 0.0 {
++            let [columns, rows] = self.cells;
++            for (offset, slope, extent) in [(start[0], delta[0], columns), (start[1], delta[1], rows), (start[0] + start[1], delta[0] + delta[1], columns + rows)] {
++                if !offset.is_finite() || !slope.is_finite() || slope == 0.0 {
+                     continue;
+                 }
+-                let first = (offset + slope * enter).min(offset + slope * leave).ceil() as i32;
+-                let last = (offset + slope * enter).max(offset + slope * leave).floor() as i32;
++                let a = slope.mul_add(enter, offset);
++                let b = slope.mul_add(leave, offset);
++                let first = a.min(b).ceil().max(0.0) as i32;
++                let last = a.max(b).floor().min(extent) as i32;
+                 stops.extend((first..=last).map(|k| (f64::from(k) - offset) / slope).filter(|&t| t > enter && t < leave));
+             }
+             stops.sort_unstable_by(f64::total_cmp);
+@@ -146,17 +153,20 @@
+     }
+ }
+ 
+-fn clip_segment(start: [f64; 2], delta: [f64; 2]) -> Option<[f64; 2]> {
++fn clip_segment(start: [f64; 2], delta: [f64; 2], cells: [f64; 2]) -> Option<[f64; 2]> {
++    if !start.into_iter().chain(delta).all(f64::is_finite) {
++        return None;
++    }
+     let (mut enter, mut leave) = (0.0_f64, 1.0_f64);
+-    for (coordinate, movement) in start.into_iter().zip(delta) {
++    for ((coordinate, movement), extent) in start.into_iter().zip(delta).zip(cells) {
+         if movement == 0.0 {
+-            if !(0.0..=CELLS).contains(&coordinate) {
++            if !(0.0..=extent).contains(&coordinate) {
+                 return None;
+             }
+             continue;
+         }
+         let a = -coordinate / movement;
+-        let b = (CELLS - coordinate) / movement;
++        let b = (extent - coordinate) / movement;
+         enter = enter.max(a.min(b));
+         leave = leave.min(a.max(b));
+     }
+@@ -164,6 +174,21 @@
+ }
+ 
+ impl TerrainSessionCore {
++    fn overlay_grid<'a>(&self, positions: &'a [f32]) -> Option<OverlayGrid<'a>> {
++        let (inline_bounds, dimensions) = match &self.elevation_grid {
++            Some(grid) => (Some(grid.bounds), grid.dimensions()?),
++            None => (None, [TERRAIN_GRID_RESOLUTION; 2]),
++        };
++        Some(OverlayGrid {
++            positions,
++            origin_lon: self.origin_lon,
++            origin_lat: self.origin_lat,
++            inline_bounds,
++            width: dimensions[0] as usize,
++            cells: dimensions.map(|samples| f64::from(samples - 1)),
++        })
++    }
++
+     /// 🧭 Sample the project's origin if this tile contains it.
+     pub fn terrain_origin_elevation(&self, z: u32, x: u32, y: u32) -> Option<f32> {
+         if let Some(grid) = &self.elevation_grid {
+@@ -178,14 +203,14 @@
+             }
+         }
+         let mesh = self.tile_mesh(z, x, y)?;
+-        let grid = OverlayGrid { positions: &mesh.positions, origin_lon: self.origin_lon, origin_lat: self.origin_lat, inline_bounds: self.elevation_grid.as_ref().map(|grid| grid.bounds) };
++        let grid = self.overlay_grid(&mesh.positions)?;
+         Some(grid.point(grid.coordinates([self.origin_lon, self.origin_lat]))[2])
+     }
+ 
+     /// 📍 Drape features on this DEM tile using the same triangles shown by the renderer.
+     pub fn overlay_tile(&self, z: u32, x: u32, y: u32, overlays: &TerrainOverlays) -> Option<TerrainOverlayTile> {
+         let mesh = self.tile_mesh(z, x, y)?;
+-        let grid = OverlayGrid { positions: &mesh.positions, origin_lon: self.origin_lon, origin_lat: self.origin_lat, inline_bounds: self.elevation_grid.as_ref().map(|grid| grid.bounds) };
++        let grid = self.overlay_grid(&mesh.positions)?;
+         let positions = overlays.positions.iter().filter_map(|feature| {
+             let coordinate = grid.coordinates(feature.coordinates);
+             if !grid.contains_position(feature.coordinates, coordinate) {
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🔬️unit/🦀️.rs
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🔬️unit/🦀️.rs
+@@ -10,18 +10,18 @@
+     let samples = &fixture["samples"];
+     let size = samples["size"].as_i64().unwrap();
+     let grid = &fixture["pick"]["raisedSample"];
+-    let rows: Vec<Vec<i16>> = (0..size).map(|row| (0..size).map(|column| {
++    let rows_millimetres: Vec<Vec<i32>> = (0..size).map(|row| (0..size).map(|column| {
+         let base = samples["southwest"].as_i64().unwrap()
+             + row * samples["northwardStep"].as_i64().unwrap()
+             + column * samples["eastwardStep"].as_i64().unwrap();
+         let raised = grid["column"].as_i64() == Some(column) && grid["row"].as_i64() == Some(row);
+-        (base + if raised { grid["meters"].as_i64().unwrap() } else { 0 }) as i16
++        ((base + if raised { grid["meters"].as_i64().unwrap() } else { 0 }) * 1000) as i32
+     }).collect()).collect();
+     let mut session = TerrainSessionCore::default();
+     session.set_project_origin(lon, lat);
+     session.set_exaggeration(fixture["exaggeration"].as_f64().unwrap());
+     assert!(session.pick_elevation_grid([0.0, 0.0, 1000.0], [0.0, 0.0, -1.0]).is_none());
+-    assert!(session.set_elevation_grid(Some(TerrainElevationGrid { bounds, rows })));
++    assert!(session.set_elevation_grid(Some(TerrainElevationGrid { bounds, rows_millimetres })));
+     let cells = (size - 1) as f64;
+     for ray in fixture["pick"]["rays"].as_array().unwrap() {
+         let [column, row, z]: [f64; 3] = serde_json::from_value(ray["originSample"].clone()).unwrap();
+@@ -51,15 +51,15 @@
+     let origin: [f64; 2] = serde_json::from_value(fixture["origin"].clone()).unwrap();
+     let samples = &fixture["samples"];
+     let size = samples["size"].as_i64().unwrap();
+-    let rows = (0..size).map(|row| (0..size).map(|column| {
+-        samples["southwest"].as_i64().unwrap()
++    let rows_millimetres = (0..size).map(|row| (0..size).map(|column| {
++        1000 * (samples["southwest"].as_i64().unwrap()
+             + row * samples["northwardStep"].as_i64().unwrap()
+-            + column * samples["eastwardStep"].as_i64().unwrap()
++            + column * samples["eastwardStep"].as_i64().unwrap())
+     }).collect::<Vec<_>>()).collect::<Vec<_>>();
+     let mut session = TerrainSessionCore::default();
+     session.set_project_origin(origin[0], origin[1]);
+     session.set_exaggeration(fixture["exaggeration"].as_f64().unwrap());
+-    assert!(session.set_elevation_grid_json(&serde_json::json!({"bounds": fixture["bounds"], "rows": rows}).to_string()));
++    assert!(session.set_elevation_grid_json(&serde_json::json!({"bounds": fixture["bounds"], "rowsMillimetres": rows_millimetres}).to_string()));
+     let visible: serde_json::Value = serde_json::from_str(&session.visible_terrain_tiles_json("{}")).unwrap();
+     assert_eq!(visible, serde_json::json!([{"z":0,"x":0,"y":0,"key":"0/0/0"}]));
+     let mesh: TerrainTileMeshJson = serde_json::from_str(&session.terrain_tile_mesh_json(0, 0, 0)).unwrap();
+@@ -303,3 +303,69 @@
+     let second = session.terrain_tile_mesh_json(12, 2000, 1300);
+     assert_eq!(first, second, "mesh build over an unchanged cached tile must be byte-identical across calls");
+ }
++
++
++#[test]
++fn rectangular_fractional_grid_agrees_across_mesh_pick_and_drape() {
++    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️rectangular-elevation-grid/🔣️.json")).unwrap();
++    let shape: [u32; 2] = serde_json::from_value(fixture["shape"].clone()).unwrap();
++    let [lon, lat]: [f64; 2] = serde_json::from_value(fixture["origin"].clone()).unwrap();
++    let grid: TerrainElevationGrid = from_json_str(&fixture["grid"].to_string(), JsonMemberPolicy::Reject).unwrap();
++    assert_eq!(grid.dimensions(), Some(shape));
++    assert!(grid.is_valid());
++    let mut session = TerrainSessionCore::default();
++    session.set_project_origin(lon, lat);
++    session.set_exaggeration(fixture["exaggeration"].as_f64().unwrap());
++    assert!(session.set_elevation_grid_json(&fixture["grid"].to_string()));
++    let mesh = session.terrain_tile_mesh(0, 0, 0).unwrap();
++    let expected = &fixture["expected"];
++    assert_eq!(serde_json::json!(mesh.indices), expected["indices"]);
++    let near = |value: f64, key: &str| {
++        assert!((value - expected[key].as_f64().unwrap()).abs() < 1e-5, "{key}: {value}");
++    };
++    near(f64::from(mesh.positions[2]), "northwestHeight");
++    near(f64::from(*mesh.positions.last().unwrap()), "southeastHeight");
++    near(f64::from(session.terrain_origin_elevation(0, 0, 0).unwrap()), "originHeight");
++    let hit = session.pick_elevation_grid([0.0, 0.0, 10.0], [0.0, 0.0, -1.0]).unwrap();
++    assert_eq!(serde_json::json!(hit.sample), expected["originSample"]);
++    near(hit.position[2], "originHeight");
++    let overlays = session.overlay_tile(0, 0, 0, &from_json_str(&fixture["overlays"].to_string(), JsonMemberPolicy::Reject).unwrap()).unwrap();
++    near(f64::from(overlays.positions[0].point[2]), "originHeight");
++    for path in overlays.routes.iter().chain(&overlays.regions) {
++        assert!(path.segments.len() > 3);
++        for [a, b] in &path.segments {
++            let [x, y, z] = std::array::from_fn(|axis| (f64::from(a[axis]) + f64::from(b[axis])) * 0.5);
++            let hit = session.pick_elevation_grid([x, y, 20.0], [0.0, 0.0, -1.0]).unwrap();
++            assert!((hit.position[2] - z).abs() < 1e-5);
++        }
++    }
++}
++
++#[test]
++fn authored_grid_width_height_and_storage_are_bounded() {
++    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📐️rectangular-elevation-grid/🔣️.json")).unwrap();
++    let [width, height]: [usize; 2] = serde_json::from_value(fixture["maximumShape"].clone()).unwrap();
++    let bounds = serde_json::from_value(fixture["grid"]["bounds"].clone()).unwrap();
++    let mut grid = TerrainElevationGrid { bounds, rows_millimetres: vec![vec![i32::MIN; width]; height] };
++    grid.rows_millimetres[0][0] = i32::MAX;
++    let mesh = grid.mesh(5.556, 50.586, 1.0).unwrap();
++    assert_eq!(mesh.indices.len(), (width - 1) * (height - 1) * 6);
++    let bytes = 4 * (mesh.positions.len() + mesh.normals.len() + mesh.indices.len() + mesh.uvs.len());
++    assert_eq!(bytes as u64, fixture["maximumBytes"].as_u64().unwrap());
++    for [width, height] in [[1, 2], [2, 1], [66, 2], [2, 66]] {
++        grid.rows_millimetres = vec![vec![0; width]; height];
++        assert!(!grid.is_valid());
++        assert!(grid.mesh(5.556, 50.586, 1.0).is_none());
++    }
++    grid.rows_millimetres = vec![vec![0; 2], vec![0; 3]];
++    assert!(!grid.is_valid());
++    let mut session = TerrainSessionCore::default();
++    for invalid in [
++        r#"{"bounds":[0,0,1,1],"rowsMillimetres":[[0,0],[0,2147483648]]}"#,
++        r#"{"bounds":[0,0,1,1],"rowsMillimetres":[[0,0],[0,-2147483649]]}"#,
++        r#"{"bounds":[0,0,1,1],"rowsMillimetres":[[0,0],[0,0.1]]}"#,
++        r#"{"bounds":[0,0,1,1],"rows":[[0,0],[0,0]]}"#,
++    ] {
++        assert!(!session.set_elevation_grid_json(invalid));
++    }
++}
+--- a/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🧪️tests/🦀️.rs
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🗺️overlay/🧪️tests/🦀️.rs
+@@ -65,11 +65,11 @@
+     let bounds = serde_json::from_value(fixture["bounds"].clone()).unwrap();
+     let [lon, lat]: [f64; 2] = serde_json::from_value(fixture["origin"].clone()).unwrap();
+     let exaggeration = fixture["exaggeration"].as_f64().unwrap();
+-    let height = |field: &str| fixture[field].as_i64().unwrap() as i16;
+-    let rows = (0..GRID as i16).map(|row| (0..GRID as i16).map(|column| {
++    let height = |field: &str| fixture[field].as_i64().unwrap() as i32 * 1000;
++    let rows_millimetres = (0..GRID as i32).map(|row| (0..GRID as i32).map(|column| {
+         height("heightAtSouthWest") + height("heightStepEast") * column + height("heightStepNorth") * row
+     }).collect()).collect();
+-    let source = super::super::TerrainElevationGrid { bounds, rows };
++    let source = super::super::TerrainElevationGrid { bounds, rows_millimetres };
+     let overlays = serde_json::from_value(fixture["overlays"].clone()).unwrap();
+     let mut session = TerrainSessionCore::default();
+     session.set_project_origin(lon, lat);
+--- a/🧰️framework/🔨️modules/🗺️surface/🧪️tests/🕸️browser/🟦️.ts
++++ b/🧰️framework/🔨️modules/🗺️surface/🧪️tests/🕸️browser/🟦️.ts
+@@ -9,6 +9,7 @@
+ import overlayFixture from "../../🏔️terrain/🗺️overlay/🧪️tests/🧫️fixtures/🔣️.json";
+ import overlaySchema from "../../🏔️terrain/🗺️overlay/🧬️schema/🔣️.json";
+ import elevationGridFixture from "../../🏔️terrain/🧪️tests/🧫️fixtures/📦️elevation-grid/🔣️.json";
++import rectangularElevationGrid from "../../🏔️terrain/🧪️tests/🧫️fixtures/📐️rectangular-elevation-grid/🔣️.json";
+ import terrainPickSchema from "../../🏔️terrain/🎯️pick/🧬️schema/🔣️.json";
+ 
+ const files = new Map<string, string>(JSON.parse(process.env.SEMIO_SURFACE_WASM_PACKAGE ?? "[]"));
+@@ -92,10 +93,10 @@
+  try {
+   session.set_project_origin(origin[0], origin[1]);
+   session.set_exaggeration(exaggeration);
+-  expect(session.set_elevation_grid_json(JSON.stringify({ bounds, rows: [[40]] }))).toBe(false);
+-  const rows = Array.from({ length: samples.size }, (_, row) => Array.from({ length: samples.size }, (_, column) =>
+-   samples.southwest + row * samples.northwardStep + column * samples.eastwardStep));
+-  expect(session.set_elevation_grid_json(JSON.stringify({ bounds, rows }))).toBe(true);
++  expect(session.set_elevation_grid_json(JSON.stringify({ bounds, rowsMillimetres: [[40_000]] }))).toBe(false);
++  const rowsMillimetres = Array.from({ length: samples.size }, (_, row) => Array.from({ length: samples.size }, (_, column) =>
++   1_000 * (samples.southwest + row * samples.northwardStep + column * samples.eastwardStep)));
++  expect(session.set_elevation_grid_json(JSON.stringify({ bounds, rowsMillimetres }))).toBe(true);
+   const [visible] = JSON.parse(session.visible_terrain_tiles_json("{}"));
+   expect(JSON.parse(session.visible_terrain_tiles_json("{}"))).toHaveLength(1);
+   const { z, x, y } = visible;
+@@ -144,11 +145,11 @@
+  try {
+   session.set_project_origin(origin[0], origin[1]);
+   session.set_exaggeration(exaggeration);
+-  const rows = Array.from({ length: samples.size }, (_, row) => Array.from({ length: samples.size }, (_, column) =>
+-   samples.southwest + row * samples.northwardStep + column * samples.eastwardStep));
++  const rowsMillimetres = Array.from({ length: samples.size }, (_, row) => Array.from({ length: samples.size }, (_, column) =>
++   1_000 * (samples.southwest + row * samples.northwardStep + column * samples.eastwardStep)));
+   const raised = pick.raisedSample;
+-  rows[raised.row]![raised.column]! += raised.meters;
+-  expect(session.set_elevation_grid_json(JSON.stringify({ bounds: [west, south, east, north], rows }))).toBe(true);
++  rowsMillimetres[raised.row]![raised.column]! += 1_000 * raised.meters;
++  expect(session.set_elevation_grid_json(JSON.stringify({ bounds: [west, south, east, north], rowsMillimetres }))).toBe(true);
+   const data = JSON.parse(session.terrain_tile_mesh_json(0, 0, 0));
+   geometry.setAttribute("position", new Float32BufferAttribute(data.positions, 3));
+   geometry.setIndex(data.indices);
+@@ -178,3 +179,44 @@
+   session.free();
+  }
+ });
++
++
++test("A fractional rectangular authored grid drapes and picks against the browser surface", async () => {
++ const { grid, origin, exaggeration, expected, overlays } = rectangularElevationGrid;
++ const module = await import(fileUrl(file("framework_surface.js")).href);
++ await module.default({ module_or_path: await WebAssembly.compile(readFileSync(file("framework_surface_bg.wasm"))) });
++ const session = new module.TerrainSession();
++ const geometry = new BufferGeometry();
++ const material = new MeshBasicMaterial({ side: DoubleSide });
++ try {
++  session.set_project_origin(origin[0], origin[1]);
++  session.set_exaggeration(exaggeration);
++  expect(session.set_elevation_grid_json(JSON.stringify(grid))).toBe(true);
++  const data = JSON.parse(session.terrain_tile_mesh_json(0, 0, 0));
++  expect(data.indices).toEqual(expected.indices);
++  expect(data.positions[2]).toBeCloseTo(expected.northwestHeight, 6);
++  expect(data.positions.at(-1)).toBeCloseTo(expected.southeastHeight, 6);
++  geometry.setAttribute("position", new Float32BufferAttribute(data.positions, 3));
++  geometry.setIndex(data.indices);
++  const mesh = new Mesh(geometry, material);
++  const ray = { origin: [0, 0, 20], direction: [0, 0, -1] };
++  const hit = JSON.parse(session.pickElevationGridJson(JSON.stringify(ray)));
++  expect(hit.sample).toEqual(expected.originSample);
++  expect(hit.position[2]).toBeCloseTo(expected.originHeight, 5);
++  expect(new Raycaster(new Vector3(0, 0, 20), new Vector3(0, 0, -1)).intersectObject(mesh)[0]!.point.z).toBeCloseTo(hit.position[2], 5);
++  const draped = JSON.parse(session.terrain_overlay_tile_json(0, 0, 0, JSON.stringify(overlays)));
++  expect(draped.positions[0].point[2]).toBeCloseTo(expected.originHeight, 5);
++  for (const path of [...draped.routes, ...draped.regions]) {
++   expect(path.segments.length).toBeGreaterThan(3);
++   for (const [a, b] of path.segments) {
++    const [x, y, z] = a.map((value: number, axis: number) => (value + b[axis]) / 2);
++    const oracle = new Raycaster(new Vector3(x, y, 20), new Vector3(0, 0, -1)).intersectObject(mesh)[0];
++    expect(oracle!.point.z).toBeCloseTo(z, 5);
++   }
++  }
++ } finally {
++  material.dispose();
++  geometry.dispose();
++  session.free();
++ }
++});
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/🔭️unit-2/🥽️brush-environment-and-hover-laws/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/🔭️unit-2/🥽️brush-environment-and-hover-laws/🦀️.rs
+@@ -645,11 +645,11 @@
+     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+     let mut scene = scene_with_selection("[]");
+     let origin = [9.7382, 52.3759];
+-    let rows: Vec<_> = (99..=131).map(|height| vec![height; 33]).collect();
++    let rows_millimetres: Vec<_> = [99_125, 115_375, 131_625].into_iter().map(|height| vec![height; 5]).collect();
+     scene.world_3d.as_mut().unwrap().terrain_json = Some(serde_json::json!({
+         "projectOriginLon": origin[0],
+         "projectOriginLat": origin[1],
+-        "elevationGrid": { "bounds": [9.7282, 52.3659, 9.7482, 52.3859], "rows": rows },
++        "elevationGrid": { "bounds": [9.7282, 52.3659, 9.7482, 52.3859], "rowsMillimetres": rows_millimetres },
+         "overlays": {
+             "positions": [{ "id": "center", "name": "Center", "coordinates": origin }],
+             "routes": [],
+@@ -683,7 +683,8 @@
+     assert!(evicted.is_empty());
+     assert!(state.scene.meshes.contains_key(&draw.mesh_key));
+     let overlays = state.terrain.tile_overlays(draw.tile).expect("overlays sample the embedded grid");
+-    assert!((overlays.positions[0].point[2] - 115.0).abs() < 0.01);
++    assert!((overlays.positions[0].point[2] - 115.375).abs() < 0.01);
++    assert_eq!(state.terrain.pick_terrain_sample([0.0, 0.0, 300.0], [0.0, 0.0, -1.0]), Some([2, 1]));
+     assert!(state.terrain.pending_terrain_tile_urls.is_empty());
+     assert!(take_next_world3d_asset(&mut state.assets).is_none());
+ 
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/📜️journal-sequences/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/📜️journal-sequences/🦀️.rs
+@@ -202,7 +202,7 @@
+     let mut state = journey_state();
+     state.terrain.set_terrain_interaction(Some(r#"{"terrainBrush":{"action":"sculptTerrain","arguments":{"operation":"lower-ground","radius":7,"value":-31}}}"#));
+     state.terrain.set_terrain_json(Some(&serde_json::json!({
+-        "elevationGrid": { "bounds": [-0.01, -0.01, 0.01, 0.01], "rows": vec![vec![0; 33]; 33] }
++        "elevationGrid": { "bounds": [-0.01, -0.01, 0.01, 0.01], "rowsMillimetres": vec![vec![0; 5]; 3] }
+     }).to_string()));
+     semio_os_infinite_world_scene::apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
+     let [x, y] = [280.0, 180.0];
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🌪️vortex-relocate-and-terrain/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/🌪️vortex-relocate-and-terrain/🦀️.rs
+@@ -539,8 +539,8 @@
+             if !terrain_state.terrain_session.has_elevation_tile(z, x, y) {
+                 reserve_terrain_tile_fetch(session_state, terrain_state, assets_state, &tile_url_template, (z, x, y));
+             } else if terrain_state.terrain_build.is_none() && terrain_state.terrain_pending.is_none() && scene_state.dynamic_mesh_close.is_none() && scene_state.dynamic_blocked_mesh.is_none() && session_state.snapshot_fault.is_none() {
+-                let mesh_json = terrain_state.terrain_session.terrain_tile_mesh_json(z, x, y);
+-                if let Ok(mesh_payload) = serde_json::from_str::<TerrainTileMeshPayload>(&mesh_json) {
++                if let Some(mesh) = terrain_state.terrain_session.terrain_tile_mesh(z, x, y) {
++                    let mesh_payload = TerrainTileMeshPayload { positions: mesh.positions, normals: mesh.normals, indices: mesh.indices, uvs: mesh.uvs };
+                     let next = scene_state.placeholder_generation.checked_add(1);
+                     if let Some(next) = next {
+                         scene_state.placeholder_generation=next;
+--- /dev/null
++++ b/🧰️framework/🔨️modules/🗺️surface/🏔️terrain/🧪️tests/🧫️fixtures/📐️rectangular-elevation-grid/🔣️.json
+@@ -0,0 +1,23 @@
++{
++  "grid": {
++    "bounds": [5.556, 50.586, 5.562, 50.590],
++    "rowsMillimetres": [[-3007, -1999, -1, 9], [-1125, 0, 3333, 6789], [125, 1234, 2875, 4001]]
++  },
++  "shape": [4, 3],
++  "maximumShape": [65, 65],
++  "maximumBytes": 233504,
++  "origin": [5.5604, 50.5874],
++  "exaggeration": 1.5,
++  "expected": {
++    "indices": [0,4,1,1,4,5,1,5,2,2,5,6,2,6,3,3,6,7,4,8,5,5,8,9,5,9,6,6,9,10,6,10,7,7,10,11],
++    "northwestHeight": 0.1875,
++    "southeastHeight": 0.0135,
++    "originHeight": 4.536,
++    "originSample": [2, 1]
++  },
++  "overlays": {
++    "positions": [{"id":"center","name":"Center","coordinates":[5.5604,50.5874]}],
++    "routes": [{"id":"crossing","name":"Crossing","coordinates":[[5.555,50.5868],[5.563,50.5892]]}],
++    "regions": [{"id":"boundary","name":"Boundary","rings":[[[5.5568,50.5864],[5.5614,50.5868],[5.5606,50.5894],[5.5572,50.5896]]]}]
++  }
++}

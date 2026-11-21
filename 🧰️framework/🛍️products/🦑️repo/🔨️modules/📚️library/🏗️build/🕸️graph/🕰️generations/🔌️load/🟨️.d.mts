@@ -29,7 +29,7 @@ export function createGenerationProgressV1(clock:{begin(phase:string,total:numbe
 export interface GenerationHostV1{
  /** 🧭️ Words, in the language of the host, how far the whole read of this machine is; called only when a question about every project finds no sealed generation. */
  wholeReadProgress?():Promise<string|undefined>|string|undefined;
- workspaceRoot:string;separator?:string;language:"en"|"de";namedInputs:unknown;registryDigest:string;signal?:AbortSignal;verbose?:boolean;waitNoticeMilliseconds?:number;
+ workspaceRoot:string;separator?:string;language:"en"|"de";namedInputs:unknown;registryDigest:string;signal?:AbortSignal;verbose?:boolean;waitNoticeMilliseconds?:number;now?:()=>number;
  release?(options?:{more?:boolean}):Promise<void>;
  /** ✂️ Drops what the cutoff verification of the plan filled (verified blocks, interned rows, settled reads, string interner) once the owners to infer are known and before the first one starts; optional. */
  releaseCutoff?():Promise<void>;
@@ -44,6 +44,8 @@ export interface GenerationHostV1{
  /** 🧲️ Attaches the command to the live builder of its stale projects on this machine (see `attachToBuilderV1`): `recheck` tries to serve the command from the generation published so far; answers what it served, or undefined when no live builder holds the custody against the command; optional. */
  attach?(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;structural:boolean;implementation:string},recheck:()=>Promise<{graph:unknown;stats:GenerationLoadStatsV1}|undefined>):Promise<{graph:unknown;stats:GenerationLoadStatsV1}|undefined>;
  storeOptions(store:unknown,control:unknown):GenerationStoreOptionsV1;
+ verifyClosure?:import("../🩹️closure-repair/🟨️.mjs").ClosureRepairVerifierV1;
+ refetchClosure?(reference:import("../🩹️closure-repair/🟨️.mjs").ClosureRepairReferenceV1,signal?:AbortSignal):Promise<boolean>;
  membership(previous:{manifest:GenerationManifestV1;frontier:FrontierV1}|undefined,signal?:AbortSignal):Promise<GenerationMembershipV1>;
  discoverPart(spec:GenerationComputeSpecV1,signal:AbortSignal|undefined,control:unknown,ownerDone?:()=>void,ownerRunning?:(running:readonly {name:string;seconds:number;kind?:string;rows?:number}[],decision?:unknown)=>unknown,ownerProgress?:(done:number,total:number)=>unknown):Promise<GenerationPartV1>;
  expand(projects:Record<string,unknown>,control:unknown):Promise<Record<string,unknown>>;
@@ -74,7 +76,7 @@ export type RestoreExpectedWholeGenerationOutcomeV1=
  | (GenerationExchangeOutcomeV1&Readonly<{status:"restored";generation:number;head:import("../🌐️remote-exchange/🟦️.ts").GenerationHeadEvidenceV1;localManifest:string}>);
 export type LocalWholeGenerationAdoptionV1=Readonly<{generation:number;localManifest:string}>;
 export function restoreExpectedWholeGenerationV1(host:GenerationHostV1,expected:import("../🌐️remote-exchange/🟦️.ts").GenerationHeadCandidateV1,adoption?:Readonly<{beforePublication(local:LocalWholeGenerationAdoptionV1):Promise<void>}>):Promise<RestoreExpectedWholeGenerationOutcomeV1>;
-export function loadGenerationGraphV1(host:GenerationHostV1,options?:{policy?:GenerationGraphPolicyV1;closure?:readonly string[];selection?:unknown;slice?:{selection:unknown;roots:readonly string[];providers?:readonly {consumerRoots:readonly string[];sourcePath:string}[]};lean?:boolean;externalInputs?:readonly string[];pin?:import("../🧷️pin/🟨️.mjs").GenerationPinV1}):Promise<{graph:unknown;stats:GenerationLoadStatsV1}>;
+export function loadGenerationGraphV1(host:GenerationHostV1,options?:{policy?:GenerationGraphPolicyV1;closure?:readonly string[];sealedOnly?:boolean;selection?:unknown;slice?:{selection:unknown;roots:readonly string[];providers?:readonly {consumerRoots:readonly string[];sourcePath:string}[]};lean?:boolean;externalInputs?:readonly string[];pin?:import("../🧷️pin/🟨️.mjs").GenerationPinV1}):Promise<{graph:unknown;stats:GenerationLoadStatsV1}>;
 /** 📦️ Expands compact inputs within the capacity of one capture. */
 export function expandInChunksV1(projects:Record<string,unknown>,expand:(chunk:Record<string,unknown>)=>Promise<Record<string,unknown>>,limits:{maximumProjects:number;maximumBytes:number}):Promise<Record<string,unknown>>;
 /** 🌊️ Expands compact inputs chunk by chunk while the nodes of the assembly arrive. */

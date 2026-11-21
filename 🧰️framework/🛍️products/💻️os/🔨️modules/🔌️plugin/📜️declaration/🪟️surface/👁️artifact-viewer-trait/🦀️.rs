@@ -162,8 +162,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
         Ok(None)
     }
 
-    fn retained_window_transient_target(_command: &Self::Command) -> Option<(&str, &'static str)> {
-        None
+    fn retained_window_transient_target<'a>(_command: &'a Self::Command, _view: Option<&'a ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        Ok(None)
     }
 
     /// 🐢️ This viewer's declared interaction refresh scope — forwarded verbatim to

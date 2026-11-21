@@ -1,5 +1,5 @@
 /** 💾️ Binary-facet grammar mirror (descriptive) — see ../🟦️.ts for the canonical facet
- * schema; this file describes the OP PACK-BINARY ENCODING of the same shape. */
+ * schema. The tag identifies a declared record. The payload is its typed Pack wire value in hexadecimal. */
 export interface SemioGraphOpFrameHeader {
   format: number;
   tag: number;

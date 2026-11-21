@@ -1,5 +1,5 @@
 {
-  "maximumAttempts": 2,
+  "retrySuffixes": ["-retry", "-retry-2", "-retry-3"],
   "maximumChecks": 512,
   "maximumReadBytes": 262144,
   "maximumProbeMilliseconds": 10000,

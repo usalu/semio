@@ -1,7 +1,7 @@
 //! 🔤 Symbol interning, token alphabet, escapes, numbers, and units.
 
 use semio_framework_diagnostic::TextSpan;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
 //#region 🔖️Intern
@@ -12,7 +12,7 @@ pub struct Symbol(u32);
 
 struct InternerState {
     strings: Vec<Arc<str>>,
-    lookup: HashMap<Arc<str>, u32>,
+    lookup: BTreeMap<Arc<str>, u32>,
 }
 
 static INTERNER: OnceLock<Mutex<InternerState>> = OnceLock::new();
@@ -21,7 +21,7 @@ static INTERNER: OnceLock<Mutex<InternerState>> = OnceLock::new();
 // overwhelmingly consumed sync across the tokenizer/lexer/parser (112 sync call sites vs. 8 that
 // had been wrongly ``ed by the blind codemod) — see R9.
 fn interner() -> &'static Mutex<InternerState> {
-    INTERNER.get_or_init(|| Mutex::new(InternerState { strings: Vec::new(), lookup: HashMap::new() }))
+    INTERNER.get_or_init(|| Mutex::new(InternerState { strings: Vec::new(), lookup: BTreeMap::new() }))
 }
 
 impl Symbol {
@@ -41,6 +41,28 @@ impl Symbol {
         let state = interner().lock().unwrap_or_else(|poison| poison.into_inner());
         state.strings[self.0 as usize].clone()
     }
+}
+
+#[cfg(test)]
+#[test]
+fn ordered_lookup_preserves_first_occurrence_and_exact_utf8() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/interning.json")).unwrap();
+    let inputs = fixture["inputs"].as_array().unwrap();
+    let ordinals = fixture["ordinals"].as_array().unwrap();
+    assert_eq!(inputs.len(), ordinals.len());
+    let mut symbols = Vec::new();
+    for (text, ordinal) in inputs.iter().zip(ordinals) {
+        let text = text.as_str().unwrap();
+        let ordinal = ordinal.as_u64().unwrap() as usize;
+        let symbol = Symbol::intern(text);
+        if ordinal == symbols.len() {
+            assert!(!symbols.contains(&symbol));
+            symbols.push(symbol);
+        }
+        assert_eq!(symbol, symbols[ordinal]);
+        assert_eq!(symbol.as_str().as_ref(), text);
+    }
+    assert_eq!(symbols.len(), 5);
 }
 //#endregion 🔖️Intern
 

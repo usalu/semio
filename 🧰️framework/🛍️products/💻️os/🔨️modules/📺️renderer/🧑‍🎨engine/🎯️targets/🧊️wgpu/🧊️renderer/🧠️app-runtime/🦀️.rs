@@ -44,6 +44,14 @@ impl MailboxRuntime for AppRuntime {
         AppRuntime::interaction_available(self)
     }
 
+    fn interaction_checkout(&self) -> &runtime_mailbox_core::InteractionCheckoutLedger {
+        &self.checkout
+    }
+
+    fn interaction_checkout_mut(&mut self) -> &mut runtime_mailbox_core::InteractionCheckoutLedger {
+        &mut self.checkout
+    }
+
     fn check_out_interaction(&mut self, site: &'static str) -> Option<AppInteractionState> {
         AppRuntime::check_out_interaction(self, site)
     }
@@ -629,7 +637,25 @@ impl AppRuntime {
                     match original { Ok(true) => {}, Ok(false) => return FrameFinishBoundaryStep::Pending, Err(failure) => return FrameFinishBoundaryStep::CloseFailure(failure) }
                 }
                 if partial.resource_input.is_none() || partial.engine_packets.is_none() { return FrameFinishBoundaryStep::Fault("frame completion lost its original input or engine packets"); }
-                let cancel = if has_deferred { match context.admit_original_cancel_alias() { Ok(Some(cancel)) => Some(cancel), Ok(None) => return FrameFinishBoundaryStep::Pending, Err(error) => return FrameFinishBoundaryStep::CloseFailure(error.into()) } } else { None };
+                if has_deferred {
+                    let mut cancel = None;
+                    let admission = context.admit_original_cancel_alias(&mut cancel);
+                    if let Some(cancel) = cancel {
+                        let deferred_actions = std::mem::take(&mut self.frame_actions);
+                        if !deferred_actions.is_empty() {
+                            log_debug("[TRACE] frame deferred install carries an action");
+                        }
+                        let generation = partial.resource_input.as_ref().expect("validated frame resource input").preview_generation;
+                        let mut deferred = FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, generation, cancel);
+                        if admission.is_err() { deferred.begin_close(); }
+                        self.pending_frame_deferred = Some(deferred);
+                    }
+                    match admission {
+                        Ok(true) => {},
+                        Ok(false) => return FrameFinishBoundaryStep::Pending,
+                        Err(failure) => return FrameFinishBoundaryStep::CloseFailure(failure),
+                    }
+                }
                 let Some(input) = partial.resource_input.take() else {
                     return FrameFinishBoundaryStep::Fault("frame completion lost resource input");
                 };
@@ -637,13 +663,6 @@ impl AppRuntime {
                     partial.resource_input = Some(input);
                     return FrameFinishBoundaryStep::Fault("frame completion lost engine packets");
                 };
-                if has_deferred {
-                    let deferred_actions = std::mem::take(&mut self.frame_actions);
-                    if !deferred_actions.is_empty() {
-                        log_debug("[TRACE] frame deferred install carries an action");
-                    }
-                    self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, cursor.pump_sync, cursor.flush_tutorial, cursor.shell_maintenance, cursor.settle, input.preview_generation, cancel.expect("admitted deferred original cancellation alias")));
-                }
                 return FrameFinishBoundaryStep::Complete(AppFrameBuild {
                     retained: partial.retained,
                     generation: semio_framework_trace::Generation(input.preview_generation),

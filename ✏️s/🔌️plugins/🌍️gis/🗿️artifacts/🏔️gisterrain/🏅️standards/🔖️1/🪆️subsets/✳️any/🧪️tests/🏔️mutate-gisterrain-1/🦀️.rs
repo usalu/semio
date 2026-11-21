@@ -10,6 +10,7 @@ use semio_repo_test_host::{parse_json, Adapter, Json};
 const KINDS: &[&str] = &[
     "change-exaggeration",
     "change-imported-features",
+    "replace-elevation-source",
 ];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
@@ -31,7 +32,7 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 const DERIVED_ASSET: &str = "shared://🏔️mutate-gisterrain-1/🔣️.snapshot.json";
 
 /// 🗂️ The persisted Terrain fields compared across language implementations.
-const FIELDS: &[&str] = &["exaggeration", "importedMap", "mesh"];
+const FIELDS: &[&str] = &["exaggeration", "importedMap", "mesh", "elevationSource"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -61,6 +62,13 @@ fn vector(kind: &str) -> Vector {
             after: include_str!("../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/📸️snapshot/➡️after/🔣️.json"),
             diff: include_str!("../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/🔺️diff/🔣️.json"),
             outcome: include_str!("../🧫️fixtures/🧬️mutations/📥change-imported-features/📥️imports/🎯️outcome/🔣️.json"),
+        },
+        "replace-elevation-source" => Vector {
+            before: include_str!("../🧫️fixtures/🧬️mutations/🏔️replace-elevation-source/🏔️authors/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🏔️replace-elevation-source/🏔️authors/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🏔️replace-elevation-source/🏔️authors/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../🧫️fixtures/🧬️mutations/🏔️replace-elevation-source/🏔️authors/🔺️diff/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🏔️replace-elevation-source/🏔️authors/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-gisterrain-1: no committed specification vector is registered for kind {other:?}"),
     }
@@ -285,8 +293,10 @@ pub fn adapter() -> Adapter {
     {
         let mut built = built;
         for kind in KINDS {
-            built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
-            built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
+            if *kind != "replace-elevation-source" {
+                built = built.subject(&format!("mutate-{kind}"), subject::mutate(kind));
+                built = built.subject(&format!("inverse-{kind}"), subject::inverse(kind).expect("valid retained mutation inverse fixture"));
+            }
             built = built.subject(&format!("spec-vector-{kind}"), subject::spec_vector(kind));
         }
         return built.subject("identity-round-trip", subject::round_trip);

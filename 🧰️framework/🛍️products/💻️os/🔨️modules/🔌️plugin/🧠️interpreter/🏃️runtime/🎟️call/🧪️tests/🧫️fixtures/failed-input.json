@@ -1,6 +1,8 @@
 {
   "failedEpoch": 7,
   "failedKind": 8,
+  "wireLength": 4,
+  "retiredInputFlags": 2,
   "cases": [
     {
       "export": "PublishActorFailure",

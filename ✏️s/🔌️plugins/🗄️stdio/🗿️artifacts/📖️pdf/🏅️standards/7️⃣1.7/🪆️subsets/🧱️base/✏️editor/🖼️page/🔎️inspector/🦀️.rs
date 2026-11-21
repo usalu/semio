@@ -26,7 +26,7 @@ pub(super) fn inspector_fields(snapshot: &PdfSnapshot, object: &PageObject) -> V
             fields.push(InspectorField { id: "pdf-object-font", label_en: "Font", label_de: "Schrift", action: "set-font", key: "text", kind: ui::InputKind::Text, value: font, numbers: Vec::new(), text: None, object_key: None });
             fields.push(placed("pdf-object-x", "X", "X", "move", "x", object.x, &[("y", object.y)]));
             fields.push(placed("pdf-object-y", "Y", "Y", "move", "y", object.y, &[("x", object.x)]));
-            fields.push(geometry("pdf-object-size", "Font size", "Schriftgröße", "height", object.font_size, object.x, object.y, object.width, object.font_size));
+            fields.push(placed("pdf-object-size", "Font size", "Schriftgröße", "set-font-size", "size", object.font_size, &[]));
             fields.extend(color_fields("set-fill", object.fill, &[]));
         }
         ObjectKind::Vector => {
@@ -174,7 +174,9 @@ pub(super) fn field_input(
     let draft_target = inspector_draft_target(controller_id, field.action, page, object_id, field.key)?;
     let builder = ui::input(field.kind)
         .value(inspector_text(&field.value)?)
-        .commit(inspector_text("blur")?)
+        .commit(inspector_text(if field.action == "set-page-extra" && object_id.starts_with("box.") {
+            "blurDecimalQuad"
+        } else { "blur" })?)
         .draft_target(draft_target)
         .publication_revision(publication_revision)
         .try_label(label)

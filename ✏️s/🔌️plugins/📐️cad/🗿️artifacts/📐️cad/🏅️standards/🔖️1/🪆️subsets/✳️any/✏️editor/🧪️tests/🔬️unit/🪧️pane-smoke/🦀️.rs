@@ -16,3 +16,17 @@ async fn koordinator_pane_loads_applies_undoes_and_closes() {
         assert_eq!(applied.nodes.len(), loaded.nodes.len() + 1);
     }
 }
+
+/// 📬️ An untagged host contribution is admitted and published through the mounted command owner.
+#[semio_framework_async_macros::async_test]
+async fn koordinator_plain_contributions_reach_the_host_lane() {
+    let mut app = new_app().await;
+    let args = semio_framework_value::DslValue::object([
+        ("json".to_owned(), semio_framework_value::DslValue::String("[]".to_owned())),
+        ("page".to_owned(), semio_framework_value::DslValue::Number(0_u64.into())),
+        ("pageCount".to_owned(), semio_framework_value::DslValue::Number(1_u64.into())),
+    ]);
+    let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setContributions", Some(args), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close).await;
+    close(&mut app);
+    assert!(result.is_ok(), "plain host contribution must not require a press tag: {result:?}");
+}

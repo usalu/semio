@@ -1,9 +1,9 @@
 {
   "title": "Clean Closed State Silhouettes Across UI",
   "emoji": "🫧",
-  "status": "open",
+  "status": "closed",
   "description": "State silhouettes (hover, active, pressed, selected, focus, open, dragging) must be clean and closed at all times for every element and every UI. Build one mechanism grounded in the shared-border system (cells, frames, groups, parents) that draws one closed silhouette for the active element on top of shared seams, coordinated with neighbours and parents; apply it across web, native and language-agnostic cases; verify live in all apps at 1440/768/375. Continues 26/11/17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI.",
-  "summary": "State silhouettes are now one closed outline everywhere. A box model in the shared-border compositor owns state: hover goes to the innermost interactive box, focus only on :focus-visible, markers stay on their own box, and ancestors never inherit. Stated boxes draw all four sides, cells are painted by their owner, and there is one paint convention. Interaction states outrank persistent ones. The compositor is the only state-line painter (CSS rings, outlines and the browser focus outline are removed). There is a borderless-box API, void-element painting, lazy overlays and auto-attach. A Rust mirror with JSON cases covers wgpu HOVER_OWNER and closed TUI chips. Element and product sweeps were done. Unrelated fixes: 2px cell overflow, CardStack interlock write loop, LayeredOverview and ToggleGroup markers, Dock test compile, staffage clock subscriptions. Live probe: elements went from 483 failing checks to 0/354; OS 0/548; course 0 at 1440/919/768/375 en+de; demonstrator, play, CAD and hub 0. Open: Rust re-run blocked by full disk, staffage overview main-thread saturation (proposed separately), bun and Chromium tests not run. See SUMMARY.md.",
+  "summary": "Passed all 48 live silhouette cells across eight UI surfaces at 1440, 768 and 375 in English and German, with no findings across 6,331 targets. Staffage overview and mobile OS retests passed. All 472 Rust tests passed, including both priority-order laws. SUMMARY.md records the profile, test scope and separate catalog timeout. Removed generated artifacts.",
   "goal": "runningframework",
   "sessions": [
     "f14dedae-ac48-456c-8919-96e22e41eda7",
@@ -67,6 +67,653 @@
       "client": "codex",
       "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
       "prompt": "Continue native laws and live multilingual responsive sweeps"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-20 17:17:54",
+      "author": "ueli",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "summary": "Passed all 48 live silhouette cells across eight UI surfaces at 1440, 768 and 375 in English and German, with no findings across 6,331 targets. Staffage overview and mobile OS retests passed. All 472 Rust tests passed, including both priority-order laws. SUMMARY.md records the profile, test scope and separate catalog timeout. Removed generated artifacts.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/round3-cad-live.tsx"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/round3-os-live.tsx"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/vite-hub-admin.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/FINISH-SHARED-BORDER-CONSOLIDATION-ACROSS-UI/vite-play.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/SUMMARY.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/app-sweep.js"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/apps-start.sh"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/audit-state-mechanisms.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/border-gap-probe.js"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/cad-aside-frame.test.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/catalog-followup.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/cell-overflow.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/chip-outline.cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/chip-outline.test.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/closure-files.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/design.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/elements-compose.tsx"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/elements-live.tsx"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/elements-restart.sh"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/foreground-profile.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/inventory-state-lines.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/launcher-diagnosis.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/live-baseline.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/live-final.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/live-os.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/live-round6.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-attempt.test.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-bridge.cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-bridge.test.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-cells.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-cells.test.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-report.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-runner.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-settle.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/matrix-settle.test.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/native-mechanism.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/native-rerun.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/native-rerun.sh"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/os-fixes.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/os-sweep.js"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/os-verify-deps.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/os-verify-recovery.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/perf-fixes.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/preview-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/preview-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/preview-cli.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/preview-process.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/preview-process.test.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/profile.html"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/runner-bridge.js"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/runner-server.cjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/runner.html"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/silhouette-probe.js"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/site/index.html"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/site/main.css"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/site/main.tsx"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/staffage-drawing-bench.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/staffage-followup.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/staffage-worker-build.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/staffage-worker-entry.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/staffage-worker-smoke.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/sweep-boot.js"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/sweep-elements.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/sweep-products.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/verification-tests.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vite-elements.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-cad-renderer.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-course.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-demonstrator.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-hub-admin.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-interpreter.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-os-elements.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-os-engine.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-os-final.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-presentation.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-teaching.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/vitest-ui.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️19/CLEAN-CLOSED-STATE-SILHOUETTES-ACROSS-UI/web-mechanism.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🌐️vite/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/⏱️clock/🏁️frames/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/⏱️clock/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/⏱️clock/🧱️core/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/⚖️compare/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🏠️overview/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/📍️placed/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/📚️catalog/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔬️detail/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔭️viewpoints/🪟️sheet/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🖼️previews/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🗃️browse/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧍️figure/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧪️playground/🎞️timeline/🖼️panel/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧪️playground/🖼️stage/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧮️pipeline/🏁️drawing/queue.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧮️pipeline/🏁️drawing/worker.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧮️pipeline/🏁️drawing/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧮️pipeline/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🧮️pipeline/🧬️svg/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/⏱️clock-determinism/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/⏱️clock-frame-budget/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📖️detail-sections/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📖️detail-sections/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📚️catalog-loading/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗜️catalog-payload/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🧭️viewpoint-pages/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🧭️viewpoint-pages/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🧷️shared-borders/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📥️source/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎛️chrome-control-presentation/cell-contract.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎛️chrome-control-presentation/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/segments.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/segments.test.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/segments.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/silhouettes.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/silhouettes.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/silhouettes.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/silhouettes.test.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/silhouettes.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.test.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/states.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/↔️Resizable/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Checkbox/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/🟦️.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️CardStack/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/↕️sortable-item/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🍃️item/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/shared-border-dock.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📋️MenuItem/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📜️Scrollable/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowSilhouette/shared-border.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕰️HistoryTable/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/⌨️keyboard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🔗️fusion/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🔘️trigger/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/compositor.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/compositor.schema.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/focus-boxes.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/focus-seam.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/shared-border.test.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/shared-border.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/state-boxes.test.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/💡️hints/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟢️overview-button/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪢️SharedBorderRow/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🔨️modules/🌳️json-tree/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellFooter/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌐️locale-picker/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌟️default-app-toggle/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🌱️artifact-creation/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🍞️transient-notice/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/👥️presence-scope/🌐️browser/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📇️directory-bootstrap/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔖️session-notice/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🔸️canvas/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/📂️files/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🚪️close-guard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🪄️catalogue-spotlight/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🧱️ink-block-views/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🖼️surface-views/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️wgpu-unit/shared-borders.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️wgpu-unit/🗜️closing-collapse-and-split-resize/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️wgpu-unit/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️wgpu-unit/🧭️drag-merge-mobile-and-focus/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentApprovals/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentApprovals/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧩️BlockListHost/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/⚖️legal/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/⛰️challenge/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🏆️leaderboard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🐾️pets/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📚️app/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🕸️radar/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🖥️mockup/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🪪️identity/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/💽️image-recovery/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts"
+        }
+      ]
     }
   ]
 }

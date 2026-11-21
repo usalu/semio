@@ -503,8 +503,10 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 cursor.advance(ShellChromeFramePhase::Error);
             }
             ShellChromeFramePhase::Error => {
-                if let Some(error) = &self.chrome.error {
-                    match chrome_text_complete_step(draw, atlas, error, 12.0, h - theme.footer_height - self.as_session().subfooter_height(theme) - 24.0, (w - 24.0).max(1.0), theme.font_size_small, theme.error, &mut cursor.child.glyph) {
+                let session = self.as_session();
+                if let Some(error) = &session.chrome.error {
+                    let error_top = h - theme.footer_height - session.subfooter_height(theme) - 24.0;
+                    match chrome_text_complete_step(draw, atlas, error, 12.0, error_top, (w - 24.0).max(1.0), theme.font_size_small, theme.error, &mut cursor.child.glyph) {
                         Ok(false) => return false,
                         Ok(true) => {}
                         Err(()) => cursor.child.glyph.reset(),

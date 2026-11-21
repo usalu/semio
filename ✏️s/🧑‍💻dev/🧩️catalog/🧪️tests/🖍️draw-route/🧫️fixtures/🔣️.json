@@ -1,0 +1,14 @@
+{
+  "variant": "draw",
+  "pluginId": "draw",
+  "app": "s.draw.drawing@1/*#editor",
+  "ports": {
+    "react": 6064,
+    "wgpu": 6164
+  },
+  "manifest": "🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+  "devContribution": "✏️s/🧑‍💻dev/🎭️variants/🖍️draw/🧬️schema/🔣️.json",
+  "ownerRoot": "✏️s/🧑‍💻dev/🎭️variants/🖍️draw",
+  "browserEntry": "✏️s/🧑‍💻dev/🎭️variants/🖍️draw/🚀️entry/🟦️.ts",
+  "viteConfig": "✏️s/🧑‍💻dev/🎭️variants/🖍️draw/🏗️builder/🌐️vite/🟦️.ts"
+}

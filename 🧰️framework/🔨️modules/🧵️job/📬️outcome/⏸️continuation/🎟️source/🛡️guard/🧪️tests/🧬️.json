@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cells", "headerBytes", "cases"],
+  "properties": {
+    "cells": { "type": "integer", "minimum": 1 },
+    "headerBytes": { "type": "integer", "minimum": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["acknowledged", "admitted", "chargedItems", "chargedWork"],
+        "properties": {
+          "acknowledged": { "type": "integer", "minimum": 0 },
+          "admitted": { "type": "boolean" },
+          "chargedItems": { "type": "integer", "minimum": 0 },
+          "chargedWork": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

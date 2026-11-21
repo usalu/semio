@@ -79,7 +79,7 @@ pub fn process_engine_events(viewport: &mut DagViewportState, graph: &mut DagGra
     }
 }
 
-fn channel_row_handle_hit(viewport: &DagViewportState, graph: &DagGraphState, world_x: f64, world_y: f64) -> Option<HandleId> {
+pub(super) fn channel_row_handle_hit(viewport: &DagViewportState, graph: &DagGraphState, world_x: f64, world_y: f64) -> Option<HandleId> {
     if !draw_lod_for_frame(viewport, graph).uses_channel_row_pick() {
         return None;
     }

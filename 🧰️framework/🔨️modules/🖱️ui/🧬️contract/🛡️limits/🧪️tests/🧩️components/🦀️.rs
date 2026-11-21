@@ -119,7 +119,7 @@ fn every_component_variant_round_trips() {
         row_actions: crate::UiFixedList::default(),
         target: None,
     }));
-    component_round_trips(Component::Image(ImageProps { src: ui_text("atlas://x"), alt: Some(label("alt")) }));
+    component_round_trips(Component::Image(ImageProps { src: ui_text("atlas://x"), alt: Some(label("alt")), source_body_bytes: None }));
     component_round_trips(Component::Surface(Default::default()));
     component_round_trips(Component::Extension(ExtensionProps { extension: ui_text("plugin.app.slot"), props: Default::default() }));
 }

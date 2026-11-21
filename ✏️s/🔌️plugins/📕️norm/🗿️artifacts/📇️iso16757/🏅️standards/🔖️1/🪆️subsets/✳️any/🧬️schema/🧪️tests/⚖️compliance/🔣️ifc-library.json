@@ -1,0 +1,13 @@
+{
+  "catalogueId": "catalogue-ä",
+  "catalogueName": "Heizung's catalogue #99",
+  "dictionaryId": "bSDD building services",
+  "dictionaryVersion": "2025.1",
+  "classId": "class-valve",
+  "className": "Valves / Ventile",
+  "products": [
+    {"id": "valve-100", "name": "Valve #12, line (A)"},
+    {"id": "valve-50", "name": "Lüftung's Ventil 🛠"},
+    {"id": "valve-80", "name": "Ventil \\ A"}
+  ]
+}

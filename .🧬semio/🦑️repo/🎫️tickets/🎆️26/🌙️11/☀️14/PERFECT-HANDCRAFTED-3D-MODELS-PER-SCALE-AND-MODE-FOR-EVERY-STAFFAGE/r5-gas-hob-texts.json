@@ -1,0 +1,178 @@
+{
+  "areas": {
+    "plate": 0.175,
+    "knob": 0.002,
+    "burner": 0.0137,
+    "trivet": 0.062
+  },
+  "structureAssumption": {
+    "en": "The 5.6 kg hob stands on four rubber feet under its housing: a unilateral contact on a footprint of 0.26 m by 0.455 m carries the weight.",
+    "de": "Das 5,6 kg schwere Kochfeld steht auf vier Gummifüßen unter seinem Gehäuse: ein einseitiger Kontakt auf einer Aufstandsfläche von 0,26 m mal 0,455 m trägt das Gewicht."
+  },
+  "provenanceNotes": {
+    "en": "A table-top domino gas hob of 0.30 m by 0.52 m (0.497 m plate and the 23 mm knob in front of it; built-in 30 cm dominoes measure 306 by 527 mm) with one rapid burner of 2.5 kW rated heat input: a 10 mm enamelled steel top with a pressed spill well around the burner on a pressed housing standing on four rubber feet, a brass burner (cup, crown with 36 flame ports on a ring of 0.09 m, cap of 96 mm), a cast-iron pan support (a 0.27 m square frame of 10 by 12 mm bars on four legs with four fingers towards the burner; the pan rests 48 mm above the plate) and a bakelite knob at the right of the front fascia that turns the gas tap behind it. The mass of 5.6 kg is the sum of the housing (4.1 kg), burner (0.4 kg), pan support (1.1 kg) and knob (0.03 kg). Natural gas releases 10 kWh per cubic metre; the thermal model puts 865 W into the flame region (about 35 percent of the rated input leaves the flame directly as plume and radiation, the pot absorbs about 1200 W, 48 percent, as the cooking-pot asset books it) and 260 W into the pan support, 120 W into the burner head and 55 W into the plate (authored estimates). The origin is the centre of the hob on the ground line; the burner axis stands 30 mm behind it; the elevation is the front view.",
+    "de": "Ein Tisch-Domino-Gaskochfeld von 0,30 m mal 0,52 m (0,497 m Platte und davor der 23 mm tiefe Knebel; eingebaute 30-cm-Dominos messen 306 mal 527 mm) mit einem Starkbrenner von 2,5 kW Nennwärmebelastung: eine 10 mm starke emaillierte Stahlplatte mit einer gepressten Überlaufmulde um den Brenner auf einem gepressten Gehäuse, das auf vier Gummifüßen steht, ein Messingbrenner (Topf, Brennerkrone mit 36 Flammenöffnungen auf einem Kreis von 0,09 m, Deckel von 96 mm), ein gusseiserner Pfannenträger (ein quadratischer Rahmen von 0,27 m aus 10-mal-12-mm-Stäben auf vier Beinen mit vier Fingern zum Brenner; der Topf steht 48 mm über der Platte) und ein Bakelit-Knebel rechts an der Frontblende, der den Gashahn dahinter dreht. Die Masse von 5,6 kg ist die Summe aus Gehäuse (4,1 kg), Brenner (0,4 kg), Pfannenträger (1,1 kg) und Knebel (0,03 kg). Erdgas setzt 10 kWh je Kubikmeter frei; das Wärmemodell legt 865 W in die Flammenregion (rund 35 Prozent der Nennbelastung verlassen die Flamme direkt als Fahne und Strahlung, der Topf nimmt etwa 1200 W auf, 48 Prozent, wie es das Asset cooking-pot bucht) und 260 W in den Pfannenträger, 120 W in den Brennerkopf und 55 W in die Platte (Schätzwerte). Der Ursprung ist die Mitte des Kochfelds auf der Standlinie; die Brennerachse steht 30 mm dahinter; die Ansicht ist die Vorderansicht."
+  },
+  "drawings": {
+    "50": {
+      "silhouette": {
+        "en": "A 0.30 m table-top domino hob seen from the front, 6 mm wide and 1.8 mm tall on paper: the housing on four feet with the knob on the fascia, the 10 mm top, the burner with its crown of flame tongues and the cast-iron pan support standing over it on two legs. Front view from the side, 10.4 mm by 1.8 mm: the 0.497 m top with the knob in front of it, the housing on its feet, burner and flames 30 mm behind the middle, the pan support with its two legs. Plan, 6 mm by 10.4 mm: the top with its spill well, the burner cap ringed by 24 flame lobes, the square pan support with its four fingers and the knob in front of the top.",
+        "de": "Ein Tisch-Domino-Gaskochfeld von 0,30 m in der Vorderansicht, auf Papier 6 mm breit und 1,8 mm hoch: das Gehäuse auf vier Füßen mit dem Knebel an der Blende, die 10 mm starke Platte, der Brenner mit seinem Kranz aus Flammenzungen und der gusseiserne Pfannenträger, der auf zwei Beinen darüber steht. Seitenansicht, 10,4 mm auf 1,8 mm: die 0,497 m tiefe Platte mit dem Knebel davor, das Gehäuse auf seinen Füßen, Brenner und Flammen 30 mm hinter der Mitte, der Pfannenträger mit seinen zwei Beinen. Grundriss, 6 mm auf 10,4 mm: die Platte mit ihrer Überlaufmulde, der Brennerdeckel mit 24 Flammenbögen, der quadratische Pfannenträger mit seinen vier Fingern und der Knebel vor der Platte."
+      },
+      "retained": {
+        "en": "Housing with bead, vent slots and feet, the 10 mm top, the knob with grip ridge and pointer, burner cup and crown with its ports, the cap, the flame tongues in three groups (left, right and the front and back tongues on the stretching tip), the pan support with frame, fingers and legs, the spill well in the plan.",
+        "de": "Gehäuse mit Sicke, Lüftungsschlitzen und Füßen, die 10 mm starke Platte, der Knebel mit Griffsteg und Zeiger, Brennertopf und -krone mit ihren Öffnungen, der Deckel, die Flammenzungen in drei Gruppen (links, rechts und die vordere und hintere Zunge auf der streckbaren Spitze), der Pfannenträger mit Rahmen, Fingern und Beinen, die Überlaufmulde im Grundriss."
+      },
+      "merged": {
+        "en": "Nothing is merged: every region has its own shape; the 24 tongues of one side are one outline.",
+        "de": "Nichts ist zusammengeführt: jede Region hat ihre eigene Form; die 24 Zungen einer Seite sind ein Umriss."
+      },
+      "omitted": {
+        "en": "The ignition electrode and the thermocouple (6 mm, below the printable feature), the gas tap and pipe inside the housing; the knob ridge is left out of the side view, which shows the turned knob.",
+        "de": "Zündelektrode und Thermoelement (6 mm, unter dem druckbaren Merkmal), Gashahn und Leitung im Gehäuse; der Knebelsteg fehlt in der Seitenansicht, die den gedrehten Knebel zeigt."
+      },
+      "thinElements": {
+        "en": "The pan-support bars and legs are drawn at their real 10 mm, the flame tongues at 7.5 mm, the feet at 7.5 mm.",
+        "de": "Die Stäbe und Beine des Pfannenträgers sind in ihren realen 10 mm gezeichnet, die Flammenzungen mit 7,5 mm, die Füße mit 7,5 mm."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Darker tones carry heavy parts and the rubber feet, lighter tones the flame; body pen 0.18 mm, detail 0.13 mm, ground 0.35 mm.",
+        "de": "Dunklere Töne tragen schwere Teile und die Gummifüße, hellere die Flamme; Körperstift 0,18 mm, Detail 0,13 mm, Boden 0,35 mm."
+      },
+      "overlays": {
+        "en": "Plate, knob, burner, flame and pan support are five regions; in the thermal view the flame and the pan support glow, the burner head warms and the plate stays cool except around the burner.",
+        "de": "Platte, Knebel, Brenner, Flamme und Pfannenträger sind fünf Regionen; in der Thermikansicht glühen Flamme und Pfannenträger, der Brennerkopf erwärmt sich und die Platte bleibt außer um den Brenner kühl."
+      }
+    },
+    "100": {
+      "silhouette": {
+        "en": "A 0.30 m hob 3 mm wide on paper: the block of housing and top with the knob, the burner puck with its crown of twelve tongues and the pan support on two legs. Front view, 5.2 mm by 0.9 mm: the block with the knob in front, burner, crown and pan support. Plan, 3 mm by 5.2 mm: the top, the burner with its flame crown as one disc, the square pan support with its fingers and the knob in front of the top.",
+        "de": "Ein Kochfeld von 0,30 m, auf Papier 3 mm breit: der Block aus Gehäuse und Platte mit dem Knebel, die Brennerscheibe mit ihrem Kranz aus zwölf Zungen und der Pfannenträger auf zwei Beinen. Seitenansicht, 5,2 mm auf 0,9 mm: der Block mit dem Knebel davor, Brenner, Kranz und Pfannenträger. Grundriss, 3 mm auf 5,2 mm: die Platte, der Brenner mit seinem Flammenkranz als eine Scheibe, der quadratische Pfannenträger mit seinen Fingern und der Knebel vor der Platte."
+      },
+      "retained": {
+        "en": "Block, knob, burner, crown, pan support with frame, fingers and legs.",
+        "de": "Block, Knebel, Brenner, Kranz, Pfannenträger mit Rahmen, Fingern und Beinen."
+      },
+      "merged": {
+        "en": "Housing, top and feet are one block; cup, crown and cap are one burner; the tongues are one crown.",
+        "de": "Gehäuse, Platte und Füße sind ein Block; Topf, Krone und Deckel sind ein Brenner; die Zungen sind ein Kranz."
+      },
+      "omitted": {
+        "en": "Bead, vent slots, spill well, ports, the knob ridge and pointer: below 15 mm, and the detail pen is not drawn at 1:100.",
+        "de": "Sicke, Lüftungsschlitze, Überlaufmulde, Öffnungen, Knebelsteg und Zeiger: unter 15 mm, und der Detailstift wird bei 1:100 nicht gezeichnet."
+      },
+      "thinElements": {
+        "en": "The pan-support bars are drawn 10 by 12 mm (0.1 by 0.12 mm on paper), as the 3D model has them.",
+        "de": "Die Stäbe des Pfannenträgers sind mit 10 mal 12 mm gezeichnet (0,1 mal 0,12 mm auf Papier), wie das 3D-Modell sie hat."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Darker tones carry heavy parts, lighter tones the flame; body pen 0.18 mm, detail not drawn, ground 0.25 mm.",
+        "de": "Dunklere Töne tragen schwere Teile, hellere die Flamme; Körperstift 0,18 mm, Detail nicht gezeichnet, Boden 0,25 mm."
+      },
+      "overlays": {
+        "en": "Plate and knob are separate shapes again; burner, crown and pan support keep their own regions, so the flame and the pan support glow on their own.",
+        "de": "Platte und Knebel sind wieder getrennte Formen; Brenner, Kranz und Pfannenträger behalten ihre Regionen, sodass Flamme und Pfannenträger für sich glühen."
+      }
+    },
+    "200": {
+      "silhouette": {
+        "en": "A 1.5 mm wide hob: the block, the burner puck under its flame crown and the pan support as a frame on two posts with the gap under it. Front view, 2.6 mm by 0.45 mm: the block with the knob step and one outline of pan support, burner and flame. Plan, 1.5 mm by 2.6 mm: the block with the knob step, the burner disc and the square frame of the pan support.",
+        "de": "Ein 1,5 mm breites Kochfeld: der Block, die Brennerscheibe unter ihrem Flammenkranz und der Pfannenträger als Rahmen auf zwei Pfosten mit der Lücke darunter. Seitenansicht, 2,6 mm auf 0,45 mm: der Block mit der Knebelstufe und ein Umriss aus Pfannenträger, Brenner und Flamme. Grundriss, 1,5 mm auf 2,6 mm: der Block mit der Knebelstufe, die Brennerscheibe und der quadratische Rahmen des Pfannenträgers."
+      },
+      "retained": {
+        "en": "Block with knob, burner, flame crown, pan-support frame and posts.",
+        "de": "Block mit Knebel, Brenner, Flammenkranz, Rahmen und Pfosten des Pfannenträgers."
+      },
+      "merged": {
+        "en": "Plate and knob share the block; in the side and the front view pan support, burner and flame are one outline; burner and flame are one disc in the plan.",
+        "de": "Platte und Knebel teilen den Block; in Vorder- und Seitenansicht sind Pfannenträger, Brenner und Flamme ein Umriss; Brenner und Flamme sind im Grundriss eine Scheibe."
+      },
+      "omitted": {
+        "en": "Fingers, feet, cap step, the single tongues.",
+        "de": "Finger, Füße, Deckelstufe, die einzelnen Zungen."
+      },
+      "thinElements": {
+        "en": "The pan-support bars and posts are thickened from 10 to 30 mm and the gap of 18 mm under the frame stays open (0.09 mm on paper).",
+        "de": "Stäbe und Pfosten des Pfannenträgers sind von 10 auf 30 mm verstärkt und die Lücke von 18 mm unter dem Rahmen bleibt offen (0,09 mm auf Papier)."
+      },
+      "hatching": {
+        "en": "None.",
+        "de": "Keine."
+      },
+      "styles": {
+        "en": "Darker tones carry heavy parts, lighter tones the flame; body pen 0.13 mm, detail not drawn, ground 0.25 mm.",
+        "de": "Dunklere Töne tragen schwere Teile, hellere die Flamme; Körperstift 0,13 mm, Detail nicht gezeichnet, Boden 0,25 mm."
+      },
+      "overlays": {
+        "en": "Five shapes carry the five regions; the flame and the pan support stay their own regions.",
+        "de": "Fünf Formen tragen die fünf Regionen; Flamme und Pfannenträger bleiben eigene Regionen."
+      }
+    }
+  },
+  "volumes": {
+    "50": [
+      {
+        "en": "Body: the real table-top hob. A pressed housing of 0.28 m by 0.484 m with a stiffening bead and nine vent slots on the fascia and eleven on each side stands on four rubber feet of 20 mm; on it lies the 10 mm enamelled top, one pressed piece without a seam, of 0.30 m by 0.497 m, flush with the fascia at the front and 10 mm proud at the sides and back, with a pressed spill well of 0.15 m around the burner. The brass burner is turned from its real section: cup on the well floor, crown with 36 flame ports, cap of 96 mm. The flame is the inner-cone ring at the ports and 24 tongues of 7.5 mm (lofts square to their curved centre lines) leaning outwards and up to 22 mm; the front and back tongues sit on the stretching flame-tip bone. The cast-iron pan support is a 0.27 m square frame of cast bars 10 mm wide and 12 mm deep (the section of the BSH domino grates) on four legs with four fingers that droop towards the burner; the bakelite knob of 26 mm with its grip ridge and pointer turns on the fascia.",
+        "de": "Körper: das reale Tischkochfeld. Ein gepresstes Gehäuse von 0,28 m mal 0,484 m mit Versteifungssicke und neun Lüftungsschlitzen an der Blende und elf an jeder Seite steht auf vier Gummifüßen von 20 mm; darauf liegt die 10 mm starke emaillierte Platte, ein gepresstes Stück ohne Naht, von 0,30 m mal 0,497 m, vorn bündig mit der Blende und seitlich und hinten 10 mm überstehend, mit einer gepressten Überlaufmulde von 0,15 m um den Brenner. Der Messingbrenner ist aus seinem realen Querschnitt gedreht: Topf auf dem Muldenboden, Brennerkrone mit 36 Flammenöffnungen, Deckel von 96 mm. Die Flamme ist der Ring der inneren Kegel an den Öffnungen und 24 Zungen von 7,5 mm (Lofts quer zu ihrer gekrümmten Mittellinie), die sich nach außen und bis 22 mm hoch neigen; die vordere und hintere Zunge sitzen auf dem streckbaren Knochen der Flammenspitze. Der gusseiserne Pfannenträger ist ein quadratischer Rahmen von 0,27 m aus gegossenen Stäben von 10 mm Breite und 12 mm Höhe (der Querschnitt der BSH-Domino-Roste) auf vier Beinen mit vier Fingern, die sich zum Brenner neigen; der Bakelit-Knebel von 26 mm mit Griffsteg und Zeiger dreht sich an der Blende."
+      },
+      {
+        "en": "Thermal: every region on its real surface. Plate: the one-piece top and the spill well; the underside, which closes the housing, is marked as mounting face (C25 b). Knob: its turned body and ridge, the back on the fascia marked. Burner: cup, crown and cap, the cup's seat on the well floor marked. Flame: the inner-cone ring and all 26 tongues. Pan support: frame, legs and fingers. The plume emitter is the 7.5 mm outlet ring at the tongue tips (D2). The housing is not a thermal region of this asset and stays a ghost.",
+        "de": "Thermik: jede Region auf ihrer realen Oberfläche. Platte: die einteilige Deckplatte und die Überlaufmulde; die Unterseite, die das Gehäuse schließt, ist als Auflagefläche markiert (C25 b). Knebel: sein gedrehter Körper und der Steg, die Rückseite an der Blende markiert. Brenner: Topf, Krone und Deckel, der Sitz des Topfs auf dem Muldenboden markiert. Flamme: der Ring der inneren Kegel und alle 26 Zungen. Pfannenträger: Rahmen, Beine und Finger. Der Fahnenemitter ist der 7,5-mm-Auslassring an den Zungenspitzen (D2). Das Gehäuse ist keine Thermikregion dieses Assets und bleibt Geist."
+      },
+      {
+        "en": "Structure: the real load path. The pressed housing tray (0.8 mm walls) with the one-piece top plate and the well, the four rubber feet and the support ring through the foot centres at the base-contact anchor; the gas pipe from the tap to the burner; the burner body on its seat ring in the well (joint); the knob spindle into the brass gas tap (joint of the turning knob); the pan-support frame, legs and fingers with the leg seats on the plate (joints) and four mass lumps on the frame whose centroid is the support's centre of mass; masses of housing and burner at their centres. The flames carry no load: the member of each flame bone is a thin turned band, the flame sheet its tongues stand on, never the flame volume itself.",
+        "de": "Tragwerk: der reale Lastpfad. Die gepresste Gehäusewanne (0,8 mm Wände) mit der einteiligen Deckplatte und der Mulde, die vier Gummifüße und der Auflagering durch die Fußmitten am Anker base-contact; die Gasleitung vom Hahn zum Brenner; der Brennerkörper auf seinem Sitzring in der Mulde (Gelenk); die Knebelspindel in den Messing-Gashahn (Gelenk des drehenden Knebels); Rahmen, Beine und Finger des Pfannenträgers mit den Beinsitzen auf der Platte (Gelenke) und vier Massenklumpen auf dem Rahmen, deren Schwerpunkt der des Trägers ist; Massen von Gehäuse und Brenner in ihren Schwerpunkten. Die Flammen tragen keine Last: der Stab jedes Flammenknochens ist ein dünnes gedrehtes Band, die Flammenschicht, auf der die Zungen stehen, nie das Flammenvolumen selbst."
+      }
+    ],
+    "100": [
+      {
+        "en": "Body at 15 mm: housing, top and feet are one rounded block of 0.30 m by 0.497 m (the 10 mm overhang, the 7.5 mm feet, bead, slots and well are below the feature); the knob is a 26 mm turned stub without ridge; burner cup, crown and cap are one turned puck of 94 mm; the flame is twelve 15 mm tongues; the pan support keeps its frame, four legs and four fingers as 10 by 12 mm bars, drawn that way in the 1:100 drawings.",
+        "de": "Körper bei 15 mm: Gehäuse, Platte und Füße sind ein gerundeter Block von 0,30 m mal 0,497 m (der 10-mm-Überstand, die 7,5-mm-Füße, Sicke, Schlitze und Mulde liegen unter dem Merkmal); der Knebel ist ein gedrehter Stumpf von 26 mm ohne Steg; Topf, Krone und Deckel des Brenners sind eine gedrehte Scheibe von 94 mm; die Flamme sind zwölf Zungen von 15 mm; der Pfannenträger behält Rahmen, vier Beine und vier Finger als Stäbe von 10 mal 12 mm, so wie die Zeichnungen 1:100 sie zeigen."
+      },
+      {
+        "en": "Thermal: the plate is the top 15 mm of the block with its underside on the housing marked; knob, burner (seat marked), flame crown and pan support reference their body solids; the plume emitter is a 15 mm outlet ring at the tongue tips.",
+        "de": "Thermik: die Platte sind die oberen 15 mm des Blocks, ihre Unterseite auf dem Gehäuse markiert; Knebel, Brenner (Sitz markiert), Flammenkranz und Pfannenträger verweisen auf ihre Körper; der Fahnenemitter ist ein 15-mm-Auslassring an den Zungenspitzen."
+      },
+      {
+        "en": "Structure: the housing tray merged with the overhang, the top plate as a 15 mm slab with the burner opening, the support ring of 15 mm at the anchor, burner on a 15 mm seat ring, knob spindle of 15 mm into the tap, the pan support's bars, four mass lumps on the frame, a ring member for the flame bone, the crown and two 15 mm tongues for the flame tip; feet, pipe and leg seats are merged.",
+        "de": "Tragwerk: die Gehäusewanne mit dem Überstand zusammengefasst, die Deckplatte als 15-mm-Scheibe mit der Brenneröffnung, der Auflagering von 15 mm am Anker, der Brenner auf einem 15-mm-Sitzring, die Knebelspindel von 15 mm in den Hahn, die Stäbe des Pfannenträgers, vier Massenklumpen auf dem Rahmen, ein Ringstab für den Flammenknochen, der Kranz und zwei 15-mm-Zungen für die Flammenspitze; Füße, Leitung und Beinsitze sind zusammengefasst."
+      }
+    ],
+    "200": [
+      {
+        "en": "Body at 30 mm: the hob is one rounded block of 0.30 m by 0.497 m by 40 mm with the knob as a 30 mm stub on its fascia; the burner is a 30 mm turned puck, the flame a 30 mm crown ring standing on the cap rim, open in the middle so the cap shows through; the pan support is its frame of 30 mm bars on four 30 mm posts (30 mm, the feature of the scale, keep the bars printable to the end of the band at 1:350) with the open gap under it, as the 1:200 drawing draws the separate legs; the fingers are merged.",
+        "de": "Körper bei 30 mm: das Kochfeld ist ein gerundeter Block von 0,30 m mal 0,497 m mal 40 mm mit dem Knebel als 30-mm-Stumpf an der Blende; der Brenner ist eine gedrehte Scheibe von 30 mm, die Flamme ein Kranzring von 30 mm auf dem Deckelrand, in der Mitte offen, so dass der Deckel durchscheint; der Pfannenträger ist sein Rahmen aus 30-mm-Stäben auf vier Pfosten von 30 mm (30 mm, das Merkmal des Maßstabs, halten die Stäbe bis zum Bandende bei 1:350 druckbar) mit der offenen Lücke darunter, so wie die Zeichnung 1:200 die einzelnen Beine zeichnet; die Finger sind zusammengefasst."
+      },
+      {
+        "en": "Thermal: the plate is the top 30 mm of the block (underside on the housing marked), the knob its stub (back marked), burner (seat marked), the crown references its body, the pan support is its four real 10 by 12 mm bars as slender solids inside the 30 mm body bars (C2), so that its area stays the real grate's, the plume emitter is a 30 mm outlet ring above the crown.",
+        "de": "Thermik: die Platte sind die oberen 30 mm des Blocks (Unterseite auf dem Gehäuse markiert), der Knebel sein Stumpf (Rückseite markiert), Brenner (Sitz markiert), der Kranz verweist auf seinen Körper, der Pfannenträger sind seine vier wirklichen Stäbe von 10 mal 12 mm als schlanke Körper in den 30-mm-Körperstäben (C2), damit seine Fläche die des wirklichen Rosts bleibt, der Fahnenemitter ist ein 30-mm-Auslassring über dem Kranz."
+      },
+      {
+        "en": "Structure: the housing tray as a ring of 30 mm walls with the top plate as a 30 mm slab set into it, open around the burner, the support ring at the anchor, the burner, a 30 mm knob spindle, the pan-support frame and posts with four mass lumps, three 30 mm flame bands for the flame bones, which carry no load; joints are merged into their members.",
+        "de": "Tragwerk: die Gehäusewanne als Ring aus 30-mm-Wänden mit der Deckplatte als darin eingesetzte 30-mm-Scheibe, um den Brenner offen, der Auflagering am Anker, der Brenner, eine 30-mm-Knebelspindel, Rahmen und Pfosten des Pfannenträgers mit vier Massenklumpen, drei 30-mm-Flammenbänder für die Flammenknochen, die keine Last tragen; die Gelenke gehen in ihren Stäben auf."
+      }
+    ],
+    "500": [
+      {
+        "en": "Body at 75 mm: a crisp massing of the hob. Housing, top and feet are one 40 mm slab of 0.30 m by 0.497 m; the knob is a 30 mm turned stub on the fascia; burner, cap and flame are one turned crown of 124 mm with a conical top; the pan support is its square frame of 20 mm bars on two pairs of 20 mm posts with the gap under it, so the silhouette stays a hob with a pan support and not a block.",
+        "de": "Körper bei 75 mm: eine klare Massenform des Kochfelds. Gehäuse, Platte und Füße sind eine 40-mm-Scheibe von 0,30 m mal 0,497 m; der Knebel ist ein gedrehter 30-mm-Stumpf an der Blende; Brenner, Deckel und Flamme sind eine gedrehte Krone von 124 mm mit kegeligem Abschluss; der Pfannenträger ist sein quadratischer Rahmen aus 20-mm-Stäben auf zwei Paaren von 20-mm-Pfosten mit der Lücke darunter, damit der Umriss ein Kochfeld mit Pfannenträger bleibt und kein Block."
+      },
+      {
+        "en": "Thermal at 75 mm: the plate is the top 20 mm of the slab (underside marked), the knob its stub (back marked), the burner the lower 12 mm of the crown (seat marked), the flame its conical top, the pan support its four real 10 by 12 mm bars as slender solids (C2) inside the 20 mm body frame.",
+        "de": "Thermik bei 75 mm: die Platte sind die oberen 20 mm der Scheibe (Unterseite markiert), der Knebel sein Stumpf (Rückseite markiert), der Brenner die unteren 12 mm der Krone (Sitz markiert), die Flamme ihr kegeliger Abschluss, der Pfannenträger seine vier wirklichen Stäbe von 10 mal 12 mm als schlanke Körper (C2) im 20-mm-Körperrahmen."
+      },
+      {
+        "en": "Structure at 75 mm: the housing tray as a ring of 40 mm walls with a 20 mm top slab set into it, open around the burner, the support slab over the foot rectangle at the anchor, the burner crown, a 20 mm knob spindle, the pan-support frame and posts with four mass lumps, three 20 mm flame bands for the flame bones.",
+        "de": "Tragwerk bei 75 mm: die Gehäusewanne als Ring aus 40-mm-Wänden mit einer darin eingesetzten 20-mm-Deckscheibe, um den Brenner offen, die Auflagescheibe über dem Fußrechteck am Anker, die Brennerkrone, eine 20-mm-Knebelspindel, Rahmen und Pfosten des Pfannenträgers mit vier Massenklumpen, drei 20-mm-Flammenbänder für die Flammenknochen."
+      }
+    ]
+  }
+}

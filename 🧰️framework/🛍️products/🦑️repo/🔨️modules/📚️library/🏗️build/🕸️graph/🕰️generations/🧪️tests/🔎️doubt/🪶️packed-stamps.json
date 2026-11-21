@@ -1,0 +1,20 @@
+{
+  "files": 512,
+  "digests": 512,
+  "published": [
+    "listing",
+    "missing",
+    "nested",
+    "present",
+    "resolved"
+  ],
+  "excluded": [
+    "missing",
+    "nested",
+    "present",
+    "resolved"
+  ],
+  "publishedReads": 5,
+  "settledReads": 4,
+  "maximumBytes": 1048576
+}

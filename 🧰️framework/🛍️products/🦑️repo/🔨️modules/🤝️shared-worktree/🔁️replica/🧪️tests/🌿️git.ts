@@ -1,22 +1,28 @@
-import {afterAll,expect,test} from "bun:test";
+import {afterAll,expect,spyOn,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import stagePriority from "./🧫️fixtures/🧾️stage-priority.json" with {type:"json"};
 import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,statSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
-import {tmpdir} from "node:os";
+import {devNull,tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import * as journal from "../../📒️journal/🟦️.ts";
+import {authorisePacksV1} from "../🧷️packgate/🟦️.ts";
 import {readEventsV1,readHeadV1,listOriginsV1,appendEventsV1,formatHlcV1,type FleetEventV1} from "../../📒️journal/🟦️.ts";
 import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {gitSharedV1} from "../../🚧️boundary/🟦️.ts";
-import {gitStateV1,gitViewV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,rebaseRequestedV1,requestRebaseV1} from "../../🌿️git/🟦️.ts";
+import {gitStateV1,gitViewV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexRealmV1,rebaseRequestedV1,requestRebaseV1,publishIndexV1,type IndexHostV1} from "../../🌿️git/🟦️.ts";
+import * as gitControl from "../../🌿️git/🟦️.ts";
 import {fleetReportV1,readViewLinesV1} from "../../🩺️attest/🟦️.ts";
 import {runReplicaCommandV1} from "../⌨️command/🟦️.ts";
 import {closeReplicaV1,followOnceV1,joinV1,repairRequestedV1,repairV1,requestRepairV1,openReplicaV1,publishOnceV1,runV1,seedV1,statusV1,verifyV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
 
 type Machine={name:string;options:ReplicaOptionsV1;events:ReplicaEventV1[];replica?:ReplicaV1};
 const scratch:string[]=[],fast={pollMilliseconds:10,scanSeconds:900,debounceMilliseconds:5,persistMilliseconds:0};
-const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`replica-git-${label}-`));scratch.push(path);return path;};
+const temp=(label:string)=>{const path=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),`replica-git-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
-const posixTest=process.platform==="win32"||Bun.spawnSync(["git","--version"]).exitCode!==0?test.skip:test;
-const environment={...process.env,GIT_AUTHOR_NAME:"t",GIT_AUTHOR_EMAIL:"t@example.test",GIT_COMMITTER_NAME:"t",GIT_COMMITTER_EMAIL:"t@example.test",GIT_CONFIG_GLOBAL:"/dev/null",GIT_CONFIG_NOSYSTEM:"1"};
+const gitAvailable=Bun.spawnSync(["git","--version"]).exitCode===0;
+const posixTest=process.platform==="win32"||!gitAvailable?test.skip:test;
+const environment={...process.env,GIT_AUTHOR_NAME:"t",GIT_AUTHOR_EMAIL:"t@example.test",GIT_COMMITTER_NAME:"t",GIT_COMMITTER_EMAIL:"t@example.test",GIT_CONFIG_GLOBAL:devNull,GIT_CONFIG_NOSYSTEM:"1"};
 function cli(who:Machine,args:string[],input?:string,extra:Record<string,string>={}):string{
  const result=Bun.spawnSync(["git",...args],{cwd:who.options.worktree,env:{...environment,...extra},stdin:input===undefined?undefined:Buffer.from(input),stdout:"pipe",stderr:"pipe"});
  if(result.exitCode!==0)throw Error(`git ${args.join(" ")}: ${result.stderr.toString()}`);
@@ -402,7 +408,10 @@ posixTest("three real worktrees attest the same view, a local-only refused symli
    expect((await diff(server)).exitCode).toBe(0);
    const deep=Array.from({length:9},(_,index)=>String(index).repeat(30)).join("/");
    symlinkSync("/etc/hosts",at(worker,"local-link"));mkdirSync(at(worker,deep),{recursive:true});writeFileSync(at(worker,`${deep}/leaf.txt`),"l\n");
-   await until(async()=>(await statusV1(worker.options)).refusedPaths.recent.some(item=>item.path==="local-link"));
+   await until(async()=>{
+    const recorded=(await statusV1(worker.options)).refusedPaths.recent;
+    return recorded.some(item=>item.path==="local-link")&&recorded.some(item=>item.reason==="too-long"&&`${deep}/leaf.txt`.startsWith(item.path));
+   });
    const recorded=(await statusV1(worker.options)).refusedPaths.recent;
    expect(recorded.find(item=>item.path==="local-link")).toMatchObject({reason:"unsafe-link"});
    expect(recorded.some(item=>item.reason==="too-long"&&`${deep}/leaf.txt`.startsWith(item.path))).toBe(true);
@@ -427,19 +436,19 @@ posixTest("untracked files created and deleted on one machine reach every attest
  const {store,machines}=await fleet(["g1-server","g1-m01","g1-m02"]),controller=new AbortController();
  for(const who of machines)await shut(who);
  const options=(who:Machine):ReplicaOptionsV1=>({...who.options,attestMilliseconds:100,viewMilliseconds:3_600_000,viewDebounceMilliseconds:50,deltaDebounceMilliseconds:50}),runs=machines.map(who=>runV1(options(who),controller.signal,event=>who.events.push(event)));
- const verdicts:string[]=[];
- const until=async(condition:(report:Awaited<ReturnType<typeof fleetReportV1>>)=>boolean):Promise<number>=>{const began=Date.now();for(;;){const report=await fleetReportV1(store);for(const row of report.rows)verdicts.push(row.verdict);if(condition(report))return Date.now()-began;if(Date.now()-began>60_000)throw Error(`Timed out: ${JSON.stringify(report.rows.map(row=>[row.originId,row.verdict,row.view]))}`);await Bun.sleep(25);}};
+ const divergences:Awaited<ReturnType<typeof fleetReportV1>>["differing"][number][]=[];
+ const until=async(condition:(report:Awaited<ReturnType<typeof fleetReportV1>>)=>boolean):Promise<number>=>{const began=Date.now();for(;;){const report=await fleetReportV1(store);if(report.rows.some(row=>row.verdict==="diverged"))divergences.push(...report.differing);if(condition(report))return Date.now()-began;if(Date.now()-began>60_000)throw Error(`Timed out: ${JSON.stringify(report.rows.map(row=>[row.originId,row.verdict,row.view]))}`);await Bun.sleep(25);}};
  try{
   await until(report=>report.ok&&report.rows.length===3&&report.rows.every(row=>row.view!==null&&row.view.stale!==true));
   const [,worker]=machines as [Machine,Machine,Machine];
-  verdicts.length=0;
+  divergences.length=0;
   for(let n=0;n<40;n++){mkdirSync(at(worker,`burst/${n%4}`),{recursive:true});writeFileSync(at(worker,`burst/${n%4}/f${n}.txt`),`${n}\n`);}
   const created=await until(report=>report.ok&&report.rows.every(row=>row.view!==null&&row.view.untracked===40&&row.view.stale!==true));
   rmSync(at(worker,"burst"),{recursive:true,force:true});
   const removed=await until(report=>report.ok&&report.rows.every(row=>row.view!==null&&row.view.untracked===0&&row.view.stale!==true));
   expect(created).toBeLessThan(20_000);
   expect(removed).toBeLessThan(20_000);
-  expect(verdicts).not.toContain("diverged");
+  expect(divergences).toEqual([]);
   for(const who of machines)expect((await gitViewV1(who.options.worktree))!.lines).toEqual([]);
  }finally{controller.abort();await Promise.all(runs);}
 },120_000);
@@ -709,3 +718,336 @@ posixTest("two machines editing the same file before either published end on ide
   expect(same(machines,who=>contents(who,files))).toBe(true);
  }finally{for(const who of machines)await shut(who);}
 },120_000);
+
+test.skipIf(!gitAvailable)("a polling worker applies the current stage before Git health can block",async()=>{
+ const {machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const {staged:stagedFile}=stagePriority,database=new Database(":memory:"),controller=new AbortController();
+ const entered=Promise.withResolvers<void>(),release=Promise.withResolvers<void>(),check=gitControl.gitBrokenV1;
+ let checking:ReturnType<typeof spyOn>|undefined,running:ReturnType<typeof runV1>|undefined,timer:ReturnType<typeof setTimeout>|undefined;
+ try{
+  await shut(worker);
+  const before=tree(worker);
+  write(server,stagedFile.path,stagedFile.text);
+  cli(server,["add","--",stagedFile.path]);
+  const want=tree(server);
+  await publishOnceV1(server.replica!,undefined,[".git/index",stagedFile.path]);
+  checking=spyOn(gitControl,"gitBrokenV1").mockImplementation(async(worktree,...rest)=>{
+   if(worktree===worker.options.worktree){entered.resolve();await release.promise;}
+   return check(worktree,...rest);
+  });
+  running=runV1({...worker.options,watch:false},controller.signal,event=>worker.events.push(event));
+  await Promise.race([entered.promise,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error("the worker did not reach Git health")),5000);})]);
+  const oracle=database.query("select ?1 as tree, ?1 <> ?2 as advances").get(want,before) as {tree:string;advances:number};
+  expect(oracle.advances).toBe(1);
+  expect((await gitStateV1(worker.options.worktree)).indexTree).toBe(oracle.tree);
+  expect(worker.events.some(event=>event.event==="applied"&&event.stage==="git")).toBe(true);
+ }finally{
+  clearTimeout(timer);controller.abort();release.resolve();await running?.catch(()=>{});
+  checking?.mockRestore();database.close();await shut(server);await shut(worker);
+ }
+},20000);
+
+posixTest("ready stage registers settle before unrelated worktree payload",async()=>{
+ const {machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const {staged:stagedFile,unrelated}=stagePriority,observed:string[]=[];
+ const database=new Database(":memory:");
+ try{
+  write(server,stagedFile.path,stagedFile.text);
+  cli(server,["add","--",stagedFile.path]);
+  write(server,unrelated.path,unrelated.text);
+  const oid=cli(server,["rev-parse",":"+stagedFile.path]).trim();
+  const stagedObject=".git/objects/"+oid.slice(0,2)+"/"+oid.slice(2);
+  await shut(worker);
+  worker.replica=await openReplicaV1(worker.options,event=>{
+   worker.events.push(event);
+   if(event.event!=="applied"||event.stage!=="git")return;
+   expect(existsSync(at(worker,stagedObject))).toBe(true);
+   expect(readFileSync(at(worker,stagedFile.path),"utf8")).toBe(stagedFile.text);
+   observed.push("git-object");
+   if(existsSync(at(worker,unrelated.path)))observed.push("worktree");
+   observed.push("stage");
+  });
+  await publishOnceV1(server.replica!);
+  await followOnceV1(worker.replica!);
+  if(!observed.includes("worktree")&&existsSync(at(worker,unrelated.path)))observed.push("worktree");
+  const oracle=database.query("SELECT value FROM json_each(?) ORDER BY key").all(JSON.stringify(stagePriority.order));
+  expect(observed).toEqual(oracle.map(row=>(row as {value:string}).value));
+  expect(tree(worker)).toBe(tree(server));
+  expect(readFileSync(at(worker,unrelated.path),"utf8")).toBe(unrelated.text);
+ }finally{database.close();for(const machine of machines)await shut(machine);}
+},20000);
+
+
+posixTest("an exact incremental stage applies before unrelated pack hydration completes",async()=>{
+ const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const {staged:stagedFile,unrelated}=stagePriority,db=new Database(":memory:");
+ let release!:()=>void,enter!:()=>void,following:Promise<unknown>|undefined;
+ const held=new Promise<void>(done=>{release=done;}),entered=new Promise<void>(done=>{enter=done;});
+ let copier:ReturnType<typeof spyOn>|undefined,timer:ReturnType<typeof setTimeout>|undefined;
+ try{
+  const baseline=tree(worker);
+  write(server,stagedFile.path,stagedFile.text);
+  cli(server,["add","--",stagedFile.path]);
+  const need=cli(server,["rev-parse",":"+stagedFile.path]).trim(),object=".git/objects/"+need.slice(0,2)+"/"+need.slice(2),target=tree(server);
+  await publishOnceV1(server.replica!,undefined,[object]);
+  await followOnceV1(worker.replica!);
+  expect(existsSync(at(worker,object))).toBe(true);
+  expect(tree(worker)).toBe(baseline);
+  await publishOnceV1(server.replica!,undefined,[".git/index",stagedFile.path]);
+  const unplanned=cli(server,["hash-object","-w","--stdin"],unrelated.text).trim();
+  const stem="pack-"+cli(server,["pack-objects",at(server,".git/objects/pack/pack")],unplanned+"\n").trim();
+  const path=".git/objects/pack/"+stem+".pack",stored=await journal.storeBlobV1(store,server.name,at(server,path));
+  const authorHead=(await journal.readHeadV1(store,server.name))!,clock=journal.parseHlcV1(authorHead.hlc);
+  await journal.appendEventsV1(store,server.name,[{version:1,hlc:journal.formatHlcV1({ms:clock.ms,counter:clock.counter+1},server.name),operation:"put",path,sha256:stored.sha256,bytes:stored.bytes,executable:false,base:null}]);
+  const expectedBlob=journal.blobPathV1(store,stored.sha256),copy=journal.copyVerifiedV1;
+  copier=spyOn(journal,"copyVerifiedV1").mockImplementation(async(...input:Parameters<typeof journal.copyVerifiedV1>)=>{
+   if(input[0]===expectedBlob){enter();await held;}
+   return copy(...input);
+  });
+  following=followOnceV1(worker.replica!);
+  await Promise.race([entered,new Promise<never>((_,fail)=>{timer=setTimeout(()=>fail(Error("the unrelated private pack did not reach hydration")),3000);})]);
+  expect(existsSync(at(worker,path))).toBe(false);
+  expect(worker.replica!.queue.has(path)).toBe(true);
+  const oracle=db.query("select ?1 <> ?2 as advances, ?3 as stage").get(target,baseline,target) as {advances:number;stage:string};
+  expect(oracle.advances).toBe(1);
+  expect(tree(worker)).toBe(oracle.stage);
+  release();await following;
+  expect(existsSync(at(worker,path))).toBe(true);
+  expect(worker.replica!.queue.size).toBe(0);
+ }finally{
+  clearTimeout(timer);release();await following?.catch(()=>undefined);copier?.mockRestore();
+  db.close();await shut(server);await shut(worker);
+ }
+},20000);
+
+
+posixTest("an incremental stage that requires the advertised pack settles in the same follow",async()=>{
+ const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const {staged:stagedFile}=stagePriority,db=new Database(":memory:");
+ let release!:()=>void,enter!:()=>void,following:Promise<unknown>|undefined;
+ const held=new Promise<void>(done=>{release=done;}),entered=new Promise<void>(done=>{enter=done;});
+ let copier:ReturnType<typeof spyOn>|undefined,timer:ReturnType<typeof setTimeout>|undefined;
+ try{
+  const before=await readHeadV1(store,server.name),baseline=tree(worker);
+  write(server,stagedFile.path,stagedFile.text);
+  cli(server,["add","--",stagedFile.path]);
+  const oid=cli(server,["rev-parse",":"+stagedFile.path]).trim(),loose=".git/objects/"+oid.slice(0,2)+"/"+oid.slice(2),target=tree(server);
+  const stem="pack-"+cli(server,["pack-objects",at(server,".git/objects/pack/pack")],oid+"\n").trim();
+  const pack=".git/objects/pack/"+stem+".pack",idx=".git/objects/pack/"+stem+".idx";
+  rmSync(at(server,loose));await authorisePacksV1(server.options.worktree,{publish:[stem]});
+  await publishOnceV1(server.replica!,undefined,[pack,idx]);
+  await publishOnceV1(server.replica!,undefined,[".git/index",stagedFile.path]);
+  const events=(await readEventsV1(store,server.name,before)).events,stagePath=INDEX_PREFIX_V1+stagedFile.path;
+  const order=events.flatMap(event=>event.operation==="put"&&event.path===pack?["pack"]:event.operation==="put"&&event.path===idx?["idx"]:event.path===stagePath?["stage"]:[]);
+  const expected=db.query("select value from json_each(?) order by key").all(JSON.stringify(["pack","idx","stage"])).map(row=>(row as {value:string}).value);
+  expect(order).toEqual(expected);
+  expect(events.some(event=>event.path===loose)).toBe(false);
+  expect(existsSync(at(worker,loose))).toBe(false);
+  const source=journal.blobPathV1(store,server.replica!.manifest.get(pack)!.sha256!),copy=journal.copyVerifiedV1;
+  copier=spyOn(journal,"copyVerifiedV1").mockImplementation(async(...input:Parameters<typeof journal.copyVerifiedV1>)=>{
+   if(input[0]===source){enter();await held;}
+   return copy(...input);
+  });
+  worker.events.length=0;following=followOnceV1(worker.replica!);
+  await Promise.race([entered,new Promise<never>((_,fail)=>{timer=setTimeout(()=>fail(Error("the required private pack did not reach hydration")),3000);})]);
+  expect(existsSync(at(worker,pack))).toBe(false);
+  expect(worker.replica!.queue.has(stagePath)).toBe(true);
+  expect(tree(worker)).toBe(baseline);
+  expect(worker.events.some(event=>event.event==="applied"&&event.stage==="git")).toBe(false);
+  release();await following;
+  expect(worker.events.some(event=>event.event==="applied"&&event.stage==="git")).toBe(true);
+  expect(tree(worker)).toBe(target);
+  expect(worker.replica!.queue.size).toBe(0);
+  expect(existsSync(at(worker,idx))).toBe(true);
+  expect(existsSync(at(worker,loose))).toBe(false);
+ }finally{
+  clearTimeout(timer);release();await following?.catch(()=>undefined);copier?.mockRestore();
+  db.close();await shut(server);await shut(worker);
+ }
+},20000);
+
+posixTest("one intake round only materialises the final winner across consecutive journal spans",async()=>{
+ const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const {path,spans}=stagePriority.journal,database=new Database(":memory:"),now=Date.now();
+ try{
+  let ordinal=0;
+  const events=spans.flatMap(({target,count})=>Array.from({length:count},():FleetEventV1=>({version:1,hlc:formatHlcV1({ms:now,counter:ordinal++},server.name),operation:"link",path,target,base:null})));
+  await appendEventsV1(store,server.name,events);
+  worker.events.length=0;
+  const result=await followOnceV1(worker.replica!);
+  const oracle=database.query("SELECT count(DISTINCT ?1) AS applications, sum(json_extract(value, '$.count')) AS events FROM json_each(?2)").get(path,JSON.stringify(spans));
+  expect({applications:result.applied,events:result.events}).toEqual(oracle);
+  expect(readFileSync(at(worker,path),"utf8")).toBe(readFileSync(at(worker,spans.at(-1)!.target),"utf8"));
+ }finally{database.close();for(const machine of machines)await shut(machine);}
+},20000);
+
+posixTest("the archivist publishes exact staged loose objects before unrelated payload",async()=>{
+ const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const {staged:stagedFile,unrelated}=stagePriority,database=new Database(":memory:");
+ try{
+  const before=await readHeadV1(store,server.name);
+  const objectPath=(oid:string)=>".git/objects/"+oid.slice(0,2)+"/"+oid.slice(2);
+  const unrelatedObject=objectPath(cli(server,["hash-object","-w","--stdin"],unrelated.text).trim());
+  write(server,stagedFile.path,stagedFile.text);
+  cli(server,["add","--",stagedFile.path]);
+  const object=objectPath(cli(server,["rev-parse",":"+stagedFile.path]).trim());
+  write(server,unrelated.path,unrelated.text);
+  await publishOnceV1(server.replica!,undefined,[".git/index",stagedFile.path,unrelated.path]);
+  const published=(await readEventsV1(store,server.name,before)).events.map(event=>event.path);
+  const oracle=database.query("SELECT value FROM json_each(?) ORDER BY key").all(JSON.stringify(stagePriority.order)).map(row=>(row as {value:string}).value);
+  const names=new Map([[object,"git-object"],[INDEX_PREFIX_V1+stagedFile.path,"stage"],[unrelated.path,"worktree"]]);
+  expect(published.flatMap(path=>names.has(path)?[names.get(path)!]:[])).toEqual(oracle);
+  expect(published).not.toContain(unrelatedObject);
+  expect(published.indexOf(stagedFile.path)).toBeGreaterThanOrEqual(0);
+  expect(published.indexOf(stagedFile.path)).toBeLessThan(published.indexOf(INDEX_PREFIX_V1+stagedFile.path));
+  await followOnceV1(worker.replica!);
+  expect(tree(worker)).toBe(tree(server));
+ }finally{database.close();for(const machine of machines)await shut(machine);}
+},20000);
+
+test.skipIf(!gitAvailable)("certifies equal stage semantics after its original index signature moves during prepare",async()=>{
+ const sql=new Database(":memory:");
+ try{
+  for(const row of stagePriority.signatureMoves){
+   const who=machine("signature",temp("store")),file=stagePriority.staged,index=at(who,".git/index");
+   cli(who,["init","-q","-b","main"]);
+   const initial=tree(who),base={hlc:formatHlcV1({ms:1,counter:0},"g1-server"),operation:"link" as const,target:"tree "+initial};
+   write(who,file.path,file.text);cli(who,["add","--",file.path]);
+   const prior=tree(who),oid=cli(who,["rev-parse",":"+file.path]).trim(),events:string[]=[];
+   let after:string|undefined;
+   const host:IndexHostV1={worktree:who.options.worktree,server:true,archivist:"g1-server",now:Date.now,base:()=>base,
+    each:visit=>visit(INDEX_BASE_V1,base),held:visit=>visit(INDEX_BASE_V1,base),pending:()=>new Map(),
+    emit:async batch=>{events.push(...batch.map(event=>event.path));return batch.map(()=>base.hlc);},settle:()=>{},enqueue:()=>{},say:()=>{},
+   };
+   const result=await publishIndexV1(host,undefined,async(oids,paths)=>{
+    expect(oids).toEqual([oid]);expect(paths).toEqual([file.path]);
+    if(row.change==="content"){write(who,file.path,file.text+"other\n");cli(who,["add","--",file.path]);}
+    after=tree(who);const stamp=statSync(index);utimesSync(index,stamp.atime,new Date(stamp.mtimeMs+2000));
+    return true;
+   });
+   const expected=sql.query("select ?1=?2 allowed").get(prior,after) as {allowed:number};
+   expect(Boolean(expected.allowed)).toBe(row.published);
+   expect(result).toMatchObject({published:expected.allowed,waiting:!expected.allowed});
+   expect(events).toEqual(row.published?[INDEX_PREFIX_V1+file.path]:[]);
+  }
+ }finally{sql.close();}
+},20000);
+
+test.skipIf(!gitAvailable)("publishes the committed author index while its writer holds the lock",async()=>{
+ const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const row=stagePriority.staged,index=at(server,".git/index"),lock=index+".lock",database=new Database(":memory:");
+ try{
+  const cursor=(await readHeadV1(store,server.name))!;
+  write(server,row.path,row.text);cli(server,["add","--",row.path]);
+  const oid=cli(server,["rev-parse",":"+row.path]).trim(),object=".git/objects/"+oid.slice(0,2)+"/"+oid.slice(2);
+  const original=readFileSync(index),owner="fixture owns the writer lock";
+  writeFileSync(lock,owner);
+  await publishOnceV1(server.replica!,undefined,[".git/index",row.path]);
+  expect(readFileSync(index)).toEqual(original);expect(readFileSync(lock,"utf8")).toBe(owner);
+  const events=(await readEventsV1(store,server.name,cursor)).events;
+  const order=database.query("with rows as (select key i,json_extract(value,'$.path') name from json_each(?1)) select min(i) object,min(case when name=?3 then i end) entry from rows where name in (?2,?3)").get(JSON.stringify(events),object,INDEX_PREFIX_V1+row.path) as {object:number|null;entry:number|null};
+  expect(order.object).not.toBeNull();expect(order.entry).not.toBeNull();expect(order.object!).toBeLessThan(order.entry!);
+  expect(events.find(event=>event.path===INDEX_PREFIX_V1+row.path)).toMatchObject({operation:"link",target:"100644 "+oid});
+  expect((await followOnceV1(worker.replica!)).queued).toBe(0);
+  expect(cli(worker,["rev-parse",":"+row.path]).trim()).toBe(oid);
+ }finally{database.close();rmSync(lock,{force:true});for(const machine of machines)await shut(machine);}
+},20000);
+
+posixTest("an uncertifiable locked author stage retries unchanged when its missing object returns",async()=>{
+ const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const stagedFile=stagePriority.staged,abort=new AbortController(),lock=at(server,".git/index.lock");
+ const predicate=async(test:()=>Promise<boolean>):Promise<void>=>{
+  const deadline=Date.now()+8000;
+  while(!await test()){
+   if(Date.now()>deadline)throw Error("The unchanged stage was not retried");
+   await Bun.sleep(40);
+  }
+ };
+ let daemon:Promise<void>|undefined;
+ try{
+  const previous=(await readHeadV1(store,server.name))!;
+  await shut(server);
+  daemon=runV1({...server.options,watch:false,gitCheckMilliseconds:600000,hotMilliseconds:30},abort.signal,event=>server.events.push(event));
+  await predicate(async()=>existsSync(at(server,".cache/f/health.json")));
+  await Bun.sleep(400);
+  write(server,stagedFile.path,stagedFile.text);
+  cli(server,["add","--",stagedFile.path]);
+  const wanted=cli(server,["rev-parse",":"+stagedFile.path]).trim(),signature=statSync(at(server,".git/index")).mtimeMs;
+  const object=at(server,".git/objects/"+wanted.slice(0,2)+"/"+wanted.slice(2)),material=readFileSync(object);
+  rmSync(object);writeFileSync(lock,"test holds the author index","utf8");
+  await predicate(async()=>server.events.some(event=>event.stage==="git"&&(event.reason==="write-tree-failed"||event.reason==="index-busy")));
+  expect(statSync(at(server,".git/index")).mtimeMs).toBe(signature);
+  expect((await readEventsV1(store,server.name,previous)).events.some(event=>event.path===INDEX_PREFIX_V1+stagedFile.path)).toBe(false);
+  writeFileSync(object,material);rmSync(lock);
+  await predicate(async()=>{
+   await followOnceV1(worker.replica!);
+   return cli(worker,["rev-parse",":"+stagedFile.path]).trim()===wanted;
+  });
+  expect(readFileSync(at(worker,stagedFile.path),"utf8")).toBe(stagedFile.text);
+ }finally{
+  abort.abort();await daemon;rmSync(lock,{force:true});
+  for(const machine of machines)await shut(machine);
+ }
+},22000);
+
+test.skipIf(!gitAvailable)("observes the current index while another writer holds its lock",async()=>{
+ const database=new Database(":memory:");
+ try{
+  const expected=database.query("select json_extract(value,'$.treeKnown') known from json_each(?) order by key").values(JSON.stringify(stagePriority.observations));
+  for(const [position,observation] of stagePriority.observations.entries()){
+   const who=machine("observe",temp("store")),index=at(who,".git/index"),lock=index+".lock";
+   const file=stagePriority.staged;
+   cli(who,["init","-q","-b","main"]);
+   write(who,file.path,file.text);
+   cli(who,["add","--",file.path]);
+   const oid=cli(who,["rev-parse",":"+file.path]).trim();
+   if(observation.object==="missing")rmSync(at(who,".git/objects/"+oid.slice(0,2)+"/"+oid.slice(2)));
+   const original=readFileSync(index),owned="fixture holds Git's writer lock";
+   writeFileSync(lock,owned);
+   let observed:string|null;
+   try{
+    expect(()=>cli(who,["--no-optional-locks","write-tree"])).toThrow("index.lock");
+    observed=(await gitStateV1(who.options.worktree)).indexTree;
+    expect(Number(observed!==null)).toBe(expected[position]![0]);
+    expect(readFileSync(lock,"utf8")).toBe(owned);
+    expect(readFileSync(index)).toEqual(original);
+    const working=at(who,".cache/f/tmp");
+    if(existsSync(working))expect(readdirSync(working)).toEqual([]);
+   }finally{rmSync(lock,{force:true});}
+   if(observation.treeKnown)expect(observed).toBe(tree(who));
+   else expect(()=>tree(who)).toThrow();
+  }
+ }finally{database.close();}
+},20000);
+
+test.skipIf(!gitAvailable)("publishes the exact staged packed blob before its register",async()=>{
+ const {store,machines}=await fleet(["g1-server","g1-m01"]),[server,worker]=machines as [Machine,Machine];
+ const database=new Database(":memory:"),rows=stagePriority.packedObjects;
+ try{
+  const cursor=(await readHeadV1(store,server.name))!;
+  for(const row of rows)write(server,row.path,row.text);
+  cli(server,["add","--",...rows.map(row=>row.path)]);
+  const current=tree(server),oids=new Map(rows.map(row=>[row.path,cli(server,["rev-parse",":"+row.path]).trim()]));
+  const loosePath=(oid:string)=>".git/objects/"+oid.slice(0,2)+"/"+oid.slice(2);
+  const packedRow=rows.find(row=>row.storage==="packed")!,packed=oids.get(packedRow.path)!;
+  const name=cli(server,["pack-objects",at(server,".git/objects/pack/pack")],packed+"\n").trim();
+  rmSync(at(server,loosePath(packed)));
+  expect(cli(server,["cat-file","blob",packed])).toBe(packedRow.text);
+  const loose=rows.find(row=>row.storage==="loose")!;
+  await publishOnceV1(server.replica!,undefined,[loosePath(oids.get(loose.path)!),loose.path]);
+  await publishOnceV1(server.replica!,undefined,[".git/index",packedRow.path]);
+  const stream=(await readEventsV1(store,server.name,cursor)).events;
+  database.exec("create table event(position integer, path text, operation text);create table prerequisite(object text, register text)");
+  const insert=database.query("insert into event values(?,?,?)");
+  for(const [position,event] of stream.entries())insert.run(position,event.path,event.operation);
+  for(const [path,oid] of oids)database.query("insert into prerequisite values(?,?)").run(loosePath(oid),INDEX_PREFIX_V1+path);
+  const violations=database.query("select count(*) bad from prerequisite p where not exists (select 1 from event o join event s on s.path=p.register where o.path=p.object and o.operation='put' and s.operation='link' and o.position<s.position)").get();
+  expect(violations).toEqual({bad:0});
+  expect(stream.some(event=>event.path.endsWith(name+".pack"))).toBe(false);
+  expect((await followOnceV1(worker.replica!)).queued).toBe(0);
+  expect(tree(worker)).toBe(current);
+ }finally{
+  database.close();
+  for(const who of machines)await shut(who);
+ }
+},22000);

@@ -4,10 +4,10 @@ use super::*;
 
 //#region 🔬️Introspection
 //#region 🔬️IntrospectionBuilders
-struct VfsAccessibilityEntry {
+pub struct VfsAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    pub depth: usize,
+    depth: usize,
     pub control: semio_renderer_wgpu_scene_state::VfsAccessibilityControl,
 }
 
@@ -80,10 +80,10 @@ pub(super) fn append_vfs_accessibility_nodes(window_id: &str, tree: &semio_ui_re
     }
 }
 
-struct BlockListAccessibilityEntry {
+pub struct BlockListAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    pub depth: usize,
+    depth: usize,
     pub control: semio_renderer_wgpu_scene_state::BlockListAccessibilityControl,
 }
 
@@ -159,10 +159,10 @@ pub(super) fn append_block_list_accessibility_nodes(tree: &semio_ui_retained_tre
     }
 }
 
-struct EventFeedAccessibilityEntry {
+pub struct EventFeedAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    pub depth: usize,
+    depth: usize,
     pub control: semio_renderer_wgpu_scene_state::EventFeedAccessibilityControl,
 }
 
@@ -304,10 +304,10 @@ pub(super) fn append_event_feed_accessibility_nodes(tree: &semio_ui_retained_tre
     }
 }
 
-struct GraphTimelineAccessibilityEntry {
+pub struct GraphTimelineAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    pub depth: usize,
+    depth: usize,
     pub control: semio_renderer_wgpu_scene_state::GraphTimelineAccessibilityControl,
 }
 

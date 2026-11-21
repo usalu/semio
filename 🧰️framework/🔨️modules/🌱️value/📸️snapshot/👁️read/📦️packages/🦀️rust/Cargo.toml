@@ -20,6 +20,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "captured-snapshot-retirement"
+path = "../../🔗️source/🧪️tests/captured-retirement.rs"
+
 [features]
 testkit = ["dep:semio-framework-trace", "dep:semio-framework-value-testing-presence-retirement"]
 

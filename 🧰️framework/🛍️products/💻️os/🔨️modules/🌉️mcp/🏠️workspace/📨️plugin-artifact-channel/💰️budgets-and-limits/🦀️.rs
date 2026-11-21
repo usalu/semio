@@ -15,11 +15,59 @@ fn headless_budget(wall_us: u64) -> semio_framework::kernel::Budget {
 
 /// 🪪️ Runs `run` under the authoring identity a headless gateway issues to itself.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn with_headless_identity<T>(run: impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> T) -> T {
-    let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observer;
-    let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, observer).expect("headless authoring identity admission");
-    run(&mut identity)
+pub(crate) fn with_headless_identity<T>(run: impl FnOnce(&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<T, semio_plugin_guest_contract::TurnFault>) -> Result<T, semio_plugin_guest_contract::TurnFault> {
+    use semio_framework_value::native_encoding::{NativeEncodeControl, NativeEncodeRetirementRecipient};
+    use semio_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority, Observer};
+    use semio_plugin_guest_contract::identity_turn_fault;
+
+    let mut observer = |_| true;
+    let observer: &mut Observer<'_> = &mut observer;
+    let mut recipient = NativeEncodeRetirementRecipient::new();
+    let receipt = NativeEncodeControl::new(HEADLESS_ENCODING_BYTES, &mut *observer).pause().map_err(|(error, _)| identity_turn_fault(error))?;
+    let receipt = receipt.with_retirement_recipient(&mut recipient).map_err(|(error, _)| identity_turn_fault(error))?;
+    let mut identity = EntityIdentityAuthority::resume_retirement(receipt, observer);
+    let result = run(&mut identity);
+    identity.encode(close_headless_encoding).map_err(identity_turn_fault)?;
+    result
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+const HEADLESS_ENCODING_BYTES: usize = 1 << 24;
+
+/// ♻️ Funds each physical close step on the caller's explicit encoder slot.
+#[cfg(not(target_arch = "wasm32"))]
+fn close_headless_encoding(native: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<(), semio_framework_value::ValueError> {
+    use semio_framework_value::{RetainedCloneGrant, ValueError, ValueRefusalKind, retained_clone::OriginalEffectReply};
+    let grant = RetainedCloneGrant {
+        maximum_items: 4096,
+        maximum_copy_bytes: 65536,
+        maximum_capacity_bytes: HEADLESS_ENCODING_BYTES,
+        maximum_release_bytes: HEADLESS_ENCODING_BYTES,
+        maximum_depth: 256,
+    };
+    let pump = semio_framework_job::OriginalRetirementPump::new();
+    let mut work_left = u128::from(HEADLESS_WORK_FUEL);
+    let mut reply = None;
+    let mut recovering = false;
+    let mut stalled = false;
+    while native.has_retirement_owner() {
+        let fuel = native.retirement_work_demand(grant.maximum_copy_bytes)?.max(1);
+        if u128::from(fuel) > work_left { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "headless encoding retirement exceeded caller work")); }
+        let (issued, work) = pump.turn(fuel, u64::MAX, semio_framework_job::default_now_us, grant)?.with_effect(|effect| {
+            let output = OriginalEffectReply::borrow(&mut reply)?;
+            if recovering { native.recover_close_retirement_recipient_into(grant.maximum_copy_bytes, effect, output)?; }
+            else { native.close_retirement_recipient_into(grant.maximum_copy_bytes, effect, output)?; }
+            Ok::<(), ValueError>(())
+        })?.ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "headless encoding retirement turn was not admitted"))?;
+        issued?;
+        let step = reply.take().transpose().map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;
+        recovering = step.is_none();
+        let no_progress = work == 0 && step.is_none_or(|step| step.progress() == Default::default());
+        if stalled && no_progress { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "headless encoding retirement did not advance")); }
+        stalled = no_progress;
+        work_left = work_left.saturating_sub(work.max(1));
+    }
+    Ok(())
 }
 
 #[cfg(not(target_arch = "wasm32"))]

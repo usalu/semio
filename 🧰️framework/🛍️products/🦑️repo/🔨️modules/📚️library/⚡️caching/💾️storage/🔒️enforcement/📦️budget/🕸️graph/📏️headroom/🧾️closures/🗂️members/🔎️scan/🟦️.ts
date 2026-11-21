@@ -113,7 +113,7 @@ export async function verifyBuildGraphMembersDeepV1(root:string,control:MemberSc
 type Request=MemberReadRequestV1;
 const READ_CHUNK_V1=64;
 
-function packet(root:string,files:readonly Request[]):string{return JSON.stringify({files,imageRoot:root,remainingBytes:P.maximumProofBytes,root:process.cwd()});}
+function packet(root:string,files:readonly Request[],remainingBytes:number):string{return JSON.stringify({files,imageRoot:root,remainingBytes,root:process.cwd()});}
 
 async function rowsFor(root:string,group:string,pending:readonly Leaf[],leaves:readonly Leaf[],ports:MemberIndexPortsV1,control:MemberScanControlV1,counters:{refused:number},needAll=false):Promise<MemberRowV1[]>{
  const directory=join(root,...directoryOf(group).split("/")),rows:MemberRowV1[]=[],requests:Request[]=[],byPath=new Map(leaves.map(leaf=>[leaf.path,leaf]));
@@ -236,7 +236,7 @@ async function referencedClosuresV1(root:string,groups:readonly string[],ports:P
 
 /** 🏗️ Removes, under the shared hold of the graph image, the closure inventories no leaf of any group names: a leaf's references are proven by its index row (or read once more), an inventory younger than the grace may belong to a leaf still being written, and each batch is removed while every group's non-blocking writer lease is held and the references are proven again, so no writer can start naming an inventory that is being removed. Nothing is removed while any reference is unproven or a writer is busy. */
 export async function supersedeBuildGraphClosuresV1(root:string,ports:Pick<MemberIndexPortsV1,"lease"|"read">&Readonly<{queue?(kind:"selection"|"dataset"|"canonical",identity:string):Promise<Readonly<{release():void}>|undefined>}>,control:MemberScanControlV1,{dryRun=false,graceMilliseconds=3600000,now=Date.now(),maximumPending=65536,batch=256,attempts=8}:Readonly<{dryRun?:boolean;graceMilliseconds?:number;now?:number;maximumPending?:number;batch?:number;attempts?:number}>={}):Promise<ClosureSupersedeReportV1>{
- const groups=listBuildGraphMemberGroupsV1(root),known:LeafKnowledgeV1=new Map(),keys=[...new Map(groups.map(group=>{const[kind,identity]=group.split("/") as [string,string],key:LeaseKeyV1=[kind==="contexts"?"dataset":kind==="selections"?"selection":"canonical",identity??""];return[key.join("\0"),key] as const;})).values()];let unvouched=0,busy=0,removed=0,bytes=0,cancelled=false,candidates=0;
+ const groups=listBuildGraphMemberGroupsV1(root),cut=groups.join("\0"),known:LeafKnowledgeV1=new Map(),keys:LeaseKeyV1[]=[["canonical",""],...groups.flatMap<LeaseKeyV1>(group=>{const[kind,identity]=group.split("/");return identity?[[kind==="contexts"?"dataset":"selection",identity]]:[];})];let unvouched=0,busy=0,removed=0,bytes=0,cancelled=false,candidates=0;
  const done=()=>Object.freeze({groups:groups.length,unvouched,busy,candidates,removed,bytes,cancelled});
  const collect=(referenced:ReadonlySet<string>)=>{
   const rows:{path:string;key:string;allocated:number;proof:string}[]=[];
@@ -279,7 +279,8 @@ export async function supersedeBuildGraphClosuresV1(root:string,ports:Pick<Membe
   if(!held)break;
   try{
    const referenced=await referencedClosuresV1(root,groups,ports,control,maximumPending,known,now-graceMilliseconds);
-   if(!referenced){if(control.cancelled())cancelled=true;else unvouched++;break;}
+   if(control.cancelled()){cancelled=true;break;}
+   if(!referenced||listBuildGraphMemberGroupsV1(root).join("\0")!==cut){unvouched++;break;}
    for(const row of list.slice(from,from+batch)){
     if(referenced.has(row.key))continue;
     let current:BigIntStats;try{current=lstatSync(row.path,{bigint:true});}catch(error){if(absent(error))continue;throw error;}
@@ -387,10 +388,12 @@ function compactGroupIndexV1(root:string,group:string):void{
 /** 🧒️ Binds the closure read child: the captured worker, heap and wire bounds the closure proof uses, one cohort of requests per child under the caller's lease control, each leaf its own request so that its answer is its own. */
 export function closureReadChildPortV1(root:string,control:import("../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl):MemberIndexPortsV1["read"]{
  return async(requests,accept)=>{
-  await runClosureReadCohortsV1(requests.map(request=>[request]),worker,root,control,async rows=>packet(root,rows),async(text,rows)=>{
+  let remainingBytes:number=P.maximumProofBytes;
+  await runClosureReadCohortsV1(requests.map(request=>[request]),worker,root,control,async rows=>packet(root,rows,remainingBytes),async(text,rows)=>{
    const answer=JSON.parse(text) as MemberReadAnswerV1,request=rows[0]!;
    if(!answer||answer.version!==1||!Array.isArray(answer.rows)||answer.rows.length!==1||answer.rows[0]!.path!==request.path||!Array.isArray(answer.references)||!Array.isArray(answer.links))throw Error("Closed closure read result required");
    accept(request,answer);
-  },async()=>{throw Error("Deferred closure read refused");});
+   remainingBytes=P.maximumProofBytes;
+  },async deferred=>{remainingBytes-=deferred.readBytes;});
  };
 }

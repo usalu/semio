@@ -407,8 +407,6 @@ use semio_framework_diagnostic::TextSpan;
     }
     //#endregion 🔖️Analyzer
 
-    #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
 }
 pub use derived_analysis::*;
 

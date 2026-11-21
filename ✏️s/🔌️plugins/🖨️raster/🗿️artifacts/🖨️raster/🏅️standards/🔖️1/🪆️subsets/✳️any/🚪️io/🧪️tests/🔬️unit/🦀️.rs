@@ -30,7 +30,7 @@ fn document_with_solid_layer(red: u8, green: u8, blue: u8, alpha: u8, width: u32
         rgba8.extend_from_slice(&[red, green, blue, alpha]);
     }
     let image = SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() };
-    raster_document_from_semio_image(&image, "fixture", "Fixture").expect("fixture document")
+    raster_document_from_semio_image(image, "fixture", "Fixture").expect("fixture document")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -175,6 +175,40 @@ async fn png_export_writes_a_real_png_signature() {
     retire(document);
 }
 
+#[semio_framework_async_macros::async_test]
+async fn png_import_retains_source_color_and_metadata_and_produces_preview_pixels() {
+    let fixture: serde_json::Value =
+        serde_json::from_str(runtime_fixture_text("../../🧪️tests/🧫️fixtures/📷️png-import.json")).unwrap();
+    let png = semio_framework_io_base64::base64_standard_decode(
+        fixture["sourceBase64"].as_str().unwrap().as_bytes(),
+    ).unwrap();
+    let document = crate::import::deserializers::artifacts::png::v1_2::any::deserialize_bytes(&png)
+        .expect("a grayscale PNG with UTF-8 metadata is a valid raster input");
+    let source = document.assets.iter().next().and_then(|(asset_id, child)| {
+        let source = child.local_owner::<SemioImageSnapshot>()?;
+        let preview = raster_asset(&document.assets, asset_id);
+        Some((source, preview))
+    });
+    let composite = raster_composite_image(&document);
+    retire(document);
+    let (source, preview) = source.expect("the import materializes its pixel layer");
+    let expected: Vec<u8> = serde_json::from_value(fixture["rgba8"].clone()).unwrap();
+    assert_eq!(source.bit_depth, fixture["sourceBitDepth"].as_u64().unwrap() as u8);
+    assert_eq!(source.colorspace, SemioColorspace::Grayscale);
+    assert!(source.metadata.iter().any(|entry| {
+        entry.key == "Description" && entry.value == fixture["caption"].as_str().unwrap()
+    }));
+    assert_eq!(source.frames[0].rgba8, expected);
+    let preview = preview.expect("the editor can render the imported pixels");
+    let preview = semio_framework_pixels::decode_png(&preview.data).unwrap();
+    let extent = (fixture["width"].as_u64().unwrap() as u32, fixture["height"].as_u64().unwrap() as u32);
+    assert_eq!((preview.width, preview.height), extent);
+    assert_eq!(preview.pixels, expected);
+    let composite = composite.unwrap();
+    assert_eq!((composite.width, composite.height), extent);
+    assert_eq!(composite.frames[0].rgba8, expected);
+}
+
 /// 🧫️ The one cross-language oracle both implementations of the bmp hop assert. The bun twin
 /// (`🚪️io/🧪️tests/🟦️.ts`) writes and reads the SAME `bmpHex` from its own hand-written BMP v3
 /// codec, so a drift between this plugin's Rust path (composite → stdio `SemioImageToBmp` →
@@ -212,7 +246,7 @@ fn bytes_of(hex: &str) -> Vec<u8> {
 
 fn parity_document(width: u32, height: u32, rgba8: Vec<u8>) -> RasterSnapshot {
     let image = SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() };
-    raster_document_from_semio_image(&image, "parity", "Parity").expect("parity document")
+    raster_document_from_semio_image(image, "parity", "Parity").expect("parity document")
 }
 
 /// 🧪️ The Rust bmp EXPORT must produce the exact bytes the TypeScript twin produces.
@@ -274,7 +308,7 @@ async fn composite_source_preparation_copies_unique_images_in_bounded_grants() {
         assert_eq!(done,expected==(width*height) as usize);
     }
     let mut job=preparation.into_job().unwrap();while !advance_stack(&mut job,32768).unwrap().done {}
-    assert_eq!(job.into_result().unwrap().image.pixels,pixel.repeat((width*height) as usize));
+    assert_eq!(job.into_result(&mut semio_framework_pixels::BlockingTurns::new(65536)).unwrap().image.pixels,pixel.repeat((width*height) as usize));
     let mut cancelled=RasterStackPreparation::new(&document).unwrap();cancelled.advance(&document,1).unwrap();cancelled.cancel();
     assert!(cancelled.images.is_empty());assert!(cancelled.layers.is_empty());
     assert!(cancelled.advance(&document,1).is_err());assert!(cancelled.into_job().is_err());

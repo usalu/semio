@@ -1,0 +1,37 @@
+{
+  "lastWarmOwner": "last-owner",
+  "total": 6,
+  "skipped": 2,
+  "warm": [
+    {
+      "name": "durable",
+      "outcome": "durable"
+    },
+    {
+      "name": "settled",
+      "outcome": "settled"
+    },
+    {
+      "name": "failed-a",
+      "outcome": "failed"
+    },
+    {
+      "name": "failed-b",
+      "outcome": "failed"
+    }
+  ],
+  "completed": [
+    {
+      "name": "adopted",
+      "outcome": "adopted"
+    },
+    {
+      "name": "inferred",
+      "outcome": "inferred"
+    },
+    {
+      "name": "inferred",
+      "outcome": "inferred"
+    }
+  ]
+}

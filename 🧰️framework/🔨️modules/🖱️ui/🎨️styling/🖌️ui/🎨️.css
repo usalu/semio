@@ -4,9 +4,17 @@
 @import "../🎨️palette/🎨️.css";
 @plugin "@tailwindcss/typography";
 
-/* 🎯️ The compositor is the only painter of state lines: inside a compositor root the browser focus outline is off. Declared after the framework layers so it outranks utilities without `!important`. */
+/* 🎯️ Compositor participants use their shared line for keyboard focus. Other controls keep their own focus indicator. */
 @layer shared-border-outline {
-  [data-shared-border-root] :focus-visible,
+  [data-shared-border-root] :is(
+    [data-shared-border-frame],
+    [data-shared-border-cell],
+    .shared-border-cell,
+    [data-overview-card],
+    [data-slot="mode-dock-tab"] [role="tab"],
+    [data-shared-border-frame] > :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]),
+    :is([data-shared-border-cells], [data-shared-border-field]) > :is(input, select, textarea, [contenteditable])
+  ):focus-visible,
   .react-flow__node:focus-visible {
     outline: none;
   }
@@ -126,6 +134,52 @@
 [data-slot="navbar"] {
   -webkit-app-region: drag !important;
 }
+
+/* #region 🪟️PageChrome */
+.ui-chrome-tint {
+  background-color: var(--base);
+  background-color: color-mix(in srgb, var(--base) var(--chrome-tint-opacity, 76%), transparent);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .ui-chrome-tint { background-color: var(--base); }
+}
+
+@media (forced-colors: active) {
+  .ui-chrome-tint { background-color: Canvas; }
+}
+
+[data-slot="layout-scrollport"] {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  min-block-size: 0;
+  overflow: auto;
+  isolation: isolate;
+}
+
+[data-slot="layout-scrollport"] > :not([data-slot="layout-scroll-start"], [data-slot="layout-scroll-end"]) {
+  flex: 1 0 auto;
+}
+
+[data-slot="layout-scroll-start"],
+[data-slot="layout-scroll-end"] {
+  position: sticky;
+  flex: none;
+  z-index: 1;
+}
+
+[data-slot="layout-scroll-start"] { inset-block-start: 0; }
+[data-slot="layout-scroll-end"] { inset-block-end: 0; }
+
+[data-slot="layout-scrollport"]:has(> [data-slot="layout-scroll-start"] [data-slot="navbar"]) {
+  scroll-padding-block-start: var(--navbar-band-height);
+}
+
+[data-slot="layout-scrollport"]:has(> [data-slot="layout-scroll-end"] [data-slot="footer"]) {
+  scroll-padding-block-end: var(--footer-band-height);
+}
+/* #endregion 🪟️PageChrome */
 
 /* https://tailwindcss.com/doc/theme */
 /* 🎨️ Both appearance palettes inherit from the owning theme root; semantic aliases resolve locally. */
@@ -1219,12 +1273,6 @@
   initial-value: 1.6s;
 }
 
-@property --introduced-border-width {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 1px;
-}
-
 @property --celebrate-border-angle {
   syntax: "<angle>";
   inherits: false;
@@ -1235,12 +1283,6 @@
   syntax: "<time>";
   inherits: true;
   initial-value: 1.2s;
-}
-
-@property --celebrate-border-padding {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 1px;
 }
 
 @keyframes loading-border-spin {
@@ -1281,16 +1323,6 @@
   }
 }
 
-@keyframes celebrate-border-burst {
-  0%,
-  100% {
-    --celebrate-border-padding: var(--stroke-hairline);
-  }
-  50% {
-    --celebrate-border-padding: var(--stroke-focus);
-  }
-}
-
 /* 🎉️ The three-brand conic ink of a celebrating element (authored state: "celebrating", or the transient
    completion stamp from celebrateElements()). Its outline is the compositor's celebrated stroke; this
    variable only feeds the label, icon and guide ink below. Recolor via --celebrate-border-color-{a,b,c}. */
@@ -1307,10 +1339,10 @@
 @keyframes introduced-border-pulse {
   0%,
   100% {
-    --introduced-border-width: var(--stroke-hairline);
+    opacity: 1;
   }
   50% {
-    --introduced-border-width: var(--stroke-focus);
+    opacity: 0.7;
   }
 }
 
@@ -1333,7 +1365,7 @@
 }
 
 .window-silhouette-border-introduced {
-  stroke-width: var(--introduced-border-width);
+  stroke-width: var(--stroke-hairline);
   animation: introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite;
 }
 
@@ -1367,11 +1399,9 @@
   stroke: var(--border-normal-color);
 }
 
-/* 🎉️ Window silhouette celebrate: mask path pulses thickness while the foreignObject fill spins the
-   same three-color conic as `[data-celebrated="true"]::after` — never a solid three-color stroke cycle. */
+/* 🎉️ The celebratory fill spins through the brand colours along the same hairline. */
 .window-silhouette-border-celebrated-mask {
-  stroke-width: var(--celebrate-border-padding);
-  animation: celebrate-border-burst var(--celebrate-border-duration) ease-in-out infinite;
+  stroke-width: var(--stroke-hairline);
 }
 
 .window-silhouette-border-celebrated-fill {
@@ -1406,10 +1436,6 @@
     opacity: 1;
   }
 
-  .window-silhouette-border-introduced,
-  .window-silhouette-border-celebrated-mask {
-    stroke-width: var(--stroke-default);
-  }
 }
 
 /* 🎓️ The chrome unit (panel/window/navbar/footer) containing a step's introduce/show target — raised
@@ -6443,14 +6469,7 @@
 
 
 
-/* #region 🪟️ShellParentHover
- * Parent-shell edge strokes mirror mode-dock silhouette hover: a dedicated stroke layer
- * (navbar/footer pseudo-edges, mobile panel compositor frame) recolors while the
- * pointer is inside the parent. Never recolor the parent's own Tailwind `!border-*` — those
- * utilities win the cascade and made the previous border-*-color :hover rules invisible.
- * Use :hover only — never :focus-within — so clicking a toggle/pane does not leave the border
- * stuck emphasized after the cursor leaves.
- */
+/* #region 🪟️ShellParentHover */
 
 [data-slot="navbar"],
 [data-slot="footer"] {
@@ -6458,13 +6477,14 @@
   border-style: none !important;
 }
 
-[data-slot="navbar"]::after,
-[data-slot="footer"]::before {
+/* First-paint edges yield to their compositor as soon as it attaches. */
+[data-slot="navbar"]:not([data-shared-border-attached~="bottom"])::after,
+[data-slot="footer"]:not([data-shared-border-attached~="top"])::before {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  height: var(--stroke-hairline);
+  height: 1px;
   background-color: var(--border-normal-color);
   pointer-events: none;
   transition: background-color 120ms ease;
@@ -6479,8 +6499,8 @@
   top: 0;
 }
 
-[data-slot="navbar"]:hover::after,
-[data-slot="footer"]:hover::before {
+[data-slot="navbar"]:not([data-shared-border-attached~="bottom"]):hover::after,
+[data-slot="footer"]:not([data-shared-border-attached~="top"]):hover::before {
   background-color: var(--border-emphasized-color);
 }
 
@@ -6510,11 +6530,6 @@
 :is([data-slot="navbar"], [data-slot="footer"]) [data-shared-border-frame]:not([data-slot="navbar"], [data-slot="footer"]) {
   height: auto;
   max-height: none;
-}
-
-[data-slot="navbar"] :is([data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"], [data-slot="app-panel-toggle-group"]),
-[data-slot="footer"] :is([data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"]) {
-  border-color: var(--border-normal-color) !important;
 }
 
 /* Shell chrome: reinforce level-aware hover on navbar, footer, and toolbar controls. */
@@ -6610,6 +6625,9 @@
   width: auto;
   max-width: none;
 }
+[data-shared-border-cells] > [data-slot="button-group"] {
+  padding: 0;
+}
 [data-shared-border-cells] > [data-shared-border-frame] > :is([data-slot="input"], [data-slot="textarea"]) {
   border-width: 0;
   border-radius: 0;
@@ -6669,15 +6687,13 @@
   outline: none !important;
   box-shadow: none !important;
 }
-/* ⌨️ A control that already paints the accent (selected, pressed, active) cannot show focus by recolouring its seam, so keyboard focus underlines its label, and inside an active window chip the focus path doubles its weight (below). */
+/* ⌨️ Selected and pressed controls also underline the label when keyboard focus is visible. */
 :is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]):not([role="tabpanel"], [data-window-silhouette]):focus-visible,
 :is([data-state="active"], [data-state="on"], [aria-selected="true"], [aria-pressed="true"], [data-active="true"], [data-selected="true"]):not([role="tabpanel"], [data-window-silhouette], [data-slot="window"]) > :is(button, [role="button"], [role="tab"], a[href], select, input, [tabindex]):focus-visible {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 0.2em;
 }
-/* ⌨️ A chip of an active window already paints the accent, so its focus path doubles the line weight instead of repeating the colour. The base weight lives in a lower layer, so this wins by layer order, never by !important. */
-[data-shared-border-segment][data-shared-border-state="focus"][data-focus-on-accent] { stroke-width: calc(var(--stroke-hairline) * 2); }
 [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:is(:hover, :has(+ [data-slot="mode-dock-tab"]:hover)) {
   border-inline-end-color: var(--border-emphasized-color) !important;
 }
@@ -6685,10 +6701,11 @@
   [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"]:is(:hover, :has(+ [data-slot="mode-dock-tab"]:hover)) {
     border-inline-end-color: Highlight !important;
   }
-  [data-shared-border-segment][data-shared-border-state="focus"][data-focus-on-accent] { stroke-width: 2; }
   [data-shared-border-segment] { stroke: CanvasText !important; }
   [data-shared-border-segment]:is([data-shared-border-state="hover"], [data-shared-border-state="focus"], [data-shared-border-state="active"], [data-shared-border-state="invalid"]) { stroke: Highlight !important; }
+  [data-shared-border-segment][data-shared-border-state="focus"][data-focus-on-accent] { stroke: CanvasText !important; }
   [data-shared-border-segment][data-shared-border-state="normal"][data-shared-border-disabled] { stroke: GrayText !important; }
+  [data-slot="slider-thumb"]:focus-visible { border-color: Highlight; outline: none; }
 }
 }
 /* Suppress only replaced paint, never border layout: measurement must remain stable. */
@@ -6698,12 +6715,11 @@
 [data-shared-border-attached~="right"] { border-right-color: transparent !important; }
 [data-shared-border-attached~="bottom"] { border-bottom-color: transparent !important; }
 [data-shared-border-attached~="left"] { border-left-color: transparent !important; }
-[data-slot="navbar"][data-shared-border-attached~="bottom"]::after,
-[data-slot="footer"][data-shared-border-attached~="top"]::before { background-color: transparent !important; }
 }
 [data-shared-border-segment] { pointer-events: none; }
 [data-shared-border-segment][data-shared-border-state="normal"] { stroke: var(--border-normal-color); }
 [data-shared-border-segment]:is([data-shared-border-state="active"], [data-shared-border-state="focus"]) { stroke: var(--active-base); }
+[data-shared-border-segment][data-shared-border-state="focus"][data-focus-on-accent] { stroke: var(--border-emphasized-color); }
 [data-shared-border-segment][data-shared-border-state="invalid"] { stroke: var(--destructive-border); }
 [data-shared-border-segment][data-shared-border-state="hover"] { stroke: var(--border-emphasized-color); }
 
@@ -7743,7 +7759,7 @@ table thead.border-b {
 /* #endregion SelectionMarquee */
 
 /* #region PlatformPrefs */
-/* ♿️ The platform preferences the React shell reads from the media queries (`ShellHost/🎛️platform-prefs`) and states on its root, so the rendering follows the same four values the native shell hands its plugins (`ShellPlatformPrefs`): reduced motion stills every transition and animation, more contrast (and forced colours) draws the keyboard focus and the focused grip heavier. */
+/* ♿️ Shell platform preferences mirror the native host. Reduced motion stills transitions and animations. Higher contrast strengthens border ink and the focused grip. */
 .semio-scope[data-reduced-motion="reduce"] *,
 .semio-scope[data-reduced-motion="reduce"] *::before,
 .semio-scope[data-reduced-motion="reduce"] *::after {
@@ -7753,8 +7769,8 @@ table thead.border-b {
   scroll-behavior: auto !important;
 }
 
-.semio-scope[data-contrast="more"] [data-shared-border-segment]:is([data-shared-border-state="focus"], [data-shared-border-state="hover"], [data-shared-border-state="active"], [data-shared-border-state="invalid"]) {
-  stroke-width: calc(var(--stroke-hairline) * 3);
+.semio-scope[data-contrast="more"] {
+  --border-emphasized-color: var(--foreground);
 }
 
 .semio-scope [data-grip-focused="true"] {

@@ -236,11 +236,13 @@ pub(super) fn checked_ink_document(scene: &UiComponentSceneNode) -> Result<Optio
     let source = ink.document_json.clone();
     let mut spans = Box::new(std::array::from_fn(|_| None));
     let mut span_len = 0usize;
-    collect_ink_document_block_spans(source.as_bytes(), &mut spans, &mut span_len)?;
+    let mut positions = Box::new(std::array::from_fn(|_| Default::default()));
+    collect_ink_document_block_positions(source.as_bytes(), &mut spans, &mut span_len, &mut positions)?;
     Ok(Some(InkInteractionDocument {
         source,
         spans,
         span_len,
+        positions,
         schema: document.schema,
         id: document.id,
         camera: document.camera,

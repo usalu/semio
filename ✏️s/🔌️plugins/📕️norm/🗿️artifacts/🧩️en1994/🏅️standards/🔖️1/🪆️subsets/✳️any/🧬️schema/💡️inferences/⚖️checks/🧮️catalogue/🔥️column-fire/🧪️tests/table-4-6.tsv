@@ -1,0 +1,10 @@
+rating_min	load_level	min_dimension_mm	min_axis_mm	min_reinforcement_pct
+30	0.28	160	-	-
+60	0.28	200	50	4
+90	0.28	300	50	3
+120	0.28	400	70	4
+30	0.47	160	-	-
+60	0.47	300	50	4
+90	0.47	400	70	4
+30	0.66	160	40	1
+60	0.66	400	70	4

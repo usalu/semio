@@ -1,5 +1,5 @@
 //! 🪪️ Original operation identity becomes cancellation text through separately paid source events.
-use super::*;
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 pub struct FlowInvocationIdentity{source:u64,remaining:u64,digits:[u8;20],length:usize,buffer:Vec<u8>,text:Option<String>,phase:u8}
 impl FlowInvocationIdentity{

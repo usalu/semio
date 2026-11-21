@@ -3,7 +3,7 @@
 //! 🧭️ Interaction state: topology resolution, selection persistence, inline interaction verbs and the interaction action.
 use semio_framework::{ActionKind, Fault, FaultCode, FaultFrom, FaultOrigin, InteractionDefinition, InteractionVerb};
 use semio_plugin_decl_emission::{ActionMeta, Emit, InteractionWrite};
-use semio_plugin_interaction::interaction_topology::{AppliedInteractionVerb, INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE, InlineInteractionFold, InteractionRevalidateOrigin, derive_path_delimited_topology, interaction_after_document_change_v1, interaction_domain_id_arg, interaction_selection_loss_v1, leftover_after_app_selection_write_v1, leftover_gumball_active_v1, leftover_selected_ids_of, parse_interaction_targets, parse_merge_mode, parse_selection_mode, report_interaction_selection_loss};
+use semio_plugin_interaction::interaction_topology::{AppliedInteractionVerb, INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE, InlineInteractionFold, InteractionRevalidateOrigin, derive_path_delimited_topology, interaction_after_document_change_v1, interaction_domain_id_arg, interaction_selection_loss_v1, leftover_after_app_selection_write_v1, leftover_gumball_active_v1, leftover_selected_ids_of, parse_interaction_hover_targets, parse_interaction_targets, parse_merge_mode, parse_selection_mode, report_interaction_selection_loss, resolve_interaction_hover_group};
 use semio_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::{ArtifactCommand, HistoryLane};
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
@@ -15,7 +15,7 @@ use semio_framework_value::DslValue;
 use semio_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
 use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;
-use semio_plugin_instance_stores::stores_components::HoverSurface;
+use semio_plugin_decl_views::HoverSurface;
 use semio_plugin_interaction::mutations::InteractionConfigMutation;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
@@ -348,11 +348,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let domain_id = interaction_domain_id_arg(args, action).await?;
                 let def = self.tools.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
                 let channel = args.and_then(|value| value.get("channel")).and_then(DslValue::as_str).unwrap_or("pointer").to_string();
-                let targets = parse_interaction_targets(args, action).await?;
+                let targets = parse_interaction_hover_targets(args, action).await?;
                 let source = meta.view_state.as_deref().map(|view| view.window_id.as_deref());
+                let targets = resolve_interaction_hover_group(targets, |reference| {
+                    let Some(window) = source.flatten() else { return Ok(None); };
+                    self.tools.instance_operation_owner.read_interaction_hover_group(&domain_id, window, reference)
+                })?;
                 let current = self.interaction.interaction_hover.get(&domain_id);
                 let owner = self.interaction.interaction_hover_owners.get(&domain_id);
-                if !targets.is_empty() || window_hover_can_clear(current.map(|hover| hover.channel.as_str()), owner, &channel, source) {
+                if let Some(targets) = targets.filter(|targets| !targets.is_empty() || window_hover_can_clear(current.map(|hover| hover.channel.as_str()), owner, &channel, source)) {
                     let current = current.cloned().unwrap_or_default();
                     let known_ids = current.ids.iter().cloned().chain(targets.iter().map(|target| target.id.clone()));
                     let topology = self.resolve_domain_topology(&def, known_ids).await?;

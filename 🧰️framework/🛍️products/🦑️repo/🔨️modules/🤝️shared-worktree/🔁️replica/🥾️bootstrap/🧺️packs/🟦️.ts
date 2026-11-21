@@ -12,21 +12,26 @@ const HASH=20,HEADER=Buffer.from([0xff,0x74,0x4f,0x63,0,0,0,2]),companions=new S
 const later=():Promise<void>=>new Promise(done=>setImmediate(done));
 
 /** 🔬️ Reads the sorted object-name table of a version 2 pack index (SHA-1 names); `undefined` when the file is not a complete index of that shape. */
-export async function readPackNamesV1(idx:string):Promise<Names|undefined>{
+export async function readPackNamesV1(idx:string,options:Readonly<{maximumBytes?:number;expectedIdentity?:string;signal?:AbortSignal}>={}):Promise<Names|undefined>{
+ const {maximumBytes,expectedIdentity,signal}=options;
+ signal?.throwIfAborted();
  const handle=await open(idx,"r").catch(()=>undefined);
  if(handle===undefined)return undefined;
  try{
+  const identity=async()=>{const value=await handle.stat({bigint:true});return [value.dev,value.ino,value.size,value.mtimeNs,value.ctimeNs].join(":");};
+  if(expectedIdentity!==undefined&&await identity()!==expectedIdentity)return undefined;
   const size=(await handle.stat()).size,head=Buffer.alloc(8+1024);
-  if(size<head.length+2*HASH||(await handle.read(head,0,head.length,0)).bytesRead!==head.length||!head.subarray(0,8).equals(HEADER))return undefined;
+  if((maximumBytes!==undefined&&size>maximumBytes)||size<head.length+2*HASH||(await handle.read(head,0,head.length,0)).bytesRead!==head.length||!head.subarray(0,8).equals(HEADER))return undefined;
   const fanout=new Uint32Array(256);
   for(let index=0;index<256;index++)fanout[index]=head.readUInt32BE(8+4*index);
   const count=fanout[255]!;
   if(size<head.length+count*(HASH+8)+2*HASH)return undefined;
   const names=Buffer.alloc(count*HASH);
   let done=0;
-  while(done<names.length){const {bytesRead}=await handle.read(names,done,Math.min(names.length-done,1<<24),head.length+done);if(bytesRead===0)return undefined;done+=bytesRead;}
+  while(done<names.length){signal?.throwIfAborted();const {bytesRead}=await handle.read(names,done,Math.min(names.length-done,1<<24),head.length+done);if(bytesRead===0)return undefined;done+=bytesRead;}
+  if(expectedIdentity!==undefined&&await identity()!==expectedIdentity)return undefined;
   return {count,fanout,names};
- }catch{return undefined;}finally{await handle.close();}
+ }catch{signal?.throwIfAborted();return undefined;}finally{await handle.close();}
 }
 
 function holds(table:Names,name:Buffer,offset:number):boolean{

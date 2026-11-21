@@ -1,5 +1,21 @@
 /* 🧩 The head of a run and the layouts of the classification, sorting and matching tasks, each taken for the room its card has. */
 
+@media (pointer: coarse) {
+  .course-run .course-target {
+    min-block-size: var(--layout-touch-min);
+  }
+
+  .course-run .course-task :is(button.course-target, [data-course-grip]) {
+    min-inline-size: var(--layout-touch-min);
+    min-block-size: var(--layout-touch-min);
+  }
+
+  .course-run .course-task :is(input.course-target, select.course-target) {
+    min-block-size: var(--layout-touch-min);
+    font-size: max(16px, 1rem);
+  }
+}
+
 /* ▶️ The head of a run: its tasks and how far the learner is, rows of a flush card that share the card's dividers. In
    a narrow card the tasks are a list of rows, each with its title on the left and its state on the right; from 40rem
    they are one row of equal cells, each with its title above its state, the dividers between them turned from the
@@ -171,7 +187,6 @@
   grid-template-columns: minmax(0, 16rem);
   align-self: stretch;
   align-content: stretch;
-  border-block-start: var(--stroke-hairline) solid var(--border-normal-color);
 }
 
 .course-guess > :not(.course-guess-entry) {
@@ -207,8 +222,6 @@
 
   .course-guess {
     grid-template-columns: minmax(0, 1fr);
-    border-inline-start: var(--stroke-hairline) solid var(--border-normal-color);
-    border-block-start: 0;
   }
 }
 
@@ -319,41 +332,14 @@
   }
 }
 
-/* 🧱 Tiles: equal cells of a grid that share their dividers, a hairline to the right of every cell but the last of its
-   row and one below every cell but the last of its column; two columns in a narrow card, four from 28rem. The cells
-   are 2 × 4 or 4 × 2, so the last row and the last column are known. */
+/* 🧱 Tiles: equal shared-border cells in two columns in a narrow card, four from 28rem. */
 .course-tiles {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.course-tiles > * {
-  border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
-  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
-}
-
-.course-tiles > :nth-child(2n) {
-  border-inline-end-width: 0;
-}
-
-.course-tiles > :nth-child(n + 7) {
-  border-block-end-width: 0;
-}
-
 @container course-card (min-width: 28rem) {
   .course-tiles {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .course-tiles > :nth-child(2n) {
-    border-inline-end-width: var(--stroke-hairline);
-  }
-
-  .course-tiles > :nth-child(4n) {
-    border-inline-end-width: 0;
-  }
-
-  .course-tiles > :nth-child(n + 5) {
-    border-block-end-width: 0;
   }
 }

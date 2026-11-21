@@ -1,0 +1,30 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@ -49,1 +49,1 @@
+-    use semio_plugin::{artifact_app_laws as laws, EditorApp};
++    use semio_plugin::{artifact_app_laws as laws, EditorApp, PluginApp};
+@@ -67,1 +67,23 @@
+-    laws::consume_media(&mut app, semio_plugin::NATURAL_FILE_PORT, artifact, scope.cx()).await.unwrap();
++    let cx = scope.cx();
++    let fuel = laws::OriginalFixtureCaller::turn_fuel();
++    let grant = cx.retained_grant();
++    laws::ensure_fixture_cancellation_issuer(&mut app, cx).expect("mounted PDF instance is born");
++    app.render_ctx().refresh_cache().await.expect("mounted PDF head is projected");
++    let mut artifact = Some(artifact);
++    let mut consumed = false;
++    let mut idle = 0;
++    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
++        laws::fixture_renew_turn(cx, fuel, grant).expect("mounted PDF import turn is funded");
++        let before = (cx.original_work_units_spent(), cx.retained_progress());
++        if PluginApp::consume_media(&mut app, semio_plugin::NATURAL_FILE_PORT, &mut artifact, cx)
++            .await.expect("mounted PDF consumes original bytes").is_some()
++        {
++            consumed = true;
++            break;
++        }
++        app.maintenance_step(cx, policy.close).expect("mounted PDF upkeep is funded");
++        let after = (cx.original_work_units_spent(), cx.retained_progress());
++        idle = if before == after { idle + 1 } else { 0 };
++        if idle >= laws::OriginalFixtureCaller::maximum_idle_turns() { break }
++    }
++    assert!(consumed, "mounted PDF media intake stalled after {idle} idle turns: {:?}, {}", cx.retained_grant(), app.typed_operation_diagnostic());

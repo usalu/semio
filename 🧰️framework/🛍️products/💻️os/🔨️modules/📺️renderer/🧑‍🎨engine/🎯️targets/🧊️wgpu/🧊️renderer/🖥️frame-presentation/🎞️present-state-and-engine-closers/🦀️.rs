@@ -14,10 +14,10 @@ pub struct AppPresenter {
     #[cfg(target_arch = "wasm32")]
     pub offscreen_token: Option<semio_ui_prepared::OffscreenPresentToken>,
     pub last_cursor: Option<(SemioCursor, bool)>,
-    pub pending: Option<AppPresentCursor>,
-    pub retirement: Option<AppPresentedRetirement>,
+    pub(super) pending: Option<AppPresentCursor>,
+    pub(super) retirement: Option<AppPresentedRetirement>,
     pub retained_fault: Option<String>,
-    pub surface_resize: Option<AppSurfaceResizeCursor>,
+    pub(super) surface_resize: Option<AppSurfaceResizeCursor>,
     pub stall: AppPresentStallWatch,
 }
 
@@ -210,6 +210,37 @@ pub enum AppPresentStep {
 }
 
 impl AppPresenter {
+    fn new(gpu: GpuContext, runtime: AppMailbox, window: Option<Arc<Window>>) -> Self {
+        Self {
+            gpu,
+            engine: Default::default(),
+            gate: Default::default(),
+            presentation_authority: runtime.presentation_authority(),
+            raster_operation_authority: runtime.raster_operation_authority(),
+            runtime,
+            window,
+            #[cfg(target_arch = "wasm32")]
+            offscreen_token: None,
+            last_cursor: None,
+            pending: None,
+            retirement: None,
+            retained_fault: None,
+            surface_resize: None,
+            stall: Default::default(),
+        }
+    }
+
+    /// 🪟️ Creates the presenter for a platform-managed window.
+    pub fn for_window(gpu: GpuContext, runtime: AppMailbox, window: Arc<Window>) -> Self {
+        Self::new(gpu, runtime, Some(window))
+    }
+
+    /// 🎞️ Creates the presenter for an admitted browser worker surface.
+    #[cfg(target_arch = "wasm32")]
+    pub fn for_offscreen(gpu: GpuContext, runtime: AppMailbox, token: semio_ui_prepared::OffscreenPresentToken) -> Self {
+        Self { offscreen_token: Some(token), ..Self::new(gpu, runtime, None) }
+    }
+
     #[cfg(not(target_os = "wasi"))]
     pub fn raster_is_resident(&self, key: &str) -> bool {
         self.gpu.raster_is_resident(key)

@@ -30,9 +30,9 @@ async fn playback_export_route_is_registered_cancellable_and_fully_retired() {
     use semio_plugin::PluginApp;
     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered MP4 playback producer");
+    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx()).await.expect("registered MP4 playback producer");
     app.cancel_media_export(&handle).await.expect("cancel live MP4 producer");
-    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.is_err(), "cancelled handle transfers to bounded close");
+    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.is_err(), "cancelled handle transfers to bounded close");
     let mut last = None;
     for _ in 0..10_000 {
         if app.close_terminal_is_empty() {
@@ -55,10 +55,10 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
         panic!("MP4 snapshot builds one document load");
     };
     semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("host loads the real MP4 document");
-    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered MP4 playback producer");
+    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx()).await.expect("registered MP4 playback producer");
     let mut completed = None;
     for _ in 0..100_000 {
-        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("MP4 playback poll") {
+        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.expect("MP4 playback poll") {
             ArtifactMediaExportPoll::Running { .. } => semio_framework_async::yield_once().await,
             ArtifactMediaExportPoll::Complete(result) => {
                 completed = Some(result);
@@ -72,10 +72,10 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     assert_eq!(result.mime_type, crate::standards::isobmff::subsets::any::io::playback::MIME_TYPE);
     assert_eq!(result.schema, crate::standards::isobmff::subsets::any::io::playback::MEDIA_SCHEMA);
     assert_eq!(result.media_type, crate::standards::isobmff::subsets::any::io::playback::MEDIA_TYPE);
-    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("retain exact MP4 output authority");
+    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx()).await.expect("retain exact MP4 output authority");
     let mut exported = Vec::new();
     let mut download_terminal = false;
-    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("take MP4 playback page") {
+    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx()).await.expect("take MP4 playback page") {
         assert!(chunk.len() <= semio_plugin::app::ArtifactOutputChunks::CHUNK_BYTES);
         exported.extend_from_slice(&chunk);
     }

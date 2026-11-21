@@ -1,6 +1,10 @@
 //! 🌐️ Native asset stream: the file and http page streams that feed a world asset fetch; mailbox transport of the runtime-mailbox crate of the renderer partition (plan section 5.3).
 use super::*;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🧭️tile-proxy-url/🦀️.rs"]
+mod tile_proxy_url;
+
 //#region 📮️RuntimeMailbox
 #[cfg(not(target_arch = "wasm32"))]
 fn native_renderer_asset_path(url: &str) -> Result<RendererIoPath<'_>, String> {
@@ -19,8 +23,12 @@ fn native_renderer_asset_path(url: &str) -> Result<RendererIoPath<'_>, String> {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
-    if fetch.url().starts_with("http://") || fetch.url().starts_with("https://") {
-        return retry_native_renderer_http_asset(mailbox, fetch).await;
+    let proxy_url = match fetch.kind() {
+        WorldAssetRequestKind::MapTile { .. } => tile_proxy_url::native_map_tile_proxy_url(fetch.url(), std::env::var("SEMIO_ASSET_BASE_URL").ok().as_deref()),
+        _ => None,
+    };
+    if proxy_url.is_some() || fetch.url().starts_with("http://") || fetch.url().starts_with("https://") {
+        return retry_native_renderer_http_asset(mailbox, fetch, proxy_url.as_deref()).await;
     }
     let opened={let path=native_renderer_asset_path(fetch.url()).map_err(|detail| NativeAssetStreamFailure::Unavailable { detail, retryable: false })?;let mut open=open_renderer_source_io(path);std::future::poll_fn(|context|{
         if mailbox.renderer_asset_cancelled(fetch){return std::task::Poll::Ready(Err(None))}
@@ -53,12 +61,12 @@ pub async fn stream_native_renderer_asset<R: MailboxRuntime>(mailbox: &RuntimeMa
 
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn retry_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
-    if !matches!(fetch, RendererAssetFetchOwner::World { .. }) {
-        return stream_native_renderer_http_asset(mailbox, fetch).await;
+async fn retry_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner, proxy_url: Option<&str>) -> Result<(), NativeAssetStreamFailure> {
+    if !fetch.allows_transport_retry() {
+        return stream_native_renderer_http_asset(mailbox, fetch, proxy_url).await;
     }
     for delay in [200, 800] {
-        match stream_native_renderer_http_asset(mailbox, fetch).await {
+        match stream_native_renderer_http_asset(mailbox, fetch, proxy_url).await {
             Err(NativeAssetStreamFailure::Unavailable { retryable: true, .. }) => {}
             result => return result,
         }
@@ -78,11 +86,14 @@ async fn retry_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeMa
             return Err(NativeAssetStreamFailure::Cancelled);
         }
     }
-    stream_native_renderer_http_asset(mailbox, fetch).await
+    stream_native_renderer_http_asset(mailbox, fetch, proxy_url).await
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
+async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeMailbox<R>, fetch: &mut RendererAssetFetchOwner, proxy_url: Option<&str>) -> Result<(), NativeAssetStreamFailure> {
+    if mailbox.renderer_asset_cancelled(fetch) {
+        return Err(NativeAssetStreamFailure::Cancelled);
+    }
     let cancel = mailbox.0.native_asset_http_cancel.child_now();
     let context = semio_framework_async::OperationContext {
         actor: 0,
@@ -93,8 +104,9 @@ async fn stream_native_renderer_http_asset<R: MailboxRuntime>(mailbox: &RuntimeM
         cancel: cancel.clone(),
         capability: None,
     };
-    let request = semio_os_services::HttpRequest { method: "GET".into(), url: fetch.url().to_owned(), headers: Vec::new(), body: Vec::new() };
-    let pool = if fetch.url().starts_with("https://") { &mailbox.0.native_asset_https } else { &mailbox.0.native_asset_http };
+    let url = proxy_url.unwrap_or_else(|| fetch.url());
+    let request = semio_os_services::HttpRequest { method: "GET".into(), url: url.to_owned(), headers: Vec::new(), body: Vec::new() };
+    let pool = if url.starts_with("https://") { &mailbox.0.native_asset_https } else { &mailbox.0.native_asset_http };
     let mut transport = None;
     let response = pool
         .fetch_started(mailbox.0.native_asset_http_runtime.as_ref(), &mailbox.0.native_asset_http_scope, context, semio_framework_actor::PackageId("os.renderer.asset".into()), semio_framework_actor::ActorId(0), request, |cancellation| {

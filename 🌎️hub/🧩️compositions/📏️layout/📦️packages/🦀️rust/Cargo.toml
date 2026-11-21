@@ -18,7 +18,6 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-s-artifact-layout-layout = { workspace = true }
-semio-hub-layout-drawing = { path = "../../🖊️drawing/📦️packages/🦀️rust" }
 semio-ui-contract.workspace = true
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }

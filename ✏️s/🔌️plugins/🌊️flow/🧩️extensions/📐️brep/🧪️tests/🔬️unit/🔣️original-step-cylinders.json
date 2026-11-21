@@ -1,0 +1,68 @@
+{
+  "cases": [
+    {
+      "file": "../../../../../🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/❌️fuse-cylinder-cross/🅰️operand-a.step",
+      "base": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "radius": 5,
+      "height": 40,
+      "bounds": [
+        [
+          -5,
+          -5,
+          0
+        ],
+        [
+          5,
+          5,
+          40
+        ]
+      ],
+      "vertices": 2,
+      "edges": 3,
+      "faces": 3,
+      "area": 1413.7166941154069,
+      "volume": 3141.592653589793
+    },
+    {
+      "file": "../../../../../🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧪️tests/🧫️fixtures/🎯️cut-tangent-cylinder-exact/🅱️operand-b.step",
+      "base": [
+        -5,
+        10,
+        -10
+      ],
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "radius": 5,
+      "height": 40,
+      "bounds": [
+        [
+          -10,
+          5,
+          -10
+        ],
+        [
+          0,
+          15,
+          30
+        ]
+      ],
+      "vertices": 2,
+      "edges": 3,
+      "faces": 3,
+      "area": 1413.7166941154069,
+      "volume": 3141.592653589793
+    }
+  ]
+}

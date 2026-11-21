@@ -10,8 +10,14 @@ export function testSelectedRuntimeDependencies(targets: Record<string, any>, gr
     const name = `prepare-${row.variant}-${renderer}-${profile}`, target = targets[name];
     assert.ok(target, name);
     const engines = target.dependsOn.filter((id: string) => /:wasm(?:-release)?$/.test(id));
-    const expected = [...fixture.sharedEngines,...(renderer === "react" ? row.engines : [`${rendererProject}:wasm`])];
+    const expected = [...fixture.rendererEngines[renderer], ...(renderer === "react" ? row.engines : [])];
     assert.deepEqual(require("lodash").sortBy(engines), require("lodash").sortBy(expected), name + ": only declared runtime engines");
+    if (renderer === "wgpu" && row.wgpu) {
+      const serve = targets[`serve-${row.variant}-wgpu-${profile}`];
+      assert.deepEqual(serve.dependsOn, [`activate-${row.variant}-wgpu-${profile}`]);
+      assert.ok(serve.options.command.endsWith(` serve ${row.variant} ${profile} --port ${row.wgpu.port}`));
+      assert.equal(serve.options.env.SEMIO_WGPU_COMPOSITION_PATH, row.wgpu.composition);
+    }
     if (!graph) continue;
     const tasks = createRequire(join(process.cwd(), ".nx/installation/package.json"))("nx/src/tasks-runner/create-task-graph").createTaskGraph(graph, {}, [owner], [`dev-${row.variant}-${renderer}-${profile}`], undefined, {}, false);
     const ids = Object.keys(tasks.tasks);

@@ -1,0 +1,30 @@
+[
+  {
+    "case": "observer withdraws",
+    "cancel": true,
+    "expected": {
+      "drained": 1,
+      "flying": 0,
+      "held": 1,
+      "ownerSettled": 0,
+      "looks": 2,
+      "found": 0,
+      "arrived": 0,
+      "exactReason": 1
+    }
+  },
+  {
+    "case": "owner answers",
+    "cancel": false,
+    "expected": {
+      "drained": 1,
+      "flying": 0,
+      "held": 1,
+      "ownerSettled": 1,
+      "looks": 2,
+      "found": 1,
+      "arrived": 1,
+      "exactReason": 0
+    }
+  }
+]

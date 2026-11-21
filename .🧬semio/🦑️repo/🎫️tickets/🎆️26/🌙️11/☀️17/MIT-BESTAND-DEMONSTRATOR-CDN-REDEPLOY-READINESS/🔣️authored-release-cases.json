@@ -1,0 +1,26 @@
+[
+  {
+    "name": "energy-like stale confirmation",
+    "pluginId": "energy",
+    "confirmedVersion": "1.0.0",
+    "authoredVersion": "1.0.1",
+    "formatted": false,
+    "accepted": false
+  },
+  {
+    "name": "fem-like unchanged confirmation",
+    "pluginId": "fem",
+    "confirmedVersion": "1.0.0",
+    "authoredVersion": "1.0.0",
+    "formatted": false,
+    "accepted": true
+  },
+  {
+    "name": "equivalent JSON formatting",
+    "pluginId": "fem",
+    "confirmedVersion": "1.0.0",
+    "authoredVersion": "1.0.0",
+    "formatted": true,
+    "accepted": true
+  }
+]

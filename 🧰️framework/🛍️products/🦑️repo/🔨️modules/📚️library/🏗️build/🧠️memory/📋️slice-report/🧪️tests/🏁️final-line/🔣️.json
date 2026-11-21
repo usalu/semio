@@ -3,5 +3,15 @@
   "reported": 208,
   "settled": 211,
   "receiptSeconds": 5798,
-  "quietMilliseconds": 600000
+  "quietMilliseconds": 600000,
+  "repeatedPass": {
+    "first": 1,
+    "second": 2,
+    "counters": [
+      152,
+      155
+    ],
+    "total": 596,
+    "elapsed": 4800
+  }
 }

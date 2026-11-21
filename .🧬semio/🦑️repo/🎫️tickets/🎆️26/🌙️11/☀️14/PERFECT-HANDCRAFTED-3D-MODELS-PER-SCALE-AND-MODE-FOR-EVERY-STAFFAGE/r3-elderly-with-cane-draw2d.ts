@@ -8,7 +8,7 @@ import { contours, inverse, projectMask } from "./r3-project2d.ts";
 import { meshesIn, rigAt, type Frame } from "./r3-lib.ts";
 import { area, entryOf, projectWorld, simplifyRing, type Json, type P2, type Ring, type View } from "./volumes-lib.ts";
 import { volumes } from "./r3-elderly-with-cane-build.ts";
-import { crookPath, jacketX } from "./r3-elderly-with-cane-s50.ts";
+import { CANE_L, crookPath, jacketX } from "./r3-elderly-with-cane-s50.ts";
 
 type V3 = [number, number, number];
 const { asset } = entryOf("humans/elderly-with-cane");
@@ -72,7 +72,7 @@ function strokes(scale: number, view: View, frames: Record<string, Frame>): Stro
   const at = (bone: string, p: V3): V3 => { const f = frames[bone]!; return [0, 1, 2].map((k) => f.o[k]! + p[0] * f.u[k]! + p[1] * f.v[k]! + p[2] * f.w[k]!) as V3; };
   const head = (id: string, points: V3[], closed = false, tone = 0.15): Stroke => ({ id, bone: "head", role: "detail", after: "head-eye", tone, region: "face-skin", material: "skin", closed, points: points.map((p) => at("head", p)) });
   const out: Stroke[] = [];
-  const edge: Stroke = { id: "jacket-front-edge", bone: "torso", role: "detail", after: "jacket-", tone: 0.3, region: "jacket", material: "tweed", closed: false, points: [1.125, 1.02, 0.9, 0.768].map((y) => [jacketX(y, 0.004, 1) + 0.002, y, 0.004] as V3) };
+  const edge: Stroke = { id: "jacket-front-edge", bone: "torso", role: "detail", after: "jacket-", tone: 0.3, region: "jacket", material: "tweed", closed: false, points: [1.139, 1.034, 0.914, 0.782].map((y) => [jacketX(y, 0.004, 1) + 0.002, y, 0.004] as V3) };
   if (scale === 100 && view === "front") out.push(edge);
   if (scale !== 50) return out;
   if (view === "elevation") {
@@ -112,7 +112,7 @@ for (const scale of [50, 100, 200, 500]) {
       if (own.slender === true) {
         const f = frames.cane!;
         const at = (p: V3): P2 => projectWorld(view, [0, 1, 2].map((k) => f.o[k]! + p[0] * f.u[k]! + p[1] * f.v[k]! + p[2] * f.w[k]!) as V3);
-        const [a, b] = [at([0, 0, 0]), at([0.734, 0, 0])];
+        const [a, b] = [at([0, 0, 0]), at([CANE_L, 0, 0])];
         const h = CANE_WIDTH[scale]! / 2;
         const strip: P2[] = view === "plan" ? [{ x: a.x - 0.011, y: a.y - h }, { x: b.x + 0.011, y: b.y - h }, { x: b.x + 0.011, y: b.y + h }, { x: a.x - 0.011, y: a.y + h }] : [{ x: a.x - h, y: a.y }, { x: b.x - h, y: b.y }, { x: b.x + h, y: b.y }, { x: a.x + h, y: a.y }];
         const meta: Json = { id, bone: own.bone, role: "body", z: layer(id, view), filled: true, tone: own.tone, region: regionOf(own), material: own.material };

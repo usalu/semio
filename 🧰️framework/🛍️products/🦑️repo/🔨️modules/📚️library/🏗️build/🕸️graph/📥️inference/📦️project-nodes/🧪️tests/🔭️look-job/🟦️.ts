@@ -9,9 +9,9 @@ const source=readFileSync(join(import.meta.dir,"..","..","🟨️.mjs"),"utf8"),
 
 test("the parent asks the look queue before it derives anything and takes native, pipeline and head from the look",()=>{
  const body=source.slice(source.indexOf("const inferProject=async("),source.indexOf("const loop=async end=>"));
- expect(body.indexOf("lookQueue.ask(name)")).toBeGreaterThan(0);
- expect(body.indexOf("lookQueue.ask(name)")).toBeLessThan(body.indexOf("projectAssemblyAuthorityV1("));
- expect(body.indexOf("lookQueue.ask(name)")).toBeLessThan(body.indexOf('existsSync(join(workspaceRoot,nativeRoot,"Cargo.toml"))'));
+ expect(body.indexOf("lookQueue.ask(name,withdraw)")).toBeGreaterThan(0);
+ expect(body.indexOf("lookQueue.ask(name,withdraw)")).toBeLessThan(body.indexOf("projectAssemblyAuthorityV1("));
+ expect(body.indexOf("lookQueue.ask(name,withdraw)")).toBeLessThan(body.indexOf('existsSync(join(workspaceRoot,nativeRoot,"Cargo.toml"))'));
  expect(body).toContain("nativeCandidate=looked!==undefined?looked.native:existsSync(");
  expect(body).toContain("pipeline=looked!==undefined?looked.pipeline:");
  expect(body).toContain("assemblyAuthority=looked!==undefined?undefined:native||pipeline?");
@@ -25,8 +25,10 @@ test("the verdict of the look is the verdict of the record when it judged the re
 });
 
 test("the take pass starts the queue with its lanes, every look runs in the look scope, the queue follows the children and a read says what its parent computed",()=>{
- expect(source).toContain("lookQueue?.start([...lanes,split.heavy],");
- expect(source).toContain("withTakeLookScopeV1(()=>runClosureTakeV1(()=>lookProject(job,takeAway)))");
+ const take=source.slice(source.indexOf("const resolveOwners=async"),source.indexOf("let warmState"));
+ expect(take).toMatch(/lookQueue\?\.start\(\[\.\.\.lanes,split\.heavy\],.*\},signal\);/u);
+ expect(take).toContain("finally{stopper.abort();");
+ expect(source).toContain("withTakeLookScopeV1(()=>runClosureTakeV1(()=>lookProject(job,takeAway,signal),signal))");
  expect(source).toContain("farm?.onReady(()=>lookQueue?.kick())");
  expect(source).toContain("farm===undefined||options?.ownerAdmission?undefined:createLookQueueV1(");
  expect(source).toContain("readParentObservedCountsV1()");

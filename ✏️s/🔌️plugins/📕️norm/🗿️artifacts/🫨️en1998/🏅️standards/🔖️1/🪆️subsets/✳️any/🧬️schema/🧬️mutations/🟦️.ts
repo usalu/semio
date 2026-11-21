@@ -364,7 +364,22 @@ import { type InsertRetainingWall, parseInsertRetainingWall } from "./🧱️ins
 import { type InsertFoundation, parseInsertFoundation } from "./🪨insert-foundation/🧬️schema/🟦️.ts";
 import { type InsertSilo, parseInsertSilo } from "./🫙insert-silo/🧬️schema/🟦️.ts";
 
+import { type InsertCase, parseInsertCase } from "./➕️insert-case/🧬️schema/🟦️.ts";
+import { type RemoveCase, parseRemoveCase } from "./➖️remove-case/🧬️schema/🟦️.ts";
+import { type ChangeCaseNumber, parseChangeCaseNumber } from "./🔢️change-case-number/🧬️schema/🟦️.ts";
+import { type ChangeCaseText, parseChangeCaseText } from "./🔤️change-case-text/🧬️schema/🟦️.ts";
+import { type ChangeCaseLabelEn, parseChangeCaseLabelEn } from "./🏷️change-case-label-en/🧬️schema/🟦️.ts";
+import { type ChangeCaseLabelDe, parseChangeCaseLabelDe } from "./🏷️change-case-label-de/🧬️schema/🟦️.ts";
+import { type ChangeCaseEntryId, parseChangeCaseEntryId } from "./📇️change-case-entry-id/🧬️schema/🟦️.ts";
+
 export type En1998Mutation =
+  | InsertCase
+  | RemoveCase
+  | ChangeCaseNumber
+  | ChangeCaseText
+  | ChangeCaseLabelEn
+  | ChangeCaseLabelDe
+  | ChangeCaseEntryId
   | ChangeAnnex
   | InsertBuilding
   | RemoveBuilding
@@ -1089,4 +1104,11 @@ export const parseEn1998Mutation: NormWireReader<En1998Mutation> = normWireTagge
   changeTieBeamSteelArea: parseChangeTieBeamSteelArea,
   changeTieBeamSteelDesignStrength: parseChangeTieBeamSteelDesignStrength,
   changeTieBeamWidth: parseChangeTieBeamWidth,
+  insertCase: parseInsertCase,
+  removeCase: parseRemoveCase,
+  changeCaseNumber: parseChangeCaseNumber,
+  changeCaseText: parseChangeCaseText,
+  changeCaseLabelEn: parseChangeCaseLabelEn,
+  changeCaseLabelDe: parseChangeCaseLabelDe,
+  changeCaseEntryId: parseChangeCaseEntryId,
 });

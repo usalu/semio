@@ -1,0 +1,21 @@
+# FEM 2D Mounted Session Tests
+
+The session's native test crate had drifted from the current original-turn API. It now borrows the shared numerical test caller, which funds actual StepContext turns and its outcome decoder. Test numerical work uses the same `NumericalStep::step_plain` entry as the mounted owner. Assembly returns its original completion before the fixture transfers the matrix inputs, and PCG returns its outcome and storage through the same caller after the displacement checks.
+
+The registry fixtures use the exact quoted session release capacity, including the 16,384-byte owner page. Their cold snapshots use the fixture's bounded retirement owner. The test that borrows a real Store child honors the child's handback opportunity and the Store's owned disposer. The source contract checks the actual split modules.
+
+The first executable pass after fixing stale test API calls ran 19 tests and found 10 failures. This identified fixture teardown and accounting issues as well as a stale source assertion. After those repairs, all 19 passed, including the 257-poll live maintenance fixture and the independent cantilever modal and buckling comparison.
+
+The subsequent results build initially stopped in a shared return module because its guard referenced missing `reserve_original_return_rows` and `claim_why` functions. The later rerun passed all 22 results-window tests. The focused shared assembly test belongs to the `✏️s` workspace. Cargo rejected it from the FEM 2D workspace and then reported that the owning lockfile was stale when invoked with `--locked`.
+
+## Authored demo static publication
+
+`mounted_demo_static_publishes_live_load_reaction` starts from the bundled demo and acquires the original bounded registry shell and Store snapshot lease. The test selects the authored Live Load in the native mounted state, then uses the ordinary graph, mesh, assembly, PCG, reaction recovery and final publication stages. The independent equilibrium expectation in the shared fixture is +12,000 N at `p8` in Ty. The frame's only Live Load acts vertically at the same horizontal coordinate as `p8`; the region load is on the separate slab. A failure reports the reached stage, stage history and latest progress or fault. The same numerical caller drives execution and bounded retirement.
+
+The first locked native run reproduced `fem2d.model-unknown-region-material` while mounting the Demo, before assembly. The triangle ID collision scan had left its cursor at the end of the mounted element table. The next triangle reused that cursor to scan the shorter authored material table. The cursor now resets when the collision scan completes. The test also reports registry and Store retirement status separately, along with the last lifecycle step and the remaining mounted mesh and model owners.
+
+The first isolated secondary assembly build found an incorrect relative path to its existing language-neutral fixture. The law now resolves the fixture within the assembly module. The locked isolated rerun passed `secondary_assembly_retains_consistent_mass_in_stiffness_order`. The locked `editor_boot` rerun passed all seven tests after the fixture settled the framework-reserved job before typed publication.
+
+After the cursor fix, native Demo analysis reached Complete, published its validated final result, and measured +12,000.000122908174 N at `p8` in Ty. The registry and its mounted shell retired. The test still failed because the Store did not confirm terminal disposal. The fixture originally requested a quote using its release ceiling, then gave the Store an effect with a narrower copy ceiling. The Store uses the effect's copy ceiling to select and fund its close work. The test now quotes and executes under the same fixed one-item lifecycle grant, following the existing Store fixture laws. The terminal assertion remains and reports the Store phase and final quote and step if retirement stalls. This fixture correction still needs a native rerun.
+
+The 11:52 UTC rerun passed the bundled Demo static test, including validated final publication, the independent Live Load reaction at p8, and strict termination of both mounted and document Store owners. The executable test completed in 0.61 seconds after compilation.

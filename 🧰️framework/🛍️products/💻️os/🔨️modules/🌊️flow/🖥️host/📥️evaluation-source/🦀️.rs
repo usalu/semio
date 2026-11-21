@@ -169,6 +169,9 @@ pub mod dependency_publication;
 #[path="🔣️receive/🦀️.rs"]
 pub mod receiving;
 
+#[path="../📤️publication/📡️invocation/🪪️identity/🦀️.rs"]
+pub mod invocation_identity;
+
 #[path="../📤️publication/📡️invocation/🧾️request-work/🦀️.rs"]
 pub mod invocation_request;
 

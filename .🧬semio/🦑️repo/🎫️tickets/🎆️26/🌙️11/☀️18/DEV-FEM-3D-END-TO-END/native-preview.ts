@@ -9,33 +9,20 @@ const staged = component === "--staged";
 const port = Number(process.env.FEM_PREVIEW_PORT || (staged ? 6092 : 6091));
 if (!staged && (!component || !existsSync(component))) throw Error("Pass the FEM component wasm from the native build.");
 const workspace = resolve(import.meta.dirname, "../../../../../../..");
-const modules = join(import.meta.dirname, "🗑️generated", "preview");
+const modules = join(import.meta.dirname, "🗑️generated", "preview-" + port);
 const fem = join(modules, "🏗️fem");
 const base = "semio_hub_fem_component";
 mkdirSync(fem, { recursive: true });
 if (!staged) await transpilePluginComponentAsync(resolve(component), fem, base, {
   repoRoot: workspace, optimize: false, preview2VendorDir: join(modules, "🪞️vendor", "🤝️bytecode-alliance", "🪟️preview2-shim"),
 });
-const workerDiagnostics = `let capturedGuestLines = 0, guestTraceTimer;
-const lastGuestLines = [];
-const postGuestTrace = (text) => fetch("/__fem_guest_trace", {method:"POST",body:text.slice(0,4096)}).catch(()=>{});
-postGuestTrace("[DEBUG] guest shard started");
-let commandSamples = 0;
-self.addEventListener("message", ({data: msg}) => {
-  if (msg?.kind !== "turn" || (!msg.commandPage && !msg.events?.length) || commandSamples++ >= 24) return;
-  const wire = JSON.stringify({actor:msg.actorId, budget:msg.budget, cursor:msg.commandPage?.cursor, hex:msg.commandPage ? Array.from(msg.commandPage.bytes, b => b.toString(16).padStart(2,"0")).join("") : undefined, events:msg.events}, (_, v) => typeof v === "bigint" ? String(v) : v);
-  postGuestTrace("[DEBUG] command " + wire);
-});
-const originalGuestError = console.error.bind(console);
+const workerDiagnostics = `
+const writeError = console.error.bind(console);
 console.error = (...args) => {
-  originalGuestError(...args);
+  writeError(...args);
   const text = args.join(" ");
-  lastGuestLines.push(text.slice(0,400));
-  if (lastGuestLines.length > 12) lastGuestLines.shift();
-  clearTimeout(guestTraceTimer);
-  guestTraceTimer = setTimeout(() => postGuestTrace(lastGuestLines.join("\\n")), 400);
-  if (capturedGuestLines++ < 8 || /semantic failure|receipt-refusal|owes its enclosing|exchange.unapplied|exchange.retire-refused/.test(text)) {
-    postGuestTrace(text);
+  if (/semantic failure|receipt-refusal|owes its enclosing/.test(text)) {
+    void fetch("/__fem_guest_trace", {method:"POST",body:text.slice(0,4096)}).catch(()=>{});
   }
 };
 `;

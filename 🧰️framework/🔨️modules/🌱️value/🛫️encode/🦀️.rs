@@ -2,6 +2,7 @@
 use crate::{ValueError, ValueRefusalKind,ErasedSnapshotRetirement};
 use crate::native_receiving::span::{OriginalRecordedIdentity,SendOriginalRecordedLoan};
 pub use crate::native_receiving::span::{OriginalCheckpointRequest,OriginalSpanRequest,OriginalRecordedAuthority,OriginalRecordedProducer,OriginalRecordedReply,OriginalRecordedReplyComplete};
+pub use crate::native_receiving::NativeEncodingReceiverFrame;
 #[path="🧭️span/🦀️.rs"]
 mod span;
 pub use span::{OriginalSourceCheckpointState,OriginalSourceProgressState};

@@ -128,6 +128,10 @@ pub trait Element {
     fn mass(&self, _ctx: &ElementContext) -> Option<MatD> {
         None
     }
+    /// ⚖️ Returns one mounted consistent mass cell in global coordinates.
+    fn mounted_mass_cell(&self, _positions: &[[f64; 3]], _row: usize, _column: usize) -> Option<f64> {
+        None
+    }
     /// 🌀️ Geometric ("stress") stiffness in GLOBAL coordinates for the element's current axial/stress
     /// state at displacement `u_element` — used by linear buckling. `None` means unsupported.
     fn geometric_stiffness(&self, _ctx: &ElementContext, _u_element: &VecD) -> Option<MatD> {

@@ -15323,6 +15323,12 @@
    }
   ]
  },
+ "gitComparisons": [
+  {"name": "an unavailable stage does not disagree with a known stage", "left": {"cursors": {}, "wallMs": 1700000000000, "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "indexTree": null}, "right": {"cursors": {}, "wallMs": 1700000000000, "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "indexTree": "cccccccccccccccccccccccccccccccccccccccc"}, "known": false, "compared": [{"field": "head.commit", "same": true}]},
+  {"name": "HEAD differs even when its stage is unavailable", "left": {"cursors": {}, "wallMs": 1700000000000, "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "indexTree": "cccccccccccccccccccccccccccccccccccccccc"}, "right": {"cursors": {}, "wallMs": 1700000000000, "head": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "indexTree": null}, "known": false, "compared": [{"field": "head.commit", "same": false}]},
+  {"name": "both absent Git repositories agree", "left": {"cursors": {}, "wallMs": 1700000000000, "head": null, "indexTree": null}, "right": {"cursors": {}, "wallMs": 1700000000000, "head": null, "indexTree": null}, "known": true, "compared": [{"field": "head.commit", "same": true}, {"field": "indexTree", "same": true}]},
+  {"name": "different authoritative staged trees disagree", "left": {"cursors": {}, "wallMs": 1700000000000, "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "indexTree": "cccccccccccccccccccccccccccccccccccccccc"}, "right": {"cursors": {}, "wallMs": 1700000000000, "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "indexTree": "dddddddddddddddddddddddddddddddddddddddd"}, "known": true, "compared": [{"field": "head.commit", "same": true}, {"field": "indexTree", "same": false}]}
+ ],
  "agreements": [
   {
    "name": "three cuts of one history agree although they never meet",

@@ -1,11 +1,11 @@
-//! 📚️ Example conforming Blatt 19.
+//! 📚️ Thermal solar collector catalogue.
 
 use semio_plugin::ExampleSource;
 use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "blatt-19";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Blatt 19 conforming", "Blatt 19 konform")
+    LocalizedLabel::native("Thermal solar collector catalogue", "Katalog für thermische Solarkollektoren")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/blatt-19/🗣️.dsl.semio");

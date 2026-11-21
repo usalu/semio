@@ -18,6 +18,10 @@ pub struct OpeningState {
     /// 📥️ Picked-file imports moving into the session's program chunk by chunk, oldest first ([`ImportTransfer`]).
     pub import_transfers: VecDeque<ImportTransfer>,
     pub import_transfer_next: u64,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub native_media_save: Option<NativeMediaSaveTask>,
+    #[cfg(not(target_arch = "wasm32"))]
+    pub native_original_media: Vec<NativeOriginalMediaTask>,
     pub last_envelope_dsl: Option<String>,
     #[cfg(not(target_arch = "wasm32"))]
     pub document_services: Vec<InstalledServiceContributionV1>,

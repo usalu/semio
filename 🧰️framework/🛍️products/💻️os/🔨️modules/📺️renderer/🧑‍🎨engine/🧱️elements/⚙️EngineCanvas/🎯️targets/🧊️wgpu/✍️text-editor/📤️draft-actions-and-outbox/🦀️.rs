@@ -4,10 +4,10 @@ use super::*;
 
 //#region TextEditor
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct TextEditorExplicitDraftSettings {
-    pub edit_action: String,
-    pub edit_argument: String,
-    pub edit_arguments: serde_json::Map<String, Value>,
+pub struct TextEditorExplicitDraftSettings {
+    pub(super) edit_action: String,
+    pub(super) edit_argument: String,
+    pub(super) edit_arguments: serde_json::Map<String, Value>,
     pub apply_label: String,
     pub discard_label: String,
     pub conflict_label: String,
@@ -85,8 +85,8 @@ pub(super) fn emit_text_editor_actions(
             mutate(host);
             if edited {
                 if before.as_deref() != Some(host.text()) {
-                    let changes = entry.editor_delivery.explicit_changes.as_deref().and_then(|json| serde_json::from_str::<Vec<semio_ui_declaration::ui::DraftChange>>(json).ok()).unwrap_or_default();
-                    entry.editor_delivery.explicit_changes = Some(ui_wgpu::wgpu::draft_changes_json(&semio_ui_declaration::ui::compose_draft_step(&changes, before.as_deref().unwrap_or_default(), host.text())));
+                    entry.editor_delivery.explicit_changes =
+                        semio_ui_declaration::ui::compose_draft_step(&entry.editor_delivery.explicit_changes, before.as_deref().unwrap_or_default(), host.text());
                     if entry.editor_delivery.explicit_past.len() == TEXT_EDITOR_PENDING_ECHO_CAPACITY {
                         entry.editor_delivery.explicit_past.pop_front();
                     }

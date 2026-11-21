@@ -1,0 +1,13 @@
+{
+  "archiveMinimumItems": 16,
+  "cases": [
+    { "archivePending": false, "stage": 0, "items": 15, "eligible": true },
+    { "archivePending": true, "stage": 24, "items": 15, "eligible": false },
+    { "archivePending": true, "stage": 24, "items": 16, "eligible": true },
+    { "archivePending": true, "stage": 8, "items": 16, "eligible": true },
+    { "archivePending": true, "stage": 14, "items": 16, "eligible": true },
+    { "archivePending": true, "stage": 15, "items": 16, "eligible": true },
+    { "archivePending": true, "stage": 0, "items": 16, "eligible": false },
+    { "archivePending": true, "stage": 0, "items": 17, "eligible": true }
+  ]
+}

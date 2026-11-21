@@ -26,7 +26,7 @@ export async function runBuildScript(context: Readonly<{ root: string; repoRoot:
   const mode=readBuildMode(profile);
   if(process.env.SEMIO_BUILD_MODE!==undefined&&readBuildMode(process.env.SEMIO_BUILD_MODE)!==mode)throw new Error("Service build mode contradicts its original environment");
   const binary=`semio-s-gis-services-${kind}`;
-  await buildAdmittedCargoArtifactsV1(`${context.root}/Cargo.toml`,["-p","semio-s-dev-gis-services","--bin",binary],context.repoRoot,{producer:"artifact",invocation:context.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(context.invocation, "cargo:build", 0), environment:buildModeEnvironment(mode),output:`dist/${kind}-${mode}`,sourcesRecord:`${binary}.sources.json`});
+  await buildAdmittedCargoArtifactsV1(`${context.root}/Cargo.toml`,["-p","semio-s-dev-gis-services","--bin",binary],context.repoRoot,{producer:"artifact",invocation:context.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(context.invocation, "cargo:build", 0), environment:buildModeEnvironment(mode),...(kind==="mcp"?{output:`dist/${kind}-${mode}`}:{}),sourcesRecord:`${binary}.sources.json`});
 }
 
 /** 🏃️ Runs the `OsMcpLiveAgentLoopScript` command under the caller's roots and invocation. */

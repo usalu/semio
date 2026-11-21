@@ -46,6 +46,7 @@ use semio_framework_value::ValueRefusalKind;
 #[cfg(test)]
 use semio_ui_scene::world3d_snapshot_with_page;
 use semio_ui_scene::world3d_snapshot_recovery_close_step;
+use semio_ui_scene::world3d_snapshot_recovery_pending;
 use semio_ui_scene::WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 use semio_ui_scene::WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY;
 use std::cell::Cell;
@@ -95,6 +96,7 @@ use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_jo
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dNumericalFailure;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::FixedOrder;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::close_recovered_fem3d_backing;
+use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::recovered_fem3d_backing_pending;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageCredit;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualJob;

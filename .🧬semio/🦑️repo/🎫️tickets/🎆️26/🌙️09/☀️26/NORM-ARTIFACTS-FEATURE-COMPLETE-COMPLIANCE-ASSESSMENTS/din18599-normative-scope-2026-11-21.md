@@ -1,0 +1,12 @@
+# DIN 18599 energy assessment coverage
+
+The trace identifies existing checks by part and the building data that reaches them. Matching a production check establishes the execution path. The requirements for ventilation air treatment, building-integrated generation and the complete use-profile and climate tables still need worked examples from their corresponding publications. [DIN V 18599-1:2018-09](https://www.dinmedia.de/de/vornorm/din-v-18599-1/293515783)
+
+German statutory primary energy calculations reference the September 2018 series. The tabular residential method has a separate publication history, including DIN/TS 18599-12:2021-04. The report's tabular path needs its own publication-level worked examples and conditions of use. [Statutory residential method](https://www.gesetze-im-internet.de/geg/__20.html) · [Non-residential method](https://www.gesetze-im-internet.de/geg/__21.html) · [2021 tabular method](https://www.dinmedia.de/de/vornorm/din-ts-18599-12/330414564)
+
+The 2025 DIN/TS revision changes zoning, area-based quantities and primary-energy factors in Part 1. Part 2 changes the handling of temperature corrections, glazing, minimum window ventilation and point thermal bridges. Supplement 1:2026-06 changes the end-energy and applicability tables. Those data and equations require edition-specific selection and numerical verification. [DIN/TS 18599-1:2025-10](https://www.dinmedia.de/de/vornorm/din-ts-18599-1/389750965) · [DIN/TS 18599-2:2025-10](https://www.dinmedia.de/de/vornorm/din-ts-18599-2/389744117) · [DIN/TS 18599 Supplement 1](https://www.dinmedia.de/de/vornorm/din-ts-18599-beiblatt-1/400836333)
+## Residential tabular method
+
+Part 12 is a separate residential procedure using precomputed building and plant tables. The publisher lists the 2021 revision as the successor to the 2017 publication. The statutory monthly method still references the 2018 series. The simplified statutory method in §31 depends on the distinct Annex 5 envelope, system and eligibility requirements. [DIN Media, Part 12](https://www.dinmedia.de/de/vornorm/din-ts-18599-12/330414564) · [GModG §20](https://www.gesetze-im-internet.de/geg/__20.html) · [GModG §31 and Annex 5](https://www.gesetze-im-internet.de/geg/anlage_5.html)
+
+The app withholds a Part 12 verdict when the residential tabular method is selected. Its catalogue now displays verified Part 10 hot-water examples in place of the previous single-rate-per-use estimates. The tabular calculation remains open as DE-12.

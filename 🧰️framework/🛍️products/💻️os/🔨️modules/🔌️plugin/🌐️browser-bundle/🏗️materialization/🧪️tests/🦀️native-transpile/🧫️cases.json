@@ -16,5 +16,10 @@
       "wit": "package semio:plain@0.1.0;\nworld plain {\n  export run: func(n: u32) -> list<u32>;\n}\n",
       "expect": "the native output tree equals the jco output tree byte for byte"
     }
+  ],
+  "shim_imports": [
+    { "name": "same", "component": "component.mjs", "shim": ".", "expect": "same-directory CLI" },
+    { "name": "nested", "component": "component.mjs", "shim": "vendor", "expect": "nested CLI" },
+    { "name": "sibling", "component": "component/component.mjs", "shim": "vendor", "expect": "sibling CLI" }
   ]
 }

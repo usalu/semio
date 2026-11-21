@@ -3,7 +3,7 @@
  * @see ./r3-parent-carrying-toddler-s50.ts
  * @see ./design.md */
 import type { Json } from "./volumes-lib.ts";
-import { ASSET, FRAMES, H, L, X, aboutU, aboutV, aboutW, boneDeg, capsule, compose, ellipsoid, loft, mirrored, part, revolve, st, thOf, toRight, tube, type V3 } from "./r3-parent-carrying-toddler-kit.ts";
+import { ASSET, D, FRAMES, H, L, X, aboutU, aboutV, aboutW, boneDeg, capsule, compose, ellipsoid, loft, mirrored, part, revolve, st, thOf, toRight, tube, type V3 } from "./r3-parent-carrying-toddler-kit.ts";
 import { HEAD, THEAD, TONE, lean, spine } from "./r3-parent-carrying-toddler-s50.ts";
 
 /* ---------------------------------------------------------------- thermal */
@@ -99,23 +99,26 @@ export const jointBall = (member: string, at: V3, r: number, id = `joint-${membe
 /** 🦴 The spine from the sacral base to C7 (upright x, y, radius): lumbar lordosis, thoracic kyphosis. */
 export const SPINE: readonly [number, number, number][] = [[-0.04, 1.012, 0.019], [-0.022, 1.06, 0.019], [-0.014, 1.11, 0.0185], [-0.022, 1.17, 0.018], [-0.045, 1.24, 0.0165], [-0.065, 1.31, 0.015], [-0.072, 1.37, 0.0145], [-0.066, 1.43, 0.0135], [-0.052, 1.47, 0.0125], [-0.042, 1.484, 0.012]];
 /** 🫁 Rib hoops, tenth to second rib: [y, x of the centre, depth radius, half-width] upright. */
-export const RIBS: readonly [number, number, number, number][] = [[1.17, 0.005, 0.085, 0.118], [1.205, 0.005, 0.09, 0.126], [1.24, 0.004, 0.093, 0.13], [1.275, 0.003, 0.094, 0.131], [1.31, 0.0, 0.092, 0.129], [1.345, -0.004, 0.087, 0.123], [1.375, -0.008, 0.078, 0.112], [1.405, -0.013, 0.066, 0.096], [1.43, -0.018, 0.052, 0.074]];
+export const RIBS: readonly [number, number, number, number][] = [[1.17, 0.005, 0.085, 0.118], [1.205, 0.005, 0.09, 0.126], [1.24, 0.004, 0.093, 0.13], [1.275, 0.003, 0.094, 0.131], [1.31, 0.0, 0.092, 0.129], [1.345, -0.004, 0.087, 0.123], [1.375, -0.004, 0.074, 0.112], [1.405, 0.003, 0.064, 0.096], [1.43, 0.003, 0.058, 0.074]];
+/** 📐 The plane normal of a rib hoop in the upright figure: ribs fall about 24 degrees from their heads at the spine to the costal cartilages in front. */
+export const RIB_NORMAL: V3 = [Math.sin((24 * Math.PI) / 180), Math.cos((24 * Math.PI) / 180), 0];
 
 function parentSkeleton(body: readonly Json[]): Json[] {
   const out: Json[] = [];
   const m = (solid: Json, member: string): void => { out.push(part(solid, member, "member")); };
   m(tube({ id: "spine", bone: "torso", ...BONE }, SPINE.map(([x, y]) => T(x, y)), SPINE.map((q) => q[2])), "torso");
-  RIBS.forEach(([y, x, rd, rw], i) => m(revolve({ id: `rib-${10 - i}`, bone: "torso", ...BONE }, ring(rd, 0.006), T(x, y), [1, 0, 0], { lateralScale: Math.round((rw / rd) * 1000) / 1000 }), "torso"));
+  RIBS.forEach(([y, x, rd, rw], i) => m(revolve({ id: `rib-${10 - i}`, bone: "torso", ...BONE }, ring(rd, 0.006), T(x, y), D("torso", RIB_NORMAL), { lateralScale: Math.round((rw / rd) * 1000) / 1000 }), "torso"));
   m(loft({ id: "sternum", bone: "torso", ...BONE }, [H("torso", 1.25, 0.085 + lean(1.25), 0.097 + lean(1.25), 0.013), H("torso", 1.33, 0.083 + lean(1.33), 0.095 + lean(1.33), 0.018), H("torso", 1.4, 0.062 + lean(1.4), 0.074 + lean(1.4), 0.024), H("torso", 1.425, 0.05 + lean(1.425), 0.062 + lean(1.425), 0.026)]), "torso");
   for (const side of [1, -1]) {
     const n = side > 0 ? "l" : "r";
     m(capsule({ id: `clavicle-${n}`, bone: "torso", ...BONE }, T(0.05, 1.425, side * 0.022), T(-0.012, 1.448, side * 0.165), 0.0078, 0.0072), "torso");
-    m(ellipsoid({ id: `scapula-${n}`, bone: "torso", ...BONE }, [0.07, 0.007, 0.048], T(-0.088, 1.35, side * 0.102), compose(aboutW(4), aboutU(side * 28))), "torso");
+    m(loft({ id: `scapula-${n}`, bone: "torso", ...BONE }, [st(-0.07, 0, side * -0.022, 0.012, 0.007, 2), st(-0.035, 0, side * -0.01, 0.03, 0.007, 2.2), st(0.005, 0, 0, 0.045, 0.007, 2.4), st(0.045, 0, side * 0.008, 0.05, 0.007, 2.4), st(0.068, 0, side * 0.005, 0.036, 0.007, 2.2)], [true, true], { transform: { translation: T(-0.088, 1.35, side * 0.102), rotation: compose(aboutW(4), aboutU(side * 28)) } }), "torso");
+    m(capsule({ id: `scapular-spine-${n}`, bone: "torso", ...BONE }, T(-0.1, 1.4, side * 0.07), T(-0.03, 1.446, side * 0.165), 0.0065, 0.0075), "torso");
   }
   m(tube({ id: "sacrum", bone: "pelvis", ...BONE }, [P(-0.04, 1.012), P(-0.064, 0.97), P(-0.076, 0.93), P(-0.07, 0.9)], [0.027, 0.025, 0.016, 0.008]), "pelvis");
   for (const side of [1, -1]) {
     const n = side > 0 ? "l" : "r";
-    m(ellipsoid({ id: `ilium-${n}`, bone: "pelvis", ...BONE }, [0.062, 0.07, 0.012], P(-0.022, 0.985, side * 0.106), compose(aboutU(side * 32), aboutV(side * -22))), "pelvis");
+    m(loft({ id: `ilium-${n}`, bone: "pelvis", ...BONE }, [st(-0.06, 0, 0, 0.0085, 0.02, 2), st(-0.03, 0, 0, 0.0085, 0.036, 2.2), st(0.01, 0, 0, 0.0085, 0.058, 2.4), st(0.045, 0, 0, 0.0085, 0.07, 2.6), st(0.062, 0, 0, 0.0085, 0.06, 2.6), st(0.072, 0, 0, 0.0075, 0.034, 2.2)], [true, true], { transform: { translation: P(-0.022, 0.985, side * 0.106), rotation: compose(aboutU(side * 32), aboutV(side * -22)) } }), "pelvis");
     m(capsule({ id: `pubis-${n}`, bone: "pelvis", ...BONE }, P(0.004, 0.94, side * 0.078), P(0.052, 0.915, side * 0.012), 0.012, 0.011), "pelvis");
     m(capsule({ id: `ischium-${n}`, bone: "pelvis", ...BONE }, P(-0.008, 0.93, side * 0.076), P(-0.036, 0.865, side * 0.055), 0.013, 0.014), "pelvis");
   }
@@ -186,7 +189,7 @@ function toddlerSkeleton(): Json[] {
   const tz = FRAMES["toddler-torso"]!.o[2];
   const Tt = (dx: number, y: number, z = 0): V3 => L("toddler-torso", [spine(y) + dx, y, tz + z]);
   m(tube({ id: "toddler-spine", bone: "toddler-torso", ...BONE }, [Tt(-0.035, 1.2), Tt(-0.022, 1.26), Tt(-0.024, 1.33), Tt(-0.034, 1.4), Tt(-0.026, 1.47)], [0.012, 0.012, 0.0105, 0.0095, 0.0085]), "toddler-torso");
-  [[1.3, 0.06, 0.076], [1.335, 0.062, 0.08], [1.37, 0.06, 0.078], [1.405, 0.052, 0.068]].forEach(([y, rd, rw], i) => m(revolve({ id: `toddler-rib-${i + 1}`, bone: "toddler-torso", ...BONE }, ring(rd!, 0.0045), Tt(0.025, y!), [1, 0, 0], { lateralScale: Math.round((rw! / rd!) * 1000) / 1000 }), "toddler-torso"));
+  [[1.3, 0.06, 0.076], [1.335, 0.062, 0.08], [1.37, 0.06, 0.078], [1.405, 0.052, 0.068]].forEach(([y, rd, rw], i) => m(revolve({ id: `toddler-rib-${i + 1}`, bone: "toddler-torso", ...BONE }, ring(rd!, 0.0045), Tt(0.025, y!), D("toddler-torso", RIB_NORMAL), { lateralScale: Math.round((rw! / rd!) * 1000) / 1000 }), "toddler-torso"));
   for (const side of [1, -1]) {
     const n = side > 0 ? "l" : "r";
     m(ellipsoid({ id: `toddler-ilium-${n}`, bone: "toddler-torso", ...BONE }, [0.032, 0.036, 0.008], Tt(0.0, 1.235, side * 0.058), compose(aboutU(side * 30))), "toddler-torso");

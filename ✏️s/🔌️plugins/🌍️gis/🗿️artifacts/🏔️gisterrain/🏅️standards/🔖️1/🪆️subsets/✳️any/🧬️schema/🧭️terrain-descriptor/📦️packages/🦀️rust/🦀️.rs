@@ -58,15 +58,6 @@ pub mod standards {
     }
 }
 #[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "../../../../📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
-#[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod gis3d {

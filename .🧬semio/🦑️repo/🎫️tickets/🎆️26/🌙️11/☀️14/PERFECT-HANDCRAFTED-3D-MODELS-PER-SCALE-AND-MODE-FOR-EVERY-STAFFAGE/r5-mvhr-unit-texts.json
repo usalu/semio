@@ -1,0 +1,30 @@
+{
+  "200": [
+    {
+      "en": "Body: at 1:200 (30 mm) the casing is one rounded block reaching to the wall (bracket and rest strip merged), the cover a 30 mm slab with the window opening and one glass disc, the impeller a plain 30 mm disc, the spigots plain tubes without seals, generalised to 90 mm so that the gaps between them stay printable (0.26 mm instead of 0.21 mm at the 42 mm gap of the side view).",
+      "de": "Körper: bei 1:200 (30 mm) ist das Gehäuse ein gerundeter Block bis zur Wand (Konsole und Auflageleiste zusammengeführt), der Deckel eine 30-mm-Platte mit Fensteröffnung und einer Glasscheibe, das Laufrad eine glatte 30-mm-Scheibe, die Stutzen glatte Rohre ohne Dichtungen, auf 90 mm verallgemeinert, damit die Lücken zwischen ihnen druckbar bleiben (0,26 mm statt 0,21 mm an der 42-mm-Lücke der Vorderansicht)."
+    },
+    {
+      "en": "Thermal: casing and cover surfaces, window, impeller, four plain closed ducts; inside the plate pack, the extract fan as its 144 mm scroll drum and both filters as one slab; 30 mm outlet patches.",
+      "de": "Thermik: Gehäuse- und Deckelflächen, Fenster, Laufrad, vier glatte geschlossene Kanäle; innen das Plattenpaket, der Abluftventilator als seine Spiraltrommel von 144 mm und beide Filter als eine Platte; 30-mm-Auslassflächen."
+    },
+    {
+      "en": "Structure: wrapper and back tray to the wall, spigot tubes in 30 mm collars, impeller disc on a 30 mm shaft, the hook and the rest as 30 mm bars in the wall plane; only the casing mass, the spigot and impeller masses (7 and 6 percent) are merged into it.",
+      "de": "Tragwerk: Mantel und Rückwandwanne bis zur Wand, Stutzenrohre in 30-mm-Kragen, Laufradscheibe auf einer 30-mm-Welle, Haken und Auflage als 30-mm-Riegel in der Wandebene; nur die Gehäusemasse, die Massen von Stutzen und Laufrad (7 und 6 Prozent) sind in sie eingerechnet."
+    }
+  ],
+  "500": [
+    {
+      "en": "Body: a digital miniature for the 75 mm feature: casing and cover are one crisp 0.6 x 0.6 x 0.3 m block from the cover face to the wall (bends, cover joint, bezel, light, grip and the wall rail are far below the feature), the 254 mm window lies in its face with the impeller disc behind it, and the four DN100 spigots are solid 90 mm drums in their staggered rows.",
+      "de": "Körper: eine digitale Miniatur für das Merkmal von 75 mm: Gehäuse und Deckel sind ein scharfkantiger Block von 0,6 x 0,6 x 0,3 m von der Deckelfläche bis zur Wand (Biegekanten, Deckelfuge, Ring, Leuchte, Griff und Wandschiene liegen weit unter dem Merkmal), das Fenster von 254 mm liegt in seiner Fläche mit der Laufradscheibe dahinter, und die vier DN100-Stutzen sind volle Trommeln von 90 mm in ihren versetzten Reihen."
+    },
+    {
+      "en": "Thermal: the casing block, the front face of the window, the impeller, the four spigots as closed duct drums (both ends are duct sections), and inside the hidden plate pack, the extract-fan drum and the filter slab; supply and exhaust air leave through thin patches on the tops of their spigots.",
+      "de": "Thermik: der Gehäuseblock, die Vorderseite des Fensters, das Laufrad, die vier Stutzen als geschlossene Kanaltrommeln (beide Enden sind Kanalschnitte) und innen das verborgene Plattenpaket, die Trommel des Abluftventilators und die Filterplatte; Zu- und Fortluft treten durch dünne Flächen auf den Stutzenköpfen aus."
+    },
+    {
+      "en": "Structure: the 1 mm steel wrapper as one sheet ring and the back tray as one plate carry the unit to the wall: the hook at the rail (pin) and the rest strip (roller); the four spigot tubes stand on 30 mm collars, the impeller turns on its shaft, and the mass sits at the centre of the casing.",
+      "de": "Tragwerk: der 1 mm starke Stahlmantel als ein Blechring und die Rückwand als eine Platte tragen das Gerät an die Wand: der Haken an der Schiene (Gelenk) und die Auflageleiste (Rolle); die vier Stutzenrohre stehen auf Kragen von 30 mm, das Laufrad dreht auf seiner Welle, und die Masse liegt in der Mitte des Gehäuses."
+    }
+  ]
+}

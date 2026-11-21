@@ -1,0 +1,69 @@
+{
+  "objects": [
+    {
+      "id": "covered",
+      "value": "already captured by fleet\n",
+      "values": 1
+    },
+    {
+      "id": "unshared",
+      "value": "local pack without fleet publication\n",
+      "values": 1
+    },
+    {
+      "id": "large",
+      "value": "large represented bytes\n",
+      "values": 180000
+    },
+    {
+      "id": "wrongPair",
+      "value": "belongs to a mismatched index\n",
+      "values": 1
+    },
+    {
+      "id": "packWithoutIndex",
+      "value": "only the pack row is live\n",
+      "values": 1
+    },
+    {
+      "id": "missing",
+      "value": "not in this repository\n",
+      "values": 1
+    }
+  ],
+  "request": [
+    "covered",
+    "unshared",
+    "large",
+    "wrongPair",
+    "packWithoutIndex",
+    "missing",
+    "covered"
+  ],
+  "rows": [
+    {
+      "id": "covered",
+      "outcome": "covered"
+    },
+    {
+      "id": "unshared",
+      "outcome": "loose"
+    },
+    {
+      "id": "large",
+      "outcome": "loose"
+    },
+    {
+      "id": "wrongPair",
+      "outcome": "loose"
+    },
+    {
+      "id": "packWithoutIndex",
+      "outcome": "loose"
+    },
+    {
+      "id": "missing",
+      "outcome": "pending"
+    }
+  ]
+}

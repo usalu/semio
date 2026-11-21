@@ -33,6 +33,22 @@
    "echo": { "buffer": "", "lanes": [{ "lane": "buffer", "bytes": 0, "hash": "cbf29ce484222325" }], "language": "plain" },
    "synced": { "buffer": "" },
    "samePack": false
+  },
+  {
+   "id": "decoded-absent-options-sync-like-omitted-fields",
+   "external": true,
+   "previous": { "buffer": "\ufeffvisible", "settingsJson": "{\"readOnly\":true}" },
+   "echo": { "buffer": "\ufeffvisible", "settingsJson": "{\"readOnly\":true}", "selectionJson": null, "tokensJson": null, "diagnosticsJson": null, "placeholdersJson": null, "occurrencesJson": null, "extraCaretsJson": null, "selectableSpansJson": null, "cameraJson": null, "overlaysJson": null, "hoverJson": null },
+   "synced": { "buffer": "\ufeffvisible", "settings": { "readOnly": true } },
+   "samePack": true
+  },
+  {
+   "id": "encoded-null-explicitly-clears-hover",
+   "external": true,
+   "previous": { "buffer": "visible", "hoverJson": "{\"start\":0,\"end\":1}" },
+   "echo": { "buffer": "visible", "hoverJson": "null" },
+   "synced": { "buffer": "visible", "hover": { "kind": "clear" } },
+   "samePack": false
   }
  ]
 }

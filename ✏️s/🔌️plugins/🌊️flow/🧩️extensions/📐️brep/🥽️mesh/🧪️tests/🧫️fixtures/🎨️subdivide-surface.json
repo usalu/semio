@@ -1,0 +1,216 @@
+{
+  "convex": {
+    "face": 0,
+    "faceCount": 5,
+    "center": [
+      1,
+      1,
+      0
+    ],
+    "centerNormal": [
+      0,
+      0,
+      1
+    ],
+    "centerUv": [
+      0.5,
+      0.5
+    ],
+    "area": 6
+  },
+  "concave": {
+    "source": {
+      "vertices": [
+        [
+          0,
+          0,
+          2
+        ],
+        [
+          4,
+          0,
+          2
+        ],
+        [
+          4,
+          4,
+          2
+        ],
+        [
+          2,
+          1.5,
+          2
+        ],
+        [
+          0,
+          4,
+          2
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      "surface": [
+        {
+          "kind": "vertexNormal",
+          "index": 0,
+          "normal": [
+            0.0,
+            0.0,
+            1
+          ]
+        },
+        {
+          "kind": "vertexNormal",
+          "index": 1,
+          "normal": [
+            0.5,
+            0.0,
+            1
+          ]
+        },
+        {
+          "kind": "vertexNormal",
+          "index": 2,
+          "normal": [
+            0.5,
+            0.5,
+            1
+          ]
+        },
+        {
+          "kind": "vertexNormal",
+          "index": 3,
+          "normal": [
+            0.25,
+            0.1875,
+            1
+          ]
+        },
+        {
+          "kind": "vertexNormal",
+          "index": 4,
+          "normal": [
+            0.0,
+            0.5,
+            1
+          ]
+        },
+        {
+          "kind": "smoothFace",
+          "index": 0
+        },
+        {
+          "kind": "cornerUv",
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "kind": "cornerUv",
+          "index": 1,
+          "uv": [
+            1.0,
+            0.0
+          ]
+        },
+        {
+          "kind": "cornerUv",
+          "index": 2,
+          "uv": [
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "cornerUv",
+          "index": 3,
+          "uv": [
+            0.5,
+            0.375
+          ]
+        },
+        {
+          "kind": "cornerUv",
+          "index": 4,
+          "uv": [
+            0.0,
+            1.0
+          ]
+        }
+      ],
+      "attributes": {
+        "submittedNormal": {
+          "domain": "vertex",
+          "semantic": "normal",
+          "interpolation": "linear",
+          "values": [
+            [
+              0.0,
+              0.0,
+              1
+            ],
+            [
+              0.5,
+              0.0,
+              1
+            ],
+            [
+              0.5,
+              0.5,
+              1
+            ],
+            [
+              0.25,
+              0.1875,
+              1
+            ],
+            [
+              0.0,
+              0.5,
+              1
+            ]
+          ]
+        },
+        "detailUv": {
+          "domain": "corner",
+          "semantic": "uv",
+          "interpolation": "linear",
+          "values": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              0.0
+            ],
+            [
+              1.0,
+              1.0
+            ],
+            [
+              0.5,
+              0.375
+            ],
+            [
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      }
+    },
+    "face": 0,
+    "faceCount": 9,
+    "area": 11
+  }
+}

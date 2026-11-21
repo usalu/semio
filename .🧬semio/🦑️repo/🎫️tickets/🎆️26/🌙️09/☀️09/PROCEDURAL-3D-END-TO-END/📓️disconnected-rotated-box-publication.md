@@ -1,0 +1,14 @@
+# Disconnected Rotated Box Boolean Publication
+
+The retained `brep.bool.cut` and `brep.bool.fuse` operators publish disconnected same-span, shared-axis rotated box results through the existing geometry value on their `solid` port. Two to four verified material cycles produce separately closed planar prism roots. The output uses geometry kind `compound` and preserves the deterministic material-cycle order. The established connected prism and through-hole construction paths still return one solid.
+
+The compound reuses the original funded pattern journal cursor. Each disconnected component has its own private solid publication, bounded demand, stable topology labels, and reverse-order rollback. The cursor holds all roots until one live compound insertion succeeds. A failed insertion restores the root list to the cursor. Cancellation rolls back the partial and completed journals. The compound remains owned by the original engine and captured topology revision, with both native source roots checked before further funded work. Existing patterns continue to borrow their original first solid and draft only the remaining copies.
+
+The ordinary compound preview walks every retained solid. Explode exposes each piece through the existing topology alias operation. Retained planar area and volume integrate each of up to four distinct native roots independently and sum the results using compensated accumulation. Each member's volume has its own integration origin and winding check.
+
+## Verification
+
+- The neutral fixture now specifies every component's area and volume for two-piece and four-piece cuts and two-piece disjoint fuse. Manifold verified area, volume, component count and genus for all operations in 91 assertions.
+- The compact Rust verification compiled the authored arrangement, group ownership, batch cursor, prism recipe and planar measure integration with an in-memory child journal. It passed 24 tests, including zero-item admission, cancellation after the first and after all private roots, failed root transfer recovery, terminal publication and independent exact component and aggregate measures. The same cursor's borrowed-first pattern regression passed.
+- The registered Flow case checks that the live index stays unchanged during preparation, cancels after the first inserted private root, then publishes one compound on a separate run. It checks whole-compound preview, preview after Explode, and exact measurements on the compound and every member. Linked execution remains pending under the shared build capacity constraint.
+- The canonical source reader measured 3,940 active lines in Engine, 3,998 in Native Registry, 3,989 in Solid Transaction and 2,796 in Analysis. Spatial Session measured 260,983 active bytes and the Boolean integration target 140,151. Rust syntax, scoped whitespace and path-length checks passed.

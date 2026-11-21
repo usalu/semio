@@ -1,263 +1,69 @@
-use crate::{editor::gis3d::commands::example, editor::gis3d::commands::exaggeration, editor::gis3d::commands::view};
-use crate::editor::gis3d::modes::view::windows::terrain;
-use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
+//! 🔐️ Checks private Terrain command factory admission and exposes the shared test context.
+
+use crate::editor::gis3d::{Gis3dCommand, Gis3dCommandJobFactory, Gis3dPlayApp, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_TOOL_IDS, GIS3D_RETAINED_WORK_ITEMS, gis3d_retained_extent};
+use crate::editor::gis3d::commands::view::set_camera;
 use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
-use crate::GIS_3D_TERRAIN_SCHEMA;
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract};
-use semio_plugin::ArtifactView;
-use semio_plugin::Media;
-use semio_plugin::MediaClass;
-use semio_plugin::MediaForm;
-use semio_plugin::MediaPayload;
-use semio_plugin::MediaType;
+use semio_framework::{ToolExecutionContract, ToolJobFactory};
 use semio_framework_test_fixtures::fixture_text;
-use serde_json::Value;
-use example::set_active_example;
-use exaggeration::set_exaggeration;
-use view::set_camera;
-#[allow(unused_imports)]
-use crate::editor::gis3d::modes::view as view_mode;
-#[allow(unused_imports)]
-use crate::GisTerrainSnapshot;
-#[allow(unused_imports)]
-use semio_framework::{ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-#[allow(unused_imports)]
-use semio_plugin::app::InteractionView;
-#[allow(unused_imports)]
-use semio_plugin::{retained_command::ArtifactRetainedCommandJob, retained_command::ArtifactRetainedCommandPayload, retained_command::BoundedArtifactCommandWork};
-#[allow(unused_imports)]
-use semio_plugin::AppIo;
-#[allow(unused_imports)]
-use semio_plugin::AppOperationContext;
-#[allow(unused_imports)]
 use semio_plugin::ArtifactEditor;
-#[allow(unused_imports)]
-use semio_plugin::ArtifactOwnedToolJobRequest;
-#[allow(unused_imports)]
-use semio_plugin::ArtifactToolFactoryRegistry;
-#[allow(unused_imports)]
-use semio_plugin::ArtifactToolPublicationContract;
-#[allow(unused_imports)]
-use semio_plugin::ArtifactToolPublicationLane;
-#[allow(unused_imports)]
-use semio_plugin::ConfigView;
-#[allow(unused_imports)]
-use semio_framework_artifact_reference::Dialect;
-#[allow(unused_imports)]
-use semio_plugin::DraftView;
-#[allow(unused_imports)]
-use semio_plugin::Editor;
-#[allow(unused_imports)]
-use semio_plugin::Emit;
-#[allow(unused_imports)]
-use semio_plugin::Fault;
-#[allow(unused_imports)]
-use semio_plugin::GranularityDefinition;
-#[allow(unused_imports)]
-use semio_plugin::HierarchyProvider;
-#[allow(unused_imports)]
-use semio_plugin::HoverSpec;
-#[allow(unused_imports)]
-use semio_plugin::InteractionDefinition;
-#[allow(unused_imports)]
-use semio_plugin::InteractionRef;
-#[allow(unused_imports)]
-use semio_ui_locale::Label;
-#[allow(unused_imports)]
-use semio_ui_locale::LocalizedLabel;
-#[allow(unused_imports)]
-use semio_plugin::MediaError;
-#[allow(unused_imports)]
-use semio_plugin::MergeMode;
-#[allow(unused_imports)]
-use semio_plugin::NoConfig;
-#[allow(unused_imports)]
-use semio_plugin::NoConfigMutation;
-#[allow(unused_imports)]
-use semio_plugin::NoDraft;
-#[allow(unused_imports)]
-use semio_plugin::NoDraftMutation;
-#[allow(unused_imports)]
-use semio_plugin::SelectionMethod;
-#[allow(unused_imports)]
-use semio_plugin::SelectionMode;
-#[allow(unused_imports)]
-use semio_plugin::SelectionSpec;
-#[allow(unused_imports)]
-use pack::snapshot::ArtifactPack;
-#[allow(unused_imports)]
-use semio_framework_2d_compute::EngineHandles;
-use crate::editor::gis3d::{GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM, GIS3D_EXAGGERATION_STAGED_DEFAULT, GIS3D_RETAINED_TOOL_IDS, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, gis3d_retained_extent, Gis3dCommandJobFactory};
-pub mod context {
-    use crate::editor::gis3d::*;
-use crate::{editor::gis3d::commands::example, editor::gis3d::commands::exaggeration, editor::gis3d::commands::view};
-use crate::editor::gis3d::modes::view::windows::terrain;
-use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
-use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
-use crate::GIS_3D_TERRAIN_SCHEMA;
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract};
-use semio_plugin::ArtifactView;
-use semio_plugin::Media;
-use semio_plugin::MediaClass;
-use semio_plugin::MediaForm;
-use semio_plugin::MediaPayload;
-use semio_plugin::MediaType;
 use serde_json::Value;
-use example::set_active_example;
-use exaggeration::set_exaggeration;
-use view::set_camera;
-    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation, TypedOperationFixtureReceipt};
-    use semio_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
-    
-    /// 🗺️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
-/// scope pays the caller's terminal retirement after the app's paid close.
-pub struct Gis3dApp(pub VcsArtifactApp<EditorApp<Gis3dPlayApp>>, pub semio_plugin::artifact_app_laws::OriginalFixtureScope);
 
-impl std::ops::Deref for Gis3dApp {
-    type Target = VcsArtifactApp<EditorApp<Gis3dPlayApp>>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+use crate as artifact;
+
+#[path = "../🧰️context/🦀️.rs"]
+pub mod context;
+
+semio_plugin::history_edit_acceptance_law!("gis", Gis3dPlayApp, gis3d_app_manifest_for_tests, "../..");
+
+use context::gis3d_app_manifest_for_tests;
+
+#[test]
+fn published_terrain_fault_notices_pass_registry_validation() {
+    let notices = semio_framework::fault_notice_definitions(Gis3dPlayApp::fault_notices());
+    assert_eq!(semio_framework::validate_fault_notices(&notices), []);
 }
 
-impl std::ops::DerefMut for Gis3dApp {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-    
-    /// 🧬️ Builds the real registered fixture and binds the instance addressed by [`meta`].
-    pub async fn app() -> Gis3dApp {
-        let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
-        app.bind_instance_id(meta("local").instance_id).await;
-        Gis3dApp(app, scope)
-    }
-    
-    /// ✏️ Adapts `create_gis3d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
-    /// examples }` shape `context::assert_declared_actions_bridge_to_commands` still expects —
-    /// framework test context gap, not modifiable here.
-    pub fn gis3d_app_manifest_for_tests() -> semio_plugin::App {
-        semio_plugin::App { definition: create_gis3d_app(), examples: Vec::new() }
-    }
+#[test]
+fn history_exaggeration_fixture_matches_the_native_fold() {
+    use crate::{GisTerrainSnapshot, mutations::GisTerrainMutation};
+    use protocol::ColdMutation;
+    use semio_framework_pack_json::{JsonMemberPolicy, from_json_str, to_json_string};
 
-    semio_plugin::history_edit_acceptance_law!("gis", Gis3dPlayApp, gis3d_app_manifest_for_tests, "../..");
-    
-    /// 🪟️ Targets the real Terrain window instance for render and command authority.
-    pub fn main_window_view() -> ViewModel {
-        ViewModel {
-            window_id: Some(crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into()),
-            window_instances: vec![ViewWindowInstance {
-                id: crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(),
-                window_kind_id: crate::editor::gis3d::modes::view::windows::terrain::GIS3D_PLAY_WINDOW_MAIN.into(),
-            }],
-            ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
-        }
-    }
-    
-    /// 🧹️ Drives a Terrain fixture to its exact terminal-empty ownership witness.
-    pub fn close(app: &mut Gis3dApp) {
-        close_registered_fixture_app(&mut app.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
-    }
-    
-    /// 🎯️ Dispatches a typed Terrain command and completes its bounded host publication protocol.
-    pub async fn dispatch(app: &mut Gis3dApp, command: Gis3dCommand) -> TypedOperationFixtureReceipt {
-        dispatch_at(app, command, main_window_view()).await
-    }
-    
-    /// 🎯️ Dispatches through the exact addressed Terrain window captured by the retained operation.
-    pub async fn dispatch_at(app: &mut Gis3dApp, command: Gis3dCommand, view_state: ViewModel) -> TypedOperationFixtureReceipt {
-        let mut action_meta = meta("local");
-        action_meta.view_state = Some(view_state);
-        let admission = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        assert!(admission.mutations.is_empty(), "retained Terrain commands publish only through acknowledged result pages");
-        settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle Terrain dispatch")
-    }
-    
-    /// ↩️ Drives a framework-reserved history verb (`undo`/`redo`) home. `handle_action` only ADMITS
-    /// such a verb and answers with the reserved job's `Effect::SpawnJob`; without settling that
-    /// admission the rewind never runs and the projection still shows the pre-undo document.
-    pub async fn history_verb(app: &mut Gis3dApp, action: &str) -> TypedOperationFixtureReceipt {
-        let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("history verb");
-        semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("settle the framework-reserved history verb");
-        settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the history verb publication")
-    }
-    
-    pub async fn render(app: &mut Gis3dApp, body_key: &str) -> String {
-        render_at(app, body_key, &main_window_view()).await
-    }
-    
-    /// 🪟️ Renders from the persisted configuration of one exact Terrain window.
-    pub async fn render_at(app: &mut Gis3dApp, body_key: &str, view_state: &ViewModel) -> String {
-        semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render projection")
-    }
+    let fixture: Value = serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🧬️history-edits/🎚️exaggeration/🦠️mutation/🔣️.json")).unwrap();
+    let before: GisTerrainSnapshot = from_json_str(&fixture["before"].to_string(), JsonMemberPolicy::Reject).unwrap();
+    let mutation: GisTerrainMutation = from_json_str(&fixture["mutation"].to_string(), JsonMemberPolicy::Reject).unwrap();
+    let outcome = mutation.diff(&before);
+    let applied = protocol::apply_diff_cold(outcome.diff(), &before).unwrap();
+    let actual: Value = serde_json::from_str(&to_json_string(&applied)).unwrap();
+    assert_eq!(actual, fixture["after"]);
 }
 
-use crate::editor::gis3d::*;
-use crate::editor::gis3d::unit_tests::context::{app, close, dispatch, gis3d_app_manifest_for_tests, render};
-use semio_plugin::EditorApp;
-use serde_json::json;
+#[test]
+fn history_operations_receive_under_mounted_copy_quanta() {
+    use crate::mutations::{ChangeExaggeration, ChangeImportedFeatures, GisTerrainMutation, ReplaceElevationSource};
+    use dsl::original_receiving::{ReceivingStock, receive_to_completion};
+    use protocol::OpBinary;
+    use semio_framework_value::RetainedCloneGrant;
+
+    let gis = default_terrain_document();
+    let operations = [
+        (0, GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: 2.5 })),
+        (1, GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: gis.imported_map })),
+        (2, GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource { new_elevation_source: gis.elevation_source })),
+        (2, GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource { new_elevation_source: None })),
+    ];
+    let quantum = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4_096 };
+    let stock = ReceivingStock { stock: RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, ..quantum }, quantum, fuel: 1 << 20 };
+    for (tag, operation) in operations {
+        let bytes = operation.encode_op().unwrap();
+        assert_eq!(bytes[..2], [1, tag]);
+        assert_eq!(GisTerrainMutation::decode_op(&bytes).unwrap(), operation);
+        let received = receive_to_completion::<GisTerrainMutation>(&bytes, (0, bytes.len()), stock).unwrap();
+        assert_eq!(received, operation);
+    }
+}
 
 static RETAINED_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
-
-//#region 🔖️CommandSurface
-/// 🎯️ One value per `app_commands!` row, in row order.
-fn every_command() -> Vec<Gis3dCommand> {
-    vec![
-        Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }),
-        Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }),
-        Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example::DEFAULT_EXAMPLE_ID.into() }),
-    ]
-}
-
-/// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
-/// manifest action id.
-const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera", "active-example"];
-
-#[semio_framework_async_macros::async_test]
-async fn command_ids_are_unique_and_cover_every_row() {
-    let commands = every_command();
-    let ids: Vec<&str> = commands.iter().map(Gis3dCommand::command_id).collect();
-    let mut sorted = ids.clone();
-    sorted.sort_unstable();
-    sorted.dedup();
-    assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 3, "every Gis3dCommand row must be covered by every_command()");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    assert_eq!(every_command().len(), WIRE_KEYWORDS.len());
-    for (command, keyword) in every_command().iter().zip(WIRE_KEYWORDS) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(command);
-        let printed = protocol::OpText::print_op(command);
-        assert!(printed == *keyword || printed.starts_with(&format!("{keyword} ")), "row {} printed {printed:?}, expected the {keyword:?} wire keyword", command.command_id());
-    }
-}
-
-/// 🎯️ Every declared action maps to a typed command. The pre-migration `gis3d_ui` crate had NO
-/// `command_from_action` override at all — it inherited the trait default, which errors for every
-/// action, so the whole `{action,args}` host wire was dead. That crate never compiled (see the
-/// migration ticket), which is why the gap was invisible; this test locks the fix in.
-/// 🎯️ Every app-declared action must bridge through `command_from_action` and round-trip
-/// `command_id`. Uses the framework's own harness, which stages each action's declared args and
-/// knows the framework-injected ids to skip (`undo`/`copy`/`recordTutorial`/…).
-///
-/// 🩹️ This is the test that would have caught the pre-migration gap: `gis3d_ui` had NO
-/// `command_from_action` override, so every declared action fell through to the trait default's
-/// hard error and the whole `{action,args}` host wire was dead.
-#[semio_framework_async_macros::async_test]
-async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-    semio_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_tests).await;
-    assert!(Gis3dPlayApp::command_from_action("noSuchAction", None, None).is_err());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn command_from_action_reads_the_nested_camera_object() {
-    let camera = Gis3dPlayApp::command_from_action("setCamera", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).clone()), None).expect("setCamera");
-    assert!(matches!(camera, Gis3dCommand::SetCamera(ref payload) if payload.camera_json.contains("position")));
-}
-
 #[test]
 fn retained_command_factory_matches_the_language_neutral_maximum_oracle() {
     let fixture: Value = serde_json::from_str((*RETAINED_LIMITS)).expect("GIS terrain retained limits decode through serde_json");
@@ -276,145 +82,6 @@ fn retained_command_factory_matches_the_language_neutral_maximum_oracle() {
     assert_eq!(gis3d_retained_extent(&rejected, &snapshot, &interaction), None);
     let factory = Gis3dCommandJobFactory::new("s.gis.gisterrain@1/*#editor");
     assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
-    assert!(Gis3dPlayApp::command_from_action("setCamera", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "cameraJson": "c".repeat(maximum + additional) }))).clone()), None).is_err());
+    let mut args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "cameraJson": "c".repeat(maximum + additional) })));
+    assert!(Gis3dPlayApp::command_from_action("setCamera", &mut args, &mut None).is_err());
 }
-//#endregion 🔖️CommandSurface
-
-//#region 🔖️Manifest
-#[semio_framework_async_macros::async_test]
-async fn the_manifest_stitches_every_taxonomy_node() {
-    let definition = create_gis3d_app();
-    assert_eq!(definition.modes.len(), 1);
-    assert_eq!(definition.window_kinds.len(), 1);
-    assert!(definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
-    assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
-    assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind));
-    assert!(!definition.artifact_kinds.iter().any(|kind| kind.id == "3d.mesh"), "3d.mesh is composed via GisTerrainSnapshot.mesh now, never a standalone ArtifactKindSpec");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn an_unknown_body_key_falls_back_to_a_text_node() {
-    let mut app = app().await;
-    assert!(render(&mut app, "gis3d.play.nope").await.contains("Unknown body"));
-    close(&mut app);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn retained_commands_publish_only_their_declared_store_lanes() {
-    fn lane_name(lane: &semio_plugin::app::TypedOperationResultLane) -> &'static str {
-        match lane {
-            semio_plugin::app::TypedOperationResultLane::Artifact => "artifact",
-            semio_plugin::app::TypedOperationResultLane::Config => "config",
-            semio_plugin::app::TypedOperationResultLane::WindowConfig => "window-config",
-            semio_plugin::app::TypedOperationResultLane::Ui => "ui",
-            semio_plugin::app::TypedOperationResultLane::Terminal => "terminal",
-            lane => panic!("unexpected Terrain publication lane {lane:?}"),
-        }
-    }
-    let mut app = app().await;
-    let fixture: Value = serde_json::from_str((*RETAINED_LIMITS)).expect("GIS terrain retained completion oracle");
-    let expected = |command: &str| fixture["publicationLanes"][command].as_array().expect("publication lanes").iter().map(|lane| lane.as_str().expect("publication lane").to_string()).collect::<Vec<_>>();
-    let camera = dispatch(&mut app, Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: "{}".into() })).await;
-    let camera_lanes = camera.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
-    assert_eq!(camera_lanes, expected("setCamera"));
-    let exaggeration = dispatch(&mut app, Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.0 })).await;
-    let exaggeration_lanes = exaggeration.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
-    assert_eq!(exaggeration_lanes, expected("setExaggeration"));
-    assert_eq!(app.snapshot().expect("settled Terrain snapshot").exaggeration, 2.0);
-    let example = dispatch(&mut app, Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example::DEFAULT_EXAMPLE_ID.into() })).await;
-    let example_lanes = example.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
-    assert_eq!(example_lanes, expected("setActiveExample"));
-    assert_eq!(app.snapshot().expect("settled Terrain snapshot").exaggeration, 1.5, "the curated example's authored relief reaches the document");
-    close(&mut app);
-}
-//#endregion 🔖️Manifest
-
-//#region 🔖️Media
-#[semio_framework_async_macros::async_test]
-async fn export_media_scene_out_produces_a_3d_mesh_structured_payload() {
-    let mut app = app().await;
-    let document = app.snapshot().expect("projection");
-    let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&document, &history);
-    let media = Gis3dPlayApp::export_media("scene:out", &doc).expect("scene:out export");
-    let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
-    assert_eq!(schema, "3d.mesh");
-    assert!(json.contains("exaggeration"));
-    close(&mut app);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn import_media_map_in_writes_the_imported_features_operation() {
-    let mut app = app().await;
-    let document = app.snapshot().expect("projection");
-    let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&document, &history);
-    let incoming = json!({ "positions": [{ "id": "imported-1", "lon": 1.0, "lat": 2.0 }] }).to_string();
-    let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Intrinsic { schema: "2d.map".into(), value: semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&incoming,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()) } };
-    let emit = Gis3dPlayApp::import_media("map:in", &media, &doc).expect("map:in import");
-    use crate::mutations::change_imported_features::ChangeImportedFeatures;
-    assert_eq!(emit.artifact_mutations, vec![GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(&incoming).unwrap()) })]);
-    close(&mut app);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn media_ports_declare_map_in_and_scene_out() {
-    let ports = Gis3dPlayApp::media_ports().await;
-    assert!(ports.iter().any(|port| port.id == "map:in"));
-    assert!(ports.iter().any(|port| port.id == "scene:out"));
-}
-
-/// 🧭️ Relocated from the artifact's `⚙️engine` tests (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) alongside `gis3d_io`/`gis3d_scene_media`.
-#[semio_framework_async_macros::async_test]
-async fn gis3d_io_declares_the_map_in_and_scene_out_ports() {
-    let io = gis3d_io();
-    assert_eq!(io.artifact_schema, GIS_3D_TERRAIN_SCHEMA);
-    let ports = io.all_ports().await;
-    let map_in = ports.iter().find(|port| port.id == "map:in").expect("map:in declared");
-    assert_eq!(map_in.direction, semio_plugin::MediaPortDirection::In);
-    assert_eq!(map_in.kind_id.as_deref(), Some(semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind));
-    let scene_out = ports.iter().find(|port| port.id == "scene:out").expect("scene:out declared");
-    assert_eq!(scene_out.direction, semio_plugin::MediaPortDirection::Out);
-    assert_eq!(scene_out.kind_id.as_deref(), Some("3d.mesh"));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn gis3d_scene_media_exports_the_terrain_descriptor() {
-    let document = default_terrain_document();
-    let media = gis3d_scene_media(&document);
-    let MediaPayload::Structured { schema, json } = media.payload else {
-        panic!("expected a structured scene:out payload");
-    };
-    assert_eq!(schema, "3d.mesh");
-    assert!(json.contains("exaggeration"));
-}
-//#endregion 🔖️Media
-
-//#region 🎬️StageableActionVocabulary
-/// ⛰️ The terrain's one document mutation must be dispatchable from the Actions rail with nothing
-/// typed, AND its staged default must differ from the fixture's own exaggeration — otherwise the rail
-/// re-applies the value already in the document and the edit diffs to zero operations, which is
-/// exactly how `setExaggeration` behaved before it had an argument schema.
-#[semio_framework_async_macros::async_test]
-async fn set_exaggeration_stages_a_bounded_default_that_actually_edits() {
-    let definition = create_gis3d_app();
-    let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setExaggeration").expect("setExaggeration is declared");
-    assert_eq!(action.kind, semio_plugin::ActionKind::Mutation);
-    assert!(action.in_palette, "the rail can stage it");
-    let arg = action.args.iter().find(|arg| arg.id == "value").expect("a staged value");
-    let semio_plugin::ArgSchema::Number { min, max, .. } = arg.schema else {
-        panic!("exaggeration stages as a bounded number");
-    };
-    assert_eq!((min, max), (Some(GIS3D_EXAGGERATION_MINIMUM), Some(GIS3D_EXAGGERATION_MAXIMUM)));
-    assert_eq!(arg.default.as_ref().and_then(semio_framework_value::DslValue::as_f64), Some(GIS3D_EXAGGERATION_STAGED_DEFAULT));
-
-    let mut app = context::app().await;
-    let seeded = app.snapshot().expect("projection").exaggeration;
-    assert_ne!(seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT, "a staged default equal to the seeded value would dispatch a no-op");
-    let staged = semio_framework::effective_action_args(&action.args, &semio_framework_value::DslValue::Object(Vec::new()), None);
-    let command = <EditorApp<Gis3dPlayApp> as semio_plugin::ArtifactApp>::command_from_action("setExaggeration", Some((staged).clone()), None).await.expect("the staged default bridges to a command");
-    semio_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, command, |app| app.snapshot().expect("projection").exaggeration, seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
-    context::close(&mut app);
-}
-//#endregion 🎬️StageableActionVocabulary

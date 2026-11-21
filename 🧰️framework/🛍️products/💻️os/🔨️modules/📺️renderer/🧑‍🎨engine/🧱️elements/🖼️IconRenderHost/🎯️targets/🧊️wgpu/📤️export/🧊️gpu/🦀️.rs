@@ -44,7 +44,7 @@ pub struct IconGpuPngRejected {
 impl IconGpuPngRejected {
     pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,super::IconExportFault> {
         let copy=cx.retained_grant().maximum_copy_bytes;
-        super::scene::close_prepared(cx,self.packet.next_close_demands(copy),|grant|self.packet.close_step(grant))
+        super::scene::close_prepared(cx,self.packet.next_close_demands(copy),|effect| self.packet.close_step(effect))
     }
 }
 
@@ -80,7 +80,7 @@ impl IconGpuPngExport {
         if cx.should_yield() { return Ok(false); }
         if self.phase==Phase::RetirePacket {
             let copy=cx.retained_grant().maximum_copy_bytes;
-            if let Some(packet)=self.packet.as_mut(){if !super::scene::close_prepared(cx,packet.next_close_demands(copy),|grant|packet.close_step(grant))?{return Ok(false)}}
+            if let Some(packet)=self.packet.as_mut(){if !super::scene::close_prepared(cx,packet.next_close_demands(copy),|effect| packet.close_step(effect))?{return Ok(false)}}
             self.packet=None;self.phase=Phase::Complete;
             return self.fault.as_ref().map_or(Ok(true),|fault|Err(fault.clone().into()));
         }

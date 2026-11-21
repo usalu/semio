@@ -80,8 +80,6 @@
     "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css",
     "keyframesByProperty": {
       "--celebrate-border-angle": ["celebrate-border-spin"],
-      "--celebrate-border-padding": ["celebrate-border-burst"],
-      "--introduced-border-width": ["introduced-border-pulse"],
       "--loading-border-angle": ["loading-border-spin"],
       "--loading-border-dashoffset": ["window-silhouette-border-loading-dash"],
       "--loading-border-pulse-opacity": ["loading-border-pulse"],

@@ -807,3 +807,21 @@ fn e2_14_protected_member_temperature_by_the_insulation_formula() {
     let bare = part_1_2::protected_temperature_c(20.0, 200.0, 900.0, &part_1_2::Insulation { thickness: 0.0, ..ins });
     assert_eq!(bare, part_1_2::unprotected_temperature_c(20.0, 200.0, 900.0), "no thickness is the unprotected member");
 }
+
+#[test]
+fn thermal_effects_match_en_1999_fire_equation_and_exposure_thresholds() {
+    for line in include_str!("thermal-effects.tsv").lines().skip(1) {
+        let columns: Vec<_> = line.split('\t').collect();
+        let a = columns[1].parse::<f64>().unwrap();
+        let b = columns[2].parse::<f64>().unwrap();
+        match (columns[0], columns[3]) {
+            ("elongation", "unavailable") => assert!(part_1_2::thermal_elongation(a).is_none(), "{line}"),
+            ("elongation", expected) => assert!(close(part_1_2::thermal_elongation(a).unwrap(), expected.parse().unwrap(), 1e-10), "{line}"),
+            ("creep", expected) => assert_eq!(part_1_2::transient_creep_requires_model(a, |t| {
+                assert_eq!(t, a - 1800.0);
+                b
+            }), expected == "1", "{line}"),
+            _ => panic!("unexpected fixture row {line}"),
+        }
+    }
+}

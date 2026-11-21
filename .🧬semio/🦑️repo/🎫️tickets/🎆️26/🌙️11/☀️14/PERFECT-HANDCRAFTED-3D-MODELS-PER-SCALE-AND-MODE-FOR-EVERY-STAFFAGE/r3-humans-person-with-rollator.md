@@ -88,3 +88,65 @@ This session resumed the work interrupted on 2026-11-20. The model, the root fix
 
 - Scripts: `r3-person-with-rollator-kit.ts`, `-figure.ts`, `-aid.ts`, `-s50.ts`, `-coarse.ts`, `-build.ts`, `-roots.ts`, `-draw2d.ts`, `-candidate.py`, `-texts.json`, `-sheet.ts`, `-suit.ts`, `-probe.ts`, `-run.sh`, `-all.sh`.
 - Source: `volumes/humans/person-with-rollator.json`. Renders: `🗑️generated/r3-sheet/humans/person-with-rollator.*.png`, `🗑️generated/r3-2d/humans/person-with-rollator.*.png`. Check output: `🗑️generated/r3-person-with-rollator/check.txt`.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: the round-3 chain copied to `r5-person-with-rollator-{kit,figure,aid,s50,coarse,build,draw2d}.ts`, `-candidate.py`, `-texts.json` and changed there (r3 files untouched); new `r5-person-with-rollator-arms.ts` (shoulder move with arm re-solve, also used for the pregnant person), `-arms-check.ts`, `-measure.ts`, `-print-probe.ts`, `-print-cover.ts`, `-render-all.sh`, `-same.ts` (proof that the copied chain rebuilt the old source byte for byte before any change). Output `🗑️generated/r5-person-with-rollator/` (`before/`, `after/` sheets, `check.txt`, `measure.txt`, `catalog-before.json`, `source-before.json`).
+
+### Reference (elderly woman, 79, 1.58 m upright; DIN 33402-2 women 61 to 65 less age loss, Drillis and Contini 1966 shares, ISO 11199-2 for the rollator)
+
+| quantity | reference | model before | model after |
+|---|---|---|---|
+| hip joint (stooped stance, 12 mm sole) | 0.53 H + sole = 0.85 m upright, about 0.84 m stooped | 0.835 | 0.835 |
+| knee | 0.285 H + sole = 0.462 | 0.460 / 0.451 | same |
+| ankle | 0.039 H + sole = 0.074 | 0.074 | 0.074 |
+| upper arm / forearm | 0.186 H = 0.294 / 0.146 H = 0.231 | 0.294 / 0.231 | same |
+| head bone (joint to vertex) | head height H/7.5 = 0.21 incl. chin below the joint | 0.186 + chin 0.03 | same |
+| biacromial breadth | 0.35 m (elderly woman, narrow sloping shoulders); glenohumeral joints about 35 mm inside the acromion tips: 0.315 | joints 0.354 apart (acromial about 0.39, +11 %) | joints 0.314 apart (acromial 0.35) |
+| shoulder width over the coat sleeves | about 0.40 to 0.42 | 0.452 | 0.407 |
+| chest girth over coat | 0.95 to 1.0 skin + coat layers, about 1.0 | 1.008 (width 0.338) | 0.983 (width 0.315, depth 0.291) |
+| hip girth over coat | about 1.10 to 1.15 | 1.151 | 1.137 |
+| calf girth (trousers) | 0.34 to 0.37 | 0.366 | 0.366 |
+| neck girth | 0.33 to 0.35 | 0.338 | 0.338 |
+| hip joint spacing | 0.16 to 0.18 | 0.169 | 0.169 |
+| rollator width / grip height | 0.60 / 0.79 m | 0.60 / 0.79 | same (grips unchanged in the world, hands re-solved) |
+
+All joint heights and segment lengths were within 3 % already; the only proportion defect was the shoulder breadth (+11 %).
+
+### Grades (my own look at every sheet; before = round-3/4 state)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B- -> A- | B+ -> A- | B -> A- |
+| 1:100 | B -> B+ | B -> B+ | B- -> B+ |
+| 1:200 | B -> B+ | B -> B | B- -> B |
+| 1:500 | B- -> B+ | B -> B | B -> B |
+
+Defects seen before (sheets `before/`): coat skirt read as shorts (a fork between two thigh-shaped halves at 0.72 to 0.76 m, front and back, all scales); shoulders 4 cm too broad with the sleeve heads standing up like epaulettes; spine one tapered tube (lumbar one member, r4 open point); ribs as nine horizontal hoops (a coil spring, not a ribcage) at 1:50, 1:100, 1:200; pelvis two loose ovals with no ring; clavicles reaching to the old shoulder.
+
+### Changes
+
+- Root: `rig.bones.arm-l/-r.z` 0.1771 -> 0.157. Every pose and every clip key that states the arms re-solved by damped least squares through the product's `evaluate` so both hands keep their grip anchors in the world (worst over all poses and both clips sampled at 20 Hz: 0.94 mm; hand orientation within 1.5 degrees); loop-closing keys take the arms of key 0.
+- Body 1:50 to 1:500: coat torso half-width 0.013 m narrower from waist to shoulder (girth kept by 2 to 6 mm more depth), sleeve heads lower (first ring 0.045 -> 0.039, dome 18 -> 10 mm); skirt halves centred 18 mm inside their thigh with flat-sided sections (exponent 3.2 at the seat, rounding to 2.6 at the hem) so they overlap at full depth across the middle: one closed coat front and back, no fork, still following each thigh in the walk and when seated.
+- Structure 1:50: the spine is now 17 vertebral bodies L5 to T1 (lumbar 1.35 times as high) with 17 spinous processes on the stooped curve; nine pairs of ribs, each a tube from its vertebra round the flank and down 30 to 62 mm to the front (upper two stop at the sternum); pelvis with iliac crest, sacroiliac bars and acetabulum rims tying ilium, sacrum, pubis and ischium into a ring; clavicles end at the new acromion (z 0.15). 1:100 and 1:200: rib hoops replaced by sloping rib pairs (5 and 3), clavicles and shoulder bar to z 0.15. Structure counts 191 -> 239 (1:50), 97 -> 102, 57 -> 60, 40.
+- 2D: the coat, coat seat, skirt halves and the arms from sleeve to hand redrawn from the new solids at every scale and view (keeping the catalog's layer `z`); all other shapes kept as drawn. Print bands narrowed where the product measured visible slivers under 0.2 mm at band ends (they were already red before this round: skirt-l, main tubes, casters, beret): 1:100 75-130, 1:200 130-250, 1:500 250-500; the 22 mm tubes cannot print beyond 1:500. The 1:200 backrest strap is drawn 6 mm taller at each edge so its part beside the stooping arm stays printable.
+- Thermal: `tyres.areaM2` 0.21 -> 0.24 (C16, factor 1.14; by hand four tyres 0.2 m x 36 mm: tread 0.0226 + sidewalls 0.0174 + shoulders, about 0.06 each).
+- Decisions 1:50, 1:100, 1:200 rewritten for shoulders, skirt, spine, ribs and pelvis (en, de).
+
+### Checks
+
+`r3-validate.ts humans/person-with-rollator`: VALID (schema 0, validateAsset 0, print 0; before this round the catalog had 7 print findings). `volumes-check.ts --product`: all rules green at every scale except `volumes-thermal-coverage` `beret` (1:50 1.77, 1:100 1.74) and `shoes` (1:50 0.46) - the C18 body-region shares already filed in `area-review.md` (2026-11-20 r3 humans/person-with-rollator), unchanged.
+
+### Seen (opened)
+
+`after/s50.body` (six views), `s50.structure`, `s50.thermal.cut`, `s50.pose.seated-rest`, the `rollator-walk` frame at 0.4 s, `s500.body`, `s100.structure`, and the candidate front view at full size. The coat reads as one garment in front, back and seated; shoulders narrow and sloping; ribs slope, vertebrae show as a segmented column, the pelvis is a ring. 1:100 structure: ribs slope, but the ilia are still two loose ovals with crossed ischiopubic bars (B+). Rendered, not opened this round (their grades carry over from round 3 with the shared changes): 1:100 and 1:200 body, 1:200 and 1:500 structure, 1:100 to 1:500 thermal, `walking-midstance`, `stoop-to-basket`.
+
+### Still open
+
+- beret and shoes areas (C18, area reviewer).
+- 1:500: a shallow notch (about 3 cm) remains at the top of the skirt between the halves in front.
+- Sleeve heads still sit slightly proud of the coat shoulder line (reads as a set-in sleeve with light padding).
+- The asset is unavailable beyond 1:500 (band narrowed for printability).
+- 1:100 pelvis still two loose iliac ovals.
+
+The tyre outlines, shoe tips and thigh contours have 0.20 mm printed weights at their respective generalisation scales. The 1:130 and 1:250 range endpoints and the official paper document now pass.

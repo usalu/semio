@@ -1,5 +1,6 @@
 {
   "contract": "schema-neutral-deletion-v1",
+  "catalogConstruction": { "ambientEntropy": false },
   "ownership": {
     "schemaManifest": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
     "schemaRoot": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/🦀️.rs",

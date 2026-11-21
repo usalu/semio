@@ -191,6 +191,7 @@
           },
           "runtimeSourceEntries": [
             "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🧮️numeric-execution/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/▶️invocation/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/▶️invocation/🧭️control/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/▶️invocation/💾️memory/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/▶️invocation/📞️host/🧪️tests/🟦️.ts",

@@ -41,6 +41,7 @@ LEVER = [(0.80, -0.11), (0.91, 0.0), (0.80, 0.11), (0.10, 0.16), (-0.02, 0.17), 
 LINK = [(-0.10, 0.0), (-0.06, -0.09), (0.06, -0.09), (0.20, -0.055), (0.70, -0.055), (0.84, -0.09), (0.96, -0.09), (1.0, 0.0), (0.96, 0.09), (0.84, 0.09), (0.70, 0.055), (0.20, 0.055), (0.06, 0.09), (-0.06, 0.09)]
 TYRE = [(-0.25, 0.32), (-0.30, 0.44), (-0.30, 0.62), (-0.285, 0.71), (-0.25, 0.765), (-0.20, 0.7775), (0.20, 0.7775), (0.25, 0.765), (0.285, 0.71), (0.30, 0.62), (0.30, 0.44), (0.25, 0.32), (-0.25, 0.32)]
 TYRE_PLAIN = [(-0.25, 0.0), (-0.25, 0.32), (-0.30, 0.44), (-0.30, 0.66), (-0.27, 0.775), (-0.20, TR), (0.20, TR), (0.27, 0.775), (0.30, 0.66), (0.30, 0.44), (0.25, 0.32), (0.25, 0.0)]
+LUG = [(0.7700, 0.010), (0.8075, 0.010), (0.8075, 0.200), (0.7950, 0.255), (0.7400, 0.292), (0.6600, 0.315), (0.6600, 0.282), (0.7100, 0.272), (0.7550, 0.240), (0.7700, 0.200)]
 AXLE = [(-0.77, 0.0), (-0.77, 0.14), (-0.50, 0.12), (-0.22, 0.12), (-0.14, 0.27), (0.14, 0.27), (0.22, 0.12), (0.50, 0.12), (0.77, 0.14), (0.77, 0.0)]
 
 
@@ -145,6 +146,20 @@ def build(sc):
             add(box("cab-glass-side-" + side, glass_c, (-1.34, sill - 0.01, a_), (-0.31 if not coarse else -0.24, 3.31, b_)), (2.4, 2.4, 2.4) if side == "r" else None, views="e", sid="cab-glass-side")
             add(ext("cab-glass-corner-" + side, glass_c, [(sg * 0.76, -0.26), (sg * 0.76, -0.25), (sg * 0.49, 0.22), (sg * (0.49 - g), 0.22 - g / 2), (sg * (0.76 - g), -0.25 - g / 2), (sg * (0.76 - g), -0.26)], sill - 0.01, 3.31, "zx"), (2.4, 2.4, 2.4) if side == "r" else None, views="e", sid="cab-glass-front")
         add(box("cab-rear-glass", glass_c, (-1.40, 2.63, -0.70), (-1.40 + g, 3.31, 0.70)))
+        if fine or mid:
+            metal = det(cab_c, 0.16)
+            rubber = metal(material=RU, tone=0.10)
+            outside = [(-1.333, 2.004), (-1.31, 1.977), (-0.349, 1.977), (-0.32, 2.016), (-0.32, 3.258), (-0.36, 3.296), (-1.304, 3.296), (-1.333, 3.264)]
+            inside = [(-1.317, 2.010), (-1.302, 1.993), (-0.357, 1.993), (-0.336, 2.022), (-0.336, 3.252), (-0.366, 3.280), (-1.297, 3.280), (-1.317, 3.258)]
+            add(ext("cab-door-gasket", rubber, outside, -0.766, -0.758 if fine else -0.751, holes=[inside]))
+            sh.add("elevation", "cab-door-gasket", "rear-frame", "detail", 2.47, 0.1, poly(outside), filled=False, region="cab", material=RU, pen=0.18)
+            blade = [(2.163, -0.378), (2.174, -0.385), (2.309, 0.203), (2.308, 0.216), (2.295, 0.211)]
+            add(ext("cab-wiper-blade", rubber, blade, 0.239, 0.249 if fine else 0.254, plane="yz"))
+            sh.add("front", "cab-wiper-blade", "rear-frame", "detail", 2.52, 0.1, poly([(z,y) for y,z in blade]), region="cab", material=RU, pen=0.18)
+            add(cap("cab-wiper-arm", metal, (0.264,1.942,0.276), (0.255,2.238,-0.076), 0.008, False), (2.52,2.52,2.52), views="f", pen=0.18)
+            if fine:
+                add(rev("cab-wiper-spindle", metal, [(0,0),(0,0.020),(0.012,0.020),(0.017,0.015),(0.028,0.015),(0.028,0)], "u", (0.237,1.942,0.276)), (2.53,2.53,2.53), views="f", pen=0.18)
+                add(box("cab-wiper-clevis", metal, (0.246,2.229,-0.092),(0.262,2.250,-0.061)), (2.53,2.53,2.53), views="f", pen=0.18)
         if fine:
             add(box("door-handle", det(cab_c, 0.2), (-0.60, 2.40, -0.79), (-0.36, 2.44, -0.76)), (2.5, 2.5, 2.5), views="e")
             add(loft("seat", RF(material=RU, role="detail", tone=0.2, region=None), [((-0.80, 2.25, 0), 0.26, 0.25), ((-0.80, 2.42, 0), 0.26, 0.25)], 4.0))
@@ -264,29 +279,26 @@ def build(sc):
             near = side == "r"
             if fine:
                 add(rev("tyre-%s-%s" % (k, side), tc, TYRE, "w", (0, 0, zc)), None)
-                for row, (a0, w0, w1) in enumerate(((0.0, 0.01, 0.285), (7.5, -0.285, -0.01))):
-                    c, s_ = math.cos(math.radians(a0)), math.sin(math.radians(a0))
-                    lug = base("lugs-%s-%s-%d" % (k, side, row), "box", tc(role="detail", tone=0.05), size=[0.035, 0.115, r4(w1 - w0)], transform={"translation": [r4(0.789 * c), r4(0.789 * s_), r4(zc + (w0 + w1) / 2)], "rotation": [0, 0, r4(math.sin(math.radians(a0) / 2)), r4(math.cos(math.radians(a0) / 2))]}, repeat={"count": 24, "rotationRad": r4(math.pi / 12), "rotationAxis": [0, 0, 1], "origin": [0, 0, 0]})
+                for row, (a0, sw) in enumerate(((0.0, 1), (7.5, -1))):
+                    lug = base("lugs-%s-%s-%d" % (k, side, row), "extrude", tc(role="detail", tone=0.05), profile=P(ccw([(r, sw * w) for r, w in LUG])), plane="yz", transform={"translation": [0, 0, r4(zc)], "rotation": [0, 0, r4(math.sin(math.radians(a0) / 2)), r4(math.cos(math.radians(a0) / 2))]}, repeat={"count": 24, "rotationRad": r4(math.pi / 12), "rotationAxis": [0, 0, 1], "origin": [0, 0, 0]}, **{"from": -0.0575, "to": 0.0575})
                     B.append(lug)
             else:
                 add(rev("tyre-%s-%s" % (k, side), tc, TYRE_PLAIN, "w", (0, 0, zc)), None)
-            if not tiny:
-                o = 1 if sg > 0 else -1
-                rim = [(-0.26, 0.30), (-0.26, 0.365), (-0.235, 0.365), (-0.235, 0.325), (0.235, 0.325), (0.235, 0.365), (0.26, 0.365), (0.26, 0.30), (0.13, 0.30), (0.13, 0.17), (0.09, 0.17), (0.09, 0.30), (-0.26, 0.30)] if fine or mid else [(-0.26, 0), (-0.26, 0.365), (0.26, 0.365), (0.26, 0)]
-                add(rev("rim-%s-%s" % (k, side), rc, [(o * a, r) for a, r in rim] if fine or mid else rim, "w", (0, 0, zc)), None)
-                if fine or mid:
-                    hub = [(0.02, 0), (0.02, 0.19), (0.20, 0.19), (0.25, 0.15), (0.27, 0.08), (0.27, 0)]
-                    add(rev("hub-%s-%s" % (k, side), rc(tone=0.3), [(o * a, r) for a, r in hub][:: 1 if o > 0 else -1], "w", (0, 0, zc)), None)
-                if fine:
-                    add(rev("bolt-%s-%s" % (k, side), rc(tone=0.0), [(0, 0), (0, 0.02), (0.035, 0.02), (0.035, 0)], "w", (0.245, 0, zc + (0.13 if o > 0 else -0.165)), repeat={"count": 12, "rotationRad": r4(math.pi / 6), "rotationAxis": [0, 0, 1], "origin": [0, 0, 0]}), None)
+            o = 1 if sg > 0 else -1
+            rim = [(-0.26, 0.30), (-0.26, 0.365), (-0.235, 0.365), (-0.235, 0.325), (0.235, 0.325), (0.235, 0.365), (0.26, 0.365), (0.26, 0.30), (0.13, 0.30), (0.13, 0.17), (0.09, 0.17), (0.09, 0.30), (-0.26, 0.30)] if fine or mid else [(-0.26, 0), (-0.26, 0.365), (0.26, 0.365), (0.26, 0)]
+            add(rev("rim-%s-%s" % (k, side), rc, [(o * a, r) for a, r in rim] if fine or mid else rim, "w", (0, 0, zc)), None)
+            if fine or mid:
+                hub = [(0.02, 0), (0.02, 0.19), (0.20, 0.19), (0.25, 0.15), (0.27, 0.08), (0.27, 0)]
+                add(rev("hub-%s-%s" % (k, side), rc(tone=0.3), [(o * a, r) for a, r in hub][:: 1 if o > 0 else -1], "w", (0, 0, zc)), None)
+            if fine:
+                add(rev("bolt-%s-%s" % (k, side), rc(tone=0.0), [(0, 0), (0, 0.02), (0.035, 0.02), (0.035, 0)], "w", (0.245, 0, zc + (0.13 if o > 0 else -0.165)), repeat={"count": 12, "rotationRad": r4(math.pi / 6), "rotationAxis": [0, 0, 1], "origin": [0, 0, 0]}), None)
             up = [(0.30, 0.62), (0.285, 0.71), (0.285, TR)] if fine else [(0.30, 0.66), (0.27, 0.775), (0.20, TR)]
             q = up + [(-a, r) for a, r in up[::-1]]
             prof = q + [(-a, -r) for a, r in q]
             sh.add("front", "tyre-%s-%s" % (k, side), bone, "body", 4 if k == "f" else 1.5, 0.12, poly([(zc + a, TR + r) for a, r in prof]), region="tyres", material=RU)
             sh.add("plan", "tyre-%s-%s" % (k, side), bone, "body", 1.5, 0.12, poly([(ox + r, zc + a) for a, r in prof]), region="tyres", material=RU)
         sh.add("elevation", "tyre-" + k if not tiny else "wheel-" + k, bone, "body", 4, 0.12, circle(0, 0, TR), region="tyres", material=RU)
-        if not tiny:
-            sh.add("elevation", "rim-" + k, bone, "detail", 4.2, 0.6, circle(0, 0, 0.365), region="front-frame", material=CI)
+        sh.add("elevation", "rim-" + k, bone, "detail", 4.2, 0.6, circle(0, 0, 0.365), region="front-frame", material=CI)
         if fine or mid:
             sh.add("elevation", "hub-" + k, bone, "detail", 4.3, 0.3, circle(0, 0, 0.19), region="front-frame", material=CI)
             for i in range(12 if fine else 6):

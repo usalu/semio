@@ -8,7 +8,7 @@
  */
 
 import { AccessGate, clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
-import { useEffect, useId, useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { challengeRules, roomScope, thinkingScope, type CourseQuizView, type Challenge, type RunView, type ThinkingState } from "@semio-tech/course";
 import { TASK_KIND_LABELS, localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { formatPoints } from "../📏️quantity/🟦️.ts";
@@ -178,8 +178,19 @@ export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly 
   const latest = state.learnerView?.runs.filter((run) => run.quiz === quiz.id).sort((left, right) => right.startedAt - left.startedAt)[0]?.run;
   const held = sheetOfQuiz(state, quiz.id) !== undefined;
   useEffect(() => {
-    if (!held && latest !== undefined) void session.loadRun(latest);
-  }, [held, latest, session]);
+    if (view.opened && !held && latest !== undefined) void session.loadRun(latest);
+  }, [view.opened, held, latest, session]);
+  const crowdRevision = useRef<number | undefined>(undefined);
+  const submissions = state.submissions ?? 0;
+  useEffect(() => {
+    if (!view.opened) {
+      crowdRevision.current = undefined;
+      return;
+    }
+    if (crowdRevision.current === submissions) return;
+    crowdRevision.current = submissions;
+    void session.refreshCrowd(quiz.id);
+  }, [view.opened, quiz.id, session, submissions]);
   const gate = crowdGate(props.others ?? "submitted", "quiz", { asked: state.asked.includes(quiz.id), submitted: lastSubmittedRunOf(state, quiz.id) !== undefined, hidden: opened !== undefined && !challengeRules(opened).keys });
   const close = (): void => setAsking(false);
   return (

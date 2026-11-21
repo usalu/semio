@@ -9,12 +9,7 @@ use semio_framework_value::retained_clone::retained_clone_grant_admits;
 impl Brep {
     /// 🌉️ Admits only live immutable constructor provenance into direct analytic preview.
     pub fn admit_primitive_preview(&self, handle: &str, tolerance: f64) -> Result<Option<PrimitivePreviewJob>, ValueError> {
-        if let Some((source,bore))=self.live_bore_preview(handle){
-            return PrimitivePreviewJob::new_bore(source,bore,tolerance).map(Some);
-        }
-        let Some((source, provenance)) = self.native.live_primitive_preview(handle) else { return Ok(None) };
-        let Some(first_label) = provenance.preview_first_label else { return Ok(None) };
-        PrimitivePreviewJob::new(source, provenance.primitive, first_label, tolerance).map(Some)
+        self.native.admit_live_primitive_preview(handle,tolerance)
     }
 
     /// 🧭️ Quotes the live source check and next preview buffer event.
@@ -32,9 +27,7 @@ impl Brep {
         if !retained_clone_grant_admits(effect.grant(), self.primitive_preview_demand(handle, job)?) {
             return Ok((None, Progress::default()));
         }
-        let live=if job.is_bore(){self.live_bore_preview(handle).map(|(source,_)|source)}
-            else{self.native.live_primitive_preview(handle).map(|(source,_)|source)};
-        if live!=Some(job.source()) {
+        if !self.native.live_primitive_preview_matches(handle,job) {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "primitive preview source no longer has live constructor provenance"));
         }
         job.step(effect)

@@ -64,11 +64,7 @@ pub fn generation_command_result_for(command: &Generation3dCommand, projection: 
             let args = semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone())), ("name".to_string(), semio_framework_value::DslValue::String(payload.name.clone()))]);
             generation_command_result("renameGeneration", Some(&args), projection, config)
         }
-        Generation3dCommand::UpdateGenerationValues(payload) => {
-            let generation_id = payload.generation_id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String);
-            let args = semio_framework_value::DslValue::object([("generationId".to_string(), generation_id), ("questionId".to_string(), semio_framework_value::DslValue::String(payload.question_id.clone())), ("value".to_string(), payload.value.clone())]);
-            generation_command_result("updateGenerationValues", Some(&args), projection, config)
-        }
+        Generation3dCommand::UpdateGenerationValues(payload) => generation_command_result("updateGenerationValues", Some(&payload.arguments()), projection, config),
         Generation3dCommand::SelectGeneration(payload) => {
             let args = semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String(payload.id.clone()))]);
             generation_command_result("selectGeneration", Some(&args), projection, config)
@@ -88,6 +84,7 @@ pub fn generation_command_result_for(command: &Generation3dCommand, projection: 
 pub struct Generation3dInstanceOperationOwner {
     pub(super) operator_catalogue:semio_os_flow::registry::FlowOperatorCatalogueOwner,
     pub(super) eval_session: Option<FlowEvalSession>,
+    pub(super) preview_hover: semio_s_artifact_procedural_3d_preview_eval::PreviewHoverPublications,
     /// ⏯️ The `previewEval` run's surface-owned half: attached preview roster and the live job's port.
     run_link: semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink,
     /// 🛠️ Every window's open gumball gesture — ephemeral local tool state, never history; the previews fold it in.
@@ -100,7 +97,7 @@ pub struct Generation3dInstanceOperationOwner {
 impl Generation3dInstanceOperationOwner {
     pub fn new() -> Self {
         let(registry,generation)=semio_os_flow::registry::bootstrap_flow_operator_registry_source();
-        Self { operator_catalogue:semio_os_flow::registry::FlowOperatorCatalogueOwner::new(registry,generation),eval_session: Some(FlowEvalSession::new()), run_link: semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink::default(), gumball: semio_s_artifact_procedural_3d_transforms::GumballGestures::default(), geometry: Default::default(), closing: false }
+        Self { operator_catalogue:semio_os_flow::registry::FlowOperatorCatalogueOwner::new(registry,generation),eval_session: Some(FlowEvalSession::new()), preview_hover: Default::default(), run_link: semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink::default(), gumball: semio_s_artifact_procedural_3d_transforms::GumballGestures::default(), geometry: Default::default(), closing: false }
     }
 
     /// 📐️ The geometry host a run of the contextual `s.procedural.generation3d.inference` geometry service executes against.
@@ -158,6 +155,11 @@ impl semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunOwner for Genera
 impl semio_plugin::ArtifactInstanceOperationOwner for Generation3dInstanceOperationOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+
+    fn interaction_hover_group(&self, domain: &str, window: &str, reference: &str) -> Option<(&'static str, Vec<String>)> {
+        if self.closing || domain != edit_preview::GENERATION_3D_INTERACTION_DOMAIN { return None; }
+        self.preview_hover.targets(window, reference).map(|targets| (edit_preview::GENERATION_3D_INTERACTION_GRANULARITY, targets.to_vec()))
     }
 
     fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {

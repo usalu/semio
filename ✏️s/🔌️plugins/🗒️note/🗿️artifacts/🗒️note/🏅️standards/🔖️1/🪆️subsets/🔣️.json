@@ -12,7 +12,7 @@
       "name": "Math -- a math block's TeX source (edit-block-math)"
     },
     "table": {
-      "name": "Table -- a table block's row/column structure (insert-table-row, remove-table-row, insert-table-column, remove-table-column)"
+      "name": "Table -- a table block's row/column structure and cell content (insert-table-row, remove-table-row, insert-table-column, remove-table-column, edit-table-cell)"
     },
     "asset": {
       "name": "Asset -- the id-keyed image asset pool, independent of any block (create-asset, replace-asset-payload, delete-asset)"

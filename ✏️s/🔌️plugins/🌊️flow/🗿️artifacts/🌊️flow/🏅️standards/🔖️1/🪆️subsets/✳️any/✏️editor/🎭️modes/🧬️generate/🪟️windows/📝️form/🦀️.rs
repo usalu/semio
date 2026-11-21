@@ -64,11 +64,7 @@ fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
     UiText::try_from_str(value.as_ref()).ok_or_else(|| form_error("text"))
 }
 
-/// 🧩️ Builds the one interactive control a question's kind maps to (`📓️recipe-plugin.md` §2's
-/// `Input`/`Select`/`Slider` rows). `flow_host_snapshot_to_form_spec` only ever emits `"slider"`/`"note"`/
-/// `"image"`/`"text"`/`"single"` (see `forms_bridge::widget_to_playbook_block`'s exhaustive match) — the
-/// `_` arm below covers `"text"` and any future addition defensively as a plain text input, and `"note"`/
-/// `"image"` never reach this function (handled directly in [`question_field`], unwrapped, no control).
+/// 🧩️ Builds the semantic control for a scalar form question.
 fn question_control(question: &PlaybookBlock, value: &semio_framework_value::DslValue, field_id: &str, action: (ActionId, Option<semio_plugin::UiValue>)) -> UiAssemblyResult<BuiltNode> {
     let (action, args) = action;
     match question.kind.as_str() {
@@ -96,15 +92,29 @@ fn question_control(question: &PlaybookBlock, value: &semio_framework_value::Dsl
             };
             builder.try_build().map_err(|_| form_error("select-build"))
         }
+        "boolean" => {
+            let mut builder = ui::toggle(value.as_bool().unwrap_or(false)).text(ui_label(&question.label)?);
+            builder = builder.try_id(format!("{field_id}.toggle")).map_err(|_| form_error("toggle-id"))?;
+            builder = match args {
+                Some(args) => builder.try_on_with(Trigger::Change, action, args).map_err(|_| form_error("toggle-binding"))?,
+                None => builder.try_on(Trigger::Change, action).map_err(|_| form_error("toggle-binding"))?,
+            };
+            builder.try_build().map_err(|_| form_error("toggle-build"))
+        }
         _ => {
-            let mut builder = ui::input(InputKind::Text).value(ui_text(value.as_str().unwrap_or_default())?);
+            let builder = if question.kind == "number" {
+                ui::input(InputKind::Number).number(value.as_f64().unwrap_or(0.0))
+            } else {
+                ui::input(InputKind::Text).value(ui_text(value.as_str().unwrap_or_default())?)
+            };
+            let mut builder = builder.commit(ui_text("blur")?);
             if let Some(placeholder) = question.placeholder.as_deref() {
                 builder = builder.placeholder(ui_label(placeholder)?);
             }
             builder = builder.try_id(format!("{field_id}.input")).map_err(|_| form_error("input-id"))?;
             builder = match args {
-                Some(args) => builder.try_on_with(Trigger::Change, action, args).map_err(|_| form_error("input-binding"))?,
-                None => builder.try_on(Trigger::Change, action).map_err(|_| form_error("input-binding"))?,
+                Some(args) => builder.try_on_with(Trigger::Commit, action, args).map_err(|_| form_error("input-binding"))?,
+                None => builder.try_on(Trigger::Commit, action).map_err(|_| form_error("input-binding"))?,
             };
             builder.try_build().map_err(|_| form_error("input-build"))
         }
@@ -125,6 +135,22 @@ fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_actio
     }
     let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_block(question));
     let field_id = format!("generate.form.{}", question.id);
+    if question.kind == "vector" {
+        let mut group = ui::vector_input(ui_label(&question.label)?).commit(ui_text("blur")?).try_id(&field_id).map_err(|_| form_error("vector-id"))?;
+        for (index, axis) in question.fields.iter().flatten().enumerate() {
+            let number = value.as_array().and_then(|values| values.get(index)).and_then(semio_framework_value::DslValue::as_f64).or(axis.value).unwrap_or(0.0);
+            let args = ui_value_map([
+                ("generationId", ui_value_text(generation_id)?),
+                ("questionId", ui_value_text(&question.id)?),
+                ("fieldIndex", semio_plugin::UiValue::Number(index as f64)),
+            ])?;
+            let (action, args) = flow_action(patch_action, Some(args))?;
+            let args = args.ok_or_else(|| form_error("vector-args"))?;
+            let axis_label = ui_label(axis.label.as_deref().unwrap_or(&axis.key))?;
+            group = group.try_axis(&format!("{field_id}.{}.input", axis.key), axis_label, number, |input| input.try_on_with(Trigger::Commit, action, args).map_err(|(input, _)| input)).map_err(|_| form_error("vector-axis"))?;
+        }
+        return group.try_build().map(Some).map_err(|_| form_error("vector-build"));
+    }
     let args = ui_value_map([("generationId", ui_value_text(generation_id)?), ("questionId", ui_value_text(&question.id)?)])?;
     let action = flow_action(patch_action, Some(args))?;
     let control = question_control(question, &value, &field_id, action)?;
@@ -149,9 +175,6 @@ pub fn render_source(source:&dyn semio_framework_artifact_flow_flow::FlowSnapsho
     };
     let mut children = UiFixedList::<BuiltNode>::default();
     for step in &spec.steps {
-        if !step.blocks.is_empty() {
-            children.try_push(ui::text(ui_label(&step.title)?).try_build().map_err(|_| form_error("step-title-build"))?).map_err(|_| form_error("children"))?;
-        }
         for question in &step.blocks {
             if let Some(field) = question_field(question, &active.values, "updateGenerationValues", &active.id, labels)? {
                 children.try_push(field).map_err(|_| form_error("children"))?;

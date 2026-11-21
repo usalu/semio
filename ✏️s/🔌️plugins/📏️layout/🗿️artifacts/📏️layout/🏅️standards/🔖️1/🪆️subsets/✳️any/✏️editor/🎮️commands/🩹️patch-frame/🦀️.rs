@@ -22,6 +22,7 @@ use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::text_to_rgba;
 use semio_s_artifact_layout_layout_model::{Frame, Page, PageOverride, TextStyleRun};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::story_splice::replacement;
 use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -37,17 +38,6 @@ pub struct PatchFrame {
     pub value: String,
 }
 
-
-/// ✂️ The single contiguous splice (character `offset`, characters `delete`d, text `insert`ed) the field edit changed; `None` for an unchanged value.
-pub(crate) fn story_splice(content: &str, value: &str) -> Option<(usize, usize, String)> {
-    if content == value {
-        return None;
-    }
-    let (old, new): (Vec<char>, Vec<char>) = (content.chars().collect(), value.chars().collect());
-    let prefix = old.iter().zip(&new).take_while(|(left, right)| left == right).count();
-    let suffix = old[prefix..].iter().rev().zip(new[prefix..].iter().rev()).take_while(|(left, right)| left == right).count();
-    Some((prefix, old.len() - prefix - suffix, new[prefix..new.len() - suffix].iter().collect()))
-}
 
 fn inherited_override(document: &LayoutSnapshot, page: &Page, page_id: &str, frame_id: &str, field: &str, value: &str) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
     let Some(parent_id) = &page.parent_page_id else { return Ok(Emit::default()) };
@@ -175,7 +165,7 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
             };
             match story_id {
                 Some(id) => match document.stories.iter().find(|story| story.id == id) {
-                    Some(story) => Ok(Emit::mutations(story_splice(&story.content, &payload.value).map(|(offset, delete, insert)| LayoutMutation::EditStory(EditStory { id, offset, delete, insert })).into_iter().collect())),
+                    Some(story) => Ok(Emit::mutations(replacement(&story.content, &payload.value).map(|(offset, delete, insert)| LayoutMutation::EditStory(EditStory { id, offset, delete, insert })).into_iter().collect())),
                     None => Ok(Emit::default()),
                 },
                 _ => Ok(Emit::default()),

@@ -3,7 +3,34 @@ import { readFileSync } from "node:fs";
 import { test } from "vitest";
 import Ajv from "ajv";
 import { DatabaseSync } from "node:sqlite";
+import { EventEmitter } from "node:events";
 import { OPENED_CHECKS_COMPLETE_V1, openedCheckNameV1, openedChecksPassV1, runOpenedChecksV1 } from "../🟦️.ts";
+import { openedUiOwnerV1 } from "../🔒️adapter/🟦️.ts";
+
+test("picker cancellation configures the browser before clicking and releases interception", async () => {
+  for (const backendNodeId of [23, undefined]) {
+    const session = new EventEmitter(), trace: string[] = [];
+    const send = async (method: string, args?: { enabled: boolean; cancel?: boolean }) => {
+      trace.push(`${method}:${args?.enabled ?? ""}:${args?.cancel ?? ""}`);
+    };
+    const locator = {
+      first: () => locator,
+      waitFor: async () => {},
+      count: async () => 1,
+      click: async () => { trace.push("click"); session.emit("Page.fileChooserOpened", { backendNodeId }); },
+    };
+    const page = {
+      context: () => ({ newCDPSession: async () => Object.assign(session, { send, detach: async () => { trace.push("detach"); } }) }),
+      locator: () => locator,
+    };
+    const owner = openedUiOwnerV1(page as never, new AbortController().signal);
+    const action = owner.ui.cancelFilePicker!("#file");
+    if (backendNodeId === undefined) await assert.rejects(action, /no input/u);
+    else await action;
+    await owner.finish();
+    assert.deepEqual(trace, ["Page.enable::", "Page.setInterceptFileChooserDialog:true:true", "click", "Page.setInterceptFileChooserDialog:false:", "detach"]);
+  }
+});
 
 test("opened artifact checks refuse missing, duplicate, unsupported and empty evidence", () => {
   const rows = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));

@@ -32,14 +32,19 @@ const target = (instances: WindowInstance[], id: string, expectedKind: string): 
 export function testLayoutWindowOwnershipOracle(): void {
   const ajv = semioSchemaAjvV1({ allErrors: true });
   assert(ajv.compile(configSchema)(fixture.baseConfig));
+  const validateUpdate = ajv.getSchema("layout.windowconfig#/$defs/Update");
+  assert(validateUpdate);
   assert(ajv.compile(transientSchema)(fixture.baseTransient));
   const documentBytes = JSON.stringify(fixture.document);
   const configs: Record<string, LayoutWindowConfig> = {};
   const configOracle: Record<string, LayoutWindowConfig> = {};
   for (const row of fixture.configMutations) {
+    assert(validateUpdate(row.mutation), JSON.stringify(validateUpdate.errors));
     target(fixture.windowInstances, row.windowId, row.windowKindId);
     configs[row.windowId] = applyLayoutWindowConfigMutation(configs[row.windowId] ?? fixture.baseConfig, row.mutation);
-    configOracle[row.windowId] = applyPatch(structuredClone(configOracle[row.windowId] ?? fixture.baseConfig), [{ op: "replace", path: "", value: row.mutation.config }], false, false).newDocument;
+    const changes = Object.entries(row.mutation.patch).flatMap(([field, value]) =>
+      value == null ? [] : [{ op: "replace" as const, path: `/${field}`, value }]);
+    configOracle[row.windowId] = applyPatch(structuredClone(configOracle[row.windowId] ?? fixture.baseConfig), changes, true, false).newDocument;
   }
   assert.deepEqual(configs, configOracle);
   assert.notDeepEqual(configs["layout-left"].camera, configs["layout-right"].camera);

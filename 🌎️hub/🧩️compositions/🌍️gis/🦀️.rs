@@ -25,8 +25,8 @@ pub mod editor {
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for both GIS artifact surfaces.
     pub enum GisApps: PluginApp {
-        Gis2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
-        GisMapViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Gis2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>, semio_s_artifact_gis_gismap::GisMapMembers>),
+        GisMapViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_gis_gismap::viewer::gismap::GisMapViewer>, semio_s_artifact_gis_gismap::GisMapMembers>),
         Gis3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>),
         GisTerrainViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_gis_gisterrain::viewer::gisterrain::GisTerrainViewer>>),
     }

@@ -12,7 +12,83 @@ import ownershipSchema from "../../🧬️schema/🪟️input-window/🔣️.jso
 import { InterpretedUiNode } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 
+import fieldOwnership from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/field-association.json";
+import { createTreeWindowContextV1, createTreeWindowSchedulerV1 } from "../../🧱️elements/🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import { TreeWindowContext } from "../../🧱️elements/🗣️Interpreter/🪟️tree-windows/🟦️.ts";
+import pageNavigation from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/form-page-window.json";
+import formPageViewSchema from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
 afterEach(cleanup);
+
+it("routes form navigation to the mounted window's local request and never to a document command", () => {
+  const law = pageNavigation;
+  const refreshes: string[] = [];
+  const forwarded: unknown[] = [];
+  const scheduler = createTreeWindowSchedulerV1({ refresh: body => { refreshes.push(body); }, setTimer: () => 1, clearTimer: () => {} });
+  const context = createTreeWindowContextV1(law.body, scheduler);
+  const window = (windowId: string, authoredWindow: string, page: string | number) => {
+    const store = new UiDocumentStore(windowId);
+    store.loadSnapshot({ surface: windowId, revision: 1, root: 1, layoutEpoch: 0n, nodes: [{
+      id: 1, key: windowId + ".next", component: { type: "button", label: windowId, icon: "arrow-right" }, layout: { kind: "leaf", width: "hug", height: "hug" },
+      children: [], accessibility: {}, style: {}, bindings: [{ trigger: "activate", action: { scope: law.controller, name: law.action, version: 1 }, args: { windowId: authoredWindow, page } }],
+    }] } as any);
+    return createElement(TreeWindowContext.Provider, { value: context },
+      createElement(InterpretedUiNode, { store, windowId, onAction: () => {}, onIntent: intent => { forwarded.push(intent); } }));
+  };
+  const [left, right] = law.windows;
+  const mounted = render(createElement("div", {}, window(left, left, law.second), window(right, left, law.later)));
+  fireEvent.click(mounted.getByRole("button", { name: left }));
+  fireEvent.click(mounted.getByRole("button", { name: right }));
+  expect(refreshes).toEqual([law.body]);
+  expect(scheduler.viewStateFields().treeWindows).toEqual([{ bodyKey: law.body, nodeKey: left, offset: law.second, rows: 1 }]);
+  expect(forwarded).toEqual([]);
+
+  scheduler.reportWindows(law.body, [{ nodeKey: "measured-list", offset: 8, rows: 4 }], 20);
+  scheduler.setFormPage(law.body, right, law.later);
+  for (const invalid of law.invalid) scheduler.setFormPage(law.body, left, invalid as number);
+  scheduler.settled(law.body);
+  expect(refreshes).toEqual([law.body, law.body]);
+  const produced = { locale: "en", terminology: "native", ...scheduler.viewStateFields() };
+  expect(new Ajv2020({ strict: false }).compile(formPageViewSchema)(produced)).toBe(true);
+  const requests = produced.treeWindows!;
+  expect(requests.find(row => row.nodeKey === left)).toMatchObject({ offset: law.second, rows: 1 });
+  expect(requests.find(row => row.nodeKey === right)).toMatchObject({ offset: law.later, rows: 1 });
+  expect(requests.find(row => row.nodeKey === "measured-list")).toMatchObject({ open: true, offset: 8, rows: 4 });
+  scheduler.reset();
+  expect(scheduler.viewStateFields()).toEqual({});
+});
+
+for (const fixture of fieldOwnership.labelRows) it("associates the published control with its field in " + fixture.locale, () => {
+  const { surface, field, control, replacement } = fieldOwnership;
+  const store = new UiDocumentStore(surface);
+  const layout = { kind: "leaf", width: "hug", height: "hug" };
+  const record = (id: number, key: string, component: object, children: number[], accessibility = {}) => ({ id, key, component, layout, children, accessibility, style: {} });
+  const publish = (revision: number, key: string, component: object, name?: string) => store.loadSnapshot({ surface, revision, root: 0, layoutEpoch: 0n, nodes: [
+    record(0, field, { type: "container", role: "field", label: fixture.label, description: fixture.description, error: fixture.error, required: true }, [1]),
+    record(1, key, component, [], name ? { label: name } : {}),
+  ] } as any);
+  publish(1, control, { type: "input", kind: "number", value: "1" });
+  const view = render(createElement(InterpretedUiNode, { store, onAction: () => {}, onIntent: () => {} }));
+  const label = () => view.container.querySelector("[data-slot=field-label]")!;
+  const number = view.getByRole("spinbutton", { name: fixture.label });
+  expect(label().getAttribute("for")).toBe(number.id);
+  expect(number.id).toBe(surface + "/" + control);
+  expect(computeAccessibleDescription(number)).toBe(fixture.description + " " + fixture.error);
+  expect(number.getAttribute("aria-required")).toBe("true");
+  expect(number.getAttribute("aria-invalid")).toBe("true");
+
+  act(() => publish(2, replacement, { type: "input", kind: "number", value: "2" }, fixture.explicit));
+  const renamed = view.getByRole("spinbutton", { name: fixture.explicit });
+  expect(label().getAttribute("for")).toBe(renamed.id);
+  expect(renamed.id).toBe(surface + "/" + replacement);
+
+  act(() => publish(3, replacement, { type: "slider", min: 0, max: 10, step: 1, value: 2 }));
+  expect(view.getByRole("slider", { name: fixture.label })).toBeDefined();
+  expect(label().tagName).toBe("SPAN");
+  act(() => publish(4, replacement, { type: "text", text: fixture.description }));
+  expect(label().tagName).toBe("SPAN");
+  expect(label().hasAttribute("for")).toBe(false);
+});
+
 
 import crossInputs from "../🧫️fixtures/↔️input-commits/🔣️.json";
 import { inputCommitLaneV1 } from "../../🧱️elements/🗣️Interpreter/🎯️commit-lane/🟦️.ts";

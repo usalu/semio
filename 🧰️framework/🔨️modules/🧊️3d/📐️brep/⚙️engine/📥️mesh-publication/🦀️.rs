@@ -79,7 +79,7 @@ impl Brep {
         if plan.handle() != Some(key.as_str()) { return Err((ValueError::invariant("original mesh publication key changed"), key)); }
         if let Err(error) = self.mesh_publication_demand(plan, grant.maximum_copy_bytes) { return Err((error, key)); }
         let entity = match plan.cursor.original_import_root() {
-            Some(EntityRef::Solid(id)) => Entity::Solid(id, Some(SolidProvenance::PlanarBoundary)),
+            Some(EntityRef::Solid(id)) => Entity::Solid(id, Some(SolidProvenance::PlanarBoundary(None))),
             Some(EntityRef::Shell(id)) => Entity::Shell(id),
             _ => unreachable!("prepared mesh publication has a native root"),
         };

@@ -530,7 +530,10 @@ impl KernelPoolState {
                 self.acknowledge_job_progress(token);
                 return None;
             }
-            KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(self.exchange(instance, vec![event.into_event()]).await),
+            KernelRequest::Exchange { instance, event } => {
+                let one_job_step = event.is_original_media();
+                KernelOutcome::Exchanged(self.exchange(instance, vec![event.into_event()], one_job_step).await)
+            },
             KernelRequest::AdvanceRetained { instance, surface } => KernelOutcome::Exchanged(self.advance_retained_surface_one(instance, surface)),
             KernelRequest::MountProductReplay { owner } => KernelOutcome::ProductReplayMounted(self.mount_product_replay(owner)),
             KernelRequest::RetireProductReplay { owner } => {

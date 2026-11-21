@@ -10,6 +10,15 @@ pub mod primitives;
 pub mod point_hull;
 #[path = "🗜️prism-boundary/🦀️.rs"]
 pub mod prism_boundary;
+
+#[path = "📐️circular-prism/🦀️.rs"]
+pub mod circular_prism;
+
+#[path = "✂️skew-box-clip/🦀️.rs"]
+pub mod skew_box_clip;
+
+#[path = "📐️conical-frustum/🦀️.rs"]
+pub mod conical_frustum;
 #[path = "⏱️staged/🦀️.rs"]
 pub mod staged;
 #[path = "🧵️sew/🦀️.rs"]

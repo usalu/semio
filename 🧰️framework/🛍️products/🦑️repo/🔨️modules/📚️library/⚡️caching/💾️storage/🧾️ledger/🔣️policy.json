@@ -195,6 +195,25 @@
       }
     },
     {
+      "id": "fleet-state",
+      "root": "native",
+      "kind": "control",
+      "directory": "f",
+      "managed": {
+        "owner": "fleet"
+      },
+      "writers": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📍️cursor/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🔒️guard/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Fleet replica identity, synchronization state, worker sidecars and graph custody.",
+        "de": "Identität und Synchronisationszustand der Flottenreplik, Worker-Sidecars und Graph-Verwahrung."
+      }
+    },
+    {
       "id": "boot-recovery",
       "root": "native",
       "kind": "tree",

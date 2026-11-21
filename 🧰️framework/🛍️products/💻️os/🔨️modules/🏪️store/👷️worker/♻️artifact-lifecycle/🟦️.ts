@@ -1,5 +1,7 @@
+import { relayAtomicHubPart } from "../📦️atomic-hub-group/🟦️.ts";
+import { parseDocumentBackboneTransportMessage } from "../../../../../../🔨️modules/🛰️backbone/🔀️message/🟦️.ts";
 import type { ArtifactActorConfig, ArtifactActorMsg } from "../../../../🟦️";
-import { HUB_RECONNECT_MIN_MS, noteAuthoredEnvelopeIds, parseDocumentBackboneMessage, localCommandRejectionV1 } from "../../../../🟦️";
+import { HUB_RECONNECT_MIN_MS, noteAuthoredEnvelopeIds, localCommandRejectionV1 } from "../../../../🟦️";
 import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1 } from "../🚑️actor-recovery/🟦️.ts";
 import type { MutationEnvelope, ExactWireMutationEnvelope } from "@semio-tech/framework-replication";
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS, encodePresencePeer } from "@semio-tech/framework-replication";
@@ -145,6 +147,8 @@ function admitLocalMutations(
   return true;
 }
 
+import { localAtomicDocumentFrames } from "../🧩️atomic-document-relay/🟦️.ts";
+
 export async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): Promise<void> {
   switch (message.kind) {
     case "documentBackbone": {
@@ -152,7 +156,28 @@ export async function handleLocalMsg(state: ArtifactState, message: ArtifactActo
         rejectDocumentBackboneBootstrapAdmission(state, message.message.byteLength);
         break;
       }
-      const parsed = parseDocumentBackboneMessage(message.message);
+      const parsed = parseDocumentBackboneTransportMessage(message.message);
+      if (parsed.kind === "atomic-part") {
+        if (hubBinding(state.config) !== null) {
+          await relayAtomicHubPart(state, parsed);
+          break;
+        }
+        if (state.executionTargetLease?.live && !state.executionTargetLease.fields().grant.write) {
+          rejectLocally(state, localCommandRejectionV1("local.backbone-scope-mismatch", "document backbone write authority is unavailable"));
+          break;
+        }
+        const sealed = await localAtomicDocumentFrames(state, parsed, "outgoing");
+        if (!sealed) break;
+        const rows = sealed.envelopes.map(opaqueEnvelopeFromWire);
+        rows.forEach((row, index) => state.exactLocalEnvelopes.set(row, {
+          envelope: sealed.envelopes[index]!, bytes: index === 0 ? sealed.bytes : 0, messages: index === 0 ? sealed.messages : 0,
+        }));
+        noteAuthoredEnvelopeIds(state.ingestedMutationIds, sealed.envelopes.map(row => row.mutation_id));
+        state.pendingMutations.push(...rows);
+        setStatus(state, { pendingMutations: state.pendingMutations.length });
+        for (const physical of sealed.frames) state.channel.postMessage({ kind: "documentBackbone", message: physical });
+        break;
+      }
       if (parsed.envelopes.some((envelope) => envelope.document_id !== state.config.documentId)) {
         rejectLocally(state, localCommandRejectionV1("local.backbone-scope-mismatch", "document backbone scope mismatch", { envelopes: parsed.envelopes.length }));
         break;

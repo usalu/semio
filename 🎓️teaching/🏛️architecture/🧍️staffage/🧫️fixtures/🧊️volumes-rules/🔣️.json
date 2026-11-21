@@ -1,4 +1,102 @@
 {
+  "subpixelShaft": {"triangle": [[0, 0], [0.3, 8e-05], [0, 0.00016]], "points": [[0.275, 8e-05], [0.275, 0.02008], [0.33, 8e-05]], "degenerate": [[0.3, 0], [0.31, 0], [0.32, 0]], "probeRadiusM": 0.045},
+  "closedPartBounds": {"boxes":[[0,0,0,1,1,1],[0,3,0,1,4,1],[4,0,0,5,1,1]],"samples":[{"at":[0.4,0.6,0.3],"skip":[0],"inside":false,"tested":[0]},{"at":[0.4,3.6,0.3],"skip":[],"inside":true,"tested":[1]},{"at":[4.5,0.6,0.3],"skip":[],"inside":true,"tested":[2]},{"at":[0.4,-0.6,0.3],"skip":[],"inside":false,"tested":[]},{"at":[2.0,0.6,0.3],"skip":[],"inside":false,"tested":[]}],"copies":{"count":125,"stepY":1.25,"samples":[[0.5,78,0.5],[0.5,78.3,0.5],[0.5,154.9,0.5],[0.5,155.3,0.5],[0.5,2.333,0.5]]}},
+  "totalSurface": {"stockM": [0.4, 0.15, 0.1], "areaM2": 0.23, "wrongAreaM2": 0.5},
+  "sheetStock": {"spanM": 0.60, "depthM": 0.45, "clothM": 0.0005, "narrowM": 0.002, "inflatedM": 0.004},
+  "breathApertures": {
+    "diameterM": 0.002,
+    "pigeonRadiiM": [
+      0.001,
+      0.00055,
+      0.00032
+    ],
+    "ovalProfileM": [
+      [
+        0.001,
+        0
+      ],
+      [
+        0,
+        0.00055
+      ],
+      [
+        -0.001,
+        0
+      ],
+      [
+        0,
+        -0.00055
+      ]
+    ],
+    "normalThicknessM": 0.00064,
+    "cases": [
+      {
+        "kind": "ellipsoid",
+        "variant": "physical",
+        "finding": false
+      },
+      {
+        "kind": "extrude",
+        "variant": "physical",
+        "finding": false
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "device",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "unused-breath",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "unknown",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "untagged",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "wrong-bone",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "away-from-surface",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "non-tissue",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "undersized",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "body-list",
+        "finding": true
+      },
+      {
+        "kind": "ellipsoid",
+        "variant": "bead",
+        "finding": true
+      },
+      {
+        "kind": "extrude",
+        "variant": "longitudinal",
+        "finding": true
+      }
+    ]
+  },
   "description": "Vectors of the rules of the per-scale volumes: the design limits, one invalid vector per rule on the sample figure (a rule must report it, at the scale it names, and a measured value must move the wrong way against the baseline), the scales on which the unpatched sample passes each rule, and hand-computed meshes for the geometry that the owned checks and the oracle (shapely, trimesh) both measure.",
   "rules": [
     "volumes-availability",
@@ -62,7 +160,11 @@
     "sectionAngleDeg": 45,
     "crossDistanceFeatures": 2,
     "crossDistancePlus2DFeatures": 1,
-    "crossIouMarginTo2D": 0.05
+    "crossIouMarginTo2D": 0.05,
+    "transparentRegionKinds": [
+      "glazing"
+    ],
+    "enclosedOuterFraction": 0.02
   },
   "baselinePasses": {
     "volumes-availability": [
@@ -1569,6 +1671,12 @@
         "value": "torso"
       }
     ]
+  },
+  "sweptRod": {
+    "radiusM": 0.004,
+    "stationsM": [[0,0,0],[0.03,0,0],[0.03,0.04,0],[0,0.04,0],[0,0,0]],
+    "lengthM": 0.14,
+    "diameterM": 0.008
   },
   "hollow": {
     "description": "C30: a cup modelled as a hollow revolve with a wall of 0.2 mm, 100 mm long and 80 mm across: volumes-feature judges its overall extents (80 mm), not its wall.",

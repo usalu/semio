@@ -1,5 +1,7 @@
 {
   "version": 1,
+  "nestedBatches": {"directories":40,"files":24},
+  "flatBatches": {"files":384,"directoryBlocks":8,"fileBlocks":4,"fileSize":1500,"links":3,"replace":{"index":1,"blocks":7,"size":3000},"vanish":16},
   "bounds": [
     {"physicalBytes": 1, "entries": 1048576},
     {"physicalBytes": 34603008, "entries": 1048576},

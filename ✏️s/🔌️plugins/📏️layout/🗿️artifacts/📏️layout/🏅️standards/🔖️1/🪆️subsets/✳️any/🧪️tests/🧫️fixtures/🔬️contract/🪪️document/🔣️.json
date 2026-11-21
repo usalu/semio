@@ -28,7 +28,7 @@
     },
     "backgroundDrawing": {
       "handle": {
-        "childId": "background-drawing-canonical-fixture",
+        "childId": "background-member-canonical-fixture",
         "target": {
           "artifactId": "background-drawing-canonical-fixture",
           "dialect": {
@@ -129,7 +129,7 @@
     },
     "backgroundDrawing": {
       "handle": {
-        "childId": "background-drawing-canonical-fixture",
+        "childId": "background-member-canonical-fixture",
         "target": {
           "artifactId": "background-drawing-canonical-fixture",
           "dialect": {

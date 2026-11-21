@@ -1,10 +1,10 @@
-"""🔌️ Independent closed Jack parent/query oracle preserves every literal child-address field."""
+"""🔌️ Independent Jack parent mutation oracle."""
 import json
 from semio_repo_test import Adapter, Outcome
 
 REQUIRED = {"schema", "name", "manifest", "camera", "content", "query"}
 OPTIONAL = {"manifestId", "rootNodeId"}
-KINDS = ("set-query",)
+KINDS = ("set-query", "set-root")
 
 
 def uri_in(ctx, needle):
@@ -34,10 +34,20 @@ def parent(value):
 
 
 def apply(source, mutation):
-    """📝️ The parent event changes only its query; every other original reference remains unchanged."""
-    if set(mutation) != {"mutation", "value"} or mutation["mutation"] != "setQuery" or not isinstance(mutation["value"], str):
-        raise AssertionError("closed set-query event required")
-    return {**source, "query": mutation["value"]}
+    """📝️ Applies the parent event selected by the mutation tag."""
+    if set(mutation) != {"mutation", "value"}:
+        raise AssertionError("closed parent event required")
+    kind, value = mutation["mutation"], mutation["value"]
+    if kind == "setQuery" and isinstance(value, str):
+        return {**source, "query": value}
+    if kind == "setRoot" and (value is None or isinstance(value, str)):
+        changed = dict(source)
+        if value is None:
+            changed.pop("rootNodeId", None)
+        else:
+            changed["rootNodeId"] = value
+        return changed
+    raise AssertionError("unknown or invalid parent event")
 
 
 def outcome(value):
@@ -50,18 +60,19 @@ def mutate_handler(_kind):
     def handler(ctx):
         source = parent(fixture(ctx, "asset://"))
         changed = apply(source, json.loads(ctx.doc_string()))
-        if changed["query"] == source["query"]:
+        if changed == source:
             raise AssertionError("authored event was an unexpected no-op")
         return outcome(changed)
     return handler
 
 
-def inverse_handler(_kind):
-    """↩️ The original query creates the inverse and restores the complete parent."""
+def inverse_handler(kind):
+    """↩️ The prior parent field supplies the inverse."""
     def handler(ctx):
         source = parent(fixture(ctx, "asset://"))
         changed = apply(source, json.loads(ctx.doc_string()))
-        restored = apply(changed, {"mutation": "setQuery", "value": source["query"]})
+        tag, field = ("setQuery", "query") if kind == "set-query" else ("setRoot", "rootNodeId")
+        restored = apply(changed, {"mutation": tag, "value": source.get(field)})
         if restored != source:
             raise AssertionError("inverse lost original parent fields")
         return outcome({"mutated": changed, "restored": restored})
@@ -74,7 +85,7 @@ def spec_handler(_kind):
         source = parent(fixture(ctx, "⬅️before"))
         expected = parent(fixture(ctx, "➡️after"))
         changed = apply(source, fixture(ctx, "🦠️mutation"))
-        if json.loads(ctx.doc_string())["verdict"] != "applied" or changed["query"] == source["query"] or changed != expected:
+        if json.loads(ctx.doc_string())["verdict"] != "applied" or changed == source or changed != expected:
             raise AssertionError("complete parent differs from its committed applied vector")
         return outcome(changed)
     return handler

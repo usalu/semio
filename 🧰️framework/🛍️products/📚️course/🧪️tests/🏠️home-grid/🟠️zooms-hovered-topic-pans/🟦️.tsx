@@ -56,22 +56,18 @@ export function registerZoomsHoveredTopicPansTests(): void {
     expect(document.querySelector('[data-layered-card="energy"]')!.hasAttribute("data-revealed")).toBe(false);
     for (const id of ["physics", "heating", "cooling", "demand", "storage", "network"]) expect(document.querySelector(`[data-layered-card="${id}"]`)!.hasAttribute("data-revealed"), id).toBe(false);
   });
-  it("pans and glides just the same on a device that reports reduced motion, as a Remote Desktop session does for everyone", () => {
+  it("centres and reveals the selected page immediately when the device requests reduced motion", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "requestAnimationFrame", "cancelAnimationFrame", "performance", "Date"] });
     vi.stubGlobal("matchMedia", (query: string) => ({ matches: query === "(prefers-reduced-motion: reduce)", media: query, onchange: null, addEventListener: () => undefined, removeEventListener: () => undefined, addListener: () => undefined, removeListener: () => undefined, dispatchEvent: () => false }));
     render(<Home session={stubSession()} />);
-    expect(document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview]')!.dataset.pan).toBe("pointer");
+    expect(document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview]')!.dataset.pan).toBe("none");
     const strip = document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview] > [data-layered-strip]')!;
     const veil = document.querySelector<HTMLElement>('[data-grid-active] > [data-layered-overview] > [data-layered-veil]')!;
     moveMouseOver(1, 1);
-    expect(translation(strip)).toBe("translate(-33.3333%, -50%)");
+    expect(translation(strip)).toBe("translate(0%, 0%)");
     const explore = within(screen.getByRole("region", { name: "Badges" })).getByRole("button", { name: "All badges" });
     fireEvent.pointerOver(explore, { pointerType: "mouse" });
     fireEvent.pointerDown(explore, { pointerType: "mouse", button: 0 });
-    expect(translation(strip), "the glide starts where the pan stood").toBe("translate(-33.3333%, -50%)");
-    for (let spent = 0; spent < 250; spent += 10) act(() => void vi.advanceTimersByTime(10));
-    expect(veil.dataset.veil, "under way the pressed glass has a hole over the page").toBe("hole");
-    for (let spent = 0; spent < 350; spent += 10) act(() => void vi.advanceTimersByTime(10));
     expect(translation(strip)).toBe("translate(0%, -50%)");
     expect(veil.dataset.veil).toBe("clear");
   });

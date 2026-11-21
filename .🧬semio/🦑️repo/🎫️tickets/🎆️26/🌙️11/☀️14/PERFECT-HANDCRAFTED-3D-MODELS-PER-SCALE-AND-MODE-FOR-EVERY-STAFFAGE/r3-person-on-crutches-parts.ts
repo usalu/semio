@@ -10,15 +10,18 @@ export const TONE = { hoodie: 0.42, hoodieFar: 0.34, shorts: 0.3, shortsFar: 0.2
 /** 🌗 The tone of the far (left) side for a near-side tone. */
 export const nearOf = (t: number): number => (t === TONE.hoodieFar ? TONE.hoodie : t === TONE.shortsFar ? TONE.shorts : t === TONE.legFar ? TONE.leg : t === TONE.handFar ? TONE.hand : t === TONE.frameFar ? TONE.frame : t);
 
-const ANKLE_H = 0.083;
-const COS = Math.cos((29.0748 * Math.PI) / 180);
-const SIN = Math.sin((29.0748 * Math.PI) / 180);
-const BALL = 0.1708 * COS;
+/** 🦶 The ankle joint centre 95 mm above the sole plane in the sneaker (0.039 H = 70 mm barefoot for H 1.805 m, Winter 2009, plus the 25 mm heel stack), the foot bone running down to the ball contact 149 mm ahead, and the shank from the knee to that ankle. */
+export const ANKLE_H = 0.095;
+export const FOOT_PITCH = 32.4766;
+export const SHANK_L = 0.4357;
+const COS = Math.cos((FOOT_PITCH * Math.PI) / 180);
+const SIN = Math.sin((FOOT_PITCH * Math.PI) / 180);
+const BALL = 0.14926;
 /** 🦶 A cross slice of a foot standing flat (x ahead of the ankle, heights above the sole plane of the rig) as a station of the foot bone or of the toe bone. */
 export function footSt(bone: "foot" | "toe", x: number, bottom: number, top: number, rw: number, e = 2.4, z = 0): St {
   const y = (bottom + top) / 2 - ANKLE_H;
   const at: V3 = bone === "foot" ? [x * COS - y * SIN, x * SIN + y * COS, z] : [x - BALL, y + ANKLE_H, z];
-  return { at, rw, rv: (top - bottom) / 2, e, n: bone === "foot" ? 29.0748 : 0 };
+  return { at, rw, rv: (top - bottom) / 2, e, n: bone === "foot" ? FOOT_PITCH : 0 };
 }
 /** 🦶 A point of the flat-standing foot in the frame of the foot bone or of the toe bone. */
 export function footAt(bone: "foot" | "toe", x: number, y: number, z = 0): V3 {
@@ -26,7 +29,7 @@ export function footAt(bone: "foot" | "toe", x: number, y: number, z = 0): V3 {
   return bone === "foot" ? [x * COS - h * SIN, x * SIN + h * COS, z] : [x - BALL, y, z];
 }
 /** 🥾 A horizontal slice of the boot leg with the shank upright (height above the sole plane, x ahead of the ankle) as a station of the shank bone. */
-export const bootSt = (y: number, back: number, front: number, rw: number, e = 2.5): St => ({ at: [0.4477 - (y - ANKLE_H), (back + front) / 2, 0], rw, rv: (front - back) / 2, e, n: 0 });
+export const bootSt = (y: number, back: number, front: number, rw: number, e = 2.5): St => ({ at: [SHANK_L - (y - ANKLE_H), (back + front) / 2, 0], rw, rv: (front - back) / 2, e, n: 0 });
 
 const HD: [number, number] = [GRIP_AT[0] - CRUTCH_AT[0], GRIP_AT[1] - CRUTCH_AT[1]];
 const HL = Math.hypot(HD[0], HD[1]);
@@ -110,12 +113,12 @@ export const THIGH: St[] = [st(0.21, 0.006, 0, 0.076, 0.086, 2.1), st(0.27, 0.00
 /** 🩳 The left leg of the shorts on the thigh: a loose tube from the hip to a hem at mid-thigh. */
 export const SHORTS_LEG: St[] = [st(-0.02, -0.006, -0.01, 0.09, 0.102, 2.3), st(0.05, -0.008, -0.008, 0.091, 0.108, 2.3), st(0.12, -0.004, -0.004, 0.094, 0.11, 2.3), st(0.2, 0.002, 0.001, 0.096, 0.107, 2.3), st(0.245, 0.003, 0.003, 0.098, 0.108, 2.3)];
 /** 🦵 The bare left shank, bone-local (v ahead: shin, -v: calf): knee, tibial head, the calf belly behind and inwards, the taper to the ankle. */
-export const SHANK: St[] = [st(-0.02, 0.005, 0, 0.052, 0.057, 2.2), st(0.03, 0.002, 0, 0.0525, 0.057, 2.15), st(0.085, -0.005, -0.002, 0.054, 0.059, 2.05), st(0.15, -0.011, -0.004, 0.057, 0.064, 2), st(0.22, -0.01, -0.003, 0.05, 0.057, 2), st(0.29, -0.006, -0.001, 0.04, 0.047, 2), st(0.35, -0.004, 0, 0.034, 0.041, 2), st(0.4, -0.003, 0, 0.0325, 0.039, 2)];
+export const SHANK: St[] = [st(-0.02, 0.005, 0, 0.0555, 0.061, 2.2), st(0.03, 0.003, 0, 0.0535, 0.0585, 2.15), st(0.085, -0.005, -0.002, 0.054, 0.059, 2.05), st(0.15, -0.011, -0.004, 0.057, 0.064, 2), st(0.22, -0.01, -0.003, 0.05, 0.057, 2), st(0.282, -0.006, -0.001, 0.04, 0.047, 2), st(0.34, -0.004, 0, 0.034, 0.041, 2), st(0.39, -0.003, 0, 0.0325, 0.039, 2)];
 
 /** 💪 The left sleeve on the upper arm, bone-local (v ahead, w outwards): the sleeve head sits inwards over the shoulder, the deltoid below it, biceps ahead, the elbow. */
 export const SLEEVE: St[] = lean([st(-0.03, 0, -0.03, 0.038, 0.052), st(0, 0, -0.014, 0.049, 0.063), st(0.045, 0.002, -0.003, 0.053, 0.068), st(0.11, 0.004, 0, 0.053, 0.066), st(0.19, 0.004, 0, 0.052, 0.062), st(0.27, 0, 0, 0.049, 0.056), st(0.3385, -0.003, 0, 0.0475, 0.053)], ARM_LEAN);
 /** 💪 The left sleeve on the forearm down to the ribbed cuff. */
-export const FORE: St[] = lean([st(-0.012, -0.004, 0, 0.043, 0.0485), st(0.05, 0, 0, 0.0445, 0.049), st(0.12, 0, 0, 0.0445, 0.0465), st(0.185, 0, 0, 0.039, 0.04), st(0.222, 0, 0, 0.037, 0.0375)], FORE_LEAN);
+export const FORE: St[] = lean([st(-0.012, -0.004, 0, 0.047, 0.0525), st(0.05, 0, 0, 0.0445, 0.049), st(0.12, 0, 0, 0.0445, 0.0465), st(0.185, 0, 0, 0.039, 0.04), st(0.222, 0, 0, 0.037, 0.0375)], FORE_LEAN);
 export const CUFF: St[] = lean([st(0.218, 0, 0, 0.0335, 0.031), st(0.24, 0, 0, 0.0325, 0.029), st(0.26, 0, 0, 0.0325, 0.0285)], FORE_LEAN);
 export const WRIST: St[] = lean([st(0.236, 0, 0, 0.03, 0.0235), st(0.262, 0, 0, 0.0305, 0.023), st(0.285, 0.001, 0, 0.032, 0.0235)], FORE_LEAN);
 

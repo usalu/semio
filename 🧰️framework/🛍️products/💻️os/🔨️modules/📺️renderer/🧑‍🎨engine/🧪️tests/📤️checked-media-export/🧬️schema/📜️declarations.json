@@ -10,7 +10,8 @@
     "descriptor",
     "rejectedFilenames",
     "deliveryCases",
-    "snapshot"
+    "snapshot",
+    "drainBounds"
   ],
   "properties": {
     "$schema": {
@@ -123,7 +124,9 @@
               "source-changed-before-delivery",
               "cancelled-during-copy",
               "owner-retired-during-copy",
-              "wrong-format"
+              "wrong-format",
+              "archive-refused-before-delivery",
+              "archive-cancelled-before-delivery"
             ]
           },
           "delivered": {
@@ -143,6 +146,17 @@
                 "write",
                 "close",
                 "abort"
+              ]
+            }
+          },
+          "transport": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "open",
+                "take",
+                "write",
+                "close"
               ]
             }
           }
@@ -238,6 +252,68 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "drainBounds": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "dataPages",
+          "pageBytes",
+          "terminal",
+          "expectedDelivery",
+          "expectedPages",
+          "expectedTakes",
+          "expectedCancel",
+          "expectedError"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dataPages": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8193
+          },
+          "pageBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4096
+          },
+          "terminal": {
+            "type": "boolean"
+          },
+          "expectedDelivery": {
+            "type": "boolean"
+          },
+          "expectedPages": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8193
+          },
+          "expectedTakes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8193
+          },
+          "expectedCancel": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "expectedError": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       }

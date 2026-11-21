@@ -80,6 +80,49 @@ impl ToolLatestWinsRegistry {
         Self { map: Some(semio_framework_value_ordered::ordered::OrderedMap::new()), update: None, retirement: None, removed_scope: None, retired_scope:ManuallyDrop::new(None),scope_close:Default::default(),active_operation: None, outcome: None, scan: 0, admission_scan: None, update_closing: false, closing: false }
     }
 
+    semio_framework_value::initialization::original_empty_fields!(EMPTY_FIELDS, empty_field_demands, initialize_empty_field_at;
+        map = Some(semio_framework_value_ordered::ordered::OrderedMap::new()),
+        removed_scope = None,
+        retired_scope = ManuallyDrop::new(None),
+        scope_close = Default::default(),
+        active_operation = None,
+        outcome = None,
+        scan = 0,
+        admission_scan = None,
+        update_closing = false,
+        closing = false,
+    );
+
+    /// 📋️ Counts the two absent ordered-map cursors and the remaining independently placed fields.
+    pub const INITIAL_FIELDS: usize = 2 + Self::EMPTY_FIELDS;
+
+    /// 📐️ Quotes at most the supplied body grant while placing an absent ordered-map cursor.
+    pub fn initial_field_demands(field:usize, offset:usize, body:usize) -> Result<semio_framework_value::RetirementDemand,ValueError> {
+        use semio_framework_value::initialization::{absent_chunk_bytes,absent_field_bytes};
+        use semio_framework_value_ordered::ordered::{Retirement,UpdateCursor};
+        let extent=match field {
+            0=>absent_field_bytes::<UpdateCursor<ToolLatestWinsScope>>(),
+            1=>absent_field_bytes::<Retirement<ToolLatestWinsScope>>(),
+            _=>return Self::empty_field_demands(field-2),
+        };
+        Ok(semio_framework_value::RetirementDemand{copy_bytes:absent_chunk_bytes(extent,offset,body.max(1))?,depth:1,..Default::default()})
+    }
+
+    /// 🌿️ Places the next funded bytes of one field in its final position.
+    /// # Safety
+    /// The destination is exclusive uninitialized storage and any preceding byte range has been placed.
+    pub unsafe fn initialize_field_at(target:*mut Self, field:usize, offset:usize, count:usize) -> Result<bool,ValueError> {
+        use semio_framework_value::initialization::initialize_absent_field_at;
+        use std::ptr::addr_of_mut;
+        unsafe {
+            match field {
+                0=>initialize_absent_field_at(addr_of_mut!((*target).update),offset,count),
+                1=>initialize_absent_field_at(addr_of_mut!((*target).retirement),offset,count),
+                _=>Self::initialize_empty_field_at(target,field-2,offset,count),
+            }
+        }
+    }
+
     /// 🚦️ A new operation may start only while the whole frontier of the previous update has returned its owners.
     pub fn can_begin(&self) -> bool {
         !self.closing && self.update.is_none() && self.retirement.is_none() && self.removed_scope.is_none() && self.retired_scope.is_none()&&self.scope_close.is_empty()&&self.outcome.is_none()

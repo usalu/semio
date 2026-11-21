@@ -1,0 +1,21 @@
+# Poll host copy audit
+
+## What exhausted the live operation
+
+The exact typed Note run held the same first ActorInput guest loan, epoch 67,389, from native step 32,768 through 65,536. It had no Input SRE1 when it failed. The operation entered with 3,000,000,000 host copy bytes and the first cleanup trace had 33,544,587 remaining. That is approximately 2.97 GB posted to the host treasury. The close sample follows diagnostic capture, so its 155-byte difference from two nominal 16 MiB ceilings is not the exact ordinary callback grant. The driver derives that actual grant from the remaining treasury, settled and outstanding guest currency, the cleanup reserve, and the drive slice ceiling.
+
+The checkout path reserves a host slice and returns only its exact observed receipt. The Host root and Driver treasury track the same cumulative physical progress in separate ledgers; the Driver intersects the slice with both available limits. Each completed scope starts with a fresh callback receipt recipient and returns its delta once. The VM-credit receipt subtracts instruction fuel on a different axis. The outstanding guest descriptor is one availability hold. It is not reissued or posted as spent for each VM slice. Issuer History applies actual guest-used currency only after the fixed receipt.
+
+Core execution performs retained work on the physical host loan while it interprets the guest. Ordinary operations charge a VM value and instruction cursor, loads and stores charge scalar and memory bytes, and calls and structured control charge owned stack frames, local vectors, control plans, and their physical release. This can debit multiple retained items per VM instruction. At the failed close sample the 2 GiB retained capacity and release axes had also fallen by approximately 930 MB and 885 MB. The VM dispatch remained active, reaching at least 33,214,922 execution fuel by host step 262,144. The wider witness reached 50,230,641 execution fuel before another stage-0 plateau on the same Input loan. Its supplied Wasm symbol map places the hot path in the guest's `NativeDecodeControl::receive_original_effect_dyn`, beneath typed Input JSON receiving.
+
+The available traces support sustained metered VM and control work. They contain no evidence of repeated checkout or guest hold debits. They lack a separate per-slice physical Core counter, so they do not give an exact breakdown between VM instructions, host control, and other retained spends.
+
+## Host changes and limits
+
+The independent 16 MiB `transit` partition is excluded when sizing guest logical subloans. The physical VM still shares the ordinary drive grant available after guest and cleanup holds. Preserving transport through a dedicated VM partition would need an exact VM progress or refusal boundary. It would not recover the gigabytes of physical work already performed in the failing run.
+
+The wider witness supplied concrete evidence of an adjacent acknowledgment stall. It plateaued at stage 0 before its first Input SRE1, with only three nominal copy bytes beyond the two 16 MiB ceilings at the start of cleanup. Poll's Input-progress branch used the same control quote as the frozen-frontier check but discarded the acknowledgment's Pending result. The session now uses the same physical inability check when that actual Input acknowledgment cannot complete. The neutral test exercises both a contended pre-admission Input and an Input with a real submitted VM receipt. Each spends its ordinary Source stock to one byte below the quote, requires a typed refusal, checks the original owner, epoch, request and loan remain in custody, and then closes through the ordinary cleanup path.
+
+The scope keeps the configured budgets, the actor protocol, and the retained currency definitions. The repeatable end-to-end performance question is the guest typed decoder and its concrete physical Core work, followed by a fresh exact Note qualification under the existing paid operation policy.
+
+The final pinned native Poll build passed all 17 tests in `native-poll-input-progress-stock.log`. The same linked binary passed ten parallel repetitions of the five actual Poll probes. The wider live Note completion was not reverified by the host test.

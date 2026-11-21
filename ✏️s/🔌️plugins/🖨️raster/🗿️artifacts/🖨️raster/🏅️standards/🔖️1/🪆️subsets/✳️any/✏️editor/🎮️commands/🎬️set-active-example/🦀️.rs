@@ -48,9 +48,14 @@ pub fn example_document(example_id: &str) -> Option<RasterSnapshot> {
     Some(document)
 }
 
-/// 🔍️ Whether the open pool already resolves every pixel the example's media declares.
-fn example_media_present(example_id: &str, current: &RasterSnapshot) -> bool {
-    example_media(example_id).iter().all(|(asset_id, _)| semio_s_artifact_raster_raster_io::raster_asset(&current.assets, asset_id).is_some())
+/// 🔍️ Matches the full snapshot and requires the open document's materialized image owners.
+fn matches_example(current: &RasterSnapshot, example: &RasterSnapshot) -> bool {
+    current == example
+        && example.assets.keys().all(|asset_id| {
+            current.assets.get(asset_id).is_some_and(|asset| {
+                asset.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>().is_some()
+            })
+        })
 }
 
 /// 🧹️ Dismantles a document that is not handed on: the asset pool is drained and the layer forest released before the drop.
@@ -72,13 +77,13 @@ fn release_layer_forest(layers: Vec<RasterLayerNode>) {
 /// 🎬️ Loads one registered example as the open document through the load effect — no mutation rows, no history row. An
 /// id this subset does not register is a no-op rather than a fault — the navbar switcher is free-text on the wire, and an
 /// unknown id must not destroy the open document. The shell replays `setActiveExample` on every boot, so a document that
-/// already carries the example's forest and media is left alone.
+/// already matches the example snapshot and has its materialized images is left alone.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
     for layer in &doc.snapshot.layers {semio_s_artifact_raster_raster_model::require_layer_edit(&doc.snapshot.layers,semio_s_artifact_raster_raster_model::layer_node_id(layer),true).map_err(Fault::from)?;}
     let Some(example) = example_document(&payload.example_id) else {
         return Ok(Emit::default());
     };
-    if doc.snapshot.layers == example.layers && example_media_present(&payload.example_id, doc.snapshot) {
+    if matches_example(doc.snapshot, &example) {
         dismantle(example);
         return Ok(Emit::default());
     }
@@ -88,4 +93,7 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RasterSnapshot>
 }
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

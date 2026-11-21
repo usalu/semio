@@ -20,6 +20,7 @@ semio-framework-3d-brep-boolean.workspace = true
 semio-framework-3d-brep-construction.workspace = true
 semio-framework-3d-brep-curve.workspace = true
 semio-framework-3d-brep-representation.workspace = true
+semio-framework-3d-brep-spline-construction.workspace = true
 semio-framework-3d-brep-surface.workspace = true
 semio-framework-3d-brep-tolerance.workspace = true
 semio-framework-3d-brep-vector.workspace = true

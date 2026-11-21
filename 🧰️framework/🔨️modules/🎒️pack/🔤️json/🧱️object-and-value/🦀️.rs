@@ -31,6 +31,18 @@ impl Object {
         None
     }
 
+    /// 🔎️ Borrows an object member at its retained ordinal.
+    pub fn member_at(&self, index: usize) -> Option<(&str, &Value)> {
+        self.0.get(index).map(|(key, value)| (key.as_str(), value))
+    }
+
+    /// 🔀️ Exchanges two existing member slots without allocating or modifying their values.
+    pub fn swap_members(&mut self, first: usize, second: usize) -> bool {
+        if first >= self.0.len() || second >= self.0.len() { return false; }
+        self.0.swap(first, second);
+        true
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }

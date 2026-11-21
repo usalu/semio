@@ -5,7 +5,6 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
 #[allow(unused_imports)] use serde_json::{json, Value};
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_editor_commands::canvas::*;
-use semio_framework_io_ports::testkit::{bind, scene_content};
 use semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot;
 
 #[semio_framework_async_macros::async_test]
@@ -210,40 +209,20 @@ async fn canvas_layers_turns_a_rotated_proxy() {
 }
 
 #[test]
-fn canvas_layers_emits_an_embedded_drawing_png() {
-    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
-    use semio_framework_io_ports::VectorPoint2;
-    use semio_framework_io_ports::VectorTransform;
-    use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene, VectorSegment};
-    let point = |x: f64, y: f64| VectorPoint2 { x, y };
-    let encoded = semio_framework_pixels::RasterImage { width: 1, height: 1, pixels: vec![255, 0, 0, 255] };
-    let bytes = semio_framework_pixels::encode_png(&encoded).expect("png");
-    let content = VectorScene {
-        schema: "test.scene".into(),
-        canvas: Default::default(),
-        styles: Vec::new(),
-        layers: vec![VectorLayer {
-            id: "imported".into(),
-            name: "Imported".into(),
-            visible: true,
-            root: VectorNode::Group {
-                transform: VectorTransform::identity(),
-                children: vec![
-                    VectorNode::Path {
-                        style: None,
-                        segments: vec![VectorSegment::MoveTo { to: point(0.0, 0.0) }, VectorSegment::LineTo { to: point(1.0, 0.0) }, VectorSegment::LineTo { to: point(1.0, 1.0) }, VectorSegment::LineTo { to: point(0.0, 1.0) }, VectorSegment::Close],
-                    },
-                    VectorNode::Image { at: point(0.0, 0.0), width: 1.0, height: 1.0, mime: "image/png".into(), bytes },
-                ],
-            },
-        }],
-    };
+fn canvas_layers_preserves_an_authored_drawing_reference() {
+    use semio_framework_value::{DslValue, FromValue};
+    use semio_s_artifact_layout_layout_model::{drawing_member_at, DrawingSourceAddress, LayoutDrawingMember};
+
     let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    let reference = json!({"handle":{"childId":"dwg","target":{"artifactId":"rot","dialect":{"artifactKind":"s.draw.drawing","standard":"1","subset":"*"}}}});
+    document.background_drawing = Some(LayoutDrawingMember::from_value(DslValue::from(reference)).expect("authored Drawing reference"));
     document.links[0].artifact_kind = "s.draw.drawing".into();
-    document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &scene_content(&content)));
+    document.links[0].artifact_ref = "rot".into();
+    let original = document.background_drawing.as_ref().expect("document Drawing");
     let json = canvas_layers(&document, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), false);
-    assert!(json.contains("data:image/png;base64,"), "{json}");
-    assert!(json.contains("\"x\":146.0") || json.contains("\"x\":146"), "{json}");
-    assert!(json.contains("drawing.plan.0") && json.contains("[0.0,50.0]"), "{json}");
-    assert!(json.contains("drawing.frame.0"), "{json}");
+    let layers: Value = serde_json::from_str(&json).expect("Canvas layers");
+    assert!(layers.as_array().expect("layer array").iter().any(|layer| layer["id"] == "layout.page-bg"));
+    assert!(!json.contains("data:image/png;base64,"), "{json}");
+    let member = drawing_member_at(&document, DrawingSourceAddress::Document).expect("document Drawing address").expect("authored member");
+    assert!(std::ptr::eq(member, original));
 }

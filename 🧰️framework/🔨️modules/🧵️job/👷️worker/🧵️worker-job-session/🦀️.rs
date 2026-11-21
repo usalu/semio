@@ -180,7 +180,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
     }
 
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-        if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let grant=cx.retained_grant();if self.inner.0.is_none(){let step=self.release_retirement_slot(grant);return receive_original_worker_close_effects(cx,before,step)}
+        if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=(cx.retained_progress(),cx.reserved_return_progress());let grant=cx.retained_grant();if self.inner.0.is_none(){let step=self.release_retirement_slot(grant);return receive_original_worker_close_effects(cx,before,step)}
         let step=match worker_job_close_step(&self.inner,cx)?{WorkerJobCloseStep::Complete{progress}if progress!=Default::default()=>WorkerJobCloseStep::Pending{progress},WorkerJobCloseStep::Complete{..}=>{let result=self.close_original_session_arc(cx).map(|step|match step{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step});return receive_original_worker_close_result(cx,before,result)},step=>step};receive_original_worker_close_effects(cx,before,step)
     }
 

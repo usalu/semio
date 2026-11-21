@@ -10,6 +10,7 @@ pub struct NativeRuntimeModule {
     pub wasm_sha256: String,
     pub wasm_path: String,
     pub descriptor_path: String,
+    pub consumes: Vec<String>,
 }
 
 /// 📋️ The native runtime's compact, profile-specific artifact manifest.
@@ -39,7 +40,9 @@ impl NativeRuntimeManifest {
             let valid_id = !module.plugin_id.is_empty() && module.plugin_id.len() <= 64 && module.plugin_id.split('-').all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()));
             let valid_hash = module.wasm_sha256.len() == 64 && module.wasm_sha256.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte));
             let valid_paths = module.wasm_path == format!("{}/📦️component.wasm", module.plugin_id) && module.descriptor_path == format!("{}/🔣️.json", module.plugin_id);
-            if !valid_id || !valid_hash || !valid_paths || !ids.insert(&module.plugin_id) {
+            let mut topics = BTreeSet::new();
+            let valid_topics = module.consumes.len() <= 128 && module.consumes.iter().all(|topic| !topic.is_empty() && topic.chars().count() <= 256 && topics.insert(topic));
+            if !valid_id || !valid_hash || !valid_paths || !valid_topics || !ids.insert(&module.plugin_id) {
                 return Err("Invalid native runtime module".into());
             }
         }

@@ -50,8 +50,8 @@ fn law_outline_projection() -> serde_json::Value {
 fn project_outline_with_status(status: Option<&String>, labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels) -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(GRAPH_OUTLINE_LAW).expect("graph outline law json");
     let fixture = semio_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
-    let dag = semio_os_flow::FlowHost::project_dag_snapshot(&fixture, &semio_os_flow::flow_neuron_kind_info_map());
-    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
+    let dag = semio_os_flow::FlowHost::project_registered_dag_snapshot(&fixture);
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag, &fixture.synapses);
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, status, labels).expect("outline builds");
     fixture.retire_cold();
     let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(outline)).expect("outline projects");
@@ -88,15 +88,15 @@ fn flow_graph_outline_answers_its_language_agnostic_law() {
     let expected_nodes = law["expected"]["nodes"].as_array().expect("law nodes");
     assert_eq!(nodes.len(), expected_nodes.len(), "node rows: {nodes:?}");
     for (row, expected) in nodes.iter().zip(expected_nodes) {
-        assert_eq!(row.0, expected["id"].as_str().unwrap_or_default(), "node row id");
+        assert_eq!(row.0, semio_s_artifact_procedural_3d_model::GraphTargetKind::Node.target(expected["id"].as_str().unwrap()), "node row id");
         assert_eq!(row.1.as_deref(), expected["label"].as_str(), "node row label");
-        let expected_ports: Vec<String> = expected["ports"].as_array().expect("law ports").iter().map(|port| port.as_str().unwrap_or_default().to_string()).collect();
+        let expected_ports: Vec<String> = expected["ports"].as_array().expect("law ports").iter().map(|port| semio_s_artifact_procedural_3d_model::GraphTargetKind::Handle.target(port.as_str().unwrap())).collect();
         assert_eq!(row.2, expected_ports, "node {} port rows", row.0);
         assert_eq!(row.3, vec!["hoverPreview".to_string()], "node {} interaction bindings", row.0);
         assert_eq!(row.4.as_deref(), Some("node"), "node {} pick granularity", row.0);
     }
     let wires: Vec<String> = law_rows(&sections[1]).iter().map(|row| row.0.clone()).collect();
-    let expected_wires: Vec<String> = law["expected"]["wires"].as_array().expect("law wires").iter().map(|wire| wire["id"].as_str().unwrap_or_default().to_string()).collect();
+    let expected_wires: Vec<String> = law["expected"]["wires"].as_array().expect("law wires").iter().map(|wire| semio_s_artifact_procedural_3d_model::GraphTargetKind::Edge.target(wire["id"].as_str().unwrap())).collect();
     assert_eq!(wires, expected_wires, "wire rows");
 }
 
@@ -126,8 +126,8 @@ fn flow_graph_rows_pick_through_the_tree_domain_and_hover_on_their_own() {
         assert_eq!(hover["action"]["name"], semio_plugin::INTERACTION_HOVER_ACTION_ID);
         assert_eq!(hover["args"]["channel"], GENERATION_3D_INTERACTION_CHANNEL);
         assert_eq!(hover["args"]["domainId"], law["interactionDomain"]);
-        let targets: serde_json::Value = serde_json::from_str(hover["args"]["targets"].as_str().unwrap()).unwrap();
-        assert_eq!(targets, serde_json::json!([{ "granularity": granularity, "id": row["key"] }]));
+        assert_eq!(&hover["args"]["granularityId"], granularity);
+        assert_eq!(hover["args"]["targetId"], row["key"]);
     };
     for node in projection["children"][0]["children"].as_array().unwrap() {
         check(node, &granularities["nodes"]);
@@ -149,16 +149,42 @@ fn preview_component_hover_projects_the_original_graph_port() {
         marks.components.granularity=row["mode"].as_str().unwrap().to_owned();
         marks.components.hovered=Some(row["id"].as_str().unwrap().to_owned());
         let graph=row["graphHover"].as_str();
-        if let Some(id)=graph {marks.hovered.insert(id.to_owned());}
-        let expected=row["node"].as_str().map(|name|(name.to_owned(),row["port"].as_str().map(str::to_owned)));
-        assert_eq!(marks.hovered_graph_target(),expected);
-        let components=marks.preview_components();
-        if graph.is_some(){assert!(components.hovered.is_none());}
-        else{assert_eq!(components.hovered,marks.components.hovered);}
-        match expected {
-            Some((node,Some(port)))=>assert_eq!(marks.graph_highlight_ids(),vec![node.clone(),format!("{node}@{port}")]),
-            Some((node,None))=>assert_eq!(marks.graph_highlight_ids(),[node]),
-            None=>assert!(marks.graph_highlight_ids().is_empty()),
-        }
+        if let Some(id)=graph {marks.hovered.push(id.to_owned());}
+        let hover = marks.hovered_graph_target();
+        assert_eq!(hover.as_ref().and_then(|mark| mark.node_id.as_deref()), row["node"].as_str());
+        assert_eq!(hover.as_ref().and_then(|mark| mark.port_id.as_deref()), row["port"].as_str());
+        assert_eq!(hover.as_ref().and_then(|mark| mark.edge_id.as_deref()), row["edge"].as_str());
+        let components = marks.preview_components();
+        if graph.is_some() { assert!(components.hovered.is_none()); }
+        else { assert_eq!(components.hovered, marks.components.hovered); }
+        assert_eq!(marks.graph_highlight_ids(), row["node"].as_str().into_iter().map(str::to_owned).collect::<Vec<_>>());
+    }
+}
+
+#[test]
+fn graph_marks_keep_a_widget_id_distinct_from_a_handle_and_wire_with_the_same_text() {
+    use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
+    use semio_s_artifact_procedural_3d_model::GraphTargetKind::{self, Node, Handle, Edge};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🧬️schema/🔌️graph-ports/🔣️.json")).unwrap();
+    let case = &fixture["interactionCollision"];
+    let raw = case["raw"].as_str().unwrap();
+    let widget = case["widget"].as_str().unwrap();
+    let channel = case["channel"].as_str().unwrap();
+    for row in case["targets"].as_array().unwrap() {
+        let granularity = row["granularity"].as_str().unwrap();
+        let kind = GraphTargetKind::for_granularity(granularity).unwrap();
+        let id = row["target"].as_str().unwrap().to_owned();
+        let mut marks = PreviewInteractionMarks { selected: [id.clone()].into(), selection_granularity: granularity.into(), hovered: vec![id], graph_hover_source: Some(Some("pointer-root".into())), ..Default::default() };
+        assert_eq!(marks.scene_selection_ids(), [raw]);
+        let hover = marks.hovered_graph_target().unwrap();
+        assert_eq!(hover.hover_source_window_id, Some(Some("pointer-root".into())));
+        assert_eq!(hover.node_id.as_deref(), match kind { Node => Some(raw), Handle => Some(widget), Edge => None });
+        assert_eq!(hover.port_id.as_deref(), (kind == Handle).then_some(channel));
+        assert_eq!(hover.edge_id.as_deref(), (kind == Edge).then_some(raw));
+        let (nodes, edges) = marks.graph_selection_domains();
+        assert_eq!(nodes, hover.node_id.into_iter().collect::<Vec<_>>());
+        assert_eq!(edges, hover.edge_id.into_iter().collect::<Vec<_>>());
+        marks.hovered.clear();
+        assert!(marks.hovered_graph_target().is_none());
     }
 }

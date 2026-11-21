@@ -165,3 +165,42 @@ What the views show:
 - **Areas.** The `casing` and `discharge-vane` corrections are within the factor of 1.5 allowed by C16. They are listed here and not in `area-review.md`.
 
 Sources: [Mitsubishi Electric MSZ-AP series](https://www.mitsubishielectric.com.au/product/msz-ap25-80vgd-split-system-air-conditioner/), [Daikin FTXM-N table](https://www.daikin-ce.com/en_us/products/product.table.html/FTXM-N.html).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-split-ac-indoor-unit-500.py` (1:500 anew and the 1:50 thermal grille), `r5-split-ac-indoor-unit-area.py` (one areaM2 root edit).
+
+### Reference and model vs reference
+
+| Quantity | Reference (Mitsubishi MSZ-AP25VG, Daikin FTXM25N) | Model | Deviation |
+|---|---|---|---|
+| H x W x D | 299 x 798 x 219 / 294 x 811 x 272 mm | 290 x 850 x 210 mm (class value) | -3 % / +6.5 % / -4 % against the Mitsubishi |
+| Lower front radius | large radius carrying the flap | R 115 mm | ok |
+| Flap | thin curved blade 4-8 mm | 8 -> 4 mm (1:50), 8 -> 5 mm (1:500) | ok |
+| Intake grille | top, open lattice | 5 bars, 9 ribs; thermal grille now open between them | ok |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | B+ / A- (check red: closed grille plate sealed the casing, flap inner face uncounted, vane area -46 %) / A- | A- / A- / A- |
+| 1:100 | A- / B+ / B+ | A- / B+ / B+ (unchanged) |
+| 1:200 | B+ / B+ / B+ | B+ / B+ / B+ (unchanged) |
+| 1:500 | B- (round-1 polygon profile, wedge vane) / B (copies of 1:200 shells) / B | A- / A- / A- |
+
+Opened: body 1:50, 1:100, 1:200, 1:500 before; 1:500 body (sheet and from below), thermal cut and structure after; pose `swing-low` (right). Not opened in this round: 1:50-1:200 thermal and structure sheets (unchanged except the 1:50 grille), 2D.
+
+### Changes
+
+- 1:50 thermal `th-grille`: the 2 mm plate with 32 openings of 13.5 x 82.5 mm between the body's bars and ribs; the room air now reaches coil, fan and the inner face of the closed flap (C31), so `discharge-vane` measures 0.1409 against 0.141 (was 0.0755).
+- Root: `thermal.regions.intake-grille.areaM2` 0.0829 -> 0.11 (measured 0.1105 on the open lattice, both faces and opening edges; factor 1.33, within C16).
+- 1:500 anew: one casing of the true D profile in 15-degree steps with a 9 mm seat for the flap, the closed curved flap flush in it; thermal casing by reference (back face against the wall plate marked), grille plate, flap, hidden coil and fan, jet patch behind the seat; structure back member, two D side frames, flap, hook, rest, mass.
+
+### Checks
+
+`volumes-check.ts --product` PASS (was FAIL at 1:50); `r3-validate.ts --volumes` VALID; spliced.
+
+### Remaining
+
+- Width 0.85 m is 6.5 % over the 0.798 m reference unit (the asset's class value, kept by round 3).
+- The area reviewers should note the `intake-grille` correction (0.0829 -> 0.11) against their ACCEPT of 0.0829.

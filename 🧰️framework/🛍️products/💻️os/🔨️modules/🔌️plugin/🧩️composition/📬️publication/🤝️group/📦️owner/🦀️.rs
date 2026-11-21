@@ -19,7 +19,7 @@ use semio_plugin_composition_emission::metadata::private_child_metadata::{Privat
 use crate::group::private_publication_group::child::PrivateChildPublicationInput;
 use crate::group::private_publication_group::{PrivateOwnedPublicationLane, child, owner};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::{FactoryAuthority, RetirementDemand, ValueError};
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_job::{Generation, OperationId, StepContext};
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
@@ -269,6 +269,7 @@ pub struct PrivateChildPublicationGroup<M: SpaceMember + MemberFactory> {
     graph_cursor: usize,
     visibility_owner: Option<vcs::ArtifactGroupVisibilityOwner>,
     pub visibility: Option<Arc<vcs::ArtifactGroupVisibility>>,
+    visibility_retirement: Option<FactoryAuthority>,
     pub graph: Option<store::GroupOwnsPreparation>,
     parent_read: ManuallyDrop<Option<store::os_store::snapshot_read::ErasedSnapshotRead>>,
     projection_cursor: usize,
@@ -292,7 +293,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     pub fn try_new(source: PrivateChildGroupSource) -> Result<Self, PrivateChildGroupSource> {
         if source.children.is_empty() || source.children.len() > PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN||source.origins.as_ref().is_some_and(|rows|rows.len()!=source.children.len()+1) { return Err(source); }
         let count = source.children.len();
-        Ok(Self { parent_source: ManuallyDrop::new(Some(source.parent)), parent_touched: source.parent_touched, parent_identity: None, qualified_cursor:0, pending_failure:ManuallyDrop::new(None),failure_close:Default::default(), sources: ManuallyDrop::new(Some(source.children.into())), original_metadata: Some(PrivatePublicationMetadata::from_parts(PrivatePublicationMetadataParts { actor: Default::default(), transaction: source.transaction, group_id: Some(source.group_id) })), parent_issuer: PrivatePublicationMetadataIssuer::new(), parent_metadata: None, parent_lane: None, parent_receipt_copied: false, rows: ManuallyDrop::new(std::array::from_fn(|_| None)), count, input_cursor: 0, open_cursor: 0, lane_cursor: 0, entry_cursor: 0, graph_cursor: 0, visibility_owner: None, visibility: None, graph: None, parent_read: ManuallyDrop::new(None), projection_cursor: 0, projection_row: 0, projection_matched: false, projection_ready: false, future: ManuallyDrop::new(None), displaced: ManuallyDrop::new(std::array::from_fn(|_| None)), committed: false, closing: false, complete: false,origins:ManuallyDrop::new(source.origins),origins_retirement:Default::default() })
+        Ok(Self { parent_source: ManuallyDrop::new(Some(source.parent)), parent_touched: source.parent_touched, parent_identity: None, qualified_cursor:0, pending_failure:ManuallyDrop::new(None),failure_close:Default::default(), sources: ManuallyDrop::new(Some(source.children.into())), original_metadata: Some(PrivatePublicationMetadata::from_parts(PrivatePublicationMetadataParts { actor: Default::default(), transaction: source.transaction, group_id: Some(source.group_id) })), parent_issuer: PrivatePublicationMetadataIssuer::new(), parent_metadata: None, parent_lane: None, parent_receipt_copied: false, rows: ManuallyDrop::new(std::array::from_fn(|_| None)), count, input_cursor: 0, open_cursor: 0, lane_cursor: 0, entry_cursor: 0, graph_cursor: 0, visibility_owner: None, visibility: None, visibility_retirement: None, graph: None, parent_read: ManuallyDrop::new(None), projection_cursor: 0, projection_row: 0, projection_matched: false, projection_ready: false, future: ManuallyDrop::new(None), displaced: ManuallyDrop::new(std::array::from_fn(|_| None)), committed: false, closing: false, complete: false,origins:ManuallyDrop::new(source.origins),origins_retirement:Default::default() })
     }
     pub fn transaction(&self) -> Option<&protocol::TransactionRef> { self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.transaction.as_ref()) }
     pub fn group_id(&self) -> &str { self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.group_id.as_deref()).expect("private group retains its original common identity") }
@@ -438,7 +439,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         demand.depth = demand.depth.checked_add(2).ok_or_else(|| input_owner_error("original open row/group depth overflow"))?;
         Ok(demand)
     }
-    fn visibility_birth_bytes() -> usize { 2 * size_of::<usize>() + size_of::<vcs::ArtifactGroupVisibility>().next_multiple_of(align_of::<usize>()) }
+    fn visibility_birth_bytes() -> usize { vcs::ArtifactGroupVisibilityOwner::allocation_bytes() }
     pub fn next_publication_capacity_byte_demand(&self, parent: &impl SpaceMember, registry: &ChildMemberRegistry<M>) -> Result<usize, Fault> {
         if self.visibility.is_none() { return Ok(Self::visibility_birth_bytes()); }
         if let Some(lane) = self.parent_lane.as_ref().filter(|lane| !lane.staged()) { return lane.next_capacity_byte_demand(parent).map_err(plugin_sdk_fault); }
@@ -648,7 +649,15 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if let Some(metadata) = self.parent_metadata.as_ref() { return nested(release(metadata.next_close_byte_demand())); }
         if !self.parent_issuer.terminal_is_empty() { return nested(RetirementDemand { release_bytes: self.parent_issuer.next_close_byte_demand(), depth: 2, ..Default::default() }); }
         if let Some(metadata) = self.original_metadata.as_ref() { return nested(release(metadata.next_close_byte_demand())); }
-        if self.visibility.is_some() { return nested(release(Self::visibility_birth_bytes())); }
+        if let Some(authority) = self.visibility_retirement.as_ref() {
+            if !authority.terminal_is_empty() { return nested(authority.demands(body)?); }
+            return Ok(RetirementDemand { copy_bytes: size_of::<Option<FactoryAuthority>>(), depth: 1, ..Default::default() });
+        }
+        let visibility_header = if self.visibility.is_some() { size_of::<Option<Arc<vcs::ArtifactGroupVisibility>>>() }
+            else if self.visibility_owner.is_some() { size_of::<Option<vcs::ArtifactGroupVisibilityOwner>>() } else { 0 };
+        if visibility_header != 0 {
+            return Ok(RetirementDemand { copy_bytes: visibility_header + size_of::<Option<FactoryAuthority>>(), depth: 1, ..Default::default() });
+        }
         Ok(RetirementDemand { depth: usize::from(!self.complete), ..Default::default() })
     }
     /// ♻️ Returns private reads before staged abort and preserves each independently granted original owner.
@@ -727,17 +736,25 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if let Some(metadata) = self.parent_metadata.as_mut() { let step = metadata.close_granted(child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?; if metadata.terminal_is_empty() { self.parent_metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
         if !self.parent_issuer.terminal_is_empty() { return self.parent_issuer.close_granted(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from); }
         if let Some(metadata) = self.original_metadata.as_mut() { let step = metadata.close_granted(child).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?; if metadata.terminal_is_empty() { self.original_metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
-        if let Some(visibility) = self.visibility.as_ref() {
-            if Arc::strong_count(visibility) != 2 { return Ok(RetainedCloneStep::Progress(empty)); }
-            let released_bytes = if Arc::weak_count(visibility) == 0 { Self::visibility_birth_bytes() } else { 0 };
-            self.visibility_owner.take(); self.visibility.take();
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }));
+        if let Some(authority) = self.visibility_retirement.as_mut() {
+            if !authority.terminal_is_empty() {
+                let body = child.maximum_copy_bytes;
+                let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, child, |effect| crate::poll_step(authority.step(body, effect)))?;
+                return Ok(RetainedCloneStep::Progress(step.progress()));
+            }
+            self.visibility_retirement = None;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+        }
+        if let Some(authority) = self.visibility.take().map(|view| FactoryAuthority::new(view))
+            .or_else(|| self.visibility_owner.take().map(vcs::ArtifactGroupVisibilityOwner::into_retirement)) {
+            self.visibility_retirement = Some(authority);
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
         }
         self.complete = true;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
     }
     pub fn requires_native_source_close(&self)->bool{self.parent_lane.as_ref().is_some_and(|lane|lane.requires_native_source_close())||self.rows.iter().flatten().any(|row|row.requires_native_source_close())}
-    pub fn terminal_is_empty(&self) -> bool { self.complete && self.origins.is_none()&&self.origins_retirement.is_empty() && self.parent_source.is_none() && self.sources.is_none() && self.original_metadata.is_none() && self.parent_metadata.is_none() && self.parent_lane.is_none() && self.parent_issuer.terminal_is_empty() && self.rows.iter().all(Option::is_none) && self.graph.is_none() && self.parent_read.is_none() && self.future.is_none() && self.displaced.iter().all(Option::is_none) && self.visibility.is_none() && self.visibility_owner.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.complete && self.origins.is_none()&&self.origins_retirement.is_empty() && self.parent_source.is_none() && self.sources.is_none() && self.original_metadata.is_none() && self.parent_metadata.is_none() && self.parent_lane.is_none() && self.parent_issuer.terminal_is_empty() && self.rows.iter().all(Option::is_none) && self.graph.is_none() && self.parent_read.is_none() && self.future.is_none() && self.displaced.iter().all(Option::is_none) && self.visibility.is_none() && self.visibility_owner.is_none() && self.visibility_retirement.is_none() }
 }
 
 fn group_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant { RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant } }

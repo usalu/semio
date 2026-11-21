@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
-  "artifact": "s.norm-eurocode-structural.en1993",
+  "artifact": "s.norm.en1993",
   "inputs": [
     {
       "key": "k_plate",
@@ -910,6 +910,2901 @@
       "min": 0.001,
       "max": 0.2,
       "example": 0.03
+    },
+    {
+      "key": "hot_spot_detail",
+      "scope": "C93-16",
+      "kind": "choice",
+      "en": "Weld detail from Table B.1",
+      "de": "Schweißdetail aus Tabelle B.1",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "ground-butt",
+          "en": "1. Full penetration butt weld ground flush",
+          "de": "1. Voll durchgeschweißte, blecheben geschliffene Stumpfnaht"
+        },
+        {
+          "value": "as-welded-butt",
+          "en": "2. Full penetration butt weld as welded",
+          "de": "2. Voll durchgeschweißte Stumpfnaht ohne blechebenen Schliff"
+        },
+        {
+          "value": "full-penetration-cruciform",
+          "en": "3. Cruciform joint with full penetration K-butt welds",
+          "de": "3. Kreuzstoß mit voll durchgeschweißten K-Nähten"
+        },
+        {
+          "value": "non-load-bearing-fillet",
+          "en": "4. Non-load-bearing fillet weld",
+          "de": "4. Unbelastete Kehlnaht"
+        },
+        {
+          "value": "bracket-stiffener-end",
+          "en": "5. Bracket or longitudinal stiffener end",
+          "de": "5. Ende eines Anschlussblechs oder einer Längssteife"
+        },
+        {
+          "value": "cover-plate-end",
+          "en": "6. Cover plate end or similar joint",
+          "de": "6. Gurtlamellenende oder ähnlicher Anschluss"
+        },
+        {
+          "value": "load-bearing-fillet-cruciform",
+          "en": "7. Cruciform joint with load-bearing fillet welds",
+          "de": "7. Kreuzstoß mit belasteten Kehlnähten"
+        }
+      ],
+      "example": "non-load-bearing-fillet"
+    },
+    {
+      "key": "hot_spot_crack",
+      "scope": "C93-16",
+      "kind": "choice",
+      "en": "Expected crack initiation",
+      "de": "Erwarteter Ort der Rissbildung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "toe",
+          "en": "Crack at the weld toe",
+          "de": "Riss am Nahtübergang"
+        },
+        {
+          "value": "root",
+          "en": "Crack at the weld root",
+          "de": "Riss an der Nahtwurzel"
+        }
+      ],
+      "example": "toe"
+    },
+    {
+      "key": "hot_spot_basis",
+      "scope": "C93-16",
+      "kind": "choice",
+      "en": "Table B.1 fabrication and stress documentation",
+      "de": "Nachweise zu Fertigung und Spannung nach Tabelle B.1",
+      "confidence": "high",
+      "note": "Butt welds require run-on and run-off pieces removed, plate edges ground parallel to stress and welding from both sides. Row 1 also requires welds ground flush in the load direction and NDT.",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Fabrication conditions checked and misalignment included in the stress",
+          "de": "Fertigungsanforderungen geprüft und Exzentrizitäten in der Spannung berücksichtigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Fabrication or structural stress basis unconfirmed",
+          "de": "Fertigung oder Strukturspannungsgrundlage unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "hot_spot_angle",
+      "scope": "C93-16",
+      "kind": "number",
+      "en": "Weld toe angle for details 3 to 7",
+      "de": "Nahtanstiegswinkel für Details 3 bis 7",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "min": 0.0,
+      "max": 180.0,
+      "example": 45.0
+    },
+    {
+      "key": "hot_spot_range",
+      "scope": "C93-16",
+      "kind": "number",
+      "en": "Unfactored damage-equivalent structural stress range at 2 million cycles",
+      "de": "Unbemessene schadensäquivalente Strukturspannungsschwingbreite bei 2 Millionen Lastspielen",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 62.0
+    },
+    {
+      "key": "hot_spot_frequent",
+      "scope": "C93-16",
+      "kind": "number",
+      "en": "Structural stress range under frequent loads",
+      "de": "Strukturspannungsschwingbreite unter häufigen Einwirkungen",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 3000.0,
+      "example": 120.0
+    },
+    {
+      "key": "lattice_section",
+      "scope": "C93-17",
+      "kind": "choice",
+      "en": "Cross-section type",
+      "de": "Querschnittsform",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "chs",
+          "en": "Circular hollow section",
+          "de": "Kreisförmiges Hohlprofil"
+        },
+        {
+          "value": "rhs",
+          "en": "Rectangular hollow section",
+          "de": "Rechteckiges Hohlprofil"
+        }
+      ],
+      "example": "chs"
+    },
+    {
+      "key": "lattice_joint",
+      "scope": "C93-17",
+      "kind": "choice",
+      "en": "Joint type",
+      "de": "Knotenausbildung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "gap-k",
+          "en": "Gap K joint",
+          "de": "K-Knoten mit Spalt"
+        },
+        {
+          "value": "gap-n-kt",
+          "en": "Gap N or KT joint",
+          "de": "N- oder KT-Knoten mit Spalt"
+        },
+        {
+          "value": "overlap-k",
+          "en": "Overlap K joint",
+          "de": "K-Knoten mit Überlappung"
+        },
+        {
+          "value": "overlap-n-kt",
+          "en": "Overlap N or KT joint",
+          "de": "N- oder KT-Knoten mit Überlappung"
+        }
+      ],
+      "example": "gap-k"
+    },
+    {
+      "key": "lattice_member",
+      "scope": "C93-17",
+      "kind": "choice",
+      "en": "Member evaluated",
+      "de": "Untersuchter Stab",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "chord",
+          "en": "Chord",
+          "de": "Gurt"
+        },
+        {
+          "value": "vertical",
+          "en": "Vertical",
+          "de": "Pfosten"
+        },
+        {
+          "value": "diagonal",
+          "en": "Diagonal",
+          "de": "Diagonale"
+        }
+      ],
+      "example": "diagonal"
+    },
+    {
+      "key": "lattice_basis",
+      "scope": "C93-17",
+      "kind": "choice",
+      "en": "Modelling and detail scope",
+      "de": "Modell- und Detailgrundlage",
+      "confidence": "high",
+      "note": "In-plane loading, pinned joints, member loads applied between joints included, and geometry and detail category checked against Table 8.7.",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "In-plane pinned model, external member loads and Table 8.7 detail checked",
+          "de": "Ebenes gelenkiges Modell, äußere Stablasten und Detail nach Tabelle 8.7 geprüft"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Model or detail unconfirmed",
+          "de": "Modell oder Detail unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "lattice_beta",
+      "scope": "C93-17",
+      "kind": "number",
+      "en": "Joint width parameter β",
+      "de": "Knotenbreitenparameter β",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.5
+    },
+    {
+      "key": "lattice_gamma",
+      "scope": "C93-17",
+      "kind": "number",
+      "en": "Chord slenderness parameter γ",
+      "de": "Gurtschlankheitsparameter γ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 100.0,
+      "example": 15.0
+    },
+    {
+      "key": "lattice_tau",
+      "scope": "C93-17",
+      "kind": "number",
+      "en": "Wall thickness ratio τ",
+      "de": "Wanddickenverhältnis τ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 2.0,
+      "example": 0.6
+    },
+    {
+      "key": "lattice_angle",
+      "scope": "C93-17",
+      "kind": "number",
+      "en": "Brace angle θ",
+      "de": "Strebenwinkel θ",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "min": 0.0,
+      "max": 180.0,
+      "example": 45.0
+    },
+    {
+      "key": "lattice_range",
+      "scope": "C93-17",
+      "kind": "number",
+      "en": "Unfactored damage-equivalent stress range from the pinned model",
+      "de": "Unbemessene schadensäquivalente Spannungsschwingbreite aus dem gelenkigen Modell",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 40.0
+    },
+    {
+      "key": "node_section",
+      "scope": "C93-25",
+      "kind": "choice",
+      "en": "Section type",
+      "de": "Querschnittsform",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "chs",
+          "en": "Circular hollow section",
+          "de": "Kreishohlprofil"
+        },
+        {
+          "value": "rhs",
+          "en": "Rectangular hollow section",
+          "de": "Rechteckhohlprofil"
+        }
+      ],
+      "example": "rhs"
+    },
+    {
+      "key": "node_joint",
+      "scope": "C93-25",
+      "kind": "choice",
+      "en": "Joint geometry",
+      "de": "Knotenausbildung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "gap-k",
+          "en": "K joint with gap",
+          "de": "K-Knoten mit Spalt"
+        },
+        {
+          "value": "gap-n",
+          "en": "N joint with gap",
+          "de": "N-Knoten mit Spalt"
+        },
+        {
+          "value": "overlap-k",
+          "en": "Overlap K joint",
+          "de": "K-Knoten mit Überlappung"
+        },
+        {
+          "value": "overlap-n",
+          "en": "Overlap N joint",
+          "de": "N-Knoten mit Überlappung"
+        }
+      ],
+      "example": "gap-k"
+    },
+    {
+      "key": "node_member",
+      "scope": "C93-25",
+      "kind": "choice",
+      "en": "Member assessed in this case",
+      "de": "In diesem Fall untersuchter Stab",
+      "confidence": "high",
+      "note": "Create separate cases for the chord and each brace.",
+      "choices": [
+        {
+          "value": "chord",
+          "en": "Chord",
+          "de": "Gurt"
+        },
+        {
+          "value": "diagonal",
+          "en": "Diagonal brace",
+          "de": "Diagonale"
+        },
+        {
+          "value": "vertical",
+          "en": "Vertical brace",
+          "de": "Pfosten"
+        }
+      ],
+      "example": "diagonal"
+    },
+    {
+      "key": "node_stress_basis",
+      "scope": "C93-25",
+      "kind": "choice",
+      "en": "Calculation basis for fatigue stress",
+      "de": "Berechnungsgrundlage der Ermüdungsspannung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "complete",
+          "en": "Nominal stress including secondary moments",
+          "de": "Nennspannung mit Sekundärmomenten"
+        },
+        {
+          "value": "pinned",
+          "en": "In-plane pinned model with external member loads",
+          "de": "Ebenes Gelenkmodell mit äußeren Stablasten"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Stress basis unconfirmed",
+          "de": "Spannungsgrundlage unbestätigt"
+        }
+      ],
+      "example": "complete"
+    },
+    {
+      "key": "node_geometry",
+      "scope": "C93-25",
+      "kind": "choice",
+      "en": "Confirmation of the detail and weld execution",
+      "de": "Bestätigung des Details und der Schweißnahtausführung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Detail and weld construction confirmed",
+          "de": "Detail und Nahtausführung bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail or weld unconfirmed",
+          "de": "Detail oder Naht unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "node_t0",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Chord wall t₀",
+      "de": "Gurtwand t₀",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 30.0,
+      "example": 6.0
+    },
+    {
+      "key": "node_ti",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Brace wall tᵢ",
+      "de": "Strebenwand tᵢ",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 30.0,
+      "example": 4.0
+    },
+    {
+      "key": "node_chord_width",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Chord width b₀ or diameter d₀",
+      "de": "Gurtbreite b₀ oder Durchmesser d₀",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 400.0,
+      "example": 96.0
+    },
+    {
+      "key": "node_chord_height",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Rectangular chord depth h₀",
+      "de": "Rechteckige Gurthöhe h₀",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 400.0,
+      "example": 96.0
+    },
+    {
+      "key": "node_brace_width",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Brace width bᵢ or diameter dᵢ",
+      "de": "Strebenbreite bᵢ oder Durchmesser dᵢ",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 400.0,
+      "example": 54.0
+    },
+    {
+      "key": "node_angle",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Diagonal angle θ",
+      "de": "Diagonalenwinkel θ",
+      "confidence": "high",
+      "note": "Enter the diagonal angle for an N joint.",
+      "unit": "°",
+      "unitId": "Degree",
+      "min": 0.0,
+      "max": 90.0,
+      "example": 45.0
+    },
+    {
+      "key": "node_eip",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Signed in-plane eccentricity",
+      "de": "Vorzeichenbehaftete Ausmittigkeit in der Fachwerkebene",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": -500.0,
+      "max": 500.0,
+      "example": 0.0
+    },
+    {
+      "key": "node_eop",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Out-of-plane eccentricity",
+      "de": "Ausmittigkeit aus der Fachwerkebene",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": -500.0,
+      "max": 500.0,
+      "example": 0.0
+    },
+    {
+      "key": "node_gap",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Gap g",
+      "de": "Spalt g",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 500.0,
+      "example": 30.0
+    },
+    {
+      "key": "node_overlap",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Overlap ratio q/p",
+      "de": "Überlappungsverhältnis q/p",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.5
+    },
+    {
+      "key": "node_beta",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Pinned model parameter β",
+      "de": "Geometrieparameter β für das Gelenkmodell",
+      "confidence": "high",
+      "note": "Use the joint parameter from the calculated EN 1993-1-8 geometry.",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.55
+    },
+    {
+      "key": "node_gamma",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Pinned model parameter γ",
+      "de": "Gurtparameter γ für das Gelenkmodell",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 100.0,
+      "example": 8.0
+    },
+    {
+      "key": "node_equiv_range",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Damage-equivalent direct stress range at two million cycles",
+      "de": "Schadensäquivalente Normalspannungsschwingbreite bei zwei Millionen Lastwechseln",
+      "confidence": "high",
+      "note": "Use the Table 8.7 curve exponent m = 5.",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 30.0
+    },
+    {
+      "key": "node_frequent_range",
+      "scope": "C93-25",
+      "kind": "number",
+      "en": "Direct stress range for the frequent load combination",
+      "de": "Normalspannungsschwingbreite der häufigen Lastkombination",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 80.0
+    },
+    {
+      "key": "runway_detail",
+      "scope": "C93-18",
+      "kind": "choice",
+      "en": "Junction detail",
+      "de": "Anschlussdetail",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "rolled",
+          "en": "Rolled I-section top flange",
+          "de": "Obergurt eines Walzprofils"
+        },
+        {
+          "value": "full-tee",
+          "en": "Full penetration flange-to-web weld",
+          "de": "Durchgeschweißte Gurt-Steg-Naht"
+        },
+        {
+          "value": "partial-tee",
+          "en": "Partial penetration flange-to-web weld",
+          "de": "Teilweise durchgeschweißte Gurt-Steg-Naht"
+        },
+        {
+          "value": "fillet",
+          "en": "Fillet flange-to-web weld",
+          "de": "Gurt-Steg-Kehlnaht"
+        },
+        {
+          "value": "t-full",
+          "en": "Tee flange with full penetration weld",
+          "de": "T-Obergurt mit voll durchgeschweißter Naht"
+        },
+        {
+          "value": "t-partial",
+          "en": "Tee flange with partial penetration weld",
+          "de": "T-Obergurt mit teilweise durchgeschweißter Naht"
+        },
+        {
+          "value": "t-fillet",
+          "en": "Tee flange with fillet weld",
+          "de": "T-Obergurt mit Kehlnaht"
+        }
+      ],
+      "example": "rolled"
+    },
+    {
+      "key": "runway_location",
+      "scope": "C93-18",
+      "kind": "choice",
+      "en": "Stress location",
+      "de": "Spannungsstelle",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "web",
+          "en": "Web",
+          "de": "Steg"
+        },
+        {
+          "value": "throat",
+          "en": "Weld throat",
+          "de": "Nahtquerschnitt"
+        }
+      ],
+      "example": "web"
+    },
+    {
+      "key": "runway_basis",
+      "scope": "C93-18",
+      "kind": "choice",
+      "en": "Detail and stress basis",
+      "de": "Detail und Spannungsgrundlage",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Detail and wheel-load stress basis confirmed",
+          "de": "Detail und Radlastspannung bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail or stress basis unconfirmed",
+          "de": "Detail oder Spannungsgrundlage unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "runway_range",
+      "scope": "C93-18",
+      "kind": "number",
+      "en": "Wheel-load equivalent stress range",
+      "de": "Schadensäquivalente Radlastspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 80.0
+    },
+    {
+      "key": "runway_frequent",
+      "scope": "C93-18",
+      "kind": "number",
+      "en": "Frequent wheel-load stress range",
+      "de": "Häufige Radlastspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 100.0
+    },
+    {
+      "key": "deck_open_end_basis",
+      "scope": "C93-19",
+      "kind": "choice",
+      "en": "End detail and stress basis",
+      "de": "Enddetail und Spannungsgrundlage",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Open stringer end detail and stress basis confirmed",
+          "de": "Enddetail und Spannungsgrundlage der offenen Rippe bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail or stress basis unconfirmed",
+          "de": "Detail oder Spannungsgrundlage unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "deck_open_thickness",
+      "scope": "C93-19",
+      "kind": "number",
+      "en": "Plate thickness",
+      "de": "Blechdicke",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 500.0,
+      "example": 12.0
+    },
+    {
+      "key": "deck_open_range",
+      "scope": "C93-19",
+      "kind": "number",
+      "en": "Equivalent direct stress range",
+      "de": "Schadensäquivalente Normalspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 50.0
+    },
+    {
+      "key": "deck_open_frequent_direct",
+      "scope": "",
+      "kind": "number",
+      "en": "Frequent direct stress range",
+      "de": "Häufige Normalspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 100.0
+    },
+    {
+      "key": "deck_open_cross_basis",
+      "scope": "C93-20",
+      "kind": "choice",
+      "en": "Cross-girder detail and stress basis",
+      "de": "Querträgerdetail und Spannungsgrundlage",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Continuous open stringer and cross-girder stress confirmed",
+          "de": "Offene durchlaufende Längsrippe und Querträgerspannung bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail or stress basis unconfirmed",
+          "de": "Detail oder Spannungsgrundlage unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "deck_cross_direct",
+      "scope": "C93-20",
+      "kind": "number",
+      "en": "Cross-girder direct stress range",
+      "de": "Normalspannungsschwingbreite im Querträger",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 25.0
+    },
+    {
+      "key": "deck_cross_shear",
+      "scope": "C93-20",
+      "kind": "number",
+      "en": "Cross-girder shear stress range",
+      "de": "Schubspannungsschwingbreite im Querträger",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 10.0
+    },
+    {
+      "key": "deck_cross_equivalence",
+      "scope": "C93-20",
+      "kind": "number",
+      "en": "Damage equivalence and impact factor",
+      "de": "Schadensäquivalenz- und Stoßbeiwert",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 10.0,
+      "example": 1.0
+    },
+    {
+      "key": "deck_cross_frequent_shear",
+      "scope": "C93-20",
+      "kind": "number",
+      "en": "Frequent shear stress range",
+      "de": "Häufige Schubspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 60.0
+    },
+    {
+      "key": "deck_between_utilization",
+      "scope": "C93-20",
+      "kind": "number",
+      "en": "Independent EN 1993-2 utilisation between stringers",
+      "de": "Ausnutzung zwischen Längsrippen nach EN 1993-2",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 10.0,
+      "example": 0.5
+    },
+    {
+      "key": "closed_connection_detail",
+      "scope": "C93-21",
+      "kind": "choice",
+      "en": "Stringer detail",
+      "de": "Rippendetail",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "cutout",
+          "en": "Continuous stringer with additional cutout",
+          "de": "Durchlaufende Längsrippe mit zusätzlichem Ausschnitt"
+        },
+        {
+          "value": "continuous",
+          "en": "Continuous stringer without additional cutout",
+          "de": "Durchlaufende Längsrippe ohne zusätzlichen Ausschnitt"
+        },
+        {
+          "value": "separate",
+          "en": "Separate longitudinal stringer",
+          "de": "Getrennte Längsrippe"
+        },
+        {
+          "value": "backed",
+          "en": "Single-sided butt weld with backing",
+          "de": "Einseitige Stumpfnaht mit Badsicherung"
+        }
+      ],
+      "example": "cutout"
+    },
+    {
+      "key": "closed_geometry",
+      "scope": "",
+      "kind": "choice",
+      "en": "Geometry and fabrication confirmation",
+      "de": "Bestätigung von Geometrie und Ausführung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Geometry, fabrication and stress requirements confirmed",
+          "de": "Geometrie, Ausführung und Spannungsanforderungen bestätigt"
+        },
+        {
+          "value": "backed-confirmed",
+          "en": "Requirements and tack welds within weld thickness confirmed",
+          "de": "Anforderungen und Heftnähte innerhalb der Nahtdicke bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Requirements unconfirmed",
+          "de": "Anforderungen unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "closed_web_thickness",
+      "scope": "C93-21",
+      "kind": "number",
+      "en": "Cross-girder web thickness",
+      "de": "Stegdicke des Querträgers",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 500.0,
+      "example": 12.0
+    },
+    {
+      "key": "closed_range",
+      "scope": "",
+      "kind": "number",
+      "en": "Equivalent direct stress range",
+      "de": "Schadensäquivalente Normalspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 50.0
+    },
+    {
+      "key": "closed_frequent",
+      "scope": "",
+      "kind": "number",
+      "en": "Frequent direct stress range",
+      "de": "Häufige Normalspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 100.0
+    },
+    {
+      "key": "closed_cutout_method",
+      "scope": "C93-22",
+      "kind": "choice",
+      "en": "Stress calculation method at cutout",
+      "de": "Spannungsberechnung am Ausschnitt",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "vierendeel",
+          "en": "Vierendeel analysis",
+          "de": "Vierendeel-Berechnung"
+        },
+        {
+          "value": "bridge-method",
+          "en": "EN 1993-2 stress method",
+          "de": "Spannungsberechnung nach EN 1993-2"
+        }
+      ],
+      "example": "vierendeel"
+    },
+    {
+      "key": "closed_splice_group",
+      "scope": "C93-23",
+      "kind": "choice",
+      "en": "Splice execution group",
+      "de": "Ausführungsgruppe des Spleißstoßes",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "ground",
+          "en": "Ground Table 8.3 splice group",
+          "de": "Verschliffener Stoß nach Tabelle 8.3"
+        },
+        {
+          "value": "flat",
+          "en": "Table 8.3 splice group welded flat",
+          "de": "Waagerecht geschweißter Stoß nach Tabelle 8.3"
+        },
+        {
+          "value": "as-welded",
+          "en": "Table 8.3 as-welded splice group",
+          "de": "Stoß im Schweißzustand nach Tabelle 8.3"
+        }
+      ],
+      "example": "ground"
+    },
+    {
+      "key": "closed_splice_thickness",
+      "scope": "C93-23",
+      "kind": "number",
+      "en": "Splice plate thickness",
+      "de": "Blechdicke am Stoß",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 500.0,
+      "example": 25.0
+    },
+    {
+      "key": "closed_weld_type",
+      "scope": "C93-24",
+      "kind": "choice",
+      "en": "Rib-to-deck weld type",
+      "de": "Nahttyp am Rippen-Deckblech-Anschluss",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "recessed",
+          "en": "Recessed weld",
+          "de": "Eingelassene Schweißnaht"
+        },
+        {
+          "value": "fillet",
+          "en": "Fillet weld",
+          "de": "Kehlnaht"
+        }
+      ],
+      "example": "recessed"
+    },
+    {
+      "key": "closed_weld_rib_thickness",
+      "scope": "C93-24",
+      "kind": "number",
+      "en": "Rib wall thickness",
+      "de": "Rippenwanddicke",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 100.0,
+      "example": 6.0
+    },
+    {
+      "key": "closed_weld_throat",
+      "scope": "C93-24",
+      "kind": "number",
+      "en": "Weld throat thickness",
+      "de": "Nahtdicke",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 100.0,
+      "example": 6.0
+    },
+    {
+      "key": "closed_weld_gap",
+      "scope": "C93-24",
+      "kind": "number",
+      "en": "Root gap",
+      "de": "Wurzelspalt",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 30.0,
+      "example": 1.0
+    },
+    {
+      "key": "closed_weld_root_face",
+      "scope": "C93-24",
+      "kind": "number",
+      "en": "Root face",
+      "de": "Wurzelsteg",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 30.0,
+      "example": 1.0
+    },
+    {
+      "key": "closed_weld_moment",
+      "scope": "C93-24",
+      "kind": "number",
+      "en": "Equivalent bending moment range per unit weld length",
+      "de": "Schadensäquivalente Biegemomentschwingbreite je Nahtlänge",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "min": 0.0,
+      "max": 100000.0,
+      "example": 250.0
+    },
+    {
+      "key": "closed_weld_frequent_moment",
+      "scope": "C93-24",
+      "kind": "number",
+      "en": "Frequent bending moment range per unit weld length",
+      "de": "Häufige Biegemomentschwingbreite je Nahtlänge",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "min": 0.0,
+      "max": 100000.0,
+      "example": 400.0
+    },
+    {
+      "key": "hollow_detail",
+      "scope": "C93-26",
+      "kind": "choice",
+      "en": "Hollow section construction detail",
+      "de": "Konstruktionsdetail des Hohlprofils",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "flattened",
+          "en": "Butt weld of flattened circular tube end",
+          "de": "Stumpfnaht am zusammengedrückten Rundrohrende"
+        },
+        {
+          "value": "slotted",
+          "en": "Slotted tube welded to a plate with a hole at the slot end",
+          "de": "Geschlitztes Rohr am Blech mit Loch am Schlitzende"
+        },
+        {
+          "value": "chs-butt",
+          "en": "Circular hollow-section full penetration butt weld",
+          "de": "Durchgeschweißte Stumpfnaht am Rundhohlprofil"
+        },
+        {
+          "value": "rhs-butt",
+          "en": "Rectangular hollow-section full penetration butt weld",
+          "de": "Durchgeschweißte Stumpfnaht am Rechteckhohlprofil"
+        },
+        {
+          "value": "non-load-bearing",
+          "en": "Non-load-carrying welded hollow-section attachment",
+          "de": "Nicht tragender angeschweißter Hohlprofil-Anschluss"
+        },
+        {
+          "value": "chs-butt-endplate",
+          "en": "Circular hollow section with full penetration weld to endplate",
+          "de": "Rundhohlprofil mit durchgeschweißter Kopfplattennaht"
+        },
+        {
+          "value": "rhs-butt-endplate",
+          "en": "Rectangular hollow section with full penetration weld to endplate",
+          "de": "Rechteckhohlprofil mit durchgeschweißter Kopfplattennaht"
+        },
+        {
+          "value": "chs-fillet-endplate",
+          "en": "Circular hollow section with load-carrying fillet weld to endplate",
+          "de": "Rundhohlprofil mit tragender Kopfplattenkehlnaht"
+        },
+        {
+          "value": "rhs-fillet-endplate",
+          "en": "Rectangular hollow section with load-carrying fillet weld to endplate",
+          "de": "Rechteckhohlprofil mit tragender Kopfplattenkehlnaht"
+        }
+      ],
+      "example": "flattened"
+    },
+    {
+      "key": "hollow_execution",
+      "scope": "C93-26",
+      "kind": "choice",
+      "en": "Fabrication, inspection and stress basis",
+      "de": "Ausführung, Prüfung und Spannungsgrundlage",
+      "confidence": "high",
+      "note": "For details 3 and 4, confirm flat-position welding, smooth transitions and EN 1090 tolerances. For details 6 and 7, confirm weld inspection and EN 1090 tolerances.",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Detail geometry, weld execution, inspection and stresses confirmed",
+          "de": "Detailgeometrie, Schweißausführung, Prüfung und Spannungen bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail conditions unconfirmed",
+          "de": "Detailbedingungen unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "hollow_wall",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Wall thickness t",
+      "de": "Wanddicke t",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 40.0,
+      "example": 8.0
+    },
+    {
+      "key": "hollow_diameter",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Tube diameter for detail 1",
+      "de": "Rohrdurchmesser für Kerbfall 1",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 500.0,
+      "example": 150.0
+    },
+    {
+      "key": "hollow_slot_angle",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Slot detail angle α",
+      "de": "Schlitzwinkel α",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "min": 0.0,
+      "max": 180.0,
+      "example": 45.0
+    },
+    {
+      "key": "hollow_weld_dimension",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Weld dimension for the reinforcement ratio",
+      "de": "Nahtabmessung für das Überhöhungsverhältnis",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 100.0,
+      "example": 8.0
+    },
+    {
+      "key": "hollow_reinforcement",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Weld reinforcement height",
+      "de": "Schweißnahtüberhöhung",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 20.0,
+      "example": 0.5
+    },
+    {
+      "key": "hollow_attachment_width",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Attachment width along the stress",
+      "de": "Anschlussbreite parallel zur Spannungsrichtung",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 500.0,
+      "example": 95.0
+    },
+    {
+      "key": "hollow_range",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Equivalent direct stress range at the designated section",
+      "de": "Schadensäquivalente Normalspannungsschwingbreite am maßgebenden Querschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 40.0
+    },
+    {
+      "key": "hollow_frequent",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Frequent direct stress range",
+      "de": "Häufige Normalspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 100.0
+    },
+    {
+      "key": "hollow_weld_shear",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Damage-equivalent weld throat shear range for detail 2",
+      "de": "Schadensäquivalente Schubspannungsschwingbreite im Nahtquerschnitt für Kerbfall 2",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 35.0
+    },
+    {
+      "key": "hollow_weld_frequent_shear",
+      "scope": "C93-26",
+      "kind": "number",
+      "en": "Frequent weld throat shear range for detail 2",
+      "de": "Häufige Schubspannungsschwingbreite im Nahtquerschnitt für Kerbfall 2",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 70.0
+    },
+    {
+      "key": "weld85_detail",
+      "scope": "C93-27",
+      "kind": "choice",
+      "en": "Table 8.5 construction detail",
+      "de": "Konstruktionsdetail nach Tabelle 8.5",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "toe",
+          "en": "1 · Cruciform or T-joint toe, specified nominal stress",
+          "de": "1 · Kreuz- oder T-Stoß am Nahtübergang mit vorgegebener Nennspannung"
+        },
+        {
+          "value": "modified-toe",
+          "en": "2 · Toe of flexible attachment, modified nominal stress",
+          "de": "2 · Nahtübergang am verformbaren Anschlussblech mit korrigierter Nennspannung"
+        },
+        {
+          "value": "root",
+          "en": "3 · Partial-penetration or fillet weld, root and plate toe",
+          "de": "3 · Teilweise durchgeschweißte Naht oder Kehlnaht mit Wurzel und Blechübergang"
+        },
+        {
+          "value": "lap-main",
+          "en": "4 · Lap joint, main plate and weld",
+          "de": "4 · Laschenstoß mit Hauptblech und Naht"
+        },
+        {
+          "value": "lap-cover",
+          "en": "5 · Lap joint, overlap plates and weld",
+          "de": "5 · Laschenstoß mit überlappenden Laschen und Naht"
+        },
+        {
+          "value": "cover-end",
+          "en": "6 · End of welded cover plate",
+          "de": "6 · Ende einer aufgeschweißten Gurtlamelle"
+        },
+        {
+          "value": "cover-reinforced",
+          "en": "7 · Cover plate with reinforced transverse end weld",
+          "de": "7 · Gurtlamelle mit verstärkter Stirnnaht"
+        },
+        {
+          "value": "continuous-shear",
+          "en": "8 · Continuous load-carrying fillet weld in shear",
+          "de": "8 · Durchgehende tragende Kehlnaht unter Schub"
+        },
+        {
+          "value": "lap-shear",
+          "en": "9 · Lap fillet weld in shear over the complete weld length",
+          "de": "9 · Laschenkehlnaht unter Schub über die gesamte Nahtlänge"
+        },
+        {
+          "value": "stud",
+          "en": "10 · Headed stud in shear, EN 1994-2",
+          "de": "10 · Kopfbolzendübel unter Schub nach EN 1994-2"
+        },
+        {
+          "value": "ring-butt",
+          "en": "11 · Ring flange with partially penetrated butt weld",
+          "de": "11 · Ringflansch mit teilweise durchgeschweißter Stumpfnaht"
+        },
+        {
+          "value": "ring-fillet",
+          "en": "12 · Ring flange with fillet weld",
+          "de": "12 · Ringflansch mit Kehlnaht"
+        }
+      ],
+      "example": "toe"
+    },
+    {
+      "key": "weld85_basis",
+      "scope": "C93-27",
+      "kind": "choice",
+      "en": "Fabrication, inspection and stress evidence",
+      "de": "Nachweise zu Ausführung, Prüfung und Spannungen",
+      "confidence": "high",
+      "note": "Confirm each row's execution, inspection and designated stress area. This includes the applicable EN 1090 tolerances and cover-plate or ring-flange weld finishing requirements.",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Detail conditions and specified stress sections confirmed",
+          "de": "Detailbedingungen und maßgebende Spannungsquerschnitte bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail conditions unconfirmed",
+          "de": "Detailbedingungen unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "weld85_length",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Dimension ℓ in the detail sketch, or cover length for detail 6",
+      "de": "Abmessung ℓ in der Detailskizze oder Lamellenlänge für Kerbfall 6",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 65.0
+    },
+    {
+      "key": "weld85_plate",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Loaded plate thickness t",
+      "de": "Dicke t des belasteten Blechs",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 20.0
+    },
+    {
+      "key": "weld85_cover",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Cover-plate thickness tc",
+      "de": "Gurtlamellendicke tc",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 16.0
+    },
+    {
+      "key": "weld85_intermediate",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Intermediate plate thickness",
+      "de": "Dicke des Zwischenblechs",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 20.0
+    },
+    {
+      "key": "weld85_misalignment",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Load-carrying plate misalignment",
+      "de": "Achsversatz der belasteten Bleche",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 1.0
+    },
+    {
+      "key": "weld85_end_distance",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Weld end distance from plate end",
+      "de": "Abstand zwischen Nahtende und Blechende",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 12.0
+    },
+    {
+      "key": "weld85_reinforcing_length",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Reinforcing end-weld length",
+      "de": "Länge der Verstärkungsnaht",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 100.0
+    },
+    {
+      "key": "weld85_slope",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Cover-plate end slope rise to run",
+      "de": "Neigung am Lamellenende als Höhen- zu Längenverhältnis",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.2
+    },
+    {
+      "key": "weld85_penetration",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Ring-flange butt-weld penetration fraction",
+      "de": "Durchschweißungsgrad der Ringflanschstumpfnaht",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.8
+    },
+    {
+      "key": "weld85_range",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Equivalent direct stress range at the designated plate or tube section",
+      "de": "Schadensäquivalente Normalspannungsschwingbreite im maßgebenden Blech- oder Rohrquerschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 40.0
+    },
+    {
+      "key": "weld85_frequent",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Frequent direct stress range at that section",
+      "de": "Häufige Normalspannungsschwingbreite im gleichen Querschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 100.0
+    },
+    {
+      "key": "weld85_root",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Equivalent transverse weld throat stress range per Clause 5",
+      "de": "Schadensäquivalente Querspannungsschwingbreite im Nahtquerschnitt nach Abschnitt 5",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 22.0
+    },
+    {
+      "key": "weld85_root_frequent",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Frequent transverse weld throat stress range",
+      "de": "Häufige Querspannungsschwingbreite im Nahtquerschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 65.0
+    },
+    {
+      "key": "weld85_shear",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Equivalent longitudinal weld throat shear range",
+      "de": "Schadensäquivalente Längsschubspannungsschwingbreite im Nahtquerschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 35.0
+    },
+    {
+      "key": "weld85_shear_frequent",
+      "scope": "C93-27",
+      "kind": "number",
+      "en": "Frequent longitudinal weld throat shear range",
+      "de": "Häufige Längsschubspannungsschwingbreite im Nahtquerschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 70.0
+    },
+    {
+      "key": "weld84_detail",
+      "scope": "C93-28",
+      "kind": "choice",
+      "en": "Table 8.4 construction detail",
+      "de": "Konstruktionsdetail nach Tabelle 8.4",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "longitudinal",
+          "en": "1 · Longitudinal attachment",
+          "de": "1 · Längsrippe"
+        },
+        {
+          "value": "sloped",
+          "en": "2 · Longitudinal attachment with sloped transition",
+          "de": "2 · Längsrippe mit geneigtem Übergang"
+        },
+        {
+          "value": "gusset-reinforced",
+          "en": "3 · Longitudinal gusset with reinforced radius transition",
+          "de": "3 · Längsanschlussblech mit verstärkter Ausrundung"
+        },
+        {
+          "value": "gusset-edge",
+          "en": "4 · Smoothly finished edge or flange gusset",
+          "de": "4 · Nachbehandeltes Knotenblech am Blech- oder Flanschrand"
+        },
+        {
+          "value": "gusset-as-welded",
+          "en": "5 · As-welded edge gusset without a radius",
+          "de": "5 · Knotenblech ohne Nachbehandlung und ohne Ausrundung"
+        },
+        {
+          "value": "transverse",
+          "en": "6 · Transverse stiffener on a plate",
+          "de": "6 · Quersteife auf einem Blech"
+        },
+        {
+          "value": "beam-stiffener",
+          "en": "7 · Vertical stiffener in a beam or plate girder",
+          "de": "7 · Vertikalsteife im Walz- oder Blechträger"
+        },
+        {
+          "value": "web-stiffener",
+          "en": "7 · Stiffener ending in the web, principal stress",
+          "de": "7 · Im Steg endende Steife mit Hauptspannungen"
+        },
+        {
+          "value": "box-diaphragm",
+          "en": "8 · Box girder diaphragm or ring stiffener within scope",
+          "de": "8 · Kastenquerschott oder Ringsteife im Anwendungsbereich"
+        },
+        {
+          "value": "stud-base",
+          "en": "9 · Base material under a welded shear stud",
+          "de": "9 · Grundwerkstoff unter einem geschweißten Kopfbolzendübel"
+        }
+      ],
+      "example": "longitudinal"
+    },
+    {
+      "key": "weld84_basis",
+      "scope": "C93-28",
+      "kind": "choice",
+      "en": "Weld finishing and stress evidence",
+      "de": "Nachweise zu Nahtnachbehandlung und Spannungen",
+      "confidence": "high",
+      "note": "Details 3 and 4 require a smooth ground transition after shaping the radius. Details 6 and 7 require ground weld ends with undercuts removed. Detail 7 ending in the web uses principal stress. Detail 8 excludes hollow sections.",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Detail, weld finishing and stress basis confirmed",
+          "de": "Detail, Nahtnachbehandlung und Spannungsgrundlage bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail conditions unconfirmed",
+          "de": "Detailbedingungen unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "weld84_length",
+      "scope": "C93-28",
+      "kind": "number",
+      "en": "Attachment dimension L or ℓ shown for the selected detail",
+      "de": "Anschlussabmessung L oder ℓ gemäß ausgewähltem Detail",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 65.0
+    },
+    {
+      "key": "weld84_thickness",
+      "scope": "C93-28",
+      "kind": "number",
+      "en": "Longitudinal attachment thickness",
+      "de": "Dicke der Längsrippe",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 8.0
+    },
+    {
+      "key": "weld84_height",
+      "scope": "C93-28",
+      "kind": "number",
+      "en": "Longitudinal attachment height",
+      "de": "Höhe der Längsrippe",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 25.0
+    },
+    {
+      "key": "weld84_angle",
+      "scope": "C93-28",
+      "kind": "number",
+      "en": "Transition angle α of detail 2",
+      "de": "Übergangswinkel α des Kerbfalls 2",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "min": 0.0,
+      "max": 180.0,
+      "example": 35.0
+    },
+    {
+      "key": "weld84_radius",
+      "scope": "C93-28",
+      "kind": "number",
+      "en": "Finished transition radius r",
+      "de": "Nachbehandelter Übergangsradius r",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 160.0
+    },
+    {
+      "key": "weld84_reinforced_length",
+      "scope": "C93-28",
+      "kind": "number",
+      "en": "Length of the full-penetration reinforcement at the gusset end",
+      "de": "Länge der durchgeschweißten Verstärkungsnaht am Anschlussblechende",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 200.0
+    },
+    {
+      "key": "weld84_range",
+      "scope": "C93-28",
+      "kind": "number",
+      "en": "Equivalent stress range at the designated section",
+      "de": "Schadensäquivalente Spannungsschwingbreite im maßgebenden Querschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 40.0
+    },
+    {
+      "key": "weld84_frequent",
+      "scope": "C93-28",
+      "kind": "number",
+      "en": "Frequent stress range at the designated section",
+      "de": "Häufige Spannungsschwingbreite im maßgebenden Querschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 100.0
+    },
+    {
+      "key": "weld83_detail",
+      "scope": "C93-29",
+      "kind": "choice",
+      "en": "Table 8.3 construction detail",
+      "de": "Konstruktionsdetail nach Tabelle 8.3",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "ground-plate",
+          "en": "1 · Ground transverse plate or flat splice",
+          "de": "1 · Geschliffener Querstoß in einem Blech oder Flachstahl"
+        },
+        {
+          "value": "ground-built-up",
+          "en": "2 · Ground flange or web splice welded before assembly",
+          "de": "2 · Vor dem Zusammenbau geschweißter Flansch- oder Stegstoß"
+        },
+        {
+          "value": "ground-rolled",
+          "en": "3 · Ground full-section rolled profile without cope holes",
+          "de": "3 · Geschliffener Vollstoß im Walzprofil ohne Freischnitt"
+        },
+        {
+          "value": "ground-tapered",
+          "en": "4 · Ground taper in plate width or thickness",
+          "de": "4 · Geschliffener Querstoß mit Breiten- oder Dickenübergang"
+        },
+        {
+          "value": "profile-plate",
+          "en": "5 · Flat-position plate splice with limited weld convexity",
+          "de": "5 · Querstoß in Wannenlage mit begrenzter Nahtüberhöhung"
+        },
+        {
+          "value": "profile-rolled",
+          "en": "6 · Rolled profile without cope holes and limited convexity",
+          "de": "6 · Walzprofil ohne Freischnitt mit begrenzter Nahtüberhöhung"
+        },
+        {
+          "value": "profile-tapered",
+          "en": "7 · Flat-position tapered splice with limited convexity",
+          "de": "7 · Abgeschrägter Querstoß in Wannenlage mit begrenzter Nahtüberhöhung"
+        },
+        {
+          "value": "ground-cope",
+          "en": "8 · Ground rolled profile with cope holes",
+          "de": "8 · Geschliffener Vollstoß im Walzprofil mit Freischnitten"
+        },
+        {
+          "value": "as-welded-built-up",
+          "en": "9 · As-welded built-up girder splice without cope holes",
+          "de": "9 · Nicht nachbehandelter Blechträgerstoß ohne Freischnitt"
+        },
+        {
+          "value": "as-welded-cope",
+          "en": "10 · As-welded rolled profile with cope holes",
+          "de": "10 · Nicht nachbehandelter Walzprofilstoß mit Freischnitten"
+        },
+        {
+          "value": "as-welded-plate",
+          "en": "11 · As-welded transverse plate or section splice",
+          "de": "11 · Nicht nachbehandelter Querstoß in Blechen oder Profilen"
+        },
+        {
+          "value": "unbacked-rolled",
+          "en": "12 · Two-sided rolled section splice without cope holes",
+          "de": "12 · Beidseitiger Walzprofilstoß ohne Freischnitt"
+        },
+        {
+          "value": "single-sided",
+          "en": "13 · One-sided butt weld, no backing",
+          "de": "13 · Einseitige Stumpfnaht ohne Schweißbadsicherung"
+        },
+        {
+          "value": "single-sided-inspected",
+          "en": "13 · One-sided butt weld with root NDT",
+          "de": "13 · Einseitige Stumpfnaht mit zerstörungsfreier Wurzelprüfung"
+        },
+        {
+          "value": "backed",
+          "en": "14 · Butt weld with fitted backing strip",
+          "de": "14 · Querstoß mit passgenauer Schweißbadsicherung"
+        },
+        {
+          "value": "backed-tapered",
+          "en": "15 · Tapered butt weld with fitted backing strip",
+          "de": "15 · Abgeschrägter Querstoß mit passgenauer Schweißbadsicherung"
+        },
+        {
+          "value": "backed-lower-class",
+          "en": "16 · Backed splice with uncertain fit or short end clearance",
+          "de": "16 · Querstoß mit verbleibender Schweißbadsicherung bei unsicherer Passung oder geringem Endabstand"
+        },
+        {
+          "value": "unequal-section",
+          "en": "17 · Aligned plates of unequal thickness",
+          "de": "17 · Zentrierter Querstoß zwischen unterschiedlich dicken Blechen"
+        },
+        {
+          "value": "intersecting",
+          "en": "18 · Intersecting flanges without a radius transition",
+          "de": "18 · Sich kreuzende Gurte ohne Ausrundung"
+        },
+        {
+          "value": "intersecting-rounded",
+          "en": "19 · Intersecting flanges with a smooth radius transition",
+          "de": "19 · Sich kreuzende Gurte mit nachbehandelter Ausrundung"
+        }
+      ],
+      "example": "ground-plate"
+    },
+    {
+      "key": "weld83_basis",
+      "scope": "C93-29",
+      "kind": "choice",
+      "en": "Fabrication, inspection and geometry evidence",
+      "de": "Ausführungs-, Prüf- und Geometrienachweise",
+      "confidence": "high",
+      "note": "Confirm all conditions of the selected row, including grinding direction, run-on and run-off pieces, two-sided welding, flat position, matching sections or inspection where specified.",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Detail-specific fabrication and inspection confirmed",
+          "de": "Detailspezifische Ausführung und Prüfung bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail conditions unconfirmed",
+          "de": "Detailbedingungen unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "weld83_fit",
+      "scope": "C93-29",
+      "kind": "choice",
+      "en": "Backing-strip fit for details 14 to 16",
+      "de": "Passgenauigkeit der Schweißbadsicherung für Kerbfälle 14 bis 16",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "good",
+          "en": "Good backing fit documented",
+          "de": "Gute Passung der Schweißbadsicherung nachgewiesen"
+        },
+        {
+          "value": "uncertain",
+          "en": "Good fit cannot be assured",
+          "de": "Gute Passung kann nicht sichergestellt werden"
+        }
+      ],
+      "example": "good"
+    },
+    {
+      "key": "weld83_cross_reference",
+      "scope": "C93-29",
+      "kind": "choice",
+      "en": "Approved classification reference for detail 19",
+      "de": "Bestätigter Einstufungsverweis für Kerbfall 19",
+      "confidence": "high",
+      "note": "The English and German publications cite different references for the category in the weld direction.",
+      "choices": [
+        {
+          "value": "unresolved",
+          "en": "Cross-reference unresolved",
+          "de": "Verweis ungeklärt"
+        },
+        {
+          "value": "table84",
+          "en": "Approved Table 8.4 detail 4 reference",
+          "de": "Bestätigter Verweis auf Tabelle 8.4 Kerbfall 4"
+        },
+        {
+          "value": "table85",
+          "en": "Approved Table 8.5 detail 4 reference",
+          "de": "Bestätigter Verweis auf Tabelle 8.5 Kerbfall 4"
+        }
+      ],
+      "example": "unresolved"
+    },
+    {
+      "key": "weld83_flange",
+      "scope": "C93-29",
+      "kind": "choice",
+      "en": "Continuous flange detail perpendicular to the weld direction",
+      "de": "Detail des durchlaufenden Flansches quer zur Nahtrichtung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "as-welded",
+          "en": "As-welded perpendicular continuous flange",
+          "de": "Nicht nachbehandelter durchlaufender Flansch quer zur Lastrichtung"
+        },
+        {
+          "value": "rounded",
+          "en": "Rounded and finished perpendicular continuous flange",
+          "de": "Ausgerundeter und nachbehandelter durchlaufender Flansch quer zur Lastrichtung"
+        }
+      ],
+      "example": "as-welded"
+    },
+    {
+      "key": "weld83_thickness",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Assessed plate thickness t or thinner plate t1",
+      "de": "Dicke t des geprüften Blechs oder dünneres Blech t1",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 25.0
+    },
+    {
+      "key": "weld83_thicker",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Thicker plate t2 for detail 17",
+      "de": "Dickeres Blech t2 für Kerbfall 17",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 35.0
+    },
+    {
+      "key": "weld83_offset",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Residual offset e for detail 17",
+      "de": "Verbleibende Exzentrizität e für Kerbfall 17",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 0.0
+    },
+    {
+      "key": "weld83_slope",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Taper slope as rise divided by run",
+      "de": "Neigung als Verhältnis von Höhen- zu Längenänderung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.2
+    },
+    {
+      "key": "weld83_weld_width",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Weld face width b",
+      "de": "Schweißnahtbreite b",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 15.0
+    },
+    {
+      "key": "weld83_reinforcement",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Height of weld convexity",
+      "de": "Höhe der Nahtüberhöhung",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 1.2
+    },
+    {
+      "key": "weld83_end_distance",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Backing weld end clearance",
+      "de": "Abstand des Schweißnahtendes zum beanspruchten Blechrand",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 12.0
+    },
+    {
+      "key": "weld83_length",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Dimension ℓ at the intersecting flange",
+      "de": "Abmessung ℓ am sich kreuzenden Gurt",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 220.0
+    },
+    {
+      "key": "weld83_radius",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Radius r at the finished intersecting flange",
+      "de": "Radius r am nachbehandelten sich kreuzenden Gurt",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 85.0
+    },
+    {
+      "key": "weld83_range",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Equivalent direct stress range at the weld detail",
+      "de": "Schadensäquivalente Normalspannungsschwingbreite am Nahtdetail",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 50.0
+    },
+    {
+      "key": "weld83_frequent",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Frequent direct stress range at the weld detail",
+      "de": "Häufige Normalspannungsschwingbreite am Nahtdetail",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 100.0
+    },
+    {
+      "key": "weld83_perpendicular_range",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Equivalent perpendicular stress range in the continuous flange",
+      "de": "Schadensäquivalente Querspannungsschwingbreite im durchlaufenden Flansch",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 30.0
+    },
+    {
+      "key": "weld83_perpendicular_frequent",
+      "scope": "C93-29",
+      "kind": "number",
+      "en": "Frequent perpendicular stress range in the continuous flange",
+      "de": "Häufige Querspannungsschwingbreite im durchlaufenden Flansch",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 80.0
+    },
+    {
+      "key": "weld82_detail",
+      "scope": "C93-30",
+      "kind": "choice",
+      "en": "Table 8.2 construction detail",
+      "de": "Konstruktionsdetail nach Tabelle 8.2",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "automatic-butt",
+          "en": "1 · Two-sided mechanized butt weld",
+          "de": "1 · Beidseitig durchgeschweißte mechanisierte Stumpfnaht"
+        },
+        {
+          "value": "automatic-fillet",
+          "en": "2 · Mechanized fillet weld",
+          "de": "2 · Mechanisierte Kehlnaht"
+        },
+        {
+          "value": "two-sided-stops",
+          "en": "3 · Mechanized two-sided weld with start or stop positions",
+          "de": "3 · Beidseitige mechanisierte Naht mit Ansatzstellen"
+        },
+        {
+          "value": "single-backed",
+          "en": "4 · Mechanized one-sided butt weld with continuous backing",
+          "de": "4 · Einseitig durchgeschweißte mechanisierte Naht mit durchgehender Schweißbadsicherung"
+        },
+        {
+          "value": "manual",
+          "en": "5 · Manual fillet or butt weld",
+          "de": "5 · Handgeschweißte Kehl- oder Stumpfnaht"
+        },
+        {
+          "value": "single-sided",
+          "en": "6 · One-sided butt weld such as a box girder seam",
+          "de": "6 · Einseitig durchgeschweißte Naht etwa am Hohlkasten"
+        },
+        {
+          "value": "repair",
+          "en": "7 · Repaired weld from details 1 to 6",
+          "de": "7 · Ausgebesserte Schweißnaht der Kerbfälle 1 bis 6"
+        },
+        {
+          "value": "intermittent",
+          "en": "8 · Intermittent longitudinal fillet weld",
+          "de": "8 · Unterbrochene Längskehlnaht"
+        },
+        {
+          "value": "cope-hole",
+          "en": "9 · Longitudinal seam with a cope hole",
+          "de": "9 · Längsnaht mit Freischnitt"
+        },
+        {
+          "value": "longitudinal-butt",
+          "en": "10 · Butt seam loaded longitudinally",
+          "de": "10 · Längsbeanspruchte Stumpfnaht"
+        },
+        {
+          "value": "hollow-seam",
+          "en": "11 · Mechanized longitudinal hollow-section seam",
+          "de": "11 · Mechanisierte Längsnaht im Hohlprofil"
+        }
+      ],
+      "example": "automatic-butt"
+    },
+    {
+      "key": "weld82_basis",
+      "scope": "C93-30",
+      "kind": "choice",
+      "en": "Fabrication, inspection and stress evidence",
+      "de": "Ausführungs-, Prüf- und Spannungsnachweise",
+      "confidence": "high",
+      "note": "Confirm the applicable automated or manual process, required flange-to-web fit and root penetration, and direct flange stress for details 8 and 9.",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Detail fabrication, inspection and stress basis confirmed",
+          "de": "Detailausführung, Prüfung und Spannungsgrundlage bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail conditions unconfirmed",
+          "de": "Detailbedingungen unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "weld82_stop",
+      "scope": "C93-30",
+      "kind": "choice",
+      "en": "Weld start and stop positions",
+      "de": "Ansatzstellen der Schweißnaht",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "none",
+          "en": "Continuous without start or stop positions",
+          "de": "Durchgehend ohne Ansatzstellen"
+        },
+        {
+          "value": "ordinary",
+          "en": "Start or stop positions present",
+          "de": "Ansatzstellen vorhanden"
+        },
+        {
+          "value": "qualified-repair",
+          "en": "Only specialist repair starts and stops with verified execution",
+          "de": "Nur dokumentierte Ansatzstellen einer geprüften Fachreparatur"
+        }
+      ],
+      "example": "none"
+    },
+    {
+      "key": "weld82_repair",
+      "scope": "C93-30",
+      "kind": "choice",
+      "en": "Weld repair and original category",
+      "de": "Nahtreparatur und ursprünglicher Kerbfall",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "repaired",
+          "en": "Repaired weld with base category 100",
+          "de": "Ausgebesserte Naht mit Grundkerbfall 100"
+        },
+        {
+          "value": "restored-125",
+          "en": "Specialist ground and verified, original category 125",
+          "de": "Fachgerecht ausgeschliffen und geprüft, ursprünglicher Kerbfall 125"
+        },
+        {
+          "value": "restored-112",
+          "en": "Specialist ground and verified, original category 112",
+          "de": "Fachgerecht ausgeschliffen und geprüft, ursprünglicher Kerbfall 112"
+        },
+        {
+          "value": "restored-100",
+          "en": "Specialist ground and verified, original category 100",
+          "de": "Fachgerecht ausgeschliffen und geprüft, ursprünglicher Kerbfall 100"
+        }
+      ],
+      "example": "repaired"
+    },
+    {
+      "key": "weld82_finish",
+      "scope": "C93-30",
+      "kind": "choice",
+      "en": "Finish and inspection of longitudinal butt seam",
+      "de": "Nachbehandlung und Prüfung der Längsstumpfnaht",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "ground-ndt",
+          "en": "Both sides ground flush in load direction, 100% NDT",
+          "de": "Beidseitig in Lastrichtung blecheben geschliffen, 100 % ZfP"
+        },
+        {
+          "value": "unground",
+          "en": "Unground",
+          "de": "Ungeschliffen"
+        }
+      ],
+      "example": "unground"
+    },
+    {
+      "key": "weld82_cope_basis",
+      "scope": "C93-30",
+      "kind": "choice",
+      "en": "Approved 60 mm cope-hole boundary rule",
+      "de": "Bestätigte Regel für einen Freischnitt von 60 mm",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "din",
+          "en": "Published DIN classification",
+          "de": "Veröffentlichte DIN-Einstufung"
+        },
+        {
+          "value": "english",
+          "en": "English EN classification confirmed for the project",
+          "de": "Englische EN-Einstufung für das Projekt bestätigt"
+        }
+      ],
+      "example": "din"
+    },
+    {
+      "key": "weld82_ends",
+      "scope": "C93-30",
+      "kind": "choice",
+      "en": "Separate cover-plate-end assessment",
+      "de": "Getrennter Nachweis der Gurtlamellenenden",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "none",
+          "en": "No cover-plate ends in this detail",
+          "de": "Keine Gurtlamellenenden in diesem Detail"
+        },
+        {
+          "value": "assessed",
+          "en": "Cover-plate ends checked separately under Table 8.5",
+          "de": "Gurtlamellenenden getrennt nach Tabelle 8.5 nachgewiesen"
+        },
+        {
+          "value": "pending",
+          "en": "Cover-plate end check outstanding",
+          "de": "Nachweis der Gurtlamellenenden offen"
+        }
+      ],
+      "example": "none"
+    },
+    {
+      "key": "weld82_gap",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Gap g between intermittent weld segments",
+      "de": "Lücke g zwischen unterbrochenen Nahtabschnitten",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 45.0
+    },
+    {
+      "key": "weld82_web_height",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Web height h in the intermittent weld detail",
+      "de": "Steghöhe h im Detail der unterbrochenen Längsnaht",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 60.0
+    },
+    {
+      "key": "weld82_cope_height",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Cope-hole height",
+      "de": "Freischnitthöhe",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 40.0
+    },
+    {
+      "key": "weld82_attachment_length",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Attachment length L for a cope hole above 60 mm",
+      "de": "Anschlusslänge L für einen Freischnitt über 60 mm",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 75.0
+    },
+    {
+      "key": "weld82_attachment_thickness",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Attachment thickness for a cope hole above 60 mm",
+      "de": "Anschlussdicke für einen Freischnitt über 60 mm",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 8.0
+    },
+    {
+      "key": "weld82_attachment_height",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Attachment height for a cope hole above 60 mm",
+      "de": "Anschlusshöhe für einen Freischnitt über 60 mm",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 30.0
+    },
+    {
+      "key": "weld82_wall",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Hollow-section thickness t at the seam",
+      "de": "Hohlprofilwanddicke t an der Naht",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 12.5
+    },
+    {
+      "key": "weld82_ends_utilization",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Governing utilization from the separate cover-plate end check",
+      "de": "Maßgebende Ausnutzung aus dem getrennten Gurtlamellennachweis",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 100000.0,
+      "example": 0.65
+    },
+    {
+      "key": "weld82_range",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Equivalent longitudinal stress range",
+      "de": "Schadensäquivalente Längsspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 55.0
+    },
+    {
+      "key": "weld82_frequent",
+      "scope": "C93-30",
+      "kind": "number",
+      "en": "Frequent longitudinal stress range",
+      "de": "Häufige Längsspannungsschwingbreite",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 100.0
+    },
+    {
+      "key": "detail81_detail",
+      "scope": "C93-31",
+      "kind": "choice",
+      "en": "Table 8.1 construction detail",
+      "de": "Konstruktionsdetail nach Tabelle 8.1",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "rolled-plate",
+          "en": "1 · Plate or flat with rolled edges",
+          "de": "1 · Blech oder Flachstahl mit gewalzten Kanten"
+        },
+        {
+          "value": "rolled-profile",
+          "en": "2 · Rolled profile with rolled edges",
+          "de": "2 · Walzprofil mit gewalzten Kanten"
+        },
+        {
+          "value": "seamless",
+          "en": "3 · Seamless circular or rectangular hollow section",
+          "de": "3 · Nahtloses rundes oder rechteckiges Hohlprofil"
+        },
+        {
+          "value": "cut-machined",
+          "en": "4 · Machine-cut plate with machined edges",
+          "de": "4 · Maschinell brenngeschnittenes Blech mit bearbeiteten Kanten"
+        },
+        {
+          "value": "cut-dressed",
+          "en": "5 · Cut plate with qualified surface finish",
+          "de": "5 · Brenngeschnittenes Blech mit nachgewiesener Schnittqualität"
+        },
+        {
+          "value": "rolled-shear",
+          "en": "6 · Shear stress in a rolled section",
+          "de": "6 · Schubspannung im Walzprofil"
+        },
+        {
+          "value": "seamless-shear",
+          "en": "7 · Shear stress in a seamless hollow section",
+          "de": "7 · Schubspannung im nahtlosen Hohlprofil"
+        },
+        {
+          "value": "double-preloaded",
+          "en": "8 · Symmetric double-covered preloaded joint",
+          "de": "8 · Symmetrische zweischnittige vorgespannte Verbindung"
+        },
+        {
+          "value": "double-fitted",
+          "en": "9 · Double-covered fitted or non-preloaded injection joint",
+          "de": "9 · Zweischnittige Passschrauben- oder nicht vorgespannte Injektionsverbindung"
+        },
+        {
+          "value": "single-preloaded",
+          "en": "10 · One-sided preloaded high-strength or injection joint",
+          "de": "10 · Einschnittige vorgespannte hochfeste oder Injektionsverbindung"
+        },
+        {
+          "value": "holes",
+          "en": "11 · Member with holes under bending and axial force",
+          "de": "11 · Bauteil mit Löchern unter Biegung und Normalkraft"
+        },
+        {
+          "value": "single-fitted",
+          "en": "12 · One-sided fitted or non-preloaded injection joint",
+          "de": "12 · Einschnittige Passschrauben- oder nicht vorgespannte Injektionsverbindung"
+        },
+        {
+          "value": "clearance-no-preload",
+          "en": "13 · Clearance holes and non-preloaded bolts without load reversal",
+          "de": "13 · Lochspiel und nicht vorgespannte Schrauben ohne Lastumkehr"
+        },
+        {
+          "value": "bolt-tension",
+          "en": "14 · Bolt or threaded rod under tension",
+          "de": "14 · Schraube oder Gewindestange unter Zug"
+        },
+        {
+          "value": "bolt-shear",
+          "en": "15 · Bolt shank in single or double shear",
+          "de": "15 · Schraubenschaft in ein- oder zweischnittiger Scherung"
+        }
+      ],
+      "example": "rolled-plate"
+    },
+    {
+      "key": "detail81_basis",
+      "scope": "C93-31",
+      "kind": "choice",
+      "en": "Material, fabrication and stress evidence",
+      "de": "Werkstoff-, Ausführungs- und Spannungsnachweise",
+      "confidence": "high",
+      "note": "Confirm edge finishing and local concentration allowances, bolt detailing, stress section and any prying and bending effects for the selected detail.",
+      "choices": [
+        {
+          "value": "confirmed",
+          "en": "Detail-specific material, fabrication and stress section confirmed",
+          "de": "Detailspezifischer Werkstoff, Ausführung und Spannungsquerschnitt bestätigt"
+        },
+        {
+          "value": "unconfirmed",
+          "en": "Detail conditions unconfirmed",
+          "de": "Detailbedingungen unbestätigt"
+        }
+      ],
+      "example": "confirmed"
+    },
+    {
+      "key": "detail81_steel",
+      "scope": "C93-31",
+      "kind": "choice",
+      "en": "Steel family for details 1 to 5",
+      "de": "Stahlart für Kerbfälle 1 bis 5",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "ordinary",
+          "en": "Non-weathering steel",
+          "de": "Nicht wetterfester Stahl"
+        },
+        {
+          "value": "weathering",
+          "en": "Weathering steel",
+          "de": "Wetterfester Stahl"
+        }
+      ],
+      "example": "ordinary"
+    },
+    {
+      "key": "detail81_reversal",
+      "scope": "C93-31",
+      "kind": "choice",
+      "en": "Load reversal",
+      "de": "Lastumkehr",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "none",
+          "en": "No load reversal",
+          "de": "Keine Lastumkehr"
+        },
+        {
+          "value": "present",
+          "en": "Load reversal present or unverified",
+          "de": "Lastumkehr vorhanden oder ungeklärt"
+        }
+      ],
+      "example": "none"
+    },
+    {
+      "key": "detail81_threads",
+      "scope": "C93-31",
+      "kind": "choice",
+      "en": "Thread position for the shear bolt",
+      "de": "Gewindelage zur Scherfläche",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "outside",
+          "en": "Threads outside the shear plane",
+          "de": "Gewinde außerhalb der Scherfläche"
+        },
+        {
+          "value": "inside",
+          "en": "Threads intersect the shear plane",
+          "de": "Gewinde schneidet die Scherfläche"
+        }
+      ],
+      "example": "outside"
+    },
+    {
+      "key": "detail81_bolt_type",
+      "scope": "C93-31",
+      "kind": "choice",
+      "en": "Bolt type for detail 15",
+      "de": "Schraubentyp für Kerbfall 15",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "fitted",
+          "en": "Fitted bolt",
+          "de": "Passschraube"
+        },
+        {
+          "value": "normal",
+          "en": "Normal bolt",
+          "de": "Normale Schraube"
+        }
+      ],
+      "example": "normal"
+    },
+    {
+      "key": "detail81_bolt_grade",
+      "scope": "C93-31",
+      "kind": "choice",
+      "en": "Normal bolt property class",
+      "de": "Festigkeitsklasse der normalen Schraube",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "5.6",
+          "en": "5.6",
+          "de": "5.6"
+        },
+        {
+          "value": "8.8",
+          "en": "8.8",
+          "de": "8.8"
+        },
+        {
+          "value": "10.9",
+          "en": "10.9",
+          "de": "10.9"
+        },
+        {
+          "value": "other",
+          "en": "Other property class",
+          "de": "Andere Festigkeitsklasse"
+        }
+      ],
+      "example": "8.8"
+    },
+    {
+      "key": "detail81_diameter",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Reference diameter d for bolt or hole detailing",
+      "de": "Bezugsdurchmesser d für Schrauben- oder Lochausbildung",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 20.0
+    },
+    {
+      "key": "detail81_end_parallel",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Edge distance e1 parallel to the load",
+      "de": "Randabstand e1 in Kraftrichtung",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 35.0
+    },
+    {
+      "key": "detail81_edge_transverse",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Edge distance e2 transverse to the load",
+      "de": "Randabstand e2 quer zur Kraftrichtung",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 35.0
+    },
+    {
+      "key": "detail81_pitch_parallel",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Pitch p1 parallel to the load, zero without a neighbor",
+      "de": "Lochabstand p1 in Kraftrichtung, null ohne benachbartes Loch",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 60.0
+    },
+    {
+      "key": "detail81_pitch_transverse",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Pitch p2 transverse to the load, zero without a neighbor",
+      "de": "Lochabstand p2 quer zur Kraftrichtung, null ohne benachbartes Loch",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 50000.0,
+      "example": 60.0
+    },
+    {
+      "key": "detail81_first_moment",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "First moment S at the assessed depth",
+      "de": "Statisches Moment S in der geprüften Tiefe",
+      "confidence": "high",
+      "unit": "mm³",
+      "unitId": "CubicMillimetre",
+      "min": 0.0,
+      "max": 1000000000000.0,
+      "example": 250000.0
+    },
+    {
+      "key": "detail81_inertia",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Second moment of area I about the bending axis",
+      "de": "Flächenträgheitsmoment I um die Biegeachse",
+      "confidence": "high",
+      "unit": "mm⁴",
+      "unitId": "MillimetreFourth",
+      "min": 0.0,
+      "max": 1000000000000000.0,
+      "example": 120000000.0
+    },
+    {
+      "key": "detail81_thickness",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Section thickness t at the assessed depth",
+      "de": "Querschnittsdicke t in der geprüften Tiefe",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "min": 0.0,
+      "max": 1000.0,
+      "example": 8.0
+    },
+    {
+      "key": "detail81_shear_force",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Equivalent shear force range",
+      "de": "Schadensäquivalente Querkraftschwingbreite",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "min": 0.0,
+      "max": 1000000000.0,
+      "example": 180000.0
+    },
+    {
+      "key": "detail81_frequent_force",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Frequent shear force range",
+      "de": "Häufige Querkraftschwingbreite",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "min": 0.0,
+      "max": 1000000000.0,
+      "example": 400000.0
+    },
+    {
+      "key": "detail81_range",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Equivalent stress range on the prescribed section",
+      "de": "Schadensäquivalente Spannungsschwingbreite im maßgebenden Querschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 45.0
+    },
+    {
+      "key": "detail81_frequent",
+      "scope": "C93-31",
+      "kind": "number",
+      "en": "Frequent stress range on the prescribed section",
+      "de": "Häufige Spannungsschwingbreite im maßgebenden Querschnitt",
+      "confidence": "high",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "min": 0.0,
+      "max": 2000.0,
+      "example": 105.0
     }
   ]
 }

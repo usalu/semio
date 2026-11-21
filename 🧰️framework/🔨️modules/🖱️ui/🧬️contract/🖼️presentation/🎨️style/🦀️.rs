@@ -91,7 +91,7 @@ pub enum Emphasis {
     Strong,
 }
 
-/// 🎨️ A node's design-token styling — five closed enums, never a raw color or a raw pixel value. A
+/// 🎨️ A node's design-token styling and its authored interaction highlight. A
 /// renderer resolves every field against the active theme; this struct only names the tokens. Each
 /// field is omitted from the wire at its default, so a default-styled node costs nothing to encode.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -114,6 +114,10 @@ pub struct StyleSpec {
     #[serde(default, skip_serializing_if = "is_default")]
     #[value(default, skip_serializing_if = "is_default")]
     pub emphasis: Emphasis,
+    /// 🔦️ Paints incoming interaction emphasis without changing selection or keyboard ownership.
+    #[serde(default, skip_serializing_if = "is_default")]
+    #[value(default, skip_serializing_if = "is_default")]
+    pub highlighted: bool,
 }
 //#endregion 🔖️Style
 

@@ -50,11 +50,6 @@ impl protocol::OpBinary for TrinityRewritingViewCommand {
 #[derive(Default, Clone, Copy)]
 pub struct TrinityRewritingViewer;
 
-/// 👁️ A fresh viewer begins with the canonical empty rule and graph.
-fn empty_rule_state() -> RewritingSnapshot {
-    RewritingSnapshot::default()
-}
-
 impl ArtifactViewer for TrinityRewritingViewer {
     /// 🧩️ The same member roster the editor declares — see `TrinityRewritingPlayApp`'s `Members`.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
@@ -75,12 +70,20 @@ impl ArtifactViewer for TrinityRewritingViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::build_document_store_owners(grant))
+    }
+
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
         crate::standards::v1::subsets::any::content::genesis_working_child_pack(snapshot, slot, child_id)
     }
 
     fn reference_birth()->Option<fn()->Result<RewritingSnapshot,semio_plugin::Fault>>{Some(||{
-        Ok(empty_rule_state())
+        Ok(crate::standards::v1::subsets::any::content::empty_rule_state())
     })}
 
     /// 👁️ Structurally read-only: the sole `TrinityRewritingViewCommand::Noop` variant never carries a

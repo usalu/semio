@@ -115,6 +115,16 @@ impl PdfStreamDataCursor {
         Some(std::mem::take(&mut self.output))
     }
 
+    /// 🪣️ Quotes the fresh history unit before copying any staged stream bytes.
+    pub fn next_reserves_history(&self) -> bool {
+        if self.phase != Phase::Decode || self.previous.is_some() || self.staging_start < self.staging_end || self.decoder_done { return false; }
+        match &self.decoder {
+            Decoder::Flate(cursor) => cursor.next_reserves_history(),
+            Decoder::Predicted(cursor) => cursor.next_reserves_history(),
+            _ => false,
+        }
+    }
+
     /// ▶️ Drives one bounded turn against the same stable, already-framed source.
     pub fn advance(&mut self, source: &[u8], grant: StreamDataGrant, cancelled: bool) -> StreamDataReceipt {
         let mut receipt = StreamDataReceipt { status: Ok(StreamDataStatus::More), work: 0, allocated_bytes: 0, released_bytes: 0 };

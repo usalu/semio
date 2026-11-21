@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/mutation/replace-elevation-source/schema.json",
+  "title": "ReplaceElevationSource",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "newElevationSource": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/elevation.json",
+      "x-semio-ui": {
+        "role": "value",
+        "label": { "en": "Elevation source", "de": "Höhenquelle" }
+      }
+    }
+  }
+}

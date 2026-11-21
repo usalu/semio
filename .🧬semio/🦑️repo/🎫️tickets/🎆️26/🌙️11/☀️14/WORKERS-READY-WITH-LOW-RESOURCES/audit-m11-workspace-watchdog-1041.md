@@ -1,0 +1,7 @@
+# m11 Workspace Watchdog at 10:41 UTC
+
+The m11 timing receipt records its 20th workspace attempt ending at 10:41:05.843 UTC after 6939 seconds: stalled, exit null, SIGTERM, exit-receipt evidence, and step-overdue evidence of 6913 seconds against a 1200-second limit with 601420 ms quiet. The matching stalled log ends in the signal and repeats 307618 source observations, 4462 owner checks and 738496 memo rows from displayed slice 6587 through 6926 seconds. The retained log spans only 339 seconds after the last visible counter change, so it cannot independently validate the full recorded quiet interval or prove a false watchdog stop. This is not a resource-refusal exit. The separately retained authorizer output-read failure is from 08:25 UTC and belongs to an earlier attempt.
+
+The new m11 workspace attempt has reason previous-failed and is running, with its inventory count advancing from 3346 to 48860. At approximately 10:46 UTC, six other fresh receipts reported running/adopted rather than the same terminal reason. Their current logs showed m02 taken 279 to 291, m07 owner checks 5095 to 5104, m08 owner checks 1269 to 1297, m10 owner checks 8893 to 8936, and m12 taken 136 to 140. The retained m05 output showed 58210 source observations and 3 owner checks without a second distinct sample; current forward progress is unproven. None of these receipts establishes successful workspace readiness.
+
+Continue observing the new attempt and retain a longer exact activity history if the watchdog recurs; no process or remote host was changed.

@@ -29,7 +29,7 @@ impl protocol::ColdMutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMu
         if base.camera_json == self.camera_json {
             MutationOutcome::empty().warning("mutation.no-op", "Camera is already at the requested position.")
         } else {
-            MutationOutcome::new(GisTerrainWindowConfigDelta { camera_json: Some(self.camera_json.clone()) }.into())
+            MutationOutcome::new(GisTerrainWindowConfigDelta { camera_json: Some(self.camera_json.clone()), ..Default::default() }.into())
         }
     }
     fn inverse(&self, base: &GisTerrainWindowConfig) -> Result<Vec<GisTerrainWindowConfigMutation>, semio_framework_value::ValueError> {

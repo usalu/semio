@@ -436,12 +436,18 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
     let mutations:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<ScalarConfig>>=Arc::new(OwnedValueRetirementFactory::<ScalarConfig>::default());
     let snapshots:Arc<dyn semio_framework_value::SnapshotRetirementFactory<i64>>=Arc::new(SharedValueRetirementFactory::<i64>::default());
     let request=ArtifactStoreOneItemPreparationRequest{operation:semio_framework_job::OperationId(1),generation:semio_framework_job::Generation(1),base_revision:[0;32],lane:HistoryLane::Document,authority,base:SnapshotRead::new(Arc::clone(&root),lease),mutation:ScalarConfig{value:expected},mutation_retirement:Arc::clone(&mutations),snapshot_retirement:Arc::clone(&snapshots)};
-    let factory=semio_os_store_snapshot_clone::config_apply::config_apply_preparation_factory::<i64,ScalarConfig>();let policy=grant(1<<16,WIDE);
+    let factory=semio_os_store_snapshot_clone::config_apply::config_apply_preparation_factory::<i64,ScalarConfig>();
+    let limits=&law["configPreparation"];
+    let limit=|name:&str|limits[name].as_u64().unwrap() as usize;
+    let policy=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:limit("maximumCopyBytes"),maximum_capacity_bytes:limit("maximumCapacityBytes"),maximum_release_bytes:limit("maximumReleaseBytes"),maximum_depth:limit("maximumDepth")};
     let(mut owner,receipt)=factory.begin(request,policy).unwrap_or_else(|_|panic!("scalar config birth"));assert!(receipt.fits(policy.retained_grant()));
-    let mut prepared=None;let mut turns=0;let mut receiver=Receiver::new(policy.retained_grant());
-    for _ in 0..100000{
-        match receiver.run(policy.retained_grant(),|control|owner.advance(policy.maximum_copy_bytes,policy,control)).unwrap(){ArtifactStoreOneItemPreparationStep::Prepared(..)=>{prepared=owner.take_prepared();break;},ArtifactStoreOneItemPreparationStep::Progress(_,receipt)=>assert!(receipt.fits(policy.retained_grant())),ArtifactStoreOneItemPreparationStep::Blocked=>panic!("funded scalar config stalled")}
-        turns+=1;
+    let mut prepared=None;let mut blocked=0;let mut receiver=Receiver::new(policy.retained_grant());
+    for _ in 0..limit("maximumTurns"){
+        match receiver.run(policy.retained_grant(),|control|owner.advance(policy.maximum_copy_bytes,policy,control)).unwrap(){
+            ArtifactStoreOneItemPreparationStep::Prepared(..)=>{prepared=owner.take_prepared();break;},
+            ArtifactStoreOneItemPreparationStep::Progress(_,receipt)=>{assert!(receipt.fits(policy.retained_grant()));blocked=0;},
+            ArtifactStoreOneItemPreparationStep::Blocked=>{blocked+=1;assert!(blocked<limit("maximumConsecutiveBlocked"),"funded Config stalled at {:?}",owner.checkpoint());},
+        }
     }
     let prepared=prepared.expect("scalar config prepared");assert_eq!(**prepared.post_snapshot(),expected);assert_eq!(prepared.edit().inverse.get(0).unwrap().value,base);assert_eq!(*root,base);
     let(mut ticket,receipt)=prepared.admit_retirement(mutations,snapshots,policy.retained_grant()).unwrap_or_else(|_|panic!("scalar config candidate retirement"));assert!(receipt.fits(policy.retained_grant()));

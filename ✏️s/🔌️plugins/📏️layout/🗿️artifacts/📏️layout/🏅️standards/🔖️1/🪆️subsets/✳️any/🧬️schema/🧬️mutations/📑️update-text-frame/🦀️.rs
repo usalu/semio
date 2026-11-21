@@ -9,7 +9,7 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]

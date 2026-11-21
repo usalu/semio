@@ -757,3 +757,136 @@ Round 3 rebuilt the set on the cited product class (hansgrohe Croma Select S 110
 | furniture/picnic-table | hinges | 0.22 | 0.39 | factor 1.78: four folded 8 mm gusset brackets with flanges, four bearing plates, bolts and plungers instead of four 80 x 100 mm blocks (hand sum 0.37-0.39) |
 | furniture/picnic-table | bench-seats | 2.7 | 2.26 | factor 0.84: benches 1.50 x 0.30 m of two planks between the frames (were 1.70 x 0.36 m) |
 | furniture/picnic-table | table-top | 2.96 | 3.07 | factor 1.04: five 132 x 40 mm planks with 10 mm gaps |
+
+## r5 animals/pig (2026-11-20, unapplied, C27 for the area reviewers)
+
+| asset / region | declared | measured by the round-5 model 1:50 / 1:100 | what the model shows | proposal |
+|---|---|---|---|---|
+| pig skin-head | 0.10 | 0.170 / 0.160 | 0.26 m head with jowled lower jaw, dished face and neck-to-poll skin; hand sum about 0.16 to 0.17 m² | 0.17 (share from skin-trunk) |
+| pig skin-legs | 0.20 | 0.262 / 0.267 | four legs from stifle or elbow down to the coronet: gaskin or forearm about 0.044 m² each, cannon 0.015, pastern 0.01; hand sum about 0.27 to 0.28 m² | 0.27 (share from skin-trunk) |
+| pig hooves | 0.018 | 0.051 / 0.034 | eight claws 52 x 24 x 35 mm (about 45 cm² each) and eight dewclaws (about 12 cm² each); hand sum about 0.046 m² | 0.05 (share from skin-trunk) |
+
+## 2026-11-20 r5 humans/child-on-kick-scooter (round 5 author)
+
+| asset | region | declared areaM2 | measured 1:50 | what the model shows |
+|---|---|---|---|---|
+| child-on-kick-scooter | wheels | 0.082 | 0.096 | two 145 x 30 mm wheels (the decision assumed 0.12 m): tread 2 x pi x 0.145 x 0.030 = 0.027 plus four faces 4 x pi x 0.0725² = 0.066, total 0.093 m²; the model's 0.096 includes the hubs. Proposed 0.093 (factor 1.13). |
+
+## 2026-11-20 r5 animals/domestic-cat (round 5 author)
+
+| asset | region | declared areaM2 | measured 1:50 | what the model shows |
+|---|---|---|---|---|
+| domestic-cat | eyes | 0.0005 | 0.00056 | two eye ellipsoids 7.5 mm deep (feature floor), visible 12 x 9 mm; the real palpebral fissure is 16 x 11 mm, so a true-size eye at the 7.5 mm depth floor measures about 0.00068 m² (+36 %), because half of each ellipsoid lies in the head. Not applied; the eyes were shrunk to pass. Proposed: either areaM2 0.00068 (factor 1.36, eye solids at real size) or an exposure rule for small regions sunk into another region. |
+
+## r5 humans/elderly-with-cane and humans/person-on-crutches (2026-11-20, unapplied, C18 / C27 for the area reviewers)
+
+| asset / region | declared | measured by the round-5 model 1:50 / 1:100 | what the model shows | proposal |
+|---|---|---|---|---|
+| elderly-with-cane cap | 0.059 | 0.084 / 0.082 | flat tweed cap, crown 0.24 x 0.20 m with a 7 cm peak, underside on the head marked as section face; hand sum crown 0.06 + peak both faces 0.02 = 0.08 m² | 0.08 as garment surface (share from jacket) |
+| elderly-with-cane shoes | 0.126 | 0.186 / 0.153 | two EU 43 derby shoes 0.285 x 0.104 m, upper to 9 cm, 25 mm heel block and 12 mm sole; hand sum per shoe upper 0.065 + sole 0.025 = 0.09, pair 0.18 m² | 0.18 as garment surface (C27 review of shod figures, as jogger and parent-with-stroller) |
+| person-on-crutches shorts | 0.197 | 0.48 (1:50 and 1:100) | loose knee-length sports shorts over the seat, both leg tubes 0.19 m wide; hand sum seat 0.2 + legs 2 x 0.13 = 0.46 m² | restate as garment surface (already listed in areareview-c27c28.md) |
+| person-on-crutches boot | 0.224 | 0.353 / 0.322 | walker boot shell 0.42 m high, foot 0.30 x 0.13 m, rocker sole; hand sum shaft 0.22 + foot 0.1 + sole 0.04 = 0.36 m² | 0.35 as device surface |
+| person-on-crutches sneaker | 0.0697 | 0.109 / 0.123 | one sneaker 0.30 x 0.11 m with foam sole; hand sum upper 0.07 + sole 0.035 = 0.105 m² | 0.105 |
+| sheep hooves (r5, 2026-11-21) | 0.016 | 0.0397 / 0.0244 (1:50 / 1:100; 1:200 total 0.066 against 0.038) | eight claws 55 x 20 x 33 mm plus eight dewclaws at 1:50 (one hoof per foot at 1:100); hand sum per claw abaxial wall 55 x 28 + axial wall 55 x 20 + sole with bulb 55 x 18 mm = 36 cm², eight claws 0.029 m² + dewclaws 0.002 m² | 0.034 (C27: share from lower-legs 0.15 -> 0.132, total unchanged; request since r3 in author-requests.md) |
+
+## 2026-11-21 r5 humans/runner-with-blade-prosthesis — segment shares (C27), not applied
+Round-5 1:50 model on the reference girths (ANSUR II, lean 1.80 m man: upper thigh 0.55 m, mid thigh 0.49 m, calf 0.37 m, ankle 0.22 m, upper arm 0.28 m, forearm 0.25 m, wrist 0.16 m). Product measurement (`volumes-check.ts --product`, outer area of the region's outermost solids): `arm-skin` 0.343 m² against 0.2309 (+48 %; two bare arms from the singlet's shoulder seam to the wrist: upper arms 2 x 0.33 m x 0.28 m and forearms 2 x 0.26 m x 0.25 m are already 0.31 m² by hand), `leg-skin` 0.469 against 0.3552 (+32 %; left thigh below the 12.5 cm shorts leg, knee, shank, plus the right thigh down to the liner cuff), `socket` 0.057 against 0.0959 (-41 %; the validator counts only the carbon shell layer, the exposed liner cuff adds about 0.04 m², see tool-requests 2026-11-20). Proposal for the reviewer: re-divide the body total so that `arm-skin` 0.34, `leg-skin` 0.47 and keep `socket` 0.0959 (shell plus cuff). Nothing was changed by the author (C18).
+
+## r5 humans/parent-with-stroller and humans/parent-carrying-toddler (2026-11-21, unapplied, C18 / C27 for the area reviewers)
+
+| asset / region | declared | measured 1:50 / 1:100 | what the model shows | proposal |
+|---|---|---|---|---|
+| parent-with-stroller shoes | 0.128 | 0.176 / — | two size-43 sneakers 0.284 x 0.103 m with 25 mm soles; hand sum per shoe upper 0.06 + sole 0.028 = 0.088, pair 0.176 | 0.17 (share from leg-clothing) |
+| parent-carrying-toddler scarf | 0.0794 | 0.147 / 0.129 | knit scarf wound twice round the neck plus two 0.06 m wide ends to the chest | 0.14 |
+| parent-carrying-toddler coat-torso | 0.757 | 1.249 / 1.230 | mid-calf double-breasted wool coat, hem 8 cm above the knee: trunk 0.85 + skirt halves 0.40 | C27 re-division of the body total |
+| parent-carrying-toddler jeans | 0.613 | 0.858 / 0.860 | straight jeans from the seat to the boot; skin share vs garment | C27 |
+| parent-carrying-toddler boots | 0.106 | 0.273 / 0.201 | EU 41 ankle boots with 0.15 m shafts, heel and welt | 0.25 |
+| parent-carrying-toddler toddler-face / toddler-boots | 0.0317 / 0.0369 | 0.054 / 0.121 | open face band below the hat; rubber boots with shafts; the toddler's total is −8 %, so a C27 re-division fixes all four toddler regions | C27 |
+
+## Round 5 (2026-11-21) animals/dairy-cow — not applied
+
+After the hind-leg root fix (metatarsus 0.29 → 0.349 m, tibia 0.48 → 0.385 m) and lead-in sections at hock, knee and fetlock the measured outer areas are: `lower-legs` deviation 0.66 (1:50) and 0.56 (1:100), `hooves` 3.07 and 1.91, totals 0.37 (1:200) and 0.44 (1:500). `areaM2` unchanged (C18, C27); decision with the area reviewers.
+
+## r5 humans/cyclist helmet (2026-11-21, C18/C27, not changed)
+
+- `helmet` declared 0.07 m², modelled outer area 0.131 m² at 1:50 and 0.100 m² at 1:100 (EN 1078 city helmet shell 0.27 x 0.21 x 0.13 m); `volumes-check` fails only on this line (deviation 0.87 / 0.43). Proposal unchanged from `author-requests.md` (r3 cyclist): re-divide the body shares so `helmet` is about 0.13 m², total unchanged.
+
+### Round 5 handcraft re-measure (2026-11-21, humans/walking-commuter, humans/standing-adult)
+
+| asset / region | declared | outer at 1:50 (round 5 model) | note |
+|---|---|---|---|
+| walking-commuter shoes | 0.1326 | 0.216 (+63 %) | unchanged pair of derby shoes (upper, toe box, heel, sole); C18 body region, not changed by the author; the proposal of row "walking-commuter shoes" above (about 0.23) stands. This is the only red line of `volumes-check.ts humans/walking-commuter --product`. |
+| standing-adult jeans / sneakers | 0.6109 / 0.1424 | inside the C18 band (`checkVolumes 0`) | round-5 jeans with the waistband lowered to 0.995 m and slimmer thighs; no change requested. |
+
+## r5 humans/jogger (2026-11-21, round 5 handcraft): C29 outer areas of the remodelled 1:50 figure, not applied (C18/C27)
+
+| region | declared areaM2 | measured 1:50 | deviation | what the model shows |
+|---|---|---|---|---|
+| arm-clothing | 0.059 | 0.174 | +196 % | two short sleeves of a loose running shirt (hem 0.17 m below the shoulder joint) plus the armband; the declared value is the skin share under the sleeves |
+| leg-clothing | 0.182 | 0.424 | +133 % | running shorts with gluteal mass and two flared legs to 0.17 m below the hip joint |
+| leg-skin | 0.412 | 0.605 | +47 % | bare thighs below the shorts, knees, shanks with ankle socks (socks are booked on leg-skin) |
+| shoes | 0.135 | 0.199 | +47 % | a pair of EU 44 running shoes 0.309 x 0.106 m with 31 mm heel stack; 0.135 is the nude feet share |
+
+The figure total and arm-skin (+30 %), head-skin (+20 %), hand-skin (+14 %), torso-clothing (+14 %) pass. Request as before: the area reviewers re-divide the body shares (C27) to the garment surfaces.
+
+## r5 humans/courier-with-hand-truck and humans/worker-carrying-box (2026-11-21, unapplied, C18 / C27 for the area reviewers)
+
+| asset / region | declared | measured by the round-5 model 1:50 / 1:100 | what the model shows | proposal |
+|---|---|---|---|---|
+| courier boots | 0.122 | 0.271 / 0.255 | two 6 inch EU 45 safety boots 0.32 x 0.105 m, shaft to 0.15 m, 30 mm sole with heel; hand sum per boot upper 0.09 + shaft 0.03 + sole 0.015 = 0.135, pair 0.27 m² | 0.27 as garment surface (share from trousers/jacket) |
+| worker helmet | 0.067 | 0.102 / 0.188 (1:100 closed shell with base) | EN 397 hard hat 0.26 x 0.22 m plan, 0.14 m high with rim and peak; hand sum dome 0.09 + rim and peak 0.01 = 0.10 m² | 0.10 |
+| worker leg-clothing | 0.73 | 1.05 / 1.04 | work trousers over the seat and the boot shafts, knee pads and cargo pockets; hand sum seat 0.25 + legs 2 x 0.40 = 1.05 m² | 1.0 as garment surface |
+| worker shoes | 0.141 | 0.343 / 0.309 | EU 44 safety ankle boots 0.305 x 0.112 m, shaft to 0.176 m, cleated 30 mm sole; pair about 0.33 m² | 0.33 as garment surface |
+
+## r5 humans/person-with-white-cane and humans/person-with-umbrella (2026-11-21, unapplied, C18 / C27 for the area reviewers)
+
+| asset / region | declared | measured by the round-5 model 1:50 / 1:100 | what the model shows | proposal |
+|---|---|---|---|---|
+| person-with-white-cane boots | 0.1619 | 0.216 / 0.180 | two EU 39 Chelsea boots 0.27 x 0.098 m, shaft to 0.17 m, 25 mm heel and 10 mm sole, shaft openings marked as section faces; hand sum per boot shaft 0.04 + foot upper 0.045 + sole and heel 0.022 = 0.107, pair 0.21 m² | 0.21 as garment surface (share from jeans or jacket, total unchanged) |
+| person-with-umbrella head-skin | 0.082 | 0.149 / 0.144 | head of 0.227 x 0.196 x 0.151 m with ears, nose and neck to the collar; the hair is porous (C26), so the scalp under the swept-back hair and the bun counts as skin outer area (about 0.06 m²); face, ears and neck alone are 0.085 m² | either 0.145 (whole head skin, hair region separate) or keep 0.082 and let the scalp under porous hair not count for the skin region (rule question for C26/C27) |
+| person-with-umbrella shoes | 0.128 | 0.205 / 0.165 | two derby shoes 0.276 x 0.102 m (round 5 shortened from 0.297 to the foot of a 1.70 m woman), upper to 0.106 m at the collar, 22 mm heel and 10 mm sole; hand sum per shoe upper 0.065 + sole and heel 0.03 = 0.095, pair 0.19 m² | 0.19 as garment surface (share from coat or trousers, total unchanged) |
+
+## r5 machinery/solar-thermal-collector (2026-11-21, unapplied, C16 factor above 1.5 / C31 for the area reviewers)
+
+Since the C31 flood, the glazed collector box is a closed cavity at every scale (pane on the cover angles, tray, wool): the faces inside it are no longer outer. `volumes-check.ts --product` fails at 1:50, 1:100 (per region) and 1:200 (total 33.5 %); the model itself is unchanged since round 3 and is the real construction (Romstal / Stiebel Eltron SOL 27 class: 3.2 mm pane, 25 mm gap, 0.5 mm harp, 58 mm wool, 1.5 mm tray).
+
+| region | declared | outer area 1:50 (C31) | what the model shows | proposal |
+|---|---|---|---|---|
+| housing | 5.27 | 2.94 | tray outside 2.55 + cover angles and ledges; the wool top and wall insides lie in the closed cavity | 2.94 (factor 1.79, beyond the 1.5 an author may apply) |
+| glazing | 3.96 | 1.99 | outer face 1.99 x 0.99 m plus edges; the underside faces the sealed gap | 1.99 (factor 1.99) |
+| absorber | 3.88 | 0.007 | the whole harp lies in the sealed gap | not an area question: C31 (e) says declare it `hidden`, but B4 and the `hidden` text ("no drawing shows it") contradict, since the absorber is the visible part under the pane; see `tool-requests.md` 2026-11-21 |
+| header-lower / header-upper | 0.073 | 0.003 | only the four socket ends leave the box | as absorber |
+
+## 2026-11-21 r5 appliances/shower-head (round 5, unapplied)
+
+| region | declared | outer 1:50 (round 5) | what the model shows | proposal |
+|---|---|---|---|---|
+| head | 0.0303 (round-3 C16 cap from 0.0454) | 0.0252 | 110 mm disc (domed back 0.0099, rounded rim 0.0077, face 0.0075) and the neck, now 31 mm wide and sinking into the dome instead of a 54 mm tongue | 0.0252; `volumes-thermal-coverage` 1:50 fails at 16.9 % until applied |
+
+## 2026-11-21 r5 machinery/plate-heat-exchanger (round 5, unapplied)
+
+Since the product floods cavities (C31), the bypass flap's underside over the 0.36 m lid opening faces the closed casing (duct air, closed by the filled spigots and the flap itself) and is no longer outer. Model unchanged since round 3 (0.4 x 0.4 m blade, 7.5 mm at 1:50, 20 mm hinge barrel, lying on the lid).
+
+| region | declared | outer 1:50 / 1:100 (C31) | what the model shows | proposal |
+|---|---|---|---|---|
+| damper | 0.37 (reviewer 2, two faces) | 0.213 / 0.224 | top face 0.16, edges 0.012, barrel 0.025, the underside only where it rests on the lid rim (counts under C29 as covered by another region) | 0.21 (factor 1.74, beyond the 1.5 an author may apply); `volumes-thermal-coverage` fails at 1:50 (43 %) and 1:100 (39 %) until decided |
+
+## 2026-11-21 r5 machinery/heat-pump-outdoor-unit (round 5, applied within C16)
+
+The round-4 stand-in `th-compressor-envelope` (a box with `sectionFaces` on its inner faces, forbidden by C31 g) was replaced by the plain references to the column panel, column back and service panel; the flood now finds the closed compressor column, so the casing and base-pan faces inside it are no longer outer. Applied: `casing` 4.6 -> 3.75 (measured 3.736 at 1:50; round-3 hand value 3.8), `base-tray` 1.2 -> 1.0 (measured 0.992). `compressor-casing` 1.5 passes with the references.
+
+## 2026-11-21 r5 appliances/vacuum-cleaner body-shell (not applied, C16 dispute)
+
+`body-shell` is declared 0.42 (restored by the reviewers, row 244 of `area-decisions.md`: "canister 0.3 x 0.25 x 0.3 all faces 0.48 incl. the floor and hose faces"). The honest 1:50 model measures 0.293 (outer area under C31, 1:100 0.275), and `lid` measures 0.178 against its declared 0.17: shell plus lid are 0.47, which is the reviewers' whole-canister 0.48. The 0.42 therefore books most of the canister to the shell and the top of it again to the lid. Proposal: `body-shell` 0.30 (lower shell, bumper and socket up to the lid seam: sides 1.25 m x 0.15 m + base 0.106 m² ≈ 0.29), `lid` 0.17 unchanged. Until decided, `volumes-thermal-coverage` stays red on `body-shell` at 1:50 (+30 %) and 1:100 (+34 %); it was red before round 5 for the same reason.
+
+## 2026-11-21 r5 objects/waste-bin (round 5 author, nothing applied)
+
+The C31 flood makes `volumes-thermal-coverage` fail at 1:200 and 1:500 (total outer area 2.58 / 2.62 m2 against the sum of `areaM2` 4.715 m2, limit 30 %). `bin-hdpe` 3.8 m2 is the reviewers' value with the tub's inner faces counted (outer 1.9 + inner 1.9, area-decisions.md). At 1:50 and 1:100 the 14 mm lid notches at the hinge lugs are wider than half a flood cell, the air reaches the tub and the model measures 3.81 / 3.77 m2; at 1:200 (cell 7.5 mm) and 1:500 (cell 18.75 mm) the lid closes the tub, the inner faces are not outer and the model measures 1.88 / 1.89 m2. Physically the closed bin breathes only through those notches. Decision needed: either `bin-hdpe` is the outer shell only (about 1.9 m2, ratio 0.5, beyond the C16 factor, so not applied by the author) and the 1:50 model then over-counts the inside through the notches, or the inner faces stay counted and coarse scales need a rule for openings below the flood resolution (tool-requests.md, same date). The author did not cut notches larger than the real 14 mm to satisfy the flood.
+
+## 2026-11-21 r5 vehicles/motor-scooter (round 5, applied within C16)
+
+| region | declared | outer 1:50 / 1:100 (C31) | what the model shows | applied |
+|---|---|---|---|---|
+| rims | 0.62 (round 3) | 0.52 / 0.70 | two 12 inch cast rims with flanges, five-spoke centres with windows and hubs; the 1:100 dished discs count both faces | 0.60 (factor 0.97), the only value inside 15 % at 1:50 and 30 % at 1:100 |
+
+The rebuilt vacuum separates its 0.293 m² shell from the approximately 0.178 m² lid. The previous 0.42 m² shell estimate included part of the independently modeled lid. The present thermal field and all four measured digital scales use the separated areas.

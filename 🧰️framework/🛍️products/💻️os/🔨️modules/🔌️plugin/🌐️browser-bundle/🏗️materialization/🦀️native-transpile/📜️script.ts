@@ -2,40 +2,56 @@
 import { chmodSync, copyFileSync, mkdirSync, renameSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import { verifyCapturedCargoArtifactsV1, withCapturedCargoArtifactsTaskV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { withCapturedCargoArtifactsTaskV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { buildAdmittedCargoArtifactsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { requestedCompilerAdmissionControlV1, scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { BundleScript, ScriptRouter, receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 import { requireHostPlatformBuildArgumentsV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
-import { nativeTranspileBinaryNameV1 } from "./🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { nativeTranspileBinaryNameV1, nativeTranspileBinaryV1, nativeTranspilePublicationPathV1, nativeTranspileRequiresBuildV1 } from "./🟦️.ts";
+
+async function buildNativeTranspileV1(workspace: string, invocation: ScriptInvocation, platform: string, control: CompilerAdmissionControl = scriptCompilerAdmissionControlV1(invocation, "cargo:build", buildBudgetMs())): Promise<void> {
+  const authority = readNativeCallerAuthorityV1(invocation.capabilities);
+  if (workspace !== authority.repositoryRoot) throw Error("Actual native transpile workspace required");
+  const name = nativeTranspileBinaryNameV1(platform);
+  const destination = nativeTranspilePublicationPathV1(workspace, authority.original.buildMode, platform);
+  await buildAdmittedCargoArtifactsV1(join(import.meta.dirname, "Cargo.toml"), ["--bin", "semio-native-transpile"], workspace, {
+    producer: "artifact",
+    invocation,
+    control,
+    consume: capture => withCapturedCargoArtifactsTaskV1(capture, async view => {
+      const observation = decodeCargoProvenanceV1(view.observation);
+      if (observation.status !== 0 || observation.cancelled) throw new Error("Completed native-transpile Cargo observation required");
+      const executable = view.files.get(name);
+      if (!executable) throw new Error(`cargo built no ${name} executable`);
+      await view.recheck();
+      mkdirSync(dirname(destination), { recursive: true });
+      const staging = `${destination}.${process.pid}.tmp`;
+      copyFileSync(executable, staging);
+      chmodSync(staging, 0o755);
+      renameSync(staging, destination);
+      console.log(destination);
+    }),
+  });
+}
+
+/** 🥾️ Ensures the playground's actual build mode has a runnable native transpiler before component admission. */
+export async function ensureNativeTranspileV1(workspace: string, invocation: ScriptInvocation, control: CompilerAdmissionControl, environment: Readonly<Record<string, string | undefined>> = process.env): Promise<void> {
+  const mode = readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode;
+  const platform = process.platform;
+  if (!nativeTranspileRequiresBuildV1(workspace, mode, environment, platform)) return;
+  await buildNativeTranspileV1(workspace, invocation, platform, requestedCompilerAdmissionControlV1(control, buildBudgetMs()));
+  nativeTranspileBinaryV1(workspace, mode, environment, platform);
+}
 
 /** 🏗️ Builds the native transpile in-process under the received script invocation and stages the executable beside the other browser tools.
  * @see {@link ./🟦️.ts} */
 class NativeTranspileBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const platform = requireHostPlatformBuildArgumentsV1(segments, process.platform);
-    const name = nativeTranspileBinaryNameV1(platform);
-    const destination = join(this.repoRoot, ".cache", "b", "p", "m", "browser", "release", "tools", "native-transpile", platform, name);
-    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--bin", "semio-native-transpile"], this.repoRoot, {
-      producer: "artifact",
-      invocation: this.invocation,
-      control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", buildBudgetMs()),
-      consume: capture => withCapturedCargoArtifactsTaskV1(capture, async view => {
-        const observation = decodeCargoProvenanceV1(view.observation);
-        if (observation.status !== 0 || observation.cancelled) throw new Error("Completed native-transpile Cargo observation required");
-        const executable = view.files.get(name);
-        if (!executable) throw new Error(`cargo built no ${name} executable`);
-        await view.recheck();
-        mkdirSync(dirname(destination), { recursive: true });
-        const staging = `${destination}.${process.pid}.tmp`;
-        copyFileSync(executable, staging);
-        chmodSync(staging, 0o755);
-        renameSync(staging, destination);
-        console.log(destination);
-      }),
-    });
+    const platform = segments.length ? requireHostPlatformBuildArgumentsV1(segments, process.platform) : process.platform;
+    await buildNativeTranspileV1(this.repoRoot, this.invocation, platform);
   }
 }
 

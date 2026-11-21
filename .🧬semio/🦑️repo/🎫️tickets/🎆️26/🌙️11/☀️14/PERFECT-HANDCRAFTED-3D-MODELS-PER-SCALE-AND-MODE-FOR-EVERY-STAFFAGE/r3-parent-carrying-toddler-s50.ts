@@ -83,7 +83,7 @@ export const SEAT: readonly Row[] = [
 /** 👖 The left jeans leg on the thigh, bone-local: quadriceps in front, hamstrings behind, inner seam clear of the other leg. */
 export const THIGH_L: St[] = [st(0.0, -0.006, 0.012, 0.086, 0.095, 2.1), st(0.08, 0.0, 0.01, 0.084, 0.092, 2.1), st(0.18, 0.006, 0.006, 0.076, 0.083), st(0.28, 0.008, 0.002, 0.066, 0.072), st(0.36, 0.006, 0, 0.058, 0.063), st(0.4, 0.006, 0, 0.056, 0.06)];
 /** 🦵 The left jeans leg on the shank: knee, calf, straight leg falling over the boot shaft with a small break. */
-export const SHANK_L: St[] = [st(0.0, 0.006, 0, 0.056, 0.06), st(0.06, 0.003, 0, 0.053, 0.057), st(0.14, -0.008, 0, 0.055, 0.062), st(0.24, -0.006, 0, 0.052, 0.058), st(0.32, -0.002, 0, 0.05, 0.055), st(0.37, 0.0, 0, 0.051, 0.058), st(0.395, 0.004, 0, 0.052, 0.062, 2, -6)];
+export const SHANK_L: St[] = [st(0.0, 0.006, 0, 0.05, 0.054), st(0.06, 0.003, 0, 0.053, 0.057), st(0.14, -0.008, 0, 0.055, 0.062), st(0.24, -0.006, 0, 0.052, 0.058), st(0.32, -0.002, 0, 0.05, 0.055), st(0.37, 0.0, 0, 0.051, 0.058), st(0.395, 0.004, 0, 0.052, 0.062, 2, -6)];
 
 /** 🥾 The left ankle boot upper as cross slices from the ankle: [dx, bottom, top, half-width, exponent]; shaft and quarters on the foot bone, toe box on the toe bone. */
 export const BOOT_REAR: readonly Row[] = [
@@ -217,7 +217,7 @@ export const TFORE_L: St[] = [st(-0.01, 0.0, 0, 0.0378, 0.0389), st(0.04, 0.0, -
 /** 🧥 The left sleeve on the upper arm: set-in sleeve head inside the shoulder, deltoid, the elbow drifting outwards to the forearm joint (`drift` = lateral offset of the elbow). */
 export const sleeve = (drift: number, side: 1 | -1): St[] => [st(-0.025, 0, -0.02 * side, 0.04, 0.05), st(-0.005, 0, -0.005 * side, 0.054, 0.062), st(0.045, 0.002, 0.006 * side + drift * 0.14, 0.06, 0.066), st(0.12, 0.004, drift * 0.38, 0.056, 0.062), st(0.2, 0.002, drift * 0.63, 0.052, 0.058), st(0.27, -0.002, drift * 0.85, 0.05, 0.055), st(0.316, -0.004, drift, 0.049, 0.054)];
 /** 💪 The sleeve on the forearm down to the cuff, drifting laterally by `drift` to the wrist. */
-export const foreSleeve = (drift: number): St[] => [st(-0.01, -0.004, 0, 0.049, 0.054), st(0.06, 0, drift * 0.24, 0.048, 0.052), st(0.14, 0, drift * 0.56, 0.044, 0.046), st(0.2, 0, drift * 0.8, 0.041, 0.042), st(0.232, 0, drift * 0.93, 0.042, 0.043)];
+export const foreSleeve = (drift: number): St[] => [st(-0.01, -0.004, 0, 0.043, 0.048), st(0.06, 0, drift * 0.24, 0.048, 0.052), st(0.14, 0, drift * 0.56, 0.044, 0.046), st(0.2, 0, drift * 0.8, 0.041, 0.042), st(0.232, 0, drift * 0.93, 0.042, 0.043)];
 const glove = (id: string, bone: string, tone: number, role = "body"): C => ({ id, bone, material: "leather-glove", tone, role });
 
 /** 🧤 The hanging left hand in its glove: palm towards the thigh, thumb ahead, fingers of three phalanges curling in. */
@@ -328,7 +328,7 @@ export function body50(): Json[] {
   const [cap, capCuff] = knitCap(HEAD, BEANIE_EDGE, 0.01, 0.012, 0.04, "head");
   out.push(loft({ id: "beanie", bone: "head", material: "knit-hat", tone: TONE.beanie }, cap));
   out.push(loft({ id: "beanie-cuff", bone: "head", material: "knit-hat", tone: TONE.beanie - 0.04 }, capCuff));
-  const hair: Row[] = [[1.57, -0.112, -0.06, 0.056, 2], [1.6, -0.128, -0.04, 0.069, 2], [1.63, -0.134, -0.03, 0.075, 2], [1.66, -0.132, -0.04, 0.074, 2]];
+  const hair: Row[] = [[1.575, -0.112, -0.03, 0.058, 2.1], [1.6, -0.127, 0.0, 0.07, 2.1], [1.63, -0.132, 0.02, 0.074, 2.1], [1.66, -0.134, 0.03, 0.076, 2]];
   out.push(loft({ id: "hair", bone: "head", material: "skin", tone: TONE.hair }, dome(hair.map(([y, b, f, rw, e]) => H("head", y, b, f, rw, e)), -1, 0.012, 2)));
   const nose: [number, number, number][] = [[1.632, 0.0725, 0.0075], [1.616, 0.0805, 0.0092], [1.601, 0.0885, 0.012], [1.59, 0.0935, 0.0158], [1.582, 0.085, 0.0158]];
   out.push(loft(skin("head-nose"), dense(nose.map(([y, f, rw]) => H("head", y, 0.054, f, rw, 2)), 2).reverse()));

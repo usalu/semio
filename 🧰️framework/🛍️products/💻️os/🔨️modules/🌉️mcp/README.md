@@ -10,13 +10,13 @@ VCS → backbone path, so a live shell sees an agent's edit exactly as it sees a
 The `semio` entry in `.mcp.json` and `.codex/config.toml` launches this server through `repo`:
 
 ```text
-repo dev mcp stdio os --catalog ✏️s/🧑‍💻dev/🧩️catalog/🤖️generated --catalog-target @semio-tech/s-dev-composition:generate --folder .🧬semio/🔗space/os-mcp --scopes workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write
+repo dev mcp stdio os --catalog ✏️s/🧑‍💻dev/🧩️catalog/🤖️generated --catalog-target @semio-tech/s-dev-composition:generate --folder .🧬semio/🔗space/os-mcp --scopes workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write --operation-policy 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/💡️host-operation-policy.json
 ```
 
 The root `📋️project.json` declaration `tool:workspace/os-mcp-stdio` owns this command.
 The client configuration writer derives both client files from that declaration.
 The launcher answers the cold handshake immediately, prepares the native executable and catalog through their owning build and generation interfaces, then forwards requests to the native server.
-A handshake whose `serverInfo.version` is `warming` means preparation is still running. Native discovery and successful tool calls are the readiness checks.
+A handshake whose `serverInfo.version` is `warming` means preparation is still running. Discovery waits for the native server and returns its actual catalog; a preparation failure returns a JSON-RPC error. Native discovery and successful tool calls are the readiness checks.
 
 For development choose **New Task**, search `mcp http` or `mcp inspector`, complete
 its form and choose **Start**. Inspect output and readiness in Task overview;
@@ -200,10 +200,13 @@ Both examples assume you cloned this repository to `~/src/semio` and want the as
   "mcpServers": {
     "semio": {
       "type": "stdio",
-      "command": "bun",
+      "command": "repo",
       "args": [
-        "./📜️script.ts", "dev", "mcp", "stdio", "os",
+        "dev", "mcp", "stdio", "os",
+        "--catalog", "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
+        "--catalog-target", "@semio-tech/s-dev-composition:generate",
         "--folder", "/Users/you/Documents/my-semio-space",
+        "--operation-policy", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/💡️host-operation-policy.json",
         "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
       ],
       "cwd": "/Users/you/src/semio"
@@ -212,7 +215,8 @@ Both examples assume you cloned this repository to `~/src/semio` and want the as
 }
 ```
 
-`cwd` matters: `repo ./📜️script.ts` resolves against the repo root.
+`cwd` points to the repository root, where the relative catalog and policy paths resolve. The
+launcher supplies the host-driver policy and prepares the native executable and catalog.
 
 **Claude Code, bound to a hub space instead of a folder.** `--folder` and `--hub` are mutually
 exclusive, so a hub-bound agent is a *different* config file, not an extra flag on the one above —
@@ -223,12 +227,15 @@ this is the shape G15/G19 kept asking for:
   "mcpServers": {
     "semio": {
       "type": "stdio",
-      "command": "bun",
+      "command": "repo",
       "args": [
-        "./📜️script.ts", "dev", "mcp", "stdio", "os",
+        "dev", "mcp", "stdio", "os",
+        "--catalog", "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
+        "--catalog-target", "@semio-tech/s-dev-composition:generate",
         "--hub", "https://hub.example.com",
         "--space", "spc_studio",
         "--credential-file", "/Users/you/.semio/agent-credential.json",
+        "--operation-policy", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/💡️host-operation-policy.json",
         "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
       ],
       "cwd": "/Users/you/src/semio"
@@ -259,8 +266,13 @@ invoke the built binary by absolute path instead of going through `bun`:
       "args": [
         "stdio",
         "--folder", "/Users/you/Documents/my-semio-space",
+        "--host-driver-policy", "/Users/you/src/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/🏛️host-driver-policy.json",
+        "--operation-policy", "/Users/you/src/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/💡️host-operation-policy.json",
         "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
-      ]
+      ],
+      "env": {
+        "SEMIO_PLUGIN_CATALOG": "/Users/you/src/semio/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"
+      }
     }
   }
 }
@@ -279,12 +291,20 @@ also why a plausible-looking typo costs you a whole tool family with no error: w
 `PERMISSION_DENIED` because `jobs.spawn` was never granted, while `tools/list` still shows all 28
 tools. Measured against the release binary, ticket 26/09/18 `📓️rb1-release-builds-and-production-posture.md`.
 
-Run `repo run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
-Claude Desktop after editing the file. If your `semio-os-mcp` lives elsewhere, use that path — the emoji
-directory names are literal and must be copied exactly.
+Run `repo run @semio-tech/framework-os-mcp-rs:build-release` and
+`repo run @semio-tech/s-dev-composition:generate` first to publish the binary and plugin catalog.
+The two policy paths are required by the binary; the catalog environment variable selects the
+composition's plugin capabilities. Replace all example paths with absolute paths on your machine,
+including the policy files and catalog, then restart Claude Desktop. On Windows use the `.exe`
+binary and JSON-escaped Windows paths. The emoji directory names are literal.
+
+This standalone configuration supports gateway tools and catalog discovery. For component-backed
+actions and inference in Claude Desktop, configure a local launch command that enters the checkout
+and runs the repository launcher shown above. It verifies the installed component publications and
+holds them open for the life of the server.
 
 The repository writes headless Claude Code and Codex configurations from dashboard-owned declarations.
-`.mcp.json` and `.codex/config.toml` are working examples of the `bun`-plus-`cwd` form.
+`.mcp.json` and `.codex/config.toml` are working examples of the `repo` launcher form.
 
 ### Checking it works
 

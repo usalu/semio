@@ -8,17 +8,28 @@ use semio_framework_value_native_owned::native_decoding::{NativeDecodeProgress,N
 use semio_framework_job_receiving::OriginalJobWorkRecipient;
 use semio_framework_value_call::NativeCallFailure;
 type ScopeLoan=stock::OriginalReturnScopeLoan<Input>;
-/// 📏️ Larger native copies must quote their work so one persistent decoder cannot reserve a large share of an actor's lifetime copy stock.
+/// 📏️ Larger atomic native copies must quote their work.
 const UNQUOTED_RECEIVING_COPY_BYTES: usize = 16 * 1024 * 1024;
+/// 🔢️ An unquoted scope receives at most the item stock issued to a self-issued document operation.
+const UNQUOTED_RECEIVING_ITEMS: usize = 1 << 20;
+/// 🧹️ An unquoted scope receives at most the release span of a self-issued job crossing.
+const UNQUOTED_RECEIVING_RELEASE_BYTES: usize = 64 << 20;
+/// ⚙️ Bounds the work held by one unquoted scope across source turns.
+const UNQUOTED_RECEIVING_WORK: u64 = 1 << 20;
 
 fn unquoted_receiving_grant(whole: G) -> G {
     G {
-        maximum_items: whole.maximum_items.div_ceil(2),
+        maximum_items: whole.maximum_items.div_ceil(2).min(UNQUOTED_RECEIVING_ITEMS),
         maximum_copy_bytes: whole.maximum_copy_bytes.div_ceil(2).min(UNQUOTED_RECEIVING_COPY_BYTES),
         maximum_capacity_bytes: whole.maximum_capacity_bytes.div_ceil(2),
-        maximum_release_bytes: whole.maximum_release_bytes.div_ceil(2),
+        maximum_release_bytes: whole.maximum_release_bytes.div_ceil(2).min(UNQUOTED_RECEIVING_RELEASE_BYTES),
         maximum_depth: whole.maximum_depth,
     }
+}
+
+/// ⛽️ Shares the bounded automatic Work quote with callers that price their physical axes.
+pub fn unquoted_receiving_work(fuel: u64) -> u64 {
+    fuel.div_ceil(2).min(UNQUOTED_RECEIVING_WORK)
 }
 
 #[cfg(test)]
@@ -93,7 +104,12 @@ impl StepContext<'_>{
   if self.return_budget.as_ref().is_none_or(|b|b.get().table().is_none()){self.admit_original_return_table()?;return Ok(false)}
   self.observe_native_scope()?;if !retirement&&self.original_decoder.as_deref().unwrap().state.has_pending_receiving(){return Err(ValueError::invariant("pending decoder requires original recovery").into())}
   if (!retirement&&(self.is_cancelled()||self.deadline_exceeded()))||(retirement&&!self.original_retirement&&self.deadline_exceeded()){return Ok(false)}
-  let local=self.return_budget.as_ref().unwrap().get().delivery==stock::OriginalReturnDelivery::LocalWitness;let owner=self.original_decoder.as_deref().unwrap();let existing=match owner.scope.as_ref(){Some(loan)=>self.return_budget.as_ref().unwrap().get().scope_remaining(loan)?,None=>Amounts::default()};let whole=self.native_scope_quantum();let(quantum,quantum_work)=match quote{Some((grant,work))=>(G{maximum_depth:whole.maximum_depth,..grant},work),None=>(unquoted_receiving_grant(whole),self.fuel_remaining.div_ceil(2))};let Some(plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{return Ok(false)};
+  let local=self.return_budget.as_ref().unwrap().get().delivery==stock::OriginalReturnDelivery::LocalWitness;let owner=self.original_decoder.as_deref().unwrap();let existing=match owner.scope.as_ref(){Some(loan)=>self.return_budget.as_ref().unwrap().get().scope_remaining(loan)?,None=>Amounts::default()};let whole=self.native_scope_quantum();
+  let (quantum, quantum_work) = match quote {
+      Some((grant, work)) => (G { maximum_depth: whole.maximum_depth, ..grant }, work),
+      None => (unquoted_receiving_grant(whole), unquoted_receiving_work(self.fuel_remaining)),
+  };
+  let Some(plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{return Ok(false)};
   let reserved_receipt=typed||plan.recovering_pending;
   if retirement&&plan.ready&&!reserved_receipt{self.receiving.open(self.retained_grant())?}
   let epoch=self.original_source_epoch().unwrap_or(0);let admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?};let Some((progress,work))=admitted else{if self.reclaim_original_escrow_slot()?{return Ok(false)}return Err(ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::OwnershipLimit,"original return escrow table has no free slot for a new receiving scope").into())};let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;if !plan.ready{return Ok(false)}

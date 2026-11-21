@@ -9,12 +9,12 @@ export type CargoWorkspaceScopeV1 = Readonly<{ directory: string; manifest: stri
 /** 📦️ Names one current member package of a Cargo workspace. */
 export type CargoWorkspacePackageV1 = Readonly<{ directory: string; manifest: string; name: string; workspace: string }>;
 /** 🔎️ Names the kind of one input a preparation program observed. */
-export type CargoPreparationInputKindV1 = "file" | "directory" | "presence";
+export type CargoPreparationInputKindV1 = "file" | "directory" | "presence" | "discovery";
 
 /** 🔌️ Prepares Cargo workspaces and records the inputs and outputs a preparation program observes, under the repository's custody. */
 export interface CargoWorkspaceProviderV1 {
   observeSource(...paths: string[]): void;
-  observeInput(path: string, kind?: CargoPreparationInputKindV1, bytes?: string | Buffer): void;
+  observeInput(path: string, kind?: CargoPreparationInputKindV1, bytes?: string | Buffer, suffix?: string): void;
   observeOutput(path: string, bytes: string | Buffer): void;
   completeObservation(): void;
   prepareCapabilityLinks(repoRoot: string, ownerRoot: string, manifestRelative: string, linksRelative: string): number;
@@ -35,7 +35,7 @@ const observing = (): boolean => process.env[SCRIPT_PROVIDERS_ENV] !== undefined
 /** 👁️ Records source programs of a running preparation; a process without a designated repository observes nothing. */
 export function observeCargoPreparationSourceV1(...paths: string[]): void { if (observing()) sync().observeSource(...paths); }
 /** 📥️ Records one input of a running preparation; a process without a designated repository observes nothing. */
-export function observeCargoPreparationInputV1(path: string, kind: CargoPreparationInputKindV1 = "file", bytes?: string | Buffer): void { if (observing()) sync().observeInput(path, kind, bytes); }
+export function observeCargoPreparationInputV1(path: string, kind: CargoPreparationInputKindV1 = "file", bytes?: string | Buffer, suffix?: string): void { if (observing()) sync().observeInput(path, kind, bytes, suffix); }
 /** 📹️ Records one output of a running preparation; a process without a designated repository observes nothing. */
 export function observeCargoPreparationOutputV1(path: string, bytes: string | Buffer): void { if (observing()) sync().observeOutput(path, bytes); }
 /** ✅️ Completes the observation of a running preparation. */

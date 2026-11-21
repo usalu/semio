@@ -1,12 +1,6 @@
 //! 🚪️ Artifact representation codecs.
 
-#[allow(unused_imports)]
-mod mutations_codec {
-use super::*;
-use crate::editor::dag::config::component::mutations::*;
-use crate::editor::dag::config::component::DagConfig;
-use crate::editor::dag::config::component::mutations::ReplaceConfig;
-use crate::editor::dag::config::component::mutations::ChangeCamera;
+use crate::editor::dag::config::DagConfigMutation;
 
 impl protocol::OpBinary for DagConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -16,4 +10,5 @@ impl protocol::OpBinary for DagConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
-}
+
+semio_os_kernel::original_ordinal_operation_receiving!(DagConfigMutation);

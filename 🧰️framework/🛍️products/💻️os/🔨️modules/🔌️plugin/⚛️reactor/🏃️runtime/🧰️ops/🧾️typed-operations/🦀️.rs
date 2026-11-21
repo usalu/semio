@@ -75,6 +75,15 @@ fn trace_typed_operation_slot_occupancy<PA: PluginApp>(app: &PA, instance: u32) 
 }
 #[doc(hidden)]
 pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA, instance: u32, pages: &mut semio_plugin_reactor_lifecycle::result_publication::NativeResultPages, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    advance_typed_operation_output_inner(app, instance, Some(pages), identity, cx)
+}
+
+/// 📨️ The original media command acknowledges its own pages while routing ordinary effects and receipts.
+pub fn advance_original_media_operation_output<PA: PluginApp>(app: &mut PA, instance: u32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    advance_typed_operation_output_inner(app, instance, None, identity, cx).map(|(output, _)| output)
+}
+
+fn advance_typed_operation_output_inner<PA: PluginApp>(app: &mut PA, instance: u32, pages: Option<&mut semio_plugin_reactor_lifecycle::result_publication::NativeResultPages>, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(PluginExchangeOutput, Option<TypedOperationLeftover>), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut output=PluginExchangeOutput::default();output.collect_original_receipts(app);if output.ownership_receipt_pending(){return Ok((output,None))}
     let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let original=cx.retained_grant();let recipient=cx.original_recipient_identity();
     ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(identity,cx))?;
@@ -113,7 +122,9 @@ pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA,
         }
         None => {}
     }
-    output.typed_operation_pages=pages.capture(app,instance,cx)?;
+    if let Some(pages) = pages {
+        output.typed_operation_pages = pages.capture(app, instance, cx)?;
+    }
     if let Some(effect) = app.take_typed_operation_effect() {
         output.effects.push(encode_wire_serialized(&effect));
     }
@@ -268,8 +279,8 @@ fn pending_typed_operation_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     }
     Ok((None, TypedOperationScan { runnable: false, contended }))
 }
-/// ⏱️ Drives every armed per-instance pending-effects owner with this turn's own `cx`, after command and response intake and before dependent render or publication. A `Some` answer lowers the owner and publishes its effects; `None` keeps it armed and reports runnable work. A busy instance is contention, never runnable work, so the documented typed-operation contention rule stays intact.
-pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, effects: &mut Vec<semio_framework::kernel::Effect>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+/// ⏱️ Drives armed pending-effects owners against their latest mounted view. Document work and contention leave each owner armed. A paid poll returning `None` reports runnable work, and `Some` publishes and lowers the owner.
+pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, effects: &mut Vec<semio_framework::kernel::Effect>, document_ingress_pending: impl Fn(u32) -> bool, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let armed: Vec<std::sync::Arc<semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell<PA>>> = {
         let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let mut armed = Vec::new();
@@ -282,7 +293,7 @@ pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
                 cell.pending_effects.close();
                 continue;
             }
-            armed.push(cell.clone());
+            if !document_ingress_pending(id) { armed.push(cell.clone()); }
             if cursor >= PLUGIN_RUNTIME_INSTANCE_SLOTS { break }
         }
         armed
@@ -294,8 +305,10 @@ pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
             Err(std::sync::TryLockError::WouldBlock) => continue,
             Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault(format!("runtime operation authority is poisoned for instance {}", cell.id)).into()),
         };
-        let view = active.surface_contexts.view().cloned();
-        match ::semio_framework_async::poll::resolve_ready(active.app.pending_effects(view.as_ref(), cx))? {
+        if active.app.pending_effects_waits_for_document() { continue; }
+        let active = &mut *active;
+        let view = active.surface_contexts.view();
+        match ::semio_framework_async::poll::resolve_ready(active.app.pending_effects(view, cx))? {
             Some(polled) => {
                 cell.pending_effects.publish();
                 effects.extend(polled);

@@ -10,16 +10,17 @@
 import { StrictMode, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { DEFAULT_UI_DRIVER, Navbar, UI_AVAILABLE_HEIGHT, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, bootstrapElementsSurfaceChromeDocument, elementsSurfaceDeviceForMatches, navbarFillItem, useElementsSurfaceChrome, useMediaQuery, type NavbarItem } from "@semio-tech/ui-react/chrome";
+import { DEFAULT_UI_DRIVER, Navbar, UI_AVAILABLE_HEIGHT, bootstrapElementsSurfaceChromeDocument, elementsSurfaceDeviceForMatches, navbarFillItem, useElementsSurfaceChrome, type NavbarItem } from "@semio-tech/ui-react/chrome";
 import { VIEWS } from "@teaching/staffage";
 import "../../../🎨️.css";
 import { ArchiveProvider, useArchive, useLocal } from "../../../🔨️modules/🧭️context/🟦️.tsx";
 import { LANGUAGE_NAMES, OFFERED, inEveryLanguage, resolveLanguage, translator } from "../../../🔨️modules/🌐️i18n/🟦️.ts";
 import { Bar, Button, ButtonLink, Segmented, SharedBorderRow, SharedBorderRowCell, asCells, cn } from "../../../🔨️modules/🪟️chrome/🟦️.tsx";
+import { useBreakpoint, type Breakpoint } from "../../../🔨️modules/🥞️levels/🟦️.tsx";
 import { RootLevel } from "../../../🔨️modules/🏠️overview/🟦️.tsx";
 import { ArchiveStore, STORAGE_VERSION, browserStorage, useArchiveState, type StorageArea, type Theme } from "../../../🔨️modules/💾️persistence/🟦️.ts";
 import { CatalogStore, bundledCatalog, type CatalogSource } from "../../../🔨️modules/📚️catalog/🟦️.ts";
-import { formatAddress, parentRoute, recallParams, useAddress } from "../../../🔨️modules/🗺️routing/🟦️.ts";
+import { formatAddress, parentRoute, recallParams, routePath, useAddress } from "../../../🔨️modules/🗺️routing/🟦️.ts";
 
 /** ⚙️ What a host may replace: storage (tests), the browser's language list, the catalog source. */
 export type ArchiveOptions = { readonly storage?: StorageArea; readonly durable?: boolean; readonly languages?: readonly string[]; readonly catalog?: CatalogSource };
@@ -28,9 +29,9 @@ const ROUTE_TITLES = { overview: "nav.overview", all: "all.title", category: "na
 
 function LanguageGate(props: { readonly onChoose: (language: (typeof OFFERED)[number]) => void }): ReactElement {
   return (
-    <div className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
-      <main id="staffage-main" className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-double overflow-auto p-4">
-        <SharedBorderRow orientation="vertical" className="w-full max-w-xl bg-panel">
+    <div data-staffage-language-gate="" className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
+      <main id="staffage-main" className="relative flex min-h-0 flex-1 flex-col items-center gap-double overflow-auto p-4">
+        <SharedBorderRow orientation="vertical" className="my-auto w-full max-w-xl shrink-0 bg-panel">
           <SharedBorderRowCell className="flex-col items-start gap-double p-4">
             {inEveryLanguage("brand.title").map(({ language, text }) => (
               <h1 key={language} lang={language} className="m-0 font-serif text-3xl leading-tight">
@@ -54,7 +55,7 @@ function LanguageGate(props: { readonly onChoose: (language: (typeof OFFERED)[nu
 
 const THEMES: readonly Theme[] = ["system", "light", "dark"];
 
-function SettingsMenu(): ReactElement {
+function SettingsMenu({ phone }: { readonly phone: boolean }): ReactElement {
   const { t, store } = useArchive();
   const { preferences } = useLocal();
   const { route } = useAddress();
@@ -77,7 +78,7 @@ function SettingsMenu(): ReactElement {
     const onFocus = (event: FocusEvent): void => {
       if (root.current !== null && panel.current !== null && event.target instanceof Node && !root.current.contains(event.target) && !panel.current.contains(event.target)) setOpen(false);
     };
-    panel.current?.querySelector<HTMLElement>("a, button, input, select")?.focus();
+    panel.current?.querySelector<HTMLElement>("a[href], button[tabindex='0']")?.focus();
     window.addEventListener("keydown", onKey, true);
     window.addEventListener("pointerdown", onPointer);
     window.addEventListener("focusin", onFocus);
@@ -86,21 +87,25 @@ function SettingsMenu(): ReactElement {
       window.removeEventListener("keydown", onKey, true);
       window.removeEventListener("pointerdown", onPointer);
     };
-  }, [open]);
+  }, [open, phone]);
   const patch = (next: Partial<typeof preferences>): void => store.dispatch({ type: "preferences-changed", patch: next });
   return (
     <div ref={root} className="relative">
-      <Button variant="quiet" icon="settings" aria-expanded={open} aria-haspopup="true" aria-controls={open ? "staffage-settings" : undefined} aria-label={t("settings.title")} title={t("settings.title")} onClick={() => setOpen(!open)}>
+      <Button variant="quiet" icon="settings" aria-expanded={open} aria-controls={open ? "staffage-settings" : undefined} aria-label={t("settings.title")} title={t("settings.title")} onClick={() => setOpen(!open)}>
         <span className="hidden lg:inline">{t("settings.title")}</span>
       </Button>
       {open ? createPortal(
-        <SharedBorderRow orientation="vertical" id="staffage-settings" ref={panel} role="group" aria-label={t("settings.title")} className="staffage-app fixed right-double top-[calc(var(--size-workbench)+0.5rem)] z-50 max-h-[85vh] w-72 max-w-[90vw] overflow-auto bg-panel text-foreground">
-          <SharedBorderRow as="nav" orientation="vertical" aria-label={t("nav.label")} className="md:hidden">
-            {([{ page: "all", label: t("all.title") }, { page: "collections", label: t("collections.title") }, { page: "compare", label: t("compare.title") }, { page: "playground", label: t("playground.title") }] as const).map((link) => (
-              <ButtonLink key={link.page} grouped href={formatAddress(link.page === "collections" ? { page: "collections", collection: null } : { page: link.page })} variant="quiet" aria-current={route.page === link.page ? "page" : undefined} className={cn("justify-start", route.page === link.page && "text-primary")}>{link.label}</ButtonLink>
-            ))}
-          </SharedBorderRow>
-          <Segmented className="sm:hidden" label={t("settings.theme")} value={preferences.theme} onChange={(theme) => patch({ theme })} options={THEMES.map((theme) => ({ value: theme, label: t(`settings.theme.${theme}`) }))} />
+        <SharedBorderRow orientation="vertical" id="staffage-settings" data-staffage-phone={phone ? "" : undefined} ref={panel} role="group" aria-label={t("settings.title")} className="staffage-app fixed right-double top-[calc(max(44px,var(--size-workbench))+0.5rem)] z-50 max-h-[85vh] w-72 max-w-[90vw] overflow-auto bg-panel text-foreground">
+          {phone ? (
+            <>
+              <SharedBorderRow as="nav" orientation="vertical" aria-label={t("nav.label")}>
+                {([{ page: "all", label: t("all.title") }, { page: "collections", label: t("collections.title") }, { page: "compare", label: t("compare.title") }, { page: "playground", label: t("playground.title") }] as const).map((link) => (
+                  <ButtonLink key={link.page} grouped href={formatAddress(link.page === "collections" ? { page: "collections", collection: null } : { page: link.page })} variant="quiet" aria-current={route.page === link.page ? "page" : undefined} className={cn("justify-start", route.page === link.page && "text-primary")}>{link.label}</ButtonLink>
+                ))}
+              </SharedBorderRow>
+              <Segmented label={t("settings.theme")} value={preferences.theme} onChange={(theme) => patch({ theme })} options={THEMES.map((theme) => ({ value: theme, label: t(`settings.theme.${theme}`) }))} />
+            </>
+          ) : null}
           <Segmented label={t("settings.textSize")} value={preferences.textSize} onChange={(textSize) => patch({ textSize })} options={[{ value: "normal", label: t("settings.textSize.normal") }, { value: "large", label: t("settings.textSize.large") }]} />
           <Segmented label={t("settings.motion")} value={preferences.motion} onChange={(motion) => patch({ motion })} options={[{ value: "system", label: t("settings.motion.system") }, { value: "reduced", label: t("settings.motion.reduced") }, { value: "full", label: t("settings.motion.full") }]} />
           <Segmented label={t("settings.playful")} value={preferences.playful ? "on" : "off"} onChange={(value) => patch({ playful: value === "on" })} options={[{ value: "on", label: t("settings.on") }, { value: "off", label: t("settings.off") }]} />
@@ -122,7 +127,7 @@ function SettingsMenu(): ReactElement {
   );
 }
 
-function Navigation(): ReactElement {
+function Navigation({ phone }: { readonly phone: boolean }): ReactElement {
   const { t, store, language } = useArchive();
   const { preferences } = useLocal();
   const { route, navigate } = useAddress();
@@ -149,16 +154,16 @@ function Navigation(): ReactElement {
     {
       key: "brand",
       content: (
-        <a href="#/" data-shared-border-frame="" data-shared-border-edges="" data-shared-border-state={route.page === "overview" ? "active" : undefined} aria-label={t("nav.home")} aria-current={route.page === "overview" ? "page" : undefined} className={cn("inline-flex min-h-6 items-center gap-single px-single text-sm font-semibold no-underline", route.page === "overview" ? "text-primary" : "text-foreground")}>
+        <a href="#/" data-staffage-nav-home="" data-shared-border-frame="" data-shared-border-edges="" data-shared-border-state={route.page === "overview" ? "active" : undefined} aria-label={t("nav.home")} aria-current={route.page === "overview" ? "page" : undefined} className={cn("inline-flex min-h-6 items-center gap-single px-single text-sm font-semibold no-underline", route.page === "overview" ? "text-primary" : "text-foreground")}>
           <span aria-hidden="true" className="font-serif text-lg leading-none">⌂</span>
           <span className="hidden sm:inline">{t("brand.short")}</span>
         </a>
       ),
     },
     { key: "up", content: up === null ? <span /> : <Button variant="quiet" icon="arrow-left" aria-label={t("nav.up")} title={t("nav.up")} onClick={() => navigate(up, recallParams(up))}><span className="hidden md:inline">{t("nav.up")}</span></Button> },
-    ...links.map((link): NavbarItem => ({ key: link.href, className: "hidden md:flex", content: <ButtonLink href={link.href} icon={link.icon} variant="quiet" aria-label={link.label} aria-current={link.active ? "page" : undefined} className={cn(link.active && "text-primary")}>{link.label}</ButtonLink> })),
+    ...(phone ? [] : links.map((link): NavbarItem => ({ key: link.href, className: "hidden md:flex", content: <ButtonLink href={link.href} icon={link.icon} variant="quiet" aria-label={link.label} aria-current={link.active ? "page" : undefined} className={cn(link.active && "text-primary")}>{link.label}</ButtonLink> }))),
     navbarFillItem("fill"),
-    {
+    ...(phone ? [] : [{
       key: "search",
       className: "hidden min-w-0 shrink lg:flex",
       content: (
@@ -167,39 +172,41 @@ function Navigation(): ReactElement {
           <Button grouped type="submit" variant="quiet" icon="search" aria-label={t("nav.searchSubmit")} title={t("nav.searchSubmit")} />
         </SharedBorderRow>
       ),
-    },
+    }]),
     { key: "language", content: <Segmented hideLabel label={t("settings.language")} value={language} onChange={(chosen) => store.dispatch({ type: "preferences-changed", patch: { language: chosen } })} options={OFFERED.map((option) => ({ value: option, label: option.toUpperCase(), title: LANGUAGE_NAMES[option], name: LANGUAGE_NAMES[option], lang: option }))} /> },
-    { key: "theme", className: "hidden sm:flex", content: <Segmented hideLabel label={t("settings.theme")} value={preferences.theme} onChange={(theme) => store.dispatch({ type: "preferences-changed", patch: { theme } })} options={THEMES.map((theme) => ({ value: theme, label: <span className="sr-only">{t(`settings.theme.${theme}`)}</span>, title: t(`settings.theme.${theme}`), icon: theme === "system" ? "monitor" : theme === "light" ? "sun" : "moon" }))} /> },
-    { key: "settings", content: <SettingsMenu /> },
+    { key: "theme", className: phone ? "hidden" : "hidden sm:flex", content: <Segmented hideLabel label={t("settings.theme")} value={preferences.theme} onChange={(theme) => store.dispatch({ type: "preferences-changed", patch: { theme } })} options={THEMES.map((theme) => ({ value: theme, label: <span className="sr-only">{t(`settings.theme.${theme}`)}</span>, title: t(`settings.theme.${theme}`), icon: theme === "system" ? "monitor" : theme === "light" ? "sun" : "moon" }))} /> },
+    { key: "settings", content: <SettingsMenu phone={phone} /> },
   ];
   return <Navbar label={t("nav.label")} items={items} showFullscreenToggle={false} />;
 }
 
-function Shell(): ReactElement {
+function Shell({ breakpoint }: { readonly breakpoint: Breakpoint }): ReactElement {
+  const phone = breakpoint === "mobile";
   const { t, store, language, reducedMotion } = useArchive();
   const { route } = useAddress();
   const { preferences } = useLocal();
   const main = useRef<HTMLElement>(null);
-  const seen = useRef(route.page);
+  const path = routePath(route);
+  const seen = useRef(path);
   useEffect(() => {
     document.title = `${t(ROUTE_TITLES[route.page])} · ${t("brand.title")}`;
   }, [route.page, t]);
   useEffect(() => {
-    if (seen.current !== route.page) main.current?.focus({ preventScroll: true });
-    seen.current = route.page;
-  }, [route.page]);
+    if (seen.current !== path) main.current?.focus({ preventScroll: true });
+    seen.current = path;
+  }, [path]);
   return (
-    <div className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={language} data-motion={reducedMotion ? "reduced" : "full"} data-playful={preferences.playful ? "on" : "off"}>
+    <div className="staffage-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={language} data-staffage-phone={phone ? "" : undefined} data-motion={reducedMotion ? "reduced" : "full"} data-playful={preferences.playful ? "on" : "off"}>
       <a href="#staffage-main" data-shared-border-frame="" data-shared-border-edges="" className="sr-only focus:not-sr-only focus:absolute focus:left-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground" onClick={(event) => { event.preventDefault(); main.current?.focus(); }}>
         {t("nav.skip")}
       </a>
       <header className="relative z-40 shrink-0">
-        <Navigation />
+        <Navigation phone={phone} />
       </header>
-      <main id="staffage-main" ref={main} tabIndex={-1} className="flex min-h-0 flex-1 flex-col outline-none">
-        {route.page === "overview" ? <h1 className="sr-only">{t("brand.title")}</h1> : null}
+      <main id="staffage-main" ref={main} data-staffage-shell-main="" tabIndex={-1} className="flex min-h-0 flex-1 flex-col outline-none">
+        {route.page === "overview" && !phone ? <h1 className="sr-only">{t("brand.title")}</h1> : null}
         <div className="relative min-h-0 flex-1">
-          <RootLevel />
+          <RootLevel breakpoint={breakpoint} route={route} />
         </div>
       </main>
       <SharedBorderRow as="footer" edges={["top"]} className="shrink-0 flex-wrap items-center justify-between gap-double px-double py-single text-[0.65rem] text-muted-foreground">
@@ -215,9 +222,8 @@ function Client(props: { readonly store: ArchiveStore; readonly catalog: Catalog
   const { store, catalog, languages } = props;
   const state = useArchiveState(store);
   const { language } = resolveLanguage(state.preferences.language, languages);
-  const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
-  const tablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
-  useElementsSurfaceChrome({ appearance: state.preferences.theme, device: elementsSurfaceDeviceForMatches({ mobile, tablet }), driver: DEFAULT_UI_DRIVER, browserDefaults: "native" });
+  const breakpoint = useBreakpoint();
+  useElementsSurfaceChrome({ appearance: state.preferences.theme, device: elementsSurfaceDeviceForMatches({ mobile: breakpoint === "mobile", tablet: breakpoint === "tablet" }), driver: DEFAULT_UI_DRIVER, browserDefaults: "native" });
   useEffect(() => {
     document.documentElement.style.fontSize = state.preferences.textSize === "large" ? "112.5%" : "";
   }, [state.preferences.textSize]);
@@ -236,7 +242,7 @@ function Client(props: { readonly store: ArchiveStore; readonly catalog: Catalog
   }
   return (
     <ArchiveProvider language={language} t={t} catalog={catalog} store={store}>
-      <Shell />
+      <Shell breakpoint={breakpoint} />
     </ArchiveProvider>
   );
 }

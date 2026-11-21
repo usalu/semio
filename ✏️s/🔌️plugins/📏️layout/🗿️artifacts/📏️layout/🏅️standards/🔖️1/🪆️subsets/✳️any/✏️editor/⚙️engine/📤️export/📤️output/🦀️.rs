@@ -1,6 +1,6 @@
 //! 📤️ Output bytes retain original paged backing until paid transfer and physical retirement.
 use semio_framework_value::{RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value_persistent::list::{PagedList,PagedListReleaseFailure,PagedListReleaseOutcome};
 use std::mem::{size_of,ManuallyDrop};
 use super::{MAX_LAYOUT_EXPORT_OUTPUT_BYTES,OUTPUT_CHUNK_BYTES};
 #[path="📝️text/🦀️.rs"]mod text;
@@ -49,8 +49,35 @@ impl ChunkRope{
  pub fn copy_range(&self,start:usize,target:&mut[u8],work:&mut OutputWork)->Result<(),String>{if start.checked_add(target.len()).is_none_or(|end|end>self.len){return Err("layout-output-read-range".into());}let depth=self.bytes.next_get_depth_demand(start).map_err(|_|"layout-output-read-depth")?;work.copy(target.len()+HEADER_BYTES,depth)?;for(at,out)in target.iter_mut().enumerate(){*out=*self.bytes.get(start+at).ok_or("layout-output-read-address")?;}Ok(())}
  pub fn transfer_demand(&self)->Result<RetirementDemand,ValueError>{let remaining=self.len.saturating_sub(self.read_cursor);if remaining==0&&self.transfer_length==0{return Ok(Default::default());}let length=remaining.min(OUTPUT_CHUNK_BYTES);if self.transfer.capacity()==0{return Ok(RetirementDemand{capacity_bytes:length,copy_bytes:HEADER_BYTES,depth:1,release_bytes:0});}if self.transfer.len()<self.transfer_length{return Ok(RetirementDemand{copy_bytes:(self.transfer_length-self.transfer.len()).min(TRANSFER_BYTES)+HEADER_BYTES,depth:self.bytes.next_get_depth_demand(self.read_cursor+self.transfer.len()).map_err(|_|fault("layout output transfer path"))?,..Default::default()});}Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Vec<u8>>()*2+HEADER_BYTES,depth:1,..Default::default()})}
  pub fn transfer_one(&mut self,grant:RetainedCloneGrant)->Result<(Option<Vec<u8>>,bool,RetainedCloneProgress),ValueError>{if self.read_cursor==self.len&&self.transfer_length==0{return Ok((None,true,Default::default()));}let demand=self.transfer_demand()?;if !fits(demand,grant){return Ok((None,false,Default::default()));}let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};if self.transfer.capacity()==0{let length=(self.len-self.read_cursor).min(OUTPUT_CHUNK_BYTES);self.transfer.try_reserve_exact(length).map_err(|_|fault("layout output transfer reservation failed"))?;self.transfer_length=length;p.retained_capacity_bytes=self.transfer.capacity();if p.retained_capacity_bytes>grant.maximum_capacity_bytes{return Err(fault("layout output transfer allocator exceeded original capacity grant").with_retained_progress(p));}return Ok((None,false,p));}if self.transfer.len()<self.transfer_length{let end=(self.transfer.len()+TRANSFER_BYTES).min(self.transfer_length);for at in self.transfer.len()..end{self.transfer.push(*self.bytes.get(self.read_cursor+at).ok_or_else(||fault("layout output transfer source"))?);}return Ok((None,false,p));}let chunk=std::mem::take(&mut *self.transfer);self.read_cursor+=self.transfer_length;self.transfer_length=0;Ok((Some(chunk),false,p))}
- pub fn close_demand(&self)->Result<RetirementDemand,ValueError>{if let Some(chunk)=self.publishing.as_ref(){return Ok(RetirementDemand{release_bytes:chunk.capacity(),copy_bytes:std::mem::size_of::<Vec<u8>>(),depth:1,capacity_bytes:0});}if self.transfer.capacity()>0{return Ok(RetirementDemand{release_bytes:self.transfer.capacity(),depth:1,..Default::default()});}if !self.bytes.is_empty(){return Ok(RetirementDemand{copy_bytes:self.bytes.len().min(OUTPUT_BODY_BYTES)+HEADER_BYTES,depth:self.bytes.next_pop_depth_demand().map_err(|_|fault("layout output retirement path"))?,..Default::default()});}Ok(RetirementDemand{copy_bytes:self.bytes.next_release_copy_byte_demand().map_err(|_|fault("layout output retirement backing"))?,release_bytes:self.bytes.next_release_allocation_bytes().map_err(|_|fault("layout output retirement backing"))?,depth:self.bytes.next_release_depth_demand().map_err(|_|fault("layout output retirement depth"))?,..Default::default()})}
- pub fn close_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let d=self.close_demand()?;if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};if self.publishing.is_some(){p.released_bytes=self.publishing.as_ref().map_or(0,Vec::capacity);self.publishing.take();}else if self.transfer.capacity()>0{p.released_bytes=self.transfer.capacity();drop(std::mem::take(&mut *self.transfer));self.transfer_length=0;}else if !self.bytes.is_empty(){for _ in 0..self.bytes.len().min(OUTPUT_BODY_BYTES){self.bytes.pop();}}else{let step=self.bytes.release_empty_page(grant.maximum_release_bytes).map_err(|_|fault("layout output physical retirement failed"))?;p.released_bytes=step.released_allocation_bytes;}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
+ pub fn close_demand(&self)->Result<RetirementDemand,ValueError>{if let Some(chunk)=self.publishing.as_ref(){return Ok(RetirementDemand{release_bytes:chunk.capacity(),copy_bytes:std::mem::size_of::<Vec<u8>>(),depth:1,capacity_bytes:0});}if self.transfer.capacity()>0{return Ok(RetirementDemand{release_bytes:self.transfer.capacity(),depth:1,..Default::default()});}if !self.bytes.is_empty(){return Ok(RetirementDemand{copy_bytes:self.bytes.len().min(OUTPUT_BODY_BYTES)+HEADER_BYTES,depth:self.bytes.next_pop_depth_demand().map_err(|_|fault("layout output retirement path"))?,..Default::default()});}self.bytes.next_release_demand().map_err(|_|fault("layout output retirement backing"))}
+ /// ♻️ Releases one funded slice or backing page through the original Work effect.
+ pub fn close_one(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+    if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+    let demand=self.close_demand()?;
+    if !fits(demand,effect.grant())||effect.remaining_work_units()?==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+    let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+    if self.publishing.is_none()&&self.transfer.capacity()==0&&self.bytes.is_empty(){
+        let released=match self.bytes.release_empty_page(effect).result{
+            Ok(PagedListReleaseOutcome::Ready(step))=>step,
+            Ok(PagedListReleaseOutcome::Denied)=>return Ok(RetainedCloneStep::Progress(Default::default())),
+            Err(PagedListReleaseFailure::Work(error))=>return Err(error),
+            Err(PagedListReleaseFailure::Release(error))=>return Err(error.into()),
+        };
+        progress.released_bytes=released.released_allocation_bytes;
+    }else{
+        if !effect.performed(1)?{return Err(fault("layout output retirement exceeded admitted Work"))}
+        if let Some(chunk)=self.publishing.take(){
+            progress.released_bytes=chunk.capacity();
+        }else if self.transfer.capacity()>0{
+            progress.released_bytes=self.transfer.capacity();
+            drop(std::mem::take(&mut *self.transfer));
+            self.transfer_length=0;
+        }else{
+            for _ in 0..self.bytes.len().min(OUTPUT_BODY_BYTES){self.bytes.pop();}
+        }
+    }
+    Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+ }
  #[cfg(any(test,feature="testkit"))]pub fn fixture_source_pointer(&self,index:usize)->Option<usize>{self.bytes.backing_ptr(index).map(|pointer|pointer as usize)}
  #[cfg(any(test,feature="testkit"))]pub fn fixture_transfer(&mut self,value:Vec<u8>){self.transfer_length=value.len();*self.transfer=value;}
  #[cfg(any(test,feature="testkit"))]pub fn fixture_transfer_ptr(&self)->usize{self.transfer.as_ptr()as usize}

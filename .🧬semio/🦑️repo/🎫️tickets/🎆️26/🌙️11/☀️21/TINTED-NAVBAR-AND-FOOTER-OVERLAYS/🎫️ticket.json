@@ -1,0 +1,70 @@
+{
+  "title": "Tinted Navbar and Footer Overlays",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "Layer UI navbar and footer over scrolling page content with visible tint and initial and final clearance. Verify browser behavior.",
+  "summary": "Layered tinted sticky navbar and footer over scrolling page content, applied the tint to Play and Demonstrator, and restored focus to scrolled cards. Seven Layout tests and isolated Chromium checks passed. Missing plugin activation receipts prevented full application E2E.",
+  "goal": "RUNNINGFRAMEWORK",
+  "sessions": [
+    "7a6c65e1-d518-4c2c-b68c-ac4d9e45f2b0"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-21 00:00:30",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "prompt": "Layer UI navbar and footer over scrolling page content with visible tint and initial and final clearance. Verify browser behavior.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-21 00:12:12",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "summary": "Layered tinted sticky navbar and footer over scrolling page content, applied the tint to Play and Demonstrator, and restored focus to scrolled cards. Seven Layout tests and isolated Chromium checks passed. Missing plugin activation receipts prevented full application E2E.",
+      "files": [
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/📖️stories/🧪️.story.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧪️tests/🧩️component/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧪️tests/🧩️component/scroll-canvas.cases.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟠️pane-styles/🟦️.tsx"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/🟦️.tsx"
+        },
+        {
+          "path": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🟦️.ts"
+        },
+        {
+          "path": "🏢️semio-tech/🎡️play/🏠️play-landing.tsx"
+        },
+        {
+          "path": "🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/TINTED-NAVBAR-AND-FOOTER-OVERLAYS/verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/TINTED-NAVBAR-AND-FOOTER-OVERLAYS/layout-mutation.vitest.ts"
+        }
+      ]
+    }
+  ]
+}

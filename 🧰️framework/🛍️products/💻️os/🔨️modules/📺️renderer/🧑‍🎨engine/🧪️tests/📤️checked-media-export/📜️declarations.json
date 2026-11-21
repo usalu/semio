@@ -50,6 +50,15 @@
         "write",
         "write",
         "close"
+      ],
+      "transport": [
+        "open",
+        "take",
+        "write",
+        "take",
+        "write",
+        "take",
+        "close"
       ]
     },
     {
@@ -94,6 +103,28 @@
       "delivered": false,
       "error": "media-export.descriptor-mismatch",
       "sink": []
+    },
+    {
+      "id": "archive-refused-before-delivery",
+      "delivered": false,
+      "error": "natural-file.saved-revision-changed",
+      "sink": [
+        "open",
+        "write",
+        "write",
+        "abort"
+      ]
+    },
+    {
+      "id": "archive-cancelled-before-delivery",
+      "delivered": false,
+      "error": null,
+      "sink": [
+        "open",
+        "write",
+        "write",
+        "abort"
+      ]
     }
   ],
   "snapshot": {
@@ -126,5 +157,40 @@
         "format_kind": "semio.snapshot.pack.v1"
       }
     }
-  }
+  },
+  "drainBounds": [
+    {
+      "id": "at-data-page-cap",
+      "dataPages": 8192,
+      "pageBytes": 4096,
+      "terminal": true,
+      "expectedDelivery": true,
+      "expectedPages": 8192,
+      "expectedTakes": 8193,
+      "expectedCancel": 0,
+      "expectedError": null
+    },
+    {
+      "id": "extra-data-page",
+      "dataPages": 8193,
+      "pageBytes": 1,
+      "terminal": true,
+      "expectedDelivery": false,
+      "expectedPages": 8192,
+      "expectedTakes": 8193,
+      "expectedCancel": 1,
+      "expectedError": "media-export.pages"
+    },
+    {
+      "id": "missing-terminal-after-cap",
+      "dataPages": 8192,
+      "pageBytes": 4096,
+      "terminal": false,
+      "expectedDelivery": false,
+      "expectedPages": 8192,
+      "expectedTakes": 8193,
+      "expectedCancel": 1,
+      "expectedError": "media-export.pages"
+    }
+  ]
 }

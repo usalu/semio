@@ -1,3 +1,5 @@
+import {Database} from "bun:sqlite";
+import observationFixture from "./🔭️git-observation/🔣️.json" with {type:"json"};
 import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
 import {createHash} from "node:crypto";
@@ -12,7 +14,7 @@ import {platformV1} from "../../🗺️topology/🟦️.ts";
 import {parseGitViewV1} from "../../🌿️git/🟦️.ts";
 import {closeReplicaV1,CompactTableV1,compactV1,homedOriginsV1,joinV1,openReplicaV1,publishOnceV1,ReplicaBookV1,relayOnceV1,runV1,seedV1,setSyncEnabledV1,type ReplicaEventV1,type ReplicaV1,type ReplicaOptionsV1} from "../../🔁️replica/🟦️.ts";
 import {runReplicaCommandV1} from "../../🔁️replica/⌨️command/🟦️.ts";
-import {attestPathV1,bucketMaskV1,bucketOfV1,codeDigestV1,gitPathV1,recomputeBucketsV1,viewBucketsV1,type GapWindowV1,type FleetGuardsV1,createAttesterV1,fleetReportV1,judgeFleetV1,readAttestationV1,readAttestationsV1,readRetirementV1,readViewLinesV1,recomputeManifestV1,viewDiffV1,viewPathV1,writeAttestationV1,type AttesterViewV1,type FleetAttestationV1,type FleetReportV1,type FleetTermV1,type RetirementV1} from "../🟦️.ts";
+import {attestPathV1,bucketMaskV1,bucketOfV1,codeDigestV1,compareCheckpointsV1,gitPathV1,recomputeBucketsV1,viewBucketsV1,type GapWindowV1,type FleetGuardsV1,createAttesterV1,fleetReportV1,judgeFleetV1,readAttestationV1,readAttestationsV1,readRetirementV1,readViewLinesV1,recomputeManifestV1,viewDiffV1,viewPathV1,writeAttestationV1,type AttesterGitV1,type AttesterViewV1,type FleetAttestationV1,type FleetReportV1,type FleetTermV1,type RetirementV1} from "../🟦️.ts";
 
 setDefaultTimeout(60_000);
 const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`});
@@ -70,6 +72,14 @@ for(const row of fixture.agreements)test(`fleet agreement vector: ${row.name}`,(
  const report=judgeFleetV1({now:row.now,heads:row.heads,attestations:row.attestations as unknown as Record<string,FleetAttestationV1>,retirements:row.retirements as Record<string,RetirementV1>,windows:row.windows as unknown as Record<string,GapWindowV1>});
  expect(report).toEqual(row.expected as unknown as FleetReportV1);
  expect(validator("Report")(report)).toBe(true);
+});
+
+for(const row of fixture.gitComparisons)test(`Git evidence vector: ${row.name}`,()=>{
+ for(const [left,right] of [[row.left,row.right],[row.right,row.left]] as const){
+  const result=compareCheckpointsV1({git:left},{git:right},row.left.wallMs,{});
+  expect(result.known.has("git")).toBe(row.known);
+  expect(result.items.map(({field,same})=>({field,same}))).toEqual(row.compared);
+ }
 });
 
 for(const row of fixture.bucketing.paths)test(`bucket of a path: ${row.path}`,()=>{expect(bucketOfV1(row.path)).toBe(row.bucket);});
@@ -510,9 +520,8 @@ test("the view is asked at start and afterwards only after a change, at most eve
  await attester.start();
  let snapshot={sync:true,files:1,manifest:"1".repeat(64),cursors:{},incoming:0,hlc:"0000001000000-000000-a1",activity:0};
  const tick=async(milliseconds:number)=>{clock+=milliseconds;return attester.tick(snapshot);};
- expect(await attester.tick(snapshot)).toBe("idle");
- await Bun.sleep(5);
- expect(await tick(1000)).toBe("written");
+ expect(await attester.tick(snapshot)).toBe("written");
+ await tick(1000);
  const stamp=()=>statSync(viewPathV1(store,"a1")).mtimeMs;
  expect(asked).toBe(1);
  expect((await readAttestationV1(store,"a1"))!.view).toEqual({staged:0,modified:0,deleted:0,untracked:1,digest:viewOf(["?? a"]).digest});
@@ -641,6 +650,52 @@ test("the attestation carries the passive latency of the replica and refreshes i
  expect(validator("Latency")({...report,samples:{publish:-1,apply:0}})).toBe(false);
 });
 
+test("the daemon attests liveness while the initial Git sample is blocked",async()=>{
+ const entered=Promise.withResolvers<void>(),release=Promise.withResolvers<void>(),database=new Database(":memory:");
+ const {store,runners}=await fleet(["a1"],()=>({gitState:async()=>{entered.resolve();await release.promise;return git;}}));
+ const [who]=runners as [Runner];
+ const results=database.query("select case value when 'certified' then ?1 else null end as tree, case value when 'certified' then ?2 else null end as head from json_each(?3) order by key").all(git.indexTree,git.commit,JSON.stringify(observationFixture.firstGit));
+ const actual=async()=>{
+  const row=await readAttestationV1(store,who.name);
+  return {tree:row?.indexTree??null,head:row?.head?.commit??null};
+ };
+ try{
+  await entered.promise;
+  await until(async()=>(await readAttestationV1(store,who.name))!==undefined,3000);
+  expect(await actual()).toEqual(results[0]);
+  expect((await readAttestationV1(store,who.name))?.view).toBeNull();
+  release.resolve();
+  await until(async()=>(await actual()).tree===git.indexTree,3000);
+  expect(await actual()).toEqual(results[1]);
+ }finally{release.resolve();database.close();await stop(who);}
+});
+
+test("a certified stage is reported while its initial worktree view is still reading",async()=>{
+ const store=temp("stage-first"),database=new Database(":memory:"),release=Promise.withResolvers<void>(),measured=Promise.withResolvers<void>();
+ const view=viewOf(["?? worker.txt"]);
+ let clock=1_000_000,calls=0;
+ const attester=createAttesterV1({storeRoot:store,originId:"a1",groupId:"g1",now:()=>clock,codeRoot:code("stage-first"),git:async()=>git,reachable:async()=>true,view:async()=>{calls++;await release.promise;return view;},onView:()=>measured.resolve()});
+ const snapshot={sync:true,files:1,manifest:"1".repeat(64),cursors:{},incoming:0,hlc:"0000001000000-000000-a1"};
+ const oracle=database.query("select ?1 as tree, case value when 'measured' then ?2 else null end as view from json_each(?3) order by key").all(git.indexTree,view.digest,JSON.stringify(observationFixture.firstView));
+ const observed=async()=>{
+  const row=await readAttestationV1(store,"a1");
+  return {tree:row?.indexTree??null,view:row?.view?.digest??null};
+ };
+ try{
+  await attester.start();
+  expect(await attester.tick(snapshot)).toBe("written");
+  expect(await observed()).toEqual(oracle[0]);
+  expect(existsSync(viewPathV1(store,"a1"))).toBe(false);
+  expect(calls).toBe(1);
+  release.resolve();await measured.promise;
+  clock+=1000;
+  expect(await attester.tick(snapshot)).toBe("written");
+  expect(await observed()).toEqual(oracle[1]);
+  expect(await readViewLinesV1(store,"a1",view.digest)).toEqual(view.lines);
+  expect(calls).toBe(1);
+ }finally{release.resolve();database.close();}
+});
+
 test("an attester without git states no view and writes no view.txt, and a view that cannot be read keeps the last one",async()=>{
  const store=temp("store");
  let clock=1_000_000;
@@ -654,9 +709,9 @@ test("an attester without git states no view and writes no view.txt, and a view 
  let fail=false;
  const keeper=createAttesterV1({storeRoot:other,originId:"a2",groupId:"g1",platform:"linux",now:()=>clock,codeRoot:code("keep"),git:async()=>git,reachable:async()=>true,view:async()=>{if(fail)throw Error("boom");return viewOf(["?? kept"]);},viewMilliseconds:1000});
  await keeper.start();
- await keeper.tick(snapshot);
- await Bun.sleep(5);
  expect(await keeper.tick(snapshot)).toBe("written");
+ clock+=1000;await keeper.tick(snapshot);
+ expect((await readAttestationV1(other,"a2"))!.view!.digest).toBe(viewOf(["?? kept"]).digest);
  fail=true;clock+=2000;
  await keeper.tick(snapshot);
  clock+=1000;
@@ -698,6 +753,31 @@ test("checkpoints are taken only at a cut with nothing left to apply, copy the c
  await older.tick({sync:true,files:1,manifest:"1".repeat(64),cursors,incoming:0,hlc:"0000001000000-000000-a2"});await Bun.sleep(5);clock+=6000;
  expect(await older.tick({sync:true,files:1,manifest:"1".repeat(64),cursors,incoming:0,hlc:"0000001000000-000000-a2"})).toBe("written");
  expect((await readAttestationV1(store,"a2"))!.checkpoints).toBeUndefined();
+});
+
+test("the attester withdraws a Git checkpoint while its index tree is unavailable and preserves HEAD",async()=>{
+ const store=temp("store");
+ let clock=1_000_000,reading:AttesterGitV1=git;
+ const attester=createAttesterV1({storeRoot:store,originId:"a1",groupId:"g1",platform:"linux",now:()=>clock,heartbeatMilliseconds:1000,codeRoot:code("index-evidence"),git:async()=>reading,reachable:async()=>true});
+ await attester.start();
+ const snapshot={sync:true,files:1,manifest:"1".repeat(64),buckets:"0".repeat(1024),cursors:{},incoming:0,hlc:"0000001000000-000000-a1"};
+ const settle=async()=>{
+  for(let turn=0;turn<3;turn++){clock+=1000;await attester.tick(snapshot);}
+  return (await readAttestationV1(store,"a1"))!;
+ };
+ expect((await settle()).checkpoints?.git?.indexTree).toBe(git.indexTree);
+ const commit="b".repeat(40);
+ reading={...git,commit,indexTree:null};
+ const unavailable=await settle();
+ expect(unavailable.head?.commit).toBe(commit);
+ expect(unavailable.indexTree).toBeNull();
+ expect(unavailable.checkpoints?.git).toBeUndefined();
+
+ reading={...git,commit:null,indexTree:null};
+ expect((await settle()).checkpoints?.git).toBeUndefined();
+
+ reading={present:false,head:null,commit:null,indexTree:null};
+ expect((await settle()).checkpoints?.git).toMatchObject({head:null,indexTree:null});
 });
 
 test("a fetched remote ref or object does not hold the git reading back, an unpublished change of the stage does for 30 s and then counts as noise",async()=>{
@@ -777,9 +857,8 @@ test("the guards are asked first, again when they are due and soon after the vie
  const tick=async(milliseconds:number)=>{clock+=milliseconds;return attester.tick(snapshot);};
  let release!:()=>void;
  gate=new Promise<void>(resolve=>{release=resolve;});
- expect(await tick(0)).toBe("idle");
- await Bun.sleep(5);
- expect(await tick(1000)).toBe("written");
+ expect(await tick(0)).toBe("written");
+ await tick(1000);
  expect(asked).toBe(1);
  expect((await readAttestationV1(store,"a1"))!.guards).toBeNull();
  release();await Bun.sleep(10);
@@ -874,6 +953,20 @@ test("workers that cannot resolve HEAD while another origin has one are diverged
  expect(noGit.warnings.filter(item=>item.kind==="git-broken")).toEqual([]);
 });
 
+test("recent historical observations do not warn after an exact stage is certified",()=>{
+ const base=fixture.verdicts[0]!,member=base.attestations.a as unknown as FleetAttestationV1,database=new Database(":memory:");
+ const cases=observationFixture.stageWarnings;
+ try{
+  const oracle=database.query("select case when json_extract(value,'$.treeKnown') and json_extract(value,'$.kind') like 'observe-%' then null else json_extract(value,'$.kind') end as expected from json_each(?) order by key").all(JSON.stringify(cases));
+  const observed=cases.map(({treeKnown,kind})=>{
+   const item={...member,indexTree:treeKnown?git.indexTree:null,failures:[{kind:"stage-"+kind,count:1,lastMs:member.wallMs-1000}]};
+   const report=judgeFleetV1({now:base.now,heads:{a:base.heads.a!},attestations:{a:item},retirements:{}});
+   return {expected:report.warnings.find(warning=>warning.kind==="stage")?.detail??null};
+  });
+  expect(observed).toEqual(oracle);
+ }finally{database.close();}
+});
+
 test("a machine whose index tree differs from the others is diverged in indexTree and head, and the reason its stage waits for is a warning that names it",()=>{
  const base=fixture.verdicts[0]!,attestations={...base.attestations} as unknown as Record<string,FleetAttestationV1>,commit="1".repeat(40),tree="2".repeat(40),other="3".repeat(40);
  const view={staged:0,modified:0,deleted:0,untracked:0,digest:"a".repeat(64)},head={ref:"refs/heads/main",commit};
@@ -920,4 +1013,69 @@ test("a store file replaced under the reader is read again, a missing or always 
  expect(calls).toBe(REPLACED_READ_V1.attempts);expect(waits).toHaveLength(REPLACED_READ_V1.attempts-1);
  expect(await readThroughReplacementV1(async()=>{throw failure("ENOENT");},wait)).toBeUndefined();
  await expect(readThroughReplacementV1(async()=>{throw failure("EIO");},wait)).rejects.toThrow("EIO");
+});
+
+test("a rejected Git observation withdraws its checkpoint and counts only each failure episode",async()=>{
+ const store=temp("git-observation"),rows=observationFixture.observations;let clock=1_000_000,observation="exact";
+ const counts=new Map<string,{kind:string;count:number;lastMs:number}>();
+ const attester=createAttesterV1({storeRoot:store,originId:"a1",groupId:"g1",platform:"linux",now:()=>clock,heartbeatMilliseconds:1000,codeRoot:code("observe"),reachable:async()=>true,
+  git:async()=>{if(observation==="rejected")throw Error("private-index-reason");return observation==="exact"?git:{...git,indexTree:null,observation:observation==="foreign"?"private-index-reason" as never:"index-changed" as const};},
+  failures:()=>[...counts.values()],
+  gitObservationFailed:(reason:string)=>{const kind="stage-observe-"+reason;counts.set(kind,{kind,count:(counts.get(kind)?.count??0)+1,lastMs:clock});}
+ });
+ await attester.start();
+ const snapshot={sync:true,files:1,manifest:"1".repeat(64),buckets:"0".repeat(1024),cursors:{},incoming:0,hlc:"0000001000000-000000-a1"};
+ const db=new Database(":memory:");
+ try{
+  const oracle=db.query(`with rows as (select cast(key as integer) as n,case when value='foreign' then 'rejected' else value end as value from json_each(?)), phases as (select n,value,lag(value) over (order by n) as prior from rows)
+  select sum(case when value='rejected' and value is not prior then 1 else 0 end) as rejected,
+  sum(case when value='moved' and value is not prior then 1 else 0 end) as moved from phases where n<=?`);
+  for(const [index,row] of rows.entries()){
+   observation=row;
+   for(let turn=0;turn<3;turn++){clock+=1000;await attester.tick(snapshot);}
+   const receipt=(await readAttestationV1(store,"a1"))!;
+   expect(receipt.indexTree,row).toBe(row==="exact"?git.indexTree:null);
+   expect(receipt.checkpoints?.git?.indexTree,row).toBe(row==="exact"?git.indexTree:undefined);
+   expect({rejected:counts.get("stage-observe-observation-failed")?.count??0,moved:counts.get("stage-observe-index-changed")?.count??0},row).toEqual(oracle.get(JSON.stringify(rows),index));
+   expect(JSON.stringify(receipt)).not.toContain("private-index-reason");
+   expect(validator("Attestation")(receipt)).toBe(true);
+  }
+ }finally{db.close();}
+});
+
+test("an unavailable Git sample stays at heartbeat cadence and does not start a view",async()=>{
+ const store=temp("stage-cadence");
+ let clock=1_000_000,reads=0,views=0;
+ const replica=createAttesterV1({storeRoot:store,originId:"a1",groupId:"g1",now:()=>clock,heartbeatMilliseconds:5000,codeRoot:code("observe-cadence"),reachable:async()=>true,
+  git:async()=>{reads++;return {...git,indexTree:null,observation:"index-changed"};},
+  view:async()=>{views++;return null;}
+ });
+ const snapshot={sync:true,files:1,manifest:"1".repeat(64),buckets:"0".repeat(1024),cursors:{},incoming:0,hlc:"0000001000000-000000-a1"};
+ await replica.start();
+ for(let step=0;step<4;step++){clock+=1000;await replica.tick(snapshot);}
+ expect(reads).toBe(1);expect(views).toBe(0);
+ expect((await readAttestationV1(store,"a1"))?.indexTree).toBeNull();
+ clock+=1000;await replica.tick(snapshot);await Bun.sleep(1);
+ expect(reads).toBe(2);expect(views).toBe(0);
+});
+
+test("the replica mirrors one closed observation failure per episode in its existing diagnostics",async()=>{
+ let exact=false;
+ const {store,runners}=await fleet(["a1"],()=>({
+  gitState:async()=>exact?git:{...git,indexTree:null,observation:"locked-snapshot-failed"},
+  gitView:async()=>null
+ }));
+ const read=()=>readAttestationV1(store,"a1");
+ const kind="stage-observe-locked-snapshot-failed";
+ const count=async()=>(await read())?.failures?.find(row=>row.kind===kind)?.count;
+ try{
+  await until(async()=>await count()===1);
+  expect((await read())?.indexTree).toBeNull();
+  await Bun.sleep(250);expect(await count()).toBe(1);
+  exact=true;
+  await until(async()=>(await read())?.indexTree===git.indexTree);
+  exact=false;
+  await until(async()=>await count()===2);
+  expect((await read())?.checkpoints?.git).toBeUndefined();
+ }finally{await Promise.all(runners.map(stop));}
 });

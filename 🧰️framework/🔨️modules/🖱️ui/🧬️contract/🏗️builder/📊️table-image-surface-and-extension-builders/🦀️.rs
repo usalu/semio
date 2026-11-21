@@ -149,6 +149,7 @@ enum ImageAlt {
 pub struct ImageBuilder<State = NoAlt> {
     pub(super) base: NodeBase,
     src: crate::UiText,
+    source_body_bytes: Option<u32>,
     pub(super) alt: State,
 }
 
@@ -156,19 +157,34 @@ pub struct ImageBuilder<State = NoAlt> {
 /// [`ImageBuilder::decorative`] before `.try_build()` becomes callable at all.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn image(src: crate::UiText) -> ImageBuilder<NoAlt> {
-    ImageBuilder { base: NodeBase::leaf(), src, alt: NoAlt }
+    ImageBuilder { base: NodeBase::leaf(), src, source_body_bytes: None, alt: NoAlt }
 }
 
 impl<State> ImageBuilder<State> {
     /// ♿️ Supplies the accessible alt text, unlocking `.try_build()` by transitioning to [`HasAlt`].
     pub fn alt(self, alt: crate::Label) -> ImageBuilder<HasAlt> {
-        ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Text(alt)) }
+        ImageBuilder { base: self.base, src: self.src, source_body_bytes: self.source_body_bytes, alt: HasAlt(ImageAlt::Text(alt)) }
     }
 
     /// 🙈️ Explicitly opts out: the image is decorative and hidden from the accessibility tree.
     /// Unlocks `.try_build()` by transitioning to [`HasAlt`], the same as [`ImageBuilder::alt`].
     pub fn decorative(self) -> ImageBuilder<HasAlt> {
-        ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Decorative) }
+        ImageBuilder { base: self.base, src: self.src, source_body_bytes: self.source_body_bytes, alt: HasAlt(ImageAlt::Decorative) }
+    }
+}
+
+impl ImageBuilder<HasAlt> {
+    /// 📼️ Attaches the single retained source carrier keyed by this image source.
+    #[expect(clippy::result_large_err, reason = "A rejected carrier retains its builder and exact node ownership.")]
+    pub fn try_source_body(mut self, bytes: u32, carrier: BuiltNode) -> Result<Self, (Self, BuiltNode)> {
+        if bytes == 0 || self.source_body_bytes.is_some() || carrier.key != self.src {
+            return Err((self, carrier));
+        }
+        if let Err(carrier) = self.base.children.try_push(carrier) {
+            return Err((self, carrier));
+        }
+        self.source_body_bytes = Some(bytes);
+        Ok(self)
     }
 }
 
@@ -180,7 +196,7 @@ impl<State> HasBase for ImageBuilder<State> {
 
 impl From<ImageBuilder<HasAlt>> for BuiltNode {
     fn from(builder: ImageBuilder<HasAlt>) -> Self {
-        let ImageBuilder { mut base, src, alt, .. } = builder;
+        let ImageBuilder { mut base, src, source_body_bytes, alt } = builder;
         let HasAlt(alt) = alt;
         let alt_label = match alt {
             ImageAlt::Text(label) => {
@@ -192,7 +208,7 @@ impl From<ImageBuilder<HasAlt>> for BuiltNode {
                 None
             }
         };
-        assemble(base, crate::Component::Image(crate::ImageProps { src, alt: alt_label }))
+        assemble(base, crate::Component::Image(crate::ImageProps { src, alt: alt_label, source_body_bytes }))
     }
 }
 //#endregion 🖼️Image

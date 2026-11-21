@@ -3,7 +3,7 @@
 use crate::editor::note::modes::edit::windows::composite::NOTE_PLAY_WINDOW_COMPOSITE;
 use crate::NoteCamera;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, Default, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslReceiving)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -34,9 +34,10 @@ mod diff;
 pub mod transient;
 pub use diff::{NoteCompositeWindowConfigDiff, NoteCompositeWindowTransientDiff};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum NoteCompositeWindowConfigMutation {
+    #[dsl(key = "set-camera")]
     SetCamera(NoteCamera),
 }
 
@@ -146,27 +147,44 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoteC
 
 
 }
+impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for NoteCompositeWindowConfig {
+    type Receiving = store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+
+    fn original_pack_birth_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self::Receiving>(), depth: 1, ..Default::default() }
+    }
+
+    fn admit_original_pack(source: &[u8], limits: protocol::PackLimits, native: &semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant) -> Result<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+        Self::Receiving::admit(source, <Self as pack::snapshot::ArtifactDsl>::envelope_id(), limits, native, grant)
+    }
+}
+
 impl store::ConfigRecord for NoteCompositeWindowConfig {}
 json_store!(NoteCompositeWindowTransient, "notecompositewindowtransient", "s.note.note.compositewindowtransient");
 
-macro_rules! mutation_wire {
-    ($mutation:ty) => {
-        impl protocol::OpText for $mutation {
-            fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
-            fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
-        }
-        impl protocol::OpBinary for $mutation {
-            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
-            fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-                semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
-            }
-        }
-    };
+impl protocol::OpText for NoteCompositeWindowConfigMutation {
+    fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
 }
 
-mutation_wire!(NoteCompositeWindowConfigMutation);
-mutation_wire!(NoteCompositeWindowTransientMutation);
+impl protocol::OpBinary for NoteCompositeWindowConfigMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
+}
+protocol::original_ordinal_operation_receiving!(NoteCompositeWindowConfigMutation);
+
+impl protocol::OpText for NoteCompositeWindowTransientMutation {
+    fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
+}
+
+impl protocol::OpBinary for NoteCompositeWindowTransientMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+    }
+}
 
 semio_framework_value::artifact_retire_struct!(NoteCompositeWindowTransient { engagement_input, ink_tool });
 
@@ -207,6 +225,21 @@ impl semio_plugin::WindowConfigOwner for NoteCompositeWindowConfigOwner {
     fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_plugin::bounded_window_config_preparation_source_birth::<Self>() }
     fn build_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_plugin::bounded_window_config_preparation_factory::<Self>() }
+    fn native_pair_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_plugin::window_config_native_pair_demands::<Self::State>())
+    }
+
+    fn admit_native_pair(pack: &[u8], spr: &[u8], pack_limits: protocol::PackLimits, history_limits: store::os_store::codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits, native: &mut semio_framework_value::NativeDecodeControl<'_>, grant: semio_framework_value::RetainedCloneGrant, output: &mut Option<Box<dyn semio_plugin::WindowConfigNativePairReceiving<Self::State>>>) -> Result<semio_framework_value::RetainedCloneProgress, store::os_store::codec_registry::native_snapshot::OriginalArtifactPairFailure> {
+        semio_plugin::admit_window_config_native_pair::<Self::State>(pack, spr, pack_limits, history_limits, native, grant, output)
+    }
+
+    fn native_operation_wire() -> store::os_store::ArtifactOperationWire<Self::Mutation> {
+        store::os_store::ArtifactOperationWire::canonical().with_original_receiving()
+    }
+
+    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_plugin::bounded_window_config_store_disposer_birth::<Self>()
+    }
     fn build_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_plugin::bounded_window_config_store_disposer::<Self>() }
 }
 

@@ -14,3 +14,5 @@ Per asset, in this order:
 Rules: touch only your assets; others edit the tree live, re-read a file right before editing it; never run a modifying git command; never stop to ask; one render or check at a time (shared 10-core machine); tool output only under `🗑️generated/`; no comments inside definitions; docstrings start with a unique emoji. Never claim to have seen an image you did not open.
 
 Return only: one line per asset (`<asset>: before -> after, open points`).
+
+Addendum 16:55: `r3-validate.ts` now also reports `PRINT` lines (print suitability and valid-range ends, see the end of `r3-tools.md`). They must be clean for your assets too; fix the drawing or the declared range at the root.

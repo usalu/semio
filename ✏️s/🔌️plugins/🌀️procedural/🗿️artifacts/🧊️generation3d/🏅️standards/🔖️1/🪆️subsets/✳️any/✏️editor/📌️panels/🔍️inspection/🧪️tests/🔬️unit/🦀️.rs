@@ -17,10 +17,14 @@ fn inspector_selected_slider_has_localized_commit_control() {
     let case = &fixture["selectionPublication"];
     let host = FlowHostSnapshot { widgets: vec![Widget::InputSlider { id: case["widgetId"].as_str().unwrap().into(), label: String::new(), value: case["value"].as_f64().unwrap(), min: 0.0, max: 10.0, step: 0.1 }], synapses: Vec::new(), ..Default::default() };
     for (locale, labels) in [("en", &Generation3dLabels::NATIVE_EN), ("de", &Generation3dLabels::NATIVE_DE)] {
-        let built = render(&host, &[case["widgetId"].as_str().unwrap().into()], labels, &semio_plugin::TreeWindows::unhosted(), if locale == "de" { semio_ui_locale::Locale::De } else { semio_ui_locale::Locale::En }, semio_ui_locale::Terminology::Native, &[], "", "{}", true,None).unwrap();
+        let built = render(&host, &[case["widgetId"].as_str().unwrap().into()], labels, &semio_plugin::TreeWindows::unhosted(), if locale == "de" { semio_ui_locale::Locale::De } else { semio_ui_locale::Locale::En }, semio_ui_locale::Terminology::Native, &[], "", "{}", true,None, &|_| false).unwrap();
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
         let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
         let control = inspector_node(&tree, case["controlKey"].as_str().unwrap()).unwrap();
+        let row = inspector_node(&tree, case["rowHover"]["key"].as_str().unwrap()).unwrap();
+        let hover = row["bindings"].as_array().unwrap().iter().find(|binding| binding["trigger"] == "hoverPreview").unwrap();
+        assert_eq!(hover["action"]["name"], "interactionHover");
+        assert_eq!(hover["args"]["targetId"], case["rowHover"]["targetId"]);
         assert_eq!(control["component"]["type"], case["control"]["type"]);
         for field in ["min", "max", "step"] { assert_eq!(control["component"][field].as_f64(), case["control"][field].as_f64()); }
         assert_eq!(control["component"]["value"].as_f64(), case["value"].as_f64());
@@ -127,7 +131,7 @@ fn inspector_language_neutral_ports_project_editable_and_connected_controls() {
     let shape = host.add_widget(r#"{"kind":"neuron","id":"shape","neuronKind":"inspector-input-law.typed"}"#, 200.0, 0.0).unwrap();
     host.connect_ports(&source, "number", &shape, "height").unwrap();
     let projections = [("en", &Generation3dLabels::NATIVE_EN), ("de", &Generation3dLabels::NATIVE_DE)].map(|(locale, labels)| {
-        let tree = render(&host.host_snapshot, std::slice::from_ref(&shape), labels, &semio_plugin::TreeWindows::unhosted(), if locale == "de" { semio_ui_locale::Locale::De } else { semio_ui_locale::Locale::En }, semio_ui_locale::Terminology::Native, &[], "", "{}", true,None).unwrap();
+        let tree = render(&host.host_snapshot, std::slice::from_ref(&shape), labels, &semio_plugin::TreeWindows::unhosted(), if locale == "de" { semio_ui_locale::Locale::De } else { semio_ui_locale::Locale::En }, semio_ui_locale::Terminology::Native, &[], "", "{}", true,None, &|_| false).unwrap();
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
         (locale, projection)
     });
@@ -245,7 +249,7 @@ fn inspector_widget_metadata_controls_bind_explicit_localized_facets() {
         let snapshot = FlowHostSnapshot { widgets: vec![widget], ..Default::default() };
         for (locale, key, labels) in [(semio_ui_locale::Locale::En, "en", &Generation3dLabels::NATIVE_EN), (semio_ui_locale::Locale::De, "de", &Generation3dLabels::NATIVE_DE)] {
             let evaluation = entry.get("evaluation").map(serde_json::Value::to_string).unwrap_or_default();
-            let tree = render(&snapshot, std::slice::from_ref(&id), labels, &semio_plugin::TreeWindows::unhosted(), locale, semio_ui_locale::Terminology::Native, &[], &evaluation, "{}", true,None).unwrap();
+            let tree = render(&snapshot, std::slice::from_ref(&id), labels, &semio_plugin::TreeWindows::unhosted(), locale, semio_ui_locale::Terminology::Native, &[], &evaluation, "{}", true,None, &|_| false).unwrap();
             let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
             let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
             for expected in entry["controls"].as_array().unwrap() {
@@ -285,7 +289,7 @@ fn inspector_connected_export_shows_localized_losses_and_pending_refusal() {
         let meshes = [semio_plugin::MeshData { normals: entry["normals"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect(), ..Default::default() }];
         for (locale, key, labels) in [(semio_ui_locale::Locale::En, "en", &Generation3dLabels::NATIVE_EN), (semio_ui_locale::Locale::De, "de", &Generation3dLabels::NATIVE_DE)] {
             let ready = entry["ready"].as_bool().unwrap();
-            let tree = render(&snapshot, &["download".into()], labels, &semio_plugin::TreeWindows::unhosted(), locale, semio_ui_locale::Terminology::Native, &meshes, "", "{}", ready,None).unwrap();
+            let tree = render(&snapshot, &["download".into()], labels, &semio_plugin::TreeWindows::unhosted(), locale, semio_ui_locale::Terminology::Native, &meshes, "", "{}", ready,None, &|_| false).unwrap();
             let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(tree)).unwrap();
             let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
             let button = inspector_node(&tree, "procedural-play-inspector.export-connected.button").unwrap();
@@ -343,7 +347,7 @@ fn inspector_selected_analysis_projects_declared_outputs_without_recomputation()
         for (available, status, fault) in [(true, "ok", false), (false, "ok", false), (true, "stale", false), (true, "error", true)] {
             let evaluation = if available { serde_json::json!({"analysis":{"out":case["outputs"]}}).to_string() } else { "{}".into() };
             let status_json = serde_json::json!({"analysis":{"status":status}}).to_string();
-            let built = render(&host, &["analysis".into()], labels, &semio_plugin::TreeWindows::unhosted(), locale, semio_ui_locale::Terminology::Native, &[], &evaluation, &status_json, true,None).unwrap();
+            let built = render(&host, &["analysis".into()], labels, &semio_plugin::TreeWindows::unhosted(), locale, semio_ui_locale::Terminology::Native, &[], &evaluation, &status_json, true,None, &|_| false).unwrap();
             let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap(); let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
             for (port, expected) in case["expectedText"].as_object().unwrap() { let output = inspector_node(&tree, &format!("procedural-play-inspector.output.{port}")).unwrap_or_else(|| panic!("Missing output {port}: {projection}")); let text = output.to_string(); assert!(text.contains(if fault { labels.mesh_output_error.as_str() } else if status == "stale" { labels.mesh_output_stale.as_str() } else if available { expected.as_str().unwrap() } else { labels.input_value_unavailable.as_str() })); assert!(!text.contains("setWidgetInput")); }
         }
@@ -358,7 +362,7 @@ fn inspector_multi_selection_exposes_each_absolute_edit_target() {
     let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
     let host = FlowHostSnapshot { widgets: selected.iter().enumerate().map(|(index, id)| Widget::InputSlider { id: id.clone(), label: String::new(), value: case["values"][index].as_f64().unwrap(), min: 0.0, max: 10.0, step: 0.1 }).collect(), ..Default::default() };
     for (locale, labels) in [(semio_ui_locale::Locale::En, &Generation3dLabels::NATIVE_EN), (semio_ui_locale::Locale::De, &Generation3dLabels::NATIVE_DE)] {
-        let built = render(&host, &selected, labels, &semio_plugin::TreeWindows::unhosted(), locale, semio_ui_locale::Terminology::Native, &[], "{}", "{}", true,None).unwrap();
+        let built = render(&host, &selected, labels, &semio_plugin::TreeWindows::unhosted(), locale, semio_ui_locale::Terminology::Native, &[], "{}", "{}", true,None, &|_| false).unwrap();
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
         let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
         for (index, id) in selected.iter().enumerate() {
@@ -384,7 +388,7 @@ fn inspector_geometry_output_reflects_exact_topology_identity_in_both_languages(
     let case = &fixture["geometryReflection"];
     let value = semio_framework_pack_json::parse(&case["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (language, labels) in [("en", &Generation3dLabels::NATIVE_EN), ("de", &Generation3dLabels::NATIVE_DE)] {
-        let built = reflected_output(&semio_plugin::TreeWindows::unhosted(), "geometry-output", "Solid", &value, 0, labels).unwrap();
+        let built = reflected_output(&semio_plugin::TreeWindows::unhosted(), "geometry-output", "Solid", &value, 0, labels, None, false).unwrap();
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
         for (field, label) in case["fields"].as_object().unwrap() { assert!(projection.contains(label[language].as_str().unwrap()), "{projection}"); assert!(projection.contains(case["value"][field].as_str().unwrap()), "{projection}"); }
         assert!(!projection.contains("setWidgetInput"));
@@ -396,7 +400,8 @@ fn inspector_connected_source_navigation_retains_exact_framework_target() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["sourceNavigation"];
     for (language, labels) in [("en", &Generation3dLabels::NATIVE_EN), ("de", &Generation3dLabels::NATIVE_DE)] {
-        let built = connected_source(case["key"].as_str().unwrap(), "Geometry", case["source"].as_str().unwrap(), "geometry", labels).unwrap();
+        let connection = SynapseSpec { id: "wire".into(), from: case["source"].as_str().unwrap().into(), from_port: "geometry".into(), to: "receiver".into(), to_port: "input".into() };
+        let built = connected_source(case["key"].as_str().unwrap(), "Geometry", &connection, labels).unwrap();
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
         let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
         let button = inspector_node(&tree, "source-field.source").unwrap();
@@ -438,20 +443,55 @@ fn inspected_channels_share_the_graph_hover_binding() {
         let key = row["key"].as_str().unwrap();
         let widget = row["widget"].as_str().unwrap();
         let port = row["port"].as_str().unwrap();
-        let built = if row["kind"] == "output" {
-            let source = semio_framework_pack_json::parse(&row["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-            let target = format!("{widget}@{port}");
-            reflected_output(&windows, key, "Value", &source, 0, labels, Some(("handle", &target))).unwrap()
-        } else {
-            connected_source(key, "Geometry", widget, port, labels).unwrap()
+        let (built, hover_key) = match row["kind"].as_str().unwrap() {
+            "output" => {
+                let source = semio_framework_pack_json::parse(&row["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+                let target = graph_port_id(widget, port, false);
+                (reflected_output(&windows, key, "Value", &source, 0, labels, Some((GraphTargetKind::Handle, &target)), false).unwrap(), key.to_owned())
+            }
+            "connected" => {
+                let connection = SynapseSpec { id: "wire".into(), from: row["sourceWidget"].as_str().unwrap().into(), from_port: row["sourcePort"].as_str().unwrap().into(), to: widget.into(), to_port: port.into() };
+                (connected_source(key, "Geometry", &connection, labels).unwrap(), key.to_owned())
+            }
+            "numeric" | "boolean" => {
+                let input_kind = (row["kind"] == "numeric").then_some(InputKind::Number);
+                let control = editable_input(key, "Value", widget, port, None, &row["value"].to_string(), input_kind).unwrap();
+                (control, key.to_owned())
+            }
+            "text" => {
+                let text = row["value"].as_str().unwrap();
+                let incoming = row["incoming"].as_bool().unwrap();
+                (editable_text_input(&windows, key, "Text", widget, port, None, text, incoming).unwrap(), key.to_owned())
+            }
+            "literal" => {
+                let value = semio_framework_value::DslValue::from(&row["value"]);
+                let part = row["part"].as_str();
+                let index = row["index"].as_u64().map(|index| index as usize);
+                let control = coordinate_input(key, row["label"].as_str().unwrap(), widget, port, part, index, Some(&value)).unwrap();
+                (control, format!("{key}.coordinates"))
+            }
+            _ => unreachable!(),
         };
         let projection = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(built)).unwrap();
         let tree: serde_json::Value = serde_json::from_str(&projection).unwrap();
-        let node = inspector_node(&tree, key).unwrap();
+        let node = inspector_node(&tree, &hover_key).unwrap();
         let hover = node["bindings"].as_array().unwrap().iter().find(|binding| binding["trigger"] == fixture["trigger"]).unwrap();
         assert_eq!(hover["action"]["name"], fixture["action"]);
         assert_eq!(hover["args"]["domainId"], fixture["domainId"]);
         assert_eq!(hover["args"]["channel"], fixture["channel"]);
-        assert_eq!(serde_json::from_str::<serde_json::Value>(hover["args"]["targets"].as_str().unwrap()).unwrap(), serde_json::json!([row["target"]]));
+        assert_eq!(hover["args"]["targetId"], row["target"]["id"]);
+        assert_eq!(hover["args"]["granularityId"], row["target"]["granularity"]);
+        if row["kind"] == "literal" {
+            for (index, axis) in ["x", "y", "z"].into_iter().enumerate() {
+                let control = inspector_node(&tree, &format!("{key}.{axis}.input")).unwrap();
+                let binding = &control["bindings"][0];
+                assert_eq!(binding["trigger"], "commit");
+                assert_eq!(binding["action"]["name"], "setWidgetInput");
+                assert_eq!(binding["args"]["widgetId"], widget);
+                assert_eq!(binding["args"]["channel"], port);
+                assert_eq!(binding["args"]["component"], row["components"][index]);
+                assert_eq!(binding["args"]["index"], row["index"]);
+            }
+        }
     }
 }

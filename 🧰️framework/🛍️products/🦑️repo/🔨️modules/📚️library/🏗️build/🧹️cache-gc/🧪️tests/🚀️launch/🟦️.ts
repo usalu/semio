@@ -120,7 +120,7 @@ test("the reclaim takes a single-flight lease, uses only the two shared scoped r
  expect(done).toBe("Reclaimed 2.00 GiB of optional graph caches; 3.00 GiB free, target 2.00 GiB");
  const sparing:string[]=[];
  await reclaimGraphOptionalV1("/w",ledger,false,"de",fake([GIB,target],sparing));
- expect(sparing).toEqual(["lease:repository-graph-optional-collector:/w","open","free","selected:"+target+":false","free","free","close","release"]);
+ expect(sparing).toEqual(["lease:repository-graph-optional-collector:/w","open","free","selected:"+target+":false","free","close","release"]);
  expect(sparing.some(line=>line.startsWith("optional:"))).toBe(false);
  const rich:string[]=[];
  expect(await reclaimGraphOptionalV1("/w",ledger,false,"en",fake([target+1],rich))).toBe("The graph image has 2.00 GiB free, at least the target of 2.00 GiB; nothing to reclaim");
@@ -135,6 +135,26 @@ test("the reclaim takes a single-flight lease, uses only the two shared scoped r
  await expect(reclaimGraphOptionalV1("/w",ledger,false,"en",fake([GIB],broken,{failOptional:true}))).rejects.toThrow("scope busy");
  expect(broken.slice(-2)).toEqual(["close","release"]);
  expect(await reclaimGraphOptionalV1("/w",{...ledger,areas:ledger.areas.filter(area=>area.id!=="graph-inference")},false,"en",fake([GIB],[]))).toBe("No reclaim threshold is declared for the graph image");
+});
+
+test("physical pressure reclaims idle graph scopes before the queued closure scan",async()=>{
+ const target=reclaim.targetAvailableBytes;
+ for(const free of [[GIB,target],[GIB,GIB,target]]){
+  const log:string[]=[],ports=fake(free,log);
+  const answer=await reclaimGraphOptionalV1("/w",ledger,false,"en",{...ports,closures:async()=>{throw Error("closure writer still active");}});
+  expect(log).toEqual(["lease:repository-graph-optional-collector:/w","open","free","selected:"+target+":false","free",...(free.length===3?["optional:"+target,"free"]:[]),"close","release"]);
+  expect(answer).toBe("Reclaimed 1.00 GiB of optional graph caches; 2.00 GiB free, target 2.00 GiB");
+ }
+});
+
+test("pressure remaining after scoped relief reaches graph-owned inventory retirement",async()=>{
+ const target=reclaim.targetAvailableBytes,log:string[]=[],ports=fake([GIB,GIB,GIB,target],log);
+ const answer=await reclaimGraphOptionalV1("/w",ledger,false,"en",{...ports,closures:async(_image,dryRun)=>{
+  expect(dryRun).toBe(false);log.push("closure inventory retirement");
+  return{candidates:1,removed:1,bytes:GIB,busy:0,unvouched:0,cancelled:false};
+ }});
+ expect(log).toEqual(["lease:repository-graph-optional-collector:/w","open","free","selected:"+target+":false","free","optional:"+target,"free","closure inventory retirement","free","close","release"]);
+ expect(answer).toContain("Reclaimed 1.00 GiB");
 });
 
 test("every graph loader below the soft threshold launches the collector once per interval, and the decision agrees with an independent Python model",async()=>{

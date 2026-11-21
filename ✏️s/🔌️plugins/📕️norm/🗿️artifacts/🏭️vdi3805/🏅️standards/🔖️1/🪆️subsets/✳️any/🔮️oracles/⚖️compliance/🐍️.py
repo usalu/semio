@@ -17,7 +17,6 @@ SHEET_MANDATORY = {
     7: ["dn", "pressure_class", "connection_type", "volume_m3"],
     8: ["product_group", "type_code", "dn", "pressure_class"],
     16: ["product_group", "type_code", "airflow_m3_s", "pressure_drop_pa"],
-    19: ["product_group", "type_code", "airflow_m3_s", "filter_class"],
     53: ["product_group", "type_code", "dn", "nominal_heat_output_w", "cop"],
     60: ["dn", "pressure_class", "connection_type", "axial_force_n"],
 }
@@ -134,19 +133,19 @@ def oracle_checks(doc: dict) -> list[dict]:
             amax = float(attrs.get("authorityMax", attrs.get("authority_max", kv.get("authority_max", 0))) or 0)
             checks.append({"id": f"authority:{article}", "pass": amin < amax and 0 <= amin and amax <= 1})
 
-        if sheet == 3 or kind == "radiator":
+        if sheet == 6 or kind == "radiator":
             phi = float(attrs.get("standardOutputW", attrs.get("standard_output_w", kv.get("standard_output_w", 0))) or 0)
             n = float(attrs.get("heatExponentN", attrs.get("heat_exponent_n", kv.get("n", 0))) or 0)
             checks.append({"id": f"phi:{article}", "pass": phi >= 1.0, "phi": phi})
             checks.append({"id": f"n:{article}", "pass": RADIATOR_N_MIN <= n <= RADIATOR_N_MAX, "n": n})
 
-        if sheet == 5 or kind == "pumpHeating":
+        if sheet == 4 or kind == "pumpHeating":
             q = float(attrs.get("nominalFlowM3S", attrs.get("nominal_flow_m3_s", kv.get("nominal_flow_m3_s", 0))) or 0)
             eta = float(attrs.get("hydraulicEfficiency", attrs.get("hydraulic_efficiency", kv.get("hydraulic_efficiency", 0))) or 0)
             checks.append({"id": f"q:{article}", "pass": q >= 1e-6, "q": q})
             checks.append({"id": f"eta:{article}", "pass": 0.0 < eta <= 1.0, "eta": eta})
 
-        if sheet == 6 or kind == "heatGenerator":
+        if sheet == 3 or kind == "heatGenerator":
             qn = float(attrs.get("nominalHeatOutputW", attrs.get("nominal_heat_output_w", kv.get("nominal_heat_output_w", 0))) or 0)
             fuel = attrs.get("fuelType") or attrs.get("fuel_type") or kv.get("fuel_type") or ""
             checks.append({"id": f"qn:{article}", "pass": qn >= 1.0, "qn": qn})

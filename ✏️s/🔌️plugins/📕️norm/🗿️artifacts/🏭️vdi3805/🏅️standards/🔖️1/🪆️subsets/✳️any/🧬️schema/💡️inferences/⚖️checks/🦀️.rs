@@ -122,6 +122,9 @@ pub fn validate_structure(document: &Vdi3805Snapshot) -> Vec<Diagnostic> {
             issues.push(Diagnostic::error(format!("{base}.records"), "missing mandatory record 100"));
         }
         for (ri, record) in product.records.iter().enumerate() {
+            if product.sheet.0 == 22 && record.family.has_part22_correction_fields() {
+                continue;
+            }
             if let Some(min) = record_min_fields(record.family.0.as_str()) {
                 if record.fields.len() < min {
                     issues.push(Diagnostic::error(format!("{base}.records[{ri}]"), format!("record {} needs ≥{min} fields, has {}", record.family.0, record.fields.len())));

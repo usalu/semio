@@ -78,6 +78,7 @@ def change(asset):
         for scale, decisions in texts.get("decisions", {}).items():
             asset["representations"][scale]["decisions"] = decisions
         asset["dimensions"].update(texts.get("dimensions", {}))
+    asset["representations"]["500"]["validRange"]["maxDenominator"] = 800
     have = {m["id"] for m in asset["materials"]}
     asset["materials"].extend(m for m in MATERIALS if m["id"] not in have)
     return ["materials", "dimensions", "representations"]

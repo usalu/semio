@@ -1,0 +1,7 @@
+# Coordinator adoption receipts at 13:32 UTC
+
+At 13:32:09 UTC on November 21 the coordinator attestation last updated at 13:30:40.132 UTC still recorded outgoing cursor `181:824089`, index tree `0401fa055d8df31143107ba00e76bf7d787cf241`, and running code `9e1584d8cf87bebc96643ce3ce217e8ee6c8fd7e93b19f943c0356c10eb45ba4`. The physical segment 181 had exactly 824,089 bytes; its final event was a Git loose-object put, not an adoption receipt.
+
+The main-loop health receipt was older, from 13:29:57.107 UTC, and still named PID 61266 and pending digest `dc217a96f4ab88fd2446a064b11104ab4f3265e526c7d8065045e9b62a8b9492` with `ok: false`. Its reason said no origin ran that code yet, it was not all written on this machine, and the coordinator would go first in 23 seconds. That countdown describes the old receipt and is not evidence that the deadline elapsed in the main loop or the digest was adopted. The independent boot beat at 13:32:09.433 UTC remained fresh for the same PID and reported activity `file`; a fresh beat is not proof of journal, main-loop health, or adoption progress.
+
+The ordinary next verification is to inspect newer coordinator health and attestation, exact source and fixture journal hashes, then peer running-code receipts after coordinator adoption. A touch acceptance or staged-tree attestation alone proves neither those journal hashes nor running-code adoption. No source, remote state, processes, or services were changed by this audit.

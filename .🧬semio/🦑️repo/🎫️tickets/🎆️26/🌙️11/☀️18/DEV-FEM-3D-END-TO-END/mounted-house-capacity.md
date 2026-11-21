@@ -20,7 +20,7 @@ The FEM3D numerical child now uses paged analysis identifiers, solid storage and
 
 The language-neutral mounted example law checks completed dead-load publication for both assets, analysis-node count and vertical support equilibrium. NumPy independently integrated the published House volumes and attic surface pressure to 2,131,298.9 N. It summed the Concrete Forest member loads over the lengths of the published frames to 684,631.2580208586 N.
 
-Native mounted verification is pending. The working tree's physical model and sparse scalar owners now have larger paged limits. The mounted triangulation owner passed its native House raft regression and all 17 mesh tests.
+The working tree's physical model and sparse scalar owners now have larger paged limits. The mounted triangulation owner passed its native House raft regression and all 17 mesh tests. The subsequent native original solver published all 1,939 House analysis nodes, matched the independent vertical reaction and retired its owners. [Mounted solver verification](./mounted-original-solver.md)
 
 
 

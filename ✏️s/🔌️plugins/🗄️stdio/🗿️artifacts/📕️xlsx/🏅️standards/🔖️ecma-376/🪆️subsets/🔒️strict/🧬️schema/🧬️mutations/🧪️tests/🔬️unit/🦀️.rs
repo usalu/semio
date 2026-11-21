@@ -110,7 +110,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     let mutation = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: None, override_index: None });
     assert_eq!(XlsxStrictMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     let encoded = mutation.encode_op().unwrap();
-    assert_ne!(encoded, mutation.print_op().into_bytes());
+    assert_eq!(protocol::os_pack::pack_rt::decode_pack_value(&encoded).unwrap(), semio_framework_value::ToValue::to_value(&mutation));
     assert_eq!(XlsxStrictMutation::decode_op(&encoded).unwrap(), mutation);
     let mut invalid = encoded.clone();
     invalid[0] = 255;

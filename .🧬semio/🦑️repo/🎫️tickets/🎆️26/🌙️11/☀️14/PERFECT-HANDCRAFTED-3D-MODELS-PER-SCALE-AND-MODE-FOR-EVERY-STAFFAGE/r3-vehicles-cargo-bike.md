@@ -119,3 +119,7 @@ All three views of all four scales are written by the same statements as the sol
 - Steering cables are housed push-pull cables (as on Douze-type long-johns); Bakfiets.nl itself uses a steering rod. A straight rod cannot pass the box and the gooseneck in this geometry without a bell crank, so the cable layout was chosen.
 - Head angle 70 degrees, fork offset 35 mm and the 80 degree column are own-knowledge values (manufacturers do not publish long-john geometry tables); the box is 141 l against the 148 l of the Bakfiets.nl sheet.
 - At 1:200 and 1:500 thin tubes are generalised to 30 mm and 75 mm bars (smallest printable feature), the 1:500 box is a closed block.
+
+The transport box battens, crate edges, steerer cap, stand feet and the narrow pedal details now retain a printable 0.20 mm outline through the appropriate scale bands. The full asset document passed.
+
+The fine scale's eleven birch-plywood pieces enclose a storage bay under the seat. An independent polygon union measured 3.4565 m² including the sealed faces and 2.8328 m² exposed to the environment. The cargo box now uses 2.83 m² for heat exchange. The native exterior sampler found 2.853 m². All four thermal coverage checks and the whole drawing and schema check passed.

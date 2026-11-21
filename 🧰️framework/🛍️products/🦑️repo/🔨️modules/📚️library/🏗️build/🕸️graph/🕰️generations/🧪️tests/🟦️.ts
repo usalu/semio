@@ -14,6 +14,7 @@ import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {GENERATION_POLICY_V1,canonicalJsonV1,createFactIndexV1,createFileLeasePortV1,createFrontierV1,createGenerationStoreV1,diffFrontiersV1,factConsumersV1,frontierHoldsV1,patchFactIndexV1,readGenerationFragmentV1,readGenerationManifestV1,readGenerationPointerV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleFactRowsV1,type GenerationRowV1} from "../🟨️.mjs";
 import {IDENTITY,IMPLEMENTATION,applyOps,createMemoryFilePort,createWorld,ringFiles,seed,type Op} from "./🏃️world/🟦️.ts";
+import type {GenerationStoreOptionsV1} from "../🟨️.mjs";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),windows=process.platform==="win32";
 const sha=(text:string)=>createHash("sha256").update(text).digest("hex");
@@ -34,6 +35,103 @@ test("the declared policy and the bilingual texts are the ones the implementatio
  const placeholders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
  expect(Object.keys(schema.definitions.Messages.const.en).sort()).toEqual(Object.keys(schema.definitions.Messages.const.de).sort());
  for(const key of Object.keys(schema.definitions.Messages.const.en))expect(placeholders(schema.definitions.Messages.const.de[key as keyof typeof schema.definitions.Messages.const.de])).toEqual(placeholders(schema.definitions.Messages.const.en[key as keyof typeof schema.definitions.Messages.const.en]));
+});
+
+async function repairWorld(stepped?:GenerationStoreOptionsV1["stepped"]){
+ const memory=createMemoryFilePort(),root="/memory/closure-repair",sizes=new Map<string,number>();
+ const store=createGenerationStoreV1({root,fs:memory.port,resources:{facts:"f"},holds:async rows=>rows.every(item=>(item.fact as {size:number}).size===(sizes.get(item.path)??0)),stepped});
+ const names=Array.from({length:12},(_,i)=>"p"+i),owners=["p1","p4"],derived:string[][]=[];
+ const membership=async()=>({digest:sha("membership"),frontier:createFrontierV1({directories:[],members:[],capturedAt:1}),changes:[]});
+ let available=false;
+ const compute=async(spec:{cold:boolean;owners:string[]})=>{
+  const wanted=spec.cold?names:spec.owners;derived.push(wanted);
+  return{owners:wanted.map(name=>({name,root:name,kind:"project" as const,node:{name,missing:owners.includes(name)&&!available},edges:[],targets:[],rows:[row(name+"/source",sizes.get(name+"/source")??0)]})),env:{digest:sha("env"),rows:[]}};
+ };
+ const request={identity:IDENTITY,implementation:IMPLEMENTATION,membership,compute};
+ const before=await store.refresh(request),parent=before.current.pointer.manifest!;
+ await store.invalidate({reason:"closure-missing",expected:before.current.pointer});
+ const tombstone=(await store.read())!.pointer,repair={generation:tombstone.generation,parent,owners,receipt:sha("repair"),maximumOwners:owners.length};
+ available=true;
+ return{memory,root,sizes,derived,names,owners,request,before,tombstone,repair,store};
+}
+
+test("closure repair verifies a private archived base and replaces only the forced owners",async()=>{
+ const {store,names,owners,derived,before,tombstone,repair,request}=await repairWorld();
+ await expect(store.snapshot()).rejects.toThrow("A sealed generation is required");
+ const result=await store.refresh({...request,repair,qualify:async candidate=>{
+  expect((await store.read())!.pointer).toEqual(tombstone);
+  for(const owner of Object.values(candidate.owners))expect((await store.readFragment(owner))!.node).toMatchObject({missing:false});
+ }});
+ expect(result.published).toBe(true);
+ expect(result.computed).toBe(owners.length);
+ expect(derived).toEqual([names,owners]);
+ expect(result.current.pointer.generation).toBe(tombstone.generation+1);
+ for(const name of names.filter(name=>!owners.includes(name)))expect(result.current.manifest!.owners[name]).toEqual(before.current.manifest!.owners[name]);
+ const retained=names.filter(name=>!owners.includes(name)),priorIndex=(await store.readIndex(before.current.manifest!.factIndex))!,afterIndex=(await store.readIndex(result.current.manifest!.factIndex))!;
+ const facts=(index:typeof priorIndex,name:string)=>selectFactClassesV1(index,new Set([name])).ids.map(id=>index.rows[id]);
+ for(const name of retained)expect(facts(afterIndex,name)).toEqual(facts(priorIndex,name));
+});
+
+test("closure repair checks ordinary facts and requests full funding when its scope widens",async()=>{
+ const {store,sizes,names,owners,derived,tombstone,repair,request}=await repairWorld();
+ sizes.set("p8/source",1);
+ const qualify=async()=>{};
+ const capped=await store.refresh({...request,repair,qualify});
+ expect(capped.repairUnavailable).toBe(true);
+ expect(capped.current.pointer).toEqual(tombstone);
+ expect(derived).toEqual([names]);
+ const recovered=await store.refresh({...request,repair:{...repair,maximumOwners:undefined},qualify});
+ expect(recovered.published).toBe(true);
+ expect(derived[1]).toEqual([...owners,"p8"]);
+});
+
+test("closure repair asks for full funding when the archived fact index disappears",async()=>{
+ const {store,memory,root,derived,before,names,tombstone,repair,request}=await repairWorld();
+ await memory.port.remove(join(root,GENERATION_POLICY_V1.indexes,before.current.manifest!.factIndex+".facts.br"));
+ const qualify=async()=>{};
+ const capped=await store.refresh({...request,repair,qualify});
+ expect(capped.repairUnavailable).toBe(true);
+ expect(capped.current.pointer).toEqual(tombstone);
+ expect(derived).toEqual([names]);
+ const recovered=await store.refresh({...request,repair:{...repair,maximumOwners:undefined},qualify});
+ expect(recovered.published).toBe(true);
+ expect(recovered.current.manifest!.built.kind).toBe("cold");
+});
+
+test("closure repair verifies archived index bytes even when the previous build cached its view",async()=>{
+ const {store,memory,root,derived,before,names,tombstone,repair,request}=await repairWorld();
+ await memory.port.write(join(root,GENERATION_POLICY_V1.indexes,before.current.manifest!.factIndex+".facts.br"),Buffer.from("changed after caching"));
+ const result=await store.refresh({...request,repair,qualify:async()=>{throw Error("candidate should not qualify");}});
+ expect(result.repairUnavailable).toBe(true);
+ expect(result.current.pointer).toEqual(tombstone);
+ expect(derived).toEqual([names]);
+});
+
+for(const changed of [false,true])test(`closure repair after cancellation revalidates a sealed journal with ${changed?"changed":"unchanged"} facts`,async()=>{
+ const abort=new AbortController();let cancel=false,qualified=0;
+ const {store,sizes,derived,owners,names,repair,tombstone,request}=await repairWorld(async phase=>{if(cancel&&phase==="indexing")abort.abort(Error("interrupted before pointer swap"));});
+ const qualify=async()=>{qualified++;};
+ cancel=true;
+ await expect(store.refresh({...request,repair,qualify,signal:abort.signal})).rejects.toThrow("interrupted before pointer swap");
+ expect((await store.read())!.pointer).toEqual(tombstone);
+ expect(derived).toEqual([names,owners]);
+ if(changed)sizes.set("p1/source",1);
+ cancel=false;
+ const recovered=await store.refresh({...request,repair,qualify});
+ expect(recovered.published).toBe(true);
+ expect(derived).toEqual(changed?[names,owners,owners]:[names,owners]);
+ expect(qualified).toBe(2);
+});
+
+test("closure repair leaves the tombstone on failed qualification and preserves a peer publication",async()=>{
+ const {store,repair,tombstone,request}=await repairWorld();
+ await expect(store.refresh({...request,repair,qualify:async()=>{throw Error("candidate closure unavailable");}})).rejects.toThrow("candidate closure unavailable");
+ expect((await store.read())!.pointer).toEqual(tombstone);
+ let winner;
+ const repaired=await store.refresh({...request,repair,qualify:async()=>{winner=await store.refresh(request);}});
+ expect(repaired.published).toBe(false);
+ expect(repaired.current).toEqual(winner!.current);
+ expect(store.stats.merged).toBe(0);
 });
 
 for(const scenario of fixture.scenarios)test("scenario "+scenario.name+": every edit refreshes exactly the owners the model names and the graph equals the model graph",async()=>{

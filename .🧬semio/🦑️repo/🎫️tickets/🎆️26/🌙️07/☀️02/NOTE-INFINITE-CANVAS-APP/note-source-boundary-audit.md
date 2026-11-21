@@ -1,0 +1,9 @@
+# Source Boundary Audit
+
+Attempt 47 failed source admission for `semio-plugin-instance-app`: `files 18/32 bytes 263166/262144`. The error is raised during a physical file read, so 263166 is the accumulated amount including the first file that crosses the limit, not necessarily the full closure size.
+
+The package owns `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📦️packages/🦀️rust/Cargo.toml`; its `package.metadata.semio.rust-source-boundary` declares 262144 bytes, 32 files and 4000 active lines. The central `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json` also limits source to 262144 bytes, and the sibling `🧬️schema/🔣️.json` has 262144 as its maximum.
+
+`🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts::admitCargoSourceBoundariesV1` takes the minimum of the central policy and package boundary, and reads the actual cfg-selected source closure. The package metadata is therefore a narrowing interface, not an override of the global ceiling. Increasing the package value alone cannot admit this closure. The repo Cargo unit descriptor likewise takes the minimum of its invocation limit and owner limit. Changing the central cap and schema would affect all crates; the boundary-preserving route is to remove enough source from this crate’s actual selected closure, such as by moving a cohesive part behind a separately owned crate interface. Re-run admission after concurrent source changes settle to obtain the complete current closure evidence.
+
+The shared `🧵️instance/📥️staging/🧬️composer-api/🦀️.rs` changed from the reported 13579 bytes before peer work to 14601 during attempt 47, then 14300 at this inspection. The 301-byte reduction after the logged failure is not enough by itself to infer a pass; other source files may also have changed, and the failure stopped before a full closure measurement. No product files were edited and no build was run for this audit.

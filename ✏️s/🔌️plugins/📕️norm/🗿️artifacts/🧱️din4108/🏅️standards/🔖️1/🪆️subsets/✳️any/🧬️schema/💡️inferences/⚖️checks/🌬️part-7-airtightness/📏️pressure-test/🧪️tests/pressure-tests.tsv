@@ -1,0 +1,24 @@
+name	before_completion	annex_na_confirmed	conditioned_volume_m3	mechanical_ventilation	pressurisation_m3_h	depressurisation_m3_h	basis	envelope_area_m2	scope	non_residential	only_selected_zones	different_requirements	identical_units	exterior_access_only	annex_nb_confirmed	outcome	limit_m3_h	positive_pass	negative_pass
+residence-balanced	1	1	450	1	675	660	volume	0	whole_building	0	0	0	0	0	0	ok	675	1	1
+positive-failure	1	1	450	1	676	660	volume	0	whole_building	0	0	0	0	0	0	ok	675	0	1
+negative-failure	1	1	450	1	675	676	volume	0	whole_building	0	0	0	0	0	0	ok	675	1	0
+both-fail	1	1	450	1	676	676	volume	0	whole_building	0	0	0	0	0	0	ok	675	0	0
+nat-ventilation	1	1	450	0	675	660	volume	0	whole_building	0	0	0	0	0	0	ok	1350	1	1
+at-volume-threshold	1	1	1500	1	675	660	volume	0	whole_building	0	0	0	0	0	0	ok	2250	1	1
+area-at-volume-threshold	1	1	1500	1	675	660	envelope_area	1000	whole_building	0	0	0	0	0	0	IneligibleAreaMethod			
+area-above-threshold	1	1	1500.01	1	2500	2500.01	envelope_area	1000	whole_building	0	0	0	0	0	0	ok	2500	1	0
+large-volume-method	1	1	2000	1	3000	3000	volume	0	whole_building	0	0	0	0	0	0	ok	3000	1	1
+area-natural-ventilation	1	1	2000	0	675	660	envelope_area	1000	whole_building	0	0	0	0	0	0	ok	4500	1	1
+missing-volume	1	1	0	1	675	660	volume	0	whole_building	0	0	0	0	0	0	ConditionedVolume			
+missing-area	1	1	2000	1	675	660	envelope_area	0	whole_building	0	0	0	0	0	0	EnvelopeArea			
+negative-airflow	1	1	450	1	-1	660	volume	0	whole_building	0	0	0	0	0	0	MeasuredAirflow			
+post-completion	0	1	450	1	675	660	volume	0	whole_building	0	0	0	0	0	0	MeasurementBasis			
+missing-protocol	1	0	450	1	675	660	volume	0	whole_building	0	0	0	0	0	0	MeasurementBasis			
+zone-selected-only	1	1	450	1	675	660	volume	0	non_residential_zone	1	1	0	0	0	0	ok	675	1	1
+zone-alternate-requirements	1	1	450	1	675	660	volume	0	non_residential_zone	1	0	1	0	0	0	ok	675	1	1
+zone-without-condition	1	1	450	1	675	660	volume	0	non_residential_zone	1	0	0	0	0	0	InvalidTestScope			
+residential-zone	1	1	450	1	675	660	volume	0	non_residential_zone	0	1	0	0	0	0	InvalidTestScope			
+sample-qualifies	1	1	450	1	675	660	volume	0	exterior_unit_sample	0	0	0	1	1	1	ok	675	1	1
+sample-different-units	1	1	450	1	675	660	volume	0	exterior_unit_sample	0	0	0	0	1	1	InvalidTestScope			
+sample-inside-access	1	1	450	1	675	660	volume	0	exterior_unit_sample	0	0	0	1	0	1	InvalidTestScope			
+sample-undocumented	1	1	450	1	675	660	volume	0	exterior_unit_sample	0	0	0	1	1	0	InvalidTestScope			

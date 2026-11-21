@@ -45,8 +45,10 @@ export function usePaneStylesState({ previousOpened, opened, openedRef, interact
     if (!interactive || previous === null) return;
     const active = document.activeElement;
     if (active && active !== document.body && rootRef.current && !rootRef.current.contains(active)) return;
-    cardElements.current.get(previous)?.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
-  }, [opened, interactive, routing, deepLink, container, finishGhost, focusView]);
+    const card = cardElements.current.get(previous)?.querySelector<HTMLElement>(FOCUSABLE);
+    if (!swiping) card?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+    card?.focus({ preventScroll: true });
+  }, [opened, interactive, routing, deepLink, container, finishGhost, focusView, swiping]);
 
   React.useLayoutEffect(() => {
     if (props.revealedId === undefined) return;

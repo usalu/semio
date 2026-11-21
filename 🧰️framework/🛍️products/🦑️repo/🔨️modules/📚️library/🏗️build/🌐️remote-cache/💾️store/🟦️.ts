@@ -182,7 +182,7 @@ export class RemoteCacheStoreV1{
    }
    if(removedEntries){this.evictedEntries+=removedEntries;this.evictedBytes+=removedBytes;this.options.onEvent?.({stage:"evict",entries:removedEntries,bytes:removedBytes});}
    if(this.options.host&&refs.size>0){
-    const live=await liveRemoteCacheReferencesV1(this.root,this.index.keys(),this.slots,this.options.signal),orphaned=[...refs].filter(hash=>!live.has(hash));
+    const live=await liveRemoteCacheReferencesV1(this.root,this.index.keys(),this.slots,this.options.signal,(namespace,tree)=>this.readBytes(namespace,"cas",tree.hash,Math.min(tree.size,16*1048576))),orphaned=[...refs].filter(hash=>!live.has(hash));
     if(orphaned.length>0){
      const freed=await reclaimCasObjectsV1(this.options.host,orphaned,{...this.options.signal?{signal:this.options.signal}:{}});
      if(freed.entries>0)this.options.onEvent?.({stage:"reclaim",entries:freed.entries,bytes:freed.bytes});
@@ -209,7 +209,8 @@ export class RemoteCacheStoreV1{
  private async referencesOf(relative:string,kind:RemoteCacheKindV1):Promise<readonly string[]>{
   if(kind==="cas")return [];
   if(this.referenced(relative.split("/")[0]!,kind)){const hash=await this.reference(relative);return hash===undefined?[]:[hash];}
-  return readRemoteCacheReferencesV1(this.path(relative),kind,parseRemoteCacheActionResultV1);
+  const namespace=relative.split("/")[0]!;
+  return readRemoteCacheReferencesV1(this.path(relative),kind,parseRemoteCacheActionResultV1,tree=>this.readBytes(namespace,"cas",tree.hash,Math.min(tree.size,16*1048576)));
  }
 
  /** 🪢️ Makes an existing key current in its slot: its slot id and claim time are recorded (the key was stored again, or a client got a hit on it after a revert, or knows its slot only after the run); a read never does this. Answers `missing` for a key that is not stored. */

@@ -19,7 +19,7 @@ pub(super) fn mutation(document: &LayoutSnapshot, field: &str, value: &str) -> O
         let (id, key) = rest.rsplit_once('.')?;
         let story = document.stories.iter().find(|story| story.id == id)?;
         return match key {
-            "content" => crate::patch_frame::story_splice(&story.content, value).map(|(offset, delete, insert)| LayoutMutation::EditStory(EditStory { id: id.into(), offset, delete, insert })),
+            "content" => semio_s_artifact_layout_layout_model::story_splice::replacement(&story.content, value).map(|(offset, delete, insert)| LayoutMutation::EditStory(EditStory { id: id.into(), offset, delete, insert })),
             "delete" if !document.pages.iter().flat_map(|page| &page.frames).chain(document.parent_pages.iter().flat_map(|page| &page.frames)).any(|frame| matches!(frame, Frame::Text { story_id, .. } if story_id == id)) => Some(LayoutMutation::DeleteStory(DeleteStory { id: id.into() })),
             _ => None,
         };

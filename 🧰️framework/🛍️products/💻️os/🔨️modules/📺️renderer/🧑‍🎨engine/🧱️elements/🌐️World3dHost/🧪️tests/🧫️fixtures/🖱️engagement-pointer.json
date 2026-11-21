@@ -1,0 +1,15 @@
+{
+  "surfaceId": "process3d/workpiece",
+  "windowId": "process-workpiece:2",
+  "pane": "workpiece",
+  "viewport": [100, 200, 480, 360],
+  "pickBounds": [130, 220, 420, 310],
+  "cases": [
+    { "id": "ground", "active": true, "declared": true, "camera": [0, -8, 6], "target": [2, 3, 0], "point": [340, 380], "position": [2, 3, 0] },
+    { "id": "outside-clip", "active": true, "declared": true, "camera": [0, -8, 6], "target": [2, 3, 0], "point": [110, 380], "position": null },
+    { "id": "parallel", "active": true, "declared": true, "camera": [0, -8, 6], "target": [0, 0, 6], "point": [340, 380], "position": null },
+    { "id": "behind-camera", "active": true, "declared": true, "camera": [0, -8, 6], "target": [0, 0, 8], "point": [340, 380], "position": null },
+    { "id": "inactive", "active": false, "declared": true, "camera": [0, -8, 6], "target": [2, 3, 0], "point": [340, 380], "position": null },
+    { "id": "undeclared", "active": true, "declared": false, "camera": [0, -8, 6], "target": [2, 3, 0], "point": [340, 380], "position": null }
+  ]
+}

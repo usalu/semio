@@ -433,6 +433,7 @@ export async function settlePluginTurn(actorId: string, initial: WireTurnResult,
     commandIngress: results.at(-1)?.commandIngress,
   };
 }
+/** 🧾️ Finishes ingress receipts and deferred events before handing remaining actor work to the operation drain. */
 export async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[], acceptPatches?: (result: WireTurnResult) => PluginPatchAcceptance | Promise<PluginPatchAcceptance>, activation?: ShardActorActivationLease, call?: TypedOperationCall): Promise<WireTurnResult> {
   for (const settled of results) { retainTurnPresence(settled); await call?.accept(settled.effects); }
   const initial: WireTurnResult = {
@@ -441,8 +442,9 @@ export async function settleAcknowledgedPluginTurns(actorId: string, results: re
     nextWake: null,
     commandIngress: results.at(-1)?.commandIngress,
     status: results.at(-1)?.status,
+    deferredEvents: results.findLast((turn) => turn.deferredEvents !== undefined)?.deferredEvents,
   };
-  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : acceptPatches?.(turn) ?? [], true, activation, call);
+  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : acceptPatches?.(turn) ?? [], false, activation, call);
   return {
     ...continued,
     uiPatches: [...results.flatMap((turn) => turn.uiPatches), ...continued.uiPatches],

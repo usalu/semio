@@ -3,6 +3,10 @@
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
 
+#[path = "📥️atomic-receive.rs"]
+mod atomic_receive;
+pub use atomic_receive::{advance_atomic_document_backbone, prepare_atomic_document_turn, retains_atomic_document_backbone, retire_atomic_document_backbone};
+
 use semio_plugin_decl_app::ArtifactApp;
 pub use semio_plugin_document_media::OriginalDocumentArchiveAdmission;
 use semio_framework::kernel::{Effect, MessageEndpoint};
@@ -174,8 +178,31 @@ pub async fn plugin_document_load_archive<PA: PluginApp>(runtime: &PluginRuntime
 pub async fn plugin_begin_document_archive_load<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,operation:u64,archive:&mut protocol::DocumentArchivePack,admission:&mut semio_plugin_document_media::OriginalDocumentArchiveAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     let cell=runtime_instance_cell(runtime,instance_id)?;
     let mut instance=cell.host_instance().ok_or_else(||plugin_internal_fault("archive admission requires its exact available instance"))?;
-    instance.app.begin_document_archive_load(operation,archive,admission,cx)
+    let admitted = instance.app.begin_document_archive_load(operation, archive, admission, cx)?;
+    if admitted { cell.pending_effects.retain(); }
+    Ok(admitted)
 }
+/// 🔔️ Signals paid live archive maintenance so status queries can observe it independently.
+pub fn plugin_document_archive_maintenance_is_runnable<PA: PluginApp>(
+    runtime: &PluginRuntime<PA>,
+    stock: semio_framework_value::retained_clone::RetainedCloneGrant,
+) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
+    let guest_lifetimes = runtime.guest_lifetimes.try_borrow().map_err(|_| plugin_internal_fault("lifecycle authority is busy"))?;
+    let mut cursor = 0;
+    while let Some((index, id, cell)) = instances.next_entry_from(cursor) {
+        if index < cursor { break; }
+        cursor = index + 1;
+        if guest_lifetimes.get(id).is_some_and(|slot| !slot.cell.is_live()) { continue; }
+        match cell.instance.try_lock() {
+            Ok(instance) if instance.app.document_archive_maintenance_is_runnable(stock)? => return Ok(true),
+            Ok(_) | Err(std::sync::TryLockError::WouldBlock) => {}
+            Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_internal_fault("document archive maintenance authority is poisoned").into()),
+        }
+    }
+    Ok(false)
+}
+
 /// 📊️ Advances one whole-document archive load for at most one poll wall and answers its status — the in-guest twin of
 /// `AppCommand::PollDocumentArchiveLoad`.
 pub async fn plugin_poll_document_archive_load<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
@@ -234,6 +261,21 @@ fn live_document_backbone_for_uri<PA: PluginApp>(runtime: &PluginRuntime<PA>, ur
 fn document_backbone_receipt_effect(receipt: &semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingReceiptV1) -> Effect {
     Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(receipt.instance_id.to_string()) }, payload: receipt.encode() }
 }
+/// 🔓️ Settles a matching retire command's paid ingress custody before the exact existing binding closes.
+pub fn prepare_atomic_document_detach<PA: PluginApp>(runtime: &PluginRuntime<PA>, source_instance: &str, payload: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    use semio_plugin_actor_host::document_backbone_binding::{decide_document_backbone_binding_v1, decode_document_backbone_binding_command_v1, DocumentBackboneBindingDecisionV1};
+    let Some(command) = decode_document_backbone_binding_command_v1(payload).map_err(plugin_internal_fault)? else { return Ok(true); };
+    if source_instance.parse::<u32>().ok() != Some(command.instance_id) { return Ok(true); }
+    if !runtime.guest_lifetimes.try_borrow().map_err(|_| plugin_internal_fault("lifecycle authority busy"))?
+        .get(command.instance_id).is_some_and(|slot| slot.cell.is_live()) { return Ok(true); }
+    let valid = {
+        let bindings = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority is busy"))?;
+        let state = bindings.get(command.instance_id).map(RuntimeDocumentBackboneBindingV1::state).unwrap_or_default();
+        matches!(decide_document_backbone_binding_v1(&state, &command), DocumentBackboneBindingDecisionV1::Retire(_))
+    };
+    if !valid { return Ok(true); }
+    retire_atomic_document_backbone(runtime, command.instance_id, cx)
+}
 pub async fn plugin_handle_document_backbone_binding<PA: PluginApp>(runtime: &PluginRuntime<PA>, source_instance: &str, payload: &[u8]) -> Result<Option<Vec<Effect>>, Fault> {
     use semio_plugin_actor_host::document_backbone_binding::{decide_document_backbone_binding_v1, decode_document_backbone_binding_command_v1, DocumentBackboneBindingDecisionV1};
     let Some(command) = decode_document_backbone_binding_command_v1(payload).map_err(plugin_internal_fault)? else { return Ok(None) };
@@ -274,7 +316,7 @@ pub async fn plugin_handle_document_backbone_binding<PA: PluginApp>(runtime: &Pl
                 } else if !bindings.can_insert(command.instance_id) {
                     Some(("plugin.document-backbone.binding-capacity", owner))
                 } else {
-                    bindings.insert_admitted(command.instance_id, RuntimeDocumentBackboneBindingV1 { generation: command.binding_generation, uri: Some(command.uri.clone()), channel: Some(owner) });
+                    bindings.insert_admitted(command.instance_id, RuntimeDocumentBackboneBindingV1 { generation: command.binding_generation, uri: Some(command.uri.clone()), channel: Some(owner), atomic: Default::default() });
                     None
                 }
             };

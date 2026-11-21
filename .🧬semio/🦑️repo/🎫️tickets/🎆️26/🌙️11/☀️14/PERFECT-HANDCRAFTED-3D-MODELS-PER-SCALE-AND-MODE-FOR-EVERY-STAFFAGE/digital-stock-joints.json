@@ -1,0 +1,25 @@
+{
+  "folding-deck-chair": {
+    "propThicknessM": 0.02,
+    "propWidthM": 0.032,
+    "bearingSpacingM": 0.56,
+    "dowelLengthM": 0.58,
+    "dowelEndDiameterM": 0.019,
+    "dowelShaftDiameterM": 0.022
+  },
+  "patio-heater": {
+    "knobDepthM": 0.027,
+    "knobDiameterM": 0.047,
+    "spindleDiameterM": 0.008
+  },
+  "external-venetian-blind": {
+    "paneM": 0.004,
+    "sealedGapM": 0.016,
+    "sightHeightM": 1.18,
+    "sightWidthM": 1.13,
+    "spacerFaceM": 0.012,
+    "bendRadiusM": 0.006,
+    "slatCount": 18,
+    "slatSpanM": 1.13
+  }
+}

@@ -7,7 +7,7 @@ mod placement;
 
 #[path = "✂️section/🦀️.rs"]
 mod section;
-pub use section::{BoxSectionDraft, BoxSectionPolygon};
+pub use semio_framework_3d_brep_representation::contract::{BoxSectionDraft, SectionPolygon};
 
 /// 🧭️ Fixed numeric parameters and topology of one analytic solid.
 #[derive(Clone, Copy)]

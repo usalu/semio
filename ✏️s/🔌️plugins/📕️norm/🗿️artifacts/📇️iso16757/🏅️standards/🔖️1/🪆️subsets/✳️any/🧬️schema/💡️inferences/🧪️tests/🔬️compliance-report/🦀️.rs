@@ -12,7 +12,12 @@ use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 async fn evaluate_exercises_all_parts_with_numeric_checks() {
     let report = evaluate(&Iso16757Snapshot::default());
     assert!(!report.checks.is_empty());
-    assert!(report.complies(), "default catalogue must comply: {:?}", report.failing().map(|c| c.id.as_str()).collect::<Vec<_>>());
+    assert_eq!(report.failing().count(), 0);
+    assert!(!report.complies(), "the ISO catalogue view still requires verification");
+    let projection = report.checks.iter().find(|c| c.id == "iso16757.ifc4.catalogueProjection").unwrap();
+    assert_eq!(projection.status, CheckStatus::Info);
+    let view = report.checks.iter().find(|c| c.id == "iso16757.5.6.1.ifcView").unwrap();
+    assert_eq!(view.status, CheckStatus::UnverifiedBasis);
     let clauses: HashSet<String> = report.checks.iter().map(|c| format!("{} {}", c.clause.part, c.clause.section)).collect();
     assert!(clauses.iter().any(|c| c.starts_with("1 ")));
     assert!(clauses.iter().any(|c| c.starts_with("2 ")));

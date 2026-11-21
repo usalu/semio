@@ -1,0 +1,27 @@
+# Canonical Procedural Boot Readiness
+
+Read-only source and filesystem inspection, 2026-11-20. No server or Cargo build was started. Port state is the requesting agent's observation, not independently probed here. The older boot-path audit is stale: ownership and artifact roots have moved and profile names are now prototype/release.
+
+## Current owners and entry points
+
+The authoritative playground row is in `🌎️hub/🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust/Cargo.toml`: plugin `procedural`, variant `generation3d`, app `s.procedural.generation3d@1/*#editor`, React port 6018 and WGPU port 6118. The procedural component depends on the nine Flow extensions and consumes forms and Flow topics. The actual Generation3d artifact and preview Rust source is owned by `@semio-tech/procedural-generation3d-rs` at `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/📋️project.json`; the old `✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml` does not exist.
+
+The current target generator `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs` declares, subject to runtime input admission:
+
+- `repo run @semio-tech/framework-os-dev:dev-generation3d-react-prototype`: session, boot component and engine prerequisites, preparation and activation, then React Vite serve on 6018. The React renderer contains the actual browser 3D preview (WebGL); verify the runtime graphics context rather than assuming availability.
+- `repo run @semio-tech/framework-os-dev:dev-generation3d-wgpu-prototype`: session, support/fonts, WGPU wasm and generated browser/frame/renderer boot, boot component closure, preparation and activation, then WGPU browser server on 6118 with the composition path from the row.
+- `repo run @semio-tech/framework-os-dev:serve-generation3d-react-prototype` depends on session only, but the serve implementation runs activation if the receipt is absent and invokes freshness reporting. It is not a reliable no-build bypass on this machine. Both WGPU serve and dev depend on activation. Do not use stale `*-dev` profile names or the former unprofiled plugin directory.
+
+These are target-generator source findings, not a successful graph-admission or boot run. Each generated target can instead become a diagnostic refusal if runtime input admission rejects a missing source. The full closure is determined from the current catalog and source contracts, not the old fixed 11-component inventory. The default React serve implementation is `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts` and also arranges the local hub session.
+
+## Staging and freshness
+
+At inspection, neither `.cache/b/p/m/browser/prototype/runtime/react/generation3d` nor `.cache/b/p/m/browser/prototype/runtime/wgpu/generation3d` exists; in fact `.cache/b/p/m/browser` is absent. The corresponding prototype session root is absent too. The old `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist` and unprofiled `🧑‍💻dev/🔌️plugin-modules` are absent. Thus this audit found no canonical warm activation to serve or assess as fresh. It did not exhaustively scan content-addressed caches and cannot rule out restorable build receipts elsewhere.
+
+The current procedural component's checked-in `🌎️hub/🧩️compositions/🌀️procedural/🧩️component/🔣️.json` and `🛂️.descriptor.semio` exist, dated 2026-11-18 13:49 UTC. The Edit preview Rust producer `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs` was modified 2026-11-20 22:48 UTC. Descriptors are metadata, not evidence of compiled producer freshness; no staged current procedural component wasm was found at the canonical runtime paths. A listening port or descriptor timestamp would not prove the changed producer is running.
+
+## Smallest next mounted verification
+
+After the active managed native Cargo session and capacity/disk admission allow it, use the React `dev-generation3d-react-prototype` target above, which owns prerequisite freshness and activation. Open `http://127.0.0.1:6018/?plugin=generation3d`, confirm the activation receipt and served component correspond to the current source, then exercise real Edit, Generate and View: authored graph geometry, current generation changes, and view selection/hover through the mounted browser, checking actual 3D canvas rendering. Repeat with the WGPU target and `http://127.0.0.1:6118/?plugin=generation3d`, asserting a real GPU adapter/device and successful rendered frames. Keep screenshots/logs in the ticket generated folder and remove generated output when finished. If target admission refuses, record its concrete diagnostic rather than launching an ad-hoc mock or claiming mounted coverage. This is the smallest source-owned path found; no currently staged runtime justifies a build-free shortcut.
+
+A `repo show project @semio-tech/framework-os-dev --json` inspection was attempted. It requested 3.4 GiB capacity and triggered the repository's automatic derivable-cache collection because free space was below its 12 GiB reserve; it was interrupted while waiting, with no graph result. Its collector reported freeing 8 KiB from stale waves and no other completed reclamation in the observed output. The findings above are from current authored source and filesystem inspection, not that command.

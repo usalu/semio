@@ -28,7 +28,7 @@ use semio_renderer_wgpu_scene_canvas2d::{render_canvas_2d};
 use semio_renderer_wgpu_scene_ink::{INK_INTERACTION_ITEM_CAPACITY, InkCameraF, InkCameraJson, ink_hits_point, ink_screen_to_world, render_ink_canvas};
 use semio_renderer_wgpu_scene_feeds::{EventFeedEntryJson, event_feed_hit, event_feed_layout, event_feed_row_height, graph_timeline_hit, render_event_feed, render_graph_timeline, stage_world3d_accessibility_controls, tiled_map_context_menu_target};
 use semio_renderer_wgpu_scene_tables::{TableColumn, block_list_hit, block_list_transfer_drop_action, block_list_transfer_start, merge_action_args, render_block_list, render_diff_view, render_table, table_hit, table_metrics, table_row_id, table_transfer_start};
-use semio_renderer_wgpu_scene_text_vfs::{TEXT_EDITOR_OVERLAY_ITEMS, build_vfs_visible_rows, double_click_action, hit_double_click_target, render_text_editor_overlays, render_vfs, vfs_hit, vfs_metrics, vfs_row_id};
+use semio_renderer_wgpu_scene_text_vfs::{TEXT_EDITOR_OVERLAY_ITEMS, build_vfs_visible_rows, double_click_action, hit_double_click_target, render_text_editor_overlays, render_vfs, vfs_hit, vfs_metrics};
 use semio_renderer_wgpu_engine_registry::engine_surface_registry::{engine_surface_token};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_engine_board::paint2d::{board2d_context_menu_target, node_graph_context_menu_target, paint2d_context_menu_target, text_editor_context_menu_target};

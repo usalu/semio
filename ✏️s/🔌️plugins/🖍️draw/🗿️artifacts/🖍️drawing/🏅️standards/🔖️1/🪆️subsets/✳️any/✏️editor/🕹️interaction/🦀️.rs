@@ -102,6 +102,22 @@ pub const DRAWING_PLAY_CONTROLLER_ID: &str = "drawing-play";
 /// 🧰️ The utility the canvas returns to after committing a shape/draft/trace (first UtilityRef default).
 pub const DRAWING_DEFAULT_UTILITY: &str = "selectDirect";
 
+/// 🧰️ The utility armed for THIS window. The React host keeps utilities per window
+/// (`ViewModel::active_utility_by_window_id`, keyed by window instance id) and only mirrors the
+/// ACTIVE window's utility into the flat `active_utility_id`; a gesture dispatched into a pane that
+/// is not the shell's active window therefore carried `None` and every rectangle drag ran as a
+/// marquee select (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17). Resolution order: the
+/// addressed window's entry, the focused window's entry, the flat field, the default.
+pub fn drawing_active_utility(view: &semio_plugin::ViewModel) -> &str {
+    view.contextual_utility()
+        .unwrap_or(DRAWING_DEFAULT_UTILITY)
+}
+
+/// 🔘️ Admits one boolean UI action value.
+pub fn ui_value_bool(value: bool) -> semio_plugin::UiValue {
+    semio_plugin::UiValue::Bool(value)
+}
+
 /// 🕹️ Framework-owned layer selection and snapshot-bound path point selection.
 pub const DRAWING_INTERACTION_DOMAIN: &str = "strokes";
 

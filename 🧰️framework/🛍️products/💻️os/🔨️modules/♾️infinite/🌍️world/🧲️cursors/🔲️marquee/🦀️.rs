@@ -356,7 +356,7 @@ impl WorldMarqueePickCursor {
             let Some(entry) = interaction_state.interaction_objects.resolve(token).filter(|entry| entry.revision == self.gesture.revision && entry.kind == WorldInteractionObjectKind::Instance) else {
                 return WorldInteractionStep::Stale;
             };
-            if self.component_kind.is_some() && selection_state.active_object_id.as_deref().is_some_and(|active| active != entry.id.as_str()) {
+            if self.component_kind.is_some() && !interaction_state.component_pickable(entry.id.as_str(), selection_state.active_object_id.as_deref()) {
                 context.consume_fuel(1);
                 return WorldInteractionStep::Pending;
             }

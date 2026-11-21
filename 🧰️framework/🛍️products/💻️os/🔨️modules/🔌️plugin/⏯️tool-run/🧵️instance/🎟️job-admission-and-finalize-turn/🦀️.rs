@@ -2,6 +2,39 @@
 
 use super::*;
 use semio_framework::Fault;
+use semio_framework_tool_run::{ToolRunTraceApplyCursor,ToolRunTracePage};
+use semio_framework_job::{OriginalTurnFailure,StepContext};
+use std::collections::VecDeque;
+
+fn advance_tool_run_trace(
+    store:&mut ToolRunTraceStore,
+    keys:&ToolRunTraceKeys,
+    recent:&mut VecDeque<u64>,
+    pages:&[ToolRunTracePage],
+    cursor:&mut ToolRunTraceApplyCursor,
+    cx:&mut StepContext<'_>,
+)->Result<bool,OriginalTurnFailure>{
+    if recent.capacity()<TOOL_RUN_PANEL_TRACE_ROWS{
+        return Err(ValueError::invariant("the mounted trace panel requires its reserved recent rows").into())
+    }
+    let mut demand=store.next_funded_apply_demand(cursor,pages)?;
+    let panel_bytes=size_of::<VecDeque<u64>>()+(recent.len()+2)*size_of::<u64>();
+    demand.copy_bytes=demand.copy_bytes.checked_add(panel_bytes)
+        .ok_or_else(||ValueError::invariant("the mounted trace panel copy quote overflowed"))?;
+    if cx.should_yield()||!cx.retained_work_can_enter(demand){return Ok(false)}
+    let Some((result,performed))=cx.with_original_source_effect(cx.retained_grant(),|_,effect|{
+        let mut step=store.step_funded_apply(cursor,pages,effect)?;
+        if let Some(op)=step.applied{
+            semio_plugin_tool_run::record_tool_run_trace_op(keys,recent,op);
+            step.progress.copied_bytes+=panel_bytes;
+        }
+        Ok::<_,ValueError>(step)
+    })?else{return Ok(false)};
+    let progress=match &result{Ok(step)=>step.progress,Err(error)=>error.retained_progress()};
+    cx.consume_retained(progress)?;
+    cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+    Ok(result?.complete)
+}
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     pub(super) async fn admit_tool_run_job(&mut self) -> Result<(), Fault> {
@@ -52,9 +85,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             match interactive.borrow_outcome(descriptor)?{
                 semio_framework_job::JobOutcomeView::PreviewReady{payload,..}=>{
                     let source=semio_plugin_tool_run::original_native_tick::OriginalPreviewPages(payload);
-                    if entry.native.receive_with_domain(&source,entry.identity,entry.slot.state,|tick,cx|{if entry.operations.ingest(tick,&self.stores.store,&mut entry.overlay,cx)?{Ok(Some(entry.operations.len()as u32))}else{Ok(None)}},cx)?{
-                        let d=RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()};
-                        if cx.retained_work_can_enter(d){job.outcome_received=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);self.mark_tool_run_ui_dirty();}
+                    let ready=entry.native.receive_with_domain(&source,entry.identity,entry.slot.state,|tick,cx|{
+                        if entry.operations.ingest(tick,&self.stores.store,&mut entry.overlay,cx)?{
+                            Ok(Some(entry.operations.len()as u32))
+                        }else{Ok(None)}
+                    },|pages,cursor,cx|{
+                        advance_tool_run_trace(&mut entry.trace,&entry.trace_keys,&mut entry.recent_trace,pages,cursor,cx)
+                    },cx)?;
+                    if ready&&entry.native.acknowledge_received(&mut job.outcome_received,cx)?{
+                        self.mark_tool_run_ui_dirty();
                     }
                     return Ok(())
                 }

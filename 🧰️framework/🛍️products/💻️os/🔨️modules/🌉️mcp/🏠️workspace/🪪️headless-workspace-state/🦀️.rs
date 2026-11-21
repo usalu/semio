@@ -9,7 +9,7 @@ use semio_os_mcp_catalog::catalog::Catalog;
 use semio_os_mcp_dispatch::actions::ActionAdapter;
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_os_mcp_hub_remote::remote::HubRemoteBinding;
-use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
+pub use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
 use semio_os_mcp_probe_document::probe_document::{PROBE_SCHEMA, ProbeStore, close_probe_store_to_terminal};
 use semio_os_mcp_routing::routing_and_shell_routed::{PluginArtifactBinding, WorkspaceCatalog};
 use semio_os_mcp_schema::schema::{UntrustedAuthors, UntrustedProvenance, UntrustedRevision, UntrustedSource, untrusted_content, untrusted_content_sha256};

@@ -96,3 +96,65 @@ Final checks (2026-11-20): `r3-validate.ts humans/sleeping-person`: `VALID ... s
 - Not re-opened after the last fix: thermal and structure sheets of 1:100, 1:200, 1:500 and the 2D of 1:100, 1:200, 1:500 (all rendered without error and all checks green).
 
 State: default pose grade A at 1:50 in body, thermal and structure as far as I looked; NOT DONE for the points listed above (side and curled poses first).
+
+## Round 5 handcraft
+
+Round 5 author, 2026-11-21. Found: the S01 second pass (cloth lofts that follow trunk, hips, thighs and shins with the hills staying on the bed; 1:50 face details) existed only in the scripts and was never spliced; the candidate it built was INVALID (1:50 print, 1:500 extent, arm twist). Scripts extended in place (`r3-sleeping-person-s50.ts`, `-coarse.ts`, `-lists.ts`, `-roots.ts`, `-draw2d.ts`), plus `r5-sleeping-person-measure.ts` (model vs reference), `r5-sleeping-person-box.ts` (vertical extremes per scale), `r5-sleeping-person-print.ts` and `r5-sleeping-person-culprit.ts` (which 1:50 shape breaks the print measurement). Output under `🗑️generated/r5-sleeping-person/`.
+
+### Model vs reference (1:50, H = 1.70 m woman; `bun r5-sleeping-person-measure.ts`)
+
+| quantity | reference mm | model mm | deviation | source |
+|---|---|---|---|---|
+| thigh (hip-knee joint) | 400 | 400 | 0.1 % | hip joint 0.52 H, knee 0.285 H |
+| shank (knee-ankle joint) | 418 | 419 | 0.1 % | Drillis-Contini 0.246 H |
+| upper arm (shoulder-elbow joint) | 316 | 315 | -0.3 % | Drillis-Contini 0.186 H |
+| forearm (elbow-wrist joint) | 248 | 248 | 0.0 % | Drillis-Contini 0.146 H |
+| hand bone | 184 | 182 | -1.1 % | Drillis-Contini 0.108 H |
+| hip joint to C7 (torso bone + pelvis) | 578 | 578 | 0.0 % | C7 0.86 H - hip joint 0.52 H |
+| shoulder joint spacing | 316 | 316 | 0.0 % | ANSUR II women biacromial 366 mm less 2 x 25 mm |
+| hip joint spacing | 174 | 174 | 0.0 % | Bell et al. 1990, women |
+| head chin-vertex (u) | 227 | 229 | 1.0 % | H / 7.5 |
+| head breadth (w) | 148 | 148 | 0.0 % | ANSUR II women 148 mm |
+| head length (v, skull loft without the nose) | 186 | 187 | 0.5 % | ANSUR II women glabella-opisthocranion 186 mm |
+| foot length (heel to big toe tip) | 258 | 262 | 1.4 % | 0.152 H |
+| pillow length across the bed | 800 | 800 | 0.0 % | 40 x 80 cm pillow |
+
+All within 3 %. Bedding: pillow 40 x 80 cm, duvet 135 x 200 cm with the foot end folded back 0.58 m (round 3 table).
+
+### Grades (before = catalog at the start of round 5 -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 supine | B+ (steps between the rigid mounds) -> A- (hills fade into each other; faint seam lines where the body cloth meets the hill surface) | A -> A | A- -> A- |
+| 1:50 side / curled | D (mounds torn into wedges, pyjama and hips through the duvet, body below the bed line) -> B+ (closed; the cloth goes with the body; small skin patches at the knees in `side`; the hills of the supine legs stay on the bed) | not opened | not opened |
+| 1:100 | A- -> A- (only the face details and the right-arm twist changed) | A- -> A- | A- -> A- |
+| 1:200 | A- -> A- | A- -> A- | A- -> A- |
+| 1:500 | B+ (drapes 25 mm short, the drawing 20 mm lower than the asset) -> A- (crisp massing: head, shoulders, arm, feet, two mounds, slab with drapes) | B+ -> B+ | A- -> A- |
+
+### Changes
+
+- Spliced the S01 second pass (cloth lofts `cloth-trunk`, `cloth-hips`, `cloth-thighs`, `cloth-shins` weighted to their bones, hills weighted 30–50 % to the body and the rest to the duvet; brow, alae, cheeks, chin and lower lip on the face).
+- Cloth restated: trunk cloth 20–40 mm wider than the pyjama trunk at every station with the same superellipse exponent 2.4 (the corners of the 2.4 trunk had pierced the exponent-2 cloth in `side`), its depth kept within the supine hills (cloth top at most 5 mm above the round 3 value); hips cloth likewise (exponent 2.5, 22 mm wider).
+- Pose `curled`: `arm-r` twist -181.82 deg -> 178.18 deg (the same rotation inside the joint limits).
+- Face: eyelids 22.4 x 19 x 33 mm (were 17 x 18 x 31), upper lip 14.8 mm deep (was 11), lower lip set 2 mm lower, so that 1:50 prints (the product refused 1:50 at 0.189 mm).
+- Thermal: the merged face details (brow, cheeks, chin, alae, lower lip) are left out of `face-skin`; the face mask carries that surface (they had raised `face-skin` to 0.113 m² against 0.0871, a 30 % excess that was a double count, not a model of more skin).
+- 1:500: trunk mound restated to the 1:50 crest (0.262 m) and the slab drapes lowered to 115 mm (were 90), so the 1:500 body spans the asset height 0.378 m like the 1:50 one.
+- 2D (`r3-sleeping-person-draw2d.ts`): the cloth lofts and the left arm (under the duvet) are not drawn in the front view (the cloth plates are seen edge-on there, which gave NaN points, and the hidden left hand broke the product's polygon union in the print measurement); the right eyelid merges into the head outline in the elevation like the left one. All views of all scales redrawn.
+
+### Checks
+
+- Candidate `r3-validate.ts --file … --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0); catalog after write and splice: VALID; print suitable at every scale.
+- `volumes-check.ts humans/sleeping-person --product`: PASS (15.2 s).
+
+### Seen (opened)
+
+1:50 body `supine`, `side`, `curled` (before and after), `side` three-quarter close-up, 1:500 body (catalog), 1:50 structure (catalog). Rendered and not opened in this round: 1:100 and 1:200 body (candidate), 1:50 thermal cut, structure and thermal of 1:100–1:500, the 2D of every scale, the `turn-over` and `breathing` clips.
+
+### Still not perfect
+
+- In `side` and `curled` the hills of the supine legs stay on the bed (the duvet keeps the shape of stretched legs at the foot end) and two small skin patches of the lower knee show between the thigh and shin cloth; a cloth that is pose-specific needs pose-specific solids, which the schema has no place for.
+- Supine: faint seam lines on the trunk where the cloth surface comes within a few mm of the hill surface.
+- 1:50 face details are separate ellipsoids (lids, alae, cheeks), not one face loft.
+- Thermal and structure sheets of the poses and of 1:100–1:500 were not opened in this round.
+
+The fine drawing now uses 0.16 mm for the eyelid and lip contours. The whole document, 1:75 print endpoint, 1:50 silhouette and feature checks passed.

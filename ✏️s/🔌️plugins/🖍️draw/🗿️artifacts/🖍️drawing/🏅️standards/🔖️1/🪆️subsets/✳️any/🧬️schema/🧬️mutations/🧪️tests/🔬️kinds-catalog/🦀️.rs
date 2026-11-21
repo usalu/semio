@@ -1,6 +1,6 @@
 use super::*;
 use protocol::SemanticMutation;
-use semio_framework_test_fixtures::fixture_path;
+use semio_framework_test_fixtures::{fixture_path, fixture_text};
 
 /// 🏷️ `KINDS` must name every declared variant, in the exact order and spelling
 /// `#[derive(dsl::Mutations)]` assigns, and every entry must also appear in the committed
@@ -14,7 +14,7 @@ fn kinds_match_the_enum_and_the_catalog() {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
     let manifests: Vec<serde_json::Value> =
-        [include_str!("../../../../../🎨️style/🔮️oracles/🔣️.json"), include_str!("../../../../../🏷️metadata/🔮️oracles/🔣️.json"), include_str!("../../../../../🔀️transform/🔮️oracles/🔣️.json"), include_str!("../../../../../🧱️structure/🔮️oracles/🔣️.json")]
+        [fixture_text!("../../../../../🎨️style/🔮️oracles/🔣️.json"), fixture_text!("../../../../../🏷️metadata/🔮️oracles/🔣️.json"), fixture_text!("../../../../../🔀️transform/🔮️oracles/🔣️.json"), fixture_text!("../../../../../🧱️structure/🔮️oracles/🔣️.json")]
             .into_iter()
             .map(|text| serde_json::from_str(text).expect("language-neutral subset oracle"))
             .collect();
@@ -37,7 +37,7 @@ fn canonical_tagged_mutations_match_the_owned_schema_validator() {
         std::fs::read_dir(path).unwrap().map(|entry| entry.unwrap().path()).filter(|path| path.is_dir()).collect()
     }
     let subsets = fixture_path!("../../../../..");
-    let mut documents = vec![include_str!("../../../🔣️.json").to_owned()];
+    let mut documents = vec![fixture_text!("../../../🔣️.json").to_owned()];
     let mut fixtures = Vec::new();
     for subset in ["🎨️style", "🏷️metadata", "🔀️transform", "🧱️structure"] {
         let owner = subsets.join(subset);
@@ -50,7 +50,7 @@ fn canonical_tagged_mutations_match_the_owned_schema_validator() {
             }
         }
     }
-    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile_with_documents(include_str!("../../🔣️.json"), &documents.iter().map(String::as_str).collect::<Vec<_>>()).unwrap();
+    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile_with_documents(fixture_text!("../../🔣️.json"), &documents.iter().map(String::as_str).collect::<Vec<_>>()).unwrap();
     let mut kinds = std::collections::BTreeSet::new();
     for fixture in &fixtures {
         let mut value: serde_json::Value = serde_json::from_str(fixture).unwrap();

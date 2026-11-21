@@ -71,18 +71,13 @@ pub(super) fn duplicate_edge_id(source: &str, target: &str) -> String {
 fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> Result<String, Fault> {
     let live = snapshot.to_host_snapshot();
     let snapshot_json = semio_framework_pack_json::to_json_string(&live);
-    let values: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
-    let patched = flow::forms_bridge::apply_generation_values_to_host_snapshot(&snapshot_json, &values);
-    let patched_fixture = match FlowHost::parse_host_snapshot_json(&patched) {
-        Ok(parsed) => {
-            live.retire_cold();
-            parsed
-        }
-        Err(_) => live,
-    };
+    let object: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
+    let patched = flow::forms_bridge::apply_generation_values_to_host_snapshot(&snapshot_json, &object);
+    let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| live.clone());
     let mut host = FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
-    let preview = host.evaluate();
+    let preview = host.evaluate_with_seeds(|seeds| flow::forms_bridge::add_generation_variable_seeds(&live, |id| values.get(id), seeds));
+    live.retire_cold();
     host.retire_cold().or_else(|refusal|refusal.resolve()).map_err(crate::editor::flow::host::value_fault)?;
     preview.map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.evaluation"), error.to_string()))
 }
@@ -107,6 +102,7 @@ pub(super) fn generation_window_transient(
             Some(semio_framework_value::DslValue::object([
                 ("generationId".to_string(), payload.generation_id.clone().map(semio_framework_value::DslValue::String).unwrap_or(semio_framework_value::DslValue::Null)),
                 ("questionId".to_string(), semio_framework_value::DslValue::String(payload.question_id.clone())),
+                ("fieldIndex".to_string(), payload.field_index.map_or(semio_framework_value::DslValue::Null, |index| semio_framework_value::DslValue::uint(u64::from(index)))),
                 ("value".to_string(), payload.value.clone()),
             ])),
         ),

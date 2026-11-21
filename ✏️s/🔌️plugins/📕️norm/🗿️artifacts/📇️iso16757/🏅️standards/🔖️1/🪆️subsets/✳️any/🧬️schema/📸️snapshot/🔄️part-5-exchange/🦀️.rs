@@ -1,4 +1,4 @@
-//! 🔄️ Part 5 of the ISO 16757 snapshot: the exchange process, part number rule, external media, IFC catalogue and the script limits, result and error. See [`super`].
+//! 🔄️ Part 5 of the ISO 16757 snapshot: the exchange process, part number rule, external media and the script limits, result and error. See [`super`].
 
 use super::catalogue_core::IdMap;
 
@@ -44,32 +44,6 @@ pub struct ExternalMedia {
     pub media_type: String,
     pub checksum: Option<String>,
     pub language: Option<String>,
-}
-
-/// 🏛️ Minimal IFC catalogue node.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
-pub struct IfcCatalogueNode {
-    pub entity_type: String,
-    pub global_id: String,
-    pub name: String,
-    pub attributes: std::collections::HashMap<String, String>,
-    pub children: Vec<IfcCatalogueNode>,
-}
-
-/// 📦️ IFC catalogue root.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
-pub struct IfcCatalogue {
-    pub schema: String,
-    pub metadata: IfcCatalogueNode,
-    pub product_classes: Vec<IfcCatalogueNode>,
-    pub products: Vec<IfcCatalogueNode>,
-    pub unknown_entities: Vec<String>,
 }
 
 /// 🧮️ Script execution limits.

@@ -1,7 +1,7 @@
 /** 🥞️ One level of the nested overview: the design system's `LayeredOverview` fed with the archive's pages, so a deeper page opens while the grid before it stays visible and live behind the glass.
  *
  * The reference experience of the course site is reused as is — glass veil, pointer parallax, hover reveal, swipe on phones, Escape to the parent. This module only supplies what the archive decides:
- * the cards, the grid they stand on, the layout mode (a scrolling card grid on desktop and tablet, swipe on a phone), the one pointer shared by every nested grid, and the address as the single source of the opened page.
+ * the cards, the grid they stand on, the layout mode for larger screens, the one pointer shared by every nested grid, and the address as the single source of the opened page.
  * Only the deepest grid handles input; the grids behind it stay live and inert.
  *
  * @see ../../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx — the element
@@ -79,9 +79,10 @@ export type Breakpoint = "desktop" | "tablet" | "mobile";
 
 /** 🧭️ The design system's breakpoints as one value. */
 export function useBreakpoint(): Breakpoint {
-  const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  const narrow = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  const shortTouch = useMediaQuery("(max-height: 480px) and (pointer: coarse)");
   const tablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
-  return mobile ? "mobile" : tablet ? "tablet" : "desktop";
+  return narrow || shortTouch ? "mobile" : tablet ? "tablet" : "desktop";
 }
 
 /** 📍️ Cells of `count` pages, row by row in `columns` columns. */

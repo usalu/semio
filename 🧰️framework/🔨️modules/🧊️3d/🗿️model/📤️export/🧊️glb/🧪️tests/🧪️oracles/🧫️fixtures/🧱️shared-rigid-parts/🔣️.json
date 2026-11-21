@@ -1,0 +1,10 @@
+{
+  "trianglesPerPart": 128,
+  "triangle": [[0,0,0],[1,0,0],[0,1,0]],
+  "partOrders": [["bearing-a","flange-a"],["bearing-b","flange-b"]],
+  "partOffsetsM": [[0,12],[0,24]],
+  "materials": ["skin","ink"],
+  "sharedParts": ["bearing-a","bearing-b"],
+  "weightedMesh": "body",
+  "rotatingJoint": "arm"
+}

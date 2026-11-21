@@ -48,7 +48,7 @@ pub use close_scene_pointer_and_dispatch::{
     dispatch_presented_ui_pointer_event, dispatch_ui_event, dispatch_ui_pointer_event,
     register_clipped_retained_hit_targets, register_retained_hit_targets, release_scene_pointer,
     request_ui_document_close, retained_any_pointer_capture, retained_content_height, retained_window_pointer_capture,
-    retained_pointer_capture_window, retained_scene_target, retained_scene_target_at,
+    retained_pointer_capture_window, retained_scene_target, retained_scene_target_at, retained_selection_cancellation,
     scene_pointer_target_is_live, tree_window_measures,
 };
 #[cfg(any(test,feature="testkit"))]
@@ -66,12 +66,11 @@ pub use accessibility_dispatch_and_focus::{
 mod receipts_drop_and_clipboard;
 pub use receipts_drop_and_clipboard::{
     apply_drop_committed, apply_scene_ui_command, apply_tree_row_drop, tree_item_drop_action, apply_ui_commands, decode_drop_payload,
-    drop_target_action, pointer_button_code, reserve_retained_input_receipt,
-    settle_retained_input_receipt, RETAINED_INPUT_RECEIPTS,
+    drop_target_action, pointer_button_code, settle_retained_input_receipt,
 };
 #[cfg(any(test,feature="testkit"))]
 pub use receipts_drop_and_clipboard::{
-    merge_action_args, pointer_button_from_code, RetainedInputReceiptReservation,
+    merge_action_args, pointer_button_from_code, reserve_retained_input_receipt, RetainedInputReceiptReservation, RetainedInputReceipts, RetainedInputSubmission, RETAINED_INPUT_RECEIPTS,
 };
 #[cfg(all(not(target_arch="wasm32"),any(test,feature="testkit")))]
 pub use receipts_drop_and_clipboard::apply_clipboard_paste_requested;

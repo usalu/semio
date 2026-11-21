@@ -2,7 +2,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { HOME_GRID_TRACKS, HomeScreen, LEADERBOARD_POLL_MS, LeaderboardPage, homeCells, homeTrackTemplate, courseText, type CourseSession, type CourseState } from "@semio-tech/course-react";
-import { Home, PAGES, PREFERENCES, QUIZZES, STATE, boardOf, cardHost, fixture, held, pane, stubSession } from "../../🛠️home-grid-kit/🟦️.tsx";
+import { Home, PAGES, PREFERENCES, STATE, boardOf, cardHost, fixture, held, pane, stubSession } from "../../🛠️home-grid-kit/🟦️.tsx";
 import { cards, moveMouseOver, translation, weights } from "../🟣️harness/🟦️.tsx";
 
 /** 🔹 Registers the opens page step front tests of the 🏠️ home overview suite. */
@@ -56,14 +56,14 @@ export function registerOpensPageStepFrontTests(): void {
     expect(session.resumeRun).not.toHaveBeenCalled();
     expect(session.open).not.toHaveBeenCalled();
   });
-  it("polls the leaderboard while home shows, whatever page is opened or revealed, and asks for the crowd of every quiz", async () => {
+  it("polls the leaderboard while home shows, whatever page is opened or revealed, with no crowd reads when a quiz is merely hovered", async () => {
     vi.useFakeTimers();
     vi.spyOn(Math, "random").mockReturnValue(0.5);
     const session = stubSession();
     const { unmount } = render(<Home initial={{ screen: "home", page: "quizzes" }} session={session} />);
     await vi.advanceTimersByTimeAsync(0);
     expect(session.refreshLeaderboard).toHaveBeenCalledTimes(1);
-    expect(session.refreshCrowd.mock.calls.map(([quiz]) => quiz)).toEqual([...QUIZZES]);
+    expect(session.refreshCrowd).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(LEADERBOARD_POLL_MS);
     expect(session.refreshLeaderboard).toHaveBeenCalledTimes(2);
     fireEvent.pointerOver(screen.getByRole("region", { name: "Quiz heating" }).querySelector("[data-layered-zoom]")!, { pointerType: "mouse" });
@@ -74,7 +74,7 @@ export function registerOpensPageStepFrontTests(): void {
     expect(pane("board").hasAttribute("data-opened")).toBe(true);
     await vi.advanceTimersByTimeAsync(LEADERBOARD_POLL_MS);
     expect(session.refreshLeaderboard).toHaveBeenCalledTimes(4);
-    expect(session.refreshCrowd).toHaveBeenCalledTimes(QUIZZES.length);
+    expect(session.refreshCrowd).not.toHaveBeenCalled();
     unmount();
     await vi.advanceTimersByTimeAsync(3 * LEADERBOARD_POLL_MS);
     expect(session.refreshLeaderboard).toHaveBeenCalledTimes(4);
@@ -84,16 +84,21 @@ export function registerOpensPageStepFrontTests(): void {
     expect(alone.refreshLeaderboard).not.toHaveBeenCalled();
     expect(screen.queryByRole("status")).toBeNull();
   });
-  it("asks for the crowd of every quiz again whenever the polled leaderboard says that a run was submitted, and only then", () => {
+  it("refreshes only the open quiz crowd when the leaderboard reports a submission", () => {
     const session = stubSession();
     const home = (state: Partial<CourseState>) => <HomeScreen session={session as unknown as CourseSession} state={{ ...STATE, ...state }} text={courseText("en")} locale="en" preferences={PREFERENCES} onPreferences={() => undefined} />;
     const { rerender } = render(home({}));
-    expect(session.refreshCrowd).toHaveBeenCalledTimes(QUIZZES.length);
+    expect(session.refreshCrowd).not.toHaveBeenCalled();
     rerender(home({ leaderboards: held(boardOf(8, 6), 2) }));
     rerender(home({ board: { period: "daily", quiz: "heating" }, leaderboards: { ...held(boardOf(8, 6), 2), ...held({ ...boardOf(3, 1), period: "daily", quiz: "heating", submissions: 8 }, 3) } }));
-    expect(session.refreshCrowd).toHaveBeenCalledTimes(QUIZZES.length);
-    rerender(home({ submissions: 9, leaderboards: held({ ...boardOf(8, 6), submissions: 9 }, 4) }));
-    expect(session.refreshCrowd.mock.calls.slice(QUIZZES.length).map(([quiz]) => quiz)).toEqual([...QUIZZES]);
+    expect(session.refreshCrowd).not.toHaveBeenCalled();
+    const step = { screen: "home", page: "heating" } as const;
+    rerender(home({ step }));
+    expect(session.refreshCrowd.mock.calls).toEqual([["heating"]]);
+    rerender(home({ step, submissions: 9, leaderboards: held({ ...boardOf(8, 6), submissions: 9 }, 4) }));
+    expect(session.refreshCrowd.mock.calls).toEqual([["heating"], ["heating"]]);
+    rerender(home({ submissions: 10 }));
+    expect(session.refreshCrowd).toHaveBeenCalledTimes(2);
   });
   it("keeps every page live behind the glass, each the size of the screen in its cell of the strip, and each card fixed in the same cell of the card grid", () => {
     render(<Home session={stubSession()} />);

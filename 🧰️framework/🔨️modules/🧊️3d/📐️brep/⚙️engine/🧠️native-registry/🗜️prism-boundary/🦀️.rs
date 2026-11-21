@@ -126,7 +126,7 @@ impl BrepRegistry {
             DraftPhase::Ready => {
                 let boundary = PrismBoundary::from_planar_ring(draft.corners, draft.count, draft.vector, draft.normal).ok_or_else(invalid)?;
                 draft.corners = [ZERO; MAX_CORNERS];
-                return self.plan_prism_boundary(boundary).map(|solid| (Some(solid), receipt));
+                return self.plan_exchange_boundary(SolidExchangeBoundary::Prism(boundary)).map(|solid| (Some(solid), receipt));
             }
             DraftPhase::Coplanar(index) => {
                 let frame = draft.plane.ok_or_else(invalid)?;
@@ -138,10 +138,10 @@ impl BrepRegistry {
                 return Ok((None, receipt));
             }
             DraftPhase::Crossing { first, second } => {
-                use polygon_face_publication::{intersects, point2};
+                use semio_framework_3d_brep_solid_topology::{point2, segments_intersect};
                 let frame = draft.plane.ok_or_else(invalid)?;
                 let corner = |index| point2(frame, draft.corners[index % draft.count]);
-                if intersects(corner(first), corner(first + 1), corner(second), corner(second + 1)) { return Err(invalid()); }
+                if segments_intersect(corner(first), corner(first + 1), corner(second), corner(second + 1)) { return Err(invalid()); }
                 draft.phase = if second + 1 < draft.count - usize::from(first == 0) {
                     DraftPhase::Crossing { first, second: second + 1 }
                 } else if first + 3 < draft.count {

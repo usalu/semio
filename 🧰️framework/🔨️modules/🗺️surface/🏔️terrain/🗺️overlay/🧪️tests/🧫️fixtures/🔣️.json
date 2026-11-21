@@ -1,0 +1,32 @@
+{
+  "origin": [0, 0],
+  "tile": [14, 8192, 8192],
+  "exaggeration": 2,
+  "overlays": {
+    "positions": [
+      { "id": "grounded", "name": "Grounded", "coordinates": [0.006, -0.006], "elevation": 10 },
+      { "id": "raised", "name": "Raised", "coordinates": [0.016, -0.016], "elevation": 250 },
+      { "id": "outside", "name": "Outside", "coordinates": [-0.004, -0.004] }
+    ],
+    "routes": [
+      { "id": "crossing", "name": "Crossing", "coordinates": [[-0.004, -0.004], [0.027, -0.009]] }
+    ],
+    "regions": [
+      {
+        "id": "park",
+        "name": "Park",
+        "rings": [
+          [[0.004, -0.012], [0.011, -0.012], [0.009, -0.019]],
+          [[0.006, -0.013], [0.008, -0.013], [0.007, -0.014]]
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "visiblePositions": ["grounded", "raised"],
+    "raisedWorldHeight": 500,
+    "visibleRoutes": ["crossing"],
+    "visibleRegions": ["park"],
+    "closedRingStarts": [[0.004, -0.012], [0.006, -0.013]]
+  }
+}

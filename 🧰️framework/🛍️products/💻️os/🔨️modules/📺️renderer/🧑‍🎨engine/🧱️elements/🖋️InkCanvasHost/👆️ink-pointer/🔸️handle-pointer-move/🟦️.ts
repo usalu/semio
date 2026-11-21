@@ -75,10 +75,8 @@ export function useHandlePointerMoveState({ rootRef, doc, presencePointerRef, pu
         const dy = (screenY - dragState.startY) / camera.zoom;
         const toBounds = inkResizeBounds(dragState.fromBounds, dragState.handle, dx, dy);
         const events: InkCanvasEvent[] = [];
-        for (const blockId of dragState.selectedIds) {
-          const block = findInkItem(doc, blockId);
-          if (!block) continue;
-          events.push({ operation: "updateBlock", blockId, block: inkScaleItemWithinGroup(block, dragState.fromBounds, toBounds) });
+        for (const block of dragState.origins) {
+          events.push({ operation: "updateBlock", blockId: block.id, block: inkScaleItemWithinGroup(block, dragState.fromBounds, toBounds) });
         }
         if (events.length) liveGesture(events);
       }
@@ -120,9 +118,9 @@ export function useHandlePointerMoveState({ rootRef, doc, presencePointerRef, pu
       else commitGesture([]);
     } else if (dragState?.kind === "resize") {
       const events: InkCanvasEvent[] = [];
-      for (const blockId of dragState.selectedIds) {
-        const block = findInkItem(doc, blockId);
-        if (block) events.push({ operation: "updateBlock", blockId, block });
+      for (const origin of dragState.origins) {
+        const block = findInkItem(doc, origin.id);
+        if (block) events.push({ operation: "updateBlock", blockId: block.id, block });
       }
       commitGesture(events);
     } else if (dragState?.kind === "eraser") {

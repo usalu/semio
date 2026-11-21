@@ -38,10 +38,10 @@ pub(super) fn is_glyph_instance(instance: &semio_ui_draw_contract::UiInstance) -
     instance.params[2] == semio_ui_draw_contract::KIND_GLYPH
 }
 
-struct TableStepperAccessibilityEntry {
+pub struct TableStepperAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    pub depth: usize,
+    depth: usize,
     pub cell: semio_renderer_wgpu_scene_state::TableStepperAccessibilityCell,
 }
 
@@ -119,10 +119,10 @@ pub(super) fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &s
     }
 }
 
-struct TableEditableTextAccessibilityEntry {
+pub struct TableEditableTextAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    pub depth: usize,
+    depth: usize,
     pub cell: semio_renderer_wgpu_scene_state::TableEditableTextAccessibilityCell,
 }
 
@@ -200,10 +200,10 @@ pub(super) fn append_table_editable_text_accessibility_nodes(window_id: &str, tr
     }
 }
 
-struct TableButtonAccessibilityEntry {
+pub struct TableButtonAccessibilityEntry {
     pub scene_node: NodeId,
     pub host_id: String,
-    pub depth: usize,
+    depth: usize,
     pub cell: semio_renderer_wgpu_scene_state::TableButtonAccessibilityCell,
 }
 

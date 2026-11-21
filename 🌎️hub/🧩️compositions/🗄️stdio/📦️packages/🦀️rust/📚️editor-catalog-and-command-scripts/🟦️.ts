@@ -11,7 +11,7 @@ import { isDeepStrictEqual } from "node:util";
 import { devToolingEnv, resolveWorkspaceBin, runCmd, cargoTargetDirectory, cargoBuildDirectory } from "@semio-tech/process/execution";
 import { BundleScript } from "@semio-tech/process/routing";
 import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
-import { prepareStdioComposition } from "../../../🧩️composition/🟦️.ts";
+import { prepareStdioCatalogDefinition, prepareStdioComposition } from "../../../🧩️composition/🟦️.ts";
 import { runCompositionContributionChecks } from "../../../🧩️composition/📋️contract/🧪️tests/🟦️.ts";
 import { ARTIFACT_OWNER, CATALOG_DEADLINE_MS, COMPONENT_PROFILE, PACKAGE_NAME } from "../🧮️component-constants/🟦️.ts";
 import { assertComponentizableCore, assertContainedBounded, assertControlled, catalogControlV1, copyCatalogArtifact, pathIsWithin, prepareReleaseComponent, runControlled } from "../🧾️catalog-artifact-io/🟦️.ts";
@@ -85,6 +85,12 @@ export class MutationInventoryScript extends BundleScript {
 
 export class CompositionScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "prepare-catalog-definition") {
+      const result = prepareStdioCatalogDefinition(this.repoRoot, resolve(this.root, "../.."));
+      console.log(`stdio catalog definition: definitions=${result.definitions} receipts=${result.receipts} bytes=${result.bytes}`);
+      completeCargoPreparationObservationV1();
+      return;
+    }
     if (segments.length === 1 && segments[0] === "prepare") {
       const result = prepareStdioComposition(this.repoRoot, resolve(this.root, "../.."));
       console.log(`stdio composition: contributions=${result.contributions} apps=${result.apps} receipts=${result.receipts}`);
@@ -95,7 +101,7 @@ export class CompositionScript extends BundleScript {
       console.log(`stdio composition contribution contract: checks=${runCompositionContributionChecks()}`);
       return;
     }
-    if (segments.length !== 2 || !["removal-check", "removal-test-check"].includes(segments[0]!) || !isAbsolute(segments[1]!)) throw new Error("composition prepare|contribution-check|removal-check|removal-test-check <absolute-snapshot>");
+    if (segments.length !== 2 || !["removal-check", "removal-test-check"].includes(segments[0]!) || !isAbsolute(segments[1]!)) throw new Error("composition prepare|prepare-catalog-definition|contribution-check|removal-check|removal-test-check <absolute-snapshot>");
     const tests = segments[0] === "removal-test-check";
     const snapshot = realpathSync(segments[1]!), artifact = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi";
     const output = process.env.SEMIO_TEST_ARTIFACT_DIR;

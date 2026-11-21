@@ -134,6 +134,8 @@ impl ArtifactEngine {
                     let mut frontier_seen = false;
                     let mut body_records = 0usize;
                     let mut durable_group = None;
+                    let mut atomic_group = None;
+                    let mut atomic_rows = Vec::new();
                     loop {
                         let record = match transaction.next_record_step()? {
                             db_wal_log::WalCommittedRecordStep::Record(record) => record,
@@ -155,6 +157,9 @@ impl ArtifactEngine {
                                 let envelope = db_sync::decode_wal_command(bytes, &mut decode_control)?;
                                 if envelope.document_id.0 != core_id.0 {
                                     return Err(DbError::Corrupt("artifact envelope document differs".to_string()));
+                                }
+                                if envelope.transaction.as_ref().is_some_and(|tx| protocol::atomic_group::is_atomic_backbone_tool(&tx.tool)) {
+                                    atomic_rows.push(envelope.mutation_id.clone());
                                 }
                                 replay_head_edit_id = Some(envelope.mutation_id.clone());
                                 seen += 1;
@@ -188,6 +193,13 @@ impl ArtifactEngine {
                                 replay_frontier = frontier.clone();
                                 replay_projected = true;
                             }
+                            db_wal_log::WalRecord::Outbox(bytes) => {
+                                if let Some(decoded) = db_sync::decode_atomic_wal_descriptor(bytes)? {
+                                    if atomic_group.replace(decoded).is_some() {
+                                        return Err(DbError::Corrupt("artifact frontier repeats an original edit descriptor".into()));
+                                    }
+                                }
+                            }
                             db_wal_log::WalRecord::Event(bytes) => {
                                 if body_records != 1 {
                                     return Err(DbError::Corrupt("durable group decision must be the sole committed transaction body".to_string()));
@@ -211,6 +223,17 @@ impl ArtifactEngine {
                     }
                     if !batch_ids.is_empty() && !frontier_seen {
                         return Err(DbError::Corrupt("artifact committed commands have no frontier".to_string()));
+                    }
+                    if let Some(group) = atomic_group {
+                        if atomic_rows.len() != batch_ids.len() ||
+                            !group.admits(atomic_rows.iter().filter_map(|id| engine.applied.get(&id.0))) ||
+                            engine.committed_atomic_edits.contains_key(&group.edit_id) {
+                            return Err(DbError::Corrupt("artifact committed original edit lost exact WAL grouping".into()));
+                        }
+                        replay_head_edit_id = Some(protocol::MutationId(group.edit_id.clone()));
+                        engine.committed_atomic_edits.insert(group.edit_id, atomic_rows);
+                    } else if !atomic_rows.is_empty() {
+                        return Err(DbError::Corrupt("artifact committed original edit has no WAL descriptor".into()));
                     }
                     if let Some(record) = durable_group {
                         if body_records != 1 {
@@ -286,6 +309,7 @@ impl ArtifactEngine {
             wal,
             state: DocumentState::new(),
             applied: HashMap::new(),
+            committed_atomic_edits: HashMap::new(),
             applied_receipts: HashMap::new(),
             applied_receipt_order: VecDeque::new(),
             durable_group_receipts: HashMap::new(),

@@ -41,3 +41,39 @@ fn genuine_worker_close_wrapper_forwards_direct_cpu_for_invalid_denied_removed_a
  for row in law["cases"].as_array().unwrap(){if row["name"]=="denied"{caller.turn(STOCK,|cx|{source.original_mut().unwrap().begin_close();receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;Ok(())}).unwrap();}let grant=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,..STOCK};caller.turn(grant,|cx|{let before=cx.retained_progress();let work=cx.original_work_units_spent();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let turn=source.remove_terminal(cx.retained_grant());worker_work_step(cx,turn)});assert_eq!(result.is_err(),row["error"].as_bool().unwrap());if let Err(error)=&result{assert_eq!(error.primary.message(),"original worker job removal precedes its terminal witness");}assert_eq!(cx.original_work_units_spent()-work,u128::from(row["work"].as_u64().unwrap()));assert_eq!(cx.retained_progress().copied_items-before.copied_items,row["receiptItems"].as_u64().unwrap()as usize);assert!(!heap.overflowed);assert_eq!(serde_json::to_value([heap.requested_bytes,heap.released_bytes]).unwrap(),law["heap"]);Ok(())}).unwrap();}
  assert!(source.is_empty());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));caller.retire(STOCK);
 }
+
+#[test]
+fn reserved_return_does_not_debit_close_again() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("close-receipt.json")).unwrap();
+    let progress = |row: &serde_json::Value| {
+        let value = |i: usize| row[i].as_u64().unwrap() as usize;
+        RetainedCloneProgress {
+            copied_items: value(0),
+            copied_bytes: value(1),
+            retained_capacity_bytes: value(2),
+            released_bytes: value(3),
+        }
+    };
+    let mut caller = OriginalJobFixtureCaller::admit(OperationId(98120), Generation(12), STOCK, || Some(0), 8000, 20000);
+    for row in cases.as_array().unwrap() {
+        caller.turn(STOCK, |cx| {
+            let before = (cx.retained_progress(), cx.reserved_return_progress());
+            let reserved = progress(&row["reserved"]);
+            cx.receive_original_reserved_return(reserved, 0)?;
+            cx.consume_retained(progress(&row["posted"]))?;
+            let before_receive = cx.retained_progress();
+            let step = WorkerJobCloseStep::Pending { progress: progress(&row["reported"]) };
+            let received = receive_original_worker_close_effects(cx, before, step);
+            if row["unposted"].is_null() {
+                assert!(received.is_err());
+                assert_eq!(cx.retained_progress(), before_receive);
+            } else {
+                assert_eq!(received.unwrap(), step);
+                assert_eq!(cx.retained_progress(), before_receive.checked_add(progress(&row["unposted"])).unwrap());
+            }
+            assert_eq!(cx.reserved_return_progress(), before.1.checked_add(reserved).unwrap());
+            Ok(())
+        }).unwrap();
+    }
+    caller.retire(STOCK);
+}

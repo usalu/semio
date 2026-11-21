@@ -1,0 +1,7 @@
+# Generation Graph Reuse Audit
+
+Read-only inspection: the active procedural React dry-run log reached 290,910 source observations, 1,222 completed owner checks and 905,472 verified memo rows at slice elapsed 3,117 seconds, with no completed plan in the observed tail. Counts advanced from 1,219 owners, so this is not evidence of a stalled process.
+
+The resident host deduplicates jobs and retains completed plan slices using a key including revision, tool, graph policy, arguments, targets and dirty set (`🏗️build/🏡️resident/🏛️service/🌐️host/🟨️.mjs`). The dry-run and real run have different arguments; source inspection does not establish a way to attach the real execution to the in-progress dry-run or reuse its plan as identical. Nested orchestration does use a generation pinned by the outer build, once obtained (`🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs`).
+
+The supported `--graph-policy=current` catalog option is advertised for graph/show, serving a sealed generation without verification; it does not establish a fresh actionable build closure. The earlier graph-regrow log says the graph partition was retired; this audit did not establish an available sealed generation. An unverified stale generation would not prove current code is served. No distinct approved, verified faster command was found; continue the existing fresh path and use the canonical dev target when admitted. No graph, build, cache operation or test was started.

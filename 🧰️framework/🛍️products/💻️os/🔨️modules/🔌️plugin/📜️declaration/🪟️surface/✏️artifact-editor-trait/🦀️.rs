@@ -125,8 +125,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
         Ok(())
     }
 
-    fn retained_window_transient_target(_command: &Self::Command) -> Option<(&str, &'static str)> {
-        None
+    fn retained_window_transient_target<'a>(_command: &'a Self::Command, _view: Option<&'a ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        Ok(None)
     }
 
     /// 🐢️ This editor's declared interaction refresh scope — forwarded verbatim to
@@ -166,6 +166,18 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
 
     /// 🎞️ Author-owned resumable media-output producer for `EditorApp<Self>`.
+    fn build_original_picker_job(
+        _request: &mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,
+        _body: &mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,
+        _construction: &mut semio_framework_job::OriginalConstructionAdmission,
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(
+            semio_framework_value::ValueRefusalKind::UnsupportedOwner,
+            "This editor has no registered Original picker format",
+        ).into())
+    }
+
     fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,_body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_construction:&mut semio_plugin_decl_app::media_contract::MediaConstruction,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media surface lacks its concrete source-preserving producer").into())
     }

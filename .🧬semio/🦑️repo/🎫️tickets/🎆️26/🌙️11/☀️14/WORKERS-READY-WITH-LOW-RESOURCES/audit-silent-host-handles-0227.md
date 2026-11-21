@@ -1,0 +1,5 @@
+# Silent Host Recovery Handles at 02:27 UTC
+
+At 02:27:52 UTC on 2026-11-21, m04’s latest replica, Ready and pool clocks were 23:43:11, 23:53:10 and 23:53:12 UTC respectively. m06’s three clocks remained around 18:25:11–12 UTC. Both old Ready records say running/adopted, but their stale PIDs and clocks are not evidence of present custody or a live process. m09 still has only its 2026-11-14 `fleet-auth.json` registration and no attestation, Ready or pool publication. No `retired.json` exists for any of the three in the inspected store. Registration and absence of a retirement record do not establish reachability.
+
+The host-owned replica/supervisor can reconcile its local processes when running; the previously inspected bootstrap and command surfaces provide no authenticated coordinator-side startup action for these silent hosts. No fresh active handle or other new evidence changes that conclusion. A machine-local bootstrap and service-status inspection is the evidence boundary; the mirrored records do not justify signalling old PIDs, changing a retirement record or restarting another workload. No remote connection, mutation or process control was performed.

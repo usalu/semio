@@ -1,0 +1,12 @@
+# Archived Generation Repair Capacity
+
+A metadata-only read straddled by the generation 260 pointer confirmed its reason `closure-missing`, null manifest, and unchanged parent. Generation 259's 6,352,438-byte manifest hashes to the recorded parent and names 5,101 distinct fragment files including global. All were present by stat. Together they occupy 28,987,400 packed bytes, with the largest at 320,037 bytes. These measurements fit the new manifest, fragment count, packed aggregate and single-document limits. They do not establish expanded totals, typed-reference and missing-owner counts, content integrity, or current implementation compatibility. The earlier 40-owner probe found four genuinely absent source leaves, without establishing the rest of the census. No full live census ran.
+
+The archive has a 14,011,996-byte packed fact index with 848,604 rows, 12,242 view owners and roughly 19.6 MB of typed side tables before caches and decoding. A targeted repair still verifies frontier and facts, opens the previous fact view, patches and repacks the complete fact index, and qualifies replacement closure leaves. Keeping inference to a few owners does not bound those other costs to the inference subset. The synthetic fragment scan measurement is separate from native index and inference high-water.
+
+The native gate uses an existing plan grant until a fair, separately committed rebuild replacement. The host's builder and prefetch both call the existing pre-custody upgrade, and there is no distinct repair booking or phase estimate. At the read-only capacity snapshot the already-active native `graph-plan` process tree held a 2,048 MiB plan reservation and measured 4,972 MiB. The failed graph's `show` process held 2,747 MiB, with a 14,336 MiB rebuild request waiting and 7,235 MiB above the host floor. Earlier `graph-plan` samples measured 4,713–4,890 MiB. These are native observations, not an upper bound or the pending repair's footprint. The production repair can use the existing pre-custody rebuild reservation. A smaller booking needs a measured and enforced native peak that includes fact scanning, patching, packing, closure qualification and owner children.
+
+- [Existing reader observations](audit-reader-capacity.md)
+- [Fact-index backing observations](fact-index-backing-accounting.md)
+- [Partial closure sample](parent-259-closure-leaf-sample.md)
+- [Graph host capacity route](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/../🕰️host/🟦️.ts:152)

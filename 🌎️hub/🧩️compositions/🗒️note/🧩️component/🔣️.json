@@ -539,7 +539,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -1466,7 +1500,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -2086,7 +2154,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2144,7 +2212,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2338,7 +2406,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2432,7 +2500,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2483,7 +2551,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2541,7 +2609,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2614,7 +2682,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2692,7 +2760,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2770,7 +2838,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2824,7 +2892,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2897,7 +2965,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2970,7 +3038,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3043,7 +3111,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3191,7 +3259,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3263,7 +3331,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3335,7 +3403,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3641,7 +3709,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3695,7 +3763,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3758,7 +3826,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3812,7 +3880,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3857,7 +3925,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3915,7 +3983,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3960,7 +4028,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4005,7 +4073,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4050,7 +4118,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4095,7 +4163,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4140,7 +4208,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4185,7 +4253,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4230,7 +4298,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4276,7 +4344,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4322,7 +4390,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4368,7 +4436,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -4432,7 +4500,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -8258,7 +8326,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio note.note.dsl v1\nschema=note.document id=semio title=Semio grid-visible=true grid-spacing=32 grid-subdivisions=4 grid-opacity=0.35 snap-enabled=false snap-grid-spacing=8 pencil-width=3 eraser-radius=12\nblocks {\n  text id=text-semio name=Welcome x=48 y=48 width=320 height=120 rotation=0 visible=true locked=false font-size=24 font-weight=normal align=left content=handle=child_id=note-text-f42b3fecd19a3854 target=\"text-semio-text!s.stdio.semio@v1/text\" paragraphs=[ p runs=[ r \"Welcome to semio note\" ] ]\n}\nassets={\n  asset-1=mime=image/png data=\"data:image/png;base64,abc==\" width=10 height=20\n}\n",
+        "artifactJson": "semio note.note.dsl v1\nschema=note.document id=semio title=Semio grid-visible=true grid-spacing=32 grid-subdivisions=4 grid-opacity=0.35 snap-enabled=false snap-grid-spacing=8 pencil-width=3 eraser-radius=12\nblocks {\n  text id=text-semio name=Welcome x=48 y=48 width=320 height=120 rotation=0 visible=true locked=false font-size=24 font-weight=normal align=left content=handle=child_id=note-text-f42b3fecd19a3854 target=artifact-id=text-semio-text artifact-kind=s.stdio.semio standard=v1 subset=text paragraphs=[ p runs=[ r \"Welcome to semio note\" ] ]\n}\nassets={\n  asset-1=mime=image/png data=\"data:image/png;base64,abc==\" width=10 height=20\n}\n",
         "dialect": {
           "artifactKind": "s.note.note",
           "standard": "1",

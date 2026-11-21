@@ -34,14 +34,12 @@ pub async fn plugin_mount_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, in
             semio_framework::MAX_SURFACE_BODY_KEY_BYTES
         )));
     }
-    let view = decode_wire_serialized::<ViewModel>(view_state).await?;
-    let view = match (semio_framework::UiRefreshSection::from_body_key(&body_key), view.window_id.as_deref()) {
-        (None, Some(window)) => view.for_window_instance(window).ok_or_else(|| plugin_internal_fault(format!("unknown surface window instance {window}")))?,
-        _ => view,
-    };
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        instance.surface_contexts.insert(surface, body_key, view).map_err(plugin_internal_fault)
+        let view = ::semio_framework_async::poll::resolve_ready(decode_wire_serialized::<ViewModel>(view_state))?;
+        instance.surface_contexts.insert(surface, body_key, view).map_err(plugin_internal_fault)?;
+        instance.cell.pending_effects.retain();
+        Ok(())
     })
     .await
 }
@@ -64,6 +62,7 @@ pub async fn plugin_hide_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, ins
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
         instance.surface_contexts.remove(surface);
+        instance.cell.pending_effects.retain();
         Ok(())
     })
     .await
@@ -95,10 +94,14 @@ pub async fn plugin_instance_background_surfaces<PA: PluginApp>(runtime: &Plugin
 pub async fn plugin_render_surface<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,surface:&str,receive:&mut dyn FnMut(&mut Option<ComponentTree>,&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<ui_contract::PresenceUpdate>>,semio_framework_job::OriginalTurnFailure>{
     with_instances_turn_mut(runtime,|list|{
         let mut instance=find_instance(list,instance_id)?;
-        let instance=&mut *instance;
-        let context=instance.surface_contexts.borrow(surface).ok_or_else(||plugin_internal_fault(format!("surface {surface} has no host context")))?;
-        let original_render_result=::semio_framework_async::poll::resolve_ready(instance.app.render(context.body_key,None,context.view_state,cx));
-        let Some(())=original_render_result? else{return Ok(None)};
+        let is_window = {
+            let original=&mut *instance;
+            let context=original.surface_contexts.borrow(surface).ok_or_else(||plugin_internal_fault(format!("surface {surface} has no host context")))?;
+            let original_render_result=::semio_framework_async::poll::resolve_ready(original.app.render(context.body_key,None,context.view_state,cx));
+            let Some(())=original_render_result? else{return Ok(None)};
+            context.view_state.window_id.is_some()
+        };
+        if is_window { instance.cell.pending_effects.retain(); }
         if !receive(instance.app.original_render_tree_source(cx)?,cx)?{return Ok(None)};
         let mut presence=::semio_framework_async::poll::resolve_ready(instance.app.take_pending_presence());
         let target=ui_contract::SurfaceId::try_from(surface).map_err(|_|plugin_internal_fault("presence surface exceeds fixed capacity"))?;
@@ -288,8 +291,8 @@ pub async fn plugin_refresh_ui<PA: PluginApp>(runtime: &PluginRuntime<PA>, insta
         let mut instance = find_instance(list, instance_id)?;
         instance.surface_contexts.update_view(&request.view_state);instance.surface_contexts.retire_displaced_step(cx)?;
         let polled = {
-            let registered_view = instance.surface_contexts.view().cloned();
-            ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(registered_view.as_ref(), cx))?
+            let instance = &mut *instance;
+            ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(instance.surface_contexts.view(), cx))?
         };
         if polled.is_none() { instance.cell.pending_effects.retain() } else { instance.cell.pending_effects.publish() }
         let mut response = RefreshResponse { requested_effects: polled.unwrap_or_default(), ..RefreshResponse::default() };

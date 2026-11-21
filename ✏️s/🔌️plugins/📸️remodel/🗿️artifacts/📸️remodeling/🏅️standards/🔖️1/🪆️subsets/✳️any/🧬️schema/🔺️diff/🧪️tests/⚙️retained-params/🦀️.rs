@@ -1,52 +1,24 @@
 use super::*;
-use protocol::{RetainedPatchSource, RetainedRowPatchFields};
+use super::retained_test_support::{grant, retire};
+use protocol::{RetainedDone, RetainedPatchSource, RetainedReply, RetainedRowPatchFields};
 use semio_framework_value::{
-    retained_clone::{RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep},
-    retirement::{controlled::ControlledRetirement, RetireOwned},
-    RetirementDemand,
+    retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep},
+    OriginalRetirementFailure, RetirementDemand, ValueError,
 };
+use semio_framework_value_clone_source_testing::{FixtureSource, drive::drive_reply};
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionParams;
 
-fn grant(demand: RetirementDemand) -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+fn receipt(result: &Result<RetainedCloneStep, OriginalRetirementFailure>) -> RetainedCloneProgress {
+    match result {
+        Ok(step) => step.progress(),
+        Err(error) => error.retained_progress(),
+    }
 }
 
-fn source<T: RetireOwned + Sync>(value: T) -> RetainedCloneSource<T> {
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: 65536, maximum_release_bytes: 65536, maximum_depth: 4096 };
-    let mut admission = RetainedCloneSource::admission_owned(value, ());
-    let mut output = None;
-    for _ in 0..4096 {
-        if admission.terminal_is_empty() {
-            return output.expect("funded original source");
-        }
-        let mut actual = None;
-        let outcome = if admission.phase() == "ready" { admission.take_output(&mut output, grant) } else { admission.advance(grant, &mut actual) };
-        assert!(outcome.result.unwrap().progress().fits(grant));
-    }
-    panic!("source admission did not settle");
-}
-
-fn close_source<T: RetireOwned + Sync>(source: &mut RetainedCloneSource<T>) {
-    for _ in 0..4096 {
-        if source.terminal_is_empty() {
-            return;
-        }
-        let grant = grant(source.next_close_demand(4096).unwrap());
-        assert!(source.close_step(grant).result.unwrap().progress().fits(grant));
-    }
-    panic!("source closure did not settle");
-}
-
-fn retire<T: RetireOwned>(value: T) {
-    let mut owner = ControlledRetirement::new(value).unwrap();
-    for _ in 0..4096 {
-        if owner.terminal_is_empty() {
-            return;
-        }
-        let grant = grant(owner.next_demand(4096).unwrap());
-        assert!(owner.step(grant).unwrap().progress().fits(grant));
-    }
-    panic!("owned value retirement did not settle");
+fn advance(fields: &mut retained_params::Fields, patch: RetainedCloneRef<'_, RemodelingParamsDiff>, row: RetainedCloneRef<'_, ReconstructionParams>, maximum: u64, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, OriginalRetirementFailure> {
+    drive_reply(grant, 64, receipt, |effect, reply: RetainedReply<'_>, recover| -> Result<RetainedDone<'_>, ValueError> {
+        fields.advance_reply(patch, row, 64, maximum, effect, reply, recover)
+    })
 }
 
 fn values(case: &serde_json::Value) -> (ReconstructionParams, RemodelingParamsDiff) {
@@ -82,8 +54,8 @@ fn prepare(case: &serde_json::Value, kind: RetainedPatchSource, cut: Option<usiz
         RetainedPatchSource::Authored => patch.clone(),
         RetainedPatchSource::Inverse => patch.restoring(&row),
     };
-    let mut original = source(row);
-    let mut authored = source(patch);
+    let original = FixtureSource::from_owner(row);
+    let authored = FixtureSource::from_owner(patch);
     let (mut fields, birth_work) = retained_params::Fields::new(kind);
     assert_eq!(birth_work, retained_params::Fields::new_work_demand().unwrap());
     let mut turns = 0;
@@ -93,15 +65,15 @@ fn prepare(case: &serde_json::Value, kind: RetainedPatchSource, cut: Option<usiz
         let work = fields.advance_work_demand(authored.borrow(), original.borrow(), 64, 64).unwrap();
         let selected = grant(demand);
         for denied in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_items: 0, ..selected }, RetainedCloneGrant { maximum_depth: 0, ..selected }] {
-            let outcome = fields.advance(authored.borrow(), original.borrow(), 64, 64, denied);
+            let outcome = advance(&mut fields, authored.borrow(), original.borrow(), 64, denied);
             assert_eq!(outcome.work, 0);
             assert_eq!(outcome.result.unwrap().progress(), Default::default());
         }
-        let denied_work = fields.advance(authored.borrow(), original.borrow(), 64, 0, selected);
+        let denied_work = advance(&mut fields, authored.borrow(), original.borrow(), 0, selected);
         assert_eq!(denied_work.work, 0);
         assert_eq!(denied_work.result.unwrap().progress(), Default::default());
-        let outcome = fields.advance(authored.borrow(), original.borrow(), 64, 64, selected);
-        assert!(outcome.work <= work);
+        let outcome = advance(&mut fields, authored.borrow(), original.borrow(), 64, selected);
+        assert!(outcome.work <= u128::from(work));
         let step = outcome.result.unwrap();
         assert!(step.progress().fits(selected));
         turns += 1;
@@ -138,17 +110,20 @@ fn prepare(case: &serde_json::Value, kind: RetainedPatchSource, cut: Option<usiz
         assert!(close_turn < 4095);
         let work = fields.close_work_demand(4096).unwrap();
         let selected = grant(fields.close_demand(4096).unwrap());
-        let denied = fields.close_step(RetainedCloneGrant::default());
+        let close = |fields: &mut retained_params::Fields, grant| {
+            drive_reply(grant, 4096, receipt, |effect, reply: RetainedReply<'_>, recover| -> Result<RetainedDone<'_>, ValueError> {
+                fields.close_reply(None, 4096, effect, reply, recover)
+            })
+        };
+        let denied = close(&mut fields, RetainedCloneGrant::default());
         assert_eq!(denied.work, 0);
         assert_eq!(denied.result.unwrap().progress(), Default::default());
-        let outcome = fields.close_step(selected);
-        assert!(outcome.work <= work);
+        let outcome = close(&mut fields, selected);
+        assert!(outcome.work <= u128::from(work));
         assert!(outcome.result.unwrap().progress().fits(selected));
     }
     assert!(fields.terminal_is_empty());
     drop(fields);
-    close_source(&mut authored);
-    close_source(&mut original);
     retire(expected);
     turns
 }

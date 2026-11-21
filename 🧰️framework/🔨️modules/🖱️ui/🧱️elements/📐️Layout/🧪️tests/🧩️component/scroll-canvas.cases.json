@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "id": "desktop long page", "width": 1280, "height": 720, "canvasHeight": 1600, "mobile": false, "dark": false, "auxiliaryRows": true, "scrolls": true },
+    { "id": "mobile long page", "width": 390, "height": 700, "canvasHeight": 1500, "mobile": true, "dark": true, "auxiliaryRows": false, "scrolls": true },
+    { "id": "desktop short page", "width": 1280, "height": 720, "canvasHeight": 240, "mobile": false, "dark": true, "auxiliaryRows": false, "scrolls": false },
+    { "id": "mobile short page", "width": 390, "height": 700, "canvasHeight": 240, "mobile": true, "dark": false, "auxiliaryRows": true, "scrolls": false }
+  ]
+}

@@ -125,3 +125,13 @@ The repo’s offload check reported memory pressure and a fleet path. Session 35
 The React icon renderer now keeps preview and export requests alive through a short GLB connection outage. The Chromium probe verified retry after a reset, HTTP 503 and truncated response, immediate cancellation for a single consumer, independent cancellation for a shared load, and bounded termination for persistent 503. HTTP 404 and invalid model data made one attempt. A glTF with a relative external buffer produced the same raster as the original GLB. All eight focused React tests passed with the retry change. [React GLB transport report](react-glb-retry.md)
 
 The React export, React cancellation and browser WGPU probes now observe the app shell’s error signal as soon as it appears and verify that the ready signal identifies Shooting. All three pass syntax validation. Their production runtime runs await the canonical dev ports.
+
+## Live Cargo admission
+
+The Cargo host gate can now re-evaluate fleet eligibility during a local capacity wait. The normal local grant wins when it is available. On fleet handoff, the gate removes the pending local queue entry before launching Cargo and retains the caller’s original flags and compiler parallelism. Explicit offload flags apply to both startup and queue probes, and cancellation during the probe exits without a launch.
+
+After the repo’s live implementation route was verified, the two owned outer capacity waiters were replaced. Renderer session 97027 entered Rust compilation with one local slot. Shooting session 30722 entered source admission with its original two-slot setting. The React launcher continues to verify project graph owner facts, and the WGPU launcher is waiting for the same checkout’s graph access. Neither dev port is ready.
+
+The focused admission run passed all nine Cargo parser cases and all 40 combined Cargo and host-capacity cases. The fleet policy test passed separately. The scoped diff passed whitespace validation. [Queued fleet handoff report](cargo-queued-fleet-handoff.md)
+
+Both Rust retries reached compilation. The browser acceptance runner waits on ports 6019 and 6119 and starts the registered Playwright probes as soon as the respective dev server listens. The runner’s routing and sequential React failure handling passed an isolated check. React browser probes are waiting as session 33631 and WGPU as session 24282. [Browser probe runner](wait-for-dev-probes.py)

@@ -21,27 +21,37 @@ export type CategoryDocument = { readonly assets: readonly Asset[]; readonly rev
 export interface CatalogSource {
   readonly manifest: (signal?: AbortSignal) => Promise<Manifest>;
   readonly category: (entry: CategoryEntry, signal?: AbortSignal) => Promise<CategoryDocument | null>;
+  readonly asset?: (entry: CategoryEntry, id: Slug, signal?: AbortSignal) => Promise<{ readonly asset: Asset; readonly revision?: Revision } | null>;
 }
 
 const documents = import.meta.glob<StaffageAssetPayload>("../../../../🗂️catalog/*/*/🔣️.json", { query: "?staffage-asset", import: "default" });
 const stripSelectors = (path: string): string => path.replaceAll("️", "");
+const documentsFor = (entry: CategoryEntry): string[] => {
+  const wanted = `/${stripSelectors(entry.folder)}/`;
+  return Object.keys(documents).filter((path) => stripSelectors(path).includes(wanted));
+};
+
+async function readDocument(key: string, signal?: AbortSignal): Promise<{ asset: Asset; revision: Revision }> {
+  signal?.throwIfAborted();
+  const payload = await documents[key]!();
+  signal?.throwIfAborted();
+  const asset = JSON.parse(payload.json) as Asset;
+  assetIssues.set(asset, payload.issues);
+  return { asset, revision: payload.revision as Revision };
+}
 
 /** 📦️ The catalog bundled with the site: the manifest inline, each asset file a chunk of its own, gathered per category folder; a category without asset files loads as `null`. */
 export const bundledCatalog: CatalogSource = {
   manifest: async () => manifestDocument as unknown as Manifest,
   category: async (entry, signal) => {
-    signal?.throwIfAborted();
-    const wanted = `/${stripSelectors(entry.folder)}/`;
-    const keys = Object.keys(documents).filter((path) => stripSelectors(path).includes(wanted)).sort();
+    const keys = documentsFor(entry).sort();
     if (keys.length === 0) return null;
-    const payloads = await Promise.all(keys.map((key) => documents[key]!()));
-    signal?.throwIfAborted();
-    const assets = payloads.map(payload => {
-      const asset = JSON.parse(payload.json) as Asset;
-      assetIssues.set(asset, payload.issues);
-      return asset;
-    });
-    return { assets, revisions: Object.fromEntries(assets.map((asset, index) => [asset.id, payloads[index]!.revision as Revision])) };
+    const loaded = await Promise.all(keys.map((key) => readDocument(key, signal)));
+    return { assets: loaded.map(({ asset }) => asset), revisions: Object.fromEntries(loaded.map(({ asset, revision }) => [asset.id, revision])) };
+  },
+  asset: async (entry, id, signal) => {
+    const key = documentsFor(entry).find((path) => path.split("/").at(-2)?.replace(/^[^a-z]+/u, "") === id);
+    return key === undefined ? null : readDocument(key, signal);
   },
 };
 
@@ -85,6 +95,7 @@ export class CatalogStore {
   #snapshot: CatalogSnapshot = { manifest: null, manifestState: "idle", categories: initialCategories(), rows: [], manifestIssues: null };
   readonly #listeners = new Set<() => void>();
   readonly #loaded = new Map<CategoryId, Loaded>();
+  readonly #individual = new Map<Slug, Row>();
   readonly #running = new Map<CategoryId, { readonly promise: Promise<void>; readonly controller: AbortController; interested: number }>();
   #manifestPromise: Promise<void> | null = null;
   readonly #source: CatalogSource;
@@ -144,6 +155,37 @@ export class CatalogStore {
     await started.promise;
   }
 
+  async loadAsset(entry: ManifestEntry, signal: AbortSignal): Promise<void> {
+    await this.loadManifest(signal);
+    if (signal.aborted || this.#loaded.has(entry.category)) return;
+    const category = this.#snapshot.manifest?.categories.find(({ id }) => id === entry.category);
+    if (category === undefined || this.#source.asset === undefined) {
+      if (this.#snapshot.categories[entry.category].state === "failed") await this.retryCategory(entry.category, { signal });
+      else await this.loadCategory(entry.category, { signal });
+      return;
+    }
+    const previous = this.#individual.get(entry.id);
+    if (previous !== undefined && previous.status !== "failed") return;
+    let row: Row;
+    try {
+      const loaded = await this.#source.asset(category, entry.id, signal);
+      if (signal.aborted) return;
+      if (loaded === null) row = { entry, status: "missing" };
+      else {
+        const { asset, revision } = loaded;
+        if (asset.id !== entry.id || asset.category !== entry.category) throw new Error("Asset document does not match the requested entry");
+        const issues = this.#validate(asset);
+        row = issues.length === 0 ? { entry, status: "ready", asset, revision } : { entry, status: "invalid", issues };
+      }
+    } catch {
+      if (signal.aborted) return;
+      row = { entry, status: "failed" };
+    }
+    if (this.#loaded.has(entry.category)) return;
+    this.#individual.set(entry.id, row);
+    this.#set({});
+  }
+
   retryCategory(id: CategoryId, control: JobControl = {}): Promise<void> {
     this.#category(id, IDLE);
     return this.loadCategory(id, control);
@@ -198,6 +240,7 @@ export class CatalogStore {
       }
       const known = new Set(manifest.entries.map((candidate) => candidate.id));
       this.#loaded.set(id, { revisions: document.revisions, assets, allAssets, invalid, extra: [...assets.values()].filter((asset) => !known.has(asset.id)) });
+      for (const [key, row] of this.#individual) if (row.entry.category === id) this.#individual.delete(key);
       this.#category(id, { state: "ready", done: total, total });
     } catch (error) {
       if (isAbort(error) || signal.aborted) return this.#running.get(id)?.controller.signal === signal || !this.#running.has(id) ? this.#category(id, IDLE) : undefined;
@@ -226,7 +269,7 @@ export class CatalogStore {
     const rows: Row[] = snapshot.manifest.entries.map((entry): Row => {
       const loaded = this.#loaded.get(entry.category);
       const progress = snapshot.categories[entry.category];
-      if (loaded === undefined) return progress.state === "failed" ? { entry, status: "failed" } : { entry, status: "pending" };
+      if (loaded === undefined) return this.#individual.get(entry.id) ?? (progress.state === "failed" ? { entry, status: "failed" } : { entry, status: "pending" });
       const asset = loaded.assets.get(entry.id);
       if (asset !== undefined) return { entry, status: "ready", asset, revision: loaded.revisions[entry.id] };
       const issues = loaded.invalid.get(entry.id);

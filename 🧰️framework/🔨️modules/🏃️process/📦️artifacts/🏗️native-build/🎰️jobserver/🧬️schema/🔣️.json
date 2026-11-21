@@ -16,6 +16,7 @@
         "token": "+",
         "pollMs": 2,
         "fifoName": "jobserver.fifo",
+        "fifoReplacementPrefix": "j-",
         "semaphorePrefix": "semio-jobserver-",
         "clientEnvironment": ["CARGO_MAKEFLAGS", "MAKEFLAGS"],
         "authPrecedence": ["CARGO_MAKEFLAGS", "MAKEFLAGS", "MFLAGS"],

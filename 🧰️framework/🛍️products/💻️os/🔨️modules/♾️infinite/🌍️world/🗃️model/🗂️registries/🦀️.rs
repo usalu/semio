@@ -1,6 +1,7 @@
 //! 🗂️ World3d dynamic, mesh and draw registries, opaque quarantine, session and interaction state.
 
 use super::*;
+use std::collections::HashSet;
 
 //#region World3dState
 /// 🎟️ Funds one original World mesh turn with independent ownership currencies.
@@ -794,6 +795,9 @@ pub struct WorldSessionState {
 
     pub controller_id: String,
 
+    /// 🪟️ The window instance hosting this surface.
+    pub window_instance_id: Option<String>,
+
     pub bounds: Rect,
 
     pub pick_bounds: Rect,
@@ -840,6 +844,10 @@ pub struct WorldInteractionState {
 
     pub instance_interaction_granularity_ids: HashMap<String, String>,
 
+    pub instance_hover_targets: HashMap<String, String>,
+
+    pub component_unpickable_instance_ids: HashSet<String>,
+
     pub interaction_meshes: WorldInteractionMeshRegistry,
 
     pub interaction_objects: WorldInteractionObjectRegistry,
@@ -850,6 +858,7 @@ impl WorldSessionState {
         Self {
             surface_id,
             controller_id,
+            window_instance_id: None,
             bounds: Rect::default(),
             pick_bounds: Rect::default(),
             bound_domain_id: None,
@@ -865,10 +874,17 @@ impl WorldSessionState {
 }
 
 impl WorldInteractionState {
+    /// 🎯️ Whether this instance can offer components in the active object scope.
+    pub fn component_pickable(&self, id: &str, active: Option<&str>) -> bool {
+        active.is_none_or(|active| active == id) && !self.component_unpickable_instance_ids.contains(id)
+    }
+
     pub fn new() -> Self {
         Self {
             instance_interaction_ids: HashMap::new(),
             instance_interaction_granularity_ids: HashMap::new(),
+            instance_hover_targets: HashMap::new(),
+            component_unpickable_instance_ids: HashSet::new(),
             interaction_meshes: WorldInteractionMeshRegistry::default(),
             interaction_objects: WorldInteractionObjectRegistry::default(),
         }

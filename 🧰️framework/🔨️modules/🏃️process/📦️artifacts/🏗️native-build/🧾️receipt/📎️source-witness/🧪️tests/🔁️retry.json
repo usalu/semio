@@ -1,0 +1,16 @@
+[
+  {
+    "id": "a new attempt retains exact compiler bytes",
+    "consumed": "compiler bytes",
+    "live": ["newer and longer bytes", "compiler bytes"],
+    "events": ["compile", "graph-retry-plan", "admit", "graph-retry", "compile-retry", "stage"],
+    "staged": true
+  },
+  {
+    "id": "the same mismatch refuses another attempt and staging",
+    "consumed": "compiler bytes",
+    "live": ["newer and longer bytes", "newer and longer bytes"],
+    "events": ["compile", "graph-retry-plan", "admit", "graph-retry", "compile-retry"],
+    "staged": false
+  }
+]

@@ -1,0 +1,7 @@
+# Retained Bevel Surface Fidelity
+
+Bevel now detects authored point normals, face shading and raw corner UVs during its existing validation passes. Every clipping plane rebuilds a closed shell with its compacted vertex origins and runs the funded source-surface transfer. Existing faces retain their shading and UV chart. A clipped corner interpolates its original edge samples, and each new flat bevel face receives a planar chart. Seam membership follows source edges and chart discontinuities. The last clipping result publishes directly, keeping the restored surface and the material and texture owners attached to it.
+
+The language-neutral fixture describes a unit box with a custom bottom-face chart and nonuniform point normals. Three.js independently intersected the source edge with the bevel plane, derived the interpolated UV and normal, and confirmed the expected signed volume. The focused portable check passed with 12 assertions. The production Mesh sources linked into a compact native test and passed the fixture for one and two profile segments. The native check verified manifold incidence, compact vertex counts, retained and interpolated samples, flat generated faces and chart seam membership on both halfedges.
+
+The wider portable Mesh jobs run also identified a separate mismatch between the orientation component ownership schema and fixture. The funded Bevel source check and its focused oracle completed independently of that mismatch.

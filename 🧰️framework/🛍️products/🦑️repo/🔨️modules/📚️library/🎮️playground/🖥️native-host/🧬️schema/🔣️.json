@@ -171,6 +171,29 @@
         }
       }
     },
+    "NativeHostTaskV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "arguments", "environment"],
+      "properties": {
+        "command": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^repo (?:[.]/)?📜️script[.]ts(?: [a-z0-9][a-z0-9-]*)+$(?![\\s\\S])"
+        },
+        "arguments": {
+          "type": "array",
+          "maxItems": 16,
+          "items": { "type": "string", "maxLength": 128, "pattern": "^[a-z0-9][a-z0-9-]*$(?![\\s\\S])" }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["SEMIO_BUILD_MODE"],
+          "properties": { "SEMIO_BUILD_MODE": { "enum": ["prototype", "release"] } }
+        }
+      }
+    },
     "NativeHostMessagesV1": {
       "description": "The refusal of an executable host that disagrees with its authored producer, per language; {placeholders} are filled by the admission.",
       "const": {

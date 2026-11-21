@@ -17,7 +17,7 @@ use semio_ui_locale::Locale;
 use semio_ui_locale::LocalizedLabel;
 use crate::WindowKit;
 use semio_plugin_interaction::UiAssemblyResult;
-use semio_plugin_window_transient::paged_text_carrier;
+use semio_plugin_window_transient::image_with_source;
 use semio_plugin_interaction::ui_assembly_error;
 use semio_plugin_window_transient::window_kind_definition;
 
@@ -41,17 +41,6 @@ fn image_alt_text(view: &ImageView) -> UiAssemblyResult<Label> {
     UiText::try_format(format_args!("{format} {}x{} px", view.width, view.height)).map(Label).ok_or_else(|| ui_assembly_error("image-window.alt"))
 }
 
-/// 🚚️ Out-of-doc lane key for an image whose data URI is larger than one [`UiText`]
-/// (`UI_TEXT_MAX_BYTES` is 512, so no real composited PNG fits). The payload rides in a
-/// [`paged_text_carrier`] sibling of the image node under the window's own body key — the same
-/// shape `scene_surface` uses for a world scene's lanes, and readable by the existing lane
-/// reassembly (`fixture_carrier_text`, the React Interpreter's `surfaceSceneLaneText`).
-pub const IMAGE_WINDOW_PIXELS_LANE_KEY: &str = "framework.window.image.pixels";
-
-/// 🖼️ Node key of the image itself once the payload moved out of the doc; distinct from the lane
-/// carrier's key so both can be children of one window body.
-pub const IMAGE_WINDOW_PAGED_NODE_KEY: &str = "framework.window.image.view";
-
 /// 🧩️ Stable child key for an image projection mounted beside domain controls in the same body.
 pub const IMAGE_WINDOW_CONTENT_NODE_KEY: &str = "framework.window.image.content";
 
@@ -71,49 +60,16 @@ impl WindowKit for ImageWindowKit {
         window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::bounded_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation)])
     }
 
-    /// 🖼️ An image's payload size is a property of the document, never of the UI contract, so a
-    /// composite too large for one [`UiText`] pages out of the doc instead of refusing the whole
-    /// window. Below the `UiText` bound the node is byte-identical to what this always produced;
-    /// above it the `src` names [`IMAGE_WINDOW_PIXELS_LANE_KEY`] and the data URI rides in a
-    /// [`paged_text_carrier`] sibling. Before this, every raster viewer window died at assembly
-    /// with `ui.fixed-capacity … image-window.source` because `UI_TEXT_MAX_BYTES` is 512 and a real
-    /// composited PNG never fits (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, raster §3).
     fn render(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
         let source = format!("data:{};base64,{}", view.mime, view.base64);
-        let alt = image_alt_text(view)?;
-        if let Some(src) = UiText::try_format(format_args!("{source}")) {
-            return image(src).alt(alt).try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("image-window.id"))?.try_build().map_err(|_| ui_assembly_error("image-window.build"));
-        }
-        let lane = UiText::try_format(format_args!("{IMAGE_WINDOW_PIXELS_LANE_KEY}")).ok_or_else(|| ui_assembly_error("image-window.lane-key"))?;
-        let node = image(lane).alt(alt).try_id(IMAGE_WINDOW_PAGED_NODE_KEY).map_err(|_| ui_assembly_error("image-window.paged-id"))?.try_build().map_err(|_| ui_assembly_error("image-window.paged-build"))?;
-        let carrier = paged_text_carrier(IMAGE_WINDOW_PIXELS_LANE_KEY, &source)?;
-        column()
-            .try_id(Self::KIND_ID)
-            .map_err(|_| ui_assembly_error("image-window.id"))?
-            .try_children(vec![node, carrier])
-            .map_err(|_| ui_assembly_error("image-window.paged-children"))?
-            .try_build()
-            .map_err(|_| ui_assembly_error("image-window.build"))
+        image_with_source(Self::KIND_ID, &source, image_alt_text(view)?)
     }
 }
 
 impl ImageWindowKit {
     fn render_content(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
         let source = format!("data:{};base64,{}", view.mime, view.base64);
-        let alt = image_alt_text(view)?;
-        if let Some(src) = UiText::try_format(format_args!("{source}")) {
-            return image(src).alt(alt).try_id(IMAGE_WINDOW_CONTENT_NODE_KEY).map_err(|_| ui_assembly_error("image-window.content-id"))?.try_build().map_err(|_| ui_assembly_error("image-window.content-build"));
-        }
-        let lane = UiText::try_format(format_args!("{IMAGE_WINDOW_PIXELS_LANE_KEY}")).ok_or_else(|| ui_assembly_error("image-window.lane-key"))?;
-        let node = image(lane).alt(alt).try_id(IMAGE_WINDOW_PAGED_NODE_KEY).map_err(|_| ui_assembly_error("image-window.paged-id"))?.try_build().map_err(|_| ui_assembly_error("image-window.paged-build"))?;
-        let carrier = paged_text_carrier(IMAGE_WINDOW_PIXELS_LANE_KEY, &source)?;
-        column()
-            .try_id(IMAGE_WINDOW_CONTENT_NODE_KEY)
-            .map_err(|_| ui_assembly_error("image-window.content-id"))?
-            .try_children(vec![node, carrier])
-            .map_err(|_| ui_assembly_error("image-window.paged-children"))?
-            .try_build()
-            .map_err(|_| ui_assembly_error("image-window.content-build"))
+        image_with_source(IMAGE_WINDOW_CONTENT_NODE_KEY, &source, image_alt_text(view)?)
     }
 
     /// 🧩️ Renders one bounded domain accessory and the image projection under the kit body.

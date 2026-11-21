@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rows", "cases", "native"],
+  "properties": {
+    "rows": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0}},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["start", "work", "stopAt", "next", "spent"],
+        "properties": {
+          "start": {"type": "integer", "minimum": 0},
+          "work": {"type": "integer", "minimum": 0},
+          "stopAt": {"type": "integer", "minimum": 0},
+          "next": {"type": "integer", "minimum": 0},
+          "spent": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "bytes", "fuel", "maximumRetirementSteps"],
+      "properties": {
+        "items": {"type": "integer", "minimum": 1},
+        "bytes": {"type": "integer", "minimum": 1},
+        "fuel": {"type": "integer", "minimum": 1},
+        "maximumRetirementSteps": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

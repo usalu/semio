@@ -36,6 +36,26 @@ fn source<T:Sync+'static,A:RetireOwned+Sync>(o:&RetainedCloneSource<T,A>)->Resul
 
 fn projection<T:?Sized+Sync>(o:&RetainedOwnedProjection<T>)->Result<RetirementDemand,ValueError>{let body=o.close_demand(0)?.copy_bytes;nested(o.close_demand(body)?)}
 
+fn admission_demand<T: RetireOwned + Sync>(
+ admission: &RetainedCloneSourceAdmission<T, T>,
+) -> Result<RetirementDemand, ValueError> {
+ nested(match admission.phase() {
+  "projectionStart" => admission.owned_projection_demand()?,
+  "ready" => admission.take_output_demand(),
+  _ => admission.next_demand()?,
+ })
+}
+
+fn admission_work<T: RetireOwned + Sync>(
+ admission: &RetainedCloneSourceAdmission<T, T>,
+) -> Result<u64, ValueError> {
+ match admission.phase() {
+  "projectionStart" => Ok(1),
+  "ready" => Ok(admission.take_output_work_demand()),
+  _ => admission.advance_work_demand(),
+ }
+}
+
 fn authority_ref(source:&Option<RetainedCloneSource<AuthorityLease>>)->Result<RetainedCloneRef<'_,Authority>,ValueError>{Ok(source.as_ref().ok_or_else(||refusal("canonical original authority source is absent"))?.try_borrow()?.project(0,|lease:&AuthorityLease|&*lease.0 as &Authority))}
 fn edit_ref<M:RetireOwned+Sync+'static>(source:&Option<RetainedCloneSource<Box<Edit<M>>>>)->Result<RetainedCloneRef<'_,Edit<M>>,ValueError>{Ok(source.as_ref().ok_or_else(||refusal("canonical original edit source is absent"))?.try_borrow()?.project(0,|edit:&Box<Edit<M>>|&**edit))}
 
@@ -150,7 +170,23 @@ fn project_demand(&self)->Result<RetirementDemand,ValueError>{
 }
 impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalOwner<M> for ArtifactStoreCanonicalSource<M>{
  fn next_work_demand(&self)->Result<u64,ValueError>{
-  Ok(match self.traversal.as_ref(){Some(Traversal::Semantic(owner))=>owner.next_work_demand().max(1),Some(Traversal::Identity(owner))=>if owner.is_ready()||owner.terminal_is_empty(){1}else{256},Some(Traversal::Hash(owner))=>owner.next_work_demand()?.max(1),None=>if self.terminal_is_empty(){0}else if !self.closing&&matches!(self.phase,2|3){self.project_work_demand()?}else{3}})
+  Ok(match self.traversal.as_ref(){
+   Some(Traversal::Semantic(owner))=>owner.next_work_demand().max(1),
+   Some(Traversal::Identity(owner))=>if owner.is_ready()||owner.terminal_is_empty(){1}else{256},
+   Some(Traversal::Hash(owner))=>owner.next_work_demand()?.max(1),
+   None if self.terminal_is_empty()=>0,
+   None if !self.closing=>match self.phase{
+    0=>self.edit_admission.as_ref().map_or(Ok(1),admission_work)?,
+    1=>self.authority_admission.as_ref().map_or(Ok(1),admission_work)?,
+    2|3=>self.project_work_demand()?,
+    5=>{
+     let owner=self.authority_source.as_ref().ok_or_else(||refusal("canonical original authority source disappeared"))?;
+     if owner.terminal_is_empty(){1}else{owner.next_close_work_demand(owner.next_close_copy_byte_demand()?)?}
+    },
+    _=>3,
+   },
+   None=>3,
+  })
  }
  fn next_demand(&self)->Result<RetirementDemand,ValueError>{
   if let Some(Traversal::Semantic(o))=self.traversal.as_ref(){return if o.terminal_is_empty(){Ok(copy(size_of::<Option<Traversal<M>>>()))}else{nested(o.next_demand()?)};}
@@ -172,8 +208,8 @@ impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalOwner<M
    return Ok(Default::default());
   }
   Ok(match self.phase{
-   0=>match self.edit_admission.as_ref(){Some(a) if a.phase()=="projectionStart"=>nested(a.owned_projection_demand()?)?,Some(a) if a.phase()!="ready"=>nested(a.next_demand()?)?,_=>nested(copy(size_of::<Box<Edit<M>>>()))?},
-   1=>match self.authority_admission.as_ref(){Some(a) if a.phase()=="projectionStart"=>nested(a.owned_projection_demand()?)?,Some(a) if a.phase()!="ready"=>nested(a.next_demand()?)?,_=>nested(copy(size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()))?},
+   0=>self.edit_admission.as_ref().map_or_else(||nested(copy(size_of::<Box<Edit<M>>>())),admission_demand)?,
+   1=>self.authority_admission.as_ref().map_or_else(||nested(copy(size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>())),admission_demand)?,
    2|3=>self.project_demand()?,
    4=>nested(ArtifactCanonicalEditSealCursor::<M>::source_constructor_demand())?,
    5=>{let o=self.authority_source.as_ref().ok_or_else(||refusal("canonical original authority source disappeared"))?;if o.terminal_is_empty(){copy(size_of::<Option<RetainedCloneSource<AuthorityLease>>>())}else{return source(o);}},

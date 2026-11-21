@@ -24,7 +24,9 @@ export async function handleSetActiveUtilityAction({ activeWindowIdRef, activeUt
   const windowId = typeof args.windowId === "string" && args.windowId ? args.windowId : (activeWindowIdRef.current ?? "");
   if (!windowId) return refuse("view-state-unresolved", "no target window");
   const requestedUtility = typeof args.utilityId === "string" ? args.utilityId : "";
-  const next = resolveUtilityActivationV1(activeUtilityByWindowIdRef.current[windowId], requestedUtility);
+  const prior = activeUtilityByWindowIdRef.current[windowId] ?? null;
+  const next = resolveUtilityActivationV1(prior, requestedUtility);
+  const viewInputsChanged = prior !== next;
   const expected = expectedGenerationFromArgsV1(action.args);
   const write = writeUtilityRegister(windowId, next, expected);
   if (write.kind === "refused") return refuse("stale-generation", `window=${windowId} expected=${write.expected} current=${write.register.generation}`);
@@ -47,15 +49,16 @@ export async function handleSetActiveUtilityAction({ activeWindowIdRef, activeUt
     );
     if (!viewState) return refuse("view-state-unresolved", `window=${windowId}`);
     const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
-    await program
-      .handleAction(utilitySession.instanceId, encodeWindowActionInvocation({ ...utilitySession, viewState }, forwarded, utilityExtraInstances, utilityGuestWindowId), viewState, { order: causalOrderKeyV1(entry.provenance) })
-      .then((response) => {
-        applyHistoryPatch(response.historyPatch, false, { pluginId: utilitySession.pluginId, instanceId: utilitySession.instanceId });
-        applyLeftoverInteractionView(response.output, windowId);
-        if (!isCurrentEffectOwner(primaryActionOwner)) return;
-        return applyHostEffects(response.requestedEffects ?? [], { ...utilitySession, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
-      })
-      .catch((utilityError) => undefined);
+    try {
+      const response = await program.handleAction(utilitySession.instanceId, encodeWindowActionInvocation({ ...utilitySession, viewState }, forwarded, utilityExtraInstances, utilityGuestWindowId), viewState, { order: causalOrderKeyV1(entry.provenance) });
+      applyHistoryPatch(response.historyPatch, false, { pluginId: utilitySession.pluginId, instanceId: utilitySession.instanceId });
+      applyLeftoverInteractionView(response.output, windowId);
+      if (isCurrentEffectOwner(primaryActionOwner)) {
+        await applyHostEffects(response.requestedEffects ?? [], { ...utilitySession, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner, viewInputsChanged);
+      }
+    } catch (error) {
+      return refuse("dispatch-failed", String(error));
+    }
   }
   return applied();
 }

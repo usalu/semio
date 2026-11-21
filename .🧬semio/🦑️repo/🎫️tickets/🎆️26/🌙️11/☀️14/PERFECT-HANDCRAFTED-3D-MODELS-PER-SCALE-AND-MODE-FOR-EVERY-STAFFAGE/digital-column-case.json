@@ -1,0 +1,7 @@
+{
+  "widthM": 1,
+  "depthM": 1,
+  "gridColumns": 400,
+  "verticalIntervalsM": [[2, 2.25], [0.5, 1.5], [0, 1], [0, 1]],
+  "unionM3": 1.75
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
-  "artifact": "s.norm-eurocode-structural.en1994",
+  "artifact": "s.norm.en1994",
   "inputs": [
     {
       "key": "d_stud",
@@ -712,242 +712,714 @@
       "example": 0.04
     },
     {
-      "key": "psi_vib",
-      "scope": "",
-      "kind": "number",
-      "en": "Share of the variable load acting as vibrating mass ψ",
-      "de": "Anteil der veränderlichen Last als schwingende Masse ψ",
-      "confidence": "low",
-      "note": "Project input; EN 1990 A1.4.4 leaves the share to the National Annex or the project. The example 0.3 is the documented input of worked example E1-23, a project assumption and not a normative value.",
-      "unit": "1",
-      "unitId": "One",
-      "min": 0.0,
-      "max": 1.0,
-      "example": 0.3
-    },
-    {
-      "key": "f_min",
-      "scope": "",
-      "kind": "number",
-      "en": "Required lowest natural frequency fmin",
-      "de": "Geforderte tiefste Eigenfrequenz fmin",
-      "confidence": "low",
-      "note": "Project input; EN 1990 A1.4.4 leaves the limit to the National Annex or the project. The example 3 Hz is the documented input of worked example E1-23, a project assumption and not a normative limit.",
-      "unit": "Hz",
-      "unitId": "Hertz",
-      "min": 0.5,
-      "max": 20.0,
-      "example": 3.0
-    },
-    {
-      "key": "l_ltb",
-      "scope": "",
-      "kind": "number",
-      "en": "Length between lateral restraints of the bottom flange L",
-      "de": "Länge zwischen seitlichen Halterungen des Untergurts L",
-      "confidence": "high",
-      "unit": "m",
-      "unitId": "Metre",
-      "min": 0.5,
-      "max": 30.0,
-      "example": 6.0
-    },
-    {
-      "key": "i2_slab",
-      "scope": "",
-      "kind": "number",
-      "en": "Cracked second moment of the slab per metre I2",
-      "de": "Gerissenes Flächenmoment 2. Grades der Platte je Meter I2",
-      "confidence": "medium",
-      "note": "Unit m⁴ per metre of the beam length.",
-      "unit": "m⁴",
-      "unitId": "MetreFourth",
-      "min": 1e-09,
-      "max": 0.01,
-      "example": 4e-05
-    },
-    {
-      "key": "a_beam",
-      "scope": "",
-      "kind": "number",
-      "en": "Beam spacing a",
-      "de": "Trägerabstand a",
-      "confidence": "high",
-      "unit": "m",
-      "unitId": "Metre",
-      "min": 0.5,
-      "max": 20.0,
-      "example": 3.0
-    },
-    {
-      "key": "k_alpha",
-      "scope": "",
-      "kind": "number",
-      "en": "Frame factor α (2 edge beam, 3 interior beam)",
-      "de": "Rahmenbeiwert α (2 Randträger, 3 Innenträger)",
-      "confidence": "high",
-      "unit": "1",
-      "unitId": "One",
-      "min": 1.0,
-      "max": 4.0,
-      "example": 2.0
-    },
-    {
-      "key": "steel_kind",
-      "scope": "",
+      "key": "fire_col_rating",
+      "scope": "C94-13",
       "kind": "choice",
-      "en": "Production of the steel section",
-      "de": "Herstellung des Stahlprofils",
+      "en": "Standard fire resistance class",
+      "de": "Feuerwiderstandsklasse bei Normbrand",
       "confidence": "high",
       "choices": [
         {
-          "value": "rolled",
-          "en": "Rolled section",
-          "de": "Walzprofil"
+          "value": "R30",
+          "en": "R30",
+          "de": "R30"
         },
         {
-          "value": "welded",
-          "en": "Welded section",
-          "de": "Geschweißtes Profil"
+          "value": "R60",
+          "en": "R60",
+          "de": "R60"
+        },
+        {
+          "value": "R90",
+          "en": "R90",
+          "de": "R90"
+        },
+        {
+          "value": "R120",
+          "en": "R120",
+          "de": "R120"
         }
       ],
-      "example": "rolled"
+      "example": "R60"
     },
     {
-      "key": "phi_t",
-      "scope": "",
-      "kind": "number",
-      "en": "Creep coefficient φ(t,t0)",
-      "de": "Kriechzahl φ(t,t0)",
-      "confidence": "low",
-      "note": "Project input from the creep and shrinkage analysis of EN 1992-1-1 3.1.4. The example is the documented input of worked example E1-25 and is not a normative value.",
-      "unit": "1",
-      "unitId": "One",
-      "min": 0.0,
-      "max": 6.0,
-      "example": 2.5
+      "key": "fire_col_restraint",
+      "scope": "C94-13",
+      "kind": "choice",
+      "en": "Column boundary conditions",
+      "de": "Lagerungsbedingungen der Stütze",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "table",
+          "en": "Braced frame, fixed ends in standard fire, normal-weight concrete",
+          "de": "Ausgesteiftes Tragwerk, beidseitig eingespannt im Normbrand, Normalbeton"
+        },
+        {
+          "value": "other",
+          "en": "Other conditions",
+          "de": "Andere Bedingungen"
+        }
+      ],
+      "example": "table"
     },
     {
-      "key": "psi_l",
-      "scope": "",
-      "kind": "number",
-      "en": "Creep multiplier ψL of the permanent load",
-      "de": "Kriechbeiwert ψL der ständigen Last",
-      "confidence": "medium",
-      "note": "EN 1994-1-1 5.4.2.2 (1.1 permanent loads, 0.55 shrinkage).",
-      "unit": "1",
-      "unitId": "One",
-      "min": 0.4,
-      "max": 2.0,
-      "example": 1.1
+      "key": "fire_col_steel",
+      "scope": "C94-13",
+      "kind": "choice",
+      "en": "Steel grade of the partially encased section",
+      "de": "Stahlsorte des teilweise einbetonierten Profils",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "S235",
+          "en": "S235",
+          "de": "S235"
+        },
+        {
+          "value": "S275",
+          "en": "S275",
+          "de": "S275"
+        },
+        {
+          "value": "S355",
+          "en": "S355",
+          "de": "S355"
+        }
+      ],
+      "example": "S355"
     },
     {
-      "key": "eps_cs",
-      "scope": "",
+      "key": "fire_col_load_level",
+      "scope": "C94-13,C94-14",
       "kind": "number",
-      "en": "Free shrinkage strain εcs",
-      "de": "Freie Schwinddehnung εcs",
-      "confidence": "low",
-      "note": "Project input from the creep and shrinkage analysis of EN 1992-1-1 3.1.4. The example is the documented input of worked example E1-25 and is not a normative value.",
-      "unit": "1",
-      "unitId": "One",
-      "min": 0.0,
-      "max": 0.002,
-      "example": 0.0003
-    },
-    {
-      "key": "am_v",
-      "scope": "",
-      "kind": "number",
-      "en": "Section factor of the steel Ap/V (1/m)",
-      "de": "Profilfaktor des Stahls Ap/V (1/m)",
+      "en": "Fire design action divided by ambient member resistance η_fi,t",
+      "de": "Brandbeanspruchung geteilt durch Tragfähigkeit bei Normaltemperatur η_fi,t",
       "confidence": "high",
       "unit": "1",
       "unitId": "One",
-      "min": 10.0,
-      "max": 500.0,
-      "example": 150.0
+      "min": 0.0,
+      "max": 0.66,
+      "example": 0.4
     },
     {
-      "key": "d_p",
-      "scope": "",
+      "key": "fire_col_width",
+      "scope": "C94-13,C94-14,C94-15,C94-17",
       "kind": "number",
-      "en": "Thickness of the fire protection dp",
-      "de": "Dicke der Brandschutzbekleidung dp",
+      "en": "Section width b",
+      "de": "Querschnittsbreite b",
       "confidence": "high",
       "unit": "m",
       "unitId": "Metre",
-      "min": 0.001,
-      "max": 0.1,
+      "example": 0.35
+    },
+    {
+      "key": "fire_col_depth",
+      "scope": "C94-13,C94-14,C94-15,C94-17",
+      "kind": "number",
+      "en": "Section depth h",
+      "de": "Querschnittshöhe h",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.36
+    },
+    {
+      "key": "fire_col_axis",
+      "scope": "C94-13,C94-15",
+      "kind": "number",
+      "en": "Smallest longitudinal bar axis distance u_s",
+      "de": "Kleinster Achsabstand der Längsbewehrung u_s",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.06
+    },
+    {
+      "key": "fire_col_ambient_axis",
+      "scope": "C94-13,C94-14,C94-15",
+      "kind": "number",
+      "en": "Minimum bar axis distance from ambient reinforcement design",
+      "de": "Mindestachsabstand aus der Bewehrungsbemessung bei Normaltemperatur",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.05
+    },
+    {
+      "key": "fire_col_rebar_ratio",
+      "scope": "C94-13",
+      "kind": "number",
+      "en": "Longitudinal reinforcement ratio A_s/(A_c + A_s)",
+      "de": "Längsbewehrungsgrad A_s/(A_c + A_s)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.01,
+      "max": 0.06,
+      "example": 0.045
+    },
+    {
+      "key": "fire_col_web_flange",
+      "scope": "C94-13",
+      "kind": "number",
+      "en": "Web-to-flange thickness ratio e_w/e_f",
+      "de": "Verhältnis von Steg- zu Flanschdicke e_w/e_f",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.6
+    },
+    {
+      "key": "fire_col_ext_rating",
+      "scope": "C94-14,C94-15,C94-16,C94-17,C94-18",
+      "kind": "choice",
+      "en": "Standard fire resistance class",
+      "de": "Feuerwiderstandsklasse bei Normbrand",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "R30",
+          "en": "R30",
+          "de": "R30"
+        },
+        {
+          "value": "R60",
+          "en": "R60",
+          "de": "R60"
+        },
+        {
+          "value": "R90",
+          "en": "R90",
+          "de": "R90"
+        },
+        {
+          "value": "R120",
+          "en": "R120",
+          "de": "R120"
+        },
+        {
+          "value": "R180",
+          "en": "R180",
+          "de": "R180"
+        },
+        {
+          "value": "R240",
+          "en": "R240",
+          "de": "R240"
+        }
+      ],
+      "example": "R60"
+    },
+    {
+      "key": "fire_fill_basis",
+      "scope": "C94-14",
+      "kind": "choice",
+      "en": "Fire exposure and ambient resistance basis",
+      "de": "Brandbeanspruchung und Grundlage der Tragfähigkeit bei Normaltemperatur",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "table",
+          "en": "Braced, fixed ends in full standard fire, ambient resistance calculated for eccentricity and twice the fire buckling length using 235 MPa steel and up to 3% reinforcement",
+          "de": "Ausgesteift, beidseitig eingespannt unter voller Normbrandbeanspruchung, Tragfähigkeit bei Normaltemperatur für Exzentrizität und doppelte Brandknicklänge mit 235 MPa Stahl und höchstens 3 % Bewehrung ermittelt"
+        },
+        {
+          "value": "other",
+          "en": "Other basis",
+          "de": "Andere Grundlage"
+        }
+      ],
+      "example": "table"
+    },
+    {
+      "key": "fire_fill_shape",
+      "scope": "C94-14",
+      "kind": "choice",
+      "en": "Hollow section shape, enter diameter as both outer dimensions for circular sections",
+      "de": "Hohlprofilform, bei Kreisprofilen Durchmesser für beide Außenabmessungen eingeben",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "rectangular",
+          "en": "Rectangular hollow section",
+          "de": "Rechteckiges Hohlprofil"
+        },
+        {
+          "value": "circular",
+          "en": "Circular hollow section",
+          "de": "Kreisförmiges Hohlprofil"
+        }
+      ],
+      "example": "rectangular"
+    },
+    {
+      "key": "fire_fill_wall",
+      "scope": "C94-14",
+      "kind": "number",
+      "en": "Hollow section wall thickness",
+      "de": "Wanddicke des Hohlprofils",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.01
+    },
+    {
+      "key": "fire_fill_ratio",
+      "scope": "C94-14",
+      "kind": "number",
+      "en": "Actual reinforcement ratio A_s/(A_c + A_s), zero if unreinforced",
+      "de": "Vorhandener Bewehrungsgrad A_s/(A_c + A_s), null bei unbewehrtem Querschnitt",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.045
+    },
+    {
+      "key": "fire_fill_axis",
+      "scope": "C94-14",
+      "kind": "number",
+      "en": "Bar axis distance from the inner tube surface, zero if unreinforced",
+      "de": "Achsabstand der Bewehrung zur Profilinnenseite, null bei unbewehrtem Querschnitt",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.06
+    },
+    {
+      "key": "fire_fill_rebar",
+      "scope": "C94-14",
+      "kind": "choice",
+      "en": "Longitudinal reinforcement grade",
+      "de": "Betonstahlgüte der Längsbewehrung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "S500",
+          "en": "S500",
+          "de": "S500"
+        },
+        {
+          "value": "none",
+          "en": "Unreinforced",
+          "de": "Unbewehrt"
+        },
+        {
+          "value": "other",
+          "en": "Other reinforcement grade",
+          "de": "Andere Betonstahlgüte"
+        }
+      ],
+      "example": "S500"
+    },
+    {
+      "key": "fire_enc_basis",
+      "scope": "C94-15",
+      "kind": "choice",
+      "en": "Fire exposure and ambient design basis",
+      "de": "Brandbeanspruchung und Bemessungsgrundlage bei Normaltemperatur",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "table",
+          "en": "Braced, fully encased under standard fire, ambient resistance and reinforcement detailing verified",
+          "de": "Ausgesteift, vollständig einbetoniert unter Normbrand, Tragfähigkeit und Bewehrungsdetails bei Normaltemperatur nachgewiesen"
+        },
+        {
+          "value": "other",
+          "en": "Other conditions",
+          "de": "Andere Bedingungen"
+        }
+      ],
+      "example": "table"
+    },
+    {
+      "key": "fire_enc_steel_cover",
+      "scope": "C94-15",
+      "kind": "number",
+      "en": "Smallest concrete cover of the structural steel section",
+      "de": "Kleinste Betondeckung des Baustahlquerschnitts",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.06
+    },
+    {
+      "key": "fire_enc_bar_count",
+      "scope": "C94-15",
+      "kind": "number",
+      "en": "Number of longitudinal bars",
+      "de": "Anzahl der Längsstäbe",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 4.0
+    },
+    {
+      "key": "fire_enc_bar_diameter",
+      "scope": "C94-15",
+      "kind": "number",
+      "en": "Smallest longitudinal bar diameter",
+      "de": "Kleinster Durchmesser der Längsstäbe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.016
+    },
+    {
+      "key": "fire_ins_beam_basis",
+      "scope": "C94-16",
+      "kind": "choice",
+      "en": "Applicability of Table 4.3",
+      "de": "Anwendbarkeit der Tabelle 4.3",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unverified",
+          "en": "Conditions still to be confirmed",
+          "de": "Bedingungen noch zu bestätigen"
+        },
+        {
+          "value": "verified",
+          "en": "Standard fire exposure from below, web compartments filled and secured, concrete used only as insulation, member basis and detailing verified",
+          "de": "Normbrand von unten, Kammern am Steg ausbetoniert und gesichert, Beton nur zur Isolierung, Bauteilgrundlage und Ausführung bestätigt"
+        }
+      ],
+      "example": "unverified"
+    },
+    {
+      "key": "fire_ins_column_basis",
+      "scope": "C94-17",
+      "kind": "choice",
+      "en": "Applicability of Table 4.5",
+      "de": "Anwendbarkeit der Tabelle 4.5",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unverified",
+          "en": "Conditions still to be confirmed",
+          "de": "Bedingungen noch zu bestätigen"
+        },
+        {
+          "value": "verified",
+          "en": "Four-sided standard fire, web compartments filled and secured, concrete used only as insulation, member basis and detailing verified",
+          "de": "Vierseitiger Normbrand, Kammern am Steg ausbetoniert und gesichert, Beton nur zur Isolierung, Bauteilgrundlage und Ausführung bestätigt"
+        }
+      ],
+      "example": "unverified"
+    },
+    {
+      "key": "fire_ins_cover",
+      "scope": "C94-16,C94-17",
+      "kind": "number",
+      "en": "Smallest concrete cover to the steel profile",
+      "de": "Kleinste Betondeckung des Stahlprofils",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.03
+    },
+    {
+      "key": "fire_ins_mesh",
+      "scope": "C94-16,C94-17",
+      "kind": "choice",
+      "en": "Reinforcing mesh for R60 to R180",
+      "de": "Betonstahlmatte für R60 bis R180",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "yes",
+          "en": "Mesh surrounds the section in both directions",
+          "de": "Betonstahlmatte umgibt den Querschnitt in beiden Richtungen"
+        },
+        {
+          "value": "no",
+          "en": "Mesh not present around the section",
+          "de": "Keine umlaufende Betonstahlmatte vorhanden"
+        }
+      ],
+      "example": "yes"
+    },
+    {
+      "key": "fire_ins_spacing",
+      "scope": "C94-16,C94-17",
+      "kind": "number",
+      "en": "Largest mesh spacing in either direction",
+      "de": "Größter Mattenstab-Abstand in beiden Richtungen",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.2
+    },
+    {
+      "key": "fire_ins_diameter",
+      "scope": "C94-16,C94-17",
+      "kind": "number",
+      "en": "Smallest mesh bar diameter in either direction",
+      "de": "Kleinster Mattenstab-Durchmesser in beiden Richtungen",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.005
+    },
+    {
+      "key": "fire_ins_mesh_cover_min",
+      "scope": "C94-16,C94-17",
+      "kind": "number",
+      "en": "Smallest cover to mesh on fire-exposed surfaces",
+      "de": "Kleinste Betondeckung der Matte auf beflammten Oberflächen",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
       "example": 0.02
     },
     {
-      "key": "lambda_p",
-      "scope": "",
+      "key": "fire_ins_mesh_cover_max",
+      "scope": "C94-16,C94-17",
       "kind": "number",
-      "en": "Thermal conductivity of the protection λp",
-      "de": "Wärmeleitfähigkeit der Bekleidung λp",
-      "confidence": "low",
-      "note": "Product input from the declaration of performance of the protection. The example is the documented input of worked example E1-26 and is not a normative value.",
-      "unit": "W/(m·K)",
-      "unitId": "WattPerMetreKelvin",
-      "min": 0.01,
+      "en": "Largest cover to mesh on fire-exposed surfaces",
+      "de": "Größte Betondeckung der Matte auf beflammten Oberflächen",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.025
+    },
+    {
+      "key": "fire_beam_basis",
+      "scope": "C94-18",
+      "kind": "choice",
+      "en": "Applicability of Tables 4.1 and 4.2",
+      "de": "Anwendbarkeit der Tabellen 4.1 und 4.2",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unverified",
+          "en": "Conditions still to be confirmed",
+          "de": "Bedingungen noch zu bestätigen"
+        },
+        {
+          "value": "verified",
+          "en": "Simply supported partially encased composite beam, three-sided standard fire and verified ambient resistance excluding additional fire reinforcement",
+          "de": "Einfeld-Verbundträger mit Kammerbeton, dreiseitigem Normbrand und nachgewiesener Tragfähigkeit bei Normaltemperatur ohne zusätzliche Brandbewehrung"
+        }
+      ],
+      "example": "unverified"
+    },
+    {
+      "key": "fire_beam_deck",
+      "scope": "C94-18",
+      "kind": "choice",
+      "en": "Type of composite slab connected to the beam",
+      "de": "Art der schubfest mit dem Träger verbundenen Decke",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "solid",
+          "en": "Solid reinforced concrete slab in shear connection",
+          "de": "Schubfest verbundene Stahlbetonplatte"
+        },
+        {
+          "value": "profiled",
+          "en": "Composite profiled sheeting, top flange coverage verified",
+          "de": "Verbunddecke mit Stahlprofilblech und bestätigter Obergurtabdeckung"
+        },
+        {
+          "value": "closed_voids",
+          "en": "Composite profiled sheeting with voids closed by suitable fire protection",
+          "de": "Verbunddecke mit Stahlprofilblech und geeignetem Brandschutzverschluss der Öffnungen"
+        }
+      ],
+      "example": "solid"
+    },
+    {
+      "key": "fire_beam_deck_coverage",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Fraction of top flange covered by profiled sheeting",
+      "de": "Anteil des durch das Profilblech abgedeckten Obergurts",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
       "max": 1.0,
-      "example": 0.12
+      "example": 0.85
     },
     {
-      "key": "c_p",
-      "scope": "",
+      "key": "fire_beam_load_level",
+      "scope": "C94-18",
       "kind": "number",
-      "en": "Specific heat of the protection cp (J/(kg·K))",
-      "de": "Spezifische Wärme der Bekleidung cp (J/(kg·K))",
-      "confidence": "low",
-      "note": "Product input from the declaration of performance of the protection. The example is the documented input of worked example E1-26 and is not a normative value.",
-      "unit": "1",
-      "unitId": "One",
-      "min": 100.0,
-      "max": 5000.0,
-      "example": 1000.0
-    },
-    {
-      "key": "rho_p",
-      "scope": "",
-      "kind": "number",
-      "en": "Density of the protection ρp",
-      "de": "Rohdichte der Bekleidung ρp",
-      "confidence": "low",
-      "note": "Product input from the declaration of performance of the protection. The example is the documented input of worked example E1-26 and is not a normative value.",
-      "unit": "kg/m³",
-      "unitId": "KilogramPerCubicMetre",
-      "min": 50.0,
-      "max": 3000.0,
-      "example": 800.0
-    },
-    {
-      "key": "t_fire",
-      "scope": "",
-      "kind": "number",
-      "en": "Fire duration t",
-      "de": "Branddauer t",
-      "confidence": "high",
-      "unit": "s",
-      "unitId": "Second",
-      "min": 60.0,
-      "max": 14400.0,
-      "example": 3600.0
-    },
-    {
-      "key": "mu0",
-      "scope": "",
-      "kind": "number",
-      "en": "Degree of utilisation μ0 in fire",
-      "de": "Ausnutzungsgrad μ0 im Brandfall",
+      "en": "Ratio of fire design action to ambient member resistance",
+      "de": "Verhältnis der Brandbeanspruchung zur Tragfähigkeit bei Normaltemperatur",
       "confidence": "high",
       "unit": "1",
       "unitId": "One",
-      "min": 0.013,
-      "max": 0.99,
-      "example": 0.5
+      "example": 0.6
+    },
+    {
+      "key": "fire_beam_width",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Flange width b",
+      "de": "Gurtbreite b",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.3
+    },
+    {
+      "key": "fire_beam_depth",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Steel profile height h",
+      "de": "Baustahlprofilhöhe h",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.65
+    },
+    {
+      "key": "fire_beam_web",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Web thickness e_w",
+      "de": "Stegdicke e_w",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.012
+    },
+    {
+      "key": "fire_beam_flange",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Bottom flange thickness e_f",
+      "de": "Untergurtdicke e_f",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.02
+    },
+    {
+      "key": "fire_beam_slab",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Concrete slab thickness h_c",
+      "de": "Betonplattendicke h_c",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.13
+    },
+    {
+      "key": "fire_beam_effective_width",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Effective slab width b_eff",
+      "de": "Mittragende Plattenbreite b_eff",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 3.5
+    },
+    {
+      "key": "fire_beam_as",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Area of additional longitudinal reinforcement A_s",
+      "de": "Fläche der zusätzlichen Längsbewehrung A_s",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre",
+      "example": 0.0028
+    },
+    {
+      "key": "fire_beam_ac",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Net area of encasement concrete A_c",
+      "de": "Nettofläche des Kammerbetons A_c",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre",
+      "example": 0.09
+    },
+    {
+      "key": "fire_beam_fy",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Nominal yield strength of the structural steel",
+      "de": "Nennstreckgrenze des Baustahls",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 355000000.0
+    },
+    {
+      "key": "fire_beam_rebar",
+      "scope": "C94-18",
+      "kind": "choice",
+      "en": "Grade of additional longitudinal reinforcement",
+      "de": "Betonstahlgüte der zusätzlichen Längsbewehrung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "S500",
+          "en": "S500",
+          "de": "S500"
+        },
+        {
+          "value": "other",
+          "en": "Other additional reinforcement grade",
+          "de": "Andere Betonstahlgüte für die Zulagebewehrung"
+        }
+      ],
+      "example": "S500"
+    },
+    {
+      "key": "fire_beam_u1",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Additional reinforcement axis distance u_1",
+      "de": "Achsabstand der Zulagebewehrung u_1",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.06
+    },
+    {
+      "key": "fire_beam_u2",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Additional reinforcement axis distance u_2",
+      "de": "Achsabstand der Zulagebewehrung u_2",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.055
+    },
+    {
+      "key": "fire_beam_ambient_u1",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Ambient minimum axis distance u_1 from reinforcement detailing",
+      "de": "Mindestachsabstand u_1 aus der Bemessung bei Normaltemperatur",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.035
+    },
+    {
+      "key": "fire_beam_ambient_u2",
+      "scope": "C94-18",
+      "kind": "number",
+      "en": "Ambient minimum axis distance u_2 from reinforcement detailing",
+      "de": "Mindestachsabstand u_2 aus der Bemessung bei Normaltemperatur",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.035
     }
   ]
 }

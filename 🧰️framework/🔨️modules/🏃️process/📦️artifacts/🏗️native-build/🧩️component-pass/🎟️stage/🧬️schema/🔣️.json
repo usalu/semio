@@ -1,10 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "ParallelStart": {"const": {"preferredSlots": 2, "waitMilliseconds": 30000}},
     "Capacity": {
       "enum": [
         "single",
         "available",
+        "parallel",
         "whole-host",
         "cleanup",
         "io"

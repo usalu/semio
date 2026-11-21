@@ -20,16 +20,19 @@ use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_child::SnapshotReadReturnPump;
 use semio_ui_contract::*;
+#[path = "🎟️picker-publication.rs"]
+pub mod picker_publication;
 
 /// 🩺️ Media transfers: the media exports, downloads, closures and snapshot retirements of the instance.
 pub struct MediaTransfers<A: ArtifactApp> {
+    pub original_picker: Option<Box<picker_publication::PickerPublication>>,
     pub pending_reserved_producer_permit:ManuallyDrop<Option<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>>,
     pub reserved_mount:ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
     pub reserved_mounted_construction:semio_framework::action_bus::ResidentConstruction<Box<semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>>>,
     pub reserved_receipt:Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>,
     pub reserved_mount_construction:semio_framework_job::OriginalConstructionAdmission,
     pub media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
-    pub media_export_preparation:ManuallyDrop<Option<MediaExportPreparation<A>>>,
+    pub media_export_preparation:ManuallyDrop<Option<Box<MediaExportPreparation<A>>>>,
     pub media_download_preparation:ManuallyDrop<Option<semio_plugin_document_media::media_export::MediaDownloadPreparation>>,
     pub media_closures: ArtifactFixedRegistry<ActiveMediaExport>,
     pub snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>,
@@ -52,6 +55,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     pub fn with_backing(backing:bool)->Self{
         Self {
             pending_reserved_producer_permit: ManuallyDrop::new(None),
+            original_picker:None,
             reserved_mount:ManuallyDrop::new(None),
             reserved_mount_construction:Default::default(),
             reserved_mounted_construction:Default::default(),
@@ -69,6 +73,75 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             segmented_downloads: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
             segmented_closures: if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)},
         }
+    }
+
+    semio_framework_value::initialization::original_empty_fields!(EMPTY_FIELDS, empty_field_demands, initialize_empty_field_at;
+        pending_reserved_producer_permit = ManuallyDrop::new(None),
+        reserved_mount = ManuallyDrop::new(None),
+        reserved_mount_construction = Default::default(),
+        reserved_mounted_construction = Default::default(),
+        reserved_receipt = None,
+        current_media_export = None,
+        media_submission_refusal = ManuallyDrop::new(None),
+        media_submission_refusal_place = ManuallyDrop::new(None),
+        media_submission_refusal_identity = None,
+        media_submission_refusal_retirement = ManuallyDrop::new(None),
+    );
+
+    /// 📋️ Counts absent transfers, fixed registry headers and other resident fields.
+    pub const INITIAL_FIELDS:usize=7+Self::EMPTY_FIELDS;
+
+    /// 📐️ Quotes one bounded media field before placing its original fixed backing.
+    pub fn initial_field_demands(field:usize,offset:usize,body:usize,backing:bool)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        use semio_framework_value::{initialization::absent_chunk_bytes,RetirementDemand};
+        use semio_plugin_ownership::bounded_ownership::original_registry_backing;
+        fn extent<S,T>(_:fn(&S)->&T)->usize{size_of::<T>()}
+        if field<2{
+            let bytes=if field==0{extent::<Self,_>(|owner|&owner.media_export_preparation)}else{extent::<Self,_>(|owner|&owner.media_download_preparation)};
+            return Ok(RetirementDemand{copy_bytes:absent_chunk_bytes(bytes,offset,body.max(1))?,depth:1,..Default::default()});
+        }
+        macro_rules! quote_registry{
+            ($key:ident)=>{RetirementDemand{copy_bytes:2*extent::<Self,_>(|owner|&owner.$key),capacity_bytes:if backing{original_registry_backing::<Self,_>(|owner|&owner.$key,64)?}else{0},depth:1,..Default::default()}}
+        }
+        Ok(match field{
+            2=>quote_registry!(media_exports),
+            3=>quote_registry!(media_closures),
+            4=>quote_registry!(snapshot_retirements),
+            5=>quote_registry!(segmented_downloads),
+            6=>quote_registry!(segmented_closures),
+            _=>return Self::empty_field_demands(field-7),
+        })
+    }
+
+    /// 🌱️ Places a selected field directly in the caller's original media storage.
+    /// # Safety
+    /// The selected field must be exclusively owned, uninitialized storage; offsets must advance monotonically.
+    pub unsafe fn initialize_field_at(target:*mut Self,field:usize,offset:usize,count:usize,backing:bool)->Result<bool,semio_framework_value::ValueError>{
+        use semio_framework_value::initialization::initialize_absent_field_at;
+        use std::ptr::addr_of_mut;
+        unsafe{
+            match field{
+                0=>return initialize_absent_field_at(addr_of_mut!((*target).media_export_preparation).cast::<Option<Box<MediaExportPreparation<A>>>>(),offset,count),
+                1=>return initialize_absent_field_at(addr_of_mut!((*target).media_download_preparation).cast::<Option<semio_plugin_document_media::media_export::MediaDownloadPreparation>>(),offset,count),
+                7.. => return Self::initialize_empty_field_at(target,field-7,offset,count),
+                _=>{},
+            }
+        }
+        if offset!=0||count!=Self::initial_field_demands(field,0,count,backing)?.copy_bytes{
+            return Err(semio_framework_value::ValueError::invariant("media registry requires its exact copy extent"));
+        }
+        macro_rules! place_registry{
+            ($key:ident)=>{unsafe{addr_of_mut!((*target).$key).write(if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(64)})}}
+        }
+        match field{
+            2=>place_registry!(media_exports),
+            3=>place_registry!(media_closures),
+            4=>place_registry!(snapshot_retirements),
+            5=>place_registry!(segmented_downloads),
+            6=>place_registry!(segmented_closures),
+            _=>unreachable!(),
+        }
+        Ok(true)
     }
 
     pub async fn take_media_export_chunk(&mut self,handle:semio_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{

@@ -181,6 +181,11 @@ impl WindowConfigOwnerRegistry {
     }
 
     #[doc(hidden)]
+    pub fn admit_store_batch(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, Fault> {
+        self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.admit_store_batch(publication, grant)
+    }
+
+    #[doc(hidden)]
     pub fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
         self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.advance(publication, body, grant, turn_ceiling, receiving)
     }

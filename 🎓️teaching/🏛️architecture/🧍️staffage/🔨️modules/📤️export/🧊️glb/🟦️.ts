@@ -26,7 +26,7 @@ export async function writeGlbDetailed(asset: Asset, options: GlbFileOptions, co
   const job = jobOf(control, [{ label: PHASES.model, weight: 6 }, { label: PHASES.tessellate, weight: 3 }, { label: PHASES.edges, weight: 2 }, { label: PHASES.encode, weight: 1 }]);
   return cancellable(control, async () => {
     const procedural = await modelOfAsset(asset, { ...rest, at: { kind: "pose", pose }, poses: [pose], clips: [] }, job.operation(0));
-    const edged = await resolvedOf(asset, procedural, job, 1);
+    const edged = await resolvedOf(asset, procedural, job, 1, { shareVertices: true });
     const operation = job.operation(3);
     const bytes = encodeGlb(edged, { pose, animations: false, variants: true }, operation);
     job.finish();

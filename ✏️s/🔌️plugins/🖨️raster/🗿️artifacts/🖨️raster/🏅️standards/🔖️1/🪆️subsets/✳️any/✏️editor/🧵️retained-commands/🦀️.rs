@@ -45,6 +45,7 @@ pub const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setFilterKind",
     "setFilterAmount",
     "setImageGrid",
+    "importPng",
 ];
 
 pub const RASTER_PIXEL_EDIT_TOOL_IDS:&[&str]=&["paintStroke","fillRegion","applyFilter","transformImage","fillSelection"];
@@ -109,6 +110,7 @@ pub(super) const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "importPng", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 pub fn raster_retained_contract() -> ToolExecutionContract {

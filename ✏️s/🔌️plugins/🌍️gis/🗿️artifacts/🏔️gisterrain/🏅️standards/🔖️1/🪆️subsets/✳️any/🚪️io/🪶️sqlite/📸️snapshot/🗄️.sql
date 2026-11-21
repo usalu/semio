@@ -15,3 +15,5 @@ CREATE TABLE gis_terrain_text (id INTEGER PRIMARY KEY REFERENCES gis_terrain_val
 CREATE TABLE gis_terrain_bytes (id INTEGER PRIMARY KEY REFERENCES gis_terrain_value(id), value BLOB NOT NULL);
 CREATE TABLE gis_terrain_array (id INTEGER PRIMARY KEY, parent_id INTEGER NOT NULL REFERENCES gis_terrain_value(id), ordinal INTEGER NOT NULL, value_id INTEGER NOT NULL REFERENCES gis_terrain_value(id));
 CREATE TABLE gis_terrain_member (id INTEGER PRIMARY KEY, parent_id INTEGER NOT NULL REFERENCES gis_terrain_value(id), ordinal INTEGER NOT NULL, name TEXT NOT NULL, value_id INTEGER NOT NULL REFERENCES gis_terrain_value(id));
+CREATE TABLE gis_terrain_elevation_source (id INTEGER PRIMARY KEY REFERENCES gis_terrain_document(id), west_ieee754_bits INTEGER NOT NULL, south_ieee754_bits INTEGER NOT NULL, east_ieee754_bits INTEGER NOT NULL, north_ieee754_bits INTEGER NOT NULL);
+CREATE TABLE gis_terrain_elevation_sample (id INTEGER PRIMARY KEY, source_id INTEGER NOT NULL REFERENCES gis_terrain_elevation_source(id), ordinal INTEGER NOT NULL CHECK(ordinal BETWEEN 0 AND 1088), elevation_meters INTEGER NOT NULL CHECK(elevation_meters BETWEEN -32768 AND 32767));

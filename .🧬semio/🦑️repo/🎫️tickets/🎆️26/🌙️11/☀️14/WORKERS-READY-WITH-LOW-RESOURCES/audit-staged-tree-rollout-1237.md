@@ -1,0 +1,7 @@
+# Staged tree change at 12:37 UTC
+
+At 12:37:26 UTC, a stable descriptor-only snapshot of the coordinator Git index enumerated 289,688 stage-zero entries. Independent Python Git tree serialization produced `0401fa055d8df31143107ba00e76bf7d787cf241`. The same accepted value appeared in the coordinator attestation. The native device, inode, size and file timestamps still matched at verification completion. No live Git index was changed by the verifier.
+
+Native read-only Git tree comparison against `41cfdebf5190cfa4c28e0b38b0294119d053503f` found 942 added paths, 1,617 modified paths and five deleted paths. The coordinator emitted exactly those 2,564 stage records across segments 180 and 181. Every emitted operation, target file mode and target Git object matched. The stage register contract uses a null base for all of these records. Comparing each new record with the native old Git blob would be a mismatched comparison. The valid comparison found no omitted, additional or mismatched records.
+
+At 12:38 the early peer records showed old or intermediate stages and outstanding consumption. m05 recorded one missing-object observation while its incoming queue was active, then reached the exact new stage. At 12:40:16 UTC, m02, m03, m05, m08, m10 and m12 all reported the exact new tree in one fresh sample. m01 and m07 were temporarily unknown. m11 had not reported the exact new tree in that sample. m04 and m06 remained stale and m09 had no current receipt. Replica stage proof is separate from native readiness and signed graph adoption.

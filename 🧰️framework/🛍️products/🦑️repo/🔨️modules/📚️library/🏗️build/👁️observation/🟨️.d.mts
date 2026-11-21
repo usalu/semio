@@ -38,6 +38,8 @@ export const observedFs:Readonly<Pick<typeof fs,"readFileSync"|"existsSync"|"sta
 export function registerSourceAnalysisV1(declaration:Readonly<{id:string;revision:string;analyze:(path:string,bytes:Buffer)=>unknown}>):SourceAnalysisProviderV1;
 /** 🔬️ Returns an admitted JSON image; consumers must validate its defining parser result. */
 export function observedSourceAnalysisV1(provider:SourceAnalysisProviderV1,path:fs.PathLike):unknown;
+/** 👥️ Returns two ordered parser results from one source image, preserving each provider's original facts. */
+export function observedSourceAnalysisPairV1(first:SourceAnalysisProviderV1,second:SourceAnalysisProviderV1,path:fs.PathLike):readonly [unknown,unknown];
 /** 🌊️ Retains original parser and nested Source observations through asynchronous input. */
 export function observedSourceAnalysisAsyncV1(provider:SourceAnalysisProviderV1,path:fs.PathLike):Promise<unknown>;
 /** 🧿️ Seals and fingerprints the original module-load authority without issuing a grant. */
@@ -63,6 +65,7 @@ export function memoizedObservedComputationV1<T>(cache:Map<unknown,unknown>,key:
 /** 🧪️ Replays original facts while checking the receiving caller's continuation. */
 export function memoizedObservedAsyncComputationV1<T>(cache:Map<unknown,unknown>,key:unknown,compute:()=>Promise<T>,checkpoint:()=>Promise<void>):Promise<T>;
 /** 🕸️ Preserves every Source fact even when a computation fails. */
+export function captureObservedSourceInputsV1<T>(compute:()=>T|PromiseLike<T>,onFailure?:((observations:SourceObservationV1[],authorityObservations:SourceObservationV1[])=>void)|undefined,includeAuthority?:boolean,spill?:undefined):Promise<CapturedSourceInputsV1<Awaited<T>>&{readonly observations:readonly SourceObservationV1[]}>;
 export function captureObservedSourceInputsV1<T>(compute:()=>T|PromiseLike<T>,onFailure?:((observations:SourceObservationV1[],authorityObservations:SourceObservationV1[])=>void)|undefined,includeAuthority?:boolean,spill?:{builder():{add(rows:Iterable<SourceObservationV1>):void;finish():Iterable<SourceObservationV1>&{readonly length:number}}}):Promise<CapturedSourceInputsV1<Awaited<T>>>;
 /** ✍️ Records actual bounded bytes without accepting a caller-provided digest or file observation. */
 export function observedExactSourceFileV1(batch:ExactSourceReadBatchV1,root:string,name:string):Promise<ExactSourceFileV1|null>;
@@ -136,6 +139,7 @@ export function inferenceHeaderLine(path:string):string|null;
 export function readInferenceHeaderV1(path:string):{digest:string;resultSha256:string;authorityObservations:readonly SourceObservationV1[];blocks:readonly string[];observations:readonly SourceObservationV1[]};
 /** ✅️ Rechecks untrusted captured facts without admitting a provider or renewing Source authority. */
 export function observationsHold(observations:readonly unknown[],limit?:number,stableDirectories?:Set<string>,symlinks?:Set<string>|true,signal?:AbortSignal,onStale?:((row:SourceObservationV1)=>void)|undefined,onVerified?:(rows:number)=>void):Promise<boolean>;
+export function observationsHoldWithinRoundV1(observations:readonly unknown[],limit:number,signal?:AbortSignal,onStale?:(row:SourceObservationV1)=>void,onVerified?:(rows:number)=>void):Promise<boolean>;
 /** 📊️ Exposes owned computation counts without affecting admission. */
 export function projectInferenceCountsV1():Record<string,number>;
 /** 🌐️ The facts one project record consumed, whether it was computed or reused in this process. */

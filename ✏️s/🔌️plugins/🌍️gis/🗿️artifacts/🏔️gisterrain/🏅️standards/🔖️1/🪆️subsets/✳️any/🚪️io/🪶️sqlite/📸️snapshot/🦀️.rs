@@ -21,12 +21,24 @@ impl ArtifactSqliteSnapshotHost for GisTerrainSnapshot{
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   let mut bound=NativeEncodingBound::new(control)?;bound.add(4096)?;
   if let Some(map)=&self.imported_map{map.validate().map_err(invalid)?;let mut pending=bound.allocate_frontier(0)?;for records in [&map.positions,&map.routes,&map.regions]{for value in records{bound.push_frontier(&mut pending,value)?;}}for property in &map.properties{bound.repeated(property.name.len(),6)?;bound.push_frontier(&mut pending,&property.value)?;}while let Some(value)=pending.pop(){bound.add(512)?;match value{DslValue::String(text)=>bound.repeated(text.len(),6)?,DslValue::Bytes(bytes)=>bound.repeated(bytes.len(),4)?,DslValue::Array(items)=>for value in items{bound.push_frontier(&mut pending,value)?;},DslValue::Object(members)=>for(name,value)in members{bound.repeated(name.len(),6)?;bound.push_frontier(&mut pending,value)?;},_=>()}}}
-  if let Some(child)=&self.mesh{for text in [&child.child_id,&child.target.artifact_id,&child.target.dialect.artifact_kind,&child.target.dialect.standard,&child.target.dialect.subset]{bound.repeated(text.len(),6)?;}}bound.finish()
+  if let Some(child)=&self.mesh{for text in [&child.child_id,&child.target.artifact_id,&child.target.dialect.artifact_kind,&child.target.dialect.standard,&child.target.dialect.subset]{bound.repeated(text.len(),6)?;}}
+  if let Some(source) = &self.elevation_source {
+   if !source.is_valid() { return Err(invalid("invalid GIS elevation source")); }
+   bound.add(512)?;
+   bound.repeated(source.rows.iter().map(Vec::len).sum::<usize>(), 64)?;
+  }
+  bound.finish()
  }
  
  
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
-  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.gis.gisterrain"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"GIS terrain does not own this semantic subset")))}let restored=Self::from_sqlite_database(database,control).map_err(store::io_schema::IoError::from_value_error)?;let maps=match(&self.imported_map,&restored.imported_map){(None,None)=>true,(Some(a),Some(b))=>a.same(b),_=>false};if self.exaggeration.to_bits()!=restored.exaggeration.to_bits()||!maps||self.mesh!=restored.mesh{return Err(store::io_schema::IoError::from_value_error(invalid("GIS terrain owned identity differs")))}Ok(store::io_schema::IoOutcome::clean(()))
+  control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.gis.gisterrain"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner,"GIS terrain does not own this semantic subset")))}let restored=Self::from_sqlite_database(database,control).map_err(store::io_schema::IoError::from_value_error)?;let maps=match(&self.imported_map,&restored.imported_map){(None,None)=>true,(Some(a),Some(b))=>a.same(b),_=>false};
+  let sources = match (&self.elevation_source, &restored.elevation_source) {
+   (None, None) => true,
+   (Some(a), Some(b)) => a.bounds.map(f64::to_bits) == b.bounds.map(f64::to_bits) && a.rows == b.rows,
+   _ => false,
+  };
+  if self.exaggeration.to_bits()!=restored.exaggeration.to_bits()||!maps||self.mesh!=restored.mesh||!sources{return Err(store::io_schema::IoError::from_value_error(invalid("GIS terrain owned identity differs")))}Ok(store::io_schema::IoOutcome::clean(()))
  }
 }
 impl pack::snapshot::ArtifactSqliteSnapshot for GisTerrainSnapshot {

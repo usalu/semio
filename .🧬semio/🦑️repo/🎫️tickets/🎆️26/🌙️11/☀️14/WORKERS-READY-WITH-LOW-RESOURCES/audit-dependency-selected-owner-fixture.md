@@ -1,0 +1,11 @@
+# Selected Dependency Owner Fixture Binding
+
+The combined dependency-reader and unready-retirement run's first failure came from the neutral selected-owner fixture's `inactive` case at `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts:117`. Its generic expected-success assertion hid the caught primary. Reporting the primary in the isolated lane produced `ReferenceError: tryRepositoryDependencyBindingsV1 is not defined`. This originated inside the test's extracted function, whose injected globals still used the previous raw binding lease port. The production administrative owner imports the current binding port from the adjacent `🔒️bindings` module.
+
+The fixture now imports the actual binding-gate and result-projection functions and the existing Native volume-event observer. Its simulated parent uses the same acquired-value result contract as the Native driver. SQLite independently projects the expected disposition for the eleven fixture cases, including typed busy after both leases close and zero Source ALL entries during contention. The previous assertions on whole allocation retention, zero publication-retirement dispatches, active/inactive identity, complete Source binding custody, original error identity and untouched journal remain. Unexpected failures in accepted cases now propagate their original primary. Production code and the postorder retirement test stayed outside this change.
+
+Session 57401 ran the exact selected-owner fixture in isolation and passed with 90 assertions. `🗑️generated/dependency-selected-owner-first-error.log` and `🗑️generated/dependency-selected-owner-rebound.log` retain the precise red and green outcomes. The other failures in the earlier combined run followed closure of its shared Original admission. The isolated result establishes the repair of the first fixture, while the rest of that run still awaits verification.
+
+```sh
+SEMIO_TEST_ARTIFACT_DIR="$PWD/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/🗑️generated" repo tools exec --light bun -- test './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts' -t 'selected owner keeps whole allocation'
+```

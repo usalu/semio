@@ -333,9 +333,9 @@ export const TABLE = {
   cell: { role: "cell" },
 } as const;
 
-/** 🗄️ Retains one semantic table and folds it below its reading tier or whenever its actual columns exceed their frame. */
-export function Records(props: { readonly fold: number; readonly children: ReactNode } & Pick<HTMLAttributes<HTMLDivElement>, "className" | "role" | "tabIndex" | "aria-labelledby" | "aria-describedby">): ReactElement {
-  const { fold, children, className, ...rest } = props;
+/** 🗄️ Retains one semantic table and folds it below its reading tier or whenever its actual columns exceed their frame. A table embedded in a figure uses the figure's surrounding cell. */
+export function Records(props: { readonly fold: number; readonly children: ReactNode; readonly cell?: boolean } & Pick<HTMLAttributes<HTMLDivElement>, "className" | "role" | "tabIndex" | "aria-labelledby" | "aria-describedby">): ReactElement {
+  const { fold, children, className, cell = true, ...rest } = props;
   const host = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const frame = host.current;
@@ -383,7 +383,7 @@ export function Records(props: { readonly fold: number; readonly children: React
     };
   }, [fold]);
   return (
-    <div {...rest} {...CELL} ref={host} className={cn("course-records", className)} style={{ ["--course-fold" as string]: fold } as CSSProperties}>
+    <div {...rest} {...(cell ? CELL : undefined)} ref={host} className={cn("course-records", className)} style={{ ["--course-fold" as string]: fold } as CSSProperties}>
       {children}
     </div>
   );
@@ -447,15 +447,15 @@ export function Segments<T extends string>(props: { readonly label: string; read
  * wraps instead of overflowing when a translation or the learner's text size makes it longer than its card. A `row`
  * button is a whole row of a flush card: a cell as wide as the card whose dividers are the card's single ones and
  * which has no outline of its own, since its outer edges are the card's. A `cell` button is a cell of a row (a notice band's
- * actions) with no outline of its own either; a `tile` is a row button whose dividers the grid of `.course-tiles` draws. */
-export function BodyButton(props: { readonly onClick: () => void; readonly disabled?: boolean; readonly primary?: boolean; readonly row?: boolean; readonly cell?: boolean; readonly tile?: boolean; readonly type?: "button" | "submit"; readonly describedBy?: string; readonly children: ReactNode }): ReactElement {
+ * actions) with no outline of its own either. */
+export function BodyButton(props: { readonly onClick: () => void; readonly disabled?: boolean; readonly primary?: boolean; readonly row?: boolean; readonly cell?: boolean; readonly type?: "button" | "submit"; readonly describedBy?: string; readonly children: ReactNode }): ReactElement {
   return (
     <button
       type={props.type ?? "button"}
       disabled={props.disabled}
       aria-describedby={props.describedBy}
       onClick={props.onClick}
-      {...((props.row && !props.tile) || props.cell ? CELL : props.tile ? sharedBorderlessBoxProps : FRAME)}
+      {...(props.row || props.cell ? CELL : FRAME)}
       className={cn(
         overviewCardChipClass,
         "course-target h-auto max-h-none cursor-pointer whitespace-normal text-left leading-tight transition-colors disabled:cursor-not-allowed disabled:opacity-50",

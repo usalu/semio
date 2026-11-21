@@ -3,11 +3,10 @@ use semio_s_artifact_trinity_jack as jack;
 use jack::standards::v1::subsets::any::schema::content::JackContentChild;
 use semio_s_artifact_trinity_jack_graph_query::{JackContentVisual, JackGraphQuery};
 use jack::standards::v1::subsets::any::schema::content_read::{JackContentProjection, JackContentLayout, JackContentRead, JackOwnedContent};
-use jack::standards::v1::subsets::any::schema::graph::{Node, Edge, Port};
+use jack::standards::v1::subsets::any::schema::graph::{Node, Edge, EntityRef, GraphEffect, Port};
 use semio_framework_graph_manifest::{PortDirection, PropertyBag, PropertyValue};
-use jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
+use semio_plugin::app::ChildEmitPreparation;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::schema::geometry::binary64_lexeme;
 use semio_s_artifact_stdio_semio_base::schema::geometry::read_binary64_lexeme;
@@ -19,13 +18,9 @@ use std::sync::Arc;
 use {semio_s_artifact_stdio_semio_graph::schema::mutations::add_edge_property::AddEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::add_node_property::AddNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::create_node::CreateNode, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode, semio_s_artifact_stdio_semio_graph::schema::mutations::move_node::MoveNode, semio_s_artifact_stdio_semio_graph::schema::mutations::remove_edge_property::RemoveEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::remove_node_property::RemoveNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::set_edge_property::SetEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::set_node_property::SetNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
 
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct SemioJackOwnedContent{identity:JackContentChild,snapshot:Option<SemioGraphSnapshot>}
 impl SemioJackOwnedContent{pub fn new(identity:JackContentChild,snapshot:SemioGraphSnapshot)->Self{Self{identity,snapshot:Some(snapshot)}}pub fn snapshot(&self)->&SemioGraphSnapshot{self.snapshot.as_ref().expect("original live graph owner")}}
-impl RetireOwned for SemioJackOwnedContent{
- fn retirement(self)->Box<dyn RetirementCursor>{semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.identity),semio_framework_value::retirement::deferred(self.snapshot)])}
- fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.identity),semio_framework_value::retirement::deferred_birth_bytes_for(&self.snapshot)])}
- fn controlled_retirement_supported()->bool{true}
-}
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
 fn property_to_semio(value:&PropertyValue)->SemioValue{match value{
@@ -47,7 +42,17 @@ fn property_from_semio(value:&SemioValue)->Result<PropertyValue,ValueError>{Ok(m
  SemioValue::Int{..}|SemioValue::Bytes{..}|SemioValue::Ref{..}=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Jack query projection cannot represent this intrinsic Semio value family")),
 })}
 fn properties_from_semio(values:&[SemioValueEntry])->Result<PropertyBag,ValueError>{let mut result=PropertyBag::new();for entry in values{if result.contains_key(&entry.key){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Jack query projection requires unique property keys"))}result.insert(entry.key.clone(),property_from_semio(&entry.value)?);}Ok(result)}
-fn endpoint(node:&str,port:Option<&str>)->Result<String,ValueError>{if node.contains('@')||port.is_some_and(|port|port.contains('@')){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Jack query endpoint cannot represent a literal separator in an endpoint component"))}Ok(match port{Some(port)=>format!("{node}@{port}"),None=>node.to_string()})}
+fn validate_endpoint(node: &str, port: Option<&str>) -> Result<(), ValueError> {
+    if node.is_empty() || node.contains('@') || port.is_some_and(str::is_empty) {
+        return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Jack query endpoint requires a nonempty node without a separator and a nonempty port when specified"));
+    }
+    Ok(())
+}
+
+fn endpoint(node: &str, port: Option<&str>) -> Result<String, ValueError> {
+    validate_endpoint(node, port)?;
+    Ok(match port { Some(port) => format!("{node}@{port}"), None => node.to_string() })
+}
 
 pub fn jack_content_snapshot_from_working(nodes:&[Node],edges:&[Edge])->SemioGraphSnapshot{
  SemioGraphSnapshot{schema:STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(),nodes:nodes.iter().map(|node|SemioGraphNode{id:GraphNodeId::new(node.id.clone()),kind:node.kind.clone(),label:node.name.clone(),position:SemioPoint2{x:node.x,y:node.y},width:node.width,height:node.height,ports:node.ports.iter().map(|port|SemioGraphPort{name:port.id.clone(),kind:match port.direction{PortDirection::In=>SemioGraphPortKind::In,PortDirection::Out=>SemioGraphPortKind::Out},category:port.kind.clone(),properties:properties_to_semio(&port.properties)}).collect(),properties:properties_to_semio(&node.properties)}).collect(),edges:edges.iter().map(|edge|{let(source,source_port)=edge.source.split_once('@').map_or((edge.source.as_str(),None),|(node,port)|(node,Some(port.to_string())));let(target,target_port)=edge.target.split_once('@').map_or((edge.target.as_str(),None),|(node,port)|(node,Some(port.to_string())));SemioGraphEdge{id:GraphEdgeId::new(edge.id.clone()),source:GraphNodeId::new(source),target:GraphNodeId::new(target),kind:edge.kind.clone(),label:String::new(),source_port,target_port,properties:properties_to_semio(&edge.properties)}}).collect()}
@@ -83,61 +88,98 @@ fn property_index(entries: &[SemioValueEntry], key: &str) -> usize {
 /// 🧮️ The content child's graph leaves that apply query `effects` to `base`, each against the state the earlier ones left:
 /// a node delete first cuts every incident edge as its own row (every row stays point-invertible), a property set on an
 /// existing key is `set-*-property`, a new key is `add-*-property` at its sorted index.
-pub fn graph_leaves(base: &SemioGraphSnapshot, effects: &[jack::standards::v1::subsets::any::schema::graph::GraphEffect]) -> Vec<SemioGraphMutation> {
-    use jack::standards::v1::subsets::any::schema::graph::GraphEffect;
+pub fn graph_leaves(base: &SemioGraphSnapshot, effects: &[GraphEffect]) -> Result<Vec<SemioGraphMutation>, ValueError> {
+    if effects.is_empty() {
+        return Ok(Vec::new());
+    }
     let mut work = base.clone();
+    let staged = stage_graph_leaves(&mut work, effects);
+    jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(work)?;
+    staged
+}
+
+fn stage_graph_leaves(work: &mut SemioGraphSnapshot, effects: &[GraphEffect]) -> Result<Vec<SemioGraphMutation>, ValueError> {
     let mut leaves = Vec::with_capacity(effects.len());
-    let push = |work: &mut SemioGraphSnapshot, leaf: SemioGraphMutation, leaves: &mut Vec<SemioGraphMutation>| {
+    let mut push = |work: &mut SemioGraphSnapshot, leaf: SemioGraphMutation| {
         let outcome = <SemioGraphMutation as protocol::ColdMutation<SemioGraphSnapshot>>::diff(&leaf, work);
-        if let Ok(next) = protocol::apply_diff_cold(outcome.diff(), work) {
-            *work = next;
+        match outcome.admit() {
+            protocol::MutationAdmission::Admitted(outcome) => {
+                if !outcome.diff().is_empty_diff() {
+                    protocol::apply_diff_cold_into(outcome.diff(), work).map_err(|error| invalid(error.to_string()))?;
+                    leaves.push(leaf);
+                }
+                Ok(())
+            }
+            protocol::MutationAdmission::Refused(outcome) => {
+                let message = outcome.messages().iter().max_by_key(|message| message.level).expect("refusal has a diagnostic");
+                Err(invalid(format!("{}: {}", message.code.0, message.message)))
+            }
         }
-        leaves.push(leaf);
     };
     for effect in effects {
         match effect {
             GraphEffect::CreateNode(node) => {
                 let content = jack_content_snapshot_from_working(std::slice::from_ref(node), &[]).nodes.remove(0);
                 let SemioGraphNode { id, kind, label, position, width, height, ports, properties } = content;
-                push(&mut work, SemioGraphMutation::CreateNode(CreateNode { id, kind, label, position, width, height, ports, properties, at: None }), &mut leaves);
+                push(work, SemioGraphMutation::CreateNode(CreateNode { id, kind, label, position, width, height, ports, properties, at: None }))?;
             }
             GraphEffect::DeleteNode(id) => {
                 let incident: Vec<GraphEdgeId> = work.edges.iter().filter(|edge| edge.source.value == *id || edge.target.value == *id).map(|edge| edge.id.clone()).collect();
                 for edge in incident {
-                    push(&mut work, SemioGraphMutation::DeleteEdge(DeleteEdge { id: edge }), &mut leaves);
+                    push(work, SemioGraphMutation::DeleteEdge(DeleteEdge { id: edge }))?;
                 }
-                push(&mut work, SemioGraphMutation::DeleteNode(DeleteNode { id: GraphNodeId::new(id.clone()) }), &mut leaves);
+                push(work, SemioGraphMutation::DeleteNode(DeleteNode { id: GraphNodeId::new(id.clone()) }))?;
             }
             GraphEffect::CreateEdge(edge) => {
                 let (source, source_port) = split_endpoint(&edge.source);
                 let (target, target_port) = split_endpoint(&edge.target);
-                push(&mut work, SemioGraphMutation::CreateEdge(CreateEdge { id: GraphEdgeId::new(edge.id.clone()), source, target, kind: edge.kind.clone(), label: String::new(), source_port, target_port, properties: properties_to_semio(&edge.properties), at: None }), &mut leaves);
+                validate_endpoint(&source.value, source_port.as_deref())?;
+                validate_endpoint(&target.value, target_port.as_deref())?;
+                push(work, SemioGraphMutation::CreateEdge(CreateEdge { id: GraphEdgeId::new(edge.id.clone()), source, target, kind: edge.kind.clone(), label: String::new(), source_port, target_port, properties: properties_to_semio(&edge.properties), at: None }))?;
             }
-            GraphEffect::DeleteEdge(id) => push(&mut work, SemioGraphMutation::DeleteEdge(DeleteEdge { id: GraphEdgeId::new(id.clone()) }), &mut leaves),
-            GraphEffect::RenameNode { id, name } => push(&mut work, SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: GraphNodeId::new(id.clone()), new_label: name.clone() }), &mut leaves),
-            GraphEffect::MoveNode { id, x, y } => push(&mut work, SemioGraphMutation::MoveNode(MoveNode { id: GraphNodeId::new(id.clone()), new_position: SemioPoint2 { x: *x, y: *y } }), &mut leaves),
-            GraphEffect::SetProperty { entity: jack::standards::v1::subsets::any::schema::graph::EntityRef::Node(id), key, value } => {
+            GraphEffect::DeleteEdge(id) => push(work, SemioGraphMutation::DeleteEdge(DeleteEdge { id: GraphEdgeId::new(id.clone()) }))?,
+            GraphEffect::RenameNode { id, name } => push(work, SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: GraphNodeId::new(id.clone()), new_label: name.clone() }))?,
+            GraphEffect::MoveNode { id, x, y } => push(work, SemioGraphMutation::MoveNode(MoveNode { id: GraphNodeId::new(id.clone()), new_position: SemioPoint2 { x: *x, y: *y } }))?,
+            GraphEffect::SetProperty { entity: EntityRef::Node(id), key, value } => {
                 let existing = work.nodes.iter().find(|node| node.id.value == *id).map(|node| (node.properties.iter().any(|entry| entry.key == *key), property_index(&node.properties, key)));
                 let leaf = match existing {
                     Some((true, _)) => SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: GraphNodeId::new(id.clone()), key: key.clone(), value: property_to_semio(value) }),
                     other => SemioGraphMutation::AddNodeProperty(AddNodeProperty { node_id: GraphNodeId::new(id.clone()), index: other.map_or(0, |(_, index)| index), property: SemioValueEntry { key: key.clone(), value: property_to_semio(value) } }),
                 };
-                push(&mut work, leaf, &mut leaves);
+                push(work, leaf)?;
             }
-            GraphEffect::SetProperty { entity: jack::standards::v1::subsets::any::schema::graph::EntityRef::Edge(id), key, value } => {
+            GraphEffect::SetProperty { entity: EntityRef::Edge(id), key, value } => {
                 let existing = work.edges.iter().find(|edge| edge.id.value == *id).map(|edge| (edge.properties.iter().any(|entry| entry.key == *key), property_index(&edge.properties, key)));
                 let leaf = match existing {
                     Some((true, _)) => SemioGraphMutation::SetEdgeProperty(SetEdgeProperty { edge_id: GraphEdgeId::new(id.clone()), key: key.clone(), value: property_to_semio(value) }),
                     other => SemioGraphMutation::AddEdgeProperty(AddEdgeProperty { edge_id: GraphEdgeId::new(id.clone()), index: other.map_or(0, |(_, index)| index), property: SemioValueEntry { key: key.clone(), value: property_to_semio(value) } }),
                 };
-                push(&mut work, leaf, &mut leaves);
+                push(work, leaf)?;
             }
-            GraphEffect::RemoveProperty { entity: jack::standards::v1::subsets::any::schema::graph::EntityRef::Node(id), key } => push(&mut work, SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: GraphNodeId::new(id.clone()), key: key.clone() }), &mut leaves),
-            GraphEffect::RemoveProperty { entity: jack::standards::v1::subsets::any::schema::graph::EntityRef::Edge(id), key } => push(&mut work, SemioGraphMutation::RemoveEdgeProperty(RemoveEdgeProperty { edge_id: GraphEdgeId::new(id.clone()), key: key.clone() }), &mut leaves),
+            GraphEffect::RemoveProperty { entity: EntityRef::Node(id), key } => {
+                let node = work.nodes.iter().find(|node| node.id.value == *id);
+                if node.is_none_or(|node| node.properties.iter().any(|entry| entry.key == *key)) {
+                    push(work, SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: GraphNodeId::new(id.clone()), key: key.clone() }))?;
+                }
+            }
+            GraphEffect::RemoveProperty { entity: EntityRef::Edge(id), key } => {
+                let edge = work.edges.iter().find(|edge| edge.id.value == *id);
+                if edge.is_none_or(|edge| edge.properties.iter().any(|entry| entry.key == *key)) {
+                    push(work, SemioGraphMutation::RemoveEdgeProperty(RemoveEdgeProperty { edge_id: GraphEdgeId::new(id.clone()), key: key.clone() }))?;
+                }
+            }
         }
     }
-    jack::standards::v1::subsets::any::schema::content::retire_owned_to_terminal(work).expect("valid Jack working child retirement");
-    leaves
+    Ok(leaves)
+}
+
+/// 📤️ Prepares the same typed graph edit for local and published child reads.
+pub fn prepare_graph_effects(snapshot: &SemioGraphSnapshot, child_id: &str, effects: &[GraphEffect]) -> Result<Vec<ChildEmitPreparation>, ValueError> {
+    let leaves = graph_leaves(snapshot, effects)?;
+    if leaves.is_empty() {
+        return Ok(Vec::new());
+    }
+    Ok(vec![ChildEmitPreparation::of_owned::<SemioGraphSnapshot, _>("content", child_id, leaves)])
 }
 const QUERY_ENTITY_COLLECTION_MAXIMUM:usize=128;
 const QUERY_ENTITY_NESTING_MAXIMUM:usize=16;
@@ -160,7 +202,8 @@ fn content_node_bytes(node:&SemioGraphNode,maximum:usize)->Result<(),ValueError>
 }
 fn content_edge_bytes(edge:&SemioGraphEdge,maximum:usize)->Result<(),ValueError>{
     if !edge.label.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Jack query projection cannot represent an intrinsic edge label"))}
-    if [&edge.source.value,&edge.target.value].into_iter().any(|id|id.contains('@'))||[edge.source_port.as_deref(),edge.target_port.as_deref()].into_iter().flatten().any(|port|port.contains('@')){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Jack query endpoint cannot represent a literal separator in an endpoint component"))}
+    validate_endpoint(&edge.source.value, edge.source_port.as_deref())?;
+    validate_endpoint(&edge.target.value, edge.target_port.as_deref())?;
     let mut bytes=size_of::<Edge>();let mut items=0;
     for value in[&edge.id.value,&edge.id.value,&edge.kind,&edge.source.value,&edge.target.value]{add_owned_bytes(&mut bytes,value.len(),maximum)?;}
     for port in[edge.source_port.as_deref(),edge.target_port.as_deref()].into_iter().flatten(){add_owned_bytes(&mut bytes,port.len().checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"query entity byte count overflow"))?,maximum)?;}
@@ -203,11 +246,13 @@ impl JackContentProjection for SemioJackOwnedContent{
  fn query_edge(&self,index:usize,maximum_bytes:usize)->Result<Option<Edge>,ValueError>{project_edge(self.snapshot(),index,maximum_bytes)}
 }
 impl JackContentLayout for SemioJackOwnedContent{fn move_codec(&self)->Arc<dyn jack::standards::v1::subsets::any::schema::content_read::JackContentMoveCodec>{move_codec()}}
-impl JackContentRead for SemioJackOwnedContent{fn prepare_effects(&self,effects:&[jack::standards::v1::subsets::any::schema::graph::GraphEffect])->Result<Vec<semio_plugin::app::ChildEmitPreparation>,ValueError>{let leaves=graph_leaves(self.snapshot(),effects);Ok(if leaves.is_empty(){Vec::new()}else{vec![semio_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot,_>("content",&self.identity.child_id,leaves)]})}}
+impl JackContentRead for SemioJackOwnedContent {
+    fn prepare_effects(&self, effects: &[GraphEffect]) -> Result<Vec<ChildEmitPreparation>, ValueError> {
+        prepare_graph_effects(self.snapshot(), &self.identity.child_id, effects)
+    }
+}
 impl JackOwnedContent for SemioJackOwnedContent{
  fn genesis_pack(&self)->Result<Vec<u8>,ValueError>{use pack::snapshot::ArtifactPack;Ok(SemioGraphSnapshot::encode_pack(self.snapshot()))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::boxed_owner_birth_bytes::<Self>())}
- fn into_retirement(self:Box<Self>)->Box<dyn RetirementCursor>{RetireOwned::retirement(self)}
 }
 
 /// 🏭️ The Semio-backed graph capability factory: the one composition behavior a snapshot needs to hold a working scene.

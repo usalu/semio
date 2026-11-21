@@ -21,6 +21,8 @@ pub struct ReservedPreparation<A:ArtifactApp>{
  pub wire_schema:ManuallyDrop<Option<String>>,
  pub wire_cursor:ManuallyDrop<Option<semio_framework::action_bus::OriginalWireAdmission>>,
  pub wire_construction:semio_framework_job::OriginalConstructionAdmission,
+ pub wire_phase:ReservedWirePhase,
+ pub original_picker:bool,
  pub admission_cursor:(usize,usize),
  pub admission_registration:Option<usize>,
  pub admission_decoded:usize,
@@ -46,7 +48,21 @@ pub struct ReservedPreparation<A:ArtifactApp>{
  retirement:RetainedCloneClose,
  closing:bool,
 }
+/// 🧭 Tracks the two paid construction receipts in their original order.
+#[derive(Clone,Copy,Eq,PartialEq)]
+pub enum ReservedWirePhase { Cursor, ResetCursor, Search, Close }
+
 impl<A:ArtifactApp> ReservedPreparation<A>{
+ pub fn advance_wire_phase(&mut self,next:ReservedWirePhase,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+  self.validate(self.revision,cx)?;
+  let progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ReservedWirePhase>(),..Default::default()};
+  let grant=cx.retained_grant();
+  if !cx.should_yield()&&!cx.is_cancelled()&&cx.fuel_remaining()>0&&grant.maximum_depth>0&&progress.fits(grant){
+   cx.consume_retained(progress)?;cx.consume_fuel(1);self.wire_phase=next;
+  }
+  Ok(())
+ }
+
  pub fn slot_close_demands(slot:&Option<Self>,birth:&Option<semio_framework_job::OriginalConstructionAdmission>,body:usize)->Result<RetirementDemand,ValueError>{match slot.as_ref(){None=>Ok(if birth.is_some(){RetirementDemand{copy_bytes:size_of::<semio_framework_job::OriginalConstructionAdmission>(),depth:1,..Default::default()}}else{Default::default()}),Some(owner)if owner.terminal_is_empty()=>Ok(RetirementDemand{copy_bytes:size_of::<Option<Self>>(),depth:1,..Default::default()}),Some(owner)=>owner.close_demands(body)}}
  pub fn close_slot(slot:&mut Option<Self>,birth:&mut Option<semio_framework_job::OriginalConstructionAdmission>,bus:&semio_framework::ActionBus,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
   let Some(owner)=slot.as_mut()else{let Some(admission)=birth.as_mut()else{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})};let step=admission.retire_step(cx)?;if admission.terminal_is_empty(){*birth=None}return Ok(step)};owner.validate(owner.revision,cx)?;if !owner.terminal_is_empty(){return owner.close_step(bus,cx)}let bytes=size_of::<Option<Self>>();semio_framework_job::close_original_retained_step(cx,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{drop(slot.take());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})
@@ -58,7 +74,7 @@ impl<A:ArtifactApp> ReservedPreparation<A>{
   let bytes=size_of::<Self>();let source=semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx);
   let admission=birth.get_or_insert_with(Default::default);
   let settled=semio_framework_job::admit_original_construction_settled(cx,admission,slot,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},1,|control,_|{
-   let result=control.retirement_recipient_identity().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"reserved preparation requires its original decoder recipient")).map(|recipient|(Self{source,decoder:(control.ledger_identity(),recipient),revision,meta:None,admission:ManuallyDrop::new(None),wire_key:ManuallyDrop::new(None),wire_schema:ManuallyDrop::new(None),wire_cursor:ManuallyDrop::new(None),wire_construction:Default::default(),admission_cursor:(0,0),admission_registration:None,admission_decoded:0,cache_roots:ManuallyDrop::new(None),metadata:ManuallyDrop::new(Some(Default::default())),headers:ManuallyDrop::new(Some(Default::default())),metadata_sources:[[(0,0);2];9],metadata_bound:[false;9],metadata_transferred:[false;9],seed:None,seed_output:ManuallyDrop::new(None),completion_birth:Default::default(),completion:ManuallyDrop::new(None),action_wire:ManuallyDrop::new(None),action_returned:ManuallyDrop::new(None),raw_wire:ManuallyDrop::new(None),input:ManuallyDrop::new(None),snapshot_read:ManuallyDrop::new(None),interaction_read:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),job:ManuallyDrop::new(None),retirement:Default::default(),closing:false},RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
+   let result=control.retirement_recipient_identity().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"reserved preparation requires its original decoder recipient")).map(|recipient|(Self{source,decoder:(control.ledger_identity(),recipient),revision,meta:None,admission:ManuallyDrop::new(None),wire_key:ManuallyDrop::new(None),wire_schema:ManuallyDrop::new(None),wire_cursor:ManuallyDrop::new(None),wire_construction:Default::default(),wire_phase:ReservedWirePhase::Cursor,original_picker:false,admission_cursor:(0,0),admission_registration:None,admission_decoded:0,cache_roots:ManuallyDrop::new(None),metadata:ManuallyDrop::new(Some(Default::default())),headers:ManuallyDrop::new(Some(Default::default())),metadata_sources:[[(0,0);2];9],metadata_bound:[false;9],metadata_transferred:[false;9],seed:None,seed_output:ManuallyDrop::new(None),completion_birth:Default::default(),completion:ManuallyDrop::new(None),action_wire:ManuallyDrop::new(None),action_returned:ManuallyDrop::new(None),raw_wire:ManuallyDrop::new(None),input:ManuallyDrop::new(None),snapshot_read:ManuallyDrop::new(None),interaction_read:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),job:ManuallyDrop::new(None),retirement:Default::default(),closing:false},RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
    RetainedWorkOutcome{result,work:1}
   })?;
   if settled{if let(Some(owner),Some(residue))=(slot.as_mut(),birth.take()){owner.wire_construction=residue}}
@@ -115,7 +131,7 @@ impl<A:ArtifactApp> ReservedPreparation<A>{
   funded(cx,Default::default(),|effect|{let result=owner.advance(effect).map(|step|{*self.raw_wire=step.output;RetainedCloneStep::Progress(step.progress)});RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()})})?;Ok(self.raw_wire.is_some()&&self.action_returned.is_some())
  }
  pub fn advance_builder(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(self.revision,cx)?;if self.job.is_some(){return Ok(true)}if self.body.is_none(){A::build_reserved_tool_job(&mut self.request,&mut self.body,&mut self.wire_construction,cx)?;return Ok(false)}ArtifactReservedToolJob::admit_boxed_original(&mut self.body,&mut self.job,cx)
+  self.validate(self.revision,cx)?;if self.job.is_some(){return Ok(true)}if self.body.is_none(){if self.original_picker{A::build_original_picker_job(&mut self.request,&mut self.body,&mut self.wire_construction,cx)?;}else{A::build_reserved_tool_job(&mut self.request,&mut self.body,&mut self.wire_construction,cx)?;}return Ok(false)}ArtifactReservedToolJob::admit_boxed_original(&mut self.body,&mut self.job,cx)
  }
  /// 🤝️ Moves the built producer, its completion and its wire admission into the receiving slot in one paid step.
  pub fn handoff(&mut self,output:&mut Option<(ArtifactReservedToolJob,ArtifactToolCompletion<A>,semio_framework::ToolWireAdmission)>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{

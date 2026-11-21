@@ -127,7 +127,22 @@ fn layout_window_ownership_mutations_match_neutral_fixture_and_codecs() {
         let restored = mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff_cold(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base_config);
         assert_eq!(LayoutWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-        assert_eq!(LayoutWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+        use semio_os_kernel::original_receiving::{ReceivingStock, receive_to_completion};
+        let binary = mutation.encode_op().unwrap();
+        let stock = semio_framework_value::RetainedCloneGrant {
+            maximum_items: 1024,
+            maximum_copy_bytes: 65_536,
+            maximum_capacity_bytes: 65_536,
+            maximum_release_bytes: 65_536,
+            maximum_depth: 64,
+        };
+        assert_eq!(LayoutWindowConfigMutation::decode_op(&binary).unwrap(), mutation);
+        let received = receive_to_completion::<LayoutWindowConfigMutation>(
+            &binary,
+            (0, binary.len()),
+            ReceivingStock { stock, quantum: semio_framework_value::RetainedCloneGrant { maximum_items: 1, ..stock }, fuel: 1024 },
+        );
+        assert_eq!(received.expect("original Layout window config Pack receiving"), mutation);
     }
     for row in fixture["transientMutations"].as_array().unwrap() {
         let mutation: LayoutWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

@@ -73,6 +73,8 @@ export interface TreeDataItem {
   control?: React.ReactNode;
   /** 🖼️ Full-width content beneath the row label. */
   content?: React.ReactNode;
+  /** 🪟️ Number of retained window entries rendered as full-width content. */
+  windowContentRows?: number;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
   /** 🌿️ Alternative branches for this item. Each branch is an array of child items. Navigation < > switches between branches. */

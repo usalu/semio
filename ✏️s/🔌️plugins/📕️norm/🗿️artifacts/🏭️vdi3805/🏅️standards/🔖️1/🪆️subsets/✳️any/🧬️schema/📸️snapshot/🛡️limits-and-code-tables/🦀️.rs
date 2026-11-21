@@ -47,7 +47,7 @@ pub const PRESSURE_CLASS_CODES: &[&str] = &["PN6", "PN10", "PN16", "PN25", "PN40
 /// 🏷️ PN rows with nominal bar pressure for catalogue cells.
 pub const PRESSURE_CLASS_ROWS: &[(&str, f64)] = &[("PN6", 6.0), ("PN10", 10.0), ("PN16", 16.0), ("PN25", 25.0), ("PN40", 40.0)];
 
-/// 🏷️ Filter classes Blatt 19 (ISO 16890 / EN 779 legacy — VDI 3805-19 Table 1).
+/// 🏷️ Air-filter classification examples from EN 779 and ISO 16890.
 pub const FILTER_CLASS_CODES: &[&str] = &["G4", "M5", "M6", "F7", "F8", "F9", "ePM1", "ePM2_5", "ePM10"];
 
 /// 🏷️ Filter-class rows: code, en, de.
@@ -67,11 +67,9 @@ pub const FILTER_CLASS_ROWS: &[(&str, &str, &str)] = &[
 pub const TYPE_CODE_CODES: &[&str] = &["STD", "STD-A", "STD-B", "TYPE-A", "TYPE-B", "TYPE-C", "DEFAULT"];
 
 /// 📏 Blatt-sourced numeric domains used by evaluate and catalogue (min, max).
-pub const SHEET_NUMERIC_BOUNDS_19_AIRFLOW: (f64, f64) = (1e-5, 50.0);
+pub const SHEET_NUMERIC_BOUNDS_AIRFLOW: (f64, f64) = (1e-5, 50.0);
 
 pub const SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA: (f64, f64) = (0.0, 5000.0);
-
-pub const SHEET_NUMERIC_BOUNDS_53_COP: (f64, f64) = (1.0, 10.0);
 
 pub const SHEET_NUMERIC_BOUNDS_DN: (f64, f64) = (6.0, 600.0);
 
@@ -80,11 +78,3 @@ pub const SHEET_NUMERIC_BOUNDS_DN_PIPE: (f64, f64) = (6.0, 1200.0);
 pub const SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M: (f64, f64) = (0.006, 2.0);
 
 pub const SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M: (f64, f64) = (0.0005, 0.1);
-
-pub const SHEET_NUMERIC_BOUNDS_VOLUME_M3: (f64, f64) = (0.001, 500.0);
-
-pub const SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N: (f64, f64) = (0.0, 1.0e7);
-
-pub const SHEET_NUMERIC_BOUNDS_53_HEAT_W: (f64, f64) = (100.0, 5.0e6);
-
-pub const SHEET_NUMERIC_BOUNDS_53_DN: (f64, f64) = (6.0, 300.0);

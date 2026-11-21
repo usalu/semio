@@ -14291,6 +14291,36 @@
      "part": "member"
     },
     {
+     "id": "roof-rail",
+     "bone": "chassis",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "kind": "box",
+     "size": [
+      1.265,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       1.1485,
+       2.2025,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1
+      ]
+     },
+     "member": "chassis",
+     "part": "member"
+    },
+    {
      "id": "mass-chassis",
      "bone": "chassis",
      "material": "steel",
@@ -14313,8 +14343,24 @@
      "part": "mass"
     },
     {
-     "id": "m-cw-block",
-     "of": "cw-block",
+     "id": "cw-beam",
+     "bone": "counterweight",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.35,
+     "kind": "box",
+     "size": [
+      0.46,
+      0.075,
+      1
+     ],
+     "transform": {
+      "translation": [
+       0.386,
+       0.2875,
+       0
+      ]
+     },
      "member": "counterweight",
      "part": "member"
     },
@@ -14421,26 +14467,122 @@
      "part": "member"
     },
     {
-     "id": "m-tyre-f-l",
-     "of": "tyre-f-l",
+     "id": "hub-f-l",
+     "bone": "wheel-f",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0.15
+      ],
+      [
+       0.075,
+       0.15
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0.45
+     ],
      "member": "wheel-f",
      "part": "member"
     },
     {
-     "id": "m-tyre-r-l",
-     "of": "tyre-r-l",
+     "id": "hub-r-l",
+     "bone": "wheel-r",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0.12
+      ],
+      [
+       0.075,
+       0.12
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0.4325
+     ],
      "member": "wheel-r",
      "part": "member"
     },
     {
-     "id": "m-tyre-f-r",
-     "of": "tyre-f-r",
+     "id": "hub-f-r",
+     "bone": "wheel-f",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0.15
+      ],
+      [
+       0.075,
+       0.15
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      -1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.45
+     ],
      "member": "wheel-f",
      "part": "member"
     },
     {
-     "id": "m-tyre-r-r",
-     "of": "tyre-r-r",
+     "id": "hub-r-r",
+     "bone": "wheel-r",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "kind": "revolve",
+     "profile": [
+      [
+       0,
+       0.12
+      ],
+      [
+       0.075,
+       0.12
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      -1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.4325
+     ],
      "member": "wheel-r",
      "part": "member"
     },
@@ -14629,8 +14771,24 @@
      "part": "member"
     },
     {
-     "id": "m-pallet",
-     "of": "pallet",
+     "id": "pallet-stringer",
+     "bone": "pallet",
+     "material": "wood",
+     "role": "body",
+     "tone": 0.55,
+     "kind": "box",
+     "size": [
+      1.2,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.1065,
+       0
+      ]
+     },
      "member": "pallet",
      "part": "member"
     }
@@ -14641,8 +14799,8 @@
      "de": "1:500 zeichnet und modelliert den EFG 425 als wenige Massen bei 75 mm und behält alle realen Proportionen: die Rahmenseiten sind 75 mm dicke Seitenprofilbleche mit dem vorderen Radlauf, geschlossen von Haube, Bodenwanne und Fußblech um die Batterie (ein verdeckter Wärmekörper), Kotflügel und Unterbodenrahmen sind Blöcke, Armaturenhaube, Sitz und Lehne sind Blöcke; das Schutzdach sind vier 75-mm-Pfosten unter einer 75-mm-Dachplatte anstelle des Dachgitters; das Gegengewicht ist sein Loft über einem unteren Gussteil mit dem hinteren Radlauf und dem Achsgehäuse; Reifen sind Scheiben; der Mast sind zwei 75-mm-Schienen je Stufe und der Innenmastkopf, der Gabelträger ist eine Platte und das vergitterte Lastschutzgitter ein 75-mm-Rahmen mit Mittelstab, die Gabeln 75-mm-L-Profile, die Palette ein Block unter dem Ladegut."
     },
     {
-     "en": "Thickened to the 75 mm feature: guard posts (60 mm), fork blades (40 mm, so the blade top lies at 75 mm instead of 60 mm), tilt rods (45 mm), rails (64 to 70 mm wide). Dropped: steering wheel and column, armrest, lamps, coupling, chains, lift cylinders, pallet openings, straps. Structure: frame side plates (they are the frame members at this scale), floor pan and under-floor frame, guard posts, counterweight, axles, tyres, tilt cylinders, rails and inner head, carriage, forks, pallet; four 75 mm contact pads and three masses.",
-     "de": "Auf das Kleinstmaß 75 mm verdickt: Schutzdachpfosten (60 mm), Gabelblätter (40 mm, die Blattoberkante liegt daher bei 75 statt 60 mm), Kolbenstangen der Neigezylinder (45 mm), Schienen (64 bis 70 mm breit). Weggelassen: Lenkrad und Säule, Armlehne, Leuchten, Kupplung, Ketten, Hubzylinder, Palettenöffnungen, Umreifung. Tragwerk: Rahmenseitenbleche (bei diesem Maßstab sind sie die Rahmenträger), Bodenwanne und Unterbodenrahmen, Schutzdachpfosten, Gegengewicht, Achsen, Reifen, Neigezylinder, Schienen und Innenmastkopf, Gabelträger, Gabeln, Palette; vier 75-mm-Aufstandsplatten und drei Massen."
+     "en": "Thickened to the 75 mm feature: guard posts (60 mm), fork blades (40 mm, so the blade top lies at 75 mm instead of 60 mm), tilt rods (45 mm), rails (64 to 70 mm wide). Dropped: steering wheel and column, armrest, lamps, coupling, chains, lift cylinders, pallet openings, straps. Structure: frame side plates (they are the frame members at this scale), floor pan and under-floor frame, guard posts with the two roof rails, the counterweight beam that carries the steer axle, axles, wheel hubs, tilt cylinders, rails and inner head, carriage, forks, the pallet base, block and centre stringer (the load path, not the masses of the body); four 75 mm contact pads and three masses.",
+     "de": "Auf das Kleinstmaß 75 mm verdickt: Schutzdachpfosten (60 mm), Gabelblätter (40 mm, die Blattoberkante liegt daher bei 75 statt 60 mm), Kolbenstangen der Neigezylinder (45 mm), Schienen (64 bis 70 mm breit). Weggelassen: Lenkrad und Säule, Armlehne, Leuchten, Kupplung, Ketten, Hubzylinder, Palettenöffnungen, Umreifung. Tragwerk: Rahmenseitenbleche (bei diesem Maßstab sind sie die Rahmenträger), Bodenwanne und Unterbodenrahmen, Schutzdachpfosten mit den zwei Dachlängsträgern, der Gegengewichtsträger, der die Lenkachse trägt, Achsen, Radnaben, Neigezylinder, Schienen und Innenmastkopf, Gabelträger, Gabeln, Palettenfuß, -klotz und Mittellängsbrett (der Kraftfluss, nicht die Massen des Körpers); vier 75-mm-Aufstandsplatten und drei Massen."
     }
    ]
   }

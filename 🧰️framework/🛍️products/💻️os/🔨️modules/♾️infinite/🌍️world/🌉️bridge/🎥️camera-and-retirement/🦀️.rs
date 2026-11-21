@@ -662,13 +662,24 @@ impl World3dDynamicRetirement {
             }
             7 => {
                 let Some(id) = interaction_state.instance_interaction_granularity_ids.keys().next().cloned() else {
+                    if let Some(id) = interaction_state.instance_hover_targets.keys().next().cloned() {
+                        interaction_state.instance_hover_targets.remove(&id);
+                        return false;
+                    }
                     self.phase = 8;
                     return false;
                 };
                 interaction_state.instance_interaction_granularity_ids.remove(&id);
             }
             8 => {
+                if let Some(id) = interaction_state.component_unpickable_instance_ids.iter().next().cloned() {
+                    interaction_state.component_unpickable_instance_ids.remove(&id);
+                    return false;
+                }
                 if selection_state.local_hover_granularity_id.take().is_some() {
+                    return false;
+                }
+                if selection_state.local_hover_targets.take().is_some() {
                     return false;
                 }
                 self.phase = 9;

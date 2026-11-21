@@ -4,7 +4,7 @@ use super::{LayoutRunGraph, LayoutRunPoint, LayoutRunStage};
 use fdg_sim::force::fruchterman_reingold;
 use fdg_sim::glam::Vec3;
 use fdg_sim::{Dimensions, ForceGraph, ForceGraphHelper, Simulation, SimulationParameters};
-use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeBorrow, JobOutcomeView, OperationId, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepBudget, StepContextOwner, INTERACTIVE_LANE_WALL_US};
+use semio_framework_job::{drive_step, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeView, OperationId, OriginalJobFixtureCaller, OriginalJobReturn, OriginalJobReturnOrigin, RetainedCloneGrant};
 use semio_framework_job_payload::{RetainedJobPayload};
 use semio_framework_tool_run::{ToolRunProgress, ToolRunStep, ToolRunTick, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict};
 use serde::Deserialize;
@@ -164,25 +164,63 @@ fn wallet() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 256, maximum_copy_bytes: 1 << 18, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 }
 }
 
+const SOURCE: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 28, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4096 };
+
+fn caller() -> OriginalJobFixtureCaller {
+    OriginalJobFixtureCaller::admit(OperationId(1), Generation(1), SOURCE, frozen_now, u64::MAX, 1 << 28)
+}
+
 /// ▶️ Drives `job` through `drive_step` to `Complete` with `fuel` per step and a frozen clock, so the slicing is
 /// the job's own (one iteration per step) and every recorded step time is a whole, never deadline-cut step.
 pub fn layout_run_drive<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64) -> Result<LayoutRunRecording, String> {
     let mut recording = LayoutRunRecording::default();
-    let cancel = root_cancel_token();
     let grant = wallet();
-    let (mut owner, _) = StepContextOwner::new(OperationId(1), Generation(1), grant).map_err(|error| format!("{error:?}"))?;
-    let (mut sequence, mut verdict) = (0, None);
+    let mut caller = caller();
+    caller.birth_returns(SOURCE);
+    let mut origin = OriginalJobReturnOrigin::empty();
+    let mut verdict = None;
     let result = (|| {
+        let mut ready = false;
+        for _ in 0..4096 {
+            ready = caller.turn(SOURCE, |cx| cx.with_original_work_loan(16, cx.original_absolute_deadline_us(), |cx| origin.admit(cx)))
+                .map_err(|error| format!("{error:?}"))?;
+            if ready {
+                break;
+            }
+        }
+        if !ready {
+            return Err("layout run return origin was not admitted".into());
+        }
         while !recording.complete {
             let started = std::time::Instant::now();
-            let mut receipt = RetainedCloneProgress::default();
-            let descriptor = {
-                let mut cx = owner.context(StepBudget::new(fuel, INTERACTIVE_LANE_WALL_US, grant), cancel.clone(), frozen_now, &mut sequence, &mut receipt).ok_or_else(|| "layout run step context refused".to_string())?;
-                drive_step(job, &mut cx, "layout-run-testing", InteractiveStage::InteractiveStep, &mut verdict).map_err(|error| format!("{error:?}"))?.map(JobOutcomeBorrow::into_descriptor)
-            };
+            let mut returned = None;
+            let mut continuation = None;
+            caller.refreshed_turn(grant, |cx| cx.with_original_work_loan(fuel, cx.original_absolute_deadline_us(), |cx| {
+                match drive_step(job, cx, origin.receiver()?, "layout-run-testing", InteractiveStage::InteractiveStep, &mut verdict)? {
+                    OriginalJobReturn::Preparing | OriginalJobReturn::Pending => {}
+                    OriginalJobReturn::Outcome(reply) => returned = Some(reply.into_descriptor()),
+                    OriginalJobReturn::Continuation(failure) => continuation = Some(failure),
+                }
+                Ok(())
+            })).map_err(|error| format!("{error:?}"))?;
             recording.step_micros.push(started.elapsed().as_micros() as u64);
-            let Some(mut descriptor) = descriptor else { continue };
-            let observed = match job.borrow_outcome(&descriptor).map_err(|error| format!("{error:?}"))? {
+            if continuation.is_some() {
+                while continuation.is_some() {
+                    caller.refreshed_turn(grant, |cx| origin.receive_continuation(cx, &mut continuation)).map_err(|error| format!("{error:?}"))?;
+                }
+                let message = origin.continuation().and_then(|failure| failure.view().callback)
+                    .and_then(|failure| failure.primary_fault()).map(|failure| failure.message.to_string())
+                    .unwrap_or_else(|| "layout run failed in its original turn".into());
+                return Err(message);
+            }
+            if returned.is_none() {
+                continue;
+            }
+            while returned.is_some() {
+                caller.refreshed_turn(grant, |cx| origin.receive_outcome(cx, &mut returned)).map_err(|error| format!("{error:?}"))?;
+            }
+            let descriptor = origin.outcome().expect("received layout run outcome");
+            let observed = match job.borrow_outcome(descriptor).map_err(|error| format!("{error:?}"))? {
                 JobOutcomeView::PreviewReady { payload, .. } => ToolRunTick::decode(&payload_bytes(payload)).map_err(|error| format!("{error:?}")).and_then(|tick| recording.apply(tick)),
                 JobOutcomeView::CheckpointReady { .. } => {
                     recording.checkpoints += 1;
@@ -196,40 +234,41 @@ pub fn layout_run_drive<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64) -> R
                 JobOutcomeView::Cancelled { .. } => Err("layout run cancelled".to_string()),
                 JobOutcomeView::Fault { detail, .. } => Err(String::from_utf8_lossy(&payload_bytes(detail)).into_owned()),
             };
-            for _ in 0..4096 {
-                if matches!(descriptor.acknowledge(grant), RetainedCloneStep::Complete(_)) {
-                    break;
-                }
+            while origin.outcome().is_some() {
+                caller.refreshed_turn(grant, |cx| origin.acknowledge_outcome(cx)).map_err(|error| format!("{error:?}"))?;
             }
             observed?;
         }
         Ok(())
     })();
     for _ in 0..4096 {
-        if owner.terminal_is_empty() {
+        if origin.terminal_is_empty() {
             break;
         }
-        owner.close_step(grant);
+        caller.turn(SOURCE, |cx| origin.close_step(cx).map(|_| ())).map_err(|error| format!("{error:?}"))?;
     }
+    assert!(origin.terminal_is_empty(), "layout run return origin did not close");
+    if result.is_err() {
+        close_on_caller(job, &mut caller);
+    }
+    caller.retire(SOURCE);
     result.map(|()| recording)
 }
 
 /// 🧹️ Closes a job the way the ledger does, one owned buffer per `close_step`.
 pub fn layout_run_close<J: InteractiveJob + ?Sized>(job: &mut J) {
-    let grant = wallet();
-    let (mut owner, _) = StepContextOwner::new(OperationId(1), Generation(1), grant).expect("layout close context owner admission");
-    let cancel = root_cancel_token();
-    let mut sequence = 0;
-    let mut complete = false;
+    let mut caller = caller();
+    close_on_caller(job, &mut caller);
+    caller.retire(SOURCE);
+}
+
+fn close_on_caller<J: InteractiveJob + ?Sized>(job: &mut J, caller: &mut OriginalJobFixtureCaller) {
     job.begin_close();
     for _ in 0..4096 {
-        let mut receipt = RetainedCloneProgress::default();
-        let mut cx = owner.context(StepBudget::new(1, INTERACTIVE_LANE_WALL_US, grant), cancel.clone(), frozen_now, &mut sequence, &mut receipt).expect("layout close original context");
-        let step = job.close_step(&mut cx).expect("layout close original failure custody");
-        assert_eq!(step.progress(), cx.retained_progress());
-        if matches!(step, InteractiveJobCloseStep::Complete { .. }) { complete = true; break; }
+        let step = caller.turn(wallet(), |cx| cx.with_original_retirement(|cx| job.close_step(cx))).expect("layout close original failure custody");
+        if matches!(step, InteractiveJobCloseStep::Complete { .. }) {
+            return;
+        }
     }
-    for _ in 0..4096 { if owner.terminal_is_empty() { break; } owner.close_step(grant); }
-    assert!(owner.terminal_is_empty(), "layout close context owner did not close");
-    assert!(complete, "layout run job did not close");
+    panic!("layout run job did not close");
 }

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/scene.json",
+  "title": "GIS Terrain Scene",
+  "type": "object",
+  "required": ["tileUrlTemplate", "projectOriginLon", "projectOriginLat", "exaggeration", "colorRamp", "minZoom", "maxZoom", "attribution", "overlays"],
+  "properties": {
+    "tileUrlTemplate": { "type": "string" },
+    "projectOriginLon": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/surface/terrain/overlays.json#/$defs/longitude" },
+    "projectOriginLat": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/surface/terrain/overlays.json#/$defs/latitude" },
+    "exaggeration": { "type": "number" },
+    "colorRamp": { "type": "string" },
+    "minZoom": { "type": "integer", "minimum": 0 },
+    "maxZoom": { "type": "integer", "minimum": 0 },
+    "attribution": {
+      "type": "object",
+      "required": ["label", "url"],
+      "properties": {
+        "label": { "type": "string" },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "overlays": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/surface/terrain/overlays.json" }
+  }
+}

@@ -72,17 +72,12 @@ impl Brep {
 
     /// 📐️ Measures vertices, analytic line or circular edges, and complete ellipses with fixed work.
     pub fn original_geometry_length(&self, handle: &str) -> Result<f64, ValueError> {
-        let (curve, range) = match self.native.original_query_entity(handle)? {
+        let (curve, trim) = match self.native.original_query_entity(handle)? {
             Entity::Vertex(_) => return Ok(0.0),
-            Entity::Curve(curve, _) => (curve, curve.domain()),
-            Entity::Edge(id) => {
-                let edge = self.native.body.edges.get(*id).ok_or_else(|| ValueError::invariant("live edge record is missing"))?;
-                let curve = self.native.body.curves3.get(edge.curve).ok_or_else(|| ValueError::invariant("live edge curve is missing"))?;
-                (curve, edge.range)
-            }
+            Entity::Curve(..) | Entity::Edge(..) => self.native.original_intersection_curve(handle)?,
             _ => return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "boundary length requires an original topology traversal")),
         };
-        analysis::analytic_curve_length(curve, range)
+        analysis::analytic_curve_length(curve, trim.unwrap_or_else(|| curve.domain()))
     }
 
     pub fn curve_domain_sync(&self, curve: &GeometryHandle) -> Result<ParamDomain, BrepError> {
@@ -125,10 +120,42 @@ impl Brep {
         let cp = surface_closest_uv_fn(s, s.domain(), pnt(point), 1e-9);
         Ok((cp.u, cp.v, evec(cp.point), cp.distance))
     }
-    /// 🎯️ Finds the original nearest parameter on a native analytic curve.
+    /// 🎯️ Finds the original nearest parameter on a supported native curve or edge.
     pub fn original_curve_closest_parameter(&self,handle:&str,target:EVec3)->Result<(f64,EVec3,f64),ValueError>{
-        let ([parameter],point,distance)=nearest_analytic::curve_nearest(self.original_curve(handle)?,pnt(target))?;
+        let ([parameter],point,distance)=nearest_analytic::curve_nearest(self.native.original_intersection_curve(handle)?,pnt(target))?;
         Ok((parameter,evec(point),distance))
+    }
+
+    fn vertex_distance_source<'a>(&self, a: &'a str, b: &'a str) -> Result<Option<(&'a str, Pnt3)>, ValueError> {
+        let (id, source) = match (self.native.original_query_entity(a)?, self.native.original_query_entity(b)?) {
+            (Entity::Vertex(id), Entity::Curve(..) | Entity::Edge(..) | Entity::Surface(..) | Entity::Face(..)) => (*id, b),
+            (Entity::Curve(..) | Entity::Edge(..) | Entity::Surface(..) | Entity::Face(..), Entity::Vertex(id)) => (*id, a),
+            _ => return Ok(None),
+        };
+        let point = self.native.body.vertices.get(id).ok_or_else(|| ValueError::invariant("live distance vertex is missing"))?.position;
+        Ok(Some((source, point)))
+    }
+
+    /// 📏️ Measures original vertex, linear pair, and certified box separations.
+    pub fn original_measure_distance(&self, a: &str, b: &str) -> Result<f64, ValueError> {
+        let Some((source, target)) = self.vertex_distance_source(a, b)? else {
+            if [a, b].into_iter().all(|handle| matches!(self.native.original_query_entity(handle), Ok(Entity::Curve(..) | Entity::Edge(..)))) {
+                return analysis::original_linear_distance(self.native.original_intersection_curve(a)?, self.native.original_intersection_curve(b)?);
+            }
+            return self.native.original_solid_distance(a, b);
+        };
+        let delta = pnt(self.original_geometry_closest_point(source, evec(target))?) - target;
+        let distance = delta.x.hypot(delta.y).hypot(delta.z);
+        if distance.is_finite() { Ok(distance) }
+        else { Err(ValueError::literal(ValueRefusalKind::InvalidValue, "vertex distance exceeds finite range")) }
+    }
+
+    /// 🪜️ Quotes the original retained geometry rows used by a measurement.
+    pub fn original_measure_source_depth(&self, handle: &str) -> Result<usize, ValueError> {
+        match self.native.original_query_entity(handle)? {
+            Entity::Vertex(_) | Entity::Edge(_) | Entity::Face(_) => self.original_closest_point_depth_demand(handle),
+            _ => self.certified_solid_depth(handle),
+        }
     }
 
     /// 🏄️ Finds the original nearest UV on a native analytic surface.
@@ -158,7 +185,9 @@ impl Brep {
                 Some(Curve3::Ellipse{major_radius,minor_radius,..}) => std::f64::consts::PI * major_radius * minor_radius,
                 _ => return Ok(None),
             },
-            _ => match self.live_solid_primitive(handle) { Some(shape)=>shape.area(),None=>return Ok(None) },
+            _ => match self.native.live_circular_prism_area(handle).or_else(|| self.live_curved_solid_properties(handle).map(|(area, _)| area)).or_else(|| self.live_solid_primitive(handle).map(|shape| shape.area())) {
+                Some(area) => area, None => return Ok(None),
+            },
         };
         if !area.is_finite() { return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"analytic area exceeds finite numeric range")); }
         Ok(Some(area))
@@ -266,12 +295,7 @@ impl Brep {
         let target = pnt(target);
         let result = match self.native.original_query_entity(handle)? {
             Entity::Vertex(id) => self.native.body.vertices.get(*id).ok_or_else(|| ValueError::invariant("live vertex is missing"))?.position,
-            Entity::Curve(curve,_)=>nearest_analytic::curve_nearest(curve,target)?.1,
-            Entity::Edge(id) => {
-                let edge = self.native.body.edges.get(*id).ok_or_else(|| ValueError::invariant("live edge is missing"))?;
-                let curve = self.native.body.curves3.get(edge.curve).ok_or_else(|| ValueError::invariant("live edge curve is missing"))?;
-                nearest_analytic::edge_nearest(curve,target,edge.range)?
-            }
+            Entity::Curve(..) | Entity::Edge(..)=>nearest_analytic::curve_nearest(self.native.original_intersection_curve(handle)?,target)?.1,
             Entity::Face(id)=>{
                 let (curve,_,_)=self.conic_face_preview_source(*id).ok_or_else(||
                     ValueError::literal(ValueRefusalKind::UnsupportedOwner,"closest point on a trimmed face requires original boundary traversal"))?;
@@ -279,6 +303,9 @@ impl Brep {
             }
             Entity::Surface(surface,_)=>nearest_analytic::surface_nearest(surface,target)?.1,
             Entity::Solid(_,Some(SolidProvenance::Primitive(provenance)))=>nearest_analytic::primitive_nearest(provenance.primitive,target)?,
+            Entity::Solid(_,Some(SolidProvenance::SphericalShell(shell,_)))=>nearest_analytic::spherical_shell_nearest(*shell,target)?,
+            Entity::Solid(_,Some(SolidProvenance::SphericalCaps(caps,_)))=>nearest_analytic::spherical_caps_nearest(*caps,target)?,
+            Entity::Solid(_,Some(SolidProvenance::Frustum(shape,_)))=>nearest_analytic::frustum_nearest(shape.frame,shape.radii,shape.height,target)?,
             _ => return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "geometry requires original closest-point traversal")),
         };
         let axes = evec(result);

@@ -1,3 +1,4 @@
+import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {statSync,statfsSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
@@ -46,8 +47,8 @@ export function repositoryPartitionReclaimDueV1(workspace:string,partition:Repos
  try{
   const declared=policy.partitions[partition],directory=machinePathV1(requireMaterializedPathV1(resolve(workspace)),declared.directory),mount=join(directory,"m");
   if(statSync(mount).dev===statSync(directory).dev)return false;
-  const image=statfsSync(mount),host=statfsSync(dirname(directory));
-  return elasticBloatedV1(repositoryPartitionReclaimRuleV1(partition),statSync(join(directory,"fixed.dmg")).blocks*512,(image.blocks-image.bfree)*image.bsize,host.bavail*host.bsize);
+  const used=nativeImageVolumeUsedBytesSyncV1(mount,statfsSync(mount)),host=statfsSync(dirname(directory));
+  return used!==undefined&&elasticBloatedV1(repositoryPartitionReclaimRuleV1(partition),statSync(join(directory,"fixed.dmg")).blocks*512,used,host.bavail*host.bsize);
  }catch{return false;}
 }
 /** 📝️ Records the size the next image of a pressed elastic partition is born with (the image that is about to be recreated has less free space than the pressure floor), so the recreation grows instead of repeating the same size; answers the recorded bytes, or 0 when the image is not pressed or cannot grow. */

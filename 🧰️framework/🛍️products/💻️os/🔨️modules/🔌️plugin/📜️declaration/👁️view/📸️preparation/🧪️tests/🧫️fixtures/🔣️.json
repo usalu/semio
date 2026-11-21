@@ -2,6 +2,7 @@
   "cases": [
     {
       "name": "denied-items",
+      "retainsPoll": false,
       "grant": [
         0,
         8,
@@ -20,6 +21,7 @@
     },
     {
       "name": "partial-copy",
+      "retainsPoll": true,
       "grant": [
         2,
         8,
@@ -38,6 +40,7 @@
     },
     {
       "name": "ready-copy",
+      "retainsPoll": false,
       "grant": [
         2,
         8,

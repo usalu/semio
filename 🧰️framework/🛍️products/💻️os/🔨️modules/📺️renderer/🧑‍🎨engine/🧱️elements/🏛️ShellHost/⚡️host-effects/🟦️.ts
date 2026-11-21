@@ -83,7 +83,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
     applyHostEffectsRef, refreshUi, refreshSpawnedUi, ensureSpawnedPlugin, requestServiceOperation, hostPorts
   } = core;
   const applyHostEffects = useCallback(
-    async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => {
+    async (effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>, viewInputsChanged = false) => {
       const effectOrigin = effectOwner.presentation;
       if (effects.length === 0 && sealedInstancesRef.current.sealed(effectOwner.plugin, baseSession.pluginId, baseSession.instanceId)) return;
       if (dropForSealedInstance(effectOwner.plugin, baseSession, "host effects", `${effects.length} effect(s)`)) return;
@@ -202,12 +202,12 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
           return viewStateRewrittenByEffects ? { ...current, viewState: nextViewState } : current;
         },
       });
-      const refreshScope = hostEffectRefreshScopeV1(effects, uiScope ?? { kind: "full" }, nextSession.app.windowKinds.map((kind) => kind.bodyKey));
+      const refreshScope = hostEffectRefreshScopeV1(effects, uiScope ?? { kind: "full" }, nextSession.app.windowKinds.map((kind) => kind.bodyKey), viewInputsChanged);
       if (isSpawnedPluginSession) {
         const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
         if (spawned) await refreshSpawnedUi(spawned, nextViewState, refreshScope);
       } else if (shellDialogSessionIsCurrentV1(shellStateRef.current.pluginRuntime.session, nextSession)) {
-        await refreshUi(nextSession, refreshScope, undefined, leftoverReplaceRefreshBodiesV1(), hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
+        await refreshUi(nextSession, refreshScope, undefined, viewInputsChanged || leftoverReplaceRefreshBodiesV1(), viewInputsChanged || hostEffectsRewriteGuestRenderInputsV1(effects) || nextViewState !== baseSession.viewState);
       }
     },
     [catalog,captureDialogOrigin, captureEffectOwner, dropForSealedInstance, isCurrentEffectOwner, loadDocumentPair, makeOwnedDialog, refreshHistorySnapshot, clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateShellUri, refreshSpawnedUi, refreshUi, requestServiceOperation, resolvedTargetViewState, session, writeUtilityRegister, writeToolRegister, spacePrograms, hostMode, hostPorts?.documentAccess],

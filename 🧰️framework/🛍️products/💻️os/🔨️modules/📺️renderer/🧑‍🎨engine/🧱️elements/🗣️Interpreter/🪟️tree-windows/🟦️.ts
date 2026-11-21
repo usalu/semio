@@ -55,6 +55,7 @@ export type TreeWindowContextValue = {
   readonly bodyKey: string;
   readonly openStates: Readonly<Record<string, boolean>>;
   readonly setOpen: (nodeKey: string, open: boolean) => void;
+  readonly setFormPage?: (windowId: string, page: number) => void;
   readonly reportWindows: (requests: readonly TreeWindowReportV1[], viewportRows: number) => void;
 };
 

@@ -1,0 +1,9 @@
+# Retained Authored Surface on Knife Cut and Loop Cut
+
+The two original cut jobs now project authored normals, corner UVs and source smooth flags onto the rebuilt mesh. Knife Cut interpolates each source face’s corner values independently at new edge points, so neighbors retain different values across a shared seam. Loop Cut also bilinearly interpolates grid interiors. Existing named channel handling remains in the shared provenance cursor.
+
+The same retained surface stage traces each new halfedge back to its source edge when its two endpoint origins identify the same original segment. It preserves every surviving authored seam segment on both sides. Generated interior edges have independent topology and receive the seam flag only when their ancestry identifies a marked source segment. The implementation quotes the exact depth, scalar copies and map reservations before changing the surface.
+
+The neutral fixture uses two adjacent quads with different UV values at the shared edge, one smooth region and one flat region. The production native modeling job completed 54 funded surface turns and copied 235 bytes for Knife Cut, and completed 83 funded surface turns and copied 390 bytes for Loop Cut. A one-byte-short reservation left each job inert. Cancellation after 12 surface turns retired 123,539 and 120,554 bytes respectively, with neither job publishing. The exact native output kept both authored UVs at the shared midpoint, normalized the new point normal and retained all four seam halfedges. Three.js independently interpolated the source UVs and triangulated the native faces to verify area, face flags and new cut data.
+
+All 26 portable Mesh tests passed with 4,012 assertions. Mesh Reconstruction admitted 1,386 active lines and 118,832 bytes. The 3D facade admitted 2,489 active lines and 217,872 bytes. The registered Flow workbench contains both successes and Loop Cut cancellation. The official linked Flow target remains storage-gated.

@@ -105,10 +105,13 @@ export function Stage(props: StageProps): ReactElement {
     if (origin === null) return;
     setDrag({ xMm: origin.pan.xMm + (event.clientX - origin.x) / px, yMm: origin.pan.yMm + (event.clientY - origin.y) / px });
   };
-  const up = (): void => {
-    if (start.current !== null && drag !== null) onPan({ xMm: drag.xMm, yMm: drag.yMm });
+  const cancelDrag = (): void => {
     start.current = null;
     setDrag(null);
+  };
+  const up = (): void => {
+    if (start.current !== null && drag !== null) onPan({ xMm: drag.xMm, yMm: drag.yMm });
+    cancelDrag();
   };
   const key = (event: KeyboardEvent<HTMLDivElement>): void => {
     const step = (event.shiftKey ? 40 : 10) / px;
@@ -133,14 +136,14 @@ export function Stage(props: StageProps): ReactElement {
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
-      onPointerCancel={up}
+      onPointerCancel={cancelDrag}
       onKeyDown={key}
       data-stage=""
       data-shared-border-cell=""
       data-border-probe-art=""
       data-zoom={effective.toFixed(3)}
-      className={cn("relative h-[clamp(22rem,64vh,42rem)] w-full touch-pan-y select-none overflow-hidden", ground === "transparent" && "staffage-checker", start.current === null ? "cursor-grab" : "cursor-grabbing", props.className)}
-      style={colour === undefined ? undefined : { backgroundColor: colour }}
+      className={cn("relative h-[clamp(22rem,64vh,42rem)] w-full select-none overflow-hidden", ground === "transparent" && "staffage-checker", start.current === null ? "cursor-grab" : "cursor-grabbing", props.className)}
+      style={{ backgroundColor: colour, touchAction: "pan-y pinch-zoom" }}
     >
       <span id={helpId} className="sr-only">
         {props.help}

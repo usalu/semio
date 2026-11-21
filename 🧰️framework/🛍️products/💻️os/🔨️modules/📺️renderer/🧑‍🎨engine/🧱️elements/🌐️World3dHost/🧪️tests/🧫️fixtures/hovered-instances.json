@@ -1,0 +1,212 @@
+{
+  "instances": [
+    {
+      "id": "design@surface#0",
+      "meshId": "surface"
+    },
+    {
+      "id": "design@surface#1",
+      "meshId": "surface"
+    },
+    {
+      "id": "design@edge#0",
+      "meshId": "edge"
+    },
+    {
+      "id": "unrelated@body#0",
+      "meshId": "surface"
+    }
+  ],
+  "selection": {
+    "hoveredId": "design@surface#0",
+    "hoveredIds": [
+      "design@surface#0",
+      "design@surface#1",
+      "design@edge#0"
+    ]
+  },
+  "cases": [
+    {
+      "expected": [
+        "design@surface#0",
+        "design@surface#1",
+        "design@edge#0"
+      ]
+    },
+    {
+      "local": "design@surface#0",
+      "expected": [
+        "design@surface#0"
+      ]
+    },
+    {
+      "local": "unrelated@body#0",
+      "expected": [
+        "unrelated@body#0"
+      ]
+    },
+    {
+      "local": null,
+      "expected": []
+    },
+    {
+      "expected": [
+        "design@surface#0",
+        "design@surface#1",
+        "design@edge#0"
+      ],
+      "selection": {
+        "hoveredId": "design@surface#0",
+        "hoveredIds": [
+          "design@surface#0",
+          "design@surface#1",
+          "design@edge#0"
+        ],
+        "hoverSourceWindowId": "graph:1"
+      }
+    },
+    {
+      "selection": {
+        "hoveredId": null,
+        "hoveredIds": []
+      },
+      "expected": []
+    }
+  ],
+  "handoff": [
+    {
+      "selection": {
+        "hoveredId": "design@surface#0",
+        "hoveredIds": [
+          "design@surface#0"
+        ],
+        "hoverSourceWindowId": "graph:1"
+      },
+      "expected": [
+        "design@surface#0"
+      ]
+    },
+    {
+      "local": "unrelated@body#0",
+      "expected": [
+        "unrelated@body#0"
+      ]
+    },
+    {
+      "selection": {
+        "hoveredId": "design@surface#1",
+        "hoveredIds": [
+          "design@surface#1",
+          "design@edge#0"
+        ],
+        "hoverSourceWindowId": "preview:1"
+      },
+      "expected": [
+        "unrelated@body#0"
+      ]
+    },
+    {
+      "selection": {
+        "hoveredId": "design@surface#1",
+        "hoveredIds": [
+          "design@surface#1",
+          "design@edge#0"
+        ],
+        "hoverSourceWindowId": "graph:1"
+      },
+      "expected": [
+        "design@surface#1",
+        "design@edge#0"
+      ]
+    },
+    {
+      "local": "unrelated@body#0",
+      "expected": [
+        "unrelated@body#0"
+      ]
+    },
+    {
+      "selection": {
+        "hoveredId": "design@surface#1",
+        "hoveredIds": [
+          "design@edge#0",
+          "design@surface#1"
+        ],
+        "hoverSourceWindowId": "graph:1",
+        "selected": [
+          "design@surface#0"
+        ]
+      },
+      "expected": [
+        "unrelated@body#0"
+      ]
+    },
+    {
+      "selection": {
+        "hoveredId": "design@surface#0",
+        "hoveredIds": [
+          "design@edge#0",
+          "design@surface#1"
+        ],
+        "hoverSourceWindowId": "graph:1",
+        "selected": [
+          "design@surface#0"
+        ]
+      },
+      "expected": [
+        "unrelated@body#0"
+      ]
+    },
+    {
+      "selection": {
+        "hoveredId": "design@surface#0",
+        "hoveredIds": [
+          "design@surface#0"
+        ],
+        "hoverSourceWindowId": null
+      },
+      "expected": [
+        "design@surface#0"
+      ]
+    },
+    {
+      "local": null,
+      "expected": []
+    },
+    {
+      "selection": {
+        "hoveredId": null,
+        "hoveredIds": [],
+        "hoverSourceWindowId": "graph:1"
+      },
+      "expected": []
+    },
+    {
+      "local": "unrelated@body#0",
+      "expected": [
+        "unrelated@body#0"
+      ]
+    },
+    {
+      "selection": {
+        "hoveredId": null,
+        "hoveredIds": []
+      },
+      "expected": [
+        "unrelated@body#0"
+      ]
+    },
+    {
+      "selection": {
+        "hoveredId": "design@edge#0",
+        "hoveredIds": [
+          "design@edge#0"
+        ],
+        "hoverSourceWindowId": "graph:1"
+      },
+      "expected": [
+        "design@edge#0"
+      ]
+    }
+  ]
+}

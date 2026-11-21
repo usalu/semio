@@ -13,7 +13,9 @@ def main():
     parser.add_argument("--visual-chrome", type=Path)
     parser.add_argument("--check-pages", action="store_true")
     parser.add_argument("--gallery-only", action="store_true")
+    parser.add_argument("--gallery-cohort", action="store_true")
     parser.add_argument("--viewport-pages", action="store_true")
+    parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--supplemental-dir", type=Path, action="append", default=[])
     arguments = parser.parse_args()
     ticket = Path(__file__).resolve().parent
@@ -24,7 +26,9 @@ def main():
     source = "audit-eurocode-gallery.rs" if arguments.gallery_only else "audit-eurocode-windows.rs"
     if arguments.viewport_pages:
         fixture, source = "viewport-pages", "audit-eurocode-viewport-pages.rs"
-    output = ticket / "🗑️generated" / f"{fixture}-{arguments.family}.wasm"
+    output_dir = arguments.output_dir.resolve() if arguments.output_dir else ticket / "🗑️generated"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output = output_dir / f"{fixture}-{arguments.family}.wasm"
     flags = [
         "--edition=2021", "--crate-name=authored_windows", "--target=wasm32-wasip2",
         "-Cpanic=abort", "-Copt-level=1", "-Cstrip=debuginfo",
@@ -33,6 +37,8 @@ def main():
     directories = set(build.glob("*/*/out")) | set((lane / "prototype/build").glob("*/*/out"))
     directories.update(directory.resolve() for directory in arguments.supplemental_dir)
     flags.extend(f"-Ldependency={directory}" for directory in sorted(directories))
+    if arguments.gallery_cohort:
+        flags.extend(("-Clink-arg=-zstack-size=8388608", "-Clink-arg=--max-memory=536870912"))
     externs = {
         "serde_json": "serde_json",
         "pack": "semio-framework-pack",
@@ -50,9 +56,13 @@ def main():
             del externs[alias]
         externs["audited_model"] = f"semio-s-artifact-norm-{arguments.family}-model"
         externs["audited_report"] = f"semio-s-artifact-norm-{arguments.family}-inferences"
+        externs["semio_s_plugin_norm_structural_scene"] = "semio-s-plugin-norm-structural-scene"
+        externs["semio_ui_runtime"] = "semio-ui-runtime"
+        if arguments.gallery_cohort:
+            externs["semio_plugin_window_kits_rich"] = "semio-plugin-window-kits-rich"
+            flags.extend(("--cfg", 'feature="gallery-cohort"'))
         if arguments.family == "en1994":
             externs["semio_s_plugin_norm_app_surface"] = "semio-s-plugin-norm-app-surface"
-            externs["semio_s_plugin_norm_structural_scene"] = "semio-s-plugin-norm-structural-scene"
             externs["semio_ui_scene"] = "semio-ui-scene"
             externs["semio_framework_deflate"] = "semio-framework-deflate"
         flags.extend(("--cfg", f'feature="{arguments.family}"'))
@@ -65,7 +75,7 @@ def main():
         flags.extend(("--cfg", f'feature="{arguments.family}"'))
     if arguments.visual_chrome or arguments.check_pages or arguments.gallery_only:
         externs["audited_scene"] = f"semio-s-artifact-norm-{arguments.family}-scene"
-        if arguments.family == "en1996":
+        if arguments.family == "en1996" or (arguments.family == "en1990" and arguments.gallery_only):
             externs["audited_scene"] += "-diagrams"
         flags.extend(("--cfg", 'feature="updated-diagrams"'))
     if arguments.visual_chrome:

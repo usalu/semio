@@ -139,7 +139,7 @@ fn document_operator_records(dag: &semio_os_infinite_directed_presentation::DagH
 /// the marks-free `render` path passes an empty slice.
 pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
-    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
+    let dag = FlowHost::project_registered_dag_snapshot(host_snapshot);
     let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
     let operators = document_operator_records(&dag, &nodes);
     let viewport = Viewport2d { x: config.viewport.x, y: config.viewport.y, zoom: config.viewport.zoom };

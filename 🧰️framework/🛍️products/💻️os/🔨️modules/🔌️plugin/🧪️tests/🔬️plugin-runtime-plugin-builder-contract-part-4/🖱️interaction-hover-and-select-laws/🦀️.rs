@@ -26,6 +26,14 @@
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" }))), &mut identity, cx).await;
         assert!(app.interaction_state().await.hover.get("items").is_none(), "an emptied hover channel is removed, not left as an empty entry");
 
+        let mut binding = json!({ "domainId": "items", "channel": "pointer", "targetId": "item-1", "granularityId": "item" });
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(binding.clone())), &mut identity, cx).await;
+        assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
+        binding["targets"] = json!("[]");
+        reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&dv(binding)), &mut identity, cx).await;
+        assert!(app.interaction_state().await.hover.get("items").is_none());
+        assert_eq!(app.stores.interaction_store.envelope().vcs.edits.len(), edits_after_select);
+
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
 
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result

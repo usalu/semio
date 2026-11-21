@@ -29,6 +29,13 @@ fn simply_supported_beam_doc() -> Fem2dSnapshotValue {
     }
 }
 
+fn compressed_beam_doc() -> Fem2dSnapshotValue {
+    let mut doc = simply_supported_beam_doc();
+    doc.load_cases[0].loads = vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tx, value: -10000.0 }];
+    doc.analysis.buckling_count = 2;
+    doc
+}
+
 /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
 /// document nodes.
 fn rectangle_region_doc() -> Fem2dSnapshotValue {
@@ -69,22 +76,29 @@ fn fem2d_modal_mode_values_returns_node_displacements() {
 }
 
 #[test]
-fn fem2d_buckling_returns_requested_mode_count() {
-    let doc = simply_supported_beam_doc();
+fn fem2d_buckling_returns_compressed_pinned_beam_factors() {
+    let doc = compressed_beam_doc();
     let result = with(&doc, |d| fem2d_buckling(d, "dead")).expect("buckling solves");
     assert_eq!(result.factors.len(), doc.analysis.buckling_count);
-    for &f in &result.factors {
-        assert!(f.is_finite(), "buckling factor should be finite: {f}");
+    for (actual, expected) in result.factors.iter().zip([584.92, 2924.60]) {
+        assert!((actual - expected).abs() < 1e-6, "expected {expected}, got {actual}");
     }
 }
 
 #[test]
 fn fem2d_buckling_mode_values_returns_node_displacements() {
-    let doc = simply_supported_beam_doc();
+    let doc = compressed_beam_doc();
     let (factor, values) = with(&doc, |d| fem2d_buckling_mode_values(d, "dead", 0)).expect("buckling mode values solves");
     assert!(factor.is_finite());
     assert!(values.contains_key("n1"));
     assert!(values.contains_key("n2"));
+}
+
+#[test]
+fn fem2d_buckling_transverse_load_has_no_positive_factors() {
+    let result = with(&simply_supported_beam_doc(), |doc| fem2d_buckling(doc, "dead")).expect("buckling solves");
+    assert!(result.factors.is_empty());
+    assert!(result.shapes.is_empty());
 }
 
 #[test]
@@ -114,7 +128,7 @@ fn continuum_buckling_retains_mesh_nodes_elements_and_area_prestress() {
 fn continuum_buckling_rejects_unknown_area_region() {
     let mut doc = rectangle_region_doc();
     doc.load_cases[0].loads = vec![FemLoad::Area { id: "pressure".into(), region_id: "missing".into(), pressure: 3000.0 }];
-    assert!(matches!(with(&doc, |d| buckling_inputs(d, "self")), Err(Fem2dError::UnknownRegionId(id)) if id == "missing"));
+    assert!(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::from_reference(doc).is_err(), "a load must reference an existing region");
 }
 
 #[test]

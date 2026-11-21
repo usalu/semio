@@ -267,7 +267,7 @@ function packDecodeString(bytes: Uint8Array, symbols: readonly string[], pos: [n
   }
   if (tag === PACK_TAG_STR_INLINE) {
     const len = readVarintU64(bytes, pos);
-    const text = new TextDecoder().decode(bytes.subarray(pos[0], pos[0] + len));
+    const text = new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes.subarray(pos[0], pos[0] + len));
     pos[0] += len;
     return text;
   }
@@ -347,7 +347,7 @@ function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [nu
     }
     case PACK_TAG_STR_INLINE: {
       const len = readVarintU64(bytes, pos);
-      const text = new TextDecoder().decode(bytes.subarray(pos[0], pos[0] + len));
+      const text = new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes.subarray(pos[0], pos[0] + len));
       pos[0] += len;
       return text;
     }
@@ -432,7 +432,7 @@ export function viewContextWireValue(view: unknown): unknown {
 /** 📥️ TS twin of `store::pack_rt::decode_wire_value` — the inverse of {@link encodePackValue}. */
 export function decodePackValue(bytes: Uint8Array): PackValue {
   const pos: [number] = [0];
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder("utf-8", { ignoreBOM: true });
   const symbolCount = readVarintU64(bytes, pos);
   const symbols: string[] = [];
   for (let i = 0; i < symbolCount; i++) {

@@ -8,7 +8,7 @@ import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { ARTIFACTS_ROOT, REPO_ROOT, candidateSamples, hexBytes, invalidSamples, readMatrix, readSampleManifest, readSampleSchema, readSchema, resolveSample, selectEditorProgram } from "../📇️matrix/🟦️.ts";
 import { ORACLES, judgeBytes, persistedContent } from "../🔬️oracles/🟦️.ts";
-import { zipSync } from "fflate";
+import { unzipSync, zipSync } from "fflate";
 import { detailsControlId, detailsControlSelector } from "../🏃️browser/🎯️details/🟦️.ts";
 
 const matrix = readMatrix();
@@ -172,6 +172,22 @@ describe("matrix", () => {
   });
   test("names an oracle that exists for every row", () => {
     for (const row of matrix.artifacts) expect(Object.keys(ORACLES)).toContain(row.oracle);
+  });
+  test("the XLSX oracle recognizes the workbook media type by its case-insensitive name", () => {
+    const root = join(ARTIFACTS_ROOT, "📕️xlsx", "🏅️standards", "🔖️ecma-376", "🪆️subsets", "🧱️base", "🧪️tests", "🧫️fixtures");
+    const { workbookContentType: fixture } = JSON.parse(readFileSync(join(root, "📕️native-document", "🔣️.json"), "utf8")) as {
+      workbookContentType: { part: string; cases: { contentType: string; accepted: boolean }[] };
+    };
+    const workbook = unzipSync(readFileSync(join(root, "📕️reuse-marketplaces.xlsx")));
+    const manifest = "[Content_Types].xml";
+    const contentTypes = new TextDecoder().decode(workbook[manifest]);
+    const original = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml";
+    expect(contentTypes).toContain(`PartName="/${fixture.part}"`);
+    expect(contentTypes.split(original)).toHaveLength(2);
+    for (const { contentType, accepted } of fixture.cases) {
+      const bytes = zipSync({ ...workbook, [manifest]: new TextEncoder().encode(contentTypes.replace(original, contentType)) });
+      expect(judgeBytes("xlsx", bytes).ok).toBe(accepted);
+    }
   });
   test("the XLSX oracle distinguishes spreadsheets from Word and PowerPoint packages", () => {
     const workbook = matrix.artifacts.find(row => row.artifact === "xlsx")!;

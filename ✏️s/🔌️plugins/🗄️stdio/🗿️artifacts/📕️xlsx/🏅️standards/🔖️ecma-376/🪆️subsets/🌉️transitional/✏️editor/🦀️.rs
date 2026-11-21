@@ -116,6 +116,22 @@ impl ArtifactEditor for XlsxTransitionalEditor {
     const DIALECT: Dialect = XLSX_TRANSITIONAL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(
+        grant: semio_plugin::__value::retained_clone::RetainedCloneGrant,
+    ) -> Option<Result<
+        (store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress),
+        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
+    >> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_target(XlsxMutation::original_conflict_target);
+            (owners, progress)
+        }))
+    }
+
     /// 📂️ Opening a natural file or a document pack is the whole-document LOAD (genesis path), never a history mutation.
     fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)

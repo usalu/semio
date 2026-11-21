@@ -31,6 +31,7 @@ pub trait ErasedWindowConfigPublication: Send {
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn window_kind_id(&self) -> &str;
     fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase;
+    fn store_batch_phase(&self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase>;
     fn accepted_receipt(&self)->Option<store::os_store::one_item::LaneItemReceipt>;
     fn fault(&self) -> Option<&str>;
     fn preparation_refusal(&self) -> Option<&ValueError>;
@@ -99,6 +100,10 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
 
     fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase {
         self.publication.as_ref().map_or(if self.closing{store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing}else{store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Preparing},|publication|publication.phase())
+    }
+
+    fn store_batch_phase(&self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase> {
+        self.publication.as_ref().map(|publication| publication.phase())
     }
 
     fn accepted_receipt(&self)->Option<store::os_store::one_item::LaneItemReceipt>{self.publication.as_ref().and_then(|publication|publication.accepted_receipt())}

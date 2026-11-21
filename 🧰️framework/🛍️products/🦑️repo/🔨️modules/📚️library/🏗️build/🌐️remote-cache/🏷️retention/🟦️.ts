@@ -1,6 +1,8 @@
-import {mkdir,readdir,readFile,rename,unlink,writeFile} from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {mkdir,open,readdir,readFile,rename,unlink,writeFile} from "node:fs/promises";
 import {dirname,join} from "node:path";
 import {requireSlotShapeV1} from "../../🪢️slots/🟦️.ts";
+import {parseRemoteCacheTreeV1,type RemoteCacheDigestV1} from "../🔬️action-result/🟦️.ts";
 
 /** 🏷️ The retention sidecar of one server entry (`Meta` in the slot schema): its slot, when it was stored or last claimed (server clock) and the blobs it references.
  * @see ../../🪢️slots/🧬️schema/🔣️.json */
@@ -53,12 +55,32 @@ export async function scanRemoteCacheMetaV1(root:string,present:ReadonlyMap<stri
  await walk(base,0,[]);return found;
 }
 
-/** 🔗️ The blobs an entry of the Nx keyspace references: its host store hash, or none when the file is not a reference. */
-export async function readRemoteCacheReferencesV1(path:string,kind:"ac"|"cas"|"nx",parse:(bytes:Uint8Array)=>Readonly<{references:readonly {hash:string}[];trees:readonly {hash:string}[]}>):Promise<readonly string[]>{
+/** 📏️ Reads one addressed tree within the same byte ceiling as server validation. */
+export async function readRemoteCacheTreeBytesV1(path:string,size:number):Promise<Uint8Array|undefined>{
+ if(!Number.isSafeInteger(size)||size<1||size>16*1048576)return undefined;
+ const file=await open(path,"r").catch(()=>undefined);if(!file)return undefined;
+ try{
+  const stat=await file.stat();if(!stat.isFile()||stat.size!==size)return undefined;
+  const bytes=Buffer.allocUnsafe(size);let at=0;
+  while(at<size){const{bytesRead}=await file.read(bytes,at,size-at,at);if(bytesRead===0)return undefined;at+=bytesRead;}
+  return bytes;
+ }catch{return undefined;}finally{await file.close();}
+}
+
+/** 🔗️ Keeps the file digests inside every output Tree alongside its own CAS digest. */
+export async function readRemoteCacheReferencesV1(path:string,kind:"ac"|"cas"|"nx",parse:(bytes:Uint8Array)=>Readonly<{references:readonly {hash:string}[];trees:readonly RemoteCacheDigestV1[]}>,readTree?:(tree:RemoteCacheDigestV1)=>Promise<Uint8Array|undefined>):Promise<readonly string[]>{
  if(kind==="cas")return [];
  let bytes;try{bytes=await readFile(path);}catch{return [];}
  if(kind==="nx"){try{const row=JSON.parse(new TextDecoder().decode(bytes)) as {hash?:unknown};return typeof row.hash==="string"&&META.test(row.hash)?[row.hash]:[];}catch{return [];}}
- try{const parsed=parse(bytes);return [...new Set([...parsed.references,...parsed.trees].map(value=>value.hash))];}catch{return [];}
+ let parsed;try{parsed=parse(bytes);}catch{return [];}
+ const refs=new Set([...parsed.references,...parsed.trees].map(row=>row.hash)),namespace=dirname(dirname(dirname(path)));
+ for(const tree of parsed.trees){
+  try{
+   const data=await readTree?.(tree)??await readRemoteCacheTreeBytesV1(join(namespace,"cas",tree.hash.slice(0,2),tree.hash),tree.size);
+   if(data&&data.length===tree.size&&createHash("sha256").update(data).digest("hex")===tree.hash)for(const leaf of parseRemoteCacheTreeV1(data))refs.add(leaf.hash);
+  }catch{}
+ }
+ return [...refs];
 }
 
 /** 🔍️ Audits a store directory against the keys the current worktree state needs: an entry with a slot that is not among them and neither the newest key of its slot nor within the grace is stray. An empty `stray` list means the store holds the synchronized state (plus what the grace keeps) only; entries without a slot are counted, not judged. The current keys come from outside (for Nx the task hashes of the worktree), so this is an oracle that does not use the supersession rule. */

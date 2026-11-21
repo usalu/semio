@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { PanelTabBar, singleTreeLeaf, type PanelTabNode } from "./🟦️.tsx";
 import { panelTabBarEdge } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
+import trailingCases from "./trailing-space.cases.json";
 
 afterEach(() => {
   cleanup();
@@ -60,6 +61,20 @@ function Host({ children, host = false }: { children: React.ReactNode; host?: bo
 }
 
 describe("panel tab strip shares one seam with its panel body", () => {
+  it.each(trailingCases)("fits the final tab when $name", ({ room, overflow, fill }) => {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      if (this.dataset.slot === "panel-tabs") return new DOMRect(0, 0, WIDTH, STRIP);
+      if (this.dataset.tabId === "tab-c" || this.querySelector(':scope > [data-tab-id="tab-c"]')) return new DOMRect(WIDTH - room - 20, 0, 20, STRIP);
+      return new DOMRect();
+    });
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(WIDTH);
+    vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(overflow ? WIDTH + 20 : WIDTH);
+    const tree: PanelTabNode[] = [{ id: "group", name: "Group", kind: "branch", icon: Stub, children: tabs }];
+    const { container } = render(<Host><PanelTabBar variant="panel" tabs={tree} activePath={["group"]} onActivePathChange={() => {}} startDepth={1} /></Host>);
+    const finalTab = container.querySelector<HTMLElement>('[data-tab-id="tab-c"]')!;
+    expect(finalTab.style.flexGrow).toBe(fill ? "1" : "");
+  });
+
   it("declares only the content-facing edge, and only while expanded", () => {
     expect(panelTabBarEdge("panel", "down", true)).toBe("bottom");
     expect(panelTabBarEdge("panel", "up", true)).toBe("top");

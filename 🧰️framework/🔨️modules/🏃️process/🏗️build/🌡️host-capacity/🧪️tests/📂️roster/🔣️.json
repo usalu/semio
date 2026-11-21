@@ -1,0 +1,78 @@
+{
+  "entries": [
+    "live.json",
+    "live.attached",
+    "live.json.9.tmp"
+  ],
+  "cases": [
+    {
+      "id": "Windows transient contention preserves the live grant",
+      "platform": "win32",
+      "errors": [
+        "EBUSY",
+        "EPERM"
+      ],
+      "expected": {
+        "attempts": 3,
+        "delays": [
+          10,
+          40
+        ],
+        "entries": [
+          "live.json"
+        ],
+        "error": null
+      }
+    },
+    {
+      "id": "Windows persistent contention propagates the scan error",
+      "platform": "win32",
+      "errors": [
+        "EBUSY",
+        "EBUSY",
+        "EBUSY",
+        "EBUSY",
+        "EBUSY",
+        "EBUSY"
+      ],
+      "expected": {
+        "attempts": 6,
+        "delays": [
+          10,
+          40,
+          160,
+          640,
+          2560
+        ],
+        "entries": null,
+        "error": "EBUSY"
+      }
+    },
+    {
+      "id": "Windows I/O failure propagates immediately",
+      "platform": "win32",
+      "errors": [
+        "EIO"
+      ],
+      "expected": {
+        "attempts": 1,
+        "delays": [],
+        "entries": null,
+        "error": "EIO"
+      }
+    },
+    {
+      "id": "POSIX busy errors propagate immediately",
+      "platform": "linux",
+      "errors": [
+        "EBUSY"
+      ],
+      "expected": {
+        "attempts": 1,
+        "delays": [],
+        "entries": null,
+        "error": "EBUSY"
+      }
+    }
+  ]
+}

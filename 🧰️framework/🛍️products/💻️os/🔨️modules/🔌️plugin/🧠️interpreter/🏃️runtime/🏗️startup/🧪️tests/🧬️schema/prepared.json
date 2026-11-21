@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["coreHex", "channelVersion", "channelInstructions", "marker"],
+  "properties": {
+    "coreHex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$"},
+    "channelVersion": {"type": "integer", "minimum": 1},
+    "channelInstructions": {"type": "integer", "minimum": 1},
+    "marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offset", "afterStart", "prepared", "mutated"],
+      "properties": {
+        "offset": {"type": "integer", "minimum": 0},
+        "afterStart": {"type": "integer", "minimum": 0, "maximum": 255},
+        "prepared": {"type": "integer", "minimum": 0, "maximum": 255},
+        "mutated": {"type": "integer", "minimum": 0, "maximum": 255}
+      }
+    }
+  }
+}

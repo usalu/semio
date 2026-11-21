@@ -146,3 +146,22 @@ Totals at 1:200 and 1:500: 2.5 % and 14.8 %. The volumes are spliced with `volum
 - **Two areas left as declared:** jamb-steel (1.43 declared, 1.30 modelled) and leaf-frame (1.1 declared, 1.01 modelled) are within 15 % and were not changed.
 - **Same-region outlines merged in light-line:** a product behaviour, not filed as a defect. Any body shape of the frame region drawn over the glass loses its outline in light-line.
 - **Slender seals were widened by the check:** declaring the buffers and brushes `slender` made the product widen them to the 100 mm shape they sit in. I made them ordinary 8 to 12 mm solids instead, so `slender` is not used.
+
+## Round 5 handcraft (2026-11-21)
+
+Renders (opened with Read) under `🗑️generated/r5-sliding-door/before/` and `after/` (made by `r5-c01-sheets.sh`). I opened body (pose `half-open`), structure and the cut thermal sheets at 1:50, and body at 1:100, 1:200 and 1:500. The 1:50 solids were checked against the reference table of round 3: 1990 mm leaf, 10 mm floor clearance (EN 1527), trolleys at ±0.35 m, a 50 x 50 x 2 frame with a 50 x 100 bottom rail, and a back-to-back pull with 25 mm finger clearance. No deviation above 3 %.
+
+| scale | before = after (body / thermal / structure) |
+|---|---|
+| 1:50 | A- / A- / A- |
+| 1:100 | A- / A- / A- |
+| 1:200 | A- / A- / A- |
+| 1:500 | B+ / A- / A- |
+
+The 1:500 leaf is one block with no frame read, because the 50 mm frame is under the 75 mm feature. In the half-open pose the leaf hangs cleanly under the track.
+
+No change was needed. The source equals the catalog; it is VALID.
+
+Remaining:
+- the support solids are hidden inside the track;
+- the cut-cap wedge in the thermal three-quarter view is a renderer artefact.

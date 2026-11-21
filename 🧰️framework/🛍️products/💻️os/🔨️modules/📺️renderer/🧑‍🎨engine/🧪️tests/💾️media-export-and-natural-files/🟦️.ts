@@ -13,10 +13,16 @@ import {
   naturalFileFormatV1,
   naturalFileNameV1,
   naturalMediaDescriptorMatchesV1,
+  naturalFileMediaInputV1,
   openNaturalFileOwnerV1
 } from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID } from "@semio-tech/framework";
 import naturalFileLifecycleFixture from "@semio-tech/framework-plugin/testing/fixtures/natural-file-lifecycle.json";
+import Ajv from "ajv";
+import lifecycleSchema from "../../../../🔌️plugin/🧪️tests/🧫️fixtures/📄️natural-file-lifecycle/📄️lifecycle.schema.json";
+import { encodeAppCommand } from "@semio-tech/framework/app-channel";
+import { createTurnPump } from "../../🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/🟦️.ts";
+import type { WireTurnResult } from "../../🧱️elements/🔌️PluginRuntime/🪝️wire-codec/🟦️.ts";
 import { cleanup } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { type AppDefinition } from "@semio-tech/framework";
@@ -24,6 +30,122 @@ import "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("framework renderer hosts", () => {
   afterEach(() => cleanup());
+
+  it("forwards cancellation into the admitted import and awaits owner retirement", async () => {
+    const fixture = naturalFileLifecycleFixture.openCancellation;
+    expect(new Ajv().compile(lifecycleSchema)(naturalFileLifecycleFixture)).toBe(true);
+    const { promise: admitted, resolve: admit } = Promise.withResolvers<void>();
+    const { promise: closed, resolve: finishRetirement } = Promise.withResolvers<void>();
+    const controller = new AbortController();
+    const instance = naturalFileLifecycleFixture.lifecycle.openedInstanceId;
+    const order: string[] = [];
+    const opened = openNaturalFileOwnerV1({
+      signal: controller.signal,
+      create: async () => { order.push("open"); return instance; },
+      importBytes: (id, signal) => {
+        expect(id).toBe(instance);
+        admit();
+        expect(signal).toBe(controller.signal);
+        order.push("submit");
+        return new Promise((_, reject) => signal.addEventListener("abort", () => {
+          order.push("cancel");
+          reject(signal.reason);
+        }, { once: true }));
+      },
+      retire: async (id) => {
+        expect(id).toBe(instance);
+        order.push("retire");
+        await closed;
+        order.push("closed");
+      },
+    });
+    const result = expect(opened).rejects.toBe(fixture.reason);
+    await admitted;
+    controller.abort(fixture.reason);
+    await Promise.resolve();
+    expect(order).toEqual(fixture.expectedOrder.slice(0, -1));
+    finishRetirement();
+    await result;
+    expect(order).toEqual(fixture.expectedOrder);
+  });
+
+  it("acknowledges the current media crossing before abort and runs the queued command for the same actor", async () => {
+    const fixture = naturalFileLifecycleFixture.openCancellation;
+    const instance = naturalFileLifecycleFixture.lifecycle.openedInstanceId;
+    const controller = new AbortController();
+    const actorId = "natural-file-cancel-law#" + instance;
+    const { promise: admitted, resolve: admit } = Promise.withResolvers<void>();
+    const { promise: receipt, resolve: acknowledge } = Promise.withResolvers<WireTurnResult>();
+    const turn = (ingress: string): WireTurnResult => ({ uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, commandIngress: { tag: ingress } });
+    const observed: string[] = [];
+    const acknowledgement = { kind: "message", payload: { source: { tag: "shell", val: instance }, payload: [1] } };
+    let acknowledgedBeforeAbort = false;
+    const publish = vi.fn((outcome: unknown) => {
+      if (typeof outcome === "object" && outcome !== null && "error" in outcome) acknowledgedBeforeAbort = observed.includes("acknowledge");
+    });
+    const pump = createTurnPump(
+      {
+        pluginId: "natural-file-cancel-law",
+        shardClient: { captureActorActivation: () => ({ assertActive: () => {} }) },
+        state: { eventSeq: 0 },
+        closingInstances: new Set(),
+        actorIdByInstance: new Map([[instance, actorId]]),
+        documentBindings: new Map(),
+        turnOutcomes: { push: publish },
+      } as unknown as Parameters<typeof createTurnPump>[0],
+      {
+        requireActorId: () => actorId,
+        submitTurn: async (_actor, events, options) => {
+          const seq = options?.commandPage?.cursor.seq;
+          if (seq === undefined && events.length > 0) {
+            expect(events).toEqual([acknowledgement]);
+            observed.push("acknowledge");
+            return turn("idle");
+          }
+          observed.push(seq === 1n ? "media-in" : seq === 2n ? "read-document" : "continuation");
+          if (seq === 1n) { admit(); return receipt; }
+          return turn("command-complete");
+        },
+      } as Parameters<typeof createTurnPump>[1],
+      {
+        acceptUiPatches: async (_instanceId, received) => ({
+          acknowledgements: received.commandIngress?.tag === "page-accepted" ? [acknowledgement] : [],
+          turns: [],
+        }),
+      } as Parameters<typeof createTurnPump>[2],
+      {
+        routeHostEffects: () => [],
+        flushReservedJobDrives: async () => {},
+        commitReservedToolSpawnsWhileSerialized: async () => {},
+      } as Parameters<typeof createTurnPump>[3],
+    );
+    const media = encodeAppCommand({ MediaIn: { seq: 1, port: "artifact:native", descriptor: [], data: naturalFileLifecycleFixture.transport.octets } });
+    const read = encodeAppCommand({ ReadDocument: { seq: 2 } });
+    const importing = pump.runQueuedTurn(instance, [media], undefined, controller.signal);
+    await admitted;
+    const reading = pump.runQueuedTurn(instance, [read], undefined, controller.signal);
+    controller.abort(fixture.reason);
+    acknowledge({ ...turn("page-accepted"), status: { tag: "more-work" } });
+    await Promise.all([importing, reading]);
+    expect(publish.mock.calls).toEqual([[{ instanceId: instance, error: fixture.reason }], [{ instanceId: instance, frames: [] }]]);
+    expect(observed).toEqual(fixture.expectedCrossings);
+    expect(acknowledgedBeforeAbort).toBe(true);
+  });
+
+  it("preserves the import failure when retiring the fresh owner also fails", async () => {
+    const fixture = naturalFileLifecycleFixture.openFailure;
+    const primary = new Error(fixture.import);
+    const retirement = new Error(fixture.retirement);
+    const retire = vi.fn<(instance: number) => Promise<void>>().mockRejectedValue(retirement);
+    const instance = naturalFileLifecycleFixture.lifecycle.openedInstanceId;
+    await expect(openNaturalFileOwnerV1({
+      signal: new AbortController().signal,
+      create: async () => instance,
+      importBytes: async () => { throw primary; },
+      retire,
+    })).rejects.toMatchObject({cause: primary, errors: [primary, retirement]});
+    expect(retire).toHaveBeenCalledExactlyOnceWith(instance);
+  });
 
   it("treats a non-string media-export encoding as a one-shot download, not a segmented marker", () => {
     expect(mediaExportEncodingText("utf-8")).toBe("utf-8");
@@ -48,6 +170,18 @@ describe("framework renderer hosts", () => {
       URL.createObjectURL = create;
       URL.revokeObjectURL = revoke;
     }
+  });
+
+  it("refuses a picked PDF outside its encoded command extent before reading", async () => {
+    const law = naturalFileLifecycleFixture.wireIngress;
+    const input = naturalFileMediaInputV1(law.formatKind);
+    expect(input.maximumBytes).toBe(law.browserPayloadBytes);
+    const slice = vi.fn();
+    const oversized = { size: input.maximumBytes + 1, slice } as unknown as Blob;
+    await expect(readBlobBytesBoundedV1(oversized, {
+      signal: new AbortController().signal, maximumBytes: input.maximumBytes, chunkBytes: 4096,
+    })).rejects.toThrow();
+    expect(slice).not.toHaveBeenCalled();
   });
 
   it("mounts exact natural codecs and opens bytes into an isolated owner", async () => {

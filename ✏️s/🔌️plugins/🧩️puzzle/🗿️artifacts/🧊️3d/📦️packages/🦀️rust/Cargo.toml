@@ -9,6 +9,10 @@ description = "Puzzle 3d artifact"
 [package.metadata.semio]
 role = "artifact"
 
+[package.metadata.semio.preparation]
+script = "📜️script.ts"
+command = ["graph-generate"]
+
 [lints]
 workspace = true
 

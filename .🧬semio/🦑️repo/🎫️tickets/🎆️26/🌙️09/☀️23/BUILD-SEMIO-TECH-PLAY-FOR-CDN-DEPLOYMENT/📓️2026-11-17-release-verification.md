@@ -7,7 +7,7 @@ Run after `native-play.sh site` succeeded: `./native-play.sh verify` (logs in `�
 - `browsers`: skipped when `ms-playwright/chromium-*` and `chromium_headless_shell-*` exist (revision 1248 installed, matches playwright-core 1.64.1); else `repo <bootstrap>/📦️dependencies/🏗️native/📜️script.ts sync browsers`.
 - `verify-browser` launches the exact app-local Playwright installation from the repository browser cache and verifies JSPI plus WebGL 2 and WebGPU draw/readback. An explicitly configured GPU profile is authoritative. When the default probe fails, macOS tries `verify-browser-windowed` before `verify-browser-swiftshader`. The successful profile carries into the full acceptance run.
 - `release-verify`: play `🔨️modules/📦️site/📜️script.ts verify` (catalog equals descriptors, module page files equal the catalog binding).
-- `test-release` reads the published cohort from the products cache store, serves the committed families on loopback listeners, and maps the three HTTPS CDN origins to their respective listeners. The Playwright gate runs the complete acceptance spec. The current catalog yields 172 tests across 18 groups, including a boot test for each of 150 panes.
+- `test-release` reads the published cohort from the products cache store, serves the committed families on loopback listeners, and maps the three HTTPS CDN origins to their respective listeners. The Playwright gate runs the complete acceptance spec. The November 21 discovery run enumerated 173 tests in the acceptance file, including 150 individual pane boot tests.
 
 ## Changed
 - `native-play.sh`: added `routing`, `browsers`, `verify`.
@@ -29,7 +29,7 @@ Run after `native-play.sh site` succeeded: `./native-play.sh verify` (logs in `�
 
 ## Pending
 
-- The 172 browser tests still need to run against a complete published release cohort in the products store.
+- The 173 browser tests still need to run against a complete published release cohort in the products store. The Play-local CLI completed test discovery without starting a server or opening a browser.
 
 ## Follow-up files
 

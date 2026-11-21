@@ -6185,7 +6185,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6213,7 +6213,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6281,7 +6281,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6309,7 +6309,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6337,7 +6337,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6579,7 +6579,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6607,7 +6607,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6675,7 +6675,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6703,7 +6703,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6811,7 +6811,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6839,7 +6839,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6907,7 +6907,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -6935,7 +6935,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -7043,7 +7043,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -7071,7 +7071,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -7139,7 +7139,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -7167,7 +7167,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -7235,7 +7235,7 @@
      "role": "body",
      "tone": 0.7,
      "size": [
-      0.25,
+      0.248,
       0.25,
       0.175
      ],
@@ -8131,6 +8131,89 @@
        ],
        [
         0.855,
+        2.25
+       ],
+       [
+        0.625,
+        2.25
+       ]
+      ]
+     ],
+     "member": "wall",
+     "part": "member"
+    },
+    {
+     "id": "member-wall-facing",
+     "kind": "extrude",
+     "bone": "wall",
+     "material": "brick",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       3.0,
+       0.0
+      ],
+      [
+       3.0,
+       2.75
+      ],
+      [
+       0.0,
+       2.75
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.2225,
+     "to": -0.1075,
+     "holes": [
+      [
+       [
+        0.625,
+        2.5
+       ],
+       [
+        2.375,
+        2.5
+       ],
+       [
+        2.375,
+        2.25
+       ],
+       [
+        2.13,
+        2.25
+       ],
+       [
+        2.13,
+        0.91667
+       ],
+       [
+        2.2,
+        0.91667
+       ],
+       [
+        2.2,
+        0.83333
+       ],
+       [
+        0.8,
+        0.83333
+       ],
+       [
+        0.8,
+        0.91667
+       ],
+       [
+        0.87,
+        0.91667
+       ],
+       [
+        0.87,
         2.25
        ],
        [
@@ -9123,8 +9206,8 @@
      "de": "Thermisch: die drei Regionen der Berechnung nach EN ISO 6946 (Wandfeld, Sturzzone, Fensterbankzone) als Streifen durch die Wand, jede Schicht eine Schale in ihrer wirklichen Dicke, von innen nach außen: Putz, Innenschale, Dämmung, Vormauerung für das Feld (eigene Körper, weil der Körper Stein für Stein gebaut ist); Putz, Innensturz, 80 mm Dämmung, Außensturz für die Sturzzone; Putz, Kalksandstein, 80 mm Dämmung, Fensterbank für die Fensterbankzone. Die äußere Schicht jeder Region zählt nur ihre Außenfläche: ihre übrigen Flächen sind Schnitte der weiterlaufenden Wand, Kontakte mit der Nachbarzone oder die Laibung, an die das Fenster anschließt (`sectionFaces`)."
     },
     {
-     "en": "Structure: the 175 mm calcium silicate leaf with its opening is the wall member (the facing leaf is self-supporting cladding and is left out); both precast lintels are lintel members on their four bearings (thin bed under the inner, the 12.3 mm bed under the outer lintel), the sill sits on its bed; a bearing pad on the wall head carries the beam; the 4 mm stainless wall ties in ten bed joints 0.25 m apart (8 per m2, slender) tie the facing to the leaf; three contact pads at the foundation anchors; mass spheres at the centres of mass of wall, lintel and sill.",
-     "de": "Tragwerk: die 175-mm-Kalksandsteinschale mit ihrer Öffnung ist der Wandstab (die Vormauerschale ist selbsttragende Bekleidung und fehlt); beide Fertigteilstürze sind Sturzstäbe auf ihren vier Auflagern (Dünnbett unter dem inneren, 12,3-mm-Mörtelbett unter dem äußeren Sturz), die Fensterbank liegt auf ihrem Bett; ein Lagerkissen auf dem Wandkopf trägt den Träger; die 4-mm-Edelstahl-Luftschichtanker in zehn Lagerfugen im Abstand von 0,25 m (8 je m2, schlank) binden die Vormauerung an die Innenschale; drei Kontaktplatten an den Fundamentankern; Massekugeln in den Schwerpunkten von Wand, Sturz und Fensterbank."
+     "en": "Structure: both leaves are wall members: the 175 mm calcium silicate leaf with its opening carries the floors and the beam, the 115 mm facing leaf with its opening carries its own weight and the exposed outer lintel down to the foundation (a self-supporting leaf, DIN EN 1996-2/NA); both precast lintels are lintel members on their four bearings (thin bed under the inner lintel on the calcium silicate piers, the 12.3 mm bed under the outer lintel on the facing piers), the sill sits on its bed on the facing; a bearing pad on the wall head carries the beam; the 4 mm stainless wall ties in ten bed joints 0.25 m apart (8 per m2, slender) hold the facing against wind; three contact pads under both leaves at the foundation anchors; mass spheres at the centres of mass of wall, lintel and sill.",
+     "de": "Tragwerk: beide Schalen sind Wandstäbe: die 175-mm-Kalksandsteinschale mit ihrer Öffnung trägt Decken und Träger, die 115-mm-Vormauerschale mit ihrer Öffnung trägt ihr Eigengewicht und den sichtbaren Außensturz bis zum Fundament (eine selbsttragende Schale, DIN EN 1996-2/NA); beide Fertigteilstürze sind Sturzstäbe auf ihren vier Auflagern (Dünnbett unter dem Innensturz auf den Kalksandsteinpfeilern, das 12,3-mm-Mörtelbett unter dem Außensturz auf den Pfeilern der Vormauerung), die Fensterbank liegt auf ihrem Bett auf der Vormauerung; ein Lagerkissen auf dem Wandkopf trägt den Träger; die 4-mm-Edelstahl-Luftschichtanker in zehn Lagerfugen im Abstand von 0,25 m (8 je m2, schlank) halten die Vormauerung gegen Wind; drei Kontaktplatten unter beiden Schalen an den Fundamentankern; Massekugeln in den Schwerpunkten von Wand, Sturz und Fensterbank."
     }
    ]
   },
@@ -9804,6 +9887,89 @@
        ],
        [
         2.13,
+        0.91667
+       ],
+       [
+        0.87,
+        0.91667
+       ],
+       [
+        0.87,
+        2.25
+       ],
+       [
+        0.625,
+        2.25
+       ]
+      ]
+     ],
+     "member": "wall",
+     "part": "member"
+    },
+    {
+     "id": "member-wall-facing",
+     "kind": "extrude",
+     "bone": "wall",
+     "material": "brick",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       3.0,
+       0.0
+      ],
+      [
+       3.0,
+       2.75
+      ],
+      [
+       0.0,
+       2.75
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.2225,
+     "to": -0.1075,
+     "holes": [
+      [
+       [
+        0.625,
+        2.5
+       ],
+       [
+        2.375,
+        2.5
+       ],
+       [
+        2.375,
+        2.25
+       ],
+       [
+        2.13,
+        2.25
+       ],
+       [
+        2.13,
+        0.91667
+       ],
+       [
+        2.2,
+        0.91667
+       ],
+       [
+        2.2,
+        0.83333
+       ],
+       [
+        0.8,
+        0.83333
+       ],
+       [
+        0.8,
         0.91667
        ],
        [
@@ -10722,8 +10888,8 @@
      "de": "Körper: die vier Schalen als Scheiben (115 mm Vormauerung, 140 mm Dämmung, 175 mm Kalksandstein, 15 mm Putz: der Putz ist eine kleinste Einzelheit und bleibt), die zwei Stürze als einfache 175-mm-Balken mit den 80 mm Dämmung dazwischen, die Fensterbank mit 50 mm Überstand und einem geraden Gefälle. Gegenüber 1:50 zusammengefasst: Steine, Blöcke und ihre 10 bis 12 mm Fugen (unter der Einzelheit von 15 mm, als Schichtschraffur gezeichnet), die offenen Stoßfugen, der Laibungs- und Untersichtputz (in die Öffnungskontur), das Bett unter dem Außensturz, die Sturzfase, die Tropfnase und die hochgezogenen Fensterbankenden."
     },
     {
-     "en": "Thermal: three shells per region, innermost first: inner masonry with the plaster merged, wool, outer layer; wool and outer layer reference the body, the outer layer counts its exterior face only (`sectionFaces`). Structure: the leaf, both lintels on two merged bearings, the sill, the beam bearing pad, the wall ties kept as slender wires, three contact pads of 15 mm and the three mass spheres.",
-     "de": "Thermisch: drei Schalen je Region, von innen: Innenmauerwerk mit eingeschlossenem Putz, Dämmung, äußere Schicht; Dämmung und äußere Schicht verweisen auf den Körper, die äußere Schicht zählt nur ihre Außenfläche (`sectionFaces`). Tragwerk: die Innenschale, beide Stürze auf zwei zusammengefassten Auflagern, die Fensterbank, das Trägerlagerkissen, die Luftschichtanker als schlanke Drähte, drei Kontaktplatten zu 15 mm und die drei Massekugeln."
+     "en": "Thermal: three shells per region, innermost first: inner masonry with the plaster merged, wool, outer layer; wool and outer layer reference the body, the outer layer counts its exterior face only (`sectionFaces`). Structure: both leaves as wall members (the facing carries its own weight and the outer lintel to the foundation), both lintels on two merged bearings, the sill, the beam bearing pad, the wall ties kept as slender wires, three contact pads of 15 mm and the mass spheres.",
+     "de": "Thermisch: drei Schalen je Region, von innen: Innenmauerwerk mit eingeschlossenem Putz, Dämmung, äußere Schicht; Dämmung und äußere Schicht verweisen auf den Körper, die äußere Schicht zählt nur ihre Außenfläche (`sectionFaces`). Tragwerk: beide Schalen als Wandstäbe (die Vormauerung trägt ihr Eigengewicht und den Außensturz bis zum Fundament), beide Stürze auf zwei zusammengefassten Auflagern, die Fensterbank, das Trägerlagerkissen, die Luftschichtanker als schlanke Drähte, drei Kontaktplatten zu 15 mm und die Massekugeln."
     }
    ]
   },
@@ -11343,6 +11509,89 @@
      "part": "member"
     },
     {
+     "id": "member-wall-facing",
+     "kind": "extrude",
+     "bone": "wall",
+     "material": "brick",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       3.0,
+       0.0
+      ],
+      [
+       3.0,
+       2.75
+      ],
+      [
+       0.0,
+       2.75
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.2225,
+     "to": -0.1075,
+     "holes": [
+      [
+       [
+        0.625,
+        2.5
+       ],
+       [
+        2.375,
+        2.5
+       ],
+       [
+        2.375,
+        2.25
+       ],
+       [
+        2.13,
+        2.25
+       ],
+       [
+        2.13,
+        0.91667
+       ],
+       [
+        2.2,
+        0.91667
+       ],
+       [
+        2.2,
+        0.83333
+       ],
+       [
+        0.8,
+        0.83333
+       ],
+       [
+        0.8,
+        0.91667
+       ],
+       [
+        0.87,
+        0.91667
+       ],
+       [
+        0.87,
+        2.25
+       ],
+       [
+        0.625,
+        2.25
+       ]
+      ]
+     ],
+     "member": "wall",
+     "part": "member"
+    },
+    {
      "id": "member-lintel-inner",
      "kind": "box",
      "bone": "lintel",
@@ -11600,8 +11849,8 @@
      "de": "Körper: die Wand als eine 445-mm-Masse mit ausgeschnittener Öffnung, Sturz- und Fensterbankzone, das Sturzband über die ganze Dicke (beide Stürze, die Dämmung dazwischen und der Putz zusammengefasst), die Fertigteil-Fensterbank mit 50 mm Überstand (mehr als eine Einzelheit von 30 mm) und die Brüstungsabdeckung dahinter. Die Zeichnung 1:200 zeigt keine Schichten; die Schalen sind in der Masse aufgegangen."
     },
     {
-     "en": "Thermal: per region the inner masonry (plaster merged), the insulation and the outer layer as shells of their own, because the body no longer separates them; the outer layer counts its exterior face only. Structure: the 175 mm leaf, the inner lintel as the bearing member over the opening and the outer lintel, the sill, three contact pads of 30 mm and the mass spheres; ties, bearings and the beam pad are below the 30 mm feature and are left out.",
-     "de": "Thermisch: je Region das Innenmauerwerk (mit Putz), die Dämmung und die äußere Schicht als eigene Schalen, weil der Körper sie nicht mehr trennt; die äußere Schicht zählt nur ihre Außenfläche. Tragwerk: die 175-mm-Innenschale, der Innensturz als tragender Stab über der Öffnung und der Außensturz, die Fensterbank, drei Kontaktplatten zu 30 mm und die Massekugeln; Anker, Auflager und Trägerkissen liegen unter der Einzelheit von 30 mm und entfallen."
+     "en": "Thermal: per region the inner masonry (plaster merged), the insulation and the outer layer as shells of their own, because the body no longer separates them; the outer layer counts its exterior face only. Structure: the 175 mm inner leaf and the 115 mm facing leaf as wall members, the inner lintel over the opening of the inner leaf and the outer lintel over that of the facing, the sill, three contact pads of 30 mm and the mass spheres; ties, bearings and the beam pad are below the 30 mm feature and are left out.",
+     "de": "Thermisch: je Region das Innenmauerwerk (mit Putz), die Dämmung und die äußere Schicht als eigene Schalen, weil der Körper sie nicht mehr trennt; die äußere Schicht zählt nur ihre Außenfläche. Tragwerk: die 175-mm-Innenschale und die 115-mm-Vormauerschale als Wandstäbe, der Innensturz über der Öffnung der Innenschale und der Außensturz über der der Vormauerung, die Fensterbank, drei Kontaktplatten zu 30 mm und die Massekugeln; Anker, Auflager und Trägerkissen liegen unter der Einzelheit von 30 mm und entfallen."
     }
    ]
   },
@@ -12050,6 +12299,89 @@
      "part": "member"
     },
     {
+     "id": "member-wall-facing",
+     "kind": "extrude",
+     "bone": "wall",
+     "material": "brick",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       3.0,
+       0.0
+      ],
+      [
+       3.0,
+       2.75
+      ],
+      [
+       0.0,
+       2.75
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.2225,
+     "to": -0.1075,
+     "holes": [
+      [
+       [
+        0.625,
+        2.5
+       ],
+       [
+        2.375,
+        2.5
+       ],
+       [
+        2.375,
+        2.25
+       ],
+       [
+        2.13,
+        2.25
+       ],
+       [
+        2.13,
+        0.91667
+       ],
+       [
+        2.2,
+        0.91667
+       ],
+       [
+        2.2,
+        0.83333
+       ],
+       [
+        0.8,
+        0.83333
+       ],
+       [
+        0.8,
+        0.91667
+       ],
+       [
+        0.87,
+        0.91667
+       ],
+       [
+        0.87,
+        2.25
+       ],
+       [
+        0.625,
+        2.25
+       ]
+      ]
+     ],
+     "member": "wall",
+     "part": "member"
+    },
+    {
      "id": "member-lintel",
      "kind": "box",
      "bone": "lintel",
@@ -12059,13 +12391,13 @@
      "size": [
       1.75,
       0.25,
-      0.175
+      0.43
      ],
      "transform": {
       "translation": [
        0.875,
        0.125,
-       0.12
+       -0.0075
       ]
      },
      "member": "lintel",
@@ -12301,8 +12633,8 @@
      "de": "Minimal: die Wandmasse mit der Öffnung, das Sturzband über die ganze Dicke und das Fensterbankband über die ganze Dicke mit seiner Nase 50 mm vor der Wandfläche (die wirkliche Tiefe der Wand; das Band selbst ist 83 mm hoch und 495 mm tief, über der Einzelheit von 75 mm); Schichten, Gefälle und Tropfnase sind zusammengefasst, wie in der Zeichnung 1:500."
     },
     {
-     "en": "Thermal: the field keeps inner masonry, the 140 mm wool and the facing as three shells (the insulation is wider than the 75 mm feature and is what the wall is about), drawn over field and sill zone together as the 1:500 elevation merges them; the lintel zone and the sill band are one solid each that counts its exterior face. Structure: the 175 mm leaf, the inner lintel, the precast sill in the wall plane, three contact pads of 75 mm and the mass spheres.",
-     "de": "Thermisch: das Feld behält Innenmauerwerk, die 140-mm-Dämmung und die Vormauerung als drei Schalen (die Dämmung ist breiter als die Einzelheit von 75 mm und ist das, worum es bei der Wand geht), über Feld und Fensterbankzone zusammen gezogen, wie die Ansicht 1:500 sie zusammenfasst; Sturzzone und Fensterbankband sind je ein Körper, der seine Außenfläche zählt. Tragwerk: die 175-mm-Innenschale, der Innensturz, die Fertigteil-Fensterbank in der Wandebene, drei Kontaktplatten zu 75 mm und die Massekugeln."
+     "en": "Thermal: the field keeps inner masonry, the 140 mm wool and the facing as three shells (the insulation is wider than the 75 mm feature and is what the wall is about), drawn over field and sill zone together as the 1:500 elevation merges them; the lintel zone and the sill band are one solid each that counts its exterior face. Structure: the 175 mm inner leaf and the 115 mm facing leaf, one lintel member through the whole thickness (both lintels merged, as the drawn lintel band), the precast sill in the wall plane, three contact pads of 75 mm and the mass spheres.",
+     "de": "Thermisch: das Feld behält Innenmauerwerk, die 140-mm-Dämmung und die Vormauerung als drei Schalen (die Dämmung ist breiter als die Einzelheit von 75 mm und ist das, worum es bei der Wand geht), über Feld und Fensterbankzone zusammen gezogen, wie die Ansicht 1:500 sie zusammenfasst; Sturzzone und Fensterbankband sind je ein Körper, der seine Außenfläche zählt. Tragwerk: die 175-mm-Innenschale und die 115-mm-Vormauerschale, ein Sturzstab über die ganze Wanddicke (beide Stürze zusammengefasst, wie das gezeichnete Sturzband), die Fertigteil-Fensterbank in der Wandebene, drei Kontaktplatten zu 75 mm und die Massekugeln."
     }
    ]
   }

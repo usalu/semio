@@ -93,6 +93,8 @@ pub fn admit_retained_clone_progress(grant: RetainedCloneGrant, progress: Retain
 pub fn admit_retained_clone_close(grant: RetainedCloneGrant, step: RetainedCloneStep, terminal: bool, scope: &str) -> Result<RetainedCloneStep, ValueError> {
     admit_retained_clone_progress(grant, step.progress(), scope)?;
     if matches!(step, RetainedCloneStep::Complete(_)) && !terminal {
+        #[cfg(debug_assertions)]
+        eprintln!("[DEBUG] Retained close completed with owners in {scope} at {:?}", step.progress());
         return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original retained turn completed with retained owners").with_retained_progress(step.progress()));
     }
     Ok(step)

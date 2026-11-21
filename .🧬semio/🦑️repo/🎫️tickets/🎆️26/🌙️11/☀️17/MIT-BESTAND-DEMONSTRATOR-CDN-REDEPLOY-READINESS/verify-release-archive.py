@@ -15,9 +15,10 @@ def relative_name(name):
     return name
 
 
-def verify(path):
+def verify(path, accepted=None):
     actual = {}
     expected = None
+    manifest = hashlib.sha256()
     total = 0
     with gzip.open(path, "rb") as inflated, tarfile.open(fileobj=inflated, mode="r|") as archive:
         for member in archive:
@@ -34,6 +35,7 @@ def verify(path):
                     raise ValueError("duplicate checksum manifest")
                 expected = {}
                 for line in stream:
+                    manifest.update(line)
                     match = re.fullmatch(rb"([0-9a-f]{64}) [ *](.+)\n", line)
                     if not match:
                         raise ValueError("invalid checksum manifest entry")
@@ -51,6 +53,8 @@ def verify(path):
             pass
     if expected is None:
         raise ValueError("missing checksum manifest")
+    if accepted is not None and manifest.digest() != hashlib.sha256(accepted.read_bytes()).digest():
+        raise ValueError("archive manifest differs from the accepted site")
     for name in sorted(actual.keys() | expected.keys()):
         if actual.get(name) != expected.get(name):
             raise ValueError(f"archive checksum or membership mismatch for {name}")
@@ -58,5 +62,5 @@ def verify(path):
 
 
 if __name__ == "__main__":
-    count, size = verify(Path(sys.argv[1]))
+    count, size = verify(Path(sys.argv[1]), Path(sys.argv[2]) if len(sys.argv) > 2 else None)
     print(f"Verified {count} files and {size} bytes in the release archive")

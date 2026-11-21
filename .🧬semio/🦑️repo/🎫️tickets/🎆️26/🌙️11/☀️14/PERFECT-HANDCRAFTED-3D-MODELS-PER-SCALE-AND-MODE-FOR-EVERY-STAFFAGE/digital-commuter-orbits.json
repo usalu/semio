@@ -1,0 +1,9 @@
+{
+ "eyeSpacingM": 0.064,
+ "apertureWidthM": 0.027,
+ "upperApertureM": 0.0048,
+ "lowerApertureM": 0.0037,
+ "irisDiameterM": 0.011,
+ "pupilDiameterM": 0.0042,
+ "scales": {"50":24,"100":16}
+}

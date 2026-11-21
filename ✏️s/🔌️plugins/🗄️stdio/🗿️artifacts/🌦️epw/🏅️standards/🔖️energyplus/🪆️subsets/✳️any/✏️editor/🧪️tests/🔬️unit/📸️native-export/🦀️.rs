@@ -5,7 +5,7 @@ use semio_plugin::{ArtifactMediaExportJobRequest,ArtifactReservedJob,EditorApp};
 use semio_plugin::app::{ArtifactOutputChunks,ArtifactMediaExportCredit,ArtifactMediaExportCompletion};
 use semio_plugin::native_snapshot_export::{NativeSnapshotPackExportJob,SNAPSHOT_PACK_PORT,SNAPSHOT_PACK_TOOL,SNAPSHOT_PACK_MIME};
 use semio_framework_value::{RetainedCloneGrant,retirement::{OwnedValueRetirementFactory,controlled::ControlledRetirement},ToValue};
-use semio_framework_pack::snapshot::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use std::sync::Arc;
 fn clock()->Option<u64>{Some(1)}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:4_000_000,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:96}}

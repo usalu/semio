@@ -1,5 +1,5 @@
 /// 🎥️ Persisted local viewport transform for one concrete Wires canvas.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value_derive::NativeReceive, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -16,7 +16,7 @@ impl Default for WiresCanvasCamera {
     }
 }
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, Default, PartialEq, semio_os_kernel::DslArtifact, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -26,6 +26,8 @@ pub struct WiresCanvasWindowConfig {
     #[dsl(block)]
     pub camera: WiresCanvasCamera,
 }
+
+impl store::ConfigRecord for WiresCanvasWindowConfig {}
 
 /// 🔺️ Sparse field delta over [`WiresCanvasWindowConfig`]: every present slot is the new value of exactly that field.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]

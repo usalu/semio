@@ -1,0 +1,901 @@
+{
+  "edition": "EN 1993-1-9:2005+AC:2009",
+  "clause": "Table 8.6, Table 8.5(8), and §8(1)–(2)",
+  "columns": [
+    "case",
+    "choices",
+    "values",
+    "expected"
+  ],
+  "resultColumns": [
+    "demandMPa",
+    "limitMPa",
+    "status"
+  ],
+  "cases": [
+    [
+      "flattened",
+      {
+        "hollow_detail": "flattened",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          56.8,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "diameter-over",
+      {
+        "hollow_detail": "flattened",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 200,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "diameter-near",
+      {
+        "hollow_detail": "flattened",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 199.999,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          56.8,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "slotted-45",
+      {
+        "hollow_detail": "slotted",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          56.8,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ],
+        [
+          43.75,
+          64.0,
+          "pass"
+        ],
+        [
+          70,
+          307.4390183434757,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "slotted-above-45",
+      {
+        "hollow_detail": "slotted",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45.001,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          50.4,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ],
+        [
+          43.75,
+          64.0,
+          "pass"
+        ],
+        [
+          70,
+          307.4390183434757,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "slotted-shear-fails",
+      {
+        "hollow_detail": "slotted",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 55,
+        "hollow_weld_frequent_shear": 330,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          56.8,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ],
+        [
+          68.75,
+          64.0,
+          "fail"
+        ],
+        [
+          330,
+          307.4390183434757,
+          "fail"
+        ]
+      ]
+    ],
+    [
+      "slotted-negative-shear",
+      {
+        "hollow_detail": "slotted",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": -1,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "slotted-invalid-angle",
+      {
+        "hollow_detail": "slotted",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 181,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "chs-butt-8",
+      {
+        "hollow_detail": "chs-butt",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          56.8,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "chs-butt-thicker",
+      {
+        "hollow_detail": "chs-butt",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8.0001,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          72.0,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "rhs-butt-8",
+      {
+        "hollow_detail": "rhs-butt",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          44.8,
+          "fail"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "rhs-butt-thicker",
+      {
+        "hollow_detail": "rhs-butt",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8.0001,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          56.8,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "rhs-butt-overheight",
+      {
+        "hollow_detail": "rhs-butt",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8001,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "chs-weld-invalid",
+      {
+        "hollow_detail": "chs-butt",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 0,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "attachment-at-limit",
+      {
+        "hollow_detail": "non-load-bearing",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          56.8,
+          "pass"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "attachment-over-limit",
+      {
+        "hollow_detail": "non-load-bearing",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100.01,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "chs-butt-endplate",
+      {
+        "hollow_detail": "chs-butt-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          40.0,
+          "fail"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "chs-butt-endplate-thicker",
+      {
+        "hollow_detail": "chs-butt-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 12.5,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          44.8,
+          "fail"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "rhs-butt-endplate",
+      {
+        "hollow_detail": "rhs-butt-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          36.0,
+          "fail"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "rhs-butt-endplate-thicker",
+      {
+        "hollow_detail": "rhs-butt-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 9,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          40.0,
+          "fail"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "chs-fillet-endplate",
+      {
+        "hollow_detail": "chs-fillet-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          32.0,
+          "fail"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "rhs-fillet-endplate",
+      {
+        "hollow_detail": "rhs-fillet-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          28.8,
+          "fail"
+        ],
+        [
+          100,
+          532.5,
+          "pass"
+        ]
+      ]
+    ],
+    [
+      "chs-fillet-endplate-over",
+      {
+        "hollow_detail": "chs-fillet-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8.01,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "rhs-fillet-endplate-over",
+      {
+        "hollow_detail": "rhs-fillet-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8.01,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "global-thickness-over",
+      {
+        "hollow_detail": "rhs-butt-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 12.501,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "global-thickness-zero",
+      {
+        "hollow_detail": "rhs-butt-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 0,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "stress-negative",
+      {
+        "hollow_detail": "rhs-butt-endplate",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": -1,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ],
+    [
+      "stress-frequent-fails",
+      {
+        "hollow_detail": "chs-butt",
+        "hollow_execution": "confirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 540,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      [
+        [
+          50.0,
+          56.8,
+          "pass"
+        ],
+        [
+          540,
+          532.5,
+          "fail"
+        ]
+      ]
+    ],
+    [
+      "missing-qualification",
+      {
+        "hollow_detail": "flattened",
+        "hollow_execution": "unconfirmed"
+      },
+      {
+        "hollow_wall": 8,
+        "hollow_diameter": 150,
+        "hollow_slot_angle": 45,
+        "hollow_weld_dimension": 8,
+        "hollow_reinforcement": 0.8,
+        "hollow_attachment_width": 100,
+        "hollow_range": 40,
+        "hollow_frequent": 100,
+        "hollow_weld_shear": 35,
+        "hollow_weld_frequent_shear": 70,
+        "fy": 355,
+        "gamma_ff": 1.25,
+        "gamma_mf": 1.25
+      },
+      []
+    ]
+  ]
+}

@@ -1,5 +1,5 @@
 import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-/** 🛠️ `dev` command family: Storybook, time-travel, storybook-static and the MCP launchers.
+/** 🛠️ `dev` command family: playground, Storybook, time-travel, storybook-static and the MCP launchers.
  * @see 📜️script.ts
  */
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -22,6 +22,10 @@ function requireRepoMcpBinary(root: string): string {
 //#region 🔖️DevScript
 export class DevScript extends Script {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "playground") {
+      const { serveRootPlaygroundV1 } = await import("./🎮️playground/🟦️.ts");
+      return serveRootPlaygroundV1(this.repoRoot, this.invocation, ["dev", ...segments]);
+    }
     if (segments[0] === "time-travel") {
       const { issueRepositoryScriptProvidersV1 } = await import("../../🏃️process/🔌️providers/🟦️.ts");
       issueRepositoryScriptProvidersV1(process.env);
@@ -41,7 +45,7 @@ export class DevScript extends Script {
       await this.runMcp(segments.slice(1));
       return;
     }
-    console.error(`[dev] unknown route ${JSON.stringify(segments.join(" "))}: expected storybook, storybook-static, time-travel or mcp. Playgrounds are dashboard commands: \`repo dashboard run playground:<variant> --param renderer=react\` (list them with \`repo dashboard commands playground\`).`);
+    console.error(`[dev] unknown route ${JSON.stringify(segments.join(" "))}: expected playground, storybook, storybook-static, time-travel or mcp.`);
     process.exit(1);
   }
 

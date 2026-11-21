@@ -69,6 +69,14 @@ impl<'a> SpannedParser<'a> {
         }
     }
 
+    fn expect_kind(&mut self) -> Result<(String, usize, usize), String> {
+        let token = self.bump();
+        match token.token {
+            Token::Ident(kind) | Token::StringLit(kind) => Ok((kind, token.start, token.end)),
+            other => Err(format!("expected kind at {}, got {other:?}", token.start)),
+        }
+    }
+
     pub(super) fn expect(&mut self, want: &Token) -> Result<SpannedToken, String> {
         let token = self.bump();
         if std::mem::discriminant(&token.token) == std::mem::discriminant(want) {
@@ -166,7 +174,7 @@ impl<'a> SpannedParser<'a> {
             }
             if matches!(self.peek().token, Token::Colon) {
                 self.bump();
-                let (text, s, e) = self.expect_ident()?;
+                let (text, s, e) = self.expect_kind()?;
                 edge_children.push(spanned_node("edgeKind", s, e, self.source, Vec::new(), Some(text.as_str())));
             }
             self.expect(&Token::RBracket)?;
@@ -186,7 +194,7 @@ impl<'a> SpannedParser<'a> {
         let start = self.peek().start;
         let (var_text, _, var_end) = self.expect_ident()?;
         self.expect(&Token::Colon)?;
-        let (kind_text, kind_start, kind_end) = self.expect_ident()?;
+        let (kind_text, kind_start, kind_end) = self.expect_kind()?;
         let var_node = spanned_node("var", start, var_end, self.source, Vec::new(), Some(var_text.as_str()));
         let kind_node = spanned_node("label", kind_start, kind_end, self.source, Vec::new(), Some(kind_text.as_str()));
         let label = format!("{var_text}:{kind_text}");

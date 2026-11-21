@@ -1,0 +1,13 @@
+{
+  "schema": "semio.plugin.declaration-action-index/v1",
+  "ambientEntropy": false,
+  "generatedActions": [{ "id": "shared", "marker": "generated" }, { "id": "system", "marker": "generated-system" }],
+  "windows": [
+    { "id": "z-first", "actions": [{ "id": "shared", "marker": "first-window" }, { "id": "aux", "marker": "auxiliary" }] },
+    { "id": "a-last", "actions": [{ "id": "local", "marker": "local" }, { "id": "shared", "marker": "last-window" }] }
+  ],
+  "global": { "aux": "auxiliary", "local": "local", "shared": "last-window", "system": "generated-system" },
+  "windowOrder": { "z-first": ["shared", "aux"], "a-last": ["local", "shared"] },
+  "modes": [{ "id": "z-first", "command": "first-mode" }, { "id": "a-last", "command": "last-mode" }],
+  "unscopedCommand": "first-mode"
+}

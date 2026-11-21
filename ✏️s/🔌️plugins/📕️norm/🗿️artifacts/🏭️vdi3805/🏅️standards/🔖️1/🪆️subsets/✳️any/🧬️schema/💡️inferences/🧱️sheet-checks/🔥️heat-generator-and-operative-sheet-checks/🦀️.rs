@@ -6,8 +6,8 @@ pub(super) fn check_heat_generator(product: &CatalogueProduct, attrs: &HeatGener
     let mut out = Vec::new();
     let article = product.id.as_str();
     let subject = subject_product(product);
-    let part = part_label(6);
-    let mut qn = CheckResult::assess(format!("vdi3805.6.qn.{article}"), part.clone(), clause("6", "4.1"), subject.clone(), copy("Nominal heat output", "Nennwärmeleistung"))
+    let part = part_label(3);
+    let mut qn = CheckResult::assess(format!("vdi3805.3.qn.{article}"), part.clone(), clause("3", "4.1"), subject.clone(), copy("Nominal heat output", "Nennwärmeleistung"))
         .annex(ANNEX)
         .minimum(Quantity::new(QuantityKind::Power, attrs.nominal_heat_output_w), Quantity::new(QuantityKind::Power, 1.0));
     if attrs.nominal_heat_output_w >= 1.0 {
@@ -25,7 +25,7 @@ pub(super) fn check_heat_generator(product: &CatalogueProduct, attrs: &HeatGener
     out.push(qn.build());
 
     let fuel_ok = !attrs.fuel_type.is_empty();
-    let mut fuel = CheckResult::assess(format!("vdi3805.6.fuel.{article}"), part.clone(), clause("6", "4.2"), subject.clone(), copy("Fuel / energy type", "Brennstoff-/Energieträger"))
+    let mut fuel = CheckResult::assess(format!("vdi3805.3.fuel.{article}"), part.clone(), clause("3", "4.2"), subject.clone(), copy("Fuel / energy type", "Brennstoff-/Energieträger"))
         .annex(ANNEX)
         .status(if fuel_ok { CheckStatus::Pass } else { CheckStatus::Fail });
     if fuel_ok {
@@ -36,16 +36,16 @@ pub(super) fn check_heat_generator(product: &CatalogueProduct, attrs: &HeatGener
             .remedy(Remedy::one_of(
                 SubjectRef::new(article, product_path(article, "configuration.attributes.fuelType"), copy("Fuel type", "Energieträger")),
                 vec!["gas".into(), "oil".into(), "electric".into(), "biomass".into(), "district".into()],
-                copy("Set fuelType to a Blatt 6 energy carrier code.", "fuelType auf einen Blatt-6-Energieträger setzen."),
+                copy("Set fuelType to a Blatt 3 energy carrier code.", "fuelType auf einen Blatt-3-Energieträger setzen."),
             ));
     }
     out.push(fuel.build());
 
     let flow_ok = attrs.flow_temp_max_c >= 30.0 && attrs.flow_temp_max_c <= 110.0;
     let mut flow = CheckResult::assess(
-        format!("vdi3805.6.flowTempMaxC.{article}"),
+        format!("vdi3805.3.flowTempMaxC.{article}"),
         part.clone(),
-        clause("6", "4.3"),
+        clause("3", "4.3"),
         subject.clone(),
         copy("Maximum flow temperature", "Maximale Vorlauftemperatur"),
     )
@@ -60,16 +60,16 @@ pub(super) fn check_heat_generator(product: &CatalogueProduct, attrs: &HeatGener
                 SubjectRef::new(article, attr_leaf_path(article, "flowTempMaxC"), copy("Flow temperature max", "Vorlauftemperatur max")),
                 Quantity::new(QuantityKind::Temperature, attrs.flow_temp_max_c),
                 Quantity::new(QuantityKind::Temperature, 80.0),
-                copy("Set flowTempMaxC to a Blatt 6 design flow temperature (e.g. 80 °C).", "flowTempMaxC auf eine Blatt-6-Auslegungsvorlauftemperatur setzen (z. B. 80 °C)."),
+                copy("Set flowTempMaxC to a Blatt 3 design flow temperature (e.g. 80 °C).", "flowTempMaxC auf eine Blatt-3-Auslegungsvorlauftemperatur setzen (z. B. 80 °C)."),
             ));
     }
     out.push(flow.build());
 
     let ret_ok = attrs.return_temp_min_c >= 5.0 && attrs.return_temp_min_c < attrs.flow_temp_max_c.max(30.0);
     let mut ret = CheckResult::assess(
-        format!("vdi3805.6.returnTempMinC.{article}"),
+        format!("vdi3805.3.returnTempMinC.{article}"),
         part,
-        clause("6", "4.4"),
+        clause("3", "4.4"),
         subject,
         copy("Minimum return temperature", "Minimale Rücklauftemperatur"),
     )
@@ -206,7 +206,7 @@ pub(super) fn check_operative_sheet(document: &Vdi3805Snapshot, product: &Catalo
         }
         out.push(kc.build());
         if sheet_numeric_bounds(sheet).iter().any(|(k, _, _)| *k == entry.key) || keys.iter().any(|k| *k == entry.key) {
-            let (value_ok, value_metric) = if let Some(codes) = code_list_for_key(sheet, &entry.key) {
+            let (value_ok, value_metric) = if let Some(codes) = code_list_for_key(&entry.key) {
                 let ok = codes.iter().any(|c| *c == entry.value.as_str());
                 (ok, if ok { 1.0 } else { 0.0 })
             } else if let Ok(v) = entry.value.parse::<f64>() {
@@ -247,7 +247,7 @@ pub(super) fn check_operative_sheet(document: &Vdi3805Snapshot, product: &Catalo
     }
 
     for key in keys {
-        let Some(codes) = code_list_for_key(sheet, key) else { continue };
+        let Some(codes) = code_list_for_key(key) else { continue };
         let raw = kv.get(*key).cloned().or_else(|| generic_entries.iter().find(|e| e.key.eq_ignore_ascii_case(key)).map(|e| e.value.clone())).unwrap_or_default();
         if raw.is_empty() {
             continue;

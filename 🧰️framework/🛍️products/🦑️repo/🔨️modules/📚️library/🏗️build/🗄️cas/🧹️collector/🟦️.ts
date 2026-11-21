@@ -4,13 +4,14 @@ import type {FileHandle} from "node:fs/promises";
 import {compactCasShardV1,foldCasShardV1,openCasShardViewV1,type CasShardViewV1} from "../📒️ledger/🟦️.ts";
 import {casPinDirectoryV1,readCasPinsV1} from "../📌️pins/🟦️.ts";
 import {casPartitionNeedBytesV1,casPartitionUsedFractionV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
-import {CAS_POLICY_V1,casTextV1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {CAS_GRAPH_CLOSURE_AREA_V1,CAS_POLICY_V1,casTextV1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 import {createCasPlannerV1,type CasPlanTotalsV1,type CasReasonV1} from "./🧮️plan.ts";
 
 export {casCutV1,createCasPlannerV1} from "./🧮️plan.ts";
 export type {CasCutV1,CasPlanTotalsV1,CasReasonV1} from "./🧮️plan.ts";
 
-/** 📂️ One loose-file area outside the store: independent cache files below `directory` (for example the host's graph memo or a workspace's build-input closures) whose bytes count against the host cap. `id` names the policy bounds it falls under; a file named `<sha256>.json` is protected while a live holder pins that digest (the build-input closures the loaded graph generation references). */
+/** 📂️ One loose-file area outside the store whose bytes count against the host cap. The graph owns retirement of source inventories. Other files named `<sha256>.json` are protected while a live holder pins that digest. */
 export type CasAreaSourceV1=Readonly<{id:string;directory:string;skip?:RegExp}>;
 /** 📣️ Progress of one collection. */
 export type CasProgressV1=Readonly<{stage:"scan"|"evict"|"compact";entries:number;usedBytes:number;freedBytes:number}>;
@@ -18,13 +19,15 @@ export type CasProgressV1=Readonly<{stage:"scan"|"evict"|"compact";entries:numbe
 export type CasCollectOptionsV1=Readonly<{
  root:string;policy?:CasPolicyV1;areas?:readonly CasAreaSourceV1[];externalBytes?:number;partition?:CasPartitionV1;signal?:AbortSignal;dryRun?:boolean;
  now?():number;pid?:number;progress?(event:CasProgressV1):void|Promise<void>;
+ automaticScope?():Promise<string|undefined>;
+ completedAutomatic?(hint:CasUsageHintV1):void;
  beforeEvict?(path:string):void|Promise<void>;
  openLock?(path:string):Promise<FileHandle>;
 }>;
 /** 🌡️ What a collection saw of the partition that holds the store: its share in use before it, and the bytes it was above its low share. */
 export type CasCollectedPartitionV1=Readonly<{partition:string;usedFraction:number;needBytes:number}>;
 /** 🧾️ What a collection did; `locked` is a collection that found another one running, `lockless` one that ran without the lock because the disk was too full to create it. */
-export type CasCollectionV1=Readonly<{status:"idle"|"collected"|"locked";partial:boolean;dryRun:boolean;scanned:number;evicted:number;freedBytes:number;busy:number;skipped:number;totals:CasPlanTotalsV1;byReason:Readonly<Record<CasReasonV1,number>>;lockless?:true;partition?:CasCollectedPartitionV1}>;
+export type CasCollectionV1=Readonly<{status:"idle"|"collected"|"locked";partial:boolean;dryRun:boolean;scanned:number;evicted:number;freedBytes:number;busy:number;skipped:number;totals:CasPlanTotalsV1;byReason:Readonly<Record<CasReasonV1,number>>;graphClosureBytes?:number;lockless?:true;partition?:CasCollectedPartitionV1}>;
 
 const STORE="store",zero:CasPlanTotalsV1={totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,needBytes:0};
 const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
@@ -87,7 +90,7 @@ async function* entries(options:CasCollectOptionsV1,policy:CasPolicyV1,pins:Read
   for await(const file of walk(area.directory,area.skip??TEMPORARY,options.signal)){
    const access=Math.max(file.mtimeMs,file.atimeMs);
    const pin=pinOfFileV1(file.path);
-   yield{area:area.id,path:file.path,size:file.size,access,protectedEntry:nowMs-access<policy.minAgeMs||(pin!==undefined&&pins.has(pin)),pin};
+   yield{area:area.id,path:file.path,size:file.size,access,protectedEntry:area.id===CAS_GRAPH_CLOSURE_AREA_V1||nowMs-access<policy.minAgeMs||(pin!==undefined&&pins.has(pin)),pin};
   }
  }
 }
@@ -100,16 +103,23 @@ async function sweepTemporary(root:string,policy:CasPolicyV1,nowMs:number):Promi
 /** 🧹️ Collects the host store and its declared areas: scans once (bounded memory, shard by shard), decides with the streaming least-recently-accessed planner (down to the low watermark of the cap and, when the caller measured the partition, down to the low used share of the partition), then evicts in a second pass that re-checks pins and fresh access right before every removal. Single-flight per root through a lock file with stale-owner takeover. Idempotent and stateless, so a crash or cancellation leaves a consistent store and the next run simply continues; objects are written by atomic rename, so no partial object is ever visible. It frees space before it needs any: stale temporary files go first, and when the disk is too full to create the lock the collection runs without it (every removal is idempotent and re-checked, so two collectors cannot do harm) and skips the ledger compaction and the usage hint, so a full disk never keeps it from deleting. */
 export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasCollectionV1>{
  const policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),now=options.now??Date.now,pid=options.pid??process.pid,signal=options.signal;
- await sweepTemporary(options.root,policy,now());
+ if(!options.dryRun)await sweepTemporary(options.root,policy,now());
  const lock=await acquire(options.root,policy,now(),pid,options.openLock??(path=>open(path,"wx"))),release=lock?.release;
  if(!lock||!release)return{status:"locked",partial:false,dryRun:options.dryRun===true,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:zero,byReason:{age:0,area:0,host:0}};
- const views=new Map<string,CasShardViewV1>();let scanned=0,evicted=0,freed=0,busy=0,skipped=0,used=0,lastReport=-Infinity,partial=false;const byReason:Record<CasReasonV1,number>={age:0,area:0,host:0};
+ const views=new Map<string,CasShardViewV1>();let scanned=0,evicted=0,freed=0,busy=0,skipped=0,used=0,graphClosureBytes=0,lastReport=-Infinity,partial=false;const byReason:Record<CasReasonV1,number>={age:0,area:0,host:0};
  const report=async(stage:CasProgressV1["stage"],force=false):Promise<void>=>{
   signal?.throwIfAborted();const at=now();
   if(!force&&at-lastReport<policy.progressMs)return;
   lastReport=at;await options.progress?.({stage,entries:scanned,usedBytes:used,freedBytes:freed});signal?.throwIfAborted();
  };
  try{
+  const scope=lock.lockless?undefined:await options.automaticScope?.();
+  const finishUsage=async(bytes:number)=>{
+   const exact=scope!==undefined&&!signal?.aborted&&await options.automaticScope?.()===scope&&!signal?.aborted;
+   const atMs=now();
+   if(await recordUsage(options,bytes,atMs,exact?scope:undefined)&&exact&&scope!==undefined)
+    options.completedAutomatic?.({atMs,bytes,automaticScope:scope});
+  };
   const started=now(),partitionNeed=casPartitionNeedBytesV1(options.partition,policy),partition=options.partition?Object.freeze({partition:options.partition.partition,usedFraction:casPartitionUsedFractionV1(options.partition),needBytes:partitionNeed}):undefined,lockless=lock.lockless?{lockless:true as const}:{};
   const bounds=[{id:STORE,capBytes:null,maxAgeMs:null},...(options.areas??[]).map(area=>{const row=policy.areas.find(candidate=>candidate.id===area.id);return{id:area.id,capBytes:row?.capBytes??null,maxAgeMs:row?.maxAgeMs??null};})];
   const planner=createCasPlannerV1({policy,areas:bounds,externalBytes:options.externalBytes??0,nowMs:started,partitionNeedBytes:partitionNeed});
@@ -117,15 +127,16 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
   try{
    for await(const entry of entries(options,policy,pins,started,views)){
     planner.add(entry.area,entry.access,entry.size,entry.protectedEntry);scanned++;used+=entry.size;
+    if(entry.area===CAS_GRAPH_CLOSURE_AREA_V1)graphClosureBytes+=entry.size;
     if(scanned%policy.checkEvery===0)await report("scan");
    }
   }catch(error){if(signal?.aborted){partial=true;}else throw error;}
   const plan=partial?undefined:planner.finish();
   if(!plan)return{status:"collected",partial:true,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals:zero,byReason,...lockless,...partition?{partition}:{}};
-  const totals=plan.totals;
+  const totals=plan.totals,graphClosures=graphClosureBytes>0?{graphClosureBytes}:{};
   if(totals.plannedBytes<=0){
-   await compactAll(options,policy,started,views);await recordUsage(options,totals.keptBytes-(options.externalBytes??0),now());
-   return{status:"idle",partial:false,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals,byReason,...lockless,...partition?{partition}:{}};
+   await compactAll(options,policy,started,views);await finishUsage(totals.keptBytes-(options.externalBytes??0));
+   return{status:"idle",partial:false,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals,byReason,...graphClosures,...lockless,...partition?{partition}:{}};
   }
   const evaluator=plan.evaluator();pins=await readCasPinsV1(options.root,now());let currentShard:string|undefined,view:CasShardViewV1|undefined,pinStamp=(await stat(casPinDirectoryV1(options.root)).catch(()=>undefined))?.mtimeMs??0;
   try{
@@ -144,9 +155,9 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
     if(evicted%policy.checkEvery===0)await report("evict");
    }
   }catch(error){if(signal?.aborted)partial=true;else throw error;}
-  if(!partial&&!options.dryRun){await compactAll(options,policy,started,views);await recordUsage(options,used,now());}
+  if(!partial&&!options.dryRun){await compactAll(options,policy,started,views);await finishUsage(used);}
   await options.progress?.({stage:"evict",entries:scanned,usedBytes:used,freedBytes:freed});
-  return{status:"collected",partial,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals,byReason,...lockless,...partition?{partition}:{}};
+  return{status:"collected",partial,dryRun:options.dryRun===true,scanned,evicted,freedBytes:freed,busy,skipped,totals,byReason,...graphClosures,...lockless,...partition?{partition}:{}};
  }finally{await release();}
 }
 
@@ -164,18 +175,20 @@ async function compactAll(options:CasCollectOptionsV1,policy:CasPolicyV1,nowMs:n
 export const casUsageHintPathV1=(root:string):string=>join(root,"v1","usage.json");
 
 /** 📈️ Reads the usage hint: the bytes the last finished collection left and when; `undefined` when there is none or it is unreadable. */
-export async function readCasUsageHintV1(root:string):Promise<Readonly<{bytes:number;atMs:number}>|undefined>{
+export type CasUsageHintV1=Readonly<{bytes:number;atMs:number;automaticScope?:string}>;
+const automaticScopePattern=new RegExp(schema.definitions.UsageHint.properties.automaticScope.pattern,"u");
+export async function readCasUsageHintV1(root:string):Promise<CasUsageHintV1|undefined>{
  try{
-  const row=JSON.parse(await readFile(casUsageHintPathV1(root),"utf8")) as {version?:unknown;bytes?:unknown;atMs?:unknown};
-  return row.version===1&&typeof row.bytes==="number"&&Number.isFinite(row.bytes)&&row.bytes>=0&&typeof row.atMs==="number"?Object.freeze({bytes:row.bytes,atMs:row.atMs}):undefined;
+  const row=JSON.parse(await readFile(casUsageHintPathV1(root),"utf8")) as {version?:unknown;bytes?:unknown;atMs?:unknown;automaticScope?:unknown};
+  return row.version===1&&typeof row.bytes==="number"&&Number.isSafeInteger(row.bytes)&&row.bytes>=0&&typeof row.atMs==="number"&&Number.isSafeInteger(row.atMs)&&row.atMs>0?Object.freeze({bytes:row.bytes,atMs:row.atMs,...typeof row.automaticScope==="string"&&automaticScopePattern.test(row.automaticScope)?{automaticScope:row.automaticScope}:{}}):undefined;
  }catch{return undefined;}
 }
 
-async function recordUsage(options:CasCollectOptionsV1,bytes:number,atMs:number):Promise<void>{
- if(options.dryRun)return;
+async function recordUsage(options:CasCollectOptionsV1,bytes:number,atMs:number,automaticScope?:string):Promise<boolean>{
+ if(options.dryRun)return false;
  const target=casUsageHintPathV1(options.root),temporary=`${target}.${process.pid}.tmp`;
- try{await writeFile(temporary,JSON.stringify({version:1,bytes:Math.max(0,Math.round(bytes)),atMs}));await rename(temporary,target);}
- catch{await unlink(temporary).catch(()=>undefined);}
+ try{await writeFile(temporary,JSON.stringify({version:1,bytes:Math.max(0,Math.round(bytes)),atMs,...automaticScope===undefined?{}:{automaticScope}}));await rename(temporary,target);return true;}
+ catch{await unlink(temporary).catch(()=>undefined);return false;}
 }
 
 /** 📣️ The one-line report of a collection in the requested language. */
@@ -184,8 +197,8 @@ export function formatCasCollectionV1(result:CasCollectionV1,policy:CasPolicyV1,
  const mib=(bytes:number):number=>Math.round(bytes/1048576*10)/10,gib=(bytes:number):number=>Math.round(bytes/1073741824*100)/100;
  if(result.status==="locked")return casTextV1("locked",language);
  const partition=result.partition&&result.partition.needBytes>0?result.partition:undefined,policyLine=partition?casTextV1("partitionState",language,{partition:partition.partition,usedPercent:percent(partition.usedFraction),highPercent:percent(policy.partition.highUsedFraction),lowPercent:percent(policy.partition.lowUsedFraction)}):"";
- if(result.status==="idle"&&!partition)return casTextV1("idle",language,{usedGib:gib(result.totals.totalBytes),capGib:gib(policy.capBytes)});
- const text=casTextV1("done",language,{evicted:result.evicted,freedMib:mib(result.freedBytes),keptGib:gib(result.totals.keptBytes),protectedMib:mib(result.totals.protectedBytes),partial:result.partial?casTextV1("partial",language):""})+policyLine;
+ if(result.status==="idle"&&!partition&&result.totals.shortfallBytes<=0)return casTextV1("idle",language,{usedGib:gib(result.totals.totalBytes),capGib:gib(policy.capBytes)});
+ const text=casTextV1(result.dryRun?"previewCollection":"done",language,{evicted:result.evicted,freedMib:mib(result.freedBytes),keptGib:gib(result.totals.keptBytes),protectedMib:mib(result.totals.protectedBytes),partial:result.partial?casTextV1("partial",language):""})+policyLine;
  if(result.totals.shortfallBytes<=0)return text;
- return partition?text+casTextV1("partitionShortfall",language,{overMib:mib(result.totals.shortfallBytes)}):text+" "+casTextV1("shortfall",language,{overMib:mib(result.totals.shortfallBytes)});
+ return text+" "+casTextV1("shortfall",language,{overMib:mib(result.totals.shortfallBytes)})+(result.graphClosureBytes?casTextV1("graphClosures",language,{protectedMib:mib(result.graphClosureBytes)}):"");
 }

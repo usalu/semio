@@ -1,14 +1,18 @@
 /** 🔎️ Contract: without a journal the fact check costs one stat per distinct directory and file. A structural row under a directory whose stamp is unchanged is vouched for, a changed, new or racy directory and every unstamped row go to the precise check, a rows file edit is caught by its own stat, and the stamps of directories whose rows were stale are forgotten. */
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import packedStampFixture from "./🪶️packed-stamps.json";
+import {createFactIndexV1} from "../../🟨️.mjs";
+import {encodeFactIndexV1,openFactIndexV1} from "../../🧮️fact-codec/🟨️.mjs";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join,relative} from "node:path";
 import {createDirectoryStampsV1} from "../../🗂️directory-stamps/🟨️.mjs";
 import {createEpochDoubtV1,rowDependenciesV1,selectDoubtfulRowsV1} from "../../🔎️doubt/🟨️.mjs";
 
 const old=(path:string)=>{const past=new Date(Date.now()-60_000);utimesSync(path,past,past);};
 const fixture=()=>{
- const root=mkdtempSync(join(tmpdir(),"doubt-")),src=join(root,"src");mkdirSync(src);
+ const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"doubt-")),src=join(root,"src");mkdirSync(src);
  writeFileSync(join(src,"a.ts"),"a");writeFileSync(join(src,"b.ts"),"b");old(join(src,"a.ts"));old(join(src,"b.ts"));old(src);old(root);
  const status=(path:string)=>statSync(path),fileFact=(path:string)=>{const s=status(path);return{size:s.size,mtimeMs:s.mtimeMs,ctimeMs:s.ctimeMs,ino:s.ino,sha256:"0".repeat(64)};};
  const rows=[{kind:"file",path:join(src,"a.ts"),fact:fileFact(join(src,"a.ts"))},{kind:"readdir",path:src,fact:["a.ts","b.ts"]},{kind:"fileExists",path:join(src,"missing.ts"),fact:false},{kind:"exists",path:join(src,"a.ts"),fact:true},{kind:"resolve",path:"[]",fact:"x"}];
@@ -122,4 +126,42 @@ test("settling forgets exactly the directories the full row walk forgot, over ra
    expect([...forgotten!].sort(),"round "+round).toEqual([...expected].sort());
   }
  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+/** 🪶️ Checks that the real binary view decodes only rows that can affect directory stamps. */
+test("directory stamp passes skip packed content-only rows without losing structural dependencies",async()=>{
+ const root=join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"packed-rows"),at=(scope:string,name?:string)=>name?join(root,scope,name):join(root,scope),rows=[];
+ for(let id=0;id<packedStampFixture.files;id++)rows.push({kind:"file",path:at("contents","f"+id),fact:{size:id,mtimeMs:7,ctimeMs:8,ino:id,sha256:"0".repeat(64)}});
+ for(let id=0;id<packedStampFixture.digests;id++)rows.push({kind:"digest",path:at("contents","d"+id),fact:{size:id,mtimeMs:7,sha256:"a".repeat(64)}});
+ rows.push(
+  {kind:"readdir",path:at("listing"),fact:["one"]},
+  {kind:"fileExists",path:at("missing","one"),fact:false},
+  {kind:"exists",path:at("present","one"),fact:true},
+  {kind:"analysis",path:at("contents","analyzed"),fact:{nestedObservations:[{kind:"lstat",path:at("nested","one"),fact:"file"}]}},
+  {kind:"resolve",path:JSON.stringify([at("resolved","request.ts"),"./provider"]),fact:at("resolved","provider.ts")}
+ );
+ const bytes=encodeFactIndexV1(createFactIndexV1(new Map([["owner",rows]])),{maximumBytes:packedStampFixture.maximumBytes}),published=openFactIndexV1(bytes),settled=openFactIndexV1(bytes);
+ const database=new Database(":memory:"),names=(paths:readonly string[])=>paths.map(path=>relative(root,path)).sort();
+ let checked:string[]|undefined,excluded:Set<string>|undefined;
+ try{
+  const lookup=(values:readonly string[])=>database.query("select distinct value from json_each(?) order by value").all(JSON.stringify(values)).map(row=>(row as {value:string}).value);
+  const doubt=createEpochDoubtV1({stamps:{async classify(paths:string[]){checked=paths;return{measured:new Map()};},async save(_measured:Map<string,unknown>,exclude?:Set<string>){excluded=exclude;return true;}} as never});
+  expect(await doubt.published({rows:published.rows,index:published,observedAt:1} as never)).toBe(true);
+  expect(names(checked!)).toEqual(lookup(packedStampFixture.published));
+  expect(published.rowsRead()).toBe(packedStampFixture.publishedReads);
+  const stable=Array.from({length:settled.rows.length},(_,id)=>id).find(id=>settled.rowKindOf(id)==="readdir")!;
+  expect(await doubt.settled({rows:settled.rows,index:settled,ids:[stable],stale:new Set()} as never)).toBe(true);
+  expect(names([...excluded!])).toEqual(lookup(packedStampFixture.excluded));
+  expect(settled.rowsRead()).toBe(packedStampFixture.settledReads);
+ }finally{database.close();}
+});
+
+/** 🛑️ Keeps a cancelled optional stamp pass from saving a partial observation. */
+test("publication stamp measurement propagates cancellation before save",async()=>{
+ const controller=new AbortController();
+ let saved=0,signal:AbortSignal|undefined;
+ const doubt=createEpochDoubtV1({stamps:{async classify(_paths:string[],options:{signal?:AbortSignal}){signal=options.signal;controller.abort(Error("stamp measurement cancelled"));return{measured:new Map()};},async save(){saved++;return true;}} as never});
+ await expect(doubt.published({rows:[{kind:"readdir",path:".",fact:["one"]}],observedAt:1,signal:controller.signal} as never)).rejects.toThrow("stamp measurement cancelled");
+ expect(signal).toBe(controller.signal);
+ expect(saved).toBe(0);
 });

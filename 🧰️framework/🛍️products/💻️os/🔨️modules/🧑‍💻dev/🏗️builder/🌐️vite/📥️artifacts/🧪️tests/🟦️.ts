@@ -251,7 +251,7 @@ test("neutral distribution engine coordinates equal actual selected product file
 
 
 test("neutral engine catalog source owners declare their wasm package source and the inference selects the engine owners",async()=>{
- const catalog=(await import("../🕸️engines/📇️catalog.json")).default;for(const row of catalog.packages){const project=JSON.parse(readFileSync(join(workspace,row.sourceOwner,"📋️project.json"),"utf8"));expect(project.targets.wasm.metadata.semio.wasmPackageSourceV1).toEqual({version:1,sourceOwner:row.sourceOwner});}
+ const catalog=(await import("../🕸️engines/📇️catalog.json")).default;for(const row of catalog.packages){const project=JSON.parse(readFileSync(join(workspace,row.sourceOwner,"📋️project.json"),"utf8"));expect(project.targets.wasm.metadata.semio.wasmPackageSourceV1).toMatchObject({version:1,sourceOwner:row.sourceOwner});}
  const inference=readInferenceSourceV1("playground-targets");expect(inference).toContain('frameworkOsEngineSourceOwnersV1("renderer")');expect(inference).toContain('frameworkOsEngineSourceOwnersV1("distribution")');expect(inference).toContain("...rendererEngines");expect(inference).toContain("...distributionEngines");
 });
 

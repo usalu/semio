@@ -22,12 +22,13 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
         .stack_size(8 * 1024 * 1024)
         .spawn(|| block_on_drawing_windows(async {
             use semio_s_artifact_draw_drawing_editor_commands::{engagement_input, set_camera};
-            use semio_s_artifact_draw_drawing_editor::{create_drawing_app, DrawingCommand, DrawingPlayApp};
+            use semio_s_artifact_draw_drawing::editor_manifest::create_drawing_app;
+            use semio_s_artifact_draw_drawing_editor::{DrawingCommand, DrawingPlayApp};
             use crate::modes::edit::windows::canvas::DRAWING_PLAY_BODY_COMPOSITE;
             use semio_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
             async fn dispatch(app: &mut VcsArtifactApp<EditorApp<DrawingPlayApp>>, command: DrawingCommand, view: &ViewModel, cx: &mut semio_plugin::StepContext<'_>) -> Result<(usize, usize), String> {
-                let meta = ActionMeta { instance_id: 91, view_state: Some(view.clone()), ..artifact_app_laws::meta("drawing-window-ownership") };
+                let meta = ActionMeta { instance_id: 91, view_state: Some(view.clone().into()), ..artifact_app_laws::meta("drawing-window-ownership") };
                 semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
                 let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
                 Ok((
@@ -94,7 +95,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                 let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
                 let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(92).await;
-                for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
+                for pack in packs { semio_plugin::restore_fixture_window_config(&mut *reopened, pack, scope.cx()).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_left = scene(&mut reopened, &left, scope.cx()).await?;
                 let reopened_right = scene(&mut reopened, &right, scope.cx()).await?;
                 artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");

@@ -1,4 +1,4 @@
-//! 🧊️ Field receiving reads sets, maps, literals and blocks natively from the moved field: every action is exactly quoted, denied turns charge nothing, Pending keeps state and every cancelled frontier closes through paid turns.
+//! 🧊️ Field receiving reads sets, maps, literals and blocks natively from the moved field. Denied turns charge nothing, Pending keeps state and each cancelled frontier closes through paid turns.
 use semio_framework_dsl_record::receiving::owned::{DslOwnedReceivingField,NativeFieldReceiving,OriginalReceivingPrimary,OwnedAdvanceSelection,OwnedFieldReceiving,OwnedPoll};
 use semio_framework_dsl_record::{FieldValue,RecordValue};
 use semio_framework_value::{DslValue,Number,OriginalRetirementFailure,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkPoll,RetirementDemand,retirement::{RetireOwned,controlled::ControlledRetirement}};
@@ -7,6 +7,7 @@ use semio_framework_value_testing_admission::{EffectBank,Wallet,denials,driven,s
 use std::collections::BTreeSet;
 const BODY:usize=4096;
 const MAXIMUM:u64=1<<20;
+const NESTED_ITEMS:usize=3;
 const STALL:u32=1024;
 const SETTLE:usize=1_000_000;
 #[derive(Debug,PartialEq,semio_framework_value::NativeReceive,semio_framework_value::RetireOwned)]
@@ -40,7 +41,12 @@ fn close<T:RetireOwned,C:OwnedFieldReceiving<T>>(cursor:&mut C,bank:&mut EffectB
 fn receive<T:RetireOwned,C:OwnedFieldReceiving<T>>(mut cursor:C,source:FieldValue,bank:&mut EffectBank,cut:Option<usize>,inspect:impl FnOnce(&T))->bool{
     let mut source=Some(source);let(mut turns,mut idle,mut parked)=(0,0u32,false);session_open(bank);
     while !cursor.is_ready()&&(parked||cut.is_none_or(|cut|turns<cut)){
-        let d=cursor.demands(&source,BODY).unwrap();let selection=cursor.select_advance(&source,BODY,MAXIMUM).unwrap();let g=grant(d);
+        let d=cursor.demands(&source,BODY).unwrap();
+        let selection=cursor.select_advance(&source,BODY,MAXIMUM).unwrap();
+        let g=match selection{
+            OwnedAdvanceSelection::Nested=>RetainedCloneGrant{maximum_items:NESTED_ITEMS,..grant(d)},
+            OwnedAdvanceSelection::Local{..}=>grant(d),
+        };
         if !parked{for denied in denials(g,d){let(poll,heap)=observe(||advance(bank,selection,denied,&mut cursor,&mut source));refused(poll,heap);assert_eq!(cursor.demands(&source,BODY).unwrap(),d,"denied turn changed its quote");}}
         let(poll,heap)=observe(||advance(bank,selection,g,&mut cursor,&mut source));parked=matches!(poll,RetainedWorkPoll::Pending{..});
         idle=if post(bank,g,heap,poll)==0{idle+1}else{0};assert!(idle<STALL,"cursor stalled: {STALL} funded turns performed no work");turns+=1;assert!(turns<SETTLE);
@@ -91,6 +97,28 @@ fn value_receiving_equals_serde_json_at_every_cancel_prefix(){
     }
     assert!(completed>0);
 }
+#[test]
+fn value_type_receives_and_retires_its_canonical_tree() {
+    use semio_framework_value::{ToValue, ValueType};
+
+    let law = law();
+    for case in cases(&law, "value-type") {
+        for cut in cuts(&law) {
+            let source = FieldValue::Value(dsl(&case["source"]));
+            let complete = receive(
+                ValueType::receiving_cursor(),
+                source,
+                &mut bank(&law),
+                cut,
+                |value| assert_eq!(json(&value.to_value()), case["expected"]),
+            );
+            if cut.is_none() {
+                assert!(complete);
+            }
+        }
+    }
+}
+
 #[test]
 fn block_receiving_equals_serde_json_record_at_every_cancel_prefix(){
     let law=law();let mut completed=0;

@@ -1,5 +1,6 @@
 use crate::viewer::gismap::modes::view;
 use crate::viewer::gismap::modes::view::windows::map;
+use crate::standards::v1::subsets::any::map_composition::GisMapMembers;
 use crate::GISMAP_DIALECT;
 use semio_plugin::{ArtifactToolPublicationLane, ArtifactViewer, PluginApp as _, Viewer, ViewerApp};
 #[allow(unused_imports)]
@@ -17,7 +18,7 @@ use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::gismap::{GIS_MAP_VIEW_TOOL_IDS, camera_emit, command_from_action, GisMapViewCommandJobFactory};
 use crate::viewer::gismap::*;
 
-type GisViewerApp = semio_plugin::VcsArtifactApp<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers>;
+type GisViewerApp = semio_plugin::VcsArtifactApp<ViewerApp<GisMapViewer>, GisMapMembers>;
 
 /// 🧹️ Owning guard that drains the exact close ladder before `ArtifactStore` drop asserts.
 /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
@@ -49,7 +50,7 @@ impl Drop for GisViewerTestApp {
 /// 🧬️ Builds the real registered viewer fixture and binds the instance addressed by `meta`.
 async fn viewer_app() -> GisViewerTestApp {
     let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let app = semio_plugin::artifact_app_laws::new_registered_app_with_members::<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers, _>(async { semio_plugin::App { definition: create_gismap_viewer(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
+    let app = semio_plugin::artifact_app_laws::new_registered_app_with_members::<ViewerApp<GisMapViewer>, GisMapMembers, _>(async { semio_plugin::App { definition: create_gismap_viewer(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     GisViewerTestApp(app, scope)
 }
 

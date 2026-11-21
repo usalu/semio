@@ -19,3 +19,9 @@ The first managed prototype component build compiled 817 of 821 units. The PDF l
 The owner-only dry run of the normal target also entered the graph service. It first queued for a 2 GiB capacity grant, then inventoried 123,799 source observations and completed six owner checks. I cancelled that dry run after more than 13 minutes and confirmed exit 130 with its leases released. This kept capacity available for the active WASI build and the owned ServeScript route.
 
 The owned catalog and browser-session publication ran again against the current working tree and both completed successfully. The Note session admitted one registered plugin. The executable WASI guest has its own staging step.
+
+The standard component inference declares the native browser transpiler build for the host platform. The direct launcher uses the same producer by running the ticket wrapper’s prepare-note-transpiler command. This is required before the manually sequenced component staging when the executable is absent.
+
+The prototype descriptor emitter was also absent. The prepare-note-descriptor wrapper runs its owned build. Once both host tools were published, the managed component published its browser module. The owned ServeScript then validated the Note activation and returned HTTP 200 for the React editor URL.
+
+The command router exposes `--exclude-dependencies` for a task whose prerequisites are already prepared. The cold owner-only check still entered source admission. The current-graph option reads an already sealed graph, which can lack the requested task closure. A bare `repo <dev script>` check reached the real owner entry and refused with `Original parent Script process invocation required`. The ticket bootstrap obtains the actual parent invocation from the repository and dispatches the same activation and ServeScript as the project target.

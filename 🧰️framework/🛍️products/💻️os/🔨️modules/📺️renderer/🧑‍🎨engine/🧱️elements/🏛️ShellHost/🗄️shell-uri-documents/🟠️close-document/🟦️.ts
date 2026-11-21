@@ -195,7 +195,7 @@ export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, 
     return decision;
   }, [closeDocument]);
 
-  const requestProgramRetirement: ProgramRetirementRequestV1 = useCallback(async (requested, held) => {
+  const requestProgramRetirement: ProgramRetirementRequestV1 = useCallback(async (requested, held, work) => {
     const owners = requested.filter((owner, index) => requested.findIndex(candidate => candidate.handle === owner.handle && candidate.session.instanceId === owner.session.instanceId) === index);
     if (owners.some(owner => retirementReservationsRef.current.get(owner.handle)?.has(owner.session.instanceId))) return null;
     const reservation = Symbol(), retired = new Set<typeof owners[number]>();
@@ -206,13 +206,14 @@ export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, 
     }
     const releaseReservations = (): void => { for (const owner of owners) { const lane = retirementReservationsRef.current.get(owner.handle); if (lane?.get(owner.session.instanceId) === reservation) lane.delete(owner.session.instanceId); } };
     const abort = new AbortController();
+    const signal = work === undefined ? abort.signal : AbortSignal.any([abort.signal, work.signal]);
     closeRequestRef.current?.abort();
     closeRequestRef.current = abort;
     const current = (): boolean => closeRequestRef.current === abort && held() && owners.every(owner => core.loadedPluginsRef.current.some(entry => entry.handle === owner.handle));
     const clear = (): void => { if (closeRequestRef.current === abort) { closeRequestRef.current = null; setClosePrompt(null); } };
     try {
       const admission = await admitProgramRetirementV1({
-        owners, signal: abort.signal, current,
+        owners, signal, current,
         quiesce: async owner => (await quiesceSessionWorkV1(() => core.sessionWorkRef.current.pending(owner.session.pluginId, owner.session.instanceId))).settled,
         seal: owner => {
           const { pluginId, instanceId } = owner.session, ledger = core.sealedInstancesRef.current;
@@ -222,13 +223,13 @@ export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, 
         },
         persist: async owner => {
           setClosePrompt({ runtimeKey: owner.session.pluginId + "#" + owner.session.instanceId, name: owner.name, phase: "saving", failure: null, onKeep: () => abort.abort(), onDiscard: () => undefined });
-          await core.persistProgramDocumentRef.current(owner, abort.signal);
+          await (work?.persist ?? core.persistProgramDocumentRef.current)(owner, signal);
         },
         confirmDiscard: (owner, failure) => new Promise<boolean>(resolve => {
-          const finish = (discard: boolean): void => { abort.signal.removeEventListener("abort", keep); resolve(discard); };
+          const finish = (discard: boolean): void => { signal.removeEventListener("abort", keep); resolve(discard); };
           const keep = (): void => finish(false);
-          if (abort.signal.aborted || !current()) return keep();
-          abort.signal.addEventListener("abort", keep, { once: true });
+          if (signal.aborted || !current()) return keep();
+          signal.addEventListener("abort", keep, { once: true });
           setClosePrompt({ runtimeKey: owner.session.pluginId + "#" + owner.session.instanceId, name: owner.name, phase: "confirm", failure: { code: failure instanceof Error ? failure.message : "program-retirement.persistence-failed" }, onKeep: keep, onDiscard: () => finish(true) });
         }),
       });

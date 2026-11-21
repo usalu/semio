@@ -21,6 +21,10 @@ use semio_framework_mesh_engine::PolygonMeshSource;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
+#[path = "🔗️combine/🦀️.rs"]
+mod combine;
+pub use combine::{combine, difference, intersect, polygon_capture_slice, union};
+
 #[cfg(test)]
 pub use semio_s_artifact_procedural_3d_geometry_mesh_harness as harness;
 #[cfg(test)]
@@ -302,7 +306,19 @@ pub trait Stepper: Send {
 /// 🎟️ Advances a kernel modeling job by up to `budget` units inside the caller's own turn: the turn's grant and fuel fund one original effect.
 pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize, cx: &mut StepContext<'_>) -> Result<MeshModelingStep, MeshKernelError> {
     let grant = cx.retained_grant();
-    let Some((step, _)) = cx.with_original_effect(grant, |_, effect| job.step(budget, effect, &mut RetainedCloneProgress::default())).map_err(MeshKernelError::Retained)? else { return Ok(MeshModelingStep::Working(job.progress())) };
+    let demand=job.orientation_normal_demand(grant.maximum_copy_bytes).map_err(MeshKernelError::Retained)?
+        .or(job.refined_surface_demand(grant.maximum_copy_bytes).map_err(MeshKernelError::Retained)?);
+    if let Some(demand)=demand {
+        if !cx.admit_work_step(demand).map_err(MeshKernelError::Retained)? {
+            return Ok(MeshModelingStep::Working(job.progress()));
+        }
+    }
+    let mut receipt=RetainedCloneProgress::default();
+    let Some((step,work))=cx.with_original_effect(grant,|_,effect|job.step(budget,effect,&mut receipt)).map_err(MeshKernelError::Retained)? else {
+        return Ok(MeshModelingStep::Working(job.progress()));
+    };
+    cx.consume_work(work);
+    if receipt!=RetainedCloneProgress::default() {cx.consume_retained(receipt).map_err(MeshKernelError::Retained)?;}
     step
 }
 

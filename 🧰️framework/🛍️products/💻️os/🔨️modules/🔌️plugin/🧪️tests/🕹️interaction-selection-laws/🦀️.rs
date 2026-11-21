@@ -93,3 +93,62 @@ fn a_document_change_prunes_the_vortex_mirror_and_the_leftover_cover_with_the_se
     let (pruned, _, _) = interaction_after_document_change_v1(&flat_only, &["nodes".to_string()], None, &[]);
     assert_eq!(pruned.selection.get("nodes").map(|domain| domain.ids.clone()), Some(vec!["widget-3".to_string()]), "a DECLARED domain the topology has no entry for (Flat) has no membership information and keeps every id");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn retained_hover_admits_exact_targets_and_explicit_pointer_clears() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("👆️hover-targets.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let source = case["args"].as_object().unwrap();
+        let arguments = DslValue::object(source.iter().map(|(key, value)| (key.clone(), DslValue::String(value.as_str().unwrap().to_owned()))));
+        let parsed = parse_interaction_hover_targets(Some(&arguments), INTERACTION_HOVER_ACTION_ID).await;
+        if case["fault"].as_bool().unwrap_or(false) {
+            assert!(parsed.is_err(), "{}", case["name"]);
+        } else {
+            let targets = parsed.unwrap();
+            let projected = targets.iter().map(|target| serde_json::json!({"id": target.id, "granularity": target.granularity})).collect::<Vec<_>>();
+            assert_eq!(serde_json::json!(projected), case["expected"], "{}", case["name"]);
+        }
+    }
+    let direct = &fixture["cases"][0];
+    let id = direct["args"]["targetId"].as_str().unwrap();
+    assert!(id.len() as u64 <= fixture["maximumInteractionIdBytes"].as_u64().unwrap());
+    assert!(direct["expected"].to_string().len() as u64 > fixture["maximumUiTextBytes"].as_u64().unwrap());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn window_hover_groups_expand_before_topology_membership_validation() {
+    use semio_plugin_interaction::interaction_topology::{
+        INTERACTION_HOVER_GROUP_GRANULARITY, resolve_interaction_hover_group,
+    };
+    let ids = vec!["h:solid@!iport".to_owned(), "h:solid@port".to_owned()];
+    let domain = protocol::DomainTopology {
+        ordered: ids.iter().map(|id| protocol::TopologyNode {
+            id: id.clone(), granularity: "handle".into(), parent: None,
+        }).collect(),
+    };
+    let topology = protocol::InteractionTopology { domains: [("graph".into(), domain.clone())].into_iter().collect() };
+    let outline = protocol::InteractionOutline {
+        id: "graph".into(),
+        granularity_ids: vec!["handle".into()],
+        selection: protocol::SelectionSpec {
+            modes: vec![protocol::SelectionMode::Single], methods: vec![], merges: vec![], transitive: false, broadcast: false,
+        },
+    };
+    let args = DslValue::object([("targets".to_owned(), DslValue::String(serde_json::json!([
+        {"granularity": INTERACTION_HOVER_GROUP_GRANULARITY, "id": "window-owned-group"}
+    ]).to_string()))]);
+    let parsed = parse_interaction_hover_targets(Some(&args), INTERACTION_HOVER_ACTION_ID).await.unwrap();
+    let targets = resolve_interaction_hover_group(parsed, |reference| {
+        assert_eq!(reference, "window-owned-group");
+        Ok(Some(("handle", ids.clone())))
+    }).unwrap().unwrap();
+    let hover = protocol::next_hover(&protocol::HoverSpec::default(), &domain, &protocol::HoverInput {
+        channel: "pointer".into(), targets,
+    }).await;
+    let state = protocol::InteractionState { hover: [("graph".into(), hover)].into_iter().collect(), ..Default::default() };
+    let validated = protocol::validate_state(&[outline], &topology, &state).await;
+    assert_eq!(validated.hover["graph"].ids, ids);
+    let parsed = parse_interaction_hover_targets(Some(&args), INTERACTION_HOVER_ACTION_ID).await.unwrap();
+    assert!(resolve_interaction_hover_group(parsed, |_| Ok(None)).unwrap().is_none());
+    assert!(resolve_interaction_hover_group(vec![], |_| panic!("clear must bypass group lookup")).unwrap().unwrap().is_empty());
+}

@@ -1,0 +1,29 @@
+{
+  "heartbeatMs": 30000,
+  "stage": {
+    "movementsMs": [
+      1000,
+      29999,
+      30000,
+      30001,
+      60000,
+      615000,
+      615010,
+      645000
+    ],
+    "endedMs": 1245001,
+    "expectedPublicationsMs": [
+      0,
+      30000,
+      60000,
+      615000,
+      645000
+    ]
+  },
+  "loopBackoff": {
+    "attempt": 6,
+    "pauseMs": 960000,
+    "expectedPublications": 32,
+    "expectedLastMs": 930000
+  }
+}

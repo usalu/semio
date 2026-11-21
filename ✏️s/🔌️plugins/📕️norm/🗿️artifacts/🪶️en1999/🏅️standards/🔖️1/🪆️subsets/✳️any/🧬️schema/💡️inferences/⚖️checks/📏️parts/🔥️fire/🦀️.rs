@@ -46,6 +46,17 @@ pub fn critical_temperature_c(mu0: f64) -> f64 {
 /// 🔥️ ISO 834 standard fire gas temperature θ_g(t) = 20 + 345·log10(8·t_min + 1).
 pub fn gas_temperature_c(t_s: f64) -> f64 { 20.0 + 345.0 * (8.0 * t_s / 60.0 + 1.0).log10() }
 
+/// 📐 Relative thermal elongation of aluminium under EN 1999-1-2:2007 §3.3.1.1.
+pub fn thermal_elongation(theta_c: f64) -> Option<f64> {
+    (theta_c > 0.0 && theta_c < 500.0)
+        .then(|| 1.0e-8 * theta_c * theta_c + 22.5e-6 * theta_c - 4.5e-4)
+}
+
+/// ⏳ Whether monotonic fire heating keeps the aluminium above 170 °C for more than 30 minutes, EN 1999-1-2:2007 §4.3.3(4).
+pub fn transient_creep_requires_model(duration_s: f64, temperature_at: impl FnOnce(f64) -> f64) -> bool {
+    duration_s.is_finite() && duration_s > 1800.0 && temperature_at(duration_s - 1800.0) > 170.0
+}
+
 /// 🌡️ Specific heat of aluminium c_a = 0.41·θ + 903 [J/(kg·K)].
 pub fn specific_heat(theta_a: f64) -> f64 { 0.41 * theta_a + 903.0 }
 

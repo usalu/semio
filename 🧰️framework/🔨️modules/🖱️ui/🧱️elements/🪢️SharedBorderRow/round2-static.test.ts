@@ -11,6 +11,9 @@ describe("round 2 static border findings", () => {
     expect(css).toMatch(/\.introduction-demo-callout-chips \{[^}]*gap: 0;/);
     expect(css).not.toMatch(/\.introduction-demo-callout-chip \{[^}]*margin-block-start/);
   });
+  it("keeps a button-group wrapper flush with the border row that owns its seams", () => {
+    expect(css).toMatch(/\[data-shared-border-cells\] > \[data-slot="button-group"\] \{\s*padding: 0;/u);
+  });
   it("stacks file-tree cards on one seam", () => {
     expect(css).not.toMatch(/\[data-slot="tree-files"\] \+ \[data-slot="tree-files"\]/);
   });

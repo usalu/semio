@@ -123,6 +123,42 @@ impl HostEvents {
             resumes: semio_plugin_command::command_admission::original_typed_command::TaskResumes::new(),
         }
     }
+
+    semio_framework_value::initialization::original_empty_fields!(OWN_INITIAL_FIELDS, own_field_demands, initialize_own_field_at;
+        invocation_kind = None,
+        action_delivery = Default::default(),
+        action_event_complete = false,
+        action_event_removed = false,
+        host_event_utilities = HashMap::new(),
+        host_event_roster = Vec::new(),
+        host_event_operations = HostEventOperations::default(),
+        queue = std::collections::VecDeque::new(),
+        delivering = false,
+        reply = false,
+        resumes = semio_plugin_command::command_admission::original_typed_command::TaskResumes::new(),
+    );
+
+    /// 📋️ Counts both route and host-event fields in their final-address inventory.
+    pub const INITIAL_FIELDS: usize = Self::OWN_INITIAL_FIELDS + Self::ROUTE_FIELDS;
+    const ROUTE_FIELDS: usize = semio_plugin_decl_emission::original_view::routing::OriginalHostEventRoutes::INITIAL_FIELDS;
+
+    /// 📐️ Quotes one independently funded host-event or route field.
+    pub fn initial_field_demands(field: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if field < Self::ROUTE_FIELDS {
+            return semio_plugin_decl_emission::original_view::routing::OriginalHostEventRoutes::initial_field_demands(field);
+        }
+        Self::own_field_demands(field - Self::ROUTE_FIELDS)
+    }
+
+    /// 🌱️ Places one selected field in the final HostEvents allocation.
+    /// # Safety
+    /// The selected field must be uninitialized within the caller's exclusive, aligned original allocation.
+    pub unsafe fn initialize_field_at(target: *mut Self, field: usize, offset: usize, count: usize) -> Result<bool, semio_framework_value::ValueError> {
+        if field < Self::ROUTE_FIELDS {
+            return unsafe { semio_plugin_decl_emission::original_view::routing::OriginalHostEventRoutes::initialize_field_at(std::ptr::addr_of_mut!((*target).routes), field, offset, count) };
+        }
+        unsafe { Self::initialize_own_field_at(target, field - Self::ROUTE_FIELDS, offset, count) }
+    }
 }
 
 /// 🎼️ Transactions: the single pending foreign transaction and its proposal.

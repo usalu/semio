@@ -23,7 +23,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioMeshApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioMeshApps>::builder("stdio-mesh").label("Stdio Mesh").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-mesh").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioMeshApps>::new("stdio-mesh").label("Stdio Mesh").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-mesh").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_gltf::declaration(semio_s_artifact_stdio_gltf::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_obj::declaration(semio_s_artifact_stdio_obj::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_stl::declaration(semio_s_artifact_stdio_stl::definition()?).map_err(PluginAssemblyError::definition)?);

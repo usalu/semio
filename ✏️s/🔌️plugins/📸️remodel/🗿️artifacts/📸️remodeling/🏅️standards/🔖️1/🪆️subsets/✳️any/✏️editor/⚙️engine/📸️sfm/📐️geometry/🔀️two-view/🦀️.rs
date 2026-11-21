@@ -733,12 +733,12 @@ pub fn estimate_essential_five_point_bounded(matches: &[([f64; 2], [f64; 2])], k
 /// over at most [`INTERACTIVE_ESSENTIAL_REFINE_CORRESPONDENCES`] of the estimate's inliers (an
 /// evenly strided subset): the unbounded polish of a true model with 60 raw inliers measured 4–12 ms
 /// in a debug build, the whole worker law, and its cost grows with the inliers it explains.
-pub fn polish_essential(estimate: TwoViewResult, matches: &[([f64; 2], [f64; 2])], intrinsics: &Intrinsics, threshold: f64) -> TwoViewResult {
+pub fn polish_essential(estimate: TwoViewResult, matches: &[([f64; 2], [f64; 2])], intrinsics_a: &Intrinsics, intrinsics_b: &Intrinsics, threshold: f64) -> TwoViewResult {
     let normalized: Vec<([f64; 2], [f64; 2])> = matches
         .iter()
         .map(|&(pa, pb)| {
-            let ra = intrinsics.unproject_ray(pa);
-            let rb = intrinsics.unproject_ray(pb);
+            let ra = intrinsics_a.unproject_ray(pa);
+            let rb = intrinsics_b.unproject_ray(pb);
             ([ra[0], ra[1]], [rb[0], rb[1]])
         })
         .collect();

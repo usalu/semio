@@ -1,0 +1,7 @@
+[
+  {"id":"matching intermediate body","admitted":true,"source":"intermediate","consumed":"intermediate","existed":true,"retained":true,"drift":false},
+  {"id":"equal-length different body","admitted":true,"source":"other-source","consumed":"intermediate","existed":true,"retained":false,"drift":true},
+  {"id":"different length","admitted":true,"source":"old","consumed":"intermediate","existed":true,"retained":false,"drift":true},
+  {"id":"outside roster","admitted":false,"source":"intermediate","consumed":"intermediate","existed":true,"retained":false,"drift":false},
+  {"id":"dep-info not yet uplifted","admitted":true,"source":"intermediate","consumed":"intermediate","existed":false,"retained":false,"drift":false}
+]

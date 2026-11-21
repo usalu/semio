@@ -31,8 +31,8 @@ fn zone_spec(input: &SceneInput, zone: &ThermalZone, placed: &ZoneBox) -> (Spec,
 fn role_of(kind: ElementKind) -> MaterialRole {
     match kind {
         ElementKind::Wall => MaterialRole::Masonry,
-        ElementKind::Roof | ElementKind::Floor => MaterialRole::Concrete,
-        ElementKind::Window => MaterialRole::Glass,
+        ElementKind::Roof | ElementKind::Floor | ElementKind::GroundSlabPerimeter | ElementKind::GroundSlabInterior => MaterialRole::Concrete,
+        ElementKind::Window | ElementKind::CurtainWall | ElementKind::RoofGlazing | ElementKind::RoofDome | ElementKind::GlazedDoor | ElementKind::RoofWindow | ElementKind::RooflightStrip => MaterialRole::Glass,
         ElementKind::Door => MaterialRole::Timber,
     }
 }
@@ -44,12 +44,19 @@ fn kind_words(kind: ElementKind) -> (&'static str, &'static str) {
         ElementKind::Floor => ("floor", "Boden"),
         ElementKind::Window => ("window", "Fenster"),
         ElementKind::Door => ("door", "Tür"),
+        ElementKind::CurtainWall => ("curtain wall", "Vorhangfassade"),
+        ElementKind::RoofGlazing => ("roof glazing", "Dachverglasung"),
+        ElementKind::RoofDome => ("rooflight dome", "Lichtkuppel"),
+        ElementKind::RoofWindow => ("roof window", "Dachflächenfenster"),
+        ElementKind::RooflightStrip => ("rooflight strip", "Lichtband"),
+        ElementKind::GlazedDoor => ("glazed door", "Fenstertür"),
+        ElementKind::GroundSlabPerimeter | ElementKind::GroundSlabInterior => ("ground slab", "Bodenplatte"),
     }
 }
 
 fn element_spec(input: &SceneInput, element: &EnvelopeElement, panel: &Panel) -> (Spec, Vec<Vec3>) {
     let (en, de) = kind_words(element.kind);
-    let glazing = matches!(element.kind, ElementKind::Window | ElementKind::Door);
+    let glazing = element.kind.transmits_solar_radiation();
     let spec = Spec::new(element.id.clone(), "elements", solid(panel.frame.clone(), panel.size.clone()), role_of(element.kind), loc(&element.label_en, &element.label_de), if glazing { LAYER_GLAZING } else { LAYER_OPAQUE })
         .bound(binding(input.report, &element.id, CHECKS))
         .detailed(loc(&format!("Envelope {en} {}: {:.1} m², U = {:.2} W/(m²·K).", element.label_en, element.area_m2, element.u_value_w_m2k), &format!("Hüllbauteil {de} {}: {:.1} m², U = {:.2} W/(m²·K).", element.label_de, element.area_m2, element.u_value_w_m2k)))

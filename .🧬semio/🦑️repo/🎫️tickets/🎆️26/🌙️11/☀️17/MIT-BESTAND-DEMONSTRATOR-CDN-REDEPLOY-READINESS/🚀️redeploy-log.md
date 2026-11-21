@@ -1,5 +1,33 @@
 # 🚀️ Redeploy Log
 
+## November 21, 00:55 PST
+
+On the freshly built static site, English Aggregator and Energie passed. Aussuchen and Bearbeiten both wait in the original host contribution command. The sourcing parser was observed in its native JSON receiving scope and its work quote is now corrected in source. Both locales on a rebuilt hub remain to be tested. See `🔬️sealed-demonstrator-first-fault.md`.
+
+## November 21 verification at 00:43 PST
+
+Demonstrator wKqQfVt earned the fifth of 32 queue receipts. The linked browser probe passed Aggregator in both languages. Koordinator, Aussuchen and Bearbeiten timed out, and Verfolgen refused the GIS media factory’s declared 20,000-microsecond step. The optimized-site probe on port 8767 had no listener. A new static site build and an independent checksum-verified staged probe are running. The previous full static result was 4/16. The previous native supervisors ended. New bounded native queues cover every outstanding root. Procedural is compiling and GIS is waiting. GIS terrain error targets and elevation canonical JSON, the Procedural viewer field pattern, and the structured media registration bound have been corrected. The host descriptor emitter prerequisite needs rebuilding for CAD. No CDN archive has been produced.
+
+## November 20 verification at 19:21 PST
+
+The rebuilt static site passed 4 of 16 real browser cases. Energie and Statik each passed in both languages. The static server handled 950 GET requests with zero development bridge requests. The six remaining panes failed in both languages. Generator reported the toolRunStart refusal in the previous Procedural component. The five Demonstrator panes reported the stale guest’s settle table_false error. The current Demonstrator compiler accepted PDF family 8, the app builder and BREP representation. The corrected Procedural request is queued. Four of 32 release receipts are confirmed.
+
+## November 20 verification at 19:08 PST
+
+FEM wFz8qpa completed all 11 release stages without failures in 1,744 seconds. A second English and German Statik probe used the final optimized browser core (SHA-256 90345f9e9be2050eea3ffb11cb8b82f5a685317a16d25624429d37acd88e4e2c), bridge, shim and receipt served from the staged release. English passed in 10.6 seconds and German in 10.3 seconds. Four of 32 rebuild receipts are confirmed. Demonstrator wKqQfVt is compiling. Corrected Procedural is next in the compiler image queue. The last full static build remains at 2 of 16.
+
+## November 20 verification at 19:04 PST
+
+FEM wFz8qpa linked after compiling 895 units and the driver sealed its compiler provenance. The private overlay served the raw FEM core with matching SHA-256 a07bf43372697be58deb19202698d4c4fd7f4b56f60fd9e2a394b223067c4b84. English Statik boot passed in 9.6 seconds and German in 10.6 seconds. Binaryen and the descriptor emitter were still running. All nine preparation variants passed the separate site preflight. The accepted full-site result remains 2 of 16 with three confirmed module builds.
+
+## November 20 verification at 18:54 PST
+
+FEM wFz8qpa reached its final component compiler. Its compiler dep-info has 18 ToolRun and eight mounted-turn source records matching the live BLAKE3 hashes and file sizes. The six native receiver tests, seven trace store tests, independent replay comparison and focused WASI compilation of the mounted receiver passed. The two queue slots and their successors cover every missing module in the 32-entry runtime roster. Demonstrator is waiting for headroom. There are three confirmed rebuilds and the current static result is 2 of 16. The site has not been packaged.
+
+## November 20 verification at 18:36 PST
+
+The last full static run passed 2 of 16 cases. Three module rebuilds have confirmed release receipts. Generator w2wlSTL and Demonstrator wsWhso3 finished without staging a new release. The current PDF content mirror and Pack JSON compiled with the pinned WASI inputs after restoring the stream_roles re-export. New FEM and Demonstrator jobs entered the native queue. Both initially requested compiler-image cleanup. The optional physical reclaim refused the recorded backing identity before unmounting. The host and Rust mount each reported 14 GiB available.
+
 ## Blockers
 
 ### 1. `undefined is not an object (evaluating 's.busy')` in the resident service
@@ -423,3 +451,142 @@ The command host also retained the entire result object from every acknowledged 
 ### November 20 08:22 PST — Renderer preserved patch acknowledgement replies
 
 The full PluginRuntime suite reproduced a production API mismatch. The actor client returns one result per UI patch acknowledgement. The renderer read an obsolete singular property, discarded every reply, and treated it as an empty turn. It now keeps the original response for single-turn consumers, passes all acknowledgement turns to the UI intake in submission order, and counts each crossing once. A real ShardClient fixture sent two acknowledgements with distinct wake times, checked their independent submission receipts and retired the same instance. All 141 runtime tests passed. A host site rebuild is running before the next browser probe.
+
+### November 20 08:36 PST — Static host rerun
+
+The rebuilt static site failed all 16 boot checks on the CDN test origin. The five panes backed by the staged Demonstrator guest still refuse the original source grant in both languages. Generator reproduces its mounted lifecycle receipt mismatch. Energy and Statik time out. The host now preserves replies to UI patch acknowledgements and its complete runtime suite passes 141/141. The new host alone did not open a pane.
+
+A same-binary browser differential confirmed that the Energy command quotes depth 128 against the production limit of 64. Letting that diagnostic page past the quote exposed the native receiving-slot failure at model creation. The production cursor now quotes its actual depth. Its rebuilt guest still needs static verification. FEM and Procedural are in the two allowed build lanes. Playbook linked and completed ten stages, then its compiler-input recheck found a source edit before provenance transfer. The queue rejected that run.
+
+
+FEM run wbXjJ9G reached a 32-bit shell-credit constant overflow. The registry fix passed both address-width regressions against SQLite. See 🔬️fem-shell-credit.md. Energy has the next B slot, followed by the repaired FEM.
+
+The full 08:26 CDN-origin browser run issued 1229 HTTP requests. It recorded 0 missing resources and 0 requests for /__semio/agent-bridge. The current output also passed the packaging local-reference preflight.
+
+### November 20 at 09:11 PST
+
+Procedural wzRLwOO linked 1,212 compiler units. The new English browser probe passed stage 16 and then refused the original ownership of a native projection backing during cleanup at epoch 3,359. Its optimizer was stopped after this reproducible failure. The revised backing passed the native cross-turn test while preserving the original source for pending work. Demonstrator took its place in lane A and will be followed by the repaired Procedural. Energy wKZ8QJX is compiling in lane B.
+
+To admit both lanes, finished ticket compiler logs were compressed (1,416 MiB saved). Three inactive run work directories and obsolete stage cache entries were removed after checking open handles. The per-run reports and retained test evidence remain. Native test owners also reclaimed obsolete packages and retained their current dependency graphs.
+
+Demonstrator wP6kzMf stopped at the Process3d B-Rep crate-name mismatch and procedural dependency drift. Both Process3d imports were corrected and the Wasm32 method typecheck passed. The native queue started wSeD9dw. See 🔬️process3d-brep-pack.md.
+
+Demonstrator wSeD9dw reused 311 units in its warm retry. It then hit a changed procedural hover contract and a genuine Process3d workpiece surface-type error. Both are now checked against real compiler metadata. Lane A is rebuilding Procedural first, then Demonstrator.
+
+## November 20, 10:47 PST
+
+Energy guest wKZ8QJX reached graph admission. The authored Energy controls and mesh producer now have corrections for the first two surfaces and the 3D geometry. The host command-page batch fix passed 323 tests. See `🔬️command-page-batch.md` and `🔬️early-energy-live-maintenance.md`. A new Energy build is scheduled after FEM.
+
+Both language-specific browser differentials now report ready, nine meshes and nine instances. The corrected Energy build is next, before FEM, to reuse the current Energy compiler lane. The original guest is finishing optimization.
+
+### 11:25 PST – Optimized Energy and corrected queue
+
+Optimized wKZ8QJX published its browser core and failed both normal locale probes on the unnamed weather input. The final compiler custody check refused a changed BREP curve source. The build finished in 9,143 seconds with one staged component and one failure. The queue started corrected Energy wt48zqN. Its next supervisor skips a duplicate Energy run if this one earns its release confirmation. Procedural w2pN2J2 re-admitted its graph after the BREP representation contract changed. It reused 289 units in the same lane.
+
+### November 20, 14:32 PST
+
+Verified unmodified canonical Energie wt48zqN in English and German. The process exited on a mutable workspace manifest recheck after all component stages completed. The optimizer cleanup race was reproduced and corrected. The active queues continue with corrected Energy and Procedural sources. See the readiness report and optimizer work directory drain audit.
+
+### November 20, 14:50 PST
+
+The site rebuilt successfully with the optimized Energy component. German Energie passed the full matrix. Both languages passed on a persistent static HTTP origin. Aggregator also passed both locales on the digest-verified Demonstrator preview. The corrected Procedural queue reused 690 Cargo units after the previous link was cancelled on confirmed stale source. The new Energy attempt follows the optimizer cleanup fix and mutable-manifest retry fix. Two of 32 receipts are confirmed.
+
+### November 20, 14:58 PST
+
+Full static matrix on the production-style HTTP origin passed 2/16, Energie in English and German. The current-bridge Aggregator preview passed both languages. Native regressions now cover the remaining Demonstrator cleanup, tool registration, and canonical seal failures. Generator catalogue derivation and cancellation passed with corrected handoff and source-placement quotes. The active Procedural retry admitted its updated graph and retained 803 more fresh Cargo units. Energy is waiting for image admission.
+
+### November 20, 15:07 PST
+
+Procedural recompiled the corrected spatial plane-split forwarding call in its existing run after admitting both Flow catalogue changes. The static release input scanner passed on all 3,494 intermediate site files. The final package command now accepts the exact successful browser-run manifest as its third argument. A changed-site archive fixture was rejected. See `🔬️static-release-manifest.md`.
+
+### November 20, 15:12 PST
+
+The second Energy receipt attempt was cancelled while still waiting for its compiler admission. Its process released its leases and reported status 143. The accepted static Energie results from the earlier build stand. The queued Demonstrator now has the next admission, followed by Energy. Procedural continues in the same live lane and FEM follows it. Across the two supervisors all 32 IDs remain accounted for. The singleton proof check now rejects a zero-status wrapper with no completed staging run. Both previously confirmed roots satisfy the stricter check. Earlier ticket-only private preview copies were retired after their traces had been retained, reducing generated space to 794 MiB. No active compiler was stopped.
+
+### November 20, 15:41 PST
+
+Demonstrator `wJqLX4t` encountered graph-port imports introduced during the compile. Its warm retry then refused the current Procedural model source budget by 170 bytes. The last 292-byte file had only 122 bytes of aggregate allowance left. The nested physical reader diagnostic and the crate-level boundary report give the same excess. The two graph-port functions are exported in current source. Redundant historical commentary was removed from the model while preserving those functions and the existing cap. The queue's fresh attempt is `wzhjRpw`; its two-locale watcher is armed. The Procedural release link remains active.
+
+### November 20, 15:47 PST
+
+The digest-verified Generator guest from `wUTcq7L` reached example selection in English and German. Both then stopped on `toolRunStart` at epoch 22509 because the child receipt retained capacity and the finish operation supplied no actual extent. The build also lacked matching source bytes for the edited preview module. Its remaining optimization was cancelled. The queue started FEM for Statik, followed by a fresh Procedural build. Demonstrator retry `wzhjRpw` passed initial source admission. The last full static result remains 2/16 and the release queue has confirmed 2/32 modules.
+
+### November 20, 16:12 PST
+
+The corrected Pack record-body decoder passed a Wasm check that reproduced the prior missing allocation marker. A second Wasm check completed a tool tick with segmented trace, counters, append operations and payload, then retired its state. Generator still needs a fresh browser pass. Statik build `wgLbV5H` is compiling. Demonstrator `wzhjRpw` compiled the Procedural model before the graph-target type arrived and then hit the source cap on retry. Moving graph-port addressing into its own crate preserved the public model export. The source scanner now measures 256,724 bytes in the model and 6,023 in the addressing crate. The pinned Hub dependency graph passes offline with its lockfile. A fresh five-pane build is queued. A supported pressure reclaim recovered 3.40 GiB of physical product image allocation, and its normal mount again serves the shell and all 34 module-tree entries. The last full static result remains 2/16, with two of 32 successful release queue confirmations.
+
+### November 20, 16:46 PST
+
+The release verifier recovered Energie’s exact published receipt from the original sealed build. It verified all eleven stages, 37 staged/static file pairs and both static boot tests. Three of 32 release inputs are confirmed. Statik passed both diagnostic boot tests against FEM run `wgLbV5H` (14.2 seconds English and 17.7 seconds German). The compiler reported inconsistent source versions for arc custody and the run did not publish. The queue is rebuilding FEM. Demonstrator `w0salWH` is compiling. The full static verdict is still 2/16.
+
+### November 20, 16:59 PST
+
+The corrected Demonstrator build has compiled over 1,200 units. The corrected Generator now has the next storage admission, followed by FEM. Two native compiler records from the prior FEM run agree on the affected source digest. Its live file differs. A retained Energy receipt shows how a Cargo-generated list of transitive inputs can add an extra observation for that file. Replaying that receipt through the current selector keeps the checked compiler records. The failed FEM run did not retain enough evidence to establish its exact comparison. Statik’s two diagnostic boots stand. Three of 32 release inputs are confirmed and the last full static suite passed 2/16. The final gate now independently checks all sixteen actual Playwright outcomes and the static host request log. The current 43,087-byte staged worker and static worker match the generated worker byte for byte.
+
+### November 20, 17:15 PST
+
+Generator run `wONtSjE` has started. Its compiled UI contract passed a pinned WASI consumer of the image body field and builder method that the concurrent Demonstrator retry could not find. A separate pinned consumer now imports the polygon JSON exporter from the refreshed Demonstrator mesh engine. Demonstrator `w0salWH` is re-admitting dependencies in its held lane. The Statik recovery probe independently located and verified the retained transpilation and passed both browser cases again. Three release inputs are confirmed. The last full static result remains 2/16.
+
+### November 20, 17:32 PST
+
+The final Demonstrator admission in `w0salWH` stopped before staging. The current six-graph check read 1,735 source closures and found none over the default limits following the BREP shape exchange extraction. Eight native engine laws passed and one existing test was ignored. The Generator `wONtSjE` retry retained 849 compiler units after a graph-row signature correction. The corrected library passed a separate pinned WASI metadata check. The next Demonstrator attempt awaits physical storage. All 32 staged/static module inventories and distributed contents agree on the current site, including the shared vendor paths in extension JavaScript. Three release inputs have successful rebuild confirmations. The last full static boot result remains 2/16.
+
+### November 20, 18:00 PST
+
+Generator build `wONtSjE` linked and staged its component. It compiled 1,568 units and reused 849. Transpilation and provenance checks are in progress. Demonstrator build `wsWhso3` selected all 1,357 workspace source units after the BREP source split. Its first compiler pass exposed an ambiguous annular-revolution parameter. The explicit f64 parameter passed the locked WASI check. The current static acceptance result remains 2/16, with three module rebuild confirmations.
+
+### November 20, 18:09 PST
+
+Generator build `wONtSjE` completed all eleven release stages. The linked guest still failed in both languages during `toolRunStart`. A diagnostic Wasm stack and a native failure independently identified the presentation update running without its original Source. The corrected native path passed publication and retirement across turns, and the next Generator queue attempt is waiting for storage. Demonstrator `wsWhso3` retained its lane for a second warm retry. Its previous compiler pass saw an old manifest exposing HashMap where the builder already required BTreeMap. The same pinned WASI consumer rejected that previous artifact and compiled with the current manifest. The live box-section borrow correction is also present. The last full static result remains 2/16.
+
+### November 20, 18:21 PST
+
+Corrected Generator build `w2wlSTL` is compiling. The full native receiver now publishes and retires a segmented tick in four passing tests, covering both an empty entity list and an appended entity. A separate trace-page case is under investigation. Demonstrator `wsWhso3` compiled the corrected BREP representation and app builder in its second held retry. Its compiler checksum for the tick receiver matches the corrected 23,150-byte source. Fourteen extension lockfiles were refreshed offline and verified with locked graph generation. The combined source preflight examined 3,870 distinct target/configuration closures with zero refusals. The latest full static result remains 2/16.
+
+### November 21, 01:14 PST
+
+GIS exhausted both attempts during source admission at 263,519 bytes for semio-plugin-instance-app against its 262,144-byte limit. The mounted implementation now imports its frequently repeated job-context and entity-identity types. The production source reader measured the current combined closure, including concurrent edits, at 255,206 bytes across 17 files. The next B-slot root, Process, completed source admission. GIS still needs a new queue receipt. The fleet cache remained unreachable on its configured endpoint, and builds continued natively. The corrected Procedural viewer passed its locked WASI metadata check.
+
+The host contribution parser passed the complete locked native suite, including a 26,538-byte pack, original custody, and cancellation. The renderer command-address regression and the adjacent ingress test passed. The temporary native host-test target was released by the repo driver, and the Rust mount reported 17 GiB available. Process is compiling, Procedural is linking, and the next corrected Demonstrator will include these source changes.
+
+### November 21, 01:29 PST
+
+The native roster coordinator adopted both live roots and supports receipt-checked retries without duplicating either queue. Procedural compiled 1,214 units and remained in its final release compilation. Process passed 844 units. Across 3,871 workspace and target configurations, the source preflight saw one unresolved GIS GeoJSON source during concurrent edits. The targeted GIS editor recheck passed. The GIS operation suite now has a concurrent complete diagnostic oracle for the three rejected terrain values, plus canonical comparison of each elevation sample, so the smaller duplicate fixture from this ticket was withdrawn. Its complete native execution remains unverified in this ticket.
+
+The CAD emitter prerequisite restored 173 immutable host compiler units on its third canonical attempt. Four closed, ticket-private diagnostic copies of core WASM were cleared as disk space tightened. The original browser results, hashes and release stages remain available. The current official result remains six of sixteen and no archive has been produced.
+
+At 01:37 PST the first Process Cargo pass had already failed on the BREP convex_edges producer/consumer mismatch. At 151 MiB host free with 7 GiB of swap fully used, the supervisor terminated its last redundant rustc for that failed pass. The Procedural linker and queue controller stayed live. The Process driver finished with its original failure and retired 4,738 MiB of compiler files. The host then reported 4.3 GiB available. Current Process producer and consumer signatures match in source and both are within admission limits. See 🔬️process-brep-retry.md.
+
+### November 21, 04:29 PST
+
+The machine restarted and the previously recorded queue PIDs no longer existed. The original tools, dependencies, products, graph, leases, diagnostics and Nx images have been mounted again. Two unrelated native Cargo tests were holding a loose Cargo registry at the intended Rust mountpoint. The original Rust image was attached at the ticket's temporary recover-r mount while those tests ran. Its Procedural linked component and build records were present. APFS reduced its physical backing from 56.3 GiB to 21.6 GiB and the host reported 40 GiB free. The canonical Rust mount must be restored before the queues resume. The site rebuild is waiting for its normal memory admission.
+
+Generator's linked guest timed out in both browser locales and its release descriptor stage refused --prepare-actor. The new DSL record-model source admission scan now passes for host and WASI at 261,849 bytes. No new full-site acceptance or archive has been produced.
+
+At 04:49, repeated kernel-handle checks showed three direct native Cargo test processes reopening the canonical mountpoint. The operator applied the requested holder-stop procedure with SIGINT to PIDs 8732, 23105 and 37691. The exclusive image lease and a fresh empty kernel-handle check allowed a normal unmount and remount. The original volume is /dev/disk19s1, with the retained linked Procedural run present and 19 GiB available at the canonical path. The pre-existing 197 MiB loose Cargo registry is preserved at .cache/retained-cargo-20261121. The affected commands were the Trinity rewriting inferences and editor tests and the Puzzle 5D tests. Release compilation remains gated on the current descriptor binary.
+
+## November 21, 05:15 PST
+
+The site was rebuilt and captured at 05:13 with the receipt-only renderer command settlement. Its local-reference scan passed. The previous static server recorded no HTTP errors. The new full English/German matrix is running with its own 4,096 MiB browser admission. At 05:10 the three remote cache probes still reported unreachable. Native descriptor rebuild attempts continue to stop on concurrent source edits, including a different pack JSON decoder; the full-retention compiler custody fix is in progress.
+
+## November 21, 05:36 PST
+
+The canonical native descriptor prerequisite completed with status 0. Its installed executable answered capabilities with protocol 1 and actor preparation enabled. The reboot-recovered roster acquired its advisory guard and started fresh Demonstrator and CAD through the two-slot native queue; the tested supervisor acknowledged the pending GIS retry. The new static site still passes six of sixteen boots. Generator now exposes the 4,096-unit publication stall in both optimized locale runs.
+
+At 05:40 the Generator owner corrected progress accounting for an open durable Store batch after tracing repeated scope top-ups in the actual retained WASM. Procedural and Demonstrator have the two release slots. CAD had only entered the disk wait; both interrupted CAD invocations exited there without starting Cargo, and its retry was queued behind the two direct boot priorities. The original CAD guest also passed replay with the newly sealed descriptor executable; four authored interactionHover definitions differed from current Rust and are being checked.
+
+## November 21, 06:23 PST
+
+After the disk admission ramp expired, Procedural wKD5kO3 started at 6.2 GiB free despite Demonstrator still writing. At 3.7 GiB free the coordinator interrupted only the already-failed Demonstrator invocation. Its compiler had reported three BREP errors subsequently corrected and checked against release WASI dependencies. The normal JOBS=2 queue immediately resubmitted Demonstrator behind Procedural. Managed cleanup restored roughly 11 GiB free. A separate official cache GC dry run identified only 21 zero-byte entries. Remote execution was still unconfigured at 06:14, and the cache remained unreachable.
+
+November 21, 07:40 PST. Procedural wKD5kO3 completed release staging, with optimized core SHA-256 dbcf6d7182aae784c3dce596a133b62d292b4dfa58d7e3d5923dabe4ef52c62e. Both private raw browser locales reached the 4,096-unit publication stall. A WASI reproduction isolated a persistent phase-5 canonical Source retirement denial under fixed Work 3. The corrected leaf reached ready after 623 funded turns. The next Procedural root has been requested. GIS is compiling and Demonstrator is waiting for disk. Its preceding attempt exceeded the BREP registry boundary by four lines. Moving shared validation to the kernel contract brought it to 3,970. Removed the manifest command temporary browser debug trace seen in both locales.
+
+November 21, 07:50 PST. Vite published the current optimized Procedural core and the enclosing build receipt settled. Its lightweight envelope and receipt helpers previously reserved a full 2 GiB per invocation, including after Vite finished. They now use the managed light Bun route. The native task receipt wrapper also swallowed both issue and settlement failures. A real invalid declaration returned success before the change. Real issue, successful rename, failure cleanup, and invalid commands now pass the focused test.
+
+November 21, 07:56 PST. Demonstrator wakSUm7 admitted its real source and compiled both changed BREP crates. A witness linked against their WASI artifacts matched JavaScriptCore on all 39 scalar/vector cases, including errors. GIS wsl3Qi1 reached its component link. The real camera/selection Config Store batch then folded, committed and acknowledged in 3,305 turns, with controlled revisions and matching published values. This is bounded integration evidence while the next Procedural browser build remains queued. The new coordinator adopted both active children and can schedule ten validated two-root groups.
+
+At 08:00 the captured static site’s optimized Procedural guest returned the same 4,096-unit setActiveExample stall in both official targeted tests (EN 16.7 s and DE 17.1 s). Both optimized-core requests were HTTP 200. This guest predates the canonical authority-retirement fix.
+
+November 21, 08:16 PST. GIS wsl3Qi1 completed 11 release stages with zero failures in 2,764 seconds. Its authored descriptor matches the successful build (06b9070b…), and the atomic queue confirmation certifies the optimized browser core at 97,822,997 bytes, SHA-256 09e096f099a1203533beaa611da2f86272b33105530d013a53cfd66039512b77. The queue withdrew the old Procedural confirmation and started w5PGoij, which will carry the Store authority-retirement change. The Demonstrator final component is linking in parallel.
+
+November 21, 08:54 PST. Procedural w5PGoij completed 11 release stages with zero failures. The new optimized core is 111,725,044 bytes, SHA-256 90f04dc1fd7e0c141ce732b840fc000499ccff69c2dfb22298d1f37082e20de1. The raw component and optimized browser bytes have a durable queue confirmation. The two official Generator boots and the refreshed static site are waiting for host memory. Demonstrator wakSUm7 is linking and Energy is compiling. CAD encountered a new BREP registry boundary violation (4,058/4,000 lines). Five current module confirmations exist. The latest complete boot matrix is still 6/16.

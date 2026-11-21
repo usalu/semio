@@ -288,8 +288,8 @@ async fn a_history_transition_naming_another_actors_operation_is_refused_before_
         dependencies: Vec::new(),
         observed: None,
         target: vec![id.to_string()],
-        diff: protocol::ArtifactDiff { schema: protocol::SchemaId("fixture.opaque.v1".into()), payload: id.as_bytes().to_vec() },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId("fixture.opaque.v1".into()), payload: Vec::new() },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId("fixture.opaque.v1".into()), payload: protocol::CausalPayload::try_from_slice(id.as_bytes()).unwrap() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId("fixture.opaque.v1".into()), payload: protocol::CausalPayload::try_from_slice(&[]).unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(at, 0),
         transaction: None, verb: None, line: None,
     };

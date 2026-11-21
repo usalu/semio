@@ -1,0 +1,21 @@
+# Original Media Reactor Mount
+
+The guarded overlay puts an `OriginalMediaAdmission` on each `NativeLifetimeSlot`, with its implementation in the media declaration crate. A mounted producer installs a paid typed picker intent only through `admit_original_media`, after the observed `NativeCloseKey` and complete document stamp agree. Same-instance supersession waits for the codec and prior Original bytes to close before changing the issued identity. Instance closure waits for the app and existing close peers, closes the raw child, then returns the actual `OriginalCommandOrigin` loan.
+
+The actor poll recognizes the typed Begin, Complete and Cancel control event and the reserved fixed command kind 240 before the generic command tag check. The reserved kind is outside the guarded ordinary tag roster. Raw pages keep the complete transport cursor, and generic input and parked generic work continue on their own lanes. A refused preliminary grant leaves the staged page untouched. A raw control reserves its release before crossing the nested real Source grant, then consumes its event owner only after an exact acknowledgment is available. The browser checks an exact raw cursor before reoffering a backpressured page and waits for the existing deferred queue when a control has already crossed.
+
+Native and WIT shapes use the same explicit command loan and receipt fields. The WIT event lift reads exact unsigned values and validates the complete lowercase revision before selecting the original route. The WIT result publishes a typed acknowledgment in the ordinary status record. The browser continues to use the existing per-actor serializer and selection-only file request.
+
+## Registered app ports
+
+- Donation takes `&mut Option<RawMediaIntent>`, an exact `NativeCloseKey`, the actor's current `OriginalMediaLoan`, and the format close witness. The selector constructs the existing Pack-backed `RequestFileOpen.args.originalMedia` from the admitted picker. `RawMediaIntent` retains a fixed eight-word trusted placement chosen by the app.
+- `PluginApp::advance_original_media_format(&mut self, picker: &mut RawMediaPicker, identity: &mut EntityIdentityAuthority<'_>, cx: &mut StepContext<'_>)` receives the registered decoder and mutation publication lane under the same Source. The mounted callback borrows `picker.format_input()` and records `finish_format` only alongside the actual publication result. The reactor polls the paired close before acknowledging Complete or Cancel.
+- `PluginApp::original_media_live_document` projects the actual store document ID and all 32 canonical revision bytes. `original_media_format_closed` reports the mounted format owner's paid closure. The live Base PDF picker still uses the current effect path. Enabling the staged raw picker requires the typed retained command donation, a format callback override, and the atomic typed-store resource attachment.
+
+## Verification
+
+`raw-reactor-stage.py` generated 33 guarded product postimages. The complete staged command-ingress crate compiled against the pinned native and `wasm32-wasip2` dependencies. The 12 linked native laws compiled the staged slot owner and the actual staged reactor prologue against that rebuilt ingress crate. The prologue law supplied a minimal app and lifecycle shell and used the real retained caller. It exercised a false allocation identity, a denied control close grant, a distinct raw control, ordinary page passthrough, and an admitted PNG-signature page using the reserved kind. The native owner verified exact Pack sequence bits, both fixed pages, terminal receipts and the actual Origin loan return.
+
+All 104 crate source-boundary checks passed across Linux, macOS, Windows and WASI, with every staged Rust source measured. The raw prologue lives in runtime-ops. The macOS reactor lifecycle tests measured 3,887 active lines and the reactor turn tests measured 259,314 source bytes.
+
+Jco generated and checked declarations for the complete staged actor WIT world. All 12 React and Ajv cases passed, including preflight reoffers and Complete waiting on format publication. The governed full mounted reactor and PDF end-to-end build is pending the registered app attachment. No product source files were applied by this work.

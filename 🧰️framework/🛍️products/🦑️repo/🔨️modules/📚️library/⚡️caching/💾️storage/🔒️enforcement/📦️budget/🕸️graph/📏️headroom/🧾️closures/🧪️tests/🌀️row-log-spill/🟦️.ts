@@ -1,7 +1,8 @@
 /** 🌀️ Contract: a row log is a process-private spill of the graph writer, written under the closure store as `rl/rl-<pid>-<time>-<serial>.rows`; the closure proof knows it as a spill (never read, never a member, never retired) instead of refusing the whole store with "Unknown closure reference publication", and every file shape a read writes under the store is either a known closure role or a known spill, never neither. */
 import {expect,test} from "bun:test";
 import {readFileSync,readdirSync,statSync} from "node:fs";
-import {join} from "node:path";
+import {join,relative,sep} from "node:path";
+import {CLOSURE_REPAIR_POLICY_V1,isClosureRepairReceiptNameV1} from "../../../../../../../../../🏗️build/🕸️graph/🕰️generations/🩹️closure-repair/🟨️.mjs";
 import {fileURLToPath} from "node:url";
 import ts from "typescript";
 import {physicalSourceOriginV1} from "../../../../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
@@ -36,4 +37,18 @@ test("no source of the build names a row log file by hand: the one name factory 
  const walk=(directory:string)=>{for(const name of readdirSync(directory)){if(name==="🧪️tests"||name==="node_modules")continue;const path=join(directory,name);let stat;try{stat=statSync(path);}catch{continue;}if(stat.isDirectory())walk(path);else if(/\.(?:ts|mjs)$/u.test(name)&&readFileSync(path,"utf8").includes('"rl-"'))found.push(name);}};
  walk(fileURLToPath(new URL("../../../../../../../../../🏗️build/",origin)));
  expect(found).toEqual(["🟨️.mjs"]);
+});
+
+test("bounded repair receipts are graph control metadata, while aliases and oversized receipts refuse the proof",()=>{
+ const root=join(sep,"fixture"),folder=join(root,"generations","cr"),name="4-"+hash+".json";
+ const code=ts.transpileModule(["directories","physicalRow","spill"].map(name=>declared(name).getText(tree)).join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+ for(const [basename,bytes,links,ordinary,directory] of [[name,1n,1n,true],[name+"."+"a".repeat(16)+".tmp",1n,1n,true],[name,1n,2n,false],[name,BigInt(CLOSURE_REPAIR_POLICY_V1.maximumReceiptBytes)+1n,1n,false],[name,1n,1n,false,true]] as const){
+  const leaf=join(folder,basename),proof={image:{root},directories:new Map(),rows:new Map()};
+  const lstatSync=(path:string)=>({isDirectory:()=>path!==leaf||directory===true,isFile:()=>path===leaf&&directory!==true,isSymbolicLink:()=>false,dev:1n,nlink:path===leaf?links:1n,size:path===leaf?bytes:0n,blocks:1n,mtimeMs:1n});
+  const ports={P:{maximumPathUnits:256,maximumEntries:16,maximumFileBytes:16777216,ignoredDirectories:[],ignoredFiles:[]},join,relative,sep,stamp:()=>"same",ancestor:()=>"same",nativeImageServiceEntryV1:()=>false,check:()=>{},requireNativeStoragePathV1:(_root:string,path:string)=>path,named:(_proof:unknown,path:string)=>lstatSync(path),lstatSync,namesAt:(_proof:unknown,path:string)=>path===root?["generations"]:path===folder?[basename]:["cr"],CLOSURE_REPAIR_POLICY_V1,isClosureRepairReceiptNameV1};
+  const run=Function(...Object.keys(ports),code+";return directories")(...Object.values(ports));
+  if(ordinary){run(proof);expect(proof.rows.has(leaf)).toBe(false);}
+  else expect(()=>run(proof)).toThrow();
+ }
+ for(const near of ["0-"+hash+".json","9007199254740992-"+hash+".json","01-"+hash+".json",name+".bak","sub/"+name])expect(isClosureRepairReceiptNameV1(near)).toBe(false);
 });

@@ -3,7 +3,7 @@
   "stock": {
     "grant": {
       "maximumItems": 67108864,
-      "maximumCopyBytes": 4294967296,
+      "maximumCopyBytes": 8589934592,
       "maximumCapacityBytes": 4294967296,
       "maximumReleaseBytes": 4294967296,
       "maximumDepth": 128
@@ -14,7 +14,7 @@
   "operation": {
     "grant": {
       "maximumItems": 8388608,
-      "maximumCopyBytes": 1073741824,
+      "maximumCopyBytes": 2147483648,
       "maximumCapacityBytes": 536870912,
       "maximumReleaseBytes": 536870912,
       "maximumDepth": 64

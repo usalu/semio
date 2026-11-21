@@ -86,6 +86,7 @@ Feature: Apply both typed gis.gisterrain mutations twice — once in Rust, once 
       | id                       | dir                        | fixture                            |
       | change-exaggeration      | 🎚️change-exaggeration      | ⛰️raises  |
       | change-imported-features | 📥change-imported-features | 📥️imports |
+      | replace-elevation-source | 🏔️replace-elevation-source | 🏔️authors |
 
   @id-identity-round-trip
   @level-long

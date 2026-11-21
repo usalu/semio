@@ -37,10 +37,9 @@ impl PluginArtifactChannel {
             actor_label,
             host_driver_policy,
             operation_policy,
-            startup_failure:None,
-            host_driver:Arc::new(semio_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
+            inference_origin_driver: None,
             instances: HashMap::new(),
-            closing_instances:std::collections::BTreeSet::new(),
+            closing_instances: std::collections::BTreeSet::new(),
             pending_exchanges: PendingExchangeRegistry::new(),
             pending_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
             rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
@@ -71,27 +70,21 @@ impl PluginArtifactChannel {
             uri: self.actor_label.clone(),
         };
         let payload = command.encode().map_err(|error| Self::not_wired("document-backbone bind", error))?;
-        let mut event = semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload };
-        let runtime = Arc::clone(&self.runtime);
-        let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("document-backbone bind", format!("no open instance {instance}")))?;
-        let turn = with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_mut(&mut event), headless_command_budget(), identity))).map_err(|error| Self::not_wired("document-backbone bind", error))?;
-        let receipts: Vec<&Vec<u8>> = turn
-            .effects
-            .iter()
-            .filter_map(|effect| match effect {
-                semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Shell { instance: target }, payload } if target.0 == instance.to_string() => Some(payload),
+        let instance_name = instance.to_string();
+        let event = semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance_name.clone()) }, payload };
+        self.with_native_turn(instance, &[event], |channel, turn| {
+            let mut receipts = turn.effects.iter().filter_map(|effect| match effect {
+                semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Shell { instance: target }, payload } if target.0 == instance_name => Some(payload),
                 _ => None,
-            })
-            .collect();
-        if receipts.len() != 1 {
-            return Err(Self::not_wired("document-backbone bind", format!("the guest answered {} shell receipt(s) for one bind", receipts.len())));
-        }
-        semio_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(receipts[0], &command).map_err(|error| Self::not_wired("document-backbone bind", error))?;
-        for effect in &turn.effects {
-            if let Some(egress) = document_backbone_payload(&self.actor_label, effect) {
-                self.backbone_egress.push(egress.to_vec());
+            });
+            let receipt = receipts.next().ok_or_else(|| Self::not_wired("document-backbone bind", "the guest returned no shell receipt"))?;
+            if receipts.next().is_some() { return Err(Self::not_wired("document-backbone bind", "the guest returned multiple shell receipts")); }
+            semio_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(receipt, &command).map_err(|error| Self::not_wired("document-backbone bind", error))?;
+            for effect in &turn.effects {
+                if let Some(egress) = document_backbone_payload(&channel.actor_label, effect) { channel.backbone_egress.push(egress.to_vec()); }
             }
-        }
+            Ok(())
+        })?;
         self.backbone_bindings.insert(instance);
         Ok(())
     }
@@ -184,32 +177,23 @@ impl PluginArtifactChannel {
         let mut owed = vec![semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Backbone { uri: self.actor_label.clone() }, payload: message }];
         let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
         loop {
-            let mut events = std::mem::take(&mut owed);
-            let runtime = Arc::clone(&self.runtime);
-            let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("document-backbone ingress", format!("no open instance {instance}")))?;
-            let turn = match with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, &mut events, headless_command_budget(), identity))) {
-                Ok(turn) => turn,
-                Err(error) => {
-                    self.discard_instance(instance);
-                    return Err(Self::not_wired("document-backbone ingress", format!("{error}; the instance was discarded")));
+            let events = std::mem::take(&mut owed);
+            let outcome = self.with_native_turn(instance, &events, |channel, turn| {
+                for effect in &turn.effects {
+                    if let Some(egress) = document_backbone_payload(&channel.actor_label, effect) { channel.backbone_egress.push(egress.to_vec()); }
+                    if let Some(fault) = shell_lane_fault(instance, effect) { return Err(fault); }
                 }
-            };
-            for effect in &turn.effects {
-                if let Some(egress) = document_backbone_payload(&self.actor_label, effect) {
-                    self.backbone_egress.push(egress.to_vec());
-                }
-                if let Some(fault) = shell_lane_fault(instance, effect) {
-                    return Err(fault);
-                }
-            }
-            if let Some(receipt) = turn.lifecycle_receipt {
+                if let semio_framework::kernel::TurnStatus::Faulted(detail) = &turn.status { return Err(decode_guest_fault(detail)); }
+                Ok((turn.lifecycle_receipt, matches!(turn.status, semio_framework::kernel::TurnStatus::Idle)))
+            });
+            if outcome.is_err() { self.discard_instance(instance); }
+            let (receipt, idle) = outcome?;
+            if let Some(receipt) = receipt {
                 owed.push(semio_framework::kernel::Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt }));
             }
-            match turn.status {
-                semio_framework::kernel::TurnStatus::Idle if owed.is_empty() => return Ok(()),
-                semio_framework::kernel::TurnStatus::Faulted(detail) => return Err(decode_guest_fault(&detail)),
-                _ if owed.is_empty() => owed.push(semio_framework::kernel::Event::Wake),
-                _ => {}
+            if owed.is_empty() {
+                if idle { return Ok(()); }
+                owed.push(semio_framework::kernel::Event::Wake);
             }
             if std::time::Instant::now() >= deadline {
                 return Err(Self::budget_fault("document-backbone ingress"));

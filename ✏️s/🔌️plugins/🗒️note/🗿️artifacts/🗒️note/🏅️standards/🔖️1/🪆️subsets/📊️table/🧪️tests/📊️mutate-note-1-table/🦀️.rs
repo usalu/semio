@@ -22,7 +22,7 @@ use semio_repo_test_host::Adapter;
 /// 🏷️ This subset's own slice of `NoteMutation::KINDS`
 /// (`../../🧬️schema/🧬️mutations/🦀️.rs`) — duplicated, not imported, because the oracle-only build
 /// must not link the subject crate.
-const KINDS: &[&str] = &["insert-table-row", "remove-table-row", "insert-table-column", "remove-table-column"];
+const KINDS: &[&str] = &["insert-table-row", "remove-table-row", "insert-table-column", "remove-table-column", "edit-table-cell"];
 
 #[cfg(feature = "sut")]
 /// 👁️ Deliberately EMPTY: every one of this subset's committed vectors moves the document, so no

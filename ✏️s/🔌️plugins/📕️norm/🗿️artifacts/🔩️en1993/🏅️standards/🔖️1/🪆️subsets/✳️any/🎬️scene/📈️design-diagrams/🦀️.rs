@@ -1,7 +1,7 @@
 //! 📈️ Design-point diagrams: the sheet pile M–V interaction, the bridge S–N curve with the damage-equivalent range, the crane runway wheel position envelope, the plated panel ρ(λ̄_p) curve, one stacked load-case diagram per load case, the N, V and M courses along every frame bar and the utilisation ladder of every collection that has no dedicated curve.
 
 use super::super::checks::clauses::{bridge_fatigue, crane_runway, effective_width, sheet_piling, toughness};
-use super::super::checks::{frame_envelope, frame_eigen, joint_frame, part_1_1, part_3, toughness_point, tower_design_point, AnnexParams};
+use super::super::checks::{frame_envelope, frame_eigen, joint_frame, part_1_1, part_2, part_3, toughness_point, tower_design_point, AnnexParams};
 use super::super::model::{SteelMember, BridgeFatigue, TowerLeg, CraneRunway, En1993Snapshot, LoadCase, PlatedPanel, SheetPileEnvironment, SteelPile};
 use super::super::norm::{CheckReport, CheckResult};
 use super::super::scene::diagram_kit::{sn_curves, Xy};
@@ -71,13 +71,13 @@ fn bridge_sn(d: &En1993Snapshot, bf: &BridgeFatigue) -> Option<Diagram2d> {
     if !(bf.heavy_vehicle_weight > 0.0 && bf.reference_weight > 0.0 && bf.delta_sigma_p > 0.0) {
         return None;
     }
-    let params = AnnexParams::for_choice(d.annex);
+    let gamma_mf = part_2::fatigue_factor(bf, d.annex);
     let l2 = bridge_fatigue::lambda_2(bf.heavy_vehicle_weight, bf.reference_weight, bf.observed_traffic, 0.5e6);
     let l3 = bridge_fatigue::lambda_3(bf.design_life);
     let l4 = bridge_fatigue::lambda_4(&[(bf.second_lane_traffic, bf.second_lane_weight)], bf.observed_traffic, bf.heavy_vehicle_weight);
     let delta_e2 = bridge_fatigue::delta_sigma_e2_bridge(bf.lambda_1, l2, l3, l4, if bf.lambda_max > 0.0 { bf.lambda_max } else { f64::INFINITY }, bf.phi2, bf.delta_sigma_p / 1e6);
     let delta_c = bridge_fatigue::orthotropic_detail(&bf.detail_id).map_or(f64::from(bf.category), |c| c.min(f64::from(bf.category))) * bridge_fatigue::size_effect(bf.plate_thickness * 1e3);
-    let utilisation = bridge_fatigue::fatigue_utilisation(delta_e2, delta_c, 1.0, params.gamma_mf);
+    let utilisation = bridge_fatigue::fatigue_utilisation(delta_e2, delta_c, 1.0, gamma_mf);
     if !(delta_e2 > 0.0 && delta_c > 0.0 && utilisation.is_finite()) {
         return None;
     }
@@ -85,10 +85,10 @@ fn bridge_sn(d: &En1993Snapshot, bf: &BridgeFatigue) -> Option<Diagram2d> {
     Some(Diagram2d {
         id: format!("bridge-sn:{}", bf.id),
         title: loc(&format!("S–N curve and damage-equivalent range – {}", bf.id), &format!("Wöhlerlinie und schadensäquivalente Schwingbreite – {}", bf.id)),
-        description: loc(&format!("Fatigue strength Δσ_R of the detail category Δσ_C = {delta_c:.1} MPa (EN 1993-1-9) in log–log scale with the damage-equivalent range γ_Mf Δσ_E,2 = {:.1} MPa at 2·10⁶ cycles (EN 1993-2, 9.5.2).", delta_e2 * params.gamma_mf), &format!("Ermüdungsfestigkeit Δσ_R der Kerbfallklasse Δσ_C = {delta_c:.1} MPa (EN 1993-1-9) doppeltlogarithmisch mit der schadensäquivalenten Schwingbreite γ_Mf Δσ_E,2 = {:.1} MPa bei 2·10⁶ Lastspielen (EN 1993-2, 9.5.2).", delta_e2 * params.gamma_mf)),
+        description: loc(&format!("Fatigue strength Δσ_R of the detail category Δσ_C = {delta_c:.1} MPa (EN 1993-1-9) in log–log scale with the damage-equivalent range γ_Mf Δσ_E,2 = {:.1} MPa at 2·10⁶ cycles (EN 1993-2, 9.5.2).", delta_e2 * gamma_mf), &format!("Ermüdungsfestigkeit Δσ_R der Kerbfallklasse Δσ_C = {delta_c:.1} MPa (EN 1993-1-9) doppeltlogarithmisch mit der schadensäquivalenten Schwingbreite γ_Mf Δσ_E,2 = {:.1} MPa bei 2·10⁶ Lastspielen (EN 1993-2, 9.5.2).", delta_e2 * gamma_mf)),
         axes: vec![axis("Cycles N", "Lastspiele N", QuantityKind::Dimensionless, "1", AxisScale::Log10, Some((1.0e4, 1.0e8))), axis("Stress range Δσ", "Spannungsschwingbreite Δσ", QuantityKind::Stress, "MPa", AxisScale::Log10, Some((10.0, 1000.0)))],
         series: vec![Series::Polyline { id: "wohler".into(), label: loc(&format!("Δσ_C = {delta_c:.1} MPa"), &format!("Δσ_C = {delta_c:.1} MPa")), points: curve.iter().map(|q| Vec2::new(q[0], q[1])).collect(), style: stroke(Tone::Info, 2.0, Dash::Solid) }],
-        markers: vec![Marker { id: "design".into(), at: Vec2::new(2.0e6, delta_e2 * params.gamma_mf), shape: MarkerShape::Diamond, tone: tone(utilisation), label: loc(&format!("γ_Mf Δσ_E,2 = {:.1} MPa", delta_e2 * params.gamma_mf), &format!("γ_Mf Δσ_E,2 = {:.1} MPa", delta_e2 * params.gamma_mf)), utilisation: Some(utilisation), bound_check: Some(format!("en1993.2.9.5.{}", bf.id)), binding: None }],
+        markers: vec![Marker { id: "design".into(), at: Vec2::new(2.0e6, delta_e2 * gamma_mf), shape: MarkerShape::Diamond, tone: tone(utilisation), label: loc(&format!("γ_Mf Δσ_E,2 = {:.1} MPa", delta_e2 * gamma_mf), &format!("γ_Mf Δσ_E,2 = {:.1} MPa", delta_e2 * gamma_mf)), utilisation: Some(utilisation), bound_check: Some(format!("en1993.2.9.5.{}", bf.id)), binding: None }],
         annotations: Vec::new(),
         focus: Some(EntityRef::new(EntityKind::Group, &bf.id, format!("bridgeFatigue[id={}]", bf.id))),
         legend: true,

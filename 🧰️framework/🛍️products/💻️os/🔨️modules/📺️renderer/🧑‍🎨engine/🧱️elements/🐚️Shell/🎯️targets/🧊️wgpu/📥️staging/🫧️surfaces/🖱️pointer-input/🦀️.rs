@@ -12,10 +12,10 @@ pub const WORLD3D_CLOSE_CANCEL_SIGHTINGS: u8 = 8;
 //#endregion 🫥️HostWindowBlur
 impl SurfaceState {
     /// 🎬️ Whether a live engine surface is painted under this point — the wheel's twin of the press
-    /// path's own `state.bounds.contains(x, y)` claim, and the same set of surfaces the four wheel
+    /// path's own `state.session.bounds.contains(x, y)` claim, and the same set of surfaces the four wheel
     /// phases go on to offer the notch to.
     pub fn scene_surface_contains(&self, x: f32, y: f32) -> bool {
-        self.world3d_states.values().any(|state| state.bounds.contains(x, y))
+        self.world3d_states.values().any(|state| state.session.bounds.contains(x, y))
             || self.node_graph_states.values().any(|surface| surface.bounds.contains(x, y))
             || self.tiled_map_states.values().any(|surface| surface.bounds.contains(x, y))
             || self.board2d_states.values().any(|surface| surface.bounds.contains(x, y))
@@ -24,7 +24,7 @@ impl SurfaceState {
     pub async fn handle_world3d_input(&mut self, x: f32, y: f32, down: bool, button: i16, shift: bool, ctrl: bool, alt: bool, meta: bool, wheel_delta: f32, drag_dx: f32, drag_dy: f32) -> Result<(), String> {
         let modifiers = PointerModifiers { shift, ctrl, alt, meta };
         for state in self.world3d_states.values_mut() {
-            if !state.bounds.contains(x, y) {
+            if !state.session.bounds.contains(x, y) {
                 continue;
             }
             let wheel = WorldInteractionIntent::wheel(x, y, wheel_delta, &modifiers);

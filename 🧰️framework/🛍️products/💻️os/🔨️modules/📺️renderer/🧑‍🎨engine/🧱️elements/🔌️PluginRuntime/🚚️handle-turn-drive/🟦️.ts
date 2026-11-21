@@ -19,7 +19,9 @@ import {
   type WireTurnResult,
   type WireVariant
 } from "../🪝️wire-codec/🟦️.ts";
-import { typedOperationAcknowledgements, withTypedOperationCall } from "../📬️typed-result/🟦️.ts";
+import { createOriginalMediaExchange } from "./original-media-exchange.ts";
+import { originalMediaRequest } from "./original-media-wire.ts";
+import { typedOperationAcknowledgements, withTypedOperationCall, type TypedOperationCall } from "../📬️typed-result/🟦️.ts";
 import {
   beginIsolatedJobDrive,
   DEFAULT_SHARD_BUDGET,
@@ -30,7 +32,7 @@ import {
 } from "../🛰️runtime-singletons/🟦️.ts";
 import { commandStallWatch, serializeCommandIngressForActor } from "../🧵️turn-dispatch/🟦️.ts";
 import { compactAcknowledgedTurns } from "../🔁️turn-settle/📥️acknowledged/🟦️.ts";
-import { commandIngressContinuationCeilingV1, commandIngressNeedsReplyStampV1, commandIngressUnownedV1, settleAcknowledgedPluginTurns, settlePluginTurn } from "../🔁️turn-settle/🟦️.ts";
+import { commandIngressContinuationCeilingV1, commandIngressNeedsReplyStampV1, commandIngressUnownedV1, PLUGIN_UI_CONTINUATION_LIMIT, settleAcknowledgedPluginTurns, settlePluginTurn } from "../🔁️turn-settle/🟦️.ts";
 import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 import {
   drainTypedOperationTurns,
@@ -208,25 +210,26 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
    * subsequent commands observe its commit and completion in actor order. */
   const commitReservedToolJobWhileSerialized = async (instanceId: number, actorId: string, job: bigint, kind: string, input: Uint8Array): Promise<void> => {
     const key = `${actorId}#${job}`;
-    if (drivingJobs.has(key)) return;
+    if (drivingJobs.has(key) || finishedReservedJobs.has(key)) return;
+    const live = (): boolean => !state.disposing && !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId;
+    if (!live()) return;
     drivingJobs.add(key);
     try {
       beginIsolatedJobDrive();
       await shardClient.startJob(actorId, job, kind, input);
-      let step = 0;
-      let last: ShardJobStep | undefined;
-      const batch = isolatedJobStepsPerSerializedAdmission(PLUGIN_JOB_STEPS_PER_YIELD);
-      for (let i = 0; i < batch; i += 1) {
-        last = await shardClient.stepJob(actorId, job, jobStepBudget);
-        step += 1;
-        if (last.status !== "running") break;
+      while (live()) {
+        const batch = isolatedJobStepsPerSerializedAdmission(PLUGIN_JOB_STEPS_PER_YIELD);
+        for (let i = 0; i < batch && live(); i += 1) {
+          const outcome = await shardClient.stepJob(actorId, job, jobStepBudget);
+          if (outcome.status === "running") continue;
+          finishedReservedJobs.add(key);
+          if (live()) await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
+          return;
+        }
+        await yieldPluginUiContinuation();
       }
-      const outcome = last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
-      if (outcome.status === "running") throw new Error(`reserved-tool job ${job} still running after ${step} Isolated steps`);
-      await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
     } finally {
       endIsolatedJobDrive();
-      finishedReservedJobs.add(key);
       drivingJobs.delete(key);
     }
   };
@@ -239,32 +242,11 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
     }
   };
 
-    const driveReservedToolJob = async (instanceId: number, actorId: string, job: bigint, kind: string, input: Uint8Array): Promise<void> => {
-    const key = `${actorId}#${job}`;
-    if (drivingJobs.has(key)) return;
-    drivingJobs.add(key);
-    const live = (): boolean => !state.disposing && !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId;
+  const driveReservedToolJob = async (instanceId: number, actorId: string, job: bigint, kind: string, input: Uint8Array): Promise<void> => {
     try {
-      beginIsolatedJobDrive();
-      await serializeCommandIngressForActor(actorId, async () => {
-        await shardClient.startJob(actorId, job, kind, input);
-        let step = 0;
-        let last: ShardJobStep | undefined;
-        const batch = isolatedJobStepsPerSerializedAdmission(PLUGIN_JOB_STEPS_PER_YIELD);
-        for (let i = 0; i < batch; i += 1) {
-          last = await shardClient.stepJob(actorId, job, jobStepBudget);
-          step += 1;
-          if (last.status !== "running") break;
-        }
-        const outcome = last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
-        if (outcome.status === "running") throw new Error(`reserved-tool job ${job} still running after ${step} Isolated steps`);
-        if (live()) await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
-      });
+      await serializeCommandIngressForActor(actorId, () => commitReservedToolJobWhileSerialized(instanceId, actorId, job, kind, input));
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
-    } finally {
-      endIsolatedJobDrive();
-      drivingJobs.delete(key);
     }
   };
 
@@ -317,15 +299,19 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
    * (NOT an `AppFrame::Error` — that is still an ordinary decoded frame) becomes an `error`-shaped
    * outcome rather than an uncaught rejection, since nothing here awaits this function's own promise.
    * `dispatch?.order` (the ledger's causal key, see {@link serializeCommandIngressForActor}) is the
-   * only thing that steers WHERE in the actor's ingress queue this turn lands. */
-  const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[], dispatch?: PluginDispatchHintV1): Promise<void> => {
+   * only thing that steers WHERE in the actor's ingress queue this turn lands.
+   * The natural import's signal stops new command crossings after the current turn's patch receipts
+   * settle. Its fresh owner's lifecycle close then retires the retained guest command. */
+  const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[], dispatch?: PluginDispatchHintV1, queuedImportSignal?: AbortSignal): Promise<void> => {
     try {
       const actorId = requireActorId(instanceId);
       const activation = shardClient.captureActorActivation(actorId);
       const documentPort = documentBindings.get(instanceId)?.port;
       const inspected = inspectEncodedAppCommand(events);
+      const importSignal = inspected.mediaIn ? queuedImportSignal : undefined;
       const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, () => commandStallWatch.watch({ actorId, programId: pluginId, commandId: inspected.actionId }, async (): Promise<WireTurnResult> => {
         activation.assertActive();
+        importSignal?.throwIfAborted();
         const results: WireTurnResult[] = [];
         let acknowledgements: readonly ShardEventEnvelope[] = [];
         const acceptTurn = async (turn: WireTurnResult): Promise<void> => {
@@ -333,6 +319,19 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
           const accepted = await acceptUiPatches(instanceId, turn);
           results.push(...accepted.turns);
           acknowledgements = [...accepted.acknowledgements, ...typedOperationAcknowledgements(turn), ...accepted.turns.flatMap(typedOperationAcknowledgements)];
+        };
+        const cancelImportAtBoundary = async (): Promise<void> => {
+          let consumed = 0;
+          let deferred = results.findLast((turn) => turn.deferredEvents !== undefined)?.deferredEvents ?? 0;
+          for (let step = 0; ; step += 1) {
+            while (consumed < results.length) await call.accept(results[consumed++]!.effects);
+            if (acknowledgements.length === 0 && deferred === 0) break;
+            if (step >= PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("natural-file.import-acknowledgement-stalled");
+            const receipt = await submitTurn(actorId, acknowledgements, { activation });
+            deferred = receipt.deferredEvents ?? 0;
+            await acceptTurn(receipt);
+          }
+          importSignal?.throwIfAborted();
         };
         for (let commandIndex = 0; commandIndex < events.length; commandIndex += 1) {
           state.eventSeq += 1;
@@ -363,11 +362,14 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
           };
           let terminal: string | undefined;
           for (let pageIndex = 0; pageIndex < pages.length;) {
+            if (importSignal?.aborted) await cancelImportAtBoundary();
             if (performance.now() - crossingStartedMs >= COMMAND_CONTINUATION_WALL_MS) throw new Error(`plugin ${pluginId}: command ingress plugin.command-page-stalled: page ${pageIndex}/${pages.length} stayed refused (action=${inspected.actionId ?? "none"})`);
-            await acceptTurn(await submitTurn(actorId, acknowledgements, { commandPage: pages[pageIndex]!, activation }));
+            const offered = await submitTurn(actorId, acknowledgements, { commandPage: pages[pageIndex]!, activation });
+            await acceptTurn(offered);
+            if (importSignal?.aborted) await cancelImportAtBoundary();
             terminal = foldIngress();
             // 🚦️ A refused page is NOT consumed: the guest keeps its assembly at the pages it admitted, so offer the SAME page again (the native driver's `CommandBatchDriver::observe` does the same) instead of moving on and tripping `plugin.command-page-order`.
-            if (terminal === "backpressure") { await yieldPluginUiContinuation(); continue; }
+            if ((offered.deferredEvents ?? 0) > 0 || terminal === "backpressure") { await yieldPluginUiContinuation(); continue; }
             if (terminal !== "page-accepted") break;
             pageIndex += 1;
           }
@@ -387,9 +389,11 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
             const quietMs = performance.now() - lastObservableMs;
             if (lastTurnStatus === "more-work" && quietMs < COMMAND_CONTINUATION_BURST_MS) await yieldPluginUiContinuation();
             else await new Promise<void>((resolve) => setTimeout(resolve, lastTurnStatus === "more-work" ? Math.min(COMMAND_CONTINUATION_BACKOFF_MAX_MS, COMMAND_CONTINUATION_PAUSE_MS * 2 ** Math.min(4, Math.floor((quietMs - COMMAND_CONTINUATION_BURST_MS) / 5_000))) : COMMAND_CONTINUATION_PAUSE_MS));
+            if (importSignal?.aborted) await cancelImportAtBoundary();
             const continued = await submitTurn(actorId, acknowledgements, { activation });
             const previousIngress = terminal;
             await acceptTurn(continued);
+            if (importSignal?.aborted) await cancelImportAtBoundary();
             terminal = foldIngress();
             const observable = continued.effects.length > 0 || continued.uiPatches.length > 0 || (continued.presence?.length ?? 0) > 0 || continued.lifecycleReceipt !== undefined || continued.uiPatchReceipt !== undefined || acknowledgements.length > 0 || terminal !== previousIngress || (continued.deferredEvents ?? 0) > 0;
             if (observable) lastObservableMs = performance.now();
@@ -400,7 +404,9 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
             throw new Error(`plugin ${pluginId}: command ingress ${cause} (action=${inspected.actionId ?? "none"}, seq=${inspected.seq ?? "none"}, pages=${pages.length}, continuations=${continuations}/${ceiling}, observed statuses: ${[...observedStatuses].join(", ")})`);
           }
         }
+        if (importSignal?.aborted) await cancelImportAtBoundary();
         const settled = await settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation, call);
+        importSignal?.throwIfAborted();
         await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);
         return settled;
       }), inspected.lane, dispatch?.order));
@@ -473,6 +479,74 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
       drainingInstances.delete(instanceId);
     }
   };
-  return { runQueuedTurn, drainTypedOperations };
+
+  const openOriginalMediaIngress = (instanceId: number, issued: unknown) => {
+    const request = originalMediaRequest(issued, instanceId);
+    const actorId = requireActorId(instanceId);
+    const activation = shardClient.captureActorActivation(actorId);
+    const binding = documentBindings.get(instanceId);
+    const scopedDocument = binding?.port.owner.scope?.documentId;
+    if (scopedDocument !== undefined && scopedDocument !== request.loan.documentId) throw new Error("original-media.wrong-document");
+    if (!Number.isSafeInteger(state.eventSeq + 1)) throw new Error("original-media.sequence");
+    const seq = BigInt(++state.eventSeq);
+    const retired = () => {
+      if (state.disposing || closingInstances.has(instanceId) || actorIdByInstance.get(instanceId) !== actorId) return true;
+      try { activation.assertActive(); return false; } catch { return true; }
+    };
+    const current = () => !retired() && documentBindings.get(instanceId) === binding && !binding?.port.closing;
+    let call: TypedOperationCall | undefined;
+    const results: WireTurnResult[] = [];
+    let acknowledgements: readonly ShardEventEnvelope[] = [];
+    const settle = async () => {
+      if (results.length === 0) return;
+      const turns = results.splice(0);
+      const acks = acknowledgements;
+      acknowledgements = [];
+      const settled = await settleAcknowledgedPluginTurns(actorId, turns, acks, (turn) => acceptUiPatches(instanceId, turn), activation, call);
+      await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);
+      const frames: Uint8Array[] = [];
+      const pending: WireVariant[] = [...pendingTurnEffects.get(instanceId) ?? []];
+      for (const effect of routeHostEffects(instanceId, settled.effects, binding?.port)) {
+        const frame = shellFrameBytes(effect, instanceId);
+        if (frame) frames.push(frame);
+        else pending.push(effect);
+      }
+      if (pending.length > PLUGIN_OPERATION_EFFECT_CAPACITY) throw new Error("original-media.effect-capacity");
+      pendingTurnEffects.set(instanceId, promoteShellSendMessages(instanceId, pending, frames));
+      if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
+      if (wireTurnStatusTag(settled.status) === "more-work") void drainTypedOperations(instanceId);
+    };
+    return createOriginalMediaExchange(request, BigInt(instanceId), seq, {
+      current,
+      retired,
+      assertOriginalActivation: () => activation.assertActive(),
+      serialize: (run) => withTypedOperationCall(actorId, `original-media#${instanceId}:${seq}`, owned =>
+        serializeCommandIngressForActor(actorId, async () => {
+          call = owned;
+          try { return await run(); }
+          finally {
+            try { if (!retired()) await settle(); }
+            finally { call = undefined; }
+          }
+        })).then(async (answer) => { await flushReservedJobDrives(); return answer; }),
+      turn: async (crossing) => {
+        const turn = await submitTurn(actorId, [...acknowledgements, ...(crossing?.events ?? [])], { commandPage: crossing?.page, activation });
+        const accepted = await acceptUiPatches(instanceId, turn);
+        const observations = [turn, ...accepted.turns];
+        const failure = observations.find((value) => value.commandIngress?.tag === "fault");
+        const ingress = observations.findLast((value) => value.commandIngress?.tag === "original-media-ack" || value.commandIngress?.tag === "backpressure")?.commandIngress;
+        const collected = results.length;
+        results.push(...observations);
+        compactAcknowledgedTurns(results, collected);
+        acknowledgements = [...accepted.acknowledgements, ...observations.flatMap(typedOperationAcknowledgements)];
+        if (failure) throw new Error(commandIngressFaultDisplay(failure.commandIngress));
+        return { ingress, deferredEvents: turn.deferredEvents };
+      },
+      settle,
+      yieldTurn: yieldPluginUiContinuation,
+      now: () => performance.now(),
+    });
+  };
+  return { runQueuedTurn, drainTypedOperations, openOriginalMediaIngress };
 }
 //#endregion 🔖️plugin-runtime

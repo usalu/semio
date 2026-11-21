@@ -199,6 +199,7 @@ export const COURSE_BUNDLE_DE: typeof COURSE_BUNDLE_EN = {
       allBadges: phrase("Alle Abzeichen"),
       openPage: phrase("Öffnen"),
       cards: phrase("Übersichtsseiten"),
+      pagePicker: phrase("Kursseite öffnen"),
       pageWaiting: phrase("{{page}} wird geladen"),
       pageFailed: phrase("{{page}} konnte nicht angezeigt werden."),
       neighbourUp: phrase("Nach oben zu {{page}}"),

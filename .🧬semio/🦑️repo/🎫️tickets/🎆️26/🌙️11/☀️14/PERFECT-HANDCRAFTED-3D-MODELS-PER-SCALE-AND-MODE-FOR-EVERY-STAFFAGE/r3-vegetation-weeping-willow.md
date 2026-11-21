@@ -77,3 +77,7 @@ Final check (`--product`, PASS): silhouette IoU elevation / front / plan 0.9995 
 4. 1:500: the 16 broad tresses leave small scallops in plan (each flat section bulges up to about 0.15 m between neighbours).
 5. Surface roots are thin tapering tubes; seen from below they read as spikes.
 6. Bark area 1:500 trunk 28 % under (only the total is compared there).
+
+Eight tapered willow switches tie the pendant foliage to the crown. Their basal radii are 15–20 mm and their nominal axial reaches are 6.05–8.15 m. Each switch has its own curve, local taper and branch attachment. The wood serves as both a structural member and an exterior bark surface. All twelve drawing comparisons, the four thermal/structural and cross-scale checks, and the twelve-scene GLB passed. The GLB occupies 5,627,592 bytes.
+
+The current willow splits the hanging tresses into overlapping pointed sprays. Eight separate foliage surface fields now follow their respective branches, with two additional fields at the crown caps. The 1:500 model retains 22 recessed fringe pieces within the crown. All twelve physical projections and all twelve paper samples passed. Independent readback covered twelve scenes totalling 5,766,480 bytes.

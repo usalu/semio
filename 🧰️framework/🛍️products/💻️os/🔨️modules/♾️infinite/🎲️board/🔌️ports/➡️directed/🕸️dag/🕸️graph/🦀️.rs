@@ -39,7 +39,7 @@ mod graph_state_journal_and_hits;
 
 #[path = "🔭️viewport-lod-grid-and-camera/🦀️.rs"]
 mod viewport_lod_grid_and_camera;
-pub use viewport_lod_grid_and_camera::{dag_draw_lod_label, dag_set_wheel_zoom_active, draw_lod_for_frame, focus_selection_camera, set_hover_channel, set_selected_channels};
+pub use viewport_lod_grid_and_camera::{dag_draw_lod_label, dag_set_wheel_zoom_active, draw_lod_for_frame, focus_selection_camera, set_hover_channel, set_hover_channel_direction, set_selected_channels};
 
 #[path = "🧮️world-snap-engine-sync-and-hit-tests/🦀️.rs"]
 mod world_snap_engine_sync_and_hit_tests;

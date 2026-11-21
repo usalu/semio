@@ -8,13 +8,13 @@
  * @see ../../🧬️schema/🔣️.json — the normative structural contract
  * @see ../🧮️evaluation/🟦️.ts — `evaluate`, used for the extent and plant checks
  */
-import { CATEGORIES, PARAMETER_SOURCES, POWER_BASES, SCALE_DENOMINATORS, UNAVAILABLE_CAUSES, PLANAR_VIEWPOINTS, operatingKeyOf } from "../../🧬️schema/🟦️.ts";
-import type { Asset, AuthoredRepresentation, BoneOffset, Environment, EnvironmentPreset, Manifest, PrintProfile, Shape, Slug, SymbolRepresentation, Text, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
+import { CATEGORIES, PARAMETER_SOURCES, POWER_BASES, SCALE_BANDS, SCALE_DENOMINATORS, UNAVAILABLE_CAUSES, PLANAR_VIEWPOINTS, operatingKeyOf } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, BoneOffset, ScaleDenominator, Environment, EnvironmentPreset, Manifest, PrintProfile, Shape, Slug, SymbolRepresentation, Text, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedState } from "../🔗️contracts/🟦️.ts";
 import { VIEWPOINT_CAPTIONS } from "../🎨️depiction/✂️section/🟦️.ts";
 import { sampleClip, samplePose } from "../🎞️animation/🟦️.ts";
 import { evaluate, flattenGeometry } from "../🧮️evaluation/🟦️.ts";
-import { exportIssues, volumeIssues } from "./🧊️volume/🟦️.ts";
+import { exportIssues, volumeIssues, weightIssues } from "./🧊️volume/🟦️.ts";
 import { POWER_TOLERANCE_W, totalPowerW } from "../🌡️thermal/⚡️power/🟦️.ts";
 import { analyticRules } from "./🧊️volumes/🧱️rules/🟦️.ts";
 import { compareRepresentations } from "../🖨️representation/🪞️copies/🟦️.ts";
@@ -105,7 +105,8 @@ function jointIssues(asset: Asset, offsets: Readonly<Record<Slug, BoneOffset>> |
     const joint = bone.joint;
     const effective = effectiveOffset(bone, offset);
     const bad = (en: string, de: string): void => void out.push({ path: `${path}.${id}`, code: "joint-limit", message: text(en, de) });
-    if (joint.type === "fixed" && ((offset.angleDeg ?? 0) !== 0 || (offset.abductionDeg ?? 0) !== 0 || (offset.twistDeg ?? 0) !== 0 || (offset.dx ?? 0) !== 0 || (offset.dy ?? 0) !== 0)) bad(`Bone "${id}" has a fixed joint and cannot be offset.`, `Knochen "${id}" hat ein festes Gelenk und kann nicht versetzt werden.`);
+    if (joint.continuousTwist && [offset.angleDeg, offset.abductionDeg, offset.dx, offset.dy].some((value) => Math.abs(value ?? 0) > 1e-9)) bad(`Shaft "${id}" can only turn about its longitudinal axis.`, `Welle "${id}" darf sich nur um ihre Längsachse drehen.`);
+    else if (joint.type === "fixed" && ((offset.angleDeg ?? 0) !== 0 || (offset.abductionDeg ?? 0) !== 0 || (offset.twistDeg ?? 0) !== 0 || (offset.dx ?? 0) !== 0 || (offset.dy ?? 0) !== 0)) bad(`Bone "${id}" has a fixed joint and cannot be offset.`, `Knochen "${id}" hat ein festes Gelenk und kann nicht versetzt werden.`);
     else if (joint.type === "revolute" && Math.abs((offset.angleDeg ?? 0) - effective.angleDeg) > ANGLE_EPS) bad(`Offset ${offset.angleDeg} deg of bone "${id}" leaves its limits ${joint.minDeg ?? "-inf"}..${joint.maxDeg ?? "inf"}.`, `Versatz ${offset.angleDeg} Grad von Knochen "${id}" verlässt die Grenzen ${joint.minDeg ?? "-inf"}..${joint.maxDeg ?? "inf"}.`);
     else if (joint.type === "prismatic" && ((offset.abductionDeg ?? 0) !== 0 || (offset.twistDeg ?? 0) !== 0)) bad(`Bone "${id}" has a prismatic joint and cannot spread laterally or twist.`, `Knochen "${id}" hat ein Schiebegelenk und kann weder seitlich gespreizt noch verdreht werden.`);
     else if (joint.type === "revolute" && Math.abs((offset.twistDeg ?? 0) - effective.twistDeg) > ANGLE_EPS) bad(`Twist ${offset.twistDeg} deg of bone "${id}" leaves ${joint.twistMinDeg ?? -180}..${joint.twistMaxDeg ?? 180} deg.`, `Verdrehung ${offset.twistDeg} Grad von Knochen "${id}" verlässt ${joint.twistMinDeg ?? -180}..${joint.twistMaxDeg ?? 180} Grad.`);
@@ -232,6 +233,23 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
       trail.add(cursor.id);
     }
   }
+  if (asset.rig.radialFolds?.length) {
+    const assigned = new Set<Slug>();
+    const parents = new Set(asset.rig.bones.map(bone => bone.parent));
+    const rays = new Set(asset.rig.radialFolds.flatMap(fold => [fold.left, fold.right]));
+    asset.rig.radialFolds.forEach((fold, index) => {
+      const path = `rig.radialFolds[${index}]`;
+      if (fold.left === fold.right || !bones.has(fold.left) || !bones.has(fold.right)) add(path, "rig-fold-rays", "A radial fold needs two distinct driving bones.", "Eine Radialfalte braucht zwei unterschiedliche Führungsknochen.");
+      if (fold.facets.length < 2 || fold.facets.length % 2 !== 0 || !(fold.cutAngleDeg > 0 && fold.cutAngleDeg < 180)) add(path, "rig-fold-cut", "Radial fold facets come in pairs with a total cut angle between zero and 180 degrees.", "Eine Radialfalte hat Flächenpaare und einen Zuschnittwinkel zwischen null und 180 Grad.");
+      const first = byId.get(fold.facets[0]!);
+      fold.facets.forEach((id, i) => {
+        if (!bones.has(id) || assigned.has(id) || parents.has(id) || rays.has(id)) add(`${path}.facets[${i}]`, "rig-fold-facet", "A fold facet must be a distinct terminal bone driven by a single fold.", "Eine Faltenfläche muss ein eindeutiger Endknochen einer einzelnen Falte sein.");
+        const bone = byId.get(id);
+        if (bone && first && (bone.parent !== first.parent || bone.x !== first.x || bone.y !== first.y || (bone.z ?? 0) !== (first.z ?? 0))) add(`${path}.facets[${i}]`, "rig-fold-pivot", "All facets must share the same pivot.", "Alle Faltenflächen müssen denselben Drehpunkt haben.");
+        assigned.add(id);
+      });
+    });
+  }
   const rigOk = !out.some((issue) => issue.code.startsWith("rig-") || issue.code === "duplicate-id");
   if (!out.some((issue) => issue.code.startsWith("rig-") || issue.code === "duplicate-id")) {
     const limit = asset.dimensions.depthM / 2 + Math.max(0.02, 0.03 * Math.max(asset.dimensions.heightM, asset.dimensions.widthM, asset.dimensions.depthM));
@@ -342,8 +360,9 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
           for (let cursor: Slug | null | undefined = shape.bone; cursor !== null && cursor !== undefined && !lineage.has(cursor); cursor = byId.get(cursor)?.parent) lineage.add(cursor);
           if (bones.has(shape.solid.axisBone) && !lineage.has(shape.solid.axisBone)) add(`${sp}.solid.axisBone`, "solid-axis-not-ancestor", `Shape "${shape.id}" on bone "${shape.bone}" revolves about bone "${shape.solid.axisBone}", which is neither its own bone nor an ancestor; the solid would not move rigidly with its bone.`, `Form "${shape.id}" am Knochen "${shape.bone}" rotiert um den Knochen "${shape.solid.axisBone}", der weder ihr eigener noch ein Vorfahre ist; der Körper würde sich nicht starr mit seinem Knochen bewegen.`);
         }
-        if (shape.solid.kind === "extruded" && (shape.solid as { sweep?: string }).sweep !== "v" && (shape.solid as { sweep?: string }).sweep !== "w") add(`${sp}.solid.sweep`, "solid-sweep", `Shape "${shape.id}" has an extruded solid without sweep; state "w" (lateral) or "v" (along the bone normal), there is no default.`, `Form "${shape.id}" hat einen extrudierten Körper ohne sweep; "w" (seitlich) oder "v" (entlang der Knochennormalen) angeben, es gibt keinen Standardwert.`);
+        if (shape.solid.kind === "extruded" && !["u", "v", "w"].includes((shape.solid as { sweep?: string }).sweep ?? "")) add(`${sp}.solid.sweep`, "solid-sweep", `Shape "${shape.id}" has an extruded solid without sweep; state "u" (longitudinal), "v" (normal) or "w" (lateral), there is no default.`, `Form "${shape.id}" hat einen extrudierten Körper ohne sweep; "u" (längs), "v" (normal) oder "w" (seitlich) angeben, es gibt keinen Standardwert.`);
         if (shape.solid.kind === "extruded" && shape.solid.zTip !== undefined && !(shape.solid.zTip[0] < shape.solid.zTip[1])) add(`${sp}.solid.zTip`, "solid-taper-order", `Shape "${shape.id}" needs zTip[0] < zTip[1], in the same order as z0 < z1.`, `Form "${shape.id}" braucht zTip[0] < zTip[1], in derselben Reihenfolge wie z0 < z1.`);
+        if (shape.solid.kind === "extruded" && shape.solid.weights) weightIssues({ id: shape.id, weights: shape.solid.weights }, `${sp}.solid`, bones, add);
         if (shape.solid.kind === "extruded" && !(shape.solid.z0 < shape.solid.z1)) add(`${sp}.solid`, "solid-extent", `Shape "${shape.id}" needs z0 < z1 in its extruded solid.`, `Form "${shape.id}" braucht z0 < z1 in ihrem extrudierten Körper.`);
       }
       if (shape.solid === undefined && shape.role !== "ground" && !path.startsWith("symbols") && bones.has(shape.bone) && !out.some((issue) => issue.code.startsWith("rig-") || issue.code === "duplicate-id") && spreadBones().has(shape.bone)) {
@@ -489,13 +508,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     const next = authoredReps[i + 1];
     if (next !== undefined && rep.validRange.maxDenominator > next.validRange.minDenominator) add(`representations.${rep.denominator}.validRange`, "valid-range-overlap", `The valid range ${rep.validRange.minDenominator}…${rep.validRange.maxDenominator} of 1:${rep.denominator} overlaps ${next.validRange.minDenominator}…${next.validRange.maxDenominator} of 1:${next.denominator}.`, `Der Gültigkeitsbereich ${rep.validRange.minDenominator}…${rep.validRange.maxDenominator} von 1:${rep.denominator} überlappt ${next.validRange.minDenominator}…${next.validRange.maxDenominator} von 1:${next.denominator}.`);
   });
-  const presets = [...SCALE_DENOMINATORS].sort((p, q) => p - q);
-  presets.forEach((denominator, i) => {
-    const rep = asset.representations[`${denominator}`];
-    const next = asset.representations[`${presets[i + 1]}`];
-    if (rep?.status !== "authored" || next?.status !== "authored") return;
-    if (next.validRange.minDenominator - rep.validRange.maxDenominator > 1) add(`representations.${rep.denominator}.validRange`, "valid-range-gap", `The valid range ${rep.validRange.minDenominator}…${rep.validRange.maxDenominator} of 1:${rep.denominator} and ${next.validRange.minDenominator}…${next.validRange.maxDenominator} of 1:${next.denominator} leave the scales between ${rep.validRange.maxDenominator} and ${next.validRange.minDenominator} undrawable although both neighbours are authored.`, `Die Gültigkeitsbereiche ${rep.validRange.minDenominator}…${rep.validRange.maxDenominator} von 1:${rep.denominator} und ${next.validRange.minDenominator}…${next.validRange.maxDenominator} von 1:${next.denominator} lassen die Maßstäbe zwischen ${rep.validRange.maxDenominator} und ${next.validRange.minDenominator} unzeichenbar, obwohl beide Nachbarn gezeichnet sind.`);
-  });
+  for (const gap of uncoveredDenominators(asset)) add(`representations.${gap.border}.validRange`, "valid-range-gap", `No drawing covers 1:${gap.from}…1:${gap.to}: the valid ranges of the authored representations must cover the bands of the authored presets (${gap.required.map(([from, to]) => `1:${from}…1:${to}`).join(", ")}) without a hole; redraw the band so it prints over its whole range instead of narrowing it.`, `Keine Zeichnung deckt 1:${gap.from}…1:${gap.to} ab: die Gültigkeitsbereiche der gezeichneten Darstellungen müssen die Bänder der gezeichneten Vorgaben (${gap.required.map(([from, to]) => `1:${from}…1:${to}`).join(", ")}) lückenlos abdecken; das Band neu zeichnen, damit es über seinen ganzen Bereich druckt, statt ihn einzuengen.`, { from: gap.from, to: gap.to, border: gap.border });
   const coarseFirst = authoredReps.slice().sort((p, q) => q.denominator - p.denominator);
   for (let i = 0; i < coarseFirst.length; i++)
     for (let j = i + 1; j < coarseFirst.length; j++) {
@@ -682,7 +695,9 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
         const unlimited = bone.joint.type === "revolute" && bone.joint.minDeg === undefined && bone.joint.maxDeg === undefined;
         const turns = ((tail[bone.id]!.angleDeg ?? 0) - (head[bone.id]!.angleDeg ?? 0)) / 360;
         const angleOk = unlimited ? Math.abs(turns - Math.round(turns)) < 1e-9 : Math.abs(turns) < 1e-9;
-        const shiftOk = Math.abs((tail[bone.id]!.abductionDeg ?? 0) - (head[bone.id]!.abductionDeg ?? 0)) < 1e-9 && Math.abs((tail[bone.id]!.twistDeg ?? 0) - (head[bone.id]!.twistDeg ?? 0)) < 1e-9 && Math.abs((tail[bone.id]!.dx ?? 0) - (head[bone.id]!.dx ?? 0)) < 1e-6 && Math.abs((tail[bone.id]!.dy ?? 0) - (head[bone.id]!.dy ?? 0)) < 1e-6;
+        const twistTurns = ((tail[bone.id]!.twistDeg ?? 0) - (head[bone.id]!.twistDeg ?? 0)) / 360;
+        const twistOk = bone.joint.continuousTwist ? Math.abs(twistTurns - Math.round(twistTurns)) < 1e-9 : Math.abs(360 * twistTurns) < 1e-9;
+        const shiftOk = twistOk && Math.abs((tail[bone.id]!.abductionDeg ?? 0) - (head[bone.id]!.abductionDeg ?? 0)) < 1e-9 && Math.abs((tail[bone.id]!.dx ?? 0) - (head[bone.id]!.dx ?? 0)) < 1e-6 && Math.abs((tail[bone.id]!.dy ?? 0) - (head[bone.id]!.dy ?? 0)) < 1e-6;
         if (!angleOk || !shiftOk) add(`${path}.keys[${clip.keys.length - 1}].bones.${bone.id}`, "loop-closing", `The closing key of looping clip "${clip.id}" must equal the first key for bone "${bone.id}"${unlimited ? " up to whole turns of 360 degrees" : ""}.`, `Der Schlusskey des Schleifen-Clips "${clip.id}" muss für Knochen "${bone.id}" dem ersten Key entsprechen${unlimited ? " bis auf ganze Umdrehungen von 360 Grad" : ""}.`);
       }
     }
@@ -800,12 +815,41 @@ export function validateManifest(manifest: Manifest, assets: readonly Asset[]): 
   return out;
 }
 
-/** 📁️ The print-profile findings at the ends of every declared `validRange` of an authored representation: a band is declared supported over its whole range, so its strokes, hatch spacing, gaps and feature widths are measured at the smallest and the largest denominator of the range, not only at its preset. One `range-end-<check>` issue per violation and end. Measured over all named poses and all three viewpoints, like the preset suitability. */
+/** 🕳️ One stretch of denominators that an asset promises (the {@link SCALE_BANDS} of its authored presets) and no authored `validRange` covers; `border` is the authored preset whose band touches the hole from below (or from above at the finest end), `required` the merged promised intervals. */
+export type RangeGap = { readonly from: number; readonly to: number; readonly border: ScaleDenominator; readonly required: readonly (readonly [number, number])[] };
+
+/** 🕳️ The holes in the drawing coverage of an asset: the union of the {@link SCALE_BANDS} of its authored presets minus the union of their `validRange`s (both ends inclusive, so ranges that meet at one denominator leave no hole). Empty when every promised denominator resolves to a drawing.
+ * @see ../🖨️representation/🧭️pick/🟦️.ts — `pickRepresentation`, which resolves a custom denominator through these ranges */
+export function uncoveredDenominators(asset: Asset): readonly RangeGap[] {
+  const authored = [...SCALE_DENOMINATORS].sort((p, q) => p - q).filter((denominator) => asset.representations[`${denominator}`]?.status === "authored");
+  const merge = (intervals: readonly (readonly [number, number])[]): [number, number][] => intervals.slice().sort((p, q) => p[0] - q[0]).reduce<[number, number][]>((out, [from, to]) => {
+    const last = out[out.length - 1];
+    if (last !== undefined && from <= last[1]) last[1] = Math.max(last[1], to);
+    else out.push([from, to]);
+    return out;
+  }, []);
+  const required = merge(authored.map((denominator) => SCALE_BANDS[`${denominator}`]));
+  const covered = merge(authored.map((denominator) => { const range = (asset.representations[`${denominator}`] as AuthoredRepresentation).validRange; return [range.minDenominator, range.maxDenominator] as const; }));
+  const borderOf = (from: number): ScaleDenominator => authored.filter((denominator) => SCALE_BANDS[`${denominator}`][0] <= from).pop() ?? authored[0]!;
+  const out: RangeGap[] = [];
+  for (const [low, high] of required) {
+    let cursor = low;
+    for (const [from, to] of covered) {
+      if (to < cursor || from > high) continue;
+      if (from > cursor) out.push({ from: cursor, to: from, border: borderOf(cursor), required });
+      cursor = Math.max(cursor, to);
+    }
+    if (cursor < high) out.push({ from: cursor, to: high, border: borderOf(cursor), required });
+  }
+  return out;
+}
+
+/** 📁️ The print-profile findings at the ends of every declared `validRange` of an authored representation: a band is declared supported over its whole range (which must cover its promised band, see {@link uncoveredDenominators}), so its strokes, hatch spacing, gaps and feature widths are measured at the smallest and the largest denominator of the range, not only at its preset. One `range-end-<check>` issue per violation and end. Measured over all named poses and all three viewpoints, like the preset suitability. */
 export function validateRanges(asset: Asset, profile: PrintProfile): readonly Issue[] {
   const out: Issue[] = [];
   const measureAt = (denominator: number, rep: AuthoredRepresentation, end: number, at: "nominal" | "range-end"): void => {
     const suitability = measureSuitability(asset, rep, end, profile);
-    for (const violation of suitability.violations) out.push({ path: `representations.${denominator}.validRange`, code: `${at === "nominal" ? "nominal" : "range-end"}-${violation.check}`, message: text(`The ${violation.check} of ${violation.shapes.join("+")} is ${violation.measuredMm.toFixed(3)} mm at 1:${end}${at === "nominal" ? ", the nominal scale of this band," : `, the end of the declared range of 1:${denominator},`} below the ${profile.id} minimum ${violation.requiredMm} mm: ${at === "nominal" ? "redraw the band" : "narrow the valid range or redraw the band"}.`, `Das Merkmal ${violation.check} von ${violation.shapes.join("+")} beträgt ${violation.measuredMm.toFixed(3)} mm bei 1:${end}${at === "nominal" ? ", dem Nennmaßstab dieses Bands," : `, dem Ende des deklarierten Bereichs von 1:${denominator},`} unter dem Minimum ${violation.requiredMm} mm von ${profile.id}: ${at === "nominal" ? "Band neu zeichnen" : "Gültigkeitsbereich einengen oder das Band neu zeichnen"}.`), data: { at, denominator, scale: end, check: violation.check, shapes: violation.shapes, measuredMm: Number(violation.measuredMm.toFixed(3)), requiredMm: violation.requiredMm } });
+    for (const violation of suitability.violations) out.push({ path: `representations.${denominator}.validRange`, code: `${at === "nominal" ? "nominal" : "range-end"}-${violation.check}`, message: text(`The ${violation.check} of ${violation.shapes.join("+")} is ${violation.measuredMm.toFixed(3)} mm at 1:${end}${at === "nominal" ? ", the nominal scale of this band," : `, the end of the declared range of 1:${denominator},`} below the ${profile.id} minimum ${violation.requiredMm} mm: ${at === "nominal" ? "redraw the band" : "redraw the band so it prints over its whole range (narrowing the range opens a hole, rule valid-range-gap)"}.`, `Das Merkmal ${violation.check} von ${violation.shapes.join("+")} beträgt ${violation.measuredMm.toFixed(3)} mm bei 1:${end}${at === "nominal" ? ", dem Nennmaßstab dieses Bands," : `, dem Ende des deklarierten Bereichs von 1:${denominator},`} unter dem Minimum ${violation.requiredMm} mm von ${profile.id}: ${at === "nominal" ? "Band neu zeichnen" : "das Band neu zeichnen, damit es über seinen ganzen Bereich druckt (Einengen öffnet eine Lücke, Regel valid-range-gap)"}.`), data: { at, denominator, scale: end, check: violation.check, shapes: violation.shapes, measuredMm: Number(violation.measuredMm.toFixed(3)), requiredMm: violation.requiredMm } });
   };
   for (const denominator of SCALE_DENOMINATORS) {
     const rep = asset.representations[`${denominator}`];

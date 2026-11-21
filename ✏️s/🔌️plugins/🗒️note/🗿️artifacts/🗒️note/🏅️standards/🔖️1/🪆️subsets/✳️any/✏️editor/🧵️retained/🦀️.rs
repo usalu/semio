@@ -145,6 +145,7 @@ fn note_command_units(command: &NoteCommand, selected: &[String]) -> Vec<NoteCom
 
 //#region 🧵️Work
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct NoteCommandRemnant {
     units: Vec<NoteCommandUnit>,
     projection: Option<NoteSnapshot>,
@@ -231,7 +232,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
 
     fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<NotePlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { snapshot, config, history, context, operation, .. } = *input;
         if self.complete || self.cursor >= self.units.len() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("note.retained.repeated"), "Note retained work was stepped after completion"));
         }
@@ -246,7 +247,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         let mut ctx = NoteDispatchCtx {
             selected_block_ids: unit.selected_block_ids.clone(),
             id_owner: id_owner.clone(),
-            view_state: context.and_then(|context| context.view_state.clone()),
+            view_state: context.and_then(|context| context.view_state.as_deref()),
             window_transient: window_before.clone(),
             window_transient_owner: window_owner,
         };
@@ -323,55 +324,53 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         self.closing = true;
     }
 
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            use semio_framework_value::retained_clone::RetainedCloneStep;
-            if !self.closing {
-                return Ok(InteractiveJobCloseStep::Blocked);
-            }
-            if let Some(owner) = self.remnant.as_mut() {
-                let step = owner.step(grant);
-                if owner.terminal_is_empty() {
-                    self.remnant = None;
+    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
+        use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement};
+
+        if !self.closing {
+            return Ok(InteractiveJobCloseStep::Blocked);
+        }
+        if let Some(owner) = self.remnant.as_mut().filter(|owner| !owner.terminal_is_empty()) {
+            let body = cx.retained_grant().maximum_copy_bytes;
+            let demand = owner.selected_demand(body)?;
+            return semio_framework_job::close_original_effect_step(cx, demand, |effect| owner.step(body, effect));
+        }
+        if self.remnant.is_none() && self.workspace_is_empty() {
+            return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+        }
+
+        let copy_bytes = self.next_close_copy_byte_demand()?;
+        let demand = RetirementDemand { copy_bytes, depth: 1, ..Default::default() };
+        semio_framework_job::close_original_retained_step(cx, demand, |_| {
+            if self.remnant.is_some() {
+                self.remnant = None;
+            } else {
+                if !NoteCommandRemnant::controlled_retirement_supported() {
+                    let error = ValueError::literal(ValueRefusalKind::UnsupportedOwner, "Note command has no controlled retirement authority");
+                    return RetainedWorkOutcome { result: Err(error), work: 1 };
                 }
-                return Ok(match step {
-                    Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
-                    Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
-                    Err(error) => return Err(error),
-                });
+                let remnant = NoteCommandRemnant {
+                    units: std::mem::take(&mut self.units),
+                    projection: self.projection.take(),
+                    accumulated: std::mem::take(&mut self.accumulated),
+                    ephemeral: std::mem::take(&mut self.ephemeral),
+                    id_owner: self.id_owner.take(),
+                };
+                self.remnant = Some(ControlledRetirement::retain(remnant));
             }
-            if self.workspace_is_empty() {
-                return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
-            }
-            if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-                return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
-            }
-            let remnant = NoteCommandRemnant {
-                units: std::mem::take(&mut self.units),
-                projection: self.projection.take(),
-                accumulated: std::mem::take(&mut self.accumulated),
-                ephemeral: std::mem::take(&mut self.ephemeral),
-                id_owner: self.id_owner.take(),
-            };
-            Ok(match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
-                Ok(owner) => {
-                    self.remnant = Some(owner);
-                    InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } }
-                }
-                Err((error, remnant)) => {
-                    self.units = remnant.units;
-                    self.projection = remnant.projection;
-                    self.accumulated = remnant.accumulated;
-                    self.ephemeral = remnant.ephemeral;
-                    self.id_owner = remnant.id_owner;
-                    return Err(error)
-                }
-            })
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() };
+            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(progress)), work: 1 }
         })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_copy_byte_demand())
+        match &self.remnant {
+            Some(owner) if owner.terminal_is_empty() => Ok(size_of_val(&self.remnant)),
+            Some(owner) => owner.next_copy_byte_demand(),
+            None if self.workspace_is_empty() => Ok(0),
+            None => Ok(2 * size_of::<NoteCommandRemnant>() + size_of_val(&self.remnant)),
+        }
     }
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
         self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_capacity_byte_demand(maximum_copy_bytes))
@@ -380,7 +379,11 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         self.remnant.as_ref().map_or(Ok(0), |owner| owner.next_release_byte_demand())
     }
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
-        self.remnant.as_ref().map_or(Ok(usize::from(!self.workspace_is_empty())), |owner| owner.next_depth_demand())
+        match &self.remnant {
+            Some(owner) if owner.terminal_is_empty() => Ok(1),
+            Some(owner) => owner.next_depth_demand(),
+            None => Ok(usize::from(!self.workspace_is_empty())),
+        }
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {

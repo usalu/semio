@@ -1,0 +1,9 @@
+# Borrowed Owner Look Cancellation
+
+The optional take poll snapshots a batch before its workers start each entry. An inference lane can acquire an exact owner between the snapshot and a later optional attempt. The optional attempt then joins that active look. Previously it waited for the producer's result after its own signal had aborted. The poll remained admitted and its drain could wait for that producer.
+
+The active branch of `look` in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs` now uses `joinTakeLookV1` in the adjacent take module. The wait rejects with the observer's abort reason and removes its listener when settled. The producer retains its exact promise, signal, accounting, and inflight slot. Paths that start a new look retain their existing cancellation and custody.
+
+The scheduler's successful inference completion normally awaits its own workers. A concurrent borrowed wait can delay optional cleanup when its producer is still active, including the early take drain and rejection paths. The stopped physical scheduler output alone does not establish that this race occurred or which source version the running process loaded.
+
+The neutral `📥️take/🧪️tests/🪢️borrowed-look/🔣️.json` fixture runs the actual scheduler's look branch, take admission, and poll. A first deferred item holds the worker while the unrelated producer acquires the second item. The independent SQLite model checks both observer withdrawal and producer fulfillment. Red had one failure and one control pass. Withdrawal left the poll pending and its flying count at one while the producer stayed held. Green passed 18 tests and 69 assertions across borrowed look, fetch first, hot lane, release, and before-infer. The exact light test transcripts are `🗑️generated/borrowed-look-red.log` and `🗑️generated/borrowed-look-green.log`. No live job or service was changed.

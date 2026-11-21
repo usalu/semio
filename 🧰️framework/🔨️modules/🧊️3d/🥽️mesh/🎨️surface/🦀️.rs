@@ -331,11 +331,8 @@ impl HalfedgeMesh {
         self.clone().unwrap_uv_job_owned()
     }
 
-    /// 🗺️ [`Self::unwrap_uv_job`] over this mesh itself; a mesh with an authored UV channel is refused because the unwrapped coordinates would be hidden behind it.
+    /// 🗺️ Unwraps an owned mesh and updates its active named UV channel when present.
     pub fn unwrap_uv_job_owned(self) -> MeshResult<MeshSurfaceJob> {
-        if self.attributes.values().any(|attribute| attribute.semantic == MeshAttributeSemantic::Uv) {
-            return Err(MeshKernelError::InvalidInput("the mesh carries an authored UV channel".into()));
-        }
         if self.faces.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
@@ -390,12 +387,17 @@ struct Unwrap {
     solve: Option<Solve>,
     local: Vec<BTreeMap<u32, [f64; 2]>>,
     packed: Vec<BTreeMap<u32, [f32; 2]>>,
+    active_uv: Option<String>,
+    uv_samples: Vec<semio_framework_value::DslValue>,
+    retired_uv: Option<MeshAttribute>,
 }
 
 impl Unwrap {
     fn new(mesh: HalfedgeMesh) -> Self {
         let faces = mesh.face_count();
-        Self { mesh, phase: 0, cursor: 0, visited: vec![false; faces], stack: Vec::new(), current: Vec::new(), face_island: vec![0; faces], islands: Vec::new(), island: 0, build: None, solve: None, local: Vec::new(), packed: Vec::new() }
+        let active_uv=mesh.attributes.iter().filter(|(_, attribute)|attribute.semantic==MeshAttributeSemantic::Uv)
+            .map(|(name,_)|name).min().cloned();
+        Self { mesh, phase: 0, cursor: 0, visited: vec![false; faces], stack: Vec::new(), current: Vec::new(), face_island: vec![0; faces], islands: Vec::new(), island: 0, build: None, solve: None, local: Vec::new(), packed: Vec::new(), active_uv, uv_samples:Vec::new(), retired_uv:None }
     }
 
     fn phase(&self) -> &'static str {
@@ -415,10 +417,10 @@ impl Unwrap {
             1 | 2 => {
                 let pending: usize = self.islands.iter().skip(self.island).map(|island| island.len().div_ceil(CHUNK) + 1).sum();
                 let solving = self.solve.as_ref().map_or(0, |solve| solve.limit.saturating_sub(solve.iterations) * (solve.triangles.len().div_ceil(CHUNK) + solve.vertices.len().div_ceil(CHUNK) * 3 + 1));
-                pending + solving.min(1 << 20) + faces.div_ceil(CHUNK) + 2
+                pending + solving.min(1 << 20) + self.mesh.halfedge_count().div_ceil(CHUNK) + 2
             }
-            3 => faces.div_ceil(CHUNK) + 2,
-            _ => faces.saturating_sub(self.cursor).div_ceil(CHUNK),
+            3 => self.mesh.halfedge_count().div_ceil(CHUNK) + 2,
+            _ => self.mesh.halfedge_count().saturating_sub(self.cursor).div_ceil(CHUNK),
         }
     }
 
@@ -579,24 +581,37 @@ impl Unwrap {
     }
 
     fn advance_apply(&mut self) -> MeshResult<Option<HalfedgeMesh>> {
-        let end = (self.cursor + CHUNK).min(self.mesh.face_count());
-        for face in self.cursor..end {
-            let island = self.face_island[face] as usize;
-            let start = self.mesh.faces[face].halfedge;
-            let mut halfedge = start;
-            loop {
-                let vertex = self.mesh.halfedges[halfedge as usize].vertex;
-                if let Some(uv) = self.packed[island].get(&vertex) {
-                    self.mesh.halfedges[halfedge as usize].uv = *uv;
-                }
-                halfedge = self.mesh.halfedges[halfedge as usize].next;
-                if halfedge == start {
-                    break;
-                }
+        use semio_framework_value::{DslValue,ValueError,ValueRefusalKind};
+
+        let count=self.mesh.halfedge_count();
+        if self.cursor==0 && self.active_uv.is_some() {
+            self.uv_samples.try_reserve_exact(count).map_err(|_|MeshKernelError::Retained(
+                ValueError::literal(ValueRefusalKind::AllocationFailed,"cannot reserve unwrapped mesh UV samples")))?;
+        }
+        let end=(self.cursor+CHUNK).min(count);
+        for halfedge in &mut self.mesh.halfedges[self.cursor..end] {
+            let face=halfedge.face.ok_or(MeshKernelError::InvalidHandle)? as usize;
+            let island=self.face_island[face] as usize;
+            if let Some(uv)=self.packed[island].get(&halfedge.vertex) {
+                halfedge.uv=*uv;
+            }
+            if self.active_uv.is_some() {
+                self.uv_samples.push(DslValue::Array(halfedge.uv.into_iter().map(|value|DslValue::float(f64::from(value))).collect()));
             }
         }
-        self.cursor = end;
-        Ok((self.cursor == self.mesh.face_count()).then(|| std::mem::replace(&mut self.mesh, HalfedgeMesh::empty())))
+        self.cursor=end;
+        if end!=count {return Ok(None);}
+        if let Some(name)=&self.active_uv {
+            let channel=self.mesh.attributes.get_mut(name).ok_or(MeshKernelError::InvalidHandle)?;
+            self.retired_uv=Some(std::mem::replace(channel,MeshAttribute{
+                domain:MeshAttributeDomain::Corner,
+                semantic:MeshAttributeSemantic::Uv,
+                interpolation:MeshAttributeInterpolation::Linear,
+                values:std::mem::take(&mut self.uv_samples),
+                indices:None,
+            }));
+        }
+        Ok(Some(std::mem::replace(&mut self.mesh,HalfedgeMesh::empty())))
     }
 }
 

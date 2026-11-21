@@ -1,0 +1,274 @@
+{
+  "title": "Optimize Staffage and Architecture Course for Phones",
+  "emoji": "📱",
+  "status": "closed",
+  "description": "Audit, improve and verify phone usability, accessibility and performance in Staffage and the architecture course.",
+  "summary": "Optimized phone navigation, touch behavior, accessibility, and on-demand loading in Staffage and the architecture course. Verified Staffage in Chromium and WebKit. The course passed 1,163 React tests, 875 site tests, React and production TypeScript checks, and all four connected phone specs against the native Proctor. All six assignment PDFs matched their published bytes. Staffage’s separately tracked authored geometry issues remain recorded in the verification report.",
+  "goal": "🎯runningproducts",
+  "sessions": [
+    "f62db16c-b074-4ff5-8beb-7b3d32832ad6"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-20 04:47:33",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "prompt": "Audit, improve and verify phone usability, accessibility and performance in Staffage and the architecture course.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-20 23:29:26",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "3d62b2ef22c562d836e27f09600a7f24fe84f5e8",
+      "summary": "Optimized phone navigation, touch behavior, accessibility, and on-demand loading in Staffage and the architecture course. Verified Staffage in Chromium and WebKit. The course passed 1,163 React tests, 875 site tests, React and production TypeScript checks, and all four connected phone specs against the native Proctor. All six assignment PDFs matched their published bytes. Staffage’s separately tracked authored geometry issues remain recorded in the verification report.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🎨️.css"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript/📚️app/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/⏯️transport/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🎛️viewer/🗺️stage/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔠️english/🧱️core.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔡️german/🧱️core.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🏠️overview/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/📚️catalog/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🔬️detail/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🥞️levels/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🗃️browse/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🧊️model-viewer-page/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🧊️model-viewer-page/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🚶️learner/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📱️phone/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📱️phone/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🎭️e2e-output/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🌪️chaos-crowd/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🏠️chrome-and-home/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🤏️drag-and-spider/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🎨️styles/🧩️task-layouts/🎨️.css"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🎬️clips/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🏠️home/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📖️quiz-page/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📚️app/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📝️assignments/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧩️task/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🤏️drag/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔠️english-bundle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔡️german-bundle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/⌨️task-keyboard/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🔸️opens-page-step-front/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🟠️zooms-hovered-topic-pans/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🏠️home-grid/🟢️home-overview/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/💭️crowd-client/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/📱️home-text-and-viewport/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🖱️pointer-and-focus/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🛠️home-grid-kit/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/📥️load-failures/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🖱️pointer-and-focus/🔣️.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/PHONE-AUDIT.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/STAFFAGE-GEOMETRY-AUDIT.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/STAFFAGE-PHONE-AUDIT.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/architecture-course-phone.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-assignment-receipts.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-browser.config.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-desktop-browser.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-drag-check.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-isolated-vitest.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-live-phone.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-live-phone.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-middleware-smoke.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-phone-browser.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-phone-interactions.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-phone-interactions.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/course-touch-chromium.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/isolated-browser-runner.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/isolated-run.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/isolated-test-preload.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/isolated-vite-route.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/phone-implementation.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-catalog-check.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-desktop-browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-desktop-check.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-isolated-launch.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-isolated-vite.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-isolated-vitest.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-middleware-smoke.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-phone-browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-phone-follow-up.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-phone-profile.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-phone-stage.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-phone.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/OPTIMIZE-STAFFAGE-AND-ARCHITECTURE-COURSE-FOR-PHONES/staffage-stalled-process.mjs"
+        }
+      ]
+    }
+  ]
+}

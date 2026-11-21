@@ -66,23 +66,24 @@ impl NdpEntry {
     }
 
     /// ✅️ Marks the row as verified against the print for every annex.
-    pub const fn ver(mut self) -> Self {
-        self.status = NdpStatus::Verified;
-        self.status_en = NdpStatus::Verified;
-        self.status_de = NdpStatus::Verified;
-        self
+    pub const fn ver(self) -> Self {
+        self.ver_en().ver_de()
     }
 
     /// ✅️ Marks the EN-recommended value as verified; the row status follows once the NA-DE value is verified too.
     pub const fn ver_en(mut self) -> Self {
-        self.status_en = NdpStatus::Verified;
+        if !matches!(self.recommended, NdpValue::Unset) {
+            self.status_en = NdpStatus::Verified;
+        }
         self.status = self.joint();
         self
     }
 
     /// ✅️ Marks the NA-DE value as verified; the row status follows once the EN-recommended value is verified too.
     pub const fn ver_de(mut self) -> Self {
-        self.status_de = NdpStatus::Verified;
+        if !matches!(self.na_de, NdpValue::Unset) {
+            self.status_de = NdpStatus::Verified;
+        }
         self.status = self.joint();
         self
     }

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "cases": [
+    {"name":"cuts discard no original page and settle quiet deferred events","turns":[
+      {"page":0,"deferred":2,"followUps":1},
+      {"page":0,"deferred":1},
+      {"page":0,"ingress":"backpressure"},
+      {"page":0,"ingress":"page-accepted"},
+      {"page":1,"ingress":"command-complete","owesAck":true},
+      {"page":null,"deferred":2,"acks":1},
+      {"page":null,"deferred":1},
+      {"page":null,"deferred":0}
+    ],"accepted":9,"error":null},
+    {"name":"an absent direct count closes a deferred batch after quiet native replies","turns":[
+      {"page":0,"ingress":"page-accepted"},
+      {"page":1,"ingress":"command-complete","owesAck":true},
+      {"page":null,"deferred":2,"acks":1,"followUps":1},
+      {"page":null}
+    ],"accepted":5,"error":null},
+    {"name":"ambiguous transport refusal does not replay a page","turns":[
+      {"page":0,"transportError":true}
+    ],"accepted":0,"error":"transport refused"},
+    {"name":"revocation refuses the same-page retry at the old activation","turns":[
+      {"page":0,"deferred":1,"revoke":true}
+    ],"accepted":1,"error":"activation revoked"}
+  ]
+}

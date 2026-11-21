@@ -58,3 +58,87 @@ gamma_c||n|1|1.5|r1:2|Partial factor γC|Teilsicherheitsbeiwert γC|high|
 as_rebar||n|m2|0.004|r0:0.1|Reinforcement area As in the slab|Bewehrungsfläche As in der Platte|high|
 fsd||n|Pa|435000000|r200e6:700e6|Design yield strength fsd of the reinforcement|Bemessungsstreckgrenze fsd der Bewehrung|high|
 y_r||n|m|0.04|r0:0.5|Depth of the reinforcement below the slab top|Tiefe der Bewehrung unter Plattenoberkante|high|
+fire_col_rating|C94-13|c||R60||Standard fire resistance class|Feuerwiderstandsklasse bei Normbrand|high|
+@choice fire_col_rating|R30|R30|R30
+@choice fire_col_rating|R60|R60|R60
+@choice fire_col_rating|R90|R90|R90
+@choice fire_col_rating|R120|R120|R120
+fire_col_restraint|C94-13|c||table||Column boundary conditions|Lagerungsbedingungen der Stütze|high|
+@choice fire_col_restraint|table|Braced frame, fixed ends in standard fire, normal-weight concrete|Ausgesteiftes Tragwerk, beidseitig eingespannt im Normbrand, Normalbeton
+@choice fire_col_restraint|other|Other conditions|Andere Bedingungen
+fire_col_steel|C94-13|c||S355||Steel grade of the partially encased section|Stahlsorte des teilweise einbetonierten Profils|high|
+@choice fire_col_steel|S235|S235|S235
+@choice fire_col_steel|S275|S275|S275
+@choice fire_col_steel|S355|S355|S355
+fire_col_load_level|C94-13,C94-14|n|1|0.4|r0:0.66|Fire design action divided by ambient member resistance η_fi,t|Brandbeanspruchung geteilt durch Tragfähigkeit bei Normaltemperatur η_fi,t|high|
+fire_col_width|C94-13,C94-14,C94-15,C94-17|n|m|0.35||Section width b|Querschnittsbreite b|high|
+fire_col_depth|C94-13,C94-14,C94-15,C94-17|n|m|0.36||Section depth h|Querschnittshöhe h|high|
+fire_col_axis|C94-13,C94-15|n|m|0.06||Smallest longitudinal bar axis distance u_s|Kleinster Achsabstand der Längsbewehrung u_s|high|
+fire_col_ambient_axis|C94-13,C94-14,C94-15|n|m|0.05||Minimum bar axis distance from ambient reinforcement design|Mindestachsabstand aus der Bewehrungsbemessung bei Normaltemperatur|high|
+fire_col_rebar_ratio|C94-13|n|1|0.045|r0.01:0.06|Longitudinal reinforcement ratio A_s/(A_c + A_s)|Längsbewehrungsgrad A_s/(A_c + A_s)|high|
+fire_col_web_flange|C94-13|n|1|0.6||Web-to-flange thickness ratio e_w/e_f|Verhältnis von Steg- zu Flanschdicke e_w/e_f|high|
+@choice fire_col_ext_rating|R30|R30|R30
+@choice fire_col_ext_rating|R60|R60|R60
+@choice fire_col_ext_rating|R90|R90|R90
+@choice fire_col_ext_rating|R120|R120|R120
+@choice fire_col_ext_rating|R180|R180|R180
+@choice fire_col_ext_rating|R240|R240|R240
+@choice fire_fill_basis|table|Braced, fixed ends in full standard fire, ambient resistance calculated for eccentricity and twice the fire buckling length using 235 MPa steel and up to 3% reinforcement|Ausgesteift, beidseitig eingespannt unter voller Normbrandbeanspruchung, Tragfähigkeit bei Normaltemperatur für Exzentrizität und doppelte Brandknicklänge mit 235 MPa Stahl und höchstens 3 % Bewehrung ermittelt
+@choice fire_fill_basis|other|Other basis|Andere Grundlage
+@choice fire_fill_shape|rectangular|Rectangular hollow section|Rechteckiges Hohlprofil
+@choice fire_fill_shape|circular|Circular hollow section|Kreisförmiges Hohlprofil
+@choice fire_fill_rebar|S500|S500|S500
+@choice fire_fill_rebar|none|Unreinforced|Unbewehrt
+@choice fire_fill_rebar|other|Other reinforcement grade|Andere Betonstahlgüte
+@choice fire_enc_basis|table|Braced, fully encased under standard fire, ambient resistance and reinforcement detailing verified|Ausgesteift, vollständig einbetoniert unter Normbrand, Tragfähigkeit und Bewehrungsdetails bei Normaltemperatur nachgewiesen
+@choice fire_enc_basis|other|Other conditions|Andere Bedingungen
+fire_col_ext_rating|C94-14,C94-15,C94-16,C94-17,C94-18|c||R60||Standard fire resistance class|Feuerwiderstandsklasse bei Normbrand|high|
+fire_fill_basis|C94-14|c||table||Fire exposure and ambient resistance basis|Brandbeanspruchung und Grundlage der Tragfähigkeit bei Normaltemperatur|high|
+fire_fill_shape|C94-14|c||rectangular||Hollow section shape, enter diameter as both outer dimensions for circular sections|Hohlprofilform, bei Kreisprofilen Durchmesser für beide Außenabmessungen eingeben|high|
+fire_fill_wall|C94-14|n|m|0.01||Hollow section wall thickness|Wanddicke des Hohlprofils|high|
+fire_fill_ratio|C94-14|n|1|0.045|r0:1|Actual reinforcement ratio A_s/(A_c + A_s), zero if unreinforced|Vorhandener Bewehrungsgrad A_s/(A_c + A_s), null bei unbewehrtem Querschnitt|high|
+fire_fill_axis|C94-14|n|m|0.06||Bar axis distance from the inner tube surface, zero if unreinforced|Achsabstand der Bewehrung zur Profilinnenseite, null bei unbewehrtem Querschnitt|high|
+fire_fill_rebar|C94-14|c||S500||Longitudinal reinforcement grade|Betonstahlgüte der Längsbewehrung|high|
+fire_enc_basis|C94-15|c||table||Fire exposure and ambient design basis|Brandbeanspruchung und Bemessungsgrundlage bei Normaltemperatur|high|
+fire_enc_steel_cover|C94-15|n|m|0.06||Smallest concrete cover of the structural steel section|Kleinste Betondeckung des Baustahlquerschnitts|high|
+fire_enc_bar_count|C94-15|n|1|4||Number of longitudinal bars|Anzahl der Längsstäbe|high|
+fire_enc_bar_diameter|C94-15|n|m|0.016||Smallest longitudinal bar diameter|Kleinster Durchmesser der Längsstäbe|high|
+@choice fire_ins_beam_basis|unverified|Conditions still to be confirmed|Bedingungen noch zu bestätigen
+@choice fire_ins_beam_basis|verified|Standard fire exposure from below, web compartments filled and secured, concrete used only as insulation, member basis and detailing verified|Normbrand von unten, Kammern am Steg ausbetoniert und gesichert, Beton nur zur Isolierung, Bauteilgrundlage und Ausführung bestätigt
+@choice fire_ins_column_basis|unverified|Conditions still to be confirmed|Bedingungen noch zu bestätigen
+@choice fire_ins_column_basis|verified|Four-sided standard fire, web compartments filled and secured, concrete used only as insulation, member basis and detailing verified|Vierseitiger Normbrand, Kammern am Steg ausbetoniert und gesichert, Beton nur zur Isolierung, Bauteilgrundlage und Ausführung bestätigt
+@choice fire_ins_mesh|yes|Mesh surrounds the section in both directions|Betonstahlmatte umgibt den Querschnitt in beiden Richtungen
+@choice fire_ins_mesh|no|Mesh not present around the section|Keine umlaufende Betonstahlmatte vorhanden
+fire_ins_beam_basis|C94-16|c||unverified||Applicability of Table 4.3|Anwendbarkeit der Tabelle 4.3|high|
+fire_ins_column_basis|C94-17|c||unverified||Applicability of Table 4.5|Anwendbarkeit der Tabelle 4.5|high|
+fire_ins_cover|C94-16,C94-17|n|m|0.030||Smallest concrete cover to the steel profile|Kleinste Betondeckung des Stahlprofils|high|
+fire_ins_mesh|C94-16,C94-17|c||yes||Reinforcing mesh for R60 to R180|Betonstahlmatte für R60 bis R180|high|
+fire_ins_spacing|C94-16,C94-17|n|m|0.200||Largest mesh spacing in either direction|Größter Mattenstab-Abstand in beiden Richtungen|high|
+fire_ins_diameter|C94-16,C94-17|n|m|0.005||Smallest mesh bar diameter in either direction|Kleinster Mattenstab-Durchmesser in beiden Richtungen|high|
+fire_ins_mesh_cover_min|C94-16,C94-17|n|m|0.020||Smallest cover to mesh on fire-exposed surfaces|Kleinste Betondeckung der Matte auf beflammten Oberflächen|high|
+fire_ins_mesh_cover_max|C94-16,C94-17|n|m|0.025||Largest cover to mesh on fire-exposed surfaces|Größte Betondeckung der Matte auf beflammten Oberflächen|high|
+@choice fire_beam_basis|unverified|Conditions still to be confirmed|Bedingungen noch zu bestätigen
+@choice fire_beam_basis|verified|Simply supported partially encased composite beam, three-sided standard fire and verified ambient resistance excluding additional fire reinforcement|Einfeld-Verbundträger mit Kammerbeton, dreiseitigem Normbrand und nachgewiesener Tragfähigkeit bei Normaltemperatur ohne zusätzliche Brandbewehrung
+@choice fire_beam_deck|solid|Solid reinforced concrete slab in shear connection|Schubfest verbundene Stahlbetonplatte
+@choice fire_beam_deck|profiled|Composite profiled sheeting, top flange coverage verified|Verbunddecke mit Stahlprofilblech und bestätigter Obergurtabdeckung
+@choice fire_beam_deck|closed_voids|Composite profiled sheeting with voids closed by suitable fire protection|Verbunddecke mit Stahlprofilblech und geeignetem Brandschutzverschluss der Öffnungen
+@choice fire_beam_rebar|S500|S500|S500
+@choice fire_beam_rebar|other|Other additional reinforcement grade|Andere Betonstahlgüte für die Zulagebewehrung
+fire_beam_basis|C94-18|c||unverified||Applicability of Tables 4.1 and 4.2|Anwendbarkeit der Tabellen 4.1 und 4.2|high|
+fire_beam_deck|C94-18|c||solid||Type of composite slab connected to the beam|Art der schubfest mit dem Träger verbundenen Decke|high|
+fire_beam_deck_coverage|C94-18|n|1|0.85|r0:1|Fraction of top flange covered by profiled sheeting|Anteil des durch das Profilblech abgedeckten Obergurts|high|
+fire_beam_load_level|C94-18|n|1|0.6||Ratio of fire design action to ambient member resistance|Verhältnis der Brandbeanspruchung zur Tragfähigkeit bei Normaltemperatur|high|
+fire_beam_width|C94-18|n|m|0.3||Flange width b|Gurtbreite b|high|
+fire_beam_depth|C94-18|n|m|0.65||Steel profile height h|Baustahlprofilhöhe h|high|
+fire_beam_web|C94-18|n|m|0.012||Web thickness e_w|Stegdicke e_w|high|
+fire_beam_flange|C94-18|n|m|0.02||Bottom flange thickness e_f|Untergurtdicke e_f|high|
+fire_beam_slab|C94-18|n|m|0.13||Concrete slab thickness h_c|Betonplattendicke h_c|high|
+fire_beam_effective_width|C94-18|n|m|3.5||Effective slab width b_eff|Mittragende Plattenbreite b_eff|high|
+fire_beam_as|C94-18|n|m2|0.0028||Area of additional longitudinal reinforcement A_s|Fläche der zusätzlichen Längsbewehrung A_s|high|
+fire_beam_ac|C94-18|n|m2|0.09||Net area of encasement concrete A_c|Nettofläche des Kammerbetons A_c|high|
+fire_beam_fy|C94-18|n|Pa|355000000||Nominal yield strength of the structural steel|Nennstreckgrenze des Baustahls|high|
+fire_beam_rebar|C94-18|c||S500||Grade of additional longitudinal reinforcement|Betonstahlgüte der zusätzlichen Längsbewehrung|high|
+fire_beam_u1|C94-18|n|m|0.06||Additional reinforcement axis distance u_1|Achsabstand der Zulagebewehrung u_1|high|
+fire_beam_u2|C94-18|n|m|0.055||Additional reinforcement axis distance u_2|Achsabstand der Zulagebewehrung u_2|high|
+fire_beam_ambient_u1|C94-18|n|m|0.035||Ambient minimum axis distance u_1 from reinforcement detailing|Mindestachsabstand u_1 aus der Bemessung bei Normaltemperatur|high|
+fire_beam_ambient_u2|C94-18|n|m|0.035||Ambient minimum axis distance u_2 from reinforcement detailing|Mindestachsabstand u_2 aus der Bemessung bei Normaltemperatur|high|

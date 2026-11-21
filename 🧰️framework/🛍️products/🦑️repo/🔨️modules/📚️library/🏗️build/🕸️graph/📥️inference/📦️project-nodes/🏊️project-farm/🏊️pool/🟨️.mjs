@@ -99,7 +99,7 @@ export function grantedPoolV1(granted, policy = P) {
   return { source: "host", workers: granted.jobs, megabytes: granted.megabytes };
 }
 
-/** 🧭️ Chooses the pool that takes the next job among the pools that are ready and usable: a pool with an idle worker first (earliest), otherwise the one with the fewest jobs per worker (earliest on a tie); -1 when none can take it. */
+/** 🧭️ Chooses the pool that takes the next job among the pools that are ready and usable: a pool with a dispatchable idle worker first (earliest), otherwise the one with the fewest jobs per worker (earliest on a tie); -1 when none can take it. */
 export function choosePoolV1(pools) {
   let best = -1, ratio = Infinity;
   for (let index = 0; index < pools.length; index++) {
@@ -373,18 +373,21 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     child.once("error", error => { if (slot.child === child) lose(slot, String(error?.message ?? error)); });
     
   };
-  let recheck;
+  let recheck, lastHeld = false;
+  const requiresFreshSlot = slot => queue[0]?.alone === true && slot.served > 0;
+  const dispatchBlocked = (busy, soloRunning, held) => soloRunning || busy > 0 && (held || queue[0]?.alone === true || crowded(busy));
   const pump = () => {
     if (closed || disabled !== undefined) return;
     if (queue.length > 1) queue.splice(0, queue.length, ...farmQueueOrderV1(queue, performance.now(), policy));
     let held = false;
     try { held = hold() === true; } catch {}
+    lastHeld = held;
     let busy = slots.filter(slot => slot.state === "busy").length, soloRunning = slots.some(slot => slot.state === "busy" && slot.job?.alone === true);
     for (const slot of slots) {
       if (!queue.length) break;
       if (slot.state !== "idle") continue;
-      if (queue[0].alone === true && slot.served > 0) { retire(slot, true); continue; }
-      if (held && busy > 0 || soloRunning || queue[0].alone === true && busy > 0 || crowded(busy)) break;
+      if (requiresFreshSlot(slot)) { retire(slot, true); continue; }
+      if (dispatchBlocked(busy, soloRunning, held)) break;
       const job = queue.shift();
       if (job.settled) continue;
       busy++;
@@ -431,7 +434,11 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   return Object.freeze({
     width: workers,
     ready,
-    get idle() { return slots.some(slot => slot.state === "idle"); },
+    get idle() {
+      if (!slots.some(slot => slot.state === "idle" && !requiresFreshSlot(slot))) return false;
+      const busy = slots.filter(slot => slot.state === "busy");
+      return !dispatchBlocked(busy.length, busy.some(slot => slot.job?.alone === true), lastHeld);
+    },
     get usable() { return !closed && disabled === undefined; },
     get pending() { return queue.length + slots.filter(slot => slot.state === "busy" || slot.state === "settling").length; },
     /** 🔭️ The live slot counts, including final memory measurements and retiring workers, for the parked-owner report. */

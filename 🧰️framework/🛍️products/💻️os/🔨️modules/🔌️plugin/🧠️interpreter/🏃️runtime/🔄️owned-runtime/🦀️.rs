@@ -9,13 +9,13 @@ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 impl OwnedRuntime {
     /// 🌱️ A runtime whose first instance is id 1.
     pub fn new(original_clock:fn()->Option<u64>) -> Self {
-        Self { next_instance_id: std::sync::atomic::AtomicU32::new(1), original_clock }
+        Self { next_instance_id: std::sync::atomic::AtomicU32::new(1), original_clock, input_retirement:semio_plugin_interpreter::CoreInputRetirementAuthority::new() }
     }
 
     /// 🧩️ Parses `bytes` as an owned-ABI component, ready to instantiate; no codec origin is assembled yet.
     pub fn compile_component(&self, bytes: &[u8]) -> Result<OwnedCompiledGuest, PluginHostError> {
         let artifact = OwnedSemioArtifact::parse(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
-        Ok(OwnedCompiledGuest { artifact: Arc::new(artifact), codec_origin: Arc::new(OwnedCodecOriginCell::new()) })
+        Ok(OwnedCompiledGuest { artifact: Arc::new(artifact), codec_origin: Arc::new(OwnedCodecOriginCell::new()), actor_preparation: None })
     }
 
     /// 🏃️ A fresh instance of `compiled` whose app channel is admitted ([`admit_owned_channel`]).
@@ -116,6 +116,9 @@ impl OwnedRuntime {
         let fresh=state.pending.is_none();
         if fresh{
         if state.original_receipt.is_some(){return Err(identity_turn_fault(operation_authority::refusal(4)));}
+        if state.original_job_clock.is_none() && state.original_source.is_none() {
+            state.original_job_clock = Some((budget.retained.work.clock_binding, self.original_clock));
+        }
         let mut ordinary_events = identity.encode(|control|control.allocate_vec::<&Event>(events.len())).map_err(identity_turn_fault)?;
         let mut command_page = None;
         let mut cold_pair_page = None;
@@ -256,7 +259,7 @@ impl OwnedRuntime {
         };
         let codec_origin = OwnedCodecOriginCell::new();
         *codec_origin.lock() = OwnedCodecOriginState::Ready(Arc::new(origin));
-        let described = OwnedCompiledGuest { artifact: Arc::clone(&compiled.artifact), codec_origin: Arc::new(codec_origin) };
+        let described = OwnedCompiledGuest { artifact: Arc::clone(&compiled.artifact), codec_origin: Arc::new(codec_origin), actor_preparation: compiled.actor_preparation.clone() };
         Ok((invocation.output, described))
     }
 

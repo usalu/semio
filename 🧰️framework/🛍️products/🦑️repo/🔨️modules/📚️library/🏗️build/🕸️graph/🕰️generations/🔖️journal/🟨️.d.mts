@@ -3,7 +3,7 @@ export const BUILD_JOURNAL_V1:Readonly<{directory:string;version:1;rowsPerLine:n
 /** 🧾️ The marker a finished step leaves. */
 export interface BuildJournalStepV1{step:string;inputs:string;output:string}
 /** 🔖️ The header of one build journal. */
-export interface BuildJournalV1{version:1;key:string;state:"waves"|"sealed";parent:string|null;generation:number;identity:string;implementation:string;steps:readonly BuildJournalStepV1[];names?:readonly string[];done?:number;owners?:Readonly<Record<string,unknown>>;dropped?:readonly string[];returned?:readonly string[];derived?:readonly string[];rows?:readonly {file:string;sha256:string;bytes:number}[];manifest?:string;env?:{digest:string;parts?:unknown}}
+export interface BuildJournalV1{version:1;key:string;state:"waves"|"sealed";parent:string|null;generation:number;repair?:{parent:string;receipt:string};identity:string;implementation:string;steps:readonly BuildJournalStepV1[];names?:readonly string[];done?:number;owners?:Readonly<Record<string,unknown>>;dropped?:readonly string[];returned?:readonly string[];derived?:readonly string[];rows?:readonly {file:string;sha256:string;bytes:number}[];manifest?:string;env?:{digest:string;parts?:unknown}}
 /** 🔑️ The name of the journal of one build. */
 export function buildJournalKeyV1(input:unknown):string;
 /** 🔖️ Admits the header of one build journal. */

@@ -1,5 +1,8 @@
 /** 🧬️ The authored window data and granularity row pick tests. */
 import hover from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/tree-hover.json";
+import directHover from "../../../../../../../🔌️plugin/🧪️tests/🕹️interaction-selection-laws/👆️hover-targets.json";
+import { uiIntentToActionDescriptor } from "../../../../🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
+import inspectorHover from "../../../../../../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🖱️channel-hover.json";
 import type { TreeWindowsTestKit } from "../🧰️tree-windows-test-kit/🟦️.tsx";
 
 /** 🎯 Registers the cleanup hook, the authored window and key data and the granularity pick tests. */
@@ -77,6 +80,49 @@ export function registerWindowDataAndGranularityPickTests(kit: TreeWindowsTestKi
     row.dispatchEvent(new MouseEvent("mouseout", {bubbles: true, relatedTarget: document.body}));
     expect(intents.map(intent => intent.input?.targets ?? intent.args.targets)).toEqual([JSON.stringify(hover.enter), JSON.stringify(hover.leave)]);
     expect(intents.map(intent => intent.args.channel)).toEqual([hover.channel, hover.channel]);
+  });
+  it("keeps a long direct graph target and applies the merged pointer clear", () => {
+    const source = directHover.cases[0];
+    const args = {
+      domainId: directHover.domain, channel: directHover.channel,
+      targetId: source.args.targetId, granularityId: source.args.granularityId,
+    };
+    const intents: any[] = [];
+    const binding = { trigger: "hoverPreview", action: {scope: "outliner", name: "interactionHover", version: 1}, args, capability: null };
+    const rendered = mount([
+      node(1, "outliner", {type: "tree", interactionDomain: directHover.domain}, [2]),
+      node(2, "section", {type: "treeSection", label: "Outputs", defaultOpen: true, headerToolbar: null, window: null}, [3]),
+      treeItem(3, args.targetId, "Long channel", {granularity: "handle"}, [], [binding]),
+    ], 1, (intent) => intents.push(intent));
+    const row = rendered.getByText("Long channel");
+    row.dispatchEvent(new MouseEvent("mouseover", {bubbles: true}));
+    row.dispatchEvent(new MouseEvent("mouseout", {bubbles: true, relatedTarget: document.body}));
+    const descriptors = intents.map(uiIntentToActionDescriptor);
+    expect(descriptors.map(descriptor => descriptor.action)).toEqual(["interactionHover", "interactionHover"]);
+    expect(descriptors[0].args).toEqual(args);
+    expect(descriptors[1].args).toEqual({...args, targets: "[]"});
+  });
+  it("publishes one hover for a spatial input across its label and axis controls", () => {
+    const source = inspectorHover.cases.find(row => row.kind === "literal")!;
+    const args = {
+      domainId: inspectorHover.domainId, channel: inspectorHover.channel,
+      targetId: source.target.id, granularityId: source.target.granularity,
+    };
+    const intents: any[] = [];
+    const binding = { trigger: "hoverPreview", action: { scope: "outliner", name: "interactionHover", version: 1 }, args, capability: null };
+    const rendered = mount([
+      node(1, source.key + ".coordinates", { type: "container", role: "group", label: source.label }, [2], [binding]),
+      node(2, "axis", { type: "input", kind: "number", value: "1" }),
+    ], 1, intent => intents.push(intent));
+    const label = rendered.getByRole("heading", { name: source.label });
+    const axis = rendered.container.querySelector("input")!;
+    expect(axis).toBeTruthy();
+    label.dispatchEvent(new MouseEvent("pointerover", { bubbles: true }));
+    label.dispatchEvent(new MouseEvent("pointerout", { bubbles: true, relatedTarget: axis }));
+    axis.dispatchEvent(new MouseEvent("pointerover", { bubbles: true, relatedTarget: label }));
+    expect(intents.map(uiIntentToActionDescriptor).map(descriptor => descriptor.args)).toEqual([args]);
+    axis.dispatchEvent(new MouseEvent("pointerout", { bubbles: true, relatedTarget: document.body }));
+    expect(intents.map(uiIntentToActionDescriptor).map(descriptor => descriptor.args)).toEqual([args, {...args, targets: "[]"}]);
   });
   it("leaves a row that activates its own target verb on that verb, granularity or not", () => {
     const intents: any[] = [];

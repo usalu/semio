@@ -31,8 +31,8 @@ fn shipped_extension_descriptors_deliver_installable_machines() {
     let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
     assert_eq!(semio_framework::parse_contributions(&distilled).len(), 4);
     let mut app = context::unseeded_app_with_registry();
-    let args = DslValue::object([("json".into(), DslValue::String(pack))]);
-    settled_action(&mut app, "setContributions", Some(&args));
+    let receipt = context::install_contributions(&mut app, pack);
+    assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Config));
     let stock_id = app.snapshot().expect("document").stock_id.clone();
     for (field, value) in [("width", 0.2), ("depth", 0.2), ("height", 0.05)] {
         let args = DslValue::object([("target".into(), DslValue::String(stock_id.clone())), ("field".into(), DslValue::String(field.into())), ("value".into(), DslValue::float(value))]);
@@ -69,7 +69,7 @@ fn shipped_extension_descriptors_deliver_installable_machines() {
                     Err(fault) => format!("{fault:?}"),
                     Ok(result) => {
                         let settled = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
-                        format!("{result:?} {settled:?}")
+                        format!("{result:?} {:?}", settled.err())
                     }
                 },
             };
@@ -78,11 +78,23 @@ fn shipped_extension_descriptors_deliver_installable_machines() {
             assert!(published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&height(0.05))).1));
         }
         assert!(published_a_document_mutation(&settled_action(&mut app, "addStep", Some(&args)).1));
-        assert!(app.snapshot().expect("document").step_payloads.iter().any(|step| step.origin.as_ref().is_some_and(|origin| origin.machine_id == available.id && origin.capability_id == capability.id)));
+        let snapshot = app.snapshot().expect("document");
+        let (index, step) = snapshot.step_payloads.iter().enumerate().find(|(_, step)| step.origin.as_ref().is_some_and(|origin| origin.machine_id == available.id && origin.capability_id == capability.id)).expect("catalog step");
+        let mut expected = step.clone();
+        let ProcessMeasure::Cut { tool, .. } = &mut expected.measure else { panic!("expected a catalog cut") };
+        let (field, size) = match tool {
+            WorkingSolid::Cylinder { height, .. } => ("height", height),
+            WorkingSolid::Box { width, .. } => ("width", width),
+            _ => panic!("expected an analytic catalog tool"),
+        };
+        *size *= 0.75;
+        let edit = DslValue::object([("target".into(), DslValue::String(step.id.clone())), ("field".into(), DslValue::String(field.into())), ("value".into(), DslValue::float(*size))]);
+        assert!(published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&edit)).1));
+        assert_eq!(app.snapshot().expect("edited document").step_payloads[index], expected);
+        assert!(!published_a_document_mutation(&settled_action(&mut app, "patchInspector", Some(&edit)).1));
     }
     let before = app.snapshot().expect("document before uninstall");
-    let args = DslValue::object([("json".into(), DslValue::String("[]".into()))]);
-    settled_action(&mut app, "setContributions", Some(&args));
+    context::install_contributions(&mut app, "[]".into());
     assert!(catalog_machine("[]", "wood", "circularSaw").is_none());
     let rendered = context::render(&mut app, workshop_panel::PROCESS_3D_PLAY_BODY_WORKSHOP);
     assert!(!rendered.contains("process3d-play-workshop.catalog.wood"), "the removed provider no longer appears in the mounted catalog");
@@ -207,30 +219,21 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
     let worst = Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: "x".repeat(PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES) }).encode_op().expect("encode lane-sized roster");
     assert!(worst.len() <= PROCESS3D_RESUMABLE_OUTPUT_BYTES, "a lane-filling roster encodes to {} B, past the declared {PROCESS3D_RESUMABLE_OUTPUT_BYTES} B", worst.len());
 
-    use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
     let mut app = context::unseeded_app_with_registry();
-    let invocation = CommandInvocation {
-        address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "process".into(), app_id: "s.process.process3d@1/*#editor".into() }, command_id: "setContributions".into() },
-        arguments: [("json".to_string(), DslValue::String(pack))].into_iter().collect(),
-    };
-    let mut arguments = Some(DslValue::object(invocation.arguments.iter().map(|(name, value)| (name.clone(), value.clone()))));
-    let mut fault = None;
-    for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
-        let handled = ::semio_framework_async::poll::resolve_ready(PluginApp::handle_command(&mut app.0, &invocation.address, &mut arguments, &mut fault, None, &mut Some(semio_plugin::artifact_app_laws::meta("local")), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("the host's setContributions command passes the host-configuration output gate");
-        if handled.is_some() {
-            return;
-        }
-        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("setContributions maintenance step");
-    }
-    panic!("the host's setContributions command stayed pending under its original caller");
+    let receipt = context::install_contributions(&mut app, pack);
+    assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Config));
 }
 //#endregion 🧩️HostContributionsOutputCap
 
 //#region 🚪️ExampleArchiveDoor
 /// 🚪️ Settles one member-less archive load exactly the way the react shell's `loadDocumentPair` does.
 fn settle_member_less_archive(app: &mut context::Process3dApp, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
-    PluginApp::begin_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
-    for _ in 0..200_000 {
+    use semio_plugin::artifact_app_laws::{OriginalFixtureCaller, admit_document_archive_load, fixture_renew_turn};
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    let grant = app.1.cx().retained_grant();
+    admit_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(app.1.cx(), fuel, grant).expect("archive caller renewal");
         let polled = ::semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(&mut app.0, operation, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(&mut app.0, operation).expect("archive acknowledgement");
@@ -238,7 +241,7 @@ fn settle_member_less_archive(app: &mut context::Process3dApp, operation: u64, p
         }
         let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
     }
-    panic!("archive load never reached a terminal state");
+    panic!("archive {operation} never reached a terminal state: {}", PluginApp::close_diagnostic(&app.0));
 }
 
 /// 🔁️ Dispatches `setActiveExample` and drives its typed operation to the published
@@ -256,7 +259,7 @@ fn published_example_load(app: &mut context::Process3dApp, example: &str) -> (Ve
         }
         PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("example maintenance step");
         ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("example publication");
-        if let (Some(page), _) = semio_plugin::artifact_app_laws::take_fixture_result_turn(&mut app, instance, semio_plugin::artifact_app_laws::OriginalWorkFixture::stock()).expect("example result page") {
+        if let (Some(page), _) = semio_plugin::artifact_app_laws::take_fixture_result_turn(&mut app.0, instance, semio_plugin::artifact_app_laws::OriginalWorkFixture::stock()).expect("example result page") {
             assert!(app.acknowledge_typed_operation_result(page.token).expect("example result ack"));
         }
         if let Some(Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {

@@ -121,3 +121,59 @@ Still not A:
 - Jagged grey seams where the trunk domes and the limbs graze each other (shoulder, haunch, tail joint) at every scale.
 - The brush is still two rigid links; in poses that bend the tail joint far from the sitting angle the bow may read wrong. Not looked at.
 - 1:100 pelvis is a keg; hands are paddles; the round-3 list of section 6 stands.
+
+## Round 5 handcraft (2026-11-20/21)
+
+Scripts: the asset's chain, extended in place (`r3_red_squirrel_body50.py`, `r3_red_squirrel_body100.py`, `r4_red_squirrel_coarse.py`: the brush at all four scales), `r5-squirrel-gull-look.sh` (renders every sheet judged here from the candidate document). Build and splice: `sh r3-red-squirrel-run.sh catalog`.
+
+### Reference table (modelled to)
+
+| measure | reference | source |
+|---|---|---|
+| head and body | 190-240 mm | Gurnell 1987 |
+| tail (vertebrae / with hair) | 140-200 mm | Gurnell 1987 |
+| hind foot | 51-63 mm | field guides |
+| ear with tuft | 25-36 mm | field guides |
+| brush width | 50-70 mm | own knowledge |
+| humerus = radius | 38-41 mm | Thorington et al. 1997 (proportion) |
+| femur / tibia | 48-52 / 56-60 mm | same |
+| sitting height | head and body + raised head, about 0.20-0.22 m | derived |
+
+### Model vs reference (1:50, sitting, measured on the spliced catalog)
+
+| measure | model | reference | deviation |
+|---|---|---|---|
+| head and body (rig rump 72 + chest 62 + neck 24 + head 52) | 210 mm | 190-240 | in range |
+| tail vertebrae (85 + 90) / with hair | 175 / 194.5 mm | 140-200 | in range |
+| brush width / depth (new) | 55 / 41 mm | 50-70 wide | in range |
+| humerus / radius | 40 / 40 mm | 38-41 | in range |
+| femur / tibia | 50 / 58 mm | 48-52 / 56-60 | in range |
+| hind foot | 59 mm | 51-63 | in range |
+| bounding box h / l / w | 209.2 / 152.1 / 67.7 mm | dimensions 209 / 151 / 68 | 0.1 / 0.7 / 0.4 % |
+| same at 1:100 / 1:200 / 1:500 | 209.2-210.2 / 151.4-151.7 / 65.0-67.4 mm | same | under 1 % (1:500 width 4.4 %, within its 75 mm feature) |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B (brush a stiff two-plank paddle standing off the back with a gap) -> A- | A- -> A- (underfur follows the new brush) | B+ -> B+ (unchanged) |
+| 1:100 | B (same plank) -> A- | B+ -> B+ (not re-opened) | B (not re-opened) |
+| 1:200 | B -> A- (not re-opened at 1:200 after the change; same stations as 1:500) | B (not opened) | B (not opened) |
+| 1:500 | B (faceted plank) -> B+ (clean massing, banana brush against the back) | B (rendered, not opened) | B (rendered, not opened) |
+| poses | sitting B, running B+ -> sitting A-, running B+ (the bowed brush trails as a soft S; forelimbs reaching like claws, unchanged) | | |
+
+### Changes
+
+- Brush at every scale re-stated by hand: thin root (2.5 mm) widening fast to a 55 x 40 mm plume (was 54 x 35 from the second station on), tail-1 bowed 5.5 mm towards the back so brush and back meet in the sitting pose (before: a 12-17 mm gap and two straight planks), tail-2 swinging over the crown and curling back at the tip; the domes at the mid-tail joint grown with the plume so every pose stays closed. 2D of 1:50 and 1:100 regenerated from the solids by the round-3 drawing chain (E1).
+- Checks: `volumes-check.ts animals/red-squirrel --product` PASS at four scales; `r3-validate.ts animals/red-squirrel --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); spliced.
+
+### Opened
+
+1:50 body before and after (six views), 1:100 and 1:500 body before, 1:500 body after, 1:50 structure before, 1:50 thermal cut after, pose `running` after. Rendered by `r5-squirrel-gull-look.sh` but not opened: 1:100/1:200 body after, 1:500 structure and thermal, `climbing`, bound t = 0.2 s.
+
+### Remaining (reason)
+
+- The brush is still two rigid links: an S stated inside each link, not a living curve; a third tail bone would need new poses for all 14 poses and 3 clips (not done in this round).
+- Hands are paddles with one finger group (single fingers are under the 7.5 mm feature at 1:50).
+- Jagged grey seams where trunk domes and limbs graze (shoulder, haunch).
+- Structure lists unchanged from round 4 (B+ at 1:50; 1:100 pelvis a keg).

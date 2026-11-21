@@ -1,0 +1,5 @@
+method	consequence	en	de
+damage-tolerant	low	1.00	1.00
+damage-tolerant	high	1.15	1.15
+safe-life	low	1.15	1.15
+safe-life	high	1.35	1.35

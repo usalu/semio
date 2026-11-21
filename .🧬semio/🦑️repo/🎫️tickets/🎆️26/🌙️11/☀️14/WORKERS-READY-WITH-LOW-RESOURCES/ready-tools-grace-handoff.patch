@@ -1,0 +1,73 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/🔄️handoff/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/🔄️handoff/🟦️.ts
+@@ -46,4 +46,7 @@
+   expect(counter.previousAt).toBeGreaterThan(startedMs);
+   expect(counter.advancedAt).toBeGreaterThan(counter.previousAt);
++  const sampleLimit=2*containment.slowSampleMilliseconds+P.pollMilliseconds;
++  await Bun.sleep(sampleLimit+100);
++  expect(Date.now()-witness.sampleAt).toBeGreaterThan(sampleLimit);
+   const result=await watch(stop.signal);
+   if(!result.timedOut||result.physicalEnd?.endedMs===undefined)throw Error("Expected owned physical timeout: "+JSON.stringify(result)+" log: "+readFileSync(log,"utf8").slice(-1800));
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts
+@@ -835,5 +835,4 @@
+   };
+   const moved=(now=Date.now()):void=>{stallAt=now;progressAt=now;dirty=true;};
+-  checkpoint();
+   const holderLines=treePolicy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u")),left=new Map<number,ReadyKnownV1>(earlier.survivors.map(row=>[row.pid,row])),reaped:ReadyReapedV1[]=[...earlier.reaped];
+   const rootOf=():ReadyKnownV1=>({pid:inflight.pid,startMs:inflight.startedMs});
+@@ -849,4 +848,5 @@
+     toolsGrace=recordToolsProgress(toolsGrace,value,now);dirty=true;
+    };
++  checkpoint();
+   let overdueStep:Readonly<ReadyStepV1&{limit:number;quiet:number}>|undefined,aliveAt=Date.now(),tableMilliseconds=0,confirming=false,killReason:ReadyStageStopV1=stop??"stall",inspecting=false,inspectedAt=0,silentHolder:Readonly<{pid:number;command:string;seconds:number}>|undefined;const yielded=new Set<number>();
+   const recorder=(reason:ReadyKillReasonV1)=>readyKillRecorderV1({directory,stage:inflight.stage,owner:ownerOf(inflight.stage,inflight.startedMs),reason,seconds:Math.round(treePolicy.stallStopMilliseconds/1000),say,policy:contain});
+@@ -916,4 +916,22 @@
+    void settle().then(publish,failWatch);
+   };
++   const sampleTree=(maximum?:number):void=>{sampling=true;const tableBegan=Date.now();void readyReadTableV1(maximum,undefined,undefined,undefined,windows||maximum!==undefined?input.signal:undefined).then(table=>{sampling=false;if(maximum!==undefined)probeUntil=0;tableMilliseconds=Date.now()-tableBegan;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);if(killed||!watching||finishing||!owns())return;const root=rootOf();if(maximum!==undefined&&readyIdentityV1(root,table)!=="same"){toolsGrace=recordToolsProgress(toolsGrace,undefined,Date.now());dirty=true;}if(table.length===0)return;if(readyIdentityV1(root,table)==="reused"&&!existsSync(inflight.exitFile)&&!confirming&&!finishing){confirming=true;const first=table.find(row=>row.pid===root.pid)!;void readyReadTableV1().then(second=>{confirming=false;if(!watching||finishing||killed||existsSync(inflight.exitFile)||second.length===0||readyIdentityV1(root,second)!=="reused")return;const again=second.find(row=>row.pid===root.pid)!,why=changedLineV1(root.pid,root.startMs,again.startMs,first.startMs,P.toleranceMilliseconds,tableMilliseconds);complete({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)},true);});return;}known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})]);sampledAt=Date.now();observeToolsGrace(table);readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);
++     if(windows&&!existsSync(cancelFile)){
++      const sample=readyWindowsTreeSampleV1({table,root:root.pid,members:known,previous:windowsBefore,maximum:P.watchdogCpuMaximum,minimumCpuMilliseconds:treePolicy.livenessCpuMilliseconds});
++      if(sample!==undefined){
++       windowsBefore=sample.checkpoint;
++       if(sample.progress)moved();
++       const peakChanged=sample.megabytes!==null&&sample.megabytes>peak;
++       if(peakChanged)peak=sample.megabytes!;
++       dirty||=sample.changed||peakChanged;
++       checkpoint(peakChanged);
++      }
++     }
++    });};
++   const probeNow=Date.now(),probeLimit=2*P.pollMilliseconds;
++   let probeUntil=!fresh&&!killed&&toolsPaths!==undefined&&probeNow-progressAt<=treePolicy.stallMilliseconds&&
++    toolsGraceActive(toolsGrace,{stage:stage.name,started:inflight.startedMs,now:probeNow,soft:stageTimeout,quiet:treePolicy.stallMilliseconds,sampleLimit:treePolicy.stallMilliseconds})?
++    Math.min(probeNow+probeLimit,inflight.startedMs+5*stageTimeout):0;
++   if(probeUntil>probeNow)sampleTree(probeUntil-probeNow);
+   const timer=setInterval(()=>{
+    tick++;
+@@ -940,17 +958,5 @@
+      if(kill("overdue",readyValidStepEvidenceV1(stepOverdue)?{stepOverdue}:{})){overdueStep={...watched.step,limit,quiet:Math.round(watched.quietMs/1000)};stalled=true;}
+     }if(!killed&&watching&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))&&owns()){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder",inflight.stage).then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}if(!killed&&(waiting>=treePolicy.holderWaitRestartMilliseconds||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const holder=readyHolderRestartV1(waiting,true,treePolicy),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy,sha);if(file!==null&&(holder||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))){codeFile=file;codeStale=!holder;stalled=true;kill("restart");}}}
+-   if(Date.now()>=nextSample&&!sampling&&!killed){sampling=true;const tableBegan=Date.now();void readyReadTableV1(undefined,undefined,undefined,undefined,windows?input.signal:undefined).then(table=>{sampling=false;tableMilliseconds=Date.now()-tableBegan;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);if(table.length===0||killed||!watching||finishing||!owns())return;const root=rootOf();if(readyIdentityV1(root,table)==="reused"&&!existsSync(inflight.exitFile)&&!confirming&&!finishing){confirming=true;const first=table.find(row=>row.pid===root.pid)!;void readyReadTableV1().then(second=>{confirming=false;if(!watching||finishing||killed||existsSync(inflight.exitFile)||second.length===0||readyIdentityV1(root,second)!=="reused")return;const again=second.find(row=>row.pid===root.pid)!,why=changedLineV1(root.pid,root.startMs,again.startMs,first.startMs,P.toleranceMilliseconds,tableMilliseconds);complete({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)},true);});return;}known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})]);sampledAt=Date.now();observeToolsGrace(table);readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);
+-     if(windows&&!existsSync(cancelFile)){
+-      const sample=readyWindowsTreeSampleV1({table,root:root.pid,members:known,previous:windowsBefore,maximum:P.watchdogCpuMaximum,minimumCpuMilliseconds:treePolicy.livenessCpuMilliseconds});
+-      if(sample!==undefined){
+-       windowsBefore=sample.checkpoint;
+-       if(sample.progress)moved();
+-       const peakChanged=sample.megabytes!==null&&sample.megabytes>peak;
+-       if(peakChanged)peak=sample.megabytes!;
+-       dirty||=sample.changed||peakChanged;
+-       checkpoint(peakChanged);
+-      }
+-     }
+-    });}
++   if(Date.now()>=nextSample&&!sampling&&!killed)sampleTree();
+    let peakChanged=false;
+    if(!windows&&(tick%sampleEvery===0||!fresh&&tick===1)){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){const observedPeak=readyTreeMegabytesV1(rows.stdout,inflight.pid);if(observedPeak>peak){peak=observedPeak;peakChanged=dirty=true;}const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy))moved();if(cpu.size!==cpuBefore.size||[...cpu].some(([pid,spent])=>cpuBefore.get(pid)!==spent))dirty=true;cpuBefore=cpu;}}
+@@ -959,5 +965,5 @@
+    {const elapsed=Date.now()-inflight.startedMs;if(elapsed>stageTimeout){const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:Date.now()-progressAt,policy:treePolicy});const now=Date.now(),extend=verdict==="timeout"&&toolsPaths!==undefined&&now-progressAt<=treePolicy.stallMilliseconds&&
+       toolsGraceActive(toolsGrace,{stage:stage.name,started:inflight.startedMs,now,soft:stageTimeout,quiet:treePolicy.stallMilliseconds,sampleLimit:2*contain.slowSampleMilliseconds+P.pollMilliseconds});
+-     if(verdict==="timeout"&&!extend||verdict==="stalled"&&now>=armedAt){timedOut=true;kill("timeout",{deadline:verdict==="timeout"?"hard-cap":"soft-cap-idle"});}}}
++     if(verdict==="timeout"&&!extend&&now>=probeUntil||verdict==="stalled"&&now>=armedAt){timedOut=true;kill("timeout",{deadline:verdict==="timeout"?"hard-cap":"soft-cap-idle"});}}}
+    if(watching&&existsSync(cancelFile)&&owns()){cancelled=true;kill("cancel");if(killed)rmSync(cancelFile,{force:true});}
+   },P.pollMilliseconds);

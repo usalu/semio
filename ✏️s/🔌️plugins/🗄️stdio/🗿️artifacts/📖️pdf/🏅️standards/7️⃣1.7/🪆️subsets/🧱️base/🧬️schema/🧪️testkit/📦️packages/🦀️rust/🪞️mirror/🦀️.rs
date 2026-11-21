@@ -67,9 +67,6 @@ pub mod standards {
                         pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::*;
                         pub use semio_s_artifact_stdio_pdf_mut_base_4::standards::v1_7::subsets::base::schema::mutations::set_object_value;
                         pub use semio_s_artifact_stdio_pdf_mut_base_3::standards::v1_7::subsets::base::schema::mutations::set_shading;
-                        #[cfg(test)]
-                        #[path = "../../../../🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
                 #[path = "."]

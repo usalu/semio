@@ -5,11 +5,12 @@
 //! (design §5, §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
 
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value::retirement::arc_custody::ArcLease;
 use std::mem::size_of;
 
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]
-pub struct RasterStrokePreview{pub base_revision:[u8;32],pub snapshot:std::sync::Arc<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>}
-impl PartialEq for RasterStrokePreview{fn eq(&self,other:&Self)->bool{self.base_revision==other.base_revision&&std::sync::Arc::ptr_eq(&self.snapshot,&other.snapshot)}}
+pub struct RasterStrokePreview{pub base_revision:[u8;32],pub snapshot:ArcLease<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>}
+impl PartialEq for RasterStrokePreview{fn eq(&self,other:&Self)->bool{self.base_revision==other.base_revision&&self.snapshot.addr()==other.snapshot.addr()}}
 impl semio_framework_value::ToValue for RasterStrokePreview{fn to_value(&self)->semio_framework_value::DslValue{semio_framework_value::DslValue::object(vec![("baseRevision".into(),semio_framework_value::ToValue::to_value(&self.base_revision)),("ready".into(),semio_framework_value::ToValue::to_value(&true))])}}
 impl semio_framework_value::FromValue for RasterStrokePreview{fn from_value(_value:semio_framework_value::DslValue)->Result<Self,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"stroke preview requires its original retained semantic candidate"))}}
 
@@ -80,7 +81,7 @@ semio_plugin::window_transient_registry! {
 }
 //#endregion 🔖️Owner
 
-pub fn cached_stroke_preview<'a>(window:&'a RasterCompositeWindowTransient,base_revision:&[u8;32])->Option<&'a semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>{let preview=window.stroke.as_deref()?.preview.as_ref()?;(preview.base_revision==*base_revision).then_some(preview.snapshot.as_ref())}
+pub fn cached_stroke_preview<'a>(window:&'a RasterCompositeWindowTransient,base_revision:&[u8;32])->Option<&'a semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>{let preview=window.stroke.as_deref()?.preview.as_ref()?;if preview.base_revision!=*base_revision{return None;}preview.snapshot.get().ok()}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

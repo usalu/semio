@@ -109,7 +109,7 @@ struct Frame{path:[usize;32],depth:usize,at:usize,matrix:[f64;6],visible:bool,lo
 impl Frame{const EMPTY:Self=Self{path:[0;32],depth:0,at:0,matrix:[1.0,0.0,0.0,1.0,0.0,0.0],visible:true,locks:0,groups:[0;32],group_count:0};}
 /// 🧱️ Inline bounded traversal retains only the output payloads admitted by the original work ledger.
 struct DocumentSceneCursor{
- limits:DocumentSceneLimits,frames:[Frame;33],frame_count:usize,path:[usize;32],depth:usize,parent:Frame,node:Option<DocumentSceneNode>,plan:DocumentScenePlan,
+ limits:DocumentSceneLimits,frames:[Frame;33],frame_count:usize,path:[usize;32],depth:usize,parent:Frame,node:Option<DocumentSceneNode>,plan:DocumentScenePlan,output_taken:bool,
  asset_samples:Vec<u8>,asset_id:String,reference:String,group:Option<DrawingSceneGroup>,asset_char:usize,text_chunk:usize,
  phase:&'static str,layers:usize,assets:usize,segments:usize,references:usize,source_bytes:usize,work:u64,last_turn_work:u64,last_turn_semantic_work:u64,step_work:u64,pending:semio_framework_value::RetirementDemand,
  at:usize,stroke_at:usize,text_at:usize,text_chars:usize,text_chunk_offset:usize,group_at:usize,
@@ -173,7 +173,7 @@ fn scene_text_copy(source:&(impl Utf8Text+?Sized),target:&mut String,chunk:&mut 
 impl DocumentSceneCursor{
  pub fn new(document:&impl DrawingSceneSource,limits:DocumentSceneLimits)->Result<Self,DocumentSceneError>{
   if !(1..=1024).contains(&limits.max_nodes)||!(1..=32).contains(&limits.max_depth)||!(1..=65536).contains(&limits.max_segments)||!(1..=32768).contains(&limits.max_references)||!(1..=268439552).contains(&limits.max_source_bytes)||document.root_count()>limits.max_nodes||document.asset_count()>1024{return Err(preparation_invalid("Invalid scene preparation limits or document"));}
-  Ok(Self{limits,frames:[Frame::EMPTY;33],frame_count:1,path:[0;32],depth:0,parent:Frame::EMPTY,node:None,plan:DocumentScenePlan::default(),asset_samples:Vec::new(),asset_id:String::new(),reference:String::new(),group:None,asset_char:0,text_chunk:0,phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,last_turn_work:0,last_turn_semantic_work:0,step_work:0,pending:semio_framework_value::RetirementDemand{depth:1,..Default::default()},at:0,stroke_at:0,text_at:0,text_chars:0,text_chunk_offset:0,group_at:0,validate_at:0,ref_at:0,cycle_at:0,graph:[(0,0);1024],graph_len:0,visited:[false;1024],visiting:[false;1024],cancelled:false,failure:None})
+  Ok(Self{limits,frames:[Frame::EMPTY;33],frame_count:1,path:[0;32],depth:0,parent:Frame::EMPTY,node:None,plan:DocumentScenePlan::default(),output_taken:false,asset_samples:Vec::new(),asset_id:String::new(),reference:String::new(),group:None,asset_char:0,text_chunk:0,phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,last_turn_work:0,last_turn_semantic_work:0,step_work:0,pending:semio_framework_value::RetirementDemand{depth:1,..Default::default()},at:0,stroke_at:0,text_at:0,text_chars:0,text_chunk_offset:0,group_at:0,validate_at:0,ref_at:0,cycle_at:0,graph:[(0,0);1024],graph_len:0,visited:[false;1024],visiting:[false;1024],cancelled:false,failure:None})
  }
  fn layer<'d>(&self,document:&'d impl DrawingSceneSource)->Result<&'d DrawingLayerNode,DocumentSceneError>{scene_layer_at(document,&self.path[..self.depth])}
  fn transition(&mut self,phase:&'static str){self.phase=phase;self.text_chunk=0;}
@@ -291,11 +291,11 @@ impl DocumentSceneCursor{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(preparation_invalid("Invalid scene preparation work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
   let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.progress());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.progress());};
-  let result=(||{for _ in 0..budget{if self.phase=="complete"{break;}if !work.can_step(){break;}let before=work.receipt();self.step_work=0;let result=self.step(document,work,effect);let semantic=result.as_ref().copied().unwrap_or(true);let actual=semantic||self.step_work>0||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result
+  let result=(||{for _ in 0..budget{if self.phase=="complete"||effect.actual().is_some(){break;}if !work.can_step(){break;}let before=work.receipt();self.step_work=0;let result=self.step(document,work,effect);let semantic=result.as_ref().copied().unwrap_or(true);let actual=semantic||self.step_work>0||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result
  }
- fn into_retirement(mut self)->(DocumentSceneRetirement,Option<DocumentScenePlan>){let output=if self.phase=="complete"&&!self.cancelled&&self.failure.is_none(){Some(std::mem::take(&mut self.plan))}else{None};self.cancelled=true;(DocumentSceneRetirement::new(self),output)}
+ fn into_retirement(mut self)->(DocumentSceneRetirement,Option<DocumentScenePlan>){let output=if self.phase=="complete"&&!self.cancelled&&self.failure.is_none()&&!self.output_taken{Some(std::mem::take(&mut self.plan))}else{None};self.cancelled=true;(DocumentSceneRetirement::new(self),output)}
  pub fn cancel(&mut self){self.cancelled=true;}
- pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if self.phase!="complete"{return Err(DocumentSceneError::Incomplete);}Ok(std::mem::take(&mut self.plan))}
+ pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if self.phase!="complete"||self.output_taken{return Err(DocumentSceneError::Incomplete);}self.output_taken=true;Ok(std::mem::take(&mut self.plan))}
 }
 #[derive(semio_framework_value::RetireOwned)]
 #[doc(hidden)]
@@ -351,7 +351,7 @@ impl ResolvedSceneInputJob{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if items==0{return Err(preparation_invalid("Invalid resolved scene work grant"));}
   let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.done);}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.done);};
-  let result=(||{for _ in 0..items{if self.done||!work.can_step(){break;}let before=work.receipt();let settling=self.invalid;let result=self.step(work,effect);let semantic=!settling&&matches!(&result,Ok((true,_))|Err(_));let actual=matches!(&result,Ok((_,true))|Err(_))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.done)})();work.exit();result
+  let result=(||{for _ in 0..items{if self.done||effect.actual().is_some()||!work.can_step(){break;}let before=work.receipt();let settling=self.invalid;let result=self.step(work,effect);let semantic=!settling&&matches!(&result,Ok((true,_))|Err(_));let actual=matches!(&result,Ok((_,true))|Err(_))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.done)})();work.exit();result
  }
  fn step(&mut self,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<(bool,bool),DocumentSceneError>{
   if self.invalid{
@@ -446,9 +446,9 @@ impl<'a> DocumentVectorJob<'a>{
  pub fn advance_scene_source(&mut self,document:&impl DrawingSceneSource,budget:usize,work:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<DocumentVectorProgress,DocumentSceneError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(DocumentSceneError::literal("Invalid document work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
   for _ in 0..budget{
-   if self.progress.done{break;}let d=self.pending;
+   if self.progress.done||effect.actual().is_some(){break;}let d=self.pending;
    if !work.admits_absolute(d){work.require_absolute(d);break;}
-   if self.progress.work>=self.limits.max_work&&!self.failure_pending(){let error=DocumentSceneError::literal("Document vector work limit exceeded");self.failure=Some(error.clone());return Err(error);}
+   if self.progress.work>=self.limits.max_work&&!self.failure_pending()&&!self.settlement_pending(){let error=DocumentSceneError::literal("Document vector work limit exceeded");self.failure=Some(error.clone());return Err(error);}
    let settling=self.failure_pending();let before=work.receipt();let before_cpu=self.last_turn_work;let before_semantic=self.last_turn_semantic_work;self.step_semantic=false;self.step_cpu=false;let entered=work.enter();
    if entered.is_none(){self.pending=work.next_demand();break;}
    let result=self.step(document,work,effect);let child_cpu=self.last_turn_work-before_cpu;let child_semantic=self.last_turn_semantic_work-before_semantic;let actual=child_cpu>0||work.receipt()!=before||self.step_cpu||result.is_err();
@@ -601,9 +601,8 @@ impl<'a> DocumentRasterJob<'a>{
  pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>)->Result<DocumentRasterProgress,DocumentSceneError>{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(DocumentSceneError::literal("Invalid document work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
   for _ in 0..budget{
-   if self.phase=="complete"{break;}let d=self.pending;
+   if self.phase=="complete"||effect.actual().is_some(){break;}let d=self.pending;
    if !work.admits_absolute(d){work.require_absolute(d);break;}
-   if self.work>=self.max_work&&!self.failure_pending(){let error=DocumentSceneError::literal("Document raster work limit exceeded");self.failure=Some(error.clone());return Err(error);}
    let settling=self.failure_pending();let before=work.receipt();let before_cpu=self.last_turn_work;let before_semantic=self.last_turn_semantic_work;self.step_semantic=false;self.step_cpu=false;let entered=work.enter();if entered.is_none(){self.pending=work.next_demand();break;}
    let exhausted=self.work>=self.max_work&&!settling&&!self.settlement_pending();let result=if exhausted{Err(DocumentSceneError::literal("Document raster work limit exceeded"))}else{self.step(work,effect)};let child_cpu=self.last_turn_work-before_cpu;let child_semantic=self.last_turn_semantic_work-before_semantic;let actual=child_cpu>0||work.receipt()!=before||self.step_cpu||result.is_err();
    if actual{work.note_source(entered==Some(true));if child_cpu==0{self.last_turn_work+=1;}}if !settling&&!exhausted&&child_semantic==0&&(self.step_semantic||result.is_err()){self.last_turn_semantic_work+=1;}if !settling{self.work+=self.last_turn_semantic_work-before_semantic;}work.exit();self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked()||!actual{break;}

@@ -61,13 +61,13 @@ fn e11_04(c: &Case) -> R {
     let cat = c.s("category")?.to_string();
     let area = c.pos("area")?;
     let n = c.n("storeys")?;
-    if n < 1.0 { return Err("input storeys must be at least 1".into()); }
+    if !(1.0..=255.0).contains(&n) || n.fract() != 0.0 { return Err("input storeys must be a whole number from 1 to 255".into()); }
     let a = part_1_1::alpha_a(&cat, area, c.annex);
     let an = part_1_1::alpha_n(&cat, n as u8, c.annex);
-    let psi0 = part_1_1::psi_0(&cat);
+    let (area_clause, storey_clause) = if c.de() { ("6.1a/b DE", "6.2 DE") } else { ("6.1", "6.2") };
     Ok(vec![
-        Outcome::info("alpha_a", "Area reduction α_A", "Flächenabminderung α_A", QuantityKind::Dimensionless, a).steps(format!("Category {cat}, A = {area:.1} m², ψ₀ = {psi0}: α_A = {a:.4}.")).basis(&["ndp.en1991.e11.alpha"]),
-        Outcome::info("alpha_n", "Storey reduction α_n", "Geschossabminderung α_n", QuantityKind::Dimensionless, an).steps(format!("n = {n:.0}, ψ₀ = {psi0}: α_n = {an:.4}.")).basis(&["ndp.en1991.e11.alpha"]),
+        Outcome::info("alpha_a", "Area reduction α_A for a secondary member", "Flächenabminderung α_A für ein sekundäres Tragglied", QuantityKind::Dimensionless, a).steps(format!("({area_clause}) · {cat} · A = {area:.1} m² · α_A = {a:.4}.")),
+        Outcome::info("alpha_n", "Storey reduction α_n for a vertical member", "Geschossabminderung α_n für ein vertikales Tragglied", QuantityKind::Dimensionless, an).steps(format!("({storey_clause}) · {cat} · n = {n:.0} · α_n = {an:.4}.")),
     ])
 }
 

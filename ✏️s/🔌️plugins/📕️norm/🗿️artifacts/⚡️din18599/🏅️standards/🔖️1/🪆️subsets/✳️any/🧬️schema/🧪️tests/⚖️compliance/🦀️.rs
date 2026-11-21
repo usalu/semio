@@ -6,7 +6,8 @@ use semio_framework_value::ToValue;
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus};
 use crate::{cooling_utilization, derive_balance, heating_utilization, evaluate_document, geg_ht_prime_limit, h_t_prime, primary_energy_factor, required_u_for_ht_prime, transmission_loss_coefficient, usage_profile_row, ventilation_loss_coefficient, zone_balances, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_INFILTRATION_N_INF};
 use semio_s_artifact_norm_din18599_examples as examples;
-use semio_s_artifact_norm_din18599_model::{Attachment, AutomationClass, ElementKind, UsageProfile};
+use crate::{internal_gains_w_m2, residential_daily_gain_wh_m2, zone_heating_months};
+use semio_s_artifact_norm_din18599_model::{Attachment, AutomationClass, BuildingCategory, CalculationMethod, Din18599Snapshot, ElementKind, UsageProfile, UseClass};
 
 fn apply_path_f64(doc: &mut semio_s_artifact_norm_din18599_model::Din18599Snapshot, path: &str, value: f64) {
     if path == "deltaUWbWM2k" {
@@ -105,9 +106,9 @@ fn ventilation_hv_matches_hand_derivation() {
 fn potsdam_compliant_house_passes_geg_gates() {
     let doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     let report = evaluate_document(&doc);
-    assert!(report.complies(), "expected compliant, fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
+    assert!(report.failing().next().is_none(), "unexpected failure: {:?}", report.failing().next().map(|c| &c.id));
     let ht = h_t_prime(&doc);
-    let limit = geg_ht_prime_limit(Attachment::Detached, doc.net_floor_area_m2);
+    let limit = geg_ht_prime_limit(&doc).expect("positive envelope area");
     assert!(ht <= limit, "H'T={ht} limit={limit}");
     let d = derive_balance(&doc);
     assert!(d.q_p_kwh <= d.q_p_limit_kwh, "Q_P={} limit={}", d.q_p_kwh, d.q_p_limit_kwh);
@@ -135,11 +136,11 @@ fn noncompliant_house_fails_ht_and_qp_with_remedies() {
 #[test]
 fn remedy_lowering_worst_u_improves_ht_prime() {
     let doc = semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house();
-    let limit = geg_ht_prime_limit(doc.attachment, doc.net_floor_area_m2);
+    let limit = geg_ht_prime_limit(&doc).expect("positive envelope area");
     assert!(h_t_prime(&doc) > limit);
     let mut fixed = doc.clone();
     for el in &mut fixed.elements {
-        el.u_value_w_m2k = crate::reference_u(el.kind);
+        el.u_value_w_m2k = crate::reference_u(el);
     }
     fixed.delta_u_wb_w_m2k = 0.05;
     assert!(h_t_prime(&fixed) <= limit + 1e-6, "after reference envelope H'T={} limit={}", h_t_prime(&fixed), limit);
@@ -163,17 +164,28 @@ fn remedy_law_apply_required_u_makes_ht_check_pass() {
 }
 
 #[test]
-fn remedy_law_apply_pv_makes_qp_check_pass() {
-    let doc = semio_s_artifact_norm_din18599_model::subjects::noncompliant_detached_house();
+fn renewable_electricity_credit_is_bounded_month_by_month() {
+    let vectors = include_str!("../../../🧪️tests/🧫️fixtures/☀️monthly-renewable-credit/🔣️.tsv");
+    for row in vectors.lines().skip(1) {
+        let columns: Vec<_> = row.split('\t').collect();
+        let expected = columns[3].parse::<f64>().ok();
+        assert_eq!(crate::monthly_renewable_electricity_credit_kwh(
+            columns[1].parse().unwrap(), columns[2].parse().unwrap(),
+        ), expected, "{}", columns[0]);
+    }
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
+    doc.renewables.pv_area_m2 = 10000.0;
+    let balance = derive_balance(&doc);
+    assert!(balance.renewable_electricity_months.iter().all(|row| row.credit_kwh <= row.eligible_electricity_kwh));
+    assert!(balance.renewable_electricity_months.iter().any(|row| row.credit_kwh < row.generation_kwh));
+    assert_eq!(balance.q_f_light_kwh, 0.0);
+    let before = balance.q_p_kwh;
+    doc.renewables.solar_thermal_kwh_a += 5000.0;
+    assert_eq!(derive_balance(&doc).q_p_kwh, before);
     let report = evaluate_document(&doc);
-    let qp = report.checks.iter().find(|c| c.id == "din18599.geg.qp").expect("qp");
-    assert_eq!(qp.status, CheckStatus::Fail);
-    let remedy = qp.remedies.iter().find(|r| r.applicable && r.target.path == "renewables.pvAreaM2").expect("pv remedy");
-    let mut fixed = doc.clone();
-    apply_path_f64(&mut fixed, &remedy.target.path, remedy.required.value);
-    let again = evaluate_document(&fixed);
-    let qp2 = again.checks.iter().find(|c| c.id == "din18599.geg.qp").unwrap();
-    assert!(qp2.utilization <= 1.0 + 1e-6, "u={} after PV {:?}", qp2.utilization, fixed.renewables.pv_area_m2);
+    let renewable = report.checks.iter().find(|c| c.id == "din18599.geg.renewable-electricity").expect("renewable credit");
+    assert_eq!(renewable.status, CheckStatus::UnverifiedBasis);
+    assert_eq!(renewable.computed.value, balance.q_pv_kwh);
 }
 
 #[test]
@@ -193,9 +205,36 @@ fn remedy_law_automation_oneof_makes_automation_pass() {
 
 #[test]
 fn primary_energy_factor_table_geg_annex4() {
-    assert!((primary_energy_factor("natural_gas") - 1.1).abs() < 1e-12);
-    assert!((primary_energy_factor("electricity") - 1.8).abs() < 1e-12);
-    assert!((primary_energy_factor("biomass") - 0.2).abs() < 1e-12);
+    let fixture = include_str!("../../../🧪️tests/🧫️fixtures/💡primary-energy-factors/🔣️.tsv");
+    let rows = crate::geg_anlage4_primary_energy_factors::ROWS;
+    let mut cases = fixture.lines().skip(1);
+    for (index, factor) in rows.iter().enumerate() {
+        let mut cells = cases.next().unwrap().split('\t');
+        assert_eq!(cells.next().unwrap().parse::<usize>().unwrap(), index + 1);
+        assert_eq!(cells.next().unwrap(), factor.carrier);
+        let expected = cells.next().unwrap().parse::<f64>().ok();
+        assert_eq!(expected, factor.factor);
+        if let Some(value) = expected {
+            assert_eq!(primary_energy_factor(factor.carrier), value);
+        }
+        assert_eq!(crate::has_direct_primary_energy_factor(factor.carrier), index < 9);
+    }
+    assert!(cases.next().is_none());
+    assert!(!crate::has_direct_primary_energy_factor("district_heating"));
+    assert!(!crate::has_direct_primary_energy_factor("unnamed"));
+    assert!(crate::uses_grid_electricity("heat_pump_electric"));
+}
+
+#[test]
+fn energy_reports_unverified_carrier_when_a_supply_factor_is_needed() {
+    let mut doc = Din18599Snapshot::default();
+    doc.dhw.energy_carrier = "district_heating".into();
+    let report = evaluate_document(&doc);
+    let basis = report.checks.iter().find(|check| check.id == "din18599.geg.primary-energy-factor-basis").unwrap();
+    assert_eq!(basis.subject.path, "dhw.energyCarrier");
+    assert_eq!(basis.status, CheckStatus::UnverifiedBasis);
+    let primary = report.checks.iter().find(|check| check.id == "din18599.geg.qp").unwrap();
+    assert_eq!(primary.status, CheckStatus::UnverifiedBasis);
 }
 
 #[test]
@@ -263,11 +302,50 @@ fn example_assets_decode_and_match_claimed_verdict() {
         let doc = <semio_s_artifact_norm_din18599_model::Din18599Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).unwrap_or_else(|e| panic!("{id} parse: {e}"));
         let report = evaluate_document(&doc);
         if expect_comply {
-            assert!(report.complies(), "{id} should comply; fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
+            assert!(report.failing().next().is_none(), "{id}: unexpected failure {:?}", report.failing().next().map(|c| &c.id));
+        } else if id == "cooled-office" {
+            assert!(!report.complies(), "{id} requires a verified ground-floor area");
+            assert!(report.checks.iter().any(|c| c.id.starts_with("din18599.geg.mean-u.1.") && c.status == CheckStatus::UnverifiedBasis));
         } else {
             assert!(!report.complies(), "{id} should fail");
             assert!(report.failing().count() >= 2, "{id} fail_count={}", report.failing().count());
         }
+    }
+}
+
+#[test]
+fn residential_hot_water_matches_table_4_fixtures() {
+    let cases = include_str!("../../../🧪️tests/🧫️fixtures/🚿residential-hot-water/🔣️.tsv");
+    for row in cases.lines().skip(1) {
+        let mut cells = row.split('\t');
+        let area = cells.next().unwrap().parse().unwrap();
+        let dwellings = cells.next().unwrap().parse().unwrap();
+        let expected = cells.next().unwrap();
+        let estimate = crate::residential_dhw_useful_kwh_a(area, dwellings);
+        if expected == "scope" {
+            assert_eq!(estimate, None, "{row}");
+        } else {
+            let expected = expected.parse::<f64>().unwrap();
+            assert!((estimate.unwrap() - expected).abs() < 1e-9, "{row}");
+        }
+    }
+}
+
+#[test]
+fn residential_hot_water_uses_geometry_in_live_balance() {
+    let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
+    doc.net_floor_area_m2 = 140.0;
+    doc.dhw.dwelling_count = 1;
+    doc.dhw.specific_demand_kwh_person_a = 900.0;
+    doc.zones[0].occupants = 12;
+    assert_eq!(crate::derive_balance(&doc).q_w_useful_kwh, 1330.0);
+    doc.dhw.dwelling_count = 2;
+    assert_eq!(crate::derive_balance(&doc).q_w_useful_kwh, 1820.0);
+    doc.dhw.dwelling_count = 0;
+    let report = evaluate_document(&doc);
+    for id in ["din18599.10.residential-dhw", "din18599.8.dhw", "din18599.geg.qp"] {
+        let result = report.checks.iter().find(|result| result.id == id).unwrap();
+        assert_eq!(result.status, CheckStatus::UnverifiedBasis, "{id}");
     }
 }
 
@@ -292,13 +370,12 @@ fn dhw_remedy_inverts_profile_limit() {
 #[test]
 fn norm_table_rows_match_cited_sources() {
     use crate::{
-        din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_zone_defaults, din_v_18599_11_automation_factor, din_v_18599_12_tabelle5_qp_specific, din_v_18599_2_adjacency_fx, din_v_18599_2_solar_geometry_factors, din_v_18599_4_lighting_power_density, DIN_V_18599_1_DAYS_PER_MONTH, DIN_V_18599_1_RHO_CA, din_v_18599_2_c_wirk_wh_m2k, zone_heat_capacity_wh_k, DIN_V_18599_2_UTILIZATION_A0, DIN_V_18599_2_UTILIZATION_TAU0_H, DIN_V_18599_5_ETA_SYS_FLOOR, DIN_V_18599_5_ETA_SYS_MIN, DIN_V_18599_7_COOLING_TO_HEATING_RATIO, din_v_18599_7_g_remedy, din_v_18599_8_dhw_loss_fractions, geg_anlage1_tabelle1_heating_eta, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors, GEG_ANLAGE1_DELTA_U_WB_REF, GEG_ANLAGE1_TABELLE1_ETA_WRG_REF, GEG_ANLAGE1_WINDOW_G_REF, GEG_SECTION10_QP_FACTOR_DEFAULT,
+        din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_zone_defaults, din_v_18599_11_automation_factor, din_v_18599_2_adjacency_fx, din_v_18599_2_solar_geometry_factors, din_v_18599_4_lighting_power_density, DIN_V_18599_1_DAYS_PER_MONTH, DIN_V_18599_1_RHO_CA, din_v_18599_2_c_wirk_wh_m2k, zone_heat_capacity_wh_k, DIN_V_18599_2_UTILIZATION_A0, DIN_V_18599_2_UTILIZATION_TAU0_H, DIN_V_18599_5_ETA_SYS_FLOOR, DIN_V_18599_5_ETA_SYS_MIN, DIN_V_18599_7_COOLING_TO_HEATING_RATIO, din_v_18599_7_g_remedy, din_v_18599_8_dhw_loss_fractions, geg_anlage1_tabelle1_heating_eta, GEG_SECTION_16_HT_PRIME_RATIO, geg_anlage1_reference_u, geg_anlage4_primary_energy_factors, GEG_ANLAGE1_DELTA_U_WB_REF, GEG_ANLAGE1_TABELLE1_ETA_WRG_REF, GEG_ANLAGE1_WINDOW_G_REF, GEG_SECTION10_QP_FACTOR_DEFAULT,
     };
     assert!((geg_anlage4_primary_energy_factors::NATURAL_GAS - 1.1).abs() < 1e-12);
     assert!((geg_anlage4_primary_energy_factors::ELECTRICITY_GRID - 1.8).abs() < 1e-12);
     assert!((geg_anlage4_primary_energy_factors::BIOMASS - 0.2).abs() < 1e-12);
-    assert!((geg_anlage2_reference_u::WALL - 0.28).abs() < 1e-12);
-    assert!((geg_anlage3_mean_u::WINDOW - 1.5).abs() < 1e-12);
+    assert!((geg_anlage1_reference_u::WALL_AND_FLOOR_TO_OUTDOORS - 0.28).abs() < 1e-12);
     assert!((GEG_ANLAGE1_TABELLE1_ETA_WRG_REF - 0.80).abs() < 1e-12);
     assert!((GEG_ANLAGE1_DELTA_U_WB_REF - 0.05).abs() < 1e-12);
     assert!((geg_anlage1_tabelle1_heating_eta::GENERATION - 0.95).abs() < 1e-12);
@@ -310,10 +387,7 @@ fn norm_table_rows_match_cited_sources() {
     assert!((DIN_V_18599_5_ETA_SYS_MIN - 0.85).abs() < 1e-12);
     assert!((DIN_V_18599_7_COOLING_TO_HEATING_RATIO - 0.5).abs() < 1e-12);
     assert!((din_v_18599_7_g_remedy::REDUCE_FACTOR - 0.7).abs() < 1e-12);
-    assert!((din_v_18599_12_tabelle5_qp_specific::RESIDENTIAL - 66.0).abs() < 1e-12);
-    assert!((din_v_18599_12_tabelle5_qp_specific::OFFICE - 100.0).abs() < 1e-12);
-    assert!((din_v_18599_12_tabelle5_qp_specific::SCHOOL - 85.0).abs() < 1e-12);
-    assert!((geg_anlage2_ht_prime_limits::DETACHED_AN_LE_350 - 0.40).abs() < 1e-12);
+    assert!((GEG_SECTION_16_HT_PRIME_RATIO - 1.0).abs() < 1e-12);
     assert!((din_v_18599_11_automation_factor::CLASS_A - 0.88).abs() < 1e-12);
     assert!((din_v_18599_2_adjacency_fx::GROUND - 0.6).abs() < 1e-12);
     assert!((din_v_18599_10_zone_defaults::THETA_I_HEAT_C - 20.0).abs() < 1e-12);
@@ -466,10 +540,18 @@ fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &semio_s_art
     let value = serde_json::to_value(base).expect("json");
     let mut leaves = Vec::new();
     walk_leaves("", &value, &mut |path| {
-        if path.is_empty() {
+        if path.is_empty() || path == "attachment" {
             return;
         }
         let leaf = path.rsplit(['.', '[']).next().unwrap_or(path);
+        if residential_daily_gain_wh_m2(base).is_some() {
+            let residential_zone_gain = base.zones.iter().enumerate().any(|(index, zone)| {
+                zone.usage_profile == UsageProfile::WFH && path == format!("zones[{index}].internalGainsWM2")
+            });
+            if residential_zone_gain {
+                return;
+            }
+        }
         if leaf == "labelEn" || leaf == "labelDe" || leaf == "id" || leaf.starts_with("id=") {
             return;
         }
@@ -557,6 +639,9 @@ fn assert_climate_payload_influences_checks(fixture_name: &str, base: &semio_s_a
 }
 
 fn perturb_string(path: &str, s: &str) -> String {
+    if path == "useClass" {
+        return if s == "ResidentialUpToTwoDwellings" { "ResidentialMultifamily".into() } else { "ResidentialUpToTwoDwellings".into() };
+    }
     if path.ends_with("usageProfile") || path.contains("usageProfile") {
         return if s == "WFH" { "Office".into() } else { "WFH".into() };
     }
@@ -763,4 +848,207 @@ fn the_zone_heat_capacity_follows_the_thermal_mass_class_or_the_explicit_value_o
         let expected = row["capacityWhK"].as_f64().expect("capacity");
         assert!((zone_heat_capacity_wh_k(&zone) - expected).abs() <= 1e-12 * expected, "{row}");
     }
+}
+
+#[test]
+fn residential_table_4_gains_flow_into_the_monthly_balance_and_report() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🏘️residential-gains.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut doc = Din18599Snapshot::default();
+        doc.dhw.dwelling_count = serde_json::from_value(case["dwellingCount"].clone()).unwrap();
+        doc.zones[0].area_m2 = fixture["netFloorAreaM2"].as_f64().unwrap();
+        doc.zones[0].internal_gains_w_m2 = 100.0;
+        let (_, months) = &zone_heating_months(&doc)[0];
+        assert_eq!(residential_daily_gain_wh_m2(&doc), case["dailyWhM2"].as_f64());
+        assert_eq!(internal_gains_w_m2(&doc, &doc.zones[0]), case["averageWM2"].as_f64().unwrap());
+        assert_eq!(months[0].q_i_kwh, case["januaryKWh"].as_f64().unwrap());
+        assert_eq!(months[1].q_i_kwh, case["februaryKWh"].as_f64().unwrap());
+        assert_eq!(months.iter().map(|m| m.q_i_kwh).sum::<f64>(), case["annualKWh"].as_f64().unwrap());
+        let report = evaluate_document(&doc);
+        let check = report.checks.iter().find(|check| check.id == "din18599.10.residential-internal-gains").unwrap();
+        assert_eq!(check.status, CheckStatus::Pass);
+        assert!(check.explanation.en.contains("Table 4"));
+        assert!(check.explanation.de.contains("Tabelle 4"));
+    }
+}
+
+#[test]
+fn residential_table_4_rejects_unspecified_basis_and_gates_on_profile_and_method() {
+    let mut doc = Din18599Snapshot::default();
+    doc.dhw.dwelling_count = 0;
+    let report = evaluate_document(&doc);
+    let check = report.checks.iter().find(|check| check.id == "din18599.10.residential-internal-gains").unwrap();
+    assert_eq!(check.status, CheckStatus::UnverifiedBasis);
+    assert_eq!(check.subject.path, "dhw.dwellingCount");
+    assert!(residential_daily_gain_wh_m2(&doc).is_none());
+
+    doc.dhw.dwelling_count = 3;
+    doc.zones[0].usage_profile = UsageProfile::Office;
+    assert_eq!(internal_gains_w_m2(&doc, &doc.zones[0]), doc.zones[0].internal_gains_w_m2);
+    doc.zones[0].usage_profile = UsageProfile::WFH;
+    doc.method = CalculationMethod::Tabular;
+    assert!(residential_daily_gain_wh_m2(&doc).is_none());
+    doc.method = CalculationMethod::DetailedMonthly;
+    doc.building_category = BuildingCategory::NonResidential;
+    assert!(residential_daily_gain_wh_m2(&doc).is_none());
+}
+
+#[test]
+fn residential_transmission_limit_uses_the_same_geometry_reference_envelope() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🧱️residential-envelope.json")).unwrap();
+    let close = |actual: f64, expected: f64| assert!((actual - expected).abs() < 1e-12, "{actual} != {expected}");
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut doc = Din18599Snapshot::default();
+        let wall = doc.elements[0].clone();
+        doc.delta_u_wb_w_m2k = fixture["deltaUWbWM2k"].as_f64().unwrap();
+        doc.elements = fixture["components"].as_array().unwrap().iter().zip(case["actualUWM2k"].as_array().unwrap()).enumerate().map(|(index, (component, actual))| {
+            let mut element = wall.clone();
+            element.id = format!("wall-{index}");
+            element.adjacency = serde_json::from_value(component["adjacency"].clone()).unwrap();
+            element.area_m2 = component["areaM2"].as_f64().unwrap();
+            element.u_value_w_m2k = actual.as_f64().unwrap();
+            if let Some(expected) = component["referenceUWM2k"].as_f64() {
+                close(crate::reference_u(&element), expected);
+            }
+            element
+        }).collect();
+        let expected_limit = fixture["limitWM2k"].as_f64().unwrap();
+        let expected_ht = case["hTPrimeWM2k"].as_f64().unwrap();
+        close(geg_ht_prime_limit(&doc).unwrap(), expected_limit);
+        close(h_t_prime(&doc), expected_ht);
+
+        doc.attachment = Attachment::MidTerrace;
+        doc.net_floor_area_m2 = 400.0;
+        let report = evaluate_document(&doc);
+        let check = report.checks.iter().find(|check| check.id == "din18599.geg.ht-prime").unwrap();
+        close(check.limit.value, expected_limit);
+        close(check.computed.value, expected_ht);
+        assert_eq!(format!("{:?}", check.status), case["status"].as_str().unwrap());
+        assert!(check.explanation.en.contains("Annex 1"));
+    }
+}
+
+#[test]
+fn potsdam_geometry_and_monthly_irradiance_match_the_published_examples() {
+    let fixture = include_str!("../../../🧪️tests/🧫️fixtures/☀️potsdam-irradiance/🔣️.tsv");
+    for row in fixture.lines().skip(1) {
+        let fields: Vec<_> = row.split('\t').collect();
+        let month = fields[0].parse::<usize>().unwrap() - 1;
+        let irradiance = crate::potsdam_irradiance_w_m2(month, fields[1].parse().unwrap(), fields[2].parse().unwrap());
+        if fields[3] == "scope" {
+            assert_eq!(irradiance, None, "{row}");
+            continue;
+        }
+        let expected = fields[3].parse::<f64>().unwrap();
+        let value = irradiance.unwrap();
+        assert!((value - expected).abs() < 1e-9, "{row}: {value}");
+        if let Ok(expected_yield) = fields[4].parse::<f64>() {
+            let energy = value * crate::DIN_V_18599_1_DAYS_PER_MONTH[month] * 24.0 / 1000.0
+                * 602.0 * 0.166 * 0.9 * 0.75;
+            assert!((energy - expected_yield).abs() <= 0.005, "{row}: {energy}");
+        }
+    }
+}
+
+#[test]
+fn tabular_method_scopes_building_category_and_withholds_primary_energy_verdict() {
+    let mut doc = Din18599Snapshot::default();
+    doc.method = CalculationMethod::Tabular;
+    for (category, expected) in [
+        (BuildingCategory::Residential, CheckStatus::UnverifiedBasis),
+        (BuildingCategory::NonResidential, CheckStatus::NotApplicable),
+    ] {
+        doc.building_category = category;
+        let report = evaluate_document(&doc);
+        let tabular = report.checks.iter().find(|check| check.id == "din18599.12.tabular").unwrap();
+        let primary = report.checks.iter().find(|check| check.id == "din18599.geg.qp").unwrap();
+        assert_eq!(tabular.status, expected);
+        assert_eq!(primary.status, CheckStatus::UnverifiedBasis);
+    }
+}
+
+#[test]
+fn annex3_groups_by_class_and_exact_heating_setpoint() {
+    let mut doc = Din18599Snapshot::default();
+    doc.building_category = BuildingCategory::NonResidential;
+    let mut different_zone = doc.zones[0].clone();
+    different_zone.id = "zone-second".into();
+    different_zone.theta_i_heat_c = 21.0;
+    doc.zones.push(different_zone);
+    let mut wall = doc.elements[0].clone();
+    wall.kind = semio_s_artifact_norm_din18599_model::ElementKind::Wall;
+    wall.adjacency = semio_s_artifact_norm_din18599_model::Adjacency::Outdoor;
+    wall.u_value_w_m2k = 0.5;
+    let mut other_wall = wall.clone();
+    other_wall.id = "other-wall".into();
+    other_wall.zone_id = "zone-second".into();
+    other_wall.u_value_w_m2k = 0.16;
+    doc.elements = vec![wall, other_wall];
+    let (groups, missing_basis) = crate::annex3_envelope_groups(&doc);
+    assert!(!missing_basis);
+    assert_eq!(groups.len(), 2);
+    assert_ne!(groups[0].check_id(), groups[1].check_id());
+    let report = evaluate_document(&doc);
+    let results: Vec<_> = groups.iter().map(|group| {
+        report.checks.iter().find(|check| check.id == group.check_id()).unwrap()
+    }).collect();
+    assert_eq!(results[0].status, CheckStatus::Fail);
+    assert_eq!(results[1].status, CheckStatus::Pass);
+    let remedy = &results[0].remedies[0];
+    assert!((remedy.required.value - 0.28).abs() < 1e-12);
+}
+
+#[test]
+fn annex3_normative_tables_and_weighting_match_fixtures() {
+    use crate::{annex3_limit, annex3_mean_u, Annex3EnvelopeClass};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏢annex-3-envelope/🔣️.json")).unwrap();
+    for row in fixture.as_array().unwrap() {
+        let class = Annex3EnvelopeClass::ALL.into_iter().find(|class| format!("{class:?}") == row["envelopeClass"].as_str().unwrap()).unwrap();
+        let theta = row["setpointC"].as_f64().unwrap();
+        let components: Vec<(f64, f64, f64)> = serde_json::from_value(row["components"].clone()).unwrap();
+        assert_eq!(annex3_limit(class, theta), row["limitU"].as_f64());
+        match (annex3_mean_u(components), row["meanU"].as_f64()) {
+            (Some(mean), Some(expected)) => assert!((mean - expected).abs() < 1e-12, "{row}"),
+            (None, None) => {}
+            mismatch => panic!("Unexpected mean {mismatch:?} for {row}"),
+        }
+    }
+}
+
+#[test]
+fn annex2_reference_preserves_geometry_and_shading() {
+    use semio_s_artifact_norm_din18599_model::{Adjacency, ElementKind};
+    let mut doc = Din18599Snapshot::default();
+    doc.building_category = BuildingCategory::NonResidential;
+    doc.zones[0].theta_i_heat_c = 18.0;
+    let mut element = doc.elements[0].clone();
+    element.kind = ElementKind::CurtainWall;
+    element.adjacency = Adjacency::Outdoor;
+    element.fc = 0.45;
+    let reference = crate::energy_reference_element(&doc, &element);
+    assert_eq!(reference.u_value_w_m2k, 1.9);
+    assert_eq!(reference.g_value, 0.60);
+    assert_eq!(reference.area_m2, element.area_m2);
+    assert_eq!(reference.fc, element.fc);
+    let roof = crate::annex2_reference_values(ElementKind::RooflightStrip, Adjacency::Outdoor, 19.0).unwrap();
+    assert_eq!(roof.u_value_w_m2k, 2.4);
+    assert_eq!(roof.solar_transmittance, Some(0.55));
+    assert_eq!(roof.visible_transmittance, Some(0.48));
+}
+
+#[test]
+fn annex2_bridge_covers_only_listed_exterior_components() {
+    use semio_s_artifact_norm_din18599_model::{Adjacency, ElementKind};
+    let doc = Din18599Snapshot::default();
+    let mut wall = doc.elements[0].clone();
+    wall.kind = ElementKind::Wall;
+    wall.adjacency = Adjacency::Outdoor;
+    wall.area_m2 = 20.0;
+    let mut curtain_wall = wall.clone();
+    curtain_wall.kind = ElementKind::CurtainWall;
+    let mut internal_wall = wall.clone();
+    internal_wall.adjacency = Adjacency::Heated;
+    let components = [&wall, &curtain_wall, &internal_wall];
+    assert_eq!(crate::annex2_reference_bridge_w_k(&components, 19.0), 1.0);
+    assert_eq!(crate::annex2_reference_bridge_w_k(&components, 18.0), 2.0);
 }

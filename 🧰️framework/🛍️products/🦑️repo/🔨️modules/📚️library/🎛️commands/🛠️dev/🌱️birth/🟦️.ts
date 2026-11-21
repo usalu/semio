@@ -32,3 +32,31 @@ export async function rootDevMcpFreshCapabilitiesV1(root: string, argv: readonly
   }
   return Object.freeze({ ...original, launches: Object.freeze([...launches.values()]) });
 }
+
+type PlaygroundServeRequest = Readonly<{ variant: string; renderer: "react" | "wgpu" | "native"; profile: "prototype" | "release" }>;
+
+/** 🎮️ Admits only the complete root request for the playground owner. */
+export function rootDevPlaygroundRequestV1(argv: readonly string[]): PlaygroundServeRequest | null {
+  const { prefix, operands } = schema.$defs.PlaygroundProtocol.const;
+  if (argv.length !== operands || !prefix.every((word, index) => argv[index] === word)) return null;
+  const [, , variant, renderer, profile] = argv;
+  const request = { variant, renderer, profile };
+  if (validateJsonSchemaSubset(schema.$defs.PlaygroundRequest, request).length) return null;
+  return Object.freeze(request as PlaygroundServeRequest);
+}
+
+/** 🌱️ Declares exactly the root playground request as Native caller DATA without planning a build graph. */
+export async function rootDevPlaygroundFreshCapabilitiesV1(root: string, argv: readonly string[], environment: NodeJS.ProcessEnv): Promise<Readonly<Record<string, unknown>> | null> {
+  const request = rootDevPlaygroundRequestV1(argv);
+  if (!request) return null;
+  if (environment.SEMIO_BUILD_MODE !== undefined && environment.SEMIO_BUILD_MODE !== request.profile) {
+    throw Error("Playground profile disagrees with the requested build mode");
+  }
+  const [{ createNativeBuildCallerCapabilitiesV1 }, { parseBuildInvocationV1 }] = await Promise.all([
+    import("../../../🏗️build/📥️caller/🟦️.ts"),
+    import("../../../🏗️build/🧭️invocation/🟦️.ts"),
+  ]);
+  const { tool } = parseBuildInvocationV1([], environment);
+  const capabilities = createNativeBuildCallerCapabilitiesV1(root, argv, tool, { ...environment, SEMIO_BUILD_MODE: request.profile });
+  return Object.freeze({ ...capabilities });
+}

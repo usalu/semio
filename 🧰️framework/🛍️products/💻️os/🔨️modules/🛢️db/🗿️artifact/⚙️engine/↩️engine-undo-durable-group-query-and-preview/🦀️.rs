@@ -41,8 +41,8 @@ impl ArtifactEngine {
             dependencies: vec![target.clone()],
             observed: None,
             target: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)).await },
-            inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)).await },
+            diff: protocol::ArtifactDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap_payload(&entries_to_value(&undo_diff_entries)).await? },
+            inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap_payload(&entries_to_value(&redo_inverse_entries)).await? },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
             transaction: None, verb: None, line: None,
         };
@@ -308,8 +308,8 @@ impl ArtifactEngine {
             dependencies: Vec::new(),
             observed: None,
             target: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)).await },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&semio_framework_value::DslValue::Object(vec![])).await },
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap_payload(&entries_to_value(&dsl_entries)).await? },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap_payload(&semio_framework_value::DslValue::Object(vec![])).await? },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
             transaction: None, verb: None, line: None,
         };

@@ -1,0 +1,12 @@
+{
+  "stripTriangles": 4096,
+  "authoredNormal": [0.6, 0, -0.8],
+  "scale": [2, 3, 4],
+  "translation": [5, -2, 9],
+  "stripTranslation": [3, 0, 2],
+  "smallMatrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -4, -1, 1, 1],
+  "expectedTriangles": 4100,
+  "expectedLists": 2,
+  "expectedFan": 2,
+  "expectedBounds": [[-3, -5, 13], [4107, 1, 17]]
+}

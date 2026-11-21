@@ -273,7 +273,8 @@
         "specificDemandKwhPersonA",
         "storageLossKwhA",
         "distributionLossKwhA",
-        "energyCarrier"
+        "energyCarrier",
+        "dwellingCount"
       ],
       "properties": {
         "specificDemandKwhPersonA": {
@@ -310,6 +311,16 @@
           "anyOf": [
             {
               "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/energyCarrier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dwellingCount": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-energy/din18599/snapshot/schema.json#/$defs/DhwSystem/properties/dwellingCount"
             },
             {
               "type": "null"

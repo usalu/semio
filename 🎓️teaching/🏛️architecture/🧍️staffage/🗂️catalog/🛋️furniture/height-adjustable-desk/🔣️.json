@@ -113,6 +113,20 @@
         "solarAbsorptivity": 0.6,
         "densityKgM3": 1100,
         "source": "authored-estimate"
+      },
+      {
+        "id": "display-glass",
+        "title": {
+          "en": "Display cover glass",
+          "de": "Display-Deckglas"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1.4,
+        "specificHeatJKgK": 840,
+        "source": "literature",
+        "reference": "incropera-2018"
       }
     ],
     "rig": {
@@ -290,6 +304,26 @@
             "distribution": "point",
             "source": "literature",
             "reference": "ashby-2011"
+          }
+        },
+        {
+          "id": "screen-tilt",
+          "parent": "top",
+          "title": {
+            "en": "Display tilt spindle",
+            "de": "Neigeachse des Monitors"
+          },
+          "x": 0.6,
+          "y": 0.305,
+          "z": 0.177,
+          "angleDeg": 0,
+          "lengthM": 0.05,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 0,
+            "twistMinDeg": -5,
+            "twistMaxDeg": 20
           }
         }
       ]
@@ -542,36 +576,6 @@
               "material": "equipment-housing"
             },
             {
-              "id": "monitor-stand",
-              "bone": "top",
-              "role": "body",
-              "z": 4.05,
-              "filled": true,
-              "tone": 0.28,
-              "kind": "rect",
-              "x": 0.57,
-              "y": 0.025,
-              "w": 0.06,
-              "h": 0.102,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 4.3,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.293,
-              "y": 0.117,
-              "w": 0.614,
-              "h": 0.368,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -585,6 +589,86 @@
               "h": 0.02,
               "region": "laptop-lid",
               "material": "equipment-housing"
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.303, 0.18], [-0.303, 0.18], [-0.307, 0.176], [-0.307, -0.184], [-0.303, -0.188], [0.303, -0.188], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
             }
           ],
           "front": [
@@ -694,36 +778,6 @@
               "material": "equipment-housing"
             },
             {
-              "id": "monitor-stand",
-              "bone": "top",
-              "role": "body",
-              "z": 4.05,
-              "filled": true,
-              "tone": 0.28,
-              "kind": "rect",
-              "x": 0.13,
-              "y": 0.72,
-              "w": 0.07,
-              "h": 0.102,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 4.2,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.115,
-              "y": 0.812,
-              "w": 0.053,
-              "h": 0.368,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -737,6 +791,106 @@
               "h": 0.02,
               "region": "laptop-lid",
               "material": "equipment-housing"
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.303, 0.18], [-0.303, 0.18], [-0.307, 0.176], [-0.307, -0.184], [-0.303, -0.188], [0.303, -0.188], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
+            },
+            {
+              "id": "monitor-bulge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "poly",
+              "points": [[0.245, 0.108], [0.2414853, 0.1164853], [0.233, 0.12], [-0.233, 0.12], [-0.2414853, 0.1164853], [-0.245, 0.108], [-0.245, -0.138], [-0.2414853, -0.1464853], [-0.233, -0.15], [0.233, -0.15], [0.2414853, -0.1464853], [0.245, -0.138]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.13,
+                "z1": 0.168
+              }
             }
           ],
           "plan": [
@@ -756,36 +910,6 @@
               "material": "particleboard-laminate"
             },
             {
-              "id": "monitor-stand",
-              "bone": "top",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.28,
-              "kind": "rect",
-              "x": 0.57,
-              "y": 0.13,
-              "w": 0.06,
-              "h": 0.07,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 3.0,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.293,
-              "y": 0.115,
-              "w": 0.614,
-              "h": 0.053,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -799,6 +923,106 @@
               "h": 0.25,
               "region": "laptop-lid",
               "material": "equipment-housing"
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.303, 0.18], [-0.303, 0.18], [-0.307, 0.176], [-0.307, -0.184], [-0.303, -0.188], [0.303, -0.188], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
+            },
+            {
+              "id": "monitor-bulge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "poly",
+              "points": [[0.245, 0.108], [0.2414853, 0.1164853], [0.233, 0.12], [-0.233, 0.12], [-0.2414853, 0.1164853], [-0.245, 0.108], [-0.245, -0.138], [-0.2414853, -0.1464853], [-0.233, -0.15], [0.233, -0.15], [0.2414853, -0.1464853], [0.245, -0.138]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.13,
+                "z1": 0.168
+              }
             }
           ]
         },
@@ -1065,51 +1289,6 @@
               "material": "equipment-housing"
             },
             {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 4.1,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.475,
-              "y": 0.025,
-              "w": 0.25,
-              "h": 0.018,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 4.05,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.57,
-              "y": 0.043,
-              "w": 0.06,
-              "h": 0.317,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 4.3,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.293,
-              "y": 0.117,
-              "w": 0.614,
-              "h": 0.368,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -1123,6 +1302,106 @@
               "h": 0.02,
               "region": "laptop-lid",
               "material": "equipment-housing"
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3058284, 0.1788284], [0.303, 0.18], [-0.303, 0.18], [-0.3058284, 0.1788284], [-0.307, 0.176], [-0.307, -0.184], [-0.3058284, -0.1868284], [-0.303, -0.188], [0.303, -0.188], [0.3058284, -0.1868284], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
             }
           ],
           "front": [
@@ -1247,51 +1526,6 @@
               "material": "equipment-housing"
             },
             {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 4.05,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.175,
-              "y": 0.738,
-              "w": 0.025,
-              "h": 0.317,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 4.1,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.06,
-              "y": 0.72,
-              "w": 0.2,
-              "h": 0.018,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 4.2,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.115,
-              "y": 0.812,
-              "w": 0.06,
-              "h": 0.368,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -1305,6 +1539,126 @@
               "h": 0.02,
               "region": "laptop-lid",
               "material": "equipment-housing"
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3058284, 0.1788284], [0.303, 0.18], [-0.303, 0.18], [-0.3058284, 0.1788284], [-0.307, 0.176], [-0.307, -0.184], [-0.3058284, -0.1868284], [-0.303, -0.188], [0.303, -0.188], [0.3058284, -0.1868284], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
+            },
+            {
+              "id": "monitor-bulge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "poly",
+              "points": [[0.245, 0.108], [0.2414853, 0.1164853], [0.233, 0.12], [-0.233, 0.12], [-0.2414853, 0.1164853], [-0.245, 0.108], [-0.245, -0.138], [-0.2414853, -0.1464853], [-0.233, -0.15], [0.233, -0.15], [0.2414853, -0.1464853], [0.245, -0.138]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.13,
+                "z1": 0.168
+              }
             }
           ],
           "plan": [
@@ -1324,51 +1678,6 @@
               "material": "particleboard-laminate"
             },
             {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 2.0,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.475,
-              "y": 0.06,
-              "w": 0.25,
-              "h": 0.2,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.57,
-              "y": 0.175,
-              "w": 0.06,
-              "h": 0.025,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 3.0,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.293,
-              "y": 0.115,
-              "w": 0.614,
-              "h": 0.06,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -1382,6 +1691,126 @@
               "h": 0.25,
               "region": "laptop-lid",
               "material": "equipment-housing"
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3058284, 0.1788284], [0.303, 0.18], [-0.303, 0.18], [-0.3058284, 0.1788284], [-0.307, 0.176], [-0.307, -0.184], [-0.3058284, -0.1868284], [-0.303, -0.188], [0.303, -0.188], [0.3058284, -0.1868284], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
+            },
+            {
+              "id": "monitor-bulge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "poly",
+              "points": [[0.245, 0.108], [0.2414853, 0.1164853], [0.233, 0.12], [-0.233, 0.12], [-0.2414853, 0.1164853], [-0.245, 0.108], [-0.245, -0.138], [-0.2414853, -0.1464853], [-0.233, -0.15], [0.233, -0.15], [0.2414853, -0.1464853], [0.245, -0.138]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.13,
+                "z1": 0.168
+              }
             }
           ]
         },
@@ -1629,7 +2058,7 @@
               "h": 0.025,
               "region": "steel-desk",
               "material": "steel-desk",
-              "penMm": 0.18
+              "penMm": 0.2
             },
             {
               "id": "top-bracket-right",
@@ -1645,7 +2074,7 @@
               "h": 0.025,
               "region": "steel-desk",
               "material": "steel-desk",
-              "penMm": 0.18
+              "penMm": 0.2
             },
             {
               "id": "top-crossbar",
@@ -1696,70 +2125,6 @@
               "penMm": 0.18
             },
             {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 4.1,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.475,
-              "y": 0.025,
-              "w": 0.25,
-              "h": 0.018,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 4.05,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.57,
-              "y": 0.043,
-              "w": 0.06,
-              "h": 0.317,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 4.3,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.293,
-              "y": 0.117,
-              "w": 0.614,
-              "h": 0.368,
-              "r": 0.004,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
-              "id": "monitor-screen",
-              "bone": "top",
-              "role": "glazing",
-              "z": 4.4,
-              "filled": true,
-              "tone": 0.08,
-              "kind": "rect",
-              "x": 0.301,
-              "y": 0.141,
-              "w": 0.598,
-              "h": 0.336,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -1774,6 +2139,106 @@
               "region": "laptop-lid",
               "material": "equipment-housing",
               "penMm": 0.18
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3066955, 0.1775307], [0.3058284, 0.1788284], [0.3045307, 0.1796955], [0.303, 0.18], [-0.303, 0.18], [-0.3045307, 0.1796955], [-0.3058284, 0.1788284], [-0.3066955, 0.1775307], [-0.307, 0.176], [-0.307, -0.184], [-0.3066955, -0.1855307], [-0.3058284, -0.1868284], [-0.3045307, -0.1876955], [-0.303, -0.188], [0.303, -0.188], [0.3045307, -0.1876955], [0.3058284, -0.1868284], [0.3066955, -0.1855307], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
             }
           ],
           "front": [
@@ -1785,32 +2250,7 @@
               "filled": true,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  -0.35,
-                  0.0
-                ],
-                [
-                  0.35,
-                  0.0
-                ],
-                [
-                  0.35,
-                  0.028
-                ],
-                [
-                  0.07,
-                  0.045
-                ],
-                [
-                  -0.07,
-                  0.045
-                ],
-                [
-                  -0.35,
-                  0.028
-                ]
-              ],
+              "points": [[-0.35, 0.0], [0.35, 0.0], [0.35, 0.028], [0.07, 0.045], [-0.07, 0.045], [-0.35, 0.028]],
               "closed": true,
               "region": "steel-desk",
               "material": "steel-desk",
@@ -1911,7 +2351,7 @@
               "h": 0.025,
               "region": "steel-desk",
               "material": "steel-desk",
-              "penMm": 0.18
+              "penMm": 0.2
             },
             {
               "id": "top-tray",
@@ -1921,40 +2361,7 @@
               "filled": true,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.2,
-                  0.695
-                ],
-                [
-                  0.208,
-                  0.695
-                ],
-                [
-                  0.208,
-                  0.593
-                ],
-                [
-                  0.332,
-                  0.593
-                ],
-                [
-                  0.332,
-                  0.695
-                ],
-                [
-                  0.34,
-                  0.695
-                ],
-                [
-                  0.34,
-                  0.585
-                ],
-                [
-                  0.2,
-                  0.585
-                ]
-              ],
+              "points": [[0.2, 0.695], [0.208, 0.695], [0.208, 0.593], [0.332, 0.593], [0.332, 0.695], [0.34, 0.695], [0.34, 0.585], [0.2, 0.585]],
               "closed": true,
               "region": "steel-desk",
               "material": "steel-desk",
@@ -1977,55 +2384,6 @@
               "penMm": 0.18
             },
             {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 4.05,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.175,
-              "y": 0.738,
-              "w": 0.025,
-              "h": 0.317,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 4.1,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.06,
-              "y": 0.72,
-              "w": 0.2,
-              "h": 0.018,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 4.2,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.115,
-              "y": 0.812,
-              "w": 0.06,
-              "h": 0.368,
-              "r": 0.006,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -2040,6 +2398,126 @@
               "region": "laptop-lid",
               "material": "equipment-housing",
               "penMm": 0.18
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3066955, 0.1775307], [0.3058284, 0.1788284], [0.3045307, 0.1796955], [0.303, 0.18], [-0.303, 0.18], [-0.3045307, 0.1796955], [-0.3058284, 0.1788284], [-0.3066955, 0.1775307], [-0.307, 0.176], [-0.307, -0.184], [-0.3066955, -0.1855307], [-0.3058284, -0.1868284], [-0.3045307, -0.1876955], [-0.303, -0.188], [0.303, -0.188], [0.3045307, -0.1876955], [0.3058284, -0.1868284], [0.3066955, -0.1855307], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
+            },
+            {
+              "id": "monitor-bulge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "poly",
+              "points": [[0.245, 0.108], [0.2414853, 0.1164853], [0.233, 0.12], [-0.233, 0.12], [-0.2414853, 0.1164853], [-0.245, 0.108], [-0.245, -0.138], [-0.2414853, -0.1464853], [-0.233, -0.15], [0.233, -0.15], [0.2414853, -0.1464853], [0.245, -0.138]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.13,
+                "z1": 0.168
+              }
             }
           ],
           "plan": [
@@ -2061,56 +2539,6 @@
               "penMm": 0.35
             },
             {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 2.0,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.475,
-              "y": 0.06,
-              "w": 0.25,
-              "h": 0.2,
-              "r": 0.008,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.57,
-              "y": 0.175,
-              "w": 0.06,
-              "h": 0.025,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 3.0,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.293,
-              "y": 0.115,
-              "w": 0.614,
-              "h": 0.06,
-              "r": 0.006,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.18
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -2126,6 +2554,126 @@
               "region": "laptop-lid",
               "material": "equipment-housing",
               "penMm": 0.18
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3066955, 0.1775307], [0.3058284, 0.1788284], [0.3045307, 0.1796955], [0.303, 0.18], [-0.303, 0.18], [-0.3045307, 0.1796955], [-0.3058284, 0.1788284], [-0.3066955, 0.1775307], [-0.307, 0.176], [-0.307, -0.184], [-0.3066955, -0.1855307], [-0.3058284, -0.1868284], [-0.3045307, -0.1876955], [-0.303, -0.188], [0.303, -0.188], [0.3045307, -0.1876955], [0.3058284, -0.1868284], [0.3066955, -0.1855307], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
+            },
+            {
+              "id": "monitor-bulge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "poly",
+              "points": [[0.245, 0.108], [0.2414853, 0.1164853], [0.233, 0.12], [-0.233, 0.12], [-0.2414853, 0.1164853], [-0.245, 0.108], [-0.245, -0.138], [-0.2414853, -0.1464853], [-0.233, -0.15], [0.233, -0.15], [0.2414853, -0.1464853], [0.245, -0.138]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.2,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.13,
+                "z1": 0.168
+              }
             }
           ]
         },
@@ -2233,16 +2781,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  0.003,
-                  0.028
-                ],
-                [
-                  0.077,
-                  0.028
-                ]
-              ],
+              "points": [[0.003, 0.028], [0.077, 0.028]],
               "closed": false,
               "region": "steel-desk",
               "material": "steel-desk"
@@ -2385,16 +2924,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  0.003,
-                  0.028
-                ],
-                [
-                  0.077,
-                  0.028
-                ]
-              ],
+              "points": [[0.003, 0.028], [0.077, 0.028]],
               "closed": false,
               "region": "steel-desk",
               "material": "steel-desk"
@@ -2644,71 +3174,6 @@
               "penMm": 0.25
             },
             {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 4.1,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.475,
-              "y": 0.025,
-              "w": 0.25,
-              "h": 0.018,
-              "r": 0.004,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 4.05,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.57,
-              "y": 0.043,
-              "w": 0.06,
-              "h": 0.317,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 4.3,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.293,
-              "y": 0.117,
-              "w": 0.614,
-              "h": 0.368,
-              "r": 0.004,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-screen",
-              "bone": "top",
-              "role": "glazing",
-              "z": 4.4,
-              "filled": true,
-              "tone": 0.08,
-              "kind": "rect",
-              "x": 0.301,
-              "y": 0.141,
-              "w": 0.598,
-              "h": 0.336,
-              "region": "monitor-housing",
-              "material": "equipment-housing"
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -2733,19 +3198,110 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  0.894,
-                  0.037
-                ],
-                [
-                  1.246,
-                  0.037
-                ]
-              ],
+              "points": [[0.894, 0.037], [1.246, 0.037]],
               "closed": false,
               "region": "laptop-lid",
               "material": "equipment-housing"
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3068637, 0.1770353], [0.3064641, 0.178], [0.3058284, 0.1788284], [0.305, 0.1794641], [0.3040353, 0.1798637], [0.303, 0.18], [-0.303, 0.18], [-0.3040353, 0.1798637], [-0.305, 0.1794641], [-0.3058284, 0.1788284], [-0.3064641, 0.178], [-0.3068637, 0.1770353], [-0.307, 0.176], [-0.307, -0.184], [-0.3068637, -0.1850353], [-0.3064641, -0.186], [-0.3058284, -0.1868284], [-0.305, -0.1874641], [-0.3040353, -0.1878637], [-0.303, -0.188], [0.303, -0.188], [0.3040353, -0.1878637], [0.305, -0.1874641], [0.3058284, -0.1868284], [0.3064641, -0.186], [0.3068637, -0.1850353], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
             }
           ],
           "front": [
@@ -2770,32 +3326,7 @@
               "filled": true,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  -0.35,
-                  0.01
-                ],
-                [
-                  0.35,
-                  0.01
-                ],
-                [
-                  0.35,
-                  0.028
-                ],
-                [
-                  0.07,
-                  0.045
-                ],
-                [
-                  -0.07,
-                  0.045
-                ],
-                [
-                  -0.35,
-                  0.028
-                ]
-              ],
+              "points": [[-0.35, 0.01], [0.35, 0.01], [0.35, 0.028], [0.07, 0.045], [-0.07, 0.045], [-0.35, 0.028]],
               "closed": true,
               "region": "steel-desk",
               "material": "steel-desk",
@@ -2940,64 +3471,7 @@
               "filled": true,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.185,
-                  0.695
-                ],
-                [
-                  0.355,
-                  0.695
-                ],
-                [
-                  0.355,
-                  0.691
-                ],
-                [
-                  0.34,
-                  0.691
-                ],
-                [
-                  0.34,
-                  0.585
-                ],
-                [
-                  0.2,
-                  0.585
-                ],
-                [
-                  0.2,
-                  0.691
-                ],
-                [
-                  0.185,
-                  0.691
-                ],
-                [
-                  0.185,
-                  0.695
-                ],
-                [
-                  0.204,
-                  0.695
-                ],
-                [
-                  0.204,
-                  0.589
-                ],
-                [
-                  0.336,
-                  0.589
-                ],
-                [
-                  0.336,
-                  0.695
-                ],
-                [
-                  0.185,
-                  0.695
-                ]
-              ],
+              "points": [[0.185, 0.695], [0.355, 0.695], [0.355, 0.691], [0.34, 0.691], [0.34, 0.585], [0.2, 0.585], [0.2, 0.691], [0.185, 0.691], [0.185, 0.695], [0.204, 0.695], [0.204, 0.589], [0.336, 0.589], [0.336, 0.695], [0.185, 0.695]],
               "closed": true,
               "region": "steel-desk",
               "material": "steel-desk",
@@ -3037,111 +3511,6 @@
               "penMm": 0.25
             },
             {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 4.05,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.175,
-              "y": 0.738,
-              "w": 0.025,
-              "h": 0.317,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 4.1,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.06,
-              "y": 0.72,
-              "w": 0.2,
-              "h": 0.018,
-              "r": 0.004,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-hinge",
-              "bone": "top",
-              "role": "body",
-              "z": 4.07,
-              "filled": true,
-              "tone": 0.22,
-              "kind": "rect",
-              "x": 0.155,
-              "y": 0.965,
-              "w": 0.025,
-              "h": 0.07,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-bulge",
-              "bone": "top",
-              "role": "body",
-              "z": 4.15,
-              "filled": true,
-              "tone": 0.24,
-              "kind": "poly",
-              "points": [
-                [
-                  0.128,
-                  0.835
-                ],
-                [
-                  0.15,
-                  0.845
-                ],
-                [
-                  0.168,
-                  0.885
-                ],
-                [
-                  0.168,
-                  1.085
-                ],
-                [
-                  0.15,
-                  1.125
-                ],
-                [
-                  0.128,
-                  1.135
-                ]
-              ],
-              "closed": true,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 4.2,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.115,
-              "y": 0.812,
-              "w": 0.015,
-              "h": 0.368,
-              "r": 0.004,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -3157,6 +3526,126 @@
               "region": "laptop-lid",
               "material": "equipment-housing",
               "penMm": 0.25
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3068637, 0.1770353], [0.3064641, 0.178], [0.3058284, 0.1788284], [0.305, 0.1794641], [0.3040353, 0.1798637], [0.303, 0.18], [-0.303, 0.18], [-0.3040353, 0.1798637], [-0.305, 0.1794641], [-0.3058284, 0.1788284], [-0.3064641, 0.178], [-0.3068637, 0.1770353], [-0.307, 0.176], [-0.307, -0.184], [-0.3068637, -0.1850353], [-0.3064641, -0.186], [-0.3058284, -0.1868284], [-0.305, -0.1874641], [-0.3040353, -0.1878637], [-0.303, -0.188], [0.303, -0.188], [0.3040353, -0.1878637], [0.305, -0.1874641], [0.3058284, -0.1868284], [0.3064641, -0.186], [0.3068637, -0.1850353], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
+            },
+            {
+              "id": "monitor-bulge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "poly",
+              "points": [[0.245, 0.108], [0.2414853, 0.1164853], [0.233, 0.12], [-0.233, 0.12], [-0.2414853, 0.1164853], [-0.245, 0.108], [-0.245, -0.138], [-0.2414853, -0.1464853], [-0.233, -0.15], [0.233, -0.15], [0.2414853, -0.1464853], [0.245, -0.138]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.13,
+                "z1": 0.168
+              }
             }
           ],
           "plan": [
@@ -3196,111 +3685,6 @@
               "penMm": 0.5
             },
             {
-              "id": "monitor-base",
-              "bone": "top",
-              "role": "body",
-              "z": 2.0,
-              "filled": true,
-              "tone": 0.26,
-              "kind": "rect",
-              "x": 0.475,
-              "y": 0.06,
-              "w": 0.25,
-              "h": 0.2,
-              "r": 0.008,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-neck",
-              "bone": "top",
-              "role": "body",
-              "z": 2.5,
-              "filled": true,
-              "tone": 0.3,
-              "kind": "rect",
-              "x": 0.57,
-              "y": 0.175,
-              "w": 0.06,
-              "h": 0.025,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-hinge",
-              "bone": "top",
-              "role": "body",
-              "z": 2.6,
-              "filled": true,
-              "tone": 0.22,
-              "kind": "rect",
-              "x": 0.56,
-              "y": 0.155,
-              "w": 0.08,
-              "h": 0.025,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-bulge",
-              "bone": "top",
-              "role": "body",
-              "z": 2.8,
-              "filled": true,
-              "tone": 0.24,
-              "kind": "poly",
-              "points": [
-                [
-                  0.34,
-                  0.128
-                ],
-                [
-                  0.36,
-                  0.15
-                ],
-                [
-                  0.42,
-                  0.168
-                ],
-                [
-                  0.78,
-                  0.168
-                ],
-                [
-                  0.84,
-                  0.15
-                ],
-                [
-                  0.86,
-                  0.128
-                ]
-              ],
-              "closed": true,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
-              "id": "monitor-panel",
-              "bone": "top",
-              "role": "body",
-              "z": 3.0,
-              "filled": true,
-              "tone": 0.18,
-              "kind": "rect",
-              "x": 0.293,
-              "y": 0.115,
-              "w": 0.614,
-              "h": 0.015,
-              "r": 0.004,
-              "region": "monitor-housing",
-              "material": "equipment-housing",
-              "penMm": 0.25
-            },
-            {
               "id": "laptop",
               "bone": "top",
               "role": "body",
@@ -3325,19 +3709,130 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  0.911,
-                  0.032
-                ],
-                [
-                  1.229,
-                  0.032
-                ]
-              ],
+              "points": [[0.911, 0.032], [1.229, 0.032]],
               "closed": false,
               "region": "laptop-lid",
               "material": "equipment-housing"
+            },
+            {
+              "id": "monitor-base",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.26,
+              "kind": "poly",
+              "points": [[0.475, 0.025], [0.725, 0.025], [0.725, 0.043000000000000003], [0.475, 0.043000000000000003]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.06,
+                "z1": 0.26
+              }
+            },
+            {
+              "id": "monitor-neck",
+              "bone": "top",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [[0.57, 0.04300000000000001], [0.63, 0.04300000000000001], [0.63, 0.36], [0.57, 0.36]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.175,
+                "z1": 0.2
+              }
+            },
+            {
+              "id": "monitor-hinge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.32,
+              "kind": "poly",
+              "points": [[-0.05, -0.006], [0.05, -0.006], [0.05, 0.006], [-0.05, 0.006]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "steel-desk",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.171,
+                "z1": 0.183
+              }
+            },
+            {
+              "id": "monitor-panel",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "poly",
+              "points": [[0.307, 0.176], [0.3068637, 0.1770353], [0.3064641, 0.178], [0.3058284, 0.1788284], [0.305, 0.1794641], [0.3040353, 0.1798637], [0.303, 0.18], [-0.303, 0.18], [-0.3040353, 0.1798637], [-0.305, 0.1794641], [-0.3058284, 0.1788284], [-0.3064641, 0.178], [-0.3068637, 0.1770353], [-0.307, 0.176], [-0.307, -0.184], [-0.3068637, -0.1850353], [-0.3064641, -0.186], [-0.3058284, -0.1868284], [-0.305, -0.1874641], [-0.3040353, -0.1878637], [-0.303, -0.188], [0.303, -0.188], [0.3040353, -0.1878637], [0.305, -0.1874641], [0.3058284, -0.1868284], [0.3064641, -0.186], [0.3068637, -0.1850353], [0.307, -0.184]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.115,
+                "z1": 0.13
+              }
+            },
+            {
+              "id": "monitor-screen",
+              "bone": "screen-tilt",
+              "role": "glazing",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [[0.299, 0.17], [0.2984142, 0.1714142], [0.297, 0.172], [-0.297, 0.172], [-0.2984142, 0.1714142], [-0.299, 0.17], [-0.299, -0.162], [-0.2984142, -0.1634142], [-0.297, -0.164], [0.297, -0.164], [0.2984142, -0.1634142], [0.299, -0.162]],
+              "closed": true,
+              "region": "display-front",
+              "material": "display-glass",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.11529999999999999,
+                "z1": 0.11729999999999999
+              }
+            },
+            {
+              "id": "monitor-bulge",
+              "bone": "screen-tilt",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.24,
+              "kind": "poly",
+              "points": [[0.245, 0.108], [0.2414853, 0.1164853], [0.233, 0.12], [-0.233, 0.12], [-0.2414853, 0.1164853], [-0.245, 0.108], [-0.245, -0.138], [-0.2414853, -0.1464853], [-0.233, -0.15], [0.233, -0.15], [0.2414853, -0.1464853], [0.245, -0.138]],
+              "closed": true,
+              "region": "monitor-housing",
+              "material": "equipment-housing",
+              "penMm": 0.25,
+              "solid": {
+                "kind": "extruded",
+                "sweep": "w",
+                "z0": 0.13,
+                "z1": 0.168
+              }
             }
           ]
         },
@@ -3404,10 +3899,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "contact-foot-left",
-          "contact-foot-right"
-        ],
+        "contacts": ["contact-foot-left", "contact-foot-right"],
         "thermal": {
           "regions": {
             "top-board": {
@@ -3435,6 +3927,10 @@
               "sunlitFraction": 0.0
             },
             "laptop-lid": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "display-front": {
               "exposedFraction": 1.0,
               "sunlitFraction": 0.0
             }
@@ -3501,10 +3997,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "contact-foot-left",
-          "contact-foot-right"
-        ],
+        "contacts": ["contact-foot-left", "contact-foot-right"],
         "thermal": {
           "regions": {
             "top-board": {
@@ -3532,6 +4025,10 @@
               "sunlitFraction": 0.0
             },
             "laptop-lid": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "display-front": {
               "exposedFraction": 1.0,
               "sunlitFraction": 0.0
             }
@@ -3598,10 +4095,7 @@
           }
         },
         "ground": "auto",
-        "contacts": [
-          "contact-foot-left",
-          "contact-foot-right"
-        ],
+        "contacts": ["contact-foot-left", "contact-foot-right"],
         "thermal": {
           "regions": {
             "top-board": {
@@ -3629,6 +4123,10 @@
               "sunlitFraction": 0.0
             },
             "laptop-lid": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "display-front": {
               "exposedFraction": 1.0,
               "sunlitFraction": 0.0
             }
@@ -3858,6 +4356,88 @@
                 "v": 1
               }
             ]
+          }
+        ]
+      },
+      {
+        "id": "adjust-screen-tilt",
+        "title": {
+          "en": "Adjust screen tilt",
+          "de": "Bildschirm neigen"
+        },
+        "description": {
+          "en": "The display tilts on the horizontal axle of its stand while the desk stays seated.",
+          "de": "Der Bildschirm schwenkt auf der waagerechten Achse des Fußes bei Sitzhöhe."
+        },
+        "durationS": 4,
+        "fps": 24,
+        "loop": true,
+        "rootMotion": "none",
+        "phases": [
+          {
+            "id": "adjust",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Tilt adjustment",
+              "de": "Neigungsverstellung"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": [],
+        "contacts": [
+          {
+            "anchor": "contact-foot-left",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "contact-foot-right",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "keys": [
+          {
+            "t": 0,
+            "pose": "seated-height",
+            "ease": "smooth",
+            "bones": {
+              "screen-tilt": {
+                "twistDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1,
+            "pose": "seated-height",
+            "ease": "smooth",
+            "bones": {
+              "screen-tilt": {
+                "twistDeg": -5
+              }
+            }
+          },
+          {
+            "t": 2.5,
+            "pose": "seated-height",
+            "ease": "smooth",
+            "bones": {
+              "screen-tilt": {
+                "twistDeg": 20
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "seated-height",
+            "ease": "smooth",
+            "bones": {
+              "screen-tilt": {
+                "twistDeg": 0
+              }
+            }
           }
         ]
       }
@@ -4122,13 +4702,13 @@
         {
           "id": "monitor-housing",
           "title": {
-            "en": "Monitor housing and screen",
-            "de": "Monitorgehäuse und Schirm"
+            "en": "Monitor enclosure and stand",
+            "de": "Monitorgehäuse und Standfuß"
           },
           "kind": "surface",
           "model": "operating",
           "material": "equipment-housing",
-          "areaM2": 0.65,
+          "areaM2": 0.449072,
           "characteristicLengthM": 0.45,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -4150,9 +4730,9 @@
           "heatCapacityJM2K": 5520,
           "operating": {
             "key": "monitor",
-            "heatW": 25
+            "heatW": 17
           },
-          "ratedPowerW": 25,
+          "ratedPowerW": 17,
           "ratedPowerBasis": "electrical-input",
           "source": "authored-estimate"
         },
@@ -4188,6 +4768,43 @@
           "heatCapacityJM2K": 3696,
           "source": "authored-estimate",
           "reference": "iso-10456-2007"
+        },
+        {
+          "id": "display-front",
+          "title": {
+            "en": "Display cover glass",
+            "de": "Deckglas des Bildschirms"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "display-glass",
+          "areaM2": 0.200928,
+          "characteristicLengthM": 0.336,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "glass",
+              "title": {
+                "en": "2 mm cover glass",
+                "de": "2 mm starkes Deckglas"
+              },
+              "kind": "glass",
+              "material": "display-glass",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.002,
+              "heatCapacityJM2K": 4000,
+              "source": "authored-estimate"
+            }
+          ],
+          "heatCapacityJM2K": 4000,
+          "operating": {
+            "key": "monitor",
+            "heatW": 8
+          },
+          "ratedPowerW": 8,
+          "ratedPowerBasis": "electrical-input",
+          "source": "authored-estimate"
         }
       ],
       "emitters": [],
@@ -4207,6 +4824,10 @@
         {
           "en": "Heat capacity of the motor housings at the column heads is a 0.8 kg steel-and-copper motor mass over 0.05 m2 (7.2 kJ/m2K); the control box (160 W switched-mode supply and motor control, about 6 W loss while lifting) carries 0.5 kg over 0.08 m2 (6 kJ/m2K); other capacities are rho*cp*min(thickness, sqrt(alpha*3600 s)) with ISO 10456 values.",
           "de": "Die Wärmekapazität der Motorgehäuse an den Säulenköpfen ist eine Motormasse von 0,8 kg Stahl und Kupfer auf 0,05 m2 (7,2 kJ/m2K); der Steuerkasten (160-W-Schaltnetzteil und Motorsteuerung, etwa 6 W Verlust beim Heben) trägt 0,5 kg auf 0,08 m2 (6 kJ/m2K); die übrigen Kapazitäten sind rho*cp*min(Dicke, sqrt(alpha*3600 s)) mit ISO-10456-Werten."
+        },
+        {
+          "en": "The 25 W display releases an estimated 8 W through the cover glass and 17 W through the rear enclosure. The stand carries the full 8 kg monitor load to the worktop.",
+          "de": "Der Monitor gibt von 25 W geschätzt 8 W über das Deckglas und 17 W über das Rückgehäuse ab. Der Fuß trägt die gesamte Monitorlast von 8 kg in die Tischplatte ein."
         }
       ],
       "passengers": []
@@ -4265,24 +4886,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.36,
-            "profile": [
-              [-0.042, 0.008],
-              [-0.0445, 0.00867],
-              [-0.04633, 0.0105],
-              [-0.047, 0.013],
-              [-0.047, 0.067],
-              [-0.04633, 0.0695],
-              [-0.0445, 0.07133],
-              [-0.042, 0.072],
-              [0.042, 0.072],
-              [0.0445, 0.07133],
-              [0.04633, 0.0695],
-              [0.047, 0.067],
-              [0.047, 0.013],
-              [0.04633, 0.0105],
-              [0.0445, 0.00867],
-              [0.042, 0.008]
-            ],
+            "profile": [[-0.042, 0.008], [-0.0445, 0.00867], [-0.04633, 0.0105], [-0.047, 0.013], [-0.047, 0.067], [-0.04633, 0.0695], [-0.0445, 0.07133], [-0.042, 0.072], [0.042, 0.072], [0.0445, 0.07133], [0.04633, 0.0695], [0.047, 0.067], [0.047, 0.013], [0.04633, 0.0105], [0.0445, 0.00867], [0.042, 0.008]],
             "plane": "zx",
             "from": 0.03,
             "to": 0.39
@@ -4294,24 +4898,7 @@
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.14,
-            "profile": [
-              [-0.043, 0.006],
-              [-0.046, 0.0068],
-              [-0.0482, 0.009],
-              [-0.049, 0.012],
-              [-0.049, 0.068],
-              [-0.0482, 0.071],
-              [-0.046, 0.0732],
-              [-0.043, 0.074],
-              [0.043, 0.074],
-              [0.046, 0.0732],
-              [0.0482, 0.071],
-              [0.049, 0.068],
-              [0.049, 0.012],
-              [0.0482, 0.009],
-              [0.046, 0.0068],
-              [0.043, 0.006]
-            ],
+            "profile": [[-0.043, 0.006], [-0.046, 0.0068], [-0.0482, 0.009], [-0.049, 0.012], [-0.049, 0.068], [-0.0482, 0.071], [-0.046, 0.0732], [-0.043, 0.074], [0.043, 0.074], [0.046, 0.0732], [0.0482, 0.071], [0.049, 0.068], [0.049, 0.012], [0.0482, 0.009], [0.046, 0.0068], [0.043, 0.006]],
             "plane": "zx",
             "from": 0.39,
             "to": 0.405
@@ -4323,24 +4910,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.48,
-            "profile": [
-              [-0.024, -0.043],
-              [-0.026, -0.04246],
-              [-0.02746, -0.041],
-              [-0.028, -0.039],
-              [-0.028, 0.039],
-              [-0.02746, 0.041],
-              [-0.026, 0.04246],
-              [-0.024, 0.043],
-              [0.024, 0.043],
-              [0.026, 0.04246],
-              [0.02746, 0.041],
-              [0.028, 0.039],
-              [0.028, -0.039],
-              [0.02746, -0.041],
-              [0.026, -0.04246],
-              [0.024, -0.043]
-            ],
+            "profile": [[-0.024, -0.043], [-0.026, -0.04246], [-0.02746, -0.041], [-0.028, -0.039], [-0.028, 0.039], [-0.02746, 0.041], [-0.026, 0.04246], [-0.024, 0.043], [0.024, 0.043], [0.026, 0.04246], [0.02746, 0.041], [0.028, 0.039], [0.028, -0.039], [0.02746, -0.041], [0.026, -0.04246], [0.024, -0.043]],
             "plane": "yz",
             "from": 0.0,
             "to": 0.425
@@ -4352,24 +4922,7 @@
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.14,
-            "profile": [
-              [-0.025, -0.045],
-              [-0.0275, -0.04433],
-              [-0.02933, -0.0425],
-              [-0.03, -0.04],
-              [-0.03, 0.04],
-              [-0.02933, 0.0425],
-              [-0.0275, 0.04433],
-              [-0.025, 0.045],
-              [0.025, 0.045],
-              [0.0275, 0.04433],
-              [0.02933, 0.0425],
-              [0.03, 0.04],
-              [0.03, -0.04],
-              [0.02933, -0.0425],
-              [0.0275, -0.04433],
-              [0.025, -0.045]
-            ],
+            "profile": [[-0.025, -0.045], [-0.0275, -0.04433], [-0.02933, -0.0425], [-0.03, -0.04], [-0.03, 0.04], [-0.02933, 0.0425], [-0.0275, 0.04433], [-0.025, 0.045], [0.025, 0.045], [0.0275, 0.04433], [0.02933, 0.0425], [0.03, 0.04], [0.03, -0.04], [0.02933, -0.0425], [0.0275, -0.04433], [0.025, -0.045]],
             "plane": "yz",
             "from": 0.425,
             "to": 0.44
@@ -4381,24 +4934,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.6,
-            "profile": [
-              [-0.02, -0.039],
-              [-0.022, -0.03846],
-              [-0.02346, -0.037],
-              [-0.024, -0.035],
-              [-0.024, 0.035],
-              [-0.02346, 0.037],
-              [-0.022, 0.03846],
-              [-0.02, 0.039],
-              [0.02, 0.039],
-              [0.022, 0.03846],
-              [0.02346, 0.037],
-              [0.024, 0.035],
-              [0.024, -0.035],
-              [0.02346, -0.037],
-              [0.022, -0.03846],
-              [0.02, -0.039]
-            ],
+            "profile": [[-0.02, -0.039], [-0.022, -0.03846], [-0.02346, -0.037], [-0.024, -0.035], [-0.024, 0.035], [-0.02346, 0.037], [-0.022, 0.03846], [-0.02, 0.039], [0.02, 0.039], [0.022, 0.03846], [0.02346, 0.037], [0.024, 0.035], [0.024, -0.035], [0.02346, -0.037], [0.022, -0.03846], [0.02, -0.039]],
             "plane": "yz",
             "from": 0.0,
             "to": 0.54
@@ -4450,24 +4986,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.36,
-            "profile": [
-              [-0.042, 0.008],
-              [-0.0445, 0.00867],
-              [-0.04633, 0.0105],
-              [-0.047, 0.013],
-              [-0.047, 0.067],
-              [-0.04633, 0.0695],
-              [-0.0445, 0.07133],
-              [-0.042, 0.072],
-              [0.042, 0.072],
-              [0.0445, 0.07133],
-              [0.04633, 0.0695],
-              [0.047, 0.067],
-              [0.047, 0.013],
-              [0.04633, 0.0105],
-              [0.0445, 0.00867],
-              [0.042, 0.008]
-            ],
+            "profile": [[-0.042, 0.008], [-0.0445, 0.00867], [-0.04633, 0.0105], [-0.047, 0.013], [-0.047, 0.067], [-0.04633, 0.0695], [-0.0445, 0.07133], [-0.042, 0.072], [0.042, 0.072], [0.0445, 0.07133], [0.04633, 0.0695], [0.047, 0.067], [0.047, 0.013], [0.04633, 0.0105], [0.0445, 0.00867], [0.042, 0.008]],
             "plane": "zx",
             "from": 0.03,
             "to": 0.39
@@ -4479,24 +4998,7 @@
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.14,
-            "profile": [
-              [-0.043, 0.006],
-              [-0.046, 0.0068],
-              [-0.0482, 0.009],
-              [-0.049, 0.012],
-              [-0.049, 0.068],
-              [-0.0482, 0.071],
-              [-0.046, 0.0732],
-              [-0.043, 0.074],
-              [0.043, 0.074],
-              [0.046, 0.0732],
-              [0.0482, 0.071],
-              [0.049, 0.068],
-              [0.049, 0.012],
-              [0.0482, 0.009],
-              [0.046, 0.0068],
-              [0.043, 0.006]
-            ],
+            "profile": [[-0.043, 0.006], [-0.046, 0.0068], [-0.0482, 0.009], [-0.049, 0.012], [-0.049, 0.068], [-0.0482, 0.071], [-0.046, 0.0732], [-0.043, 0.074], [0.043, 0.074], [0.046, 0.0732], [0.0482, 0.071], [0.049, 0.068], [0.049, 0.012], [0.0482, 0.009], [0.046, 0.0068], [0.043, 0.006]],
             "plane": "zx",
             "from": 0.39,
             "to": 0.405
@@ -4508,24 +5010,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.48,
-            "profile": [
-              [-0.024, -0.043],
-              [-0.026, -0.04246],
-              [-0.02746, -0.041],
-              [-0.028, -0.039],
-              [-0.028, 0.039],
-              [-0.02746, 0.041],
-              [-0.026, 0.04246],
-              [-0.024, 0.043],
-              [0.024, 0.043],
-              [0.026, 0.04246],
-              [0.02746, 0.041],
-              [0.028, 0.039],
-              [0.028, -0.039],
-              [0.02746, -0.041],
-              [0.026, -0.04246],
-              [0.024, -0.043]
-            ],
+            "profile": [[-0.024, -0.043], [-0.026, -0.04246], [-0.02746, -0.041], [-0.028, -0.039], [-0.028, 0.039], [-0.02746, 0.041], [-0.026, 0.04246], [-0.024, 0.043], [0.024, 0.043], [0.026, 0.04246], [0.02746, 0.041], [0.028, 0.039], [0.028, -0.039], [0.02746, -0.041], [0.026, -0.04246], [0.024, -0.043]],
             "plane": "yz",
             "from": 0.0,
             "to": 0.425
@@ -4537,24 +5022,7 @@
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.14,
-            "profile": [
-              [-0.025, -0.045],
-              [-0.0275, -0.04433],
-              [-0.02933, -0.0425],
-              [-0.03, -0.04],
-              [-0.03, 0.04],
-              [-0.02933, 0.0425],
-              [-0.0275, 0.04433],
-              [-0.025, 0.045],
-              [0.025, 0.045],
-              [0.0275, 0.04433],
-              [0.02933, 0.0425],
-              [0.03, 0.04],
-              [0.03, -0.04],
-              [0.02933, -0.0425],
-              [0.0275, -0.04433],
-              [0.025, -0.045]
-            ],
+            "profile": [[-0.025, -0.045], [-0.0275, -0.04433], [-0.02933, -0.0425], [-0.03, -0.04], [-0.03, 0.04], [-0.02933, 0.0425], [-0.0275, 0.04433], [-0.025, 0.045], [0.025, 0.045], [0.0275, 0.04433], [0.02933, 0.0425], [0.03, 0.04], [0.03, -0.04], [0.02933, -0.0425], [0.0275, -0.04433], [0.025, -0.045]],
             "plane": "yz",
             "from": 0.425,
             "to": 0.44
@@ -4566,24 +5034,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.6,
-            "profile": [
-              [-0.02, -0.039],
-              [-0.022, -0.03846],
-              [-0.02346, -0.037],
-              [-0.024, -0.035],
-              [-0.024, 0.035],
-              [-0.02346, 0.037],
-              [-0.022, 0.03846],
-              [-0.02, 0.039],
-              [0.02, 0.039],
-              [0.022, 0.03846],
-              [0.02346, 0.037],
-              [0.024, 0.035],
-              [0.024, -0.035],
-              [0.02346, -0.037],
-              [0.022, -0.03846],
-              [0.02, -0.039]
-            ],
+            "profile": [[-0.02, -0.039], [-0.022, -0.03846], [-0.02346, -0.037], [-0.024, -0.035], [-0.024, 0.035], [-0.02346, 0.037], [-0.022, 0.03846], [-0.02, 0.039], [0.02, 0.039], [0.022, 0.03846], [0.02346, 0.037], [0.024, 0.035], [0.024, -0.035], [0.02346, -0.037], [0.022, -0.03846], [0.02, -0.039]],
             "plane": "yz",
             "from": 0.0,
             "to": 0.54
@@ -4608,28 +5059,7 @@
             "material": "particleboard-laminate",
             "role": "body",
             "tone": 0.62,
-            "profile": [
-              [-0.388, 0.0],
-              [-0.39259, 0.00091],
-              [-0.39649, 0.00351],
-              [-0.39909, 0.00741],
-              [-0.4, 0.012],
-              [-0.4, 1.588],
-              [-0.39909, 1.59259],
-              [-0.39649, 1.59649],
-              [-0.39259, 1.59909],
-              [-0.388, 1.6],
-              [0.388, 1.6],
-              [0.39259, 1.59909],
-              [0.39649, 1.59649],
-              [0.39909, 1.59259],
-              [0.4, 1.588],
-              [0.4, 0.012],
-              [0.39909, 0.00741],
-              [0.39649, 0.00351],
-              [0.39259, 0.00091],
-              [0.388, 0.0]
-            ],
+            "profile": [[-0.388, 0.0], [-0.39259, 0.00091], [-0.39649, 0.00351], [-0.39909, 0.00741], [-0.4, 0.012], [-0.4, 1.588], [-0.39909, 1.59259], [-0.39649, 1.59649], [-0.39259, 1.59909], [-0.388, 1.6], [0.388, 1.6], [0.39259, 1.59909], [0.39649, 1.59649], [0.39909, 1.59259], [0.4, 1.588], [0.4, 0.012], [0.39909, 0.00741], [0.39649, 0.00351], [0.39259, 0.00091], [0.388, 0.0]],
             "plane": "zx",
             "from": 0.0,
             "to": 0.025
@@ -4641,24 +5071,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.3,
-            "profile": [
-              [0.223, -0.025],
-              [0.2215, -0.0246],
-              [0.2204, -0.0235],
-              [0.22, -0.022],
-              [0.22, -0.003],
-              [0.2204, -0.0015],
-              [0.2215, -0.0004],
-              [0.223, 0.0],
-              [0.277, 0.0],
-              [0.2785, -0.0004],
-              [0.2796, -0.0015],
-              [0.28, -0.003],
-              [0.28, -0.022],
-              [0.2796, -0.0235],
-              [0.2785, -0.0246],
-              [0.277, -0.025]
-            ],
+            "profile": [[0.223, -0.025], [0.2215, -0.0246], [0.2204, -0.0235], [0.22, -0.022], [0.22, -0.003], [0.2204, -0.0015], [0.2215, -0.0004], [0.223, 0.0], [0.277, 0.0], [0.2785, -0.0004], [0.2796, -0.0015], [0.28, -0.003], [0.28, -0.022], [0.2796, -0.0235], [0.2785, -0.0246], [0.277, -0.025]],
             "plane": "xy",
             "from": -0.33,
             "to": 0.33,
@@ -4674,24 +5087,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.34,
-            "profile": [
-              [-0.112, -0.015],
-              [-0.1135, -0.0146],
-              [-0.1146, -0.0135],
-              [-0.115, -0.012],
-              [-0.115, 0.012],
-              [-0.1146, 0.0135],
-              [-0.1135, 0.0146],
-              [-0.112, 0.015],
-              [-0.068, 0.015],
-              [-0.0665, 0.0146],
-              [-0.0654, 0.0135],
-              [-0.065, 0.012],
-              [-0.065, -0.012],
-              [-0.0654, -0.0135],
-              [-0.0665, -0.0146],
-              [-0.068, -0.015]
-            ],
+            "profile": [[-0.112, -0.015], [-0.1135, -0.0146], [-0.1146, -0.0135], [-0.115, -0.012], [-0.115, 0.012], [-0.1146, 0.0135], [-0.1135, 0.0146], [-0.112, 0.015], [-0.068, 0.015], [-0.0665, 0.0146], [-0.0654, 0.0135], [-0.065, 0.012], [-0.065, -0.012], [-0.0654, -0.0135], [-0.0665, -0.0146], [-0.068, -0.015]],
             "plane": "yz",
             "from": 0.274,
             "to": 1.326
@@ -4719,20 +5115,7 @@
             "material": "steel-desk",
             "role": "body",
             "tone": 0.4,
-            "profile": [
-              [0.0, 0.185],
-              [0.0, 0.2015],
-              [-0.1085, 0.2015],
-              [-0.1085, 0.3385],
-              [0.0, 0.3385],
-              [0.0, 0.355],
-              [-0.0015, 0.355],
-              [-0.0015, 0.34],
-              [-0.11, 0.34],
-              [-0.11, 0.2],
-              [-0.0015, 0.2],
-              [-0.0015, 0.185]
-            ],
+            "profile": [[0.0, 0.185], [0.0, 0.2015], [-0.1085, 0.2015], [-0.1085, 0.3385], [0.0, 0.3385], [0.0, 0.355], [-0.0015, 0.355], [-0.0015, 0.34], [-0.11, 0.34], [-0.11, 0.2], [-0.0015, 0.2], [-0.0015, 0.185]],
             "plane": "yz",
             "from": 0.45,
             "to": 1.15
@@ -4764,100 +5147,6 @@
             }
           },
           {
-            "id": "monitor-base",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.26,
-            "size": [0.25, 0.018, 0.2],
-            "cornerRadius": 0.004,
-            "transform": {
-              "translation": [0.6, 0.034, 0.16]
-            }
-          },
-          {
-            "id": "monitor-neck",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.06, 0.317, 0.025],
-            "cornerRadius": 0.008,
-            "transform": {
-              "translation": [0.6, 0.2015, 0.1875]
-            }
-          },
-          {
-            "id": "monitor-hinge",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.22,
-            "size": [0.08, 0.07, 0.025],
-            "cornerRadius": 0.006,
-            "transform": {
-              "translation": [0.6, 0.305, 0.1675]
-            }
-          },
-          {
-            "id": "monitor-panel",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.18,
-            "size": [0.614, 0.368, 0.015],
-            "cornerRadius": 0.004,
-            "transform": {
-              "translation": [0.6, 0.301, 0.1225]
-            }
-          },
-          {
-            "id": "monitor-bulge",
-            "kind": "loft",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.24,
-            "sections": [
-              {
-                "at": [0.6, 0.29, 0.128],
-                "rx": 0.26,
-                "ry": 0.15,
-                "exponent": 5
-              },
-              {
-                "at": [0.6, 0.29, 0.15],
-                "rx": 0.24,
-                "ry": 0.14,
-                "exponent": 4
-              },
-              {
-                "at": [0.6, 0.29, 0.168],
-                "rx": 0.18,
-                "ry": 0.1,
-                "exponent": 4
-              }
-            ],
-            "capStart": true,
-            "capEnd": true
-          },
-          {
-            "id": "monitor-screen",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "glazing",
-            "tone": 0.08,
-            "size": [0.598, 0.336, 0.002],
-            "transform": {
-              "translation": [0.6, 0.309, 0.1145]
-            }
-          },
-          {
             "id": "laptop",
             "kind": "box",
             "bone": "top",
@@ -4882,6 +5171,208 @@
             "transform": {
               "translation": [1.07, 0.041, -0.08]
             }
+          },
+          {
+            "id": "monitor-base",
+            "kind": "box",
+            "bone": "top",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.26,
+            "size": [0.25, 0.018, 0.2],
+            "transform": {
+              "translation": [0.6, 0.034, 0.16]
+            },
+            "cornerRadius": 0.004
+          },
+          {
+            "id": "monitor-neck",
+            "kind": "box",
+            "bone": "top",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.06, 0.317, 0.025],
+            "transform": {
+              "translation": [0.6, 0.2015, 0.1875]
+            },
+            "cornerRadius": 0.006
+          },
+          {
+            "id": "monitor-panel",
+            "kind": "extrude",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.18,
+            "plane": "xy",
+            "profile": [[0.307, 0.176], [0.3068637, 0.1770353], [0.3064641, 0.178], [0.3058284, 0.1788284], [0.305, 0.1794641], [0.3040353, 0.1798637], [0.303, 0.18], [-0.303, 0.18], [-0.3040353, 0.1798637], [-0.305, 0.1794641], [-0.3058284, 0.1788284], [-0.3064641, 0.178], [-0.3068637, 0.1770353], [-0.307, 0.176], [-0.307, -0.184], [-0.3068637, -0.1850353], [-0.3064641, -0.186], [-0.3058284, -0.1868284], [-0.305, -0.1874641], [-0.3040353, -0.1878637], [-0.303, -0.188], [0.303, -0.188], [0.3040353, -0.1878637], [0.305, -0.1874641], [0.3058284, -0.1868284], [0.3064641, -0.186], [0.3068637, -0.1850353], [0.307, -0.184]],
+            "holes": [
+              [[0.299, -0.162], [0.2989319, -0.1625176], [0.2987321, -0.163], [0.2984142, -0.1634142], [0.298, -0.1637321], [0.2975176, -0.1639319], [0.297, -0.164], [-0.297, -0.164], [-0.2975176, -0.1639319], [-0.298, -0.1637321], [-0.2984142, -0.1634142], [-0.2987321, -0.163], [-0.2989319, -0.1625176], [-0.299, -0.162], [-0.299, 0.17], [-0.2989319, 0.1705176], [-0.2987321, 0.171], [-0.2984142, 0.1714142], [-0.298, 0.1717321], [-0.2975176, 0.1719319], [-0.297, 0.172], [0.297, 0.172], [0.2975176, 0.1719319], [0.298, 0.1717321], [0.2984142, 0.1714142], [0.2987321, 0.171], [0.2989319, 0.1705176], [0.299, 0.17]]
+            ],
+            "from": -0.062,
+            "to": -0.047
+          },
+          {
+            "id": "monitor-screen",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "display-glass",
+            "role": "glazing",
+            "tone": 0.08,
+            "size": [0.598, 0.336, 0.002],
+            "transform": {
+              "translation": [0, 0.004, -0.0607]
+            }
+          },
+          {
+            "id": "monitor-backplane",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.23,
+            "size": [0.6, 0.338, 0.009],
+            "transform": {
+              "translation": [0, 0.004, -0.0552]
+            }
+          },
+          {
+            "id": "monitor-rear-panel",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.24,
+            "size": [0.607, 0.361, 0.003],
+            "transform": {
+              "translation": [0, -0.004, -0.0485]
+            }
+          },
+          {
+            "id": "monitor-bulge",
+            "kind": "loft",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.24,
+            "capStart": true,
+            "capEnd": true,
+            "sections": [
+              {
+                "at": [0, -0.015, -0.047],
+                "rx": 0.26,
+                "ry": 0.15,
+                "exponent": 5
+              },
+              {
+                "at": [0, -0.015, -0.038],
+                "rx": 0.256,
+                "ry": 0.147,
+                "exponent": 5
+              },
+              {
+                "at": [0, -0.015, -0.027],
+                "rx": 0.24,
+                "ry": 0.14,
+                "exponent": 4
+              },
+              {
+                "at": [0, -0.015, -0.015],
+                "rx": 0.212,
+                "ry": 0.12,
+                "exponent": 4
+              },
+              {
+                "at": [0, -0.015, -0.009],
+                "rx": 0.18,
+                "ry": 0.1,
+                "exponent": 4
+              }
+            ]
+          },
+          {
+            "id": "monitor-vesa-plate",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.31,
+            "size": [0.116, 0.116, 0.0025],
+            "transform": {
+              "translation": [0, 0, -0.00775]
+            }
+          },
+          {
+            "id": "monitor-hinge-ear",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.31,
+            "size": [0.009, 0.033, 0.017],
+            "transform": {
+              "translation": [-0.042, 0, -0.001]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.084, 0, 0]
+            }
+          },
+          {
+            "id": "monitor-hinge",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.32,
+            "profile": [[-0.05, 0.0045], [-0.047, 0.006], [0.047, 0.006], [0.05, 0.0045]],
+            "origin": [0, 0, 0],
+            "axis": [1, 0, 0]
+          },
+          {
+            "id": "vesa-screw-bl",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [-0.05, -0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-br",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [0.05, -0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-tl",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [-0.05, 0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-tr",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [0.05, 0.05, -0.0065],
+            "axis": [0, 0, 1]
           }
         ],
         "thermal": [
@@ -5018,42 +5509,6 @@
             "layer": "housing"
           },
           {
-            "id": "th-monitor-base",
-            "of": "monitor-base",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
-            "id": "th-monitor-neck",
-            "of": "monitor-neck",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
-            "id": "th-monitor-hinge",
-            "of": "monitor-hinge",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
-            "id": "th-monitor-panel",
-            "of": "monitor-panel",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
-            "id": "th-monitor-bulge",
-            "of": "monitor-bulge",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
-            "id": "th-monitor-screen",
-            "of": "monitor-screen",
-            "region": "monitor-housing",
-            "layer": "housing"
-          },
-          {
             "id": "th-laptop",
             "of": "laptop",
             "region": "laptop-lid",
@@ -5072,28 +5527,7 @@
             "material": "particleboard-laminate",
             "role": "body",
             "tone": 0.55,
-            "profile": [
-              [-0.388, 0.0005],
-              [-0.3924, 0.00138],
-              [-0.39613, 0.00387],
-              [-0.39862, 0.0076],
-              [-0.3995, 0.012],
-              [-0.3995, 1.588],
-              [-0.39862, 1.5924],
-              [-0.39613, 1.59613],
-              [-0.3924, 1.59862],
-              [-0.388, 1.5995],
-              [0.388, 1.5995],
-              [0.3924, 1.59862],
-              [0.39613, 1.59613],
-              [0.39862, 1.5924],
-              [0.3995, 1.588],
-              [0.3995, 0.012],
-              [0.39862, 0.0076],
-              [0.39613, 0.00387],
-              [0.3924, 0.00138],
-              [0.388, 0.0005]
-            ],
+            "profile": [[-0.388, 0.0005], [-0.3924, 0.00138], [-0.39613, 0.00387], [-0.39862, 0.0076], [-0.3995, 0.012], [-0.3995, 1.588], [-0.39862, 1.5924], [-0.39613, 1.59613], [-0.3924, 1.59862], [-0.388, 1.5995], [0.388, 1.5995], [0.3924, 1.59862], [0.39613, 1.59613], [0.39862, 1.5924], [0.3995, 1.588], [0.3995, 0.012], [0.39862, 0.0076], [0.39613, 0.00387], [0.3924, 0.00138], [0.388, 0.0005]],
             "plane": "zx",
             "from": 0.001,
             "to": 0.024,
@@ -5105,6 +5539,78 @@
             "of": "top-board",
             "region": "top-board",
             "layer": "laminate"
+          },
+          {
+            "id": "th-monitor-base",
+            "of": "monitor-base",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-neck",
+            "of": "monitor-neck",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-panel",
+            "of": "monitor-panel",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-screen",
+            "of": "monitor-screen",
+            "region": "display-front",
+            "layer": "glass",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-monitor-rear-panel",
+            "of": "monitor-rear-panel",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-bulge",
+            "of": "monitor-bulge",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-vesa-plate",
+            "of": "monitor-vesa-plate",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-monitor-hinge-ear",
+            "of": "monitor-hinge-ear",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-monitor-hinge",
+            "of": "monitor-hinge",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-bl",
+            "of": "vesa-screw-bl",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-br",
+            "of": "vesa-screw-br",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-tl",
+            "of": "vesa-screw-tl",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-tr",
+            "of": "vesa-screw-tr",
+            "region": "monitor-housing"
           }
         ],
         "structure": [
@@ -5363,13 +5869,13 @@
           {
             "id": "mass-monitor",
             "kind": "ellipsoid",
-            "bone": "top",
+            "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.5,
             "radii": [0.03, 0.03, 0.02],
             "transform": {
-              "translation": [0.6, 0.271, 0.145]
+              "translation": [0, -0.034, -0.032]
             },
             "member": "top",
             "part": "mass"
@@ -5397,6 +5903,10 @@
           {
             "en": "Thermal: the steel, drive, controls, monitor and laptop regions reference their body solids; the top board is two nested shells (the 1 mm laminate skin all round as the board solid itself, the 23 mm particleboard core inside it); the inner column tube runs on through the motor housing to the head plate. Structure: feet, outer tubes, stages and inner tubes are the members of their bones, the slide bushings are the prismatic joints, a head plate is the fixed joint to the top, the crossbar flanges are its fixed joints to the column heads, side rails, crossbar and board carry the top; contact pads under the foot footprints; masses at the centres of mass of the bones, the monitor and the laptop.",
             "de": "Thermik: Stahl-, Antriebs-, Steuer-, Monitor- und Laptopregion verweisen auf ihre Körper; die Platte besteht aus zwei geschachtelten Schalen (die 1-mm-Beschichtung ringsum als Plattenkörper selbst, der 23-mm-Spanplattenkern darin); das Innenrohr läuft durch das Motorgehäuse bis zur Kopfplatte. Tragwerk: Füße, Außenrohre, Stufen und Innenrohre sind die Stäbe ihrer Knochen, die Gleitbuchsen die Schubgelenke, eine Kopfplatte das feste Gelenk zur Platte, die Querträgerflansche dessen feste Gelenke zu den Säulenköpfen, Seitenzargen, Querträger und Platte tragen die Platte; Kontaktflächen unter den Fußflächen; Massen in den Schwerpunkten der Knochen, des Monitors und des Laptops."
+          },
+          {
+            "en": "The 15 mm bezel surrounds a 2 mm display glass. The contoured rear cover bears on a four-screw VESA plate. The hinge supports the display on the neck while its angle changes.",
+            "de": "Der 15 mm tiefe Rahmen fasst ein 2 mm starkes Deckglas. Das profilierte Rückgehäuse sitzt auf einer VESA-Platte mit vier Schrauben. Das Gelenk trägt das neigbare Display am Standfuß."
           }
         ]
       },
@@ -5591,55 +6101,6 @@
             }
           },
           {
-            "id": "monitor-base",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.26,
-            "size": [0.25, 0.018, 0.2],
-            "transform": {
-              "translation": [0.6, 0.034, 0.16]
-            }
-          },
-          {
-            "id": "monitor-neck",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.3,
-            "size": [0.06, 0.317, 0.025],
-            "transform": {
-              "translation": [0.6, 0.2015, 0.1875]
-            }
-          },
-          {
-            "id": "monitor-panel",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.18,
-            "size": [0.614, 0.368, 0.06],
-            "cornerRadius": 0.006,
-            "transform": {
-              "translation": [0.6, 0.301, 0.145]
-            }
-          },
-          {
-            "id": "monitor-screen",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "glazing",
-            "tone": 0.08,
-            "size": [0.598, 0.336, 0.002],
-            "transform": {
-              "translation": [0.6, 0.309, 0.1145]
-            }
-          },
-          {
             "id": "laptop",
             "kind": "box",
             "bone": "top",
@@ -5651,6 +6112,202 @@
             "transform": {
               "translation": [1.07, 0.035, -0.08]
             }
+          },
+          {
+            "id": "monitor-base",
+            "kind": "box",
+            "bone": "top",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.26,
+            "size": [0.25, 0.018, 0.2],
+            "transform": {
+              "translation": [0.6, 0.034, 0.16]
+            },
+            "cornerRadius": 0.004
+          },
+          {
+            "id": "monitor-neck",
+            "kind": "box",
+            "bone": "top",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.06, 0.317, 0.025],
+            "transform": {
+              "translation": [0.6, 0.2015, 0.1875]
+            },
+            "cornerRadius": 0.006
+          },
+          {
+            "id": "monitor-panel",
+            "kind": "extrude",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.18,
+            "plane": "xy",
+            "profile": [[0.307, 0.176], [0.3066955, 0.1775307], [0.3058284, 0.1788284], [0.3045307, 0.1796955], [0.303, 0.18], [-0.303, 0.18], [-0.3045307, 0.1796955], [-0.3058284, 0.1788284], [-0.3066955, 0.1775307], [-0.307, 0.176], [-0.307, -0.184], [-0.3066955, -0.1855307], [-0.3058284, -0.1868284], [-0.3045307, -0.1876955], [-0.303, -0.188], [0.303, -0.188], [0.3045307, -0.1876955], [0.3058284, -0.1868284], [0.3066955, -0.1855307], [0.307, -0.184]],
+            "holes": [
+              [[0.299, -0.162], [0.2988478, -0.1627654], [0.2984142, -0.1634142], [0.2977654, -0.1638478], [0.297, -0.164], [-0.297, -0.164], [-0.2977654, -0.1638478], [-0.2984142, -0.1634142], [-0.2988478, -0.1627654], [-0.299, -0.162], [-0.299, 0.17], [-0.2988478, 0.1707654], [-0.2984142, 0.1714142], [-0.2977654, 0.1718478], [-0.297, 0.172], [0.297, 0.172], [0.2977654, 0.1718478], [0.2984142, 0.1714142], [0.2988478, 0.1707654], [0.299, 0.17]]
+            ],
+            "from": -0.062,
+            "to": -0.047
+          },
+          {
+            "id": "monitor-screen",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "display-glass",
+            "role": "glazing",
+            "tone": 0.08,
+            "size": [0.598, 0.336, 0.002],
+            "transform": {
+              "translation": [0, 0.004, -0.0607]
+            }
+          },
+          {
+            "id": "monitor-backplane",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.23,
+            "size": [0.6, 0.338, 0.009],
+            "transform": {
+              "translation": [0, 0.004, -0.0552]
+            }
+          },
+          {
+            "id": "monitor-rear-panel",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.24,
+            "size": [0.607, 0.361, 0.003],
+            "transform": {
+              "translation": [0, -0.004, -0.0485]
+            }
+          },
+          {
+            "id": "monitor-bulge",
+            "kind": "loft",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.24,
+            "capStart": true,
+            "capEnd": true,
+            "sections": [
+              {
+                "at": [0, -0.015, -0.047],
+                "rx": 0.26,
+                "ry": 0.15,
+                "exponent": 5
+              },
+              {
+                "at": [0, -0.015, -0.027],
+                "rx": 0.24,
+                "ry": 0.14,
+                "exponent": 4
+              },
+              {
+                "at": [0, -0.015, -0.015],
+                "rx": 0.212,
+                "ry": 0.12,
+                "exponent": 4
+              },
+              {
+                "at": [0, -0.015, -0.009],
+                "rx": 0.18,
+                "ry": 0.1,
+                "exponent": 4
+              }
+            ]
+          },
+          {
+            "id": "monitor-vesa-plate",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.31,
+            "size": [0.116, 0.116, 0.0025],
+            "transform": {
+              "translation": [0, 0, -0.00775]
+            }
+          },
+          {
+            "id": "monitor-hinge-ear",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.31,
+            "size": [0.009, 0.033, 0.017],
+            "transform": {
+              "translation": [-0.042, 0, -0.001]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.084, 0, 0]
+            }
+          },
+          {
+            "id": "monitor-hinge",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.32,
+            "profile": [[-0.05, 0.0045], [-0.047, 0.006], [0.047, 0.006], [0.05, 0.0045]],
+            "origin": [0, 0, 0],
+            "axis": [1, 0, 0]
+          },
+          {
+            "id": "vesa-screw-bl",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [-0.05, -0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-br",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [0.05, -0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-tl",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [-0.05, 0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-tr",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [0.05, 0.05, -0.0065],
+            "axis": [0, 0, 1]
           }
         ],
         "thermal": [
@@ -5725,26 +6382,6 @@
             "region": "controls"
           },
           {
-            "id": "th-monitor-base",
-            "of": "monitor-base",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-neck",
-            "of": "monitor-neck",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-panel",
-            "of": "monitor-panel",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-screen",
-            "of": "monitor-screen",
-            "region": "monitor-housing"
-          },
-          {
             "id": "th-laptop",
             "of": "laptop",
             "region": "laptop-lid"
@@ -5753,6 +6390,78 @@
             "id": "th-top-board",
             "of": "top-board",
             "region": "top-board"
+          },
+          {
+            "id": "th-monitor-base",
+            "of": "monitor-base",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-neck",
+            "of": "monitor-neck",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-panel",
+            "of": "monitor-panel",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-screen",
+            "of": "monitor-screen",
+            "region": "display-front",
+            "layer": "glass",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-monitor-rear-panel",
+            "of": "monitor-rear-panel",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-bulge",
+            "of": "monitor-bulge",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-vesa-plate",
+            "of": "monitor-vesa-plate",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-monitor-hinge-ear",
+            "of": "monitor-hinge-ear",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-monitor-hinge",
+            "of": "monitor-hinge",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-bl",
+            "of": "vesa-screw-bl",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-br",
+            "of": "vesa-screw-br",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-tl",
+            "of": "vesa-screw-tl",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-tr",
+            "of": "vesa-screw-tr",
+            "region": "monitor-housing"
           }
         ],
         "structure": [
@@ -6055,13 +6764,13 @@
           {
             "id": "mass-monitor",
             "kind": "ellipsoid",
-            "bone": "top",
+            "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.5,
             "radii": [0.03, 0.03, 0.02],
             "transform": {
-              "translation": [0.6, 0.271, 0.145]
+              "translation": [0, -0.034, -0.032]
             },
             "member": "top",
             "part": "mass"
@@ -6089,6 +6798,10 @@
           {
             "en": "Thermal references the 1:100 bodies, the board as one shell (layers merged); structure as at 1:50 with 15 mm slide collars at the tube ends and 15 mm flange joints at the crossbar ends.",
             "de": "Die Thermik verweist auf die Körper von 1:100, die Platte als eine Schale (Schichten verschmolzen); Tragwerk wie bei 1:50 mit 15-mm-Gleitmanschetten an den Rohrenden und 15-mm-Flanschgelenken an den Querträgerenden."
+          },
+          {
+            "en": "The 15 mm bezel surrounds a 2 mm display glass. The contoured rear cover bears on a four-screw VESA plate. The hinge supports the display on the neck while its angle changes.",
+            "de": "Der 15 mm tiefe Rahmen fasst ein 2 mm starkes Deckglas. Das profilierte Rückgehäuse sitzt auf einer VESA-Platte mit vier Schrauben. Das Gelenk trägt das neigbare Display am Standfuß."
           }
         ]
       },
@@ -6265,6 +6978,18 @@
             }
           },
           {
+            "id": "laptop",
+            "kind": "box",
+            "bone": "top",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.42,
+            "size": [0.36, 0.02, 0.25],
+            "transform": {
+              "translation": [1.07, 0.035, -0.08]
+            }
+          },
+          {
             "id": "monitor-base",
             "kind": "box",
             "bone": "top",
@@ -6290,27 +7015,167 @@
           },
           {
             "id": "monitor-panel",
-            "kind": "box",
-            "bone": "top",
+            "kind": "extrude",
+            "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "body",
             "tone": 0.18,
-            "size": [0.614, 0.368, 0.06],
+            "plane": "xy",
+            "profile": [[0.307, 0.176], [0.3058284, 0.1788284], [0.303, 0.18], [-0.303, 0.18], [-0.3058284, 0.1788284], [-0.307, 0.176], [-0.307, -0.184], [-0.3058284, -0.1868284], [-0.303, -0.188], [0.303, -0.188], [0.3058284, -0.1868284], [0.307, -0.184]],
+            "holes": [
+              [[0.299, -0.162], [0.2984142, -0.1634142], [0.297, -0.164], [-0.297, -0.164], [-0.2984142, -0.1634142], [-0.299, -0.162], [-0.299, 0.17], [-0.2984142, 0.1714142], [-0.297, 0.172], [0.297, 0.172], [0.2984142, 0.1714142], [0.299, 0.17]]
+            ],
+            "from": -0.062,
+            "to": -0.047
+          },
+          {
+            "id": "monitor-screen",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "display-glass",
+            "role": "glazing",
+            "tone": 0.08,
+            "size": [0.598, 0.336, 0.002],
             "transform": {
-              "translation": [0.6, 0.301, 0.145]
+              "translation": [0, 0.004, -0.0607]
             }
           },
           {
-            "id": "laptop",
+            "id": "monitor-backplane",
             "kind": "box",
-            "bone": "top",
+            "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "body",
-            "tone": 0.42,
-            "size": [0.36, 0.02, 0.25],
+            "tone": 0.23,
+            "size": [0.6, 0.338, 0.009],
             "transform": {
-              "translation": [1.07, 0.035, -0.08]
+              "translation": [0, 0.004, -0.0552]
             }
+          },
+          {
+            "id": "monitor-rear-panel",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.24,
+            "size": [0.607, 0.361, 0.003],
+            "transform": {
+              "translation": [0, -0.004, -0.0485]
+            }
+          },
+          {
+            "id": "monitor-bulge",
+            "kind": "loft",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.24,
+            "capStart": true,
+            "capEnd": true,
+            "sections": [
+              {
+                "at": [0, -0.015, -0.047],
+                "rx": 0.26,
+                "ry": 0.15,
+                "exponent": 5
+              },
+              {
+                "at": [0, -0.015, -0.027],
+                "rx": 0.24,
+                "ry": 0.14,
+                "exponent": 4
+              },
+              {
+                "at": [0, -0.015, -0.009],
+                "rx": 0.18,
+                "ry": 0.1,
+                "exponent": 4
+              }
+            ]
+          },
+          {
+            "id": "monitor-vesa-plate",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.31,
+            "size": [0.116, 0.116, 0.0025],
+            "transform": {
+              "translation": [0, 0, -0.00775]
+            }
+          },
+          {
+            "id": "monitor-hinge-ear",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.31,
+            "size": [0.009, 0.033, 0.017],
+            "transform": {
+              "translation": [-0.042, 0, -0.001]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.084, 0, 0]
+            }
+          },
+          {
+            "id": "monitor-hinge",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.32,
+            "profile": [[-0.05, 0.0045], [-0.047, 0.006], [0.047, 0.006], [0.05, 0.0045]],
+            "origin": [0, 0, 0],
+            "axis": [1, 0, 0]
+          },
+          {
+            "id": "vesa-screw-bl",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [-0.05, -0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-br",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [0.05, -0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-tl",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [-0.05, 0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-tr",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [0.05, 0.05, -0.0065],
+            "axis": [0, 0, 1]
           }
         ],
         "thermal": [
@@ -6380,21 +7245,6 @@
             "region": "controls"
           },
           {
-            "id": "th-monitor-base",
-            "of": "monitor-base",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-neck",
-            "of": "monitor-neck",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-panel",
-            "of": "monitor-panel",
-            "region": "monitor-housing"
-          },
-          {
             "id": "th-laptop",
             "of": "laptop",
             "region": "laptop-lid"
@@ -6403,6 +7253,78 @@
             "id": "th-top-board",
             "of": "top-board",
             "region": "top-board"
+          },
+          {
+            "id": "th-monitor-base",
+            "of": "monitor-base",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-neck",
+            "of": "monitor-neck",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-panel",
+            "of": "monitor-panel",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-screen",
+            "of": "monitor-screen",
+            "region": "display-front",
+            "layer": "glass",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-monitor-rear-panel",
+            "of": "monitor-rear-panel",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-bulge",
+            "of": "monitor-bulge",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-vesa-plate",
+            "of": "monitor-vesa-plate",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-monitor-hinge-ear",
+            "of": "monitor-hinge-ear",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-monitor-hinge",
+            "of": "monitor-hinge",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-bl",
+            "of": "vesa-screw-bl",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-br",
+            "of": "vesa-screw-br",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-tl",
+            "of": "vesa-screw-tl",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-tr",
+            "of": "vesa-screw-tr",
+            "region": "monitor-housing"
           }
         ],
         "structure": [
@@ -6699,13 +7621,13 @@
           {
             "id": "mass-monitor",
             "kind": "ellipsoid",
-            "bone": "top",
+            "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.5,
             "radii": [0.03, 0.03, 0.02],
             "transform": {
-              "translation": [0.6, 0.271, 0.145]
+              "translation": [0, -0.034, -0.032]
             },
             "member": "top",
             "part": "mass"
@@ -6733,6 +7655,10 @@
           {
             "en": "Thermal references the 1:200 bodies; structure: feet, tubes, crossbar and board as members, 30 mm slide collars, crossbar flange joints, head plates, contact pads and masses.",
             "de": "Die Thermik verweist auf die Körper von 1:200; Tragwerk: Füße, Rohre, Querträger und Platte als Stäbe, 30-mm-Gleitmanschetten, Flanschgelenke des Querträgers, Kopfplatten, Kontaktflächen und Massen."
+          },
+          {
+            "en": "The 15 mm bezel surrounds a 2 mm display glass. The contoured rear cover bears on a four-screw VESA plate. The hinge supports the display on the neck while its angle changes.",
+            "de": "Der 15 mm tiefe Rahmen fasst ein 2 mm starkes Deckglas. Das profilierte Rückgehäuse sitzt auf einer VESA-Platte mit vier Schrauben. Das Gelenk trägt das neigbare Display am Standfuß."
           }
         ]
       },
@@ -6897,30 +7823,6 @@
             }
           },
           {
-            "id": "monitor-panel",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.18,
-            "size": [0.614, 0.368, 0.053],
-            "transform": {
-              "translation": [0.6, 0.301, 0.1415]
-            }
-          },
-          {
-            "id": "monitor-stand",
-            "kind": "box",
-            "bone": "top",
-            "material": "equipment-housing",
-            "role": "body",
-            "tone": 0.28,
-            "size": [0.06, 0.102, 0.07],
-            "transform": {
-              "translation": [0.6, 0.076, 0.165]
-            }
-          },
-          {
             "id": "laptop",
             "kind": "box",
             "bone": "top",
@@ -6931,6 +7833,188 @@
             "transform": {
               "translation": [1.07, 0.035, -0.08]
             }
+          },
+          {
+            "id": "monitor-base",
+            "kind": "box",
+            "bone": "top",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.26,
+            "size": [0.25, 0.018, 0.2],
+            "transform": {
+              "translation": [0.6, 0.034, 0.16]
+            }
+          },
+          {
+            "id": "monitor-neck",
+            "kind": "box",
+            "bone": "top",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.06, 0.317, 0.025],
+            "transform": {
+              "translation": [0.6, 0.2015, 0.1875]
+            }
+          },
+          {
+            "id": "monitor-panel",
+            "kind": "extrude",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.18,
+            "plane": "xy",
+            "profile": [[0.307, 0.176], [0.303, 0.18], [-0.303, 0.18], [-0.307, 0.176], [-0.307, -0.184], [-0.303, -0.188], [0.303, -0.188], [0.307, -0.184]],
+            "holes": [
+              [[0.299, -0.162], [0.297, -0.164], [-0.297, -0.164], [-0.299, -0.162], [-0.299, 0.17], [-0.297, 0.172], [0.297, 0.172], [0.299, 0.17]]
+            ],
+            "from": -0.062,
+            "to": -0.047
+          },
+          {
+            "id": "monitor-screen",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "display-glass",
+            "role": "glazing",
+            "tone": 0.08,
+            "size": [0.598, 0.336, 0.002],
+            "transform": {
+              "translation": [0, 0.004, -0.0607]
+            }
+          },
+          {
+            "id": "monitor-backplane",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.23,
+            "size": [0.6, 0.338, 0.009],
+            "transform": {
+              "translation": [0, 0.004, -0.0552]
+            }
+          },
+          {
+            "id": "monitor-rear-panel",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.24,
+            "size": [0.607, 0.361, 0.003],
+            "transform": {
+              "translation": [0, -0.004, -0.0485]
+            }
+          },
+          {
+            "id": "monitor-bulge",
+            "kind": "loft",
+            "bone": "screen-tilt",
+            "material": "equipment-housing",
+            "role": "body",
+            "tone": 0.24,
+            "capStart": true,
+            "capEnd": true,
+            "sections": [
+              {
+                "at": [0, -0.015, -0.047],
+                "rx": 0.26,
+                "ry": 0.15,
+                "exponent": 5
+              },
+              {
+                "at": [0, -0.015, -0.009],
+                "rx": 0.18,
+                "ry": 0.1,
+                "exponent": 4
+              }
+            ]
+          },
+          {
+            "id": "monitor-vesa-plate",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.31,
+            "size": [0.116, 0.116, 0.0025],
+            "transform": {
+              "translation": [0, 0, -0.00775]
+            }
+          },
+          {
+            "id": "monitor-hinge-ear",
+            "kind": "box",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.31,
+            "size": [0.009, 0.033, 0.017],
+            "transform": {
+              "translation": [-0.042, 0, -0.001]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.084, 0, 0]
+            }
+          },
+          {
+            "id": "monitor-hinge",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "body",
+            "tone": 0.32,
+            "profile": [[-0.05, 0.0045], [-0.047, 0.006], [0.047, 0.006], [0.05, 0.0045]],
+            "origin": [0, 0, 0],
+            "axis": [1, 0, 0]
+          },
+          {
+            "id": "vesa-screw-bl",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [-0.05, -0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-br",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [0.05, -0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-tl",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [-0.05, 0.05, -0.0065],
+            "axis": [0, 0, 1]
+          },
+          {
+            "id": "vesa-screw-tr",
+            "kind": "revolve",
+            "bone": "screen-tilt",
+            "material": "steel-desk",
+            "role": "detail",
+            "tone": 0.27,
+            "profile": [[-0.009, 0.002], [0, 0.002], [0, 0.0038], [0.002, 0.0038]],
+            "origin": [0.05, 0.05, -0.0065],
+            "axis": [0, 0, 1]
           }
         ],
         "thermal": [
@@ -6995,16 +8079,6 @@
             "region": "controls"
           },
           {
-            "id": "th-monitor-stand",
-            "of": "monitor-stand",
-            "region": "monitor-housing"
-          },
-          {
-            "id": "th-monitor-panel",
-            "of": "monitor-panel",
-            "region": "monitor-housing"
-          },
-          {
             "id": "th-laptop",
             "of": "laptop",
             "region": "laptop-lid"
@@ -7013,6 +8087,78 @@
             "id": "th-top-board",
             "of": "top-board",
             "region": "top-board"
+          },
+          {
+            "id": "th-monitor-base",
+            "of": "monitor-base",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-neck",
+            "of": "monitor-neck",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-panel",
+            "of": "monitor-panel",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-screen",
+            "of": "monitor-screen",
+            "region": "display-front",
+            "layer": "glass",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-monitor-rear-panel",
+            "of": "monitor-rear-panel",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-bulge",
+            "of": "monitor-bulge",
+            "region": "monitor-housing",
+            "layer": "housing"
+          },
+          {
+            "id": "th-monitor-vesa-plate",
+            "of": "monitor-vesa-plate",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-monitor-hinge-ear",
+            "of": "monitor-hinge-ear",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-monitor-hinge",
+            "of": "monitor-hinge",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-bl",
+            "of": "vesa-screw-bl",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-br",
+            "of": "vesa-screw-br",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-tl",
+            "of": "vesa-screw-tl",
+            "region": "monitor-housing"
+          },
+          {
+            "id": "th-vesa-screw-tr",
+            "of": "vesa-screw-tr",
+            "region": "monitor-housing"
           }
         ],
         "structure": [
@@ -7235,13 +8381,13 @@
           {
             "id": "mass-monitor",
             "kind": "ellipsoid",
-            "bone": "top",
+            "bone": "screen-tilt",
             "material": "equipment-housing",
             "role": "detail",
             "tone": 0.5,
             "radii": [0.075, 0.075, 0.025],
             "transform": {
-              "translation": [0.6, 0.271, 0.145]
+              "translation": [0, -0.034, -0.032]
             },
             "member": "top",
             "part": "mass"
@@ -7269,6 +8415,10 @@
           {
             "en": "Thermal references the 1:500 bodies; structure: the same members without slide and flange joints (below the 75 mm feature), head plates of the housing section, 30 mm contact pads standing 15 mm proud of the foot footprint and the masses.",
             "de": "Die Thermik verweist auf die Körper von 1:500; Tragwerk: dieselben Stäbe ohne Gleit- und Flanschgelenke (unter dem 75-mm-Merkmal), Kopfplatten im Gehäusequerschnitt, 30-mm-Kontaktflächen, die 15 mm über die Fußfläche vorstehen, und die Massen."
+          },
+          {
+            "en": "The 15 mm bezel surrounds a 2 mm display glass. The contoured rear cover bears on a four-screw VESA plate. The hinge supports the display on the neck while its angle changes.",
+            "de": "Der 15 mm tiefe Rahmen fasst ein 2 mm starkes Deckglas. Das profilierte Rückgehäuse sitzt auf einer VESA-Platte mit vier Schrauben. Das Gelenk trägt das neigbare Display am Standfuß."
           }
         ]
       }

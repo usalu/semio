@@ -65,7 +65,7 @@ fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinitio
         named_layouts: vec![],
         default_layout: layout,
         terminologies: vec![],
-        terminology_breadcrumbs: HashMap::new(),
+        terminology_breadcrumbs: Default::default(),
         introduction: None,
         tutorials: Vec::new(),
         dialogs: Vec::new(),

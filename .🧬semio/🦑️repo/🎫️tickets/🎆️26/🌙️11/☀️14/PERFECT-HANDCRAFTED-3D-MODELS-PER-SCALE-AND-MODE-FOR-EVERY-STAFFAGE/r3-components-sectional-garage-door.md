@@ -90,3 +90,5 @@ Final check: `volumes-check.ts components/sectional-garage-door --product` PASS 
 - 1:200 structure leaves out brackets and bearing plates (they stay in the body): the validator's body mask misses folded sheet seen edge on (`tool-requests.md`, 2026-11-20, with two more findings: slender centre line of a bent bar, `r3-validate.ts` green on unsuitable representations).
 - No track-frame mass solid: its centre of mass lies in the void between the tracks.
 - Screws and bolts below 7.5 mm, handle and lock are not modelled.
+
+At 1:200 the three hinge axes are drawn with a 0.20 mm pen, and the hangers, braces and tracks use at least 0.15 mm. At 1:500 the visible panels and track edges use at least 0.18 mm. The whole asset passed its paper endpoints through 1:1000. All four physical panels and their real gauges remain in the model. Both affected scales passed silhouette and cross-scale checks.

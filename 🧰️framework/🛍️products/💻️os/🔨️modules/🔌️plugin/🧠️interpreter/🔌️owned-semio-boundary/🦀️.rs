@@ -2,6 +2,9 @@
 
 use super::*;
 
+#[path = "🌱️preparation/🦀️.rs"]
+mod preparation;
+
 //#region 🧠️OwnedSemioBoundary
 const SEMIO_ACTOR_CHECKPOINT_MAGIC: &[u8; 8] = b"SEMIOACT";
 
@@ -115,6 +118,12 @@ pub enum OwnedSemioExport {
 }
 
 impl OwnedSemioExport {
+    /// ♻️ Names guest exports permitted to spend an authenticated original retirement loan.
+    pub const fn is_original_retirement(self) -> bool {
+        use OwnedSemioExport::*;
+        matches!(self, Deallocate | CloseActorContext | CloseActorOutput | CancelJob | CloseJobs | AcknowledgeJobOutput | AcknowledgeJobOutputChunk | PublishActorFailure | ReadActorFailure | BorrowActorFailure | AcknowledgeActorFailure | AcknowledgeActorFailureChunk)
+    }
+
     pub const MAX_SCALAR_ARGUMENTS:usize=23;
     pub const ALL: [Self; 36] = [
         Self::Allocate,

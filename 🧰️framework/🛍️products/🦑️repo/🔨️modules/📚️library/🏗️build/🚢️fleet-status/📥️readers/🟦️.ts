@@ -83,7 +83,7 @@ export const readFleetStorageV1:FleetReaderV1=async context=>{
  const {cacheRunnerPortsV1,machineHostFreeBytesV1,machineUsesV1,reportCacheLedgerV1}=await import("../../🧹️cache-gc/🏃️runner/🟦️.ts");
  const ledger=cacheLedgerV1(),ports=cacheRunnerPortsV1({signal:new AbortController().signal,progress:async()=>{},exclusive:async()=>undefined}),report=await reportCacheLedgerV1(context.root,ledger,ports),declared=machinePolicyV1();
  const fileText=(()=>{try{return readFileSync(join(context.root,...ledger.roots.repository.directory.split("/"),declared.file),"utf8");}catch{return undefined;}})(),total=resolveMachineTotalV1({environment:context.environment,...fileText===undefined?{}:{fileText}},declared);
- const plan=planMachineBudgetV1({totalBytes:total.bytes,hostFreeBytes:machineHostFreeBytesV1(context.root),uses:machineUsesV1(report,report.roots.reduce((sum,row)=>sum+row.usedBytes,0),null)},declared);
+ const plan=planMachineBudgetV1({totalBytes:total.bytes,hostFreeBytes:machineHostFreeBytesV1(context.root),uses:machineUsesV1(report)},declared);
  return {storage:{hostFreeBytes:machineHostFreeBytesV1(context.root),hostFreeFloorBytes:declared.hostFreeFloorBytes,images:report.partitions.map(row=>({id:row.id,kind:row.kind,state:row.state,usedBytes:row.usedBytes,capacityBytes:row.capacityBytes,budgetBytes:row.budgetBytes,source:row.source})),overAreas:report.areas.filter(row=>row.over).map(row=>row.id),machine:{totalBytes:plan.totalBytes,effectiveTotalBytes:plan.effectiveTotalBytes,usedBytes:plan.usedBytes,footprintBytes:plan.footprintBytes,overBytes:plan.overBytes,evictBytes:plan.evictBytes,blockedBytes:plan.blockedBytes,source:total.source}}};
 };
 

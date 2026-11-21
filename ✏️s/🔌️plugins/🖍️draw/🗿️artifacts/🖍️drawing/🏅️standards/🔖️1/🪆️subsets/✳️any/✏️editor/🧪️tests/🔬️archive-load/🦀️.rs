@@ -17,7 +17,7 @@ async fn published_load(app: &mut super::unit_tests::context::DrawingAppFixture,
     for _ in 0..100_000 {
         app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
         app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-        if let Some(page) = app.take_typed_operation_result_page(instance) {
+        if let Some(page) = artifact_laws::take_fixture_result_page(&mut app.0, instance, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).unwrap() {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
         if let Some(semio_plugin::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
@@ -34,20 +34,13 @@ async fn published_load(app: &mut super::unit_tests::context::DrawingAppFixture,
 }
 
 async fn settle_archive(app: &mut super::unit_tests::context::DrawingAppFixture, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
-    PluginApp::begin_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+    semio_plugin::artifact_app_laws::admit_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
     let mut status = None;
-    let mut last = String::new();
-    for round in 0..20_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, operation, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
-        let line = format!("{:?} {}/{}", polled.state, polled.completed, polled.total);
-        if round % 1 == 0 {
-            let pack = app.document_pack().await.map(|files| files.pack.len()).unwrap_or(0);
-            let current = app.snapshot().map(|snapshot| snapshot.encode_pack().len()).unwrap_or(0);
-            eprintln!("archive poll round={round} {line} initial_pack={pack} current_pack={current}");
-        }
-        if line != last {
-            last = line;
-        }
+    let grant = app.1.cx().retained_grant();
+    let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
+    for _ in 0..20_000 {
+        semio_plugin::artifact_app_laws::fixture_renew_turn(app.1.cx(), semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), grant).expect("archive fixture turn");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, operation, &mut identity, app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;

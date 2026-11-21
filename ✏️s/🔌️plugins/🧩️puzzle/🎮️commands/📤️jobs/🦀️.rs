@@ -259,7 +259,11 @@ impl JobOutbox {
 pub fn job_close_step<T: RetireOwned + 'static>(outbox: &mut JobOutbox, owners: &mut WorkClosing<T>, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
     if !outbox.terminal_is_empty() {
         let demand = outbox.retirement_demands()?;
-        return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(outbox.close_step(effect)));
+        let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(outbox.close_step(effect)))?;
+        return Ok(match step {
+            InteractiveJobCloseStep::Complete { progress } if !outbox.terminal_is_empty() || !owners.is_empty() => InteractiveJobCloseStep::Pending { progress },
+            step => step,
+        });
     }
     owners.close_step(cx)
 }

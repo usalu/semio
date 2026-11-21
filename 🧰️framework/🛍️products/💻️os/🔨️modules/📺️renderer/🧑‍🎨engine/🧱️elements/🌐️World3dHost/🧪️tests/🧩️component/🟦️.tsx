@@ -13,12 +13,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BufferGeometry, Float32BufferAttribute, Matrix4, Quaternion, Vector3, type InstancedMesh, type PerspectiveCamera } from "three";
 import fixture from "../🧫️fixtures/⏯️tool-run-trace-mount.json" with { type: "json" };
 import computeLocaleFixture from "../🧫️fixtures/⏳️compute-locale.json" with { type: "json" };
+import cameraSyncFixture from "../🧫️fixtures/📷️camera-sync.json" with { type: "json" };
+import type { WorldCameraState } from "@semio-tech/framework/infinite/world/r3f";
 import {createMemoryStoragePort} from "@semio-tech/framework";
 import {createShellScope, ShellScopeProvider, disposeShellI18nInstance} from "@semio-tech/ui-react";
 import { base64UrlEncode } from "@semio-tech/framework/io/base64";
 import { encodeToolRunTraceDelta, toolRunIdentityFromJson, toolRunTraceOpFromJson, ToolRunTraceStore, type ToolRunTraceCursor, type ToolRunTraceSubject } from "@semio-tech/framework/tool-run";
 
-const recorded = vi.hoisted(() => ({ instanced: [] as { mesh: InstancedMesh; live: boolean }[], geometries: [] as BufferGeometry[], dashed: 0, frames: [] as ((state: unknown, delta: number) => void)[], camera: null as PerspectiveCamera | null, gumball: null as UnifiedGumballProps | null }));
+const recorded = vi.hoisted(() => ({ instanced: [] as { mesh: InstancedMesh; live: boolean }[], geometries: [] as BufferGeometry[], dashed: 0, frames: [] as ((state: unknown, delta: number) => void)[], camera: null as PerspectiveCamera | null, gumball: null as UnifiedGumballProps | null, onCamera: undefined as ((pose: WorldCameraState) => void) | undefined }));
 
 vi.mock("@semio-tech/ui-react", async (importOriginal) => {
   const actual = (await importOriginal()) as typeof import("@semio-tech/ui-react");
@@ -74,7 +76,7 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   return {
     ...actual,
     WorldCanvas: ({ children, overlay }: { children?: ReactNode; overlay?: ReactNode }) => createElement("div", { "data-testid": "world-canvas" }, overlay, children),
-    WorldOrbitGated: () => null,
+    WorldOrbitGated: ({ onCamera }: { onCamera: (pose: WorldCameraState) => void }) => { recorded.onCamera = onCamera; return null; },
     WorldOrbitViewControls: () => null,
     WorldProjectionRig: () => null,
     WorldOrbitViewSnapGateProvider: passthrough,
@@ -86,6 +88,7 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
 
 import { setRuntimeDiagnostics } from "../../../🏛️ShellHost/🟦️.tsx";
 import { World3dHost } from "../../🟦️.tsx";
+import { allowsWorld3dCameraSync, World3dCameraSyncContext } from "../../🪟️window-view-store/🟦️.tsx";
 import { buildMeshVisuals, disposeMeshVisuals } from "../../🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts";
 import { world3dComponentInteractionTarget } from "../../🔗️instance-selection/🟦️.ts";
 import { world3dGumballSelectionArgsV1, getWorldGumballTransformPreview } from "../../🧮️gumball-math/🟦️.ts";
@@ -168,6 +171,28 @@ describe("🎬️ world 3d host tool run trace mount", () => {
     recorded.camera?.position.set(10, -10, 10);
     setRuntimeDiagnostics(undefined);
     vi.restoreAllMocks();
+  });
+
+  it.each(cameraSyncFixture.cases)("keeps the camera local and syncs only to declared poses for $app.id", ({ app, publications }) => {
+    vi.useFakeTimers();
+    try {
+      const onAction = vi.fn(async (_action: { action: string; args?: Record<string, unknown> }) => {});
+      const before = recorded.camera!.position.clone();
+      const expected = before.multiplyScalar(0.8).toArray();
+      expect(cameraSyncFixture.pose.position).toEqual(expected);
+      const view = render(createElement(World3dCameraSyncContext.Provider, { value: allowsWorld3dCameraSync(app) }, sceneNode(null, {}, onAction)));
+      const world = view.container.querySelector(".semio-world-3d-host")!;
+      expect(JSON.parse(world.getAttribute("data-viewport-camera-json")!).position).not.toEqual(expected);
+      expect(recorded.onCamera).toBeDefined();
+      act(() => recorded.onCamera!(cameraSyncFixture.pose as WorldCameraState));
+      act(() => vi.advanceTimersByTime(1000));
+      expect(JSON.parse(world.getAttribute("data-viewport-camera-json")!).position).toEqual(expected);
+      const cameraActions = onAction.mock.calls.flatMap((args) => args).filter((action) => action.action === "setCamera");
+      expect(cameraActions).toHaveLength(publications);
+      if (publications > 0) expect(cameraActions[0]?.args).toMatchObject({ windowId: "trace-window:1", camera: { position: expected } });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("prints one gated accepted-frame receipt and only repeats when the live camera changes", () => {
@@ -617,4 +642,81 @@ describe("world compute explicit locale", () => {
       mounted.unmount();
     }
   });
+});
+
+it("paints each projected instance and gives the local ray the hover while inside the pane", async () => {
+  const { createWorldInstanceChromeStore } = await import("../../🧱️instance-layers/🪟️instance-chrome-store/🟦️.ts");
+  const fixture = (await import("../🧫️fixtures/hovered-instances.json")).default;
+  const store = createWorldInstanceChromeStore();
+  const stamp = (selection: { hoveredId: string | null; hoveredIds: string[] }) => store.setSnapshot({
+    selectedIds: new Set(), hoveredId: selection.hoveredId, hoveredIds: new Set(selection.hoveredIds), hoveredKindId: null, previewInstanceIds: null,
+  });
+  stamp(fixture.selection);
+  let published = 0;
+  const unsubscribe = store.subscribe(() => { published++; });
+  for (const [index, row] of fixture.cases.entries()) {
+    if ("selection" in row && row.selection) stamp(row.selection);
+    store.setLocalHover("local" in row ? row.local : undefined);
+    expect(fixture.instances.filter(instance => store.isHovered(instance.id)).map(instance => instance.id), "turn " + index).toEqual(row.expected);
+    expect(published).toBe(index);
+  }
+  unsubscribe();
+});
+
+it("paints and clears the full scene hover group without replacing shared geometry", async () => {
+  const fixture = (await import("../🧫️fixtures/hovered-instances.json")).default;
+  const styles = await loadPrimaryGeometryStyleFixture();
+  const styling = await import("@semio-tech/ui-styling");
+  const three = await vi.importActual<typeof import("three")>("three");
+  const neutral = styles.states.find(state => !state.hovered && !state.selected)!;
+  styling.clearColorResolveCache();
+  const hover = styles.states.find(state => state.hovered && !state.selected)!;
+  const expectedPaint = (marked: boolean) => new three.Color(styling.resolveColorHex((marked ? hover : neutral).line)).getHexString();
+  const positions = [0, 0, 0, 1, 0, 0];
+  const data = { positions, normals: [], indices: [], edgePositions: positions };
+  const meshesJson = JSON.stringify([{ id: "surface", data }, { id: "edge", data }]);
+  const instancesJson = JSON.stringify(fixture.instances.map((instance, index) => ({ ...instance, position: [3 * index, 0, 0] })));
+  const node = (selection: { hoveredId: string | null; hoveredIds: readonly string[] }) => sceneNode(null, {
+    meshesJson, instancesJson, referencesJson: "[]",
+    selectionJson: JSON.stringify({ ...selection, ids: [], selectionMode: "object", targets: { mesh: true, vertex: false, edge: false, face: false } }),
+  });
+  const view = render(node(fixture.selection));
+  const geometryByInstance = new Map<string, string>();
+  try {
+    for (const selection of [fixture.selection, { hoveredId: fixture.selection.hoveredId, hoveredIds: [] }]) {
+      view.rerender(node(selection));
+      runFrames();
+      const painted = new Map<string, string>();
+      for (const material of view.container.querySelectorAll("linesegments > linebasicmaterial")) {
+        const position = material.closest("group")!.getAttribute("position")!.split(",").map(Number);
+        const id = fixture.instances[position[0]! / 3]!.id;
+        const geometry = material.parentElement!.getAttribute("geometry")!;
+        expect(geometry).toBeTruthy();
+        if (geometryByInstance.has(id)) expect(geometry).toBe(geometryByInstance.get(id));
+        geometryByInstance.set(id, geometry);
+        painted.set(id, new three.Color(material.getAttribute("color")!).getHexString());
+      }
+      expect(painted.size).toBe(fixture.instances.length);
+      for (const instance of fixture.instances) expect(painted.get(instance.id), instance.id).toBe(expectedPaint(selection.hoveredIds.includes(instance.id)));
+    }
+  } finally {
+    view.unmount();
+  }
+});
+
+it("hands authored hover to another window without mistaking delayed own echoes for a handoff", async () => {
+  const { createWorldInstanceChromeStore } = await import("../../🧱️instance-layers/🪟️instance-chrome-store/🟦️.ts");
+  const fixture = (await import("../🧫️fixtures/hovered-instances.json")).default;
+  const store = createWorldInstanceChromeStore("preview:1");
+  for (const [index, step] of fixture.handoff.entries()) {
+    if (step.selection) {
+      const { hoveredId, hoveredIds, hoverSourceWindowId, selected } = step.selection;
+      store.setSnapshot({
+        hoveredId, hoveredIds: new Set(hoveredIds), hoverSourceWindowId,
+        selectedIds: new Set(selected ?? []), hoveredKindId: null, previewInstanceIds: null,
+      });
+    }
+    if ("local" in step) store.setLocalHover(step.local);
+    expect(fixture.instances.filter(instance => store.isHovered(instance.id)).map(instance => instance.id), "turn " + index).toEqual(step.expected);
+  }
 });

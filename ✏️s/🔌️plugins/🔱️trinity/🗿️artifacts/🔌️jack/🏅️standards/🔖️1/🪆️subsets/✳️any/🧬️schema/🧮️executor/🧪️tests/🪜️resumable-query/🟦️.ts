@@ -31,13 +31,15 @@ export function testResumableQueryOracle(): void {
   for (const test of fixture.cases) {
     const database = new Database(":memory:");
     try {
-      database.run("CREATE TABLE nodes (id TEXT PRIMARY KEY, kind TEXT, name TEXT, label TEXT)");
-      database.run("CREATE TABLE edges (id TEXT PRIMARY KEY, kind TEXT, source TEXT, target TEXT)");
-      for (const node of fixture.graph.nodes) database.run("INSERT INTO nodes (id, kind, name) VALUES (?, ?, ?)", [node.id, node.kind, node.name]);
-      for (const edge of fixture.graph.edges) database.run("INSERT INTO edges VALUES (?, ?, ?, ?)", [edge.id, edge.kind, endpointNode(edge.source), endpointNode(edge.target)]);
-      const oracle: Partial<Record<"cascade" | "mutate" | "select" | "nodes" | "edges", string>> = test.oracle;
+      database.run("CREATE TABLE nodes (id TEXT PRIMARY KEY, kind TEXT, name TEXT, label TEXT, x REAL, y REAL)");
+      database.run("CREATE TABLE edges (id TEXT PRIMARY KEY, kind TEXT, source TEXT, target TEXT, u REAL)");
+      const nodeId = (id: string) => id === fixture.graph.rootNodeId && "rootId" in test ? (test.rootId ?? id) : id;
+      for (const node of fixture.graph.nodes) database.run("INSERT INTO nodes (id, kind, name, x, y) VALUES (?, ?, ?, ?, ?)", [nodeId(node.id), node.kind, node.name, node.x, node.y]);
+      for (const edge of fixture.graph.edges) database.run("INSERT INTO edges VALUES (?, ?, ?, ?, ?)", [edge.id, edge.kind, nodeId(endpointNode(edge.source)), nodeId(endpointNode(edge.target)), edge.properties.u]);
+      const oracle: Partial<Record<"cascade" | "select" | "nodes" | "edges", string>> & { mutate?: string | string[] } = test.oracle;
       if (oracle.cascade !== undefined) database.run(oracle.cascade);
-      const mutations = oracle.mutate === undefined ? 0 : database.run(oracle.mutate).changes;
+      const operations = typeof oracle.mutate === "string" ? [oracle.mutate] : (oracle.mutate ?? []);
+      const mutations = operations.reduce((count, sql) => count + database.run(sql).changes, 0);
       const rows = oracle.select === undefined ? [] : database.query(oracle.select).values();
       assert.deepEqual(rows, test.rows, test.query);
       assert.equal(mutations, test.mutations, test.query);
@@ -45,6 +47,21 @@ export function testResumableQueryOracle(): void {
       if ("postEdgeCount" in test) assert.equal(database.query("SELECT COUNT(*) FROM edges").values().at(0)?.at(0), test.postEdgeCount);
       if (oracle.nodes !== undefined && "nodeIds" in test) assert.deepEqual(database.query(oracle.nodes).values().flat(), test.nodeIds, test.query);
       if (oracle.edges !== undefined && "edgeIds" in test) assert.deepEqual(database.query(oracle.edges).values().flat(), test.edgeIds, test.query);
+    } finally {
+      database.close();
+    }
+  }
+  for (const test of fixture.invalidMutations) {
+    const database = new Database(":memory:");
+    try {
+      database.run("CREATE TABLE nodes (id TEXT PRIMARY KEY, name TEXT)");
+      for (const node of fixture.graph.nodes) database.run("INSERT INTO nodes VALUES (?, ?)", [node.id, node.name]);
+      const executeBatch = database.transaction(() => {
+        database.run(test.oracle.accepted);
+        database.run(test.oracle.refused);
+      });
+      assert.throws(executeBatch);
+      assert.deepEqual(database.query(test.oracle.select).values(), test.rows, test.query);
     } finally {
       database.close();
     }

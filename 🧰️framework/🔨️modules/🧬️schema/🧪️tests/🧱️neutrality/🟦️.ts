@@ -15,6 +15,7 @@ type CatalogCase = Readonly<{ id: string; family: "artifact" | "inference" | "ap
 type Schedule = Readonly<{ id: string; family: "inference"; initial: readonly Descriptor[]; actors: readonly Readonly<{ id: string; descriptors: readonly Descriptor[] }>[]; order: readonly string[]; expected: Readonly<{ decisions: readonly Readonly<{ actor: string; accepted: boolean }>[]; entries: readonly Descriptor[] }> }>;
 type Corpus = Readonly<{
   contract: "schema-neutral-deletion-v1";
+  catalogConstruction: Readonly<{ ambientEntropy: false }>;
   ownership: Readonly<Record<"schemaManifest" | "schemaRoot" | "schemaComponent" | "compositionSource" | "compositionManifest" | "stateSource" | "stateManifest" | "registrySource" | "registryManifest" | "protocolSource" | "protocolManifest" | "kernelRoot" | "componentUnit" | "higherLawSource" | "deriveSource", string>>;
   providers: Readonly<Record<"composition" | "state" | "registry" | "forbidden", string>>;
   compositionTypes: readonly string[];
@@ -237,6 +238,13 @@ test("three catalog registrations use canonical registry identity without kernel
 test("artifact mirror conflicts are exposed before writes rather than discarded export results", () => {
   expect(read(corpus.ownership.schemaComponent)).not.toMatch(/let\s+_\s*=\s*register_scope_facet_leaves/);
   expect(corpus.catalogs.filter(row => row.expected.error === "export-conflict")).toHaveLength(3);
+});
+
+test("trusted schema declaration catalogs initialize without ambient entropy", () => {
+  const registry = read(corpus.ownership.registrySource);
+  const declarations = registry.slice(registry.indexOf("struct SchemaExportRegistry"));
+  expect(declarations).toContain("CATALOG.get_or_init");
+  expect(/\b(?:HashMap|HashSet|RandomState)\b/u.test(declarations)).toBe(corpus.catalogConstruction.ambientEntropy);
 });
 
 test("schema versions are owned free functions over the one lower descriptor identity", () => {

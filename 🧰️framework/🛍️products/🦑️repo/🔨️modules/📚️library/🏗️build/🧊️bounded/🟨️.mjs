@@ -4,14 +4,26 @@ import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 export const BOUNDED_POLICY_V1=Object.freeze(structuredClone(schema.definitions.Policy.const));
 const fail=message=>Error(message),registry=new Map();
 
-/** 📊️ The statistics of every registered cache, ordered by name: what the daemon status and the bench read. */
-export function boundedCacheStatsV1(){return[...registry.values()].map(cache=>cache.stats()).sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0);}
+function visitRegisteredCaches(visit){
+ for(const[name,reference]of registry){
+  const cache=reference.deref();
+  if(cache===undefined)registry.delete(name);
+  else visit?.(cache);
+ }
+}
 
-/** 🗜️ Evicts the oldest entries of every registered cache down to `fraction` of its entries (0 empties them) and answers the freed bytes: what the memory governor calls under pressure so memory shrinks instead of growing. */
-export function shrinkBoundedCachesV1(fraction){let freed=0;for(const cache of registry.values())freed+=cache.shrink(fraction);return freed;}
+/** 📊️ The statistics of live registered caches, ordered by name, for daemon status and benchmarks. */
+export function boundedCacheStatsV1(){
+ const stats=[];
+ visitRegisteredCaches(cache=>stats.push(cache.stats()));
+ return stats.sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0);
+}
+
+/** 🗜️ Evicts the oldest entries of live registered caches down to `fraction` of their entries (0 empties them) and returns the freed bytes. */
+export function shrinkBoundedCachesV1(fraction){let freed=0;visitRegisteredCaches(cache=>{freed+=cache.shrink(fraction);});return freed;}
 
 /**
- * 🧊️ Creates a least recently used cache with a finite entry bound and a finite byte bound: growth is impossible, the oldest entries leave first and `onEvict` sees each one. A value larger than `maxBytes` is rejected, never stored. `load` shares one loader call between concurrent callers of a key and honours cancellation. A named cache is listed by `boundedCacheStatsV1`.
+ * 🧊️ Creates a least recently used cache with a finite entry bound and a finite byte bound: growth is impossible, the oldest entries leave first and `onEvict` sees each one. A value larger than `maxBytes` is rejected, never stored. `load` shares one loader call between concurrent callers of a key and honours cancellation. A named cache is listed by `boundedCacheStatsV1` while its owner retains it.
  * @param {{name?:string;maxEntries:number;maxBytes:number;sizeOf?:(value:any,key:any)=>number;onEvict?:(key:any,value:any)=>void}} options
  */
 export function createBoundedCacheV1({name,maxEntries,maxBytes,sizeOf=()=>1,onEvict}){
@@ -51,8 +63,12 @@ export function createBoundedCacheV1({name,maxEntries,maxBytes,sizeOf=()=>1,onEv
   stats(){return{name:name??"",entries:entries.size,bytes,maxEntries,maxBytes,hits,misses,evictions,rejected,loads};},
  };
  if(name!==undefined){
-  if(!registry.has(name)&&registry.size>=BOUNDED_POLICY_V1.maximumRegistered)registry.delete(registry.keys().next().value);
-  registry.delete(name);registry.set(name,cache);
+  registry.delete(name);
+  if(registry.size>=BOUNDED_POLICY_V1.maximumRegistered){
+   visitRegisteredCaches();
+   if(registry.size>=BOUNDED_POLICY_V1.maximumRegistered)registry.delete(registry.keys().next().value);
+  }
+  registry.set(name,new WeakRef(cache));
  }
  return Object.freeze(cache);
 }

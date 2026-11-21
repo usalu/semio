@@ -706,10 +706,22 @@ pub mod part_1_9 {
         category as f64 * 1e6
     }
 
-    pub enum AssessmentMethod {
-        DamageTolerant,
-        SafeLife,
-        LowConsequence,
+    use semio_s_artifact_norm_en1993_model::{FatigueConsequence, FatigueMethod};
+    use semio_s_plugin_norm_compliance::{AnnexChoice, ndp_number};
+
+    /// 🏷️ EN 1993-1-9:2005 Table 3.1 resistance factor by assessment method and consequence.
+    pub fn gamma_mf_id(method: FatigueMethod, consequence: FatigueConsequence) -> &'static str {
+        match (method, consequence) {
+            (FatigueMethod::DamageTolerant, FatigueConsequence::Low) => "ndp.en1993.1-9.gamma-mf.damage-tolerant.low",
+            (FatigueMethod::DamageTolerant, FatigueConsequence::High) => "ndp.en1993.1-9.gamma-mf.damage-tolerant.high",
+            (FatigueMethod::SafeLife, FatigueConsequence::Low) => "ndp.en1993.1-9.gamma-mf.safe-life.low",
+            (FatigueMethod::SafeLife, FatigueConsequence::High) => "ndp.en1993.1-9.gamma-mf.safe-life.high",
+        }
+    }
+
+    /// 🔢️ EN 1993-1-9:2005 fatigue resistance factor for the selected design basis.
+    pub fn gamma_mf(method: FatigueMethod, consequence: FatigueConsequence, annex: AnnexChoice) -> f64 {
+        ndp_number(gamma_mf_id(method, consequence), annex)
     }
 
     /// 🔄 Palmgren-Miner damage with tri-linear Δσ_C/Δσ_D/Δσ_L (m=3 then m=5).
@@ -718,21 +730,6 @@ pub mod part_1_9 {
         spectrum.iter().filter(|(_, n)| *n > 0.0).filter_map(|&(ds, n)| crate::clauses::fatigue_fire::endurance(ds, delta_c).map(|n_r| n / n_r.max(1e-12))).sum()
     }
 
-    pub fn parse_method(value: &str) -> AssessmentMethod {
-        match value.to_ascii_lowercase().as_str() {
-            "safe_life" => AssessmentMethod::SafeLife,
-            "low_consequence" => AssessmentMethod::LowConsequence,
-            _ => AssessmentMethod::DamageTolerant,
-        }
-    }
-
-    pub fn gamma_mf(method: AssessmentMethod) -> f64 {
-        match method {
-            AssessmentMethod::DamageTolerant => 1.0,
-            AssessmentMethod::SafeLife => 1.15,
-            AssessmentMethod::LowConsequence => 1.35,
-        }
-    }
 }
 
 pub mod part_1_11 {
@@ -753,6 +750,23 @@ pub mod part_1_12 {
 }
 
 pub mod part_2 {
+    use crate::{part_1_9, AnnexParams};
+    use semio_s_artifact_norm_en1993_model::BridgeFatigue;
+    use semio_s_plugin_norm_compliance::{AnnexChoice, ndp_number};
+
+    /// 🌉 Resistance factor governing the bridge detail under EN 1993-2:2006 §9.3(2).
+    pub fn fatigue_factor_id(detail: &BridgeFatigue, annex: AnnexChoice) -> &'static str {
+        match annex {
+            AnnexChoice::En => part_1_9::gamma_mf_id(detail.method, detail.consequence),
+            AnnexChoice::De => AnnexParams::GAMMA_MF,
+        }
+    }
+
+    /// 🔢️ Bridge fatigue resistance factor used by the report and the diagram.
+    pub fn fatigue_factor(detail: &BridgeFatigue, annex: AnnexChoice) -> f64 {
+        ndp_number(fatigue_factor_id(detail, annex), annex)
+    }
+
     pub fn bridge_interaction_eta(n_ed: f64, n_rd: f64, m_ed: f64, m_rd: f64) -> f64 {
         (n_ed / n_rd).abs() + (m_ed / m_rd).abs()
     }

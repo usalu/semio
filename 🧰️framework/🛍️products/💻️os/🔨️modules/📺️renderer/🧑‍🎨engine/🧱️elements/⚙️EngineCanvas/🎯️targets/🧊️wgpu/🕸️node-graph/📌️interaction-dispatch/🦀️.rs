@@ -73,7 +73,16 @@ pub fn node_graph_domain_targets_json(domain: &semio_ui_declaration::ui::NodeGra
 
 pub fn graph_interaction_dispatch(published: PublishedGraphInteraction, snapshot: GraphInteractionSnapshot, domain: Option<&semio_ui_declaration::ui::NodeGraphInteractionDomain>) -> Result<GraphInteractionDispatch, semio_ui_action::BoundedActionFault> {
     let select_targets = match domain {
-        Some(domain) => node_graph_domain_targets_json(domain, "node", &snapshot.node_ids)?,
+        Some(domain) => {
+            let targets = [
+                ("node", domain.node_target_prefix.as_str(), &snapshot.node_ids),
+                ("edge", domain.edge_target_prefix.as_str(), &snapshot.edge_ids),
+                ("handle", domain.handle_target_prefix.as_str(), &snapshot.handle_ids),
+            ].into_iter().flat_map(|(granularity, prefix, ids)| {
+                ids.iter().map(move |id| json!({ "granularity": granularity, "id": format!("{prefix}{id}") }))
+            }).collect::<Vec<_>>();
+            serde_json::to_string(&targets).map_err(|_| semio_ui_action::BoundedActionFault::Structure)?
+        }
         None => "[]".into(),
     };
     let hover_targets = match (domain, snapshot.hovered_handle.as_ref(), snapshot.hovered_edge.as_ref(), snapshot.hovered_id.as_ref()) {
@@ -131,7 +140,7 @@ pub(super) fn record_graph_interaction(surface_id: &str, digest: PublishedGraphI
 }
 //#endregion 📌️GraphInteractionChange
 
-pub(super) fn write_graph_interaction_actions(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, dispatch: &GraphInteractionDispatch) -> Result<(), semio_ui_action::BoundedActionFault> {
+pub(super) fn write_graph_interaction_actions(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, host_id: &str, surface_id: &str, controller_id: &str, dispatch: &GraphInteractionDispatch) -> Result<(), semio_ui_action::BoundedActionFault> {
     if dispatch.publish_select {
         let domain_id = dispatch.domain_id.as_deref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
         let select_action = "interactionSelect";
@@ -148,16 +157,8 @@ pub(super) fn write_graph_interaction_actions(batch: &mut semio_ui_action::Bound
     }
     if dispatch.publish_hover {
         let domain_id = dispatch.domain_id.as_deref().ok_or(semio_ui_action::BoundedActionFault::Structure)?;
-        let hover_action = "interactionHover";
-        let hover_targets = dispatch.hover_targets.as_str();
-        let hover_bytes = semio_ui_action::checked_action_string_bytes(&[controller_id, hover_action, "domainId", domain_id, "channel", "pointer", "targets", hover_targets])?;
-        batch.action(controller_id, hover_action, hover_bytes, |builder| {
-            builder.begin_object(None)?;
-            builder.string(Some("domainId"), domain_id)?;
-            builder.string(Some("channel"), "pointer")?;
-            builder.string(Some("targets"), hover_targets)?;
-            builder.end_container()
-        })?;
+        let window = node_graph_window_id(host_id);
+        write_graph_hover_action(batch, controller_id, domain_id, window.as_ref().map(EngineSurfaceId::as_str), &dispatch.hover_targets)?;
     }
     if dispatch.publish_viewport {
         let viewport_action = "nodeGraphViewport";
@@ -175,6 +176,49 @@ pub(super) fn write_graph_interaction_actions(batch: &mut semio_ui_action::Bound
         })?;
     }
     Ok(())
+}
+
+fn node_graph_window_id(host_id: &str) -> Option<EngineSurfaceId> {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(host_id)?.sync_cache.window_id)
+}
+
+fn write_graph_hover_action(batch: &mut semio_ui_action::BoundedActionBatchReservation<'_>, controller: &str, domain: &str, window: Option<&str>, targets: &str) -> Result<(), semio_ui_action::BoundedActionFault> {
+    let action = "interactionHover";
+    let bytes = semio_ui_action::checked_action_string_bytes(&[controller, action, "domainId", domain, "channel", "pointer", "targets", targets, window.map_or("", |_| "windowId"), window.unwrap_or_default()])?;
+    batch.action(controller, action, bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("domainId"), domain)?;
+        builder.string(Some("channel"), "pointer")?;
+        builder.string(Some("targets"), targets)?;
+        if let Some(window) = window { builder.string(Some("windowId"), window)?; }
+        builder.end_container()
+    })
+}
+
+/// 🚪️ Relinquishes a graph's published pointer hover and leaves other input lanes alone.
+pub fn node_graph_pointer_leave_into(host_id: &str, controller: &str, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_ui_action::BoundedActionFault> {
+    let Some(domain) = node_graph_interaction_domain(host_id) else { return Ok(false) };
+    let previous = published_graph_interaction(host_id).hover;
+    let cleared = graph_payload_digest(&[&domain.id, "[]"]);
+    if previous == 0 || previous == cleared { return Ok(false); }
+    let window = node_graph_window_id(host_id);
+    let mut batch = input.reserve_actions(1, semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
+    write_graph_hover_action(&mut batch, controller, &domain.id, window.as_ref().map(EngineSurfaceId::as_str), "[]")?;
+    batch.publish_with_checked(|| ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(host_id) else { return false };
+        if !entry.sync_cache.scene_owns_hover {
+            match entry.node_graph.as_mut() {
+                Some(NodeGraphEngine::Flow(host)) => { host.dag.graph.set_hover_edge(None); host.set_hover(None); }
+                Some(NodeGraphEngine::Dag(host)) => { host.dag.graph.set_hover_edge(None); host.dag.graph.set_hover(None); }
+                None => return false,
+            }
+            entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        }
+        entry.published_graph_interaction.hover = cleared;
+        true
+    }))?;
+    Ok(true)
 }
 
 pub(super) fn world_to_screen_inner(inner: Rect, cam_x: f64, cam_y: f64, zoom: f64, wx: f64, wy: f64) -> (f32, f32) {

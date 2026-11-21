@@ -325,12 +325,16 @@ fn world_native_analytic_component_picks_and_marquee_preserve_original_source() 
         let mut scene = scene_with_selection_and_domain("{}", Some(("geometry", "object")));
         let world = scene.world_3d.as_mut().unwrap();
         world.meshes_json = serde_json::json!([{"id":"analytic","data":mesh}]).to_string();
-        world.instances_json = serde_json::json!([{"id":row["instance"],"meshId":"analytic","componentSource":{"handle":row["handle"],"revision":row["revision"]}}]).to_string();
+        world.instances_json = serde_json::json!([
+            {"id":"read-only","meshId":"analytic","position":[0.0,0.0,0.1],"componentPickable":false},
+            {"id":row["instance"],"meshId":"analytic","componentSource":{"handle":row["handle"],"revision":row["revision"]}}
+        ]).to_string();
         world.camera_json = fixture["camera"].to_string();
         let mut state = World3dState::new("surface".into(), "controller".into());
         drive_scene_bridge(&mut state, &scene, Rect::new(0.0, 0.0, 400.0, 400.0));
         state.selection.granularity = "face".into();
-        state.selection.active_object_id = Some(row["instance"].as_str().unwrap().into());
+        assert!(state.interaction.component_unpickable_instance_ids.contains("read-only"));
+        assert_eq!(state.scene.draws.iter().map(|draw| draw.instances.len()).sum::<usize>(), 2);
         let mut registry = WorldInteractionRegistryBuildCursor::new(state.session.interaction_revision);
         for turn in 0..128 {
             match with_world_step_context(1, |context| registry.step(&mut state.session, &mut state.interaction, &mut state.scene, context)) {

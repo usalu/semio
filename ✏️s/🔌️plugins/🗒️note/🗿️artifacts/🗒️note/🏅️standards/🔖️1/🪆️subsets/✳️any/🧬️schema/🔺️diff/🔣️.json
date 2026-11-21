@@ -845,6 +845,36 @@
               }
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "row",
+            "column",
+            "before",
+            "after"
+          ],
+          "properties": {
+            "edit": {
+              "const": "setCell"
+            },
+            "row": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "column": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "before": {
+              "type": "string"
+            },
+            "after": {
+              "type": "string"
+            }
+          }
         }
       ]
     },

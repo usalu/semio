@@ -64,6 +64,20 @@ impl protocol::OpBinary for Puzzle5dViewCommand {
 pub struct Puzzle5dViewer;
 
 impl ArtifactViewer for Puzzle5dViewer {
+    type Members = semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::Puzzle5dMembers;
+
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_os_kernel::semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_plugin::Fault> {
+        semio_os_kernel::semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot)
+            .map_err(|error| semio_plugin::Fault::from(error.to_string()))
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
+        let document = snapshot;
+        semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::genesis_kind_catalogs_pack(
+            &document.kind_catalogs, &document.kind_catalogs_extra, slot, child_id,
+        )
+    }
+
     type Snapshot = Puzzle5dSnapshot;
     type Mutation = Puzzle5dMutation;
     type Config = NoConfig;
@@ -78,6 +92,25 @@ impl ArtifactViewer for Puzzle5dViewer {
     const DOCUMENT_SCHEMA: &'static str = PUZZLE_5D_SCHEMA;
 
 
+
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(
+        grant: semio_plugin::__value::retained_clone::RetainedCloneGrant,
+    ) -> Option<Result<
+        (store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress),
+        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>,
+    >> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant).map(
+            |(mut owners, progress)| {
+                owners.operation_wire.source = semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source;
+                owners.operation_wire = owners.operation_wire.with_original_binary_receiving();
+                (owners, progress)
+            },
+        ))
+    }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))

@@ -1,7 +1,7 @@
 {
  "$schema": "http://json-schema.org/draft-07/schema#",
  "title": "Bounded cache",
- "description": "A least recently used cache with a finite entry bound and a finite byte bound. A value larger than the byte bound is never stored (rejected). An insert that exceeds either bound evicts the least recently used entries first (never the entry just inserted). A get and a set make the key the most recently used; peek and has do not. Concurrent loads of one key share one loader call. Stats are the public CacheStats record.",
+ "description": "A least recently used cache with a finite entry bound and a finite byte bound. A value larger than the byte bound is never stored (rejected). An insert that exceeds either bound evicts the least recently used entries first (never the entry just inserted). A get and a set make the key the most recently used; peek and has do not. Concurrent loads of one key share one loader call. Stats are the public CacheStats record. The bounded stats registry observes live named cache instances. Callers own their cache handles.",
  "definitions": {
   "Policy": {
    "const": {

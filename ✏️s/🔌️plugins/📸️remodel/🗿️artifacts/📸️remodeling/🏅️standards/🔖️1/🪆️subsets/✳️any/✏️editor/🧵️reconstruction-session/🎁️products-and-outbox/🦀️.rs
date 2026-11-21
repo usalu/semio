@@ -191,7 +191,7 @@ impl ProductPreparation {
                 self.quality_points.extend(chunk.point_indices);
                 if chunk.complete {
                     self.watertight = engine.terminal_watertight_report().as_ref().map(watertight_snapshot);
-                    let accepted = engine.frame_source().accepted_count();
+                    let accepted = engine.accepted_frame_count();
                     let mut warnings = Vec::new();
                     if self.watertight.as_ref().is_some_and(|report| !report.is_watertight) {
                         warnings.push("Mesh is not watertight.".into());

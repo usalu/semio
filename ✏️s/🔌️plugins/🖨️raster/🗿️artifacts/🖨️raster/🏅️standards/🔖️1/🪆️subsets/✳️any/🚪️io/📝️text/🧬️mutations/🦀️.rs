@@ -5,12 +5,13 @@
 //! `RasterMutationDsl` enum flattens every real variant into its own keyworded record, converted at
 //! the `OpText`/`OpBinary` boundary only — `RasterMutation` itself is untouched.
 
-use semio_s_artifact_raster_raster_diff::io::text::RasterImageDsl;
+#[path="image.rs"]
+mod image;
+pub use image::{RasterMutationImageDsl, RasterMutationOctets};
 use semio_s_artifact_raster_raster_mutations_pixels::{write_pixel_region, apply_filter, transform_image, fill_selection, fill_region, paint_stroke, change_layer_mask, change_layer_pixels, add_layer_asset, remove_layer_asset};
 use semio_s_artifact_raster_raster_mutations_layers::{create_layer, delete_layer, move_layer, rename_layer, reorder_layers, resize_layer};
 use semio_s_artifact_raster_raster_mutations_layer_props::{change_layer_transform, change_layer_locked, change_layer_adjustment_parameter, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible};
 pub use crate::{inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
-use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
 use protocol::OpText;
 
@@ -24,7 +25,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#region 🔖️OpText
 /// ✂️ Local DSL-only mirror of `RasterMutation` — every real variant flattened into its own
 /// keyworded record, converted at the `store::OpText` boundary only.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub enum RasterMutationDsl {
     CreateLayer {
         #[dsl(key = "parent")]
@@ -91,7 +92,7 @@ pub enum RasterMutationDsl {
         #[dsl(key = "id")]
         asset_id: String,
         #[dsl(block)]
-        asset: RasterImageDsl,
+        asset: RasterMutationImageDsl,
     },
     ChangeLayerAdjustmentParameter {
         #[dsl(key = "id")]
@@ -228,7 +229,7 @@ pub fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
         RasterMutation::MoveLayer(payload) => RasterMutationDsl::MoveLayer { layer_id: payload.layer_id.clone(), new_x: payload.new_x, new_y: payload.new_y },
         RasterMutation::ResizeLayer(payload) => RasterMutationDsl::ResizeLayer { layer_id: payload.layer_id.clone(), new_width: payload.new_width, new_height: payload.new_height },
         RasterMutation::ChangeLayerAdjustmentKind(payload) => RasterMutationDsl::ChangeLayerAdjustmentKind { layer_id: payload.layer_id.clone(), new_adjustment_kind: payload.new_adjustment_kind.clone() },
-        RasterMutation::AddLayerAsset(payload) => RasterMutationDsl::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: RasterImageDsl::from(payload.asset.image()) },
+        RasterMutation::AddLayerAsset(payload) => RasterMutationDsl::AddLayerAsset { asset_id: payload.asset_id.clone(), asset: RasterMutationImageDsl::from(payload.asset.image()) },
         RasterMutation::ChangeLayerAdjustmentParameter(payload) => RasterMutationDsl::ChangeLayerAdjustmentParameter {layer_id:payload.layer_id.clone(),parameter:payload.parameter.clone(),expected:payload.expected,value:payload.value},
         RasterMutation::ChangeLayerTransform(payload)=>RasterMutationDsl::ChangeLayerTransform {layer_id:payload.layer_id.clone(),expected:payload.expected.clone(),transform:payload.transform.clone()},
         RasterMutation::ChangeLayerMask(payload) => RasterMutationDsl::ChangeLayerMask { layer_id: payload.layer_id.clone(), expected: payload.expected.clone(), mask: payload.mask.clone() },

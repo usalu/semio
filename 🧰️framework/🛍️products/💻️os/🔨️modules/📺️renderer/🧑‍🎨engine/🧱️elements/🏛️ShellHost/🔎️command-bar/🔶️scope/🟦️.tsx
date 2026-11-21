@@ -1,5 +1,5 @@
 /** 🔶️ The scope phase of useCommandBar. */
-import { useCallback, useLayoutEffect, useMemo } from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useLayoutEffect, useMemo, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
 import { type AppDefinition, type AppRole, examplesForApp, type LocalizedLabel, resolveWindowActions } from "@semio-tech/framework";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, surfaceRoleAppsV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
@@ -22,7 +22,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
     scope, hostMode, mobile, locks, dispatch, historyStore, exampleOptionsRef, loadedPlugins,
     session, localPrograms, uiLocale, uiTerminology, applyHistoryPatch, applyLeftoverInteractionView, landingAppId,
     appLabelsOverlay, actionPaneStagedArgsByKey, commandStagedArgsByCommandId, activeExampleId, extraWindowInstances,
-    surfaceSwitchBusy, uiTerminologyRef, replayShellOwnedCommandRef, openDocumentSessionsRef, captureDialogOrigin,
+    surfaceSwitchBusy, sessionWorkRef, uiTerminologyRef, replayShellOwnedCommandRef, openDocumentSessionsRef, captureDialogOrigin,
     isCurrentDialogOrigin, captureEffectOwner, isCurrentEffectOwner, sharedSpaceAccessRef, sharedSpaceAccessVersion,
     navigateHistory, dockLayoutStore, dockUiStateStore, panel, focusedProgram, focusedApp, focusedModeId,
     toolMeasuresByToolIdRef, startTutorialRef, toggleTutorialRecordingRef, tutorialDrivenRef, tutorialRecordingRef,
@@ -106,6 +106,13 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
     const apps = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.manifest.apps ?? [];
     return surfaceRoleAppsV1(apps, session.app.dialect);
   }, [loadedPlugins, session]);
+  const sessionWork = sessionWorkRef.current;
+  const sourceBusy = useSyncExternalStore(
+    sessionWork.subscribe,
+    () => session !== null && sessionWork.pending(session.pluginId, session.instanceId) > 0,
+    () => false,
+  );
+  const roleSwitchBlocked = surfaceSwitchBusy || sourceBusy;
 
   /** 🔸️ Navbar role group — the in-shell control that makes `…#viewer` reachable without a
    * reload (`📓️audit-window-inventory-2026-09-12.md` §4 P0 item 2). Labels come from each target
@@ -129,7 +136,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
               data-state={isActive ? "on" : undefined}
               data-role={role}
               aria-pressed={isActive}
-              disabled={(surfaceSwitchBusy && !isActive) || refused(role, isActive)}
+              disabled={(roleSwitchBlocked && !isActive) || refused(role, isActive)}
               aria-description={refused(role, isActive) ? replayRefusalNoticeTextV1("view-only-access", uiLocale) : undefined}
               aria-keyshortcuts={ariaKeyshortcutsText(controlKeybindings.get(SURFACE_ROLE_CONTROL_IDS[role]))}
               onClick={() => void switchToSessionRole(role).catch((switchError) => console.error(`role switch to ${role} failed`, switchError))}
@@ -140,7 +147,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
         })}
       </ButtonGroup>
     );
-  }, [session, sessionRoleApps, surfaceSwitchBusy, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale, sharedSpaceAccessVersion]);
+  }, [session, sessionRoleApps, surfaceSwitchBusy, roleSwitchBlocked, switchToSessionRole, controlKeybindings, uiTerminology, uiLocale, sharedSpaceAccessVersion]);
 
   const resolvedCommands = useMemo(() => {
     const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds);

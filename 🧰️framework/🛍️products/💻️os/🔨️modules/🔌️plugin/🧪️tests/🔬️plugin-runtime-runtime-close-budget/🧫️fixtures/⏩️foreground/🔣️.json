@@ -1,0 +1,9 @@
+[
+  { "stage": "emissionAdmission", "owner": "dispatch" },
+  { "stage": "producerBuild", "owner": "publication" },
+  { "stage": "worker", "owner": "maintenance" },
+  { "stage": "publication", "owner": "publication" },
+  { "stage": "pagePresentation", "owner": "publication" },
+  { "stage": "presentedPage", "owner": "host" },
+  { "stage": "retirement", "owner": "maintenance" }
+]

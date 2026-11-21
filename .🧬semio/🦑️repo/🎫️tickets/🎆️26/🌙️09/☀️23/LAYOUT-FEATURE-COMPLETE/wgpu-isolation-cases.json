@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-embedder-policy": "credentialless"
+  },
+  "requests": [
+    {
+      "path": "/?plugin=layout",
+      "status": 200
+    },
+    {
+      "path": "/renderer-modules/wgpu/semio-renderer-wgpu-component.js",
+      "status": 200
+    }
+  ]
+}

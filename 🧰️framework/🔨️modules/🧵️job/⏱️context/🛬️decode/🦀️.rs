@@ -32,15 +32,27 @@ impl<'a,'source> ActualTurn<'a,'source>{
  fn with<R>(&self,run:impl FnOnce(&mut StepContext<'source>,&mut u128)->R)->Result<R,ValueError>{self.borrowed.compare_exchange(false,true,Ordering::Acquire,Ordering::Relaxed).map_err(|_|refusal("original native decoder caller is already borrowed"))?;let guard=ActualGuard(&self.borrowed);let result=unsafe{run(&mut **self.actual.get(),&mut *self.reserved.get())};drop(guard);Ok(result)}
 }
 /// 🏗️ The calling turn's own physical grant is the original construction recipient of every native frontier.
-struct ActualPhysical{grant:RetainedCloneGrant,turn:Option<OriginalSourceTurnIdentity>}
+struct ActualPhysical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,turn:Option<OriginalSourceTurnIdentity>}
 struct ActualPhysicalDriver;
 impl OriginalConstructionRecipient for ActualPhysicalDriver{
  type Context<'t,'s>=ActualPhysical where 's:'t;
  fn validate_context<'t,'s>(&self,_:&ActualPhysical)->Result<(),ValueError> where 's:'t{Ok(())}
  fn source_turn<'t,'s>(&self,physical:&ActualPhysical)->Option<OriginalSourceTurnIdentity> where 's:'t{physical.turn}
  fn grant<'r,'t,'s>(&mut self,physical:&mut ActualPhysical,quote:OriginalConstructionGrant<'r>)->OriginalConstructionGrantComplete<'r> where 's:'t{quote.complete(Ok(physical.grant))}
- fn accept<'r,'t,'s>(&mut self,physical:&mut ActualPhysical,receipt:OriginalConstructionAccept<'r>)->OriginalConstructionAcceptComplete<'r> where 's:'t{let(grant,progress)=(receipt.grant(),receipt.progress());let result=if !progress.fits(grant)||!progress.fits(physical.grant){Err(refusal("native construction receipt exceeds its physical grant"))}else{let left=&mut physical.grant;left.maximum_items-=progress.copied_items;left.maximum_copy_bytes-=progress.copied_bytes;left.maximum_capacity_bytes-=progress.retained_capacity_bytes;left.maximum_release_bytes-=progress.released_bytes;Ok(())};receipt.complete(result)}
- fn submitted<'t,'s>(&self,_:&ActualPhysical)->RetainedCloneProgress where 's:'t{RetainedCloneProgress::default()}
+ fn accept<'r,'t,'s>(&mut self,physical:&mut ActualPhysical,receipt:OriginalConstructionAccept<'r>)->OriginalConstructionAcceptComplete<'r> where 's:'t{
+  let(grant,progress)=(receipt.grant(),receipt.progress());
+  let result=if !progress.fits(grant)||!progress.fits(physical.grant){Err(refusal("native construction receipt exceeds its physical grant"))}else{
+   physical.submitted.checked_add(progress).map(|submitted|{
+    physical.submitted=submitted;
+    physical.grant.maximum_items-=progress.copied_items;
+    physical.grant.maximum_copy_bytes-=progress.copied_bytes;
+    physical.grant.maximum_capacity_bytes-=progress.retained_capacity_bytes;
+    physical.grant.maximum_release_bytes-=progress.released_bytes;
+   })
+  };
+  receipt.complete(result)
+ }
+ fn submitted<'t,'s>(&self,physical:&ActualPhysical)->RetainedCloneProgress where 's:'t{physical.submitted}
 }
 struct ActualDecodeFrame<'slot,'control,'turn,'call,'source>{frame:NativeForwardedDecodeFrame<'slot,'control>,turn:&'turn ActualTurn<'call,'source>,before:u128}
 impl Drop for ActualDecodeFrame<'_,'_,'_,'_,'_>{fn drop(&mut self){if std::thread::panicking(){let work=self.frame.control().actual_work().saturating_sub(self.before);let work=u64::try_from(work).unwrap_or(u64::MAX);self.turn.with(|cx,_|cx.consume_fuel(work)).expect("original decoder work return requires its same unborrowed caller")}}}
@@ -123,7 +135,7 @@ impl OriginalNativeDecodeSource{
   let answer=allocation.with_send_loan(&mut allocation_context,|allocate|{
    let frame=NativeForwardedDecodeFrame::begin(receipt,maximum,&mut progress,allocate,original_recipient)?;
    let mut frame=ActualDecodeFrame{before:0,frame,turn:&borrowed};frame.before=frame.frame.control().actual_work();let before_work=frame.before;
-   let answer=authority.with_loan(&mut work_context,|work_loan|frame.frame.control().with_work_recipient(work_loan,|control|control.with_source_witness(source_turn.map(|token|unsafe{&*token}.witness()),|control|{let mut physical=ActualPhysical{grant,turn:turn_identity};construction.with_loan(&mut physical,|physical|control.with_construction_recipient(physical,|control|Ok::<_,ValueError>(run(control)))).and_then(|answer|answer)}))).and_then(|answer|answer);
+   let answer=authority.with_loan(&mut work_context,|work_loan|frame.frame.control().with_work_recipient(work_loan,|control|control.with_source_witness(source_turn.map(|token|unsafe{&*token}.witness()),|control|{let mut physical=ActualPhysical{grant,submitted:Default::default(),turn:turn_identity};construction.with_loan(&mut physical,|physical|control.with_construction_recipient(physical,|control|Ok::<_,ValueError>(run(control)))).and_then(|answer|answer)}))).and_then(|answer|answer);
    let observed=u64::try_from(frame.frame.control().actual_work().saturating_sub(before_work)).unwrap_or(u64::MAX);drop(frame);
    answer.map(|value|(value,observed))
   }).and_then(|answer|answer);

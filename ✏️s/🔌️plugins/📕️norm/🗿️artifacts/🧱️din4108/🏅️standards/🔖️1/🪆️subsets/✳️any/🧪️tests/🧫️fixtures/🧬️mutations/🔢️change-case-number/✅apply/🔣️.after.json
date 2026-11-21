@@ -1,0 +1,32 @@
+{
+  "climateZone": "Zone2",
+  "usage": "residential",
+  "tIntC": 20.0,
+  "rhInt": 0.5,
+  "hasMechanicalVentilation": true,
+  "airtightnessN50": 1.5,
+  "bb2DetailsConform": true,
+  "zones": [],
+  "elements": [],
+  "thermalBridges": [],
+  "cases": [
+    {
+      "id": "pressure-test",
+      "labelEn": "Volume-based pressure test",
+      "labelDe": "Volumenbezogene Differenzdruckmessung",
+      "entryId": "G26-01",
+      "numbers": [
+        {
+          "id": "test_volume",
+          "value": 320.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "test_protocol",
+          "value": "unconfirmed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,20 +1,15 @@
-//! 🧭️ Terrain descriptor DTOs of the gisterrain artifact: the `.gis.json` shape a `gis/3d` example is authored in and the `World3dScene.terrain_json` payload built from it. Kept below the schema root so the snapshot and the inferences can name it without reaching back into the root.
+//! 🧭️ GIS terrain descriptor and geographic overlay projections for World3d scenes.
 
 use semio_framework_value_derive::{FromValue, ToValue};
 
+#[path = "🗺️overlays/🦀️.rs"]
+pub mod overlays;
+
+#[path = "🎞️scene/🦀️.rs"]
+pub mod scene;
+
 //#region 🔖️TerrainDescriptor
-/// 🧭️ Relocated from `⚙️engine/terrain/🦀️.rs` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure DTOs + a pure formatter, neither
-/// snapshot-derived nor stateful — the `.gis.json` shape a `gis/3d` example is authored in, and the
-/// `World3dScene.terrain_json` payload built from it for the `gis3d-play` app's terrain window.
-///
-/// 🧭️ Originally relocated out of the generic `framework_surface_terrain` engine (audit finding A5:
-/// the framework must not know ✏️s — these DTOs and `build_terrain_scene_json` name gis-specific
-/// concepts). The DEM-tile decode/session/mesh engine itself
-/// (`semio_framework_surface::terrain::{tiles, projection, TerrainSessionCore}`) stays in the framework:
-/// it is also path-mounted directly into `framework/os/infinite`'s `World3dState` (to dodge a
-/// surface↔infinite cargo cycle) to drive the generic `World3d` terrain layer, so it is genuinely
-/// shared rendering engine code, not gis-specific — only this descriptor/DTO layer belonged here.
+/// 🌐️ Local terrain coordinates use this geographic origin.
 #[derive(Clone, Debug, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TerrainProjectOrigin {
@@ -26,12 +21,43 @@ pub struct TerrainProjectOrigin {
 #[value(rename_all = "camelCase")]
 pub struct TerrainPositionData {
     pub id: String,
-    pub lon: f64,
-    pub lat: f64,
+    pub name: String,
+    pub coordinates: [f64; 2],
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub label: Option<String>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>,
+    pub elevation: Option<f64>,
+}
+
+#[derive(Clone, Debug, ToValue, FromValue)]
+pub struct TerrainRouteData {
+    pub id: String,
+    pub name: String,
+    pub coordinates: Vec<[f64; 2]>,
+}
+
+#[derive(Clone, Debug, ToValue, FromValue)]
+pub struct TerrainRegionData {
+    pub id: String,
+    pub name: String,
+    pub rings: Vec<Vec<[f64; 2]>>,
+}
+
+#[derive(Clone, Debug, Default, ToValue, FromValue)]
+pub struct TerrainOverlays {
+    pub positions: Vec<TerrainPositionData>,
+    pub routes: Vec<TerrainRouteData>,
+    pub regions: Vec<TerrainRegionData>,
+}
+
+impl TerrainOverlays {
+    pub fn is_empty(&self) -> bool {
+        self.positions.is_empty() && self.routes.is_empty() && self.regions.is_empty()
+    }
+
+    pub fn coordinates(&self) -> impl Iterator<Item = [f64; 2]> + '_ {
+        self.positions.iter().map(|position| position.coordinates)
+            .chain(self.routes.iter().flat_map(|route| route.coordinates.iter().copied()))
+            .chain(self.regions.iter().flat_map(|region| region.rings.iter().flatten().copied()))
+    }
 }
 
 #[derive(Clone, Debug, ToValue, FromValue)]
@@ -40,7 +66,7 @@ pub struct TerrainDescriptorJson {
     pub schema: String,
     pub project_origin: TerrainProjectOrigin,
     #[value(default)]
-    pub positions: Vec<TerrainPositionData>,
+    pub overlays: TerrainOverlays,
     #[value(default = "default_exaggeration")]
     pub exaggeration: f64,
 }
@@ -48,10 +74,5 @@ pub struct TerrainDescriptorJson {
 fn default_exaggeration() -> f64 {
     1.0
 }
-
-pub const GIS_3D_TERRAIN_TILE_URL_TEMPLATE: &str = "/dem/{z}/{x}/{y}.png";
-
-
-
 
 //#endregion 🔖️TerrainDescriptor

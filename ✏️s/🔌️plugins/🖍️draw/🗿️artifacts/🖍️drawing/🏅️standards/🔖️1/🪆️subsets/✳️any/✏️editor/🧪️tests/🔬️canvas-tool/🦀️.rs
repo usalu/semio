@@ -91,6 +91,7 @@ fn shape_identity_is_replay_stable_and_scoped_to_the_durable_app_operation() {
         operation_id: 11,
         generation: 13,
         canonical_base_revision: [17; 32],
+        retained: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation,
         authoring_seed: "authoring-seed-test".into(),
     };
     let geometry = [10.0, 20.0, 30.0, 40.0];
@@ -331,7 +332,7 @@ fn repeated_pen_and_polygon_drafts_keep_distinct_layers_and_transactions() {
         let mut session=semio_s_artifact_draw_drawing_editor::identity_test::session(utility,"draft-seed");
         for round in 0..3 {
             for point in [[0.0,0.0],[10.0,0.0],[10.0,10.0]] { session.press(pointer(utility,point)).unwrap(); }
-            let emit=session.finish_draft(DrawingToolBase { document: Arc::new(document.clone()), operation: Some(AppOperationContext { app_instance_id: 1, parent_document_id: "draft".into(), operation_id: round+1, generation: 1, canonical_base_revision: [round as u8; 32], authoring_seed: "draft-seed".into() }) }).unwrap();
+            let emit=session.finish_draft(DrawingToolBase { document: Arc::new(document.clone()), operation: Some(AppOperationContext { app_instance_id: 1, parent_document_id: "draft".into(), operation_id: round+1, generation: 1, canonical_base_revision: [round as u8; 32], retained: semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation, authoring_seed: "draft-seed".into() }) }).unwrap();
             let DrawingMutation::CreateLayer(created)=&emit.artifact_mutations[0] else {panic!("Expected creation")};
             assert!(ids.insert(layer_id(&created.layer).to_string()),"{utility} reused a completed draft id");
             assert!(transactions.insert(emit.transaction.clone().expect("one transaction per draft").id),"{utility} reused a transaction id");

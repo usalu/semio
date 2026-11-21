@@ -31,6 +31,7 @@ import { PLUGIN_HOST_SHIM_FILE, SHARD_WORKER_FILE } from "../🧾️contract/�
 import { pluginComponentBridgeSource } from "../🌉️component-bridge-source/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../🕸️imports/🟦️.ts";
 import { rewritePreview2ShimImports, transpilePluginComponentModulesAsync } from "../🟦️.ts";
+import { nativeTranspileBinaryV1 } from "../🦀️native-transpile/🟦️.ts";
 import { shardWorkerSource } from "../🧵️shard-worker-source/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
@@ -101,9 +102,9 @@ async function materializationIdentityV1(): Promise<string> {
   return createHash("sha256").update(digests.join("\n")).digest("hex");
 }
 
-/** 🧬️ The transpile stage cache request: the digest of the debug-stripped component bytes jco reads, the jco version, this module's implementation and the module name; no path of any checkout is part of it. */
-export function transpileStageRequestV1(component: string, jco: string, materialization: string, base: string) {
-  return { stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base } };
+/** 🧬️ Identifies the component, selected native transpile bytes, jco version, materializer and module name independently of checkout paths. */
+export function transpileStageRequestV1(component: string, jco: string, materialization: string, base: string, native: string) {
+  return { stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base, "native-transpile": native } };
 }
 
 /** 🪶️ The optimize stage cache request of one extracted core: its digest, the optimizer's version and its arguments. */
@@ -116,8 +117,9 @@ export function optimizeStageRequestV1(core: string, version: string, args: read
 export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): Promise<string> {
   checkResourceLeaseControl(work.control);
   const base = componentBaseV1(work.target), output = join(work.work, "transpiled");
-  const [component, jco, materialization] = await Promise.all([Promise.resolve(createHash("sha256").update(stripWasmDebugSectionsV1(readFileSync(work.deliverable.wasm))).digest("hex")), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", materializationIdentityV1)]);
-  await work.cache.run(transpileStageRequestV1(component, jco, materialization, base), output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal, base);
+  const nativeBinary = nativeTranspileBinaryV1(work.repoRoot, work.deliverable.profile, work.environment);
+  const [component, jco, materialization, native] = await Promise.all([Promise.resolve(createHash("sha256").update(stripWasmDebugSectionsV1(readFileSync(work.deliverable.wasm))).digest("hex")), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", materializationIdentityV1), fileDigest(nativeBinary, work.control.signal)]);
+  await work.cache.run(transpileStageRequestV1(component, jco, materialization, base, native), output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, mode: work.deliverable.profile, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal, base);
   checkResourceLeaseControl(work.control);
   return output;
 }
@@ -179,12 +181,20 @@ async function publishComponentModuleV1(work: ComponentModuleWorkV1, module: str
 }
 
 /** 🌐️ Retains one genuine vendor reader and funded assembled module through actual probe and final publication. */
-export async function publishComponentBrowserV1(work:ComponentModuleWorkV1,transpiled:string,optimized:string|null,receipt:ComponentReceiptV1):Promise<void>{
+export async function publishComponentBrowserV1(work:ComponentModuleWorkV1,transpiled:string,optimized:string|null,receipt:ComponentReceiptV1,withCompilerFiles:<T>(phase:CompilerAdmissionControl,body:(writer:CompilerAdmissionControl)=>Promise<T>)=>Promise<T>):Promise<void>{
  const mode=readNativeCallerAuthorityV1(work.invocation.capabilities).original.buildMode,policy=publicationSchema.definitions.Protocol.const;if(receipt.profile!==mode)throw Error("Exact actual browser publication mode required");
  await withRepositoryCacheStoreV1(work.repoRoot,"products",work.invocation,work.control,(store,storePhase)=>withRepositoryArtifactV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,path:join(builtPluginModulesRootIn(work.repoRoot,mode),PREVIEW2_VENDOR_RELATIVE),owner:"browser-support:preview2",maximumBytes:policy.maximumOutputBytes,maximumFiles:policy.maximumFiles}},reader=>withRepositoryArtifactTaskV1(reader,work.invocation,async artifact=>{
   await withArtifactScratchV1({workspace:work.repoRoot,invocation:work.invocation,storage:store.storage,control:store.control,phaseControl:artifact.control,request:{version:1,mode,owner:"browser/module/"+work.target.pluginId}},scratch=>withArtifactDestinationTaskV1(scratch,work.invocation,async sink=>{
    let total=0;const vendor=join(sink.directory,PREVIEW2_VENDOR_RELATIVE);for(const name of artifact.files){const source=join(artifact.path,name),destination=join(vendor,name),size=lstatSync(source).size;if(destination.length>policy.maximumPathUnits||size>policy.maximumOutputBytes-total)throw Error("Browser vendor scratch extent exceeded");total+=size;mkdirSync(dirname(destination),{recursive:true});await withArtifactDescriptorSlotV1(()=>withArtifactDescriptorSlotV1(()=>copyFile(source,destination)));}
-   const module=await assembleComponentModuleV1({...work,control:sink.control},transpiled,optimized,join(sink.directory,"module"),vendor,policy.maximumFiles-artifact.files.length,policy.maximumOutputBytes-total);artifactFiles(sink.directory);const semantic=await probeComponentModuleV1({...work,control:sink.control},module,vendor);await artifact.recheck();await publishComponentModuleV1({...work,control:sink.control},module,semantic,receipt,policy.maximumFiles-artifact.files.length,policy.maximumOutputBytes-total);
+   const maximumFiles=policy.maximumFiles-artifact.files.length,maximumBytes=policy.maximumOutputBytes-total;
+   const {module,semantic}=await withCompilerFiles(sink.control,async writer=>{
+    const compilerWork={...work,control:writer};
+    const module=await assembleComponentModuleV1(compilerWork,transpiled,optimized,join(sink.directory,"module"),vendor,maximumFiles,maximumBytes);
+    artifactFiles(sink.directory);
+    return {module,semantic:await probeComponentModuleV1(compilerWork,module,vendor)};
+   });
+   await artifact.recheck();
+   await publishComponentModuleV1({...work,control:sink.control},module,semantic,receipt,maximumFiles,maximumBytes);
   }));
  })));
 }

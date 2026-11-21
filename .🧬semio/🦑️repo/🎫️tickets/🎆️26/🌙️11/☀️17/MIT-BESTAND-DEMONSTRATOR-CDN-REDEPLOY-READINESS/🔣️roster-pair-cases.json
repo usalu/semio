@@ -1,0 +1,50 @@
+{
+  "established": [
+    [
+      "flow-extension-text",
+      "flow-extension-math"
+    ],
+    [
+      "flow",
+      "playbook"
+    ],
+    [
+      "process-extension-metal",
+      "process-extension-wood"
+    ],
+    [
+      "sourcing-module-beams",
+      "sourcing-module-slabs"
+    ],
+    [
+      "cad-extension-aec-building-energy",
+      "cad-extension-aec-building-structure"
+    ]
+  ],
+  "additional": [
+    [
+      "flow-extension-draw",
+      "flow-extension-list"
+    ],
+    [
+      "flow-extension-logic",
+      "flow-extension-primitive"
+    ],
+    [
+      "process-extension-concrete",
+      "process-extension-robotic"
+    ],
+    [
+      "flow-extension-brep",
+      "playbook-module-procedural"
+    ],
+    [
+      "cad-extension-aec-building",
+      "cad-extension-spatial-shape"
+    ]
+  ],
+  "oneConfirmed": {
+    "confirmed": "flow-extension-draw",
+    "pending": "flow-extension-list"
+  }
+}

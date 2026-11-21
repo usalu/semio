@@ -1,0 +1,14 @@
+# Graph Closure Read Failure on Streamed Authority
+
+Two resident graph-planning requests failed at 15:41:35 and 15:44:14 UTC under service reference `9cec57dc`. The retained service messages contain a closed child failure packet with `TypeError`, no payload-refusal context, status 1 and null signal. The parent at `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/📡️session/🟦️.ts:33` constructs its error from that frame. The child completed the failure exchange.
+
+The pre-fix streamed-authority branch in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs` intentionally left its whole-file buffer null. The payload catch still read `bytes.length` while preparing refusal context, masking the original validation error before it could be propagated. The 15:51:42 UTC worktree update gives the catch the packed byte count from the verified streamed file size or the buffered file. The current source retains that fix at lines 66 and 77.
+
+The owning ticket already has an exact reproduction. The historical pre-fix run at 15:51:17 UTC produced Bun's equivalent `null is not an object (evaluating 'bytes.length')`. The same harness passed again against the current worktree. It launches the actual worker entry and checks through Ajv that the neutral fixture's only authority-schema fault is `/graph`, and that the worker exits 1 with a valid wire failure carrying `Closed authenticated closure graph authority required`. The historical service frame omits the failing authority path and value, so the specific validation error it masked remains unobserved. The current authority-stream and closed-session refusal tests also passed (5 tests, 107 assertions, including SQLite and Ajv).
+
+```sh
+repo tools exec --light bun -- './.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️15/DEV-PROCESS-REACT-E2E/authority-refusal.ts' './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs' './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧬️schema/🔣️.json' './.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️15/DEV-PROCESS-REACT-E2E/invalid-closure-authority.json'
+repo tools exec --light bun -- test './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/🌊️authority-stream/🟦️.ts' './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📡️session/📣️failure/🟦️.ts'
+```
+
+This verification made no source edits or replacement graph build. The original owner-backed suite failed before test dispatch, as recorded in [Windows Graph Snapshot Paths](audit-windows-graph-snapshot-paths.md).

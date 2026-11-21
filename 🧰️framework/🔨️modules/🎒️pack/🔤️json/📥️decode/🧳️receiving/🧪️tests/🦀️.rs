@@ -22,7 +22,7 @@ fn receipt(p:RetainedCloneProgress,heap:Heap,g:RetainedCloneGrant){assert!(p.fit
 fn source<T:RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T>{let mut bank=bank();let g=bank.loan(1,1<<20);let admitted=fx::admit_owned(&mut bank,value,(),g).result;match admitted{Ok((source,_))=>source,Err(_)=>panic!("fixture source admission refused")}}
 /// 🪪️ Binds one owning alias of the whole retained source through the turn effect.
 fn alias_of<T:RetireOwned+Sync+'static>(root:&RetainedCloneSource<T>,bank:&mut EffectBank,g:RetainedCloneGrant)->semio_framework_value::retained_clone::RetainedOwnedProjection<T>{
-run_poll(bank,g,|effect|{let started=effect.performed_work();let result=crate::retained_alias(root.try_borrow().unwrap(),effect).map(|answer|answer.expect("alias funded").0);RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()-started})}).result.unwrap()
+run_poll(bank,g,|effect|{let started=effect.performed_work();let result=semio_framework_pack_json::retained_alias(root.try_borrow().unwrap(),effect).map(|answer|answer.expect("alias funded").0);RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()-started})}).result.unwrap()
 }
 fn close_source<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){
 let mut payer=Authorities::new();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);
@@ -40,14 +40,17 @@ let mut original_retirement=NativeDecodeRetirementRecipient::new();let mut contr
 let shell=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.max(OriginalJsonReceiving::<M>::constructor_demand().copy_bytes),..g};let(mut owner,p)=admitted(OriginalJsonReceiving::<M>::admit(wire,&factory,if row["header"]=="op"{b"op"}else{b""},|value|value,&control,shell));assert!(p.fits(shell));
 let mut turns=0;let mut output=None;let mut owned=None;let mut faulted=false;let body=g.maximum_copy_bytes;
 for _ in 0..100000{
-if cut==Some(turns){break;}let g=RetainedCloneGrant{maximum_copy_bytes:body.max(owner.demands(body).unwrap().copy_bytes),..g};
+if cut==Some(turns){break;}
+let phase=owner.phase;
 let d=owner.demands(body).unwrap();
+let items=owner.minimum_advance_items(body,WORK).unwrap();
+let g=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:body.max(d.copy_bytes),..g};
 let mut foreign_accept=|_|true;let mut foreign=NativeDecodeControl::new_retained(&mut foreign_accept);
 let(result,heap)=actual(||complete(owner.advance(&mut foreign,payer.turn.witness(),body,WORK,g)).result);
 assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes,foreign.owned_bytes()),(0,0,0));
 for axis in 0..5{
 if axis==1&&d.copy_bytes==0||axis==2&&d.capacity_bytes==0||axis==3&&d.release_bytes==0{continue;}
-let denied=match axis{0=>RetainedCloneGrant{maximum_items:0,..g},1=>RetainedCloneGrant{maximum_copy_bytes:0,..g},2=>RetainedCloneGrant{maximum_capacity_bytes:0,..g},3=>RetainedCloneGrant{maximum_release_bytes:0,..g},_=>RetainedCloneGrant{maximum_depth:0,..g}};
+let denied=match axis{0=>RetainedCloneGrant{maximum_items:items-1,..g},1=>RetainedCloneGrant{maximum_copy_bytes:0,..g},2=>RetainedCloneGrant{maximum_capacity_bytes:0,..g},3=>RetainedCloneGrant{maximum_release_bytes:0,..g},_=>RetainedCloneGrant{maximum_depth:0,..g}};
 let admitted=control.owned_bytes();let calls=callbacks.get();
 let(step,heap)=actual(||payer.receive(&mut control,denied,|control,witness|complete(owner.advance(control,witness,body,WORK,denied))).result.unwrap());
 
@@ -56,7 +59,7 @@ receipt(step.progress(),heap,denied);assert_eq!(control.owned_bytes(),admitted);
 let admitted=control.owned_bytes();
 let(result,heap)=actual(||payer.receive(&mut control,g,|control,witness|complete(owner.advance(control,witness,body,WORK,g))).result);
 assert_eq!(control.owned_bytes()-admitted,heap.requested_bytes);
-let p=match result{Ok(step)=>step.progress(),Err(error)=>{faulted=true;error.retained_progress()}};
+let p=match result{Ok(step)=>step.progress(),Err(error)=>{assert_ne!(row["canonical"],true,"original JSON case {} refused in {phase:?} with {d:?}: {error:?}",row["name"]);faulted=true;error.retained_progress()}};
 receipt(p,heap,g);turns+=1;if faulted||owner.ready(){break;}
 }
 if cut.is_none(){

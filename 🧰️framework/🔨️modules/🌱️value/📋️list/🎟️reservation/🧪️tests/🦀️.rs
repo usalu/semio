@@ -48,3 +48,29 @@ fn allocation_policy_partial_payload_hands_back_without_hidden_disposal(){
 }
 
 fn test_reserve<T>(owner:&mut Vec<T>,slots:usize,mut actual:Option<&mut Option<usize>>)->Result<(),std::collections::TryReserveError>{let allocating=std::mem::size_of::<T>()!=0&&owner.len().saturating_add(slots)>owner.capacity();if allocating{if let Some(marker)=actual.as_deref_mut(){*marker=Some(0)}}let result=owner.try_reserve_exact(slots);if allocating&&result.is_ok(){if let Some(marker)=actual.as_deref_mut(){*marker=Some(owner.capacity()*std::mem::size_of::<T>())}}result}
+
+#[test]
+fn original_reservation_reuses_existing_empty_metadata_without_an_allocation_receipt() {
+    let laws: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law = &laws["metadataReuse"];
+    let mut owner = PagedList::<u64, 4>::empty();
+    owner.root = Vec::with_capacity(law["backingSlots"].as_u64().unwrap() as usize);
+    let pointer = owner.root.as_ptr();
+    let retained = owner.root.capacity() * size_of::<Page<u64>>();
+    owner.allocated = retained;
+
+    let quoted = owner.next_allocation_bytes().unwrap();
+    let mut actual = None;
+    let (result, heap) = observe(|| owner.reserve_one_granted(quoted, &mut actual));
+    let allocated = law["allocatedBytes"].as_u64().unwrap() as usize;
+    let released = law["releasedBytes"].as_u64().unwrap() as usize;
+    assert_eq!(quoted, allocated);
+    assert_eq!(heap, (allocated, released));
+    assert_eq!(actual, None);
+    let progress = result.unwrap();
+    assert!(progress.progressed);
+    assert_eq!((progress.allocated_bytes, progress.released_allocation_bytes), heap);
+    assert_eq!(owner.root.as_ptr(), pointer);
+    assert_eq!(owner.allocated_bytes(), retained);
+    assert_eq!(close(&mut owner, grant()), retained);
+}

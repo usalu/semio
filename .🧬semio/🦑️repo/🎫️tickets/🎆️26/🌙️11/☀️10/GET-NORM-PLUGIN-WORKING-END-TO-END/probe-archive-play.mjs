@@ -25,6 +25,26 @@ const browser = await chromium.launch({
   ],
 });
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+if (process.env.TRACE_MODEL_DRAW) await page.addInitScript(() => {
+  const metrics = globalThis.__semioProbeModelDraw = { webgpu: 0, webgl: 0, canvas2d: 0 };
+  for (const [backend, proto, methods] of [
+    ["webgpu", globalThis.GPURenderPassEncoder?.prototype, ["draw", "drawIndexed", "drawIndirect", "drawIndexedIndirect"]],
+    ["webgl", globalThis.WebGLRenderingContext?.prototype, ["drawArrays", "drawElements"]],
+    ["webgl", globalThis.WebGL2RenderingContext?.prototype, ["drawArrays", "drawElements", "drawArraysInstanced", "drawElementsInstanced"]],
+    ["canvas2d", globalThis.CanvasRenderingContext2D?.prototype, ["fill", "stroke", "drawImage"]],
+  ]) {
+    if (!proto) continue;
+    for (const method of methods) {
+      const original = proto[method];
+      if (typeof original !== "function") continue;
+      proto[method] = function (...args) {
+        const result = Reflect.apply(original, this, args);
+        metrics[backend]++;
+        return result;
+      };
+    }
+  }
+});
 const preview = process.env.PLAY_TEST_GUEST;
 const previewJs = process.env.PLAY_TEST_GUEST_JS;
 const previewImports = previewJs ? await import(pathToFileURL(`${process.cwd()}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts`)) : null;
@@ -42,6 +62,7 @@ if (preview) {
 let transferFinishedAt = null;
 let acknowledgedTransfers = 0;
 let settledNotes = 0;
+let completedReservedJobs = 0;
 let exampleRequested = false;
 let fatal = null;
 const notable = /play-archive|boot failed|semantic failure|authority failure|source-not-ready|shell\.documentTransfer\.load|archive (?:load deferred|await replacement|maintenance result missing)|document archive parent Pack and SPR hydration was rejected|close demand|cleanup job body unreachable|failed-decoded/i;
@@ -67,6 +88,7 @@ page.on("console", (message) => {
     transferFinishedAt = Date.now();
   }
   if (line.includes("[DEBUG] play-archive shell note reserved tool drives handed off")) settledNotes++;
+  if (line.startsWith("[DEBUG] play-archive reserved job ") && line.endsWith("completion event returned")) completedReservedJobs++;
 });
 page.on("pageerror", (error) => {
   print(`page error: ${error}`);
@@ -100,9 +122,42 @@ if (probeCopyStock > 0) await page.context().route((requestUrl) => decodeURIComp
   await route.fulfill({ response, body: instrumented });
 });
 
-if (process.env.TRACE_COMMAND_INGRESS || verifyPicker) await page.context().route((url) => decodeURIComponent(url.pathname).includes("/🚚️handle-turn-drive/"), async (route) => {
+if (process.env.TRACE_PICKER_SETTLEMENT) await page.context().route((url) => decodeURIComponent(url.pathname).includes("/🧭️input-funnel/"), async (route) => {
   const response = await route.fetch();
   const source = await response.text();
+  const instrumented = source
+    .replace(/if \((action\d*)\.action === SET_ACTIVE_EXAMPLE_ACTION_ID && outcome.kind === "applied"\) \{/, `if ($1.action === SET_ACTIVE_EXAMPLE_ACTION_ID) console.info("[DEBUG] play-archive picker dispatch outcome", outcome.kind, outcome.inputSeq, outcome.reason, outcome.detail);
+    $&`)
+    .replace("if (!active || core.loadedPluginsRef.current.find", `console.info("[DEBUG] play-archive picker live owner", active, targetSession.instanceId, currentSession?.instanceId, core.loadedPluginsRef.current.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle === plugin);
+      if (!active || core.loadedPluginsRef.current.find`)
+    .replace("if (selection) {", `console.info("[DEBUG] play-archive picker selection", programHistoryKeyV1(targetSession), core.focusedExampleProgramRef.current, programHistoryKeyV1(liveFocus), focused, selection?.visibleExampleId, memory.get(programHistoryKeyV1(targetSession))?.inputSeq);
+      if (selection) {`)
+    .replace("await applyHostEffects(response.requestedEffects ?? [],", `if (action.action === "setActiveExample") console.info("[DEBUG] play-archive picker host effects start", startedOperation?.operationId, response.requestedEffects?.length);
+    await applyHostEffects(response.requestedEffects ?? [],`)
+    .replace(/;(\s+)const completion = await awaitOperationSettle\(targetSession.instanceId, startedOperation\?\.operation\);/g, `;\nif (action.action === "setActiveExample") console.info("[DEBUG] play-archive picker host effects returned", startedOperation?.operationId);
+    const completion = await awaitOperationSettle(targetSession.instanceId, startedOperation?.operation);
+    if (action.action === "setActiveExample") console.info("[DEBUG] play-archive picker wait returned", completion?.revision);`);
+  if (instrumented !== source) print(`picker settlement observer attached: ${decodeURIComponent(new URL(route.request().url()).pathname).split("/").slice(-3).join("/")}`);
+  await route.fulfill({ response, body: instrumented });
+});
+
+if (process.env.TRACE_COMMAND_INGRESS || verifyPicker) await page.context().route((url) => decodeURIComponent(url.pathname).includes("/🚚️handle-turn-drive/"), async (route) => {
+  const response = await route.fetch();
+  let source = await response.text();
+  if (process.env.TRACE_JOB_BUDGET === "current") {
+    const authored = readFileSync(`${process.cwd()}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🚚️handle-turn-drive/🟦️.ts`, "utf8");
+    const find = (text, name) => text.indexOf(`const ${name}`);
+    const start = find(source,"commitReservedToolJobWhileSerialized");
+    const end = find(source,"commitReservedToolSpawnsWhileSerialized");
+    const authoredStart = find(authored,"commitReservedToolJobWhileSerialized");
+    const authoredEnd = find(authored,"commitReservedToolSpawnsWhileSerialized");
+    if (start < 0 || end <= start || authoredStart < 0 || authoredEnd <= authoredStart) throw Error("Missing reserved job driver frontier");
+    const ts = require("typescript");
+    const fresh = ts.transpileModule(authored.slice(authoredStart, authoredEnd), {
+      compilerOptions: {target:ts.ScriptTarget.ES2022, module:ts.ModuleKind.ESNext},
+    }).outputText;
+    source = source.slice(0,start) + fresh + source.slice(end);
+  }
   const instrumented = source
     .replace("const inspected = inspectEncodedAppCommand(events);", `const inspected = inspectEncodedAppCommand(events);
       const traceNote = (...detail) => { if (inspected.actionId === "noteShellCommand") console.info("[DEBUG] play-archive shell note", ...detail); };
@@ -119,7 +174,28 @@ if (process.env.TRACE_COMMAND_INGRESS || verifyPicker) await page.context().rout
     .replace("await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);", `traceNote("settled", settled.effects.length);
         await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);
         traceNote("reserved tool drives handed off");`);
-  const rewritten = omitNoteView ? `${instrumented}\nfunction windowlessNote(bytes) {
+  const reservedStart = instrumented.indexOf("const commitReservedToolJobWhileSerialized");
+  const reservedEnd = instrumented.indexOf("const commitReservedToolSpawnsWhileSerialized", reservedStart);
+  const jobObserved = process.env.TRACE_RESERVED_JOB && reservedStart >= 0 && reservedEnd > reservedStart ? (
+    instrumented.slice(0, reservedStart)
+    + instrumented.slice(reservedStart, reservedEnd)
+      .replace("const key =", `const traceReserved = (...detail) => console.info("[DEBUG] play-archive reserved job", String(job), ...detail);
+    const key =`)
+      .replace("await shardClient.startJob(actorId, job, kind, input);", `traceReserved("start request", kind, input.byteLength);
+      await shardClient.startJob(actorId, job, kind, input);
+      traceReserved("start accepted");`)
+      .replace("step += 1;", 'step += 1; traceReserved("step", step, last.status);')
+      .replace(/const outcome = await shardClient\.stepJob\(actorId, job, jobStepBudget\);/, '$& traceReserved("step", outcome.status);')
+      .replace("await deliverJobCompletionTurn(instanceId, actorId, job, outcome);", `traceReserved("completion event start", outcome.status);
+      await deliverJobCompletionTurn(instanceId, actorId, job, outcome);
+      traceReserved("completion event returned");`)
+      .replace("} finally {", `} catch (error) {
+      traceReserved("failure", String(error), error?.stack);
+      throw error;
+    } finally {`)
+    + instrumented.slice(reservedEnd)
+  ) : instrumented;
+  const rewritten = omitNoteView ? `${jobObserved}\nfunction windowlessNote(bytes) {
     let at = 1;
     const next = () => { let value = 0, n = 1, byte; do { byte = bytes[at++]; value += (byte & 127) * n; n *= 128; } while (byte & 128); return value; };
     next();
@@ -129,9 +205,41 @@ if (process.env.TRACE_COMMAND_INGRESS || verifyPicker) await page.context().rout
     output.set(bytes.subarray(0, end));
     console.info("[DEBUG] play-archive shell note empty view wire", bytes.length, output.length);
     return output;
-  }` : instrumented;
+  }` : jobObserved;
   print(`command ingress observer attached: ${instrumented !== source}`);
+  if (process.env.TRACE_RESERVED_JOB) print(`reserved job observer attached: ${jobObserved !== instrumented}`);
   await route.fulfill({ response, body: rewritten });
+});
+
+if (process.env.TRACE_JOB_BUDGET) await page.context().route((url) => decodeURIComponent(url.pathname).endsWith("/📕️norm/🌉️bridge.js"), async (route) => {
+  const response = await route.fetch();
+  const source = await response.text();
+  let current = source;
+  if (process.env.TRACE_JOB_BUDGET === "current") {
+    const fresh = await import(pathToFileURL(`${process.cwd()}/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts`));
+    const start = current.indexOf("class OriginalJobFunds {");
+    const end = current.indexOf("class OriginalSelfIssuedTurns {", start);
+    if (start < 0 || end <= start) throw Error("Missing original job budgets in browser bridge");
+    current = current.slice(0,start) + fresh.OriginalJobFunds.toString() + "\n" + fresh.originalSourceJob.toString() + "\n" + current.slice(end);
+  }
+  let instrumented = current.replace('throw Object.assign(Error("original-job.call-refused"), { refusal: call.refusal });',
+    '{ console.info("[DEBUG] play-archive reserved job budget refusal", JSON.stringify({refusal:call.refusal, epoch:String(input.epoch), deadline:String(input.work.absoluteDeadlineUs)})); throw Object.assign(Error("original-job.call-refused"), { refusal: call.refusal }); }');
+  if (process.env.TRACE_JOB_BUDGET === "current") instrumented = instrumented
+    .replace("if(refusal!==undefined)throw refusal;", 'if(refusal!==undefined){console.info("[DEBUG] play-archive reserved job budget refusal", JSON.stringify({refusal:refusal.refusal, epoch:String(turn.input.epoch)}));throw refusal;}')
+    .replace("if(reply.admitted)return;", `if(pending < 4 || reply.admitted) console.info("[DEBUG] play-archive reserved job start receipt", String(job), pending, String(reply.input.epoch), source !== null, reply.admitted);
+   if(reply.admitted)return;`)
+    .replace("const chunk=optionValue(call.chunk);", `const chunk=optionValue(call.chunk);
+if(chunk === undefined || chunk.outputClosed || call.spent.releasedBytes > 0n || optionValue(chunk.bytes) !== undefined) console.info("[DEBUG] play-archive reserved job output read", String(job), String(call.input.epoch), String(chunk?.offset ?? 0n), optionValue(chunk?.bytes)?.length ?? 0, String(call.spent.releasedBytes), chunk?.outputClosed ?? false);`)
+    .replace("if(ack.acknowledged)break;", `if(pending < 4 || ack.acknowledged) console.info("[DEBUG] play-archive reserved job output receipt", String(job), pending, String(ack.input.epoch), String(held.length), String(ack.spent.releasedBytes), ack.acknowledged);
+if(ack.acknowledged)break;`);
+  if (process.env.TRACE_JOB_BUDGET === "preserve-deadline") instrumented = instrumented
+    .replace("class OriginalJobFunds {", "class OriginalJobFunds {\n  #deadlineUs;")
+    .replace("this.#input = { ...wit, work: { ...wit.work, absoluteDeadlineUs: wall < wit.work.absoluteDeadlineUs ? wall : wit.work.absoluteDeadlineUs } };",
+      "this.#input = wit; this.#deadlineUs = wall < wit.work.absoluteDeadlineUs ? wall : wit.work.absoluteDeadlineUs;")
+    .replace("deadlineUs: this.#input.work.absoluteDeadlineUs, cancelled:", "deadlineUs: this.#deadlineUs ?? this.#input.work.absoluteDeadlineUs, cancelled:")
+    .replace("this.#clock() >= this.#input.work.absoluteDeadlineUs", "this.#clock() >= (this.#deadlineUs ?? this.#input.work.absoluteDeadlineUs)");
+  print(`job budget diagnostic attached: ${instrumented !== source}`);
+  await route.fulfill({ response, body: instrumented });
 });
 
 if (process.env.TRACE_GRANT) await page.context().route((requestUrl) => decodeURIComponent(requestUrl.pathname).endsWith("/📕️norm/🌉️bridge.js"), async (route) => {
@@ -248,6 +356,9 @@ try {
       predicate: message => message.text().includes("[DEBUG] play-archive shell note reserved tool drives handed off"),
       timeout,
     });
+    if (process.env.TRACE_RESERVED_JOB && completedReservedJobs === 0) {
+      throw new Error("The shell note did not return a native reserved job completion");
+    }
     const picker = page.locator('[id="playground.navbar.fixture"]');
     const previousTransfers = acknowledgedTransfers;
     await picker.click();
@@ -257,9 +368,9 @@ try {
       predicate: message => message.text().includes("[DEBUG] play-archive acknowledged"),
       timeout,
     });
-    if ((await picker.innerText()).trim() !== "Failing thin insulation") {
-      throw new Error("The failing example did not settle its picker");
-    }
+    print(`picker immediately after acknowledgement: ${JSON.stringify((await picker.innerText()).trim())}`);
+    await page.waitForFunction(() => document.getElementById("playground.navbar.fixture")?.innerText.trim() === "Failing thin insulation",
+      null, { timeout: Math.min(timeout, 45_000) });
     await page.locator("canvas:visible").first().waitFor({timeout});
     const canvases = await page.locator("canvas").evaluateAll(nodes => nodes.filter(node => {
       const rect = node.getBoundingClientRect();
@@ -268,7 +379,9 @@ try {
     if (canvases === 0 || fatal || (preview && !previewFetched) || (previewJs && !previewJsFetched)) {
       throw new Error(fatal ?? "The failing example did not keep a visible model with the expected guest");
     }
-    print(`example workflow complete with ${acknowledgedTransfers} archive receipts, ${settledNotes} shell notes and ${canvases} visible canvases`);
+    if (process.env.TRACE_MODEL_DRAW) print(`renderer draw calls: ${JSON.stringify(await page.evaluate(() => globalThis.__semioProbeModelDraw))}`);
+    if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT, timeout: 10_000 });
+    print(`example workflow complete with ${acknowledgedTransfers} archive receipts, ${settledNotes} shell notes, ${completedReservedJobs} reserved job completions and ${canvases} visible canvases`);
   } else {
     const deadline = Date.now() + Number(seconds) * 1_000;
     let lastText;

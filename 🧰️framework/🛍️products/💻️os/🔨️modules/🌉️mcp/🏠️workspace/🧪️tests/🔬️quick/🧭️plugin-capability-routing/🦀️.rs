@@ -137,7 +137,7 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
             return;
         };
         if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-            eprintln!("skipped: {plugin_id} has no shipped component under its crate's dist/components");
+            eprintln!("skipped: the launcher has no retained component model for {plugin_id}");
             return;
         }
     }

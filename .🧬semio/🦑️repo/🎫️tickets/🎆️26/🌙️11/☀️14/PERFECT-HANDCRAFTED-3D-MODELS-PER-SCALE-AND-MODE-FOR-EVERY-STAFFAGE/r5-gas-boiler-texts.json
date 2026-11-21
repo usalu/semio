@@ -1,0 +1,30 @@
+{
+  "200": [
+    {
+      "en": "Body: a new abstraction for the 30 mm feature: the hood is one block with its rounded side edges, the control band is a 30 mm strip that stands 15 mm proud of the hood face as drawn, the collar is one 125 mm drum, and the five stubs are one 0.34 m connection bar; window, flames and knobs are below what the scale can show and omitted as in the drawing.",
+      "de": "Körper: eine neue Abstraktion für das Merkmal von 30 mm: die Haube ist ein Block mit ihren gerundeten Seitenkanten, das Bedienband ist ein Streifen von 30 mm, der wie gezeichnet 15 mm vor der Haubenfront steht, der Stutzen ist eine Trommel von 125 mm und die fünf Anschlüsse sind ein Anschlussbalken von 0,34 m; Fenster, Flammen und Knöpfe liegen unter dem, was der Maßstab zeigen kann, und entfallen wie in der Zeichnung."
+    },
+    {
+      "en": "Thermal: the hood (casing), the control band (controls), a flush window disc (sight glass), one merged burner block, the collar drum with its outlet patch, the connection bar, and the hidden regions in their real forms and places: the heat-exchanger drum with its collector, the premix fan drum, the expansion vessel as its 0.32 m lens of two dished shells, and the hydraulic group as one block: the hot core stays readable inside the casing.",
+      "de": "Thermik: die Haube (Gehäuse), das Bedienband (Bedienung), eine bündige Fensterscheibe (Schauglas), ein zusammengefasster Brennerblock, die Abgastrommel mit ihrer Austrittsfläche, der Anschlussbalken und die verborgenen Bereiche in ihrer wirklichen Form und Lage: die Wärmetauschertrommel mit ihrem Sammler, die Trommel des Vormischgebläses, das Ausdehnungsgefäß als seine Linse von 0,32 m aus zwei gewölbten Schalen und die Hydraulikgruppe als ein Block: der heiße Kern bleibt im Gehäuse lesbar."
+    },
+    {
+      "en": "Structure: the chassis as a channel 30 mm deep at the wall, the bracket pair merged into one shelf under the heat-exchanger drum with its collector, the collar drum, the connection bar, the rail and the rest strip as 30 mm bars at their anchors, and the mass; every section is generalised to the 30 mm feature.",
+      "de": "Tragwerk: das Chassis als Kanal von 30 mm Tiefe an der Wand, das Konsolenpaar zu einer Konsole unter der Wärmetauschertrommel mit ihrem Sammler zusammengefasst, die Stutzentrommel, der Anschlussbalken, Schiene und Auflageleiste als Stäbe von 30 mm an ihren Ankern und die Masse; jeder Querschnitt ist auf das Merkmal von 30 mm verallgemeinert."
+    }
+  ],
+  "500": [
+    {
+      "en": "Body: a digital miniature for the 75 mm feature: the hood is one crisp block of 0.44 x 0.72 x 0.325 m from the front face to the wall (edge radius and chassis band are far below the feature), the control strip lies 15 mm proud as at 1:200, the 80/125 flue adapter is one solid 125 mm drum and the five stubs are one connection bar; window, knobs and nuts are omitted.",
+      "de": "Körper: eine digitale Miniatur für das Merkmal von 75 mm: die Haube ist ein scharfkantiger Block von 0,44 x 0,72 x 0,325 m von der Front bis zur Wand (Kantenradius und Chassisband liegen weit unter dem Merkmal), die Bedienleiste steht wie bei 1:200 15 mm vor, der Abgasadapter 80/125 ist eine volle Trommel von 125 mm und die fünf Stutzen sind ein Anschlussbalken; Fenster, Knöpfe und Muttern entfallen."
+    },
+    {
+      "en": "Thermal: hood, control strip, the window as a flush disc, one burner block, the flue drum with the flue-gas outlet patch on its top face, the connection bar, and every hidden region as one solid in its real place: the heat-exchanger drum, the fan drum on the left, the expansion vessel as a coarse lens behind, the hydraulic block above the stubs.",
+      "de": "Thermik: Haube, Bedienleiste, das Fenster als bündige Scheibe, ein Brennerblock, die Abgastrommel mit der Austrittsfläche des Abgases auf ihrer Oberseite, der Anschlussbalken und jeder verborgene Bereich als ein Körper an seiner wirklichen Stelle: die Wärmetauschertrommel, die Gebläsetrommel links, das Ausdehnungsgefäß als grobe Linse dahinter, der Hydraulikblock über den Stutzen."
+    },
+    {
+      "en": "Structure: the real load path, generalised: the galvanised chassis channel to the wall, one bracket shelf under the heat-exchanger drum, collector and flue adapter as one stepped tube through the hood top, the connection bar on the bottom edge, the rail and the rest strip at the wall and the mass at the centre of mass; the hood is cladding and absent.",
+      "de": "Tragwerk: der wirkliche Lastpfad, verallgemeinert: der verzinkte Chassiskanal an der Wand, eine Konsole unter der Wärmetauschertrommel, Sammler und Abgasadapter als ein abgestuftes Rohr durch die Haubenoberseite, der Anschlussbalken an der Unterkante, Schiene und Auflageleiste an der Wand und die Masse im Schwerpunkt; die Haube ist Verkleidung und fehlt."
+    }
+  ]
+}

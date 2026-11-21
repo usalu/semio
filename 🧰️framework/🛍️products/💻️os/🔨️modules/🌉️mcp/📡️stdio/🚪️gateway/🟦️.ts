@@ -1,4 +1,6 @@
 import policy from "./🧬️schema/🔣️.json" with {type:"json"};
+import serverInstructions from "../../🧭️protocol/🧬️schema/📜️instructions.json" with {type:"json"};
+import protocolVersions from "../../🧭️protocol/🧬️schema/🗓️versions.json" with {type:"json"};
 import { type ChildProcess, spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
@@ -11,21 +13,24 @@ export const WARM_MCP_SERVER_NAME = "semio";
 /** 🪪️ The id the gateway handshakes with the real server under; it never collides with a client id. */
 export const WARM_MCP_HANDSHAKE_ID = "semio-gateway-initialize";
 
-const LIST_FIELDS: Readonly<Record<string, string>> = { "tools/list": "tools", "resources/list": "resources", "resources/templates/list": "resourceTemplates", "prompts/list": "prompts" };
 const LIST_CHANGED: readonly string[] = ["notifications/tools/list_changed", "notifications/resources/list_changed", "notifications/prompts/list_changed"];
 
-/** 🌡️ What the gateway answers by itself while the real server is not up: `initialize`, `ping` and every list method. `null` means the request must wait for the real server. */
+/** 🌡️ Answers `initialize` and `ping` during staging. Other requests wait for the native server. */
 export function warmMcpReply(frame: WarmMcpFrame): WarmMcpFrame | null {
   if (frame.method === undefined || frame.id === undefined || frame.id === null) return null;
   const reply = (result: unknown): WarmMcpFrame => ({ jsonrpc: "2.0", id: frame.id, result });
   if (frame.method === "initialize") {
     const requested = (frame.params as { protocolVersion?: unknown } | undefined)?.protocolVersion;
     const listChanged = { listChanged: true };
-    return reply({ protocolVersion: typeof requested === "string" ? requested : "2025-06-18", capabilities: { tools: listChanged, resources: listChanged, prompts: listChanged }, serverInfo: { name: WARM_MCP_SERVER_NAME, version: "warming" }, instructions: "The semio server is starting; its tools appear through list_changed notifications once its binary is staged." });
+    return reply({
+      protocolVersion: typeof requested === "string" && protocolVersions.includes(requested) ? requested : protocolVersions[0],
+      capabilities: { tools: listChanged, resources: { ...listChanged, subscribe: true }, prompts: listChanged },
+      serverInfo: { name: WARM_MCP_SERVER_NAME, version: "warming" },
+      instructions: `${serverInstructions}\nThe semio server is starting. Discovery and tool requests wait for the native server.`,
+    });
   }
   if (frame.method === "ping") return reply({});
-  const field = LIST_FIELDS[frame.method];
-  return field === undefined ? null : reply({ [field]: [] });
+  return null;
 }
 
 export type WarmMcpServerPort = Readonly<{ send: (frame: WarmMcpFrame) => void; stop: () => void }>;
@@ -34,7 +39,7 @@ export type WarmMcpPorts = Readonly<{ toClient: (frame: WarmMcpFrame) => void; s
 
 type WarmState = "warming" | "handshaking" | "ready" | "failed";
 
-/** 🚪️ A protocol-level gateway that answers the client's handshake at once, queues every other request, and splices in the real server once it is staged. Pure state machine: all IO flows through {@link WarmMcpPorts}. */
+/** 🚪️ Answers the initial handshake and pings, queues discovery and tool requests, and relays frames once the native server is ready. */
 export class WarmMcpGateway {
   private state: WarmState = "warming";
   private staged = false;
@@ -60,6 +65,16 @@ export class WarmMcpGateway {
     if (this.closed) return;
     if (this.state === "ready") return this.server!.send(frame);
     if (this.state === "failed") return this.refuse(frame);
+    if (frame.method === "notifications/cancelled" && frame.id === undefined) {
+      const requestId = (frame.params as { requestId?: unknown } | null | undefined)?.requestId;
+      if (typeof requestId === "number" || typeof requestId === "string") {
+        const index = this.queue.findIndex(queued => queued.method !== undefined && queued.id === requestId);
+        if (index !== -1) {
+          this.queue.splice(index, 1);
+          return;
+        }
+      }
+    }
     if (frame.method === "server/discover" && this.initialize === null) this.modern = true;
     if (frame.method === "initialize" && this.initialize === null) this.initialize = frame;
     if (frame.method === "notifications/initialized") this.initialized = true;
@@ -87,7 +102,7 @@ export class WarmMcpGateway {
   }
 
   serverExited(code: number | null): void {
-    if (this.state === "handshaking") this.fail(`the server exited with ${code}`);
+    if (!this.closed && this.state === "handshaking") this.fail(`the server exited with ${code}`);
   }
 
   clientClosed(): void {
@@ -116,8 +131,6 @@ export class WarmMcpGateway {
   }
 
   private refuse(frame: WarmMcpFrame): void {
-    const reply = this.modern ? null : warmMcpReply(frame);
-    if (reply !== null) return this.ports.toClient(reply);
     if (frame.method !== undefined && frame.id !== undefined && frame.id !== null) this.ports.toClient({ jsonrpc: "2.0", id: frame.id, error: { code: -32603, message: `semio-os-mcp is unavailable: ${this.failure}` } });
   }
 }
@@ -186,7 +199,8 @@ export function serveWarmMcpGateway(launch: WarmMcpLaunch): Promise<number> {
         });
         spawned.on("close", (code) => {
           gateway.serverExited(code);
-          finish(requestedExit ?? code ?? 1);
+          const status = code === 0 && gateway.phase === "failed" ? 1 : code ?? 1;
+          finish(requestedExit ?? status);
         });
         spawned.on("error", (error) => {
           gateway.serverExited(null);

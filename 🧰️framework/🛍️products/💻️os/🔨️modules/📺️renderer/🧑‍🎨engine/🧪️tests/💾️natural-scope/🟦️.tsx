@@ -2,23 +2,27 @@
 import { afterEach, expect, it, vi } from "vitest";
 import Ajv from "ajv";
 import { decodeBackboneWorkerRequest } from "@semio-tech/framework/backbone";
+import { EXPORT_MEDIA_FILE_ACTION_ID } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework/packs";
 import { encodeDocumentArchiveBytes } from "@semio-tech/framework/wire-contracts";
 import { buildScopeState } from "../../🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🔶️scope/🟦️.tsx";
 import fixture from "./🔣️.json";
 
-const selection = vi.hoisted(() => ({ files: [] as File[], downloads: [] as string[] }));
-vi.mock("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), downloadMediaExportBytes: (file: string) => { selection.downloads.push(file); }, requestFileSelectionV1: async () => selection.files, readBlobBytesBoundedV1: async () => new Uint8Array([1, 2]) }));
+const selection = vi.hoisted(() => ({ files: [] as File[], archiveFiles: [] as { name: string; contents: string }[], downloads: [] as string[], segmented: [] as number[][], aborted: false }));
+vi.mock("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), downloadMediaExportBytes: (file: string) => { selection.downloads.push(file); }, shellSegmentedDownloadSinkFactory: async (file: string) => ({ write: async (bytes: Uint8Array) => { selection.segmented.push([...bytes]); }, close: async () => { selection.downloads.push(file); }, abort: async () => { selection.aborted = true; } }), requestFileSelectionV1: async () => selection.files, requestFileOpen: async () => selection.archiveFiles, readBlobBytesBoundedV1: async () => new Uint8Array([1, 2]) }));
 vi.mock("../../🧱️elements/🏛️ShellHost/📂️picked-file-opening/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), routePickedFileV1: async () => ({ kind: "routed", artifactRef: "s.stdio.txt@utf-8/*" }) }));
-vi.mock("../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), naturalFileFormatV1: () => ({ formatKind: "txt", extension: ".txt", mediaType: "text/plain", binary: false }) }));
+vi.mock("../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), naturalFileFormatV1: (app: { actions: unknown[] }) => app.actions.length ? ({ formatKind: "s.stdio.pdf@1.7", extension: ".pdf", mediaType: "application/pdf", binary: true }) : ({ formatKind: "txt", extension: ".txt", mediaType: "text/plain", binary: false }) }));
 vi.mock("../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts", async importOriginal => ({ ...await importOriginal<object>(), studioPanelFocusingSpawned: (_latest: unknown, spawned: unknown) => spawned }));
 afterEach(() => vi.restoreAllMocks());
 const deferred = <T,>() => { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; };
 const archive = { parent_pack: [1, 2], parent_spr: [3], members: [] };
 const document = { documentId: "01900000-0000-7000-8000-000000000001", schema: "stdio.txt", name: "Chosen.txt", storage: "folder" as const, target: "/data/kept", admittedAtMs: 42, surface: { pluginId: "stdio-text", appId: "s.stdio.txt@utf-8/*#editor" } };
-function setup() {
+function setup(segmented = false) {
   const calls: string[] = [];
-  const app = { id: document.surface.appId, io: { artifactSchema: document.schema }, windowKinds: [], modes: [], breadcrumb: [] };
+  const media = { outputPort: "artifact:native", filename: "document.pdf", mediaType: "application/pdf", formatKind: "s.stdio.pdf@1.7" };
+  const actions = segmented ? [{ id: EXPORT_MEDIA_FILE_ACTION_ID, args: Object.entries(media).map(([id, value]) => ({ id, default: value })) }] : [];
+  const ports = segmented ? [{ id: media.outputPort, direction: "out", kindId: media.formatKind, mediaType: { class: "data", form: "document" } }] : [];
+  const app = { id: document.surface.appId, io: { artifactSchema: document.schema, ports }, actions, windowKinds: [], modes: [], breadcrumb: [] };
   const host = { pluginId: "host", app: { id: "host" }, instanceId: 1, viewState: {} };
   const handle = {
     pluginId: document.surface.pluginId,
@@ -53,7 +57,7 @@ function setup() {
     documentTransferFlightRef: { current: false }, documentTransfersRef: { current: new Map() }, documentTransferTasksRef: { current: [] }, taskManagerListenersRef: { current: new Set() },
     showTransientNoticeRef: { current: vi.fn((_text: string, _kind: string, code: string) => { calls.push(code); }) },
   };
-  selection.files = [new File(["hi"], document.name)]; selection.downloads = [];
+  selection.files = [new File(["hi"], document.name)]; selection.archiveFiles = []; selection.downloads = []; selection.segmented = []; selection.aborted = false;
   return { core, handle, calls, worker, target, state: buildScopeState({ core } as unknown as Parameters<typeof buildScopeState>[0]) };
 }
 it("validates neutral lifecycle cases using Ajv", () => { expect(new Ajv().validate(fixture.schema, fixture.cases)).toBe(true); });
@@ -100,6 +104,28 @@ for (const failure of ["load", "identity", "stale", "cancel"] as const) it("reti
   expect(view.calls).not.toContain("focus");
   expect(view.core.documentTransferFlightRef.current).toBe(false);
 });
+it("reports the archive failure while the imported instance is still retiring", async () => {
+  const view = setup();
+  const cleanup = deferred<void>();
+  selection.archiveFiles = [{ name: "fixture.semio-archive", contents: `data:application/octet-stream;base64,${Buffer.from(encodeDocumentArchiveBytes(archive)).toString("base64")}` }];
+  view.handle.loadAppDocumentArchive.mockRejectedValueOnce(new Error("archive initialization failed"));
+  view.handle.destroyApp.mockImplementation(async () => {
+    view.calls.push("destroy");
+    await cleanup.promise;
+  });
+  vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  const importing = view.state.importDocumentArchive();
+  try {
+    await vi.waitFor(() => expect(view.handle.destroyApp).toHaveBeenCalledWith(7));
+    expect(view.calls).toEqual(fixture.archiveFailureBeforeRetirement);
+    expect(view.core.documentTransferFlightRef.current).toBe(true);
+  } finally {
+    cleanup.resolve();
+    await importing;
+  }
+  expect(view.core.documentTransferFlightRef.current).toBe(false);
+});
+
 it("awaits genuine native import acknowledgment before any persistence or opened notice", async () => {
   const view = setup(), imported = deferred<void>();
   view.handle.importAppMedia.mockImplementation(async () => { view.calls.push("import"); await imported.promise; });
@@ -112,8 +138,8 @@ it("awaits genuine native import acknowledgment before any persistence or opened
   expect(view.calls).toContain("shell.documentTransfer.file-opened");
 });
 
-function setupSave(bound = true) {
-  const view = setup();
+function setupSave(bound = true, segmented = false) {
+  const view = setup(segmented);
   const entry = { documentId: document.documentId, clientInstanceId: "01900000-0000-4000-8000-000000000002", plugin: view.handle, session: view.target };
   if (bound) view.core.openDocumentSessionsRef.current.set(document.documentId, entry);
   else {
@@ -280,4 +306,36 @@ it("recovery refuses a kept record retired during its archive write", async () =
   view.core.writeLocalDocumentRef.current.mockImplementation(async () => { view.core.localCatalogRef.current.documents = []; return true; });
   await expect(view.core.persistProgramDocumentRef.current({ handle: view.handle, session: view.target, name: "Recovered.txt" }, new AbortController().signal)).rejects.toThrow("persistence-owner-unavailable");
   expect(view.core.openDocumentRef.current).not.toHaveBeenCalled();
+});
+
+for (const outcome of fixture.segmentedSave) it("Save delivers staged native output " + outcome.id, async () => {
+  const view = setupSave(true, true);
+  const portId = "artifact:native", mediaType = "application/pdf", formatKind = "s.stdio.pdf@1.7";
+  const identity = { app_instance_id: view.target.instanceId, parent_document_id: document.documentId, base_revision: 3n };
+  const handle = { ...identity, operation_id: 8n, generation: 2n };
+  const submitted = vi.fn(async () => handle);
+  const segments = outcome.chunks.map(bytes => Uint8Array.from(bytes));
+  Object.assign(view.handle, {
+    readAppDocumentIdentity: async () => identity,
+    submitMediaExport: submitted,
+    pollMediaExport: async () => ({ handle, state: "complete", applied_progress: 2n, checkpoint_available: false, mime_type: mediaType, total_bytes: BigInt(segments.reduce((total, bytes) => total + bytes.length, 0)), detail: "", descriptor: [...encodePackValue({ portId, kindId: formatKind, mediaType: { class: "data", form: "document" }, wire: { kind: "binary", format_kind: formatKind } })] }),
+    takeMediaExportChunk: async () => {
+      const data = segments.shift();
+      if (data !== undefined) return { handle, data, terminal: false };
+      if (outcome.id === "edited") view.handle.readAppDocumentArchive.mockResolvedValue({ ...archive, parent_pack: [9] });
+      return { handle, data: new Uint8Array(), terminal: true };
+    },
+    cancelMediaExport: vi.fn(),
+  });
+  const saving = view.state.saveNaturalFile();
+  await vi.waitFor(() => expect(view.observer()).toBeDefined());
+  expect(submitted).not.toHaveBeenCalled();
+  view.observer().archive(encodeDocumentArchiveBytes(archive));
+  await saving;
+  expect(submitted).toHaveBeenCalledExactlyOnceWith(view.target.instanceId, portId, document.documentId, 3n);
+  expect(view.handle.exportAppMedia).not.toHaveBeenCalled();
+  expect(selection.segmented).toEqual(outcome.chunks);
+  expect(selection.downloads).toHaveLength(outcome.delivered ? 1 : 0);
+  expect(selection.aborted).toBe(!outcome.delivered);
+  expect(view.calls.includes("shell.documentTransfer.file-saved")).toBe(outcome.delivered);
 });

@@ -20,6 +20,7 @@ export interface SharedOutlineSegment extends BorderSegment {
   readonly paintTo: BorderPoint;
   readonly transform: SharedBorderTransform;
   readonly clip?: SharedBorderClip;
+  readonly follows?: true;
 }
 
 export interface SharedBorderClip {
@@ -27,6 +28,12 @@ export interface SharedBorderClip {
   readonly top: number;
   readonly right: number;
   readonly bottom: number;
+}
+
+/** ⚓ Visible state-only edges can recolour a permanent line without shifting it. */
+export function leadingSharedOutlineSegments(sources: readonly SharedOutlineSegment[]): readonly SharedOutlineSegment[] {
+  const permanent = sources.filter(source => !source.follows);
+  return permanent.length ? permanent : sources;
 }
 
 /** ✂️ Excludes invisible source paint before it can suppress a visible incident owner. */
@@ -61,7 +68,7 @@ export function visibleSharedOutlineSegments(input: readonly SharedOutlineSegmen
     for (const span of resolveBorderSegments(sources)) {
       const horizontal = span.from.y === span.to.y, normal = horizontal ? "y" : "x";
       const contributors = span.contributors.map(id => byId.get(id)!);
-      const values = contributors.map(source => (horizontal ? source.transform.top : source.transform.left) + source.paintFrom[normal] * (horizontal ? source.transform.scaleY : source.transform.scaleX));
+      const values = leadingSharedOutlineSegments(contributors).map(source => (horizontal ? source.transform.top : source.transform.left) + source.paintFrom[normal] * (horizontal ? source.transform.scaleY : source.transform.scaleX));
       const centerline = (Math.min(...values) + Math.max(...values)) / 2;
       for (const source of contributors) {
         const clip = source.clip;
@@ -89,7 +96,7 @@ export function createSharedBorderJunctionResolver(sources: readonly SharedOutli
     const hs = incident(horizontal, "y", "x"), vs = incident(vertical, "x", "y");
     const coordinate = (normalSources: readonly SharedOutlineSegment[], tangentSources: readonly SharedOutlineSegment[], normal: "x" | "y"): number => {
       const screen = (source: SharedOutlineSegment, paint: BorderPoint) => source.transform[normal === "x" ? "left" : "top"] + paint[normal] * source.transform[normal === "x" ? "scaleX" : "scaleY"];
-      const values = normalSources.length ? normalSources.map(source => screen(source, source.paintFrom)) : tangentSources.flatMap(source => {
+      const values = normalSources.length ? leadingSharedOutlineSegments(normalSources).map(source => screen(source, source.paintFrom)) : leadingSharedOutlineSegments(tangentSources).flatMap(source => {
         if (point.x === source.logicalFrom.x && point.y === source.logicalFrom.y) return [screen(source, source.paintFrom)];
         if (point.x === source.logicalTo.x && point.y === source.logicalTo.y) return [screen(source, source.paintTo)];
         return [point[normal]];
@@ -104,6 +111,17 @@ export function createSharedBorderJunctionResolver(sources: readonly SharedOutli
 /** 🪢️ Pure junction convenience entry for fixtures and independent implementations. */
 export function sharedBorderJunction(point: BorderPoint, sources: readonly SharedOutlineSegment[]): BorderPoint {
   return createSharedBorderJunctionResolver(sources)(point);
+}
+
+/** 🖌️ Connects an ordered span's snapped junctions to its centerline. Crossing junctions consume the span, and an isolated move does not paint.
+ * @see ./junctions.cases.json
+ */
+export function sharedBorderPaintPoints(from: BorderPoint, to: BorderPoint, normal: "x" | "y", centerline: number): BorderPoint[] {
+  const tangent = normal === "x" ? "y" : "x";
+  if (from[tangent] > to[tangent]) return [];
+  const points = [from, { ...from, [normal]: centerline }, { ...to, [normal]: centerline }, to]
+    .filter((point, index, all) => index === 0 || point.x !== all[index - 1]!.x || point.y !== all[index - 1]!.y);
+  return points.length > 1 ? points : [];
 }
 
 /** 📍️ Projects split logical edges onto the unchanged inset silhouette stroke. */

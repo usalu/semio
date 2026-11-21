@@ -3,6 +3,7 @@
  "$id": "https://semio.tech/framework/repo/shared-worktree/packgate/v1",
  "title": "Shared worktree pack gate: which packs of .git/objects/pack may leave this machine",
  "definitions": {
+  "StagePackedPolicy": {"const":{"maximumIndexBytes":67108864,"maximumBatchObjects":5000,"maximumHeaderBytes":128}},
   "PackAuthorisation": {
    "description": ".git/semio-packs.json, written only by the consolidator on the machine that consolidates: publish lists the stems of packs the replica may publish, retire the stems (and 'multi-pack-index') whose deletion it may publish; each maps to the wall clock milliseconds of the entry, older entries are dropped after 12 hours. Every other pack of the directory stays on its machine.",
    "type": "object",
@@ -25,6 +26,7 @@
     "retired": {"type": "integer", "minimum": 0},
     "kept": {"type": "integer", "minimum": 0}
    }
+  },
+    "RescueProbeFixture": {"type":"object","additionalProperties":false,"required":["minimumAgeMilliseconds","cases"],"properties":{"minimumAgeMilliseconds":{"type":"integer","minimum":1},"cases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","rows"],"properties":{"id":{"type":"string"},"rows":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["stem","role","files","ageMilliseconds"],"properties":{"stem":{"type":"string","pattern":"^pack-[a-z-]+$"},"role":{"enum":["fleet","authorised","local"]},"files":{"type":"array","minItems":1,"uniqueItems":true,"items":{"enum":["idx","pack"]}},"ageMilliseconds":{"type":"integer","minimum":0}}}}}}}}}
   }
- }
 }

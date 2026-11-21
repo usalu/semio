@@ -1,0 +1,10 @@
+[
+  {"name":"no welcome","welcome":false,"frames":[],"stage":"before-welcome","phase":null,"progress":0,"extra":false},
+  {"name":"premature exact frames","welcome":false,"frames":["accepted","progress"],"stage":"before-welcome","phase":null,"progress":0,"extra":false},
+  {"name":"welcome only","welcome":true,"frames":[],"stage":"before-acceptance","phase":null,"progress":0,"extra":false},
+  {"name":"unrelated replies","welcome":true,"frames":["wrong-accepted","wrong-progress","wrong-refused","duplicate-welcome"],"stage":"before-acceptance","phase":null,"progress":0,"extra":false},
+  {"name":"ongoing unrelated frames","welcome":true,"frames":["wrong-progress","duplicate-welcome"],"repeat":true,"stage":"before-acceptance","phase":null,"progress":0,"extra":false},
+  {"name":"malformed exact evidence","welcome":true,"frames":["invalid-accepted","invalid-progress"],"stage":"before-acceptance","phase":null,"progress":0,"extra":false},
+  {"name":"exact accepted","welcome":true,"frames":["accepted"],"stage":"after-acceptance","phase":null,"progress":0,"extra":false},
+  {"name":"exact slice progress","welcome":true,"frames":["progress"],"stage":"after-acceptance","phase":"slice","progress":1,"extra":true}
+]

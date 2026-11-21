@@ -1,5 +1,4 @@
 use super::*;
-use std::collections::HashMap;
 use semio_framework::PluginManifest;
 
 async fn fixture_artifact_kind(id: &str) -> semio_framework::ArtifactKindSpec {
@@ -57,7 +56,7 @@ pub(super) async fn fixture_app(id: &str, dialect: semio_framework_artifact_refe
         named_layouts: Vec::new(),
         default_layout: None,
         terminologies: Vec::new(),
-        terminology_breadcrumbs: HashMap::new(),
+        terminology_breadcrumbs: Default::default(),
         introduction: None,
         tutorials: Vec::new(),
         dialogs: Vec::new(),

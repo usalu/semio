@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "original": "Café",
+  "observations": [
+    {
+      "value": "Café",
+      "reason": null
+    },
+    {
+      "value": "Thé!!",
+      "reason": "length"
+    },
+    {
+      "value": "Cafè",
+      "reason": "bytes"
+    },
+    {
+      "value": null,
+      "reason": "vanished"
+    }
+  ]
+}

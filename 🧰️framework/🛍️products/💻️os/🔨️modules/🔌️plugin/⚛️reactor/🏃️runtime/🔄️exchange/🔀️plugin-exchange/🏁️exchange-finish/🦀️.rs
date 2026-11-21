@@ -29,10 +29,14 @@ pub(super) async fn finish_exchange<PA: PluginApp>(
     if flags.mutated {state.mutated = true;}
     if state.mutated && !state.effects_done {
         let pulled = with_instances_original_mut(runtime, |list| {
-            let mut instance = find_instance(list, instance_id)?;
-            let view = instance.surface_contexts.view().cloned();
-            let pulled = ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(view.as_ref(), cx))?;
-            if pulled.is_none() { instance.cell.pending_effects.retain() } else { instance.cell.pending_effects.publish() }
+            let mut guard = find_instance(list, instance_id)?;
+            if guard.app.pending_effects_waits_for_document() {
+                guard.cell.pending_effects.retain();
+                return Ok(Some(Vec::new()));
+            }
+            let instance = &mut *guard;
+            let pulled = ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(instance.surface_contexts.view(), cx))?;
+            if pulled.is_none() { guard.cell.pending_effects.retain() } else { guard.cell.pending_effects.publish() }
             Ok(pulled)
         })
         .await?;
@@ -137,6 +141,19 @@ pub(super) async fn finish_exchange<PA: PluginApp>(
 mod reentry_laws {
     use super::*;
     use semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState;
+
+    #[test]
+    fn pending_effects_borrows_the_guarded_surface_view() {
+        let law: serde_json::Value = serde_json::from_str(include_str!("effect-view.json")).unwrap();
+        let source = include_str!("🦀️.rs");
+        let pull = source.split_once("let pulled = with_instances_original_mut").unwrap().1.split_once(".await?;").unwrap().0;
+        assert!(pull.contains("let instance = &mut *guard;"));
+        assert!(pull.contains("instance.app.pending_effects(instance.surface_contexts.view(), cx)"));
+        let starting_owners = law["viewOwnersBefore"].as_u64().unwrap();
+        let retained_owners = starting_owners + pull.matches(".cloned()").count() as u64;
+        assert_eq!(retained_owners, law["viewOwnersAfterPending"].as_u64().unwrap());
+        assert_eq!(retained_owners, law["viewOwnersAfterPublication"].as_u64().unwrap());
+    }
 
     fn notify(message: &str) -> semio_framework::kernel::Effect { semio_framework::kernel::Effect::Notify { message: message.to_string() } }
 

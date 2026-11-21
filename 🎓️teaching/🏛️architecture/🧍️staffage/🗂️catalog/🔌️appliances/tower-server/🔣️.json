@@ -6204,54 +6204,22 @@
             "material": "chassis-steel",
             "role": "body",
             "tone": 0.55,
-            "size": [0.438, 0.3, 0.2],
+            "size": [0.438, 0.375, 0.2],
             "transform": {
-              "translation": [0.231, 0.0, 0.0]
+              "translation": [0.231, 0.0375, 0.0]
             }
           },
           {
-            "id": "rear-panel",
-            "kind": "extrude",
-            "bone": "case",
-            "material": "chassis-steel",
-            "role": "body",
-            "tone": 0.55,
-            "profile": [[-0.1, 0.012], [0.1, 0.012], [0.1, 0.45], [-0.1, 0.45]],
-            "plane": "zx",
-            "from": 0.15,
-            "to": 0.225,
-            "holes": [
-              [[-0.075, 0.438], [0.075, 0.438], [0.075, 0.352], [-0.075, 0.352]],
-              [
-                [0.02523, 0.256],
-                [0.004, 0.23477],
-                [-0.025, 0.227],
-                [-0.054, 0.23477],
-                [-0.07523, 0.256],
-                [-0.083, 0.285],
-                [-0.07523, 0.314],
-                [-0.054, 0.33523],
-                [-0.025, 0.343],
-                [0.004, 0.33523],
-                [0.02523, 0.314],
-                [0.033, 0.285]
-              ]
-            ]
-          },
-          {
             "id": "front-bezel",
-            "kind": "extrude",
+            "kind": "box",
             "bone": "case",
             "material": "bezel-abs",
             "role": "body",
             "tone": 0.2,
-            "profile": [[-0.1, 0.012], [0.1, 0.012], [0.1, 0.45], [-0.1, 0.45]],
-            "plane": "zx",
-            "from": -0.225,
-            "to": -0.15,
-            "holes": [
-              [[-0.08, 0.35], [0.08, 0.35], [0.08, 0.05], [-0.08, 0.05]]
-            ]
+            "size": [0.438, 0.075, 0.2],
+            "transform": {
+              "translation": [0.231, -0.1875, 0.0]
+            }
           }
         ],
         "thermal": [
@@ -6538,12 +6506,12 @@
         ],
         "decisions": [
           {
-            "en": "Body: a digital model only, the drawing is not printable at this scale: a steel block on a recessed rubber plinth, the dark bezel block in front with the intake as a window onto the case, and a rear plate with the recesses of power supply and fan. Minimal: four solids are the least that still tells front from rear.",
-            "de": "Körper: nur ein digitales Modell, die Zeichnung ist in diesem Maßstab nicht druckbar: ein Stahlblock auf einem zurückgesetzten Gummisockel, vorn der dunkle Blendenblock mit dem Einlass als Fenster auf das Gehäuse und eine Rückplatte mit den Nischen für Netzteil und Lüfter. Minimal: vier Körper sind das Wenigste, das Vorder- und Rückseite noch unterscheidet."
+            "en": "Body: a digital model only, the drawing is not printable at this scale. The pedestal server is 6 x 2.7 x 6 smallest features, so it is told by its massing alone: the light steel case block (rear panel merged into it), the dark ABS bezel block of one feature in front, and the rubber plinth of the four feet. The grille, intake, power supply and fan windows of 1:200 are dropped: at 75 mm they would be pockets as deep as they are wide and read as holes in the block.",
+            "de": "Körper: nur ein digitales Modell, die Zeichnung ist in diesem Maßstab nicht druckbar. Der Standserver misst 6 x 2,7 x 6 kleinste Merkmale und wird allein durch seine Masse erkannt: der helle Stahlblock des Gehäuses (die Rückwand darin aufgegangen), vorn der dunkle ABS-Blendenblock von einem Merkmal Tiefe und der Gummisockel der vier Füße. Die Fenster für Gitter, Einlass, Netzteil und Lüfter aus 1:200 entfallen: bei 75 mm wären es Nischen, so tief wie breit, die als Löcher im Block gelesen würden."
           },
           {
-            "en": "Thermal: sleeve, grille patch, bezel face, the two power supply faces, rear face, the plinth as the feet and the two outlets.",
-            "de": "Thermisch: Hülse, Gitterfeld, Blendenfläche, die beiden Netzteilflächen, Rückwand, der Sockel als Füße und die zwei Auslässe."
+            "en": "Thermal: sleeve, grille patch, bezel face, the two power supply faces, rear face, the plinth as the feet and the two outlets, each as a skin on the faces of the block where the region lies.",
+            "de": "Thermisch: Hülse, Gitterfeld, Blendenfläche, die beiden Netzteilflächen, Rückwand, der Sockel als Füße und die zwei Auslässe, jeweils als Haut auf den Flächen des Blocks, wo die Zone liegt."
           },
           {
             "en": "Structure: floor, mainboard wall, two posts and top frame in 30 mm, the plinth on the floor patch of the contact, and two masses: the power supply and everything else.",

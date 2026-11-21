@@ -1,12 +1,14 @@
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
 import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
-import {createReadyPortsV1,emptyReadyStateV1,READY_POLICY_V1 as policy,runReadyStageV1,runReadyV1,type ReadyInflightV1,type ReadyStageV1} from "../../🟦️.ts";
+import {createReadyPortsV1,emptyReadyStateV1,READY_POLICY_V1 as policy,runReadyStageV1,runReadyV1,type ReadyInflightV1,type ReadyStageV1,type ReadyStatusV1} from "../../🟦️.ts";
 import cases from "./🔣️.json" with {type:"json"};
 import terminalCases from "./📈️timings.json" with {type:"json"};
+import overdueCases from "./⏳️overdue.json" with {type:"json"};
 
 const posix=test.skipIf(process.platform==="win32");
 const makeStage=(name:string,files:readonly string[]=[]):ReadyStageV1=>({name,kind:"repo",arguments:[name],timeoutMilliseconds:60000,inputs:files,bootstrapInput:false});
@@ -189,4 +191,28 @@ posix("same-stage failure timing uses the adopted launch identity rather than ne
    expect(readFileSync(f.runs,"utf8")).toBe("workspace\n");
   }finally{f.close();}
  }
+},30000);
+
+posix("a handed-off overdue stop keeps its durable diagnostic at the next supervisor",async()=>{
+ const oracle=new Database(":memory:");
+ try{for(const evidence of overdueCases){
+  const expected=oracle.query("select seconds>=lim and lim>=bound as overdue,(quiet+500)/1000 as quiet from (select ?1 as seconds,?2 as bound,?3 as lim,?4 as quiet)").get(evidence.seconds,evidence.bound,evidence.limit,evidence.quietMs) as {overdue:number;quiet:number};
+  const f=await fixture(1,true),abort=new AbortController(),ports=f.ports(),updates:Partial<ReadyStatusV1>[]=[];
+  try{
+   await f.detach();
+   const row=JSON.parse(readFileSync(f.running,"utf8")) as ReadyInflightV1;
+   writeFileSync(f.running,JSON.stringify({...row,stop:"overdue",stepOverdue:evidence}));
+   await runReadyV1({...ports,disk:()=>null,diskUnknown:()=>[],memory:()=>({ok:true,availableMegabytes:4096}),
+    status:{update(patch){updates.push(patch);if(patch.state==="waiting"&&patch.refusal)abort.abort();}},
+    sleep:async()=>{abort.abort();}},abort.signal);
+   const wait=updates.find(patch=>patch.state==="waiting"&&patch.refusal);
+   expect(wait?.refusal?.code).toBe(expected.overdue?"stage-step-overdue":"stage-stalled");
+   const timing=JSON.parse(readFileSync(join(f.ready,policy.timingsName),"utf8")).runs[0];
+   expect(timing.watchdog?.stepOverdue).toEqual(expected.overdue?evidence:undefined);
+   if(expected.overdue){
+    for(const text of [wait?.refusal?.en,wait?.refusal?.de])for(const value of [evidence.seconds,evidence.bound,evidence.limit,expected.quiet])expect(text).toContain(String(value));
+   }
+   expect(readFileSync(f.runs,"utf8")).toBe("workspace\n");
+  }finally{f.close();}
+ }}finally{oracle.close();}
 },30000);

@@ -4,7 +4,7 @@
   "title": "PdfSnapshot",
   "type": "object",
   "properties": {
-    "schema": {
+    "schema": { "readOnly": true,
       "type": "string",
       "x-semio-ui": {
         "widget": "text",
@@ -18,7 +18,7 @@
         }
       }
     },
-    "declaredVersion": {
+    "declaredVersion": { "readOnly": true,
       "type": "string",
       "x-semio-ui": {
         "widget": "text",
@@ -144,7 +144,7 @@
         }
       }
     },
-    "properties": {
+    "properties": { "x-semio-ui": {"label": {"en": "Marked content properties", "de": "Eigenschaften markierter Inhalte"}},
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfNamedProperties"
@@ -552,7 +552,7 @@
         }
       }
     },
-    "admittedStreamRoles": {
+    "admittedStreamRoles": { "readOnly": true, "x-semio-ui": {"label": {"en": "Recognized stream roles", "de": "Erkannte Streamrollen"}},
       "type": "array",
       "items": {
         "$ref": "#/$defs/PdfAdmittedStreamRole"
@@ -5708,6 +5708,12 @@
           }
         },
         "body": {
+          "x-semio-ui": {
+            "label": {
+              "en": "Image data",
+              "de": "Bilddaten"
+            }
+          },
           "$ref": "#/$defs/PdfImageBody"
         }
       },
@@ -8062,6 +8068,12 @@
           }
         },
         "profile": {
+          "x-semio-ui": {
+            "label": {
+              "en": "ICC profile",
+              "de": "ICC-Profil"
+            }
+          },
           "anyOf": [
             {
               "$ref": "#/$defs/ArtifactRef"
@@ -9855,6 +9867,12 @@
       ],
       "properties": {
         "owner": {
+          "x-semio-ui": {
+            "label": {
+              "en": "Owning object",
+              "de": "Zugehöriges Objekt"
+            }
+          },
           "$ref": "#/$defs/ObjRef"
         },
         "path": {
@@ -10132,6 +10150,12 @@
           "$ref": "#/$defs/PdfGraphIdentity"
         },
         "dependencies": {
+          "x-semio-ui": {
+            "label": {
+              "en": "Dependencies",
+              "de": "Abhängigkeiten"
+            }
+          },
           "type": "array",
           "items": {
             "$ref": "#/$defs/PdfGraphIdentity"
@@ -10151,9 +10175,21 @@
       ],
       "properties": {
         "artifactId": {
+          "x-semio-ui": {
+            "label": {
+              "en": "Artifact ID",
+              "de": "Artefakt-ID"
+            }
+          },
           "type": "string"
         },
         "dialect": {
+          "x-semio-ui": {
+            "label": {
+              "en": "Artifact dialect",
+              "de": "Artefaktdialekt"
+            }
+          },
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -10163,12 +10199,30 @@
           ],
           "properties": {
             "artifactKind": {
+              "x-semio-ui": {
+                "label": {
+                  "en": "Artifact kind",
+                  "de": "Artefaktart"
+                }
+              },
               "type": "string"
             },
             "standard": {
+              "x-semio-ui": {
+                "label": {
+                  "en": "Standard",
+                  "de": "Standard"
+                }
+              },
               "type": "string"
             },
             "subset": {
+              "x-semio-ui": {
+                "label": {
+                  "en": "Subset",
+                  "de": "Teilmenge"
+                }
+              },
               "type": "string"
             }
           }

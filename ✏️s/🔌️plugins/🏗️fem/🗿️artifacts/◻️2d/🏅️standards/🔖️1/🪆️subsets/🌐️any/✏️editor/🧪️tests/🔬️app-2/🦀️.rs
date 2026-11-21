@@ -1,5 +1,7 @@
 //! 🧪️ Integration tests of the `s.fem.fem2d` play app editor that drive the whole mounted app through the shared `context` harness.
 
+#![recursion_limit = "256"]
+
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as vcs;
 

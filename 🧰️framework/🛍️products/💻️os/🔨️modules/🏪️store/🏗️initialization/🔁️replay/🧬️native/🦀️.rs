@@ -55,7 +55,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
     fn physical_work(cx:&mut StepContext<'_>,quote:RetirementDemand,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome)->Result<RetainedCloneProgress,OriginalTurnFailure>{
         let grant=cx.retained_grant();
         if cx.should_yield()||!retained_clone_grant_admits(grant,quote){return Ok(Default::default());}
-        let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|run(effect))?else{return Ok(Default::default());};
+        let Some((turn,performed))=cx.with_original_source_effect(grant,|_,effect|run(effect))?else{return Ok(Default::default());};
         cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
         match turn.result{
             Ok(step)=>{let progress=step.progress();cx.consume_retained(progress)?;Ok(progress)}
@@ -63,7 +63,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         }
     }
     fn close_poll(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>,&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::OriginalRetirementPoll,ValueError>)->Result<RetainedCloneStep,OriginalTurnFailure>{
-        let Some((polled,_))=cx.with_original_effect(grant,run)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+        let Some((polled,_))=cx.with_original_source_effect(grant,run)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};
         match polled?{
             semio_framework_value::RetainedWorkPoll::Pending{work}=>{cx.consume_fuel(u64::try_from(work).unwrap_or(u64::MAX));Ok(RetainedCloneStep::Progress(Default::default()))},
             semio_framework_value::RetainedWorkPoll::Complete(turn)=>semio_framework_job::receive_original_retained_work(cx,turn),
@@ -91,7 +91,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
             let key=envelope.vcs.edits.retained_read_key_at(edit).ok_or_else(||invalid("initialization original edit key absent"))?;
             Self::physical(cx,OriginalHistorySource::<Edit<M>>::constructor_demand(),|grant|{let Some((source,receipt))=OriginalHistorySource::admit(key,self.issuer.as_ref().unwrap(),grant)?else{return Ok(Default::default());};self.history=Some(source);self.phase=1;Ok(receipt)})?;return Ok(false);
         }
-        if self.replacement_key.is_none()&&self.input.is_none()&&self.owner.is_none(){
+        if self.replacement_key.is_none() && !self.input.is_some() && self.owner.is_none() {
             let history=self.history.as_mut().unwrap();let quote=history.projection_demands(&envelope.vcs.edits,cx.retained_grant().maximum_copy_bytes,&self.input,mutation+1,|edit|&edit.forwards[mutation])?;
             Self::physical_work(cx,quote,|effect|history.advance(&mut envelope.vcs.edits,&mut self.input,mutation+1,|edit|&edit.forwards[mutation],effect))?;return Ok(false);
         }
@@ -131,7 +131,20 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if cx.should_yield()||!retained_clone_grant_admits(grant,quote){return Ok(false);}
         let generation=cx.generation().0;let clock=cx.clock_source();let deadline=cx.deadline_us();
         let mut outcome=None;let mut stepped=None;
-        if !cx.with_native_receiving(&mut outcome,|control,_|{stepped=Some(owner.step(generation,self.revision,grant.maximum_copy_bytes,grant,control,&mut||clock().is_none_or(|now|now>=deadline)));Ok(())})?{return Ok(false)}
+        if !cx.with_native_receiving(&mut outcome, |control, available| {
+            let step = if owner.requires_original_control()
+                && (!control.has_retirement_failure_storage() || control.failure_storage_birth_pending())
+            {
+                match control.prepare_failure_storage(available) {
+                    semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
+                    semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result,
+                }
+            } else {
+                owner.step(generation, self.revision, available.maximum_copy_bytes, available, control, &mut || clock().is_none_or(|now| now >= deadline))
+            };
+            stepped = Some(step);
+            Ok(())
+        })? { return Ok(false); }
         refuse_scope(outcome)?;post_receiving(cx,stepped.ok_or_else(invalid_scope)?.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),|step|step.progress())?;Ok(false)
     }
     pub fn close_demands(&self,envelope:&ArtifactEnvelope<P,M>,runtime:&ArtifactStoreInitializationRuntime<P>,body:usize)->Result<RetirementDemand,ValueError>{

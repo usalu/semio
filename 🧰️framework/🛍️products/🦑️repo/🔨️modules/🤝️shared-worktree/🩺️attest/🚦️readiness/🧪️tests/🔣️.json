@@ -1,0 +1,158 @@
+{
+  "nowMs": 1794975700000,
+  "receipt": {
+    "version": 1,
+    "host": "fixture",
+    "platform": "linux",
+    "pid": 42,
+    "state": "ready",
+    "digest": "abababababababababababababababababababababababababababababababab",
+    "ready": true,
+    "stage": null,
+    "stageIndex": 0,
+    "stageCount": 5,
+    "attempts": 0,
+    "exit": null,
+    "refusal": null,
+    "reason": null,
+    "peakMegabytes": null,
+    "tail": [],
+    "nextAttemptMs": null,
+    "readyMs": 1794975000000,
+    "startedMs": 1794974990000,
+    "updatedMs": 1794975700000
+  },
+  "cases": [
+    {
+      "origin": "g1-m01",
+      "patch": {
+        "updatedMs": 1794975100000
+      },
+      "expected": [
+        "fresh",
+        true,
+        "ready",
+        null
+      ]
+    },
+    {
+      "origin": "g1-m02",
+      "patch": {
+        "updatedMs": 1794975099999
+      },
+      "expected": [
+        "stale",
+        null,
+        "ready",
+        null
+      ]
+    },
+    {
+      "origin": "g1-m03",
+      "patch": {
+        "updatedMs": 1794970000000,
+        "state": "running",
+        "ready": false,
+        "stage": "workspace",
+        "stageIndex": 5,
+        "reason": {
+          "code": "adopted",
+          "en": "Adopted running workspace stage.",
+          "de": "Laufende Stufe workspace übernommen."
+        },
+        "tail": [
+          "earlier",
+          "Graph scope 155/600"
+        ]
+      },
+      "expected": [
+        "stale",
+        null,
+        "running",
+        "workspace"
+      ]
+    },
+    {
+      "origin": "g1-m04",
+      "patch": {
+        "state": "running",
+        "ready": false,
+        "stage": "workspace",
+        "stageIndex": 5,
+        "reason": {
+          "code": "adopted",
+          "en": "Adopted running workspace stage.",
+          "de": "Laufende Stufe workspace übernommen."
+        },
+        "tail": [
+          "Graph scope 263/600"
+        ]
+      },
+      "expected": [
+        "fresh",
+        false,
+        "running",
+        "workspace"
+      ]
+    },
+    {
+      "origin": "g1-m05",
+      "patch": {
+        "updatedMs": 1794975700001
+      },
+      "expected": [
+        "future",
+        null,
+        "ready",
+        null
+      ]
+    },
+    {
+      "origin": "g1-m06",
+      "patch": {
+        "origin": "g1-m01"
+      },
+      "expected": [
+        "missing",
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "origin": "g1-m07",
+      "patch": {
+        "updatedMs": null
+      },
+      "expected": [
+        "missing",
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "origin": "g1-m08",
+      "patch": null,
+      "expected": [
+        "missing",
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "origin": "g1-m09",
+      "patch": {
+        "stage": "tools",
+        "stageIndex": 2
+      },
+      "expected": [
+        "fresh",
+        false,
+        "ready",
+        "tools"
+      ]
+    }
+  ]
+}

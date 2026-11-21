@@ -1,0 +1,13 @@
+{
+  "shells": 64,
+  "perShellItems": 1,
+  "maximumShellItems": 4096,
+  "perShellBytes": 1507885056,
+  "numericalItems": 68719476736,
+  "numericalBytes": 1099511627776,
+  "numericalDepth": 4096,
+  "targets": [
+    32,
+    64
+  ]
+}

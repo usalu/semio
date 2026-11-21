@@ -3,7 +3,7 @@ import cases from "./shared-border.cases.json";
 import { Vector2 } from "three";
 import Ajv from "ajv/dist/2020.js";
 import schema from "./shared-border.schema.json";
-import { projectSharedBorderPoint, sharedOutlineSegments, sharedBorderJunction, clipSharedOutlineSegments, visibleSharedOutlineSegments } from "./shared-border.ts";
+import { projectSharedBorderPoint, sharedOutlineSegments, sharedBorderJunction, clipSharedOutlineSegments, sharedBorderPaintPoints, visibleSharedOutlineSegments } from "./shared-border.ts";
 import junctions from "./junctions.cases.json";
 import junctionSchema from "./junctions.schema.json";
 import spans from "./chip-span.cases.json";
@@ -20,6 +20,11 @@ describe("shared silhouette projection", () => {
     expect(sharedBorderJunction(point, [...sources].reverse())).toEqual(actual);
     const reference = new Vector2(...entry.expected as [number, number]);
     expect(new Vector2(actual.x, actual.y).distanceTo(reference)).toBe(0);
+  });
+  for (const entry of junctions.paintSpans) test(entry.name, () => {
+    const point = ([x, y]: readonly number[]) => ({ x: x!, y: y! });
+    const actual = sharedBorderPaintPoints(point(entry.from), point(entry.to), entry.horizontal ? "y" : "x", entry.centerline);
+    expect(actual.map(({ x, y }) => [x, y])).toEqual(entry.expected);
   });
   test("invisible inset cannot win at an overflow boundary", () => {
     const sources = sharedOutlineSegments("hidden", [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 100 }], [{ x: 1, y: 1 }, { x: 99, y: 1 }, { x: 99, y: 99 }, { x: 1, y: 99 }], "active", { left: 100, top: 0, scaleX: 1, scaleY: 1 });

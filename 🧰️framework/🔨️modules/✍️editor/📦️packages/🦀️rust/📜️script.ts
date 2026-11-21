@@ -1,4 +1,5 @@
 #!/usr/bin/env repo
+import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {verifyProducedWasmPackageV1, buildAdmittedWasmWebV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
@@ -13,7 +14,7 @@ import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packa
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedErrorScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
-class WasmScript extends BundleScript {
+export class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await buildAdmittedWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
       rsDir: this.root,
@@ -48,4 +49,4 @@ class OwnedErrorScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dirname).register("test-owned-error",OwnedErrorScript).register("wasm", WasmScript).register("test", TestScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "wasm" }));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "wasm" }));

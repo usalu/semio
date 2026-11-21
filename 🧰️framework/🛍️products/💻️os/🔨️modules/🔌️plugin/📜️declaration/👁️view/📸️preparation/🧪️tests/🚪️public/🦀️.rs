@@ -70,10 +70,13 @@ async fn mounted_snapshot_preparation_boundary_uses_original_context_and_readine
         let admitted_grant = MountedSnapshotReadPreparation::grant(policy.preparation, &cx).unwrap();
         let (result,_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(PluginApp::pending_effects(&mut app,None,&mut cx)));
         assert_eq!(result.is_err(), row["fault"].as_bool().unwrap());
-        if !row["fault"].as_bool().unwrap() { assert!(result.as_ref().unwrap().is_some(), "an admitted poll publishes its effects instead of retaining"); }
+        if let Ok(effects) = &result {
+            assert_eq!(effects.is_none(), row["retainsPoll"].as_bool().unwrap_or(false));
+        }
         assert_eq!(cx.retained_progress(), progress);
         let observed = ORIGINAL.with(|probe| probe.take().unwrap());
-        let pre_heap=observed.pre_heap.expect("original callback samples live allocator scope");assert_eq!(pre_heap.requested_bytes,fixture["preAdmissionHeap"]["requestedBytes"].as_u64().unwrap()as usize);assert_eq!(pre_heap.released_bytes,fixture["preAdmissionHeap"]["releasedBytes"].as_u64().unwrap()as usize);assert!(!pre_heap.overflowed);assert_eq!(observed.source_version,result.is_ok().then_some(original_source_version)); assert_eq!(observed.parent_identity,if result.is_ok(){original_parent_identity}else{0},"admitted poll view must borrow original envelope identity"); assert_eq!(observed.calls, 1); assert_eq!(observed.grant, admitted_grant); assert_eq!(observed.reads, usize::from(ready && result.is_ok()));
+        let published = result.as_ref().is_ok_and(Option::is_some);
+        let pre_heap=observed.pre_heap.expect("original callback samples live allocator scope");assert_eq!(pre_heap.requested_bytes,fixture["preAdmissionHeap"]["requestedBytes"].as_u64().unwrap()as usize);assert_eq!(pre_heap.released_bytes,fixture["preAdmissionHeap"]["releasedBytes"].as_u64().unwrap()as usize);assert!(!pre_heap.overflowed);assert_eq!(observed.source_version,published.then_some(original_source_version)); assert_eq!(observed.parent_identity,if published{original_parent_identity}else{0},"published poll view must borrow original envelope identity"); assert_eq!(observed.calls, 1); assert_eq!(observed.grant, admitted_grant); assert_eq!(observed.reads, usize::from(ready && published));
     }
     let mut sequence = 0; let mut receipt = RetainedCloneProgress::default();
     let mut cx = StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), StepBudget::new(0, u64::MAX, policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);

@@ -1,0 +1,276 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📜️contract/🔏️pack-authority-and-publication/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📜️contract/🔏️pack-authority-and-publication/🦀️.rs
+@@ -31,6 +31,7 @@
+     fn as_any_mut(&mut self) -> &mut dyn Any;
+     fn window_kind_id(&self) -> &str;
+     fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase;
++    fn store_batch_phase(&self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase>;
+     fn accepted_receipt(&self)->Option<store::os_store::one_item::LaneItemReceipt>;
+     fn fault(&self) -> Option<&str>;
+     fn preparation_refusal(&self) -> Option<&ValueError>;
+@@ -101,6 +102,10 @@
+         self.publication.as_ref().map_or(if self.closing{store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing}else{store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Preparing},|publication|publication.phase())
+     }
+ 
++    fn store_batch_phase(&self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase> {
++        self.publication.as_ref().map(|publication| publication.phase())
++    }
++
+     fn accepted_receipt(&self)->Option<store::os_store::one_item::LaneItemReceipt>{self.publication.as_ref().and_then(|publication|publication.accepted_receipt())}
+ 
+     fn fault(&self) -> Option<&str> {
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🦀️.rs
+@@ -191,6 +191,7 @@
+ 
+     fn dispatch<'a, 'b>(&'a mut self, actor: &'a str, mutation: WindowConfigMutation, identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>>;
+     fn admit_begin(&mut self, operation: semio_framework_job::OperationId, actor: &mut Option<ControlledRetirement<SharedUtf8>>, mutations: &mut Vec<WindowConfigMutation>, authority: &WindowConfigAuthority, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedWindowConfigPublication>,RetainedCloneProgress)>,ValueError>;
++    fn admit_store_batch(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, Fault>;
+     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body:usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault>;
+     fn refresh_demands(&self,authority:&WindowConfigAuthority,body:usize)->Result<RetirementDemand,ValueError>;
+     fn refresh(&mut self,authority:&mut WindowConfigAuthority,effect:&mut RetainedAllocationEffect<'_>)->Result<crate::window_mutation::WindowAuthorityRefreshStep,Fault>;
+@@ -385,6 +386,25 @@
+         Ok(Some((Box::new(publication),RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
+     }
+ 
++    fn admit_store_batch(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, Fault> {
++        let publication = publication
++            .as_any_mut()
++            .downcast_mut::<TypedWindowConfigPublication<O>>()
++            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.publication-type"), "window config publication did not match its registered window owner"))?;
++        if publication.closing || publication.publication.is_some() {
++            return Ok(None);
++        }
++        let address=publication.window_id.original().ok_or_else(||Fault::from("original window publication lost its captured address"))?;
++        let partition=self.partitions.get_mut(address).ok_or_else(||Fault::from("original window publication lost its exact partition"))?;
++        let admitted = partition.store.admit_member_apply_batch(
++            publication.operation, publication.generation, publication.revision,
++            &mut publication.actor, &mut publication.pending, &mut publication.transaction, grant,
++        ).map_err(ValueError::into_fault)?;
++        let Some((batch, progress)) = admitted else { return Ok(None) };
++        *publication.publication = Some(batch);
++        Ok(Some(progress))
++    }
++
+     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body:usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant,receiving:&mut NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
+         let publication = publication
+             .as_any_mut()
+@@ -393,13 +413,10 @@
+         if publication.closing{return Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked);}
+         let address=publication.window_id.original().ok_or_else(||Fault::from("original window publication lost its captured address"))?;
+         let partition=self.partitions.get_mut(address).ok_or_else(||Fault::from("original window publication lost its exact partition"))?;
+-        if publication.publication.is_none(){
+-            return match partition.store.admit_member_apply_batch(publication.operation,publication.generation,publication.revision,&mut publication.actor,&mut publication.pending,&mut publication.transaction,grant.retained_grant()).map_err(|error|error.into_fault())?{
+-                Some((owner,progress))=>{*publication.publication=Some(owner);Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(Default::default(),progress))},
+-                None=>Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked),
+-            };
+-        }
+-        let result=partition.store.advance_apply_batch_with_turn_ceiling(publication.publication.as_mut().expect("admitted original Store publication remains"),body,grant,turn_ceiling,receiving).map_err(|error|error.into_fault());
++        let Some(batch) = publication.publication.as_mut() else {
++            return Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked);
++        };
++        let result=partition.store.advance_apply_batch_with_turn_ceiling(batch,body,grant,turn_ceiling,receiving).map_err(|error|error.into_fault());
+         if publication.publication.as_ref().is_some_and(|owner|owner.phase()==store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing){publication.closing=true;}
+         result
+     }
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧭️owner-registry/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧭️owner-registry/🦀️.rs
+@@ -181,6 +181,11 @@
+     }
+ 
+     #[doc(hidden)]
++    pub fn admit_store_batch(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, Fault> {
++        self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.admit_store_batch(publication, grant)
++    }
++
++    #[doc(hidden)]
+     pub fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant, receiving: &mut NativeDecodeControl<'_>) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
+         self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.advance(publication, body, grant, turn_ceiling, receiving)
+     }
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/📬️typed-operation-unit/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/📬️typed-operation-unit/🦀️.rs
+@@ -132,6 +132,16 @@
+                 return Ok(());
+             }
+             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
++            if let PendingArtifactStorePublication::WindowConfig(publication) = pending {
++                if publication.store_batch_phase().is_none() {
++                    if let Some(ownership) = self.stores.window_config_store.admit_store_batch(publication.as_mut(), retained)? {
++                        mounted.note_paid_publication_progress(ownership);
++                        mounted.publication_ownership_progress = Some((retained, ownership));
++                    }
++                    return Ok(());
++                }
++            }
++            let window_config_batch = matches!(pending, PendingArtifactStorePublication::WindowConfig(_));
+             let mut turn_ceiling = cx.original_turn_ceiling().0;
+             turn_ceiling.maximum_copy_bytes = turn_ceiling.maximum_copy_bytes.saturating_sub(capture);
+             let mut scope=None;let mut stepped=None;
+@@ -151,7 +161,7 @@
+             let receipt=cx.consume_receiving_retained(retained,ownership);
+             if scope.source_refusal.is_some()||scope.call.is_err(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original publication receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
+             let advance=match result{Err(OriginalPublicationAdvanceFailure::Primary(primary))=>return Err(primary.with_receiving_receipt(receipt)),Err(OriginalPublicationAdvanceFailure::Domain(source))=>{assert!(mounted.publication_failure.original.is_none());mounted.publication_failure.original=Some(semio_plugin_retained_command::typed_operation::OriginalPublicationFailure::new(source,ownership,receipt.err()));return Ok(())},Ok(advance)=>{receipt?;advance}};
+-            if batch {
++            if batch || window_config_batch {
+                 mounted.note_paid_publication_progress(ownership);
+             }
+             return match advance {
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🏃️mounted-run-and-pump/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🏃️mounted-run-and-pump/🦀️.rs
+@@ -96,7 +96,7 @@
+                 let advancing_batch = !acknowledged_page && !custody && !cancelled
+                     && mounted.publication_failure.terminal_is_empty()
+                     && mounted.pending_artifact_publication.as_ref().is_some_and(|owner| {
+-                        !owner.is_closing() && matches!(owner, PendingArtifactStorePublication::Artifact(_) | PendingArtifactStorePublication::Config(_) | PendingArtifactStorePublication::Draft(_))
++                        !owner.is_closing() && matches!(owner, PendingArtifactStorePublication::Artifact(_) | PendingArtifactStorePublication::Config(_) | PendingArtifactStorePublication::Draft(_) | PendingArtifactStorePublication::WindowConfig(_))
+                     });
+                 let before = (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage);
+                 let original_before=cx.retained_progress();
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🔁️stall-witness-and-unit-advance/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/📬️publication/🔁️stall-witness-and-unit-advance/🦀️.rs
+@@ -83,6 +83,10 @@
+                         };
+                         (owner.lane().1, owner.is_closing(), owner.accepted_receipt().is_some(), batch)
+                     });
++                    let window_store_phase = match operation.pending_artifact_publication.as_ref() {
++                        Some(PendingArtifactStorePublication::WindowConfig(publication)) => publication.store_batch_phase(),
++                        _ => None,
++                    };
+                     let (released_reads, outstanding_reads) = match operation.pending_artifact_publication.as_ref() {
+                         Some(PendingArtifactStorePublication::Config(_)) => (self.stores.config_store.returned_snapshot_read_count(), self.stores.config_store.outstanding_snapshot_read_count()),
+                         Some(PendingArtifactStorePublication::Draft(_)) => (self.stores.draft_store.returned_snapshot_read_count(), self.stores.draft_store.outstanding_snapshot_read_count()),
+@@ -90,7 +94,7 @@
+                     };
+                     let grant = cx.retained_grant();
+                     let turn = (grant, cx.fuel_remaining(), cx.should_yield());
+-                    semio_plugin_reactor_app::debug_runtime_line(format_args!("[DEBUG] typed-operation {} advanced {streak} units with no change: operation={} stage={} flags={:#010b} progress={} child={child:?} group={group:?} child_result_pending={child_result_pending} page_pending={page_pending} result_page={result_page:?} receipt_pending={receipt_pending} store={store:?} released_reads={released_reads} outstanding_reads={outstanding_reads} turn={turn:?}", operation.verb, after.0, after.1, after.2, after.3));
++                    semio_plugin_reactor_app::debug_runtime_line(format_args!("[DEBUG] typed-operation {} advanced {streak} units with no change: operation={} stage={} flags={:#010b} progress={} child={child:?} group={group:?} child_result_pending={child_result_pending} page_pending={page_pending} result_page={result_page:?} receipt_pending={receipt_pending} store={store:?} window_store_phase={window_store_phase:?} released_reads={released_reads} outstanding_reads={outstanding_reads} turn={turn:?}", operation.verb, after.0, after.1, after.2, after.3));
+                 }
+                 if after.1 == TYPED_OPERATION_STALL_PUBLISHING_STAGE && streak >= TYPED_OPERATION_STALL_FAULT_CEILING {
+                     self.tools.fault_stalled_typed_operation_publication(after.0, streak)?;
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run-part-1/🪟️trace-requests-and-window-config/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run-part-1/🪟️trace-requests-and-window-config/🦀️.rs
+@@ -192,10 +192,11 @@
+     mounted.publication = Some(ArtifactToolCompletionValue::Emit(Ok(Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { window_config_mutations: vec![mutation], ..Default::default() }), EphemeralEmit::default()));
+     let grant = mounted_policy.maintenance;
+     let mut yielded_with_retained_receipt = 0;
++    let mut admitted_store_batch = false;
+     let mut refreshed_generation = None;
+     let mut page = None;
+     for _ in 0..4096 {
+-        publish_window_config_fixture_unit(&mut app,&mut mounted,grant,caller.context).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
++        admitted_store_batch |= publish_window_config_fixture_unit(&mut app,&mut mounted,grant,caller.context).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
+         let authority = mounted.window_config_authority.as_ref().unwrap();
+         if let Some(generation) = refreshed_generation {
+             assert_eq!(authority.snapshot.generation(), generation);
+@@ -212,6 +213,7 @@
+             break;
+         }
+     }
++    assert!(admitted_store_batch, "the original Store constructor has its own mounted receipt");
+     let mut page = page.expect("the retained window config receipt reaches its result page");
+     assert_eq!(page.lane, TypedOperationResultLane::WindowConfig);
+     assert!(semio_plugin_testing_laws::artifact_app_laws::present_fixture_mounted_page(&mut mounted,grant,caller.context).unwrap().is_none(), "a transferred authority presents one result page before ACK");
+@@ -261,15 +263,29 @@
+ //#endregion 🎯️RetargetAndSettings
+ 
+ /// 🪟️ Returns each publication receipt to the original window fixture caller once.
+-fn publish_window_config_fixture_unit(app:&mut ToyApp,mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>,grant:semio_framework_value::retained_clone::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
++fn publish_window_config_fixture_unit(app:&mut ToyApp,mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>,grant:semio_framework_value::retained_clone::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+  cx.with_retained_loan(grant,|same|{
++  let waiting_for_window_result = |operation: &semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<ToyRunApp>| {
++   operation.pending_artifact_publication.as_ref().is_some_and(|owner| {
++    owner.lane().0 == TypedOperationResultLane::WindowConfig && owner.accepted_receipt().is_none()
++   })
++  };
+   let before=same.retained_progress();
++  let window_frame_existed = waiting_for_window_result(mounted);
++  let work_before = same.original_work_units_spent();
+   app.typed_ctx().publish_mounted_typed_operation_unit(mounted,grant,same)?;
+-  if let Some((issued,progress))=mounted.publication_ownership_progress.take(){
++  let receipt = mounted.publication_ownership_progress.take();
++  let admitted_now = window_frame_existed && waiting_for_window_result(mounted) && receipt.is_some();
++  if admitted_now {
++   assert!(receipt.is_some_and(|(_, progress)| progress.copied_items == 1 && progress.retained_capacity_bytes > 0));
++   assert_eq!(same.retained_progress(), before, "Store admission did not open a native receiving scope");
++   assert_eq!(same.original_work_units_spent(), work_before, "Store admission did not spend receiving work");
++  }
++  if let Some((issued,progress))=receipt{
+    assert!(progress.fits(issued)&&progress.fits(grant));
+    let unposted=semio_plugin_ownership::bounded_ownership::original_lifecycle_unposted(progress,before,same.retained_progress())?;
+    same.consume_retained(unposted)?;
+   }
+-  Ok(())
++  Ok(admitted_now)
+  })
+ }
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/♻️publication-retirement-authority/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/♻️publication-retirement-authority/🦀️.rs
+@@ -511,11 +511,14 @@
+     caller.retire(fuel).unwrap();
+ }
+ 
+-fn admit_window_config_publication(registry: &mut WindowConfigOwnerRegistry, operation: semio_framework_job::OperationId, authority: &semio_plugin_window_config::WindowConfigAuthority, mutation: WindowConfigMutation, grant: semio_framework_value::RetainedCloneGrant) -> Box<dyn semio_plugin_window_config::ErasedWindowConfigPublication> {
+-    let (actor, _) = registry.local_actor_id().0.admit_clone(grant).unwrap();
++fn admit_window_config_publication(registry: &mut WindowConfigOwnerRegistry, operation: semio_framework_job::OperationId, authority: &semio_plugin_window_config::WindowConfigAuthority, mutation: WindowConfigMutation, grant: semio_framework_value::RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) -> Box<dyn semio_plugin_window_config::ErasedWindowConfigPublication> {
++    let (turn, work) = cx.with_original_effect(grant, |_, effect| registry.local_actor_id().0.admit_clone(effect)).unwrap().expect("the original actor clone receives its paid effect");
++    cx.consume_work(work); let (actor, progress) = turn.result.unwrap(); cx.consume_retained(progress).expect("the fixture pays the original actor capture");
+     let mut actor = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).map_err(|(error, _)| error).unwrap());
+     let mut mutations = vec![mutation];
+-    registry.admit_begin(operation, &mut actor, &mut mutations, authority, grant).unwrap().expect("window config publication admitted").0
++    let (publication, progress) = registry.admit_begin(operation, &mut actor, &mut mutations, authority, grant).unwrap().expect("window config publication admitted");
++    cx.consume_retained(progress).expect("the fixture pays the original Window frame");
++    publication
+ }
+ 
+ #[doc(hidden)]
+@@ -621,17 +624,45 @@
+                 PendingArtifactStorePublication::Transient(publication)
+             }
+             "windowConfig" => {
++                use store::os_store::one_item::ArtifactStoreOneItemGrant;
++                use store::os_store::one_item_publication::ArtifactStoreOneItemAdvance;
+                 let mutation = |value: &str| WindowConfigMutation::of::<RetirementWindowConfigOwner>("publication-retirement-window-left", config_mutation(value));
+-                let mut publication = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("first"), grant.retained_grant());
+-                let mut superseding = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("superseding"), grant.retained_grant());
++                let preparation = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation;
++                let mut publication = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("first"), preparation, cx);
++                let mut superseding = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("superseding"), preparation, cx);
++                let source_grant = cx.retained_grant();
++                let ownership = app.stores.window_config_store.admit_store_batch(superseding.as_mut(), preparation).expect("superseding window Store accepts the original authority").expect("fixture preparation funds the Store constructor");
++                cx.consume_retained(ownership).expect("the fixture pays the original Store frame");
++                let mut published = false;
+                 for _ in 0..4_096 {
+-                    if matches!(app.stores.window_config_store.advance(superseding.as_mut(), grant).expect("superseding window config advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_, _)) {
++                    semio_plugin_testing_laws::artifact_app_laws::fixture_renew_turn(cx, semio_plugin_testing_caller::OriginalFixtureCaller::turn_fuel(), source_grant).unwrap();
++                    let retained = cx.retained_grant(); let body = retained.restricted_by(preparation);
++                    let turn_ceiling = cx.original_turn_ceiling().0;
++                    let mut scope = None;
++                    let mut advance = None;
++                    if !cx.with_native_receiving(&mut scope, |receiving, _| {
++                        advance = Some(app.stores.window_config_store.advance(superseding.as_mut(), body.maximum_copy_bytes, ArtifactStoreOneItemGrant::from_retained(body), turn_ceiling, receiving));
++                        Ok(())
++                    }).expect("superseding window config receives its native Store turn") {
++                        continue;
++                    }
++                    let scope = scope.expect("original window receiving scope");
++                    assert!(scope.source_refusal.is_none() && scope.call.is_ok());
++                    let advance = advance.expect("original window Store step").expect("superseding window config advances");
++                    let ownership = match &advance {
++                        ArtifactStoreOneItemAdvance::PreparationProgress(_, ownership) | ArtifactStoreOneItemAdvance::Published(_, ownership) => *ownership,
++                        _ => Default::default(),
++                    };
++                    cx.consume_receiving_retained(retained, ownership).expect("the fixture pays the window Store receipt");
++                    if matches!(advance, ArtifactStoreOneItemAdvance::Published(_, _)) {
+                         assert!(superseding.acknowledge());
++                        published = true;
+                         break;
+                     }
+                 }
++                assert!(published, "the superseding WindowConfig publication reaches the Store");
+                 superseding_owner = Some(PendingArtifactStorePublication::WindowConfig(superseding));
+-                assert!(app.stores.window_config_store.advance(publication.as_mut(), grant).is_err(), "the superseded window config publication is rejected");
++                assert!(app.stores.window_config_store.admit_store_batch(publication.as_mut(), preparation).is_err(), "the superseded window config publication is rejected");
+                 PendingArtifactStorePublication::WindowConfig(publication)
+             }
+             "windowTransient" => {

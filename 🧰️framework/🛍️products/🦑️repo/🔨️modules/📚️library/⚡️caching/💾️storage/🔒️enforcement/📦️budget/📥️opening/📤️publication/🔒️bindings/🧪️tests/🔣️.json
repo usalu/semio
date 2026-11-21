@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"peerBinding": null, "maintenanceBinding": "acquired", "readerDuringMaintenance": "busy", "readerAfterMaintenance": "acquired"},
+    {"peerBinding": "shared", "maintenanceBinding": "busy", "readerDuringMaintenance": "busy", "readerAfterMaintenance": "acquired"},
+    {"peerBinding": "exclusive", "maintenanceBinding": "busy", "readerDuringMaintenance": "busy", "readerAfterMaintenance": "acquired"}
+  ]
+}

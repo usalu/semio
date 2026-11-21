@@ -84,10 +84,17 @@ def chains():
         out.append(k.capsule("hook-shank-%s" % name, bone, ST, "detail", 0.35, [0.019, 0.0, zc], [0.046, 0.0, zc], 0.0065))
         out.append(k.revolve("lower-eye-%s" % name, bone, ST, "detail", 0.35, k.torus_profile(0.013, 0.0055), UP, [0.058, 0.0, zc]))
         for parity, axis in ((0, 1), (1, 2)):
-            for half, pts in (("top", k.link_half(k.link_u(parity), axis, zc, -1)), ("bottom", k.link_half(k.link_u(parity), axis, zc, 1))):
-                s = k.loft("links-%s-%s-%s" % ("a" if parity == 0 else "b", half, name), bone, ST, "body", 0.5, [k.section(p, k.WIRE_R, k.WIRE_R) for p in pts])
-                s["repeat"] = {"count": k.LINKS // 2, "translation": [2 * k.PITCH, 0.0, 0.0]}
-                out.append(s)
+            path = k.link_path(k.link_u(parity), axis, zc)[1:-1]
+            normal = [0, 0, 1] if axis == 1 else [0, 1, 0]
+            sections = []
+            for i, point in enumerate(path):
+                tangent = k.unit(k.sub(path[(i + 1) % len(path)], path[i - 1]))
+                rotation = k.quat_from_axes(normal, k.cross(tangent, normal), tangent)
+                sections.append(k.section(point, k.WIRE_R, k.WIRE_R, rotation=rotation))
+            tag = "a" if parity == 0 else "b"
+            out.append(k.loft(f"links-{tag}-{name}", bone, ST, "body", 0.5,
+                              sections + [sections[0]], caps=False,
+                              repeat={"count": k.LINKS // 2, "translation": [2 * k.PITCH, 0, 0]}))
     return out
 
 

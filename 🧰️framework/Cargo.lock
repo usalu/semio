@@ -4956,7 +4956,9 @@ dependencies = [
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-kernel-contract",
  "semio-framework-3d-brep-mesh-io",
+ "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-solid-topology",
  "semio-framework-3d-brep-solid-transaction",
  "semio-framework-3d-brep-spline-construction",
  "semio-framework-3d-brep-spline-trim",
@@ -5042,6 +5044,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-kernel-contract",
+ "semio-framework-3d-brep-native-registry",
  "semio-framework-3d-brep-representation",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tessellation",
@@ -5058,6 +5061,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-3d-brep-boolean",
  "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tolerance",
@@ -5073,6 +5077,7 @@ dependencies = [
  "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-spline-construction",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tolerance",
  "semio-framework-3d-brep-vector",
@@ -5083,6 +5088,7 @@ dependencies = [
 name = "semio-framework-3d-brep-spline-construction"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
  "semio-framework-3d-brep-surface",
@@ -6041,6 +6047,7 @@ name = "semio-framework-graph-manifest"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
@@ -7744,6 +7751,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-mutation-diff",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
@@ -8268,6 +8276,7 @@ dependencies = [
 name = "semio-framework-surface-terrain"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-value",
  "serde",
@@ -10718,6 +10727,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -11815,6 +11825,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-job",
  "semio-framework-value",
+ "semio-plugin-interpreter-numeric",
 ]
 
 [[package]]
@@ -11827,6 +11838,10 @@ dependencies = [
  "semio-plugin-guest-contract",
  "semio-plugin-interpreter",
 ]
+
+[[package]]
+name = "semio-plugin-interpreter-numeric"
+version = "0.1.0"
 
 [[package]]
 name = "semio-plugin-interpreter-runtime"

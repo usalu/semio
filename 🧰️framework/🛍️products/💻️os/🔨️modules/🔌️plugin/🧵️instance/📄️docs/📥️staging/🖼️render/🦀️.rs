@@ -48,7 +48,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             if original.lease.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<semio_plugin_operation::ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}
             if let Some(owner)=original.snapshot_retention.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.retirement_demands(body)}}
             if !original.snapshot_source.terminal_is_empty(){return original.snapshot_source.retirement_demands(body)}
-            return Ok(RetirementDemand{copy_bytes:size_of::<MediaExportPreparation<A>>(),depth:1,..Default::default()})
+            return Ok(MediaExportPreparation::<A>::carrier_release_demand())
         }
         if let Some(owner)=self.media_submission_refusal_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&*self.media_submission_refusal_retirement),depth:1,..Default::default()})}else{owner.selected_demand(body)}}
         if let Some(place)=self.media_submission_refusal_place.as_ref(){return place.retirement_demands(body)}
@@ -82,7 +82,11 @@ impl<A: ArtifactApp> MediaTransfers<A> {
                 let step=if let Some(owner)=original.retirement.as_mut(){if owner.terminal_is_empty(){RetainedCloneStep::Progress(semio_plugin_operation::original_lease_cursor_release(&mut original.retirement,grant)?)}else{semio_plugin_ownership::bounded_ownership::plugin_controlled_effect_close::<ValueError>(cx,grant,|effect,_|owner.close_step(&tools.tool_cancellations,effect))?}}else if original.lease.is_some(){let(owner,progress)=semio_plugin_operation::original_lease_cursor_admit(&mut original.lease,grant)?;original.retirement=owner;RetainedCloneStep::Progress(progress)}
                 else if let Some(owner)=original.snapshot_retention.as_mut(){if owner.terminal_is_empty(){original.snapshot_retention.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}else{return owner.close_step(cx,grant).map(|step|(PluginLifecycleStep::Progress(step.progress().unwrap_or_default()),false)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)}}
                 else if !original.snapshot_source.terminal_is_empty(){return original.snapshot_source.close_step(cx).map(|step|(PluginLifecycleStep::Progress(step.progress()),false)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)}
-                else{self.media_export_preparation.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<MediaExportPreparation<A>>(),..Default::default()})};
+                else{
+                    let release=MediaExportPreparation::<A>::carrier_release_demand();
+                    self.media_export_preparation.take();
+                    RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:release.copy_bytes,released_bytes:release.release_bytes,..Default::default()})
+                };
                 return Ok((PluginLifecycleStep::Progress(step.progress()),false))
             }
             if let Some(owner)=self.media_submission_refusal_retirement.as_mut(){
@@ -129,13 +133,20 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         if let Some(original)=self.media_export_preparation.as_ref(){if original.source_identity!=source_identity||original.port_identity!=port_identity||original.checkpoint_identity!=checkpoint_identity||original.key.app_instance_id!=app_instance_id{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media submission requires its unchanged original source and borrowed port").into())}}
         if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
         if self.media_export_preparation.is_none(){
-            if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<size_of::<MediaExportPreparation<A>>(){return Ok(false)}
+            let capacity=size_of::<MediaExportPreparation<A>>();
+            let progress=RetainedCloneProgress {
+                copied_items:1,
+                copied_bytes:capacity+size_of::<Option<Box<MediaExportPreparation<A>>>>(),
+                retained_capacity_bytes:capacity,
+                ..Default::default()
+            };
+            if grant.maximum_depth==0||!progress.fits(grant){return Ok(false)}
             let Some(slot)=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot|self.media_exports.slot_is_vacant(*slot)&&self.media_closures.slot_is_vacant(*slot)&&self.snapshot_retirements.slot_is_vacant(*slot))else{return Ok(false)};
             let revision=stores.store.content_revision_now();let operation_id=semio_framework_job::allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64,slot as u64);let key=ToolOperationKey{app_instance_id,document:ArtifactDocumentAuthority(app_instance_id),operation_id,base_revision:semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),generation:semio_framework_job::Generation(stores.store.generation_now())};
-            *self.media_export_preparation=Some(MediaExportPreparation{construction:Default::default(),original_read:ManuallyDrop::new(None),original_read_close:ManuallyDrop::new(None),original_children:ManuallyDrop::new(None),original_children_close:ManuallyDrop::new(None),child_root_identity:children.root.as_ref().map(|root|std::sync::Arc::as_ptr(root)as usize),checkpoint:checkpoint_id.map(|_|super::native_checkpoint_export::NativeCheckpointExportSource::empty()),checkpoint_identity,canonical_revision:revision,metadata:ManuallyDrop::new(Some(std::array::from_fn(|_|Vec::new()))),metadata_stage:0,metadata_close:ManuallyDrop::new(None),request_close:ManuallyDrop::new(None),parts:ManuallyDrop::new(None),parts_close:ManuallyDrop::new(None),handle:ManuallyDrop::new(None),handle_close:ManuallyDrop::new(None),operation:None,body_ready:false,operation_bound:false,assembled:false,published:false,snapshot_source:semio_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource::empty(),snapshot:ManuallyDrop::new(None),snapshot_lease:ManuallyDrop::new(None),snapshot_retention:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),source_identity,port_identity,key,lease:None,retirement:None,completion:None,completion_close:None,credit:None,credit_close:None,chunks:None,chunks_close:None});
-            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<MediaExportPreparation<A>>(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)
+            *self.media_export_preparation=Some(Box::new(MediaExportPreparation{construction:Default::default(),original_read:ManuallyDrop::new(None),original_read_close:ManuallyDrop::new(None),original_children:ManuallyDrop::new(None),original_children_close:ManuallyDrop::new(None),child_root_identity:children.root.as_ref().map(|root|std::sync::Arc::as_ptr(root)as usize),checkpoint:checkpoint_id.map(|_|super::native_checkpoint_export::NativeCheckpointExportSource::empty()),checkpoint_identity,canonical_revision:revision,metadata:ManuallyDrop::new(Some(std::array::from_fn(|_|Vec::new()))),metadata_stage:0,metadata_close:ManuallyDrop::new(None),request_close:ManuallyDrop::new(None),parts:ManuallyDrop::new(None),parts_close:ManuallyDrop::new(None),handle:ManuallyDrop::new(None),handle_close:ManuallyDrop::new(None),operation:None,body_ready:false,operation_bound:false,assembled:false,published:false,snapshot_source:semio_plugin_ownership::store_lifecycle::ArtifactMediaSnapshotSource::empty(),snapshot:ManuallyDrop::new(None),snapshot_lease:ManuallyDrop::new(None),snapshot_retention:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),producer:ManuallyDrop::new(None),source_identity,port_identity,key,lease:None,retirement:None,completion:None,completion_close:None,credit:None,credit_close:None,chunks:None,chunks_close:None}));
+            cx.consume_retained(progress)?;cx.consume_fuel(1);return Ok(false)
         }
-        let original=self.media_export_preparation.as_mut().unwrap();if original.retirement.is_some(){return Ok(false)}
+        let original=self.media_export_preparation.as_deref_mut().unwrap();if original.retirement.is_some(){return Ok(false)}
         if original.child_root_identity!=children.root.as_ref().map(|root|std::sync::Arc::as_ptr(root)as usize){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media preparation requires its exact original child-content root").into())}
 
         if original.published{
@@ -143,9 +154,11 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             let Some(receiver)=receiver.as_deref_mut()else{return Ok(true)};
             if original.handle.is_some(){let _=ArtifactMediaExportHandle::receive_original(&mut original.handle,receiver,cx)?;return Ok(false)}
             if receiver.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"published media lost its retained receiving handle").into())}
-            let bytes=size_of::<MediaExportPreparation<A>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+            let release=MediaExportPreparation::<A>::carrier_release_demand();
+            let progress=RetainedCloneProgress{copied_items:1,copied_bytes:release.copy_bytes,released_bytes:release.release_bytes,..Default::default()};
+            if grant.maximum_depth==0||!progress.fits(grant){return Ok(false)}
             self.media_export_preparation.take();
-            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(true)
+            cx.consume_retained(progress)?;cx.consume_fuel(1);return Ok(true)
         }
         if stores.store.content_revision_now()!=original.canonical_revision||stores.store.generation_now()!=original.key.generation.0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media preparation requires its exact captured canonical revision and generation").into())}
         let(id,registration)=tools.app_registrations().find(|(id,_)|id.strip_prefix("export-media:")==Some(port)).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media output lacks its published application factory"))?;
@@ -182,13 +195,21 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         if !original.body_ready{original.body_ready=A::build_media_export_job(&mut original.request,&mut original.body,&mut original.construction,cx)?;if original.body_ready&&(original.request.is_some()||original.body.is_none()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media factory readiness must retain one actual body and consume its exact request").into())}return Ok(false)}
         if original.producer.is_none(){let _=ArtifactReservedToolJob::admit_boxed_original(&mut original.body,&mut original.producer,cx)?;return Ok(false)}
         if !original.operation_bound{original.operation_bound=original.producer.as_mut().unwrap().bind_original_operation(&mut original.operation,cx)?;return Ok(false)}
-        let bytes=size_of::<semio_plugin_document_media::media_export::ActiveMediaExport>()+size_of::<ArtifactSnapshotCloseRetention>()+size_of::<bool>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        let capacity=ActiveMediaExport::worker_admission_release_demand().release_bytes;
+        let progress=RetainedCloneProgress{
+            copied_items:1,
+            copied_bytes:size_of::<ActiveMediaExport>()+size_of::<ArtifactSnapshotCloseRetention>()+size_of::<bool>()+capacity,
+            retained_capacity_bytes:capacity,
+            ..Default::default()
+        };
+        if grant.maximum_depth==0||!progress.fits(grant){return Ok(false)}
         let operation=original.request.as_ref().map_or_else(||semio_framework_job::Operation::new(original.key.operation_id,original.key.base_revision,original.key.generation,original.key.operation_id.0^original.key.base_revision.0),|request|request.operation);let operation_id=operation.operation;
         let retention=original.snapshot_retention.take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media publication lost its actual snapshot supplier"))?;
         self.snapshot_retirements.insert_admitted(operation_id.0,retention);
-        let active=ActiveMediaExport{parts:ManuallyDrop::new(original.parts.take()),parts_retirement:ManuallyDrop::new(None),cancellation_retirement:None,operation,contract,session:None,session_rejected:Some(semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(original.producer.take().unwrap(),(cx.operation(),cx.generation()))),outcome_pending:false,resume_pending:false,lease:ManuallyDrop::new(original.lease.take()),checkpoint_available:false,applied_progress:0,download_pending:false,close_stage:ActiveMediaExportCloseStage::Live};
+        let worker=Box::write(Box::new_uninit(),semio_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(original.producer.take().unwrap(),(cx.operation(),cx.generation())));
+        let active=ActiveMediaExport{parts:ManuallyDrop::new(original.parts.take()),parts_retirement:ManuallyDrop::new(None),cancellation_retirement:None,operation,contract,session:None,session_rejected:Some(worker),outcome_pending:false,resume_pending:false,lease:ManuallyDrop::new(original.lease.take()),checkpoint_available:false,applied_progress:0,download_pending:false,close_stage:ActiveMediaExportCloseStage::Live};
         self.media_exports.insert_admitted(operation_id.0,active);self.current_media_export=Some(operation_id.0);original.published=true;
-        cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
+        cx.consume_retained(progress)?;cx.consume_fuel(1);
         Ok(false)
     }
 
@@ -223,14 +244,22 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         }
         if let Some(rejected) = active.session_rejected.as_mut() {
             if rejected.terminal_is_empty() {
-                if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<size_of_val(rejected){let poll=active.running_poll();self.media_exports.insert_admitted(operation_id,active);return Ok(poll);}
-                let cancelled=cx.is_cancelled()||active.lease.as_ref().expect("live media lease").token.is_cancelled_now();drop(active.session_rejected.take());
+                let retired=active.release_worker_admission(cx,grant);
+                if retired.is_err() || active.session_rejected.is_some() || active.session.is_some() {
+                    let poll=active.running_poll();
+                    self.media_exports.insert_admitted(operation_id,active);
+                    retired?;
+                    return Ok(poll);
+                }
+                let cancelled=cx.is_cancelled()||active.lease.as_ref().expect("live media lease").token.is_cancelled_now();
                 return self.finish_media_poll(operation_id, active, if cancelled{ArtifactMediaExportPoll::Cancelled}else{ArtifactMediaExportPoll::Failed("media export mounted session capacity is exhausted".into())});
             }
             if rejected.admission_pending()&&!cx.is_cancelled()&&!active.lease.as_ref().expect("live media lease").token.is_cancelled_now(){
-                let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_media_export_submission",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
-                let mut session=None;let result=rejected.admit_pending(config,&mut session,cx);
-                match result{Ok(true)=>{active.session=session;drop(active.session_rejected.take());},Ok(false)=>{},Err(failure)=>{self.media_exports.insert_admitted(operation_id,active);return Err(failure.into());}}
+                let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_media_export_submission",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:active.contract.max_work_units_per_step,step_budget_us:u64::from(active.contract.max_step_micros)};
+                if let Err(failure)=rejected.admit_pending(config,&mut active.session,cx){
+                    self.media_exports.insert_admitted(operation_id,active);
+                    return Err(failure.into());
+                }
             }else{
                 let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
                 let result=semio_plugin_document_media::original_rejection_lifecycle(cx,demand,grant,"media rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))});
@@ -256,14 +285,26 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         if !receipt.is_some_and(|(issued, progress)| progress.fits(issued) && progress.fits(grant)) {
             return self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed("media export mounted worker receipt is absent or exceeded its issued grant".into()));
         }
-        enum SeenMediaOutcome { Progress, Checkpoint { applied_progress: u64, state_len: usize }, Complete { output_len: usize }, Cancelled, Fault(String), Lost }
-        let seen = match active.session.as_ref().map(semio_framework_job_worker::MountedWorkerJobSession::checked_out_outcome) {
-            Some(Ok(Some(semio_framework_job::JobOutcomeView::Yield { .. } | semio_framework_job::JobOutcomeView::PreviewReady { .. }))) => SeenMediaOutcome::Progress,
-            Some(Ok(Some(semio_framework_job::JobOutcomeView::CheckpointReady { state, applied_progress, .. }))) => SeenMediaOutcome::Checkpoint { applied_progress, state_len: state.len() },
-            Some(Ok(Some(semio_framework_job::JobOutcomeView::Complete { output, .. }))) => SeenMediaOutcome::Complete { output_len: output.map_or(0, semio_framework_job_payload::RetainedJobPayload::len) },
-            Some(Ok(Some(semio_framework_job::JobOutcomeView::Cancelled { .. }))) => SeenMediaOutcome::Cancelled,
-            Some(Ok(Some(semio_framework_job::JobOutcomeView::Fault { detail, .. }))) => SeenMediaOutcome::Fault(detail.single_page().and_then(|bytes| std::str::from_utf8(bytes).ok()).filter(|detail| !detail.is_empty()).unwrap_or("media export job faulted").to_string()),
-            _ => SeenMediaOutcome::Lost,
+        enum SeenMediaOutcome { Progress, Checkpoint { applied_progress: u64, state_len: usize }, Complete { output_len: usize }, Cancelled, Fault(String) }
+        let session = active.session.as_ref().expect("the checked-out receipt belongs to this media session");
+        let seen = match session.checked_out_outcome() {
+            Ok(Some(semio_framework_job::JobOutcomeView::Yield { .. } | semio_framework_job::JobOutcomeView::PreviewReady { .. })) => SeenMediaOutcome::Progress,
+            Ok(Some(semio_framework_job::JobOutcomeView::CheckpointReady { state, applied_progress, .. })) => SeenMediaOutcome::Checkpoint { applied_progress, state_len: state.len() },
+            Ok(Some(semio_framework_job::JobOutcomeView::Complete { output, .. })) => SeenMediaOutcome::Complete { output_len: output.map_or(0, semio_framework_job_payload::RetainedJobPayload::len) },
+            Ok(Some(semio_framework_job::JobOutcomeView::Cancelled { .. })) => SeenMediaOutcome::Cancelled,
+            Ok(Some(semio_framework_job::JobOutcomeView::Fault { detail, .. })) => SeenMediaOutcome::Fault(detail.single_page().and_then(|bytes| std::str::from_utf8(bytes).ok()).filter(|detail| !detail.is_empty()).unwrap_or("media export job faulted").to_string()),
+            Ok(None) => match session.checked_out_continuation() {
+                None => SeenMediaOutcome::Progress,
+                Some(continuation) => SeenMediaOutcome::Fault(
+                    continuation.callback.or(continuation.qualification).or(continuation.receipt_qualification)
+                        .map_or_else(|| "media export worker returned a continuation without a cause".into(), |failure| match &failure.primary {
+                            semio_framework_job::OriginalTurnPrimary::Fault(fault) => format!("{:?}: {}", fault.code, fault.message),
+                            semio_framework_job::OriginalTurnPrimary::Value(error) => format!("{:?}: {}", error.kind, error.message),
+                            other => format!("{other:?}"),
+                        }),
+                ),
+            },
+            Err(failure) => SeenMediaOutcome::Fault(failure.message.into_owned()),
         };
         match seen {
             SeenMediaOutcome::Progress => {
@@ -296,7 +337,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
                     return self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed("media export completed against a stale revision or generation".into()));
                 }
                 if active.retained_result.is_none(){match active.completion.take(){Ok(Some(result))=>active.retained_result=Some(result),Ok(None)=>return self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed("media export completed without producer output".into())),Err(error)=>return self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed(error.message))};}
-                let result=match active.retained_result.as_ref(){Some(Ok(result))=>result,Some(Err(error))=>{let Some(Err(source))=active.retained_result.take()else{unreachable!("observed exact original media domain result")};self.media_closures.insert_admitted(operation_id,active);return Err(source.into());},None=>return self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed("media export lost its original completion result".into()))};
+                let result=match active.retained_result.as_ref(){Some(Ok(result))=>result,Some(Err(MediaError::NotImplemented)) if active.port==semio_plugin_decl_app::NATURAL_FILE_PORT&&active.output_chunks.bytes()==0&&active.output_credit.bytes()==0=>return self.finish_media_poll(operation_id,active,ArtifactMediaExportPoll::Failed("media-export.reference-required".into())),Some(Err(error))=>{let Some(Err(source))=active.retained_result.take()else{unreachable!("observed exact original media domain result")};self.media_closures.insert_admitted(operation_id,active);return Err(source.into());},None=>return self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed("media export lost its original completion result".into()))};
                 let output_bytes = match active.output_credit.validate_terminal() {
                     Ok(output_bytes) => output_bytes,
                     Err(error) => return self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed(error.message)),
@@ -313,7 +354,6 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             }
             SeenMediaOutcome::Cancelled => self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Cancelled),
             SeenMediaOutcome::Fault(detail) => self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed(detail)),
-            SeenMediaOutcome::Lost => self.finish_media_poll(operation_id, active, ArtifactMediaExportPoll::Failed("media export original outcome changed during publication".into())),
         }
     }
 

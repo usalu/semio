@@ -8,10 +8,10 @@ use crate::editor::note::window::NoteCompositeWindowTransient;
 /// `📐️cad`'s `CadDispatchCtx`). Row-id-prefixed `InteractionTarget` ids (the SAME canonical ids the
 /// document panel tree renders, see its own doc comment) are converted back to raw block ids here,
 /// once, so every downstream handler keeps working with the raw ids it always did.
-pub struct NoteDispatchCtx {
+pub struct NoteDispatchCtx<'view> {
     pub selected_block_ids: Vec<String>,
     pub id_owner: crate::schema::NoteIdOwner,
-    pub view_state: Option<semio_plugin::ViewModel>,
+    pub view_state: Option<&'view semio_plugin::ViewModel>,
     pub window_transient: NoteCompositeWindowTransient,
     pub window_transient_owner: Option<semio_plugin::WindowTransientSnapshot>,
 }

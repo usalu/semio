@@ -1,0 +1,17 @@
+{
+  "viewport": [560,360],
+  "bounds": [-0.0014373044546,-0.0014373044546,0.0014373044546,0.0014373044546],
+  "radius": 2,
+  "value": 31,
+  "cases": [
+    {"id":"click","points":[[280,180]],"start":[16,16]},
+    {"id":"turn","points":[[280,180],[300,180],[300,150],[280,150]],"start":[16,16],"stroke":[[16,16],[18,16],[18,19],[16,19]]},
+    {"id":"duplicate-cell","points":[[280,180],[281,181],[280,179],[280,180]],"start":[16,16]},
+    {"id":"capture-lost","points":[[280,180],[300,180]],"beforeRelease":"captureLost"},
+    {"id":"blur","points":[[280,180],[300,180]],"beforeRelease":"blur"},
+    {"id":"change-brush","points":[[280,180],[300,180]],"beforeRelease":"brushChange"},
+    {"id":"change-source","points":[[280,180],[300,180]],"beforeRelease":"sourceChange"},
+    {"id":"leave-terrain","points":[[280,180],[470,180],[300,180]]},
+    {"id":"overflow","points":[[130,180],[430,180],[130,180],[430,180]]}
+  ]
+}

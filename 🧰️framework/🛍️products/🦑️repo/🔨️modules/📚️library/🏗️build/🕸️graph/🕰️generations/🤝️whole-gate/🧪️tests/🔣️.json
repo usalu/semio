@@ -1,0 +1,21 @@
+{
+  "contestedClaim": {
+    "first": "first",
+    "next": "next",
+    "maximumReservations": 1,
+    "waitingWithReservation": 0,
+    "finalReservations": 0
+  },
+  "unfundedPlanner": {
+    "initial": "g1-a",
+    "eligible": "g1-b",
+    "owners": 4,
+    "orderedEvents": [
+      "wait",
+      "book",
+      "build",
+      "release",
+      "restore"
+    ]
+  }
+}

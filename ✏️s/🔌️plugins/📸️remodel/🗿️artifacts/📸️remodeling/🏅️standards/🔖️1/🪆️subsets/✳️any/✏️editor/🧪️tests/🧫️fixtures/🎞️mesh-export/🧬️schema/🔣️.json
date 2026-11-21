@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["port", "tool", "schema", "mimeType", "filename", "positions", "indices", "emptyMesh", "cancelAfterTurns", "denied"],
+  "required": ["port", "tool", "schema", "mimeType", "filename", "positions", "indices", "uvs", "emptyMesh", "cancelAfterTurns", "denied"],
   "properties": {
     "port": { "const": "mesh:out" },
     "tool": { "const": "export-media:mesh:out" },
@@ -11,6 +11,7 @@
     "filename": { "const": "remodeling-mesh.glb" },
     "positions": { "type": "array", "minItems": 9, "maxItems": 9, "items": { "type": "number" } },
     "indices": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "integer", "minimum": 0, "maximum": 2 } },
+    "uvs": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "type": "number" } },
     "emptyMesh": { "const": "refused" },
     "cancelAfterTurns": { "const": [0, 1, 2] },
     "denied": { "const": ["items", "copyBytes", "depth"] }

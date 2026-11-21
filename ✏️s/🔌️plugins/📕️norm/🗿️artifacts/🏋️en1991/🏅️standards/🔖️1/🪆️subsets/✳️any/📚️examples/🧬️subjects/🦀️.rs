@@ -80,17 +80,17 @@ pub fn de_bridge_noncompliant() -> En1991Snapshot {
 }
 
 /// 🔥 Parametric fire compartment on the occupancy-table basis — assumptions cover Annex A / E.
-pub fn de_fire_parametric_compliant() -> En1991Snapshot {
+pub fn en_fire_parametric_compliant() -> En1991Snapshot {
     fire_compartment(semio_s_artifact_norm_en1991_model::FireLoadBasis::OccupancyTable, 420.0e6)
 }
 
 /// 🧯 Parametric fire compartment on the user-specified basis: q_f,k = 600 MJ/m² is the entered value, the occupancy row is not consulted.
-pub fn de_fire_user_specified_compliant() -> En1991Snapshot {
+pub fn en_fire_user_specified_compliant() -> En1991Snapshot {
     fire_compartment(semio_s_artifact_norm_en1991_model::FireLoadBasis::UserSpecified, 600.0e6)
 }
 
 fn fire_compartment(basis: semio_s_artifact_norm_en1991_model::FireLoadBasis, qf_k: f64) -> En1991Snapshot {
-    let mut s = En1991Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    let mut s = En1991Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::En);
     s.structure_kind = StructureKind::Building;
     s.fire_mode = FireMode::Parametric;
     s.fire_curve = semio_s_artifact_norm_en1991_model::part_1_2::FireCurve::Parametric;
@@ -118,8 +118,8 @@ fn fire_compartment(basis: semio_s_artifact_norm_en1991_model::FireLoadBasis, qf
 }
 
 /// ⚠️ Parametric fire with under-assumed θ_g / q_f,d.
-pub fn de_fire_parametric_noncompliant() -> En1991Snapshot {
-    let mut s = de_fire_parametric_compliant();
+pub fn en_fire_parametric_noncompliant() -> En1991Snapshot {
+    let mut s = en_fire_parametric_compliant();
     s.assumed_gas_temperature = 400.0;
     s.assumed_h_net = 1_000.0;
     s.assumed_qf_d = 50.0e6;

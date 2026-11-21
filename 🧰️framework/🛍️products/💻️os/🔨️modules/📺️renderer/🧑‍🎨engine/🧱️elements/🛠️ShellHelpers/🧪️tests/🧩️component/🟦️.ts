@@ -133,11 +133,20 @@ describe("segmented download assembled sink", () => {
   it("assembles every chunk in order and delivers the payload once", async () => {
     const payload = "x".repeat(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes) + "TAIL";
     const pages = [bytes(payload.slice(0, SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes)), bytes(payload.slice(SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes)), undefined];
-    const delivered: { filename: string; mimeType: string; text: string }[] = [];
+    const delivered: { filename: string; mimeType: string; blob: Blob }[] = [];
     await drainSegmentedMediaExport("nakagin-capsule-tower.json", "application/json", "7", "semio-segmented-handle-v1:identity", async () => pages.shift(), {
-      sinkFactory: segmentedDownloadSinkFactory((filename, mimeType, assembled) => delivered.push({ filename, mimeType, text: new TextDecoder().decode(assembled) })),
+      sinkFactory: segmentedDownloadSinkFactory((filename, blob) => delivered.push({ filename, mimeType: blob.type, blob })),
     });
-    expect(delivered).toEqual([{ filename: "nakagin-capsule-tower.json", mimeType: "application/json", text: payload }]);
+    expect(delivered).toEqual([{ filename: "nakagin-capsule-tower.json", mimeType: "application/json", blob: expect.any(Blob) }]);
+    const { blob } = delivered[0]!;
+    expect(blob.type).toBe("application/json");
+    const text = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(blob);
+    });
+    expect(text).toBe(payload);
   });
 
   /** 🧯️ A drain that aborts delivers NOTHING: a truncated payload must never reach the user as a file

@@ -136,3 +136,43 @@ Poses: only `load-carrier` moves (`dx`). I checked 2D at `beam-over-opening` (`r
 - The tie wires are straight; real ties have a drip kink or a drip disc in the cavity (below the feature).
 - Brick tone is uniform, and the joints are flush, which is real for flush pointing (Fugenglattstrich) but only visible as seams.
 - The 2 mm thin-bed joints of the calcium silicate leaf are shown only as seams between solids (below the feature). The notched blocks at the parapet are single L-extrusions, so they show no false seam.
+
+## Round 5 handcraft
+
+Script: `r5-masonry-wall-with-lintel-volumes.py` (body and thermal of every scale from the round 3 kit, unchanged; structure with the facing leaf; writes the volumes source). Zoom tool: `r5-c02-zoom.ts`. Backup before: `🗑️generated/r5-masonry-wall-with-lintel/volumes-before.json`.
+
+### Reference vs model (1:50, measured in the source)
+
+| item | reference | model | deviation |
+|---|---|---|---|
+| facing brick | NF 240 x 115 x 71 mm, stretcher bond, half bond 125 mm | 240 x 115 x 71, pitch 250, offset 125 | 0 % |
+| course | 1/12 m = 83.3 mm (bed 12.3, head 10) | 83.33 / 12.33 / 10 | 0 % |
+| opening | octametric 1.26 m (n x 0.125 + 0.01) x 1.333 m | 1.26 x 1.333 | 0 % |
+| cavity | at most 150 mm (DIN EN 1996-2/NA) | 140 mm full fill | inside |
+| inner leaf | KS 175 mm, course 0.25 m (248 + 2 thin bed) | 175, 0.25 | 0 % |
+| ties | at least 7 per m2, 4 mm stainless | 8 per m2, 4 mm | inside |
+| lintel bearing | at least 0.1 m | 0.245 m | inside |
+| sill | projection 40 to 50 mm, weathering at least 5 degrees, drip | 50 mm, 5 degrees, 10 x 10 drip | inside |
+
+### Grades before (opened: body, structure, thermal `--cut` at all four scales, 2D at all four scales, poses floor-line-load, beam-over-opening, shaded-morning, clip beam-sweep t 6 s, zoomed views of the opening from outside, the left sill end and the left lintel bearing)
+
+- Body: 1:50 A (bond, weep joints, lintel bed, sill with nose, drip and raised ends, plaster returns), 1:100 A, 1:200 A, 1:500 A.
+- Thermal: A at every scale (moiré on the cut panels was the sheet tool, fixed, see below).
+- Structure: 1:50 B, 1:100 B, 1:200 B, 1:500 B: only the calcium silicate leaf was a wall member; the facing leaf was missing, so the outer lintel and the sill sat on their beds on a ghost and the load path of the facing (its own weight plus the outer lintel) ended in the air.
+
+### Changes
+
+- Structure, every scale: `member-wall-facing` (bone `wall`), the 115 mm facing leaf with the opening, lintel and sill zones cut out, standing on the three foundation pads (which already spanned both leaves). It carries its own weight and the outer lintel to the foundation (a self-supporting, non-load-bearing leaf in the sense of DIN EN 1996-2/NA); the ties hold it against wind. 1:500: the lintel member now spans the whole wall thickness (both lintels merged, as the drawn lintel band), so the facing has its lintel too. Counts 47 / 42 / 14 / 13.
+- Structure decisions rewritten at every scale (en, de). Body, thermal, 2D and all roots unchanged.
+
+### Grades after
+
+Body A / A / A / A; thermal A / A / A / A; structure A / A / A / A. Structure sheets after: two leaves with the cavity between them in front, back and top views, both lintels on their own leaves, the sill on the facing; the beam-sweep pad travels along the wall head.
+
+### Checks
+
+`volumes-check.ts --product` PASS (296 s); `r3-validate.ts --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0; a first run threw inside the validator's flood module while another agent was editing it, the rerun was clean); spliced with `volumes-insert.py`.
+
+### Remaining (with reason)
+
+- Unchanged from round 3: damp-proof courses (1 to 2 mm) below the feature; uniform brick tone; straight ties without drip kink; no window (not part of the asset).

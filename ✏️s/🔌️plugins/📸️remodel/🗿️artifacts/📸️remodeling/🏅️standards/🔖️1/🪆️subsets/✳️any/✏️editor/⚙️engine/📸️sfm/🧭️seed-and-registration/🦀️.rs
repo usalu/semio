@@ -13,7 +13,7 @@ impl IncrementalSfm {
             return Err(SfmError::InsufficientMatches);
         }
         let corr: Vec<([f64; 2], [f64; 2])> = matches.iter().map(|m| (self.obs_px(frame_a, m.a), self.obs_px(frame_b, m.b))).collect();
-        let two_view = estimate_init_pair_essential(&corr, &self.intrinsics, frame_b as u64).ok_or(SfmError::DegenerateGeometry)?;
+        let two_view = estimate_init_pair_essential(&corr, &self.intrinsics[frame_a], &self.intrinsics[frame_b], frame_b as u64).ok_or(SfmError::DegenerateGeometry)?;
         let TwoViewModel::Fundamental(e) = two_view.model else {
             return Err(SfmError::DegenerateGeometry);
         };
@@ -21,8 +21,8 @@ impl IncrementalSfm {
             .inliers
             .iter()
             .map(|&idx| {
-                let ra = self.intrinsics.unproject_ray(corr[idx].0);
-                let rb = self.intrinsics.unproject_ray(corr[idx].1);
+                let ra = self.intrinsics[frame_a].unproject_ray(corr[idx].0);
+                let rb = self.intrinsics[frame_b].unproject_ray(corr[idx].1);
                 ([ra[0], ra[1]], [rb[0], rb[1]])
             })
             .collect();
@@ -58,7 +58,7 @@ impl IncrementalSfm {
         }
         if world_pts.len() >= P3pSolver::SAMPLE_SIZE {
             let cfg = RansacConfig { threshold: self.cfg.ransac_threshold_px, confidence: 0.999, max_iters: 2000, seed: frame as u64, scoring: RansacScoring::Msac };
-            if let Some((pose, _inliers)) = pnp_ransac(&self.intrinsics, &world_pts, &obs, &cfg) {
+            if let Some((pose, _inliers)) = pnp_ransac(&self.intrinsics[frame], &world_pts, &obs, &cfg) {
                 self.cameras.push((frame, pose));
                 return Ok(());
             }
@@ -107,7 +107,7 @@ impl IncrementalSfm {
             let step = corr.len().div_ceil(MAX_TWO_VIEW_CORRS);
             corr = corr.into_iter().enumerate().filter_map(|(i, c)| (i % step == 0).then_some(c)).collect();
         }
-        let two_view = estimate_init_pair_essential(&corr, &self.intrinsics, frame as u64).ok_or(SfmError::DegenerateGeometry)?;
+        let two_view = estimate_init_pair_essential(&corr, &self.intrinsics[ref_f], &self.intrinsics[frame], frame as u64).ok_or(SfmError::DegenerateGeometry)?;
         let TwoViewModel::Fundamental(e) = two_view.model else {
             return Err(SfmError::DegenerateGeometry);
         };
@@ -115,8 +115,8 @@ impl IncrementalSfm {
             .inliers
             .iter()
             .map(|&idx| {
-                let ra = self.intrinsics.unproject_ray(corr[idx].0);
-                let rb = self.intrinsics.unproject_ray(corr[idx].1);
+                let ra = self.intrinsics[ref_f].unproject_ray(corr[idx].0);
+                let rb = self.intrinsics[frame].unproject_ray(corr[idx].1);
                 ([ra[0], ra[1]], [rb[0], rb[1]])
             })
             .collect();
@@ -131,8 +131,8 @@ impl IncrementalSfm {
             let Some(&point) = self.points.get(&track_id) else { continue };
             let Some(px_r) = self.track_obs_in(track, ref_f) else { continue };
             let Some(px_f) = self.track_obs_in(track, frame) else { continue };
-            let ray_r = self.intrinsics.unproject_ray(px_r);
-            let ray_f = self.intrinsics.unproject_ray(px_f);
+            let ray_r = self.intrinsics[ref_f].unproject_ray(px_r);
+            let ray_f = self.intrinsics[frame].unproject_ray(px_f);
             let Some(p_unit) = triangulate_normalized_pair(&r_arr, relative.t, [ray_r[0], ray_r[1]], [ray_f[0], ray_f[1]]) else {
                 continue;
             };
@@ -173,7 +173,7 @@ impl IncrementalSfm {
             let max_reproj = self.cfg.ransac_threshold_px * 3.0;
             let mut ok = 0usize;
             for &(point, px) in &shared {
-                let Some(pred) = reproject(&self.intrinsics, &pose, point) else { continue };
+                let Some(pred) = reproject(&self.intrinsics[frame], &pose, point) else { continue };
                 let err = ((pred[0] - px[0]).powi(2) + (pred[1] - px[1]).powi(2)).sqrt();
                 if err <= max_reproj {
                     ok += 1;
@@ -202,7 +202,7 @@ impl IncrementalSfm {
         let mut observations = Vec::with_capacity(track.len().min(MAX_INTERACTIVE_TRACK_OBSERVATIONS));
         for &(frame, keypoint) in track.iter().take(MAX_INTERACTIVE_TRACK_OBSERVATIONS) {
             let Some(pose) = self.pose_of(frame) else { continue };
-            poses.push((pose, self.intrinsics));
+            poses.push((pose, self.intrinsics[frame]));
             observations.push(self.obs_px(frame, keypoint));
         }
         if poses.len() < 2 {
@@ -233,19 +233,21 @@ impl IncrementalSfm {
                 if preparation.correspondences.len() < 8 {
                     return Err(SfmError::InsufficientMatches);
                 }
-                let threshold = self.cfg.ransac_threshold_px / self.intrinsics.fx.max(self.intrinsics.fy).max(1.0);
+                let a = &self.intrinsics[preparation.frame_a];
+                let b = &self.intrinsics[preparation.frame_b];
+                let threshold = self.cfg.ransac_threshold_px / a.fx.max(a.fy).max(b.fx).max(b.fy).max(1.0);
                 let seed = (preparation.frame_a as u64) << 32 ^ preparation.frame_b as u64 ^ (preparation.attempts as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
-                let candidate = estimate_essential_five_point_bounded(&preparation.correspondences, &self.intrinsics, &self.intrinsics, threshold, seed, SEED_HYPOTHESES_PER_CALL, 0);
+                let candidate = estimate_essential_five_point_bounded(&preparation.correspondences, a, b, threshold, seed, SEED_HYPOTHESES_PER_CALL, 0);
                 let linear = || {
-                    let linear = estimate_essential_with_threshold(&preparation.correspondences, &self.intrinsics, &self.intrinsics, threshold, MAX_INTERACTIVE_SEED_HYPOTHESES).ok_or(SfmError::DegenerateGeometry)?;
+                    let linear = estimate_essential_with_threshold(&preparation.correspondences, a, b, threshold, MAX_INTERACTIVE_SEED_HYPOTHESES).ok_or(SfmError::DegenerateGeometry)?;
                     let TwoViewModel::Fundamental(essential) = linear.model else { return Err(SfmError::DegenerateGeometry) };
                     let rays: Vec<([f64; 2], [f64; 2])> = linear
                         .inliers
                         .iter()
                         .take(MAX_INTERACTIVE_SEED_CORRESPONDENCES)
                         .map(|&index| {
-                            let left = self.intrinsics.unproject_ray(preparation.correspondences[index].0);
-                            let right = self.intrinsics.unproject_ray(preparation.correspondences[index].1);
+                            let left = self.intrinsics[preparation.frame_a].unproject_ray(preparation.correspondences[index].0);
+                            let right = self.intrinsics[preparation.frame_b].unproject_ray(preparation.correspondences[index].1);
                             ([left[0], left[1]], [right[0], right[1]])
                         })
                         .collect();
@@ -265,7 +267,7 @@ impl IncrementalSfm {
                 if let Some(candidate) = candidate {
                     if candidate.score < preparation.best_raw_score {
                         preparation.best_raw_score = candidate.score;
-                        let polished = polish_essential(candidate, &preparation.correspondences, &self.intrinsics, threshold);
+                        let polished = polish_essential(candidate, &preparation.correspondences, a, b, threshold);
                         if preparation.best.as_ref().is_none_or(|best| polished.inliers.len() > best.inliers.len()) {
                             preparation.best = Some(polished);
                         }
@@ -285,8 +287,8 @@ impl IncrementalSfm {
                     .iter()
                     .take(MAX_INTERACTIVE_SEED_CORRESPONDENCES)
                     .map(|&index| {
-                        let left = self.intrinsics.unproject_ray(preparation.correspondences[index].0);
-                        let right = self.intrinsics.unproject_ray(preparation.correspondences[index].1);
+                        let left = self.intrinsics[preparation.frame_a].unproject_ray(preparation.correspondences[index].0);
+                        let right = self.intrinsics[preparation.frame_b].unproject_ray(preparation.correspondences[index].1);
                         ([left[0], left[1]], [right[0], right[1]])
                     })
                     .collect();
@@ -339,7 +341,7 @@ impl IncrementalSfm {
                 } else {
                     let config = RansacConfig { threshold: self.cfg.ransac_threshold_px * INTERACTIVE_REGISTRATION_THRESHOLD_FACTOR, confidence: 0.5, max_iters: 1, seed: preparation.frame as u64 ^ preparation.attempts.wrapping_mul(0x9E37_79B9), scoring: RansacScoring::Msac };
                     preparation.attempts += 1;
-                    if let Some((pose, inliers)) = pnp_ransac_bounded(&self.intrinsics, &preparation.world_points, &preparation.observations, &config, INTERACTIVE_POSE_REFINE_ITERATIONS) {
+                    if let Some((pose, inliers)) = pnp_ransac_bounded(&self.intrinsics[preparation.frame], &preparation.world_points, &preparation.observations, &config, INTERACTIVE_POSE_REFINE_ITERATIONS) {
                         if preparation.best.as_ref().is_none_or(|(_, best)| inliers.len() > *best) {
                             preparation.best = Some((pose, inliers.len()));
                         }
@@ -418,13 +420,14 @@ impl IncrementalSfm {
             }
             RegistrationPhase::TwoViewSolve => {
                 const FIVE_POINT_THRESHOLD: f64 = 0.005;
-                let intrinsics = self.intrinsics;
+                let a = &self.intrinsics[fallback.reference];
+                let b = &self.intrinsics[preparation.frame];
                 let frame = preparation.frame;
                 let fallback = preparation.two_view.as_mut().expect("two-view fallback");
                 let seed = (frame as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ fallback.attempts as u64;
                 let candidates = [
-                    estimate_essential_five_point_bounded(&fallback.correspondences, &intrinsics, &intrinsics, FIVE_POINT_THRESHOLD, seed, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL, 0),
-                    estimate_essential_with_limit(&fallback.correspondences, &intrinsics, &intrinsics, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL),
+                    estimate_essential_five_point_bounded(&fallback.correspondences, a, b, FIVE_POINT_THRESHOLD, seed, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL, 0),
+                    estimate_essential_with_limit(&fallback.correspondences, a, b, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL),
                 ];
                 for candidate in candidates.into_iter().flatten() {
                     if fallback.best.as_ref().is_none_or(|best| candidate.score < best.score) {
@@ -436,7 +439,7 @@ impl IncrementalSfm {
                     return Ok(false);
                 }
                 if let Some(best) = fallback.best.take() {
-                    fallback.best = Some(polish_essential(best, &fallback.correspondences, &intrinsics, FIVE_POINT_THRESHOLD));
+                    fallback.best = Some(polish_essential(best, &fallback.correspondences, a, b, FIVE_POINT_THRESHOLD));
                 }
                 let relative = fallback.best.as_ref().and_then(|estimate| {
                     let TwoViewModel::Fundamental(essential) = estimate.model else { return None };
@@ -445,8 +448,8 @@ impl IncrementalSfm {
                         .iter()
                         .take(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES)
                         .map(|&index| {
-                            let left = intrinsics.unproject_ray(fallback.correspondences[index].0);
-                            let right = intrinsics.unproject_ray(fallback.correspondences[index].1);
+                            let left = a.unproject_ray(fallback.correspondences[index].0);
+                            let right = b.unproject_ray(fallback.correspondences[index].1);
                             ([left[0], left[1]], [right[0], right[1]])
                         })
                         .collect();
@@ -477,8 +480,8 @@ impl IncrementalSfm {
                     let Some(&point) = self.points.get(&track_id) else { continue };
                     let track = &self.tracks.tracks[track_id];
                     let (Some(pixel_reference), Some(pixel_frame)) = (self.track_obs_in(track, reference), self.track_obs_in(track, frame)) else { continue };
-                    let ray_reference = self.intrinsics.unproject_ray(pixel_reference);
-                    let ray_frame = self.intrinsics.unproject_ray(pixel_frame);
+                    let ray_reference = self.intrinsics[reference].unproject_ray(pixel_reference);
+                    let ray_frame = self.intrinsics[frame].unproject_ray(pixel_frame);
                     let rotation = mat3d_to_array(&relative.r.0);
                     let Some(unit_point) = triangulate_normalized_pair(&rotation, relative.t, [ray_reference[0], ray_reference[1]], [ray_frame[0], ray_frame[1]]) else { continue };
                     let Some(reference_pose) = self.pose_of(reference) else { continue };
@@ -525,7 +528,7 @@ impl IncrementalSfm {
                 };
                 let pose = CameraPose(Se3 { r: relative.r, t: scale3(relative.t, scale) }.semio_compose_rs(&reference_pose.0));
                 let maximum_reprojection = self.cfg.ransac_threshold_px * 3.0;
-                let consistent = fallback.shared.iter().any(|&(point, pixel)| reproject(&self.intrinsics, &pose, point).is_some_and(|predicted| ((predicted[0] - pixel[0]).powi(2) + (predicted[1] - pixel[1]).powi(2)).sqrt() <= maximum_reprojection));
+                let consistent = fallback.shared.iter().any(|&(point, pixel)| reproject(&self.intrinsics[frame], &pose, point).is_some_and(|predicted| ((predicted[0] - pixel[0]).powi(2) + (predicted[1] - pixel[1]).powi(2)).sqrt() <= maximum_reprojection));
                 if !fallback.shared.is_empty() && !consistent {
                     preparation.phase = RegistrationPhase::Failed;
                     return Ok(false);

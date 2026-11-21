@@ -1,0 +1,11 @@
+# Retained Vertex Distance to Surfaces and Faces
+
+The registered `brep.measure.distance` operation now accepts a live vertex and an original surface or face in either input order. Bare planes, cylinders, spheres, cones, and ring tori use the existing exact analytic projection. That projection measures to the analytic surface itself. Complete certified circular and elliptical faces use their finite planar interiors and closed outer edges.
+
+Finite planar faces with supported line trims reuse the original funded Closest Point cursor. It projects the vertex to the source plane, walks the authored coedges, classifies the foot against the outer loop and holes, and keeps the nearest point on the original edge intervals. A foot on an edge stays on the face. A foot in a hole or outside the outer ring uses the closest finite edge point or endpoint. Distance takes the world-space norm from the winning point to the live vertex captured on admission. Both operand orders share the same cursor and original shape revision. Each turn quotes the rows it reads and can be paused or cancelled through the existing job.
+
+Mixed curved and line trim rings, nonplanar trimmed faces, and unsupported freeform surfaces return the existing closest-point refusals. Existing retained curve and certified box distance paths remain available.
+
+The 17-case neutral corpus covers concave and skew planar faces with two holes, edge and vertex cases, five analytic surface types, and finite circular and elliptical faces. The independent Three.js witness triangulates the authored polygon with its holes and uses closest points on triangles. It separately computes the analytic fixture projections using Three.js geometry and passed all 17 cases. The focused native witness compiled the production Curve, Representation and Intersect crates and the actual planar and analytic projection owners. All 152 combined native cases passed. The registered tests check both operand orders, one-item grants, cancellation, no work under an insufficient grant, and refusal for mixed trim loops. Full registered execution remains pending under the disk gate.
+
+Rust source parsing and whitespace checks passed. Engine measured 3,982 active lines. The original-query test closure measured 29 files and 246,541 active bytes, and the original-curve test closure measured 14 files and 87,418 active bytes.

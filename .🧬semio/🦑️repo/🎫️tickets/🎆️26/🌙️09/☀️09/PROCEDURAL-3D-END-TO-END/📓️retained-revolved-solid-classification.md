@@ -1,0 +1,12 @@
+# Exact Classification of Retained Revolved Solids
+
+The registered Classify operator now accepts the existing certificates for conical frusta, partial ring tori and annular solids. It measures signed Euclidean distance against finite supports. Frusta use the meridional flank segment and both disk caps. Torus sectors use their analytic flank and the two finite meridian disks. Annular sectors use their radial walls, both axial rings and both rectangular angular caps. Full annular certificates use finite cylinders and planar disks or nested annuli to cover through-bores, blind floors, closed cavities and one or two shoulders, including eccentric inner axes.
+
+At a bore mouth, a point strictly within the opening remains outside even on the axial cap plane. At a joined shoulder, points in the narrower common disk remain inside across the internal plane. The signed distance measures the physical boundary in each case. The result follows the existing 1e-6 contact tolerance. The retained lookup and Classify job keep their existing ownership and scheduling. Construction and its publication paths do not need a new geometry recipe.
+
+## Verification
+
+- The language-neutral fixture covers nine constructions and 46 point probes. Manifold independently authored the solids and supplied triangle meshes and ray crossings. Three measured independent nearest triangle distances. All 55 assertions passed, including the mesh approximation checks against the exact witnesses.
+- The compact Rust test compiled the actual distance helpers and the new provenance dispatch arms. Exact signed distances passed for all probes in both identity and tilted, translated frames, including contact-tolerance checks. The combined compact suite passed 20 tests. Existing orthogonal, spherical, cylindrical, annular-revolve and torus-sector source suites all passed after following the shared dispatcher.
+- The registered `original-brep-queries` test constructs the Frustum through Split, the sectors through Revolve and the eccentric bores and shoulders through Cut and Fuse. It calls the ordinary retained Classify operator and verifies that all reads leave the live handle index unchanged. Linked execution remains pending under shared build capacity.
+- Canonical source admission measured 3,940 active lines in Engine, 3,989 in Native Registry, 3,768 in Solid Transaction and 3,838 in Representation. The registered query closure measured 200,125 active bytes. Rust AST parsing, scoped whitespace and path-length checks passed.

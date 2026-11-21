@@ -1,0 +1,12 @@
+{
+  "failure": "original scalar cause",
+  "workRefusal": "original scalar work refusal",
+  "spentFuel": 11,
+  "unpaid": { "producerRetained": true, "diagnosticRetained": false },
+  "paid": { "producerRetained": false, "diagnosticRetained": true },
+  "retired": { "producerRetained": false, "diagnosticRetained": false },
+  "ordinaryRefusals": [
+    { "kind": "WorkLimit", "message": "unframed original input", "producerRetained": false },
+    { "kind": "Canceled", "message": "unframed original input", "producerRetained": false }
+  ]
+}

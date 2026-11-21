@@ -27,24 +27,42 @@ pub fn encode_pdf(snapshot: &PdfSnapshot) -> PResult<Vec<u8>> {
 /// snapshot carries beyond the writer's own bookkeeping is written back.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_pdf_with(snapshot: &PdfSnapshot, options: &EncodeOptions) -> PResult<Vec<u8>> {
-    let version = if snapshot.declared_version.is_empty() { "1.7".to_string() } else { snapshot.declared_version.clone() };
-    if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
-        return Err(PdfEngineError::Malformed("declared PDF version is not numeric".into()));
-    }
-    let version = if options.write.xref_stream && version.as_str() < "1.5" { "1.5".to_string() } else { version };
-    let mut write = options.write.clone();
-    if write.encryption.is_none() {
-        write.encryption = snapshot.encryption.clone();
-    }
-    let retained = dict_get(&snapshot.trailer, "Root").and_then(PdfObject::as_ref).is_some() && !snapshot.objects.is_empty() && options.lower == LowerOptions::default();
-    let (objects, trailer) = if retained {
-        reconcile(snapshot)?
-    } else {
-        let LoweredDocument { objects, root, info, .. } = lower_document(snapshot, 1, options.lower.clone())?;
-        (Cow::Owned(objects), DocumentTrailer { root, info, id: snapshot.document_id.clone(), extra: trailer_extra(&snapshot.trailer) })
-    };
-    Ok(serialize_document(&version, &objects, &trailer, &write))
+    let graph = PreparedPdfGraph::from_snapshot(snapshot, options)?;
+    Ok(serialize_document(&graph.version, &graph.objects, &graph.trailer, &graph.write))
 }
+
+pub struct PreparedPdfGraph<'a> {
+    pub version: String,
+    pub objects: Cow<'a, [PdfIndirectObject]>,
+    pub trailer: DocumentTrailer,
+    pub write: WriteOptions,
+}
+
+impl<'a> PreparedPdfGraph<'a> {
+    pub fn from_snapshot(snapshot: &'a PdfSnapshot, options: &EncodeOptions) -> PResult<Self> {
+        let version = if snapshot.declared_version.is_empty() { "1.7".to_string() } else { snapshot.declared_version.clone() };
+        if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
+            return Err(PdfEngineError::Malformed("declared PDF version is not numeric".into()));
+        }
+        let version = if options.write.xref_stream && version.as_str() < "1.5" { "1.5".to_string() } else { version };
+        let mut write = options.write.clone();
+        if write.encryption.is_none() {
+            write.encryption = snapshot.encryption.clone();
+        }
+        let retained = dict_get(&snapshot.trailer, "Root").and_then(PdfObject::as_ref).is_some() && !snapshot.objects.is_empty() && options.lower == LowerOptions::default();
+        let (mut objects, trailer) = if retained {
+            reconcile(snapshot)?
+        } else {
+            let LoweredDocument { objects, root, info, .. } = lower_document(snapshot, 1, options.lower.clone())?;
+            (Cow::Owned(objects), DocumentTrailer { root, info, id: snapshot.document_id.clone(), extra: trailer_extra(&snapshot.trailer) })
+        };
+        let private = |object: &PdfIndirectObject| crate::standards::v1_7::subsets::base::io::foreign_artifacts::png_source::referenced_source_object(&object.value, &snapshot.images);
+        if let Cow::Owned(objects) = &mut objects { objects.retain(|object| !private(object)); }
+        else if objects.iter().any(private) { return Err(PdfEngineError::Malformed("retained PDF PNG source requires lowered image resources".into())); }
+        Ok(Self { version, objects, trailer, write })
+    }
+}
+
 /// 🧾 Trailer entries beyond the identity the writer states itself (`/Root`, `/Info`, `/ID`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn trailer_extra(trailer: &[PdfDictEntry]) -> Vec<PdfDictEntry> {

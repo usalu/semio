@@ -144,7 +144,7 @@ pub fn build_mesh_stats(engine: &semio_ui_wgpu_engine::Ui, requested: Option<&st
 /// 🎥️ A board's published camera — `Board2dScene.camera_json` read as `{x, y, zoom}`.
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
-struct DumpBoard2dCamera {
+pub struct DumpBoard2dCamera {
     pub x: f64,
     pub y: f64,
     zoom: f64,
@@ -158,7 +158,7 @@ struct DumpBoard2dCamera {
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DumpBoard2dSurface {
+pub struct DumpBoard2dSurface {
     pub surface_id: String,
     pub window_id: String,
     pub rect: [f32; 4],
@@ -175,7 +175,7 @@ struct DumpBoard2dSurface {
 /// 🎲️ The wire shape `dumpBoard2d()` answers.
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 #[derive(Debug, PartialEq, serde::Serialize)]
-struct DumpBoard2d {
+pub struct DumpBoard2d {
     pub surfaces: Vec<DumpBoard2dSurface>,
 }
 

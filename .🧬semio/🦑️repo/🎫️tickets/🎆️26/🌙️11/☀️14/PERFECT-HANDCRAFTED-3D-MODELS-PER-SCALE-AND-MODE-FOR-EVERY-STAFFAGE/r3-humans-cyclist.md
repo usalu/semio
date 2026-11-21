@@ -69,3 +69,53 @@ Final check line (`volumes-check.ts humans/cyclist --product`): `FAIL: 2 measure
 ## 7. Files
 
 `r3-cyclist-ref.py` (reference numbers), `-fk.py`, `-root.py` (rig, anchors, IK of poses and clips), `-kit.py` (solid writers), `-body50.py`, `-coarse.py` (1:100, 1:200, 1:500), `-volumes.py` (thermal, structure, decisions), `-build.py`, `-project2d.ts`, `-draw2d.py`, `-texts.py`, `-sheet.ts` (sheet of the candidate), `-slender.ts`, `-suit.ts` (print suitability), `-apply.ts`, `-ship.sh` (rebuild, validate, write catalog, splice, validate). Appended: `author-requests.md`.
+
+## Round 5 handcraft (2026-11-21)
+
+State: catalog written (`r5-cyclist-roots.ts --write`) and volumes spliced. `r3-validate.ts humans/cyclist --catalog-only`: `VALID ... schema 0, validateAsset 0` (before this round the catalog was INVALID: four `PRINT range-end-feature` findings). `volumes-check.ts humans/cyclist --product`: every rule ok except `areaDeviation:helmet` 0.87 (1:50) and 0.43 (1:100), the known C18/C27 body-share finding (`author-requests.md`, `area-review.md`). Silhouette IoU elevation / front / plan: 1:50 0.968 / 0.960 / 0.939, 1:100 0.962 / 0.959 / 0.935, 1:200 0.964 / 0.966 / 0.948, 1:500 0.927 / 0.894 / 0.912.
+
+Scripts: `r5-cyclist-remodel.py` (jacket rows of every scale through `r4-g11-kit.edit`, thermal shells re-drawn), `r5-cyclist-roots.ts` (2D print root fixes), `r5-cyclist-ranges.ts` (print violations at preset and range ends); `r5-human-measure.ts`.
+
+### Reference and model (rig of round 3, bone lengths; woman, H = 1.72 m)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| shank (knee to ankle) | 0.246 H = 0.423 | 0.4231 | 0.0 % |
+| thigh (hip to knee) | 0.235 to 0.245 H = 0.404 to 0.421 (hip 0.52 to 0.53 H) | 0.4042 | in range |
+| upper arm | 0.186 H = 0.320 | 0.3188 | -0.4 % |
+| forearm | 0.146 H = 0.251 | 0.2512 | 0.0 % |
+| hand | 0.108 H = 0.186 | 0.1835 | -1.3 % |
+| head chin to vertex | H / 7.5 = 0.229 | 0.226 (lips at 1.543 to 1.561, vertex 1.754 in the rest frame) | -1.3 % |
+| ankle in the shoe | 0.039 H + 25 mm = 0.092 | 0.092 | 0.0 % |
+| shoe length EU 39 | 0.27 | 0.274 | +1.5 % |
+| wheel 40-622 outer radius, wheelbase | 0.34, 1.05 | 0.34, 1.05 | 0 % |
+
+The rig's rest pose is not upright (trunk and neck carry the riding lean), so stature and breadths are taken from the bone chain, not from the rest-pose mesh (`r5-human-measure.ts` output kept only as a cross-check).
+
+### Grades before -> after
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B+ -> A- | A- -> A- | A- -> A- |
+| 1:100 | B+ -> A- | A- -> A- | A- -> A- |
+| 1:200 | B+ -> B+ | B+ -> B+ | B+ -> B+ |
+| 1:500 | B -> B | B+ -> B+ | B+ -> B+ |
+
+Defects seen before: the softshell jacket pinched into the lumbar hollow (back 0.048 m behind the trunk axis at L3) and flared out over the seat, so the hem read as a peplum from the side and the three-quarter views; the catalog failed the print range ends (1:100 front `carrier` slivers at 1:75, 1:500 tyre bands at 1:1000).
+
+### Changes
+
+- Jacket at every scale: back 0.062 to 0.074 m behind the axis between L5 and T12 (a loose softshell bridges the lordosis); hem rows kept because they cover the seated buttocks (0.117 m behind the hip joint); nested thermal shells re-drawn.
+- 2D roots: 1:50 front carrier stays 10.5 mm and platform 12 mm (real tubes 10 mm); 1:100 front drops the `carrier` detail block that only showed 14.5 mm slivers between the rack bars behind the rider; 1:500 front and plan tyre bands drawn 72 mm (the scale's feature) instead of 40 mm.
+
+### Looked at (opened)
+
+1:50 body sheet, right side large, torso crop, three-quarter from the front right, pose `dismounted-astride`, thermal cut, structure; 1:200 and 1:500 body sheets; `r3-2d` 1:500. Rendered, not opened: clip `pedal-cycle` at 0.4 s.
+
+### Open points
+
+- `helmet` area 0.07 m² declared against 0.13 m² modelled (C27, reviewer's decision pending).
+- 1:500 bicycle is drawn and modelled as true-diameter slender tubes (the 2D draws strokes); the fenders stand 16 mm off the tyres as separate rings, below the 75 mm feature.
+- No cloth folds; face plain; 1:200 / 1:500 not remodelled beyond the jacket.
+
+The rear carrier is now a welded tubular rack at all four scales. The pair of 330 mm deck rails is 136 mm apart at 735 mm above the ground. The steelwork provides at least 23 mm vertical clearance over the rear mudguard envelope. The legs reach the dropout mounting points, two stays connect to the frame, and each crossbar connects both rails. The models retain five, five, four and three crossbars at the four scales. Their thermal and load-bearing references follow the actual stock. The saddle and rear carrier remain distinct in the 1:350 drawing. All twelve outlines, the four scale, thermal and structural checks and the full paper document passed. Independent GLB readback measured 6,025,592 bytes across twelve scenes.

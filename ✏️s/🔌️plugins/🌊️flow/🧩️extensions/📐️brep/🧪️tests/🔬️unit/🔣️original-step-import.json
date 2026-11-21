@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "file": "../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧫️fixtures/📐️booleans-non-manifold-corner-touch-boxes/🅰️operand-a.step",
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "size": [
+        10.0,
+        10.0,
+        10.0
+      ],
+      "volume": 1000.0,
+      "area": 600.0,
+      "vertices": 8,
+      "edges": 12,
+      "faces": 6
+    },
+    {
+      "file": "../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧫️fixtures/📐️booleans-non-manifold-corner-touch-boxes/🅱️operand-b.step",
+      "origin": [
+        10.0,
+        10.0,
+        10.0
+      ],
+      "size": [
+        10.0,
+        10.0,
+        10.0
+      ],
+      "volume": 1000.0,
+      "area": 600.0,
+      "vertices": 8,
+      "edges": 12,
+      "faces": 6
+    }
+  ]
+}

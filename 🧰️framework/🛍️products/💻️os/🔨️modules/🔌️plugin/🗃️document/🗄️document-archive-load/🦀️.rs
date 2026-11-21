@@ -44,14 +44,16 @@ pub enum ActiveDocumentArchiveLoadPhase {
     Terminal,
 }
 
+const DOCUMENT_ARCHIVE_HISTORY_BYTES: u32 = protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u32;
+
 /// 📜️ The History read policy of a whole-document archive: one parent SPR within the archive ceiling, one member envelope page directory per record.
 const DOCUMENT_ARCHIVE_HISTORY_LIMITS: store::os_store::HistoryReadLimits = store::os_store::HistoryReadLimits {
-    file_bytes: protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u32,
-    frame_body_bytes: (store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES * 256) as u32,
+    file_bytes: DOCUMENT_ARCHIVE_HISTORY_BYTES,
+    frame_body_bytes: DOCUMENT_ARCHIVE_HISTORY_BYTES,
     records: (protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS * 8) as u32,
     maximum_fields: 128,
     maximum_text_bytes: 1_048_576,
-    maximum_binary_bytes: 1_048_576,
+    maximum_binary_bytes: DOCUMENT_ARCHIVE_HISTORY_BYTES,
     maximum_json_bytes: 1_048_576,
     maximum_json_allocation_bytes: 8_388_608,
     maximum_json_items: 65_536,
@@ -526,4 +528,24 @@ mod original_archive_admission_laws{
   }
  }
 
+
+ #[test]
+ fn archive_history_extent_matches_the_portable_transport_bound(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("admission.json")).unwrap();
+    let law=&fixture["history"];
+    let limit=law["archiveLimit"].as_u64().unwrap() as u32;
+    let limits=DOCUMENT_ARCHIVE_HISTORY_LIMITS;
+    assert_eq!(limits.file_bytes,limit);
+    assert_eq!(limits.frame_body_bytes,limit);
+    assert_eq!(limits.maximum_binary_bytes,limit);
+    assert_eq!(DOCUMENT_ARCHIVE_HISTORY_ALLOCATION_BYTES,law["historyAllocationLimit"].as_u64().unwrap() as usize);
+    assert_eq!(semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES,law["transportLimit"].as_u64().unwrap() as usize);
+    for row in law["cases"].as_array().unwrap(){
+        let bytes=|key:&str|row[key].as_u64().unwrap() as u32;
+        let accepted=bytes("archiveBytes")<=limits.file_bytes
+            &&bytes("frameBodyBytes")<=limits.frame_body_bytes
+            &&bytes("binaryBytes")<=limits.maximum_binary_bytes;
+        assert_eq!(accepted,row["accepted"].as_bool().unwrap(),"{}",row["name"]);
+    }
+ }
 }

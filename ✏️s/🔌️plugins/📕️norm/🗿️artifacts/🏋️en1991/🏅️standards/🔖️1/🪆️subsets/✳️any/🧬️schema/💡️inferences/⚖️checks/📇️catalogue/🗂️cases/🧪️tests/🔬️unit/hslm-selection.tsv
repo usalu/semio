@@ -1,0 +1,8 @@
+span_m	structure	a_all	a_one_eligible	b
+6.999	simple	0	0	1
+7	simple	1	1	0
+15	simple	1	1	0
+5	continuous	1	0	0
+8	continuous	1	0	0
+6	complex	1	0	0
+14	complex_floor	1	0	1

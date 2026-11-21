@@ -1,11 +1,10 @@
 //! 📚️ DIN EN 16798 play app panel — examples plus SFP, draught, and Annex B reference tables.
 
 use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use semio_s_artifact_norm_din16798_checks::annex_params::AnnexParams;
 use semio_s_artifact_norm_din16798_checks::part_1::{co2_above_outdoor_ppm, draught_limit_percent, outdoor_air_per_area_l_s_m2, outdoor_air_per_person_l_s};
 use semio_s_artifact_norm_din16798_checks::part_3::sfp_bound;
 use semio_s_artifact_norm_din16798_checks::{ComfortCategory, PollutionClass};
-use semio_s_plugin_norm_compliance::ClauseId;
+use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::PanelGroup;
 use semio_plugin::PanelTabDefinition;
@@ -26,7 +25,7 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Tables
 /// 📚️ Normative reference tables beside examples (Table 10 SFP, ISO 7730 DR, Annex B.6/B.7, annex CO₂).
 pub fn reference_tables() -> Vec<CatalogueTable> {
-    vec![sfp_class_bounds(), draught_rate_limits(), table_b6_co2(), table_b6_b7_outdoor_air(), annex_co2_absolute()]
+    vec![sfp_class_bounds(), draught_rate_limits(), co2_design_deltas(), table_b6_b7_outdoor_air()]
 }
 
 fn sfp_class_bounds() -> CatalogueTable {
@@ -51,40 +50,38 @@ fn sfp_class_bounds() -> CatalogueTable {
 fn draught_rate_limits() -> CatalogueTable {
     CatalogueTable {
         id: "draught-rate-limits",
-        title_en: "Draught rate DR limits",
-        title_de: "Zugluftraten-Grenzwerte DR",
-        clause: ClauseId::new("EN 16798-1", "§7.2 / ISO 7730", "DR"),
+        title_en: "Draught rate design limits",
+        title_de: "Grenzwerte für die Zugluftrate",
+        clause: ClauseId::new("EN 16798-1", "Tables B.3 / NA.4", "DR"),
         columns: vec![
             CatalogueColumn { id: "cat", label_en: "Category", label_de: "Kategorie", unit: None },
-            CatalogueColumn { id: "dr", label_en: "DR max", label_de: "DR max", unit: Some("%") },
+            CatalogueColumn { id: "en", label_en: "EN B.3", label_de: "EN B.3", unit: Some("%") },
+            CatalogueColumn { id: "de", label_en: "DE NA.4", label_de: "DE NA.4", unit: Some("%") },
         ],
-        rows: [ComfortCategory::I, ComfortCategory::II, ComfortCategory::III, ComfortCategory::IV]
+        rows: [("I", ComfortCategory::I), ("II", ComfortCategory::II), ("III", ComfortCategory::III)]
             .into_iter()
-            .map(|cat| {
-                let label = match cat {
-                    ComfortCategory::I => "I",
-                    ComfortCategory::II => "II",
-                    ComfortCategory::III => "III",
-                    ComfortCategory::IV => "IV",
-                };
-                CatalogueRow {
-                    id: label.into(),
-                    cells: vec![CatalogueCell::text(label), CatalogueCell::number(draught_limit_percent(cat), 0)],
-                }
-            })
+            .filter_map(|(label, cat)| Some(CatalogueRow {
+                id: label.into(),
+                cells: vec![
+                    CatalogueCell::text(label),
+                    CatalogueCell::number(draught_limit_percent(AnnexChoice::En, cat)?, 0),
+                    CatalogueCell::number(draught_limit_percent(AnnexChoice::De, cat)?, 0),
+                ],
+            }))
             .collect(),
     }
 }
 
-fn table_b6_co2() -> CatalogueTable {
+fn co2_design_deltas() -> CatalogueTable {
     CatalogueTable {
-        id: "table-b6-co2",
-        title_en: "CO₂ above outdoor (Table B.6)",
-        title_de: "CO₂ über Außenluft (Tabelle B.6)",
-        clause: ClauseId::new("EN 16798-1", "Annex B", "B.6"),
+        id: "co2-design-deltas",
+        title_en: "CO₂ above outdoor (Tables B.9 / NA.9)",
+        title_de: "CO₂ über Außenluft (Tabellen B.9 / NA.9)",
+        clause: ClauseId::new("EN 16798-1", "Tables B.9 / NA.9", "CO₂"),
         columns: vec![
             CatalogueColumn { id: "cat", label_en: "Category", label_de: "Kategorie", unit: None },
-            CatalogueColumn { id: "delta", label_en: "ΔCO₂", label_de: "ΔCO₂", unit: Some("ppm") },
+            CatalogueColumn { id: "en", label_en: "EN B.9", label_de: "EN B.9", unit: Some("ppm") },
+            CatalogueColumn { id: "de", label_en: "DE NA.9", label_de: "DE NA.9", unit: Some("ppm") },
         ],
         rows: [ComfortCategory::I, ComfortCategory::II, ComfortCategory::III, ComfortCategory::IV]
             .into_iter()
@@ -97,7 +94,7 @@ fn table_b6_co2() -> CatalogueTable {
                 };
                 CatalogueRow {
                     id: label.into(),
-                    cells: vec![CatalogueCell::text(label), CatalogueCell::number(co2_above_outdoor_ppm(cat), 0)],
+                    cells: vec![CatalogueCell::text(label), CatalogueCell::number(co2_above_outdoor_ppm(AnnexChoice::En, cat), 0), CatalogueCell::number(co2_above_outdoor_ppm(AnnexChoice::De, cat), 0)],
                 }
             })
             .collect(),
@@ -137,47 +134,6 @@ fn table_b6_b7_outdoor_air() -> CatalogueTable {
     }
 }
 
-fn annex_co2_absolute() -> CatalogueTable {
-    let en = AnnexParams::en();
-    let de = AnnexParams::de();
-    CatalogueTable {
-        id: "annex-co2-absolute",
-        title_en: "Absolute CO₂ limits (national annex)",
-        title_de: "Absolute CO₂-Grenzwerte (nationaler Anhang)",
-        clause: ClauseId::new("EN 16798-1", "Annex", "CO2"),
-        columns: vec![
-            CatalogueColumn { id: "usage", label_en: "Usage", label_de: "Nutzung", unit: None },
-            CatalogueColumn { id: "en", label_en: "EN", label_de: "EN", unit: Some("ppm") },
-            CatalogueColumn { id: "de", label_en: "DE NA", label_de: "DE NA", unit: Some("ppm") },
-        ],
-        rows: vec![
-            CatalogueRow {
-                id: "residential".into(),
-                cells: vec![
-                    CatalogueCell::text("Residential / Wohnen"),
-                    CatalogueCell::number(en.co2_absolute_residential_ppm, 0),
-                    CatalogueCell::number(de.co2_absolute_residential_ppm, 0),
-                ],
-            },
-            CatalogueRow {
-                id: "classroom".into(),
-                cells: vec![
-                    CatalogueCell::text("Classroom / Unterricht"),
-                    CatalogueCell::number(en.co2_absolute_classroom_ppm, 0),
-                    CatalogueCell::number(de.co2_absolute_classroom_ppm, 0),
-                ],
-            },
-            CatalogueRow {
-                id: "other".into(),
-                cells: vec![
-                    CatalogueCell::text("Other / Sonstige"),
-                    CatalogueCell::number(en.co2_absolute_other_ppm, 0),
-                    CatalogueCell::number(de.co2_absolute_other_ppm, 0),
-                ],
-            },
-        ],
-    }
-}
 //#endregion 🔖️Tables
 
 //#region 🔖️Render

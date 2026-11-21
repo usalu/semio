@@ -234,3 +234,60 @@ Rendered but not opened: the 1:100 and 1:200 thermal and structure sheets, 1:500
 - **Frame mass** (28 kg each, 89.5 kg total) follows from the modelled solid steel armrest and 40 mm flanges. That is at the heavy end of real cast benches, which run 60-95 kg. A hollow armrest would save about 4 kg per frame.
 - **References.** The catalogue figures came from search excerpts, because the manufacturer pages refused automated fetches (403).
 - **Not run.** The repo test suites were not run, only the checks of the brief.
+
+## Round 5 handcraft (2026-11-21)
+
+Sheets rendered with `sh r5-sheets.sh furniture/park-bench before "occupied-one occupied-two" "occupant-sit-down 1"`. Opened:
+- body 1:50 (six views with rig);
+- a montage of body 1:100 / 1:200 / 1:500 and structure 1:50;
+- a montage of the 1:50 thermal cut, structure and thermal cut at 1:100 / 1:200 / 1:500, and the clip `occupant-sit-down` at 1 s;
+- body 1:500 on its own;
+- the 1:50 body from below (turn 30, tilt -22).
+
+The bones do not move in the poses, so `occupied-one` and `occupied-two` equal the default. Measurements: `r5-furniture-extent.ts furniture/park-bench 50`.
+
+### Reference against model (1:50)
+
+| Quantity | Reference | Model | Deviation |
+| --- | --- | --- | --- |
+| Length x depth x height | 1800 x 600 x 850 mm (asset; CIS / Kronemag 1800) | 1800 x 603 x 847 | +0.5 % / -0.4 % |
+| Seat height, front edge | 450 mm (BS 8300, Inclusive Mobility 440-490) | 449 | -0.2 % |
+| Seat depth | 430 mm (380-450 with backrest) | 431 | +0.2 % |
+| Armrest top | about 200 mm above the seat; 630 mm | 630 (180 above the seat front) | 0 % |
+| Back top | at least 300 mm above the seat; 850 mm | 847 (397 above the seat) | -0.4 % |
+| Seat slat / back slat | 100 x 45 / 80 x 35 mm | 4 slats in 0.431 m depth, 81 mm thick band; back 82 x 44 mm on the rake | 0 % |
+| Frame inset from the slat ends | 120 mm | 115-125 mm (frame web 0.115-0.125) | 0 % |
+
+### Grades
+
+| Scale | Body | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | A | A | A- |
+| 1:100 | A | A | A- |
+| 1:200 | A | A | A- |
+| 1:500 | A- (a solid back slab on the frame, minimal by decision) | A | A- |
+
+The catalog was INVALID before this round. The print check that came in after round 3 found five `range-end-gap` findings: seat slat gaps of 0.005 mm at 1:20, and the 32 mm back gap of 0.007 mm at 1:75 (bands 1:50 and 1:100). It is VALID after.
+
+What I saw:
+- 1:50 is a credible cast-iron-and-oak bench. It has an I-section casting with flange rims, the raked seat rail, the back post, a kicked rear leg, pads, eased slats, bolt heads, and an armrest clear of the slats.
+- 1:100 and 1:200 simplify cleanly. At 1:500 the 75 mm frame bands read as a bench with armrests.
+- The thermal regions are tidy. The structure is casting and slats (members by D3), with bolt joints, green pads and masses.
+
+Root fix (catalog, outside `volumes`, by `r5-furniture-range.py park-bench 50=30-55 100=55-150 --apply`, a textual edit of the two `validRange` blocks only):
+
+| Band | Old range | New range |
+| --- | --- | --- |
+| 1:50 | 1:20-1:75 | 1:30-1:55 |
+| 1:100 | 1:75-1:150 | 1:55-1:150 |
+
+Why these ends:
+- Below 1:30 the 10 mm seat drainage gaps open to an unprintable sliver under the 0.35 mm pen.
+- The back gap measures 0.088 mm at 1:65, 0.057 at 1:70, 0.007 at 1:75, 0.050 at 1:80 and 0.006 at 1:90.
+- So the 1:50/1:100 boundary sits at 1:55, the last scale where the gap is printable (more than 0.15 mm).
+
+Checks: `r3-validate.ts furniture/park-bench --volumes` gives `VALID ... schema 0, validateAsset 0, checkVolumes 0`. `volumes-check.ts --product` gives `PASS` with 41 lines ok.
+
+Open points:
+- Inside the 1:100 band, between about 1:60 and 1:90, the 32 mm back gap is still a sub-0.15 mm sliver. Only the range ends are checked. A clean fix is to redraw the 1:100 back as two bands, or to widen the gap; both change the modelled construction.
+- The seat moment remains cantilevered by the tree solver (round 3, section 7).

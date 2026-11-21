@@ -150,20 +150,14 @@ pub fn reserve_insert_step(&mut self,grant:semio_framework_value::retained_clone
         loop{let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_insert_capacity_byte_demand(copy).expect("original arena cold capacity authority"),maximum_release_bytes:self.next_insert_release_byte_demand().expect("original arena cold release authority"),maximum_depth:self.next_insert_depth_demand().expect("original arena cold depth authority")};if grant.maximum_capacity_bytes==0{return self.insert_reserved(value,grant).unwrap_or_else(|(error,_)|panic!("original arena cold transfer: {error}")).0;}self.reserve_insert_step(grant).unwrap_or_else(|(error,_)|panic!("original arena cold reserve: {error}"));}
     }
     pub fn get(&self, id: Id) -> Option<&T> {
-        let slot = self.slots.get(id.raw_index() as usize)?;
-        if slot.generation == id.raw_generation() {
-            slot.value.as_ref()
-        } else {
-            None
-        }
+        self.slots.get(id.raw_index() as usize)
+            .filter(|slot| slot.generation == id.raw_generation())
+            .and_then(|slot| slot.value.as_ref())
     }
     pub fn get_mut(&mut self, id: Id) -> Option<&mut T> {
-        let slot = self.slots.get_mut(id.raw_index() as usize)?;
-        if slot.generation == id.raw_generation() {
-            slot.value.as_mut()
-        } else {
-            None
-        }
+        self.slots.get_mut(id.raw_index() as usize)
+            .filter(|slot| slot.generation == id.raw_generation())
+            .and_then(|slot| slot.value.as_mut())
     }
     pub fn contains(&self, id: Id) -> bool {
         self.get(id).is_some()

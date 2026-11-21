@@ -35,14 +35,14 @@ pub(super) fn parse_preview_camera_json(args: &semio_framework_value::DslValue) 
 /// `dag_host_snapshot_to_workflow` projection the node-graph window paints — so an interaction target and a
 /// graph pick can never drift apart.
 pub fn generation3d_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
-    let dag = semio_os_flow::FlowHost::project_dag_snapshot(host_snapshot, &semio_os_flow::flow_neuron_kind_info_map());
-    let (graph_nodes, _) = semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&dag);
+    let dag = semio_os_flow::FlowHost::project_registered_dag_snapshot(host_snapshot);
+    let (graph_nodes, _) = semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&dag, &host_snapshot.synapses);
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 
-pub(super) fn generation3d_addressed_preview_eval(window: &semio_plugin::WindowTransientSnapshot, eval_text: Option<String>) -> Result<semio_plugin::WindowTransientMutation, Fault> {
+pub(super) fn generation3d_addressed_preview_eval(window: &semio_plugin::WindowTransientSnapshot, eval_text: Option<String>, generation_id: Option<String>) -> Result<semio_plugin::WindowTransientMutation, Fault> {
     if window.window_kind_id() == generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW {
-        generate_preview::transient::addressed(window, eval_text)
+        generate_preview::transient::addressed(window, eval_text, generation_id)
     } else {
         edit_preview::transient::addressed(window, eval_text)
     }
@@ -60,6 +60,7 @@ pub fn generation3d_render_body(
     marks: &PreviewInteractionMarks,
     session: &FlowEvalSession,
     run: Option<&semio_plugin::ToolRunView>,
+    hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
     let labels = generation3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().unwrap_or("move");
@@ -69,7 +70,7 @@ pub fn generation3d_render_body(
     }
     let node = match body_key {
         flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, session, marks, labels),
-        edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, run, active_utility, marks, labels, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De),
+        edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW => edit_preview::render(document, config, preview_eval_text, session, run, active_utility, marks, labels, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De, hover_groups),
         generations::GENERATION_3D_PLAY_BODY_GENERATIONS => generations::render(
             &document.generation,
             selected_generation_id,
@@ -77,8 +78,8 @@ pub fn generation3d_render_body(
             view_state.terminology,
             &semio_plugin::TreeWindows::for_body(view_state, generations::GENERATION_3D_PLAY_BODY_GENERATIONS),
         ),
-        form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.host_snapshot, &document.generation, selected_generation_id, labels),
-        generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.host_snapshot, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session, run, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De),
+        form::GENERATION_3D_PLAY_BODY_GENERATE_FORM => form::render(&document.host_snapshot, &document.generation, selected_generation_id, view_state, labels),
+        generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW => generate_preview::render(&document.host_snapshot, &document.generation, selected_generation_id, preview_eval_text, config, labels, active_utility, marks, session, run, &semio_plugin::TreeWindows::for_body(view_state, body_key), view_state.locale == semio_ui_locale::Locale::De, hover_groups),
         artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT => artifact_panel::render(document, config, session, labels, &semio_plugin::TreeWindows::for_body(view_state, artifact_panel::GENERATION_3D_PLAY_BODY_ARTIFACT)),
         catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_plugin::TreeWindows::for_body(view_state, catalogue_panel::GENERATION_3D_PLAY_BODY_CATALOGUE)),
         inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION => {
@@ -88,7 +89,10 @@ pub fn generation3d_render_body(
             let exported = match export_widget { Some(widget) => export_meshes_from_session(document, config, session, Some(widget.as_str())), None => Ok(Vec::new()) };
             let export_ready = exported.is_ok();
             let meshes = exported.unwrap_or_default();
-            inspection_panel::render(&document.host_snapshot, &marks.graph_selection_ids(), labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION), view_state.locale, view_state.terminology, &meshes, evaluation, session.status_json(), export_ready,marks.source_revision.as_deref())
+            let component_output = marks.hovered.is_empty().then(|| marks.hovered_graph_target()).flatten()
+                .and_then(|target| Some(format!("{}@{}", target.node_id?, target.port_id?)));
+            let hover = semio_s_artifact_procedural_3d_preview_eval::PreviewChannelHover::new(&document.host_snapshot, &marks.hovered, component_output);
+            inspection_panel::render(&document.host_snapshot, &selected, labels, &semio_plugin::TreeWindows::for_body(view_state, inspection_panel::GENERATION_3D_PLAY_BODY_INSPECTION), view_state.locale, view_state.terminology, &meshes, evaluation, session.status_json(), export_ready,marks.source_revision.as_deref(), &|port| hover.matches(port))
         },
         _ => semio_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
     }?;

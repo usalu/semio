@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "unrelatedRoots": 50,
+  "cases": [
+    {
+      "id": "fallback",
+      "request": "source/dependency.ts",
+      "outputs": [
+        "made/file.ts"
+      ],
+      "expected": ""
+    },
+    {
+      "id": "exact",
+      "request": "made/file.ts",
+      "outputs": [
+        "made/file.ts"
+      ],
+      "expected": "made/file.ts"
+    },
+    {
+      "id": "descendant",
+      "request": "made/directory/nested.ts",
+      "outputs": [
+        "made/directory"
+      ],
+      "expected": "made/directory"
+    },
+    {
+      "id": "sibling-prefix",
+      "request": "made/directory-other/nested.ts",
+      "outputs": [
+        "made/directory"
+      ],
+      "expected": ""
+    },
+    {
+      "id": "extensionless",
+      "request": "made/file",
+      "outputs": [
+        "made/file.ts"
+      ],
+      "expected": "made/file.ts"
+    },
+    {
+      "id": "extensionless-physical-competitor",
+      "request": "made/file",
+      "outputs": [
+        "made/file.ts"
+      ],
+      "physical": [
+        "made/file.d.ts"
+      ],
+      "expected": "ambiguous-resolution"
+    },
+    {
+      "id": "extensionless-declared-competitor",
+      "request": "made/file",
+      "outputs": [
+        "made/file.ts",
+        "made/file.d.ts"
+      ],
+      "expected": "ambiguous-resolution"
+    },
+    {
+      "id": "extensionless-multiple",
+      "request": "made/file",
+      "outputs": [
+        "made/file.ts",
+        "made/file.tsx"
+      ],
+      "expected": "ambiguous-producer"
+    },
+    {
+      "id": "ancestor-and-inferred",
+      "request": "made/file",
+      "outputs": [
+        "made",
+        "made/file.ts"
+      ],
+      "expected": "ambiguous-producer"
+    },
+    {
+      "id": "overlapping",
+      "request": "made/directory/nested.ts",
+      "outputs": [
+        "made",
+        "made/directory"
+      ],
+      "expected": "ambiguous-producer"
+    },
+    {
+      "id": "duplicate",
+      "request": "made/file.ts",
+      "outputs": [
+        "made/file.ts",
+        "made/file.ts"
+      ],
+      "expected": "ambiguous-producer"
+    },
+    {
+      "id": "outside",
+      "request": "../source.ts",
+      "outputs": [
+        "made/file.ts"
+      ],
+      "expected": "unsafe-path"
+    },
+    {
+      "id": "reserved-character-under-root",
+      "request": "made/directory/input?.ts",
+      "outputs": [
+        "made/directory"
+      ],
+      "expected": "unsafe-path"
+    },
+    {
+      "id": "reserved-character-without-root",
+      "request": "source/input?.ts",
+      "outputs": [
+        "made/directory"
+      ],
+      "expected": ""
+    }
+  ]
+}

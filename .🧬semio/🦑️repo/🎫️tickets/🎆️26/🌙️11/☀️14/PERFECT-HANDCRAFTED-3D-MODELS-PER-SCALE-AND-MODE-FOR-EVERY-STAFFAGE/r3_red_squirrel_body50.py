@@ -59,16 +59,16 @@ def nose():
 
 
 def tail1():
-    """Proximal brush: thin root inside the rump fur, widening to the full flattened brush (54 mm wide, 35 mm deep); dome about the mid-tail joint."""
-    s = [st(-7, 2.5, 2.5), st(-3, 7.5, 7), st(4, 11, 9.5), st(14, 16, 12), st(28, 21.2, 14.6, 2), st(46, 24.8, 16.4, 4.4), st(66, 26.6, 17.2, 4.6), st(85, 27, 17.5, 3)]
-    s += dome(85, 17.5, 27, 17.5, 3)
+    """Proximal brush: thin root inside the rump fur, the hair lengthening fast to the full plume (55 mm wide, 40 mm deep), the link bowed towards the back so that brush and back meet; dome about the mid-tail joint."""
+    s = [st(-7, 2.5, 2.5), st(-3, 7, 6.5), st(4, 10.5, 8.5, -0.5), st(14, 15.5, 11.5, -1.5), st(28, 21, 15, -3.5), st(46, 25, 18, -5.5), st(66, 27, 19.5, -5), st(85, 27.5, 20, -3)]
+    s += dome(85, 20, 27.5, 20, -3)
     return loft("tail-1", "tail-1", TAIL, 0.3, s, e=2.0)
 
 
 def tail2():
-    """Distal brush: full width over the first half, tapering to the hair tip 19 mm beyond the last vertebra, the tip curling away from the back."""
-    s = dome(0, -17.5, 26.6, 17.1, 3)
-    s += [st(0, 27, 17.5, 3), st(24, 27, 17.4, 2.2), st(48, 25.6, 16.6, 2.6), st(70, 22.4, 15, 4.4), st(88, 17.6, 12.4, 6.6), st(99, 11.6, 9, 10), st(105.5, 6.4, 5.4, 13.4), st(109, 1.6, 1.6, 16)]
+    """Distal brush: full plume over the first half, swinging forward over the crown and curling back at the tip, where the hair ends 19 mm beyond the last vertebra."""
+    s = dome(0, -20, 27.5, 20, -3)
+    s += [st(0, 27.5, 20, -3), st(22, 28, 20.5, -4.5), st(44, 27, 20, -3.5), st(64, 24.5, 18, 0), st(80, 20.5, 15.5, 4.5), st(92, 15, 12, 9), st(101, 9.5, 8, 13), st(106.5, 5, 4.5, 15.5), st(109.5, 1.6, 1.6, 17)]
     return loft("tail-2", "tail-2", TAIL, 0.3, s, e=2.0)
 
 

@@ -13,10 +13,31 @@ export function nativeImageEffectiveAvailableBytesV1(volumeAvailableBytes:number
 export function nativeImageContainerFreeBytesV1(plist:string):number|undefined{
  try{const value=nativeImageInformationV1(plist)[policy.containerFreeKey];return typeof value==="number"&&Number.isSafeInteger(value)&&value>=0?value:undefined;}catch{return undefined;}
 }
+type ImageInformationRunV1=(program:string,args:readonly string[])=>string|undefined;
+const runImageInformationV1:ImageInformationRunV1=(program,args)=>{
+ const row=spawnSync(program,[...args],{encoding:"utf8",timeout:10000,env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});
+ return row.status===0?row.stdout:undefined;
+};
+
 /** 🩺️ Asks the system for the container free bytes of a mounted volume, `undefined` off macOS or when the tool fails. See https://ss64.com/mac/diskutil.html */
-export function nativeImageContainerFreeBytesSyncV1(mountPoint:string,platform:string=process.platform,run:(program:string,args:readonly string[])=>string|undefined=(program,args)=>{const row=spawnSync(program,[...args],{encoding:"utf8",timeout:10000,env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"}});return row.status===0?row.stdout:undefined;}):number|undefined{
+export function nativeImageContainerFreeBytesSyncV1(mountPoint:string,platform:string=process.platform,run:ImageInformationRunV1=runImageInformationV1):number|undefined{
  if(platform!=="darwin")return undefined;
  const text=run(policy.infoProgram,[...policy.infoArguments,mountPoint]);return text===undefined?undefined:nativeImageContainerFreeBytesV1(text);
+}
+/** 🧮️ Measures occupied bytes independently of APFS availability clamped by the hosting filesystem. */
+export function nativeImageVolumeUsedBytesSyncV1(mountPoint:string,volume:Readonly<{blocks:number;bfree:number;bsize:number}>,platform:string=process.platform,run:ImageInformationRunV1=runImageInformationV1):number|undefined{
+ const capacity=volume.blocks*volume.bsize;
+ if(!Number.isSafeInteger(capacity)||capacity<=0)return undefined;
+ if(platform!=="darwin"){
+  const used=(volume.blocks-volume.bfree)*volume.bsize;
+  return Number.isSafeInteger(used)&&used>=0&&used<=capacity?used:undefined;
+ }
+ try{
+  const text=run(policy.infoProgram,[...policy.infoArguments,mountPoint]);
+  if(text===undefined)return undefined;
+  const facts=nativeImageInformationV1(text),used=facts[policy.volumeUsedKey];
+  return facts[policy.mountPointKey]===mountPoint&&facts[policy.filesystemTypeKey]===policy.darwinFilesystemType&&typeof used==="number"&&Number.isSafeInteger(used)&&used>0&&used<=capacity?used:undefined;
+ }catch{return undefined;}
 }
 /** ⏳️ Names how long a stale-figure correction stays valid before the container is asked again. */
 export const nativeImageAvailabilityCorrectionMillisecondsV1:number=policy.correctionMilliseconds;

@@ -11,16 +11,16 @@ const digestOf=value=>createHash("sha256").update(canonicalJsonV1(value)).digest
 export const TASK_STATE_POLICY_V1=Object.freeze({version:1,maximumTasks:262144});
 
 /**
- * 🔑️ The key of every planned task: the digest of its complete declaration (`task-key` node: executor options, configurations, outputs, resolved inputs, environment) and the keys of the tasks it depends on, so an edit that reaches a dependency changes the key of every task above it. `tasks` maps a task id to `{root, target, declaration, dependsOn, cacheable}`; ids come in dependency order. A task whose declaration cannot be keyed has the key `null` and is never up to date.
+ * 🔑️ The key of every planned task: the digest of its complete declaration (`task-key` node: executor options, configurations, outputs, resolved inputs, environment) the ordered forwarded arguments and the keys of the tasks it depends on, so an edit that reaches a dependency changes the key of every task above it. `tasks` maps a task id to `{root, target, declaration, dependsOn, cacheable}`; ids come in dependency order. A task whose declaration cannot be keyed has the key `null` and is never up to date.
  * @see ../🧩️kinds/🟨️.mjs
  */
-export async function taskKeysV1({graph,tasks,order,environment={},signal}){
- const own=new Map(),keys=new Map();
+export async function taskKeysV1({graph,tasks,order,environment={},forwarded=[],signal}){
+ const own=new Map(),keys=new Map(),argumentsDigest=forwarded.length?digestOf(forwarded):undefined;
  const nodes=await graph.getMany(order.map(id=>{const task=tasks.get(id);return graph.key("task-key",task.root+":"+task.target,{root:task.root,target:task.target,declaration:task.declaration,env:environment});}),{signal});
  order.forEach((id,index)=>own.set(id,nodes[index].value.key));
  for(const id of order){
   const task=tasks.get(id),mine=own.get(id),dependencies=[...task.dependsOn].filter(dependency=>keys.has(dependency)).sort().map(dependency=>keys.get(dependency));
-  keys.set(id,mine===null||dependencies.includes(null)?null:digestOf({own:mine,dependencies}));
+  keys.set(id,mine===null||dependencies.includes(null)?null:digestOf({own:mine,dependencies,...argumentsDigest===undefined?{}:{arguments:argumentsDigest}}));
  }
  return keys;
 }

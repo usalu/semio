@@ -1,0 +1,35 @@
+{
+  "directory": "in",
+  "namePrefix": "🧬️-",
+  "cases": [
+    {
+      "id": "same-directory",
+      "files": 96,
+      "createLast": false,
+      "epochs": [
+        96
+      ],
+      "firstReadFails": false
+    },
+    {
+      "id": "name-created-during-observation",
+      "files": 2,
+      "createLast": true,
+      "epochs": [
+        1,
+        1
+      ],
+      "firstReadFails": false
+    },
+    {
+      "id": "listing-refusal-isnt-reused",
+      "files": 2,
+      "createLast": false,
+      "firstReadFails": true,
+      "epochs": [
+        0,
+        1
+      ]
+    }
+  ]
+}

@@ -19,9 +19,7 @@ use semio_framework::REVERT_TO_COMMAND_ACTION_ID;
 /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
 /// too, since this module already used every one of the old wgpu-target types unqualified.
 use semio_ui_contract::*;
-#[cfg(any(test, feature = "artifact-app-testing"))]
-use std::collections::BTreeMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use semio_ui_locale::LocalizedLabel;
 /// 🔗️ `ContextMenuRequest.menu` (the kept old `ContextMenuRequest`, above) is itself still declared
 /// as `semio_ui_layout::layout::UiMenuRef`, not the contract's `MenuRef` — same "forced by a kept old
@@ -118,7 +116,7 @@ pub struct AppBuilder {
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
     terminologies: Vec<String>,
-    terminology_breadcrumbs: HashMap<String, Vec<LocalizedLabel>>,
+    terminology_breadcrumbs: BTreeMap<String, Vec<LocalizedLabel>>,
     introduction: Option<IntroductionDefinition>,
     tutorials: Vec<TutorialDefinition>,
     pub dialogs: Vec<DialogDefinition>,
@@ -132,3 +130,7 @@ pub struct AppBuilder {
 
 #[cfg(test)]
 include!("../../🧪️tests/🔬️app-example-source/🦀️.rs");
+
+#[cfg(test)]
+#[path = "../🧪️tests/app-declaration-collections.rs"]
+mod declaration_collections;

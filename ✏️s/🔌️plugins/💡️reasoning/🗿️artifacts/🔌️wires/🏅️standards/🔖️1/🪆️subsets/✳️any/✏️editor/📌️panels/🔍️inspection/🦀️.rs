@@ -162,8 +162,6 @@ impl semio_framework_canvas::CanvasExtension for DefaultWiresExtension {
     }
 }
 
-impl graph::GraphExtension for DefaultWiresExtension {}
-
 impl canvas::board::GraphExtension for DefaultWiresExtension {}
 
 impl DefaultWiresExtension {

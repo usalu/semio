@@ -62,7 +62,7 @@ fn every_shell_owned_leaf_projects_into_retained_records() {
 /// that grows a `Tree`/`Image`/`ComponentScene` fails at publication rather than painting a hole.
 #[test]
 fn the_panel_assembler_refuses_an_unprojectable_node() {
-    let node = UiNode::Image(semio_ui_declaration::ui::UiImageNode { id: "x".into(), src: "y".into(), alt: None, presence: UiPresence::default(), menu: None });
+    let node = UiNode::Image(semio_ui_declaration::ui::UiImageNode { source_page: None, id: "x".into(), src: "y".into(), alt: None, presence: UiPresence::default(), menu: None });
     let error = panel_ui_records("framework.settings.general", &node).expect_err("an image is not projectable by this assembler");
     assert!(error.contains("image"), "the refusal names the variant: {error}");
 }

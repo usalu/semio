@@ -185,7 +185,7 @@ impl Env {
         let limits = turn_budget_of(record);
         let now = semio_framework_job::default_now_us().ok_or_else(|| "benchmark activation clock unavailable".to_string())?;
         let policy = semio_renderer_wgpu_host_plumbing::native_caller::NativeFrameRootPolicyV1::initiating_event();
-        let operation = semio_framework_trace::allocate_operation_id().0;
+        let operation = semio_framework_job::allocate_operation_id().0;
         let retained = semio_framework_actor::RetainedTurnInput {
             operation,
             generation: 1,

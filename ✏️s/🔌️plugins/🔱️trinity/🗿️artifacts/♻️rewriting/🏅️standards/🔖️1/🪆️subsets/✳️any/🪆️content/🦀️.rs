@@ -7,10 +7,18 @@ use semio_plugin::app::{ChildContentView,ChildEmitPreparation};
 use semio_plugin::{Emit, Fault};
 use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-use semio_s_artifact_trinity_jack_semio_content::SemioJackContentOwner;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::{JackContentOwner, jack_content_for_handle};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::{JackSnapshot, empty_trinity_graph_snapshot};
+use semio_s_artifact_trinity_jack_semio_content::{SemioJackContent, SemioJackContentOwner, jack_content_handle, jack_content_snapshot_from_working};
 
 pub use semio_s_artifact_trinity_rewriting_schema::standards::v1::subsets::any::content::read;
 pub use read::{read, WORKING_CHILD_SLOT};
+
+/// 🆕️ Creates a blank rule with an admitted empty member for its working graph.
+pub fn empty_rule_state() -> RewritingSnapshot {
+    let working_graph = JackSnapshot { name: String::new(), ..empty_trinity_graph_snapshot::<SemioJackContent>() };
+    RewritingSnapshot { working_graph, ..RewritingSnapshot::default() }
+}
 
 /// 🧩️ The rule as its readers see it: the parent's fields composed on read with the exact published `workingGraph` member — the
 /// working graph's single truth, never the parent's genesis owner, which goes stale after a child-lane edit. A root the child no
@@ -28,11 +36,31 @@ pub fn composed(parent: &RewritingSnapshot, children: &ChildContentView) -> Resu
 /// 🌱️ The genesis pack of the rule's own `workingGraph` child, derived from the parent the document was created or loaded with.
 pub fn genesis_working_child_pack(parent: &RewritingSnapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
     use pack::snapshot::ArtifactPack;
-    if slot != WORKING_CHILD_SLOT || child_id != parent.working_graph.content.child_id {
+    use store::os_store::artifact_child::ArtifactChildMaterializationError;
+
+    let handle = &parent.working_graph.content;
+    if slot != WORKING_CHILD_SLOT || child_id != handle.child_id {
         return Ok(None);
     }
-    let owner = semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_content_for_handle(&parent.working_graph.content)?;
-    Ok(Some(SemioGraphSnapshot::encode_pack(owner.snapshot())))
+    match handle.require_local_owner::<JackContentOwner>() {
+        Ok(_) => return jack_content_for_handle(handle).map(|owner| Some(owner.snapshot().encode_pack())),
+        Err(ArtifactChildMaterializationError::Absent) => {}
+        Err(error) => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())),
+    }
+    let empty = jack_content_snapshot_from_working(&[], &[]);
+    if *handle == jack_content_handle(&empty) {
+        return Ok(Some(empty.encode_pack()));
+    }
+    let dialect = &handle.target.dialect;
+    if child_id == "nakagin-jack-demo-content" && handle.target.artifact_id == child_id
+        && dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == "graph"
+    {
+        let child = semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(
+            include_str!("../🖼️assets/🎬️demo/🪆️working-graph/🔣️.json"),
+        )?;
+        return Ok(Some(child.encode_pack()));
+    }
+    Ok(None)
 }
 
 /// 🧬️ Publishes `leaves` as ONE edit of the exact composed `workingGraph` child; no leaf is the empty emit.

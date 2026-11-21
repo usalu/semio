@@ -212,14 +212,7 @@ pub fn prepare_command(command: &Generation2dCommand, doc: &ArtifactView<'_, Gen
             let args = semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(payload.id.clone())), ("name".into(), semio_framework_value::DslValue::String(payload.name.clone()))]);
             Some(generation::handle_generation("renameGeneration", Some(&args), doc, cfg))
         }
-        Generation2dCommand::UpdateGenerationValues(payload) => {
-            let args = semio_framework_value::DslValue::object([
-                ("generationId".into(), payload.generation_id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String)),
-                ("questionId".into(), semio_framework_value::DslValue::String(payload.question_id.clone())),
-                ("value".into(), payload.value.clone()),
-            ]);
-            Some(generation::handle_generation("updateGenerationValues", Some(&args), doc, cfg))
-        }
+        Generation2dCommand::UpdateGenerationValues(payload) => Some(generation::handle_generation("updateGenerationValues", Some(&payload.arguments()), doc, cfg)),
         Generation2dCommand::SelectGeneration(payload) => {
             let args = semio_framework_value::DslValue::object([("id".into(), payload.id.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String))]);
             Some(generation::handle_generation("selectGeneration", Some(&args), doc, cfg))

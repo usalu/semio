@@ -10,16 +10,16 @@ from semio_repo_test import Adapter, Context, Outcome
 
 
 # region 🔖️Vocabulary
-FIELDS = ("exaggeration", "importedMap", "mesh")
+FIELDS = ("exaggeration", "importedMap", "mesh", "elevationSource")
 """🗂️ The persisted fields `GisTerrainSnapshot` declares — and the cross-language projection."""
 
-KINDS = ("change-exaggeration", "change-imported-features")
+KINDS = ("change-exaggeration", "change-imported-features", "replace-elevation-source")
 """🏷️ Every kind the catalog declares."""
 
-TAGS = {"change-exaggeration": "ChangeExaggeration", "change-imported-features": "ChangeImportedFeatures"}
+TAGS = {"change-exaggeration": "ChangeExaggeration", "change-imported-features": "ChangeImportedFeatures", "replace-elevation-source": "ReplaceElevationSource"}
 """🔤️ The externally tagged wire name of each kind, as the committed vectors spell it."""
 
-ARGUMENTS = {"change-exaggeration": "newExaggeration", "change-imported-features": "newImportedMap"}
+ARGUMENTS = {"change-exaggeration": "newExaggeration", "change-imported-features": "newImportedMap", "replace-elevation-source": "newElevationSource"}
 """🔤️ The single argument each verb carries, as the committed vectors spell it."""
 
 # endregion 🔖️Vocabulary
@@ -42,6 +42,20 @@ def validate(document):
         for member in imported["properties"]:
             if set(member) != {"name", "value"} or not isinstance(member["name"], str) or member["name"] in ("positions", "routes", "regions"):
                 raise AssertionError("literal nonreserved root member required")
+    if "elevationSource" in document:
+        source = document["elevationSource"]
+        if not isinstance(source, dict) or set(source) != {"bounds", "rows"}:
+            raise AssertionError("complete elevation source required")
+        bounds, rows = source["bounds"], source["rows"]
+        if not isinstance(bounds, list) or len(bounds) != 4 or any(type(value) not in (int, float) for value in bounds):
+            raise AssertionError("four numeric elevation bounds required")
+        west, south, east, north = bounds
+        if not (-180 <= west < east <= 180 and -90 <= south < north <= 90):
+            raise AssertionError("ordered WGS84 elevation bounds required")
+        if not isinstance(rows, list) or len(rows) != 33 or any(not isinstance(row, list) or len(row) != 33 for row in rows):
+            raise AssertionError("33 by 33 elevation samples required")
+        if any(type(sample) is not int or not -32768 <= sample <= 32767 for row in rows for sample in row):
+            raise AssertionError("signed whole-meter elevation samples required")
 
 
 def document_of(payload):
@@ -69,7 +83,7 @@ def kind_of(mutation):
 
 def field_of(kind):
     """🗂️ The one field a kind writes — the grammar names one verb per persisted field."""
-    return "exaggeration" if kind == "change-exaggeration" else "importedMap"
+    return {"change-exaggeration": "exaggeration", "change-imported-features": "importedMap", "replace-elevation-source": "elevationSource"}[kind]
 
 
 def apply_mutation(document, mutation):
@@ -77,8 +91,8 @@ def apply_mutation(document, mutation):
     kind = kind_of(mutation)
     value = mutation[TAGS[kind]].get(ARGUMENTS[kind])
     result = dict(document)
-    if kind == "change-imported-features" and value is None:
-        result.pop("importedMap", None)
+    if kind != "change-exaggeration" and value is None:
+        result.pop(field_of(kind), None)
     else:
         result[field_of(kind)] = float(value) if kind == "change-exaggeration" else value
     validate(result)
@@ -106,9 +120,9 @@ def observable(kind, before, after):
 def independent(kind, before, after):
     """🔀️ The two setters are independent: writing one field must leave the OTHER exactly as it was.
     An implementation that reset a sibling field on every edit passes a field-only check."""
-    other = "importedMap" if field_of(kind) == "exaggeration" else "exaggeration"
-    if before.get(other) != after.get(other):
-        raise AssertionError("mutate-%s: writing %s also moved %s, from %r to %r" % (kind, field_of(kind), other, before.get(other), after.get(other)))
+    for other in FIELDS:
+        if other != field_of(kind) and before.get(other) != after.get(other):
+            raise AssertionError("mutate-%s: writing %s also moved %s, from %r to %r" % (kind, field_of(kind), other, before.get(other), after.get(other)))
 
 
 def restores(kind, restored, original):
@@ -247,8 +261,9 @@ def adapter():
     self-comparison."""
     built = Adapter("python")
     for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate_handler(kind))
-        built = built.oracle("inverse-%s" % kind, inverse_handler(kind))
+        if kind != "replace-elevation-source":
+            built = built.oracle("mutate-%s" % kind, mutate_handler(kind))
+            built = built.oracle("inverse-%s" % kind, inverse_handler(kind))
         built = built.oracle("spec-vector-%s" % kind, spec_vector_handler(kind))
     return built.oracle("identity-round-trip", identity_handler)
 

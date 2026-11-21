@@ -19,7 +19,7 @@ fn bounded_seed_fixture(degenerate: bool) -> (IncrementalSfm, SeedPairPreparatio
         tracks.push(vec![(0, index as u32), (1, index as u32)]);
         matches.push(Match { a: index as u32, b: index as u32, distance: 0 });
     }
-    let sfm = IncrementalSfm::new(intrinsics, FeatureTracks { tracks }, keypoints, SfmConfig::default());
+    let sfm = IncrementalSfm::new(vec![intrinsics; keypoints.len()], FeatureTracks { tracks }, keypoints, SfmConfig::default());
     (sfm, SeedPairPreparation::new(0, 1, &matches))
 }
 
@@ -39,7 +39,7 @@ fn bounded_registration_fixture(degenerate: bool) -> (IncrementalSfm, Registrati
         tracks.push(vec![(0, index as u32), (1, index as u32)]);
         points.insert(index, point);
     }
-    let mut sfm = IncrementalSfm::new(intrinsics, FeatureTracks { tracks }, keypoints, SfmConfig::default());
+    let mut sfm = IncrementalSfm::new(vec![intrinsics; keypoints.len()], FeatureTracks { tracks }, keypoints, SfmConfig::default());
     sfm.cameras.push((0, registered));
     sfm.points = points;
     (sfm, RegistrationPreparation::new(1))
@@ -58,7 +58,7 @@ fn bounded_triangulation_fixture(degenerate: bool) -> IncrementalSfm {
         track.push((frame, 0));
         cameras.push((frame, pose));
     }
-    let mut sfm = IncrementalSfm::new(intrinsics, FeatureTracks { tracks: vec![track] }, keypoints, SfmConfig { min_track_length: 2, ..SfmConfig::default() });
+    let mut sfm = IncrementalSfm::new(vec![intrinsics; keypoints.len()], FeatureTracks { tracks: vec![track] }, keypoints, SfmConfig { min_track_length: 2, ..SfmConfig::default() });
     sfm.cameras = cameras;
     sfm
 }
@@ -167,7 +167,7 @@ fn run_all_reconstructs_synthetic_multi_camera_scene() {
     let pairwise_matches = vec![(0usize, 1usize, matches01)];
 
     let cfg = SfmConfig { ransac_threshold_px: 2.5, min_track_length: 2, ba_max_iterations: 30, robust_loss: RobustLoss::Huber(2.0), min_triangulation_angle_rad: 1.0_f64.to_radians(), min_visible_points_to_keep_camera: 6 };
-    let mut sfm = IncrementalSfm::new(intr, feature_tracks.clone(), keypoints_per_frame.clone(), cfg);
+    let mut sfm = IncrementalSfm::new(vec![intr; keypoints_per_frame.len()], feature_tracks.clone(), keypoints_per_frame.clone(), cfg);
     let recon = sfm.run_all(&frame_order, &pairwise_matches).expect("run_all should reconstruct the synthetic scene");
 
     assert!(recon.cameras.len() + 1 >= n_cams, "expected almost all cameras registered, got {}", recon.cameras.len());
@@ -229,7 +229,7 @@ fn init_pair_recovers_pose_and_triangulates_on_low_parallax_pair() {
     let matches: Vec<Match> = (0..track_list.len() as u32).map(|i| Match { a: i, b: i, distance: 0 }).collect();
     let tracks = FeatureTracks { tracks: track_list };
     let cfg = SfmConfig { ransac_threshold_px: 2.0, min_track_length: 2, ..SfmConfig::default() };
-    let mut sfm = IncrementalSfm::new(intr, tracks, vec![keypoints_a, keypoints_b], cfg);
+    let mut sfm = IncrementalSfm::new(vec![intr; 2], tracks, vec![keypoints_a, keypoints_b], cfg);
     sfm.init_pair(0, 1, &matches).expect("init_pair should succeed on a low-parallax pair once routed through the five-point solver");
 
     let recon = sfm.reconstruction();

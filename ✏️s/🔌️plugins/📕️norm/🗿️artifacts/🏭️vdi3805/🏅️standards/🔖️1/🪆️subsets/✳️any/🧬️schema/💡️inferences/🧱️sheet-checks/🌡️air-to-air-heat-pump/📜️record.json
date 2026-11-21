@@ -1,0 +1,364 @@
+{
+  "standard": "VDI 3805 Blatt 22:2019-03",
+  "effective": "2022-01",
+  "clause": "5.2.3",
+  "records": [
+    {
+      "correction": "22-0005",
+      "recordFamily": "710.15",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=11",
+      "fields": [
+        [
+          "family",
+          "A6",
+          {
+            "constant": "710.15"
+          }
+        ],
+        [
+          "index",
+          "I",
+          {
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        ],
+        [
+          "defrostMethod",
+          "I",
+          {
+            "codes": [
+              1,
+              2,
+              99
+            ]
+          }
+        ],
+        [
+          "defrostDescription",
+          "A",
+          {
+            "requiredWhen": {
+              "field": 3,
+              "code": 99
+            }
+          }
+        ],
+        [
+          "minHeatingSourceTemperature",
+          "N",
+          {
+            "unit": "°C"
+          }
+        ],
+        [
+          "maxHeatingSourceTemperature",
+          "N",
+          {
+            "unit": "°C"
+          }
+        ],
+        [
+          "minCoolingSourceTemperature",
+          "N",
+          {
+            "unit": "°C"
+          }
+        ],
+        [
+          "maxCoolingSourceTemperature",
+          "N",
+          {
+            "unit": "°C"
+          }
+        ],
+        [
+          "fanCount",
+          "N",
+          {}
+        ],
+        [
+          "fanPower",
+          "N",
+          {
+            "unit": "W"
+          }
+        ],
+        [
+          "maxAirflow",
+          "N",
+          {
+            "unit": "m³/h"
+          }
+        ],
+        [
+          "heatPumpType",
+          "I",
+          {
+            "codes": [
+              1,
+              2,
+              3,
+              99
+            ]
+          }
+        ],
+        [
+          "heatPumpTypeDescription",
+          "A",
+          {
+            "requiredWhen": {
+              "field": 12,
+              "code": 99
+            }
+          }
+        ],
+        [
+          "heatRecovery",
+          "I",
+          {
+            "codes": [
+              0,
+              1
+            ]
+          }
+        ],
+        [
+          "variableRefrigerantTemperature",
+          "I",
+          {
+            "codes": [
+              0,
+              1
+            ]
+          }
+        ],
+        [
+          "maxPipeLength",
+          "N",
+          {
+            "unit": "m"
+          }
+        ],
+        [
+          "maxElevationDifference",
+          "N",
+          {
+            "unit": "m"
+          }
+        ],
+        [
+          "maxIndoorUnits",
+          "I",
+          {}
+        ],
+        [
+          "expansionValvePosition",
+          "I",
+          {
+            "codes": [
+              1,
+              2
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "correction": "22-0006 / 22-0007",
+      "recordFamily": "710.16",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=13",
+      "fields": [
+        [
+          "family",
+          "A6",
+          {
+            "constant": "710.16"
+          }
+        ],
+        [
+          "index",
+          "I",
+          {
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        ],
+        [
+          "erpLot",
+          "I",
+          {
+            "codes": [
+              1,
+              2
+            ]
+          }
+        ],
+        [
+          "operatingMode",
+          "I",
+          {
+            "codes": [
+              1,
+              2
+            ]
+          }
+        ],
+        [
+          "energyEfficiencyClass",
+          "I",
+          {
+            "codesWhen": {
+              "field": 3,
+              "code": 1,
+              "codes": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            },
+            "absentOtherwise": true
+          }
+        ],
+        [
+          "ratedPower",
+          "N",
+          {
+            "unit": "kW"
+          }
+        ],
+        [
+          "seasonalEfficiency",
+          "N",
+          {
+            "unit": "%"
+          }
+        ],
+        [
+          "degradationCoefficient",
+          "N",
+          {}
+        ],
+        [
+          "offPower",
+          "N",
+          {
+            "unit": "kW"
+          }
+        ],
+        [
+          "thermostatOffPower",
+          "N",
+          {
+            "unit": "kW"
+          }
+        ],
+        [
+          "standbyPower",
+          "N",
+          {
+            "unit": "kW"
+          }
+        ],
+        [
+          "crankcaseHeaterPower",
+          "N",
+          {
+            "unit": "kW"
+          }
+        ],
+        [
+          "backupHeatingPower",
+          "N",
+          {
+            "unit": "kW"
+          }
+        ],
+        [
+          "capacityControl",
+          "I",
+          {
+            "codes": [
+              1,
+              2,
+              3
+            ]
+          }
+        ],
+        [
+          "refrigerantGwp100",
+          "N",
+          {
+            "unit": "kg CO₂e"
+          }
+        ]
+      ],
+      "energyEfficiencyCodes": [
+        "G",
+        "F",
+        "E",
+        "D",
+        "C",
+        "B",
+        "A",
+        "A+",
+        "A++",
+        "A+++"
+      ],
+      "energyEfficiencyCodeSource": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=14"
+    },
+    {
+      "correction": "22-0008",
+      "recordFamily": "710.17",
+      "source": "https://www.vdi3805.eu/fileadmin/user_upload/vdi3805/vdi_3805_22_waermepumpe_012026.pdf#page=15",
+      "fields": [
+        [
+          "family",
+          "A6",
+          {
+            "constant": "710.17"
+          }
+        ],
+        [
+          "index",
+          "I",
+          {
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        ],
+        [
+          "location",
+          "I",
+          {
+            "codes": [
+              1,
+              2
+            ]
+          }
+        ],
+        [
+          "soundPowerLevel",
+          "N",
+          {
+            "unit": "dB(A)"
+          }
+        ],
+        [
+          "airflow",
+          "N",
+          {
+            "unit": "m³/h"
+          }
+        ]
+      ]
+    }
+  ]
+}

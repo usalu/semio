@@ -52,7 +52,16 @@ impl RecordCursor{
    if cursor.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
    let demand=match cursor.source_close_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
    if !funded(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-   let result=cursor.close_step(grant.maximum_items,grant.maximum_release_bytes,effect).map(|step|match step{semio_framework_pack_format_retained::RetainedPackCloseStep::Complete=>RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),semio_framework_pack_format_retained::RetainedPackCloseStep::Pending{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()})});RetainedWorkOutcome{result,work:1}
+   let before = effect.performed_work();
+   let mut result = cursor.close_step(grant.maximum_items, grant.maximum_release_bytes, effect).map(|step| match step {
+    semio_framework_pack_format_retained::RetainedPackCloseStep::Complete => RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),
+    semio_framework_pack_format_retained::RetainedPackCloseStep::Pending{released_items,released_bytes} => RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}),
+   });
+   if effect.performed_work() == before {
+    let charge = effect.performed(1).and_then(|paid| if paid { Ok(()) } else { Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained record close exceeded its original work")) });
+    if let Err(error) = charge { result = result.and(Err(PackRefusal::from(error))); }
+   }
+   RetainedWorkOutcome { result, work: effect.performed_work() - before }
   }
  }}
  pub(super) fn terminal_is_empty(&self)->bool{match self{Self::Body(cursor)=>cursor.terminal_is_empty(),Self::Document(owner)=>owner.closed&&owner.storage.is_none()}}

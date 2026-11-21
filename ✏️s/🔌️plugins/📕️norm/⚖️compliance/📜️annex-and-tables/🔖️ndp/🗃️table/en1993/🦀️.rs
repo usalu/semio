@@ -11,6 +11,8 @@ const S4: &str = "EN 1993-1-3:2006";
 const S5: &str = "EN 1993-1-8:2005";
 const S6: &str = "DIN EN 1993-1-3/NA";
 const S7: &str = "EN 1993-1-5:2006";
+const S8: &str = "EN 1993-1-9";
+const S9: &str = "2005 + AC:2009";
 
 /// 📊️ Registered NDPs and table cells of en1993.
 pub const ROWS: &[NdpEntry] = &[
@@ -822,10 +824,10 @@ pub const ROWS: &[NdpEntry] = &[
     c("ndp.en1993.1-9.deck.rib-to-deck-partial-penetration-plate", S0, "Table 8.8", "orthotropic deck detail rib-to-deck-partial-penetration-plate", Number(71.0), S3, S1),
     c("ndp.en1993.1-9.deck.rib-to-deck-partial-penetration-throat", S0, "Table 8.8", "orthotropic deck detail rib-to-deck-partial-penetration-throat", Number(36.0), S3, S1),
     c("ndp.en1993.1-9.gamma-ff", S0, "3(7)", "gamma_Ff", Number(1.0), "", "EN 1993-1-9:2005"),
-    c("ndp.en1993.1-9.gamma-mf.damage-tolerant.high", S0, "Table 3.1", "gamma_Mf damage tolerant, high consequence", Number(1.15), "", S1),
-    c("ndp.en1993.1-9.gamma-mf.damage-tolerant.low", S0, "Table 3.1", "gamma_Mf damage tolerant, low consequence", Number(1.0), "", S1),
-    c("ndp.en1993.1-9.gamma-mf.safe-life.high", S0, "Table 3.1", "gamma_Mf safe life, high consequence", Number(1.35), "", S1),
-    c("ndp.en1993.1-9.gamma-mf.safe-life.low", S0, "Table 3.1", "gamma_Mf safe life, low consequence", Number(1.15), "", S1),
+    c("ndp.en1993.1-9.gamma-mf.damage-tolerant.high", S0, "Table 3.1", "gamma_Mf damage tolerant, high consequence", Number(1.15), "", S8).ed(S9).at("§3(7), Table 3.1").ver(),
+    c("ndp.en1993.1-9.gamma-mf.damage-tolerant.low", S0, "Table 3.1", "gamma_Mf damage tolerant, low consequence", Number(1.0), "", S8).ed(S9).at("§3(7), Table 3.1").ver(),
+    c("ndp.en1993.1-9.gamma-mf.safe-life.high", S0, "Table 3.1", "gamma_Mf safe life, high consequence", Number(1.35), "", S8).ed(S9).at("§3(7), Table 3.1").ver(),
+    c("ndp.en1993.1-9.gamma-mf.safe-life.low", S0, "Table 3.1", "gamma_Mf safe life, low consequence", Number(1.15), "", S8).ed(S9).at("§3(7), Table 3.1").ver(),
     c("ndp.en1993.1-9.size-effect.exponent", S0, "Table 8.1 notes", "size effect exponent", Number(0.2), "", S1),
     c("ndp.en1993.1-9.size-effect.t-ref", S0, "Table 8.1 notes", "reference thickness", Number(25.0), "mm", S1),
     c("ndp.en1993.1-9.sn.m-1", S0, "7.1 / Figure 7.1", "m1", Number(3.0), "", S1),

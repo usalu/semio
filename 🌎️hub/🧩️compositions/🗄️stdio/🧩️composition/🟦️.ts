@@ -4,6 +4,7 @@ import { observeCargoPreparationSourceV1, observeCargoPreparationInputV1, observ
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, relative, resolve, sep } from "node:path";
+import { deflateRawSync } from "node:zlib";
 import { admitCompositionContributionV1, selectCompositionContributionsV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, type CompositionNativeReceiptV1, type CompositionContributionV1 } from "./📋️contract/🟦️.ts";
 
 type OwnerV1 = { id: string; root: string; enum: string; label: string; main: boolean };
@@ -50,7 +51,7 @@ function rustSource(owner: OwnerV1, rows: CompositionContributionV1[]): string {
   const registrations = apps.map((app) => `    builder = builder.${app.role}::<${app.type}>(${app.factory}());${app.mutationRoster ? `\n    builder = builder.${app.role}_mutation_roster::<${app.type}>();` : ""}`).join("\n");
   const activations = hosted.map((row) => `    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: ${crate(row)}::artifact_kind().id });`).join("\n");
   const assembly = owner.main ? `    let registry = semio_hub_stdio_catalog::selected_registry()?;\n    let plan = semio_s_plugin_stdio::AssemblyPlan::new(&registry, semio_s_plugin_stdio::AssemblyOwner { plugin_id: ${JSON.stringify(owner.id)}, package_id: semio_hub_stdio_catalog::component_package_id()?, package_version: env!("CARGO_PKG_VERSION") })?;\n    let catalog = semio_hub_stdio_catalog::artifact_catalog_contribution(plan.assemblies())?;\n    builder = plan.apply(builder);` : hosted.map((row) => `    builder = builder.host_artifact(${(row.catalogPackage ?? row.package).replaceAll("-", "_")}::declaration(${crate(row)}::definition()?).map_err(PluginAssemblyError::definition)?);`).join("\n");
-  const source = `//! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.\n\nuse semio_plugin::__semio_dispatch_PluginApp;\nuse semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_plugin::plugin_app_close_prelude::*;\nuse semio_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The present owner-authored runtime app contributions.\n    pub enum ${owner.enum}: PluginApp {\n${variants}\n    }\n}\n\n/// 🔌️ Builds the exact present artifact and app contributions.\npub fn plugin() -> Result<Plugin<${owner.enum}>, PluginAssemblyError> {\n    let mut builder = Plugin::<${owner.enum}>::builder(${JSON.stringify(owner.id)}).label(${JSON.stringify(owner.label)}).version(env!("CARGO_PKG_VERSION")).package_id(${owner.main ? "semio_hub_stdio_catalog::component_package_id()?" : JSON.stringify(`semio:${owner.id}`)}).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)${owner.main ? '.schema_documents("stdio", semio_hub_stdio_catalog::CATALOG_SCHEMA_DOCUMENTS)' : '.depends_on("stdio", semio_framework::tree_pin!())'};\n${assembly}\n${registrations}\n${activations}\n    builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });\n    ${owner.main ? "builder.contributes_topic(catalog)" : "builder"}.try_build()\n}\n`;
+  const source = `//! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.\n\nuse semio_plugin::__semio_dispatch_PluginApp;\nuse semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_plugin::plugin_app_close_prelude::*;\nuse semio_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The present owner-authored runtime app contributions.\n    pub enum ${owner.enum}: PluginApp {\n${variants}\n    }\n}\n\n/// 🔌️ Builds the exact present artifact and app contributions.\npub fn plugin() -> Result<Plugin<${owner.enum}>, PluginAssemblyError> {\n    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, ${owner.enum}>::new(${JSON.stringify(owner.id)}).label(${JSON.stringify(owner.label)}).version(env!("CARGO_PKG_VERSION")).package_id(${owner.main ? "semio_hub_stdio_catalog::component_package_id()?" : JSON.stringify(`semio:${owner.id}`)}).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)${owner.main ? '.schema_documents("stdio", semio_hub_stdio_catalog::CATALOG_SCHEMA_DOCUMENTS)' : '.depends_on("stdio", semio_framework::tree_pin!())'};\n${assembly}\n${registrations}\n${activations}\n    builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });\n    ${owner.main ? "builder.contributes_topic(catalog)" : "builder"}.try_build()\n}\n`;
   return source;
 }
 
@@ -141,10 +142,51 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
   return inputs;
 }
 
+function selectedRows(inputs: InputV1[]) {
+  return selectCompositionContributionsV1(inputs.map(input => input.contribution), "full").map(row => ({ ...row, nativeReceipts: inputs.find(input => input.contribution.package === row.package)!.nativeReceipts }));
+}
+
+function receiptProjection(receipts: CompositionNativeReceiptV1[]) {
+  return { schema: "semio.stdio.native-openable-catalog-provider/v1", provider_id: "stdio/native-codecs/v1", plugin_id: "stdio", package_id: "semio:stdio", receipts };
+}
+
+function selectedReceipts(rows: ReturnType<typeof selectedRows>): CompositionNativeReceiptV1[] {
+  return rows.flatMap(row => row.nativeReceipts).sort((a, b) => Buffer.compare(Buffer.from(a.factory_id), Buffer.from(b.factory_id)));
+}
+
+/** 📜️ Publishes the selected schema and receipt inputs used by catalog consumers. */
+export function prepareStdioCatalogDefinition(repoRoot: string, hubRoot: string): { definitions: number; receipts: number; bytes: number } {
+  observeCargoPreparationSourceV1(fileURLToPath(import.meta.url),fileURLToPath(new URL("./📋️contract/🟦️.ts",import.meta.url)));
+  const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectedRows(inputs);
+  const path = resolve(hubRoot, "🤖️generated/📜️catalog/🗜️.bin"), directory = dirname(path);
+  const definitions = rows.map(row => {
+    const owner = inputs.find(input => input.contribution.package === row.package)!;
+    const leaf = "📜️artifact-definition.json", path = resolve(owner.directory, leaf), source = read(owner.directory, leaf);
+    if (JSON.parse(source).id !== `s.stdio.${row.artifact}`) throw new Error("Catalog definition differs from its selected artifact");
+    const digest = createHash("sha256").update(source).digest("hex");
+    if (owner.observed.has(path) && owner.observed.get(path) !== digest) throw new Error("Catalog definition changed during preparation");
+    owner.observed.set(path, digest);
+    return { artifact: row.artifact, definition: source };
+  });
+  const receipts = selectedReceipts(rows);
+  const source = Buffer.from(JSON.stringify({ schema: "semio.stdio.catalog-input/v1", definitions, provider: receiptProjection(receipts) }));
+  if (source.length > 1024 * 1024) throw new Error("Catalog definition projection exceeds 1 MiB");
+  const bytes = deflateRawSync(source);
+  if (bytes.length > 128 * 1024) throw new Error("Compressed catalog definition projection exceeds 128 KiB");
+  for (const input of inputs) for (const [path, digest] of input.observed) if (createHash("sha256").update(readFileSync(physical(repoRoot, relative(repoRoot, path)))).digest("hex") !== digest) throw new Error(`Catalog input changed during preparation: ${path}`);
+  for (const candidate of [dirname(directory), directory, path]) if (existsSync(candidate) && lstatSync(candidate).isSymbolicLink()) throw new Error("Catalog projection follows a symlink");
+  if (!existsSync(path) || !readFileSync(physical(hubRoot, relative(hubRoot, path))).equals(bytes)) {
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(path, bytes);
+  }
+  observeCargoPreparationOutputV1(path, bytes);
+  return { definitions: definitions.length, receipts: receipts.length, bytes: bytes.length };
+}
+
 /** 🛂️ Refreshes only this composition's authored output regions and source projections. */
 export function prepareStdioComposition(repoRoot: string, hubRoot: string): { contributions: number; apps: number; receipts: number } {
   observeCargoPreparationSourceV1(fileURLToPath(import.meta.url),fileURLToPath(new URL("./📋️contract/🟦️.ts",import.meta.url)));
-  const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full").map(row => ({ ...row, nativeReceipts: inputs.find(input => input.contribution.package === row.package)!.nativeReceipts }));
+  const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectedRows(inputs);
   const ownerSource = read(hubRoot, "🧩️composition/🔣️.json"), config = owners(JSON.parse(ownerSource)), ids = new Set(config.map((owner) => owner.id));
   if (rows.some((row) => row.apps.some((app) => !ids.has(app.owner)) || row.playgrounds.some((entry) => !ids.has(entry.owner)))) throw new Error("Artifact app contribution targets an undeclared composition owner");
   const outputs = new Map<string, { previous: string | undefined; next: string }>();
@@ -195,8 +237,8 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
   const editors = rows.flatMap(row => row.apps).filter(app => app.role === "editor");
   const editorLaws = editors.map(app => `    (${app.laws!.editing}, ${app.laws!.sqliteSnapshot}, ${app.type}, ${app.factory}),`).join("\n");
   publish("🤖️generated/🧪️editor-laws/🦀️.rs", editors.length ? `editor_catalog_laws! {\n${editorLaws}\n}\n` : "const EDITOR_COUNT: usize = 0;\n");
-  const receipts = rows.flatMap((row) => row.nativeReceipts).sort((a, b) => Buffer.compare(Buffer.from(a.factory_id), Buffer.from(b.factory_id)));
-  publish("🔌️plugin/📇️catalog/📜️native-codec-factories.json", JSON.stringify({ schema: "semio.stdio.native-openable-catalog-provider/v1", provider_id: "stdio/native-codecs/v1", plugin_id: "stdio", package_id: "semio:stdio", receipts }, null, 2) + "\n");
+  const receipts = selectedReceipts(rows);
+  publish("🔌️plugin/📇️catalog/📜️native-codec-factories.json", JSON.stringify(receiptProjection(receipts), null, 2) + "\n");
   const payload = JSON.parse(read(hubRoot, "📇️publication/📜️native-catalog.json"));
   payload.nativeCodecs = receipts.map((row) => ({ artifactKind: row.artifact_kind, artifactSchema: row.artifact_schema, packSchemaHash: row.pack_schema_hash, factoryId: row.factory_id, extension: row.extension, protocolSourceSha256: row.protocol_source_sha256 }));
   payload.openTargets = resolveCompositionOpenTargetsV1(rows, receipts);

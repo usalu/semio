@@ -30,13 +30,18 @@ pub fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presen
     } else if presence.state == UiState::Previewed {
         push_chrome_border(draw, bounds, theme.stroke_hairline, theme.accent, true, true, true, true, semio_ui_draw_contract::SharedBorderState::Focus);
     }
-    if presence.state == UiState::Introducing {
-        draw.push_shared_border_effect(bounds, theme.accent, theme.border_radius, theme.stroke_hairline, semio_ui_draw_contract::SharedBorderState::Introduced);
-    }
-    if presence.state == UiState::Celebrating {
-        let turns = celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds);
-        draw.push_shared_border_effect(bounds, celebrate_color(theme, turns), theme.border_radius, celebrate_stroke(theme, turns), semio_ui_draw_contract::SharedBorderState::Celebrated);
-    }
+    paint_presence_accent_effect(draw, bounds, theme, presence.state);
+}
+
+/// 🎉️ Animates the accent of an introducing or celebrating silhouette at the base border thickness.
+pub fn paint_presence_accent_effect(draw: &mut DrawList, bounds: Rect, theme: &Theme, state: UiState) {
+    use semio_ui_draw_contract::SharedBorderState;
+    let (color, border_state) = match state {
+        UiState::Introducing => (theme.accent, SharedBorderState::Introduced),
+        UiState::Celebrating => (celebrate_color(theme, celebrate_turns(draw.clock_seconds(), theme.celebrate_duration_seconds)), SharedBorderState::Celebrated),
+        _ => return,
+    };
+    draw.push_shared_border_effect(bounds, color, theme.border_radius, theme.stroke_hairline, border_state);
 }
 
 /// 🔲️ Checkbox selection represents checkedness, which is painted by the compact control itself.
@@ -78,12 +83,6 @@ pub fn progress_bar_rects_of(completed: f64, total: Option<f64>, bounds: Rect, _
 }
 
 //#region 🎉️Celebrate
-// 🎉️ React celebrates an element with TWO infinite keyframes over one `--celebrate-border-duration`
-// (1.2 s): `celebrate-border-spin` drives a conic-gradient angle 0→360° linearly, and
-// `celebrate-border-burst` drives the ring's thickness `--stroke-hairline` → `--stroke-focus` →
-// hairline on an ease-in-out (`🎨️styling/🖌️ui/🎨️.css:1218-1231, 1249-1268`). Both are pure functions
-// of the frame clock, so they port exactly; what does NOT port is the conic gradient itself, which a
-// shader-less ring cannot express — see the packet report's gap list.
 
 /// 🎉️ Where in the celebrate cycle `seconds` sits, as turns in `[0, 1)`. `duration <= 0` freezes at
 /// the start rather than dividing by zero.
@@ -93,13 +92,6 @@ pub fn celebrate_turns(seconds: f32, duration: f32) -> f32 {
     }
     let turns = seconds / duration;
     turns - turns.floor()
-}
-
-/// 💍️ The ring thickness at `turns` — React's `celebrate-border-burst`: hairline at 0 % and 100 %,
-/// `--stroke-focus` at 50 %, eased in and out (the raised cosine `ease-in-out` traces).
-pub fn celebrate_stroke(theme: &Theme, turns: f32) -> f32 {
-    let eased = 0.5 - 0.5 * (turns * std::f32::consts::TAU).cos();
-    theme.stroke_hairline + (theme.stroke_focus - theme.stroke_hairline) * eased
 }
 
 /// 🌈️ The conic gradient sampled at `turns` — React's `--celebrate-conic` cycles
@@ -126,7 +118,7 @@ pub fn focus_ring_visible(flags: NodeFlags) -> bool {
     flags.contains(NodeFlags::FOCUSED) && flags.contains(NodeFlags::FOCUS_VISIBLE)
 }
 
-/// 🏆️ Whether this node owns the hover: only the innermost enabled interactive node of the hover chain paints hover, never an ancestor of it.
+/// 🏆️ Whether the resolved hover state applies to this node's own border.
 pub fn hover_owner(flags: NodeFlags) -> bool {
     flags.contains(NodeFlags::HOVER_OWNER)
 }

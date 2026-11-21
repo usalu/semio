@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { build } from "vite";
 import { expect, it } from "vitest";
+import { atTestLevel, testLevelBudgetMs } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { repositoryCachePartitionRootDataV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import { staffageModelPipeline } from "../../🏗️builder/🌐️vite/🟦️.ts";
 
@@ -17,7 +18,7 @@ it("classifies the model pipeline modules and nothing else as free of import-tim
   for (const path of ["🔨️modules/📤️export/🖼️svg/🟦️.ts", "🔨️modules/🎨️depiction/🟦️.ts", "🎯️targets/⚛️react/🔨️modules/🧍️figure/🟦️.tsx"]) expect(staffageModelPipeline(`${root}/${path}`)).toBe(false);
 });
 
-it("builds the viewer and the encoders into lazy chunks and keeps them out of the entry", async () => {
+atTestLevel(it, "long")("builds the viewer and the encoders into lazy chunks and keeps them out of the entry", async () => {
   const out = mkdtempSync(join(tmpdir(), "staffage-split-"));
   process.env.SEMIO_VITE_CACHE_DIRECTORY = join(repositoryCachePartitionRootDataV1(resolve(import.meta.dirname, "../../../../../.."), "products"), "vite-staffage-split");
   try {
@@ -33,4 +34,4 @@ it("builds the viewer and the encoders into lazy chunks and keeps them out of th
   } finally {
     rmSync(out, { recursive: true, force: true });
   }
-}, 180_000);
+}, testLevelBudgetMs("long"));

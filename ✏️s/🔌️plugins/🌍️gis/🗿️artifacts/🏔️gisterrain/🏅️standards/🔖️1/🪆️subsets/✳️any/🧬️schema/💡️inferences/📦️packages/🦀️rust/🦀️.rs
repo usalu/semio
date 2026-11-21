@@ -10,7 +10,10 @@ pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 pub use crate::standards::v1::subsets::any::schema::imported_map::artifact_items::{GISTERRAIN_DIALECT, GIS_3D_TERRAIN_SCHEMA};
-pub use crate::standards::v1::subsets::any::schema::imported_map::artifact_items_3::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, gis_terrain_mesh_from_snapshot};
+pub use crate::standards::v1::subsets::any::schema::imported_map::artifact_items_3::{gis_terrain_elevation_grid, gis_terrain_mesh_buffers, gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, gis_terrain_mesh_from_snapshot, TerrainElevationGrid, TerrainTileMeshJson};
+
+#[path = "../../📐️elevation-edit/🦀️.rs"]
+pub mod elevation_edit;
 
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;

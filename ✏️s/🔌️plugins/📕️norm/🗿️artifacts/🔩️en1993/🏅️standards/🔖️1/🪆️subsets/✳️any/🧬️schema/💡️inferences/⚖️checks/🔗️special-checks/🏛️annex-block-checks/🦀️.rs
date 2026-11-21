@@ -216,7 +216,7 @@ fn corrugated_shear(annex: AnnexChoice, params: AnnexParams, panel: &PlatedPanel
     });
 }
 
-fn check_deck(annex: AnnexChoice, params: AnnexParams, bf: &BridgeFatigue, report: &mut CheckReport) {
+fn check_deck(annex: AnnexChoice, bf: &BridgeFatigue, report: &mut CheckReport) {
     if bf.deck_thickness <= 0.0 {
         return;
     }
@@ -272,7 +272,8 @@ fn check_deck(annex: AnnexChoice, params: AnnexParams, bf: &BridgeFatigue, repor
     let delta_c = bridge_fatigue::orthotropic_detail(&bf.detail_id).map_or(f64::from(bf.category), |d| d.min(f64::from(bf.category))) * ks;
     let (delta_e2, delta_p, l2, l3, l4) = delta_at(t_d);
     let strip = strip_at(t_d);
-    let u = bridge_fatigue::fatigue_utilisation(delta_e2, delta_c, 1.0, params.gamma_mf);
+    let gamma_mf = part_2::fatigue_factor(bf, annex);
+    let u = bridge_fatigue::fatigue_utilisation(delta_e2, delta_c, 1.0, gamma_mf);
     let case = Case {
         id: format!("en1993.2.9.5.deck.{}", bf.id),
         part: "DIN EN 1993-2",
@@ -284,14 +285,14 @@ fn check_deck(annex: AnnexChoice, params: AnnexParams, bf: &BridgeFatigue, repor
         demand: dimensionless(u),
         capacity: dimensionless(1.0),
         explanation: bilingual(
-            format!("Strip clamped over the clear span {span:.0} mm under Q_w={:.1} kN on a {:.0} mm patch: M_hog={:.0} N·mm/mm, M_sag={:.0} N·mm/mm, σ_hog={:.1} MPa=Δσ_p, σ_sag={:.1} MPa; λ2={l2:.3}, λ3={l3:.3}, λ4={l4:.3}: Δσ_E,2={delta_e2:.1} MPa against Δσ_C/γMf={:.1} MPa (screening strip model, no influence surface).", bf.wheel_load / 1e3, orthotropic_deck::patch_side(bf.wheel_patch * 1e3, surfacing, t_d), strip.m_hogging, strip.m_sagging, delta_p, strip.sigma_sagging, delta_c / params.gamma_mf),
-            format!("Streifen eingespannt über die lichte Weite {span:.0} mm unter Q_w={:.1} kN auf {:.0} mm Aufstandsfläche: M_hog={:.0} N·mm/mm, M_sag={:.0} N·mm/mm, σ_hog={:.1} MPa=Δσ_p, σ_sag={:.1} MPa; λ2={l2:.3}, λ3={l3:.3}, λ4={l4:.3}: Δσ_E,2={delta_e2:.1} MPa gegen Δσ_C/γMf={:.1} MPa (Streifenmodell zur Abschätzung, keine Einflussfläche).", bf.wheel_load / 1e3, orthotropic_deck::patch_side(bf.wheel_patch * 1e3, surfacing, t_d), strip.m_hogging, strip.m_sagging, delta_p, strip.sigma_sagging, delta_c / params.gamma_mf),
+            format!("Strip clamped over the clear span {span:.0} mm under Q_w={:.1} kN on a {:.0} mm patch: M_hog={:.0} N·mm/mm, M_sag={:.0} N·mm/mm, σ_hog={:.1} MPa=Δσ_p, σ_sag={:.1} MPa; λ2={l2:.3}, λ3={l3:.3}, λ4={l4:.3}: Δσ_E,2={delta_e2:.1} MPa against Δσ_C/γMf={:.1} MPa (screening strip model, no influence surface).", bf.wheel_load / 1e3, orthotropic_deck::patch_side(bf.wheel_patch * 1e3, surfacing, t_d), strip.m_hogging, strip.m_sagging, delta_p, strip.sigma_sagging, delta_c / gamma_mf),
+            format!("Streifen eingespannt über die lichte Weite {span:.0} mm unter Q_w={:.1} kN auf {:.0} mm Aufstandsfläche: M_hog={:.0} N·mm/mm, M_sag={:.0} N·mm/mm, σ_hog={:.1} MPa=Δσ_p, σ_sag={:.1} MPa; λ2={l2:.3}, λ3={l3:.3}, λ4={l4:.3}: Δσ_E,2={delta_e2:.1} MPa gegen Δσ_C/γMf={:.1} MPa (Streifenmodell zur Abschätzung, keine Einflussfläche).", bf.wheel_load / 1e3, orthotropic_deck::patch_side(bf.wheel_patch * 1e3, surfacing, t_d), strip.m_hogging, strip.m_sagging, delta_p, strip.sigma_sagging, delta_c / gamma_mf),
         ),
         ndps: &["ndp.en1993.v-880.1", "ndp.en1993.v-881.3"],
-        gammas: &[AnnexParams::GAMMA_MF],
+        gammas: &[part_2::fatigue_factor_id(bf, annex)],
     };
     emit(report, annex, case, || {
-        let th = grow(t_d, None, |x| bridge_fatigue::fatigue_utilisation(delta_at(x).0, delta_c, 1.0, params.gamma_mf) <= 1.0);
+        let th = grow(t_d, None, |x| bridge_fatigue::fatigue_utilisation(delta_at(x).0, delta_c, 1.0, gamma_mf) <= 1.0);
         let wheel = bf.wheel_load / u.max(1.0);
         solved([
             th.map(|th| lift(subject("deckThickness", "Deck plate thickness", "Fahrbahnblechdicke"), length_m(bf.deck_thickness), length_m(th / 1e3), &format!("Increase the deck plate to at least {th:.1} mm."), &format!("Fahrbahnblech auf mindestens {th:.1} mm erhöhen."))),
@@ -357,7 +358,7 @@ pub(super) fn check_annex_blocks(document: &En1993Snapshot, annex: AnnexChoice, 
         stiffened_plate_check(annex, params, p, report);
     }
     for b in document.bridge_fatigue.iter().filter(|e| scope.admits("bridgeFatigue", &e.id)) {
-        check_deck(annex, params, b, report);
+        check_deck(annex, b, report);
     }
     for c in document.cold_formed_members.iter().filter(|e| scope.admits("coldFormedMembers", &e.id)) {
         purlin(annex, params, c, report);

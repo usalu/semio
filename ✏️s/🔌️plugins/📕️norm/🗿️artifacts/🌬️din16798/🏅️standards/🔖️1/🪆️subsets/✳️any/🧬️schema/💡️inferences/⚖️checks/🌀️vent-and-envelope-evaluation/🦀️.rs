@@ -8,6 +8,9 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
     let path = |field: &str| format!("ventSystems[id={}].{field}", vent.id);
     let served: Vec<&ZoneDocument> = doc.zones.iter().filter(|z| z.vent_system_id == vent.id).collect();
     let q_served: f64 = served.iter().map(|z| z.outdoor_air_supplied_m3_h).sum();
+    let q_capacity_required: f64 = served.iter().map(|z| {
+        z.outdoor_air_supplied_m3_h.max(part_1::hygienic_outdoor_air_minimum_m3_h(z.occupants, parse_usage(&z.usage_type)))
+    }).sum();
     let q_design = vent.design_airflow_m3_h;
     let q_design_m3_s = (q_design / 3600.0).max(1e-9);
 
@@ -22,16 +25,16 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
                 "Keine Zone verweist auf diese Lüftungsanlage.",
             ));
         } else {
-            bc = bc.utilization(Quantity::new(QuantityKind::VentilationRate, q_served), Quantity::new(QuantityKind::VentilationRate, q_design.max(1e-9)))
+            bc = bc.utilization(Quantity::new(QuantityKind::VentilationRate, q_capacity_required), Quantity::new(QuantityKind::VentilationRate, q_design.max(1e-9)))
                 .explanation(loc(
-                    format!("q_served={q_served:.1} m³/h from {} zone(s); design capacity {q_design:.1} m³/h", served.len()),
-                    format!("q_served={q_served:.1} m³/h aus {} Zone(n); Auslegungskapazität {q_design:.1} m³/h", served.len()),
+                    format!("Assigned outdoor air {q_served:.1} m³/h across {} zones. Capacity needed {q_capacity_required:.1} m³/h after applying each zone's hygienic minimum. Design capacity {q_design:.1} m³/h.", served.len()),
+                    format!("Zugeordnete Außenluft {q_served:.1} m³/h für {} Zonen. Erforderliche Kapazität {q_capacity_required:.1} m³/h nach Berücksichtigung des hygienischen Mindestwerts jeder Zone. Auslegungskapazität {q_design:.1} m³/h.", served.len()),
                 ));
-            if q_served > q_design {
-                bc = bc.remedy(Remedy::at_least(vent_subject(vent, path("designAirflowM3H")), Quantity::new(QuantityKind::VentilationRate, q_design), Quantity::new(QuantityKind::VentilationRate, q_served),
+            if q_capacity_required > q_design {
+                bc = bc.remedy(Remedy::at_least(vent_subject(vent, path("designAirflowM3H")), Quantity::new(QuantityKind::VentilationRate, q_design), Quantity::new(QuantityKind::VentilationRate, q_capacity_required),
                     loc(
-                        format!("Increase design outdoor-air capacity to at least {q_served:.1} m³/h."),
-                        format!("Auslegungs-Außenluftkapazität auf mindestens {q_served:.1} m³/h erhöhen."),
+                        format!("Increase design outdoor-air capacity to at least {q_capacity_required:.1} m³/h."),
+                        format!("Auslegungs-Außenluftkapazität auf mindestens {q_capacity_required:.1} m³/h erhöhen."),
                     )));
             }
         }
@@ -126,17 +129,28 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bf.build());
 
-    let interval = inspection_interval_years(&vent.system_type);
-    let mut bi = CheckResult::assess(
-        format!("din16798-3.inspection.{}", vent.id), "DIN EN 16798-3", ClauseId::new("EN 16798-3", "§8.1", "inspection"),
-        vent_subject(vent, path("yearsSinceInspection")), loc("Ventilation inspection interval", "Lüftungsinspektionsintervall"),
-    ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, vent.years_since_inspection as f64), Quantity::new(QuantityKind::Dimensionless, interval as f64))
-    .explanation(loc(format!("{} years since inspection; allowed interval {} years", vent.years_since_inspection, interval), format!("{} Jahre seit der Inspektion; zulässiges Intervall {} Jahre", vent.years_since_inspection, interval)));
-    if vent.years_since_inspection > interval {
-        bi = bi.remedy(Remedy::at_most(vent_subject(vent, path("yearsSinceInspection")), Quantity::new(QuantityKind::Dimensionless, vent.years_since_inspection as f64), Quantity::new(QuantityKind::Dimensionless, 0.0),
-            loc("Perform inspection and reset years since inspection to 0.", "Inspektion durchführen und Jahre seit Inspektion auf 0 setzen.")));
-    }
-    out.push(bi.build());
+    let years = vent.years_since_inspection;
+    let (edition, clause, basis_en, basis_de) = match doc.annex {
+        AnnexChoice::De => (
+            "DIN EN 16798-17:2019-09", "NA.1",
+            "Use the applicable national energy-saving rules to determine the due date. The national annex references DIN SPEC 15240 for inspection guidance.",
+            "Für die Bestimmung der Fälligkeit gilt das anwendbare nationale Energieeinsparrecht. Der nationale Anhang verweist für die Inspektion auf DIN SPEC 15240.",
+        ),
+        AnnexChoice::En => (
+            "EN 16798-17:2017", "§1",
+            "Mandatory inspection frequency is set nationally. CEN/TR 16798-18 §5.2.1.1 provides guidance for planning.",
+            "Die Häufigkeit vorgeschriebener Inspektionen wird national festgelegt. CEN/TR 16798-18, Abschnitt 5.2.1.1, gibt Hinweise zur Planung.",
+        ),
+    };
+    out.push(CheckResult::assess(
+        format!("din16798-17.inspection-age.{}", vent.id), edition, ClauseId::new(edition, clause, "inspection"),
+        vent_subject(vent, path("yearsSinceInspection")), loc("Recorded inspection age", "Erfasste Zeit seit der Inspektion"),
+    ).annex(doc.annex)
+    .informative(Quantity::new(QuantityKind::Dimensionless, f64::from(years)))
+    .explanation(loc(
+        format!("Years since the recorded inspection: {years}. {basis_en}"),
+        format!("Jahre seit der erfassten Inspektion: {years}. {basis_de}"),
+    )).build());
 
     let vent_kind = VentSystemType::parse(&vent.system_type);
     if matches!(vent_kind, VentSystemType::Natural) {

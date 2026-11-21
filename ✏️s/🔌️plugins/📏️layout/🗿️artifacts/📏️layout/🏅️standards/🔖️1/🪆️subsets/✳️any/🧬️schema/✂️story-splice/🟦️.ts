@@ -22,3 +22,34 @@ export function spliceStory(story: TextStory, offset: number, count: number, ins
   });
   return { ...story, content: characters.slice(0,offset).join("") + insert + characters.slice(endIndex).join(""), styleRuns };
 }
+
+function previousScalar(text: string, end: number): number {
+  const tail = text.charCodeAt(end - 1);
+  const head = text.charCodeAt(end - 2);
+  return tail >= 0xdc00 && tail <= 0xdfff && head >= 0xd800 && head <= 0xdbff ? end - 2 : end - 1;
+}
+
+/** 🔁️ Finds the smallest contiguous replacement in Unicode scalar coordinates. */
+export function storyReplacement(content: string, value: string): [number, number, string] | null {
+  let start = 0;
+  let offset = 0;
+  const next = value[Symbol.iterator]();
+  for (const scalar of content) {
+    if (scalar !== next.next().value) break;
+    start += scalar.length;
+    offset++;
+  }
+  let oldEnd = content.length;
+  let newEnd = value.length;
+  if (oldEnd === start && newEnd === start) return null;
+  while (oldEnd > start && newEnd > start) {
+    const oldStart = previousScalar(content, oldEnd);
+    const newStart = previousScalar(value, newEnd);
+    if (content.codePointAt(oldStart) !== value.codePointAt(newStart)) break;
+    oldEnd = oldStart;
+    newEnd = newStart;
+  }
+  let count = 0;
+  for (let at = start; at < oldEnd; count++) at += content.codePointAt(at)! > 0xffff ? 2 : 1;
+  return [offset, count, value.slice(start, newEnd)];
+}

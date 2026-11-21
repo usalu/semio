@@ -1,0 +1,9 @@
+# Source-Faithful Raster Import
+
+The external-file import leaves were decoding a source image, asking the PNG export codec to author a new RGBA8 PNG, and decoding it again to populate the document child. The second decode discarded the original color mode and bit depth. The export codec also requires one frame, rejects ICC authoring, and converts image metadata to Latin-1 PNG text, so those export constraints could reject a valid image during import.
+
+Raster document import now takes ownership of the decoded Semio image directly. It checks editable geometry and frame lengths, then computes the handle from the owned source. Display assets encode the first frame as an RGBA8 PNG preview. The decoded Semio image remains the document’s source for editing and compositing.
+
+The shared PNG import fixture supplies a 16-bit grayscale PNG with a Unicode Description and exact display pixels. The native regression checks the attached child’s source fields, the preview PNG and the composite. The independent Sharp/libvips run verified the source metadata and pixel values. The Raster I/O Bun suite passed 8 tests with 18 assertions. Git diff whitespace checks passed for the artifact I/O changes.
+
+The directly registered Cargo invocation was refused because the workspace requires repository compiler admission. The supported shared-store Cargo request 15039 passed source admission and began compiling on one local core. Full project request 97629 stalled in project graph inventory after 1,984 owner checks and held capacity needed by the development launcher. It was interrupted to release the reservation. The focused native request 15039 ended with Cargo exit 101 while compiling upstream dependencies, before the Raster regression could execute. Cargo named bumpalo and semio-s-artifact-stdio-pdf-mut-base-4 among the failed dependencies. The shared fixture path is 145 characters and 208 UTF-8 bytes on this host.

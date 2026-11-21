@@ -3,18 +3,21 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
-type Field = { name: string; type: "utf8" | "optional-utf8" | "f64" | "u64" | "u32" | "u8" | "bool" | "bytes" };
+type Field = { name: string; enum?: string[]; type: "utf8" | "optional-utf8" | "f64" | "u64" | "u32" | "u8" | "bool" | "bytes" };
 type Contract = { operations: Record<string, number>; arguments: Record<string, Field[]> };
 
 const excluded = new Set(["open", "attachSurface", "renderFrame"]);
 const fieldTypes: Record<Field["type"], string> = { utf8: "string", "optional-utf8": "string | null", f64: "number", u64: "number", u32: "number", u8: "number", bool: "boolean", bytes: "ArrayBufferView | readonly number[]" };
+const fieldType = (field: Field): string => field.enum
+  ? [...field.enum.map((value) => JSON.stringify(value)), ...(field.type === "optional-utf8" ? ["null"] : [])].join(" | ")
+  : fieldTypes[field.type];
 export const FLOW_WASM_ABI_URL = new URL("../../../🧬️schema/📡️abi/🔣️.json", import.meta.url);
 const declarationUrl = new URL("../🤖️generated/🟦️.d.ts", import.meta.url);
 
 /** 🧬️ Renders the declaration surface without loading tests or compiler output. */
 export function flowBrowserDeclaration(): string {
   const contract: Contract = JSON.parse(readFileSync(FLOW_WASM_ABI_URL, "utf8"));
-  const record = (fields: Field[]) => `{ ${fields.map((field) => `readonly ${field.name}${field.type === "optional-utf8" ? "?" : ""}: ${fieldTypes[field.type]}`).join("; ")} }`;
+  const record = (fields: Field[]) => `{ ${fields.map((field) => `readonly ${field.name}${field.type === "optional-utf8" ? "?" : ""}: ${fieldType(field)}`).join("; ")} }`;
   const fieldsFor = (name: string): Field[] => {
     const fields = contract.arguments[name];
     if (fields === undefined) throw Error(`Flow ABI arguments missing: ${name}`);
@@ -23,7 +26,7 @@ export function flowBrowserDeclaration(): string {
   const names = Object.keys(contract.operations).filter((name) => !excluded.has(name));
   const methods = names.flatMap((name) => {
     const fields = fieldsFor(name);
-    const parameters = fields.map((field, index) => `${field.name}${field.type === "optional-utf8" && fields.slice(index).every((value) => value.type === "optional-utf8") ? "?" : ""}: ${fieldTypes[field.type]}`).join(", ");
+    const parameters = fields.map((field, index) => `${field.name}${field.type === "optional-utf8" && fields.slice(index).every((value) => value.type === "optional-utf8") ? "?" : ""}: ${fieldType(field)}`).join(", ");
     const positional = `  ${name}(${parameters}): FlowTask<unknown>;`;
     return fields.length ? [positional, `  ${name}(args: ${record(fields)}): FlowTask<unknown>;`] : [positional];
   });

@@ -38,18 +38,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     /// decode_op` (the SAME decode idiom `dispatch_typed_command` uses for `A::Command`) and
     /// dispatches them directly — see the trait method's own doc for why this skips `handle`.
     pub(super) async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
-        async fn decode_lane<T: ::protocol::OpBinary>(bytes: &[u8]) -> Result<Vec<T>, Fault> {
-            let op_bytes_list = protocol::decode_ops_vec(bytes).map_err(|error| error.into_fault())?;
-            let mut decoded = Vec::with_capacity(op_bytes_list.len());
-            for op_bytes in op_bytes_list.iter() {
-                decoded.push(<T as ::protocol::OpBinary>::decode_op(op_bytes).map_err(|error| error.into_fault())?);
-            }
-            Ok(decoded)
-        }
+        use semio_plugin_reactor_app::app_runtime_helpers::decode_task_emission_lane;
         let log_generation_before = self.history.log_generation;
-        let artifact_mutations = decode_lane::<A::Mutation>(&artifact_ops).await?;
-        let config_mutations = decode_lane::<A::ConfigMutation>(&config_ops).await?;
-        let draft_mutations = decode_lane::<A::DraftMutation>(&draft_ops).await?;
+        let artifact_mutations = decode_task_emission_lane::<A::Mutation>(&artifact_ops)?;
+        let config_mutations = decode_task_emission_lane::<A::ConfigMutation>(&config_ops)?;
+        let draft_mutations = decode_task_emission_lane::<A::DraftMutation>(&draft_ops)?;
         let result = self.dispatch_ctx().dispatch_emit("task-resume-emit", Emit { artifact_mutations, config_mutations, draft_mutations, ..Default::default() }, meta, identity).await?;
         Ok(self.render_ctx().finish_recorded(log_generation_before, "task-resume-emit", result).await)
     }

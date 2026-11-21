@@ -1,11 +1,14 @@
 import { ephemeralMap } from "../../../../../🫧️transient/🟦️.ts";
 import { TILE_PROXY_TRANSPORT_LIMITS_V1, type TileProxyAssetSpecV1, parseTileProxyAssetSpecV1 } from "../../../../../🖼️assets/📦️packages/🟦️typescript/🗺️tile-proxy/🟦️.ts";
-import { resolve, relative, isAbsolute } from "node:path";
-import { mkdir, writeFile } from "node:fs/promises";
+import { basename, dirname, join, resolve, relative, isAbsolute, sep } from "node:path";
+import { link, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import type { AssetDeliveryModeV1 } from "../../../../../🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import type { OwnedBuildMiddleware, OwnedBuildPlugin } from "../../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
-import { existsSync, mkdirSync, cpSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, cpSync } from "node:fs";
 import { serveFileWithValidatorsV1 } from "../📤️file-serving/🟦️.ts";
+
+const TILE_STAGE_PREFIX = ".tile-";
+const TILE_STAGE_NAME = /^\.tile-[\da-z]{6,}$/iu;
 
 /** 🧩️ Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
 function tileProxyExtFromTemplate(template: string): string {
@@ -21,6 +24,10 @@ function contentTypeForTileExt(ext: string): string {
 }
 
 const tileProxyTemplateCache = ephemeralMap<string, { readonly template: string; readonly at: number }>("framework.modules.ui.styling.packages.rust.vite.elements.assets.ts.tileProxyTemplateCache");
+type TileProxyResult = { readonly ok: true; readonly ext: string } | { readonly ok: false; readonly status: number };
+type TileProxyDownload = { readonly controller: AbortController; readonly result: Promise<TileProxyResult>; consumers: number };
+const tileProxyDownloads = ephemeralMap<string, TileProxyDownload>("framework.modules.ui.styling.vite.tileProxyDownloads");
+
 async function boundedTileProxyBytes(response: Response, maximum: number): Promise<Uint8Array> {
   if (Number(response.headers.get("content-length")) > maximum) { await response.body?.cancel(); throw Error("tile proxy body exceeds its byte budget"); }
   if (!response.body) return new Uint8Array();
@@ -68,27 +75,58 @@ async function resolveTileProxyUrlTemplate(upstream: string, userAgent: string, 
   return template;
 }
 
-async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z: number, x: number, y: number, userAgent: string, signal: AbortSignal): Promise<{ readonly ok: boolean; readonly ext: string }> {
+async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z: number, x: number, y: number, userAgent: string, signal: AbortSignal): Promise<TileProxyResult> {
   const template = await resolveTileProxyUrlTemplate(upstream, userAgent, signal);
   const ext = tileProxyExtFromTemplate(template);
   const filePath = resolve(cacheRoot, `${z}/${x}/${y}.${ext}`);
   const relToRoot = relative(cacheRoot, filePath);
   if (relToRoot.startsWith("..") || isAbsolute(relToRoot)) {
-    return { ok: false, ext };
+    return { ok: false, status: 404 };
   }
-  await mkdir(resolve(filePath, ".."), { recursive: true });
+  if (existsSync(filePath)) return { ok: true, ext };
   const url = template.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y));
   const upstreamRes = await fetch(url, { headers: { "User-Agent": userAgent }, signal });
   if (!upstreamRes.ok) {
-    return { ok: false, ext };
+    await upstreamRes.body?.cancel();
+    const status = upstreamRes.status;
+    return { ok: false, status: status >= 400 && status < 600 ? status : 502 };
   }
   const buf = await boundedTileProxyBytes(upstreamRes, TILE_PROXY_TRANSPORT_LIMITS_V1.tileBytes);
   if (buf.length === 0) {
-    return { ok: false, ext };
+    return { ok: false, status: 404 };
   }
   signal.throwIfAborted();
-  await writeFile(filePath, buf);
+  const directory = dirname(filePath);
+  await mkdir(directory, { recursive: true });
+  const stage = await mkdtemp(join(directory, TILE_STAGE_PREFIX));
+  const body = join(stage, "body");
+  try {
+    await writeFile(body, buf, { signal });
+    signal.throwIfAborted();
+    await link(body, filePath).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "EEXIST") throw error;
+    });
+  } finally {
+    await rm(stage, { recursive: true, force: true });
+  }
   return { ok: true, ext };
+}
+
+function acquireTileProxyDownload(key: string, fetchTile: (signal: AbortSignal) => Promise<TileProxyResult>): TileProxyDownload {
+  const current = tileProxyDownloads.get(key);
+  if (current && !current.controller.signal.aborted) {
+    current.consumers++;
+    return current;
+  }
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), TILE_PROXY_TRANSPORT_LIMITS_V1.requestMs);
+  const result = fetchTile(controller.signal).finally(() => {
+    clearTimeout(deadline);
+    if (tileProxyDownloads.get(key) === download) tileProxyDownloads.delete(key);
+  });
+  const download = { controller, result, consumers: 1 };
+  tileProxyDownloads.set(key, download);
+  return download;
 }
 
 /** 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
@@ -121,25 +159,38 @@ export function createTileProxyMiddleware(route: string, cacheRoot: string, upst
       res.end();
       return;
     }
-    const lifetime = new AbortController();
-    const retire = () => lifetime.abort();
+    const key = JSON.stringify([filePath, upstream, userAgent]);
+    const download = acquireTileProxyDownload(key, (signal) => fetchTileProxyTileToCache(cacheRoot, upstream, z, x, y, userAgent, signal));
+    let retired = false;
+    const retire = (): void => {
+      if (retired) return;
+      retired = true;
+      if (--download.consumers === 0 && tileProxyDownloads.get(key) === download) {
+        tileProxyDownloads.delete(key);
+        download.controller.abort();
+      }
+    };
     req.once("aborted", retire);
     req.socket.once("close", retire);
     res.once("close", retire);
-    const expiry = setTimeout(retire, TILE_PROXY_TRANSPORT_LIMITS_V1.requestMs);
-    const signal = lifetime.signal;
     try {
-      const result = await fetchTileProxyTileToCache(cacheRoot, upstream, z, x, y, userAgent, signal);
+      const result = await download.result;
+      if (retired || req.socket.destroyed || res.destroyed || res.writableEnded) return;
       if (!result.ok) {
-        res.statusCode = 404;
+        res.statusCode = result.status;
+        res.setHeader("Cache-Control", "no-store");
         res.end();
         return;
       }
       serveFileWithValidatorsV1(req, res, filePath, contentTypeForTileExt(result.ext));
     } catch {
-      if (!req.socket.destroyed && !res.destroyed && !res.writableEnded) { res.statusCode = 502; res.end(); }
+      if (!retired && !req.socket.destroyed && !res.destroyed && !res.writableEnded) {
+        res.statusCode = 502;
+        res.setHeader("Cache-Control", "no-store");
+        res.end();
+      }
     } finally {
-      clearTimeout(expiry);
+      retire();
       req.removeListener("aborted", retire);
       req.socket.removeListener("close", retire);
       res.removeListener("close", retire);
@@ -181,7 +232,15 @@ export function tileProxyVitePlugin(repoRoot: string, spec: TileProxyAssetSpecV1
         const dist = outDir;
         mkdirSync(dist, { recursive: true });
         if (existsSync(cacheRoot)) {
-          cpSync(cacheRoot, resolve(dist, spec.route.replace(/^\//, "")), { recursive: true });
+          cpSync(cacheRoot, resolve(dist, spec.route.replace(/^\//, "")), {
+            recursive: true,
+            filter: (source) => {
+              if (!TILE_STAGE_NAME.test(basename(source))) return true;
+              const parents = relative(cacheRoot, dirname(source)).split(sep);
+              if (parents.length !== 2 || parents.some((part) => !/^\d+$/u.test(part))) return true;
+              return lstatSync(source, { throwIfNoEntry: false })?.isDirectory() === false;
+            },
+          });
         }
       },
     });

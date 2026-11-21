@@ -1,0 +1,25 @@
+{
+  "pose": {
+    "position": [8, -8, 8],
+    "target": [0, 0, 0],
+    "up": [0, 0, 1],
+    "zoom": 1,
+    "fov": 45
+  },
+  "cases": [
+    {
+      "app": {
+        "id": "viewport-with-pose-action",
+        "windowKinds": [{"id": "model", "actions": [{"id": "setCamera"}]}]
+      },
+      "publications": 1
+    },
+    {
+      "app": {
+        "id": "s.norm-eurocode.en1990@1/*#editor",
+        "windowKinds": [{"id": "norm-en1990-viewport", "actions": [{"id": "viewportSetCamera"}]}]
+      },
+      "publications": 0
+    }
+  ]
+}

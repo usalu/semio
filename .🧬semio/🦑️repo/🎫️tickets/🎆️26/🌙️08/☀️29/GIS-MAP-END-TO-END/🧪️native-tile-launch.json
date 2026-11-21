@@ -1,0 +1,19 @@
+{
+  "variant": "gis2d",
+  "app": "s.gis.gismap@1/*#editor",
+  "routes": [
+    {
+      "route": "/osm",
+      "upstream": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      "request": "/osm/1/0/0.png",
+      "reply": "/raster/1/0/0.png"
+    },
+    {
+      "route": "/vt",
+      "upstream": "https://tiles.openfreemap.org/planet",
+      "request": "/vt/1/0/0.pbf",
+      "reply": "/vector/1/0/0.pbf"
+    }
+  ],
+  "upstreamCalls": ["/raster/1/0/0.png", "/planet", "/vector/1/0/0.pbf"]
+}

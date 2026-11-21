@@ -38,6 +38,31 @@ use semio_framework_2d_compute::EngineHandles;
 use std::sync::Arc;
 
 #[test]
+fn only_paid_publication_progress_moves_the_mounted_stall_witness() {
+    use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage::{AwaitingAck, Publishing, Retiring};
+    use semio_framework_value::retained_clone::RetainedCloneProgress;
+    use semio_plugin_retained_command::typed_operation::test_blank_mounted_operation;
+
+    let cases: serde_json::Value = serde_json::from_str(include_str!("progress.json")).unwrap();
+    for row in cases.as_array().unwrap() {
+        let mut mounted = test_blank_mounted_operation::<RetirementApp>();
+        mounted.publication_progress = row["before"].as_u64().unwrap();
+        mounted.stage = match row["stage"].as_str().unwrap() {
+            "publishing" => Publishing,
+            "ack" => AwaitingAck,
+            "retiring" => Retiring,
+            _ => panic!("unknown fixture stage"),
+        };
+        mounted.note_paid_publication_progress(RetainedCloneProgress {
+            copied_items: row["items"].as_u64().unwrap() as usize,
+            released_bytes: row["released"].as_u64().unwrap() as usize,
+            ..Default::default()
+        });
+        assert_eq!(mounted.publication_progress, row["after"].as_u64().unwrap(), "{}", row["id"]);
+    }
+}
+
+#[test]
 fn publication_original_work_charges_disjoint_core_and_native_work_once_and_resets_denials(){
  let vectors:serde_json::Value=serde_json::from_str(include_str!("work.json")).unwrap();
  let mut caller=semio_plugin_testing_caller::OriginalWorkFixture::new();
@@ -439,11 +464,61 @@ fn document_mutation(value: i32) -> TestMutation {
     SetCount { value }.into()
 }
 
-fn admit_window_config_publication(registry: &mut WindowConfigOwnerRegistry, operation: semio_framework_job::OperationId, authority: &semio_plugin_window_config::WindowConfigAuthority, mutation: WindowConfigMutation, grant: semio_framework_value::RetainedCloneGrant) -> Box<dyn semio_plugin_window_config::ErasedWindowConfigPublication> {
-    let (actor, _) = registry.local_actor_id().0.admit_clone(grant).unwrap();
+#[semio_framework_async_macros::async_test]
+async fn mounted_publication_drains_closing_store_without_a_maintenance_turn() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("publication-close.json")).unwrap();
+    let mut caller = semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();
+    let mut cx = caller.context();
+    let policy = artifact_app_laws::fixture_mounted_policy();
+    let mut app = artifact_app_laws::new_app::<RetirementApp>(protocol::ActorId("fixture".into()), policy, &mut artifact_app_laws::fixture_identity()).await;
+    let mut publication = app.stores.store.begin_apply_batch(
+        semio_framework_job::OperationId(1),
+        app.stores.store.generation_now(),
+        app.stores.store.content_revision_now(),
+        "fixture".into(),
+        vec![document_mutation(fixture["mutationValue"].as_i64().unwrap() as i32)],
+        store::os_store::store_schema::HistoryLane::Document,
+        app.stores.artifact_one_item_factory.as_ref(),
+        None,
+    ).unwrap_or_else(|rejection| panic!("Store admission failed: {}", rejection.into_owners().0));
+    publication.begin_close();
+    let mut mounted = mounted_rejection(&mut app, PendingArtifactStorePublication::Artifact(publication), &mut cx);
+    let before = cx.retained_progress();
+    let denied = semio_framework_value::retained_clone::RetainedCloneGrant {
+        maximum_items: fixture["deniedItems"].as_u64().unwrap() as usize,
+        ..policy.maintenance
+    };
+    cx.with_retained_loan(denied, |same| {
+        app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, denied, same)?;
+        Ok(())
+    }).unwrap();
+    assert_eq!(cx.retained_progress(), before);
+    assert!(mounted.pending_artifact_publication.as_ref().unwrap().is_closing());
+    for _ in 0..fixture["turnLimit"].as_u64().unwrap() {
+        if mounted.pending_artifact_publication.is_none() {
+            break;
+        }
+        publish_retirement_unit(&mut app, &mut mounted, &mut cx).unwrap();
+    }
+    assert_eq!(mounted.pending_artifact_publication.is_some(), fixture["pendingAfterClose"].as_bool().unwrap());
+    assert_eq!(mounted.terminal_fault.is_some(), fixture["faultAfterClose"].as_bool().unwrap());
+    assert!(cx.retained_progress().released_bytes > before.released_bytes);
+    mounted.stage = semio_plugin_composition_publication::MountedTypedCommandFullOperationStage::Retiring;
+    app.tools.tool_operations.insert_admitted(1, mounted);
+    close_registered_fixture_app(&mut app, policy, &mut cx).unwrap();
+    let fuel = cx.fuel_remaining();
+    drop(cx);
+    caller.retire(fuel).unwrap();
+}
+
+fn admit_window_config_publication(registry: &mut WindowConfigOwnerRegistry, operation: semio_framework_job::OperationId, authority: &semio_plugin_window_config::WindowConfigAuthority, mutation: WindowConfigMutation, grant: semio_framework_value::RetainedCloneGrant, cx: &mut semio_framework_job::StepContext<'_>) -> Box<dyn semio_plugin_window_config::ErasedWindowConfigPublication> {
+    let (turn, work) = cx.with_original_effect(grant, |_, effect| registry.local_actor_id().0.admit_clone(effect)).unwrap().expect("the original actor clone receives its paid effect");
+    cx.consume_work(work); let (actor, progress) = turn.result.unwrap(); cx.consume_retained(progress).expect("the fixture pays the original actor capture");
     let mut actor = Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(actor).map_err(|(error, _)| error).unwrap());
     let mut mutations = vec![mutation];
-    registry.admit_begin(operation, &mut actor, &mut mutations, authority, grant).unwrap().expect("window config publication admitted").0
+    let (publication, progress) = registry.admit_begin(operation, &mut actor, &mut mutations, authority, grant).unwrap().expect("window config publication admitted");
+    cx.consume_retained(progress).expect("the fixture pays the original Window frame");
+    publication
 }
 
 #[doc(hidden)]
@@ -549,17 +624,45 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
                 PendingArtifactStorePublication::Transient(publication)
             }
             "windowConfig" => {
+                use store::os_store::one_item::ArtifactStoreOneItemGrant;
+                use store::os_store::one_item_publication::ArtifactStoreOneItemAdvance;
                 let mutation = |value: &str| WindowConfigMutation::of::<RetirementWindowConfigOwner>("publication-retirement-window-left", config_mutation(value));
-                let mut publication = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("first"), grant.retained_grant());
-                let mut superseding = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("superseding"), grant.retained_grant());
+                let preparation = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation;
+                let mut publication = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("first"), preparation, cx);
+                let mut superseding = admit_window_config_publication(&mut app.stores.window_config_store, operation, &window_config_authority, mutation("superseding"), preparation, cx);
+                let source_grant = cx.retained_grant();
+                let ownership = app.stores.window_config_store.admit_store_batch(superseding.as_mut(), preparation).expect("superseding window Store accepts the original authority").expect("fixture preparation funds the Store constructor");
+                cx.consume_retained(ownership).expect("the fixture pays the original Store frame");
+                let mut published = false;
                 for _ in 0..4_096 {
-                    if matches!(app.stores.window_config_store.advance(superseding.as_mut(), grant).expect("superseding window config advances"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_, _)) {
+                    semio_plugin_testing_laws::artifact_app_laws::fixture_renew_turn(cx, semio_plugin_testing_caller::OriginalFixtureCaller::turn_fuel(), source_grant).unwrap();
+                    let retained = cx.retained_grant(); let body = retained.restricted_by(preparation);
+                    let turn_ceiling = cx.original_turn_ceiling().0;
+                    let mut scope = None;
+                    let mut advance = None;
+                    if !cx.with_native_receiving(&mut scope, |receiving, _| {
+                        advance = Some(app.stores.window_config_store.advance(superseding.as_mut(), body.maximum_copy_bytes, ArtifactStoreOneItemGrant::from_retained(body), turn_ceiling, receiving));
+                        Ok(())
+                    }).expect("superseding window config receives its native Store turn") {
+                        continue;
+                    }
+                    let scope = scope.expect("original window receiving scope");
+                    assert!(scope.source_refusal.is_none() && scope.call.is_ok());
+                    let advance = advance.expect("original window Store step").expect("superseding window config advances");
+                    let ownership = match &advance {
+                        ArtifactStoreOneItemAdvance::PreparationProgress(_, ownership) | ArtifactStoreOneItemAdvance::Published(_, ownership) => *ownership,
+                        _ => Default::default(),
+                    };
+                    cx.consume_receiving_retained(retained, ownership).expect("the fixture pays the window Store receipt");
+                    if matches!(advance, ArtifactStoreOneItemAdvance::Published(_, _)) {
                         assert!(superseding.acknowledge());
+                        published = true;
                         break;
                     }
                 }
+                assert!(published, "the superseding WindowConfig publication reaches the Store");
                 superseding_owner = Some(PendingArtifactStorePublication::WindowConfig(superseding));
-                assert!(app.stores.window_config_store.advance(publication.as_mut(), grant).is_err(), "the superseded window config publication is rejected");
+                assert!(app.stores.window_config_store.admit_store_batch(publication.as_mut(), preparation).is_err(), "the superseded window config publication is rejected");
                 PendingArtifactStorePublication::WindowConfig(publication)
             }
             "windowTransient" => {

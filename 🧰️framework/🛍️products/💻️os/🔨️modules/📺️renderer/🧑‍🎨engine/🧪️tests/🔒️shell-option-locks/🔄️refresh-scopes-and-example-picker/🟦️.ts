@@ -50,6 +50,8 @@ export function registerRefreshScopeAndExamplePickerTests(): void {
       labels: false,
     });
     expect(hostEffectRefreshScopeV1([{ setActiveTool: { toolId: "fill" } }], { kind: "none" }, bodyKeys), "a programmatic tool switch is the same shape as a utility arm").toEqual(earned);
+    expect(hostEffectRefreshScopeV1([], { kind: "none" }, bodyKeys, true), "a toolbar utility change refreshes its guest body even without a returned effect").toEqual(earned);
+    expect(hostEffectRefreshScopeV1([], { kind: "none" }, bodyKeys, false)).toEqual({ kind: "none" });
     expect(hostEffectRefreshScopeV1([{ setPanel: { panelJson: "{}" } }], { kind: "none" }, bodyKeys), "`setPanel` names no body of its own — `panelJson` feeds every section").toEqual({ kind: "full" });
 
     expect(hostEffectRefreshScopeV1([{ notify: { message: "refused" } }], { kind: "none" }, bodyKeys)).toEqual({ kind: "none" });

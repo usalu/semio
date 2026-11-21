@@ -1,6 +1,7 @@
 import{createIssuedResourceControlV1 as artifactEntryControlV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
+import {parse as parseToml} from "@iarna/toml";
 import ts from "typescript";
 import {existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {join,resolve,relative,dirname} from "node:path";
@@ -27,13 +28,17 @@ async function bounded<T>(label:string,body:()=>Promise<T>):Promise<T>{return en
 test("the test protocol report root beside the task identities stays reserved and never breaks the run inventory",async()=>withBuildTestInvocationV1(async original=>{
  const report=testReportPathV1({SEMIO_TASK_PROJECT:"@law/reserved",SEMIO_TASK_TARGET:"test",SEMIO_WORKSPACE_ROOT:root})!,tests=join(root,".cache/b/o/m/tests"),relativeReport=relative(tests,report).split(/[\\/]/u);
  expect(relativeReport.length).toBe(4);expect(storageSchema.definitions.Protocol.const.reservedChildren).toContain(relativeReport[0]!);expect(relativeReport[0]!).not.toMatch(/^[a-f0-9]{24}$/u);
- mkdirSync(dirname(report),{recursive:true});writeFileSync(report,"<testsuites/>\n");
- try{
-  await environment({SEMIO_TEST_OUTPUT_SCOPE:"law/reserved-report"},()=>withRepositoryTestArtifactsV1(root,original,artifactEntryControlV1(original,"test:artifact-entry",0),async phase=>{
+ await environment({SEMIO_TEST_OUTPUT_SCOPE:"law/reserved-report"},()=>withRepositoryTestArtifactsV1(root,original,artifactEntryControlV1(original,"test:artifact-entry",0),async phase=>{
+  mkdirSync(dirname(report),{recursive:true});
+  try{
+   writeFileSync(report,"<testsuites/>\n");
    const outcome=await retainRepositoryTestArtifactsV1(root,original,phase,{version:1,maximumRetainedBytes:fixture.retention.maximumRetainedBytes,maximumRuns:fixture.retention.maximumRuns},undefined,{dryRun:true});
-   expect(outcome.removed.every(path=>!path.startsWith(join(tests,relativeReport[0]!)))).toBe(true);expect(existsSync(report)).toBe(true);rmSync(testCacheRoot(root),{recursive:true,force:true});
-  }));
- }finally{rmSync(join(tests,relativeReport[0]!,relativeReport[1]!),{recursive:true,force:true});}
+   expect(outcome.removed.every(path=>!path.startsWith(join(tests,relativeReport[0]!)))).toBe(true);expect(existsSync(report)).toBe(true);
+  }finally{
+   rmSync(join(tests,relativeReport[0]!,relativeReport[1]!),{recursive:true,force:true});
+   rmSync(testCacheRoot(root),{recursive:true,force:true});
+  }
+ }));
 }),60000);
 
 test("test outputs reject ambient roots without an issued finite callback",async()=>{
@@ -46,7 +51,7 @@ test("test outputs retain actual finite paths and refuse released async callback
 });
 
 test("materializes exact owned host plan and result paths without compiling",async()=>bounded("plan",async()=>{
- const artifact=testCacheRoot(root),inputs=mkdtempSync(join(root,".cache/b/l/m/data/ti-"));try{const featurePath=join(inputs,"🥒️.feature"),adapterPath=join(inputs,"🦀️.rs");writeFileSync(featurePath,"Feature: explicit owned output\n  @level-quick\n  @id-owned-output\n  @mode-property\n  Scenario: keeps its caller-owned paths\n    Given a declared owner\n    Then an unchanged literal\n");writeFileSync(adapterPath,"pub fn adapter() -> semio_repo_test_host::Adapter { semio_repo_test_host::Adapter::new(\"rust\") }\n");const discovered:DiscoveredCase={owner:relative(root,inputs).split("\\").join("/"),ownerName:"owned-output",case:"fixture",caseDir:relative(root,inputs).split("\\").join("/"),featurePath:relative(root,featurePath).split("\\").join("/"),adapters:{rust:relative(root,adapterPath).split("\\").join("/")},sharedFixtureDir:null,projectName:"owned-output-fixture"};const planned=planExecution(root,discovered,"quick","subject","rust"),work=join(artifact,"work","owned-output-fixture-subject-rust"),results=join(artifact,"results","owned-output-fixture-subject-rust");expect(planned.plan.scenarios).toHaveLength(1);expect(planned.planPath).toBe(join(work,"📋️plan.json"));expect(planned.plan.resultsPath).toBe(join(results,"📤️results.jsonl"));expect(planned.plan.artifactDir).toBe(join(results,"📦️artifacts"));expect(readOutputMarker(root,work)?.testId).toBe(discovered.owner+"::fixture");expect(JSON.parse(readFileSync(planned.planPath,"utf8")).resultsPath).toBe(planned.plan.resultsPath);const host=materializeRustHost(root,discovered,"subject",planned.planPath,planned.plan.resultsPath);expect(host.hostDir).toBe(join(artifact,"hosts","owned-output-fixture-subject-rust"));expect(host.args).toEqual(["--plan",planned.planPath,"--out",planned.plan.resultsPath]);const main=readFileSync(join(host.hostDir!,"src","main.rs"),"utf8");expect(main).toContain(JSON.stringify(adapterPath));expect(main).toContain("semio_repo_test_host::run_main(adapter::adapter())");expect(existsSync(join(host.hostDir!,"Cargo.toml"))).toBe(true);expect(existsSync(planned.plan.resultsPath)).toBe(false);}finally{rmSync(inputs,{recursive:true,force:true});}
+ const artifact=testCacheRoot(root),inputs=mkdtempSync(join(root,".cache/b/l/m/data/ti-"));try{const featurePath=join(inputs,"🥒️.feature"),adapterPath=join(inputs,"🦀️.rs");writeFileSync(featurePath,"Feature: explicit owned output\n  @level-quick\n  @id-owned-output\n  @mode-property\n  Scenario: keeps its caller-owned paths\n    Given a declared owner\n    Then an unchanged literal\n");writeFileSync(adapterPath,"pub fn adapter() -> semio_repo_test_host::Adapter { semio_repo_test_host::Adapter::new(\"rust\") }\n");const discovered:DiscoveredCase={owner:relative(root,inputs).split("\\").join("/"),ownerName:"owned-output",case:"fixture",caseDir:relative(root,inputs).split("\\").join("/"),featurePath:relative(root,featurePath).split("\\").join("/"),adapters:{rust:relative(root,adapterPath).split("\\").join("/")},sharedFixtureDir:null,projectName:"owned-output-fixture"};const planned=planExecution(root,discovered,"quick","subject","rust"),work=join(artifact,"work","owned-output-fixture-subject-rust"),results=join(artifact,"results","owned-output-fixture-subject-rust");expect(planned.plan.scenarios).toHaveLength(1);expect(planned.planPath).toBe(join(work,"📋️plan.json"));expect(planned.plan.resultsPath).toBe(join(results,"📤️results.jsonl"));expect(planned.plan.artifactDir).toBe(join(results,"📦️artifacts"));expect(readOutputMarker(root,work)?.testId).toBe(discovered.owner+"::fixture");expect(JSON.parse(readFileSync(planned.planPath,"utf8")).resultsPath).toBe(planned.plan.resultsPath);const host=materializeRustHost(root,discovered,"subject",planned.planPath,planned.plan.resultsPath);expect(host.hostDir).toBe(join(artifact,"hosts","owned-output-fixture-subject-rust"));expect(host.args).toEqual(["--plan",planned.planPath,"--out",planned.plan.resultsPath]);const main=readFileSync(join(host.hostDir!,"src","main.rs"),"utf8");expect(main).toContain(JSON.stringify(adapterPath));expect(main).toContain("semio_repo_test_host::run_main(adapter::adapter())");const manifest=readFileSync(join(host.hostDir!,"Cargo.toml"),"utf8");expect(Bun.TOML.parse(manifest)).toEqual(parseToml(manifest));expect(parseToml(manifest)["cargo-features"]).toEqual(fixture.rustHostCargoFeatures);expect(existsSync(planned.plan.resultsPath)).toBe(false);}finally{rmSync(inputs,{recursive:true,force:true});}
 }),30000);
 
 test("refuses escape and foreign output ownership before marker writes",async()=>bounded("markers",async()=>{

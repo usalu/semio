@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "mode", "models"],
+  "properties": {
+    "version": { "const": 1 },
+    "mode": { "enum": ["prototype", "release"] },
+    "models": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pluginId", "cratePath", "root"],
+        "properties": {
+          "pluginId": { "type": "string", "maxLength": 64, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "cratePath": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "root": { "type": "string", "minLength": 1, "maxLength": 224 },
+          "preparedActor": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["imageSha256", "imageBytes"],
+            "properties": {
+              "imageSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "imageBytes": { "type": "integer", "minimum": 1, "maximum": 536870912 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "environment": "SEMIO_MCP_COMPONENT_MODELS",
+        "maximumBytes": 24000,
+        "preparedActorImage": "📦️actor.semio",
+        "maximumPreparedActorBytes": 536870912
+      }
+    }
+  }
+}

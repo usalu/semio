@@ -106,6 +106,9 @@ pub struct UiSeparatorNode {
 pub struct UiImageNode {
     pub id: String,
     pub src: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub source_page: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub alt: Option<Label>,

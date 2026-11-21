@@ -23,6 +23,139 @@ async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
     reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
 }
 
+/// 🎟️ The native kernel adopts a marked picker in FIFO order and drives cancellation on its original Source.
+#[semio_framework_async_macros::async_test]
+async fn reactor_native_picker_adopts_in_fifo_order_and_retires_on_cancel() {
+    use semio_framework::kernel::{
+        ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt,
+        CommandIngressStatus, OriginalActorTurnWork, OriginalMediaControlEvent, OriginalMediaWireControl,
+        OriginalMediaWireLoan, OriginalMediaWirePhase, OriginalMediaWireResult, RetainedTurnInput,
+        ORIGINAL_MEDIA_COMMAND_KIND,
+    };
+    use semio_plugin_decl_media::original_media::{OriginalMediaLoan, RawMediaIntent, issue::{issue_args, pending_picker_effect}};
+    use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
+
+    async fn poll(runtime: &PluginRuntime<TestRuntimeApps>, mut event: Option<Event>, cx: &mut semio_framework_job::StepContext<'_>) -> TurnResult {
+        let retained = RetainedTurnInput {
+            operation: cx.operation().0,
+            generation: cx.generation().0,
+            epoch: cx.original_source_epoch().expect("fixture Source epoch"),
+            work: OriginalActorTurnWork {
+                clock_binding: cx.original_clock_binding().expect("fixture Source clock"),
+                absolute_deadline_us: cx.original_absolute_deadline_us(),
+                fuel: cx.fuel_remaining(),
+            },
+            grant: cx.retained_grant(),
+        };
+        semio_plugin_reactor_turn::poll_kernel(runtime, &mut event, &mut None, None,
+            Budget::from_retained(retained, 64, 16, 65_536, 16),
+            &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx,
+        ).await.expect("authenticated picker kernel turn")
+    }
+
+    let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🚪️lifetime/🧪️tests/🧫️fixtures/🧵️production.json")).unwrap();
+    let law = &fixture["picker"];
+    let instance = fixture["open"]["instance_id"].as_u64().unwrap() as u32;
+    let open_sequence = fixture["open"]["request_sequence"].as_u64().unwrap();
+    let request = law["request"].as_u64().unwrap();
+    let maximum = u32::try_from(law["maximum_file_bytes"].as_u64().unwrap()).unwrap();
+    let expected: Vec<&str> = law["effect_order"].as_array().unwrap().iter().map(|entry| entry.as_str().unwrap()).collect();
+    let runtime = PluginRuntime::<TestRuntimeApps>::new(semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()).unwrap();
+    semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
+    let mut scope = semio_plugin_testing_caller::OriginalFixtureScope::admit();
+    let captured = poll(&runtime, Some(reactor_native_lifecycle_open(instance, open_sequence, "native-picker".into())), scope.cx())
+        .await.lifecycle_receipt.expect("captured picker instance");
+    let Receipt::Captured { lifetime, .. } = captured else { panic!("picker app must capture its lifetime") };
+    poll(&runtime, Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured })), scope.cx()).await;
+
+    let cell = runtime.instances.borrow().get(instance).unwrap().clone();
+    let wire_loan = {
+        let mut mounted = cell.instance.try_lock().expect("live picker app");
+        let (document_id, revision) = mounted.app.original_media_live_document().expect("live document identity");
+        let wire = OriginalMediaWireLoan {
+            operation_id: format!("{request:016x}"),
+            generation: format!("{:016x}", scope.cx().generation().0),
+            instance_id: instance,
+            document_id: document_id.to_owned(),
+            base_revision: revision.iter().map(|byte| format!("{byte:02x}")).collect(),
+        };
+        let loan = OriginalMediaLoan { operation_id: request, generation: scope.cx().generation().0, instance_id: instance,
+            document_id: &wire.document_id, base_revision: &revision };
+        let mut intent = None;
+        assert!(RawMediaIntent::issue(loan, [0; 8], ORIGINAL_MEDIA_COMMAND_KIND, maximum as usize, &mut intent, scope.cx()).unwrap());
+        let args = issue_args(intent.as_ref().unwrap(), scope.cx()).unwrap().expect("funded internal picker marker");
+        let marked = Effect::RequestFileOpen { req: RequestId(request), accept: "*/*".into(), read_as: Some("bytes".into()),
+            import_action: "importMedia".into(), args: Some(args), multiple: false, max_file_bytes: Some(maximum) };
+        assert!(pending_picker_effect(&marked));
+        let TestRuntimeApps::Test(app) = &mut mounted.app;
+        let outbox = &mut app.tools.typed_effect_outbox;
+        outbox.push(Effect::Notify { message: expected[0].into() }).unwrap();
+        outbox.push(marked).unwrap();
+        outbox.push(Effect::Notify { message: expected[2].into() }).unwrap();
+        wire
+    };
+    let mut effects = Vec::new();
+    let mut issued_loan = None;
+    for _ in 0..64 {
+        let turn = poll(&runtime, None, scope.cx()).await;
+        for effect in turn.effects {
+            assert!(!pending_picker_effect(&effect), "the internal marker must stay behind the public effect boundary");
+            match effect {
+                Effect::Notify { message } if message == expected[0] || message == expected[2] => effects.push(message),
+                Effect::RequestFileOpen { req, read_as, args: Some(args), .. } if req.0 == request => {
+                    assert!(read_as.is_none(), "adoption issues the raw capsule");
+                    let loan = args.get("originalMedia").and_then(|media| media.get("loan")).expect("adopted public loan");
+                    let loan: OriginalMediaWireLoan = semio_framework_value::FromValue::from_value(loan.clone()).expect("public wire loan");
+                    assert_eq!((&loan.operation_id, &loan.generation, loan.instance_id, &loan.document_id, &loan.base_revision),
+                        (&wire_loan.operation_id, &wire_loan.generation, wire_loan.instance_id, &wire_loan.document_id, &wire_loan.base_revision));
+                    assert!(issued_loan.replace(loan).is_none(), "the picker must be adopted only once");
+                    effects.push("picker".into());
+                }
+                _ => {}
+            }
+        }
+        if effects.len() >= expected.len() { break; }
+    }
+    assert_eq!(effects, expected, "the marked picker becomes public between its original neighbors");
+    assert!(runtime.guest_lifetimes.borrow().get(instance).unwrap().raw_media.picker.issued_loan().is_some());
+
+    let cancel = Event::OriginalMediaControl(OriginalMediaControlEvent {
+        loan: issued_loan.expect("the host receives the loan used for Cancel"), owner: u64::from(instance),
+        seq: law["cancel_sequence"].as_u64().unwrap(),
+        kind: ORIGINAL_MEDIA_COMMAND_KIND, extent: 0, control: OriginalMediaWireControl::Cancel,
+    });
+    let CommandIngressStatus::OriginalMediaAck(pending) = poll(&runtime, Some(cancel), scope.cx()).await.command_ingress
+        else { panic!("the raw picker must receive the Cancel control") };
+    assert!(matches!(pending.phase, OriginalMediaWirePhase::Cancel));
+    assert!(matches!(pending.result, OriginalMediaWireResult::Pending));
+    assert!(runtime.guest_lifetimes.borrow().get(instance).unwrap().raw_media.picker.receipt_due());
+    let cancelled = poll(&runtime, None, scope.cx()).await;
+    let CommandIngressStatus::OriginalMediaAck(receipt) = cancelled.command_ingress
+        else { panic!("the next kernel turn must advance the exact cancelling picker") };
+    assert!(matches!(receipt.phase, OriginalMediaWirePhase::Cancel));
+    assert!(matches!(receipt.result, OriginalMediaWireResult::Accepted));
+    drop(cell);
+
+    let close = Event::InstanceClose(ActorInstanceCloseRequest { lifetime, request_sequence: open_sequence + 1 });
+    let accepted = poll(&runtime, Some(close), scope.cx()).await.lifecycle_receipt.expect("accepted picker instance close");
+    assert!(matches!(accepted, Receipt::Accepted { .. }));
+    poll(&runtime, Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: accepted })), scope.cx()).await;
+    let mut retired = None;
+    for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns() {
+        if let Some(receipt @ Receipt::Retired { .. }) = poll(&runtime, None, scope.cx()).await.lifecycle_receipt {
+            retired = Some(receipt);
+            break;
+        }
+    }
+    let retired = retired.expect("the real picker lifetime retires with the original caller");
+    for _ in 0..8 {
+        poll(&runtime, Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: retired })), scope.cx()).await;
+        if runtime.guest_lifetimes.borrow().get(instance).is_none() { break; }
+    }
+    assert!(runtime.guest_lifetimes.borrow().get(instance).is_none());
+    scope.retire();
+}
+
 #[semio_framework_async_macros::async_test]
 async fn reactor_native_lifecycle_rejects_foreign_and_colliding_owners() {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt, Event};
@@ -391,8 +524,33 @@ fn surface_routing_projection(view: &ViewModel) -> ViewModel {
     }
 }
 
-async fn surface_routing_render(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<VcsArtifactApp<TestApp>>, surface: &str, expected: &ViewModel, node_key: &str) {
-    let (_, presence) = semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(runtime, 1, surface).await.expect("mounted surface renders");
+fn surface_routing_release_render(
+    runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<VcsArtifactApp<TestApp>>,
+    cx: &mut semio_framework_job::StepContext<'_>,
+) {
+    cx.settle_receiving_scope().expect("render turn settles");
+    let cell = runtime.instances.borrow().get(1).expect("live surface fixture").clone();
+    let mut instance = cell.host_instance().expect("render owner is available");
+    assert!((0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns()).any(|_| {
+        instance.app.close_render_work_request(cx).expect("bounded fixture render retirement") == Some(true)
+    }), "the fixture render tree retires before the next surface");
+}
+
+async fn surface_routing_render(
+    runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<VcsArtifactApp<TestApp>>,
+    surface: &str, expected: &ViewModel, node_key: &str, cx: &mut semio_framework_job::StepContext<'_>,
+) {
+    let mut presence = None;
+    for _ in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns() {
+        cx.settle_receiving_scope().expect("previous render turn settles");
+        presence = semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(
+            runtime, 1, surface, &mut |source, _| Ok(source.is_some()), cx,
+        ).await.expect("mounted surface renders");
+        if presence.is_some() { break; }
+        if cx.should_yield() { break; }
+    }
+    let presence = presence.expect("the funded mounted render reaches its ready turn");
+    surface_routing_release_render(runtime, cx);
     let (body, actual) = RENDER_CONTEXT_PROBE.with(|probe| probe.take()).expect("the app body was rendered");
     assert_eq!(
         serde_json::to_value(&actual).unwrap(),
@@ -432,6 +590,7 @@ async fn surface_routing_render(runtime: &semio_plugin_reactor_lifecycle::life_i
 /// measures — the same rule `close_fixture_app_to_terminal_emptiness` states for every fixture app.
 #[semio_framework_async_macros::async_test]
 async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick_reaches_every_body() {
+    let _arena = semio_plugin_testing_laws::FixtureUiArena::admit();
     let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original maintenance caller");let mut context=caller.context();let cx=&mut context;
     let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🧫️fixtures/🪟️surface-view-state-routing/🔣️.json")).expect("surface view-state routing fixture");
     let node_key = fixture["pickedNodeKey"].as_str().expect("picked node");
@@ -452,17 +611,24 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
 
     let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     runtime.instances.borrow_mut().insert_admitted(1, std::sync::Arc::new(semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 1, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
+    let cell = runtime.instances.borrow().get(1).expect("live surface fixture").clone();
+    assert!(!cell.pending_effects.is_armed(), "no window-scoped work is armed before a surface mounts");
     let surfaces = fixture["surfaces"].as_array().expect("surfaces");
     let mut expected: BTreeMap<String, ViewModel> = BTreeMap::new();
     for surface in surfaces {
         let id = surface["id"].as_str().expect("surface id");
         let mounted = surface_routing_view(&fixture["base"], &surface["view"]);
         semio_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 1, id.into(), surface["bodyKey"].as_str().expect("body key").into(), &semio_plugin_plugin_program::encode_wire_serialized(&mounted)).await.expect("surface mounts");
+        assert!(cell.pending_effects.is_armed(), "a mounted surface schedules the retained work owner");
+        cell.pending_effects.publish();
         expected.insert(id.into(), surface_routing_projection(&mounted));
     }
 
     for surface in surfaces {
-        surface_routing_render(&runtime, surface["id"].as_str().expect("surface id"), &expected[surface["id"].as_str().expect("surface id")], node_key).await;
+        let id = surface["id"].as_str().expect("surface id");
+        surface_routing_render(&runtime, id, &expected[id], node_key, cx).await;
+        assert_eq!(cell.pending_effects.is_armed(), expected[id].window_id.is_some(), "only a window render schedules retained work");
+        cell.pending_effects.publish();
     }
 
     let synthetic = &fixture["syntheticSurface"];
@@ -472,12 +638,24 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
         .await
         .expect_err("the synthetic `window` surface must never mount for an app with window instances");
     assert!(refused.message.contains(fixture["syntheticRefusal"].as_str().expect("refusal")), "the refusal must name the synthetic surface rule: {}", refused.message);
-    assert!(semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 1, synthetic_id).await.is_err(), "a refused synthetic surface must have no host context to render from");
-    surface_routing_render(&runtime, fixture["pickedSurface"].as_str().expect("picked surface"), &expected[fixture["pickedSurface"].as_str().expect("picked surface")], node_key).await;
-    surface_routing_render(&runtime, fixture["inspectionSurface"].as_str().expect("inspection surface"), &expected[fixture["inspectionSurface"].as_str().expect("inspection surface")], node_key).await;
+    assert!(!cell.pending_effects.is_armed(), "a refused surface does not schedule retained work");
+    assert!(semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(
+        &runtime, 1, synthetic_id, &mut |source, _| Ok(source.is_some()), cx,
+    ).await.is_err(), "a refused synthetic surface must have no host context to render from");
+    surface_routing_render(&runtime, fixture["pickedSurface"].as_str().expect("picked surface"), &expected[fixture["pickedSurface"].as_str().expect("picked surface")], node_key, cx).await;
+    surface_routing_render(&runtime, fixture["inspectionSurface"].as_str().expect("inspection surface"), &expected[fixture["inspectionSurface"].as_str().expect("inspection surface")], node_key, cx).await;
 
     let refreshed = surface_routing_view(&fixture["base"], &fixture["refreshedView"]);
-    semio_plugin_runtime_ops::ops_surface_render::plugin_render(&runtime, 1, "graph", &serde_json::to_string(&refreshed).expect("host view serializes")).await.expect("host refresh renders");
+    let encoded = serde_json::to_string(&refreshed).expect("host view serializes");
+    let mut ready = false;
+    for _ in 0..semio_plugin_testing_laws::OriginalFixtureCaller::maximum_turns() {
+        cx.settle_receiving_scope().expect("previous refresh turn settles");
+        ready = semio_plugin_runtime_ops::ops_surface_render::plugin_render(&runtime, 1, "graph", &encoded, cx)
+            .await.expect("host refresh renders").is_some();
+        if ready || cx.should_yield() { break; }
+    }
+    assert!(ready, "the funded host refresh reaches its ready turn");
+    surface_routing_release_render(&runtime, cx);
     RENDER_CONTEXT_PROBE.with(|probe| probe.take());
     for surface in surfaces {
         let id = surface["id"].as_str().expect("surface id");
@@ -485,6 +663,10 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
             Some(window) => refreshed.for_window_instance(window).expect("live window instance"),
             None => refreshed.for_panel(),
         };
-        surface_routing_render(&runtime, id, &rebound, node_key).await;
+        surface_routing_render(&runtime, id, &rebound, node_key, cx).await;
     }
+    cell.pending_effects.publish();
+    let hidden = fixture["pickedSurface"].as_str().expect("hidden surface");
+    semio_plugin_runtime_ops::ops_surface_render::plugin_hide_surface(&runtime, 1, hidden).await.expect("surface hides");
+    assert!(cell.pending_effects.is_armed(), "hiding a surface schedules retained work to reconcile");
 }

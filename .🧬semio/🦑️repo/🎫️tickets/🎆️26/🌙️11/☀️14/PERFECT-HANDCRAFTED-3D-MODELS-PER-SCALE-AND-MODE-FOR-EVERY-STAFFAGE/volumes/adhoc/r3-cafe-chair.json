@@ -1,0 +1,6042 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "rear-tube-l",
+     "kind": "loft",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.00505,
+        -0.0,
+        0.19983
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.71911,
+        -0.0,
+        0.6949,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.43801,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.44075,
+        5e-05,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.707,
+        0.01209,
+        0.707,
+        -0.01209
+       ]
+      },
+      {
+       "at": [
+        0.44348,
+        0.00019,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        0.02418,
+        0.70669,
+        -0.02418
+       ]
+      },
+      {
+       "at": [
+        0.44621,
+        0.00042,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70618,
+        0.03627,
+        0.70618,
+        -0.03627
+       ]
+      },
+      {
+       "at": [
+        0.44892,
+        0.00075,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        0.04834,
+        0.70545,
+        -0.04834
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "rear-tube-r",
+     "kind": "loft",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.00505,
+        -0.0,
+        -0.19983
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.6949,
+        -0.0,
+        0.71911,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.43801,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.44075,
+        5e-05,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.707,
+        0.01209,
+        0.707,
+        -0.01209
+       ]
+      },
+      {
+       "at": [
+        0.44348,
+        0.00019,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        0.02418,
+        0.70669,
+        -0.02418
+       ]
+      },
+      {
+       "at": [
+        0.44621,
+        0.00042,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70618,
+        0.03627,
+        0.70618,
+        -0.03627
+       ]
+      },
+      {
+       "at": [
+        0.44892,
+        0.00075,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        0.04834,
+        0.70545,
+        -0.04834
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "post-l",
+     "kind": "loft",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0001,
+        0.00075,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        -0.04834,
+        0.70545,
+        0.04834
+       ]
+      },
+      {
+       "at": [
+        0.00282,
+        0.00042,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70618,
+        -0.03627,
+        0.70618,
+        0.03627
+       ]
+      },
+      {
+       "at": [
+        0.00555,
+        0.00019,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        -0.02418,
+        0.70669,
+        0.02418
+       ]
+      },
+      {
+       "at": [
+        0.00828,
+        5e-05,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.707,
+        -0.01209,
+        0.707,
+        0.01209
+       ]
+      },
+      {
+       "at": [
+        0.01101,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.433,
+        0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "post-r",
+     "kind": "loft",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0001,
+        0.00075,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        -0.04834,
+        0.70545,
+        0.04834
+       ]
+      },
+      {
+       "at": [
+        0.00282,
+        0.00042,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70618,
+        -0.03627,
+        0.70618,
+        0.03627
+       ]
+      },
+      {
+       "at": [
+        0.00555,
+        0.00019,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        -0.02418,
+        0.70669,
+        0.02418
+       ]
+      },
+      {
+       "at": [
+        0.00828,
+        5e-05,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.707,
+        -0.01209,
+        0.707,
+        0.01209
+       ]
+      },
+      {
+       "at": [
+        0.01101,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.433,
+        0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "cap-l",
+     "kind": "revolve",
+     "bone": "back",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.011
+      ],
+      [
+       0.002,
+       0.011
+      ],
+      [
+       0.005,
+       0.0095
+      ],
+      [
+       0.007,
+       0.006
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.433,
+      0.0,
+      0.185
+     ]
+    },
+    {
+     "id": "cap-r",
+     "kind": "revolve",
+     "bone": "back",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.011
+      ],
+      [
+       0.002,
+       0.011
+      ],
+      [
+       0.005,
+       0.0095
+      ],
+      [
+       0.007,
+       0.006
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.433,
+      0.0,
+      -0.185
+     ]
+    },
+    {
+     "id": "front-tube-l",
+     "kind": "loft",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.005,
+        -0.0,
+        0.20978
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.7227,
+        0.0,
+        0.69116,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.44805,
+        0.0,
+        0.19
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.7227,
+        0.0,
+        0.69116,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "front-tube-r",
+     "kind": "loft",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.005,
+        -0.0,
+        -0.20978
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.69116,
+        0.0,
+        0.7227,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.44805,
+        0.0,
+        -0.19
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.69116,
+        0.0,
+        0.7227,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "glide-rear-l",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0105
+      ],
+      [
+       0.0015,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0125
+      ],
+      [
+       0.01,
+       0.011
+      ],
+      [
+       0.01,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.2
+     ]
+    },
+    {
+     "id": "glide-rear-r",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0105
+      ],
+      [
+       0.0015,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0125
+      ],
+      [
+       0.01,
+       0.011
+      ],
+      [
+       0.01,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.2
+     ]
+    },
+    {
+     "id": "glide-front-l",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0105
+      ],
+      [
+       0.0015,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0125
+      ],
+      [
+       0.01,
+       0.011
+      ],
+      [
+       0.01,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.21
+     ]
+    },
+    {
+     "id": "glide-front-r",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0105
+      ],
+      [
+       0.0015,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0125
+      ],
+      [
+       0.01,
+       0.011
+      ],
+      [
+       0.01,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.21
+     ]
+    },
+    {
+     "id": "stretcher-l",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008
+    },
+    {
+     "id": "stretcher-r",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      -0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008
+    },
+    {
+     "id": "seat-board",
+     "kind": "extrude",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.185,
+       0.43
+      ],
+      [
+       0.19648,
+       0.42772
+      ],
+      [
+       0.20621,
+       0.42121
+      ],
+      [
+       0.21272,
+       0.41148
+      ],
+      [
+       0.215,
+       0.4
+      ],
+      [
+       0.199,
+       0.03
+      ],
+      [
+       0.172,
+       0.03
+      ],
+      [
+       0.172,
+       0.0
+      ],
+      [
+       -0.172,
+       0.0
+      ],
+      [
+       -0.172,
+       0.03
+      ],
+      [
+       -0.199,
+       0.03
+      ],
+      [
+       -0.215,
+       0.4
+      ],
+      [
+       -0.21272,
+       0.41148
+      ],
+      [
+       -0.20621,
+       0.42121
+      ],
+      [
+       -0.19648,
+       0.42772
+      ],
+      [
+       -0.185,
+       0.43
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.02,
+     "to": 0.0
+    },
+    {
+     "id": "rail-side-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.37359,
+      0.045,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.1996,
+       -0.0425,
+       0.175
+      ]
+     }
+    },
+    {
+     "id": "rail-side-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.37359,
+      0.045,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.1996,
+       -0.0425,
+       -0.175
+      ]
+     }
+    },
+    {
+     "id": "rail-front",
+     "kind": "box",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.018,
+      0.045,
+      0.332
+     ],
+     "transform": {
+      "translation": [
+       0.37739,
+       -0.0425,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "rail-back",
+     "kind": "box",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.018,
+      0.045,
+      0.332
+     ],
+     "transform": {
+      "translation": [
+       0.02181,
+       -0.0425,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "back-board",
+     "kind": "loft",
+     "bone": "back",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.33,
+        -0.02531,
+        -0.205
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        -0.01404,
+        -0.164
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        -0.00527,
+        -0.123
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        0.00099,
+        -0.082
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        0.00475,
+        -0.041
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        0.006,
+        0.0
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        0.00475,
+        0.041
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        0.00099,
+        0.082
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        -0.00527,
+        0.123
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        -0.01404,
+        0.164
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.33,
+        -0.02531,
+        0.205
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 6
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "back-rail",
+     "kind": "loft",
+     "bone": "back",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.14,
+        -0.02531,
+        -0.205
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        -0.01404,
+        -0.164
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        -0.00527,
+        -0.123
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        0.00099,
+        -0.082
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        0.00475,
+        -0.041
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        0.006,
+        0.0
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        0.00475,
+        0.041
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        0.00099,
+        0.082
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        -0.00527,
+        0.123
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        -0.01404,
+        0.164
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.14,
+        -0.02531,
+        0.205
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 6
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-rear-tube-l",
+     "of": "rear-tube-l",
+     "region": "steel-tube",
+     "layer": "tube-wall"
+    },
+    {
+     "id": "th-rear-tube-r",
+     "of": "rear-tube-r",
+     "region": "steel-tube",
+     "layer": "tube-wall"
+    },
+    {
+     "id": "th-post-l",
+     "of": "post-l",
+     "region": "steel-tube",
+     "layer": "tube-wall"
+    },
+    {
+     "id": "th-post-r",
+     "of": "post-r",
+     "region": "steel-tube",
+     "layer": "tube-wall"
+    },
+    {
+     "id": "th-front-tube-l",
+     "of": "front-tube-l",
+     "region": "steel-tube",
+     "layer": "tube-wall"
+    },
+    {
+     "id": "th-front-tube-r",
+     "of": "front-tube-r",
+     "region": "steel-tube",
+     "layer": "tube-wall"
+    },
+    {
+     "id": "th-stretcher-l",
+     "of": "stretcher-l",
+     "region": "steel-tube",
+     "layer": "tube-wall"
+    },
+    {
+     "id": "th-stretcher-r",
+     "of": "stretcher-r",
+     "region": "steel-tube",
+     "layer": "tube-wall"
+    },
+    {
+     "id": "th-seat-board",
+     "of": "seat-board",
+     "region": "seat-beech",
+     "layer": "beech"
+    },
+    {
+     "id": "th-rail-side-l",
+     "of": "rail-side-l",
+     "region": "seat-beech",
+     "layer": "beech"
+    },
+    {
+     "id": "th-rail-side-r",
+     "of": "rail-side-r",
+     "region": "seat-beech",
+     "layer": "beech"
+    },
+    {
+     "id": "th-rail-front",
+     "of": "rail-front",
+     "region": "seat-beech",
+     "layer": "beech"
+    },
+    {
+     "id": "th-rail-back",
+     "of": "rail-back",
+     "region": "seat-beech",
+     "layer": "beech"
+    },
+    {
+     "id": "th-back-board",
+     "of": "back-board",
+     "region": "back-beech",
+     "layer": "beech"
+    },
+    {
+     "id": "th-back-rail",
+     "of": "back-rail",
+     "region": "back-beech",
+     "layer": "beech"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-rear-tube-l",
+     "of": "rear-tube-l",
+     "member": "leg-rear",
+     "part": "member"
+    },
+    {
+     "id": "m-rear-tube-r",
+     "of": "rear-tube-r",
+     "member": "leg-rear",
+     "part": "member"
+    },
+    {
+     "id": "m-post-l",
+     "of": "post-l",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-post-r",
+     "of": "post-r",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-front-tube-l",
+     "of": "front-tube-l",
+     "member": "leg-front",
+     "part": "member"
+    },
+    {
+     "id": "m-front-tube-r",
+     "of": "front-tube-r",
+     "member": "leg-front",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-l",
+     "of": "stretcher-l",
+     "member": "stretcher",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-r",
+     "of": "stretcher-r",
+     "member": "stretcher",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-board",
+     "of": "seat-board",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-side-l",
+     "of": "rail-side-l",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-side-r",
+     "of": "rail-side-r",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-front",
+     "of": "rail-front",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-back",
+     "of": "rail-back",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-back-board",
+     "of": "back-board",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-back-rail",
+     "of": "back-rail",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "joint-bend-l",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.02,
+      0.016,
+      0.016
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-bend-r",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.02,
+      0.016,
+      0.016
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       -0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-weld-rear-l",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.0125,
+      0.0125,
+      0.0125
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.19482
+      ]
+     },
+     "member": "stretcher",
+     "part": "joint"
+    },
+    {
+     "id": "joint-weld-front-l",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.0125,
+      0.0125,
+      0.0125
+     ],
+     "transform": {
+      "translation": [
+       0.42823,
+       0.0,
+       0.2033
+      ]
+     },
+     "member": "stretcher",
+     "part": "joint"
+    },
+    {
+     "id": "joint-weld-rear-r",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.0125,
+      0.0125,
+      0.0125
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       -0.19482
+      ]
+     },
+     "member": "stretcher",
+     "part": "joint"
+    },
+    {
+     "id": "joint-weld-front-r",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.0125,
+      0.0125,
+      0.0125
+     ],
+     "transform": {
+      "translation": [
+       0.42823,
+       0.0,
+       -0.2033
+      ]
+     },
+     "member": "stretcher",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-rear-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.024,
+      0.045,
+      0.024
+     ],
+     "transform": {
+      "translation": [
+       0.00881,
+       -0.0425,
+       0.18583
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-front-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.024,
+      0.045,
+      0.024
+     ],
+     "transform": {
+      "translation": [
+       0.39039,
+       -0.0425,
+       0.19168
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-rear-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.024,
+      0.045,
+      0.024
+     ],
+     "transform": {
+      "translation": [
+       0.00881,
+       -0.0425,
+       -0.18583
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-front-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.024,
+      0.045,
+      0.024
+     ],
+     "transform": {
+      "translation": [
+       0.39039,
+       -0.0425,
+       -0.19168
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-back-board-l",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.06,
+      0.008,
+      0.022
+     ],
+     "transform": {
+      "translation": [
+       0.33,
+       -0.0145,
+       0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-back-rail-l",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.008,
+      0.022
+     ],
+     "transform": {
+      "translation": [
+       0.14,
+       -0.0145,
+       0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-back-board-r",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.06,
+      0.008,
+      0.022
+     ],
+     "transform": {
+      "translation": [
+       0.33,
+       -0.0145,
+       -0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-back-rail-r",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.05,
+      0.008,
+      0.022
+     ],
+     "transform": {
+      "translation": [
+       0.14,
+       -0.0145,
+       -0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "support-contact-rear-left",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.2
+     ],
+     "member": "leg-rear",
+     "part": "support",
+     "anchor": "contact-rear-left"
+    },
+    {
+     "id": "support-contact-rear-right",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.2
+     ],
+     "member": "leg-rear",
+     "part": "support",
+     "anchor": "contact-rear-right"
+    },
+    {
+     "id": "support-contact-front-left",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.21
+     ],
+     "member": "leg-front",
+     "part": "support",
+     "anchor": "contact-front-left"
+    },
+    {
+     "id": "support-contact-front-right",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0125
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.21
+     ],
+     "member": "leg-front",
+     "part": "support",
+     "anchor": "contact-front-right"
+    },
+    {
+     "id": "mass-rear-l",
+     "kind": "ellipsoid",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.21901,
+       -0.0,
+       0.1925
+      ]
+     },
+     "member": "leg-rear",
+     "part": "mass"
+    },
+    {
+     "id": "mass-front-l",
+     "kind": "ellipsoid",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.22403,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "leg-front",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stretcher-l",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.21411,
+       0.0,
+       0.19906
+      ]
+     },
+     "member": "stretcher",
+     "part": "mass"
+    },
+    {
+     "id": "mass-post-l",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.2165,
+       -0.0,
+       0.185
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-rear-r",
+     "kind": "ellipsoid",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.21901,
+       -0.0,
+       -0.1925
+      ]
+     },
+     "member": "leg-rear",
+     "part": "mass"
+    },
+    {
+     "id": "mass-front-r",
+     "kind": "ellipsoid",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.22403,
+       0.0,
+       -0.2
+      ]
+     },
+     "member": "leg-front",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stretcher-r",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.21411,
+       0.0,
+       -0.19906
+      ]
+     },
+     "member": "stretcher",
+     "part": "mass"
+    },
+    {
+     "id": "mass-post-r",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.2165,
+       -0.0,
+       -0.185
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.06,
+      0.012,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.21463,
+       -0.014,
+       0.0
+      ]
+     },
+     "member": "seat",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-board",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.044,
+      0.012,
+      0.044
+     ],
+     "transform": {
+      "translation": [
+       0.33,
+       0.006,
+       0.0
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-rail",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.044,
+      0.012,
+      0.044
+     ],
+     "transform": {
+      "translation": [
+       0.14,
+       0.006,
+       0.0
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "1:50 is the full construction of the real chair: per side one Ø22 x 2 mm steel tube that rises from its nylon glide as the rear leg (raked back 7.7 degrees), turns in an 80 mm bend at the seat and continues as the back post (reclined 8 degrees) up to a domed end cap; two straight front legs on glides; two Ø16 side stretchers welded between the legs at 0.15 m; a 20 mm beech seat board, trapezoidal with rounded front corners and notched round the posts, raked 2 degrees, on an apron frame of four 18 x 45 mm beech rails; a curved 18 mm beech backrest board and a lower rail screwed to the post fronts.",
+     "de": "1:50 ist die volle Konstruktion des echten Stuhls: je Seite ein Stahlrohr Ø22 x 2 mm, das von seinem Nylongleiter als Hinterbein (7,7 Grad nach hinten ausgestellt) aufsteigt, am Sitz in einem 80-mm-Bogen umbiegt und als Lehnenpfosten (8 Grad geneigt) bis zur gewölbten Endkappe weiterläuft; zwei gerade Vorderbeine auf Gleitern; zwei seitliche Fußstreben Ø16, auf 0,15 m zwischen die Beine geschweißt; ein 20 mm Buchensitzbrett, trapezförmig mit gerundeten Vorderecken und um die Pfosten ausgeklinkt, 2 Grad geneigt, auf einem Zargenrahmen aus vier Buchenleisten 18 x 45 mm; ein gebogenes 18-mm-Buchenrückenbrett und eine untere Leiste, auf die Pfostenvorderseiten geschraubt."
+    },
+    {
+     "en": "Thermal: every beech and steel solid is its region's surface with the region's one layer (the closed tubes are solid, their sealed bore is not outer surface); glides and caps are nylon and belong to no region. Structure: the tubes, seat board, rails, back board and rail are the members of their bones; the two bends, four stretcher welds, four seat tab fixings and four back screw fixings are the joints; one glide pad per contact anchor; a mass at the middle of every tube and post and at the centres of seat and back boards.",
+     "de": "Thermik: jeder Buchen- und Stahlkörper ist die Oberfläche seiner Region mit deren einziger Schicht (die geschlossenen Rohre sind voll, ihre verschlossene Bohrung ist keine Außenfläche); Gleiter und Kappen sind aus Nylon und gehören zu keiner Region. Tragwerk: Rohre, Sitzbrett, Zargen, Rückenbrett und Leiste sind die Glieder ihrer Knochen; die zwei Bögen, vier Strebenschweißungen, vier Sitzlaschen und vier Rückenverschraubungen sind die Gelenke; ein Gleiterlager je Kontaktanker; eine Masse in der Mitte jedes Rohrs und Pfostens und in den Schwerpunkten von Sitz und Rückenbrett."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "rear-tube-l",
+     "kind": "loft",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        7e-05,
+        0.19983
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70552,
+        0.04735,
+        0.70552,
+        -0.04735
+       ]
+      },
+      {
+       "at": [
+        0.43801,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.44075,
+        5e-05,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.707,
+        0.01209,
+        0.707,
+        -0.01209
+       ]
+      },
+      {
+       "at": [
+        0.44348,
+        0.00019,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        0.02418,
+        0.70669,
+        -0.02418
+       ]
+      },
+      {
+       "at": [
+        0.44621,
+        0.00042,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70618,
+        0.03627,
+        0.70618,
+        -0.03627
+       ]
+      },
+      {
+       "at": [
+        0.44892,
+        0.00075,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        0.04834,
+        0.70545,
+        -0.04834
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "rear-tube-r",
+     "kind": "loft",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        7e-05,
+        -0.19983
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70552,
+        0.04735,
+        0.70552,
+        -0.04735
+       ]
+      },
+      {
+       "at": [
+        0.43801,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.44075,
+        5e-05,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.707,
+        0.01209,
+        0.707,
+        -0.01209
+       ]
+      },
+      {
+       "at": [
+        0.44348,
+        0.00019,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        0.02418,
+        0.70669,
+        -0.02418
+       ]
+      },
+      {
+       "at": [
+        0.44621,
+        0.00042,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70618,
+        0.03627,
+        0.70618,
+        -0.03627
+       ]
+      },
+      {
+       "at": [
+        0.44892,
+        0.00075,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        0.04834,
+        0.70545,
+        -0.04834
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "post-l",
+     "kind": "loft",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0001,
+        0.00075,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        -0.04834,
+        0.70545,
+        0.04834
+       ]
+      },
+      {
+       "at": [
+        0.00282,
+        0.00042,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70618,
+        -0.03627,
+        0.70618,
+        0.03627
+       ]
+      },
+      {
+       "at": [
+        0.00555,
+        0.00019,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        -0.02418,
+        0.70669,
+        0.02418
+       ]
+      },
+      {
+       "at": [
+        0.00828,
+        5e-05,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.707,
+        -0.01209,
+        0.707,
+        0.01209
+       ]
+      },
+      {
+       "at": [
+        0.01101,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.441,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "post-r",
+     "kind": "loft",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0001,
+        0.00075,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        -0.04834,
+        0.70545,
+        0.04834
+       ]
+      },
+      {
+       "at": [
+        0.00282,
+        0.00042,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70618,
+        -0.03627,
+        0.70618,
+        0.03627
+       ]
+      },
+      {
+       "at": [
+        0.00555,
+        0.00019,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        -0.02418,
+        0.70669,
+        0.02418
+       ]
+      },
+      {
+       "at": [
+        0.00828,
+        5e-05,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.707,
+        -0.01209,
+        0.707,
+        0.01209
+       ]
+      },
+      {
+       "at": [
+        0.01101,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.441,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "front-tube-l",
+     "kind": "loft",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        -2e-05,
+        0.20978
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70694,
+        -0.01543,
+        0.70694,
+        0.01543
+       ]
+      },
+      {
+       "at": [
+        0.44805,
+        0.0,
+        0.19
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.7227,
+        0.0,
+        0.69116,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "front-tube-r",
+     "kind": "loft",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        -2e-05,
+        -0.20978
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70694,
+        -0.01543,
+        0.70694,
+        0.01543
+       ]
+      },
+      {
+       "at": [
+        0.44805,
+        0.0,
+        -0.19
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.69116,
+        0.0,
+        0.7227,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "stretcher-l",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true
+    },
+    {
+     "id": "stretcher-r",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      -0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true
+    },
+    {
+     "id": "seat-board",
+     "kind": "extrude",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.185,
+       0.43
+      ],
+      [
+       0.20621,
+       0.42121
+      ],
+      [
+       0.215,
+       0.4
+      ],
+      [
+       0.199,
+       0.03
+      ],
+      [
+       0.172,
+       0.03
+      ],
+      [
+       0.172,
+       0.0
+      ],
+      [
+       -0.172,
+       0.0
+      ],
+      [
+       -0.172,
+       0.03
+      ],
+      [
+       -0.199,
+       0.03
+      ],
+      [
+       -0.215,
+       0.4
+      ],
+      [
+       -0.20621,
+       0.42121
+      ],
+      [
+       -0.185,
+       0.43
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.02,
+     "to": 0.0
+    },
+    {
+     "id": "apron",
+     "kind": "extrude",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       -0.184,
+       0.01281
+      ],
+      [
+       0.184,
+       0.01281
+      ],
+      [
+       0.184,
+       0.38639
+      ],
+      [
+       -0.184,
+       0.38639
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.065,
+     "to": -0.02,
+     "holes": [
+      [
+       [
+        -0.166,
+        0.03081
+       ],
+       [
+        0.166,
+        0.03081
+       ],
+       [
+        0.166,
+        0.36839
+       ],
+       [
+        -0.166,
+        0.36839
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "back-board",
+     "kind": "loft",
+     "bone": "back",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.33,
+        -0.02531,
+        -0.205
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.33,
+        -0.00183,
+        -0.1025
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.33,
+        0.006,
+        0.0
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.33,
+        -0.00183,
+        0.1025
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.33,
+        -0.02531,
+        0.205
+       ],
+       "rx": 0.085,
+       "ry": 0.009,
+       "exponent": 4
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "back-rail",
+     "kind": "loft",
+     "bone": "back",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.14,
+        -0.02531,
+        -0.205
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.14,
+        -0.00183,
+        -0.1025
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.14,
+        0.006,
+        0.0
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.14,
+        -0.00183,
+        0.1025
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.14,
+        -0.02531,
+        0.205
+       ],
+       "rx": 0.025,
+       "ry": 0.009,
+       "exponent": 4
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-rear-tube-l",
+     "of": "rear-tube-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-rear-tube-r",
+     "of": "rear-tube-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-post-l",
+     "of": "post-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-post-r",
+     "of": "post-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-front-tube-l",
+     "of": "front-tube-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-front-tube-r",
+     "of": "front-tube-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-stretcher-l",
+     "of": "stretcher-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-stretcher-r",
+     "of": "stretcher-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-seat-board",
+     "of": "seat-board",
+     "region": "seat-beech"
+    },
+    {
+     "id": "th-apron",
+     "of": "apron",
+     "region": "seat-beech"
+    },
+    {
+     "id": "th-back-board",
+     "of": "back-board",
+     "region": "back-beech"
+    },
+    {
+     "id": "th-back-rail",
+     "of": "back-rail",
+     "region": "back-beech"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-rear-tube-l",
+     "of": "rear-tube-l",
+     "member": "leg-rear",
+     "part": "member"
+    },
+    {
+     "id": "m-rear-tube-r",
+     "of": "rear-tube-r",
+     "member": "leg-rear",
+     "part": "member"
+    },
+    {
+     "id": "m-post-l",
+     "of": "post-l",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-post-r",
+     "of": "post-r",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-front-tube-l",
+     "of": "front-tube-l",
+     "member": "leg-front",
+     "part": "member"
+    },
+    {
+     "id": "m-front-tube-r",
+     "of": "front-tube-r",
+     "member": "leg-front",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-l",
+     "of": "stretcher-l",
+     "member": "stretcher",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-r",
+     "of": "stretcher-r",
+     "member": "stretcher",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-board",
+     "of": "seat-board",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-apron",
+     "of": "apron",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-back-board",
+     "of": "back-board",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-back-rail",
+     "of": "back-rail",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "joint-bend-l",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.024,
+      0.018,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-bend-r",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.024,
+      0.018,
+      0.018
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       -0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-weld-rear-l",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.19482
+      ]
+     },
+     "member": "stretcher",
+     "part": "joint"
+    },
+    {
+     "id": "joint-weld-front-l",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.42823,
+       0.0,
+       0.2033
+      ]
+     },
+     "member": "stretcher",
+     "part": "joint"
+    },
+    {
+     "id": "joint-weld-rear-r",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       -0.19482
+      ]
+     },
+     "member": "stretcher",
+     "part": "joint"
+    },
+    {
+     "id": "joint-weld-front-r",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.0155,
+      0.0155,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0.42823,
+       0.0,
+       -0.2033
+      ]
+     },
+     "member": "stretcher",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-rear-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.03,
+      0.045,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.00881,
+       -0.0425,
+       0.18583
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-front-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.03,
+      0.045,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.39039,
+       -0.0425,
+       0.19168
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-rear-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.03,
+      0.045,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.00881,
+       -0.0425,
+       -0.18583
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-front-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.03,
+      0.045,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.39039,
+       -0.0425,
+       -0.19168
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "support-contact-rear-left",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.015,
+       0.015
+      ],
+      [
+       0.015,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.2
+     ],
+     "member": "leg-rear",
+     "part": "support",
+     "anchor": "contact-rear-left"
+    },
+    {
+     "id": "support-contact-rear-right",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.015,
+       0.015
+      ],
+      [
+       0.015,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.2
+     ],
+     "member": "leg-rear",
+     "part": "support",
+     "anchor": "contact-rear-right"
+    },
+    {
+     "id": "support-contact-front-left",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.015,
+       0.015
+      ],
+      [
+       0.015,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.21
+     ],
+     "member": "leg-front",
+     "part": "support",
+     "anchor": "contact-front-left"
+    },
+    {
+     "id": "support-contact-front-right",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.015,
+       0.015
+      ],
+      [
+       0.015,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.21
+     ],
+     "member": "leg-front",
+     "part": "support",
+     "anchor": "contact-front-right"
+    },
+    {
+     "id": "mass-rear-l",
+     "kind": "ellipsoid",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0175,
+      0.0175,
+      0.0175
+     ],
+     "transform": {
+      "translation": [
+       0.21901,
+       -0.0,
+       0.1925
+      ]
+     },
+     "member": "leg-rear",
+     "part": "mass"
+    },
+    {
+     "id": "mass-front-l",
+     "kind": "ellipsoid",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0175,
+      0.0175,
+      0.0175
+     ],
+     "transform": {
+      "translation": [
+       0.22403,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "leg-front",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stretcher-l",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0175,
+      0.0175,
+      0.0175
+     ],
+     "transform": {
+      "translation": [
+       0.21411,
+       0.0,
+       0.19906
+      ]
+     },
+     "member": "stretcher",
+     "part": "mass"
+    },
+    {
+     "id": "mass-post-l",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0175,
+      0.0175,
+      0.0175
+     ],
+     "transform": {
+      "translation": [
+       0.2165,
+       -0.0,
+       0.185
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-rear-r",
+     "kind": "ellipsoid",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0175,
+      0.0175,
+      0.0175
+     ],
+     "transform": {
+      "translation": [
+       0.21901,
+       -0.0,
+       -0.1925
+      ]
+     },
+     "member": "leg-rear",
+     "part": "mass"
+    },
+    {
+     "id": "mass-front-r",
+     "kind": "ellipsoid",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0175,
+      0.0175,
+      0.0175
+     ],
+     "transform": {
+      "translation": [
+       0.22403,
+       0.0,
+       -0.2
+      ]
+     },
+     "member": "leg-front",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stretcher-r",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0175,
+      0.0175,
+      0.0175
+     ],
+     "transform": {
+      "translation": [
+       0.21411,
+       0.0,
+       -0.19906
+      ]
+     },
+     "member": "stretcher",
+     "part": "mass"
+    },
+    {
+     "id": "mass-post-r",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0175,
+      0.0175,
+      0.0175
+     ],
+     "transform": {
+      "translation": [
+       0.2165,
+       -0.0,
+       -0.185
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.07,
+      0.016,
+      0.07
+     ],
+     "transform": {
+      "translation": [
+       0.21463,
+       -0.012,
+       0.0
+      ]
+     },
+     "member": "seat",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-board",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.05,
+      0.016,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.33,
+       0.006,
+       0.0
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-rail",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.05,
+      0.016,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.14,
+       0.006,
+       0.0
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "1:100 merges glides and caps into the tubes (8-10 mm, below the 15 mm feature), which now stand on the floor; tubes and bend keep their true Ø22, the stretchers their Ø16; the four apron rails become one 18 mm ring under the 20 mm board, whose front corners are rounded in two steps; back board and rail keep their curve with five sections each.",
+     "de": "1:100 lässt Gleiter und Kappen in den Rohren aufgehen (8-10 mm, unter dem 15-mm-Mindestmaß), die nun auf dem Boden stehen; Rohre und Bogen behalten ihr echtes Ø22, die Streben ihr Ø16; die vier Zargenleisten werden ein 18-mm-Ring unter dem 20-mm-Brett, dessen Vorderecken in zwei Schritten gerundet sind; Rückenbrett und Leiste behalten ihre Krümmung mit je fünf Schnitten."
+    },
+    {
+     "en": "Thermal references the body without layers; structure: tubes, board, ring, back board and rail as members, bends, welds and seat fixings as joints (the back screws are below the feature), 30 mm glide pads, masses as at 1:50.",
+     "de": "Thermik verweist ohne Schichten auf den Körper; Tragwerk: Rohre, Brett, Ring, Rückenbrett und Leiste als Glieder, Bögen, Schweißungen und Sitzlaschen als Gelenke (die Rückenschrauben liegen unter dem Mindestmaß), 30-mm-Gleiterlager, Massen wie bei 1:50."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "rear-tube-l",
+     "kind": "loft",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        7e-05,
+        0.19983
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70552,
+        0.04735,
+        0.70552,
+        -0.04735
+       ]
+      },
+      {
+       "at": [
+        0.43801,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.44348,
+        0.00019,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        0.02418,
+        0.70669,
+        -0.02418
+       ]
+      },
+      {
+       "at": [
+        0.44892,
+        0.00075,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        0.04834,
+        0.70545,
+        -0.04834
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "rear-tube-r",
+     "kind": "loft",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        7e-05,
+        -0.19983
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70552,
+        0.04735,
+        0.70552,
+        -0.04735
+       ]
+      },
+      {
+       "at": [
+        0.43801,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.44348,
+        0.00019,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        0.02418,
+        0.70669,
+        -0.02418
+       ]
+      },
+      {
+       "at": [
+        0.44892,
+        0.00075,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        0.04834,
+        0.70545,
+        -0.04834
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "post-l",
+     "kind": "loft",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0001,
+        0.00075,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        -0.04834,
+        0.70545,
+        0.04834
+       ]
+      },
+      {
+       "at": [
+        0.00555,
+        0.00019,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        -0.02418,
+        0.70669,
+        0.02418
+       ]
+      },
+      {
+       "at": [
+        0.01101,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.441,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "post-r",
+     "kind": "loft",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0001,
+        0.00075,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70545,
+        -0.04834,
+        0.70545,
+        0.04834
+       ]
+      },
+      {
+       "at": [
+        0.00555,
+        0.00019,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70669,
+        -0.02418,
+        0.70669,
+        0.02418
+       ]
+      },
+      {
+       "at": [
+        0.01101,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        -0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.441,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "front-tube-l",
+     "kind": "loft",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        -2e-05,
+        0.20978
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70694,
+        -0.01543,
+        0.70694,
+        0.01543
+       ]
+      },
+      {
+       "at": [
+        0.44805,
+        0.0,
+        0.19
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.7227,
+        0.0,
+        0.69116,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "front-tube-r",
+     "kind": "loft",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        -2e-05,
+        -0.20978
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70694,
+        -0.01543,
+        0.70694,
+        0.01543
+       ]
+      },
+      {
+       "at": [
+        0.44805,
+        0.0,
+        -0.19
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.69116,
+        0.0,
+        0.7227,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "stretcher-l",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true
+    },
+    {
+     "id": "stretcher-r",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      -0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true
+    },
+    {
+     "id": "seat-board",
+     "kind": "extrude",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.215,
+       0.43
+      ],
+      [
+       0.199,
+       0.0
+      ],
+      [
+       -0.199,
+       0.0
+      ],
+      [
+       -0.215,
+       0.43
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.03,
+     "to": 0.0
+    },
+    {
+     "id": "apron",
+     "kind": "extrude",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       -0.184,
+       0.01281
+      ],
+      [
+       0.184,
+       0.01281
+      ],
+      [
+       0.184,
+       0.38639
+      ],
+      [
+       -0.184,
+       0.38639
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.065,
+     "to": -0.03,
+     "holes": [
+      [
+       [
+        -0.154,
+        0.04281
+       ],
+       [
+        0.154,
+        0.04281
+       ],
+       [
+        0.154,
+        0.35639
+       ],
+       [
+        -0.154,
+        0.35639
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "back-board",
+     "kind": "box",
+     "bone": "back",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.17,
+      0.03,
+      0.41
+     ],
+     "transform": {
+      "translation": [
+       0.33,
+       -0.0135,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "back-rail",
+     "kind": "box",
+     "bone": "back",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.05,
+      0.03,
+      0.41
+     ],
+     "transform": {
+      "translation": [
+       0.14,
+       -0.0135,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-rear-tube-l",
+     "of": "rear-tube-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-rear-tube-r",
+     "of": "rear-tube-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-post-l",
+     "of": "post-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-post-r",
+     "of": "post-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-front-tube-l",
+     "of": "front-tube-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-front-tube-r",
+     "of": "front-tube-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-stretcher-l",
+     "of": "stretcher-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-stretcher-r",
+     "of": "stretcher-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-seat-board",
+     "of": "seat-board",
+     "region": "seat-beech"
+    },
+    {
+     "id": "th-apron",
+     "of": "apron",
+     "region": "seat-beech"
+    },
+    {
+     "id": "th-back-board",
+     "of": "back-board",
+     "region": "back-beech"
+    },
+    {
+     "id": "th-back-rail",
+     "of": "back-rail",
+     "region": "back-beech"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-rear-l",
+     "kind": "capsule",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.2
+     ],
+     "p1": [
+      0.44903,
+      -0.0,
+      0.185
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "leg-rear",
+     "part": "member"
+    },
+    {
+     "id": "m-post-l",
+     "kind": "capsule",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.185
+     ],
+     "p1": [
+      0.433,
+      0.0,
+      0.185
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-front-l",
+     "kind": "capsule",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.21
+     ],
+     "p1": [
+      0.44805,
+      0.0,
+      0.19
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "leg-front",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-l",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true,
+     "member": "stretcher",
+     "part": "member"
+    },
+    {
+     "id": "m-rear-r",
+     "kind": "capsule",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.2
+     ],
+     "p1": [
+      0.44903,
+      -0.0,
+      -0.185
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "leg-rear",
+     "part": "member"
+    },
+    {
+     "id": "m-post-r",
+     "kind": "capsule",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.185
+     ],
+     "p1": [
+      0.433,
+      0.0,
+      -0.185
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-front-r",
+     "kind": "capsule",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.21
+     ],
+     "p1": [
+      0.44805,
+      0.0,
+      -0.19
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "leg-front",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-r",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      -0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true,
+     "member": "stretcher",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-board",
+     "of": "seat-board",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-apron",
+     "of": "apron",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-back-board",
+     "of": "back-board",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-back-rail",
+     "of": "back-rail",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "joint-bend-l",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-bend-r",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       -0.185
+      ]
+     },
+     "member": "back",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-rear-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.03,
+      0.045,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.00881,
+       -0.0425,
+       0.18583
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-front-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.03,
+      0.045,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.39039,
+       -0.0425,
+       0.19168
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-rear-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.03,
+      0.045,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.00881,
+       -0.0425,
+       -0.18583
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-front-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.03,
+      0.045,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.39039,
+       -0.0425,
+       -0.19168
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "support-contact-rear-left",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.03,
+       0.02
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.2
+     ],
+     "member": "leg-rear",
+     "part": "support",
+     "anchor": "contact-rear-left"
+    },
+    {
+     "id": "support-contact-rear-right",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.03,
+       0.02
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.2
+     ],
+     "member": "leg-rear",
+     "part": "support",
+     "anchor": "contact-rear-right"
+    },
+    {
+     "id": "support-contact-front-left",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.03,
+       0.02
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.21
+     ],
+     "member": "leg-front",
+     "part": "support",
+     "anchor": "contact-front-left"
+    },
+    {
+     "id": "support-contact-front-right",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.03,
+       0.02
+      ],
+      [
+       0.03,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.21
+     ],
+     "member": "leg-front",
+     "part": "support",
+     "anchor": "contact-front-right"
+    },
+    {
+     "id": "mass-rear-l",
+     "kind": "ellipsoid",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.21901,
+       -0.0,
+       0.1925
+      ]
+     },
+     "member": "leg-rear",
+     "part": "mass"
+    },
+    {
+     "id": "mass-front-l",
+     "kind": "ellipsoid",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.22403,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "leg-front",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stretcher-l",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.21411,
+       0.0,
+       0.19906
+      ]
+     },
+     "member": "stretcher",
+     "part": "mass"
+    },
+    {
+     "id": "mass-post-l",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.2165,
+       -0.0,
+       0.185
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-rear-r",
+     "kind": "ellipsoid",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.21901,
+       -0.0,
+       -0.1925
+      ]
+     },
+     "member": "leg-rear",
+     "part": "mass"
+    },
+    {
+     "id": "mass-front-r",
+     "kind": "ellipsoid",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.22403,
+       0.0,
+       -0.2
+      ]
+     },
+     "member": "leg-front",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stretcher-r",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.21411,
+       0.0,
+       -0.19906
+      ]
+     },
+     "member": "stretcher",
+     "part": "mass"
+    },
+    {
+     "id": "mass-post-r",
+     "kind": "ellipsoid",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.2165,
+       -0.0,
+       -0.185
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.08,
+      0.03,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       0.21463,
+       -0.005,
+       0.0
+      ]
+     },
+     "member": "seat",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-board",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.06,
+      0.03,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.33,
+       0.006,
+       0.0
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-rail",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.06,
+      0.03,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.14,
+       0.006,
+       0.0
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "1:200 draws the tubes as strokes, so they are slender solids at their true Ø22 and Ø16 (C24): one continuous tube per side from the floor over the bend to the post top, two front legs, two stretchers; seat board and apron ring are generalised to 30 mm (the board notch and the 30 mm corner radius are below the feature); back board and rail are flat 30 mm boards in front of the posts (their 26 mm curve is below the feature).",
+     "de": "1:200 zeichnet die Rohre als Striche, daher sind sie schlanke Körper in echter Größe Ø22 und Ø16 (C24): je Seite ein durchgehendes Rohr vom Boden über den Bogen bis zur Pfostenspitze, zwei Vorderbeine, zwei Streben; Sitzbrett und Zargenring sind auf 30 mm verallgemeinert (Ausklinkung und 30-mm-Eckradius liegen unter dem Mindestmaß); Rückenbrett und Leiste sind ebene 30-mm-Bretter vor den Pfosten (ihre 26-mm-Krümmung liegt unter dem Mindestmaß)."
+    },
+    {
+     "en": "Thermal references the body; structure: idealised true-size bars per tube member (rear leg, post, front leg, stretcher) beside the referenced boards and ring, the two bends and four seat fixings as joints, 40 mm glide pads, masses per tube and at the board centres.",
+     "de": "Thermik verweist auf den Körper; Tragwerk: idealisierte Stäbe in echter Größe je Rohrglied (Hinterbein, Pfosten, Vorderbein, Strebe) neben den verwiesenen Brettern und dem Ring, die zwei Bögen und vier Sitzlaschen als Gelenke, 40-mm-Gleiterlager, Massen je Rohr und in den Brettschwerpunkten."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "rear-tube-l",
+     "kind": "loft",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        7e-05,
+        0.2
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70552,
+        0.04735,
+        0.70552,
+        -0.04735
+       ]
+      },
+      {
+       "at": [
+        0.44903,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.71883,
+        -5e-05,
+        0.69519,
+        5e-05
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "rear-tube-r",
+     "kind": "loft",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        7e-05,
+        -0.2
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70552,
+        0.04735,
+        0.70552,
+        -0.04735
+       ]
+      },
+      {
+       "at": [
+        0.44903,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.69519,
+        -5e-05,
+        0.71883,
+        5e-05
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "post-l",
+     "kind": "loft",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.441,
+        -0.0,
+        0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "post-r",
+     "kind": "loft",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.441,
+        -0.0,
+        -0.185
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "front-tube-l",
+     "kind": "loft",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        -2e-05,
+        0.20978
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70694,
+        -0.01543,
+        0.70694,
+        0.01543
+       ]
+      },
+      {
+       "at": [
+        0.44805,
+        0.0,
+        0.19
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.7227,
+        0.0,
+        0.69116,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "front-tube-r",
+     "kind": "loft",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "sections": [
+      {
+       "at": [
+        0.0005,
+        -2e-05,
+        -0.20978
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.70694,
+        -0.01543,
+        0.70694,
+        0.01543
+       ]
+      },
+      {
+       "at": [
+        0.44805,
+        0.0,
+        -0.19
+       ],
+       "rx": 0.011,
+       "ry": 0.011,
+       "rotation": [
+        0.69116,
+        0.0,
+        0.7227,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "stretcher-l",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true
+    },
+    {
+     "id": "stretcher-r",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      -0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true
+    },
+    {
+     "id": "seat-slab",
+     "kind": "extrude",
+     "bone": "seat",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.215,
+       0.43
+      ],
+      [
+       0.199,
+       0.0
+      ],
+      [
+       -0.199,
+       0.0
+      ],
+      [
+       -0.215,
+       0.43
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.075,
+     "to": 0.0
+    },
+    {
+     "id": "back-slab",
+     "kind": "box",
+     "bone": "back",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.17,
+      0.075,
+      0.41
+     ],
+     "transform": {
+      "translation": [
+       0.33,
+       -0.0225,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-rear-tube-l",
+     "of": "rear-tube-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-rear-tube-r",
+     "of": "rear-tube-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-post-l",
+     "of": "post-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-post-r",
+     "of": "post-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-front-tube-l",
+     "of": "front-tube-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-front-tube-r",
+     "of": "front-tube-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-stretcher-l",
+     "of": "stretcher-l",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-stretcher-r",
+     "of": "stretcher-r",
+     "region": "steel-tube"
+    },
+    {
+     "id": "th-seat-slab",
+     "of": "seat-slab",
+     "region": "seat-beech"
+    },
+    {
+     "id": "th-back-slab",
+     "of": "back-slab",
+     "region": "back-beech"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-rear-l",
+     "kind": "capsule",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.2
+     ],
+     "p1": [
+      0.44903,
+      -0.0,
+      0.185
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "leg-rear",
+     "part": "member"
+    },
+    {
+     "id": "m-post-l",
+     "kind": "capsule",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.185
+     ],
+     "p1": [
+      0.433,
+      0.0,
+      0.185
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-front-l",
+     "kind": "capsule",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.21
+     ],
+     "p1": [
+      0.44805,
+      0.0,
+      0.19
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "leg-front",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-l",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true,
+     "member": "stretcher",
+     "part": "member"
+    },
+    {
+     "id": "m-rear-r",
+     "kind": "capsule",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.2
+     ],
+     "p1": [
+      0.44903,
+      -0.0,
+      -0.185
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "leg-rear",
+     "part": "member"
+    },
+    {
+     "id": "m-post-r",
+     "kind": "capsule",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.185
+     ],
+     "p1": [
+      0.433,
+      0.0,
+      -0.185
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "m-front-r",
+     "kind": "capsule",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.21
+     ],
+     "p1": [
+      0.44805,
+      0.0,
+      -0.19
+     ],
+     "r0": 0.011,
+     "r1": 0.011,
+     "slender": true,
+     "member": "leg-front",
+     "part": "member"
+    },
+    {
+     "id": "m-stretcher-r",
+     "kind": "capsule",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.0,
+      0.0,
+      -0.19482
+     ],
+     "p1": [
+      0.42823,
+      0.0,
+      -0.2033
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "slender": true,
+     "member": "stretcher",
+     "part": "member"
+    },
+    {
+     "id": "m-seat-slab",
+     "of": "seat-slab",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "m-back-slab",
+     "of": "back-slab",
+     "member": "back",
+     "part": "member"
+    },
+    {
+     "id": "joint-seat-rear-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.00881,
+       -0.0425,
+       0.18583
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-front-l",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.39039,
+       -0.0425,
+       0.19168
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-rear-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.00881,
+       -0.0425,
+       -0.18583
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-front-r",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.39039,
+       -0.0425,
+       -0.19168
+      ]
+     },
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "support-contact-rear-left",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.2
+     ],
+     "member": "leg-rear",
+     "part": "support",
+     "anchor": "contact-rear-left"
+    },
+    {
+     "id": "support-contact-rear-right",
+     "kind": "revolve",
+     "bone": "leg-rear",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99103,
+      0.13362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.2
+     ],
+     "member": "leg-rear",
+     "part": "support",
+     "anchor": "contact-rear-right"
+    },
+    {
+     "id": "support-contact-front-left",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.21
+     ],
+     "member": "leg-front",
+     "part": "support",
+     "anchor": "contact-front-left"
+    },
+    {
+     "id": "support-contact-front-right",
+     "kind": "revolve",
+     "bone": "leg-front",
+     "material": "polyamide-glide",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0375
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.99905,
+      -0.04362,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.21
+     ],
+     "member": "leg-front",
+     "part": "support",
+     "anchor": "contact-front-right"
+    },
+    {
+     "id": "mass-rear-l",
+     "kind": "ellipsoid",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.21901,
+       -0.0,
+       0.1925
+      ]
+     },
+     "member": "leg-rear",
+     "part": "mass"
+    },
+    {
+     "id": "mass-front-l",
+     "kind": "ellipsoid",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.22403,
+       0.0,
+       0.2
+      ]
+     },
+     "member": "leg-front",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stretcher-l",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.21411,
+       0.0,
+       0.19906
+      ]
+     },
+     "member": "stretcher",
+     "part": "mass"
+    },
+    {
+     "id": "mass-rear-r",
+     "kind": "ellipsoid",
+     "bone": "leg-rear",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.21901,
+       -0.0,
+       -0.1925
+      ]
+     },
+     "member": "leg-rear",
+     "part": "mass"
+    },
+    {
+     "id": "mass-front-r",
+     "kind": "ellipsoid",
+     "bone": "leg-front",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.22403,
+       0.0,
+       -0.2
+      ]
+     },
+     "member": "leg-front",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stretcher-r",
+     "kind": "ellipsoid",
+     "bone": "stretcher",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.21411,
+       0.0,
+       -0.19906
+      ]
+     },
+     "member": "stretcher",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat",
+     "kind": "box",
+     "bone": "seat",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.1,
+      0.075,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.21463,
+       -0.0375,
+       0.0
+      ]
+     },
+     "member": "seat",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back",
+     "kind": "box",
+     "bone": "back",
+     "material": "steel-tube",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       0.25722,
+       -0.0225,
+       0.0
+      ]
+     },
+     "member": "back",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "1:500 is the chair sign: a 75 mm seat slab (board and apron merged), a 75 mm back slab (backrest board and the posts beside it merged; the lower rail is dropped), four slender true-size tubes (the rear ones straight from foot to bend and from bend to top); the stretchers are omitted from the body (16 mm, 0.03 mm on paper).",
+     "de": "1:500 ist das Stuhlzeichen: eine 75-mm-Sitzplatte (Brett und Zarge verschmolzen), eine 75-mm-Rückenplatte (Rückenbrett und die Pfosten daneben verschmolzen; die untere Leiste entfällt), vier schlanke Rohre in echter Größe (die hinteren gerade vom Fuß zum Bogen und vom Bogen zur Spitze); die Streben entfallen im Körper (16 mm, 0,03 mm auf Papier)."
+    },
+    {
+     "en": "Thermal references the body and keeps the two stretchers as slender steel rods; structure: true-size bars per tube member including the stretchers, the two slabs, four 75 mm seat corner joints (the bends lie in the seat slab), 75 mm pads, masses per leg tube, at the seat centre and at the back centre.",
+     "de": "Thermik verweist auf den Körper und behält die zwei Streben als schlanke Stahlstäbe; Tragwerk: Stäbe in echter Größe je Rohrglied einschließlich der Streben, die zwei Platten, vier 75-mm-Sitzeckgelenke (die Bögen liegen in der Sitzplatte), 75-mm-Lager, Massen je Beinrohr, im Sitz- und im Rückenschwerpunkt."
+    }
+   ]
+  }
+ }
+}

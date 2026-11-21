@@ -1,0 +1,7 @@
+# Owner Verdict and Ready Observation — 2026-11-21
+
+Read-only local inspection, no worker or process changes. Around 03:07 UTC the mirrored `ready.json` for g1-m05 still reported workspace running, not ready, 472/596 taken. g1-m11 also remained running, not ready; its workspace log progressed from 4,457 to 4,466 completed owner checks at inventory elapsed 8,412 seconds. This is actual counter movement, not a terminal Ready result.
+
+The coordinator read reported inference 103/4,808 and its longest owner `@semio-tech/semio-s-plugin-flow-brep-original-jobs` at 2,120 seconds and zero rows. A parked line at 2,087 seconds identifies its parent-side stage as waiting for a farm child to verify a stored record. Current `project-nodes/🟨️.mjs` sets that stage when `observeProjectInferenceV1` needs a verdict and an earlier look does not supply a matching header, then awaits `farm.observe(observeJob)`. The elapsed owner clock includes time before and during that stage; it is not a measurement of the child’s physical validation operation. The current source may differ from the code already loaded by the read.
+
+Current pool code arms a 1,800,000 ms job timeout scaled for machine speed and can rearm for child liveness; `farm.observe` retries lost/failure outcomes. No job-timeout, lost-job, nonzero farm restart, or graph seal was found in the saved read log at observation. The line does not identify which child or the exact operation it is executing, and it does not prove a timeout or cycle. No actionable source defect is established by this sample.

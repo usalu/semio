@@ -111,7 +111,10 @@
    "q_mean": 2.0,
    "q_cov": 0.3
   },
-  "text": {}
+  "text": {
+   "g_value_basis": "normal-bounds",
+   "q_value_basis": "annual-gumbel"
+  }
  },
  {
   "entry": "E90.08",
@@ -121,7 +124,9 @@
    "g_mean": 100,
    "v_g": 0.03
   },
-  "text": {}
+  "text": {
+   "g_value_basis": "single-mean"
+  }
  },
  {
   "entry": "E90.09",

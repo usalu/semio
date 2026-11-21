@@ -7,6 +7,7 @@ use semio_s_artifact_stdio_semio_flow::{schema::{snapshot::SemioFlowSnapshot,mut
 use std::mem::size_of;
 #[path="🧷️reference/🦀️.rs"]mod reference;
 use reference::FLOW_CONTENT_REFERENCE_LENDER;
+const PARENT_SOURCE:usize=0x464c4f57;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow child publication source changed")}
 /// 🔁️ Reads a settled close poll as a grant-shaped outcome; a suspended effect keeps its state and retries next turn.
 fn poll_outcome(poll:OriginalRetirementPoll)->RetainedWorkOutcome{
@@ -51,7 +52,7 @@ impl FlowChildPublicationWork{
   if owners.authority.is_some(){let d=semio_flow_mutation_batch_demand("content".len(),parent.get().content.child_id.len())?;if !cx.retained_work_can_enter(d){return Ok(None)}let result=admit_semio_flow_mutation_batch("content",&parent.get().content.child_id,leaves,&mut owners.authority,cx.retained_grant());cx.consume_fuel(1);match result{Ok(Some((preparation,p)))=>{owners.preparation=Some(preparation);cx.consume_retained(p)?},Ok(None)=>{},Err(error)=>return Err(OriginalTurnFailure::debit_original(error,cx))}return Ok(None)}
   let key=MemberKeyRef::root("content",&parent.get().content.child_id);
   if !owners.lookup.as_ref().unwrap().ready(){let lookup=owners.lookup.as_mut().unwrap();let d=lookup.demand::<SemioFlowSnapshot>();if !cx.retained_work_can_enter(d){return Ok(None)}let result=SEMIO_FLOW_CHILD_READ.read_original(parent,children,key,operation,lookup,cx.retained_grant());cx.consume_fuel(1);match result{Ok(advance)=>cx.consume_retained(advance.progress)?,Err(error)=>return Err(OriginalTurnFailure::debit_original(error,cx))}return Ok(None)}
-  let raw=semio_plugin::app::child_read::erase_child_admission_source(parent,0x464c4f57);
+  let raw=semio_plugin::app::child_read::erase_child_admission_source(parent,PARENT_SOURCE);
   let quote=owners.lookup.as_ref().unwrap().quote_ready_receiving::<SemioFlowSnapshot,_>(parent,children,key,operation,|read|{
    if self.stamp.is_none(){owners.read_cursor.as_ref().unwrap().next_demand(raw,&FLOW_CONTENT_REFERENCE_LENDER,0,read,&SEMIO_FLOW_CHILD_READ.identity)}else if !owners.child.ready(){owners.child.next_admit_demand()}else if self.phase==6{owners.qualifier.as_ref().unwrap().take_authority_demand()}else{owners.qualifier.as_ref().unwrap().next_demand()}
   })?;if !cx.retained_work_can_enter(quote){return Ok(None)}
@@ -64,7 +65,7 @@ impl FlowChildPublicationWork{
    }else if self.phase==6{
     let cursor=owners.qualifier.as_mut().unwrap();cursor.take_authority(&owners.child,&read,effect).map(|advance|{if let Some(authority)=advance.authority{owners.authority=Some(authority)}advance.progress})
    }else{
-    let cursor=owners.qualifier.as_mut().unwrap();SEMIO_FLOW_CHILD_APPLY_MUTATIONS.qualify_original(parent,command,self.stamp.as_ref().unwrap(),&read,cursor,effect).map(|advance|{if advance.stamp.is_some(){self.phase=6}advance.progress})
+    let cursor=owners.qualifier.as_mut().unwrap();let qualified_parent=parent.project(PARENT_SOURCE,|value|value);SEMIO_FLOW_CHILD_APPLY_MUTATIONS.qualify_original(qualified_parent,command,self.stamp.as_ref().unwrap(),&read,cursor,effect).map(|advance|{if advance.stamp.is_some(){self.phase=6}advance.progress})
    }
   })?else{cx.consume_fuel(u64::try_from(borrow_work).unwrap_or(u64::MAX));return Ok(None)};
   cx.consume_fuel(u64::try_from(borrow_work.max(performed)).unwrap_or(u64::MAX));let merge=|p:RetainedCloneProgress|RetainedCloneProgress{copied_items:borrowed.progress.copied_items.max(p.copied_items),copied_bytes:borrowed.progress.copied_bytes+p.copied_bytes,retained_capacity_bytes:borrowed.progress.retained_capacity_bytes+p.retained_capacity_bytes,released_bytes:borrowed.progress.released_bytes+p.released_bytes};

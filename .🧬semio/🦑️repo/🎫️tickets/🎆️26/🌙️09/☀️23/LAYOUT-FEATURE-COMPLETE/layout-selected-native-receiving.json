@@ -1,0 +1,29 @@
+{
+  "profile": {
+    "maximumItems": 64,
+    "maximumCopyBytes": 524288,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 2097152,
+    "maximumDepth": 128
+  },
+  "emptyGrant": {
+    "maximumItems": 0,
+    "expectedWork": 0
+  },
+  "discriminator": {
+    "format": 1,
+    "tag": 129,
+    "selected": "Rename",
+    "unchosen": "Remove"
+  },
+  "cancelAfterPaidTurns": [
+    1,
+    8,
+    24,
+    48,
+    96
+  ],
+  "completion": {
+    "originalOwnerCount": 0
+  }
+}

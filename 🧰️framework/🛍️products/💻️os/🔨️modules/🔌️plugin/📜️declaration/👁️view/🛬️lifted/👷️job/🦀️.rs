@@ -15,6 +15,8 @@ use semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 /// 🧳️ Object-safe app-instance operation state retained and closed by [VcsArtifactApp].
 pub trait ArtifactInstanceOperationOwner: std::any::Any + Send {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+    /// 📎️ Resolves an ephemeral hover group from a currently mounted window publication.
+    fn interaction_hover_group(&self, _domain: &str, _window: &str, _reference: &str) -> Option<(&'static str, Vec<String>)> { None }
     /// 📏️ Exact per-axis grant the owner's next maintenance or close turn needs.
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     fn maintenance_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>;
@@ -264,6 +266,16 @@ impl ArtifactInstanceOperationOwnerHandle {
     pub fn inference_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.inference.as_ref().map_or(Ok(Default::default()),|inference|original_inference_close_demands(inference,body))}
     /// 🎟️ Advances one actual caller-funded step of the same original session owner.
     pub fn close_inference_step(&self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{self.inference.as_ref().map_or(Ok(PluginLifecycleStep::Complete(Default::default())),|inference|original_inference_close_step(inference,cx,loan))}
+
+    /// 📎️ Reads a window-owned hover group without waiting for a retained operation.
+    pub fn read_interaction_hover_group(&self, domain: &str, window: &str, reference: &str) -> Result<Option<(&'static str, Vec<String>)>, Fault> {
+        let Some(cell) = self.inner.as_ref() else { return Ok(None); };
+        match cell.try_lock() {
+            Ok(owner) => Ok(owner.interaction_hover_group(domain, window, reference)),
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy) => Ok(None),
+            Err(semio_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-poisoned"), "app-instance operation owner is poisoned")),
+        }
+    }
 
     pub fn with_mut<T: std::any::Any, R>(&self, apply: impl FnOnce(&mut T) -> Result<R, Fault>) -> Result<R, Fault> {
         let mut owner = self.inner().try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))?;

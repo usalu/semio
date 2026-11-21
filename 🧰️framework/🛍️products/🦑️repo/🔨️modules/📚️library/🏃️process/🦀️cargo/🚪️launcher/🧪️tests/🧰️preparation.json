@@ -1,0 +1,8 @@
+{
+  "order": [
+    "prepareCargoWorkspaceInvocation",
+    "prepareRepositoryCargoSchedulerV1",
+    "captureCargoCompilationGraphV1"
+  ],
+  "admitted": 1
+}

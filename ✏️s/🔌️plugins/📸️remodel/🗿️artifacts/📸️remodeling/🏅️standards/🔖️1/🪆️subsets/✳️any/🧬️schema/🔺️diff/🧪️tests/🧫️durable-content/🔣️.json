@@ -1,4 +1,6 @@
 {
+  "assignedId": { "before": "before", "after": "after" },
+  "streamOffset": { "before": 0, "after": 15 },
   "cases": [
     { "id": "create", "initial": [], "rows": [{ "operation": "create", "chunks": ["a", "b"] }], "expected": ["a", "b"] },
     { "id": "append", "initial": ["a"], "rows": [{ "operation": "append", "chunks": ["b"] }], "expected": ["a", "b"] },

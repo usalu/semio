@@ -222,12 +222,15 @@ class Chaotic implements Device {
       await form.locator('input[type="radio"][value="pseudonym"]').check({ timeout: 10_000 });
       await form.locator('input[type="text"]').fill(this.handle, { timeout: 10_000 });
     }).toPass({ timeout: 150_000, intervals: [500, 1_000, 2_000] }).catch(async (error: unknown) => {
-      const state = await this.page.evaluate(() => {
-        const radio = document.querySelector<HTMLInputElement>('input[type="radio"][value="pseudonym"]');
-        const box = radio?.getBoundingClientRect();
-        const top = box === undefined ? null : document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
-        return JSON.stringify({ disabled: radio?.disabled, checked: radio?.checked, box: box === undefined ? null : [box.x, box.y, box.width, box.height], top: top === null ? null : `${top.tagName}.${top.className}`.slice(0, 120), visibility: document.visibilityState, focus: document.hasFocus(), text: document.body.innerText.slice(0, 160), dialogs: document.querySelectorAll("[role=dialog]").length });
-      }, undefined, { timeout: 5_000 }).catch((failure: unknown) => `page unresponsive: ${String(failure).slice(0, 80)}`);
+      const state = await Promise.race([
+        this.page.evaluate(() => {
+          const radio = document.querySelector<HTMLInputElement>('input[type="radio"][value="pseudonym"]');
+          const box = radio?.getBoundingClientRect();
+          const top = box === undefined ? null : document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+          return JSON.stringify({ disabled: radio?.disabled, checked: radio?.checked, box: box === undefined ? null : [box.x, box.y, box.width, box.height], top: top === null ? null : `${top.tagName}.${top.className}`.slice(0, 120), visibility: document.visibilityState, focus: document.hasFocus(), text: document.body.innerText.slice(0, 160), dialogs: document.querySelectorAll("[role=dialog]").length });
+        }).catch((failure: unknown) => `page unresponsive: ${String(failure).slice(0, 80)}`),
+        sleep(5_000).then(() => "page unresponsive: identity diagnostic timed out"),
+      ]);
       throw new Error(`${this.handle} identity step: ${state} | ${error instanceof Error ? error.message.split("\n")[0] : ""}`);
     });
     await primary(form).click({ noWaitAfter: true });

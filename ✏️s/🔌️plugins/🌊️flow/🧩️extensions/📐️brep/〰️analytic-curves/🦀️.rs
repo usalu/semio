@@ -3,7 +3,7 @@
 use std::mem::{size_of, take};
 
 use neural_engine::{Atom, BudgetedOwnedEntry, Dictionary, EvalError, OperatorJob, OperatorJobStep, OperatorPlanAdmission, OperatorProgress, OperatorWorkFailure, Value};
-use semio_framework_3d_brep_engine::{AnalyticCurveParameters, AnalyticPublication, AnalyticTransform, BooleanOperand, BooleanOperation, BooleanPreparation, BoxFinish, BoxSectionDraft, BoxSectionPolygon, BoxShellDraft, ConicFacePublication, CuboidSew, HelixWireRecipe, HullDraft, LoftDraft, LoftPlan, PolygonFacePublication, PolygonWirePublication, PolygonWireRecipe, PrismDraft, PlanarExtrusion, PlanarMeasureJob, WireLengthJob, SolidPrimitive, SolidPublication, VertexPublication};
+use semio_framework_3d_brep_engine::{AnalyticCurveParameters, AnalyticPublication, AnalyticTransform, BooleanOperand, BooleanOperation, BooleanPreparation, CertifiedBooleanResult, BoxFinish, BoxSectionDraft, SectionPolygon, ShellDraft, ConicFacePublication, CuboidSew, HelixWireRecipe, HullDraft, LoftDraft, LoftPlan, PolygonFacePublication, PolygonSectionSet, PolygonWirePublication, PolygonWireRecipe, PrismDraft, PlanarExtrusion, PlanarMeasureJob, WireLengthJob, SECTION_FACE_LIMIT, SectionPlan, SolidPrimitive, SolidPublication, VertexPublication};
 use semio_framework_job::StepContext;
 use semio_framework_3d_brep_engine::CompoundPublication;
 use semio_framework_3d_brep_engine::{SolidPatternPublication, SolidPatternRecipe};
@@ -11,7 +11,7 @@ use semio_framework_3d_brep_engine::{MeshDecode, MeshPublication, MeshTextFormat
 use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_s_artifact_stdio_step_geometry::geometry::StepBoxDecode;
+use semio_s_artifact_stdio_step_geometry::geometry::{StepWrite, StepSolid, StepSolidDecode, StepWriteSource};
 use semio_s_spatial_kernel_semio_session::{NativeMeshExport,NativeValidationReport,Session,SessionCapture,classify_number};
 
 #[path = "🧾️topology-output/🦀️.rs"]
@@ -22,6 +22,8 @@ mod deconstruct;
 use deconstruct::DeconstructOutput;
 #[path = "✂️split/🦀️.rs"]
 mod split;
+#[path = "✂️section-faces/🦀️.rs"]
+mod section_faces;
 #[path = "🔪️compound-cut/🦀️.rs"]
 mod compound_cut;
 use compound_cut::CompoundCutDraft;
@@ -89,12 +91,17 @@ pub enum GeometryOperation {
     Pipe,
     Loft,
     Revolve,
+    HelicalSweep,
     Thicken,
     OffsetFace,
     OffsetSolid,
-    BoxShell,
+    Shell,
     Sew,
+    ConvertToNurbs,
+    ChamferAll,
+    FilletAll,
     ChamferEdges,
+    FilletEdges,
     Draft,
     Section,
     Split,
@@ -121,6 +128,7 @@ pub enum GeometryOperation {
     ImportObj,
     ImportStl,
     ImportStep,
+    ExportStep,
     ExportObj,
     ExportStl,
     Cone,
@@ -144,7 +152,7 @@ pub enum GeometryOperation {
 
 impl GeometryOperation {
     fn is_solid(self) -> bool {
-        matches!(self, Self::Box | Self::Sphere | Self::Cylinder | Self::Cone | Self::Torus | Self::ExtrudeWire | Self::ExtrudeFace | Self::Sweep | Self::Pipe | Self::Loft | Self::Revolve | Self::Thicken | Self::OffsetSolid | Self::BoundingBox | Self::BoxShell | Self::ConvexHull)
+        matches!(self, Self::Box | Self::Sphere | Self::Cylinder | Self::Cone | Self::Torus | Self::ExtrudeWire | Self::ExtrudeFace | Self::Sweep | Self::Pipe | Self::Loft | Self::Revolve | Self::HelicalSweep | Self::Thicken | Self::OffsetSolid | Self::BoundingBox | Self::Shell | Self::ConvexHull)
     }
 
     fn initial_phase(self) -> &'static str {
@@ -160,6 +168,7 @@ impl GeometryOperation {
             Self::ImportObj => "obj-source",
             Self::ImportStl => "stl-source",
             Self::ImportStep => "step-source",
+            Self::ExportStep => "step-export-source",
             Self::ExportObj | Self::ExportStl => "mesh-export-source",
             Self::Validate=>"validation-source",
             Self::Shells => "shells-source",
@@ -172,15 +181,18 @@ impl GeometryOperation {
             Self::Sweep | Self::Pipe => "straight-sweep-path",
             Self::Loft => "loft-profile-pair",
             Self::Revolve => "revolution-profile",
+            Self::HelicalSweep => "closed-helical-profile",
             Self::Thicken => "thickening-profile",
             Self::OffsetFace => "face-offset-source",
             Self::OffsetSolid => "solid-offset-source",
-            Self::BoxShell => "box-shell-source",
+            Self::Shell => "shell-source",
             Self::Sew => "sew-source",
-            Self::ChamferEdges => "box-chamfer-source",
+            Self::ConvertToNurbs => "nurbs-cuboid-source",
+            Self::ChamferAll | Self::ChamferEdges => "box-chamfer-source",
+            Self::FilletAll | Self::FilletEdges => "box-fillet-source",
             Self::Draft => "box-draft-source",
-            Self::Section => "box-section-source",
-            Self::Split => "box-split-source",
+            Self::Section => "section-source",
+            Self::Split => "split-source",
             Self::ConvexHull => "convex-hull-source",
             Self::BoundingBox => "bounding-box-source",
             Self::Fuse | Self::Cut | Self::Intersect => "boolean-operands",
@@ -205,6 +217,7 @@ impl GeometryOperation {
             Self::Compound|Self::Validate|Self::Shells=>size_of::<usize>(),
             Self::LinearPattern | Self::CircularPattern | Self::GridPattern => 64 + size_of::<SolidPrimitive>() + size_of::<SolidPatternRecipe>(),
             Self::ImportStep => size_of::<(usize, usize)>(),
+            Self::ExportStep => size_of::<StepWriteSource>(),
             Self::ImportObj | Self::ImportStl => size_of::<(usize, f64)>(),
             Self::ExportObj | Self::ExportStl => size_of::<SolidPrimitive>() + size_of::<f64>(),
             Self::Explode => 64 + size_of::<usize>(),
@@ -213,18 +226,24 @@ impl GeometryOperation {
             Self::Ellipse => 8 * size_of::<f64>(),
             Self::Arc | Self::Helix => 9 * size_of::<f64>(),
             Self::Box | Self::Vertex => 3 * size_of::<f64>(),
-            Self::CurveCurve | Self::CurveSurface => 4 * size_of::<f64>(),
+            Self::CurveCurve | Self::CurveSurface => 13 * size_of::<f64>(),
             Self::SurfaceSurface => 14 * size_of::<f64>(),
-            Self::OffsetSolid | Self::BoxShell => 7 * size_of::<f64>(),
+            Self::OffsetSolid => size_of::<SolidPrimitive>() + size_of::<f64>(),
+            Self::Shell => 16 * size_of::<f64>(),
             Self::Sew => size_of::<f64>(),
-            Self::ChamferEdges => 11 * size_of::<f64>(),
+            Self::ConvertToNurbs => size_of::<SolidPrimitive>(),
+            Self::FilletAll => 12 * size_of::<f64>(),
+            Self::ChamferAll => 16 * size_of::<f64>(),
+            Self::ChamferEdges | Self::FilletEdges => 16 * size_of::<f64>(),
             Self::Draft => 15 * size_of::<f64>(),
-            Self::Section | Self::Split => 12 * size_of::<f64>(),
+            Self::Section => 16 * size_of::<f64>(),
+            Self::Split => 12 * size_of::<f64>(),
             Self::ClassifyPoint => 4 * size_of::<f64>(),
             Self::Distance => 13 * size_of::<f64>(),
             Self::BoundingBox => 16 * size_of::<f64>(),
             Self::ExtrudeWire | Self::ExtrudeFace | Self::Sweep | Self::Pipe | Self::Loft => 16 * size_of::<f64>(),
             Self::Revolve => 14 * size_of::<f64>(),
+            Self::HelicalSweep => 10 * size_of::<f64>(),
             Self::Thicken => 16 * size_of::<f64>(),
             Self::ConicFace | Self::PlanarConicFace | Self::OffsetFace => 14 * size_of::<f64>(),
             Self::Translate => 3 * size_of::<f64>(),
@@ -232,7 +251,7 @@ impl GeometryOperation {
             Self::RotateAbout => 7 * size_of::<f64>(),
             Self::Scale | Self::Mirror => 6 * size_of::<f64>(),
             Self::Copy | Self::ConvexHull => 0,
-            Self::Fuse | Self::Cut | Self::Intersect => size_of::<SolidPrimitive>(),
+            Self::Fuse | Self::Cut | Self::Intersect => BooleanOperand::recipe_copy_bytes(),
             Self::CompoundCut => size_of::<([[f64; 3]; 2], usize)>(),
             Self::Sphere => size_of::<f64>(),
             Self::Cylinder | Self::Cone | Self::Torus => 2 * size_of::<f64>(),
@@ -240,7 +259,8 @@ impl GeometryOperation {
             Self::CurveClosestParameter|Self::SurfaceClosestUv=>9*size_of::<f64>(),
             Self::Curvature => 2 * size_of::<f64>(),
             Self::SurfacePoint | Self::SurfaceNormal => 5 * size_of::<f64>(),
-            Self::Domain | Self::Length | Self::Volume | Self::Area | Self::CenterOfMass | Self::Label => size_of::<f64>(),
+            Self::Domain | Self::Length | Self::Volume | Self::Area | Self::Label => size_of::<f64>(),
+            Self::CenterOfMass => 3 * size_of::<f64>(),
         }
     }
 
@@ -248,7 +268,10 @@ impl GeometryOperation {
         match self {
             Self::Validate => size_of::<NativeValidationReport>(),
             Self::ExportObj | Self::ExportStl => size_of::<NativeMeshExport>(),
+            Self::ImportStep => size_of::<StepSolidDecode>(),
+            Self::ExportStep => size_of::<StepWrite>(),
             Self::Split => size_of::<[SolidPublication; 2]>(),
+            Self::Section => size_of::<PolygonSectionSet>(),
             Self::Shells | Self::Explode | Self::Deconstruct => size_of::<TopologyOutput>(),
             _ => 0,
         }
@@ -273,7 +296,7 @@ impl GeometryOperation {
             Self::LinearPattern | Self::CircularPattern | Self::GridPattern => {
                 return session.plan_solid_pattern(geometry_handle(input, "geometry")?, self.pattern_recipe(input)?).map(GeometryOutput::SolidPattern);
             }
-            Self::ImportStep => return Ok(GeometryOutput::StepDecode(StepBoxDecode::new(exchange_text(input)?))),
+            Self::ImportStep => return Ok(GeometryOutput::StepDecode(Box::new(StepSolidDecode::new(exchange_text(input)?)))),
             Self::ImportObj | Self::ImportStl => {
                 let source = exchange_text(input)?;
                 let tolerance = number(input, "tolerance", "value")?;
@@ -281,6 +304,9 @@ impl GeometryOperation {
                     else { MeshDecode::Stl(StlDecode::new(source, tolerance)?) };
                 return Ok(GeometryOutput::MeshDecode(decoder));
             }
+            Self::ExportStep => return step_export_source(session, input, |source| {
+                Ok(GeometryOutput::StepExport(Box::new(StepWrite::new(source))))
+            }),
             Self::ExportObj | Self::ExportStl => {
                 let format = if matches!(self, Self::ExportObj) { MeshTextFormat::Obj } else { MeshTextFormat::Stl };
                 let source = geometry_handle(input, "geometry")?;
@@ -292,12 +318,18 @@ impl GeometryOperation {
                 let tolerance = number(input, "tolerance", "value").map_err(|_| {
                     ValueError::literal(ValueRefusalKind::InvalidValue, "tolerance must be positive and finite")
                 })?;
-                let vertex = if matches!(self, Self::CurveCurve) {
-                    session.plan_original_line_line(geometry_handle(input, "a")?, geometry_handle(input, "b")?, tolerance)?
+                let points = if matches!(self, Self::CurveCurve) {
+                    session.original_curve_curve_contacts(geometry_handle(input, "a")?, geometry_handle(input, "b")?, tolerance)?
                 } else {
-                    session.plan_original_line_plane(geometry_handle(input, "curve")?, geometry_handle(input, "surface")?, tolerance)?
+                    session.original_curve_plane_contacts(geometry_handle(input, "curve")?, geometry_handle(input, "surface")?, tolerance)?
                 };
-                return Ok(GeometryOutput::Vertex(vertex, "wire"));
+                let count = points.iter().flatten().count();
+                let points = points.map(|point| point.unwrap_or_default());
+                return match count {
+                    0 => Err(ValueError::literal(ValueRefusalKind::InvalidValue, "no intersection")),
+                    1 => session.plan_vertex_publication(points[0]).map(|vertex| GeometryOutput::Vertex(vertex, "wire")),
+                    _ => session.plan_polygon_wire(PolygonWireRecipe::Contacts { points, count }).map(|wire| GeometryOutput::Wire(wire, "wire")),
+                };
             }
             Self::SurfaceSurface => {
                 let tolerance = number(input, "tolerance", "value")?;
@@ -412,7 +444,7 @@ impl GeometryOperation {
             Self::Loft => {
                 number(input, "smooth", "value")?;
                 let loft = match session.plan_exact_loft(loft_profiles(input)?)? {
-                    LoftPlan::Cylinder(shape) => GeometryOutput::Solid(shape, "solid"),
+                    LoftPlan::Solid(shape) => GeometryOutput::Solid(shape, "solid"),
                     LoftPlan::Lines(draft) => GeometryOutput::Loft(draft),
                 };
                 return Ok(loft);
@@ -424,7 +456,7 @@ impl GeometryOperation {
                 let profile = geometry_handle(input, "profile")?;
                 let path = geometry_handle(input, "path")?;
                 let swept = match session.plan_straight_sweep(profile, path)? {
-                    PlanarExtrusion::Cylinder(shape) => GeometryOutput::Solid(shape, "solid"),
+                    PlanarExtrusion::Solid(shape) => GeometryOutput::Solid(shape, "solid"),
                     PlanarExtrusion::Prism(draft) => GeometryOutput::Prism(draft),
                 };
                 return Ok(swept);
@@ -433,10 +465,18 @@ impl GeometryOperation {
                 let source = geometry_handle(input, "face")?;
                 let thickness = number(input, "thickness", "value")?;
                 let solid = match session.plan_planar_thickening(source, thickness)? {
-                    PlanarExtrusion::Cylinder(shape) => GeometryOutput::Solid(shape, "solid"),
+                    PlanarExtrusion::Solid(shape) => GeometryOutput::Solid(shape, "solid"),
                     PlanarExtrusion::Prism(draft) => GeometryOutput::Prism(draft),
                 };
                 return Ok(solid);
+            }
+            Self::HelicalSweep => {
+                let source=geometry_handle(input,"profile")?;
+                let origin=point(input,"axisOrigin")?;
+                let direction=point(input,"axisDirection")?;
+                let parameters=[number(input,"radius","value")?,number(input,"pitch","value")?,number(input,"turns","value")?];
+                return session.plan_closed_helical_sweep(source,origin,direction,parameters)
+                    .map(|shape|GeometryOutput::Solid(shape,"solid"));
             }
             Self::Revolve => {
                 let source = geometry_handle(input, "face")?;
@@ -462,7 +502,12 @@ impl GeometryOperation {
             }
             Self::BoundingBox => {
                 let source = geometry_handle(input, "geometry")?;
-                return session.plan_analytic_bounds(source).map(|shape| GeometryOutput::Solid(shape, "box"));
+                return match session.plan_analytic_bounds(source) {
+                    Ok(shape) => Ok(GeometryOutput::Solid(shape, "box")),
+                    Err(error) if error.kind == ValueRefusalKind::UnsupportedOwner =>
+                        session.plan_planar_bounds(source).map(|job| GeometryOutput::PlanarMeasure(job, "box")),
+                    Err(error) => Err(error),
+                };
             }
             Self::ConvexHull => {
                 let draft = HullDraft::new(point_list(input)?.len().saturating_sub(1))?;
@@ -470,31 +515,46 @@ impl GeometryOperation {
             }
             Self::Split => {
                 let source = geometry_handle(input, "solid")?;
-                let pair = session.plan_box_split(source, point(input, "planeOrigin")?, point(input, "planeNormal")?)?;
+                let pair = session.plan_plane_split(source, point(input, "planeOrigin")?, point(input, "planeNormal")?)?;
                 return Ok(GeometryOutput::SolidPair(Box::new(pair)));
             }
             Self::Section => {
                 let source = geometry_handle(input, "solid")?;
-                return session.plan_box_section(source, point(input, "planeOrigin")?, point(input, "planeNormal")?)
-                    .map(GeometryOutput::Section);
+                let plan=session.plan_section(source,point(input,"planeOrigin")?,point(input,"planeNormal")?)?;
+                return Ok(match plan{
+                    SectionPlan::Box(draft)=>GeometryOutput::Section(draft),
+                    SectionPlan::Conic(face)=>GeometryOutput::Face(face,ConicFaceOutput::Section),
+                    SectionPlan::Polygon(face,polygon)=>GeometryOutput::PolygonFace(face,FaceOutput::Section(polygon)),
+                    SectionPlan::Regions(faces) => GeometryOutput::SectionFaces(Box::new(faces)),
+                });
             }
-            Self::ChamferEdges | Self::Draft => {
-                let [shape,member] = box_finish_source(input,self)?;
+            Self::ChamferAll | Self::FilletAll => {
+                let source = geometry_handle(input, "geometry")?;
+                let finish = if matches!(self,Self::FilletAll) { BoxFinish::FilletAll(number(input, "radius", "value")?) }
+                    else { BoxFinish::ChamferAll(number(input, "distance", "value")?) };
+                return session.plan_box_finish(source, &[], finish).map(|solid| GeometryOutput::Solid(solid, "solid"));
+            }
+            Self::ChamferEdges | Self::FilletEdges | Self::Draft => {
+                let (shape,members,count)=box_finish_source(input,self)?;
                 let finish = if matches!(self,Self::Draft) {
                     BoxFinish::Draft { pull:point(input,"pullDirection")?,neutral:point(input,"neutralPoint")?,angle:number(input,"angle","value")? }
+                } else if matches!(self,Self::FilletEdges) {
+                    BoxFinish::Fillet(number(input,"radius","value")?)
                 } else { BoxFinish::Chamfer(number(input,"distance","value")?) };
-                return session.plan_box_finish(shape,member,finish).map(|solid|GeometryOutput::Solid(solid,"solid"));
+                return session.plan_box_finish(shape,&members[..count],finish).map(|solid|GeometryOutput::Solid(solid,"solid"));
             }
             Self::Sew => {
                 let list = sew_faces(input)?;
                 if list.len() != 7 { return Err(invalid_sew_input()); }
                 return CuboidSew::new(number(input, "tolerance", "value")?).map(GeometryOutput::Sew);
             }
-            Self::BoxShell => {
+            Self::ConvertToNurbs => return session.plan_nurbs_cuboid(geometry_handle(input, "geometry")?)
+                .map(|solid| GeometryOutput::Solid(solid, "geometryOut")),
+            Self::Shell => {
                 let source = geometry_handle(input, "geometry")?;
                 shell_open_faces(input)?;
-                let draft = session.plan_box_shell(source, number(input, "thickness", "value")?)?;
-                return Ok(GeometryOutput::BoxShell { draft, next: 0 });
+                let draft = session.plan_shell(source, number(input, "thickness", "value")?)?;
+                return Ok(GeometryOutput::Shell { draft, next: 0 });
             }
             Self::OffsetSolid => {
                 let source = geometry_handle(input, "geometry")?;
@@ -508,7 +568,7 @@ impl GeometryOperation {
                 return if let Some(face) = session.plan_polygon_face_offset(source, distance)? {
                     Ok(GeometryOutput::PolygonFace(face, FaceOutput::Single("faceOut")))
                 } else {
-                    session.plan_conic_face_offset(source, distance).map(|shape| GeometryOutput::Face(shape, "faceOut"))
+                    session.plan_conic_face_offset(source, distance).map(|shape| GeometryOutput::Face(shape, ConicFaceOutput::Single("faceOut")))
                 };
             }
             Self::PlanarFacePoints => {
@@ -524,7 +584,7 @@ impl GeometryOperation {
                 return if let Some(face) = session.plan_polygon_face(source, xy_only)? {
                     Ok(GeometryOutput::PolygonFace(face, FaceOutput::Single("face")))
                 } else {
-                    session.plan_conic_face(source, xy_only).map(|shape| GeometryOutput::Face(shape, "face"))
+                    session.plan_conic_face(source, xy_only).map(|shape| GeometryOutput::Face(shape, ConicFaceOutput::Single("face")))
                 };
             }
             Self::Box | Self::Sphere | Self::Cylinder | Self::Cone | Self::Torus => {
@@ -546,10 +606,10 @@ impl GeometryOperation {
 
     fn geometry_source(self, input: &Dictionary) -> Result<Option<&str>, ValueError> {
         let channel = match self {
-            Self::Length | Self::Volume | Self::Area | Self::CenterOfMass | Self::Label | Self::ClosestPoint | Self::Validate | Self::Translate | Self::Rotate | Self::RotateAbout | Self::Scale | Self::Mirror | Self::Copy | Self::OffsetSolid | Self::BoundingBox | Self::BoxShell | Self::LinearPattern | Self::CircularPattern | Self::GridPattern => "geometry",
+            Self::Length | Self::Volume | Self::Area | Self::CenterOfMass | Self::Label | Self::ClosestPoint | Self::Validate | Self::Translate | Self::Rotate | Self::RotateAbout | Self::Scale | Self::Mirror | Self::Copy | Self::OffsetSolid | Self::ChamferAll | Self::FilletAll | Self::BoundingBox | Self::Shell | Self::ConvertToNurbs | Self::LinearPattern | Self::CircularPattern | Self::GridPattern => "geometry",
             Self::ExtrudeWire | Self::ConicFace | Self::PlanarConicFace => "wire",
             Self::ExtrudeFace | Self::Revolve | Self::Thicken | Self::OffsetFace => "face",
-            Self::Sweep | Self::Pipe => "profile",
+            Self::Sweep | Self::Pipe | Self::HelicalSweep => "profile",
             Self::Loft => return loft_profiles(input).map(|[first, _]| Some(first)),
             Self::ClassifyPoint | Self::Shells | Self::Section | Self::Split => "solid",
             Self::Explode => "compound",
@@ -561,21 +621,25 @@ impl GeometryOperation {
     }
 
     fn source_depth(self, session: &Session, input: &Dictionary) -> Result<usize, ValueError> {
-        if matches!(self, Self::ExportObj | Self::ExportStl) { return session.certified_solid_depth(geometry_handle(input, "geometry")?); }
+        if matches!(self, Self::ExportObj | Self::ExportStl | Self::ExportStep) { return session.certified_solid_depth(geometry_handle(input, "geometry")?); }
         if matches!(self, Self::CompoundCut) {
             return Ok(session.certified_solid_depth(geometry_handle(input, "target")?)?.max(dictionary_depth(input)));
         }
         if matches!(self, Self::ConvexHull | Self::Deconstruct) { return Ok(dictionary_depth(input)); }
-        if matches!(self, Self::ChamferEdges | Self::Draft) {
-            let [shape,member] = box_finish_source(input,self)?;
-            return session.box_finish_depth(shape,member);
+        if matches!(self, Self::ChamferAll | Self::FilletAll) { return session.box_finish_depth(geometry_handle(input, "geometry")?, &[]); }
+        if matches!(self, Self::ChamferEdges | Self::FilletEdges | Self::Draft) {
+            let (shape,members,count)=box_finish_source(input,self)?;
+            return session.box_finish_depth(shape,&members[..count]);
         }
         if matches!(self, Self::CurveSurface) {
-            let curve = session.original_query_depth_demand(geometry_handle(input, "curve")?)?;
+            let curve = session.original_intersection_curve_source_depth(&[geometry_handle(input, "curve")?])?;
             let surface = session.original_query_depth_demand(geometry_handle(input, "surface")?)?;
             return Ok(curve.max(surface));
         }
-        if matches!(self, Self::Fuse | Self::Cut | Self::Intersect | Self::CurveCurve | Self::SurfaceSurface) {
+        if matches!(self, Self::CurveCurve) {
+            return session.original_intersection_curve_source_depth(&[geometry_handle(input, "a")?, geometry_handle(input, "b")?]);
+        }
+        if matches!(self, Self::Fuse | Self::Cut | Self::Intersect | Self::SurfaceSurface) {
             let a = session.original_query_depth_demand(geometry_handle(input, "a")?)?;
             let b = session.original_query_depth_demand(geometry_handle(input, "b")?)?;
             return Ok(a.max(b));
@@ -583,14 +647,15 @@ impl GeometryOperation {
         if matches!(self, Self::BoundingBox) {
             return session.analytic_bounds_depth(geometry_handle(input, "geometry")?);
         }
-        if matches!(self, Self::OffsetSolid | Self::ClassifyPoint | Self::BoxShell | Self::Section | Self::Split | Self::LinearPattern | Self::CircularPattern | Self::GridPattern) {
+        if matches!(self, Self::OffsetSolid | Self::ClassifyPoint | Self::Shell | Self::ConvertToNurbs | Self::Section | Self::Split | Self::LinearPattern | Self::CircularPattern | Self::GridPattern) {
             let source = self.geometry_source(input)?.ok_or_else(|| ValueError::invariant("solid query has no source port"))?;
             return session.certified_solid_depth(source);
         }
+        if matches!(self, Self::Area | Self::Volume | Self::CenterOfMass) {
+            return session.original_measure_source_depth(&[geometry_handle(input, "geometry")?]);
+        }
         if matches!(self, Self::Distance) {
-            let a = session.certified_solid_depth(geometry_handle(input, "a")?)?;
-            let b = session.certified_solid_depth(geometry_handle(input, "b")?)?;
-            return Ok(a.max(b));
+            return session.original_measure_source_depth(&[geometry_handle(input, "a")?, geometry_handle(input, "b")?]);
         }
         if matches!(self, Self::Loft) {
             return session.loft_depth(loft_profiles(input)?);
@@ -601,8 +666,17 @@ impl GeometryOperation {
         if matches!(self, Self::Translate | Self::Rotate | Self::RotateAbout | Self::Scale | Self::Mirror | Self::Copy) {
             return session.planar_face_boundary_depth(geometry_handle(input, "geometry")?);
         }
-        if matches!(self, Self::Revolve | Self::Thicken | Self::OffsetFace) {
+        if matches!(self, Self::HelicalSweep) {
+            return session.planar_face_boundary_depth(geometry_handle(input, "profile")?);
+        }
+        if matches!(self, Self::ExtrudeFace | Self::Revolve | Self::Thicken | Self::OffsetFace) {
             return session.planar_face_boundary_depth(geometry_handle(input, "face")?);
+        }
+        if matches!(self, Self::Length) {
+            return session.original_intersection_curve_source_depth(&[geometry_handle(input, "geometry")?]);
+        }
+        if matches!(self, Self::CurveClosestParameter) {
+            return session.original_intersection_curve_source_depth(&[geometry_handle(input, "curve")?]);
         }
         if matches!(self,Self::ClosestPoint){return session.original_closest_point_depth_demand(geometry_handle(input,"geometry")?);}
         self.geometry_source(input)?.map_or(Ok(1), |source| session.original_query_depth_demand(source))
@@ -630,7 +704,11 @@ impl GeometryOperation {
         if matches!(self, Self::Distance) {
             let a = geometry_handle(input, "a")?;
             let b = geometry_handle(input, "b")?;
-            let distance = session.original_box_distance(a, b)?;
+            if let Some((job, face_at_b)) = session.plan_face_distance(a, b)? {
+                let port = if face_at_b { "b" } else { "a" };
+                return Ok(GeometryOutput::PlanarClosest(job, port));
+            }
+            let distance = session.original_measure_distance(a, b)?;
             return Ok(GeometryOutput::Query { channel: "distance", value: QueryOutput::Number(distance) });
         }
         let source = self.geometry_source(input)?.ok_or_else(|| ValueError::invariant("geometry query has no source port"))?;
@@ -662,7 +740,13 @@ impl GeometryOperation {
                 };
                 ("area", QueryOutput::Number(area))
             }
-            Self::CenterOfMass => ("center", QueryOutput::Coordinates("point", session.original_primitive_center_of_mass(source)?)),
+            Self::CenterOfMass => match session.original_center_of_mass(source) {
+                Ok(center)=>("center",QueryOutput::Coordinates("point",center)),
+                Err(error) if error.kind==ValueRefusalKind::UnsupportedOwner=>{
+                    return session.plan_planar_center_of_mass(source).map(|job|GeometryOutput::PlanarMeasure(job,"center"));
+                },
+                Err(error)=>return Err(error),
+            },
             Self::Volume => {
                 let Some(volume) = session.original_primitive_volume(source)? else {
                     return session.plan_planar_measure(source,false).map(|job|GeometryOutput::PlanarMeasure(job,"volume"));
@@ -679,7 +763,7 @@ impl GeometryOperation {
             }
             Self::ClosestPoint => {
                 let target = point(input, "point")?;
-                if let Some(job) = session.plan_planar_closest(source, target)? { return Ok(GeometryOutput::PlanarClosest(job)); }
+                if let Some(job) = session.plan_planar_closest(source, target)? { return Ok(GeometryOutput::PlanarClosest(job, "geometry")); }
                 let axes = session.original_geometry_closest_point(source, target)?;
                 ("pointOut", QueryOutput::Coordinates("point", axes))
             }
@@ -700,7 +784,8 @@ enum GeometryOutput {
     Compound(CompoundPublication),
     SolidPattern(SolidPatternPublication),
     MeshDecode(MeshDecode),
-    StepDecode(StepBoxDecode),
+    StepDecode(Box<StepSolidDecode>),
+    StepExport(Box<StepWrite>),
     MeshPublication(MeshPublication),
     MeshExport(Box<NativeMeshExport>),
     Validation(Box<NativeValidationReport>),
@@ -709,19 +794,20 @@ enum GeometryOutput {
     Boolean { first: BooleanOperand, operation: BooleanOperation },
     BooleanPreparation(BooleanPreparation),
     CompoundCut(CompoundCutDraft),
-    Face(ConicFacePublication, &'static str),
+    Face(ConicFacePublication, ConicFaceOutput),
     PolygonFace(PolygonFacePublication, FaceOutput),
     Section(BoxSectionDraft),
+    SectionFaces(Box<PolygonSectionSet>),
     SolidPair(Box<[SolidPublication; 2]>),
     Prism(PrismDraft),
     Loft(LoftDraft),
-    BoxShell { draft: BoxShellDraft, next: usize },
+    Shell { draft: ShellDraft, next: usize },
     Sew(CuboidSew),
     Hull(HullDraft),
     Wire(PolygonWirePublication, &'static str),
     Vertex(VertexPublication, &'static str),
     WireLength(WireLengthJob),
-    PlanarClosest(semio_framework_3d_brep_engine::PlanarClosestJob),
+    PlanarClosest(semio_framework_3d_brep_engine::PlanarClosestJob, &'static str),
     PlanarMeasure(PlanarMeasureJob, &'static str),
     Query { channel: &'static str, value: QueryOutput },
 }
@@ -730,9 +816,11 @@ fn transform_source_demand(session: &Session, source: &str) -> Result<Retirement
     Ok(RetirementDemand { depth: session.planar_face_boundary_depth(source)?.max(session.certified_solid_depth(source)?), copy_bytes: 14 * size_of::<f64>(), ..Default::default() })
 }
 
+enum ConicFaceOutput {Single(&'static str),Section}
+
 enum FaceOutput {
     Single(&'static str),
-    Section(BoxSectionPolygon),
+    Section(SectionPolygon),
 }
 
 enum QueryOutput {
@@ -804,6 +892,19 @@ enum Field<'a> {
     Decimal(f64),
     Wrap,
     Payload,
+    SectionMember,
+    SectionSchema,
+    SectionPayload,
+}
+
+impl<'a> Field<'a> {
+    fn text(self) -> Option<&'a str> {
+        match self {
+            Self::Text(text) => Some(text),
+            Self::SectionSchema => Some("list"),
+            _ => None,
+        }
+    }
 }
 
 impl GeometryOutput {
@@ -813,14 +914,14 @@ impl GeometryOutput {
             Self::Geometry(curve, _) => Some(curve.handle()),
             Self::Compound(shape)=>Some(shape.handle()),
             Self::SolidPattern(shape) => Some(shape.handle()),
-            Self::MeshDecode(_) | Self::MeshExport(_) | Self::StepDecode(_) => None,
+            Self::MeshDecode(_) | Self::MeshExport(_) | Self::StepDecode(_) | Self::StepExport(_) => None,
             Self::MeshPublication(shape) => shape.handle(),
             Self::Solid(shape, _) => Some(shape.handle()),
             Self::Face(shape, _) => Some(shape.handle()),
             Self::PolygonFace(shape, _) => Some(shape.handle()),
             Self::Wire(shape, _) => Some(shape.handle()),
             Self::Vertex(shape, _) => Some(shape.handle()),
-            Self::Query { .. } | Self::Validation(_) | Self::TopologyList(_) | Self::PlanarClosest(_) | Self::PlanarMeasure(..) | Self::Prism(_) | Self::Loft(_) | Self::BoxShell { .. } | Self::Sew(_) | Self::Hull(_) | Self::Section(_) | Self::SolidPair(_) | Self::WireLength(_) => None,
+            Self::Query { .. } | Self::Validation(_) | Self::TopologyList(_) | Self::PlanarClosest(..) | Self::PlanarMeasure(..) | Self::Prism(_) | Self::Loft(_) | Self::Shell { .. } | Self::Sew(_) | Self::Hull(_) | Self::Section(_) | Self::SectionFaces(_) | Self::SolidPair(_) | Self::WireLength(_) => None,
         }
     }
 
@@ -841,12 +942,14 @@ impl GeometryOutput {
             (Self::Compound(shape),1)=>Some(("handle",Field::Text(shape.handle()))),
             (Self::SolidPattern(shape),1)=>Some(("handle",Field::Text(shape.handle()))),
             (Self::Compound(_) | Self::SolidPattern(_),2)=>Some(("kind",Field::Text("compound"))),
-            (Self::Compound(_) | Self::SolidPattern(_),3)=>Some(("compound",Field::Payload)),
+            (Self::Compound(_),3)=>Some(("compound",Field::Payload)),
+            (Self::SolidPattern(shape),3)=>Some((shape.channel(),Field::Payload)),
             (Self::Solid(..), 0) => Some(("$schema", Field::Text("geometry"))),
             (Self::Solid(shape, _), 1) => Some(("handle", Field::Text(shape.handle()))),
             (Self::Solid(..), 2) => Some(("kind", Field::Text("solid"))),
             (Self::Solid(_, channel), 3) => Some((*channel, Field::Payload)),
             (Self::SolidPair(pair), 0..=7) => split::field(pair, index),
+            (Self::SectionFaces(faces), index) => section_faces::field(faces, index),
             (Self::Vertex(..), 0) => Some(("$schema", Field::Text("geometry"))),
             (Self::Vertex(shape, _), 1) => Some(("handle", Field::Text(shape.handle()))),
             (Self::Vertex(..), 2) => Some(("kind", Field::Text("vertex"))),
@@ -858,7 +961,10 @@ impl GeometryOutput {
             (Self::Face(..), 0) => Some(("$schema", Field::Text("geometry"))),
             (Self::Face(shape, _), 1) => Some(("handle", Field::Text(shape.handle()))),
             (Self::Face(..), 2) => Some(("kind", Field::Text("face"))),
-            (Self::Face(_, channel), 3) => Some((*channel, Field::Payload)),
+            (Self::Face(_, ConicFaceOutput::Single(channel)), 3) => Some((*channel, Field::Payload)),
+            (Self::Face(_, ConicFaceOutput::Section), 3) => Some(("0", Field::Wrap)),
+            (Self::Face(_, ConicFaceOutput::Section), 4) => Some(("$schema", Field::Text("list"))),
+            (Self::Face(_, ConicFaceOutput::Section), 5) => Some(("faces", Field::Payload)),
             (Self::PolygonFace(..), 0) => Some(("$schema", Field::Text("geometry"))),
             (Self::PolygonFace(shape, _), 1) => Some(("handle", Field::Text(shape.handle()))),
             (Self::PolygonFace(..), 2) => Some(("kind", Field::Text("face"))),
@@ -884,6 +990,9 @@ struct GeometryOutputData {
     claim_key: String,
     split_live: [String; 2],
     split_claim: [String; 2],
+    section_list: Option<Dictionary>,
+    section_live: [String; SECTION_FACE_LIMIT],
+    section_claim: [String; SECTION_FACE_LIMIT],
     retired_analytic: Option<AnalyticPublication>,
     retired_compound:Option<CompoundPublication>,
     retired_validation:Option<Box<NativeValidationReport>>,
@@ -904,6 +1013,7 @@ pub struct OriginalGeometryJob {
     closing_entry: bool,
     claim_staged: bool,
     split_staged: [bool; 2],
+    section_staged: [bool; SECTION_FACE_LIMIT],
     cancelled: bool,
     done: bool,
 }
@@ -926,6 +1036,9 @@ impl OriginalGeometryJob {
             claim_key: String::new(),
             split_live: Default::default(),
             split_claim: Default::default(),
+            section_list: None,
+            section_live: Default::default(),
+            section_claim: Default::default(),
             retired_analytic:None,
             retired_compound:None,
             retired_validation:None,
@@ -945,6 +1058,7 @@ impl OriginalGeometryJob {
             closing_entry: false,
             claim_staged: false,
             split_staged: [false; 2],
+            section_staged: [false; SECTION_FACE_LIMIT],
             cancelled: false,
             done: false,
         })), receipt))
@@ -970,28 +1084,35 @@ impl OriginalGeometryJob {
                 GeometryOutput::SolidPattern(_) => self.progress.phase = "solid-pattern-preparation",
                 GeometryOutput::MeshDecode(_) => self.progress.phase = "mesh-decoding",
                 GeometryOutput::StepDecode(_) => self.progress.phase = "step-solid-certification",
+                GeometryOutput::StepExport(export) => self.progress.phase = export.phase(),
                 GeometryOutput::MeshPublication(_) => self.progress.phase = "mesh-topology",
                 GeometryOutput::MeshExport(export) => self.progress.phase = export.phase(),
                 GeometryOutput::Validation(report)=>self.progress.phase=report.phase(),
                 GeometryOutput::TopologyList(output) => self.progress.phase = output.phase(),
                 GeometryOutput::Query { .. } => self.progress.phase = "geometry-query-output",
-                GeometryOutput::PlanarClosest(_) => self.progress.phase = "planar-closest-point",
-                GeometryOutput::PlanarMeasure(_, channel) => self.progress.phase = if *channel=="area" {"geometry-area-integrating"} else {"geometry-volume-integrating"},
+                GeometryOutput::PlanarClosest(..) => self.progress.phase = "planar-closest-point",
+                GeometryOutput::PlanarMeasure(_, channel) => self.progress.phase = match *channel {
+                    "area" => "geometry-area-integrating",
+                    "box" => "geometry-bounds-integrating",
+                    _ => "geometry-volume-integrating",
+                },
                 GeometryOutput::Loft(_) => self.progress.phase = "loft-corresponding-edges",
                 GeometryOutput::Prism(_) => self.progress.phase = match self.kind {
                     GeometryOperation::Thicken => "thickening-profile-validation",
                     GeometryOperation::Sweep | GeometryOperation::Pipe => "straight-sweep-profile-validation",
                     _ => "extrusion-profile-validation",
                 },
-                GeometryOutput::BoxShell { .. } => self.progress.phase = "box-shell-open-faces",
+                GeometryOutput::Shell { .. } => self.progress.phase = "shell-open-faces",
                 GeometryOutput::Sew(_) => self.progress.phase = "sew-cuboid-faces",
                 GeometryOutput::Hull(_) => self.progress.phase = "convex-hull-read-points",
                 GeometryOutput::Section(_) => self.progress.phase = "box-section-edges",
-                GeometryOutput::SolidPair(_) => self.progress.phase = "box-split-topology",
-                GeometryOutput::WireLength(_) => self.progress.phase = "wire-length-measuring",
+                GeometryOutput::SectionFaces(_) => self.progress.phase = "section-face-topology",
+                GeometryOutput::SolidPair(_) => self.progress.phase = "split-topology",
+                GeometryOutput::WireLength(_) => self.progress.phase = "bounded-length-measuring",
                 GeometryOutput::Solid(..) | GeometryOutput::Face(..) | GeometryOutput::PolygonFace(..) | GeometryOutput::Wire(..) | GeometryOutput::Vertex(..) => {}
             }
-            return Ok((None, Progress { copied_items: 1, copied_bytes: bytes,retained_capacity_bytes:capacity, ..empty }));
+            let retained_capacity_bytes = if matches!(self.kind, GeometryOperation::Section) && !matches!(&self.result, Some(GeometryOutput::SectionFaces(_))) { 0 } else { capacity };
+            return Ok((None, Progress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes, ..empty }));
         }
         let result = self.result.as_mut().unwrap();
         if let GeometryOutput::Transform(transform) = result {
@@ -1037,16 +1158,37 @@ impl OriginalGeometryJob {
         if let GeometryOutput::SolidPattern(shape) = result {
             if !shape.ready() { return session.step_solid_pattern_preparation(shape, effect).map(|receipt| (None, receipt)); }
         }
+        if let GeometryOutput::StepExport(export) = result {
+            self.progress.phase = export.phase();
+            let (output, receipt) = step_export_source(session, &data.input, |source| {
+                if !export.ready() { return export.step(source, effect).map(|receipt| (None, receipt)); }
+                let demand = step_export_demand(export, source)?;
+                if !retained_clone_grant_admits(grant, demand) || !effect.performed(1)? { return Ok((None, empty)); }
+                let text = export.take_output(source).map_err(|error| error.with_retained_progress(item()))?;
+                Ok((Some(text), Progress { copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..item() }))
+            })?;
+            if let Some(text) = output {
+                data.owned_text = Some(text);
+                *result = GeometryOutput::Query { channel: "step", value: QueryOutput::Text };
+                self.progress.phase = "geometry-query-output";
+            }
+            return Ok((None, receipt));
+        }
         if let GeometryOutput::StepDecode(decoder) = result {
             if !decoder.is_ready() { return decoder.step(exchange_text(&data.input)?, effect).map(|receipt| (None, receipt)); }
-            let demand = decoder.demand();
+            let demand = step_decode_demand(decoder);
             if !retained_clone_grant_admits(grant, demand) || !effect.performed(1)? { return Ok((None, empty)); }
             let receipt = Progress { copied_bytes: demand.copy_bytes, ..item() };
-            let solid = session.plan_solid_primitive(decoder.primitive().unwrap())
+            let proof = decoder.ready().unwrap();
+            let solid = if let Some(primitive) = proof.nurbs_cuboid() { session.plan_nurbs_cuboid_primitive(primitive) }
+            else if let Some(primitive) = proof.analytic_primitive() { session.plan_solid_primitive(primitive) }
+            else if let Some(prism) = proof.prism_boundary() { session.plan_exchange_boundary(semio_framework_3d_brep_engine::SolidExchangeBoundary::Prism(prism)) }
+            else if let Some(shape) = proof.rounded_box() { session.plan_exchange_boundary(semio_framework_3d_brep_engine::SolidExchangeBoundary::RoundedBox(shape)) }
+            else if let StepSolid::Orthogonal { axes, cells } = proof { session.plan_orthogonal_cells(axes, cells) }
+            else { Err(ValueError::invariant("STEP certification did not produce a solid recipe")) }
                 .map_err(|error| error.with_retained_progress(receipt))?;
             self.result = Some(GeometryOutput::Solid(solid, "geometry"));
-            self.progress.phase = "step-solid-topology";
-            return Ok((None, receipt));
+            return Ok((None, Progress { released_bytes: demand.release_bytes, ..receipt }));
         }
         if let GeometryOutput::MeshDecode(decoder) = result {
             if !decoder.ready() { return decoder.step(exchange_text(&data.input)?, effect).map(|receipt| (None, receipt)); }
@@ -1085,13 +1227,14 @@ impl OriginalGeometryJob {
         if let GeometryOutput::Boolean { first, operation } = result {
             let a = geometry_handle(&data.input, "a")?;
             let b = geometry_handle(&data.input, "b")?;
-            let bytes = size_of::<SolidPrimitive>();
+            let bytes = BooleanOperand::recipe_copy_bytes();
             if grant.maximum_copy_bytes < bytes || grant.maximum_depth < self.kind.source_depth(session, &data.input)? || !effect.performed(1)? {
                 return Ok((None, empty));
             }
             let receipt = Progress { copied_items: 1, copied_bytes: bytes, ..empty };
             self.result = Some(match session.plan_certified_boolean(a, b, first, *operation) {
-                Ok(solid) => GeometryOutput::Solid(solid, "solid"),
+                Ok(CertifiedBooleanResult::Solid(solid)) => GeometryOutput::Solid(solid,"solid"),
+                Ok(CertifiedBooleanResult::Group(shapes)) => GeometryOutput::SolidPattern(shapes),
                 Err(error) if error.kind == ValueRefusalKind::UnsupportedOwner => {
                     self.progress.phase = "boolean-acquire-faces";
                     GeometryOutput::BooleanPreparation(session.plan_boolean_preparation(a,b)
@@ -1127,16 +1270,31 @@ impl OriginalGeometryJob {
             let source = self.kind.geometry_source(&data.input)?.ok_or_else(|| ValueError::invariant("measurement has no source port"))?;
             let (number, receipt) = session.step_planar_measure(source, job, effect)?;
             if let Some(number) = number {
-                self.result = Some(GeometryOutput::Query { channel: *channel, value: QueryOutput::Number(number) });
+                if *channel == "box" {
+                    let [origin, end] = job.axis_bounds().ok_or_else(|| ValueError::invariant("planar bounds were not integrated"))?;
+                    let [width, depth, height] = (end - origin).to_array();
+                    let shape = session.plan_solid_primitive(SolidPrimitive::Box { origin, width, depth, height })?;
+                    self.result = Some(GeometryOutput::Solid(shape, "box"));
+                    self.progress.phase = "solid-primitive-topology";
+                    return Ok((None, receipt));
+                }
+                let value=if *channel=="center" {
+                    QueryOutput::Coordinates("point",job.center_of_mass().ok_or_else(||ValueError::invariant("planar center was not integrated"))?)
+                } else {QueryOutput::Number(number)};
+                self.result = Some(GeometryOutput::Query { channel: *channel, value });
                 self.progress.phase = "geometry-query-output";
             }
             return Ok((None, receipt));
         }
-        if let GeometryOutput::PlanarClosest(job) = result {
-            let source = geometry_handle(&data.input, "geometry")?;
-            let (point, receipt) = session.step_planar_closest(source, job, effect)?;
-            if let Some(point) = point {
-                self.result = Some(GeometryOutput::Query { channel: "pointOut", value: QueryOutput::Coordinates("point", point) });
+        if let GeometryOutput::PlanarClosest(job, port) = result {
+            let (measurement, receipt) = session.step_planar_closest(geometry_handle(&data.input, port)?, job, effect)?;
+            if let Some(measurement) = measurement {
+                use semio_framework_3d_brep_engine::PlanarClosestOutput::{Distance, Point};
+                let (channel, value) = match measurement {
+                    Point(point) => ("pointOut", QueryOutput::Coordinates("point", point.to_array())),
+                    Distance(distance) => ("distance", QueryOutput::Number(distance)),
+                };
+                self.result = Some(GeometryOutput::Query { channel, value });
                 self.progress.phase = "geometry-query-output";
             }
             return Ok((None, receipt));
@@ -1178,13 +1336,19 @@ impl OriginalGeometryJob {
             }
         }
         if let GeometryOutput::WireLength(query) = result {
-            let source = self.kind.geometry_source(&data.input)?.ok_or_else(|| ValueError::invariant("wire length has no source port"))?;
+            let source = self.kind.geometry_source(&data.input)?.ok_or_else(|| ValueError::invariant("bounded length has no source port"))?;
             let (length, receipt) = session.step_wire_length(source, query, effect)?;
             if let Some(length) = length {
                 self.result = Some(GeometryOutput::Query { channel: "length", value: QueryOutput::Number(length) });
                 self.progress.phase = "geometry-query-output";
             }
             return Ok((None, receipt));
+        }
+        if let GeometryOutput::SectionFaces(faces) = result {
+            if let Some(index) = section_faces::unfinished(faces) {
+                return section_faces::step_topology(session, faces, index, effect).map(|receipt| (None, receipt));
+            }
+            self.progress.phase = "section-face-list";
         }
         if let GeometryOutput::Section(draft) = result {
             let demand = section_demand(draft);
@@ -1227,15 +1391,15 @@ impl OriginalGeometryJob {
             }
             return Ok((None, Progress { copied_bytes: demand.copy_bytes, ..item() }));
         }
-        if let GeometryOutput::BoxShell { draft, next } = result {
-            let (selection, demand) = box_shell_selection(session, &data.input, draft, *next)?;
+        if let GeometryOutput::Shell { draft, next } = result {
+            let (selection, demand) = shell_selection(session, &data.input, draft, *next)?;
             if !retained_clone_grant_admits(grant, demand) || !effect.performed(1)? { return Ok((None, empty)); }
             if let Some(face) = selection {
-                if let Some(face) = face { session.add_box_shell_face(draft, face)?; }
+                if let Some(face) = face { session.add_shell_face(draft, face)?; }
                 *next += 1;
             } else {
                 let source = geometry_handle(&data.input, "geometry")?;
-                self.result = Some(GeometryOutput::Solid(session.finish_box_shell(draft, source)?, "solid"));
+                self.result = Some(GeometryOutput::Solid(session.finish_shell(draft, source)?, "solid"));
                 self.progress.phase = "solid-primitive-topology";
             }
             return Ok((None, Progress { copied_bytes: demand.copy_bytes, ..item() }));
@@ -1303,7 +1467,11 @@ impl OriginalGeometryJob {
             let receipt = entry.step_progress();
             if let RetainedWorkPoll::Complete(outcome) = poll {
                 if let Some(dictionary) = outcome.result.map_err(|error| error.into_value_error())? {
-                    if matches!(result.field(self.field), Some((_, Field::Payload))) { data.output = Some(dictionary); } else { data.geometry = Some(dictionary); }
+                    match result.field(self.field) {
+                        Some((_, Field::Payload | Field::SectionPayload)) => data.output = Some(dictionary),
+                        Some((_, Field::SectionMember | Field::SectionSchema)) => data.section_list = Some(dictionary),
+                        _ => data.geometry = Some(dictionary),
+                    }
                     self.closing_entry = true;
                 }
             }
@@ -1313,7 +1481,7 @@ impl OriginalGeometryJob {
             if data.key.len() < key.len() {
                 return write_text(&mut data.key, key, effect).map(|progress| (None, progress));
             }
-            if let Field::Text(text) = field {
+            if let Some(text) = field.text() {
                 if data.text.len() < text.len() {
                     return write_text(&mut data.text, text, effect).map(|progress| (None, progress));
                 }
@@ -1324,6 +1492,9 @@ impl OriginalGeometryJob {
             let (base, value) = match field {
                 Field::Wrap => (Dictionary::new(), Value::Dictionary(base)),
                 Field::Payload => (data.output.take().unwrap_or_default(), Value::Dictionary(base)),
+                Field::SectionMember => (data.section_list.take().unwrap_or_default(), Value::Dictionary(base)),
+                Field::SectionSchema => (data.section_list.take().unwrap_or_default(), Value::Atom(Atom::String(take(&mut data.text)))),
+                Field::SectionPayload => (data.output.take().unwrap_or_default(), Value::Dictionary(data.section_list.take().expect("original section list"))),
                 Field::Text(_) => (base, Value::Atom(Atom::String(take(&mut data.text)))),
                 Field::OwnedText=>(base,Value::Atom(Atom::String(data.owned_text.take().ok_or_else(||ValueError::invariant("original query text disappeared"))?))),
                 Field::Decimal(number) => (base, Value::Atom(Atom::Decimal(number))),
@@ -1331,8 +1502,14 @@ impl OriginalGeometryJob {
             data.entry = Some(BudgetedOwnedEntry::new(base, take(&mut data.key), value));
             return Ok((None, Progress { copied_bytes, ..item() }));
         }
+        if let GeometryOutput::SectionFaces(faces) = result {
+            self.progress.phase = "section-faces-publication";
+            let (ready, receipt) = section_faces::step(session, faces, data, &mut self.section_staged, effect)?;
+            if self.section_staged.iter().any(|&staged| staged) { self.progress.phase = "section-staged-claim"; }
+            return Ok((if ready { data.output.take() } else { None }, receipt));
+        }
         if let GeometryOutput::SolidPair(pair) = result {
-            self.progress.phase = "box-split-publication";
+            self.progress.phase = "split-publication";
             let (ready, receipt) = split::step(session, pair, data, &mut self.split_staged, effect)?;
             return Ok((if ready { data.output.take() } else { None }, receipt));
         }
@@ -1362,13 +1539,13 @@ impl OriginalGeometryJob {
             GeometryOutput::Compound(shape)=>session.step_compound_publication(shape,&mut data.live_key,&mut data.claim_key,&mut self.claim_staged,effect)?,
             GeometryOutput::SolidPattern(shape) => session.step_solid_pattern_publication(shape, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
             GeometryOutput::MeshPublication(shape) => session.step_mesh_publication(shape, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
-            GeometryOutput::MeshDecode(_) | GeometryOutput::MeshExport(_) | GeometryOutput::StepDecode(_) => unreachable!("exchange stage owns no live address here"),
+            GeometryOutput::MeshDecode(_) | GeometryOutput::MeshExport(_) | GeometryOutput::StepDecode(_) | GeometryOutput::StepExport(_) => unreachable!("exchange stage owns no live address here"),
             GeometryOutput::Solid(solid, _) => session.step_solid_primitive(solid, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
             GeometryOutput::Face(face, _) => session.step_conic_face_publication(face, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
             GeometryOutput::PolygonFace(face, _) => session.step_polygon_face_publication(face, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
             GeometryOutput::Vertex(vertex, _) => session.step_vertex_publication(vertex, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
             GeometryOutput::Wire(wire, _) => session.step_polygon_wire_publication(wire, &mut data.live_key, &mut data.claim_key, &mut self.claim_staged, effect)?,
-            GeometryOutput::Query { .. } | GeometryOutput::Validation(_) | GeometryOutput::TopologyList(_) | GeometryOutput::PlanarClosest(_) | GeometryOutput::PlanarMeasure(..) | GeometryOutput::Boolean { .. } | GeometryOutput::BooleanPreparation(_) | GeometryOutput::CompoundCut(_) | GeometryOutput::Prism(_) | GeometryOutput::Loft(_) | GeometryOutput::BoxShell { .. } | GeometryOutput::Sew(_) | GeometryOutput::Hull(_) | GeometryOutput::Section(_) | GeometryOutput::SolidPair(_) | GeometryOutput::WireLength(_) | GeometryOutput::Transform(_) => unreachable!("only geometry handles need a session claim"),
+            GeometryOutput::Query { .. } | GeometryOutput::Validation(_) | GeometryOutput::TopologyList(_) | GeometryOutput::PlanarClosest(..) | GeometryOutput::PlanarMeasure(..) | GeometryOutput::Boolean { .. } | GeometryOutput::BooleanPreparation(_) | GeometryOutput::CompoundCut(_) | GeometryOutput::Prism(_) | GeometryOutput::Loft(_) | GeometryOutput::Shell { .. } | GeometryOutput::Sew(_) | GeometryOutput::Hull(_) | GeometryOutput::Section(_) | GeometryOutput::SectionFaces(_) | GeometryOutput::SolidPair(_) | GeometryOutput::WireLength(_) | GeometryOutput::Transform(_) => unreachable!("only geometry handles need a session claim"),
         };
         Ok((if ready { data.output.take() } else { None }, progress))
     }
@@ -1403,7 +1580,10 @@ impl OriginalGeometryJob {
             if !shape.ready() { return session.solid_pattern_preparation_demand(shape); }
         }
         if let GeometryOutput::MeshDecode(decoder) = result { return Ok(decoder.demand()); }
-        if let GeometryOutput::StepDecode(decoder) = result { return Ok(decoder.demand()); }
+        if let GeometryOutput::StepDecode(decoder) = result { return Ok(step_decode_demand(decoder)); }
+        if let GeometryOutput::StepExport(export) = result {
+            return step_export_source(session, &data.input, |source| step_export_demand(export, source));
+        }
         if let GeometryOutput::MeshPublication(shape) = result {
             if shape.handle().is_none() { return session.mesh_preparation_demand(shape); }
         }
@@ -1414,7 +1594,7 @@ impl OriginalGeometryJob {
             return session.boolean_preparation_demand(geometry_handle(&data.input, "a")?, geometry_handle(&data.input, "b")?, preparation);
         }
         if matches!(result, GeometryOutput::Boolean { .. }) {
-            return Ok(RetirementDemand { copy_bytes: size_of::<SolidPrimitive>(), depth: self.kind.source_depth(session, &data.input)?, ..empty });
+            return Ok(RetirementDemand { copy_bytes: BooleanOperand::recipe_copy_bytes(), depth: self.kind.source_depth(session, &data.input)?, ..empty });
         }
         if let GeometryOutput::CompoundCut(draft) = result {
             return draft.demand(session, &data.input);
@@ -1434,8 +1614,13 @@ impl OriginalGeometryJob {
             if !wire.topology_ready() { return session.polygon_wire_demand(wire, self.claim_staged, copy); }
         }
         if let GeometryOutput::WireLength(query) = result {
-            let source = self.kind.geometry_source(&data.input)?.ok_or_else(|| ValueError::invariant("wire length has no source port"))?;
+            let source = self.kind.geometry_source(&data.input)?.ok_or_else(|| ValueError::invariant("bounded length has no source port"))?;
             return session.wire_length_demand(source, query);
+        }
+        if let GeometryOutput::SectionFaces(faces) = result {
+            if let Some(index) = section_faces::unfinished(faces) {
+                return session.polygon_face_demand(&faces.face(index).0, None, false, copy);
+            }
         }
         if let GeometryOutput::Section(draft) = result {
             return Ok(section_demand(draft));
@@ -1446,8 +1631,8 @@ impl OriginalGeometryJob {
         if let GeometryOutput::Sew(draft) = result {
             return session.cuboid_sew_demand(draft, sew_face(&data.input, draft.next_face().unwrap_or(5))?);
         }
-        if let GeometryOutput::BoxShell { draft, next } = result {
-            return box_shell_selection(session, &data.input, draft, *next).map(|(_, demand)| demand);
+        if let GeometryOutput::Shell { draft, next } = result {
+            return shell_selection(session, &data.input, draft, *next).map(|(_, demand)| demand);
         }
         if let GeometryOutput::Loft(draft) = result {
             return session.loft_draft_demand(loft_profiles(&data.input)?, draft);
@@ -1472,19 +1657,22 @@ impl OriginalGeometryJob {
             let source = self.kind.geometry_source(&data.input)?.ok_or_else(|| ValueError::invariant("measurement has no source port"))?;
             return session.planar_measure_demand(source, job);
         }
-        if let GeometryOutput::PlanarClosest(job) = result {
-            return session.planar_closest_demand(geometry_handle(&data.input, "geometry")?, job);
+        if let GeometryOutput::PlanarClosest(job, port) = result {
+            return session.planar_closest_demand(geometry_handle(&data.input, port)?, job);
         }
         if let Some(entry) = &data.entry {
             return if self.closing_entry { entry.next_close_demands(copy) } else { entry.next_demands(copy) };
         }
         if let Some((key, field)) = result.field(self.field) {
             if data.key.len() < key.len() { return Ok(text_demand(&data.key, key)); }
+            if let Some(text) = field.text().filter(|text| data.text.len() < text.len()) { return Ok(text_demand(&data.text, text)); }
             return Ok(match field {
-                Field::Text(text) if data.text.len() < text.len() => text_demand(&data.text, text),
                 Field::Decimal(_) => RetirementDemand { copy_bytes: size_of::<f64>(), ..empty },
                 _ => empty,
             });
+        }
+        if let GeometryOutput::SectionFaces(faces) = result {
+            return section_faces::demand(session, faces, data, self.section_staged, copy);
         }
         if let GeometryOutput::SolidPair(pair) = result {
             return split::demand(session, pair, data, self.split_staged, copy);
@@ -1497,7 +1685,7 @@ impl OriginalGeometryJob {
             GeometryOutput::Compound(shape)=>session.compound_publication_demand(shape,self.claim_staged,copy),
             GeometryOutput::SolidPattern(shape) => session.solid_pattern_publication_demand(shape, self.claim_staged, copy),
             GeometryOutput::MeshPublication(shape) => session.mesh_publication_demand(shape, self.claim_staged, copy),
-            GeometryOutput::MeshDecode(_) | GeometryOutput::MeshExport(_) | GeometryOutput::StepDecode(_) => unreachable!("exchange stage owns no live address here"),
+            GeometryOutput::MeshDecode(_) | GeometryOutput::MeshExport(_) | GeometryOutput::StepDecode(_) | GeometryOutput::StepExport(_) => unreachable!("exchange stage owns no live address here"),
             GeometryOutput::Solid(solid, _) => session.solid_primitive_demand(solid, self.claim_staged, copy),
             GeometryOutput::Face(face, _) => session.conic_face_demand(face, self.claim_staged, copy),
             GeometryOutput::PolygonFace(face, _) => {
@@ -1506,11 +1694,14 @@ impl OriginalGeometryJob {
             }
             GeometryOutput::Wire(wire, _) => session.polygon_wire_demand(wire, self.claim_staged, copy),
             GeometryOutput::Vertex(vertex, _) => session.vertex_publication_demand(vertex, self.claim_staged, copy),
-            GeometryOutput::Query { .. } | GeometryOutput::Validation(_) | GeometryOutput::TopologyList(_) | GeometryOutput::PlanarClosest(_) | GeometryOutput::PlanarMeasure(..) | GeometryOutput::Boolean { .. } | GeometryOutput::BooleanPreparation(_) | GeometryOutput::CompoundCut(_) | GeometryOutput::Prism(_) | GeometryOutput::Loft(_) | GeometryOutput::BoxShell { .. } | GeometryOutput::Sew(_) | GeometryOutput::Hull(_) | GeometryOutput::Section(_) | GeometryOutput::SolidPair(_) | GeometryOutput::WireLength(_) | GeometryOutput::Transform(_) => unreachable!("only geometry handles need a session claim"),
+            GeometryOutput::Query { .. } | GeometryOutput::Validation(_) | GeometryOutput::TopologyList(_) | GeometryOutput::PlanarClosest(..) | GeometryOutput::PlanarMeasure(..) | GeometryOutput::Boolean { .. } | GeometryOutput::BooleanPreparation(_) | GeometryOutput::CompoundCut(_) | GeometryOutput::Prism(_) | GeometryOutput::Loft(_) | GeometryOutput::Shell { .. } | GeometryOutput::Sew(_) | GeometryOutput::Hull(_) | GeometryOutput::Section(_) | GeometryOutput::SectionFaces(_) | GeometryOutput::SolidPair(_) | GeometryOutput::WireLength(_) | GeometryOutput::Transform(_) => unreachable!("only geometry handles need a session claim"),
         }
     }
 
     fn close_demand(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
+        if let Some(GeometryOutput::SectionFaces(faces)) = &self.result {
+            return section_faces::close_demand(self.session.as_ref().unwrap(), faces, self.section_staged);
+        }
         if let Some(GeometryOutput::SolidPair(pair)) = &self.result {
             return split::close_demand(self.session.as_ref().unwrap(), pair, self.split_staged);
         }
@@ -1529,8 +1720,12 @@ impl OriginalGeometryJob {
         if let Some(GeometryOutput::SolidPattern(shape)) = &self.result {
             if !shape.terminal_is_empty() { return self.session.as_ref().unwrap().solid_pattern_close_demand(shape); }
         }
+        if let Some(GeometryOutput::StepExport(export)) = &self.result {
+            return Ok(RetirementDemand { release_bytes: size_of::<StepWrite>() + export.output_capacity(), depth: 1, ..Default::default() });
+        }
         if let Some(GeometryOutput::StepDecode(decoder)) = &self.result {
             if !decoder.terminal_is_empty() { return Ok(decoder.close_demand()); }
+            return Ok(RetirementDemand { release_bytes: size_of::<StepSolidDecode>(), depth: 1, ..Default::default() });
         }
         if let Some(GeometryOutput::MeshDecode(decoder)) = &self.result {
             if !decoder.terminal_is_empty() { return Ok(decoder.close_demand()); }
@@ -1565,6 +1760,14 @@ impl OriginalGeometryJob {
         let grant = effect.grant();
         if grant.maximum_items == 0 || !retained_clone_grant_admits(grant, self.close_demand(grant.maximum_copy_bytes)?) {
             return Ok(Step::Progress(Progress::default()));
+        }
+        if let Some(GeometryOutput::SectionFaces(faces)) = &mut self.result {
+            if let Some(receipt) = section_faces::close(self.session.as_ref().unwrap(), faces, &mut self.section_staged, effect)? {
+                return Ok(Step::Progress(receipt));
+            }
+            if !effect.performed(1)? { return Ok(Step::Progress(Progress::default())); }
+            drop(self.result.take());
+            return Ok(Step::Progress(Progress { released_bytes: size_of::<PolygonSectionSet>(), ..item() }));
         }
         if let Some(GeometryOutput::SolidPair(pair)) = &mut self.result {
             if let Some(receipt) = split::close(self.session.as_ref().unwrap(), pair, &mut self.split_staged, effect)? {
@@ -1603,8 +1806,17 @@ impl OriginalGeometryJob {
                 return Ok(Step::Progress(step.progress()));
             }
         }
+        if let Some(GeometryOutput::StepExport(export)) = &self.result {
+            let released_bytes = size_of::<StepWrite>() + export.output_capacity();
+            if !effect.performed(1)? { return Ok(Step::Progress(Progress::default())); }
+            drop(self.result.take());
+            return Ok(Step::Progress(Progress { released_bytes, ..item() }));
+        }
         if let Some(GeometryOutput::StepDecode(decoder)) = &mut self.result {
             if !decoder.terminal_is_empty() { return decoder.close(effect).map(Step::Progress); }
+            if !effect.performed(1)? { return Ok(Step::Progress(Progress::default())); }
+            drop(self.result.take());
+            return Ok(Step::Progress(Progress { released_bytes: size_of::<StepSolidDecode>(), ..item() }));
         }
         if let Some(GeometryOutput::MeshDecode(decoder)) = &mut self.result {
             if !decoder.terminal_is_empty() { return decoder.close(effect); }
@@ -1663,6 +1875,27 @@ impl OriginalGeometryJob {
     }
 }
 
+fn step_export_source<T>(session: &Session, input: &Dictionary, read: impl FnOnce(StepWriteSource<'_>) -> Result<T, ValueError>) -> Result<T, ValueError> {
+    let handle = geometry_handle(input, "geometry")?;
+    session.with_original_certified_solid(handle, |body, solid, revision, depth| {
+        read(StepWriteSource { body, solid, revision, handle, depth })
+    })
+}
+
+fn step_export_demand(export: &StepWrite, source: StepWriteSource<'_>) -> Result<RetirementDemand, ValueError> {
+    let demand = export.demand(source)?;
+    if export.ready() {
+        return Ok(RetirementDemand { copy_bytes: size_of::<String>(), release_bytes: size_of::<StepWrite>(), ..demand });
+    }
+    Ok(demand)
+}
+
+fn step_decode_demand(decoder: &StepSolidDecode) -> RetirementDemand {
+    let quote = decoder.demand();
+    if decoder.is_ready() { RetirementDemand { release_bytes: size_of::<StepSolidDecode>(), ..quote } }
+    else { quote }
+}
+
 fn text_demand(target: &String, source: &str) -> RetirementDemand {
     let (copy_bytes, capacity_bytes) = if target.capacity() == 0 { (0, source.len()) } else { (1, 0) };
     RetirementDemand { copy_bytes, capacity_bytes, depth: 1, ..Default::default() }
@@ -1714,8 +1947,7 @@ fn dictionary_depth(dictionary: &Dictionary) -> usize {
 }
 
 fn section_demand(draft: &BoxSectionDraft) -> RetirementDemand {
-    let operands = if draft.has_edge() { 6 } else { 12 };
-    RetirementDemand { copy_bytes: operands * size_of::<f64>(), depth: 1, ..Default::default() }
+    RetirementDemand { copy_bytes: draft.copied_coordinates() * size_of::<f64>(), depth: 1, ..Default::default() }
 }
 
 fn point_hull_demand(input: &Dictionary, draft: &HullDraft) -> Result<RetirementDemand, ValueError> {
@@ -1732,19 +1964,19 @@ fn point_hull_demand(input: &Dictionary, draft: &HullDraft) -> Result<Retirement
     Ok(RetirementDemand { copy_bytes, depth, ..Default::default() })
 }
 
-fn box_shell_selection<'a>(
-    session: &Session, input: &'a Dictionary, draft: &BoxShellDraft, next: usize,
+fn shell_selection<'a>(
+    session: &Session, input: &'a Dictionary, draft: &ShellDraft, next: usize,
 ) -> Result<(Option<Option<&'a str>>, RetirementDemand), ValueError> {
     if let Some(list) = shell_open_faces(input)? {
         if let Some((key, value)) = list.entry_at_rank(next) {
             let rank_depth = dictionary_depth(input).max(dictionary_depth(list));
             let face = (key.len() <= 20 && key.parse::<usize>().is_ok()).then(|| geometry_atom_handle(Some(value))).transpose()?;
-            let depth = face.map_or(Ok(rank_depth), |handle| session.box_shell_face_depth(draft, handle).map(|depth| depth.max(rank_depth)))?;
+            let depth = face.map_or(Ok(rank_depth), |handle| session.shell_face_depth(draft, handle).map(|depth| depth.max(rank_depth)))?;
             return Ok((Some(face), RetirementDemand { copy_bytes: usize::from(face.is_some()), depth, ..Default::default() }));
         }
     }
     let source = geometry_handle(input, "geometry")?;
-    Ok((None, RetirementDemand { copy_bytes: 6 * size_of::<f64>(), depth: session.certified_solid_depth(source)?, ..Default::default() }))
+    Ok((None, RetirementDemand { copy_bytes: 16 * size_of::<f64>(), depth: session.certified_solid_depth(source)?, ..Default::default() }))
 }
 
 fn number(input: &Dictionary, port: &str, field: &str) -> Result<f64, ValueError> {
@@ -1796,17 +2028,23 @@ fn listed_point(list:&Dictionary,index:usize)->Result<[f64;3],ValueError>{
     point(list,list_key(index,&mut [0;20]))
 }
 
-fn box_finish_source(input: &Dictionary, operation: GeometryOperation) -> Result<[&str;2], ValueError> {
-    let (port,message) = match operation {
-        GeometryOperation::Draft => ("faces","retained draft requires exactly one selected side"),
-        _ => ("edges","retained chamfer requires exactly one selected edge"),
+fn box_finish_source(input:&Dictionary,operation:GeometryOperation)->Result<(&str,[&str;4],usize),ValueError>{
+    let (port,message,limit)=match operation{
+        GeometryOperation::Draft=>("faces","retained draft requires exactly one selected side",1),
+        GeometryOperation::FilletEdges=>("edges","retained fillet requires one to four selected parallel edges",4),
+        _=>("edges","retained chamfer requires exactly one selected edge",1),
     };
-    let invalid = || ValueError::literal(ValueRefusalKind::InvalidValue,message);
-    let list = input.get(port).and_then(Value::as_dictionary)
-        .filter(|list| list.schema() == Some("list") && list.len() == 2).ok_or_else(invalid)?;
-    let (key,edge) = list.entry_at_rank(1).ok_or_else(invalid)?;
-    key.parse::<usize>().map_err(|_|invalid())?;
-    Ok([geometry_handle(input,"geometry")?,geometry_atom_handle(Some(edge))?])
+    let invalid=||ValueError::literal(ValueRefusalKind::InvalidValue,message);
+    let list=input.get(port).and_then(Value::as_dictionary)
+        .filter(|list|list.schema()==Some("list")&&(2..=limit+1).contains(&list.len())).ok_or_else(invalid)?;
+    let count=list.len()-1;
+    let mut members=["";4];
+    for (i,member) in members[..count].iter_mut().enumerate(){
+        let (key,value)=list.entry_at_rank(i+1).ok_or_else(invalid)?;
+        key.parse::<usize>().map_err(|_|invalid())?;
+        *member=geometry_atom_handle(Some(value))?;
+    }
+    Ok((geometry_handle(input,"geometry")?,members,count))
 }
 
 fn invalid_sew_input() -> ValueError {

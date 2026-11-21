@@ -2230,6 +2230,7 @@ name = "semio-framework-3d-brep-analysis"
 version = "0.1.0"
 dependencies = [
  "semio-framework-3d",
+ "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
@@ -2373,6 +2374,7 @@ dependencies = [
  "semio-framework-3d-brep-kernel-contract",
  "semio-framework-3d-brep-mesh-io",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-solid-topology",
  "semio-framework-3d-brep-solid-transaction",
  "semio-framework-3d-brep-spline-construction",
  "semio-framework-3d-brep-spline-trim",
@@ -2437,6 +2439,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-kernel-contract",
+ "semio-framework-3d-brep-native-registry",
  "semio-framework-3d-brep-representation",
  "semio-framework-3d-brep-surface",
  "semio-framework-3d-brep-tessellation",
@@ -2448,7 +2451,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-3d-brep-solid-transaction"
+name = "semio-framework-3d-brep-solid-topology"
 version = "0.1.0"
 dependencies = [
  "semio-framework-3d-brep-boolean",
@@ -2462,9 +2465,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-solid-transaction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-boolean",
+ "semio-framework-3d-brep-construction",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-spline-construction",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-spline-construction"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-3d-brep-construction",
  "semio-framework-3d-brep-curve",
  "semio-framework-3d-brep-representation",
  "semio-framework-3d-brep-surface",
@@ -3185,6 +3204,7 @@ name = "semio-framework-graph-manifest"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
@@ -4272,6 +4292,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
  "semio-framework-replication-error",
@@ -4588,10 +4609,9 @@ version = "0.1.0"
 name = "semio-framework-surface-terrain"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-value",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6550,6 +6570,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-surface-terrain",
  "semio-framework-value",
@@ -7253,6 +7274,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -8548,7 +8570,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-replication-command-ingress",
  "semio-framework-value",
+ "semio-framework-value-persistent",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
  "serde_json",
@@ -9234,6 +9258,7 @@ dependencies = [
  "semio-plugin-command",
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
  "semio-plugin-decl-views",
  "semio-plugin-document-media",
  "semio-plugin-instance-children",
@@ -9707,6 +9732,7 @@ dependencies = [
  "semio-plugin-abi",
  "semio-plugin-actor-host",
  "semio-plugin-decl-app",
+ "semio-plugin-decl-media",
  "semio-plugin-interaction",
  "semio-plugin-job",
  "semio-plugin-mounted-owner",

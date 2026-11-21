@@ -1,0 +1,11 @@
+# Workspace Owner Pass Accounting on m05 and m12
+
+The physical slice receipts both identify process-local owner pass 2 with 596 owners. The Windows workspace on m05 retained graph child 43252 under the workspace started at November 20 21:02:41.127 UTC. Its second-pass count reached 303. The Darwin workspace on m12 retained graph child 95289 under the workspace started at November 20 23:24:13.728 UTC. Its second-pass count reached 158. Ready reported those stages as running after observer adoption. The most recent terminal timings preceded the current workspace tokens. The lower owner counts therefore belong to another pass within the existing physical runs.
+
+The load loop can start another pass after changed source facts, membership, selected admission, or an eligible failure. It retains the captured Source authority and emits a graph-repair line when it retries. The rolling mirrors did not retain those transition lines, so the exact trigger for either physical second pass remains unknown. The diagnostic does not establish an endless retry or failed fleet custody.
+
+The raw numeric owner lines previously omitted the pass identity. Ready deduplicates normalized progress lines over the physical stage. A real second pass that visits the same numeric counts is therefore indistinguishable from stale output in those clocks. The deterministic red fixture produced 152 then 155 of 596 in both passes and the Ready stall tracker credited only the first. The SQLite model independently identified four separate pass-and-count observations.
+
+The slice reports now label subsequent passes on their numeric and terminal owner lines and include the pass in emitter deduplication. Ready recognizes a separate pass using its existing normalization. Repeated elapsed text and a repeated count within that pass still do not renew the clock. Slice-lab still projects the same phase and counts. The Source validation, repair policy, memory custody and watchdog thresholds are unchanged.
+
+The focused suite passed 54 tests and 541 assertions. The conditional red and final transcripts are `🗑️generated/workspace-owner-pass-progress-red.log` and `🗑️generated/workspace-owner-pass-progress-green.log`. No physical worker operations were issued.

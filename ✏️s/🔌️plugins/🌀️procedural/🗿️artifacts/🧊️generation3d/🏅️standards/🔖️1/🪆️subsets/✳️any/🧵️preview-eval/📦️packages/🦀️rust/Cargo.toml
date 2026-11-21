@@ -34,8 +34,13 @@ serde_json = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-procedural-core-semantic-ui = { workspace = true }
 semio-ui-declaration = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+
+[[test]]
+name = "preview-channel-geometry"
+path = "../../🧪️tests/🔬️channel-geometry/🦀️.rs"
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

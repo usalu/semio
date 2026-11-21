@@ -369,7 +369,7 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::AddGeneration(add_generation::AddGeneration {}),
         Generation2dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "g1".into() }),
         Generation2dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
-        Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_framework_value::DslValue::float(5.0) }),
+        Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), field_index: Some(1), value: semio_framework_value::DslValue::float(5.0) }),
         Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_os_kernel::Viewport2d::default() }),
         Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wire".into() }),
         Generation2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_2d_examples::demo::ID.into() }),

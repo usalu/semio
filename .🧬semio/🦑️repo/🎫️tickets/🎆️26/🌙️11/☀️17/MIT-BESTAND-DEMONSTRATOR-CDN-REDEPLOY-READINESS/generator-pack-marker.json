@@ -1,0 +1,4 @@
+{
+  "prior": { "zeroWorkDeniesWithoutAllocation": false, "fundedTurnPostsExtentAndWork": false },
+  "proof": { "zeroWorkDeniesWithoutAllocation": true, "fundedTurnPostsExtentAndWork": true }
+}

@@ -1041,6 +1041,39 @@
    }
   },
   {
+   "name": "an over-ramp live writer forbids going on alone even after cleanup",
+   "input": {
+    "freeBytes": 1073741824,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 1000000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "running",
+      "reservedBytes": 1073741824,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 1000
+     }
+    ],
+    "reclaimed": true
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 4767413698,
+    "running": 1
+   }
+  },
+  {
    "name": "a waiting command ahead forbids going on alone",
    "input": {
     "freeBytes": 1073741824,

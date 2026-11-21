@@ -1,0 +1,14 @@
+{
+  "plugin": "energy",
+  "pass": "release-00",
+  "requires": [
+    "transpile",
+    "provenance:release-00"
+  ],
+  "independent": [
+    "describe",
+    "model"
+  ],
+  "rejection": "mixed compiler source fixture",
+  "manifest": "🌎️hub/🧩️compositions/🔋️energy/🧩️component/📦️packages/🦀️rust/Cargo.toml"
+}

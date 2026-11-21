@@ -28,11 +28,15 @@ fn frame(index: u32) -> FrameRef {
 fn durable_content_neutral_cases_match_cold_reference() {
     use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingDurableArtifact;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️durable-content/🔣️.json")).unwrap();
+    let before = fixture["assignedId"]["before"].as_str().unwrap();
+    let after = fixture["assignedId"]["after"].as_str().unwrap();
+    let stream_before = fixture["streamOffset"]["before"].as_f64().unwrap();
+    let stream_after = fixture["streamOffset"]["after"].as_f64().unwrap();
     let chunks = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|chunk| ByteBuffer::from_u8_slice(chunk.as_str().unwrap().as_bytes())).collect::<Vec<_>>();
     for case in fixture["cases"].as_array().unwrap() {
-        let mut base = std::collections::BTreeMap::new();
+        let mut base = RemodelingDurableArtifactStore::new();
         let initial = chunks(&case["initial"]);
-        if !initial.is_empty() || case["present"] == true { base.insert("asset".into(), RemodelingDurableArtifact { kind: "mesh".into(), mime: None, width: 0, height: 0, chunks: initial }); }
+        if !initial.is_empty() || case["present"] == true { base.cold_insert("asset".into(), RemodelingDurableArtifact { kind: "mesh".into(), mime: None, width: 0, height: 0, chunks: initial }); }
         let rows = case["rows"].as_array().unwrap().iter().map(|row| match row["operation"].as_str().unwrap() {
             "create" => RemodelingContentRow::Append { id: "asset".into(), header: Some(RemodelingContentHeader { kind: "mesh".into(), mime: None, width: 0, height: 0 }), chunks: chunks(&row["chunks"]) },
             "append" => RemodelingContentRow::Append { id: "asset".into(), header: None, chunks: chunks(&row["chunks"]) },
@@ -40,13 +44,57 @@ fn durable_content_neutral_cases_match_cold_reference() {
             _ => panic!("unknown content operation"),
         }).collect();
         let original = base.clone();
-        let actual = RemodelingContentDelta { rows }.apply_rows(&base);
-        assert_eq!(base, original, "{} leaves its base unchanged", case["id"]);
-        if case["refused"] == true { assert!(actual.is_err(), "{}", case["id"]); continue; }
-        let actual = actual.unwrap();
+        let streams = vec![MediaStream { sync_offset_ms: stream_before, ..stream("video") }];
+        let mut post = RemodelingSnapshot { durable_artifacts: base, id: before.into(), streams, ..default_remodeling_scene() };
+        let diff = RemodelingDiff { durable_artifacts: Some(RemodelingContentDelta { rows }), id: Some(after.into()), ..sync("video", stream_after) };
+        let actual = protocol::apply_diff_cold_into(&diff, &mut post);
+        if case["refused"] == true {
+            assert!(actual.is_err(), "{}", case["id"]);
+            assert_eq!(post.durable_artifacts, original, "{} restores every prior row", case["id"]);
+            assert_eq!(post.id, before, "{} leaves assignments untouched", case["id"]);
+            assert_eq!(post.streams[0].sync_offset_ms, stream_before, "{} leaves other keyed collections untouched", case["id"]);
+            continue;
+        }
+        actual.unwrap();
+        assert_eq!(post.id, after, "{}", case["id"]);
+        assert_eq!(post.streams[0].sync_offset_ms, stream_after, "{}", case["id"]);
         let expected = chunks(&case["expected"]);
-        assert_eq!(actual.get("asset").map(|artifact| artifact.chunks.as_slice()).unwrap_or_default(), expected.as_slice(), "{}", case["id"]);
+        assert_eq!(post.durable_artifacts.get("asset").map(|artifact| artifact.chunks.as_slice()).unwrap_or_default(), expected.as_slice(), "{}", case["id"]);
     }
+}
+
+#[test]
+fn retained_preflight_refuses_each_nonempty_keyed_delta_before_staging() {
+    use protocol::RetainedDiffApply;
+    use semio_framework_value::ValueRefusalKind;
+    use semio_framework_value_clone_source_testing::FixtureSource;
+
+    let base = FixtureSource::from_owner(default_remodeling_scene());
+    let post = FixtureSource::from_owner(default_remodeling_scene());
+    for diff in [
+        RemodelingDiff::stream_rows(vec![RemodelingRow::Remove { key: "stream".into() }]),
+        RemodelingDiff::asset_rows(vec![RemodelingRow::Remove { key: "asset".into() }]),
+        RemodelingDiff::content_rows(vec![RemodelingContentRow::Truncate { id: "content".into(), from: 0 }]),
+        RemodelingDiff::camera_rows(vec![RemodelingRow::Remove { key: "camera".into() }]),
+        RemodelingDiff::rig_rows(vec![RemodelingRow::Remove { key: "camera".into() }]),
+        RemodelingDiff::gcp_rows(vec![RemodelingRow::Remove { key: "gcp".into() }]),
+    ] {
+        let diff = FixtureSource::from_owner(RemodelingDiff { id: Some("must not stage".into()), ..diff });
+        let apply = RemodelingApply::new();
+        let error = apply.preflight_demand(diff.borrow(), base.borrow(), post.borrow(), 4096, 4096).unwrap_err();
+        assert_eq!(error.kind, ValueRefusalKind::UnsupportedOwner);
+        assert!(apply.terminal_is_empty());
+    }
+    let empty = FixtureSource::from_owner(RemodelingDiff {
+        id: Some("supported assignment".into()),
+        streams: Some(Default::default()),
+        assets: Some(Default::default()),
+        durable_artifacts: Some(Default::default()),
+        calibration: Some(Default::default()),
+        gcps: Some(Default::default()),
+        ..Default::default()
+    });
+    assert!(RemodelingApply::new().preflight_demand(empty.borrow(), base.borrow(), post.borrow(), 4096, 4096).is_ok());
 }
 
 #[semio_framework_async_macros::async_test]

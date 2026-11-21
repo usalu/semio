@@ -11,20 +11,20 @@ const far = (t: number): number => (t === TONE.jacket ? TONE.jacketFar : t === T
 
 /* ---------------------------------------------------------------- stations shared by body, thermal and the coarser scales */
 
-/** 🧥 The jacket on the trunk as horizontal slices: [y, back, front, half-width, exponent]. The back falls from the hump over the buttocks, the front hangs from chest and belly. */
+/** 🧥 The jacket on the trunk as horizontal slices: [y, back, front, half-width, exponent]. The back rounds over the thoracic kyphosis (apex at T7, 1.22 m) and the cloth hangs taut from that hump to the buttocks, bridging the flattened lumbar curve; the shoulder line falls about 22 degrees from the collar to the shoulder point; a slight waist under the chest; the front hangs from chest and belly. */
 export const JACKET: readonly [number, number, number, number, number][] = [
-  [0.765, -0.128, 0.146, 0.183, 2.4],
-  [0.82, -0.137, 0.156, 0.187, 2.4],
-  [0.9, -0.142, 0.166, 0.187, 2.35],
-  [1.03, -0.114, 0.181, 0.176, 2.3],
-  [1.14, -0.1, 0.19, 0.177, 2.3],
-  [1.22, -0.091, 0.192, 0.181, 2.3],
-  [1.275, -0.085, 0.19, 0.189, 2.3],
-  [1.31, -0.076, 0.186, 0.199, 2.3],
-  [1.338, -0.06, 0.18, 0.2, 2.25],
-  [1.362, -0.036, 0.171, 0.172, 2.2],
-  [1.384, -0.01, 0.158, 0.128, 2.1],
-  [1.4, 0.012, 0.142, 0.086, 2],
+  [0.779, -0.128, 0.146, 0.183, 2.4],
+  [0.834, -0.137, 0.156, 0.187, 2.4],
+  [0.914, -0.14, 0.166, 0.186, 2.35],
+  [1.044, -0.125, 0.181, 0.173, 2.3],
+  [1.154, -0.1125, 0.19, 0.175, 2.3],
+  [1.22, -0.105, 0.192, 0.181, 2.3],
+  [1.289, -0.098, 0.19, 0.19, 2.3],
+  [1.33, -0.082, 0.186, 0.2, 2.3],
+  [1.356, -0.064, 0.18, 0.203, 2.25],
+  [1.377, -0.044, 0.171, 0.178, 2.2],
+  [1.398, -0.018, 0.158, 0.13, 2.1],
+  [1.414, 0.006, 0.142, 0.086, 2],
 ];
 export const jacketStations = (): St[] => JACKET.map(([y, b, f, rw, e]) => H("torso", y, b, f, rw, e));
 /** 📏 The jacket surface at the height `y` and the lateral position `z`: x of the front (+1) or of the back (-1). */
@@ -43,24 +43,24 @@ export function jacketX(y: number, z: number, side: 1 | -1): number {
 export const jacketYaw = (y: number, z: number): number => (Math.atan2(jacketX(y, z - 0.004, 1) - jacketX(y, z + 0.004, 1), 0.008) * 180) / Math.PI;
 
 export const SEAT: readonly [number, number, number, number, number][] = [
-  [0.792, -0.1, 0.07, 0.15, 2.3],
-  [0.82, -0.126, 0.098, 0.176, 2.4],
-  [0.9, -0.135, 0.115, 0.178, 2.4],
-  [0.97, -0.112, 0.146, 0.168, 2.3],
-  [1.04, -0.098, 0.168, 0.158, 2.3],
-  [1.062, -0.095, 0.166, 0.155, 2.3],
+  [0.806, -0.1, 0.07, 0.15, 2.3],
+  [0.834, -0.126, 0.098, 0.176, 2.4],
+  [0.914, -0.135, 0.115, 0.178, 2.4],
+  [0.984, -0.112, 0.146, 0.168, 2.3],
+  [1.054, -0.098, 0.168, 0.158, 2.3],
+  [1.076, -0.095, 0.166, 0.155, 2.3],
 ];
 export const seatStations = (): St[] => SEAT.map(([y, b, f, rw, e]) => H("pelvis", y, b, f, rw, e));
 
 /** 👖 The left trouser leg on the thigh, bone-local: the tube hangs from the seat, quadriceps in front. */
 export const THIGH_L: St[] = [st(0.0, -0.01, 0, 0.085, 0.1, 2.1), st(0.08, -0.008, 0, 0.086, 0.097, 2.1), st(0.16, -0.002, 0, 0.08, 0.089, 2), st(0.26, 0.0, 0, 0.073, 0.08, 1.95), st(0.34, 0.002, 0, 0.068, 0.074, 1.9), st(0.4046, 0.004, 0, 0.066, 0.072, 1.9)];
-/** 🦵 The left trouser leg on the shank: knee, the calf pushing the cloth back, the break over the instep and the hem cut lower at the heel. */
-export const SHANK_L: St[] = [st(0.0, 0.004, 0, 0.0605, 0.0665, 1.9), st(0.06, 0.0, 0, 0.062, 0.068, 1.9), st(0.14, -0.006, 0, 0.064, 0.071, 1.9), st(0.24, -0.006, 0, 0.0625, 0.069, 1.9), st(0.3, -0.002, 0, 0.0625, 0.07, 1.9), st(0.336, 0.004, 0, 0.0635, 0.0745, 1.95, -4), st(0.362, 0.004, 0, 0.062, 0.072, 2, -10)];
+/** 🦵 The left trouser leg on the shank: knee (the first station repeats the thigh end, so the cloth runs on without a step), the calf pushing the cloth back, the break over the instep and the hem cut lower at the heel. */
+export const SHANK_L: St[] = [st(-0.02, 0.004, 0, 0.066, 0.072, 1.9), st(0.04, 0.002, 0, 0.0645, 0.0705, 1.9), st(0.14, -0.006, 0, 0.064, 0.071, 1.9), st(0.24, -0.006, 0, 0.0625, 0.069, 1.9), st(0.31, -0.002, 0, 0.0625, 0.07, 1.9), st(0.35, 0.004, 0, 0.0635, 0.0745, 1.95, -4), st(0.376, 0.004, 0, 0.062, 0.072, 2, -10)];
 
 /** 🧥 The left sleeve on the upper arm: the sleeve head sits inwards of the bone (the bone hangs from the acromion, the deltoid lies under it), biceps in front, the elbow at the end. */
 export const SLEEVE_L: St[] = [st(-0.022, 0.0, -0.036, 0.034, 0.05), st(0.0, 0.0, -0.022, 0.05, 0.061), st(0.04, 0.002, -0.01, 0.055, 0.064), st(0.1, 0.004, -0.005, 0.052, 0.061), st(0.19, 0.002, 0, 0.048, 0.055), st(0.27, -0.002, 0, 0.0455, 0.0515), st(0.3069, -0.004, 0, 0.0455, 0.051)];
 /** 💪 The left sleeve on the forearm down to the cuff. */
-export const CUFF_L: St[] = [st(0.0, -0.004, 0, 0.0415, 0.0465), st(0.05, 0.0, 0, 0.042, 0.0465), st(0.13, 0.0, 0, 0.0405, 0.043), st(0.19, 0, 0, 0.038, 0.0395), st(0.213, 0, 0, 0.0375, 0.039)];
+export const CUFF_L: St[] = [st(0.0, -0.004, 0, 0.0452, 0.0505), st(0.05, 0.0, 0, 0.042, 0.0465), st(0.13, 0.0, 0, 0.0405, 0.043), st(0.19, 0, 0, 0.038, 0.0395), st(0.213, 0, 0, 0.0375, 0.039)];
 
 /** 🥾 The left shoe upper as cross slices: [x, bottom, top, half-width, exponent]; rear part on the foot bone, toe box on the toe bone, overlapping at the ball. */
 export const SHOE_REAR: readonly [number, number, number, number, number][] = [
@@ -101,6 +101,8 @@ export const crownStations = (): St[] => CROWN.map(([u, v, rw, rh]) => st(u, v, 
 export const NECK: St[] = [st(-0.035, 0.004, 0, 0.066, 0.068), st(0.02, 0.0, 0, 0.059, 0.061), st(0.06, -0.005, 0, 0.056, 0.057), st(0.112, -0.01, 0, 0.055, 0.054)];
 
 const CROOK_R = 0.045;
+/** 🩼 The cane from the shaft top under the crook to the ground, cut so that the crook stands at the wrist crease of the stooped stance. */
+export const CANE_L = 0.748;
 /** 🩼 The centre line of the crook in the cane frame (u down the shaft, v ahead): from the shaft top over the apex to the nose of the hook. */
 export const crookPath = (n = 12): V3[] => [...Array.from({ length: n + 1 }, (_, i) => [-CROOK_R * Math.sin((Math.PI * i) / n), -CROOK_R + CROOK_R * Math.cos((Math.PI * i) / n), 0] as V3), [0.016, -2 * CROOK_R - 0.001, 0], [0.03, -2 * CROOK_R - 0.003, 0]];
 
@@ -202,13 +204,13 @@ export function body50(): Json[] {
   const leg: Json[] = [];
   leg.push(loft({ id: "thigh-l", bone: "thigh-l", material: "wool-trouser", tone: TONE.trousersFar }, dome(dense(THIGH_L, 3), 1, 0.014)));
   leg.push(loft({ id: "shank-l", bone: "shank-l", material: "wool-trouser", tone: TONE.trousersFar }, dome(dense(SHANK_L, 3), -1, 0.04)));
-  leg.push(loft({ id: "sock-l", bone: "shank-l", material: "wool-sock", tone: 0.25 }, [H("shank-l", 0.15, -0.046, 0.04, 0.037), H("shank-l", 0.105, -0.047, 0.043, 0.0375), H("shank-l", 0.072, -0.05, 0.048, 0.039)].reverse()));
+  leg.push(loft({ id: "sock-l", bone: "shank-l", material: "wool-sock", tone: 0.25 }, [H("shank-l", 0.164, -0.046, 0.04, 0.037), H("shank-l", 0.119, -0.047, 0.043, 0.0375), H("shank-l", 0.086, -0.05, 0.048, 0.039)].reverse()));
   leg.push(loft({ id: "shoe-rear-l", bone: "foot-l", material: "leather-shoe", tone: TONE.shoeFar }, dense(SHOE_REAR.map(([x, b, t, rw, e]) => X("foot-l", x, b, t, rw, e)), 3)));
   leg.push(loft({ id: "shoe-toe-l", bone: "toe-l", material: "leather-shoe", tone: TONE.shoeFar }, dense(SHOE_TOE.map(([x, b, t, rw, e]) => X("toe-l", x, b, t, rw, e)), 3)));
   const heelPlan: [number, number][] = [[0, -0.072], [0.02, -0.066], [0.031, -0.05], [0.036, -0.02], [0.038, 0.012], [-0.038, 0.012], [-0.036, -0.02], [-0.031, -0.05], [-0.02, -0.066]];
   const solePlan: [number, number][] = [[0.04, 0.012], [0.044, 0.05], [0.05, 0.095], [0.054, 0.135], [0.053, 0.166], [-0.053, 0.166], [-0.054, 0.135], [-0.05, 0.095], [-0.044, 0.05], [-0.04, 0.012]];
   const level = { transform: { rotation: aboutW(-boneDeg("foot-l")) } };
-  const ankleY = 0.0697;
+  const ankleY = 0.084;
   leg.push(extrude({ id: "shoe-heel-l", bone: "foot-l", material: "leather-shoe", tone: 0.12 }, "zx", heelPlan, -ankleY, -ankleY + 0.025, level));
   leg.push(extrude({ id: "shoe-sole-l", bone: "foot-l", material: "leather-shoe", tone: 0.12 }, "zx", solePlan, -ankleY, -ankleY + 0.012, level));
   const toePlan: [number, number][] = [[0.0535, -0.012], [0.052, 0.02], [0.044, 0.044], [0.03, 0.058], [0.012, 0.0635], [-0.012, 0.0635], [-0.03, 0.058], [-0.044, 0.044], [-0.052, 0.02], [-0.0535, -0.012]];
@@ -260,26 +262,26 @@ export function body50(): Json[] {
   const tweed = (id: string, tone = 0.45, role = "detail"): { id: string; bone: string; material: string; tone: number; role: string } => ({ id, bone: "torso", material: "tweed", tone, role });
   for (const side of [1, -1]) {
     const n = side > 0 ? "l" : "r";
-    const lapel: [number, number, number][] = [[1.372, 0.062, 0.022], [1.33, 0.07, 0.03], [1.26, 0.062, 0.034], [1.19, 0.04, 0.03], [1.13, 0.016, 0.014]];
+    const lapel: [number, number, number][] = [[1.386, 0.062, 0.022], [1.344, 0.07, 0.03], [1.274, 0.062, 0.034], [1.204, 0.04, 0.03], [1.144, 0.016, 0.014]];
     out.push(loft(tweed(`lapel-${n}`), dense(lapel.map(([y, z, rw]) => { const x = jacketX(y, z, 1); return H("torso", y, x - 0.006, x + 0.0045, rw, 2, side * z); }), 2).reverse()));
-    const py = 0.905;
+    const py = 0.919;
     const pz = 0.118;
     const px = jacketX(py, pz, 1);
     out.push(box(tweed(`jacket-pocket-${n}`, 0.38), [0.05, 0.009, 0.14], L("torso", [px + 0.001, py, side * pz]), compose(aboutW(90 - boneDeg("torso")), aboutU(-side * jacketYaw(py, pz))), 0.003));
   }
-  const bx = jacketX(1.245, 0.105, 1);
-  out.push(box(tweed("jacket-breast-pocket", 0.4), [0.014, 0.009, 0.09], L("torso", [bx + 0.003, 1.245, 0.105]), compose(aboutW(90 - boneDeg("torso")), aboutU(-jacketYaw(1.245, 0.105))), 0.003));
-  const vee: [number, number][] = [[1.135, 0.006], [1.19, 0.022], [1.25, 0.036], [1.3, 0.042]];
+  const bx = jacketX(1.259, 0.105, 1);
+  out.push(box(tweed("jacket-breast-pocket", 0.4), [0.014, 0.009, 0.09], L("torso", [bx + 0.003, 1.259, 0.105]), compose(aboutW(90 - boneDeg("torso")), aboutU(-jacketYaw(1.259, 0.105))), 0.003));
+  const vee: [number, number][] = [[1.149, 0.006], [1.204, 0.022], [1.264, 0.036], [1.314, 0.042]];
   out.push(loft({ id: "waistcoat", bone: "torso", material: "wool-knit", tone: TONE.waistcoat, role: "detail" }, vee.map(([y, rw]) => H("torso", y, jacketX(y, 0, 1) - 0.012, jacketX(y, 0, 1) + 0.0015, rw, 2))));
-  const shirt: [number, number][] = [[1.292, 0.04], [1.33, 0.043], [1.365, 0.04], [1.39, 0.034]];
+  const shirt: [number, number][] = [[1.306, 0.04], [1.344, 0.043], [1.379, 0.04], [1.404, 0.034]];
   out.push(loft({ id: "shirt-front", bone: "torso", material: "cotton-flannel", tone: TONE.shirt, role: "detail" }, shirt.map(([y, rw]) => H("torso", y, jacketX(y, 0, 1) - 0.014, jacketX(y, 0, 1) + 0.002, rw, 2))));
-  [0.93, 1.02, 1.11].forEach((y, i) => out.push(ellipsoid(tweed(`jacket-button-${i}`, 0.1), [0.01, 0.0045, 0.01], L("torso", [jacketX(y, 0.012, 1) + 0.002, y, 0.012]), aboutW(90 - boneDeg("torso")))));
+  [0.944, 1.034, 1.124].forEach((y, i) => out.push(ellipsoid(tweed(`jacket-button-${i}`, 0.1), [0.01, 0.0045, 0.01], L("torso", [jacketX(y, 0.012, 1) + 0.002, y, 0.012]), aboutW(90 - boneDeg("torso")))));
 
   const wood = { bone: "cane", material: "ash-wood", tone: TONE.wood };
-  out.push(tube({ id: "cane-shaft", ...wood }, [[-0.004, 0, 0], [0.25, 0, 0], [0.5, 0, 0], [0.7, 0, 0]], [0.011, 0.0105, 0.0098, 0.009]));
+  out.push(tube({ id: "cane-shaft", ...wood }, [[-0.004, 0, 0], [0.25, 0, 0], [0.5, 0, 0], [CANE_L - 0.034, 0, 0]], [0.011, 0.0105, 0.0098, 0.009]));
   out.push(tube({ id: "cane-crook", ...wood, tone: 0.4 }, crookPath(), [...Array.from({ length: 13 }, () => 0.011), 0.0108, 0.0102]));
   out.push(ellipsoid({ id: "cane-crook-nose", ...wood, tone: 0.4 }, [0.008, 0.0102, 0.0102], [0.03, -2 * CROOK_R - 0.003, 0]));
-  out.push(revolve({ id: "cane-ferrule", bone: "cane", material: "rubber", tone: 0.05 }, [[0.692, 0], [0.692, 0.0118], [0.712, 0.0125], [0.728, 0.014], [0.734, 0.0132], [0.734, 0]], [0, 0, 0], [1, 0, 0]));
+  out.push(revolve({ id: "cane-ferrule", bone: "cane", material: "rubber", tone: 0.05 }, [[CANE_L - 0.042, 0], [CANE_L - 0.042, 0.0118], [CANE_L - 0.022, 0.0125], [CANE_L - 0.006, 0.014], [CANE_L, 0.0132], [CANE_L, 0]], [0, 0, 0], [1, 0, 0]));
   return out;
 }
 
@@ -352,27 +354,27 @@ export function structure50(body: readonly Json[]): Json[] {
     out.push(part(ellipsoid({ id: `mass-${member}`, bone: member, material: "bone", tone: 0.2, role: "detail" }, [r, r, r], [k.comX, k.comY, 0]), member, "mass"));
   };
   const T = (x: number, y: number, z = 0): V3 => L("torso", [x, y, z]);
-  const spine: [number, number, number][] = [[-0.03, 0.975, 0.0195], [-0.026, 1.03, 0.019], [-0.03, 1.09, 0.018], [-0.034, 1.16, 0.0165], [-0.026, 1.235, 0.0155], [0.0, 1.3, 0.0145], [0.04, 1.355, 0.0135], [0.08, 1.392, 0.0125]];
+  const spine: [number, number, number][] = [[-0.03, 0.989, 0.0195], [-0.026, 1.044, 0.019], [-0.03, 1.104, 0.018], [-0.034, 1.174, 0.0165], [-0.026, 1.249, 0.0155], [0.0, 1.314, 0.0145], [0.04, 1.369, 0.0135], [0.08, 1.406, 0.0125]];
   m(tube({ id: "spine", bone: "torso", ...BONE }, spine.map(([x, y]) => T(x, y)), spine.map((q) => q[2])), "torso");
-  const hoops: [number, number, number, number][] = [[1.1, 0.044, 0.09, 0.122], [1.135, 0.046, 0.098, 0.132], [1.17, 0.048, 0.103, 0.138], [1.205, 0.05, 0.105, 0.14], [1.24, 0.052, 0.103, 0.138], [1.275, 0.054, 0.097, 0.132], [1.305, 0.057, 0.088, 0.122], [1.332, 0.061, 0.075, 0.104], [1.356, 0.066, 0.058, 0.078]];
+  const hoops: [number, number, number, number][] = [[1.114, 0.044, 0.09, 0.122], [1.149, 0.046, 0.098, 0.132], [1.184, 0.048, 0.103, 0.138], [1.219, 0.05, 0.105, 0.14], [1.254, 0.052, 0.103, 0.138], [1.289, 0.054, 0.097, 0.132], [1.319, 0.057, 0.088, 0.122], [1.346, 0.061, 0.075, 0.104], [1.37, 0.066, 0.058, 0.078]];
   hoops.forEach(([y, x, rd, rw], i) => {
     const ring: [number, number][] = Array.from({ length: 9 }, (_, k) => [0.006 * Math.cos((k * Math.PI) / 4), rd + 0.006 * Math.sin((k * Math.PI) / 4)] as [number, number]);
     m(revolve({ id: `rib-${10 - i}`, bone: "torso", ...BONE }, ring, T(x, y), [1, 0, 0], { lateralScale: Math.round((rw / rd) * 1000) / 1000 }), "torso");
   });
-  m(loft({ id: "sternum", bone: "torso", ...BONE }, [H("torso", 1.195, 0.144, 0.156, 0.016), H("torso", 1.26, 0.15, 0.162, 0.02), H("torso", 1.322, 0.142, 0.154, 0.024)]), "torso");
+  m(loft({ id: "sternum", bone: "torso", ...BONE }, [H("torso", 1.209, 0.144, 0.156, 0.016), H("torso", 1.274, 0.15, 0.162, 0.02), H("torso", 1.336, 0.142, 0.154, 0.024)]), "torso");
   for (const side of [1, -1]) {
     const n = side > 0 ? "l" : "r";
-    m(capsule({ id: `clavicle-${n}`, bone: "torso", ...BONE }, T(0.146, 1.332, side * 0.022), T(0.098, 1.358, side * 0.168), 0.008, 0.0075), "torso");
-    m(ellipsoid({ id: `scapula-${n}`, bone: "torso", ...BONE }, [0.075, 0.007, 0.048], T(-0.03, 1.275, side * 0.105), compose(aboutW(8), aboutU(side * 28))), "torso");
+    m(capsule({ id: `clavicle-${n}`, bone: "torso", ...BONE }, T(0.146, 1.346, side * 0.022), T(0.098, 1.372, side * 0.168), 0.008, 0.0075), "torso");
+    m(ellipsoid({ id: `scapula-${n}`, bone: "torso", ...BONE }, [0.075, 0.007, 0.048], T(-0.03, 1.289, side * 0.105), compose(aboutW(8), aboutU(side * 28))), "torso");
   }
   const P = (x: number, y: number, z = 0): V3 => L("pelvis", [x, y, z]);
-  m(tube({ id: "sacrum", bone: "pelvis", ...BONE }, [P(-0.03, 0.975), P(-0.052, 0.93), P(-0.066, 0.89), P(-0.062, 0.862)], [0.028, 0.026, 0.017, 0.008]), "pelvis");
+  m(tube({ id: "sacrum", bone: "pelvis", ...BONE }, [P(-0.03, 0.989), P(-0.052, 0.944), P(-0.066, 0.904), P(-0.062, 0.876)], [0.028, 0.026, 0.017, 0.008]), "pelvis");
   for (const side of [1, -1]) {
     const n = side > 0 ? "l" : "r";
-    m(ellipsoid({ id: `ilium-${n}`, bone: "pelvis", ...BONE }, [0.062, 0.07, 0.012], P(-0.022, 0.94, side * 0.092), compose(aboutU(side * 32), aboutV(side * -22))), "pelvis");
-    m(capsule({ id: `ilium-body-${n}`, bone: "pelvis", ...BONE }, P(-0.05, 0.94, side * 0.034), P(0.0, 0.878, side * 0.084), 0.017, 0.019), "pelvis");
-    m(capsule({ id: `pubis-${n}`, bone: "pelvis", ...BONE }, P(0.004, 0.872, side * 0.082), P(0.05, 0.852, side * 0.012), 0.012, 0.011), "pelvis");
-    m(capsule({ id: `ischium-${n}`, bone: "pelvis", ...BONE }, P(-0.008, 0.868, side * 0.08), P(-0.04, 0.805, side * 0.056), 0.013, 0.014), "pelvis");
+    m(ellipsoid({ id: `ilium-${n}`, bone: "pelvis", ...BONE }, [0.062, 0.07, 0.012], P(-0.022, 0.954, side * 0.092), compose(aboutU(side * 32), aboutV(side * -22))), "pelvis");
+    m(capsule({ id: `ilium-body-${n}`, bone: "pelvis", ...BONE }, P(-0.05, 0.954, side * 0.034), P(0.0, 0.892, side * 0.084), 0.017, 0.019), "pelvis");
+    m(capsule({ id: `pubis-${n}`, bone: "pelvis", ...BONE }, P(0.004, 0.886, side * 0.082), P(0.05, 0.866, side * 0.012), 0.012, 0.011), "pelvis");
+    m(capsule({ id: `ischium-${n}`, bone: "pelvis", ...BONE }, P(-0.008, 0.882, side * 0.08), P(-0.04, 0.819, side * 0.056), 0.013, 0.014), "pelvis");
   }
   m(ellipsoid({ id: "cranium", bone: "head", ...BONE }, [0.07, 0.09, 0.0685], [0.086, 0.011, 0]), "head");
   m(ellipsoid({ id: "face-bones", bone: "head", ...BONE }, [0.04, 0.036, 0.052], [0.032, -0.046, 0]), "head");
@@ -382,7 +384,7 @@ export function structure50(body: readonly Json[]): Json[] {
     m(capsule({ id: `mandible-body-${n}`, bone: "head", ...BONE }, [-0.018, -0.012, side * 0.046], [-0.035, -0.062, side * 0.008], 0.008, 0.009), "head");
   }
   const N = (x: number, y: number): V3 => L("neck", [x, y, 0]);
-  m(tube({ id: "cervical-spine", bone: "neck", ...BONE }, [N(0.08, 1.392), N(0.106, 1.414), N(0.134, 1.437), N(0.158, 1.457)], [0.0125, 0.012, 0.0115, 0.011]), "neck");
+  m(tube({ id: "cervical-spine", bone: "neck", ...BONE }, [N(0.08, 1.406), N(0.106, 1.428), N(0.134, 1.451), N(0.158, 1.471)], [0.0125, 0.012, 0.0115, 0.011]), "neck");
 
   const leg: Json[] = [];
   const lm = (solid: Json, member: string): void => { leg.push(part(solid, member, "member")); };
@@ -417,9 +419,9 @@ export function structure50(body: readonly Json[]): Json[] {
   }
   for (const id of ["cane-shaft", "cane-crook", "cane-crook-nose", "cane-ferrule"]) out.push({ id: `member-${id}`, of: id, member: "cane", part: "member" });
 
-  joint("torso", T(-0.03, 0.975), 0.017);
-  joint("neck", N(0.08, 1.392), 0.0135);
-  joint("head", L("head", [0.158, 1.457, 0]), 0.0125);
+  joint("torso", T(-0.03, 0.989), 0.017);
+  joint("neck", N(0.08, 1.406), 0.0135);
+  joint("head", L("head", [0.158, 1.471, 0]), 0.0125);
   for (const side of ["l", "r"]) {
     const k = side === "l" ? 1 : -1;
     joint(`thigh-${side}`, [0, 0, 0], 0.0245);

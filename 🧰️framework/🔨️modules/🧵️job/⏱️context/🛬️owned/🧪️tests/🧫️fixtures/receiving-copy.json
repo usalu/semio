@@ -1,6 +1,6 @@
 [
-  {"issued": 0, "reserved": 0, "available": 0},
-  {"issued": 32767, "reserved": 16384, "available": 16383},
-  {"issued": 33554432, "reserved": 16777216, "available": 16777216},
-  {"issued": 536870912, "reserved": 16777216, "available": 520093696}
+  {"issued": 0, "reserved": 0, "available": 0, "issuedItems": 0, "reservedItems": 0, "availableItems": 0},
+  {"issued": 32767, "reserved": 16384, "available": 16383, "issuedItems": 63, "reservedItems": 32, "availableItems": 31},
+  {"issued": 33554432, "reserved": 16777216, "available": 16777216, "issuedItems": 2097151, "reservedItems": 1048576, "availableItems": 1048575},
+  {"issued": 536870912, "reserved": 16777216, "available": 520093696, "issuedItems": 8388608, "reservedItems": 1048576, "availableItems": 7340032}
 ]

@@ -219,6 +219,9 @@ where
     /// 🪞️ Delegates to [`StoreOwners::maintenance_retirements_terminal_is_empty`].
     #[inline] pub fn maintenance_retirements_terminal_is_empty(&self) -> bool { self.owners.maintenance_retirements_terminal_is_empty() }
 
+    /// 📭️ Reports queued displaced owners that live maintenance can advance.
+    #[inline] pub fn has_pending_maintenance_retirements(&self) -> bool { self.owners.displaced_retirements.has_queued_owners() }
+
     /// 🪞️ Delegates to [`StoreOwners::maintenance_retirements_demands`].
     #[inline] pub fn maintenance_retirements_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.owners.maintenance_retirements_demands(copy) }
 

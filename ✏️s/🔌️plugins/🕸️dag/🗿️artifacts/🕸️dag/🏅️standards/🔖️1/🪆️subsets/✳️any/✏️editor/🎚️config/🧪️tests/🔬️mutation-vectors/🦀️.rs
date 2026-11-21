@@ -14,7 +14,9 @@ fn language_neutral_mutations_match_json_oracle_and_restore_base() {
         let expected: DagConfig = serde_json::from_value(vector["after"].clone()).unwrap();
         assert_eq!(next, expected);
         let encoded = mutation.encode_op().unwrap();
-        assert_eq!(DagConfigMutation::decode_op(&encoded).unwrap(), mutation);
+        let encoded_hex: String = encoded.iter().map(|byte| format!("{byte:02x}")).collect();
+        assert_eq!(encoded_hex, vector["binaryHex"].as_str().unwrap());
+        dsl::original_receiving::check_receiving_round_trip(&[oracle]).unwrap();
         assert_eq!(DagConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let mut restored = next;
         for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {

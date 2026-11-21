@@ -1,0 +1,17 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-plugin-interpreter-numeric"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Core WebAssembly scalar values and numeric execution semantics"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-interpreter-numeric"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

@@ -1198,6 +1198,107 @@
       "confidence": "low",
       "unit": "1",
       "unitId": "One"
+    },
+    {
+      "key": "g_value_basis",
+      "scope": "E90.08",
+      "kind": "choice",
+      "en": "Permanent action characteristic-value basis",
+      "de": "Grundlage für charakteristische ständige Einwirkungen",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "none",
+          "en": "No permanent action in this case",
+          "de": "Keine ständige Einwirkung in diesem Fall"
+        },
+        {
+          "value": "single-mean",
+          "en": "Small variation and insensitive structure",
+          "de": "Geringe Veränderlichkeit und unempfindliches Tragwerk"
+        },
+        {
+          "value": "normal-bounds",
+          "en": "Two characteristic values from a Gaussian distribution",
+          "de": "Zwei charakteristische Werte aus einer Normalverteilung"
+        },
+        {
+          "value": "prescribed-bounds",
+          "en": "Two values from the project design basis",
+          "de": "Zwei Werte aus der Bemessungsgrundlage"
+        }
+      ],
+      "example": "normal-bounds"
+    },
+    {
+      "key": "q_value_basis",
+      "scope": "E90.08",
+      "kind": "choice",
+      "en": "Variable action characteristic-value basis",
+      "de": "Grundlage für charakteristische veränderliche Einwirkungen",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "none",
+          "en": "No variable action in this case",
+          "de": "Keine veränderliche Einwirkung in diesem Fall"
+        },
+        {
+          "value": "annual-gumbel",
+          "en": "Annual maxima with a qualified Gumbel model",
+          "de": "Jahresmaxima mit bestätigter Gumbel-Verteilung"
+        },
+        {
+          "value": "prescribed",
+          "en": "Prescribed characteristic or nominal value",
+          "de": "Vorgegebener charakteristischer Wert oder Nennwert"
+        }
+      ],
+      "example": "annual-gumbel"
+    },
+    {
+      "key": "g_prescribed_lower",
+      "scope": "E90.08",
+      "kind": "number",
+      "en": "Prescribed lower characteristic value",
+      "de": "Vorgegebener unterer charakteristischer Wert",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "g_prescribed_upper",
+      "scope": "E90.08",
+      "kind": "number",
+      "en": "Prescribed upper characteristic value",
+      "de": "Vorgegebener oberer charakteristischer Wert",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "q_prescribed",
+      "scope": "E90.08",
+      "kind": "number",
+      "en": "Prescribed variable action value",
+      "de": "Vorgegebener Wert der veränderlichen Einwirkung",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "q_probability",
+      "scope": "E90.08",
+      "kind": "number",
+      "en": "Fractile probability for annual maxima",
+      "de": "Fraktilwahrscheinlichkeit für Jahresmaxima",
+      "confidence": "high",
+      "note": "0.98 is the default for ordinary climatic annual maxima.",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.98
     }
   ]
 }

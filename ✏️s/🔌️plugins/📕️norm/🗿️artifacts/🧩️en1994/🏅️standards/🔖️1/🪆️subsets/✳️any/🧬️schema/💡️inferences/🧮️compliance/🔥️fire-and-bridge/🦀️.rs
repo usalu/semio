@@ -129,26 +129,11 @@ fn column_fire(report: &mut CheckReport, doc: &En1994Snapshot, col: &CompositeCo
     let fire_e = part_en1990::fire_column(&col.actions, a, doc.reliability_class);
     let uls_e = part_en1990::uls_column(&col.actions, a, doc.reliability_class);
     let eta_fi = if uls_e.n_n.abs() > 1.0 { (fire_e.n_n.abs() / uls_e.n_n.abs()).clamp(0.0, 1.0) } else { 0.0 };
-    let cover = if col.rebar_cover_m > 1e-6 { col.rebar_cover_m } else { cat::constants::COLUMN_REBAR_EDGE_M };
-    let ratio = col.reinforcement_as_m2 / col.concrete_a_m2.max(1e-9);
     let table = head(a, format!("en1994.1-2.4.2.table-column.{}", col.id), "1994-1-2", "4.2", cref("kind"), "Tabulated data of composite columns", "Tabellarische Daten von Verbundstützen");
-    report.push(match cat::column_fire::check_tabulated(cat::column_fire::COLUMN_TABLE, t_min as u32, eta_fi, col.outer_size_m, cover, ratio) {
-        cat::column_fire::Tabulated::NoData => table.not_applicable(lc(
-            format!("No verified tabulated minimum dimensions for R{t_min:.0} at η_fi = {eta_fi:.2}: the cells of the EN 1994-1-2 column tables are not transcribed yet and are never guessed (NDP registry entry en1994.1-2.tables); the calculation model below applies."),
-            format!("Keine verifizierten tabellarischen Mindestabmessungen für R{t_min:.0} bei η_fi = {eta_fi:.2}: die Zellen der Stützentabellen nach EN 1994-1-2 sind noch nicht übertragen und werden nie geraten (NDP-Register-Eintrag en1994.1-2.tables); es gilt das Rechenmodell unten."),
-        )),
-        cat::column_fire::Tabulated::Evaluated { utilization, verified } => {
-            let mut t = table.utilization(dim(utilization), dim(1.0)).explanation(lc(format!("Minimum dimensions of the table row: utilisation {utilization:.2}."), format!("Mindestabmessungen der Tabellenzeile: Ausnutzung {utilization:.2}.")));
-            if !verified && utilization <= 1.0 {
-                t = t.status(CheckStatus::Warning);
-            }
-            if utilization > 1.0 && col.outer_size_m > 0.0 && utilization.is_finite() {
-                let grown = col.outer_size_m * utilization;
-                t = t.remedy(Remedy::at_least(cref("outerSizeM"), length(col.outer_size_m), length(grown), lc(format!("Increase the outer size to at least {:.0} mm so that the tabulated minimum dimensions are met.", grown * 1e3), format!("Außenmaß auf mindestens {:.0} mm erhöhen, damit die tabellarischen Mindestabmessungen eingehalten sind.", grown * 1e3))));
-            }
-            t
-        }
-    }.build());
+    report.push(table.not_applicable(lc(
+        "Table 4.6 requires the fire design action divided by the corresponding ambient member resistance, together with the specified restraint conditions. Enter those values in the partially encased column design case.",
+        "Tabelle 4.6 erfordert den Quotienten aus Brandbeanspruchung und der zugehörigen Tragfähigkeit bei Normaltemperatur sowie die vorgegebenen Lagerungsbedingungen. Diese Werte im Bemessungsfall für Verbundstützen mit Kammerbeton eingeben.",
+    )).build());
 
     let model = head(a, format!("en1994.1-2.4.3.5.column.{}", col.id), "1994-1-2", "4.3.5", cref("actions"), "Fire resistance of the composite column (simple calculation model)", "Brandwiderstand der Verbundstütze (einfaches Rechenmodell)");
     let Some(g) = part_column::true_geometry(col) else {

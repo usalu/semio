@@ -1,0 +1,7 @@
+[
+  {"mode":"prototype","platform":"darwin","file":".semio-artifact.json","code":"ENOENT","build":true},
+  {"mode":"release","platform":"win32","file":"semio-plugin-describe.exe","code":"ENOENT","build":true},
+  {"mode":"prototype","platform":"linux","file":"compilation/index.json","code":"ENOENT","build":true},
+  {"mode":"prototype","platform":"linux","file":"compilation/receipt.json","code":"EACCES","build":false},
+  {"mode":"release","platform":"linux","file":null,"code":null,"build":false}
+]

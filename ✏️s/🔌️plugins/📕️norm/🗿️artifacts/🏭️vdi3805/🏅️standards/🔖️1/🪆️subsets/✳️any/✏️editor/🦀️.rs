@@ -112,6 +112,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
             semio_s_artifact_norm_vdi3805_examples_failing::blatt_16_fail::source(),
             semio_s_artifact_norm_vdi3805_examples::blatt_19::source(),
             semio_s_artifact_norm_vdi3805_examples_failing::blatt_19_fail::source(),
+            semio_s_artifact_norm_vdi3805_examples::blatt_22::source(),
             semio_s_artifact_norm_vdi3805_examples::blatt_53::source(),
             semio_s_artifact_norm_vdi3805_examples_failing::blatt_53_fail::source(),
             semio_s_artifact_norm_vdi3805_examples::blatt_60::source(),

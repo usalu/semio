@@ -1,0 +1,7 @@
+# Graph Capacity and Disk Observation
+
+2026-11-21 14:46–14:47 local time: `repo capacity status` showed 14,887 MB available, 9,068 MB spare above the floor, graph-plan PID 27947 reserved 2,048 MB and observed 4,318 MB, and show PID 24613 still queued to grow from 2,747 to 14,336 MB. The 11,589 MB increment exceeded reported spare. A newer cargo grant PID 21350 reserved 5,434 MB and was 312 seconds old; cargo PID 10581 also remained active.
+
+The graph-plan process owns slice worker PID 38396. Between 14:47:01 and 14:47:07 the worker CPU time advanced from 197:39.18 to 197:42.27 and its RSS was about 3.0–3.2 GiB. It was physically active, although CPU activity alone does not establish graph publication progress. `repo leases status` reported its graph-facts and graph-state shard 36 leases progressing, with zero waiting leases and zero detected lease deadlock cycles; this is not proof about dependencies outside the lease graph.
+
+Available filesystem bytes fell from 40,441,196,544 to 40,321,159,168 in the six-second sample, below the cold launcher requirement of 60,129,542,144. Both cargo process trees spawned rustc during the sample, and recently modified compiler output was observed in `.cache/b/r/m/u/l/pb246c4/prototype/build`. The new cargo work is a demonstrated consumer of disk, but these observations do not quantify its share of the free-space decline or rule out other consumers. No process, storage, or remote state was changed.

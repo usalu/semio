@@ -26,6 +26,7 @@ export function finish(asset: Json): void {
   for (const reference of [WINTER, ANSUR]) if (!references.some((r) => r.id === reference.id)) references.push(reference);
   asset.structure.assumptions = [STRUCTURE_ASSUMPTION];
   for (const [scale, decisions] of Object.entries(DRAWING)) asset.representations[scale].decisions = decisions;
+  asset.representations["500"].validRange = { ...asset.representations["500"].validRange, maxDenominator: 850 };
 }
 
 /* ---------------------------------------------------------------- thermal */
@@ -64,7 +65,7 @@ export function thermal(asset: Json, kit: Kit, scale: number): Json[] {
 
 /* ---------------------------------------------------------------- structure */
 
-const MASS: readonly (readonly [bone: string, kg: number, x: number, y: number])[] = [["pelvis", 8.266, 0.05, 0], ["torso", 23.895, 0.2101, 0], ["head", 5.136, 0.12, 0], ["upper-arm-l", 2.005, 0.179, 0], ["upper-arm-r", 2.005, 0.179, 0], ["forearm-l", 1.199, 0.1235, 0], ["forearm-r", 1.199, 0.1235, 0], ["thigh-l", 10.478, 0.1761, 0], ["thigh-r", 10.478, 0.1761, 0], ["shank-l", 3.204, 0.194, 0], ["shank-r", 3.204, 0.194, 0], ["foot-l", 1.014, 0.11, -0.0435], ["foot-r", 1.014, 0.11, -0.0435], ["guitar", 2.1, 0.18, 0.02]];
+const MASS: readonly (readonly [bone: string, kg: number, x: number, y: number])[] = [["pelvis", 8.266, 0.05, 0], ["torso", 23.895, 0.2101, 0], ["head", 5.136, 0.12, 0], ["upper-arm-l", 2.005, 0.1887, 0], ["upper-arm-r", 2.005, 0.1887, 0], ["forearm-l", 1.199, 0.1176, 0], ["forearm-r", 1.199, 0.1176, 0], ["thigh-l", 10.478, 0.1761, 0], ["thigh-r", 10.478, 0.1761, 0], ["shank-l", 3.204, 0.194, 0], ["shank-r", 3.204, 0.194, 0], ["foot-l", 1.014, 0.11, -0.0435], ["foot-r", 1.014, 0.11, -0.0435], ["guitar", 2.1, 0.18, 0.02]];
 const B = 0.62;
 
 /** 🦴️ The structure of a scale: the skeleton stated bone by bone in the rest frames of the rig (radii never below half the smallest feature of the scale, parts merged as the scale coarsens), the guitar's load path (strings, bridge, sound box, neck, head) and the stool's own frame by reference. */
@@ -116,14 +117,14 @@ export function structure(asset: Json, scale: number, body: readonly Json[]): Js
   });
   for (const [s, side] of [["l", 1], ["r", -1]] as const) {
     member(`upper-arm-${s}`, (k) => {
-      k.bar(`humerus-${s}`, `upper-arm-${s}`, "bone", B, [[0, 0, 0, r(0.0125)], [0.15, 0.002, 0, r(0.011)], [0.295, 0, 0, r(0.0115)]]);
-      if (mid) k.ell(`humerus-condyles-${s}`, `upper-arm-${s}`, "bone", B, [0.304, 0, 0], [r(0.014), r(0.014), 0.031]);
+      k.bar(`humerus-${s}`, `upper-arm-${s}`, "bone", B, [[0, 0, 0, r(0.0125)], [0.158, 0.002, 0, r(0.011)], [0.311, 0, 0, r(0.0115)]]);
+      if (mid) k.ell(`humerus-condyles-${s}`, `upper-arm-${s}`, "bone", B, [0.32, 0, 0], [r(0.014), r(0.014), 0.031]);
     });
     member(`forearm-${s}`, (k) => {
       if (mid) {
-        k.bar(`radius-${s}`, `forearm-${s}`, "bone", B, [[0.012, 0.004, side * 0.018, r(0.008)], [0.14, 0.002, side * 0.022, r(0.0075)], [0.266, 0, side * 0.016, r(0.011)]]);
-        k.bar(`ulna-${s}`, `forearm-${s}`, "bone", B, [[-0.022, -0.014, side * -0.008, r(0.011)], [0.02, -0.004, side * -0.014, r(0.0105)], [0.264, 0, side * -0.019, r(0.0075)]]);
-      } else k.bar(`forearm-bones-${s}`, `forearm-${s}`, "bone", B, [[0, 0, 0, r(0.014)], [0.266, 0, 0, r(0.012)]]);
+        k.bar(`radius-${s}`, `forearm-${s}`, "bone", B, [[0.012, 0.004, side * 0.018, r(0.008)], [0.133, 0.002, side * 0.022, r(0.0075)], [0.253, 0, side * 0.016, r(0.011)]]);
+        k.bar(`ulna-${s}`, `forearm-${s}`, "bone", B, [[-0.022, -0.014, side * -0.008, r(0.011)], [0.02, -0.004, side * -0.014, r(0.0105)], [0.251, 0, side * -0.019, r(0.0075)]]);
+      } else k.bar(`forearm-bones-${s}`, `forearm-${s}`, "bone", B, [[0, 0, 0, r(0.014)], [0.253, 0, 0, r(0.012)]]);
     });
     member(`hand-${s}`, (k) => {
       if (scale === 500) k.bar(`hand-bones-${s}`, `hand-${s}`, "bone", B, [[0, 0.004, 0, r(0.02)], [0.1, 0.012, 0, r(0.02)]]);
@@ -131,11 +132,11 @@ export function structure(asset: Json, scale: number, body: readonly Json[]): Js
         k.ell(`carpals-${s}`, `hand-${s}`, "bone", B, [0.014, 0, 0], [0.015, 0.009, 0.025]);
         const flex = GRIPS[s === "l" ? "fret" : "strum"].flex;
         [0.03, 0.0095, -0.011, -0.03].forEach((w, i) => {
-          k.bar(`metacarpal-${i + 1}-${s}`, `hand-${s}`, "bone", B, [[0.028, 0, side * w * 0.55, 0.0042], [0.09, -0.003, side * w, 0.0042]]);
+          k.bar(`metacarpal-${i + 1}-${s}`, `hand-${s}`, "bone", B, [[0.028, 0, side * w * 0.55, 0.0042], [0.098, -0.003, side * w, 0.0042]]);
           k.bar(`phalanges-${i + 1}-${s}`, `hand-${s}`, "bone", B, fingerPath(side * w, [0.94, 1, 0.95, 0.78][i]!, 0.0041, flex[i] as [number, number, number]).slice(1).map((p) => [p[0]!, p[1]!, p[2]!, 0.004]));
         });
         k.bar(`thumb-bones-${s}`, `hand-${s}`, "bone", B, GRIPS[s === "l" ? "fret" : "strum"].thumb.map(([u, p, w]) => [u, p, side * w, 0.0045]));
-      } else k.loft(`hand-bones-${s}`, `hand-${s}`, "bone", B, scale === 100 ? [[0.004, 0, 0, 0.024, r(0.008)], [0.05, 0.002, 0, 0.032, r(0.008)], [0.094, 0.004, 0, 0.034, r(0.008)]] : [[0.004, 0.004, 0, 0.026, r(0.01)], [0.09, 0.008, 0, 0.03, r(0.01)]], undefined, { e: 3 });
+      } else k.loft(`hand-bones-${s}`, `hand-${s}`, "bone", B, scale === 100 ? [[0.004, 0, 0, 0.024, r(0.008)], [0.05, 0.002, 0, 0.032, r(0.008)], [0.1, 0.004, 0, 0.034, r(0.008)]] : [[0.004, 0.004, 0, 0.026, r(0.01)], [0.09, 0.008, 0, 0.03, r(0.01)]], undefined, { e: 3 });
     });
     member(`thigh-${s}`, (k) => {
       if (mid) k.bar(`femur-neck-${s}`, `thigh-${s}`, "bone", B, [[0, 0, 0, r(0.016)], [0.02, 0, side * 0.04, r(0.014)], [0.034, 0, side * 0.068, r(0.02)]]);
@@ -152,7 +153,7 @@ export function structure(asset: Json, scale: number, body: readonly Json[]): Js
       if (mid) k.ell(`calcaneus-${s}`, `foot-${s}`, "bone", B, [-0.034, -0.034, 0], [0.04, 0.022, 0.018]);
       k.loft(`tarsals-${s}`, `foot-${s}`, "bone", B, mid ? [[-0.002, -0.014, 0, 0.022, 0.018], [0.06, -0.036, 0, 0.03, 0.012], [0.132, -0.052, 0, 0.04, r(0.0085)]] : scale === 200 ? [[-0.05, -0.03, 0, 0.022, 0.02], [0.03, -0.03, 0, 0.03, 0.018], [0.2, -0.05, 0, 0.034, r(0.012)]] : [[-0.04, -0.04, 0, 0.038, 0.038], [0.19, -0.04, 0, 0.038, 0.038]]);
     });
-    member(`toe-${s}`, (k) => k.loft(`toe-bones-${s}`, `toe-${s}`, "bone", B, mid ? [[0, 0.027, 0, 0.038, r(0.007)], [0.04, 0.024, 0, 0.034, r(0.0065)], [0.074, 0.021, 0, 0.026, r(0.006)]] : scale === 200 ? [[0.004, 0.024, 0, 0.034, r(0.01)], [0.078, 0.022, 0, 0.026, r(0.01)]] : [[0.006, 0.0385, 0, 0.038, 0.038], [0.086, 0.0385, 0, 0.038, 0.038]], undefined, { e: 3 }));
+    member(`toe-${s}`, (k) => k.loft(`toe-bones-${s}`, `toe-${s}`, "bone", B, mid ? [[0, 0.027, 0, 0.038, r(0.007)], [0.04, 0.024, 0, 0.034, r(0.0065)], [0.074, 0.021, 0, 0.026, r(0.006)]] : scale === 200 ? [[0.004, 0.024, 0, 0.034, r(0.01)], [0.066, 0.022, 0, 0.026, r(0.01)]] : [[-0.032, 0.0385, 0, 0.04, 0.04], [0.046, 0.0385, 0, 0.04, 0.04]], undefined, { e: 3 }));
   }
   const joints: [string, number, number[]?][] = [["torso", 0.018, [0, 0.04, 0]], ["head", 0.0135, [0, 0.032, 0]], ["upper-arm-l", 0.0235], ["upper-arm-r", 0.0235], ["forearm-l", 0.0165], ["forearm-r", 0.0165], ["hand-l", 0.0125], ["hand-r", 0.0125], ["thigh-l", 0.0245], ["thigh-r", 0.0245], ["shank-l", 0.02], ["shank-r", 0.02], ["foot-l", 0.0165], ["foot-r", 0.0165], ["toe-l", 0.0095, [0, 0.026, 0]], ["toe-r", 0.0095, [0, 0.026, 0]], ["guitar", 0.012]];
   for (const [bone, radius, at] of joints) {

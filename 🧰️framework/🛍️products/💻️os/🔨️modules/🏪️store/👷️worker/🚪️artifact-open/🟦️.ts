@@ -1,5 +1,7 @@
+import { localAtomicDocumentFrames } from "../🧩️atomic-document-relay/🟦️.ts";
+import { parseDocumentBackboneTransportMessage } from "../../../../../../🔨️modules/🛰️backbone/🔀️message/🟦️.ts";
 import type { ArtifactActorConfig } from "../../../../🟦️";
-import { parseDocumentBackboneMessage } from "../../../../🟦️";
+
 import type { MutationEnvelope } from "@semio-tech/framework-replication";
 import { latestWins } from "@semio-tech/framework";
 import { documentRuntimeKeyForConfig, hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
@@ -19,10 +21,18 @@ export function openArtifact(request: ArtifactActorConfig & { readonly clientIns
   const channel = new BroadcastChannel(`semio-doc-${runtimeKey}`);
   const state = newArtifactState(config, runtimeKey, channel, request.clientInstanceId ?? crypto.randomUUID());
   artifacts.set(runtimeKey, state);
-  channel.onmessage = (messageEvent) => {
+  channel.onmessage = async (messageEvent) => {
     const value = messageEvent.data;
     if (typeof value === "object" && value !== null && !Array.isArray(value) && (value as { kind?: unknown }).kind === "documentBackbone" && (value as { message?: unknown }).message instanceof Uint8Array) {
-      const parsed = parseDocumentBackboneMessage((value as { message: Uint8Array }).message);
+      const parsed = parseDocumentBackboneTransportMessage((value as { message: Uint8Array }).message);
+      if (parsed.kind === "atomic-part") {
+        if (hub !== null) throw new Error("atomic backbone: Hub binding does not admit grouped history");
+        const sealed = await localAtomicDocumentFrames(state, parsed, "incoming");
+        for (const message of sealed?.frames ?? []) {
+          emitEvent(state, { kind: "documentBackbone", message });
+        }
+        return;
+      }
       if (parsed.envelopes.length > 0 && parsed.envelopes.every((envelope) => envelope.document_id === state.config.documentId)) emitEvent(state, { kind: "documentBackbone", message: parsed.message });
       return;
     }

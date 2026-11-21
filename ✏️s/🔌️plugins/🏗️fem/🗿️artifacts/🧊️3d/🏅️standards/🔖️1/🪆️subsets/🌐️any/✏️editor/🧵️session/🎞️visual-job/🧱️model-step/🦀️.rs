@@ -5,7 +5,7 @@ use super::*;
 //#region 📦️PageVisualJob
 pub(super) struct Fem3dMeshedSolid {
     pub(super) solid_index: usize,
-    pub(super) node_ids: PagedSlots<String, MAXIMUM_FIELDS>,
+    pub(super) node_indices: PagedSlots<usize, MAXIMUM_FIELDS>,
     pub(super) top_offset: usize,
     pub(super) points: PagedSlots<[f64; 2], MAXIMUM_FIELDS>,
     pub(super) tris: PagedSlots<[u32; 3], MAXIMUM_ANALYSIS_ELEMENTS>,
@@ -59,7 +59,7 @@ pub struct Fem3dNumericalChild {
     pub(super) scalar: Fem3dSolverScalar,
     pub(super) node_values: PagedSlots<NodeValues, MAXIMUM_FIELDS>,
     pub(super) free_order: usize,
-    pub(super) rhs: MountedScalarSlots,
+    pub(super) equation_values: MountedScalarSlots,
     pub request: Fem3dResultRequest,
     pub(super) source_case: usize,
     pub(super) source_factor: f64,
@@ -72,7 +72,6 @@ pub struct Fem3dNumericalChild {
     pub(super) load_node_indices: [usize; 2],
     pub(super) load_positions: [[f64; 3]; 2],
     pub(super) reaction_entry: usize,
-    pub(super) reaction_accumulator: f64,
     pub(super) solid_cursor: usize,
     pub(super) hole_cursor: usize,
     pub(super) point_cursor: usize,
@@ -80,7 +79,6 @@ pub struct Fem3dNumericalChild {
     pub(super) mesh: Option<MeshJob>,
     pub(super) solid_points: PagedSlots<[f64; 2], MAXIMUM_FIELDS>,
     pub(super) solid_tris: PagedSlots<[u32; 3], MAXIMUM_ANALYSIS_ELEMENTS>,
-    pub(super) solid_node_ids: PagedSlots<String, MAXIMUM_FIELDS>,
     pub(super) solid_node_analysis_indices: PagedSlots<usize, MAXIMUM_FIELDS>,
     pub(super) volume_node_cursor: usize,
     pub(super) pending_node_id: Option<String>,
@@ -175,7 +173,7 @@ impl Fem3dNumericalChild {
             scalar: Fem3dSolverScalar::default(),
             node_values: PagedSlots::new(),
             free_order: 0,
-            rhs: MountedScalarSlots::new(),
+            equation_values: MountedScalarSlots::new(),
             request: Fem3dResultRequest::default(),
             source_case: 0,
             source_factor: 1.0,
@@ -188,7 +186,6 @@ impl Fem3dNumericalChild {
             load_node_indices: [0; 2],
             load_positions: [[0.0; 3]; 2],
             reaction_entry: 0,
-            reaction_accumulator: 0.0,
             solid_cursor: 0,
             hole_cursor: 0,
             point_cursor: 0,
@@ -196,7 +193,6 @@ impl Fem3dNumericalChild {
             mesh: None,
             solid_points: PagedSlots::new(),
             solid_tris: PagedSlots::new(),
-            solid_node_ids: PagedSlots::new(),
             solid_node_analysis_indices: PagedSlots::new(),
             volume_node_cursor: 0,
             pending_node_id: None,
@@ -283,7 +279,7 @@ impl Fem3dNumericalChild {
             fields.applied[axis] += value;
         }
         if let Some(equation) = fields.equations[axis] {
-            self.rhs.add_at(equation, value).map_err(|_| b"fem3d.numerical-rhs-index".to_vec())?;
+            self.equation_values.add_at(equation, value).map_err(|_| b"fem3d.numerical-rhs-index".to_vec())?;
         }
         Ok(())
     }
@@ -396,6 +392,7 @@ impl Fem3dNumericalChild {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
                 if self.solid_domain.as_mut().ok_or_else(|| b"fem3d.numerical-solid-domain-owner".to_vec())?.admit_hole_one(solid.holes.len()).map_err(|_| b"fem3d.numerical-solid-holes-admission".to_vec())? {
                     self.hole_cursor = 0;
+                    self.point_cursor = 0;
                     self.stage = Fem3dNumericalStage::SolidDomainHoleReserve;
                 }
             }
@@ -467,19 +464,6 @@ impl Fem3dNumericalChild {
                     self.tet_cursor += 1;
                 }
                 self.stage = Fem3dNumericalStage::SolidTet;
-            }
-            Fem3dNumericalStage::SolidIndicesRetire => {
-                if self.solid_node_analysis_indices.pop().is_some() {
-                    return Ok(false);
-                }
-                let (closed, _, bytes) = self.solid_node_analysis_indices.close_step(context.retained_grant().maximum_release_bytes);
-                if bytes != 0 {
-                    context.consume_retained(RetainedCloneProgress { released_bytes: bytes, ..Default::default() }).map_err(|_| b"fem3d.numerical-solid-node-index-release".to_vec())?;
-                }
-                if !closed {
-                    return Ok(false);
-                }
-                self.stage = Fem3dNumericalStage::SolidCommit;
             }
             Fem3dNumericalStage::SolidCommit => return self.model_solid_commit(doc),
             Fem3dNumericalStage::SupportDofReserve => {
@@ -610,7 +594,10 @@ impl Fem3dNumericalChild {
         };
         let domain = self.solid_domain.as_mut().ok_or_else(|| b"fem3d.numerical-solid-domain-owner".to_vec())?;
         if self.point_cursor == 0 {
-            domain.begin_hole().map_err(|_| b"fem3d.numerical-solid-hole-slot".to_vec())?;
+            let opened = domain.begin_hole().map_err(|_| b"fem3d.numerical-solid-hole-slot".to_vec())?;
+            if opened != self.hole_cursor {
+                return Err(b"fem3d.numerical-solid-hole-order".to_vec());
+            }
             self.point_cursor = 1;
             return Ok(false);
         }
@@ -631,14 +618,13 @@ impl Fem3dNumericalChild {
             return Err(b"fem3d.numerical-solid-capacity".to_vec());
         }
         match self.point_cursor {
-            0 if self.solid_node_ids.admit_in(node_count, context).map_err(|_| b"fem3d.numerical-solid-node-id-admission".to_vec())? => self.point_cursor += 1,
-            1 if self.solid_node_analysis_indices.admit_in(node_count, context).map_err(|_| b"fem3d.numerical-solid-node-index-admission".to_vec())? => self.point_cursor += 1,
-            2 if model.admit_node_in(model.nodes_len() + node_count, context).map_err(|_| b"fem3d.numerical-solid-node-admission".to_vec())?.complete => self.point_cursor += 1,
-            3 if self.analysis_node_ids.admit_in(self.analysis_node_ids.len() + node_count, context).map_err(|_| b"fem3d.numerical-solid-analysis-id-admission".to_vec())? => self.point_cursor += 1,
-            4 if self.node_values.admit_in(self.node_values.len() + node_count, context).map_err(|_| b"fem3d.numerical-solid-node-values-admission".to_vec())? => self.point_cursor += 1,
-            5 if model.admit_element_in(model.elements_len() + tet_count, context).map_err(|_| b"fem3d.numerical-solid-tet-admission".to_vec())?.complete => self.point_cursor += 1,
+            0 if self.solid_node_analysis_indices.admit_in(node_count, context).map_err(|_| b"fem3d.numerical-solid-node-index-admission".to_vec())? => self.point_cursor += 1,
+            1 if model.admit_node_in(model.nodes_len() + node_count, context).map_err(|_| b"fem3d.numerical-solid-node-admission".to_vec())?.complete => self.point_cursor += 1,
+            2 if self.analysis_node_ids.admit_in(self.analysis_node_ids.len() + node_count, context).map_err(|_| b"fem3d.numerical-solid-analysis-id-admission".to_vec())? => self.point_cursor += 1,
+            3 if self.node_values.admit_in(self.node_values.len() + node_count, context).map_err(|_| b"fem3d.numerical-solid-node-values-admission".to_vec())? => self.point_cursor += 1,
+            4 if model.admit_element_in(model.elements_len() + tet_count, context).map_err(|_| b"fem3d.numerical-solid-tet-admission".to_vec())?.complete => self.point_cursor += 1,
             _ => {
-                if self.point_cursor < 6 {
+                if self.point_cursor < 5 {
                     return Ok(false);
                 }
                 self.volume_node_cursor = 0;
@@ -663,7 +649,6 @@ impl Fem3dNumericalChild {
         } else if let Some(node) = self.model.as_ref().and_then(|model| model.node(self.lookup_cursor)) {
             let point = self.solid_point(doc, self.volume_node_cursor)?;
             if (node.pos[0] - point[0]).abs() < 1e-9 && (node.pos[1] - point[1]).abs() < 1e-9 && (node.pos[2] - point[2]).abs() < 1e-9 {
-                self.pending_node_id = Some(node.id.clone());
                 self.pending_node_index = self.lookup_cursor;
                 self.pending_node_needs_analysis = false;
                 self.lookup_cursor = 0;
@@ -680,28 +665,19 @@ impl Fem3dNumericalChild {
 
     /// 🪚️ Runs the `solid node id` stage of `step_model`.
     fn model_solid_node_id(&mut self) -> Result<bool, Vec<u8>> {
-        let id = self.pending_node_id.as_ref().ok_or_else(|| b"fem3d.numerical-solid-node-owner".to_vec())?;
-        match self.point_cursor {
-            0 => {
-                if self.pending_node_needs_analysis {
-                    self.analysis_node_ids.push(id.clone()).map_err(|_| b"fem3d.numerical-solid-analysis-id-slot".to_vec())?;
-                    self.node_values.push(NodeValues::default()).map_err(|_| b"fem3d.numerical-solid-node-values-slot".to_vec())?;
-                }
-                self.point_cursor = 1;
-            }
-            1 => {
-                self.solid_node_ids.push(id.clone()).map_err(|_| b"fem3d.numerical-solid-node-id-slot".to_vec())?;
-                self.point_cursor = 2;
-            }
-            _ => {
-                self.solid_node_analysis_indices.push(self.pending_node_index).map_err(|_| b"fem3d.numerical-solid-node-index-slot".to_vec())?;
-                self.pending_node_id = None;
-                self.point_cursor = 0;
-                self.volume_node_cursor += 1;
-                self.lookup_cursor = 0;
-                self.stage = Fem3dNumericalStage::SolidNodeLookup;
-            }
+        if self.pending_node_needs_analysis && self.point_cursor == 0 {
+            let id = self.pending_node_id.as_ref().ok_or_else(|| b"fem3d.numerical-solid-node-owner".to_vec())?;
+            self.analysis_node_ids.push(id.clone()).map_err(|_| b"fem3d.numerical-solid-analysis-id-slot".to_vec())?;
+            self.node_values.push(NodeValues::default()).map_err(|_| b"fem3d.numerical-solid-node-values-slot".to_vec())?;
+            self.point_cursor = 1;
+            return Ok(false);
         }
+        self.solid_node_analysis_indices.push(self.pending_node_index).map_err(|_| b"fem3d.numerical-solid-node-index-slot".to_vec())?;
+        self.pending_node_id = None;
+        self.point_cursor = 0;
+        self.volume_node_cursor += 1;
+        self.lookup_cursor = 0;
+        self.stage = Fem3dNumericalStage::SolidNodeLookup;
         Ok(false)
     }
 
@@ -709,7 +685,7 @@ impl Fem3dNumericalChild {
     fn model_solid_tet(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
         let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
         if self.point_cursor == solid.layers {
-            self.stage = Fem3dNumericalStage::SolidIndicesRetire;
+            self.stage = Fem3dNumericalStage::SolidCommit;
         } else if self.tet_cursor == self.solid_tris.len() {
             self.point_cursor += 1;
             self.tet_cursor = 0;
@@ -717,12 +693,10 @@ impl Fem3dNumericalChild {
         } else {
             let material = (*doc.materials).get(self.resolved_solid_material).ok_or_else(|| b"fem3d.numerical-solid-material".to_vec())?;
             let indices = self.solid_tet_indices()?;
-            let nodes = [
-                self.solid_node_ids.get(indices[0]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
-                self.solid_node_ids.get(indices[1]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
-                self.solid_node_ids.get(indices[2]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
-                self.solid_node_ids.get(indices[3]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,
-            ];
+            let node_id = |index| self.solid_node_analysis_indices.get(index)
+                .and_then(|analysis| self.analysis_node_ids.get(*analysis)).cloned()
+                .ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec());
+            let nodes = [node_id(indices[0])?, node_id(indices[1])?, node_id(indices[2])?, node_id(indices[3])?];
             let positions = [self.solid_point(doc, indices[0])?, self.solid_point(doc, indices[1])?, self.solid_point(doc, indices[2])?, self.solid_point(doc, indices[3])?];
             let a = [positions[1][0] - positions[0][0], positions[1][1] - positions[0][1], positions[1][2] - positions[0][2]];
             let b = [positions[2][0] - positions[0][0], positions[2][1] - positions[0][1], positions[2][2] - positions[0][2]];
@@ -742,13 +716,13 @@ impl Fem3dNumericalChild {
         let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
         let retained = Fem3dMeshedSolid {
             solid_index: self.solid_cursor,
-            node_ids: std::mem::replace(&mut self.solid_node_ids, PagedSlots::new()),
+            node_indices: std::mem::replace(&mut self.solid_node_analysis_indices, PagedSlots::new()),
             top_offset: solid.layers * self.solid_points.len(),
             points: std::mem::replace(&mut self.solid_points, PagedSlots::new()),
             tris: std::mem::replace(&mut self.solid_tris, PagedSlots::new()),
         };
         if let Err(retained) = self.meshed_solids.push(retained) {
-            self.solid_node_ids = retained.node_ids;
+            self.solid_node_analysis_indices = retained.node_indices;
             self.solid_points = retained.points;
             self.solid_tris = retained.tris;
             return Err(b"fem3d.numerical-meshed-solid-slot".to_vec());

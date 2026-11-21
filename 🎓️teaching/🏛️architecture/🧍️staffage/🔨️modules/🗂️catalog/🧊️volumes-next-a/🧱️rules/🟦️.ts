@@ -134,6 +134,12 @@ export function sortedExtents(solid: VolumeSolid): readonly [number, number, num
       extents = [solid.to - solid.from, span(solid.profile.map((q) => q[0])) * taper, span(solid.profile.map((q) => q[1])) * taper];
       break;
     }
+    case "polyhedron": {
+      const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+      for (const p of solid.vertices) for (let i = 0; i < 3; i++) { lo[i] = Math.min(lo[i]!, p[i]!); hi[i] = Math.max(hi[i]!, p[i]!); }
+      extents = [hi[0]! - lo[0]!, hi[1]! - lo[1]!, hi[2]! - lo[2]!];
+      break;
+    }
     case "loft":
       extents = [
         Math.hypot(...solid.sections[0]!.at.map((v, i) => solid.sections[solid.sections.length - 1]!.at[i]! - v)),

@@ -325,3 +325,51 @@ Most of these were seen on the candidate document, which is identical to the spl
 - **Mass.** The model weighs 7.8 kg, against 4.5 kg before. That is real for a solid-beech steel chair, but heavier than a bentwood 214.
 - **Catalog index.** The index entry still lists `widthM` 0.44 (see section 3).
 - **Not run.** The repo test suites were not run, only the checks of the brief.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-cafe-chair-body.py` (the round-3 body with the round-5 correction stated by hand), `r5-cafe-chair-build.py` (round-3 builder fed with it; `r3-cafe-chair-apply.py` then wrote "members: none" because the roots and the 2D are unchanged), `r5-diffvol.py`.
+
+State found: the catalog was INVALID under the current validator: `volumes-slender` refused `post-l`/`post-r` at 1:100, 1:200 (20.0 x, rounded below 20) and 1:500 (19.9 x).
+
+### Reference (Thonet 214, Fermob Bistro, Café VII data sheet, Neufert)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+| --- | --- | --- | --- |
+| Overall height | 0.82-0.88 m | 0.882 m (cap top) | inside |
+| Seat height front / rear | 0.45-0.47 m | 0.467 / 0.452 m | 0 % |
+| Overall depth | 0.50-0.52 m | 0.487 m | -2.6 % to the low end |
+| Overall width | 0.42-0.45 m | 0.445 m | 0 % |
+| Seat | 0.40-0.43 m, notched at the posts | 0.43 front / 0.398 rear x 0.43 m, 20 mm beech | 0 % |
+| Apron | 18-22 x 40-60 mm | 18 x 45 mm | 0 % |
+| Back to seat | 95-105 degrees | 106 degrees (post rake 8 degrees) | +1 % |
+| Back board | 15-18 mm, curved | 170 x 410 x 18 mm, 26 mm sagitta | 0 % |
+| Rear leg rake | 6-10 degrees, foot under the back top | 7.7 degrees, foot 0.3 mm off the plumb of the post top | 0 % |
+| Tube | Ø16-25 x 1.5-2 mm, bend R 2-4 D | Ø22 x 2, R 80 mm (3.6 D), stretchers Ø16 | 0 % |
+| Glides / caps | Ø22-25 x 8-10 mm | Ø25 x 10 mm, 8 mm caps | 0 % |
+
+Rig: legs, stretcher, seat and back bones on the real tube axes and the seat plane (unchanged since round 3, checked against the solids).
+
+### Grades (opened with the Read tool)
+
+| Scale | Body before -> after | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | A- -> A- (pose `tilted-on-two-legs` closed, glides lift, nothing torn) | A- | A- |
+| 1:100 | A- but INVALID (slender posts) -> A- | A- | A- |
+| 1:200 | B+ INVALID -> B+ | B+ | B+ |
+| 1:500 | B+ INVALID (crisp 75 mm seat and back slabs on true tubes) -> B+ | B+ | B+ |
+
+Opened: 1:50 body (before), 1:500 body (after), 1:50 `tilted-on-two-legs`. Rendered but not opened: the other poses, the `tip-back` frame, thermal/structure of every scale and the 2D (`🗑️generated/r5-cafe-chair/after/`).
+
+### Changes
+
+- `post-l`/`post-r` at 1:100, 1:200, 1:500: the domed end caps merge into the tubes at these scales (their decisions say so), so the post loft now runs to the cap top (last section 8 mm further along the post axis, 0.882 m). Slenderness 20.0/19.9 -> 20.4/20.3; thermal and structure follow by reference.
+
+### Checks
+
+`r3-validate.ts --file` (candidate) and `--catalog-only` after the splice: VALID (schema 0, validateAsset 0, checkVolumes 0 on the candidate); `volumes-check.ts --product`: PASS (0 fail); spliced with `volumes-insert.py`.
+
+### Remaining
+
+- Seat board edges are a straight extrusion (3 mm round-over below the 7.5 mm feature); back fixings only as structural joints.
+- Rig is a tree: the closed frame (stretchers welded at both ends) is not representable by the solver.

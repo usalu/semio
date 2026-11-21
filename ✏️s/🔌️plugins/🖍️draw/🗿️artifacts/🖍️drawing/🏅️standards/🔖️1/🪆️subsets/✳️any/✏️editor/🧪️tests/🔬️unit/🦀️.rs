@@ -62,7 +62,7 @@ use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
     /// 🧰️ Captures the host-owned active utility in one operation's invocation context.
     pub fn meta_with_utility(utility: &str) -> ActionMeta {
         let mut action_meta = meta("local");
-        action_meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
+        action_meta.view_state = Some(ViewModel { active_utility_id: Some(utility.into()), ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) }.into());
         action_meta
     }
 }
@@ -86,9 +86,14 @@ mod clipboard_runtime;
 use semio_s_artifact_draw_drawing_model::layer_id;
 use semio_s_artifact_draw_drawing_model::default_drawing_document;
 use semio_s_artifact_draw_drawing_examples::demo::semio_drawing_example_json;
-use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::{snapshot::DrawingSnapshot, DrawingLayerNode, DRAWING_DOCUMENT_SCHEMA};
 use semio_plugin::kernel::Effect;
-use semio_plugin::{artifact_app_laws as artifact_laws, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
+use semio_plugin::{artifact_app_laws as artifact_laws, ConfigView, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
+
+fn retire_owned_fixture_view(meta: semio_plugin::ActionMeta) {
+    let view = std::sync::Arc::try_unwrap(meta.view_state.expect("fixture view")).expect("the closed app returned all aliases of its fixture view");
+    semio_s_artifact_draw_drawing_scene::preparation::testkit::scene_wallet().close_owned(view);
+}
 use context::{drawing_app, meta_with_utility, DrawingApp, DrawingAppFixture};
 
 #[path = "✉️envelope-laws/🦀️.rs"]

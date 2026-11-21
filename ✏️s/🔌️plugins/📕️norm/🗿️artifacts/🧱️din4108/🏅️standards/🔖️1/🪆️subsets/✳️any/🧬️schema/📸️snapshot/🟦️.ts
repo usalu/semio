@@ -3,6 +3,25 @@
  * @see ./🔣️.json */
 import { normWireArray, normWireBoolean, normWireLiteral, normWireNumber, normWireObject, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
+export interface CaseNumber {
+  id: string;
+  value: number;
+}
+
+export interface CaseText {
+  id: string;
+  value: string;
+}
+
+export interface CaseRow {
+  id: string;
+  labelEn: string;
+  labelDe: string;
+  entryId: string;
+  numbers: CaseNumber[];
+  texts: CaseText[];
+}
+
 export interface Din4108Snapshot {
   climateZone: Din4108ClimateZoneDe;
   usage: string;
@@ -14,6 +33,7 @@ export interface Din4108Snapshot {
   zones: Din4108ThermalZone[];
   elements: Din4108EnvelopeElement[];
   thermalBridges: Din4108ThermalBridge[];
+  cases: CaseRow[];
 }
 
 export interface Din4108LayerDocument {
@@ -80,7 +100,7 @@ export interface Din4108LayerSegment {
   density: number;
 }
 
-export const parseDin4108Snapshot: NormWireReader<Din4108Snapshot> = normWireObject<Din4108Snapshot>({ climateZone: normWireRequired(normWireRef(() => parseDin4108ClimateZoneDe)), usage: normWireRequired(normWireString), tIntC: normWireRequired(normWireNumber), rhInt: normWireRequired(normWireNumber), hasMechanicalVentilation: normWireRequired(normWireBoolean), airtightnessN50: normWireRequired(normWireNumber), bb2DetailsConform: normWireRequired(normWireBoolean), zones: normWireRequired(normWireArray(normWireRef(() => parseDin4108ThermalZone))), elements: normWireRequired(normWireArray(normWireRef(() => parseDin4108EnvelopeElement))), thermalBridges: normWireRequired(normWireArray(normWireRef(() => parseDin4108ThermalBridge))) });
+export const parseDin4108Snapshot: NormWireReader<Din4108Snapshot> = normWireObject<Din4108Snapshot>({ climateZone: normWireRequired(normWireRef(() => parseDin4108ClimateZoneDe)), usage: normWireRequired(normWireString), tIntC: normWireRequired(normWireNumber), rhInt: normWireRequired(normWireNumber), hasMechanicalVentilation: normWireRequired(normWireBoolean), airtightnessN50: normWireRequired(normWireNumber), bb2DetailsConform: normWireRequired(normWireBoolean), zones: normWireRequired(normWireArray(normWireRef(() => parseDin4108ThermalZone))), elements: normWireRequired(normWireArray(normWireRef(() => parseDin4108EnvelopeElement))), thermalBridges: normWireRequired(normWireArray(normWireRef(() => parseDin4108ThermalBridge))), cases: normWireRequired(normWireArray(normWireRef(() => parseCaseRow))) });
 export const parseDin4108LayerDocument: NormWireReader<Din4108LayerDocument> = normWireObject<Din4108LayerDocument>({ id: normWireRequired(normWireString), materialId: normWireRequired(normWireString), thicknessM: normWireRequired(normWireNumber), lambda: normWireRequired(normWireNumber), mu: normWireRequired(normWireNumber), density: normWireRequired(normWireNumber), applicationType: normWireRequired(normWireString), compressiveClass: normWireRequired(normWireString), waterClass: normWireRequired(normWireString), tensileClass: normWireRequired(normWireString), acousticClass: normWireRequired(normWireString), segments: normWireRequired(normWireArray(normWireRef(() => parseDin4108LayerSegment))) });
 export const parseDin4108ThermalZone: NormWireReader<Din4108ThermalZone> = normWireObject<Din4108ThermalZone>({ id: normWireRequired(normWireString), floorAreaM2: normWireRequired(normWireNumber), heaviness: normWireRequired(normWireString), nightVentilation: normWireRequired(normWireString), windows: normWireRequired(normWireArray(normWireRef(() => parseDin4108ZoneWindow))) });
 export const parseDin4108ThermalBridge: NormWireReader<Din4108ThermalBridge> = normWireObject<Din4108ThermalBridge>({ id: normWireRequired(normWireString), psi: normWireRequired(normWireNumber), lengthM: normWireRequired(normWireNumber), bb2Type: normWireRequired(normWireString) });
@@ -88,3 +108,6 @@ export const parseDin4108ClimateZoneDe: NormWireReader<Din4108ClimateZoneDe> = n
 export const parseDin4108EnvelopeElement: NormWireReader<Din4108EnvelopeElement> = normWireObject<Din4108EnvelopeElement>({ id: normWireRequired(normWireString), kind: normWireRequired(normWireString), zoneId: normWireRequired(normWireString), orientationDeg: normWireRequired(normWireNumber), inclinationDeg: normWireRequired(normWireNumber), adjacent: normWireRequired(normWireString), areaM2: normWireRequired(normWireNumber), deltaUG: normWireRequired(normWireNumber), deltaUF: normWireRequired(normWireNumber), deltaUR: normWireRequired(normWireNumber), layers: normWireRequired(normWireArray(normWireRef(() => parseDin4108LayerDocument))) });
 export const parseDin4108ZoneWindow: NormWireReader<Din4108ZoneWindow> = normWireObject<Din4108ZoneWindow>({ id: normWireRequired(normWireString), orientation: normWireRequired(normWireString), inclinationDeg: normWireRequired(normWireNumber), areaM2: normWireRequired(normWireNumber), gValue: normWireRequired(normWireNumber), shadingFc: normWireRequired(normWireNumber) });
 export const parseDin4108LayerSegment: NormWireReader<Din4108LayerSegment> = normWireObject<Din4108LayerSegment>({ id: normWireRequired(normWireString), materialId: normWireRequired(normWireString), fraction: normWireRequired(normWireNumber), lambda: normWireRequired(normWireNumber), mu: normWireRequired(normWireNumber), density: normWireRequired(normWireNumber) });
+export const parseCaseNumber: NormWireReader<CaseNumber> = normWireObject<CaseNumber>({ id: normWireRequired(normWireString), value: normWireRequired(normWireNumber) });
+export const parseCaseText: NormWireReader<CaseText> = normWireObject<CaseText>({ id: normWireRequired(normWireString), value: normWireRequired(normWireString) });
+export const parseCaseRow: NormWireReader<CaseRow> = normWireObject<CaseRow>({ id: normWireRequired(normWireString), labelEn: normWireRequired(normWireString), labelDe: normWireRequired(normWireString), entryId: normWireRequired(normWireString), numbers: normWireRequired(normWireArray(normWireRef(() => parseCaseNumber))), texts: normWireRequired(normWireArray(normWireRef(() => parseCaseText))) });

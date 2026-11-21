@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "original",
+    "observations"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "original": {
+      "type": "string"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "reason"
+        ],
+        "properties": {
+          "value": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "enum": [
+              null,
+              "length",
+              "bytes",
+              "vanished"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

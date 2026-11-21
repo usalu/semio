@@ -28,7 +28,7 @@ pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect,
     }
     let Some(wire_surface_id) = engine_surface_wire_id(surface_id) else { return Ok(false) };
     let mut reservation = input.reserve_actions(items, items * semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
-    write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
+    write_graph_interaction_actions(&mut reservation, surface_id, wire_surface_id.as_str(), controller_id, &dispatch)?;
     reservation.publish_with_checked(|| {
         ENGINE_SURFACES.with(|cell| {
             let mut map = cell.borrow_mut();
@@ -115,7 +115,7 @@ fn node_graph_bounded_publish(surface_id: &str, controller_id: &str, plan: NodeG
     }
     let Some(wire_surface_id) = engine_surface_wire_id(surface_id) else { return Ok(false) };
     let mut reservation = input.reserve_actions(items, items * semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
-    write_graph_interaction_actions(&mut reservation, wire_surface_id.as_str(), controller_id, &dispatch)?;
+    write_graph_interaction_actions(&mut reservation, surface_id, wire_surface_id.as_str(), controller_id, &dispatch)?;
     write_graph_edit_action(&mut reservation, controller_id, &edits)?;
     reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
     record_graph_interaction(surface_id, dispatch.digest);
@@ -171,6 +171,8 @@ pub fn node_graph_pointer_cancel_into(surface_id: &str) -> bool {
 
 pub struct GraphInteractionSnapshot {
     pub node_ids: Vec<String>,
+    pub edge_ids: Vec<String>,
+    pub handle_ids: Vec<String>,
     pub hovered_id: Option<String>,
     /// 🔌️ The `"{nodeId}@{portId}"` channel under the pointer, when the pick landed on a port rather
     /// than a node body. React qualifies its hover target the same way — `nodeGraphHoverActionArgs`
@@ -209,13 +211,20 @@ pub(super) fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> sem
 }
 
 pub fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, hovered_handle: Option<String>, hovered_edge: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, semio_ui_action::BoundedActionFault> {
+    graph_projection_snapshot_with_selection(DagSelectionDomains { nodes: node_ids, ..Default::default() }, hovered_id, hovered_handle, hovered_edge, camera)
+}
+
+pub(super) fn graph_projection_snapshot_with_selection(selection: DagSelectionDomains, hovered_id: Option<String>, hovered_handle: Option<String>, hovered_edge: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, semio_ui_action::BoundedActionFault> {
+    let DagSelectionDomains { nodes: node_ids, edges: edge_ids, handles: handle_ids } = selection;
+    let count = node_ids.len() + edge_ids.len() + handle_ids.len();
+    if count > semio_ui_action::ACTION_NODE_CAPACITY - 2 { return Err(semio_ui_action::BoundedActionFault::NodeCredits); }
     let viewport = semio_os_kernel::Viewport2d { x: camera[0], y: camera[1], zoom: camera[2] };
     viewport.validate().map_err(|_| semio_ui_action::BoundedActionFault::Structure)?;
-    let mut parts = Vec::with_capacity(node_ids.len() + 3);
+    let mut parts = Vec::with_capacity(count + 3);
     parts.extend([hovered_id.as_deref().unwrap_or_default(), hovered_handle.as_deref().unwrap_or_default(), hovered_edge.as_deref().unwrap_or_default()]);
-    parts.extend(node_ids.iter().map(String::as_str));
+    parts.extend(node_ids.iter().chain(&edge_ids).chain(&handle_ids).map(String::as_str));
     semio_ui_action::checked_action_string_bytes(&parts)?;
-    Ok(GraphInteractionSnapshot { node_ids, hovered_id, hovered_handle, hovered_edge, viewport })
+    Ok(GraphInteractionSnapshot { node_ids, edge_ids, handle_ids, hovered_id, hovered_handle, hovered_edge, viewport })
 }
 
 /// 🔌️ The channel the DAG's own hit-test reports under a screen point, in the `"{nodeId}@{portId}"`
@@ -223,22 +232,37 @@ pub fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<Strin
 /// payload BEFORE the plan is committed, so hover qualification cannot be read back off the commit.
 ///
 /// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `nodeGraphPickChannel`
-pub(super) fn graph_hovered_part(engine: &NodeGraphEngine, sx: f64, sy: f64) -> (Option<String>, Option<String>) {
+pub(super) fn graph_hovered_part(engine: &NodeGraphEngine, ports: &FlowPortAddresses, sx: f64, sy: f64) -> Result<(Option<String>, Option<String>), semio_ui_action::BoundedActionFault> {
     let targets = match engine {
         NodeGraphEngine::Flow(host) => host.pick_targets_at_screen_json(sx, sy),
         NodeGraphEngine::Dag(host) => host.pick_targets_at_screen_json(sx, sy),
     };
-    let Ok(rows) = serde_json::from_str::<Vec<Value>>(&targets) else { return (None, None) };
+    let Ok(rows) = serde_json::from_str::<Vec<Value>>(&targets) else { return Ok((None, None)) };
+    if matches!(engine, NodeGraphEngine::Flow(_)) {
+        let channel = rows.iter().filter_map(|row| row.get("channel"))
+            .find_map(|value| serde_json::from_value::<DagChannelRef>(value.clone()).ok());
+        if let Some(channel) = channel {
+            return Ok((Some(graph_handle_target(Some(ports), &channel.widget_id, &channel.port, channel.direction)?), None));
+        }
+    }
     for row in rows {
         let Some(id) = row.get("id").and_then(Value::as_str) else { continue };
         match row.get("domain").and_then(Value::as_str) {
-            Some("handle") => return (Some(id.to_owned()), None),
-            Some("edge") => return (None, Some(id.to_owned())),
+            Some("handle") if matches!(engine, NodeGraphEngine::Dag(_)) => return Ok((Some(id.to_owned()), None)),
+            Some("edge") => return Ok((None, Some(id.to_owned()))),
             Some("node") => break,
             _ => continue,
         }
     }
-    (None, None)
+    Ok((None, None))
+}
+
+pub(super) fn graph_handle_target(ports: Option<&FlowPortAddresses>, widget: &str, raw_port: &str, direction: DagChannelDirection) -> Result<String, semio_ui_action::BoundedActionFault> {
+    let port = ports.and_then(|ports| ports.semantic(widget, raw_port, direction)).unwrap_or(raw_port);
+    if widget.len().saturating_add(1).saturating_add(port.len()) > semio_ui_action::ACTION_STRING_BYTE_CAPACITY {
+        return Err(semio_ui_action::BoundedActionFault::StringCredits);
+    }
+    Ok(format!("{widget}@{port}"))
 }
 
 /// 🔌️ Reads the accepted live graph owner for React Flow's connection-handle cursor semantic.

@@ -226,7 +226,7 @@ fn the_table_paints_its_header_and_plain_cells_once_in_their_columns_and_leaves_
     let mut cursor = RetainedNodePaintCursor::default();
     let mut complete = false;
     for _ in 0..16_384 {
-        match paint_node_step_with_driver(&tree, root, absolute.x - layout.x, absolute.y - layout.y, &theme, &mut atlas, None, false, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, &mut draw, &mut cursor) {
+        match paint_node_step_with_driver(&tree, root, absolute.x - layout.x, absolute.y - layout.y, &theme, &mut atlas, None, false, UiDriverDrag::Handle, false, ui_contract::FlowInline::Ltr, None, &mut draw, &mut cursor) {
             RetainedNodePaintStep::Pending => {}
             RetainedNodePaintStep::Complete => {
                 complete = true;

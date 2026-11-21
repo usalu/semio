@@ -5,7 +5,7 @@ import{createRequire}from"node:module";
 import * as fsModule from"node:fs";
 import{spyOn}from"bun:test";
 import{chmodSync,lstatSync,existsSync,linkSync,mkdirSync,readFileSync,renameSync,rmSync,symlinkSync,writeFileSync}from"node:fs";
-import{dirname,join,resolve}from"node:path";
+import{dirname,join}from"node:path";
 import{brotliCompressSync,brotliDecompressSync}from"node:zlib";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1,scriptInvocationEnvironment,withRequestedIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withRepositoryBuildGraphPublicationFixtureV1}from"../../../../📥️inputs/💾️storage/🟨️.mjs";
@@ -13,9 +13,8 @@ import{withRepositoryBuildGraphConsumerV1,repositoryBuildGraphWriterDirectoryV1}
 import{observeInference,observedFs,readInferenceHeaderV1,inferenceObservationBlockPathV1,releaseInferenceMemoryV1}from"../../../🟨️.mjs";
 import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import corpus from"../🧫️cases.json";
-import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
-const repository=await privateRepositoryWorkspaceV1();
-const workspace=resolve(repository.root),hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex"),bounded=(path:string)=>{assert(path.length<=256);return path;},nativeFs=createRequire(import.meta.url)("node:fs")as typeof import("node:fs");
+import{requirePrivateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/📥️invocation/🟦️.ts";
+const hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex"),bounded=(path:string)=>{assert(path.length<=256);return path;},nativeFs=createRequire(import.meta.url)("node:fs")as typeof import("node:fs");
 /** 🧷️ Interposes one `node:fs` member for every module of this process through the module namespace: Bun binds builtin ESM imports when `node:fs` is first linked and `syncBuiltinESMExports` never rebinds them, while a namespace spy is seen by every importer. */
 const interposedFsV1:{mockRestore():void}[]=[];
 function interposeFsV1<K extends "lstatSync"|"openSync"|"fstatSync"|"closeSync">(name:K,body:(typeof import("node:fs"))[K]):void{interposedFsV1.push(spyOn(fsModule,name).mockImplementation(body as never));}
@@ -24,6 +23,8 @@ function restoreFsV1():void{while(interposedFsV1.length)interposedFsV1.pop()!.mo
 
 /** 🧱️ Executes one admitted physical block refusal and preserves the actual Original terminal primary. */
 export async function runScriptProgram():Promise<void>{
+ const adopted=process.env.SEMIO_PRIVATE_REPOSITORY;if(!adopted)throw Error("Observation block child requires its parent’s private repository");
+ const workspace=requirePrivateRepositoryWorkspaceV1(adopted);
  const[fault]=process.argv.slice(2);if(!corpus.faults.some(row=>row.fault===fault))throw Error("Closed block child fault required");let calls=0,warm=false,readerFailed=false,readerFailure:unknown,terminal:unknown,failed=false,mutated=false,evidenceRetained=false,sameCancellation=false,fifoSupported=false,secondaryClosed=false,republished=false,interrupted=false;const actualOpen=nativeFs.openSync,actualClose=nativeFs.closeSync;
 let reported=false;const report=():void=>{if(reported)return;reported=true;writeSync(1,JSON.stringify({version:1,fault,calls,warm,readerFailed,samePrimary:Object.is(terminal,readerFailure),code:terminal&&typeof terminal==="object"&&"code"in terminal?String(terminal.code):null,mutated,evidenceRetained,sameCancellation,fifoSupported,secondaryClosed,republished,message:terminal instanceof Error?terminal.message:String(terminal)})+"\n");};process.once("exit",report);
  try{await receiveScriptProcessInvocation(process.env,async original=>{try{const phase=createIssuedResourceControlV1(original,"observation:block-child",180000);await withRepositoryBuildGraphPublicationFixtureV1(workspace,original,phase,async fixture=>fixture.withWriter(async(_store,control)=>{

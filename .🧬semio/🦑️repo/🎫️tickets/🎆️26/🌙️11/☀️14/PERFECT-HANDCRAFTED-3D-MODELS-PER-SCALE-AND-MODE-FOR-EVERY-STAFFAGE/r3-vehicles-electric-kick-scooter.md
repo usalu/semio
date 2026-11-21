@@ -73,3 +73,49 @@ Final check line: `PASS (5.7 s)`; `VALID vehicles/electric-kick-scooter (catalog
 - `deck-grip` 0.137 m2 still counts the glued under-face of the mat (as the previous value did); one face would be 0.073 m2, beyond the factor 1.5, left to the area reviewer (`area-review.md`).
 - The structure lists have no support solids because `structure.supports` is empty in the asset; I did not add structural supports (physical modelling decision outside this task).
 - At 1:200 the deck bar with its arms crosses the rear wheel centre in the side view (true view of the merged arms); the mudguards are not in the 1:200 body.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r3-electric-kick-scooter-s50.py` and `-s200.py` (edited in place), new `r5-electric-kick-scooter-s500.py` (hand-stated 1:500 from the 1:200 lists), `r5-electric-kick-scooter-roots.py` (writes only the 2D shapes of the named scales into the catalog, shape by shape, and keeps the catalog's layer order), `r5-vehicles-render.sh` (all sheets), `r5-vehicles-ship.sh` (validate candidate, apply, splice, validate catalog, product check). Renders: `🗑️generated/r5-electric-kick-scooter/before/`.
+
+### Reference (Xiaomi Mi Electric Scooter M365, mi.com specification) and model
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| length unfolded | 1.080 m | 1.090 m | +0.9 % |
+| height to the bar | 1.140 m | 1.110 m | -2.6 % |
+| width over the bar | 0.430 m | 0.430 m (grips to +-0.215) | 0 % |
+| tyre outer diameter (8 1/2 x 2) | 0.216 m | 0.216 m | 0 % |
+| tyre section | about 0.050 m | 0.050 m | 0 % |
+| wheelbase (length minus one tyre) | 0.864 m | 0.860 m | -0.5 % |
+| folded height | 0.490 m | 0.43 to 0.48 m (hinge foot) | -2 to -12 % (see open points) |
+| deck width | about 0.15 m | 0.150 m | 0 % |
+| stem tube | 40 to 45 mm | 44 tapering to 38 mm | in range |
+| rear brake rotor | 110 mm | 110 mm | 0 % |
+| steering rake | 8 to 14 degrees | 8 degrees | in range |
+
+### Grades (opened: every sheet in `before/`: body, structure and thermal cut at 1:50, 1:100, 1:200, 1:500; all seven poses and both clip frames at 1:50; 2D at 1:50, 1:100, 1:200; 2D 1:500 is unavailable by design)
+
+| scale | body before / after | thermal before / after | structure before / after |
+|---|---|---|---|
+| 1:50 | A- / A- | A- / A- | A- / A- |
+| 1:100 | A- / A- | A- / A- | A- / A- |
+| 1:200 | B+ / B+ | B (faceted 6- and 4-segment mudguard arcs) / A- | A- / A- |
+| 1:500 | B+ / B+ | B (same facets) / A- | B+ / B+ |
+| poses, clips | A- (folded: bell on the catch, braking: steered about the raked axis, no intersections) | | |
+
+Catalog before: INVALID under the print rule (`hinge-pin` 0.199 mm at 1:20, the range end of 1:50).
+
+### Changes
+
+- Hinge pin at 1:50 (3D and 2D, all three views): r 10 -> 11 mm, length 54 -> 66 mm so its bolt heads stand 6 mm proud of the hinge base on each side, as on the real scooter; the visible pin is now wider than the printable feature at 1:20.
+- 1:200 thermal mudguards: arcs of 12 (rear) and 8 (front) segments instead of 6 and 4.
+- 1:500 (digital scale): rebuilt by `r5-electric-kick-scooter-s500.py` from the new 1:200 with the merges of `equipment-digital.py` and smooth 8- and 6-segment mudguard arcs; decision sentence added.
+
+Check: `VALID vehicles/electric-kick-scooter (catalog file as it is): schema 0, validateAsset 0, checkVolumes 0`; `volumes-check.ts --product` PASS (14.5 s).
+
+### Open points
+
+- 1:200 and 1:500 body (B+): seven masses, no mudguards in the body (a 6 mm mudguard is a fifth of the 1:200 feature); the deck plate merges the rear stays beside the wheel. Minimal by the round-3 decision, so not changed.
+- Folded height 0.43 m against 0.49 m: the `dimensions` and hinge height were kept from round 3; the bar rests lower over the rear mudguard than on the M365.
+- No support solids: `structure.supports` is empty in the asset.

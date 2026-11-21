@@ -1,0 +1,23 @@
+{
+  "display": {
+    "prefix": "﻿",
+    "unit": "München 🧬\r\n雪",
+    "repeat": 18000,
+    "suffix": "\u0000終",
+    "integerSpelling": "9007199254740993"
+  },
+  "edit": {
+    "first": {
+      "prefix": "﻿",
+      "unit": "Ä雪🧬",
+      "repeat": 57,
+      "suffix": "끝"
+    },
+    "next": {
+      "prefix": "改﻿",
+      "unit": "Aé🧬",
+      "repeat": 105,
+      "suffix": "\n東京"
+    }
+  }
+}

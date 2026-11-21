@@ -1,0 +1,8 @@
+{
+  "fileName": "large-vector-pdf.pdf",
+  "baselinePath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf",
+  "baselinePages": 2,
+  "taskLane": "documentTransfer",
+  "expectedNotice": "shell.documentTransfer.open-cancelled",
+  "slowCpuRate": 4
+}

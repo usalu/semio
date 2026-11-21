@@ -184,6 +184,7 @@ export const TREE_WINDOW_DEFAULT_ROWS = 48;
  * body refresh, a `UiDocumentStore` re-mint and the DFS renumbering both of those cause. */
 type TreeWindowBodyState = {
   readonly open: Map<string, boolean>;
+  readonly formPages: Map<string, number>;
   readonly windows: Map<string, { readonly offset: number; readonly rows: number }>;
   /** 🪟️ Every node key the observer has ever reported for this body. What it separates is "opened, not in
    * the body yet" — which asks for one viewport of rows so the chevron's promise is kept — from "was in the
@@ -204,6 +205,7 @@ export type TreeWindowSchedulerOptionsV1 = {
 };
 
 export type TreeWindowSchedulerV1 = {
+  readonly setFormPage: (bodyKey: string, windowId: string, page: number) => void;
   readonly setOpen: (bodyKey: string, nodeKey: string, open: boolean) => void;
   readonly reportWindows: (bodyKey: string, requests: readonly { readonly nodeKey: string; readonly offset: number; readonly rows: number }[], viewportRows: number) => void;
   readonly openStatesFor: (bodyKey: string) => Readonly<Record<string, boolean>>;
@@ -240,7 +242,7 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
   const bodyState = (bodyKey: string): TreeWindowBodyState => {
     const existing = bodies.get(bodyKey);
     if (existing) return existing;
-    const created: TreeWindowBodyState = { open: new Map(), windows: new Map(), measured: new Set() };
+    const created: TreeWindowBodyState = { open: new Map(), formPages: new Map(), windows: new Map(), measured: new Set() };
     bodies.set(bodyKey, created);
     return created;
   };
@@ -267,6 +269,15 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
   };
 
   return {
+    setFormPage: (bodyKey, windowId, page) => {
+      if (!Number.isInteger(page) || page < 0 || page > 0xffff_ffff || !treeWindowSendableIdentifierV1(bodyKey, windowId, unsendable)) return;
+      const state = bodyState(bodyKey);
+      if ((state.formPages.get(windowId) ?? 0) === page) return;
+      if (page === 0) state.formPages.delete(windowId);
+      else state.formPages.set(windowId, page);
+      pending.add(bodyKey);
+      flush();
+    },
     setOpen: (bodyKey, nodeKey, open) => {
       const state = bodyState(bodyKey);
       if (state.open.get(nodeKey) === open) return;
@@ -300,18 +311,23 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
     openStatesFor: (bodyKey) => Object.fromEntries(bodies.get(bodyKey)?.open ?? []),
     viewStateFields: () => {
       const flattened: ViewTreeWindowRequest[] = [];
+      const pages: ViewTreeWindowRequest[] = [];
       for (const bodyKey of [...bodies.keys()].sort()) {
         const state = bodies.get(bodyKey)!;
+        for (const [nodeKey, offset] of [...state.formPages].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
+          pages.push({ bodyKey, nodeKey, offset, rows: 1 });
+        }
         const nodeKeys = [...new Set([...state.open.keys(), ...state.windows.keys()])].sort();
         for (const nodeKey of nodeKeys) {
-          if (!treeWindowSendableIdentifierV1(bodyKey, nodeKey, unsendable)) continue;
+          if (state.formPages.has(nodeKey) || !treeWindowSendableIdentifierV1(bodyKey, nodeKey, unsendable)) continue;
           const open = state.open.get(nodeKey);
           const window = state.windows.get(nodeKey);
           const rows = window?.rows ?? (open === false || state.measured.has(nodeKey) ? 0 : (viewportRows ?? TREE_WINDOW_DEFAULT_ROWS));
           flattened.push({ bodyKey, nodeKey, ...(open === undefined ? {} : { open }), offset: window?.offset ?? 0, rows });
         }
       }
-      return { ...(flattened.length > 0 ? { treeWindows: flattened } : {}), ...(viewportRows === undefined ? {} : { treeViewportRows: viewportRows }) };
+      const treeWindows = [...pages, ...flattened].slice(0, 128);
+      return { ...(treeWindows.length > 0 ? { treeWindows } : {}), ...(viewportRows === undefined ? {} : { treeViewportRows: viewportRows }) };
     },
     settled: (bodyKey) => {
       inFlight.delete(bodyKey);
@@ -353,6 +369,7 @@ function treeWindowSendableIdentifierV1(bodyKey: string, nodeKey: string, report
 /** 🪟️ What `ShellHost` hands the panel builders — one stable object per shell, so the per-tab memo
  * cache below keys on identity rather than on a closure rebuilt every render. */
 export type TreeWindowHostV1 = {
+  readonly setFormPage?: (bodyKey: string, windowId: string, page: number) => void;
   readonly openStatesFor: (bodyKey: string) => Readonly<Record<string, boolean>>;
   readonly setOpen: (bodyKey: string, nodeKey: string, open: boolean) => void;
   readonly reportWindows: (bodyKey: string, requests: readonly TreeWindowReportV1[], viewportRows: number) => void;
@@ -363,6 +380,7 @@ export function createTreeWindowContextV1(bodyKey: string, host: TreeWindowHostV
   return {
     bodyKey,
     get openStates() { return host.openStatesFor(bodyKey); },
+    setFormPage: (windowId, page) => host.setFormPage?.(bodyKey, windowId, page),
     setOpen: (nodeKey, open) => host.setOpen(bodyKey, nodeKey, open),
     reportWindows: (requests, viewportRows) => host.reportWindows(bodyKey, requests, viewportRows),
   };

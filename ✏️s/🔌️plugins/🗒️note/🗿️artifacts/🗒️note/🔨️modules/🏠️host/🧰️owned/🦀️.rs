@@ -1,15 +1,41 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-pub type NoteStore = store::ArtifactStore<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>;
+use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{RetirementDemand, ValueError};
+use store::os_store::document_store_owners::{
+    bounded_artifact_store_owners_shared_semantic_source_demands,
+    bounded_artifact_store_owners_with_shared_semantic_preparation,
+    DocumentStoreOwners, DocumentStoreOwnersAdmissionError,
+};
+
+type Snapshot = crate::NoteSnapshot;
+type Mutation = crate::schema::mutations::NoteMutation;
+type NoteSemanticProducer = store::ColdMutationApplyFactory<Snapshot, Mutation>;
+pub type NoteStoreOwnersAdmission =
+    Result<(DocumentStoreOwners<Snapshot, Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Snapshot, Mutation>>;
+
+const PRODUCER_CHILDREN: RetainedCloneBirthDemand = RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 };
+
+/// 📏️ Quotes the single Note semantic producer and its exact document owner catalog.
+pub fn note_store_owners_source_demands() -> Result<RetirementDemand, ValueError> {
+    bounded_artifact_store_owners_shared_semantic_source_demands::<Snapshot, Mutation, NoteSemanticProducer>(PRODUCER_CHILDREN, 0)
+}
+
+/// 🔁️ Admits Note publication and replay through the same bounded semantic producer.
+pub fn admit_note_store_owners(grant: RetainedCloneGrant) -> NoteStoreOwnersAdmission {
+    bounded_artifact_store_owners_with_shared_semantic_preparation(grant, PRODUCER_CHILDREN, 0, NoteSemanticProducer::default)
+}
+
+pub type NoteStore = store::ArtifactStore<Snapshot, Mutation>;
 
 /// 🔐️ Opens a Note store WITH its exact owner catalog installed. `ArtifactStore::new` installs no
 /// catalog, and `reserve_edit_history_slot` refuses every `Apply` without one (`edit history
 /// insertion requires its exact mutation retirement factory`) — so a bare `NoteStore::new` can be
-/// read but never mutated, undone or closed. The app installs the same catalog through
+/// read but never mutated, undone or closed. The app's funded catalog supplies these retirement owners through
 /// `build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_note_store(envelope: NoteEnvelope, actor: protocol::ActorId) -> Result<OwnedNoteStore, store::VcsError> {
     let mut store = NoteStore::new::<::semio_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor).await?;
-    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Snapshot, Mutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedNoteStore(store))
 }
 
@@ -48,3 +74,7 @@ impl Drop for OwnedNoteStore {
 }
 
 pub type NoteEnvelope = store::os_store::store_schema::ArtifactEnvelope<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

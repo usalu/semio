@@ -380,7 +380,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -1168,7 +1202,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1231,7 +1265,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -1378,7 +1412,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1686,7 +1720,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1788,7 +1822,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1889,7 +1923,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1950,7 +1984,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -1995,7 +2029,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2040,7 +2074,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2085,7 +2119,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2130,7 +2164,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2175,7 +2209,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2220,7 +2254,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2265,7 +2299,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2310,7 +2344,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2373,7 +2407,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2552,7 +2586,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2612,7 +2646,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2669,7 +2703,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2747,7 +2781,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2828,7 +2862,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -2886,7 +2920,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3158,7 +3192,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3307,7 +3341,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3384,7 +3418,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3460,7 +3494,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -3536,7 +3570,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4285,7 +4319,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5040,7 +5074,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5098,7 +5132,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5143,7 +5177,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5188,7 +5222,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5233,7 +5267,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5279,7 +5313,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5325,7 +5359,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5371,7 +5405,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5417,7 +5451,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -5462,7 +5496,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -8781,7 +8815,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -9487,7 +9521,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "",
+        "artifactJson": "semio drawing.drawing.dsl v1\nschema=drawing.document id=semio title=\"Semio Emblem\"\nlayers {\n  group isolation=false\n  base {\n    id=emblem-group name=\"Semio Emblem\" visible=true locked=false opacity=1 blend-mode=normal\n    transform {\n      x=0 y=0 scale-x=1 scale-y=1 shear=0 rotation=0rad\n    }\n    attributes {\n      fill-rule=evenodd\n      fill {\n      }\n    }\n  }\n  children {\n    path\n    base {\n      id=emblem-orange name=\"Orange Wedge\" visible=true locked=false opacity=1 blend-mode=normal\n      transform {\n        x=0 y=0 scale-x=1 scale-y=1 shear=0 rotation=0rad\n      }\n      attributes {\n        fill-rule=evenodd\n        fill {\n          solid color=0.98,0.584,0,1\n        }\n        stroke {\n          color=0,0.067,0.09,1 width=2.5 cap=butt join=miter\n        }\n      }\n    }\n    segments {\n      M 1.25,196.933\n      L 36.25,161.125\n      L 36.25,43.75\n      L 1.25,43.75\n      Z\n    }\n    path\n    base {\n      id=emblem-red name=\"Red Frame\" visible=true locked=false opacity=1 blend-mode=normal\n      transform {\n        x=0 y=0 scale-x=1 scale-y=1 shear=0 rotation=0rad\n      }\n      attributes {\n        fill-rule=evenodd\n        fill {\n          solid color=1,0.204,0.31,1\n        }\n        stroke {\n          color=0,0.067,0.09,1 width=2.5 cap=butt join=miter\n        }\n      }\n    }\n    segments {\n      M 1.25,38.75\n      L 156.813,38.75\n      L 194.473,1.25\n      L 1.25,1.25\n      Z\n      M 161.263,198.75\n      L 161.25,43.144\n      L 198.75,5.63\n      L 198.75,198.75\n      Z\n    }\n    path\n    base {\n      id=emblem-teal name=\"Teal Bars\" visible=true locked=false opacity=1 blend-mode=normal\n      transform {\n        x=0 y=0 scale-x=1 scale-y=1 shear=0 rotation=0rad\n      }\n      attributes {\n        fill-rule=evenodd\n        fill {\n          solid color=0.204,0.82,0.749,1\n        }\n        stroke {\n          color=0,0.067,0.09,1 width=2.5 cap=butt join=miter\n        }\n      }\n    }\n    segments {\n      M 85.467,198.75\n      L 156.25,198.75\n      L 156.25,161.25\n      L 122.081,161.25\n      Z\n      M 85.468,118.75\n      L 156.25,118.75\n      L 156.25,81.25\n      L 122.081,81.25\n      Z\n    }\n  }\n}\nartboard {\n  width=200 height=200\n}\n",
         "dialect": {
           "artifactKind": "s.draw.drawing",
           "standard": "1",
@@ -9735,16 +9769,5 @@
         "direction": "import"
       }
     ]
-  },
-  "assets": [
-    {
-      "name": "📚️examples/s.draw.drawing.1.-/demo.json",
-      "mediaType": {
-        "class": "twoD",
-        "form": "vector"
-      },
-      "sizeBytes": 5136791,
-      "sha256": "07fbf31c0b9912a4b3cd54b21e48bf6a956f4f8d1adf55d8a98fc7e8496f7f91"
-    }
-  ]
+  }
 }

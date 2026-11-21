@@ -78,3 +78,23 @@ Loop 16 attempt 3 published the wasm at 02:56 (177314662 bytes), then ended on e
    - Remove all `[DEBUG]` probes listed in `📓️debug-probe-inventory.md`, plus my `[DEBUG] publication-unit` probes in `🔁️stall-witness-and-unit-advance\🦀️.rs`. The peer `receipt-refusal` eprintln belongs to someone else; coordinate before removing it.
    - Delete `🗑️generated` and any `C:/b/fem3d-*`.
    - Close the ticket with a summary and the full file list.
+
+## November 20 evening continuation
+
+Read the latest acknowledgment and result-page evidence in [activation verification](./📓️activation-verification.md). The old guest emitted the Demo document and accepted the Effect and UI acknowledgments. It returned a semantic refusal while polling the Terminal acknowledgment. The native actor replay now loads the actual WIT poll budgets and three shell acknowledgment tokens from the recorded browser tape.
+
+The standard component pass retried as loop 20 after loop 19 lost the Windows build broker. The direct Cargo fallback is building the same FEM composition for wasm32-wasip2 under E:/b/fem3d-wasm. The official publication watcher runs activation on a changed core. The ticket browser-smoke script can collect the four requested filters, example choices and model geometry. The playground is served on 6087. Native House, sparse, snapshot and actor replay verification are in progress. Keep this ticket open until fresh browser rendering, completed Results, editing and all three examples work.
+
+## November 21 document handoff checkpoint
+
+The original sequence 7 receipt issue is resolved through terminal ACK in the November 21 linked component. The 6099 exact WIT trace accepted all three pages and continued polling. It exposed the next hold at document load 118 of 118, after SpawnJob and before any visible Model. The native 6098 build reproduced the hold and eventually reported a direct mounted zero-progress refusal. See the [activation report](📓️activation-verification.md) and [archive effect admission](📓️archive-effect-admission.md).
+
+The source now parks pending effects across archive admission and store replacement. Live maintenance retires mounted readers during handoff and the same ladder accepts their snapshot return witnesses. The independent native House reconciler passed with indexed Model and pending Results in both cold and Demo-to-House routes.
+
+The native handoff rebuild uses E:/b/fem3d-wasm and logs to native-handoff-wasm.txt. On success its watcher starts 6100 and the fresh browser waits for solved Demo Results before switching all three examples and verifying Add Node, Undo and Redo. The official November 21 link initially stopped on a stale descriptor helper that rejected --prepare-actor. The helper project rebuild and official retry remain active. The 6087 activation watcher runs steps 14 and 15 on publication, then fresh Model, Results and action checks. Keep the ticket open until those flows are verified and the temporary instrumentation and outputs have been cleaned.
+
+### Current build attempts
+
+The direct handoff Cargo runner is now on native-handoff-wasm-retry-3.txt. Earlier attempts planned before the live replication-causal, reactor-lifecycle and instance-render manifests gained their corresponding direct dependencies. Those manifests now declare them. The current run passed instance-render and reached the STDIO composition crates. The watcher publishes its successful result to the 6100 diagnostic preview. The official retry restarts on source-digest changes. The descriptor rebuild is compiling the helper with the actual artifact writer.
+
+The limited-grant regression verifies that snapshot returns, replacement and mounted retirement can share the archive reserve. The focused maintenance tests passed four tests and 48 assertions. The archive gate and stale cancellation tests passed three tests and 29 assertions. House ambient and Demo-to-House reconciliation measurements are in [house-scene-reconcile.md](house-scene-reconcile.md). The broad native session link was intentionally stopped after successful code generation to free memory for the acceptance builds.

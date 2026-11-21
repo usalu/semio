@@ -306,11 +306,18 @@ pub fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Opt
 }
 /// 🗂️ One row of the flattened, expansion-aware row list the virtual file system paints.
 #[derive(Clone)]
-struct VfsVisibleRow {
-    pub row: Value,
+pub struct VfsVisibleRow {
+    pub(crate) row: Value,
     pub level: u32,
     has_children: bool,
     pub(crate) expanded: bool,
+}
+
+impl VfsVisibleRow {
+    /// 🪪️ Identifies this row without exposing its source JSON.
+    pub fn id(&self) -> String {
+        vfs_row_id(&self.row)
+    }
 }
 
 fn vfs_children_by_parent(rows: &[Value]) -> HashMap<String, Vec<Value>> {
@@ -455,7 +462,7 @@ pub fn vfs_temporal_request(schema: &VfsSchema, visible_rows: &[VfsVisibleRow], 
 }
 
 /// 📐️ A virtual file system's fixed metrics — the ONE derivation the paint and the pointer path share.
-struct VfsMetrics {
+pub struct VfsMetrics {
     pub(crate) header_h: f32,
     pub row_h: f32,
     pub(crate) pad: f32,

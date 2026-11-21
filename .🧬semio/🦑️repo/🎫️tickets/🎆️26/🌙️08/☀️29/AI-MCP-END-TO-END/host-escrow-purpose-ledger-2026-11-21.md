@@ -1,0 +1,17 @@
+# Five-Axis Host Escrow Purpose Ledger
+
+The host purpose ledger refused every capacity and release escrow delta. The issuer journal already tracked both currencies, but closed-producer retirement discarded them when converting the journal balance to native stock. A valid settlement could therefore fail at ledger admission or leave capacity and release stock impossible to forfeit during retirement.
+
+The ledger applies the same checked arithmetic to items, copied bytes, retained capacity, release bytes, and work. New reservations increase held stock. Redemptions move stock from held to observed under the origin's purpose. Returned unused stock leaves the held account. The fresh receipt is debited only to its actual issuing purpose and is bounded by the existing issued loan and turn-input grants. Both purpose proposals are checked before mutation.
+
+Closed-producer retirement converts all five journal amounts to native stock with checked extents, compares those amounts with the ledger account, and adds the exact balance to forfeited stock. The existing retired-witness, claim-count, and payment checks still gate the mutation.
+
+The shared `escrow-ledger.json` fixture covers reservation, cross-purpose redemption, release of unused stock, underflow on capacity or release, exact forfeiture, and rejection of capacity or release mismatches. Rust tests exercise the ledger and retirement proposal, with additional native-limit checks for overflow. The native escrow tests and four independent Bun ledger and history tests passed.
+
+The first native test build found two wake regression tests that passed an obsolete grant directly to the payload authority closer. Both now close through a paid original caller turn and compare its physical and work receipts with the observed release and quoted fuel. The treasury regression acquires the actual drive turn before closing and returns the same Source receipt to debit its finite balances.
+
+The broader Host Wake tests exposed fixture drift. Escrow reconciliation test setup now admits its Root before dispatch, and closed-producer fixtures retire native inbox custody and the return-birth owner before obtaining the witness. The shared actor/wake fixture runs in both the unit and public targets, uses independently declared drive and wake grants, and measures fixture-relative epochs and balances from the admitted Root. The Root integration fixtures fund the current Source birth demand, keep the narrowed guest subloan distinct from its held Root scope, and close the guest with the actual caller's cleanup budget. The startup expiry test supplies the interpreter's exact physical grant and sums the heap effects of both forward and cleanup turns.
+
+The reproducing native VM trace had an issued operation-work total of 999,900, while the resident return budget reported 999,902 before metadata and 999,901 after one fresh unit. The clock, deadline, operation, generation and epoch still matched. The Host VM crossing now intersects the observed total with the issued total less actual fresh callback work. Authenticated redeemed work is excluded from that debit. The existing narrowing check continues to validate the full authorization. The native fixture checks the exact issued-work delta and a remaining operation horizon beyond the current turn.
+
+The full native Host Wake suite finished with 28 unit tests, four public integration tests, and four Root integration tests passing. The verification run covering the VM, actor/wake, Root, and escrow fixtures separately passed seven Bun tests.

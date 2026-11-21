@@ -1,0 +1,13 @@
+# Bounded Layout operation binding
+
+The tagged wire receiver advances through the format, varint, protocol lookup and exact Pack Record Body. The last binding turn currently accounts for the whole dynamic tree and calls the existing typed codec. A payload larger than the turn's copy budget can stall at that boundary.
+
+The follow-on binding uses the framework's original tree receivers. The stored protocol chooses the tag. After receiving its Pack Value, the canonical variant name and payload form an original source for the Layout mutation native enum receiver. Its typed branch should publish only after its child is complete and retain the Pack owner and native source for funded closure. Plain Pack Document operations retain their current binder.
+
+The Layout mutation enum, its 58 payloads and their reachable Layout schema types need native receive ports matching the authored names, null handling, defaults and numeric shapes. Existing ArtifactLink and ArtifactChild owners already provide native receiving.
+
+Question dictionaries require their own original receiver. The wire records carry ordered entries and recursively tagged literal variants. A typed literal receiver can construct the existing dynamic value incrementally and transfer the completed child buffers for arrays, object members and bytes. Numeric limbs must retain their signed, unsigned and float-bit semantics, including refusal of invalid limbs. Duplicate question identities remain a validation error. The existing indexed heap-sort cursor can sort paid scratch indexes without changing entry order, compare identity strings in bounded ranges, and check adjacent identities before publishing.
+
+The native variant receiver needs a work-demand relay for nested schema matching and typed fields. The existing matcher and child slot already expose their individual demands. The operation receiver must propagate those quotes to its caller and relay paid close demands for every partial owner. The current schema matcher requires three physical items for a nested metadata turn. A caller that only grants one item needs a resumable metadata action before it can serve this native path.
+
+The large-payload law should exercise a value greater than one copy quantum, cancel during typed binding, and observe exact paid closure. The protobufjs oracle validated the 13,844-byte RenameLayout operation against a 4,096-byte copy quantum. Ajv and a distinct identity check validated all 13 shared dictionary cases. The Rust literal draft in this ticket is unmounted and preserves the warmed guest source. [Cases](layout-native-binding-cases.json), [oracle](layout-native-binding-oracle.mjs), [literal draft](layout-native-dictionary-literal.rs).

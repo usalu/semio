@@ -9,4 +9,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct Generation3dPreviewWindowTransient {
     #[state(transient)]
     pub preview_eval_text: Option<String>,
+    #[state(transient)]
+    pub generation_id: Option<String>,
 }

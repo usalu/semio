@@ -1,0 +1,238 @@
+{
+  "dimensions": {
+    "heightM": 1.71,
+    "widthM": 1.26,
+    "depthM": 0.56
+  },
+  "materials": [
+    {
+      "id": "bone",
+      "title": {
+        "en": "Bone",
+        "de": "Knochen"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.5,
+      "densityKgM3": 1900,
+      "source": "authored-estimate"
+    }
+  ],
+  "regions": {
+    "bag": {
+      "areaM2": 0.25
+    },
+    "cane-shaft": {
+      "areaM2": 0.04
+    }
+  },
+  "representations": {
+    "50": {
+      "decisions": {
+        "silhouette": {
+          "en": "Every filled shape is the true orthographic outline of the 1:50 model in the default pose, per bone: head with nose, lips and chin, the bob covering the ears, sunglasses, neck in the jacket collar, the short denim jacket with chest pockets, buttons and the shirt at the open collar, sleeves with cuffs, the hanging left hand with thumb and fingers and the right fist on the grip with the index finger along it, hips and legs of the jeans, Chelsea boots with shaft, heel and toe, the bag at the right hip with flap and clasp. Arms, hands and the cane are solids of their side profile (sleeves and shaft revolved about their bone, the hands as prisms), so they follow the turned arm and the sweeping cane in every view.",
+          "de": "Jede gefüllte Form ist der wahre Normalriss des 1:50-Modells in der Standardpose, je Knochen: Kopf mit Nase, Lippen und Kinn, der Bob über den Ohren, Sonnenbrille, Hals im Jackenkragen, die kurze Jeansjacke mit Brusttaschen, Knöpfen und dem Hemd im offenen Kragen, Ärmel mit Bündchen, die hängende linke Hand mit Daumen und Fingern und die rechte Faust am Griff mit dem Zeigefinger am Griff entlang, Hüfte und Beine der Jeans, Chelsea-Stiefel mit Schaft, Absatz und Kappe, die Tasche an der rechten Hüfte mit Klappe und Schließe. Arme, Hände und der Stock sind Körper aus ihrem Seitenprofil (Ärmel und Schaft um ihren Knochen gedreht, die Hände als Prismen) und folgen so in jeder Ansicht dem gedrehten Arm und dem pendelnden Stock."
+        },
+        "retained": {
+          "en": "Front view: lenses and frame, chest pockets, six buttons, placket, waistband and yoke lines, mouth line; side view: the near lens and temple, waistband and side seam, bag flap and clasp; the cane keeps grip, white shaft, red end and roller.",
+          "de": "Vorderansicht: Gläser und Fassung, Brusttaschen, sechs Knöpfe, Knopfleiste, Bund- und Passenlinien, Mundlinie; Seitenansicht: das nahe Glas mit Bügel, Bund und Seitennaht, Taschenklappe und Schließe; der Stock behält Griff, weißen Schaft, rotes Ende und Rolle."
+        },
+        "merged": {
+          "en": "Heel and sole belong to the boot outline, the cuff to the forearm, the lugs and the top of the flap to the bag; nose, lips and chin to the head.",
+          "de": "Absatz und Sohle gehören zum Stiefelumriss, das Bündchen zum Unterarm, Ösen und Klappenoberseite zur Tasche; Nase, Lippen und Kinn zum Kopf."
+        },
+        "omitted": {
+          "en": "Eyes behind the glasses, ears under the hair, the folding joints of the cane and its 4 mm wrist loop, jeans pockets and seams.",
+          "de": "Augen hinter der Brille, Ohren unter dem Haar, die Steckverbindungen des Stocks und seine 4 mm starke Handschlaufe, Jeanstaschen und Nähte."
+        },
+        "thinElements": {
+          "en": "The 12 mm shaft is a filled strip of its true width (0.24 mm on paper) with a 0.13 mm pen; the strap is a stroke of its 27 mm (0.54 mm) in front and plan and of its edge in the side view; the glasses frame and temples are 0.1 mm strokes.",
+          "de": "Der 12-mm-Schaft ist ein gefüllter Streifen in wahrer Breite (0,24 mm auf dem Papier) mit 0,13-mm-Stift; der Gurt ist vorn und im Grundriss ein Strich seiner 27 mm (0,54 mm) und in der Seitenansicht seiner Kante; Brillenfassung und Bügel sind 0,1-mm-Striche."
+        },
+        "hatching": {
+          "en": "Denim twill of 0.8 mm lines on jacket, collar and sleeves.",
+          "de": "Jeansköper aus 0,8-mm-Linien auf Jacke, Kragen und Ärmeln."
+        },
+        "styles": {
+          "en": "Body pen 0.25 mm, detail 0.15 mm; dark glasses, boots and jeans, mid-tone jacket and bag, white shaft with a mid-tone red end, dark grip.",
+          "de": "Körperstift 0,25 mm, Detail 0,15 mm; dunkle Brille, Stiefel und Jeans, Jacke und Tasche im Mittelton, weißer Schaft mit rotem Ende im Mittelton, dunkler Griff."
+        },
+        "overlays": {
+          "en": "All eleven regions have shapes: face, hair, hands, jacket, jeans, boots, sunglasses, bag, cane shaft, grip and tip.",
+          "de": "Alle elf Regionen haben Formen: Gesicht, Haar, Hände, Jacke, Jeans, Stiefel, Sonnenbrille, Tasche, Stockschaft, Griff und Spitze."
+        }
+      }
+    },
+    "100": {
+      "decisions": {
+        "silhouette": {
+          "en": "Every filled shape is the true outline of the 1:100 model per bone: head with nose, bob, the sunglasses as one dark band, neck and collar, jacket, sleeves, hands as mitten forms (the right one with the index finger on the grip), hips, legs, boots with shaft and toe, the bag with its flap. Arms, hands and the cane are solids of their side profile (sleeves and shaft revolved about their bone, the hands as prisms), so they follow the turned arm and the sweeping cane in every view.",
+          "de": "Jede gefüllte Form ist der wahre Umriss des 1:100-Modells je Knochen: Kopf mit Nase, Bob, die Sonnenbrille als ein dunkles Band, Hals und Kragen, Jacke, Ärmel, Hände als Fäustlingsformen (die rechte mit dem Zeigefinger am Griff), Hüfte, Beine, Stiefel mit Schaft und Kappe, die Tasche mit Klappe. Arme, Hände und der Stock sind Körper aus ihrem Seitenprofil (Ärmel und Schaft um ihren Knochen gedreht, die Hände als Prismen) und folgen so in jeder Ansicht dem gedrehten Arm und dem pendelnden Stock."
+        },
+        "retained": {
+          "en": "The sunglasses band, the placket line in the front view, the bag flap, the grip, the red end and the roller of the cane.",
+          "de": "Das Brillenband, die Knopfleistenlinie in der Vorderansicht, die Taschenklappe, Griff, rotes Ende und Rolle des Stocks."
+        },
+        "merged": {
+          "en": "Fingers into mitten forms, lenses into one band, sole and heel into the boot, pockets and buttons into the jacket.",
+          "de": "Finger zu Fäustlingsformen, Gläser zu einem Band, Sohle und Absatz zum Stiefel, Taschen und Knöpfe zur Jacke."
+        },
+        "omitted": {
+          "en": "Mouth, buttons, pockets, the joints and the loop of the cane, the glasses frame.",
+          "de": "Mund, Knöpfe, Taschen, Steckverbindungen und Schlaufe des Stocks, die Brillenfassung."
+        },
+        "thinElements": {
+          "en": "The 12 mm shaft is a filled strip of its true width (0.12 mm) with a 0.1 mm pen; the strap a stroke of 0.27 mm in front and plan.",
+          "de": "Der 12-mm-Schaft ist ein gefüllter Streifen in wahrer Breite (0,12 mm) mit 0,1-mm-Stift; der Gurt vorn und im Grundriss ein Strich von 0,27 mm."
+        },
+        "hatching": {
+          "en": "Denim twill lines on jacket, collar and sleeves.",
+          "de": "Jeansköperlinien auf Jacke, Kragen und Ärmeln."
+        },
+        "styles": {
+          "en": "Body pen 0.25 mm, detail 0.13 mm; tones as at 1:50.",
+          "de": "Körperstift 0,25 mm, Detail 0,13 mm; Töne wie bei 1:50."
+        },
+        "overlays": {
+          "en": "All eleven regions have shapes.",
+          "de": "Alle elf Regionen haben Formen."
+        }
+      }
+    },
+    "200": {
+      "decisions": {
+        "silhouette": {
+          "en": "Every filled shape is the true outline of the 1:200 model per bone: head, bob, sunglasses band with its temples, neck, jacket, sleeves, a mitten hand and a fist, hips, legs running into the boot, boot and toe, the bag as one block. Arms, hands and the cane are solids of their side profile (sleeves and shaft revolved about their bone, the hands as prisms), so they follow the turned arm and the sweeping cane in every view.",
+          "de": "Jede gefüllte Form ist der wahre Umriss des 1:200-Modells je Knochen: Kopf, Bob, Brillenband mit Bügeln, Hals, Jacke, Ärmel, eine Fäustlingshand und eine Faust, Hüfte, Beine bis in den Stiefel, Stiefel und Kappe, die Tasche als ein Block. Arme, Hände und der Stock sind Körper aus ihrem Seitenprofil (Ärmel und Schaft um ihren Knochen gedreht, die Hände als Prismen) und folgen so in jeder Ansicht dem gedrehten Arm und dem pendelnden Stock."
+        },
+        "retained": {
+          "en": "The sunglasses band, the bag, the red end and the roller of the cane.",
+          "de": "Das Brillenband, die Tasche, rotes Ende und Rolle des Stocks."
+        },
+        "merged": {
+          "en": "Collar into the jacket, boot shaft into the leg, the grip into the shaft, hands into single forms.",
+          "de": "Kragen in die Jacke, Stiefelschaft ins Bein, der Griff in den Schaft, Hände zu Einzelformen."
+        },
+        "omitted": {
+          "en": "Nose, cuffs, bag flap, placket.",
+          "de": "Nase, Bündchen, Taschenklappe, Knopfleiste."
+        },
+        "thinElements": {
+          "en": "The 12 mm cane is drawn as a strip of 24 mm (0.12 mm on paper), twice its width, so that it prints; the roller at 30 mm; the strap is a 0.14 mm stroke in front and plan.",
+          "de": "Der 12-mm-Stock ist als Streifen von 24 mm (0,12 mm auf dem Papier) gezeichnet, doppelt so breit, damit er druckt; die Rolle mit 30 mm; der Gurt ist vorn und im Grundriss ein 0,14-mm-Strich."
+        },
+        "hatching": {
+          "en": "No hatching at 1:200.",
+          "de": "Keine Schraffur bei 1:200."
+        },
+        "styles": {
+          "en": "Body pen 0.13 mm, detail 0.1 mm; dark jeans and boots, mid-tone jacket, light head and hands.",
+          "de": "Körperstift 0,13 mm, Detail 0,1 mm; dunkle Jeans und Stiefel, Jacke im Mittelton, heller Kopf und helle Hände."
+        },
+        "overlays": {
+          "en": "All eleven regions have shapes; the grip is the upper length of the cane strip.",
+          "de": "Alle elf Regionen haben Formen; der Griff ist die obere Länge des Stockstreifens."
+        }
+      }
+    },
+    "500": {
+      "decisions": {
+        "silhouette": {
+          "en": "Every filled shape is the true outline of the 1:500 model per bone: head with hair, the sunglasses band, jacket, sleeves, hands as single forms, hips, thigh and shank, one boot per foot, the bag block; the cane from the fist to the ground a good step ahead. Arms, hands and the cane are solids of their side profile (sleeves and shaft revolved about their bone, the hands as prisms), so they follow the turned arm and the sweeping cane in every view. The cane is drawn as a 75 mm strip (its true 12 mm would vanish), and the smallest parts (the fist, the glasses band, the fringe, shanks and boots) carry a 0.16 to 0.17 mm outline so that they stay printable down to 1:1000, the coarse end of the band.",
+          "de": "Jede gefüllte Form ist der wahre Umriss des 1:500-Modells je Knochen: Kopf mit Haar, das Brillenband, Jacke, Ärmel, Hände als Einzelformen, Hüfte, Ober- und Unterschenkel, ein Stiefel je Fuß, der Taschenblock; der Stock von der Faust zum Boden einen guten Schritt voraus. Arme, Hände und der Stock sind Körper aus ihrem Seitenprofil (Ärmel und Schaft um ihren Knochen gedreht, die Hände als Prismen) und folgen so in jeder Ansicht dem gedrehten Arm und dem pendelnden Stock. Der Stock ist als 75 mm breiter Streifen gezeichnet (seine wahren 12 mm verschwänden), und die kleinsten Teile (Faust, Brillenband, Pony, Unterschenkel und Stiefel) tragen eine 0,16 bis 0,17 mm starke Kontur, damit sie bis 1:1000, dem groben Ende des Bereichs, druckbar bleiben."
+        },
+        "retained": {
+          "en": "The cane with its angle and tip position, the bag, the dark band of the glasses and the upright posture.",
+          "de": "Der Stock mit Winkel und Spitzenposition, die Tasche, das dunkle Band der Brille und die aufrechte Haltung."
+        },
+        "merged": {
+          "en": "The roller into the red end of the cane, the grip into its upper length, the toe into the boot, the neck into head and jacket.",
+          "de": "Die Rolle in das rote Stockende, der Griff in die obere Stocklänge, die Kappe in den Stiefel, der Hals in Kopf und Jacke."
+        },
+        "omitted": {
+          "en": "Neck as its own shape (its visible sliver would not print), nose, collar, cuffs, bag flap.",
+          "de": "Hals als eigene Form (sein sichtbarer Streifen würde nicht drucken), Nase, Kragen, Bündchen, Taschenklappe."
+        },
+        "thinElements": {
+          "en": "The 12 mm cane is drawn as a strip of 40 mm (0.08 mm) with a 0.13 mm pen, about three times its width, kept because without the cane the asset is a generic pedestrian; the strap is a 0.1 mm stroke; the right fist has a 0.14 mm pen so that it prints.",
+          "de": "Der 12-mm-Stock ist als Streifen von 40 mm (0,08 mm) mit 0,13-mm-Stift gezeichnet, etwa dreimal so breit, beibehalten, weil das Asset ohne Stock ein beliebiger Fußgänger wäre; der Gurt ist ein 0,1-mm-Strich; die rechte Faust hat einen 0,14-mm-Stift, damit sie druckt."
+        },
+        "hatching": {
+          "en": "No hatching at 1:500.",
+          "de": "Keine Schraffur bei 1:500."
+        },
+        "styles": {
+          "en": "Body pen 0.13 mm; dark boots and jeans, mid-tone jacket, light head.",
+          "de": "Körperstift 0,13 mm; dunkle Stiefel und Jeans, Jacke im Mittelton, heller Kopf."
+        },
+        "overlays": {
+          "en": "All eleven regions have shapes: the upper cane strip is the grip, the red end the tip.",
+          "de": "Alle elf Regionen haben Formen: der obere Stockstreifen ist der Griff, das rote Ende die Spitze."
+        }
+      }
+    }
+  },
+  "volumes": {
+    "50": [
+      {
+        "en": "Body at 1:50: a woman of 1.68 m (1.70 m in ankle boots) modelled section by section in the stance with the cane ahead. Jacket as one loft of 15 slices with bust and shoulder blades, a separate waistband standing 4.5 mm proud, collar, two pointed chest pocket flaps that follow the curve of the chest with a press stud at each point, six buttons, the shirt at the open collar; sleeves with set-in heads and cuffs; hips and legs of slim jeans with gluteal, quadriceps and calf shaping, thigh and shank overlapping 30 mm at the knee and sleeve and forearm at the elbow so the outline runs on without a step; Chelsea boots with shaft, quarters, toe box, heel block and sole; head of 13 slices with nose, lips and chin, a chin-length bob that is fullest at the cheeks and turns in at the ends, with a fringe over the forehead and the face left open from the temples down, sunglasses with two lenses, frame and temples.",
+        "de": "Körper bei 1:50: eine Frau von 1,68 m (1,70 m in Stiefeletten), Schnitt für Schnitt im Stand mit dem Stock voraus modelliert. Jacke als ein Loft aus 15 Scheiben mit Brust und Schulterblättern, einem eigenen, 4,5 mm vorstehenden Bund, Kragen, zwei spitzen Brusttaschenklappen, die der Wölbung der Brust folgen, mit je einem Druckknopf an der Spitze, sechs Knöpfen, dem Hemd im offenen Kragen; Ärmel mit eingesetzten Armkugeln und Bündchen; Hüfte und Beine der schmalen Jeans mit Gesäß, Quadrizeps und Wade, Ober- und Unterschenkel am Knie und Ärmel und Unterarm am Ellbogen 30 mm überlappend, so dass der Umriss ohne Stufe durchläuft; Chelsea-Stiefel mit Schaft, Quartieren, Kappe, Absatzblock und Sohle; Kopf aus 13 Scheiben mit Nase, Lippen und Kinn, kinnlanger Bob, an den Wangen am vollsten und an den Spitzen eingedreht, mit Pony über der Stirn und von den Schläfen abwärts offenem Gesicht, Sonnenbrille mit zwei Gläsern, Fassung und Bügeln."
+      },
+      {
+        "en": "Hands: the left hangs with thumb and four fingers of three phalanges; the right holds the grip obliquely in the palm, index finger stretched along it, thumb on top, three fingers wrapped round. Cane: rubber grip of 24 mm, aluminium shaft of 12 mm in true size with three folding joints, red end, hook and a 27 mm roller whose end dome touches the ground, elastic wrist loop. Bag of 250 x 200 x 80 mm at the right hip with flap, clasp and lugs, its 27 mm strap across chest and back over the left shoulder.",
+        "de": "Hände: die linke hängt mit Daumen und vier dreigliedrigen Fingern; die rechte hält den Griff schräg in der Handfläche, der Zeigefinger liegt gestreckt daran, der Daumen oben, drei Finger umgreifen ihn. Stock: Gummigriff von 24 mm, Aluminiumschaft von 12 mm in wahrer Größe mit drei Steckverbindungen, rotes Ende, Haken und eine 27-mm-Rolle, deren Endkuppe den Boden berührt, elastische Handschlaufe. Tasche von 250 x 200 x 80 mm an der rechten Hüfte mit Klappe, Schließe und Ösen, ihr 27-mm-Gurt über Brust und Rücken zur linken Schulter."
+      },
+      {
+        "en": "Thermal at 1:50: jacket, collar and sleeves as nested shells (denim by reference, shirt 2 mm and air 3 mm further in), jeans legs as open tubes with their air shell, hips below the jacket hem, boots with sock and air shells; the face skin is the head below the hairline without its hair-covered back, plus neck, nose, lips and chin; hair, hands, sunglasses, bag and the three cane regions by reference; breath outlets under the nose and on the lips, the plume outlet on the crown.",
+        "de": "Thermik bei 1:50: Jacke, Kragen und Ärmel als geschachtelte Schalen (Denim als Verweis, Hemd 2 mm und Luft 3 mm weiter innen), Jeansbeine als offene Röhren mit Luftschale, Hüfte unterhalb des Jackensaums, Stiefel mit Socken- und Luftschale; die Gesichtshaut ist der Kopf unter dem Haaransatz ohne den haarbedeckten Hinterkopf, dazu Hals, Nase, Lippen und Kinn; Haar, Hände, Sonnenbrille, Tasche und die drei Stockregionen als Verweis; Atemauslässe unter der Nase und auf den Lippen, der Auslass der Wärmefahne auf dem Scheitel."
+      },
+      {
+        "en": "Structure at 1:50: the skeleton, never the body: spine with lordosis and kyphosis, nine rib hoops, sternum, clavicles, scapulae, sacrum, ilia, pubic and ischial rami of a wide female pelvis, cranium, facial bones, mandible, cervical spine, femur with neck and trochanter running inwards to the knee, patella, tibia, fibula, foot bones, humerus, ulna and radius, carpals, metacarpals and phalanges; the cane tube as a member with its joint in the fist and the roller support at the tip; joints at the rig joints, masses at the centres of mass.",
+        "de": "Struktur bei 1:50: das Skelett, nie der Körper: Wirbelsäule mit Lordose und Kyphose, neun Rippenringe, Brustbein, Schlüsselbeine, Schulterblätter, Kreuzbein, Darmbeine, Scham- und Sitzbeinäste eines breiten weiblichen Beckens, Hirnschädel, Gesichtsknochen, Unterkiefer, Halswirbelsäule, Femur mit Hals und Trochanter, einwärts zum Knie laufend, Kniescheibe, Tibia, Fibula, Fußknochen, Humerus, Elle und Speiche, Handwurzel, Mittelhand und Fingerglieder; das Stockrohr als Stab mit seinem Gelenk in der Faust und dem Rollenlager an der Spitze; Gelenke an den Rig-Gelenken, Massen in den Schwerpunkten."
+      }
+    ],
+    "100": [
+      {
+        "en": "1:100, authored anew for 15 mm: jacket of ten slices, collar, legs of four stations, boots with shaft and merged sole, sleeves, the left hand as a mitten with thumb, the right as palm, index finger, finger mass and thumb on the grip; head of eight slices with nose, bob of seven, the sunglasses as one dark band; bag with flap; cane with grip, true-size shaft, red end and roller. Buttons, pockets, joints and loop are left out.",
+        "de": "1:100, neu für 15 mm verfasst: Jacke aus zehn Scheiben, Kragen, Beine aus vier Stationen, Stiefel mit Schaft und eingeschmolzener Sohle, Ärmel, die linke Hand als Fäustling mit Daumen, die rechte als Handfläche, Zeigefinger, Fingermasse und Daumen am Griff; Kopf aus acht Scheiben mit Nase, Bob aus sieben, die Sonnenbrille als ein dunkles Band; Tasche mit Klappe; Stock mit Griff, Schaft in wahrer Größe, rotem Ende und Rolle. Knöpfe, Taschen, Steckverbindungen und Schlaufe entfallen."
+      },
+      {
+        "en": "Thermal at 1:100: one surface per region in its outer layer (layers merged), jeans as open tubes, hips below the hem, face skin without the hair-covered back of the head. Structure: merged skeleton with five rib hoops, ischiopubic bars, jaw, hand plates and the index finger, the cane tube and its support.",
+        "de": "Thermik bei 1:100: je Region eine Fläche in ihrer äußeren Lage (Lagen zusammengelegt), Jeans als offene Röhren, Hüfte unter dem Saum, Gesichtshaut ohne den haarbedeckten Hinterkopf. Struktur: zusammengefasstes Skelett mit fünf Rippenringen, Sitz-Schambein-Stäben, Kiefer, Handplatten und dem Zeigefinger, das Stockrohr und sein Lager."
+      }
+    ],
+    "200": [
+      {
+        "en": "1:200, authored anew for 30 mm: jacket of eight slices, legs of three and four stations running into the boot, boot and toe, sleeves, mitten hand and fist, neck, head of six slices, bob of five, the sunglasses band wrapped to the temples, bag block; the cane as three true-size rods (grip length, white shaft, red end) with a roller at the 30 mm floor.",
+        "de": "1:200, neu für 30 mm verfasst: Jacke aus acht Scheiben, Beine aus drei und vier Stationen bis in den Stiefel, Stiefel und Kappe, Ärmel, Fäustlingshand und Faust, Hals, Kopf aus sechs Scheiben, Bob aus fünf, das Brillenband bis zu den Schläfen, Taschenblock; der Stock als drei Stäbe in wahrer Größe (Grifflänge, weißer Schaft, rotes Ende) mit einer Rolle an der 30-mm-Untergrenze."
+      },
+      {
+        "en": "Structure at 1:200: skull, cervical bar, spine, three rib hoops, shoulder girdle bar, pelvic ring, one bone per limb segment, foot and toe bones, hand bones, the cane rods and their support, joints and five masses.",
+        "de": "Struktur bei 1:200: Schädel, Halsstab, Wirbelsäule, drei Rippenringe, Schultergürtelstab, Beckenring, ein Knochen je Gliedsegment, Fuß- und Zehenknochen, Handknochen, die Stockstäbe und ihr Lager, Gelenke und fünf Massen."
+      }
+    ],
+    "500": [
+      {
+        "en": "1:500, authored anew for 75 mm: jacket of six slices, hips, thigh and shank, one boot per foot, sleeve and forearm, hands as single forms, neck, head and hair, the sunglasses band, bag block; the cane as three true-size rods, the roller merged into the red end.",
+        "de": "1:500, neu für 75 mm verfasst: Jacke aus sechs Scheiben, Hüfte, Ober- und Unterschenkel, ein Stiefel je Fuß, Ärmel und Unterarm, Hände als Einzelformen, Hals, Kopf und Haar, das Brillenband, Taschenblock; der Stock als drei Stäbe in wahrer Größe, die Rolle im roten Ende aufgegangen."
+      },
+      {
+        "en": "Structure at 1:500: a stick skeleton at 75 mm (skull, neck, spine, shoulder and pelvic girdle, limb sticks, foot and hand bones), the cane rods and their support, eight joints and two masses.",
+        "de": "Struktur bei 1:500: ein Stabskelett mit 75 mm (Schädel, Hals, Wirbelsäule, Schulter- und Beckengürtel, Gliederstäbe, Fuß- und Handknochen), die Stockstäbe und ihr Lager, acht Gelenke und zwei Massen."
+      }
+    ]
+  },
+  "notes": {
+    "en": "Joint heights and segment lengths after Winter 2009 (table 4.1) and Drillis and Contini for a woman of 1.68 m, raised by 21 mm for ankle boots with a 25 mm heel; masses and centres of mass after de Leva (female), surface area after DuBois, clothing after ISO 9920. Cane length (to the sternum) and techniques after Jacobson 2013 (qualitative): index-finger grasp with the hand at the midline, the tip sweeping to the side opposite the leading foot. The 12 mm folding aluminium shaft, the 24 mm rubber grip, the 27 mm roller tip and the red end are authored after common products; gait after Perry and Burnfield 2010.",
+    "de": "Gelenkhöhen und Segmentlängen nach Winter 2009 (Tabelle 4.1) und Drillis und Contini für eine Frau von 1,68 m, um 21 mm angehoben für Stiefeletten mit 25 mm Absatz; Massen und Schwerpunkte nach de Leva (weiblich), Oberfläche nach DuBois, Kleidung nach ISO 9920. Stocklänge (bis zum Brustbein) und Techniken nach Jacobson 2013 (qualitativ): Zeigefingergriff mit der Hand in der Körpermitte, die Spitze pendelt auf die Seite gegenüber dem vorderen Fuß. Der faltbare 12-mm-Aluminiumschaft, der 24-mm-Gummigriff, die 27-mm-Rollspitze und das rote Ende sind nach gängigen Produkten angesetzt; Gang nach Perry und Burnfield 2010."
+  },
+  "structureAssumptions": [
+    {
+      "en": "The cane tip is a permanent rolling support on the ground (a roller carries only vertical force, no braking); the share it carries follows the elastic-support model of the solver and is not a clinical load measurement.",
+      "de": "Die Stockspitze ist ein dauerhaftes Rollenlager am Boden (eine Rolle trägt nur Vertikalkraft, keine Bremskraft); ihr Lastanteil folgt dem Elastizitätsmodell des Lösers und ist keine klinische Lastmessung."
+    },
+    {
+      "en": "The cane tip sweeps from side to side across the walking direction; the roller support carries vertical force only and its share follows the solver's elastic-support model.",
+      "de": "Die Stockspitze pendelt quer zur Gehrichtung von Seite zu Seite; das Rollenlager trägt nur Vertikalkraft und sein Anteil folgt dem Elastizitätsmodell des Lösers."
+    }
+  ]
+}

@@ -6,7 +6,7 @@
 use semio_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::{focus_ink_editor, focus_ink_surface, focus_vfs_control};
 use crate::retained_ui_engine::{ui_document_close_pending_for, SceneIntentEvent, SceneInteractionIntent, SCENE_INTENTS, UI_ENGINE};
 use semio_renderer_wgpu_ui_engine_focus::text_and_table_focus::{clear_focused_table_editable_text, commit_focused_table_editable_text_with_engine, focus_table_editable_text, focus_table_stepper, focused_table_editable_text_address, install_text_editor_focus, reset_text_editor_caret, text_editor_focus_in};
-use semio_renderer_wgpu_scene_canvas2d::ui_image_loading::{framework_widget_context, render_ui_image_step};
+use semio_renderer_wgpu_scene_canvas2d::ui_image_loading::{framework_widget_context, render_ui_image_step, render_window_image_resource, replace_window_image_resource};
 use crate::element_contracts::ScenePointerTarget;
 use semio_renderer_wgpu_scene_render::render_component_scene_step;
 use semio_ui_declaration::layout::ActionDescriptor;
@@ -475,7 +475,14 @@ impl semio_ui_wgpu_hosting::scene_slots::SceneHost for FrameworkSceneHost<'_> {
                 }
                 step
             }
-            semio_ui_wgpu_hosting::scene_slots::SlotContent::Image(image) => render_ui_image_step(image, slot.rect, &mut ctx, cursor),
+            semio_ui_wgpu_hosting::scene_slots::SlotContent::Image(image) => {
+                if ui_contract::window_resource::WindowResourcePage::parse(&image.src).is_some() {
+                    render_window_image_resource(image, slot.rect, &mut ctx, cursor, self.window_id, self.window_generation, self.document_generation)
+                } else {
+                    if cursor.phase() == 0 { replace_window_image_resource(image, &mut ctx, self.window_id, self.window_generation); }
+                    render_ui_image_step(image, slot.rect, &mut ctx, cursor)
+                }
+            }
         }
     }
 }

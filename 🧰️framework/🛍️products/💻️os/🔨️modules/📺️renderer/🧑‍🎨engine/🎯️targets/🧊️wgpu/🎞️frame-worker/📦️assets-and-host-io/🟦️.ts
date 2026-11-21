@@ -14,7 +14,7 @@ type AssetRequest = {
   readonly available: boolean;
   readonly url?: string;
   readonly referenceImage?: boolean;
-  readonly world?: boolean;
+  readonly transportRetry?: boolean;
   readonly responseByteCapacity?: number;
   readonly pageByteCapacity?: number;
 };
@@ -90,11 +90,11 @@ async function pumpAsset(): Promise<void> {
     const signal = responseController.signal;
     const referenceChunks = await retryBrowserAssetResponse(
       () => streamAssetResponse(url, request.referenceImage === true, signal, responseCurrent),
-      request.world ? async delayMs => {
+      request.transportRetry ? async delayMs => {
         const attempts = ASSET_RESPONSE_BYTE_CAPACITY / ASSET_RESPONSE_PAGE_BYTES + ASSET_SEAL_ATTEMPTS;
         for (let attempt = 0; attempt < attempts; attempt++) {
           responseCurrent();
-          if (ownedStep("asset-response-retry", () => runtime!.resetWorldAssetResponseStep())) {
+          if (ownedStep("asset-response-retry", () => runtime!.resetAssetResponseStep())) {
             await monitoredSuspension("asset-transport-retry", () => waitForBrowserAssetRetry(delayMs, signal));
             responseCurrent();
             return;

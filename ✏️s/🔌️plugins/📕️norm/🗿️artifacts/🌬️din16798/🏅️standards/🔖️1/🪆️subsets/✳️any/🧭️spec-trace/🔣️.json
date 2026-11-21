@@ -1,0 +1,372 @@
+{
+ "code": "din16798",
+ "standard": "DIN EN 16798",
+ "spec": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/din16798-normative-scope-2026-11-21.md",
+ "specIds": [
+  "VE-01",
+  "VE-02",
+  "VE-03",
+  "VE-04",
+  "VE-05",
+  "VE-06",
+  "VE-07",
+  "VE-08",
+  "VE-09",
+  "VE-10",
+  "VE-11",
+  "VE-12",
+  "VE-13",
+  "VE-14",
+  "VE-15",
+  "VE-16",
+  "VE-17",
+  "VE-18",
+  "VE-19",
+  "VE-20",
+  "VE-21"
+ ],
+ "items": [
+  {
+   "id": "VE-01",
+   "clause": "DIN EN 16798-1:2022-03",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.top.summer.",
+     "din16798-1.top.winter.",
+     "din16798-1.adaptive.",
+     "din16798-1.pmv.summer.",
+     "din16798-1.ppd.summer."
+    ]
+   },
+   "description": {
+    "en": "The checks cover the implemented seasonal, adaptive and PMV/PPD models.",
+    "de": "Die Prüfungen erfassen die implementierten saisonalen, adaptiven sowie PMV-/PPD-Modelle."
+   }
+  },
+  {
+   "id": "VE-02",
+   "clause": "DIN EN 16798-1:2022-03",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.co2.",
+     "din16798-1.vent.",
+     "din16798-1.rh."
+    ]
+   },
+   "description": {
+    "en": "The checks cover modeled outdoor air, carbon dioxide and humidity cases.",
+    "de": "Die Prüfungen erfassen modellierte Fälle zu Außenluft, Kohlendioxid und Feuchte."
+   }
+  },
+  {
+   "id": "VE-03",
+   "clause": "DIN EN 16798-1:2022-03",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.illuminance.",
+     "din16798-1.noise.",
+     "din16798-1.draught."
+    ]
+   },
+   "description": {
+    "en": "The report checks the recorded lighting, noise and draught inputs.",
+    "de": "Der Bericht prüft die erfassten Angaben zu Beleuchtung, Geräusch und Zugluft."
+   }
+  },
+  {
+   "id": "VE-04",
+   "clause": "DIN EN 16798-1:2022-03 / German National Annex",
+   "entity": "UseProfile",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "Seasonal and hourly thermal criteria, occupancy profiles, dwelling airflow, ventilation effectiveness, pre-occupancy flushing, local discomfort and contaminant evidence require individual modelling.",
+     "de": "Saisonale und stündliche Temperaturkriterien, Belegungsprofile, Wohnungslüftung, Lüftungseffektivität, Spülbetrieb, lokale Unbehaglichkeit und Schadstoffnachweise erfordern eigene Modelle."
+    }
+   },
+   "description": {
+    "en": "Seasonal and hourly thermal criteria, occupancy profiles, dwelling airflow, ventilation effectiveness, pre-occupancy flushing, local discomfort and contaminant evidence require individual modelling.",
+    "de": "Saisonale und stündliche Temperaturkriterien, Belegungsprofile, Wohnungslüftung, Lüftungseffektivität, Spülbetrieb, lokale Unbehaglichkeit und Schadstoffnachweise erfordern eigene Modelle."
+   }
+  },
+  {
+   "id": "VE-05",
+   "clause": "DIN EN 16798-3:2017-11",
+   "entity": "VentilationSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-3.capacity.",
+     "din16798-3.filter.",
+     "din16798-3.hr.",
+     "din16798-3.humid.",
+     "din16798-3.sfp."
+    ]
+   },
+   "description": {
+    "en": "The report reaches the existing non-residential checks for design flow, filtration, heat recovery, humidity and fan power.",
+    "de": "Der Bericht führt die vorhandenen Nichtwohngebäudeprüfungen für Auslegungsvolumenstrom, Filtration, Wärmerückgewinnung, Feuchte und Ventilatorleistung aus."
+   }
+  },
+  {
+   "id": "VE-06",
+   "clause": "DIN EN 16798-3:2026-10",
+   "entity": "VentilationSystem",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "Revised system definitions, filtration, heat recovery, leakage, fan power and the national annex need an edition-specific implementation.",
+     "de": "Überarbeitete Anlagendefinitionen, Filtration, Wärmerückgewinnung, Leckage, Ventilatorleistung und nationaler Anhang erfordern eine ausgabespezifische Implementierung."
+    }
+   },
+   "description": {
+    "en": "Revised system definitions, filtration, heat recovery, leakage, fan power and the national annex need an edition-specific implementation.",
+    "de": "Überarbeitete Anlagendefinitionen, Filtration, Wärmerückgewinnung, Leckage, Ventilatorleistung und nationaler Anhang erfordern eine ausgabespezifische Implementierung."
+   }
+  },
+  {
+   "id": "VE-07",
+   "clause": "DIN EN 16798-5-1",
+   "entity": "VentilationSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-5-1.fan.",
+     "din16798-5-1.fan-flow.",
+     "din16798-5-1.setback"
+    ]
+   },
+   "description": {
+    "en": "The report computes the implemented fan input and setback checks.",
+    "de": "Der Bericht berechnet die implementierten Prüfgrößen für Ventilatorleistung und Absenkbetrieb."
+   }
+  },
+  {
+   "id": "VE-08",
+   "clause": "DIN EN 16798-5-2:2017-11",
+   "entity": "VentilationSystem",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The separate Method 2 calculation for ventilation distribution and generation needs coverage.",
+     "de": "Das gesonderte Verfahren 2 für Verteilung und Erzeugung der Lüftung muss abgedeckt werden."
+    }
+   },
+   "description": {
+    "en": "The separate Method 2 calculation for ventilation distribution and generation needs coverage.",
+    "de": "Das gesonderte Verfahren 2 für Verteilung und Erzeugung der Lüftung muss abgedeckt werden."
+   }
+  },
+  {
+   "id": "VE-09",
+   "clause": "DIN EN 16798-7",
+   "entity": "Zone / Envelope",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-7.n50",
+     "din16798-7.cellar",
+     "din16798-7.infiltration"
+    ]
+   },
+   "description": {
+    "en": "The report reaches the modeled air infiltration and cellar branches.",
+    "de": "Der Bericht führt die modellierten Zweige für Infiltration und Keller aus."
+   }
+  },
+  {
+   "id": "VE-10",
+   "clause": "DIN EN 16798-9 / DIN EN 16798-13 / DIN EN 16798-15",
+   "entity": "CoolingSystem",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "Cooling system distribution, generation and storage need clause-level traces and normative fixtures.",
+     "de": "Kälteverteilung, Kälteerzeugung und Speicherung erfordern abschnittsgenaue Rückverfolgung und normative Prüffälle."
+    }
+   },
+   "description": {
+    "en": "Cooling system distribution, generation and storage need clause-level traces and normative fixtures.",
+    "de": "Kälteverteilung, Kälteerzeugung und Speicherung erfordern abschnittsgenaue Rückverfolgung und normative Prüffälle."
+   }
+  },
+  {
+   "id": "VE-11",
+   "clause": "DIN EN 16798-17",
+   "entity": "VentilationSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-17.duct.",
+     "din16798-17.inspection-age."
+    ]
+   },
+   "description": {
+    "en": "The report compares the recorded duct leakage and reports inspection age as information. Mandatory inspection frequency is set nationally.",
+    "de": "Der Bericht vergleicht die erfasste Kanalleckage und weist die Zeit seit der Inspektion als Information aus. Die Häufigkeit vorgeschriebener Inspektionen wird national festgelegt."
+   }
+  },
+  {
+   "id": "VE-12",
+   "clause": "DIN EN 16798-17",
+   "entity": "Inspection",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "Inspection procedures, on-site measurements and reporting evidence need a dedicated assessment.",
+     "de": "Inspektionsabläufe, Vor-Ort-Messungen und Berichtsnachweise erfordern eine eigene Bewertung."
+    }
+   },
+   "description": {
+    "en": "Inspection procedures, on-site measurements and reporting evidence need a dedicated assessment.",
+    "de": "Inspektionsabläufe, Vor-Ort-Messungen und Berichtsnachweise erfordern eine eigene Bewertung."
+   }
+  },
+  {
+   "id": "VE-13",
+   "clause": "DIN EN 16798-1:2022-03 NA.5.1.1 / EN 16798-1:2019 B.3.1.1",
+   "entity": "Zone / VentilationSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.vent.",
+     "din16798-3.capacity."
+    ]
+   },
+   "description": {
+    "en": "For occupied non-residential zones with complete mixing, the design airflow respects the 4 L/s per-person minimum. System capacity accounts for the minimum of each served zone.",
+    "de": "Für belegte Nichtwohnräume mit vollständiger Vermischung gilt ein Auslegungs-Außenluftvolumenstrom von mindestens 4 l/s je Person. Die Anlagenkapazität berücksichtigt den Mindestwert jeder versorgten Zone."
+   }
+  },
+  {
+   "id": "VE-14",
+   "clause": "EN 16798-1:2019 §6.3.2 / Tables B.9–B.12",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.vent.",
+     "din16798-1.co2."
+    ]
+   },
+   "description": {
+    "en": "The report and category diagrams evaluate the selected complete-mixing zone design method. Defaults include the reference CO₂ balance, the greater of the two office rates and the selected residential supply criterion.",
+    "de": "Bericht und Kategoriediagramme bewerten das gewählte Raum-Auslegungsverfahren bei vollständiger Vermischung. Standardwerte umfassen die CO₂-Stoffbilanz, den größeren der beiden Büro-Luftvolumenströme und das gewählte Wohnraum-Zuluftkriterium."
+   }
+  },
+  {
+   "id": "VE-15",
+   "clause": "DIN EN 16798-1:2022-03 NA.5.1.2–NA.5.2",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.vent.",
+     "din16798-1.co2."
+    ]
+   },
+   "description": {
+    "en": "German non-residential design uses Tables NA.6 and NA.7 for perceived air quality and Table NA.9 for the CO₂ reference. Method 3 is excluded and the German dwelling branch requires a dwelling-unit design basis.",
+    "de": "Die deutsche Auslegung für Nichtwohngebäude nutzt Tabellen NA.6 und NA.7 für empfundene Luftqualität sowie Tabelle NA.9 für den CO₂-Bezugswert. Verfahren 3 ist ausgeschlossen und die deutsche Wohnraumlüftung erfordert eine Auslegungsgrundlage für die Nutzeinheit."
+   }
+  },
+  {
+   "id": "VE-16",
+   "clause": "EN 16798-1:2019 Table B.2 / DIN EN 16798-1:2022-03 Table NA.3",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.top.summer.",
+     "din16798-1.top.winter."
+    ]
+   },
+   "description": {
+    "en": "The seasonal design checks use the applicable heating minimum and cooling maximum for the modelled seated office-like and living-room uses.",
+    "de": "Die saisonalen Auslegungsprüfungen verwenden das zutreffende Heizminimum und Kühlmaximum für die modellierten sitzenden Büro- und Wohnraumnutzungen."
+   }
+  },
+  {
+   "id": "VE-17",
+   "clause": "EN 16798-1:2019 B.2.2 / Figure B.1",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.adaptive."
+    ]
+   },
+   "description": {
+    "en": "For the selected EN free-running profile, categories I to III use asymmetric temperature bounds inside the published range of running-mean outdoor temperature.",
+    "de": "Für das gewählte freilaufende EN-Profil verwenden die Kategorien I bis III asymmetrische Temperaturgrenzen innerhalb des veröffentlichten Bereichs der gleitenden Außenlufttemperatur."
+   }
+  },
+  {
+   "id": "VE-18",
+   "clause": "DIN EN 16798-1:2022-03 NA.6.2",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.vent."
+    ]
+   },
+   "description": {
+    "en": "Projects using the German very-low-pollution design class need approval and material and acceptance evidence before using its lower airflow rate.",
+    "de": "Für den niedrigeren Auslegungsvolumenstrom der deutschen Kategorie sehr schadstoffarm sind Zustimmung und Nachweise zu Baustoffen und Abnahme erforderlich."
+   }
+  },
+  {
+   "id": "VE-19",
+   "clause": "EN 16798-1:2019 Table B.16 / DIN EN 16798-1:2022-03 Table NA.10",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.rh."
+    ]
+   },
+   "description": {
+    "en": "The report and diagram show the applicable relative-humidity design setpoints. Operator evidence of an installed humidifier enables the lower-bound assessment.",
+    "de": "Bericht und Diagramm zeigen die zutreffenden relativen Feuchtesollwerte. Eine hinterlegte installierte Befeuchtung aktiviert die Prüfung der Untergrenze."
+   }
+  },
+  {
+   "id": "VE-20",
+   "clause": "EN 16798-1:2019 Table B.3 / DIN EN 16798-1:2022-03 Table NA.4",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.draught."
+    ]
+   },
+   "description": {
+    "en": "The draught prediction uses the annex-specific rate limit and checks the local air model range. A speed remedy respects the same formula and limit.",
+    "de": "Die Zugluftprognose verwendet den anhangbezogenen Grenzwert und prüft den Anwendungsbereich des Luftmodells. Die Abhilfe zur Luftgeschwindigkeit hält dieselbe Formel und denselben Grenzwert ein."
+   }
+  },
+  {
+   "id": "VE-21",
+   "clause": "EN 16798-1:2019 Tables B.18 and B.20 / DIN EN 16798-1:2022-03 NA.7 and Table NA.11",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din16798-1.illuminance.",
+     "din16798-1.noise."
+    ]
+   },
+   "description": {
+    "en": "The report uses the representative visual-task illuminance and continuous equipment sound levels applicable to the modelled room profiles.",
+    "de": "Der Bericht verwendet die repräsentative Beleuchtungsstärke der Sehaufgabe und die anwendbaren Dauerschallpegel gebäudetechnischer Anlagen für die modellierten Räume."
+   }
+  }
+ ]
+}

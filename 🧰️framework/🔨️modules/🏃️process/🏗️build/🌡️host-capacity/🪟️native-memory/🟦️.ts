@@ -27,7 +27,19 @@ export type WindowsMemoryPortV1=Readonly<{memory:()=>WindowsMemoryFactsV1;proces
 /** 🛑️ Builds the typed unknown of a Windows answer, in every language. */
 export const windowsMemoryUnknownV1=(reason:"platform"|"host-call",call:string,error:number,detail:string=""):WindowsMemoryUnknownV1=>Object.freeze({known:false,reason,call,error,detail,text:Object.freeze(reason==="platform"?{en:"native Windows memory is read on Windows hosts only",de:"der native Windows-Speicher wird nur auf Windows-Rechnern gelesen"}:{en:`the Windows call ${call} failed (error ${error})${detail===""?"":": "+detail}`,de:`der Windows-Aufruf ${call} schlug fehl (Fehler ${error})${detail===""?"":": "+detail}`})});
 
-type Kernel=Readonly<Record<string,(...args:any[])=>any>>;
+type Kernel = Readonly<{
+ GlobalMemoryStatusEx(buffer: Buffer): number;
+ CreateToolhelp32Snapshot(flags: number, pid: number): bigint;
+ Process32FirstW(snapshot: bigint, entry: Buffer): number;
+ Process32NextW(snapshot: bigint, entry: Buffer): number;
+ OpenProcess(access: number, inherit: number, pid: number): bigint;
+ K32GetProcessMemoryInfo(handle: bigint, counters: Buffer, size: number): number;
+ CloseHandle(handle: bigint): number;
+ GetLastError(): number;
+}>;
+type MemoryKernel = Pick<Kernel, "GlobalMemoryStatusEx" | "GetLastError">;
+type ProcessCountersKernel = Pick<Kernel, "OpenProcess" | "K32GetProcessMemoryInfo" | "CloseHandle">;
+type ProcessTableKernel = Omit<Kernel, "GlobalMemoryStatusEx">;
 
 const loadKernel=():Kernel=>{
  const{dlopen,FFIType:T}=createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
@@ -43,19 +55,19 @@ const loadKernel=():Kernel=>{
  }).symbols as unknown as Kernel;
 };
 
-const fail=(kernel:Kernel,call:string):WindowsMemoryUnknownV1=>windowsMemoryUnknownV1("host-call",call,Number(kernel.GetLastError()));
+const fail=(kernel:Pick<Kernel,"GetLastError">,call:string):WindowsMemoryUnknownV1=>windowsMemoryUnknownV1("host-call",call,kernel.GetLastError());
 
 /** 🪟️ Reads the machine facts through `GlobalMemoryStatusEx` of an already loaded kernel32. */
-export function readWindowsMemoryV1(kernel:Kernel):WindowsMemoryFactsV1{
+export function readWindowsMemoryV1(kernel:MemoryKernel):WindowsMemoryFactsV1{
  const buffer=Buffer.alloc(L.memoryStatus.size),view=new DataView(buffer.buffer,buffer.byteOffset,buffer.byteLength);view.setUint32(0,L.memoryStatus.size,true);
  if(!kernel.GlobalMemoryStatusEx(buffer))return fail(kernel,"GlobalMemoryStatusEx");
  const big=(offset:number):number=>Number(view.getBigUint64(offset,true));
  return Object.freeze({known:true,totalBytes:big(L.memoryStatus.totalPhysical),availableBytes:big(L.memoryStatus.availablePhysical),commitLimitBytes:big(L.memoryStatus.totalPageFile),commitAvailableBytes:big(L.memoryStatus.availablePageFile),loadPercent:Math.min(100,view.getUint32(L.memoryStatus.load,true))});
 }
 
-function readWindowsProcessCountersV1(kernel:Kernel,pid:number):Readonly<{workingSetBytes:number;privateBytes:number}>|undefined{
+function readWindowsProcessCountersV1(kernel:ProcessCountersKernel,pid:number):Readonly<{workingSetBytes:number;privateBytes:number}>|undefined{
  if(!Number.isInteger(pid)||pid<1||pid>0xffffffff)return undefined;
- const handle=kernel.OpenProcess(L.queryLimitedInformation,0,pid) as bigint;
+ const handle=kernel.OpenProcess(L.queryLimitedInformation,0,pid);
  if(handle===0n)return undefined;
  try{
   const counters=Buffer.alloc(L.memoryCounters.size),view=new DataView(counters.buffer,counters.byteOffset,counters.byteLength);
@@ -66,7 +78,7 @@ function readWindowsProcessCountersV1(kernel:Kernel,pid:number):Readonly<{workin
 }
 
 /** 🎯️ Opens one exact Windows process, reads its working set and closes its handle without walking the process table. */
-export function readWindowsProcessWorkingSetV1(kernel:Kernel,pid:number):number|undefined{
+export function readWindowsProcessWorkingSetV1(kernel:ProcessCountersKernel,pid:number):number|undefined{
  const bytes=readWindowsProcessCountersV1(kernel,pid)?.workingSetBytes;
  return Number.isSafeInteger(bytes)?bytes:undefined;
 }
@@ -81,21 +93,21 @@ export function systemWindowsProcessWorkingSetV1(pid:number):number|undefined{
 }
 
 /** 🗂️ Walks the toolhelp snapshot of an already loaded kernel32 and reads the memory counters of every process it may open. */
-export function readWindowsProcessesV1(kernel:Kernel):WindowsProcessTableV1{
- const invalid=BigInt(L.invalidHandle),snapshot=kernel.CreateToolhelp32Snapshot(L.snapshotProcesses,0) as bigint;
+export function readWindowsProcessesV1(kernel:ProcessTableKernel):WindowsProcessTableV1{
+ const invalid=BigInt(L.invalidHandle),snapshot=kernel.CreateToolhelp32Snapshot(L.snapshotProcesses,0);
  if(snapshot===invalid||snapshot===0n)return fail(kernel,"CreateToolhelp32Snapshot");
  const entry=Buffer.alloc(L.processEntry.size),view=new DataView(entry.buffer,entry.byteOffset,entry.byteLength),rows:WindowsProcessRowV1[]=[];let unreadable=0;
  try{
   view.setUint32(0,L.processEntry.size,true);
-  let more=kernel.Process32FirstW(snapshot,entry) as number;
-  if(!more){const error=Number(kernel.GetLastError());if(error!==18)return windowsMemoryUnknownV1("host-call","Process32FirstW",error);}
+  let more=kernel.Process32FirstW(snapshot,entry);
+  if(!more){const error=kernel.GetLastError();if(error!==18)return windowsMemoryUnknownV1("host-call","Process32FirstW",error);}
   while(more){
    const pid=view.getUint32(L.processEntry.processId,true),parent=view.getUint32(L.processEntry.parentProcessId,true);
    let name="";for(let index=0;index<L.processEntry.executableNameCharacters;index++){const unit=view.getUint16(L.processEntry.executableName+index*2,true);if(unit===0)break;name+=String.fromCharCode(unit);}
    const counters=readWindowsProcessCountersV1(kernel,pid);
    if(counters===undefined)unreadable++;
    rows.push(Object.freeze({pid,parent,name,workingSetBytes:counters?.workingSetBytes??null,privateBytes:counters?.privateBytes??null}));
-   view.setUint32(0,L.processEntry.size,true);more=kernel.Process32NextW(snapshot,entry) as number;
+   view.setUint32(0,L.processEntry.size,true);more=kernel.Process32NextW(snapshot,entry);
   }
  }finally{kernel.CloseHandle(snapshot);}
  return Object.freeze({known:true,unreadable,rows:Object.freeze(rows)});
@@ -107,6 +119,6 @@ export function systemWindowsMemoryPortV1(platform:NodeJS.Platform=process.platf
  if(platform!=="win32"){const unknown=windowsMemoryUnknownV1("platform","",0);return Object.freeze({memory:()=>unknown,processes:()=>unknown});}
  let kernel:Kernel|WindowsMemoryUnknownV1|undefined;
  const load=():Kernel|WindowsMemoryUnknownV1=>kernel??=((): Kernel|WindowsMemoryUnknownV1=>{try{return loadKernel();}catch(error){return windowsMemoryUnknownV1("host-call","dlopen kernel32.dll",0,String((error as Error)?.message??error).split("\n")[0]!);}})();
- const use=<T>(run:(kernel:Kernel)=>T):T|WindowsMemoryUnknownV1=>{const loaded=load();return"known"in loaded?loaded as WindowsMemoryUnknownV1:run(loaded as Kernel);};
+ const use=<T>(run:(kernel:Kernel)=>T):T|WindowsMemoryUnknownV1=>{const loaded=load();return"known"in loaded?loaded:run(loaded);};
  return Object.freeze({memory:()=>use(readWindowsMemoryV1),processes:()=>use(readWindowsProcessesV1)});
 }

@@ -1,0 +1,15 @@
+{
+  "schema": "semio.framework.tool-run.funded-trace-replay.v1",
+  "capacity": 2,
+  "operations": [
+    ["upsert", 7, "danger"], ["upsert", 3, "success"], ["upsert", 6, "success"],
+    ["upsert", 2, "warning"], ["upsert", 1, "testing"], ["retire", 8]
+  ],
+  "resident": [3, 6],
+  "evicted": 2,
+  "overflowed": 1,
+  "replay": [
+    ["upsert", 7, "danger"], ["upsert", 3, "success"],
+    ["retire", 7], ["upsert", 6, "success"]
+  ]
+}

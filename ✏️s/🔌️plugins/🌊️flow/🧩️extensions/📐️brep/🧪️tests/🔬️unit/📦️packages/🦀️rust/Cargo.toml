@@ -60,12 +60,32 @@ name = "original-brep-queries"
 path = "../../🧭️original-queries.rs"
 
 [[test]]
+name = "original-brep-exchange"
+path = "../../📂️original-exchange.rs"
+
+[[test]]
+name = "original-curve-contacts"
+path = "../../✂️original-curve-contacts.rs"
+
+[[test]]
+name = "original-brep-booleans"
+path = "../../🔗️original-booleans.rs"
+
+[[test]]
+name = "original-skew-boxes"
+path = "../../🔀️original-skew-boxes.rs"
+
+[[test]]
 name = "original-brep-solids"
 path = "../../🧊️original-solids.rs"
 
 [[test]]
 name = "original-brep-faces"
 path = "../../📐️original-faces.rs"
+
+[[test]]
+name = "original-brep-sections"
+path = "../../✂️original-sections.rs"
 
 [[test]]
 name = "retained-mesh-workbench"

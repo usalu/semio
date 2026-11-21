@@ -1,0 +1,251 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@ -675,3 +675,122 @@
+     verify(reopened.snapshot().unwrap(), false);
+     laws::close_registered_fixture_app(&mut reopened, policy, scope.cx()).unwrap();
+ }
++
++#[semio_framework_async_macros::async_test]
++async fn registered_pdf_png_picker_publishes_an_atomic_revision_guarded_image_edit() {
++    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfFormXObject, PdfImage, PdfOp, PdfPage};
++    use semio_framework_value::DslValue;
++    use semio_plugin::{artifact_app_laws as laws, EditorApp, Effect, PluginApp};
++
++    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🖼️local-png/🔣️.json")).unwrap();
++    let samples = |key: &str| fixture[key].as_array().unwrap().iter().map(|sample| u8::try_from(sample.as_u64().unwrap()).unwrap()).collect::<Vec<_>>();
++    let matrix: [f64; 6] = std::array::from_fn(|index| fixture["existing"]["insertPlacement"][index].as_f64().unwrap());
++    let source_id = fixture["existing"]["images"][0].as_str().unwrap();
++    let form_id = fixture["existing"]["forms"][0].as_str().unwrap();
++    let image_id = fixture["expected"]["image"].as_str().unwrap();
++    let mask_id = fixture["expected"]["mask"].as_str().unwrap();
++
++    let mut original = PdfSnapshot::default();
++    let mut first = PdfPage::new(160.0, 120.0);
++    first.content.push(PdfOp::PaintXObject { name: source_id.into() });
++    original.pages = vec![first.clone(), first];
++    original.images.push(PdfImage::gray8(source_id, 1, 1, vec![127]));
++    original.forms.push(PdfFormXObject::new(form_id, [0.0, 0.0, 1.0, 1.0], Vec::new()));
++
++    let mut scope = laws::OriginalFixtureScope::admit();
++    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
++    let meta = laws::meta("local");
++    let mut app = semio_plugin::with_authoring_identity!(|identity| laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(
++        async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } },
++        semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), policy, &mut identity
++    ).await);
++    let Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else {
++        panic!("the seed PDF can produce a document load");
++    };
++    semio_plugin::with_authoring_identity!(|identity| laws::load_document(
++        &mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()
++    ).await).unwrap();
++    let loaded = app.snapshot().unwrap().clone();
++    let request = DslValue::object([
++        ("page".into(), DslValue::float(0.0)),
++        ("x".into(), DslValue::float(matrix[4])),
++        ("y".into(), DslValue::float(matrix[5])),
++        ("width".into(), DslValue::float(matrix[0])),
++        ("height".into(), DslValue::float(matrix[3])),
++    ]);
++    semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
++        &mut app, "insert-image", Some(request), &meta, &mut identity, scope.cx(), policy.close
++    ).await).unwrap();
++    let picker = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
++        &mut app, meta.instance_id, policy, &mut identity, scope.cx()
++    ).await).unwrap();
++    let [Effect::RequestFileOpen { accept, read_as, import_action, multiple, args: Some(args), max_file_bytes, .. }] = picker.effects.as_slice() else {
++        panic!("the registered action emits exactly one local file picker");
++    };
++    assert_eq!(accept, "image/png,.png");
++    assert_eq!(read_as.as_deref(), Some("dataUrl"));
++    assert_eq!(import_action, "import-local-image");
++    assert!(!*multiple);
++    assert_eq!(max_file_bytes.map(|bytes| bytes as u64), fixture["bounds"]["maxFileBytes"].as_u64());
++    assert_eq!(args.get("page").and_then(DslValue::as_u64), Some(0));
++    assert_eq!(args.get("operator").and_then(DslValue::as_u64), Some(u64::from(u32::MAX)));
++    let revision = args.get("revision").and_then(DslValue::as_str).expect("exact picker revision");
++    assert_eq!(revision.len(), 64);
++    assert!(revision.bytes().all(|byte| byte.is_ascii_hexdigit()));
++    assert_eq!(app.snapshot().unwrap(), &loaded);
++
++    let mut callback = args.as_object().unwrap().to_vec();
++    callback.extend([
++        ("name".into(), DslValue::String("sample.png".into())),
++        ("chunk".into(), DslValue::uint(0)),
++        ("chunkCount".into(), DslValue::uint(1)),
++        ("payload".into(), DslValue::String(format!("data:application/octet-stream;base64,{}", fixture["png"].as_str().unwrap()))),
++    ]);
++    let callback = DslValue::object(callback);
++    semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
++        &mut app, import_action, Some(callback.clone()), &meta, &mut identity, scope.cx(), policy.close
++    ).await).unwrap();
++    assert_eq!(app.snapshot().unwrap(), &loaded, "dispatch leaves the retained import private");
++    let receipt = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
++        &mut app, meta.instance_id, policy, &mut identity, scope.cx()
++    ).await).unwrap();
++    assert_eq!(receipt.completions, 1);
++
++    let published = app.snapshot().unwrap().clone();
++    let width = u32::try_from(fixture["width"].as_u64().unwrap()).unwrap();
++    let height = u32::try_from(fixture["height"].as_u64().unwrap()).unwrap();
++    let mut image = PdfImage::rgb8(image_id, width, height, samples("rgb"));
++    image.soft_mask = Some(mask_id.into());
++    let mask = PdfImage::gray8(mask_id, width, height, samples("softMask"));
++    assert_eq!(published.images.len(), loaded.images.len() + 2);
++    assert_eq!(published.image(image_id), Some(&image));
++    assert_eq!(published.image(mask_id), Some(&mask));
++    assert_eq!(published.image(source_id), loaded.image(source_id));
++    assert_eq!(published.forms, loaded.forms);
++    assert_eq!(published.pages[1], loaded.pages[1]);
++    assert!(published.pages[0].content.starts_with(&loaded.pages[0].content));
++    assert!(matches!(
++        &published.pages[0].content[loaded.pages[0].content.len()..],
++        [PdfOp::Save, PdfOp::Transform { matrix: applied }, PdfOp::PaintXObject { name }, PdfOp::Restore]
++            if applied == &matrix && name == image_id
++    ));
++
++    semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
++        &mut app, import_action, Some(callback), &meta, &mut identity, scope.cx(), policy.close
++    ).await).unwrap();
++    let stale = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
++        &mut app, meta.instance_id, policy, &mut identity, scope.cx()
++    ).await);
++    assert!(format!("{:?}", stale.err().expect("the completed picker revision is stale")).contains("PDF changed while the image picker was open"));
++    assert_eq!(app.snapshot().unwrap(), &published);
++
++    semio_plugin::with_authoring_identity!(|identity| laws::settle_history_verb(
++        &mut app, "undo", meta.instance_id, policy, &mut identity, scope.cx()
++    ).await);
++    assert_eq!(app.snapshot().unwrap(), &loaded);
++    semio_plugin::with_authoring_identity!(|identity| laws::settle_history_verb(
++        &mut app, "redo", meta.instance_id, policy, &mut identity, scope.cx()
++    ).await);
++    assert_eq!(app.snapshot().unwrap(), &published);
++    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PNG fixture closes");
++}
+--- /dev/null
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🖼️local-png/🔣️.json
+@@ -0,0 +1,123 @@
++{
++  "definition": "Local sampled image authoring for PDF 1.7 base",
++  "width": 2,
++  "height": 2,
++  "rgba": [
++    255,
++    0,
++    0,
++    255,
++    0,
++    255,
++    0,
++    128,
++    0,
++    0,
++    255,
++    0,
++    255,
++    255,
++    0,
++    255
++  ],
++  "rgb": [
++    255,
++    0,
++    0,
++    0,
++    255,
++    0,
++    0,
++    0,
++    255,
++    255,
++    255,
++    0
++  ],
++  "softMask": [
++    255,
++    128,
++    0,
++    255
++  ],
++  "existing": {
++    "images": [
++      "SemioImage1"
++    ],
++    "forms": [
++      "SemioImage2"
++    ],
++    "placement": [
++      40,
++      0,
++      0,
++      40,
++      20,
++      20
++    ],
++    "inlinePlacement": [
++      40,
++      0,
++      0,
++      40,
++      90,
++      20
++    ],
++    "insertPlacement": [
++      40,
++      0,
++      0,
++      40,
++      20,
++      60
++    ]
++  },
++  "expected": {
++    "image": "SemioImage3",
++    "mask": "SemioImage4",
++    "replacement": 2,
++    "pixelProbes": [
++      [
++        25,
++        45,
++        [
++          255,
++          0,
++          0
++        ]
++      ],
++      [
++        55,
++        45,
++        [
++          127,
++          255,
++          127
++        ]
++      ],
++      [
++        25,
++        75,
++        [
++          255,
++          255,
++          255
++        ]
++      ],
++      [
++        55,
++        75,
++        [
++          255,
++          255,
++          0
++        ]
++      ]
++    ]
++  },
++  "bounds": {
++    "maxFileBytes": 24546,
++    "maxPixels": 4096
++  },
++  "png": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGP4z8DwHwgbGMA0EAEAPdkHevpJ8dsAAAAASUVORK5CYII="
++}

@@ -87,3 +87,48 @@ Final check lines: 1:50 `FAIL: 2 measurement(s) over 1 rule line(s)` (areaDeviat
 - Solid-tone 2D at 1:50 and 1:100 shows one line across the back in plan where the chest shape ends; it is a straight articulation line, not an anatomical one.
 - 1:500: legs, horns, ears and tail are 75 mm thick by the feature rule, so the animal is stouter than life; the skeleton rods are as thick as the legs.
 - No hair texture, no eyelids or pupils, no hoof cleft line in the side elevation.
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: `r5-goat-ribs.ts` (the thirteen rib pairs), `r5-goat-50.ts`, `r5-goat-50-lists.ts`, `r5-goat-coarse.ts`, `r5-goat-decisions.ts` (copies of the r3 scripts with the changes below), `r5-goat-run.sh` (whole pipeline with the r3 2D redraw and candidate validation). Backup of the asset before this round: `🗑️generated/r5-goat/asset-r4.json`.
+
+### Reference and model
+
+The reference table of section 1 stands (withers 0.76 m, bone lengths and joint heights measured there within 3 %). New rows this round:
+
+| landmark | reference (Nickel/Schummer/Seiferle, small ruminants) | model before | model after |
+|---|---|---|---|
+| ribs | 13 pairs: 8 sternal, 5 asternal, slanting caudoventrally (more so caudally), costal cartilages turning forward to the sternum, costal arch | 8 upright hoops perpendicular to the thoracic bone, rings closing under the belly, T1 to T3 and T11 to T13 missing | 13 pairs from T1 (x 0.705) to T13 (x 0.399), ventral sweep 15 to 141 mm, 8 cartilages on the sternum, 5 in the costal arch |
+| ribcage length / depth | 0.31 to 0.34 / 0.33 to 0.36 m | 0.27 / 0.31 | 0.33 / 0.27 bony plus the cartilages to the sternum at 0.437 |
+| cleft between the two claws | a hairline, the claws touch | 3 mm gap (0.06 mm at 1:50, unprintable) | claws touch (centres ±10.2 mm, halfwidth 10.5 to 11 mm) |
+
+### Grades (opened sheets)
+
+| scale | body before / after | thermal before / after | structure before / after |
+|---|---|---|---|
+| 1:50 | A- / A- (body not remodelled except the claws) | A- (r3) / not re-opened | B (barrel-ring ribs) / A- |
+| 1:100 | B+ (not re-opened) / not re-opened | not opened | B / A- (5 sloping ribs with arch, three-quarter view opened) |
+| 1:200 | B+ (six views opened: clean simplified goat, the croup a squared block) / unchanged | not opened | B / not opened (3 sloping ribs) |
+| 1:500 | B (faceted massing, 75 mm limbs) / unchanged | not opened | B / unchanged (one rib girth) |
+| 2D 1:50 | invalid for print (gap 0.096 mm at 1:50) / A- (redrawn, six panels opened) | | |
+
+### Changes
+
+- Structure 1:50: the eight upright rib hoops and the sternum loft replaced by 13 rib pairs as capsule chains (head, angle, widest bow, lowest point, cartilage) with costal arch and a four-segment sternum; 1:100 five of them (ribs 1, 4, 7, 10, 13) at 16 mm, 1:200 three (2, 7, 12) at 31 mm, each with the costal arch where an asternal rib is chosen. `decisions` say so (en, de).
+- Body 1:50: the two claws of each foot moved together so that the cleft is a seam, not a 3 mm gap; this made the 1:50 drawing printable again (`PRINT nominal-gap` and `range-end-gap` gone) after the E1 redraw of all 2D shapes.
+- Pipeline: volumes of all scales rebuilt, spliced, 2D redrawn into a candidate (VALID), written.
+
+### Checks
+
+- `r3-validate.ts animals/goat --volumes`: schema 0, validateAsset 0 (print clean), checkVolumes 5: horns and hooves area shares at 1:50 and 1:100 and the 1:200 total, unchanged from round 3 and filed in `area-review.md` ("r3 animals/goat").
+- `volumes-check.ts --product`: 1:500 PASS; 1:50, 1:100, 1:200 fail only on those area lines.
+
+### What I saw
+
+- 1:50 body six views (before), 1:500 and 1:200 body six views, 1:50 structure six views before and after, 1:100 structure three-quarter after, 1:50 `browsing-upright` six views (closed, reads as a rearing goat), 1:50 2D light-line and light-solid in all three views after the redraw.
+
+### Still imperfect
+
+- The body was not remodelled this round: the ribcage and abdomen meet in a visible seam, the hook bones and thighs stand out as pads in plan, the coarse scales are faceted at 1:500 and the croup is boxy at 1:200; the udder points backwards in `browsing-upright` (it is rigid to the pelvis).
+- Thermal cut sheets, 1:200 and 1:500 structure and the walk clip were not opened in this round.
+- Horn and hoof area shares wait for the area reviewers.

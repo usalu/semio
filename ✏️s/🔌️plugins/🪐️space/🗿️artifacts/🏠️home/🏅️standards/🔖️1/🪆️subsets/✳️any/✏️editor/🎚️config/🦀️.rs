@@ -8,6 +8,8 @@
 //! human's own, undoable Home choices, today the local-studio tombstones. The folded hub directory is DERIVED hub state
 //! and lives in the app transient lane instead (`🫧️transient`), never in this history.
 
+use semio_framework_value::{OriginalReceivingPrimary, OriginalRetirementPoll, RetainedAllocationEffect, RetainedCloneProgress, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::native_decoding::{construction::NativeRecoveryLoan, NativeRetirementDecodeControl};
 use semio_plugin::ToolExecutionContract;
 
 //#region 🔖️Config
@@ -363,6 +365,7 @@ pub struct HomeConfigPreparation {
     serialized_bytes: Option<usize>,
     checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
+    last_work: u64,
 }
 
 fn home_config_refusal(kind: semio_framework_value::ValueRefusalKind, message: &'static str) -> semio_framework_value::ValueError {
@@ -437,7 +440,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         if request.lane != store::os_store::store_schema::HistoryLane::Document || mutation_bytes > maximum_bytes || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err((home_config_refusal(semio_framework_value::ValueRefusalKind::InvariantViolated, "home preparation rejected original mutation or publication authority"), request));
         }
-        Ok((Box::new(HomeConfigPreparation { owners: store::OneItemOwners::from_request(request), serialized_bytes: None, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
+        Ok((Box::new(HomeConfigPreparation { owners: store::OneItemOwners::from_request(request), serialized_bytes: None, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, last_work: 0 }), progress))
     }
 }
 
@@ -445,14 +448,9 @@ impl HomeConfigPreparation {
     fn progress() -> semio_framework_value::retained_clone::RetainedCloneProgress {
         semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }
     }
-}
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for HomeConfigPreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance_admitted(&mut self) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, ValueError> {
         use semio_framework_value::ValueRefusalKind::{InvalidValue, InvariantViolated, OwnershipLimit};
-        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
-        if self.owners.refused.is_some() { return Err(home_config_refusal(InvalidValue, "Space Home config preparation retains its original refusal")); }
-        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
         if self.owners.candidate.is_none() && self.owners.sealed.is_none() {
             let base = self.owners.base.as_ref().ok_or_else(|| home_config_refusal(InvariantViolated, "Space Home config preparation lost its exact base root"))?.get();
             let base_bytes = home_config_retained_bytes(base);
@@ -503,12 +501,35 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Home
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Self::progress()))
     }
+}
+
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for HomeConfigPreparation {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut protocol::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, OriginalReceivingPrimary> {
+        use store::os_store::one_item::ArtifactStoreOneItemPreparationStep::{Blocked, Prepared};
+        self.last_work = 0;
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(Blocked); }
+        if self.owners.refused.is_some() { return Err(home_config_refusal(ValueRefusalKind::InvalidValue, "Space Home config preparation retains its original refusal").into()); }
+        if self.owners.prepared.is_some() { return Ok(Prepared(self.checkpoint, Default::default())); }
+        if !receiving.prepare_work(1)? { return Ok(Blocked); }
+        let result = self.advance_admitted();
+        self.last_work = 1;
+        receiving.commit_work(1)?;
+        result.map_err(Into::into)
+    }
+
+    fn last_turn_work(&self) -> u64 { self.last_work }
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
     fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.owners.prepared.as_ref() }
     fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
+    fn has_pending_receiving_recovery(&self) -> bool { false }
+    fn pending_receiving_demand(&self) -> Option<RetirementDemand> { None }
+    fn pending_receiving_recovery(&mut self) -> Option<NativeRecoveryLoan<'_>> { None }
+    fn finish_receiving_recovery(&mut self, _: &mut NativeRetirementDecodeControl<'_, '_>) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
+        RetainedWorkOutcome { result: Err(home_config_refusal(ValueRefusalKind::InvariantViolated, "Space Home config preparation has no pending receiving frame").into()), work: 0 }
+    }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll { self.owners.close_step(effect) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }

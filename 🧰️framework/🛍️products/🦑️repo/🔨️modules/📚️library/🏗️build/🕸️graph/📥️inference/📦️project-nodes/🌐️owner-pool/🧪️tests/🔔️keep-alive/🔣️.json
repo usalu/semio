@@ -1,0 +1,13 @@
+{
+  "largeBlobBytes": 512,
+  "steps": [
+    { "mode": "announce", "count": 500, "advance": "none", "stored": true, "renewal": false },
+    { "mode": "learn", "count": 499, "advance": "keepalive", "stored": true, "renewal": true },
+    { "mode": "learn", "count": 300, "advance": "minimum", "stored": true, "renewal": false },
+    { "mode": "settle", "count": 299, "advance": "none", "stored": true, "renewal": false },
+    { "mode": "settle", "count": 120, "advance": "none", "stored": false, "renewal": false },
+    { "mode": "miss", "count": 120, "advance": "keepalive", "stored": true, "renewal": true },
+    { "mode": "target", "count": 8, "advance": "none", "stored": true, "renewal": false },
+    { "mode": "miss", "count": 119, "advance": "keepalive", "stored": true, "renewal": true }
+  ]
+}

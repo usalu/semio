@@ -99,3 +99,56 @@ Opened after the last change: `r3-sheet` body 1:50 and 1:200; structure 1:50, 1:
 - Tilt actuator, hand control, cables and the gas spring cover of the arm are not modelled; the spring is in the structure list only.
 - `r3-sheet --list thermal`: at 1:200 and 1:500 the solids that stand for two regions are striped (two references at one place), and pads are grey at 1:100 and coarser; noted in `tool-requests.md`.
 - Repo test suites and exports were not run; fixtures that embed this asset will differ.
+
+## Round 5 handcraft
+
+Scripts: `r5-operating-table-build.py` (round 3 model loaded, the mass solids restated; writes `🗑️generated/r5-operating-table/🔣️.json` and `volumes/furniture/operating-table.json`), `r5-furniture-f03-ship.sh`, `r5-furniture-f03-report.py`. Sheets opened for grading (Read tool, 1000 to 1400 px copies of the 2400 px sheets under `🗑️generated/r5-operating-table/before|after/`): `r3-sheet` body, structure and thermal (`--cut`) at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50, one clip frame, and `r3-2d` at every scale (the 2D drawings were not changed in round 5, so the before set is the after set).
+
+### Reference (manufacturer data and standards)
+
+| Quantity | Reference | Source |
+| --- | --- | --- |
+| Table top | 500-540 mm wide, 560-590 mm over the rails, 2030-2130 mm long | ALVO Etiuda, Schmitz OPX mobilis, IEC 60601-2-46 |
+| Height range | 690-1050 mm | Schmitz catalogue 60, medifa 6000 |
+| Base | 940 x 540 mm (medifa 6000), 1120 x 580 mm (Schmitz) | brochures |
+| Castors | twin 100-125 mm | product data |
+| Mass | about 200 kg | medifa 6000 |
+| Light stand | stand 1.88 m, arm 0.805 m, head 0.9-2.08 m | Dr. Mach LED 150 FP |
+| Light head | 440-520 mm, up to 150 mm thick | Constella C, CL-2MB, FY-500BS |
+
+### Model against reference (1:50)
+
+| Quantity | Model | Reference | Deviation |
+| --- | --- | --- | --- |
+| Top | 2.00 x 0.50 m, 0.56 m over the rails | 2.03-2.13 x 0.50-0.54, 0.56-0.59 | length -1.5 % to the shortest, width and rails in range |
+| Top height | 0.90 m | 0.69-1.05 | in range |
+| Base | 0.94 x 0.54 m | 0.94 x 0.54 (medifa) | 0 % |
+| Castors | 100 mm twin | 100-125 | in range |
+| Table mass | 210 kg | about 200 | +5 % (asset value, inside the class) |
+| Stand / arm | 1.96 m / 0.80 m | 1.88 / 0.805 | +4.3 % (asset height kept) / -0.6 % |
+| Light head | 0.50 x 0.105 m | 0.44-0.52 x <= 0.15 | in range |
+
+### Grades (before -> after)
+
+| Scale | Body | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | A- -> A- | A- -> A- | B+ -> A- |
+| 1:100 | A- -> A- | A- -> A- | B+ -> A- |
+| 1:200 | A- -> A- | A- -> A- | B+ -> A- |
+| 1:500 | B+ -> B+ | B+ -> B+ | B+ -> B+ |
+
+Poses at 1:50 (light-on, light-off, head-down) and clip tilt-table t 10 s: A- (the tilt clears the column and the stand).
+
+### Defects seen before, and what was changed
+
+- Structure, all scales: every bone declares a point mass, but the masses of chassis, table top, stand base and lamp head were drawn as flat discs up to 0.60 x 0.30 m that read as plates in the load path (a magenta slab across the table top). Each mass is now a compact spheroid at the same centre: half width 0.011 m x kg^(1/3) (base 120 kg 54 mm, column 42 kg 38 mm, top 48 kg 40 mm, stand base 18 kg 29 mm, lamp head 9 kg 23 mm), never wider than before, the vertical half axis kept at the value that fits in its part (the half feature at 1:200 and 1:500).
+
+### Checks
+
+`volumes-check.ts furniture/operating-table --product`: PASS (123.7 s); silhouette IoU 1:50 0.998 / 0.997 / 0.994, 1:500 0.999 / 0.995 / 1.000. After the splice `r3-validate.ts <asset> --catalog-only --volumes`: VALID, schema 0, validateAsset 0, checkVolumes 0.
+
+### Remaining issues
+
+- The telescopic column reads as three stepped shrouds (real telescopic covers step in, but less); the lamp head stands over the leg plates because a 0.8 m arm from a stand beyond the foot end reaches no further (asset layout kept).
+- 1:500: slabs for base and stand base, the stand tube at the slender floor; thermal coincident region solids stripe in `r3-sheet` (sheet artefact). B+.
+- Lamp internals (LED boards, driver), actuator, hand control and cables are not modelled (no regions declared for them).

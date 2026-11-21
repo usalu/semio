@@ -1,0 +1,7 @@
+# Active WFC Cancellation Fixture
+
+The Semio OS MCP client journey now loads a 2 × 1 bitmap with opaque black and white palette entries and canonical base64 `AAE=` for indices `[0, 1]`. With periodic input, identity symmetry, and 2 × 2 windows, its two overlapping patterns are `[0, 1, 0, 1]` and `[1, 0, 1, 0]`. The existing input had seed `1`, which this change preserves. The output remains open-boundary 64 × 64 (4,096 cells). The bitmap snapshot schema admits the dimensions, palette, model, and canonical encoding.
+
+The focused client-journey test uses Ajv against the bitmap owner's snapshot schema. A separate case uses Buffer to decode and round-trip the canonical bytes, then enumerates each wrapped 2 × 2 window independently of the WFC implementation. The new case failed on the previous one-pixel fixture. After the fixture update, `repo tools exec bun -- test './🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤝️client-journey/🟦️.test.ts'` passed all seven cases with 77 assertions.
+
+The MCP journey still requires actual progress reported while the job is active, acceptance of cancellation without a commit, and exact equality of the two persisted document representations before and after cancellation. The polling schedule remains in place. The fixture increases the pattern count while the native worker and the MCP client still run independently. The focused tests establish fixture and client conformance. The native journey is the check for live timing and cancellation.

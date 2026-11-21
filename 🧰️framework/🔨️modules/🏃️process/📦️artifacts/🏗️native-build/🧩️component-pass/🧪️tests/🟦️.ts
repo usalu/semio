@@ -1,7 +1,11 @@
+import {sha256} from "@noble/hashes/sha2.js";
+import {blake3} from "@noble/hashes/blake3.js";
+import warmGraphFixture from "../🔁️failure-churn/🧪️tests/🔣️.json" with {type:"json"};
+
 import {registeredToolExecutableV1} from "../../../../🧰️tools/🏃️run/🟦️.ts";
 import {pathToFileURL} from "node:url";
 import {testPythonV1} from "../../../../🧪️testing/🧰️toolchain/🟦️.ts";
-import { phaseCompilerAdmissionControlV1, scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
+import { requireGrantedCompileUnitsV1, phaseCompilerAdmissionControlV1, scriptCompilerAdmissionControlV1, withCompilerCapacityScopeV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { withCompilerCapacityConsumptionV1 } from "../../../../🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts";
 import { withCompilerWorkspaceLifetimeV1, withCompilerWorkspaceStageWriteV1, withCompilerWriterCustodyV1 } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import { currentLeaseLineageV1, heldLeasesV1, leaseLedgerSnapshotV1 } from "../../../../🔒️leases/🧭️order/🟦️.ts";
@@ -11,18 +15,24 @@ import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦�
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { spawnSync } from "node:child_process";
+import {createJobserverV1,defaultJobserverStyleV1} from "../../🎰️jobserver/🟦️.ts";
+import {withNativeBuildStageCapacityV1} from "../🎟️stage/🟦️.ts";
+import {optimizePluginCoreModuleAsync} from "../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪶️wasm-opt/🟦️.ts";
+import {optimizeComponentCoresV1} from "../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts";
 import { createHash } from "node:crypto";
+import { Database } from "bun:sqlite";
 import { decodeCargoProvenanceV1 } from "../../🧾️receipt/🟦️.ts";
+import {CargoSourceAttemptV1,CargoSourceWitnessV1} from "../../🧾️receipt/📎️source-witness/🟦️.ts";
 import { formatStampProtocolV1 } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { readUnitHistoryV1, unitHistoryPathV1 } from "../../🎟️admission/🟦️.ts";
 import { lawSourceBoundaryV1, lawStoragePolicyV1, schedulerBinaries, withLawStorageV1, type LawStorageV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 import { readTimelineV1 } from "../../📈️telemetry/🟦️.ts";
-import { nativeBuildReusedUnitsV1, nativeBuildComponentStagePathV1, announcedRunIdentityV1, announcedUnitIdentityV1, componentBatchesV1, reclaimablePassFilesV1, unitFootprintKindV1, unitGraphHistoryKeyV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildOutcomeV1, type NativeBuildStageV1 } from "../🟦️.ts";
-import { ConcurrentEditErrorV1, churnProtocolV1, concurrentEditV1, installRestartableFailureHandlerV1 } from "../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import { componentCompileUnitsV1, nativeBuildReusedUnitsV1, nativeBuildComponentStagePathV1, announcedRunIdentityV1, announcedUnitIdentityV1, componentBatchesV1, reclaimablePassFilesV1, unitFootprintKindV1, unitGraphHistoryKeyV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildOutcomeV1, type NativeBuildStageV1 } from "../🟦️.ts";
+import { ConcurrentEditErrorV1, churnProtocolV1, concurrentEditOfV1, concurrentEditV1, installRestartableFailureHandlerV1 } from "../../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import { failedCompilerMessageFilesV1, failedPassConcurrentEditV1 } from "../🔁️failure-churn/🟦️.ts";
 import { nativeBuildJobAttemptLogPathV1, nativeBuildJobLogNamesV1, runNativeBuildJobAttemptsV1 } from "../🔁️job-attempts/🟦️.ts";
 import{admitNativeBuildPlanV1,type NativeBuildJobV1,type NativeBuildPassV1,type NativeBuildPlanV1} from "../📋️contract/🟦️.ts";
@@ -30,6 +40,20 @@ import{admitNativeBuildPlanV1,type NativeBuildJobV1,type NativeBuildPassV1,type 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 mkdirSync(artifacts, { recursive: true });
 const header = Buffer.from(NATIVE_BUILD_DRIVER_POLICY_V1.componentHeader);
+
+test("component compiler requests and accepts one free slot without widening its capacity", () => {
+  const row = fixture.componentCompileCapacity;
+  const hostDecision = { ...row.hostDecision, reason: "memory" as const };
+  const { decision, request } = componentCompileUnitsV1(hostDecision);
+  expect(decision).toEqual({ ...hostDecision, minimum: 1 });
+  expect(request).toEqual(row.request);
+  const oracle = new Ajv({ strict: true }).compile({ type: "integer", minimum: row.request.minimumParallelism, maximum: row.request.maximumParallelism });
+  for (const { slots, admitted } of row.grants) {
+    expect(oracle(slots)).toBe(admitted);
+    if (admitted) expect(requireGrantedCompileUnitsV1(decision, slots)).toBe(slots);
+    else expect(() => requireGrantedCompileUnitsV1(decision, slots)).toThrow();
+  }
+});
 
 test("nested compiler budgets use reserved tokens or the shared jobserver protocol", () => {
   for (const row of fixture.workerBudgets) {
@@ -43,12 +67,21 @@ test("nested compiler budgets use reserved tokens or the shared jobserver protoc
 /** 🎭️ A stub Cargo: logs its pass, links every planned component after a delay (`omit-last` skips the last, `hang` never answers). */
 function stubCargo(root: string): { readonly command: string; readonly args: readonly string[]; readonly calls: string } {
   const calls = join(root, "calls.jsonl"), stub = join(root, "📜️script.ts");
-  writeFileSync(stub, `import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+  writeFileSync(stub, `import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
 const args = process.argv.slice(2), profile = args[args.indexOf("--profile") + 1], manifest = args[args.indexOf("--manifest-path") + 1];
+if (["locate-project", "metadata", "update"].includes(args[0])) {
+  const result = spawnSync(${JSON.stringify(registeredToolExecutableV1("cargo"))}, args, { stdio: "inherit" });
+  if (result.error) throw result.error;
+  process.exit(result.status ?? 1);
+}
 const packages = args.flatMap((arg, index) => args[index - 1] === "-p" ? [arg] : []), root = manifest.slice(0, -"/Cargo.toml".length);
-const observing = process.env.STUB_MODE==="observe-linked";
+const observing = process.env.STUB_MODE.startsWith("observe-") || process.env.STUB_MODE === "reclaim-error";
+const announced = process.env.STUB_MODE === "observe-announced";
+const beforeAnnouncement = process.env.STUB_MODE.startsWith("observe-before-announcement");
+const consumed = announced || beforeAnnouncement || process.env.STUB_MODE === "observe-consumed";
 if (args.includes("--unit-graph")) {
   if(process.env.STUB_MODE==="unit-hang"){appendFileSync(${JSON.stringify(join(root,"unit-calls.jsonl"))},JSON.stringify({pid:process.pid})+"\\n");await new Promise(()=>setInterval(()=>{},1000));}
   const units = observing ? packages.map(name=>({pkg_id:"path+"+pathToFileURL(join(root,name)).href+"#"+name+"@0.1.0",target:{name,kind:["cdylib"],crate_types:["cdylib"],src_path:join(root,name,"lib.rs")},platform:"wasm32-wasip2",mode:"build",features:[],dependencies:[]})) : [];
@@ -56,13 +89,27 @@ if (args.includes("--unit-graph")) {
 }
 appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ at: Date.now(), pid: process.pid, profile, manifest, jobserver: process.env.CARGO_MAKEFLAGS ?? null, wrapper: process.env.RUSTC_WRAPPER ?? null, unification: process.env.CARGO_RESOLVER_FEATURE_UNIFICATION ?? null }) + "\\n");
 if (process.env.STUB_MODE === "hang") await new Promise(() => setInterval(() => {}, 1000));
-const failing = ["error-last", "error-touch"].includes(process.env.STUB_MODE), linked = process.env.STUB_MODE === "omit-last" || failing ? packages.slice(0, -1) : packages;
+const failing = ["error-last", "error-touch"].includes(process.env.STUB_MODE) || process.env.STUB_MODE === "reclaim-error" && basename(root) === "hub";
+const linked = process.env.STUB_MODE === "omit-last" || failing ? packages.slice(0, -1) : packages;
 for (const name of linked) {
   await new Promise((accept) => setTimeout(accept, ${fixture.stub.delayMs} / packages.length));
   const directory = join(process.env.CARGO_TARGET_DIR, "wasm32-wasip2", profile), wasm = join(directory, name.replaceAll("-", "_") + ".wasm"), source = join(root, name, "lib.rs");
+  const original = readFileSync(source, "utf8") === ${JSON.stringify(fixture.provenanceSeal.originalSource)};
+  if (beforeAnnouncement && !original && process.env.STUB_MODE.endsWith("-unbacked")) {
+    process.stderr.write("retry stopped by the fixture after the unbacked source edit\\n");
+    process.exit(101);
+  }
   mkdirSync(directory, { recursive: true });
   writeFileSync(wasm, Buffer.concat([Buffer.from(${JSON.stringify([...header])}), Buffer.from(name + profile)]));
-  if(observing) writeFileSync(wasm.replace(/\\.wasm$/u,".d"), wasm+": "+source.replaceAll(" ","\\\\ ")+"\\n");
+  if(consumed) {
+    if(announced) writeFileSync(source, ${JSON.stringify(fixture.provenanceSeal.originalSource)});
+    const result = spawnSync("rustc", ["--crate-type=lib", "-Zunstable-options", "-Zchecksum-hash-algorithm=blake3", "--emit=dep-info="+wasm.slice(0,-5)+".d", source], {encoding:"utf8"});
+    if(result.status!==0)throw Error("actual rustc dep-info failed: "+result.stderr+" "+result.error);
+  } else if(observing) writeFileSync(wasm.replace(/\\.wasm$/u,".d"), wasm+": "+source.replaceAll(" ","\\\\ ")+"\\n");
+  if (beforeAnnouncement && original) {
+    writeFileSync(source, ${JSON.stringify(fixture.provenanceSeal.editedSource)});
+    await new Promise(accept => setTimeout(accept, ${fixture.provenanceSeal.beforeAnnouncement.watchMilliseconds}));
+  }
   process.stdout.write(JSON.stringify({ reason: "compiler-artifact", package_id: "path+" + pathToFileURL(join(root,name)).href + "#" + name + "@0.1.0", manifest_path: join(root, name, "Cargo.toml"), target: { kind: ["cdylib"], crate_types: ["cdylib"], name, src_path: source }, profile: { test: false }, features: [], filenames: [wasm], executable: null, fresh: false }) + "\\n");
 }
 if (failing) {
@@ -89,12 +136,12 @@ function stubWorkspace(root: string, name: string, packages: readonly string[], 
 
 /** 🚀️ Runs the driver against a stub Cargo inside one original compiler reservation bound to its control (cache, target and build stores live in that
  * reservation); `inspect` reads the run's generation, whether it succeeded or failed, before the reservation retires. */
-async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<typeof stubCargo>, overrides: Partial<Parameters<typeof runNativeBuildDriverV1>[0]> & { cancel?: Readonly<{ signal: AbortSignal; milliseconds: number }>; verifyStageWriters?:boolean } = {}, mode = "ok", inspect?: (run: Readonly<{ outcome?: NativeBuildOutcomeV1; held: LawStorageV1 }>) => void | Promise<void>): Promise<NativeBuildOutcomeV1> {
-  const { cancel, verifyStageWriters, ...driver } = overrides;
+async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<typeof stubCargo>, overrides: Partial<Parameters<typeof runNativeBuildDriverV1>[0]> & { cancel?: Readonly<{ signal: AbortSignal; milliseconds: number }>; verifyStageWriters?:boolean; storageBytes?:number } = {}, mode = "ok", inspect?: (run: Readonly<{ outcome?: NativeBuildOutcomeV1; held: LawStorageV1 }>) => void | Promise<void>): Promise<NativeBuildOutcomeV1> {
+  const { cancel, verifyStageWriters, storageBytes, ...driver } = overrides;
   const settled = await withBuildTestInvocationV1(async (original): Promise<Readonly<{ failed: boolean; failure?: unknown; outcome?: NativeBuildOutcomeV1 }>> => {
     const control = driver.control ?? scriptCompilerAdmissionControlV1(original, "test:component-pass", cancel?.milliseconds ?? 120000, cancel?.signal);
     try {
-      return { failed: false, outcome: await withLawStorageV1(control, mode === "observe-linked" ? lawStoragePolicyV1.realImageBytes : lawStoragePolicyV1.stubImageBytes, async (held, control) => {
+      return { failed: false, outcome: await withLawStorageV1(control, storageBytes ?? (mode.startsWith("observe-") ? lawStoragePolicyV1.realImageBytes : lawStoragePolicyV1.stubImageBytes), async (held, control) => {
         let outcome: NativeBuildOutcomeV1 | undefined;
         const withCapacity:NonNullable<Parameters<typeof runNativeBuildDriverV1>[0]["withCapacity"]> = compile => {
           if(verifyStageWriters){
@@ -197,15 +244,342 @@ test("the driver streams each component the moment Cargo links it, runs profiles
   });
 }, 120_000);
 
-test("the driver seals compiler provenance while independent stages run", async () => {
-  const expected = fixture.provenanceSeal;
-  for (const scenario of expected.cases) {
-    const root=mkdtempSync(join(artifacts,"z-")), cargo=stubCargo(root), pass=stubWorkspace(root,"app",["seal-a"],"release");
-    const source=join(dirname(pass.packages[0]!.manifest),"lib.rs");
+for(const correction of warmGraphFixture.secondSourceCorrections) registerIsolatedBuildTestV1(import.meta.path,correction.name,{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
+  installRestartableFailureHandlerV1(() => undefined);
+  const vector=warmGraphFixture.driverReplacement,directSecond=correction.source==="diagnostic",growth=correction.source==="growth";
+  const root=mkdtempSync(join(artifacts,"wr-")), original=stubWorkspace(root,"app",[vector.application,vector.secondary,vector.prior,vector.replacement],"release");
+  const pass={...original,packages:original.packages.slice(0,2)}, workspace=dirname(pass.manifest);
+  const path=(name:string,leaf:string)=>join(workspace,name,leaf);
+  const manifest=(name:string,dependency:string)=>[
+    "[package]",'name = "'+name+'"','version = "0.1.0"','edition = "2021"',"[lib]",'path = "lib.rs"','crate-type = ["cdylib"]',
+    "[dependencies]",...([vector.prior,vector.replacement].map(name=>name+' = { path = "../'+name+'", optional = true }')),
+    "[features]",'default = ["dep:'+dependency+'"'+(growth&&dependency===vector.replacement?', "dep:'+vector.prior+'"':'')+']',"",
+  ].join("\n");
+  for (const name of [vector.prior,vector.replacement]) {
+    const file=path(name,"Cargo.toml");
+    writeFileSync(file,readFileSync(file,"utf8").replace('"cdylib"','"rlib"'));
+    writeFileSync(path(name,"lib.rs"),vector.source);
+  }
+  for (const row of pass.packages) writeFileSync(row.manifest,manifest(row.name,growth?vector.replacement:vector.prior));
+  expect(spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--offline","--manifest-path",pass.manifest],{encoding:"utf8"}).status).toBe(0);
+  const command=join(root,"warm-graph.ts"),calls=join(root,"calls.jsonl"),target=pass.target;
+  if(directSecond)writeFileSync(path(vector.application,"lib.rs"),vector.source);
+  const config={directSecond,growth,cargo:registeredToolExecutableV1("cargo"),secondCode:correction.code,vector,workspace,calls,target,priorChecksum:Buffer.from(blake3(Buffer.from(vector.source))).toString("hex"),manifests:pass.packages.map(row=>[row.manifest,manifest(row.name,vector.replacement)]),header:[...header]};
+  writeFileSync(command, String.raw`import {appendFileSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";
+import {spawnSync} from "node:child_process";
+import {join} from "node:path";
+import {pathToFileURL} from "node:url";
+const {directSecond,growth,cargo,secondCode,vector:v,workspace:w,calls,target,priorChecksum,manifests,header}=${JSON.stringify(config)};
+if(process.argv[2]!=="build"){
+ const result=spawnSync(cargo,process.argv.slice(2),{stdio:"inherit"});
+ if(result.error)throw result.error;
+ process.exit(result.status??1);
+}
+const path=(name,leaf)=>join(w,name,leaf),app=path(v.application,"Cargo.toml");
+const selection=readFileSync(app,"utf8"),larger=growth&&readFileSync(path(v.prior,"lib.rs"),"utf8")!==v.source,first=!larger&&(growth||selection.includes("dep:"+v.prior)),child=first?v.prior:v.replacement;
+const unit=(name,kind,features,dependencies)=>({pkg_id:"path+"+pathToFileURL(join(w,name)).href+"#"+name+"@0.1.0",target:{name,kind:[kind],crate_types:[kind],src_path:path(name,"lib.rs")},platform:target,mode:"build",features,dependencies:dependencies.map(index=>({index}))});
+const edges=larger?[1,3]:[1],units=[unit(v.application,"cdylib",["default"],edges),unit(child,"rlib",[],[]),unit(v.secondary,"cdylib",["default"],edges)];
+if(larger)units.push(unit(v.prior,"rlib",[],[]));
+if(process.argv.includes("--unit-graph")){console.log(JSON.stringify({version:1,units,roots:[0,2]}));process.exit(0);}
+const directory=join(process.env.CARGO_TARGET_DIR,target,"release");
+appendFileSync(calls,JSON.stringify({child,directory,build:process.env.CARGO_BUILD_BUILD_DIR})+"\n");
+mkdirSync(directory,{recursive:true});
+const announce=(unit,file,checksum)=>{
+ const source=unit.target.src_path,dep=file.replace(/\.(rlib|wasm)$/u,".d");
+ writeFileSync(file,Buffer.concat([Buffer.from(header),Buffer.from(unit.target.name)]));
+ writeFileSync(dep,file+": "+source.replaceAll(" ","\\ ")+"\n"+(checksum?"# checksum:blake3="+checksum+" file_len:"+Buffer.byteLength(v.source)+" "+source+"\n":""));
+ console.log(JSON.stringify({reason:"compiler-artifact",package_id:unit.pkg_id,manifest_path:path(unit.target.name,"Cargo.toml"),target:unit.target,features:unit.features,profile:{test:false},filenames:[file],executable:null,fresh:false}));
+};
+const diagnostic=directSecond&&!first,edited=path(diagnostic?v.application:child,"lib.rs");
+const changed=readFileSync(edited,"utf8")!==v.source;
+announce(units[1],join(directory,"lib"+child+"-abc.rlib"),changed?undefined:priorChecksum);
+if(!changed){
+ writeFileSync(edited,v.editedSource);
+ if(first&&!growth) for (const [path, manifest] of manifests) writeFileSync(path,manifest);
+ console.log(JSON.stringify({reason:"compiler-message",package_id:units[0].pkg_id,manifest_path:app,target:units[0].target,message:{level:"error",code:{code:first?"E0599":secondCode},message:"selected source changed",spans:diagnostic?[{file_name:edited,is_primary:true}]:[]}}));
+ process.exit(v.originalExit);
+}
+for (const index of [0,2]) announce(units[index],join(directory,units[index].target.name.replaceAll("-","_")+".wasm"),undefined);
+process.exit(v.finalExit);`);
+  if(growth&&"heldBytes" in correction&&"replacementBytes" in correction){
+    let report="";
+    const retry=runStub(root,{version:1,passes:[pass]},{command:process.execPath,args:[command],calls},
+      {storageBytes:vector.storageBytes},"observe-linked",({held})=>{
+        const generations=join(held.root,"cache",NATIVE_BUILD_DRIVER_POLICY_V1.warmRoot);
+        const run=join(generations,readdirSync(generations)[0]!);
+        report=readFileSync(join(run,NATIVE_BUILD_DRIVER_POLICY_V1.stores.report,"report.md"),"utf8");
+        expect(existsSync(join(run,NATIVE_BUILD_DRIVER_POLICY_V1.stores.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory,"cargo-unit-provenance-"+pass.id+".json"))).toBe(false);
+      });
+    const failure=await retry.catch(error=>error);
+    expect(failure).toBeInstanceOf(ConcurrentEditErrorV1);
+    const message=String(failure);
+    const bounds=message.match(/held ([0-9]+) bytes, replacement ([0-9]+) bytes, admissible (-?[0-9]+) bytes, available (-?[0-9]+) bytes, floor ([0-9]+) bytes/u);
+    expect(bounds?.slice(1,3).map(Number)).toEqual([correction.heldBytes,correction.replacementBytes]);
+    const [,held,,admissible,available,floor]=bounds!;
+    using independent=new Database(":memory:");
+    const predicted=independent.query("select min(?1,?2-?3) admissible").get(Number(held),Number(available),Number(floor));
+    expect(predicted).toEqual({admissible:Number(admissible)});
+    expect(report).toContain(bounds![0]);
+    expect(readFileSync(calls,"utf8").trim().split("\\n").map(line=>JSON.parse(line).child)).toEqual([vector.prior]);
+    checkpoint();
+    return;
+  }
+  const seen:string[]=[];
+  const outcome=await runStub(root,{version:1,passes:[pass]},{command:process.execPath,args:[command],calls}, {
+    log:line=>seen.push(line),
+    storageBytes:vector.storageBytes,
+    stages:()=>[{name:"inspect",after:[],capacity:"io",async run(context){expect((await context.provenance()).units).toBe(vector.artifacts);}}],
+  },"observe-linked",({outcome})=>{
+    if(!outcome)return;
+    const receipt=readFileSync(join(outcome.generation.logs,"unit-graph-"+pass.id+"-retry-2.json"),"utf8");
+    expect(JSON.parse(receipt).units.map((unit:{target:{name:string}})=>unit.target.name)).toEqual([vector.application,vector.replacement,vector.secondary]);
+    const directory=join(outcome.generation.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory);
+    const file=readdirSync(directory).find(name=>name.startsWith("cargo-unit-provenance-"))!;
+    const sources=decodeCargoProvenanceV1(readFileSync(join(directory,file),"utf8")).units.flatMap(unit=>unit.inputs);
+    const paths=sources.map(input=>input.path);
+    if(directSecond)expect(sources.find(input=>input.path===path(vector.application,"lib.rs"))?.sha256).toBe(Buffer.from(sha256(Buffer.from(vector.editedSource))).toString("hex"));
+    expect(paths).toContain(path(vector.replacement,"lib.rs"));
+    expect(paths).not.toContain(path(vector.prior,"lib.rs"));
+  });
+  expect([...outcome.staged].sort()).toEqual([vector.application+":release",vector.secondary+":release"]);
+  const rows=readFileSync(calls,"utf8").trim().split("\n").map(line=>JSON.parse(line));
+  expect(rows.map(row=>row.child)).toEqual([vector.prior,vector.replacement,vector.replacement]);
+  expect(new Set(rows.map(row=>row.directory)).size).toBe(1);
+  expect(new Set(rows.map(row=>row.build)).size).toBe(1);
+  expect(seen.filter(line=>line.includes("recompiling in the held lane"))).toHaveLength(2);
+  checkpoint();
+},correction.source==="growth"?/^Replacement Cargo unit graph does not fit the held component plan \(held /u:undefined);
+
+test("mixed compiler claims agree with the language-neutral retry oracle",()=>{
+  const {cases,retryLimit,sourceRevisions}=fixture.mixedWarmDepInfo;
+  const oracle=spawnSync(testPythonV1()??"python3",["-c",String.raw`import json,sys
+data=json.load(sys.stdin)
+def run(case):
+    seen=set()
+    for turn,claims in enumerate(case["claims"],1):
+        proof=frozenset(claims)
+        if len(proof)==1:
+            return [turn,turn]
+        if proof in seen or len(seen)==data["retryLimit"]:
+            return [turn,None]
+        seen.add(proof)
+print(json.dumps([run(case) for case in data["cases"]]))
+`],{input:JSON.stringify({cases,retryLimit}),encoding:"utf8"});
+  expect(oracle.status,oracle.stderr).toBe(0);
+  expect(JSON.parse(oracle.stdout)).toEqual(cases.map(({attempts,staged})=>[attempts,staged]));
+  const source=resolve("source.rs"),external=resolve("external.rs");
+  const claim=(path:string,index:number)=>({path,blake3:Buffer.from(blake3(Buffer.from(sourceRevisions[index]!))).toString("hex"),length:Buffer.byteLength(sourceRevisions[index]!)});
+  for(const scenario of cases){
+    const admitted=new Map([[source,"admitted"]]),seen=new Set<string>();
+    for(const [attempt,[before,after]] of scenario.claims.entries()){
+      const proof=new CargoSourceAttemptV1(admitted);
+      proof.record("first",claim(external,0));
+      proof.record("second",claim(external,1));
+      proof.record("first",claim(source,before!));
+      proof.record("first",claim(source,after!));
+      expect(proof.conflict).toBeUndefined();
+      proof.record("second",claim(source,after!));
+      const drift=proof.conflict;
+      if(!drift){expect([attempt+1,attempt+1]).toEqual([scenario.attempts,scenario.staged]);break;}
+      expect(drift).toMatchObject({path:source});
+      const key=JSON.stringify(drift);
+      if(seen.has(key)||seen.size===retryLimit){expect([attempt+1,null]).toEqual([scenario.attempts,scenario.staged]);break;}
+      seen.add(key);
+    }
+  }
+});
+
+for(const scenario of [...fixture.mixedWarmDepInfo.cases,...fixture.mixedWarmDepInfo.missingWitnessCases]) registerIsolatedBuildTestV1(import.meta.path,scenario.name,{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
+  installRestartableFailureHandlerV1(() => undefined);
+  const vector=fixture.mixedWarmDepInfo;
+  const root=mkdtempSync(join(artifacts,"wm-")),workspace=stubWorkspace(root,"app",[vector.application,vector.dependency],"release");
+  const [application,dependency]=workspace.packages;
+  const pass={...workspace,packages:[application!]};
+  writeFileSync(application!.manifest,readFileSync(application!.manifest,"utf8")+`\n[dependencies]\n${vector.dependency} = { path = "../${vector.dependency}" }\n`);
+  writeFileSync(dependency!.manifest,readFileSync(dependency!.manifest,"utf8").replace('"cdylib"','"rlib"'));
+  writeFileSync(join(dirname(dependency!.manifest),"lib.rs"),`include!("../${vector.application}/lib.rs");\n`);
+  const source=join(dirname(application!.manifest),"lib.rs");
+  const initialRevision="initialRevision" in scenario?scenario.initialRevision:0;
+  const liveRevisions="liveRevisions" in scenario?scenario.liveRevisions:undefined;
+  writeFileSync(source,vector.sourceRevisions[initialRevision]!);
+  expect(spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--offline","--manifest-path",pass.manifest],{encoding:"utf8"}).status).toBe(0);
+  const command=join(root,"mixed.ts"),calls=join(root,"mixed.jsonl");
+  writeFileSync(command,String.raw`import {appendFileSync,existsSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";
+import {spawnSync} from "node:child_process";
+import {dirname,join} from "node:path";
+import {pathToFileURL} from "node:url";
+const {cargo,calls,source,units:packages,target,profile,header,claims,revisions,liveRevisions}=${JSON.stringify({
+    cargo:registeredToolExecutableV1("cargo"),calls,source,units:[dependency,application],target:pass.target,profile:pass.profile,header:[...header],claims:scenario.claims,liveRevisions,
+    revisions:vector.sourceRevisions.map(body=>({body,hash:Buffer.from(blake3(Buffer.from(body))).toString("hex"),length:Buffer.byteLength(body)})),
+  })};
+const args=process.argv.slice(2);
+if(args[0]!=="build"){
+  const result=spawnSync(cargo,args,{stdio:"inherit"});
+  if(result.error)throw result.error;
+  process.exit(result.status??1);
+}
+const units=packages.map(({name,manifest},index)=>{
+  const pkg_id="path+"+pathToFileURL(dirname(manifest)).href+"#"+name+"@0.1.0";
+  return {pkg_id,target:{name,kind:[index===0?"lib":"cdylib"],crate_types:[index===0?"rlib":"cdylib"],src_path:join(dirname(manifest),"lib.rs")},platform:target,mode:"build",features:[],dependencies:index===0?[]:[{index:0}]};
+});
+if(process.argv.includes("--unit-graph")){console.log(JSON.stringify({version:1,units,roots:[1]}));process.exit(0);}
+const attempt=existsSync(calls)?readFileSync(calls,"utf8").trim().split("\n").length:0;
+const directory=join(process.env.CARGO_TARGET_DIR,target,profile);
+appendFileSync(calls,JSON.stringify({directory,build:process.env.CARGO_BUILD_BUILD_DIR})+"\n");
+mkdirSync(directory,{recursive:true});
+writeFileSync(source,revisions[claims[attempt][1]].body);
+for(const [index,unit] of units.entries()){
+  const file=join(directory,index===0?"libmixed_dep-abc.rlib":"mixed_app.wasm");
+  const {hash,length}=revisions[claims[attempt][index]];
+  const dep=file.replace(/\.(?:rlib|wasm)$/u,".d"),inputs=[...new Set([unit.target.src_path,source])];
+  writeFileSync(file,Buffer.concat([Buffer.from(header),Buffer.from([attempt+1])]));
+  writeFileSync(dep,file+": "+inputs.map(path=>path.replaceAll(" ","\\ ")).join(" ")+"\n# checksum:blake3="+hash+" file_len:"+length+" "+source+"\n");
+   if(index===0&&liveRevisions)writeFileSync(source,revisions[liveRevisions[attempt]].body);
+  console.log(JSON.stringify({reason:"compiler-artifact",package_id:unit.pkg_id,manifest_path:packages[index].manifest,target:unit.target,features:[],profile:{test:false},filenames:[file],executable:null,fresh:attempt>0||index===0}));
+}
+`);
+  const planned:number[]=[],staged:number[]=[],log:string[]=[];
+  const result=await runStub(root,{version:1,passes:[pass]},{command:process.execPath,args:[command],calls},{
+    storageBytes:warmGraphFixture.driverReplacement.storageBytes,
+    log:line=>log.push(line),
+    stages:()=>{
+      planned.push(readFileSync(calls,"utf8").trim().split("\n").length);
+      return [{name:"inspect",after:[],capacity:"io",async run(context){
+        expect((await context.provenance()).units).toBe(2);
+      }}];
+    },
+  },"observe-mixed",({outcome})=>{
+    if(!outcome)return;
+    const stage=nativeBuildComponentStagePathV1(outcome.generation,pass,application!);
+    if(existsSync(stage))staged.push(readFileSync(stage).at(-1)!);
+  }).then(outcome=>({outcome}),error=>({error}));
+  if(!existsSync(calls)&&"error"in result)throw result.error;
+  const attempts=readFileSync(calls,"utf8").trim().split("\n").map(line=>JSON.parse(line));
+  expect(attempts).toHaveLength(scenario.attempts);
+  expect(new Set(attempts.map(row=>row.directory)).size).toBe(1);
+  expect(new Set(attempts.map(row=>row.build)).size).toBe(1);
+  expect(log.filter(line=>line.includes("recompiling in the held lane"))).toHaveLength(scenario.attempts-1);
+  expect(planned).toEqual(scenario.staged===null?[]:[scenario.staged]);
+  expect(staged).toEqual(scenario.staged===null?[]:[scenario.staged]);
+  if(scenario.staged===null){
+    expect("error"in result&&concurrentEditOfV1(result.error)).toMatchObject({reason:"bytes",path:source});
+  }else expect(result).toHaveProperty("outcome");
+  checkpoint();
+},scenario.staged===null?/^Compiler consumed inconsistent source versions \(BLAKE3 and byte lengths /u:undefined);
+
+registerIsolatedBuildTestV1(import.meta.path,"an optimizer waits without holding partial slots and preserves real Binaryen output",{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
+  const vector=fixture.optimizerParallel,root=mkdtempSync(join(artifacts,"o-")),input=join(root,"core.wat");
+  const outputs=[join(root,"parallel.wasm"),join(root,"single.wasm")];
+  writeFileSync(input,vector.source);
+  await withBuildTestInvocationV1(async original=>{
+    const control=scriptCompilerAdmissionControlV1(original,"test:optimizer-parallel",120000);
+    const pool=await createJobserverV1({version:1,tokens:vector.pool,style:defaultJobserverStyleV1()},join(root,"j"));
+    const directory=artifacts,environment={...process.env};
+    const audit=new Database(":memory:");
+    audit.exec("create table running (kind text primary key, granted integer, held integer, external integer)");
+    try{
+      await withCompilerCapacityScopeV1({directory,control,environment,request:{kind:"exact",parallelism:vector.pool}},async(_,control)=>{
+        const options={directory,control,environment,jobserver:pool};
+        const blocker=await pool.acquire(control.signal),release=await pool.acquire(control.signal);
+        let notify!:()=>void,entered=false;
+        const waiting=new Promise<void>(resolve=>{notify=resolve;});
+        const optimize=(cores:number,output:string,control:Parameters<typeof withNativeBuildStageCapacityV1>[0]["control"])=>optimizePluginCoreModuleAsync(input,output,{repoRoot:process.cwd(),preview2VendorDir:"",cores,control,environment});
+        const parallel=withNativeBuildStageCapacityV1({...options,capacity:"parallel",ready:async()=>{notify();return true;}},async facts=>{
+          entered=true;
+          audit.query("insert into running values (?,?,?,?)").run("parallel",facts.parallelism,pool.held(),1);
+          await optimize(facts.parallelism,outputs[0]!,facts.control);
+        });
+        await waiting;await control.yieldContinuation();
+        expect(entered).toBe(false);
+        expect(pool.held()).toBe(vector.blocked);
+        const competing=await pool.acquire(control.signal);
+        expect(pool.held()).toBe(vector.pool);
+        competing.release();
+        expect(entered).toBe(false);
+        release.release();
+        await parallel;
+        expect(pool.held()).toBe(1);
+        const last=await pool.acquire(control.signal);
+        const stop=new AbortController(),cancelled=Error("optimizer no longer wanted");
+        const withdrawn=pool.acquireAvailable(vector.parallel,30_000,stop.signal);
+        stop.abort(cancelled);
+        await expect(withdrawn).rejects.toBe(cancelled);
+        expect(pool.held()).toBe(vector.blocked);
+        const settled=await pool.acquireAvailable(vector.parallel,1,control.signal);
+        expect(settled).toHaveLength(vector.single);
+        for(const slot of settled)slot.release();
+        last.release();
+        blocker.release();
+        expect(pool.held()).toBe(0);
+        await withNativeBuildStageCapacityV1({...options,capacity:"single",ready:async()=>true},async facts=>{
+          audit.query("insert into running values (?,?,?,?)").run("single",facts.parallelism,pool.held(),0);
+          await optimize(facts.parallelism,outputs[1]!,facts.control);
+        });
+        expect(pool.held()).toBe(0);
+      });
+      expect(audit.query("select kind,granted from running where held = granted + external and held <= ? order by kind").all(vector.pool)).toEqual([
+        {kind:"parallel",granted:vector.parallel},{kind:"single",granted:vector.single},
+      ]);
+      const parallel=readFileSync(outputs[0]!),single=readFileSync(outputs[1]!);
+      expect(parallel.equals(single)).toBe(true);
+      const instance=new WebAssembly.Instance(new WebAssembly.Module(parallel));
+      expect((instance.exports.result as ()=>number)()).toBe(vector.result);
+    }finally{
+      audit.close();
+      pool.close();
+    }
+  });
+  checkpoint();
+});
+
+const compilerSealMutationError = /Current physical bytes changed before transfer/u;
+
+for (const scenario of fixture.provenanceSeal.beforeAnnouncement.cases) {
+  const name = `the driver seals compiler provenance across a pre-announcement source edit (${scenario.retained ? "retained" : "unbacked"})`;
+  const refusal = /retry stopped by the fixture after the unbacked source edit/u;
+  registerIsolatedBuildTestV1(import.meta.path,name,{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
+    const root=mkdtempSync(join(artifacts,"z-")),cargo=stubCargo(root),pass=stubWorkspace(root,"app",["seal-a"],"release");
+    const source=join(dirname(pass.packages[0]!.manifest),"lib.rs"),expected=fixture.provenanceSeal;
     writeFileSync(source,expected.originalSource);
+    const log:string[]=[];
+    const run=runStub(root,{version:1,passes:[pass]},cargo,{
+      log:line=>log.push(line),
+      ...(scenario.retained?{}:{retainCompilationBytes:1_048_576,maximumObservationBytes:1_048_576,consume:async()=>{throw Error("unbacked fixture must not publish");}}),
+    },scenario.retained?"observe-before-announcement":"observe-before-announcement-unbacked",({outcome})=>{
+      if(!outcome)return;
+      const receipts=join(outcome.generation.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory);
+      const files=readdirSync(receipts).filter(name=>name.startsWith("cargo-unit-provenance-"));
+      expect(files).toHaveLength(1);
+      const units=decodeCargoProvenanceV1(readFileSync(join(receipts,files[0]!),"utf8")).units;
+      expect(units.flatMap(unit=>unit.inputs).find(row=>row.path===source)?.sha256)
+        .toBe(createHash("sha256").update(expected.originalSource).digest("hex"));
+      expect(units.flatMap(unit=>unit.depInfo).flatMap(row=>row.checksums).find(row=>resolve(row.path)===source))
+        .toMatchObject({blake3:Buffer.from(blake3(Buffer.from(expected.originalSource))).toString("hex"),length:Buffer.byteLength(expected.originalSource)});
+    });
+    if(scenario.retained)expect((await run).staged).toEqual(["seal-a:release"]);
+    else await expect(run).rejects.toThrow(refusal);
+    const calls=readFileSync(cargo.calls,"utf8").trim().split("\n").map(line=>JSON.parse(line));
+    expect(calls.filter(row=>row.pid)).toHaveLength(scenario.attempts);
+    expect(calls.filter(row=>row.end)).toHaveLength(scenario.retained?1:0);
+    expect(log.filter(line=>line.includes("recompiling in the held lane"))).toHaveLength(scenario.attempts-1);
+    expect(readFileSync(source,"utf8")).toBe(expected.editedSource);
+    checkpoint();
+  },scenario.retained?undefined:refusal);
+}
+
+for (const scenario of fixture.provenanceSeal.cases) {
+  const packages = scenario.packages ?? ["seal-a"];
+  const name = "the driver seals compiler provenance while independent stages run (" + scenario.mutation + " " + scenario.timing + (packages.length > 1 ? " pair" : "") + ")";
+  registerIsolatedBuildTestV1(import.meta.path,name,{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
+    if (!scenario.publishesReceipt) installRestartableFailureHandlerV1(() => undefined);
+    const expected=fixture.provenanceSeal, announced=scenario.timing==="after-announcement", withChecksum=announced||scenario.timing==="after-compiler-checksum";
+    const root=mkdtempSync(join(artifacts,"z-")), cargo=stubCargo(root), pass=stubWorkspace(root,"app",packages,"release");
+    const sources=pass.packages.map(row=>join(dirname(row.manifest),"lib.rs"));
+    for(const source of sources)writeFileSync(source,announced?expected.admittedSource:expected.originalSource);
     let signalSeal!:()=>void, sealed=false, edited=false;
     const seal=new Promise<void>(resolve=>{signalSeal=resolve;});
     const run=runStub(root,{version:1,passes:[pass]},cargo,{
+      verifyStageWriters:true,
       log(line) {
         if(line==="[native-build] compiler provenance sealed"){sealed=true;signalSeal();}
       },
@@ -218,27 +592,68 @@ test("the driver seals compiler provenance while independent stages run", async 
             try{await Promise.race([seal,new Promise<void>(resolve=>{timer=setTimeout(resolve,5000);})]);}
             finally{if(timer!==undefined)clearTimeout(timer);}
           }
-          writeFileSync(scenario.mutation==="source"?source:linked.staged,expected.editedSource);
+          writeFileSync(scenario.mutation==="source"?join(dirname(linked.package.manifest),"lib.rs"):linked.staged,expected.editedSource);
           edited=true;
         }}];
       },
-    },"observe-linked",({outcome,held})=>{
-      const generation=outcome?.generation??nativeBuildGenerationV1(join(held.root,"cache"),{target:join(held.root,"target"),build:join(held.root,"build")},"warm");
-      const receipts=join(generation.report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory);
-      const name=readdirSync(receipts).find(name=>name.startsWith("cargo-unit-provenance-"));
-      expect(Boolean(name)).toBe(scenario.publishesReceipt);
-      if(name){
-        const receipt=decodeCargoProvenanceV1(readFileSync(join(receipts,name),"utf8"));
-        const original=receipt.units[0]!.inputs.find(row=>row.path===source);
+    },announced?"observe-announced":withChecksum?"observe-consumed":"observe-linked",({outcome,held})=>{
+      const runs=join(held.root,"cache",NATIVE_BUILD_DRIVER_POLICY_V1.warmRoot);
+      const receipts=join(outcome?.generation.report??join(runs,readdirSync(runs)[0]!,NATIVE_BUILD_DRIVER_POLICY_V1.stores.report),NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory);
+      const files=readdirSync(receipts).filter(name=>name.startsWith("cargo-unit-provenance-"));
+      expect(files.length>0).toBe(scenario.publishesReceipt);
+      if(!files.length)return;
+      const units=files.flatMap(name=>decodeCargoProvenanceV1(readFileSync(join(receipts,name),"utf8")).units);
+      for(const source of sources){
+        const original=units.flatMap(unit=>unit.inputs).find(row=>row.path===source);
         expect(original?.sha256).toBe(createHash("sha256").update(expected.originalSource).digest("hex"));
+        if(withChecksum){
+          const compiler=units.flatMap(unit=>unit.depInfo).flatMap(dep=>dep.checksums).find(row=>resolve(row.path)===source);
+          expect(compiler?.blake3).toBe(Buffer.from(blake3(Buffer.from(expected.originalSource))).toString("hex"));
+          expect(compiler?.length).toBe(Buffer.byteLength(expected.originalSource));
+          expect(readFileSync(source,"utf8")).toBe(expected.editedSource);
+        }
       }
     });
-    if(scenario.publishesReceipt) expect((await run).staged).toEqual(["seal-a:release"]);
-    else await expect(run).rejects.toThrow(/Current physical bytes changed before transfer/u);
+    if (scenario.publishesReceipt) expect([...(await run).staged].sort()).toEqual(packages.map(name=>name+":release").sort());
+    else await expect(run).rejects.toThrow(compilerSealMutationError);
     expect(edited).toBe(true);
-    expect(sealed).toBe(scenario.timing==="after-seal");
-  }
-},120_000);
+    expect(sealed).toBe(scenario.publishesReceipt||scenario.timing==="after-seal");
+    checkpoint();
+  },scenario.publishesReceipt?undefined:compilerSealMutationError);
+}
+
+registerIsolatedBuildTestV1(import.meta.path,"compiler source witnesses refuse mixed consumed versions in either order and reject altered blobs",{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
+  const vector=fixture.provenanceSeal,root=mkdtempSync(join(artifacts,"m-")),source=join(root,"source.rs");
+  const original=Buffer.from(vector.originalSource),revised=Buffer.from(vector.editedSource);
+  const physical=()=>({maxBytes:65536,maxWork:100,chunkBytes:4096,cancelled:()=>false,remainingMs:()=>10000,onProgress:()=>{}});
+  const claim=(bytes:Buffer)=>({path:source,blake3:Buffer.from(blake3(bytes)).toString("hex"),length:bytes.byteLength});
+  await withBuildTestInvocationV1(originalInvocation=>{
+    const control=scriptCompilerAdmissionControlV1(originalInvocation,"test:source-witness",120000);
+    return withLawStorageV1(control,lawStoragePolicyV1.stubImageBytes,async(held,control)=>{
+      for(const order of vector.mixedOrders){
+        const directory=join(held.root,"c"),witness=new CargoSourceWitnessV1(root,directory,held.storage,control);
+        writeFileSync(source,original);
+        await witness.remember(source,original,control);
+        writeFileSync(source,revised);
+        const missing=Buffer.concat([original,revised]);
+        await expect(witness.input(source,claim(missing),physical())).rejects.toThrow("Compiler consumed bytes have no matching retained source witness");
+        const first=order[0]==="retained"?original:revised,second=first===original?revised:original;
+        const selected=await witness.input(source,claim(first),physical());
+        expect(selected.retained).toBe(first===original);
+        expect(selected.row.sha256).toBe(createHash("sha256").update(first).digest("hex"));
+        await expect(witness.input(source,claim(second),physical())).rejects.toThrow("Compiler consumed inconsistent source versions");
+        if(selected.retained){
+          const blob=join(directory,selected.row.sha256!);
+          chmodSync(blob,0o600);
+          writeFileSync(blob,revised);
+          await expect(witness.recheck(physical)).rejects.toThrow("Retained compiler source witness changed before transfer");
+        }
+        await witness.close();
+      }
+    },originalInvocation);
+  });
+  checkpoint();
+});
 
 registerIsolatedBuildTestV1(import.meta.path, "a failed cargo exit with no failed unit surfaces cargo's own stderr in the error and the report", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "g-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
@@ -271,6 +686,19 @@ registerIsolatedBuildTestV1(import.meta.path, "a failed cargo pass whose failing
   checkpoint();
 }, /Native build failed: comp-b/u);
 
+for (const count of [1, 2]) registerIsolatedBuildTestV1(import.meta.path, `reclaim preserves Cargo's hard failure after ${count} pass(es)`, { bodyMilliseconds: 60000, scope: { kind: "body" } }, async checkpoint => {
+  const root = mkdtempSync(join(artifacts, "reclaim-")), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
+  const passes = count === 2 ? [stubWorkspace(root, "earlier", ["comp-earlier"], "release"), pass] : [pass];
+  const logs: string[] = [];
+  const failure = await runStub(root, { version: 1, passes }, stubCargo(root), {
+    generation: "fresh", storageBytes: 2 * lawStoragePolicyV1.realImageBytes, log: line => logs.push(line),
+  }, "reclaim-error").then(() => undefined, (error: unknown) => error);
+  expect(failure).not.toBeInstanceOf(ConcurrentEditErrorV1);
+  expect(String((failure as Error).message)).toMatch(/Native build failed: comp-b/u);
+  for (const { id } of passes) expect(logs.some(line => line.includes(`${id}: reclaimed `) && /reclaimed [1-9]/u.test(line)), logs.join("\n")).toBe(true);
+  checkpoint();
+}, /Native build failed: comp-b/u);
+
 registerIsolatedBuildTestV1(import.meta.path, "a failed cargo pass whose failing unit's inputs changed after Cargo started is a restartable concurrent edit naming the file", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   installRestartableFailureHandlerV1(() => undefined);
   const root = mkdtempSync(join(artifacts, "e-")), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
@@ -291,9 +719,9 @@ test("failed pass inputs: a changed custody digest, a vanished file or a file mo
   expect(await failedPassConcurrentEditV1({ startedMs: 100, files: [], recheck: async () => { throw Error("not an edit"); } })).toBeUndefined();
   const cwd = resolve("/w");
   const manifest = join(cwd, "plugin", "packages", "rust", "Cargo.toml");
-  expect(failedCompilerMessageFilesV1({ package_id: "registry+https://example.org/index#foreign@1.0.0", manifest_path: "/deps/foreign/Cargo.toml", message: { spans: [{ file_name: "src/lib.rs" }, { file_name: "<proc-macro source code>" }] } }, cwd)).toEqual([]);
-  expect(failedCompilerMessageFilesV1({ package_id: "path+file:///w/plugin/packages/rust#window-config@0.1.0", manifest_path: manifest, message: { spans: [{ file_name: "window-config-0.1.0/../../native/lib.rs" }] } }, cwd)).toEqual([manifest, join(cwd, "plugin", "native", "lib.rs")]);
-  expect(failedCompilerMessageFilesV1({ manifest_path: join(cwd, "c", "Cargo.toml"), message: { spans: [{ file_name: "c/src/lib.rs" }, { file_name: join(cwd, "c", "src", "lib.rs") }, { file_name: resolve("/rustc/library/core.rs") }] } }, cwd)).toEqual([join(cwd, "c", "Cargo.toml"), join(cwd, "c", "src", "lib.rs")]);
+  expect(failedCompilerMessageFilesV1({ package_id: "registry+https://example.org/index#foreign@1.0.0", manifest_path: "/deps/foreign/Cargo.toml", message: { spans: [{ file_name: "src/lib.rs" }, { file_name: "<proc-macro source code>" }] } }, cwd, join(cwd, "hub"))).toEqual([]);
+  expect(failedCompilerMessageFilesV1({ package_id: "path+file:///w/plugin/packages/rust#window-config@0.1.0", manifest_path: manifest, message: { spans: [{ file_name: "window-config-0.1.0/../../native/lib.rs" }] } }, cwd, join(cwd, "hub"))).toEqual([manifest, join(cwd, "plugin", "native", "lib.rs")]);
+  expect(failedCompilerMessageFilesV1({ manifest_path: join(cwd, "c", "Cargo.toml"), message: { spans: [{ file_name: "c/src/lib.rs" }, { file_name: join(cwd, "c", "src", "lib.rs") }, { file_name: resolve("/rustc/library/core.rs") }] } }, cwd, cwd)).toEqual([join(cwd, "c", "Cargo.toml"), join(cwd, "c", "src", "lib.rs")]);
 });
 
 registerIsolatedBuildTestV1(import.meta.path, "a batch the free storage cannot cover above the hard reserve is refused before Cargo starts", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
@@ -448,19 +876,98 @@ test("a lane job runs inside its profile's Cargo lane before that lane's passes,
 
 registerIsolatedBuildTestV1(import.meta.path, "a finalizer runs once its stages settled, also after one failed, and the failure still fails the release", { bodyMilliseconds: 120_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "z-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a", "comp-b"], "release");
-  const finalized: Record<string, { after: number; outcome: string }> = {}, failedAt: Record<string, number> = {};
-  const stages = (component: LinkedComponentV1): readonly NativeBuildStageV1[] => [
-    { name: "assemble", capacity: "single", after: [], run: async () => { if (component.package.name === "comp-b") { failedAt[component.package.name] = Date.now(); throw Error("assembly refused"); } } },
-    { name: "publish", capacity: "single", after: ["assemble"], run: async () => undefined },
-    { name: "discard", capacity: "cleanup", after: ["publish"], run: async (context) => { finalized[component.package.name] = { after: Date.now(), outcome: context.signal.aborted ? "aborted" : "settled" }; } },
-  ];
-  await expect(runStub(root, { version: 1, passes: [pass] }, cargo, { stages })).rejects.toThrow(/Native build failed: comp-b \(assemble\)/u);
-  expect(Object.keys(finalized).sort()).toEqual(["comp-a", "comp-b"]);
-  expect(finalized["comp-b"]!.after).toBeGreaterThanOrEqual(failedAt["comp-b"]!);
-  expect(Object.values(finalized).map((row) => row.outcome)).toEqual(["settled", "settled"]);
+  const law=fixture.finalizerSettlement, failedAt:Record<string,number>={}, events:string[]=[];
+  const assemblyError=Error(law.primaryError);
+  const stages = (component: LinkedComponentV1): readonly NativeBuildStageV1[] => {
+    const name=component.package.name;
+    const row=law.components.find(row=>row.name===name)!;
+    return [
+      { name: "assemble", capacity: "single", after: [], run: async () => {
+        events.push(name+":assemble");
+        if (!row.assembleSucceeds) { failedAt[name]=Date.now(); throw assemblyError; }
+      } },
+      { name: "publish", capacity: "single", after: ["assemble"], run: async () => { events.push(name+":publish"); } },
+      { name: "discard", capacity: "cleanup", after: ["publish"], run: async (context) => {
+        expect(context.signal.aborted).toBe(false);
+        expect(context.parallelism).toBe(0);
+        if (!row.assembleSucceeds) expect(Date.now()).toBeGreaterThanOrEqual(failedAt[name]!);
+        events.push(name+":discard");
+      } },
+    ];
+  };
+  const failure=await runStub(root,{version:1,passes:[pass]},cargo,{stages,verifyStageWriters:true}).then(()=>undefined,error=>error);
+  expect(failure?.message).toMatch(/Native build failed: comp-b \(assemble\)/u);
+  expect(failure?.cause).toBe(assemblyError);
+  const oracle=new Database(":memory:");
+  try {
+    oracle.exec("create table component(name text, assembled integer);");
+    for (const row of law.components) oracle.query("insert into component values(?,?)").run(row.name,Number(row.assembleSucceeds));
+    const expected=oracle.query<{event:string},[]>("select name||':assemble' as event from component union all select name||':publish' from component where assembled=1 union all select name||':discard' from component order by event").all();
+    expect(events.sort()).toEqual(expected.map(row=>row.event));
+  } finally { oracle.close(); }
   checkpoint();
 }, /Native build failed: comp-b/u);
 
+
+registerIsolatedBuildTestV1(import.meta.path,"a blocked browser release drains real optimize before deleting its work",{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
+  const vector=fixture.optimizerDrain,root=mkdtempSync(join(artifacts,"d-")),cargo=stubCargo(root),pass=stubWorkspace(root,"hub",[vector.root],"release");
+  const failure=Error(vector.failure),events:string[]=[],logs:string[]=[];
+  const stored=Promise.withResolvers<void>(),modelFailed=Promise.withResolvers<void>(),discarded=Promise.withResolvers<void>();
+  await withBuildTestInvocationV1(async invocation=>{
+    const result=await runStub(root,{version:1,passes:[pass]},cargo,{
+      log(line){logs.push(line);if(line.includes(vector.failure)){events.push("model-failed");modelFailed.resolve();}},
+      stages(component){
+        let workspace:string,transpiled:string;
+        const crate=component.package.name,file=crate.replaceAll("-","_")+".core.wasm";
+        return [
+          {name:"transpile",after:[],capacity:"single",async run(context){
+            workspace=join(context.generation.root,"w",crate);
+            transpiled=join(workspace,"transpiled");
+            mkdirSync(transpiled,{recursive:true});
+            writeFileSync(join(transpiled,file),Buffer.from(vector.core));
+          }},
+          {name:"model",after:[`provenance:${component.pass.id}`],capacity:"io",async run(context){
+            await context.provenance();
+            await stored.promise;
+            throw failure;
+          }},
+          {name:"optimize",after:["transpile"],capacity:"parallel",async run(context){
+            const cache:typeof context.cache={...context.cache,run(key,output,produce,signal,slot){
+              return context.cache.run(key,output,async directory=>{
+                await produce(directory);
+                events.push("cas-ready");
+                stored.resolve();
+                await modelFailed.promise;
+                await Promise.race([discarded.promise,Bun.sleep(150)]);
+              },signal,slot);
+            }};
+            const target={pluginId:crate,packageId:crate,cratePath:root,packageName:crate,wasmOut:component.staged,role:"plugin" as const,consumes:[],dependsOn:[]};
+            const deliverable={profile:"release" as const,directory:dirname(component.staged),wasm:component.staged,receipt:join(dirname(component.staged),"receipt.json")};
+            const output=await optimizeComponentCoresV1({invocation,repoRoot:process.cwd(),target,deliverable,cache,work:workspace,environment:context.environment,control:context.control},transpiled,context.parallelism);
+            expect(output).toBe(join(workspace,"optimized"));
+            expect(WebAssembly.validate(readFileSync(join(output!,file)))).toBe(true);
+            events.push("optimize-finished");
+          }},
+          {name:"browser",after:["model","optimize"],capacity:"single",async run(){events.push("browser");}},
+          {name:"complete",after:["browser"],capacity:"io",async run(){events.push("complete");}},
+          {name:"discard",after:["complete"],capacity:"cleanup",async run(){
+            rmSync(workspace,{recursive:true,force:true});
+            events.push("discard");
+            discarded.resolve();
+          }},
+        ];
+      },
+    },"observe-linked").then(()=>undefined,error=>error);
+    expect(result?.cause).toBe(failure);
+    expect(logs.filter(line=>line.includes("ENOENT"))).toEqual([]);
+    const oracle=new Database(":memory:");
+    try{
+      const ordered=oracle.query<{event:string},[string]>("select value as event from json_each(?) order by key");
+      expect(events).toEqual(ordered.all(JSON.stringify(vector.events)).map(row=>row.event));
+    }finally{oracle.close();}
+  });
+  checkpoint();
+},/Native build failed: opt-drain \(model\)/u);
 
 registerIsolatedBuildTestV1(import.meta.path, "a job failing at once rejects the driver, naming it, and terminates the sibling job still running", { bodyMilliseconds: 60_000, scope: { kind: "body" } }, async (checkpoint) => {
   const root = mkdtempSync(join(artifacts, "ff-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release"), pids = join(root, "long.pid");
@@ -641,7 +1148,6 @@ test("unlaned same-profile Cargo jobs reserve tokens before mutable state", asyn
 import { resourceLeasePathV1 } from ${JSON.stringify(resourceModule)};
 import { phaseCompilerAdmissionControlV1 } from ${JSON.stringify(new URL("../../../../🏗️build/🎟️capacity/🟦️.ts", import.meta.url).href)};
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 const signal = AbortSignal.timeout(${vector.deadlineMs - 1000});
 const lease = await acquireCargoBuildLeaseV1({ directory: ${JSON.stringify(artifacts)}, buildDirectory: process.env.CARGO_BUILD_BUILD_DIR, targetDirectory: process.env.CARGO_TARGET_DIR, args: ["--profile", ${JSON.stringify(vector.profile)}], signal, control: phaseCompilerAdmissionControlV1(signal, ${vector.deadlineMs - 1000}, () => undefined, () => new Promise(done => setImmediate(done))) });
 try {
@@ -675,3 +1181,113 @@ test("a resumed build counts the units Cargo reused apart from the ones it compi
   expect(nativeBuildReusedUnitsV1([{ reason: "compiler-artifact", fresh: true }, { reason: "compiler-artifact", fresh: false }, { reason: "build-script-executed" }, { reason: "compiler-artifact", fresh: true }, { reason: "compiler-artifact" }])).toBe(2);
   expect(nativeBuildReusedUnitsV1([])).toBe(0);
 });
+
+/** 🧩️ Proves that a failed pass only observes the complete closure of the components it did link. */
+for (const scenario of fixture.partialProvenance.rows) {
+  const refusal = scenario.exit === 0 ? undefined : scenario.missing !== null
+    ? /Native build failed: stdio .*\(provenance\)/u : scenario.accepted
+      ? /^Native build failed: stdio \(release-app\);/u : /Compiler consumed bytes have no matching retained source witness: .*common[\\/]lib\.rs/u;
+  registerIsolatedBuildTestV1(import.meta.path, "closure-scoped partial Cargo provenance: " + scenario.name,
+    {bodyMilliseconds:120_000,scope:{kind:"body"}}, async checkpoint => {
+    if (refusal) installRestartableFailureHandlerV1(() => undefined);
+    const vector=fixture.partialProvenance, root=mkdtempSync(join(artifacts,"p-"));
+    const pass=stubWorkspace(root,"app",vector.components,"release"), workspace=dirname(pass.manifest);
+    const path=(name:string,file:string)=>join(workspace,name,file);
+    for(const dependency of vector.dependencies){
+      mkdirSync(join(workspace,dependency));
+      writeFileSync(path(dependency,"Cargo.toml"),`[package]\nname="${dependency}"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="lib.rs"\n`);
+      writeFileSync(path(dependency,"lib.rs"),vector.edited);
+      writeFileSync(path(dependency,"build.rs"),"fn main() {}\n");
+    }
+    const work=readFileSync(pass.manifest,"utf8");
+    writeFileSync(pass.manifest,work.replace(JSON.stringify(vector.components),JSON.stringify([...vector.components,...vector.dependencies])));
+    for(const [index,row] of pass.packages.entries()){
+      const deps=vector.edges.filter(([source])=>source===index).map(([,dep])=>vector.nodes[dep!]![0]);
+      writeFileSync(row.manifest,readFileSync(row.manifest,"utf8")+"\n[dependencies]\n"+deps.map(name=>`${name} = { path = "../${name}" }\n`).join(""));
+    }
+    expect(spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--offline","--manifest-path",pass.manifest],{encoding:"utf8"}).status).toBe(0);
+    const command=join(root,"partial.ts"),calls=join(root,"calls"), config={workspace,vector,scenario,calls,target:pass.target,header:[...header],staleHash:Buffer.from(blake3(Buffer.from(vector.original))).toString("hex")};
+    writeFileSync(command,String.raw`import {appendFileSync,mkdirSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import {pathToFileURL} from "node:url";
+import {spawnSync} from "node:child_process";
+const args=process.argv.slice(2);
+if (["locate-project","update","metadata"].includes(args[0])) {
+  const cargo=spawnSync(${JSON.stringify(registeredToolExecutableV1("cargo"))},args,{stdio:"inherit"});
+  process.exit(cargo.status??1);
+}
+const {workspace,vector,scenario,target,calls,header,staleHash}=${JSON.stringify(config)};
+const path=(name,file)=>join(workspace,name,file);
+const units=vector.nodes.map(([packageName,kind],index)=>{
+  const script=kind==="run-custom-build"||kind==="custom-build";
+  return {pkg_id:"path+"+pathToFileURL(join(workspace,packageName)).href+"#"+packageName+"@0.1.0",
+    target:{name:script?"build-script-build":packageName,kind:[script?"custom-build":kind],crate_types:[script?"bin":kind],src_path:path(packageName,script?"build.rs":"lib.rs")},
+    platform:kind==="custom-build"?null:target,mode:kind==="run-custom-build"?kind:"build",features:[],
+    dependencies:vector.edges.filter(([from])=>from===index).map(([,child])=>({index:child})),
+  };
+});
+if(process.argv.includes("--unit-graph")){console.log(JSON.stringify({version:1,units,roots:vector.roots}));process.exit(0);}
+appendFileSync(calls,"build\n");
+const emit=(message)=>console.log(JSON.stringify(message));
+for(const [index,unit] of units.entries()){
+  if(scenario.missing===index||vector.roots.includes(index)&&!scenario.linked.includes(index))continue;
+  const name=vector.nodes[index][0],pkg=unit.pkg_id;
+  if(unit.mode==="run-custom-build"){
+    const out=join(process.env.CARGO_BUILD_BUILD_DIR,target,name,"out");
+    mkdirSync(out,{recursive:true});
+    writeFileSync(join(out,"semio-runtime-resource-inputs.jsonl"),index===scenario.runStale?"unparseable unrelated journal\n":JSON.stringify({kind:"read",path:path(name,"build.rs")})+"\n");
+    emit({reason:"build-script-executed",package_id:pkg,out_dir:out,linked_libs:[],linked_paths:[],cfgs:[],env:[]});
+    continue;
+  }
+  const out=join(process.env.CARGO_TARGET_DIR,...(unit.platform?[unit.platform]:[]),"release"),kind=unit.target.kind[0],source=unit.target.src_path;
+  mkdirSync(out,{recursive:true});
+  const stem=kind==="custom-build"?name+"-build":name,file=join(out,stem+(kind==="cdylib"?".wasm":".rlib"));
+  writeFileSync(file,Buffer.concat([Buffer.from(header),Buffer.from(name)]));
+  writeFileSync(join(out,stem+".d"),file+": "+source.replaceAll(" ","\\ ")+"\n"+
+   (scenario.stale===index?"# checksum:blake3="+staleHash+" file_len:"+Buffer.byteLength(vector.original)+" "+source+"\n":""));
+  emit({reason:"compiler-artifact",package_id:pkg,manifest_path:path(name,"Cargo.toml"),target:unit.target,
+    features:unit.features,profile:{test:false},filenames:[file],executable:null,fresh:false});
+}
+if(scenario.exit!==0){
+  const failed=units[2];
+  emit({reason:"compiler-message",package_id:failed.pkg_id,manifest_path:path("stdio","Cargo.toml"),target:failed.target,
+    message:{level:"error",code:{code:"E0599"},message:vector.cargoError,rendered:vector.cargoError,spans:[]}});
+}
+process.exit(scenario.exit);`);
+    const db=new Database(":memory:");
+    const expected=new Map<string,number>();
+    try{
+      db.exec("create table edges(src integer,dst integer); create table nodes(id integer primary key)");
+      for(const [src,dst] of vector.edges)db.query("insert into edges values(?,?)").run(src,dst);
+      for(const i of vector.nodes.keys())db.query("insert into nodes values(?)").run(i);
+      for(const node of scenario.linked){
+        const {count}=db.query<{count:number},[number]>("with recursive closure(id) as (select ? union select dst from edges join closure on src=id) select count(*) as count from nodes join closure using(id)").get(node)!;
+        expected.set(vector.nodes[node]![0]!,count);
+      }
+    }finally{db.close();}
+    const seen=new Map<string,number>();
+    const logs:string[]=[];
+    let finish!:()=>void;
+    const passFinished=new Promise<void>(resolve=>{finish=resolve;});
+    const run=runStub(root,{version:1,passes:[pass]},{command:process.execPath,args:[command],calls},{
+      storageBytes:vector.storageBytes,
+      log:line=>{logs.push(line);if(line.startsWith("[native-build] "+pass.id)&&line.includes("component(s) linked"))finish();},
+      stages:linked=>[{name:"proof",capacity:"io",after:[],async run(context){
+        await passFinished;
+        const provenance=await context.provenance();
+        seen.set(linked.package.name,provenance.units);
+      }}],
+    },"observe-partial",({outcome,held})=>{
+      expect(readFileSync(calls,"utf8").trim().split("\n")).toHaveLength(1);
+      const runs=join(held.root,"cache",NATIVE_BUILD_DRIVER_POLICY_V1.warmRoot);
+      const report=outcome?.generation.report??join(runs,readdirSync(runs)[0]!,NATIVE_BUILD_DRIVER_POLICY_V1.stores.report);
+      const provenance=join(report,NATIVE_BUILD_DRIVER_POLICY_V1.provenanceDirectory);
+      expect(readdirSync(provenance).some(name=>name.startsWith("cargo-unit-provenance-"))).toBe(scenario.exit===0);
+      if(scenario.exit!==0)expect(logs.join("\n")).toContain(vector.cargoError);
+    });
+    if(scenario.exit===0)expect((await run).staged).toHaveLength(scenario.linked.length);
+    else await expect(run).rejects.toThrow(refusal);
+    expect(seen).toEqual(scenario.accepted?expected:new Map());
+    checkpoint();
+  }, refusal);
+}

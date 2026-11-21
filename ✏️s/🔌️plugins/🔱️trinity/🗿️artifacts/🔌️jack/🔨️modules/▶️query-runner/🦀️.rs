@@ -21,8 +21,11 @@ pub fn encode_query_result_json(result: &QueryResult, control: &mut semio_framew
 
 /// ▶️ Runs a text query and emits its response under physical JSON byte admission.
 pub fn run_json_controlled(graph: &mut Graph, source: &str, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<String, String> {
-    let result = run(graph, source)?;
-    encode_query_result_json(&result, control).map_err(|error| error.to_string())
+    let query = parse(source)?;
+    let (result, effects) = execute(graph, &query)?;
+    let response = encode_query_result_json(&result, control).map_err(|error| error.to_string())?;
+    apply_graph_effects(graph, &effects).map_err(|error| error.to_string())?;
+    Ok(response)
 }
 
 /// ▶️ Executes a text query with the default response byte grant.
@@ -32,8 +35,11 @@ pub fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
     run_json_controlled(graph, source, &mut control)
 }
 
-
 /// 📤️ Encodes the typed language-service example at its physical text boundary.
 pub fn example_graph_snapshot_json() -> String {
     semio_framework_pack_json::to_json_string(&example_graph_snapshot())
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

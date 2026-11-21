@@ -1,5 +1,6 @@
 /** ⏳️ Busy dependency store: a child that finds the funding parent or the producer held by a sibling waits with a progress line and a bound, it never fails. */
 import{test,expect}from"bun:test";
+import "../../../🔒️bindings/🧪️tests/🟦️.ts";
 import{existsSync,mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
 import{execSync,spawn}from"node:child_process";
 import{leaseRegistryFolderV1}from"../../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";

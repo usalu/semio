@@ -205,7 +205,7 @@ fn flow_operation_fields(operation: u16) -> &'static [(&'static str, FlowArgumen
         2_508 | 2_510 => &[("widgetId", Text), ("portId", Text)],
         2_511 => &[("fromId", Text), ("fromPort", Text), ("toId", Text), ("toPort", Text)],
         2_526 => &[("widgetId", OptionalText)],
-        2_527 => &[("widgetId", OptionalText), ("port", OptionalText)],
+        2_527 => &[("widgetId", OptionalText), ("port", OptionalText), ("direction", OptionalText), ("portsJson", OptionalText)],
         2_530 | 2_534 | 2_553 => &[("widgetId", Text)],
         2_532 => &[("clusterId", Text)],
         2_536 => &[("widgetId", Text), ("value", Number)],

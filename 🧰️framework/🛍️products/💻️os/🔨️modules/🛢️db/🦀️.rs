@@ -47,7 +47,7 @@ pub mod storage_sqlite {
 }
 
 pub mod sync {
-    pub use db_sync::handle_frontier_advertise;
+    pub use db_sync::{from_frontier_summary, grouped_frontier_frames, handle_frontier_advertise, replay_sync_state};
 }
 
 pub mod wal {

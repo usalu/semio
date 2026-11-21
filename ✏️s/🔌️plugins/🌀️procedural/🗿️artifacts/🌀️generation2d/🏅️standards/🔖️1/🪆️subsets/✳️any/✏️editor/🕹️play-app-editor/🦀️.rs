@@ -256,6 +256,8 @@ impl ArtifactEditor for Generation2dPlayApp {
                 Ok(Generation2dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                     generation_id: str_arg(&["generationId", "generation_id"]),
                     question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
+                    field_index: args.get("fieldIndex").filter(|value| !matches!(value, semio_framework_value::DslValue::Null))
+                        .map(|value| semio_framework_artifact_playbook_playbook::generation_field_index(value).ok_or_else(|| Fault::from("Invalid generation field index"))).transpose()?,
                     value,
                 }))
             }

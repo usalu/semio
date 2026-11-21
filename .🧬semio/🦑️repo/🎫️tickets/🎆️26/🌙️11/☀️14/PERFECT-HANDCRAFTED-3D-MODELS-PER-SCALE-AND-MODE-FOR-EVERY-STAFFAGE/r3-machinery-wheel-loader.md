@@ -105,3 +105,5 @@ Thermal at every scale: `{ of }` references per region (ten regions, one layer e
 - The inner pane faces of the cab are `sectionFaces` on the thermal references: a workaround for the missing C31 flood in the product measurement (already in `tool-requests.md`), not a C25 case.
 - Clips interpolate joint angles between solved keys; between keys the closed loop is only approximately closed (not visible at the frame looked at).
 - Tyre lugs are boxes on the carcass, not moulded into it; the tyre does not bulge at the contact patch.
+
+The paired mirror contours have a 0.20 mm paper stroke in the 1:100 drawing. The official document now passes its nominal and band-end paper checks.

@@ -22,3 +22,7 @@ pub(crate) mod reactor_driver;
 #[cfg(test)]
 #[path = "../../⚛️reactor/🏃️runtime/🔄️exchange/🔀️plugin-exchange/📦️document-archive-commands/🧪️tests/🪪️documentless/🦀️.rs"]
 mod documentless_identity_abi;
+
+#[cfg(test)]
+#[path = "../../⚛️reactor/🧪️tests/📤️picker/🦀️.rs"]
+mod picker_lifecycle;

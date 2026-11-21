@@ -127,3 +127,25 @@ test("the storage publication seals each published leaf into its group index aft
   expect(()=>record(root,join(root,"outside.json"))).not.toThrow();
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("optional member indexing settles a reply deferral before accepting the same leaf once",async()=>{
+ const url=new URL("../🔎️scan/🟦️.ts",import.meta.url),tree=ts.createSourceFile("scan.ts",readFileSync(url,"utf8"),ts.ScriptTarget.Latest,true);
+ const names=["packet","closureReadChildPortV1"],declarations=names.map(name=>tree.statements.find((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===name)!.getText(tree).replace(/^export\s+/u,""));
+ const source=ts.transpileModule(declarations.join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+ const maximumProofBytes=1048576,readBytes=4096,requests=["before","deferred","after"].map(path=>({path,bytes:readBytes})),observed:number[]=[],accepted:string[]=[];
+ const run=async(rows:readonly (typeof requests)[],_worker:unknown,_root:unknown,_control:unknown,packet:(row:typeof requests)=>Promise<string>,accept:(text:string,row:typeof requests)=>Promise<void>,defer:(value:{readBytes:number})=>Promise<void>)=>{
+  for(const row of rows){
+   observed.push(JSON.parse(await packet(row)).remainingBytes);
+   if(row[0]!.path==="deferred"){await defer({readBytes});observed.push(JSON.parse(await packet(row)).remainingBytes);}
+   await accept(JSON.stringify({version:1,rows:[{path:row[0]!.path}],references:[],links:[]}),row);
+  }
+ };
+ const port=new Function("runClosureReadCohortsV1","P","worker",source+";return closureReadChildPortV1;")(run,{maximumProofBytes},"worker") as (root:string,control:unknown)=>(leaves:typeof requests,accept:(request:(typeof requests)[number])=>void)=>Promise<void>;
+ await port(".",{ })(requests,request=>accepted.push(request.path));
+ expect(accepted).toEqual(requests.map(row=>row.path));
+ const db=new Database(":memory:");
+ try{
+  const oracle=db.query("select ?1 as first, ?1 as beforeRetry, ?1 - ?2 as retry, ?1 as next").get(maximumProofBytes,readBytes) as Record<string,number>;
+  expect(observed).toEqual(Object.values(oracle));
+ }finally{db.close();}
+});

@@ -18,15 +18,31 @@ use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, EdgeId, F
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d_brep_representation::topology::{Body, EntityRef};
 
+#[path = "📏️linear-distance/🦀️.rs"]
+mod linear_distance;
+pub use linear_distance::original_linear_distance;
+
+#[path = "📦️box-distance/🦀️.rs"]
+mod box_distance;
+pub use box_distance::{axial_cylinder_box_distance, parallel_cylinder_distance, separated_box_distance, sphere_boundary_gap, sphere_box_distance, sphere_pair_distance};
+
+#[path = "📏️bounded-length/🦀️.rs"]
+mod bounded_length;
+pub use bounded_length::{LengthAccumulator, LengthSource};
+
 #[path = "🛞️mass/🦀️.rs"]
 mod mass;
 pub use mass::{mass_properties, ShapeMassProperties, VolumetricMass};
 #[path = "📦️planar-volume/🦀️.rs"]
 mod planar_volume;
-pub use planar_volume::PlanarMeasure;
+pub use planar_volume::{PlanarMeasure, PlanarMeasureSource, advance_measure};
+#[path = "🧭️planar-classify/🦀️.rs"]
+mod planar_classify;
+pub use planar_classify::{classify_planar_compound, classify_planar_solid, planar_classification_depth, planar_compound_classification_depth};
+
 #[path = "🎯️planar-closest/🦀️.rs"]
 mod planar_closest;
-pub use planar_closest::{PlanarClosest, closest_face_depth, planar_dual_coordinates};
+pub use planar_closest::{PlanarClosest, PlanarClosestOutput, SolidClosest, closest_face_depth, planar_dual_coordinates};
 #[path = "🎯️nearest-analytic/🦀️.rs"]
 pub mod nearest_analytic;
 #[path = "📐️analytic-measure/🦀️.rs"]

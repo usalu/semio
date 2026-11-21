@@ -1,0 +1,17 @@
+[
+  {
+    "id": "publishes the newest position when the outstanding move settles",
+    "steps": [["move", 25], ["move", 50], ["move", 75], ["settle"], ["settle"]],
+    "events": [["worldPointerMove", -0.5], ["worldPointerMove", 0.5]]
+  },
+  {
+    "id": "discards a pending move when the utility commits",
+    "steps": [["move", 25], ["move", 50], ["down", 75], ["settle"]],
+    "events": [["worldPointerMove", -0.5], ["worldPointerDown", 0.5]]
+  },
+  {
+    "id": "a newly armed utility can publish the same position",
+    "steps": [["move", 25], ["move", 50], ["select"], ["arm"], ["move", 25], ["settle"], ["settle"]],
+    "events": [["worldPointerMove", -0.5], ["worldPointerMove", -0.5]]
+  }
+]

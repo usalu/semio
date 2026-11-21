@@ -6,11 +6,12 @@ import{withArtifactDescriptorSlotV1}from"./📥️sources/🟦️.ts";
 import{readArtifactPublicationManifestV1,type ArtifactPublicationManifestV1}from"./📋️manifest/🟦️.ts";
 import { waitingDelayV1 as delay } from "../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import { basename, dirname, resolve, join, isAbsolute, relative } from "node:path";
-import { acquireFreshResourceLeaseV1, acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourceLeaseWriterProofV1, resourceLeasePathV1, checkResourceLeaseControl, type ResourceLease, type ResourceLeaseControl, type ResourceLeaseWriterProofV1, type LeaseWait } from "../../🔒️leases/🟦️.ts";
+import { acquireResourceLease, captureResourceLeaseWriterProofV1, requireResourceLeaseWriterProofV1, resourceLeasePathV1, checkResourceLeaseControl, type ResourceLease, type ResourceLeaseControl, type ResourceLeaseWriterProofV1, type LeaseWait } from "../../🔒️leases/🟦️.ts";
 
 import{requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupControlV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import {refuseProcessV1} from "../../📖️texts/🟦️.ts";
+import freshAdmission from "./🧬️schema/🚪️fresh-admission.json" with {type:"json"};
 
 export type ArtifactPublicationOptions = { readonly control?: ResourceLeaseControl; readonly signal?: AbortSignal; readonly leaseDirectory: string; readonly timeoutMs?: number; readonly onWait?: (progress: LeaseWait) => void };
 
@@ -67,17 +68,30 @@ async function renameArtifactDirectory(source: string, destination: string, sign
 /** 🧱️ Reuses identical owned artifacts or replaces their tree with rollback on publication failure. */
 export function stageArtifacts(staging:string,owner:string,files:ReadonlyMap<string,string>,options:ArtifactPublicationOptions):Promise<void>{return withArtifactSourceCaptureV1(resolve(staging),files,{...options,owner},capture=>executeArtifactPublicationV1(staging,owner,capture,options));}
 
+/** 🔏️ Publishes only a retained source capture that matches the verified compiler observation. */
+export function stageVerifiedArtifactsV1(staging:string,owner:string,files:ReadonlyMap<string,string>,expected:ReadonlyMap<string,string>,options:ArtifactPublicationOptions):Promise<void>{
+ const hashes=new Map(expected);
+ return withArtifactSourceCaptureV1(resolve(staging),files,{...options,owner},capture=>{
+  for(const row of artifactCaptureEntriesV1(capture))if(hashes.has(row.name)){
+   if(hashes.get(row.name)!==row.sha256)throw Error("Artifact publication bytes differ from verified compiler observation: "+row.name);
+   hashes.delete(row.name);
+  }
+  if(hashes.size)throw Error("Verified compiler observation lacks a captured publication file");
+  return executeArtifactPublicationV1(staging,owner,capture,options);
+ });
+}
+
 type ArtifactPublicationWritersV1 = Readonly<{capture:ResourceLeaseWriterProofV1;destination:ResourceLeaseWriterProofV1}>;
 type StageWithPublicationWritersV1 = (owner:string,files:ReadonlyMap<string,string>,options:ArtifactPublicationOptions&{control:ResourceLeaseControl})=>Promise<void>;
 
-/** 🗝️ Retains both physical writers for one fresh destination before entering its higher writer scope. */
+/** 🗝️ Retains both fresh publication writers with a bounded directory wait and a single destination lock attempt. */
 export async function withFreshArtifactPublicationWritersV1<T>(destination:string,leaseDirectory:string,control:ResourceLeaseControl,body:(stage:StageWithPublicationWritersV1)=>Promise<T>):Promise<T>{
   requireIssuedResourceControlV1(control);
   if(!isAbsolute(leaseDirectory)||!isAbsolute(destination)||resolve(destination)!==destination)throw Error("Exact fresh publication destination required");
   leaseDirectory=resolve(leaseDirectory);
   const leases:ResourceLease[]=[],failures:unknown[]=[];
   const acquire=async(resource:string)=>{
-    const lease=await acquireFreshResourceLeaseV1({directory:leaseDirectory,resource,mode:"exclusive",control,signal:control.signal});
+    const lease=await acquireResourceLease({directory:leaseDirectory,resource,mode:"exclusive",control,signal:control.signal,timeoutMs:0,admissionPatienceMs:freshAdmission.const.directoryPatienceMilliseconds});
     leases.push(lease);
     return captureResourceLeaseWriterProofV1(lease,leaseDirectory,resource,control);
   };

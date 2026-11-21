@@ -4,6 +4,7 @@ use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext}
 use semio_framework_value::{RetainedAllocationEffect,RetireOwned,RetirementDemand,RetirementPollExit,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use semio_s_artifact_procedural_3d_editor_selection::{ComponentTarget,AnalyticComponent};
+use semio_s_artifact_procedural_3d_model::{graph_channel_code_unit_width, graph_output_channel_body};
 use std::mem::{ManuallyDrop,size_of};
 const QUANTUM:usize=64;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -16,7 +17,7 @@ impl SelectionRefusal{
  fn key(self)->&'static str{match self{Self::FirstInvalid=>"first-invalid",Self::InvalidTarget=>"invalid-target",Self::MixedTargets=>"mixed-targets",Self::ConflictingIdentity=>"conflicting-identity"}}
 }
 #[derive(Clone,Copy,Default)]
-struct Parsed{at:Option<usize>,hash:Option<usize>,dots:[Option<usize>;2],tildes:[usize;3],tilde_count:usize,ats:usize,hashes:usize,end:usize,index:u32,component:u32}
+struct Parsed{at:Option<usize>,hash:Option<usize>,dots:[Option<usize>;2],tildes:[usize;3],tilde_count:usize,end:usize,index:u32,component:u32}
 impl Parsed{
  fn analytic(self)->bool{self.tilde_count==3}
  fn span(self,lane:usize)->(usize,usize){match lane{0=>(0,self.dots[0].unwrap()),1=>(self.dots[0].unwrap()+1,self.dots[1].unwrap()),2=>(self.tildes[0]+1,self.tildes[1]),_=>(self.tildes[2]+1,self.end)}}
@@ -25,7 +26,7 @@ impl Parsed{
 #[derive(Clone,Copy,RetireOwned)]
 struct Entry{component:u32,ordinal:usize,label_start:usize,label_end:usize}
 #[derive(Clone,Copy,PartialEq,Eq)]
-enum Phase{Scan,Validate,Index,Component,Label,Handle,Revision,Classify,Capacity,Compare,Search,LabelCompare,Insert,Shift,Next,Ready}
+enum Phase{Scan,Validate,Channel,Index,Component,Label,Handle,Revision,Classify,Capacity,Compare,Search,LabelCompare,Insert,Shift,Next,Ready}
 pub struct GumballSelectionWork{
  entries:ManuallyDrop<Option<Vec<Entry>>>,retirement:RetainedCloneClose,birth:Birth,original:OriginalSourceBinding,source:Option<(usize,usize)>,current:Option<(usize,usize)>,first_identity:Option<(usize,usize)>,parsed:Parsed,first:Option<Parsed>,ordinal:usize,byte:usize,lane:usize,position:usize,shift:usize,phase:Phase,outcome:Option<Result<SelectionKind,SelectionRefusal>>,closing:bool,progress:RetainedCloneProgress
 }
@@ -50,7 +51,7 @@ impl GumballSelectionWork{
  pub fn target<'a>(&self,ids:&'a[String],cx:&StepContext<'_>)->Result<Option<ComponentTarget<'a>>,OriginalTurnFailure>{
   self.validate(ids)?;if !self.original.matches(cx){return Err(invalid().into())}cx.original_source_parent()?.validate_borrowed_context(cx)?;
   if self.result()!=Some(Ok(SelectionKind::Components)){return Ok(None)}let p=self.first.ok_or_else(invalid)?;let id=ids.first().ok_or_else(invalid)?;
-  Ok(Some(ComponentTarget{instance:&id[..p.dots[0].unwrap()],widget:&id[..p.at.unwrap()],channel:&id[p.at.unwrap()+1..p.hash.unwrap()],index:p.index as usize,granularity:&id[p.dots[0].unwrap()+1..p.dots[1].unwrap()],component:p.component,analytic:if p.analytic(){Some(AnalyticComponent{handle:&id[p.tildes[0]+1..p.tildes[1]],label:&id[p.tildes[1]+1..p.tildes[2]],revision:&id[p.tildes[2]+1..p.end]})}else{None}}))
+  Ok(Some(ComponentTarget{instance:&id[..p.dots[0].unwrap()],widget:&id[..p.at.unwrap()],channel_code:&id[p.at.unwrap()+1..p.hash.unwrap()],index:p.index as usize,granularity:&id[p.dots[0].unwrap()+1..p.dots[1].unwrap()],component:p.component,analytic:if p.analytic(){Some(AnalyticComponent{handle:&id[p.tildes[0]+1..p.tildes[1]],label:&id[p.tildes[1]+1..p.tildes[2]],revision:&id[p.tildes[2]+1..p.end]})}else{None}}))
  }
  fn finish(&mut self,result:Result<SelectionKind,SelectionRefusal>){self.outcome=Some(result);self.phase=Phase::Ready}
  fn bad(&mut self){if self.first.is_some(){self.finish(Err(SelectionRefusal::InvalidTarget))}else{self.phase=Phase::Next}}
@@ -60,6 +61,7 @@ impl GumballSelectionWork{
   let metadata=size_of::<Parsed>()+4*size_of::<usize>();
   Ok(match self.phase{
    Phase::Scan=>fixed(metadata+ids.get(self.ordinal).map_or(0,|id|id.len().saturating_sub(self.byte).min(QUANTUM))),
+   Phase::Channel=>fixed(metadata+(self.parsed.hash.unwrap()-self.byte).min(QUANTUM+2)),
    Phase::Index|Phase::Component|Phase::Label=>fixed(metadata+20),
    Phase::Handle|Phase::Revision=>fixed(metadata+64),
    Phase::Capacity=>RetirementDemand{copy_bytes:size_of::<Vec<Entry>>(),capacity_bytes:ids.len().checked_mul(size_of::<Entry>()).ok_or_else(invalid)?,depth:1,..Default::default()},
@@ -85,12 +87,39 @@ impl GumballSelectionWork{
   match self.phase{
    Phase::Scan=>{
     let Some(id)=ids.get(self.ordinal)else{self.finish(Ok(if self.first.is_some(){SelectionKind::Components}else{SelectionKind::Basic}));return Ok(true)};
-    self.current=Some(text_identity(id));let end=(self.byte+QUANTUM).min(id.len());for index in self.byte..end{let b=id.as_bytes()[index];if b==b'~'{if self.parsed.tilde_count<3{self.parsed.tildes[self.parsed.tilde_count]=index}self.parsed.tilde_count+=1}else if self.parsed.tilde_count==0{match b{b'@'=>{if self.parsed.at.is_none(){self.parsed.at=Some(index)}self.parsed.ats+=1},b'#'=>{self.parsed.hash=Some(index);self.parsed.hashes+=1},b'.'=>{self.parsed.dots[0]=self.parsed.dots[1];self.parsed.dots[1]=Some(index)},_=>{}}}}self.byte=end;if end==id.len(){self.parsed.end=id.len();self.phase=Phase::Validate}
+    self.current=Some(text_identity(id));
+    let end=(self.byte+QUANTUM).min(id.len());
+    for index in self.byte..end {
+     match id.as_bytes()[index] {
+      b'@'=>self.parsed.at=Some(index),
+      b'#'=>self.parsed.hash=Some(index),
+      b'.'=>{self.parsed.dots=[self.parsed.dots[1],Some(index)];self.parsed.tilde_count=0},
+      b'~'=>{if self.parsed.tilde_count<3{self.parsed.tildes[self.parsed.tilde_count]=index}self.parsed.tilde_count+=1},
+      _=>{},
+     }
+    }
+    self.byte=end;
+    if end==id.len(){self.parsed.end=id.len();self.phase=Phase::Validate}
    },
    Phase::Validate=>{
     let p=self.parsed;let Some(id)=ids.get(self.ordinal)else{return Err(invalid())};
-    let valid=match(p.at,p.hash,p.dots[0],p.dots[1]){(Some(at),Some(hash),Some(dot),Some(last))=>p.ats==1&&p.hashes==1&&at>0&&at+1<hash&&hash+1<dot&&dot<last&&last<p.end&&matches!(p.tilde_count,0|3)&&matches!(&id[dot+1..last],"vertex"|"edge"|"face")&&(p.tilde_count==0||last<p.tildes[0]),_=>false};
-    if valid{self.phase=Phase::Index}else{self.bad()}
+    let (Some(at),Some(hash),Some(dot),Some(last))=(p.at,p.hash,p.dots[0],p.dots[1]) else {self.bad();return Ok(self.ready())};
+    if at==0||at+1>=hash||hash+1>=dot||last+1>=p.end||!matches!(last-dot,5|7)||!matches!(p.tilde_count,0|3)||!matches!(&id[dot+1..last],"vertex"|"edge"|"face") {self.bad();return Ok(self.ready())}
+    let code=&id[at+1..hash];
+    let Some(body)=graph_output_channel_body(code) else {self.bad();return Ok(self.ready())};
+    self.byte=hash-body.len();
+    self.phase=Phase::Channel;
+   },
+   Phase::Channel=>{
+    let hash=self.parsed.hash.unwrap();
+    let id=ids[self.ordinal].as_bytes();
+    let end=(self.byte+QUANTUM).min(hash);
+    while self.byte<end {
+     let width=graph_channel_code_unit_width(&id[self.byte..hash]);
+     if width==0 {self.bad();return Ok(self.ready())}
+     self.byte+=width;
+    }
+    if self.byte==hash{self.phase=Phase::Index}
    },
    Phase::Index=>{let p=self.parsed;let id=&ids[self.ordinal];let end=p.dots[0].ok_or_else(invalid)?;match number(&id[p.hash.ok_or_else(invalid)?+1..end],u32::MAX as u64,true){Some(value)=>{self.parsed.index=value as u32;self.phase=Phase::Component},None=>self.bad()}},
    Phase::Component=>{let p=self.parsed;let id=&ids[self.ordinal];let end=if p.analytic(){p.tildes[0]}else{p.end};match number(&id[p.dots[1].ok_or_else(invalid)?+1..end],u32::MAX as u64,true){Some(value)=>{self.parsed.component=value as u32;self.phase=if p.analytic(){Phase::Label}else{Phase::Classify}},None=>self.bad()}},

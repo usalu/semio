@@ -3,6 +3,21 @@
 //! Members of tier-1 crates are methods of their component struct with the lower components as parameters; use-case members stay `impl ShellState` and address the components as `self.<component>.<field>`; a private item that crossed a module boundary was widened to `pub(super)`.
 
 use super::*;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "💾️save.rs"]
+mod native_media_save;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_media_save::NativeMediaSaveTask;
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎞️original-picker.rs"]
+mod native_original_media;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_original_media::{NativeOriginalMediaPoll, NativeOriginalMediaTask};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "📂️open.rs"]
+mod native_file_open;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_file_open::{native_local_documents, NativeOpenedFile};
 
 //#region 📤️FileOpenImport
 /// 📥️ Turns one picker answer into the actions a shell dispatches — one per
@@ -101,7 +116,10 @@ impl OpeningState {
         let is_de = prefs.locale_id == "de";
         let pick = |en: &str, de: &str| if is_de { de.to_string() } else { en.to_string() };
         let mut children = vec![settings_text_row(shell_chrome_string("taskManager.runningTasks", is_de))];
-        if self.import_transfers.is_empty() {
+        let idle = self.import_transfers.is_empty();
+        #[cfg(not(target_arch = "wasm32"))]
+        let idle = idle && self.native_media_save.is_none() && self.active_original_media().is_none();
+        if idle {
             children.push(settings_text_row(&pick("No task is running.", "Es läuft keine Aufgabe.")));
         }
         for transfer in &self.import_transfers {
@@ -124,6 +142,28 @@ impl OpeningState {
                 style: None,
                 presence: UiPresence::default(),
                 menu: None,
+            }));
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some((id, task)) = self.active_original_media() {
+            children.extend(native_original_media::task_nodes(id, task, is_de));
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(task) = &self.native_media_save {
+            children.push(settings_text_row(&format!("{} · {} · {}", task.file, pick("File export", "Dateiexport"), task.plugin_id)));
+            children.push(UiNode::Progress(semio_ui_declaration::ui::UiProgressNode {
+                id: format!("os.task-manager.progress.documentTransfer:{}", task.id),
+                completed: task.completed() as f64, total: None,
+                value_text: Label::data(pick("Export progress", "Exportfortschritt")),
+                presence: UiPresence::default(), menu: None,
+            }));
+            children.push(UiNode::Button(UiButtonNode {
+                id: Some(format!("os.task-manager.cancel.documentTransfer:{}", task.id)),
+                icon_id: IconName::Square,
+                label: Label::data(if is_de { format!("{} abbrechen", task.file) } else { format!("Cancel {}", task.file) }),
+                action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(),
+                    args: semio_renderer_wgpu_host_base::action_args_json!({ "transfer": task.id }) },
+                style: None, presence: UiPresence::default(), menu: None,
             }));
         }
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("os.task-manager.tasks".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })

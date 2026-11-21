@@ -65,6 +65,22 @@ struct NeutralWindowCase {
 }
 
 #[test]
+fn window_disposer_birth_quotes_the_concrete_store_disposer() {
+    use semio_plugin::WindowConfigOwner;
+    type Owner = NoteCompositeWindowConfigOwner;
+    let demand = Owner::store_disposer_birth().expect("Note window disposer has an original allocation quote");
+    let disposer = Owner::build_store_disposer();
+    assert_eq!(demand.capacity_bytes, std::alloc::Layout::for_value(disposer.as_ref()).size());
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../✏️editor/🪟️window/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral window owner fixture");
+    let birth = &fixture["disposerBirth"];
+    assert_eq!(demand.depth, birth["depth"].as_u64().unwrap() as usize);
+    assert_eq!(demand.copy_bytes, birth["copyBytes"].as_u64().unwrap() as usize);
+    assert_eq!(demand.release_bytes, birth["releaseBytes"].as_u64().unwrap() as usize);
+    assert!(Owner::native_pair_demands().unwrap().capacity_bytes > 0);
+    assert!(Owner::native_operation_wire().original_receiving.is_some());
+}
+
+#[test]
 fn neutral_window_schema_round_trips_match_the_serde_json_oracle() {
     let fixture: NeutralWindowFixture = serde_json::from_str(fixture_text!("../../../../../../✏️editor/🪟️window/🧪️tests/🧫️fixtures/🔣️.json")).expect("independent neutral JSON oracle");
     assert_eq!(fixture.windows.len(), 2);
@@ -76,7 +92,9 @@ fn neutral_window_schema_round_trips_match_the_serde_json_oracle() {
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&transient)).expect("transient JSON"), case.transient);
         store::os_store::test_support::assert_dsl_pack_equivalence(&config);
         store::os_store::test_support::assert_dsl_pack_equivalence(&transient);
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowConfigMutation::SetCamera(config.camera.clone()));
+        let mutation = NoteCompositeWindowConfigMutation::SetCamera(config.camera);
+        store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+        protocol::os_dsl::original_receiving::check_receiving_round_trip(&[mutation]).expect("bounded camera receiving matches the independently decoded fixture");
         store::os_store::test_support::assert_op_text_binary_equivalence(&NoteCompositeWindowTransientMutation::Snapshot { transient });
     }
 }

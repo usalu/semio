@@ -1,0 +1,11 @@
+{"absoluteTolerance":1e-8,"relativeTolerance":2e-7,"cases":[
+  {"id":"nearest of two equal isolated minima uses earliest parameter","curve":{"ellipse":[4,2]},"range":[0.1,5],"target":[0,0,3],"parameter":1.5707963267948966,"point":[2.4492935982947064e-16,2.0,0],"distance":3.6055512754639896,"length":15.470313697576188},
+  {"id":"trim endpoint beats every retained stationary point","curve":{"ellipse":[4,2]},"range":[0,0.7853981633974483],"target":[-10,0,0],"parameter":0.7853981633974483,"point":[2.8284271247461903,1.414213562373095,0],"distance":12.906143595006366,"length":1.9313274884444547},
+  {"id":"seam crossing keeps the authored lift","curve":{"ellipse":[4,2]},"range":[5.7,6.8],"target":[10,0,2],"parameter":6.283185307179586,"point":[4.0,-4.898587196589413e-16,0],"distance":6.324555320336759,"length":2.484559343329674},
+  {"id":"trim excludes the full-ellipse minimum but admits another stationary point","curve":{"ellipse":[4,2]},"range":[3.141592653589793,5.5],"target":[0,0.25,1],"parameter":4.71238898038469,"point":[-7.347880794884119e-16,-2.0,0],"distance":2.462214450449026,"length":7.76411375038725},
+  {"id":"offset full turn keeps the earliest of equal periodic minima","curve":{"ellipse":[4,2]},"range":[4,10.283185307179586],"target":[0,0,1],"parameter":4.71238898038469,"point":[-7.347880794884119e-16,-2.0,0],"distance":2.23606797749979,"length":19.376896441095347},
+  {"id":"two complete turns plus partial arc preserve length and earliest contact","curve":{"ellipse":[4,2]},"range":[-0.2,13.466370614359173],"target":[10,0,0],"parameter":0.0,"point":[4.0,0.0,0],"distance":6.0,"length":41.467459939608304},
+  {"id":"eccentric trim reconstructs its authored target","curve":{"ellipse":[1000,2]},"range":[0.4,1.2],"target":[613.7457494888115,1.579007479379901,3],"parameter":0.91,"point":[613.7457494888115,1.579007479379901,0],"distance":3.0,"length":558.7045548793055}
+,
+  {"id":"elliptic trim evaluates in its rotated translated source frame","curve":{"ellipse":[1000,2],"origin":[1,-3,4],"normal":[0,1,0]},"range":[0.4,1.2],"target":[614.7457494888115,0,2.420992520620099],"parameter":0.91,"point":[614.7457494888115,-3,2.420992520620099],"distance":3,"length":558.7045548793055}
+]}

@@ -177,4 +177,10 @@ describe("🌗️ contrast and states", () => {
       for (const property of entry.properties) expect(rules.get(entry.selector), `${entry.selector} { ${property} }`).toContain(property);
     });
   }
+
+  it("leaves the shared clock and drop-zone edges to the compositor in forced colours", () => {
+    for (const [selector, properties] of forcedColorRules(stylesheet)) {
+      if (/^\.course-(?:clock\[|drop-active)/u.test(selector)) expect(properties, selector).not.toContain("outline");
+    }
+  });
 });

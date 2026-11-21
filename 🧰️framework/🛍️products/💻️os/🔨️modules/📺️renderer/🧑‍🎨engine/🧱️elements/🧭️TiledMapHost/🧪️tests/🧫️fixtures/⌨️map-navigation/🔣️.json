@@ -1,0 +1,18 @@
+{
+  "camera": { "x": 80, "y": 120, "zoom": 2 },
+  "pan": [
+    { "key": "ArrowRight", "offset": [-64, 0] },
+    { "key": "ArrowLeft", "offset": [64, 0] },
+    { "key": "ArrowDown", "offset": [0, -64] },
+    { "key": "ArrowUp", "offset": [0, 64] }
+  ],
+  "zoom": [
+    { "key": "+", "wheelDelta": -120 },
+    { "key": "-", "wheelDelta": 120 }
+  ],
+  "ignored": [
+    { "key": "ArrowDown", "ctrlKey": true },
+    { "key": "z", "metaKey": true },
+    { "key": "Tab" }
+  ]
+}

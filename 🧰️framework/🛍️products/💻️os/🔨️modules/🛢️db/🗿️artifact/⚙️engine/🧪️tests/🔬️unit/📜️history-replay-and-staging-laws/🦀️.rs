@@ -316,8 +316,8 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_
         dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
         observed: None,
         target: Vec::new(),
-        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(object)).await },
-        inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap_payload(&DslValue::Object(object)).await.unwrap() },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap_payload(&DslValue::Object(vec![])).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         transaction: None, verb: None, line: None,
     }

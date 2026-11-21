@@ -552,9 +552,16 @@ fn retained_draw_rebuild_preserves_prepared_material_colors_from_the_json_oracle
 fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
-    state.terrain.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 9.7382, project_origin_lat: 52.3759, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
+    let mut scene = scene_with_selection("[]");
+    let world = scene.world_3d.as_mut().unwrap();
+    world.terrain_json = Some(r#"{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":9.7382,"projectOriginLat":52.3759,"attribution":{"label":"Elevation source","url":"https://example.test"}}"#.into());
+    world.camera_json = r#"{"position":[0,0,300],"target":[0,0,0],"up":[0,1,0],"fov":45,"terrainFrame":[9.7382,52.3759,1000]}"#.into();
+    let camera_digest = semio_os_infinite_world_scene::world3d_scene_digest(&[&world.camera_json]);
+    let viewport = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+    sync_world3d_state(&mut state, &scene, viewport);
+    assert_eq!(state.terrain.terrain_attribution_label(), Some("Elevation source"));
     apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
-    let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: ui_scene::math::CameraProjection3d::Perspective, zoom: 1.0 };
+    let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 1.0, 0.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: ui_scene::math::CameraProjection3d::Perspective, zoom: 1.0 };
     let (tile_draws, evicted) = sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
     assert!(tile_draws.is_empty(), "no elevation data uploaded yet, nothing to draw");
     assert!(evicted.is_empty(), "nothing was cached yet, nothing to evict");
@@ -565,7 +572,8 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
         WorldAssetRequestKind::Terrain { z, x, y } => (z, x, y),
         other => panic!("a DEM tile is admitted as a Terrain request, got {other:?}"),
     };
-    assert_eq!(owner.url(), terrain_tile_url("/dem/{z}/{x}/{y}.png", z, x, y));
+    let url = terrain_tile_url("/dem/{z}/{x}/{y}.png", z, x, y);
+    assert_eq!(owner.url(), url);
     return_world3d_asset(&mut state.assets, owner).expect("the admitted owner returns to its claim");
     let value = (100.0_f64 + 32768.0).round() as i64;
     let r = ((value >> 8) & 0xff) as u8;
@@ -576,8 +584,12 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     }
     let mut bytes = Vec::new();
     image::DynamicImage::ImageRgba8(image).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
-    assert!(apply_world3d_terrain_tile_bytes(&mut state.terrain, z, x, y, &bytes), "fetched DEM bytes reach the terrain session");
+    assert!(!apply_world3d_terrain_tile_bytes(&mut state.terrain, &format!("/other/{z}/{x}/{y}.png"), z, x, y, &bytes), "stale source bytes are declined");
+    assert!(apply_world3d_terrain_tile_bytes(&mut state.terrain, &url, z, x, y, &bytes), "fetched DEM bytes reach the terrain session");
     assert!(!state.terrain.pending_terrain_tile_urls.contains_key(&terrain_tile_url("/dem/{z}/{x}/{y}.png", z, x, y)), "an applied tile leaves the pending set");
+    assert_eq!(state.terrain.take_camera_origin_elevation(None, false), None, "the scene camera must be applied first");
+    assert_eq!(state.terrain.take_camera_origin_elevation(Some(camera_digest), false), Some(100.0), "the auto-frame raises its estimated target to the real origin height");
+    assert_eq!(state.terrain.take_camera_origin_elevation(Some(camera_digest), false), None, "the camera is adjusted once");
 
     sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
     assert!(state.terrain.terrain_pending.is_some() || state.terrain.terrain_build.is_some(), "an uploaded tile opens its mesh-build owner");
@@ -589,17 +601,110 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     }
     let (tile_draws_after_upload, _) = sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
     assert_eq!(tile_draws_after_upload.len(), 1, "one draw per tile — the ramp rides the mesh's own vertex colours, not ten flat bands");
+    let tile_size = f64::from(1u32 << z);
+    let lon = ((f64::from(x) + 0.5) / tile_size) * 360.0 - 180.0;
+    let lat = (std::f64::consts::PI * (1.0 - 2.0 * (f64::from(y) + 0.5) / tile_size)).sinh().atan().to_degrees();
+    let delta = 10.0 / tile_size;
+    let terrain = serde_json::json!({
+        "tileUrlTemplate": "/dem/{z}/{x}/{y}.png",
+        "projectOriginLon": 9.7382, "projectOriginLat": 52.3759,
+        "overlays": {
+            "positions": [{ "id": "pin", "name": "Pin", "coordinates": [lon, lat] }],
+            "routes": [{ "id": "path", "name": "Path", "coordinates": [[lon, lat], [lon + delta, lat + delta]] }],
+            "regions": [{ "id": "zone", "name": "Zone", "rings": [[[lon, lat], [lon + delta, lat], [lon, lat + delta]]] }]
+        }
+    });
+    state.terrain.set_terrain_json(Some(&terrain.to_string()));
+    assert!(apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain).is_empty());
+    assert!(state.scene.meshes.contains_key(&tile_draws_after_upload[0].mesh_key), "overlay edits leave the DEM mesh resident");
+    let overlays = state.terrain.tile_overlays((z, x, y)).expect("visible tile overlays");
+    assert_eq!(overlays.positions.len(), 1);
+    assert_eq!(overlays.positions[0].id, "pin");
+    assert!((overlays.positions[0].point[2] - 100.0).abs() < 0.01);
+    let region_vertices = 2 * overlays.regions[0].segments.len();
+    let route_vertices = 2 * overlays.routes[0].segments.len();
+    let mut lines = Vec::new();
+    semio_os_infinite_world_interaction::append_terrain_overlay_lines(&mut state.terrain, (z, x, y), &camera, viewport, &mut lines);
+    assert_eq!(lines.len(), region_vertices + route_vertices + 8);
+    assert_ne!(lines[0].color, lines[region_vertices].color);
+    assert_ne!(lines[region_vertices].color, lines[region_vertices + route_vertices].color);
+    assert!(lines.iter().all(|line| line.position[2] > 100.0));
+    state.terrain.set_terrain_json(Some(r#"{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":9.7382,"projectOriginLat":52.3759}"#));
+    assert!(state.terrain.tile_overlays((z, x, y)).is_none(), "removed overlays leave no cached markers");
+    state.terrain.terrain_tile_misses.insert((z, x, y));
+    let mut panned = camera;
+    panned.position.x += 100_000.0;
+    panned.target.x += 100_000.0;
+    sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &panned);
+    assert!(!state.terrain.terrain_tile_misses.contains(&(z, x, y)), "an offscreen tile can retry when it comes back into view");
+}
+
+#[test]
+fn inline_terrain_publishes_and_retires_without_tile_requests() {
+    let _gate = semio_os_infinite_world_host::world_test_gate();
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    let mut scene = scene_with_selection("[]");
+    let origin = [9.7382, 52.3759];
+    let rows: Vec<_> = (99..=131).map(|height| vec![height; 33]).collect();
+    scene.world_3d.as_mut().unwrap().terrain_json = Some(serde_json::json!({
+        "projectOriginLon": origin[0],
+        "projectOriginLat": origin[1],
+        "elevationGrid": { "bounds": [9.7282, 52.3659, 9.7482, 52.3859], "rows": rows },
+        "overlays": {
+            "positions": [{ "id": "center", "name": "Center", "coordinates": origin }],
+            "routes": [],
+            "regions": []
+        }
+    }).to_string());
+    let viewport = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+    let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 1.0, 0.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: ui_scene::math::CameraProjection3d::Perspective, zoom: 1.0 };
+    scene.world_3d.as_mut().unwrap().interaction_json = Some(r#"{"terrainBrush":{"action":"editElevation","arguments":{"operation":"smooth","radius":4,"value":50}}}"#.into());
+    sync_world3d_state(&mut state, &scene, viewport);
+    let (brush, _) = state.terrain.terrain_brush().expect("scene projects a validated terrain brush");
+    assert_eq!((brush.action.as_str(), brush.arguments.operation.as_str(), brush.arguments.radius, brush.arguments.value), ("editElevation", "smooth", 4, 50));
+    assert!(apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain).is_empty());
+    let (draws, evicted) = sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
+    assert!(draws.is_empty() && evicted.is_empty());
+    assert!(state.terrain.terrain_pending.is_some(), "embedded elevation opens a mesh build on the first sync");
+    for _ in 0..100_000 {
+        if state.terrain.terrain_pending.is_none() && state.terrain.terrain_build.is_none() {
+            break;
+        }
+        with_world_step_context(1, |context| {
+            let grant = terrain_test_grant();
+            let result = step_world3d_terrain(&mut state.session, &mut state.interaction, &mut state.authority, &mut state.scene, &mut state.terrain, grant, context);
+            assert!(result.ownership.fits(grant));
+            assert!(!matches!(result.step, WorldTerrainMeshPublicationStep::Fault(_)));
+        });
+    }
+    assert!(state.terrain.terrain_pending.is_none() && state.terrain.terrain_build.is_none());
+    let (draws, evicted) = sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
+    let [draw] = draws.as_slice() else { panic!("expected one embedded terrain draw") };
+    assert!(evicted.is_empty());
+    assert!(state.scene.meshes.contains_key(&draw.mesh_key));
+    let overlays = state.terrain.tile_overlays(draw.tile).expect("overlays sample the embedded grid");
+    assert!((overlays.positions[0].point[2] - 115.0).abs() < 0.01);
+    assert!(state.terrain.pending_terrain_tile_urls.is_empty());
+    assert!(take_next_world3d_asset(&mut state.assets).is_none());
+
+    scene.world_3d.as_mut().unwrap().terrain_json = None;
+    sync_world3d_state(&mut state, &scene, viewport);
+    assert_eq!(state.terrain.terrain_brush(), None);
+    assert_eq!(apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain), [draw.mesh_key.clone()]);
+    let (draws, evicted) = sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
+    assert!(draws.is_empty() && evicted.is_empty());
+    assert!(state.scene.meshes.is_empty());
 }
 
 #[test]
 fn apply_terrain_style_if_changed_state_purges_stale_meshes_on_origin_change() {
     let _gate = semio_os_infinite_world_host::world_test_gate();
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
-    state.terrain.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 0.0, project_origin_lat: 0.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
+    state.terrain.set_terrain_json(Some(r#"{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png"}"#));
     assert!(apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain).is_empty(), "first application has nothing to purge");
     let mesh_key = terrain_tile_mesh_key(&state.session.surface_id, 10, 1, 2);
     store_mesh(&mut state.session, &mut state.interaction, &mut state.authority, &mut state.scene, mesh_key, publish_oracle_mesh(mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])));
-    state.terrain.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 5.0, project_origin_lat: 5.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
+    state.terrain.set_terrain_json(Some(r#"{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":5.0,"projectOriginLat":5.0}"#));
     let purged = apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
     assert_eq!(purged.len(), 1, "an origin change should purge the previously-cached terrain mesh");
     assert!(state.scene.meshes.is_empty());

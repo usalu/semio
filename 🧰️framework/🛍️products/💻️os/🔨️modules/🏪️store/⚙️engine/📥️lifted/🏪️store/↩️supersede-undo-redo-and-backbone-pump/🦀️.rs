@@ -316,9 +316,7 @@ where
         self.pump_with_reports().await.map(|(_, reports)| reports)
     }
 
-    /// 🛟️ The sole public remote write gate ([`Self::ingest_remote_merge`]). While a tool transaction is open its
-    /// unannounced edit is lifted off the applied tail for the merge and folded back onto the merged head after it, so a
-    /// remote edit never reorders, quarantines or degrades it and it stays the tail its commit announces.
+    /// 🛟️ Folds a remote edit before restoring any open local tool transaction to the applied tail.
     pub async fn ingest_remote(&mut self, envelope: semio_os_spr::MutationEnvelope) -> Result<semio_os_spr::MergeReport, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let Some((open, edit)) = self.lift_open_transaction().await? else {
             return self.ingest_remote_merge(envelope).await;
@@ -328,21 +326,35 @@ where
         report
     }
 
-    /// 🪞️ Delegates to [`semio_os_store_engine_bundle::ingest_remote_merge`]: feeds one remote envelope through the causal DAG and merges it into the edit timeline.
+    /// 🪞️ Folds one remote envelope through the causal edit timeline.
     #[inline]
     async fn ingest_remote_merge(&mut self, envelope: semio_os_spr::MutationEnvelope) -> Result<semio_os_spr::MergeReport, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         semio_os_store_engine_bundle::ingest_remote_merge(&mut self.parts(), envelope).await
     }
 
-    /// 📥️ Pumps every queued inbound message from the attached backbone into the timeline.
+    /// 📥 Passes a verified group through one Store history publication.
+    pub async fn ingest_original_atomic(&mut self, group: &semio_os_spr::VerifiedAtomicEdit)
+        -> Result<semio_os_store_engine_bundle::AtomicStoreReceive, VcsError>
+    where P: Clone, Mutation: ColdMutation<P> {
+        let prepared = semio_os_store_engine_bundle::prepare_verified_atomic_edit(&mut self.parts(), group).await?;
+        let open = if prepared.will_commit() {
+            match self.lift_open_transaction().await {
+                Ok(open) => open,
+                Err(error) => { prepared.discard(&mut self.parts())?; return Err(error); }
+            }
+        } else { None };
+        let report = prepared.commit(&mut self.parts(), group.edit_id()).await;
+        if let Some((open, edit)) = open { self.restore_open_transaction(open, edit).await?; }
+        report
+    }
+
+    /// 📥️ Folds the attached backbone's queued messages.
     pub async fn pump(&mut self) -> Result<bool, VcsError> where Mutation: semio_os_spr::ColdMutation<P> {
         self.pump_with_reports().await.map(|(changed, _)| changed)
     }
 
-    /// 🪆️ A member lane names a document this store does not own; only the composing app can
-    /// resolve `(slot, child_id)` to a live member, so the message waits for its owner.
-    ///
-    /// A store never consumes acks (they flow store→actor); drain and ignore any that echo back.
+    /// 🪆️ Folds this document's queue, leaving member lanes to their owning app.
+    /// Drops echoed acknowledgements, which only flow Store to actor.
     async fn pump_with_reports(&mut self) -> Result<(bool, Vec<semio_os_spr::MergeReport>), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let Some(mut backbone) = self.wire.backbone.take() else {
             return Ok((false, Vec::new()));

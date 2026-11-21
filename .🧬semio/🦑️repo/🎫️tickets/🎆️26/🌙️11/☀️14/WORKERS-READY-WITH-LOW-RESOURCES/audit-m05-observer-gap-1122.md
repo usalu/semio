@@ -1,0 +1,7 @@
+# Fleet Observer Gap at 11:22 UTC
+
+The mirrored m05 attestation last published at 11:18:13 UTC with exact index tree 41cfdebf5190cfa4c28e0b38b0294119d053503f and 5362 incoming items. Its Ready receipt, six seconds old at the inspection, still reported workspace running and adopted, ready=false and exit null. The fresh workspace log reported 321228 source observations and 31 owner checks at slice 4561 seconds. Its latest terminal timing remains the 09:20 UTC stalled attempt. These records show an attestation-publication gap alongside a fresh readiness observer; they do not establish a new completed or failed stage, the physical status of the replica process, or the cause of the gap.
+
+The m01, m03, m04 and m06 attestation and readiness records remain stale, and m09 has no mirrored readiness or attestation. Their historical states do not establish their current process state. Six other workers, m02, m07, m08, m10, m11 and m12, freshly attest the exact index tree, but none reports Ready.
+
+The m07 timing and matching failed log show a separate new workspace attempt ended at 11:17:48 UTC after 365 seconds, exit 1 with an exit receipt. Its failed log says the graph service was silent for 120 seconds and the request was treated as lost. A previous workspace attempt timed out after 8421 seconds with SIGTERM. Its newest receipt reports a running retry with reason previous-failed and no terminal exit. No direct worker action is justified by these mirrored receipts; observe existing retries and require fresh exact stage plus a successful readiness receipt.

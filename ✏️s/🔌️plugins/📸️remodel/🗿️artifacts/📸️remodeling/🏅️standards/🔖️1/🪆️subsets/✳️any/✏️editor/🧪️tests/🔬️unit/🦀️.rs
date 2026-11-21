@@ -849,23 +849,33 @@ async fn neutral_mesh_export_triangle_agrees_with_independent_gltf() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️mesh-export/🔣️.json")).unwrap();
     let positions: Vec<f32> = fixture["positions"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect();
     let indices: Vec<u32> = fixture["indices"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect();
-    let mesh = semio_framework::MeshData { positions: positions.clone(), indices: indices.clone(), ..Default::default() };
+    let uvs: Vec<f32> = fixture["uvs"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect();
+    let mesh = semio_framework::MeshData { positions: positions.clone(), indices: indices.clone(), uvs: uvs.clone(), ..Default::default() };
     let bytes = GlbExporter.export(&mesh).expect("batch reference GLB");
     let glb = gltf::Gltf::from_slice(&bytes).expect("independent GLB decoder");
     let primitive = glb.meshes().next().unwrap().primitives().next().unwrap();
     let reader = primitive.reader(|buffer| (buffer.index() == 0).then_some(glb.blob.as_deref().unwrap()));
     assert_eq!(reader.read_positions().unwrap().flatten().collect::<Vec<_>>(), positions);
     assert_eq!(reader.read_indices().unwrap().into_u32().collect::<Vec<_>>(), indices);
+    assert_eq!(reader.read_tex_coords(0).unwrap().into_f32().flatten().collect::<Vec<_>>(), uvs);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn checked_mesh_media_export_is_resumable_and_matches_independent_gltf() {
-    use semio_plugin::artifact_app_laws::{fixture_close_grant, poll_fixture_media_export, retain_fixture_media_export_result, take_fixture_media_export_chunk, OriginalFixtureCaller};
+    use semio_plugin::artifact_app_laws::{ensure_fixture_cancellation_issuer, fixture_close_grant, poll_fixture_media_export, retain_fixture_media_export_result, take_fixture_media_export_chunk, OriginalFixtureCaller};
     use semio_plugin::{ArtifactMediaExportPoll, PluginApp};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️mesh-export/🔣️.json")).unwrap();
-    let cuts = std::iter::once(None).chain(fixture["cancelAfterTurns"].as_array().unwrap().iter().map(|cut| Some(cut.as_u64().unwrap() as usize)));
-    for cut in cuts {
+    let cases = std::iter::once((None, false))
+        .chain(fixture["cancelAfterTurns"].as_array().unwrap().iter().map(|cut| (Some(cut.as_u64().unwrap() as usize), false)))
+        .chain(std::iter::once((None, true)));
+    for (cut, empty) in cases {
         let mut app = app().await;
+        ensure_fixture_cancellation_issuer(&mut app.0, app.1.cx()).expect("mount the original cancellation issuer");
+        if empty {
+            assert_eq!(fixture["emptyMesh"], "refused");
+            let cleared = dispatch(&mut app, RemodelingCommand::ClearMeshResult(clear_mesh_result::ClearMeshResult {})).await;
+            assert!(cleared.edited_document());
+        }
         let before = app.snapshot().expect("original mesh snapshot");
         let expected = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&before.durable_artifacts, &before.results.mesh.mesh).expect("original mesh");
         let close = fixture_close_grant(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
@@ -882,17 +892,26 @@ async fn checked_mesh_media_export_is_resumable_and_matches_independent_gltf() {
         let mut terminal = false;
         for turn in 0..OriginalFixtureCaller::maximum_turns() {
             if cut == Some(turn) { app.0.cancel_media_export(&handle).await.expect("cancel original media export"); cancelled = true; }
-            match poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), close).await.expect("original media poll") {
+            let poll = match poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await {
+                Ok(poll) => poll,
+                Err(failure) if empty => {
+                    assert!(failure.primary.message().contains("No mesh is available to export"), "{failure:?}");
+                    terminal = true;
+                    break;
+                }
+                Err(failure) => panic!("original media poll: {failure:?}"),
+            };
+            match poll {
                 ArtifactMediaExportPoll::Running { applied_progress, .. } => { assert!(applied_progress >= progress); progress = applied_progress; }
                 ArtifactMediaExportPoll::Cancelled => { assert!(cancelled); terminal = true; break; }
                 ArtifactMediaExportPoll::Complete(result) => {
-                    assert!(!cancelled && cut.is_none());
+                    assert!(!cancelled && !empty && cut.is_none());
                     assert_eq!(result.schema, fixture["schema"].as_str().unwrap());
                     assert_eq!(result.mime_type, fixture["mimeType"].as_str().unwrap());
-                    let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx(), close).await.expect("publish segmented media");
+                    let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx()).await.expect("publish segmented media");
                     let mut bytes = Vec::new();
                     let mut done = false;
-                    while !done { if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx(), close).await.expect("media chunk") { bytes.extend_from_slice(&chunk); } }
+                    while !done { if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx()).await.expect("media chunk") { bytes.extend_from_slice(&chunk); } }
                     assert_eq!(bytes.len() as u64, status.total_bytes);
                     let glb = gltf::Gltf::from_slice(&bytes).expect("independent GLB decoder");
                     let primitive = glb.meshes().next().expect("one mesh").primitives().next().expect("one primitive");

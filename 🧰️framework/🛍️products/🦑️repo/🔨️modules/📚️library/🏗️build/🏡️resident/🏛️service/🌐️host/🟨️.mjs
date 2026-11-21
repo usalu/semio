@@ -127,13 +127,17 @@ export function createHostServiceV1(options){
   return{ref:{hash:digest,size:Buffer.byteLength(body)}};
  };
 
+ const retainWorkspace=workspace=>{
+  workspace.active++;
+  return()=>{workspace.active--;workspace.lastUsedAt=now();};
+ };
  const openWorkspace=frame=>{
   let workspace=workspaces.get(frame.workspace);
   if(workspace){workspaces.delete(frame.workspace);workspaces.set(frame.workspace,workspace);workspace.lastUsedAt=now();return workspace;}
   if(workspaceIdV1(frame.root)!==frame.workspace)return undefined;
   try{if(!lstatSync(frame.root).isDirectory())return undefined;}catch{return undefined;}
-  for(const idle of[...workspaces.values()]){if(workspaces.size<policy.maximumWorkspaces)break;if(idle.loads===0)closeWorkspace(idle.id);}
-  workspace={id:frame.workspace,root:frame.root,lastUsedAt:now(),plans:0,loads:0,handle:undefined,indexKey:undefined};
+  for(const idle of[...workspaces.values()]){if(workspaces.size<policy.maximumWorkspaces)break;if(idle.active===0)closeWorkspace(idle.id);}
+  workspace={id:frame.workspace,root:frame.root,lastUsedAt:now(),plans:0,active:0,handle:undefined,indexKey:undefined};
   workspaces.set(frame.workspace,workspace);
   return workspace;
  };
@@ -151,8 +155,7 @@ export function createHostServiceV1(options){
   if(workspace.handle)return{hit:true};
   const started=performance.now();
   await progress("load",0,1,"host-load",{workspace:workspace.id});
-  workspace.loads++;
-  const handle=await pool.acquire(key,loadSignal=>ports.planner.load({root:workspace.root,workspace:workspace.id,signal:loadSignal}),signal).finally(()=>{workspace.loads--;workspace.lastUsedAt=now();});
+  const handle=await pool.acquire(key,loadSignal=>ports.planner.load({root:workspace.root,workspace:workspace.id,signal:loadSignal}),signal);
   if(workspaces.get(workspace.id)!==workspace){handle.release();throw Object.assign(new Error("closed"),{code:"closed"});}
   if(workspace.handle)handle.release();else{workspace.handle=handle;workspace.indexKey=key;}
   phases.push({phase:"load",ms:Math.round((performance.now()-started)*1000)/1000});
@@ -173,11 +176,13 @@ export function createHostServiceV1(options){
   const deadline=frame.deadlineMs?setTimeout(()=>controller.abort(Object.assign(new Error("deadline"),{code:"deadline"})),frame.deadlineMs):undefined;
   const client={connection,frame,controller,stage:"starting",aliveKey:"host-alive",job:undefined},began=now();
   const alive=setInterval(()=>{if(keepaliveDueV1({stage:client.stage,held:client.job?.clients.has(client),sentAt:connection.sentAt??began,now:now(),intervalMilliseconds:policy.requestKeepaliveMilliseconds}))void send(connection,{t:"progress",id:frame.id,phase:"alive",done:0,total:0,message:text(connection,client.aliveKey,{seconds:Math.round((now()-began)/1000)})});},Math.max(10,Math.floor(policy.requestKeepaliveMilliseconds/2)));alive.unref?.();
+  let releaseWorkspace;
   try{
    await send(connection,{t:"accepted",id:frame.id,queue:governor.queued});
    controller.signal.throwIfAborted();
    const workspace=openWorkspace(frame);
    if(!workspace){await refuse(connection,frame.id,"invalid","host-unknown-workspace",{workspace:frame.workspace},"never");return;}
+   releaseWorkspace=retainWorkspace(workspace);
    client.aliveKey="host-alive-identify";
    const indexKey=await indexKeyOf(workspace,controller.signal);
    client.aliveKey="host-alive-scope";
@@ -204,7 +209,7 @@ export function createHostServiceV1(options){
     await refuse(connection,frame.id,failure.code,failure.key,failure.fields,failure.retry);
     if(failure.key==="access-denied")void drainAndExit("access-denied");
    }
-  }finally{clearTimeout(deadline);clearInterval(alive);connection.requests.delete(frame.id);touch();}
+  }finally{releaseWorkspace?.();clearTimeout(deadline);clearInterval(alive);connection.requests.delete(frame.id);touch();}
  }
 
  /** 🤝 Attaches a client to the running job of an identical request, or starts the job; resolves when the job answered this client, rejects-by-outcome when it failed, and detaches the client (cancelling the job with its last client) when the client goes away first. */
@@ -244,7 +249,7 @@ export function createHostServiceV1(options){
  }
 
  async function run(job,workspace,frame,progress,indexKey){
-  const phases=[];let release;
+  const phases=[],releaseWorkspace=retainWorkspace(workspace);let release;
   try{
    const queued=performance.now();
    release=await governor.enter(frame.agent+"/"+frame.priority,job.controller.signal,position=>{void progress("queued",0,0,"queued",{position});});
@@ -252,7 +257,7 @@ export function createHostServiceV1(options){
    phases.push({phase:"queued",ms:Math.round((performance.now()-queued)*1000)/1000});
    job.controller.signal.throwIfAborted();
    const{hit}=await ensureIndex(workspace,job.controller.signal,phases,progress,indexKey);
-   const memoKey=workspace.indexKey+"\0"+workspace.id+"\0"+(frame.revision??"")+"\0"+(frame.parent??"")+"\0"+(frame.tool??"")+"\0"+(frame.graphPolicy??"")+"\0"+(frame.arguments?.join("\u0001")??"")+"\0"+[...frame.targets].sort().join(","),started=performance.now();
+   const memoKey=jobKeyV1(workspace.indexKey,workspace.id,frame),started=performance.now();
    const cursor=frame.dirty?.cursor,live=frame.dirty!==undefined;
    let plan=live?undefined:memo.get(memoKey);
    if(plan!==undefined&&!slicePresent(plan)){memo.delete(memoKey);plan=undefined;}
@@ -288,7 +293,7 @@ export function createHostServiceV1(options){
     if(own&&validateReply(full).length)throw new Error("planner bound an invalid reply: "+validateReply(full)[0]);
     return send(client.connection,full);
    }));
-  }finally{release?.();}
+  }finally{try{release?.();}finally{releaseWorkspace();}}
  }
 
  const status=id=>{
@@ -371,8 +376,8 @@ export function createHostServiceV1(options){
 
  const sweep=()=>{
   const at=now();
-  for(const workspace of[...workspaces.values()])if(workspace.loads===0&&at-workspace.lastUsedAt>policy.workspaceIdleMilliseconds)closeWorkspace(workspace.id);
-  const rss=(ports.resident?.rss??(()=>process.memoryUsage().rss))(),governed=(ports.workers?.active?.()??0)>0||governor.inFlight>0||[...workspaces.values()].some(workspace=>workspace.loads>0)||[...connections].some(connection=>connection.requests.size>0);
+  for(const workspace of[...workspaces.values()])if(workspace.active===0&&at-workspace.lastUsedAt>policy.workspaceIdleMilliseconds)closeWorkspace(workspace.id);
+  const rss=(ports.resident?.rss??(()=>process.memoryUsage().rss))(),governed=(ports.workers?.active?.()??0)>0||governor.inFlight>0||[...workspaces.values()].some(workspace=>workspace.active>0)||[...connections].some(connection=>connection.requests.size>0);
   if(!governed&&rss>policy.maximumResidentBytes){
    for(const id of[...workspaces.keys()])closeWorkspace(id);
    pool.clear();memo.clear();globalThis.Bun?.gc?.(true);

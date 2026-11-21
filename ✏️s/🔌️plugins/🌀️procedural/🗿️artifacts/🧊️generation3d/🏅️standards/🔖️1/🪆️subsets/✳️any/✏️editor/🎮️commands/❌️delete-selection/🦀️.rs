@@ -5,7 +5,7 @@ use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::generation3d_selection_removal;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
-use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::{snapshot::Generation3dSnapshot, GraphTargetKind::{Edge, Node}};
 use semio_os_flow::FlowEvalSession;
 use semio_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -18,7 +18,9 @@ pub struct DeleteSelection {}
 /// (`disconnect-synapse`, `delete-widget-position`, `delete-widget`) as ONE edit; a selected id the graph no longer holds is
 /// skipped.
 fn delete_selected(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    Emit { artifact_mutations: generation3d_selection_removal(host_snapshot, selected), ..Default::default() }
+    let nodes: Vec<_> = selected.iter().filter_map(|id| Node.raw(id).map(str::to_owned)).collect();
+    let edges: Vec<_> = selected.iter().filter_map(|id| Edge.raw(id).map(str::to_owned)).collect();
+    Emit { artifact_mutations: generation3d_selection_removal(host_snapshot, &nodes, &edges), ..Default::default() }
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, ctx)` is framework-fixed at this exact 4-arg

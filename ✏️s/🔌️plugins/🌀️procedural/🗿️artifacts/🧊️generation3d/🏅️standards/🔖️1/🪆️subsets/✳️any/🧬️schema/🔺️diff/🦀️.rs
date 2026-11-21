@@ -691,9 +691,7 @@ impl protocol::ColdMutationDiff<Generation3dSnapshot> for Generation3dDiff {
     }
 
     fn apply(&self, unpublished: &mut Generation3dSnapshot, capability: protocol::ApplyCapability) -> MutationApplyResult<()> {
-        let applied = (|snapshot: &Generation3dSnapshot| -> MutationApplyResult<Generation3dSnapshot> {
-        let mut next = snapshot.clone();
-        let applied = (|| {
+        let prepared = protocol::PreparedField::prepare(unpublished, Generation3dSnapshot::retire_cold, capability, |next| {
             if let Some(schema) = &self.schema {
                 next.host_snapshot.schema.clone_from(schema);
             }
@@ -708,19 +706,10 @@ impl protocol::ColdMutationDiff<Generation3dSnapshot> for Generation3dDiff {
                 let committed = delta.commit_onto(&next.host_snapshot.synapses, capability).map_err(|error| error.under(["synapses"]))?;
                 Generation3dSynapsesDelta::retire_list(std::mem::replace(&mut next.host_snapshot.synapses, committed));
             }
-            self.apply_layout(&mut next)?;
-            self.apply_generation(&mut next, capability)
-        })();
-        match applied {
-            Ok(()) => Ok(next),
-            Err(error) => {
-                next.retire_cold();
-                Err(error)
-            }
-        }
-    
-        })(&*unpublished)?;
-        *unpublished = applied;
+            self.apply_layout(next)?;
+            self.apply_generation(next, capability)
+        })?;
+        prepared.install(unpublished);
         Ok(())
     }
 }

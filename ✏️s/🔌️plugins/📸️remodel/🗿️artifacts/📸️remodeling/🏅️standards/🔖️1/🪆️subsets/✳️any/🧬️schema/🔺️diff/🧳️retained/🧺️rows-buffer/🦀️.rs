@@ -74,7 +74,7 @@ impl<T: RetireOwned> OwnedRowsBuffer<T> {
         let mut pending = None;
         let result: Result<_, OriginalRetirementFailure> = (|| {
             let selected = self.work_demand(body, maximum_work_units)?;
-            if selected == 0 {
+            if selected == 0 || selected > effect.maximum_work_units() {
                 return Ok(RetainedCloneStep::Progress(Default::default()));
             }
             let demand = self.demand(body, maximum_work_units)?;
@@ -99,7 +99,10 @@ impl<T: RetireOwned> OwnedRowsBuffer<T> {
                     }
                 }
             }
-            work = 1;
+            if !effect.performed(selected)? {
+                return Ok(RetainedCloneStep::Progress(Default::default()));
+            }
+            work = u128::from(selected);
             let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
             match self.phase {
                 0 => {

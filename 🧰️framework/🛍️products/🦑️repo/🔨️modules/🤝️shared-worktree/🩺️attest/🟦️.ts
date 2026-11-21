@@ -4,6 +4,8 @@ import {dirname,join} from "node:path";
 import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {listOriginsV1,readEventSpansV1,readHeadV1,readThroughReplacementV1,replaceOriginFileV1,storePathsV1,type FleetCursorV1} from "../📒️journal/🟦️.ts";
 import {importClosureV1,moduleSourcesV1,restartJitterMillisecondsV1,StoreStalledV1,type FailureSummaryV1} from "../🛡️resilience/🟦️.ts";
+import gitSchema from "../🌿️git/🧬️schema/🔣️.json" with {type:"json"};
+import type {GitStageObservationV1,GitStateV1} from "../🌿️git/🟦️.ts";
 import {platformV1} from "../🗺️topology/🟦️.ts";
 import {nextDelayV1,silentLatencyV1,type LatencyReportV1,type TierNameV1} from "../🎣️tiers/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
@@ -405,8 +407,8 @@ const blobsWarnMilliseconds=120_000,brokenWindowMilliseconds=120_000;
 
 /** 🩹 The reason an origin states for a git repository it cannot read (`git-broken-<reason>` among its failures, noted while the daemon finds it broken), `undefined` when it states none within the last two minutes. */
 const brokenReasonV1=(attestation:FleetAttestationV1):string|undefined=>attestation.failures?.find(failure=>failure.kind.startsWith("git-broken-")&&attestation.wallMs-failure.lastMs<brokenWindowMilliseconds)?.kind.slice(11);
-/** 🪞 The reason an origin states for a stage that does not follow the stage of the archivist (`stage-<reason>` among its failures, present while the stage waits or is degraded), `undefined` when it states none within the last two minutes. */
-const stageReasonV1=(attestation:FleetAttestationV1):string|undefined=>attestation.failures?.find(failure=>failure.kind.startsWith("stage-")&&attestation.wallMs-failure.lastMs<brokenWindowMilliseconds)?.kind.slice(6);
+/** 🪞 The recent reason a stage waits or cannot be certified. A later exact tree supersedes an observation failure. */
+const stageReasonV1=(attestation:FleetAttestationV1):string|undefined=>attestation.failures?.find(failure=>failure.kind.startsWith("stage-")&&(attestation.indexTree===null||!failure.kind.startsWith("stage-observe-"))&&attestation.wallMs-failure.lastMs<brokenWindowMilliseconds)?.kind.slice(6);
 const capabilities=(origins:readonly string[],attestations:Readonly<Record<string,FleetAttestationV1>>):FleetWarningV1[]=>{
  const warnings:FleetWarningV1[]=[],measured=origins.filter(origin=>attestations[origin]!.guards!==null);
  const usual=majority(measured.map(origin=>attestations[origin]!.guards!.version??"-")),volume=(origin:string):string=>{const found=attestations[origin]!.guards!.volume;return `case=${found.caseInsensitive?"insensitive":"sensitive"} normalisation=${found.normalisationInsensitive?"insensitive":"sensitive"}`;},common=majority(measured.map(volume));
@@ -432,7 +434,7 @@ const everyBucket=Array.from({length:bucketCountV1},(_,bucket)=>bucket);
 const comparedFields:readonly FleetFieldV1[]=["manifest","head.commit","indexTree","view.digest"];
 const spell=(bucket:number,value:string):string=>bucket<0?value:`#${bucket}=${value}`;
 
-/** 🔬️ Compares two workers at the cuts of their checkpoints, component by component, and returns every value compared as an item (`same` or not) together with the components that could be decided. A component is *known* when both checkpoints are at most 60 s old and the events between the two spans are known and leave something to compare; then everything outside the buckets those events touch must be equal. Shared files: the buckets no event between the spans touched (all of them when the spans are the same point). Git state (`HEAD` commit, stage tree): compared unless an event between the spans touches the git state (then undecided). View: the buckets that no event between the spans and no pending change on either side touches, undecided when an event touches the git state; a worker without view is exempt. */
+/** 🔬️ Compares two workers at the cuts of their checkpoints, component by component, and returns every value compared as an item (`same` or not) together with the components that could be decided. A component is *known* when both checkpoints are at most 60 s old and the events between the two spans are known and leave something to compare; then everything outside the buckets those events touch must be equal. Shared files: the buckets no event between the spans touched (all of them when the spans are the same point). Git state: compare `HEAD` when no intervening event touches Git. A null stage tree beside a known `HEAD` leaves the stage undecided, so Git is known only when both stages can be compared. View: the buckets that no event between the spans and no pending change on either side touches, undecided when an event touches the git state; a worker without view is exempt. */
 export function compareCheckpointsV1(left:FleetCheckpointsV1,right:FleetCheckpointsV1,now:number,windows:Readonly<Record<string,GapWindowV1|undefined>>):ComparisonV1{
  const items:ItemV1[]=[],known=new Set<TrackV1>();
  const spread=(field:FleetFieldV1,skip:ReadonlySet<number>,one:string,two:string):void=>{for(const bucket of everyBucket)if(!skip.has(bucket))items.push({field,bucket,left:sliceOf(one,bucket),right:sliceOf(two,bucket),same:sliceOf(one,bucket)===sliceOf(two,bucket)});};
@@ -448,8 +450,11 @@ export function compareCheckpointsV1(left:FleetCheckpointsV1,right:FleetCheckpoi
  if(first!==undefined&&second!==undefined&&recentAt(now,first.wallMs)&&recentAt(now,second.wallMs)){
   const gap=gapBetweenV1(spanOfV1(first),spanOfV1(second),windows);
   if(gap!==undefined&&!gap.git){
-   known.add("git");
-   items.push({field:"head.commit",bucket:-1,left:first.head??"-",right:second.head??"-",same:first.head===second.head},{field:"indexTree",bucket:-1,left:first.indexTree??"-",right:second.indexTree??"-",same:first.indexTree===second.indexTree});
+   items.push({field:"head.commit",bucket:-1,left:first.head??"-",right:second.head??"-",same:first.head===second.head});
+   if((first.indexTree!==null||first.head===null)&&(second.indexTree!==null||second.head===null)){
+    known.add("git");
+    items.push({field:"indexTree",bucket:-1,left:first.indexTree??"-",right:second.indexTree??"-",same:first.indexTree===second.indexTree});
+   }
   }
  }
  const above=left.view,below=right.view;
@@ -619,15 +624,17 @@ export type AttesterViewRequestV1=Readonly<{previous:AttesterViewV1;paths:readon
 export type AttesterChangesV1=Readonly<{paths:readonly string[];overflow:boolean}>;
 
 /** 🌿️ The git state the attestation carries. */
-export type AttesterGitV1=Readonly<{present:boolean;head:string|null;commit:string|null;indexTree:string|null}>;
+export type AttesterGitV1=GitStateV1;
+const gitObservationKinds=new Set<string>(gitSchema.definitions.StageObservation.enum);
+const gitUnavailable=(state:AttesterGitV1|undefined):boolean=>state?.observation!==undefined||state?.present===true&&state.indexTree===null;
 
 /** 🧪️ The answer of the self-check of new code: it starts (`ok`), it does not (`reason`), or the code changed meanwhile and the check must be repeated (`again`). */
 export type RestartCheckV1=Readonly<{ok:true}>|Readonly<{ok:false;reason:string;again?:boolean}>;
 
 /** ⚙️ How an attester is wired: identity, clock, code location, intervals and the injected side effects. */
-export type AttesterOptionsV1=Readonly<{retryMilliseconds?:number;storeRoot:string;originId:string;groupId:string;platform?:string;now:()=>number;heartbeatMilliseconds?:number;stableMilliseconds?:number;codeRoot?:string;watchRoot?:string;check?:(digest:string,signal?:AbortSignal)=>Promise<RestartCheckV1>;busy?:()=>boolean;jitterSpanMilliseconds?:number;minimumUptimeMilliseconds?:number;busyCapMilliseconds?:number;refused?:(digest:string,reason:string)=>void;admit?:(digest:string,signal?:AbortSignal)=>Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>;fallback?:FleetFallbackV1;returnMilliseconds?:number;failures?:()=>readonly FailureSummaryV1[];suspect?:(digest:string,running:string)=>string|undefined;suspicious?:(digest:string,reason:string)=>void;ran?:(digest:string)=>void;store?:<T>(work:()=>Promise<T>)=>Promise<T>;git:(signal?:AbortSignal)=>Promise<AttesterGitV1>;reachable:()=>Promise<boolean>;prepare?:()=>Promise<void>;view?:(signal?:AbortSignal,request?:AttesterViewRequestV1)=>Promise<AttesterViewV1|null>;changes?:()=>AttesterChangesV1;unsettled?:()=>readonly string[];viewMilliseconds?:number;viewDebounceMilliseconds?:number;deltaDebounceMilliseconds?:number;deltaLimit?:number;latency?:()=>LatencyReportV1;timed?:(name:TierNameV1,costMs:number,delayMs:number)=>void;viewSeed?:()=>FleetViewV1|undefined;onView?:(view:FleetViewV1)=>void;guards?:(signal?:AbortSignal)=>Promise<FleetGuardsV1|null>;guardsMilliseconds?:number;guardsMinimumMilliseconds?:number}>;
+export type AttesterOptionsV1=Readonly<{retryMilliseconds?:number;storeRoot:string;originId:string;groupId:string;platform?:string;now:()=>number;heartbeatMilliseconds?:number;stableMilliseconds?:number;codeRoot?:string;watchRoot?:string;check?:(digest:string,signal?:AbortSignal)=>Promise<RestartCheckV1>;busy?:()=>boolean;jitterSpanMilliseconds?:number;minimumUptimeMilliseconds?:number;busyCapMilliseconds?:number;refused?:(digest:string,reason:string)=>void;admit?:(digest:string,signal?:AbortSignal)=>Promise<Readonly<{ok:true}>|Readonly<{ok:false;reason:string}>>;fallback?:FleetFallbackV1;returnMilliseconds?:number;failures?:()=>readonly FailureSummaryV1[];suspect?:(digest:string,running:string)=>string|undefined;suspicious?:(digest:string,reason:string)=>void;ran?:(digest:string)=>void;store?:<T>(work:()=>Promise<T>)=>Promise<T>;git:(signal?:AbortSignal)=>Promise<AttesterGitV1>;gitObservationFailed?:(reason:GitStageObservationV1)=>void;reachable:()=>Promise<boolean>;prepare?:()=>Promise<void>;view?:(signal?:AbortSignal,request?:AttesterViewRequestV1)=>Promise<AttesterViewV1|null>;changes?:()=>AttesterChangesV1;unsettled?:()=>readonly string[];viewMilliseconds?:number;viewDebounceMilliseconds?:number;deltaDebounceMilliseconds?:number;deltaLimit?:number;latency?:()=>LatencyReportV1;timed?:(name:TierNameV1,costMs:number,delayMs:number)=>void;viewSeed?:()=>FleetViewV1|undefined;onView?:(view:FleetViewV1)=>void;guards?:(signal?:AbortSignal)=>Promise<FleetGuardsV1|null>;guardsMilliseconds?:number;guardsMinimumMilliseconds?:number}>;
 
-/** 🩺️ The attester: `start` records the digest of the code that runs (`code` of every attestation); `tick` watches the code on disk (`watchRoot`, by default the running code) and answers `restart` only when the digest there differs from the running one, has stayed the same for the stable time (5 s), the admission (`admit`: another origin attests the digest, a code snapshot of it lies in the store, or all of it was written on this machine; otherwise the daemon waits, shows `pending` with `waiting: …` and asks again every heartbeat, and a digest that changes starts again), the self-check (`check`, a fresh process that loads the new code) passed, the deterministic per-origin jitter (0 to 60 s from origin id and new digest) has elapsed, the process has run for at least 30 s and the replica is not busy (`busy`: incoming queue not empty or an apply batch in flight; given up after 5 minutes); a failed check keeps the old code running, calls `refused`, shows as `pending:{code,ok:false,reason}` in the attestation and is repeated only when the digest on disk changes again, except a check that only timed out or could not start (`retryableCheckV1`), which is repeated after `retryMilliseconds` (five minutes). It writes the attestation when a value changed (at most once per second) or the heartbeat is due (every 5 s), never while the store is unreachable. The working-tree view (`git status`, 15 to 20 s of CPU on 270 000 files) is asked once at start and afterwards only when something relevant changed (the manifest, a cursor, the activity counter of the replica that counts publishes, applies, hints and sweep findings, or the git state) and then at most once every `viewMilliseconds` (120 s) or, when a view took long, nineteen times its duration (at most 5 % of the time busy), when the change has been quiet for `viewDebounceMilliseconds` (5 s) or has waited a whole spacing; the duration is reported through `timed`; an idle replica never asks again; never concurrently with itself and cancellable by the signal; `view.txt` is written before the attestation that carries its digest and only when the digest changed. The guards (see `FleetGuardsV1`) are measured in the background after the git state is known, every `guardsMilliseconds` (5 minutes) and, at most every `guardsMinimumMilliseconds` (10 s), after the view digest changed; the attestation states `null` until the first measurement arrives and never waits for it. Git is asked at most once per heartbeat, in the background. */
+/** 🩺️ The attester: `start` records the digest of the code that runs (`code` of every attestation); `tick` watches the code on disk (`watchRoot`, by default the running code) and answers `restart` only when the digest there differs from the running one, has stayed the same for the stable time (5 s), the admission (`admit`: another origin attests the digest, a code snapshot of it lies in the store, or all of it was written on this machine; otherwise the daemon waits, shows `pending` with `waiting: …` and asks again every heartbeat, and a digest that changes starts again), the self-check (`check`, a fresh process that loads the new code) passed, the deterministic per-origin jitter (0 to 60 s from origin id and new digest) has elapsed, the process has run for at least 30 s and the replica is not busy (`busy`: incoming queue not empty or an apply batch in flight; given up after 5 minutes); a failed check keeps the old code running, calls `refused`, shows as `pending:{code,ok:false,reason}` in the attestation and is repeated only when the digest on disk changes again, except a check that only timed out or could not start (`retryableCheckV1`), which is repeated after `retryMilliseconds` (five minutes). It writes the attestation when a value changed (at most once per second) or the heartbeat is due (every 5 s), never while the store is unreachable. The working-tree view (`git status`, 15 to 20 s of CPU on 270 000 files) is asked once at start and afterwards only when something relevant changed (the manifest, a cursor, the activity counter of the replica that counts publishes, applies, hints and sweep findings, or the git state) and then at most once every `viewMilliseconds` (120 s) or, when a view took long, nineteen times its duration (at most 5 % of the time busy), when the change has been quiet for `viewDebounceMilliseconds` (5 s) or has waited a whole spacing; the duration is reported through `timed`; an idle replica never asks again; never concurrently with itself and cancellable by the signal; `view.txt` is written before the attestation that carries its digest and only when the digest changed. The guards (see `FleetGuardsV1`) are measured in the background after the git state is known, every `guardsMilliseconds` (5 minutes) and, at most every `guardsMinimumMilliseconds` (10 s), after the view digest changed; the attestation states `null` until the first measurement arrives and never waits for it. Git is asked at most once per heartbeat, in the background. The first certified Git state is reported while the working-tree view is still being measured. A pending first Git read gets a liveness receipt after one heartbeat. */
 export type AttesterV1={start(signal?:AbortSignal):Promise<void>;tick(snapshot:AttesterSnapshotV1,signal?:AbortSignal):Promise<"idle"|"written"|"restart">;pending():Readonly<{code:string;ok:false;reason:string}>|null;running():string};
 
 /** ⏳️ Whether a refused self-check says only that the machine was too slow or could not start the check (a timeout, a process that did not start): the code is not blamed, so the check is repeated after a pause (the daemon doubles its deadline each time) instead of the machine staying on its old code until the digest changes again. */
@@ -636,7 +643,7 @@ export const retryableCheckV1=(reason:string):boolean=>/^self-check (timed out|c
 /** 🏭️ Creates an attester. */
 export function createAttesterV1(options:AttesterOptionsV1):AttesterV1{
  const heartbeat=options.heartbeatMilliseconds??5000,stable=options.stableMilliseconds??5000,spacing=Math.min(1000,heartbeat),probe=createCodeProbeV1(options.codeRoot??codeRootV1),watching=options.watchRoot===undefined?probe:createCodeProbeV1(options.watchRoot),platform=options.platform??platformV1(),viewEvery=options.viewMilliseconds??120_000,viewQuiet=options.viewDebounceMilliseconds??5000,deltaQuiet=options.deltaDebounceMilliseconds??1000,deltaLimit=options.deltaLimit??1500,guardsEvery=options.guardsMilliseconds??300_000,guardsMinimum=options.guardsMinimumMilliseconds??10_000;
- let started="",bootAt=0,reported=false,adopt:{digest:string;since:number}|undefined,admission:{digest:string;ok:boolean;reason:string;at:number}|undefined,admitting:Promise<void>|undefined,verdict:{digest:string;ok:boolean;reason:string;retryAt?:number}|undefined,checking:Promise<void>|undefined,signature="",wrote=-Infinity,gitAt=-Infinity,gitState:AttesterGitV1|undefined,gitBusy:Promise<void>|undefined,codeAt=-Infinity;
+ let started="",bootAt=0,reported=false,adopt:{digest:string;since:number}|undefined,admission:{digest:string;ok:boolean;reason:string;at:number}|undefined,admitting:Promise<void>|undefined,verdict:{digest:string;ok:boolean;reason:string;retryAt?:number}|undefined,checking:Promise<void>|undefined,signature="",wrote=-Infinity,gitAt=-Infinity,gitState:AttesterGitV1|undefined,gitBusy:Promise<void>|undefined,gitFailure:GitStageObservationV1|undefined,codeAt=-Infinity;
  let holdGitSince:number|undefined,currentBuckets:Readonly<{digest:string;buckets:string}>|undefined,manifestCheckpoint:FleetManifestCheckpointV1|undefined,gitCheckpoint:FleetGitCheckpointV1|undefined,viewCheckpoint:FleetViewCheckpointV1|undefined,lastCut:FleetCutV1|undefined,gitPending:Readonly<{before:FleetCutV1;wallMs:number;head:string|null;indexTree:string|null}>|undefined,viewPending:Readonly<{before:FleetCutV1;wallMs:number;digest:string;buckets:string}>|undefined;
  let guardsState:FleetGuardsV1|null|undefined,guardsBusy:Promise<void>|undefined,guardsAt=-Infinity,guardsDigest:string|undefined;
  let viewStale=false,viewSeeded=false,viewBase=false,viewState:AttesterViewV1|null|undefined,viewBusy:Promise<void>|undefined,viewFlight:boolean|undefined,viewAt=-Infinity,viewSpacing=viewEvery,viewDemandSpacing=0,viewDeltaAt=-Infinity,viewDeltaSpacing=0,viewDirty:number|undefined,viewTouched=0,viewWatch="",viewStored:string|undefined,viewKey="",viewTree:string|null=null,viewSeen="",viewPaths=new Set<string>(),viewOverflow=false,deltaDirty:number|undefined,deltaTouched=0;
@@ -664,7 +671,18 @@ export function createAttesterV1(options:AttesterOptionsV1):AttesterV1{
  const askGit=(signal?:AbortSignal):Promise<void>=>{
   gitAt=options.now();
   const before=lastCut,wallMs=gitAt;
-  return gitBusy??=options.git(signal).then(state=>{gitState=state;gitPending=before===undefined||signal?.aborted===true?undefined:{before,wallMs,head:state.present?state.commit:null,indexTree:state.present?state.indexTree:null};},()=>{gitState={present:false,head:null,commit:null,indexTree:null};}).finally(()=>{gitBusy=undefined;});
+  const observed=(state:AttesterGitV1):void=>{
+   if(signal?.aborted===true)return;
+   gitState=state;
+   const unavailable=gitUnavailable(state);
+   if(unavailable)gitCheckpoint=undefined;
+   gitPending=before===undefined||unavailable?undefined:{before,wallMs,head:state.present?state.commit:null,indexTree:state.present?state.indexTree:null};
+   const reason=state.observation===undefined?undefined:gitObservationKinds.has(state.observation)?state.observation:"observation-failed";
+   if(reason===gitFailure)return;
+   gitFailure=reason;
+   if(gitFailure!==undefined)options.gitObservationFailed?.(gitFailure);
+  };
+  return gitBusy??=Promise.resolve().then(()=>options.git(signal)).then(observed,()=>observed({present:false,head:null,commit:null,indexTree:null,observation:"observation-failed"})).finally(()=>{gitBusy=undefined;});
  };
  const shown=():Readonly<{code:string;ok:false;reason:string}>|null=>verdict?.ok===false?{code:verdict.digest,ok:false,reason:verdict.reason}:adopt!==undefined&&admission?.digest===adopt.digest&&!admission.ok?{code:admission.digest,ok:false,reason:`waiting: ${admission.reason}`}:null;
  return {
@@ -704,7 +722,8 @@ export function createAttesterV1(options:AttesterOptionsV1):AttesterV1{
      if(now>=at&&now-bootAt>=Math.max(options.minimumUptimeMilliseconds??30_000,digest===started?options.returnMilliseconds??300_000:0)&&(options.busy?.()!==true||now-at>=(options.busyCapMilliseconds??300_000)))return "restart";
     }
    }
-   if((now-gitAt>=heartbeat||spanned&&gitCheckpoint===undefined&&gitPending===undefined&&now-gitAt>=spacing)&&gitBusy===undefined)void askGit(signal);
+   const unavailable=gitUnavailable(gitState);
+   if((now-gitAt>=heartbeat||!unavailable&&spanned&&gitCheckpoint===undefined&&gitPending===undefined&&now-gitAt>=spacing)&&gitBusy===undefined)void askGit(signal);
    const changes=options.changes?.();
    if(changes!==undefined&&(changes.overflow||changes.paths.length>0)){
     if(changes.overflow)viewOverflow=true;
@@ -713,7 +732,8 @@ export function createAttesterV1(options:AttesterOptionsV1):AttesterV1{
     deltaTouched=now;deltaDirty??=now;
    }
    if(viewState===undefined&&!viewSeeded){const seed=options.viewSeed?.();if(seed!==undefined){viewState={...seed,lines:[]};viewSeeded=true;viewStored=seed.digest;}}
-   if(gitState!==undefined&&!gitState.present){viewState=null;viewCheckpoint=undefined;viewPending=undefined;viewStale=false;viewSeeded=false;viewBase=false;viewPaths.clear();viewOverflow=false;deltaDirty=undefined;guardsState=null;}
+   if(unavailable){viewStale=true;viewCheckpoint=undefined;viewPending=undefined;}
+   else if(gitState!==undefined&&!gitState.present){viewState=null;viewCheckpoint=undefined;viewPending=undefined;viewStale=false;viewSeeded=false;viewBase=false;viewPaths.clear();viewOverflow=false;deltaDirty=undefined;guardsState=null;}
    else if(gitState!==undefined){
     const key=`${gitState.commit}|${gitState.indexTree}`,watch=JSON.stringify([snapshot.files,snapshot.manifest,snapshot.cursors,snapshot.activity,gitState.commit,gitState.indexTree]);
     if(key!==viewSeen){viewSeen=key;if(viewBase){deltaTouched=now;deltaDirty??=now;}}
@@ -733,19 +753,21 @@ export function createAttesterV1(options:AttesterOptionsV1):AttesterV1{
      viewCheckpoint={cursors:shot!,wallMs:now,digest:viewState.digest,buckets:currentBuckets.buckets,pending:bucketMaskV1(hold.map(bucketOfV1))};
     }
    }
-   if(gitState?.present===true&&guardsBusy===undefined&&(guardsState===undefined||now-guardsAt>=guardsEvery||viewState!==undefined&&viewState!==null&&viewState.digest!==guardsDigest&&!viewStale&&now-guardsAt>=guardsMinimum))void askGuards(signal);
+   if(!unavailable&&gitState?.present===true&&guardsBusy===undefined&&(guardsState===undefined||now-guardsAt>=guardsEvery||viewState!==undefined&&viewState!==null&&viewState.digest!==guardsDigest&&!viewStale&&now-guardsAt>=guardsMinimum))void askGuards(signal);
    const checkpoints:FleetCheckpointsV1|undefined=spanned?{...manifestCheckpoint===undefined?{}:{manifest:manifestCheckpoint},...gitCheckpoint===undefined?{}:{git:gitCheckpoint},...viewCheckpoint===undefined||gitState?.present!==true?{}:{view:viewCheckpoint}}:undefined;
    const shownNow=shown(),refusal=shownNow===null?undefined:{code:shownNow.code,ok:false as const,reason:shownNow.reason.slice(0,512)},failures=options.failures?.()??[];
    const next=JSON.stringify([options.fallback,snapshot.sync,snapshot.files,snapshot.manifest,snapshot.cursors,snapshot.incoming,started,refusal,failures,gitState?.commit,gitState?.indexTree,gitState?.head,viewState?.digest,viewStale,guardsState,checkpoints===undefined?undefined:[manifestCheckpoint?.cursors,manifestCheckpoint?.manifest,gitCheckpoint?.cursors,gitCheckpoint?.until,gitCheckpoint?.head,gitCheckpoint?.indexTree,viewCheckpoint?.cursors,viewCheckpoint?.until,viewCheckpoint?.digest,viewCheckpoint?.pending]]);
    const due=now-wrote>=heartbeat||(next!==signature&&now-wrote>=spacing);
-   if(!due||gitState===undefined||viewState===undefined)return "idle";
+   if(!due||started===""||gitState===undefined&&now-bootAt<heartbeat)return "idle";
    if(!await options.reachable())return "idle";
    const write=async():Promise<void>=>{
     await options.prepare?.();
-    const git=gitState,view=viewState;if(git===undefined||view===undefined)return;
+    const view=viewState??null;
     if(view!==null&&view.digest!==viewStored){await writeViewLinesV1(options.storeRoot,options.originId,view.lines);viewStored=view.digest;}
-     const commit=git.commit,head=git.present&&commit!==null?{ref:git.head??"HEAD",commit}:null;
-     await writeAttestationV1(options.storeRoot,{version:1,originId:options.originId,groupId:options.groupId,platform,wallMs:now,hlc:snapshot.hlc,sync:snapshot.sync,code:started,cursors:snapshot.cursors,files:snapshot.files,manifest:snapshot.manifest,head,indexTree:git.present?git.indexTree:null,view:view===null?null:{staged:view.staged,modified:view.modified,deleted:view.deleted,untracked:view.untracked,digest:view.digest,...(viewStale?{stale:true}:{})},guards:guardsState??null,latency:options.latency?.()??silentLatencyV1(),queue:{incoming:snapshot.incoming},...checkpoints===undefined?{}:{checkpoints},...refusal===undefined?{}:{pending:refusal},...failures.length===0?{}:{failures},...options.fallback===undefined?{}:{fallback:options.fallback}});
+    const git=gitState,failed=git===undefined||gitUnavailable(git);
+    const currentCheckpoints=failed&&checkpoints!==undefined?{...checkpoints.manifest===undefined?{}:{manifest:checkpoints.manifest}}:checkpoints;
+     const commit=git?.commit,head=git?.present&&commit!=null?{ref:git.head??"HEAD",commit}:null;
+     await writeAttestationV1(options.storeRoot,{version:1,originId:options.originId,groupId:options.groupId,platform,wallMs:now,hlc:snapshot.hlc,sync:snapshot.sync,code:started,cursors:snapshot.cursors,files:snapshot.files,manifest:snapshot.manifest,head,indexTree:git?.present&&!failed?git.indexTree:null,view:view===null?null:{staged:view.staged,modified:view.modified,deleted:view.deleted,untracked:view.untracked,digest:view.digest,...(viewStale||failed?{stale:true}:{})},guards:guardsState??null,latency:options.latency?.()??silentLatencyV1(),queue:{incoming:snapshot.incoming},...currentCheckpoints===undefined?{}:{checkpoints:currentCheckpoints},...refusal===undefined?{}:{pending:refusal},...failures.length===0?{}:{failures},...options.fallback===undefined?{}:{fallback:options.fallback}});
    };
    if(options.store===undefined)await write();
    else{try{await options.store(write);}catch(error){if(error instanceof StoreStalledV1)return "idle";throw error;}}

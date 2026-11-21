@@ -49,7 +49,6 @@ impl BrepRegistry {
         let Entity::Face(id) = self.original_query_entity(profile)? else { return Err(unsupported_profile()); };
         let face = self.body.faces.get(*id).ok_or_else(unsupported_profile)?;
         let Some(Surface::Plane { frame }) = self.body.surfaces.get(face.surface) else { return Err(unsupported_profile()); };
-        if !face.inners.is_empty() { return Err(unsupported_profile()); }
         let direction = displacement * (1.0 / length);
         if direction.dot(frame.z).abs() <= 1e-9 {
             return Err(invalid("sweep path direction lies in the profile plane"));

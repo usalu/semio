@@ -5,6 +5,17 @@ use semio_s_artifact_norm_en1991_checks::part_1_4::TerrainCategory;
 use semio_s_plugin_norm_compliance::oracle_driver::{self, Adapter, Inputs, KnownDifference, Outputs, Registry};
 use semio_s_plugin_norm_compliance::AnnexChoice;
 
+#[cfg(test)]
+#[path = "🚦️catalogue-cases.rs"]
+mod catalogue_cases;
+#[cfg(test)]
+#[path = "../../../🧪️tests/📇️catalogue/🦀️.rs"]
+mod catalogue_tests;
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔮️catalogue-oracle/🦀️.rs"]
+mod catalogue_oracle_tests;
+
+
 extern crate semio_s_artifact_norm_en1991_inferences_rail_silo as rail_silo_crate;
 use rail_silo_crate::formulas as rail_silo;
 
@@ -323,6 +334,24 @@ static REGISTRY: Registry = Registry { artifact: "en1991", adapters: &ADAPTERS, 
 #[test]
 fn evaluators_reproduce_the_blessed_oracle_cases() {
     oracle_driver::drive(env!("CARGO_MANIFEST_DIR"), &REGISTRY).assert_clean("en1991");
+}
+
+#[test]
+fn the_committed_demo_document_equals_the_seeded_cases_and_covers_the_registry() {
+    use semio_s_artifact_norm_en1991_checks::catalogue::{En1991Cases, catalogue_demo_cases};
+    use semio_s_plugin_norm_compliance::design_case::CaseCatalogue;
+
+    let fixture = include_str!("../../../../🧪️tests/🧫️fixtures/📇️catalogue/📚️demo-document/🔣️.json");
+    let rows = catalogue_demo_cases();
+    assert_eq!(fixture.matches("\"entryId\":").count(), rows.len(), "the demo document has a different number of cases than the seeded demo");
+    for row in &rows {
+        assert!(fixture.contains(&format!("\"id\": \"{}\"", row.id)) && fixture.contains(&format!("\"entryId\": \"{}\"", row.entry_id)), "{} is missing from the demo document", row.id);
+    }
+    let rows_with_values: usize = rows.iter().map(|row| row.numbers.len() + row.texts.len()).sum();
+    assert_eq!(fixture.matches("\"value\":").count(), rows_with_values, "the demo document values drifted from the seeded demo");
+    for entry in En1991Cases::entries() {
+        assert!(rows.iter().any(|row| row.entry_id == entry.id), "{} has no case in the demo document", entry.id);
+    }
 }
 
 /// 🧭️ The typed adapter registry of this artifact for the shared `oracle-comparison` step layer (compiled for tests and the `oracle-wiring` feature only).

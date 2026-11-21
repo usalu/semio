@@ -1,0 +1,11 @@
+# Oversized Directional Hover
+
+A fixture with 32 coincident input and output instances reproduced the loss of all group members once the serialized action exceeded 4 KiB. The preview now publishes a short reference. The interaction ingress resolves it through the current artifact instance and the window that published it, before topology validation. The host sees the original graph handle IDs and keeps hover ephemeral. A stale or cross-window reference leaves the current pointer state alone. Click selection retains its single original target.
+
+Eight compact native tests verified exact Edit and View payloads, direction, isolation and retirement. The independent SQLite oracle passed seven assertions. Mounted Chromium confirmed the WebGL canvas sent a 67-byte reference, painted the projected set, selected one original target and cleared on leave. A registered native law checks the group ingress followed by topology validation. Full canonical actor and WGPU verification remain open.
+
+The separate Flow browser adapter test adds 1,024 distinct directional handles. The decoder uses the existing ABI body bound and retains the 1,024-address cap. The production Rust decoder accepted the full request, preserved both directions, refused a 1,025th entry and refused a body beyond the ABI bound. The grouped React suite passed 47 tests and the independent ABI schema and operation ledger passed.
+
+The shared native highlight style and mounted React Interpreter passed incoming Values and Inspector checks. External hover highlighted exact rows and coordinate groups while preserving ordinary selection and axis focus. The portable oracle derives matched handles from direct port, node, edge and connected-inlet cases. The canonical app result remains open.
+
+The managed Rust type check for Preview and Mesh test targets passed on the earlier admitted snapshot. A subsequent Preview linked-test launch failed source admission at 271,101 bytes, above the 262,144-byte limit. The geometry laws now have their own registered integration target. Local source closure measured 250,062 bytes for the unit-test target and 44,177 bytes for the integration target. The linked retry is tracked independently.

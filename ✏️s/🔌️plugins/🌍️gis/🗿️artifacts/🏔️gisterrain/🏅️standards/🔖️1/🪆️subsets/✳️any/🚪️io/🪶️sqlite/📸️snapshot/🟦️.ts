@@ -1,5 +1,6 @@
 /** 🏔️ Complete imported intrinsic trees and independent mesh identities. */
 import type {GisTerrainArtifact,ImportedMap} from "../../../🧬️schema/🟦️.ts";
+import {parseElevationSource} from "../../../🧬️schema/🗺️imported-map/🏔️elevation/🟦️.ts";
 import type {IntrinsicValue} from "@semio-tech/framework/value/schema";
 import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
 import {sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue} from "@semio-tech/framework/io/sqlite-snapshot";
@@ -9,10 +10,31 @@ import sql from "./🗄️.sql" with {type:"text"};
 export const GIS_TERRAIN_SQLITE_SCHEMA:string=sql;
 const SCALAR=[{index:1,width:64}]as const;
 const roles=["position","route","region"]as const;
+const elevationSide = 33;
+const elevationWord = new DataView(new ArrayBuffer(8));
+
+function encodeElevationBound(value: number): bigint {
+ elevationWord.setFloat64(0, value);
+ return elevationWord.getBigInt64(0);
+}
+
+function decodeElevationBound(word: bigint): number {
+ elevationWord.setBigInt64(0, word);
+ return elevationWord.getFloat64(0);
+}
 /** 📤️ Each occurrence owns one intrinsic tree, with no encoded descriptor cell. */
 export async function gisTerrainSnapshotToSqliteDatabase(snapshot:GisTerrainArtifact,options:ArtifactSqliteOptions={}):Promise<SqliteDatabase>{
  options=sqliteOperation(options);const p=await ArtifactSqliteProjection.create(sql,options),put=(name:string,cells:readonly SqliteValue[],id?:bigint)=>p.insert("gis_terrain_"+name,cells,id);
  await put("document",[],1n);await put("parameters",encodeIeee754Cells([1n,snapshot.exaggeration],SCALAR,options.maxColumns).slice(1),1n);
+ if (snapshot.elevationSource !== undefined) {
+  const {bounds, rows} = parseElevationSource(snapshot.elevationSource);
+  p.checkRowsAdditional(1 + elevationSide * elevationSide);
+  await put("elevation_source", bounds.map(encodeElevationBound), 1n);
+  let ordinal = 0;
+  for (const row of rows) {
+   for (const meters of row) await put("elevation_sample", [1n, BigInt(ordinal++), BigInt(meters)]);
+  }
+ }
  if(snapshot.mesh){const c=snapshot.mesh;await put("mesh_child",[c.childId,c.target.artifactId,c.target.dialect.artifactKind,c.target.dialect.standard,c.target.dialect.subset],1n);}
  if(snapshot.importedMap!==undefined){const map=snapshot.importedMap;await put("imported_map",[],1n);
   const pending:({value:IntrinsicValue;attach:(id:bigint)=>Promise<unknown>}|{close:IntrinsicValue})[]=[],active=new Set<object>();
@@ -34,12 +56,24 @@ export async function gisTerrainSnapshotToSqliteDatabase(snapshot:GisTerrainArti
 }
 /** 📥️ Consuming each row exactly once proves dense ordered ownership and variant exclusivity. */
 export async function gisTerrainSnapshotFromSqliteDatabase(database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<GisTerrainArtifact>{
- const operation=sqliteOperation(options);options=operation;const rows=await artifactSqliteTables(database,sql,options),names=["document","parameters","mesh_child","imported_map","value","position","route","region","property","boolean","unsigned","signed","float","text","bytes","array","member"],widths=[1,4,6,1,2,4,4,4,5,2,2,2,4,2,2,4,5],tables=new Map<string,Map<bigint,SqliteRow>>();
+ const operation=sqliteOperation(options);options=operation;const rows=await artifactSqliteTables(database,sql,options),names=["document","parameters","mesh_child","imported_map","value","position","route","region","property","boolean","unsigned","signed","float","text","bytes","array","member","elevation_source","elevation_sample"],widths=[1,4,6,1,2,4,4,4,5,2,2,2,4,2,2,4,5,5,4],tables=new Map<string,Map<bigint,SqliteRow>>();
  for(let i=0;i<names.length;i++){const map=new Map<bigint,SqliteRow>();for(let j=0;j<rows[i]!.length;j++){const r=rows[i]![j]!;if(r.values.length!==widths[i]||integer(r,0)!==r.rowid||map.has(r.rowid))throw Error("GIS terrain row identity differs");map.set(r.rowid,r);if((j+1)%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",j+1,rows[i]!.length);}tables.set(names[i]!,map);}
  const table=(name:string)=>tables.get(name)!,take=(name:string,id:bigint)=>{const row=table(name).get(id);if(!row)throw Error("dangling or multiply owned GIS terrain relation");table(name).delete(id);return row;};
  const grouped=new Map<string,Map<bigint,SqliteRow[]>>();
  const list=async(name:string,parent:bigint)=>{let groups=grouped.get(name);if(!groups){groups=new Map();let count=0;for(const row of table(name).values()){const id=integer(row,1),values=groups.get(id)??[];values.push(row);groups.set(id,values);if(++count%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",count,0);}grouped.set(name,groups);}const ordered=await artifactSqliteOrderedRowsControlled(groups.get(parent)??[],2,options);for(const row of ordered)take(name,row.rowid);return ordered;};
  if(table("document").size!==1||table("parameters").size!==1||table("mesh_child").size>1||table("imported_map").size>1)throw Error("GIS terrain entity ownership differs");const doc=table("document").values().next().value as SqliteRow;take("document",doc.rowid);const parameters=take("parameters",doc.rowid),result:GisTerrainArtifact={exaggeration:readBinary64(parameters,1,SCALAR)};
+ if (table("elevation_source").size) {
+  const source = take("elevation_source", doc.rowid);
+  const bounds = [1, 2, 3, 4].map(index => decodeElevationBound(integer(source, index)));
+  const samples = await list("elevation_sample", doc.rowid);
+  if (samples.length !== elevationSide * elevationSide) throw Error("GIS elevation sample count differs");
+  const rows: number[][] = [];
+  for (let row = 0; row < elevationSide; row++) {
+   const start = row * elevationSide;
+   rows.push(samples.slice(start, start + elevationSide).map(sample => Number(integer(sample, 3))));
+  }
+  result.elevationSource = parseElevationSource({bounds, rows});
+ }
  if(table("mesh_child").size){const r=take("mesh_child",doc.rowid);result.mesh={childId:text(r,1),target:{artifactId:text(r,2),dialect:{artifactKind:text(r,3),standard:text(r,4),subset:text(r,5)}}};}
  if(table("imported_map").size){take("imported_map",doc.rowid);const map:ImportedMap={positions:[],routes:[],regions:[],properties:[]},pending:{id:bigint;attach:(v:IntrinsicValue)=>void}[]=[];
   for(const role of roles){const values=map[(role+"s")as"positions"|"routes"|"regions"];for(const row of await list(role,doc.rowid)){const ordinal=values.length;values.push({kind:"object",members:[]});pending.push({id:integer(row,3),attach:v=>{if(v.kind!=="object")throw Error("imported feature object required");values[ordinal]=v;}});}}
@@ -59,5 +93,5 @@ export async function gisTerrainSnapshotFromSqliteDatabase(database:SqliteDataba
 /** 🪪️ Compare exact intrinsic domains, IEEE words, member order and owned child identities. */
 export async function validateGisTerrainSnapshotSqliteDialect(snapshot:GisTerrainArtifact,dialect:ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<readonly never[]>{
  options=sqliteOperation(options);await artifactSqliteCheckpoint(options,"projectSnapshot",0,0,false);if(dialect.artifactKind!=="s.gis.gisterrain"||dialect.standard!=="1"||dialect.subset!=="*")throw Error("GIS terrain does not own this semantic subset");const restored=await gisTerrainSnapshotFromSqliteDatabase(database,options),pending:[unknown,unknown][]=[[snapshot,restored]];let completed=0;
- while(pending.length){const[a,b]=pending.pop()!;if(a instanceof Uint8Array&&b instanceof Uint8Array){if(a.length!==b.length||a.some((v,i)=>v!==b[i]))throw Error("GIS terrain owned identity differs");continue;}if(a&&b&&typeof a==="object"&&typeof b==="object"){const ak=Object.keys(a),bk=Object.keys(b);if(ak.length!==bk.length||ak.some(k=>!Object.hasOwn(b,k)))throw Error("GIS terrain owned identity differs");for(const k of ak)pending.push([(a as Record<string,unknown>)[k],(b as Record<string,unknown>)[k]]);}else if(a!==b)throw Error("GIS terrain owned identity differs");if(++completed%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",completed,0);}return[];
+ while(pending.length){const[a,b]=pending.pop()!;if(a instanceof Uint8Array&&b instanceof Uint8Array){if(a.length!==b.length||a.some((v,i)=>v!==b[i]))throw Error("GIS terrain owned identity differs");continue;}if(a&&b&&typeof a==="object"&&typeof b==="object"){const ak=Object.keys(a),bk=Object.keys(b);if(ak.length!==bk.length||ak.some(k=>!Object.hasOwn(b,k)))throw Error("GIS terrain owned identity differs");for(const k of ak)pending.push([(a as Record<string,unknown>)[k],(b as Record<string,unknown>)[k]]);}else if(!Object.is(a,b))throw Error("GIS terrain owned identity differs");if(++completed%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",completed,0);}return[];
 }

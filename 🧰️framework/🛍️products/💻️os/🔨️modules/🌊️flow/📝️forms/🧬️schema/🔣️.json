@@ -161,7 +161,11 @@
         "producer",
         "widgets",
         "selectedInputs",
-        "playbook"
+        "playbook",
+        "variableAnswers",
+        "answerEdits",
+        "expectedAnswers",
+        "expectedSeeds"
       ],
       "properties": {
         "version": {
@@ -200,8 +204,122 @@
         },
         "playbook": {
           "type": "object"
+        },
+        "variableAnswers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VariableAnswer"
+          }
+        },
+        "answerEdits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "questionId",
+              "value",
+              "accepted"
+            ],
+            "properties": {
+              "questionId": {
+                "type": "string"
+              },
+              "value": {},
+              "accepted": {
+                "type": "boolean"
+              },
+              "fieldIndex": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "expectedAnswers": {
+          "type": "object"
+        },
+        "expectedSeeds": {
+          "type": "object"
         }
       }
+    },
+    "VariableAnswer": {
+      "description": "Form answers supported for registered Flow variable dictionaries. Other variable schemas do not define interactive form answers.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "schema",
+            "value"
+          ],
+          "properties": {
+            "schema": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "schema",
+            "value"
+          ],
+          "properties": {
+            "schema": {
+              "const": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "schema",
+            "value"
+          ],
+          "properties": {
+            "schema": {
+              "const": "boolean"
+            },
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "schema",
+            "value"
+          ],
+          "properties": {
+            "schema": {
+              "enum": [
+                "point",
+                "vector"
+              ]
+            },
+            "value": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   },
   "$ref": "#/$defs/Corpus"

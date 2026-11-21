@@ -79,7 +79,7 @@ fn png_data_url(width: u32, height: u32) -> String {
 }
 
 fn image_node(id: &str, src: &str) -> UiNode {
-    UiNode::Image(UiImageNode { id: id.into(), src: src.into(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None })
+    UiNode::Image(UiImageNode { source_page: None, id: id.into(), src: src.into(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None })
 }
 
 #[test]

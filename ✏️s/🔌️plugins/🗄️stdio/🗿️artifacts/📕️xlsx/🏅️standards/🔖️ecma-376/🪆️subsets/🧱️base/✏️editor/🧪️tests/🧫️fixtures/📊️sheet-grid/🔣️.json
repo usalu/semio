@@ -1,6 +1,26 @@
 {
   "schemaVersion": 1,
   "newWorkbook": { "sheetName": "Sheet1" },
+  "genericToolProofs": [
+    {
+      "tool": "setSnapshotValue",
+      "factory": "SnapshotEditToolJobFactory",
+      "qualifiedFactory": "editing::tool_job_factories::SnapshotEditToolJobFactory<xlsx::base::component::XlsxEditor>"
+    },
+    {
+      "tool": "set-cell",
+      "factory": "BoundedNativeEditToolJobFactory",
+      "qualifiedFactory": "editing::tool_job_factories::BoundedNativeEditToolJobFactory<xlsx::base::component::XlsxEditor>"
+    }
+  ],
+  "historyPreview": {
+    "sheetName": "Sheet1",
+    "inputs": [
+      { "path": "/address/row", "value": 3, "cell": "B3" },
+      { "path": "/address/column", "value": 2, "cell": "C3" }
+    ],
+    "expected": { "cell": "C3", "row": 2, "column": 2, "value": 42 }
+  },
   "cases": [
     {
       "id": "sparse-sheet",

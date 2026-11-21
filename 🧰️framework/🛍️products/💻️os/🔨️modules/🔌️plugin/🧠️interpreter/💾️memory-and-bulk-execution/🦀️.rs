@@ -64,7 +64,7 @@ impl CoreInstance {
             return None;
         }
         let new_length = pages_to_bytes(new_pages).ok()?;
-        memory.bytes.try_reserve(new_length.saturating_sub(memory.bytes.len())).ok()?;
+        reserve_core_growth(&mut memory.bytes, new_length, &mut self.preparation_storage)?;
         memory.bytes.resize(new_length, 0);
         Some(old_pages)
     }
@@ -171,7 +171,9 @@ impl CoreInstance {
                 let encoded = reference_bits(value)?;
                 let old = table.values.len() as u64;
                 let new = old.checked_add(delta);
-                let grown = new.filter(|new| table.maximum.is_none_or(|maximum| *new <= maximum)).and_then(|new| usize::try_from(new).ok()).and_then(|new| table.values.try_reserve(new.saturating_sub(table.values.len())).ok().map(|_| new));
+                let grown = new.filter(|new| table.maximum.is_none_or(|maximum| *new <= maximum))
+                    .and_then(|new| usize::try_from(new).ok())
+                    .and_then(|new| reserve_core_growth(&mut table.values, new, &mut self.preparation_storage).map(|()| new));
                 if let Some(new) = grown {
                     table.values.resize(new, encoded);
                     machine.values.push(Value::I32(old as i32));
@@ -198,6 +200,25 @@ impl CoreInstance {
         }
         Ok(())
     }
+}
+
+fn reserve_core_growth<T>(values: &mut Vec<T>, length: usize, preparation_storage: &mut Option<usize>) -> Option<()> {
+    let capacity = values.capacity();
+    if length <= capacity {
+        return Some(());
+    }
+    let Some(remaining) = preparation_storage else {
+        return values.try_reserve(length - values.len()).ok();
+    };
+    let width = size_of::<T>();
+    let maximum = capacity.saturating_add(*remaining / width);
+    if length > maximum {
+        return None;
+    }
+    let target = capacity.saturating_mul(2).clamp(length, maximum);
+    values.try_reserve_exact(target - values.len()).ok()?;
+    *remaining -= (values.capacity() - capacity) * width;
+    Some(())
 }
 
 fn effective_address(base: u64, offset: u64) -> Result<usize, CoreError> {

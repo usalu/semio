@@ -1,0 +1,80 @@
+{
+ "shapes": [
+  {
+   "scale": 200,
+   "view": "elevation",
+   "id": "pan-head",
+   "set": {
+    "r0": 0.0225,
+    "r1": 0.0225
+   }
+  },
+  {
+   "scale": 200,
+   "view": "front",
+   "id": "pan-head",
+   "set": {
+    "r0": 0.0225,
+    "r1": 0.0225
+   }
+  },
+  {
+   "scale": 200,
+   "view": "plan",
+   "id": "pan-head",
+   "set": {
+    "r0": 0.0225,
+    "r1": 0.0225
+   }
+  },
+  {
+   "scale": 500,
+   "view": "front",
+   "id": "pan-upper",
+   "set": {
+    "r0": 0.03,
+    "r1": 0.03,
+    "solid": {
+     "kind": "extruded",
+     "sweep": "w",
+     "z0": -0.03,
+     "z1": 0.03
+    }
+   }
+  },
+  {
+   "scale": 500,
+   "view": "plan",
+   "id": "pan-upper",
+   "set": {
+    "r0": 0.03,
+    "r1": 0.03,
+    "solid": {
+     "kind": "extruded",
+     "sweep": "w",
+     "z0": -0.03,
+     "z1": 0.03
+    }
+   }
+  },
+  {
+   "scale": 500,
+   "view": "elevation",
+   "id": "bogie-frame-f",
+   "set": {
+    "y": -0.2,
+    "h": 0.5
+   }
+  },
+  {
+   "scale": 500,
+   "view": "elevation",
+   "id": "bogie-frame-r",
+   "set": {
+    "y": -0.2,
+    "h": 0.5
+   }
+  }
+ ],
+ "ranges": {}
+}

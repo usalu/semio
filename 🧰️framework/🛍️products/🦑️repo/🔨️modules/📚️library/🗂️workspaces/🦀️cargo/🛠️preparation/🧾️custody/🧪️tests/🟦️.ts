@@ -3,15 +3,31 @@ import{nativeCallerPhaseV1}from"../../../../../⚡️caching/📦️artifacts/�
 import{cargoPreparationControlV1}from"../../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {test,expect} from "bun:test";
-import {mkdirSync,readFileSync,writeFileSync} from "node:fs";
+import {mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,writeFileSync} from "node:fs";
 import {resolve,join,dirname,relative} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createHash} from "node:crypto";
 import Ajv from "ajv";
 import{cargoPreparationSourceOracleV1}from"./🔭️oracle/🟦️.ts";
-import {cargoPreparationProgramSourcesV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1} from "../🟦️.ts";
+import {cargoPreparationInputV1,cargoPreparationProgramSourcesV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "./🧫️fixtures/🔣️.json";
+
+test("directory custody records link membership without admitting the linked owner",()=>{
+ const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"cu-"));
+ try{
+  const source=join(root,"source"),dependency=join(root,"dependency"),link=join(source,"node_modules");
+  mkdirSync(source);mkdirSync(dependency);writeFileSync(join(source,"manifest.json"),"{}");
+  const before=cargoPreparationInputV1(root,source,"directory");
+  symlinkSync(dependency,link,process.platform==="win32"?"junction":"dir");
+  const observed=cargoPreparationInputV1(root,source,"directory");
+  const expected=new Bun.CryptoHasher("sha256").update(JSON.stringify([["manifest.json","file"],["node_modules","symlink"]])).digest("hex");
+  expect(observed.sha256).toBe(expected);expect(observed.sha256).not.toBe(before.sha256);
+  writeFileSync(join(dependency,"manifest.json"),"{}");
+  expect(cargoPreparationInputV1(root,source,"directory")).toEqual(observed);
+  expect(()=>cargoPreparationInputV1(root,join(link,"manifest.json"),"file")).toThrow("follows a symlink");
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
 
 registerBuildTestLawV1("Cargo custody actual preparation program binds distinct fixture and tracked defining roots without source copies","caller-birth",async original=>{
  const control=cargoPreparationControlV1(nativeCallerPhaseV1(original,process.cwd(),createIssuedResourceControlV1(original,"custody:actual",0)));

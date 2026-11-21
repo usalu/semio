@@ -10,6 +10,14 @@ use protocol::Mutation;
 #[dsl(layout = "lines")]
 pub struct Generation3dPreviewWindowTransient {
     pub preview_eval_text: Option<String>,
+    pub generation_id: Option<String>,
+}
+
+impl Generation3dPreviewWindowTransient {
+    /// 🧬️ Borrows the evaluation owned by the requested generation.
+    pub fn evaluation_for(&self, generation_id: Option<&str>) -> Option<&str> {
+        self.preview_eval_text.as_deref().filter(|_| self.generation_id.as_deref() == generation_id)
+    }
 }
 
 impl pack::snapshot::ArtifactDsl for Generation3dPreviewWindowTransient {
@@ -50,7 +58,7 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Gener
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Generation3dPreviewWindowTransientMutation {
     #[dsl(key = "set-preview-eval")]
-    SetPreviewEval { eval_text: Option<String> },
+    SetPreviewEval { eval_text: Option<String>, generation_id: Option<String> },
 }
 
 impl protocol::OpText for Generation3dPreviewWindowTransientMutation {
@@ -101,13 +109,15 @@ impl Mutation<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowT
 impl protocol::ColdMutation<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientMutation {
     type ReferenceDiff = Generation3dPreviewWindowTransientDiff;
     fn diff(&self, base: &Generation3dPreviewWindowTransient) -> protocol::MutationOutcome<Self::ReferenceDiff> {
-        let Self::SetPreviewEval { eval_text } = self;
-        protocol::MutationOutcome::new(Generation3dPreviewWindowTransientDiff { preview_eval_text: (base.preview_eval_text != *eval_text).then(|| Generation3dPreviewEvalText { value: eval_text.clone() }) })
+        let Self::SetPreviewEval { eval_text, generation_id } = self;
+        protocol::MutationOutcome::new(Generation3dPreviewWindowTransientDiff {
+            preview_eval_text: (base.preview_eval_text != *eval_text).then(|| Generation3dPreviewEvalText { value: eval_text.clone() }),
+            generation_id: (base.generation_id != *generation_id).then(|| Generation3dPreviewEvalText { value: generation_id.clone() }),
+        })
     }
     fn inverse(&self, base: &Generation3dPreviewWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::SetPreviewEval { eval_text: base.preview_eval_text.clone() }] 
-    })())
-}
+        Ok(vec![Self::SetPreviewEval { eval_text: base.preview_eval_text.clone(), generation_id: base.generation_id.clone() }])
+    }
 }
 
 /// 🧱️ Carries an optional value as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
@@ -123,6 +133,8 @@ pub struct Generation3dPreviewEvalText {
 pub struct Generation3dPreviewWindowTransientDiff {
     #[value(skip_serializing_if = "Option::is_none")]
     pub preview_eval_text: Option<Generation3dPreviewEvalText>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub generation_id: Option<Generation3dPreviewEvalText>,
 }
 
 impl protocol::MutationDiff<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {}
@@ -132,22 +144,25 @@ impl protocol::ColdMutationDiff<Generation3dPreviewWindowTransient> for Generati
         if other.preview_eval_text.is_some() {
             self.preview_eval_text = other.preview_eval_text;
         }
+        if other.generation_id.is_some() {
+            self.generation_id = other.generation_id;
+        }
     }
 
     fn apply(&self, unpublished: &mut Generation3dPreviewWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
-        let base = &*unpublished;
-        let mut next = base.clone();
         if let Some(value) = &self.preview_eval_text {
-            next.preview_eval_text = value.value.clone();
+            unpublished.preview_eval_text = value.value.clone();
         }
-        *unpublished = next;
+        if let Some(value) = &self.generation_id {
+            unpublished.generation_id = value.value.clone();
+        }
         Ok(())
     }
 }
 
 impl protocol::DiffAlgebra<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {
     fn is_empty(&self) -> bool {
-        self.preview_eval_text.is_none()
+        self.preview_eval_text.is_none() && self.generation_id.is_none()
     }
 }
 
@@ -155,22 +170,26 @@ impl protocol::ColdDiffAlgebra<Generation3dPreviewWindowTransient> for Generatio
     fn inverse(&self, base: &Generation3dPreviewWindowTransient) -> Self {
         Self {
             preview_eval_text: self.preview_eval_text.as_ref().map(|_| Generation3dPreviewEvalText { value: base.preview_eval_text.clone() }),
+            generation_id: self.generation_id.as_ref().map(|_| Generation3dPreviewEvalText { value: base.generation_id.clone() }),
         }
     }
 }
 
-semio_framework_value::artifact_retire_struct!(Generation3dPreviewWindowTransient { preview_eval_text });
+semio_framework_value::artifact_retire_struct!(Generation3dPreviewWindowTransient { preview_eval_text, generation_id });
 
 fn preflight(mutation: &Generation3dPreviewWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
-    let Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text } = mutation;
-    let retained_bytes = size_of::<Generation3dPreviewWindowTransient>().checked_add(eval_text.as_ref().map_or(0, String::capacity)).ok_or_else(|| "Generation3d preview window transient footprint overflowed".to_string())?;
+    let Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text, generation_id } = mutation;
+    let retained_bytes = size_of::<Generation3dPreviewWindowTransient>()
+        .checked_add(eval_text.as_ref().map_or(0, String::capacity))
+        .and_then(|bytes| bytes.checked_add(generation_id.as_ref().map_or(0, String::capacity)))
+        .ok_or_else(|| "Generation3d preview window transient footprint overflowed".to_string())?;
     let footprint = store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes);
     footprint.is_admissible().then_some(footprint).ok_or_else(|| "Generation3d preview window transient exceeds its retained publication envelope".into())
 }
 
 fn transfer(mutation: Generation3dPreviewWindowTransientMutation) -> Generation3dPreviewWindowTransient {
-    let Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text } = mutation;
-    Generation3dPreviewWindowTransient { preview_eval_text: eval_text }
+    let Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text, generation_id } = mutation;
+    Generation3dPreviewWindowTransient { preview_eval_text: eval_text, generation_id }
 }
 
 pub struct Generation3dPreviewWindowTransientOwner;
@@ -192,7 +211,7 @@ pub fn addressed(snapshot: &semio_plugin::WindowTransientSnapshot, eval_text: Op
     if snapshot.window_kind_id() != super::GENERATION_3D_PLAY_WINDOW_PREVIEW || snapshot.get::<Generation3dPreviewWindowTransientOwner>().is_none() {
         return Err(semio_plugin::Fault::from("generation3d-preview-window-transient-required"));
     }
-    Ok(semio_plugin::WindowTransientMutation::of::<Generation3dPreviewWindowTransientOwner>(snapshot.window_id(), Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text }))
+    Ok(semio_plugin::WindowTransientMutation::of::<Generation3dPreviewWindowTransientOwner>(snapshot.window_id(), Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text, generation_id: None }))
 }
 
 //#region 🧬️Schema

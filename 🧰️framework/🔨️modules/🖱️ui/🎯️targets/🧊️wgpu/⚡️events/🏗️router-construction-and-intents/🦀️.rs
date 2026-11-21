@@ -3,6 +3,12 @@
 use super::*;
 use crate::event_model_and_focus::node_state_box;
 
+fn hover_card_stack(tree: &UiTree, card: NodeId) -> Option<NodeId> {
+    let node = tree.node(card)?;
+    let parent = node.parent?;
+    (matches!(node.spec.0, UiNode::OverviewCard(_)) && matches!(tree.node(parent)?.spec.0, UiNode::CardStack(_))).then_some(parent)
+}
+
 // #region events
 //#region 🔖️UiCommand
 impl EventRouter {
@@ -12,6 +18,7 @@ impl EventRouter {
             capture: CaptureState::default(),
             focus: FocusState::new(),
             hovered: None,
+            hover_pointer: None,
             hover_chain: Vec::new(),
             press_origin: None,
             overlays: OverlayStack::new(),
@@ -50,6 +57,7 @@ impl EventRouter {
         self.focus.tab_order.clear();
         self.focus.tab_order.extend(presented.focus.tab_order.iter().filter_map(|node| remap(*node)));
         self.hovered = presented.hovered.and_then(remap);
+        self.hover_pointer = self.hovered.and(presented.hover_pointer);
         self.hover_chain.clear();
         self.hover_chain.extend(presented.hover_chain.iter().filter_map(|node| remap(*node)));
         self.press_origin = self.capture.target.and(presented.press_origin);
@@ -90,6 +98,7 @@ impl EventRouter {
         if self.capture.release_any().is_some()
             || self.focus.focused.take().is_some()
             || self.hovered.take().is_some()
+            || self.hover_pointer.take().is_some()
             || self.press_origin.take().is_some()
             || self.tree_drag_handle_press.take().is_some()
             || self.thumb_start.take().is_some()
@@ -350,14 +359,35 @@ impl EventRouter {
         hit_test_node(tree, subtree_root, rect.x - layout.x, rect.y - layout.y, x, y, self.flow.block.is_reversed(), Some(&self.tree_drag_metrics))
     }
 
+    /// 🖱️ The latest pointer position in the surface coordinates used by retained paint.
+    pub fn hover_pointer(&self) -> Option<(f32, f32)> {
+        self.hover_pointer
+    }
+
+    fn dirty_card_stack_hover_bands(&self, tree: &mut UiTree, chain: &[NodeId], pointers: [Option<(f32, f32)>; 2]) {
+        for &card in chain {
+            let Some(stack) = hover_card_stack(tree, card) else { continue };
+            let Some(bounds) = tree.absolute_rect(card) else { continue };
+            let row = self.tree_drag_metrics.control_height;
+            if pointers.into_iter().flatten().any(|(x, y)| bounds.contains(x, y) && (y < bounds.y + row || y >= bounds.y + bounds.h - row)) {
+                tree.mark_dirty(stack, NodeFlags::DIRTY_PAINT);
+            }
+        }
+    }
+
     /// 👆️ Flips `NodeFlags::HOVERED` off every node in the old hover bubble chain that isn't in the
     /// new one, and on for every new node that wasn't in the old one — see `hover_chain`'s own doc
     /// comment for why the whole chain (not just the leaf) carries the flag. ticket
     /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: the per-row `hover_action`/
     /// `unhover_action` dispatch this used to fire is deleted — a `Tree`'s hover now flows through its
     /// `UiTreeNode.interaction_domain` binding (`interactionHover`) instead of an ad hoc per-item action.
-    pub(super) fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) -> Vec<UiCommand> {
+    pub(super) fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>, pointer: Option<(f32, f32)>) -> Vec<UiCommand> {
         let mut commands = Vec::new();
+        let pointer = target.and(pointer);
+        let previous_pointer = std::mem::replace(&mut self.hover_pointer, pointer);
+        if previous_pointer != pointer {
+            self.dirty_card_stack_hover_bands(tree, &self.hover_chain, [previous_pointer, pointer]);
+        }
         if self.hovered == target {
             return commands;
         }
@@ -368,6 +398,9 @@ impl EventRouter {
                 new_chain.push(id);
                 false
             });
+        }
+        if previous_pointer != pointer {
+            self.dirty_card_stack_hover_bands(tree, &new_chain, [previous_pointer, pointer]);
         }
         let bound_row = |chain: &[NodeId]| chain.iter().copied().find(|id| {
             tree.node(*id).and_then(|node| node.intent.as_ref()).is_some_and(|binding| binding.binds(Trigger::HoverPreview))
@@ -393,14 +426,20 @@ impl EventRouter {
             }
         }
         let boxes: Vec<_> = new_chain.iter().filter_map(|&id| node_state_box(tree, id)).collect();
-        let owner = target.and_then(|leaf| semio_ui_border_presentation::resolve_box_states(&boxes, Some(leaf), None).ok().and_then(|states| boxes.iter().zip(states).find(|(_, state)| *state == semio_ui_border_presentation::SharedBorderState::Hover).map(|(entry, _)| entry.id)));
+        let states = semio_ui_border_presentation::resolve_box_states(&boxes, target, None).unwrap_or_default();
+        let owners: Vec<_> = boxes.iter().zip(states)
+            .filter_map(|(entry, state)| (state == semio_ui_border_presentation::SharedBorderState::Hover).then_some(entry.id))
+            .collect();
         for &id in self.hover_chain.iter().chain(&new_chain) {
-            let owned = owner == Some(id);
-            if tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::HOVER_OWNER) != owned) {
-                if let Some(node) = tree.node_mut(id) {
-                    node.flags.set(NodeFlags::HOVER_OWNER, owned);
-                }
-                tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+            let owned = owners.contains(&id);
+            let Some(node) = tree.node_mut(id) else { continue };
+            if node.flags.contains(NodeFlags::HOVER_OWNER) == owned {
+                continue;
+            }
+            node.flags.set(NodeFlags::HOVER_OWNER, owned);
+            tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+            if let Some(stack) = hover_card_stack(tree, id) {
+                tree.mark_dirty(stack, NodeFlags::DIRTY_PAINT);
             }
         }
         for &previous in &self.hover_chain {

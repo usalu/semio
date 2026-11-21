@@ -1,27 +1,57 @@
 //! ▶️ Rewriting rule application: builds the Jack query of a rule, applies it to a graph and exposes both as JSON entry points.
 
 use crate::standards::v1::subsets::any::schema::errors::TrinityRewritingError;
-use crate::standards::v1::subsets::any::schema::rule::{Assignment, Pattern, Rule};
-use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::ast::QueryResult;
+use crate::standards::v1::subsets::any::schema::rule::{default_parameter_bindings, Pattern, Rule};
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::ast::{Assignment, Clause, JackQueryGraphSnapshot, Pattern as JackPattern, Query, QueryResult};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::executor::execute;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::GraphEffect;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::language_service::parse;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::lexer::{Token, lex};
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::memory::Graph;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::operations::apply_graph_effects;
-use semio_framework_graph_manifest::PropertyValue;
-use semio_s_artifact_trinity_jack_semio_content::SemioJackContent;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
+
+/// 🧾️ Compiles a rule to the typed program used by Jack's stepped evaluator.
+pub fn compile_rule(rule: &Rule, bindings: &PropertyBag) -> Result<Query, TrinityRewritingError> {
+    for pattern in std::iter::once(&rule.lhs.pattern).chain(&rule.rhs.create).chain(&rule.rhs.merge) {
+        validate_pattern(pattern)?;
+    }
+    let mut clauses = vec![Clause::Match(vec![rule.lhs.pattern.to_jack_pattern()])];
+    if let Some(predicate) = rule_predicate(rule) {
+        let mut filter = parse(&format!("WHERE {predicate}")).map_err(TrinityRewritingError::Jack)?.clauses;
+        if !matches!(filter.as_slice(), [Clause::Where(_)]) {
+            return Err(TrinityRewritingError::Jack("A rewrite filter must be a single WHERE predicate.".into()));
+        }
+        clauses.append(&mut filter);
+    }
+    clauses.extend(rhs_clauses(rule, bindings));
+    Ok(Query { clauses })
+}
+
+/// 🗺️ Plan the ordered effects of a rewrite against the supplied graph.
+pub fn plan_rule(graph: &Graph, rule: &Rule, bindings: &PropertyBag) -> Result<(QueryResult, Vec<GraphEffect>), TrinityRewritingError> {
+    execute(graph, &compile_rule(rule, bindings)?).map_err(TrinityRewritingError::Jack)
+}
 
 /// ♻️ Apply a rewrite rule to a graph.
-pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag) -> Result<QueryResult, TrinityRewritingError> {
-    let query = build_rule_query(rule, bindings);
-    let parsed = parse(&query).map_err(TrinityRewritingError::Jack)?;
-    let (result, effects) = execute(graph, &parsed).map_err(TrinityRewritingError::Jack)?;
+pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &PropertyBag) -> Result<QueryResult, TrinityRewritingError> {
+    let (result, effects) = plan_rule(graph, rule, bindings)?;
     apply_graph_effects(graph, &effects)?;
     Ok(result)
 }
 
-
-
-
+fn validate_pattern(pattern: &Pattern) -> Result<(), TrinityRewritingError> {
+    let has_edge = pattern.edge_var.is_some() || pattern.edge_kind.is_some();
+    match (&pattern.right_var, &pattern.right_kind) {
+        (Some(var), Some(_)) if pattern.edge_var.as_ref().is_some_and(|edge| edge == &pattern.left_var || edge == var) => {
+            Err(TrinityRewritingError::Jack("A rewrite edge and its endpoints must have distinct variables.".into()))
+        }
+        (Some(_), Some(_)) => Ok(()),
+        (None, None) if !has_edge => Ok(()),
+        _ => Err(TrinityRewritingError::Jack("A rewrite edge requires both a right variable and a right kind.".into())),
+    }
+}
 
 #[derive(value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
@@ -36,38 +66,44 @@ pub struct RuleQueryResult {
     pub query: String,
 }
 
-pub fn parse_bindings_json(bindings_json: &str) -> Result<semio_framework_graph_manifest::PropertyBag, TrinityRewritingError> {
+pub fn parse_bindings_json(bindings_json: &str) -> Result<PropertyBag, TrinityRewritingError> {
     if bindings_json.trim().is_empty() {
-        return Ok(semio_framework_graph_manifest::PropertyBag::new());
+        return Ok(PropertyBag::new());
     }
     Ok(semio_framework_pack_json::from_json_str(bindings_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?)
 }
 
 pub fn pattern_to_match_clause(pattern: &Pattern) -> String {
-    let p = pattern.to_jack_pattern();
-    let left = format!("({}:{} )", p.nodes[0].var, p.nodes[0].kind).replace(" )", ")");
-    if let Some(edge) = &p.edge {
-        let edge_mid = match (&edge.var, &edge.kind) {
-            (Some(v), Some(k)) => format!("[{v}:{k}]"),
-            (Some(v), None) => format!("[{v}]"),
-            (None, Some(k)) => format!("[:{k}]"),
-            (None, None) => "[]".into(),
+    format_pattern(&pattern.to_jack_pattern())
+}
+
+fn format_pattern(pattern: &JackPattern) -> String {
+    let left = &pattern.nodes[0];
+    let mut text = format!("({}:{})", left.var, format_kind(&left.kind));
+    if let Some(edge) = &pattern.edge {
+        let edge_text = match (&edge.var, &edge.kind) {
+            (Some(var), Some(kind)) => format!("[{var}:{}]", format_kind(kind)),
+            (Some(var), None) => format!("[{var}]"),
+            (None, Some(kind)) => format!("[:{}]", format_kind(kind)),
+            (None, None) => "[]".to_owned(),
         };
-        format!("({}:{} )-{edge_mid}->({}:{} )", p.nodes[0].var, p.nodes[0].kind, edge.right.var, edge.right.kind).replace(" )", ")")
-    } else {
-        left
+        text.push_str(&format!("-{edge_text}->({}:{})", edge.right.var, format_kind(&edge.right.kind)));
     }
+    text
 }
 
-pub fn parameter_defaults(rule: &Rule) -> semio_framework_graph_manifest::PropertyBag {
-    let mut defaults = semio_framework_graph_manifest::PropertyBag::new();
-    for param in &rule.rhs.parameters {
-        defaults.insert(param.name.clone(), param.default.clone());
+fn format_kind(kind: &str) -> String {
+    if matches!(lex(kind).as_deref(), Ok([Token::Ident(identifier), Token::Eof]) if identifier == kind) {
+        return kind.to_owned();
     }
-    defaults
+    semio_framework_pack_json::to_json_string(&kind)
 }
 
-pub fn effective_bindings(rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag) -> semio_framework_graph_manifest::PropertyBag {
+pub fn parameter_defaults(rule: &Rule) -> PropertyBag {
+    default_parameter_bindings(&rule.rhs)
+}
+
+pub fn effective_bindings(rule: &Rule, bindings: &PropertyBag) -> PropertyBag {
     let mut merged = parameter_defaults(rule);
     for (key, value) in bindings {
         merged.insert(key.clone(), value.clone());
@@ -75,7 +111,7 @@ pub fn effective_bindings(rule: &Rule, bindings: &semio_framework_graph_manifest
     merged
 }
 
-pub fn resolve_parameter_value(rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag, value: &PropertyValue) -> PropertyValue {
+pub fn resolve_parameter_value(rule: &Rule, bindings: &PropertyBag, value: &PropertyValue) -> PropertyValue {
     if let PropertyValue::String(s) = value {
         if let Some(name) = s.strip_prefix('$') {
             if !name.is_empty() {
@@ -96,38 +132,56 @@ pub fn resolve_parameter_value(rule: &Rule, bindings: &semio_framework_graph_man
 /// 🩹️ unified syntax law: string literals PRINT double-quoted (never single-quoted) — matches the
 /// shared `🫀️core` jack lexer/wire-literal printer, which accepts either quote style on parse but
 /// always emits `"..."`.
-pub fn assignment_value_jack(rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag, value: &PropertyValue) -> String {
-    let resolved = resolve_parameter_value(rule, bindings, value);
-    match resolved {
-        PropertyValue::Null => "null".into(),
-        PropertyValue::Bool(b) => b.to_string(),
+pub fn assignment_value_jack(rule: &Rule, bindings: &PropertyBag, value: &PropertyValue) -> String {
+    format_value(&resolve_parameter_value(rule, bindings, value))
+}
+
+fn format_value(value: &PropertyValue) -> String {
+    match value {
         PropertyValue::Number(n) => n.to_string(),
-        PropertyValue::String(s) => format!("\"{s}\""),
-        PropertyValue::Array(_) | PropertyValue::Object(_) => semio_framework_pack_json::to_json_string(&resolved),
+        _ => semio_framework_pack_json::to_json_string(value),
     }
 }
 
-/// 🧵️ Build the Jack query string for a rewrite rule without executing it.
-pub fn build_rule_query(rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag) -> String {
+fn rule_predicate(rule: &Rule) -> Option<&str> {
+    rule.lhs.where_clause.as_deref().filter(|predicate| !predicate.trim().is_empty())
+}
+
+fn rhs_clauses(rule: &Rule, bindings: &PropertyBag) -> Vec<Clause> {
     let effective = effective_bindings(rule, bindings);
+    let mut clauses = Vec::new();
+    if !rule.rhs.delete.is_empty() {
+        clauses.push(Clause::Delete(rule.rhs.delete.clone()));
+    }
+    clauses.extend(rule.rhs.create.iter().map(|pattern| Clause::Create(pattern.to_jack_pattern())));
+    clauses.extend(rule.rhs.merge.iter().map(|pattern| Clause::Merge(pattern.to_jack_pattern())));
+    if !rule.rhs.set.is_empty() {
+        clauses.push(Clause::Set(rule.rhs.set.iter().map(|item| Assignment {
+            var: item.var.clone(),
+            prop: item.prop.clone(),
+            value: resolve_parameter_value(rule, &effective, &item.value),
+        }).collect()));
+    }
+    clauses
+}
+
+/// 🧵️ Build the Jack query string for a rewrite rule without executing it.
+pub fn build_rule_query(rule: &Rule, bindings: &PropertyBag) -> String {
     let mut query = format!("MATCH {}", pattern_to_match_clause(&rule.lhs.pattern));
-    if let Some(where_clause) = &rule.lhs.where_clause {
-        if !where_clause.trim().is_empty() {
-            query.push_str(&format!(" WHERE {where_clause}"));
+    if let Some(predicate) = rule_predicate(rule) {
+        query.push_str(&format!(" WHERE {predicate}"));
+    }
+    for clause in rhs_clauses(rule, bindings) {
+        match clause {
+            Clause::Delete(vars) => query.push_str(&format!(" DELETE {}", vars.join(", "))),
+            Clause::Create(pattern) => query.push_str(&format!(" CREATE {}", format_pattern(&pattern))),
+            Clause::Merge(pattern) => query.push_str(&format!(" MERGE {}", format_pattern(&pattern))),
+            Clause::Set(items) => {
+                let assignments = items.iter().map(|item| format!("{}.{} = {}", item.var, item.prop, format_value(&item.value))).collect::<Vec<_>>();
+                query.push_str(&format!(" SET {}", assignments.join(", ")));
+            }
+            _ => unreachable!("rewrite RHS contains only mutation clauses"),
         }
-    }
-    for del in &rule.rhs.delete {
-        query.push_str(&format!(" DELETE {del}"));
-    }
-    for set in &rule.rhs.set {
-        let val = assignment_value_jack(rule, &effective, &set.value);
-        query.push_str(&format!(" SET {}.{} = {val}", set.var, set.prop));
-    }
-    for create in &rule.rhs.create {
-        query.push_str(&format!(" CREATE {}", pattern_to_match_clause(create)));
-    }
-    for merge in &rule.rhs.merge {
-        query.push_str(&format!(" MERGE {}", pattern_to_match_clause(merge)));
     }
     query
 }
@@ -137,7 +191,18 @@ pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) 
     let rule: Rule = semio_framework_pack_json::from_json_str(rule_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let result = apply_rule(graph, &rule, &bindings)?;
-    Ok(semio_framework_pack_json::to_json_string(&ApplyRuleResult { snapshot_json: graph.host_snapshot_json::<SemioJackContent>()?, query: result }))
+    let snapshot = JackQueryGraphSnapshot {
+        schema: JackSnapshot::SCHEMA.into(),
+        name: graph.name.clone(),
+        manifest_id: graph.manifest_id.clone(),
+        manifest: graph.manifest.clone(),
+        camera: graph.camera.clone(),
+        nodes: graph.nodes.values().cloned().collect(),
+        edges: graph.edges.values().cloned().collect(),
+        root_node_id: graph.root_node_id.clone(),
+        query: graph.query.clone(),
+    };
+    Ok(semio_framework_pack_json::to_json_string(&ApplyRuleResult { snapshot_json: snapshot.to_json()?, query: result }))
 }
 
 /// 🧵️ Build a rewrite rule Jack query from JSON without a graph.

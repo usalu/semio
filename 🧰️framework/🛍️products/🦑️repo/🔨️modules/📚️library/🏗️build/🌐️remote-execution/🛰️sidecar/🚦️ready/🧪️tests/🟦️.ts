@@ -1,11 +1,12 @@
 import{afterAll,expect,test}from"bun:test";
-import{chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,utimesSync,writeFileSync}from"node:fs";
+import{chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmSync,utimesSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{spawnSync}from"node:child_process";
 import{READY_CONTAINMENT_POLICY_V1 as CONTAIN,readyContainmentStatusV1}from"../🌲️process-tree/🧹️containment/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+import heartbeatFixture from"./💓️heartbeat/🔣️.json"with{type:"json"};
 import{READY_TREE_POLICY_V1 as TREE}from"../🌲️process-tree/🟦️.ts";
 import{READY_POLICY_V1 as P,READY_STAGES_V1 as STAGES,READY_STATUS_SCHEMA_V1,createReadyLeaseV1,createReadyPortsV1,createReadyStatusV1,readyWriteStoreFileV1,readyInputHashV1,readyReasonV1,readyRepoBinaryV1,emptyReadyStateV1,readyBackoffV1,readyDecideV1,readyDigestsV1,readyHumanActiveV1,readyHumanRecordV1,readyHumanVerdictV1,readyIsServerV1,readyJobsV1,readyRefusalV1,readyStoreFullV1,readyTreeMegabytesV1,runReadyStageV1,runReadyV1,type ReadyCodeV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1}from"../🟦️.ts";
 
@@ -36,6 +37,50 @@ test("digests, back-off, jobs, tree size and the decision equal an independent i
  const python=spawnSync("python3",["-I",join(import.meta.dir,"🧫️fixtures","🐍️oracle.py"),fixtureFile,schemaFile,nativeSchemaFile],{encoding:"utf8"});
  expect(python.status).toBe(0);
  expect(JSON.parse(python.stdout)).toEqual(JSON.parse(JSON.stringify(ours)));
+});
+
+test("selected Nx materials invalidate only workspace and a restarted observer reuses matching receipts",()=>{
+ const fixture=JSON.parse(readFileSync(fixtureFile,"utf8")).workspaceInvalidation as {platforms:("linux"|"macos"|"windows")[];cases:{name:string;path:string|null;changed:string[]}[]};
+ const result=fixture.platforms.flatMap(platform=>fixture.cases.map(row=>{
+  const old=readyDigestsV1({platform,hash:()=>undefined}),current=readyDigestsV1({platform,hash:path=>path===row.path?"a".repeat(64):undefined});
+  const changed=current.stages.filter((stage,index)=>stage.digest!==old.stages[index]!.digest).map(stage=>stage.name);
+  expect(changed,row.name).toEqual(row.changed);
+  const done=Object.fromEntries(old.stages.map(stage=>[stage.name,stage.digest]));
+  const decision=readyDecideV1({server:false,...current,done,marker:true,repo:true,human:false,lease:"free",memoryOk:true,failure:null,now:1});
+  expect(decision.action,row.name).toBe(row.changed.length?"run":"idle");
+  expect(decision.stageIndex,row.name).toBe(STAGES.findIndex(stage=>stage.name===row.changed[0]));
+  return {changed,decision};
+ }));
+ const python=spawnSync("python3",["-I",join(import.meta.dir,"🧫️fixtures","🐍️oracle.py"),fixtureFile,schemaFile,nativeSchemaFile,"workspace"],{encoding:"utf8"});
+ expect(python.status).toBe(0);
+ expect(result).toEqual(JSON.parse(python.stdout).workspaceInvalidation);
+});
+
+test("the Ready workspace roster follows the unique patch selected by the Nx tool recipe",()=>{
+ const workspace=STAGES.find(stage=>stage.name==="workspace")!;
+ const recipe=workspace.inputs.find(path=>path.endsWith("/🚀️bootstrap/🛠️tools/package.json"))!;
+ const manifest=JSON.parse(readFileSync(join(process.cwd(),recipe),"utf8")) as {semio:{toolPatches:Record<string,string>}};
+ const patches=Object.entries(manifest.semio.toolPatches).filter(([name])=>name.startsWith("nx@")).map(([,path])=>path);
+ expect(patches).toHaveLength(1);
+ expect(workspace.inputs.filter(path=>/(?:^|\/)nx@[^/]+\.patch$/u.test(path))).toEqual(patches);
+ expect(existsSync(join(process.cwd(),patches[0]!))).toBe(true);
+});
+
+test("Ready input hashing observes original bytes after stale path identity, miss and restart",async()=>{
+ const root=temp("inputs"),file=join(root,"nx-material"),replacement=join(root,"next");
+ const workspace=STAGES.find(stage=>stage.name==="workspace")!;
+ const args={root,environment:{},origin:"g1-m97",group:"g1",stages:[{...workspace,inputs:["nx-material"]}],say:()=>undefined};
+ const port=createReadyPortsV1(args),read=async()=>((await port.digests()).stages[0]!.digest);
+ const absent=await read(),date=new Date(2026,0,1);
+ writeFileSync(file,"alpha");utimesSync(file,date,date);
+ const first=await read();expect(first).not.toBe(absent);
+ expect(await read()).toBe(first);
+ expect((await createReadyPortsV1(args).digests()).stages[0]!.digest).toBe(first);
+ writeFileSync(replacement,"bravo");utimesSync(replacement,date,date);renameSync(replacement,file);
+ const second=await read();expect(second).not.toBe(first);expect(second).not.toBe(absent);
+ rmSync(file);expect(await read()).toBe(absent);
+ mkdirSync(file);expect(await read()).toBe(absent);rmSync(file,{recursive:true});
+ writeFileSync(file,"alpha");utimesSync(file,date,date);expect(await read()).toBe(first);
 });
 
 test("every refusal code has its text in English and German and the stage table is the order the bootstrap needs",()=>{
@@ -291,8 +336,10 @@ posix("a stage outlives the runner that started it: aborting the signal detaches
 
 posix("a silent stage that spends processor time is alive and is not stopped as stalled, a silent stage that spends none is, and the kill is recorded with its killer in both languages",async()=>{
  const busy=fakeHome("#!/bin/bash\nwhile [ $SECONDS -lt 17 ]; do :; done\nexit 0\n"),idle=fakeHome("#!/bin/sh\nexec sleep 40\n"),rootBusy=temp("root"),rootIdle=temp("root");
- const run=(home:string,root:string)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:11000}});
+ const moves:string[]=[];
+ const run=(home:string,root:string)=>runReadyStageV1({home,root,environment:{},stage:stageOf("tools",600000),signal:new AbortController().signal,jobs:1,onActivity:()=>moves.push(root),onLine:()=>undefined,tree:{...TREE,stallStopMilliseconds:11000}});
  const [alive,silent]=await Promise.all([run(busy.home,rootBusy),run(idle.home,rootIdle)]);
+ expect(moves).toContain(rootBusy);
  expect(alive.stalled,"a busy compile is alive without any output").toBe(false);expect(alive.exit).toBe(0);
  expect(silent.stalled,"no output and no processor time is a stall").toBe(true);
  const record=readFileSync(join(rootIdle,".cache","f","ready",CONTAIN.killRecordName),"utf8");
@@ -347,7 +394,7 @@ test("a native stage that ends 0 without leaving the repo binary is a failure wi
  expect(readyRepoBinaryV1(temp("emptyhome"),{LOCALAPPDATA:local},"win32")).toBe(join(local,"semio","launcher","bin","repo.exe"));
 });
 
-test("readiness hashes what is provisioned, not the words: texts of the tool table, scripts and dependencies of package.json never make a stage stale, a pin does",()=>{
+test("provisioning hashes track tool pins independently of descriptions and package scripts",()=>{
  const table=(pin:string,summary:string)=>JSON.stringify({groups:{all:["bun"]},tools:[{id:"bun",summary:{en:summary},pin:{format:"value",value:pin},locate:[],setup:{kind:"bun"}}],steps:[{id:"h",kind:"cargo-helpers",configuration:"prototype",platforms:["linux"],timeoutSeconds:1200,summary:{en:summary}}],messages:{texts:{a:summary}}});
  const path="x/🧰️tool-setup/🔣️.json";
  expect(readyInputHashV1(path,table("1.4.2","one"))).toBe(readyInputHashV1(path,table("1.4.2","another text")));
@@ -683,4 +730,75 @@ test("a stopped current attempt replaces the historical failure tail while it wa
  expect(waiting?.tail).toEqual([current]);expect(waiting?.exit).toBe(expectedExit);
  expect(mirrors.get("workspace-stalled")).toEqual(failure);
  expect(w.shared.state.failure?.tail).toEqual([previous]);
+});
+
+test("a quiet stage refreshes its running receipt only on owned movement and respects cancellation",async()=>{
+ const store=temp("heartbeat-store"),w=world(),{stage}=heartbeatFixture;
+ const origin="g1-m99",file=join(store,"v1","origins",origin,"ready.json"),started=w.shared.now,publications:number[]=[];
+ const status=createReadyStatusV1({store,origin,platform:"linux",now:()=>w.shared.now,rename(from,to){renameSync(from,to);publications.push(w.shared.now-started);}});
+ const receipt=()=>JSON.parse(readFileSync(file,"utf8")) as ReadyStatusV1;
+ let active:ReadyStatusV1|undefined,silentAge:number|undefined;
+ await runReadyV1({...w.ports,status,run:async(_stage,options)=>{
+  for(const at of stage.movementsMs){w.shared.now=started+at;options.onActivity?.();}
+  active=receipt();
+  w.shared.now=started+stage.endedMs;
+  silentAge=w.shared.now-receipt().updatedMs;
+  w.controller.abort();
+  options.onActivity?.();
+  return{exit:null,timedOut:false,spawnFailed:false,cancelled:false,stalled:false,detached:true,startedMs:started,peakMegabytes:null,tail:[]};
+ }},w.controller.signal);
+ expect(publications).toEqual(stage.expectedPublicationsMs);
+ expect(active?.updatedMs).toBe(started+stage.expectedPublicationsMs.at(-1)!);
+ expect([active?.state,active?.ready,active?.tail]).toEqual(["running",false,[]]);
+ expect(silentAge).toBeGreaterThan(TREE.foregroundFreshMilliseconds);
+ status.update({state:"ready",ready:true,stage:null});
+ const verified=receipt().updatedMs;
+ w.shared.now+=TREE.foregroundFreshMilliseconds+1;
+ status.heartbeat?.();
+ expect(receipt().updatedMs).toBe(verified);
+});
+
+test("a long loop backoff renews only its stated wait up to the original retry deadline",async()=>{
+ const store=temp("backoff-store"),w=world(),{loopBackoff,heartbeatMs}=heartbeatFixture;
+ const receipts:ReadyStatusV1[]=[];
+ let failures=0,backoffStarted=0;
+ const status=createReadyStatusV1({store,origin:"g1-m99",platform:"linux",now:()=>w.shared.now,rename(from,to){
+  renameSync(from,to);
+  if(failures!==loopBackoff.attempt)return;
+  receipts.push(JSON.parse(readFileSync(to,"utf8")) as ReadyStatusV1);
+ }});
+ await runReadyV1({...w.ports,status,
+  digests:async()=>{
+   failures++;
+   if(failures===loopBackoff.attempt)backoffStarted=w.shared.now;
+   if(failures>loopBackoff.attempt)w.controller.abort();
+   throw new Error("fixture refused");
+  },
+  sleep:async(milliseconds)=>{w.shared.now+=milliseconds;},
+ },w.controller.signal);
+ expect(w.shared.now-backoffStarted).toBe(loopBackoff.pauseMs);
+ expect(receipts.every(doc=>doc.state==="backoff"&&!doc.ready&&doc.refusal?.code==="loop-failed")).toBe(true);
+ expect([...new Set(receipts.map(doc=>doc.nextAttemptMs))]).toEqual([backoffStarted+loopBackoff.pauseMs]);
+ const offsets=receipts.map(doc=>doc.updatedMs-backoffStarted);
+ expect(offsets).toHaveLength(loopBackoff.expectedPublications);
+ expect(offsets.at(-1)).toBe(loopBackoff.expectedLastMs);
+ expect(offsets.every((at,index)=>at===index*heartbeatMs)).toBe(true);
+});
+
+test("late movement from a failed stage cannot renew its replacement's running receipt",async()=>{
+ const w=world(),store=temp("replacement-store"),origin="g1-m99",file=join(store,"v1","origins",origin,"ready.json");
+ const status=createReadyStatusV1({store,origin,platform:"linux",now:()=>w.shared.now});
+ let oldActivity:(()=>void)|undefined,observed:ReadyStatusV1|undefined,replacementStarted=0;
+ await runReadyV1({...w.ports,status,sleep:async(milliseconds)=>{w.shared.now+=milliseconds;},run:async(_stage,options)=>{
+  const result={timedOut:false,spawnFailed:false,cancelled:false,stalled:false,startedMs:w.shared.now,peakMegabytes:null,tail:[]};
+  if(oldActivity===undefined){oldActivity=options.onActivity;return{...result,exit:7,detached:false};}
+  options.onStage?.("tools",true);
+  replacementStarted=w.shared.now;
+  w.shared.now+=heartbeatFixture.heartbeatMs;
+  oldActivity();
+  observed=JSON.parse(readFileSync(file,"utf8")) as ReadyStatusV1;
+  w.controller.abort();
+  return{...result,exit:null,detached:true};
+ }},w.controller.signal);
+ expect([observed?.state,observed?.stage,observed?.updatedMs]).toEqual(["running","tools",replacementStarted]);
 });

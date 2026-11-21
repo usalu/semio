@@ -1,0 +1,7 @@
+[
+  {"id":"idle publication retains its stall streak","stage":"publishing","before":6,"items":0,"released":0,"after":6},
+  {"id":"paid page movement clears prior idle units","stage":"publishing","before":6,"items":1,"released":0,"after":7},
+  {"id":"paid acknowledged Store owner release clears idle units","stage":"publishing","before":7,"items":0,"released":256,"after":8},
+  {"id":"awaiting ACK does not count publication turns","stage":"ack","before":8,"items":1,"released":0,"after":8},
+  {"id":"terminal retirement has no publication stall streak","stage":"retiring","before":8,"items":1,"released":256,"after":8}
+]

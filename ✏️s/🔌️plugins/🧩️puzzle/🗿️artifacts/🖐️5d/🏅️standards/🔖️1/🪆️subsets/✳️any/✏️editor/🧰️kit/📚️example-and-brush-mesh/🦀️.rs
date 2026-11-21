@@ -198,7 +198,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
             cx.consume_fuel(1);
             return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Progress {
                 stage: "puzzle5d-example-mutation-page",
-                preview: br#"{"en":"Preparing example edit","de":"Beispieländerung wird vorbereitet"}"#,
+                preview: r#"{"en":"Preparing example edit","de":"Beispieländerung wird vorbereitet"}"#.as_bytes(),
             });
         }
         let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {

@@ -190,6 +190,11 @@ where
         }
         let Some(session) = self.session.as_ref() else { return Ok(item) };
         if self.outcome_pending { return session_demand(session); }
+        if self.terminal_target.is_none()
+            && (closing || self.cancelled() || session.poll() == semio_framework_job_worker::WorkerJobPoll::Closing)
+        {
+            return Ok(self.initializer_close_handoff_demand());
+        }
         if self.resume_pending {
             let (_, copy_bytes) = self.initializer_resume_quote(session)?;
             return Ok(RetirementDemand { copy_bytes, ..item });
@@ -199,6 +204,12 @@ where
             return session_demand(session);
         }
         Ok(if closing || self.cancelled() { item } else { RetirementDemand { depth: self.initializer_step_demand.depth.max(1), ..self.initializer_step_demand } })
+    }
+
+    /// 🧯️ Quotes the target and refusal metadata needed to hand a failed or cancelled worker to close.
+    pub(super) fn initializer_close_handoff_demand(&self) -> RetirementDemand {
+        let copy_bytes = size_of_val(&self.terminal_target) + usize::from(self.refusal.is_none()) * size_of_val(&self.refusal);
+        RetirementDemand { copy_bytes, depth: 1, ..Default::default() }
     }
 
     pub(super) fn initializer_resume_quote(&self, session: &semio_framework_job_worker::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>) -> Result<(RetirementDemand, usize), ValueError> {

@@ -2,7 +2,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "cases"
+    "cases",
+    "history"
   ],
   "properties": {
     "cases": {
@@ -37,6 +38,100 @@
           },
           "accepted": {
             "type": "boolean"
+          }
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "archiveLimit",
+        "historyAllocationLimit",
+        "transportLimit",
+        "cases",
+        "image"
+      ],
+      "properties": {
+        "archiveLimit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "historyAllocationLimit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transportLimit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "archiveBytes",
+              "frameBodyBytes",
+              "binaryBytes",
+              "accepted"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "archiveBytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "frameBodyBytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "binaryBytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width",
+            "height",
+            "rgba",
+            "pixelVarintBytes"
+          ],
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "pixelVarintBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rgba": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
           }
         }
       }

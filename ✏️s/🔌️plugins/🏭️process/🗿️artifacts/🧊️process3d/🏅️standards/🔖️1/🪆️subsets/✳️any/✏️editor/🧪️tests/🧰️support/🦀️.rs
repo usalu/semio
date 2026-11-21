@@ -220,7 +220,42 @@ fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
         },
     ];
     let json = semio_framework_pack_json::to_json_string(&entries);
-    dispatch(app, Process3dCommand::SetContributions(set_contributions::SetContributions { json }));
+    install_contributions(app, json);
+}
+
+/// 🏛️ Installs a host contribution pack through the editor's addressed app command.
+pub fn install_contributions(app: &mut Process3dApp, json: String) -> semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+    use semio_framework::manifest::{CommandAddress, CommandOwnerAddress};
+    use semio_plugin::artifact_app_laws::{dispatch_fixture_command, fixture_renew_turn, OriginalFixtureCaller};
+
+    let cx = app.1.cx();
+    let grant = cx.original_turn_ceiling().0;
+    let fuel = OriginalFixtureCaller::turn_fuel();
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        if cx.native_receiving_identity().is_some() {
+            break;
+        }
+        fixture_renew_turn(cx, fuel, grant).expect("fund the contribution decoder turn");
+        let mut outcome = None;
+        cx.with_native_receiving(&mut outcome, |_, _| Ok(())).expect("admit the original contribution decoder");
+        if let Some(outcome) = outcome {
+            assert!(outcome.source_refusal.is_none() && outcome.call.is_ok(), "the original contribution decoder opens");
+        }
+    }
+    assert!(cx.native_receiving_identity().is_some(), "the host command has its actual decoder recipient");
+    fixture_renew_turn(cx, fuel, grant).expect("fund the addressed host command turn");
+    let address = CommandAddress {
+        owner: CommandOwnerAddress::App { plugin_id: "process".into(), app_id: semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_CONTROLLER_ID.into() },
+        command_id: "setContributions".into(),
+    };
+    let args = DslValue::object([("json".into(), DslValue::String(json))]);
+    ::semio_framework_async::poll::resolve_ready(dispatch_fixture_command(
+        &mut app.0, &address, Some(args), None, &meta("local"),
+        &mut semio_plugin::artifact_app_laws::fixture_identity(), cx,
+        semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close,
+    )).expect("the addressed host contribution command settles");
+    fixture_renew_turn(cx, fuel, grant).expect("fund the contribution publication turn");
+    settle(app)
 }
 
 /// 🧪️ Every test context app is wired to the real manifest registry. The registry-less `new_app` path
@@ -273,7 +308,7 @@ pub fn settled_dispatch(app: &mut Process3dApp, command: Process3dCommand) -> (I
 }
 
 pub fn settled_dispatch_with_utility(app: &mut Process3dApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-    let mut view_state = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut view_state = main_window_view();
     view_state.active_utility_id = Some(active_utility_id.into());
     let action_meta = ActionMeta { view_state: Some(std::sync::Arc::new(view_state)), ..meta("local") };
     let mut result = ::semio_framework_async::poll::resolve_ready(semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("dispatch");

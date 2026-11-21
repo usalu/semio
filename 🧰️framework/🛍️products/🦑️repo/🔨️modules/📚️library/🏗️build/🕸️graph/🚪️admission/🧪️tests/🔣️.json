@@ -640,6 +640,7 @@
     ]
   },
   "directTaskAdmission": {
+    "nativeManifests": ["app/Cargo.toml", "library/Cargo.toml"],
     "registry": {
       "version": 1,
       "owners": [

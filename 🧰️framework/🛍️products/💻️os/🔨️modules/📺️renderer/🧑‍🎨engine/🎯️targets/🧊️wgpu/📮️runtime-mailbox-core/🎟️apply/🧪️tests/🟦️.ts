@@ -69,6 +69,8 @@ test("completion checkout preserves its bounded owner on pending and refusal", (
   expect(actions).toContain("owner.try_borrow_mut");
   expect(actions).toContain("retain_cancelled_action(action)");
   expect(actions).toContain("ControlledRetirement::retain((controller_id, action, args))");
-  expect(actions).toContain("owner.return_alias_step(cx.original_cancel_token(), grant)");
-  expect(mailbox).not.toContain("applied_revisions: Mutex::new(std::collections::HashMap::new())");
+  expect(actions).toContain("owner.return_alias_step(cx.original_cancel_token(), effect)");
+  const constructor = readFileSync(resolve(base, "../../🧊️renderer/📮️mailbox-impl/🏗️mailbox-construction-and-authorities/🦀️.rs"), "utf8");
+  expect(constructor).toContain("applied_window_metrics_revision: AtomicU64::new(0)");
+  expect(constructor).not.toContain("applied_revisions: Mutex::new(std::collections::HashMap::new())");
 });

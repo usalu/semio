@@ -1,0 +1,112 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@ -794,3 +794,109 @@
+     assert_eq!(app.snapshot().unwrap(), published);
+     laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PNG fixture closes");
+ }
++
++#[test]
++fn controlled_pdf_terminal_publication_requires_both_owned_headers() {
++    use crate::standards::v1_7::subsets::base::io::import::retained_graph::PreparedPdfFile;
++    use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, RetirementPollExit};
++    use semio_plugin::artifact_app_laws::OriginalWorkFixture;
++    use semio_plugin::{NaturalFileDecodeOwner, NaturalFileDecodeStep, ToolExecutionContract};
++    use std::mem::{size_of, size_of_val};
++
++    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
++    let contract = ToolExecutionContract::resumable(input.len(), 16_384, 1, 16 << 20, 7_500, 1, 1);
++    let quote = size_of::<PreparedPdfFile>() + size_of::<PdfSnapshot>();
++    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
++    assert_eq!(quote, 964);
++    let stock = OriginalWorkFixture::stock();
++    let run = |constrained_at: Option<usize>| {
++        let mut scope = OriginalWorkFixture::new();
++        let mut source = Some(input.to_vec());
++        let mut claimed = None;
++        assert!(scope.turn(stock, |cx| Pdf17Editor::admit_natural_file_decode_owner(&mut source, contract, &mut claimed, cx)).unwrap());
++        assert!(source.is_none(), "the exact original PDF bytes transferred");
++        let Some(NaturalFileDecodeOwner::Controlled(decoder)) = claimed else {
++            panic!("one-unit file contract must use the real controlled PDF decoder");
++        };
++        let mut decoder = Some(decoder);
++        let mut complete = None;
++        for turn in 0..200_000 {
++            let owner = decoder.as_mut().unwrap();
++            if constrained_at == Some(turn) {
++                let short = RetainedCloneGrant { maximum_copy_bytes: quote - 1, ..stock };
++                for _ in 0..2 {
++                    scope.turn(short, |cx| {
++                        let before = (cx.retained_progress(), cx.original_work_units_spent());
++                        assert!(matches!(owner.advance(cx).unwrap(), NaturalFileDecodeStep::Yield));
++                        assert_eq!((cx.retained_progress(), cx.original_work_units_spent()), before);
++                        Ok(())
++                    }).unwrap();
++                }
++            }
++            let grant = RetainedCloneGrant { maximum_copy_bytes: if constrained_at == Some(turn) { quote } else { stock.maximum_copy_bytes }, ..stock };
++            let (step, copied, items) = scope.turn(grant, |cx| {
++                let before = cx.retained_progress();
++                let step = owner.advance(cx).unwrap();
++                let after = cx.retained_progress();
++                Ok((step, after.copied_bytes - before.copied_bytes, after.copied_items - before.copied_items))
++            }).unwrap();
++            if let NaturalFileDecodeStep::Complete { snapshot, progress } = step {
++                assert_eq!((copied, items), (quote, 1));
++                if let Some(expected) = constrained_at { assert_eq!(turn, expected); }
++                complete = Some((snapshot, progress, turn));
++                break;
++            }
++            assert_ne!(Some(turn), constrained_at, "the exact quote must publish after the two refusals");
++        }
++        let (snapshot, progress, terminal_turn) = complete.expect("the original controlled PDF reached publication");
++        let owner = decoder.as_mut().unwrap();
++        owner.begin_close();
++        for _ in 0..200_000 {
++            if owner.terminal_is_empty() { break; }
++            scope.turn(stock, |cx| {
++                let demand = owner.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
++                semio_plugin::__job::close_original_effect_step(cx, demand, |effect| {
++                    let result = owner.close_step(effect).map(|step| RetainedCloneStep::Progress(step.progress().unwrap_or_default())).map_err(Into::into);
++                    RetirementPollExit::settle(effect, result)
++                })?;
++                Ok(())
++            }).unwrap();
++        }
++        assert!(owner.terminal_is_empty());
++        let demand = RetirementDemand {
++            release_bytes: size_of_val(&**owner),
++            copy_bytes: size_of_val(&decoder),
++            depth: 1,
++            ..Default::default()
++        };
++        scope.turn(stock, |cx| {
++            semio_plugin::__job::close_original_retained_step(cx, demand, |_| {
++                drop(decoder.take());
++                RetainedWorkOutcome {
++                    work: 1,
++                    result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress {
++                        copied_items: 1,
++                        copied_bytes: demand.copy_bytes,
++                        released_bytes: demand.release_bytes,
++                        ..Default::default()
++                    })),
++                }
++            })?;
++            Ok(())
++        }).unwrap();
++        assert!(decoder.is_none());
++        (snapshot, progress, terminal_turn, scope)
++    };
++
++    let (reference, reference_progress, terminal_turn, mut reference_scope) = run(None);
++    let (published, progress, _, mut scope) = run(Some(terminal_turn));
++    assert_eq!(published, reference);
++    assert_eq!(progress, reference_progress);
++    assert_eq!(published.pages.len(), 2);
++    assert!(!published.objects.is_empty());
++    assert!(!published.trailer.is_empty());
++    scope.retire_owned(published, stock);
++    scope.finish();
++    reference_scope.retire_owned(reference, stock);
++    reference_scope.finish();
++}

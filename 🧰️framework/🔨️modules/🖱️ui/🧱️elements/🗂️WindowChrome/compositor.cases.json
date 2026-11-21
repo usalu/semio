@@ -109,6 +109,14 @@
   },
   "interlock": [
     {
+      "name": "near-full chip on a narrow card shares its seam with its neighbour",
+      "windows": [
+        { "id": "left", "left": 0, "top": 0, "width": 59, "height": 80, "topEdge": { "depth": 28, "chips": [{ "left": 0, "right": 57.5 }] }, "bottomEdge": { "depth": 0, "chips": [] } },
+        { "id": "right", "left": 59, "top": 0, "width": 59, "height": 80, "topEdge": { "depth": 28, "chips": [{ "left": 1.5, "right": 59 }] }, "bottomEdge": { "depth": 0, "chips": [] } }
+      ],
+      "lines": [{ "axis": "v", "at": 59, "from": 1, "to": 79 }]
+    },
+    {
       "name": "footer chip of the upper card shares the band with the title chip of the lower card",
       "windows": [
         {

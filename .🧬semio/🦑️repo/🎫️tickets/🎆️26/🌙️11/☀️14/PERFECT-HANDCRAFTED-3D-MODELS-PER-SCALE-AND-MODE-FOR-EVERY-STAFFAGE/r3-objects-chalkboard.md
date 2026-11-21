@@ -95,3 +95,36 @@ I did not run the product test suites (`repo run … :test`, `export-models`). T
 - 1:200 and 1:500 bodies are plain slabs; I judge them right for the scale, not rich.
 
 State: DONE
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-chalkboard-model.py` (1:100 running gap), shared `r5_o02_lib.py`, `r5-o02-sheets.sh`, `r5-o02-montage.sh`, `r5-o02-measure.ts`. Renders under `🗑️generated/r5-chalkboard/{before,after}/` (every scale body, thermal cut, structure, 2D; poses leaf-left, leaf-middle, leaf-right; clip slide-leaf 3 s), all opened.
+
+### Model against reference (default pose, `r5-o02-measure.ts`)
+
+| quantity | reference (section 1: EN 14434 board class, sliding-board products) | model | deviation |
+|---|---|---|---|
+| width x height x depth | 4.0 x 1.26 x 0.08 m (asset) | 4.000 x 1.260 x 0.080 m at every scale | 0 % |
+| fixed panel | 2 x 1.97 x 1.12 m, 16.6 mm (0.6 mm enamel steel on 16 mm MDF) | 1.974 x 1.116 x 0.0166 m | 0 % |
+| sliding leaf panel | 1.95 x 1.10 m | 1.954 x 1.100 m | 0 % |
+| tray | full length, about 60 mm high | 3.985 x 0.060 m | 0 % |
+| leaf to board gap | about 4 mm (two planes in 90 mm) | 4 mm at 1:50; 7.5 mm at 1:100 (see below) | scale floor |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | unchanged |
+| 1:100 | A- / C (board-face measured 2.14 m2 against 4.5: the left enamel behind the leaf counted nothing) / A- | A- / A- (4.27 m2) / A- |
+| 1:200 | A- (slabs, header, stepped tray) / A- / A- | unchanged |
+| 1:500 | A- / A- / A- | unchanged |
+
+Catalog before: INVALID (`checkVolumes` 1). After: VALID with volumes, `volumes-check --product` PASS.
+
+### Change
+
+- 1:100 volumes: the leaf solids of every list move 3.5 mm towards the room, so the running gap between leaf frame and board frame is 7.5 mm, the narrowest gap the 1:100 flood cell (3.75 mm) leaves open. The real 4 mm gap is open at the leaf's free edge and lets the room air reach the board behind the leaf, as the 1:50 model shows; at 1:100 it had closed the air space. The shift is below the 15 mm feature (2D unchanged, silhouettes within limits); the leaf stays inside the header hood and the 0.08 m depth. Decision text en/de extended. Rule question in `tool-requests.md` (2026-11-21).
+
+### Remaining
+
+Section 6 items stand (tray under the leaf at 80 mm depth, no screw heads, single-layer panels, `wall-rest` normal, coarse bodies are slabs by scale).

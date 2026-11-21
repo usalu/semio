@@ -1,0 +1,17 @@
+{
+  "faces": [[0,3,2,1],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,4,7,3],[1,2,6,5]],
+  "left": [[0,0,0],[2,2,2]],
+  "overlappingWallCutter": [[-1,-1,-1],[0.75,0.75,3]],
+  "cases": [
+    {"name":"six-plane slab","right":[[1,0.5,0.25],[3,1.5,1.75]],"bounds":[[1,0.5,0.25],[2,1.5,1.75]],"volume":1.5,"area":8,"leftFaces":[5],"rightPlanes":[0,1,2,3,4]},
+    {"name":"translated slab","left":[[1048576,1048576,1048576],[1048578,1048578,1048578]],"right":[[1048577,1048576.5,1048576.25],[1048579,1048577.5,1048577.75]],"bounds":[[1048577,1048576.5,1048576.25],[1048578,1048577.5,1048577.75]],"volume":1.5,"area":8,"leftFaces":[5],"rightPlanes":[0,1,2,3,4]},
+    {"name":"right containment","right":[[0.25,0.5,0.75],[1.25,1.5,1.75]],"bounds":[[0.25,0.5,0.75],[1.25,1.5,1.75]],"volume":1,"area":6,"leftFaces":[],"rightPlanes":[0,1,2,3,4,5]},
+    {"name":"left containment","right":[[-1,-1,-1],[3,3,3]],"bounds":[[0,0,0],[2,2,2]],"volume":8,"area":24,"leftFaces":[0,1,2,3,4,5],"rightPlanes":[]},
+    {"name":"coincident closed meshes","right":[[0,0,0],[2,2,2]],"bounds":[[0,0,0],[2,2,2]],"volume":8,"area":24,"leftFaces":[0,1,2,3,4,5],"rightPlanes":[]},
+    {"name":"rotated octagonal prism","right":[[0,0,0],[2,2,2]],"rotateZ":45,"bounds":[[0,0,0],[2,2,2]],"volume":6.627416997969522,"area":19.88225099390857,"leftFaces":[0,1,2,3,4,5],"rightPlanes":[2,3,4,5]},
+    {"name":"face contact","right":[[2,0,0],[4,2,2]],"empty":true},
+    {"name":"edge contact","right":[[2,2,0],[4,4,2]],"empty":true},
+    {"name":"point contact","right":[[2,2,2],[4,4,4]],"empty":true},
+    {"name":"separation","right":[[3,0,0],[4,2,2]],"empty":true}
+  ]
+}

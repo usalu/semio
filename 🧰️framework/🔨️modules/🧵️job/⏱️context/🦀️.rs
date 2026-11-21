@@ -13,6 +13,7 @@ use std::task::{Context, Waker};
 pub use semio_framework_value_retained_clone::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 pub use semio_framework_value_retained_clone::RetirementDemand;
 pub use semio_framework_value_control_contract::{OriginalSourceTurn,OriginalSourceTurnIssuer,OriginalSourceTurnIdentity,OriginalSourceTurnWitness};
+use semio_framework_value_control_contract::{OriginalWork,OriginalWorkActionIdentity,OriginalWorkActionProof,OriginalWorkPerformedReceipt,OriginalWorkSink};
 
 use semio_framework_value_retained_clone::{ValueError, ValueRefusalKind};
 #[path="../📬️outcome/⏸️continuation/🦀️.rs"]
@@ -81,7 +82,7 @@ pub struct OriginalCallerSource<'source>{pub ledger:&'source Arc<JobPayloadOpera
 pub use owned_source::{OriginalReturnBirthState,OriginalCallerCloseReturn,source_loan_transfer_demand,OriginalCallerSourceAdmission,OriginalSourceCloseContext,OriginalSourceCloseProducer,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
 #[path="🛬️owned/🦀️.rs"]
 mod original_job_decoder;
-pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput,original_receiving_scope_headroom};
+pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput,original_receiving_scope_headroom,unquoted_receiving_work};
 //#endregion 📄️RetainedPayload
 
 #[path="📦️return/🪶️weak/🦀️.rs"]
@@ -131,6 +132,64 @@ pub struct StepContext<'a> {
 }
 
 impl Drop for StepContext<'_>{fn drop(&mut self){if let Some((recipient,start))=self.original_physical_recipient.as_mut(){let delta=retained_delta(*self.retained_progress,*start);**recipient=recipient.checked_add(delta).expect("original physical receipt exceeds usize");}if self.reserved_observer.is_some(){*self.retained_progress=semio_framework_job_return_budget::source_fresh_progress(*self.retained_progress,self.reserved_return_progress).expect("actual reserved effects exceed their aggregate observer");}if let Some(recipient)=self.original_work_recipient.as_mut(){**recipient=recipient.checked_add(self.work_units_spent).expect("original source work counter exceeds u128");}}}
+
+#[inline(never)]
+fn settle_original_effect_work(
+    work: &mut OriginalWork<'_>,
+    action: &mut Option<OriginalWorkActionIdentity>,
+    receipt: &mut Option<OriginalWorkPerformedReceipt>,
+    proof: &mut Option<OriginalWorkActionProof>,
+) -> Result<u128, ValueError> {
+    let performed = OriginalWorkSink::observed_work(receipt.as_ref().ok_or_else(|| ValueError::invariant("original effect receipt absent"))?);
+    work.claim_performed_for_action(*action, receipt)?;
+    if !work.performed_seen_for_action(*action)? {
+        work.cancel_for_action(action)?;
+    } else {
+        let mut partial = None;
+        if !work.settle_partial_for_action_into(*action, &mut partial)? {
+            return Err(ValueError::invariant("original effect partial receipt is pending"));
+        }
+        let partial = partial.ok_or_else(|| ValueError::invariant("original effect partial outcome absent"))?;
+        if partial.total() != performed || partial.source_refusal().is_some() {
+            return Err(ValueError::invariant("original effect partial outcome differs from its performed work"));
+        }
+        let accepted = work.commit_for_action(performed, *action, proof)?;
+        work.finish_for_action(proof, action)?;
+        if !accepted {
+            return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "original effect performed more work than its ceiling"));
+        }
+    }
+    Ok(performed)
+}
+
+#[inline(never)]
+fn recover_original_effect_work(
+    work: &mut OriginalWork<'_>,
+    action: &mut Option<OriginalWorkActionIdentity>,
+    receipt: &mut Option<OriginalWorkPerformedReceipt>,
+    proof: &mut Option<OriginalWorkActionProof>,
+) {
+    if receipt.is_some() {
+        let _ = work.claim_performed_for_action(*action, receipt);
+    }
+    if action.is_none() {
+        return;
+    }
+    if proof.is_some() {
+        let _ = work.finish_for_action(proof, action);
+    } else if work.performed_seen_for_action(*action).unwrap_or(false) {
+        if work.partial_pending_for_action(*action).unwrap_or(false) {
+            let mut outcome = None;
+            let _ = work.settle_partial_for_action_into(*action, &mut outcome);
+        }
+        if let Ok(total) = work.performed_total_for_action(*action) {
+            let _ = work.commit_for_action(total, *action, proof);
+            let _ = work.finish_for_action(proof, action);
+        }
+    } else {
+        let _ = work.cancel_for_action(action);
+    }
+}
 
 fn replaced_context<R>(result:Result<R,OriginalTurnFailure>,message:&'static str)->Result<R,OriginalTurnFailure>{let refusal=||ValueError::invariant(message);Err(match result{Ok(_)=>{let mut failure=OriginalTurnFailure::from(refusal());failure.context_refusal=Some(refusal());failure},Err(mut failure)=>{if failure.context_refusal.is_none(){failure.context_refusal=Some(refusal())}failure}})}
 #[derive(Clone,Copy)]
@@ -251,7 +310,7 @@ impl<'a> StepContext<'a> {
     /// 🧮️ Returns the spendable grant after applying the turn policy and live Source holds.
     pub fn retained_grant(&self)->RetainedCloneGrant{
         let current=retained_delta(*self.retained_progress,self.reserved_return_progress);
-        retained_min(self.retained_turn_remaining(current),self.original_source_total_grant())
+        retained_min(self.retained_turn_remaining(current),self.original_source_total_grant_at(current))
     }
     fn retained_turn_remaining(&self,current:RetainedCloneProgress)->RetainedCloneGrant{
         let remaining=retained_remaining(self.retained,current);
@@ -282,40 +341,36 @@ impl<'a> StepContext<'a> {
     }
     pub(crate) fn record_original_source_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{if let Some(budget)=self.return_budget.as_mut(){budget.get_mut().record_retained(progress)?;}Ok(())}
     pub fn retained_progress(&self)->RetainedCloneProgress{*self.retained_progress}
+    /// 🧮️ Measures the fresh retained effects posted since the given receipt and reserved-return observations.
+    pub fn fresh_retained_progress_since(&self, before: RetainedCloneProgress, reserved_before: RetainedCloneProgress) -> Result<RetainedCloneProgress, ValueError> {
+        let subtract = semio_framework_job_return_budget::source_fresh_progress;
+        subtract(self.retained_progress(), before)
+            .zip(subtract(self.reserved_return_progress(), reserved_before))
+            .and_then(|(total, reserved)| subtract(total, reserved))
+            .ok_or_else(|| ValueError::invariant("fresh retained progress must preserve the observed reserved return span"))
+    }
     /// 🪙️ Runs one closure inside one actual original effect over a performed-work receipt settled against this turn's own fuel; `None` means the Work quote was not admitted and nothing ran.
     pub fn with_original_effect<R>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{self.with_original_effect_at(None,grant,run)}
     /// 🪙️ Runs one closure inside one original effect whose Work carries this resident Source's own turn.
     pub fn with_original_source_effect<R>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{let turn=self.original_source_turn_identity().ok_or_else(||ValueError::invariant("original Source turn is absent"))?;self.with_original_effect_at(Some(turn),grant,run)}
     fn with_original_effect_at<R>(&mut self,source:Option<OriginalSourceTurnIdentity>,grant:RetainedCloneGrant,run:impl FnOnce(&mut Self,&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->R)->Result<Option<(R,u128)>,ValueError>{
-        use semio_framework_value_control_contract::{OriginalWork,OriginalWorkAuthority,OriginalWorkSink,RetainedAllocationEffect};
+        use semio_framework_value_control_contract::{OriginalWorkAuthority,RetainedAllocationEffect};
         let maximum=self.fuel_remaining;let fuel=self.fuel_remaining;let retirement=self.original_retirement;let deadline=self.deadline_us;let now=self.now_us;
         let mut ready=move||retirement||now().is_some_and(|value|value<deadline);
         let mut authority=OriginalWorkAuthority::new(semio_framework_job_receiving::OriginalJobWorkDriver);
         let result=authority.with_loan(&mut semio_framework_job_receiving::OriginalJobWorkRecipient::new(&fuel,&mut ready).with_source(source),|loan|{
             let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);let mut action=None;let mut proof=None;
             if work.prepare_for_action(maximum,&mut action)?!=Some(true){if action.is_some(){work.cancel_for_action(&mut action)?}return Ok(None)}
-            let mut receipt=None;let mut partial=None;
+            let mut receipt=None;
             let mut exchange=||->Result<Option<(R,u128)>,ValueError>{
             let absent=||ValueError::invariant("original effect receipt absent");
             work.issue_performed_for_action(action,&mut receipt)?;let mut actual=None;
             let output={let sink=receipt.as_mut().ok_or_else(absent)?;let mut effect=RetainedAllocationEffect::new(grant,maximum,&mut actual,sink);let mut run=Some(run);let mut output=None;{let mut call=|effect:&mut RetainedAllocationEffect<'_>|{if let Some(run)=run.take(){output=Some(run(&mut *self,effect))}};semio_framework_value_control_contract::with_original_invocation(source,&mut effect,&mut call)?;}output.ok_or_else(||ValueError::invariant("original effect call did not run"))?};
-            let performed=OriginalWorkSink::observed_work(receipt.as_ref().ok_or_else(absent)?);work.claim_performed_for_action(action,&mut receipt)?;
-            if !work.performed_seen_for_action(action)?{work.cancel_for_action(&mut action)?}else{
-                if !work.settle_partial_for_action_into(action,&mut partial)?{return Err(ValueError::invariant("original effect partial receipt is pending"))}
-                let partial=partial.take().ok_or_else(||ValueError::invariant("original effect partial outcome absent"))?;if partial.total()!=performed||partial.source_refusal().is_some(){return Err(ValueError::invariant("original effect partial outcome differs from its performed work"))}
-                let accepted=work.commit_for_action(performed,action,&mut proof)?;work.finish_for_action(&mut proof,&mut action)?;if !accepted{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original effect performed more work than its ceiling"))}
-            }
+            let performed=settle_original_effect_work(&mut work,&mut action,&mut receipt,&mut proof)?;
                 Ok(Some((output,performed)))
             };
             match exchange(){Ok(done)=>Ok(done),Err(error)=>{
-                if receipt.is_some(){let _=work.claim_performed_for_action(action,&mut receipt);}
-                if action.is_some(){
-                    if proof.is_some(){let _=work.finish_for_action(&mut proof,&mut action);}
-                    else if work.performed_seen_for_action(action).unwrap_or(false){
-                        if work.partial_pending_for_action(action).unwrap_or(false){let mut outcome=None;let _=work.settle_partial_for_action_into(action,&mut outcome);}
-                        if let Ok(total)=work.performed_total_for_action(action){let _=work.commit_for_action(total,action,&mut proof);let _=work.finish_for_action(&mut proof,&mut action);}
-                    }else{let _=work.cancel_for_action(&mut action);}
-                }
+                recover_original_effect_work(&mut work,&mut action,&mut receipt,&mut proof);
                 Err(error)
             }}
         })??;
@@ -365,7 +420,10 @@ impl<'a> StepContext<'a> {
 
     pub fn original_total_retained_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_min(retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start)),retained_remaining(self.issued_ceiling.0,current));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(remaining,|budget|retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
     /// 🏛️ The Source's own remaining total, independent of this turn's issued ceiling, so a narrow turn is never mistaken for a permanent misfit.
-    pub fn original_source_total_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(remaining,|budget|retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
+    pub fn original_source_total_grant(&self)->RetainedCloneGrant{
+        self.original_source_total_grant_at(retained_delta(*self.retained_progress,self.reserved_return_progress))
+    }
+    fn original_source_total_grant_at(&self,current:RetainedCloneProgress)->RetainedCloneGrant{let remaining=retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(remaining,|budget|retained_min(remaining,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
 
     pub fn bind_original_clock_binding(&mut self,binding:u64)->Result<(),ValueError>{self.original_source_parent()?.validate_borrowed_context(self).map_err(|_|ValueError::invariant("original clock binding requires its genuine source context"))?;if binding==0||self.original_clock_binding.is_some_and(|original|original!=binding){return Err(ValueError::invariant("original source clock authority cannot be absent or rebound"))}self.original_clock_binding=Some(binding);Ok(())}
 
@@ -561,11 +619,36 @@ pub mod testkit {
     pub(crate) fn narrow_loan_receipt(cx:&mut StepContext<'_>){if NEXT_LOAN_REFUSAL.with(|flag|flag.replace(false)){cx.retained.maximum_items=cx.retained_progress().copied_items}}
     pub(crate) fn narrow_cancel_receipt(cx:&mut StepContext<'_>){if NEXT_CANCEL_REFUSAL.with(|flag|flag.replace(false)){cx.retained_policy=Some((RetainedCloneGrant::default(),cx.retained_progress()))}}
     pub fn renew_payload_page_grant(cx:&mut StepContext<'_>){cx.payload_page_granted=false}
+
+    fn renew_local_turn(cx: &mut StepContext<'_>, fuel: u64, grant: RetainedCloneGrant, current: RetainedCloneProgress) {
+        cx.fuel_remaining = fuel;
+        cx.payload_page_granted = false;
+        cx.retained = RetainedCloneGrant {
+            maximum_items: current.copied_items.saturating_add(grant.maximum_items),
+            maximum_copy_bytes: current.copied_bytes.saturating_add(grant.maximum_copy_bytes),
+            maximum_capacity_bytes: current.retained_capacity_bytes.saturating_add(grant.maximum_capacity_bytes),
+            maximum_release_bytes: current.released_bytes.saturating_add(grant.maximum_release_bytes),
+            maximum_depth: grant.maximum_depth,
+        };
+    }
+
+    /// 🧷️ Refreshes the fixture's local turn while the original return stock and its claims stay live.
+    pub fn renew_pinned_turn(cx: &mut StepContext<'_>, fuel: u64, grant: RetainedCloneGrant) -> Result<(), ValueError> {
+        let budget = cx.return_budget.as_ref().filter(|budget| budget.get().is_bound() && !budget.get().renewable())
+            .ok_or_else(|| ValueError::invariant("fixture turn requires a pinned original return source"))?;
+        budget.get().remaining()?;
+        let current = retained_delta(*cx.retained_progress, cx.reserved_return_progress);
+        let fuel = fuel.min(cx.original_total_fuel_remaining());
+        let grant = retained_min(grant, cx.original_source_total_grant());
+        renew_local_turn(cx, fuel, grant, current);
+        Ok(())
+    }
+
     pub fn renew_turn(cx:&mut StepContext<'_>,fuel:u64,grant:RetainedCloneGrant)->Result<(),ValueError>{
         let current=retained_delta(*cx.retained_progress,cx.reserved_return_progress);
         if let Some(budget)=cx.return_budget.as_mut().filter(|budget|budget.get().is_bound()){budget.get_mut().renew_turn()?}
-        let refill=fuel.saturating_sub(cx.fuel_remaining);cx.fuel_remaining=fuel;cx.payload_page_granted=false;
-        cx.retained=RetainedCloneGrant{maximum_items:current.copied_items.saturating_add(grant.maximum_items),maximum_copy_bytes:current.copied_bytes.saturating_add(grant.maximum_copy_bytes),maximum_capacity_bytes:current.retained_capacity_bytes.saturating_add(grant.maximum_capacity_bytes),maximum_release_bytes:current.released_bytes.saturating_add(grant.maximum_release_bytes),maximum_depth:grant.maximum_depth};
+        let refill=fuel.saturating_sub(cx.fuel_remaining);
+        renew_local_turn(cx, fuel, grant, current);
         cx.original_total_retained_start=current;
         match cx.return_budget.as_ref().filter(|budget|budget.get().is_bound()){
             Some(budget)=>{let(retained,total)=budget.get().remaining()?;cx.original_total_retained=retained;cx.original_total_fuel=total;cx.original_total_work_start=cx.work_units_spent.saturating_sub(u128::from(cx.reserved_return_work));}

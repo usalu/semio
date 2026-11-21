@@ -19,8 +19,7 @@ use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_mutations::GraphEditor;
 
-use semio_s_artifact_procedural_3d_io_text::snapshot::widget_id_from_instance_id;
-use semio_s_artifact_procedural_3d_model::widget_id;
+use semio_s_artifact_procedural_3d_model::{graph_instance_id, parse_graph_instance_id, parse_graph_port_id, widget_id, GraphTargetKind};
 use semio_framework_value::DslValue;
 use machine::Command;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
@@ -74,10 +73,12 @@ pub fn validate_component_gesture(snapshot: &FlowHostSnapshot, pinned: &[String]
         return Err(GumballRefusal::SelectionChanged.into());
     }
     let mut widget_id = target.widget;
-    let mut channel = target.channel;
+    let origin_channel = origin.channel();
+    let target_channel = target.channel();
+    let mut channel = target_channel.as_ref();
     let mut visited = std::collections::BTreeSet::new();
     while visited.insert(widget_id) {
-        if origin.widget == widget_id && origin.channel == channel { return Ok(()); }
+        if origin.widget == widget_id && origin_channel == channel { return Ok(()); }
         let Some(Widget::Neuron { neuron_kind, params, .. }) = snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == widget_id) else { break };
         if !matches!(neuron_kind.as_str(), "brep.mesh.translateComponents" | "brep.mesh.rotateComponents" | "brep.mesh.scaleComponents") || channel != "meshOut" { break; }
         let text = |key| params.get(key).and_then(|value| value.as_dictionary()).and_then(|value| value.get("value")).and_then(|value| value.as_atom()).and_then(|value| value.as_str());
@@ -408,7 +409,7 @@ pub struct GumballSelection {
 impl GumballSelection {
     /// ✍️ The replacing interaction writes the commit lands.
     pub fn writes(&self) -> Vec<InteractionWrite> {
-        let mut writes = vec![InteractionWrite::replace("graph", "node", self.nodes.iter().cloned())];
+        let mut writes = vec![InteractionWrite::replace("graph", "node", self.nodes.iter().map(|id| GraphTargetKind::Node.target(id)))];
         if let Some((granularity, components)) = &self.components {
             writes.push(InteractionWrite::replace(DOMAIN, granularity, components.iter().cloned()));
         }
@@ -445,7 +446,8 @@ pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operatio
         let (targets, selection, mut wanted) = if ids.iter().any(|id| ComponentTarget::parse(id).is_some()) {
             let (id, mode, components) = ensure_component_node(&mut editor, ids, operation)?;
             let wanted = component_gesture_inputs(&mode, &components, operation);
-            let addressed = components.iter().map(|component| format!("{id}@meshOut#0.{mode}.{component}")).collect();
+            let instance = graph_instance_id(&id, "meshOut", false, 0);
+            let addressed = components.iter().map(|component| format!("{instance}.{mode}.{component}")).collect();
             (vec![id.clone()], GumballSelection { nodes: vec![id], components: Some((mode, addressed)) }, wanted)
         } else {
             let mut targets: Vec<String> = Vec::new();
@@ -578,8 +580,33 @@ pub fn gumball_ids(snapshot: &FlowHostSnapshot, explicit: &[String], components:
             validate_component_gesture(snapshot, explicit, selected)?;
             Ok(selected.to_vec())
         }
-        None => Ok(selection_ids(explicit, graph)),
+        None if !explicit.is_empty() => Ok(explicit.to_vec()),
+        None => graph.iter().map(|target| graph_gumball_instance(snapshot, target).map_err(Into::into)).collect(),
     }
+}
+
+fn graph_gumball_instance(snapshot: &FlowHostSnapshot, target: &str) -> Result<String, GumballRefusal> {
+    match GraphTargetKind::parse(target) {
+        Some((GraphTargetKind::Handle, id)) => {
+            let port = parse_graph_port_id(id).ok_or(GumballRefusal::NoShapeOutput)?;
+            Ok(graph_instance_id(port.widget, &port.channel, port.input, 0))
+        }
+        Some((GraphTargetKind::Node, id)) => {
+            let kind = source_neuron_kind(snapshot, id).ok_or(GumballRefusal::NoShapeSource)?;
+            let infos = semio_os_flow::flow_neuron_kind_info_map();
+            let info = infos.get().get(kind).ok_or_else(|| GumballRefusal::KindUnavailable(kind.into()))?;
+            let output = info.outputs.iter().find(|port| port.value_types.iter().any(|kind| kind == "mesh" || kind == "geometry")).ok_or(GumballRefusal::NoShapeOutput)?;
+            Ok(graph_instance_id(id, &output.name, false, 0))
+        }
+        _ => Err(GumballRefusal::NoShapeSource),
+    }
+}
+
+fn source_neuron_kind<'a>(snapshot: &'a FlowHostSnapshot, widget: &str) -> Option<&'a str> {
+    snapshot.widgets.iter().find_map(|value| match value {
+        Widget::Neuron { id, neuron_kind, .. } if id == widget => Some(neuron_kind.as_str()),
+        _ => None,
+    })
 }
 
 /// 🕹️ ONE one-shot gumball transaction of `ids` — the entry a view without a retained instance (the marks-free handler)
@@ -597,6 +624,7 @@ pub fn gumball_once(verb: &'static str, ids: Vec<String>, motion: GumballMotion,
 /// `change-widget-input` leaves, [`gumball_splice`]) and reuses it only for its own component set.
 pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], operation: &str) -> Result<(String, String, Vec<u32>), GumballRefusal> {
     let (target, components) = component_group(ids).map_err(GumballRefusal::ComponentSelection)?;
+    let channel = target.channel();
     if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
     if target.index != 0 { return Err(GumballRefusal::ListOutput); }
     let kind = editor.snapshot().widgets.iter().find_map(|widget| match widget {
@@ -605,7 +633,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
     }).ok_or(GumballRefusal::MeshMissing)?;
     let infos = semio_os_flow::flow_neuron_kind_info_map();
     let source = infos.get().get(&kind).ok_or_else(|| GumballRefusal::KindUnavailable(kind.clone()))?;
-    if !source.outputs.iter().any(|port| port.name == target.channel && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) {
+    if !source.outputs.iter().any(|port| port.name == channel.as_ref() && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) {
         return Err(GumballRefusal::NotIndexedMesh);
     }
     let next_kind = format!("brep.mesh.{operation}Components");
@@ -624,7 +652,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
     while editor.snapshot().widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
     let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     editor.add_widget_json(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y).map_err(GumballRefusal::HostEdit)?;
-    editor.insert_between(target.widget, target.channel, &id, "mesh", &output.name).map_err(GumballRefusal::HostEdit)?;
+    editor.insert_between(target.widget, channel.as_ref(), &id, "mesh", &output.name).map_err(GumballRefusal::HostEdit)?;
     editor.set_preview(&id, true);
     editor.set_preview(target.widget, false);
     Ok((id, target.granularity.into(), components))
@@ -753,11 +781,11 @@ pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
 /// actually evaluates and exports.
 pub fn ensure_gumball_node(editor: &mut GraphEditor<'_>, selected_id: &str, operation: &str) -> Result<String, GumballRefusal> {
     if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
-    let selected_port = selected_id.split_once('@').map(|(_, channel)| channel.split('#').next().unwrap_or(channel));
-    let selected_id = widget_id_from_instance_id(selected_id);
+    let address = gumball_output_address(selected_id, || editor.snapshot().widgets.iter().any(|widget| widget_id(widget) == selected_id))?;
+    let (selected_id, selected_port) = address.as_ref().map_or((selected_id, None), |port| (port.widget, Some(port.channel.as_ref())));
     let infos = semio_os_flow::flow_neuron_kind_info_map();
-    let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, neuron_kind, .. } if id == selected_id => Some(neuron_kind.clone()), _ => None }).ok_or(GumballRefusal::NoShapeSource)?;
-    let source_info = infos.get().get(&source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.clone()))?;
+    let source_kind = source_neuron_kind(editor.snapshot(), selected_id).ok_or(GumballRefusal::NoShapeSource)?;
+    let source_info = infos.get().get(source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.into()))?;
     let source_port = source_info.outputs.iter().find(|port| selected_port.is_none_or(|selected| port.name == selected) && port.value_types.iter().any(|kind| kind == "mesh" || kind == "geometry")).ok_or(GumballRefusal::NoShapeOutput)?;
     let mesh = source_port.value_types.iter().any(|kind| kind == "mesh");
     let transform_kind = if mesh { format!("brep.mesh.{operation}") } else { gumball_xform_kind(operation).to_string() };
@@ -781,6 +809,13 @@ pub fn ensure_gumball_node(editor: &mut GraphEditor<'_>, selected_id: &str, oper
     editor.set_preview(&transform_id, true);
     editor.set_preview(selected_id, false);
     Ok(transform_id)
+}
+
+fn gumball_output_address(id: &str, is_bare_widget: impl FnOnce() -> bool) -> Result<Option<semio_s_artifact_procedural_3d_model::GraphPortAddress<'_>>, GumballRefusal> {
+    let port = parse_graph_instance_id(id).map(|address| address.port)
+        .or_else(|| if is_bare_widget() { None } else { parse_graph_port_id(id) });
+    if port.as_ref().is_some_and(|port| port.input) { return Err(GumballRefusal::NoShapeOutput); }
+    Ok(port)
 }
 
 /// 🔎️ Projects the live widget at the gumball IO boundary.

@@ -24,7 +24,7 @@ pub use builder_kit::{build_palette, build_playbook_list_scene, playbook_builder
 /// 🧬️ Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
 /// `playbook::*` import surface (mirrors how `semio-plugin` flattened these before the move).
 pub use generation_forms::{
-    add_generation, apply_generation_mutation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationMutation, GenerationPlayState,
+    add_generation, apply_generation_mutation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, generation_field_index, FormGeneration, GenerationMutation, GenerationPlayState,
 };
 
 //#region 🔖️Domain
@@ -341,8 +341,7 @@ pub mod generation_forms {
     //! a set of named "generations" (parameter presets) — moved here (from `semio-plugin`) since
     //! it is typed end-to-end on `PlaybookSpec`/`PlaybookBlock`, i.e. playbook-domain code, not SDK code.
 
-    use super::{default_value_for_block, flatten_playbook_blocks, DslValue, FromValue, PlaybookSpec, PlaybookValues, ToValue};
-    #[cfg(test)] use super::{PlaybookBlock};
+    use super::{default_value_for_block, flatten_playbook_blocks, DslValue, FromValue, PlaybookBlock, PlaybookSpec, PlaybookValues, ToValue};
     use semio_ui_declaration::layout::ActionDescriptor;
     use semio_ui_locale::Label;
     use semio_ui_locale::Locale;
@@ -472,11 +471,10 @@ pub mod generation_forms {
                 true
             }
             "updateGenerationValues" => {
-                let generation_id = args.and_then(|value| value.get("generationId")).and_then(|value| value.as_str()).map(str::to_string).or_else(|| state.selected_generation_id.clone());
-                let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str());
-                let value = args.and_then(|value| value.get("value"));
-                if let (Some(generation_id), Some(question_id), Some(value)) = (generation_id, question_id, value) {
-                    update_generation_values(state, &generation_id, question_id, value.clone());
+                if let Some(operations) = generation_operations(action, args, state, spec) {
+                    for operation in operations {
+                        apply_generation_mutation(state, &operation);
+                    }
                 }
                 let _ = controller_id;
                 true
@@ -499,6 +497,50 @@ pub mod generation_forms {
         UpdateValues { id: String, question_id: String, value: DslValue },
     }
 
+    /// 🔢️ Reads an index from typed UI action arguments.
+    pub fn generation_field_index(value: &DslValue) -> Option<u32> {
+        let number = value.as_f64()?;
+        (number.fract() == 0.0 && (0.0..=f64::from(u32::MAX)).contains(&number)).then_some(number as u32)
+    }
+
+    fn generation_answer(question: &PlaybookBlock, current: Option<&DslValue>, value: &DslValue, field_index: Option<&DslValue>) -> Option<DslValue> {
+        let numeric = |value: &DslValue| value.as_f64().is_some_and(f64::is_finite);
+        let vector = |value: &DslValue| value.as_array().is_some_and(|axes| {
+            question.fields.as_ref().is_none_or(|fields| axes.len() == fields.len()) && axes.iter().all(numeric)
+        });
+        if let Some(index) = field_index.filter(|value| !matches!(value, DslValue::Null)) {
+            if question.kind != "vector" || !numeric(value) {
+                return None;
+            }
+            let index = generation_field_index(index)? as usize;
+            let answer = current.filter(|value| vector(value)).cloned().unwrap_or_else(|| super::default_value_for_block(question));
+            let DslValue::Array(mut axes) = answer else { return None };
+            *axes.get_mut(index)? = value.clone();
+            return Some(DslValue::Array(axes));
+        }
+        if matches!(question.kind.as_str(), "text" | "longText") {
+            if let Some(pages) = value.as_array().filter(|pages| !pages.is_empty()) {
+                let mut text = String::new();
+                for page in pages {
+                    for chunk in page.as_array().filter(|chunks| !chunks.is_empty())? {
+                        text.push_str(chunk.as_str().filter(|chunk| !chunk.is_empty())?);
+                    }
+                }
+                return Some(DslValue::String(text));
+            }
+        }
+        let accepted = match question.kind.as_str() {
+            "slider" | "number" => numeric(value),
+            "boolean" => value.as_bool().is_some(),
+            "text" | "longText" => value.as_str().is_some(),
+            "single" => value.as_str().is_some_and(|selected| question.options.iter().flatten().any(|option| option.value == selected)),
+            "vector" => vector(value),
+            "note" | "image" => false,
+            _ => true,
+        };
+        accepted.then(|| value.clone())
+    }
+
     /// 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
     /// non-document (view) actions like `selectGeneration`. Pure — reads `state`/`spec` but mutates
     /// nothing; the caller applies the returned operations through its store.
@@ -515,7 +557,10 @@ pub mod generation_forms {
             "updateGenerationValues" => {
                 let id = arg_str("generationId").or_else(|| state.selected_generation_id.clone())?;
                 let question_id = arg_str("questionId")?;
-                let value = args.and_then(|value| value.get("value")).cloned()?;
+                let args = args?;
+                let question = flatten_playbook_blocks(spec).into_iter().find(|question| question.id == question_id)?;
+                let generation = state.generations.iter().find(|entry| entry.id == id)?;
+                let value = generation_answer(question, generation.values.get(&question_id), args.get("value")?, args.get("fieldIndex"))?;
                 Some(vec![GenerationMutation::UpdateValues { id, question_id, value }])
             }
             _ => None,

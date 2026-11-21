@@ -50,16 +50,17 @@ pub fn evaluate(window_id: &str, window_kind_id: &str, target: PreviewEvalTarget
     let outcome = match target {
         PreviewEvalTarget::Document => preview_eval::evaluate_tick(window_id, window_kind_id, &doc.snapshot.host_snapshot, session, retained.as_deref(), retained_grant).map_err(|error| Fault::from(error.to_string()))?,
         PreviewEvalTarget::Generation => {
-            let mut state = doc.snapshot.generation.as_state().clone();
-            state.selected_generation_id.clone_from(&cfg.snapshot.selected_generation_id);
-            let Some(values) = semio_framework_artifact_playbook_playbook::selected_generation(&state).map(|selected| selected.values.clone()) else {
+            let state = doc.snapshot.generation.as_state();
+            let Some(values) = cfg.snapshot.selected_generation_id.as_ref().and_then(|id| state.generations.iter().find(|group| group.id == *id)).map(|group| &group.values) else {
                 if !preview_eval::settle_empty_tick(window_id, session, retained_grant, effect).map_err(|error| Fault::from(error.to_string()))? {
                     return Ok(None);
                 }
                 return Ok(Some((Emit::default(), session.eval_publication_for(retained.as_deref()))));
             };
-            let host = semio_s_artifact_procedural_2d_io_text::snapshot::generation_preview_host(&doc.snapshot.host_snapshot, &values);
-            let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, &host.host_snapshot, session, retained.as_deref(), retained_grant);
+            let host = semio_s_artifact_procedural_2d_io_text::snapshot::generation_preview_host(&doc.snapshot.host_snapshot, values);
+            let outcome = preview_eval::evaluate_tick_with_seeds(window_id, window_kind_id, &host.host_snapshot, session, retained.as_deref(), retained_grant, |seeds| {
+                semio_os_flow::forms_bridge::add_generation_variable_seeds(&host.host_snapshot, |id| values.get(id), seeds);
+            });
             host.retire_cold_or_park().map_err(|error| Fault::new(semio_plugin::FaultOrigin::App, semio_plugin::FaultCode::new("flow.retained"), error.into_message()))?;
             outcome.map_err(|error| Fault::from(error.to_string()))?
         }

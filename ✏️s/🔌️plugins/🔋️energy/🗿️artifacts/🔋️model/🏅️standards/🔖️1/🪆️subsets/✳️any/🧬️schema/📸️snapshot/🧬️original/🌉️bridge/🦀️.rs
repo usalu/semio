@@ -124,8 +124,6 @@ pub fn receive_stepped<T:NativeReceive<DslValue>+RetireOwned>(value:DslValue)->R
   let mut work=OriginalWorkAuthority::new(StepWork{quantum:u64::try_from(wallet.remaining_work()).unwrap_or(u64::MAX),turn:turn.identity()});
   let mut construction=OriginalConstructionAuthority::new(StepRecipient{turn:turn.identity()});
   let mut stock=StepStock{grant:wallet.remaining(),submitted:Default::default()};
-  let mut observed_idle=false;
-  let mut observed_pending=false;
   for _ in 0..BRIDGE_STEPS{
    native.checkpoint()?;
    if slot.ready(){
@@ -146,19 +144,16 @@ pub fn receive_stepped<T:NativeReceive<DslValue>+RetireOwned>(value:DslValue)->R
     })
    })??;
    match poll{
-    RetainedWorkPoll::Pending{work}=>{if !observed_pending{observed_pending=true;eprintln!("[DEBUG] Energy receiver pending work={work} stock={stock_for_turn:?}");}wallet.charge_work(work)?;},
+    RetainedWorkPoll::Pending{work}=>wallet.charge_work(work)?,
     RetainedWorkPoll::Complete(turn)=>{
      wallet.charge_work(turn.work)?;
-     let progress=turn.result.map_err(bridge_native)?.progress();
-     if progress==RetainedCloneProgress::default()&&turn.work==0&&!observed_idle{observed_idle=true;eprintln!("[DEBUG] Energy receiver idle demand={:?}, next work={:?}, stock={stock_for_turn:?}",slot.demands(original,BRIDGE_BODY,BRIDGE_STEP_WORK),slot.advance_work_demand(original,BRIDGE_BODY));}
-     wallet.post(progress)?;
+     wallet.post(turn.result.map_err(bridge_native)?.progress())?;
      stock=StepStock{grant:wallet.remaining(),submitted:Default::default()};
     }
    }
   }
   Err(bridge_exhausted())
  })();
- eprintln!("[DEBUG] Energy receive result={:?} ready={} pending={}",received.as_ref().err(),slot.ready(),slot.advance_pending());
  let mut closed:Result<(),ValueError>=Ok(());
  for _ in 0..BRIDGE_STEPS{
   if slot.is_closing(){break}
@@ -215,7 +210,6 @@ pub fn receive_stepped<T:NativeReceive<DslValue>+RetireOwned>(value:DslValue)->R
  }
  let grant=wallet.remaining();
  let drained:Result<(),ValueError>=native.with_retirement(grant,|native|{while native.has_retirement_owner(){let(turn,_)=wallet.run_settled(wallet.remaining(),BRIDGE_STEP_WORK,|effect|native.close_retirement_recipient(BRIDGE_BODY,effect))?.ok_or_else(bridge_exhausted)?;wallet.post(turn.result.map_err(bridge_failure)?.progress())?;}Ok::<(),ValueError>(())});
- eprintln!("[DEBUG] Energy close result={closed:?} decoder={drained:?} slot_empty={} original_birth={} controlled={}",slot.terminal_is_empty(),slot.requires_original_birth(),slot.requires_original_control());
  let output=received?;closed?;drained?;Ok(output)
 }
 

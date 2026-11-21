@@ -8,6 +8,8 @@ use semio_s_fem_model::Support;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use std::collections::HashMap;
 
+pub use semio_s_fem_analyses_model::encode_result_source_parts;
+
 // #region 🔖️Errors
 /// ⚠️ Everything that can go wrong resolving or solving a `Fem2dSnapshot`.
 #[derive(Clone, Debug, PartialEq)]

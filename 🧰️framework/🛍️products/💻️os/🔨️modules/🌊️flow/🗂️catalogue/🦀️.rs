@@ -107,22 +107,31 @@ pub fn flow_neuron_kind_infos_json() -> String {
 /// after that issues a counted alias of one process-global cold original, not 108 kB of operator records;
 /// a superseded generation is retired through the owner-less retirement pump, so its original drains when the last alias retires.
 pub fn flow_neuron_kind_info_map() -> semio_framework_value_ordered::ordered::SharedOwner<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>> {
-    type Infos = semio_framework_value_ordered::ordered::SharedOwner<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>>;
-    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, Infos)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
+    with_flow_neuron_kind_info_owner(|infos| infos.alias())
+}
+
+type FlowNeuronKindInfos = semio_framework_value_ordered::ordered::SharedOwner<protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>>;
+
+/// 🪞️ Reads the current operator catalogue while the shared original remains in cache custody.
+pub fn with_flow_neuron_kind_info_map<R>(read: impl FnOnce(&protocol::causal::transition::HistoryFoldIndex<String, OperatorInfo>) -> R) -> R {
+    with_flow_neuron_kind_info_owner(|infos| read(infos.get()))
+}
+
+fn with_flow_neuron_kind_info_owner<R>(read: impl FnOnce(&FlowNeuronKindInfos) -> R) -> R {
+    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, FlowNeuronKindInfos)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
     let generation = flow_extension_registry_generation();
     let mut cache = CACHE.lock().expect("flow neuron kind info cache");
     if let Some((cached_generation, infos)) = cache.as_ref() {
         if *cached_generation == generation {
-            return infos.alias();
+            return read(infos);
         }
     }
     let registry = flow_extension_registry();
-    let infos = Infos::from_cold(registry.operator_infos().map(|info| (info.id.clone(), info.clone())).collect());
-    let alias = infos.alias();
+    let infos = FlowNeuronKindInfos::from_cold(registry.operator_infos().map(|info| (info.id.clone(), info.clone())).collect());
     if let Some((_, displaced)) = cache.replace((generation, infos)) {
         retire_superseded_catalogue(displaced);
     }
-    alias
+    read(&cache.as_ref().expect("flow neuron info cache was refreshed").1)
 }
 
 /// ♻️ Closes the registry's own alias of a superseded generation in host-funded owner-less turns.

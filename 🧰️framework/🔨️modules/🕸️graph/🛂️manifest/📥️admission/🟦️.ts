@@ -1,9 +1,10 @@
 /** 📥️ No-follow discovery and parsing for graph manifest inputs. */
-import { lstatSync, readdirSync, readFileSync } from "node:fs";
+import { lstatSync, readdirSync, readFileSync, type Dirent } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import policy from "./🔣️.json" with { type: "json" };
 
 const excludedDirectories = new Set(policy.excludedDirectoryNames);
+const manifestSuffix = "manifest.json";
 
 export type ManifestAxes = { portModel?: string; directedness?: string };
 export type ManifestPropertyDef = { name: string; kind: "data" | "derived"; valueType?: unknown; expr?: string };
@@ -17,6 +18,7 @@ export type ManifestDocument = {
 };
 
 type FileStatus = ReturnType<typeof lstatSync>;
+export type ManifestDiscoveryObserver = (path: string, kind: "discovery" | "presence", suffix?: string) => void;
 
 function inspect(path: string, root: string): FileStatus | undefined {
   try {
@@ -27,7 +29,7 @@ function inspect(path: string, root: string): FileStatus | undefined {
   }
 }
 
-function admittedDirectory(root: string, area: string): string | undefined {
+function admittedDirectory(root: string, area: string, observe?: ManifestDiscoveryObserver): string | undefined {
   const absoluteRoot = resolve(root);
   const scanRoot = resolve(root, area);
   const relation = relative(absoluteRoot, scanRoot);
@@ -36,14 +38,17 @@ function admittedDirectory(root: string, area: string): string | undefined {
   for (const segment of ["", ...relation.split(sep)]) {
     if (segment) current = join(current, segment);
     const status = inspect(current, absoluteRoot);
-    if (!status) return undefined;
+    if (!status) {
+      observe?.(current, "presence");
+      return undefined;
+    }
     if (status.isSymbolicLink()) throw new Error(`admitted graph manifest ancestor is a symbolic link: ${relative(absoluteRoot, current) || "."}`);
     if (!status.isDirectory()) throw new Error(`admitted graph manifest ancestor is not a directory: ${relative(absoluteRoot, current) || "."}`);
   }
   return scanRoot;
 }
 
-export function findManifestFiles(root: string, inputAreas: readonly string[], excludedInputPaths: readonly string[]): string[] {
+export function findManifestFiles(root: string, inputAreas: readonly string[], excludedInputPaths: readonly string[], observe?: ManifestDiscoveryObserver): string[] {
   const out: string[] = [];
   function excluded(path: string): boolean {
     const identity = relative(root, path).replaceAll("\\", "/");
@@ -51,25 +56,28 @@ export function findManifestFiles(root: string, inputAreas: readonly string[], e
     return excludedInputPaths.some(prefix => identity === prefix || identity.startsWith(prefix + "/"));
   }
   function walk(dir: string): void {
-    let names: string[];
+    let entries: Dirent[];
     try {
-      names = readdirSync(dir);
+      observe?.(dir, "discovery", manifestSuffix);
+      entries = readdirSync(dir, { withFileTypes: true });
     } catch (error) {
       throw new Error(`cannot read admitted graph manifest directory ${relative(root, dir)}`, { cause: error });
     }
-    for (const name of names) {
+    for (const entry of entries) {
+      const { name } = entry;
+      if (!entry.isDirectory() && !entry.isSymbolicLink() && !name.endsWith(manifestSuffix)) continue;
       const path = join(dir, name);
       if (excluded(path)) continue;
       const status = inspect(path, root);
       if (!status) throw new Error(`admitted graph manifest input disappeared: ${relative(root, path)}`);
       if (status.isSymbolicLink()) throw new Error(`admitted graph manifest input is a symbolic link: ${relative(root, path)}`);
       if (status.isDirectory()) walk(path);
-      else if (name.endsWith("manifest.json")) out.push(path);
+      else if (name.endsWith(manifestSuffix)) out.push(path);
     }
   }
   for (const area of inputAreas) {
     if (excluded(resolve(root, area))) continue;
-    const scanRoot = admittedDirectory(root, area);
+    const scanRoot = admittedDirectory(root, area, observe);
     if (scanRoot) walk(scanRoot);
   }
   return out.sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
@@ -81,8 +89,9 @@ export function readGraphManifestDocuments(
   inputAreas: readonly string[],
   excludedInputPaths: readonly string[],
   read: (path: string) => string = (path) => readFileSync(path, "utf8"),
+  observe?: ManifestDiscoveryObserver,
 ): readonly ManifestDocument[] {
-  const files = findManifestFiles(root, inputAreas, excludedInputPaths);
+  const files = findManifestFiles(root, inputAreas, excludedInputPaths, observe);
   const docs: ManifestDocument[] = [];
   for (const path of files) {
     let doc: ManifestDocument;

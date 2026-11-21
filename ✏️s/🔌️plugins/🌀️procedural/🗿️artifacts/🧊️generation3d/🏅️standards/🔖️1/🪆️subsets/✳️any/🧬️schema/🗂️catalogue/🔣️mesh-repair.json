@@ -89,8 +89,8 @@
         "de": "Flächen einheitlich ausrichten"
       },
       "description": {
-        "en": "Makes the winding of neighbouring faces agree within each connected piece.",
-        "de": "Gleicht den Umlaufsinn benachbarter Flächen innerhalb jedes zusammenhängenden Teils an."
+        "en": "Orients each closed component outward and aligns the winding of neighbouring faces on open components.",
+        "de": "Richtet jede geschlossene Komponente nach außen aus und gleicht den Umlaufsinn benachbarter Flächen in offenen Komponenten an."
       },
       "inputs": [
         {

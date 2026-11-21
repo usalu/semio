@@ -86,7 +86,7 @@ impl ArtifactEditor for FormsPlayApp {
         try_window::transient::register(registry)
     }
 
-    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
+    fn retained_window_transient_target<'a>(command: &'a Self::Command, _view: Option<&'a semio_plugin::ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
         let target = match command {
             FormsCommand::SetTryValue(payload) => (&payload.window_id, &payload.window_kind_id),
             FormsCommand::SetTryValues(payload) => (&payload.window_id, &payload.window_kind_id),
@@ -95,9 +95,9 @@ impl ArtifactEditor for FormsPlayApp {
             FormsCommand::PreviousStep(payload) => (&payload.window_id, &payload.window_kind_id),
             FormsCommand::NextStep(payload) => (&payload.window_id, &payload.window_kind_id),
             FormsCommand::Submit(payload) => (&payload.window_id, &payload.window_kind_id),
-            _ => return None,
+            _ => return Ok(None),
         };
-        (!target.0.is_empty() && target.1 == support::FORMS_PLAY_WINDOW_TRY).then_some((target.0.as_str(), support::FORMS_PLAY_WINDOW_TRY))
+        Ok((!target.0.is_empty() && target.1 == support::FORMS_PLAY_WINDOW_TRY).then_some((target.0.as_str(), support::FORMS_PLAY_WINDOW_TRY)))
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {

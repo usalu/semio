@@ -74,7 +74,9 @@ pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefiniti
         ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Darüberfahren"), ActionKind::Interaction, "eye") }.with_args([
             ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
             ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
-            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")),
+            ActionArgDef::text("targetId", LocalizedLabel::native("Target", "Ziel")),
+            ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")),
         ]),
         ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::resumable_framework(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction, "mouse-pointer-2") },
         ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::resumable_framework(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction, "maximize-2") },

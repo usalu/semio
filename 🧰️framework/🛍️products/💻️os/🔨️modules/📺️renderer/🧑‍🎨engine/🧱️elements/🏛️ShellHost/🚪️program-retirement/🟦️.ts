@@ -7,7 +7,11 @@ import type { ActiveSession } from "../../🐚️Shell/📦️program-sessions/�
 export type ProgramRetirementOwnerV1 = Readonly<{ handle: PluginWasmHandle; session: ActiveSession; name: string }>;
 export type ProgramRetirementAdmissionV1 = Readonly<{ current: () => boolean; release: () => void }>;
 export type ProgramRetirementLeaseV1 = ProgramRetirementAdmissionV1 & Readonly<{ retire: () => Promise<boolean> }>;
-export type ProgramRetirementRequestV1 = (owners: readonly ProgramRetirementOwnerV1[], current: () => boolean) => Promise<ProgramRetirementLeaseV1 | null>;
+export type ProgramRetirementWorkV1 = Readonly<{
+  signal: AbortSignal;
+  persist: (owner: ProgramRetirementOwnerV1, signal: AbortSignal) => Promise<void>;
+}>;
+export type ProgramRetirementRequestV1 = (owners: readonly ProgramRetirementOwnerV1[], current: () => boolean, work?: ProgramRetirementWorkV1) => Promise<ProgramRetirementLeaseV1 | null>;
 
 export async function admitProgramRetirementV1<T>(ports: Readonly<{
   owners: readonly T[];

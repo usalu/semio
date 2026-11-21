@@ -35,7 +35,7 @@ const UI_DOCUMENT_PAINT_STALL_NOTICE: u32 = 65_536;
 
 #[derive(Default)]
 pub struct UiDocumentFrameCursor {
-    pub phase: UiDocumentFramePhase,
+    phase: UiDocumentFramePhase,
     /// 🩺️ Consecutive `Pending` paint opportunities, reset whenever the phase changes.
     stalled: u32,
     /// ⏱️ Whether the last step advanced THIS document's own ladder ([`Self::last_step_was_own_work`]).
@@ -112,6 +112,11 @@ pub fn set_ui_presence_notes(notes: &[(String, String)]) -> bool {
 /// channel. Structural document records stay immutable and a stale document generation is refused.
 pub fn stamp_ui_document_tree_selected_item(window_id: &str, generation: u64, selected_key: &str) -> bool {
     UI_ENGINE.with(|cell| cell.borrow_mut().stamp_tree_selected_item(window_id, generation, selected_key))
+}
+
+/// 🪪️ Reads the surface generation used by the retained window paint owner.
+pub fn ui_document_window_generation(window_id: &str) -> Option<u64> {
+    UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id))
 }
 
 pub fn begin_ui_document_opportunity(consumed: bool) {
@@ -201,8 +206,13 @@ pub fn render_ui_document_step(
     if close_retiring_focus_clipboard_one() {
         return false;
     }
-    if semio_renderer_wgpu_scene_state::close_retired_scene_surface_one() {
-        return false;
+    match semio_renderer_wgpu_scene_state::close_retired_scene_surface_one(step) {
+        Ok(false) => {}
+        Ok(true) => return false,
+        Err(_) => {
+            cursor.phase = UiDocumentFramePhase::Fault;
+            return false;
+        }
     }
     if !forward_retired_component_scene_one(window_id) {
         return false;
@@ -303,6 +313,7 @@ pub fn render_ui_document_step(
             UiDocumentFramePhase::Paint => {
                 let progress_before = engine.paint_frame_progress(window_id);
                 let document_generation = engine.tree_revision(window_id).unwrap_or(generation);
+                let window_generation = engine.surface_generation(window_id).unwrap_or(generation);
                 let mut scene_host = FrameworkSceneHost {
                     input: ctx.input,
                     theme: ctx.theme,
@@ -313,18 +324,19 @@ pub fn render_ui_document_step(
                     window_id,
                     driver_drag,
                     document_generation,
-                    window_generation: engine.surface_generation(window_id).unwrap_or(generation),
+                    window_generation,
                     world3d_states: &mut *hosts.world3d_states,
                     world_resources: &mut *hosts.world_resources,
                 };
                 let viewport = semio_ui_theme::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h };
-                let demand = match engine.frame_into_next_retained_demand(window_id, viewport, ctx.draw) { Ok(demand) => demand, Err(_) => { cursor.phase = UiDocumentFramePhase::Fault; return; } };
+                let demand = match engine.frame_into_next_retained_demand(window_id, viewport, ctx.draw) { Ok(demand) => demand, Err(_) => { cursor.phase = UiDocumentFramePhase::Fault; return false; } };
                 let grant = step.retained_grant();
-                if demand.maximum_items > grant.maximum_items || demand.maximum_copy_bytes > grant.maximum_copy_bytes || demand.maximum_capacity_bytes > grant.maximum_capacity_bytes || demand.maximum_release_bytes > grant.maximum_release_bytes || demand.maximum_depth > grant.maximum_depth { return; }
+                if demand.maximum_items > grant.maximum_items || demand.maximum_copy_bytes > grant.maximum_copy_bytes || demand.maximum_capacity_bytes > grant.maximum_capacity_bytes || demand.maximum_release_bytes > grant.maximum_release_bytes || demand.maximum_depth > grant.maximum_depth { return false; }
                 let (paint, receipt) = engine.frame_into_step(window_id, viewport, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw, grant);
-                if step.consume_retained(receipt).is_err() { cursor.phase = UiDocumentFramePhase::Fault; return; }
+                if step.consume_retained(receipt).is_err() { cursor.phase = UiDocumentFramePhase::Fault; return false; }
                 match paint {
                     semio_ui_wgpu_engine_surface::UiFrameStep::Ready | semio_ui_wgpu_engine_surface::UiFrameStep::Missing => {
+                        semio_renderer_wgpu_scene_canvas2d::ui_image_loading::close_hidden_window_image_resource(ctx, window_id, window_generation, document_generation);
                         cursor.stalled = 0;
                         cursor.phase = UiDocumentFramePhase::Complete;
                     }

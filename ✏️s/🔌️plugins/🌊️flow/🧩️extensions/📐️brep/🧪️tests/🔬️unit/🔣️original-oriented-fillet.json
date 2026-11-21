@@ -1,0 +1,311 @@
+{
+  "operator": "brep.solid.filletEdges",
+  "stock": {
+    "size": [
+      4,
+      5,
+      6
+    ],
+    "origin": [
+      1,
+      -3,
+      2
+    ],
+    "rotateY": 0.6435011087932844
+  },
+  "radius": 0.75,
+  "cases": [
+    {
+      "name": "local width",
+      "axis": 0,
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            0
+          ]
+        ]
+      ],
+      "mirror": false,
+      "area": 146.4709619142068,
+      "volume": 119.51714586764426
+    },
+    {
+      "name": "local depth",
+      "axis": 1,
+      "edges": [
+        [
+          [
+            4,
+            0,
+            0
+          ],
+          [
+            4,
+            5,
+            0
+          ]
+        ]
+      ],
+      "mirror": false,
+      "area": 146.149059159303,
+      "volume": 119.39643233455533
+    },
+    {
+      "name": "local height",
+      "axis": 2,
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ]
+      ],
+      "mirror": false,
+      "area": 145.82715640439918,
+      "volume": 119.27571880146638
+    },
+    {
+      "name": "parallel local height",
+      "axis": 2,
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ],
+        [
+          [
+            4,
+            5,
+            0
+          ],
+          [
+            4,
+            5,
+            6
+          ]
+        ]
+      ],
+      "mirror": false,
+      "area": 143.65431280879832,
+      "volume": 118.55143760293278
+    },
+    {
+      "name": "reflected width",
+      "axis": 0,
+      "edges": [
+        [
+          [
+            4,
+            5,
+            0
+          ],
+          [
+            0,
+            5,
+            0
+          ]
+        ]
+      ],
+      "mirror": true,
+      "area": 146.4709619142068,
+      "volume": 119.51714586764426
+    },
+    {
+      "name": "reflected depth",
+      "axis": 1,
+      "edges": [
+        [
+          [
+            0,
+            5,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      ],
+      "mirror": true,
+      "area": 146.149059159303,
+      "volume": 119.39643233455533
+    },
+    {
+      "name": "reflected height",
+      "axis": 2,
+      "edges": [
+        [
+          [
+            4,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            6
+          ]
+        ]
+      ],
+      "mirror": true,
+      "area": 145.82715640439918,
+      "volume": 119.27571880146638
+    },
+    {
+      "name": "fully tilted and reflected parallel edges",
+      "axis": 2,
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ],
+        [
+          [
+            4,
+            5,
+            0
+          ],
+          [
+            4,
+            5,
+            6
+          ]
+        ]
+      ],
+      "mirror": true,
+      "area": 143.65431280879832,
+      "volume": 118.55143760293278,
+      "rotateX": 0.37
+    }
+  ],
+  "refused": [
+    {
+      "name": "foreign edge",
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            0
+          ]
+        ]
+      ],
+      "foreign": true,
+      "radius": 0.75
+    },
+    {
+      "name": "repeated edge",
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ]
+      ],
+      "radius": 0.75
+    },
+    {
+      "name": "crossing local directions",
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ]
+      ],
+      "radius": 0.75
+    },
+    {
+      "name": "collapsed tangent span",
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ]
+      ],
+      "radius": 4
+    }
+  ]
+}

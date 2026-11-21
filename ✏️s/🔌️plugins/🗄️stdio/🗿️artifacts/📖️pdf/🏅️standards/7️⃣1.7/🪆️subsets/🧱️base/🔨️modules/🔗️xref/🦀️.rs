@@ -558,7 +558,7 @@ pub fn normalize_pdf_object(value: PdfObject) -> PResult<PdfObject> {
     match value {
         PdfObject::Array(items) => Ok(PdfObject::Array(items.into_iter().map(normalize_pdf_object).collect::<PResult<_>>()?)),
         PdfObject::Dict(entries) => Ok(PdfObject::Dict(entries.into_iter().map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?)),
-        PdfObject::Stream { dict, data, .. } => normalize_stream(dict, data),
+        PdfObject::Stream { dict, data, filters } => normalize_stream(dict, data, filters),
         value => Ok(value),
     }
 }
@@ -570,8 +570,12 @@ fn normalize_retained_object(value: PdfObject) -> PResult<PdfObject> {
     }
 }
 
-fn normalize_stream(dict: Vec<PdfDictEntry>, raw: Vec<u8>) -> PResult<PdfObject> {
-    let (data, filters, normalized) = retained_stream_data(&dict, std::borrow::Cow::Owned(raw))?;
+fn normalize_stream(dict: Vec<PdfDictEntry>, data: Vec<u8>, filters: Vec<PdfStreamFilter>) -> PResult<PdfObject> {
+    let (data, filters, normalized) = if filters.is_empty() {
+        retained_stream_data(&dict, std::borrow::Cow::Owned(data))?
+    } else {
+        (data, filters, true)
+    };
     let dict = dict.into_iter()
         .filter(|entry| retain_stream_entry(entry, normalized))
         .map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? }))

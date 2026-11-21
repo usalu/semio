@@ -4,6 +4,8 @@ export type * from "./🧬️schema/🟦️.ts";
 export { CancelledError, Pace, silentOperation } from "./⏱️operation/🟦️.ts";
 export { scenesOf, selectScene, nodesOfScene, solidsOfScene, materialsOfScene, sceneIdsOfNodes, UnknownSceneError, type SceneOption } from "./🎞️scenes/🟦️.ts";
 export { boundsOf, type ModelBounds } from "./📐️bounds/🟦️.ts";
+export { polyhedronExtents } from "./📐️bounds/🪨️polyhedron/🟦️.ts";
+export { polyhedronFault } from "./✅️validation/🪨️polyhedron/🟦️.ts";
 export { validateModel } from "./✅️validation/🟦️.ts";
 export { meshIntegrity, outwardNormals, outwardOrientation, solidIntegrity, type IntegrityOptions, type MeshIntegrity } from "./🩻️integrity/🟦️.ts";
 export { revolveClosure, revolveOutline, type RevolveClosure } from "./🔺️tessellation/🌀️revolved/🟦️.ts";

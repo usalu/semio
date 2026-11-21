@@ -100,3 +100,71 @@ Sources for the truck: [contorion data sheet](https://media.contorion.de/content
 - The face is simple (no lips, eyes hidden under the brim); the cap is the asset's "knitted cap with brim", a hybrid I kept because the thermal layer names it.
 - 2D outlines of trunk, head, legs and boots are traced from the solids and reduced (jacket 26 points at 1:50); they are clean but not hand-inked curves. In the front and plan line views the product draws the cartons and arms as merged outlines.
 - 1:500: the drawn stack is one block of mean width and the tyres are 100 mm, so front and plan IoU are 0.95 and 0.94.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts (ticket folder): `r5-courier-with-hand-truck-forms.py` (the garment forms, one table per segment, stated once and picked per scale), `-s50.py` … `-s500.py` (the four scales; head, hands, boots, truck and lists as in round 3 except where named below), `-build.py`, `-draw2d.ts` + `-decisions2d.json` (2D redraw), `-ship.sh` (build → `r3-courier-roots.ts` → redraw → validate the candidate → `--apply`: `r3-courier-apply.py`, `volumes-insert.py`, product check, full validation), `-measure.ts` (rig and slice measurements), `-ends.ts` (print suitability per band, pose and view at any denominator). Output: `🗑️generated/r5-courier-with-hand-truck/` (`before/`, `after/`, `check.txt`, `measure.txt`).
+
+### Reference (1.82 m man in a softshell jacket, cargo trousers, EU 45 safety boots)
+
+| quantity | reference | source |
+|---|---|---|
+| stature (shod) / hip / knee / ankle joint | 1.82 / 0.52-0.53 H / 0.285 H / 0.039 H + sole | Winter 2009 tab. 4.1, Drillis & Contini |
+| shoulder / elbow / wrist joint height | 0.818 / 0.63 / 0.485 H | same |
+| upper arm / forearm / hand | 0.186 / 0.146 / 0.108 H | same |
+| head chin to vertex | 0.232 m (H/7.5 canon 0.243) | ANSUR II male mean (Gordon 2014), DIN 33402-2 |
+| bideltoid breadth | 0.49-0.50 nude, about 0.52 in a jacket | DIN 33402-2, ANSUR II |
+| chest / waist / hip breadth x depth (nude) | 0.33 x 0.24-0.25 / 0.30 x 0.22 / 0.35-0.36 x 0.24; + 2 x 12 mm jacket and fleece, + 15 mm trousers | DIN 33402-2 |
+| girths: mid thigh / calf / upper arm (nude) | 0.53-0.56 / 0.38 / 0.31 m; + 40 mm ease of work trousers or jacket sleeve | DIN 33402-2 |
+| shoulder slope neck base to acromion | about 18-20 degrees (drop 35-40 mm over 0.13 m) | anatomical canon |
+| safety boot EU 45 | 0.31-0.325 m long, 0.105-0.11 m wide | EN ISO 20345 boots, own knowledge |
+| hand truck | fetra B1125L: 1150 x 570 mm, toe plate 320 x 250, wheels 260 x 85 | manufacturer data (round 3) |
+
+### Model against reference (1:50 body, rest pose; `measure.txt`)
+
+| quantity | model | reference | deviation |
+|---|---|---|---|
+| hip / knee / ankle joint | 0.957 / 0.514 / 0.080 | 0.946-0.965 / 0.519 / 0.071 + sole 0.010 | in range / -1.0 % / 0 |
+| shoulder / elbow / wrist joint | 1.491 / 1.155 / 0.889 | 1.489 / 1.147 / 0.883 | +0.1 / +0.7 / +0.7 % |
+| upper arm / forearm / hand | 0.337 / 0.265 / 0.194 | 0.339 / 0.266 / 0.197 | -0.6 / -0.4 / -1.5 % |
+| head chin to vertex | 0.230 | 0.232 | -0.9 % |
+| bideltoid over the jacket | 0.508 | 0.52 | -2.3 % |
+| jacket chest breadth x depth | 0.360 x 0.268 | 0.354 x 0.264-0.274 | +1.7 % / in range |
+| jacket waist breadth x depth | 0.328 x 0.238 | 0.324 x 0.244 | +1.2 / -2.5 % |
+| hip over jacket hem | 0.384 | 0.38-0.39 | in range |
+| trousered thigh girth (mid) / calf girth | 0.579 / 0.429 | 0.57-0.60 / 0.42 | in range / +2.1 % |
+| jacket upper arm girth | 0.348 | 0.35 | -0.6 % |
+| boot length | 0.323 | 0.31-0.325 | in range |
+
+### Grades (body / thermal / structure)
+
+| scale | before (round 4 state) | after |
+|---|---|---|
+| 1:50 | C+ / B+ / A- | A- / A- / A- |
+| 1:100 | C / B / B+ | A- / B+ / B+ |
+| 1:200 | C / B / B | B+ / B+ / B |
+| 1:500 | C+ / B / B | B+ / B / B |
+| poses 1:50 (waiting, tilted-back, parked-upright, walking-contact) | B (knee steps, hem poke-through) | A- (closed at knee, elbow, hem) |
+
+Defects seen before (sheets `before/`): a box jacket with straight sides from hem to chest and a flat shoulder plateau ending in a corner, sleeve heads as humps with a flat disc on top, reflective bands standing 5-10 mm proud as belts, the thigh tops piercing the jacket hem at the side, a 6 mm step at every knee (thigh hem wider than the shank top), the cargo pocket a box slab, the 1:500 cap a bucket, the 1:200 knees torn open (shank started below the knee) and the round-4 source (1:500 handle bar) unspliced and unprintable.
+
+### Changes
+
+- Garment forms rebuilt from the reference (`-forms.py`): jacket of 13 sections (hem 0.194 half breadth, waist 0.164, chest 0.180 x 0.134 deep with the chest ahead of the back, armpit 0.186, a trapezius slope from the neck base at 0.078 to the acromion at 0.200 over 70 mm of height, exponents 2.4 at the hem to 2.0 at the neck: no box corners); sleeve of 10 sections with a domed deltoid cap that starts 42 mm above the joint inside the yoke, deltoid 0.063 at 40 mm, biceps forward, 0.047 at the elbow; forearm flattened (0.047 x 0.044 to 0.036 x 0.031); thigh oval with the quadriceps forward and valgus to the knee, its hem identical to the shank section at the same place (no knee step), calf bulge behind (0.064 x 0.071 at 130 mm); trousers seat rounded (exponent 2.3); cargo pocket 12 mm proud with rounded edges; bands interpolated on the jacket and only 2 mm proud; cap 5 mm higher at its rim (cap still a beanie with brim); ears 2 mm closer to the head.
+- Every coarser scale picks fewer rows of the same tables (1:100 10/7/4/5/5 sections, 1:200 7/5/3/4/4, 1:500 6/4/2/3/4), so the proportions are the same at every scale; the 1:200 and 1:500 shank now starts inside the thigh (closed knees in every pose); 1:500 cap a dome; 1:500 handle bar 112 mm and boot heel and toe 72-88 mm so that the band prints.
+- 2D (E1, `-draw2d.ts`): all scales and views retraced from the new bodies; zip line on the new jacket front; 1:200 rails 44 mm wide (print at 1:350); 1:500 rails one 80 mm strip in the elevation and one 365 mm frame panel in front (with the handle) and plan, starting where the stack covers its foot; decisions of 1:200 and 1:500 updated (en, de). The catalog was INVALID under the print rule (four range-end findings) and is now VALID.
+- No rig change: joints, segment lengths and the truck geometry measured within 1.5 % of the reference. The single torso bone stays (pelvis tip to C7, through the vertebral bodies); the curvature of the spine (lumbar lordosis, thoracic kyphosis, dorsal position) is in the structure list, which was already right.
+
+### Checks
+
+`r3-validate.ts humans/courier-with-hand-truck --volumes`: schema 0, validateAsset 0 (print clean at every band and range end), checkVolumes 2. `volumes-check.ts --product`: every rule ok except `volumes-thermal-coverage` boots at 1:50 (0.271 against 0.122 m², +122 %) and 1:100 (+109 %): honest EU 45 safety boots against the skin share of the feet; C18 forbids the change, listed in `area-review.md` since round 3 (and again below). The cap (0.325 in round 3, over the limit) passes after its rim was raised 5 mm; trousers 1:100 pass at 0.299 after the 1:100 thigh dropped its widest row.
+
+### Remaining
+
+- Boots area (C18/C27, area reviewer).
+- Garments are rigid per bone: no cloth folds; elbows and knees are nested lofts, closed but without creases.
+- Plain face; the cap is the asset's knit cap with a brim.
+- 1:500 structure is a stick skeleton of 75 mm bars (the feature floor), with the curved dorsal spine, both girdles and the skull.
+- Opened: before and after sheets of every scale (body, structure, thermal cut), the three poses at 1:50, 2D 1:50 and 1:200; 1:100/1:500 2D only through the validator.
+
+The sack truck now has a turned 578 × 20 mm steel axle, with two machined snap-ring seats at the fine scales. The formerly solid wheel hubs have 20.4 mm through bores, giving 0.2 mm of radial clearance. All four physical scales show the separate steel rims and rubber tyres at the original 485 mm wheel spacing. The steel retaining rings fit the end grooves and their true 1.1 mm section appears in the fine drawing. The thermal and structural models refer to these parts. An independent Three.js section check measured each scale. The whole drawing, feature, cross-scale and four-scale model checks passed with the fine ring drawing in place.

@@ -1,0 +1,9 @@
+# Generator Sections Through the Cone Apex
+
+Original `brep.intersect.section` now handles a certified plane containing the apex of a right cone or the supporting apex of a frustum when the plane crosses two generators. The kernel intersects the finite cap circles analytically, then joins the results along the original generators. A pointed cone produces a triangle and a frustum produces a trapezoid. The exact three- or four-edge contour uses the existing funded polygon Face owner, including paired line pcurves, signed orientation, stable preview labels, and retirement of unpublished topology. The registered `faces` output is unchanged. The initial copy quote is 128 bytes to include the stored frustum apex distance.
+
+Exact containment of the cap-defined or stored support apex admits the generator branch. A near miss continues through the existing conic route. Tangent generator, apex-only and other zero-area cases return a refusal.
+
+The shared neutral fixture covers an oblique cone triangle, a reverse-normal oblique frustum trapezoid, and an axial frustum trapezoid. Three.js independently reconstructed the cap contacts and signed area. All 13 tests passed. The isolated native-source suite passed all 14 tests, including midpoint membership on the conical generators, exact signed area, fixed one-item publisher grants, refusal of tangent and apex-only planes, and rollback. The linked original Sections fixture adds registered Cone or Frustum Loft, Section, cancellation after unpublished edge creation, exact contour/cap points, and funded preview label assertions. Its linked run remains pending shared native capacity.
+
+Scoped AST and diff checks passed. Measured source closures were 3,982 Engine lines, 3,990 native registry lines, 2,533 solid-transaction lines, 3,955 construction lines, and 80,210 active bytes for the original Sections integration target.

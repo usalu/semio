@@ -9,7 +9,7 @@
   "properties": {
     "scene": {
       "type": "object",
-      "description": "Canonical owned VectorScene read via borrowed lower-step descriptors; source image bytes remain borrowed."
+      "description": "Independent VectorScene geometry fixture for borrowed original Drawing graph projection."
     },
     "page": {
       "type": "object",
@@ -19,5 +19,5 @@
       ]
     }
   },
-  "description": "Parent/group affine geometry is orthographically projected in native page coordinates and millimetres. Each path batch is bounded to65points; filled compound/over-envelope paths refuse explicitly, stroked paths page through batches."
+  "description": "Nested affine geometry is orthographically projected in native page coordinates and millimetres. Each path batch has at most 65 points. Compound or oversized fills are refused. Stroked paths continue across batches, and image source identifiers appear as annotations."
 }

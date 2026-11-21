@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["canonical", "cases"],
+  "properties": {
+    "canonical": {"$ref": "#/definitions/ids"},
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "hasInteractions", "app", "window", "append"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "hasInteractions": {"type": "boolean"},
+          "app": {"$ref": "#/definitions/ids"},
+          "window": {"$ref": "#/definitions/ids"},
+          "append": {"$ref": "#/definitions/ids"}
+        }
+      }
+    }
+  },
+  "definitions": {"ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}}
+}

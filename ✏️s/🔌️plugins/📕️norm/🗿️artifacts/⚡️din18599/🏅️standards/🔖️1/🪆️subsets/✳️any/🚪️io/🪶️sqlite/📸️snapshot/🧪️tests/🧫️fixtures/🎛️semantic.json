@@ -1,11 +1,11 @@
 {
-  "schemaBytes": 7033,
+  "schemaBytes": 7312,
   "tableWidths": {
     "din18599_climate_child": 7,
     "din18599_climate_month": 8,
     "din18599_cooling": 2,
     "din18599_cooling_plant": 6,
-    "din18599_dhw": 12,
+    "din18599_dhw": 13,
     "din18599_document": 18,
     "din18599_element": 27,
     "din18599_heating": 15,
@@ -18,12 +18,12 @@
     {
       "id": "full",
       "rows": 25,
-      "valueBytes": 2268
+      "valueBytes": 2276
     },
     {
       "id": "emptyCollections",
       "rows": 21,
-      "valueBytes": 1405
+      "valueBytes": 1413
     }
   ]
 }

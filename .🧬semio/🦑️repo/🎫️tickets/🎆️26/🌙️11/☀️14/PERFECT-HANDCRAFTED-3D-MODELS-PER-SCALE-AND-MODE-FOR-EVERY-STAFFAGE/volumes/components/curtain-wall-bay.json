@@ -5939,21 +5939,66 @@
         },
         {
           "id": "spandrel",
-          "kind": "box",
+          "kind": "extrude",
           "bone": "spandrel",
           "material": "spandrel-glass",
           "role": "body",
           "tone": 0.24,
+          "profile": [
+            [
+              -0.05,
+              -0.1
+            ],
+            [
+              -0.05,
+              0.02
+            ],
+            [
+              0.8,
+              0.02
+            ],
+            [
+              0.8,
+              0.05
+            ],
+            [
+              0.875,
+              0.05
+            ],
+            [
+              0.875,
+              -0.025
+            ],
+            [
+              0.8,
+              -0.025
+            ],
+            [
+              0.8,
+              -0.1
+            ]
+          ],
+          "plane": "yz",
+          "from": 0.025,
+          "to": 1.275
+        },
+        {
+          "id": "transom-head",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.5,
           "size": [
             1.25,
-            0.85,
-            0.12
+            0.075,
+            0.075
           ],
           "transform": {
             "translation": [
-              0.65,
-              0.375,
-              -0.04
+              0.7,
+              3.2625,
+              0.0125
             ]
           }
         }
@@ -6205,7 +6250,15 @@
             "translation": [
               0.7,
               0.8875,
-              -0.0625
+              0.0125
+            ]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [
+              0.0,
+              2.375,
+              0.0
             ]
           },
           "member": "frame",
@@ -6372,12 +6425,12 @@
       ],
       "decisions": [
         {
-          "en": "Body: the two mullions as full-depth bars (cap to room-side back, 200 mm) at the 75 mm feature width; between them the vision field as one 75 mm layer at the face (glass unit with the mid and head transoms merged) and the spandrel zone as one 120 mm block (enamel, wool, back pan and base transom merged), held 80 mm short of the mullion backs so that the plan section keeps a printable step.",
-          "de": "Körper: die beiden Pfosten als Stäbe über die volle Tiefe (Kappe bis raumseitiger Rücken, 200 mm) in der Merkmalsbreite von 75 mm; dazwischen das Sichtfeld als eine 75-mm-Schicht an der Außenfläche (Isolierverglasung mit mittlerem und oberem Riegel zusammengefasst) und die Brüstungszone als ein 120-mm-Block (Email, Wolle, Rückwand und Fußriegel zusammengefasst), 80 mm hinter den Pfostenrücken zurückgesetzt, damit der Grundriss-Schnitt eine druckbare Stufe behält."
+          "en": "Body: the two mullions as full-depth bars (cap to room-side back, 200 mm) at the 75 mm feature width; between them the vision field as one 75 mm layer at the face (glass unit with the transom caps merged), behind it the head transom as a 75 mm bar to the transom back (50 mm behind the axis), and the spandrel zone as one 120 mm block (enamel, wool, back pan and base transom merged) that carries the mid transom on its top as the same 75 mm step, so that the room side still reads as the stick grid; held 80 mm short of the mullion backs so that the plan section keeps a printable step.",
+          "de": "Körper: die beiden Pfosten als Stäbe über die volle Tiefe (Kappe bis raumseitiger Rücken, 200 mm) in der Merkmalsbreite von 75 mm; dazwischen das Sichtfeld als eine 75-mm-Schicht an der Außenfläche (Isolierverglasung mit den Riegelkappen zusammengefasst), dahinter der obere Riegel als 75-mm-Stab bis zum Riegelrücken (50 mm hinter der Achse), und die Brüstungszone als ein 120-mm-Block (Email, Wolle, Rückwand und Fußriegel zusammengefasst), der oben den mittleren Riegel als gleiche 75-mm-Stufe trägt, damit die Raumseite das Pfosten-Riegel-Raster zeigt; 80 mm hinter den Pfostenrücken zurückgesetzt, damit der Grundriss-Schnitt eine druckbare Stufe behält."
         },
         {
-          "en": "Minimal: thermal and structure are authored on these blocks and are already minimal. Thermal: glass centre, edge ring, spandrel, mullion and transom zones as 75 mm pieces of the face layer, each with its outer face only. Structure: the mullion bars as the members, the mid transom bar, the vision plate, the spandrel block, bracket pins and spigots at the 75 mm feature and the mass of the glass unit.",
-          "de": "Minimal: Thermik und Tragwerk sind auf diesen Blöcken erstellt und bereits minimal. Thermik: Glasmitte, Randring, Brüstung, Pfosten- und Riegelzonen als 75-mm-Stücke der Außenschicht, jedes nur mit seiner Außenfläche. Tragwerk: die Pfostenstäbe als Stäbe, der mittlere Riegelstab, die Sichtfeldplatte, der Brüstungsblock, Konsolbolzen und Stoßdorne im Merkmal von 75 mm und die Masse der Glaseinheit."
+          "en": "Minimal: thermal and structure are authored on these blocks and are already minimal. Thermal: glass centre, edge ring, spandrel, mullion and transom zones as 75 mm pieces of the face layer, each with its outer face only. Structure: the mullion bars as the members, the mid and head transom bars, the vision plate, the spandrel block, bracket pins and spigots at the 75 mm feature and the mass of the glass unit.",
+          "de": "Minimal: Thermik und Tragwerk sind auf diesen Blöcken erstellt und bereits minimal. Thermik: Glasmitte, Randring, Brüstung, Pfosten- und Riegelzonen als 75-mm-Stücke der Außenschicht, jedes nur mit seiner Außenfläche. Tragwerk: die Pfostenstäbe als Stäbe, mittlerer und oberer Riegelstab, die Sichtfeldplatte, der Brüstungsblock, Konsolbolzen und Stoßdorne im Merkmal von 75 mm und die Masse der Glaseinheit."
         }
       ]
     }

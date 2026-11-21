@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Raw picker PNG paired placement",
+  "type": "object",
+  "required": ["pack", "window", "maximumPixels", "placement"],
+  "additionalProperties": false,
+  "properties": {
+    "pack": {"const": "s.stdio.pdf.png-placement.v1"},
+    "window": {"const": 4096},
+    "maximumPixels": {"const": 4096},
+    "placement": {
+      "enum": ["masked-insert", "opaque-insert", "masked-replace", "opaque-replace"]
+    }
+  },
+  "$defs": {
+    "live-gate": {
+      "enum": ["exact-same-raster-and-canonical-revision", "blocked-by-cancellation", "blocked-by-revision-change", "blocked-by-source-change"]
+    },
+    "publication": {
+      "enum": ["owns-paged-archive-and-all-typed-rows", "returns-unpublished-original-for-paid-close"]
+    }
+  }
+}

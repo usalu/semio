@@ -91,6 +91,8 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     pub fn phase(&self)->&'static str {match &self.lexeme {Some(JsonLexeme::String(scan))=>if scan.writing {"materialize-string"}else {"measure-string"},Some(JsonLexeme::Number(_))=>"number",None=>match self.frames.last(){Some(frame) if frame.state==8=>if frame.object {"materialize-object"}else {"materialize-array"},Some(frame)=>if frame.object {"collect-object"}else {"collect-array"},None=>"grammar"}}}
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
     pub fn last_turn_work(&self)->u64{self.normal_step_work}
+    /// 🔡️ Quotes scalar validation units guaranteed to precede grammar even when each scalar uses four bytes.
+    pub fn validation_work_units(&self,source_bytes:usize)->usize{source_bytes.saturating_sub(self.validated_position)/char::MAX.len_utf8()}
     pub fn normal_step_demands<S:JsonReadSource+?Sized>(&self,input:&S)->Result<RetirementDemand,JsonError>{
         if self.validated_position<input.byte_len(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         let mut demand=RetirementDemand{depth:self.frames.len()+1,..Default::default()};
@@ -469,3 +471,65 @@ impl semio_framework_value::retirement::RetireOwned for JsonValueProjection {
 #[cfg(test)]
 #[path="🎟️work/🧪️tests/🦀️.rs"]
 mod actual_work_tests;
+
+impl JsonGrammarCursor<DslValue> {
+    /// 🧭️ Detects a requested direct object path at the opening bracket of its array.
+    pub fn selected_number_array_start(&self, source: &[u8], path: &[&str]) -> Option<usize> {
+        if self.validated_position != source.len() || self.lexeme.is_some() || self.pending.is_some()
+            || self.result.is_some() || self.frames.len() != path.len() || path.is_empty()
+            || source.get(self.position) != Some(&b'[')
+        {
+            return None;
+        }
+        for (index, member) in path.iter().enumerate() {
+            let frame = self.frames.get(index)?;
+            if !frame.object || frame.state != 4 || frame.key.as_deref() != Some(*member) {
+                return None;
+            }
+        }
+        Some(self.position)
+    }
+
+    /// 📩️ Advances past one validated numeric child and leaves its ordered object slot in place.
+    pub fn accept_number_array_marker(
+        &mut self, source: &[u8], path: &[&str], span: &crate::JsonNumberArraySpan<'_>,
+        effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
+    ) -> Result<RetainedCloneProgress, ValueError> {
+        let range = span.range(source).ok_or_else(|| ValueError::invariant("JSON number-array marker changed the enclosing source"))?;
+        if self.selected_number_array_start(source, path) != Some(range.start) {
+            return Err(ValueError::invariant("JSON number-array marker changed the selected object path"));
+        }
+        let demand = Self::number_array_marker_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(), demand)
+            || effect.remaining_work_units()? == 0 || !effect.performed(1)?
+        {
+            return Ok(Default::default());
+        }
+        self.position = range.end;
+        self.pending = Some(DslValue::Array(Vec::new()));
+        Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })
+    }
+
+    pub fn number_array_marker_demand() -> RetirementDemand {
+        RetirementDemand {
+            copy_bytes: size_of::<usize>() + size_of::<Option<DslValue>>(),
+            depth: 4,
+            ..Default::default()
+        }
+    }
+}
+
+impl JsonGrammarCursor<DslValue> {
+    /// 🏷️ Selects a numeric array and borrows the leading discriminator values already parsed.
+    pub fn selected_number_array_tags<const N: usize>(
+        &self, source: &[u8], path: &[&str], tags: &[(usize, &str); N],
+    ) -> Option<(usize, [Option<&DslValue>; N])> {
+        let start = self.selected_number_array_start(source, path)?;
+        let discriminators = std::array::from_fn(|index| {
+            let (layer, key) = tags[index];
+            let (name, value) = self.frames.get(layer)?.entries.get(0)?;
+            (name == key).then_some(value)
+        });
+        Some((start, discriminators))
+    }
+}

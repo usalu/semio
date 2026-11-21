@@ -848,6 +848,25 @@
     }
    },
    "name": "a read that holds the memory leaves the pool no child instead of a forced one"
+  },
+  {
+   "name": "foreground memory leaves too little room to start any child",
+   "host": {
+    "cores": 8,
+    "totalMegabytes": 16384,
+    "availableMegabytes": 4763,
+    "pressure": "normal",
+    "load": 2,
+    "swapOutMegabytesPerSecond": null,
+    "idleCores": 6,
+    "foreground": {
+     "cpu": 1,
+     "unrealizedMegabytes": 3000,
+     "waiters": 0
+    }
+   },
+   "children": 0,
+   "childMegabytes": 1237
   }
  ],
  "limits": [
@@ -1180,6 +1199,10 @@
    {
     "children": 0,
     "reason": "pressure"
+   },
+   {
+    "children": 0,
+    "reason": "nothing-fits"
    },
    {
     "children": 0,
@@ -1575,6 +1598,13 @@
     "freeMegabytes": 464,
     "heldMegabytes": 0,
     "floorMegabytes": 1536
+   },
+   {
+    "limit": "memory",
+    "needMegabytes": 1237,
+    "freeMegabytes": 258,
+    "heldMegabytes": 2457,
+    "floorMegabytes": 2048
    }
   ]
  },

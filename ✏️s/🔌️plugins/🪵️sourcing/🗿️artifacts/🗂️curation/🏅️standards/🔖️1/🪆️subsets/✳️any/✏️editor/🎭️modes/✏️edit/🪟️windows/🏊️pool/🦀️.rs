@@ -104,7 +104,7 @@ pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAs
     let mut children = UiFixedList::<BuiltNode>::default();
     let (query_action, _) = sourcing_action("setFilterQuery", None)?;
     let query = ui::input(InputKind::Text).value(ui_text(&filters.query)?).placeholder(ui_label(labels.search_placeholder.as_str())?);
-    children.try_push(query.try_id("sourcing-filter-query").map_err(|_| filter_error("query-id"))?.try_on(Trigger::Change, query_action).map_err(|_| filter_error("query-binding"))?.try_build().map_err(|_| filter_error("query-build"))?).map_err(|_| filter_error("children"))?;
+    children.try_push(query.try_label(labels.search.as_str()).map_err(|_| filter_error("query-label"))?.try_id("sourcing-filter-query").map_err(|_| filter_error("query-id"))?.try_on(Trigger::Change, query_action).map_err(|_| filter_error("query-binding"))?.try_build().map_err(|_| filter_error("query-build"))?).map_err(|_| filter_error("children"))?;
     let modules = available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(&cfg.contributions_json));
     for module in &modules {
         let pressed = filters.module_ids.iter().any(|id| id == &module.module_id);
@@ -124,10 +124,10 @@ pub fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAs
             typology = typology.try_item(ui_text(path.join("/"))?, ui_label(label)?).map_err(|_| filter_error("typology-item"))?;
         }
     }
-    children.try_push(typology.try_id("sourcing-filter-typology").map_err(|_| filter_error("typology-id"))?.try_on(Trigger::Change, typology_action).map_err(|_| filter_error("typology-binding"))?.try_build().map_err(|_| filter_error("typology-build"))?).map_err(|_| filter_error("children"))?;
+    children.try_push(typology.try_label(labels.col_typology.as_str()).map_err(|_| filter_error("typology-label"))?.try_id("sourcing-filter-typology").map_err(|_| filter_error("typology-id"))?.try_on(Trigger::Change, typology_action).map_err(|_| filter_error("typology-binding"))?.try_build().map_err(|_| filter_error("typology-build"))?).map_err(|_| filter_error("children"))?;
     let (availability_action, _) = sourcing_action("setFilterMinAvailability", None)?;
     let availability = ui::input(InputKind::Number).value(ui_text(filters.min_availability.to_string())?);
-    children.try_push(availability.try_id("sourcing-filter-min-availability").map_err(|_| filter_error("availability-id"))?.try_on(Trigger::Change, availability_action).map_err(|_| filter_error("availability-binding"))?.try_build().map_err(|_| filter_error("availability-build"))?).map_err(|_| filter_error("children"))?;
+    children.try_push(availability.try_label(labels.minimum_availability.as_str()).map_err(|_| filter_error("availability-label"))?.try_id("sourcing-filter-min-availability").map_err(|_| filter_error("availability-id"))?.try_on(Trigger::Change, availability_action).map_err(|_| filter_error("availability-binding"))?.try_build().map_err(|_| filter_error("availability-build"))?).map_err(|_| filter_error("children"))?;
     let (restock_action, _) = sourcing_action("stockFromCatalogue", None)?;
     let restock = ui::button(ui_label(labels.restock.as_str())?).icon(ui_text("refresh-cw")?);
     children.try_push(restock.try_id("sourcing-pool-restock").map_err(|_| filter_error("restock-id"))?.try_on(Trigger::Activate, restock_action).map_err(|_| filter_error("restock-binding"))?.try_build().map_err(|_| filter_error("restock-build"))?).map_err(|_| filter_error("children"))?;

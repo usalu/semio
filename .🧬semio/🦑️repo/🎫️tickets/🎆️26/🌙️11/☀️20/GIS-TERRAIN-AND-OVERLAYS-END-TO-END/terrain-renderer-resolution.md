@@ -1,0 +1,9 @@
+# Rectangular Fractional Terrain Rendering
+
+The authored Terrain renderer accepts a rectangular south-first `rowsMillimetres` grid with 2–65 samples per axis and signed 32-bit millimetres. The browser passes this descriptor through the existing WASM entry point. Native World3d parses it through the same `TerrainElevationGrid` type and passes typed buffers directly to its resumable mesh publication cursor. Streamed Terrarium still uses its 33 × 33 tile shape.
+
+The shared projection uses separate x/y cell counts, row-major indices and f64 metre arithmetic before conversion to f32 renderer buffers. Authored meshing reverses south-first source rows. Drape and hit tests read the same cached triangles as drawing. Source, origin or exaggeration changes invalidate that mesh. Overlay clipping and stop generation stay bounded by the actual dimensions. The f32 renderer can lose submillimetre visual separation at large absolute elevations while the stored samples retain exact millimetres.
+
+The shared test fixture covers a 4 × 3 elevation source, both signed fractional corners, north-first triangle winding, an off-centre pick, a route crossing the grid boundary and a closed region. At 65 × 65 the mesh owns 233,504 bytes of positions, normals, UVs and u32 indices. This includes 4,225 vertices and 24,576 indices, and excludes vector metadata, temporaries, publication copies and GPU buffers. The ray scan traverses at most 8,192 triangles.
+
+The ticket patch passed read-only applicability checking. An isolated test compiled the shared geometry, hit-testing and draping functions and compared their output with Three.js ray intersections. It verified the rectangular fixture, northern and southern heights, sampled origin and overlays, and maximum buffer count. Browser WASM tests and the mounted native publication test are included in the patch and await the integrated build.

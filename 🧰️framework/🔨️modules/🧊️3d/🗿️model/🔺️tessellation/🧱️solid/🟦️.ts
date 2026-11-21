@@ -6,6 +6,7 @@ import { Pace, silentOperation } from "../../⏱️operation/🟦️.ts";
 import { type Geometry } from "../🧱️builder/🟦️.ts";
 import { tessellateBox } from "../📦️box/🟦️.ts";
 import { tessellateExtrude } from "../🏗️extrude/🟦️.ts";
+import { tessellatePolyhedron } from "../🪨️polyhedron/🟦️.ts";
 import { tessellateLoft } from "../🧵️loft/🟦️.ts";
 import { tessellateCapsule, tessellateEllipsoid, tessellateRevolve } from "../🌀️revolved/🟦️.ts";
 
@@ -24,6 +25,7 @@ export function tessellateSolid(solid: Solid, quality: Quality, extra: M4 = iden
       case "capsule": return tessellateCapsule(solid, quality, operation);
       case "revolve": return tessellateRevolve(solid, quality, operation);
       case "extrude": return tessellateExtrude(solid, quality, operation);
+      case "polyhedron": return tessellatePolyhedron(solid, operation);
       case "loft": return tessellateLoft(solid, quality, operation);
     }
   })();

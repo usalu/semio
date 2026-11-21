@@ -40,7 +40,6 @@ export function draw(asset: Json, F: Record<string, Frame>, models: Tree[]): str
       const shapeOf = (base: Json, bone: string, rings: P2[][], closed: boolean): Json | null => {
         if (rings.length === 0 || rings[0]!.length < 2) return null;
         const local = toDrawing(view, F[bone]!, rings);
-        if (closed && local.length === 1) return { ...base, bone, kind: "poly", points: pointsOf(local[0]!), closed: true };
         return { ...base, bone, kind: "path", d: pathOf(local, closed) };
       };
       const push = (shape: Json | null): void => {
@@ -78,7 +77,7 @@ export function draw(asset: Json, F: Record<string, Frame>, models: Tree[]): str
             const tresses = g.parts.filter((l) => l.az !== undefined), sleeves = g.parts.filter((l) => l.az === undefined);
             if (view === "plan") stroke(`${id}-arc`, g.bone, scale === 50 ? "texture" : "detail", r4(z + 0.004), 0.25, sleeves.map((l) => l.sections.slice(1, -1).map((q) => q.p)));
             else {
-              stroke(`${id}-arcs`, g.bone, "detail", r4(z + 0.004), 0.3, tresses.map((l) => l.sections.slice(2, -1).map((q) => q.p)));
+              stroke(`${id}-arcs`, g.bone, "detail", r4(z + 0.004), 0.3, tresses.map((l) => (l.capsule ? [l.capsule.p0, l.capsule.p1] : l.sections.slice(1, -1).map((q) => q.p))));
               if (scale === 50) stroke(`${id}-leaves`, g.bone, "texture", r4(z + 0.006), 0.3, [...tresses, ...sleeves].flatMap((l) => l.sections.slice(1, -1).map((q, i) => {
                 const side = i % 2 === 0 ? 1 : -1;
                 const from = add(q.p, mul(q.x, side * 0.5 * q.rx));

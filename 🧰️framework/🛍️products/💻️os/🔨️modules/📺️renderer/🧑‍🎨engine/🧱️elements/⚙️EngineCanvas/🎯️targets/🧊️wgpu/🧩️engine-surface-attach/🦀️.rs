@@ -25,7 +25,7 @@ use std::sync::Arc;
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::{Rgba, Theme};
 use semio_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
-use infinite_canvas::{board_set_camera, board_set_grid_visible};
+use infinite_canvas::board_set_grid_visible;
 use semio_os_infinite_board_dag_graph::{adopt_camera_or_fit, refit_camera_if_content_left_view, hovered_node_id_ref, set_hover_channel};
 use semio_os_infinite_board_dag_host::{set_computing_progress, set_dimmed, set_node_statuses};
 use semio_os_infinite_board_normal_focus::{set_camera_silent, set_selection_ids_silent};
@@ -58,6 +58,5 @@ pub use board_sync::board2d_tool_run_trace_state;
 mod paint_editor_and_composite;
 pub use paint_editor_and_composite::{
     advance_raster_composite, engine_raster_key, stage_engine_scene_paint, sync_engine_scene,
-    sync_paint2d_scene, sync_text_editor_scene,
+    sync_paint2d_scene, sync_text_editor_scene, RasterCompositeProgress,
 };
-pub(crate) use paint_editor_and_composite::RasterCompositeProgress;

@@ -1,0 +1,22 @@
+[
+  {
+    "root": "C:\\semio\\framework\\dev",
+    "browserEntry": "/@fs/C:/semio/s/dev/🚀️entry/🟦️.ts",
+    "source": "C:/semio/s/dev/🚀️entry/🟦️.ts"
+  },
+  {
+    "root": "/workspace/framework/dev",
+    "browserEntry": "/@fs//workspace/s/dev/🚀️entry/🟦️.ts",
+    "source": "/workspace/s/dev/🚀️entry/🟦️.ts"
+  },
+  {
+    "root": "C:\\semio\\framework\\dev",
+    "browserEntry": "/🚀️entry/🟦️.ts",
+    "source": "C:/semio/framework/dev/🚀️entry/🟦️.ts"
+  },
+  {
+    "root": "/workspace/framework/dev",
+    "browserEntry": "/🚀️entry/🟦️.ts",
+    "source": "/workspace/framework/dev/🚀️entry/🟦️.ts"
+  }
+]

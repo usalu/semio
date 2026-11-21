@@ -16,11 +16,20 @@ import picomatch from "picomatch";
 import { describe, expect, it, vi } from "vitest";
 import { stripExecutableShebang } from "../../🧹️executable-source/🟦️.ts";
 import { createServer } from "vite";
+import { playgroundOptimizerEntryV1 } from "../../🏗️builder/🌐️vite/📥️entry/🟦️.ts";
+import optimizerEntries from "../🧫️fixtures/🗺️optimizer-entry.json";
 import { UNWATCHED_REPOSITORY_SEGMENTS, createSourceFreshnessRegistry, repositorySourceWatchRoots, requestedTransformFile, semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceFreshnessVitePlugins, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🔖️source-freshness/🟦️.ts";
 
 vi.mock("node:fs", async (original) => {
   const fs = await original<typeof import("node:fs")>();
   return { ...fs, existsSync: vi.fn(fs.existsSync), watch: vi.fn(fs.watch) };
+});
+
+it.each(optimizerEntries)("gives the development optimizer entry $source", ({ root, browserEntry, source }) => {
+  const pattern = playgroundOptimizerEntryV1(root, browserEntry);
+  expect(pattern).toBe(source);
+  expect(picomatch(pattern)(source)).toBe(true);
+  expect(picomatch(pattern)(`${source}.other`)).toBe(false);
 });
 
 describe("semioPlaygroundReactRefreshCoherenceVitePlugin", () => {

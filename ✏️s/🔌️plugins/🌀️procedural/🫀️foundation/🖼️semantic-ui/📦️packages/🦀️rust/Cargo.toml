@@ -16,8 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-os-playbook-contract = { workspace = true }
 semio-plugin = { workspace = true }
 semio-ui-locale = { workspace = true }
 semio-ui-declaration = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
-

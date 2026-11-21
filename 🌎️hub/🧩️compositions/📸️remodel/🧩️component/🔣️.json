@@ -398,7 +398,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -1954,7 +1988,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -3509,7 +3577,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -4755,6 +4857,262 @@
         ],
         "actions": [
           {
+            "id": "exportMediaFile",
+            "label": {
+              "native": {
+                "en": "Export Mesh",
+                "de": "Netz exportieren"
+              },
+              "reuse": {
+                "en": "Export Mesh",
+                "de": "Netz exportieren"
+              }
+            },
+            "kind": "shell",
+            "iconId": "export",
+            "args": [
+              {
+                "id": "outputPort",
+                "label": {
+                  "native": {
+                    "en": "outputPort",
+                    "de": "outputPort"
+                  },
+                  "reuse": {
+                    "en": "outputPort",
+                    "de": "outputPort"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false,
+                "default": "mesh:out"
+              },
+              {
+                "id": "filename",
+                "label": {
+                  "native": {
+                    "en": "filename",
+                    "de": "filename"
+                  },
+                  "reuse": {
+                    "en": "filename",
+                    "de": "filename"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false,
+                "default": "remodeling-mesh.glb"
+              },
+              {
+                "id": "mediaType",
+                "label": {
+                  "native": {
+                    "en": "mediaType",
+                    "de": "mediaType"
+                  },
+                  "reuse": {
+                    "en": "mediaType",
+                    "de": "mediaType"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false,
+                "default": "model/gltf-binary"
+              },
+              {
+                "id": "formatKind",
+                "label": {
+                  "native": {
+                    "en": "formatKind",
+                    "de": "formatKind"
+                  },
+                  "reuse": {
+                    "en": "formatKind",
+                    "de": "formatKind"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false,
+                "default": "glb"
+              }
+            ],
+            "inPalette": true,
+            "category": "transfer",
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "audience": "chrome"
+            }
+          },
+          {
+            "id": "exportSnapshotFile",
+            "label": {
+              "native": {
+                "en": "Export Snapshot",
+                "de": "Momentaufnahme exportieren"
+              },
+              "reuse": {
+                "en": "Export Snapshot",
+                "de": "Momentaufnahme exportieren"
+              }
+            },
+            "kind": "shell",
+            "iconId": "export",
+            "args": [
+              {
+                "id": "outputPort",
+                "label": {
+                  "native": {
+                    "en": "outputPort",
+                    "de": "outputPort"
+                  },
+                  "reuse": {
+                    "en": "outputPort",
+                    "de": "outputPort"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false,
+                "default": "semio.snapshot.pack"
+              },
+              {
+                "id": "filename",
+                "label": {
+                  "native": {
+                    "en": "filename",
+                    "de": "filename"
+                  },
+                  "reuse": {
+                    "en": "filename",
+                    "de": "filename"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false,
+                "default": "remodeling-snapshot.pack"
+              },
+              {
+                "id": "mediaType",
+                "label": {
+                  "native": {
+                    "en": "mediaType",
+                    "de": "mediaType"
+                  },
+                  "reuse": {
+                    "en": "mediaType",
+                    "de": "mediaType"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false,
+                "default": "application/vnd.semio.pack"
+              },
+              {
+                "id": "formatKind",
+                "label": {
+                  "native": {
+                    "en": "formatKind",
+                    "de": "formatKind"
+                  },
+                  "reuse": {
+                    "en": "formatKind",
+                    "de": "formatKind"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false,
+                "default": "semio.snapshot.pack.v1"
+              }
+            ],
+            "inPalette": true,
+            "category": "transfer",
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "shell.navigate"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "audience": "chrome"
+            }
+          },
+          {
             "id": "importFrames",
             "label": {
               "native": {
@@ -4789,7 +5147,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4843,7 +5201,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4894,7 +5252,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -4948,7 +5306,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5002,7 +5360,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5056,7 +5414,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5110,7 +5468,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5247,7 +5605,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5319,7 +5677,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5410,7 +5768,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5766,7 +6124,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5820,7 +6178,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5950,7 +6308,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -6022,7 +6380,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -6165,7 +6523,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -6301,7 +6659,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -6477,7 +6835,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -6676,7 +7034,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -6895,7 +7253,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -7090,7 +7448,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -7363,7 +7721,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -7517,7 +7875,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -7738,7 +8096,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -7792,7 +8150,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -7846,7 +8204,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -7900,7 +8258,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -7954,7 +8312,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8008,7 +8366,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8062,7 +8420,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8116,7 +8474,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8171,7 +8529,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -8216,7 +8574,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -8261,7 +8619,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -8306,7 +8664,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               }
@@ -8347,18 +8705,18 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
               "description": {
                 "native": {
-                  "en": "Writes the reconstruction's quality-control report to a downloaded remodeling-qc-report.ops file on the user's machine; without a report nothing happens.",
-                  "de": "Schreibt den Qualitätsbericht der Rekonstruktion in eine heruntergeladene Datei remodeling-qc-report.ops auf dem Rechner des Nutzers; ohne Bericht geschieht nichts."
+                  "en": "Writes the reconstruction's quality-control report to a downloaded remodeling-qc-report.json file on the user's machine; without a report nothing happens.",
+                  "de": "Schreibt den Qualitätsbericht der Rekonstruktion in eine heruntergeladene Datei remodeling-qc-report.json auf dem Rechner des Nutzers; ohne Bericht geschieht nichts."
                 },
                 "reuse": {
-                  "en": "Writes the reconstruction's quality-control report to a downloaded remodeling-qc-report.ops file on the user's machine; without a report nothing happens.",
-                  "de": "Schreibt den Qualitätsbericht der Rekonstruktion in eine heruntergeladene Datei remodeling-qc-report.ops auf dem Rechner des Nutzers; ohne Bericht geschieht nichts."
+                  "en": "Writes the reconstruction's quality-control report to a downloaded remodeling-qc-report.json file on the user's machine; without a report nothing happens.",
+                  "de": "Schreibt den Qualitätsbericht der Rekonstruktion in eine heruntergeladene Datei remodeling-qc-report.json auf dem Rechner des Nutzers; ohne Bericht geschieht nichts."
                 }
               }
             }
@@ -8461,7 +8819,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -11265,6 +11623,42 @@
             },
             "iconId": "circle",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": true,
               "rebase": "revalidate",
               "reconfigure": "resume",
@@ -12262,6 +12656,26 @@
             "kindId": "3d.mesh",
             "required": false,
             "multiplicity": "many"
+          },
+          {
+            "id": "semio.snapshot.pack",
+            "label": {
+              "native": {
+                "en": "Snapshot",
+                "de": "Momentaufnahme"
+              },
+              "reuse": {
+                "en": "Snapshot",
+                "de": "Momentaufnahme"
+              }
+            },
+            "direction": "out",
+            "mediaType": {
+              "class": "data",
+              "form": "document"
+            },
+            "required": false,
+            "multiplicity": "many"
           }
         ],
         "artifactKinds": [
@@ -12362,6 +12776,26 @@
                 "form": "mesh"
               },
               "kindId": "3d.mesh",
+              "required": false,
+              "multiplicity": "many"
+            },
+            {
+              "id": "semio.snapshot.pack",
+              "label": {
+                "native": {
+                  "en": "Snapshot",
+                  "de": "Momentaufnahme"
+                },
+                "reuse": {
+                  "en": "Snapshot",
+                  "de": "Momentaufnahme"
+                }
+              },
+              "direction": "out",
+              "mediaType": {
+                "class": "data",
+                "form": "document"
+              },
               "required": false,
               "multiplicity": "many"
             }
@@ -13227,7 +13661,7 @@
           }
         },
         "iconId": "play",
-        "artifactJson": "semio remodeling.remodeling.cmd v1\naction=demo\n",
+        "artifactJson": "semio remodeling.remodeling.dsl v1\nschema=remodeling.scene id=remodeling assets={\n}\ndurable-artifacts={\n}\ncalibration {\n  cameras [id:TEXT label:TEXT model:TEXT fx:NUM fy:NUM cx:NUM cy:NUM skew:NUM distortion:TUPLE rms-reprojection-px:NUM locked:BOOL] {\n    demo-left \"Left Capture Camera\" brownConrady 600 600 320 240 0 0,0,0,0,0 0.5 true\n    demo-right \"Right Capture Camera\" brownConrady 600 600 320 240 0 0,0,0,0,0 0.5 true\n  }\n  rig [camera-id:TEXT rotation-wxyz:TUPLE translation-m:CRD] {\n  }\n}\nparams {\n  ingest {\n    frame-sample-stride=1 max-frames=48 downscale-long-edge-px=640 min-sharpness=0.25\n  }\n  feature {\n    detector=orb target-count=1200 octaves=4 edge-threshold=10\n  }\n  matching {\n    matcher=brute-force ratio-test=0.75 cross-check=true sequential-window=4 max-pairs-per-frame=8 loop-closure=true\n  }\n  sfm {\n    ransac-iterations=1000 ransac-threshold-px=2 min-track-length=2 ba-max-iterations=25 robust-loss=huber huber-delta-px=1.5\n  }\n  dense {\n    resolution=low window-radius-px=2 min-view-consistency=2 confidence-threshold=0.5 max-points=20000\n  }\n  mesh {\n    tsdf-voxel-size-mm=25mm tsdf-truncation-mm=100mm decimate-target-triangles=5000 smoothing-iterations=1 texture-enabled=false texture-size=512 guarantee-watertight=true hole-fill-max-boundary-verts=512 self-intersection-check=false\n  }\n  motion {\n    enabled=true max-tracks=32 track-window-px=15 min-track-quality=0.25 min-track-length-frames=3\n  }\n  geo {\n    enabled=false gsd-m=0.05000000074505806m dsm-cell-m=0.10000000149011612m dtm-filter-radius-m=2m ortho-max-px=4096\n  }\n}\nresults {\n  mesh {\n    source=placeholder\n    mesh {\n      child_id=remodeling-mesh-constant-box target { artifact-id=\"remodeling-mesh-constant:box\" artifact-kind=\"s.stdio.semio\" standard=\"v1\" subset=\"mesh\" }\n    }\n  }\n  tracks [id:TEXT length:UINT class:ENUM mean-speed-m-s:QTY] {\n  }\n}\nstreams [id:TEXT name:TEXT kind:ENUM camera-id:TEXT sync-offset-ms:NUM fps-hint:NUM frames:TABLE source:BLOCK] {\n  left-capture \"Left Capture\" image-sequence demo-left 0 24 [] _\n  right-capture \"Right Capture\" video demo-right 125 24 [] _\n}\ngcps [id:TEXT name:TEXT world-position:CRD observations:TABLE] {\n}\n",
         "dialect": {
           "artifactKind": "s.remodel.remodeling",
           "standard": "1",

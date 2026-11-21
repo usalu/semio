@@ -32,6 +32,31 @@ pub struct SetWidgetInput {
     pub path: Option<Vec<String>>,
 }
 
+/// 📏️ Established maximum for a text value committed to a widget input.
+pub const MAX_WIDGET_INPUT_TEXT_BYTES: usize = 1_048_576;
+
+/// 📥️ Reconstructs the pages of a retained text edit before building the widget command.
+pub fn widget_input_action_value(value: &semio_framework_value::DslValue) -> Result<String, &'static str> {
+    use semio_plugin::plugin_app_close_prelude::{UiValue, UI_TEXT_MAX_BYTES, UI_VALUE_MAX_ITEMS};
+    if let Some(text) = value.as_str() {
+        return Ok(text.to_owned());
+    }
+    let Some(pages) = value.as_array().filter(|pages| pages.first().is_some_and(|page| page.as_array().is_some())) else {
+        return Ok(semio_framework_pack_json::to_json_string(value));
+    };
+    if pages.len() > UI_VALUE_MAX_ITEMS { return Err("Too many input text pages"); }
+    let page_limit = UI_TEXT_MAX_BYTES * UI_VALUE_MAX_ITEMS;
+    let mut text = String::new();
+    for page in pages {
+        let chunks = page.as_array().filter(|chunks| (1..=UI_VALUE_MAX_ITEMS).contains(&chunks.len())).ok_or("Input text page is missing or too large")?;
+        let chunks = chunks.iter().map(|chunk| chunk.as_str().filter(|text| !text.is_empty())).collect::<Option<Vec<_>>>().ok_or("Input text chunk is invalid")?;
+        let available = MAX_WIDGET_INPUT_TEXT_BYTES - text.len();
+        let source = UiValue::join_text_chunks(chunks, page_limit.min(available))?;
+        text.push_str(&source);
+    }
+    Ok(text)
+}
+
 /// 📃️ Computes one absolute ordered list value, validating indices, element type and cardinality before publication.
 pub(crate) fn edit_collection_value(types: &[String], current: Option<&semio_framework_value::DslValue>, payload: &SetWidgetInput, cardinality: &semio_os_flow::neural::Cardinality) -> Result<WidgetInputValue, String> {
     if !cardinality.is_collection() { return Err("Select a collection input".into()); }
@@ -109,7 +134,7 @@ pub(crate) fn input_leaf(host_snapshot: &FlowHostSnapshot, payload: &SetWidgetIn
     if payload.facet.as_deref() == Some("meshSource") { return mesh_source_leaf(host_snapshot, payload); }
     if payload.path.is_some() { return Err("Only structured mesh fields have a path".into()); }
     if payload.facet.as_deref().is_some_and(|facet| facet != "port") { return widget_facet_leaf(host_snapshot, payload); }
-    if payload.value.len() > 1_048_576 { return Err("Input text exceeds 1 MiB".into()); }
+    if payload.value.len() > MAX_WIDGET_INPUT_TEXT_BYTES { return Err("Input text exceeds 1 MiB".into()); }
     let widget = host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == payload.widget_id).ok_or("The selected widget no longer exists")?;
     if let Widget::InputNote { text, .. } = widget {
         if payload.channel != "text" || payload.component.is_some() || payload.index.is_some() || payload.destination.is_some() || payload.operation.as_deref().is_some_and(|operation| operation != "set") { return Err("Select an operator input or a text source".into()); }

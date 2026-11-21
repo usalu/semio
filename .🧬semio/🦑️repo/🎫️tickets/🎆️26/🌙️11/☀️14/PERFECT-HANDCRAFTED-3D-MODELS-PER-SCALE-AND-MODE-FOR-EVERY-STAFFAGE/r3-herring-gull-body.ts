@@ -18,6 +18,7 @@ export const EYE: Look = { material: "eye-tissue", tone: 0.5, role: "detail" };
 
 /** 🥚️ Plumage hull of the trunk: [s, dorsal, ventral, half width]. Back 40-43 mm over the hip axis, belly 88 mm under it (13 cm deep), 112 mm wide without the wings, the full breast 16 cm ahead of the hips, the shoulders rising into the nape, the under-tail coverts tapering 8 cm along the underside of the tail. */
 export const HULL_50: readonly HullStation[] = [
+  [-0.163, 0.0175, 0.0145, 0.0015],
   [-0.158, 0.021, 0.011, 0.005],
   [-0.145, 0.023, 0.004, 0.011],
   [-0.125, 0.025, -0.004, 0.017],
@@ -72,13 +73,15 @@ export function headLoft(S: Bench, id: string, hand: readonly NeckStation[], loo
 
 /** 🧠️ Head of the gull: long flat crown sloping into the bill, rounded nape, 51 mm deep and 44 mm wide over the feathers. */
 export const HEAD_50: readonly NeckStation[] = [
-  [-0.031, 0.004, 0.011, 0.011],
-  [-0.021, 0.0065, 0.0185, 0.018],
-  [-0.006, 0.0115, 0.0235, 0.0205],
-  [0.008, 0.012, 0.025, 0.0218],
-  [0.022, 0.011, 0.0238, 0.0208],
-  [0.036, 0.0085, 0.0205, 0.0182],
-  [0.048, 0.0055, 0.0162, 0.0148],
+  [-0.034, 0.005, 0.005, 0.005],
+  [-0.031, 0.0055, 0.0125, 0.012],
+  [-0.024, 0.006, 0.0175, 0.0165],
+  [-0.015, 0.008, 0.0205, 0.019],
+  [-0.002, 0.0105, 0.022, 0.0205],
+  [0.012, 0.0108, 0.0222, 0.0208],
+  [0.026, 0.0095, 0.0212, 0.0195],
+  [0.038, 0.0075, 0.019, 0.0175],
+  [0.049, 0.005, 0.0158, 0.0146],
   [0.058, 0.0025, 0.0122, 0.0112],
   [0.066, 0.0005, 0.0101, 0.0086],
 ];
@@ -300,8 +303,8 @@ export function leg50(S: Bench, sd: Side): void {
 }
 
 /** 🦢️ Neck: the lower neck runs forward and up out of the breast, the upper neck rises to the skull; thick feathered column 62 mm wide at the base, 40 mm under the head. */
-export const NECK_1_50: readonly NeckStation[] = [[-0.036, -0.008, 0.026, 0.026], [-0.008, -0.004, 0.039, 0.036], [0.018, -0.001, 0.036, 0.032], [0.042, 0.002, 0.03, 0.0272], [0.064, 0.002, 0.0255, 0.0235], [0.082, 0.001, 0.0225, 0.021]];
-export const NECK_2_50: readonly NeckStation[] = [[-0.032, -0.002, 0.012, 0.012], [-0.014, 0.0, 0.0228, 0.0212], [0.01, 0.001, 0.0224, 0.0208], [0.032, 0.002, 0.0218, 0.0202], [0.052, 0.003, 0.0212, 0.0194], [0.068, 0.004, 0.0205, 0.0188], [0.082, 0.006, 0.019, 0.0175], [0.093, 0.007, 0.012, 0.012]];
+export const NECK_1_50: readonly NeckStation[] = [[-0.044, -0.014, 0.012, 0.012], [-0.036, -0.013, 0.024, 0.024], [-0.008, -0.011, 0.031, 0.031], [0.018, -0.007, 0.028, 0.028], [0.042, -0.003, 0.0255, 0.0255], [0.064, 0.0, 0.0245, 0.0232], [0.078, 0.002, 0.0222, 0.0208], [0.088, 0.004, 0.016, 0.0152], [0.094, 0.005, 0.007, 0.007]];
+export const NECK_2_50: readonly NeckStation[] = [[-0.04, 0.003, 0.006, 0.006], [-0.03, 0.003, 0.016, 0.0155], [-0.012, 0.003, 0.0222, 0.0208], [0.01, 0.002, 0.0222, 0.0207], [0.032, 0.002, 0.0218, 0.0202], [0.052, 0.003, 0.0212, 0.0194], [0.068, 0.004, 0.0205, 0.0188], [0.078, 0.005, 0.0198, 0.0182], [0.088, 0.006, 0.013, 0.012]];
 export const MANTLE_50: readonly MantleStation[] = [[0.112, 0.008, 0.002], [0.1, 0.018, 0.004], [0.075, 0.025, 0.0055], [0.04, 0.026, 0.006], [0.0, 0.024, 0.006], [-0.04, 0.02, 0.0055], [-0.07, 0.016, 0.0045], [-0.092, 0.011, 0.003], [-0.104, 0.006, 0.0015]];
 
 export function hull50(S: Bench): void {

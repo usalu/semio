@@ -1,0 +1,12 @@
+{
+  "rows": [2, 4, 1, 0, 6],
+  "cases": [
+    {"start": 0, "work": 20, "stopAt": 5, "next": 3, "spent": 7},
+    {"start": 0, "work": 5, "stopAt": 5, "next": 1, "spent": 2},
+    {"start": 1, "work": 3, "stopAt": 5, "next": 1, "spent": 0},
+    {"start": 1, "work": 20, "stopAt": 2, "next": 2, "spent": 4},
+    {"start": 1, "work": 20, "stopAt": 1, "next": 1, "spent": 0},
+    {"start": 4, "work": 6, "stopAt": 5, "next": 5, "spent": 6}
+  ],
+  "native": {"items": 16384, "bytes": 16777216, "fuel": 16384, "maximumRetirementSteps": 8192}
+}

@@ -176,11 +176,6 @@ fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem2
         registry.request_cursor = (current_slot + 1) % SESSION_ACTIVE_CAPACITY;
         registry.snapshot_owners[app_slot] = Some(owner);
         if registry.source_apps[current_slot].is_some_and(|app| app != render.app_instance_id) { return false; }
-        if registry.families[current_slot] != semio_s_fem_app_surface::ResultMode::Static {
-            let detail = if registry.families[current_slot] == semio_s_fem_app_surface::ResultMode::Modal { "fem2d.modal-job-owner-missing" } else { "fem2d.buckling-job-owner-missing" };
-            if registry.preflight_fault[current_slot].is_none() { registry.preflight_fault[current_slot] = Some(PendingSnapshotFault { app_instance_id: render.app_instance_id, render, detail, emitted: false }); }
-            return false;
-        }
         if let Some(current) = registry.current[current_slot].filter(|current| render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision)) {
             let Ok(owner) = registry.shells[current.shell as usize].try_borrow() else { return false };
             if owner.as_ref().is_some_and(|state| state.source == registry.sources[current_slot]) { return false }
@@ -373,6 +368,8 @@ pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem2dSnapshot>) -> 
         assert!(registry.requests.begin_execution(owner,identity_version(identity),job), "only the original verified request admits one current job");
         let mut state = MountedState::new(identity, snapshot, pending.admitted_items);
         state.source = registry.sources[current_slot];
+        state.family = registry.families[current_slot];
+        state.mode_index = registry.mode_indices[current_slot];
         *registry.shells[shell as usize].borrow_mut() = Some(state);
         registry.current[current_slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity, previous_valid });
         let mut effects = Vec::with_capacity(2);
@@ -385,7 +382,59 @@ pub fn reconcile(doc: &semio_plugin::ArtifactPendingView<'_, Fem2dSnapshot>) -> 
 }
 
 /// 📊️ Borrows physical fields from the addressed source and generation without running a solver in render.
-pub struct MountedFieldsView<'a> { pub progress: &'a Fem2dLiveVisual, pub fields: &'a [semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::NodeLiveField], pub retained: bool }
+pub struct MountedFieldsView<'a> {
+    pub progress: &'a Fem2dLiveVisual,
+    pub fields: &'a semio_s_fem_analyses_model::AssemblyOrder<NodeLiveField>,
+    assembly: Option<&'a AssemblyCsrBuild>,
+    pub retained: bool,
+    pub eigenvalue: Option<f64>,
+    pub mode_shape_peak: f64,
+    family: semio_s_fem_app_surface::ResultMode,
+    mode_index: usize,
+    source: Option<ResolvedResultSource>,
+}
+
+impl MountedFieldsView<'_> {
+    /// 📍️ Walks the retained analysis positions and the matching prefix of published fields.
+    pub fn model_nodes(&self) -> impl Iterator<Item = (&str, [f64; 2], Option<&NodeLiveField>)> + '_ {
+        let mut fields = self.fields.iter().fuse();
+        (0..).map_while(move |index| {
+            let node = self.assembly?.model_node(index)?;
+            let field = fields.next().filter(|field| field.node_id == node.id);
+            Some((node.id.as_str(), [node.pos[0], node.pos[1]], field))
+        })
+    }
+
+    /// 🔺️ Walks only the plane triangles in the same retained analysis model as the fields.
+    pub fn model_triangles(&self) -> impl Iterator<Item = [&str; 3]> + '_ {
+        (0..)
+            .map_while(move |index| self.assembly?.model_element(index))
+            .filter_map(|element| match element {
+                semio_s_fem_static::Elements::Tri3Cst(triangle) => Some(triangle.nodes.each_ref().map(String::as_str)),
+                _ => None,
+            })
+    }
+
+    /// 🧭️ Checks the live binding against the selected analysis while a replacement request is prepared.
+    pub fn matches_selection(&self, snapshot: &Fem2dSnapshot, family: semio_s_fem_app_surface::ResultMode, mode_index: usize, source: Option<&str>) -> bool {
+        if self.family != family || self.mode_index != mode_index {
+            return false;
+        }
+        if family == semio_s_fem_app_surface::ResultMode::Modal {
+            return true;
+        }
+        if let Some(source) = source {
+            let Ok(source) = semio_s_fem_analyses_model::borrow_result_source_identity(source) else { return false; };
+            match self.source {
+                Some(ResolvedResultSource::LoadCase(index)) => source.kind == "loadCase" && snapshot.load_cases.get(index).is_some_and(|case| case.id.as_str() == source.id),
+                Some(ResolvedResultSource::Combination(index)) => source.kind == "combination" && snapshot.combinations.get(index).is_some_and(|combination| combination.id.as_str() == source.id),
+                None => false,
+            }
+        } else {
+            self.source == snapshot.load_cases.first().map(|_| ResolvedResultSource::LoadCase(0))
+        }
+    }
+}
 
 pub fn with_live_fields<R>(render: AppRenderOperationContext, authority: Option<semio_plugin::WindowConfigAuthorityIdentity>, read: impl FnOnce(Option<MountedFieldsView<'_>>) -> R) -> R {
     let shells = MOUNTED.with(|registry| {
@@ -400,7 +449,18 @@ pub fn with_live_fields<R>(render: AppRenderOperationContext, authority: Option<
     let Some(current) = owner.as_ref() else { return read(None); };
     let previous = previous.as_ref().and_then(|owner| owner.try_borrow().ok());
     let previous = previous.as_ref().and_then(|owner| owner.as_ref()).filter(|state| state.visual.validated_final && !current.visual.validated_final);
-    read(Some(MountedFieldsView { progress: &current.visual, fields: previous.map_or(current.visual.fields.as_slice(), |state| state.visual.fields.as_slice()), retained: previous.is_some() }))
+    let fields = previous.unwrap_or(current);
+    read(Some(MountedFieldsView {
+        progress: &current.visual,
+        fields: &fields.visual.fields,
+        assembly: fields.csr_build.as_ref(),
+        retained: previous.is_some(),
+        eigenvalue: fields.visual.validated_final.then_some(fields.eigenvalue).flatten(),
+        mode_shape_peak: fields.mode_shape_peak,
+        family: current.family,
+        mode_index: current.mode_index,
+        source: current.source,
+    }))
 }
 
 /// 👁️ Borrows the immutable generation-exact mounted visual lease only while the renderer adopts it.
@@ -421,10 +481,27 @@ pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: imp
     build(owner.as_ref().and_then(|state| state.visual_current.as_ref()).filter(|lease| lease.matches(render.app_instance_id, render.base_revision.0, render.generation.0)))
 }
 
+fn retirable_shell(registry: &MountedRegistry, index: usize, app: u32) -> bool {
+    registry.retiring[index].is_some_and(|entry| {
+        entry.app_instance_id == app && !registry.current.iter().flatten().any(|current| current.previous_valid == Some(entry.shell))
+    })
+}
+
+fn next_retirement(registry: &MountedRegistry, app: u32) -> Option<usize> {
+    (0..registry.retiring.len()).find(|&index| retirable_shell(registry, index, app))
+}
+
+fn detached_request(registry: &MountedRegistry, app: u32) -> Option<semio_framework_value_registry::fixed_key_slots::FixedKeySlot> {
+    (0..SESSION_ACTIVE_CAPACITY).find_map(|index| {
+        let (owner, scope, _) = registry.requests.at(index)?;
+        (scope == app && registry.requests.references(owner) == 0).then_some(owner)
+    })
+}
+
 fn retire_one(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
-        let Some(index) = registry.retiring.iter().position(|entry| entry.is_some_and(|entry| entry.app_instance_id == app_instance_id && !registry.current.iter().flatten().any(|current| current.previous_valid == Some(entry.shell))))
+        let Some(index) = next_retirement(&registry, app_instance_id)
         else {
             return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
         };
@@ -453,24 +530,49 @@ fn retire_one(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedClo
     })
 }
 
+/// 🛠 Reports retirement work while the live app and its current result remain mounted.
+pub fn maintenance_pending(app_instance_id: u32) -> bool {
+    MOUNTED.with(|registry| {
+        let registry = registry.borrow();
+        detached_request(&registry, app_instance_id).is_some()
+            || next_retirement(&registry, app_instance_id).is_some()
+            || (0..SESSION_CONSUMER_CAPACITY).any(|index| {
+                registry.requests.consumer_retiring(index) && registry.requests.consumer_at(index).is_some_and(|(scope, _)| scope == app_instance_id)
+            })
+    })
+}
+
 pub fn maintenance_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
-    semio_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
+    if !maintenance_pending(app_instance_id) { return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default())); }
+    semio_plugin::app::original_lifecycle_step(cx, grant, owner_demands(app_instance_id, true)?, |cx, grant| {
         let step = if let Some(progress) = MOUNTED.with(|registry| registry.borrow_mut().requests.retire_consumer_step(app_instance_id, grant)) {
             PluginLifecycleStep::Progress(progress)
         } else {
-            let owner = MOUNTED.with(|registry| { let registry = registry.borrow(); (0..SESSION_ACTIVE_CAPACITY).find_map(|index| { let (owner, scope, _) = registry.requests.at(index)?; (scope == app_instance_id && registry.requests.references(owner) == 0).then_some(owner) }) });
+            let owner = MOUNTED.with(|registry| detached_request(&registry.borrow(), app_instance_id));
             if let Some(owner) = owner { close_request_step(app_instance_id, owner, cx, grant)? } else { retire_one(app_instance_id, cx, grant)? }
         };
-        Ok((step, terminal_is_empty(app_instance_id)))
+        Ok((step, !maintenance_pending(app_instance_id)))
     })
 }
 
 /// 📏️ Quotes the next close or maintenance turn: one owner release bounded by the largest session owner.
 pub fn close_demands(app_instance_id: u32) -> Result<RetirementDemand, ValueError> {
+    owner_demands(app_instance_id, false)
+}
+
+/// 📑 Quotes the mounted owners that are eligible to retire during live maintenance.
+pub fn maintenance_demands(app_instance_id: u32) -> Result<RetirementDemand, ValueError> {
+    if maintenance_pending(app_instance_id) { owner_demands(app_instance_id, true) } else { Ok(RetirementDemand::default()) }
+}
+
+fn owner_demands(app_instance_id: u32, maintenance: bool) -> Result<RetirementDemand, ValueError> {
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
         let mut demand = RetirementDemand { copy_bytes: SESSION_CLOSE_COPY_BYTES, release_bytes: SESSION_CLOSE_RELEASE_BYTES, depth: SESSION_CLOSE_DEPTH, ..Default::default() };
-        for shell in &registry.shells {
+        let retiring_shell = next_retirement(&registry, app_instance_id)
+            .and_then(|index| registry.retiring[index]).map(|entry| usize::from(entry.shell));
+        for (index, shell) in registry.shells.iter().enumerate() {
+            if maintenance && retiring_shell != Some(index) { continue; }
             if let Ok(owner) = shell.try_borrow() {
                 if let Some(state) = owner.as_ref().filter(|state| state.identity.app_instance_id == app_instance_id) { state.child_close_demands(&mut demand)?; }
             }

@@ -7,6 +7,11 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
+#[path = "../../../../../../../../🔨️modules/🎞️rule-media/🦀️.rs"]
+pub mod rule_media;
+
+pub use standards::v1::subsets::any::schema::{application::compile_rule, rule::Rule};
+
 #[path = "."]
 pub mod standards {
     #[path = "."]

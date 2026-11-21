@@ -6,6 +6,7 @@
   "filename": "remodeling-mesh.glb",
   "positions": [0, 0, 0, 1, 0, 0, 0, 1, 0],
   "indices": [0, 1, 2],
+  "uvs": [0, 0, 1, 0, 0, 1],
   "emptyMesh": "refused",
   "cancelAfterTurns": [0, 1, 2],
   "denied": ["items", "copyBytes", "depth"]

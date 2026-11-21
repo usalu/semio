@@ -1,0 +1,10 @@
+source	delta_k	nu	measured_pa	weight_n_m3	base_stress_pa	esu_pa	ct	pressure_pa
+tested	35	-	180000000	-	-	180000000	1.2	78886.95652173914
+density	35	-	-	16000	75000	33600000	3	54000
+tested	0	-	180000000	-	-	180000000	1.2	0
+tested	35	0.2	180000000	-	-	180000000	1.2	72576
+tested	-5	-	180000000	-	-	-	-	-
+tested	35	0.6	180000000	-	-	-	-	-
+tested	35	-	0	-	-	-	-	-
+density	35	-	-	0	75000	-	-	-
+density	35	-	-	16000	-	-	-	-

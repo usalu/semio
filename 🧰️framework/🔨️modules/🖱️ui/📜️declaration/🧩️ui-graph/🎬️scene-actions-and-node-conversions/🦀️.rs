@@ -81,7 +81,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
 
 /** 🖼️ Builds an image node rendering a source URL or path. */
 pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<Label>) -> UiNode {
-    UiNode::Image(UiImageNode { menu: None, id: id.into(), src: src.into(), alt, presence: UiPresence::default() })
+    UiNode::Image(UiImageNode { source_page: None, menu: None, id: id.into(), src: src.into(), alt, presence: UiPresence::default() })
 }
 
 /** 🎛️ Extracts the control payload of a {@link UiNode} when it is a control variant. */

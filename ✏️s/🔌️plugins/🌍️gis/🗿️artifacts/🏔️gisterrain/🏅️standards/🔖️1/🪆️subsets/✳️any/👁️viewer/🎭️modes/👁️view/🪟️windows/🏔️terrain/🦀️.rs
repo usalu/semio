@@ -5,9 +5,9 @@
 //! exaggeration control, no selection, no camera persistence: a viewer has no utilities that edit and
 //! emits no mutations by construction (`ViewEmit`).
 
-use crate::schema::terrain_descriptor::{TerrainDescriptorJson};
-use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json};
-use crate::standards::v1::subsets::any::io::text::snapshot::fixture_descriptor;
+use crate::standards::v1::subsets::any::io::text::snapshot::{
+    build_artifact_terrain_camera_json, build_terrain_scene_json, fixture_descriptor,
+};
 use crate::GisTerrainSnapshot;
 use semio_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 use semio_plugin::scene_surface;
@@ -19,16 +19,11 @@ use semio_plugin::UiAssemblyResult;
 use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowOptions;
 use semio_plugin::World3dScene;
-use semio_framework_surface::terrain::projection;
-use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "gis3d-view-terrain";
 pub const BODY_KEY: &str = "gis3d.view.terrain";
 const SURFACE_ID: &str = "gis3d.view.composite";
-/// 👁️ Matches the editor terrain window's `GisTerrainWindowConfig::default()` camera — a viewer has no persisted per-session
-/// camera (`Config = NoConfig`), so this is a hardcoded default, not a bug.
-const GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"position":[800.0,-800.0,600.0],"target":[0.0,0.0,0.0],"up":[0.0,0.0,1.0],"fov":45.0}"#;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -55,36 +50,21 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 📍️ GIS pins are emitted as plain `World3d` instances with no matching `meshesJson` entry —
-/// `WorldInstancesLayer`'s existing missing-mesh fallback renders a small colored box, so a viewer
-/// still shows every imported overlay feature, just never lets one be selected.
-fn instances_json(descriptor: &TerrainDescriptorJson) -> String {
-    let instances: Vec<Value> = descriptor
-        .positions
-        .iter()
-        .map(|position| {
-            let (x, y) = projection::lonlat_to_local_meters(position.lon, position.lat, descriptor.project_origin.lon, descriptor.project_origin.lat);
-            json!({
-                "id": position.id,
-                "meshId": "pin",
-                "position": [x, y, 50.0],
-                "color": "#ff3355",
-                "label": position.label,
-            })
-        })
-        .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
-}
-
-/// 👁️ Pure `GisTerrainSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
-/// camera), the same real overlay pins/terrain descriptor the editor renders, no selection overlay.
-/// The scene binds this window to the "features"/"pin" interaction domain and carries the terrain payload.
-pub fn render(document: &GisTerrainSnapshot) -> UiAssemblyResult<BuiltNode> {
+/// 👁️ Renders the same terrain and GIS overlays as the editor with an overview camera.
+pub fn render(document: &GisTerrainSnapshot, view: &semio_plugin::ViewModel) -> UiAssemblyResult<BuiltNode> {
     let descriptor = fixture_descriptor(document);
-    let mut scene = World3dScene::base(GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON.into(), "[]".into(), instances_json(&descriptor), world3d_selection_json("rectangle", &[], None));
+    let Some(terrain_json) = build_terrain_scene_json(document, &descriptor) else {
+        return crate::schema::terrain_descriptor::scene::terrain_source_required(view);
+    };
+    let mut scene = World3dScene::base(
+        build_artifact_terrain_camera_json(document, &descriptor),
+        "[]".into(),
+        "[]".into(),
+        world3d_selection_json("rectangle", &[], None),
+    );
     scene.domain_id = Some("features".into());
     scene.domain_granularity_id = Some("pin".into());
-    scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
+    scene.terrain_json = Some(terrain_json);
     scene_surface(SURFACE_ID, ContractSurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render

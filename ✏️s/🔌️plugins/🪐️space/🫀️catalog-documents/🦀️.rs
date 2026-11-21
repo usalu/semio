@@ -25,6 +25,8 @@ use semio_os::{
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os::{document_backbone_ref, VcsError};
 use semio_plugin::plugin_app_close_prelude::*;
+use semio_framework_value::{OriginalReceivingPrimary, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetirementDemand};
+use semio_framework_value::native_decoding::{construction::NativeRecoveryLoan, NativeRetirementDecodeControl};
 use semio_ui_locale::app_labels;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -612,13 +614,13 @@ where
         self.last_work
     }
 
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut ::protocol::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut ::protocol::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, OriginalReceivingPrimary> {
         self.last_work = 0;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
-            return Err(space_refusal("s.space.retained.original-refusal-retained"));
+            return Err(space_refusal("s.space.retained.original-refusal-retained").into());
         }
         if self.owners.prepared.is_some() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
@@ -628,21 +630,28 @@ where
         }
         let base = self.owners.base.as_ref().ok_or_else(|| space_refusal("s.space.retained.base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
-        let (post, inverse) = prepare_space_retained_one_item(base.get(), mutation, self.maximum_bytes)?;
         let authority = self.owners.authority.as_ref().ok_or_else(|| space_refusal("s.space.retained.authority-missing"))?;
-        let forward = self.owners.mutation.take().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
-        let edit = authority.next_edit(forward, inverse);
-        let prepared = match authority.prepare_one_item(edit, Arc::new(post)) {
-            Ok(prepared) => prepared,
-            Err((error, edit, post)) => {
-                *self.owners.refused = Some((edit, post));
-                return Err(error);
-            }
-        };
+        if !receiving.prepare_work(1)? {
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        let result = (|| {
+            let (post, inverse) = prepare_space_retained_one_item(base.get(), mutation, self.maximum_bytes)?;
+            let forward = self.owners.mutation.take().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
+            let edit = authority.next_edit(forward, inverse);
+            let prepared = match authority.prepare_one_item(edit, Arc::new(post)) {
+                Ok(prepared) => prepared,
+                Err((error, edit, post)) => {
+                    *self.owners.refused = Some((edit, post));
+                    return Err(error);
+                }
+            };
+            self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+            *self.owners.prepared = Some(prepared);
+            Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+        })();
         self.last_work = 1;
-        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-        *self.owners.prepared = Some(prepared);
-        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+        receiving.commit_work(1)?;
+        result.map_err(Into::into)
     }
 
     fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
@@ -661,12 +670,28 @@ where
         self.cancelled = true;
     }
 
+    fn has_pending_receiving_recovery(&self) -> bool {
+        false
+    }
+
+    fn pending_receiving_demand(&self) -> Option<RetirementDemand> {
+        None
+    }
+
+    fn pending_receiving_recovery(&mut self) -> Option<NativeRecoveryLoan<'_>> {
+        None
+    }
+
+    fn finish_receiving_recovery(&mut self, _: &mut NativeRetirementDecodeControl<'_, '_>) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
+        RetainedWorkOutcome { result: Err(space_refusal("s.space.retained.no-pending-receiving-frame").into()), work: 0 }
+    }
+
     fn begin_close(&mut self) {
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.owners.close_step(grant.retained_grant())
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        self.owners.close_step(effect)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

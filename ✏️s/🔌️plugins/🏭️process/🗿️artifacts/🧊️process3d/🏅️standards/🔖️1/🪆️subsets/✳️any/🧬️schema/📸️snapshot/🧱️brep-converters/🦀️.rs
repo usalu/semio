@@ -2,7 +2,7 @@
 
 use super::document_records::WorkingSolid;
 use semio_framework_3d_brep_engine::{Brep, GeometryHandle, ShapeRoot, ShapeValue};
-use semio_framework_pack::snapshot::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::body::{body_from_snapshot, snapshot_from_body};
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
 

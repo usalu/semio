@@ -1495,11 +1495,38 @@
       },
       "target": {
         "inherits": "dev",
-        "opt-level": 1,
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "thin",
+        "debug-assertions": true,
+        "overflow-checks": true,
+        "strip": "symbols",
+        "trim-paths": "object"
+      },
+      "host": {
+        "opt-level": 0,
         "debug": 0,
         "codegen-units": 256,
-        "incremental": true,
-        "lto": "off",
+        "incremental": false
+      }
+    },
+    {
+      "request": {
+        "version": 1,
+        "mode": "prototype",
+        "target": "wasm32-wasip2",
+        "producer": "artifact",
+        "operation": "build"
+      },
+      "target": {
+        "inherits": "dev",
+        "opt-level": "s",
+        "debug": 0,
+        "codegen-units": 16,
+        "incremental": false,
+        "lto": "thin",
         "debug-assertions": true,
         "overflow-checks": true,
         "strip": "symbols",
@@ -1644,6 +1671,43 @@
       }
     }
   ],
+  "workspaceSelectionChurn": {
+    "maximumManifestBytes": 262144,
+    "cases": [
+      {
+        "before": "original",
+        "after": "edited",
+        "beforePadding": 0,
+        "afterPadding": 24,
+        "extentChanged": true,
+        "expected": "retry"
+      },
+      {
+        "before": "original",
+        "after": "edited",
+        "beforePadding": 24,
+        "afterPadding": 0,
+        "extentChanged": true,
+        "expected": "retry"
+      },
+      {
+        "before": "original",
+        "after": "newbytes",
+        "beforePadding": 0,
+        "afterPadding": 0,
+        "extentChanged": false,
+        "expected": "retry"
+      },
+      {
+        "before": "original",
+        "after": "oversize",
+        "beforePadding": 0,
+        "afterPadding": 262144,
+        "extentChanged": true,
+        "expected": "refuse"
+      }
+    ]
+  },
   "workspaceSelection": [
     {
       "name": "nearest-root",

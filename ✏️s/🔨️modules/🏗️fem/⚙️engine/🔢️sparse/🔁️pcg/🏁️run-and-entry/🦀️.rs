@@ -33,6 +33,7 @@ impl PcgJob {
         let mut units = 0;
         while units < self.state.batch_units && !context.should_yield() && self.state.stage != PcgStage::Complete && !self.state.preview_due && !self.state.checkpoint_due {
             let advanced = self.state.advance_one();
+            self.state.checkpoint_due &= self.publish_checkpoints;
             units += advanced;
             context.consume_fuel(advanced as u64);
             if context.is_cancelled() {

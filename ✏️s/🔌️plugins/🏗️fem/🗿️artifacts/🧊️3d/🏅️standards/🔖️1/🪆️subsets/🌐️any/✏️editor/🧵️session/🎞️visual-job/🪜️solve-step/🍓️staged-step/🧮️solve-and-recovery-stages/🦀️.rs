@@ -6,23 +6,27 @@ use super::*;
 impl Fem3dNumericalChild {
     /// 🗜 Builds the CSR matrix of the assembled system.
     pub(super) fn step_build_csr(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
-        let grant = context.retained_grant();
         let build = self.csr_build.as_mut().ok_or_else(|| b"fem3d.numerical-csr".to_vec())?;
-        let stepped = match context.with_original_effect(grant, |_, effect| build.step_one_in(effect)).map_err(|_| b"fem3d.numerical-csr-grant".to_vec())? {
-            None => Ok((false, Default::default())),
-            Some((result, performed)) => { semio_framework_job::receive_original_retained_work(context, semio_framework_value::RetainedWorkOutcome { result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: performed }).map_err(|_| b"fem3d.numerical-csr-grant".to_vec())?; result }
-        };
-        match stepped.and_then(|(complete, progress)| {
-            context.consume_retained(progress).map_err(|_| b"fem3d.numerical-csr-grant" as &'static [u8])?;
-            Ok(complete)
-        }) {
-            Ok(false) => {}
-            Ok(true) => {
+        for _ in 0..64 {
+            if context.should_yield() || context.is_cancelled() { break; }
+            let grant = context.retained_grant();
+            if grant.maximum_items == 0 { break; }
+            let Some((result, work)) = context.with_original_effect(grant, |_, effect| build.step_one_in(effect))
+                .map_err(|_| b"fem3d.numerical-csr-grant".to_vec())? else { break; };
+            semio_framework_job::receive_original_retained_work(context, semio_framework_value::RetainedWorkOutcome {
+                result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(Default::default())),
+                work,
+            }).map_err(|_| b"fem3d.numerical-csr-grant".to_vec())?;
+            let (complete, progress) = result.map_err(|detail| detail.to_vec())?;
+            context.consume_retained(progress).map_err(|_| b"fem3d.numerical-csr-grant".to_vec())?;
+            if complete {
                 self.stage = Fem3dNumericalStage::BeginPcg;
+                break;
             }
-            Err(detail) => return Err((detail.to_vec()).into()),
+            if progress == RetainedCloneProgress::default() { break; }
+            if work == 0 { context.consume_fuel(1); }
         }
-        Ok(self.stage == Fem3dNumericalStage::Complete)
+        Ok(false)
     }
 
     /// 🚦 Begins the preconditioned conjugate gradient solve.
@@ -31,7 +35,7 @@ impl Fem3dNumericalChild {
         if build.take_demands().is_none() { return Err((b"fem3d.numerical-csr-terminal".to_vec()).into()); }
         let Some((matrix, progress)) = build.take_complete(context.retained_grant()) else { return Ok(false); };
         context.consume_retained(progress).map_err(|_| b"fem3d.numerical-csr-transfer-grant".to_vec())?;
-        match PcgJobConstruction::new_with_mounted_rhs(operation, matrix, std::mem::take(&mut self.rhs)) {
+        match PcgJobConstruction::new_with_mounted_rhs(operation, matrix, std::mem::take(&mut self.equation_values)) {
             Ok(construction) => self.pcg_build = Some(construction),
             Err((matrix, rhs)) => {
                 self.rejected_pcg_matrix = Some(matrix);
@@ -60,12 +64,55 @@ impl Fem3dNumericalChild {
     pub(super) fn step_pcg(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
         let end = child_end(self.pcg.as_mut().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.step_plain(context))?;
         if self.observe_child_end(end)? {
-            self.stage = Fem3dNumericalStage::ReadNodeScalar;
-            self.node_cursor = 0;
-            self.scalar_axis = 0;
+            self.stage = Fem3dNumericalStage::ReserveReactionRows;
         }
-        return Ok(false);
-        Ok(self.stage == Fem3dNumericalStage::Complete)
+        Ok(false)
+    }
+
+    /// 🧺 Admits the paged accumulator used by the full equation rows.
+    pub(super) fn step_reserve_reaction_rows(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
+        let order = self.reaction_order()?;
+        if self.equation_values.admit_in(order, context).map_err(|_| b"fem3d.numerical-reaction-admission".to_vec())? {
+            self.stage = Fem3dNumericalStage::InitializeReactionRows;
+        }
+        Ok(false)
+    }
+
+    /// 🏁 Initializes one full equation row before visiting the original triplets.
+    pub(super) fn step_initialize_reaction_rows(&mut self) -> Result<bool, Fem3dNumericalFailure> {
+        if self.equation_values.len() == self.reaction_order()? {
+            self.reaction_entry = 0;
+            self.stage = Fem3dNumericalStage::RecoverReaction;
+        } else {
+            self.equation_values.push(0.0).map_err(|_| b"fem3d.numerical-reaction-row".to_vec())?;
+        }
+        Ok(false)
+    }
+
+    fn reaction_order(&self) -> Result<usize, Fem3dNumericalFailure> {
+        self.csr_build.as_ref().and_then(AssemblyCsrBuild::visual_full_order)
+            .ok_or_else(|| b"fem3d.numerical-reaction-assembly".to_vec().into())
+    }
+
+    /// ↩ Accumulates each original stiffness contribution in its full equation row.
+    pub(super) fn step_recover_reaction(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
+        let build = self.csr_build.as_ref().ok_or_else(|| b"fem3d.numerical-reaction-assembly".to_vec())?;
+        let pcg = self.pcg.as_ref().ok_or_else(|| b"fem3d.numerical-reaction-solution".to_vec())?;
+        for _ in 0..256 {
+            if context.should_yield() || context.is_cancelled() { break; }
+            let Some((row, column, value)) = build.visual_full_entry(self.reaction_entry) else {
+                self.node_cursor = 0;
+                self.scalar_axis = 0;
+                self.stage = Fem3dNumericalStage::ReadNodeScalar;
+                break;
+            };
+            let displacement = build.visual_compact_index(column).and_then(|index| pcg.visual_scalar(index))
+                .map_or(0.0, |scalar| scalar.displacement);
+            self.equation_values.add_at(row, value * displacement).map_err(|_| b"fem3d.numerical-reaction-row".to_vec())?;
+            self.reaction_entry += 1;
+            context.consume_fuel(1);
+        }
+        Ok(false)
     }
 
     /// 📖 Reads one node scalar of the solution.
@@ -81,35 +128,19 @@ impl Fem3dNumericalChild {
                     self.scalar.residual[self.scalar_axis] = value.residual;
                 }
             }
-            self.reaction_entry = 0;
-            self.reaction_accumulator = 0.0;
-            self.stage = Fem3dNumericalStage::RecoverReaction;
-        }
-        Ok(self.stage == Fem3dNumericalStage::Complete)
-    }
-
-    /// ↩ Recovers one support reaction.
-    pub(super) fn step_recover_reaction(&mut self) -> Result<bool, Fem3dNumericalFailure> {
-        let Some(row) = self.node_values.get(self.node_cursor).and_then(|fields| fields.full_equations[self.scalar_axis]) else {
-            self.scalar_axis += 1;
-            self.stage = if self.scalar_axis == 6 { Fem3dNumericalStage::PublishNodeScalar } else { Fem3dNumericalStage::ReadNodeScalar };
-            return Ok(false);
-        };
-        if let Some((entry_row, entry_col, value)) = self.csr_build.as_ref().and_then(|build| build.visual_full_entry(self.reaction_entry)) {
-            if entry_row == row {
-                let displacement = self.csr_build.as_ref().and_then(|build| build.visual_compact_index(entry_col)).and_then(|compact| self.pcg.as_ref().and_then(|pcg| pcg.visual_scalar(compact))).map_or(0.0, |scalar| scalar.displacement);
-                self.reaction_accumulator += value * displacement;
-            }
-            self.reaction_entry += 1;
-        } else {
             let fields = self.node_values.get_mut(self.node_cursor).ok_or_else(|| b"fem3d.numerical-reaction-node-values".to_vec())?;
-            let reaction = self.reaction_accumulator - fields.applied[self.scalar_axis];
-            fields.reactions[self.scalar_axis] = reaction;
-            if self.scalar_axis < 3 { self.scalar.reaction[self.scalar_axis] = reaction; }
+            if let Some(row) = fields.full_equations[self.scalar_axis] {
+                let internal = self.equation_values.get(row).ok_or_else(|| b"fem3d.numerical-reaction-row".to_vec())?;
+                let reaction = internal - fields.applied[self.scalar_axis];
+                fields.reactions[self.scalar_axis] = reaction;
+                if self.scalar_axis < 3 { self.scalar.reaction[self.scalar_axis] = reaction; }
+            }
             self.scalar_axis += 1;
-            self.stage = if self.scalar_axis == 6 { Fem3dNumericalStage::PublishNodeScalar } else { Fem3dNumericalStage::ReadNodeScalar };
+            if self.scalar_axis == 6 {
+                self.stage = Fem3dNumericalStage::PublishNodeScalar;
+            }
         }
-        Ok(self.stage == Fem3dNumericalStage::Complete)
+        Ok(false)
     }
 
     /// 📤 Publishes one node scalar.

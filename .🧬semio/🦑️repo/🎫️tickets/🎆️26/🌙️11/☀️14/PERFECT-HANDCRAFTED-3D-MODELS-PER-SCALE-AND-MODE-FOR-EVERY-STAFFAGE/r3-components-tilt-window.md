@@ -173,3 +173,38 @@ Files are in `🗑️generated/r3-sheet/components/tilt-window.*` and `🗑️ge
 4. **The sill underside stays counted.** It rests on masonry, so by C25 b it should be excluded, which gives 0.31 m². The area reviewers' R-C value of 0.62 counts it, and the gap is beyond the factor 1.5 an author may correct. The model keeps the underside counted (0.55 / 0.62) and the question is in `area-review.md`. The jamb backs and the head top are marked; this asymmetry is deliberate and documented there.
 5. **The front line view keeps four short ticks** where the sill and head stops meet the jamb stops. They are real joint lines 30 mm long (0.6 mm on paper).
 6. **No 2D shapes were drawn for some parts at 1:50.** The stay arc and grip are not in the 1:50 front or plan, because they are hidden behind the stops or the head.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-tilt-window-volumes.py`. Renders (opened with Read) under `🗑️generated/r5-tilt-window/before/` and `after/` (made by `r5-c01-sheets.sh`). I opened body, structure and the cut thermal sheets at 1:50; body at 1:100; body and structure at 1:200; the 2D at 1:200; and the pose `fully-tilted`. 1:500 stays unavailable.
+
+### Model against reference (1:50)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| sash profile depth | 90 mm (DIN 68121-1 IV 92 family) | 90 mm | 0 % |
+| rebate clearance | 12 mm (DIN 68121) | 12 mm | 0 % |
+| glass | 4-16-4, 24 mm | 24 mm | 0 % |
+| tilt at the stay stop | 130 mm at the head (Winkhaus SH.SE) | 126 mm (6°) | -3 % |
+| lining | 50 mm boards, 300 mm reveal | 50 / 300 mm | 0 % |
+| sash mass | glass 14.3 kg + timber 9.7 kg + seal 1.0 kg + steel 0.8 kg | 25.78 kg | from the parts |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | unchanged |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | B (the 12 mm clearance stood open all round: daylight through the frame, a gap below the 30 mm feature) / A- / A- | A- / A- / A- |
+
+### Changes
+
+- At 1:200 there is a new 30 x 30 mm exterior stop ring (`stop-ring`, with a thermal reference). It covers the clearance, as the stop strips do at 1:50 and 1:100.
+- **Root state repaired:** the catalog carried a stale authored 1:500 volume (lining, sash ring, pane) although `representations.500` is unavailable. The splice restores `status: unavailable`.
+- Checks: `volumes-check --product` PASS (18 s). `r3-validate --volumes` VALID. Spliced; `--catalog-only` VALID.
+
+### Remaining
+
+- The 1:200 front 2D still draws the clearance as a double line. The true outline of the stop lies 18 mm inside it, below the 30 mm feature.
+- Moiré on the thermal glass faces is a coincident-face artefact of the renderer.
+- The remaining points of round 3 (idealised stay roller, 8 mm hardware) stand.

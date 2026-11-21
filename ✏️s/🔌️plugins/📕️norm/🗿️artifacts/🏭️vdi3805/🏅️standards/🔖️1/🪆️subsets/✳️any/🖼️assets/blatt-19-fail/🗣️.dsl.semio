@@ -4,26 +4,12 @@ strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="
 extensions=fields={
 }
 products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
-  FIL-F7 {manufacturer-code=DEMO product-group=FIL article-number=FIL-F7} [ {locale=de text="Filter F7"} {locale=en text="Filter F7"} ] 19 [ {family="100" fields=[ "100" DEMO FIL FIL-F7 "19" ] extensions=fields={
+  SOLAR-01 {manufacturer-code=DEMO product-group=SOLAR article-number=SOLAR-01} [ {locale=de text="Thermischer Solarkollektor"} {locale=en text="Thermal solar collector"} ] 19 [ {family="100" fields=[ "100" DEMO SOLAR SOLAR-01 "19" ] extensions=fields={
   }
-  } {family="210" fields=[ "210" airflow_m3_s "-1" filter_class INVALID product_group FIL type_code INVALID ] extensions=fields={
+  } {family="700" fields=[ "700" de "Thermischer Solarkollektor" en "Thermal solar collector" ] extensions=fields={
   }
-  } {family="700" fields=[ "700" de "Filter F7" en "Filter F7" ] extensions=fields={
-  }
-  } ] {id=cfg.FIL-F7 attributes={
-    entries=[ {
-      key="product_group" unit=null value="FIL"
-    }
- {
-      key="type_code" unit=null value="INVALID"
-    }
- {
-      key="airflow_m3_s" unit=null value="-1"
-    }
- {
-      key="filter_class" unit=null value="INVALID"
-    }
-    ] kind="generic"
+  } ] {id=cfg.SOLAR-01 attributes={
+    entries=[ ] kind="generic"
   }
   function-refs=[ ]} [ ] [ ] {fields={
   }
@@ -33,7 +19,7 @@ edition-profile={
 }
 correction-as-of=year=2024 month=1 index=
 entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
-  FIL-F7 19 [ "Filter F7" "Filter F7" ] _
+  SOLAR-01 19 [ "Thermischer Solarkollektor" "Thermal solar collector" ] _
 }
 geometry={
 }

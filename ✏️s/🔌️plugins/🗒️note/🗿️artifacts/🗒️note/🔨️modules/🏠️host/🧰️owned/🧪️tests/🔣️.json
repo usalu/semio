@@ -1,0 +1,7 @@
+{
+  "deniedCurrencies": ["items", "copy", "capacity", "depth"],
+  "ports": ["publication", "replay"],
+  "distinctProducers": 1,
+  "constructorCancellationPrefixes": [0, 1, 3],
+  "maximumCloseTurns": 256
+}

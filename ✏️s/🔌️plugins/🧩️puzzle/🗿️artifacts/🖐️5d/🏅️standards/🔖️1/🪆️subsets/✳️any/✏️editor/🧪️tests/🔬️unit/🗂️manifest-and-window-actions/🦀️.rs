@@ -284,7 +284,7 @@ async fn exact_window_cameras_isolate_render_and_reload_without_document_or_app_
     let packs = app.window_config_packs().await.expect("two exact window packs");
     assert_eq!(packs.len(), 2);
     for pack in packs {
-        reopened.load_window_config_pack(pack).await.expect("reload exact window pack");
+        semio_plugin::restore_fixture_window_config(&mut reopened.0, pack, reopened.1.cx()).await.expect("reload exact window pack");
     }
     assert_eq!(render_window(&mut reopened, board2d::BODY_KEY, window_a), board_a);
     assert_eq!(render_window(&mut reopened, board2d::BODY_KEY, window_b), board_b);

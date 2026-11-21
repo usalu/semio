@@ -18,4 +18,15 @@ def need(policy,row):
     return math.ceil(used-row["totalBytes"]*p["lowUsedFraction"]) if used>row["totalBytes"]*p["highUsedFraction"] else 0
 
 data=json.load(sys.stdin)
-print(json.dumps({"decisions":[decide(data["policy"],c) for c in data["cases"]],"needs":[need(data["policy"],n) for n in data["needs"]]}))
+if "localCompletion" in data:
+    print(json.dumps([int(not (row["result"] == "completed" and row["owner"] == "same" and row["origin"] == row["request"])) for row in data["localCompletion"]]))
+elif "automaticCompletion" in data:
+    corpus=data["automaticCompletion"]
+    def scans(row):
+        compatible=(row["scope"],row["cap"],row["timestamp"])==("same",corpus["capBytes"],"valid")
+        if compatible and not row["critical"] and row["advance"] in range(corpus["minAgeMs"]):
+            return int(row["priorBytes"]<=row["cap"])
+        return 1
+    print(json.dumps([scans(row) for row in corpus["rows"]]))
+else:
+    print(json.dumps({"decisions":[decide(data["policy"],c) for c in data["cases"]],"needs":[need(data["policy"],n) for n in data["needs"]]}))

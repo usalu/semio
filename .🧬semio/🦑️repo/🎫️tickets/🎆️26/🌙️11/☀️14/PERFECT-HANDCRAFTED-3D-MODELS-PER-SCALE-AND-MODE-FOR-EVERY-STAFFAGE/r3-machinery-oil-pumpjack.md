@@ -111,3 +111,45 @@ Thermal: every solid of the body is referenced in its region (base, wellhead, st
 - The skid deck spans the full width under the cranks, so the counterweights are limited to r 1.12 m (real units let them swing beside a narrower base); the crank mass of 2600 kg is consistent with this geometry.
 - Motor areaM2 4.7 is the C16 limit (factor 1.5 from 7.0); the model measures 4.44 at 1:50 and 3.44 at 1:100 (no fins finer than 15 mm), both inside the tolerance.
 - No `structure.supports` in the asset, hence no support solids (the four foundation contacts live in the poses).
+
+## Round 5 handcraft
+
+Round-5 author (M02), 2026-11-21. Scripts: `r5-machinery-ranges.py`, `r5-machinery-range.ts`. Renders: `🗑️generated/r5-oil-pumpjack/before/` (every sheet of `r5-sheets.sh`: body, structure, thermal cut at 1:50 to 1:500, poses `stopped`, `mid-stroke`, `bottom-of-stroke`, clip `pump-cycle` t 1 s, 2D at all scales; montages `m1`-`m3`).
+
+### Reference and model against it (1:50)
+
+Reference: Lufkin conventional unit catalog, API Spec 11E letter dimensions (table in section 1); NEMA MG-1 324T; AISC W24x104.
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| stroke | 1.88 m (74 in) | 2 R A / C = 1.89 m | +0.5 % |
+| H saddle height | 4.27-4.98 m | 4.40 m | in range |
+| G crankshaft height | 1.76-2.01 m | 1.75 m | -0.6 % to the low end |
+| R crank radius | 0.81-0.94 m | 0.85 m | in range |
+| P pitman | 2.44-2.90 m (P = 3.16 R) | 2.65 m (3.12 R) | in range |
+| I = C | equal | 2.7 = 2.7 | 0 % |
+| A horsehead radius | 2.44 m for a 74 in unit; 2.82-3.28 m for 86-100 in units | 3.0 m | +23 % against the 74 in unit (see remaining) |
+| beam section | W24: 611 x 325 mm | 611 x 325 mm | 0 % |
+| motor 324T | shaft height 203 mm, frame about 0.50 m | 0.203 / 0.50 m | 0 % |
+| counterweight phase | in phase with the wrist pin | in phase (pose `stopped`: weights hanging, horsehead up) | ok |
+
+### Grades (before -> after; body / thermal / structure)
+
+- 1:50: A- / A- / A- -> A- / A- / A-: W-beam with stiffeners, flanged face plate horsehead, A-frame Samson post with brace and saddle, equalizer with both pitman arms outboard of crank arms and counterweights, arched reducer with bearing caps, belt guard over both sheaves, finned 324T motor on its slide base, I-beam skid on the slab. All three poses and the clip frame closed (pitman on the wrist pin, rope line on the face tangent).
+- 1:100 A- / A- / A-, 1:200 A- / A- / A-, 1:500 A- / A- / B+ (beam its envelope, members 75 mm). 2D: A- at every scale.
+
+### Changes
+
+- Catalog INVALID before (PRINT `range-end-feature` at the 1:500 band end 1:1000: `motor-feet` 0.174 mm, `carrier` 0.148 mm). Walked with `r5-machinery-range.ts`: suitable from 1:350 to 1:575, refused from 1:600. `representations.500.validRange.maxDenominator` 1000 -> 580.
+- No volume change: no defect in the renders needed one.
+
+### Check
+
+`r3-validate.ts machinery/oil-pumpjack`: VALID, schema 0, validateAsset 0 (catalog as spliced; volumes unchanged since the round-3 PASS of `volumes-check --product`).
+
+### Remaining
+
+- A = 3.0 m and C = 2.7 m are those of an 86-100 in unit while the stroke is the 74 in one (A / C 1.11 inside the real 1.0-1.14); changing them re-solves the four-bar, every pose, clip, anchor and 2D shape of four scales. Kept and stated, as in round 3.
+- Bridle ropes modelled as the one static rod line (rigid bones cannot follow both the horsehead and the carrier); ladder, brake and belts not modelled.
+
+The current four models include a bored valve chamber, a saddle-cut side branch with 108 mm bore and 120 mm outside diameter, the 78 mm stuffing-box sleeve, and separate packing and follower around the 50 mm polished rod. Independent ray intersections verify a continuous passage through the side branch. The heat model distinguishes the rod’s full stock area from the portion exposed during its stroke. The rod and wire mechanism passed 65 frames with 1.92327 m rod travel. Twelve independently reopened scenes total 3,027,024 bytes.

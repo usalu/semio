@@ -932,6 +932,53 @@ export async function touchSwipe(page: Page, dx: number, dy: number, ms = 160, s
 }
 
 
+/** 🤏️ Holds an item at the phone's scroll edge, then assigns it to a newly reachable category. */
+export async function touchAssignClassification(page: Page): Promise<void> {
+  const task = screen(page, "task");
+  const grip = task.locator(".course-chip [data-course-grip]").first();
+  const itemId = await grip.locator("..").getAttribute("data-course-item");
+  expect(itemId).not.toBeNull();
+  const answer = task.locator(`[data-course-item="${itemId}"] select`);
+  await expect(answer).toHaveValue("");
+  const scroll = page.locator("#course-main .course-page-scroll:not([inert] *)").filter({ has: page.locator('[data-card="task"]') });
+  await grip.scrollIntoViewIfNeeded();
+  const item = await boxOf(grip);
+  const viewport = await boxOf(scroll);
+  const from = await scroll.evaluate((element) => element.scrollTop);
+  const x = Math.round(item.x + item.width / 2);
+  const y = Math.round(item.y + item.height / 2);
+  const bottom = Math.floor(viewport.y + viewport.height) - 4;
+  const cdp = await page.context().newCDPSession(page);
+  let touching = false;
+  try {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+    touching = true;
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: bottom }] });
+    await expect(page.locator(".course-drag-ghost")).toBeVisible();
+    await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBeGreaterThan(from + 80);
+    const visible = await page.waitForFunction(([top, bottom]) => {
+      const x = Math.round(window.innerWidth / 2);
+      const edge = Math.min(76, (bottom - top) / 4 + 4);
+      for (let y = Math.ceil(Math.max(0, top) + edge); y < Math.min(window.innerHeight, bottom) - edge; y += 12) {
+        const target = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-course-drop^="category:"]');
+        if (target) return { x, y, category: target.dataset.courseDrop!.slice("category:".length) };
+      }
+      return null;
+    }, [viewport.y, viewport.y + viewport.height] as const);
+    const target = (await visible.jsonValue())!;
+    await visible.dispose();
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: target.x, y: target.y }] });
+    await expect(task.locator(`[data-course-drop="category:${target.category}"].course-drop-active`)).toBeVisible();
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    touching = false;
+    await expect(answer).toHaveValue(target.category);
+  } finally {
+    if (touching) await cdp.send("Input.dispatchTouchEvent", { type: "touchCancel", touchPoints: [] });
+    await cdp.detach();
+  }
+  await expect(page.locator(".course-drag-ghost")).toHaveCount(0);
+}
+
 /** 📜️ Measures the actual remaining scroll range inside the page the next gesture starts on. */
 async function swipeScrollProgress(page: Page, id: string, axis: "x" | "y", direction: number): Promise<{ readonly position: number; readonly remaining: number }> {
   return activeOverview(page).evaluate((overview, [id, axis, direction]) => {

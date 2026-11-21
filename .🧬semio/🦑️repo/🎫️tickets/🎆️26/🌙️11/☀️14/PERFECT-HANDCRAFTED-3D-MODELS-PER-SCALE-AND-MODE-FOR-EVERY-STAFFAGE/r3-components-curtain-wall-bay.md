@@ -251,3 +251,41 @@ The mesh check (`r3-curtain-wall-bay-meshcheck.ts`) finds the mesh volume of eve
 **Renderers (tool side)**
 - `r3-sheet` and `volumes-render` show thermal regions with merged layers (1:100 to 1:500) in grey or hatch. The legend has no plain region key. Filed in `T/tool-requests.md` (2026-11-20).
 - `r3-sheet` draws a tiny white sliver at one corner of the pressure plate in the top view. The mesh volume is exact (mesh check), so this is a rasteriser artefact.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-curtain-wall-bay-volumes.py`. Renders (opened with Read) under `🗑️generated/r5-curtain-wall-bay/before/` and `after/` (made by `r5-c01-sheets.sh`). I opened body, structure and the cut thermal sheets at 1:50, 1:100, 1:200 and 1:500, the 2D at 1:500, the clip `cradle-pass` at 4 s, and an enlarged crop of the 1:50 head section (`r3-curtain-wall-bay-crop.ts`). The crop shows the tube with its chamber, the isolator, the inner and outer gaskets, the pressure plate, the cap and the neighbour's glass stub.
+
+### Model against reference (1:50)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| face width | 50 mm (Schüco FWS 50) | 50 mm | 0 % |
+| mullion / transom depth | 150 / 100 mm | 150 / 100 mm | 0 % |
+| glass build-up | 6-16-6 = 28 mm (EN ISO 10077-1) | 28 mm | 0 % |
+| glass bite / joint | 15 / 20 mm (DIN 18545) | 15 / 20 mm | 0 % |
+| depth overall | cap 12 + gasket 4 + glass 28 + gasket 6 + mullion 150 = 200 mm | 200 mm | 0 % |
+| mullion I | at least 2.0e-6 m⁴ for L/200 | 3.589e-6 m⁴ | meets the limit |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A / A- / A- | unchanged |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | A- / A- / A- | unchanged |
+| 1:500 | B (the room side was a flat glass layer between two posts; no transom read at all) / A- / B+ | A- / A- / A- |
+
+### Changes
+
+- At 1:500 the head transom is a 75 mm bar on the room side, from the back of the vision layer to the transom back at +50 mm.
+- At 1:500 the spandrel block is now an extruded profile that carries the mid transom as the same 75 mm step. This keeps the body at 5 expanded solids, so the scale is not heavier than 1:200 (`volumes-monotonic`).
+- The structure mid and head transoms (`member-transom`, repeated) now lie at the real room-side position, not in the face layer.
+- The decisions texts are updated in en and de.
+- Checks: `volumes-check --product` PASS (35.1 s). `r3-validate --volumes` VALID. Spliced; `--catalog-only` VALID.
+
+### Remaining
+
+- The renderer shows thermal regions that merge layers (1:100 to 1:500) in grey. The tool request was filed in round 3.
+- In the `--cut` sheets a large wedge shows through the thin glass shells. This is the cut-cap artefact.
+- The 1:500 section A-A in 2D is a full-depth strip. It does not show the transom steps, which are below the drawn difference.

@@ -3,11 +3,13 @@ import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, join, relative } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { componentEmbed, componentNew } from "@bytecodealliance/jco";
 import cases from "./🧫️cases.json" with { type: "json" };
 import { nativeTranspileArgsV1, nativeTranspileBinaryV1 } from "../../🦀️native-transpile/🟦️.ts";
+
+import { rewritePreview2ShimImports } from "../../🟦️.ts";
 
 const repoRoot = fileURLToPath(new URL("../../../../../../../../../", import.meta.url));
 
@@ -41,6 +43,25 @@ for (const row of cases.cases) {
       const expected = tree(reference);
       expect(expected.size).toBeGreaterThan(1);
       expect([...tree(native)]).toEqual([...expected]);
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  });
+}
+
+for (const row of cases.shim_imports) {
+  test(`preview2 imports load from a ${row.name} directory`, async () => {
+    const work = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "shim-import-"));
+    try {
+      const component = join(work, ...row.component.split("/"));
+      const shim = join(work, ...row.shim.split("/"));
+      mkdirSync(dirname(component), { recursive: true });
+      mkdirSync(shim, { recursive: true });
+      writeFileSync(component, 'export { marker } from "@bytecodealliance/preview2-shim/cli";\n');
+      writeFileSync(join(shim, "cli.js"), `export const marker = ${JSON.stringify(row.expect)};\n`);
+      rewritePreview2ShimImports(component, shim);
+      const { marker } = await import(pathToFileURL(component).href);
+      expect(marker).toBe(row.expect);
     } finally {
       rmSync(work, { recursive: true, force: true });
     }

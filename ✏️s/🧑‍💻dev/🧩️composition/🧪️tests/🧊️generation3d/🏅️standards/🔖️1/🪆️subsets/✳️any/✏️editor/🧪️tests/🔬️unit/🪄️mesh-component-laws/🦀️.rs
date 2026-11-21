@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_preview_eval::PreviewEvaluation;
 use semio_framework_test_fixtures::repo_text;
 
 /// 🪄️ Mesh component laws: the mesh gumball, component edits and quick actions.
@@ -183,13 +184,13 @@ fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
 fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
     let _serial = test_serial();
     let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
-    let evaluation = semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap());
+    let evaluation = semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap()).expect("the evaluation host closes cold");
     let marks = PreviewInteractionMarks {
         components: selection::ComponentSelection { granularity: "face".into(), selected: vec!["extrude@meshOut#0.face.0".into()], hovered: None },
         ..Default::default()
     };
     let cfg = Generation3dConfig::default();
-    let payload = preview_payload(&evaluation, &snapshot.host_snapshot, &cfg, None, &marks);
+    let payload = preview_payload(&PreviewEvaluation::from_json(&evaluation), &snapshot.host_snapshot, &cfg, None, &marks);
     assert!(payload.component_pivot.is_some());
     let value: Value = serde_json::from_str(&preview_selection_json(&cfg, "translate", &payload)).unwrap();
     assert_eq!(value["gumballActive"], true);
@@ -200,7 +201,7 @@ fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
     let value: Value = serde_json::from_str(&preview_selection_json(&cfg, "", &payload)).unwrap();
     assert_eq!(value["gumballActive"], false);
     let invalid = PreviewInteractionMarks { components: selection::ComponentSelection { selected: vec!["extrude@meshOut#0.face.9999".into()], ..marks.components.clone() }, ..Default::default() };
-    assert!(preview_payload(&evaluation, &snapshot.host_snapshot, &cfg, None, &invalid).component_pivot.is_none());
+    assert!(preview_payload(&PreviewEvaluation::from_json(&evaluation), &snapshot.host_snapshot, &cfg, None, &invalid).component_pivot.is_none());
     snapshot.retire_cold();
 }
 

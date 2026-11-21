@@ -2,9 +2,11 @@ syntax = "proto3";
 package semio.s.trinity.jack.mutation;
 
 message SetQuery { string value = 1; }
+message SetRoot { optional string value = 1; }
 
 message JackMutation {
   oneof mutation {
     SetQuery set_query = 1;
+    SetRoot set_root = 2;
   }
 }

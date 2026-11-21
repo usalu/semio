@@ -10,8 +10,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             &&!semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation::<A>::owns_birth(&self.pending.reserved_preparation,&self.pending.reserved_birth,cx)&&!self.owns_original_reserved_mount(cx)&&!self.owns_original_reserved_permit(cx)&&!routing.owns_original_host_event_source(cx)
     }
 
-    /// 🔓️ A lane returning a result or an error ends its hold on the command lease; a pending lane keeps it.
-    pub(crate) fn settle_command_lease<T>(&mut self,result:&Result<Option<T>,semio_framework_job::OriginalTurnFailure>,cx:&semio_framework_job::StepContext<'_>){if !matches!(result,Ok(None)){self.original_command_scope.release(cx);}}
+    /// 🔓️ A refused command keeps its lease while the original caller still has a source to retire.
+    pub(crate) fn settle_command_lease<T>(&mut self, result: &Result<Option<T>, semio_framework_job::OriginalTurnFailure>, cx: &semio_framework_job::StepContext<'_>) {
+        if matches!(result, Ok(Some(_))) || result.is_err() && self.command_lease_release_ready(cx) {
+            self.original_command_scope.release(cx);
+        }
+    }
 
     pub(crate) fn original_typed_tag_pending(&self)->bool{self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty()}
 
@@ -48,6 +52,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.tools.pending_tool_lease_admission.is_none()
             && self.media.pending_reserved_producer_permit.is_none()
             && self.media.reserved_mount.is_none()
+            && self.media.original_picker.is_none()
             && self.media.reserved_receipt.is_none()
             && self.media.reserved_mount_construction.terminal_is_empty()
             && self.tools.tool_operations.is_empty()

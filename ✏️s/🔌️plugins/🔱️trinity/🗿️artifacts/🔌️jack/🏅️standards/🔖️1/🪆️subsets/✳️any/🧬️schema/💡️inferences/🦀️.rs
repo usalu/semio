@@ -11,11 +11,11 @@
 //! honestly re-derivable from `nodes`/`edges`/`root_node_id` alone, so it moved out of the manifest's
 //! former `flatPosition` `"derived"` node property into this family instead).
 
+use crate::standards::v1::subsets::any::schema::content::{jack_content_for_handle, jack_content_identity};
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
+use semio_s_artifact_trinity_jack_graph_query::{infer_jack_flat_position, infer_jack_topology, JackGraphQuery};
 
-use super::flat_position::compute_flat_position;
-use super::topology::compute_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a jack snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by `🧭topology/`; `flat_position`, backed by
@@ -30,12 +30,21 @@ pub struct JackInference {
     pub flat_position: JackFlatPosition,
 }
 
+impl JackInference {
+    /// 💡️ Reads both inferences from the exact graph retained by the artifact composition.
+    pub fn infer_from_graph(snapshot: &JackSnapshot, graph: &dyn JackGraphQuery) -> Result<Self, semio_framework_value::ValueError> {
+        let selected = jack_content_identity(&snapshot.content);
+        Ok(Self {
+            topology: infer_jack_topology(selected, graph)?,
+            flat_position: infer_jack_flat_position(selected, snapshot.root_node_id.as_deref(), graph)?,
+        })
+    }
+}
+
 impl protocol::Inference<JackSnapshot> for JackInference {
     fn infer(snapshot: &JackSnapshot) -> Result<Self, semio_framework_value::ValueError> {
-        Ok({
-        Self { topology: compute_topology(snapshot)?, flat_position: compute_flat_position(snapshot)? }
-    
-        })
+        let owner = jack_content_for_handle(&snapshot.content)?;
+        Self::infer_from_graph(snapshot, owner.read())
     }
 }
 
@@ -47,7 +56,10 @@ impl protocol::InferenceSpec<JackSnapshot> for JackInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.topology", reads: &["nodes", "edges"] }, protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.flatPosition", reads: &["nodes", "edges", "root_node_id"] }]
+        &[
+            protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.topology", reads: &["content"] },
+            protocol::InferenceFieldSpec { id: "s.trinity.jack.inference.flatPosition", reads: &["content", "root_node_id"] },
+        ]
     }
 }
 //#endregion 🔖️Inference

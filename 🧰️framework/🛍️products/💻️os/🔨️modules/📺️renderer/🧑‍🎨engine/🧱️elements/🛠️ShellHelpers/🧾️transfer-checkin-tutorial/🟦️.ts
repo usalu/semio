@@ -4,6 +4,10 @@
  */
 
 // #region 🔌️Adapters
+import { ACTOR_BYTE_PAGE_BYTES } from "@semio-tech/framework/actor/page";
+import { SHARD_COMMAND_MAXIMUM_PAGES } from "@semio-tech/framework/actor/shard-client/wire";
+import { encodeAppCommand } from "@semio-tech/framework/app-channel";
+import { encodePackValue } from "@semio-tech/framework/packs";
 import { deriveSavedStateV1, saveFailureTextV1 } from "../💾️saved-state/🟦️.ts";
 import { localizedLabelTextV1 } from "../../🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 import {
@@ -92,6 +96,18 @@ export function naturalFileFormatV1(app: AppDefinition): NaturalFileFormatV1 | n
   return saveFormat;
 }
 
+/** 📐️ Reserves the natural-file descriptor and sequence before the picker reads any payload. */
+export function naturalFileMediaInputV1(formatKind: string) {
+  const port = NATURAL_FILE_PORT_ID;
+  const descriptor = { portId: port, kindId: formatKind, wire: { kind: "binary", format_kind: formatKind } };
+  const commandBytes = SHARD_COMMAND_MAXIMUM_PAGES * ACTOR_BYTE_PAGE_BYTES;
+  const emptyCommand = encodeAppCommand({
+    MediaIn: { seq: Number.MAX_SAFE_INTEGER, port, descriptor: Array.from(encodePackValue(descriptor)), data: [] },
+  });
+  const lengthBytes = Math.ceil(Math.log2(commandBytes + 1) / 7);
+  return { port, descriptor, maximumBytes: Math.max(0, commandBytes - emptyCommand.length + 1 - lengthBytes) };
+}
+
 /** 📄️ Checks the native producer's typed descriptor before bytes are offered as a natural file. */
 export function naturalMediaDescriptorMatchesV1(value: unknown, format: NaturalFileFormatV1): boolean {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
@@ -106,18 +122,23 @@ export function naturalMediaDescriptorMatchesV1(value: unknown, format: NaturalF
 export async function openNaturalFileOwnerV1(input: Readonly<{
   signal: AbortSignal;
   create: () => Promise<number>;
-  importBytes: (instanceId: number) => Promise<void>;
+  importBytes: (instanceId: number, signal: AbortSignal) => Promise<void>;
   retire: (instanceId: number) => Promise<void>;
 }>): Promise<number> {
   if (input.signal.aborted) throw input.signal.reason ?? new DOMException("The operation was aborted", "AbortError");
   const instanceId = await input.create();
   try {
     if (input.signal.aborted) throw input.signal.reason ?? new DOMException("The operation was aborted", "AbortError");
-    await input.importBytes(instanceId);
+    await input.importBytes(instanceId, input.signal);
     if (input.signal.aborted) throw input.signal.reason ?? new DOMException("The operation was aborted", "AbortError");
     return instanceId;
   } catch (error) {
-    await input.retire(instanceId);
+    try {
+      await input.retire(instanceId);
+    } catch (retirement) {
+      const primary = error instanceof Error ? error.message : String(error);
+      throw new AggregateError([error, retirement], "natural-file.import-and-retirement-failed: " + primary, { cause: error });
+    }
     throw error;
   }
 }

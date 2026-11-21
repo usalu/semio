@@ -1,4132 +1,3395 @@
 {
  "volumes": {
-  "50": {
-   "status": "authored",
-   "denominator": 50,
-   "body": [
-    {
-     "id": "top-l",
-     "kind": "extrude",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.45,
-       -0.8
+    "50": {
+      "status": "authored",
+      "denominator": 50,
+      "body": [
+        {
+          "id": "top-l",
+          "kind": "extrude",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.45, -0.8], [0.45, -0.8], [0.45, 0.0], [-0.45, 0.0]],
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.015,
+          "transform": {
+            "translation": [0.8, 0, 0.0]
+          }
+        },
+        {
+          "id": "top-l-bevel",
+          "kind": "extrude",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.435, -0.785], [0.435, -0.785], [0.435, 0.0], [-0.435, 0.0]],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.0,
+          "taperTo": [1.03448, 1.01911],
+          "transform": {
+            "translation": [0.8, 0, 0.0]
+          }
+        },
+        {
+          "id": "leg-l",
+          "kind": "loft",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.6,
+          "sections": [
+            {
+              "at": [0.135, -0.735, 0.375],
+              "rx": 0.0225,
+              "ry": 0.0225,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            },
+            {
+              "at": [0.135, -0.155, 0.375],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            },
+            {
+              "at": [0.135, -0.015, 0.375],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          }
+        },
+        {
+          "id": "apron-l-side",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.65, 0.08, 0.025],
+          "transform": {
+            "translation": [0.475, -0.085, 0.3875]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.775]
+          }
+        },
+        {
+          "id": "apron-l-end",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.025, 0.08, 0.72],
+          "transform": {
+            "translation": [0.1225, -0.085, 0.0]
+          }
+        },
+        {
+          "id": "block-l-0",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.45,
+          "size": [0.06, 0.03, 0.025],
+          "transform": {
+            "translation": [0.28, -0.03, 0.3775]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.755]
+          }
+        },
+        {
+          "id": "block-l-1",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.45,
+          "size": [0.06, 0.03, 0.025],
+          "transform": {
+            "translation": [0.43, -0.03, 0.3775]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.755]
+          }
+        },
+        {
+          "id": "block-l-end",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.45,
+          "size": [0.015, 0.03, 0.06],
+          "transform": {
+            "translation": [0.1275, -0.03, 0.15]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.3]
+          }
+        },
+        {
+          "id": "runner-l-l",
+          "kind": "extrude",
+          "bone": "top-left",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.35,
+          "profile": [[-0.0635, 0.363], [-0.07, 0.363], [-0.07, 0.375], [-0.045, 0.375], [-0.045, 0.363], [-0.0515, 0.363], [-0.0515, 0.365], [-0.047, 0.365], [-0.047, 0.373], [-0.068, 0.373], [-0.068, 0.365], [-0.0635, 0.365]],
+          "plane": "yz",
+          "from": 0.17,
+          "to": 0.79
+        },
+        {
+          "id": "runner-l-r",
+          "kind": "extrude",
+          "bone": "top-left",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.35,
+          "profile": [[-0.0635, -0.363], [-0.07, -0.363], [-0.07, -0.375], [-0.045, -0.375], [-0.045, -0.363], [-0.0515, -0.363], [-0.0515, -0.365], [-0.047, -0.365], [-0.047, -0.373], [-0.068, -0.373], [-0.068, -0.365], [-0.0635, -0.365]],
+          "plane": "yz",
+          "from": 0.17,
+          "to": 0.79
+        },
+        {
+          "id": "top-r",
+          "kind": "extrude",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.45, 0.0], [0.45, 0.0], [0.45, 0.8], [-0.45, 0.8]],
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.015,
+          "transform": {
+            "translation": [0.0, 0, 0.0]
+          }
+        },
+        {
+          "id": "top-r-bevel",
+          "kind": "extrude",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.435, 0.0], [0.435, 0.0], [0.435, 0.785], [-0.435, 0.785]],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.0,
+          "taperTo": [1.03448, 1.01911],
+          "transform": {
+            "translation": [0.0, 0, 0.0]
+          }
+        },
+        {
+          "id": "leg-r",
+          "kind": "loft",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.6,
+          "sections": [
+            {
+              "at": [0.665, -0.735, 0.375],
+              "rx": 0.0225,
+              "ry": 0.0225,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            },
+            {
+              "at": [0.665, -0.155, 0.375],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            },
+            {
+              "at": [0.665, -0.015, 0.375],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          }
+        },
+        {
+          "id": "apron-r-side",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.65, 0.08, 0.025],
+          "transform": {
+            "translation": [0.325, -0.085, 0.3875]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.775]
+          }
+        },
+        {
+          "id": "apron-r-end",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.025, 0.08, 0.72],
+          "transform": {
+            "translation": [0.6775, -0.085, 0.0]
+          }
+        },
+        {
+          "id": "block-r-0",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.45,
+          "size": [0.06, 0.03, 0.025],
+          "transform": {
+            "translation": [0.52, -0.03, 0.3775]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.755]
+          }
+        },
+        {
+          "id": "block-r-1",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.45,
+          "size": [0.06, 0.03, 0.025],
+          "transform": {
+            "translation": [0.37, -0.03, 0.3775]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.755]
+          }
+        },
+        {
+          "id": "block-r-end",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.45,
+          "size": [0.015, 0.03, 0.06],
+          "transform": {
+            "translation": [0.6725, -0.03, 0.15]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.3]
+          }
+        },
+        {
+          "id": "runner-r-l",
+          "kind": "extrude",
+          "bone": "top-right",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.35,
+          "profile": [[-0.0635, 0.363], [-0.07, 0.363], [-0.07, 0.375], [-0.045, 0.375], [-0.045, 0.363], [-0.0515, 0.363], [-0.0515, 0.365], [-0.047, 0.365], [-0.047, 0.373], [-0.068, 0.373], [-0.068, 0.365], [-0.0635, 0.365]],
+          "plane": "yz",
+          "from": 0.01,
+          "to": 0.63
+        },
+        {
+          "id": "runner-r-r",
+          "kind": "extrude",
+          "bone": "top-right",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.35,
+          "profile": [[-0.0635, -0.363], [-0.07, -0.363], [-0.07, -0.375], [-0.045, -0.375], [-0.045, -0.363], [-0.0515, -0.363], [-0.0515, -0.365], [-0.047, -0.365], [-0.047, -0.373], [-0.068, -0.373], [-0.068, -0.365], [-0.0635, -0.365]],
+          "plane": "yz",
+          "from": 0.01,
+          "to": 0.63
+        },
+        {
+          "id": "leaf",
+          "kind": "extrude",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [[-0.45, -0.3], [-0.45, 0.3], [0.45, 0.3], [0.45, -0.3]],
+          "plane": "zx",
+          "from": 0.015,
+          "to": 0.03,
+          "transform": {
+            "translation": [0.3, 0, 0.0]
+          }
+        },
+        {
+          "id": "leaf-bevel",
+          "kind": "extrude",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [[-0.435, -0.3], [-0.435, 0.3], [0.435, 0.3], [0.435, -0.3]],
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.015,
+          "taperTo": [1.03448, 1.0],
+          "transform": {
+            "translation": [0.3, 0, 0.0]
+          }
+        },
+        {
+          "id": "centre-bar",
+          "kind": "box",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.35,
+          "size": [1.0, 0.021, 0.008],
+          "transform": {
+            "translation": [0.5, 0.0, 0.369]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.738]
+          }
+        },
+        {
+          "id": "lift-crosshead-0",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "zx",
+          "profile": [[-0.31, -0.018], [0.31, -0.018], [0.31, 0.018], [-0.31, 0.018]],
+          "holes": [
+            [[-0.2314, 0.0], [-0.2316613, 0.0026532], [-0.2324352, 0.0052045], [-0.233692, 0.0075558], [-0.2353833, 0.0096167], [-0.2374442, 0.011308], [-0.2397955, 0.0125648], [-0.2423468, 0.0133387], [-0.245, 0.0136], [-0.2476532, 0.0133387], [-0.2502045, 0.0125648], [-0.2525558, 0.011308], [-0.2546167, 0.0096167], [-0.256308, 0.0075558], [-0.2575648, 0.0052045], [-0.2583387, 0.0026532], [-0.2586, 0.0], [-0.2583387, -0.0026532], [-0.2575648, -0.0052045], [-0.256308, -0.0075558], [-0.2546167, -0.0096167], [-0.2525558, -0.011308], [-0.2502045, -0.0125648], [-0.2476532, -0.0133387], [-0.245, -0.0136], [-0.2423468, -0.0133387], [-0.2397955, -0.0125648], [-0.2374442, -0.011308], [-0.2353833, -0.0096167], [-0.233692, -0.0075558], [-0.2324352, -0.0052045], [-0.2316613, -0.0026532]],
+            [[0.2586, 0.0], [0.2583387, 0.0026532], [0.2575648, 0.0052045], [0.256308, 0.0075558], [0.2546167, 0.0096167], [0.2525558, 0.011308], [0.2502045, 0.0125648], [0.2476532, 0.0133387], [0.245, 0.0136], [0.2423468, 0.0133387], [0.2397955, 0.0125648], [0.2374442, 0.011308], [0.2353833, 0.0096167], [0.233692, 0.0075558], [0.2324352, 0.0052045], [0.2316613, 0.0026532], [0.2314, 0.0], [0.2316613, -0.0026532], [0.2324352, -0.0052045], [0.233692, -0.0075558], [0.2353833, -0.0096167], [0.2374442, -0.011308], [0.2397955, -0.0125648], [0.2423468, -0.0133387], [0.245, -0.0136], [0.2476532, -0.0133387], [0.2502045, -0.0125648], [0.2525558, -0.011308], [0.2546167, -0.0096167], [0.256308, -0.0075558], [0.2575648, -0.0052045], [0.2583387, -0.0026532]],
+            [[-0.283, -0.013], [-0.2765, -0.0112583], [-0.2717417, -0.0065], [-0.27, 0.0], [-0.2717417, 0.0065], [-0.2765, 0.0112583], [-0.283, 0.013], [-0.287, 0.013], [-0.2935, 0.0112583], [-0.2982583, 0.0065], [-0.3, 0.0], [-0.2982583, -0.0065], [-0.2935, -0.0112583], [-0.287, -0.013]],
+            [[-0.097, -0.013], [-0.0905, -0.0112583], [-0.0857417, -0.0065], [-0.084, 0.0], [-0.0857417, 0.0065], [-0.0905, 0.0112583], [-0.097, 0.013], [-0.207, 0.013], [-0.2135, 0.0112583], [-0.2182583, 0.0065], [-0.22, 0.0], [-0.2182583, -0.0065], [-0.2135, -0.0112583], [-0.207, -0.013]],
+            [[0.062, -0.013], [0.0685, -0.0112583], [0.0732583, -0.0065], [0.075, 0.0], [0.0732583, 0.0065], [0.0685, 0.0112583], [0.062, 0.013], [-0.062, 0.013], [-0.0685, 0.0112583], [-0.0732583, 0.0065], [-0.075, 0.0], [-0.0732583, -0.0065], [-0.0685, -0.0112583], [-0.062, -0.013]],
+            [[0.207, -0.013], [0.2135, -0.0112583], [0.2182583, -0.0065], [0.22, 0.0], [0.2182583, 0.0065], [0.2135, 0.0112583], [0.207, 0.013], [0.097, 0.013], [0.0905, 0.0112583], [0.0857417, 0.0065], [0.084, 0.0], [0.0857417, -0.0065], [0.0905, -0.0112583], [0.097, -0.013]],
+            [[0.287, -0.013], [0.2935, -0.0112583], [0.2982583, -0.0065], [0.3, 0.0], [0.2982583, 0.0065], [0.2935, 0.0112583], [0.287, 0.013], [0.283, 0.013], [0.2765, 0.0112583], [0.2717417, 0.0065], [0.27, 0.0], [0.2717417, -0.0065], [0.2765, -0.0112583], [0.283, -0.013]]
+          ],
+          "from": -0.0415,
+          "to": -0.0235,
+          "transform": {
+            "translation": [0.34, 0, 0]
+          }
+        },
+        {
+          "id": "lift-bracket-0-near",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, -0.31], [-0.0415, -0.319], [-0.005, -0.353], [-0.005, -0.365], [0.005, -0.365], [0.005, -0.347], [-0.0235, -0.319], [-0.0235, -0.31]],
+          "from": 0.322,
+          "to": 0.358
+        },
+        {
+          "id": "lift-bracket-0-far",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, 0.31], [-0.0415, 0.319], [-0.005, 0.353], [-0.005, 0.365], [0.005, 0.365], [0.005, 0.347], [-0.0235, 0.319], [-0.0235, 0.31]],
+          "from": 0.322,
+          "to": 0.358
+        },
+        {
+          "id": "lift-nut-0",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.34, 0, -0.245],
+          "profile": [[-0.0475, 0.008], [-0.0475, 0.02], [-0.0415, 0.02], [-0.0415, 0.013], [-0.0235, 0.013], [-0.0235, 0.026], [-0.0195, 0.029], [-0.0135, 0.029], [-0.0105, 0.025], [-0.0105, 0.008], [-0.0475, 0.008]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-screw-0",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.14, 0, -0.245],
+          "profile": [[-0.09, 0], [-0.09, 0.0065], [-0.0885, 0.008], [-0.006, 0.008], [-0.004, 0.017], [-0.0015, 0.019], [0, 0.019], [0, 0]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-crosshead-1",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "zx",
+          "profile": [[-0.31, -0.018], [0.31, -0.018], [0.31, 0.018], [-0.31, 0.018]],
+          "holes": [
+            [[-0.2314, 0.0], [-0.2316613, 0.0026532], [-0.2324352, 0.0052045], [-0.233692, 0.0075558], [-0.2353833, 0.0096167], [-0.2374442, 0.011308], [-0.2397955, 0.0125648], [-0.2423468, 0.0133387], [-0.245, 0.0136], [-0.2476532, 0.0133387], [-0.2502045, 0.0125648], [-0.2525558, 0.011308], [-0.2546167, 0.0096167], [-0.256308, 0.0075558], [-0.2575648, 0.0052045], [-0.2583387, 0.0026532], [-0.2586, 0.0], [-0.2583387, -0.0026532], [-0.2575648, -0.0052045], [-0.256308, -0.0075558], [-0.2546167, -0.0096167], [-0.2525558, -0.011308], [-0.2502045, -0.0125648], [-0.2476532, -0.0133387], [-0.245, -0.0136], [-0.2423468, -0.0133387], [-0.2397955, -0.0125648], [-0.2374442, -0.011308], [-0.2353833, -0.0096167], [-0.233692, -0.0075558], [-0.2324352, -0.0052045], [-0.2316613, -0.0026532]],
+            [[0.2586, 0.0], [0.2583387, 0.0026532], [0.2575648, 0.0052045], [0.256308, 0.0075558], [0.2546167, 0.0096167], [0.2525558, 0.011308], [0.2502045, 0.0125648], [0.2476532, 0.0133387], [0.245, 0.0136], [0.2423468, 0.0133387], [0.2397955, 0.0125648], [0.2374442, 0.011308], [0.2353833, 0.0096167], [0.233692, 0.0075558], [0.2324352, 0.0052045], [0.2316613, 0.0026532], [0.2314, 0.0], [0.2316613, -0.0026532], [0.2324352, -0.0052045], [0.233692, -0.0075558], [0.2353833, -0.0096167], [0.2374442, -0.011308], [0.2397955, -0.0125648], [0.2423468, -0.0133387], [0.245, -0.0136], [0.2476532, -0.0133387], [0.2502045, -0.0125648], [0.2525558, -0.011308], [0.2546167, -0.0096167], [0.256308, -0.0075558], [0.2575648, -0.0052045], [0.2583387, -0.0026532]],
+            [[-0.283, -0.013], [-0.2765, -0.0112583], [-0.2717417, -0.0065], [-0.27, 0.0], [-0.2717417, 0.0065], [-0.2765, 0.0112583], [-0.283, 0.013], [-0.287, 0.013], [-0.2935, 0.0112583], [-0.2982583, 0.0065], [-0.3, 0.0], [-0.2982583, -0.0065], [-0.2935, -0.0112583], [-0.287, -0.013]],
+            [[-0.097, -0.013], [-0.0905, -0.0112583], [-0.0857417, -0.0065], [-0.084, 0.0], [-0.0857417, 0.0065], [-0.0905, 0.0112583], [-0.097, 0.013], [-0.207, 0.013], [-0.2135, 0.0112583], [-0.2182583, 0.0065], [-0.22, 0.0], [-0.2182583, -0.0065], [-0.2135, -0.0112583], [-0.207, -0.013]],
+            [[0.062, -0.013], [0.0685, -0.0112583], [0.0732583, -0.0065], [0.075, 0.0], [0.0732583, 0.0065], [0.0685, 0.0112583], [0.062, 0.013], [-0.062, 0.013], [-0.0685, 0.0112583], [-0.0732583, 0.0065], [-0.075, 0.0], [-0.0732583, -0.0065], [-0.0685, -0.0112583], [-0.062, -0.013]],
+            [[0.207, -0.013], [0.2135, -0.0112583], [0.2182583, -0.0065], [0.22, 0.0], [0.2182583, 0.0065], [0.2135, 0.0112583], [0.207, 0.013], [0.097, 0.013], [0.0905, 0.0112583], [0.0857417, 0.0065], [0.084, 0.0], [0.0857417, -0.0065], [0.0905, -0.0112583], [0.097, -0.013]],
+            [[0.287, -0.013], [0.2935, -0.0112583], [0.2982583, -0.0065], [0.3, 0.0], [0.2982583, 0.0065], [0.2935, 0.0112583], [0.287, 0.013], [0.283, 0.013], [0.2765, 0.0112583], [0.2717417, 0.0065], [0.27, 0.0], [0.2717417, -0.0065], [0.2765, -0.0112583], [0.283, -0.013]]
+          ],
+          "from": -0.0415,
+          "to": -0.0235,
+          "transform": {
+            "translation": [0.66, 0, 0]
+          }
+        },
+        {
+          "id": "lift-bracket-1-near",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, -0.31], [-0.0415, -0.319], [-0.005, -0.353], [-0.005, -0.365], [0.005, -0.365], [0.005, -0.347], [-0.0235, -0.319], [-0.0235, -0.31]],
+          "from": 0.642,
+          "to": 0.678
+        },
+        {
+          "id": "lift-bracket-1-far",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, 0.31], [-0.0415, 0.319], [-0.005, 0.353], [-0.005, 0.365], [0.005, 0.365], [0.005, 0.347], [-0.0235, 0.319], [-0.0235, 0.31]],
+          "from": 0.642,
+          "to": 0.678
+        },
+        {
+          "id": "lift-nut-1",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.66, 0, -0.245],
+          "profile": [[-0.0475, 0.008], [-0.0475, 0.02], [-0.0415, 0.02], [-0.0415, 0.013], [-0.0235, 0.013], [-0.0235, 0.026], [-0.0195, 0.029], [-0.0135, 0.029], [-0.0105, 0.025], [-0.0105, 0.008], [-0.0475, 0.008]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-screw-1",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.46, 0, -0.245],
+          "profile": [[-0.09, 0], [-0.09, 0.0065], [-0.0885, 0.008], [-0.006, 0.008], [-0.004, 0.017], [-0.0015, 0.019], [0, 0.019], [0, 0]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        }
       ],
-      [
-       0.45,
-       -0.8
+      "thermal": [
+        {
+          "id": "th-top-l",
+          "of": "top-l",
+          "region": "table-top",
+          "layer": "top-plank"
+        },
+        {
+          "id": "th-top-l-bevel",
+          "of": "top-l-bevel",
+          "region": "table-top",
+          "layer": "top-plank"
+        },
+        {
+          "id": "th-leg-l",
+          "of": "leg-l",
+          "region": "legs",
+          "layer": "leg-solid"
+        },
+        {
+          "id": "th-apron-l-side",
+          "of": "apron-l-side",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-apron-l-end",
+          "of": "apron-l-end",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-block-l-0",
+          "of": "block-l-0",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-block-l-1",
+          "of": "block-l-1",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-block-l-end",
+          "of": "block-l-end",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-runner-l-l",
+          "of": "runner-l-l",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-runner-l-r",
+          "of": "runner-l-r",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-top-r",
+          "of": "top-r",
+          "region": "table-top",
+          "layer": "top-plank"
+        },
+        {
+          "id": "th-top-r-bevel",
+          "of": "top-r-bevel",
+          "region": "table-top",
+          "layer": "top-plank"
+        },
+        {
+          "id": "th-leg-r",
+          "of": "leg-r",
+          "region": "legs",
+          "layer": "leg-solid"
+        },
+        {
+          "id": "th-apron-r-side",
+          "of": "apron-r-side",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-apron-r-end",
+          "of": "apron-r-end",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-block-r-0",
+          "of": "block-r-0",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-block-r-1",
+          "of": "block-r-1",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-block-r-end",
+          "of": "block-r-end",
+          "region": "apron",
+          "layer": "apron-board"
+        },
+        {
+          "id": "th-runner-r-l",
+          "of": "runner-r-l",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-runner-r-r",
+          "of": "runner-r-r",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-leaf",
+          "of": "leaf",
+          "region": "leaf-top",
+          "layer": "leaf-plank"
+        },
+        {
+          "id": "th-leaf-bevel",
+          "of": "leaf-bevel",
+          "region": "leaf-top",
+          "layer": "leaf-plank"
+        },
+        {
+          "id": "th-centre-bar",
+          "of": "centre-bar",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-crosshead-0",
+          "of": "lift-crosshead-0",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-bracket-0-near",
+          "of": "lift-bracket-0-near",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-bracket-0-far",
+          "of": "lift-bracket-0-far",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-nut-0",
+          "of": "lift-nut-0",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-screw-0",
+          "of": "lift-screw-0",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-crosshead-1",
+          "of": "lift-crosshead-1",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-bracket-1-near",
+          "of": "lift-bracket-1-near",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-bracket-1-far",
+          "of": "lift-bracket-1-far",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-nut-1",
+          "of": "lift-nut-1",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        },
+        {
+          "id": "th-lift-screw-1",
+          "of": "lift-screw-1",
+          "region": "slide-rails",
+          "layer": "rail-steel"
+        }
       ],
-      [
-       0.45,
-       0.0
+      "structure": [
+        {
+          "id": "m-top-l",
+          "of": "top-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-top-l-bevel",
+          "of": "top-l-bevel",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-leg-l",
+          "of": "leg-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-l-side",
+          "of": "apron-l-side",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-l-end",
+          "of": "apron-l-end",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "j-block-l-0",
+          "of": "block-l-0",
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "j-block-l-1",
+          "of": "block-l-1",
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "j-block-l-end",
+          "of": "block-l-end",
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "m-runner-l-l",
+          "of": "runner-l-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-runner-l-r",
+          "of": "runner-l-r",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-top-r",
+          "of": "top-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-top-r-bevel",
+          "of": "top-r-bevel",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-leg-r",
+          "of": "leg-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-r-side",
+          "of": "apron-r-side",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-r-end",
+          "of": "apron-r-end",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "j-block-r-0",
+          "of": "block-r-0",
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "j-block-r-1",
+          "of": "block-r-1",
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "j-block-r-end",
+          "of": "block-r-end",
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "m-runner-r-l",
+          "of": "runner-r-l",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-runner-r-r",
+          "of": "runner-r-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-leaf",
+          "of": "leaf",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "m-leaf-bevel",
+          "of": "leaf-bevel",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "m-centre-bar",
+          "of": "centre-bar",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "tenon-left-side",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.02, 0.06, 0.025],
+          "transform": {
+            "translation": [0.16, -0.085, 0.3875]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.775]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "tenon-left-end",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.025, 0.06, 0.02],
+          "transform": {
+            "translation": [0.1225, -0.085, 0.35]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.7]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "shoe-left",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.25,
+          "size": [0.1, 0.021, 0.008],
+          "transform": {
+            "translation": [0.74, -0.0575, 0.369]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.738]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "tenon-right-side",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.02, 0.06, 0.025],
+          "transform": {
+            "translation": [0.64, -0.085, 0.3875]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.775]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "tenon-right-end",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.025, 0.06, 0.02],
+          "transform": {
+            "translation": [0.6775, -0.085, 0.35]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.7]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "shoe-right",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.25,
+          "size": [0.1, 0.021, 0.008],
+          "transform": {
+            "translation": [0.06, -0.0575, 0.369]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.738]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "dowel-left",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [[0.0, 0.0], [0.0, 0.005], [0.03, 0.005], [0.03, 0.0]],
+          "axis": [1, 0, 0],
+          "origin": [0.785, 0.0, 0.3],
+          "repeat": {
+            "count": 3,
+            "translation": [0.0, 0.0, -0.3]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "dowel-right",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [[0.0, 0.0], [0.0, 0.005], [0.03, 0.005], [0.03, 0.0]],
+          "axis": [1, 0, 0],
+          "origin": [-0.015, 0.0, 0.15],
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.3]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "support-leg-left-l",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.018], [0.0075, 0.018], [0.0075, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.135, -0.735, 0.375],
+          "member": "top-left",
+          "part": "support",
+          "anchor": "leg-left-l"
+        },
+        {
+          "id": "support-leg-left-r",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.018], [0.0075, 0.018], [0.0075, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.135, -0.735, -0.375],
+          "member": "top-left",
+          "part": "support",
+          "anchor": "leg-left-r"
+        },
+        {
+          "id": "support-leg-right-l",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.018], [0.0075, 0.018], [0.0075, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.665, -0.735, 0.375],
+          "member": "top-right",
+          "part": "support",
+          "anchor": "leg-right-l"
+        },
+        {
+          "id": "support-leg-right-r",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.018], [0.0075, 0.018], [0.0075, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.665, -0.735, -0.375],
+          "member": "top-right",
+          "part": "support",
+          "anchor": "leg-right-r"
+        },
+        {
+          "id": "mass-left",
+          "kind": "ellipsoid",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.02, 0.02, 0.02],
+          "transform": {
+            "translation": [0.35667, -0.06811, 0.0]
+          },
+          "member": "top-left",
+          "part": "mass"
+        },
+        {
+          "id": "mass-right",
+          "kind": "ellipsoid",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.02, 0.02, 0.02],
+          "transform": {
+            "translation": [0.44333, -0.06811, 0.0]
+          },
+          "member": "top-right",
+          "part": "mass"
+        },
+        {
+          "id": "mass-leaf",
+          "kind": "ellipsoid",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.04, 0.012, 0.04],
+          "transform": {
+            "translation": [0.3, 0.01211, 0.0]
+          },
+          "member": "leaf",
+          "part": "mass"
+        },
+        {
+          "id": "mass-frame",
+          "kind": "ellipsoid",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.02, 0.02, 0.02],
+          "transform": {
+            "translation": [0.5, -0.01764, 0.0]
+          },
+          "member": "frame",
+          "part": "mass"
+        },
+        {
+          "id": "st-lift-crosshead-0",
+          "of": "lift-crosshead-0",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-0-near",
+          "of": "lift-bracket-0-near",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-0-far",
+          "of": "lift-bracket-0-far",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-nut-0",
+          "of": "lift-nut-0",
+          "member": "frame",
+          "part": "joint"
+        },
+        {
+          "id": "st-lift-screw-0",
+          "of": "lift-screw-0",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-crosshead-1",
+          "of": "lift-crosshead-1",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-1-near",
+          "of": "lift-bracket-1-near",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-1-far",
+          "of": "lift-bracket-1-far",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-nut-1",
+          "of": "lift-nut-1",
+          "member": "frame",
+          "part": "joint"
+        },
+        {
+          "id": "st-lift-screw-1",
+          "of": "lift-screw-1",
+          "member": "leaf",
+          "part": "member"
+        }
       ],
-      [
-       -0.45,
-       0.0
+      "decisions": [
+        {
+          "en": "Body, authored for 7.5 mm: two 0.80 x 0.90 m solid oak top halves, 30 mm thick with a 15 mm underside bevel on the three free edges and a square joint edge; a 30 mm shadow gap under the top in which the 0.60 x 0.90 m leaf (same bevel on its long edges) is stored and in which four oak blocks per half join top and aprons; 25 x 80 mm aprons, the long ones running to the joint, tenoned 20 mm into the legs; four legs, 70 mm square under the aprons and tapered on all four faces to 45 mm at the floor; per long apron a 25 x 12 mm steel tube of 2 mm sheet, and in the tubes the two stationary 21 x 8 mm centre bars of the telescopic slide (tube-in-tube). Screws, felt glides, table locks and dowels are omitted from the body (below 7.5 mm or hidden).",
+          "de": "Körper, für 7,5 mm gebaut: zwei Plattenhälften 0,80 x 0,90 m aus massiver Eiche, 30 mm stark, mit 15 mm Unterfase an den drei freien Kanten und gerader Stoßkante; eine 30-mm-Schattenfuge unter der Platte, in der die Einlegeplatte 0,60 x 0,90 m (gleiche Fase an den Längskanten) liegt und in der je Hälfte vier Eichenklötze Platte und Zargen verbinden; Zargen 25 x 80 mm, die langen bis zum Stoß, 20 mm in die Beine gezapft; vier Beine, unter der Zarge 70 mm im Quadrat und allseitig auf 45 mm am Boden verjüngt; je Längszarge ein Stahlrohr 25 x 12 mm aus 2 mm Blech und in den Rohren die zwei feststehenden Mittelstäbe 21 x 8 mm des Teleskopauszugs (Rohr in Rohr). Schrauben, Filzgleiter, Tischverbinder und Dübel fehlen im Körper (unter 7,5 mm oder verdeckt)."
+        },
+        {
+          "en": "Thermal: every region is the surface of its body solids with its one layer (top plank, leaf plank, apron board with the blocks, leg, steel rail); no hidden regions, no emitters. Structure: per half the top plate, the aprons, the legs and the runners are the members, the tenons, the gap blocks and the slide shoes at the inner ends of the tubes are the joints; the leaf plate is the member of the leaf; the joint edges carry the alignment dowels (three in the left half, two in the right half) that enter the other half when closed and the leaf when extended; the centre bars are the frame member; four felt glides are the supports; each half, the leaf and the slide frame carry their mass at their centre.",
+          "de": "Thermik: jede Region ist die Oberfläche ihrer Körper mit ihrer einen Schicht (Plattenbohle, Einlegebohle, Zargenbrett mit den Klötzen, Bein, Stahlschiene); keine verdeckten Regionen, keine Emitter. Tragwerk: je Hälfte sind Platte, Zargen, Beine und Laufschienen die Stäbe, Zapfen, Fugenklötze und die Gleitschuhe an den inneren Rohrenden die Gelenke; die Einlegeplatte ist der Stab der Einlage; die Stoßkanten tragen die Passdübel (drei in der linken, zwei in der rechten Hälfte), die geschlossen in die andere Hälfte und ausgezogen in die Einlage greifen; die Mittelstäbe sind der Rahmenstab; vier Filzgleiter sind die Auflager; jede Hälfte, die Einlage und der Auszugsrahmen tragen ihre Masse im Schwerpunkt."
+        },
+        {
+          "en": "Two steel crossheads on the stationary slide bars carry four captive lifting nuts. Non-rotating screw posts travel with the leaf. Its weight passes through the thrust collars and crossheads into the slide bars and both timber aprons.",
+          "de": "Zwei stählerne Querträger an den feststehenden Auszugsstegen tragen vier gefasste Hubmuttern. Verdrehsichere Spindeln fahren mit der Einlegeplatte. Über die Druckbunde und Querträger gelangt die Last in die Auszugsstege und beide Holzzargen."
+        }
       ]
-     ],
-     "plane": "zx",
-     "from": 0.0,
-     "to": 0.015,
-     "transform": {
-      "translation": [
-       0.8,
-       0,
-       0.0
-      ]
-     }
     },
-    {
-     "id": "top-l-bevel",
-     "kind": "extrude",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.435,
-       -0.785
+    "100": {
+      "status": "authored",
+      "denominator": 100,
+      "body": [
+        {
+          "id": "top-l",
+          "kind": "extrude",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.45, -0.8], [0.45, -0.8], [0.45, 0.0], [-0.45, 0.0]],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.015,
+          "transform": {
+            "translation": [0.8, 0, 0.0]
+          }
+        },
+        {
+          "id": "leg-l",
+          "kind": "loft",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.6,
+          "sections": [
+            {
+              "at": [0.135, -0.735, 0.375],
+              "rx": 0.0225,
+              "ry": 0.0225,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            },
+            {
+              "at": [0.135, -0.155, 0.375],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            },
+            {
+              "at": [0.135, -0.015, 0.375],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          }
+        },
+        {
+          "id": "apron-l-side",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.65, 0.08, 0.025],
+          "transform": {
+            "translation": [0.475, -0.085, 0.3875]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.775]
+          }
+        },
+        {
+          "id": "apron-l-end",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.025, 0.08, 0.72],
+          "transform": {
+            "translation": [0.1225, -0.085, 0.0]
+          }
+        },
+        {
+          "id": "top-r",
+          "kind": "extrude",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.45, 0.0], [0.45, 0.0], [0.45, 0.8], [-0.45, 0.8]],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.015,
+          "transform": {
+            "translation": [0.0, 0, 0.0]
+          }
+        },
+        {
+          "id": "leg-r",
+          "kind": "loft",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.6,
+          "sections": [
+            {
+              "at": [0.665, -0.735, 0.375],
+              "rx": 0.0225,
+              "ry": 0.0225,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            },
+            {
+              "at": [0.665, -0.155, 0.375],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            },
+            {
+              "at": [0.665, -0.015, 0.375],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 10,
+              "rotation": [0.707107, 0.0, 0.0, 0.707107]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          }
+        },
+        {
+          "id": "apron-r-side",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.65, 0.08, 0.025],
+          "transform": {
+            "translation": [0.325, -0.085, 0.3875]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.775]
+          }
+        },
+        {
+          "id": "apron-r-end",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.025, 0.08, 0.72],
+          "transform": {
+            "translation": [0.6775, -0.085, 0.0]
+          }
+        },
+        {
+          "id": "leaf",
+          "kind": "extrude",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [[-0.45, -0.3], [-0.45, 0.3], [0.45, 0.3], [0.45, -0.3]],
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.03,
+          "transform": {
+            "translation": [0.3, 0, 0.0]
+          }
+        },
+        {
+          "id": "slide",
+          "kind": "box",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.35,
+          "size": [1.0, 0.02, 0.018],
+          "transform": {
+            "translation": [0.5, -0.0005, 0.366]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.732]
+          }
+        },
+        {
+          "id": "lift-crosshead-0",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "zx",
+          "profile": [[-0.31, -0.018], [0.31, -0.018], [0.31, 0.018], [-0.31, 0.018]],
+          "holes": [
+            [[-0.2314, 0.0], [-0.2318634, 0.0035199], [-0.2332221, 0.0068], [-0.2353833, 0.0096167], [-0.2382, 0.0117779], [-0.2414801, 0.0131366], [-0.245, 0.0136], [-0.2485199, 0.0131366], [-0.2518, 0.0117779], [-0.2546167, 0.0096167], [-0.2567779, 0.0068], [-0.2581366, 0.0035199], [-0.2586, 0.0], [-0.2581366, -0.0035199], [-0.2567779, -0.0068], [-0.2546167, -0.0096167], [-0.2518, -0.0117779], [-0.2485199, -0.0131366], [-0.245, -0.0136], [-0.2414801, -0.0131366], [-0.2382, -0.0117779], [-0.2353833, -0.0096167], [-0.2332221, -0.0068], [-0.2318634, -0.0035199]],
+            [[0.2586, 0.0], [0.2581366, 0.0035199], [0.2567779, 0.0068], [0.2546167, 0.0096167], [0.2518, 0.0117779], [0.2485199, 0.0131366], [0.245, 0.0136], [0.2414801, 0.0131366], [0.2382, 0.0117779], [0.2353833, 0.0096167], [0.2332221, 0.0068], [0.2318634, 0.0035199], [0.2314, 0.0], [0.2318634, -0.0035199], [0.2332221, -0.0068], [0.2353833, -0.0096167], [0.2382, -0.0117779], [0.2414801, -0.0131366], [0.245, -0.0136], [0.2485199, -0.0131366], [0.2518, -0.0117779], [0.2546167, -0.0096167], [0.2567779, -0.0068], [0.2581366, -0.0035199]],
+            [[-0.283, -0.013], [-0.2717417, -0.0065], [-0.2717417, 0.0065], [-0.283, 0.013], [-0.287, 0.013], [-0.2982583, 0.0065], [-0.2982583, -0.0065], [-0.287, -0.013]],
+            [[-0.097, -0.013], [-0.0857417, -0.0065], [-0.0857417, 0.0065], [-0.097, 0.013], [-0.207, 0.013], [-0.2182583, 0.0065], [-0.2182583, -0.0065], [-0.207, -0.013]],
+            [[0.062, -0.013], [0.0732583, -0.0065], [0.0732583, 0.0065], [0.062, 0.013], [-0.062, 0.013], [-0.0732583, 0.0065], [-0.0732583, -0.0065], [-0.062, -0.013]],
+            [[0.207, -0.013], [0.2182583, -0.0065], [0.2182583, 0.0065], [0.207, 0.013], [0.097, 0.013], [0.0857417, 0.0065], [0.0857417, -0.0065], [0.097, -0.013]],
+            [[0.287, -0.013], [0.2982583, -0.0065], [0.2982583, 0.0065], [0.287, 0.013], [0.283, 0.013], [0.2717417, 0.0065], [0.2717417, -0.0065], [0.283, -0.013]]
+          ],
+          "from": -0.0415,
+          "to": -0.0235,
+          "transform": {
+            "translation": [0.34, 0, 0]
+          }
+        },
+        {
+          "id": "lift-bracket-0-near",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, -0.31], [-0.0415, -0.32], [-0.005, -0.357], [0.005, -0.357], [0.005, -0.348], [-0.0235, -0.315], [-0.0235, -0.31]],
+          "from": 0.322,
+          "to": 0.358
+        },
+        {
+          "id": "lift-bracket-0-far",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, 0.31], [-0.0415, 0.32], [-0.005, 0.357], [0.005, 0.357], [0.005, 0.348], [-0.0235, 0.315], [-0.0235, 0.31]],
+          "from": 0.322,
+          "to": 0.358
+        },
+        {
+          "id": "lift-nut-0",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.34, 0, -0.245],
+          "profile": [[-0.0445, 0.008], [-0.0445, 0.019], [-0.0415, 0.019], [-0.0415, 0.013], [-0.0235, 0.013], [-0.0235, 0.027], [-0.0105, 0.027], [-0.0105, 0.008], [-0.0445, 0.008]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-screw-0",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.14, 0, -0.245],
+          "profile": [[-0.09, 0], [-0.09, 0.008], [-0.005, 0.008], [-0.005, 0.018], [0, 0.018], [0, 0]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-crosshead-1",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "zx",
+          "profile": [[-0.31, -0.018], [0.31, -0.018], [0.31, 0.018], [-0.31, 0.018]],
+          "holes": [
+            [[-0.2314, 0.0], [-0.2318634, 0.0035199], [-0.2332221, 0.0068], [-0.2353833, 0.0096167], [-0.2382, 0.0117779], [-0.2414801, 0.0131366], [-0.245, 0.0136], [-0.2485199, 0.0131366], [-0.2518, 0.0117779], [-0.2546167, 0.0096167], [-0.2567779, 0.0068], [-0.2581366, 0.0035199], [-0.2586, 0.0], [-0.2581366, -0.0035199], [-0.2567779, -0.0068], [-0.2546167, -0.0096167], [-0.2518, -0.0117779], [-0.2485199, -0.0131366], [-0.245, -0.0136], [-0.2414801, -0.0131366], [-0.2382, -0.0117779], [-0.2353833, -0.0096167], [-0.2332221, -0.0068], [-0.2318634, -0.0035199]],
+            [[0.2586, 0.0], [0.2581366, 0.0035199], [0.2567779, 0.0068], [0.2546167, 0.0096167], [0.2518, 0.0117779], [0.2485199, 0.0131366], [0.245, 0.0136], [0.2414801, 0.0131366], [0.2382, 0.0117779], [0.2353833, 0.0096167], [0.2332221, 0.0068], [0.2318634, 0.0035199], [0.2314, 0.0], [0.2318634, -0.0035199], [0.2332221, -0.0068], [0.2353833, -0.0096167], [0.2382, -0.0117779], [0.2414801, -0.0131366], [0.245, -0.0136], [0.2485199, -0.0131366], [0.2518, -0.0117779], [0.2546167, -0.0096167], [0.2567779, -0.0068], [0.2581366, -0.0035199]],
+            [[-0.283, -0.013], [-0.2717417, -0.0065], [-0.2717417, 0.0065], [-0.283, 0.013], [-0.287, 0.013], [-0.2982583, 0.0065], [-0.2982583, -0.0065], [-0.287, -0.013]],
+            [[-0.097, -0.013], [-0.0857417, -0.0065], [-0.0857417, 0.0065], [-0.097, 0.013], [-0.207, 0.013], [-0.2182583, 0.0065], [-0.2182583, -0.0065], [-0.207, -0.013]],
+            [[0.062, -0.013], [0.0732583, -0.0065], [0.0732583, 0.0065], [0.062, 0.013], [-0.062, 0.013], [-0.0732583, 0.0065], [-0.0732583, -0.0065], [-0.062, -0.013]],
+            [[0.207, -0.013], [0.2182583, -0.0065], [0.2182583, 0.0065], [0.207, 0.013], [0.097, 0.013], [0.0857417, 0.0065], [0.0857417, -0.0065], [0.097, -0.013]],
+            [[0.287, -0.013], [0.2982583, -0.0065], [0.2982583, 0.0065], [0.287, 0.013], [0.283, 0.013], [0.2717417, 0.0065], [0.2717417, -0.0065], [0.283, -0.013]]
+          ],
+          "from": -0.0415,
+          "to": -0.0235,
+          "transform": {
+            "translation": [0.66, 0, 0]
+          }
+        },
+        {
+          "id": "lift-bracket-1-near",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, -0.31], [-0.0415, -0.32], [-0.005, -0.357], [0.005, -0.357], [0.005, -0.348], [-0.0235, -0.315], [-0.0235, -0.31]],
+          "from": 0.642,
+          "to": 0.678
+        },
+        {
+          "id": "lift-bracket-1-far",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, 0.31], [-0.0415, 0.32], [-0.005, 0.357], [0.005, 0.357], [0.005, 0.348], [-0.0235, 0.315], [-0.0235, 0.31]],
+          "from": 0.642,
+          "to": 0.678
+        },
+        {
+          "id": "lift-nut-1",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.66, 0, -0.245],
+          "profile": [[-0.0445, 0.008], [-0.0445, 0.019], [-0.0415, 0.019], [-0.0415, 0.013], [-0.0235, 0.013], [-0.0235, 0.027], [-0.0105, 0.027], [-0.0105, 0.008], [-0.0445, 0.008]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-screw-1",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.46, 0, -0.245],
+          "profile": [[-0.09, 0], [-0.09, 0.008], [-0.005, 0.008], [-0.005, 0.018], [0, 0.018], [0, 0]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        }
       ],
-      [
-       0.435,
-       -0.785
+      "thermal": [
+        {
+          "id": "th-top-l",
+          "of": "top-l",
+          "region": "table-top"
+        },
+        {
+          "id": "th-leg-l",
+          "of": "leg-l",
+          "region": "legs"
+        },
+        {
+          "id": "th-apron-l-side",
+          "of": "apron-l-side",
+          "region": "apron"
+        },
+        {
+          "id": "th-apron-l-end",
+          "of": "apron-l-end",
+          "region": "apron"
+        },
+        {
+          "id": "th-top-r",
+          "of": "top-r",
+          "region": "table-top"
+        },
+        {
+          "id": "th-leg-r",
+          "of": "leg-r",
+          "region": "legs"
+        },
+        {
+          "id": "th-apron-r-side",
+          "of": "apron-r-side",
+          "region": "apron"
+        },
+        {
+          "id": "th-apron-r-end",
+          "of": "apron-r-end",
+          "region": "apron"
+        },
+        {
+          "id": "th-leaf",
+          "of": "leaf",
+          "region": "leaf-top"
+        },
+        {
+          "id": "th-slide",
+          "of": "slide",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-crosshead-0",
+          "of": "lift-crosshead-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-0-near",
+          "of": "lift-bracket-0-near",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-0-far",
+          "of": "lift-bracket-0-far",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-nut-0",
+          "of": "lift-nut-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-screw-0",
+          "of": "lift-screw-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-crosshead-1",
+          "of": "lift-crosshead-1",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-1-near",
+          "of": "lift-bracket-1-near",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-1-far",
+          "of": "lift-bracket-1-far",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-nut-1",
+          "of": "lift-nut-1",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-screw-1",
+          "of": "lift-screw-1",
+          "region": "slide-rails"
+        }
       ],
-      [
-       0.435,
-       0.0
+      "structure": [
+        {
+          "id": "m-top-l",
+          "of": "top-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-leg-l",
+          "of": "leg-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-l-side",
+          "of": "apron-l-side",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-l-end",
+          "of": "apron-l-end",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-top-r",
+          "of": "top-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-leg-r",
+          "of": "leg-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-r-side",
+          "of": "apron-r-side",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-r-end",
+          "of": "apron-r-end",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-leaf",
+          "of": "leaf",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "m-slide",
+          "of": "slide",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "tenon-left-side",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.02, 0.06, 0.025],
+          "transform": {
+            "translation": [0.16, -0.085, 0.3875]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.775]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "tenon-left-end",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.025, 0.06, 0.02],
+          "transform": {
+            "translation": [0.1225, -0.085, 0.35]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.7]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "slide-link-left",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.25,
+          "size": [0.1, 0.02, 0.018],
+          "transform": {
+            "translation": [0.7, -0.058, 0.366]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.732]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "tenon-right-side",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.02, 0.06, 0.025],
+          "transform": {
+            "translation": [0.64, -0.085, 0.3875]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.775]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "tenon-right-end",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.025, 0.06, 0.02],
+          "transform": {
+            "translation": [0.6775, -0.085, 0.35]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.7]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "slide-link-right",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.25,
+          "size": [0.1, 0.02, 0.018],
+          "transform": {
+            "translation": [0.1, -0.058, 0.366]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.732]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "dowel-left",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [[0.0, 0.0], [0.0, 0.0075], [0.04, 0.0075], [0.04, 0.0]],
+          "axis": [1, 0, 0],
+          "origin": [0.78, 0.0, 0.3],
+          "repeat": {
+            "count": 3,
+            "translation": [0.0, 0.0, -0.3]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "dowel-right",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "profile": [[0.0, 0.0], [0.0, 0.0075], [0.04, 0.0075], [0.04, 0.0]],
+          "axis": [1, 0, 0],
+          "origin": [-0.02, 0.0, 0.15],
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.3]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "support-leg-left-l",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.0225], [0.015, 0.0225], [0.015, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.135, -0.735, 0.375],
+          "member": "top-left",
+          "part": "support",
+          "anchor": "leg-left-l"
+        },
+        {
+          "id": "support-leg-left-r",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.0225], [0.015, 0.0225], [0.015, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.135, -0.735, -0.375],
+          "member": "top-left",
+          "part": "support",
+          "anchor": "leg-left-r"
+        },
+        {
+          "id": "support-leg-right-l",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.0225], [0.015, 0.0225], [0.015, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.665, -0.735, 0.375],
+          "member": "top-right",
+          "part": "support",
+          "anchor": "leg-right-l"
+        },
+        {
+          "id": "support-leg-right-r",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.0225], [0.015, 0.0225], [0.015, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.665, -0.735, -0.375],
+          "member": "top-right",
+          "part": "support",
+          "anchor": "leg-right-r"
+        },
+        {
+          "id": "mass-left",
+          "kind": "ellipsoid",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.025, 0.025, 0.025],
+          "transform": {
+            "translation": [0.35667, -0.06811, 0.0]
+          },
+          "member": "top-left",
+          "part": "mass"
+        },
+        {
+          "id": "mass-right",
+          "kind": "ellipsoid",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.025, 0.025, 0.025],
+          "transform": {
+            "translation": [0.44333, -0.06811, 0.0]
+          },
+          "member": "top-right",
+          "part": "mass"
+        },
+        {
+          "id": "mass-leaf",
+          "kind": "ellipsoid",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.04, 0.012, 0.04],
+          "transform": {
+            "translation": [0.3, 0.01211, 0.0]
+          },
+          "member": "leaf",
+          "part": "mass"
+        },
+        {
+          "id": "mass-frame",
+          "kind": "ellipsoid",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.025, 0.025, 0.025],
+          "transform": {
+            "translation": [0.5, -0.01764, 0.0]
+          },
+          "member": "frame",
+          "part": "mass"
+        },
+        {
+          "id": "st-lift-crosshead-0",
+          "of": "lift-crosshead-0",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-0-near",
+          "of": "lift-bracket-0-near",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-0-far",
+          "of": "lift-bracket-0-far",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-nut-0",
+          "of": "lift-nut-0",
+          "member": "frame",
+          "part": "joint"
+        },
+        {
+          "id": "st-lift-screw-0",
+          "of": "lift-screw-0",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-crosshead-1",
+          "of": "lift-crosshead-1",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-1-near",
+          "of": "lift-bracket-1-near",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-1-far",
+          "of": "lift-bracket-1-far",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-nut-1",
+          "of": "lift-nut-1",
+          "member": "frame",
+          "part": "joint"
+        },
+        {
+          "id": "st-lift-screw-1",
+          "of": "lift-screw-1",
+          "member": "leaf",
+          "part": "member"
+        }
       ],
-      [
-       -0.435,
-       0.0
+      "decisions": [
+        {
+          "en": "Body, authored anew for 15 mm: the top halves and the leaf as square-edged 30 mm plates (the 15 mm bevel is one feature and merges into the edge), the shadow gap with the stored leaf, the 25 x 80 mm aprons, the tapered legs, and per side one 18 x 20 mm steel slide in which runner and centre bar are merged; the gap blocks are omitted.",
+          "de": "Körper, für 15 mm neu gebaut: Plattenhälften und Einlegeplatte als 30-mm-Platten mit gerader Kante (die 15-mm-Fase ist ein Merkmal und geht in der Kante auf), die Schattenfuge mit der verstauten Einlage, die Zargen 25 x 80 mm, die verjüngten Beine und je Seite ein Stahlauszug 18 x 20 mm, in dem Laufschiene und Mittelstab verschmolzen sind; die Fugenklötze entfallen."
+        },
+        {
+          "en": "Thermal: one surface per region; the slide is the steel region. Structure: plates, aprons, legs, leaf and slides as members; tenons, one 15 mm slide link per half and side, dowels of the joint edges; four glides; masses at the centres.",
+          "de": "Thermik: eine Oberfläche je Region; der Auszug ist die Stahlregion. Tragwerk: Platten, Zargen, Beine, Einlage und Auszüge als Stäbe; Zapfen, je Hälfte und Seite ein 15-mm-Auszugsglied, Dübel der Stoßkanten; vier Gleiter; Massen in den Schwerpunkten."
+        },
+        {
+          "en": "Two steel crossheads on the stationary slide bars carry four captive lifting nuts. Non-rotating screw posts travel with the leaf. Its weight passes through the thrust collars and crossheads into the slide bars and both timber aprons.",
+          "de": "Zwei stählerne Querträger an den feststehenden Auszugsstegen tragen vier gefasste Hubmuttern. Verdrehsichere Spindeln fahren mit der Einlegeplatte. Über die Druckbunde und Querträger gelangt die Last in die Auszugsstege und beide Holzzargen."
+        }
       ]
-     ],
-     "plane": "zx",
-     "from": -0.015,
-     "to": 0.0,
-     "taperTo": [
-      1.03448,
-      1.01911
-     ],
-     "transform": {
-      "translation": [
-       0.8,
-       0,
-       0.0
-      ]
-     }
     },
-    {
-     "id": "leg-l",
-     "kind": "loft",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.6,
-     "sections": [
-      {
-       "at": [
-        0.135,
-        -0.735,
-        0.375
-       ],
-       "rx": 0.0225,
-       "ry": 0.0225,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      },
-      {
-       "at": [
-        0.135,
-        -0.155,
-        0.375
-       ],
-       "rx": 0.035,
-       "ry": 0.035,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      },
-      {
-       "at": [
-        0.135,
-        -0.015,
-        0.375
-       ],
-       "rx": 0.035,
-       "ry": 0.035,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      }
-     ],
-     "capStart": true,
-     "capEnd": true,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
+    "200": {
+      "status": "authored",
+      "denominator": 200,
+      "body": [
+        {
+          "id": "top-l",
+          "kind": "extrude",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.45, -0.8], [0.45, -0.8], [0.45, 0.0], [-0.45, 0.0]],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.015,
+          "transform": {
+            "translation": [0.8, 0, 0.0]
+          }
+        },
+        {
+          "id": "leg-l",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.06, 0.72, 0.06],
+          "transform": {
+            "translation": [0.135, -0.375, 0.375]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          }
+        },
+        {
+          "id": "apron-l-side",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.655, 0.08, 0.03],
+          "transform": {
+            "translation": [0.4725, -0.085, 0.385]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.77]
+          }
+        },
+        {
+          "id": "apron-l-end",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.03, 0.08, 0.73],
+          "transform": {
+            "translation": [0.125, -0.085, 0.0]
+          }
+        },
+        {
+          "id": "top-r",
+          "kind": "extrude",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.45, 0.0], [0.45, 0.0], [0.45, 0.8], [-0.45, 0.8]],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.015,
+          "transform": {
+            "translation": [0.0, 0, 0.0]
+          }
+        },
+        {
+          "id": "leg-r",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.06, 0.72, 0.06],
+          "transform": {
+            "translation": [0.665, -0.375, 0.375]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          }
+        },
+        {
+          "id": "apron-r-side",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.655, 0.08, 0.03],
+          "transform": {
+            "translation": [0.3275, -0.085, 0.385]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.77]
+          }
+        },
+        {
+          "id": "apron-r-end",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.03, 0.08, 0.73],
+          "transform": {
+            "translation": [0.675, -0.085, 0.0]
+          }
+        },
+        {
+          "id": "leaf",
+          "kind": "extrude",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [[-0.45, -0.3], [-0.45, 0.3], [0.45, 0.3], [0.45, -0.3]],
+          "plane": "zx",
+          "from": 0.0,
+          "to": 0.03,
+          "transform": {
+            "translation": [0.3, 0, 0.0]
+          }
+        },
+        {
+          "id": "slide",
+          "kind": "box",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.35,
+          "size": [1.0, 0.03, 0.03],
+          "transform": {
+            "translation": [0.5, -0.0025, 0.355]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.71]
+          }
+        },
+        {
+          "id": "lift-crosshead-0",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "zx",
+          "profile": [[-0.31, -0.018], [0.31, -0.018], [0.31, 0.018], [-0.31, 0.018]],
+          "holes": [
+            [[-0.2314, 0.0], [-0.2324352, 0.0052045], [-0.2353833, 0.0096167], [-0.2397955, 0.0125648], [-0.245, 0.0136], [-0.2502045, 0.0125648], [-0.2546167, 0.0096167], [-0.2575648, 0.0052045], [-0.2586, 0.0], [-0.2575648, -0.0052045], [-0.2546167, -0.0096167], [-0.2502045, -0.0125648], [-0.245, -0.0136], [-0.2397955, -0.0125648], [-0.2353833, -0.0096167], [-0.2324352, -0.0052045]],
+            [[0.2586, 0.0], [0.2575648, 0.0052045], [0.2546167, 0.0096167], [0.2502045, 0.0125648], [0.245, 0.0136], [0.2397955, 0.0125648], [0.2353833, 0.0096167], [0.2324352, 0.0052045], [0.2314, 0.0], [0.2324352, -0.0052045], [0.2353833, -0.0096167], [0.2397955, -0.0125648], [0.245, -0.0136], [0.2502045, -0.0125648], [0.2546167, -0.0096167], [0.2575648, -0.0052045]],
+            [[-0.283, -0.013], [-0.2717417, -0.0065], [-0.2717417, 0.0065], [-0.283, 0.013], [-0.287, 0.013], [-0.2982583, 0.0065], [-0.2982583, -0.0065], [-0.287, -0.013]],
+            [[-0.097, -0.013], [-0.0857417, -0.0065], [-0.0857417, 0.0065], [-0.097, 0.013], [-0.207, 0.013], [-0.2182583, 0.0065], [-0.2182583, -0.0065], [-0.207, -0.013]],
+            [[0.062, -0.013], [0.0732583, -0.0065], [0.0732583, 0.0065], [0.062, 0.013], [-0.062, 0.013], [-0.0732583, 0.0065], [-0.0732583, -0.0065], [-0.062, -0.013]],
+            [[0.207, -0.013], [0.2182583, -0.0065], [0.2182583, 0.0065], [0.207, 0.013], [0.097, 0.013], [0.0857417, 0.0065], [0.0857417, -0.0065], [0.097, -0.013]],
+            [[0.287, -0.013], [0.2982583, -0.0065], [0.2982583, 0.0065], [0.287, 0.013], [0.283, 0.013], [0.2717417, 0.0065], [0.2717417, -0.0065], [0.283, -0.013]]
+          ],
+          "from": -0.0415,
+          "to": -0.0235,
+          "transform": {
+            "translation": [0.34, 0, 0]
+          }
+        },
+        {
+          "id": "lift-bracket-0-near",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, -0.31], [-0.0415, -0.32], [-0.005, -0.34], [0.005, -0.34], [0.005, -0.335], [-0.0235, -0.315], [-0.0235, -0.31]],
+          "from": 0.322,
+          "to": 0.358
+        },
+        {
+          "id": "lift-bracket-0-far",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, 0.31], [-0.0415, 0.32], [-0.005, 0.34], [0.005, 0.34], [0.005, 0.335], [-0.0235, 0.315], [-0.0235, 0.31]],
+          "from": 0.322,
+          "to": 0.358
+        },
+        {
+          "id": "lift-nut-0",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.34, 0, -0.245],
+          "profile": [[-0.0415, 0.008], [-0.0415, 0.013], [-0.0235, 0.013], [-0.0235, 0.025], [-0.0105, 0.025], [-0.0105, 0.008], [-0.0415, 0.008]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-screw-0",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.14, 0, -0.245],
+          "profile": [[-0.09, 0], [-0.09, 0.008], [-0.005, 0.008], [-0.005, 0.018], [0, 0.018], [0, 0]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-crosshead-1",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "zx",
+          "profile": [[-0.31, -0.018], [0.31, -0.018], [0.31, 0.018], [-0.31, 0.018]],
+          "holes": [
+            [[-0.2314, 0.0], [-0.2324352, 0.0052045], [-0.2353833, 0.0096167], [-0.2397955, 0.0125648], [-0.245, 0.0136], [-0.2502045, 0.0125648], [-0.2546167, 0.0096167], [-0.2575648, 0.0052045], [-0.2586, 0.0], [-0.2575648, -0.0052045], [-0.2546167, -0.0096167], [-0.2502045, -0.0125648], [-0.245, -0.0136], [-0.2397955, -0.0125648], [-0.2353833, -0.0096167], [-0.2324352, -0.0052045]],
+            [[0.2586, 0.0], [0.2575648, 0.0052045], [0.2546167, 0.0096167], [0.2502045, 0.0125648], [0.245, 0.0136], [0.2397955, 0.0125648], [0.2353833, 0.0096167], [0.2324352, 0.0052045], [0.2314, 0.0], [0.2324352, -0.0052045], [0.2353833, -0.0096167], [0.2397955, -0.0125648], [0.245, -0.0136], [0.2502045, -0.0125648], [0.2546167, -0.0096167], [0.2575648, -0.0052045]],
+            [[-0.283, -0.013], [-0.2717417, -0.0065], [-0.2717417, 0.0065], [-0.283, 0.013], [-0.287, 0.013], [-0.2982583, 0.0065], [-0.2982583, -0.0065], [-0.287, -0.013]],
+            [[-0.097, -0.013], [-0.0857417, -0.0065], [-0.0857417, 0.0065], [-0.097, 0.013], [-0.207, 0.013], [-0.2182583, 0.0065], [-0.2182583, -0.0065], [-0.207, -0.013]],
+            [[0.062, -0.013], [0.0732583, -0.0065], [0.0732583, 0.0065], [0.062, 0.013], [-0.062, 0.013], [-0.0732583, 0.0065], [-0.0732583, -0.0065], [-0.062, -0.013]],
+            [[0.207, -0.013], [0.2182583, -0.0065], [0.2182583, 0.0065], [0.207, 0.013], [0.097, 0.013], [0.0857417, 0.0065], [0.0857417, -0.0065], [0.097, -0.013]],
+            [[0.287, -0.013], [0.2982583, -0.0065], [0.2982583, 0.0065], [0.287, 0.013], [0.283, 0.013], [0.2717417, 0.0065], [0.2717417, -0.0065], [0.283, -0.013]]
+          ],
+          "from": -0.0415,
+          "to": -0.0235,
+          "transform": {
+            "translation": [0.66, 0, 0]
+          }
+        },
+        {
+          "id": "lift-bracket-1-near",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, -0.31], [-0.0415, -0.32], [-0.005, -0.34], [0.005, -0.34], [0.005, -0.335], [-0.0235, -0.315], [-0.0235, -0.31]],
+          "from": 0.642,
+          "to": 0.678
+        },
+        {
+          "id": "lift-bracket-1-far",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, 0.31], [-0.0415, 0.32], [-0.005, 0.34], [0.005, 0.34], [0.005, 0.335], [-0.0235, 0.315], [-0.0235, 0.31]],
+          "from": 0.642,
+          "to": 0.678
+        },
+        {
+          "id": "lift-nut-1",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.66, 0, -0.245],
+          "profile": [[-0.0415, 0.008], [-0.0415, 0.013], [-0.0235, 0.013], [-0.0235, 0.025], [-0.0105, 0.025], [-0.0105, 0.008], [-0.0415, 0.008]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-screw-1",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.46, 0, -0.245],
+          "profile": [[-0.09, 0], [-0.09, 0.008], [-0.005, 0.008], [-0.005, 0.018], [0, 0.018], [0, 0]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        }
+      ],
+      "thermal": [
+        {
+          "id": "th-top-l",
+          "of": "top-l",
+          "region": "table-top"
+        },
+        {
+          "id": "th-leg-l",
+          "of": "leg-l",
+          "region": "legs"
+        },
+        {
+          "id": "th-apron-l-side",
+          "of": "apron-l-side",
+          "region": "apron"
+        },
+        {
+          "id": "th-apron-l-end",
+          "of": "apron-l-end",
+          "region": "apron"
+        },
+        {
+          "id": "th-top-r",
+          "of": "top-r",
+          "region": "table-top"
+        },
+        {
+          "id": "th-leg-r",
+          "of": "leg-r",
+          "region": "legs"
+        },
+        {
+          "id": "th-apron-r-side",
+          "of": "apron-r-side",
+          "region": "apron"
+        },
+        {
+          "id": "th-apron-r-end",
+          "of": "apron-r-end",
+          "region": "apron"
+        },
+        {
+          "id": "th-leaf",
+          "of": "leaf",
+          "region": "leaf-top"
+        },
+        {
+          "id": "th-slide",
+          "of": "slide",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-crosshead-0",
+          "of": "lift-crosshead-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-0-near",
+          "of": "lift-bracket-0-near",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-0-far",
+          "of": "lift-bracket-0-far",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-nut-0",
+          "of": "lift-nut-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-screw-0",
+          "of": "lift-screw-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-crosshead-1",
+          "of": "lift-crosshead-1",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-1-near",
+          "of": "lift-bracket-1-near",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-1-far",
+          "of": "lift-bracket-1-far",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-nut-1",
+          "of": "lift-nut-1",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-screw-1",
+          "of": "lift-screw-1",
+          "region": "slide-rails"
+        }
+      ],
+      "structure": [
+        {
+          "id": "m-top-l",
+          "of": "top-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-leg-l",
+          "of": "leg-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-l-side",
+          "of": "apron-l-side",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-l-end",
+          "of": "apron-l-end",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-top-r",
+          "of": "top-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-leg-r",
+          "of": "leg-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-r-side",
+          "of": "apron-r-side",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-apron-r-end",
+          "of": "apron-r-end",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-leaf",
+          "of": "leaf",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "m-slide",
+          "of": "slide",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "corner-left",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.06, 0.08, 0.06],
+          "transform": {
+            "translation": [0.135, -0.085, 0.375]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "slide-link-left",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.25,
+          "size": [0.15, 0.03, 0.03],
+          "transform": {
+            "translation": [0.675, -0.06, 0.355]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.71]
+          },
+          "member": "top-left",
+          "part": "joint"
+        },
+        {
+          "id": "corner-right",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "size": [0.06, 0.08, 0.06],
+          "transform": {
+            "translation": [0.665, -0.085, 0.375]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "slide-link-right",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.25,
+          "size": [0.15, 0.03, 0.03],
+          "transform": {
+            "translation": [0.125, -0.06, 0.355]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.71]
+          },
+          "member": "top-right",
+          "part": "joint"
+        },
+        {
+          "id": "support-leg-left-l",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.03], [0.03, 0.03], [0.03, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.135, -0.735, 0.375],
+          "member": "top-left",
+          "part": "support",
+          "anchor": "leg-left-l"
+        },
+        {
+          "id": "support-leg-left-r",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.03], [0.03, 0.03], [0.03, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.135, -0.735, -0.375],
+          "member": "top-left",
+          "part": "support",
+          "anchor": "leg-left-r"
+        },
+        {
+          "id": "support-leg-right-l",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.03], [0.03, 0.03], [0.03, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.665, -0.735, 0.375],
+          "member": "top-right",
+          "part": "support",
+          "anchor": "leg-right-l"
+        },
+        {
+          "id": "support-leg-right-r",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.03], [0.03, 0.03], [0.03, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.665, -0.735, -0.375],
+          "member": "top-right",
+          "part": "support",
+          "anchor": "leg-right-r"
+        },
+        {
+          "id": "mass-left",
+          "kind": "ellipsoid",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.03, 0.03, 0.03],
+          "transform": {
+            "translation": [0.35667, -0.06811, 0.0]
+          },
+          "member": "top-left",
+          "part": "mass"
+        },
+        {
+          "id": "mass-right",
+          "kind": "ellipsoid",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.03, 0.03, 0.03],
+          "transform": {
+            "translation": [0.44333, -0.06811, 0.0]
+          },
+          "member": "top-right",
+          "part": "mass"
+        },
+        {
+          "id": "mass-leaf",
+          "kind": "ellipsoid",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.04, 0.03, 0.04],
+          "transform": {
+            "translation": [0.3, 0.01211, 0.0]
+          },
+          "member": "leaf",
+          "part": "mass"
+        },
+        {
+          "id": "mass-frame",
+          "kind": "ellipsoid",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.03, 0.03, 0.03],
+          "transform": {
+            "translation": [0.5, -0.01764, 0.0]
+          },
+          "member": "frame",
+          "part": "mass"
+        },
+        {
+          "id": "st-lift-crosshead-0",
+          "of": "lift-crosshead-0",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-0-near",
+          "of": "lift-bracket-0-near",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-0-far",
+          "of": "lift-bracket-0-far",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-nut-0",
+          "of": "lift-nut-0",
+          "member": "frame",
+          "part": "joint"
+        },
+        {
+          "id": "st-lift-screw-0",
+          "of": "lift-screw-0",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-crosshead-1",
+          "of": "lift-crosshead-1",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-1-near",
+          "of": "lift-bracket-1-near",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-1-far",
+          "of": "lift-bracket-1-far",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-nut-1",
+          "of": "lift-nut-1",
+          "member": "frame",
+          "part": "joint"
+        },
+        {
+          "id": "st-lift-screw-1",
+          "of": "lift-screw-1",
+          "member": "leaf",
+          "part": "member"
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Body, authored anew for 30 mm: square 30 mm plates for the halves and the leaf, the shadow gap of one feature, 30 x 80 mm aprons, straight 60 mm legs (the 25 mm taper is below the feature) and one 30 mm slide bar per side.",
+          "de": "Körper, für 30 mm neu gebaut: gerade 30-mm-Platten für die Hälften und die Einlage, die Schattenfuge von einem Merkmal, Zargen 30 x 80 mm, gerade 60-mm-Beine (die 25-mm-Verjüngung liegt unter dem Merkmal) und je Seite ein 30-mm-Auszugsstab."
+        },
+        {
+          "en": "Thermal: one surface per region. Structure: plates, aprons, legs, leaf and slides as members; one 60 mm frame corner per leg and one slide link per half and side as the joints; glides; masses.",
+          "de": "Thermik: eine Oberfläche je Region. Tragwerk: Platten, Zargen, Beine, Einlage und Auszüge als Stäbe; je Bein eine 60-mm-Rahmenecke und je Hälfte und Seite ein Auszugsglied als Gelenke; Gleiter; Massen."
+        },
+        {
+          "en": "Two steel crossheads on the stationary slide bars carry four captive lifting nuts. Non-rotating screw posts travel with the leaf. Its weight passes through the thrust collars and crossheads into the slide bars and both timber aprons.",
+          "de": "Zwei stählerne Querträger an den feststehenden Auszugsstegen tragen vier gefasste Hubmuttern. Verdrehsichere Spindeln fahren mit der Einlegeplatte. Über die Druckbunde und Querträger gelangt die Last in die Auszugsstege und beide Holzzargen."
+        }
       ]
-     }
     },
-    {
-     "id": "apron-l-side",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.65,
-      0.08,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.475,
-       -0.085,
-       0.3875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.775
-      ]
-     }
-    },
-    {
-     "id": "apron-l-end",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.025,
-      0.08,
-      0.72
-     ],
-     "transform": {
-      "translation": [
-       0.1225,
-       -0.085,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "block-l-0",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.45,
-     "size": [
-      0.06,
-      0.03,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.28,
-       -0.03,
-       0.3775
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.755
-      ]
-     }
-    },
-    {
-     "id": "block-l-1",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.45,
-     "size": [
-      0.06,
-      0.03,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.43,
-       -0.03,
-       0.3775
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.755
-      ]
-     }
-    },
-    {
-     "id": "block-l-end",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.45,
-     "size": [
-      0.015,
-      0.03,
-      0.06
-     ],
-     "transform": {
-      "translation": [
-       0.1275,
-       -0.03,
-       0.15
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.3
-      ]
-     }
-    },
-    {
-     "id": "runner-l-l",
-     "kind": "extrude",
-     "bone": "top-left",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.07,
-       0.363
+    "500": {
+      "status": "authored",
+      "denominator": 500,
+      "body": [
+        {
+          "id": "slab-l",
+          "kind": "extrude",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.45, -0.8], [0.45, -0.8], [0.45, 0.0], [-0.45, 0.0]],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.015,
+          "transform": {
+            "translation": [0.8, 0, 0.0]
+          }
+        },
+        {
+          "id": "frame-l",
+          "kind": "extrude",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "profile": [[0.375, 0.0], [0.375, -0.675], [-0.375, -0.675], [-0.375, 0.0], [-0.4, 0.0], [-0.4, -0.7], [0.4, -0.7], [0.4, 0.0]],
+          "plane": "zx",
+          "from": -0.125,
+          "to": -0.045,
+          "transform": {
+            "translation": [0.8, 0, 0.0]
+          }
+        },
+        {
+          "id": "leg-l",
+          "kind": "box",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.075, 0.72, 0.075],
+          "transform": {
+            "translation": [0.135, -0.375, 0.375]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          }
+        },
+        {
+          "id": "slab-r",
+          "kind": "extrude",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-0.45, 0.0], [0.45, 0.0], [0.45, 0.8], [-0.45, 0.8]],
+          "plane": "zx",
+          "from": -0.015,
+          "to": 0.015,
+          "transform": {
+            "translation": [0.0, 0, 0.0]
+          }
+        },
+        {
+          "id": "frame-r",
+          "kind": "extrude",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.55,
+          "profile": [[0.4, 0.0], [0.4, 0.7], [-0.4, 0.7], [-0.4, 0.0], [-0.375, 0.0], [-0.375, 0.675], [0.375, 0.675], [0.375, 0.0]],
+          "plane": "zx",
+          "from": -0.125,
+          "to": -0.045,
+          "transform": {
+            "translation": [0.0, 0, 0.0]
+          }
+        },
+        {
+          "id": "leg-r",
+          "kind": "box",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.075, 0.72, 0.075],
+          "transform": {
+            "translation": [0.665, -0.375, 0.375]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.75]
+          }
+        },
+        {
+          "id": "leaf",
+          "kind": "extrude",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "body",
+          "tone": 0.65,
+          "profile": [[-0.45, -0.3], [-0.45, 0.3], [0.45, 0.3], [0.45, -0.3]],
+          "plane": "zx",
+          "from": 0,
+          "to": 0.03,
+          "transform": {
+            "translation": [0.3, 0, 0.0]
+          }
+        },
+        {
+          "id": "slide",
+          "kind": "box",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.35,
+          "size": [1, 0.021, 0.012],
+          "transform": {
+            "translation": [0.5, 0, 0.369]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.738]
+          },
+          "slender": true
+        },
+        {
+          "id": "lift-crosshead-0",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "zx",
+          "profile": [[-0.31, -0.018], [0.31, -0.018], [0.31, 0.018], [-0.31, 0.018]],
+          "holes": [
+            [[-0.2314, 0.0], [-0.2332221, 0.0068], [-0.2382, 0.0117779], [-0.245, 0.0136], [-0.2518, 0.0117779], [-0.2567779, 0.0068], [-0.2586, 0.0], [-0.2567779, -0.0068], [-0.2518, -0.0117779], [-0.245, -0.0136], [-0.2382, -0.0117779], [-0.2332221, -0.0068]],
+            [[0.2586, 0.0], [0.2567779, 0.0068], [0.2518, 0.0117779], [0.245, 0.0136], [0.2382, 0.0117779], [0.2332221, 0.0068], [0.2314, 0.0], [0.2332221, -0.0068], [0.2382, -0.0117779], [0.245, -0.0136], [0.2518, -0.0117779], [0.2567779, -0.0068]]
+          ],
+          "from": -0.0415,
+          "to": -0.0235,
+          "transform": {
+            "translation": [0.34, 0, 0]
+          }
+        },
+        {
+          "id": "lift-bracket-0-near",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, -0.31], [-0.0415, -0.32], [-0.005, -0.363], [0.005, -0.363], [0.005, -0.348], [-0.0235, -0.315], [-0.0235, -0.31]],
+          "from": 0.322,
+          "to": 0.358
+        },
+        {
+          "id": "lift-bracket-0-far",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, 0.31], [-0.0415, 0.32], [-0.005, 0.363], [0.005, 0.363], [0.005, 0.348], [-0.0235, 0.315], [-0.0235, 0.31]],
+          "from": 0.322,
+          "to": 0.358
+        },
+        {
+          "id": "lift-nut-0",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.34, 0, -0.245],
+          "profile": [[-0.0415, 0.008], [-0.0415, 0.013], [-0.0235, 0.013], [-0.0235, 0.025], [-0.0105, 0.025], [-0.0105, 0.008], [-0.0415, 0.008]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-screw-0",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.14, 0, -0.245],
+          "profile": [[-0.09, 0], [-0.09, 0.008], [-0.005, 0.008], [-0.005, 0.018], [0, 0.018], [0, 0]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-crosshead-1",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "zx",
+          "profile": [[-0.31, -0.018], [0.31, -0.018], [0.31, 0.018], [-0.31, 0.018]],
+          "holes": [
+            [[-0.2314, 0.0], [-0.2332221, 0.0068], [-0.2382, 0.0117779], [-0.245, 0.0136], [-0.2518, 0.0117779], [-0.2567779, 0.0068], [-0.2586, 0.0], [-0.2567779, -0.0068], [-0.2518, -0.0117779], [-0.245, -0.0136], [-0.2382, -0.0117779], [-0.2332221, -0.0068]],
+            [[0.2586, 0.0], [0.2567779, 0.0068], [0.2518, 0.0117779], [0.245, 0.0136], [0.2382, 0.0117779], [0.2332221, 0.0068], [0.2314, 0.0], [0.2332221, -0.0068], [0.2382, -0.0117779], [0.245, -0.0136], [0.2518, -0.0117779], [0.2567779, -0.0068]]
+          ],
+          "from": -0.0415,
+          "to": -0.0235,
+          "transform": {
+            "translation": [0.66, 0, 0]
+          }
+        },
+        {
+          "id": "lift-bracket-1-near",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, -0.31], [-0.0415, -0.32], [-0.005, -0.363], [0.005, -0.363], [0.005, -0.348], [-0.0235, -0.315], [-0.0235, -0.31]],
+          "from": 0.642,
+          "to": 0.678
+        },
+        {
+          "id": "lift-bracket-1-far",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "plane": "yz",
+          "profile": [[-0.0415, 0.31], [-0.0415, 0.32], [-0.005, 0.363], [0.005, 0.363], [0.005, 0.348], [-0.0235, 0.315], [-0.0235, 0.31]],
+          "from": 0.642,
+          "to": 0.678
+        },
+        {
+          "id": "lift-nut-1",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.66, 0, -0.245],
+          "profile": [[-0.0415, 0.008], [-0.0415, 0.013], [-0.0235, 0.013], [-0.0235, 0.025], [-0.0105, 0.025], [-0.0105, 0.008], [-0.0415, 0.008]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        },
+        {
+          "id": "lift-screw-1",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel-slides",
+          "role": "body",
+          "tone": 0.36,
+          "axis": [0, 1, 0],
+          "origin": [0.46, 0, -0.245],
+          "profile": [[-0.09, 0], [-0.09, 0.008], [-0.005, 0.008], [-0.005, 0.018], [0, 0.018], [0, 0]],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.49]
+          }
+        }
       ],
-      [
-       -0.07,
-       0.375
+      "thermal": [
+        {
+          "id": "th-slab-l",
+          "of": "slab-l",
+          "region": "table-top"
+        },
+        {
+          "id": "th-frame-l",
+          "of": "frame-l",
+          "region": "apron"
+        },
+        {
+          "id": "th-leg-l",
+          "of": "leg-l",
+          "region": "legs"
+        },
+        {
+          "id": "th-slab-r",
+          "of": "slab-r",
+          "region": "table-top"
+        },
+        {
+          "id": "th-frame-r",
+          "of": "frame-r",
+          "region": "apron"
+        },
+        {
+          "id": "th-leg-r",
+          "of": "leg-r",
+          "region": "legs"
+        },
+        {
+          "id": "th-leaf",
+          "of": "leaf",
+          "region": "leaf-top"
+        },
+        {
+          "id": "th-slide",
+          "of": "slide",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-crosshead-0",
+          "of": "lift-crosshead-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-0-near",
+          "of": "lift-bracket-0-near",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-0-far",
+          "of": "lift-bracket-0-far",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-nut-0",
+          "of": "lift-nut-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-screw-0",
+          "of": "lift-screw-0",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-crosshead-1",
+          "of": "lift-crosshead-1",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-1-near",
+          "of": "lift-bracket-1-near",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-bracket-1-far",
+          "of": "lift-bracket-1-far",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-nut-1",
+          "of": "lift-nut-1",
+          "region": "slide-rails"
+        },
+        {
+          "id": "th-lift-screw-1",
+          "of": "lift-screw-1",
+          "region": "slide-rails"
+        }
       ],
-      [
-       -0.045,
-       0.375
+      "structure": [
+        {
+          "id": "m-slab-l",
+          "of": "slab-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-frame-l",
+          "of": "frame-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-leg-l",
+          "of": "leg-l",
+          "member": "top-left",
+          "part": "member"
+        },
+        {
+          "id": "m-slab-r",
+          "of": "slab-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-frame-r",
+          "of": "frame-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-leg-r",
+          "of": "leg-r",
+          "member": "top-right",
+          "part": "member"
+        },
+        {
+          "id": "m-leaf",
+          "of": "leaf",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "member-slide",
+          "of": "slide",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "support-leg-left-l",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.135, -0.735, 0.375],
+          "member": "top-left",
+          "part": "support",
+          "anchor": "leg-left-l"
+        },
+        {
+          "id": "support-leg-left-r",
+          "kind": "revolve",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.135, -0.735, -0.375],
+          "member": "top-left",
+          "part": "support",
+          "anchor": "leg-left-r"
+        },
+        {
+          "id": "support-leg-right-l",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.665, -0.735, 0.375],
+          "member": "top-right",
+          "part": "support",
+          "anchor": "leg-right-l"
+        },
+        {
+          "id": "support-leg-right-r",
+          "kind": "revolve",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "ground",
+          "tone": 0.2,
+          "profile": [[0.0, 0.0], [0.0, 0.0375], [0.075, 0.0375], [0.075, 0.0]],
+          "axis": [0, 1, 0],
+          "origin": [0.665, -0.735, -0.375],
+          "member": "top-right",
+          "part": "support",
+          "anchor": "leg-right-r"
+        },
+        {
+          "id": "mass-left",
+          "kind": "ellipsoid",
+          "bone": "top-left",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.0375, 0.0375, 0.0375],
+          "transform": {
+            "translation": [0.35667, -0.06811, 0.0]
+          },
+          "member": "top-left",
+          "part": "mass"
+        },
+        {
+          "id": "mass-right",
+          "kind": "ellipsoid",
+          "bone": "top-right",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.0375, 0.0375, 0.0375],
+          "transform": {
+            "translation": [0.44333, -0.06811, 0.0]
+          },
+          "member": "top-right",
+          "part": "mass"
+        },
+        {
+          "id": "mass-leaf",
+          "kind": "ellipsoid",
+          "bone": "leaf",
+          "material": "oak-timber",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.04, 0.0375, 0.04],
+          "transform": {
+            "translation": [0.3, 0.01211, 0.0]
+          },
+          "member": "leaf",
+          "part": "mass"
+        },
+        {
+          "id": "mass-frame",
+          "kind": "ellipsoid",
+          "bone": "frame",
+          "material": "steel-slides",
+          "role": "detail",
+          "tone": 0.3,
+          "radii": [0.0375, 0.0375, 0.0375],
+          "transform": {
+            "translation": [0.5, -0.01764, 0.0]
+          },
+          "member": "frame",
+          "part": "mass"
+        },
+        {
+          "id": "st-lift-crosshead-0",
+          "of": "lift-crosshead-0",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-0-near",
+          "of": "lift-bracket-0-near",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-0-far",
+          "of": "lift-bracket-0-far",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-nut-0",
+          "of": "lift-nut-0",
+          "member": "frame",
+          "part": "joint"
+        },
+        {
+          "id": "st-lift-screw-0",
+          "of": "lift-screw-0",
+          "member": "leaf",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-crosshead-1",
+          "of": "lift-crosshead-1",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-1-near",
+          "of": "lift-bracket-1-near",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-bracket-1-far",
+          "of": "lift-bracket-1-far",
+          "member": "frame",
+          "part": "member"
+        },
+        {
+          "id": "st-lift-nut-1",
+          "of": "lift-nut-1",
+          "member": "frame",
+          "part": "joint"
+        },
+        {
+          "id": "st-lift-screw-1",
+          "of": "lift-screw-1",
+          "member": "leaf",
+          "part": "member"
+        }
       ],
-      [
-       -0.045,
-       0.363
+      "decisions": [
+        {
+          "en": "Square slab edges, square legs and a single U-shaped apron for each half. The oak boards keep their 30 mm stock thickness and the insert clears both halves while stored. The two stationary steel slide rails connect to the transverse lift mechanism.",
+          "de": "Gerade Plattenkanten, Vierkantbeine und je eine U-Zarge. Die Eichenplatten behalten ihre Materialstärke von 30 mm. Verstaut passt die Einlage unter beide Hälften. Zwei feststehende Stahl-Auszugsschienen tragen den querliegenden Hubmechanismus."
+        },
+        {
+          "en": "Two steel crossheads on the stationary slide bars carry four captive lifting nuts. Non-rotating screw posts travel with the leaf. Its weight passes through the thrust collars and crossheads into the slide bars and both timber aprons.",
+          "de": "Zwei stählerne Querträger an den feststehenden Auszugsstegen tragen vier gefasste Hubmuttern. Verdrehsichere Spindeln fahren mit der Einlegeplatte. Über die Druckbunde und Querträger gelangt die Last in die Auszugsstege und beide Holzzargen."
+        }
       ]
-     ],
-     "plane": "yz",
-     "from": 0.17,
-     "to": 0.79,
-     "holes": [
-      [
-       [
-        -0.068,
-        0.365
-       ],
-       [
-        -0.068,
-        0.373
-       ],
-       [
-        -0.047,
-        0.373
-       ],
-       [
-        -0.047,
-        0.365
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "runner-l-r",
-     "kind": "extrude",
-     "bone": "top-left",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.045,
-       -0.363
-      ],
-      [
-       -0.045,
-       -0.375
-      ],
-      [
-       -0.07,
-       -0.375
-      ],
-      [
-       -0.07,
-       -0.363
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.17,
-     "to": 0.79,
-     "holes": [
-      [
-       [
-        -0.047,
-        -0.365
-       ],
-       [
-        -0.047,
-        -0.373
-       ],
-       [
-        -0.068,
-        -0.373
-       ],
-       [
-        -0.068,
-        -0.365
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "top-r",
-     "kind": "extrude",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.45,
-       0.0
-      ],
-      [
-       0.45,
-       0.0
-      ],
-      [
-       0.45,
-       0.8
-      ],
-      [
-       -0.45,
-       0.8
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.0,
-     "to": 0.015,
-     "transform": {
-      "translation": [
-       0.0,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "top-r-bevel",
-     "kind": "extrude",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.435,
-       0.0
-      ],
-      [
-       0.435,
-       0.0
-      ],
-      [
-       0.435,
-       0.785
-      ],
-      [
-       -0.435,
-       0.785
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.015,
-     "to": 0.0,
-     "taperTo": [
-      1.03448,
-      1.01911
-     ],
-     "transform": {
-      "translation": [
-       0.0,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leg-r",
-     "kind": "loft",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.6,
-     "sections": [
-      {
-       "at": [
-        0.665,
-        -0.735,
-        0.375
-       ],
-       "rx": 0.0225,
-       "ry": 0.0225,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      },
-      {
-       "at": [
-        0.665,
-        -0.155,
-        0.375
-       ],
-       "rx": 0.035,
-       "ry": 0.035,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      },
-      {
-       "at": [
-        0.665,
-        -0.015,
-        0.375
-       ],
-       "rx": 0.035,
-       "ry": 0.035,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      }
-     ],
-     "capStart": true,
-     "capEnd": true,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     }
-    },
-    {
-     "id": "apron-r-side",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.65,
-      0.08,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.325,
-       -0.085,
-       0.3875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.775
-      ]
-     }
-    },
-    {
-     "id": "apron-r-end",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.025,
-      0.08,
-      0.72
-     ],
-     "transform": {
-      "translation": [
-       0.6775,
-       -0.085,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "block-r-0",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.45,
-     "size": [
-      0.06,
-      0.03,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.52,
-       -0.03,
-       0.3775
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.755
-      ]
-     }
-    },
-    {
-     "id": "block-r-1",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.45,
-     "size": [
-      0.06,
-      0.03,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.37,
-       -0.03,
-       0.3775
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.755
-      ]
-     }
-    },
-    {
-     "id": "block-r-end",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.45,
-     "size": [
-      0.015,
-      0.03,
-      0.06
-     ],
-     "transform": {
-      "translation": [
-       0.6725,
-       -0.03,
-       0.15
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.3
-      ]
-     }
-    },
-    {
-     "id": "runner-r-l",
-     "kind": "extrude",
-     "bone": "top-right",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.07,
-       0.363
-      ],
-      [
-       -0.07,
-       0.375
-      ],
-      [
-       -0.045,
-       0.375
-      ],
-      [
-       -0.045,
-       0.363
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.01,
-     "to": 0.63,
-     "holes": [
-      [
-       [
-        -0.068,
-        0.365
-       ],
-       [
-        -0.068,
-        0.373
-       ],
-       [
-        -0.047,
-        0.373
-       ],
-       [
-        -0.047,
-        0.365
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "runner-r-r",
-     "kind": "extrude",
-     "bone": "top-right",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "profile": [
-      [
-       -0.045,
-       -0.363
-      ],
-      [
-       -0.045,
-       -0.375
-      ],
-      [
-       -0.07,
-       -0.375
-      ],
-      [
-       -0.07,
-       -0.363
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.01,
-     "to": 0.63,
-     "holes": [
-      [
-       [
-        -0.047,
-        -0.365
-       ],
-       [
-        -0.047,
-        -0.373
-       ],
-       [
-        -0.068,
-        -0.373
-       ],
-       [
-        -0.068,
-        -0.365
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "leaf",
-     "kind": "extrude",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.65,
-     "profile": [
-      [
-       -0.45,
-       -0.3
-      ],
-      [
-       -0.45,
-       0.3
-      ],
-      [
-       0.45,
-       0.3
-      ],
-      [
-       0.45,
-       -0.3
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.015,
-     "to": 0.03,
-     "transform": {
-      "translation": [
-       0.3,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leaf-bevel",
-     "kind": "extrude",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.65,
-     "profile": [
-      [
-       -0.435,
-       -0.3
-      ],
-      [
-       -0.435,
-       0.3
-      ],
-      [
-       0.435,
-       0.3
-      ],
-      [
-       0.435,
-       -0.3
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.0,
-     "to": 0.015,
-     "taperTo": [
-      1.03448,
-      1.0
-     ],
-     "transform": {
-      "translation": [
-       0.3,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "centre-bar",
-     "kind": "box",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "size": [
-      1.0,
-      0.021,
-      0.008
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       0.0,
-       0.369
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.738
-      ]
-     }
     }
-   ],
-   "thermal": [
-    {
-     "id": "th-top-l",
-     "of": "top-l",
-     "region": "table-top",
-     "layer": "top-plank"
-    },
-    {
-     "id": "th-top-l-bevel",
-     "of": "top-l-bevel",
-     "region": "table-top",
-     "layer": "top-plank"
-    },
-    {
-     "id": "th-leg-l",
-     "of": "leg-l",
-     "region": "legs",
-     "layer": "leg-solid"
-    },
-    {
-     "id": "th-apron-l-side",
-     "of": "apron-l-side",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-apron-l-end",
-     "of": "apron-l-end",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-block-l-0",
-     "of": "block-l-0",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-block-l-1",
-     "of": "block-l-1",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-block-l-end",
-     "of": "block-l-end",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-runner-l-l",
-     "of": "runner-l-l",
-     "region": "slide-rails",
-     "layer": "rail-steel"
-    },
-    {
-     "id": "th-runner-l-r",
-     "of": "runner-l-r",
-     "region": "slide-rails",
-     "layer": "rail-steel"
-    },
-    {
-     "id": "th-top-r",
-     "of": "top-r",
-     "region": "table-top",
-     "layer": "top-plank"
-    },
-    {
-     "id": "th-top-r-bevel",
-     "of": "top-r-bevel",
-     "region": "table-top",
-     "layer": "top-plank"
-    },
-    {
-     "id": "th-leg-r",
-     "of": "leg-r",
-     "region": "legs",
-     "layer": "leg-solid"
-    },
-    {
-     "id": "th-apron-r-side",
-     "of": "apron-r-side",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-apron-r-end",
-     "of": "apron-r-end",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-block-r-0",
-     "of": "block-r-0",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-block-r-1",
-     "of": "block-r-1",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-block-r-end",
-     "of": "block-r-end",
-     "region": "apron",
-     "layer": "apron-board"
-    },
-    {
-     "id": "th-runner-r-l",
-     "of": "runner-r-l",
-     "region": "slide-rails",
-     "layer": "rail-steel"
-    },
-    {
-     "id": "th-runner-r-r",
-     "of": "runner-r-r",
-     "region": "slide-rails",
-     "layer": "rail-steel"
-    },
-    {
-     "id": "th-leaf",
-     "of": "leaf",
-     "region": "leaf-top",
-     "layer": "leaf-plank"
-    },
-    {
-     "id": "th-leaf-bevel",
-     "of": "leaf-bevel",
-     "region": "leaf-top",
-     "layer": "leaf-plank"
-    },
-    {
-     "id": "th-centre-bar",
-     "of": "centre-bar",
-     "region": "slide-rails",
-     "layer": "rail-steel"
-    }
-   ],
-   "structure": [
-    {
-     "id": "m-top-l",
-     "of": "top-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-top-l-bevel",
-     "of": "top-l-bevel",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-leg-l",
-     "of": "leg-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-l-side",
-     "of": "apron-l-side",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-l-end",
-     "of": "apron-l-end",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "j-block-l-0",
-     "of": "block-l-0",
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "j-block-l-1",
-     "of": "block-l-1",
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "j-block-l-end",
-     "of": "block-l-end",
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "m-runner-l-l",
-     "of": "runner-l-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-runner-l-r",
-     "of": "runner-l-r",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-top-r",
-     "of": "top-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-top-r-bevel",
-     "of": "top-r-bevel",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-leg-r",
-     "of": "leg-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-r-side",
-     "of": "apron-r-side",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-r-end",
-     "of": "apron-r-end",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "j-block-r-0",
-     "of": "block-r-0",
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "j-block-r-1",
-     "of": "block-r-1",
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "j-block-r-end",
-     "of": "block-r-end",
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "m-runner-r-l",
-     "of": "runner-r-l",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-runner-r-r",
-     "of": "runner-r-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-leaf",
-     "of": "leaf",
-     "member": "leaf",
-     "part": "member"
-    },
-    {
-     "id": "m-leaf-bevel",
-     "of": "leaf-bevel",
-     "member": "leaf",
-     "part": "member"
-    },
-    {
-     "id": "m-centre-bar",
-     "of": "centre-bar",
-     "member": "frame",
-     "part": "member"
-    },
-    {
-     "id": "tenon-left-side",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.02,
-      0.06,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.16,
-       -0.085,
-       0.3875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.775
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "tenon-left-end",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.025,
-      0.06,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.1225,
-       -0.085,
-       0.35
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.7
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "shoe-left",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.25,
-     "size": [
-      0.1,
-      0.021,
-      0.008
-     ],
-     "transform": {
-      "translation": [
-       0.74,
-       -0.0575,
-       0.369
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.738
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "tenon-right-side",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.02,
-      0.06,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.64,
-       -0.085,
-       0.3875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.775
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "tenon-right-end",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.025,
-      0.06,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.6775,
-       -0.085,
-       0.35
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.7
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "shoe-right",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.25,
-     "size": [
-      0.1,
-      0.021,
-      0.008
-     ],
-     "transform": {
-      "translation": [
-       0.06,
-       -0.0575,
-       0.369
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.738
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "dowel-left",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.005
-      ],
-      [
-       0.03,
-       0.005
-      ],
-      [
-       0.03,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0.785,
-      0.0,
-      0.3
-     ],
-     "repeat": {
-      "count": 3,
-      "translation": [
-       0.0,
-       0.0,
-       -0.3
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "dowel-right",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.005
-      ],
-      [
-       0.03,
-       0.005
-      ],
-      [
-       0.03,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      -0.015,
-      0.0,
-      0.15
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.3
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "support-leg-left-l",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.018
-      ],
-      [
-       0.0075,
-       0.018
-      ],
-      [
-       0.0075,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.135,
-      -0.735,
-      0.375
-     ],
-     "member": "top-left",
-     "part": "support",
-     "anchor": "leg-left-l"
-    },
-    {
-     "id": "support-leg-left-r",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.018
-      ],
-      [
-       0.0075,
-       0.018
-      ],
-      [
-       0.0075,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.135,
-      -0.735,
-      -0.375
-     ],
-     "member": "top-left",
-     "part": "support",
-     "anchor": "leg-left-r"
-    },
-    {
-     "id": "support-leg-right-l",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.018
-      ],
-      [
-       0.0075,
-       0.018
-      ],
-      [
-       0.0075,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.665,
-      -0.735,
-      0.375
-     ],
-     "member": "top-right",
-     "part": "support",
-     "anchor": "leg-right-l"
-    },
-    {
-     "id": "support-leg-right-r",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.018
-      ],
-      [
-       0.0075,
-       0.018
-      ],
-      [
-       0.0075,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.665,
-      -0.735,
-      -0.375
-     ],
-     "member": "top-right",
-     "part": "support",
-     "anchor": "leg-right-r"
-    },
-    {
-     "id": "mass-left",
-     "kind": "ellipsoid",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.02,
-      0.02,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.35667,
-       -0.068,
-       0.0
-      ]
-     },
-     "member": "top-left",
-     "part": "mass"
-    },
-    {
-     "id": "mass-right",
-     "kind": "ellipsoid",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.02,
-      0.02,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.44333,
-       -0.068,
-       0.0
-      ]
-     },
-     "member": "top-right",
-     "part": "mass"
-    },
-    {
-     "id": "mass-leaf",
-     "kind": "ellipsoid",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.04,
-      0.012,
-      0.04
-     ],
-     "transform": {
-      "translation": [
-       0.3,
-       0.015,
-       0.0
-      ]
-     },
-     "member": "leaf",
-     "part": "mass"
-    },
-    {
-     "id": "mass-frame",
-     "kind": "ellipsoid",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.02,
-      0.02,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "frame",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body, authored for 7.5 mm: two 0.80 x 0.90 m solid oak top halves, 30 mm thick with a 15 mm underside bevel on the three free edges and a square joint edge; a 30 mm shadow gap under the top in which the 0.60 x 0.90 m leaf (same bevel on its long edges) is stored and in which four oak blocks per half join top and aprons; 25 x 80 mm aprons, the long ones running to the joint, tenoned 20 mm into the legs; four legs, 70 mm square under the aprons and tapered on all four faces to 45 mm at the floor; per long apron a 25 x 12 mm steel tube of 2 mm sheet, and in the tubes the two stationary 21 x 8 mm centre bars of the telescopic slide (tube-in-tube). Screws, felt glides, table locks and dowels are omitted from the body (below 7.5 mm or hidden).",
-     "de": "Körper, für 7,5 mm gebaut: zwei Plattenhälften 0,80 x 0,90 m aus massiver Eiche, 30 mm stark, mit 15 mm Unterfase an den drei freien Kanten und gerader Stoßkante; eine 30-mm-Schattenfuge unter der Platte, in der die Einlegeplatte 0,60 x 0,90 m (gleiche Fase an den Längskanten) liegt und in der je Hälfte vier Eichenklötze Platte und Zargen verbinden; Zargen 25 x 80 mm, die langen bis zum Stoß, 20 mm in die Beine gezapft; vier Beine, unter der Zarge 70 mm im Quadrat und allseitig auf 45 mm am Boden verjüngt; je Längszarge ein Stahlrohr 25 x 12 mm aus 2 mm Blech und in den Rohren die zwei feststehenden Mittelstäbe 21 x 8 mm des Teleskopauszugs (Rohr in Rohr). Schrauben, Filzgleiter, Tischverbinder und Dübel fehlen im Körper (unter 7,5 mm oder verdeckt)."
-    },
-    {
-     "en": "Thermal: every region is the surface of its body solids with its one layer (top plank, leaf plank, apron board with the blocks, leg, steel rail); no hidden regions, no emitters. Structure: per half the top plate, the aprons, the legs and the runners are the members, the tenons, the gap blocks and the slide shoes at the inner ends of the tubes are the joints; the leaf plate is the member of the leaf; the joint edges carry the alignment dowels (three in the left half, two in the right half) that enter the other half when closed and the leaf when extended; the centre bars are the frame member; four felt glides are the supports; each half, the leaf and the slide frame carry their mass at their centre.",
-     "de": "Thermik: jede Region ist die Oberfläche ihrer Körper mit ihrer einen Schicht (Plattenbohle, Einlegebohle, Zargenbrett mit den Klötzen, Bein, Stahlschiene); keine verdeckten Regionen, keine Emitter. Tragwerk: je Hälfte sind Platte, Zargen, Beine und Laufschienen die Stäbe, Zapfen, Fugenklötze und die Gleitschuhe an den inneren Rohrenden die Gelenke; die Einlegeplatte ist der Stab der Einlage; die Stoßkanten tragen die Passdübel (drei in der linken, zwei in der rechten Hälfte), die geschlossen in die andere Hälfte und ausgezogen in die Einlage greifen; die Mittelstäbe sind der Rahmenstab; vier Filzgleiter sind die Auflager; jede Hälfte, die Einlage und der Auszugsrahmen tragen ihre Masse im Schwerpunkt."
-    }
-   ]
-  },
-  "100": {
-   "status": "authored",
-   "denominator": 100,
-   "body": [
-    {
-     "id": "top-l",
-     "kind": "extrude",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.45,
-       -0.8
-      ],
-      [
-       0.45,
-       -0.8
-      ],
-      [
-       0.45,
-       0.0
-      ],
-      [
-       -0.45,
-       0.0
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.015,
-     "to": 0.015,
-     "transform": {
-      "translation": [
-       0.8,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leg-l",
-     "kind": "loft",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.6,
-     "sections": [
-      {
-       "at": [
-        0.135,
-        -0.735,
-        0.375
-       ],
-       "rx": 0.0225,
-       "ry": 0.0225,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      },
-      {
-       "at": [
-        0.135,
-        -0.155,
-        0.375
-       ],
-       "rx": 0.035,
-       "ry": 0.035,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      },
-      {
-       "at": [
-        0.135,
-        -0.015,
-        0.375
-       ],
-       "rx": 0.035,
-       "ry": 0.035,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      }
-     ],
-     "capStart": true,
-     "capEnd": true,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     }
-    },
-    {
-     "id": "apron-l-side",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.65,
-      0.08,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.475,
-       -0.085,
-       0.3875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.775
-      ]
-     }
-    },
-    {
-     "id": "apron-l-end",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.025,
-      0.08,
-      0.72
-     ],
-     "transform": {
-      "translation": [
-       0.1225,
-       -0.085,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "top-r",
-     "kind": "extrude",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.45,
-       0.0
-      ],
-      [
-       0.45,
-       0.0
-      ],
-      [
-       0.45,
-       0.8
-      ],
-      [
-       -0.45,
-       0.8
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.015,
-     "to": 0.015,
-     "transform": {
-      "translation": [
-       0.0,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leg-r",
-     "kind": "loft",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.6,
-     "sections": [
-      {
-       "at": [
-        0.665,
-        -0.735,
-        0.375
-       ],
-       "rx": 0.0225,
-       "ry": 0.0225,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      },
-      {
-       "at": [
-        0.665,
-        -0.155,
-        0.375
-       ],
-       "rx": 0.035,
-       "ry": 0.035,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      },
-      {
-       "at": [
-        0.665,
-        -0.015,
-        0.375
-       ],
-       "rx": 0.035,
-       "ry": 0.035,
-       "exponent": 10,
-       "rotation": [
-        0.707107,
-        0.0,
-        0.0,
-        0.707107
-       ]
-      }
-     ],
-     "capStart": true,
-     "capEnd": true,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     }
-    },
-    {
-     "id": "apron-r-side",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.65,
-      0.08,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.325,
-       -0.085,
-       0.3875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.775
-      ]
-     }
-    },
-    {
-     "id": "apron-r-end",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.025,
-      0.08,
-      0.72
-     ],
-     "transform": {
-      "translation": [
-       0.6775,
-       -0.085,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leaf",
-     "kind": "extrude",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.65,
-     "profile": [
-      [
-       -0.45,
-       -0.3
-      ],
-      [
-       -0.45,
-       0.3
-      ],
-      [
-       0.45,
-       0.3
-      ],
-      [
-       0.45,
-       -0.3
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.0,
-     "to": 0.03,
-     "transform": {
-      "translation": [
-       0.3,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "slide",
-     "kind": "box",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "size": [
-      1.0,
-      0.02,
-      0.018
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       -0.0005,
-       0.366
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.732
-      ]
-     }
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-top-l",
-     "of": "top-l",
-     "region": "table-top"
-    },
-    {
-     "id": "th-leg-l",
-     "of": "leg-l",
-     "region": "legs"
-    },
-    {
-     "id": "th-apron-l-side",
-     "of": "apron-l-side",
-     "region": "apron"
-    },
-    {
-     "id": "th-apron-l-end",
-     "of": "apron-l-end",
-     "region": "apron"
-    },
-    {
-     "id": "th-top-r",
-     "of": "top-r",
-     "region": "table-top"
-    },
-    {
-     "id": "th-leg-r",
-     "of": "leg-r",
-     "region": "legs"
-    },
-    {
-     "id": "th-apron-r-side",
-     "of": "apron-r-side",
-     "region": "apron"
-    },
-    {
-     "id": "th-apron-r-end",
-     "of": "apron-r-end",
-     "region": "apron"
-    },
-    {
-     "id": "th-leaf",
-     "of": "leaf",
-     "region": "leaf-top"
-    },
-    {
-     "id": "th-slide",
-     "of": "slide",
-     "region": "slide-rails"
-    }
-   ],
-   "structure": [
-    {
-     "id": "m-top-l",
-     "of": "top-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-leg-l",
-     "of": "leg-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-l-side",
-     "of": "apron-l-side",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-l-end",
-     "of": "apron-l-end",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-top-r",
-     "of": "top-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-leg-r",
-     "of": "leg-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-r-side",
-     "of": "apron-r-side",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-r-end",
-     "of": "apron-r-end",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-leaf",
-     "of": "leaf",
-     "member": "leaf",
-     "part": "member"
-    },
-    {
-     "id": "m-slide",
-     "of": "slide",
-     "member": "frame",
-     "part": "member"
-    },
-    {
-     "id": "tenon-left-side",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.02,
-      0.06,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.16,
-       -0.085,
-       0.3875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.775
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "tenon-left-end",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.025,
-      0.06,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.1225,
-       -0.085,
-       0.35
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.7
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "slide-link-left",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.25,
-     "size": [
-      0.1,
-      0.02,
-      0.018
-     ],
-     "transform": {
-      "translation": [
-       0.7,
-       -0.058,
-       0.366
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.732
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "tenon-right-side",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.02,
-      0.06,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.64,
-       -0.085,
-       0.3875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.775
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "tenon-right-end",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.025,
-      0.06,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.6775,
-       -0.085,
-       0.35
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.7
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "slide-link-right",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.25,
-     "size": [
-      0.1,
-      0.02,
-      0.018
-     ],
-     "transform": {
-      "translation": [
-       0.1,
-       -0.058,
-       0.366
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.732
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "dowel-left",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0075
-      ],
-      [
-       0.04,
-       0.0075
-      ],
-      [
-       0.04,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0.78,
-      0.0,
-      0.3
-     ],
-     "repeat": {
-      "count": 3,
-      "translation": [
-       0.0,
-       0.0,
-       -0.3
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "dowel-right",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0075
-      ],
-      [
-       0.04,
-       0.0075
-      ],
-      [
-       0.04,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      -0.02,
-      0.0,
-      0.15
-     ],
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.3
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "support-leg-left-l",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0225
-      ],
-      [
-       0.015,
-       0.0225
-      ],
-      [
-       0.015,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.135,
-      -0.735,
-      0.375
-     ],
-     "member": "top-left",
-     "part": "support",
-     "anchor": "leg-left-l"
-    },
-    {
-     "id": "support-leg-left-r",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0225
-      ],
-      [
-       0.015,
-       0.0225
-      ],
-      [
-       0.015,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.135,
-      -0.735,
-      -0.375
-     ],
-     "member": "top-left",
-     "part": "support",
-     "anchor": "leg-left-r"
-    },
-    {
-     "id": "support-leg-right-l",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0225
-      ],
-      [
-       0.015,
-       0.0225
-      ],
-      [
-       0.015,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.665,
-      -0.735,
-      0.375
-     ],
-     "member": "top-right",
-     "part": "support",
-     "anchor": "leg-right-l"
-    },
-    {
-     "id": "support-leg-right-r",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0225
-      ],
-      [
-       0.015,
-       0.0225
-      ],
-      [
-       0.015,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.665,
-      -0.735,
-      -0.375
-     ],
-     "member": "top-right",
-     "part": "support",
-     "anchor": "leg-right-r"
-    },
-    {
-     "id": "mass-left",
-     "kind": "ellipsoid",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.025,
-      0.025,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.35667,
-       -0.068,
-       0.0
-      ]
-     },
-     "member": "top-left",
-     "part": "mass"
-    },
-    {
-     "id": "mass-right",
-     "kind": "ellipsoid",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.025,
-      0.025,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.44333,
-       -0.068,
-       0.0
-      ]
-     },
-     "member": "top-right",
-     "part": "mass"
-    },
-    {
-     "id": "mass-leaf",
-     "kind": "ellipsoid",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.04,
-      0.012,
-      0.04
-     ],
-     "transform": {
-      "translation": [
-       0.3,
-       0.015,
-       0.0
-      ]
-     },
-     "member": "leaf",
-     "part": "mass"
-    },
-    {
-     "id": "mass-frame",
-     "kind": "ellipsoid",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.025,
-      0.025,
-      0.025
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "frame",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body, authored anew for 15 mm: the top halves and the leaf as square-edged 30 mm plates (the 15 mm bevel is one feature and merges into the edge), the shadow gap with the stored leaf, the 25 x 80 mm aprons, the tapered legs, and per side one 18 x 20 mm steel slide in which runner and centre bar are merged; the gap blocks are omitted.",
-     "de": "Körper, für 15 mm neu gebaut: Plattenhälften und Einlegeplatte als 30-mm-Platten mit gerader Kante (die 15-mm-Fase ist ein Merkmal und geht in der Kante auf), die Schattenfuge mit der verstauten Einlage, die Zargen 25 x 80 mm, die verjüngten Beine und je Seite ein Stahlauszug 18 x 20 mm, in dem Laufschiene und Mittelstab verschmolzen sind; die Fugenklötze entfallen."
-    },
-    {
-     "en": "Thermal: one surface per region; the slide is the steel region. Structure: plates, aprons, legs, leaf and slides as members; tenons, one 15 mm slide link per half and side, dowels of the joint edges; four glides; masses at the centres.",
-     "de": "Thermik: eine Oberfläche je Region; der Auszug ist die Stahlregion. Tragwerk: Platten, Zargen, Beine, Einlage und Auszüge als Stäbe; Zapfen, je Hälfte und Seite ein 15-mm-Auszugsglied, Dübel der Stoßkanten; vier Gleiter; Massen in den Schwerpunkten."
-    }
-   ]
-  },
-  "200": {
-   "status": "authored",
-   "denominator": 200,
-   "body": [
-    {
-     "id": "top-l",
-     "kind": "extrude",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.45,
-       -0.8
-      ],
-      [
-       0.45,
-       -0.8
-      ],
-      [
-       0.45,
-       0.0
-      ],
-      [
-       -0.45,
-       0.0
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.015,
-     "to": 0.015,
-     "transform": {
-      "translation": [
-       0.8,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leg-l",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.6,
-     "size": [
-      0.06,
-      0.72,
-      0.06
-     ],
-     "transform": {
-      "translation": [
-       0.135,
-       -0.375,
-       0.375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     }
-    },
-    {
-     "id": "apron-l-side",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.655,
-      0.08,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.4725,
-       -0.085,
-       0.385
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.77
-      ]
-     }
-    },
-    {
-     "id": "apron-l-end",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.03,
-      0.08,
-      0.73
-     ],
-     "transform": {
-      "translation": [
-       0.125,
-       -0.085,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "top-r",
-     "kind": "extrude",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.45,
-       0.0
-      ],
-      [
-       0.45,
-       0.0
-      ],
-      [
-       0.45,
-       0.8
-      ],
-      [
-       -0.45,
-       0.8
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.015,
-     "to": 0.015,
-     "transform": {
-      "translation": [
-       0.0,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leg-r",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.6,
-     "size": [
-      0.06,
-      0.72,
-      0.06
-     ],
-     "transform": {
-      "translation": [
-       0.665,
-       -0.375,
-       0.375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     }
-    },
-    {
-     "id": "apron-r-side",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.655,
-      0.08,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.3275,
-       -0.085,
-       0.385
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.77
-      ]
-     }
-    },
-    {
-     "id": "apron-r-end",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.03,
-      0.08,
-      0.73
-     ],
-     "transform": {
-      "translation": [
-       0.675,
-       -0.085,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leaf",
-     "kind": "extrude",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.65,
-     "profile": [
-      [
-       -0.45,
-       -0.3
-      ],
-      [
-       -0.45,
-       0.3
-      ],
-      [
-       0.45,
-       0.3
-      ],
-      [
-       0.45,
-       -0.3
-      ]
-     ],
-     "plane": "zx",
-     "from": 0.0,
-     "to": 0.03,
-     "transform": {
-      "translation": [
-       0.3,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "slide",
-     "kind": "box",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "size": [
-      1.0,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       -0.0025,
-       0.355
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.71
-      ]
-     }
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-top-l",
-     "of": "top-l",
-     "region": "table-top"
-    },
-    {
-     "id": "th-leg-l",
-     "of": "leg-l",
-     "region": "legs"
-    },
-    {
-     "id": "th-apron-l-side",
-     "of": "apron-l-side",
-     "region": "apron"
-    },
-    {
-     "id": "th-apron-l-end",
-     "of": "apron-l-end",
-     "region": "apron"
-    },
-    {
-     "id": "th-top-r",
-     "of": "top-r",
-     "region": "table-top"
-    },
-    {
-     "id": "th-leg-r",
-     "of": "leg-r",
-     "region": "legs"
-    },
-    {
-     "id": "th-apron-r-side",
-     "of": "apron-r-side",
-     "region": "apron"
-    },
-    {
-     "id": "th-apron-r-end",
-     "of": "apron-r-end",
-     "region": "apron"
-    },
-    {
-     "id": "th-leaf",
-     "of": "leaf",
-     "region": "leaf-top"
-    },
-    {
-     "id": "th-slide",
-     "of": "slide",
-     "region": "slide-rails"
-    }
-   ],
-   "structure": [
-    {
-     "id": "m-top-l",
-     "of": "top-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-leg-l",
-     "of": "leg-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-l-side",
-     "of": "apron-l-side",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-l-end",
-     "of": "apron-l-end",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-top-r",
-     "of": "top-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-leg-r",
-     "of": "leg-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-r-side",
-     "of": "apron-r-side",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-apron-r-end",
-     "of": "apron-r-end",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-leaf",
-     "of": "leaf",
-     "member": "leaf",
-     "part": "member"
-    },
-    {
-     "id": "m-slide",
-     "of": "slide",
-     "member": "frame",
-     "part": "member"
-    },
-    {
-     "id": "corner-left",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.06,
-      0.08,
-      0.06
-     ],
-     "transform": {
-      "translation": [
-       0.135,
-       -0.085,
-       0.375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "slide-link-left",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.25,
-     "size": [
-      0.15,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.675,
-       -0.06,
-       0.355
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.71
-      ]
-     },
-     "member": "top-left",
-     "part": "joint"
-    },
-    {
-     "id": "corner-right",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "size": [
-      0.06,
-      0.08,
-      0.06
-     ],
-     "transform": {
-      "translation": [
-       0.665,
-       -0.085,
-       0.375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "slide-link-right",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.25,
-     "size": [
-      0.15,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.125,
-       -0.06,
-       0.355
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.71
-      ]
-     },
-     "member": "top-right",
-     "part": "joint"
-    },
-    {
-     "id": "support-leg-left-l",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.03
-      ],
-      [
-       0.03,
-       0.03
-      ],
-      [
-       0.03,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.135,
-      -0.735,
-      0.375
-     ],
-     "member": "top-left",
-     "part": "support",
-     "anchor": "leg-left-l"
-    },
-    {
-     "id": "support-leg-left-r",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.03
-      ],
-      [
-       0.03,
-       0.03
-      ],
-      [
-       0.03,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.135,
-      -0.735,
-      -0.375
-     ],
-     "member": "top-left",
-     "part": "support",
-     "anchor": "leg-left-r"
-    },
-    {
-     "id": "support-leg-right-l",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.03
-      ],
-      [
-       0.03,
-       0.03
-      ],
-      [
-       0.03,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.665,
-      -0.735,
-      0.375
-     ],
-     "member": "top-right",
-     "part": "support",
-     "anchor": "leg-right-l"
-    },
-    {
-     "id": "support-leg-right-r",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.03
-      ],
-      [
-       0.03,
-       0.03
-      ],
-      [
-       0.03,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.665,
-      -0.735,
-      -0.375
-     ],
-     "member": "top-right",
-     "part": "support",
-     "anchor": "leg-right-r"
-    },
-    {
-     "id": "mass-left",
-     "kind": "ellipsoid",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.35667,
-       -0.068,
-       0.0
-      ]
-     },
-     "member": "top-left",
-     "part": "mass"
-    },
-    {
-     "id": "mass-right",
-     "kind": "ellipsoid",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.44333,
-       -0.068,
-       0.0
-      ]
-     },
-     "member": "top-right",
-     "part": "mass"
-    },
-    {
-     "id": "mass-leaf",
-     "kind": "ellipsoid",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.04,
-      0.03,
-      0.04
-     ],
-     "transform": {
-      "translation": [
-       0.3,
-       0.015,
-       0.0
-      ]
-     },
-     "member": "leaf",
-     "part": "mass"
-    },
-    {
-     "id": "mass-frame",
-     "kind": "ellipsoid",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "frame",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body, authored anew for 30 mm: square 30 mm plates for the halves and the leaf, the shadow gap of one feature, 30 x 80 mm aprons, straight 60 mm legs (the 25 mm taper is below the feature) and one 30 mm slide bar per side.",
-     "de": "Körper, für 30 mm neu gebaut: gerade 30-mm-Platten für die Hälften und die Einlage, die Schattenfuge von einem Merkmal, Zargen 30 x 80 mm, gerade 60-mm-Beine (die 25-mm-Verjüngung liegt unter dem Merkmal) und je Seite ein 30-mm-Auszugsstab."
-    },
-    {
-     "en": "Thermal: one surface per region. Structure: plates, aprons, legs, leaf and slides as members; one 60 mm frame corner per leg and one slide link per half and side as the joints; glides; masses.",
-     "de": "Thermik: eine Oberfläche je Region. Tragwerk: Platten, Zargen, Beine, Einlage und Auszüge als Stäbe; je Bein eine 60-mm-Rahmenecke und je Hälfte und Seite ein Auszugsglied als Gelenke; Gleiter; Massen."
-    }
-   ]
-  },
-  "500": {
-   "status": "authored",
-   "denominator": 500,
-   "body": [
-    {
-     "id": "slab-l",
-     "kind": "extrude",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.45,
-       -0.8
-      ],
-      [
-       0.45,
-       -0.8
-      ],
-      [
-       0.45,
-       0.0
-      ],
-      [
-       -0.45,
-       0.0
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.06,
-     "to": 0.015,
-     "transform": {
-      "translation": [
-       0.8,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "frame-l",
-     "kind": "extrude",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "profile": [
-      [
-       0.325,
-       0.0
-      ],
-      [
-       0.325,
-       -0.625
-      ],
-      [
-       -0.325,
-       -0.625
-      ],
-      [
-       -0.325,
-       0.0
-      ],
-      [
-       -0.4,
-       0.0
-      ],
-      [
-       -0.4,
-       -0.7
-      ],
-      [
-       0.4,
-       -0.7
-      ],
-      [
-       0.4,
-       0.0
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.135,
-     "to": -0.06,
-     "transform": {
-      "translation": [
-       0.8,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leg-l",
-     "kind": "box",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.6,
-     "size": [
-      0.075,
-      0.61,
-      0.075
-     ],
-     "transform": {
-      "translation": [
-       0.135,
-       -0.43,
-       0.375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     }
-    },
-    {
-     "id": "slab-r",
-     "kind": "extrude",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       -0.45,
-       0.0
-      ],
-      [
-       0.45,
-       0.0
-      ],
-      [
-       0.45,
-       0.8
-      ],
-      [
-       -0.45,
-       0.8
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.06,
-     "to": 0.015,
-     "transform": {
-      "translation": [
-       0.0,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "frame-r",
-     "kind": "extrude",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.55,
-     "profile": [
-      [
-       0.4,
-       0.0
-      ],
-      [
-       0.4,
-       0.7
-      ],
-      [
-       -0.4,
-       0.7
-      ],
-      [
-       -0.4,
-       0.0
-      ],
-      [
-       -0.325,
-       0.0
-      ],
-      [
-       -0.325,
-       0.625
-      ],
-      [
-       0.325,
-       0.625
-      ],
-      [
-       0.325,
-       0.0
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.135,
-     "to": -0.06,
-     "transform": {
-      "translation": [
-       0.0,
-       0,
-       0.0
-      ]
-     }
-    },
-    {
-     "id": "leg-r",
-     "kind": "box",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.6,
-     "size": [
-      0.075,
-      0.61,
-      0.075
-     ],
-     "transform": {
-      "translation": [
-       0.665,
-       -0.43,
-       0.375
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.75
-      ]
-     }
-    },
-    {
-     "id": "leaf",
-     "kind": "extrude",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "body",
-     "tone": 0.65,
-     "profile": [
-      [
-       -0.39,
-       -0.3
-      ],
-      [
-       -0.39,
-       0.3
-      ],
-      [
-       0.39,
-       0.3
-      ],
-      [
-       0.39,
-       -0.3
-      ]
-     ],
-     "plane": "zx",
-     "from": -0.045,
-     "to": 0.03,
-     "transform": {
-      "translation": [
-       0.3,
-       0,
-       0.0
-      ]
-     }
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-slab-l",
-     "of": "slab-l",
-     "region": "table-top"
-    },
-    {
-     "id": "th-frame-l",
-     "of": "frame-l",
-     "region": "apron"
-    },
-    {
-     "id": "th-leg-l",
-     "of": "leg-l",
-     "region": "legs"
-    },
-    {
-     "id": "th-slab-r",
-     "of": "slab-r",
-     "region": "table-top"
-    },
-    {
-     "id": "th-frame-r",
-     "of": "frame-r",
-     "region": "apron"
-    },
-    {
-     "id": "th-leg-r",
-     "of": "leg-r",
-     "region": "legs"
-    },
-    {
-     "id": "th-leaf",
-     "of": "leaf",
-     "region": "leaf-top"
-    },
-    {
-     "id": "th-slide",
-     "kind": "box",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "size": [
-      1.0,
-      0.075,
-      0.075
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       -0.04,
-       0.2875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.575
-      ]
-     },
-     "region": "slide-rails"
-    }
-   ],
-   "structure": [
-    {
-     "id": "m-slab-l",
-     "of": "slab-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-frame-l",
-     "of": "frame-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-leg-l",
-     "of": "leg-l",
-     "member": "top-left",
-     "part": "member"
-    },
-    {
-     "id": "m-slab-r",
-     "of": "slab-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-frame-r",
-     "of": "frame-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-leg-r",
-     "of": "leg-r",
-     "member": "top-right",
-     "part": "member"
-    },
-    {
-     "id": "m-leaf",
-     "of": "leaf",
-     "member": "leaf",
-     "part": "member"
-    },
-    {
-     "id": "member-slide",
-     "kind": "box",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "body",
-     "tone": 0.35,
-     "size": [
-      1.0,
-      0.075,
-      0.075
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       -0.04,
-       0.2875
-      ]
-     },
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0.0,
-       0.0,
-       -0.575
-      ]
-     },
-     "member": "frame",
-     "part": "member"
-    },
-    {
-     "id": "support-leg-left-l",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0375
-      ],
-      [
-       0.075,
-       0.0375
-      ],
-      [
-       0.075,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.135,
-      -0.735,
-      0.375
-     ],
-     "member": "top-left",
-     "part": "support",
-     "anchor": "leg-left-l"
-    },
-    {
-     "id": "support-leg-left-r",
-     "kind": "revolve",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0375
-      ],
-      [
-       0.075,
-       0.0375
-      ],
-      [
-       0.075,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.135,
-      -0.735,
-      -0.375
-     ],
-     "member": "top-left",
-     "part": "support",
-     "anchor": "leg-left-r"
-    },
-    {
-     "id": "support-leg-right-l",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0375
-      ],
-      [
-       0.075,
-       0.0375
-      ],
-      [
-       0.075,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.665,
-      -0.735,
-      0.375
-     ],
-     "member": "top-right",
-     "part": "support",
-     "anchor": "leg-right-l"
-    },
-    {
-     "id": "support-leg-right-r",
-     "kind": "revolve",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "ground",
-     "tone": 0.2,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.0375
-      ],
-      [
-       0.075,
-       0.0375
-      ],
-      [
-       0.075,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      1,
-      0
-     ],
-     "origin": [
-      0.665,
-      -0.735,
-      -0.375
-     ],
-     "member": "top-right",
-     "part": "support",
-     "anchor": "leg-right-r"
-    },
-    {
-     "id": "mass-left",
-     "kind": "ellipsoid",
-     "bone": "top-left",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.0375,
-      0.0375,
-      0.0375
-     ],
-     "transform": {
-      "translation": [
-       0.35667,
-       -0.068,
-       0.0
-      ]
-     },
-     "member": "top-left",
-     "part": "mass"
-    },
-    {
-     "id": "mass-right",
-     "kind": "ellipsoid",
-     "bone": "top-right",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.0375,
-      0.0375,
-      0.0375
-     ],
-     "transform": {
-      "translation": [
-       0.44333,
-       -0.068,
-       0.0
-      ]
-     },
-     "member": "top-right",
-     "part": "mass"
-    },
-    {
-     "id": "mass-leaf",
-     "kind": "ellipsoid",
-     "bone": "leaf",
-     "material": "oak-timber",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.04,
-      0.0375,
-      0.04
-     ],
-     "transform": {
-      "translation": [
-       0.3,
-       0.015,
-       0.0
-      ]
-     },
-     "member": "leaf",
-     "part": "mass"
-    },
-    {
-     "id": "mass-frame",
-     "kind": "ellipsoid",
-     "bone": "frame",
-     "material": "steel-slides",
-     "role": "detail",
-     "tone": 0.3,
-     "radii": [
-      0.0375,
-      0.0375,
-      0.0375
-     ],
-     "transform": {
-      "translation": [
-       0.5,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "frame",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body, authored anew for 75 mm: per half one 75 mm slab for top and shadow gap and below it a U frame of the three aprons (75 mm walls), two 75 mm square legs; the leaf is a 75 mm block, 0.78 m wide (the 60 mm it lacks per side is below the feature), that lies inside the slabs and the apron frame while stored and fills the gap flush when the table is extended. The model is minimal: nothing smaller can be left out without losing the table.",
-     "de": "Körper, für 75 mm neu gebaut: je Hälfte eine 75-mm-Platte für Platte und Schattenfuge und darunter ein U-Rahmen aus den drei Zargen (75-mm-Wände), zwei 75-mm-Vierkantbeine; die Einlage ist ein 75-mm-Block, 0,78 m breit (die fehlenden 60 mm je Seite liegen unter dem Merkmal), der verstaut in Platten und Zargenrahmen liegt und ausgezogen die Lücke bündig füllt. Das Modell ist minimal: kleiner geht es nicht, ohne den Tisch zu verlieren."
-    },
-    {
-     "en": "Thermal: slabs, frames, legs and leaf are their regions' surfaces; the slides, absent from the body, are one hidden 75 mm bar per side inside the frame. Structure: slabs, frames, legs, leaf and the two slide bars as members; glides of the leg section; masses at the centres.",
-     "de": "Thermik: Platten, Rahmen, Beine und Einlage sind die Oberflächen ihrer Regionen; die Auszüge, im Körper nicht vorhanden, sind je Seite ein verdeckter 75-mm-Stab im Rahmen. Tragwerk: Platten, Rahmen, Beine, Einlage und die zwei Auszugsstäbe als Stäbe; Gleiter im Beinquerschnitt; Massen in den Schwerpunkten."
-    }
-   ]
   }
- }
 }

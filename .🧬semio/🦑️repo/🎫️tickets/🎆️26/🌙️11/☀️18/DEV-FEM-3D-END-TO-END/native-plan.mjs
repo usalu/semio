@@ -13,7 +13,8 @@ const authored = new Map(execFileSync("git", ["-c", "core.quotepath=false", "ls-
 for (const [name, value] of authored) if (!projects[name]) projects[name] = {...value, authoredOnly: true};
 if (!graph) {
   const target = authored.get(rootProject)?.targets?.[rootTarget];
-  if (!target || !Array.isArray(target.dependsOn) || target.dependsOn.length) throw Error(`no sealed selected graph holds ${root}`);
+  const dependencies = target?.dependsOn ?? [];
+  if (!target || !Array.isArray(dependencies) || dependencies.length) throw Error(`no sealed selected graph holds ${root}`);
 }
 const projectDeps = name => (edges[name] ?? []).map(edge => typeof edge === "string" ? edge : edge.target).filter(name => projects[name]);
 const expand = (project, entry) => {

@@ -15,6 +15,8 @@ fn birth_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_
 /// 📨️ Funds one zero-heap terminal ownership transfer independently of the frame birth.
 fn handoff_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}}
 const OUTPUT_LIMIT:usize=ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES;
+pub(super) const EXECUTION_CONTRACT: semio_framework::ToolExecutionContract =
+    semio_framework::ToolExecutionContract::resumable(4_096, 4_096, 1, OUTPUT_LIMIT, 7_500, 1, 1);
 const PAGE_INPUT:usize=ArtifactOutputChunks::CHUNK_BYTES/4*3;
 #[derive(semio_framework_value::RetireOwned)]
 struct DownloadOwners{chunks:Option<ArtifactOutputChunks>,raw:Option<OwnedSerializerOutput>,filename:String,mime:String,metadata:Option<((ArtifactDialect,ArtifactDialect),DslValue)>,refusal:Option<ValueError>}
@@ -128,7 +130,7 @@ impl semio_framework::ToolJobFactory for DrawingExportCommandJobFactory {
  fn keys(&self)->&[semio_framework::ToolFactoryKey]{&self.keys}
  fn payload_schema_id(&self)->&str{DRAWING_BOUNDED_PAYLOAD_SCHEMA}
  fn classification(&self)->semio_framework::InteractiveJobClassification{semio_framework::InteractiveJobClassification::Migrated}
- fn execution_contract(&self)->semio_framework::ToolExecutionContract{semio_framework::ToolExecutionContract::resumable(4096,4096,1,OUTPUT_LIMIT,7500,1,1)}
+ fn execution_contract(&self)->semio_framework::ToolExecutionContract{EXECUTION_CONTRACT}
  semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:4096,checkpoint_resume:false);
 }
 impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingExportCommandJobFactory{type Owner=App;const TOOL_IDS:&'static[&'static str]=DRAWING_EXPORT_TOOL_IDS;const DOCUMENT_SCHEMA:&'static str=DRAWING_DOCUMENT_SCHEMA;const PUBLICATION_CONTRACTS:&'static[semio_plugin::ArtifactToolPublicationContract]=DRAWING_EXPORT_PUBLICATION_CONTRACTS;}

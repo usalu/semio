@@ -6,7 +6,7 @@ use super::*;
 mod pixel_work;
 use semio_s_artifact_raster_raster_mutations_layers::rename_layer;
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
-use semio_s_artifact_raster_raster_model::{RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use semio_s_artifact_raster_raster_model::{RasterTransform, RASTER_DOCUMENT_SCHEMA, retire_raster_value_cold};
 use semio_framework_job::{JobOutcomeBorrow, OperationId};
 use semio_plugin::{ArtifactOwnedDisposer, ArtifactStoreInitializationAuthority};
 
@@ -18,6 +18,12 @@ fn test_wallet() -> RetainedCloneGrant {
 
 fn exact_grant(demand: semio_framework_value::RetirementDemand) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RASTER_OWNED_FIELD_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+}
+
+fn with_effect<T>(grant: RetainedCloneGrant, budget: u64, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> T) -> T {
+    let mut turn = semio_framework_job::OriginalRetirementPump::new().turn(budget.max(1), u64::MAX, semio_framework_job::default_now_us, grant).unwrap();
+    let (result, _) = turn.with_effect(|effect| run(&mut effect.nested_within(grant, budget))).unwrap().expect("test work quote");
+    result
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -87,7 +93,7 @@ fn close_raster_candidate(mut candidate: store::ArtifactStore<RasterSnapshot, Ra
             return;
         }
         let demand = disposer.retirement_demands(&candidate, RASTER_OWNED_FIELD_BYTES).expect("Raster candidate quotes its next close turn");
-        disposer.close_step(&mut candidate, exact_grant(demand)).expect("Raster candidate close step");
+        disposer.close_step_cold(&mut candidate, exact_grant(demand)).expect("Raster candidate close step");
     }
     panic!("Raster candidate did not reach terminal-empty close")
 }
@@ -98,7 +104,7 @@ fn close_slot(slot: &mut RasterRetirementSlot) {
             return;
         }
         let demand = slot.demands(RASTER_OWNED_FIELD_BYTES).expect("Raster slot quotes its next close turn");
-        slot.close(exact_grant(demand)).result.expect("Raster slot closes within its quoted grant");
+        with_effect(exact_grant(demand), 256, |effect| slot.close(effect)).result.expect("Raster slot closes within its quoted grant");
     }
     panic!("Raster retirement slot did not reach terminal-empty");
 }
@@ -262,7 +268,7 @@ fn raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner() {
             break;
         }
         let demand = clone.close_demands(RASTER_OWNED_FIELD_BYTES).expect("expired clone quotes its close turn");
-        clone.close_step(exact_grant(demand)).result.expect("expired clone closes through retained owner");
+        with_effect(exact_grant(demand), 256, |effect| clone.close_step(effect)).result.expect("expired clone closes through retained owner");
     }
     assert!(clone.terminal_is_empty());
     drop(clone);
@@ -326,11 +332,27 @@ fn raster_displaced_owners_retire_through_exact_demand_quoted_grants() {
     let mut slot = RasterRetirementSlot::new();
     slot.put(RasterDisplaced::String(spare));
     assert!(!slot.is_empty());
-    let empty = slot.close(RetainedCloneGrant { maximum_items: 0, ..test_wallet() }).result.expect("a zero-item grant retains the exact string");
+    let empty = with_effect(RetainedCloneGrant { maximum_items: 0, ..test_wallet() }, 256, |effect| slot.close(effect)).result.expect("a zero-item grant retains the exact string");
     assert_eq!(empty.progress(), RetainedCloneProgress::default());
     assert!(!slot.is_empty());
-    let starved = slot.close(RetainedCloneGrant { maximum_capacity_bytes: 0, ..test_wallet() }).result.expect("an unfunded birth retains the exact string");
+    let unfunded_work = with_effect(test_wallet(), 0, |effect| slot.close(effect));
+    assert_eq!(unfunded_work.work, 0);
+    assert_eq!(unfunded_work.result.unwrap().progress(), RetainedCloneProgress::default());
+    let starved = with_effect(RetainedCloneGrant { maximum_capacity_bytes: 0, ..test_wallet() }, 256, |effect| slot.close(effect)).result.expect("an unfunded birth retains the exact string");
     assert_eq!(starved.progress(), RetainedCloneProgress::default());
+    let demand = slot.demands(RASTER_OWNED_FIELD_BYTES).unwrap();
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth, ..Default::default() };
+    let short = RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant };
+    let denied = with_effect(short, 256, |effect| slot.close(effect));
+    assert_eq!(denied.work, 0);
+    assert_eq!(denied.result.unwrap().progress(), RetainedCloneProgress::default());
+    assert!(slot.active.is_none());
+    let funded = with_effect(grant, 256, |effect| slot.close(effect));
+    assert_eq!(funded.work, 1);
+    let receipt = funded.result.unwrap().progress();
+    assert_eq!(receipt.copied_bytes, demand.copy_bytes);
+    assert_eq!(receipt.retained_capacity_bytes, demand.capacity_bytes);
+    assert!(slot.pending.is_none());
     close_slot(&mut slot);
 
     let mut value = semio_framework_value::DslValue::String(String::with_capacity(RASTER_OWNED_FIELD_BYTES));

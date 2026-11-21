@@ -13,6 +13,58 @@ use semio_s_fem_model::NodalLoad;
 use semio_s_fem_model::Support;
 use semio_s_fem_sparse::CsrTripletBuildStage;
 
+/// 🎼️ The retained second matrix projects consistent beam mass into the original free equations.
+#[test]
+fn secondary_assembly_retains_consistent_mass_in_stiffness_order() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../🧫️fixtures/🎼️secondary-matrix/🔣️.json"
+    )).expect("secondary assembly law");
+    let scalar = |key: &str| fixture[key].as_f64().expect("fixture scalar");
+    let native = cantilever_analysis_model(
+        scalar("youngsModulus"), scalar("area"), scalar("inertia"), scalar("length"), scalar("density"),
+    ).0;
+    let mut mounted = MountedAnalysisModel::new();
+    while !mounted.admit_node_one(native.nodes.len(), MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
+    for node in native.nodes { mounted.push_node(node).unwrap(); }
+    while !mounted.admit_element_one(native.elements.len(), MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
+    for element in native.elements { assert!(mounted.push_element(element).is_ok()); }
+    while !mounted.admit_support_one(1, MOUNTED_ANALYSIS_BACKING_BYTES).unwrap().complete {}
+    let mut support = MountedAnalysisSupport::new("a".into());
+    let dofs = [Dof::Tx, Dof::Ty, Dof::Rz];
+    for dof in dofs { support.push_fixed(dof).unwrap(); }
+    assert!(mounted.push_support(support).is_ok());
+    let operation = test_operation(9781);
+    let mut builder = AssemblyJobConstruction::new_mounted(mounted, operation, 1);
+    assert!((0..4_096).any(|_| builder.step_one().expect("admit stiffness construction")));
+    let mut stiffness = builder.take_complete().expect("take admitted stiffness construction");
+    let mut original = OriginalNumericalFixture::new(operation);
+    assert!((0..8_192).any(|_| matches!(original.step_seen(&mut stiffness, TEST_GRANT, 128, u64::MAX), Seen::Complete(_))));
+    original.turn(TEST_GRANT, 128, u64::MAX, |cx| { stiffness.retire_outcome(cx); Ok(()) }).unwrap();
+    let mut stiffness = AssemblyCsrBuild::new_free(stiffness).unwrap_or_else(|_| panic!("complete stiffness"));
+    let mut secondary = SecondaryAssembly::default();
+    assert!((0..8_192).any(|_| original.turn(TEST_GRANT, 128, u64::MAX, |cx| secondary.step(
+        &stiffness, None, |element, positions, _, row, column| element.mounted_mass_cell(positions, row, column), cx,
+    )).expect("assemble secondary matrix")));
+    let (mut mass, _) = secondary.take_complete(TEST_GRANT).expect("take the completed mass CSR");
+    assert_eq!(mass.n, dofs.len());
+    let address = |dof| stiffness.visual_equation_indices("b", dof).unwrap().1.expect("free tip");
+    for (i, row) in dofs.into_iter().enumerate() {
+        for (j, column) in dofs.into_iter().enumerate() {
+            let row = address(row);
+            let column = address(column);
+            let start = mass.indptr(row).unwrap() as usize;
+            let end = mass.indptr(row + 1).unwrap() as usize;
+            let observed = (start..end).find(|index| mass.index(*index) == Some(column as u32)).map_or(0.0, |index| mass.value(index).unwrap());
+            let expected = fixture["expectedMass"][i][j].as_f64().unwrap();
+            assert!((observed - expected).abs() <= scalar("tolerance"), "mass[{i}, {j}] = {observed}, expected {expected}");
+        }
+    }
+    original.finish();
+    assert!((0..8_192).any(|_| mass.close_step(MOUNTED_OWNER_PAGE_BYTES).0));
+    assert!((0..8_192).any(|_| secondary.close_step(MOUNTED_OWNER_PAGE_BYTES).0));
+    assert!((0..8_192).any(|_| stiffness.close_step(MOUNTED_OWNER_PAGE_BYTES).0));
+}
+
 fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
     let model = AnalysisModel {
         nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],

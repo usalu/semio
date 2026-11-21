@@ -1,0 +1,55 @@
+{
+  "title": "Preserve Work While Reconciling Worker Git State",
+  "emoji": "🛟",
+  "status": "closed",
+  "description": "Safeguard g1-m07 local Git state and unpublished work, compare against the fleet, and restore agreement safely.",
+  "summary": "Preserved the worker’s original Git and worktree data, received fleet updates without publishing stale variants, republished 98 verified local-only additions or edits, and confirmed fresh matching HEAD and staged tree, an empty queue and the current archivist journal cursor. Recovery copies and overlap path maps were retained.",
+  "goal": "consistentrepohistory",
+  "sessions": [
+    "7da7eabb-2116-4eb3-843d-6d368b68fa7e"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-20 17:00:02",
+      "author": "",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Safeguard g1-m07 local Git state and unpublished work, compare against the fleet, and restore agreement safely.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-21 00:05:58",
+      "author": "ueli",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "summary": "Preserved the worker’s original Git and worktree data, received fleet updates without publishing stale variants, republished 98 verified local-only additions or edits, and confirmed fresh matching HEAD and staged tree, an empty queue and the current archivist journal cursor. Recovery copies and overlap path maps were retained.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/PRESERVE-WORK-WHILE-RECONCILING-WORKER-GIT-STATE/recovery.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/PRESERVE-WORK-WHILE-RECONCILING-WORKER-GIT-STATE/recovery-copy.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/PRESERVE-WORK-WHILE-RECONCILING-WORKER-GIT-STATE/receive.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/PRESERVE-WORK-WHILE-RECONCILING-WORKER-GIT-STATE/verify-receive.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/PRESERVE-WORK-WHILE-RECONCILING-WORKER-GIT-STATE/verify-source.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/PRESERVE-WORK-WHILE-RECONCILING-WORKER-GIT-STATE/classify.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️20/PRESERVE-WORK-WHILE-RECONCILING-WORKER-GIT-STATE/merge-local.py"
+        }
+      ]
+    }
+  ]
+}

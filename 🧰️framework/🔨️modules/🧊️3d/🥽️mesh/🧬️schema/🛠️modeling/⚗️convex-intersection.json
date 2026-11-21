@@ -1,0 +1,57 @@
+{
+  "title": "Convex Mesh Solid Intersection",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "left",
+    "right"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "left": {
+      "$ref": "#/definitions/convexMesh"
+    },
+    "right": {
+      "$ref": "#/definitions/convexMesh"
+    }
+  },
+  "definitions": {
+    "convexMesh": {
+      "description": "One outward closed convex polyhedron with planar convex polygon faces. Point, edge or face contact alone has an empty solid intersection.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertices",
+        "faces"
+      ],
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "faces": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          }
+        }
+      }
+    }
+  }
+}

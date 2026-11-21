@@ -1,0 +1,21 @@
+{
+  "tolerance": 1e-8,
+  "output": "wire",
+  "cases": [
+    {"id": "centered perpendicular circles share two contacts", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": [[-5, 0, 0], [5, 0, 0]]},
+    {"id": "parallel separated circles still miss", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 1], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": []},
+    {"id": "both circles tangent to the plane line", "a": {"center": [0, 5, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 5], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": [[0, 0, 0]], "tangent": true},
+    {"id": "only the first circle is tangent to the plane line", "a": {"center": [5, 5, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": [[5, 0, 0]]},
+    {"id": "only the second circle is tangent to the plane line", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [5, 0, 5], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": [[5, 0, 0]]},
+    {"id": "secant intervals share one contact", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [2, 0, 0], "radius": 3, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": [[5, 0, 0]]},
+    {"id": "the plane line misses the first circle", "a": {"center": [0, 6, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": []},
+    {"id": "secant intervals have no common contact", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [1, 0, 0], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": []},
+    {"id": "both edge trims retain the positive contact", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [4, 5]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1], "range": [4, 5]}, "points": [[5, 0, 0]]},
+    {"id": "opposite edge trims remove both contacts", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [4, 5]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1], "range": [1, 2]}, "points": []},
+    {"id": "one edge crosses the angular seam", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0], "range": [5.5, 7]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [1, 0, 0], "axis": [0, 0, 1], "range": [4, 5.2]}, "points": [[0, 5, 0]]},
+    {"id": "translated oblique supports", "a": {"center": [3, 4, 2], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [3, 4, 2], "radius": 5, "normal": [0, 0.6, 0.8], "axis": [0, 0.8, -0.6]}, "points": [[-2, 4, 2], [8, 4, 2]]},
+    {"id": "shallow intersecting planes are not rank-degenerate", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 1e-10, 1], "axis": [0, 1, -1e-10]}, "points": [[-5, 0, 0], [5, 0, 0]]},
+    {"id": "roundoff does not collapse a near tangency", "a": {"center": [0, 4.9999999999, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "b": {"center": [0, 0, 4.9999999999], "radius": 5, "normal": [0, 1, 0], "axis": [0, 0, -1]}, "points": [[-3.162277660152568e-05, 0, 0], [3.162277660152568e-05, 0, 0]]},
+    {"id": "swapped frames keep the first operand parameter order", "a": {"center": [0, 0, 0], "radius": 5, "normal": [0, -1, 0], "axis": [0, 0, 1]}, "b": {"center": [0, 0, 0], "radius": 5, "normal": [0, 0, 1], "axis": [0, 1, 0]}, "points": [[-5, 0, 0], [5, 0, 0]]}
+  ]
+}

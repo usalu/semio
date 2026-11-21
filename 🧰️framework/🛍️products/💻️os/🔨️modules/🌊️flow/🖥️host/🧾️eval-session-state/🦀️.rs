@@ -55,17 +55,8 @@ pub struct FlowEvalSessionState {
     pub(super) previous_snapshot: Option<SharedOwner<TreeSnapshot>>,
     pub(super) previous_channels: Option<SharedOwner<EvalChannels>>,
     pub eval_json: Option<SharedOwner<String>>,
-    /// 🖼️ The evaluation a preview PAINTS while this one is still running: the live walk's own
-    /// answer, with every node the live walk has not answered YET filled in from the last CONVERGED
-    /// evaluation of the same node. Identical to [`FlowEvalSessionState::eval_json`] the moment the
-    /// walk converges, so a settled evaluation is never dressed up by a stale one.
-    ///
-    /// 🐛️ A budgeted walk emits NO entry for a node whose extension request is parked, so a preview
-    /// assembled from the live answer alone loses every branch that is recomputing. Measured on
-    /// :6025 for ONE slider step of the hex column: the payload went from three meshes to one at
-    /// +1 312 ms and the extruded solid was off screen for 1.4 s of a 2.7 s re-evaluation — the
-    /// geometry vanished and came back rather than following the knob
-    /// (`📓️slider-latency-incremental-eval-2026-09-15.md` §1).
+    /// 🖼️ Live evaluation with unanswered nodes filled from the last converged evaluation.
+    /// Once the walk converges it matches [`FlowEvalSessionState::eval_json`].
     pub painted_eval_json: String,
     /// 🖼️ The last evaluation that CONVERGED — the only honest source for a node the live walk has
     /// not reached. Advanced with the incremental baseline, under the same `remaining.is_empty()`
@@ -75,12 +66,7 @@ pub struct FlowEvalSessionState {
     pub previous_converged_eval_json: String,
     pub status_json: String,
     pub(super) tick_scheduled: bool,
-    /// 🔒️ One arming latch per preview window this session publishes into, keyed by
-    /// [`flow_eval_window_key`]. See [`FlowEvalWindowTickLatch`] — this is what makes "at most ONE
-    /// pending `flowEvalTick` per (instance, window)" a fact the session owns rather than a
-    /// convention every caller has to re-derive. Plain `Copy` rows keyed by hash, so retirement is
-    /// a single `clear` (the `tessellate_progress_by_hash` precedent) and no window id is ever
-    /// retained here.
+    /// 🔒️ One pending tick per preview window. The latch key owns no window ID.
     pub window_tick_latches: HistoryFoldIndex<u64, FlowEvalWindowTickLatch>,
     pub live_geometry_handles: HistoryFoldIndex<String, ()>,
     /// 🧊️ Canonical native Mesh16 ownership lands only through the original paid receiver.
@@ -89,10 +75,7 @@ pub struct FlowEvalSessionState {
     /// request is removed the moment its answer is folded, even a partial one — the continuation
     /// re-admits it on the next tick.
     pub pending_tessellate_by_hash: HistoryFoldIndex<u64, String>,
-    /// 🔗 The handle every admitted `nodeHash` belongs to, kept for as long as the tessellation is
-    /// unfinished. This is what makes a MULTI-STEP tessellation survive `retain_preview_meshes`:
-    /// its progress row and its half-received mesh body are keyed by hash, and pruning them by the
-    /// (already emptied) pending table would restart the transfer from chunk zero forever.
+    /// 🔗 Maps unfinished tessellations to their retained handles across round trips.
     pub tessellate_handle_by_hash: HistoryFoldIndex<u64, String>,
     /// 📈 Progress of every tessellation this session has admitted, keyed by `nodeHash`. Plain
     /// `Copy` rows — no heap, so retirement is a single take.
@@ -100,34 +83,13 @@ pub struct FlowEvalSessionState {
     pub(super) preview_tessellate_tolerance: Option<f64>,
     /// 🩺 Blocking validate-gate findings keyed by geometry handle, as a JSON array string.
     pub preview_diagnostics_by_handle: HistoryFoldIndex<String, String>,
-    /// 🔢 Which replacement of the process-wide flow extension registry every result this session
-    /// still holds was computed against. A contributed operator that no plugin had contributed yet
-    /// evaluates to a fault, and the fault is CACHED — in the neural cache, in the incremental
-    /// baseline and in the tessellation ledger — so a later contribution install has to be able to
-    /// say "everything in here predates the registry you can now address"
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 🔢 The extension registry generation that produced this session's cached results.
     pub flow_extension_generation: u64,
-    /// 💥 The LAST `evaluate` answer this session was handed that faulted, so the surface publishes
-    /// the fault it is actually living with instead of the addressing miss that preceded it. Cleared
-    /// the moment a contribution install moves `flow_extension_generation`, and the moment any
-    /// answer folds — a stale fault outranking a live evaluation is the same defect as an
-    /// `extension-not-contributed` card surviving its own install
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 💥 Latest evaluation fault, cleared by a registry change or a folded answer.
     pub extension_evaluate_fault: Option<ExtensionEvaluateFault>,
-    /// 🛑 Whether the user's explicit `cancelPreviewEval` gesture is the LAST thing that happened to
-    /// this session's evaluation. It is not derivable from the tessellation ledger: a cancel raised
-    /// while the chain was still in its `evaluate` round trips has no progress row to stamp, and a
-    /// cancel of a never-admitted tessellation leaves an all-`Idle` ledger — both of which would
-    /// publish `phase: "idle"` and silently swallow the gesture. Cleared by the next tick that
-    /// actually begins ([`FlowEvalSession::begin_window_tick`]), so a later gesture resumes with a
-    /// clean status rather than a frozen `cancelled` banner
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 🛑 An explicit cancellation stays visible until the next preview tick begins.
     pub preview_cancelled: bool,
-    /// ⏱️ Per-node progress of the BUDGETED `evaluate` round trips — the half of the preview's work
-    /// the tessellation ledger cannot see at all, because a long operator (a boolean) admits no
-    /// tessellation until it has finished. Keyed by `nodeHash`, the same identity the extension
-    /// resumes its retained job by (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-    /// `📓️extension-evaluate-budget-2026-09-12.md`).
+    /// ⏱️ In-flight operator evaluation progress, keyed by the extension's node hash.
     pub eval_progress_by_hash: HistoryFoldIndex<u64, PreviewEvalProgress>,
     /// 📏️ Fingerprint of the mesh packs the preview last published — lets tessellation land without
     /// moving the evaluation text while still owing a republication
@@ -139,12 +101,11 @@ pub struct FlowEvalSessionState {
     pub(super) pending_tick_display:Option<SessionLivePublication>,
     pub(super) tick_display_progress:RetainedCloneProgress,
     pub(super) tick_evaluation_ready:u8,
-    pub(super) pending_host:Option<FlowHost>,
+    pub(super) host: Option<SessionHostOwner>,
     pub(super) pending_snapshot_copy:Option<Box<dyn semio_framework_job::OriginalSnapshotIntake<FlowHostSnapshot>>>,
     pub pending_tick_snapshot:Option<FlowHostSnapshot>,
     pub pending_tick_snapshot_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<FlowHostSnapshot>>,
     pub pending_tick_snapshot_origin:Option<(u64,u64)>,
-    pub(super) retiring_host:Option<FlowHostRetirement>,
     pub(super) pending_host_cancelled:bool,
     pub(super) preview_cancellation_cursor:Option<usize>,
     pub(super) preview_cancellation_phase:u8,
@@ -153,6 +114,28 @@ pub struct FlowEvalSessionState {
     pub(super) preview_retention_progress:RetainedCloneProgress,
     pub(super) retirement: SessionRetirement,
     pub(super) closing: bool,
+}
+
+/// 🧵️ One evaluation host moves from the active tick to its explicit retirement.
+pub(super) enum SessionHostOwner {
+    Evaluating(FlowHost),
+    Closing(FlowHostRetirement),
+}
+
+impl SessionHostOwner {
+    pub(super) fn evaluating(&self) -> Option<&FlowHost> {
+        match self {
+            Self::Evaluating(host) => Some(host),
+            Self::Closing(_) => None,
+        }
+    }
+
+    pub(super) fn evaluating_mut(&mut self) -> Option<&mut FlowHost> {
+        match self {
+            Self::Evaluating(host) => Some(host),
+            Self::Closing(_) => None,
+        }
+    }
 }
 
 /// 💥 One faulted `evaluate` round trip, as the surface publishes it: the addressed extension, the
@@ -433,6 +416,7 @@ pub enum FlowSnapshotIntakeFailure<Original>{Original{failure:semio_framework_jo
 
 /// 🔒️ Evaluation ownership stays guarded until every collection, domain, cache, and byte frontier is empty.
 pub struct FlowEvalSession {
+    pub(super) preview_cache_identity: u64,
     pub(super) state: std::mem::ManuallyDrop<FlowEvalSessionState>,
 }
 impl std::ops::Deref for FlowEvalSession {
@@ -473,6 +457,6 @@ impl FlowSourceBaseline for FlowEvalSession {
     fn previous_channels(&self) -> Option<&SharedOwner<EvalChannels>> { self.previous_channels.as_ref() }
     fn baseline_geometry_pending(&self) -> bool { self.baseline_geometry_pending }
     fn preview_cancelled(&self) -> bool { self.preview_cancelled }
-    fn pending_host(&self) -> Option<&FlowHost> { self.pending_host.as_ref() }
+    fn pending_host(&self) -> Option<&FlowHost> { self.tick_host() }
     fn flow_extension_generation(&self) -> u64 { self.flow_extension_generation }
 }

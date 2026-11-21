@@ -1,8 +1,8 @@
 //! 👁️ Consumer-owned reads preserve the rich original child behind borrowed views.
 use crate::standards::v1::subsets::any::schema::graph::{Edge,GraphEffect,Node};
 use semio_s_artifact_trinity_jack_graph_query::{JackContentVisual,JackGraphQuery};
-use semio_framework_value::{ValueError,retirement::RetirementCursor};
-use semio_plugin::{Fault,app::{ChildContentView,ChildEmitPreparation}};
+use semio_framework_value::ValueError;
+use semio_plugin::app::ChildEmitPreparation;
 
 /// 📍️ One decoded move keeps the concrete operation representation owned by composition.
 pub struct JackContentMove{pub node_id:String,pub x:f64,pub y:f64}
@@ -33,9 +33,7 @@ pub trait JackContentRead:JackGraphQuery+JackContentLayout+JackContentProjection
     fn prepare_effects(&self,effects:&[GraphEffect])->Result<Vec<ChildEmitPreparation>,ValueError>;
 }
 
-/// 🧳️ The original rich child supplies pack bytes and its own bounded retirement authority.
+/// 🧳️ The original rich child supplies its pack bytes.
 pub trait JackOwnedContent:JackContentRead+Send+Sync+std::any::Any{
     fn genesis_pack(&self)->Result<Vec<u8>,ValueError>;
-    fn retirement_birth_bytes(&self)->Option<usize>;
-    fn into_retirement(self:Box<Self>)->Box<dyn RetirementCursor>;
 }

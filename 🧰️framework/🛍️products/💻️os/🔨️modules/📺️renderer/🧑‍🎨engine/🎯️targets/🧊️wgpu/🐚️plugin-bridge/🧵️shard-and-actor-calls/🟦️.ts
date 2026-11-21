@@ -2,7 +2,7 @@ import { type ActivationReason, ActivationRegistry, ON_EXTENSION_REQUEST_ACTIVAT
 import { ShardWorkerLike } from "@semio-tech/framework-actor/shard-client/quota";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime, SHARD_WORKER_URL } from "@semio-tech/framework-actor/shard-runtime";
 import { type OriginalBootstrapResponse, RemoteOriginalBootstrapOwner } from "@semio-tech/framework-actor/retained-turn/bootstrap/port";
-import { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import { ShardClient, type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client";
 import { rendererResidentLedger } from "@semio-tech/framework-canvas-ts/renderer-resident";
 import type { ShardCommandIngressPage, ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
 import { coerceTurnResult, type WireTurnResult } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
@@ -151,8 +151,11 @@ export function submitActorWork<T>(actorId: string, work: () => Promise<T>): Pro
   return next;
 }
 
-export function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], commandPage?: ShardCommandIngressPage): Promise<WireTurnResult> {
-  return submitActorWork(actorId, () => getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage)).then(coerceTurnResult);
+export function submitTurn(actorId: string, events: readonly ShardEventEnvelope[], commandPage?: ShardCommandIngressPage, activation?: ShardActorActivationLease): Promise<WireTurnResult> {
+  if (activation && activation.actorId !== actorId) return Promise.reject(new Error("wgpu-bridge activation actor changed"));
+  return submitActorWork(actorId, () => activation
+    ? activation.turn(events, DEFAULT_SHARD_BUDGET, commandPage)
+    : getShardClient().turn(actorId, events, DEFAULT_SHARD_BUDGET, commandPage)).then(coerceTurnResult);
 }
 
 /** 🧮️ Pending (not yet started) calls one actor may hold before {@link serializeWgpuActorCall} refuses —

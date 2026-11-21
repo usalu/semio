@@ -1,11 +1,12 @@
 //! ⚙️ Jack artifact mutation validation, application, inversion and store behavior.
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use crate::standards::v1::subsets::any::schema::graph::{EntityRef, GraphEffect, TRINITY_GRAPH_SCHEMA};
+use crate::standards::v1::subsets::any::schema::graph::{parse_port_key, port_node_id, Edge, EntityRef, GraphEffect, Node, TRINITY_GRAPH_SCHEMA};
 use crate::standards::v1::subsets::any::schema::memory::Graph;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 use protocol::ColdMutation;
+use std::collections::BTreeMap;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
@@ -62,9 +63,11 @@ impl Drop for OwnedTrinityGraphStore {
 //#region 🔖️Validation
 /// 🛡️ Pre-flight validation of one parent-lane operation against `snapshot` — the query must fit its document bound.
 pub fn validate_trinity_graph_operation(operation: &TrinityGraphMutation, _snapshot: &JackSnapshot) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
-    let TrinityGraphMutation::SetQuery(payload) = operation;
-    if payload.value.len() > crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES {
-        return Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::QueryTooLarge { bytes: payload.value.len(), maximum: crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES });
+    if let TrinityGraphMutation::SetQuery(payload) = operation {
+        let maximum = crate::standards::v1::subsets::any::schema::graph::JACK_QUERY_MAXIMUM_BYTES;
+        if payload.value.len() > maximum {
+            return Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::QueryTooLarge { bytes: payload.value.len(), maximum });
+        }
     }
     Ok(())
 }
@@ -99,14 +102,8 @@ pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), 
             }
             validate_edge_kind_trinity(&graph.manifest, &edge.kind)?;
             validate_edge_properties_trinity(&graph.manifest, &edge.kind, &edge.properties)?;
-            let source_node = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(edge.source.clone()))?;
-            let target_node = crate::standards::v1::subsets::any::schema::graph::port_node_id(&edge.target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(edge.target.clone()))?;
-            if !graph.nodes.contains_key(source_node) {
-                return Err(TrinityRamError::SourceNodeNotFound(source_node.to_string()));
-            }
-            if !graph.nodes.contains_key(target_node) {
-                return Err(TrinityRamError::TargetNodeNotFound(target_node.to_string()));
-            }
+            validate_endpoint(graph, &edge.source, TrinityRamError::InvalidSourcePortKey, TrinityRamError::SourceNodeNotFound)?;
+            validate_endpoint(graph, &edge.target, TrinityRamError::InvalidTargetPortKey, TrinityRamError::TargetNodeNotFound)?;
         }
         GraphEffect::DeleteEdge(id) => {
             if !graph.edges.contains_key(id) {
@@ -119,36 +116,122 @@ pub fn validate_graph_effect(effect: &GraphEffect, graph: &Graph) -> Result<(), 
     Ok(())
 }
 
+fn validate_endpoint(
+    graph: &Graph,
+    endpoint: &str,
+    invalid_key: fn(String) -> crate::standards::v1::subsets::any::schema::errors::TrinityRamError,
+    missing_node: fn(String) -> crate::standards::v1::subsets::any::schema::errors::TrinityRamError,
+) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
+    if let Some((id, port)) = parse_port_key(endpoint) {
+        let node = graph.node(id).ok_or_else(|| missing_node(id.to_owned()))?;
+        if node.ports.iter().any(|item| item.id == port) {
+            return Ok(());
+        }
+    } else if !endpoint.contains('@') && graph.nodes.contains_key(endpoint) {
+        return Ok(());
+    }
+    Err(invalid_key(endpoint.to_owned()))
+}
+
 /// ▶️ Validates then applies query effects to `graph`, failing atomically on the first invalid one.
 pub fn apply_graph_effects(graph: &mut Graph, effects: &[GraphEffect]) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
+    if effects.is_empty() {
+        return Ok(());
+    }
+    let mut undo = GraphEffectUndo::default();
+    let root = graph.root_node_id.clone();
     for effect in effects {
-        validate_graph_effect(effect, graph)?;
+        if let Err(error) = validate_graph_effect(effect, graph) {
+            undo.restore(graph);
+            graph.root_node_id = root;
+            return Err(error);
+        }
         match effect {
-            GraphEffect::CreateNode(node) => graph.add_node(node.clone()),
+            GraphEffect::CreateNode(node) => {
+                undo.nodes.entry(node.id.clone()).or_insert(None);
+                graph.add_node(node.clone());
+            }
             GraphEffect::DeleteNode(id) => {
-                graph.remove_node(id);
+                let node = graph.nodes.remove(id).expect("validated node");
+                undo.nodes.entry(id.clone()).or_insert(Some(node));
+                for (id, edge) in graph.edges.extract_if(.., |_, edge| {
+                    port_node_id(&edge.source).unwrap_or(&edge.source) == id || port_node_id(&edge.target).unwrap_or(&edge.target) == id
+                }) {
+                    undo.edges.entry(id).or_insert(Some(edge));
+                }
+                if graph.root_node_id.as_ref() == Some(id) {
+                    graph.root_node_id = None;
+                }
             }
-            GraphEffect::CreateEdge(edge) => graph.add_edge(edge.clone()),
+            GraphEffect::CreateEdge(edge) => {
+                undo.edges.entry(edge.id.clone()).or_insert(None);
+                graph.add_edge(edge.clone());
+            }
             GraphEffect::DeleteEdge(id) => {
-                graph.remove_edge(id);
+                let edge = graph.edges.remove(id).expect("validated edge");
+                undo.edges.entry(id.clone()).or_insert(Some(edge));
             }
-            GraphEffect::RenameNode { id, name } => graph.node_mut(id).expect("validated node").name = name.clone(),
+            GraphEffect::RenameNode { id, name } => {
+                let node = undo.edit_node(graph, id);
+                node.name.clone_from(name);
+            }
             GraphEffect::MoveNode { id, x, y } => {
-                let node = graph.node_mut(id).expect("validated node");
+                let node = undo.edit_node(graph, id);
                 node.x = *x;
                 node.y = *y;
             }
-            GraphEffect::SetProperty { entity, key, value } => graph.set_property(entity.clone(), key, value.clone())?,
+            GraphEffect::SetProperty { entity, key, value } => {
+                undo.edit_properties(graph, entity).insert(key.clone(), value.clone());
+            }
             GraphEffect::RemoveProperty { entity, key } => {
-                let bag = match entity {
-                    EntityRef::Node(id) => graph.nodes.get_mut(id).map(|node| &mut node.properties),
-                    EntityRef::Edge(id) => graph.edges.get_mut(id).map(|edge| &mut edge.properties),
-                };
-                bag.expect("validated entity").remove(key);
+                undo.edit_properties(graph, entity).remove(key);
             }
         }
     }
     Ok(())
+}
+
+#[derive(Default)]
+struct GraphEffectUndo {
+    nodes: BTreeMap<String, Option<Node>>,
+    edges: BTreeMap<String, Option<Edge>>,
+}
+
+impl GraphEffectUndo {
+    fn edit_node<'a>(&mut self, graph: &'a mut Graph, id: &str) -> &'a mut Node {
+        let node = graph.nodes.get_mut(id).expect("validated node");
+        self.nodes.entry(id.to_owned()).or_insert_with(|| Some(node.clone()));
+        node
+    }
+
+    fn edit_properties<'a>(&mut self, graph: &'a mut Graph, entity: &EntityRef) -> &'a mut PropertyBag {
+        match entity {
+            EntityRef::Node(id) => &mut self.edit_node(graph, id).properties,
+            EntityRef::Edge(id) => {
+                let edge = graph.edges.get_mut(id).expect("validated edge");
+                self.edges.entry(id.clone()).or_insert_with(|| Some(edge.clone()));
+                &mut edge.properties
+            }
+        }
+    }
+
+    fn restore(self, graph: &mut Graph) {
+        restore_entries(&mut graph.nodes, self.nodes);
+        restore_entries(&mut graph.edges, self.edges);
+    }
+}
+
+fn restore_entries<T>(entries: &mut BTreeMap<String, T>, originals: BTreeMap<String, Option<T>>) {
+    for (id, original) in originals {
+        match original {
+            Some(original) => {
+                entries.insert(id, original);
+            }
+            None => {
+                entries.remove(&id);
+            }
+        }
+    }
 }
 
 fn validate_entity(graph: &Graph, entity: &EntityRef) -> Result<(), crate::standards::v1::subsets::any::schema::errors::TrinityRamError> {
@@ -236,6 +319,9 @@ use crate::standards::v1::subsets::any::schema::errors::TrinityRamError;
 }
 
 fn property_value_matches_type_trinity(value: &PropertyValue, def: &semio_framework_graph_manifest::PropertyDef) -> bool {
+    if matches!(def.value_type, semio_framework_value::ValueType::Any) {
+        return true;
+    }
     match value {
         PropertyValue::Null => def.value_type.id() == "null",
         PropertyValue::Bool(_) => def.value_type.id() == "boolean",

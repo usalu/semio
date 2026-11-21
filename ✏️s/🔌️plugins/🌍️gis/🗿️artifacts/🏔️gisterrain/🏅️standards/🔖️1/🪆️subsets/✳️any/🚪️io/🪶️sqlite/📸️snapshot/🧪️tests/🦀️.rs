@@ -51,7 +51,30 @@ fn sqlite_snapshot_terrain_map_mutation_distinguishes_nan_and_optional_owner(){
  assert_map_mutation(Some(map_with_scalar(semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(f64::from_bits(0x7ff8000000000042))))),Some(map_with_scalar(semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(f64::from_bits(0x7ff8000000000043))))),true);
  assert_map_mutation(None,None,false);assert_map_mutation(None,Some(crate::schema::imported_map::ImportedMap::default()),true);assert_map_mutation(Some(crate::schema::imported_map::ImportedMap::default()),None,true);assert_map_mutation(Some(crate::schema::imported_map::ImportedMap::default()),Some(crate::schema::imported_map::ImportedMap::default()),false);
 }
-fn row_limit_owners()->[GisTerrainSnapshot;3]{let absent=GisTerrainSnapshot{mesh:None,imported_map:None,..Default::default()};let empty=GisTerrainSnapshot{imported_map:Some(crate::schema::imported_map::ImportedMap::default()),..absent.clone()};[absent,empty,complete_fixture(0x8000000000000000)]}
+fn row_limit_owners()->[GisTerrainSnapshot;4]{let absent=GisTerrainSnapshot{mesh:None,imported_map:None,..Default::default()};let empty=GisTerrainSnapshot{imported_map:Some(crate::schema::imported_map::ImportedMap::default()),..absent.clone()};[absent,empty,complete_fixture(0x8000000000000000),elevation_fixture()]}
+
+fn elevation_fixture() -> GisTerrainSnapshot {
+    let mut rows = vec![vec![20; 33]; 33];
+    rows[32][32] = i16::MIN;
+    GisTerrainSnapshot {
+        elevation_source: Some(crate::schema::snapshot::ElevationSource { bounds: [-0.0, 0.0, 0.04, 0.04], rows }),
+        ..GisTerrainSnapshot::default()
+    }
+}
+
+#[test]
+fn sqlite_snapshot_terrain_preserves_exact_elevation_bounds_and_dense_samples() {
+    let snapshot = elevation_fixture();
+    let limits = SqliteDatabaseLimits::default();
+    let database = original_owners::with_sqlite_recipient(limits, &mut |_| true, |control| snapshot.to_sqlite_database(control)).unwrap();
+    assert_eq!(database.tables.iter().map(|table| table.rows.len()).sum::<usize>(), 1092);
+    let restored = original_owners::with_sqlite_recipient(limits, &mut |_| true, |control| GisTerrainSnapshot::from_sqlite_database(&database, control)).unwrap();
+    literal_equal(&restored, &snapshot);
+    let mut incomplete = database;
+    let sample_table = incomplete.tables.iter_mut().find(|table| table.name == "gis_terrain_elevation_sample").unwrap();
+    sample_table.rows.pop();
+    assert!(original_owners::with_sqlite_recipient(limits, &mut |_| true, |control| GisTerrainSnapshot::from_sqlite_database(&incomplete, control)).is_err());
+}
 #[test]
 fn sqlite_snapshot_terrain_native_encode_counts_complete_map_rows_before_work(){
  let limits=SqliteDatabaseLimits::default();for(owner_index,snapshot)in row_limit_owners().into_iter().enumerate(){let database=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap();let rows=database.tables.iter().map(|table|table.rows.len()).sum::<usize>();if owner_index<2{assert_eq!(rows,2+owner_index);}else{assert!(rows>3);}
@@ -66,7 +89,7 @@ fn sqlite_snapshot_terrain_native_decode_counts_complete_map_rows(){
 }
 #[test]
 fn sqlite_snapshot_terrain_complete_imported_intrinsic_owner_roundtrips(){let limits=SqliteDatabaseLimits::default();let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🗺️imported-map/🔣️.json")).unwrap();for word in plan["words"].as_array().unwrap(){let snapshot=complete_fixture(u64::from_str_radix(word.as_str().unwrap(),16).unwrap());let database=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap();let restored=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|GisTerrainSnapshot::from_sqlite_database(&database, sqlite_control)).unwrap();literal_equal(&restored,&snapshot);for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let payload=original_owners::with_encoding(|native_owner|snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();let decoded=original_owners::with_decoding(|native_owner|GisTerrainSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();literal_equal(&decoded,&snapshot);decoded.retire_sqlite_snapshot();}restored.retire_sqlite_snapshot();snapshot.retire_sqlite_snapshot();}}
-fn fixture()->(serde_json::Value,GisTerrainSnapshot){let f:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let child=&f["child"];let target=&child["target"];let dialect=&target["dialect"];let s=|v:&serde_json::Value|v.as_str().unwrap().to_owned();let value=GisTerrainSnapshot{exaggeration:1.5,imported_map:None,mesh:Some(store::os_store::artifact_child::ArtifactChild::new(s(&child["childId"]),semio_framework_artifact_reference::ArtifactRef{artifact_id:s(&target["artifactId"]),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:s(&dialect["artifactKind"]),standard:s(&dialect["standard"]),subset:s(&dialect["subset"])}}))};(f,value)}
+fn fixture()->(serde_json::Value,GisTerrainSnapshot){let f:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let child=&f["child"];let target=&child["target"];let dialect=&target["dialect"];let s=|v:&serde_json::Value|v.as_str().unwrap().to_owned();let value=GisTerrainSnapshot{exaggeration:1.5,imported_map:None,mesh:Some(store::os_store::artifact_child::ArtifactChild::new(s(&child["childId"]),semio_framework_artifact_reference::ArtifactRef{artifact_id:s(&target["artifactId"]),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:s(&dialect["artifactKind"]),standard:s(&dialect["standard"]),subset:s(&dialect["subset"])}})),elevation_source:None};(f,value)}
 #[test]
 fn sqlite_snapshot_gis_terrain_all_ieee_words_and_independent_sql(){use std::{io::Write,process::{Command,Stdio}};let(f,mut value)=fixture();let limits=SqliteDatabaseLimits::default();for word in f["words"].as_array().unwrap(){value.exaggeration=f64::from_bits(u64::from_str_radix(word.as_str().unwrap(),16).unwrap());let database=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|value.to_sqlite_database(sqlite_control)).unwrap();let restored=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|GisTerrainSnapshot::from_sqlite_database(&database, sqlite_control)).unwrap();assert_eq!(restored.exaggeration.to_bits(),value.exaggeration.to_bits());assert_eq!(restored.imported_map,value.imported_map);assert_eq!(restored.mesh,value.mesh);let bytes=export_sqlite_database(&database,limits,&mut |_|true).unwrap();let script="import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');d.query('UPDATE gis_terrain_mesh_child SET child_id=?').run('independent semantic edit');await Bun.write(Bun.stdout,d.serialize());d.close();";let mut p=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();p.stdin.take().unwrap().write_all(&bytes).unwrap();let output=p.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let edited=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|GisTerrainSnapshot::from_sqlite_database(&import_sqlite_database(&output.stdout,limits,&mut |_|true).unwrap(), sqlite_control)).unwrap();assert_eq!(edited.exaggeration.to_bits(),value.exaggeration.to_bits());assert_eq!(edited.mesh.unwrap().child_id,"independent semantic edit");}}
 #[test]

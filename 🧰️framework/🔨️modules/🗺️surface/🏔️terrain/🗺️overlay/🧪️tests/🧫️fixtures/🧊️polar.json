@@ -1,0 +1,33 @@
+{
+  "bounds": [8.5, 88, 9.5, 90],
+  "origin": [9, 89],
+  "exaggeration": 2,
+  "heightAtSouthWest": 10,
+  "heightStepEast": 2,
+  "heightStepNorth": 1,
+  "overlays": {
+    "positions": [
+      {"id": "southwest", "name": "Southwest", "coordinates": [8.5, 88]},
+      {"id": "northeast", "name": "Northeast", "coordinates": [9.5, 90]},
+      {"id": "just-east", "name": "Outside east", "coordinates": [9.500000000000002, 90]},
+      {"id": "beyond-pole", "name": "Beyond the pole", "coordinates": [9, 90.00000000000001]}
+    ],
+    "routes": [
+      {"id": "transverse", "name": "Transverse route", "coordinates": [[8, 89], [10, 89]]}
+    ],
+    "regions": [
+      {"id": "sample", "name": "Sample field", "rings": [[[8.75, 88.5], [9.25, 88.5], [9, 89.25]]]}
+    ]
+  },
+  "expected": {
+    "positions": [
+      {"id": "southwest", "point": [-971.4009422991927, -111320, 20]},
+      {"id": "northeast", "point": [971.4009422991927, 111320, 212]}
+    ],
+    "route": [
+      [-971.4009422991927, 0, 52],
+      [971.4009422991927, 0, 180]
+    ],
+    "regionStart": [-485.70047114959635, -55660, 68]
+  }
+}

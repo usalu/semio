@@ -12,7 +12,7 @@ use framework_schema::ArtifactSchema;
 use semio_s_plugin_norm_compliance::ClimateZoneDe;
 use semio_s_artifact_norm_din4108_model::ThermalZone;
 use semio_s_artifact_norm_din4108_model::EnvelopeElement;
-use semio_s_artifact_norm_din4108_model::ThermalBridge;
+use semio_s_artifact_norm_din4108_model::{CaseRow, ThermalBridge};
 
 //#region 🔖️Artifact
 /// 🧬️ Full Din4108 artifact state across the artifact and presence lanes.
@@ -42,6 +42,8 @@ pub struct Din4108Artifact {
     pub elements: Vec<EnvelopeElement>,
     #[state(artifact)]
     pub thermal_bridges: Vec<ThermalBridge>,
+    #[state(artifact)]
+    pub cases: Vec<CaseRow>,
 }
 //#endregion 🔖️Artifact
 
@@ -60,6 +62,7 @@ impl Din4108Artifact {
             zones: self.zones.clone(),
             elements: self.elements.clone(),
             thermal_bridges: self.thermal_bridges.clone(),
+            cases: self.cases.clone(),
         }
     }
 
@@ -76,6 +79,7 @@ impl Din4108Artifact {
             zones: snapshot.zones,
             elements: snapshot.elements,
             thermal_bridges: snapshot.thermal_bridges,
+            cases: snapshot.cases,
         }
     }
 }

@@ -1,7 +1,8 @@
 //! 📚️ DIN 4108 play app panel — examples plus design-λ, Table 3 R_min, and 4108-10 application classes.
 
 use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use semio_s_plugin_norm_compliance::ClauseId;
+use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
+use semio_s_artifact_norm_din4108_checks::{part_3::catalogue::Din4108PeriodCases, part_7::pressure_test::catalogue::Din4108PressureCases};
 use semio_s_artifact_norm_din4108_checks::{part_2, part_4, part_10};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::PanelGroup;
@@ -113,7 +114,10 @@ pub fn render(
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_plugin::UiAssemblyResult<semio_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
+    let mut tables = reference_tables();
+    tables.push(semio_s_plugin_norm_app_surface::verification_catalogue_table::<Din4108PressureCases>("GModG §26", AnnexChoice::De, "", locale));
+    tables.push(semio_s_plugin_norm_app_surface::verification_catalogue_table::<Din4108PeriodCases>("DIN 4108-3 Annex A", AnnexChoice::De, "", locale));
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

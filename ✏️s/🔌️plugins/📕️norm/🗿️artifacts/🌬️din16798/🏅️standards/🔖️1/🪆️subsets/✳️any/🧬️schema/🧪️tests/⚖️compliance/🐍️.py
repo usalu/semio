@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -17,16 +18,32 @@ def required_outdoor_air_m3_h(occupants: float, area: float, cat: str, pollution
     return (occupants * qp + area * qa) * 3.6
 
 
-def predefined_outdoor_air_m3_h(area: float, cat: str, occupants: float = 0.0, pollution: str = "low") -> float:
-    qa = {"I": 1.4, "II": 1.0, "III": 0.6, "IV": 0.4}[cat]
-    qp = {"I": 10.0, "II": 7.0, "III": 4.0, "IV": 2.5}[cat]
-    scale = {"very_low": 0.8, "low": 1.0, "non_low": 1.25}.get(pollution.replace("-", "_"), 1.0)
-    return area * qa * scale * 3.6 + occupants * qp * 3.6
-
-
-def method2_outdoor_air_m3_h(occupants: float, met: float, delta_ppm: float) -> float:
-    g = occupants * 0.005 * max(met / 1.2, 0.5)
-    return (1.0e6 * g / max(delta_ppm, 100.0)) * 3.6
+def design_flow(zone: dict, annex: str, delta_ppm: float):
+    cat = zone["comfortCategory"]
+    usage = zone["usageType"]
+    people = float(zone["occupants"])
+    area = float(zone["floorAreaM2"])
+    pollution = zone["pollutionClass"]
+    method = zone["ventMethod"]
+    if annex.lower() == "de" and (usage == "residential" or "method_3" in method):
+        return None
+    if annex.lower() == "de" and "method_1" in method and pollution == "very_low":
+        return None
+    if "method_2" in method:
+        return people * (20 / 1000) / (delta_ppm / 1_000_000)
+    if usage == "residential" and cat != "IV":
+        if "method_3" in method:
+            return {"I": 10, "II": 7, "III": 4}[cat] * people * 3.6
+        person, building = {"I": (3.5, 0.25), "II": (2.5, 0.15), "III": (1.5, 0.1)}[cat]
+        return (person * people + building * area) * 3.6
+    if usage == "residential":
+        return None
+    if "method_3" not in method:
+        return required_outdoor_air_m3_h(people, area, cat, pollution)
+    if usage == "office" and pollution == "low":
+        person, building = {"I": (20, 2), "II": (14, 1.4), "III": (8, 0.8), "IV": (5.5, 0.55)}[cat]
+        return max(person * people, building * area) * 3.6
+    return None
 
 
 def draught_rate_percent(t_a: float, v: float, tu: float) -> float:
@@ -35,20 +52,24 @@ def draught_rate_percent(t_a: float, v: float, tu: float) -> float:
     return max(0.0, min(100.0, dr))
 
 
+def hygienic_minimum(zone: dict) -> float:
+    return 0.0 if zone.get("usageType") == "residential" else 14.4 * zone["occupants"]
+
+
 def capacity_served(snap: dict, vent_id: str) -> float:
-    return sum(float(z.get("outdoorAirSuppliedM3H", 0)) for z in (snap.get("zones") or []) if z.get("ventSystemId") == vent_id)
+    return sum(
+        max(float(z["outdoorAirSuppliedM3H"]), hygienic_minimum(z))
+        for z in (snap.get("zones") or []) if z.get("ventSystemId") == vent_id
+    )
 
 
 def sfp_bound(cls: int) -> float:
     return [300.0, 500.0, 750.0, 1250.0, 2000.0, 3000.0, 4500.0, 6500.0][int(cls)]
 
 
-def co2_limit_above(cat: str, annex: str, outdoor: float) -> float:
-    dlim = {"I": 550.0, "II": 800.0, "III": 1350.0, "IV": 1350.0}.get(cat, 800.0)
-    annex_s = annex if isinstance(annex, str) else str(annex)
-    if annex_s.lower() != "de":
-        return dlim
-    return min(900.0 - outdoor, dlim)
+def co2_limit_above(cat: str, annex: str) -> float:
+    values = (350, 550, 900, 1350) if annex.lower() == "de" else (550, 800, 1350, 1350)
+    return dict(zip(("I", "II", "III", "IV"), values))[cat]
 
 
 def qty(obj, *keys):
@@ -65,31 +86,47 @@ def qty(obj, *keys):
 
 
 def status_na(st: str) -> bool:
-    return st in {"notApplicable", "NotApplicable"}
+    return st in {"notApplicable", "NotApplicable", "unverifiedBasis", "UnverifiedBasis"}
 
 
 def main() -> int:
+    if len(sys.argv) == 3 and sys.argv[1] == "--hygienic-fixture":
+        fixture = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+        with sqlite3.connect(":memory:") as db:
+            for case in fixture["cases"]:
+                floor, required = db.execute("""
+                    WITH basis(floor, q) AS (
+                        SELECT CASE :usage WHEN 'residential' THEN 0 ELSE 14.4 * :occupants END,
+                               CASE :method
+                                   WHEN 'method_2_limit_concentration' THEN :occupants * 18000.0 / 1350
+                                   WHEN 'method_3_predefined_rates' THEN 9 * :occupants + 1.44 * :areaM2
+                                   ELSE CASE :category
+                                       WHEN 'II' THEN 25.2 * :occupants + 2.52 * :areaM2
+                                       WHEN 'IV' THEN 9 * :occupants + 1.08 * :areaM2
+                                   END
+                               END
+                    )
+                    SELECT floor, max(floor, q) FROM basis
+                """, case).fetchone()
+                assert abs(floor - case["healthMinimumM3H"]) < 1e-9, case["name"]
+                assert abs(required - case["designMinimumM3H"]) < 1e-9, case["name"]
+                assert (case["supplyM3H"] + 1e-9 >= required) == case["passes"], case["name"]
+        print(json.dumps({"ok": True, "cases": len(fixture["cases"])}))
+        return 0
     if len(sys.argv) >= 2 and sys.argv[1] == "--report":
         report = json.loads(sys.stdin.read())
         snap = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
         zones = snap.get("zones") or []
         vents = snap.get("ventSystems") or []
         annex = snap.get("annex", "de")
-        outdoor = float(snap.get("outdoorCo2Ppm", 400.0))
         tol = 0.005
         checked = 0
         checks = {c["id"]: c for c in report.get("checks", [])}
         for z in zones:
             cat = z.get("comfortCategory", "II")
-            pol = z.get("pollutionClass", "low")
             method = z.get("ventMethod", "method_1_perceived_air_quality")
-            delta = co2_limit_above(cat, annex, outdoor)
-            if "method_3" in method:
-                q_exp = predefined_outdoor_air_m3_h(float(z["floorAreaM2"]), cat, float(z.get("occupants", 0)), str(z.get("pollutionClass", "low")))
-            elif "method_2" in method:
-                q_exp = method2_outdoor_air_m3_h(float(z["occupants"]), float(z.get("metabolicRateMet", 1.2)), delta)
-            else:
-                q_exp = required_outdoor_air_m3_h(float(z["occupants"]), float(z["floorAreaM2"]), cat, pol)
+            delta = co2_limit_above(cat, annex)
+            q_exp = max(design_flow(z, annex, delta) or 0.0, hygienic_minimum(z))
             zid = z["id"]
             vent_id = f"din16798-1.vent.{zid}"
             if vent_id in checks and not status_na(str(checks[vent_id].get("status"))):

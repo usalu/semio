@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Media Ingress Frame",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "begin"
+        },
+        "loan": {
+          "$ref": "#/$defs/loan"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "mediaType": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.+-]*/[a-z0-9][a-z0-9.+-]*$",
+          "maxLength": 255
+        },
+        "byteLength": {
+          "$ref": "#/$defs/nonemptyExtent"
+        }
+      },
+      "required": [
+        "kind",
+        "loan",
+        "name",
+        "mediaType",
+        "byteLength"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "page"
+        },
+        "loan": {
+          "$ref": "#/$defs/loan"
+        },
+        "index": {
+          "$ref": "#/$defs/ordinal"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      },
+      "required": [
+        "kind",
+        "loan",
+        "index",
+        "byteLength"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "complete"
+        },
+        "loan": {
+          "$ref": "#/$defs/loan"
+        }
+      },
+      "required": [
+        "kind",
+        "loan"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "cancel"
+        },
+        "loan": {
+          "$ref": "#/$defs/loan"
+        }
+      },
+      "required": [
+        "kind",
+        "loan"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "ordinal": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "nonemptyExtent": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 536870912
+    },
+    "u64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "loan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operationId": {
+          "$ref": "#/$defs/u64"
+        },
+        "generation": {
+          "$ref": "#/$defs/u64"
+        },
+        "instanceId": {
+          "$ref": "#/$defs/ordinal"
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "baseRevision": {
+          "$ref": "#/$defs/revision"
+        }
+      },
+      "required": [
+        "operationId",
+        "generation",
+        "instanceId",
+        "documentId",
+        "baseRevision"
+      ]
+    }
+  }
+}

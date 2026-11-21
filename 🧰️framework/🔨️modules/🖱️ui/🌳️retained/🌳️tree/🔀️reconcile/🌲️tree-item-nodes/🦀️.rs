@@ -39,7 +39,7 @@ pub(super) fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surfac
         let items: Vec<UiTreeItemNode> = record.children.iter().filter_map(|child| document.record(*child)).filter(|child| matches!(child.component, ui_contract::Component::TreeItem(_))).map(|child| tree_item(document, child, surface, controller, depth + 1)).collect();
         let content: Vec<&UiNodeRecord> = tree_row_content(document, record).collect();
         match content.as_slice() {
-            [only] if is_tree_inline_control(&only.component) => (items, tree_item_control(only, controller), None),
+            [only] if is_tree_inline_control(&only.component) => (items, tree_item_control(document, only, controller), None),
             _ => (items, None, tree_row_content_lines(document, record).map(|lines| u16::try_from(lines).unwrap_or(u16::MAX))),
         }
     } else {
@@ -158,6 +158,7 @@ pub fn tree_content_lines(document: &UiDocumentTree, record: &UiNodeRecord, dept
     let children = || record.children.iter().filter_map(|child| document.record(*child)).map(|child| tree_content_lines(document, child, depth + 1)).sum::<u32>();
     match &record.component {
         ui_contract::Component::TreeItem(_) => 0,
+        ui_contract::Component::Image(_) => 6,
         ui_contract::Component::Container(props) => {
             let (above, below) = tree_content_label_lines(props);
             above + below + children()
@@ -185,9 +186,9 @@ fn is_tree_inline_control(component: &ui_contract::Component) -> bool {
 }
 
 /// 🎛️ The control a tree row embeds, when its child record is one of the nine control components.
-fn tree_item_control(record: &UiNodeRecord, controller: &str) -> Option<UiControlNode> {
+fn tree_item_control(document: &UiDocumentTree, record: &UiNodeRecord, controller: &str) -> Option<UiControlNode> {
     Some(match record.component {
-        ui_contract::Component::Input(_) => UiControlNode::Input(match input_node(record, controller) {
+        ui_contract::Component::Input(_) => UiControlNode::Input(match input_node(document, record, controller) {
             UiNode::Input(node) => node,
             _ => return None,
         }),

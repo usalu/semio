@@ -4,23 +4,26 @@ import {readScriptProcessJsonV1} from "../../../../../🔨️modules/🏃️proc
 import { readingGroupSchema as groupSchema } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {withArtifactDescriptorSlotV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
 import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
-import { withRepositoryCacheStoreV1, requireCompilerWriterCustodyV1, withCompilerWorkspaceSharedWriteV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { withRepositoryCacheStoreV1, requireCompilerWriterCustodyV1, withCompilerWorkspaceSharedWriteV1, withCompilerWorkspaceStageWriteV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts, readNativeCallerAuthorityV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {withIssuedResourceOperationV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {withIssuedResourceOperationV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {buildModePolicy} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import type {LinkedComponentV1} from "@semio-tech/process/native-release";
+import type {DescriptorEmitterV1} from "../🖨️describe/🛠️emitter/🟦️.ts";
 import type {SemanticDescriptorEmissionV1} from "../🖨️describe/🛂️descriptor-emission/🟦️.ts";
 import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../📇️registry/✅️catalog-verification/🟦️.ts";
 import { verifySemanticDescriptorPairBytesV1 } from "../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { actorPreparationPolicyV1, actorPreparationReceiptV1, assertActorPreparationBindingV1 } from "./🌱️actor-preparation/🟦️.ts";
 import { encodeComponentReceiptV1, componentReceiptBindsV1, COMPONENT_PROFILE_POLICIES } from "../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 import { type ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 import { artifactsStorageSchema as publicationSchema } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { artifactsReadingSchema as inspectionSchema } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {readComponentModelIntentV1,componentModelLayoutV1,type ComponentModelIntentV1} from "./📋️contract/🟦️.ts";
+import type {captureComponentProductLeaseTaskV1} from "./🔒️lease-task/🟦️.ts";
 import {dirname,join,resolve} from "node:path";
 import {lstat,open,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
@@ -29,17 +32,17 @@ import {COMPONENT_RECEIPT_SCHEMA_ID,COMPONENT_TARGET,rustToolchainIdentityFromVe
 import type {NativeBuildStageContextV1,ComponentProvenanceV1} from "@semio-tech/process/native-release";
 import nativeSchema from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️json/🟦️.ts";
 export interface ComponentModelDeclarationV1{readonly manifest:string;readonly intent:ComponentModelIntentV1;readonly packageId:string;readonly packageName:string}
-export interface ComponentModelPublicationOptionsV1{readonly workspace:string;readonly invocation:ScriptInvocation;readonly storage:NativeStorageReservationV1;readonly control:ResourceLeaseControl;readonly toolchain:RepositoryRustToolchainV1;readonly declarations:readonly ComponentModelDeclarationV1[]}
+export interface ComponentModelPublicationOptionsV1{readonly workspace:string;readonly invocation:ScriptInvocation;readonly storage:NativeStorageReservationV1;readonly control:ResourceLeaseControl;readonly toolchain:RepositoryRustToolchainV1;readonly declarations:readonly ComponentModelDeclarationV1[];readonly withProductLeaseTask:ReturnType<typeof captureComponentProductLeaseTaskV1>}
 declare const modelBrand:unique symbol;
 export type ComponentModelPublicationV1=Readonly<{readonly[modelBrand]:true}>;
 type Scope={options:ComponentModelPublicationOptionsV1;allowed:ReadonlyMap<string,ComponentModelDeclarationV1>;live:boolean;accepting:boolean;pending:Set<Promise<unknown>>;failures:unknown[];seen:Set<string>;describing:Set<string>;records:Map<string,{component:LinkedComponentV1;emission:SemanticDescriptorEmissionV1}>;retainedBytes:number;toolchainIdentity?:Promise<string>};
 const scopes=new WeakMap<ComponentModelPublicationV1,Scope>(),policy=publicationSchema.definitions.Protocol.const,protocol=schema.definitions.Protocol.const;
-function live(token:ComponentModelPublicationV1):Scope{const scope=scopes.get(token);if(!scope?.live||!scope.accepting)throw Error("Live original component model publication required");requireIssuedResourceControlInvocationV1(scope.options.control,scope.options.invocation);requireNativeStorageReservationV1(scope.options.storage,scope.options.control);requireCompilerWriterCustodyV1(scope.options.storage.backing.root,scope.options.control);return scope;}
+function live(token:ComponentModelPublicationV1,operation?:ResourceLeaseControl):Scope{const scope=scopes.get(token);if(!scope?.live||!scope.accepting)throw Error("Live original component model publication required");requireIssuedResourceControlInvocationV1(scope.options.control,scope.options.invocation);requireNativeStorageReservationV1(scope.options.storage,scope.options.control);const writer=operation??scope.options.control;requireIssuedResourceControlRefinementV1(scope.options.control,writer);requireCompilerWriterCustodyV1(scope.options.storage.backing.root,writer);return scope;}
 
 /** 🧷️ Captures genuine compiler writer custody, closes births and drains every accepted model before its roots leave. */
 export function withComponentModelPublicationV1<T>(options:ComponentModelPublicationOptionsV1,body:(publisher:ComponentModelPublicationV1)=>Promise<T>):Promise<T>{
  const authority=readNativeCallerAuthorityV1(options.invocation.capabilities);requireIssuedResourceControlInvocationV1(options.control,options.invocation);requireNativeStorageReservationV1(options.storage,options.control);
- if(resolve(options.workspace)!==authority.repositoryRoot||options.storage.allocation.kind!=="compiler-workspace"||typeof body!=="function"||!options.declarations.length||options.declarations.length>groupSchema.definitions.Protocol.const.maximumArtifacts)throw Error("Finite actual compiler model declarations required");
+ if(resolve(options.workspace)!==authority.repositoryRoot||options.storage.allocation.kind!=="compiler-workspace"||typeof options.withProductLeaseTask!=="function"||typeof body!=="function"||!options.declarations.length||options.declarations.length>groupSchema.definitions.Protocol.const.maximumArtifacts)throw Error("Finite actual compiler model declarations required");
  const captured=readScriptProcessJsonV1({declarations:options.declarations}),declarations=captured.declarations as unknown as readonly ComponentModelDeclarationV1[];if(Buffer.byteLength(JSON.stringify(captured))>authority.transport.maximumBytes)throw Error("Actual Original declaration transport exceeded");const allowed=new Map<string,ComponentModelDeclarationV1>();for(const row of declarations){const intent=readComponentModelIntentV1(row.intent);if(intent.mode!==authority.original.buildMode||row.manifest!==join(options.workspace,intent.cratePath,"Cargo.toml")||allowed.has(row.manifest)||!row.packageId||row.packageId.length>4096||!row.packageName||row.packageName.length>256)throw Error("Exact declared compiler component required");allowed.set(row.manifest,Object.freeze({...row,intent}));}options=Object.freeze({...options,declarations:Object.freeze([...allowed.values()])});
  return withCompilerWorkspaceSharedWriteV1(options.storage,join(options.workspace,".cache/b/l/m/data"),options.control,async()=>{
   await requireRepositoryRustToolchainV1(options.toolchain);requireCompilerWriterCustodyV1(options.storage.backing.root,options.control);const token=Object.freeze({})as ComponentModelPublicationV1,scope:Scope={options,allowed,live:true,accepting:true,pending:new Set(),failures:[],seen:new Set(),describing:new Set(),records:new Map(),retainedBytes:0};scopes.set(token,scope);let value:T|undefined,failed=false,primary:unknown;
@@ -59,24 +62,57 @@ async function copyModelBody(source:string,destination:string,maximum:number,exp
 function copyModel(source:string,destination:string,maximum:number,expected:ComponentReceiptV1,control:ResourceLeaseControl):Promise<void>{return withArtifactDescriptorSlotV1(()=>copyModelBody(source,destination,maximum,expected,control));}
 
 /** 🛂️ Emits from the actual Rust image and retains its bounded immutable pair privately through model publication. */
-export function describeComponentModelV1(token:ComponentModelPublicationV1,component:LinkedComponentV1,context:NativeBuildStageContextV1):Promise<SemanticDescriptorEmissionV1>{
- const scope=live(token),{options}=scope;if(scope.describing.has(component.package.manifest)||scope.describing.size>=scope.allowed.size)throw Error("Exact once-only model describe required");scope.describing.add(component.package.manifest);
- const task=withIssuedResourceOperationV1(options.control,()=>withCompilerWorkspaceSharedWriteV1(options.storage,join(options.workspace,".cache/b/l/m/data"),options.control,async()=>{
+export function describeComponentModelV1(token:ComponentModelPublicationV1,component:LinkedComponentV1,context:NativeBuildStageContextV1,emitter:DescriptorEmitterV1):Promise<SemanticDescriptorEmissionV1>{
+ const scope=live(token,context.control),{options}=scope;if(scope.describing.has(component.package.manifest)||scope.describing.size>=scope.allowed.size)throw Error("Exact once-only model describe required");scope.describing.add(component.package.manifest);
+ const task=withIssuedResourceOperationV1(context.control,async()=>{
   const declared=scope.allowed.get(component.package.manifest);if(!declared||component.package.name!==declared.packageName||component.pass.profile!==buildModePolicy(declared.intent.mode).cargoProfile)throw Error("Exact declared linked model required");await options.storage.recheck();const source=requireNativeStoragePathV1(options.storage.backing.root,component.wasm),target=componentStageTargetV1(options.workspace,declared.manifest),directory=dirname(source),deliverable=Object.freeze({profile:componentProfileV1(component.pass.profile),directory,wasm:source,receipt:join(directory,protocol.receipt)});
-  const actual=await describeComponentStageV1(options.workspace,target,deliverable,context.cache,{invocation:options.invocation,compiler:context.control,environment:context.environment,cancelled:()=>context.signal.aborted});if(actual.jsonBytes.byteLength>CATALOG_DESCRIPTOR_MAX_BYTES||actual.packBytes.byteLength>CATALOG_DESCRIPTOR_MAX_BYTES)throw Error("Finite actual descriptor pair required");const retained=actual.jsonBytes.byteLength+actual.packBytes.byteLength;if(retained>policy.maximumOutputBytes-scope.retainedBytes)throw Error("Finite aggregate model descriptor retention exceeded");scope.retainedBytes+=retained;const emission=Object.freeze({...actual,jsonBytes:new Uint8Array(actual.jsonBytes),packBytes:new Uint8Array(actual.packBytes)});verifySemanticDescriptorPairBytesV1(emission.jsonBytes,emission.packBytes);scope.records.set(declared.manifest,{component,emission});await options.storage.recheck();return Object.freeze({...emission,jsonBytes:new Uint8Array(emission.jsonBytes),packBytes:new Uint8Array(emission.packBytes)});
- }));scope.pending.add(task);void task.then(()=>scope.pending.delete(task),error=>{scope.failures.push(error);scope.pending.delete(task);});return task;
+  const actual = await describeComponentStageV1(options.workspace, target, deliverable, context.cache, {invocation: options.invocation, compiler: context.control, environment: context.environment, emitter, cancelled: () => context.signal.aborted, prepareActor: true});
+  if (actual.jsonBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES || actual.packBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES) throw Error("Finite actual descriptor pair required");
+  const {actorImage, ...semantic} = actual;
+  const retained = actual.jsonBytes.byteLength + actual.packBytes.byteLength + (actorImage?.byteLength ?? 0);
+  if (retained > policy.maximumOutputBytes - scope.retainedBytes) throw Error("Finite aggregate model retention exceeded");
+  scope.retainedBytes += retained;
+  const emission = Object.freeze({...semantic, jsonBytes: new Uint8Array(actual.jsonBytes), packBytes: new Uint8Array(actual.packBytes)});
+  verifySemanticDescriptorPairBytesV1(emission.jsonBytes, emission.packBytes);
+  scope.records.set(declared.manifest, {component, emission: Object.freeze({...emission, ...(actorImage ? {actorImage} : {})})});
+  await options.storage.recheck();
+  return Object.freeze({...emission, jsonBytes: new Uint8Array(emission.jsonBytes), packBytes: new Uint8Array(emission.packBytes)});
+ });scope.pending.add(task);void task.then(()=>scope.pending.delete(task),error=>{scope.failures.push(error);scope.pending.delete(task);});return task;
 }
 
 /** 📦️ Creates and publishes a receipt from privately retained actual emission, provenance and the still-held Rust image. */
 export function publishComponentModelV1(token:ComponentModelPublicationV1,component:LinkedComponentV1,provenance:ComponentProvenanceV1):Promise<ComponentReceiptV1>{
  const scope=live(token);if(scope.seen.has(component.package.manifest)||scope.seen.size>=scope.allowed.size)throw Error("Declared model publication capacity exhausted");scope.seen.add(component.package.manifest);const {options}=scope;
- const task=withIssuedResourceOperationV1(options.control,()=>withCompilerWorkspaceSharedWriteV1(options.storage,join(options.workspace,".cache/b/l/m/data"),options.control,async()=>{
+ const task=withIssuedResourceOperationV1(options.control,async()=>{
   const declared=scope.allowed.get(component.package.manifest),record=scope.records.get(component.package.manifest);if(!declared||!record||record.component!==component)throw Error("Actual privately retained model emission required");await options.storage.recheck();requireCompilerWriterCustodyV1(options.storage.backing.root,options.control);const source=requireNativeStoragePathV1(options.storage.backing.root,component.wasm),{emission}=record,json=emission.jsonBytes,pack=emission.packBytes,pair=verifySemanticDescriptorPairBytesV1(json,pack),facts=await lstat(source);
   const receipt:ComponentReceiptV1=Object.freeze({schema:COMPONENT_RECEIPT_SCHEMA_ID,pluginId:declared.intent.pluginId,packageId:declared.packageId,profile:componentProfileV1(component.pass.profile),target:COMPONENT_TARGET,wasmSha256:emission.componentSha256,wasmBytes:facts.size,semanticDescriptorSha256:pair.semanticSha256,toolchain:await(scope.toolchainIdentity??=(async()=>{await requireRepositoryRustToolchainV1(options.toolchain);const authority=readNativeCallerAuthorityV1(options.invocation.capabilities),version=await captureOwnedCommandV1(options.toolchain.rustc,["-vV"],options.workspace,{control:options.control,env:options.toolchain.environment,output:authority.transport});await options.toolchain.recheck();return rustToolchainIdentityFromVersionV1(version);})()),sourceTreeDigest:provenance.sourceTreeDigest,provenanceSha256:provenance.root}),receiptBytes=new TextEncoder().encode(encodeComponentReceiptV1(receipt));
-  if(!componentReceiptBindsV1(receipt,{profile:declared.intent.mode,pluginId:declared.intent.pluginId,packageId:declared.packageId,wasmSha256:emission.componentSha256,semanticDescriptorSha256:pair.semanticSha256})||pair.pluginId!==receipt.pluginId||pair.packageId!==receipt.packageId)throw Error("Actual linked model receipt and descriptor tuple required");const maximum=Math.min(COMPONENT_PROFILE_POLICIES[receipt.profile].maximumBytes,policy.maximumOutputBytes-json.length-pack.length-receiptBytes.length);if(maximum<receipt.wasmBytes)throw Error("Model product exceeds unchanged publisher grant");
-  await withRepositoryCacheStoreV1(options.workspace,"products",options.invocation,options.control,(store,storePhase)=>withArtifactScratchV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode:declared.intent.mode,owner:"browser/model/"+declared.intent.pluginId}},scratch=>withArtifactDestinationTaskV1(scratch,options.invocation,async sink=>{
-   const wasm=join(sink.directory,protocol.component);await copyModel(source,wasm,maximum,receipt,sink.control);const files=new Map([[protocol.component,wasm]]);for(const[name,bytes]of[[protocol.descriptor,json],[protocol.descriptorPack,pack],[protocol.receipt,receiptBytes]]as const){const path=join(sink.directory,name);await withArtifactDescriptorSlotV1(()=>writeFile(path,bytes,{flag:"wx",signal:sink.control.signal}));files.set(name,path);}const layout=componentModelLayoutV1(store.root,declared.intent);
-   await withRepositoryArtifactDestinationV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:layout.path},destination=>stageRepositoryArtifacts(destination,layout.owner,files));await options.storage.recheck();
-  })));scope.retainedBytes-=json.length+pack.length;scope.records.delete(declared.manifest);return receipt;
- }));scope.pending.add(task);void task.then(()=>scope.pending.delete(task),error=>{scope.failures.push(error);scope.pending.delete(task);});return task;
+  if(!componentReceiptBindsV1(receipt,{profile:declared.intent.mode,pluginId:declared.intent.pluginId,packageId:declared.packageId,wasmSha256:emission.componentSha256,semanticDescriptorSha256:pair.semanticSha256})||pair.pluginId!==receipt.pluginId||pair.packageId!==receipt.packageId)throw Error("Actual linked model receipt and descriptor tuple required");
+  const modelFiles: [string, Uint8Array][] = [[protocol.descriptor, json], [protocol.descriptorPack, pack], [protocol.receipt, receiptBytes]];
+  if (emission.actorImage) {
+    const image = emission.actorImage;
+    assertActorPreparationBindingV1(image, receipt.wasmSha256);
+    const imageSha256 = createHash("sha256").update(image).digest("hex");
+    const actor = actorPreparationReceiptV1({version: 1, componentSha256: receipt.wasmSha256, imageSha256, imageBytes: image.length}, receipt.wasmSha256, imageSha256, image.length);
+    modelFiles.push([actorPreparationPolicyV1.image, image], [actorPreparationPolicyV1.receipt, new TextEncoder().encode(JSON.stringify(actor) + "\n")]);
+  }
+  const sidecarBytes = modelFiles.reduce((bytes, [, file]) => bytes + file.length, 0);
+  const maximum = Math.min(COMPONENT_PROFILE_POLICIES[receipt.profile].maximumBytes, policy.maximumOutputBytes - sidecarBytes);
+  if (maximum < receipt.wasmBytes) throw Error("Model product exceeds publisher grant");
+  await options.withProductLeaseTask(()=>withRepositoryCacheStoreV1(options.workspace,"products",options.invocation,options.control,(store,storePhase)=>withArtifactScratchV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,mode:declared.intent.mode,owner:"browser/model/"+declared.intent.pluginId}},scratch=>withArtifactDestinationTaskV1(scratch,options.invocation,async sink=>{
+   const wasm=join(sink.directory,protocol.component);
+   await withCompilerWorkspaceStageWriteV1(options.storage,join(options.workspace,".cache/b/l/m/data"),sink.control,writer=>copyModel(source,wasm,maximum,receipt,writer));
+   const files=new Map([[protocol.component,wasm]]);
+   for(const[name,bytes]of modelFiles){
+    const path=join(sink.directory,name);
+    await withArtifactDescriptorSlotV1(()=>writeFile(path,bytes,{flag:"wx",signal:sink.control.signal}));
+    files.set(name,path);
+   }
+   const layout=componentModelLayoutV1(store.root,declared.intent);
+   await withRepositoryArtifactDestinationV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:sink.control,directory:layout.path},destination=>stageRepositoryArtifacts(destination,layout.owner,files));
+   await options.storage.recheck();
+  }))));
+  scope.retainedBytes-=json.length+pack.length+(emission.actorImage?.length??0);
+  scope.records.delete(declared.manifest);
+  return receipt;
+ });scope.pending.add(task);void task.then(()=>scope.pending.delete(task),error=>{scope.failures.push(error);scope.pending.delete(task);});return task;
 }

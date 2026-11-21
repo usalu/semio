@@ -1,0 +1,897 @@
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️elevation-edit/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️elevation-edit/🦀️.rs
+@@ -4,6 +4,10 @@
+ use semio_framework_value::{ValueError, ValueRefusalKind};
+ 
+ pub const LAST_SAMPLE: u32 = 32;
++pub const MAX_STROKE_SAMPLES: usize = 64;
++const GRID_WIDTH: u64 = LAST_SAMPLE as u64 + 1;
++const STAMP_WORK: u64 = GRID_WIDTH * GRID_WIDTH * 10;
++pub const MAX_STROKE_WORK: u64 = MAX_STROKE_SAMPLES as u64 * STAMP_WORK + 1;
+ pub const MIN_ELEVATION: i32 = i16::MIN as i32;
+ pub const MAX_ELEVATION: i32 = i16::MAX as i32;
+ 
+@@ -47,6 +51,81 @@
+         source.validate()?;
+         let edit = self.validate()?;
+         let mut next = source.clone();
++        edit.write(source, &mut next)?;
++        Ok(next)
++    }
++
++    /// 🖌️ Applies ordered brush stamps to one private grid, with a second grid for smoothing.
++    pub fn apply_stroke(self, source: &ElevationSource, samples: &[[u32; 2]]) -> Result<ElevationSource, ValueError> {
++        self.apply_stroke_with(source, samples, || true)
++    }
++
++    /// ⏱️ Allows one mounted command to cancel its still-private samples between stamps.
++    pub fn apply_stroke_with(self, source: &ElevationSource, samples: &[[u32; 2]], mut active: impl FnMut() -> bool) -> Result<ElevationSource, ValueError> {
++        source.validate()?;
++        let stamps = self.stroke_stamps(samples)?;
++        let mut current = source.clone();
++        let mut next = source.clone();
++        for [column, row] in stamps {
++            if !active() {
++                return Err(invalid("gis-terrain-elevation-stroke-cancelled"));
++            }
++            Self { column, row, ..self }.write(&current, &mut next)?;
++            std::mem::swap(&mut current, &mut next);
++        }
++        Ok(current)
++    }
++
++    /// 📏️ Expands contiguous picked sample anchors at no more than half-radius spacing.
++    pub fn stroke_stamps(self, samples: &[[u32; 2]]) -> Result<Vec<[u32; 2]>, ValueError> {
++        let count = self.validate_stroke(samples)?;
++        let spacing = self.stroke_spacing();
++        let mut stamps = Vec::with_capacity(count);
++        stamps.push([self.column, self.row]);
++        for pair in samples.windows(2) {
++            let [from, to] = [pair[0], pair[1]];
++            let steps = Self::stroke_distance(from, to).div_ceil(spacing);
++            for step in 1..=steps {
++                let sample = |axis: usize| (from[axis] * (steps - step) + to[axis] * step + steps / 2) / steps;
++                stamps.push([sample(0), sample(1)]);
++            }
++        }
++        Ok(stamps)
++    }
++
++    /// 🎟️ Admits the bounded number of brush stamps without allocating a working grid.
++    pub fn validate_stroke(self, samples: &[[u32; 2]]) -> Result<usize, ValueError> {
++        self.validate()?;
++        if !matches!(self.mode, ElevationEditMode::RaiseLower | ElevationEditMode::Smooth)
++            || samples.first() != Some(&[self.column, self.row])
++            || samples.len() > MAX_STROKE_SAMPLES
++            || samples.iter().flatten().any(|coordinate| *coordinate > LAST_SAMPLE)
++        {
++            return Err(invalid("gis-terrain-elevation-stroke-invalid"));
++        }
++        let spacing = self.stroke_spacing();
++        let count = 1 + samples.windows(2).map(|pair| Self::stroke_distance(pair[0], pair[1]).div_ceil(spacing) as usize).sum::<usize>();
++        if count > MAX_STROKE_SAMPLES {
++            return Err(invalid("gis-terrain-elevation-stroke-limit"));
++        }
++        Ok(count)
++    }
++
++    /// 🧮️ Charges each visited sample and up to nine smoothing neighbors.
++    pub fn stroke_work(self, samples: &[[u32; 2]]) -> Result<u64, ValueError> {
++        Ok(self.validate_stroke(samples)? as u64 * STAMP_WORK)
++    }
++
++    fn stroke_spacing(self) -> u32 {
++        ((self.radius + 1) / 2).max(1)
++    }
++
++    fn stroke_distance(from: [u32; 2], to: [u32; 2]) -> u32 {
++        from[0].abs_diff(to[0]).max(from[1].abs_diff(to[1]))
++    }
++
++    fn write(self, source: &ElevationSource, next: &mut ElevationSource) -> Result<(), ValueError> {
++        let edit = self;
+         let limit = ((edit.radius + 1) * (edit.radius + 1)) as i32;
+         for (y, row) in next.rows.iter_mut().enumerate() {
+             for (x, height) in row.iter_mut().enumerate() {
+@@ -54,7 +133,7 @@
+                 let dy = y as i32 - edit.row as i32;
+                 let distance = dx * dx + dy * dy;
+                 let weight = limit - distance;
+-                let current = i32::from(*height);
++                let current = i32::from(source.rows[y][x]);
+                 let updated = match edit.mode {
+                     ElevationEditMode::SetSample if distance == 0 => edit.value,
+                     ElevationEditMode::Offset => current + edit.value,
+@@ -66,7 +145,7 @@
+                 *height = i16::try_from(updated).map_err(|_| invalid("gis-terrain-elevation-sample-overflow"))?;
+             }
+         }
+-        Ok(next)
++        Ok(())
+     }
+ }
+ 
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️edit-elevation/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️edit-elevation/🦀️.rs
+@@ -3,7 +3,7 @@
+ use crate::mutations::{GisTerrainMutation, ReplaceElevationSource};
+ use crate::schema::snapshot::ElevationSource;
+ use crate::GisTerrainSnapshot;
+-use semio_s_artifact_gis_gisterrain_inferences::elevation_edit::{ElevationEdit, ElevationEditMode as Operation, LAST_SAMPLE, MAX_ELEVATION, MIN_ELEVATION};
++use semio_s_artifact_gis_gisterrain_inferences::elevation_edit::{ElevationEdit, ElevationEditMode as Operation, LAST_SAMPLE, MAX_ELEVATION, MAX_STROKE_SAMPLES, MIN_ELEVATION};
+ use semio_framework_value::DslValue;
+ use semio_framework_value_derive::{FromValue, ToValue};
+ use semio_plugin::{ActionArgDef, ActionArgOption, ArgSchema, ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+@@ -17,6 +17,8 @@
+     pub row: u32,
+     pub radius: u32,
+     pub value: i32,
++    #[value(default, skip_serializing_if = "Option::is_none")]
++    pub stroke: Option<Vec<[u32; 2]>>,
+ }
+ 
+ const OPERATIONS: [(Operation, &str, &str, &str); 5] = [
+@@ -41,20 +43,42 @@
+             (number.fract() == 0.0 && (f64::from(i32::MIN)..=f64::from(i32::MAX)).contains(&number)).then_some(number as i32)
+         }).ok_or_else(|| Fault::from(format!("gis-terrain-elevation-edit-invalid-{key}")));
+         let index = |key: &str| u32::try_from(integer(key)?).map_err(|_| Fault::from(format!("gis-terrain-elevation-edit-invalid-{key}")));
++        let invalid_stroke = || Fault::from("gis-terrain-elevation-stroke-invalid");
++        let stroke = args.get("stroke").map(|value| {
++            let samples = value.as_array().filter(|samples| (1..=MAX_STROKE_SAMPLES).contains(&samples.len())).ok_or_else(invalid_stroke)?;
++            samples.iter().map(|sample| {
++                let Some([column, row]) = sample.as_array() else { return Err(invalid_stroke()) };
++                let coordinate = |value: &DslValue| {
++                    value.as_f64().filter(|value| value.fract() == 0.0 && (0.0..=f64::from(LAST_SAMPLE)).contains(value))
++                        .map(|value| value as u32).ok_or_else(invalid_stroke)
++                };
++                Ok([coordinate(column)?, coordinate(row)?])
++            }).collect::<Result<Vec<_>, Fault>>()
++        }).transpose()?;
+         let command = Self {
+             operation: args.get("operation").and_then(DslValue::as_str).ok_or_else(|| Fault::from("gis-terrain-elevation-operation-required"))?.into(),
+             column: index("column")?,
+             row: index("row")?,
+             radius: index("radius")?,
+             value: integer("value")?,
++            stroke,
+         };
+-        command.edit()?.validate().map_err(|error| Fault::from(error.message.into_owned()))?;
++        command.validate()?;
+         Ok(command)
+     }
+ 
+     /// 🎟️ Validates bounded direct command admission.
+     pub fn is_valid(&self) -> bool {
+-        self.edit().is_ok_and(|edit| edit.validate().is_ok())
++        self.validate().is_ok()
++    }
++
++    fn validate(&self) -> Result<(), Fault> {
++        let edit = self.edit()?;
++        let result = match self.stroke.as_deref() {
++            Some(samples) => edit.validate_stroke(samples).map(|_| ()),
++            None => edit.validate().map(|_| ()),
++        };
++        result.map_err(|error| Fault::from(error.message.into_owned()))
+     }
+ }
+ 
+@@ -64,27 +88,102 @@
+         ActionArgDef::with_schema(id, LocalizedLabel::native(en, de), ArgSchema::number(Some(minimum), Some(maximum), Some(1.0), true)).default_value(&default)
+     };
+     let options = OPERATIONS.iter().map(|(_, id, en, de)| ActionArgOption::new(*id, LocalizedLabel::native(en, de))).collect();
++    let mut stroke = ActionArgDef::with_schema(
++        "stroke", LocalizedLabel::native("Terrain Brush Stroke", "Geländepinselstrich"),
++        ArgSchema::Array {
++            items: Box::new(ArgSchema::Array {
++                items: Box::new(ArgSchema::number(Some(0.0), Some(f64::from(LAST_SAMPLE)), None, true)),
++                min_items: Some(2),
++                max_items: Some(2),
++            }),
++            min_items: Some(1),
++            max_items: Some(MAX_STROKE_SAMPLES as u32),
++        },
++    );
++    stroke.presentation = Some(semio_plugin::ArgPresentation::Hidden);
+     vec![
+         ActionArgDef::select("operation", LocalizedLabel::native("Operation", "Vorgang"), options).default_value(&"raise-lower"),
+         numbers("column", "Column from West", "Spalte ab Westen", 0.0, f64::from(LAST_SAMPLE), 16_i32),
+         numbers("row", "Row from South", "Zeile ab Süden", 0.0, f64::from(LAST_SAMPLE), 16),
+         numbers("radius", "Radius in Samples", "Radius in Rasterpunkten", 0.0, f64::from(LAST_SAMPLE), 4),
+         numbers("value", "Meters or Smoothing Percent", "Meter oder Glättungsprozent", f64::from(MIN_ELEVATION), f64::from(MAX_ELEVATION), 25),
++        stroke,
+     ]
+ }
+ 
+ fn apply(source: &ElevationSource, command: &EditElevation) -> Result<ElevationSource, Fault> {
+-    command.edit()?.apply(source).map_err(|error| Fault::from(error.message.into_owned()))
++    let edit = command.edit()?;
++    let edited = match command.stroke.as_deref() {
++        Some(samples) => edit.apply_stroke(source, samples),
++        None => edit.apply(source),
++    };
++    edited.map_err(|error| Fault::from(error.message.into_owned()))
+ }
+ 
+ /// 🧾️ Publishes the edited grid as one reversible artifact mutation.
+ pub fn handle(payload: &EditElevation, doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisTerrainMutation, NoConfigMutation>, Fault> {
+     let source = doc.snapshot.elevation_source.as_ref().ok_or_else(|| Fault::from("gis-terrain-elevation-source-required"))?;
+     let next = apply(source, payload)?;
++    Ok(elevation_emit(source, next))
++}
++
++fn elevation_emit(source: &ElevationSource, next: ElevationSource) -> Emit<GisTerrainMutation, NoConfigMutation> {
+     if next == *source {
+-        return Ok(Emit::default());
+-    }
+-    Ok(Emit::mutations(vec![GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource { new_elevation_source: Some(next) })]))
++        return Emit::default();
++    }
++    Emit::mutations(vec![GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource { new_elevation_source: Some(next) })])
++}
++
++type Editor = semio_plugin::EditorApp<crate::editor::gis3d::Gis3dPlayApp>;
++
++/// 🖌️ Meters the bounded stroke as one cancellable artifact command.
++#[derive(Default)]
++pub struct StrokeWork {
++    consumed: bool,
++}
++
++impl semio_plugin::retained_command::ArtifactCommandWork<Editor> for StrokeWork {
++    fn tool_id(&self) -> &'static str { "editElevation" }
++
++    fn extent(&self, command: &crate::editor::gis3d::Gis3dCommand, snapshot: &GisTerrainSnapshot, interaction: &semio_os_kernel::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<Editor>>) -> Option<usize> {
++        crate::editor::gis3d::gis3d_retained_extent(command, snapshot, interaction)
++    }
++
++    fn terminal_frame_release_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<Self>()) }
++
++    fn step(
++        &mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, Editor>,
++        cx: &mut semio_plugin::__job::StepContext<'_>,
++    ) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<Editor>, semio_plugin::__job::OriginalTurnFailure> {
++        use semio_plugin::retained_command::ArtifactCommandWorkStep;
++        let crate::editor::gis3d::Gis3dCommand::EditElevation(payload) = input.command else {
++            return Err(Fault::from("gis-terrain-elevation-stroke-invalid").into());
++        };
++        let samples = payload.stroke.as_deref().ok_or_else(|| Fault::from("gis-terrain-elevation-stroke-invalid"))?;
++        let source = input.snapshot.elevation_source.as_ref().ok_or_else(|| Fault::from("gis-terrain-elevation-source-required"))?;
++        let edit = payload.edit()?;
++        let fault = |error: semio_framework_value::ValueError| Fault::from(error.message.into_owned());
++        let work = edit.stroke_work(samples).map_err(fault)?;
++        if work >= cx.original_turn_ceiling().1 || work >= cx.original_total_fuel_remaining() {
++            return Err(Fault::from("gis-terrain-elevation-stroke-work-limit").into());
++        }
++        if work >= cx.fuel_remaining() {
++            return Ok(ArtifactCommandWorkStep::Pending {
++                stage: "gis-terrain-brush-stroke",
++                preview: r#"{"en":"Applying terrain brush","de":"Geländepinsel wird angewendet"}"#.as_bytes(),
++            });
++        }
++        if self.consumed || cx.is_cancelled() || cx.deadline_exceeded() {
++            return Err(Fault::from("gis-terrain-elevation-stroke-cancelled").into());
++        }
++        self.consumed = true;
++        cx.consume_fuel(work);
++        let next = edit.apply_stroke_with(source, samples, || !cx.is_cancelled() && !cx.deadline_exceeded()).map_err(fault)?;
++        if cx.is_cancelled() || cx.deadline_exceeded() {
++            return Err(Fault::from("gis-terrain-elevation-stroke-cancelled").into());
++        }
++        Ok(ArtifactCommandWorkStep::Complete(elevation_emit(source, next)))
++    }
+ }
+ 
+ #[cfg(test)]
+@@ -122,6 +221,58 @@
+             assert!(apply(&source, &decode(command)).is_err(), "{command}");
+         }
+         assert_eq!(source.rows[16][16], 190);
++        for case in fixture["strokeGestures"].as_array().unwrap() {
++            if let Some(anchors) = case["anchors"].as_array() {
++                let samples: Vec<[u32; 2]> = serde_json::from_value(anchors.clone().into()).unwrap();
++                let [column, row] = samples[0];
++                let edit = ElevationEdit { mode: Operation::RaiseLower, column, row, radius: case["radius"].as_u64().unwrap() as u32, value: 1 };
++                assert_eq!(serde_json::to_value(edit.stroke_stamps(&samples).unwrap()).unwrap(), case["stamps"]);
++            }
++        }
++        for case in fixture["strokeEdits"].as_array().unwrap() {
++            let args = semio_framework_pack_json::parse(&case["command"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
++            let command = EditElevation::from_action(&semio_framework_pack_json::to_dsl_value(&args)).unwrap();
++            let edited = apply(&source, &command).unwrap();
++            let changed = edited.rows.iter().flatten().zip(source.rows.iter().flatten()).filter(|(a, b)| a != b).count();
++            assert_eq!(changed, case["changed"].as_u64().unwrap() as usize);
++            for sample in case["samples"].as_array().unwrap() {
++                let [column, row, height] = serde_json::from_value::<[i32; 3]>(sample.clone()).unwrap();
++                assert_eq!(i32::from(edited.rows[row as usize][column as usize]), height);
++            }
++        }
++        for command in fixture["refusedStrokes"].as_array().unwrap() {
++            let parsed = semio_framework_pack_json::parse(&command.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
++            assert!(EditElevation::from_action(&semio_framework_pack_json::to_dsl_value(&parsed)).is_err(), "{command}");
++        }
++        let float_wire = semio_framework_pack_json::parse(
++            r#"{"operation":"smooth","column":8.0,"row":8.0,"radius":0.0,"value":100.0,"stroke":[[8.0,8.0],[10.0,8.0]]}"#,
++            semio_framework_pack_json::JsonMemberPolicy::Reject,
++        ).unwrap();
++        let admitted = EditElevation::from_action(&semio_framework_pack_json::to_dsl_value(&float_wire)).unwrap();
++        let typed = semio_framework_value::ToValue::to_value(&admitted);
++        let point = &typed.get("stroke").unwrap().as_array().unwrap()[0].as_array().unwrap()[0];
++        assert_eq!(point.as_u64(), Some(8));
++        assert_eq!(<EditElevation as semio_framework_value::FromValue>::from_value(typed).unwrap(), admitted);
++
++        let edit = ElevationEdit { mode: Operation::Smooth, column: 0, row: 0, radius: 1, value: 100 };
++        let entire_budget = [[0, 0], [32, 0], [1, 0]];
++        assert_eq!(edit.stroke_work(&entire_budget).unwrap(), semio_s_artifact_gis_gisterrain_inferences::elevation_edit::MAX_STROKE_WORK - 1);
++        let mut polls = 0;
++        assert!(edit.apply_stroke_with(&source, &entire_budget, || { polls += 1; polls < 2 }).is_err());
++        assert_eq!(polls, 2);
++        assert_eq!(source.rows[16][16], 190);
++        let overflow = &fixture["overflowStroke"][0];
++        let [column, row, height] = serde_json::from_value::<[i32; 3]>(overflow["seed"].clone()).unwrap();
++        source.rows[row as usize][column as usize] = height as i16;
++        let before = source.clone();
++        assert!(apply(&source, &decode(&overflow["command"])).is_err());
++        assert_eq!(source, before);
++    }
++
++    fn from_fixture_stroke() -> DslValue {
++        let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🎮️commands/📐️edit-elevation/🧪️tests/🔣️.json")).unwrap();
++        let command = semio_framework_pack_json::parse(&fixture["strokeEdits"][0]["command"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
++        semio_framework_pack_json::to_dsl_value(&command)
+     }
+ 
+     #[semio_framework_async_macros::async_test]
+@@ -156,6 +307,18 @@
+         assert_eq!(app.snapshot().expect("undone document"), original);
+         context::history_verb(&mut app, "redo").await;
+         assert_eq!(app.snapshot().expect("redone document"), edited);
++        let brush = from_fixture_stroke();
++        let stroke = Gis3dPlayApp::command_from_action("editElevation", &mut Some(brush), &mut None).expect("staged stroke");
++        let receipt = context::dispatch(&mut app, stroke).await;
++        assert_eq!(receipt.lanes.iter().filter(|lane| **lane == semio_plugin::app::TypedOperationResultLane::Artifact).count(), 1);
++        let brushed = app.snapshot().expect("brushed terrain");
++        for column in 8..=11 {
++            assert_eq!(brushed.elevation_source.as_ref().unwrap().rows[8][column], edited.elevation_source.as_ref().unwrap().rows[8][column] + 7);
++        }
++        context::history_verb(&mut app, "undo").await;
++        assert_eq!(app.snapshot().expect("one undo restores the entire stroke"), edited);
++        context::history_verb(&mut app, "redo").await;
++        assert_eq!(app.snapshot().expect("one redo restores the entire stroke"), brushed);
+         context::close(&mut app);
+     }
+ }
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs
+@@ -226,7 +226,11 @@
+ pub const GIS3D_RETAINED_WORK_ITEMS: usize = 1;
+ 
+ fn gis3d_retained_contract() -> ToolExecutionContract {
+-    ToolExecutionContract::bounded_first_step(GIS3D_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)
++    ToolExecutionContract::bounded_first_step(
++        GIS3D_RETAINED_RAW_BYTES, 32,
++        semio_s_artifact_gis_gisterrain_inferences::elevation_edit::MAX_STROKE_WORK,
++        16_384, 7_500,
++    )
+ }
+ 
+ pub fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+@@ -252,7 +256,9 @@
+         Gis3dCommand::ImportGeoJson(_) | Gis3dCommand::ExportGeoJson(_) => 0,
+         Gis3dCommand::ImportElevationGridFile(file) => return local_file::valid_length(&file.payload).then_some(GIS3D_RETAINED_WORK_ITEMS),
+         Gis3dCommand::ImportGeoJsonFile(file) => return local_file::valid_length(&file.payload).then_some(GIS3D_RETAINED_WORK_ITEMS),
+-        Gis3dCommand::EditElevation(payload) if payload.is_valid() => payload.operation.len(),
++        Gis3dCommand::EditElevation(payload) if payload.is_valid() => {
++            payload.operation.len() + payload.stroke.as_ref().map_or(0, |samples| samples.len() * std::mem::size_of::<[u32; 2]>())
++        }
+         _ => return None,
+     };
+     (bytes <= GIS3D_RETAINED_RAW_BYTES).then_some(GIS3D_RETAINED_WORK_ITEMS)
+@@ -485,6 +491,9 @@
+         let tool_id = original.command.command_id();
+         if geojson_export {
+             return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |_| export_geojson::Work::default());
++        }
++        if matches!(&original.command, Gis3dCommand::EditElevation(payload) if payload.stroke.is_some()) {
++            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |_| edit_elevation::StrokeWork::default());
+         }
+         let maximum_raw_bytes = if file_import { local_file::MAX_WIRE_BYTES } else { GIS3D_RETAINED_RAW_BYTES };
+         if tool_id == contours::ACTION {
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧩️mounted/🦀️.rs
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧩️mounted/🦀️.rs
+@@ -33,7 +33,7 @@
+         Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }),
+         Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example::DEFAULT_EXAMPLE_ID.into() }),
+         Gis3dCommand::ClearElevationSource(clear_elevation_source::ClearElevationSource {}),
+-        Gis3dCommand::EditElevation(edit_elevation::EditElevation { operation: "set-sample".into(), column: 16, row: 16, radius: 0, value: 36 }),
++        Gis3dCommand::EditElevation(edit_elevation::EditElevation { operation: "set-sample".into(), column: 16, row: 16, radius: 0, value: 36, stroke: None }),
+         Gis3dCommand::AddOverlayPosition(add_overlay_position::AddOverlayPosition { id: "marker".into(), longitude: 5.55, latitude: 50.62, label: Some("Survey".into()), elevation: None }),
+         Gis3dCommand::RemoveOverlayFeature(remove_overlay_feature::RemoveOverlayFeature { id: "marker".into() }),
+         Gis3dCommand::ClearOverlays(clear_overlays::ClearOverlays {}),
+--- /dev/null
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🖌️brush/👆️stroke.ts
+@@ -0,0 +1,74 @@
++/** 🖌️ One captured pointer's ordered authored-grid samples. */
++export type TerrainBrushSample = readonly [column: number, row: number];
++
++export const MAX_TERRAIN_STROKE_SAMPLES = 64;
++
++const distance = (left: TerrainBrushSample, right: TerrainBrushSample): number =>
++  Math.max(Math.abs(left[0] - right[0]), Math.abs(left[1] - right[1]));
++
++type ActiveStroke = {
++  readonly pointer: number;
++  readonly spacing: number;
++  readonly samples: TerrainBrushSample[];
++  readonly release: () => void;
++  stamps: number;
++};
++
++/** 🎟️ Collects one bounded gesture and exposes its samples exactly once on a valid release. */
++export class TerrainBrushStroke {
++  private active: ActiveStroke | undefined;
++
++  begin(pointer: number, radius: number, sample: TerrainBrushSample, release: () => void): boolean {
++    if (this.active) return false;
++    this.active = { pointer, spacing: Math.max(1, Math.floor((radius + 1) / 2)), samples: [sample], stamps: 1, release };
++    return true;
++  }
++
++  owns(pointer: number): boolean {
++    return this.active?.pointer === pointer;
++  }
++
++  move(pointer: number, sample: TerrainBrushSample | undefined): void {
++    this.record(pointer, sample, false);
++  }
++
++  finish(pointer: number, sample: TerrainBrushSample | undefined): readonly TerrainBrushSample[] | undefined {
++    const stroke = this.record(pointer, sample, true);
++    if (!stroke) return undefined;
++    this.cancel(pointer);
++    return stroke.samples;
++  }
++
++  captureLost(pointer: number, defer: (cancel: () => void) => void): void {
++    const stroke = this.active;
++    if (stroke?.pointer === pointer) {
++      defer(() => { if (this.active === stroke) this.cancel(pointer); });
++    }
++  }
++
++  cancel(pointer?: number): void {
++    if (!this.active || (pointer !== undefined && this.active.pointer !== pointer)) return;
++    const { release } = this.active;
++    this.active = undefined;
++    release();
++  }
++
++  private record(pointer: number, sample: TerrainBrushSample | undefined, final: boolean): ActiveStroke | undefined {
++    const stroke = this.active;
++    if (!stroke || stroke.pointer !== pointer) return undefined;
++    if (!sample) {
++      this.cancel(pointer);
++      return undefined;
++    }
++    const gap = distance(stroke.samples[stroke.samples.length - 1]!, sample);
++    if (gap === 0 || (!final && gap < stroke.spacing)) return stroke;
++    const stamps = stroke.stamps + Math.ceil(gap / stroke.spacing);
++    if (stamps > MAX_TERRAIN_STROKE_SAMPLES) {
++      this.cancel(pointer);
++      return undefined;
++    }
++    stroke.stamps = stamps;
++    stroke.samples.push(sample);
++    return stroke;
++  }
++}
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx
+@@ -9,6 +9,7 @@
+ import { BufferAttribute, BufferGeometry, CanvasTexture, ClampToEdgeWrapping, DoubleSide, MeshStandardMaterial } from "@semio-tech/ui-react";
+ import { createTerrainSession, type TerrainWasmSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
+ import { parseTerrainOverlayDescriptor, TerrainMapFeatures, type TerrainOverlayTile } from "./🗺️overlays/🟦️.tsx";
++import { TerrainBrushStroke, type TerrainBrushSample } from "./🖌️brush/👆️stroke.ts";
+ // #endregion 🔌️Adapters
+ 
+ //#region 🔖️WorldTerrainLayerHost
+@@ -286,17 +287,19 @@
+ //#region WorldTerrainLayer
+ /** ⛰️ Renders GIS 3D terrain as chunked DEM-tile meshes inside the shared `World3d` viewport —
+  * mounted alongside `WorldInstancesLayer` when `scene.terrainJson` is present. */
+-export function WorldTerrainLayer({ terrainJson, cameraPosition, cameraTarget, onFeatureHover, onOriginElevation, onElevationEdit }: {
++export function WorldTerrainLayer({ terrainJson, cameraPosition, cameraTarget, onFeatureHover, onOriginElevation, brush, onElevationStroke }: {
+   readonly terrainJson: string | undefined;
+   readonly cameraPosition: readonly [number, number, number];
+   readonly cameraTarget: readonly [number, number, number];
+   readonly onFeatureHover?: (name: string | null) => void;
+   readonly onOriginElevation?: (elevation: number) => void;
+-  readonly onElevationEdit?: (column: number, row: number) => void;
++  readonly brush?: { readonly radius: number; readonly key: string };
++  readonly onElevationStroke?: (samples: readonly TerrainBrushSample[]) => void;
+ }) {
+   const style = useMemo(() => parseWorldTerrainStyle(terrainJson), [terrainJson]);
+   const overlaysJson = useMemo(() => JSON.stringify(parseTerrainOverlayDescriptor(terrainJson).overlays), [terrainJson]);
+   const rendererRef = useRef<TerrainTileRenderer | null>(null);
++  const stroke = useMemo(() => new TerrainBrushStroke(), []);
+   const [geometries, setGeometries] = useState<Map<string, BufferGeometry>>(new Map());
+   const material = useMemo(() => new MeshStandardMaterial({ map: getHypsometricTexture(), side: DoubleSide, roughness: 1, metalness: 0 }), []);
+ 
+@@ -328,38 +331,92 @@
+     }
+   }, [geometries, onOriginElevation]);
+ 
++  useEffect(() => {
++    const cancel = () => stroke.cancel();
++    if (!brush?.key || !style?.elevationGridJson) return cancel;
++    const keyDown = (event: KeyboardEvent) => { if (event.key === "Escape") cancel(); };
++    const pointerCancel = (event: PointerEvent) => stroke.cancel(event.pointerId);
++    const captureLost = (event: PointerEvent) => stroke.captureLost(event.pointerId, window.requestAnimationFrame.bind(window));
++    window.addEventListener("blur", cancel);
++    window.addEventListener("keydown", keyDown);
++    window.addEventListener("pointercancel", pointerCancel, true);
++    window.addEventListener("lostpointercapture", captureLost, true);
++    return () => {
++      window.removeEventListener("blur", cancel);
++      window.removeEventListener("keydown", keyDown);
++      window.removeEventListener("pointercancel", pointerCancel, true);
++      window.removeEventListener("lostpointercapture", captureLost, true);
++      cancel();
++    };
++  }, [stroke, brush?.key, style?.elevationGridJson, style?.projectOriginLon, style?.projectOriginLat, style?.exaggeration]);
++
+   if (!style) return null;
+ 
+   return (
+     <group>
+       {[...geometries.entries()].map(([key, geometry]) => (
+-        <TerrainTileVisual key={key} tileKey={key} geometry={geometry} material={material} renderer={rendererRef.current} overlaysJson={overlaysJson} onFeatureHover={onFeatureHover} onElevationEdit={style.elevationGridJson ? onElevationEdit : undefined} />
++        <TerrainTileVisual key={key} tileKey={key} geometry={geometry} material={material} renderer={rendererRef.current} overlaysJson={overlaysJson} onFeatureHover={onFeatureHover} stroke={stroke} radius={style.elevationGridJson && onElevationStroke ? brush?.radius : undefined} onElevationStroke={onElevationStroke} />
+       ))}
+     </group>
+   );
+ }
+ 
+-function TerrainTileVisual({ tileKey, geometry, material, renderer, overlaysJson, onFeatureHover, onElevationEdit }: {
++function TerrainTileVisual({ tileKey, geometry, material, renderer, overlaysJson, onFeatureHover, stroke, radius, onElevationStroke }: {
+   readonly tileKey: string;
+   readonly geometry: BufferGeometry;
+   readonly material: MeshStandardMaterial;
+   readonly renderer: TerrainTileRenderer | null;
+   readonly overlaysJson: string | undefined;
+   readonly onFeatureHover?: (name: string | null) => void;
+-  readonly onElevationEdit?: (column: number, row: number) => void;
++  readonly stroke: TerrainBrushStroke;
++  readonly radius: number | undefined;
++  readonly onElevationStroke?: (samples: readonly TerrainBrushSample[]) => void;
+ }) {
+   const overlays = useMemo(() => overlaysJson && renderer ? JSON.parse(renderer.getTerrainOverlayTile(tileKey, overlaysJson)) as TerrainOverlayTile | null : null, [renderer, tileKey, geometry, overlaysJson]);
+   const positions = geometry.getAttribute("position");
+   const width = positions.getX(positions.count - 1) - positions.getX(0);
+   return (
+     <group>
+-      <mesh geometry={geometry} material={material} receiveShadow onClick={onElevationEdit ? (event) => {
+-        if (event.button !== 0 || event.delta > 4) return;
+-        const sample = renderer?.pickElevationSample(event.ray.origin.toArray(), event.ray.direction.toArray());
+-        if (!sample) return;
+-        event.stopPropagation();
+-        onElevationEdit(...sample);
+-      } : undefined} />
++      <mesh
++        geometry={geometry}
++        material={material}
++        receiveShadow
++        onPointerDown={radius === undefined ? undefined : (event) => {
++          if (event.button !== 0 || event.isPrimary === false) return;
++          const sample = renderer?.pickElevationSample(event.ray.origin.toArray(), event.ray.direction.toArray());
++          if (!sample) return;
++          const { pointerId } = event;
++          const target = event.target as unknown as Pick<Element, "hasPointerCapture" | "setPointerCapture" | "releasePointerCapture"> | null;
++          const source = event.nativeEvent.target;
++          if (!target || !(source instanceof HTMLElement)) return;
++          const otherTouch = (touch: PointerEvent) => {
++            if (touch.pointerType === "touch" && touch.pointerId !== pointerId) stroke.cancel(pointerId);
++          };
++          if (!stroke.begin(pointerId, radius, sample, () => {
++            source.removeEventListener("pointerdown", otherTouch);
++            if (target.hasPointerCapture(pointerId)) target.releasePointerCapture(pointerId);
++          })) return;
++          try {
++            target.setPointerCapture(pointerId);
++            if (event.pointerType === "touch") source.addEventListener("pointerdown", otherTouch);
++            event.stopPropagation();
++          } catch {
++            stroke.cancel(pointerId);
++          }
++        }}
++        onPointerMove={radius === undefined ? undefined : (event) => {
++          if (!stroke.owns(event.pointerId)) return;
++          event.stopPropagation();
++          stroke.move(event.pointerId, renderer?.pickElevationSample(event.ray.origin.toArray(), event.ray.direction.toArray()));
++        }}
++        onPointerUp={radius === undefined ? undefined : (event) => {
++          if (!stroke.owns(event.pointerId)) return;
++          event.stopPropagation();
++          if (event.button !== 0) return;
++          const samples = stroke.finish(event.pointerId, renderer?.pickElevationSample(event.ray.origin.toArray(), event.ray.direction.toArray()));
++          if (samples) onElevationStroke?.(samples);
++        }}
++      />
+       {overlays && width > 0 ? <TerrainMapFeatures tile={overlays} tileWidth={width} onFeatureHover={onFeatureHover} /> : null}
+     </group>
+   );
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx
+@@ -23,6 +23,7 @@
+ 
+ import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
+ import { parseTerrainBrushAction } from "../🗺️WorldTerrainLayer/🖌️brush/🟦️.ts";
++import type { TerrainBrushSample } from "../🗺️WorldTerrainLayer/🖌️brush/👆️stroke.ts";
+ import { parseTerrainOverlayDescriptor } from "../🗺️WorldTerrainLayer/🗺️overlays/🟦️.tsx";
+ import { world3dMarqueeOverlayShape } from "../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
+ import { NOTE_WORLD_NAVIGATION_ACTION_ID } from "../🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts";
+@@ -80,8 +81,11 @@
+   const [suggestionsAnnouncement, setSuggestionsAnnouncement] = useState("");
+   const [terrainFeatureName, setTerrainFeatureName] = useState<string | null>(null);
+   const terrainBrush = useMemo(() => parseTerrainBrushAction(interaction.terrainBrush), [interaction.terrainBrush]);
+-  const applyTerrainBrush = useCallback((column: number, row: number) => {
+-    if (terrainBrush) dispatch(terrainBrush.action, { ...terrainBrush.arguments, column, row });
++  const applyTerrainBrush = useCallback((samples: readonly TerrainBrushSample[]) => {
++    const first = samples[0];
++    if (!terrainBrush || !first) return;
++    const [column, row] = first;
++    dispatch(terrainBrush.action, { ...terrainBrush.arguments, column, row, ...(samples.length > 1 ? { stroke: samples } : {}) });
+   }, [terrainBrush, dispatch]);
+   const terrainFeatures = useMemo(() => parseTerrainOverlayDescriptor(scene?.terrainJson), [scene?.terrainJson]);
+   const terrainCameraFrame = useMemo(() => scene?.cameraJson?.includes('"terrainFrame"') ? {} : null, [scene?.cameraJson]);
+@@ -191,8 +195,8 @@
+         event.stopPropagation();
+         openSuggestionsAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+       }}
+-      onPointerDown={(event) => { if (event.pointerType === "touch") suggestionsLongPress.down(event.clientX, event.clientY); handlePointerDown(event); }}
+-      onPointerMove={(event) => { if (event.pointerType === "touch") suggestionsLongPress.move(event.clientX, event.clientY); handlePointerMove(event); }}
++      onPointerDown={(event) => { if (!terrainBrush) { if (event.pointerType === "touch") suggestionsLongPress.down(event.clientX, event.clientY); handlePointerDown(event); } }}
++      onPointerMove={(event) => { if (!terrainBrush) { if (event.pointerType === "touch") suggestionsLongPress.move(event.clientX, event.clientY); handlePointerMove(event); } }}
+       onPointerUp={(event) => { suggestionsLongPress.up(); handlePointerUp(event); }}
+       onPointerCancel={(event) => { suggestionsLongPress.cancel(); handlePointerUp(event); }}
+       onPointerLeave={() => { setTerrainFeatureName(null); releaseLocalHover(); publishWorldPresenceView(null); }}
+@@ -209,7 +213,7 @@
+         background={environment && !isTransparentWorldBackground(environment.background) ? environment.background : undefined}
+         gl={environment && isTransparentWorldBackground(environment.background) ? { antialias: true, alpha: true, stencil: true } : undefined}
+         shadows={environment?.shadow?.enabled === true ? true : undefined}
+-        onPointerMissed={handleEmptyClick}
++        onPointerMissed={terrainBrush ? undefined : handleEmptyClick}
+         overlay={
+           <>
+             {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
+@@ -277,6 +281,7 @@
+           ) : null}
+           <WorldOrbitGated
+             controlsGate={marqueeDown || gumballDragActive || handleDragActive || connectDragSource !== null || faceDragSession !== null}
++            reservePrimaryTouch={terrainBrush !== undefined}
+             onCamera={handleCameraChange}
+             onCameraNavigate={handleCameraNavigate}
+             zoom={cameraState.zoom}
+@@ -352,7 +357,7 @@
+                 <BrushMeshRegistrar url={url} revision={brushMeshRevisions.generation + (brushMeshRevisions.urls[url] ?? 0)} onRegister={handleRegisterBrushMesh} />
+               </Suspense>
+             ))}
+-            <WorldTerrainLayer terrainJson={scene?.terrainJson} cameraPosition={cameraState.position} cameraTarget={cameraState.target} onFeatureHover={setTerrainFeatureName} onOriginElevation={terrainCameraFrame ? elevateTerrainFrame : undefined} onElevationEdit={terrainBrush ? applyTerrainBrush : undefined} />
++            <WorldTerrainLayer terrainJson={scene?.terrainJson} cameraPosition={cameraState.position} cameraTarget={cameraState.target} onFeatureHover={setTerrainFeatureName} onOriginElevation={terrainCameraFrame ? elevateTerrainFrame : undefined} brush={terrainBrush && { radius: terrainBrush.arguments.radius, key: JSON.stringify(terrainBrush) }} onElevationStroke={applyTerrainBrush} />
+             <WorldPointCloudLayer pointsJson={scene?.pointsJson} />
+             <group ref={instancesGroupRef}>
+               <WorldInstancesLayer
+--- a/🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🎬️canvas/🟦️.tsx
++++ b/🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🎬️canvas/🟦️.tsx
+@@ -218,6 +218,7 @@
+   readonly constraints?: { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number };
+   readonly onCamera?: (state: WorldCameraState) => void;
+   readonly controlsGate?: boolean;
++  readonly reservePrimaryTouch?: boolean;
+   readonly onCameraNavigate?: (active: boolean) => void;
+   readonly controlsKey?: string | number;
+   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
+@@ -284,6 +285,7 @@
+ function WorldOrbitControlsBridge({
+   camera,
+   enabled,
++  reservePrimaryTouch,
+   mouseButtons,
+   constraints,
+   controlsKey,
+@@ -293,6 +295,7 @@
+ }: {
+   readonly camera: Camera;
+   readonly enabled: boolean;
++  readonly reservePrimaryTouch: boolean;
+   readonly mouseButtons: ReturnType<typeof resolveWorldOrbitMouseButtonsIdle>;
+   readonly constraints?: { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number };
+   readonly controlsKey?: string | number;
+@@ -307,6 +310,9 @@
+   const gestureRecognizerRef = reactHostPort.useRef<GestureRecognizer | null>(null);
+   const enabledRef = reactHostPort.useRef(enabled);
+   enabledRef.current = enabled;
++  const reserveTouchRef = reactHostPort.useRef(reservePrimaryTouch);
++  reserveTouchRef.current = reservePrimaryTouch;
++  const defaultSingleTouch = reactHostPort.useRef<ThreeOrbitControls["touches"]["ONE"]>(undefined);
+   const callbacksRef = reactHostPort.useRef({ onChange, onStart, onEnd });
+   callbacksRef.current = { onChange, onStart, onEnd };
+   const resolvedConstraints = constraints ?? WORLD_ORBIT_CONSTRAINTS_DEFAULT;
+@@ -317,6 +323,8 @@
+     controls.enableZoom = true;
+     controls.enabled = enabledRef.current;
+     controls.mouseButtons = { ...mouseButtons };
++    defaultSingleTouch.current = controls.touches.ONE;
++    if (reserveTouchRef.current) delete controls.touches.ONE;
+     const change = () => callbacksRef.current.onChange();
+     const start = () => callbacksRef.current.onStart(controls);
+     const end = () => callbacksRef.current.onEnd(controls);
+@@ -330,15 +338,24 @@
+       const rect = pointerTarget.getBoundingClientRect();
+       return { pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top };
+     };
++    let pinchOwnsReceipt = false;
+     const onGestureDown = (event: PointerEvent) => {
+-      if (gestures.down(gesturePoint(event)).kind === "pinchBegin") controls.enabled = false;
++      if (gestures.down(gesturePoint(event)).kind === "pinchBegin") {
++        pinchOwnsReceipt = reserveTouchRef.current && enabledRef.current;
++        if (pinchOwnsReceipt) callbacksRef.current.onStart(controls);
++        controls.enabled = false;
++      }
+     };
+     const onGestureMove = (event: PointerEvent) => {
+       const verdict = gestures.move(gesturePoint(event));
+       if (verdict.kind === "pinch" && enabledRef.current) applyWorldOrbitPinch(controls, camera, verdict.step, pointerTarget.clientHeight);
+     };
+     const onGestureUp = (event: PointerEvent) => {
+-      if (gestures.up(event.pointerId).kind === "pinchEnd") controls.enabled = enabledRef.current;
++      if (gestures.up(event.pointerId).kind === "pinchEnd") {
++        controls.enabled = enabledRef.current;
++        if (pinchOwnsReceipt) callbacksRef.current.onEnd(controls);
++        pinchOwnsReceipt = false;
++      }
+     };
+     const gestureDocument = pointerTarget.ownerDocument;
+     pointerTarget.addEventListener("pointerdown", onGestureDown, { capture: true });
+@@ -392,11 +409,13 @@
+     if (!controls) return;
+     controls.enabled = enabled && !gestureRecognizerRef.current?.latched;
+     controls.mouseButtons = { ...mouseButtons };
++    if (reservePrimaryTouch || defaultSingleTouch.current === undefined) delete controls.touches.ONE;
++    else controls.touches.ONE = defaultSingleTouch.current;
+     controls.enableRotate = resolvedConstraints.rotate;
+     controls.minPolarAngle = resolvedConstraints.minPolar ?? 0;
+     controls.maxPolarAngle = resolvedConstraints.maxPolar ?? Math.PI;
+     controls.update();
+-  }, [enabled, mouseButtons, resolvedConstraints]);
++  }, [enabled, reservePrimaryTouch, mouseButtons, resolvedConstraints]);
+   return null;
+ }
+ 
+@@ -452,6 +471,7 @@
+     <WorldOrbitControlsBridge
+       camera={camera}
+       enabled={!gate && !snapGate}
++      reservePrimaryTouch={props.reservePrimaryTouch ?? false}
+       mouseButtons={mouseButtonsIdle}
+       constraints={props.constraints}
+       controlsKey={props.controlsKey}
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️edit-elevation/🧪️tests/🔣️.json
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️edit-elevation/🧪️tests/🔣️.json
+@@ -16,5 +16,30 @@
+     {"operation":"offset","column":0,"row":0,"radius":0,"value":32767},
+     {"operation":"smooth","column":16,"row":16,"radius":1,"value":101},
+     {"operation":"set-sample","column":33,"row":16,"radius":0,"value":200}
++  ],
++  "strokeGestures": [
++    {"id": "click", "radius": 4, "down": [16, 16], "moves": [], "up": [16, 16], "anchors": [[16, 16]], "stamps": [[16, 16]]},
++    {"id": "radius-spacing", "radius": 4, "down": [1, 1], "moves": [[2, 1], [5, 4]], "up": [6, 4], "anchors": [[1, 1], [5, 4], [6, 4]], "stamps": [[1, 1], [3, 3], [5, 4], [6, 4]]},
++    {"id": "reverse-diagonal", "radius": 2, "down": [4, 4], "moves": [[4, 4]], "up": [2, 1], "anchors": [[4, 4], [2, 1]], "stamps": [[4, 4], [3, 3], [3, 2], [2, 1]]},
++    {"id": "missing-surface", "radius": 4, "down": [1, 1], "moves": [[6, 1], null], "up": [9, 1], "anchors": null},
++    {"id": "cancelled", "radius": 4, "down": [1, 1], "moves": [[6, 1]], "cancel": true, "up": [9, 1], "anchors": null},
++    {"id": "over-limit", "radius": 1, "down": [0, 0], "moves": [[32, 0]], "up": [0, 0], "anchors": null}
++  ],
++  "strokeEdits": [
++    {"command": {"operation": "raise-lower", "column": 8, "row": 8, "radius": 0, "value": 7, "stroke": [[8, 8], [11, 8]]}, "changed": 4, "samples": [[8, 8, 107], [9, 8, 107], [10, 8, 107], [11, 8, 107], [12, 8, 100]]},
++    {"command": {"operation": "raise-lower", "column": 8, "row": 8, "radius": 0, "value": -7, "stroke": [[8, 8], [11, 8]]}, "changed": 4, "samples": [[8, 8, 93], [9, 8, 93], [10, 8, 93], [11, 8, 93], [12, 8, 100]]},
++    {"command": {"operation": "smooth", "column": 16, "row": 16, "radius": 0, "value": 100, "stroke": [[16, 16], [17, 16]]}, "changed": 2, "samples": [[16, 16, 110], [17, 16, 101], [18, 16, 100]]}
++  ],
++  "refusedStrokes": [
++    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0], [32, 0], [0, 0]]},
++    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[1, 0]]},
++    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0], [33, 0]]},
++    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0], [1.5, 0]]},
++    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": []},
++    {"operation": "set-sample", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0], [1, 0]]},
++    {"operation": "raise-lower", "column": 0, "row": 0, "radius": 1, "value": 4, "stroke": [[0, 0, 0]]}
++  ],
++  "overflowStroke": [
++    {"seed": [1, 0, 32767], "command": {"operation": "raise-lower", "column": 0, "row": 0, "radius": 0, "value": 1, "stroke": [[0, 0], [1, 0]]}}
+   ]
+ }
+--- /dev/null
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🖌️brush/🧪️tests/🟦️.test.ts
+@@ -0,0 +1,83 @@
++import { expect, test } from "bun:test";
++import Ajv from "ajv";
++import fixture from "../../../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️edit-elevation/🧪️tests/🔣️.json" with { type: "json" };
++import { MAX_TERRAIN_STROKE_SAMPLES, TerrainBrushStroke, type TerrainBrushSample } from "../👆️stroke.ts";
++
++const coordinate = { type: "integer", minimum: 0, maximum: 32 };
++const pathValidator = new Ajv().compile({
++  type: "array", minItems: 1, maxItems: MAX_TERRAIN_STROKE_SAMPLES,
++  items: { type: "array", minItems: 2, maxItems: 2, items: coordinate },
++});
++
++test("one pointer yields one bounded stroke or cancels it", () => {
++  for (const row of fixture.strokeGestures) {
++    const gesture = new TerrainBrushStroke();
++    let releases = 0;
++    const sample = (value: number[]) => value as unknown as TerrainBrushSample;
++    expect(gesture.begin(7, row.radius, sample(row.down), () => ++releases)).toBe(true);
++    expect(gesture.begin(8, row.radius, sample(row.down), () => ++releases)).toBe(false);
++    gesture.move(8, [32, 32]);
++    for (const move of row.moves) gesture.move(7, move ? sample(move) : undefined);
++    if ("cancel" in row && row.cancel) gesture.cancel(7);
++    const path = gesture.finish(7, sample(row.up));
++    expect(path ?? null, row.id).toEqual(row.anchors);
++    if (path) expect(pathValidator(path), row.id).toBe(true);
++    expect(gesture.finish(7, sample(row.up))).toBeUndefined();
++    expect(releases).toBe(1);
++  }
++});
++
++test("capture loss discards only the original pointer session", () => {
++  const gesture = new TerrainBrushStroke();
++  const deferred: Array<() => void> = [];
++  expect(gesture.begin(7, 2, [4, 4], () => undefined)).toBe(true);
++  gesture.captureLost(7, cancel => deferred.push(cancel));
++  expect(gesture.finish(7, [4, 4])).toEqual([[4, 4]]);
++  expect(gesture.begin(7, 2, [6, 6], () => undefined)).toBe(true);
++  deferred.shift()?.();
++  expect(gesture.owns(7)).toBe(true);
++  gesture.captureLost(7, cancel => deferred.push(cancel));
++  deferred.shift()?.();
++  expect(gesture.finish(7, [6, 6])).toBeUndefined();
++});
++
++test("independent brush arithmetic matches the neutral stroke elevations", () => {
++  for (const row of fixture.strokeEdits) {
++    const { operation, radius, value, stroke } = row.command;
++    expect(pathValidator(stroke)).toBe(true);
++    const coordinates = Array.from({ length: fixture.size }, (_, index) => index);
++    const original = coordinates.map(() => coordinates.map(() => fixture.height));
++    for (const [x, y, height] of fixture.seed) original[y]![x] = height;
++    let current = original;
++    const stamps = [stroke[0]!];
++    for (let index = 1; index < stroke.length; index++) {
++      const from = stroke[index - 1]!;
++      const to = stroke[index]!;
++      const delta = to.map((value, axis) => value - from[axis]!);
++      const steps = Math.ceil(Math.max(...delta.map(Math.abs)) / Math.max(1, Math.floor((radius + 1) / 2)));
++      for (let step = 1; step <= steps; step++) stamps.push(delta.map((value, axis) => Math.round(from[axis]! + value * step / steps)));
++    }
++    for (const [centerX, centerY] of stamps) {
++      const previous = current;
++      current = coordinates.map(y => coordinates.map(x => {
++        const height = previous[y]![x]!;
++        const normalized = Math.max(0, 1 - ((x - centerX!) ** 2 + (y - centerY!) ** 2) / (radius + 1) ** 2);
++        let delta = value * normalized;
++        if (operation === "smooth") {
++          const neighbors = previous.slice(Math.max(0, y - 1), y + 2).flatMap(row => row.slice(Math.max(0, x - 1), x + 2));
++          const average = neighbors.reduce((total, height) => total + height, 0) / neighbors.length;
++          delta = (average - height) * normalized * value / 100;
++        }
++        return height + Math.sign(delta) * Math.round(Math.abs(delta));
++      }));
++    }
++    const baseline = original.flat();
++    const changed = current.flat().filter((height, index) => height !== baseline[index]).length;
++    expect(changed).toBe(row.changed);
++    for (const [x, y, height] of row.samples) expect(current[y]![x]).toBe(height);
++  }
++  for (const index of [2, 3, 4, 6]) expect(pathValidator(fixture.refusedStrokes[index]!.stroke)).toBe(false);
++  const overflow = fixture.overflowStroke[0]!;
++  expect(pathValidator(overflow.command.stroke)).toBe(true);
++  expect(overflow.seed[2]! + overflow.command.value).toBeGreaterThan(32767);
++});

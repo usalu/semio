@@ -26,3 +26,6 @@ semio-s-artifact-fem-3d-engine = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
 semio-s-fem-model = { workspace = true }
+
+[dev-dependencies]
+semio-s-fem-receiving = { path = "../../../../../../../../../🧩️receiving/📦️packages/🦀️rust" }

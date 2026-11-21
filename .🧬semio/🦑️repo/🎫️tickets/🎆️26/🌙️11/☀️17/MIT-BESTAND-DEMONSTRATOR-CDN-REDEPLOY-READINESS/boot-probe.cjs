@@ -1,5 +1,10 @@
 // Opens a pane URL headless and dumps console errors plus the structured error payload as JSON. Usage: node boot-probe.cjs <url> <out.json>
-const { chromium } = require("/Users/ueli/Documents/semio/.cache/b/d/m/j/756d41589305a40912e2/node_modules/playwright");
+const { createRequire } = require("node:module");
+const { resolve, join } = require("node:path");
+const root = resolve(__dirname, "../../../../../../..");
+const appRequire = createRequire(join(root, "♻️mit-bestand", "🧺️demonstrator", "package.json"));
+process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(root, ".🧬semio", "🦑️repo", "⚡️cache", "tools", "ms-playwright");
+const { chromium } = appRequire("@playwright/test");
 (async () => {
   const [url, out] = process.argv.slice(2);
   const b = await chromium.launch();

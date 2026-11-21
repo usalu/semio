@@ -66,7 +66,12 @@ const DEMONSTRATOR_CELLS = Object.fromEntries(centeredLastRowCells(DEMONSTRATOR_
 
 /** 🔢️ The card grid mirrors the strip. */
 const DEMONSTRATOR_GRID = nearSquareGrid(DEMONSTRATOR_PANES.length);
-const DEMONSTRATOR_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${DEMONSTRATOR_GRID.rows}, minmax(0, 1fr))`, paddingBlock: "var(--navbar-band-height) var(--footer-band-height)" } as const;
+const DEMONSTRATOR_OVERLAY_STYLE = {
+  gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID.columns}, minmax(0, 1fr))`,
+  gridTemplateRows: `repeat(${DEMONSTRATOR_GRID.rows}, minmax(max-content, 1fr))`,
+  paddingBlock: "var(--navbar-band-height) var(--footer-band-height)",
+  scrollPaddingBlock: "var(--navbar-band-height) var(--footer-band-height)",
+} as const;
 
 /** 🧮️ Every app may stay live; boots start 1.5 s after load, one per 35 s plugin-load budget. A pristine app is released to its poster after
  * 30 s offscreen while another is opened, 5 min idle on the overview or 60 s in a hidden tab — the unattended kiosk case. */
@@ -118,7 +123,7 @@ const demonstratorPages = (views: readonly DemonstratorPaneView[], locale: Demon
 /** 🃏️ An app's card, filling its cell of the card grid edge to edge (when swiping, the overview centres it on its page itself). */
 const demonstratorCardRenderer = (views: readonly DemonstratorPaneView[]) => (page: LayeredPane, state: LayeredCardState) => {
   const card = <DemonstratorCard pane={views.find((view) => view.id === page.id)!} lifted={state.revealed} onClick={state.open} />;
-  return state.mode === "swipe" ? card : <CardGridCell className="overflow-y-auto">{card}</CardGridCell>;
+  return state.mode === "swipe" ? card : <CardGridCell>{card}</CardGridCell>;
 };
 //#endregion 🎪️DemonstratorPages
 
@@ -192,7 +197,7 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { r
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40">
             <Footer
               items={[aProjectOfLuhUdkFooterItem("landingProjectOf", locale, viewportMobile), navbarFillItem(), fundedByZukunftBauFooterItem("landingFundedBy", locale, viewportMobile)]}
-              className="pointer-events-auto bg-transparent"
+              className="pointer-events-auto ui-chrome-tint"
             />
           </div>
         )}
@@ -219,7 +224,7 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale, focusHeading }: { r
                 { key: "language", content: <DemonstratorLocaleSwitcher locale={locale} onChoose={onChooseLocale} /> },
               ]}
               showFullscreenToggle={false}
-              className="bg-transparent"
+              className="ui-chrome-tint"
             />
           </div>
         )}

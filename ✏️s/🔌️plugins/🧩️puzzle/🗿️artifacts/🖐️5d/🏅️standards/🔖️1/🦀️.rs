@@ -19,6 +19,10 @@ pub fn standard<PA: crate::ArtifactApps>() -> StandardDeclaration<PA> {
 
 //#region 🧩️ArtifactItems5
 pub mod artifact_items_5 {
+type Puzzle5dMembers = semio_s_artifact_puzzle_5d_kind_catalogs::standards::v1::subsets::any::schema::kind_catalogs::Puzzle5dMembers;
+type MountedPuzzle5dEditor = semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>, Puzzle5dMembers>;
+type MountedPuzzle5dViewer = semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>, Puzzle5dMembers>;
+
 //#region 🔖️Declaration
 /// 🔖️ Puzzle5d's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1, relocated off
 /// the former `⚙️engine` to the artifact root — `declaration()` describes the artifact itself, not
@@ -29,15 +33,15 @@ pub mod artifact_items_5 {
 /// stays wired through `🧩️puzzle/🦀️.rs`'s own `.setup()`, not here.
 pub trait ArtifactApps:
     semio_plugin::PluginApp
-    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>>
-    + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>>
+    + From<MountedPuzzle5dEditor>
+    + From<MountedPuzzle5dViewer>
 {
 }
 
 impl<PA> ArtifactApps for PA where
     PA: semio_plugin::PluginApp
-        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>>
-        + From<semio_plugin::app::VcsArtifactApp<semio_plugin::app::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>>
+        + From<MountedPuzzle5dEditor>
+        + From<MountedPuzzle5dViewer>
 {
 }
 

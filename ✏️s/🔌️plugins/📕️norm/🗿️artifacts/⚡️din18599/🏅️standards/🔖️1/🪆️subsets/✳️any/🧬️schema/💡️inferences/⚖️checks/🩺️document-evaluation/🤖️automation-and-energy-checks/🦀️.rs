@@ -38,10 +38,10 @@ pub(super) fn check_primary_energy(doc: &Din18599Snapshot, report: &mut CheckRep
         let limit = derived.q_p_limit_kwh.max(1.0);
         let mut b = CheckResult::assess(
             "din18599.geg.qp",
-            "GEG §10 / Anlage 1–2",
-            ClauseId::new("GEG", "§10", "Q_P"),
+            "GModG §§15, 18, 20, 21",
+            ClauseId::new("GModG", if doc.building_category == BuildingCategory::Residential { "§§15, 20" } else { "§§18, 21" }, "Q_P"),
             SubjectRef::new("", "heating.energyCarrier", copy("Heating energy carrier", "Energieträger Heizung")),
-            copy("Primary energy Q_P ≤ 0.55 · Q_P,Ref", "Primärenergie Q_P ≤ 0,55 · Q_P,Ref"),
+            copy("Primary energy screening", "Vorprüfung der Primärenergie"),
         )
         .utilization(energy(q_p), energy(limit))
         .annex(annex)
@@ -49,34 +49,55 @@ pub(super) fn check_primary_energy(doc: &Din18599Snapshot, report: &mut CheckRep
             &format!("Q_P = {q_p:.0} kWh/a; Q_P,Ref = {:.0}; limit = 0.55·Q_P,Ref = {limit:.0} kWh/a.", derived.q_p_ref_kwh),
             &format!("Q_P = {q_p:.0} kWh/a; Q_P,Ref = {:.0}; Grenzwert = 0,55·Q_P,Ref = {limit:.0} kWh/a.", derived.q_p_ref_kwh),
         ));
+        let unresolved_carrier = [
+            ("heating.energyCarrier", doc.heating.energy_carrier.as_str()),
+            ("dhw.energyCarrier", doc.dhw.energy_carrier.as_str()),
+            ("cooling.plant.energyCarrier", doc.cooling.energy_carrier()),
+        ].into_iter().find(|(path, carrier)| {
+            (*path != "cooling.plant.energyCarrier" || doc.cooling.is_installed()) && !has_direct_primary_energy_factor(carrier)
+        });
+        let factor_basis = CheckResult::assess(
+            "din18599.geg.primary-energy-factor-basis", "GModG §22",
+            ClauseId::new("GModG", "§22", "Anlage 4"),
+            SubjectRef::new("", unresolved_carrier.map_or("heating.energyCarrier", |(path, _)| path), copy("Energy carrier", "Energieträger")),
+            copy("Primary-energy factor basis", "Grundlage des Primärenergiefaktors"),
+        ).annex(annex);
+        let factor_basis = if unresolved_carrier.is_some() {
+            factor_basis.status(CheckStatus::UnverifiedBasis).explanation(copy(
+                "Verify the supply or plant-specific primary-energy factor. The current balance is indicative.",
+                "Der Primärenergiefaktor der Versorgung oder Anlage ist nachzuweisen. Die aktuelle Bilanz ist überschlägig.",
+            ))
+        } else {
+            factor_basis.status(CheckStatus::Info).explanation(copy(
+                "The calculation uses the Annex 4 default factors for the entered energy carriers.",
+                "Die Berechnung verwendet die Standardfaktoren aus Anlage 4 für die erfassten Energieträger.",
+            ))
+        };
+        report.push(factor_basis.build());
+        if doc.building_category == BuildingCategory::NonResidential {
+            b = b.explanation(copy(
+                &format!("Indicative Q_P = {q_p:.0} kWh/a and reference limit {limit:.0} kWh/a. Annex 2 envelope values are used where known. The reference plant and solar-control glazing require verification."),
+                &format!("Überschlägiger Q_P = {q_p:.0} kWh/a und Referenzgrenzwert {limit:.0} kWh/a. Bekannte Hüllwerte nach Anlage 2 werden verwendet. Referenzanlagentechnik und Sonnenschutzverglasung sind nachzuweisen."),
+            ));
+        }
+        if doc.method == CalculationMethod::Tabular
+            || doc.building_category == BuildingCategory::NonResidential
+            || unresolved_carrier.is_some()
+            || doc.renewables.pv_area_m2 > 0.0
+            || doc.renewables.solar_thermal_kwh_a > 0.0
+            || (doc.building_category == BuildingCategory::Residential && residential_dhw_profile_kwh_a(doc).is_none())
+        {
+            b = b.status(CheckStatus::UnverifiedBasis);
+        }
         if q_p > limit {
-            let deficit = q_p - limit;
-            let fp_el = primary_energy_factor("electricity");
-            let annual_g = doc.climate.g_h_w_m2.iter().sum::<f64>() / 12.0 * 8760.0 / 1000.0;
-            let pv_extra = if doc.renewables.pv_efficiency * annual_g * fp_el <= 1e-9 {
-                50.0
-            } else {
-                deficit / (doc.renewables.pv_efficiency.max(DIN_V_18599_5_ETA_SYS_FLOOR) * annual_g * fp_el)
-            };
-            let pv_req = doc.renewables.pv_area_m2 + pv_extra;
-            b = b
-                .remedy(Remedy::at_least(
-                    SubjectRef::new("", "renewables.pvAreaM2", copy("PV area", "PV-Fläche")),
-                    Quantity::new(QuantityKind::Area, doc.renewables.pv_area_m2),
-                    Quantity::new(QuantityKind::Area, pv_req),
-                    copy(
-                        &format!("Increase PV area from {:.1} m² to at least {:.1} m².", doc.renewables.pv_area_m2, pv_req),
-                        &format!("PV-Fläche von {:.1} m² auf mindestens {:.1} m² erhöhen.", doc.renewables.pv_area_m2, pv_req),
-                    ),
-                ))
-                .remedy(Remedy::one_of(
-                    SubjectRef::new("", "heating.energyCarrier", copy("Heating energy carrier", "Energieträger Heizung")),
-                    vec!["natural_gas".into(), "biomass".into(), "district_heating".into()],
-                    copy(
-                        &format!("Switch heating carrier from '{}' (f_p={:.2}) to biomass or district heating.", doc.heating.energy_carrier, primary_energy_factor(&doc.heating.energy_carrier)),
-                        &format!("Energieträger Heizung von '{}' (f_p={:.2}) auf Biomasse oder Fernwärme umstellen.", doc.heating.energy_carrier, primary_energy_factor(&doc.heating.energy_carrier)),
-                    ),
-                ));
+            b = b.remedy(Remedy::one_of(
+                SubjectRef::new("", "heating.energyCarrier", copy("Heating energy carrier", "Energieträger Heizung")),
+                vec!["natural_gas".into(), "biomass".into(), "district_heating".into()],
+                copy(
+                    &format!("Review the heating carrier '{}' (f_p={:.2}) and consider verified alternatives.", doc.heating.energy_carrier, primary_energy_factor(&doc.heating.energy_carrier)),
+                    &format!("Energieträger Heizung '{}' (f_p={:.2}) prüfen und verifizierte Alternativen erwägen.", doc.heating.energy_carrier, primary_energy_factor(&doc.heating.energy_carrier)),
+                ),
+            ));
             let gen_req = (doc.heating.generation_efficiency * (q_p / limit).min(1.4)).min(1.05);
             if gen_req > doc.heating.generation_efficiency {
                 b = b.remedy(Remedy::at_least(
@@ -92,49 +113,53 @@ pub(super) fn check_primary_energy(doc: &Din18599Snapshot, report: &mut CheckRep
         }
         report.push(b.build());
     }
+    let generated = derived.renewable_electricity_months.iter().map(|month| month.generation_kwh).sum::<f64>();
+    let credit = derived.q_pv_kwh;
+    let subject = SubjectRef::new("", "renewables.pvAreaM2", copy("Renewable electricity credit", "Anrechnung erneuerbaren Stroms"));
+    let b = CheckResult::assess(
+        "din18599.geg.renewable-electricity", "GModG §23", ClauseId::new("GModG", "§23", "Strom"),
+        subject, copy("Monthly renewable electricity credit", "Monatliche Anrechnung erneuerbaren Stroms"),
+    ).annex(annex).utilization(energy(credit), energy(generated));
+    let thermal = doc.renewables.solar_thermal_kwh_a;
+    let b = if doc.renewables.pv_area_m2 > 0.0 || thermal > 0.0 {
+        b.status(CheckStatus::UnverifiedBasis).explanation(copy(
+            &format!("Indicative PV production {generated:.0} kWh/a. Monthly demand limits the modelled electricity credit to {credit:.0} kWh/a. A §23 assessment needs qualified equipment and Potsdam irradiation data. Recorded solar thermal heat {thermal:.0} kWh/a requires allocation to thermal services."),
+            &format!("Überschlägiger PV-Ertrag {generated:.0} kWh/a. Der monatliche Bedarf begrenzt die modellierte Stromanrechnung auf {credit:.0} kWh/a. Für §23 sind qualifizierte Anlagen- und Potsdamer Strahlungsdaten erforderlich. Erfasste Solarwärme von {thermal:.0} kWh/a ist den thermischen Diensten zuzuordnen."),
+        ))
+    } else {
+        b.not_applicable(copy("The building has no recorded renewable generation.", "Für das Gebäude ist keine erneuerbare Erzeugung erfasst."))
+    };
+    report.push(b.build());
 }
 
-/// 📊 Checks the tabular method where the calculation method is applicable.
-pub(super) fn check_tabular_method(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice, derived: &BalanceDerived) {
-    match doc.method {
-        CalculationMethod::Tabular => {
-            let q_tab = tabular_specific_primary_energy_kwh_m2(doc.use_class) * doc.net_floor_area_m2 * automation_factor(doc.automation_class);
-            let limit = derived.q_p_limit_kwh.max(1.0);
-            let mut b = CheckResult::assess(
-                "din18599.12.tabular",
-                "DIN V 18599-12",
-                ClauseId::new("DIN V 18599", "12", "4"),
-                whole_building(),
-                copy("Tabular primary energy", "Tabellarische Primärenergie"),
-            )
-            .utilization(energy(q_tab), energy(limit))
-            .annex(annex)
+/// 📊 Selects the reported scope of the residential tabular method.
+pub(super) fn check_tabular_method(doc: &Din18599Snapshot, report: &mut CheckReport, annex: AnnexChoice) {
+    let subject = SubjectRef::new("", "method", copy("Calculation method", "Berechnungsverfahren"));
+    let result = CheckResult::assess(
+        "din18599.12.tabular", "DIN V 18599-12",
+        ClauseId::new("DIN V 18599", "12", "Anwendungsbereich"),
+        subject.clone(), copy("Residential tabular method", "Tabellenverfahren für Wohngebäude"),
+    ).annex(annex);
+    let result = match (doc.method, doc.building_category) {
+        (CalculationMethod::DetailedMonthly, _) => result.not_applicable(copy(
+            "The detailed monthly method is selected.",
+            "Das detaillierte Monatsbilanzverfahren ist gewählt.",
+        )),
+        (CalculationMethod::Tabular, BuildingCategory::NonResidential) => result
+            .status(CheckStatus::NotApplicable)
             .explanation(copy(
-                &format!("Q_P,tab = {q_tab:.0} kWh/a vs GEG limit {limit:.0}."),
-                &format!("Q_P,tab = {q_tab:.0} kWh/a gegenüber GEG-Grenzwert {limit:.0}."),
-            ));
-            if q_tab > limit {
-                b = b.remedy(Remedy::one_of(
-                    SubjectRef::new("", "method", copy("Calculation method", "Berechnungsverfahren")),
-                    vec!["DetailedMonthly".into()],
-                    copy("Switch to detailed monthly method to resolve tabular exceedance.", "Auf detailliertes Monatsbilanzverfahren wechseln."),
-                ));
-            }
-            report.push(b.build());
-        }
-        CalculationMethod::DetailedMonthly => {
-            report.push(
-                CheckResult::assess(
-                    "din18599.12.tabular",
-                    "DIN V 18599-12",
-                    ClauseId::new("DIN V 18599", "12", "4"),
-                    whole_building(),
-                    copy("Tabular primary energy", "Tabellarische Primärenergie"),
-                )
-                .not_applicable(copy("Detailed monthly method selected; tabular method not applicable.", "Detailliertes Monatsverfahren gewählt; Tabellenverfahren nicht anwendbar."))
-                .annex(annex)
-                .build(),
-            );
-        }
-    }
+                "Part 12 applies to residential buildings. Select the detailed monthly method for this building.",
+                "Teil 12 gilt für Wohngebäude. Für dieses Gebäude ist das detaillierte Monatsbilanzverfahren zu wählen.",
+            )).remedy(Remedy::one_of(
+                subject, vec!["DetailedMonthly".into()],
+                copy("Select the detailed monthly method.", "Detailliertes Monatsbilanzverfahren wählen."),
+            )),
+        (CalculationMethod::Tabular, BuildingCategory::Residential) => result
+            .status(CheckStatus::UnverifiedBasis)
+            .explanation(copy(
+                "The residential tabular method requires the applicable building and system tables from the selected edition.",
+                "Das Tabellenverfahren für Wohngebäude erfordert die auf Gebäude und Anlagentechnik anwendbaren Tabellen der gewählten Ausgabe.",
+            )),
+    };
+    report.push(result.build());
 }

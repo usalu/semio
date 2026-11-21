@@ -57,7 +57,7 @@ function template(id: string, have: (id: string) => boolean): { from: string; se
 }
 
 /** 🧭️ The outer boundary of the largest filled component of a mask as a polygon along the cell edges (world units of the view). */
-function contour(mask: Mask): { ring: P[]; parts: number; rings: P[][] } {
+function contour(mask: Mask, retainHoles = false): { ring: P[]; parts: number; rings: P[][] } {
   const { width: w, height: h, cells } = mask;
   const at = (i: number, j: number): number => (i < 0 || j < 0 || i >= w || j >= h ? 0 : cells[j * w + i]!);
   const next = new Map<number, number[]>();
@@ -96,7 +96,7 @@ function contour(mask: Mask): { ring: P[]; parts: number; rings: P[][] } {
   }
   const area = (r: P[]): number => r.reduce((s, p, i) => s + p[0] * r[(i + 1) % r.length]![1] - r[(i + 1) % r.length]![0] * p[1], 0) / 2;
   const outer = loops.filter((l) => area(l) > 0).sort((a, b) => area(b) - area(a));
-  return { ring: outer[0] ?? [], parts: outer.length, rings: outer };
+  return { ring: outer[0] ?? [], parts: outer.length, rings: retainHoles ? loops : outer };
 }
 
 /** ✂️ Douglas-Peucker on a closed ring, split at its two farthest points. */
@@ -137,13 +137,13 @@ const costalX = (y: number): number => {
   return COSTAL[COSTAL.length - 1]![1];
 };
 
-function outline(view: View, meshes: SolidMesh[], feature: number, keep?: (x: number, y: number) => boolean): { ring: P[]; parts: number; rings: P[][] } {
+function outline(view: View, meshes: SolidMesh[], feature: number, keep?: (x: number, y: number) => boolean, retainHoles = false): { ring: P[]; parts: number; rings: P[][] } {
   const pts = meshes.flatMap((m) => Array.from({ length: m.world.length / 3 }, (_, i) => projectWorld(view, [m.world[3 * i]!, m.world[3 * i + 1]!, m.world[3 * i + 2]!])));
   const cell = feature / 16;
   const box = { minX: Math.min(...pts.map((p) => p.x)) - 3 * cell, minY: Math.min(...pts.map((p) => p.y)) - 3 * cell, maxX: Math.max(...pts.map((p) => p.x)) + 3 * cell, maxY: Math.max(...pts.map((p) => p.y)) + 3 * cell };
   const mask = meshMask(view, meshes, box, cell);
   if (keep !== undefined) for (let j = 0; j < mask.height; j++) for (let i = 0; i < mask.width; i++) if (!keep(box.minX + (i + 0.5) * cell, box.minY + (j + 0.5) * cell)) mask.cells[j * mask.width + i] = 0;
-  const { ring, parts, rings } = contour(mask);
+  const { ring, parts, rings } = contour(mask,retainHoles);
   const clean = (r: P[]): P[] => simplify(relax(r, 6), feature * 0.2);
   return { ring: clean(ring), parts, rings: rings.filter((r) => r.length * cell * cell > 0 && Math.abs(r.reduce((s, p, i) => s + p[0] * r[(i + 1) % r.length]![1] - r[(i + 1) % r.length]![0] * p[1], 0) / 2) > feature * feature).map(clean) };
 }

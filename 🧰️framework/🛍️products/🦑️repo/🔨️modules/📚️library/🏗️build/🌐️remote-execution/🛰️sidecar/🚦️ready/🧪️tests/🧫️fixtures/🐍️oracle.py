@@ -76,6 +76,18 @@ def human(policy, i):
         return i["legacyProcess"] and i["birthAgeMilliseconds"] < limit
     return i["pidAlive"] and i["now"] - i["record"]["startedMs"] < limit
 
+def workspace_invalidation(fixture, schema, policy, rustup_bridge):
+    results = []
+    for platform in fixture["platforms"]:
+        old = digests(schema, platform, {}, rustup_bridge)
+        for case in fixture["cases"]:
+            files = {} if case["path"] is None else {case["path"]: "a" * 64}
+            current = digests(schema, platform, files, rustup_bridge)
+            changed = [b["name"] for a, b in zip(old["stages"], current["stages"]) if a["digest"] != b["digest"]]
+            decision = decide(policy, dict(current, server=False, done={stage["name"]: stage["digest"] for stage in old["stages"]}, marker=True, repo=True, human=False, lease="free", memoryOk=True, failure=None, now=1))
+            results.append({"changed": changed, "decision": decision})
+    return results
+
 fixture = json.load(open(sys.argv[1], encoding="utf8"))
 schema = json.load(open(sys.argv[2], encoding="utf8"))
 policy = schema["definitions"]["Policy"]["const"]
@@ -89,4 +101,6 @@ out = {
     "decide": [decide(policy, c["input"]) for c in fixture["decide"]],
     "human": [human(policy, c["input"]) for c in fixture["human"]],
 }
+if sys.argv[4:] == ["workspace"]:
+    out = {"workspaceInvalidation": workspace_invalidation(fixture["workspaceInvalidation"], schema, policy, rustup_bridge)}
 print(json.dumps(out, ensure_ascii=False))

@@ -1,0 +1,25 @@
+{
+  "targets": [
+    "app:test"
+  ],
+  "silenceMilliseconds": 120,
+  "lifecycle": {
+    "starts": 1,
+    "aborts": 0,
+    "answers": 1
+  },
+  "interruptions": [
+    {
+      "mode": "cancel",
+      "outcome": "fixture cancelled",
+      "overlap": 2,
+      "remaining": 0
+    },
+    {
+      "mode": "silent",
+      "outcome": "silent",
+      "overlap": 2,
+      "remaining": 0
+    }
+  ]
+}

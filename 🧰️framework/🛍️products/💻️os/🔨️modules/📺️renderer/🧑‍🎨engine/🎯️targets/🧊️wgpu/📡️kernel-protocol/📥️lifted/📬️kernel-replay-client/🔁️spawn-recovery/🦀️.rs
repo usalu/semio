@@ -27,7 +27,7 @@ enum RawSpawnJobClosePhase {
 }
 
 #[derive(Debug)]
-pub(super) struct RawSpawnJobOwner {
+pub struct RawSpawnJobOwner {
     pub job: u64,
     pub(super) kind: Option<String>,
     pub input: Option<Vec<u8>>,
@@ -254,10 +254,10 @@ struct MountedProductReplayRecoverySlot {
     pub(super) owner: Option<MountedProductReplayRecoveryOwner>,
 }
 
-struct MountedProductReplayRecoveryRegistry {
-    pub slots: Box<[MountedProductReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
+pub struct MountedProductReplayRecoveryRegistry {
+    pub(super) slots: Box<[MountedProductReplayRecoverySlot; JOB_PROGRESS_ACTIVE_CAPACITY]>,
     pub(super) abandoned: Box<[Option<MountedProductReplayRecoveryOwner>; JOB_PROGRESS_ACTIVE_CAPACITY]>,
-    pub cursor: usize,
+    pub(super) cursor: usize,
     pub(super) abandoned_cursor: usize,
 }
 

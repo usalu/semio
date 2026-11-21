@@ -31,6 +31,10 @@ pub use dsl_value_bridge::*;
 mod lexer;
 pub use lexer::*;
 
+#[path = "📥️decode/🔢️u32/🦀️.rs"]
+mod u32_array;
+pub use u32_array::{JsonNumberArraySpan, JsonU32ArrayCursor};
+
 #[path = "🧮️parser-and-grammar-cursor/🦀️.rs"]
 mod parser_and_grammar_cursor;
 pub use parser_and_grammar_cursor::*;

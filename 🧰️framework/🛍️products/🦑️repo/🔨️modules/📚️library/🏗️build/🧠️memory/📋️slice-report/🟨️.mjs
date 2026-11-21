@@ -112,26 +112,28 @@ export function sliceReadMovedAtV1(){
 /** 🫀️ Whether this process has made progress within the idle bound of the schema (the heartbeat of a fleet claim asks it). */
 export function sliceReadActiveV1(now=performance.now()){return now-sliceReadMovedAtV1()<STEPS.idleMilliseconds;}
 
-/** 💓️ Tells `emit({phase:"taken",done,total})` every `milliseconds` while the owners source counts more owners decided (taken from the store or the fleet, or inferred) than the last time told: a worker that takes thousands of owners shows work to whoever watches its output, which a worker that says nothing for ten minutes never does. Returns the function that stops it; the timer never keeps the process alive.
+/** 💓️ Tells `emit({phase:"taken",done,total})` every `milliseconds` while the owners source counts more owners decided (taken from the store or the fleet, or inferred) than the last time told. Later passes carry their own progress identity: a worker that takes thousands of owners shows work to whoever watches its output, which a worker that says nothing for ten minutes never does. Returns the function that stops it; the timer never keeps the process alive.
  * @see ./🧬️schema/🔣️.json */
 export function startSliceProgressV1({emit,read=readSliceReportSourceV1,final=readFinalSliceReportSourceV1,milliseconds=P.progressMilliseconds}){
- let told,finished;
+ let told,toldPass,finished;
  const timer=setInterval(()=>{
-  const step=describeSliceReadStepV1(),live=read("owners"),ledger=(live??final("owners"))?.ledger,done=Number(ledger?.done),total=Number(ledger?.total);
-  const valid=Number.isSafeInteger(done)&&Number.isSafeInteger(total)&&total>0,fresh=valid&&(live===undefined?finished!==ledger:done!==told);
+  const step=describeSliceReadStepV1(),live=read("owners"),sample=live??final("owners"),ledger=sample?.ledger,done=Number(ledger?.done),total=Number(ledger?.total);
+  const pass=Number.isSafeInteger(sample?.pass)&&sample.pass>1?sample.pass:1;
+  const valid=Number.isSafeInteger(done)&&Number.isSafeInteger(total)&&total>0,fresh=valid&&(live===undefined?finished!==ledger:done!==told||pass!==toldPass);
   if(step!==undefined&&!(step.id==="owners-round"&&fresh)){
    if(step.id!=="owners-round")told=undefined;
    try{emit({phase:step.phase,done:step.done,total:step.total});}catch{}
    return;
   }
   if(!fresh)return;
+  const suffix=pass>1?` (pass ${pass})`:"";
   if(live===undefined){
    finished=ledger;told=undefined;
-   try{emit({phase:"owners done",done,total});}catch{}
+   try{emit({phase:"owners done"+suffix,done,total});}catch{}
    return;
   }
-  finished=undefined;told=done;
-  try{emit({phase:"taken",done,total});}catch{}
+  finished=undefined;told=done;toldPass=pass;
+  try{emit({phase:"taken"+suffix,done,total});}catch{}
  },milliseconds);
  timer.unref?.();
  return()=>clearInterval(timer);

@@ -182,6 +182,8 @@ def roof_equipment():
 
 SEAT_RUNS = {'l': ((0.95, 3), (4.55, 6)), 'r': ((0.95, 3), (4.55, 2), (7.95, 1))}
 SEAT_PITCH = 0.75
+SEAT_PAN = [(-0.21,-0.018),(-0.19,-0.04),(-0.14,-0.045),(0.14,-0.045),(0.19,-0.035),(0.21,-0.016),(0.21,0.003),(0.197,0.023),(0.16,0.039),(0.07,0.041),(-0.03,0.027),(-0.12,0.023),(-0.18,0.031),(-0.21,0.045)]
+SEAT_BACK = [(-0.027,-0.34),(0.014,-0.34),(0.028,-0.315),(0.034,-0.24),(0.040,-0.16),(0.034,-0.085),(0.016,0.025),(0.010,0.14),(0.017,0.27),(0.015,0.322),(0.005,0.34),(-0.019,0.34),(-0.030,0.321),(-0.030,0.20),(-0.038,0.06),(-0.032,-0.08),(-0.023,-0.19),(-0.032,-0.295)]
 
 
 def interior():
@@ -189,8 +191,11 @@ def interior():
     for tag, side in (('l', 1), ('r', -1)):
         for k, (x, n) in enumerate(SEAT_RUNS[tag]):
             rep = {"count": n, "translation": [SEAT_PITCH, 0, 0]}
-            b.append(box(f'seat-{tag}-{k + 1}', 'body', 'interior-trim', 'detail', 0.35, [0.42, 0.09, 0.84], [x, 0.80, side * 0.78], corner=0.03, repeat=rep))
-            b.append(box(f'seat-back-{tag}-{k + 1}', 'body', 'interior-trim', 'detail', 0.3, [0.06, 0.68, 0.84], [x - 0.24, 1.15, side * 0.78], rot=qz(0.14), corner=0.025, repeat=rep))
+            for suffix, offset in (("", 0.216), ("-aisle", -0.216)):
+                center = side * (0.78 + offset)
+                b.append(ext(f'seat-{tag}-{k + 1}{suffix}', 'body', 'interior-trim', 'detail', 0.35, 'xy', SEAT_PAN, center - 0.204, center + 0.204, at=[x, 0.80, 0], repeat=rep))
+                b.append(ext(f'seat-back-{tag}-{k + 1}{suffix}', 'body', 'interior-trim', 'detail', 0.3, 'xy', SEAT_BACK, center - 0.204, center + 0.204, at=[x - 0.24, 1.15, 0], rot=qz(0.14), repeat=rep))
+            b.append(box(f'seat-carrier-{tag}-{k + 1}', 'body', 'interior-trim', 'detail', 0.3, [0.05, 0.038, 0.76], [x, 0.748, side * 0.78], repeat=rep))
             b.append(box(f'seat-foot-{tag}-{k + 1}', 'body', 'interior-trim', 'detail', 0.3, [0.06, 0.42, 0.06], [x, 0.55, side * 0.48], repeat=rep))
         b.append(cap(f'grab-rail-{tag}', 'body', 'interior-trim', 'detail', 0.3, [0.7, 2.12, side * 0.5], [10.0, 2.12, side * 0.5], 0.016))
         for e, x in (('a', 6.2), ('b', 7.6)):

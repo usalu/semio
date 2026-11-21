@@ -11,7 +11,7 @@ use semio_framework_graph_manifest::{GraphManifest, ManifestValidator, PropertyV
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🧠️ In-memory trinity graph.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct Graph {
     pub name: String,
     pub manifest_id: Option<String>,

@@ -1,0 +1,7 @@
+[
+  {"id":"fresh retry", "mode":"fresh", "failure":"source", "attempts":2, "succeeds":true},
+  {"id":"fresh permanent refusal", "mode":"fresh", "failure":"permanent", "attempts":1, "succeeds":false},
+  {"id":"fresh interruption", "mode":"fresh", "failure":"interrupted", "attempts":1, "succeeds":false},
+  {"id":"fresh path without opt-in", "mode":"ordinary", "failure":"source", "attempts":1, "succeeds":false},
+  {"id":"forwarded path with retry requested", "mode":"forwarded", "failure":"source", "attempts":1, "succeeds":false}
+]

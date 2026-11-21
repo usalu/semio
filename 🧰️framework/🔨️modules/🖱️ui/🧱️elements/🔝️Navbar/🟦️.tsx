@@ -226,7 +226,7 @@ function Navbar({ items, label, className, showFullscreenToggle = true, onFullsc
     />
   );
   return (
-    <nav ref={borderRef} id="ui.navbar" aria-label={label} data-slot="navbar" data-shared-border-frame="" data-shared-border-edges="bottom" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-band-height)]", getLevelZClass("base"), bgClass, className)}>
+    <nav ref={borderRef} id="ui.navbar" aria-label={label} data-slot="navbar" data-shared-border-frame="" data-shared-border-edges="bottom" data-shared-border-hover="declared" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-band-height)]", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </nav>
   );

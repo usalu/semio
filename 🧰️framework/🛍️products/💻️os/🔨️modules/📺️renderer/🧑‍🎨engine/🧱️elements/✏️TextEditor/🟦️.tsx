@@ -588,6 +588,8 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
   const discardSourceLabel = useLabel("ui.host.inputDraftDiscard");
 
   if (!scene) return <div className="semio-text-editor-empty">{emptySceneLabel}</div>;
+  const authoredReadOnly = parseJsonOr<{ readonly readOnly?: unknown } | null>(scene.settingsJson, null)?.readOnly;
+  const readOnly = valueSource?.readOnly ?? (typeof authoredReadOnly === "boolean" ? authoredReadOnly : undefined);
 
   const currentDraft = draftState.surfaceId === draftScope ? draftState : createTextEditorExplicitDraft(draftScope, scene.buffer, publication.revision);
   const draft = explicitDraft ? currentDraft.draft : currentSourceDraft?.text ?? scene.buffer;
@@ -639,7 +641,7 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
   return (
     <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId} data-dirty={explicitDraft && currentDraft.dirty ? "true" : "false"} aria-busy={explicitDraft && pending || undefined}>
       {isClient ? (
-        <WasmEditorSurface scene={displayedScene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={sourceOnAction} onSourceCommit={valueSource ? commitSource : undefined} label={valueSource?.label} readOnly={valueSource?.readOnly} explicitDraft={explicitDraft} explicitDraftDirty={currentDraft.dirty} descriptionId={failure ? statusId : undefined} invalid={Boolean(failure)} onDraftChange={valueSource ? changeSource : changeDraft} requestContextMenu={requestContextMenu} />
+        <WasmEditorSurface scene={displayedScene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={sourceOnAction} onSourceCommit={valueSource ? commitSource : undefined} label={valueSource?.label} readOnly={readOnly} explicitDraft={explicitDraft} explicitDraftDirty={currentDraft.dirty} descriptionId={failure ? statusId : undefined} invalid={Boolean(failure)} onDraftChange={valueSource ? changeSource : changeDraft} requestContextMenu={requestContextMenu} />
       ) : (
         <div className="relative min-h-0 flex-1">
           <HighlightedBuffer buffer={draft} tokens={tokens} />
@@ -651,10 +653,10 @@ export function TextEditorHost({ node, onAction, requestContextMenu }: Component
             value={draft}
             placeholder={scene.language ? languageDocumentLabel : documentPlaceholderLabel}
             aria-label={valueSource?.label ?? (scene.language ? languageDocumentLabel : documentPlaceholderLabel)}
-            readOnly={valueSource?.readOnly}
+            readOnly={readOnly}
             aria-describedby={failure ? statusId : undefined}
             aria-invalid={Boolean(failure) || undefined}
-            onLazyChange={(value) => { if (valueSource) { changeSource(value); void commitSource(value); } else if (explicitDraft) changeDraft(value); else sourceOnAction({ controllerId: node.controllerId, action: textEditorActions.edit, args: { surfaceId: node.surfaceId, text: value } }); }}
+            onLazyChange={(value) => { if (readOnly) return; if (valueSource) { changeSource(value); void commitSource(value); } else if (explicitDraft) changeDraft(value); else sourceOnAction({ controllerId: node.controllerId, action: textEditorActions.edit, args: { surfaceId: node.surfaceId, text: value } }); }}
           />
         </div>
       )}

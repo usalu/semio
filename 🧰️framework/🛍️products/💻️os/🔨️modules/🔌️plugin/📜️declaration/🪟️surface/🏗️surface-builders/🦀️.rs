@@ -1,6 +1,7 @@
 //! 🏗️ Surface builders: the viewer and editor wrappers, their builders with the forwarded builder methods, the snapshot builder and the subset example tables. See [`super`].
 
 use super::*;
+use std::collections::BTreeMap;
 
 /// 🎭️👁️ Marker whose `builder` seeds a `ViewerBuilder` with the surface id/role/dialect already
 /// derived (contract §2.4) — mirrors `App::builder`'s `(id, label) -> AppBuilder` shape but never
@@ -235,19 +236,26 @@ where
 #[path = "../🏗️snapshot-builder/🧪️tests/🦀️.rs"]
 mod snapshot_builder_ownership_tests;
 
-fn subset_example_table() -> &'static std::sync::Mutex<HashMap<Dialect, Vec<ExampleSource>>> {
-    static TABLE: std::sync::OnceLock<std::sync::Mutex<HashMap<Dialect, Vec<ExampleSource>>>> = std::sync::OnceLock::new();
-    TABLE.get_or_init(|| std::sync::Mutex::new(HashMap::new()))
+type SubsetExampleKey = (&'static str, &'static str, &'static str);
+type SubsetExamples = BTreeMap<SubsetExampleKey, Vec<ExampleSource>>;
+
+fn subset_example_key(dialect: &Dialect) -> SubsetExampleKey {
+    (dialect.artifact_kind, dialect.standard.0, dialect.subset.0)
+}
+
+fn subset_example_table() -> &'static std::sync::Mutex<SubsetExamples> {
+    static TABLE: std::sync::OnceLock<std::sync::Mutex<SubsetExamples>> = std::sync::OnceLock::new();
+    TABLE.get_or_init(|| std::sync::Mutex::new(BTreeMap::new()))
 }
 
 pub fn remember_subset_examples(dialect: Dialect, examples: &[ExampleSource]) {
     if examples.is_empty() {
         return;
     }
-    subset_example_table().lock().expect("subset example catalogue").insert(dialect, examples.to_vec());
+    subset_example_table().lock().expect("subset example catalogue").insert(subset_example_key(&dialect), examples.to_vec());
 }
 
 /// 📚️ Examples a subset declaration registered for `dialect`.
 pub(super) fn subset_examples(dialect: &Dialect) -> Vec<ExampleSource> {
-    subset_example_table().lock().expect("subset example catalogue").get(dialect).cloned().unwrap_or_default()
+    subset_example_table().lock().expect("subset example catalogue").get(&subset_example_key(dialect)).cloned().unwrap_or_default()
 }

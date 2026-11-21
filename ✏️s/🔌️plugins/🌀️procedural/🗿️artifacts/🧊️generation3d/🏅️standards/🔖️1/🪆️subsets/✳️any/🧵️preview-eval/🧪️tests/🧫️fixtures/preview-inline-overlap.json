@@ -1,0 +1,134 @@
+{
+  "evaluation": {
+    "relay": {
+      "in": {
+        "shape": {
+          "$schema": "mesh",
+          "preview": "packed-mesh-a",
+          "data": "mesh-a"
+        },
+        "point": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "axis": {
+          "$schema": "vector",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "plane": {
+          "$schema": "plane",
+          "origin": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "normal": {
+            "x": 0,
+            "y": 0,
+            "z": 1
+          }
+        },
+        "annotation": {
+          "$schema": "custom",
+          "x": 801,
+          "y": 802,
+          "z": 803
+        }
+      },
+      "out": {
+        "shape": {
+          "$schema": "mesh",
+          "preview": "packed-mesh-a",
+          "data": "mesh-a"
+        },
+        "different": {
+          "$schema": "mesh",
+          "preview": "packed-mesh-a",
+          "data": "mesh-b"
+        },
+        "point": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "axis": {
+          "$schema": "vector",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "differentAxis": {
+          "$schema": "vector",
+          "x": 1,
+          "y": 2,
+          "z": 4
+        },
+        "plane": {
+          "$schema": "plane",
+          "origin": {
+            "$schema": "point",
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "normal": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 0,
+            "z": 1
+          }
+        },
+        "annotation": {
+          "x": 901,
+          "y": 902,
+          "z": 903
+        },
+        "record": {
+          "$schema": "dictionary",
+          "x": 801,
+          "y": 802,
+          "z": 803,
+          "handle": "solid-metadata",
+          "nested": {
+            "$schema": "custom",
+            "x": 4,
+            "y": 5,
+            "z": 6,
+            "body": {
+              "$schema": "point",
+              "x": 4,
+              "y": 5,
+              "z": 6
+            }
+          }
+        }
+      }
+    }
+  },
+  "widget": "relay",
+  "distinctMeshes": 7,
+  "groups": [
+    [
+      "h:relay@!iaxis",
+      "h:relay@axis"
+    ],
+    [
+      "h:relay@!iplane",
+      "h:relay@plane"
+    ],
+    [
+      "h:relay@!ipoint",
+      "h:relay@point"
+    ],
+    [
+      "h:relay@!ishape",
+      "h:relay@shape"
+    ]
+  ],
+  "instances": 11
+}

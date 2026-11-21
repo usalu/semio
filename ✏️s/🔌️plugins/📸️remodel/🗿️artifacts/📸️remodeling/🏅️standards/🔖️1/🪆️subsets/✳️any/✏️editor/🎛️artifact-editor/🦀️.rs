@@ -139,14 +139,16 @@ impl ArtifactEditor for RemodelingPlayApp {
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(RemodelingRetainedCommandJobFactory::new(&controller))?;
+        registry.register(mesh_export::MeshExportFactory::<EditorApp<Self>>::new(&controller))?;
         registry.register(semio_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<EditorApp<Self>>::new(&controller))
     }
 
     fn build_media_export_job(request: &mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>, output: &mut Option<Box<dyn semio_plugin::ArtifactReservedJob + Send>>, construction:&mut semio_plugin::MediaConstruction,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
-        if request.as_ref().is_some_and(|request| request.port == semio_plugin::native_snapshot_export::SNAPSHOT_PACK_PORT) {
-            return semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<EditorApp<Self>>::admit_original(request, output, construction, cx);
+        match request.as_ref().map(|request| request.port.as_str()) {
+            Some(mesh_export::PORT) => mesh_export::MeshExportJob::<EditorApp<Self>>::admit_original(request, output, construction, cx),
+            Some(semio_plugin::native_snapshot_export::SNAPSHOT_PACK_PORT) | None => semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<EditorApp<Self>>::admit_original(request, output, construction, cx),
+            _ => Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::UnsupportedOwner, "Remodeling media port has no registered resumable producer").into()),
         }
-        Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::UnsupportedOwner, "Remodeling media port has no registered resumable producer").into())
     }
 
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {

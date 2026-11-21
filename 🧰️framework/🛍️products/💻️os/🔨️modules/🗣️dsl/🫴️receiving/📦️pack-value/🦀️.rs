@@ -8,6 +8,9 @@ use semio_os_pack::pack_rt::{renormalize_whole_number_floats,take_received_wire_
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+#[path = "🏷️tagged/🦀️.rs"]
+mod tagged;
+pub use tagged::OriginalTaggedPackValueReceiving;
 
 enum PackOperationTag {
     Format,
@@ -94,7 +97,7 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
   RetainedWorkOutcome{result,work}
  }
  /// 🏷️ Preserves the full source and borrows the specification for an externally tagged wire value.
- pub fn admit_tagged_key(source:&[u8],range:(usize,usize),protocol:&'static str,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
+ fn admit_tagged_key(source:&[u8],range:(usize,usize),protocol:&'static str,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
   let turn=Self::admit(source,range,grant);
   RetainedWorkOutcome{result:turn.result.map(|admission|admission.map(|(mut receiving,progress)|{
    receiving.tagged=Some(TaggedPackOperation{protocol,tag:PackOperationTag::Format});
@@ -113,13 +116,7 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
    },
    1=>{let record=self.record.as_ref().ok_or_else(||ValueError::invariant("original pack value record is absent"))?;if record.is_ready(){metadata::<DslValue>()}else{record.demands(source)?}},
    2=>metadata::<DslValue>(),
-   3=>{
-    let mut quote=pack_value_conversion_quote::<M>(self.value.value.as_ref().ok_or_else(||ValueError::invariant("original pack value is absent"))?);
-    if let Some(kind)=self.tagged.as_ref().and_then(TaggedPackOperation::selected){
-     quote.copy_bytes=quote.copy_bytes.saturating_add(size_of::<(String,DslValue)>()).saturating_add(kind.len());
-    }
-    quote
-   },
+   3=>pack_value_conversion_quote::<M>(self.value.value.as_ref().ok_or_else(||ValueError::invariant("original pack value is absent"))?),
    _=>RetirementDemand{depth:1,..Default::default()},
   };
   demand.depth+=1;
@@ -155,11 +152,7 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
    _=>{
     perform(effect,1)?;
     let value=self.value.value.take().ok_or_else(||ValueError::invariant("original pack value is absent"))?;
-    let prepared=match self.tagged.as_ref().and_then(TaggedPackOperation::selected){
-     Some(kind)=>tagged_value_binary::key_payload(kind,value),
-     None=>renormalize_whole_number_floats(value),
-    };
-    let converted=M::from_value(prepared).map_err(|error|error.with_retained_progress(receipt(demand)))?;
+    let converted=M::from_value(renormalize_whole_number_floats(value)).map_err(|error|error.with_retained_progress(receipt(demand)))?;
     *self.output.value=Some(converted);self.phase=4;
     Ok(receipt(demand))
    },
@@ -173,12 +166,27 @@ impl<M:FromValue+RetireOwned> OriginalPackValueReceiving<M>{
   if let Some(record)=&self.record{if !record.terminal_is_empty(){return record.close_demands(body).map(|mut demand|{demand.depth+=1;demand})}}
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
+ fn close_work(&self, body: usize) -> Result<u64, ValueError> {
+  if self.closed { return Ok(0); }
+  if self.closing == 0 { return Ok(1); }
+  if !self.output.terminal_is_empty() { return self.output.close_work_demand(body); }
+  if !self.value.terminal_is_empty() { return self.value.close_work_demand(body); }
+  if let Some(record) = &self.record {
+   return if record.terminal_is_empty() { Ok(1) } else { record.close_work_demand(body) };
+  }
+  Ok(1)
+ }
  fn close(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let grant=effect.grant();let child=grant_child(grant);
   let settle=|effect:&RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,ValueError>|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(OriginalRetirementFailure::from),work:effect.performed_work()});
   if self.closed{return settle(effect,Ok(RetainedCloneStep::Complete(Default::default())))}
   let demand=match self.close_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return settle(effect,Err(error))};
   if !funded(grant,demand){return settle(effect,Ok(RetainedCloneStep::Progress(Default::default())))}
+  match self.close_work(grant.maximum_copy_bytes).and_then(|work| effect.remaining_work_units().map(|remaining| remaining >= work)) {
+   Ok(true) => {}
+   Ok(false) => return settle(effect, Ok(RetainedCloneStep::Progress(Default::default()))),
+   Err(error) => return settle(effect, Err(error)),
+  }
   if self.closing==0{if let Err(error)=perform(effect,1){return settle(effect,Err(error))}self.closing=1;return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
   if !self.output.terminal_is_empty(){return stepped(self.output.close_step(&mut effect.nested(child)))}
   if !self.value.terminal_is_empty(){return stepped(self.value.close_step(&mut effect.nested(child)))}
@@ -207,6 +215,7 @@ impl<M:FromValue+RetireOwned+OpBinaryReceiving<DomainFailure=ValueError,Receivin
   *recipient=self.output.value.take();RetainedWorkOutcome{result:Ok(receipt(demand)),work:1}
  }
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_work(body)}
  fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close(effect)}
  fn terminal_is_empty(&self)->bool{self.closed&&self.output.terminal_is_empty()&&self.value.terminal_is_empty()&&self.record.is_none()}
 }
@@ -223,7 +232,7 @@ impl<M:FromValue+RetireOwned> PackValueRetirement<M>{
 }
 impl<M:FromValue+RetireOwned> RetirementCursor for PackValueRetirement<M>{
  semio_framework_value::native_retirement_reply!();
- fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.close_work(body)}
  fn terminal_is_empty(&self)->bool{self.0.closed}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.depth)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.copy_bytes)}
@@ -238,11 +247,13 @@ impl<M:FromValue+RetireOwned> Drop for PackValueRetirement<M>{fn drop(&mut self)
 macro_rules! original_pack_value_operation_receiving{
  ($operation:ty $(, tagged_key = $protocol:expr)?)=>{impl $crate::original_receiving::OpBinaryReceiving for $operation{
   type DomainFailure=$crate::original_receiving::ValueError;
-  type Receiving=$crate::original_receiving::OriginalPackValueReceiving<Self>;
+  type Receiving=$crate::original_pack_value_operation_receiving!(@receiver Self $(, $protocol)?);
   fn admit_receiving(source:&[u8],range:(usize,usize),grant:$crate::original_receiving::RetainedCloneGrant)->$crate::original_receiving::RetainedWorkOutcome<Option<(Self::Receiving,$crate::original_receiving::RetainedCloneProgress)>>{
    $crate::original_pack_value_operation_receiving!(@admit Self::Receiving, source, range, grant $(, $protocol)?)
   }
  }};
+ (@receiver $operation:ty)=>{$crate::original_receiving::OriginalPackValueReceiving<$operation>};
+ (@receiver $operation:ty, $protocol:expr)=>{$crate::original_receiving::OriginalTaggedPackValueReceiving<$operation>};
  (@admit $receiving:ty, $source:expr, $range:expr, $grant:expr)=>{<$receiving>::admit($source,$range,$grant)};
- (@admit $receiving:ty, $source:expr, $range:expr, $grant:expr, $protocol:expr)=>{<$receiving>::admit_tagged_key($source,$range,$protocol,$grant)};
+ (@admit $receiving:ty, $source:expr, $range:expr, $grant:expr, $protocol:expr)=>{<$receiving>::admit($source,$range,$protocol,$grant)};
 }

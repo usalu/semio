@@ -1,3 +1,4 @@
+import { acknowledgeAtomicHubGroup } from "../📦️atomic-hub-group/🟦️.ts";
 import type { ServerFrame } from "@semio-tech/framework-replication";
 import type { DocumentScope } from "../../../../🟦️";
 import { admitRemoteEnvelopes, encodeBackboneMessage } from "../../../../🟦️";
@@ -149,6 +150,10 @@ export async function handleHubFrame(
       return;
     }
     state.frontier = frame.Ack.frontier;
+    if (acknowledgeAtomicHubGroup(state, frame.Ack.batch_id, frame.Ack.stages)) {
+      flushMutationsToHubIfReady(state);
+      return;
+    }
     await handleAck(state, frame.Ack.batch_id, frame.Ack.stages);
     return;
   }

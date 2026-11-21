@@ -233,8 +233,8 @@ pub(super) fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttribu
     let mut out = Vec::new();
     let article = product.id.as_str();
     let subject = subject_product(product);
-    let part = part_label(3);
-    let mut phi = CheckResult::assess(format!("vdi3805.3.phi.{article}"), part.clone(), clause("3", "4.1"), subject.clone(), copy("Standard output at 75/65/20 °C", "Normwärmeleistung bei 75/65/20 °C"))
+    let part = part_label(6);
+    let mut phi = CheckResult::assess(format!("vdi3805.6.phi.{article}"), part.clone(), clause("6", "4.1"), subject.clone(), copy("Standard output at 75/65/20 °C", "Normwärmeleistung bei 75/65/20 °C"))
         .annex(ANNEX)
         .minimum(Quantity::new(QuantityKind::Power, attrs.standard_output_w), Quantity::new(QuantityKind::Power, 1.0));
     if attrs.standard_output_w >= 1.0 {
@@ -246,13 +246,13 @@ pub(super) fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttribu
                 SubjectRef::new(article, product_path(article, "configuration.attributes.standardOutputW"), copy("Standard output", "Normwärmeleistung")),
                 Quantity::new(QuantityKind::Power, attrs.standard_output_w),
                 Quantity::new(QuantityKind::Power, 500.0),
-                copy("Set standardOutputW to the EN 442 / Blatt 3 rated output in watts.", "standardOutputW auf die EN-442-/Blatt-3-Nennleistung in Watt setzen."),
+                copy("Set standardOutputW to the EN 442 / Blatt 6 rated output in watts.", "standardOutputW auf die EN-442-/Blatt-6-Nennleistung in Watt setzen."),
             ));
     }
     out.push(phi.build());
 
     let n_ok = attrs.heat_exponent_n >= RADIATOR_N_MIN && attrs.heat_exponent_n <= RADIATOR_N_MAX;
-    let mut n = CheckResult::assess(format!("vdi3805.3.n.{article}"), part.clone(), clause("3", "4.2"), subject.clone(), copy("Heat exponent n", "Heizexponent n"))
+    let mut n = CheckResult::assess(format!("vdi3805.6.n.{article}"), part.clone(), clause("6", "4.2"), subject.clone(), copy("Heat exponent n", "Heizexponent n"))
         .annex(ANNEX)
         .utilization(
             Quantity::new(QuantityKind::Dimensionless, attrs.heat_exponent_n),
@@ -264,7 +264,7 @@ pub(super) fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttribu
     } else {
         let required = attrs.heat_exponent_n.clamp(RADIATOR_N_MIN, RADIATOR_N_MAX);
         n = n
-            .explanation(copy(format!("n = {:.3} outside Blatt 3 range.", attrs.heat_exponent_n), format!("n = {:.3} außerhalb des Blatt-3-Bereichs.", attrs.heat_exponent_n)))
+            .explanation(copy(format!("n = {:.3} outside Blatt 6 range.", attrs.heat_exponent_n), format!("n = {:.3} außerhalb des Blatt-6-Bereichs.", attrs.heat_exponent_n)))
             .remedy(Remedy::exactly(
                 SubjectRef::new(article, product_path(article, "configuration.attributes.heatExponentN"), copy("Heat exponent", "Heizexponent")),
                 Quantity::new(QuantityKind::Dimensionless, attrs.heat_exponent_n),
@@ -280,9 +280,9 @@ pub(super) fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttribu
         ("depthM", "Radiator depth", "Heizkörpertiefe", attrs.depth_m, 0.02),
     ] {
         let mut dim = CheckResult::assess(
-            format!("vdi3805.3.{leaf}.{article}"),
-            part_label(3),
-            clause("3", "4.3"),
+            format!("vdi3805.6.{leaf}.{article}"),
+            part_label(6),
+            clause("6", "4.3"),
             subject.clone(),
             copy(en, de),
         )
@@ -305,7 +305,7 @@ pub(super) fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttribu
     let ct = attrs.connection_type.as_str();
     let ct_ord = CONNECTION_TYPE_CODES.iter().position(|c| *c == ct).map(|i| (i + 1) as f64).unwrap_or(0.0);
     let ct_ok = ct_ord > 0.0;
-    let mut ct_check = CheckResult::assess(format!("vdi3805.3.connectionType.{article}"), part_label(3), clause("3", "4.4"), subject.clone(), copy("Connection type", "Anschlussart"))
+    let mut ct_check = CheckResult::assess(format!("vdi3805.6.connectionType.{article}"), part_label(6), clause("6", "4.4"), subject.clone(), copy("Connection type", "Anschlussart"))
         .annex(ANNEX)
         .minimum(Quantity::new(QuantityKind::Dimensionless, ct_ord), Quantity::new(QuantityKind::Dimensionless, 1.0))
         .status(if ct_ok { CheckStatus::Pass } else { CheckStatus::Fail });
@@ -328,8 +328,8 @@ pub(super) fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct,
     let mut out = Vec::new();
     let article = product.id.as_str();
     let subject = subject_product(product);
-    let part = part_label(5);
-    let mut flow = CheckResult::assess(format!("vdi3805.5.q.{article}"), part.clone(), clause("5", "4.1"), subject.clone(), copy("Nominal volume flow", "Nennvolumenstrom"))
+    let part = part_label(4);
+    let mut flow = CheckResult::assess(format!("vdi3805.4.q.{article}"), part.clone(), clause("4", "4.1"), subject.clone(), copy("Nominal volume flow", "Nennvolumenstrom"))
         .annex(ANNEX)
         .minimum(Quantity::new(QuantityKind::Volume, attrs.nominal_flow_m3_s), Quantity::new(QuantityKind::Volume, 1e-6));
     if attrs.nominal_flow_m3_s >= 1e-6 {
@@ -347,7 +347,7 @@ pub(super) fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct,
     out.push(flow.build());
 
     let eta_ok = attrs.hydraulic_efficiency > 0.0 && attrs.hydraulic_efficiency <= 1.0;
-    let mut eta = CheckResult::assess(format!("vdi3805.5.eta.{article}"), part.clone(), clause("5", "4.2"), subject.clone(), copy("Hydraulic efficiency", "Hydraulischer Wirkungsgrad"))
+    let mut eta = CheckResult::assess(format!("vdi3805.4.eta.{article}"), part.clone(), clause("4", "4.2"), subject.clone(), copy("Hydraulic efficiency", "Hydraulischer Wirkungsgrad"))
         .annex(ANNEX)
         .minimum(Quantity::new(QuantityKind::Dimensionless, attrs.hydraulic_efficiency), Quantity::new(QuantityKind::Dimensionless, 1.0))
         .status(if eta_ok { CheckStatus::Pass } else { CheckStatus::Fail });
@@ -372,9 +372,9 @@ pub(super) fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct,
         ("motorPowerW", "Motor power", "Motorleistung", attrs.motor_power_w, 10.0, QuantityKind::Power),
     ] {
         let mut c = CheckResult::assess(
-            format!("vdi3805.5.{leaf}.{article}"),
+            format!("vdi3805.4.{leaf}.{article}"),
             part.clone(),
-            clause("5", "4.3"),
+            clause("4", "4.3"),
             subject.clone(),
             copy(en, de),
         )
@@ -396,7 +396,7 @@ pub(super) fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct,
     }
 
     let qh_ref = attrs.qh_curve_ref.clone().or_else(|| product.configuration.function_refs.first().cloned());
-    let mut qhref = CheckResult::assess(format!("vdi3805.5.qhCurveRef.{article}"), part.clone(), clause("5", "5.1"), subject.clone(), copy("Q-H curve reference", "Q-H-Kennlinienreferenz"))
+    let mut qhref = CheckResult::assess(format!("vdi3805.4.qhCurveRef.{article}"), part.clone(), clause("4", "5.1"), subject.clone(), copy("Q-H curve reference", "Q-H-Kennlinienreferenz"))
         .annex(ANNEX);
     match qh_ref.as_deref() {
         Some(curve_id) if document.curves.contains_key(curve_id) => {
@@ -433,7 +433,7 @@ pub(super) fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct,
         if let Some(curve) = document.curves.get(curve_id) {
             let mono = curve.points.windows(2).all(|w| w[1].x >= w[0].x && w[1].y <= w[0].y);
             let rising = curve.points.windows(2).filter(|w| w[1].y > w[0].y + 1e-12).count() as f64;
-            let mut c = CheckResult::assess(format!("vdi3805.5.qh.{article}"), part.clone(), clause("5", "5.1"), subject.clone(), copy("Q-H curve shape", "Q-H-Kennlinie"))
+            let mut c = CheckResult::assess(format!("vdi3805.4.qh.{article}"), part.clone(), clause("4", "5.1"), subject.clone(), copy("Q-H curve shape", "Q-H-Kennlinie"))
                 .annex(ANNEX)
                 .minimum(Quantity::new(QuantityKind::Dimensionless, if mono { 0.0 } else { rising }), Quantity::new(QuantityKind::Dimensionless, 0.0))
                 .status(if mono { CheckStatus::Pass } else { CheckStatus::Fail });
@@ -465,9 +465,9 @@ pub(super) fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct,
             let factor_ok = curve.x_unit.si_factor > 0.0 && curve.y_unit.si_factor > 0.0;
             let units_ok = x_symbol_ok && y_symbol_ok && delta_ok && factor_ok;
             let mut u = CheckResult::assess(
-                format!("vdi3805.5.qh.units.{article}.{curve_id}"),
+                format!("vdi3805.4.qh.units.{article}.{curve_id}"),
                 part.clone(),
-                clause("5", "5.1"),
+                clause("4", "5.1"),
                 subject.clone(),
                 copy("Q-H curve units", "Q-H-Kennlinieneinheiten"),
             )
@@ -498,9 +498,9 @@ pub(super) fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct,
             out.push(u.build());
             for (axis, pt) in curve.points.iter().enumerate() {
                 let mut pb = CheckResult::assess(
-                    format!("vdi3805.5.qh.point.{article}.{curve_id}.{axis}"),
+                    format!("vdi3805.4.qh.point.{article}.{curve_id}.{axis}"),
                     part.clone(),
-                    clause("5", "5.1"),
+                    clause("4", "5.1"),
                     subject.clone(),
                     copy("Q-H curve point", "Q-H-Kennlinienpunkt"),
                 )

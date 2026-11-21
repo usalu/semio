@@ -114,7 +114,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -160,7 +160,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -462,7 +462,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -1766,7 +1800,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -1811,7 +1845,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": false,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   }
@@ -1856,7 +1890,7 @@
                     },
                     "idempotency": "none",
                     "expectedRevision": true,
-                    "cancellable": false,
+                    "cancellable": true,
                     "class": "interactive",
                     "interactiveJob": "migrated"
                   },
@@ -2158,7 +2192,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -3708,7 +3776,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -4992,7 +5094,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5120,7 +5222,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5172,18 +5274,18 @@
                 "id": "resultsWindowId",
                 "label": {
                   "native": {
-                    "en": "Results window",
-                    "de": "Ergebnisfenster"
+                    "en": "Results window ID",
+                    "de": "Ergebnisfenster-ID"
                   },
                   "reuse": {
-                    "en": "Results window",
-                    "de": "Ergebnisfenster"
+                    "en": "Results window ID",
+                    "de": "Ergebnisfenster-ID"
                   }
                 },
                 "schema": {
                   "kind": "string"
                 },
-                "required": true
+                "required": false
               }
             ],
             "inPalette": true,
@@ -5210,7 +5312,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5368,18 +5470,18 @@
                 "id": "resultsWindowId",
                 "label": {
                   "native": {
-                    "en": "Results window",
-                    "de": "Ergebnisfenster"
+                    "en": "Results window ID",
+                    "de": "Ergebnisfenster-ID"
                   },
                   "reuse": {
-                    "en": "Results window",
-                    "de": "Ergebnisfenster"
+                    "en": "Results window ID",
+                    "de": "Ergebnisfenster-ID"
                   }
                 },
                 "schema": {
                   "kind": "string"
                 },
-                "required": true
+                "required": false
               }
             ],
             "inPalette": true,
@@ -5406,7 +5508,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5494,7 +5596,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -5548,7 +5650,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -8100,6 +8202,42 @@
             },
             "iconId": "rotate-cw",
             "run": {
+              "receiving": {
+                "tick": {
+                  "maximumFileBytes": 262144,
+                  "maximumSegmentBytes": 262144,
+                  "maximumSymbols": 4096,
+                  "maximumDepth": 64,
+                  "maximumItems": 262144,
+                  "maximumTotalAllocationBytes": 16777216,
+                  "maximumSymbolUtf8Bytes": 262144,
+                  "maximumSymbolScalars": 262144,
+                  "maximumCursorAllocationBytes": 4194304
+                },
+                "recordBody": {
+                  "maximumFileBytes": 1048576,
+                  "maximumSegmentBytes": 1048576,
+                  "maximumSymbols": 16384,
+                  "maximumDepth": 64,
+                  "maximumItems": 1048576,
+                  "maximumTotalAllocationBytes": 67108864,
+                  "maximumSymbolUtf8Bytes": 1048576,
+                  "maximumSymbolScalars": 1048576,
+                  "maximumCursorAllocationBytes": 16777216
+                },
+                "history": {
+                  "fileBytes": 67108864,
+                  "frameBodyBytes": 1048576,
+                  "records": 8192,
+                  "maximumFields": 128,
+                  "maximumTextBytes": 1048576,
+                  "maximumBinaryBytes": 1048576,
+                  "maximumJsonBytes": 1048576,
+                  "maximumJsonAllocationBytes": 8388608,
+                  "maximumJsonItems": 65536,
+                  "maximumJsonDepth": 64
+                }
+              },
               "mutating": true,
               "rebase": "restart",
               "reconfigure": "resume",
@@ -8644,12 +8782,12 @@
             "code": "trinity.jack.content-dialect",
             "label": {
               "native": {
-                "en": "The component graph of this Jack document is not a Semio graph.",
-                "de": "Der Bauteilgraph dieses Jack-Dokuments ist kein Semio-Graph."
+                "en": "The component graph of this Jack document is not supported by its graph composition.",
+                "de": "Der Bauteilgraph dieses Jack-Dokuments ist wird von seiner Graph-Komposition nicht unterstützt."
               },
               "reuse": {
-                "en": "The component graph of this Jack document is not a Semio graph.",
-                "de": "Der Bauteilgraph dieses Jack-Dokuments ist kein Semio-Graph."
+                "en": "The component graph of this Jack document is not supported by its graph composition.",
+                "de": "Der Bauteilgraph dieses Jack-Dokuments ist wird von seiner Graph-Komposition nicht unterstützt."
               }
             }
           },
@@ -9796,7 +9934,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -10685,7 +10857,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -11574,7 +11780,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -12463,7 +12703,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -13352,7 +13626,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -14239,7 +14547,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -14958,7 +15300,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15013,7 +15355,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15101,7 +15443,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15191,7 +15533,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15333,7 +15675,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15388,7 +15730,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15452,7 +15794,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15525,7 +15867,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15581,7 +15923,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15627,7 +15969,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15683,7 +16025,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": false,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -15811,7 +16153,7 @@
                 },
                 "idempotency": "none",
                 "expectedRevision": true,
-                "cancellable": false,
+                "cancellable": true,
                 "class": "interactive",
                 "interactiveJob": "migrated"
               },
@@ -18562,6 +18904,27 @@
               "kindId": "graph.trinity",
               "required": false,
               "multiplicity": "many"
+            },
+            {
+              "id": "rule:out",
+              "label": {
+                "native": {
+                  "en": "Rewrite rule",
+                  "de": "Umschreibregel"
+                },
+                "reuse": {
+                  "en": "Rewrite rule",
+                  "de": "Umschreibregel"
+                }
+              },
+              "direction": "out",
+              "mediaType": {
+                "class": "computation",
+                "form": "value"
+              },
+              "kindId": "trinity.rewrite.invocation",
+              "required": false,
+              "multiplicity": "many"
             }
           ],
           "exportFormats": [],
@@ -19445,7 +19808,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio trinity.jack.dsl v1\nschema=trinity.graph name=\"Nakagin Capsule Tower\" manifest-id=nakagin root-node-id=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\" query=\"MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label\" camera={\n  x=0.0 y=0.0 zoom=1.0\n}\nnodes=[ {\n  height=48.0 id=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\" kind=\"Piece\" name=\"b\" ports=[ {\n    direction=\"out\" id=\"c5465220-19ba-4443-8f1d-617c832dd13c\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"d25a91ed-b124-4e5b-8e7e-af832541c953\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"tower-core\" position={\n      x=0.0 y=0.0 z=0.0\n    }\n    tier=0.0\n  }\n  width=96.0 x=0.0 y=0.0\n}\n {\n  height=40.0 id=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952\" kind=\"Piece\" name=\"t_f0_b_c0\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor0-left\" position={\n      x=-1.2 y=1.2 z=0.0\n    }\n    tier=0.0\n  }\n  width=88.0 x=-140.0 y=80.0\n}\n {\n  height=40.0 id=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd\" kind=\"Piece\" name=\"t_f0_b_c1\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"f1a2b3c4-d5e6-7890-abcd-ef1234567890\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor0-right\" position={\n      x=1.2 y=1.2 z=0.0\n    }\n    tier=0.0\n  }\n  width=88.0 x=140.0 y=80.0\n}\n {\n  height=40.0 id=\"596f3f60-b634-467b-8acc-7d5b649ae0d1\" kind=\"Piece\" name=\"t_f1_b_c0\" ports=[ {\n    direction=\"in\" id=\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor1-shaft\" position={\n      x=-1.2 y=2.4 z=0.0\n    }\n    tier=1.0\n  }\n  width=88.0 x=-140.0 y=180.0\n}\n {\n  height=40.0 id=\"f2edea5c-960e-46bd-932d-aae5ecad72d8\" kind=\"Piece\" name=\"t_f8_b_c0\" ports=[ {\n    direction=\"in\" id=\"e0fb5d49-9286-4a6d-88b0-043f389c6898\" kind=\"Connector\" properties={\n    }\n  }\n {\n    direction=\"out\" id=\"c5465220-19ba-4443-8f1d-617c832dd13c\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"floor8-shaft\" position={\n      x=-1.2 y=9.6 z=0.0\n    }\n    tier=8.0\n  }\n  width=88.0 x=-140.0 y=280.0\n}\n {\n  height=44.0 id=\"6947a41b-8c6d-4291-bdd8-96cd535c78fc\" kind=\"Piece\" name=\"ci_t_f8_b_c0\" ports=[ {\n    direction=\"in\" id=\"4ba51a88-2a7f-4b78-b119-0f02eacdb702\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"capsule-instance\" position={\n      x=-1.2 y=11.2 z=0.0\n    }\n    tier=8.0\n  }\n  width=96.0 x=-140.0 y=380.0\n}\n {\n  height=40.0 id=\"a8f3e2d1-4b5c-6d7e-8f90-a1b2c3d4e5f6\" kind=\"Piece\" name=\"jack_orphan\" ports=[ {\n    direction=\"in\" id=\"d4e5f6a7-b8c9-0123-def4-567890abcdef\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-orphan\" tier=0.0\n  }\n  width=88.0 x=300.0 y=200.0\n}\n {\n  height=40.0 id=\"b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7\" kind=\"Piece\" name=\"jack_prune\" ports=[ {\n    direction=\"in\" id=\"e5f6a7b8-c9d0-1234-ef56-7890abcdef01\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-prune\" tier=0.0\n  }\n  width=88.0 x=300.0 y=80.0\n}\n {\n  height=40.0 id=\"caf5e4d3-6d7e-8f90-a1b2-c3d4e5f6a7b8\" kind=\"Piece\" name=\"jack_spare\" ports=[ {\n    direction=\"out\" id=\"f6a7b8c9-d0e1-2345-f678-90abcdef0123\" kind=\"Connector\" properties={\n    }\n  }\n  ] properties={\n    label=\"jack-spare\" tier=0.0\n  }\n  width=88.0 x=300.0 y=300.0\n}\n] edges=[ {\n  id=\"cc0d14f5-11b2-4258-ac52-287d0d46b23b\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=270.0 shift=0.0 tilt=0.0 turn=0.0 u=-1.2 v=1.2\n  }\n  source=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@c5465220-19ba-4443-8f1d-617c832dd13c\" target=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"8684b51c-94f5-4a50-be16-526ac8e0892a\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=90.0 shift=0.0 tilt=0.0 turn=0.0 u=1.2 v=1.2\n  }\n  source=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@d25a91ed-b124-4e5b-8e7e-af832541c953\" target=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"e-shaft-1\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=1.2\n  }\n  source=\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@e0fb5d49-9286-4a6d-88b0-043f389c6898\" target=\"596f3f60-b634-467b-8acc-7d5b649ae0d1@7be6cfda-db1b-47e4-bcea-cd011e516e2e\"\n}\n {\n  id=\"e-shaft-8\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=7.2\n  }\n  source=\"596f3f60-b634-467b-8acc-7d5b649ae0d1@e0fb5d49-9286-4a6d-88b0-043f389c6898\" target=\"f2edea5c-960e-46bd-932d-aae5ecad72d8@e0fb5d49-9286-4a6d-88b0-043f389c6898\"\n}\n {\n  id=\"fdae9f64-398f-45ad-8496-453e72c31512\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=90.0 shift=0.0 tilt=0.0 turn=0.0 u=0.0 v=1.6\n  }\n  source=\"f2edea5c-960e-46bd-932d-aae5ecad72d8@c5465220-19ba-4443-8f1d-617c832dd13c\" target=\"6947a41b-8c6d-4291-bdd8-96cd535c78fc@4ba51a88-2a7f-4b78-b119-0f02eacdb702\"\n}\n {\n  id=\"e-jack-prune\" kind=\"Connection\" properties={\n    gap=0.0 rise=0.0 rotation=0.0 shift=0.0 tilt=0.0 turn=0.0 u=1.2 v=0.0\n  }\n  source=\"17d5dec8-87b2-44a9-84ff-93b7e7419bdd@f1a2b3c4-d5e6-7890-abcd-ef1234567890\" target=\"b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7@e5f6a7b8-c9d0-1234-ef56-7890abcdef01\"\n}\n]\n",
+        "artifactJson": "",
         "dialect": {
           "artifactKind": "s.trinity.jack",
           "standard": "1",
@@ -19465,7 +19828,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio trinity.rewriting.dsl v1\nbefore-document-json=\"{\\n  \\\"schema\\\": \\\"trinity.graph\\\",\\n  \\\"name\\\": \\\"Nakagin Capsule Tower — Ground Floor\\\",\\n  \\\"manifestId\\\": \\\"nakagin\\\",\\n  \\\"camera\\\": { \\\"x\\\": 0.0, \\\"y\\\": 0.0, \\\"zoom\\\": 1.0 },\\n  \\\"nodes\\\": [\\n    {\\n      \\\"id\\\": \\\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\\\",\\n      \\\"kind\\\": \\\"Piece\\\",\\n      \\\"name\\\": \\\"b\\\",\\n      \\\"x\\\": 0.0,\\n      \\\"y\\\": 0.0,\\n      \\\"width\\\": 96.0,\\n      \\\"height\\\": 48.0,\\n      \\\"properties\\\": { \\\"label\\\": \\\"tower-core\\\", \\\"position\\\": { \\\"x\\\": 0.0, \\\"y\\\": 0.0, \\\"z\\\": 0.0 }, \\\"tier\\\": 0.0 },\\n      \\\"ports\\\": [\\n        { \\\"id\\\": \\\"c5465220-19ba-4443-8f1d-617c832dd13c\\\", \\\"kind\\\": \\\"Connector\\\", \\\"direction\\\": \\\"out\\\", \\\"properties\\\": {} }\\n      ]\\n    },\\n    {\\n      \\\"id\\\": \\\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952\\\",\\n      \\\"kind\\\": \\\"Piece\\\",\\n      \\\"name\\\": \\\"t_f0_b_c0\\\",\\n      \\\"x\\\": -140.0,\\n      \\\"y\\\": 80.0,\\n      \\\"width\\\": 88.0,\\n      \\\"height\\\": 40.0,\\n      \\\"properties\\\": { \\\"label\\\": \\\"floor0-left\\\", \\\"position\\\": { \\\"x\\\": -1.2, \\\"y\\\": 1.2, \\\"z\\\": 0.0 }, \\\"tier\\\": 0.0 },\\n      \\\"ports\\\": [\\n        { \\\"id\\\": \\\"7be6cfda-db1b-47e4-bcea-cd011e516e2e\\\", \\\"kind\\\": \\\"Connector\\\", \\\"direction\\\": \\\"in\\\", \\\"properties\\\": {} }\\n      ]\\n    }\\n  ],\\n  \\\"edges\\\": [\\n    {\\n      \\\"id\\\": \\\"cc0d14f5-11b2-4258-ac52-287d0d46b23b\\\",\\n      \\\"kind\\\": \\\"Connection\\\",\\n      \\\"source\\\": \\\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1@c5465220-19ba-4443-8f1d-617c832dd13c\\\",\\n      \\\"target\\\": \\\"5f0266bc-856b-4ef2-9eb0-16ef5e1fb952@7be6cfda-db1b-47e4-bcea-cd011e516e2e\\\",\\n      \\\"properties\\\": { \\\"gap\\\": 0.0, \\\"rise\\\": 0.0, \\\"rotation\\\": 270.0, \\\"shift\\\": 0.0, \\\"tilt\\\": 0.0, \\\"turn\\\": 0.0, \\\"u\\\": -1.2, \\\"v\\\": 1.2 }\\n    }\\n  ],\\n  \\\"rootNodeId\\\": \\\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\\\"\\n}\" lhs-json=\"{\\n  \\\"pattern\\\": {\\n    \\\"leftVar\\\": \\\"a\\\",\\n    \\\"leftKind\\\": \\\"Piece\\\",\\n    \\\"edgeVar\\\": \\\"r\\\",\\n    \\\"edgeKind\\\": \\\"Connection\\\",\\n    \\\"rightVar\\\": \\\"b\\\",\\n    \\\"rightKind\\\": \\\"Piece\\\"\\n  },\\n  \\\"whereClause\\\": \\\"a.name = 'b'\\\"\\n}\" parameter-bindings={\n  label=\"nakagin-core\"\n}\nrule-layout={\n  a=x=0 y=0 b=x=-140 y=80\n}\nrhs-json=```json\n{\n  \"create\": [],\n  \"delete\": [],\n  \"set\": [{ \"var\": \"a\", \"prop\": \"label\", \"value\": \"$label\" }],\n  \"merge\": [],\n  \"parameters\": [{ \"name\": \"label\", \"kind\": \"string\", \"default\": \"nakagin-core\" }]\n}\n```\n",
+        "artifactJson": "semio trinity.rewriting.dsl v1\nworking-graph=schema=\"trinity.graph\" name=\"Nakagin Capsule Tower — Ground Floor\" manifest-id=\"nakagin\" manifest=node-kinds=[] edge-kinds=[] port-kinds=[] camera=x=0 y=0 zoom=1 content=child_id=\"nakagin-jack-demo-content\" target=artifact-id=\"nakagin-jack-demo-content\" artifact-kind=\"s.stdio.semio\" standard=\"v1\" subset=\"graph\" root-node-id=\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\" query=\"\"\nlhs=pattern=left-var=\"a\" left-kind=\"Piece\" edge-var=\"r\" edge-kind=\"Connection\" right-var=\"b\" right-kind=\"Piece\" where-clause=\"a.name = 'b'\"\nrhs=create=[] delete=[] set=[{var=\"a\" prop=\"label\" value=\"$label\"}] merge=[] parameters=[{name=\"label\" kind=string default=\"nakagin-core\"}]\nparameter-bindings={label=\"nakagin-core\"}\nrule-layout={a={x=0 y=0} b={x=-140 y=80}}\n",
         "dialect": {
           "artifactKind": "s.trinity.rewriting",
           "standard": "1",
@@ -19492,7 +19855,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "graph.trinity"
+        "kind": "s.trinity.jack"
       }
     },
     {
@@ -19725,6 +20088,71 @@
         "bodyKey": "framework.body.history",
         "children": []
       }
+    ],
+    "ioEntries": [
+      {
+        "owner": {
+          "artifactKind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "framework.io.text",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "export"
+      }
     ]
-  }
+  },
+  "assets": [
+    {
+      "name": "📚️examples/s.trinity.jack.1.-/demo.query.json",
+      "mediaType": {
+        "class": "graph",
+        "form": "trinity"
+      },
+      "sizeBytes": 8603,
+      "sha256": "6005a4bc1fd7a964744270a1ea7cabc1564440e035d32e4a0ced89f230a2afe0"
+    }
+  ]
 }

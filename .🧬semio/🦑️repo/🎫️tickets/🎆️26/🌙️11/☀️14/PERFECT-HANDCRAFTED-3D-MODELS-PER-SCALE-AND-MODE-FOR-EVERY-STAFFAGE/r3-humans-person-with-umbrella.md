@@ -83,3 +83,75 @@ Final check line (`volumes-check.ts humans/person-with-umbrella --product`): `FA
 - Canopy cloth is as thick as the feature (7.6 / 15 / 30 / 75 mm), not 0.3 mm (no thin role for membranes).
 - Grades as I see them: 1:50 body A- (face is schematic, trousers straight tubes), 1:100 A-, 1:200 B+, 1:500 B+ (hands are mitts at the 75 mm floor). Structure A- / B+. Thermal A-.
 - `provenance.notes` and `author` unchanged.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-person-with-umbrella-*.ts|py|sh` (the round-3 chain carried over under the r5 prefix and remodelled; `-run.sh` builds roots, volumes, 2D and the candidate and, with `--commit`, writes the catalog and splices), `r5-person-measure.ts`, `r5-person-sheets.sh`, `r5-person-ship.sh` (shared with person-with-white-cane). Output under `🗑️generated/r5-person-with-umbrella/` (`measure.md`, `check.log`).
+
+### Reference (woman, 1.70 m barefoot, 70 kg; 22 mm shoe sole and heel; belted raincoat; stick umbrella)
+
+| quantity | reference | source |
+| --- | --- | --- |
+| stature shod | H + 22 mm = 1.722 m | DIN 33402-2 |
+| hip / knee / ankle joint | 0.53 / 0.285 / 0.039 H (+ sole) | Winter 2009 table 4.1 |
+| shoulder joint / elbow / wrist | 0.818 / 0.63 / 0.485 H (+ sole) | Winter 2009 |
+| thigh / shank / upper arm / forearm / hand | 0.245 / 0.246 / 0.186 / 0.146 / 0.108 H | Winter 2009; de Leva 1996 |
+| head chin-vertex | H / 7.5 | brief; Neufert |
+| biacromial / bideltoid | 0.23 H / 0.265 H skin + 20 mm coat each side | ISO 7250-1; ANSUR II female |
+| hip breadth / chest depth | 0.215 H / 0.15 H, + 20 mm coat | DIN 33402-2 women |
+| thigh breadth | 0.092 H + 10 mm trousers | ISO 7250 |
+| straight trousers | leg depth at the calf about 0.13 m, hem opening 19 cm flat (oval about 0.11 m wide) | women's straight-leg trouser grading |
+| shoe | foot 0.152 H + 18 mm = 0.276 m (EU 40 to 41 women's derby), width 0.055 H + 8 mm | Winter 2009; shoe size tables |
+| relaxed hanging hand reach | 0.95 x 0.108 H | Napier, Hands; Winter 2009 |
+| stick umbrella | 8 ribs 0.56 m, span 1.03 m, stretchers, runner, crook r 35 mm, 10 mm shaft | round 3 table (Fox, Swaine Adeney Brigg style) |
+
+### Model against reference (default pose `umbrella-up-still`, 1:50)
+
+| quantity | model m | reference m | deviation |
+| --- | --- | --- | --- |
+| stature shod | 1.728 | 1.722 | 0.4 % |
+| hip / knee / ankle joint height | 0.925 / 0.504 / 0.086 | 0.923 / 0.506 / 0.088 | 0.2 / -0.4 / -2.6 % |
+| shoulder / elbow / wrist height | 1.411 / 1.095 / 0.851 | 1.413 / 1.093 / 0.847 | -0.1 / 0.2 / 0.6 % |
+| thigh / shank / upper arm / forearm | 0.420 / 0.418 / 0.316 / 0.248 | 0.416 / 0.418 / 0.316 / 0.248 | 0.9 / 0.1 / -0.1 / -0.1 % |
+| head chin-vertex | 0.228 | 0.227 | 0.5 % |
+| hand of the rig / relaxed hand reach | 0.184 / 0.175 | 0.184 / 0.174 | 0.2 / 0.6 % |
+| bideltoid (coat) / biacromial | 0.477 / 0.390 | 0.490 / 0.391 | -2.8 / -0.3 % |
+| hip breadth (coat) / chest depth (coat) | 0.404 / 0.299 | 0.405 / 0.295 | -0.4 / 1.4 % |
+| shoe length / width | 0.276 / 0.102 | 0.276 / 0.102 | -0.2 / 0.2 % |
+| thigh breadth / trouser depth at calf / hem width | 0.162 / 0.128 / 0.107 | 0.166 / 0.130 / 0.110 | -2.7 / -1.5 / -2.3 % |
+| neck breadth | 0.110 | 0.111 | -0.7 % |
+
+Every 1:50 value is within 3 %. Coarser scales (`measure.md`): joint heights and bone lengths identical; widths within 4.2 % at 1:100 and 1:200 (bideltoid of the fewer-section sleeves), within one 75 mm feature at 1:500.
+
+### Grades (my own look, strict)
+
+| scale | body before -> after | thermal before -> after | structure before -> after |
+| --- | --- | --- | --- |
+| 1:50 | B+ (coat a cylinder with a belt ring standing 13 mm off it, no waist; men's 0.297 m shoes on a 1.70 m woman; clawed hanging hand 17 % short; thighs 13 % narrow) -> A | A- -> A | A- -> A |
+| 1:100 | B+ -> A | A- -> A | A- -> A- |
+| 1:200 | B+ -> A- | A- -> A- | B+ -> B+ |
+| 1:500 | B (hair cap read as a beret, no bun; boxy coat upper overhanging the skirt; narrow shoulders and thighs, thick neck) -> A- | B+ -> A- | B (bar figure at the 75 mm floor) -> B |
+
+### Changes
+
+- Raincoat belted at the waist at 1:50, 1:100, 1:200 and 1:500: waist half-width 0.172 m (was 0.186), blousing above the belt, skirt starting from the waist; the belt sits 5 to 8 mm proud instead of 13 and the buckle moved onto it.
+- Shoes: length 0.297 -> 0.276 m (toe part shortened by a fifth about the ball), width -3 %, at every scale; toe bones of the skeleton follow.
+- Trousers: thighs 4 to 9 mm wider (mid-thigh -13 % -> -2.7 %) at every scale.
+- Hanging left hand: palm to 0.104 m, fingers from the knuckle line at 0.1 m, relaxed (10/22/16 degrees instead of 18/34/22); coarse hands lengthened to the same reach.
+- 1:500: hair pulled back from the forehead with the low bun at the 75 mm floor (no beret), sleeves fuller at the deltoid, a mid-thigh station, slimmer neck, belted waist so the coat upper no longer overhangs the skirt as a box; 1:500 decision text updated (en, de).
+- 2D of every scale redrawn from the new bodies by `r5-person-with-umbrella-draw2d.ts` (no filled multi-subpath shapes left; the 1:500 forearm holes noted in tool-requests are gone).
+
+### Checks
+
+`r3-validate.ts humans/person-with-umbrella`: `VALID ... schema 0, validateAsset 0`. `volumes-check.ts --product`: every rule green at every scale except `volumes-thermal-coverage` `head-skin` 1:50 0.149 / 1:100 0.144 m² against 0.082, and `shoes` 1:50 0.205 against 0.128 (1:100 now within, 0.165). Both are C18/C27 segment shares, listed in `area-review.md` (the head skin under the porous hair counts as outer area).
+
+### Looked at (opened)
+
+Body sheets 1:50, 1:100, 1:500 (six panels, before and after), 1:50 three-quarter close-up (before), 1:500 front alone (after the hair fix), structure 1:50 and 1:500, thermal cut 1:50, clip `close-umbrella` 1.6 s at 1:50. Rendered by `r5-person-sheets.sh` and not all opened one by one: 1:200 sheets, thermal 1:100 to 1:500, structure 1:100 and 1:200, the 2D of every scale, poses `umbrella-tilted-to-wind`, `umbrella-furled`, clip `rain-gust-sway`.
+
+### Open points
+
+- `head-skin` and `shoes` area shares (C27, area reviewer).
+- Furled umbrella: rigid panels on their ribs give a loose 0.2 m fan instead of cloth wrapped round the shaft (as round 3).
+- Back yoke of the coat reads as a plate at the shoulders from behind (it is the storm flap of a trench coat; kept).
+- 1:500 structure stays a bar figure with a thorax mass: members cannot be thinner than 75 mm there.

@@ -19,7 +19,7 @@
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfigMutation;
 use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
-use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::{parse_graph_port_id, snapshot::Generation3dSnapshot, GraphTargetKind};
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, FlowGraphStep};
 use semio_plugin::{ArtifactView, Emit, InteractionWrite};
 use std::collections::BTreeMap;
@@ -39,12 +39,16 @@ pub const HANDLE_GRANULARITY: &str = "handle";
 /// with its first member in READING order rather than whichever id the set happened to hold first;
 /// and an id the document no longer carries is no anchor at all, so the step re-enters the graph
 /// instead of refusing.
-pub(crate) fn anchor_node<'a>(host_snapshot: &'a FlowHostSnapshot, selected: &[String]) -> Option<&'a str> {
+pub(crate) fn anchor_node<'a>(host_snapshot: &'a FlowHostSnapshot, granularity: &str, selected: &[String]) -> Option<&'a str> {
     let order = semio_framework_artifact_flow_flow::keyboard_order(host_snapshot);
     selected
         .iter()
         .filter_map(|id| {
-            let node = id.split_once('@').map_or(id.as_str(), |(node, _)| node);
+            let node = match granularity {
+                NODE_GRANULARITY => id.as_str(),
+                HANDLE_GRANULARITY => parse_graph_port_id(id)?.widget,
+                _ => return None,
+            };
             order.iter().position(|known| *known == node).map(|at| (at, order[at]))
         })
         .min_by_key(|(at, _)| *at)
@@ -55,14 +59,15 @@ pub(crate) fn anchor_node<'a>(host_snapshot: &'a FlowHostSnapshot, selected: &[S
 /// when the step has nowhere to go (a source node asked for its upstream). An empty emit is the
 /// honest answer — a `Replace` naming the node already selected would cost a publication to change
 /// nothing.
-pub(crate) fn step_target<'a>(host_snapshot: &'a FlowHostSnapshot, selected: &[String], step: FlowGraphStep) -> Option<&'a str> {
-    let anchor = anchor_node(host_snapshot, selected);
+pub(crate) fn step_target<'a>(host_snapshot: &'a FlowHostSnapshot, granularity: &str, selected: &[String], step: FlowGraphStep) -> Option<&'a str> {
+    let anchor = anchor_node(host_snapshot, granularity, selected);
     semio_framework_artifact_flow_flow::keyboard_step(host_snapshot, anchor, step).filter(|target| Some(*target) != anchor)
 }
 
-pub(crate) fn step_emit(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String], step: FlowGraphStep) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let Some(target) = step_target(&doc.snapshot.host_snapshot, selected, step) else { return Emit::default() };
-    Emit { interaction_writes: vec![InteractionWrite::replace(GRAPH_DOMAIN, NODE_GRANULARITY, [target.to_string()])], ..Default::default() }
+pub(crate) fn step_emit(doc: &ArtifactView<'_, Generation3dSnapshot>, granularity: &str, selected: &[String], step: FlowGraphStep) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+    let selected = raw_selection(granularity, selected);
+    let Some(target) = step_target(&doc.snapshot.host_snapshot, granularity, &selected, step) else { return Emit::default() };
+    Emit { interaction_writes: vec![InteractionWrite::replace(GRAPH_DOMAIN, NODE_GRANULARITY, [GraphTargetKind::Node.target(target)])], ..Default::default() }
 }
 
 /// ⏎️ Opens the anchor node: replaces the selection with that node's own port handles, in the order
@@ -75,15 +80,21 @@ pub(crate) fn step_emit(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: 
 /// ([`anchor_node`]), so the node closes itself and traversal continues, and `escape` →
 /// `clearSelection` (framework-minted) backs all the way out. A node with no visible port, and a node
 /// already open, both emit nothing.
-pub(crate) fn activate_ports<'a>(host_snapshot: &FlowHostSnapshot, ports_by_node: &'a BTreeMap<String, Vec<String>>, selected: &[String]) -> Option<&'a Vec<String>> {
-    let anchor = anchor_node(host_snapshot, selected)?;
+pub(crate) fn activate_ports<'a>(host_snapshot: &FlowHostSnapshot, ports_by_node: &'a BTreeMap<String, Vec<String>>, granularity: &str, selected: &[String]) -> Option<&'a Vec<String>> {
+    let anchor = anchor_node(host_snapshot, granularity, selected)?;
     let ports = ports_by_node.get(anchor).filter(|ports| !ports.is_empty())?;
     (selected.len() != ports.len() || !selected.iter().all(|id| ports.contains(id))).then_some(ports)
 }
 
-pub(crate) fn activate_emit(doc: &ArtifactView<'_, Generation3dSnapshot>, ports_by_node: &BTreeMap<String, Vec<String>>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-    let Some(ports) = activate_ports(&doc.snapshot.host_snapshot, ports_by_node, selected) else { return Emit::default() };
-    Emit { interaction_writes: vec![InteractionWrite::replace(GRAPH_DOMAIN, HANDLE_GRANULARITY, ports.iter().cloned())], ..Default::default() }
+pub(crate) fn activate_emit(doc: &ArtifactView<'_, Generation3dSnapshot>, ports_by_node: &BTreeMap<String, Vec<String>>, granularity: &str, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+    let selected = raw_selection(granularity, selected);
+    let Some(ports) = activate_ports(&doc.snapshot.host_snapshot, ports_by_node, granularity, &selected) else { return Emit::default() };
+    Emit { interaction_writes: vec![InteractionWrite::replace(GRAPH_DOMAIN, HANDLE_GRANULARITY, ports.iter().map(|id| GraphTargetKind::Handle.target(id)))], ..Default::default() }
+}
+
+fn raw_selection(granularity: &str, ids: &[String]) -> Vec<String> {
+    let Some(kind) = GraphTargetKind::for_granularity(granularity) else { return Vec::new() };
+    ids.iter().filter_map(|id| kind.raw(id).map(str::to_owned)).collect()
 }
 
 /// 🧭️ Declares one keyboard verb: its `dsl` payload and its `app_commands!` `handle` — the macro's
@@ -109,14 +120,14 @@ macro_rules! graph_keyboard_command {
             pub struct $Payload {}
 
             pub fn handle(_payload: &$Payload, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-                Ok(apply_selected(doc, &[]))
+                Ok(apply_selected(doc, super::NODE_GRANULARITY, &[]))
             }
 
             /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) —
             /// the real `graph` selection, handed in as raw ids because plugin code cannot construct an
             /// `app::InteractionView` (its fields are `pub(crate)` to the framework crate).
-            pub fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-                super::step_emit(doc, selected, STEP)
+            pub fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, granularity: &str, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+                super::step_emit(doc, granularity, selected, STEP)
             }
         }
     };
@@ -146,8 +157,8 @@ pub mod activate_selection {
     }
 
     /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`).
-    pub fn apply_ports(doc: &ArtifactView<'_, Generation3dSnapshot>, ports_by_node: &std::collections::BTreeMap<String, Vec<String>>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
-        super::activate_emit(doc, ports_by_node, selected)
+    pub fn apply_ports(doc: &ArtifactView<'_, Generation3dSnapshot>, ports_by_node: &std::collections::BTreeMap<String, Vec<String>>, granularity: &str, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+        super::activate_emit(doc, ports_by_node, granularity, selected)
     }
 }
 

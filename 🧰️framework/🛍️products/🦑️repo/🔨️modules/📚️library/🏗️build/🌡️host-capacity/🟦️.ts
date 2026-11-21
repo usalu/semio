@@ -1,6 +1,7 @@
 import buildPolicy from "../🔣️policy.json" with {type:"json"};
 import {adoptUpgradedHostPlanV1,attachHostCapacityProcessV1,currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,wholeHostProbeV1,hostClassBoundV1,hostProfileV1,createHostPhaseResizerV1,estimateHostPhasesV1,forecastHostQuietV1,formatHostCapacityV1,hostCapacityDirectoryV1,hostEstimateLineageV1,hostFloorMegabytesV1,hostRebuildSlotsV1,hostRequestPriorityV1,learnableHostRunV1,newHostCapacityIdV1,quietHostRequestV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostForecastV1,recordHostPhasesV1,requestHostCapacityUpgradeV1,resolveHostCapacityLanguageV1,scaleHostRequestV1,sizeHostRequestV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostActionKindV1,type HostRunV1,type HostCapacityHandleV1,type HostCapacityPolicyV1,type HostCapacityPortsV1,type HostRequestV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import type {HostUpgradeOutcomeV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {leasePriorityClassV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/📈️standing/⚖️priority/🟦️.ts";
 import {availableParallelism} from "node:os";
 import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
@@ -86,10 +87,10 @@ export function grantedBuildArgumentsV1(args:readonly string[],operation:string,
 }
 
 /** 🔼️ Says that work has to run now and returns when the run may start it: under a quiet forecast grant (a run expected to execute nothing, which holds only a small reservation) it grows the reservation into the full request in the fair queue, with progress lines and cancellation through the control (an abort signal or a lease control); under a full grant it only records that the run executed, and without a grant (the gate is off, a light command) it returns at once. The executors of a build tool call it before the first thing that is not a pure replay of earlier results (the planner, a graph rebuild, the birth of every Bazel action that really runs, whose width then follows the jobs the grant holds), in the holder's process or in any process that inherits the grant; work that no executor announces grows the grant once the run's tree outgrows the quiet reservation, without pausing it.  When the growth was partial (the free memory carries fewer jobs), the plan of the calling process shrinks to the granted jobs before it returns, so the build tool started afterwards plans with them.*/
-export async function upgradeBuildCapacityV1(control?:AbortSignal|ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<"absent"|"held"|"upgraded">{
+export async function upgradeBuildCapacityV1(control?:AbortSignal|ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>=process.env,reuse?:()=>Promise<boolean>):Promise<HostUpgradeOutcomeV1>{
  if(environment["SEMIO_HOST_CAPACITY_GRANT"]===undefined)return "absent";
  const waiting=control===undefined?createCapacityControlV1():undefined,wait:ResourceLeaseControl=waiting?.control??(control instanceof AbortSignal?Object.freeze({signal:control,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))}):control as ResourceLeaseControl);
- try{const outcome=await requestHostCapacityUpgradeV1(environment,wait);if(outcome!=="absent")adoptUpgradedHostPlanV1(environment as Record<string,string|undefined>);return outcome;}finally{waiting?.dispose();}
+ try{const outcome=await requestHostCapacityUpgradeV1(environment,wait,reuse===undefined?undefined:{reuse});if(outcome==="held"||outcome==="upgraded")adoptUpgradedHostPlanV1(environment as Record<string,string|undefined>);return outcome;}finally{waiting?.dispose();}
 }
 
 
@@ -128,11 +129,16 @@ export function reserveGraphPlanCapacityV1(input:HostCapacityPortsV1&Readonly<{m
  if(!policy.enabled||environment["SEMIO_HOST_CAPACITY"]==="off")return Promise.resolve(none);
  const request:HostRequestV1=Object.freeze({id:newHostCapacityIdV1(),operation:"graph-plan",priority:"batch",minimumJobs:1,preferredJobs:1,fixedMegabytes:Math.max(0,Math.ceil(input.megabytes)),perJobMegabytes:0,cpuPerJob:1,...input.minimumMegabytes===undefined?{}:{minimumMegabytes:Math.min(Math.max(0,Math.ceil(input.minimumMegabytes)),Math.max(0,Math.ceil(input.megabytes)))},label:"graph-plan"}),session=currentAgentSessionV1({environment}),controller=new AbortController();
  const control:ResourceLeaseControl=Object.freeze({signal:controller.signal,remainingMilliseconds:()=>null,publish:()=>undefined,yieldContinuation:()=>new Promise<void>(done=>setImmediate(done))});
- let worker:number|undefined,release=()=>{},admitted=false,stopped=false;const held=new Promise<void>(done=>{release=done;});
- const stop=()=>{if(stopped)return;stopped=true;input.signal?.removeEventListener("abort",stop);if(!admitted)controller.abort(input.signal?.reason??refuseCapacityV1("cancelled","graph-plan-wait-cancelled"));release();};
- if(input.signal){if(input.signal.aborted)stop();else input.signal.addEventListener("abort",stop,{once:true});}
+ let worker:number|undefined,release=()=>{};const held=new Promise<void>(done=>{release=done;});
+ const cancelWait=()=>controller.abort(input.signal?.reason??refuseCapacityV1("cancelled","graph-plan-wait-cancelled"));
+ const leaveWait=()=>input.signal?.removeEventListener("abort",cancelWait);
+ if(input.signal?.aborted)cancelWait();else input.signal?.addEventListener("abort",cancelWait,{once:true});
  return new Promise((accept,reject)=>{
-  withHostCapacityV1({sample:previous=>readHostSampleV1(policy,wholeHostProbeV1(currentHostProbeV1()),previous,input.now,environment),...input,observe:graphPlanObserverV1(()=>worker,input.observe??observeTreeMegabytesV1),directory:input.directory??hostCapacityDirectoryV1(environment),policy,request,control,environment,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{admitted=true;accept(Object.freeze({megabytes:handle.reservedMegabytes,attach:(pid:number)=>{worker=pid;attachHostCapacityProcessV1({...environment,SEMIO_HOST_CAPACITY_GRANT:handle.id},pid);},release:stop}));await held;}).then(()=>undefined,reject);
+  withHostCapacityV1({sample:previous=>readHostSampleV1(policy,wholeHostProbeV1(currentHostProbeV1()),previous,input.now,environment),...input,observe:graphPlanObserverV1(()=>worker,input.observe??observeTreeMegabytesV1),directory:input.directory??hostCapacityDirectoryV1(environment),policy,request,control,environment,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{
+   controller.signal.throwIfAborted();leaveWait();
+   accept(Object.freeze({megabytes:handle.reservedMegabytes,attach:(pid:number)=>{worker=pid;attachHostCapacityProcessV1({...environment,SEMIO_HOST_CAPACITY_GRANT:handle.id},pid);},release}));
+   await held;
+  }).then(()=>undefined,error=>{leaveWait();reject(error);});
  });
 }
 
@@ -172,7 +178,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
  const learn=async(run:HostRunV1)=>{
   run=learnedRunAfterOutcomeV1(run,breached);
   const code=(ports.exitCode??(()=>process.exitCode))(),status=run.status==="ok"&&code!==undefined&&code!==null&&Number(code)!==0?"failed" as const:run.status,defaultMegabytes=Math.max(1,base.fixedMegabytes+run.jobs*base.perJobMegabytes);
-  const forecasted=run.executed===undefined?undefined:{executed:run.executed||forecast!==undefined&&run.peakMegabytes>forecast.megabytes,peakMegabytes:run.peakMegabytes,activeMilliseconds:run.activeMilliseconds,peakAtMilliseconds:run.peakAtMilliseconds,endedAtMs:run.endedAtMs};
+  const forecasted=run.executed===undefined?undefined:{executed:run.executed||!client&&forecast!==undefined&&run.peakMegabytes>forecast.megabytes,peakMegabytes:run.peakMegabytes,activeMilliseconds:run.activeMilliseconds,peakAtMilliseconds:run.peakAtMilliseconds,endedAtMs:run.endedAtMs};
   if(forecasted!==undefined&&!forecasted.executed){if(status==="ok")await updateHostEstimateStoreV1(directory,policy,store=>recordHostForecastV1(policy,store,leaf,forecasted),{now});return;}
   const own=run.phases===undefined?run.peakMegabytes:Math.max(0,...run.phases.filter(row=>row.phase!=="rebuild").map(row=>row.peakMegabytes));
   if(!learnableHostRunV1(status,Math.max(1,Math.floor(own*10000/defaultMegabytes+0.5)),estimate))return;
@@ -180,7 +186,7 @@ export async function withBuildCapacityV1<T>(args:readonly string[],environment:
  };
  const waiting=ports.control?undefined:createCapacityControlV1(),tasks=request.perJobMegabytes>0,deferring=quiet&&client;
  try{
-  return await withHostCapacityV1({park:parkGrantForRestartV1,...ports,learn,resize:createHostPhaseResizerV1(policy,base,estimate,capacity),directory,policy,request:admission,...forecastable||quiet?{upgrade:growth}:{},control:ports.control??waiting!.control,environment,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{
+  return await withHostCapacityV1({park:parkGrantForRestartV1,...ports,learn,resize:createHostPhaseResizerV1(policy,base,estimate,capacity),directory,policy,request:admission,...forecastable||quiet?{upgrade:growth}:{},...deferring?{quietUpgradeRequiresRequest:true}:{},control:ports.control??waiting!.control,environment,session:{address:agentSessionAddressV1(session),weight:session.budget.weight}},async handle=>{
    waiting?.dispose();
    const previous=Object.fromEntries([...Object.keys(handle.environment),"SEMIO_BUILD_PARALLEL"].map(key=>[key,environment[key]]));
    Object.assign(environment,handle.environment,tasks?{SEMIO_BUILD_PARALLEL:String(handle.jobs)}:{});

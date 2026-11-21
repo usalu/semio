@@ -6,6 +6,8 @@ import { reactHostPort } from "@semio-tech/ui-react";
 type WorldInstanceChromeSnapshot = {
   readonly selectedIds: ReadonlySet<string>;
   readonly hoveredId: string | null;
+  readonly hoveredIds: ReadonlySet<string> | null;
+  readonly hoverSourceWindowId?: string | null;
   readonly hoveredKindId: string | null;
   readonly previewInstanceIds: ReadonlySet<string> | null;
 };
@@ -14,16 +16,9 @@ type WorldInstanceChromeSnapshot = {
  * pane, over nothing", `undefined` for "the pointer is not in this pane" (no local claim). */
 export type WorldLocalHoverV1 = string | null | undefined;
 
-/** 🎯️ The instance the hover chrome paints. The pane's own raycast LEADS while the pointer is inside
- * it — that is the value the guest is being told about, one round trip (hundreds of milliseconds
- * through `interactionHover` → reserved job → publication → refresh → commit) before the guest's
- * `hoveredId` echoes it back — so the highlight follows the pointer at raycast speed and the echo
- * only ever confirms it. The guest's lane leads when the pointer is elsewhere: a hover authored by
- * another surface (an outliner row, a remote presence) has nothing local to yield to.
- *
- * 🧭️ Nothing about the guest changes: the same `interactionHover` still reaches it, the same lane
- * comes back, the same selection semantics apply to a click. Only what is PAINTED between the raycast
- * and the echo differs, and it differs toward what the guest will answer. */
+/** 🎯️ The instance the hover chrome paints. A local raycast leads until an authored hover changes
+ * owner or target from another surface.
+ * A delayed echo from this same window leaves its latest local raycast in place. */
 export function worldHoverPaintIdV1(local: WorldLocalHoverV1, guest: string | null): string | null {
   return local === undefined ? guest : local;
 }
@@ -42,25 +37,25 @@ interface WorldInstanceChromeStore {
   previewSelected: (instanceId: string) => boolean | undefined;
 }
 
-function chromeSnapshotsEqual(a: WorldInstanceChromeSnapshot, b: WorldInstanceChromeSnapshot): boolean {
-  if (a.hoveredId !== b.hoveredId || a.hoveredKindId !== b.hoveredKindId) return false;
-  if (a.previewInstanceIds !== b.previewInstanceIds) {
-    if (!a.previewInstanceIds || !b.previewInstanceIds || a.previewInstanceIds.size !== b.previewInstanceIds.size) return false;
-    for (const id of a.previewInstanceIds) {
-      if (!b.previewInstanceIds.has(id)) return false;
-    }
-  }
-  if (a.selectedIds.size !== b.selectedIds.size) return false;
-  for (const id of a.selectedIds) {
-    if (!b.selectedIds.has(id)) return false;
+function sameIds(a: ReadonlySet<string> | null, b: ReadonlySet<string> | null): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.size !== b.size) return false;
+  for (const id of a) {
+    if (!b.has(id)) return false;
   }
   return true;
 }
 
-export function createWorldInstanceChromeStore(): WorldInstanceChromeStore {
+function sameAuthoredHover(a: WorldInstanceChromeSnapshot, b: WorldInstanceChromeSnapshot): boolean {
+  return a.hoverSourceWindowId === b.hoverSourceWindowId && sameIds(a.hoveredIds, b.hoveredIds)
+    && (a.hoveredIds !== null || a.hoveredId === b.hoveredId);
+}
+
+export function createWorldInstanceChromeStore(windowInstanceId?: string | null): WorldInstanceChromeStore {
   let snapshot: WorldInstanceChromeSnapshot = {
     selectedIds: new Set(),
     hoveredId: null,
+    hoveredIds: null,
     hoveredKindId: null,
     previewInstanceIds: null,
   };
@@ -80,15 +75,22 @@ export function createWorldInstanceChromeStore(): WorldInstanceChromeStore {
       return snapshot;
     },
     setSnapshot(next) {
-      if (chromeSnapshotsEqual(snapshot, next)) return;
+      const sameHover = sameAuthoredHover(snapshot, next);
+      if (sameHover && snapshot.hoveredId === next.hoveredId && snapshot.hoveredKindId === next.hoveredKindId
+        && sameIds(snapshot.selectedIds, next.selectedIds) && sameIds(snapshot.previewInstanceIds, next.previewInstanceIds)) return;
+      const source = next.hoverSourceWindowId;
+      if (!sameHover && (source === null || (typeof source === "string" && source !== windowInstanceId))) {
+        localHover = undefined;
+      }
       snapshot = next;
       notify();
     },
     setLocalHover(local) {
       if (local === localHover) return;
       const paintedBefore = worldHoverPaintIdV1(localHover, snapshot.hoveredId);
+      const projectionChanged = snapshot.hoveredIds !== null && (localHover === undefined) !== (local === undefined);
       localHover = local;
-      if (worldHoverPaintIdV1(localHover, snapshot.hoveredId) === paintedBefore) return;
+      if (!projectionChanged && worldHoverPaintIdV1(localHover, snapshot.hoveredId) === paintedBefore) return;
       notify();
     },
     localHover() {
@@ -98,7 +100,8 @@ export function createWorldInstanceChromeStore(): WorldInstanceChromeStore {
       return snapshot.selectedIds.has(instanceId);
     },
     isHovered(instanceId) {
-      return worldHoverPaintIdV1(localHover, snapshot.hoveredId) === instanceId;
+      if (localHover !== undefined) return localHover === instanceId;
+      return snapshot.hoveredIds?.has(instanceId) ?? (snapshot.hoveredId === instanceId);
     },
     isHighlighted(objectKind) {
       return objectKind != null && snapshot.hoveredKindId != null && objectKind === snapshot.hoveredKindId;

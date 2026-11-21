@@ -17,6 +17,12 @@ pub async fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> V
     out
 }
 
+/// 🧾️ Reads only the bounded original group marker alongside this committed WAL transaction.
+pub fn decode_atomic_wal_descriptor(bytes: &db_wal_log::WalBytes) -> Result<Option<protocol::atomic_hub::AtomicWalEdit>, DbError> {
+    if bytes.len() > protocol::atomic_hub::MAX_ATOMIC_WAL_DESCRIPTOR_BYTES { return Ok(None); }
+    with_wal_command(bytes, protocol::atomic_hub::AtomicWalEdit::decode).map_err(|message| DbError::Corrupt(message.into()))
+}
+
 /// 📖️ Inverse of `encode_command_envelope`. Validates the byte length against
 /// `DbLimits::default().max_command_bytes` BEFORE decoding anything sized by it (mirrors
 /// `pack_core`'s stated invariant), then maps a decode failure to `DbError::Corrupt` rather than
@@ -85,11 +91,20 @@ pub fn wal_command_id(bytes: &db_wal_log::WalBytes, control: &mut db_wal_log::Wa
 pub struct ArtifactSyncState {
     pub frontier: Frontier,
     pub commands: Vec<protocol::MutationEnvelope>,
+    pub atomic_edits: Vec<AtomicReplaySpan>,
     /// 🚧️ The lowest `head_seq` this crate can still serve via tail (missing-command)
     /// transfer — the `head_seq` of the most recent `WAL_SNAPSHOT_PUB` record replayed, or `0` if
     /// none (nothing has ever been compacted away). A replica behind this floor needs
     /// `decide_bootstrap`'s snapshot path instead.
     pub floor_head_seq: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AtomicReplaySpan {
+    pub range: std::ops::Range<usize>,
+    pub group: protocol::atomic_hub::AtomicWalEdit,
+    pub frontier: Frontier,
+    pub prior_frontier: Frontier,
 }
 
 /// 🔁️ Replays committed transactions via `db_wal::replay_committed_document` and
@@ -100,6 +115,7 @@ pub async fn replay_sync_state(storage: &impl db_io_core::WalStorage, document: 
     let mut records = db_wal_log::replay_committed_document(storage, &document, control).await?;
     let mut decode_control = db_wal_log::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
     let mut commands = Vec::new();
+    let mut atomic_edits = Vec::new();
     let mut chain = semio_framework_hash::Hasher::new();
     let mut commit_seq = 0u64;
     let mut floor_head_seq = 0u64;
@@ -116,11 +132,27 @@ pub async fn replay_sync_state(storage: &impl db_io_core::WalStorage, document: 
                 }
                 db_wal_log::WalCommittedStep::Done => break,
             };
+            let start = commands.len();
+            let prior_frontier = Frontier {
+                document: document.clone(), head_seq: start as u64, commit_seq,
+                chain_hash: if start == 0 { [0; 32] } else { *chain.clone().finalize().as_bytes() },
+                epoch: 0,
+            };
+            let mut group = None;
             loop {
                 match transaction.next_record_step()? {
                     db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::Command(bytes)) => {
                         commands.push(decode_wal_command(bytes, &mut decode_control)?);
                         chain.update(&bytes.hash());
+                    }
+                    db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::Outbox(bytes)) if bytes.len() <= protocol::atomic_hub::MAX_ATOMIC_WAL_DESCRIPTOR_BYTES => {
+                        let decoded = with_wal_command(&bytes, protocol::atomic_hub::AtomicWalEdit::decode)
+                            .map_err(|message| DbError::Corrupt(message.into()))?;
+                        if let Some(decoded) = decoded {
+                            if group.replace(decoded).is_some() {
+                                return Err(DbError::Corrupt("WAL transaction repeats its atomic descriptor".into()));
+                            }
+                        }
                     }
                     db_wal_log::WalCommittedRecordStep::Record(db_wal_log::WalRecord::SnapshotPub { frontier, .. }) => floor_head_seq = frontier.head_seq,
                     db_wal_log::WalCommittedRecordStep::Record(_) => {}
@@ -136,6 +168,20 @@ pub async fn replay_sync_state(storage: &impl db_io_core::WalStorage, document: 
                 turn.step().await;
             }
             transaction.finish()?;
+            if let Some(group) = group {
+                if !group.admits(&commands[start..]) || atomic_edits.iter().any(|span: &AtomicReplaySpan| span.group.edit_id == group.edit_id) {
+                    return Err(DbError::Corrupt("committed WAL atomic edit does not own all of its declared rows".into()));
+                }
+                let frontier = Frontier {
+                    document: document.clone(), head_seq: commands.len() as u64,
+                    commit_seq: commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("sync replay commit sequence"))?,
+                    chain_hash: *chain.clone().finalize().as_bytes(),
+                    epoch: 0,
+                };
+                atomic_edits.push(AtomicReplaySpan { range: start..commands.len(), group, frontier, prior_frontier });
+            } else if commands[start..].iter().any(|row| row.transaction.as_ref().is_some_and(|tx| protocol::atomic_group::is_atomic_backbone_tool(&tx.tool))) {
+                return Err(DbError::Corrupt("committed original media lost its atomic WAL descriptor".into()));
+            }
             commit_seq = commit_seq.checked_add(1).ok_or(DbError::LimitExceeded("sync replay commit sequence"))?;
         }
         Ok::<(), DbError>(())
@@ -149,7 +195,7 @@ pub async fn replay_sync_state(storage: &impl db_io_core::WalStorage, document: 
     let head_seq = commands.len() as u64;
     let chain_hash = if commands.is_empty() { [0; 32] } else { *chain.finalize().as_bytes() };
     let frontier = Frontier { document, head_seq, commit_seq, chain_hash, epoch: 0 };
-    Ok(ArtifactSyncState { frontier, commands, floor_head_seq })
+    Ok(ArtifactSyncState { frontier, commands, atomic_edits, floor_head_seq })
 }
 //#endregion 🔖️ReplicaState
 
@@ -185,7 +231,8 @@ pub fn from_frontier_summary(summary: &protocol::RuntimeFrontierSummary) -> Fron
 /// the last replayed command's `mutation_id` (empty string for a genesis document with no
 /// commands yet).
 pub async fn state_frontier_summary(state: &ArtifactSyncState) -> protocol::RuntimeFrontierSummary {
-    let head_edit_id = state.commands.last().map(|envelope| envelope.mutation_id.0.clone()).unwrap_or_default();
+    let head_edit_id = state.atomic_edits.last().filter(|span| span.range.end == state.commands.len()).map(|span| span.group.edit_id.clone())
+        .or_else(|| state.commands.last().map(|envelope| envelope.mutation_id.0.clone())).unwrap_or_default();
     to_frontier_summary(&state.frontier, head_edit_id).await
 }
 //#endregion 🔖️Frontier
@@ -214,6 +261,38 @@ pub async fn missing_commands(state: &ArtifactSyncState, replica: &Frontier) -> 
         return Err(DbError::Unavailable(format!("replica head_seq {} is behind the retained WAL floor {}; snapshot bootstrap is required", replica.head_seq, state.floor_head_seq)));
     }
     Ok(state.commands[replica.head_seq as usize..].to_vec())
+}
+
+/// 🧱️ Splits the replay cut only on a stored grouped edit boundary.
+pub async fn grouped_frontier_frames(
+    state: &ArtifactSyncState, replica: &Frontier, origin: protocol::ActorId,
+) -> Result<Vec<protocol::ServerFrame>, DbError> {
+    if replica.document != state.frontier.document || replica.head_seq > state.frontier.head_seq {
+        return Err(DbError::InvalidArgument("invalid grouped frontier".into()));
+    }
+    if replica.head_seq < state.floor_head_seq {
+        return Err(DbError::Unavailable("grouped frontier is behind the retained WAL floor".into()));
+    }
+    let mut position = replica.head_seq as usize;
+    let mut frames = Vec::new();
+    for span in &state.atomic_edits {
+        if span.range.end <= position { continue; }
+        if position < span.range.start {
+            let last = state.commands[span.range.start - 1].mutation_id.0.clone();
+            let frontier = to_frontier_summary(&span.prior_frontier, last).await;
+            let envelopes = state.commands[position..span.range.start].to_vec();
+            frames.push(protocol::ServerFrame::Commands { envelopes, origin: origin.clone(), frontier });
+        }
+        let frontier = if span.range.end == state.commands.len() { &state.frontier } else { &span.frontier };
+        let frontier = to_frontier_summary(frontier, span.group.edit_id.clone()).await;
+        let envelopes = state.commands[span.range.clone()].to_vec();
+        frames.push(protocol::ServerFrame::Commands { envelopes, origin: origin.clone(), frontier });
+        position = span.range.end;
+    }
+    if position < state.commands.len() {
+        frames.push(commands_server_frame(state, state.commands[position..].to_vec(), origin).await);
+    }
+    Ok(frames)
 }
 
 /// 📨️ Wraps `envelopes` (typically `missing_commands`' result) as a `ServerFrame::Commands`

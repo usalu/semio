@@ -123,7 +123,7 @@ fn product_library_has_no_executor_bridge() {
     assert!(DRAW_SOURCE().contains("pub fn ensure_mesh_step"));
     assert!(DRAW_SOURCE().contains("pub fn close_upload_step"));
     assert!(GPU_SOURCE().contains("pub fn close_mesh_upload_step"));
-    let upload_close = OS_HOST_SOURCE().find("presenter.close_world_owners_step()").expect("active upload and packet close phase");
+    let upload_close = OS_HOST_SOURCE().find("presenter.close_world_owners_step(cx)").expect("active upload and packet close phase");
     let world_close = OS_HOST_SOURCE().find("runtime.close_world3d_dynamic_step()").expect("world mesh close phase");
     assert!(upload_close < world_close);
 }

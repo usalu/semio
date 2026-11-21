@@ -45,7 +45,7 @@ use infinite_world::world::{
     WorldAssetRequestKind, WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_REQUEST_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES,
     World3dMeshAsset, World3dMeshAppearance, World3dPrimitiveMaterial, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
-use infinite_world::world::{world3d_hover_clear_is_owed, world3d_hover_is_published};
+use infinite_world::world::world3d_hover_clear_is_owed;
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
 use program_bridge::load_wasm_plugins;

@@ -1,0 +1,10 @@
+[
+  { "resident": false, "phase": null, "documentHandoff": false, "live": "ladder", "close": "ladder", "mountedStep": null },
+  { "resident": true, "phase": null, "documentHandoff": false, "live": "ladder", "close": "mounted", "mountedStep": null },
+  { "resident": true, "phase": "preparation", "documentHandoff": false, "live": "mounted", "close": "mounted", "mountedStep": null },
+  { "resident": true, "phase": "maintenance", "documentHandoff": false, "live": "ladder", "close": "mounted", "mountedStep": "maintain" },
+  { "resident": false, "phase": null, "documentHandoff": true, "live": "ladder", "close": "ladder", "mountedStep": null },
+  { "resident": true, "phase": null, "documentHandoff": true, "live": "ladder", "close": "mounted", "mountedStep": "retire" },
+  { "resident": true, "phase": "preparation", "documentHandoff": true, "live": "ladder", "close": "mounted", "mountedStep": "retire" },
+  { "resident": true, "phase": "maintenance", "documentHandoff": true, "live": "ladder", "close": "mounted", "mountedStep": "retire" }
+]

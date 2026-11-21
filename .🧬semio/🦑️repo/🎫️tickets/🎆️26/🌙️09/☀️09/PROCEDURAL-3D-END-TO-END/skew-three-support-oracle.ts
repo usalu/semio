@@ -1,0 +1,14 @@
+import loadManifold from "manifold-3d";
+const wasm = await loadManifold();
+wasm.setup();
+const { Manifold } = wasm;
+const stock = Manifold.cube([4,4,4]);
+const shape = Manifold.cube([8,8,8.3]);
+const tilt = shape.rotate([0,0.37*180/Math.PI,0]);
+const pitch = tilt.rotate([0.21*180/Math.PI,0,0]);
+const tool = pitch.translate([-0.8929234557196959,3.55482292071051,-5.294759733163256]);
+const result = stock.subtract(tool);
+const shells = result.decompose();
+const section = result.slice(1.3);
+console.log(JSON.stringify({area:result.surfaceArea(),volume:result.volume(),bounds:[result.boundingBox().min,result.boundingBox().max],euler:2-2*result.genus(),shells:shells.length,section:{origin:[0,0,1.3],normal:[0,0,1],area:section.area(),rings:section.toPolygons().length}}));
+for(const owned of [...shells,section,result,tool,pitch,tilt,shape,stock])owned.delete();

@@ -3,6 +3,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import schema from "../🧬️schema/folder-custody.json" with {type:"json"};
 import fixture from "./🧫️fixtures/folder-custody.json" with {type:"json"};
+import "../📨️plugin-artifact-channel/🔁️native-poll/🧪️tests/scheduling.test.ts";
 
 test("folder custody vectors match independent SQLite guarded append and ownership",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);

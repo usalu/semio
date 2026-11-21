@@ -92,7 +92,7 @@ type Stages=Readonly<{transpiled:string;optimized:string|null}>;
 async function stages(c:Checkout,cache:ReturnType<typeof sharedStageCacheV1>):Promise<Stages>{
  const base=fixture.package.replaceAll("-","_"),context={repoRoot:repository,preview2VendorDir:"",environment:process.env,...(binaryen?{wasmOptBin:binaryen}:{})};
  const component=createHash("sha256").update(stripWasmDebugSectionsV1(readFileSync(c.wasm))).digest("hex"),transpiled=join(c.root,"transpiled");
- await cache.run(transpileStageRequestV1(component,"jco-test","materialization-test",base),transpiled,directory=>transpilePluginComponentModulesAsync(c.wasm,directory,base,context),undefined,base);
+ await cache.run(transpileStageRequestV1(component,"jco-test","materialization-test",base,"native-transpile-test"),transpiled,directory=>transpilePluginComponentModulesAsync(c.wasm,directory,base,context),undefined,base);
  if(!binaryen)return {transpiled,optimized:null};
  const tool=pluginWasmOptToolV1(context),version=runToolSyncV1("wasm-opt",["--version"],{encoding:"utf8",env:{...process.env,SEMIO_TOOL_WASM_OPT:binaryen}}).stdout.trim(),optimized=join(c.root,"optimized");mkdirSync(optimized,{recursive:true});
  for(const file of pluginCoreModuleFilesV1(transpiled,base)){

@@ -19,7 +19,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 mod analytic_publication;
 pub use analytic_publication::{analytic_arc_recipe, AnalyticCurveParameters, AnalyticPublication, AnalyticTransform};
 pub use analytic_publication::primitive_handle;
-pub use semio_framework_3d_brep_solid_transaction::{BoxFinish, CuboidSew, SolidPatternRecipe, UnpublishedSolidPattern};
+pub use semio_framework_3d_brep_solid_transaction::{BoxFinish, CuboidSew, SolidGroupOwnership, SolidPatternRecipe, UnpublishedSolidPattern};
 
 #[path = "🗃️session-state/🦀️.rs"]
 mod session_state;
@@ -27,11 +27,12 @@ pub use session_state::{BrepRegistry, Entity, PrimitiveProvenance, SolidProvenan
 
 #[path = "🧾️conversions-and-registry/🦀️.rs"]
 mod conversions_and_registry;
-pub use conversions_and_registry::{entity_roots, entity_tag, evec, label_of_entity, pnt, require_direction, require_finite_scalar, require_finite_vector, require_positive_size, require_scale_factor, vec3};
+pub use conversions_and_registry::{entity_roots, entity_tag, evec, label_of_entity, pnt, require_direction, vec3};
+pub use semio_framework_3d_brep_kernel_contract::{require_finite_scalar, require_finite_vector, require_positive_size, require_scale_factor};
 
 #[path = "🔀️certified-boolean/🦀️.rs"]
 mod certified_boolean;
-pub use certified_boolean::{BooleanOperand, BooleanPreparation, BorePreviewSource, BoxShellDraft};
+pub use certified_boolean::{BooleanOperand, BooleanPreparation, CertifiedBooleanResult, BorePreviewSource, ShellDraft};
 
 #[path = "🧾️topology-selection/🦀️.rs"]
 mod topology_selection;
@@ -51,7 +52,7 @@ pub use polygon_face_publication::{PolygonFacePublication};
 
 #[path = "🪷️conic-face-publication/🦀️.rs"]
 mod conic_face_publication;
-pub use conic_face_publication::{ConicFacePublication};
+pub use conic_face_publication::{ConicFacePublication,PolygonSectionSet,SECTION_FACE_LIMIT,SectionPlan};
 
 #[path = "🗜️prism-boundary/🦀️.rs"]
 mod prism_boundary;
@@ -86,7 +87,7 @@ pub use point_hull::HullDraft;
 
 #[path = "🧊️solid-publication/🦀️.rs"]
 mod solid_publication;
-pub use solid_publication::{SolidPublication};
+pub use solid_publication::{SolidExchangeBoundary,SolidPublication};
 
 #[path="🧺️compound-publication/🦀️.rs"]
 mod compound_publication;

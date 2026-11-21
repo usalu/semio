@@ -1,24 +1,16 @@
-use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::*;
-use semio_plugin::NoConfig;
-use semio_plugin::NoConfigMutation;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_plugin::ArtifactView;
-use semio_plugin::ConfigView;
-use semio_plugin::Emit;
-use semio_plugin::Fault;
-use semio_framework_value_derive::FromValue;
-use semio_framework_value_derive::ToValue;
-use pack::snapshot::ArtifactDsl;
+use pack::snapshot::ArtifactPack;
 use semio_framework::kernel::Effect;
+use semio_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::{SetActiveExample, handle};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::{default_fem2d_snapshot, empty_fem2d_snapshot};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::{Fem2dSnapshot, Fem2dSnapshotRetiring};
 
-/// 🧬️ Driven directly through `handle` (not `dispatch`, which routes through `VcsArtifactApp` and
-/// never applies `effects` to its own store — that's the real host's job): asserts on the `Emit`
-/// itself, the same shape `commands::set_active_example`'s fem3d sibling tests use.
+/// 🧬️ Inspects the public handler's load effect before the host admits the emitted Pack.
 #[test]
 fn set_active_example_loads_the_demo_fixture_2d() {
-    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
-    let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let snapshot = Fem2dSnapshotRetiring::new(empty_fem2d_snapshot());
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&*snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
@@ -26,23 +18,24 @@ fn set_active_example_loads_the_demo_fixture_2d() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let loaded = Fem2dSnapshotRetiring::new(Fem2dSnapshot::decode_pack(pack).expect("decode loaded document pack"));
     assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
 }
 
 #[test]
 fn set_active_example_unknown_id_resets_to_empty_document_2d() {
-    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
-    let history = semio_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let snapshot = Fem2dSnapshotRetiring::new(default_fem2d_snapshot().expect("bundled demo loads"));
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&*snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let emit = handle(&SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    assert_eq!(loaded, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
+    let loaded = Fem2dSnapshotRetiring::new(Fem2dSnapshot::decode_pack(pack).expect("decode loaded document pack"));
+    let empty = Fem2dSnapshotRetiring::new(empty_fem2d_snapshot());
+    assert_eq!(*loaded, *empty);
 }
 
 /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be

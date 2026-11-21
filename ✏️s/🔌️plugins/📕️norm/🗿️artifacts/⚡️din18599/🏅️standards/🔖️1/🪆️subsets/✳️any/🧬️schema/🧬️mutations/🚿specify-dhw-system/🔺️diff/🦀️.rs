@@ -12,6 +12,7 @@ pub fn diff(payload: &SpecifyDhwSystem, base: &Din18599Snapshot) -> protocol::Mu
     let (old, new) = (&base.dhw, &payload.new_dhw);
     protocol::MutationOutcome::new(Din18599Diff {
         dhw: Some(Din18599DhwPatch {
+            dwelling_count: (old.dwelling_count != new.dwelling_count).then_some(new.dwelling_count),
             specific_demand_kwh_person_a: (old.specific_demand_kwh_person_a != new.specific_demand_kwh_person_a).then(|| new.specific_demand_kwh_person_a.clone()),
             storage_loss_kwh_a: (old.storage_loss_kwh_a != new.storage_loss_kwh_a).then(|| new.storage_loss_kwh_a.clone()),
             distribution_loss_kwh_a: (old.distribution_loss_kwh_a != new.distribution_loss_kwh_a).then(|| new.distribution_loss_kwh_a.clone()),

@@ -43,7 +43,7 @@ export interface OverviewCardSectionProps extends OverviewCardBaseProps {
   readonly focusableHeading?: boolean;
 }
 
-/** 🔘️ A card that is itself one action (open this app): the whole card is a `<button>` that lifts on hover. Its body
+/** 🔘️ A card that is itself one action (open this app): the whole card is a `<button>` whose silhouette responds to hover. Its body
  * holds phrasing text only, so the button keeps a valid content model. */
 export interface OverviewCardButtonProps extends OverviewCardBaseProps {
   readonly as: "button";
@@ -55,7 +55,7 @@ export interface OverviewCardButtonProps extends OverviewCardBaseProps {
 /** ⚙️ Props of {@link OverviewCard}. */
 export type OverviewCardProps = OverviewCardSectionProps | OverviewCardButtonProps;
 
-const CARD_STACK_DATA = { "data-overview-card-stack": "" } as const;
+const CARD_STACK_DATA = { "data-overview-card-stack": "", "data-shared-border-hover": "silhouette" } as const;
 
 /** 💳️ The overview card of semio's landing pages (play, the demonstrator, the quizzes): the design system's
  * {@link WindowChrome} at dialog level, never `active`, with the title in its cap chip and actions in its footer chips.
@@ -118,7 +118,7 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
         className,
       )}
     >
-      <div data-overview-card-paint="" className={cn("h-full transition-transform duration-200 motion-reduce:transition-none group-hover:-translate-y-0.5", props.lifted && "-translate-y-0.5")}>{chrome}</div>
+      <div data-overview-card-paint="" className={cn("h-full transition-transform duration-200 motion-reduce:transition-none", props.lifted && "-translate-y-0.5")}>{chrome}</div>
     </button>
   );
 }

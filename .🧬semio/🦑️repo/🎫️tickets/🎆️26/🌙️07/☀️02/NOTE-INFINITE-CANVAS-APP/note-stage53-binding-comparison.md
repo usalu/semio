@@ -1,0 +1,5 @@
+# Stage 53 Binding Comparison
+
+Captured Stage 53 component JavaScript and published Stage 52 JavaScript each have 21,548 lines; 448 line positions differ, including four preview2 shim import paths. The differences extend beyond paths and URL rewrites. The generated Stage 53 trampoline 2 is synchronous pure.now-ms, trampoline 3 is async operation-finish, and trampoline 5 is async operation-progress. Stage 52 assigns those roles to trampolines 6, 2 and 4 respectively. The generated import maps also change task-cancel and channel-version trampoline numbers and synchronous versus asynchronous lowering.
+
+A core-only swap under Stage 52 JavaScript has not established compatible generated bindings and is unsafe as a diagnostic: a failure or success could reflect the mismatched component adapter. Use the exact Stage 53 JavaScript and core as one pair, with the same vetted shim path rewrites and corresponding supporting bridge, and independently verify the loaded URLs and hashes. This is a static comparison; no browser or tool was started.

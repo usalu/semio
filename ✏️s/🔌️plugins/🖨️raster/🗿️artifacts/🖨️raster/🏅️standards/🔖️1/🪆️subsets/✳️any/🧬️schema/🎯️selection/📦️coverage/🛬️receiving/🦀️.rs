@@ -1,7 +1,7 @@
 //! 🛬️ Original flat arrays construct one packed page at a time through the caller's native receiving authority.
 use super::*;
 use semio_framework_value::{NativeDecodeControl,OriginalRetirementCloseLoan,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneRef,retained_clone_grant_admits}};
-use semio_framework_value_native_owned::{NativeReceivingFailure,OriginalEffectReply,OriginalEffectReplyComplete,OriginalReceivingPrimary,owned::{NativeAdvanceSelection,NativeListSource,NativeReceive,NativeReceiver,OriginalSourceTurnWitness,native_close_settle,native_output_demand,native_output_take,native_receiver_close_start,native_record_pure_take}};
+use semio_framework_value_native_owned::{native_decoding::{NativeReceivingFailure,OriginalEffectReply,OriginalEffectReplyComplete,OriginalReceivingPrimary},owned::{NativeAdvanceSelection,NativeListSource,NativeReceive,NativeReceiver,OriginalSourceTurnWitness,native_close_settle,native_output_demand,native_output_take,native_receiver_close_start,native_record_pure_take}};
 use std::mem::ManuallyDrop;
 
 #[derive(Clone,Copy,PartialEq,Eq)]

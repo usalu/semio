@@ -1,3 +1,4 @@
+import { deliverAtomicHubPacket, retireAtomicHubSocket } from "../📦️atomic-hub-group/🟦️.ts";
 import type { PersistenceBinding } from "../../../../🟦️";
 import { closeHubSocketV1 } from "@semio-tech/framework/directory/client/socket-close";
 import { HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS } from "../../../../🟦️";
@@ -82,6 +83,7 @@ export async function connectHubOnce(state: ArtifactState, binding: Extract<Pers
         if (state.socket !== socket) return;
         try {
           const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
+          if (await deliverAtomicHubPacket(state, socket, bytes)) return;
           const commandBatch = extractServerCommandsDocumentBackboneBatchExact(bytes);
           await handleHubFrame(state, decodeServerFrame(bytes).frame, presenceCandidate, socket, commandBatch);
         } catch (error) {
@@ -91,6 +93,7 @@ export async function connectHubOnce(state: ArtifactState, binding: Extract<Pers
       });
     };
     socket.onclose = () => {
+      retireAtomicHubSocket(state, socket);
       state.docAbort.signal.removeEventListener("abort", onAbort);
       if (sustainedHealthTimer != null) clearTimeout(sustainedHealthTimer);
       if (state.socket !== socket) {

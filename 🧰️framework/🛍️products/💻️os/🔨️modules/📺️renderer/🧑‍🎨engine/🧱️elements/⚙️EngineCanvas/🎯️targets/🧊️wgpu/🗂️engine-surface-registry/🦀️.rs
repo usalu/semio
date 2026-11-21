@@ -25,7 +25,7 @@ mod surface_ids_and_registry;
 pub use surface_ids_and_registry::{
     retire_string_page, EngineSurface, EngineSurfaceId, EngineSurfaceIdentity,
     EngineSurfaceLiveFreshness, EngineSurfaceRegistry, EngineSurfaceSlot, EngineSurfaceSnapshot,
-    EngineSurfaceToken, NodeGraphEngine, NodeGraphSyncCache, ENGINE_SURFACE_CAPACITY,
+    EngineSurfaceToken, FlowPortAddresses, NodeGraphEngine, NodeGraphSyncCache, ENGINE_SURFACE_CAPACITY,
     ENGINE_SURFACE_ID_BYTE_CAPACITY,
 };
 use surface_ids_and_registry::retire_bytes_page;

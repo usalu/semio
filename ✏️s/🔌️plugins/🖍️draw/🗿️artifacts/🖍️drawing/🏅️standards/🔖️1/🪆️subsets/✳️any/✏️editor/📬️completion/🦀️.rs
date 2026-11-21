@@ -1,8 +1,8 @@
 //! 📬️ Draw cleanup retains the actual emitted operations, host effects and typed download.
 use super::DrawingPlayApp;
 use semio_plugin::{ArtifactToolCompletionValue,ArtifactCompletionFault,ArtifactDownloadOutput,EditorApp,Emit,EphemeralEmit,NoConfigMutation,NoDraftMutation,VacantVec,VacantDeque,CompletionEffect};
-use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep,admit_retirement_cursor,record_retirement_work,retirement_cursor_birth_demand,controlled::{ControlledRetirement,admit_typed_controlled_retirement}},retained_clone::RetainedCloneProgress};
-use semio_framework_value::{RetainedAllocationEffect, RetirementDemand, retained_clone_grant_admits};
+use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep,admit_retirement_cursor,record_retirement_work,retirement_cursor_birth_demand,controlled::{ControlledRetirement,admit_typed_controlled_retirement}},retained_clone::{RetainedCloneProgress,retained_clone_grant_admits}};
+use semio_framework_value::{RetainedAllocationEffect, RetirementDemand};
 use std::{collections::VecDeque, mem::ManuallyDrop};
 #[cfg(test)]
 use semio_framework_value::RetainedCloneGrant;
@@ -11,6 +11,7 @@ enum Source{Emit(DrawingEmit,EphemeralEmit<App>),Download(Option<ArtifactDownloa
 impl Source{fn ephemeral(&self)->&EphemeralEmit<App>{match self{Self::Emit(_,value)|Self::Download(_,value)|Self::Fault(_,value)=>value}}fn ephemeral_mut(&mut self)->&mut EphemeralEmit<App>{match self{Self::Emit(_,value)|Self::Download(_,value)|Self::Fault(_,value)=>value}}}
 pub struct DrawingCompletionPayload(pub Value);
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct RejectedCompletion{publication:DrawingCompletionPayload,fault:semio_framework::Fault}
 impl RejectedCompletion{pub fn new(original:semio_plugin::ArtifactToolCompletionRejection<App>)->Self{Self{publication:DrawingCompletionPayload(Value::Emit(original.emit.map_err(ArtifactCompletionFault::new),original.ephemeral)),fault:original.fault}}}
 pub struct Cursor{original:ManuallyDrop<Option<Source>>,phase:u8,faulted:bool}

@@ -342,18 +342,56 @@ fn e90_07(c: &Case) -> R {
 
 fn e90_08(c: &Case) -> R {
     let mut out = Vec::new();
-    if let (Some(mean), Some(v)) = (c.opt("g_mean"), c.opt("v_g")) {
-        let (sup, inf, single) = if v <= 0.05 { (mean, mean, true) } else { (mean * (1.0 + 1.64 * v), mean * (1.0 - 1.64 * v), false) };
-        out.push(info("g-k-sup", "G_k,sup", "G_k,sup", sup, if single { "V_G ≤ 0.05: single value G_k = mean".into() } else { format!("G_m(1 + 1.64 V_G) = {}", f(sup)) }));
-        out.push(info("g-k-inf", "G_k,inf", "G_k,inf", inf, if single { "V_G ≤ 0.05: single value G_k = mean".into() } else { format!("G_m(1 − 1.64 V_G) = {}", f(inf)) }));
-        out.push(Outcome::advisory("v-g-bound", "V_G small enough for the distribution assumption", "V_G klein genug für die Verteilungsannahme", DIM, 0.1, v.max(1e-9), format!("V_G = {} against 0.1 (separate upper and lower values beyond)", f(v))));
+    let force = |id, en, de, value, steps| Outcome::info(id, en, de, QuantityKind::Force, value, steps);
+    let given = |key| c.n(key).and_then(|value| {
+        if value.is_finite() { Ok(value) } else { Err(format!("Enter a finite value for {key}")) }
+    });
+    match c.so("g_value_basis", "none") {
+        "none" => {}
+        "single-mean" => out.push(force("g-k", "Single characteristic permanent action G_k", "Einzelner charakteristischer Wert der ständigen Einwirkung G_k", given("g_mean")?,
+            "§4.1.2(2)–(3): G_k equals the mean when the action variability is small and the structure is insensitive to that variability.".into())),
+        basis @ ("normal-bounds" | "prescribed-bounds") => {
+            let (lower, upper, steps) = if basis == "normal-bounds" {
+                let mean = given("g_mean")?;
+                let variation = given("v_g")?;
+                if variation < 0.0 || (mean == 0.0 && variation > 0.0) {
+                    return Err("Enter a nonnegative coefficient of variation with a defined mean".into());
+                }
+                let action = Dist::Normal { mean, sd: mean.abs() * variation };
+                (action.fractile(0.05), action.fractile(0.95), "§4.1.2(4): 5% and 95% fractiles of the qualified Gaussian model.")
+            } else {
+                (given("g_prescribed_lower")?, given("g_prescribed_upper")?, "§4.1.2(2): bounds supplied by the documented design basis.")
+            };
+            if !lower.is_finite() || !upper.is_finite() || lower > upper {
+                return Err("Enter finite characteristic bounds in ascending order".into());
+            }
+            out.push(force("g-k-sup", "Upper characteristic permanent action G_k,sup", "Oberer charakteristischer Wert der ständigen Einwirkung G_k,sup", upper, steps.into()));
+            out.push(force("g-k-inf", "Lower characteristic permanent action G_k,inf", "Unterer charakteristischer Wert der ständigen Einwirkung G_k,inf", lower, steps.into()));
+        }
+        _ => return Err("Select the documented characteristic-value basis for the permanent action".into()),
     }
-    if let (Some(mean), Some(cov)) = (c.opt("q_mean"), c.opt("q_cov")) {
-        let qk = annual_maximum_characteristic(mean, cov);
-        out.push(info("q-k", "Q_k = 98 % fractile of the annual maximum", "Q_k = 98 %-Fraktile des Jahresmaximums", qk, format!("Gumbel mean {} V {} → {}", f(mean), f(cov), f(qk))));
+    match c.so("q_value_basis", "none") {
+        "none" => {}
+        "prescribed" => out.push(force("q-k", "Prescribed variable action Q_k", "Vorgegebene veränderliche Einwirkung Q_k", given("q_prescribed")?,
+            "§4.1.2(7): project-supplied characteristic or nominal value.".into())),
+        "annual-gumbel" => {
+            let mean = given("q_mean")?;
+            let cov = given("q_cov")?;
+            let probability = c.o("q_probability", 0.98);
+            if mean <= 0.0 || cov < 0.0 || probability <= 0.0 || probability >= 1.0 || !probability.is_finite() {
+                return Err("Enter a positive annual-maximum mean, a nonnegative variation and a fractile probability between zero and one".into());
+            }
+            let value = annual_maximum_characteristic(mean, cov, probability);
+            if !value.is_finite() {
+                return Err("The resulting characteristic variable action must be finite".into());
+            }
+            out.push(force("q-k", "Characteristic variable action Q_k", "Charakteristische veränderliche Einwirkung Q_k", value,
+                format!("Fractile of the qualified Gumbel annual maxima at probability {}.", f(probability))));
+        }
+        _ => return Err("Select the documented characteristic-value basis for the variable action".into()),
     }
     if out.is_empty() {
-        return Err("give g_mean and v_g, or q_mean and q_cov".into());
+        return Err("Choose a characteristic-value basis for a permanent or variable action".into());
     }
     Ok(out)
 }
@@ -418,7 +456,7 @@ pub const BASIS_ENTRIES: &[Entry] = &[
     Entry { id: "E90.05", part: "Annex B", clause: "B4-B5", en: "Design supervision and inspection levels", de: "Entwurfs- und Ausführungsüberwachung", inputs: &["rc", "dsl", "il"], eval: e90_05 },
     Entry { id: "E90.06", part: "§3.2", clause: "3.2", en: "Design situations", de: "Bemessungssituationen", inputs: &["situations"], eval: e90_06 },
     Entry { id: "E90.07", part: "§4.1.1", clause: "4.1.1", en: "Classification of actions", de: "Einwirkungsklassifikation", inputs: &["variation", "origin", "spatial", "nature", "effect"], eval: e90_07 },
-    Entry { id: "E90.08", part: "§4.1.2", clause: "4.1.2", en: "Characteristic values", de: "Charakteristische Werte", inputs: &["g_mean", "v_g", "q_mean", "q_cov"], eval: e90_08 },
+    Entry { id: "E90.08", part: "§4.1.2", clause: "4.1.2", en: "Characteristic values", de: "Charakteristische Werte", inputs: &["g_value_basis", "g_mean", "v_g", "g_prescribed_lower", "g_prescribed_upper", "q_value_basis", "q_mean", "q_cov", "q_probability", "q_prescribed"], eval: e90_08 },
     Entry { id: "E90.09", part: "§4.1.3", clause: "4.1.3", en: "Other representative values", de: "Weitere repräsentative Werte", inputs: &["category", "altitude", "psi0", "psi1", "psi2"], eval: e90_09 },
     Entry { id: "E90.10", part: "§4.2", clause: "4.2", en: "Material properties", de: "Materialeigenschaften", inputs: &["x_k", "eta", "gamma_m", "material", "e_d"], eval: e90_10 },
     Entry { id: "E90.11", part: "§4.3", clause: "4.3", en: "Geometrical data", de: "Geometrische Größen", inputs: &["a_nom", "delta_a"], eval: e90_11 },

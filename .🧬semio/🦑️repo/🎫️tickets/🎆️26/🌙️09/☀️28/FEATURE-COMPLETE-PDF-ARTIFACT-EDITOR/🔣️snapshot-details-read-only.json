@@ -1,0 +1,182 @@
+{
+  "schema": {
+    "type": "object",
+    "properties": {
+      "declaredVersion": {
+        "type": "string",
+        "readOnly": true
+      },
+      "roles": {
+        "$ref": "#/$defs/Roles",
+        "readOnly": true
+      },
+      "retained": {
+        "$ref": "#/$defs/Managed"
+      },
+      "source": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "optional": {
+            "type": "string",
+            "default": "untitled"
+          },
+          "managed": {
+            "type": "number",
+            "readOnly": true,
+            "default": 0
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "declaredVersion",
+      "roles",
+      "retained",
+      "source"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "Roles": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "owner"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "Managed": {
+        "type": "object",
+        "readOnly": true,
+        "properties": {
+          "observed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "observed"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "snapshot": {
+    "declaredVersion": "1.6",
+    "roles": [
+      {
+        "owner": 12
+      },
+      {
+        "owner": 15
+      }
+    ],
+    "retained": {
+      "observed": true
+    },
+    "source": {
+      "title": "Editable"
+    }
+  },
+  "paths": [
+    {
+      "segments": [
+        "declaredVersion"
+      ],
+      "edit": false
+    },
+    {
+      "segments": [
+        "roles"
+      ],
+      "edit": false,
+      "insert": false
+    },
+    {
+      "segments": [
+        "roles",
+        0
+      ],
+      "edit": false,
+      "reorder": false
+    },
+    {
+      "segments": [
+        "roles",
+        0,
+        "owner"
+      ],
+      "edit": false
+    },
+    {
+      "segments": [
+        "retained",
+        "observed"
+      ],
+      "edit": false
+    },
+    {
+      "segments": [
+        "source",
+        "title"
+      ],
+      "edit": true
+    },
+    {
+      "segments": [
+        "source"
+      ],
+      "edit": true,
+      "insert": true
+    }
+  ],
+  "addable": [
+    "optional"
+  ],
+  "writes": [
+    {
+      "segments": [
+        "declaredVersion"
+      ],
+      "value": "1.7",
+      "allowed": false
+    },
+    {
+      "segments": [
+        "roles",
+        0,
+        "owner"
+      ],
+      "value": 13,
+      "allowed": false
+    },
+    {
+      "segments": [
+        "retained",
+        "observed"
+      ],
+      "value": false,
+      "allowed": false
+    },
+    {
+      "segments": [
+        "source",
+        "title"
+      ],
+      "value": "Edited",
+      "allowed": true
+    }
+  ]
+}

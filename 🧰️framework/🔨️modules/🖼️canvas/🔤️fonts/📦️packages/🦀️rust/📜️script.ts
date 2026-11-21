@@ -8,11 +8,11 @@ import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { isMainModuleV1 } from "../../../../⚙️runtime/🏁️main/🟦️.ts";
 
-class BuildScript extends BundleScript {
+export class FontAssetToolBuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Font tool build takes no arguments");
     await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--bin", "pack-typst-font-assets"], this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
   }
 }
 
-if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dirname).register("build", BuildScript)).run(process.argv.slice(2), original));
+if (isMainModuleV1(import.meta.url)) await receiveScriptProcessInvocation(process.env, original => (new ScriptRouter(import.meta.dirname).register("build", FontAssetToolBuildScript)).run(process.argv.slice(2), original));

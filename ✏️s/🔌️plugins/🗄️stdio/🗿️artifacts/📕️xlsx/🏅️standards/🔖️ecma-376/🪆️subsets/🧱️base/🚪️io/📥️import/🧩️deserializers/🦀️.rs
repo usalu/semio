@@ -1,7 +1,7 @@
 //! 🧩️ SpreadsheetML package decoding and byte-shape sniffing.
 
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;
-use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::REL_TYPE_OFFICE_DOCUMENT_STRICT;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::{workbook_media_type_matches, REL_TYPE_OFFICE_DOCUMENT_STRICT};
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::xlsx_part_is_xml;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxXmlPart;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
@@ -44,6 +44,6 @@ pub fn decode_xlsx(data: &[u8]) -> Result<XlsxSnapshot, XlsxError> {
 pub fn sniff_xlsx_bytes(data: &[u8]) -> bool {
     let Ok(opc) = opc::decode_opc(data) else { return false };
     let path = opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT));
-    path.and_then(|path| opc.content_types.resolve(&path)).is_some_and(|content_type| content_type.contains("spreadsheetml.sheet.main"))
+    path.and_then(|path| opc.content_types.resolve(&path)).is_some_and(workbook_media_type_matches)
 }
 //#endregion 🔖️Sniff

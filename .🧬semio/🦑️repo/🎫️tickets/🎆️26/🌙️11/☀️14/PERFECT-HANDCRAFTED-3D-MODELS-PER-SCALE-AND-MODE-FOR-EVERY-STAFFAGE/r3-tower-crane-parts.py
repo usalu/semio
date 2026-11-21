@@ -324,7 +324,9 @@ def counter_jib(sc):
         p.structure.append(box("joint-counter-root", "counter-jib", [K.CJ_HEEL + 0.2, 0, 0], [0.3, 1.2, 1.2], tone=0.4, member="counter-jib", part="joint"))
         p.draw(shape("rect", "counter-jib-envelope", "counter-jib", "body", 1.8, True, 0.75, "lattice", STEEL, ex(-0.7, 0.7), x=K.CJ_HEEL, y=-0.7, w=K.CJ_TAIL - K.CJ_HEEL, h=1.4))
         return p
-    joints = [box("joint-counter-heel", "counter-jib", [K.CJ_HEEL + 0.1, 0.64, 0], [0.16, 0.16, 1.4], tone=0.4, member="counter-jib", part="joint")]
+    joints = [rev(name, "counter-jib", [K.CJ_HEEL + 0.01, 0.64, z], [[0, 0.036], [0.12, 0.036]],
+                  axis=(1, 0, 0), tone=0.4, member="counter-jib", part="joint")
+              for name, z in (("joint-counter-heel", 0.64), ("joint-counter-heel-right", -0.64))]
     return lattice(K.counter_bars(sc), "counter-jib", sc, joints)
 
 

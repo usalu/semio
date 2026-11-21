@@ -40,7 +40,7 @@ impl<'ctx> WindowActionsCtx<'ctx> {
         let archive = protocol::decode_document_archive_bytes(bytes).await.map_err(|error| error.to_string())?;
         let session = self.docs.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
-        plugin.load_app_document_archive(session.instance_id, &archive).await?;
+        plugin.load_app_document_archive(session.instance_id, &archive).await.map_err(|fault| fault.to_string())?;
         self.as_session().refresh_history_snapshot().await;
         self.refresh_ui(UiDirtyScope::Full).await
     }

@@ -13,6 +13,7 @@ pub type RasterDiffText = String;
 use crate::*;
 
 use semio_s_artifact_raster_raster_model::RasterLayerNode;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioColorspace;
 use semio_framework_dsl_record::{RecordValue,RecordSpec};
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct RasterAssetDeltaDsl {key:String,#[dsl(block)] image:Option<RasterImageDsl>}
@@ -88,16 +89,16 @@ impl protocol::DiffText for RasterDiff {
  }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslScalar)]
-enum RasterImageColorspaceDsl { Rgb, Rgba, Grayscale, GrayscaleAlpha, Indexed }
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslScalar, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned)]
+pub enum RasterImageColorspaceDsl { Rgb, Rgba, Grayscale, GrayscaleAlpha, Indexed }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 struct RasterImageFrameDsl { delay_ms: u32, rgba8: Vec<u8> }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-struct RasterImageMetadataDsl { key: String, value: String }
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
+pub struct RasterImageMetadataDsl { pub key: String, pub value: String }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
 pub struct RasterImageDsl {
     schema: String,
     width: u32,
@@ -113,24 +114,38 @@ pub struct RasterImageDsl {
 
 impl From<&SemioImageSnapshot> for RasterImageDsl {
     fn from(image: &SemioImageSnapshot) -> Self {
-        use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioColorspace;
         Self {
             schema: image.schema.clone(), width: image.width, height: image.height, bit_depth: image.bit_depth,
-            colorspace: match image.colorspace { SemioColorspace::Rgb => RasterImageColorspaceDsl::Rgb, SemioColorspace::Rgba => RasterImageColorspaceDsl::Rgba, SemioColorspace::Grayscale => RasterImageColorspaceDsl::Grayscale, SemioColorspace::GrayscaleAlpha => RasterImageColorspaceDsl::GrayscaleAlpha, SemioColorspace::Indexed => RasterImageColorspaceDsl::Indexed },
+            colorspace: image.colorspace.into(),
             frames: image.frames.iter().map(|frame| RasterImageFrameDsl { delay_ms: frame.delay_ms, rgba8: frame.rgba8.clone() }).collect(),
-            icc: image.icc.clone(), metadata: image.metadata.iter().map(|entry| RasterImageMetadataDsl { key: entry.key.clone(), value: entry.value.clone() }).collect(),
+            icc: image.icc.clone(),
+            metadata: image.metadata.iter().map(RasterImageMetadataDsl::from).collect(),
         }
     }
 }
 
 impl From<RasterImageDsl> for SemioImageSnapshot {
     fn from(image: RasterImageDsl) -> Self {
-        use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+        use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioImageFrame, SemioImageMetadataEntry};
         Self {
             schema: image.schema, width: image.width, height: image.height, bit_depth: image.bit_depth,
-            colorspace: match image.colorspace { RasterImageColorspaceDsl::Rgb => SemioColorspace::Rgb, RasterImageColorspaceDsl::Rgba => SemioColorspace::Rgba, RasterImageColorspaceDsl::Grayscale => SemioColorspace::Grayscale, RasterImageColorspaceDsl::GrayscaleAlpha => SemioColorspace::GrayscaleAlpha, RasterImageColorspaceDsl::Indexed => SemioColorspace::Indexed },
+            colorspace: image.colorspace.into(),
             frames: image.frames.into_iter().map(|frame| SemioImageFrame { delay_ms: frame.delay_ms, rgba8: frame.rgba8 }).collect(),
             icc: image.icc, metadata: image.metadata.into_iter().map(|entry| SemioImageMetadataEntry { key: entry.key, value: entry.value }).collect(),
         }
     }
+}
+
+impl From<SemioColorspace> for RasterImageColorspaceDsl {
+    fn from(value:SemioColorspace)->Self {
+        match value {SemioColorspace::Rgb=>Self::Rgb,SemioColorspace::Rgba=>Self::Rgba,SemioColorspace::Grayscale=>Self::Grayscale,SemioColorspace::GrayscaleAlpha=>Self::GrayscaleAlpha,SemioColorspace::Indexed=>Self::Indexed}
+    }
+}
+impl From<RasterImageColorspaceDsl> for SemioColorspace {
+    fn from(value:RasterImageColorspaceDsl)->Self {
+        match value {RasterImageColorspaceDsl::Rgb=>Self::Rgb,RasterImageColorspaceDsl::Rgba=>Self::Rgba,RasterImageColorspaceDsl::Grayscale=>Self::Grayscale,RasterImageColorspaceDsl::GrayscaleAlpha=>Self::GrayscaleAlpha,RasterImageColorspaceDsl::Indexed=>Self::Indexed}
+    }
+}
+impl From<&semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageMetadataEntry> for RasterImageMetadataDsl {
+    fn from(value:&semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageMetadataEntry)->Self {Self {key:value.key.clone(),value:value.value.clone()}}
 }

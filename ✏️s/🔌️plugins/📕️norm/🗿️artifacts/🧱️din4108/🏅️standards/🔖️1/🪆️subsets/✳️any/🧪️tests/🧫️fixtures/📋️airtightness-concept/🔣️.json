@@ -1,0 +1,100 @@
+[
+  {
+    "records": [
+      "Plan A-01",
+      "Window J-02; cable sleeve J-03",
+      "Interior plaster and eaves membrane",
+      "Inspect before closing the lining"
+    ],
+    "missing": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  {
+    "records": [
+      "",
+      "Window J-02",
+      "Membrane and tape",
+      "Site supervisor at first fix"
+    ],
+    "missing": [
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  {
+    "records": [
+      "Section A-01",
+      "",
+      "Membrane and tape",
+      "Site supervisor at first fix"
+    ],
+    "missing": [
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  {
+    "records": [
+      "Section A-01",
+      "Window J-02",
+      " \t\r\n ",
+      "Site supervisor at first fix"
+    ],
+    "missing": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  {
+    "records": [
+      "Section A-01",
+      "Window J-02",
+      "Plaster",
+      "   "
+    ],
+    "missing": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  {
+    "records": [
+      "",
+      "",
+      "",
+      ""
+    ],
+    "missing": [
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  {
+    "records": [
+      " Gebäudequerschnitt ",
+      "Fensteranschluss",
+      "Putz",
+      "Bauleitung"
+    ],
+    "missing": [
+      false,
+      false,
+      false,
+      false
+    ]
+  }
+]

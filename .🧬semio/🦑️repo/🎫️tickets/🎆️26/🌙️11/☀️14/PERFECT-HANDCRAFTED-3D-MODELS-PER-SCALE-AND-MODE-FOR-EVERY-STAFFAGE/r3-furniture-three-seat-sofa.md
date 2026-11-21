@@ -220,3 +220,54 @@ What the views show:
 - **Simplifications.** The arm front is plain: there is no separate front panel or welt. Back cushions have no piping. Zips, staples and spring wires are omitted.
 - **1:200 seat tops.** The single chamfer step shades slightly faceted in the renderer.
 - **Not run.** The repo test suites were not run, only the two checks of the brief.
+
+## Round 5 handcraft
+
+Scripts: `r5-three-seat-sofa-build.py` (round 3 scripts loaded, the 1:500 structure and its decision extended; writes `🗑️generated/r5-three-seat-sofa/🔣️.json` and `volumes/furniture/three-seat-sofa.json`), `r5-furniture-f03-ship.sh`, `r5-furniture-f03-report.py`. Sheets opened for grading (Read tool, 1000 to 1400 px copies of the 2400 px sheets under `🗑️generated/r5-three-seat-sofa/before|after/`): `r3-sheet` body, structure and thermal (`--cut`) at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50, one clip frame, and `r3-2d` at every scale (the 2D drawings were not changed in round 5, so the before set is the after set).
+
+### Reference (manufacturer data)
+
+| Quantity | Reference | Source |
+| --- | --- | --- |
+| Overall width / height / depth | 1.80-2.18 m / 0.81-0.91 m / 0.85-0.95 m | Wayfair sofa-dimension guide; Lowe's listing (34 in depth) |
+| Seat height | 0.43-0.48 m | Livingetc (designer data) |
+| Seat depth | 0.51-0.64 m | Wayfair, Livingetc |
+| Arm height | 0.60-0.65 m for low track arms (market 0.64-0.78) | Livingetc, Lowe's / Lulu and Georgia listings |
+| Feet | turned hardwood 0.08-0.15 m | product practice |
+| Mass | 45-70 kg | product practice |
+
+### Model against reference (1:50)
+
+| Quantity | Model | Reference | Deviation |
+| --- | --- | --- | --- |
+| Width / height / depth | 2.00 / 0.85 / 0.90 m | 1.80-2.18 / 0.81-0.91 / 0.85-0.95 | in range |
+| Seat height | 0.43 m edge, 0.44 m crown | 0.43-0.48 | in range |
+| Seat depth | 0.57 m | 0.51-0.64 | in range |
+| Arm height / width | 0.62 m / 0.20 m | 0.60-0.65 / 0.15-0.25 | in range |
+| Feet | 0.10 m, 45 to 60 mm | 0.08-0.15 | in range |
+| Mass | 51.8 kg | 45-70 | in range |
+
+### Grades (before -> after)
+
+| Scale | Body | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | A- -> A- | A- -> A- | A- -> A- |
+| 1:100 | A- -> A- | A- -> A- | A- -> A- |
+| 1:200 | B+ -> B+ | A- -> A- | A- -> A- |
+| 1:500 | A- -> A- | B+ -> B+ | B -> A- |
+
+Poses at 1:50 (one-seated, two-seated, lounging, seat-proof-load, impact-key, recovering-key) and clip lie-down-on-sofa t 2.5 s: A- (closed; sunk cushions pass behind the plinth face without visible interpenetration).
+
+### Defects seen before, and what was changed
+
+- 1:500 structure: the seat bearing bands stood on nothing between the two base rails (no deck), so the load path of the cushions was broken. A 75 mm ply deck member now spans rail to rail under the seat bands (0.155 to 0.23 m, between the arms); the 1:500 structure decision says so (en, de).
+
+### Checks
+
+`volumes-check.ts furniture/three-seat-sofa --product`: PASS (66.5 s); silhouette IoU 1:50 0.9995 / 1.000 / 0.9996, 1:500 1.000 / 1.000 / 1.000. After the splice `r3-validate.ts <asset> --catalog-only --volumes`: VALID, schema 0, validateAsset 0, checkVolumes 0.
+
+### Remaining issues
+
+- 1:200 body: arm rolls, cushion tops and the back-frame top are one chamfer step that shades faceted (B+); a two-step round would add triangles against the 1:100 list, which `volumes-monotonic` refuses at equal solid counts.
+- Rigid cushions sink as blocks; foam does not deform (rig limit). Arm front without welt, back cushions without piping.
+- `r3-sheet --list thermal` at 1:100 to 1:500 paints regions grey and stripes coincident region solids (sheet legend and z order); the data are right.

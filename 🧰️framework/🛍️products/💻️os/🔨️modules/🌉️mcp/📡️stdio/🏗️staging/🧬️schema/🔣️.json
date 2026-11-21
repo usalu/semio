@@ -84,6 +84,22 @@
     "LaunchMode": {
       "const": "prototype"
     },
+    "ComponentCustody": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "binaryOverride", "catalog", "modelsAvailable", "staged", "active"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "binaryOverride": { "type": ["string", "null"] },
+          "catalog": { "type": ["string", "null"] },
+          "modelsAvailable": { "type": "boolean" },
+          "staged": { "type": "array", "items": { "type": "string" } },
+          "active": { "type": "array", "items": { "enum": ["native", "models"] } }
+        }
+      }
+    },
     "Lifetime": {
       "type": "object",
       "additionalProperties": false,
@@ -174,6 +190,7 @@
             "additionalProperties": false,
             "required": [
               "name",
+        "catalog",
               "args",
               "expected"
             ],
@@ -181,6 +198,9 @@
               "name": {
                 "type": "string"
               },
+        "catalog": {
+          "type": ["string", "null"]
+        },
               "args": {
                 "type": "array",
                 "items": {

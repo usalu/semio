@@ -1,3 +1,4 @@
+import { type CaseNumber, type CaseRow, type CaseText, parseCaseNumber, parseCaseRow, parseCaseText } from "../📸️snapshot/🟦️.ts";
 /** 🔺️ `Din4108Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `📇️registry/🧬️contract/🏭️generator/🟦️.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
@@ -25,6 +26,7 @@ export interface Din4108Diff {
   elements?: Din4108ElementDelta;
   /** @state artifact */
   thermalBridges?: Din4108ThermalBridgeDelta;
+  cases: CaseRowDelta;
 }
 
 export interface Din4108WindowDelta {
@@ -215,7 +217,7 @@ export interface Din4108ThermalBridgePatch {
   bb2Type: string | null;
 }
 
-export const parseDin4108Diff: NormWireReader<Din4108Diff> = normWireObject<Din4108Diff>({ climateZone: normWireDefault(normWireNullable(parseDin4108ClimateZoneDe), () => null), usage: normWireDefault(normWireNullable(normWireString), () => null), tIntC: normWireDefault(normWireNullable(normWireNumber), () => null), rhInt: normWireDefault(normWireNullable(normWireNumber), () => null), hasMechanicalVentilation: normWireDefault(normWireNullable(normWireBoolean), () => null), airtightnessN50: normWireDefault(normWireNullable(normWireNumber), () => null), bb2DetailsConform: normWireDefault(normWireNullable(normWireBoolean), () => null), zones: normWireOptional(normWireAny<[Din4108ZoneDelta]>(normWireRef(() => parseDin4108ZoneDelta))), elements: normWireOptional(normWireAny<[Din4108ElementDelta]>(normWireRef(() => parseDin4108ElementDelta))), thermalBridges: normWireOptional(normWireAny<[Din4108ThermalBridgeDelta]>(normWireRef(() => parseDin4108ThermalBridgeDelta))) });
+export const parseDin4108Diff: NormWireReader<Din4108Diff> = normWireObject<Din4108Diff>({ climateZone: normWireDefault(normWireNullable(parseDin4108ClimateZoneDe), () => null), usage: normWireDefault(normWireNullable(normWireString), () => null), tIntC: normWireDefault(normWireNullable(normWireNumber), () => null), rhInt: normWireDefault(normWireNullable(normWireNumber), () => null), hasMechanicalVentilation: normWireDefault(normWireNullable(normWireBoolean), () => null), airtightnessN50: normWireDefault(normWireNullable(normWireNumber), () => null), bb2DetailsConform: normWireDefault(normWireNullable(normWireBoolean), () => null), zones: normWireOptional(normWireAny<[Din4108ZoneDelta]>(normWireRef(() => parseDin4108ZoneDelta))), elements: normWireOptional(normWireAny<[Din4108ElementDelta]>(normWireRef(() => parseDin4108ElementDelta))), thermalBridges: normWireOptional(normWireAny<[Din4108ThermalBridgeDelta]>(normWireRef(() => parseDin4108ThermalBridgeDelta))), cases: normWireRequired(normWireRef(() => parseCaseRowDelta)) });
 export const parseDin4108WindowDelta: NormWireReader<Din4108WindowDelta> = normWireObject<Din4108WindowDelta>({ removed: normWireOptional(normWireArray(normWireRef(() => parseDin4108WindowRemoval))), inserted: normWireOptional(normWireArray(normWireRef(() => parseDin4108WindowInsertion))), moved: normWireOptional(normWireArray(normWireRef(() => parseDin4108WindowRelocation))), modified: normWireOptional(normWireArray(normWireRef(() => parseDin4108WindowModification))) });
 export const parseDin4108WindowRemoval: NormWireReader<Din4108WindowRemoval> = normWireObject<Din4108WindowRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
 export const parseDin4108WindowInsertion: NormWireReader<Din4108WindowInsertion> = normWireObject<Din4108WindowInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), row: normWireRequired(parseDin4108ZoneWindow) });
@@ -246,3 +248,103 @@ export const parseDin4108ThermalBridgeInsertion: NormWireReader<Din4108ThermalBr
 export const parseDin4108ThermalBridgeRelocation: NormWireReader<Din4108ThermalBridgeRelocation> = normWireObject<Din4108ThermalBridgeRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });
 export const parseDin4108ThermalBridgeModification: NormWireReader<Din4108ThermalBridgeModification> = normWireObject<Din4108ThermalBridgeModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseDin4108ThermalBridgePatch)) });
 export const parseDin4108ThermalBridgePatch: NormWireReader<Din4108ThermalBridgePatch> = normWireObject<Din4108ThermalBridgePatch>({ psi: normWireDefault(normWireNullable(normWireNumber), () => null), lengthM: normWireDefault(normWireNullable(normWireNumber), () => null), bb2Type: normWireDefault(normWireNullable(normWireString), () => null) });
+export interface CaseNumberPatch {
+  value?: number | null;
+}
+export const parseCaseNumberPatch: NormWireReader<CaseNumberPatch> = normWireObject<CaseNumberPatch>({ value: normWireOptional(normWireNullable(normWireNumber)) });
+export interface CaseNumberRemoval {
+  id: string;
+  index: number;
+}
+export const parseCaseNumberRemoval: NormWireReader<CaseNumberRemoval> = normWireObject<CaseNumberRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export interface CaseNumberInsertion {
+  index: number;
+  row: CaseNumber;
+}
+export const parseCaseNumberInsertion: NormWireReader<CaseNumberInsertion> = normWireObject<CaseNumberInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseCaseNumber) });
+export interface CaseNumberRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+export const parseCaseNumberRelocation: NormWireReader<CaseNumberRelocation> = normWireObject<CaseNumberRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export interface CaseNumberModification {
+  id: string;
+  patch: CaseNumberPatch;
+}
+export const parseCaseNumberModification: NormWireReader<CaseNumberModification> = normWireObject<CaseNumberModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseCaseNumberPatch)) });
+export interface CaseNumberDelta {
+  removed: CaseNumberRemoval[];
+  inserted: CaseNumberInsertion[];
+  moved: CaseNumberRelocation[];
+  modified: CaseNumberModification[];
+}
+export const parseCaseNumberDelta: NormWireReader<CaseNumberDelta> = normWireObject<CaseNumberDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseCaseNumberRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseCaseNumberInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseCaseNumberRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseCaseNumberModification))) });
+export interface CaseTextPatch {
+  value?: string | null;
+}
+export const parseCaseTextPatch: NormWireReader<CaseTextPatch> = normWireObject<CaseTextPatch>({ value: normWireOptional(normWireNullable(normWireString)) });
+export interface CaseTextRemoval {
+  id: string;
+  index: number;
+}
+export const parseCaseTextRemoval: NormWireReader<CaseTextRemoval> = normWireObject<CaseTextRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export interface CaseTextInsertion {
+  index: number;
+  row: CaseText;
+}
+export const parseCaseTextInsertion: NormWireReader<CaseTextInsertion> = normWireObject<CaseTextInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseCaseText) });
+export interface CaseTextRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+export const parseCaseTextRelocation: NormWireReader<CaseTextRelocation> = normWireObject<CaseTextRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export interface CaseTextModification {
+  id: string;
+  patch: CaseTextPatch;
+}
+export const parseCaseTextModification: NormWireReader<CaseTextModification> = normWireObject<CaseTextModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseCaseTextPatch)) });
+export interface CaseTextDelta {
+  removed: CaseTextRemoval[];
+  inserted: CaseTextInsertion[];
+  moved: CaseTextRelocation[];
+  modified: CaseTextModification[];
+}
+export const parseCaseTextDelta: NormWireReader<CaseTextDelta> = normWireObject<CaseTextDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseCaseTextRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseCaseTextInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseCaseTextRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseCaseTextModification))) });
+export interface CaseRowPatch {
+  labelEn?: string | null;
+  labelDe?: string | null;
+  entryId?: string | null;
+  numbers?: CaseNumberDelta;
+  texts?: CaseTextDelta;
+}
+export const parseCaseRowPatch: NormWireReader<CaseRowPatch> = normWireObject<CaseRowPatch>({ labelEn: normWireOptional(normWireNullable(normWireString)), labelDe: normWireOptional(normWireNullable(normWireString)), entryId: normWireOptional(normWireNullable(normWireString)), numbers: normWireOptional(normWireRef(() => parseCaseNumberDelta)), texts: normWireOptional(normWireRef(() => parseCaseTextDelta)) });
+export interface CaseRowRemoval {
+  id: string;
+  index: number;
+}
+export const parseCaseRowRemoval: NormWireReader<CaseRowRemoval> = normWireObject<CaseRowRemoval>({ id: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export interface CaseRowInsertion {
+  index: number;
+  row: CaseRow;
+}
+export const parseCaseRowInsertion: NormWireReader<CaseRowInsertion> = normWireObject<CaseRowInsertion>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), row: normWireRequired(parseCaseRow) });
+export interface CaseRowRelocation {
+  id: string;
+  from: number;
+  to: number;
+}
+export const parseCaseRowRelocation: NormWireReader<CaseRowRelocation> = normWireObject<CaseRowRelocation>({ id: normWireRequired(normWireString), from: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), to: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export interface CaseRowModification {
+  id: string;
+  patch: CaseRowPatch;
+}
+export const parseCaseRowModification: NormWireReader<CaseRowModification> = normWireObject<CaseRowModification>({ id: normWireRequired(normWireString), patch: normWireRequired(normWireRef(() => parseCaseRowPatch)) });
+export interface CaseRowDelta {
+  removed: CaseRowRemoval[];
+  inserted: CaseRowInsertion[];
+  moved: CaseRowRelocation[];
+  modified: CaseRowModification[];
+}
+export const parseCaseRowDelta: NormWireReader<CaseRowDelta> = normWireObject<CaseRowDelta>({ removed: normWireRequired(normWireArray(normWireRef(() => parseCaseRowRemoval))), inserted: normWireRequired(normWireArray(normWireRef(() => parseCaseRowInsertion))), moved: normWireRequired(normWireArray(normWireRef(() => parseCaseRowRelocation))), modified: normWireRequired(normWireArray(normWireRef(() => parseCaseRowModification))) });

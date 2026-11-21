@@ -6,6 +6,15 @@ use crate::editor::modes::edit;
 use crate::editor::modes::edit::windows::main;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer;
+use store::os_store::{ColdMutationApplyFactory, OriginalRecordMemberSnapshotOpen};
+use store::os_store::document_store_owners::{
+    DocumentStoreOwners, DocumentStoreOwnersAdmissionError, MemberStoreProducer,
+    bounded_artifact_store_owners_shared_semantic_source_demands,
+    bounded_artifact_store_owners_with_shared_semantic_preparation,
+};
+use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::{RetirementDemand, ValueError};
 use semio_plugin::app::InteractionView;
 use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_plugin::AppOperationContext;
@@ -20,6 +29,35 @@ use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
 use semio_plugin::DraftView;
 use semio_plugin::Editor;
+
+type GraphPreparation = ColdMutationApplyFactory<SemioGraphSnapshot, SemioGraphMutation>;
+const GRAPH_PREPARATION_CHILDREN: RetainedCloneBirthDemand = RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 };
+
+fn graph_member_demand() -> Result<RetirementDemand, ValueError> {
+    bounded_artifact_store_owners_shared_semantic_source_demands::<SemioGraphSnapshot, SemioGraphMutation, GraphPreparation>(GRAPH_PREPARATION_CHILDREN, 0)
+}
+
+impl MemberStoreProducer<SemioGraphSnapshot, SemioGraphMutation> for SemioMemberStoreProducer<SemioGraphSnapshot, SemioGraphMutation> {
+    type SnapshotOpen = OriginalRecordMemberSnapshotOpen<SemioGraphSnapshot>;
+
+    fn member_store_owners_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(graph_member_demand()?.copy_bytes)
+    }
+
+    fn member_store_owners_birth_demand(&self) -> Result<RetainedCloneBirthDemand, ValueError> {
+        let demand = graph_member_demand()?;
+        Ok(RetainedCloneBirthDemand { capacity_bytes: demand.capacity_bytes, depth: demand.depth })
+    }
+
+    fn member_store_owners(&self, grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<SemioGraphSnapshot, SemioGraphMutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<SemioGraphSnapshot, SemioGraphMutation>> {
+        bounded_artifact_store_owners_with_shared_semantic_preparation(grant, GRAPH_PREPARATION_CHILDREN, 0, GraphPreparation::default).map(|(mut owners, progress)| {
+            owners.operation_wire = store::os_store::ArtifactOperationWire::semantic::<SemioGraphSnapshot>()
+                .with_batch_digest()
+                .with_original_binary_receiving();
+            (owners, progress)
+        })
+    }
+}
 use semio_plugin::Emit;
 use semio_plugin::Fault;
 use semio_ui_locale::Label;
@@ -45,6 +83,24 @@ use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect
 pub const SEMIO_GRAPH_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("graph") };
+
+use semio_plugin::app::{child_read::{ChildReadCapability, ChildReadRegistration}, child_editor::{registration::ChildEditorRegistration, source::ChildEditorCapability}};
+
+/// 🪟️ The live graph owner's typed child read.
+pub static SEMIO_GRAPH_CHILD_READ: ChildReadRegistration<SemioGraphSnapshot> = ChildReadRegistration::new(ChildReadCapability {
+    artifact_kind: SEMIO_GRAPH_DIALECT.artifact_kind,
+    standard: SEMIO_GRAPH_DIALECT.standard.0,
+    subset: SEMIO_GRAPH_DIALECT.subset.0,
+});
+
+/// 📨️ Authorizes a batch of the graph owner's native semantic mutations.
+pub static SEMIO_GRAPH_CHILD_APPLY_MUTATIONS: ChildEditorRegistration<SemioGraphSnapshot> = ChildEditorRegistration::new(ChildEditorCapability {
+    artifact_kind: SEMIO_GRAPH_DIALECT.artifact_kind,
+    standard: SEMIO_GRAPH_DIALECT.standard.0,
+    subset: SEMIO_GRAPH_DIALECT.subset.0,
+    editor_id: "s.stdio.semio@v1/graph#editor",
+    command_id: "applyMutations",
+});
 pub const SEMIO_GRAPH_DOCUMENT_SCHEMA: &str = "stdio.semio.graph";
 //#endregion 🔖️Dialect
 

@@ -47,7 +47,9 @@ pub use semio_s_artifact_gis_gisterrain_operations::mutations;
 pub mod examples {
     #[path = "."]
     pub mod demo {
-        pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::examples::demo::*;
+        #[path = "../../../📚️examples/🎬️demo/🦀️.rs"]
+        mod component;
+        pub use component::*;
     }
 }
 #[path = "."]
@@ -57,16 +59,34 @@ pub mod editor {
         #[path = "../../🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "../../📌️panels/🔍️terrain-data/🦀️.rs"]
+        pub mod terrain_data;
         #[path = "."]
         pub mod presence {
             pub use semio_s_artifact_gis_gisterrain_terrain_descriptor::editor::gis3d::presence::*;
         }
         #[path = "."]
         pub mod commands {
+            #[path = "../../🎮️commands/📉️contours/🦀️.rs"]
+            pub mod contours;
+            #[path = "../../🎮️commands/📏️grade-region/🦀️.rs"]
+            pub mod grade_region;
+            #[path = "../../🎮️commands/📐️edit-elevation/🦀️.rs"]
+            pub mod edit_elevation;
+            #[path = "../../🎮️commands/🏔️elevation-source/🦀️.rs"]
+            pub mod elevation_source;
             #[path = "../../🎮️commands/🎨️example/🦀️.rs"]
             pub mod example;
             #[path = "../../🎮️commands/🏔️exaggeration/🦀️.rs"]
             pub mod exaggeration;
+            #[path = "../../🎮️commands/📥️import-elevation/🦀️.rs"]
+            pub mod import_elevation;
+            #[path = "../../🎮️commands/🌍️geojson/🦀️.rs"]
+            pub mod geojson;
+            #[path = "../../🎮️commands/📂️local-file/🦀️.rs"]
+            pub(crate) mod local_file;
+            #[path = "../../🎮️commands/🗺️overlays/🦀️.rs"]
+            pub mod overlays;
             #[path = "../../🎮️commands/👁️view/🦀️.rs"]
             pub mod view;
 

@@ -11,6 +11,8 @@ use semio_framework_3d_brep_representation::topology::history::{LabelSource, Per
 use semio_framework_3d_brep_representation::topology::Body;
 #[path="🎟️original/🦀️.rs"]
 mod original;
+#[path = "🚚️registry-exchange/🦀️.rs"]
+pub mod registry_exchange;
 
 /// 🧵️ An ordered chain of oriented edges, labelled because a wire has no arena identity of its own.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]

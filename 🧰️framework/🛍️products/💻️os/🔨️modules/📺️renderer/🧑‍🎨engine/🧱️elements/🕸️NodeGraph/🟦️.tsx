@@ -486,7 +486,7 @@ export function FlowGraphCanvasHost(props: FlowGraphCanvasHostProps) {
             cameraPanRef.current = false;
             cameraOnlyGestureEndRef.current = false;
             setWireRefusal(null);
-            pickInteraction.onCanvasPointerLeave();
+            pickInteraction.onCanvasPointerCancel();
             for (const tracked of gestureRecognizer.pointers) event.currentTarget.setPointerCapture?.(tracked.pointerId);
             endGesture("gesture");
             if (session) issueFlowGestureStep(session.pointerCancelScreen(), () => schedulerRef.current?.invalidate());
@@ -560,7 +560,7 @@ export function FlowGraphCanvasHost(props: FlowGraphCanvasHostProps) {
           setWireRefusal(null);
           cameraPanRef.current = false;
           cameraOnlyGestureEndRef.current = false;
-          pickInteraction.onCanvasPointerLeave();
+          pickInteraction.onCanvasPointerCancel();
           endGesture("gesture");
           if (!session) return;
           issueFlowGestureStep(session.pointerCancelScreen(), () => {

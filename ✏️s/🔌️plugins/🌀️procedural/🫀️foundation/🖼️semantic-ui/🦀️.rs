@@ -1,7 +1,7 @@
 //! 🖼️ Shared semantic UI builders for procedural generation surfaces.
 #![allow(clippy::result_large_err)]
 
-use semio_plugin::plugin_app_close_prelude::*;
+use semio_plugin::plugin_app_close_prelude::{form, *};
 use semio_ui_locale::{Locale, Terminology};
 
 fn ui_assembly_error(code: &'static str) -> PluginAssemblyError {
@@ -38,6 +38,16 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -
         builder.push(key.to_owned(), value).map_err(|_| ui_assembly_error("ui.value.map.entry"))?;
     }
     Ok(UiValue::Map(builder.finish()))
+}
+
+/// 🖲️ Carries a retained graph hover target without embedding it in JSON text.
+pub fn graph_hover_args(target_id: &str, granularity: &str) -> UiAssemblyResult<UiValue> {
+    ui_value_map([
+        ("channel", ui_value_text("pointer")?),
+        ("domainId", ui_value_text("graph")?),
+        ("targetId", ui_value_text(target_id)?),
+        ("granularityId", ui_value_text(granularity)?),
+    ])
 }
 
 /// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
@@ -103,7 +113,7 @@ pub fn activatable_scene_surface(mut node: BuiltNode, controller_id: &'static st
 fn generation_rename_field(factory: &ActionFactory, surface_prefix: &str, id: &str, name: &str, placeholder: &str) -> UiAssemblyResult<BuiltNode> {
     let (action, args) = factory.action("renameGeneration", Some(ui_value_map([("id", ui_value_text(id)?)])?))?;
     let editor = input(InputKind::Text).value(ui_text(name)?).placeholder(ui_label(placeholder)?).commit(ui_text("blur")?);
-    let editor = ui_id(editor, format!("{surface_prefix}.generation.{id}.rename"))?;
+    let editor = ui_id(editor, format!("{surface_prefix}.generation.{id}.rename"))?.try_label(placeholder).map_err(|_| ui_assembly_error("ui.generation.rename.label"))?;
     let editor = match args {
         Some(args) => editor.try_on_with(Trigger::Commit, action, args).map_err(|_| ui_assembly_error("ui.generation.rename.binding"))?,
         None => editor.try_on(Trigger::Commit, action).map_err(|_| ui_assembly_error("ui.generation.rename.binding"))?,
@@ -203,14 +213,172 @@ fn generation_control_args(generation_id: &str, question_id: &str, field_index: 
     ui_value_map(values)
 }
 
-/// 🏷️ The three user-visible words of the generated input form, resolved by the calling app.
+/// ⌨️ Publishes an editable text draft with its exact retained body when it outgrows an inline field.
+pub fn retained_text_control(
+    id: &str,
+    label: &str,
+    kind: InputKind,
+    value: &str,
+    controller: &'static str,
+    action: &str,
+    args: UiValue,
+) -> UiAssemblyResult<BuiltNode> {
+    let inline = UiText::try_from_str(value);
+    let key = inline.is_none().then(|| semio_plugin::input_value_body_key(value));
+    let authored = match &key { Some(key) => ui_text(key)?, None => inline.unwrap_or_default() };
+    let control = input(kind).value(authored).commit(ui_text(if key.is_some() { "blurRetainedBody" } else { "blurRetained" })?);
+    let control = ui_id(control, id)?.try_label(label).map_err(|_| ui_assembly_error("ui.input.label"))?;
+    let control = ui_build(generation_text_action(control, controller, action, args)?)?;
+    if let Some(key) = key {
+        let body = semio_plugin::paged_text_carrier(&key, value)?;
+        control.try_with_children([body]).map_err(|_| ui_assembly_error("ui.input.value"))
+    } else {
+        Ok(control)
+    }
+}
+
+/// 🏷️ The generated form and its control labels, resolved by the calling app.
 pub struct GenerationFormLabels<'a> {
+    pub title: &'a str,
     pub no_inputs: &'a str,
     pub field: &'a str,
     pub no_image: &'a str,
 }
 
-/// 📝 Renders generation questions as semantic controls with typed change bindings.
+fn generation_vector_axes(question: &semio_os_playbook_contract::PlaybookBlock, value: Option<&DslValue>) -> usize {
+    question.fields.as_deref().filter(|axes| !axes.is_empty()).map_or_else(
+        || value.and_then(DslValue::as_array).map_or(0, |axes| axes.len()),
+        |axes| axes.len(),
+    )
+}
+
+fn generation_question(
+    question: &semio_os_playbook_contract::PlaybookBlock,
+    values: &semio_os_playbook_contract::PlaybookValues,
+    controller_id: &'static str,
+    action: &str,
+    generation_id: &str,
+    words: &GenerationFormLabels<'_>,
+    resources: &semio_plugin::WindowResourceRequests<'_>,
+) -> UiAssemblyResult<BuiltNode> {
+    let value = values.get(&question.id).cloned().unwrap_or_else(|| semio_os_playbook_contract::default_value_for_block(question));
+    let field_id = format!("generate.form.{}", question.id);
+    let control_id = format!("{field_id}.control");
+    let args = || generation_control_args(generation_id, &question.id, None);
+    let mut control = match question.kind.as_str() {
+        "text" | "longText" => {
+            let value = value.as_str().unwrap_or_default();
+            retained_text_control(&control_id, &question.label, if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }, value, controller_id, action, args()?)?
+        }
+        "number" => {
+            let input = input(InputKind::Number).number(value.as_f64().unwrap_or(0.0)).commit(ui_text("blur")?);
+            ui_build(generation_text_action(ui_id(input, &control_id)?, controller_id, action, args()?)?)?
+        }
+        "slider" => {
+            let slider = slider(value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0))).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0));
+            ui_build(generation_control_action(ui_id(slider, &control_id)?, controller_id, action, args()?)?)?
+        }
+        "boolean" => {
+            let toggle = toggle(value.as_bool().unwrap_or(false)).icon(ui_text("toggle-left")?).text(ui_label(&question.label)?);
+            ui_build(generation_control_action(ui_id(toggle, &control_id)?, controller_id, action, args()?)?)?
+        }
+        "single" => {
+            let mut select = select(ui_text(value.as_str().unwrap_or_default())?);
+            for option in question.options.as_deref().unwrap_or_default() {
+                select = select.try_item(ui_text(&option.value)?, ui_label(&option.label)?).map_err(|_| ui_assembly_error("ui.select.item"))?;
+            }
+            ui_build(generation_control_action(ui_id(select, &control_id)?, controller_id, action, args()?)?)?
+        }
+        "vector" => {
+            let mut vector = vector_input(ui_label(&question.label)?)
+                .commit(ui_text("blur")?).try_id(&field_id).map_err(|_| ui_assembly_error("ui.vector.id"))?;
+            let axis_values = value.as_array().unwrap_or_default();
+            let axes = question.fields.as_deref().unwrap_or_default();
+            for index in 0..generation_vector_axes(question, Some(&value)) {
+                let field = axes.get(index);
+                let axis = field.map(|entry| entry.label.as_deref().unwrap_or(&entry.key).to_owned())
+                    .unwrap_or_else(|| format!("{} {}", words.field, index + 1));
+                let number = axis_values.get(index).and_then(DslValue::as_f64).or_else(|| field.and_then(|entry| entry.value)).unwrap_or(0.0);
+                let (action, args) = ActionFactory::new(controller_id).action(action, Some(generation_control_args(generation_id, &question.id, Some(index))?))?;
+                let args = args.ok_or_else(|| ui_assembly_error("ui.vector.args"))?;
+                vector = vector.try_axis(&format!("{field_id}.vector.{index}.input"), ui_label(axis)?, number, |input| input.try_on_with(Trigger::Commit, action, args).map_err(|(input, _)| input))
+                    .map_err(|_| ui_assembly_error("ui.vector.axis"))?;
+            }
+            return ui_build(vector);
+        }
+        "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
+        "image" => {
+            let id = format!("{field_id}.image");
+            match question.src.as_deref().map(str::trim).filter(|src| !src.is_empty()) {
+                Some(src) => {
+                    let alt = question.description.as_deref().map(str::trim).filter(|alt| !alt.is_empty()).unwrap_or(&question.label);
+                    resources.image(&id, src, ui_label(alt)?)?
+                }
+                None => ui_build(ui_id(text(ui_label(words.no_image)?), id)?)?,
+            }
+        }
+        _ => {
+            let input = input(InputKind::Text).value(ui_text(Value::from(&value).to_string())?).commit(ui_text("blur")?);
+            ui_build(generation_text_action(ui_id(input, &control_id)?, controller_id, action, args()?)?)?
+        }
+    };
+    let label = ui_label(&question.label)?;
+    if control.key.as_str() == control_id {
+        control.accessibility.label = Some(label.clone());
+    }
+    let field = ui_id(field(label), field_id)?;
+    ui_build(ui_child(field, control)?)
+}
+
+/// 📝️ The visible semantic form and its bounded location in the logical question sequence.
+pub struct GenerationFormPage {
+    pub body: BuiltNode,
+    pub index: usize,
+    pub total: usize,
+}
+
+impl GenerationFormPage {
+    /// 📬️ Reads the explicit request for one page from the addressed window's view context.
+    pub fn requested(view: &ViewModel, body_key: &str, window_id: &str) -> usize {
+        view.tree_windows.iter()
+            .find(|request| request.body_key == body_key && request.node_key == window_id && request.open.is_none() && request.rows == 1)
+            .map_or(0, |request| request.offset as usize)
+    }
+
+    /// 🧭️ Presents named pagination controls and a separate viewport for the current fields.
+    pub fn present(self, window_id: &str, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+        let mut body = self.body;
+        if self.total == 1 {
+            return Ok(body);
+        }
+        let current = self.index + 1;
+        let (previous, next, position) = match locale {
+            Locale::En => ("Previous page", "Next page", format!("Page {current} of {}", self.total)),
+            Locale::De => ("Vorherige Seite", "Nächste Seite", format!("Seite {current} von {}", self.total)),
+        };
+        let button = |key, label, icon, page: Option<usize>| -> UiAssemblyResult<BuiltNode> {
+            let button = ui_id(button(ui_label(label)?).icon(ui_text(icon)?).disabled(page.is_none()), key)?;
+            if let Some(page) = page {
+                let args = ui_value_map([("windowId", ui_value_text(window_id)?), ("page", UiValue::Number(page as f64))])?;
+                ui_build(generation_control_binding(button, Trigger::Activate, "framework", "setFormPage", args)?)
+            } else {
+                ui_build(button)
+            }
+        };
+        let mut position = ui_build(ui_id(text(ui_label(position)?), "generate.form.page.position")?)?;
+        position.accessibility.live = Liveness::Polite;
+        let mut navigation = ui_id(row(), "generate.form.navigation")?;
+        navigation = ui_child(navigation, button("generate.form.previous", previous, "arrow-left", self.index.checked_sub(1))?)?;
+        navigation = ui_child(navigation, position)?;
+        navigation = ui_child(navigation, button("generate.form.next", next, "arrow-right", (current < self.total).then_some(current))?)?;
+        let mut viewport = ui_build(ui_id(column(), format!("generate.form.viewport.{}", self.index))?)?;
+        viewport.layout = std::mem::replace(&mut body.layout, LayoutSpec::Stack(StackLayout { axis: Axis::Vertical, grow: true, ..Default::default() }));
+        let viewport = viewport.try_with_children(std::mem::take(&mut body.children)).map_err(|_| ui_assembly_error("ui.generation.form.viewport"))?;
+        body.try_with_children([ui_build(navigation)?, viewport]).map_err(|_| ui_assembly_error("ui.generation.form.navigation"))
+    }
+}
+
+/// 📋️ Renders one record-budgeted page of generation questions with typed change bindings.
 pub fn generation_form(
     spec: &semio_os_playbook_contract::PlaybookSpec,
     values: &semio_os_playbook_contract::PlaybookValues,
@@ -218,107 +386,60 @@ pub fn generation_form(
     action: &str,
     generation_id: &str,
     words: &GenerationFormLabels<'_>,
-) -> UiAssemblyResult<BuiltNode> {
-    let mut root = ui_id(column(), "generate.form")?;
-    let mut has_children = false;
-    for step in &spec.steps {
-        if !step.blocks.is_empty() {
+    requested_page: usize,
+    resources: &semio_plugin::WindowResourceRequests<'_>,
+) -> UiAssemblyResult<GenerationFormPage> {
+    let visible = || spec.steps.iter().enumerate().flat_map(|(step_index, step)| {
+        step.blocks.iter().filter(move |question| semio_os_playbook_contract::is_block_visible(question, values))
+            .map(move |question| (step_index, step, question))
+    });
+    let grouped = spec.steps.len() > 1;
+    let costs = || visible().map(|(step_index, _, question)| {
+        let nodes = if question.kind == "vector" {
+            1 + 2 * generation_vector_axes(question, values.get(&question.id))
+        } else if matches!(question.kind.as_str(), "text" | "longText") {
+            let fallback = || semio_os_playbook_contract::default_value_for_block(question);
+            let value = values.get(&question.id).cloned().unwrap_or_else(fallback);
+            let value = value.as_str().unwrap_or_default();
+            if UiText::try_from_str(value).is_some() { 2 } else { 2 + semio_plugin::paged_text_carrier_nodes(value) }
+        } else if question.kind == "image" {
+            question.src.as_deref().map(str::trim)
+                .map_or(2, |source| 2 + semio_plugin::WindowResourceRequests::image_body_nodes(source))
+        } else {
+            2
+        };
+        form_pages::FieldCost { nodes, section: grouped.then_some(step_index) }
+    });
+    let over_budget = |ordinal: usize| {
+        PluginAssemblyError::new("ui.generation.form.field-budget", format!("Form question {} exceeds the mounted record budget", ordinal + 1))
+    };
+    let complete = form_pages::form_page(costs(), UI_DOCUMENT_NODES - 2, 0).map_err(over_budget)?;
+    let page = if complete.total == 1 {
+        complete
+    } else {
+        form_pages::form_page(costs(), TREE_WINDOW_BODY_NODE_BUDGET - 1, requested_page).map_err(over_budget)?
+    };
+    let mut fields = ui_id(column(), "generate.form.fields")?;
+    let mut section = None;
+    for (step_index, step, question) in visible().skip(page.fields.start).take(page.fields.len()) {
+        if grouped && section != Some(step_index) {
             let heading = ui_build(ui_id(text(ui_label(&step.title)?), format!("generate.step.{}", step.id))?)?;
-            root = ui_child(root, heading)?;
-            has_children = true;
+            fields = ui_child(fields, heading)?;
+            section = Some(step_index);
         }
-        for question in &step.blocks {
-            if !semio_os_playbook_contract::is_block_visible(question, values) {
-                continue;
-            }
-            let value = values.get(&question.id).cloned().unwrap_or_else(|| semio_os_playbook_contract::default_value_for_block(question));
-            let field_id = format!("generate.form.{}", question.id);
-            let args = || generation_control_args(generation_id, &question.id, None);
-            let control = match question.kind.as_str() {
-                "text" | "longText" => {
-                    let input = input(if question.kind == "longText" { InputKind::LongText } else { InputKind::Text }).value(ui_text(value.as_str().unwrap_or_default())?).commit(ui_text("blur")?);
-                    ui_build(generation_text_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
-                }
-                "number" => {
-                    let value = value.as_f64().map(|number| number.to_string()).unwrap_or_default();
-                    let input = input(InputKind::Number).value(ui_text(value)?);
-                    ui_build(generation_control_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
-                }
-                "slider" => {
-                    let slider = slider(value.as_f64().unwrap_or_else(|| question.min.unwrap_or(0.0))).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0));
-                    ui_build(generation_control_action(ui_id(slider, format!("{field_id}.slider"))?, controller_id, action, args()?)?)?
-                }
-                "boolean" => {
-                    let toggle = toggle(value.as_bool().unwrap_or(false)).icon(ui_text("toggle-left")?).text(ui_label(&question.label)?);
-                    ui_build(generation_control_action(ui_id(toggle, format!("{field_id}.toggle"))?, controller_id, action, args()?)?)?
-                }
-                "single" => {
-                    let mut select = select(ui_text(value.as_str().unwrap_or_default())?);
-                    for option in question.options.as_deref().unwrap_or_default() {
-                        select = select.try_item(ui_text(&option.value)?, ui_label(&option.label)?).map_err(|_| ui_assembly_error("ui.select.item"))?;
-                    }
-                    ui_build(generation_control_action(ui_id(select, format!("{field_id}.select"))?, controller_id, action, args()?)?)?
-                }
-                "vector" => {
-                    let numbers = value.as_array().map_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect(), <[DslValue]>::to_vec);
-                    let labels: Vec<String> = question
-                        .fields
-                        .as_deref().map_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("{} {}", words.field, index + 1)).collect(), |fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect());
-                    let mut vector = ui_id(column(), format!("{field_id}.vector"))?;
-                    for (index, number) in numbers.iter().enumerate() {
-                        let input = input(InputKind::Number).value(ui_text(number.as_f64().map(|entry| entry.to_string()).unwrap_or_default())?);
-                        let input = ui_id(input, format!("{field_id}.vector.{index}.input"))?;
-                        let input = ui_build(generation_control_action(input, controller_id, action, generation_control_args(generation_id, &question.id, Some(index))?)?)?;
-                        let label = labels.get(index).cloned().unwrap_or_else(|| format!("{} {}", words.field, index + 1));
-                        let field = ui_id(field(ui_label(label)?), format!("{field_id}.vector.{index}"))?;
-                        vector = ui_child(vector, ui_build(ui_child(field, input)?)?)?;
-                    }
-                    ui_build(vector)?
-                }
-                "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
-                "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| words.no_image.into()))?), format!("{field_id}.image"))?)?,
-                _ => {
-                    let input = input(InputKind::Text).value(ui_text(Value::from(&value).to_string())?).commit(ui_text("blur")?);
-                    ui_build(generation_text_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
-                }
-            };
-            let field = ui_id(field(ui_label(&question.label)?), field_id)?;
-            root = ui_child(root, ui_build(ui_child(field, control)?)?)?;
-            has_children = true;
-        }
+        fields = ui_child(fields, generation_question(question, values, controller_id, action, generation_id, words, resources)?)?;
     }
-    if !has_children {
-        return ui_build(text(ui_label(words.no_inputs)?));
+    if page.nodes == 0 {
+        fields = ui_child(fields, ui_build(text(ui_label(words.no_inputs)?))?)?;
     }
-    ui_build(root)
+    let mut body = ui_build(ui_child(ui_id(form(ui_label(words.title)?), "generate.form")?, ui_build(fields)?)?)?;
+    body.layout = LayoutSpec::Scroll(ScrollLayout { axes: ScrollAxes::Vertical, sizing: Sizing::Fill, ..Default::default() });
+    Ok(GenerationFormPage { body, index: page.index, total: page.total })
 }
 
-/// 🔢️ Windowed scalar channel rows share graph hover and selection in every renderer.
-pub fn channel_value_tree(windows: &semio_plugin::TreeWindows<'_>, controller: &'static str, namespace: &str, label: &str, rows: &[(String, String, String)]) -> UiAssemblyResult<BuiltNode> {
-    let factory = ActionFactory::new(controller);
-    semio_plugin::PanelTreeBuilder::new(namespace)?
-        .window_section(windows, "values", Some(ui_label(label)?), true, rows, |(id, value, targets)| {
-            let (hover, args) = factory.action(semio_plugin::INTERACTION_HOVER_ACTION_ID, Some(ui_value_map([
-                ("channel", ui_value_text("pointer")?), ("domainId", ui_value_text("graph")?), ("targets", ui_value_text(targets)?),
-            ])?))?;
-            tree_item_builder(ui_label(id)?)
-                .try_id(id).map_err(|_| ui_assembly_error("ui.value-row.id"))?
-                .description(UiText::clipped(value))
-                .granularity(ui_text("handle")?)
-                .try_on_with(Trigger::HoverPreview, hover, args.ok_or_else(|| ui_assembly_error("ui.value-row.args"))?)
-                .map_err(|_| ui_assembly_error("ui.value-row.hover"))?
-                .try_build().map_err(|_| ui_assembly_error("ui.value-row.build"))
-        })?
-        .interaction_domain(controller, "graph")?
-        .build()
-}
+#[path = "📝️form/pages.rs"]
+mod form_pages;
 
-/// 🪟️ Places a windowed value tree beside its scene when evaluated scalar channels exist.
-pub fn scene_with_channel_values(scene: BuiltNode, windows: &semio_plugin::TreeWindows<'_>, controller: &'static str, namespace: &str, label: &str, rows: &[(String, String, String)]) -> UiAssemblyResult<BuiltNode> {
-    if rows.is_empty() { return Ok(scene); }
-    let mut tree = channel_value_tree(windows, controller, namespace, label, rows)?;
-    tree.layout = LayoutSpec::Scroll(ScrollLayout { axes: ScrollAxes::Vertical, sizing: Sizing::Fill, ..Default::default() });
-    let scene = ui_build(ui_child(column().grow(true), scene)?)?;
-    let tree = ui_build(ui_child(column().grow(true), tree)?)?;
-    ui_build(ui_child(ui_child(column().grow(true), scene)?, tree)?)
-}
+#[path = "📊️channel-values/🦀️.rs"]
+mod channel_values;
+pub use channel_values::{scene_with_channel_values, windowed_read_only_text, ChannelValueLabels, ChannelValueRow};

@@ -231,7 +231,12 @@ fn finish(sealer: &mut ArtifactStoreOneItemSealer<u64, FixtureMutation>, bytes: 
     let mut previous = sealer.completed_bytes;
     for _ in 0..100_000 {
         let grant = funded(sealer, bytes);
-        let step = with_receiving(|receiving| sealer.advance(grant, receiving)).unwrap();
+        let step = with_receiving(|receiving| {
+            let before = receiving.actual_work();
+            let step = sealer.advance(grant, receiving);
+            assert_eq!(u128::from(sealer.last_turn_work()), receiving.actual_work() - before);
+            step
+        }).unwrap();
         assert!(sealer.completed_bytes - previous <= (grant.maximum_copy_bytes + grant.maximum_capacity_bytes + grant.maximum_release_bytes) as u64);
         previous = sealer.completed_bytes;
         if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(..)) {

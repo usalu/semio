@@ -32,5 +32,11 @@
         }
       }
     ]
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
   }
 }

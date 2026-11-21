@@ -70,9 +70,10 @@ mod structure_and_live_layers;
 #[cfg(test)]
 use structure_and_live_layers::vector_layer;
 pub use structure_and_live_layers::{
-    fem2d_deformed_shape_layers, fem2d_live_visual_layers, fem2d_model_extent,
+    fem2d_canvas_text_layer, fem2d_deformed_edge_layer, fem2d_deformed_shape_layers, fem2d_live_visual_layers, fem2d_model_extent,
     fem2d_region_mesh_triangles, fem2d_structure_layers_with, render, render_with_progress,
 };
+use structure_and_live_layers::{CANVAS_TEXT_COLOR, CANVAS_TEXT_FONT};
 pub use structure_and_live_layers::fem2d_structure_layers;
 #[cfg(test)]
 pub(crate) use structure_and_live_layers::{HOVER_COLOR_2D, SELECTION_COLOR_2D};

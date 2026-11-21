@@ -31,6 +31,7 @@ pub(crate) const PROCESS3D_BOUNDED_TOOL_IDS: &[&str] = &[
     "patchInspector",
     "engagementSubmit",
     "worldPointerDown",
+    "worldPointerMove",
     "worldFaceDragEnd",
     "exportModel",
     "setCursor",
@@ -279,24 +280,26 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         })
     }
 
+    fn close_demand_without_owner(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
+
     fn terminal_is_empty(&self) -> bool {
         self.closing
     }
 }
 
-pub(super) type Process3dModelImportJobFactory = Process3dBoundedCommandJobFactory<true>;
-
-pub(super) struct Process3dBoundedCommandJobFactory<const IMPORT: bool = false> {
+pub(super) struct Process3dBoundedCommandJobFactory {
     keys: Vec<ToolFactoryKey>,
 }
 
-impl<const IMPORT: bool> Process3dBoundedCommandJobFactory<IMPORT> {
+impl Process3dBoundedCommandJobFactory {
     pub(super) fn new(controller_id: &str) -> Self {
         Self { keys: Self::TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }
 
-impl<const IMPORT: bool> ToolJobFactory for Process3dBoundedCommandJobFactory<IMPORT> {
+impl ToolJobFactory for Process3dBoundedCommandJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<Process3dPlayApp>>;
     type Job = ArtifactRetainedCommandJob<EditorApp<Process3dPlayApp>>;
 
@@ -313,16 +316,16 @@ impl<const IMPORT: bool> ToolJobFactory for Process3dBoundedCommandJobFactory<IM
     }
 
     fn execution_contract(&self) -> ToolExecutionContract {
-        if IMPORT { process3d_model_import_contract() } else { process3d_bounded_contract() }
+        process3d_bounded_contract()
     }
 
     semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
 
 }
 
-impl<const IMPORT: bool> ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory<IMPORT> {
+impl ArtifactOwnedToolJobFactory for Process3dBoundedCommandJobFactory {
     type Owner = EditorApp<Process3dPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = if IMPORT { PROCESS3D_MODEL_IMPORT_TOOL_IDS } else { PROCESS3D_BOUNDED_TOOL_IDS };
+    const TOOL_IDS: &'static [&'static str] = PROCESS3D_BOUNDED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
     /// 🛤️ The lane each tool publishes on, read off what its `🎮️commands/*` handler actually emits.
     /// `HostOnly` is a whole-document replacement or a shell round-trip carried as an `Effect`
@@ -333,10 +336,8 @@ impl<const IMPORT: bool> ArtifactOwnedToolJobFactory for Process3dBoundedCommand
     /// `Process3dArtifactPreparationFactory`; `Config` is the viewer's replay cursor and the engagement line — view
     /// state, never history — so the cursor verbs and `engagementSubmit` publish there only, and every verb that
     /// inserts or removes a step publishes BOTH lanes (the step, and the cursor moved past it).
-    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = if IMPORT {
-        &[semio_plugin::ArtifactToolPublicationContract { tool_id: "importModelFile", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] }]
-    } else { &[
-        semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "loadModelRequest", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
@@ -353,14 +354,56 @@ impl<const IMPORT: bool> ArtifactOwnedToolJobFactory for Process3dBoundedCommand
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setStock", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "patchInspector", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
-        semio_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config, semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_plugin::ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "worldFaceDragEnd", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "exportModel", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "setCursor", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursor", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorBack", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
         semio_plugin::ArtifactToolPublicationContract { tool_id: "stepCursorForward", lanes: &[semio_plugin::ArtifactToolPublicationLane::Config] },
-    ] };
+    ];
+}
+
+pub(super) struct Process3dModelImportJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Process3dModelImportJobFactory {
+    pub(super) fn new(controller_id: &str) -> Self {
+        Self { keys: Self::TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Process3dModelImportJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<Process3dPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<Process3dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        PROCESS3D_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        process3d_model_import_contract()
+    }
+
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: false);
+
+}
+
+impl ArtifactOwnedToolJobFactory for Process3dModelImportJobFactory {
+    type Owner = EditorApp<Process3dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = PROCESS3D_MODEL_IMPORT_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[semio_plugin::ArtifactToolPublicationContract { tool_id: "importModelFile", lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] }];
 }
 
 pub(super) struct Process3dResumableCommandJobFactory {

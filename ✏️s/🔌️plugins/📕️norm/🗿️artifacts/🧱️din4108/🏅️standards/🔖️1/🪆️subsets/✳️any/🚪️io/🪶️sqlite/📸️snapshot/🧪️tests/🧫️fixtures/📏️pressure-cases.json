@@ -1,0 +1,74 @@
+[
+  {
+    "id": "whole-volume-test",
+    "entryId": "G26-01",
+    "labelEn": "Whole building",
+    "labelDe": "Gesamtgebäude",
+    "numbers": [
+      {
+        "id": "test_volume",
+        "value": 300.0
+      },
+      {
+        "id": "test_pressurisation",
+        "value": 430.0
+      },
+      {
+        "id": "test_depressurisation",
+        "value": 440.0
+      }
+    ],
+    "texts": [
+      {
+        "id": "test_protocol",
+        "value": "confirmed"
+      },
+      {
+        "id": "test_ventilation",
+        "value": "mechanical"
+      }
+    ]
+  },
+  {
+    "id": "zone-pressure-test",
+    "entryId": "G26-03",
+    "labelEn": "East zone",
+    "labelDe": "Ostzone",
+    "numbers": [
+      {
+        "id": "test_volume",
+        "value": 1600.0
+      },
+      {
+        "id": "test_area",
+        "value": 800.0
+      },
+      {
+        "id": "test_pressurisation",
+        "value": 1850.125
+      },
+      {
+        "id": "test_depressurisation",
+        "value": 2020.0
+      }
+    ],
+    "texts": [
+      {
+        "id": "test_protocol",
+        "value": "confirmed"
+      },
+      {
+        "id": "test_zone_basis",
+        "value": "selected"
+      },
+      {
+        "id": "test_ventilation",
+        "value": "mechanical"
+      },
+      {
+        "id": "test_basis",
+        "value": "area"
+      }
+    ]
+  }
+]

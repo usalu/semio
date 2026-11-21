@@ -1,0 +1,8 @@
+[
+  { "mode": "release", "platform": "darwin", "override": null, "present": false, "outcome": "build" },
+  { "mode": "release", "platform": "win32", "override": null, "present": true, "outcome": "ready" },
+  { "mode": "prototype", "platform": "linux", "override": null, "present": true, "outcome": "ready" },
+  { "mode": "prototype", "platform": "win32", "override": null, "present": false, "outcome": "build" },
+  { "mode": "prototype", "platform": "darwin", "override": "fixture/custom-tool", "present": true, "outcome": "ready" },
+  { "mode": "release", "platform": "linux", "override": "fixture/custom-tool", "present": false, "outcome": "refused" }
+]

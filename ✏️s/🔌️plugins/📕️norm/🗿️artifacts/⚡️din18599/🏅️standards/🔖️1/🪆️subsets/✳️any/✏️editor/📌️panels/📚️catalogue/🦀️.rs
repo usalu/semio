@@ -1,9 +1,9 @@
 //! 📚️ DIN V 18599 play app panel — examples plus GEG / DIN V 18599 reference tables.
 
 use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use semio_s_artifact_norm_din18599_checks::{din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_lighting_hours, din_v_18599_12_tabelle5_qp_specific, din_v_18599_4_lighting_power_density, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors};
+use semio_s_artifact_norm_din18599_checks::{annex2_reference_values, annex3_limit, Annex3EnvelopeClass,din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_lighting_hours, din_v_18599_4_lighting_power_density, geg_anlage1_reference_u, GEG_ANLAGE1_DELTA_U_WB_REF, GEG_SECTION_16_HT_PRIME_RATIO, geg_anlage4_primary_energy_factors};
 use semio_s_plugin_norm_compliance::ClauseId;
-use semio_s_artifact_norm_din18599_model::MonthlyClimate;
+use semio_s_artifact_norm_din18599_model::{Adjacency, ElementKind, MonthlyClimate};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::PanelGroup;
 use semio_plugin::PanelTabDefinition;
@@ -22,15 +22,17 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Tables
-/// 📚️ Normative reference tables beside examples (GEG Anlage 2–4, DIN V 18599-4/-10/-12, Potsdam TRY).
+/// 📚️ Normative reference tables beside examples (GEG § 16 and Anlagen 1 and 4, DIN V 18599-4/-10, Potsdam TRY).
 pub fn reference_tables() -> Vec<CatalogueTable> {
     vec![
         primary_energy_factors(),
         ht_prime_limits(),
-        reference_and_mean_u(),
+        nonresidential_u_limits(),
+        residential_reference_u(),
+        nonresidential_reference_u(),
         lighting_power_density(),
         usage_profile_hours_dhw(),
-        tabular_qp_specific(),
+        residential_hot_water(),
         potsdam_monthly_climate(),
     ]
 }
@@ -46,56 +48,119 @@ fn primary_energy_factors() -> CatalogueTable {
             CatalogueColumn { id: "carrier", label_en: "Energy carrier", label_de: "Energieträger", unit: None },
             CatalogueColumn { id: "fp", label_en: "f_P", label_de: "f_P", unit: None },
         ],
-        rows: vec![
-            CatalogueRow { id: "natural_gas".into(), cells: vec![CatalogueCell::text("Natural gas / Erdgas"), CatalogueCell::number(f::NATURAL_GAS, 1)] },
-            CatalogueRow { id: "heating_oil".into(), cells: vec![CatalogueCell::text("Heating oil / Heizöl"), CatalogueCell::number(f::HEATING_OIL, 1)] },
-            CatalogueRow { id: "electricity".into(), cells: vec![CatalogueCell::text("Grid electricity / Netzstrom"), CatalogueCell::number(f::ELECTRICITY_GRID, 1)] },
-            CatalogueRow { id: "district_heating".into(), cells: vec![CatalogueCell::text("District heating / Fernwärme"), CatalogueCell::number(f::DISTRICT_HEATING, 1)] },
-            CatalogueRow { id: "biomass".into(), cells: vec![CatalogueCell::text("Biomass / Biomasse"), CatalogueCell::number(f::BIOMASS, 1)] },
+        rows: f::ROWS.iter().map(|row| CatalogueRow {
+            id: row.carrier.into(),
+            cells: vec![
+                CatalogueCell::text(format!("{} / {}", row.en, row.de)),
+                row.factor.map_or_else(|| CatalogueCell::text("Method B / Verfahren B"), |value| CatalogueCell::number(value, 1)),
+            ],
+        }).collect(),
+    }
+}
+
+fn nonresidential_reference_u() -> CatalogueTable {
+    use ElementKind::*;
+    let entries = [
+        (Wall, Adjacency::Outdoor, "Exterior wall", "Außenwand"),
+        (CurtainWall, Adjacency::Outdoor, "Curtain wall", "Vorhangfassade"),
+        (Floor, Adjacency::Ground, "Ground slab", "Bodenplatte"),
+        (Roof, Adjacency::Outdoor, "Roof", "Dach"),
+        (RoofGlazing, Adjacency::Outdoor, "Roof glazing", "Glasdach"),
+        (RooflightStrip, Adjacency::Outdoor, "Rooflight strip", "Lichtband"),
+        (RoofDome, Adjacency::Outdoor, "Rooflight dome", "Lichtkuppel"),
+        (Window, Adjacency::Outdoor, "Facade window", "Fassadenfenster"),
+        (RoofWindow, Adjacency::Outdoor, "Roof window", "Dachflächenfenster"),
+        (Door, Adjacency::Outdoor, "Exterior door", "Außentür"),
+    ];
+    CatalogueTable {
+        id: "geg-anlage2-reference-envelope",
+        title_en: "Non-residential reference envelope",
+        title_de: "Referenzhülle für Nichtwohngebäude",
+        clause: ClauseId::new("GModG", "Anlage 2", "1.1–1.11"),
+        columns: vec![
+            CatalogueColumn { id: "component", label_en: "Component", label_de: "Bauteil", unit: None },
+            CatalogueColumn { id: "warm", label_en: "U at ≥ 19 °C", label_de: "U bei ≥ 19 °C", unit: Some("W/(m²·K)") },
+            CatalogueColumn { id: "reduced", label_en: "U at 12 to < 19 °C", label_de: "U bei 12 bis < 19 °C", unit: Some("W/(m²·K)") },
+            CatalogueColumn { id: "solar", label_en: "Solar g at ≥ 19 °C", label_de: "g-Wert bei ≥ 19 °C", unit: None },
+            CatalogueColumn { id: "visible", label_en: "Light transmittance at ≥ 19 °C", label_de: "Lichttransmission bei ≥ 19 °C", unit: None },
         ],
+        rows: entries.into_iter().filter_map(|(kind, adjacency, en, de)| {
+            let normal = annex2_reference_values(kind, adjacency, 19.0)?;
+            let reduced = annex2_reference_values(kind, adjacency, 12.0)?;
+            let transmittance = |value: Option<f64>| value.map_or_else(|| CatalogueCell::text("—"), |value| CatalogueCell::number(value, 2));
+            Some(CatalogueRow {
+                id: normal.clause.into(),
+                cells: vec![
+                    CatalogueCell::text(format!("{en} / {de}")),
+                    CatalogueCell::number(normal.u_value_w_m2k, 2),
+                    CatalogueCell::number(reduced.u_value_w_m2k, 2),
+                    transmittance(normal.solar_transmittance),
+                    transmittance(normal.visible_transmittance),
+                ],
+            })
+        }).collect(),
+    }
+}
+
+fn nonresidential_u_limits() -> CatalogueTable {
+    CatalogueTable {
+        id: "geg-anlage3-mean-u-limits",
+        title_en: "Non-residential mean U limits",
+        title_de: "Grenzwerte der mittleren U-Werte für Nichtwohngebäude",
+        clause: ClauseId::new("GModG", "Anlage 3", "1–4"),
+        columns: vec![
+            CatalogueColumn { id: "class", label_en: "Exterior component class", label_de: "Art des Außenbauteils", unit: None },
+            CatalogueColumn { id: "warm", label_en: "Setpoint ≥ 19 °C", label_de: "Solltemperatur ≥ 19 °C", unit: Some("W/(m²·K)") },
+            CatalogueColumn { id: "cool", label_en: "Setpoint 12 to < 19 °C", label_de: "Solltemperatur 12 bis < 19 °C", unit: Some("W/(m²·K)") },
+        ],
+        rows: Annex3EnvelopeClass::ALL.into_iter().map(|class| {
+            let (en, de) = class.labels();
+            CatalogueRow {
+                id: class.clause().into(),
+                cells: vec![
+                    CatalogueCell::text(format!("{en} / {de}")),
+                    CatalogueCell::number(annex3_limit(class, 19.0).unwrap_or_default(), 2),
+                    CatalogueCell::number(annex3_limit(class, 12.0).unwrap_or_default(), 2),
+                ],
+            }
+        }).collect(),
     }
 }
 
 fn ht_prime_limits() -> CatalogueTable {
-    use geg_anlage2_ht_prime_limits as lim;
     CatalogueTable {
-        id: "geg-anlage2-ht-prime",
-        title_en: "H′T limit values",
-        title_de: "Grenzwerte H′T",
-        clause: ClauseId::new("GEG", "Anlage 2", "H'T"),
+        id: "geg-section16-ht-prime",
+        title_en: "Specific transmission loss limit",
+        title_de: "Grenzwert des spezifischen Transmissionswärmeverlusts",
+        clause: ClauseId::new("GEG", "§ 16", "Anlage 1"),
         columns: vec![
             CatalogueColumn { id: "case", label_en: "Building case", label_de: "Gebäudefall", unit: None },
-            CatalogueColumn { id: "limit", label_en: "H′T max", label_de: "H′T max", unit: Some("W/(m²·K)") },
+            CatalogueColumn { id: "ratio", label_en: "Maximum ratio to reference", label_de: "Maximalverhältnis zur Referenz", unit: None },
         ],
         rows: vec![
-            CatalogueRow { id: "detached-an-le-350".into(), cells: vec![CatalogueCell::text("Detached, A_N ≤ 350 m²"), CatalogueCell::number(lim::DETACHED_AN_LE_350, 2)] },
-            CatalogueRow { id: "detached-an-gt-350".into(), cells: vec![CatalogueCell::text("Detached, A_N > 350 m²"), CatalogueCell::number(lim::DETACHED_AN_GT_350, 2)] },
-            CatalogueRow { id: "semi-or-end-an-le-350".into(), cells: vec![CatalogueCell::text("Semi / end terrace, A_N ≤ 350 m²"), CatalogueCell::number(lim::SEMI_OR_END_AN_LE_350, 2)] },
-            CatalogueRow { id: "semi-or-end-an-gt-350".into(), cells: vec![CatalogueCell::text("Semi / end terrace, A_N > 350 m²"), CatalogueCell::number(lim::SEMI_OR_END_AN_GT_350, 2)] },
-            CatalogueRow { id: "mid-terrace".into(), cells: vec![CatalogueCell::text("Mid terrace"), CatalogueCell::number(lim::MID_TERRACE, 2)] },
+            CatalogueRow { id: "residential-same-geometry".into(), cells: vec![CatalogueCell::text("Residential, same envelope geometry / Wohngebäude, gleiche Hüllgeometrie"), CatalogueCell::number(GEG_SECTION_16_HT_PRIME_RATIO, 1)] },
         ],
     }
 }
 
-fn reference_and_mean_u() -> CatalogueTable {
-    use geg_anlage2_reference_u as u2;
-    use geg_anlage3_mean_u as u3;
+fn residential_reference_u() -> CatalogueTable {
+    use geg_anlage1_reference_u as u;
     CatalogueTable {
-        id: "geg-anlage2-3-u",
-        title_en: "Reference / mean U-values",
-        title_de: "Referenz- / mittlere U-Werte",
-        clause: ClauseId::new("GEG", "Anlage 2/3", "U"),
+        id: "geg-anlage1-residential-envelope",
+        title_en: "Residential reference envelope",
+        title_de: "Referenzhülle für Wohngebäude",
+        clause: ClauseId::new("GEG", "Anlage 1", "1.1–1.4, 1.7–2"),
         columns: vec![
-            CatalogueColumn { id: "kind", label_en: "Element", label_de: "Bauteil", unit: None },
-            CatalogueColumn { id: "u_ref", label_en: "U_ref (residential)", label_de: "U_ref (Wohngebäude)", unit: Some("W/(m²·K)") },
-            CatalogueColumn { id: "u_mean", label_en: "Ū (non-residential)", label_de: "Ū (Nichtwohngebäude)", unit: Some("W/(m²·K)") },
+            CatalogueColumn { id: "kind", label_en: "Envelope input", label_de: "Eingabe zur Gebäudehülle", unit: None },
+            CatalogueColumn { id: "u_ref", label_en: "Reference value", label_de: "Referenzwert", unit: Some("W/(m²·K)") },
         ],
         rows: vec![
-            CatalogueRow { id: "wall".into(), cells: vec![CatalogueCell::text("Wall / Außenwand"), CatalogueCell::number(u2::WALL, 2), CatalogueCell::number(u3::WALL, 2)] },
-            CatalogueRow { id: "roof".into(), cells: vec![CatalogueCell::text("Roof / Dach"), CatalogueCell::number(u2::ROOF, 2), CatalogueCell::number(u3::ROOF, 2)] },
-            CatalogueRow { id: "floor".into(), cells: vec![CatalogueCell::text("Floor / Boden"), CatalogueCell::number(u2::FLOOR, 2), CatalogueCell::number(u3::FLOOR, 2)] },
-            CatalogueRow { id: "window".into(), cells: vec![CatalogueCell::text("Window / Fenster"), CatalogueCell::number(u2::WINDOW, 1), CatalogueCell::number(u3::WINDOW, 1)] },
-            CatalogueRow { id: "door".into(), cells: vec![CatalogueCell::text("Door / Tür"), CatalogueCell::number(u2::DOOR, 1), CatalogueCell::number(u3::DOOR, 1)] },
+            CatalogueRow { id: "wall-floor-outdoor".into(), cells: vec![CatalogueCell::text("Wall or floor to outdoors / Wand oder Decke gegen Außenluft"), CatalogueCell::number(u::WALL_AND_FLOOR_TO_OUTDOORS, 2)] },
+            CatalogueRow { id: "wall-floor-ground-unheated".into(), cells: vec![CatalogueCell::text("Wall or floor to ground or unheated space / Wand oder Boden gegen Erdreich oder unbeheizten Raum"), CatalogueCell::number(u::WALL_AND_FLOOR_TO_GROUND_OR_UNHEATED, 2)] },
+            CatalogueRow { id: "roof".into(), cells: vec![CatalogueCell::text("Roof / Dach"), CatalogueCell::number(u::ROOF, 2)] },
+            CatalogueRow { id: "window".into(), cells: vec![CatalogueCell::text("Window / Fenster"), CatalogueCell::number(u::WINDOW, 1)] },
+            CatalogueRow { id: "door".into(), cells: vec![CatalogueCell::text("Door / Tür"), CatalogueCell::number(u::DOOR, 1)] },
+            CatalogueRow { id: "thermal-bridges".into(), cells: vec![CatalogueCell::text("Thermal-bridge surcharge / Wärmebrückenzuschlag ΔU_WB"), CatalogueCell::number(GEG_ANLAGE1_DELTA_U_WB_REF, 2)] },
         ],
     }
 }
@@ -163,22 +228,24 @@ fn usage_profile_hours_dhw() -> CatalogueTable {
     }
 }
 
-fn tabular_qp_specific() -> CatalogueTable {
-    use din_v_18599_12_tabelle5_qp_specific as q;
+fn residential_hot_water() -> CatalogueTable {
     CatalogueTable {
-        id: "din18599-12-qp-tab",
-        title_en: "Tabular specific primary energy q_p,tab",
-        title_de: "tabellarische Primärenergiekennwerte q_p,tab",
-        clause: ClauseId::new("DIN V 18599", "12", "Table 5"),
+        id: "din18599-10-residential-dhw",
+        title_en: "Residential useful hot-water demand",
+        title_de: "Trinkwarmwasser-Nutzenergie im Wohngebäude",
+        clause: ClauseId::new("DIN V 18599", "10", "Tabelle 4"),
         columns: vec![
-            CatalogueColumn { id: "profile", label_en: "Usage profile", label_de: "Nutzungsprofil", unit: None },
-            CatalogueColumn { id: "qp", label_en: "q_p,tab", label_de: "q_p,tab", unit: Some("kWh/(m²·a)") },
+            CatalogueColumn { id: "area", label_en: "Mean dwelling area", label_de: "Mittlere Wohnungsgröße", unit: Some("m²") },
+            CatalogueColumn { id: "specific", label_en: "Useful hot-water demand", label_de: "Trinkwarmwasser-Nutzenergie", unit: Some("kWh/(m²·a)") },
         ],
-        rows: vec![
-            CatalogueRow { id: "residential".into(), cells: vec![CatalogueCell::text("Residential / Wohnen"), CatalogueCell::number(q::RESIDENTIAL, 0)] },
-            CatalogueRow { id: "office".into(), cells: vec![CatalogueCell::text("Office / Büro"), CatalogueCell::number(q::OFFICE, 0)] },
-            CatalogueRow { id: "school".into(), cells: vec![CatalogueCell::text("School / Schule"), CatalogueCell::number(q::SCHOOL, 0)] },
-        ],
+        rows: [40_u32, 70, 140, 160, 200].into_iter().map(|area| {
+            let area_m2 = f64::from(area);
+            let demand = semio_s_artifact_norm_din18599_checks::residential_dhw_useful_kwh_a(area_m2, 1).unwrap_or_default();
+            CatalogueRow {
+                id: area.to_string(),
+                cells: vec![CatalogueCell::number(area_m2, 0), CatalogueCell::number(demand / area_m2, 1)],
+            }
+        }).collect(),
     }
 }
 

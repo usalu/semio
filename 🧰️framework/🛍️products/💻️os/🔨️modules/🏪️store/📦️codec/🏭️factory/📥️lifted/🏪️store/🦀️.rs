@@ -37,7 +37,7 @@ use semio_os_store_initialization_runtime::native_publication_producer::Artifact
 //#region 🔖️Backbone
 //#region 🔖️Backbone
 use semio_os_store_backbone as backbone;
-use semio_os_store_engine::lifted_store::ArtifactStore;
+use semio_os_store_engine::{AtomicStoreReceive, lifted_store::ArtifactStore};
 //#region 🔖️Authority
 //#region 🔖️EphemeralLanes
 //#region 🔖️Text
@@ -297,8 +297,56 @@ where
     if drop_ready { Ok(()) } else { Err(VcsError::ValidationFailed("artifact codec store close left a live shallow-shell owner".into())) }
 }
 
-/// 📜️ Folds an [`semio_os_spr::encode_envelopes`] ledger stream onto one authoritative pair through
-/// the SAME gate every replica folds a remote envelope through ([`ArtifactStore::ingest_remote`]):
+/// 📦 Opens a trusted Check In ledger without losing an authored edit's boundary.
+fn decode_check_in_replay(
+    bytes: &[u8], document: &str,
+) -> Result<Vec<semio_os_spr::atomic_hub::CheckpointReplayGroup>, VcsError> {
+    use semio_os_spr::atomic_hub::{CheckpointReplayGroup, decode_checkpoint_replay};
+    if let Some(commits) = decode_checkpoint_replay(bytes, document).map_err(|error| VcsError::Deserialize(error.into()))? {
+        return Ok(commits);
+    }
+    let rows = semio_os_spr::decode_envelopes(bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    if rows.iter().any(|row| row.transaction.as_ref().is_some_and(|tx| semio_os_spr::atomic_group::is_atomic_backbone_tool(&tx.tool))) {
+        return Err(VcsError::Deserialize("Check In original media requires its entire authored edit".into()));
+    }
+    Ok(vec![CheckpointReplayGroup::Ordinary(rows)])
+}
+
+async fn fold_check_in_replay<P, M>(
+    store: &mut ArtifactStore<P, M>, commits: Vec<semio_os_spr::atomic_hub::CheckpointReplayGroup>,
+) -> Result<(), VcsError>
+where
+    P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
+    M: semio_os_spr::StoreMutationFor<P>,
+{
+    use semio_os_spr::atomic_hub::CheckpointReplayGroup;
+    for commit in commits {
+        match commit {
+            CheckpointReplayGroup::Ordinary(rows) => {
+                for row in rows {
+                    check_in_report(store.ingest_remote(row).await?)?;
+                }
+            }
+            CheckpointReplayGroup::Original(edit) => {
+                match store.ingest_original_atomic(&edit).await? {
+                    AtomicStoreReceive::Finished(report) => check_in_report(report)?,
+                    AtomicStoreReceive::AwaitingDependencies => return Err(VcsError::ValidationFailed(
+                        "Check In authored edit is waiting on an unknown dependency".into(),
+                    )),
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn check_in_report(report: semio_os_spr::MergeReport) -> Result<(), VcsError> {
+    if report.accepted && report.conflict.is_none() { return Ok(()); }
+    Err(VcsError::ValidationFailed("replay-envelopes quarantined a ledger envelope as a conflict".into()))
+}
+
+/// 📜️ Folds an authoritative ledger stream onto one authoritative pair through
+/// the replica's ordinary merge ([`ArtifactStore::ingest_remote`]) or one authenticated authored edit:
 /// causal order, history transitions (undo/redo/checkpoint), edit identity and conflict quarantine are
 /// exactly a replica's, so the printed pair is the one any client holding that ledger prefix holds.
 /// A quarantined conflict or an envelope left waiting on an unknown dependency refuses the fold, and a
@@ -316,10 +364,16 @@ where
     if pack.is_empty() || spr.is_empty() {
         return Err(VcsError::Deserialize("replay-envelopes has no pack+spr baseline".into()));
     }
-    let envelopes = semio_os_spr::decode_envelopes(envelopes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let parsed = parse_document_pack::<P, Mutation>(pack, spr, &semio_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let mut envelope = parsed.into_envelope();
     let _canonical_line = canonical_check_in_line(&envelope.id);
+    let commits = match decode_check_in_replay(envelopes, &envelope.id) {
+        Ok(commits) => commits,
+        Err(error) => {
+            envelope.retire_unadopted();
+            return Err(error);
+        }
+    };
     envelope.active_alternative_id = None;
     envelope.viewer_checkpoint_id = None;
     project_envelope_history(&mut envelope)?;
@@ -332,19 +386,8 @@ where
     let mut store = match ArtifactStore::new::<semio_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_os_spr::LOCAL_ACTOR_ID.into())).await {Ok(store)=>store,Err(error)=>{close_unscheduled_catalog(owners);return Err(error)}};
     let baseline = store.supersessions().clone();
     let mut folded = store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); VcsError::ValidationFailed(error.into_message()) });
-    for envelope in envelopes {
-        if folded.is_err() { break; }
-        match store.ingest_remote(envelope).await {
-            Ok(report) if report.accepted && report.conflict.is_none() => {}
-            Ok(_) => {
-                folded = Err(VcsError::ValidationFailed("replay-envelopes quarantined a ledger envelope as a conflict".into()));
-                break;
-            }
-            Err(error) => {
-                folded = Err(error);
-                break;
-            }
-        }
+    if folded.is_ok() {
+        folded = fold_check_in_replay(&mut store, commits).await;
     }
     if folded.is_ok() && !store.log.dag.pending_is_empty() {
         folded = Err(VcsError::ValidationFailed("replay-envelopes left a ledger envelope waiting on an unknown dependency".into()));

@@ -3,6 +3,8 @@ use crate::{GisMapSnapshot, MapFeature};
 use crate::schema::{GisMapArtifact, diff::{GisMapDiff, GisMapFeaturesDelta}};
 use semio_framework_test_fixtures::fixture_text;
 use store::{snapshot::ArtifactDsl, snapshot::ArtifactPack};
+use crate::GisMapMembers;
+use store::os_store::MemberFactory;
 
 #[test]
 fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
@@ -12,6 +14,10 @@ fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
     assert_eq!(artifact.to_snapshot(), snapshot);
     assert_eq!(GisMapArtifact::from_snapshot(snapshot.clone()), artifact);
     assert_eq!(semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 3);
+    let children = [&snapshot.drawing.target, &snapshot.image.as_ref().unwrap().target, &snapshot.value.target];
+    let child_dialects = children.map(|child| (&*child.dialect.artifact_kind, &*child.dialect.standard, &*child.dialect.subset));
+    let member_dialects: Vec<_> = GisMapMembers::OPEN_DECLARATIONS.iter().map(|member| (member.kind, member.standard, member.subset)).collect();
+    assert_eq!(member_dialects, child_dialects);
     assert_eq!(GisMapSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot);
     assert_eq!(GisMapSnapshot::decode_pack(&snapshot.encode_pack()).unwrap(), snapshot);
     assert_eq!(protocol::apply_diff_cold(&GisMapDiff::default(), &snapshot).unwrap(), snapshot);

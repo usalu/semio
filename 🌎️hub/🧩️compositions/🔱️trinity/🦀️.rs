@@ -4,6 +4,7 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 
 use semio_plugin::__semio_dispatch_PluginApp;
+use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DIALECT;
 use semio_s_dev_trinity_jack::SemioJackComposition;
 use semio_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_plugin::plugin_app_close_prelude::*;
@@ -33,7 +34,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// the artifact/schema/io itself. `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each artifact's
-/// own `artifact_kind().id`, `Isolated` execution, one `artifacts.write` ask covering both editors.
+/// own declaration, `Isolated` execution, one `artifacts.write` ask covering both editors.
 pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
     PluginBuilder::<_, TrinityApps>::new("trinity")
         .label("Trinity")
@@ -45,7 +46,7 @@ pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer<SemioJackComposition>>()
         .editor_mutation_roster::<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp>()
         .viewer_mutation_roster::<semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: TRINITY_JACK_DIALECT.artifact_kind.into() })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::model::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist trinity jack/rewriting edits to the open document".into(), optional: false })

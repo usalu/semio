@@ -155,9 +155,22 @@ test("preserves native host parsing and separates build and scenario budgets", a
     ),
   ).toBe("/portable/target/host");
   const execution = readFileSync(executionPath, "utf8");
-  expect(execution).toContain("host.preparation.args,buildBudgetMs()");
-  expect(execution).toContain("host.args,testLevelBudgetMs(level)");
-  expect(execution.indexOf("host.preparation.args,buildBudgetMs()")).toBeLessThan(execution.indexOf("host.args,testLevelBudgetMs(level)"));
+  const runSource = tsApi.createSourceFile(executionPath, execution, tsApi.ScriptTarget.Latest, true, tsApi.ScriptKind.TS);
+  const calls: import("typescript").CallExpression[] = [];
+  const visit = (node: import("typescript").Node) => {
+    if (tsApi.isCallExpression(node)) calls.push(node);
+    tsApi.forEachChild(node, visit);
+  };
+  visit(runSource);
+  const launches = calls.filter((node) => node.expression.getText(runSource) === "launchRepositoryCargoV1");
+  expect(launches).toHaveLength(1);
+  const launch = launches[0]!.getText(runSource);
+  expect(launch).toContain('output: "capture"');
+  expect(launch).toContain("maximumMilliseconds: buildBudgetMs()");
+  expect(launch).toContain("consume: async (prepared, context)");
+  expect(launch).toContain("capture(command, context.control)");
+  expect(execution).toContain("testLevelBudgetMs(level)");
+  expect(execution).not.toContain("capture(host.preparation.command");
   expect(execution).toContain("host preparation emitted no executable");
   expect(execution).toContain("rmSync(plan.resultsPath");
   expect(execution.indexOf("rmSync(plan.resultsPath")).toBeLessThan(execution.indexOf("materializeHost(repoRoot"));

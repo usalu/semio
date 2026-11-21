@@ -67,7 +67,7 @@ export async function fleetReadV1(input:Readonly<{stale:readonly string[];admitt
  if(input.signal?.aborted)input.signal.throwIfAborted();
  const open=missing.filter(name=>!done.has(name)),kept=[...open,...rest.filter(name=>leftHere.has(name)&&!answer.has(name)&&!done.has(name)&&!open.includes(name))],arrived=rest.filter(name=>answer.has(name)&&!done.has(name)).length;
  if(leftHere.size>0)input.say(wantedTextV1("leftHere",language,{count:leftHere.size,named:[...leftHere].sort().join(", ")}));
- if(plan.waveProjects===0)refuse(arrived,kept,endCause);
+ if(plan.waveProjects===0&&kept.length>0)refuse(arrived,kept,endCause);
  const alone=solo(kept);
  return{outcome:"served",plan,arrived:arrived+taken.length,...cooperate?{inferred:done.size}:{},missing:kept,waitedMilliseconds:now()-started,...alone===undefined?{}:{solo:alone}};
 }

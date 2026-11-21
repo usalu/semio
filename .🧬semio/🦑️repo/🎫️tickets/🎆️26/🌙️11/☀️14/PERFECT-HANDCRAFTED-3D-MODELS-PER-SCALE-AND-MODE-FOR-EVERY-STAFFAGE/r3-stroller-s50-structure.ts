@@ -1,6 +1,6 @@
 /** 🦴️ Structure list at 1:50: the load path. Adult: skull with jaw, cervical and thoracolumbar spine with lordosis and kyphosis, six rib hoops with sternum, clavicles and scapulae, iliac wings with sacrum and pubic bar, humerus, radius and ulna, carpus with metacarpals and the finger rays around the bar, femur with neck and condyles, tibia and fibula, patella, calcaneus, metatarsus and phalanges; joints at the rig joints, masses at the segment centres of mass. Toddler: simplified skeleton. Stroller: its own tubes, hubs, forks, bows, rims, spokes and wheel hubs.
  * @see ./r3-stroller-s50-figure.ts */
-import { C, E, B, P, T, mirror, shiftW, st, qaxis, r5, type Json, type V3 } from "./r3-stroller-kit.ts";
+import { C, E, B, L, P, T, mirror, shiftW, st, qaxis, r5, type Json, type V3 } from "./r3-stroller-kit.ts";
 
 const BONE = 0.93, ZC = 0.1925;
 const polar = (c: [number, number], rho: number, deg: number, w: number): V3 => [c[0] + rho * Math.cos((deg * Math.PI) / 180), c[1] + rho * Math.sin((deg * Math.PI) / 180), w];
@@ -21,14 +21,15 @@ export function adultSkeleton(detail: 50 | 100): Json[] {
   one(e("joint-neck", "head", [0, 0.03, 0], [0.016, 0.016, 0.016], 0.6), "head", "joint");
   one(P("spine", "torso", "skin", BONE, [[-0.012, 0.014, 0, 0.022, 0.018], [0.03, 0.006, 0, 0.022, 0.018], [0.08, 0.006, 0, 0.021, 0.017], [0.15, 0.028, 0, 0.019, 0.016], [0.22, 0.052, 0, 0.018, 0.015], [0.29, 0.06, 0, 0.017, 0.014], [0.36, 0.052, 0, 0.016, 0.013], [0.42, 0.04, 0, 0.015, 0.013], [0.462, 0.032, 0, 0.015, 0.013]]), "torso");
   one(e("joint-lumbar", "torso", [0, 0.012, 0], [0.02, 0.02, 0.02], 0.6), "torso", "joint");
-  const ribs: number[][] = fine ? [[0.14, 0.085, 0.125], [0.185, 0.095, 0.135], [0.23, 0.1, 0.14], [0.275, 0.1, 0.14], [0.32, 0.092, 0.132], [0.362, 0.078, 0.115]] : [[0.16, 0.09, 0.13], [0.24, 0.1, 0.14], [0.32, 0.09, 0.13]];
-  ribs.forEach(([s, d, w], i) => one(ring(`rib-${i + 1}`, "torso", s!, -0.002 + i * 0.002, d!, w!, fine ? 0.006 : 0.009, -14), "torso"));
-  one(B("sternum", "torso", "skin", BONE, [0.31, -0.094, 0], [0.15, fine ? 0.012 : 0.016, 0.036], 0.004), "torso");
+  const ribs: number[][] = fine ? [[0.15, 0.085, 0.125, -0.002], [0.195, 0.095, 0.137, 0], [0.24, 0.1, 0.14, 0.002], [0.285, 0.1, 0.138, 0.004], [0.33, 0.096, 0.128, 0.006], [0.372, 0.086, 0.112, 0.008], [0.405, 0.07, 0.086, 0.01]] : [[0.17, 0.092, 0.132, 0], [0.26, 0.1, 0.14, 0.003], [0.35, 0.09, 0.12, 0.007]];
+  ribs.forEach(([s, d, w, cv], i) => one(ring(`rib-${i + 1}`, "torso", s!, cv!, d!, w!, fine ? 0.006 : 0.009, -24), "torso"));
+  one(P("sternum", "torso", "skin", BONE, [[0.39, -0.064, 0, 0.022, fine ? 0.006 : 0.008], [0.34, -0.08, 0, 0.017, fine ? 0.006 : 0.008], [0.29, -0.092, 0, 0.016, fine ? 0.006 : 0.008], [0.24, -0.097, 0, 0.012, fine ? 0.006 : 0.008], [0.218, -0.096, 0, 0.008, fine ? 0.005 : 0.008]]), "torso");
   both(b("clavicle-l", "torso", [0.4, -0.078, 0.022], [0.426, 0.004, 0.186], fine ? 0.007 : 0.009), "torso");
-  both(e("scapula-l", "torso", [0.34, 0.078, 0.1], [0.075, 0.009, 0.055]), "torso");
+  both(L("scapula-l", "torso", "skin", BONE, [[0.245, 0.012, 0.008, 0, -0.025, 2], [0.29, 0.03, 0.008, 0, -0.012, 2.2], [0.34, 0.045, 0.008, 0, 0, 2.4], [0.385, 0.052, 0.008, 0, 0.008, 2.4], [0.405, 0.04, 0.008, 0, 0.005, 2.2]], { extra: { transform: { translation: [0, 0.093, 0.1], rotation: qaxis([1, 0, 0], 30).map(r5) } } }), "torso");
+  both(b("scapular-spine-l", "torso", [0.385, 0.1, 0.07], [0.428, 0.035, 0.172], fine ? 0.0065 : 0.008), "torso");
   one(e("mass-torso", "torso", [0.2088, 0, 0], [0.056, 0.056, 0.056], 0.5), "torso", "mass");
-  both(E("ilium-l", "pelvis", "skin", BONE, [0.06, 0.012, 0.108], [0.072, 0.062, 0.022], { rot: qaxis([1, 0, 0], 20) }), "pelvis");
-  one(e("sacrum", "pelvis", [0.05, 0.05, 0], [0.058, 0.02, 0.048]), "pelvis");
+  both(L("ilium-l", "pelvis", "skin", BONE, [[-0.005, 0.009, 0.022, -0.008, -0.022, 2.2], [0.03, 0.008, 0.036, -0.004, -0.012, 2.2], [0.07, 0.008, 0.054, 0, 0.002, 2.4], [0.105, 0.008, 0.066, 0.006, 0.014, 2.6], [0.13, 0.008, 0.06, 0.008, 0.02, 2.6], [0.145, 0.008, 0.034, 0.008, 0.018, 2.2]], { extra: { transform: { translation: [0, 0.012, 0.11], rotation: qaxis([1, 0, 0], -35).map(r5) } } }), "pelvis");
+  one(L("sacrum", "pelvis", "skin", BONE, [[-0.02, 0.008, 0.008, 0.066, 0, 2], [0.0, 0.016, 0.01, 0.064, 0, 2], [0.03, 0.03, 0.012, 0.06, 0, 2.2], [0.065, 0.042, 0.014, 0.054, 0, 2.3], [0.1, 0.05, 0.016, 0.046, 0, 2.3]]), "pelvis");
   one(b("pubis", "pelvis", [-0.03, -0.062, -0.055], [-0.03, -0.062, 0.055], 0.012), "pelvis");
   both(b("ischium-l", "pelvis", [0.0, 0.0, 0.092], [-0.05, 0.03, 0.06], 0.014), "pelvis");
   one(e("mass-pelvis", "pelvis", [0.0497, 0, 0], [0.039, 0.039, 0.039], 0.5), "pelvis", "mass");

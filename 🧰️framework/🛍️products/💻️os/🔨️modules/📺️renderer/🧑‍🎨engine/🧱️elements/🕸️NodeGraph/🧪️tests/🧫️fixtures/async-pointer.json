@@ -1,0 +1,120 @@
+{
+  "client": {
+    "x": 37,
+    "y": 61
+  },
+  "origin": {
+    "left": 7,
+    "top": 11
+  },
+  "nativePoint": [
+    30,
+    50
+  ],
+  "nativeTargets": [
+    {
+      "domain": "node",
+      "id": "shape",
+      "generality": 1,
+      "label": "Shape"
+    },
+    {
+      "domain": "handle",
+      "id": "shape@mesh",
+      "generality": 5,
+      "label": "Mesh",
+      "channel": {
+        "widgetId": "shape",
+        "port": "mesh",
+        "direction": "out"
+      }
+    }
+  ],
+  "nativeHover": {
+    "channel": {
+      "widgetId": "shape",
+      "port": "mesh",
+      "direction": "out"
+    },
+    "refusal": null,
+    "edge": null
+  },
+  "nativeWrite": [
+    "shape",
+    "mesh",
+    "out"
+  ],
+  "published": [
+    {
+      "granularity": "handle",
+      "id": "shape@mesh"
+    }
+  ],
+  "replacement": {
+    "nodeId": "viewport",
+    "portId": "body"
+  },
+  "sceneNodes": [
+    {
+      "id": "shape",
+      "x": 0,
+      "y": 0,
+      "width": 100,
+      "height": 100,
+      "inputs": [
+        {
+          "id": "shape@!imesh",
+          "code": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "shape@mesh",
+          "code": "mesh"
+        }
+      ]
+    },
+    {
+      "id": "shape@mesh",
+      "x": 200,
+      "y": 0,
+      "width": 100,
+      "height": 100,
+      "inputs": [],
+      "outputs": []
+    }
+  ],
+  "inputTarget": {
+    "domain": "handle",
+    "id": "shape@mesh",
+    "generality": 5,
+    "label": "Mesh",
+    "channel": {
+      "widgetId": "shape",
+      "port": "mesh",
+      "direction": "in"
+    }
+  },
+  "inputWrite": [
+    "shape",
+    "mesh",
+    "in"
+  ],
+  "inputPublished": [
+    {
+      "granularity": "handle",
+      "id": "shape@!imesh"
+    }
+  ],
+  "semanticNamespace": {
+    "nodeTargetPrefix": "n:",
+    "edgeTargetPrefix": "e:",
+    "handleTargetPrefix": "h:"
+  },
+  "rawCollision": "shape@mesh",
+  "scopedCollision": [
+    "n:shape@mesh",
+    "e:shape@mesh",
+    "h:shape@mesh"
+  ]
+}

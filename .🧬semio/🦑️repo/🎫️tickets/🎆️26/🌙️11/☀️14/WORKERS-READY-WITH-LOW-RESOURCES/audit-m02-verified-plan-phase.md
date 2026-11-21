@@ -1,0 +1,9 @@
+# m02 verified plan handoff and readiness watchdog
+
+The 12:15:44 UTC physical m02 workspace receipt ended a 12,289-second attempt by SIGTERM. Its watchdog records an overdue graph step at 10,837 seconds against a 3,600-second bound, with 601,628 milliseconds of quiet. The retained output also contains execution capacity admission and growth after the last planning line. In the normal entry path, execution capacity is requested inside the scheduled callback after the command has verified its resident plan and content-addressed slice. The retained tail has no explicit validated-plan milestone. This identifies a live diagnostic gap, but the historical receipt does not retain each phase transition and cannot establish what the old observer saw in every tick.
+
+The client now emits the existing watchdog plan-answered phrase after it has verified the exact slice digest and scoped task plan. The watchdog already recognizes this milestone as the transition out of the graph read. The command emits it before scheduling or requesting execution capacity. A missing, corrupt or rejected plan produces no milestone. A subsequent graph read can still start another reading phase. All existing stage deadlines and ordinary process containment remain unchanged.
+
+The native private service test failed before the change because a verified reply left the stage classified as reading. The final language-neutral fixture compares an independent SQLite phase decision with the watchdog after real valid and corrupted replies in both English and German. All 33 invocation, catalog and stale-stage tests passed with 1,218 assertions. An initial broader attempt hit an incorrect catalog helper import. The final code uses the public catalog entry and passes the combined run.
+
+m02 has since started another workspace attempt and returned to the new exact staged index. This does not verify a successful workspace exit or the new milestone on a running physical command.

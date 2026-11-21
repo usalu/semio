@@ -58,11 +58,11 @@ export function createRelativeImportResolverV1(owners:readonly {name:string;root
  return path=>{for(let end=path.length;end>0;end=path.lastIndexOf("/",end-1)){const name=named.get(end===path.length?path:path.slice(0,end));if(name!==undefined)return name;}return undefined;};
 }
 
-/** 🗃️ The owner lookups every owner observation needs (package name to owner, root to owner, relative file to owner), built once per registry instead of once per observed owner. */
-const REGISTRY_INDEXES_V1=new WeakMap<object,{byPackage:Map<string,string>;byRoot:Map<string,string>;relativeProject:(path:string)=>string|undefined}>();
+/** 🗃️ The canonical name, package, root and relative file owner lookups, built once per registry. */
+const REGISTRY_INDEXES_V1=new WeakMap<object,{byName:ReadonlyMap<string,BuildOwnerRegistryV1["owners"][number]>;byPackage:Map<string,string>;byRoot:Map<string,string>;relativeProject:(path:string)=>string|undefined}>();
 export function registryOwnerIndexesV1(registry:BuildOwnerRegistryV1){
  let known=REGISTRY_INDEXES_V1.get(registry);
- if(known===undefined){const rows=registry.owners.flatMap(owner=>[owner.root,...owner.nativeRoots??[]].map(root=>({name:owner.name,root})));known={byPackage:new Map(registry.owners.flatMap(owner=>owner.packages.map(name=>[name,owner.name] as const))),byRoot:new Map(rows.map(row=>[row.root,row.name] as const)),relativeProject:createRelativeImportResolverV1(rows)};REGISTRY_INDEXES_V1.set(registry,known);}
+ if(known===undefined){const rows=registry.owners.flatMap(owner=>[owner.root,...owner.nativeRoots??[]].map(root=>({name:owner.name,root})));known={byName:new Map(registry.owners.map(owner=>[owner.name,owner])),byPackage:new Map(registry.owners.flatMap(owner=>owner.packages.map(name=>[name,owner.name] as const))),byRoot:new Map(rows.map(row=>[row.root,row.name] as const)),relativeProject:createRelativeImportResolverV1(rows)};REGISTRY_INDEXES_V1.set(registry,known);}
  return known;
 }
 

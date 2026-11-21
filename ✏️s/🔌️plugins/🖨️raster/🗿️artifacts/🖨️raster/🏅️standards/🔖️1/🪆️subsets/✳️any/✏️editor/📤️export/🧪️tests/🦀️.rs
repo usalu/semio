@@ -11,10 +11,45 @@ use semio_s_artifact_raster_raster_model::create_pixel_layer;
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot;
 
 fn loan()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
-fn close_work(work:&mut ImageExportWork,caller:&mut semio_plugin::artifact_app_laws::OriginalWorkFixture){work.cancel();for _ in 0..100000{if work.terminal_is_empty(){return}caller.turn(loan(),|cx|{let demand=work.close_demands(32768)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|work.close_step(grant))?;Ok(())}).unwrap();}panic!("finite export close")}
-fn advance_work(work:&mut ImageExportWork,document:&RasterSnapshot,caller:&mut semio_plugin::artifact_app_laws::OriginalWorkFixture)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
- let mut page=None;let result=caller.turn(loan(),|cx|{if work.page_ready(){let turn=work.take_page(cx.retained_grant());let cpu=turn.work;let result=turn.result.map(|output|if let Some((bytes,progress))=output{page=Some(bytes);semio_framework_value::RetainedCloneStep::Progress(progress)}else{semio_framework_value::RetainedCloneStep::Progress(Default::default())});semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:cpu})?;}else{semio_framework_job::receive_original_retained_work(cx,work.advance(document,cx.retained_grant()))?;}Ok(())});
- if let Err(error)=result{if let Some(page)=page{caller.retire_owned(page,loan());}Err(error)}else{Ok(page)}
+fn close_work(work: &mut ImageExportWork, caller: &mut semio_plugin::artifact_app_laws::OriginalWorkFixture) {
+    work.cancel();
+    for _ in 0..100_000 {
+        if work.terminal_is_empty() { return; }
+        caller.turn(loan(), |cx| {
+            let demand = work.close_demands(32768)?;
+            semio_framework_job::close_original_effect_step(cx, demand, |effect| work.close_step(32768, effect))?;
+            Ok(())
+        }).unwrap();
+    }
+    panic!("finite export close")
+}
+
+fn probe_work(work: &mut ImageExportWork, document: &RasterSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::OriginalRetirementOutcome {
+    let mut turn = semio_framework_job::OriginalRetirementPump::new().turn(4096, u64::MAX, semio_framework_job::default_now_us, grant).unwrap();
+    turn.with_effect(|effect| work.advance(document, effect)).unwrap().expect("funded export test").0
+}
+
+fn advance_work(work: &mut ImageExportWork, document: &RasterSnapshot, caller: &mut semio_plugin::artifact_app_laws::OriginalWorkFixture) -> Result<Option<Vec<u8>>, semio_framework_job::OriginalTurnFailure> {
+    use semio_framework_value::{RetainedCloneStep, RetainedWorkOutcome};
+    let mut page = None;
+    let result = caller.turn(loan(), |cx| {
+        if work.page_ready() {
+            let turn = work.take_page(cx.retained_grant());
+            let result = turn.result.map(|output| if let Some((bytes, progress)) = output {
+                page = Some(bytes);
+                RetainedCloneStep::Progress(progress)
+            } else { RetainedCloneStep::Progress(Default::default()) });
+            semio_framework_job::receive_original_retained_work(cx, RetainedWorkOutcome { result, work: turn.work })?;
+        } else if let Some((turn, work)) = cx.with_original_effect(cx.retained_grant(), |_, effect| work.advance(document, effect))? {
+            assert_eq!(turn.work, work);
+            semio_framework_job::receive_original_retained_work(cx, RetainedWorkOutcome { result: turn.result, work })?;
+        }
+        Ok(())
+    });
+    if let Err(error) = result {
+        if let Some(page) = page { caller.retire_owned(page, loan()); }
+        Err(error)
+    } else { Ok(page) }
 }
 
 fn document(width:u32,height:u32,pixels:Vec<u8>)->RasterSnapshot {
@@ -37,12 +72,12 @@ fn export_pages_match_neutral_base64_vectors() {
 fn export_work_preserves_rgba_and_yields_each_stage() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let image=&fixture["image"];
     let pixels:Vec<u8>=serde_json::from_value(image["pixels"].clone()).unwrap();let document=document(2,2,pixels.clone());
-    let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let turn=work.advance(&document,Default::default());assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(work.stage(),"prepare");
+    let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let turn=probe_work(&mut work,&document,Default::default());assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(work.stage(),"prepare");
     let mut stages=std::collections::BTreeSet::new();let mut output=Vec::new();
     for _ in 0..1000 {stages.insert(work.stage());if let Some(chunk)=advance_work(&mut work,&document,&mut caller).unwrap(){assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend_from_slice(&chunk);caller.retire_owned(chunk,loan());}if work.done{break;}}
     assert!(work.done);for stage in fixture["stages"].as_array().unwrap(){assert!(stages.contains(stage.as_str().unwrap()));}
     let bytes=base64_codec::base64_standard_decode(std::str::from_utf8(&output).unwrap()).unwrap();let decoded=semio_framework_pixels::decode_png(&bytes).unwrap();assert_eq!((decoded.width,decoded.height),(2,2));assert_eq!(decoded.pixels,pixels);
-    assert!(work.advance(&document,loan()).result.is_err());close_work(&mut work,&mut caller);caller.retire_owned(output,loan());caller.finish();retire_raster_snapshot(document);
+    assert!(probe_work(&mut work,&document,loan()).result.is_err());close_work(&mut work,&mut caller);caller.retire_owned(output,loan());caller.finish();retire_raster_snapshot(document);
 }
 
 #[test]
@@ -50,7 +85,7 @@ fn export_cancels_every_stage_and_refuses_an_empty_document() {
     let document=document(128,128,(0..128*128*4).map(|i|((i*73+i/31)%256) as u8).collect());
     for stage in ["prepare","composite","encode","output"] {
         let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();for _ in 0..100000 {if work.stage()==stage{break;}if let Some(page)=advance_work(&mut work,&document,&mut caller).unwrap(){caller.retire_owned(page,loan());}}assert_eq!(work.stage(),stage);
-        work.cancel();assert!(work.advance(&document,loan()).result.is_err());close_work(&mut work,&mut caller);assert!(work.terminal_is_empty());caller.finish();
+        work.cancel();assert!(probe_work(&mut work,&document,loan()).result.is_err());close_work(&mut work,&mut caller);assert!(work.terminal_is_empty());caller.finish();
     }
     retire_raster_snapshot(document);
     let empty=empty_raster_snapshot();let mut caller=semio_plugin::artifact_app_laws::OriginalWorkFixture::new();let mut work=ImageExportWork::default();let mut refused=false;for _ in 0..100000 {if let Err(error)=advance_work(&mut work,&empty,&mut caller){refused=true;caller.retire_owned(error,loan());break;}}assert!(refused);close_work(&mut work,&mut caller);caller.finish();retire_raster_snapshot(empty);
@@ -63,12 +98,12 @@ async fn retained_image_export_completes_or_cancels_without_mutating_history() {
     let mut app=context::app().await;
     context::dispatch(&mut app,semio_s_artifact_raster_raster_editor::RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer {kind:"pixel".into()})).await;
     let before=app.snapshot().unwrap();
-    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("registered retained export");let mut running=0;let mut progress=0;let mut result=None;
-    for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap(){ArtifactMediaExportPoll::Running {applied_progress,..}=>{assert!(applied_progress>=progress);progress=applied_progress;running+=1;},ArtifactMediaExportPoll::Complete(media)=>{result=Some(media);break;},other=>panic!("export did not complete: {other:?}")}}
+    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx()).await.expect("registered retained export");let mut running=0;let mut progress=0;let mut result=None;
+    for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.unwrap(){ArtifactMediaExportPoll::Running {applied_progress,..}=>{assert!(applied_progress>=progress);progress=applied_progress;running+=1;},ArtifactMediaExportPoll::Complete(media)=>{result=Some(media);break;},other=>panic!("export did not complete: {other:?}")}}
     assert!(running>1);assert!(progress>0);let media=result.expect("complete export");assert_eq!(media.schema,"2d.image");let mut output=Vec::new();while let Some(chunk)=media.chunks.take_chunk().unwrap(){assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend(chunk);}
     let bytes=base64_codec::base64_standard_decode(std::str::from_utf8(&output).unwrap()).unwrap();let image=semio_framework_pixels::decode_png(&bytes).unwrap();assert_eq!((image.width,image.height),(512,512));assert!(image.pixels.iter().all(|value|*value==0));
-    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();app.cancel_media_export(&handle).await.unwrap();
-    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err(),"cancelled media handles transfer to the close lane immediately");
+    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx()).await.unwrap();app.cancel_media_export(&handle).await.unwrap();
+    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.is_err(),"cancelled media handles transfer to the close lane immediately");
     let after=app.snapshot().unwrap();assert_eq!(before,after);retire_raster_snapshot(before);retire_raster_snapshot(after);
     context::history(&mut app,"undo").await;let undone=app.snapshot().unwrap();assert!(undone.layers.is_empty());retire_raster_snapshot(undone);
     drop(media);
@@ -90,9 +125,9 @@ async fn retained_export_refuses_a_superseded_document_and_retires_its_output() 
     use semio_s_artifact_raster_raster_editor::commands::{add_layer, patch_layer};
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
     let document=app.snapshot().unwrap();let id=semio_s_artifact_raster_raster_model::layer_node_id(&document.layers[0]).to_owned();retire_raster_snapshot(document);
-    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx()).await.unwrap();
     context::dispatch(&mut app,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id,field:"name".into(),value:"Changed during export".into()})).await;
-    let mut refused=false;for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap(){ArtifactMediaExportPoll::Running {..}=>{},ArtifactMediaExportPoll::Failed(detail)=>{assert!(detail.contains("stale revision or generation"),"{detail}");refused=true;break;},other=>panic!("superseded export escaped: {other:?}")}}
+    let mut refused=false;for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.unwrap(){ArtifactMediaExportPoll::Running {..}=>{},ArtifactMediaExportPoll::Failed(detail)=>{assert!(detail.contains("stale revision or generation"),"{detail}");refused=true;break;},other=>panic!("superseded export escaped: {other:?}")}}
     assert!(refused);let document=app.snapshot().unwrap();assert_eq!(semio_s_artifact_raster_raster_model::layer_name(&document.layers[0]),"Changed during export");retire_raster_snapshot(document);
 }
 
@@ -112,10 +147,11 @@ async fn png_command_download_survives_operation_retirement_and_preserves_histor
     while app.has_pending_typed_operations() {
         turns+=1;assert!(turns<100000);semio_framework_async::yield_once().await;
         app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-        if let Some(page)=app.take_typed_operation_result_page(instance) {
+        if let Some(mut page)=artifact_app_laws::take_fixture_result_page(&mut app.0, instance, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
             assert_ne!(page.lane,TypedOperationResultLane::Fault,"{}",String::from_utf8_lossy(page.bytes()));
             if page.lane==TypedOperationResultLane::Download {assert!(download.is_none());let row:serde_json::Value=serde_json::from_slice(page.bytes()).unwrap();download=Some((page.token.operation,row));}
-            assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
+            let token=artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close);
+            assert!(app.acknowledge_typed_operation_result(token).unwrap());
         }
         let _=app.take_typed_operation_effect();let _=app.take_typed_operation_event();let _=app.take_typed_operation_completion().await.unwrap();let _=app.take_typed_operation_ui_scope();
     }
@@ -141,7 +177,11 @@ async fn cancelled_png_command_never_publishes_a_download_or_changes_history() {
             if turns==cancel_after {assert!(cancellation.cancel_document(ArtifactDocumentAuthority(meta.instance_id)).unwrap());cancelled=true;}
             turns+=1;assert!(turns<100000);semio_framework_async::yield_once().await;
             app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-            if let Some(page)=app.take_typed_operation_result_page(meta.instance_id) {assert_ne!(page.lane,TypedOperationResultLane::Download);assert!(app.acknowledge_typed_operation_result(page.token).unwrap());}
+            if let Some(mut page)=artifact_app_laws::take_fixture_result_page(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
+                assert_ne!(page.lane,TypedOperationResultLane::Download);
+                let token=artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close);
+                assert!(app.acknowledge_typed_operation_result(token).unwrap());
+            }
             let _=app.take_typed_operation_effect();let _=app.take_typed_operation_event();let _=app.take_typed_operation_completion().await.unwrap();let _=app.take_typed_operation_ui_scope();
         }
         assert!(cancelled);let after=app.snapshot().unwrap();assert_eq!(before,after);retire_raster_snapshot(before);retire_raster_snapshot(after);
@@ -170,16 +210,54 @@ async fn png_progress_control_cancels_its_exact_visible_operation() {
     foreign=meta.clone();foreign.instance_id+=1;assert!(semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &foreign, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err());
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "cancelTypedOperation", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
     let cancelling=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&context::raster_view_state()).await;assert!(cancelling.contains("Cancelling"));
-    let mut terminal=false;let mut retired_refresh=false;let mut turns=0;while app.has_pending_typed_operations(){turns+=1;assert!(turns<100000);semio_framework_async::yield_once().await;app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();if let Some(page)=app.take_typed_operation_result_page(meta.instance_id){assert_ne!(page.lane,TypedOperationResultLane::Download);assert_ne!(page.lane,TypedOperationResultLane::Fault,"an explicit Cancel is a normal terminal outcome");terminal|=page.lane==TypedOperationResultLane::Terminal;assert!(app.acknowledge_typed_operation_result(page.token).unwrap());}let _=app.take_typed_operation_effect();let _=app.take_typed_operation_event();let _=app.take_typed_operation_completion().await.unwrap();if app.take_typed_operation_ui_scope().is_some()&&app.live_typed_operation_slots()==0{retired_refresh=true;}}
+    let mut terminal=false;let mut retired_refresh=false;let mut turns=0;
+    while app.has_pending_typed_operations(){
+        turns+=1;assert!(turns<100000);semio_framework_async::yield_once().await;
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        if let Some(mut page)=artifact_app_laws::take_fixture_result_page(&mut app.0, meta.instance_id, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap(){
+            assert_ne!(page.lane,TypedOperationResultLane::Download);
+            assert_ne!(page.lane,TypedOperationResultLane::Fault,"an explicit Cancel is a normal terminal outcome");
+            terminal|=page.lane==TypedOperationResultLane::Terminal;
+            let token=artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close);
+            assert!(app.acknowledge_typed_operation_result(token).unwrap());
+        }
+        let _=app.take_typed_operation_effect();let _=app.take_typed_operation_event();let _=app.take_typed_operation_completion().await.unwrap();
+        if app.take_typed_operation_ui_scope().is_some()&&app.live_typed_operation_slots()==0{retired_refresh=true;}
+    }
     assert!(terminal);assert!(retired_refresh,"retiring the final operation must still publish a UI refresh");
     let json=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&context::raster_view_state()).await;assert!(!json.contains("cancelTypedOperation"));context::history(&mut app,"undo").await;let document=app.snapshot().unwrap();assert!(document.layers.is_empty());retire_raster_snapshot(document);
 }
 #[test]
 fn export_snapshot_installed_supplier_returns_each_actual_shared_owner(){
-    use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement};use semio_framework_value_factory::FactorySharedRetirement;use std::sync::Arc;
-    let snapshot=Arc::new(semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>>=Arc::new(semio_framework_value::OwnedValueRetirementFactory::<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot>::default());
-    let mut owners=[FactorySharedRetirement::new(snapshot.clone(),factory.clone()),FactorySharedRetirement::new(snapshot,factory)];
-    for owner in &mut owners{for turn in 0..100000{if owner.terminal_is_empty(){break}let demand=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Default::default());let step=owner.close_step(grant).unwrap();assert!(step.progress().fits(grant));assert!(turn<99999)}assert!(owner.terminal_is_empty())}
+    use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, OwnedValueRetirementFactory, close_owner, factory::ArcRootRetirement};
+    use std::sync::Arc;
+    let snapshot = Arc::new(semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot());
+    let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<RasterSnapshot>> = Arc::new(OwnedValueRetirementFactory::default());
+    let mut owners = [ArcRootRetirement::new(snapshot.clone(), factory.clone()), ArcRootRetirement::new(snapshot, factory)];
+    let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
+    for owner in &mut owners {
+        for _ in 0..100_000 {
+            if owner.terminal_is_empty() { break; }
+            let demand = owner.next_demand(4096).unwrap();
+            let grant = RetainedCloneGrant {
+                maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes,
+                maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth,
+            };
+            caller.turn(RetainedCloneGrant { maximum_items: 0, ..grant }, |cx| {
+                let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| close_owner(owner, 4096, effect))?;
+                assert_eq!(step.progress(), Default::default());
+                Ok(())
+            }).unwrap();
+            caller.turn(grant, |cx| {
+                let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| close_owner(owner, 4096, effect))?;
+                assert!(step.progress().fits(grant));
+                Ok(())
+            }).unwrap();
+        }
+        assert!(owner.terminal_is_empty());
+    }
+    caller.finish();
 }
 
 #[test]

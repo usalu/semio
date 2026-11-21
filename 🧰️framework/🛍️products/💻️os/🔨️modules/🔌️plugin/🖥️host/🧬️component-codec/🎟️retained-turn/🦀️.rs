@@ -74,6 +74,19 @@ pub fn event_to_wire(event:&wit_reactor::Event)->serde_json::Value{
   W::JobCompleted(completed)=>serde_json::json!({"tag":"job-completed","val":{"job":completed.job,"outcome":wire_completion(&completed.outcome)}}),
   W::Message(message)=>serde_json::json!({"tag":"message","val":{"source":wire_endpoint(&message.source),"payload":message.payload}}),
   W::Timer(timer)=>serde_json::json!({"tag":"timer","val":{"id":timer.id}}),
+  W::OriginalMediaControl(event)=>{
+   use crate::wit_events::OriginalMediaControl;
+   let control=match &event.control{
+    OriginalMediaControl::Begin(begin)=>serde_json::json!({"tag":"begin","val":{"name":begin.name,"mediaType":begin.media_type}}),
+    OriginalMediaControl::Complete=>serde_json::json!({"tag":"complete"}),
+    OriginalMediaControl::Cancel=>serde_json::json!({"tag":"cancel"}),
+   };
+   serde_json::json!({"tag":"original-media-control","val":{
+    "loan":{"operationId":event.loan.operation_id,"generation":event.loan.generation,"instanceId":event.loan.instance_id,
+     "documentId":event.loan.document_id,"baseRevision":event.loan.base_revision},
+    "owner":event.owner,"seq":event.seq,"kind":event.kind,"extent":event.extent,"control":control,
+   }})
+  }
   W::Wake=>serde_json::json!({"tag":"wake"}),
   W::Request(request)=>serde_json::json!({"tag":"request","val":{"req":request.req,"params":{"origin":wire_endpoint(&request.params.origin),"capability":request.params.capability,"payload":request.params.payload}}}),
  }
@@ -81,6 +94,29 @@ pub fn event_to_wire(event:&wit_reactor::Event)->serde_json::Value{
 #[cfg(test)]
 mod input_tests{
  use super::*;
+ #[test]
+ fn original_media_control_preserves_all_wire_fields(){
+  use crate::wit_events::{OriginalMediaBegin,OriginalMediaControl,OriginalMediaControlEvent,OriginalMediaLoan};
+  let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/media-control.json")).unwrap();
+  let common=&law["common"];
+  let loan=&common["loan"];
+  let text=|key:&str|loan[key].as_str().unwrap().to_owned();
+  for case in law["cases"].as_array().unwrap(){
+   let control=match case["tag"].as_str().unwrap(){
+    "begin"=>OriginalMediaControl::Begin(OriginalMediaBegin{name:case["val"]["name"].as_str().unwrap().to_owned(),media_type:case["val"]["mediaType"].as_str().unwrap().to_owned()}),
+    "complete"=>OriginalMediaControl::Complete,
+    "cancel"=>OriginalMediaControl::Cancel,
+    _=>panic!("unknown original media control fixture"),
+   };
+   let event=wit_reactor::Event::OriginalMediaControl(OriginalMediaControlEvent{
+    loan:OriginalMediaLoan{operation_id:text("operationId"),generation:text("generation"),instance_id:loan["instanceId"].as_u64().unwrap() as u32,document_id:text("documentId"),base_revision:text("baseRevision")},
+    owner:common["owner"].as_u64().unwrap(),seq:common["seq"].as_u64().unwrap(),kind:common["kind"].as_u64().unwrap() as u8,extent:common["extent"].as_u64().unwrap() as u32,control,
+   });
+   let mut expected=common.clone();
+   expected["control"]=case.clone();
+   assert_eq!(event_to_wire(&event),serde_json::json!({"tag":"original-media-control","val":expected}));
+  }
+ }
  #[test]
  fn wit_actor_input_returns_its_same_vector_even_when_disposition_is_malformed(){
   for disposition in[wit_reactor::ActorInputDisposition::Borrowed,wit_reactor::ActorInputDisposition::Retained,wit_reactor::ActorInputDisposition::Returned]{let wire=vec![0,1,255];let pointer=wire.as_ptr();let returned=matches!(&disposition,wit_reactor::ActorInputDisposition::Returned);let input=RetainedTurnInput{operation:1,generation:1,epoch:1,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:1,fuel:1},grant:Default::default()};let call=wit_reactor::ActorInputAdmissionCall{input:input_to_wit(input),spent:wit_reactor::RetainedProgress{copied_items:0,copied_bytes:0,retained_capacity_bytes:0,released_bytes:0},work_units_spent:0,ready:true,disposition,returned_wire:Some(wire),refusal:Some(wit_reactor::ActorAuthorityRefusal::InvalidValue)};let reply=match input_admission_from_wit(call){Ok(reply)=>reply,Err(_)=>panic!("native-addressable raw WIT reply maps without replacing its wire")};assert_eq!(reply.returned_wire.as_ref().unwrap().as_ptr(),pointer);assert_eq!(reply.returned_wire.as_deref(),Some(&[0,1,255][..]));assert_eq!(reply.disposition_is_well_formed(),returned);assert!(reply.ready);assert_eq!(reply.refusal,Some(semio_framework_value::ValueRefusalKind::InvalidValue));}

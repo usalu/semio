@@ -343,6 +343,15 @@
       {
         "name": "port",
         "type": "optional-utf8"
+      },
+      {
+        "name": "direction",
+        "type": "optional-utf8",
+        "enum": ["in", "out"]
+      },
+      {
+        "name": "portsJson",
+        "type": "optional-utf8"
       }
     ],
     "setSelectedChannels": [

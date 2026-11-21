@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-s-artifact-draw-drawing = { path = "../../../../../../../../../📦️packages/🦀️rust" }
 semio-s-artifact-draw-drawing-scene-mounted = { workspace = true }
 base64_codec = { workspace = true }
@@ -25,6 +26,7 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-framework-pack-json = { workspace = true }
+semio-framework-trace = { workspace = true }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-ui-locale = { workspace = true }

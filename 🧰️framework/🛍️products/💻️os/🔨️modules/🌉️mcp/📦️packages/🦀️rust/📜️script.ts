@@ -12,12 +12,13 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import Ajv from "ajv";
 import { orchestratorBudgetOpts, runCmd, runCargo, runProbe, runRepositoryCommand, resolveTypescriptCompilerV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runAdmittedCargoPackageTestsV1, buildAdmittedCargoArtifactsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { buildMcpArtifactV1, MCP_MANIFEST_REL, withMcpHostDriverPolicy, MCP_GATEWAY_PACKAGES, readMcpGatewaySource } from "../../🟦️.ts";
+import { buildMcpArtifactV1, MCP_MANIFEST_REL, takeMcpPluginCatalog, withMcpHostDriverPolicy, MCP_GATEWAY_PACKAGES, readMcpGatewaySource } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 
@@ -393,8 +394,14 @@ abstract class PublishedMcpScript extends BundleScript {
 
 class DevScript extends PublishedMcpScript {
  async run(segments:string[]):Promise<void>{
-  const args=withMcpHostDriverPolicy(segments.length?segments:["stdio"]);
-  await this.withPublished("mcp:dev",0,(binary,env,control)=>runOwnedCommand(binary,args,this.root,"mcp:dev",scriptInvocationBudget(this.invocation,0),{env,signal:control.signal,control,stdout:"inherit"}));
+  const {withMcpComponentEnvironmentV1}=await import("../../📡️stdio/📦️component-models/🟦️.ts");
+  const catalog=takeMcpPluginCatalog(segments.length?segments:["stdio"],this.repoRoot);
+  if(catalog.target)throw Error("Prepare the catalog before launching the native dev transport");
+  const args=withMcpHostDriverPolicy(catalog.args.length?catalog.args:["stdio"]),outsideNativeReader=AsyncLocalStorage.snapshot();
+  await this.withPublished("mcp:dev",0,(binary,env,control)=>outsideNativeReader(()=>
+   withIssuedResourceControlV1(this.invocation,"mcp:dev:models",0,phase=>
+    withMcpComponentEnvironmentV1(this.repoRoot,this.invocation,phase,{...env,...catalog.env},(env,control)=>
+     runOwnedCommand(binary,args,this.root,"mcp:dev",scriptInvocationBudget(this.invocation,0),{env,signal:control.signal,control,stdout:"inherit"})),control.signal)));
  }
 }
 

@@ -15,6 +15,14 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "drawing-birth"
+path = "../../🔀️interchange/🪆️drawing/🌱️birth/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "interchange"
+path = "../../🔀️interchange/🧪️tests/🦀️.rs"
+
 [dependencies]
 semio-ui-locale = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
@@ -35,6 +43,9 @@ semio-s-artifact-layout-layout-mutations = { workspace = true }
 semio-framework-io-ports = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
+semio-s-artifact-stdio-semio-base = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-drawing = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-drawing-export = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-step-snapshot = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { path = "../../../../../../../../../../🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust" }
@@ -46,7 +57,9 @@ semio-s-artifact-stdio-png = { path = "../../../../../../../../../../🗄️stdi
 semio-s-artifact-stdio-idml = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📚️idml/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
+semio-framework-value-testing-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-s-artifact-layout-drawing-composition = { path = "../../../../../../../🔨️modules/🧩️drawing-composition/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }

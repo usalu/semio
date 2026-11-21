@@ -67,33 +67,10 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
                 "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: mutation["value"].as_str().unwrap().into() },
                 other => return Err(format!("unexpected neutral command {other}")),
             };
-            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &command, &ActionMeta { view_state: Some(context.into()), ..artifact_app_laws::meta("window-config") }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         }
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-        let mut receipts = 0;
-        while app.has_pending_typed_operations() {
-            if std::time::Instant::now() >= deadline {
-                return Err("window config operations did not finish".into());
-            }
-            app.maintenance_step(scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
-            app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
-            if let Some(page) = app.take_typed_operation_result_page(1) {
-                let lane = page.lane;
-                let bytes = page.bytes().to_vec();
-                app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-                if lane == semio_plugin::app::TypedOperationResultLane::Fault {
-                    return Err(format!("window config publication failed: {bytes:?}"));
-                }
-                if lane == semio_plugin::app::TypedOperationResultLane::WindowConfig {
-                    receipts += 1;
-                }
-            }
-            app.take_typed_operation_effect();
-            app.take_typed_operation_event();
-            app.take_typed_operation_ui_scope();
-            while app.take_typed_operation_completion().await.map_err(|error| format!("{error:?}"))?.is_some() {}
-            std::thread::yield_now();
-        }
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+        let receipts = receipt.lanes.iter().filter(|&&lane| lane == semio_plugin::app::TypedOperationResultLane::WindowConfig).count();
         if receipts != fixture["cases"].as_array().unwrap().len() {
             return Err(format!("expected one receipt per window mutation, got {receipts}"));
         }
@@ -132,7 +109,7 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
             return Err(format!("expected two persisted window partitions, got {}", packs.len()));
         }
         for pack in packs {
-            reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
+            semio_plugin::restore_fixture_window_config(&mut reopened, pack, scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         }
         for (context, before) in [(&left, &left_tree), (&right, &right_tree)] {
             let after = render(&mut reopened, context, scope.cx()).await?;
@@ -174,6 +151,8 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
         };
         assert_eq!(Some(u32::from(wire[1])), descriptor.binary_tag);
         assert_eq!(RewritingWindowConfigMutation::decode_op(&wire).unwrap(), mutation);
+        protocol::os_dsl::original_receiving::check_receiving_round_trip(std::slice::from_ref(&mutation))
+            .expect("bounded receiving matches the canonical mutation used by the independent patch oracle");
         windows.insert(id.into(), after);
         for (id, state) in &windows {
             let expected: RewritingWindowConfig = semio_framework_pack_json::from_json_str(&row["expected"][id].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -181,6 +160,19 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
         }
     }
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&semio_plugin::NoConfig::default())).unwrap(), fixture["expectedAppConfig"]);
+}
+
+#[test]
+fn rewriting_window_config_owners_declare_native_reload_and_retirement() {
+    fn assert_owner<O: WindowConfigOwner>() {
+        assert!(O::native_pair_demands().unwrap().capacity_bytes > 0);
+        assert!(O::native_operation_wire().original_receiving.is_some());
+        assert_eq!(O::store_disposer_birth().unwrap().capacity_bytes, std::alloc::Layout::for_value(O::build_store_disposer().as_ref()).size());
+    }
+    assert_owner::<BeforeWindowConfigOwner>();
+    assert_owner::<AfterWindowConfigOwner>();
+    assert_owner::<LhsWindowConfigOwner>();
+    assert_owner::<RhsWindowConfigOwner>();
 }
 
 #[test]

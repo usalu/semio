@@ -43,6 +43,7 @@ type DhwSystem {
   specificDemandKwhPersonA: Float! @state(class: ARTIFACT)
   storageLossKwhA: Float! @state(class: ARTIFACT)
   distributionLossKwhA: Float! @state(class: ARTIFACT)
+  dwellingCount: Int! @state(class: ARTIFACT)
   energyCarrier: String! @state(class: ARTIFACT)
 }
 

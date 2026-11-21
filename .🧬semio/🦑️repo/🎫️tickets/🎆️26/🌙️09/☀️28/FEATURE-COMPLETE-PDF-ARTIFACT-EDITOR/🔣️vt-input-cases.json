@@ -1,0 +1,148 @@
+[
+  {
+    "name": "📦️insert-object",
+    "mutation": "insertObject",
+    "missing": [
+      "/admittedStreamRoles/removed",
+      "/admittedStreamRoles/modified",
+      "/admittedStreamRoles/modified/-/value/identity/owner",
+      "/admittedStreamRoles/modified/-/value/dependencies",
+      "/admittedStreamRoles/modified/-/value/dependencies/-/owner",
+      "/admittedStreamRoles/added",
+      "/admittedStreamRoles/added/-/value/identity/owner",
+      "/admittedStreamRoles/added/-/value/dependencies",
+      "/admittedStreamRoles/added/-/value/dependencies/-/owner"
+    ],
+    "payload": {
+      "mutation": "insertObject",
+      "id": {
+        "num": 5,
+        "gen": 0
+      },
+      "value": {
+        "kind": "null"
+      },
+      "admittedStreamRoles": {
+        "removed": [
+          0
+        ],
+        "modified": [],
+        "added": []
+      }
+    },
+    "invalidPointer": [
+      "admittedStreamRoles",
+      "removed",
+      0
+    ],
+    "invalid": -1
+  },
+  {
+    "name": "🧹️remove-object",
+    "mutation": "removeObject",
+    "missing": [
+      "/admittedStreamRoles/removed",
+      "/admittedStreamRoles/modified",
+      "/admittedStreamRoles/modified/-/value/identity/owner",
+      "/admittedStreamRoles/modified/-/value/dependencies",
+      "/admittedStreamRoles/modified/-/value/dependencies/-/owner",
+      "/admittedStreamRoles/added",
+      "/admittedStreamRoles/added/-/value/identity/owner",
+      "/admittedStreamRoles/added/-/value/dependencies",
+      "/admittedStreamRoles/added/-/value/dependencies/-/owner"
+    ],
+    "payload": {
+      "mutation": "removeObject",
+      "id": {
+        "num": 5,
+        "gen": 0
+      },
+      "admittedStreamRoles": {
+        "removed": [
+          0
+        ],
+        "modified": [],
+        "added": []
+      }
+    },
+    "invalidPointer": [
+      "admittedStreamRoles",
+      "removed",
+      0
+    ],
+    "invalid": -1
+  },
+  {
+    "name": "🔧️set-object-value",
+    "mutation": "setObjectValue",
+    "missing": [
+      "/admittedStreamRoles/removed",
+      "/admittedStreamRoles/modified",
+      "/admittedStreamRoles/modified/-/value/identity/owner",
+      "/admittedStreamRoles/modified/-/value/dependencies",
+      "/admittedStreamRoles/modified/-/value/dependencies/-/owner",
+      "/admittedStreamRoles/added",
+      "/admittedStreamRoles/added/-/value/identity/owner",
+      "/admittedStreamRoles/added/-/value/dependencies",
+      "/admittedStreamRoles/added/-/value/dependencies/-/owner"
+    ],
+    "payload": {
+      "mutation": "setObjectValue",
+      "id": {
+        "num": 5,
+        "gen": 0
+      },
+      "value": {
+        "kind": "null"
+      },
+      "admittedStreamRoles": {
+        "removed": [
+          0
+        ],
+        "modified": [],
+        "added": []
+      }
+    },
+    "invalidPointer": [
+      "admittedStreamRoles",
+      "removed",
+      0
+    ],
+    "invalid": -1
+  },
+  {
+    "name": "🏳️set-output-intents",
+    "mutation": "setOutputIntents",
+    "missing": [
+      "/intents/-/profile/artifactId",
+      "/intents/-/profile/dialect",
+      "/intents/-/profile/dialect/artifactKind",
+      "/intents/-/profile/dialect/standard",
+      "/intents/-/profile/dialect/subset"
+    ],
+    "payload": {
+      "mutation": "setOutputIntents",
+      "intents": [
+        {
+          "subtype": "GTS_PDFX",
+          "conditionIdentifier": "Fixture profile",
+          "profile": {
+            "artifactId": "profile-1",
+            "dialect": {
+              "artifactKind": "s.stdio.binary",
+              "standard": "raw",
+              "subset": "*"
+            }
+          }
+        }
+      ]
+    },
+    "invalidPointer": [
+      "intents",
+      0,
+      "profile",
+      "artifactId"
+    ],
+    "invalid": 123
+  }
+]

@@ -62,6 +62,12 @@
     "keys": [
       "z",
       "a"
+    ],
+    "swaps": [
+      {"slots": [2, 0], "accepted": false, "keys": ["z", "a"]},
+      {"slots": [0, 2], "accepted": false, "keys": ["z", "a"]},
+      {"slots": [1, 1], "accepted": true, "keys": ["z", "a"]},
+      {"slots": [1, 0], "accepted": true, "keys": ["a", "z"]}
     ]
   }
 }

@@ -85,3 +85,59 @@ Poses and clips are unchanged and were rendered after the rig change (`seat-proo
 - **Legs on the axes** (one leg straight ahead) as committed; a 45-degree layout is equally common but would rewrite every anchor, pose contact and drawing for no gain in truth.
 - **1:500 ground members** (glides) are 75 mm blocks at the feet in the structure list, because `volumes-feature` needs the feature in every extent; **1:500 back panel** area is 2x the region (only the total is compared there, 0.5 %).
 - Tool inconsistencies found on the way (stroke extents with or without pen; closed slender ring not pen-widened) are in `tool-requests.md`.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-bar-stool-build.py` (loads the round-3 construction and restates it on the corrected rig; writes the candidate that `r3-bar-stool-apply.py` puts into the catalog). The round-3 build reproduced the catalog exactly before the change (checked member by member).
+
+### Reference (counter practice, ISO 7250 popliteal height, EN 12520 / EN 1728, market products)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+| --- | --- | --- | --- |
+| Seat height for a 1.05 m counter | 0.74-0.78 m | 0.752 m | 0 % |
+| Footrest above floor | 0.25-0.30 m | ring axis 0.27, top 0.2825 m | 0 % |
+| Seat to footrest | popliteal 0.43-0.47 m with shoes | 0.47 m | 0 % |
+| Ring | 25-28 mm tube, 0.38-0.45 m | 25 mm on 0.40 m, outer 0.425 m | 0 % |
+| Seat | 0.33-0.40 m round, 50-70 mm upholstered | 0.36 m, 54 mm | 0 % |
+| Swivel plate | 150-180 x 8-12 mm | 170 x 12 mm | 0 % |
+| Legs | 25 x 1.5 mm, splay 4-8 degrees | 25 x 1.5, 4.7 degrees, foot circle 0.395 m | 0 % |
+| Low backrest | top 0.10-0.20 m above seat, 0.30-0.38 m wide | 0.118 m, 0.30 m | 0 % |
+| Mass | 6-10 kg | 7.8 kg | 0 % |
+
+### Audit and root fix: the rig
+
+The skeleton was wrong although every solid sat right: `frame` (the welded frame, 5.0 kg) was a fixed bone lying along the floor, 0.70 m long, from the stool axis to 0.28 m beyond the front glide; `ground` was a 0.42 m bar along the floor; `pad` ran 0.36 m ahead from the axis, 0.18 m beyond the cushion rim. In the structural 2D view both long horizontal bones are load-bearing members (`eligibleBones`: length >= 5 % of the height), so the forces view drew a horizontal frame member in the air ahead of the stool.
+
+| Bone | Old | New |
+| --- | --- | --- |
+| `ground` | 0.42 m along the floor | 0 m (floor marker at the foot of the axis) |
+| `frame` | angle 0, 0.70 m, com (0.43, 0) world | angle 90, 0.686 m (floor to the top of the seat pan on the swivel axis), com x 0.43 along the axis |
+| `seat` | x 0, y 0.698, angle 90 (in the floor frame) | x 0.698, y 0, angle 0 (same world frame) |
+| `pad` | x 0, y 0.72, angle 0, 0.36 m, prismatic axis 90 | x 0.72, y 0, angle -90, 0.18 m (axis to cushion rim), prismatic axis 0 (down the frame axis) |
+| anchors on `frame` | foot-xn (-0.1975, 0), foot-xp (0.1975, 0), ring-front (0.2, 0.2825) | (0, 0.1975), (0, -0.1975), (0.2825, -0.2) in the turned frame; same world points |
+| poses `occupied`, `seat-proof-load`, `occupied-turned-key` | pad dy -0.018 / -0.03 / -0.018 | pad dx (along the frame axis), same travel |
+
+Everything bound to `frame` was restated in the turned frame: the volumes (legs, glides, ring, pan, mount, supports, weld ellipsoids with their radii turned, the four-fold repeats about the frame axis) and the elevation shapes (capsules and polygons; front and plan are rest-pose world coordinates and did not change). Seat, pad and backrest keep their world frames, so their solids and shapes are unchanged. `structure.assumptions[0]` names the slide of the cushion down the stool axis.
+
+### Grades (opened with the Read tool)
+
+| Scale | Body before -> after | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | B (rig) -> A- | A- | B (frame member along the floor) -> A- |
+| 1:100 | B (rig) -> A- | A- | B -> A- |
+| 1:200 | B (rig) -> B+ | B+ | B -> B+ |
+| 1:500 | B (rig) -> B+ (tub-like merged back panel at the 75 mm floor) | B+ | B -> B+ |
+
+Opened: 1:50 body before and after, 1:50 structure, 1:500 body, 1:50 `seat-proof-load` (the cushion slides down the axis), the 1:50 2D after the change. Rendered, not opened: the other poses, the `sit-and-turn` frame, thermal cuts and structure of 1:100-1:500, 2D 1:100-1:500 (`🗑️generated/r5-bar-stool/after/`).
+
+### Checks
+
+`r3-validate.ts --file` on the candidate with `--volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0); applied (`rig, anchors, representations, poses, structure`), spliced, `--catalog-only` VALID.
+
+`volumes-check.ts furniture/bar-stool --product`: PASS (0 fail).
+
+### Remaining
+
+- The cushion is still rigid on its prismatic bone: under load the wrapped edge drops over swivel and pan instead of the foam squeezing (needs a deformable cushion).
+- Plan of the backrest is its bounding rectangle in 2D (`solid` shapes cannot be bent).
+- 1:500 back panel 75 mm thick and 0.16 m high (bar and pad merged at the feature floor).

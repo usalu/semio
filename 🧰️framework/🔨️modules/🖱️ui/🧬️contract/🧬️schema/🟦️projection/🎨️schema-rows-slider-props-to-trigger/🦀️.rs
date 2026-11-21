@@ -42,11 +42,11 @@ pub(super) const STYLE_SPEC: SchemaMetadata = SchemaMetadata {
     name: "StyleSpec",
     version: 1,
     typescript: r####"/**
- * 🎨️ A node's design-token styling — five closed enums, never a raw color or a raw pixel value. A
+ * 🎨️ A node's design-token styling and its authored interaction highlight. A
  * renderer resolves every field against the active theme; this struct only names the tokens. Each
  * field is omitted from the wire at its default, so a default-styled node costs nothing to encode.
  */
-export type StyleSpec = { variant: Variant, size: SizeToken, density: Density, tone: Tone, emphasis: Emphasis, };"####,
+export type StyleSpec = { variant: Variant, size: SizeToken, density: Density, tone: Tone, emphasis: Emphasis, highlighted?: boolean, };"####,
 };
 
 pub(super) const SURFACE_DOC: SchemaMetadata = SchemaMetadata {

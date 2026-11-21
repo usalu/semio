@@ -1,0 +1,2 @@
+# import ElevationSourceInput from "🗺️imported-map/🏔️elevation/🔗️.graphql"
+input ReplaceElevationSourceInput { newElevationSource: ElevationSourceInput }

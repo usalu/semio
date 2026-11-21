@@ -1,0 +1,15 @@
+[
+  {"phase":"open","current":null,"prior":null,"spent":[0,0],"held":[0,0],"refused":false,"visible":null,"snapshot":[0,0],"raw":"absent","net":"absent"},
+  {"phase":"staged","current":null,"prior":null,"spent":[0,0],"held":[0,0],"refused":false,"visible":null,"snapshot":[0,0],"raw":"absent","net":"absent"},
+  {"phase":"fenced","current":[9,11],"prior":null,"spent":[3,4],"held":[1,2],"refused":false,"visible":null,"snapshot":[9,11],"raw":[6,7],"net":[5,5]},
+  {"phase":"staged","current":[9,11],"prior":null,"spent":[3,4],"held":[1,2],"refused":false,"visible":[9,11],"snapshot":[9,11],"raw":[6,7],"net":[5,5]},
+  {"phase":"fenced","current":[40,60],"prior":[9,11],"spent":[3,4],"held":[1,2],"refused":false,"visible":[9,11],"snapshot":[9,11],"raw":[6,7],"net":[5,5]},
+  {"phase":"open","current":[40,60],"prior":null,"spent":[3,4],"held":[1,2],"refused":false,"visible":[40,60],"snapshot":[40,60],"raw":[37,56],"net":[36,54]},
+  {"phase":"open","current":[0,0],"prior":null,"spent":[0,0],"held":[0,0],"refused":false,"visible":[0,0],"snapshot":[0,0],"raw":[0,0],"net":[0,0]},
+  {"phase":"open","current":[9,11],"prior":null,"spent":[3,4],"held":[6,7],"refused":false,"visible":[9,11],"snapshot":[9,11],"raw":[6,7],"net":[0,0]},
+  {"phase":"open","current":[9,11],"prior":null,"spent":[3,4],"held":[7,8],"refused":false,"visible":[9,11],"snapshot":[9,11],"raw":[6,7],"net":"held"},
+  {"phase":"open","current":[9,11],"prior":null,"spent":[3,4],"held":[6,8],"refused":false,"visible":[9,11],"snapshot":[9,11],"raw":[6,7],"net":"heldFuel"},
+  {"phase":"open","current":[9,11],"prior":null,"spent":[10,12],"held":[7,8],"refused":false,"visible":[9,11],"snapshot":[9,11],"raw":"spent","net":"spent"},
+  {"phase":"open","current":[9,11],"prior":null,"spent":[3,12],"held":[0,0],"refused":false,"visible":[9,11],"snapshot":[9,11],"raw":"spent","net":"spent"},
+  {"phase":"open","current":null,"prior":null,"spent":[0,0],"held":[0,0],"refused":true,"visible":null,"snapshot":[0,0],"raw":"refused","net":"refused"}
+]

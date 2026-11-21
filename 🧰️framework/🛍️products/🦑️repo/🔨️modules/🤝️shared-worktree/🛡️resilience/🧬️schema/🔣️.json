@@ -529,7 +529,8 @@
     "texts",
     "version",
     "blocked",
-    "intakeProgress"
+    "intakeProgress",
+    "materialisationProgress"
    ],
    "properties": {
     "version": {
@@ -581,6 +582,12 @@
      "type": "array",
      "items": {
       "$ref": "#/definitions/ApplyProgressCase"
+     }
+    },
+    "materialisationProgress": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/MaterialisationProgressCase"
      }
     }
    }
@@ -941,6 +948,9 @@
     "other"
    ]
   },
+  "IncomingWorktreeSharingKind": {
+   "const": "blocked-incoming-worktree-sharing"
+  },
   "BlockedCase": {
    "type": "object",
    "additionalProperties": false,
@@ -992,6 +1002,18 @@
       "$ref": "#/definitions/Failure"
      }
     }
+   }
+  },
+  "MaterialisationProgressCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "deadlineMs", "completionMs", "stallMs", "status"],
+   "properties": {
+    "name": {"type": "string"},
+    "deadlineMs": {"type": "integer", "minimum": 1},
+    "completionMs": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+    "stallMs": {"type": ["integer", "null"], "minimum": 1},
+    "status": {"enum": ["done", "stalled"]}
    }
   },
   "ApplyProgressCase": {

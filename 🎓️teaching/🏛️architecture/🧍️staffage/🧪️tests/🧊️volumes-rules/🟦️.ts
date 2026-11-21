@@ -9,20 +9,26 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { Box3, BoxGeometry, ExtrudeGeometry, Matrix4, Shape, SphereGeometry, Triangle, Vector2, Vector3 } from "three";
 import type { Asset, AuthoredVolume, ScaleDenominator } from "../../🧬️schema/🟦️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 import { tessellateSolid } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { VOLUME_LIMITS, VOLUME_RULES, bandVolumes, checkVolumes, compareSolidLists, contactPlanes, exposedArea, fixedTriangleCount, isClosed, featureOf, measureVolumes, outerArea, silhouetteAgreement, unionVolume, type VolumeRule } from "../../🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts";
+import { insideAny } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧮️measures/🟦️.ts";
 import { centreLineOf } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧵️centreline/🟦️.ts";
 import { minimumWidth, slendernessOf, sortedExtents } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
-import { CUT, Mask, TILE_CELLS, extentOf, measureAsset, measureView, referenceOf, worldSolids, type World } from "../../🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
+import { CUT, Mask, projectedBodyDistance, TILE_CELLS, extentOf, measureAsset, measureView, referenceOf, worldSolids, type World } from "../../🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
+import { qualityOf } from "../../🔨️modules/🧊️volume/⏱️job/🟦️.ts";
 import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
 import { python } from "../🧰️support/🐍️.ts";
 
 type Operation = { op: "replace" | "add" | "remove"; path: string; value?: unknown };
 type Boxes = { centre: number[]; size: number[]; sectionFaces?: string[] }[];
 type Vectors = {
+  subpixelShaft: { triangle: number[][]; points: number[][]; degenerate: number[][]; probeRadiusM: number };
+  totalSurface: { stockM: [number, number, number]; areaM2: number; wrongAreaM2: number };
+  breathApertures: { diameterM: number; pigeonRadiiM: [number, number, number]; ovalProfileM: [number, number][]; normalThicknessM: number; cases: { kind: string; variant: string; finding: boolean }[] };
   areaBasis: { name: string; undeclared: Operation[]; declared: Operation[] };
   outlines: { name: string; scale: ScaleDenominator; patch: Operation[]; measures: string[] };
   exposed: { name: string; boxes: Boxes; target: number; planes?: { point: number[]; normal: number[]; toleranceM: number }[]; area: number }[];
@@ -35,6 +41,8 @@ type Vectors = {
   burial: { table: { centre: number[]; size: number[] }; laptop: { centre: number[]; size: number[] }; area: number; probeM: number; toleranceM2: number };
   outer: { solids: { centre: number[]; size: number[] }[]; area: number; toleranceFraction: number };
   porous: { scale: ScaleDenominator; patch: Operation[] };
+  sheetStock: { spanM: number; depthM: number; clothM: number; narrowM: number; inflatedM: number };
+  sweptRod: { radiusM: number; stationsM: [number, number, number][]; lengthM: number; diameterM: number };
   hollow: { solid: unknown; smallestM: number };
   follow: { bar: { centre: number[]; size: number[] }; cases: { name: string; drawn: { bone: string; closed: boolean; filled: boolean; rings: number[][][]; penM: number }[]; widthM: number }[]; hoop: { radiusM: number; tubeM: number; penM: number; solid: { kind: "revolve"; profile: number[][] }; outline: number[][] } };
   minimumWidth: { cases: { name: string; points: number[][]; widthM: number }[] };
@@ -87,6 +95,39 @@ const baselineFindings = checkVolumes(sample);
 const value = (list: readonly { name: string; scale?: number; value: number }[], name: string, scale: number): number | undefined => list.find((m) => m.name === name && m.scale === scale)?.value;
 
 describe("🧊️ the limits and rules of the volumes are those of the design", () => {
+  it("limits closed-solid containment to the relevant component of a translated assembly", () => {
+    type Point = [number, number, number];
+    const { boxes, samples, copies } = fixture<{ closedPartBounds: {
+      boxes: number[][]; samples: { at: Point; skip: number[]; inside: boolean; tested: number[] }[];
+      copies: { count: number; stepY: number; samples: Point[] };
+    } }>("🧊️volumes-rules").closedPartBounds;
+    const bounds = boxes.map(v => new Box3(new Vector3().fromArray(v), new Vector3().fromArray(v, 3)));
+    const solids = bounds.map((box, id) => {
+      const size = box.getSize(new Vector3()), centre = box.getCenter(new Vector3());
+      const g = new BoxGeometry(size.x, size.y, size.z).translate(centre.x, centre.y, centre.z);
+      return { id: String(id), positions: Float64Array.from(g.attributes.position!.array), indices: Uint32Array.from(g.index!.array) };
+    });
+    for (const q of samples) {
+      const visited: number[] = [];
+      expect(bounds.some((box, i) => !q.skip.includes(i) && box.containsPoint(new Vector3(...q.at)))).toBe(q.inside);
+      expect(insideAny(solids, q.at, (_, i) => { visited.push(i); return q.skip.includes(i); })).toBe(q.inside);
+      expect(visited).toEqual(q.tested);
+    }
+    const base = solids[0]!, stride = base.positions.length;
+    const positions = new Float64Array(stride * copies.count), indices = new Uint32Array(base.indices.length * copies.count);
+    for (let k = 0; k < copies.count; k++) {
+      for (let i = 0; i < stride; i++) positions[k * stride + i] = base.positions[i]! + (i % 3 === 1 ? k * copies.stepY : 0);
+      for (let i = 0; i < base.indices.length; i++) indices[k * base.indices.length + i] = base.indices[i]! + k * stride / 3;
+    }
+    const merged = { id: "rungs", positions, indices };
+    const separate = { ...merged, separateCopies: { coordinatesPerCopy: stride, indices: base.indices } };
+    for (const q of copies.samples) {
+      const inside = Array.from({length: copies.count}, (_, i) => bounds[0]!.containsPoint(new Vector3(q[0], q[1] - i * copies.stepY, q[2]))).some(Boolean);
+      expect(insideAny([merged], q)).toBe(inside);
+      expect(insideAny([separate], q)).toBe(inside);
+    }
+  });
+
   it("lists the thirteen rule ids and the thresholds of the design, unweakened", () => {
     expect([...VOLUME_RULES]).toEqual(vectors.rules);
     expect(JSON.parse(JSON.stringify(VOLUME_LIMITS))).toEqual(vectors.limits);
@@ -159,6 +200,14 @@ describe("🧊️ one invalid vector per rule", () => {
       expect(now.ok, `${measure} ${now.value} against ${now.limit}`).toBe(false);
       if (was !== undefined) expect(now.bound === "min" ? now.value < was.value : now.value > was.value, `${measure}: ${was.value} -> ${now.value}`).toBe(true);
     }
+  });
+
+  it("reports the applied fine-scale body area tolerance in both languages", () => {
+    const broken = patch(sample, [{ op: "replace", path: "/thermal/regions/id=feet/areaM2", value: 2 }]) as Asset;
+    const finding = checkVolumes(broken, { scale: 50, rules: ["volumes-thermal-coverage"] }).find((f) => f.measurements.some((m) => m.name === "areaDeviation:feet"));
+    expect(finding?.measurements[0]?.limit).toBe(0.3);
+    expect(finding?.message.en).toContain("limit 30 %");
+    expect(finding?.message.de).toContain("Grenze 30 %");
   });
 
   it("only reports the rules asked for and only the scale asked for", () => {
@@ -250,24 +299,59 @@ describe("🧊️ exposed thermal area (C1), bands (C3), winding and tiling (C7)
     expect(Math.abs(whole.p95M - tiles.p95M)).toBeLessThanOrEqual(2 * whole.cell);
   });
 
+  it("shares reference geometry and preserves thermal area across separated and touching translated boxes", () => {
+    const volume = sample.volumes["50"] as AuthoredVolume;
+    const state = evaluate(sample, { kind: "pose", pose: sample.presentation.defaultPose });
+    for (const spacing of [0.1, 0.2]) {
+      const first = volume.body[0]!;
+      const box: AuthoredVolume["body"][number] = { id: "links", bone: first.bone, material: first.material, role: "body", tone: 0.5, kind: "box", size: [0.1, 0.1, 0.1], repeat: { count: 38, translation: [spacing, 0, 0] } };
+      const source: Asset = { ...sample, volumes: { ...sample.volumes, "50": { ...volume, body: [box], thermal: [{ id: "outer", of: "links", region: "skin" }] } } };
+      const body = worldSolids(source, state.bones, 50);
+      const thermal = worldSolids(source, state.bones, 50, "thermal", body);
+      const uncut = referenceOf("elevation", body, undefined);
+      expect(uncut.full).toBe(uncut.cut);
+      expect(uncut.visible).toBe(uncut.cut);
+      const section = referenceOf("elevation", body, { plane: 0, retained: "far", label: { en: "Section", de: "Schnitt" } });
+      expect(section.full.length).toBe(body[0]!.indices.length / 3);
+      expect(thermal[0]!.positions).toBe(body[0]!.positions);
+      expect(thermal[0]!.indices).toBe(body[0]!.indices);
+      expect(Boolean(body[0]!.separateCopies)).toBe(spacing > 0.1);
+      const expanded = { id: "expanded", positions: body[0]!.positions, indices: body[0]!.indices, frame: body[0]!.frame };
+      expect(isClosed(body[0]!)).toBe(isClosed(expanded));
+      expect(outerArea(thermal)).toBeCloseTo(outerArea([expanded]), 10);
+      const triangle = new Triangle();
+      let threeArea = 0;
+      for (let i = 0; i < expanded.indices.length; i += 3) {
+        triangle.a.fromArray(expanded.positions, 3 * expanded.indices[i]!);
+        triangle.b.fromArray(expanded.positions, 3 * expanded.indices[i + 1]!);
+        triangle.c.fromArray(expanded.positions, 3 * expanded.indices[i + 2]!);
+        threeArea += triangle.getArea();
+      }
+      expect(outerArea(thermal)).toBeCloseTo(threeArea, 10);
+      expect(outerArea(thermal)).toBeCloseTo(38 * 0.06, 10);
+    }
+  });
+
   it("instances the copies of a repeat exactly as the kernel tessellates them", () => {
     const pose = sample.presentation.defaultPose;
     const state = evaluate(sample, { kind: "pose", pose }, { kind: "scale", scale: { denominator: 50 } });
     const body = (sample.volumes["50"] as AuthoredVolume).body;
     const solid = body.find((x) => x.repeat !== undefined)!;
-    const mine = worldSolids(sample, state.bones as never, 50).find((w) => w.id === solid.id)!;
-    const kernel = tessellateSolid({ ...solid, node: solid.bone } as never, { chordM: 0.002, minSegments: 12, maxSegments: 64 });
-    const frame = (state.bones as any)[solid.bone].frame;
-    expect(mine.indices.length).toBeGreaterThan(0);
-    const quality = { chordM: Math.min(0.02, Math.max(0.0005, Math.max(sample.dimensions.heightM, sample.dimensions.widthM, sample.dimensions.depthM) / 800)), minSegments: 12, maxSegments: 64 };
-    const reference = tessellateSolid({ ...solid, node: solid.bone } as never, quality);
-    expect(mine.positions.length).toBe(reference.positions.length);
+    const world = worldSolids(sample, state.bones, 50).find((entry) => entry.id === solid.id)!;
+    const reference = tessellateSolid({ ...solid, node: solid.bone } as never, qualityOf(sample));
+    const { o, u, v, w } = state.bones[solid.bone]!.frame;
+    const basis = new Matrix4().makeBasis(new Vector3(u.x, u.y, u.z), new Vector3(v.x, v.y, v.z), new Vector3(w.x, w.y, w.z)).setPosition(o.x, o.y, o.z);
+    const expected = new Vector3();
+    const actual = new Vector3();
+
+    expect(world.indices.length).toBeGreaterThan(0);
+    expect(world.indices).toEqual(Uint32Array.from(reference.indices));
+    expect(world.positions.length).toBe(reference.positions.length);
     for (let i = 0; i < reference.positions.length; i += 3) {
-      const [a, b, c] = [reference.positions[i]!, reference.positions[i + 1]!, reference.positions[i + 2]!];
-      expect(Math.abs(mine.positions[i]! - (frame.o.x + a * frame.u.x + b * frame.v.x + c * frame.w.x))).toBeLessThan(1e-9);
-      expect(Math.abs(mine.positions[i + 1]! - (frame.o.y + a * frame.u.y + b * frame.v.y + c * frame.w.y))).toBeLessThan(1e-9);
+      expected.fromArray(reference.positions, i).applyMatrix4(basis);
+      actual.fromArray(world.positions, i);
+      expect(actual.distanceTo(expected)).toBeLessThan(1e-9);
     }
-    expect(kernel.indices.length).toBeGreaterThan(0);
   });
 
   it("counts triangles at one fixed quality whatever the radius", () => {
@@ -282,6 +366,81 @@ describe("🧊️ exposed thermal area (C1), bands (C3), winding and tiling (C7)
     expect(validateAsset(wrong).some((issue) => issue.code === vectors.support.wrongAnchor.code)).toBe(true);
     const valid = patch(sample, vectors.support.valid.patch) as Asset;
     expect(checkVolumes(valid, { rules: ["volumes-structure-coverage"] }).filter((f) => f.data?.anchor !== undefined)).toEqual([]);
+  });
+
+  it("checks the physical extent of a declared physiological breath aperture", () => {
+    const v = vectors.breathApertures;
+    for (const c of v.cases) {
+      const a = structuredClone(sample);
+      const rep = a.representations["50"];
+      if (rep.status !== "authored") throw Error("expected print drawing");
+      const emitter = a.thermal.emitters.find(e => e.id === "nose-breath")!;
+      Object.assign(emitter, { diameterM: v.diameterM, kind: c.variant === "device" ? "vent" : "breath" });
+      if (c.variant === "unused-breath") Object.assign(a.thermal,{respiration:undefined});
+      const anchor = a.anchors.find(x => x.id === emitter.anchor)!;
+      const source = { id: "outlet-test", bone: c.variant === "wrong-bone" ? "torso" : anchor.bone, role: "body", material: "skin", tone: 0.5,
+        region: c.variant === "non-tissue" ? "unknown" : "head", tags: c.variant === "untagged" ? [emitter.id] : ["emitter", c.variant === "unknown" ? "other-outlet" : emitter.id],
+        transform: { translation: [anchor.x, anchor.y, c.variant === "away-from-surface" ? 1 : 0] } };
+      const radii = c.variant === "bead" ? [v.diameterM/2,v.diameterM/2,v.diameterM/2] : v.pigeonRadiiM.map(x => c.variant === "undersized" ? x/2 : x);
+      const solid = c.kind === "ellipsoid" ? { ...source, kind: c.kind, radii } : { ...source, kind: c.kind, plane: "xy", profile: v.ovalProfileM, from: 0, to: c.variant === "longitudinal" ? 0.02 : v.normalThicknessM };
+      const list = c.variant === "body-list" ? "body" : "thermal";
+      const skin = {id:"outlet-skin",kind:"box",bone:anchor.bone,role:"body",material:"skin",tone:0.5,region:"head",size:[0.02,0.02,0.002], transform:{translation:[anchor.x,anchor.y,-0.001]}};
+      const asset = patch(a,[{op:"add",path:"/volumes/50/thermal/-",value:skin},{op:"add",path:"/volumes/50/"+list+"/-",value:solid}]) as Asset;
+      const failures = checkVolumes(asset,{scale:50,rules:["volumes-feature"]}).filter(f => f.message.en.includes('"outlet-test"'));
+      expect(failures.length,c.kind+" "+c.variant).toBe(Number(c.finding));
+      if (c.variant === "physical") {
+        const mesh = c.kind === "ellipsoid" ? new SphereGeometry(1,32,16).scale(...v.pigeonRadiiM) : new ExtrudeGeometry(new Shape(v.ovalProfileM.map(([x,y])=>new Vector2(x,y))),{depth:v.normalThicknessM,bevelEnabled:false});
+        mesh.computeBoundingBox();
+        const size = mesh.boundingBox!.getSize(new Vector3());
+        expect(Math.max(size.x,size.y)).toBeCloseTo(v.diameterM,8);
+        expect(size.z).toBeCloseTo(v.normalThicknessM,8);
+        mesh.dispose();
+      }
+    }
+  });
+
+  it("retains the physical gauge of a broad sheet bound to its thermal material", () => {
+    const f = vectors.sheetStock;
+    const region = sample.thermal.regions[0]!;
+    const material = region.material;
+    const bone = sample.rig.bones[1]!.id;
+    const size = (depth: number, thickness: number, bound: boolean) => {
+      const profile = [[0,0],[f.spanM,0],[0,depth]];
+      const sheet = {id:"canopy-sheet",kind:"extrude",bone,material,role:"body",tone:0.5,plane:"zx",profile,from:0,to:thickness};
+      const layer = { ...region.layers[0]!, id:"sheet-stock", material, thicknessM:f.clothM };
+      const thermal = {id:"sheet-surface",of:sheet.id,region:region.id,layer:layer.id};
+      const asset = patch(sample,[{op:"add",path:"/volumes/50/body/-",value:sheet},
+        {op:"replace",path:"/thermal/regions/0/layers",value:[layer]},
+        ...(bound ? [{op:"add" as const,path:"/volumes/50/thermal/-",value:thermal}] : [])]) as Asset;
+      const shape = new Shape(profile.map(([x,y]) => new Vector2(x,y)));
+      const geometry = new ExtrudeGeometry(shape,{depth:thickness,bevelEnabled:false});
+      geometry.computeBoundingBox();
+      expect(geometry.boundingBox!.getSize(new Vector3()).z).toBeCloseTo(thickness,8);
+      geometry.dispose();
+      return checkVolumes(asset,{scale:50,rules:["volumes-feature"]}).some(i=>i.message.en.includes('"canopy-sheet"'));
+    };
+    expect(size(f.depthM,f.clothM,true)).toBe(false);
+    expect(size(f.depthM,f.inflatedM,true)).toBe(true);
+    expect(size(f.narrowM,f.clothM,true)).toBe(true);
+    expect(size(f.depthM,f.clothM,false)).toBe(true);
+  });
+
+  it("keeps the measured tissue diameter when the drawing merges its region", () => {
+    const tissue = { id: "tissue", bone: "head", kind: "ellipsoid", radii: [0.001, 0.001, 0.001], material: "skin", tone: 0.5, role: "body", region: "head" };
+    const individual = patch(sample, [{ op: "add", path: "/volumes/50/thermal/-", value: tissue }]) as Asset;
+    const rule = (input: Asset) => checkVolumes(input, { scale: 50, rules: ["volumes-feature"] }).filter((f) => f.message.en.includes('"tissue"'));
+    expect(rule(individual)).toHaveLength(1);
+    const grouped = structuredClone(individual);
+    const drawing = grouped.representations["50"];
+    if (drawing.status !== "authored") throw new Error("expected authored representation");
+    for (const shapes of Object.values(drawing.geometry)) {
+      for (const shape of shapes) {
+        if (shape.bone === "head" && shape.region === "head") {
+          Object.assign(shape, { region: undefined, regions: ["head", "torso"] });
+        }
+      }
+    }
+    expect(rule(grouped)).toEqual([]);
   });
 
   it("exempts texture and slender solids from the feature rule and bounds the rest by the drawing", () => {
@@ -365,6 +524,32 @@ describe("🧊️ C21: small regions", () => {
     expect(small.limit).toBe(Number.MAX_VALUE);
     expect(measureVolumes(sample, { scale: 50, rules: ["volumes-thermal-coverage"] }).find((m) => m.name === "areaDeviation:feet")!.limit).toBe(0.3);
     expect(found.some((m) => m.name === "areaDeviationTotal")).toBe(true);
+  });
+});
+
+describe("📏 Total component area with pose-dependent exposure", () => {
+  it("measures the complete stock, excludes internal joints and rejects a wrong declaration", () => {
+    const { stockM: [x, y, z], areaM2, wrongAreaM2 } = vectors.totalSurface;
+    const candidate = structuredClone(sample);
+    const base = { kind: "box", material: "skin", bone: "head", role: "body", tone: 0.5, size: [x / 2, y, z] };
+    const parts = [-1, 1].map((dir, i) => ({ ...base, id: "stock-" + i, region: "head", transform: { translation: [dir * x / 4, 0, 0] } }));
+    const asset = patch(candidate, [
+      { op: "replace", path: "/thermal/regions/id=head/areaM2", value: areaM2 },
+      { op: "add", path: "/thermal/regions/id=head/areaBasis", value: "total" },
+      { op: "replace", path: "/volumes/50/thermal", value: [...(candidate.volumes["50"] as AuthoredVolume).thermal.filter(q => q.region !== "head"), ...parts] },
+    ]) as Asset;
+    const measure = (a: Asset) => measureVolumes(a, { scale: 50, rules: ["volumes-thermal-coverage"] });
+    const mesh = new BoxGeometry(x, y, z).toNonIndexed();
+    const pos = mesh.getAttribute("position");
+    let surface = 0;
+    for (let i = 0; i < pos.count; i += 3) {
+      const vertices = [i, i + 1, i + 2].map(j => new Vector3().fromBufferAttribute(pos, j));
+      surface += new Triangle(vertices[0]!, vertices[1]!, vertices[2]!).getArea();
+    }
+    expect(surface).toBeCloseTo(areaM2, 6);
+    expect(measure(asset).find(m => m.name === "info:totalAreaM2:head")?.value).toBeCloseTo(surface, 6);
+    const wrong = patch(asset, [{ op: "replace", path: "/thermal/regions/id=head/areaM2", value: wrongAreaM2 }]) as Asset;
+    expect(measure(wrong).find(m => m.name === "areaDeviation:head")?.ok).toBe(false);
   });
 });
 
@@ -487,6 +672,21 @@ describe("🧊️ emitters, huge bands and the names of the solids behind a find
     expect(r.coarse).toBeLessThanOrEqual(r.dilated);
   });
 
+  it("measures a projected member against subpixel body triangles and edge-on faces", () => {
+    const f = vectors.subpixelShaft;
+    for (const face of [f.triangle, f.degenerate]) {
+      const points = face.map(([x,y]) => ({ x: x!, y: y! }));
+      const distance = projectedBodyDistance([[points]], { minX: 0, minY: 0, maxX: 0.4, maxY: 0.1 });
+      const v = face.map(([x,y]) => new Vector3(x,y,0));
+      const triangle = new Triangle(v[0]!,v[1]!,v[2]!);
+      for (const [x,y] of f.points) {
+        const probe = new Vector3(x,y,0);
+        const expected = triangle.closestPointToPoint(probe,new Vector3()).distanceTo(probe);
+        expect(distance({ x: x!, y: y! },f.probeRadiusM)).toBeCloseTo(Math.min(expected,f.probeRadiusM),9);
+      }
+    }
+  });
+
   it("names the worst member solids of a containment finding", () => {
     const broken = patch(sample, [{ op: "replace", path: "/volumes/50/structure/0/r0", value: 0.6 }, { op: "replace", path: "/volumes/50/structure/0/r1", value: 0.6 }]) as Asset;
     const found = checkVolumes(broken, { scale: 50, rules: ["volumes-structure-coverage"] }).filter((f) => f.message.en.includes("outside the body silhouette"));
@@ -535,6 +735,19 @@ describe("🧊️ C29: the outer area of a region is the surface of the union of
 });
 
 describe("🧊️ C30: a hollow part is judged by its overall extents, not by its wall", () => {
+  it("measures the section path and wire diameter of a closed loft", () => {
+    const { radiusM, stationsM, lengthM, diameterM } = vectors.sweptRod;
+    const sections = stationsM.map((at) => ({ at, rx: radiusM, ry: radiusM, exponent: 2 }));
+    const rod = { id: "link", kind: "loft", bone: "head", material: "skin", role: "body", tone: 0.5, sections, capStart: false, capEnd: false } as const;
+    const [minor, major, length] = sortedExtents(rod);
+    const stations = stationsM.map((point) => new Vector3(...point));
+    const oracle = stations.slice(1).reduce((sum, point, i) => sum + point.distanceTo(stations[i]!), 0);
+    expect(minor).toBeCloseTo(diameterM);
+    expect(major).toBeCloseTo(diameterM);
+    expect(length).toBeCloseTo(lengthM);
+    expect(length).toBeCloseTo(oracle);
+  });
+
   it("reads 80 mm for a cup with a 0.2 mm wall and finds no thin-solid finding for it at 1:50", () => {
     const { solid, smallestM } = vectors.hollow;
     expect(sortedExtents(solid as never)[0]).toBeCloseTo(smallestM, 9);

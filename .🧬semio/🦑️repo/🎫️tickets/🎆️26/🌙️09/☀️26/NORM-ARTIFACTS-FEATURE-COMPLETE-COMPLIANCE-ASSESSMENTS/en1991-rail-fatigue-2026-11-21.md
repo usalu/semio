@@ -1,0 +1,31 @@
+# EN 1991 railway fatigue
+
+## Edition and implementation
+
+The EN 1991-2 rail implementation uses first-generation clause numbering. DIN EN 1991-2:2010-12 adopts EN 1991-2:2003 + AC:2010. Section 6.9 and normative Annex D cover railway fatigue in that edition. EN 1991-2:2023 locates fatigue in §8.9. The 2023 edition and the German National Annex require separate clause and value verification. [DIN first-generation handbook](https://www.dinmedia.de/de/fachliteratur/handbuch-eurocode-1-einwirkungen-band-3/379988625) · [German National Annex](https://www.dinmedia.de/de/norm/din-en-1991-2-na/151137329) · [CEN second-generation contents](https://cdn.standards.iteh.ai/samples/72737/ea524718f9b84227b8925568d85150a6/SIST-EN-1991-2-2024.pdf)
+
+| Catalogue | Normative source | Result in the design-case editor and demo |
+| --- | --- | --- |
+| E2.21 | Annex D.2, equation D.6 | Compares the factored fatigue stress range with fatigue resistance for a steel bridge. The user supplies the governing characteristic LM71 and, where required, SW/0 stress range before classification and dynamic enhancement, plus the material and project factors. The calculator applies Φ₂ using the existing §6.4.5.2 implementation. |
+| E2.21.1 | Annex D.1, equations D.1–D.5 | Calculates the separate 100-year average amplification for a real train at a permitted vehicle speed up to 200 km/h. Vehicle speed is entered in km/h and converted to m/s. Both determinant-length branches are implemented. |
+| E2.21.3 | Annex D.3, Tables D.1–D.3 | Presents each of the three published traffic mixes, their daily passages by train type, masses per train and derived daily totals per track. The report identifies the normative nominal annual tonnage independently of the derived daily mass. |
+| E2.22 | §6.4.6.1.1, Figure 6.12 and Table 6.3 | Presents all ten HSLM-A trains, including each axle position and the constant point force for the selected train. |
+| E2.22.1 | §6.4.6.1.1, Figures 6.13–6.14 | Generates HSLM-B point load positions for the labelled spans in Figure 6.14 or from a supplied count and spacing read for another span. |
+| E2.22.2 | §6.4.6.1.1, Table 6.4 | Determines whether HSLM-A, HSLM-B or both apply to the supplied bridge configuration, and whether Annex E critical-train selection is permitted. |
+| E2.18–E2.18.4 | §§6.6.1–6.6.6, Figures 6.22–6.25 | Applies pressure and suction factors for vertical, overhead, adjacent and multiple surfaces, plus short track enclosures. The base pressure magnitudes come from the published figures and are entered by the designer. |
+
+The equations and tables were checked against the printed edition. In equations 6.4 and 6.5, the subtraction of 0.2 sits outside the square root. The railway fatigue case uses the D.6 steel example with supplied material factors. The real-train case uses D.1 independently of the static Φ₂ and Φ₃ factors. [EN 1991-2 §6.4.5.2](https://web1.grf.bg.ac.rs/p/learning/optere_enja_mostova_prema_ec___en1991_2_1422532882430.pdf#page=80) · [Annex D.1 and D.2](https://web1.grf.bg.ac.rs/p/learning/optere_enja_mostova_prema_ec___en1991_2_1422532882430.pdf#page=136) · [Annex D.3 traffic tables](https://web1.grf.bg.ac.rs/p/learning/optere_enja_mostova_prema_ec___en1991_2_1422532882430.pdf#page=142)
+
+## Verification
+
+The Rust catalogue evaluators and independent SQLite calculations agree on all 22 language-neutral Annex D fixture rows, all 420 axle positions for the ten HSLM-A trains, 19 HSLM-B layout cases, seven Table 6.4 model selections and 16 aerodynamic cases. Annex D coverage includes 20 m and 200 km/h boundaries, the interior and clamped ranges of Φ₂, stress ranges below, on and above the resistance, zero stress, invalid input and all three traffic mixes. The repository test also exercises the design-case bridge and checks pass and fail at the relevant thresholds.
+
+The schema validator accepted all 10 Eurocode traces, including the 109 EN 1991 entries. The first full EN 1991 crate test stopped at source admission because `semio-plugin-instance-app` exceeded its configured 262,144-byte boundary. Concurrent edits cleared that boundary. The retry reached the EN 1991 checks crate, where the embedded 51,911-byte demo fixture contributed to a source-boundary failure. The snapshot test now runs in the existing EN 1991 oracle test crate. The two-crate retry passed source admission and reached Rust compilation. The native test result and UI verification remain pending. Logs are under `🗑️generated`.
+
+## Open requirements
+
+- §6.9 requires placing fatigue loading on up to two governing tracks and considering fluctuating stresses for all affected structural elements. The new D.6 case consumes the resulting stress range. The structural model still needs to produce the governing ranges, evaluate required vertical and centrifugal actions and account for longitudinal effects in applicable special situations.
+- Annex D.3 axle positions and special or project traffic distributions remain unimplemented. A published traffic mix can contain vehicles above the simplified D.1 speed limit.
+- §6.4.6.6 requires an additional fatigue assessment when dynamic analysis applies. Resonance, extra cycles and material-specific fatigue damage remain to be implemented. [EN 1991-2 §6.9](https://web1.grf.bg.ac.rs/p/learning/optere_enja_mostova_prema_ec___en1991_2_1422532882430.pdf#page=123) · [EN 1991-2 §6.4.6.6](https://web1.grf.bg.ac.rs/p/learning/optere_enja_mostova_prema_ec___en1991_2_1422532882430.pdf#page=94)
+- Automatic HSLM-B selection between the labelled spans, Annex E critical-train selection and time integration remain open under E2.22. For HSLM-B, the printed graph labels alternate source points along a categorical span axis. The implemented case uses supplied count and spacing for other spans. Annex F addresses the conditions for a simplified resonant-speed method. [DIN EN 1991-2:2010-12 source extract](https://www.normsplash.com/Samples/DIN/112745412/DIN-EN-1991-2-2010-en-2.pdf)
+- E2.18 now applies the published surface and end-zone factors. Automatic chart evaluation, moving pressure-zone placement and dynamic studies for sensitive structures remain open. [EN 1991-2 §6.6](https://web1.grf.bg.ac.rs/p/learning/optere_enja_mostova_prema_ec___en1991_2_1422532882430.pdf#page=111)

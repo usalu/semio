@@ -1,6 +1,7 @@
 /** 📚️ The example offer, ownership and switching tests. */
 import { SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, appOffersRegisteredExamples, exampleSelectionAfterInputV1, frameworkOwnsExampleSwitch, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import settlementFixture from "./settlement.json";
+import historyFixture from "./history.json";
 import exampleOfferFixture from "../../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️example-offer/🔣️.json";
 import exampleOfferSchema from "../../../🧱️elements/🐚️Shell/📚️example-offer/🔣️.json";
 import Ajv2020 from "ajv/dist/2020";
@@ -8,14 +9,19 @@ import { expect, it } from "vitest";
 
 /** 🔀 Registers the example offer, neutral ownership vector, switch admission and remembered example tests. */
 export function registerExampleOffersAndSwitchingTests(): void {
+  it("keeps the selected example after a whole-document command history refresh", () => {
+    for (const row of historyFixture) {
+      expect(navbarExampleIdFromHistoryUpserts(row.upserts, "concrete-forest", "demo") ?? null, row.name).toBe(row.expected);
+    }
+  });
   it("publishes only a settled example for the focused program and remembers it for redo", () => {
     const previous = { exampleId: "house", inputSeq: 3 };
     for (const row of settlementFixture) {
       const next = exampleSelectionAfterInputV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: row.requested } }, row, previous, "demo", row.focused);
       expect(next ?? null, row.name).toEqual(row.expected);
       if (next) {
-        expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, revertible: false }], next.memory.exampleId, "demo")).toBe("demo");
-        expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, revertible: true }], next.memory.exampleId, "demo")).toBe(next.memory.exampleId);
+        expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, editId: "example", applied: false }], next.memory.exampleId, "demo")).toBe("demo");
+        expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, editId: "example", applied: true }], next.memory.exampleId, "demo")).toBe(next.memory.exampleId);
       }
     }
   });
@@ -55,15 +61,13 @@ export function registerExampleOffersAndSwitchingTests(): void {
     expect(rememberedExampleIdFromDispatchV1({ action: "setSpacing", args: { exampleId: "concrete-forest" } }, remembered)).toBe("nakagin-capsule-tower");
     expect(rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: "" } }, remembered)).toBe("nakagin-capsule-tower");
     expect(rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID }, remembered)).toBe("nakagin-capsule-tower");
-    const popped = [{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: false }];
-    const live = [{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: true }];
+    const popped = [{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, editId: "example", applied: false }];
+    const live = [{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, editId: "example", applied: true }];
     expect(navbarExampleIdFromHistoryUpserts(popped, remembered, "concrete-forest")).toBe("concrete-forest");
     expect(navbarExampleIdFromHistoryUpserts(live, remembered, "concrete-forest")).toBe("nakagin-capsule-tower");
     expect(navbarExampleIdFromHistoryUpserts(live, "", "concrete-forest")).toBeUndefined();
   });
-  it("navbar example id follows Set Active Example revertible, on the action id alone", () => {
-    expect(navbarExampleIdFromHistoryUpserts([{ actionId: "shell.windowResize", revertible: false }], "nakagin", "forest")).toBeUndefined();
-    expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, revertible: true }], "nakagin", "forest")).toBe("nakagin");
-    expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, revertible: false }], "nakagin", "forest")).toBe("forest");
+  it("keeps the picker unchanged for history from another action", () => {
+    expect(navbarExampleIdFromHistoryUpserts([{ actionId: "shell.windowResize", editId: "resize", applied: false }], "nakagin", "forest")).toBeUndefined();
   });
 }

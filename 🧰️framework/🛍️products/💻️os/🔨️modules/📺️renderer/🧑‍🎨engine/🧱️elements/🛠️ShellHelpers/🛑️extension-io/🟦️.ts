@@ -187,8 +187,9 @@ export function createInFlightSkippingInterval<Timer>(run: () => unknown, delayM
 /**
  * 🎯️ Coalesces rapid dispatches to the latest value — skips when unchanged and keeps at most one
  * in-flight round trip (used by World3dHost hover so pointermove cannot flood the WASM handle).
+ * A source change can discard unsent work and the previous deduplication baseline.
  */
-export function createCoalescingActionDispatcher<T>(dispatch: (value: T) => unknown, isEqual: (a: T, b: T) => boolean = (a, b) => Object.is(a, b)): (value: T) => void {
+export function createCoalescingActionDispatcher<T>(dispatch: (value: T) => unknown, isEqual: (a: T, b: T) => boolean = (a, b) => Object.is(a, b)): ((value: T) => void) & { readonly clearPending: () => void } {
   let inFlight = false;
   let pending: T | undefined;
   let lastSent: T | undefined;
@@ -205,11 +206,12 @@ export function createCoalescingActionDispatcher<T>(dispatch: (value: T) => unkn
     };
     void Promise.resolve(dispatch(next)).then(release, release);
   };
-  return (value: T) => {
+  const offer = (value: T) => {
     if (pending === undefined && lastSent !== undefined && isEqual(lastSent, value)) return;
     pending = value;
     flush();
   };
+  return Object.assign(offer, { clearPending: () => { pending = undefined; lastSent = undefined; } });
 }
 
 //#region 🥽️Puzzle3dBrushMeshUpload

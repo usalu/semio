@@ -1,11 +1,11 @@
-import {existsSync,readdirSync,readFileSync} from "node:fs";
-import {join,posix} from "node:path";
+import {existsSync,readFileSync} from "node:fs";
+import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {parseJsoncV1} from "../🔌️managers/📖️formats/🟦️.ts";
 import {selectPackageManagerV1} from "../🔌️managers/📚️catalog/🟦️.ts";
-import{refuseBootstrapV1}from"../../📖️texts/🟦️.ts";
 import type {LockDriftV1} from "../🔌️managers/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
+import {javascriptLockMemberFilesV1,javascriptLockMemberKeyV1,javascriptLockOwnerDirectoriesV1,readJavascriptLockManifestV1} from "./📋️inputs/🟦️.ts";
 
 const protocol=schema.$defs.Protocol.const,texts=schema.$defs.Texts.const as Readonly<Record<string,Readonly<Record<string,string>>>>;
 const fill=(template:string,values:Readonly<Record<string,string|number|undefined>>):string=>Object.entries(values).reduce((text,[key,value])=>text.replaceAll("{"+key+"}",String(value??"")),template);
@@ -15,23 +15,14 @@ export type JavascriptLockScopeV1=Readonly<{scope:string;lock:string;manifests:R
 /** 📊️ What the lock check found in one scope. */
 export type JavascriptLockReportV1=Readonly<{scope:string;drift:readonly LockDriftV1[]}>;
 
-const memberKeyV1=(member:string):string=>posix.normalize(member.replaceAll("\\","/").normalize("NFC")).replace(/\/$/u,"");
-const readManifestV1=(path:string):unknown=>{const text=readFileSync(path,"utf8");try{return JSON.parse(text);}catch{return parseJsoncV1(text);}};
-
 /** 🧭️ Reads every dependency scope of the checkout without walking it: the root scope and each directory its `semio.workspace.owners` pattern (one level below the root) names that carries a lock file; the members are the explicit list the scope's last sync published. */
 export function readJavascriptLockScopesV1(root:string):readonly JavascriptLockScopeV1[]{
- const manager=selectPackageManagerV1("javascript"),lockName=manager.primaryLockName(),manifestName=manager.manifestFileNames()[0]!,rootManifest=readManifestV1(join(root,manifestName)) as {semio?:{workspace?:{owners?:unknown}}},directories=new Set<string>(["."]);
- for(const pattern of Array.isArray(rootManifest.semio?.workspace?.owners)?rootManifest.semio!.workspace!.owners as unknown[]:[]){
-  const match=typeof pattern==="string"?new RegExp(protocol.ownerPattern,"u").exec(pattern):null;
-  if(!match)throw refuseBootstrapV1("invalid","dependencies.owner-pattern-required",{pattern:String(pattern)});
-  for(const entry of readdirSync(root,{withFileTypes:true}))if(entry.isDirectory()&&existsSync(join(root,entry.name,match[1]!))&&existsSync(join(root,entry.name,lockName)))directories.add(entry.name);
- }
- return Object.freeze([...directories].sort().filter(directory=>existsSync(join(root,directory,lockName))).map(directory=>{
-  const base=directory==="."?root:join(root,directory),manifest=readManifestV1(join(base,manifestName)) as {workspaces?:unknown},manifests=new Map<string,unknown>([[manifestName,manifest]]);
-  for(const member of Array.isArray(manifest.workspaces)?manifest.workspaces as unknown[]:[]){
-   if(typeof member!=="string"||member.includes("*"))continue;
-   const key=memberKeyV1(member),file=join(base,key,manifestName);
-   if(existsSync(file))manifests.set(key+"/"+manifestName,readManifestV1(file));
+ const manager=selectPackageManagerV1("javascript"),lockName=manager.primaryLockName(),manifestName=manager.manifestFileNames()[0]!,rootManifest=readJavascriptLockManifestV1(join(root,manifestName));
+ return Object.freeze(javascriptLockOwnerDirectoriesV1(root,rootManifest).filter(directory=>existsSync(join(root,directory,lockName))).map(directory=>{
+  const base=directory==="."?root:join(root,directory),manifest=directory==="."?rootManifest:readJavascriptLockManifestV1(join(base,manifestName)),manifests=new Map<string,unknown>([[manifestName,manifest]]);
+  for(const member of javascriptLockMemberFilesV1(directory,manifest,manifestName)){
+   const file=join(base,member);
+   if(existsSync(file))manifests.set(member,readJavascriptLockManifestV1(file));
   }
   return Object.freeze({scope:directory,lock:readFileSync(join(base,lockName),"utf8"),manifests});
  }));
@@ -82,7 +73,7 @@ export function checkStagedJavascriptLockV1(staged:StagedJavascriptLockV1):Javas
  const manifests=new Map<string,unknown>(),decode=(value:Uint8Array)=>parseJsoncV1(new TextDecoder().decode(value));
  const root=bytes.get(join(staged.directory,manifestName));if(!root)return undefined;manifests.set(manifestName,decode(root));
  staged.members.forEach((_,index)=>{const value=bytes.get(join(staged.directory,"w",String(index),manifestName));if(value)manifests.set("w/"+index+"/"+manifestName,decode(value));});
- const original=(path:string):string=>{const match=new RegExp(protocol.stagedMember,"u").exec(path.endsWith("/"+manifestName)?path.slice(0,-manifestName.length-1):path),index=match?Number(match[1]):-1;return index>=0&&index<staged.members.length?memberKeyV1(staged.members[index]!)+"/"+manifestName:path;};
+ const original=(path:string):string=>{const match=new RegExp(protocol.stagedMember,"u").exec(path.endsWith("/"+manifestName)?path.slice(0,-manifestName.length-1):path),index=match?Number(match[1]):-1;return index>=0&&index<staged.members.length?javascriptLockMemberKeyV1(staged.members[index]!)+"/"+manifestName:path;};
  return Object.freeze({scope:staged.scope,drift:Object.freeze(manager.checkLock(new TextDecoder().decode(lock),manifests).map(row=>Object.freeze({...row,manifest:original(row.manifest)})))});
 }
 

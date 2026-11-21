@@ -55,3 +55,7 @@ Rig: joints are right (mast top 40.0 m, slewing ring 0.5 m, jib and counter-jib 
 ## Status
 
 Work in progress: checks running, areas to be set, renders to be judged.
+
+## Full fine-scale thermal verification on November 21
+
+The four-scale strict run completed locally in 937.78 seconds with zero findings. The heat solver now bounds probes against individual, demonstrably separated copies before testing triangles. The 125 ladder rungs on the 38.6 m rail exercise this path. [Independent repeated-solid fixtures](digital-thermal-bounds.ts) check containment and masking. [Catalog rule status](digital-volume-status.md).

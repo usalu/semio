@@ -4,6 +4,18 @@
     { "id": "p_institut_de_botanique_ulg_liege", "lon": 5.5818, "lat": 50.603, "label": "Institut de Botanique" },
     { "id": "p_lycee_block_3000", "lon": 5.5901, "lat": 50.6102, "label": "Lycée Block 3000" }
   ],
-  "routes": [],
-  "regions": []
+  "routes": [
+    {
+      "id": "r_sart_tilman",
+      "label": "Sart Tilman",
+      "points": [[5.5818, 50.603], [5.5844, 50.6039], [5.5875, 50.6065], [5.5901, 50.6102]]
+    }
+  ],
+  "regions": [
+    {
+      "id": "g_sart_tilman",
+      "label": "Sart Tilman",
+      "points": [[5.5774, 50.6015], [5.5823, 50.6007], [5.584, 50.6037], [5.5797, 50.6053]]
+    }
+  ]
 }

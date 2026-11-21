@@ -43,5 +43,97 @@
   "nativeProcessStatus": {
     "continuous": false,
     "childFailureExit": 23
+  },
+  "browserPrerequisites": {
+    "react": [
+      "@semio-tech/plugin-registry:session-draw",
+      "@semio-tech/framework-plugin-web:support",
+      "semio-os-infinite:fonts",
+      "@semio-tech/framework-surface-rs:wasm",
+      "@semio-tech/framework-editor-rs:wasm",
+      "@semio-tech/framework-os-node-graph-rs:wasm",
+      "semio-hub-draw-component:component"
+    ],
+    "wgpu": [
+      "@semio-tech/plugin-registry:session-draw",
+      "@semio-tech/framework-plugin-web:support",
+      "semio-os-infinite:fonts",
+      "@semio-tech/framework-renderer-wgpu:wasm",
+      "@semio-tech/framework-renderer-wgpu:generate-browser-boot",
+      "@semio-tech/framework-renderer-wgpu:generate-frame-worker",
+      "@semio-tech/framework-renderer-wgpu:generate-renderer-boot",
+      "semio-hub-draw-component:component"
+    ]
+  },
+  "sessionProducer": "@semio-tech/plugin-registry:session-draw",
+  "nativeHostProducer": "@semio-tech/framework-renderer-wgpu:native-build",
+  "componentDescribe": {
+    "emitter": "@semio-tech/os-plugin-describe-rs:build",
+    "model": [
+      {
+        "name": "describe",
+        "after": []
+      },
+      {
+        "name": "model",
+        "after": [
+          "describe"
+        ]
+      },
+      {
+        "name": "complete",
+        "after": [
+          "model"
+        ]
+      },
+      {
+        "name": "discard",
+        "after": [
+          "complete"
+        ]
+      }
+    ],
+    "browser": [
+      {
+        "name": "describe",
+        "after": []
+      },
+      {
+        "name": "model",
+        "after": [
+          "describe"
+        ]
+      },
+      {
+        "name": "transpile",
+        "after": []
+      },
+      {
+        "name": "optimize",
+        "after": [
+          "transpile"
+        ]
+      },
+      {
+        "name": "browser",
+        "after": [
+          "model",
+          "optimize"
+        ]
+      },
+      {
+        "name": "complete",
+        "after": [
+          "model",
+          "browser"
+        ]
+      },
+      {
+        "name": "discard",
+        "after": [
+          "complete"
+        ]
+      }
+    ]
   }
 }

@@ -22,6 +22,7 @@
         "id": { "type": "string", "minLength": 1 },
         "parent": { "type": ["string", "null"] },
         "interactive": { "type": "boolean" },
+        "hoverWithin": { "type": "boolean" },
         "disabled": { "type": "boolean" },
         "marks": { "type": "array", "items": { "enum": ["active", "invalid", "waiting", "loading", "introduced", "celebrated", "focus", "hover"] } }
       }

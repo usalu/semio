@@ -1,0 +1,8 @@
+{
+  "exaggeration": 1.5,
+  "vertexCount": 1089,
+  "triangleCount": 2048,
+  "elevationRangeMeters": [70.5, 378.0],
+  "southWestMeters": [-1883.75156, -2968.53333, 363.0],
+  "northEastMeters": [1883.75156, 2968.53333, 168.0]
+}

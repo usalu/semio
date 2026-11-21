@@ -1,0 +1,14 @@
+{
+  "source":{
+    "vertices":[[0,0,0],[2,0,0],[0,2,0],[4,0,0],[6,0,0],[4,2,0]],
+    "faces":[[0,1,2],[3,4,5]],
+    "attributes":{
+      "faceDirection":{"domain":"face","semantic":"normal","interpolation":"nearest","values":[[0.6,0,0.8]],"indices":[0,0]},
+      "tangent":{"domain":"face","semantic":"custom","interpolation":"nearest","values":[[0.6,0.8,0,1]],"indices":[0,0]}
+    }
+  },
+  "selection":[1,3,4,5],
+  "pivot":[2,1,0],
+  "rotation":{"axis":[0,0,1],"angle":1.5707963267948966,"partialPoint":[3,1,0]},
+  "scale":{"factor":[2,1,0.5],"partialPoint":[2,0,0]}
+}

@@ -1,0 +1,85 @@
+{
+  "radius": 3,
+  "cases": [
+    {
+      "name": "equatorial plane",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "offset": 0,
+      "volumes": [
+        56.548667764616276,
+        56.548667764616276
+      ]
+    },
+    {
+      "name": "oblique offset plane",
+      "origin": [
+        0.45,
+        0,
+        0.6
+      ],
+      "normal": [
+        0.6,
+        0,
+        0.8
+      ],
+      "offset": 0.75,
+      "volumes": [
+        35.784703819796235,
+        77.31263170943632
+      ]
+    },
+    {
+      "name": "two pieces within one spherical cap",
+      "origin": [
+        0,
+        0,
+        1.5
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "offset": 1.5,
+      "span": [
+        0.75,
+        3
+      ],
+      "volumes": [
+        17.671458676442583,
+        18.113245143353655
+      ]
+    },
+    {
+      "name": "two pieces within one spherical band",
+      "origin": [
+        0,
+        0,
+        0.35
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "offset": 0.35,
+      "span": [
+        -1,
+        1
+      ],
+      "volumes": [
+        17.376018067311243,
+        37.07825459491183
+      ]
+    }
+  ]
+}

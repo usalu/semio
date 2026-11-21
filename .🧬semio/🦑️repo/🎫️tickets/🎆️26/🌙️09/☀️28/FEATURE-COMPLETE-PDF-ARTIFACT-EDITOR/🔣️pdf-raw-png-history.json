@@ -1,0 +1,56 @@
+{
+  "width": 521,
+  "height": 257,
+  "channels": 4,
+  "palette": [
+    0,
+    127,
+    191,
+    255
+  ],
+  "smallPickerByteLimit": 24546,
+  "contiguousSampleByteLimit": 1048576,
+  "untouchedPage": 1,
+  "downloads": {
+    "image-inserted.pdf": [
+      "SemioImage1"
+    ],
+    "image-replaced.pdf": [
+      "SemioImage1",
+      "SemioImage3"
+    ],
+    "image-undone.pdf": [
+      "SemioImage1"
+    ],
+    "image-redone.pdf": [
+      "SemioImage1",
+      "SemioImage3"
+    ],
+    "image-inline.pdf": [
+      "SemioImage1",
+      "SemioImage3",
+      "SemioImage5"
+    ],
+    "image-cancelled.pdf": [
+      "SemioImage1",
+      "SemioImage3",
+      "SemioImage5"
+    ]
+  },
+  "archiveDownloads": {
+    "image-archive-reloaded.pdf": [
+      "SemioImage1",
+      "SemioImage3",
+      "SemioImage5"
+    ],
+    "image-archive-undo.pdf": [
+      "SemioImage1",
+      "SemioImage3"
+    ],
+    "image-archive-redo.pdf": [
+      "SemioImage1",
+      "SemioImage3",
+      "SemioImage5"
+    ]
+  }
+}

@@ -93,3 +93,39 @@ Seen: `r3-sheet` body at 1:50 (three times while fixing), 1:100, 1:200, 1:500; 1
 - The support is one floor patch under four feet, because a support anchor takes exactly one solid and a repeat cannot place four pads of a rectangle.
 - No hidden thermal regions were added; the internals carry the colour of the region they stand behind and no area. Thermal data other than the bezel area is unchanged.
 - The repo test suites were not run; only the checks of the brief.
+
+## Round 5 handcraft (2026-11-21)
+
+Process (all assets of E03; final `r3-validate.ts <asset> --catalog-only --volumes` VALID for all five after the splice): `r5-appliances-render.sh` rendered every list at every scale, every pose and both clips at 1:50 (t 0.5 s) and the 2D of every drawn scale into `🗑️generated/r5-<slug>/before` and `/after`; `r5-seated-montage.ts` laid them out for reading; every sheet named below was opened with the Read tool. `r5-appliances-measure.ts` measured the body extents per scale in the default pose (numbers below). Grades: body / thermal / structure.
+
+### Reference and model (default pose `typical`)
+
+| quantity | reference | source | model 1:50 | deviation |
+|---|---|---|---|---|
+| height x width x depth | 440 x 195 x 480.5 mm / 360 x 175 x 453.75 mm | HPE ProLiant ML110 Gen10 / Dell PowerEdge T150 | 450 x 200 x 450 mm (asset dimensions, class between the two) | ML110 +2.3 / +2.6 / -6.3 %; T150 depth -0.8 % |
+| power supply | 150 x 86 x 140 mm | ATX12V Design Guide 2.2 | 150 x 86 x 139 mm | 0 / 0 / -0.6 % |
+| rear fan | 120 x 120 x 25 mm | product practice | 120 x 120 x 25 mm | 0 % |
+| bezel depth | 25 mm | product knowledge | 25 mm (1:50, 1:100), 30 mm (1:200), 75 mm (1:500, one feature) | - |
+| feet | 40 x 12 mm, footprint 0.4 x 0.17 m | asset anchor | 40 x 12 mm, 0.40 x 0.18 m | - |
+| coarse scales | same envelope | - | 0.450 x 0.450 x 0.200 m at 1:100, 1:200, 1:500 | 0 % |
+
+### Grades
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | unchanged |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | B+ / A- / A- | unchanged |
+| 1:500 | C+ / B+ / B+ | A- / B+ / B+ |
+| poses `rated`, `standby`, `off`, clips `power-up`, `load-surge` (t 0.5) | A (one fixed bone) | unchanged |
+
+Seen before: body at all four scales, structure and thermal cut at all four scales, the four poses and both clip frames at 1:50, 2D 1:50, 1:100, 1:200 (1:500 has no drawing). After: 1:500 body, thermal cut and structure.
+
+### Change
+
+- 1:500 body (`r5-tower-server-500.py`): the round-3 block had a bezel extrude with a 160 x 300 mm window 75 mm deep and a rear plate with power-supply and fan pockets 75 mm deep; at the 75 mm feature they read as holes into a hollow box (three-quarter view) and split the side views into three bands. Now three solids: rubber plinth, light steel case block with the rear panel merged (375 mm deep), dark ABS bezel block of one feature. Decisions rewritten (en, de). Thermal skins (side, grille, bezel, power supply, rear, feet, outlets) unchanged, they lie on the faces of the new block. `volumes-check --product` PASS (30.6 s); cross-scale, monotonic and copied ok.
+
+### Open points
+
+- 1:200 windows onto a dark core and the 12-gon fan circle are the tessellation of the coarse scale (renderer quality at the 30 mm feature), kept.
+- Panels as deep as their folded edges, square sheet edges and the 8 mm honeycomb stay as stated in round 3.

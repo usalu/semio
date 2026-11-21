@@ -190,8 +190,8 @@ const SPIRE: Record<number, Record<string, [number, number, number]>> = {
 };
 /** 🌫️ The 1:500 crown: one weeping bough per kept branch, a single mass that follows the outer branch and turns over to hang (f0 where it starts on the branch, L its length along the arch and down, w its half width); `-t` rows are the boughs of the upturned tips of the boned branches. */
 const COARSE: Record<string, [f0: number, L: number, w: number]> = {
-  "l-a": [0.45, 1.9, 0.7], "l-a-t": [0.15, 2.1, 0.6], "l-b": [0.45, 2.6, 0.72], "l-b-t": [0.15, 2.7, 0.62], "c-a": [0.45, 2.7, 0.68], "c-a-t": [0.15, 2.4, 0.58],
-  "c-b": [0.45, 2.6, 0.66], "c-b-t": [0.15, 2.3, 0.56], "r-a": [0.45, 1.75, 0.7], "r-a-t": [0.15, 1.85, 0.6], "r-b": [0.45, 2.6, 0.72], "r-b-t": [0.15, 2.7, 0.62],
+  "l-a": [0.45, 1.8, 0.7], "l-a-t": [0.15, 2.1, 0.6], "l-b": [0.45, 2.6, 0.72], "l-b-t": [0.15, 2.7, 0.62], "c-a": [0.45, 2.7, 0.68], "c-a-t": [0.15, 2.4, 0.58],
+  "c-b": [0.45, 2.6, 0.66], "c-b-t": [0.15, 2.3, 0.56], "r-a": [0.45, 1.62, 0.7], "r-a-t": [0.15, 1.85, 0.6], "r-b": [0.45, 2.6, 0.72], "r-b-t": [0.15, 2.7, 0.62],
   l1: [0.35, 3.1, 0.68], l2: [0.35, 3.3, 0.7], l3: [0.35, 3.52, 0.74], l5: [0.35, 3.0, 0.66], l7: [0.4, 2.6, 0.6],
   c1: [0.35, 3.3, 0.74], c2: [0.35, 2.9, 0.64], c3: [0.35, 3.5, 0.72], c4: [0.35, 3.5, 0.72], c5: [0.35, 2.9, 0.64], c9: [0.4, 2.9, 0.62],
   r1: [0.35, 3.1, 0.68], r2: [0.35, 3.3, 0.7], r3: [0.35, 3.6, 0.74], r5: [0.35, 3.0, 0.66], r7: [0.4, 2.6, 0.6],
@@ -311,6 +311,14 @@ export function tress(id: string, bone: string, start: V3, az: number, L: number
   return { id, bone, material: LEAF, tone: toneOf(bone), group: "leaf", sections, owner, az };
 }
 
+const PLAIN: Pick<Sec, "x" | "y"> = { x: [1, 0, 0], y: [0, 0, -1] };
+/** 💊️ The same tress for 1:100 and 1:200: a tapering capsule from below its turn to its hanging end, as wide as the mean of its width and thickness. */
+export function plainTress(part: Part, w: number, t: number): Part {
+  const r0 = 0.5 * (w + t), r1 = 0.45 * r0;
+  const p0 = part.sections[1]!.p, p1 = add(part.sections[part.sections.length - 1]!.p, [0, 0.6 * r1, 0]);
+  return { ...part, sections: [{ p: p0, ...PLAIN, rx: r0, ry: r0 }, { p: p1, ...PLAIN, rx: r1, ry: r1 }], capsule: { p0, p1, r0, r1 } };
+}
+
 /** 〽️ The irregular run of a sleeve: sideways swerve of its centre (share of the half width) and width factor at eight places along it, in turn; read by the fraction along the sleeve, so every scale samples the same run. */
 const SWERVE = [0, 0.16, -0.14, 0.18, -0.15, 0.1, -0.08, 0.05], SWELL = [1, 0.94, 1.1, 0.92, 1.08, 0.96, 1.04, 1];
 
@@ -361,8 +369,8 @@ const heading = (part: Part, f: number): number => {
   const [a, b] = [along(part, Math.max(0, f - 0.08)), along(part, Math.min(1, f + 0.08))];
   return Math.atan2(b[2] - a[2], b[0] - a[0]) / D2R;
 };
-const TRESS_N: Record<number, number> = { 50: 7, 100: 6, 200: 5, 500: 8 };
-const SLEEVE_N: Record<number, number> = { 50: 7, 100: 7, 200: 5, 500: 6 };
+const TRESS_N = 5;
+const SLEEVE_N: Record<number, number> = { 50: 7, 100: 6, 200: 5, 500: 6 };
 const thick = (w: number): number => Math.min(0.75 * w, 0.11 + 0.3 * w);
 /** 🪢️ Lengths of the bare whip ends that hang below every second tress at 1:50, in turn. */
 const WHIPS = [0.45, 0.6, 0.35];
@@ -383,10 +391,11 @@ export function tree(scale: number, F: Record<string, Frame>, asset: Json): Tree
     const pts = [{ p: add(mul(d, 0.16), [0, 0.2, 0]), r: r * 1.15 }, { p: add(mul(d, 0.34), [0, 0.1, 0]), r }, { p: add(mul(d, 0.34 + (reach - 0.34) * 0.5), [0, 0.045, 0]), r: r * 0.72 }, { p: add(mul(d, reach), [0, 0.022, 0]), r: 0.024 }];
     wood.push({ id: `root-${i + 1}`, bone: "root-plate", material: DARK, tone: TONE.stool, group: "root", sections: tubeSections(smooth(pts, scale === 50 ? 2 : 1)).map((s) => ({ ...s, ry: s.ry * 0.8 })) });
   });
-  const n = TRESS_N[scale]!, m = SLEEVE_N[scale]!;
+  const n = TRESS_N, m = SLEEVE_N[scale]!;
   let whip = 0;
   const hang = (owner: Part, bone: string, key: string, list: T[]): void => list.forEach(([f, daz, len, w], i) => {
-    const part = tress(`leaf-${key}-${i + 1}`, bone, along(owner, f), heading(owner, f) + daz, len, w, thick(w), n, owner.id);
+    const loft = tress(`leaf-${key}-${i + 1}`, bone, along(owner, f), heading(owner, f) + daz, len, w, thick(w), n, owner.id);
+    const part = scale === 50 ? loft : plainTress(loft, w, thick(w));
     leaves.push(part);
     if (scale === 50 && i % 2 === 1 && whip++ % 2 === 0) strands.push(strand(part, WHIPS[whip % 3]!));
   });
@@ -396,15 +405,14 @@ export function tree(scale: number, F: Record<string, Frame>, asset: Json): Tree
     const pts: { p: V3; r: number }[] = [{ p: along(owner, f), r: 0.006 }];
     for (let k = 1; k <= 4; k++) pts.push({ p: add(pts[k - 1]!.p, mul(dirOf(az + (daz > 0 ? -12 : 12) * (k / 4), 18 - 40 * ((k - 0.5) / 4)), len / 4)), r: 0.005 });
     const guide: Part = { id: `side-${key}-${i + 1}`, bone, material: WHITE, tone: TONE.branch, group: "branch", sections: tubeSections(pts) };
-    leaves.push(sleeve(`leaf-${key}-v${i + 1}`, bone, guide, 0.12, w, 0.16, scale === 200 ? 4 : 6, false, ++turn));
+    leaves.push(sleeve(`leaf-${key}-v${i + 1}`, bone, guide, 0.12, w, 0.16, scale === 200 ? 4 : scale === 100 ? 5 : 6, false, ++turn));
     hang(guide, bone, `${key}-v${i + 1}`, [[0.55, daz > 0 ? 80 : -80, t1, 0.14], [1, 0, t2, 0.15]]);
   });
   const strand = (part: Part, length: number): Part => {
     const from = part.sections[part.sections.length - 2]!.p;
     const sway: V3 = [0.03 * Math.cos((part.az ?? 0) * D2R), 0, 0.03 * Math.sin((part.az ?? 0) * D2R)];
-    const drop = length + Math.hypot(...sub(part.sections[part.sections.length - 1]!.p, from));
-    const pts = [{ p: from, r: 0.0045 }, { p: add(from, add(mul(sway, 0.6), [0, -0.5 * drop, 0])), r: 0.004 }, { p: add(from, add(sway, [0, -drop, 0])), r: 0.003 }];
-    return { id: `strand-${part.id.slice(5)}`, bone: part.bone, material: WHITE, tone: TONE.strand, group: "strand", sections: tubeSections(pts), flags: { slender: true, texture: true }, owner: part.id };
+    const to = add(from, add(sway, [0, -(length + Math.hypot(...sub(part.sections[part.sections.length - 1]!.p, from))), 0]));
+    return { id: `strand-${part.id.slice(5)}`, bone: part.bone, material: WHITE, tone: TONE.strand, group: "strand", sections: [{ p: from, ...PLAIN, rx: 0.0045, ry: 0.0045 }, { p: to, ...PLAIN, rx: 0.0035, ry: 0.0035 }], capsule: { p0: from, p1: to, r0: 0.0045, r1: 0.0035 }, flags: { slender: true, texture: true }, owner: part.id };
   };
   for (const chain of STEMS) {
     const parts = chainParts(F, L, chain, scale);
@@ -480,7 +488,8 @@ export function tree(scale: number, F: Record<string, Frame>, asset: Json): Tree
   }
   if (scale === 100) BANDS.filter((_, i) => i % 3 === 0).forEach(([bone, u, az], i) => marks.push(patch(F, asset, `lenticel-${i + 1}`, bone, u, az, [0.008, 0.016, 0.7])));
   SHOOTS[scale === 500 ? 500 : 50]!.forEach(([bone, u, az, len, w], i) => {
-    const part = tress(`leaf-${bone}-${i + 1}`, bone, stemAt(F, asset, bone, u).p, az, len, w, thick(w), n, bone.startsWith("fol-") ? `leader-${bone[4]}` : bone);
+    const loft = tress(`leaf-${bone}-${i + 1}`, bone, stemAt(F, asset, bone, u).p, az, len, w, thick(w), n, bone.startsWith("fol-") ? `leader-${bone[4]}` : bone);
+    const part = scale === 50 ? loft : plainTress(loft, w, thick(w));
     leaves.push(part);
     if (scale === 50 && i % 3 === 1 && whip++ % 2 === 0) strands.push(strand(part, WHIPS[whip % 3]!));
   });

@@ -1,4 +1,5 @@
 import "../📮️order.ts";
+import "../👁️profile-recheck/🟦️.ts";
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";

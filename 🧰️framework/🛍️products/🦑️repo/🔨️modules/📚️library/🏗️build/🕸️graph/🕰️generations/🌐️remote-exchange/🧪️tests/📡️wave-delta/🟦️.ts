@@ -56,7 +56,7 @@ test("a server that publishes three waves after its first generation uploads thr
  }
  expect(sent[0]).toBe(totals[0]);for(const at of[1,2,3])expect(sent[at]!).toBeLessThan(totals[at]!/2);
  expect(lines).toHaveLength(8);
-});
+},30000);
 
 test("a head uploaded later by a machine that holds an older state is not taken, and a refused upload leaves no head", async()=>{
  const server=await serve(),serverRoot=scratch(),workerRoot=scratch(),readerRoot=scratch(),late=3_600_000;

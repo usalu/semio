@@ -48,6 +48,36 @@ fn auxiliary_context_leases_use_actual_windows_and_never_survive_source_replacem
 }
 
 #[test]
+fn mount_retains_the_owned_wire_view_and_projects_the_exact_window() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let mut contexts = SurfaceContexts::default();
+    for surface in fixture["surfaces"].as_array().unwrap() {
+        let mut source = fixture["view"].clone();
+        source["windowId"] = surface["windowId"].clone();
+        if surface["windowId"].is_string() {
+            source["activeWindowKindId"] = "other-window-kind".into();
+            source["activeUtilityId"] = "other-window-utility".into();
+        }
+        let view: ViewModel = serde_json::from_value(source).unwrap();
+        let id = surface["id"].as_str().unwrap();
+        let body = surface["bodyKey"].as_str().unwrap();
+        contexts.insert(id.into(), body.into(), view).unwrap();
+        let mounted = contexts.borrow(id).unwrap();
+        for view in [contexts.view().unwrap(), mounted.view_state] {
+            assert_eq!(view.window_id.as_deref(), surface["windowId"].as_str());
+            assert_eq!(view.active_utility_id.as_deref(), surface["activeUtilityId"].as_str());
+            assert_eq!(view.active_window_kind_id.as_deref(), surface["windowId"].as_str().map(|_| body));
+            assert_eq!(view.active_utility_by_window_id.get("left").unwrap().as_deref(), Some("pan"));
+        }
+    }
+    let mut refused = fixture["view"].clone();
+    refused["windowId"] = "missing".into();
+    assert!(contexts.insert("7:missing".into(), "graph".into(), serde_json::from_value(refused).unwrap()).is_err());
+    assert!(contexts.borrow("7:missing").is_none());
+    drain(contexts);
+}
+
+#[test]
 fn retained_surface_render_borrows_the_exact_mounted_view_without_materialization(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
     let view:ViewModel=serde_json::from_value(fixture["view"].clone()).unwrap();

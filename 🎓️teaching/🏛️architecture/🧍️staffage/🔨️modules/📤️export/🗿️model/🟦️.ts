@@ -40,9 +40,9 @@ export function singleOptions(asset: Asset, options: ModelFileOptions): AssetMod
 export const trianglesOf = (document: ModelDocument): number => document.meshes.reduce((sum, mesh) => sum + mesh.primitives.reduce((n, p) => n + (p.mode === "triangles" ? p.indices.length / 3 : 0), 0), 0);
 
 /** 🏭️ The resolved multi-scene document of one pose or clip: every scene tessellated at the quality of its scale, then the feature edges (the weighted phases tessellate and edges of `job`, which starts them at `first`). */
-export async function resolvedOf(asset: Asset, document: ModelDocument, job: Job, first: number): Promise<ModelDocument> {
+export async function resolvedOf(asset: Asset, document: ModelDocument, job: Job, first: number, options: { readonly shareVertices?: boolean } = {}): Promise<ModelDocument> {
   const resolved = await resolveScenes(document, (scale) => qualityOf(asset, scale), job.operation(first));
-  return featureEdges(resolved, EDGE_ANGLE_RAD, { material: edgeMaterialOf(document) }, job.operation(first + 1));
+  return featureEdges(resolved, EDGE_ANGLE_RAD, { ...options, material: edgeMaterialOf(document) }, job.operation(first + 1));
 }
 
 /** ⏳️ The model document of one pose or clip as JSON text (a trailing newline). Rejects with the signal's reason when cancelled. */

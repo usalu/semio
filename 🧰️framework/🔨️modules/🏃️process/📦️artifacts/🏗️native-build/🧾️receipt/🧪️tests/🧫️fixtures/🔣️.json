@@ -1,5 +1,84 @@
 {
   "schema": "semio.cargo.provenance-receipt.fixture/v1",
+  "binaryDepInfoDiscovery": {
+    "package": "sample-descriptor",
+    "announcedBytes": "descriptor executable",
+    "lookalikeBytes": "different binary",
+    "targetBytes": "fn main() {}\n",
+    "upliftBytes": "pub const VALUE: u32 = 1;\n",
+    "cases": [
+      {"name": "matching binary", "kind": "bin", "announced": "sample-descriptor", "internal": "sample_descriptor", "checksumSource": "target", "sameBytes": true, "expected": "compiler"},
+      {"name": "Windows matching binary", "kind": "bin", "announced": "sample-descriptor.exe", "internal": "sample_descriptor.exe", "checksumSource": "target", "sameBytes": true, "expected": "compiler"},
+      {"name": "lookalike binary", "kind": "bin", "announced": "sample-descriptor", "internal": "sample_descriptor", "checksumSource": "target", "sameBytes": false, "expected": "uplift"},
+      {"name": "wrong target checksum", "kind": "bin", "announced": "sample-descriptor", "internal": "sample_descriptor", "checksumSource": "uplift", "sameBytes": true, "expected": "uplift"},
+      {"name": "nonbinary candidate", "kind": "lib", "announced": "sample-descriptor", "internal": "sample_descriptor", "checksumSource": "target", "sameBytes": true, "expected": "uplift"}
+    ]
+  },
+  "compilerDepInfo": [
+    {
+      "targetSource": "note.rs",
+      "candidates": [
+        {
+          "name": "uplift.d",
+          "text": "note.wasm: note.rs transitive.rs\n"
+        },
+        {
+          "name": "rustc.d",
+          "text": "note.wasm: note.rs\n# checksum:blake3=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa file_len:12 note.rs\n"
+        }
+      ],
+      "expectedSources": [
+        "note.rs"
+      ]
+    },
+    {
+      "targetSource": "note.rs",
+      "candidates": [
+        {
+          "name": "unit.d",
+          "text": "note.wasm: note.rs local.rs\n"
+        }
+      ],
+      "expectedSources": [
+        "note.rs",
+        "local.rs"
+      ]
+    },
+    {
+      "targetSource": "note.rs",
+      "candidates": [
+        {
+          "name": "first-rustc.d",
+          "text": "note.wasm: note.rs\n# checksum:blake3=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa file_len:12 note.rs\n"
+        },
+        {
+          "name": "second-rustc.d",
+          "text": "note.wasm: changed.rs\n# checksum:blake3=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb file_len:13 changed.rs\n"
+        }
+      ],
+      "expectedSources": [
+        "note.rs",
+        "changed.rs"
+      ]
+    },
+    {
+      "targetSource": "note.rs",
+      "candidates": [
+        {
+          "name": "uplift.d",
+          "text": "note.wasm: note.rs\n"
+        },
+        {
+          "name": "unrelated-rustc.d",
+          "text": "other.wasm: other.rs\n# checksum:blake3=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa file_len:12 other.rs\n"
+        }
+      ],
+      "expectedSources": [
+        "note.rs",
+        "other.rs"
+      ]
+    }
+  ],
   "depInfo": [
     {
       "text": "/b/debug/lib.d: /w/lib.rs /w/sp\\ ace/🧫️x.rs\n\n/w/lib.rs:\n# checksum:blake3=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa file_len:12 /w/lib.rs\n# checksum:blake3=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb file_len:7 /w/sp ace/🧫️x.rs\n",

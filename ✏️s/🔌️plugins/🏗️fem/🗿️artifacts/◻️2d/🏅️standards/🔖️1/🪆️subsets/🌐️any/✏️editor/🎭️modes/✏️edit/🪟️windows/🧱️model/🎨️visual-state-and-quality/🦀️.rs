@@ -148,7 +148,7 @@ impl FromIterator<(String, RegionVisualQuality)> for Fem2dRegionQualitySlots {
 pub struct Fem2dLiveVisual {
     pub region_quality: Fem2dRegionQualitySlots,
     pub assembling_element_ids: Vec<String>,
-    pub fields: Vec<NodeLiveField>,
+    pub fields: semio_s_fem_analyses_model::AssemblyOrder<NodeLiveField>,
     pub state: FemVisualState,
     pub residual_norm: f64,
     pub tolerance: f64,

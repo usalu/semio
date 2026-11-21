@@ -27,6 +27,13 @@ test("independent BLAKE3 reproduces every authored canonical schema graph",()=>{
  for(const sample of fixture.cases){const bytes=canonical(fixture.shapeTags,sample.graph);expect(bytes.toString("hex")).toBe(sample.canonicalHex);expect(Buffer.from(blake3(bytes)).toString("hex")).toBe(sample.schemaHash);}
  expect(fixture.cases.map((sample:any)=>sample.name)).toEqual(["flat","nested","nested-inner-field-changed","recursive","every-shape"]);
 });
+test("ordinary schema discovery needs no host entropy",()=>{
+ const fixture=read("🧪️tests/🧫️fixtures/🔑️schema-hash/🔣️.json");
+ const source=readFileSync(resolve(owner,"🧬️schema/🦀️.rs"),"utf8");
+ const constructor=source.slice(source.indexOf("pub fn of(spec:"),source.indexOf("pub fn hash_controlled"));
+ expect(constructor).toContain("nodes.push");
+ expect(Array.from(constructor.matchAll(/\b(?:HashMap|RandomState|thread_rng|getrandom)\b/gu)).length).toBe(fixture.ordinaryConstruction.hostEntropyRequests);
+});
 test("failed schema storage accounts for its actual returned diagnostic owner",()=>{
  const fixture=read("🧪️tests/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json");
  expect(fixture.failureChannel,"closed diagnostic ownership facet").toBeDefined();

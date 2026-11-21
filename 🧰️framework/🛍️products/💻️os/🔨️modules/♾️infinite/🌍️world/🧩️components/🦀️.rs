@@ -116,7 +116,20 @@ pub struct WorldSelectionState {
 
     pub local_hover_id: Option<String>,
 
+    /// 🪪️ An optimistic pointer result, including an explicit miss, owns the instance hover lane.
+    pub local_instance_hover: bool,
+
+    /// 📮️ A local instance or reference hit that still owes a pointer-clear publication.
+    pub pointer_instance_hover_published: bool,
+
+    /// 🎨️ A complete authored instance projection can explicitly clear every hover.
+    pub scene_hovered_ids: Option<HashSet<String>>,
+
+    pub scene_hover_source_window: Option<Option<String>>,
+
     pub local_hover_granularity_id: Option<String>,
+
+    pub local_hover_targets: Option<String>,
 
     pub marquee_points: Vec<[f32; 2]>,
 
@@ -149,6 +162,8 @@ pub struct WorldSelectionState {
     pub component_ids: Vec<String>,
 
     pub interaction_mode: String,
+
+    pub engagement_session_active: bool,
 
     pub marquee_preview_ids: Vec<String>,
 
@@ -341,9 +356,6 @@ pub struct WorldTraceState {
 
     pub tool_run_trace_mesh_keys: Vec<String>,
 
-    /// 🪟️ The window instance whose view state echoes this layer's trace cursor as
-    /// `toolRunTraceCursorByWindowId[window]`; set by the host that paints the surface into that window.
-    pub tool_run_trace_window_id: Option<String>,
 }
 
 impl WorldCameraState {
@@ -370,11 +382,41 @@ impl WorldCameraState {
 }
 
 impl WorldSelectionState {
+    /// 🪪️ Tracks pointer publication without turning a graph-projected group into pointer debt.
+    pub fn has_published_pointer_instance_hover(&self) -> bool {
+        self.pointer_instance_hover_published || (self.scene_hovered_ids.is_none() && self.local_hover_id.is_some())
+    }
+
+    /// 🔎️ Resolves authored instance addresses only while no local pointer result owns the lane.
+    pub fn projected_instance_hovers(&self) -> Option<&HashSet<String>> {
+        if self.local_instance_hover { None } else { self.scene_hovered_ids.as_ref() }
+    }
+
+    /// 🚪️ Whether a pointer miss or leave still has instance hover to clear.
+    pub fn has_instance_hover(&self) -> bool {
+        self.projected_instance_hovers().map_or_else(|| self.local_hover_id.is_some(), |ids| !ids.is_empty())
+    }
+
+    /// 🚪️ Releases this pointer's paint and observes the authored group again.
+    pub fn release_instance_pointer_hover(&mut self) {
+        self.local_instance_hover = false;
+        self.pointer_instance_hover_published = false;
+        self.local_hover_id = None;
+        self.local_hover_granularity_id = None;
+        self.local_hover_targets = None;
+        self.pick_hover_key = None;
+    }
+
     pub fn new() -> Self {
         Self {
             selection_method: "rectangle".into(),
             local_hover_id: None,
+            local_instance_hover: false,
+            pointer_instance_hover_published: false,
+            scene_hovered_ids: None,
+            scene_hover_source_window: None,
             local_hover_granularity_id: None,
+            local_hover_targets: None,
             marquee_points: Vec::new(),
             marquee_active: false,
             pick_targets: Vec::new(),
@@ -403,6 +445,7 @@ impl WorldSelectionState {
             #[cfg(any(test, feature = "testkit"))]
                         right_press_point: None,
             scene_selection_digest: None,
+            engagement_session_active: false,
             provisional_instance_ids: HashSet::new(),
             highlighted_instance_ids: HashSet::new(),
             disabled_instance_ids: HashSet::new(),
@@ -513,7 +556,6 @@ impl WorldTraceState {
             tool_run_trace_visibility: tool_run_trace::ToolRunTraceVisibility::default(),
             tool_run_trace_meshes_digest: None,
             tool_run_trace_mesh_keys: Vec::new(),
-            tool_run_trace_window_id: None,
         }
     }
 }

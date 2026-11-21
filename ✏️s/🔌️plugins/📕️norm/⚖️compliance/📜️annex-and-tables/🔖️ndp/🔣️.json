@@ -5606,13 +5606,274 @@
    "evidence": ""
   },
   {
+   "id": "ndp.en1991.1-2.fire-load-bb.dwelling",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile dwelling",
+   "recommended": null,
+   "naDe": 1085,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 1, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 1085 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 1, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 1, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.1-2.fire-load-bb.hospital",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile hospital",
+   "recommended": null,
+   "naDe": 320,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 3, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 320 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 3, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 3, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.1-2.fire-load-bb.hotel",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile hotel",
+   "recommended": null,
+   "naDe": 431,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 4, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 431 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 4, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 4, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.1-2.fire-load-bb.library",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile library",
+   "recommended": null,
+   "naDe": 2087,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 5, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 2087 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 5, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 5, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.1-2.fire-load-bb.office",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile office",
+   "recommended": null,
+   "naDe": 584,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 2, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 584 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 2, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 2, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.1-2.fire-load-bb.school",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile school",
+   "recommended": null,
+   "naDe": 397,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 6, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 397 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 6, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 6, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.1-2.fire-load-bb.shopping",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile shopping",
+   "recommended": null,
+   "naDe": 835,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 7, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 835 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 7, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 7, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.1-2.fire-load-bb.theatre",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile theatre",
+   "recommended": null,
+   "naDe": 417,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 8, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 417 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 8, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 8, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.1-2.fire-load-bb.transport",
+   "code": "EN 1991",
+   "part": "1-2",
+   "clause": "BB.3.2",
+   "symbol": "q_f,k 90 % quantile transport",
+   "recommended": null,
+   "naDe": 139,
+   "unit": "MJ/m2",
+   "source": {
+    "document": "DIN EN 1991-1-2/NA",
+    "edition": "2015-09",
+    "locator": "BB.3.2, Table BB.1 row 9, column 3, p. 19"
+   },
+   "status": "unverified",
+   "specRef": "National Annex Table BB.1",
+   "asWritten": "q_f,k = 139 MJ/m²",
+   "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 9, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1991-1-2/NA:2015-09 BB.3.2, Table BB.1 row 9, column 3, p. 19. https://www.niedersachsen.de/download/140002/Nds._MBl._Nr._3_2019_vom_24.01.2019_Anlagenband_1-Teil_1.pdf"
+    }
+   }
+  },
+  {
    "id": "ndp.en1991.1-2.fire-load-fractile.dwelling",
    "code": "EN 1991",
    "part": "1-2",
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile dwelling",
    "recommended": 948.0,
-   "naDe": 948.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5621,8 +5882,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 780 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy dwelling | 80 %-Fraktil der Brandlastdichte der Nutzung dwelling",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 948 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.fire-load-fractile.hospital",
@@ -5631,7 +5902,7 @@
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile hospital",
    "recommended": 280.0,
-   "naDe": 280.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5640,8 +5911,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 230 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy hospital | 80 %-Fraktil der Brandlastdichte der Nutzung hospital",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 280 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.fire-load-fractile.hotel",
@@ -5650,7 +5931,7 @@
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile hotel",
    "recommended": 377.0,
-   "naDe": 377.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5659,8 +5940,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 310 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy hotel | 80 %-Fraktil der Brandlastdichte der Nutzung hotel",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 377 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.fire-load-fractile.library",
@@ -5669,7 +5960,7 @@
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile library",
    "recommended": 1824.0,
-   "naDe": 1824.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5678,8 +5969,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 1500 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy library | 80 %-Fraktil der Brandlastdichte der Nutzung library",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 1824 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.fire-load-fractile.office",
@@ -5688,7 +5989,7 @@
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile office",
    "recommended": 511.0,
-   "naDe": 511.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5697,8 +5998,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 420 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy office | 80 %-Fraktil der Brandlastdichte der Nutzung office",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 511 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.fire-load-fractile.school",
@@ -5707,7 +6018,7 @@
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile school",
    "recommended": 347.0,
-   "naDe": 347.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5716,8 +6027,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 285 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy school | 80 %-Fraktil der Brandlastdichte der Nutzung school",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 347 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.fire-load-fractile.shopping",
@@ -5726,7 +6047,7 @@
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile shopping",
    "recommended": 730.0,
-   "naDe": 730.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5735,8 +6056,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 600 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy shopping | 80 %-Fraktil der Brandlastdichte der Nutzung shopping",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 730 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.fire-load-fractile.theatre",
@@ -5745,7 +6076,7 @@
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile theatre",
    "recommended": 365.0,
-   "naDe": 365.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5754,8 +6085,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 300 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy theatre | 80 %-Fraktil der Brandlastdichte der Nutzung theatre",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 365 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.fire-load-fractile.transport",
@@ -5764,7 +6105,7 @@
    "clause": "Annex E Table E.4",
    "symbol": "q_f,k 80 % fractile transport",
    "recommended": 122.0,
-   "naDe": 122.0,
+   "naDe": null,
    "unit": "MJ/m2",
    "source": {
     "document": "DIN EN 1991/NA",
@@ -5773,8 +6114,18 @@
    },
    "status": "unverified",
    "specRef": "NORM-COMPLETE spec en1990-en1991-target E12.03 (values marked [V]; spec cites the table as E.1, the standard numbers it E.4); mean 100 MJ/m2",
-   "asWritten": "80 % fractile of the fire load density of occupancy transport | 80 %-Fraktil der Brandlastdichte der Nutzung transport",
-   "evidence": ""
+   "asWritten": "Annex E Table E.4, 80 % fractile q_f,k = 122 MJ/m². German Annex BB has separate rows.",
+   "evidence": "",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1991-1-2:2002 Table E.4, 80th percentile. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1991.1.2.2002.pdf"
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": ""
+    }
+   }
   },
   {
    "id": "ndp.en1991.1-2.flame-emissivity",
@@ -14669,80 +15020,120 @@
    "evidence": ""
   },
   {
-   "id": "ndp.en1991.alpha-a.de-c0",
+   "id": "ndp.en1991.alpha-a.de-area",
    "code": "EN 1991",
    "part": "1-1",
-   "clause": "6.3.1.2 NA",
-   "symbol": "α_A c0",
+   "clause": "6.3.1.2(10)",
+   "symbol": "α_A reference area",
+   "recommended": null,
+   "naDe": 10.0,
+   "unit": "m2",
+   "source": {
+    "document": "DIN EN 1991-1-1/NA",
+    "edition": "2010-12",
+    "locator": "(6.1a DE) and (6.1b DE), printed p. 8"
+   },
+   "status": "unverified",
+   "specRef": "EN 1991-1-1 clause 6.3.1.2 and German National Annex",
+   "asWritten": "α_A reference area = 10 m2",
+   "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.1a DE) and (6.1b DE), printed p. 8. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.1a DE) and (6.1b DE), printed p. 8. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.alpha-a.de-base-abz",
+   "code": "EN 1991",
+   "part": "1-1",
+   "clause": "6.3.1.2(10)",
+   "symbol": "α_A base for A, B and Z",
    "recommended": null,
    "naDe": 0.5,
    "unit": "",
    "source": {
-    "document": "DIN EN 1991/NA",
-    "edition": "to be recorded at verification",
-    "locator": "6.3.1.2 NA"
+    "document": "DIN EN 1991-1-1/NA",
+    "edition": "2010-12",
+    "locator": "(6.1a DE), printed p. 8"
    },
    "status": "unverified",
-   "specRef": "wave2 ndp: value as used by the artifact",
-   "asWritten": "α_A c0: EN None / DE 0.5",
-   "evidence": ""
+   "specRef": "EN 1991-1-1 clause 6.3.1.2 and German National Annex",
+   "asWritten": "α_A base for A, B and Z = 0.5",
+   "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.1a DE), printed p. 8. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.1a DE), printed p. 8. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf"
+    }
+   }
   },
   {
-   "id": "ndp.en1991.alpha-a.de-c1",
+   "id": "ndp.en1991.alpha-a.de-base-c-e11",
    "code": "EN 1991",
    "part": "1-1",
-   "clause": "6.3.1.2 NA",
-   "symbol": "α_A c1",
+   "clause": "6.3.1.2(10)",
+   "symbol": "α_A base for C, D and E1.1",
    "recommended": null,
-   "naDe": 10.0,
-   "unit": "m",
+   "naDe": 0.7,
+   "unit": "",
    "source": {
-    "document": "DIN EN 1991/NA",
-    "edition": "to be recorded at verification",
-    "locator": "6.3.1.2 NA"
+    "document": "DIN EN 1991-1-1/NA",
+    "edition": "2010-12",
+    "locator": "(6.1b DE), printed p. 8"
    },
    "status": "unverified",
-   "specRef": "wave2 ndp: value as used by the artifact",
-   "asWritten": "α_A c1: EN None / DE 10.0",
-   "evidence": ""
+   "specRef": "EN 1991-1-1 clause 6.3.1.2 and German National Annex",
+   "asWritten": "α_A base for C, D and E1.1 = 0.7",
+   "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.1b DE), printed p. 8. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.1b DE), printed p. 8. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf"
+    }
+   }
   },
   {
    "id": "ndp.en1991.alpha-a.de-max",
    "code": "EN 1991",
    "part": "1-1",
-   "clause": "6.3.1.2 NA",
-   "symbol": "α_A max",
+   "clause": "6.3.1.2(10)",
+   "symbol": "α_A upper limit",
    "recommended": null,
    "naDe": 1.0,
    "unit": "",
    "source": {
-    "document": "DIN EN 1991/NA",
-    "edition": "to be recorded at verification",
-    "locator": "6.3.1.2 NA"
+    "document": "DIN EN 1991-1-1/NA",
+    "edition": "2010-12",
+    "locator": "(6.1a DE) and (6.1b DE), printed p. 8"
    },
    "status": "unverified",
-   "specRef": "wave2 ndp: value as used by the artifact",
-   "asWritten": "α_A max: EN None / DE 1.0",
-   "evidence": ""
-  },
-  {
-   "id": "ndp.en1991.alpha-a.de-min",
-   "code": "EN 1991",
-   "part": "1-1",
-   "clause": "6.3.1.2 NA",
-   "symbol": "α_A min",
-   "recommended": null,
-   "naDe": 0.7,
-   "unit": "",
-   "source": {
-    "document": "DIN EN 1991/NA",
-    "edition": "to be recorded at verification",
-    "locator": "6.3.1.2 NA"
-   },
-   "status": "unverified",
-   "specRef": "wave2 ndp: value as used by the artifact",
-   "asWritten": "α_A min: EN None / DE 0.7",
-   "evidence": ""
+   "specRef": "EN 1991-1-1 clause 6.3.1.2 and German National Annex",
+   "asWritten": "α_A upper limit = 1",
+   "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.1a DE) and (6.1b DE), printed p. 8. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.1a DE) and (6.1b DE), printed p. 8. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf"
+    }
+   }
   },
   {
    "id": "ndp.en1991.alpha-a.en-a0",
@@ -14781,6 +15172,64 @@
    "specRef": "wave2 ndp: value as used by the artifact",
    "asWritten": "α_A min C D: EN 0.6 / DE None",
    "evidence": ""
+  },
+  {
+   "id": "ndp.en1991.alpha-n.de-base",
+   "code": "EN 1991",
+   "part": "1-1",
+   "clause": "6.3.1.2(11)",
+   "symbol": "α_n base for A to D and Z",
+   "recommended": null,
+   "naDe": 0.7,
+   "unit": "",
+   "source": {
+    "document": "DIN EN 1991-1-1/NA",
+    "edition": "2010-12",
+    "locator": "(6.2 DE), printed p. 9"
+   },
+   "status": "unverified",
+   "specRef": "EN 1991-1-1 clause 6.3.1.2 and German National Annex",
+   "asWritten": "α_n base for A to D and Z = 0.7",
+   "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.2 DE), printed p. 9. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.2 DE), printed p. 9. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf"
+    }
+   }
+  },
+  {
+   "id": "ndp.en1991.alpha-n.de-storeys",
+   "code": "EN 1991",
+   "part": "1-1",
+   "clause": "6.3.1.2(11)",
+   "symbol": "α_n numerator for A to D and Z",
+   "recommended": null,
+   "naDe": 0.6,
+   "unit": "",
+   "source": {
+    "document": "DIN EN 1991-1-1/NA",
+    "edition": "2010-12",
+    "locator": "(6.2 DE), printed p. 9"
+   },
+   "status": "unverified",
+   "specRef": "EN 1991-1-1 clause 6.3.1.2 and German National Annex",
+   "asWritten": "α_n numerator for A to D and Z = 0.6",
+   "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.2 DE), printed p. 9. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf",
+   "annexStatus": {
+    "en": {
+     "status": "unverified",
+     "evidence": ""
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "Verified against DIN EN 1991-1-1/NA:2010-12 (6.2 DE), printed p. 9. https://www.niedersachsen.de/download/80784/Nds._MBl._Nr._37_2012_vom_30.10.2012_Anlagenband_01.pdf"
+    }
+   }
   },
   {
    "id": "ndp.en1991.c-44.1",
@@ -19311,10 +19760,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "4.4.1.2 Table 4.3N"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "Structural class minus 1 from f_ck >= 35 MPa (C35/45) for XC2 and XC3.",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XC2'], 50 years, C35/45) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 35 MPa. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XC2'], 50 years, C35/45) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 35 MPa. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XC2'], 50 years, C35/45) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 35 MPa. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.d-04.class-fck.xc4-xd1-xd2-xs1",
@@ -19330,10 +19789,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "4.4.1.2 Table 4.3N"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "Structural class minus 1 from f_ck >= 40 MPa (C40/50) for XC4, XD1, XD2 and XS1.",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XC4'], 50 years, C40/50) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 40 MPa. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XC4'], 50 years, C40/50) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 40 MPa. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XC4'], 50 years, C40/50) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 40 MPa. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.d-04.class-fck.xd3-xs2-xs3",
@@ -19349,10 +19818,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "4.4.1.2 Table 4.3N"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "Structural class minus 1 from f_ck >= 45 MPa (C45/55) for XD3, XS2 and XS3.",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XD3'], 50 years, C45/55) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 45 MPa. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XD3'], 50 years, C45/55) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 45 MPa. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_4_durability_and_cover.table_4_3.Table4Dot3ConcreteStructuralClass(['XD3'], 50 years, C45/55) lowers the structural class (EN 1992-1-1 Table 4.3N) [executed]; library value 45 MPa. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.defl-limit-after",
@@ -20895,10 +21374,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "6.2.2(6) Eq. 6.6N"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "EN nu = 0.6 (1 - f_ck/250), f_ck in MPa.",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v: v(125)/v(0) = 0.5 (EN 1992-1-1 Eq. 6.6N, 1 - f_ck/250) [executed]; library value 250. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v: v(125)/v(0) = 0.5 (EN 1992-1-1 Eq. 6.6N, 1 - f_ck/250) [executed]; library value 250. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v: v(125)/v(0) = 0.5 (EN 1992-1-1 Eq. 6.6N, 1 - f_ck/250) [executed]; library value 250. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.nu1-en-factor",
@@ -20914,10 +21403,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "6.2.2(6) Eq. 6.6N"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "EN nu = 0.6 (1 - f_ck/250); the DE annex uses nu1 = 0.75 nu2 (ids nu1-factor, nu2-offset, nu2-fck-divisor).",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v(0) (EN 1992-1-1 Eq. 6.6N) [executed]; library value 0.6. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v(0) (EN 1992-1-1 Eq. 6.6N) [executed]; library value 0.6. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v(0) (EN 1992-1-1 Eq. 6.6N) [executed]; library value 0.6. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.nu1-factor",
@@ -20952,10 +21451,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "6.2.3(3) Eq. 6.10aN"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "nu1 = 0.6 for f_ck <= 60 MPa, otherwise max(0.9 - f_ck/200, 0.5) (Eq. 6.10bN).",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v1(30) (EN 1992-1-1 Eq. 6.10aN) [executed]; library value 0.6. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v1(30) (EN 1992-1-1 Eq. 6.10aN) [executed]; library value 0.6. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by structuralcodes 0.7.3 structuralcodes.codes.ec2_2004.shear.v1(30) (EN 1992-1-1 Eq. 6.10aN) [executed]; library value 0.6. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.nu2-fck-divisor",
@@ -21256,10 +21765,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "5.10.9(1)"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "r_inf = 0.90 for post-tensioning with bonded tendons (EN recommended).",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_48 docstring, recommended r_inf for post-tensioning with bonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 0.9. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_48 docstring, recommended r_inf for post-tensioning with bonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 0.9. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_48 docstring, recommended r_inf for post-tensioning with bonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 0.9. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.p-r-inf.pre-or-unbonded",
@@ -21275,10 +21794,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "5.10.9(1)"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "r_inf = 0.95 for pre-tensioning or unbonded tendons (EN recommended).",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_48 docstring, recommended r_inf for pre-tensioning or unbonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 0.95. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_48 docstring, recommended r_inf for pre-tensioning or unbonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 0.95. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_48 docstring, recommended r_inf for pre-tensioning or unbonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 0.95. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.p-r-sup",
@@ -21332,10 +21861,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "5.10.9(1)"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "r_sup = 1.10 for post-tensioning with bonded tendons (EN recommended).",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_47 docstring, recommended r_sup for post-tensioning with bonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 1.1. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_47 docstring, recommended r_sup for post-tensioning with bonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 1.1. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_47 docstring, recommended r_sup for post-tensioning with bonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 1.1. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.p-r-sup.pre-or-unbonded",
@@ -21351,10 +21890,20 @@
     "edition": "EN edition of the cited library table",
     "locator": "5.10.9(1)"
    },
-   "status": "verified",
+   "status": "unverified",
    "specRef": "fleet-1108 ndp: library fact",
    "asWritten": "r_sup = 1.05 for pre-tensioning or unbonded tendons (EN recommended).",
-   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_47 docstring, recommended r_sup for pre-tensioning or unbonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 1.05. Earlier public or spec values are superseded by the library value."
+   "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_47 docstring, recommended r_sup for pre-tensioning or unbonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 1.05. Earlier public or spec values are superseded by the library value.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "fleet-1108 ndp 2026-11-08: VERIFIED by blue-prints 0.8.0 blueprints.codes.eurocode.en_1992_1_1_2004.chapter_5_structural_analysis.formula_5_47 docstring, recommended r_sup for pre-tensioning or unbonded tendons (EN 1992-1-1 5.10.9(1)) [documented]; library value 1.05. Earlier public or spec values are superseded by the library value."
+    },
+    "naDe": {
+     "status": "unverified",
+     "evidence": "The registry has no German national-annex value for this EN parameter."
+    }
+   }
   },
   {
    "id": "ndp.en1992.pa-01.1",
@@ -38307,14 +38856,24 @@
    "naDe": 1.15,
    "unit": "",
    "source": {
-    "document": "DIN EN 1993-1-1/NA",
-    "edition": "to be recorded at verification",
-    "locator": "Table 3.1"
+    "document": "EN 1993-1-9",
+    "edition": "2005 + AC:2009",
+    "locator": "§3(7), Table 3.1"
    },
-   "status": "unverified",
+   "status": "verified",
    "specRef": "📐️specs/en1993-target.md V-502: partial factor gamma_M,f of EN 1993-1-9 Table 3.1, damage tolerant: low consequence 1.00, high consequence 1.15; safe life: low consequence 1.15, high consequence 1.35",
-   "asWritten": "gamma_Mf damage tolerant, high consequence; DIN EN 1993-1-9/NA keeps the same table (spec V-502, NA-DE may restrict damage tolerant to inspected details, to be verified)",
-   "evidence": ""
+   "asWritten": "Resistance factor by method and consequence. DIN EN 1993-1-9/NA adopts Table 3.1 where an application part does not set a specific value.",
+   "evidence": "EN 1993-1-9:2005 Table 3.1, and DIN EN 1993-1-9/NA:2010-12 NDP to 3(7) outside application-specific parts. Annex-specific references recorded below.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1993-1-9:2005 Table 3.1. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1993.1.9.2005-1.pdf#page=13"
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1993-1-9/NA:2010-12 NDP to 3(7), general cases outside Parts 2 to 6. https://www.niedersachsen.de/download/80810/nds._mbl._nr._37_2012_vom_30.10.2012_anlagenband_37i.pdf#page=296"
+    }
+   }
   },
   {
    "id": "ndp.en1993.1-9.gamma-mf.damage-tolerant.low",
@@ -38326,14 +38885,24 @@
    "naDe": 1.0,
    "unit": "",
    "source": {
-    "document": "DIN EN 1993-1-1/NA",
-    "edition": "to be recorded at verification",
-    "locator": "Table 3.1"
+    "document": "EN 1993-1-9",
+    "edition": "2005 + AC:2009",
+    "locator": "§3(7), Table 3.1"
    },
-   "status": "unverified",
+   "status": "verified",
    "specRef": "📐️specs/en1993-target.md V-502: partial factor gamma_M,f of EN 1993-1-9 Table 3.1, damage tolerant: low consequence 1.00, high consequence 1.15; safe life: low consequence 1.15, high consequence 1.35",
-   "asWritten": "gamma_Mf damage tolerant, low consequence; DIN EN 1993-1-9/NA keeps the same table (spec V-502, NA-DE may restrict damage tolerant to inspected details, to be verified)",
-   "evidence": ""
+   "asWritten": "Resistance factor by method and consequence. DIN EN 1993-1-9/NA adopts Table 3.1 where an application part does not set a specific value.",
+   "evidence": "EN 1993-1-9:2005 Table 3.1, and DIN EN 1993-1-9/NA:2010-12 NDP to 3(7) outside application-specific parts. Annex-specific references recorded below.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1993-1-9:2005 Table 3.1. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1993.1.9.2005-1.pdf#page=13"
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1993-1-9/NA:2010-12 NDP to 3(7), general cases outside Parts 2 to 6. https://www.niedersachsen.de/download/80810/nds._mbl._nr._37_2012_vom_30.10.2012_anlagenband_37i.pdf#page=296"
+    }
+   }
   },
   {
    "id": "ndp.en1993.1-9.gamma-mf.safe-life.high",
@@ -38345,14 +38914,24 @@
    "naDe": 1.35,
    "unit": "",
    "source": {
-    "document": "DIN EN 1993-1-1/NA",
-    "edition": "to be recorded at verification",
-    "locator": "Table 3.1"
+    "document": "EN 1993-1-9",
+    "edition": "2005 + AC:2009",
+    "locator": "§3(7), Table 3.1"
    },
-   "status": "unverified",
+   "status": "verified",
    "specRef": "📐️specs/en1993-target.md V-502: partial factor gamma_M,f of EN 1993-1-9 Table 3.1, damage tolerant: low consequence 1.00, high consequence 1.15; safe life: low consequence 1.15, high consequence 1.35",
-   "asWritten": "gamma_Mf safe life, high consequence; DIN EN 1993-1-9/NA keeps the same table (spec V-502, NA-DE may restrict damage tolerant to inspected details, to be verified)",
-   "evidence": ""
+   "asWritten": "Resistance factor by method and consequence. DIN EN 1993-1-9/NA adopts Table 3.1 where an application part does not set a specific value.",
+   "evidence": "EN 1993-1-9:2005 Table 3.1, and DIN EN 1993-1-9/NA:2010-12 NDP to 3(7) outside application-specific parts. Annex-specific references recorded below.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1993-1-9:2005 Table 3.1. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1993.1.9.2005-1.pdf#page=13"
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1993-1-9/NA:2010-12 NDP to 3(7), general cases outside Parts 2 to 6. https://www.niedersachsen.de/download/80810/nds._mbl._nr._37_2012_vom_30.10.2012_anlagenband_37i.pdf#page=296"
+    }
+   }
   },
   {
    "id": "ndp.en1993.1-9.gamma-mf.safe-life.low",
@@ -38364,14 +38943,24 @@
    "naDe": 1.15,
    "unit": "",
    "source": {
-    "document": "DIN EN 1993-1-1/NA",
-    "edition": "to be recorded at verification",
-    "locator": "Table 3.1"
+    "document": "EN 1993-1-9",
+    "edition": "2005 + AC:2009",
+    "locator": "§3(7), Table 3.1"
    },
-   "status": "unverified",
+   "status": "verified",
    "specRef": "📐️specs/en1993-target.md V-502: partial factor gamma_M,f of EN 1993-1-9 Table 3.1, damage tolerant: low consequence 1.00, high consequence 1.15; safe life: low consequence 1.15, high consequence 1.35",
-   "asWritten": "gamma_Mf safe life, low consequence; DIN EN 1993-1-9/NA keeps the same table (spec V-502, NA-DE may restrict damage tolerant to inspected details, to be verified)",
-   "evidence": ""
+   "asWritten": "Resistance factor by method and consequence. DIN EN 1993-1-9/NA adopts Table 3.1 where an application part does not set a specific value.",
+   "evidence": "EN 1993-1-9:2005 Table 3.1, and DIN EN 1993-1-9/NA:2010-12 NDP to 3(7) outside application-specific parts. Annex-specific references recorded below.",
+   "annexStatus": {
+    "en": {
+     "status": "verified",
+     "evidence": "EN 1993-1-9:2005 Table 3.1. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1993.1.9.2005-1.pdf#page=13"
+    },
+    "naDe": {
+     "status": "verified",
+     "evidence": "DIN EN 1993-1-9/NA:2010-12 NDP to 3(7), general cases outside Parts 2 to 6. https://www.niedersachsen.de/download/80810/nds._mbl._nr._37_2012_vom_30.10.2012_anlagenband_37i.pdf#page=296"
+    }
+   }
   },
   {
    "id": "ndp.en1993.1-9.size-effect.exponent",

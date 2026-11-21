@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Edit Terrain Elevation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operation", "column", "row", "radius", "value"],
+  "properties": {
+    "operation": { "enum": ["set-sample", "raise-lower", "flatten", "smooth", "offset"] },
+    "column": { "type": "integer", "minimum": 0, "maximum": 32 },
+    "row": { "type": "integer", "minimum": 0, "maximum": 32 },
+    "radius": { "type": "integer", "minimum": 0, "maximum": 32 },
+    "value": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+  },
+  "if": { "properties": { "operation": { "const": "smooth" } } },
+  "then": { "properties": { "value": { "type": "integer", "minimum": 0, "maximum": 100 } } }
+}

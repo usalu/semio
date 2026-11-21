@@ -20,7 +20,7 @@ pub fn render_world_3d(
     gpu: &mut World3dBuildContext,
     shadow_profile: World3dShadowProfile,
 ) {
-    use semio_ui_wgpu_widget_kit::{draw_text, gizmo as gpu_gizmo};
+    use semio_ui_wgpu_widget_kit::{draw_text, gizmo as gpu_gizmo, measure_text_width};
     let theme = ctx.theme;
     let modelling = scene.world_3d.as_ref();
     let section = modelling.and_then(|world| world.modelling_options.as_ref()).and_then(|options| options.section);
@@ -34,6 +34,12 @@ pub fn render_world_3d(
     sync_world3d_state(state, scene, bounds);
     let _ = step_world3d_camera_fit(state);
     apply_terrain_style_if_changed(&mut state.session, &mut state.scene, &mut state.terrain, gpu);
+    if let Some(elevation) = state.terrain.take_camera_origin_elevation(state.camera.scene_camera_digest, state.camera.camera_user_moved) {
+        if elevation > state.camera.orbit.target.z {
+            state.camera.orbit.target.z = elevation;
+            advance_world3d_view_revision(&mut state.session, &mut state.scene);
+        }
+    }
     let current_lod = scene_lod(&state.session, &state.camera, &state.scene);
     let lod_changed = state.camera.resolved_lod_pick.is_none_or(|previous| (previous - current_lod).abs() > WORLD_LOD_EPSILON);
     if lod_changed {
@@ -55,7 +61,8 @@ pub fn render_world_3d(
     let lighting = environment_scene_lighting(&state.scene.environment);
     let neutral_material = environment_scene_material(&state.scene.environment);
     let shadow = environment_scene_shadow(&state.scene.environment, light_dir, shadow_profile);
-    let mut terrain_draws = sync_terrain(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, gpu, &camera);
+    let mut line_vertices = Vec::new();
+    let mut terrain_draws = sync_terrain(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, gpu, &camera, inner, &mut line_vertices);
     for draw in &mut terrain_draws {
         draw.shadow_role = world3d_shadow_role(World3dShadowGeometry::Terrain, shadow.enabled);
     }
@@ -206,7 +213,6 @@ pub fn render_world_3d(
     } else {
         None
     };
-    let mut line_vertices = Vec::new();
     append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, theme, &camera, inner, &mut line_vertices);
     append_engagement_preview_lines(&state.scene, &mut line_vertices, [theme.row_hover.r, theme.row_hover.g, theme.row_hover.b, 1.0]);
     append_pick_target_hover_lines(&state.selection, theme, &camera, inner, &mut line_vertices);
@@ -401,6 +407,15 @@ pub fn render_world_3d(
     }
     if state.session.presentation.interactive && state.session.presentation.show_gizmo {
         gpu_gizmo::paint_orbit_view_gizmo(ctx, &camera, inner, state.camera.gizmo_hovered_tip);
+    }
+    if let Some(label) = state.terrain.terrain_attribution_label() {
+        let size = theme.font_size_small;
+        let w = (measure_text_width(ctx, label, size) + 12.0).min(inner.w);
+        let y = inner.y + inner.h - size - 8.0;
+        ctx.draw.push_scissor(inner);
+        ctx.draw.push_solid([inner.x, y, w, size + 8.0], theme.panel);
+        draw_text(ctx, label, inner.x + 6.0, y + size + 3.0, size, theme.text_muted);
+        ctx.draw.pop_scissor();
     }
     for (index, status) in state.overlay.prepared_status.iter().flatten().enumerate() {
         if let Some(text) = status.text() {

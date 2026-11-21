@@ -7,6 +7,8 @@
     {"name":"branch table first","args":[0],"body":[0,2,64,2,64,32,0,14,1,0,1,11,65,3,15,11,65,5,11],"expected":3},
     {"name":"branch table default","args":[4],"body":[0,2,64,2,64,32,0,14,1,0,1,11,65,3,15,11,65,5,11],"expected":5},
     {"name":"select","args":[0],"body":[0,65,1,65,2,32,0,27,11],"expected":2},
-    {"name":"actual table indirect call","args":[7],"body":[0,32,0,65,0,17,0,0,11],"callee":[0,65,33,11],"expected":33}
+    {"name":"actual table indirect call","args":[7],"body":[0,32,0,65,0,17,0,0,11],"callee":[0,65,33,11],"expected":33},
+    {"name":"settled block continues within the same grant","args":[21],"body":[0,2,64,1,11,32,0,11],"expected":21,"continuation":"settledControl","executionFuel":8},
+    {"name":"retired callee continues within the same grant","args":[21],"body":[0,32,0,16,1,65,2,106,11],"callee":[0,32,0,65,1,106,11],"expected":24,"continuation":"retiredCallee","executionFuel":8}
   ]
 }

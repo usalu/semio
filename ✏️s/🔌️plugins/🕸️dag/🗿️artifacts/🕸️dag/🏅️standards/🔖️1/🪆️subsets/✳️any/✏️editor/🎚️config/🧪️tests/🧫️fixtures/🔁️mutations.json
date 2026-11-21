@@ -1,6 +1,7 @@
 [
   {
     "kind": "replace-config",
+    "binaryHex": "01000001000e0d030005000000000000f03f0105000000000000004002050000000000000840",
     "mutation": {
       "mutation": "replaceConfig",
       "payload": {
@@ -24,6 +25,7 @@
   },
   {
     "kind": "change-camera",
+    "binaryHex": "01010003000500000000000022400105000000000000204002050000000000001c40",
     "mutation": {
       "mutation": "changeCamera",
       "payload": {

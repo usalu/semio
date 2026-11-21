@@ -1,0 +1,65 @@
+{
+  "pages": [
+    {
+      "id": "alpha",
+      "text": "Alpha anchor",
+      "width": 216,
+      "height": 216
+    },
+    {
+      "id": "blank",
+      "text": null,
+      "width": 180,
+      "height": 190
+    },
+    {
+      "id": "beta",
+      "text": "Beta anchor",
+      "width": 240,
+      "height": 260
+    }
+  ],
+  "states": [
+    [
+      "alpha",
+      "beta"
+    ],
+    [
+      "alpha",
+      "blank",
+      "beta"
+    ],
+    [
+      "beta",
+      "alpha",
+      "blank"
+    ],
+    [
+      "beta",
+      "blank"
+    ]
+  ],
+  "edits": [
+    {
+      "action": "insert-page",
+      "args": {
+        "page": 1,
+        "width": 180,
+        "height": 190
+      }
+    },
+    {
+      "action": "move-page",
+      "args": {
+        "page": 2,
+        "x": 0
+      }
+    },
+    {
+      "action": "remove-page",
+      "args": {
+        "page": 1
+      }
+    }
+  ]
+}

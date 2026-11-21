@@ -3,6 +3,43 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import * as owner from "@semio-tech/trinity-jack/source";
 import {bindSemioJackGraph} from "../🟦️.ts";
+
+test("SQLite witnesses the graph and undo in the mounted Jack publication fixture", async () => {
+ const fixture = await Bun.file(new URL("./🧫️fixtures/▶️query-publication.json", import.meta.url)).json();
+ const scene = await Bun.file(new URL("../🖼️assets/🎬️demo/🔣️.query.json", import.meta.url)).json();
+ const db = new Database(":memory:");
+ try {
+  db.exec("PRAGMA foreign_keys = ON; CREATE TABLE node(id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind = 'Piece')); CREATE TABLE edge(source TEXT NOT NULL REFERENCES node(id), target TEXT NOT NULL REFERENCES node(id)); CREATE TABLE document(root TEXT REFERENCES node(id))");
+  for (const node of scene.nodes) db.run("INSERT INTO node VALUES (?, ?)", [node.id, node.kind]);
+  for (const edge of scene.edges) db.run("INSERT INTO edge VALUES (?, ?)", [edge.source.split("@")[0], edge.target.split("@")[0]]);
+  db.run("INSERT INTO document VALUES (?)", [scene.rootNodeId]);
+  const count = () => db.query("SELECT count(*) AS total FROM node").get();
+  expect(count()).toEqual({ total: fixture.initialNodes });
+  db.exec("SAVEPOINT query");
+  db.run("INSERT INTO node VALUES ('created', ?)", [fixture.kind]);
+  expect(() => db.transaction(() => {
+   db.run("INSERT INTO node VALUES ('rejected-a', ?)", [fixture.kind]);
+   db.run("INSERT INTO node VALUES ('rejected-b', 'NoSuchKind')");
+  })()).toThrow();
+  expect(count()).toEqual({ total: fixture.publishedNodes });
+  expect(db.query("SELECT 0 AS depth FROM node WHERE id = 'created' AND NOT EXISTS (SELECT 1 FROM edge WHERE edge.target = node.id)").get()).toEqual({ depth: fixture.createdDepth });
+  db.exec("ROLLBACK TO query");
+  expect(count()).toEqual({ total: fixture.initialNodes });
+  db.exec("SAVEPOINT deletion");
+  db.run("UPDATE document SET root = NULL");
+  db.run("DELETE FROM edge WHERE source = ? OR target = ?", [fixture.initialRoot, fixture.initialRoot]);
+  db.run("DELETE FROM node WHERE id = ?", [fixture.initialRoot]);
+  expect(db.query("SELECT root FROM document").get()).toEqual({ root: null });
+  expect(count()).toEqual({ total: fixture.afterRootDeletionNodes });
+  expect(db.query("SELECT count(*) AS total FROM edge").get()).toEqual({ total: fixture.afterRootDeletionEdges });
+  db.exec("ROLLBACK TO deletion");
+  expect(db.query("SELECT root FROM document").get()).toEqual({ root: fixture.initialRoot });
+  expect(count()).toEqual({ total: fixture.initialNodes });
+ } finally {
+  db.close();
+ }
+});
+
 test("Jack published inference propagates retained child refusal and reads full raw graph",async()=>{
  const contract=await Bun.file(new URL("./🧫️fixtures/🧭️topology.json",import.meta.url)).json();
  const vector=await Bun.file(new URL("./🧫️fixtures/🪆️retained.json",import.meta.url)).json(),parent=owner.parseJackJsonValue(vector.parent),raw=JSON.parse(JSON.stringify(vector.childSnapshot),(key,value)=>key==="bits"?BigInt("0x"+value):value);

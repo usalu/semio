@@ -4,11 +4,11 @@ import {fileURLToPath} from "node:url";
 import {verifySemanticDescriptorPairBytesV1} from "@semio-tech/plugin-registry/catalog-verification/descriptor-pair";
 import {validateDrawGuestScenarios} from "../../../../../../../🌎️hub/🧩️compositions/🖍️draw/🧪️tests/🌐️guest/🟦️.ts";
 
-const [componentPath, emitterPath] = process.argv.slice(2);
+const [componentPath, emitterPath, outputDirectory] = process.argv.slice(2);
 if (!componentPath || !emitterPath) throw Error("Expected linked Draw component and published descriptor emitter paths");
 const component = resolve(componentPath);
 const emitter = resolve(emitterPath);
-const out = fileURLToPath(new URL("./🗑️generated/fresh-draw-descriptor/", import.meta.url));
+const out = outputDirectory ? resolve(outputDirectory) : fileURLToPath(new URL("./🗑️generated/fresh-draw-descriptor/", import.meta.url));
 const header = Buffer.from(await Bun.file(component).slice(0, 8).arrayBuffer());
 if (header.toString("hex") !== "0061736d0d000100") throw Error("Expected a genuine WebAssembly component binary");
 const child = Bun.spawn([emitter, "describe", component, "--out", out], {

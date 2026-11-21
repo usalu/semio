@@ -271,7 +271,7 @@
       "id": "seated-office-worker",
       "category": "humans",
       "title": { "en": "Seated Office Worker", "de": "Büroarbeitende Person im Sitzen" },
-      "heightM": 1.413,
+      "heightM": 1.409,
       "widthM": 1.278,
       "powerW": 188.9,
       "poses": ["typing", "reading-screen", "leaning-back"],
@@ -290,8 +290,8 @@
       "id": "sleeping-person",
       "category": "humans",
       "title": { "en": "Sleeping Person", "de": "Schlafende Person" },
-      "heightM": 0.364,
-      "widthM": 1.919,
+      "heightM": 0.378,
+      "widthM": 1.922,
       "powerW": 70.9,
       "poses": ["supine", "side", "curled"],
       "clips": ["breathing", "turn-over"],
@@ -478,7 +478,7 @@
         "en": "Elderly Person with Cane",
         "de": "Ältere Person mit Gehstock"
       },
-      "heightM": 1.63,
+      "heightM": 1.644,
       "widthM": 0.5,
       "powerW": 125.6,
       "poses": [
@@ -799,7 +799,7 @@
         "de": "Angelehnte Person"
       },
       "heightM": 1.74,
-      "widthM": 0.54,
+      "widthM": 0.52,
       "powerW": 118.9,
       "poses": [
         "leaning-shoulder-wall",
@@ -1340,7 +1340,7 @@
         "en": "Labrador Dog",
         "de": "Labrador"
       },
-      "heightM": 0.72,
+      "heightM": 0.71,
       "widthM": 1.29,
       "powerW": 56.6,
       "poses": [
@@ -1447,7 +1447,7 @@
         "en": "Horse",
         "de": "Pferd"
       },
-      "heightM": 2.34,
+      "heightM": 2.33,
       "widthM": 2.9,
       "powerW": 576.2,
       "poses": [
@@ -1498,7 +1498,7 @@
         "en": "Rock Pigeon",
         "de": "Felsentaube"
       },
-      "heightM": 0.224,
+      "heightM": 0.225,
       "widthM": 0.315,
       "powerW": 2.6,
       "poses": [
@@ -1555,7 +1555,7 @@
         "de": "Reh"
       },
       "heightM": 1.122,
-      "widthM": 1.035,
+      "widthM": 1.038,
       "powerW": 56.9,
       "poses": [
         "alert",
@@ -1811,7 +1811,7 @@
       },
       "heightM": 1.18,
       "widthM": 1.6,
-      "powerW": 225,
+      "powerW": 385,
       "poses": [
         "seated-height",
         "mid-height",
@@ -2219,8 +2219,8 @@
         "en": "Excavator",
         "de": "Bagger"
       },
-      "heightM": 3.44,
-      "widthM": 9.64,
+      "heightM": 3.25,
+      "widthM": 9.63,
       "powerW": 110000,
       "poses": [
         "stowed",
@@ -3353,7 +3353,7 @@
         "de": "Schwangere Person"
       },
       "heightM": 1.7,
-      "widthM": 0.525,
+      "widthM": 0.531,
       "powerW": 135.2,
       "poses": [
         "hand-on-back",
@@ -3459,7 +3459,7 @@
         "de": "Sitzender Gitarrist"
       },
       "heightM": 1.519,
-      "widthM": 0.931,
+      "widthM": 0.917,
       "powerW": 187.8,
       "poses": [
         "strumming",
@@ -3820,7 +3820,7 @@
         "en": "Herring Gull",
         "de": "Silbermöwe"
       },
-      "heightM": 0.351,
+      "heightM": 0.347,
       "widthM": 0.603,
       "powerW": 5.7,
       "poses": [
@@ -4297,7 +4297,7 @@
         "de": "Funkienhorst"
       },
       "heightM": 0.618,
-      "widthM": 0.876,
+      "widthM": 0.982,
       "powerW": 0,
       "poses": [
         "summer-full",
@@ -5344,8 +5344,8 @@
         "en": "Aluminium Stepladder",
         "de": "Aluminium-Stehleiter"
       },
-      "heightM": 1.5,
-      "widthM": 0.68,
+      "heightM": 1.68,
+      "widthM": 1.017,
       "powerW": 0,
       "poses": [
         "open-empty",
@@ -6137,8 +6137,8 @@
         "en": "Sectional Garage Door",
         "de": "Sektionaltor"
       },
-      "heightM": 2.861,
-      "widthM": 2.62,
+      "heightM": 2.85,
+      "widthM": 2.675,
       "powerW": 0,
       "poses": [
         "closed",
@@ -6559,7 +6559,7 @@
       "category": "appliances",
       "title": { "en": "Wall-Mounted Hand Shower on Riser Rail", "de": "Handbrause an Brausestange" },
       "heightM": 1.12,
-      "widthM": 0.238,
+      "widthM": 0.245,
       "powerW": 0,
       "poses": ["off", "running", "eco"],
       "clips": ["turn-on-and-run", "eco-and-off"],

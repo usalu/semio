@@ -1,6 +1,8 @@
 //! 🏷️ DIN 4108 FieldSpec lookup — SI display units + human en/de choice labels (`[]` wildcards).
 
-use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, FieldSpec, UnitId};
+use semio_s_artifact_norm_din4108_checks::design_cases::Din4108Cases;
+use semio_s_plugin_norm_compliance::design_case::CaseCatalogue;
+use semio_s_plugin_norm_app_surface::{case_input_field_meta, lookup_norm_field_meta, NormFieldChoice, FieldSpec, UnitId};
 
 const fn choice(value: &'static str, label_en: &'static str, label_de: &'static str) -> NormFieldChoice {
     NormFieldChoice { value, label_en, label_de }
@@ -100,6 +102,17 @@ const ACOUSTIC: &[NormFieldChoice] = &[
 ];
 
 const TABLE: &[(&str, FieldSpec)] = &[
+    ("cases", FieldSpec::new("Pressure tests", "Differenzdruckmessungen")),
+    ("cases[].id", FieldSpec::new("Case id", "Fall-Id")),
+    ("cases[].labelEn", FieldSpec::new("Case label (English)", "Fallbezeichnung (Englisch)")),
+    ("cases[].labelDe", FieldSpec::new("Case label (German)", "Fallbezeichnung (Deutsch)")),
+    ("cases[].entryId", FieldSpec::new("Catalogue entry", "Katalogeintrag")),
+    ("cases[].numbers", FieldSpec::new("Case numbers", "Fallzahlen")),
+    ("cases[].numbers[].id", FieldSpec::new("Number id", "Zahlen-Id")),
+    ("cases[].numbers[].value", FieldSpec::new("Number value", "Zahlenwert")),
+    ("cases[].texts", FieldSpec::new("Case texts", "Falltexte")),
+    ("cases[].texts[].id", FieldSpec::new("Text id", "Text-Id")),
+    ("cases[].texts[].value", FieldSpec::new("Text value", "Textwert")),
     ("climateZone", FieldSpec::choice("Climate zone", "Klimazone", CLIMATE)),
     ("usage", FieldSpec::choice("Usage", "Nutzung", USAGE)),
     ("tIntC", FieldSpec::quantity("Indoor air temperature", "Raumlufttemperatur", UnitId::Celsius)),
@@ -159,7 +172,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
 
 /// 🏷️ Exact / `[]`-wildcard metadata for the DIN 4108 envelope subject.
 fn describe_din4108_field(path: &str) -> Option<FieldSpec> {
-    lookup_norm_field_meta(TABLE, path)
+    case_input_field_meta(Din4108Cases::vocabulary(), path).or_else(|| lookup_norm_field_meta(TABLE, path))
 }
 
 #[cfg(test)]
@@ -174,6 +187,6 @@ pub fn din4108_field_meta(path: &str) -> Option<FieldSpec> {
         semio_s_artifact_norm_din4108_mutations::EDIT_RULES.can_set_field(path),
         ),
         semio_s_artifact_norm_din4108_mutations::EDIT_RULES.can_insert_item(path),
-        semio_s_artifact_norm_din4108_mutations::EDIT_RULES.can_remove_item(path, std::iter::empty::<&str>()),
+        semio_s_artifact_norm_din4108_mutations::EDIT_RULES.can_remove_item(path, semio_s_artifact_norm_din4108_mutations::ID_REMOVALS.iter().map(|rule| rule.path)),
     )
 }

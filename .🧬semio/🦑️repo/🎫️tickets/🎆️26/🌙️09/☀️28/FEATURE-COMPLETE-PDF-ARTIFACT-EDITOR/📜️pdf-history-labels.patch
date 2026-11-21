@@ -1,0 +1,53 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️insert-object/🧬️schema/🔣️.json
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️insert-object/🧬️schema/🔣️.json
+@@ -74,2 +74,8 @@
+     "admittedStreamRoles": {
++      "x-semio-ui": {
++        "label": {
++          "en": "Admitted stream roles",
++          "de": "Übernommene Stream-Rollen"
++        }
++      },
+       "anyOf": [
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧹️remove-object/🧬️schema/🔣️.json
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧹️remove-object/🧬️schema/🔣️.json
+@@ -31,2 +31,8 @@
+     "admittedStreamRoles": {
++      "x-semio-ui": {
++        "label": {
++          "en": "Admitted stream roles",
++          "de": "Übernommene Stream-Rollen"
++        }
++      },
+       "anyOf": [
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔧️set-object-value/🧬️schema/🔣️.json
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔧️set-object-value/🧬️schema/🔣️.json
+@@ -74,2 +74,8 @@
+     "admittedStreamRoles": {
++      "x-semio-ui": {
++        "label": {
++          "en": "Admitted stream roles",
++          "de": "Übernommene Stream-Rollen"
++        }
++      },
+       "anyOf": [
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json
+@@ -5710,2 +5710,8 @@
+         "body": {
++          "x-semio-ui": {
++            "label": {
++              "en": "Image data",
++              "de": "Bilddaten"
++            }
++          },
+           "$ref": "#/$defs/PdfImageBody"
+@@ -8064,2 +8070,8 @@
+         "profile": {
++          "x-semio-ui": {
++            "label": {
++              "en": "ICC profile",
++              "de": "ICC-Profil"
++            }
++          },
+           "anyOf": [

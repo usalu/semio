@@ -1,0 +1,19 @@
+{
+  "body": "procedural.play.generate-form",
+  "controller": "framework",
+  "action": "setFormPage",
+  "windows": [
+    "generate-form",
+    "generate-form-2"
+  ],
+  "first": 0,
+  "second": 1,
+  "max": 4294967295,
+  "invalid": [
+    -1,
+    1.5,
+    4294967296,
+    "2"
+  ],
+  "later": 2
+}

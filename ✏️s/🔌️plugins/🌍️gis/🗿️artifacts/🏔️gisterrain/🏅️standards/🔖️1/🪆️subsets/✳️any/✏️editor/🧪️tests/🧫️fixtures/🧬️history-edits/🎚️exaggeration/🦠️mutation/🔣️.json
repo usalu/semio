@@ -1,0 +1,13 @@
+{
+  "mutation": {
+    "ChangeExaggeration": {
+      "newExaggeration": 2.5
+    }
+  },
+  "before": {
+    "exaggeration": 1.25
+  },
+  "after": {
+    "exaggeration": 2.5
+  }
+}

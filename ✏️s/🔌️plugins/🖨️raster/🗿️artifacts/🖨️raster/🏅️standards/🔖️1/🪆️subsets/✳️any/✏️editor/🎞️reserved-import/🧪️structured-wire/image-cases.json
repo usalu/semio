@@ -7,6 +7,8 @@
       "height": 1,
       "colorspace": "rgba",
       "bitDepth": 8,
+      "rgbaAllocationBytes": 4,
+      "storedPngBytes": 73,
       "rgba": [
         10,
         20,

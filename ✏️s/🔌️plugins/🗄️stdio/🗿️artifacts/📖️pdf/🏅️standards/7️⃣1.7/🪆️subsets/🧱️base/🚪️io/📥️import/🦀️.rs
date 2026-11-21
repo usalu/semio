@@ -8,7 +8,7 @@ use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, pdf_header
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts;
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::modules::lift::lift_document_with;
-use crate::standards::v1_7::subsets::base::modules::xref::{read_file_xref, ResolvedGraph, Resolver, XrefEntry, WRITER_TRAILER_KEYS};
+use crate::standards::v1_7::subsets::base::modules::xref::{normalize_pdf_object, read_file_xref, ResolvedGraph, Resolver, XrefEntry, WRITER_TRAILER_KEYS};
 use crate::standards::v1_7::subsets::base::schema::graph_source::GraphSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::HashMap;
@@ -98,8 +98,16 @@ fn read_clear_pdf_graph(data: &[u8]) -> PResult<Option<PdfByteGraph>> {
         match cursor.advance(data, grant, false).event {
             Ok(PdfByteGraphEvent::Object | PdfByteGraphEvent::More) => {}
             Ok(PdfByteGraphEvent::Complete) => {
-                let file = cursor.take(grant).expect("completed PDF byte graph under unbounded reference grants");
-                return Ok(Some(file.0));
+                let (mut file, _) = cursor.take(grant).expect("completed PDF byte graph under unbounded reference grants");
+                for object in &mut file.graph.objects {
+                    if matches!(&object.value, PdfObject::Stream { dict, filters, .. }
+                        if filters.is_empty()
+                            && dict_get(dict, "Subtype").and_then(PdfObject::as_name) == Some("Image")
+                            && dict.iter().any(|entry| matches!(entry.key.as_str(), "Filter" | "F"))) {
+                        object.value = normalize_pdf_object(std::mem::replace(&mut object.value, PdfObject::Null))?;
+                    }
+                }
+                return Ok(Some(file));
             }
             Ok(PdfByteGraphEvent::NotPdf) => break Err(PdfEngineError::NotPdf),
             _ => break Ok(None),

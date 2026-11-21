@@ -3,7 +3,7 @@
 use super::kit::*;
 use super::layout::Layout;
 use super::model::{En1993Snapshot, FatigueDetail};
-use super::norm::CheckReport;
+use super::norm::{AnnexChoice, CheckReport};
 use super::scene::projection_kit::diagram_parts::{axis, column, stroke};
 use super::scene::*;
 use super::{checks, SceneInput};
@@ -41,9 +41,9 @@ pub fn histogram(blocks: &[(f64, f64)]) -> Vec<(f64, f64)> {
 }
 
 /// 🧮️ Palmgren-Miner damage sum D of a detail from its blocks.
-pub fn damage(detail: &FatigueDetail) -> f64 {
+pub fn damage(detail: &FatigueDetail, annex: AnnexChoice) -> f64 {
     let spectrum: Vec<(f64, f64)> = blocks(detail).into_iter().map(|(r, n)| (r * 1.0e6, n)).collect();
-    part_1_9::miner_damage(&spectrum, part_1_9::detail_category_pa(detail.category), part_1_9::gamma_mf(part_1_9::parse_method(detail.method.as_str())))
+    part_1_9::miner_damage(&spectrum, part_1_9::detail_category_pa(detail.category), part_1_9::gamma_mf(detail.method, detail.consequence, annex))
 }
 
 fn bar(input: &SceneInput, id: String, name: LocalizedCopy, detail: LocalizedCopy, base: &Vec3, frame: &Frame, offset: f64, width: f64, depth: f64, height: f64, owner: &str, utilised: bool, out: &mut Out) {
@@ -104,7 +104,7 @@ pub fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
             let top = along(&along(&base, &f.y, at), &f.z, BAR_HEIGHT * 1.15 + 0.06);
             out.annotate(Annotation::Label { id: format!("{}:limit-{tag}-label", detail.id), anchor: top.clone(), text: loc(&text, &text_de), tone: Tone::Neutral }, &top);
         }
-        let total = damage(detail);
+        let total = damage(detail, input.document.annex);
         let offset = (CLASSES as f64 + 1.0) * (BAR_WIDTH + BAR_GAP);
         let text = format!("D = {total:.3} (limit 1)");
         let text_de = format!("D = {total:.3} (Grenze 1)");
@@ -171,7 +171,7 @@ pub fn diagrams(document: &En1993Snapshot, report: &CheckReport, focus: Option<&
             if classes.is_empty() {
                 return Vec::new();
             }
-            let total = damage(detail);
+            let total = damage(detail, document.annex);
             let ratio = report.checks.iter().find(|c| c.id == format!("en1993.1-9.fat.{}", detail.id)).map_or(total, |c| c.utilization);
             let status = tone(ratio);
             vec![rainflow(detail, &classes, total, status), damage_bar(detail, total, status)]

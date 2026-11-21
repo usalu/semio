@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-native-save"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-job-publication = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-os-kernel = { workspace = true }
+semio-plugin = { workspace = true }
+semio-s-artifact-stdio-pdf-schema-4 = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }

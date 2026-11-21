@@ -41,7 +41,7 @@ pub fn apply_ui_commands(commands: &mut Vec<semio_ui_wgpu_events::UiCommand>, po
                     continue;
                 }
                 let descriptor = intent.descriptor();
-                if let Err(fault) = publish_retained_action(input, window_id, &descriptor, intent) {
+                if let Err(fault) = publish_retained_action(input, window_id, descriptor, intent) {
                     input.record_action_fault(fault);
                     return;
                 }
@@ -85,13 +85,13 @@ pub fn apply_ui_commands(commands: &mut Vec<semio_ui_wgpu_events::UiCommand>, po
     drive_scene_interaction_step(input);
 }
 
-struct RetainedInputSubmission {
+pub struct RetainedInputSubmission {
     pub(super) token: std::num::NonZeroU64,
-    pub window: String,
-    pub draft: semio_ui_wgpu_engine::RetainedInputDraft,
+    window: String,
+    draft: semio_ui_wgpu_engine::RetainedInputDraft,
 }
 
-struct RetainedInputReceipts {
+pub struct RetainedInputReceipts {
     sequence: u64,
     pub slots: [Option<RetainedInputSubmission>; semio_ui_action::ACTION_QUEUE_ITEM_CAPACITY],
 }
@@ -106,7 +106,7 @@ pub static RETAINED_INPUT_RECEIPTS: WorkerCell<RetainedInputReceipts> = WorkerCe
 pub struct RetainedInputReceiptReservation(#[doc(hidden)] pub Option<semio_ui_action::ActionQueueReceipt>);
 
 #[cfg(not(any(test, feature = "testkit")))]
-struct RetainedInputReceiptReservation(Option<semio_ui_action::ActionQueueReceipt>);
+pub struct RetainedInputReceiptReservation(Option<semio_ui_action::ActionQueueReceipt>);
 
 impl Drop for RetainedInputReceiptReservation {
     fn drop(&mut self) { if let Some(receipt) = self.0.take() { settle_retained_input_receipt(receipt, false); } }
@@ -137,7 +137,20 @@ pub fn settle_retained_input_receipt(receipt: semio_ui_action::ActionQueueReceip
     if discard { if let Some(submission) = submission { UI_ENGINE.with(|cell| { cell.borrow_mut().discard_retained_input_draft(&submission.window, &submission.draft); }); } }
 }
 
-fn publish_retained_action(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, window_id: &str, action: &ActionDescriptor, intent: &semio_ui_action::UiIntentCommand) -> Result<(), semio_ui_action::BoundedActionFault> {
+fn publish_retained_action(input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>, window_id: &str, mut action: ActionDescriptor, intent: &semio_ui_action::UiIntentCommand) -> Result<(), semio_ui_action::BoundedActionFault> {
+    use semio_framework::DslValue;
+    if let Some(DslValue::Object(entries)) = action.args.as_mut() {
+        let field = intent.input_field();
+        if let Some(index) = entries.iter().position(|(key, value)| key == field && value.as_str().is_some_and(|text| text.len() > semio_ui_action::ACTION_STRING_BYTE_CAPACITY)) {
+            let (_, DslValue::String(text)) = entries.swap_remove(index) else { return Err(semio_ui_action::BoundedActionFault::Structure); };
+            entries.retain(|(key, _)| key != "windowId");
+            entries.push(("windowId".into(), DslValue::String(window_id.into())));
+            let mut receipt = reserve_retained_input_receipt(window_id, intent)?;
+            input.begin_retained_string_action_owned_with_receipt(action, field.into(), text, receipt.0)?;
+            receipt.0 = None;
+            return Ok(());
+        }
+    }
     let mut reservation = input.reserve_action(&action.controller_id, &action.action, semio_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;

@@ -4,7 +4,10 @@
  * @see ../../🧫️fixtures/🔄️continuous-rotation/🔣️.json — the wheel
  */
 import { readFileSync } from "node:fs";
+import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
+import { Quaternion, Vector3 } from "three";
+import { jointOf } from "../../🔨️modules/🧊️volume/🦴️skeleton/🟦️.ts";
 import type { Asset } from "../../🧬️schema/🟦️.ts";
 import { clipOf, sampleClip } from "../../🔨️modules/🎞️animation/🟦️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
@@ -66,6 +69,43 @@ describe("🔄️ continuous rotation", () => {
     const turn = JSON.parse(JSON.stringify(wheel)) as Asset;
     (turn.clips[0]!.keys[2]!.bones as Record<string, { angleDeg: number }>).wheel!.angleDeg = -360;
     expect(validateAsset(turn)).toEqual([]);
+  });
+
+  it("keeps an explicitly continuous shaft spinning through the loop seam", () => {
+    const shaftCase = fixture.shaft;
+    const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
+    const ajv = new Ajv({ strict: true });
+    ajv.addSchema(schema);
+    const acceptsJoint = ajv.compile({ $ref: schema.$id + "#/$defs/Joint" });
+    expect(acceptsJoint(shaftCase.joint)).toBe(true);
+    expect(acceptsJoint(shaftCase.boundedJoint)).toBe(true);
+    for (const joint of shaftCase.incompatibleJoints) expect(acceptsJoint(joint)).toBe(false);
+    const rotating = (joint: object, closingAngle: number): Asset => {
+      const asset = withWheel(joint);
+      const clip = asset.clips[0]!;
+      const keys = clip.keys.map((key, index) => ({
+        ...key,
+        bones: { [fixture.bone]: { twistDeg: index === clip.keys.length - 1 ? closingAngle : shaftCase.twistsDeg[index] } },
+      }));
+      const poses = asset.poses.map((pose) => ({ ...pose, bones: { [fixture.bone]: { twistDeg: pose.bones[fixture.bone]?.angleDeg ?? 0 } } }));
+      return { ...asset, poses, clips: [{ ...clip, keys }, ...asset.clips.slice(1)] };
+    };
+    const fullTurn = shaftCase.twistsDeg.at(-1);
+    const asset = rotating(shaftCase.joint, fullTurn);
+    expect(validateAsset(asset)).toEqual([]);
+    const shaft = asset.rig.bones.find((bone) => bone.id === fixture.bone)!;
+    expect(jointOf(shaft, false, true)).toEqual({ type: "revolute", axis: [1, 0, 0] });
+    for (const timeS of shaftCase.timesS) {
+      const state = evaluate(asset, { kind: "clip", clip: fixture.clip, timeS });
+      const bone = state.bones[fixture.bone]!;
+      const twistDeg = timeS * shaftCase.speedDegS;
+      expect(bone.offset.twistDeg).toBeCloseTo(twistDeg, 6);
+      const rotation = new Quaternion().setFromAxisAngle(new Vector3(-1, 0, 0), twistDeg * Math.PI / 180);
+      const reference = new Vector3(0, 1, 0).applyQuaternion(rotation);
+      expect(new Vector3(bone.frame.v.x, bone.frame.v.y, bone.frame.v.z).distanceTo(reference)).toBeLessThan(1e-6);
+    }
+    expect(validateAsset(rotating(shaftCase.joint, shaftCase.invalidClosingTwistDeg)).map((issue) => issue.code)).toContain("loop-closing");
+    expect(validateAsset(rotating(shaftCase.boundedJoint, fullTurn)).map((issue) => issue.code)).toContain("loop-closing");
   });
 
   it("wraps back to the first key when there is no closing key", () => {

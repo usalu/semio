@@ -1,0 +1,511 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/⚙️authority-core/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/⚙️authority-core/🦀️.rs
+@@ -2,49 +2,85 @@
+ 
+ use super::*;
+ 
++pub(crate) const TERRAIN_STROKE_CAPACITY: usize = 64;
++const _: () = assert!(TERRAIN_STROKE_CAPACITY * 3 + 9 <= semio_ui_action::ACTION_NODE_CAPACITY);
++
+ pub(crate) struct TerrainPress {
+-    origin: [f32; 2],
++    samples: Vec<[u32; 2]>,
++    stamps: usize,
+     terrain_revision: u64,
+     brush_digest: u64,
+ }
+ 
++impl TerrainPress {
++    fn sample(&mut self, next: [u32; 2], radius: u32, released: bool) -> bool {
++        let [column, row] = self.samples[self.samples.len() - 1];
++        let distance = column.abs_diff(next[0]).max(row.abs_diff(next[1]));
++        let spacing = ((radius + 1) / 2).max(1);
++        if distance == 0 || !released && distance < spacing {
++            return true;
++        }
++        self.stamps += distance.div_ceil(spacing) as usize;
++        if self.stamps > TERRAIN_STROKE_CAPACITY {
++            return false;
++        }
++        self.samples.push(next);
++        true
++    }
++}
++
++impl WorldAuthorityState {
++    /// 🖌️ Checks both an active brush stroke and a primary press still waiting in the intent queue.
++    pub fn terrain_stroke_armed(&self) -> bool {
++        self.interaction_authority.as_ref().is_some_and(|authority| {
++            authority.terrain_press.is_some() || authority.queue.primary_press_pending()
++                || authority.blocked.is_some_and(|intent| intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down)
++        })
++    }
++}
++
+ impl WorldInteractionAuthority {
+-    fn terrain_click(&mut self, session: &WorldSessionState, camera: &WorldCameraState, terrain: &WorldTerrainState, intent: &WorldInteractionIntent) -> Option<Option<WorldInteractionPlan>> {
+-        let Some((brush, brush_digest)) = terrain.terrain_brush() else {
++    fn terrain_stroke(&mut self, session: &WorldSessionState, camera: &WorldCameraState, terrain: &WorldTerrainState, intent: &WorldInteractionIntent) -> Option<Option<WorldInteractionPlan>> {
++        if matches!(intent.phase, WorldInteractionPhase::PointerLeave | WorldInteractionPhase::Cancel | WorldInteractionPhase::Wheel | WorldInteractionPhase::Close)
++            || intent.button != 0
++        {
+             self.terrain_press = None;
+             return None;
++        }
++        let Some((brush, brush_digest)) = terrain.terrain_brush() else {
++            let captured = self.terrain_press.take().is_some();
++            return captured.then_some(None);
+         };
+-        let [x, y] = [intent.x, intent.y];
+-        let moved = |press: &TerrainPress| (x - press.origin[0]).hypot(y - press.origin[1]) > CLICK_DRAG_THRESHOLD_PX;
+-        if matches!(intent.phase, WorldInteractionPhase::PointerLeave | WorldInteractionPhase::Cancel | WorldInteractionPhase::Wheel | WorldInteractionPhase::Close)
+-            || intent.button != 0
+-            || self.terrain_press.as_ref().is_some_and(moved) && intent.phase != WorldInteractionPhase::PointerButton
+-        {
+-            self.terrain_press = None;
+-        }
+-        if intent.down && intent.button == 0 && matches!(intent.phase, WorldInteractionPhase::PointerMove | WorldInteractionPhase::PointerDrag) {
++        let pressed = intent.phase == WorldInteractionPhase::PointerButton && intent.down;
++        let released = intent.phase == WorldInteractionPhase::PointerButton && !intent.down;
++        let dragged = intent.down && matches!(intent.phase, WorldInteractionPhase::PointerMove | WorldInteractionPhase::PointerDrag);
++        if !pressed && !released && !dragged {
++            return None;
++        }
++        let mut stroke = self.terrain_press.take();
++        if !pressed && !stroke.as_ref().is_some_and(|stroke| stroke.terrain_revision == terrain.terrain_revision && stroke.brush_digest == brush_digest) {
+             return Some(None);
+         }
+-        if intent.phase != WorldInteractionPhase::PointerButton || intent.button != 0 {
+-            return None;
+-        }
+-        if intent.down {
+-            self.terrain_press = pointer_in_pick_rect(session, x, y).map(|_| TerrainPress {
+-                origin: [x, y], terrain_revision: terrain.terrain_revision, brush_digest,
+-            });
+-            return Some(None);
+-        }
+-        if !self.terrain_press.take().is_some_and(|press| {
+-            !moved(&press) && press.terrain_revision == terrain.terrain_revision && press.brush_digest == brush_digest
+-        }) {
+-            return Some(None);
+-        }
+-        let Some((x, y, viewport)) = pointer_in_pick_rect(session, x, y) else { return Some(None) };
++        let Some((x, y, viewport)) = pointer_in_pick_rect(session, intent.x, intent.y) else { return Some(None) };
+         let (origin, direction) = ui_scene::math::projection_spec_ray_from_screen(
+             &camera.orbit.to_camera(), camera.projection_spec, x, y, viewport.w, viewport.h,
+         );
+-        let hit = terrain.pick_terrain_sample(origin.to_array().map(f64::from), direction.to_array().map(f64::from));
+-        Some(hit.and_then(|sample| plan_world3d_terrain_edit(session, intent.generation, brush, sample)))
++        let Some(hit) = terrain.pick_terrain_sample(origin.to_array().map(f64::from), direction.to_array().map(f64::from)) else { return Some(None) };
++        if pressed {
++            let mut samples = Vec::with_capacity(TERRAIN_STROKE_CAPACITY);
++            samples.push(hit);
++            self.terrain_press = Some(TerrainPress { samples, stamps: 1, terrain_revision: terrain.terrain_revision, brush_digest });
++            return Some(None);
++        }
++        let mut stroke = stroke.take().expect("a continued terrain stroke has a live press");
++        if !stroke.sample(hit, brush.arguments.radius, released) {
++            return Some(None);
++        }
++        if released {
++            return Some(plan_world3d_terrain_edit(session, intent.generation, brush, stroke.samples, terrain.terrain_revision, brush_digest));
++        }
++        self.terrain_press = Some(stroke);
++        Some(None)
+     }
+ 
+     /// 🧭️ A DRAINED queue is this lane's settle point — React's `CAMERA_SYNC_DEBOUNCE_MS`
+@@ -109,7 +145,16 @@
+         if self.closing || context.should_yield() {
+             return WorldInteractionAuthorityStep::Pending;
+         }
+-        if let Some(active) = self.active.take() {
++        if let Some(mut active) = self.active.take() {
++            if let WorldInteractionActive::Plan { plan, retirement } = &mut active {
++                if plan.cursor == 0 && plan.terrain_stroke.as_ref().is_some_and(|stroke| {
++                    terrain_state.terrain_style_pending()
++                        || stroke.revision != terrain_state.terrain_revision
++                        || terrain_state.terrain_brush().is_none_or(|(_, digest)| stroke.brush_digest != digest)
++                }) {
++                    *retirement = Some(WorldInteractionAuthorityStep::Stale);
++                }
++            }
+             return self.step_active(active, session_state, camera_state, selection_state, gumball_state, interaction_state, scene_state, generation, input, context);
+         }
+         if self.faulted {
+@@ -186,28 +231,28 @@
+             }
+             return WorldInteractionAuthorityStep::Idle;
+         };
++        if intent.generation < generation {
++            self.queue.retire_front(intent.generation);
++            context.consume_fuel(1);
++            return WorldInteractionAuthorityStep::Stale;
++        }
++        if intent.generation > generation {
++            self.faulted = true;
++            return WorldInteractionAuthorityStep::Fault;
++        }
++        if let Some(plan) = self.terrain_stroke(session_state, camera_state, terrain_state, &intent) {
++            self.active = plan.map(|plan| WorldInteractionActive::Plan { plan, retirement: None });
++            if self.active.is_none() {
++                self.queue.retire_front(intent.generation);
++            }
++            context.consume_fuel(1);
++            return if self.active.is_some() { WorldInteractionAuthorityStep::Pending } else { WorldInteractionAuthorityStep::Complete };
++        }
+         if !matches!(intent.phase, WorldInteractionPhase::Close | WorldInteractionPhase::PointerLeave | WorldInteractionPhase::Cancel) {
+             camera_state.camera_sync.at = Some([intent.x, intent.y]);
+             if intent.phase == WorldInteractionPhase::PointerButton && !intent.down {
+                 camera_state.camera_sync.owed = true;
+             }
+-        }
+-        if intent.generation < generation {
+-            self.queue.retire_front(intent.generation);
+-            context.consume_fuel(1);
+-            return WorldInteractionAuthorityStep::Stale;
+-        }
+-        if intent.generation > generation {
+-            self.faulted = true;
+-            return WorldInteractionAuthorityStep::Fault;
+-        }
+-        if let Some(plan) = self.terrain_click(session_state, camera_state, terrain_state, &intent) {
+-            self.active = plan.map(|plan| WorldInteractionActive::Plan { plan, retirement: None });
+-            if self.active.is_none() {
+-                self.queue.retire_front(intent.generation);
+-            }
+-            context.consume_fuel(1);
+-            return if self.active.is_some() { WorldInteractionAuthorityStep::Pending } else { WorldInteractionAuthorityStep::Complete };
+         }
+         if let Some(step) = self.step_handle_drag(session_state, camera_state, &intent, input, context) {
+             return step;
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🔖️interaction-transaction/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🔖️interaction-transaction/🦀️.rs
+@@ -447,6 +447,13 @@
+         self.slots[usize::from(self.head)].as_ref()
+     }
+ 
++    /// 🛷️ Whether primary contact is waiting in the pointer queue ahead of gesture recognition.
++    pub fn primary_press_pending(&self) -> bool {
++        (0..usize::from(self.len))
++            .filter_map(|offset| self.slots[(usize::from(self.head) + offset) % WORLD_INTERACTION_INTENT_CAPACITY].as_ref())
++            .any(|intent| intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && intent.down)
++    }
++
+     /// 🚪️ The last queued pointer move or leave, in publication order.
+     pub fn latest_hover_boundary(&self) -> Option<WorldInteractionPhase> {
+         (0..usize::from(self.len)).rev()
+@@ -565,6 +572,13 @@
+     pub numbers: [f64; 10],
+ }
+ 
++/// 🏔️ Ordered authored raster samples retained with the source identity during action admission.
++pub struct WorldTerrainStroke {
++    pub samples: Vec<[u32; 2]>,
++    pub revision: u64,
++    pub brush_digest: u64,
++}
++
+ pub struct WorldInteractionPlan {
+     pub revision: u64,
+     pub generation: u64,
+@@ -574,6 +588,7 @@
+     pub action_len: u16,
+     pub cursor: u16,
+     pub faulted: bool,
++    pub terrain_stroke: Option<WorldTerrainStroke>,
+ }
+ 
+ pub const TRANSLATE_SELECTION_ACTION_ID: &str = "translateSelection";
+@@ -584,7 +599,7 @@
+ 
+ impl WorldInteractionPlan {
+     pub fn new(revision: u64, generation: u64) -> Self {
+-        Self { revision, generation, bytes: Box::new([0; WORLD_INTERACTION_BYTE_CAPACITY]), byte_len: 0, actions: Box::new([None; WORLD_INTERACTION_ITEM_CAPACITY]), action_len: 0, cursor: 0, faulted: false }
++        Self { revision, generation, bytes: Box::new([0; WORLD_INTERACTION_BYTE_CAPACITY]), byte_len: 0, actions: Box::new([None; WORLD_INTERACTION_ITEM_CAPACITY]), action_len: 0, cursor: 0, faulted: false, terrain_stroke: None }
+     }
+ 
+     pub fn push_string(&mut self, value: &str) -> Option<WorldInteractionSpan> {
+@@ -641,7 +656,7 @@
+     }
+ 
+     pub fn terminal_is_empty(&self) -> bool {
+-        self.cursor == self.action_len && self.byte_len == 0
++        self.cursor == self.action_len && self.byte_len == 0 && self.terrain_stroke.is_none()
+     }
+ 
+     pub fn close_step(&mut self) -> bool {
+@@ -651,6 +666,7 @@
+             return false;
+         }
+         self.byte_len = 0;
++        self.terrain_stroke = None;
+         true
+     }
+ }
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/📜️plan-and-publish/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧵️interaction/📜️plan-and-publish/🦀️.rs
+@@ -203,14 +203,18 @@
+ 
+ pub const INTERACTION_TARGETS_EMPTY: &str = "[]";
+ 
+-pub(super) fn plan_world3d_terrain_edit(session: &WorldSessionState, generation: u64, brush: &semio_os_infinite_world_scene::TerrainBrushAction, [column, row]: [u32; 2]) -> Option<WorldInteractionPlan> {
++pub(super) fn plan_world3d_terrain_edit(session: &WorldSessionState, generation: u64, brush: &semio_os_infinite_world_scene::TerrainBrushAction, samples: Vec<[u32; 2]>, revision: u64, brush_digest: u64) -> Option<WorldInteractionPlan> {
++    let [column, row] = *samples.first()?;
+     let mut plan = WorldInteractionPlan::new(session.interaction_revision, generation);
+     let controller = plan.push_string(&session.controller_id)?;
+     let action_id = plan.push_string(&brush.action)?;
+     let operation = plan.push_string(&brush.arguments.operation)?;
++    let window = plan.push_string(session.window_instance_id.as_deref().unwrap_or(&session.surface_id))?;
++    let surface = plan.push_string(&session.surface_id)?;
++    plan.terrain_stroke = Some(semio_os_infinite_world_model::WorldTerrainStroke { samples, revision, brush_digest });
+     let action = WorldFlatAction {
+         kind: WorldFlatActionKind::TerrainEdit,
+-        strings: [Some(controller), Some(action_id), Some(operation), None, None, None, None, None],
++        strings: [Some(controller), Some(action_id), Some(operation), Some(window), Some(surface), None, None, None],
+         numbers: [f64::from(column), f64::from(row), f64::from(brush.arguments.radius), f64::from(brush.arguments.value), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+     };
+     plan.push_action(action).then_some(plan)
+@@ -270,6 +274,7 @@
+     }
+     if plan.cursor == plan.action_len {
+         plan.byte_len = 0;
++        plan.terrain_stroke = None;
+         return Ok(WorldInteractionStep::Complete);
+     }
+     let action = plan.actions[usize::from(plan.cursor)].expect("world interaction action cursor remains admitted");
+@@ -399,14 +404,33 @@
+             let controller = plan.string(action.strings[0].expect("terrain controller span"));
+             let action_id = plan.string(action.strings[1].expect("terrain action span"));
+             let operation = plan.string(action.strings[2].expect("terrain operation span"));
++            let window = plan.string(action.strings[3].expect("terrain window span"));
++            let surface = plan.string(action.strings[4].expect("terrain surface span"));
++            let samples = &plan.terrain_stroke.as_ref().expect("terrain stroke accompanies its action").samples;
+             let fields = ["column", "row", "radius", "value"];
+-            let bytes = semio_ui_action::checked_action_string_bytes(&[controller, action_id, "operation", operation, fields[0], fields[1], fields[2], fields[3]])?;
+-            let mut reservation = input.reserve_action(controller, action_id, bytes)?;
+-            let builder = reservation.builder();
+-            builder.begin_object(None)?;
++            let stroke_key = if samples.len() > 1 { "stroke" } else { "" };
++            let bytes = semio_ui_action::checked_action_string_bytes(&[
++                controller, action_id, "operation", operation, fields[0], fields[1], fields[2], fields[3],
++                "windowId", window, "surfaceId", surface, stroke_key,
++            ])?;
++            let mut reservation = input.reserve_action(controller, action_id, bytes)?;
++            let builder = reservation.builder();
++            builder.begin_object(None)?;
++            builder.string(Some("windowId"), window)?;
++            builder.string(Some("surfaceId"), surface)?;
+             builder.string(Some("operation"), operation)?;
+             for (field, value) in fields.into_iter().zip(action.numbers) {
+-                builder.number(Some(field), value)?;
++                builder.integer(Some(field), value as i64)?;
++            }
++            if samples.len() > 1 {
++                builder.begin_array(Some(stroke_key))?;
++                for &[column, row] in samples {
++                    builder.begin_array(None)?;
++                    builder.integer(None, i64::from(column))?;
++                    builder.integer(None, i64::from(row))?;
++                    builder.end_container()?;
++                }
++                builder.end_container()?;
+             }
+             builder.end_container()?;
+             reservation.publish()?;
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🎮️interaction-state/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🎮️interaction-state/🦀️.rs
+@@ -538,7 +538,12 @@
+             } else {
+                 continue;
+             };
+-            if enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_err() {
++            let accepted = if down && button == 0 && state.terrain.terrain_brush().is_some() && intent.phase == infinite_world::world::WorldInteractionPhase::PointerMove {
++                infinite_world::world::enqueue_world3d_events(&mut state.authority, [intent]).is_ok()
++            } else {
++                enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_ok()
++            };
++            if !accepted {
+                 self.input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
+                 return;
+             }
+@@ -635,6 +640,15 @@
+         DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(*pointer),
+         DispatchEvent::PointerLeave { pointer } => {
+             if pointer.kind != ui_render::PointerKind::Touch {
++                let terrain_captured = semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id).is_some_and(|target| {
++                    target.kind == semio_ui_declaration::ui::SurfaceKind::World3d
++                        && app.shell.surfaces.world3d_states.get(&target.host_id).is_some_and(|state| {
++                            state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
++                        })
++                });
++                if terrain_captured {
++                    app.handle_pointer_cancel(*pointer);
++                }
+                 app.shell.directory.presence_pointer = None;
+                 app.shell.input.leave_retained_pointer_window(pointer.id, &mut app.input);
+                 if !app.clear_node_graph_hover_except(None) { return; }
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/⌨️keyboard-and-palette/⌨️keyboard/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/⌨️keyboard-and-palette/⌨️keyboard/🦀️.rs
+@@ -308,10 +308,14 @@
+     /// the three doors to the verb cannot diverge. Before this wave the wgpu shell had NO undo chord
+     /// at all: undo was reachable only by opening the palette and typing "undo".
+     pub async fn handle_keyboard_async(&mut self, action: semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+-        if action == semio_ui_wgpu_input::KeyAction::Escape && self.surfaces.world3d_states.values().any(|state| state.authority.handle_drag_armed()) {
+-            for state in self.surfaces.world3d_states.values_mut().filter(|state| state.authority.handle_drag_armed()) {
++        let can_abort_world_gesture = |state: &infinite_world::world::World3dState| {
++            state.authority.handle_drag_armed()
++                || state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
++        };
++        if action == semio_ui_wgpu_input::KeyAction::Escape && self.surfaces.world3d_states.values().any(can_abort_world_gesture) {
++            for state in self.surfaces.world3d_states.values_mut().filter(|state| can_abort_world_gesture(state)) {
+                 if infinite_world::world::enqueue_world3d_events(&mut state.authority, [infinite_world::world::WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::Blur)]).is_err() {
+-                    return Err("world3d handle drag cancel refused: the intent queue is full".into());
++                    return Err("world3d gesture cancel refused: the intent queue is full".into());
+                 }
+             }
+             return Ok(());
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🖱️pointer-input/🔑️key-and-move/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🖱️pointer-input/🔑️key-and-move/🦀️.rs
+@@ -80,6 +80,13 @@
+                 semio_ui_declaration::ui::SurfaceKind::World3d => {
+                     if let Some(state) = self.surfaces.world3d_states.get_mut(&cancelled.host_id) {
+                         infinite_world::world::world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene);
++                        if state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
++                            && infinite_world::world::enqueue_world3d_events(&mut state.authority, [
++                                infinite_world::world::WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::CaptureLost)
++                            ]).is_err()
++                        {
++                            input.record_action_fault(semio_ui_action::BoundedActionFault::ItemCredits);
++                        }
+                     }
+                 }
+                 semio_ui_declaration::ui::SurfaceKind::NodeGraph => {
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/📜️journal-sequences/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/📜️journal-sequences/🦀️.rs
+@@ -197,32 +197,79 @@
+ }
+ 
+ #[test]
+-fn native_terrain_brush_click_dispatches_one_edit_and_drag_dispatches_none() {
+-    let _gate = semio_os_infinite_world_host::world_test_gate();
+-    let mut state = journey_state();
+-    state.terrain.set_terrain_interaction(Some(r#"{"terrainBrush":{"action":"sculptTerrain","arguments":{"operation":"lower-ground","radius":7,"value":-31}}}"#));
+-    state.terrain.set_terrain_json(Some(&serde_json::json!({
+-        "elevationGrid": { "bounds": [-0.01, -0.01, 0.01, 0.01], "rows": vec![vec![0; 33]; 33] }
+-    }).to_string()));
+-    semio_os_infinite_world_scene::apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
+-    let [x, y] = [280.0, 180.0];
+-    let modifiers = PointerModifiers::default();
+-    enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, true, 0, &modifiers));
+-    enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, false, 0, &modifiers));
+-    let actions = journal_actions(&mut state);
+-    let edits: Vec<_> = actions.iter().filter(|action| action.action == "sculptTerrain").collect();
+-    let [edit] = edits.as_slice() else { panic!("expected exactly one terrain edit") };
+-    let args = edit.args.as_ref().unwrap();
+-    assert_eq!(args["operation"].as_str(), Some("lower-ground"));
+-    for (name, value) in [("column", 16.0), ("row", 16.0), ("radius", 7.0), ("value", -31.0)] {
+-        assert_eq!(args[name].as_f64(), Some(value));
+-    }
+-
+-    enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, true, 0, &modifiers));
+-    enqueue(&mut state, WorldInteractionIntent::pointer_move(x + 20.0, y, 20.0, 0.0, true, 0, &modifiers));
+-    enqueue(&mut state, WorldInteractionIntent::pointer_move(x, y, -20.0, 0.0, true, 0, &modifiers));
+-    enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, false, 0, &modifiers));
+-    assert!(!journal(&mut state).iter().any(|action| action == "sculptTerrain"));
++fn native_terrain_brush_journals_one_typed_edit_only_for_a_complete_stroke() {
++    let _gate = semio_os_infinite_world_host::world_test_gate();
++    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️tests/📜️journal-sequences/🏔️terrain-stroke.json")).unwrap();
++    let viewport = |value| serde_json::from_value::<[f32; 2]>(value).unwrap();
++    let dimensions = law["viewport"].clone();
++    let modifiers = PointerModifiers::default();
++    for case in law["cases"].as_array().unwrap() {
++        let mut state = journey_state();
++        let [w, h] = viewport(dimensions.clone());
++        state.session.bounds = Rect::new(0.0, 0.0, w, h);
++        state.session.pick_bounds = state.session.bounds;
++        state.session.window_instance_id = Some("gis-terrain-window".into());
++        let brush = |value| serde_json::json!({
++            "activeUtility": "raiseTerrain",
++            "terrainBrush": { "action": "editElevation", "arguments": { "operation": "raise-lower", "radius": law["radius"], "value": value } }
++        }).to_string();
++        state.terrain.set_terrain_interaction(Some(&brush(law["value"].as_i64().unwrap())));
++        let terrain = |height| serde_json::json!({
++            "elevationGrid": { "bounds": law["bounds"], "rows": vec![vec![height; 33]; 33] }
++        }).to_string();
++        state.terrain.set_terrain_json(Some(&terrain(0)));
++        semio_os_infinite_world_scene::apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
++        let mut camera = state.camera.orbit.to_camera();
++        camera.position = ui_scene::math::Vec3::new(0.0, 0.0, 500.0);
++        camera.target = ui_scene::math::Vec3::ZERO;
++        camera.up = ui_scene::math::Vec3::new(0.0, 1.0, 0.0);
++        camera.zoom = 1.0;
++        camera.projection = CameraProjection3d::Orthographic;
++        state.camera.orbit = ui_scene::math::OrbitController::from_camera(&camera);
++        state.camera.projection_spec = semio_ui_viewport::Viewport3dProjectionSpec {
++            mode: semio_ui_viewport::Viewport3dProjectionMode::Orthographic {},
++            orientation: semio_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_ui_viewport::Viewport3dOrthographicView::Top },
++        };
++        let id = case["id"].as_str().unwrap();
++        let points = case["points"].as_array().unwrap();
++        let [x, y] = viewport(points[0].clone());
++        enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, true, 0, &modifiers));
++        assert!(journal_actions(&mut state).is_empty(), "{id} before movement");
++        let (mut x, mut y) = (x, y);
++        for point in points.iter().skip(1) {
++            let [next_x, next_y] = viewport(point.clone());
++            let intent = WorldInteractionIntent::pointer_move(next_x, next_y, next_x - x, next_y - y, true, 0, &modifiers);
++            semio_os_infinite_world_interaction::enqueue_world3d_events(&mut state.authority, [intent]).unwrap();
++            (x, y) = (next_x, next_y);
++        }
++        assert!(journal_actions(&mut state).is_empty(), "{id} before release");
++        match case["beforeRelease"].as_str() {
++            Some("captureLost") => enqueue(&mut state, WorldInteractionIntent::cancel(semio_os_infinite_world_model::WorldCancelReason::CaptureLost)),
++            Some("blur") => enqueue(&mut state, WorldInteractionIntent::cancel(semio_os_infinite_world_model::WorldCancelReason::Blur)),
++            Some("brushChange") => state.terrain.set_terrain_interaction(Some(&brush(12))),
++            Some("sourceChange") => state.terrain.set_terrain_json(Some(&terrain(1))),
++            None => {}
++            _ => panic!("unknown brush interruption"),
++        }
++        enqueue(&mut state, WorldInteractionIntent::pointer_button(x, y, false, 0, &modifiers));
++        let actions = journal_actions(&mut state);
++        if case["start"].is_null() {
++            assert!(actions.is_empty(), "{id} leaves no journal entry");
++            continue;
++        }
++        let [action] = actions.as_slice() else { panic!("{id} must publish one elevation edit") };
++        assert_eq!(action.action, "editElevation");
++        assert_eq!(action.controller_id, state.session.controller_id);
++        let args = serde_json::to_value(action.args.as_ref().unwrap()).unwrap();
++        assert_eq!(args["windowId"], "gis-terrain-window");
++        assert_eq!(args["surfaceId"].as_str(), Some(state.session.surface_id.as_str()));
++        assert_eq!(args["operation"], "raise-lower");
++        assert_eq!(args["radius"], law["radius"]);
++        assert_eq!(args["value"], law["value"]);
++        assert_eq!(args["column"], case["start"][0]);
++        assert_eq!(args["row"], case["start"][1]);
++        assert_eq!(args["stroke"], case["stroke"]);
++    }
+ }
+ 
+ #[test]
+--- /dev/null
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/📜️journal-sequences/🏔️terrain-stroke.json
+@@ -0,0 +1,17 @@
++{
++  "viewport": [560,360],
++  "bounds": [-0.0014373044546,-0.0014373044546,0.0014373044546,0.0014373044546],
++  "radius": 2,
++  "value": 31,
++  "cases": [
++    {"id":"click","points":[[280,180]],"start":[16,16]},
++    {"id":"turn","points":[[280,180],[300,180],[300,150],[280,150]],"start":[16,16],"stroke":[[16,16],[18,16],[18,19],[16,19]]},
++    {"id":"duplicate-cell","points":[[280,180],[281,181],[280,179],[280,180]],"start":[16,16]},
++    {"id":"capture-lost","points":[[280,180],[300,180]],"beforeRelease":"captureLost"},
++    {"id":"blur","points":[[280,180],[300,180]],"beforeRelease":"blur"},
++    {"id":"change-brush","points":[[280,180],[300,180]],"beforeRelease":"brushChange"},
++    {"id":"change-source","points":[[280,180],[300,180]],"beforeRelease":"sourceChange"},
++    {"id":"leave-terrain","points":[[280,180],[470,180],[300,180]]},
++    {"id":"overflow","points":[[130,180],[430,180],[130,180],[430,180]]}
++  ]
++}

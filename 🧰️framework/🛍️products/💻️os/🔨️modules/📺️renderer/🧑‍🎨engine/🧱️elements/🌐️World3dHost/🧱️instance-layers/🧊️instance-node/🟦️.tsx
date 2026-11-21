@@ -32,7 +32,7 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   position,
   scale,
   quaternion,
-  targets,
+  targets: sceneTargets,
   activeObjectId,
   selectionMode,
   selectedComponentIds,
@@ -124,7 +124,8 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
     [instance.id, onRootRef],
   );
   const chrome = useWorldInstanceChrome(instance.id, instance.objectKind);
-  const isActiveObject = instance.id === activeObjectId || (instance.interactionId != null && instance.interactionId === activeObjectId);
+  const componentPickable = instance.componentPickable !== false;
+  const isActiveObject = componentPickable && (instance.id === activeObjectId || (instance.interactionId != null && instance.interactionId === activeObjectId));
   const colors = semanticColorsFromPalette(palette);
   const celebratingIds = useCelebratingWorldInstanceIds();
   const provisional = useToolRunProvisional(instance) || instance.provisional === true;
@@ -137,16 +138,17 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   const glbColor = glbUsesEnvironmentColor ? environmentMaterial!.color! : style.meshColor;
   const glbEmissive = glbUsesEnvironmentColor && environmentMaterial?.emissive ? environmentMaterial.emissive : style.meshColor;
   const glbEmissiveIntensity = glbUsesEnvironmentColor && environmentMaterial?.emissive ? (environmentMaterial.emissiveIntensity ?? 1) : style.emissiveIntensity;
-  const instancePickEnabled = pickEnabled && !instance.disabled && !provisional;
+  const targets = componentPickable ? sceneTargets : { ...sceneTargets, vertex: false, edge: false, face: false };
   const meshReachable = !targets.exclusive || targets.mesh === true;
+  const instancePickEnabled = pickEnabled && !instance.disabled && !provisional && (componentPickable || meshReachable);
   const wholePickEnabled = instancePickEnabled && meshReachable;
   const lockedClickClears = instance.disabled === true;
-  const hoveredFaceId = hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
-  const hoveredVertexId = hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
-  const hoveredEdgeId = hoveredComponent?.mode === "edge" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
-  const selectedFaceIds = selectionMode === "face" ? selectedComponentIds : new Set<number>();
-  const selectedVertexIds = selectionMode === "vertex" ? selectedComponentIds : new Set<number>();
-  const selectedEdgeIds = selectionMode === "edge" ? selectedComponentIds : new Set<number>();
+  const hoveredFaceId = componentPickable && hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
+  const hoveredVertexId = componentPickable && hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
+  const hoveredEdgeId = componentPickable && hoveredComponent?.mode === "edge" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
+  const selectedFaceIds = componentPickable && selectionMode === "face" ? selectedComponentIds : new Set<number>();
+  const selectedVertexIds = componentPickable && selectionMode === "vertex" ? selectedComponentIds : new Set<number>();
+  const selectedEdgeIds = componentPickable && selectionMode === "edge" ? selectedComponentIds : new Set<number>();
   const previewFaceIds = isActiveObject && selectionMode === "face" ? previewComponentIds : new Set<number>();
   const previewVertexIds = isActiveObject && selectionMode === "vertex" ? previewComponentIds : new Set<number>();
   const previewEdgeIds = isActiveObject && selectionMode === "edge" ? previewComponentIds : new Set<number>();
@@ -255,6 +257,7 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
             <lineSegments
               onAfterRender={reportDraw}
               geometry={edgeGeometry}
+              raycast={worldInstanceMeshRaycast(componentPickable || meshReachable)}
               renderOrder={2}
               onClick={(event) => {
                 if (lockedClickClears) {
@@ -295,6 +298,7 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
             <points
               onAfterRender={reportDraw}
               geometry={pointGeometry}
+              raycast={worldInstanceMeshRaycast(componentPickable || meshReachable)}
               onClick={(event) => {
                 if (lockedClickClears) {
                   event.stopPropagation();

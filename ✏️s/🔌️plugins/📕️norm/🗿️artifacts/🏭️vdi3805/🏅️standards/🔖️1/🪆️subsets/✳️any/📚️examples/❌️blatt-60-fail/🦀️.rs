@@ -5,7 +5,7 @@ use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "blatt-60-fail";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Blatt 60 nonconforming", "Blatt 60 nicht konform")
+    LocalizedLabel::native("Blatt 60 missing record header", "Blatt 60 ohne Satzkopf")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/blatt-60-fail/🗣️.dsl.semio");

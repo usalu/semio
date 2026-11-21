@@ -38,8 +38,34 @@ impl<Op> protocol::ColdMutationKind<Din4108Snapshot, Op> for ChangeTIntC where O
 }
 
 //#region 🪢️Mounts
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
-#[path = "↩️inverse/🦀️.rs"]
-pub mod inverse;
+pub mod diff {
+    //! 🔺️ `change-t-int-c` diff — sets the indoor air temperature θ_i in °C, refused as a `mutation.invariant` outside the bound its leaf payload schema states.
+
+    use crate::change_t_int_c::ChangeTIntC;
+    use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+
+    pub fn diff(payload: &ChangeTIntC, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+        if !(payload.new_t_int_c.is_finite() && payload.new_t_int_c > -273.15) {
+            return protocol::MutationOutcome::fatal("mutation.invariant", "t_int_c must be a finite temperature above absolute zero (-273.15 °C).", Vec::<String>::new());
+        }
+        if base.t_int_c == payload.new_t_int_c {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "t_int_c already has this value.");
+        }
+        protocol::MutationOutcome::new(Din4108Diff { t_int_c: Some(payload.new_t_int_c), ..Default::default() })
+    }
+}
+pub mod inverse {
+    //! ↩️ `change-t-int-c` inverse.
+
+    use crate::change_t_int_c::ChangeTIntC;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+
+    pub fn inverse<Op>(_payload: &ChangeTIntC, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_t_int_c::ChangeTIntC> {
+        Ok((|| {
+        vec![Op::from(ChangeTIntC { new_t_int_c: base.t_int_c })]
+
+        })())
+    }
+}
 //#endregion 🪢️Mounts

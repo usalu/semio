@@ -1,10 +1,5 @@
 use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use crate::*;
-use semio_framework_io_ports::testkit::{bind, scene_content};
-
-fn bind_drawing() {
-    bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
-}
 
 fn sample_document() -> LayoutSnapshot {
     semio_s_artifact_layout_layout_model::io::text::snapshot::parse_dsl(semio_s_artifact_layout_layout_model::io::text::snapshot::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
@@ -292,6 +287,39 @@ async fn placed_drawing_shapes_its_kind_and_keeps_a_stroke_mark() {
     assert_eq!(image.preview, "stroke");
     let run = list.text_runs.iter().find(|run| run.content == "drawing").expect("kind label");
     assert_eq!(run.glyphs.len(), "drawing".chars().count());
+}
+
+#[test]
+fn placed_drawing_uses_the_authored_child_only_for_the_matching_target() {
+    use semio_framework_value::{DslValue, FromValue};
+    use semio_s_artifact_layout_layout_model::LayoutDrawingMember;
+    use serde_json::json;
+
+    let mut doc = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
+    doc.background_drawing = Some(LayoutDrawingMember::from_value(DslValue::from(json!({
+        "handle":{"childId":"drawing","target":{"artifactId":"original","dialect":{"artifactKind":"s.draw.drawing","standard":"1","subset":"*"}}}
+    }))).expect("authored Drawing reference"));
+    doc.links[0].artifact_kind = "s.draw.drawing".into();
+    doc.links[0].artifact_ref = "original".into();
+    let mut other_link = doc.links[0].clone();
+    other_link.id = "link-other-drawing".into();
+    other_link.artifact_ref = "other".into();
+
+    let page = &mut doc.pages[0];
+    let mut other_frame = page.frames.iter().find(|frame| frame.id() == "frame-image-1").unwrap().clone();
+    let Frame::Image { id, link_id, .. } = &mut other_frame else { panic!("Drawing frame") };
+    *id = "frame-other-drawing".into();
+    page.layers[0].object_ids.push(id.clone());
+    *link_id = other_link.id.clone();
+    page.frames.push(other_frame);
+    doc.links.push(other_link);
+
+    let page = &doc.pages[0];
+    let list = build_deferred_display_list(&doc, page, &page.id, &[], None, false, 0.0, 0.0, 1.0, None);
+    let image = |id: &str| list.images.iter().find(|image| image.object_id == id).unwrap();
+    assert_eq!(image("frame-image-1").drawing_bounds, Some([136.0, 435.0, 60.0, 40.0, 0.0]));
+    assert_eq!(image("frame-other-drawing").drawing_bounds, None);
+    assert_eq!(image("frame-other-drawing").preview, "stroke");
 }
 
 #[semio_framework_async_macros::async_test]

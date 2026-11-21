@@ -121,7 +121,7 @@ pub fn terrain_tile_mesh_key(surface_id: &str, z: u32, x: u32, y: u32) -> String
 /// renderer host drains it (`take_next_world3d_asset`) and hands the bytes back through
 /// [`apply_world3d_terrain_tile_bytes`]. Mirrors `TerrainTileRenderer.uploadOne` in
 /// `🗺️WorldTerrainLayer/🟦️.tsx`, including its `tileMiss` set: a tile whose bytes the terrain
-/// session refuses is never re-requested for this style.
+/// session refuses can be requested again after it scrolls out of view.
 ///
 /// 📡️ A full request table is back-pressure, not a fault: the next frame re-offers the tile.
 pub fn reserve_terrain_tile_fetch(session_state: &mut WorldSessionState, terrain_state: &mut WorldTerrainState, assets_state: &mut WorldAssetsState, tile_url_template: &str, (z, x, y): (u32, u32, u32)) {
@@ -147,11 +147,12 @@ pub fn reserve_terrain_tile_fetch(session_state: &mut WorldSessionState, terrain
 /// `TerrainTileRenderer.uploadOne`'s `upload_elevation_tile` call. A refusal (not a terrarium PNG)
 /// records a tile miss so the pipeline stops re-requesting it; the banded meshes are built by the
 /// next `sync_terrain_state` pass, which now sees a non-`null` `terrain_tile_mesh_json`.
-pub fn apply_world3d_terrain_tile_bytes(terrain_state: &mut WorldTerrainState, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
-    let uploaded = terrain_state.terrain_session.upload_elevation_tile(z, x, y, bytes);
-    if let Some(style) = terrain_state.terrain_style.as_ref() {
-        terrain_state.pending_terrain_tile_urls.remove(&terrain_tile_url(&style.tile_url_template, z, x, y));
+pub fn apply_world3d_terrain_tile_bytes(terrain_state: &mut WorldTerrainState, url: &str, z: u32, x: u32, y: u32, bytes: &[u8]) -> bool {
+    if terrain_state.terrain_style_pending() || terrain_state.pending_terrain_tile_urls.get(url) != Some(&(z, x, y)) {
+        return false;
     }
+    terrain_state.pending_terrain_tile_urls.remove(url);
+    let uploaded = terrain_state.terrain_session.upload_elevation_tile(z, x, y, bytes);
     if !uploaded {
         terrain_state.terrain_tile_misses.insert((z, x, y));
     }
@@ -294,7 +295,7 @@ impl WorldTerrainMeshCursor {
         if context.should_yield() || grant.maximum_items == 0 { return Ok((WorldTerrainMeshStep::Pending, Default::default())); }
         context.set_stage("terrainMesh");
         if context.is_cancelled() { self.faulted=Some(WorldDynamicFault::Canceled);context.consume_fuel(1);return Ok((WorldTerrainMeshStep::Pending,Default::default())); }
-        if source_revision != self.source_revision || terrain_revision != self.terrain_revision { self.faulted = Some(WorldDynamicFault::StaleToken); }
+        if self.faulted.is_none() && (source_revision != self.source_revision || terrain_revision != self.terrain_revision) { self.faulted = Some(WorldDynamicFault::StaleToken); }
         let closing=self.faulted.is_some();
         let result = if let Some(fault) = self.faulted {
             self.close_step(grant, context).map(|step| (if step.complete { WorldTerrainMeshStep::Fault(fault) } else { WorldTerrainMeshStep::Pending }, step.progress))
@@ -531,33 +532,43 @@ pub fn build_terrain_tile_mesh_oracle(mesh: &TerrainTileMeshPayload) -> Option<T
 /// origin, or exaggeration changes (their old positions/heights are baked into cached geometry and
 /// would otherwise render stale). Returns the mesh keys the caller must also evict from the GPU.
 pub fn apply_terrain_style_if_changed_state(session_state: &mut WorldSessionState, scene_state: &mut WorldSceneState, terrain_state: &mut WorldTerrainState) -> Vec<String> {
-    let signature = terrain_state.terrain_style.as_ref().map(|style| (style.tile_url_template.clone(), style.project_origin_lon, style.project_origin_lat, style.exaggeration));
-    if signature == terrain_state.terrain_applied_signature {
+    if !terrain_state.terrain_style_pending() {
         return Vec::new();
     }
-    terrain_state.terrain_revision = terrain_state.terrain_revision.wrapping_add(1).max(1);
-    if let Some(cursor) = terrain_state.terrain_build.as_mut() {
-        cursor.faulted = Some(WorldDynamicFault::StaleToken);
-    }
     let prefix = format!("terrain:{}:", session_state.surface_id);
-    let stale_keys: Vec<String> = scene_state.meshes.keys().filter(|key| key.starts_with(&prefix)).cloned().collect();
-    for key in &stale_keys {
-        if !retire_world_mesh(scene_state, key) {
-            return Vec::new();
+    let mut stale_keys = Vec::new();
+    let stale_key = scene_state.meshes.keys().find(|key| key.starts_with(&prefix)).cloned();
+    if let Some(key) = stale_key {
+        if !retire_world_mesh(scene_state, &key) {
+            return stale_keys;
+        }
+        if let Some(tile) = key.strip_prefix(&prefix).and_then(|tile| {
+            let mut parts = tile.split(':');
+            Some((parts.next()?.parse().ok()?, parts.next()?.parse().ok()?, parts.next()?.parse().ok()?))
+        }) {
+            terrain_state.terrain_built_tiles.remove(&tile);
+        }
+        stale_keys.push(key);
+        if scene_state.meshes.keys().any(|key| key.starts_with(&prefix)) {
+            return stale_keys;
         }
     }
+    terrain_state.terrain_revision = terrain_state.terrain_revision.wrapping_add(1).max(1);
     let visible = std::mem::take(&mut terrain_state.terrain_visible_tiles);
-    for (z, x, y) in visible {
-        terrain_state.terrain_session.evict_terrain_tile(z, x, y);
+    for tile in visible {
+        terrain_state.forget_tile(tile);
     }
     terrain_state.terrain_built_tiles.clear();
+    terrain_state.terrain_overlay_tiles.clear();
     terrain_state.pending_terrain_tile_urls.clear();
     terrain_state.terrain_tile_misses.clear();
     if let Some(style) = &terrain_state.terrain_style {
         terrain_state.terrain_session.set_project_origin(style.project_origin_lon, style.project_origin_lat);
         terrain_state.terrain_session.set_exaggeration(style.exaggeration);
     }
-    terrain_state.terrain_applied_signature = signature;
+    let elevation_grid = terrain_state.terrain_style.as_ref().and_then(|style| style.elevation_grid.clone());
+    terrain_state.terrain_session.set_elevation_grid(elevation_grid.clone());
+    terrain_state.terrain_applied_signature = terrain_state.terrain_style.as_ref().map(|style| (style.tile_url_template.clone(), style.project_origin_lon, style.project_origin_lat, style.exaggeration, elevation_grid));
     stale_keys
 }
 
@@ -573,6 +584,7 @@ pub fn apply_terrain_style_if_changed(session_state: &mut WorldSessionState, sce
 /// `state.meshes`/`state.mesh_versions`). The hypsometric ramp rides the mesh's OWN per-vertex
 /// colours, so the instance tint is neutral white — one draw per tile, never one per colour band.
 pub struct TerrainTileDraw {
+    pub tile: (u32, u32, u32),
     pub mesh_key: String,
     pub mesh_version: u64,
 }

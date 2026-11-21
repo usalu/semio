@@ -44,30 +44,8 @@
   block-size: 100%;
 }
 
-/* 👆️ A card the reader swipes to (phones, short windows, large text) fills the room its page leaves it: the whole width between the swipe hints and, at least, the whole height from the navbar to the footer, so its edges are the page's. */
-.staffage-entry {
-  display: flex;
-  inline-size: 100%;
-  min-block-size: 100%;
-}
-
-.staffage-entry > .staffage-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.staffage-entry [data-overview-card] {
-  inline-size: 100%;
-  flex: 1 1 auto;
-}
-
-.staffage-entry [data-slot="staffage-card-content"] {
-  min-block-size: 14rem;
-  overflow: hidden;
-}
-
 /* 🎞️ A walking figure is drawn inside its box. The box keeps the size its parent gave it, so the gait cannot resize the card, the grid or the page. */
-.staffage-app main {
+.staffage-app [data-staffage-shell-main] {
   overflow: hidden;
   contain: layout;
 }
@@ -103,8 +81,8 @@
   transition-duration: 0.001ms !important;
 }
 
-/* 🗂️ Off-screen cards in the whole-archive grid stay unrendered until they near the viewport. */
-.staffage-app [data-page="all"] ul > li {
+/* 🗂️ Reserve the height of the desktop card grid as its off-screen cells skip layout. */
+.staffage-app [data-page="all"] [data-preview-asset] {
   content-visibility: auto;
   contain-intrinsic-size: auto 18rem;
 }
@@ -120,4 +98,34 @@
   .staffage-app [data-overview-card] {
     outline: 1px solid currentColor;
   }
+}
+
+.staffage-phone-link,
+.staffage-asset-list-link,
+.staffage-asset-list-row > button,
+.staffage-app[data-staffage-phone] :is(button, select, summary, [data-staffage-nav-home]),
+.staffage-app[data-staffage-language-gate] button {
+  min-block-size: 44px;
+}
+
+.staffage-asset-list-row > button,
+.staffage-app[data-staffage-phone] :is(button, [data-staffage-nav-home]) {
+  min-inline-size: 44px;
+}
+
+.staffage-app[data-staffage-phone] [data-slot="navbar"] {
+  min-block-size: 44px;
+}
+
+.staffage-app[data-staffage-phone] [data-staffage-filters] :is(input, select) {
+  min-block-size: 44px;
+  font-size: 1rem;
+}
+
+.staffage-app[data-staffage-phone] [role="radiogroup"] {
+  flex-wrap: wrap;
+}
+
+.staffage-app[data-staffage-phone] [data-viewer] [data-stage] {
+  block-size: clamp(11rem, 45dvh, 27rem);
 }

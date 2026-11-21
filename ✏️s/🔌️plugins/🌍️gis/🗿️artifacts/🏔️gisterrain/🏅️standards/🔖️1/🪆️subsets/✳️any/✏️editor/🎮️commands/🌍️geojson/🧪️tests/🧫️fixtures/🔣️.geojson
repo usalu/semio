@@ -1,0 +1,28 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "yard",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[5.55, 50.61], [5.58, 50.61], [5.58, 50.64], [5.55, 50.64], [5.55, 50.61]],
+          [[5.56, 50.62], [5.56, 50.63], [5.57, 50.63], [5.57, 50.62], [5.56, 50.62]]
+        ]
+      },
+      "properties": { "name": "Survey yard", "ring": "property metadata", "tags": ["soil", null, true] }
+    },
+    {
+      "type": "Feature",
+      "id": 9007199254740993,
+      "geometry": { "type": "Point", "coordinates": [5.56, 50.62, 87.25] },
+      "properties": { "lon": "survey note", "id": "external code", "accuracy": {"horizontal": 0.3} }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "LineString", "coordinates": [[5.56, 50.62, 87.25], [5.57, 50.63, 92]] },
+      "properties": null
+    }
+  ]
+}

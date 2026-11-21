@@ -59,6 +59,23 @@ fn demonstrator_contributions() -> String {
     semio_framework_pack_json::to_json_string(&entries)
 }
 
+#[test]
+fn pool_filter_controls_have_localized_names() {
+    use semio_ui_locale::{Locale, Terminology};
+    for locale in [Locale::En, Locale::De] {
+        let labels = crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_plugin::ViewModel::new(locale, Terminology::Native));
+        let node = filter_bar(&SourcingCurationConfig::default(), labels).expect("initial filter bar");
+        for (key, label) in [
+            ("sourcing-filter-query", labels.search.as_str()),
+            ("sourcing-filter-typology", labels.col_typology.as_str()),
+            ("sourcing-filter-min-availability", labels.minimum_availability.as_str()),
+        ] {
+            let control = node.children.iter().find(|child| child.key.as_str() == key).expect("initial filter control");
+            assert_eq!(control.accessibility.label.as_ref().map(|name| name.0.as_str()), Some(label));
+        }
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn pool_render_respects_query_filter() {
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();

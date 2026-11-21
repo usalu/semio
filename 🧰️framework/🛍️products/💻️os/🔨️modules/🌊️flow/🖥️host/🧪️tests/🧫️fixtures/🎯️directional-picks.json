@@ -1,0 +1,34 @@
+{
+  "widget": {
+    "kind": "variable",
+    "name": "vector",
+    "schema": "number"
+  },
+  "cases": [
+    {
+      "lod": "detail",
+      "probe": "row",
+      "direction": "in"
+    },
+    {
+      "lod": "detail",
+      "probe": "row",
+      "direction": "out"
+    },
+    {
+      "lod": "micro",
+      "probe": "anchor",
+      "direction": "in"
+    },
+    {
+      "lod": "micro",
+      "probe": "anchor",
+      "direction": "out"
+    },
+    {
+      "lod": "normal",
+      "probe": "anchor",
+      "direction": "out"
+    }
+  ]
+}

@@ -48,6 +48,7 @@
       "required": ["id", "index"],
       "properties": {
        "id": {"type": "string"},
+       "viewTableBytes": {"type": "integer", "minimum": 0},
        "index": {"$ref": "#/definitions/LogicalIndex"}
       }
      }

@@ -82,8 +82,8 @@ impl LayoutMediaExportJob{
 
 }
 
-impl InteractiveJob for LayoutMediaExportJob{
- fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->LayoutExportTurn<'a>{
+impl LayoutMediaExportJob {
+ fn step_turn<'a>(&'a mut self,cx:&mut StepContext<'_>)->LayoutExportTurn<'a>{
   if !self.slot.settle(cx)?{return Ok(None)}if self.slot.publication.is_some(){return self.slot.advance(cx)}
   if self.pending_result.is_some()||self.result_published{self.completed=self.completion.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost its original completion receiver"))?.complete_original(&mut self.pending_result,&mut self.result_published,cx)?;return Ok(None)}
   let inner=self.inner.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media cannot drive an unadmitted body"))?;
@@ -92,7 +92,7 @@ impl InteractiveJob for LayoutMediaExportJob{
    let grant=cx.retained_grant();let fields=&mut self.metadata.as_mut().ok_or_else(||ValueError::invariant("layout media metadata absent"))?.0;
    for index in 0..2{let text=if index==0{LAYOUT_MEDIA_EXPORT_SCHEMA}else{"application/json"};let output=&mut fields[index];if output.capacity()<text.len(){if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<text.len(){return Ok(None)}output.try_reserve_exact(text.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"layout media result metadata birth refused"))?;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:output.capacity(),..Default::default()})?;cx.consume_fuel(1);return Ok(None)}if output.len()<text.len(){let count=(text.len()-output.len()).min(grant.maximum_copy_bytes);if grant.maximum_items==0||grant.maximum_depth==0||count==0{return Ok(None)}let start=output.len();output.extend_from_slice(&text.as_bytes()[start..start+count]);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;cx.consume_fuel(1);return Ok(None)}}
    let bytes=2*size_of::<ArtifactMediaExportResult>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(None)}
-   if let Some(credit)=inner.media_output_credit.as_ref(){credit.credit(LAYOUT_MEDIA_EXPORT_SCHEMA.len())?}
+   if let Some(credit)=inner.media_output_credit.as_ref(){credit.credit(LAYOUT_MEDIA_EXPORT_SCHEMA.len())?;}
    let chunks=inner.output_chunks.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout media lost supplied output roots"))?;
    let schema=String::from_utf8(std::mem::take(&mut fields[0])).map_err(|_|ValueError::invariant("original schema is not UTF-8"))?;let mime_type=String::from_utf8(std::mem::take(&mut fields[1])).map_err(|_|ValueError::invariant("original MIME is not UTF-8"))?;
    *self.pending_result=Some(Ok(ArtifactMediaExportResult{media_type:MediaType{class:MediaClass::TwoD,form:MediaForm::Vector},schema,mime_type,chunks}));cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(None);
@@ -122,7 +122,15 @@ impl InteractiveJob for LayoutMediaExportJob{
    let index=match address{semio_s_artifact_layout_layout_model::DrawingSourceAddress::Document=>0,semio_s_artifact_layout_layout_model::DrawingSourceAddress::Page(0)=>1,_=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media source differs from its captured first page").into())};
    let parent=sources.parent.as_ref().ok_or_else(||ValueError::invariant("layout media parent absent"))?;let read=&mut sources.drawings[index];if !read.advance(parent,address,OriginalExportDrawingContext{snapshot:parent.try_borrow()?.get(),children:&sources.children,operation:semio_plugin::app::child_read::OriginalChildMemberOperation::Command(&sources.operation)},cx)?{return Ok(None)}return read.step_core(parent,address,inner,cx)
   }
-  inner.step(cx)
+  inner.step_with_drawing_read(cx, None)
+ }
+}
+
+impl InteractiveJob for LayoutMediaExportJob {
+ fn step<'a>(
+  &'a mut self, cx: &mut StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>,
+ ) -> semio_framework_job::InteractiveJobStep<'a> {
+  semio_framework_job::InteractiveJobStep::from_callback(self.step_turn(cx))
  }
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,semio_framework_value::ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_ if self.slot.delivered=>self.slot.borrow_outcome(descriptor),_=>self.inner.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout outcome lost its original body"))?.borrow_outcome(descriptor)}}
  fn begin_close(&mut self){if let Some(inner)=self.inner.as_mut(){inner.begin_close()}}

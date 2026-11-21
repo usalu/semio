@@ -8,8 +8,7 @@ use super::*;
 pub struct PluginArtifactChannel {
     pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
     pub operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy,
-    pub(super) startup_failure:Option<semio_plugin_host::GuestRelayAdmissionFailure>,
-    pub(super) host_driver:Arc<semio_plugin_host::GuestRelayWakeDriver>,
+    pub(super) inference_origin_driver:Option<semio_plugin_host::GuestRelayWakeDriver>,
     /// 🐎️ The process-wide compiled runtime ([`shared_plugin_runtime`]), held as the `GuestRuntimes` enum: the inference lane registers it as a run origin, and it MUST be the same one that compiled `compiled`.
     /// 🧠️ The process-wide firstparty interpreter of the retained compiled component.
     pub runtime: Arc<GuestRuntimes>,
@@ -20,8 +19,8 @@ pub struct PluginArtifactChannel {
     pub descriptor: semio_framework::PackageDescriptor,
     pub app_ref: semio_framework::AppRef,
     pub actor_label: String,
-    pub(super) instances: HashMap<u32, semio_plugin_host::GuestInstance>,
-    pub(super) closing_instances:std::collections::BTreeSet<u32>,
+    pub(super) instances: HashMap<u32, Box<super::native_poll::NativePoll>>,
+    pub(super) closing_instances: std::collections::BTreeSet<u32>,
     pub(super) pending_exchanges: PendingExchangeRegistry<1>,
     pub(super) pending_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
     pub(super) rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
@@ -39,6 +38,46 @@ pub struct PluginArtifactChannel {
     /// [`Self::ensure_document_backbone`]. Cleared per instance by [`Self::discard_instance`],
     /// because a guest that was thrown away holds no binding.
     pub(super) backbone_bindings: std::collections::BTreeSet<u32>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl PluginArtifactChannel {
+    pub(super) fn operation_caps(&self) -> semio_plugin_host::GuestRelayOperationCaps {
+        use semio_plugin_host::{GuestRelayOperationCaps, GuestRelayOperationInfrastructure, GuestRelayOperationReserve, GuestRelayOperationTransit};
+        let policy = self.operation_policy;
+        GuestRelayOperationCaps::project(self.host_driver_policy, GuestRelayOperationReserve {
+            retained: policy.cleanup.retained,
+            work_fuel: policy.cleanup.work_fuel,
+            execution_fuel: policy.cleanup.execution_fuel,
+            maximum_microseconds: policy.cleanup.maximum_microseconds,
+        }, GuestRelayOperationTransit {
+            retained: policy.transit.retained,
+            work_fuel: policy.transit.work_fuel,
+        }, GuestRelayOperationInfrastructure {
+            retained: policy.infrastructure.retained,
+            work_fuel: policy.infrastructure.work_fuel,
+            maximum_cleanup_microseconds: policy.infrastructure.maximum_cleanup_microseconds,
+        })
+    }
+
+    pub(super) fn close_inference_origin_source(&mut self) {
+        if let Some(driver) = self.inference_origin_driver.as_ref() {
+            while !driver.close_root_step().expect("inference origin source retirement") {
+                std::thread::yield_now();
+            }
+            self.inference_origin_driver = None;
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for PluginArtifactChannel {
+    fn drop(&mut self) {
+        for instance in self.instances.keys().copied().collect::<Vec<_>>() {
+            self.discard_instance(instance);
+        }
+        self.close_inference_origin_source();
+    }
 }
 
 //#endregion 🔖️ArtifactChannel

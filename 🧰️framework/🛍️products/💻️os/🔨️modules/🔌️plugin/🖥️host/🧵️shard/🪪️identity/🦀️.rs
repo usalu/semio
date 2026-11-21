@@ -6,8 +6,9 @@ use semio_os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority
 use std::pin::Pin;
 
 /// 🎟️ Explicit independent receiving policy authored before the shard starts.
-#[derive(Clone,Copy,Debug,semio_framework_value::serde::Serialize,semio_framework_value::serde::Deserialize)]
+#[derive(Clone,Copy,Debug,semio_framework_value::serde::Serialize,semio_framework_value::serde::Deserialize,semio_framework_value::FromValue)]
 #[serde(crate="semio_framework_value::serde",rename_all="camelCase",deny_unknown_fields)]
+#[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct ShardIdentityPolicy{pub maximum_bytes:usize,pub grant:RetainedCloneGrant}
 
 /// 🏭️ The caller transfers a new consuming identity only at original actor registration.

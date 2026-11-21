@@ -39,11 +39,20 @@ impl GuestRelayOperationCaps {
  }
  /// 🧮️ Publishes the effective semantic ceilings without exposing or spending cleanup currency.
  pub fn admitted_request(self,request:GuestRelayOperationRequest)->Result<GuestRelayOperationRequest,ValueError>{
-  let bounded=self.bind_request(request)?;Ok(GuestRelayOperationRequest{work_units:request.work_units.min(bounded.operation_fuel-self.cleanup.work_fuel-self.transit.work_fuel-self.infrastructure.work_fuel),maximum_elapsed_microseconds:bounded.maximum_lifetime_microseconds,retained:intersect(consumable_remaining(consumable_remaining(consumable_remaining(bounded.operation,self.cleanup.retained)?,self.transit.retained)?,self.infrastructure.retained)?,request.retained)})
+  self.bind_request(request)?.admitted_bound_request(request)
+ }
+ fn admitted_bound_request(self,request:GuestRelayOperationRequest)->Result<GuestRelayOperationRequest,ValueError>{
+  let host_semantic=consumable_remaining(consumable_remaining(consumable_remaining(self.operation,self.cleanup.retained)?,self.transit.retained)?,self.infrastructure.retained)?;
+  let core_semantic=consumable_remaining(CORE_GUEST_RETAINED_LIMIT,self.infrastructure.retained)?;
+  Ok(GuestRelayOperationRequest{
+   work_units:request.work_units.min(self.operation_fuel-self.cleanup.work_fuel-self.transit.work_fuel-self.infrastructure.work_fuel),
+   maximum_elapsed_microseconds:self.maximum_lifetime_microseconds,
+   retained:intersect(intersect(host_semantic,core_semantic),request.retained),
+  })
  }
  /// 🌱️ Births one finite source at authenticated request admission using the real native clock and cancellation.
  pub fn issue(self,request:GuestRelayOperationRequest,clock:fn()->Option<u64>,cancelled:Box<dyn Fn()->bool+Send+Sync>)->Result<GuestRelayWakeDriver,ValueError>{
-  let caps=self.bind_request(request)?;let effective=self.admitted_request(request)?;
+  let caps=self.bind_request(request)?;let effective=caps.admitted_bound_request(request)?;
   let root=super::super::GuestRelayRootPolicy{operation:semio_framework_trace::allocate_operation_id().0,generation:semio_framework_trace::allocate_operation_id().0,turn_fuel:caps.turn_fuel,operation_fuel:caps.operation_fuel,turn_execution_fuel:caps.turn_execution_fuel,operation_execution_fuel:caps.operation_execution_fuel,maximum_turn_microseconds:caps.maximum_turn_microseconds,maximum_lifetime_microseconds:caps.maximum_lifetime_microseconds,max_effects:caps.max_effects,max_patch_bytes:caps.max_patch_bytes,max_frames:caps.max_frames};
   GuestRelayWakeDriver::new(GuestRelayDriverPolicy{root,admission:caps.admission,drive:caps.drive,wake:caps.wake,operation:caps.operation},clock,cancelled).map(|driver|{driver.original.try_lock().expect("new operation is unique").operation=Some(OperationBudget{request:effective,reserve:caps.cleanup,transit:caps.transit,infrastructure:caps.infrastructure,guest:guest::GuestLedger::default(),cleanup:false,closed:false});driver})
  }
@@ -71,8 +80,20 @@ impl GuestRelayOperationTransit{
 pub struct GuestRelayOperationInfrastructure{pub retained:RetainedCloneGrant,pub work_fuel:u64,pub maximum_cleanup_microseconds:u64}
 impl GuestRelayOperationInfrastructure{
  /// 🏗️ Guest bootstrap and close receive explicit authority distinct from transport and client work.
- pub fn validate(self)->Result<(),ValueError>{if self.work_fuel==0||self.maximum_cleanup_microseconds==0||self.retained.maximum_items==0||self.retained.maximum_depth==0{return Err(invalid("explicit positive guest infrastructure scope required"))}Ok(())}
+ pub fn validate(self)->Result<(),ValueError>{
+  if self.work_fuel==0||self.maximum_cleanup_microseconds==0||self.retained.maximum_items==0||self.retained.maximum_depth==0{return Err(invalid("explicit positive guest infrastructure scope required"))}
+  if intersect(self.retained,CORE_GUEST_RETAINED_LIMIT)!=self.retained{return Err(invalid("guest infrastructure exceeds the fixed Core wasm32 extent"))}
+  Ok(())
+ }
 }
+/// 📐️ Each fixed Core retained field must fit the Wasm32 guest, including the shared header before any receipts.
+const CORE_GUEST_RETAINED_LIMIT:RetainedCloneGrant=RetainedCloneGrant{
+ maximum_items:u32::MAX as usize,
+ maximum_copy_bytes:u32::MAX as usize,
+ maximum_capacity_bytes:u32::MAX as usize,
+ maximum_release_bytes:u32::MAX as usize,
+ maximum_depth:u32::MAX as usize,
+};
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn consumable_remaining(total:RetainedCloneGrant,reserve:RetainedCloneGrant)->Result<RetainedCloneGrant,ValueError>{
  if reserve.maximum_depth>total.maximum_depth{return Err(invalid("cleanup depth exceeds the operation ceiling"))}
@@ -94,12 +115,16 @@ fn spent(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind:
 pub(super) fn physical_policy(original:&super::WakeDriverState,policy:RetainedCloneGrant,retirement:bool)->Result<RetainedCloneGrant,ValueError>{
  let Some(operation)=&original.operation else{return Ok(policy)};
  if operation.closed{return Err(invalid("operation source is already closed"))};
- let available=operation.guest.physical_remaining(original.treasury.original_remaining())?;if retirement||operation.cleanup{return Ok(intersect(policy,available))}
+ let remaining=original.treasury.original_remaining();
+ let available=operation.guest.physical_remaining(remaining)?;if retirement||operation.cleanup{return Ok(intersect(policy,available))}
  let deadline=original.root.remaining_work().absolute_deadline_us.saturating_sub(operation.reserve.maximum_microseconds);
  if original.root.clock_source()().is_none_or(|now|now>=deadline){return Err(spent("semantic deadline exhausted with original cleanup window retained"))}
  let available=consumable_remaining(available,operation.reserve.retained)?;
  let policy=intersect(policy,available);
- if policy.maximum_items==0{return Err(spent("semantic operation currency exhausted with cleanup reserve retained"))}
+ if policy.maximum_items==0{
+  if std::env::var_os("RUST_BACKTRACE").is_some(){eprintln!("[DEBUG] poll physical currency: treasury {remaining:?}, semantic available after cleanup {:?}, cleanup {:?}, guest loan pending {}",available,operation.reserve.retained,operation.guest.pending());}
+  return Err(spent("semantic operation currency exhausted with cleanup reserve retained"))
+ }
  Ok(policy)
 }
 pub(super) fn scope_budget(original:&super::WakeDriverState,mut budget:semio_framework_job::StepBudget,retirement:bool)->Result<semio_framework_job::StepBudget,ValueError>{
@@ -112,17 +137,25 @@ pub(super) fn scope_budget(original:&super::WakeDriverState,mut budget:semio_fra
 impl GuestRelayWakeDriver {
  /// 🎚️ Request ceilings and the actual semantic deadline are DATA, never a minted Source callback.
  pub fn operation_request_limits(&self)->Result<(GuestRelayOperationRequest,u64),ValueError>{let original=self.original.try_lock().map_err(|_|invalid("request limits Source is borrowed"))?;let operation=original.operation.as_ref().ok_or_else(||invalid("request limits require their actual operation"))?;Ok((operation.request,original.root.remaining_work().absolute_deadline_us.saturating_sub(operation.reserve.maximum_microseconds)))}
+ /// 🔎️ Reads the next ordinary operation drive grant from the same physical policy used at checkout.
+ pub fn original_operation_drive_grant(&self)->Result<Option<RetainedCloneGrant>,ValueError>{
+  let Ok(original)=self.original.try_lock() else { return Ok(None) };
+  if original.checkout.is_some(){return Ok(None)}
+  physical_policy(&original,original.treasury.policy().drive,false).map(Some)
+ }
  /// 🌱️ Runs one synchronous original admission slice and returns every actual receipt before yielding.
- pub fn dispatch_admission_step(&self,requires_execution:bool,produce:impl FnOnce(Option<semio_framework_actor::OriginalGuestExecutionBudget>,&mut semio_framework_job::StepContext<'_>)->GuestRelayAdmissionCall)->Result<bool,GuestRelayAdmissionFailure>{self.dispatch_original_admission_step(requires_execution,false,produce)}
+ pub fn dispatch_admission_step(&self,requires_execution:bool,produce:impl FnOnce(Option<semio_framework_actor::OriginalGuestExecutionBudget>,&mut semio_framework_job::StepContext<'_>)->GuestRelayAdmissionCall)->Result<bool,GuestRelayAdmissionFailure>{self.dispatch_original_admission_step(requires_execution,false,false,produce)}
  /// 🧹️ Uses the same Source cleanup reserve and retirement context without admitting another source.
- pub fn dispatch_cleanup_admission_step(&self,requires_execution:bool,produce:impl FnOnce(Option<semio_framework_actor::OriginalGuestExecutionBudget>,&mut semio_framework_job::StepContext<'_>)->GuestRelayAdmissionCall)->Result<bool,GuestRelayAdmissionFailure>{self.dispatch_original_admission_step(requires_execution,true,produce)}
- fn dispatch_original_admission_step(&self,requires_execution:bool,cleanup:bool,produce:impl FnOnce(Option<semio_framework_actor::OriginalGuestExecutionBudget>,&mut semio_framework_job::StepContext<'_>)->GuestRelayAdmissionCall)->Result<bool,GuestRelayAdmissionFailure>{
+ pub fn dispatch_cleanup_admission_step(&self,requires_execution:bool,produce:impl FnOnce(Option<semio_framework_actor::OriginalGuestExecutionBudget>,&mut semio_framework_job::StepContext<'_>)->GuestRelayAdmissionCall)->Result<bool,GuestRelayAdmissionFailure>{self.dispatch_original_admission_step(requires_execution,true,false,produce)}
+ /// 📥️ Returns the Host's receiving aliases before attesting the retired guest producer.
+ pub fn dispatch_return_birth_close_step(&self,produce:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>)->Result<bool,GuestRelayAdmissionFailure>{self.dispatch_original_admission_step(false,true,true,|_,cx|GuestRelayAdmissionCall{result:produce(cx),execution:None})}
+ fn dispatch_original_admission_step(&self,requires_execution:bool,cleanup:bool,close_return_birth:bool,produce:impl FnOnce(Option<semio_framework_actor::OriginalGuestExecutionBudget>,&mut semio_framework_job::StepContext<'_>)->GuestRelayAdmissionCall)->Result<bool,GuestRelayAdmissionFailure>{
   if cleanup{let original=self.original.try_lock().map_err(|_|GuestRelayAdmissionFailure::from(invalid("cleanup original source is borrowed")))?;if !original.root.ready(){return Err(GuestRelayAdmissionFailure::from(invalid("cleanup requires an already admitted original source")))}}else if !self.admit_root_step().map_err(GuestRelayAdmissionFailure::from)?{return Ok(false)}
   let Some(input)=(if cleanup{self.begin_actor_cleanup_turn()}else{self.begin_actor_turn(None)}).map_err(|error|GuestRelayAdmissionFailure::from(semio_framework_job::OriginalTurnFailure::from(error)))?else{return Ok(false)};
   let execution=if requires_execution{match if cleanup{self.checkout_actor_cleanup_execution_budget(input)}else{self.checkout_actor_execution_budget(input)}{Ok(execution)=>Some(execution),Err(error)=>return Err(GuestRelayAdmissionFailure{closure:None,primary:Some(error.into()),settlement:self.finish_actor_step(input).err()})}}else{None};
-  let callback=|cx:&mut semio_framework_job::StepContext<'_>|Ok(produce(execution,cx));let call=match if cleanup{self.dispatch_actor_cleanup_step(input,callback)}else{self.dispatch_actor_step(input,callback)}{Ok(Some(call))=>call,Ok(None)=>return Err(GuestRelayAdmissionFailure{closure:None,primary:Some(invalid("issued admission context became unavailable").into()),settlement:self.finish_actor_step(input).err()}),Err(error)=>return Err(GuestRelayAdmissionFailure{closure:None,primary:Some(error),settlement:self.finish_actor_step(input).err()})};
+  let callback=|cx:&mut semio_framework_job::StepContext<'_>|Ok(produce(execution,cx));let call=match if close_return_birth{self.dispatch_actor_return_birth_close_step(input,|cx,closed|if closed{callback(cx)}else{Ok(GuestRelayAdmissionCall{result:Ok(()),execution:None})})}else if cleanup{self.dispatch_actor_cleanup_step(input,callback)}else{self.dispatch_actor_step(input,callback)}{Ok(Some(call))=>call,Ok(None)=>return Err(GuestRelayAdmissionFailure{closure:None,primary:Some(invalid("issued admission context became unavailable").into()),settlement:self.finish_actor_step(input).err()}),Err(error)=>return Err(GuestRelayAdmissionFailure{closure:None,primary:Some(error),settlement:self.finish_actor_step(input).err()})};
   if requires_execution&&call.execution.is_none(){return Err(GuestRelayAdmissionFailure{closure:None,primary:call.result.err(),settlement:Some(invalid("admission retains its missing original execution receipt").into())})}
-  if let Some(receipt)=call.execution{if let Err(error)=self.receive_actor_execution_receipt(input,receipt){return Err(GuestRelayAdmissionFailure{closure:None,primary:call.result.err(),settlement:Some(error.into())})}}
+  if let Some(receipt)=call.execution{if let Err(error)=self.receive_narrowed_actor_execution_receipt(input,receipt){return Err(GuestRelayAdmissionFailure{closure:None,primary:call.result.err(),settlement:Some(error.into())})}}
   let settled=self.finish_actor_step(input);
   match(call.result,settled){(Ok(()),Ok(_))=>Ok(true),(result,settlement)=>Err(GuestRelayAdmissionFailure{closure:None,primary:result.err(),settlement:settlement.err()})}
  }
@@ -158,14 +191,20 @@ pub(super) struct ExecutionCredit {pub budget:semio_framework_actor::OriginalGue
 pub(super) fn execution_fuel(original:&super::WakeDriverState,retirement:bool)->Result<u64,ValueError>{
  Ok(match &original.operation{Some(operation)if!retirement&&!operation.cleanup=>original.root.execution_fuel_remaining().saturating_sub(operation.reserve.execution_fuel),_=>u64::MAX})
 }
+fn refine_execution_work(issued:u64,observed:u64,performed:u128,redeemed:u64)->Result<u64,ValueError>{
+ let fresh=performed.checked_sub(u128::from(redeemed)).and_then(|work|u64::try_from(work).ok()).ok_or_else(||invalid("original VM fresh work receipt is inconsistent"))?;
+ let remaining=issued.checked_sub(fresh).ok_or_else(||spent("original VM callback work exceeds its issued Source work"))?;
+ Ok(observed.min(remaining))
+}
 impl GuestRelayWakeDriver {
  /// 🎟️ Lends one sealed VM authorization of this exact live callback and retains its actual receipt.
  fn execute_original(&self,cx:&mut semio_framework_job::StepContext<'_>,produce:impl FnOnce(semio_framework_actor::OriginalGuestExecutionBudget,&mut semio_framework_job::StepContext<'_>)->Option<semio_framework_actor::OriginalGuestExecutionReceipt>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-  let input=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;
+   let mut input=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;
   let mut state=self.execution.try_lock().map_err(|_|invalid("original VM crossing is exclusively borrowed"))?;
   let credit=state.as_mut().ok_or_else(||invalid("original callback has no issued VM credit"))?;
   if credit.claimed{return Err(invalid("original VM credit was already claimed by its callback").into())}
-  let budget=semio_framework_actor::OriginalGuestExecutionBudget{input,fuel:credit.budget.fuel,deadline_us:cx.deadline_us()};budget.validate_narrowing(credit.budget)?;credit.claimed=true;let receipt=produce(budget,cx);credit.receipt=receipt;let receipt=receipt.ok_or_else(||invalid("submitted VM crossing retains its missing actual receipt"))?;receipt.validate_for(budget)?;Ok(())
+   input.work.fuel=refine_execution_work(credit.budget.input.work.fuel,input.work.fuel,cx.original_work_units_spent(),cx.reserved_return_work())?;
+  let budget=semio_framework_actor::OriginalGuestExecutionBudget{input,fuel:credit.budget.fuel,deadline_us:cx.deadline_us()};budget.validate_narrowing(credit.budget)?;credit.claimed=true;let receipt=produce(budget,cx);credit.receipt=receipt;let receipt=receipt.ok_or_else(||invalid("submitted VM crossing retains its missing actual receipt"))?;receipt.budget.validate_narrowing(budget)?;receipt.validate_for(receipt.budget)?;Ok(())
  }
  /// 🔎️ The request owner removes refusal custody only after the actual source is empty.
  pub fn operation_terminal_is_empty(&self)->Result<bool,ValueError>{let original=self.original.try_lock().map_err(|_|invalid("operation source is borrowed"))?;Ok(original.root.terminal_is_empty()&&original.checkout.is_none()&&!original.operation.as_ref().is_some_and(|operation|operation.guest.escrow_pending())&&self.execution.try_lock().map_err(|_|invalid("original VM credit is borrowed"))?.is_none())}

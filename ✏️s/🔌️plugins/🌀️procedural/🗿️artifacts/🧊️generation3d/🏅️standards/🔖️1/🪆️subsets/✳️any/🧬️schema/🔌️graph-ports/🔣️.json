@@ -1,0 +1,131 @@
+{
+  "cases": [
+    {
+      "widget": "axis",
+      "channel": "vector",
+      "input": true,
+      "code": "!ivector",
+      "target": "axis@!ivector"
+    },
+    {
+      "widget": "axis",
+      "channel": "vector",
+      "input": false,
+      "code": "vector",
+      "target": "axis@vector"
+    },
+    {
+      "widget": "axis",
+      "channel": "!ivector",
+      "input": false,
+      "code": "!o!ivector",
+      "target": "axis@!o!ivector"
+    },
+    {
+      "widget": "axis",
+      "channel": "!ivector",
+      "input": true,
+      "code": "!i!ivector",
+      "target": "axis@!i!ivector"
+    },
+    {
+      "widget": "柱",
+      "channel": "半径",
+      "input": true,
+      "code": "!i半径",
+      "target": "柱@!i半径"
+    },
+    {
+      "widget": "axis",
+      "channel": "",
+      "input": true,
+      "code": "!i",
+      "target": "axis@!i"
+    },
+    {
+      "widget": "axis",
+      "channel": "",
+      "input": false,
+      "code": "!o",
+      "target": "axis@!o"
+    },
+    {
+      "widget": "a@b",
+      "channel": "solid",
+      "input": false,
+      "code": "solid",
+      "target": "a@b@solid",
+      "instance": "a@b@solid#0",
+      "index": 0
+    },
+    {
+      "widget": "a#b",
+      "channel": "!i@я#",
+      "input": false,
+      "code": "!o!i%40я%23",
+      "target": "a#b@!o!i%40я%23",
+      "instance": "a#b@!o!i%40я%23#23",
+      "index": 23
+    },
+    {
+      "widget": "a@b#c~d",
+      "channel": "x@y#z~%40",
+      "input": true,
+      "code": "!ix%40y%23z%7E%2540",
+      "target": "a@b#c~d@!ix%40y%23z%7E%2540",
+      "instance": "a@b#c~d@!ix%40y%23z%7E%2540#in-2",
+      "index": 2
+    },
+    {
+      "widget": "a",
+      "channel": "b@solid",
+      "input": false,
+      "code": "b%40solid",
+      "target": "a@b%40solid",
+      "instance": "a@b%40solid#0",
+      "index": 0
+    },
+    {
+      "widget": "柱@壁",
+      "channel": "",
+      "input": true,
+      "code": "!i",
+      "target": "柱@壁@!i",
+      "instance": "柱@壁@!i#in-0",
+      "index": 0
+    }
+  ],
+  "interactionCollision": {
+    "raw": "a@solid",
+    "widget": "a",
+    "channel": "solid",
+    "wire": { "source": "b", "sourceChannel": "solid", "target": "c", "targetChannel": "shape" },
+    "targets": [
+      { "granularity": "node", "target": "n:a@solid" },
+      { "granularity": "handle", "target": "h:a@solid" },
+      { "granularity": "edge", "target": "e:a@solid" }
+    ]
+  },
+  "wireEndpoints": [
+    {
+      "sourceNode": "a@b#c",
+      "sourceEndpoint": "a@b#c@x%40y",
+      "sourceChannel": "x@y",
+      "sourceCode": "x%40y",
+      "targetNode": "sink@u",
+      "targetEndpoint": "sink@u@a#b~%2540",
+      "targetChannel": "a#b~%40",
+      "targetCode": "!ia%23b%7E%2540"
+    },
+    {
+      "sourceNode": "node@",
+      "sourceEndpoint": "node@@",
+      "sourceChannel": "",
+      "sourceCode": "!o",
+      "targetNode": "sink",
+      "targetEndpoint": "sink@value",
+      "targetChannel": "value",
+      "targetCode": "!ivalue"
+    }
+  ]
+}

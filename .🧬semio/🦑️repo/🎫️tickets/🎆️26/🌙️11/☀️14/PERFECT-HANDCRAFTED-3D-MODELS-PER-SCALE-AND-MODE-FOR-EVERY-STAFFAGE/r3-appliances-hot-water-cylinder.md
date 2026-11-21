@@ -188,3 +188,46 @@ All renders were opened with the Read tool.
 - Masses sit inside the opaque vessel shells, as their real centres of mass do.
 
 Tool output was kept only under `🗑️generated/r3-hot-water-cylinder/` (deleted at the end), `r3-sheet`, `r3-2d` and `volumes-tools`.
+
+## Round 5 handcraft
+
+Process (round 5, 2026-11-21): rendered and opened with the Read tool, before and after: `r3-sheet` body, structure and `--list thermal --cut` at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50 and one clip frame, the `r3-2d` drawings of every drawn scale (1:500 has no drawing: its representation is unavailable, the 3D 1:500 is a digital scale). Coarse sheets were opened as 2 x 2 contact sheets (`r5-grid.ts`, half size). Measurements with `r5-e01-measure.ts` (world extents per solid in the default pose). Root edits through `r5-e01-roots.py` (candidate validated with `r3-validate.ts --file --volumes` before writing), volumes through the asset's `r5-<slug>-model.py` (which re-uses the hand-stated round-3 lists it keeps and states every new solid by hand), splice with `volumes-insert.py`. The round-3 reference table above stays the reference; the table below measures the model against it.
+
+### Model against reference (Viessmann Vitocell 100-V 200 l class, EN 12897, DIN 28011)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+|---|---|---|---|
+| Jacket diameter | 581 to 637 mm (class) | 600 mm | inside the class |
+| Height | 1349 to 1409 mm, class to 1530 mm | 1480 mm | inside the class |
+| Over the connections | 605 mm (CVAA) to about 660 mm | 660 mm | inside the class |
+| Pressure vessel | 480 mm OD, 3 mm wall, Kloepper heads (head depth 93 mm) | 480 mm, 3 mm, heads 107 / 93 mm below and above the shell | 0 % |
+| Feet | 3 at 120 degrees, 50 mm pads | 3 on a 0.25 m circle, 50 mm pads | 0 % |
+| Nipples | R 3/4 to R 1, union nuts | 24 mm tubes, 34 mm hex nuts (38 mm across corners) | 0 % |
+| Thermometer bezel | about 100 mm | 100 mm, 23 mm proud | 0 % |
+| 1:100 / 1:200 / 1:500 overall | 0.66 x 1.48 x 0.60 m | 0.66 x 1.48 x 0.61 / 0.60 / 0.60 m | within one feature |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- (unchanged, re-read: levelling feet, plinth, quarters, domed cover, nipples with nuts, thermometer, inspection cover; steel vessel nested in each quarter; Kloepper vessel on three splayed legs) |
+| 1:100 | A- / A- / A- | A- / A- / A- (unchanged) |
+| 1:200 | A- / B (plume outlet a 32 mm terraced crown on the cover) / A- | A- / A- / A- |
+| 1:500 | B (outlet and nipples 110 mm cubes) / C+ (plume outlet a 76 mm stack of terraces on the cover) / B+ (75 mm cube pads) | A- / A- / A- |
+| Poses cold, half-charged, charged, clip charge-up t 2 s | A- | A- (needle turns, nothing else moves) |
+| 2D 1:50 to 1:500 | A- | A- (unchanged) |
+
+### Changes
+
+- 1:200 and 1:500 thermal: the plume outlet is a 4 mm skin on the crown of the cover (D2, `texture: true` because it is a surface patch, not a mass) instead of 32 / 76 mm terraces.
+- 1:500 body: hot-water outlet and side nipples as round 110 mm stubs on their real axes (were cubes); thermal references follow.
+- 1:500 structure: the contact pads are 75 mm round pucks under the leg ends (were cubes).
+- No root edits. Final: `r3-validate.ts --volumes` VALID, `volumes-check.ts --product` PASS.
+
+### Remaining issues
+
+- The four jacket quarters show seams and tone steps: the asset's didactic thermal division, also drawn in 2D.
+- The top foam collar in the structure (the load path of the cover into the vessel) reads as a wide ring from outside; it is the real foam annulus between the top head and the cover.
+- Coil, anode and sensor wells not modelled (no region declares them).
+
+The five 24 mm side tappings have 17 mm bores, and the 30 mm crown outlet has a 22 mm bore. They penetrate the cover, insulation and tank shell at their individual heights. The charging coil and dry sensor pocket remain distinct. The independent reload opened 12 scenes in 2,767,620 bytes, and all 984 integer paper checks on the final document passed.

@@ -20,6 +20,7 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-norm-en1998-schema-formulas = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-tie-beams = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-silos-tanks = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-slopes = { workspace = true }

@@ -179,16 +179,16 @@ pub fn entity_screen_json(viewport_state: &DagViewportState, graph: &DagGraphSta
                 }
                 nearest_center_screen(&all)
             } else {
-                id.split_once('@').and_then(|(widget_id, port)| handle_world_bounds(widget_id, port))
+                id.rsplit_once('@').and_then(|(widget_id, port)| handle_world_bounds(widget_id, port))
             }
         }
         "edge" => {
             let edge = if id == "*" { graph.host_snapshot.edges.first() } else { graph.host_snapshot.edges.iter().find(|edge| edge.id == id) };
             let Some(edge) = edge else { return semio_framework_pack_json::to_json_string(&unresolved) };
-            let Some((source_widget, source_port)) = edge.source.split_once('@') else { return semio_framework_pack_json::to_json_string(&unresolved) };
-            let Some((target_widget, target_port)) = edge.target.split_once('@') else { return semio_framework_pack_json::to_json_string(&unresolved) };
-            let Some(source_bounds) = handle_world_bounds(source_widget, source_port) else { return semio_framework_pack_json::to_json_string(&unresolved) };
-            let Some(target_bounds) = handle_world_bounds(target_widget, target_port) else { return semio_framework_pack_json::to_json_string(&unresolved) };
+            let Some((source_widget, source_port)) = semio_os_infinite_directed_presentation::parse_dag_endpoint(&edge.source) else { return semio_framework_pack_json::to_json_string(&unresolved) };
+            let Some((target_widget, target_port)) = semio_os_infinite_directed_presentation::parse_dag_endpoint(&edge.target) else { return semio_framework_pack_json::to_json_string(&unresolved) };
+            let Some(source_bounds) = handle_world_bounds(source_widget, &source_port) else { return semio_framework_pack_json::to_json_string(&unresolved) };
+            let Some(target_bounds) = handle_world_bounds(target_widget, &target_port) else { return semio_framework_pack_json::to_json_string(&unresolved) };
             let (_, source_center) = world_rect_to_screen(source_bounds.0, source_bounds.1, source_bounds.2, source_bounds.3);
             let (_, target_center) = world_rect_to_screen(target_bounds.0, target_bounds.1, target_bounds.2, target_bounds.3);
             let midpoint = ((source_center.0 + target_center.0) * 0.5, (source_center.1 + target_center.1) * 0.5);
@@ -215,7 +215,7 @@ impl RetireOwned for DagViewportState {
 }
 
 impl RetireOwned for DagGraphState {
- type RetirementCursor=semio_framework_value::retirement_fields_type!(DagHostSnapshot,DagBoardEngine,HistoryFoldIndex<NodeId,usize>,HistoryFoldIndex<HandleId,String>,HistoryFoldIndex<HandleId,PortShape>,HistoryFoldIndex<HandleId,bool>,HistoryFoldIndex<EdgeId,String>,Vec<Option<EdgeId>>,HistoryFoldIndex<EdgeId,EdgeRouteStyle>,Vec<DagGraphEdit>,Option<DagJournalRefusal>);
- fn retirement_seed(self)->Self::RetirementCursor{let Self{host_snapshot,engine,node_id_map,handle_key_map,handle_port_shape,handle_port_visible,edge_id_map,edge_engine_ids,edge_route_style,pending_graph_edits,journal_refusal}=self;semio_framework_value::retirement_fields_seed!(host_snapshot,engine,node_id_map,handle_key_map,handle_port_shape,handle_port_visible,edge_id_map,edge_engine_ids,edge_route_style,pending_graph_edits,journal_refusal)}
+ type RetirementCursor=semio_framework_value::retirement_fields_type!(DagHostSnapshot,DagBoardEngine,Vec<HandleId>,HistoryFoldIndex<NodeId,usize>,HistoryFoldIndex<HandleId,String>,HistoryFoldIndex<HandleId,PortShape>,HistoryFoldIndex<HandleId,bool>,HistoryFoldIndex<EdgeId,String>,Vec<Option<EdgeId>>,HistoryFoldIndex<EdgeId,EdgeRouteStyle>,Vec<DagGraphEdit>,Option<DagJournalRefusal>);
+ fn retirement_seed(self)->Self::RetirementCursor{let Self{host_snapshot,engine,hover_ports,node_id_map,handle_key_map,handle_port_shape,handle_port_visible,edge_id_map,edge_engine_ids,edge_route_style,pending_graph_edits,journal_refusal}=self;semio_framework_value::retirement_fields_seed!(host_snapshot,engine,hover_ports,node_id_map,handle_key_map,handle_port_shape,handle_port_visible,edge_id_map,edge_engine_ids,edge_route_style,pending_graph_edits,journal_refusal)}
  fn controlled_retirement_supported()->bool{true}
 }

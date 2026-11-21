@@ -12,11 +12,14 @@ import type { Asset } from "../../🧬️schema/🟦️.ts";
 import { writeFbx } from "../../🔨️modules/📤️export/🎬️fbx/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { frameTimes, modelOf } from "../../🔨️modules/🧊️volume/🟦️.ts";
+import { catalogAsset } from "../../🧫️fixtures/🌡️thermal/🟦️.ts";
 import { fixture } from "../🧰️support/🧰️.ts";
 import { loadFbx, sampleFigure } from "../🧰️support/🧊️.ts";
 
 type Joint = Record<string, unknown>;
 type Vectors = {
+  gullWing: { asset: string; primaries: number; secondaries: number; minimumSpanM: number; maximumSpanM: number; foldDeg: number; glideDeg: number };
+  passengers: { asset: string; root: string; neck: string; head: string; outlets: [string, string][]; segments: string[] }[];
   joints: Record<string, Joint>;
   variants: { name: string; pose: string; poseBones: Record<string, unknown>; jointPatch: Record<string, Record<string, unknown>> | null; bone: string; expected: Joint }[];
   clips: Record<string, { fps: number; durationS: number; keys: number }>;
@@ -41,6 +44,63 @@ const expectedWorld = (frame: { o: { x: number; y: number; z: number }; u: { x: 
 const worldOf = (document: ModelDocument, pose: Parameters<typeof poseModel>[1]) => poseModel(document, pose);
 
 describe("🧊️ the rig as the neutral node tree", () => {
+  it("folds and opens the gull’s remiges from their anatomical attachments at all four scales", () => {
+    const f = vectors.gullWing, asset = catalogAsset(f.asset);
+    const bones = new Map(asset.rig.bones.map(b => [b.id,b]));
+    const vector = (p: { x: number; y: number; z: number }) => new Vector3(p.x,p.y,p.z);
+    for (const [pose, degrees] of [["standing",f.foldDeg],["gliding",f.glideDeg]] as const) {
+      const state = evaluate(asset, { kind:"pose", pose }), tips: number[] = [];
+      for (const side of ["n","f"]) {
+        for (const [series,count,parent] of [["p",f.primaries,"hand"],["s",f.secondaries,"forearm"]] as const) {
+          for (let i = 1; i <= count; i++) {
+            const id = series+i+"-"+side;
+            expect(bones.get(id)?.parent).toBe(parent+"-"+side);
+            for (const vol of Object.values(asset.volumes ?? {})) {
+              if (vol.status !== "authored") throw new Error(id);
+              const solid = vol.body.find(q => q.bone === id);
+              expect(solid, id).toBeDefined();
+              expect(vol.thermal.some(q => "of" in q && q.of === solid!.id), id).toBe(true);
+              expect(vol.structure.some(q => q.member === id), id).toBe(true);
+            }
+          }
+        }
+        const axis = (i: number) => vector(state.bones["p"+i+"-"+side]!.frame.u);
+        expect(axis(1).angleTo(axis(f.primaries))*180/Math.PI).toBeCloseTo(degrees,5);
+        const id = "p9-"+side, frame = state.bones[id]!.frame;
+        tips.push(vector(frame.o).addScaledVector(vector(frame.u),bones.get(id)!.lengthM).z);
+      }
+      if (pose === "gliding") {
+        const span = Math.abs(tips[1]!-tips[0]!);
+        expect(span).toBeGreaterThan(f.minimumSpanM);
+        expect(span).toBeLessThan(f.maximumSpanM);
+      }
+    }
+  });
+
+  it.each(vectors.passengers)("keeps the $asset passenger’s joints and respiratory landmarks attached at all scales", (p) => {
+    const asset = catalogAsset(p.asset);
+    const parentOf = (id: string) => asset.rig.bones.find(b => b.id === id)?.parent;
+    expect(parentOf(p.head)).toBe(p.neck);
+    expect(parentOf(p.neck)).toBe(p.root);
+    for (const volume of Object.values(asset.volumes ?? {})) {
+      expect(volume.status).toBe("authored");
+      if (volume.status !== "authored") throw new Error(p.asset);
+      for (const id of [p.neck, p.head, ...p.segments]) {
+        expect(volume.body.some(s => s.bone === id), id).toBe(true);
+        expect(volume.structure.some(s => s.member === id), id).toBe(true);
+      }
+      for (const [landmark, id] of p.outlets) {
+        const anchor = asset.anchors.find(q => q.id === landmark)!;
+        const outlet = volume.thermal.find(q => q.id === id);
+        expect(anchor.bone).toBe(p.head);
+        if (!outlet || !("bone" in outlet) || !outlet.transform?.translation) throw new Error(id);
+        expect(outlet.bone).toBe(p.head);
+        const distance = new Vector3(...outlet.transform.translation).distanceTo(new Vector3(anchor.x, anchor.y, anchor.z ?? 0));
+        expect(distance, id).toBeLessThan(0.001);
+      }
+    }
+  });
+
   it("makes one node per bone, parents first, with the hand-computed joints and a free root", async () => {
     const asset = sampleFigure();
     const document = await modelOf(asset, OPTIONS);

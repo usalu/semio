@@ -11,6 +11,7 @@
   },
   "grants": {
     "blocked": { "maximumItems": 0, "maximumBytes": 4096 },
-    "advance": { "maximumItems": 1, "maximumBytes": 1 }
+    "undersized": { "maximumItems": 1, "maximumBytes": 1 },
+    "advance": { "maximumItems": 1, "maximumBytes": 4096 }
   }
 }

@@ -1,0 +1,79 @@
+{
+  "base": {
+    "now": 450000,
+    "began": 200000,
+    "attested": 250000,
+    "lag": 0,
+    "probeMilliseconds": 10,
+    "store": true,
+    "local": true
+  },
+  "cases": [
+    {
+      "row": {},
+      "expected": true
+    },
+    {
+      "row": {
+        "began": 330001
+      },
+      "expected": false
+    },
+    {
+      "row": {
+        "attested": 330001
+      },
+      "expected": false
+    },
+    {
+      "row": {
+        "began": null
+      },
+      "expected": false
+    },
+    {
+      "row": {
+        "attested": null
+      },
+      "expected": false
+    },
+    {
+      "row": {
+        "store": false
+      },
+      "expected": false
+    },
+    {
+      "row": {
+        "local": false
+      },
+      "expected": false
+    },
+    {
+      "row": {
+        "lag": 2001
+      },
+      "expected": false
+    },
+    {
+      "row": {
+        "probeMilliseconds": 5001
+      },
+      "expected": false
+    },
+    {
+      "row": {
+        "now": 210000,
+        "began": 300000
+      },
+      "expected": false
+    }
+  ],
+  "receipt": {
+    "version": 1,
+    "reason": "git-metadata-progress-stall",
+    "scope": "git-heal-metadata",
+    "pid": 7,
+    "began": 200000
+  }
+}

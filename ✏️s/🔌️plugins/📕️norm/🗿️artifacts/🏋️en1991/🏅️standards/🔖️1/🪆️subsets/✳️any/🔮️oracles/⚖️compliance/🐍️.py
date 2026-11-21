@@ -44,6 +44,8 @@ def gumbel_ratio(cov_or_k: float, p: float, mode: str) -> float:
         d = stats.gumbel_r(loc=1.0, scale=cov_or_k)
         return float(d.ppf(1 - p) / d.ppf(0.98))
     v = cov_or_k
+    if v == 0.0:
+        return 1.0
     scale = v * math.sqrt(6) / math.pi
     d = stats.gumbel_r(loc=1.0 - np.euler_gamma * scale, scale=scale)
     return float(d.ppf(1 - p) / d.ppf(0.98))
@@ -175,6 +177,14 @@ def ev(entry: str, annex: str, n: dict, s: dict, v: dict):
         out["delta_q"] = KN * next(q for limit, q in PARTITION_BANDS[annex] if line <= limit * KN)
     elif entry == "E11.09":
         out["pressure"] = n["load"] / (n["a"] * n["b"])
+    elif entry == "E12.03" and de:
+        gamma = n["bb_gamma"]
+        if s["bb_source"] == "survey":
+            out["q_fd"] = max(50.0, n["bb_survey_mj"] * gamma) * 1e6
+        else:
+            fire_load = {"dwelling": 1085, "office": 584, "hospital": 320, "hotel": 431,
+                         "library": 2087, "school": 397, "shopping": 835, "theatre": 417, "transport": 139}
+            out["q_fd"] = gamma * (fire_load[s["occupancy"]] * n["bb_use_chi"] + n["bb_construction_mj"]) * 1e6
     elif entry == "E12.03":
         if any(n.get(key, 0.0) or s.get(key) for key in ACTIVE_MEASURE_INPUTS):
             raise ValueError("active fire-fighting measures are not modelled by this oracle")
@@ -186,14 +196,21 @@ def ev(entry: str, annex: str, n: dict, s: dict, v: dict):
         cat, area, st = s["category"], n["area"], n["storeys"]
         psi0 = 1.0 if cat.startswith("E") else 0.7
         if de:
-            out["alpha_a"] = min(1.0, max(0.7, 0.5 + 10 / math.sqrt(area))) if cat[0] in "CDE" else 1.0
-        elif cat[0] in "AB":
-            out["alpha_a"] = min(1.0, 5 / 7 * psi0 + 10 / area)
-        elif cat[0] in "CD":
-            out["alpha_a"] = min(1.0, max(0.6, 5 / 7 * psi0 + 10 / area))
+            if cat.startswith(("A", "B")) or cat == "Z":
+                out["alpha_a"] = min(1.0, 0.5 + 10 / area)
+            elif cat.startswith(("C", "D")) or cat == "E1.1":
+                out["alpha_a"] = min(1.0, 0.7 + 10 / area)
+            else:
+                out["alpha_a"] = 1.0
+            out["alpha_n"] = 0.7 + 0.6 / st if st > 2 and (cat[0] in "ABCD" or cat == "Z") else 1.0
         else:
-            out["alpha_a"] = 1.0
-        out["alpha_n"] = min(1.0, (2 + (st - 2) * psi0) / st) if cat[0] in "ABCD" and st > 2 else 1.0
+            if cat[0] in "AB":
+                out["alpha_a"] = min(1.0, 5 / 7 * psi0 + 10 / area)
+            elif cat[0] in "CD":
+                out["alpha_a"] = min(1.0, max(0.6, 5 / 7 * psi0 + 10 / area))
+            else:
+                out["alpha_a"] = 1.0
+            out["alpha_n"] = min(1.0, (2 + (st - 2) * psi0) / st) if cat[0] in "ABCD" and st > 2 else 1.0
     elif entry == "E12.01":
         t, c = n["t_min"], s["curve"]
         th = {"standard": lambda t: 20 + 345 * np.log10(8 * t + 1), "external": lambda t: 20 + 660 * (1 - 0.687 * np.exp(-0.32 * t) - 0.313 * np.exp(-3.8 * t)), "hydrocarbon": lambda t: 20 + 1080 * (1 - 0.325 * np.exp(-0.167 * t) - 0.675 * np.exp(-2.5 * t))}[c](t)
@@ -302,7 +319,11 @@ def ev(entry: str, annex: str, n: dict, s: dict, v: dict):
     elif entry == "E16.01":
         days = n["duration_days"]
         years = 2.0 if days <= 3 else 5.0 if days <= 90 else 10.0 if days <= 365 else 50.0
-        out.update({"c_prob": gumbel_ratio(0.2, 1 / years, "wind") ** 0.5, "snow_factor": gumbel_ratio(0.4, 1 / years, "snow")})
+        out["c_prob"] = gumbel_ratio(0.2, 1 / years, "wind") ** 0.5
+        if years >= 5:
+            out["snow_factor"] = gumbel_ratio(0.4, 1 / years, "snow")
+        else:
+            out["snow_probability"] = 1 / years
     elif entry == "E16.03":
         cp = gumbel_ratio(0.2, n["p"], "wind") ** 0.5
         out.update({"c_prob": cp, "v_b": n["v_b"] * cp, "q_b": 0.5 * n.get("rho", 1.25) * (n["v_b"] * cp) ** 2})
@@ -611,7 +632,7 @@ def snapshot_checks(doc: dict) -> list[dict]:
         if cat not in table:
             continue
         r = ev("E11.04", annex, {"area": floor.get("area", 1.0), "storeys": storeys}, {"category": cat}, {})
-        out.append({"id": f"en1991.1-1.imposed.{floor['id']}", "required": KN * table[cat] * r["alpha_a"] * r["alpha_n"], "assumed": floor["assumedQk"]})
+        out.append({"id": f"en1991.1-1.imposed.{floor['id']}", "required": KN * table[cat] * r["alpha_a"], "assumed": floor["assumedQk"]})
     density = {"reinforced_concrete": 25.0, "concrete": 24.0, "cement_screed": 22.0, "steel": 78.5 if de else 77.0, "timber": 5.0, "glass": 25.0}
     for el in doc.get("selfWeightElements", []):
         if el["material"] in density:

@@ -1,6 +1,6 @@
 //! 🧪️ The real original action factory constructs one typed command and its exact borrowed Pack wire.
 use super::*;
-use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,default_now_us};
+use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,close_original_retained_step,default_now_us};
 use semio_framework_dsl_record::{BorrowedRecordSpec as R,BorrowedFieldSpec as F,BorrowedShape as S,RecordLayout,native_encoding::{FieldProjectionSource,FieldProjectionView as V}};
 use semio_framework_value::RetainedCloneGrant;
 #[derive(semio_framework_value::RetireOwned)]struct Command{kind:String,text:String}

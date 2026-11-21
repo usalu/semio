@@ -104,7 +104,7 @@ impl Parser {
             let edge_var = if matches!(self.peek(), Token::Ident(_)) { Some(self.expect_ident()?) } else { None };
             let edge_kind = if matches!(self.peek(), Token::Colon) {
                 self.bump();
-                Some(self.expect_ident()?)
+                Some(self.expect_kind()?)
             } else {
                 None
             };
@@ -122,8 +122,15 @@ impl Parser {
     pub(super) fn parse_pattern_node(&mut self) -> Result<PatternNode, String> {
         let var = self.expect_ident()?;
         self.expect(&Token::Colon)?;
-        let kind = self.expect_ident()?;
+        let kind = self.expect_kind()?;
         Ok(PatternNode { var, kind })
+    }
+
+    fn expect_kind(&mut self) -> Result<String, String> {
+        match self.bump() {
+            Token::Ident(kind) | Token::StringLit(kind) => Ok(kind),
+            other => Err(format!("expected kind, got {other:?}")),
+        }
     }
 
     pub(super) fn parse_return_item(&mut self) -> Result<ReturnItem, String> {

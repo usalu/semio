@@ -45,6 +45,13 @@ import { type ChangeLayerMaterialId, parseChangeLayerMaterialId } from "./🧽�
 import { type InsertZoneWindow, parseInsertZoneWindow } from "./🪟insert-zone-window/🧬️schema/🟦️.ts";
 import { parseRemoveElement, type RemoveElement } from "./🚫️remove-element/🧬️schema/🟦️.ts";
 import { parseRemoveZoneWindow, type RemoveZoneWindow } from "./🚫️remove-zone-window/🧬️schema/🟦️.ts";
+import { type InsertCase, parseInsertCase } from "./➕️insert-case/🧬️schema/🟦️.ts";
+import { type RemoveCase, parseRemoveCase } from "./➖️remove-case/🧬️schema/🟦️.ts";
+import { type ChangeCaseNumber, parseChangeCaseNumber } from "./🔢️change-case-number/🧬️schema/🟦️.ts";
+import { type ChangeCaseText, parseChangeCaseText } from "./🔤️change-case-text/🧬️schema/🟦️.ts";
+import { type ChangeCaseLabelEn, parseChangeCaseLabelEn } from "./🏷️change-case-label-en/🧬️schema/🟦️.ts";
+import { type ChangeCaseLabelDe, parseChangeCaseLabelDe } from "./🏷️change-case-label-de/🧬️schema/🟦️.ts";
+import { type ChangeCaseEntryId, parseChangeCaseEntryId } from "./📇️change-case-entry-id/🧬️schema/🟦️.ts";
 
 export type Din4108Mutation =
   | { ChangeClimateZone: ChangeClimateZone }
@@ -89,7 +96,14 @@ export type Din4108Mutation =
   | { ChangeZoneWindowOrientation: ChangeZoneWindowOrientation }
   | { ChangeZoneWindowInclinationDeg: ChangeZoneWindowInclinationDeg }
   | { ChangeLayerApplicationType: ChangeLayerApplicationType }
-  | { ChangeLayerCompressiveClass: ChangeLayerCompressiveClass };
+  | { ChangeLayerCompressiveClass: ChangeLayerCompressiveClass }
+  | { InsertCase: InsertCase }
+  | { RemoveCase: RemoveCase }
+  | { ChangeCaseNumber: ChangeCaseNumber }
+  | { ChangeCaseText: ChangeCaseText }
+  | { ChangeCaseLabelEn: ChangeCaseLabelEn }
+  | { ChangeCaseLabelDe: ChangeCaseLabelDe }
+  | { ChangeCaseEntryId: ChangeCaseEntryId };
 
 export const parseDin4108Mutation: NormWireReader<Din4108Mutation> = normWireExternal<Din4108Mutation>({
   ChangeClimateZone: parseChangeClimateZone,
@@ -134,5 +148,12 @@ export const parseDin4108Mutation: NormWireReader<Din4108Mutation> = normWireExt
   ChangeZoneWindowOrientation: parseChangeZoneWindowOrientation,
   ChangeZoneWindowInclinationDeg: parseChangeZoneWindowInclinationDeg,
   ChangeLayerApplicationType: parseChangeLayerApplicationType,
+  InsertCase: parseInsertCase,
+  RemoveCase: parseRemoveCase,
+  ChangeCaseNumber: parseChangeCaseNumber,
+  ChangeCaseText: parseChangeCaseText,
+  ChangeCaseLabelEn: parseChangeCaseLabelEn,
+  ChangeCaseLabelDe: parseChangeCaseLabelDe,
+  ChangeCaseEntryId: parseChangeCaseEntryId,
   ChangeLayerCompressiveClass: parseChangeLayerCompressiveClass,
 });

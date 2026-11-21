@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "name": "uncontended",
+      "nested": false,
+      "before": 17,
+      "after": 19,
+      "hostBefore": 25,
+      "hostAfter": 19,
+      "lane": 0.75,
+      "expected": 2
+    },
+    {
+      "name": "nested-writer-completed",
+      "nested": true,
+      "before": 17,
+      "after": 19,
+      "hostBefore": 25,
+      "hostAfter": 19,
+      "lane": 0.75,
+      "expected": 0.75
+    },
+    {
+      "name": "image-snapshot-unavailable",
+      "nested": false,
+      "before": null,
+      "after": 19,
+      "hostBefore": 25,
+      "hostAfter": 19,
+      "lane": 0.75,
+      "expected": 0.75
+    }
+  ]
+}

@@ -85,7 +85,7 @@ describe("🔲️ State lines belong to the border compositor", () => {
     const { container } = render(<Table columns={columns} data={[{ id: "a", name: "Alpha" }, { id: "b", name: "Beta" }]} getRowId={(row: { id: string }) => row.id} selectedRows={["b"]} onRowClick={() => {}} />);
     const [first, second] = container.querySelectorAll("tbody tr");
     for (const row of [first!, second!]) {
-      expect(row.getAttribute("data-shared-border-edges")).toBe("");
+      expect(row.getAttribute("data-shared-border-edges")).toBe("bottom");
       expect(row.hasAttribute("data-shared-border-interactive")).toBe(true);
     }
     expect(first!.getAttribute("data-active")).toBeNull();
@@ -93,11 +93,11 @@ describe("🔲️ State lines belong to the border compositor", () => {
     expect(second!.className).not.toContain("border-active-base");
   });
 
-  it("keeps the slider thumb as the only closed focus ring", () => {
+  it("recolours the slider thumb hairline on keyboard focus", () => {
     const { container } = render(<Slider min={0} max={10} defaultValue={[3]} aria-label="Level" />);
     const thumb = container.querySelector('[role="slider"]')!;
-    expect(thumb.className).toContain("focus-visible:ring-2");
-    expect(thumb.className).not.toMatch(/ring-offset-(?:[1-9])/);
+    expect(thumb.className.split(" ")).toEqual(expect.arrayContaining(["border", "border-transparent", "focus-visible:border-emphasized"]));
+    expect(thumb.className).not.toContain("ring-");
     expect(thumb.hasAttribute("data-shared-border-frame")).toBe(false);
   });
 });

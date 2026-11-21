@@ -58,10 +58,50 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 return advanced;
             }
             if let Some(streak) = typed_operation_stall_streak::<A>(before, after) {
-                let verb = self.tools.tool_operations.get(after.0).map_or("<released>", |operation| operation.verb.as_str());
-                semio_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] typed-operation {verb} advanced {streak} units with no change: operation={} stage={} flags={:#010b}", after.0, after.1, after.2));
+                if let Some(operation) = self.tools.tool_operations.get(after.0) {
+                    let child = operation.pending_child_publication.as_ref().map(|child| {
+                        let receiving = child.native_receiver.as_ref().map(|receiver| {
+                            (receiver.ready(), receiver.settling(), receiver.terminal_is_empty(), receiver.demands(cx.retained_grant().maximum_copy_bytes))
+                        });
+                        (child.phase, child.native_child_index, child.native_wires.is_some(), child.native_batch.is_some(), receiving)
+                    });
+                    let body = self.mounted_policy.close.maximum_copy_bytes;
+                    let group = operation.owned_child_group.and_then(|id| self.child_composition.private_child_groups.get(id)).map(|owner| {
+                        let publication = owner.publication.as_ref().map(|group| (group.requires_native_source_close(), group.retirement_demands(body)));
+                        (owner.phase, owner.closing, owner.retirement_demands(body), owner.receipts.is_some(), publication)
+                    });
+                    let child_result_pending = operation.owned_child_result_pending;
+                    let page_pending = operation.page_publication_pending();
+                    let result_page = operation.result_page.as_ref().map(|page| (page.lane, page.token.sequence, operation.result_page_presented));
+                    let receipt_pending = operation.publication_ownership_progress.is_some();
+                    let store = operation.pending_artifact_publication.as_ref().map(|owner| {
+                        let batch = match owner {
+                            PendingArtifactStorePublication::Artifact(publication) => Some((publication.phase(), publication.progress(), publication.last_turn_work())),
+                            PendingArtifactStorePublication::Config(publication) => Some((publication.phase(), publication.progress(), publication.last_turn_work())),
+                            PendingArtifactStorePublication::Draft(publication) => Some((publication.phase(), publication.progress(), publication.last_turn_work())),
+                            _ => None,
+                        };
+                        (owner.lane().1, owner.is_closing(), owner.accepted_receipt().is_some(), batch)
+                    });
+                    let window_store_phase = match operation.pending_artifact_publication.as_ref() {
+                        Some(PendingArtifactStorePublication::WindowConfig(publication)) => publication.store_batch_phase(),
+                        _ => None,
+                    };
+                    let (released_reads, outstanding_reads) = match operation.pending_artifact_publication.as_ref() {
+                        Some(PendingArtifactStorePublication::Config(_)) => (self.stores.config_store.returned_snapshot_read_count(), self.stores.config_store.outstanding_snapshot_read_count()),
+                        Some(PendingArtifactStorePublication::Draft(_)) => (self.stores.draft_store.returned_snapshot_read_count(), self.stores.draft_store.outstanding_snapshot_read_count()),
+                        _ => (self.stores.store.returned_snapshot_read_count(), self.stores.store.outstanding_snapshot_read_count()),
+                    };
+                    let grant = cx.retained_grant();
+                    let turn = (grant, cx.fuel_remaining(), cx.should_yield());
+                    semio_plugin_reactor_app::debug_runtime_line(format_args!("[DEBUG] typed-operation {} advanced {streak} units with no change: operation={} stage={} flags={:#010b} progress={} child={child:?} group={group:?} child_result_pending={child_result_pending} page_pending={page_pending} result_page={result_page:?} receipt_pending={receipt_pending} store={store:?} window_store_phase={window_store_phase:?} released_reads={released_reads} outstanding_reads={outstanding_reads} turn={turn:?}", operation.verb, after.0, after.1, after.2, after.3));
+                }
                 if after.1 == TYPED_OPERATION_STALL_PUBLISHING_STAGE && streak >= TYPED_OPERATION_STALL_FAULT_CEILING {
                     self.tools.fault_stalled_typed_operation_publication(after.0, streak)?;
+                    if let Some(operation) = self.tools.tool_operations.get(after.0) {
+                        let page = operation.result_page.as_ref().map(|page| (page.lane, page.token.sequence, operation.result_page_presented));
+                        semio_plugin_reactor_app::debug_runtime_line(format_args!("[DEBUG] typed-operation {} advanced to stall fault: operation={} awaiting_ack={} page={page:?}", operation.verb, after.0, operation.stage == MountedTypedCommandFullOperationStage::AwaitingAck));
+                    }
                 }
             }
         }

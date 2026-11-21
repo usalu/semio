@@ -15,7 +15,7 @@ use crate::headless_workspace_state::{HeadlessWorkspace, directory_json_value};
 use crate::workspace::workspace_worker_pool;
 use semio_os_mcp_catalog::capability_tools::to_schema_search_hit;
 use semio_os_mcp_catalog::catalog::Catalog;
-use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, is_repository_root, load_package_descriptor, load_plugin_registry};
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, is_repository_root, load_plugin_registry, load_registry_plugin_descriptor};
 use semio_os_mcp_catalog::search::SearchFilters;
 use semio_os_mcp_dispatch::actions::ActionAdapter;
 use semio_os_mcp_foundation::audit::{AuditSinks, ClientInfo, InMemoryAuditSink};

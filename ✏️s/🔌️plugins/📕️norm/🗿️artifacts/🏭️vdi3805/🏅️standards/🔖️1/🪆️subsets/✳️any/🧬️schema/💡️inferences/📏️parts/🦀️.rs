@@ -133,6 +133,9 @@ macro_rules! define_vdi_part {
                     if let Some(fail) = checks.iter().find(|c| c.status == CheckStatus::Fail) {
                         return fail.clone();
                     }
+                    if let Some(unverified) = checks.iter().find(|c| c.status == CheckStatus::UnverifiedBasis) {
+                        return unverified.clone();
+                    }
                     if let Some(pass) = checks.into_iter().find(|c| c.status == CheckStatus::Pass) {
                         return pass;
                     }
@@ -184,11 +187,11 @@ define_vdi_part!(part_06, 6);
 
 define_vdi_part!(part_07, 7);
 
-define_vdi_part!(part_08, 8, multi_profile);
+define_vdi_part!(part_08, 8);
 
 define_vdi_part!(part_09, 9);
 
-define_vdi_part!(part_10, 10, multi_profile);
+define_vdi_part!(part_10, 10);
 
 define_vdi_part!(part_11, 11);
 
@@ -274,7 +277,7 @@ define_vdi_part!(part_51, 51);
 
 define_vdi_part!(part_52, 52);
 
-define_vdi_part!(part_53, 53, multi_profile);
+define_vdi_part!(part_53, 53);
 
 define_vdi_part!(part_54, 54);
 
@@ -368,5 +371,5 @@ define_vdi_part!(part_98, 98, reserved);
 
 define_vdi_part!(part_99, 99);
 
-define_vdi_part!(part_100, 100, multi_profile);
+define_vdi_part!(part_100, 100);
 //#endregion 🔖️ComplianceReport

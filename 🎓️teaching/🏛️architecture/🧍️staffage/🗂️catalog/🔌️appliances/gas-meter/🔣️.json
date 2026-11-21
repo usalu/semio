@@ -221,40 +221,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  -0.073,
-                  0.093
-                ],
-                [
-                  -0.037,
-                  0.093
-                ],
-                [
-                  -0.037,
-                  0.1
-                ],
-                [
-                  -0.04,
-                  0.1
-                ],
-                [
-                  -0.04,
-                  0.1215
-                ],
-                [
-                  -0.07,
-                  0.1215
-                ],
-                [
-                  -0.07,
-                  0.1
-                ],
-                [
-                  -0.073,
-                  0.1
-                ]
-              ],
+              "points": [[-0.073, 0.093], [-0.037, 0.093], [-0.037, 0.1], [-0.04, 0.1], [-0.04, 0.1215], [-0.07, 0.1215], [-0.07, 0.1], [-0.073, 0.1]],
               "closed": true,
               "region": "pipes",
               "material": "steel-pipe"
@@ -283,16 +250,7 @@
               "filled": false,
               "tone": 0.15,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0654,
-                  0.108
-                ],
-                [
-                  -0.0654,
-                  0.125
-                ]
-              ],
+              "points": [[-0.0654, 0.108], [-0.0654, 0.125]],
               "closed": false,
               "region": "pipes",
               "material": "steel-pipe"
@@ -305,16 +263,7 @@
               "filled": false,
               "tone": 0.15,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0446,
-                  0.108
-                ],
-                [
-                  -0.0446,
-                  0.125
-                ]
-              ],
+              "points": [[-0.0446, 0.108], [-0.0446, 0.125]],
               "closed": false,
               "region": "pipes",
               "material": "steel-pipe"
@@ -342,40 +291,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  0.037,
-                  0.093
-                ],
-                [
-                  0.073,
-                  0.093
-                ],
-                [
-                  0.073,
-                  0.1
-                ],
-                [
-                  0.07,
-                  0.1
-                ],
-                [
-                  0.07,
-                  0.1215
-                ],
-                [
-                  0.04,
-                  0.1215
-                ],
-                [
-                  0.04,
-                  0.1
-                ],
-                [
-                  0.037,
-                  0.1
-                ]
-              ],
+              "points": [[0.037, 0.093], [0.073, 0.093], [0.073, 0.1], [0.07, 0.1], [0.07, 0.1215], [0.04, 0.1215], [0.04, 0.1], [0.037, 0.1]],
               "closed": true,
               "region": "pipes",
               "material": "steel-pipe"
@@ -404,16 +320,7 @@
               "filled": false,
               "tone": 0.15,
               "kind": "poly",
-              "points": [
-                [
-                  0.0446,
-                  0.108
-                ],
-                [
-                  0.0446,
-                  0.125
-                ]
-              ],
+              "points": [[0.0446, 0.108], [0.0446, 0.125]],
               "closed": false,
               "region": "pipes",
               "material": "steel-pipe"
@@ -426,16 +333,7 @@
               "filled": false,
               "tone": 0.15,
               "kind": "poly",
-              "points": [
-                [
-                  0.0654,
-                  0.108
-                ],
-                [
-                  0.0654,
-                  0.125
-                ]
-              ],
+              "points": [[0.0654, 0.108], [0.0654, 0.125]],
               "closed": false,
               "region": "pipes",
               "material": "steel-pipe"
@@ -463,48 +361,7 @@
               "filled": true,
               "tone": 0.72,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0915,
-                  0.0
-                ],
-                [
-                  -0.089,
-                  -0.082
-                ],
-                [
-                  -0.0866,
-                  -0.091
-                ],
-                [
-                  -0.08,
-                  -0.0976
-                ],
-                [
-                  -0.071,
-                  -0.1
-                ],
-                [
-                  0.071,
-                  -0.1
-                ],
-                [
-                  0.08,
-                  -0.0976
-                ],
-                [
-                  0.0866,
-                  -0.091
-                ],
-                [
-                  0.089,
-                  -0.082
-                ],
-                [
-                  0.0915,
-                  0.0
-                ]
-              ],
+              "points": [[-0.0915, 0.0], [-0.089, -0.082], [-0.0866, -0.091], [-0.08, -0.0976], [-0.071, -0.1], [0.071, -0.1], [0.08, -0.0976], [0.0866, -0.091], [0.089, -0.082], [0.0915, 0.0]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -517,48 +374,7 @@
               "filled": true,
               "tone": 0.76,
               "kind": "poly",
-              "points": [
-                [
-                  0.0915,
-                  0.0
-                ],
-                [
-                  0.089,
-                  0.077
-                ],
-                [
-                  0.0866,
-                  0.086
-                ],
-                [
-                  0.08,
-                  0.0926
-                ],
-                [
-                  0.071,
-                  0.095
-                ],
-                [
-                  -0.071,
-                  0.095
-                ],
-                [
-                  -0.08,
-                  0.0926
-                ],
-                [
-                  -0.0866,
-                  0.086
-                ],
-                [
-                  -0.089,
-                  0.077
-                ],
-                [
-                  -0.0915,
-                  0.0
-                ]
-              ],
+              "points": [[0.0915, 0.0], [0.089, 0.077], [0.0866, 0.086], [0.08, 0.0926], [0.071, 0.095], [-0.071, 0.095], [-0.08, 0.0926], [-0.0866, 0.086], [-0.089, 0.077], [-0.0915, 0.0]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -770,16 +586,7 @@
               "filled": false,
               "tone": 0.2,
               "kind": "poly",
-              "points": [
-                [
-                  0.013,
-                  0.027
-                ],
-                [
-                  0.017,
-                  0.027
-                ]
-              ],
+              "points": [[0.013, 0.027], [0.017, 0.027]],
               "closed": false,
               "region": "index",
               "material": "abs-plastic"
@@ -792,16 +599,7 @@
               "filled": false,
               "tone": 0.2,
               "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.04
-                ],
-                [
-                  0.0,
-                  0.044
-                ]
-              ],
+              "points": [[0.0, 0.04], [0.0, 0.044]],
               "closed": false,
               "region": "index",
               "material": "abs-plastic"
@@ -814,16 +612,7 @@
               "filled": false,
               "tone": 0.2,
               "kind": "poly",
-              "points": [
-                [
-                  -0.013,
-                  0.027
-                ],
-                [
-                  -0.017,
-                  0.027
-                ]
-              ],
+              "points": [[-0.013, 0.027], [-0.017, 0.027]],
               "closed": false,
               "region": "index",
               "material": "abs-plastic"
@@ -836,16 +625,7 @@
               "filled": false,
               "tone": 0.2,
               "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.014
-                ],
-                [
-                  0.0,
-                  0.01
-                ]
-              ],
+              "points": [[0.0, 0.014], [0.0, 0.01]],
               "closed": false,
               "region": "index",
               "material": "abs-plastic"
@@ -858,24 +638,7 @@
               "filled": true,
               "tone": 0.1,
               "kind": "poly",
-              "points": [
-                [
-                  -0.004,
-                  -0.0025
-                ],
-                [
-                  0.0155,
-                  -0.001
-                ],
-                [
-                  0.0155,
-                  0.001
-                ],
-                [
-                  -0.004,
-                  0.0025
-                ]
-              ],
+              "points": [[-0.004, -0.0025], [0.0155, -0.001], [0.0155, 0.001], [-0.004, 0.0025]],
               "closed": true,
               "region": "index",
               "material": "abs-plastic"
@@ -919,16 +682,7 @@
               "filled": false,
               "tone": 0.25,
               "kind": "poly",
-              "points": [
-                [
-                  -0.045,
-                  -0.047
-                ],
-                [
-                  0.045,
-                  -0.047
-                ]
-              ],
+              "points": [[-0.045, -0.047], [0.045, -0.047]],
               "closed": false,
               "region": "shell",
               "material": "sheet-steel"
@@ -941,16 +695,7 @@
               "filled": false,
               "tone": 0.25,
               "kind": "poly",
-              "points": [
-                [
-                  -0.045,
-                  -0.062
-                ],
-                [
-                  0.025,
-                  -0.062
-                ]
-              ],
+              "points": [[-0.045, -0.062], [0.025, -0.062]],
               "closed": false,
               "region": "shell",
               "material": "sheet-steel"
@@ -965,136 +710,7 @@
               "filled": true,
               "tone": 0.76,
               "kind": "poly",
-              "points": [
-                [
-                  0.0965,
-                  0.0
-                ],
-                [
-                  0.0958,
-                  0.037
-                ],
-                [
-                  0.0938,
-                  0.0472
-                ],
-                [
-                  0.0902,
-                  0.0541
-                ],
-                [
-                  0.0851,
-                  0.0591
-                ],
-                [
-                  0.0779,
-                  0.0627
-                ],
-                [
-                  0.0681,
-                  0.0651
-                ],
-                [
-                  0.0533,
-                  0.0665
-                ],
-                [
-                  0.0,
-                  0.067
-                ],
-                [
-                  -0.0533,
-                  0.0665
-                ],
-                [
-                  -0.0681,
-                  0.0651
-                ],
-                [
-                  -0.0779,
-                  0.0627
-                ],
-                [
-                  -0.0851,
-                  0.0591
-                ],
-                [
-                  -0.0902,
-                  0.0541
-                ],
-                [
-                  -0.0938,
-                  0.0472
-                ],
-                [
-                  -0.0958,
-                  0.037
-                ],
-                [
-                  -0.0965,
-                  0.0
-                ],
-                [
-                  -0.0958,
-                  -0.037
-                ],
-                [
-                  -0.0938,
-                  -0.0472
-                ],
-                [
-                  -0.0902,
-                  -0.0541
-                ],
-                [
-                  -0.0851,
-                  -0.0591
-                ],
-                [
-                  -0.0779,
-                  -0.0627
-                ],
-                [
-                  -0.0681,
-                  -0.0651
-                ],
-                [
-                  -0.0533,
-                  -0.0665
-                ],
-                [
-                  -0.0,
-                  -0.067
-                ],
-                [
-                  0.0533,
-                  -0.0665
-                ],
-                [
-                  0.0681,
-                  -0.0651
-                ],
-                [
-                  0.0779,
-                  -0.0627
-                ],
-                [
-                  0.0851,
-                  -0.0591
-                ],
-                [
-                  0.0902,
-                  -0.0541
-                ],
-                [
-                  0.0938,
-                  -0.0472
-                ],
-                [
-                  0.0958,
-                  -0.037
-                ]
-              ],
+              "points": [[0.0965, 0.0], [0.0958, 0.037], [0.0938, 0.0472], [0.0902, 0.0541], [0.0851, 0.0591], [0.0779, 0.0627], [0.0681, 0.0651], [0.0533, 0.0665], [0.0, 0.067], [-0.0533, 0.0665], [-0.0681, 0.0651], [-0.0779, 0.0627], [-0.0851, 0.0591], [-0.0902, 0.0541], [-0.0938, 0.0472], [-0.0958, 0.037], [-0.0965, 0.0], [-0.0958, -0.037], [-0.0938, -0.0472], [-0.0902, -0.0541], [-0.0851, -0.0591], [-0.0779, -0.0627], [-0.0681, -0.0651], [-0.0533, -0.0665], [-0.0, -0.067], [0.0533, -0.0665], [0.0681, -0.0651], [0.0779, -0.0627], [0.0851, -0.0591], [0.0902, -0.0541], [0.0938, -0.0472], [0.0958, -0.037]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -1107,136 +723,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  0.0915,
-                  0.0
-                ],
-                [
-                  0.0909,
-                  0.0342
-                ],
-                [
-                  0.0889,
-                  0.0437
-                ],
-                [
-                  0.0856,
-                  0.0501
-                ],
-                [
-                  0.0807,
-                  0.0547
-                ],
-                [
-                  0.0739,
-                  0.058
-                ],
-                [
-                  0.0645,
-                  0.0602
-                ],
-                [
-                  0.0505,
-                  0.0616
-                ],
-                [
-                  0.0,
-                  0.062
-                ],
-                [
-                  -0.0505,
-                  0.0616
-                ],
-                [
-                  -0.0645,
-                  0.0602
-                ],
-                [
-                  -0.0739,
-                  0.058
-                ],
-                [
-                  -0.0807,
-                  0.0547
-                ],
-                [
-                  -0.0856,
-                  0.0501
-                ],
-                [
-                  -0.0889,
-                  0.0437
-                ],
-                [
-                  -0.0909,
-                  0.0342
-                ],
-                [
-                  -0.0915,
-                  0.0
-                ],
-                [
-                  -0.0909,
-                  -0.0342
-                ],
-                [
-                  -0.0889,
-                  -0.0437
-                ],
-                [
-                  -0.0856,
-                  -0.0501
-                ],
-                [
-                  -0.0807,
-                  -0.0547
-                ],
-                [
-                  -0.0739,
-                  -0.058
-                ],
-                [
-                  -0.0645,
-                  -0.0602
-                ],
-                [
-                  -0.0505,
-                  -0.0616
-                ],
-                [
-                  -0.0,
-                  -0.062
-                ],
-                [
-                  0.0505,
-                  -0.0616
-                ],
-                [
-                  0.0645,
-                  -0.0602
-                ],
-                [
-                  0.0739,
-                  -0.058
-                ],
-                [
-                  0.0807,
-                  -0.0547
-                ],
-                [
-                  0.0856,
-                  -0.0501
-                ],
-                [
-                  0.0889,
-                  -0.0437
-                ],
-                [
-                  0.0909,
-                  -0.0342
-                ]
-              ],
+              "points": [[0.0915, 0.0], [0.0909, 0.0342], [0.0889, 0.0437], [0.0856, 0.0501], [0.0807, 0.0547], [0.0739, 0.058], [0.0645, 0.0602], [0.0505, 0.0616], [0.0, 0.062], [-0.0505, 0.0616], [-0.0645, 0.0602], [-0.0739, 0.058], [-0.0807, 0.0547], [-0.0856, 0.0501], [-0.0889, 0.0437], [-0.0909, 0.0342], [-0.0915, 0.0], [-0.0909, -0.0342], [-0.0889, -0.0437], [-0.0856, -0.0501], [-0.0807, -0.0547], [-0.0739, -0.058], [-0.0645, -0.0602], [-0.0505, -0.0616], [-0.0, -0.062], [0.0505, -0.0616], [0.0645, -0.0602], [0.0739, -0.058], [0.0807, -0.0547], [0.0856, -0.0501], [0.0889, -0.0437], [0.0909, -0.0342]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -1264,16 +751,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  -0.065,
-                  -0.0825
-                ],
-                [
-                  0.065,
-                  -0.0825
-                ]
-              ],
+              "points": [[-0.065, -0.0825], [0.065, -0.0825]],
               "closed": false,
               "region": "index",
               "material": "abs-plastic"
@@ -1286,36 +764,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "poly",
-              "points": [
-                [
-                  -0.02,
-                  -0.002
-                ],
-                [
-                  0.008,
-                  -0.002
-                ],
-                [
-                  0.008,
-                  -0.006
-                ],
-                [
-                  0.02,
-                  0.0
-                ],
-                [
-                  0.008,
-                  0.006
-                ],
-                [
-                  0.008,
-                  0.002
-                ],
-                [
-                  -0.02,
-                  0.002
-                ]
-              ],
+              "points": [[-0.02, -0.002], [0.008, -0.002], [0.008, -0.006], [0.02, 0.0], [0.008, 0.006], [0.008, 0.002], [-0.02, 0.002]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -1328,32 +777,7 @@
               "filled": true,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0342,
-                  0.0
-                ],
-                [
-                  -0.0446,
-                  0.018
-                ],
-                [
-                  -0.0654,
-                  0.018
-                ],
-                [
-                  -0.0758,
-                  0.0
-                ],
-                [
-                  -0.0654,
-                  -0.018
-                ],
-                [
-                  -0.0446,
-                  -0.018
-                ]
-              ],
+              "points": [[-0.0342, 0.0], [-0.0446, 0.018], [-0.0654, 0.018], [-0.0758, 0.0], [-0.0654, -0.018], [-0.0446, -0.018]],
               "closed": true,
               "region": "pipes",
               "material": "steel-pipe"
@@ -1394,32 +818,7 @@
               "filled": true,
               "tone": 0.4,
               "kind": "poly",
-              "points": [
-                [
-                  0.0758,
-                  0.0
-                ],
-                [
-                  0.0654,
-                  0.018
-                ],
-                [
-                  0.0446,
-                  0.018
-                ],
-                [
-                  0.0342,
-                  0.0
-                ],
-                [
-                  0.0446,
-                  -0.018
-                ],
-                [
-                  0.0654,
-                  -0.018
-                ]
-              ],
+              "points": [[0.0758, 0.0], [0.0654, 0.018], [0.0446, 0.018], [0.0342, 0.0], [0.0446, -0.018], [0.0654, -0.018]],
               "closed": true,
               "region": "pipes",
               "material": "steel-pipe"
@@ -1462,40 +861,7 @@
               "filled": true,
               "tone": 0.5,
               "kind": "poly",
-              "points": [
-                [
-                  -0.018,
-                  0.093
-                ],
-                [
-                  0.018,
-                  0.093
-                ],
-                [
-                  0.018,
-                  0.1
-                ],
-                [
-                  0.015,
-                  0.1
-                ],
-                [
-                  0.015,
-                  0.1215
-                ],
-                [
-                  -0.015,
-                  0.1215
-                ],
-                [
-                  -0.015,
-                  0.1
-                ],
-                [
-                  -0.018,
-                  0.1
-                ]
-              ],
+              "points": [[-0.018, 0.093], [0.018, 0.093], [0.018, 0.1], [0.015, 0.1], [0.015, 0.1215], [-0.015, 0.1215], [-0.015, 0.1], [-0.018, 0.1]],
               "closed": true,
               "region": "pipes",
               "material": "steel-pipe"
@@ -1524,16 +890,7 @@
               "filled": false,
               "tone": 0.15,
               "kind": "poly",
-              "points": [
-                [
-                  0.0,
-                  0.108
-                ],
-                [
-                  0.0,
-                  0.125
-                ]
-              ],
+              "points": [[0.0, 0.108], [0.0, 0.125]],
               "closed": false,
               "region": "pipes",
               "material": "steel-pipe"
@@ -1561,48 +918,7 @@
               "filled": true,
               "tone": 0.72,
               "kind": "poly",
-              "points": [
-                [
-                  -0.062,
-                  0.0
-                ],
-                [
-                  -0.0595,
-                  -0.082
-                ],
-                [
-                  -0.0571,
-                  -0.091
-                ],
-                [
-                  -0.0505,
-                  -0.0976
-                ],
-                [
-                  -0.0415,
-                  -0.1
-                ],
-                [
-                  0.0415,
-                  -0.1
-                ],
-                [
-                  0.0505,
-                  -0.0976
-                ],
-                [
-                  0.0571,
-                  -0.091
-                ],
-                [
-                  0.0595,
-                  -0.082
-                ],
-                [
-                  0.062,
-                  0.0
-                ]
-              ],
+              "points": [[-0.062, 0.0], [-0.0595, -0.082], [-0.0571, -0.091], [-0.0505, -0.0976], [-0.0415, -0.1], [0.0415, -0.1], [0.0505, -0.0976], [0.0571, -0.091], [0.0595, -0.082], [0.062, 0.0]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -1615,48 +931,7 @@
               "filled": true,
               "tone": 0.76,
               "kind": "poly",
-              "points": [
-                [
-                  0.062,
-                  0.0
-                ],
-                [
-                  0.0595,
-                  0.077
-                ],
-                [
-                  0.0571,
-                  0.086
-                ],
-                [
-                  0.0505,
-                  0.0926
-                ],
-                [
-                  0.0415,
-                  0.095
-                ],
-                [
-                  -0.0415,
-                  0.095
-                ],
-                [
-                  -0.0505,
-                  0.0926
-                ],
-                [
-                  -0.0571,
-                  0.086
-                ],
-                [
-                  -0.0595,
-                  0.077
-                ],
-                [
-                  -0.062,
-                  0.0
-                ]
-              ],
+              "points": [[0.062, 0.0], [0.0595, 0.077], [0.0571, 0.086], [0.0505, 0.0926], [0.0415, 0.095], [-0.0415, 0.095], [-0.0505, 0.0926], [-0.0571, 0.086], [-0.0595, 0.077], [-0.062, 0.0]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -1700,16 +975,7 @@
               "filled": false,
               "tone": 0.3,
               "kind": "poly",
-              "points": [
-                [
-                  -0.0825,
-                  0.006
-                ],
-                [
-                  -0.0825,
-                  0.072
-                ]
-              ],
+              "points": [[-0.0825, 0.006], [-0.0825, 0.072]],
               "closed": false,
               "region": "index",
               "material": "abs-plastic"
@@ -1836,72 +1102,7 @@
               "filled": true,
               "tone": 0.74,
               "kind": "poly",
-              "points": [
-                [
-                  0.0785,
-                  -0.1
-                ],
-                [
-                  0.0875,
-                  -0.0976
-                ],
-                [
-                  0.0941,
-                  -0.091
-                ],
-                [
-                  0.0965,
-                  -0.082
-                ],
-                [
-                  0.0965,
-                  0.077
-                ],
-                [
-                  0.0941,
-                  0.086
-                ],
-                [
-                  0.0875,
-                  0.0926
-                ],
-                [
-                  0.0785,
-                  0.095
-                ],
-                [
-                  -0.0785,
-                  0.095
-                ],
-                [
-                  -0.0875,
-                  0.0926
-                ],
-                [
-                  -0.0941,
-                  0.086
-                ],
-                [
-                  -0.0965,
-                  0.077
-                ],
-                [
-                  -0.0965,
-                  -0.082
-                ],
-                [
-                  -0.0941,
-                  -0.091
-                ],
-                [
-                  -0.0875,
-                  -0.0976
-                ],
-                [
-                  -0.0785,
-                  -0.1
-                ]
-              ],
+              "points": [[0.0785, -0.1], [0.0875, -0.0976], [0.0941, -0.091], [0.0965, -0.082], [0.0965, 0.077], [0.0941, 0.086], [0.0875, 0.0926], [0.0785, 0.095], [-0.0785, 0.095], [-0.0875, 0.0926], [-0.0941, 0.086], [-0.0965, 0.077], [-0.0965, -0.082], [-0.0941, -0.091], [-0.0875, -0.0976], [-0.0785, -0.1]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -1953,36 +1154,6 @@
               "material": "abs-plastic"
             },
             {
-              "id": "needle",
-              "bone": "pointer",
-              "role": "body",
-              "z": 3.5,
-              "filled": true,
-              "tone": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.004,
-                  -0.0025
-                ],
-                [
-                  0.0155,
-                  -0.001
-                ],
-                [
-                  0.0155,
-                  0.001
-                ],
-                [
-                  -0.004,
-                  0.0025
-                ]
-              ],
-              "closed": true,
-              "region": "index",
-              "material": "abs-plastic"
-            },
-            {
               "id": "plate",
               "bone": "body",
               "role": "body",
@@ -2007,104 +1178,7 @@
               "filled": true,
               "tone": 0.74,
               "kind": "poly",
-              "points": [
-                [
-                  0.0965,
-                  0.0
-                ],
-                [
-                  0.0953,
-                  0.041
-                ],
-                [
-                  0.0916,
-                  0.0521
-                ],
-                [
-                  0.0851,
-                  0.0591
-                ],
-                [
-                  0.075,
-                  0.0636
-                ],
-                [
-                  0.059,
-                  0.0662
-                ],
-                [
-                  0.0,
-                  0.067
-                ],
-                [
-                  -0.059,
-                  0.0662
-                ],
-                [
-                  -0.075,
-                  0.0636
-                ],
-                [
-                  -0.0851,
-                  0.0591
-                ],
-                [
-                  -0.0916,
-                  0.0521
-                ],
-                [
-                  -0.0953,
-                  0.041
-                ],
-                [
-                  -0.0965,
-                  0.0
-                ],
-                [
-                  -0.0953,
-                  -0.041
-                ],
-                [
-                  -0.0916,
-                  -0.0521
-                ],
-                [
-                  -0.0851,
-                  -0.0591
-                ],
-                [
-                  -0.075,
-                  -0.0636
-                ],
-                [
-                  -0.059,
-                  -0.0662
-                ],
-                [
-                  -0.0,
-                  -0.067
-                ],
-                [
-                  0.059,
-                  -0.0662
-                ],
-                [
-                  0.075,
-                  -0.0636
-                ],
-                [
-                  0.0851,
-                  -0.0591
-                ],
-                [
-                  0.0916,
-                  -0.0521
-                ],
-                [
-                  0.0953,
-                  -0.041
-                ]
-              ],
+              "points": [[0.0965, 0.0], [0.0953, 0.041], [0.0916, 0.0521], [0.0851, 0.0591], [0.075, 0.0636], [0.059, 0.0662], [0.0, 0.067], [-0.059, 0.0662], [-0.075, 0.0636], [-0.0851, 0.0591], [-0.0916, 0.0521], [-0.0953, 0.041], [-0.0965, 0.0], [-0.0953, -0.041], [-0.0916, -0.0521], [-0.0851, -0.0591], [-0.075, -0.0636], [-0.059, -0.0662], [-0.0, -0.067], [0.059, -0.0662], [0.075, -0.0636], [0.0851, -0.0591], [0.0916, -0.0521], [0.0953, -0.041]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -2194,72 +1268,7 @@
               "filled": true,
               "tone": 0.74,
               "kind": "poly",
-              "points": [
-                [
-                  0.049,
-                  -0.1
-                ],
-                [
-                  0.058,
-                  -0.0976
-                ],
-                [
-                  0.0646,
-                  -0.091
-                ],
-                [
-                  0.067,
-                  -0.082
-                ],
-                [
-                  0.067,
-                  0.077
-                ],
-                [
-                  0.0646,
-                  0.086
-                ],
-                [
-                  0.058,
-                  0.0926
-                ],
-                [
-                  0.049,
-                  0.095
-                ],
-                [
-                  -0.049,
-                  0.095
-                ],
-                [
-                  -0.058,
-                  0.0926
-                ],
-                [
-                  -0.0646,
-                  0.086
-                ],
-                [
-                  -0.067,
-                  0.077
-                ],
-                [
-                  -0.067,
-                  -0.082
-                ],
-                [
-                  -0.0646,
-                  -0.091
-                ],
-                [
-                  -0.058,
-                  -0.0976
-                ],
-                [
-                  -0.049,
-                  -0.1
-                ]
-              ],
+              "points": [[0.049, -0.1], [0.058, -0.0976], [0.0646, -0.091], [0.067, -0.082], [0.067, 0.077], [0.0646, 0.086], [0.058, 0.0926], [0.049, 0.095], [-0.049, 0.095], [-0.058, 0.0926], [-0.0646, 0.086], [-0.067, 0.077], [-0.067, -0.082], [-0.0646, -0.091], [-0.058, -0.0976], [-0.049, -0.1]],
               "closed": true,
               "region": "shell",
               "material": "sheet-steel"
@@ -2283,12 +1292,12 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "A 1.9 mm by 2.5 mm gas meter: a pale grey pressing with rounded shoulders and two stubs with union nuts, a pale index head with a dark counter strip above a round dial with a pointer, and a pale plate. Front, 1.6 mm by 2.5 mm: housing, index head, one stub and one union. Plan, 1.9 mm by 1.6 mm: housing, index strip and two union discs.",
-            "de": "Ein Gaszähler von 1,9 mm mal 2,5 mm: ein hellgraues Pressteil mit gerundeten Schultern und zwei Stutzen mit Überwurfmuttern, ein heller Zählwerkskopf mit dunklem Zählwerksstreifen über einem runden Prüfrad mit Zeiger und ein helles Schild. Vorderansicht, 1,6 mm auf 2,5 mm: Gehäuse, Zählwerkskopf, ein Stutzen und eine Überwurfmutter. Grundriss, 1,9 mm auf 1,6 mm: Gehäuse, Zählwerkstreifen und zwei Mutternscheiben."
+            "en": "A 1.9 mm by 2.5 mm gas meter: a pale grey pressing with rounded shoulders and two stubs with union nuts, a pale index head with a dark counter strip above a round dial, and a pale plate. Front, 1.6 mm by 2.5 mm: housing, index head, one stub and one union. Plan, 1.9 mm by 1.6 mm: housing, index strip and two union discs.",
+            "de": "Ein Gaszähler von 1,9 mm mal 2,5 mm: ein hellgraues Pressteil mit gerundeten Schultern und zwei Stutzen mit Überwurfmuttern, ein heller Zählwerkskopf mit dunklem Zählwerksstreifen über einem runden Prüfrad und ein helles Schild. Vorderansicht, 1,6 mm auf 2,5 mm: Gehäuse, Zählwerkskopf, ein Stutzen und eine Überwurfmutter. Grundriss, 1,9 mm auf 1,6 mm: Gehäuse, Zählwerkstreifen und zwei Mutternscheiben."
           },
           "retained": {
-            "en": "Housing, two stubs with unions, index head, counter strip, dial with pointer, data plate.",
-            "de": "Gehäuse, zwei Stutzen mit Überwurfmuttern, Zählwerkskopf, Zählwerksstreifen, Prüfrad mit Zeiger, Datenschild."
+            "en": "Housing, two stubs with unions, index head, counter strip, dial, data plate.",
+            "de": "Gehäuse, zwei Stutzen mit Überwurfmuttern, Zählwerkskopf, Zählwerksstreifen, Prüfrad, Datenschild."
           },
           "merged": {
             "en": "Both shells and the seam are one housing at the width of the seam; the tailpieces join the stubs; the hexagonal nuts become round; the digits join the dark strip.",
@@ -2299,8 +1308,8 @@
             "de": "Naht, Ziehschräge, Stutzenbunde, Bohrungen, Fensterrahmen, Ziffern, Striche, Drehpunkt, Schildtext und Durchflusspfeil."
           },
           "thinElements": {
-            "en": "The pointer is a tapered blade 5 mm wide (0.05 mm) and prints as a hairline; the stubs are 30 mm (0.3 mm) wide; the counter strip is 18 mm (0.18 mm) high.",
-            "de": "Der Zeiger ist eine sich verjüngende Klinge von 5 mm (0,05 mm) Breite und druckt als Haarlinie; die Stutzen sind 30 mm (0,3 mm) breit; der Zählwerksstreifen ist 18 mm (0,18 mm) hoch."
+            "en": "The pointer blade (5 mm, 0.05 mm on paper and 0.17 mm at 1:150) cannot be printed and is left out, the dial stays as the white disc; the stubs are 30 mm (0.3 mm) wide; the counter strip is 18 mm (0.18 mm) high.",
+            "de": "Die Zeigerklinge (5 mm, 0,05 mm auf dem Papier und 0,17 mm bei 1:150) ist nicht druckbar und entfällt, das Prüfrad bleibt als weiße Scheibe; die Stutzen sind 30 mm (0,3 mm) breit; der Zählwerksstreifen ist 18 mm (0,18 mm) hoch."
           },
           "hatching": {
             "en": "None.",
@@ -2311,8 +1320,8 @@
             "de": "Gehäuse 0,74, Zählwerkskopf 0,9, Zählwerk 0,1, Prüfrad 0,97, Schild 0,88, Stutzen 0,5, Überwurfmuttern 0,4; ein Körperstift von 0,18 mm."
           },
           "overlays": {
-            "en": "Shell, index and pipes stay the three drawn regions, the pointer turns with its bone.",
-            "de": "Schale, Zählwerkskopf und Rohre bleiben die drei gezeichneten Regionen, der Zeiger dreht sich mit seinem Knochen."
+            "en": "Shell, index and pipes stay the three drawn regions; the pointer is not drawn at this scale.",
+            "de": "Schale, Zählwerkskopf und Rohre bleiben die drei gezeichneten Regionen; der Zeiger wird in diesem Maßstab nicht gezeichnet."
           }
         }
       },
@@ -2341,12 +1350,13 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": -0.075,
+              "x": -0.08,
               "y": 0.093,
-              "w": 0.04,
+              "w": 0.032,
               "h": 0.052,
               "region": "pipes",
-              "material": "steel-pipe"
+              "material": "steel-pipe",
+              "penMm": 0.12
             },
             {
               "id": "stub-2",
@@ -2356,12 +1366,13 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": 0.035,
+              "x": 0.048,
               "y": 0.093,
-              "w": 0.04,
+              "w": 0.032,
               "h": 0.052,
               "region": "pipes",
-              "material": "steel-pipe"
+              "material": "steel-pipe",
+              "penMm": 0.12
             },
             {
               "id": "housing",
@@ -2370,14 +1381,11 @@
               "z": 3,
               "filled": true,
               "tone": 0.74,
-              "kind": "rect",
-              "x": -0.0965,
-              "y": -0.1,
-              "w": 0.193,
-              "h": 0.195,
-              "r": 0.018,
+              "kind": "poly",
               "region": "shell",
-              "material": "sheet-steel"
+              "material": "sheet-steel",
+              "closed": true,
+              "points": [[0.0785, -0.1], [0.089, -0.082], [0.0915, 0], [0.089, 0.077], [0.0785, 0.095], [-0.0785, 0.095], [-0.089, 0.077], [-0.0915, 0], [-0.089, -0.082], [-0.0785, -0.1]]
             },
             {
               "id": "index",
@@ -2407,7 +1415,8 @@
               "w": 0.104,
               "h": 0.022,
               "region": "index",
-              "material": "abs-plastic"
+              "material": "abs-plastic",
+              "penMm": 0.15
             },
             {
               "id": "dial",
@@ -2425,34 +1434,21 @@
               "material": "abs-plastic"
             },
             {
-              "id": "needle",
-              "bone": "pointer",
-              "role": "body",
-              "z": 3.5,
+              "id": "seam",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
               "filled": true,
-              "tone": 0.1,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.005,
-                  -0.003
-                ],
-                [
-                  0.017,
-                  -0.001
-                ],
-                [
-                  0.017,
-                  0.001
-                ],
-                [
-                  -0.005,
-                  0.003
-                ]
-              ],
-              "closed": true,
-              "region": "index",
-              "material": "abs-plastic"
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0965,
+              "y": -0.0045,
+              "w": 0.193,
+              "h": 0.009,
+              "r": 0.002,
+              "region": "shell",
+              "material": "sheet-steel",
+              "penMm": 0.2
             }
           ],
           "plan": [
@@ -2464,93 +1460,9 @@
               "filled": true,
               "tone": 0.74,
               "kind": "poly",
-              "points": [
-                [
-                  0.0785,
-                  -0.067
-                ],
-                [
-                  0.0875,
-                  -0.0646
-                ],
-                [
-                  0.0941,
-                  -0.058
-                ],
-                [
-                  0.0965,
-                  -0.049
-                ],
-                [
-                  0.0965,
-                  0.049
-                ],
-                [
-                  0.0941,
-                  0.058
-                ],
-                [
-                  0.0875,
-                  0.0646
-                ],
-                [
-                  0.0785,
-                  0.067
-                ],
-                [
-                  -0.0785,
-                  0.067
-                ],
-                [
-                  -0.0875,
-                  0.0646
-                ],
-                [
-                  -0.0941,
-                  0.058
-                ],
-                [
-                  -0.0965,
-                  0.049
-                ],
-                [
-                  -0.0965,
-                  -0.049
-                ],
-                [
-                  -0.0941,
-                  -0.058
-                ],
-                [
-                  -0.0875,
-                  -0.0646
-                ],
-                [
-                  -0.0785,
-                  -0.067
-                ],
-                [
-                  -0.065,
-                  -0.067
-                ],
-                [
-                  -0.065,
-                  -0.09
-                ],
-                [
-                  0.065,
-                  -0.09
-                ],
-                [
-                  0.065,
-                  -0.067
-                ]
-              ],
+              "points": [[0.0785, -0.067], [0.0875, -0.0646], [0.0941, -0.058], [0.0965, -0.049], [0.0965, 0.049], [0.0941, 0.058], [0.0875, 0.0646], [0.0785, 0.067], [-0.0785, 0.067], [-0.0875, 0.0646], [-0.0941, 0.058], [-0.0965, 0.049], [-0.0965, -0.049], [-0.0941, -0.058], [-0.0875, -0.0646], [-0.0785, -0.067], [-0.065, -0.067], [-0.065, -0.09], [0.065, -0.09], [0.065, -0.067]],
               "closed": true,
-              "regions": [
-                "shell",
-                "index"
-              ],
+              "regions": ["shell", "index"],
               "material": "sheet-steel"
             }
           ],
@@ -2578,105 +1490,38 @@
               "filled": true,
               "tone": 0.74,
               "kind": "poly",
-              "points": [
-                [
-                  0.049,
-                  -0.1
-                ],
-                [
-                  0.058,
-                  -0.0976
-                ],
-                [
-                  0.0646,
-                  -0.091
-                ],
-                [
-                  0.067,
-                  -0.082
-                ],
-                [
-                  0.067,
-                  0.077
-                ],
-                [
-                  0.0646,
-                  0.086
-                ],
-                [
-                  0.058,
-                  0.0926
-                ],
-                [
-                  0.049,
-                  0.095
-                ],
-                [
-                  -0.049,
-                  0.095
-                ],
-                [
-                  -0.058,
-                  0.0926
-                ],
-                [
-                  -0.0646,
-                  0.086
-                ],
-                [
-                  -0.067,
-                  0.077
-                ],
-                [
-                  -0.067,
-                  0.072
-                ],
-                [
-                  -0.09,
-                  0.072
-                ],
-                [
-                  -0.09,
-                  0.006
-                ],
-                [
-                  -0.067,
-                  0.006
-                ],
-                [
-                  -0.067,
-                  -0.082
-                ],
-                [
-                  -0.0646,
-                  -0.091
-                ],
-                [
-                  -0.058,
-                  -0.0976
-                ],
-                [
-                  -0.049,
-                  -0.1
-                ]
-              ],
+              "points": [[0.049, -0.1], [0.058, -0.0976], [0.0646, -0.091], [0.067, -0.082], [0.067, 0.077], [0.0646, 0.086], [0.058, 0.0926], [0.049, 0.095], [-0.049, 0.095], [-0.058, 0.0926], [-0.0646, 0.086], [-0.067, 0.077], [-0.067, 0.072], [-0.09, 0.072], [-0.09, 0.006], [-0.067, 0.006], [-0.067, -0.082], [-0.0646, -0.091], [-0.058, -0.0976], [-0.049, -0.1]],
               "closed": true,
-              "regions": [
-                "shell",
-                "index"
-              ],
+              "regions": ["shell", "index"],
               "material": "sheet-steel"
+            },
+            {
+              "id": "seam",
+              "bone": "body",
+              "role": "detail",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.067,
+              "y": -0.0045,
+              "w": 0.134,
+              "h": 0.009,
+              "r": 0.002,
+              "region": "shell",
+              "material": "sheet-steel",
+              "penMm": 0.2
             }
           ]
         },
         "decisions": {
           "silhouette": {
-            "en": "A 1 mm by 1.2 mm gas meter: a pale grey block with rounded corners and two thick pins, a pale head with a dark counter bar above a round dial with a pointer. Front, 0.8 mm by 1.2 mm: the housing and the index step merged into one outline with one pin on top. Plan, 1 mm by 0.8 mm: one outline of housing and index strip; the two pins are below what the pen can draw and are left out.",
-            "de": "Ein Gaszähler von 1 mm mal 1,2 mm: ein hellgrauer Block mit gerundeten Ecken und zwei dicken Zapfen, ein heller Kopf mit dunklem Zählwerksbalken über einem runden Prüfrad mit Zeiger. Vorderansicht, 0,8 mm auf 1,2 mm: Gehäuse und Zählwerkstufe zu einem Umriss verschmolzen, darauf ein Zapfen. Grundriss, 1 mm auf 0,8 mm: ein Umriss aus Gehäuse und Zählwerkstreifen; die zwei Zapfen liegen unter dem, was der Stift zeichnen kann, und entfallen."
+            "en": "A 1 mm by 1.2 mm gas meter: a pale grey block with rounded corners and two thick pins, a pale head with a dark counter bar above a round dial. Front, 0.8 mm by 1.2 mm: the housing and the index step merged into one outline with one pin on top. Plan, 1 mm by 0.8 mm: one outline of housing and index strip; the two pins are below what the pen can draw and are left out.",
+            "de": "Ein Gaszähler von 1 mm mal 1,2 mm: ein hellgrauer Block mit gerundeten Ecken und zwei dicken Zapfen, ein heller Kopf mit dunklem Zählwerksbalken über einem runden Prüfrad. Vorderansicht, 0,8 mm auf 1,2 mm: Gehäuse und Zählwerkstufe zu einem Umriss verschmolzen, darauf ein Zapfen. Grundriss, 1 mm auf 0,8 mm: ein Umriss aus Gehäuse und Zählwerkstreifen; die zwei Zapfen liegen unter dem, was der Stift zeichnen kann, und entfallen."
           },
           "retained": {
-            "en": "Housing, connection pins, index head, counter bar, dial and pointer.",
-            "de": "Gehäuse, Anschlusszapfen, Zählwerkskopf, Zählwerksbalken, Prüfrad und Zeiger."
+            "en": "Housing, connection pins, index head, counter bar, dial.",
+            "de": "Gehäuse, Anschlusszapfen, Zählwerkskopf, Zählwerksbalken, Prüfrad."
           },
           "merged": {
             "en": "Stub, union nut and tailpiece are one pin; the plate and the seam join the housing; in front and plan the index head joins the housing outline.",
@@ -2687,8 +1532,8 @@
             "de": "Naht, Ziffern, Striche, Drehpunkt, Schild und Bohrungen; im Grundriss die Zapfen."
           },
           "thinElements": {
-            "en": "The pins are widened to 40 mm (0.2 mm); the counter bar is 22 mm high (0.11 mm) and the dial 40 mm (0.2 mm); the pointer is a hairline.",
-            "de": "Die Zapfen sind auf 40 mm (0,2 mm) verbreitert; der Zählwerksbalken ist 22 mm hoch (0,11 mm) und das Prüfrad 40 mm (0,2 mm); der Zeiger ist eine Haarlinie."
+            "en": "The pins are widened to 40 mm (0.2 mm); the counter bar is 22 mm high (0.11 mm) and the dial 40 mm (0.2 mm); the pointer would be a hairline (0.16 mm at 1:200) and is left out; the band ends at 1:250, where the gap between the pins is still printable.",
+            "de": "Die Zapfen sind auf 40 mm (0,2 mm) verbreitert; der Zählwerksbalken ist 22 mm hoch (0,11 mm) und das Prüfrad 40 mm (0,2 mm); der Zeiger wäre eine Haarlinie (0,16 mm bei 1:200) und entfällt; das Band endet bei 1:250, wo die Lücke zwischen den Zapfen noch druckbar ist."
           },
           "hatching": {
             "en": "None.",
@@ -3465,28 +2310,7 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.9,
-            "profile": [
-              [0.059, 0.006],
-              [0.0613, 0.00646],
-              [0.06324, 0.00776],
-              [0.06454, 0.0097],
-              [0.065, 0.012],
-              [0.065, 0.066],
-              [0.06454, 0.0683],
-              [0.06324, 0.07024],
-              [0.0613, 0.07154],
-              [0.059, 0.072],
-              [-0.059, 0.072],
-              [-0.0613, 0.07154],
-              [-0.06324, 0.07024],
-              [-0.06454, 0.0683],
-              [-0.065, 0.066],
-              [-0.065, 0.012],
-              [-0.06454, 0.0097],
-              [-0.06324, 0.00776],
-              [-0.0613, 0.00646],
-              [-0.059, 0.006]
-            ],
+            "profile": [[0.059, 0.006], [0.0613, 0.00646], [0.06324, 0.00776], [0.06454, 0.0097], [0.065, 0.012], [0.065, 0.066], [0.06454, 0.0683], [0.06324, 0.07024], [0.0613, 0.07154], [0.059, 0.072], [-0.059, 0.072], [-0.0613, 0.07154], [-0.06324, 0.07024], [-0.06454, 0.0683], [-0.065, 0.066], [-0.065, 0.012], [-0.06454, 0.0097], [-0.06324, 0.00776], [-0.0613, 0.00646], [-0.059, 0.006]],
             "plane": "xy",
             "from": -0.0825,
             "to": -0.0575
@@ -3498,54 +2322,12 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.9,
-            "profile": [
-              [0.059, 0.006],
-              [0.0613, 0.00646],
-              [0.06324, 0.00776],
-              [0.06454, 0.0097],
-              [0.065, 0.012],
-              [0.065, 0.066],
-              [0.06454, 0.0683],
-              [0.06324, 0.07024],
-              [0.0613, 0.07154],
-              [0.059, 0.072],
-              [-0.059, 0.072],
-              [-0.0613, 0.07154],
-              [-0.06324, 0.07024],
-              [-0.06454, 0.0683],
-              [-0.065, 0.066],
-              [-0.065, 0.012],
-              [-0.06454, 0.0097],
-              [-0.06324, 0.00776],
-              [-0.0613, 0.00646],
-              [-0.059, 0.006]
-            ],
+            "profile": [[0.059, 0.006], [0.0613, 0.00646], [0.06324, 0.00776], [0.06454, 0.0097], [0.065, 0.012], [0.065, 0.066], [0.06454, 0.0683], [0.06324, 0.07024], [0.0613, 0.07154], [0.059, 0.072], [-0.059, 0.072], [-0.0613, 0.07154], [-0.06324, 0.07024], [-0.06454, 0.0683], [-0.065, 0.066], [-0.065, 0.012], [-0.06454, 0.0097], [-0.06324, 0.00776], [-0.0613, 0.00646], [-0.059, 0.006]],
             "plane": "xy",
             "from": -0.09,
             "to": -0.0825,
             "holes": [
-              [
-                [0.056, 0.009],
-                [0.05715, 0.00923],
-                [0.05812, 0.00988],
-                [0.05877, 0.01085],
-                [0.059, 0.012],
-                [0.059, 0.066],
-                [0.05877, 0.06715],
-                [0.05812, 0.06812],
-                [0.05715, 0.06877],
-                [0.056, 0.069],
-                [-0.056, 0.069],
-                [-0.05715, 0.06877],
-                [-0.05812, 0.06812],
-                [-0.05877, 0.06715],
-                [-0.059, 0.066],
-                [-0.059, 0.012],
-                [-0.05877, 0.01085],
-                [-0.05812, 0.00988],
-                [-0.05715, 0.00923],
-                [-0.056, 0.009]
-              ]
+              [[0.056, 0.009], [0.05715, 0.00923], [0.05812, 0.00988], [0.05877, 0.01085], [0.059, 0.012], [0.059, 0.066], [0.05877, 0.06715], [0.05812, 0.06812], [0.05715, 0.06877], [0.056, 0.069], [-0.056, 0.069], [-0.05715, 0.06877], [-0.05812, 0.06812], [-0.05877, 0.06715], [-0.059, 0.066], [-0.059, 0.012], [-0.05877, 0.01085], [-0.05812, 0.00988], [-0.05715, 0.00923], [-0.056, 0.009]]
             ]
           },
           {
@@ -3731,32 +2513,7 @@
             "from": 0.108,
             "to": 0.125,
             "holes": [
-              [
-                [0.0, -0.04],
-                [0.00388, -0.04051],
-                [0.0075, -0.04201],
-                [0.01061, -0.04439],
-                [0.01299, -0.0475],
-                [0.01449, -0.05112],
-                [0.015, -0.055],
-                [0.01449, -0.05888],
-                [0.01299, -0.0625],
-                [0.01061, -0.06561],
-                [0.0075, -0.06799],
-                [0.00388, -0.06949],
-                [0.0, -0.07],
-                [-0.00388, -0.06949],
-                [-0.0075, -0.06799],
-                [-0.01061, -0.06561],
-                [-0.01299, -0.0625],
-                [-0.01449, -0.05888],
-                [-0.015, -0.055],
-                [-0.01449, -0.05112],
-                [-0.01299, -0.0475],
-                [-0.01061, -0.04439],
-                [-0.0075, -0.04201],
-                [-0.00388, -0.04051]
-              ]
+              [[0.0, -0.04], [0.00388, -0.04051], [0.0075, -0.04201], [0.01061, -0.04439], [0.01299, -0.0475], [0.01449, -0.05112], [0.015, -0.055], [0.01449, -0.05888], [0.01299, -0.0625], [0.01061, -0.06561], [0.0075, -0.06799], [0.00388, -0.06949], [0.0, -0.07], [-0.00388, -0.06949], [-0.0075, -0.06799], [-0.01061, -0.06561], [-0.01299, -0.0625], [-0.01449, -0.05888], [-0.015, -0.055], [-0.01449, -0.05112], [-0.01299, -0.0475], [-0.01061, -0.04439], [-0.0075, -0.04201], [-0.00388, -0.04051]]
             ],
             "repeat": {
               "count": 2,
@@ -4411,19 +3168,6 @@
             "texture": true
           },
           {
-            "id": "needle",
-            "kind": "extrude",
-            "bone": "pointer",
-            "material": "abs-plastic",
-            "role": "body",
-            "tone": 0.1,
-            "profile": [[-0.004, -0.0025], [0.0155, -0.001], [0.0155, 0.001], [-0.004, 0.0025]],
-            "plane": "xy",
-            "texture": true,
-            "from": -0.092,
-            "to": -0.091
-          },
-          {
             "id": "plate",
             "kind": "box",
             "bone": "body",
@@ -4777,7 +3521,7 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.004], [0.024, 0.004], [0.024, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.0075], [0.024, 0.0075], [0.024, 0.0]],
             "axis": [0, 0, 1],
             "origin": [0.0, 0.0, -0.092],
             "member": "pointer",
@@ -4828,16 +3572,16 @@
         ],
         "decisions": [
           {
-            "en": "Body at 1:100, drawn anew: seam, draft and the two shells merge into one pressing at the width of the seam bead with shoulders in three steps; the index head is one block without its frame, with the counter strip, the dial and the pointer as sheets on its face; the data plate is a sheet on the front; the stubs are plain 30 mm pins up to the cut, without boss or bore, and the union nuts are round 40 mm drums. Digits, ticks, pivot, plate text and flow arrow are below 15 mm and left out.",
-            "de": "Körper bei 1:100, neu gezeichnet: Naht, Ziehschräge und die zwei Schalen gehen in einem Pressteil in der Breite des Nahtwulstes auf, mit Schultern in drei Stufen; der Zählwerkskopf ist ein Block ohne Rahmen, mit Zählwerksstreifen, Prüfrad und Zeiger als Blätter auf seiner Front; das Datenschild ist ein Blatt auf der Vorderseite; die Stutzen sind glatte 30-mm-Zapfen bis zum Schnitt, ohne Bund und Bohrung, und die Überwurfmuttern sind runde 40-mm-Trommeln. Ziffern, Striche, Drehpunkt, Schildtext und Durchflusspfeil liegen unter 15 mm und entfallen."
+            "en": "Body at 1:100, drawn anew: seam, draft and the two shells merge into one pressing at the width of the seam bead with shoulders in three steps; the index head is one block without its frame, with the counter strip and the dial as sheets on its face (the 5 mm pointer blade cannot print at this scale and is left out); the data plate is a sheet on the front; the stubs are plain 30 mm pins up to the cut, without boss or bore, and the union nuts are round 40 mm drums. Digits, ticks, pivot, plate text and flow arrow are below 15 mm and left out.",
+            "de": "Körper bei 1:100, neu gezeichnet: Naht, Ziehschräge und die zwei Schalen gehen in einem Pressteil in der Breite des Nahtwulstes auf, mit Schultern in drei Stufen; der Zählwerkskopf ist ein Block ohne Rahmen, mit Zählwerksstreifen und Prüfrad als Blätter auf seiner Front (die Zeigerklinge von 5 mm ist in diesem Maßstab nicht druckbar und entfällt); das Datenschild ist ein Blatt auf der Vorderseite; die Stutzen sind glatte 30-mm-Zapfen bis zum Schnitt, ohne Bund und Bohrung, und die Überwurfmuttern sind runde 40-mm-Trommeln. Ziffern, Striche, Drehpunkt, Schildtext und Durchflusspfeil liegen unter 15 mm und entfallen."
           },
           {
             "en": "Thermal: housing, index block and the closed connections with cut tops; the hidden measuring unit keeps its frame, the two diaphragm pans as rounded blocks, the valve deck with the slide covers merged into it, the gear tower and the outlet duct.",
             "de": "Thermik: Gehäuse, Zählwerksblock und die geschlossenen Anschlüsse mit Schnittflächen oben; das verborgene Messwerk behält seinen Rahmen, die zwei Membranschalen als gerundete Blöcke, das Ventildeck mit den darin aufgegangenen Schieberhauben, den Getriebeturm und den Auslasskanal."
           },
           {
-            "en": "Structure: stub tubes under round union joints, the two sheet cups with the seam as a 15 mm ring, the measuring unit as one slab in the lower cup with its outlet duct, the pointer spindle, the two tailpiece supports as plain pins and the mass.",
-            "de": "Tragwerk: Stutzenrohre unter runden Verschraubungsgelenken, die zwei Blechnäpfe mit der Naht als 15-mm-Ring, das Messwerk als eine Scheibe im unteren Napf mit seinem Auslasskanal, die Zeigerwelle, die zwei Einlegeteil-Auflager als glatte Zapfen und die Masse."
+            "en": "Structure: stub tubes under round union joints, the two sheet cups with the seam as a 15 mm ring, the measuring unit as one slab in the lower cup with its outlet duct, the pointer spindle at the 15 mm feature, the two tailpiece supports as plain pins and the mass.",
+            "de": "Tragwerk: Stutzenrohre unter runden Verschraubungsgelenken, die zwei Blechnäpfe mit der Naht als 15-mm-Ring, das Messwerk als eine Scheibe im unteren Napf mit seinem Auslasskanal, die Zeigerwelle auf dem 15-mm-Merkmal, die zwei Einlegeteil-Auflager als glatte Zapfen und die Masse."
           }
         ]
       },
@@ -4847,16 +3591,45 @@
         "body": [
           {
             "id": "housing",
-            "kind": "box",
             "bone": "body",
             "material": "sheet-steel",
             "role": "body",
             "tone": 0.74,
-            "size": [0.193, 0.195, 0.134],
-            "cornerRadius": 0.018,
-            "transform": {
-              "translation": [0.0, -0.0025, 0.0]
-            }
+            "kind": "loft",
+            "capStart": true,
+            "capEnd": true,
+            "sections": [
+              {
+                "at": [0, -0.1, 0],
+                "rx": 0.0785,
+                "ry": 0.049,
+                "exponent": 5.5
+              },
+              {
+                "at": [0, -0.082, 0],
+                "rx": 0.089,
+                "ry": 0.0595,
+                "exponent": 5.5
+              },
+              {
+                "at": [0, 0, 0],
+                "rx": 0.0915,
+                "ry": 0.062,
+                "exponent": 5.5
+              },
+              {
+                "at": [0, 0.077, 0],
+                "rx": 0.089,
+                "ry": 0.0595,
+                "exponent": 5.5
+              },
+              {
+                "at": [0, 0.095, 0],
+                "rx": 0.0785,
+                "ry": 0.049,
+                "exponent": 5.5
+              }
+            ]
           },
           {
             "id": "index",
@@ -4896,19 +3669,6 @@
             "texture": true
           },
           {
-            "id": "needle",
-            "kind": "extrude",
-            "bone": "pointer",
-            "material": "abs-plastic",
-            "role": "body",
-            "tone": 0.1,
-            "profile": [[-0.005, -0.003], [0.017, -0.001], [0.017, 0.001], [-0.005, 0.003]],
-            "plane": "xy",
-            "texture": true,
-            "from": -0.092,
-            "to": -0.091
-          },
-          {
             "id": "stubs",
             "kind": "revolve",
             "bone": "body",
@@ -4922,6 +3682,36 @@
               "count": 2,
               "translation": [0.11, 0, 0]
             }
+          },
+          {
+            "id": "seam",
+            "kind": "loft",
+            "bone": "body",
+            "material": "sheet-steel",
+            "role": "detail",
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0.0, -0.0045, 0.0],
+                "rx": 0.0945,
+                "ry": 0.065,
+                "exponent": 5.5
+              },
+              {
+                "at": [0, 0, 0],
+                "rx": 0.0965,
+                "ry": 0.067,
+                "exponent": 5.5
+              },
+              {
+                "at": [0.0, 0.0045, 0.0],
+                "rx": 0.0945,
+                "ry": 0.065,
+                "exponent": 5.5
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
           }
         ],
         "thermal": [
@@ -4953,6 +3743,11 @@
               "translation": [0.0, -0.03, 0.0]
             },
             "region": "measuring-unit"
+          },
+          {
+            "id": "th-seam",
+            "of": "seam",
+            "region": "shell"
           }
         ],
         "structure": [
@@ -5058,7 +3853,7 @@
             "material": "abs-plastic",
             "role": "body",
             "tone": 0.3,
-            "profile": [[0.0, 0.0], [0.0, 0.004], [0.024, 0.004], [0.024, 0.0]],
+            "profile": [[0.0, 0.0], [0.0, 0.015], [0.03, 0.015], [0.03, 0.0]],
             "axis": [0, 0, 1],
             "origin": [0.0, 0.0, -0.092],
             "member": "pointer",
@@ -5109,16 +3904,20 @@
         ],
         "decisions": [
           {
-            "en": "Body at 1:200, drawn anew: one block with 18 mm rounded edges for the whole housing, the index head as a 23 mm proud block with a widened counter bar, a 40 mm dial and a bolder pointer, and the two connections as solid 40 mm pins that take stub, union nut and tailpiece. Seam, shoulders' true curve, data plate and bores are below 30 mm and left out.",
-            "de": "Körper bei 1:200, neu gezeichnet: ein Block mit 18 mm gerundeten Kanten für das ganze Gehäuse, der Zählwerkskopf als 23 mm vorstehender Block mit verbreitertem Zählwerksbalken, einem 40-mm-Prüfrad und einem kräftigeren Zeiger, und die zwei Anschlüsse als volle 40-mm-Zapfen, die Stutzen, Überwurfmutter und Einlegeteil aufnehmen. Naht, die wahre Schulterkurve, Datenschild und Bohrungen liegen unter 30 mm und entfallen."
+            "en": "Body at 1:200, drawn anew: one block with 18 mm rounded edges for the whole housing, the index head as a 23 mm proud block with a widened counter bar, and a 40 mm dial (the pointer would be a hairline and is left out), and the two connections as solid 40 mm pins that take stub, union nut and tailpiece. Seam, shoulders' true curve, data plate and bores are below 30 mm and left out.",
+            "de": "Körper bei 1:200, neu gezeichnet: ein Block mit 18 mm gerundeten Kanten für das ganze Gehäuse, der Zählwerkskopf als 23 mm vorstehender Block mit verbreitertem Zählwerksbalken, und einem 40-mm-Prüfrad (der Zeiger wäre eine Haarlinie und entfällt), und die zwei Anschlüsse als volle 40-mm-Zapfen, die Stutzen, Überwurfmutter und Einlegeteil aufnehmen. Naht, die wahre Schulterkurve, Datenschild und Bohrungen liegen unter 30 mm und entfallen."
           },
           {
             "en": "Thermal: block, index block and pins with cut tops; the hidden measuring unit is one core.",
             "de": "Thermik: Block, Zählwerksblock und Zapfen mit Schnittflächen oben; das verborgene Messwerk ist ein Kern."
           },
           {
-            "en": "Structure: two hanger tubes pull on the crown of the upper sheet cup, the lower cup carries the measuring unit slab; both cups are plain walls with chamfered crowns. The pointer spindle, the two supports at the unions and the mass complete the load path.",
-            "de": "Tragwerk: zwei Hängerohre ziehen am Scheitel des oberen Blechnapfes, der untere Napf trägt die Messwerkscheibe; beide Näpfe sind glatte Wände mit gefasten Scheiteln. Zeigerwelle, die zwei Auflager an den Verschraubungen und die Masse vervollständigen den Lastpfad."
+            "en": "Structure: two hanger tubes pull on the crown of the upper sheet cup, the lower cup carries the measuring unit slab; both cups are plain walls with chamfered crowns. The pointer spindle at the 30 mm feature, the two supports at the unions and the mass complete the load path.",
+            "de": "Tragwerk: zwei Hängerohre ziehen am Scheitel des oberen Blechnapfes, der untere Napf trägt die Messwerkscheibe; beide Näpfe sind glatte Wände mit gefasten Scheiteln. Zeigerwelle auf dem 30-mm-Merkmal, die zwei Auflager an den Verschraubungen und die Masse vervollständigen den Lastpfad."
+          },
+          {
+            "en": "Five pressed sections retain the taper of the two metal shells. The folded seam projects beyond both stampings.",
+            "de": "Fünf Pressquerschnitte bilden die verjüngten Blechschalen ab. Der gefalzte Mittelstoß ragt über beide Schalen hinaus."
           }
         ]
       },
@@ -5128,99 +3927,39 @@
         "body": [
           {
             "id": "housing",
+            "kind": "extrude",
             "bone": "body",
             "material": "sheet-steel",
-            "tone": 0.74,
             "role": "body",
-            "kind": "extrude",
+            "tone": 0.74,
+            "profile": [[0.074, -0.1], [0.08673, -0.09473], [0.092, -0.082], [0.092, 0.077], [0.08673, 0.08973], [0.074, 0.095], [-0.074, 0.095], [-0.08673, 0.08973], [-0.092, 0.077], [-0.092, -0.082], [-0.08673, -0.09473], [-0.074, -0.1]],
             "plane": "xy",
-            "from": -0.067,
-            "to": 0.067,
-            "profile": [
-              [
-                -0.076,
-                -0.1
-              ],
-              [
-                0.076,
-                -0.1
-              ],
-              [
-                0.0965,
-                -0.069
-              ],
-              [
-                0.0965,
-                0.06
-              ],
-              [
-                0.075,
-                0.095
-              ],
-              [
-                -0.075,
-                0.095
-              ],
-              [
-                -0.0965,
-                0.06
-              ],
-              [
-                -0.0965,
-                -0.069
-              ]
-            ]
+            "from": -0.0625,
+            "to": 0.0625
+          },
+          {
+            "id": "seam",
+            "kind": "extrude",
+            "bone": "body",
+            "material": "sheet-steel",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[0.049, -0.0965], [0.06173, -0.09123], [0.067, -0.0785], [0.067, 0.0785], [0.06173, 0.09123], [0.049, 0.0965], [-0.049, 0.0965], [-0.06173, 0.09123], [-0.067, 0.0785], [-0.067, -0.0785], [-0.06173, -0.09123], [-0.049, -0.0965]],
+            "plane": "zx",
+            "from": -0.0045,
+            "to": 0.0045
           },
           {
             "id": "index",
+            "kind": "box",
             "bone": "body",
             "material": "abs-plastic",
+            "role": "body",
             "tone": 0.9,
-            "role": "body",
-            "kind": "box",
-            "size": [
-              0.13,
-              0.066,
-              0.026
-            ],
-            "cornerRadius": 0,
+            "size": [0.13, 0.066, 0.024],
             "transform": {
-              "translation": [
-                0.0,
-                0.039,
-                -0.077
-              ]
+              "translation": [0.0, 0.039, -0.078]
             }
-          },
-          {
-            "id": "needle",
-            "kind": "extrude",
-            "bone": "pointer",
-            "material": "abs-plastic",
-            "role": "body",
-            "tone": 0.1,
-            "profile": [
-              [
-                -0.005,
-                -0.003
-              ],
-              [
-                0.017,
-                -0.001
-              ],
-              [
-                0.017,
-                0.001
-              ],
-              [
-                -0.005,
-                0.003
-              ]
-            ],
-            "plane": "xy",
-            "texture": true,
-            "from": -0.092,
-            "to": -0.091
           },
           {
             "id": "stubs",
@@ -5228,42 +3967,13 @@
             "bone": "body",
             "material": "steel-pipe",
             "role": "body",
-            "tone": 0.45,
-            "profile": [
-              [
-                0.095,
-                0.0
-              ],
-              [
-                0.095,
-                0.02
-              ],
-              [
-                0.145,
-                0.02
-              ],
-              [
-                0.145,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              -0.055,
-              0.0,
-              0.0
-            ],
+            "tone": 0.5,
+            "profile": [[0.093, 0.0], [0.093, 0.015], [0.145, 0.015], [0.145, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [-0.055, 0.0, 0.0],
             "repeat": {
               "count": 2,
-              "translation": [
-                0.11,
-                0,
-                0
-              ]
+              "translation": [0.11, 0, 0]
             }
           }
         ],
@@ -5282,71 +3992,20 @@
             "id": "th-stubs",
             "of": "stubs",
             "region": "pipes",
-            "sectionFaces": [
-              "+v"
-            ]
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-unit",
+            "kind": "box",
             "bone": "body",
             "material": "polyester-gf",
-            "tone": 0.35,
             "role": "body",
-            "region": "measuring-unit",
-            "kind": "extrude",
-            "plane": "xy",
-            "from": -0.052,
-            "to": 0.052,
-            "profile": [
-              [
-                -0.077,
-                -0.081
-              ],
-              [
-                -0.05,
-                -0.088
-              ],
-              [
-                -0.05,
-                -0.06
-              ],
-              [
-                -0.013,
-                -0.06
-              ],
-              [
-                -0.013,
-                -0.087
-              ],
-              [
-                0.013,
-                -0.087
-              ],
-              [
-                0.013,
-                -0.06
-              ],
-              [
-                0.05,
-                -0.06
-              ],
-              [
-                0.05,
-                -0.088
-              ],
-              [
-                0.077,
-                -0.081
-              ],
-              [
-                0.077,
-                0.027
-              ],
-              [
-                -0.077,
-                0.027
-              ]
-            ]
+            "tone": 0.35,
+            "size": [0.15, 0.11, 0.09],
+            "transform": {
+              "translation": [0.0, -0.04, 0.0]
+            },
+            "region": "measuring-unit"
           }
         ],
         "structure": [
@@ -5357,47 +4016,18 @@
             "material": "steel-pipe",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.09,
-                0.0
-              ],
-              [
-                0.09,
-                0.015
-              ],
-              [
-                0.1215,
-                0.015
-              ],
-              [
-                0.1215,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              -0.055,
-              0.0,
-              0.0
-            ],
+            "profile": [[0.09, 0.0], [0.09, 0.015], [0.1215, 0.015], [0.1215, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [-0.055, 0.0, 0.0],
             "repeat": {
               "count": 2,
-              "translation": [
-                0.11,
-                0,
-                0
-              ]
+              "translation": [0.11, 0, 0]
             },
             "member": "body",
             "part": "member"
           },
           {
-            "id": "member-upper-shell",
+            "id": "member-case",
             "kind": "loft",
             "bone": "body",
             "material": "sheet-steel",
@@ -5405,146 +4035,61 @@
             "tone": 0.7,
             "sections": [
               {
-                "at": [
-                  0.0,
-                  0.0,
-                  0.0
-                ],
-                "rx": 0.0965,
-                "ry": 0.067,
-                "exponent": 5.5
-              },
-              {
-                "at": [
-                  0.0,
-                  0.077,
-                  0.0
-                ],
-                "rx": 0.0965,
-                "ry": 0.067,
-                "exponent": 5.5
-              },
-              {
-                "at": [
-                  0.0,
-                  0.095,
-                  0.0
-                ],
+                "at": [0.0, -0.1, 0.0],
                 "rx": 0.0785,
                 "ry": 0.049,
-                "exponent": 5.5
-              }
-            ],
-            "capStart": false,
-            "capEnd": true,
-            "member": "body",
-            "part": "member"
-          },
-          {
-            "id": "member-lower-shell",
-            "kind": "loft",
-            "bone": "body",
-            "material": "sheet-steel",
-            "role": "body",
-            "tone": 0.7,
-            "sections": [
-              {
-                "at": [
-                  0.0,
-                  0.0,
-                  0.0
-                ],
-                "rx": 0.0965,
-                "ry": 0.067,
-                "exponent": 5.5
+                "exponent": 4
               },
               {
-                "at": [
-                  0.0,
-                  -0.082,
-                  0.0
-                ],
+                "at": [0.0, -0.082, 0.0],
                 "rx": 0.0965,
                 "ry": 0.067,
-                "exponent": 5.5
+                "exponent": 4
               },
               {
-                "at": [
-                  0.0,
-                  -0.1,
-                  0.0
-                ],
+                "at": [0.0, 0.077, 0.0],
+                "rx": 0.0965,
+                "ry": 0.067,
+                "exponent": 4
+              },
+              {
+                "at": [0.0, 0.095, 0.0],
                 "rx": 0.0785,
                 "ry": 0.049,
-                "exponent": 5.5
+                "exponent": 4
               }
             ],
-            "capStart": false,
+            "capStart": true,
             "capEnd": true,
             "member": "body",
             "part": "member"
           },
           {
             "id": "member-unit",
+            "kind": "box",
             "bone": "body",
             "material": "polyester-gf",
-            "tone": 0.5,
             "role": "body",
-            "member": "body",
-            "part": "member",
-            "kind": "box",
-            "size": [
-              0.134,
-              0.008,
-              0.072
-            ],
-            "cornerRadius": 0,
+            "tone": 0.5,
+            "size": [0.15, 0.094, 0.03],
             "transform": {
-              "translation": [
-                0.0,
-                -0.049,
-                0.0
-              ]
-            }
+              "translation": [0.0, -0.049, 0.0]
+            },
+            "member": "body",
+            "part": "member"
           },
           {
             "id": "member-pointer-spindle",
+            "kind": "revolve",
             "bone": "pointer",
             "material": "abs-plastic",
-            "tone": 0.3,
             "role": "body",
+            "tone": 0.3,
+            "profile": [[0.0, 0.0], [0.0, 0.01], [0.024, 0.01], [0.024, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0.0, 0.0, -0.092],
             "member": "pointer",
-            "part": "member",
-            "kind": "extrude",
-            "plane": "xy",
-            "from": -0.092,
-            "to": -0.068,
-            "profile": [
-              [
-                0.002,
-                0.0
-              ],
-              [
-                0.001,
-                0.001732
-              ],
-              [
-                -0.001,
-                0.001732
-              ],
-              [
-                -0.002,
-                0.0
-              ],
-              [
-                -0.001,
-                -0.001732
-              ],
-              [
-                0.001,
-                -0.001732
-              ]
-            ]
+            "part": "member"
           },
           {
             "id": "support-union-inlet",
@@ -5553,34 +4098,9 @@
             "material": "steel-pipe",
             "role": "body",
             "tone": 0.3,
-            "profile": [
-              [
-                0.1215,
-                0.0
-              ],
-              [
-                0.1215,
-                0.015
-              ],
-              [
-                0.145,
-                0.015
-              ],
-              [
-                0.145,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              -0.055,
-              0.0,
-              0.0
-            ],
+            "profile": [[0.1215, 0.0], [0.1215, 0.015], [0.145, 0.015], [0.145, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [-0.055, 0.0, 0.0],
             "member": "body",
             "part": "support",
             "anchor": "union-inlet"
@@ -5592,34 +4112,9 @@
             "material": "steel-pipe",
             "role": "body",
             "tone": 0.3,
-            "profile": [
-              [
-                0.1215,
-                0.0
-              ],
-              [
-                0.1215,
-                0.015
-              ],
-              [
-                0.145,
-                0.015
-              ],
-              [
-                0.145,
-                0.0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0.055,
-              0.0,
-              0.0
-            ],
+            "profile": [[0.1215, 0.0], [0.1215, 0.015], [0.145, 0.015], [0.145, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.055, 0.0, 0.0],
             "member": "body",
             "part": "support",
             "anchor": "union-outlet"
@@ -5631,17 +4126,9 @@
             "material": "polyester-gf",
             "role": "detail",
             "tone": 0.5,
-            "radii": [
-              0.02,
-              0.02,
-              0.02
-            ],
+            "radii": [0.02, 0.02, 0.02],
             "transform": {
-              "translation": [
-                0.0,
-                -0.02,
-                0.0
-              ]
+              "translation": [0.0, -0.02, 0.0]
             },
             "member": "body",
             "part": "mass"
@@ -5649,8 +4136,12 @@
         ],
         "decisions": [
           {
-            "en": "Clipped corners describe the pressed diaphragm case. The forward index and twin threaded connections define its orientation.",
-            "de": "Abgesetzte Ecken zeichnen das gepresste Membrangehäuse. Vorgebautes Zählwerk und zwei Gewindestutzen zeigen die Einbaulage."
+            "en": "Own 1:500 model, a crisp massing of the compact G4 meter: the case as one prism of the front outline (0.193 x 0.195 m, 18 mm corners) across its depth, the folded seam as a proud band round the middle, the index head as a 24 mm proud block on the front and the two connections as plain 30 mm stubs at 110 mm spacing; counter, dial, plate, nuts and tailpieces are merged away.",
+            "de": "Eigenes 1:500-Modell, eine klare Massenform des kompakten G4-Zählers: das Gehäuse als ein Prisma des Frontumrisses (0,193 x 0,195 m, 18-mm-Ecken) über seine Tiefe, die gefalzte Naht als vorstehendes Band um die Mitte, der Zählwerkskopf als 24 mm vorstehender Block auf der Front und die zwei Anschlüsse als glatte 30-mm-Stutzen im Abstand von 110 mm; Zählwerk, Prüfrad, Schild, Muttern und Einlegeteile gehen darin auf."
+          },
+          {
+            "en": "Thermal by reference to case, index and stubs (the seam band merges into the shell), the measuring unit as one hidden core of 0.15 x 0.11 x 0.09 m in the lower half. Structure: the stubs carry the meter from the two supports at the unions, the pressed case as one sheet monocoque from crown to crown with its chamfered shoulders, the unit slab, the pointer spindle and the mass.",
+            "de": "Thermik als Verweis auf Gehäuse, Zählwerkskopf und Stutzen (das Nahtband geht in der Schale auf), das Messwerk als ein verborgener Kern von 0,15 x 0,11 x 0,09 m in der unteren Hälfte. Tragwerk: die Stutzen tragen den Zähler von den zwei Auflagern an den Verschraubungen, das gepresste Gehäuse als eine Blechschale von Scheitel zu Scheitel mit ihren gefasten Schultern, die Messwerkscheibe, die Zeigerwelle und die Masse."
           }
         ]
       }

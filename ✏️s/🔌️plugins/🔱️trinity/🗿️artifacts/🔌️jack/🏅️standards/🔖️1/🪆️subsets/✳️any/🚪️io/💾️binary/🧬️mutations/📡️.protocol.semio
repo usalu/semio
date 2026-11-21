@@ -13,3 +13,5 @@ field format u8
 field tag varint
 record set-query tag=0
 field payload bytes
+record set-root tag=1
+field payload bytes

@@ -76,3 +76,38 @@ Final check `$BUN volumes-check.ts machinery/scroll-compressor --product`: `PASS
 - Weld beads, bolt heads of the window, the terminal cover clip and the cable are below or at the scale and are not modelled.
 - Reference numbers marked K could not be confirmed against the datasheets (the PDFs were not readable).
 - Areas: the honest discharge area is 0.0044 m2 (1/2 in stub on a boss), smaller than the earlier 0.006; changed within factor 1.5, nothing for `area-review.md`.
+
+## Round 5 handcraft
+
+Script: `r5-scroll-compressor-model.py` (edits the volumes source; splice with `volumes-insert.py`). 1:50 to 1:200 unchanged; the model-only 1:500 (coordinator's digital scale) re-authored.
+
+### Reference (Copeland ZR K5 class) and model at 1:50
+
+| quantity | reference | model 1:50 | deviation |
+|---|---|---|---|
+| overall height incl. discharge stub | 0.43 m (asset; class 0.388-0.436) | 0.43 m | 0 % |
+| shell OD | 241 mm (9.5 in) | 241 mm | 0 % |
+| bolt square | 190.5 mm (7.5 in) | 190.5 mm | 0 % |
+| cap rise above lap | about 75 mm (K) | 75 mm | 0 % |
+| discharge stub | 1/2 in = 12.7 mm | 12.7 mm | 0 % |
+| suction tube | 7/8 in = 22.2 mm | 22.2 mm | 0 % |
+| suction height above base | about 0.18 m (K) | 0.18 m | 0 % |
+| terminal cover | 78 x 72 x 48 mm (K) | 78 x 72 x 48 mm | 0 % |
+
+### Grades (body / thermal / structure), before -> after
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- (default `full-load`, `off`, `part-load` and clip `spin` t 0.4: only the rotor turns, hidden behind the window) |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | B+ / A- / A- | unchanged (foot block with chamfered corners at the 30 mm feature) |
+| 1:500 | B- / B / B+ | B+ / A- / B+: the cap was a faceted two-slope cone with a hat-brim sliver, the base a square slab, the window thermal shell and the scroll disc stood 26 to 53 mm out of a body without a window. Now a smooth torispherical crown (75 mm rise), an octagonal base plate whose chamfers stand for the ears, no window shell in thermal, the scroll region a 90 mm disc inside the shell at the scroll-set height. |
+
+### Checks
+
+`volumes-check.ts machinery/scroll-compressor --product`: PASS. `r3-validate.ts`: VALID.
+
+### Remaining
+
+- The window remains an authored didactic device (concept of the asset); real hermetic shells are closed.
+- 1:50 structure reads as the closed vessel from outside (it is the real pressure vessel; the frame, crankshaft and bearings are inside and show only in the cut).

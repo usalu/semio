@@ -1,5 +1,6 @@
 //! 🧵️ Granted selection validation, raw mask construction, hashing and atomic adoption.
 use super::*;
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,RetirementPollExit};
 use std::mem::size_of;
 use semio_os_kernel as store;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
@@ -83,7 +84,7 @@ impl MaskSelectionWork {
             Phase::References=>demand.copy_bytes=mask_key(self.owned()?.prior.as_ref()).map_or(0,str::len)*2,
             Phase::Destination=>demand.copy_bytes=(self.count()*4-self.verified).min((body.min(32768)/2).max(1))*2,
             Phase::RowsReserve=>demand.capacity_bytes=self.plan_len*size_of::<RasterMutation>(),
-            Phase::Rows=>{let row=self.plan[self.row];demand.copy_bytes=self.row_bytes(row)?;demand.capacity_bytes=demand.copy_bytes+if matches!(row,Row::Add){RasterImagePayload::owned_birth_demands().capacity_bytes}else{0};}
+            Phase::Rows=>{let row=self.plan[self.row];let bytes=self.row_bytes(row)?;if matches!(row,Row::Add){demand=RasterImagePayload::owned_birth_demands();}demand.copy_bytes+=bytes;demand.capacity_bytes+=bytes;}
             _=>{}
         }
         Ok(demand)
@@ -142,8 +143,8 @@ impl MaskSelectionWork {
             Row::Detach=>RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask {layer_id:owned.layer_id.clone(),expected:owned.prior.clone(),mask:None}),
             Row::Remove=>RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset {asset_id:mask_key(owned.prior.as_ref()).ok_or_else(||refused("raster.mask-prior-missing"))?.into()}),
             Row::Add=>{
-                let image=owned.image.take().ok_or_else(||refused("raster.mask-result-missing"))?;let child=RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(bytes),..grant};
-                let turn=RasterImagePayload::from_owned(image,child);let(asset,p)=match turn.result{Ok(result)=>result,Err((error,image))=>{owned.image=Some(image);return Err(error.with_retained_progress(progress(0,0)));}};receipt.retained_capacity_bytes+=p.retained_capacity_bytes;
+                let image=owned.image.take().ok_or_else(||refused("raster.mask-result-missing"))?;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes-bytes,..grant};
+                let turn=RasterImagePayload::from_owned(image,child);let(asset,p)=match turn.result{Ok(result)=>result,Err((error,image))=>{owned.image=Some(image);return Err(error.with_retained_progress(progress(0,0)));}};receipt.copied_bytes+=p.copied_bytes;receipt.retained_capacity_bytes+=p.retained_capacity_bytes;
                 RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset {asset_id:owned.key.clone(),asset})
             }
             Row::AttachPrior=>RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask {layer_id:owned.layer_id.clone(),expected:owned.prior.clone(),mask:Some(replacement(&owned.key,width,height))}),
@@ -153,6 +154,7 @@ impl MaskSelectionWork {
         owned.rows.push(mutation);self.row+=1;if self.row==self.plan_len{self.phase=Phase::Ready;}Ok(receipt)
     }
     fn destination(&self,document:&RasterSnapshot)->Result<std::sync::Arc<SemioImageSnapshot>,ValueError>{document.assets.get(&self.owned()?.key).and_then(|child|child.local_owner::<SemioImageSnapshot>()).ok_or_else(||refused("raster.mask-destination-unavailable"))}
+    fn work_units(&self)->u64{if self.phase==Phase::Rows&&matches!(self.plan[self.row],Row::Add){1+RasterImagePayload::owned_birth_work()}else{1}}
     pub fn advance(&mut self,document:&RasterSnapshot,config:&RasterConfig,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if self.failed{return Err(refused("raster.mask-owner-failed"));}let result=self.advance_one(document,config,grant);if result.is_err(){self.failed=true;}result
     }
@@ -211,7 +213,20 @@ impl MaskSelectionWork {
     }
     pub fn take_emit(&mut self)->Option<Emit<RasterMutation,RasterConfigMutation>>{if self.closing||self.failed||self.phase!=Phase::Ready{return None;}self.phase=Phase::Taken;Some(Emit::mutations(std::mem::take(&mut self.owned.as_mut()?.rows)))}
     pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.hash.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<RasterImageContentHash>>(),depth:1,..Default::default()});}if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body);}if self.owned.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned);}Ok(Default::default())}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.closing=true;if self.hash.is_some(){let demand=RetirementDemand{copy_bytes:size_of::<Option<RasterImageContentHash>>(),depth:1,..Default::default()};if !funded(grant,demand){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}self.hash=None;return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress(demand.copy_bytes,0))),work:1};}if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.owned,&mut self.retirement,grant)}}
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        self.closing=true;
+        if self.hash.is_some(){
+            let demand=RetirementDemand{copy_bytes:size_of::<Option<RasterImageContentHash>>(),depth:1,..Default::default()};
+            let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
+                if !funded(effect.grant(),demand)||!effect.performed(1)?{return Ok(RetainedCloneStep::Progress(Default::default()))}
+                self.hash=None;Ok(RetainedCloneStep::Progress(progress(demand.copy_bytes,0)))
+            })();
+            return RetirementPollExit::settle(effect,result)
+        }
+        if self.retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,body,effect)}
+        let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.owned,&mut self.retirement,effect);
+        RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})
+    }
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.owned.is_none()&&self.retirement.is_none()}
 }
 
@@ -227,13 +242,15 @@ impl<A:RasterWorkApp> ArtifactCommandWork<A> for MaskFromSelectionWork {
     fn step(&mut self,input:&ArtifactCommandInputs<'_,A>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<A>,semio_framework_job::OriginalTurnFailure>{
         if cx.is_cancelled(){return Err(refused("raster.mask-cancelled").into());}if self.complete{return Err(refused("raster.mask-work-complete").into());}if cx.should_yield(){return Ok(ArtifactCommandWorkStep::Pending {stage:"mask-yield",preview:b""});}
         let RasterCommand::MaskFromSelection(command)=input.command else{return Err(refused("raster.mask-work-mismatch").into());};
+        let work=self.candidate.as_ref().map_or(1,MaskSelectionWork::work_units);
+        if cx.fuel_remaining()<work{return Ok(ArtifactCommandWorkStep::Pending {stage:"mask-yield",preview:b""});}
         let result=if let Some(candidate)=self.candidate.as_mut(){candidate.advance(input.snapshot,input.config,cx.retained_grant())}else{MaskSelectionWork::begin(command,input.snapshot,input.config,cx.retained_grant()).map(|started|{if let Some((candidate,receipt))=started{self.candidate=Some(candidate);RetainedCloneStep::Progress(receipt)}else{RetainedCloneStep::Progress(Default::default())}})};
-        cx.consume_fuel(1);let step=match result{Ok(step)=>step,Err(error)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))};let receipt=step.progress();cx.consume_retained(receipt)?;
+        cx.consume_fuel(work);let step=match result{Ok(step)=>step,Err(error)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))};let receipt=step.progress();cx.consume_retained(receipt)?;
         if matches!(step,RetainedCloneStep::Complete(_)){self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(self.candidate.as_mut().unwrap().take_emit().ok_or_else(||refused("raster.mask-output-missing"))?));}
         Ok(if receipt==RetainedCloneProgress::default(){ArtifactCommandWorkStep::Pending {stage:"mask-capacity",preview:b""}}else{ArtifactCommandWorkStep::Progress {stage:"mask-create",preview:br#"{"en":"Creating selection mask","de":"Auswahlmaske wird erstellt"}"#}})
     }
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        let Some(candidate)=self.candidate.as_mut()else{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()});};let turn=candidate.close_step(cx.retained_grant());cx.consume_fuel(turn.work);let step=turn.result.map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;let progress=step.progress();if candidate.terminal_is_empty(){self.candidate=None;Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress})}else{Ok(semio_framework_job::InteractiveJobCloseStep::Pending {progress})}
+        let Some(candidate)=self.candidate.as_mut()else{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()});};let body=cx.retained_grant().maximum_copy_bytes;let demand=candidate.close_demands(body)?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|candidate.close_step(body,effect))?;let progress=step.progress();if candidate.terminal_is_empty(){self.candidate=None;Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress})}else{Ok(semio_framework_job::InteractiveJobCloseStep::Pending {progress})}
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.candidate.as_ref().map(|candidate|candidate.close_demands(32768)).transpose()?.unwrap_or_default().copy_bytes)}
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.candidate.as_ref().map(|candidate|candidate.close_demands(body)).transpose()?.unwrap_or_default().capacity_bytes)}

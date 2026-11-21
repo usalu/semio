@@ -40,6 +40,7 @@ pub enum SceneDragMode {
     PanViewport,
     MapMarquee { start_x: f32, start_y: f32, method: String, merge_mode: String },
     MapPan,
+    MapTouch { pointer_id: ui_render::PointerId, origin: [f64; 2], panning: bool, merge_mode: &'static str },
     InkPan { start_x: f32, start_y: f32, camera_x: f64, camera_y: f64, zoom: f64 },
     InkMove { origins: BTreeMap<String, (f64, f64)>, start_x: f32, start_y: f32 },
     InkResize { handle: String, from: InkBoundsF, start_x: f32, start_y: f32, selected_ids: Vec<String> },

@@ -1,5 +1,5 @@
 //! ♻️ Actual Rewriting parent fields and semantic SQL, before Native provider opt-in.
-use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SnapshotEncoding};
+use semio_os_kernel::{sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SnapshotEncoding};
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::{encoding};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
@@ -234,7 +234,9 @@ fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_s
             SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
             SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
         };
-        let database = original_owners::with_decoding(|native_owner|(codec.export)(crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let mut database = None;
+        original_owners::with_decoding(|native_owner| (codec.export)(crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA, &dialect, &payload, &mut database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).result.unwrap();
+        let database = database.expect("exported SQLite database").unwrap().value;
         assert_eq!(database.tables.len(), 30);
         let root = database.table("rewriting_document").unwrap().single_row().unwrap();
         let graph=database.table("jack_document").unwrap().single_row().unwrap();
@@ -243,7 +245,9 @@ fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_s
         assert_eq!(graph.text(5).unwrap(),expected.working_graph.query);
         let lhs=database.table("rewriting_lhs").unwrap().single_row().unwrap();
         assert_eq!(lhs.optional_text(3).unwrap(),expected.lhs.where_clause.as_deref());
-        let payload = original_owners::with_encoding(|native_owner|(codec.import)(crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
+        let mut payload = None;
+        original_owners::with_encoding(|native_owner| (codec.import)(crate::standards::v1::subsets::any::schema::model::REWRITE_RULE_SCHEMA, &dialect, &mut Some(database), encoding, &mut payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).result.unwrap();
+        let payload = payload.expect("imported native payload").unwrap().value;
         let actual = Owned::new(match payload {
             store::io_schema::IoPayload::Text(text) => RewritingSnapshot::parse_dsl(&text).unwrap(),
             store::io_schema::IoPayload::Binary(bytes) => RewritingSnapshot::decode_pack(&bytes).unwrap(),
@@ -290,8 +294,12 @@ fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
     let restored = SemioGraphSnapshot::from_sqlite_database(&database, &mut control).unwrap();
     assert_eq!(view(&ToValue::to_value(&restored)), *expected);
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let payload = original_owners::with_encoding(|native_owner|restored.encode_sqlite_snapshot_native(encoding, &mut control, native_owner)).unwrap();
-        let output = original_owners::with_decoding(|native_owner|SemioGraphSnapshot::decode_sqlite_snapshot_native(&payload, &mut control, native_owner)).unwrap();
+        let mut payload = None;
+        original_owners::with_encoding(|native_owner| restored.encode_sqlite_snapshot_native(encoding, &mut control, native_owner, &mut payload)).result.unwrap_or_else(|_| panic!("child snapshot encoding turn failed"));
+        let payload = payload.expect("encoded child snapshot").unwrap_or_else(|_| panic!("child snapshot encoding failed"));
+        let mut output = None;
+        original_owners::with_decoding(|native_owner| SemioGraphSnapshot::decode_sqlite_snapshot_native(&payload, &mut control, native_owner, &mut output)).result.unwrap_or_else(|_| panic!("child snapshot decoding turn failed"));
+        let output = output.expect("decoded child snapshot").unwrap_or_else(|_| panic!("child snapshot decoding failed"));
         assert_eq!(view(&ToValue::to_value(&output)), *expected);
     }
 }

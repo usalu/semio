@@ -1,0 +1,12 @@
+# Retained selected box-edge Fillet
+
+The registered `brep.solid.filletEdges` operator accepts one original viewport-selected edge of a certified axis-aligned box, including a translated box. The exact native result has six planar faces and one outward quarter-cylinder face, with two analytic quarter-circle cap arcs and shared native halfedge incidence. The adjacent straight portions are tangent to the quarter profile. A source edge from another solid, a nonpositive radius, and a radius that collapses an adjoining side are refused.
+
+The boundary publisher uses one common constructive recipe for topology and funded preview. Native edge and face labels follow the existing contiguous publication order. Cap/side charts use the same arc sampling and native endpoints, and the cylindrical side uses outward radial normals. An output cylinder pick resolves through Deconstruct to the existing original trimmed-face preview. Publication, cancellation and retirement reuse the original solid arena owner, with no intermediate live solid. The cold blend remains the broader topology-surgery route, including variable and multiple-edge cases.
+
+## Verification
+
+- The neutral feature witness gives authored translated boxes on three principal axes and expected geometry, area and volume. The independent Three.js feature suite passed all nine tests, including exact quarter-circle profile construction and closed mesh checks for every new witness.
+- The isolated Rust check compiled the actual construction recipe and the actual funded preview sampling chart against the lightweight native vector/topology contract. It passed exact same-parameter curve/face projection, each edge used twice in opposite directions, expected analytic volume, radius rejection and matching preview area and volume.
+- The linked original-brep-faces regression constructs and places each box through Flow, selects a live viewport edge label, resolves it through Deconstruct, runs Fillet Edges, and checks cancellation after draft topology exists. It checks the native quarter-circle edges and cylindrical face, exact volume, component-labelled solid preview and a second pick and tessellation of the output curved face. Linked execution is pending the shared native run.
+- Scoped whitespace and Rust AST checks passed. Source closures measured 3,796 active Construction lines, 3,997 Engine lines, 2,607 Mesh IO lines, 3,851 native registry lines and 2,144 original-brep-faces lines.

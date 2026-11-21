@@ -1,5 +1,55 @@
 {
+  "gullWing": {"asset":"herring-gull","primaries":10,"secondaries":12,"minimumSpanM":1.23,"maximumSpanM":1.55,"foldDeg":0,"glideDeg":50},
   "description": "Language-agnostic vectors of the rig as a neutral node tree: `joints` are the hand-computed mechanism joints of the sample figure (angles in radians = degrees x pi/180; the pelvis, the rig root, is free because the evaluated root placement moves it; every other bone is revolute about its own +Z axis, the staffage lateral axis); `variants` patch the sample figure and name the joint the mapping must give: a bone that a pose spreads is spherical about its own bone axis +X with the twist limits (default a half turn each way) and an unrestricted swing, a bone whose joint limits twist is spherical, a prismatic joint slides along its axis in the parent frame (cos(axisDeg), sin(axisDeg), 0), a fixed joint is fixed; `clips` give per clip the sampling count the clip fps imposes, ceil(duration x fps) + 1.",
+  "passengers": [
+    {
+      "asset": "parent-carrying-toddler",
+      "root": "toddler-torso",
+      "neck": "toddler-neck",
+      "head": "toddler-head",
+      "outlets": [
+        [
+          "toddler-nostrils",
+          "th-toddler-nose-breath"
+        ],
+        [
+          "toddler-mouth",
+          "th-toddler-mouth-breath"
+        ]
+      ],
+      "segments": []
+    },
+    {
+      "asset": "parent-with-stroller",
+      "root": "child",
+      "neck": "child-neck",
+      "head": "child-head",
+      "outlets": [
+        [
+          "child-nose",
+          "th-child-nose-breath"
+        ],
+        [
+          "child-mouth",
+          "th-child-mouth-breath"
+        ]
+      ],
+      "segments": [
+        "child-upper-arm-l",
+        "child-forearm-l",
+        "child-hand-l",
+        "child-thigh-l",
+        "child-shin-l",
+        "child-foot-l",
+        "child-upper-arm-r",
+        "child-forearm-r",
+        "child-hand-r",
+        "child-thigh-r",
+        "child-shin-r",
+        "child-foot-r"
+      ]
+    }
+  ],
   "joints": {
     "pelvis": {
       "type": "free",

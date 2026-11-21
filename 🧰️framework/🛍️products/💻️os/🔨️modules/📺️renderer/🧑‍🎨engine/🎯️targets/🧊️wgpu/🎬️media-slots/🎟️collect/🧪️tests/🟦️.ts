@@ -11,7 +11,7 @@ test("original roster source owns its typed grammar, paid coverage and original 
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  expect(createHash("sha256").update(JSON.stringify(accepted.tokenIdentity)).digest("hex")).toBe(law.token);
  const db=new Database(":memory:");try{expect(db.query("SELECT json_array_length(?) AS fields").get(JSON.stringify(accepted.tokenIdentity))).toEqual({fields:8})}finally{db.close()}
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");for(const required of["UiPresentedTreeLoan","NativeDecodeControl::resume","OriginalPresentedSlot::admit","self.coverage.step(source,engine,&self.loans","ArtifactCanonicalJsonTreeCursor::admit","RetainedCloneSource::admit_owned(original","source.take_authority","semio_framework_job::OriginalClosureFailure{initial:","close_failed_step","engine.return_presented_tree_source(loan,cx)","*output=std::mem::take(&mut owners.slots)"]){expect(source.includes(required)).toBe(true)}
+ const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");for(const required of["UiPresentedTreeLoan","NativeDecodeControl::resume","OriginalPresentedSlot::admit","self.coverage.step(source,engine,&self.loans","ArtifactCanonicalJsonTreeCursor::admit","RetainedCloneSource::admission_owned(std::mem::take(&mut owners.slots)","source.take_authority","semio_framework_job::OriginalClosureFailure{initial:","close_failed_step","engine.return_presented_tree_source(loan,cx)","*output=std::mem::take(&mut owners.slots)"]){expect(source.includes(required)).toBe(true)}
  expect(source.includes("serde_json::from_str")).toBe(false);expect(source.includes("serde_json::to_vec")).toBe(false);
  const publication=readModuleTreeSource(new URL("../../../📸️render-snapshot/🦀️.rs",import.meta.url));expect(publication.includes("source:&mut Option<RenderSnapshot>")).toBe(true);expect(publication.includes("incoming.as_ref().unwrap().revision==0")).toBe(true);expect(publication.includes("close_shared(owner,cx)")).toBe(true);
  const presenter=readModuleTreeSource(new URL("../../../🪟️winit-app/🦀️.rs",import.meta.url));expect(presenter.includes("self.original_snapshot=Some(")).toBe(true);expect(presenter.includes("retain_original_publication(&mut self.original_snapshot,cx)")).toBe(true);
@@ -50,7 +50,7 @@ test("original pending render retry copies its unchanged routing source in finit
 
 test("original intrinsic parser donates its complete native cause once beside its actual receipt",()=>{
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const cause=law.originalPackCause,db=new Database(":memory:");try{expect(db.query("SELECT ? AS variant,? AS original,? AS offset").get(cause.variant,cause.message,cause.offset)).toEqual({variant:cause.variant,original:cause.message,offset:cause.offset})}finally{db.close()}
- const source=readFileSync(`${process.cwd()}/🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`,"utf8"),start=source.indexOf("pub fn advance_original_step(&mut self,grant:"),end=source.indexOf("/// ⏱️",start),original=source.slice(start,end);
+ const source=readFileSync(`${process.cwd()}/🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`,"utf8"),start=source.indexOf("pub fn advance_original_step("),end=source.indexOf("/// ⏱️",start),original=source.slice(start,end);
  expect(original).toContain("self.fault.take()");expect(original).not.toContain("error.clone()");expect(original).toContain("original_failed");expect(cause.donationCopyBytes).toBe(0);
 });
 

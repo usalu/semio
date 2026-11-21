@@ -56,6 +56,8 @@ WINGS = {
     "flare": dict(hum=(-0.05, 0.72, 0.69), fore=(0.45, 0.42, 0.79), hand=(-0.12, 0.5, 0.86), trail=(-0.8, -0.6, 0), hint=(70, -150, 140)),
     "touchdown": dict(hum=(-0.3, 0.6, 0.74), fore=(0.32, 0.45, 0.83), hand=(-0.62, 0.3, 0.73), trail=(-0.9, -0.4, 0), hint=(80, -140, 125)),
 }
+TUCKED = {"gliding", "gliding-up", "gliding-down"}
+TUCK = {"thigh": -9, "shank": -36, "tarsus": -33, "foot": -80}
 WING_OF = {"gliding": ("glide", 0), "gliding-up": ("glide", 4), "gliding-down": ("glide", -4), "approach-a": ("glide", 0), "landing": ("flare", 0), "flare-key": ("flare", 0), "touchdown": ("touchdown", 0)}
 
 ANCHORS = {
@@ -84,7 +86,7 @@ def bone_spec(bid):
 SUMMARY = {"en": "An adult herring gull (Larus argentatus, 1.0 kg, wingspan 1.45 m): upright standing, soaring on spread wings and a landing flare to touchdown; rig with the trunk hinged at the hips, a two-piece neck, three-piece wings (humerus, forearm, hand) that fold in the real Z, webbed legs; plumage thermal model (41 degC core), nares breathing, back plume, breathing patterns for rest, soaring and the flare. Every view is a projection of the same three-dimensional chain, so spread wings are foreshortened in the side elevation.", "de": "Eine erwachsene Silbermöwe (Larus argentatus, 1,0 kg, Spannweite 1,45 m): aufrechtes Stehen, Segeln mit gespreizten Flügeln und ein Landeanflug bis zum Aufsetzen; Rig mit an den Hüften gelagertem Rumpf, zweiteiligem Hals, dreiteiligen Flügeln (Oberarm, Unterarm, Hand), die sich im wirklichen Z falten, Schwimmbeinen; Gefieder-Wärmemodell (41 Grad Kern), Nasenatmung, Rückenfahne, Atemmuster für Ruhe, Segeln und Abfangen. Jede Ansicht ist eine Projektion derselben räumlichen Kette, so sind gespreizte Flügel im Seitenaufriss verkürzt."}
 DESCRIPTIONS = {
     "standing": {"en": "Standing upright on both pink webbed feet, body tilted 14 degrees, neck raised in a short S with the bill slightly down, wings folded with the black primaries crossing over the tail and 75 mm beyond it.", "de": "Aufrecht auf beiden rosa Schwimmfüßen stehend, Körper um 14 Grad geneigt, Hals in kurzem S aufgerichtet, Schnabel leicht gesenkt, Flügel angelegt, die schwarzen Handschwingen über dem Schwanz gekreuzt und 75 mm darüber hinaus."},
-    "gliding": {"en": "Soaring in lift at about 1.5 m above the ground: both wings spread to the 1.45 m span with a slight dihedral, the elbow back, the wrist forward and the hand swept back (end-on and foreshortened in the side elevation), neck drawn in, tail spread, feet trailing.", "de": "Segeln in der Aufwindzone etwa 1,5 m über dem Boden: beide Flügel auf die Spannweite von 1,45 m gespreizt, leicht V-förmig, Ellbogen hinten, Handgelenk vorn und Hand zurückgeschwungen (im Seitenaufriss von vorn gesehen und verkürzt), Hals eingezogen, Schwanz gespreizt, Füße nach hinten."},
+    "gliding": {"en": "Soaring in lift at about 1.5 m above the ground: both wings spread to the 1.45 m span with a slight dihedral, the elbow back, the wrist forward and the hand swept back (end-on and foreshortened in the side elevation), neck drawn in, tail spread, legs folded back under the belly feathers with the feet trailing under the tail.", "de": "Segeln in der Aufwindzone etwa 1,5 m über dem Boden: beide Flügel auf die Spannweite von 1,45 m gespreizt, leicht V-förmig, Ellbogen hinten, Handgelenk vorn und Hand zurückgeschwungen (im Seitenaufriss von vorn gesehen und verkürzt), Hals eingezogen, Schwanz gespreizt, Beine nach hinten unter das Bauchgefieder gelegt, die Füße unter dem Schwanz nachgezogen."},
 }
 
 
@@ -290,6 +292,10 @@ def build_poses(rig, report):
         p["bones"] = bones
         if not upright:
             legs(p, F0, rig, report)
+        if p["id"] in TUCKED:
+            for s_ in ("-n", "-f"):
+                for bid, off in TUCK.items():
+                    p["bones"][bid + s_] = {"angleDeg": off}
         if p["id"] in WING_OF:
             wings(p, rig, *WING_OF[p["id"]])
         if p["id"] in DESCRIPTIONS:

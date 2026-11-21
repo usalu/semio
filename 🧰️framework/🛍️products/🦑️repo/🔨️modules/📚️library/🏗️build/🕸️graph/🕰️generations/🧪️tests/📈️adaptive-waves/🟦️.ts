@@ -1,5 +1,7 @@
 /** 📈️ Contract: a wave that infers nothing (every project is a hit of its stored record) costs a fixed time of the whole graph, so the next wave grows toward a time budget, bounded by a growth factor and a maximum; a wave that infers returns to the base wave, whose publication is the progress the fleet waits on. The cases are language-agnostic data in `./🔣️.json`. */
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import {createHash} from "node:crypto";
 import {mkdtempSync,realpathSync,rmSync} from "node:fs";
 import {writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -7,14 +9,49 @@ import {join} from "node:path";
 import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
-import {GENERATION_POLICY_V1,nextOwnerWaveV1} from "../../🟨️.mjs";
+import repairFixture from "./🩹️repair.json";
+import repairSchema from "./🧬️schema/🩹️repair.json";
+import {GENERATION_POLICY_V1,createFrontierV1,createGenerationStoreV1,nextOwnerWaveV1,type GenerationComputeSpecV1} from "../../🟨️.mjs";
 import {shapeComputeResultV1} from "../../🔌️load/🟨️.mjs";
-import {createWorld,ringFiles,seed} from "../🏃️world/🟦️.ts";
+import {IDENTITY,IMPLEMENTATION,createMemoryFilePort,createWorld,ringFiles,seed} from "../🏃️world/🟦️.ts";
 
 const BASE=GENERATION_POLICY_V1.ownerWave,scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-adaptive-waves-")),sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 const edit=async(dir:string,count:number)=>{await sleep(20);for(let at=1;at<=count;at++)await writeFile(join(dir,`pkg/p${at}/src/index.ts`),`import "@syn/p${at+1}";\nexport const waved=${at};\n`);};
 
 test("the fixture is closed under its schema",()=>{expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);});
+
+for(const condition of repairFixture.cases)test("targeted repair archive index "+condition,async()=>{
+ expect(new Ajv({strict:true}).validate(repairSchema,repairFixture)).toBe(true);
+ const {affected,retained}=repairFixture,root="/memory/repair-waves",memory=createMemoryFilePort(),names=Array.from({length:affected+retained},(_,index)=>"p"+String(index).padStart(4,"0"));
+ const digest=(value:string)=>createHash("sha256").update(value).digest("hex");
+ let indexPath="",verifiedReads=0,waves=0,checked=0;
+ const fs={...memory.port,read:async(path:string)=>{if(path===indexPath)verifiedReads++;return memory.port.read(path);}};
+ const store=createGenerationStoreV1({root,fs,holds:async()=>true,resources:{facts:"facts"}});
+ const membership=async()=>({digest:digest("membership"),frontier:createFrontierV1({directories:[],members:[],capturedAt:0}),changes:[]});
+ const compute=async(spec:GenerationComputeSpecV1)=>{
+  if(!spec.cold){
+   waves++;expect((await store.read())!.pointer.manifest).toBeNull();
+   if(spec.owners.includes(names[affected-1]!)){
+    if(condition==="missing at patch")await memory.port.remove(indexPath);
+    if(condition==="altered at patch")await memory.port.write(indexPath,Buffer.from("altered archive"));
+   }
+  }
+  return{owners:(spec.cold?names:spec.owners).map(name=>({name,root:name,kind:"project" as const,node:{name},edges:[],targets:[],rows:[{kind:"file",path:name+"/f",fact:{size:1}}]})),env:{digest:digest("env"),rows:[]}};
+ };
+ const options={identity:IDENTITY,implementation:IMPLEMENTATION,membership,compute};
+ const first=await store.refresh(options);
+ indexPath=join(root,GENERATION_POLICY_V1.indexes,first.current.manifest!.factIndex+".facts.br");
+ await store.invalidate({reason:"closure-missing",expected:first.current.pointer});
+ const tombstone=(await store.read())!.pointer,repair={generation:tombstone.generation,parent:tombstone.parent!,receipt:digest("receipt"),owners:names.slice(0,affected)};
+ const result=await store.refresh({...options,repair,qualify:async()=>{checked++;}}).then(value=>({published:Number(value.published),refusal:null}),(error:Error&{code?:string})=>({published:0,refusal:error.code??error.name}));
+ using oracle=new Database(":memory:");
+ const expected=oracle.query(`WITH RECURSIVE w(offset) AS (VALUES (0) UNION ALL SELECT offset+?1 FROM w WHERE offset+?1<?2)
+  SELECT COUNT(*) AS waves, 2 AS verifiedReads, ?3 AS checked, ?3 AS published,
+         CASE WHEN ?3=0 THEN 'GENERATION_CLOSURE_REPAIR_UNQUALIFIED' END AS refusal FROM w`).get(BASE,affected,Number(condition==="unchanged"));
+ expect({waves,verifiedReads,checked,...result}).toEqual(expected);
+ if(result.published)expect((await store.read())!.manifest!.owners[names.at(-1)!]).toEqual(first.current.manifest!.owners[names.at(-1)!]);
+ else expect((await store.read())!.pointer).toEqual(tombstone);
+});
 
 test("the policy declares the budget, the maximum and the growth",()=>{
  expect(GENERATION_POLICY_V1.ownerWaveBudgetMilliseconds).toBe(300000);expect(GENERATION_POLICY_V1.ownerWaveMaximum).toBe(960);expect(GENERATION_POLICY_V1.ownerWaveGrowth).toBe(4);expect(BASE).toBe(48);

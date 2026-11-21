@@ -1,0 +1,5 @@
+# Literal spatial input hover
+
+The Inspector's shared vector input groups bind the canonical input handle for point, vector, plane origin, plane normal and collection items. Each axis keeps its exact absolute edit address and collection index. A group's heading and child controls share one pointer hover in the React Interpreter. Crossing between children leaves the same target active. Leaving the group sends the existing explicit clear.
+
+The neutral fixture has ten connected, output and literal cases. The compact native witness builds the real vector input controls with the original UI arena and checks four literal groups and all 12 axis commits. It restores the retained tree on every fixture. The mounted React test reproduced the missing group event and then passed. The complete Interpreter suite passed 202 tests. Its fixture catalogue count was updated to 78, and the label association law now checks an actual labelable input. The independent hover oracles passed eight tests and 38 assertions. Existing linked Inspector and native event-router laws now check the direct addresses and same-group movement. [Source audit](📓️generation-current-ux-audit.md)

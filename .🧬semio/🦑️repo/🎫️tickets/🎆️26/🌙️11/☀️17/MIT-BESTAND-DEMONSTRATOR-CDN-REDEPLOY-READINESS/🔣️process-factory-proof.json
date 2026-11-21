@@ -1,0 +1,4 @@
+[
+  {"tool":"setSnapshot","factory":"Process3dBoundedCommandJobFactory"},
+  {"tool":"importModelFile","factory":"Process3dModelImportJobFactory"}
+]

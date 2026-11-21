@@ -71,6 +71,7 @@ pub fn window_definition() -> WindowKindDefinition {
             action("set-resource-detail", "Set Resource Detail", "Ressource setzen", vec![object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Value", "Wert")).min_length(0), x(), y(), width(), height(), red(), green(), blue()]),
             action("set-page-extra", "Set Page Extra", "Seite ergänzen", vec![page(), object(), text(), ActionArgDef::text("extra", LocalizedLabel::native("Key", "Schlüssel")).min_length(0), x(), y()]),
             action("set-font", "Set Font", "Schrift setzen", vec![page(), object(), text()]),
+            action("set-font-size", "Set Font Size", "Schriftgröße setzen", vec![page(), object(), ActionArgDef::number("size", LocalizedLabel::native("Font size", "Schriftgröße")).required()]),
             action("set-outline", "Set Outline", "Lesezeichen setzen", vec![page(), x(), text()]),
             action("set-page-rotation", "Set Page Rotation", "Seitendrehung setzen", vec![page(), x()]),
             action("set-page-box", "Set Page Box", "Seitenbox setzen", vec![page(), text(), x(), y(), width(), height()]),
@@ -248,6 +249,10 @@ pub fn render_inspector(
         },
     };
     column = column.try_child(ui::text(ui::Label(UiText::clipped(heading))).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
+    if object.kind == ObjectKind::Image && controller_id == "s.stdio.pdf@1.7/*#editor" {
+        let button = image_replacement_button(controller_id, object.page, object.end, publication_revision.0, locale == Locale::De)?;
+        column = column.try_child(button).map_err(|_| inspector_error("pdf.object.image-action"))?;
+    }
     for field in inspector_fields(snapshot, &object) {
         column = column.try_child(field_input(object.page, &object.id, &field, controller_id, publication_revision, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
     }

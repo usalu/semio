@@ -1,8 +1,9 @@
 //! 📼️ Binary mesh interchange inside the Flow mesh job.
 use flow_extension_sdk::mesh::decode_base64;
 use neural_engine::EvalError;
-use semio_framework_mesh_engine::{MeshData, io::binary::{BinaryStlReader, BinaryStlWriter, mesh_from_glb_limited, stream::GlbCursor}};
+use semio_framework_mesh_engine::{MeshData, io::binary::{BinaryStlReader, BinaryStlWriter, glb_document::GlbDocumentReader, stream::GlbCursor}};
 use super::{LIMIT, invalid};
+use semio_framework_value::{RetainedAllocationEffect, retained_clone::RetainedCloneProgress};
 
 /// 🗃️ Binary mesh formats use typed text channels carrying standard base64.
 #[derive(Clone, Copy, semio_framework_value::RetireOwned)]
@@ -63,11 +64,34 @@ pub struct BinaryMeshSource {
     padded: bool,
     bytes: Vec<u8>,
     stl: Option<BinaryStlReader>,
+    glb: Option<GlbDocumentReader>,
 }
 
 impl BinaryMeshSource {
     pub fn new(format: BinaryMeshFormat) -> Self {
-        Self { format, offset: 0, carry: [0; 3], carry_len: 0, padded: false, bytes: Vec::new(), stl: None }
+        Self { format, offset: 0, carry: [0; 3], carry_len: 0, padded: false, bytes: Vec::new(), stl: None, glb: None }
+    }
+
+    pub fn phase(&self) -> &'static str {
+        self.glb.as_ref().map_or("mesh-source-binary", GlbDocumentReader::phase)
+    }
+
+    pub fn take_retained_progress(&mut self) -> RetainedCloneProgress {
+        self.glb.as_mut().map_or_else(Default::default, GlbDocumentReader::take_progress)
+    }
+
+    pub fn needs_glb_effect(&self, text: &str) -> bool {
+        matches!(self.format, BinaryMeshFormat::Glb) && self.offset == text.len()
+            && self.carry_len == 0
+    }
+
+    pub fn step_glb(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<MeshData>, EvalError> {
+        let reader = self.glb.get_or_insert_with(GlbDocumentReader::default);
+        if reader.document_ready() {
+            reader.project_step(&self.bytes, LIMIT, effect).map_err(invalid)
+        } else {
+            reader.parse_step(&self.bytes, effect).map(|_| None).map_err(invalid)
+        }
     }
 
     pub fn step(&mut self, text: &str) -> Result<Option<MeshData>, EvalError> {
@@ -81,10 +105,7 @@ impl BinaryMeshSource {
                     }
                     self.stl.as_mut().unwrap().step(&self.bytes, 64).map_err(invalid)
                 }
-                BinaryMeshFormat::Glb => {
-                    if !self.bytes.starts_with(b"glTF") { return Err(invalid("binary GLB input requires a glTF container")); }
-                    mesh_from_glb_limited(&self.bytes, LIMIT).map(Some).map_err(invalid)
-                }
+                BinaryMeshFormat::Glb => Err(invalid("GLB requires an original decode turn")),
             };
         }
         let mut chunk = [0u8; 4099];

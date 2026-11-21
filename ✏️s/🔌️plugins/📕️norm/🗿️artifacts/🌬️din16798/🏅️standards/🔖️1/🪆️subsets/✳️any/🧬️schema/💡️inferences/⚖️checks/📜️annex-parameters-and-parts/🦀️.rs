@@ -6,19 +6,13 @@ pub mod annex_params {
     use crate::*;
     pub struct AnnexParams {
         pub choice: AnnexChoice,
-        pub acoustic_limit_residential_db: f64,
-        pub co2_absolute_residential_ppm: f64,
-        pub co2_absolute_classroom_ppm: f64,
-        pub co2_absolute_other_ppm: f64,
     }
     impl AnnexParams {
         pub fn en() -> Self {
-            Self { choice: AnnexChoice::En, acoustic_limit_residential_db: 30.0,
-                co2_absolute_residential_ppm: 1500.0, co2_absolute_classroom_ppm: 1000.0, co2_absolute_other_ppm: 1000.0 }
+            Self { choice: AnnexChoice::En }
         }
         pub fn de() -> Self {
-            Self { choice: AnnexChoice::De, acoustic_limit_residential_db: 25.0,
-                co2_absolute_residential_ppm: 1200.0, co2_absolute_classroom_ppm: 800.0, co2_absolute_other_ppm: 900.0 }
+            Self { choice: AnnexChoice::De }
         }
         pub fn for_choice(choice: AnnexChoice) -> Self {
             match choice { AnnexChoice::En => Self::en(), AnnexChoice::De => Self::de() }
@@ -30,7 +24,6 @@ pub mod part_1 {
     pub use crate::{ComfortCategory, PollutionClass};
 
     use crate::*;
-    use crate::annex_params::AnnexParams;
 
     pub fn pmv_limit(cat: ComfortCategory) -> f64 {
         match cat { ComfortCategory::I => 0.2, ComfortCategory::II => 0.5, ComfortCategory::III => 0.7, ComfortCategory::IV => 1.0 }
@@ -38,70 +31,92 @@ pub mod part_1 {
     pub fn ppd_limit(cat: ComfortCategory) -> f64 {
         match cat { ComfortCategory::I => 6.0, ComfortCategory::II => 10.0, ComfortCategory::III => 15.0, ComfortCategory::IV => 25.0 }
     }
-    pub fn operative_temp_band(cat: ComfortCategory, season: &str) -> (f64, f64) {
-        match (cat, season) {
-            (ComfortCategory::I, "winter") => (21.0, 23.0),
-            (ComfortCategory::II, "winter") => (20.0, 24.0),
-            (ComfortCategory::III, "winter") => (19.0, 25.0),
-            (ComfortCategory::IV, "winter") => (18.0, 25.0),
-            (ComfortCategory::I, _) => (23.5, 25.5),
-            (ComfortCategory::II, _) => (23.0, 26.0),
-            (ComfortCategory::III, _) => (22.0, 27.0),
-            (ComfortCategory::IV, _) => (21.0, 28.0),
-        }
-    }
-    pub fn humidity_band(cat: ComfortCategory) -> (f64, f64) {
-        match cat {
-            ComfortCategory::I => (30.0, 50.0),
-            ComfortCategory::II => (25.0, 60.0),
-            ComfortCategory::III => (20.0, 70.0),
-            ComfortCategory::IV => (15.0, 75.0),
-        }
-    }
-    pub fn co2_above_outdoor_ppm(cat: ComfortCategory) -> f64 {
-        match cat { ComfortCategory::I => 550.0, ComfortCategory::II => 800.0, ComfortCategory::III => 1350.0, ComfortCategory::IV => 1350.0 }
-    }
-    /// 🫧 The CO₂ concentration above outdoor air [ppm] a category allows: the category value, under the German annex capped by the absolute limit of the usage minus the outdoor concentration.
-    pub fn co2_limit_above_outdoor_ppm(annex: &AnnexParams, usage: OccupancyType, cat: ComfortCategory, outdoor_co2_ppm: f64) -> f64 {
-        let category_limit = co2_above_outdoor_ppm(cat);
-        if annex.choice != AnnexChoice::De {
-            return category_limit;
-        }
-        let absolute = match usage {
-            OccupancyType::Residential => annex.co2_absolute_residential_ppm,
-            OccupancyType::Classroom => annex.co2_absolute_classroom_ppm,
-            _ => annex.co2_absolute_other_ppm,
+    /// 🌡️ Editable occupied-zone design references from Tables B.2 and NA.3: winter heating minimum and summer cooling maximum.
+    pub fn seasonal_design_temperatures(annex: AnnexChoice, usage: OccupancyType, cat: ComfortCategory) -> Option<(f64, f64)> {
+        let is_living_room = match (usage, annex) {
+            (OccupancyType::Office | OccupancyType::Meeting | OccupancyType::Classroom, _) => false,
+            (OccupancyType::Residential, AnnexChoice::En) => true,
+            _ => return None,
         };
-        (absolute - outdoor_co2_ppm).min(category_limit)
+        Some(match (cat, is_living_room) {
+            (ComfortCategory::I, _) => (21.0, 25.5),
+            (ComfortCategory::II, _) => (20.0, 26.0),
+            (ComfortCategory::III, false) => (19.0, 27.0),
+            (ComfortCategory::III, true) => (18.0, 27.0),
+            (ComfortCategory::IV, false) => (18.0, 28.0),
+            (ComfortCategory::IV, true) => (16.0, 28.0),
+        })
     }
-    pub fn illuminance_min_lx(usage: OccupancyType, cat: ComfortCategory) -> f64 {
-        let base = match usage {
-            OccupancyType::Office | OccupancyType::Meeting => 500.0,
-            OccupancyType::Classroom => 300.0,
-            OccupancyType::Retail => 300.0,
-            OccupancyType::Kitchen => 500.0,
-            OccupancyType::Corridor => 100.0,
-            OccupancyType::Residential => 200.0,
+    /// 💧 Installed humidity-control design references from Tables B.16 and NA.10.
+    pub fn humidity_band(annex: AnnexChoice, cat: ComfortCategory) -> Option<(f64, f64)> {
+        match (annex, cat) {
+            (AnnexChoice::En, ComfortCategory::I) => Some((30.0, 50.0)),
+            (AnnexChoice::En, ComfortCategory::II) => Some((25.0, 60.0)),
+            (AnnexChoice::De, ComfortCategory::I) => Some((40.0, 50.0)),
+            (AnnexChoice::De, ComfortCategory::II) => Some((30.0, 60.0)),
+            (_, ComfortCategory::III) => Some((20.0, 70.0)),
+            (_, ComfortCategory::IV) => None,
+        }
+    }
+    /// 🫧 Standard design CO₂ concentration above outdoor air [ppm], Table B.9 or NA.9.
+    pub fn co2_above_outdoor_ppm(annex: AnnexChoice, cat: ComfortCategory) -> f64 {
+        match (annex, cat) {
+            (AnnexChoice::De, ComfortCategory::I) => 350.0,
+            (AnnexChoice::De, ComfortCategory::II) => 550.0,
+            (AnnexChoice::De, ComfortCategory::III) => 900.0,
+            (AnnexChoice::En, ComfortCategory::I) => 550.0,
+            (AnnexChoice::En, ComfortCategory::II) => 800.0,
+            _ => 1350.0,
+        }
+    }
+    /// 💡 Maintained illuminance for the modelled office, meeting and teaching tasks.
+    pub fn illuminance_min_lx(usage: OccupancyType) -> Option<f64> {
+        match usage {
+            OccupancyType::Office | OccupancyType::Meeting | OccupancyType::Classroom => Some(500.0),
+            _ => None,
+        }
+    }
+
+    /// 🔊 Equipment sound level in the modelled room under Table B.20 or NA.11.
+    pub fn acoustic_limit_db(annex: AnnexChoice, usage: OccupancyType, cat: ComfortCategory) -> Option<f64> {
+        let levels = match (annex, usage) {
+            (AnnexChoice::De, OccupancyType::Office | OccupancyType::Residential) => [30.0, 35.0, 35.0],
+            (AnnexChoice::En, OccupancyType::Office | OccupancyType::Residential)
+            | (_, OccupancyType::Meeting) => [30.0, 35.0, 40.0],
+            (AnnexChoice::De, OccupancyType::Classroom) => [30.0, 35.0, 35.0],
+            (AnnexChoice::En, OccupancyType::Classroom) => [30.0, 34.0, 38.0],
+            (AnnexChoice::De, OccupancyType::Retail) => [40.0, 45.0, 50.0],
+            (AnnexChoice::En, OccupancyType::Retail) | (_, OccupancyType::Corridor) => [35.0, 40.0, 45.0],
+            (AnnexChoice::De, OccupancyType::Kitchen) => [50.0, 55.0, 60.0],
+            (AnnexChoice::En, OccupancyType::Kitchen) => [45.0, 50.0, 55.0],
         };
         match cat {
-            ComfortCategory::I => base,
-            ComfortCategory::II => base,
-            ComfortCategory::III => base * 0.8,
-            ComfortCategory::IV => base * 0.6,
+            ComfortCategory::I => Some(levels[0]),
+            ComfortCategory::II => Some(levels[1]),
+            ComfortCategory::III => Some(levels[2]),
+            ComfortCategory::IV => None,
         }
     }
-    pub fn acoustic_limit_db(cat: ComfortCategory, usage: OccupancyType, annex: &AnnexParams) -> f64 {
-        if matches!(usage, OccupancyType::Residential) {
-            return annex.acoustic_limit_residential_db.min(match cat {
-                ComfortCategory::I => 30.0, ComfortCategory::II => 35.0, ComfortCategory::III => 40.0, ComfortCategory::IV => 45.0,
-            });
-        }
-        match cat { ComfortCategory::I => 30.0, ComfortCategory::II => 35.0, ComfortCategory::III => 40.0, ComfortCategory::IV => 45.0 }
-    }
-    pub fn adaptive_band_k(cat: ComfortCategory) -> f64 {
-        match cat { ComfortCategory::I => 2.0, ComfortCategory::II => 3.0, ComfortCategory::III => 4.0, ComfortCategory::IV => 5.0 }
-    }
+
+    pub const ADAPTIVE_RUNNING_MEAN_RANGE_C: (f64, f64) = (10.0, 30.0);
+
     pub fn adaptive_comfort_temperature_c(theta_rm_c: f64) -> f64 { 0.33 * theta_rm_c + 18.8 }
+
+    /// 📈️ Figure B.1 adaptive lower and upper operative design limits for the valid running-mean temperature range.
+    pub fn adaptive_operative_bounds(theta_rm_c: f64, cat: ComfortCategory) -> Option<(f64, f64)> {
+        let (min, max) = ADAPTIVE_RUNNING_MEAN_RANGE_C;
+        if !(min < theta_rm_c && theta_rm_c < max) {
+            return None;
+        }
+        let upper_offset = match cat {
+            ComfortCategory::I => 2.0,
+            ComfortCategory::II => 3.0,
+            ComfortCategory::III => 4.0,
+            ComfortCategory::IV => return None,
+        };
+        let centre = adaptive_comfort_temperature_c(theta_rm_c);
+        Some((centre - upper_offset - 1.0, centre + upper_offset))
+    }
 
     /// 😌️ ISO 7730:2005 Annex D predicted mean vote: the fixed-point iteration of the clothing surface temperature, `t_a = t_r = t_op`, no external work; `rh_percent` in %, `air_speed_m_s` in m/s, `metabolic_rate_met` in met and `clothing_clo` in clo.
     pub fn pmv_iso7730(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64, metabolic_rate_met: f64, clothing_clo: f64) -> f64 {
@@ -182,71 +197,133 @@ pub mod part_1 {
         q_l_s * 3.6
     }
 
-    /// 🏠 EN 16798-1 Annex B predefined total outdoor-air intensity [L/(s·m²)] for method 3.
-    pub fn predefined_outdoor_air_l_s_m2(cat: ComfortCategory) -> f64 {
+    /// 🫁 Minimum design outdoor airflow in m³/h for non-residential occupancy with complete mixing, DIN EN 16798-1:2022-03 NA.5.1.1 and EN 16798-1:2019 B.3.1.1.
+    pub fn hygienic_outdoor_air_minimum_m3_h(occupants: u32, usage: OccupancyType) -> f64 {
+        match usage {
+            OccupancyType::Residential => 0.0,
+            _ => f64::from(occupants) * 4.0 * 3.6,
+        }
+    }
+
+    /// 🏠 EN 16798-1:2019 Table B.10 default total rates for an office with non-adapted people.
+    pub fn predefined_office_rates(cat: ComfortCategory) -> (f64, f64) {
         match cat {
-            ComfortCategory::I => 1.4,
-            ComfortCategory::II => 1.0,
-            ComfortCategory::III => 0.6,
-            ComfortCategory::IV => 0.4,
+            ComfortCategory::I => (20.0, 2.0),
+            ComfortCategory::II => (14.0, 1.4),
+            ComfortCategory::III => (8.0, 0.8),
+            ComfortCategory::IV => (5.5, 0.55),
         }
     }
 
-    /// 🏭️ Pollution multiplier applied to method-3 area intensity (EN 16798-1 Annex B building-emission classes).
-    pub fn pollution_scale(pollution: PollutionClass) -> f64 {
-        match pollution {
-            PollutionClass::VeryLow => 0.8,
-            PollutionClass::Low => 1.0,
-            PollutionClass::NonLow => 1.25,
+    /// 🏘️ EN 16798-1:2019 Table B.11 adapted-person and building rates for residential supply.
+    pub fn residential_perceived_rates(cat: ComfortCategory) -> Option<(f64, f64)> {
+        match cat {
+            ComfortCategory::I => Some((3.5, 0.25)),
+            ComfortCategory::II => Some((2.5, 0.15)),
+            ComfortCategory::III => Some((1.5, 0.1)),
+            ComfortCategory::IV => None,
         }
     }
 
-    /// 🧪 Method 2 metabolic CO₂ generation [L/s] ≈ 0.005 L/s per person at 1.2 met.
-    pub fn metabolic_co2_generation_l_s(occupants: u32, metabolic_rate_met: f64) -> f64 {
-        occupants as f64 * 0.005 * (metabolic_rate_met / 1.2).max(0.5)
+    /// 📋️ An airflow design basis that cannot supply a numerical target for the given inputs.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum OutdoorAirBasisGap {
+        OutsideDefaultTable,
+        GermanMethod3,
+        GermanResidentialBasis,
+        GermanVeryLowPollutionEvidence,
+        NoPositiveCo2Gradient,
     }
 
-    /// 🌬️ Required outdoor air [m³/h] for the selected EN 16798-1 §6.3 design method.
+    /// 🌬️ Required outdoor air [m³/h] for EN 16798-1:2019 design methods with complete mixing.
+    #[allow(clippy::too_many_arguments, reason = "the design basis uses the annex, use, category and physical zone inputs")]
     pub fn required_outdoor_air_for_method(
+        annex: AnnexChoice,
         method: VentMethod,
         occupants: u32,
         area_m2: f64,
         cat: ComfortCategory,
+        usage: OccupancyType,
         pollution: PollutionClass,
-        metabolic_rate_met: f64,
-        annex_co2_limit_above_ppm: f64,
-    ) -> f64 {
-        match method {
-            VentMethod::Method1PerceivedAirQuality => required_outdoor_air_m3_h(occupants, area_m2, cat, pollution),
-            VentMethod::Method3PredefinedRates => {
-                let q_area = area_m2 * predefined_outdoor_air_l_s_m2(cat) * pollution_scale(pollution) * 3.6;
-                let q_person = occupants as f64 * outdoor_air_per_person_l_s(cat) * 3.6;
-                q_area + q_person
-            },
-            VentMethod::Method2LimitConcentration => {
-                let g = metabolic_co2_generation_l_s(occupants, metabolic_rate_met);
-                let delta = annex_co2_limit_above_ppm.max(100.0);
-                (1.0e6 * g / delta) * 3.6
+        co2_limit_above_ppm: f64,
+    ) -> Result<f64, OutdoorAirBasisGap> {
+        if annex == AnnexChoice::De {
+            if method == VentMethod::Method3PredefinedRates {
+                return Err(OutdoorAirBasisGap::GermanMethod3);
+            }
+            if usage == OccupancyType::Residential {
+                return Err(OutdoorAirBasisGap::GermanResidentialBasis);
+            }
+            if method == VentMethod::Method1PerceivedAirQuality && pollution == PollutionClass::VeryLow {
+                return Err(OutdoorAirBasisGap::GermanVeryLowPollutionEvidence);
             }
         }
-    }
-
-    /// 💨 ISO 7730 draught rate DR [%].
-    pub fn draught_rate_percent(t_a_c: f64, air_speed_m_s: f64, turbulence_intensity_percent: f64) -> f64 {
-        let v = air_speed_m_s.max(0.05);
-        let tu = turbulence_intensity_percent.max(0.0);
-        let dr = (34.0 - t_a_c) * (v - 0.05).max(0.0).powf(0.62) * (0.37 * v * tu + 3.14);
-        dr.clamp(0.0, 100.0)
-    }
-
-    pub fn draught_limit_percent(cat: ComfortCategory) -> f64 {
-        match cat {
-            ComfortCategory::I => 10.0,
-            ComfortCategory::II => 20.0,
-            ComfortCategory::III => 30.0,
-            ComfortCategory::IV => 40.0,
+        let people = f64::from(occupants);
+        let outside = OutdoorAirBasisGap::OutsideDefaultTable;
+        match (method, usage) {
+            (VentMethod::Method1PerceivedAirQuality, OccupancyType::Residential) => {
+                let (person, area) = residential_perceived_rates(cat).ok_or(outside)?;
+                Ok((people * person + area_m2 * area) * 3.6)
+            }
+            (VentMethod::Method1PerceivedAirQuality, _) => Ok(required_outdoor_air_m3_h(occupants, area_m2, cat, pollution)),
+            (VentMethod::Method3PredefinedRates, OccupancyType::Residential) => {
+                residential_perceived_rates(cat).ok_or(outside)?;
+                Ok(people * outdoor_air_per_person_l_s(cat) * 3.6)
+            }
+            (VentMethod::Method3PredefinedRates, OccupancyType::Office) if pollution == PollutionClass::Low => {
+                let (person, area) = predefined_office_rates(cat);
+                Ok((people * person).max(area_m2 * area) * 3.6)
+            }
+            (VentMethod::Method3PredefinedRates, _) => Err(outside),
+            (VentMethod::Method2LimitConcentration, _) if occupants == 0 => Ok(0.0),
+            (VentMethod::Method2LimitConcentration, _) if co2_limit_above_ppm.is_finite() && co2_limit_above_ppm > 0.0 => {
+                Ok(people * 20_000.0 / co2_limit_above_ppm)
+            }
+            (VentMethod::Method2LimitConcentration, _) => Err(OutdoorAirBasisGap::NoPositiveCo2Gradient),
         }
     }
+
+    /// 💨 ISO 7730 draught rate DR [%] in the validated local-air input range.
+    pub fn draught_rate_percent(t_a_c: f64, air_speed_m_s: f64, turbulence_intensity_percent: f64) -> Option<f64> {
+        if !(20.0..=26.0).contains(&t_a_c) || !(0.0..0.5).contains(&air_speed_m_s)
+            || !(10.0..=60.0).contains(&turbulence_intensity_percent)
+        {
+            return None;
+        }
+        Some(draught_prediction(t_a_c, air_speed_m_s, turbulence_intensity_percent))
+    }
+
+    fn draught_prediction(t_a_c: f64, air_speed_m_s: f64, turbulence_intensity_percent: f64) -> f64 {
+        let speed = air_speed_m_s.max(0.05);
+        let dr = (34.0 - t_a_c) * (speed - 0.05).powf(0.62) * (0.37 * speed * turbulence_intensity_percent + 3.14);
+        dr.min(100.0)
+    }
+
+    /// 🔧 Maximum speed at the selected draught rate, bracketed by an already failing speed.
+    pub fn maximum_air_speed_for_draught(t_a_c: f64, speed_m_s: f64, turbulence: f64, limit: f64) -> f64 {
+        let (mut passing, mut failing) = (0.05, speed_m_s);
+        for _ in 0..32 {
+            let trial = (passing + failing) * 0.5;
+            if draught_prediction(t_a_c, trial, turbulence) <= limit {
+                passing = trial;
+            } else {
+                failing = trial;
+            }
+        }
+        (passing * 1000.0).floor() / 1000.0
+    }
+
+    /// 🧊️ Draught rate design limits from Table B.3 or NA.4 for categories I to III.
+    pub fn draught_limit_percent(annex: AnnexChoice, cat: ComfortCategory) -> Option<f64> {
+        match (annex, cat) {
+            (_, ComfortCategory::I) => Some(10.0),
+            (AnnexChoice::De, ComfortCategory::II) => Some(15.0),
+            (AnnexChoice::En, ComfortCategory::II) => Some(20.0),
+            (_, ComfortCategory::III) => Some(30.0),
+            (_, ComfortCategory::IV) => None,
+        }
+    }
+
 }
 
 pub mod part_3 {
@@ -264,13 +341,6 @@ pub mod part_3 {
         match VentSystemType::parse(system_type) {
             VentSystemType::CentralMech | VentSystemType::DecentralMech => Some(0.73),
             VentSystemType::Natural => None,
-        }
-    }
-
-    pub fn inspection_interval_years(system_type: &str) -> u32 {
-        match VentSystemType::parse(system_type) {
-            VentSystemType::DecentralMech => 5,
-            _ => 3,
         }
     }
 

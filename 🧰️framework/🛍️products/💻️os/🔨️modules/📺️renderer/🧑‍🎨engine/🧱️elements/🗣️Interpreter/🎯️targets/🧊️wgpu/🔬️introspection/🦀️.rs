@@ -47,11 +47,11 @@ use semio_ui_declaration::ui::UiNode;
 mod dump_types_paths_and_walk;
 #[cfg(target_arch="wasm32")]
 use dump_types_paths_and_walk::{DumpStructure, DumpViewport};
-use dump_types_paths_and_walk::{DumpAccessibility, DumpAccessibilityWindow};
+pub use dump_types_paths_and_walk::{DumpAccessibility, DumpAccessibilityWindow};
 #[cfg(any(target_arch="wasm32",any(test,feature="testkit")))]
 pub use dump_types_paths_and_walk::{
     ui_node_kind_tag, ui_node_path_segment, walk_dump, DumpFrameStats, DumpMesh, DumpMeshInstance,
-    DumpMeshStats, DumpMeshSurface,
+    DumpMeshStats, DumpMeshSurface, DumpNode,
 };
 #[cfg(any(target_arch="wasm32",any(test,feature="testkit")))]
 use dump_types_paths_and_walk::dump_window_id;
@@ -64,6 +64,7 @@ use structure_dump_and_table_accessibility::build_structure_dump;
 #[cfg(any(target_arch="wasm32",any(test,feature="testkit")))]
 use structure_dump_and_table_accessibility::{is_glyph_instance, layer_is_nonempty};
 pub use structure_dump_and_table_accessibility::{
+    TableButtonAccessibilityEntry, TableEditableTextAccessibilityEntry, TableStepperAccessibilityEntry,
     scene_virtual_accessibility_node_id, table_button_accessibility_entries,
     table_editable_text_accessibility_entries, table_stepper_accessibility_entries,
 };
@@ -75,6 +76,7 @@ use structure_dump_and_table_accessibility::{
 #[path = "♿️vfs-feed-world-and-timeline-accessibility/🦀️.rs"]
 mod vfs_feed_world_and_timeline_accessibility;
 pub use vfs_feed_world_and_timeline_accessibility::{
+    BlockListAccessibilityEntry, EventFeedAccessibilityEntry, GraphTimelineAccessibilityEntry, VfsAccessibilityEntry,
     block_list_accessibility_entries, event_feed_accessibility_entries,
     graph_timeline_accessibility_entries, vfs_accessibility_entries,
 };
@@ -87,7 +89,7 @@ use vfs_feed_world_and_timeline_accessibility::{
 #[path = "📤️editor-accessibility-frame-stats-and-exports/🦀️.rs"]
 mod editor_accessibility_frame_stats_and_exports;
 pub use editor_accessibility_frame_stats_and_exports::{
-    build_accessibility_dump, text_editor_accessibility_entries,
+    TextEditorAccessibilityEntry, build_accessibility_dump, text_editor_accessibility_entries,
 };
 #[cfg(any(target_arch="wasm32",any(test,feature="testkit")))]
 pub use editor_accessibility_frame_stats_and_exports::build_frame_stats;

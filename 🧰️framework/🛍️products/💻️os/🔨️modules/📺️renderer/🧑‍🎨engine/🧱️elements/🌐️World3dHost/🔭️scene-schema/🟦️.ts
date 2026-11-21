@@ -90,7 +90,11 @@ export type WorldInstanceRecord = {
    * hover/selection id absent from the topology. Dispatches on a `domainId`-bound world window use
    * this when set, falling back to `id`. */
   readonly interactionId?: string;
+  /** 🎯️ Authored aliases published together when the pointer hits this instance. */
+  readonly hoverTargets?: readonly { readonly granularity: string; readonly id: string }[];
   readonly componentSource?: { readonly handle: string; readonly revision: string };
+  /** 🎯️ Whether rays and marquee can target this instance’s sub-elements. */
+  readonly componentPickable?: boolean;
   /** 🎯️ The granularity the instance's interaction target lives under, when it differs from the
    * scene's `domainGranularityId` — a fem3d scene draws nodes, members, solids, supports and load
    * glyphs as one instance lane under one domain, and each row names its own granularity so a pick
@@ -120,6 +124,8 @@ export type WorldSelectionRecord = {
   readonly selectionMergeMode?: MergeMode;
   readonly ids?: readonly string[];
   readonly hoveredId?: string | null;
+  readonly hoveredIds?: readonly string[];
+  readonly hoverSourceWindowId?: string | null;
   readonly referenceSelectedId?: string;
   readonly targetVolumeIds?: readonly string[];
   readonly granularity?: string;
@@ -174,6 +180,7 @@ export type WorldSuggestionMenuRecord = {
 
 export type WorldInteractionRecord = {
   readonly activeUtility?: string;
+  readonly terrainBrush?: unknown;
   readonly brushCandidateIndex?: number;
   readonly hoveredVortexFullId?: string;
   readonly voxelDims?: readonly [number, number, number];

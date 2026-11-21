@@ -1,5 +1,6 @@
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandResultV1,readOwnedCommandEncodingContextV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {churnProtocolV1,concurrentEditOfV1,concurrentEditV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import { type CargoPreparationControlV1 } from "../🎛️control/🟦️.ts";
 import custodySchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {createHash} from "node:crypto";
@@ -7,12 +8,14 @@ import {existsSync,lstatSync,readFileSync,readdirSync,writeFileSync} from "node:
 import {dirname,isAbsolute,relative,resolve,sep} from "node:path";
 import {fileURLToPath} from "node:url";
 
-export type CargoPreparationInputV1 = Readonly<{path:string;kind:"file"|"directory"|"presence";sha256:string|null}>;
+export type CargoPreparationInputV1 = Readonly<{path:string;kind:"file"|"directory"|"presence"|"discovery";sha256:string|null;suffix?:string}>;
 export type CargoPreparationResolutionV1 = Readonly<{source:string;specifier:string;selected:string}>;
 export type CargoPreparationObservationV1 = Readonly<{version:1;root:string;sourceRoot:string;script:string;command:readonly string[];sources:readonly CargoPreparationInputV1[];resolverInputs:readonly CargoPreparationInputV1[];inputs:readonly CargoPreparationInputV1[];outputs:readonly CargoPreparationInputV1[];resolutions:readonly CargoPreparationResolutionV1[]}>;
 const custodyControlProtocol=Object.freeze({...custodySchema.$defs.CargoPreparationControlProtocolV1.const});
 const digest=(value:string|Buffer):string=>createHash("sha256").update(value).digest("hex");
 const ordered=(a:string,b:string):number=>Buffer.compare(Buffer.from(a),Buffer.from(b));
+const discoverySuffixPattern=new RegExp(custodySchema.$defs.CargoPreparationInputV1.properties.suffix.pattern,"u");
+const validDiscoverySuffix=(suffix:unknown):suffix is string=>typeof suffix==="string"&&discoverySuffixPattern.test(suffix);
 function physical(root:string,path:string):void {
  if(root.length>256||path.length>256||!isAbsolute(root))throw Error("Preparation physical path refused");const rootInfo=lstatSync(root);if(!rootInfo.isDirectory()||rootInfo.isSymbolicLink())throw Error("Preparation root must be physical");
  const local=relative(root,path);if(!isAbsolute(path)||isAbsolute(local)||local===".."||local.startsWith(".."+sep))throw Error("Preparation input escapes its repository");
@@ -25,13 +28,18 @@ export function cargoPreparationSourceRootV1():string {return resolve(fileURLToP
 export function cargoPreparationProgramRootV1(root:string,sourceRoot:string,path:string):string {
  const local=relative(root,path),selected=!isAbsolute(local)&&local!==".."&&!local.startsWith(".."+sep)?root:sourceRoot;physical(selected,path);return selected;
 }
-/** 📷️ Hashes exact bytes, directory identity, or physical presence without reading directory children. */
-export function cargoPreparationInputV1(root:string,path:string,kind:CargoPreparationInputV1["kind"]):CargoPreparationInputV1 {
- physical(root,path);if(!existsSync(path))return{path,kind,sha256:null};const info=lstatSync(path);
+/** 📷️ Hashes exact bytes, presence, or directory entries selected for discovery. */
+export function cargoPreparationInputV1(root:string,path:string,kind:CargoPreparationInputV1["kind"],suffix?:string):CargoPreparationInputV1 {
+ if(kind==="discovery"?!validDiscoverySuffix(suffix):suffix!==undefined)throw Error("Invalid preparation discovery suffix");
+ const selection=suffix===undefined?{path,kind}:{path,kind,suffix};
+ physical(root,path);if(!existsSync(path))return{...selection,sha256:null};const info=lstatSync(path);
  if(kind==="presence")return{path,kind,sha256:digest(JSON.stringify(info.isFile()?"file":info.isDirectory()?"directory":"other"))};
  if(kind==="file"){if(!info.isFile())throw Error("Preparation file is not regular");return{path,kind,sha256:digest(readFileSync(path))};}
  if(!info.isDirectory())throw Error("Preparation directory is not physical");
- const entries=readdirSync(path,{withFileTypes:true}).map(row=>{if(row.isSymbolicLink())throw Error("Preparation directory contains a symlink");return[row.name,row.isDirectory()?"directory":row.isFile()?"file":"other"];}).sort((a,b)=>ordered(a[0]!,b[0]!));return{path,kind,sha256:digest(JSON.stringify(entries))};
+ const entries=readdirSync(path,{withFileTypes:true}).filter(row=>suffix===undefined||row.isDirectory()||row.isSymbolicLink()||row.name.endsWith(suffix))
+  .map(row=>[row.name,row.isDirectory()?"directory":row.isFile()?"file":row.isSymbolicLink()?"symlink":"other"])
+  .sort((a,b)=>ordered(a[0]!,b[0]!));
+ return{...selection,sha256:digest(JSON.stringify(entries))};
 }
 /** 🧷️ Snapshots actual caller authority before any awaited physical continuation. */
 function cargoPreparationControlSnapshotV1(control:CargoPreparationControlV1):CargoPreparationControlV1 {
@@ -42,6 +50,33 @@ export type CargoPreparationProgramContextV1=Readonly<{version:1;kind:"cargo-pre
 export function readCargoPreparationProgramContextV1(text:string):CargoPreparationProgramContextV1|undefined {
  const policy=custodySchema.$defs.CargoPreparationDiagnosticProtocolV1.const,shape=custodySchema.$defs.CargoPreparationProgramContextV1.properties;let start=text.indexOf(policy.marker);
  while(start>=0){try{const row=JSON.parse(text.slice(start+policy.marker.length,start+policy.marker.length+policy.maximumCharacters).split("\n",1)[0]!);if(row&&typeof row==="object"&&Object.keys(row).sort().join(",")==="kind,operation,program,version"&&row.version===shape.version.const&&row.kind===shape.kind.const&&typeof row.program==="string"&&isAbsolute(row.program)&&row.program.length<=shape.program.maxLength&&shape.operation.enum.includes(row.operation))return Object.freeze({...row});}catch{}start=text.indexOf(policy.marker,start+policy.marker.length);}
+}
+const sourceEditPolicy=custodySchema.$defs.CargoPreparationSourceEditV1.properties;
+const isSourceEditPath=(path:unknown):path is string=>typeof path==="string"&&path.length<=sourceEditPolicy.path.maxLength
+ &&!/[\u0000\r\n]/u.test(path)&&isAbsolute(path)&&resolve(path)===path;
+const isSourceEditReason=(reason:unknown):reason is "bytes"|"vanished"=>reason==="bytes"||reason==="vanished";
+
+/** 📡️ Encodes a proved build-layer source edit for the synchronizing child's bounded diagnostics. */
+export function cargoPreparationSourceEditDiagnosticV1(error:unknown):string|undefined {
+ const edit=concurrentEditOfV1(error);
+ if(edit?.rank!==churnProtocolV1().profiles.build.rank-1||!isSourceEditReason(edit.reason)||!isSourceEditPath(edit.path))return;
+ return custodySchema.$defs.CargoPreparationDiagnosticProtocolV1.const.sourceEditMarker+JSON.stringify({version:1,reason:edit.reason,path:edit.path});
+}
+
+/** 🛰️ Restores only closed source edit data from a failed, unsignalled preparation child. */
+export function readCargoPreparationSourceEditV1(result:Readonly<{status:number|null;signal:string|null;stderr:string}>,root:string,sourceRoot:string=cargoPreparationSourceRootV1()):ReturnType<typeof concurrentEditV1>|undefined {
+ if(result.status===null||!Number.isInteger(result.status)||result.status<1||result.signal!==null)return;
+ const {sourceEditMarker:marker,maximumCharacters}=custodySchema.$defs.CargoPreparationDiagnosticProtocolV1.const;
+ const localTo=(base:string,path:string):boolean=>{const local=relative(base,path);return !isAbsolute(local)&&local!==".."&&!local.startsWith(".."+sep);};
+ for(let start=result.stderr.indexOf(marker);start>=0;start=result.stderr.indexOf(marker,start+marker.length)){
+  if(start>0&&result.stderr[start-1]!=="\n")continue;
+  const line=result.stderr.slice(start+marker.length,start+marker.length+maximumCharacters).split("\n",1)[0]!;
+  let row;try{row=JSON.parse(line);}catch{continue;}
+  if(row&&typeof row==="object"&&Object.keys(row).sort().join(",")==="path,reason,version"&&row.version===sourceEditPolicy.version.const
+     &&isSourceEditReason(row.reason)&&isSourceEditPath(row.path)&&(localTo(root,row.path)||localTo(sourceRoot,row.path))){
+   return concurrentEditV1(row.reason,row.path,"Preparation custody changed","build");
+  }
+ }
 }
 /** 🧭️ Retains actual declared caller provenance on the same validated decoder failure object. */
 function annotateCargoPreparationProgramFailureV1(error:unknown,program:string,operation:string):void {
@@ -60,7 +95,7 @@ export async function cargoPreparationProgramSourcesV1(root:string,entry:string,
 /** 🧬️ Admits only complete current-format observations from the selected preparation producer. */
 export function admitCargoPreparationObservationV1(value:unknown):CargoPreparationObservationV1 {
  const row=value as CargoPreparationObservationV1;if(!row||typeof row!=="object"||Object.keys(row).sort().join(",")!=="command,inputs,outputs,resolutions,resolverInputs,root,script,sourceRoot,sources,version"||row.version!==1||![row.root,row.sourceRoot,row.script].every(path=>typeof path==="string"&&isAbsolute(path))||!Array.isArray(row.command)||!row.command.length||row.command.some(value=>typeof value!=="string"||!value))throw Error("Invalid preparation observation");
- for(const [key,inputs] of [["sources",row.sources],["resolverInputs",row.resolverInputs],["inputs",row.inputs],["outputs",row.outputs]] as const){if(!Array.isArray(inputs)||(key==="sources"&&!inputs.length)||inputs.some(input=>!input||Object.keys(input).sort().join(",")!=="kind,path,sha256"||typeof input.path!=="string"||!isAbsolute(input.path)||!custodySchema.$defs.CargoPreparationInputV1.properties.kind.enum.includes(input.kind)||!(input.sha256===null||typeof input.sha256==="string"&&/^[0-9a-f]{64}$/.test(input.sha256)))||new Set(inputs.map(input=>JSON.stringify([input.path,input.kind]))).size!==inputs.length)throw Error("Invalid preparation inputs");if((key==="sources"||key==="outputs")&&inputs.some(input=>input.kind!=="file"||input.sha256===null))throw Error("Preparation source/output lacks exact file bytes");}
+ for(const [key,inputs] of [["sources",row.sources],["resolverInputs",row.resolverInputs],["inputs",row.inputs],["outputs",row.outputs]] as const){if(!Array.isArray(inputs)||(key==="sources"&&!inputs.length)||inputs.some(input=>!input||Object.keys(input).sort().join(",")!==(input.kind==="discovery"?"kind,path,sha256,suffix":"kind,path,sha256")||(input.kind==="discovery"&&!validDiscoverySuffix(input.suffix))||typeof input.path!=="string"||!isAbsolute(input.path)||!custodySchema.$defs.CargoPreparationInputV1.properties.kind.enum.includes(input.kind)||!(input.sha256===null||typeof input.sha256==="string"&&/^[0-9a-f]{64}$/.test(input.sha256)))||new Set(inputs.map(input=>JSON.stringify([input.path,input.kind,input.suffix]))).size!==inputs.length)throw Error("Invalid preparation inputs");if((key==="sources"||key==="outputs")&&inputs.some(input=>input.kind!=="file"||input.sha256===null))throw Error("Preparation source/output lacks exact file bytes");}
  if(!Array.isArray(row.resolutions)||row.resolutions.some(edge=>!edge||Object.keys(edge).sort().join(",")!=="selected,source,specifier"||![edge.source,edge.selected].every(path=>typeof path==="string"&&isAbsolute(path))||typeof edge.specifier!=="string"||!edge.specifier))throw Error("Invalid preparation program resolutions");
  physical(row.root,row.script);physical(row.sourceRoot,row.sourceRoot);if(row.sourceRoot!==cargoPreparationSourceRootV1())throw Error("Preparation defining root differs from its owner");
  for(const input of row.sources)cargoPreparationProgramRootV1(row.root,row.sourceRoot,input.path);for(const input of row.resolverInputs)physical(row.sourceRoot,input.path);for(const input of [...row.inputs,...row.outputs])physical(row.root,input.path);
@@ -77,15 +112,21 @@ export async function assertCargoPreparationObservationCurrentV1(value:unknown,c
  const actual=cargoPreparationControlSnapshotV1(control),row=admitCargoPreparationObservationV1(structuredClone(value));
  for(const edge of row.resolutions){cargoPreparationProgramRootV1(row.root,row.sourceRoot,edge.source);cargoPreparationProgramRootV1(row.root,row.sourceRoot,edge.selected);}
  let resolved=0;for(const input of cargoPreparationResolutionBatchesV1(row.resolutions)){requireIssuedResourceControlV1(actual.leaseControl);actual.signal.throwIfAborted();const batch=JSON.parse(input)as CargoPreparationResolutionV1[],selected=await captureCargoPreparationProgramV1(row.root,row.script,"resolve-program",[],actual,input);if(!Array.isArray(selected)||selected.length!==batch.length)throw Error("Invalid current program resolution");for(const[index,edge]of batch.entries())if(selected[index]!==edge.selected)throw Error(`Preparation program resolution changed: ${edge.source} ${edge.specifier}`);resolved+=batch.length;}if(resolved!==row.resolutions.length)throw Error("Incomplete current program resolution");
- let completed=0;for(const item of cargoPreparationCurrentInputsV1(row)){requireIssuedResourceControlV1(actual.leaseControl);await actual.advance({operation:"recipe",path:item.input.path,completedOperations:completed++});requireIssuedResourceControlV1(actual.leaseControl);if(cargoPreparationInputV1(item.root,item.input.path,item.input.kind).sha256!==item.input.sha256)throw Error(`Preparation custody changed: ${item.input.path}`);}requireIssuedResourceControlV1(actual.leaseControl);
+ let completed=0;for(const item of cargoPreparationCurrentInputsV1(row)){requireIssuedResourceControlV1(actual.leaseControl);await actual.advance({operation:"recipe",path:item.input.path,completedOperations:completed++});actual.signal.throwIfAborted();requireIssuedResourceControlV1(actual.leaseControl);assertCargoPreparationInputCurrentV1(row,item);}requireIssuedResourceControlV1(actual.leaseControl);
 }
 /** 📑️ Selects current byte observations with published outputs superseding prior reads. */
 function cargoPreparationCurrentInputsV1(row:CargoPreparationObservationV1):readonly Readonly<{root:string;input:CargoPreparationInputV1}>[] {
  const outputs=new Set(row.outputs.map(input=>input.path));return[...row.sources.map(input=>({root:cargoPreparationProgramRootV1(row.root,row.sourceRoot,input.path),input})),...row.resolverInputs.map(input=>({root:row.sourceRoot,input})),...[...row.inputs.filter(input=>!outputs.has(input.path)),...row.outputs].map(input=>({root:row.root,input}))];
 }
+function assertCargoPreparationInputCurrentV1(row:CargoPreparationObservationV1,item:Readonly<{root:string;input:CargoPreparationInputV1}>):void {
+ const current=cargoPreparationInputV1(item.root,item.input.path,item.input.kind,item.input.suffix).sha256;
+ if(current===item.input.sha256)return;
+ if(!row.outputs.includes(item.input))throw concurrentEditV1(current===null?"vanished":"bytes",item.input.path,"Preparation custody changed","build");
+ throw Error(`Preparation custody changed: ${item.input.path}`);
+}
 /** 🧮️ Checks producer completion bytes without acquiring resolver subprocess authority. */
 function assertCargoPreparationBytesCurrentV1(row:CargoPreparationObservationV1):void {
- for(const item of cargoPreparationCurrentInputsV1(row))if(cargoPreparationInputV1(item.root,item.input.path,item.input.kind).sha256!==item.input.sha256)throw Error(`Preparation custody changed: ${item.input.path}`);
+ for(const item of cargoPreparationCurrentInputsV1(row))assertCargoPreparationInputCurrentV1(row,item);
 }
 let active:{row:{version:1;root:string;sourceRoot:string;script:string;command:string[]};sources:Map<string,CargoPreparationInputV1>;inputs:Map<string,CargoPreparationInputV1>;outputs:Map<string,CargoPreparationInputV1>}|undefined;
 function capture():typeof active {
@@ -96,7 +137,7 @@ function capture():typeof active {
 /** 🪵️ Binds a production preparation implementation and its pure admission dependencies to current source bytes. */
 export function observeCargoPreparationSourceV1(...paths:string[]):void {const state=capture();if(state)for(const path of paths){const input=cargoPreparationInputV1(cargoPreparationProgramRootV1(state.row.root,state.row.sourceRoot,path),path,"file"),previous=state.sources.get(path);if(previous&&previous.sha256!==input.sha256)throw Error(`Preparation source changed: ${path}`);state.sources.set(path,input);}}
 /** 📥️ Retains the actual physical read/presence/directory authority of the active preparation operation. */
-export function observeCargoPreparationInputV1(path:string,kind:CargoPreparationInputV1["kind"]="file",bytes?:string|Buffer):void {const state=capture();if(state){physical(state.row.root,path);const input=bytes===undefined?cargoPreparationInputV1(state.row.root,path,kind):{path,kind,sha256:digest(bytes)},key=JSON.stringify([path,kind]),previous=state.inputs.get(key);if(bytes!==undefined&&kind!=="file")throw Error("Preparation read bytes require a file");if(previous&&previous.sha256!==input.sha256&&!state.outputs.has(path))throw Error(`Preparation read changed: ${path}`);state.inputs.set(key,input);}}
+export function observeCargoPreparationInputV1(path:string,kind:CargoPreparationInputV1["kind"]="file",bytes?:string|Buffer,suffix?:string):void {const state=capture();if(state){physical(state.row.root,path);const input=bytes===undefined?cargoPreparationInputV1(state.row.root,path,kind,suffix):{path,kind,sha256:digest(bytes)},key=JSON.stringify([path,kind,suffix]),previous=state.inputs.get(key);if(bytes!==undefined&&(kind!=="file"||suffix!==undefined))throw Error("Preparation read bytes require a file");if(previous&&previous.sha256!==input.sha256&&!state.outputs.has(path))throw Error(`Preparation read changed: ${path}`);state.inputs.set(key,input);}}
 /** 📤️ Retains the exact file bytes published by the active preparation operation. */
 export function observeCargoPreparationOutputV1(path:string,bytes:string|Buffer):void {const state=capture();if(state){physical(state.row.root,path);state.outputs.set(path,{path,kind:"file",sha256:digest(bytes)});}}
 /** 🧾️ Publishes complete operation custody only after all inputs and outputs remain current. */

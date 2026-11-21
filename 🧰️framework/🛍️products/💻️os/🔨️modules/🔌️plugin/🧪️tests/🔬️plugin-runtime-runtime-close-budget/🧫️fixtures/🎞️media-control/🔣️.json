@@ -1,0 +1,22 @@
+[
+  {
+    "pagePending": false,
+    "controlPending": false,
+    "formatRunnable": true
+  },
+  {
+    "pagePending": true,
+    "controlPending": false,
+    "formatRunnable": false
+  },
+  {
+    "pagePending": false,
+    "controlPending": true,
+    "formatRunnable": false
+  },
+  {
+    "pagePending": true,
+    "controlPending": true,
+    "formatRunnable": false
+  }
+]

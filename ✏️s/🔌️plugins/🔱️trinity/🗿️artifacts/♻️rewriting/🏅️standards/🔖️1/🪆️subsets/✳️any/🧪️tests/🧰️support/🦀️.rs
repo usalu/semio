@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::PropertyValue;
 
-const NAKAGIN_CHILD: &str = include_str!("../🧫️fixtures/🪆️child/🏢️initial/🪆️content/🔣️.json");
+const NAKAGIN_CHILD: &str = include_str!("../../🖼️assets/🎬️demo/🪆️working-graph/🔣️.json");
 
 /// 🪆️ The authored Nakagin asset materializes its actual typed child.
 pub fn nakagin_fixture() -> JackSnapshot {

@@ -2,7 +2,8 @@
 
 
 
-use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
+use crate::GisTerrainSnapshot;
+use crate::schema::snapshot::ElevationSource;
 use ::semio_framework_schema::ArtifactSchema;
 #[cfg(test)] use semio_framework_surface::terrain::tiles;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -24,25 +25,28 @@ pub struct GisTerrainArtifact {
     #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>,
+    #[state(artifact)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub elevation_source: Option<ElevationSource>,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for GisTerrainArtifact {
     fn default() -> Self {
-        Self { exaggeration: 0.0, imported_map: None, mesh: Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(0.0, None))) }
+        Self { exaggeration: 0.0, imported_map: None, mesh: None, elevation_source: None }
     }
 }
 
 impl GisTerrainArtifact {
     /// 📸️ Projects the persisted document without replacing any owned child identity.
     pub fn to_snapshot(&self) -> GisTerrainSnapshot {
-        GisTerrainSnapshot { exaggeration: self.exaggeration, imported_map: self.imported_map.clone(), mesh: self.mesh.clone() }
+        GisTerrainSnapshot { exaggeration: self.exaggeration, imported_map: self.imported_map.clone(), mesh: self.mesh.clone(), elevation_source: self.elevation_source.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: GisTerrainSnapshot) -> Self {
-        Self { exaggeration: snapshot.exaggeration, imported_map: snapshot.imported_map, mesh: snapshot.mesh }
+        Self { exaggeration: snapshot.exaggeration, imported_map: snapshot.imported_map, mesh: snapshot.mesh, elevation_source: snapshot.elevation_source }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
@@ -50,6 +54,7 @@ impl GisTerrainArtifact {
         self.exaggeration = snapshot.exaggeration;
         self.imported_map = snapshot.imported_map;
         self.mesh = snapshot.mesh;
+        self.elevation_source = snapshot.elevation_source;
     }
 }
 //#endregion 🔖️Conversions

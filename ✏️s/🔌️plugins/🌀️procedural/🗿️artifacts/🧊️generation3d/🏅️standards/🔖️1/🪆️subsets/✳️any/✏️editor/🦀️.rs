@@ -94,7 +94,6 @@ use semio_plugin::ArtifactView;
 use semio_plugin::CommandDefinition;
 use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_plugin::DomainTopology;
 use semio_plugin::DraftView;
 use semio_plugin::Editor;
 use semio_plugin::EditorApp;
@@ -127,7 +126,6 @@ use semio_plugin::SelectionSpec;
 use semio_plugin::ToolRunJob;
 use semio_plugin::ToolRunJobPurpose;
 use semio_plugin::ToolRunJobRequest;
-use semio_plugin::TopologyNode;
 use semio_plugin::UtilityDefinition;
 use semio_plugin::WindowMeasure;
 use std::collections::HashMap;
@@ -192,7 +190,7 @@ impl Generation3dPlayApp {
     /// `delete-selection` stays a direct destructive item last.
     fn context_menu_body(
         request: &semio_plugin::ContextMenuRequest,
-        doc: &ArtifactView<'_, Generation3dSnapshot>,
+        _doc: &ArtifactView<'_, Generation3dSnapshot>,
         _cfg: &ConfigView<'_, Generation3dConfig>,
         view_state: &semio_plugin::ViewModel,
         marks: &PreviewInteractionMarks,
@@ -200,7 +198,7 @@ impl Generation3dPlayApp {
     ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         use semio_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
         let labels = generation3d_labels(view_state);
-        let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
+        let (selected_nodes, selected_edges) = marks.graph_selection_domains();
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
         let has_selection = !nodes.is_empty() || !edges.is_empty();
         let mut menu = Menu::of(registry, view_state).action("reorganize");

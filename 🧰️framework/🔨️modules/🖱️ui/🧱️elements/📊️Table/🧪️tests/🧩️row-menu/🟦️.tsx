@@ -12,6 +12,13 @@ const columns = [{ id: "name", header: "Name", accessor: (row: Row) => row.name 
 afterEach(() => cleanup());
 
 describe("table row menu", () => {
+  it.each([true, false])("gives the header and rows the same seam owner with stickyHeader=%s", stickyHeader => {
+    const view = render(<Table columns={columns} data={rows} onRowClick={() => {}} stickyHeader={stickyHeader} />);
+    const bands = [...view.container.querySelectorAll("thead, tbody tr")];
+    expect(bands).toHaveLength(3);
+    expect(bands.map(band => band.getAttribute("data-shared-border-edges"))).toEqual(["bottom", "bottom", "bottom"]);
+  });
+
   it("has no button row, so the trigger is never nested inside another interactive control", () => {
     const view = render(<Table columns={columns} data={rows} getRowId={(row: Row) => row.id} onRowClick={() => {}} onRowContextMenu={() => {}} />);
     for (const row of view.container.querySelectorAll("tbody tr")) {

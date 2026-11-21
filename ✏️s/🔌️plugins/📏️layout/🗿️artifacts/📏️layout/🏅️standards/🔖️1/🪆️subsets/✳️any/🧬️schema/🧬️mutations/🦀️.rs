@@ -19,7 +19,7 @@ use semio_s_artifact_layout_layout_mutations_content::{replace_document, set_par
 use semio_s_artifact_layout_layout_mutations_content::set_page_background_drawing;
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = LayoutSnapshot, diff = LayoutDiff, schema = "s.layout.layout", reference = LayoutSnapshot, reference_diff = LayoutDiff)]

@@ -9,7 +9,7 @@ use semio_plugin::ContextMenuRequest;
 use semio_plugin::EditorApp;
 use semio_plugin::HierarchyProvider;
 use semio_plugin::InteractionRef;
-use crate::editor::dag::{DAG_RETAINED_TOOL_IDS, DAG_RETAINED_PUBLICATION_CONTRACTS, DagRetainedCommandJobFactory, DAG_CONFIG_STORE_MAXIMUM_BYTES, dag_config_footprint, prepare_dag_config};
+use crate::editor::dag::{DAG_RETAINED_TOOL_IDS, DAG_RETAINED_PUBLICATION_CONTRACTS, DagRetainedCommandJobFactory, dag_config_footprint, prepare_dag_config};
 pub(crate) mod context {
     use crate::editor::dag::*;
     use semio_plugin::artifact_app_laws::new_app_with_registry_and_members as framework_new_app_with_registry;
@@ -100,16 +100,25 @@ use crate::editor::dag::*;
 //#region 🧪️RetainedConfigOracle
 #[test]
 fn retained_config_preparation_matches_the_json_oracle_and_rejects_snapshot_input() {
-    let base = DagConfig::default();
-    let mut expected = serde_json::to_value(&base).expect("JSON oracle base");
-    expected["cameraX"] = serde_json::json!(1.0);
-    expected["cameraY"] = serde_json::json!(2.0);
-    expected["cameraZoom"] = serde_json::json!(3.0);
-    let (post, inverse, _) = prepare_dag_config(&base, DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x: 1.0, y: 2.0, zoom: 3.0 })).expect("bounded config candidate");
-    assert_eq!(serde_json::to_value(post).expect("JSON oracle post"), expected);
-    assert!(matches!(&inverse[0], DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x, y, zoom }) if (*x, *y, *zoom) == (base.camera_x, base.camera_y, base.camera_zoom)));
-    assert!(dag_config_footprint(&DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { config: base })).is_err());
-    assert_eq!(DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
+    use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+    let vectors: Vec<serde_json::Value> = serde_json::from_str(include_str!("../../🎚️config/🧪️tests/🧫️fixtures/🔁️mutations.json")).expect("config mutation fixtures");
+    for vector in vectors {
+        let base: DagConfig = from_json_str(&vector["base"].to_string(), JsonMemberPolicy::Reject).expect("config fixture base");
+        let mutation: DagConfigMutation = from_json_str(&vector["mutation"].to_string(), JsonMemberPolicy::Reject).expect("config fixture mutation");
+        if matches!(&mutation, DagConfigMutation::ReplaceConfig(_)) {
+            assert!(dag_config_footprint(&mutation).is_err());
+            assert!(prepare_dag_config(&base, &mutation).is_err());
+            continue;
+        }
+        let (post, inverse) = prepare_dag_config(&base, &mutation).expect("bounded config candidate");
+        let expected = &vector["after"];
+        assert_eq!(post.camera_x, expected["cameraX"].as_f64().unwrap());
+        assert_eq!(post.camera_y, expected["cameraY"].as_f64().unwrap());
+        assert_eq!(post.camera_zoom, expected["cameraZoom"].as_f64().unwrap());
+        let [restore] = inverse.as_slice() else { panic!("camera preparation must produce one inverse") };
+        assert_eq!(prepare_dag_config(&post, restore).expect("restore camera").0, base);
+    }
+    assert_eq!(super::DAG_CONFIG_PREPARATION_COPY_BYTES, 4_096);
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor::dag::unit_tests::context::{new_app_with_registry, DagApp};

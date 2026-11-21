@@ -153,6 +153,13 @@ impl PdfPredictorCursor {
         })
     }
 
+    /// 🪟️ Quotes a fresh inflate history before any predictor output is staged.
+    pub(crate) fn next_reserves_history(&self) -> bool {
+        self.lifecycle == Lifecycle::Decoding && !self.input_complete && self.filtered_byte.is_none()
+            && matches!(self.predicted, Predicted::Empty)
+            && matches!(&self.input, PredictorInput::Flate(cursor) if cursor.next_reserves_history())
+    }
+
     /// ⚙️ Charges both stages and writes to caller-owned staging space. Publish only after completion.
     pub fn advance(&mut self, source: &[u8], output: &mut [u8], grant: FlateGrant, cancelled: bool) -> FlateStep {
         let mut step = FlateStep { status: Ok(FlateStatus::Yield), work: 0, allocated_bytes: 0, written_bytes: 0 };

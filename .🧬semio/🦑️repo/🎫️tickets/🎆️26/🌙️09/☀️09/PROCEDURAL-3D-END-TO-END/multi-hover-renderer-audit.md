@@ -1,0 +1,11 @@
+# Multi-Instance Hover Renderer Audit
+
+The editor preview emits one instance per output channel and value, reuses meshes by source handle, and marks every applicable instance hovered (editor preview 🦀️.rs:369–445). Viewer likewise builds a deduplicated mesh table and per-instance marks. Both project only the first hovered instance into selection JSON. A shared mesh must not collapse per-instance paint.
+
+React: World3dHost/🧱️instance-layers/🧊️instance-node/🟦️.tsx:126–134 overwrites the guest instance hovered bit with chrome.hovered. The chrome store (🪟️instance-chrome-store/🟦️.ts:27–28, 97–101) resolves one local or guest hovered ID and compares each instance to it. Therefore additional graph-hovered instances do not paint hover. The direct JSON.parse in 🔗️instance-selection/🟦️.ts:117–119 preserves additional selection fields, and its mergeWorldSelectionWithLeftoverV1 at 365–389 spreads the base record. 🔭️scene-schema/🟦️.ts:122 must declare any new field; optimistic local hover precedence must also cover it.
+
+Native WGPU: ♾️infinite/🌍️world/🎛️host/🔄️sync-and-overlay/🦀️.rs:397–420 rewrites each draw instance hover from a singular live local_hover_id, matching either instance or interaction ID, deliberately ignoring retained instance bits to prevent stale paint. ♾️infinite/🌍️world/🌉️bridge/🎞️scene-bridge/🦀️.rs:346–381 deserializes a fixed World3dSceneSelectionRecord and ignores unknown fields; sync_world3d_scene_selection at 738–761 must carry a projected list through state and its change detection. Local pointer ownership and clearing must not resurrect a stale guest group.
+
+Existing payload assertions explicitly inspect hovered bits: composition generation3d editor engine-compute/🦀️.rs:429, 447–449; viewer preview tests/🦀️.rs:54, 77, 80, 176. Keep or update them if the wire contract changes.
+
+Suggested language-neutral fixture: one graph node with two output channels, one channel having two values sharing one mesh reference; another unrelated instance. Assert node hover paints all three instances, channel hover paints its two only, individual hover paints one, clear paints none, and selection retains its priority. Exercise transitions without changing instancesJson, local pointer override and release, and both real React material style and WGPU draw flags. Include a third-party oracle for the expected per-instance projection.

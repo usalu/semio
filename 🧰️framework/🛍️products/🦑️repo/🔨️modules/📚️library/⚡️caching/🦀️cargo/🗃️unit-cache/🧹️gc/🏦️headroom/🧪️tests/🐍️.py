@@ -1,5 +1,6 @@
 """🐍️ Independent oracle of the image headroom admission: argv[1] is the policy schema, stdin a list of {kind, input}; prints the result of each (kind is floor, quantile, estimate, outstanding or decision)."""
 import json
+import os
 import sys
 
 policy = json.load(open(sys.argv[1], encoding="utf8"))["definitions"]["Policy"]["const"]
@@ -54,8 +55,7 @@ def decision(state):
     facts = {"floorBytes": floor, "heldBytes": held, "aheadBytes": ahead_bytes, "shortfallBytes": shortfall, "running": len(running)}
     if shortfall == 0:
         return {"verdict": "admit", "reason": "fits", **facts}
-    active = [r for r in running if r["admittedMs"] is None or state["nowMs"] - r["admittedMs"] <= r["rampMilliseconds"] + policy["strandedGraceMilliseconds"]]
-    if not active and not ahead and state["reclaimed"]:
+    if not running and not ahead and state["reclaimed"]:
         return {"verdict": "admit", "reason": "alone", **facts}
     queued = ahead_bytes > 0 and state["freeBytes"] - floor - held >= request["reservedBytes"]
     return {"verdict": "wait", "reason": "queue" if queued else "space", **facts}
@@ -68,7 +68,18 @@ def prior(state):
     return policy["prior"][state["temperature"]]
 
 
+def exclusive_file_claim(path):
+    try:
+        descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        return True
+    os.close(descriptor)
+    os.unlink(path)
+    return False
+
+
 run = {
+    "exclusiveFileClaim": exclusive_file_claim,
     "prior": prior,
     "floor": lambda state: floor_bytes(state),
     "quantile": lambda state: quantile(state["values"], state["basisPoints"]),

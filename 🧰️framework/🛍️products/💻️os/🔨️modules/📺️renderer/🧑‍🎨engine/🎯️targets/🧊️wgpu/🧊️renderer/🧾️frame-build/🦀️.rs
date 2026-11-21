@@ -367,7 +367,11 @@ impl FrameBuildCursor {
         if let Some(owner)=self.world_rejected.as_mut(){
             if !owner.terminal_is_empty(){
                 let demand=owner.next_close_demands(grant.maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-                return frame_original_primitive_close(cx,demand,|grant|{let step=owner.close_step(grant)?;step.admit(grant,owner.terminal_is_empty())});
+                return frame_prepared_close(cx, demand, |effect| {
+                    let grant = effect.grant();
+                    let step = owner.close_step(effect)?;
+                    Ok(step.admit(grant, owner.terminal_is_empty())?)
+                });
             }
             if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.world_rejected=None;return frame_receive_close(frame_inline_progress(0),cx);
@@ -531,8 +535,13 @@ pub fn frame_unpriced_child() -> Result<InteractiveJobCloseStep,semio_framework_
 }
 
 /// 🎟️ One quoted primitive debits the unchanged frame caller exactly once.
-fn frame_draw_retirement_demand(draw: &DrawList) -> Result<RetainedCloneGrant, semio_framework_value::ValueError> {
-    Ok(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: draw.next_retirement_copy_byte_demand()?, maximum_capacity_bytes: draw.next_retirement_capacity_byte_demand()?, maximum_release_bytes: draw.next_retirement_release_byte_demand()?, maximum_depth: draw.next_retirement_depth_demand()? })
+fn frame_draw_retirement_demand(draw: &DrawList) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::RetirementDemand {
+        copy_bytes: draw.next_retirement_copy_byte_demand()?,
+        capacity_bytes: draw.next_retirement_capacity_byte_demand()?,
+        release_bytes: draw.next_retirement_release_byte_demand()?,
+        depth: draw.next_retirement_depth_demand()?,
+    })
 }
 
 /// 🧾️ Closes one ui-prepared owner under the turn's own effect; a finished owner is observed by its terminal witness on the next call.
@@ -540,11 +549,30 @@ fn frame_prepared_close(cx:&mut semio_framework_job::StepContext<'_>,quote:Retai
     Ok(match semio_ui_prepared::retirement::prepared_close_turn(cx,quote,close)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})
 }
 
-fn frame_original_primitive_close(cx:&mut semio_framework_job::StepContext<'_>,quote:RetainedCloneGrant,advance:impl FnOnce(RetainedCloneGrant)->Result<InteractiveJobCloseStep,semio_framework_value::ValueError>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-    let demand=semio_framework_value::RetirementDemand{copy_bytes:quote.maximum_copy_bytes,capacity_bytes:quote.maximum_capacity_bytes,release_bytes:quote.maximum_release_bytes,depth:quote.maximum_depth};
-    let mut blocked=false;
-    let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|advance(grant).map(|step|match step{InteractiveJobCloseStep::Pending{progress}=>semio_framework_value::RetainedCloneStep::Progress(progress),InteractiveJobCloseStep::Complete{progress}=>semio_framework_value::RetainedCloneStep::Complete(progress),InteractiveJobCloseStep::Blocked=>{blocked=true;semio_framework_value::RetainedCloneStep::Progress(Default::default())}}))?;
-    if blocked{Ok(InteractiveJobCloseStep::Blocked)}else{Ok(step)}
+fn frame_original_primitive_close(
+    cx: &mut semio_framework_job::StepContext<'_>,
+    demand: semio_framework_value::RetirementDemand,
+    advance: impl FnOnce(RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError>,
+) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+    use semio_framework_value::{RetainedCloneStep, RetainedWorkOutcome};
+    let mut blocked = false;
+    let step = semio_framework_job::close_original_quoted_retained_step(cx, demand, 1, |grant| {
+        let result = advance(grant);
+        let progress = match &result {
+            Ok(step) => step.progress(),
+            Err(error) => error.retained_progress(),
+        };
+        let result = result.map(|step| match step {
+            InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
+            InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
+            InteractiveJobCloseStep::Blocked => {
+                blocked = true;
+                RetainedCloneStep::Progress(Default::default())
+            }
+        });
+        RetainedWorkOutcome { result, work: u128::from(progress.copied_items != 0) }
+    })?;
+    if blocked { Ok(InteractiveJobCloseStep::Blocked) } else { Ok(step) }
 }
 
 /// 🧾️ Carries the real child receipt without publishing the parent as empty.

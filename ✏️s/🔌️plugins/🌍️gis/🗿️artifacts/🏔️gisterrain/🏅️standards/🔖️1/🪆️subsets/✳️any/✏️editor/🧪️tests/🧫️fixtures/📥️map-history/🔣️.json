@@ -1,0 +1,18 @@
+{
+  "port": "map:in",
+  "schema": "2d.map",
+  "maps": [
+    {
+      "positions": [{ "id": "station", "lon": 5.57, "lat": 50.6, "label": "Station" }],
+      "routes": [{ "id": "walk", "points": [[5.57, 50.6], [5.59, 50.62]] }],
+      "regions": [{ "id": "reserve", "ring": [[5.57, 50.6], [5.59, 50.6], [5.59, 50.62]] }],
+      "source": { "name": "Survey A" }
+    },
+    {
+      "positions": [{ "id": "summit", "lon": 5.58, "lat": 50.61, "alt": 250.0 }],
+      "routes": [],
+      "regions": [],
+      "source": { "name": "Survey B" }
+    }
+  ]
+}

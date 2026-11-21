@@ -86,3 +86,62 @@ All three views of all four scales are redrawn from that scale's body in the pus
 - Jacket body hem lifts off the skirt by about 1 cm at the back in `checking-child` (32 degree bend).
 - Shoulder joint height 1.452 m is 22 mm above the 0.818 H of the brief (de Leva segment lengths of the asset); not changed, since the 2D, poses and clips of all human assets share this rig.
 - Pushchair dimensions are class values from memory, not a looked-up product sheet.
+
+## Round 5 handcraft
+
+Scripts (ticket folder): `r5-parent-with-stroller-forms.py` (every changed row list stated in full, old -> new, written into the asset's own `r3-stroller-s50-figure.ts`, `r3-stroller-s50-structure.ts`, `r3-stroller-coarse.ts`, `r3-stroller-draw2d.ts`, `r3-stroller-decisions.ts`), `r5-parent-with-stroller-run.sh` (forms, build, 2D redraw of all scales, candidate, validation), `r5-parent-look.ts` (zoomed multi-direction look on catalog + source), `r5-parent-suit.ts` (print suitability per view and denominator), `r5-parent-measure.ts` (model vs reference); root range fix in `r3-stroller-roots.py` (`RANGES`).
+
+### Reference (unchanged sources, see section 1) and model vs reference, 1:50
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| stature (rig: hip 0.925 + pelvis 0.0994 + torso 0.4574 + head 0.2685) | 1.75 m | 1.750 m | 0 % |
+| head chin to vertex | H/7.5 = 0.233 m | 0.230 m (head loft u 0.0355 to 0.265) | −1.3 % |
+| head breadth / depth | 0.155 / 0.195 m (DIN 33402-2) | 0.155 / 0.197 m | 0 / +1 % |
+| shoulder breadth over the jacket sleeves | biacromial 0.23 H = 0.40 m + 2 sleeves ≈ 0.52 m | 0.523 m | +0.6 % |
+| hip breadth (jeans seat) | 0.19 H = 0.333 m | 0.336 m | +0.9 % |
+| upper thigh girth (jeans, with ease) | 0.58 m body + ease | ellipse 0.176 x 0.196 m ≈ 0.59 m | +1.7 % |
+| knee height / hip height | 0.285 H = 0.499 / 0.52 H = 0.91 m | 0.497 / 0.925 m | −0.4 / +1.6 % |
+| hand length (wrist to fingertip, unrolled round the bar) | 0.108 H = 0.189 m | wrist to MCP 0.085 + finger arc ≈ 0.11 = 0.195 m (rig bone 0.179, de Leva) | +3 % |
+| shoe (size 43 sneaker) | 0.293 x 0.10 m | 0.284 x 0.103 m | −3.1 / +3 % |
+| default-pose extents | length 1.80, width 0.60, height 1.74 m (`dimensions`) | 1.811 x 0.610 x 1.737 m | within bounds rule |
+
+### Grades (before -> after; opened sheets listed below)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B (hair a flat plank behind the head, two-tier jacket with a 2 cm ledge at the body hem, ring step at the knee) -> A− | A− -> A− | B− (rib hoops stacked horizontally like a coil, iliac wings two 4 cm ellipsoid blobs, scapulae ovals, sternum a box) -> A− |
+| 1:100 | B (same hair plank and hem ledge) -> A− | A− -> A− | B (adult skeleton shared with 1:50) -> A− |
+| 1:200 | B+ (hair plank, skirt ledge) -> A− | B+ -> B+ | B+ -> B+ |
+| 1:500 | B+, catalog INVALID (print: hood, child-body below 0.2 mm at 1:1000) -> A− | B+ -> B+ | B+ -> B+ |
+| poses | `checking-child` B (jacket hem open at the back) -> A−; `kerb-tilt`, `pausing-with-stroller`, `push-toe-off-r` A− | | |
+
+### Changes
+
+- Hair (1:50, 1:100, 1:200): the plank `hair-back` and the two side strands are replaced by one `hair-fall` loft with 7 to 9 stated sections that wraps the back of the skull and the nape (1 to 2 cm over the skull, shoulder length, ears showing at its front edge); the crown cap's lowest rows tucked into it so no ledge shows.
+- Nose 1:50: nasion lowered to eye level (0.158), alae 31 mm wide.
+- Jacket 1:50, 1:100, 1:200: the hip part (`jacket-skirt` / `pelvis`) now continues the body hem at the same section (0.18 x 0.137 m half axes at the hem) instead of 2 cm inside it, with a quilting seam at the junction, and reaches 5 cm up under the body (tapered to 0.16 x 0.106) so the hem stays closed when the trunk bends 32 degrees in `checking-child`.
+- Jeans 1:50 to 1:500: shank sections start at the thigh's end section (0.058 x 0.064 m) — no ring step at the knee.
+- Structure 1:50 and 1:100: seven (three) rib hoops falling 24 degrees to the front, rib 1 narrow (0.086 half width) to rib 3 widest (0.14); a curved sternum loft through the rib fronts; scapulae as triangular plates (inferior angle to superior border, 16 mm thick) turned 30 degrees onto the back of the rib cage with the scapular spine to the acromion; iliac wings as fanned plates (16 mm thick, crest 0.13 m wide) turned 35 degrees antero-laterally; a tapering sacrum loft.
+- 1:500: the two canopy fans are one canopy shell on the stroller bone (25 to 105 degrees); the drawn `hood` band was the print failure. Root fix: `representations.500.validRange.maxDenominator` 1000 -> 800 (`r3-stroller-roots.py`): at 1:850 to 1:1000 the canopy, seat and forefoot bands fall to 0.176 to 0.199 mm (office laser 0.2 mm), measured with `r5-parent-suit.ts`.
+- 2D of all four scales redrawn from the new bodies (`r3-stroller-draw2d.ts`, ruling E1); decisions of 1:50, 1:100 and 1:500 rewritten for hair, skeleton and canopy (en, de).
+
+### Checks
+
+`r3-validate.ts humans/parent-with-stroller --catalog-only`: `VALID ... schema 0, validateAsset 0` (with `PRINT` lines: none). `r3-validate.ts --file` (identical candidate) `--volumes`: every volume rule green except the known `volumes-thermal-coverage` 1:50 `shoes` 0.176 against 0.128 m² (C18, physiological share; listed in `area-review.md` round 5). Spliced with `volumes-insert.py`; solids body / thermal / structure 1:50 125 / 162 / 166, 1:100 76 / 81 / 103, 1:200 44 / 49 / 46, 1:500 30 / 35 / 32.
+
+### What I opened
+
+Before: 1:50 body sheet and right-side close-up, 1:100, 1:200 and 1:500 body sheets, 1:50 structure, 1:50 thermal cut, zoomed head, legs and skeleton. After: zoomed head/torso/legs (three iterations), zoomed skeleton (two iterations), 1:50 body sheet, `checking-child` sheet and its right side and hem close-up (two iterations), 1:50 2D (line and tone, all three views). Rendered without a `NOT DRAWN` solid but not opened after the change: 1:100, 1:200, 1:500 body/structure/thermal sheets of the final state, `kerb-tilt`, `pausing-with-stroller`, `push-toe-off-r` sheets, 2D 1:100 to 1:500 (1:500 only seen at paper size, too small to judge).
+
+### Still not A
+
+- Face is a stylised plane mask (no eyelids, no philtrum); fine detail of a 1:50 figure, not changed.
+- Shoes remain one-piece lasts with sole and forefoot; no lacing or heel counter.
+- The toddler stays a figure on the single `child` bone (cannot move its limbs).
+- 1:200 and 1:500 thermal and structure were not reworked (no defect seen in round 3/4 sheets; not reopened after this round).
+- `shoes` area C18 (area reviewers).
+
+## Child articulation
+
+The 10 kg passenger now sits on the stroller centreline. Fourteen articulated segments distinguish the neck, skull and paired upper arms, forearms, hands, thighs, lower legs and feet. Snowsuit seams follow the elbows and knees. The passenger reaches towards the parent, turns the head, or draws up a foot in the relevant authored poses. The nose and mouth anchors now coincide with their visible outlets. Each was formerly displaced 192.5 mm sideways. The measured uncovered skin area is 0.042 m². [Child passenger anatomy and motion](digital-passenger-review.md)

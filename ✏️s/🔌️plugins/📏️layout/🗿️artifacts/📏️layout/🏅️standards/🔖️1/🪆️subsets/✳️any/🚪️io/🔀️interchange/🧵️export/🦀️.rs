@@ -1,5 +1,7 @@
 //! 🧵️ Export sessions emit at most one bounded semantic fragment or ZIP chunk per advance.
 use super::*;
+use semio_framework_io_ports::VectorGraphSourceV1;
+use semio_s_artifact_layout_layout_model::DrawingSourceAddress;
 use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::stream::StoredZipStream;
 use semio_s_artifact_stdio_xml::{schema::snapshot::{XmlDocument,XmlNode},standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked};
 
@@ -35,12 +37,24 @@ impl InterchangeExportSession{
         if self.input_bytes>MAX_INTERCHANGE_BYTES{return Err("layout.interchange.byte-limit".into());}Ok(())
     }
     pub fn advance(&mut self,doc:&LayoutSnapshot)->Result<InterchangeExportAdvance,String>{
+        self.advance_inner(doc,false,None)
+    }
+    /// 🔎️ Selects the original Drawing member needed by the next STEP semantic turn.
+    pub fn required_step_drawing(&self,doc:&LayoutSnapshot)->Option<DrawingSourceAddress>{
+        if self.admission<9||self.pending.capacity()!=0{return None;}
+        match &self.kind{Kind::Step{session}=>session.required_drawing(doc,self.selected_page),_=>None}
+    }
+    /// 📐️ Advances original STEP export using the graph borrowed from the selected qualified member.
+    pub fn advance_with_original_step_drawing(&mut self,doc:&LayoutSnapshot,drawing:Option<&dyn VectorGraphSourceV1>)->Result<InterchangeExportAdvance,String>{
+        self.advance_inner(doc,true,drawing)
+    }
+    fn advance_inner(&mut self,doc:&LayoutSnapshot,qualified:bool,drawing:Option<&dyn VectorGraphSourceV1>)->Result<InterchangeExportAdvance,String>{
         self.completed=self.completed.saturating_add(1);
         if self.admission<9{self.admit_one(doc)?;return Ok(InterchangeExportAdvance::Progress{completed_units:self.completed});}
         if self.cursor<self.pending.len(){let end=(self.cursor+CHUNK).min(self.pending.len());let bytes=match &mut self.kind{Kind::Step{..}=>self.pending[self.cursor..end].to_vec(),Kind::Idml{writer,..}=>writer.write_chunk(&self.pending[self.cursor..end])?};self.cursor=end;return self.publish(bytes);}
         if self.pending.capacity()!=0{self.pending=Vec::new();self.cursor=0;return Ok(InterchangeExportAdvance::Progress{completed_units:self.completed});}
         match &mut self.kind{
-            Kind::Step{session}=>{match session.advance(doc,self.selected_page)?{step::StepAdvance::Progress=>Ok(InterchangeExportAdvance::Progress{completed_units:self.completed}),step::StepAdvance::Fragment(fragment)=>{self.pending=fragment;Ok(InterchangeExportAdvance::Progress{completed_units:self.completed})},step::StepAdvance::Done=>Ok(InterchangeExportAdvance::Done)}},
+            Kind::Step{session}=>{match session.advance(doc,self.selected_page,qualified,drawing)?{step::StepAdvance::Progress=>Ok(InterchangeExportAdvance::Progress{completed_units:self.completed}),step::StepAdvance::Fragment(fragment)=>{self.pending=fragment;Ok(InterchangeExportAdvance::Progress{completed_units:self.completed})},step::StepAdvance::Done=>Ok(InterchangeExportAdvance::Done)}},
             Kind::Idml{started,writer,part,layers}=>{
                 if !*started{*started=true;let bytes=writer.known_entry("mimetype",idml::MIME.as_bytes())?;return self.publish(bytes);}
                 let mut chunk=None;

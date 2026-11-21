@@ -173,9 +173,8 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
         let work = if self.settling() { self.settlement_work(4096)? } else { self.local_work() };
         Ok(if work <= maximum_work_units { work } else { 0 })
     }
-    fn settle(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+    fn settle(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         if !self.retirement.is_empty() {
-            let body = effect.grant().maximum_copy_bytes;
             return self.retirement.step_granted(body, effect);
         }
         if self.row.is_some() {
@@ -191,7 +190,7 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
         let mut pending = None;
         let result: Result<_, OriginalRetirementFailure> = (|| {
             let selected = self.work_demand(maximum_work_units)?;
-            if selected == 0 {
+            if selected == 0 || selected > effect.maximum_work_units() {
                 return Ok(RetainedCloneStep::Progress(Default::default()));
             }
             let demand = self.demand(maximum_work_units)?;
@@ -199,7 +198,7 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
                 return Ok(RetainedCloneStep::Progress(Default::default()));
             }
             if self.settling() {
-                match self.settle(effect) {
+                match self.settle(4096, effect) {
                     RetainedWorkPoll::Pending { work: owed } => {
                         pending = Some(owed);
                         return Ok(RetainedCloneStep::Progress(Default::default()));
@@ -209,6 +208,9 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
                         return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
                     }
                 }
+            }
+            if !effect.performed(selected)? {
+                return Ok(RetainedCloneStep::Progress(Default::default()));
             }
             let mut state = self.state;
             work = u128::from(selected);
@@ -410,9 +412,8 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
             self.settlement_work(body)
         }
     }
-    pub(crate) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+    pub(crate) fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         let grant = effect.grant();
-        let body = grant.maximum_copy_bytes;
         let demand = match self.close_demand(body) {
             Ok(demand) => demand,
             Err(error) => return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Err(error.into()), work: 0 }),
@@ -426,7 +427,7 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
             let turn = self.retirement.begin_granted(&mut self.input, effect);
             RetainedWorkPoll::Complete(RetainedWorkOutcome { result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into), work: turn.work })
         } else {
-            self.settle(effect)
+            self.settle(body, effect)
         };
         poll.map(|step| if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }

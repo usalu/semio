@@ -69,3 +69,57 @@ Final check: `volumes-check.ts furniture/picnic-table --product` -> `PASS (12.5 
 - The older scripts `author-16-picnic.py` and `author-50-picnic2d.py` describe the superseded model; left in place (not mine to delete).
 
 State: DONE
+
+## Round 5 handcraft (2026-11-21)
+
+Sheets rendered before and after the fix with `sh r5-sheets.sh furniture/picnic-table before|after "stowed occupied bench-proof-load half-folded-key" "fold-benches 1.5"`. Opened:
+- before: body 1:50 (six views with rig); a montage of body 1:100 / 1:200 / 1:500 and structure 1:50; a montage of the 1:50 thermal cut, structure and thermal cut at 1:100 / 1:200 / 1:500, and `fold-benches` at 1.5 s; a montage of the poses `stowed`, `occupied`, `bench-proof-load` and `half-folded-key`; the 1:50 body from below;
+- after: body 1:50 and 1:200, structure 1:200 and the 1:200 2D; the 2D at 1:50 and 1:100, the 1:200 thermal cut and `stowed` 1:50.
+
+Measurements: `r5-furniture-extent.ts furniture/picnic-table 50`.
+
+### Reference against model (1:50, pose deployed)
+
+| Quantity | Reference (USDA FS / NPS A-frame table, EN 581) | Model | Deviation |
+| --- | --- | --- | --- |
+| Top length x width x height | 1800 x 700-760 x 720-760 mm | 1800 x 700 x 750 | 0 % |
+| Overall width | 1500-1600 mm (asset 1520) | 1520 | 0 % |
+| Top planks | 5 x 2 x 6 (about 140 x 40), 6-10 mm gaps | 5 x 132 x 40, 10 mm gaps | in range |
+| Seat height / width | 430-460 / about 300 mm | 440 / 300 | 0 % |
+| Horizontal gap, top edge to seat | 80-120 mm | 110 | in range |
+| Legs | 95 x 45 mm raked about 60° | 95 x 45 at 60.0° (x extent 0.514 m) | 0 % |
+| Centre cleat | 2 x 4 on edge (89 x 38-45 mm) | before 70 x 45; now 89 x 45 | before -21 %, now 0 % |
+| Braces | 2 x 3 / 2 x 4 from the seat supports to the centre cleat | 70 x 45, ending on the cleat | 0 % |
+
+### Grades
+
+| Scale | Body before / after | Thermal | Structure before / after |
+| --- | --- | --- | --- |
+| 1:50 | A- / A | A | A- / A- |
+| 1:100 | A- / A | A | A- / A- |
+| 1:200 | B+ / A | A | B+ / A- |
+| 1:500 | A- / A- | A | A- / A- |
+
+Defects found:
+- 1:200: the centre cleat was missing, although at 45 mm it is above the 30 mm feature. The decision called it "merged into the slab", but the slab is only 40 mm. So the two braces ended under the slab with a 46 mm sliver between their tips.
+- 1:50 and 1:100: the 70 mm centre cleat was shallower than the plumb cut of the braces (75 mm). The brace tips stood 7 mm below the cleat, leaving a notch.
+- The catalog was INVALID under the print check: `range-end-gap` for brace+brace-b at 1:150 (bands 1:100 and 1:200), and for top planks 3+4 at 1:20.
+
+Root fixes:
+- **Kit.** In `r3-picnic-table-kit.py`, `MID_Y0` changed from 0.64 to 0.621, making the centre cleat 89 x 45 mm (a 2 x 4 on edge) that takes up both brace ends. `parts200` gains the `top-cleat`.
+- **Draw script.** `r3-picnic-table-draw.py` now writes the valid ranges. The 1:50 band starts at 1:30 instead of 1:20: finer than that, the 10 mm plank gaps open to a sliver under the 0.5 mm pen.
+- **Decisions and notes.** The 1:200 body and drawing decisions and the provenance notes are rewritten (en, de).
+- **Rebuilt.** All four scales were rebuilt with build, then apply, then `volumes-insert.py`. The masses follow from the model: top 25.0 to 25.3 kg, `massKg` 72.1 to 72.4.
+- **Solid counts.** 1:200 is now body 18, thermal 18, structure 33 (was 17 / 17 / 32). The other scales are unchanged in count.
+
+Checks: `r3-validate.ts furniture/picnic-table --volumes` gives `VALID ... schema 0, validateAsset 0, checkVolumes 0`. `volumes-check.ts --product` gives `PASS (23.5 s)` with 41 lines ok.
+
+What I saw after the fix:
+- At 1:200 the braces now meet the centre cleat in the long-side view, in 3D and in 2D.
+- 1:50 is unchanged except for the deeper cleat.
+- `stowed` still hangs plumb and clear.
+
+Open points:
+- The structure at 1:50 and 1:100 is mostly the timber itself (allowed by D3).
+- The plank screws are not modelled.
+- The a-frame and hinge areas are still with the area reviewers (round 3).

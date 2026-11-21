@@ -1,0 +1,37 @@
+{
+  "leaning-person": {
+    "subject": null,
+    "expectedTotalM2": 2.268,
+    "region": "head-skin",
+    "skinM2": 0.092,
+    "garmentAreasM2": {
+      "torso-clothing": 0.78879,
+      "arm-clothing": 0.27,
+      "leg-clothing": 0.8411,
+      "shoes": 0.17811
+    }
+  },
+  "parent-carrying-toddler": {
+    "subject": null,
+    "expectedTotalM2": 2.7339,
+    "region": "face",
+    "skinM2": 0.098,
+    "garmentAreasM2": {
+      "scarf": 0.13361,
+      "coat-torso": 1.10848,
+      "coat-sleeves": 0.3179,
+      "gloves": 0.0961,
+      "jeans": 0.74228,
+      "boots": 0.23753
+    }
+  },
+  "parent-with-stroller": {
+    "subject": "toddler",
+    "expectedTotalM2": 0.45,
+    "region": "child-skin",
+    "skinM2": 0.042,
+    "garmentAreasM2": {
+      "child-clothing": 0.408
+    }
+  }
+}

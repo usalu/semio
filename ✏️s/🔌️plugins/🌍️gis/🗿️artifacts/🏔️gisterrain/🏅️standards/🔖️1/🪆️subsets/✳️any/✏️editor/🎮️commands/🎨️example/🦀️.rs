@@ -2,6 +2,7 @@
 
 use crate::mutations::change_exaggeration::ChangeExaggeration;
 use crate::mutations::change_imported_features::ChangeImportedFeatures;
+use crate::mutations::ReplaceElevationSource;
 use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
 use semio_plugin::{ActionArgOption, ArtifactView, ConfigView, Emit, ExampleSource, Fault, NoConfig, NoConfigMutation};
@@ -24,9 +25,7 @@ pub fn example_arg_options() -> Vec<ActionArgOption> {
     example_catalogue().into_iter().map(|source| ActionArgOption::new(source.id(), source.label().clone())).collect()
 }
 
-/// 🔎️ Resolves one catalogue id into its document. An empty id is the catalogue's "none" arm (the
-/// flat unimported terrain); every other id must name a declared example, so a typo faults instead
-/// of silently loading whichever example happens to be bundled.
+/// 🔎️ Resolves a catalogue id or the empty terrain document.
 pub fn example_document(example_id: &str) -> Result<GisTerrainSnapshot, Fault> {
     if example_id.is_empty() {
         return Ok(crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot());
@@ -37,17 +36,8 @@ pub fn example_document(example_id: &str) -> Result<GisTerrainSnapshot, Fault> {
 //#endregion 🔖️Catalogue
 
 //#region 🔖️SetActiveExample
-/// ✏️ Replaces document content by diffing this artifact's two editable fields — `exaggeration` and
-/// the `map:in` overlay's `importedMap` — into the authored `change-exaggeration` /
-/// `change-imported-features` leaves, so this is a Mutation action, not a View one. Never a
-/// whole-document snapshot swap (that vocabulary is retired by the taxonomy): each emitted leaf
-/// still has its own real inverse, so one undo restores the prior document exactly. A field that
-/// already holds the example's value emits nothing, for the same reason `change-exaggeration`
-/// itself warns `mutation.no-op` rather than publishing an empty edit.
-///
-/// 🕸️ `mesh` is NOT emitted: it is the composed child derived from exactly these two fields
-/// (`gis_terrain_mesh_content_key`), so it follows the document the same way it follows a plain
-/// `setExaggeration` — this command does not own a second, divergent rule for it.
+/// ✏️ Emits one invertible mutation for each change to the example's exaggeration,
+/// imported map, and elevation source.
 pub mod set_active_example {
     use super::*;
 
@@ -65,7 +55,10 @@ pub mod set_active_example {
             artifact_mutations.push(GisTerrainMutation::ChangeExaggeration(ChangeExaggeration { new_exaggeration: next.exaggeration }));
         }
         if document.imported_map != next.imported_map {
-            artifact_mutations.push(GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: next.imported_map.clone() }));
+            artifact_mutations.push(GisTerrainMutation::ChangeImportedFeatures(ChangeImportedFeatures { new_imported_map: next.imported_map }));
+        }
+        if document.elevation_source != next.elevation_source {
+            artifact_mutations.push(GisTerrainMutation::ReplaceElevationSource(ReplaceElevationSource { new_elevation_source: next.elevation_source }));
         }
         Ok(Emit { artifact_mutations, ..Default::default() })
     }

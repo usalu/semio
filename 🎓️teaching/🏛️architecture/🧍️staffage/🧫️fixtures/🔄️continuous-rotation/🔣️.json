@@ -946,7 +946,7 @@
         "denominator": 200,
         "validRange": {
           "minDenominator": 150,
-          "maxDenominator": 349
+          "maxDenominator": 350
         },
         "pens": {
           "body": 0.25,
@@ -1148,7 +1148,7 @@
         "denominator": 100,
         "validRange": {
           "minDenominator": 75,
-          "maxDenominator": 149
+          "maxDenominator": 150
         },
         "pens": {
           "body": 0.35,
@@ -1350,7 +1350,7 @@
         "denominator": 50,
         "validRange": {
           "minDenominator": 20,
-          "maxDenominator": 74
+          "maxDenominator": 75
         },
         "pens": {
           "body": 0.5,
@@ -1558,6 +1558,49 @@
   "comRadiusM": 0.1,
   "velocityToleranceDegS": 0.05,
   "epsilonS": 0.0001,
+  "shaft": {
+    "joint": {
+      "type": "revolute",
+      "continuousTwist": true
+    },
+    "twistsDeg": [
+      0,
+      360,
+      720
+    ],
+    "timesS": [
+      -0.25,
+      0,
+      0.25,
+      1.9999,
+      2,
+      2.0001,
+      3.25,
+      5.25
+    ],
+    "speedDegS": 360,
+    "invalidClosingTwistDeg": 719,
+    "boundedJoint": {
+      "type": "revolute",
+      "twistMinDeg": -720,
+      "twistMaxDeg": 720
+    },
+    "incompatibleJoints": [
+      {
+        "type": "fixed",
+        "continuousTwist": true
+      },
+      {
+        "type": "prismatic",
+        "continuousTwist": true
+      },
+      {
+        "type": "revolute",
+        "continuousTwist": true,
+        "twistMaxDeg": 360
+      }
+    ]
+  },
   "noClosing": {
     "keysToRemove": [2],
     "note": "without a closing key the loop wraps back to the first key (today's behaviour)"

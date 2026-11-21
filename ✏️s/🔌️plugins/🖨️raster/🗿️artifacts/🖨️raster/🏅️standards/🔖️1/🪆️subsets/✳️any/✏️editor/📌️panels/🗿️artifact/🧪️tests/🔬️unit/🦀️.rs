@@ -46,7 +46,7 @@ fn nested_key(node_key: &str) -> String {
 #[test]
 fn oversized_document_stamps_totals_and_never_a_continuation_row() {
     let json = window_body(&oversized_document(300, 40), Vec::new());
-    assert!(json.contains("\"total\":305"), "the section stamps three add rows, flattening, export and every layer: {json}");
+    assert!(json.contains("\"total\":306"), "the section stamps three add rows, import, flattening, export and every layer: {json}");
     assert!(json.contains("\"total\":40"), "the nested group stamps its own full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
@@ -58,10 +58,10 @@ fn oversized_document_stamps_totals_and_never_a_continuation_row() {
 fn closed_containers_stamp_totals_and_materialise_no_children() {
     let document = oversized_document(300, 40);
     let json = window_body(&document, vec![closed(RASTER_TREE_PREFIX)]);
-    assert!(json.contains("\"total\":305"), "a closed section still stamps its extent: {json}");
+    assert!(json.contains("\"total\":306"), "a closed section still stamps its extent: {json}");
     assert!(!json.contains("raster-play-layers.add.pixel"), "a closed section materialises no rows: {json}");
 
-    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 0, 6), closed(&nested_key("group-0"))]);
+    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 0, 7), closed(&nested_key("group-0"))]);
     assert!(nested.contains("\"total\":40"), "a closed group still stamps its extent: {nested}");
     assert!(!nested.contains("nested-0"), "a closed group materialises no children: {nested}");
 }
@@ -71,15 +71,15 @@ fn closed_containers_stamp_totals_and_materialise_no_children() {
 #[test]
 fn host_windows_materialise_exactly_their_slice() {
     let document = oversized_document(300, 40);
-    let json = window_body(&document, vec![open(RASTER_TREE_PREFIX, 105, 10)]);
-    assert!(json.contains("\"offset\":105"), "the section reports its offset: {json}");
+    let json = window_body(&document, vec![open(RASTER_TREE_PREFIX, 106, 10)]);
+    assert!(json.contains("\"offset\":106"), "the section reports its offset: {json}");
     for index in 100..110 {
         assert!(json.contains(&format!("pixel-{index}\"")), "row {index} is inside the window: {json}");
     }
     assert!(!json.contains("pixel-99\""), "the row before the window stays out: {json}");
     assert!(!json.contains("pixel-110\""), "the row after the window stays out: {json}");
 
-    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 5, 1), open(&nested_key("group-0"), 12, 4)]);
+    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 6, 1), open(&nested_key("group-0"), 12, 4)]);
     assert!(nested.contains("\"offset\":12"), "the nested group reports its offset: {nested}");
     for index in 12..16 {
         assert!(nested.contains(&format!("nested-{index}\"")), "nested child {index} is inside the window: {nested}");
@@ -167,5 +167,18 @@ fn png_download_control_is_localized_and_not_disabled_by_layer_locks() {
         let view=ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);let node=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();
         let mut pending=vec![&node];let mut enabled=false;while let Some(item)=pending.pop(){if item.key.as_str()==format!("{RASTER_TREE_PREFIX}.export-png"){enabled=!item.disabled;}pending.extend(item.children.iter());}assert!(enabled);
         let json=semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();assert!(json.contains(fixture["download"][locale].as_str().unwrap()));assert!(json.contains("exportPng"));
+    }
+}
+
+#[test]
+fn png_picker_control_is_available_in_an_empty_document_in_each_locale() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎮️commands/📥️import-png/🧪️tests/fixture.json")).unwrap();
+    let document = semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
+    for (locale, labels) in [("en", &RasterPlayLabels::NATIVE_EN), ("de", &RasterPlayLabels::NATIVE_DE)] {
+        let view = ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+        let node = render(&document, &RasterConfig::default(), labels, &TreeWindows::for_body(&view, RASTER_PLAY_BODY_LAYERS)).unwrap();
+        let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).unwrap();
+        assert!(json.contains(fixture["labels"][locale].as_str().unwrap()), "{json}");
+        assert!(json.contains("importPng"), "{json}");
     }
 }

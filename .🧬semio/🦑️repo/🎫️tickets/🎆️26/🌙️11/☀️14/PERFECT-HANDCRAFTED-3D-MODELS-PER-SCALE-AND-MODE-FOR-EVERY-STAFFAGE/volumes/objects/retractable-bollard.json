@@ -1,6954 +1,2071 @@
 {
  "volumes": {
-  "50": {
-   "status": "authored",
-   "denominator": 50,
-   "body": [
-    {
-     "id": "sleeve-tube",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.008,
-       0.142
-      ],
-      [
-       0.008,
-       0.15
-      ],
-      [
-       1.24,
-       0.15
-      ],
-      [
-       1.24,
-       0.142
-      ],
-      [
-       0.008,
-       0.142
-      ]
+   "50": {
+     "status": "authored",
+     "denominator": 50,
+     "body": [
+       {
+         "id": "sleeve-tube",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.008, 0.142], [0.008, 0.15], [1.24, 0.15], [1.24, 0.142], [0.008, 0.142]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "sleeve-floor",
+         "kind": "extrude",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[-0.15, 0.0], [-0.148717, 0.019579], [-0.144889, 0.038823], [-0.138582, 0.057403], [-0.129904, 0.075], [-0.119003, 0.091314], [-0.106066, 0.106066], [-0.091314, 0.119003], [-0.075, 0.129904], [-0.057403, 0.138582], [-0.038823, 0.144889], [-0.019579, 0.148717], [0.0, 0.15], [0.019579, 0.148717], [0.038823, 0.144889], [0.057403, 0.138582], [0.075, 0.129904], [0.091314, 0.119003], [0.106066, 0.106066], [0.119003, 0.091314], [0.129904, 0.075], [0.138582, 0.057403], [0.144889, 0.038823], [0.148717, 0.019579], [0.15, 0.0], [0.148717, -0.019579], [0.144889, -0.038823], [0.138582, -0.057403], [0.129904, -0.075], [0.119003, -0.091314], [0.106066, -0.106066], [0.091314, -0.119003], [0.075, -0.129904], [0.057403, -0.138582], [0.038823, -0.144889], [0.019579, -0.148717], [0.0, -0.15], [-0.019579, -0.148717], [-0.038823, -0.144889], [-0.057403, -0.138582], [-0.075, -0.129904], [-0.091314, -0.119003], [-0.106066, -0.106066], [-0.119003, -0.091314], [-0.129904, -0.075], [-0.138582, -0.057403], [-0.144889, -0.038823], [-0.148717, -0.019579]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 0.008,
+         "holes": [
+           [[-0.13, 0.0], [-0.12799, 0.0075], [-0.1225, 0.01299], [-0.115, 0.015], [-0.1075, 0.01299], [-0.10201, 0.0075], [-0.1, 0.0], [-0.10201, -0.0075], [-0.1075, -0.01299], [-0.115, -0.015], [-0.1225, -0.01299], [-0.12799, -0.0075]],
+           [[0.0425, 0.099593], [0.04451, 0.107093], [0.05, 0.112583], [0.0575, 0.114593], [0.065, 0.112583], [0.07049, 0.107093], [0.0725, 0.099593], [0.07049, 0.092093], [0.065, 0.086603], [0.0575, 0.084593], [0.05, 0.086603], [0.04451, 0.092093]],
+           [[0.0425, -0.099593], [0.04451, -0.092093], [0.05, -0.086603], [0.0575, -0.084593], [0.065, -0.086603], [0.07049, -0.092093], [0.0725, -0.099593], [0.07049, -0.107093], [0.065, -0.112583], [0.0575, -0.114593], [0.05, -0.112583], [0.04451, -0.107093]]
+         ]
+       },
+       {
+         "id": "anchor-tab-upper",
+         "kind": "box",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "size": [0.08, 0.044, 0.008],
+         "transform": {
+           "translation": [0.95, -0.168, 0.0]
+         },
+         "repeat": {
+           "count": 4,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 1.570796,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "anchor-tab-lower",
+         "kind": "box",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "size": [0.08, 0.044, 0.008],
+         "transform": {
+           "translation": [0.15, -0.168, 0.0]
+         },
+         "repeat": {
+           "count": 4,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 1.570796,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "guide-bushing",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.6,
+         "profile": [[1.18, 0.102], [1.18, 0.142], [1.24, 0.142], [1.24, 0.102], [1.18, 0.102]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "buffer",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "detail",
+         "tone": 0.15,
+         "profile": [[0.008, 0.0], [0.008, 0.02], [0.092, 0.02], [0.1, 0.014], [0.1, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.117, 0.0],
+         "repeat": {
+           "count": 3,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 2.094395,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "frame-collar",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[1.18, 0.15], [1.18, 0.168], [1.24, 0.168], [1.24, 0.15], [1.18, 0.15]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "frame-plate",
+         "kind": "extrude",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[-0.2, 0.18], [-0.198478, 0.187654], [-0.194142, 0.194142], [-0.187654, 0.198478], [-0.18, 0.2], [0.18, 0.2], [0.187654, 0.198478], [0.194142, 0.194142], [0.198478, 0.187654], [0.2, 0.18], [0.2, -0.18], [0.198478, -0.187654], [0.194142, -0.194142], [0.187654, -0.198478], [0.18, -0.2], [-0.18, -0.2], [-0.187654, -0.198478], [-0.194142, -0.194142], [-0.198478, -0.187654], [-0.2, -0.18]],
+         "plane": "yz",
+         "from": 1.24,
+         "to": 1.25,
+         "holes": [
+           [[-0.142, 0.0], [-0.140785, 0.018535], [-0.137161, 0.036752], [-0.131191, 0.054341], [-0.122976, 0.071], [-0.112656, 0.086444], [-0.100409, 0.100409], [-0.086444, 0.112656], [-0.071, 0.122976], [-0.054341, 0.131191], [-0.036752, 0.137161], [-0.018535, 0.140785], [0.0, 0.142], [0.018535, 0.140785], [0.036752, 0.137161], [0.054341, 0.131191], [0.071, 0.122976], [0.086444, 0.112656], [0.100409, 0.100409], [0.112656, 0.086444], [0.122976, 0.071], [0.131191, 0.054341], [0.137161, 0.036752], [0.140785, 0.018535], [0.142, 0.0], [0.140785, -0.018535], [0.137161, -0.036752], [0.131191, -0.054341], [0.122976, -0.071], [0.112656, -0.086444], [0.100409, -0.100409], [0.086444, -0.112656], [0.071, -0.122976], [0.054341, -0.131191], [0.036752, -0.137161], [0.018535, -0.140785], [0.0, -0.142], [-0.018535, -0.140785], [-0.036752, -0.137161], [-0.054341, -0.131191], [-0.071, -0.122976], [-0.086444, -0.112656], [-0.100409, -0.100409], [-0.112656, -0.086444], [-0.122976, -0.071], [-0.131191, -0.054341], [-0.137161, -0.036752], [-0.140785, -0.018535]]
+         ]
+       },
+       {
+         "id": "frame-top",
+         "kind": "extrude",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[-0.2, 0.18], [-0.198478, 0.187654], [-0.194142, 0.194142], [-0.187654, 0.198478], [-0.18, 0.2], [0.18, 0.2], [0.187654, 0.198478], [0.194142, 0.194142], [0.198478, 0.187654], [0.2, 0.18], [0.2, -0.18], [0.198478, -0.187654], [0.194142, -0.194142], [0.187654, -0.198478], [0.18, -0.2], [-0.18, -0.2], [-0.187654, -0.198478], [-0.194142, -0.194142], [-0.198478, -0.187654], [-0.2, -0.18]],
+         "plane": "yz",
+         "from": 1.25,
+         "to": 1.265,
+         "holes": [
+           [[-0.142, 0.0], [-0.140785, 0.018535], [-0.137161, 0.036752], [-0.131191, 0.054341], [-0.122976, 0.071], [-0.112656, 0.086444], [-0.100409, 0.100409], [-0.086444, 0.112656], [-0.071, 0.122976], [-0.054341, 0.131191], [-0.036752, 0.137161], [-0.018535, 0.140785], [0.0, 0.142], [0.018535, 0.140785], [0.036752, 0.137161], [0.054341, 0.131191], [0.071, 0.122976], [0.086444, 0.112656], [0.100409, 0.100409], [0.112656, 0.086444], [0.122976, 0.071], [0.131191, 0.054341], [0.137161, 0.036752], [0.140785, 0.018535], [0.142, 0.0], [0.140785, -0.018535], [0.137161, -0.036752], [0.131191, -0.054341], [0.122976, -0.071], [0.112656, -0.086444], [0.100409, -0.100409], [0.086444, -0.112656], [0.071, -0.122976], [0.054341, -0.131191], [0.036752, -0.137161], [0.018535, -0.140785], [0.0, -0.142], [-0.018535, -0.140785], [-0.036752, -0.137161], [-0.054341, -0.131191], [-0.071, -0.122976], [-0.086444, -0.112656], [-0.100409, -0.100409], [-0.112656, -0.086444], [-0.122976, -0.071], [-0.131191, -0.054341], [-0.137161, -0.036752], [-0.140785, -0.018535]]
+         ],
+         "taperTo": [1, 0.97]
+       },
+       {
+         "id": "frame-bolt",
+         "kind": "extrude",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "detail",
+         "tone": 0.2,
+         "profile": [[-0.18097, 0.17], [-0.175485, 0.1795], [-0.164515, 0.1795], [-0.15903, 0.17], [-0.164515, 0.1605], [-0.175485, 0.1605]],
+         "plane": "yz",
+         "from": 1.265,
+         "to": 1.273,
+         "repeat": {
+           "count": 4,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 1.570796,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "seal-retainer",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.55,
+         "profile": [[1.255, 0.112], [1.255, 0.137], [1.265, 0.137], [1.265, 0.112], [1.255, 0.112]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "wiper-seal",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "detail",
+         "tone": 0.12,
+         "profile": [[1.242, 0.1005], [1.242, 0.112], [1.265, 0.112], [1.265, 0.1005], [1.242, 0.1005]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "shaft-tube",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.012, 0.095], [0.012, 0.1], [1.02, 0.1], [1.02, 0.095], [0.012, 0.095]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "shaft-flange",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.095], [0.0, 0.14], [0.012, 0.14], [0.012, 0.095], [0.0, 0.095]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "reflector",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "retro-film",
+         "role": "body",
+         "tone": 0.92,
+         "profile": [[0.91, 0.1], [0.91, 0.1005], [1.02, 0.1005], [1.02, 0.1], [0.91, 0.1]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "head-core",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.99, 0.0], [0.99, 0.095], [1.02, 0.095], [1.02, 0.085], [1.08, 0.085], [1.08, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "lens",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "pc-amber",
+         "role": "body",
+         "tone": 0.7,
+         "profile": [[1.02, 0.097], [1.02, 0.1], [1.08, 0.1], [1.08, 0.097], [1.02, 0.097]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "led",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "pc-amber",
+         "role": "detail",
+         "tone": 0.1,
+         "profile": [[0.088, 0.0], [0.088, 0.01], [0.1005, 0.01], [0.1005, 0.0]],
+         "axis": [0, -1.0, 0.0],
+         "origin": [1.05, 0.0, 0.0],
+         "repeat": {
+           "count": 12,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 0.523599,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "head-crown",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.08, 0.0], [1.08, 0.1], [1.097, 0.1], [1.097, 0.0975], [1.1, 0.0975], [1.1, 0.1], [1.108336, 0.099178], [1.115856, 0.096759], [1.122578, 0.092813], [1.128519, 0.087407], [1.133695, 0.080613], [1.138125, 0.0725], [1.141826, 0.063137], [1.144815, 0.052593], [1.147109, 0.040938], [1.148727, 0.028241], [1.149685, 0.014572], [1.15, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "cap-screw",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "detail",
+         "tone": 0.2,
+         "profile": [[1.135, 0.0], [1.135, 0.008], [1.1475, 0.008], [1.1495, 0.004], [1.1495, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.05, 0.0],
+         "repeat": {
+           "count": 3,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 2.094395,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "crosshead",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.925, 0.0], [0.925, 0.03], [0.94, 0.03], [0.94, 0.095], [0.952, 0.095], [0.952, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "rod-nut",
+         "kind": "extrude",
+         "bone": "shaft",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.3,
+         "profile": [[-0.017321, 0.0], [-0.00866, 0.015], [0.00866, 0.015], [0.017321, 0.0], [0.00866, -0.015], [-0.00866, -0.015]],
+         "plane": "yz",
+         "from": 0.952,
+         "to": 0.97
+       },
+       {
+         "id": "rod",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.85,
+         "profile": [[0.17, 0.0], [0.17, 0.018], [0.925, 0.018], [0.925, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "piston",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.3,
+         "profile": [[0.13, 0.0], [0.13, 0.03], [0.17, 0.03], [0.17, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "cyl-flange",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[-0.06, 0.05], [-0.059239, 0.053827], [-0.057071, 0.057071], [-0.053827, 0.059239], [-0.05, 0.06], [0.05, 0.06], [0.053827, 0.059239], [0.057071, 0.057071], [0.059239, 0.053827], [0.06, 0.05], [0.06, -0.05], [0.059239, -0.053827], [0.057071, -0.057071], [0.053827, -0.059239], [0.05, -0.06], [-0.05, -0.06], [-0.053827, -0.059239], [-0.057071, -0.057071], [-0.059239, -0.053827], [-0.06, -0.05]],
+         "plane": "yz",
+         "from": 0.0,
+         "to": 0.012
+       },
+       {
+         "id": "cyl-flange-bolt",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.2,
+         "profile": [[-0.054238, 0.045], [-0.049619, 0.053], [-0.040381, 0.053], [-0.035762, 0.045], [-0.040381, 0.037], [-0.049619, 0.037]],
+         "plane": "yz",
+         "from": 0.012,
+         "to": 0.02,
+         "repeat": {
+           "count": 4,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 1.570796,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "cyl-cap",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.012, 0.0], [0.012, 0.04], [0.045, 0.04], [0.045, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "cyl-tube",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.7,
+         "profile": [[0.045, 0.03], [0.045, 0.035], [0.932, 0.035], [0.932, 0.03], [0.045, 0.03]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "cyl-gland",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.932, 0.018], [0.932, 0.04], [0.964, 0.04], [0.972, 0.034], [0.972, 0.018], [0.932, 0.018]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "hose-port",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.3,
+         "profile": [[0.038, 0.0], [0.038, 0.014], [0.062, 0.014], [0.062, 0.0]],
+         "axis": [0, -1.0, 0.0],
+         "origin": [0.029, 0.0, 0.0]
+       },
+       {
+         "id": "hose",
+         "kind": "loft",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.2,
+         "sections": [
+           {
+             "at": [0.029, -0.04, 0.0],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.029, -0.15, 0.0],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.029, -0.215, 0.03],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.052, -0.255, 0.08],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.112, -0.265, 0.106],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.292, -0.265, 0.106],
+             "rx": 0.008,
+             "ry": 0.008
+           }
+         ],
+         "capStart": true,
+         "capEnd": true,
+         "slender": true
+       },
+       {
+         "id": "hose-grommet",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.15,
+         "profile": [[0.136, 0.011], [0.136, 0.022], [0.158, 0.022], [0.158, 0.011], [0.136, 0.011]],
+         "axis": [0, -1.0, 0.0],
+         "origin": [0.029, 0.0, 0.0]
+       },
+       {
+         "id": "hose-union",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.3,
+         "profile": [[0.27, 0.0], [0.27, 0.014], [0.292, 0.014], [0.292, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, -0.265, 0.106]
+       },
+       {
+         "id": "unit-body",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[-0.35, 0.178], [-0.349087, 0.182592], [-0.346485, 0.186485], [-0.342592, 0.189087], [-0.338, 0.19], [-0.192, 0.19], [-0.187408, 0.189087], [-0.183515, 0.186485], [-0.180913, 0.182592], [-0.18, 0.178], [-0.18, 0.034], [-0.180913, 0.029408], [-0.183515, 0.025515], [-0.187408, 0.022913], [-0.192, 0.022], [-0.338, 0.022], [-0.342592, 0.022913], [-0.346485, 0.025515], [-0.349087, 0.029408], [-0.35, 0.034]],
+         "plane": "yz",
+         "from": 0.292,
+         "to": 0.677
+       },
+       {
+         "id": "unit-lid",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[-0.36, 0.188], [-0.359087, 0.192592], [-0.356485, 0.196485], [-0.352592, 0.199087], [-0.348, 0.2], [-0.182, 0.2], [-0.177408, 0.199087], [-0.173515, 0.196485], [-0.170913, 0.192592], [-0.17, 0.188], [-0.17, 0.024], [-0.170913, 0.019408], [-0.173515, 0.015515], [-0.177408, 0.012913], [-0.182, 0.012], [-0.348, 0.012], [-0.352592, 0.012913], [-0.356485, 0.015515], [-0.359087, 0.019408], [-0.36, 0.024]],
+         "plane": "yz",
+         "from": 0.677,
+         "to": 0.692
+       },
+       {
+         "id": "unit-lid-bolt",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.2,
+         "profile": [[-0.192506, 0.027], [-0.188753, 0.0335], [-0.181247, 0.0335], [-0.177494, 0.027], [-0.181247, 0.0205], [-0.188753, 0.0205]],
+         "plane": "yz",
+         "from": 0.692,
+         "to": 0.7,
+         "repeat": {
+           "count": 2,
+           "translation": [0, -0.16, 0]
+         }
+       },
+       {
+         "id": "unit-lid-bolt-left",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.2,
+         "profile": [[-0.192506, 0.185], [-0.188753, 0.1915], [-0.181247, 0.1915], [-0.177494, 0.185], [-0.181247, 0.1785], [-0.188753, 0.1785]],
+         "plane": "yz",
+         "from": 0.692,
+         "to": 0.7,
+         "repeat": {
+           "count": 2,
+           "translation": [0, -0.16, 0]
+         }
+       },
+       {
+         "id": "cable-gland",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.25,
+         "profile": [[0.692, 0.0], [0.692, 0.016], [0.707, 0.016], [0.707, 0.012], [0.722, 0.012], [0.722, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, -0.3, 0.106]
+       },
+       {
+         "id": "cable",
+         "kind": "loft",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.15,
+         "sections": [
+           {
+             "at": [0.722, -0.3, 0.106],
+             "rx": 0.006,
+             "ry": 0.006
+           },
+           {
+             "at": [0.752, -0.3, 0.106],
+             "rx": 0.006,
+             "ry": 0.006
+           },
+           {
+             "at": [0.777, -0.292, 0.106],
+             "rx": 0.006,
+             "ry": 0.006
+           },
+           {
+             "at": [0.792, -0.27, 0.106],
+             "rx": 0.006,
+             "ry": 0.006
+           },
+           {
+             "at": [0.795, -0.24, 0.106],
+             "rx": 0.006,
+             "ry": 0.006
+           }
+         ],
+         "capStart": true,
+         "capEnd": true
+       },
+       {
+         "id": "conduit",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.35,
+         "profile": [[0.136, 0.0], [0.136, 0.0125], [0.181, 0.0125], [0.181, 0.0]],
+         "axis": [0, -1.0, 0.0],
+         "origin": [0.492, 0.0, 0.06]
+       },
+       {
+         "id": "bracket-upper",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[-0.1443, 0.022], [-0.18, 0.022], [-0.18, 0.19], [-0.073, 0.1265], [-0.1014, 0.105], [-0.125, 0.0752], [-0.1372, 0.0499]],
+         "plane": "yz",
+         "from": 0.638,
+         "to": 0.646
+       },
+       {
+         "id": "bracket-lower",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[-0.1443, 0.022], [-0.18, 0.022], [-0.18, 0.19], [-0.073, 0.1265], [-0.1014, 0.105], [-0.125, 0.0752], [-0.1372, 0.0499]],
+         "plane": "yz",
+         "from": 0.338,
+         "to": 0.346
+       }
      ],
-     "axis": [
-      1,
-      0,
-      0
+     "thermal": [
+       {
+         "id": "th-shaft-skin",
+         "kind": "loft",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "sections": [
+           {
+             "at": [0.5, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           },
+           {
+             "at": [0.91, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "shaft-steel"
+       },
+       {
+         "id": "th-head-crown",
+         "of": "head-crown",
+         "region": "shaft-steel"
+       },
+       {
+         "id": "th-reflector",
+         "of": "reflector",
+         "region": "reflector-band"
+       },
+       {
+         "id": "th-lens",
+         "of": "lens",
+         "region": "beacon-led"
+       },
+       {
+         "id": "th-led",
+         "of": "led",
+         "region": "beacon-led"
+       },
+       {
+         "id": "th-frame-top",
+         "of": "frame-top",
+         "region": "cover-frame",
+         "sectionFaces": ["-u"]
+       },
+       {
+         "id": "th-sleeve-skin",
+         "kind": "loft",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "sections": [
+           {
+             "at": [0.008, 0.0, 0.0],
+             "rx": 0.15,
+             "ry": 0.15
+           },
+           {
+             "at": [1.18, 0.0, 0.0],
+             "rx": 0.15,
+             "ry": 0.15
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-sleeve-floor",
+         "of": "sleeve-floor",
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-anchor-tab-upper",
+         "of": "anchor-tab-upper",
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-anchor-tab-lower",
+         "of": "anchor-tab-lower",
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-unit-body",
+         "of": "unit-body",
+         "region": "hydraulic-unit"
+       },
+       {
+         "id": "th-unit-lid",
+         "of": "unit-lid",
+         "region": "hydraulic-unit"
+       },
+       {
+         "id": "th-hose",
+         "of": "hose",
+         "region": "hydraulic-unit"
+       },
+       {
+         "id": "th-cylinder",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.7,
+         "profile": [[0.012, 0.0], [0.012, 0.04], [0.045, 0.04], [0.045, 0.035], [0.932, 0.035], [0.932, 0.04], [0.964, 0.04], [0.972, 0.034], [0.972, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "region": "hydraulic-unit"
+       }
      ],
-     "origin": [
-      0,
-      0.0,
-      0.0
+     "structure": [
+       {
+         "id": "member-sleeve",
+         "of": "sleeve-tube",
+         "member": "sleeve",
+         "part": "member"
+       },
+       {
+         "id": "member-shaft",
+         "of": "shaft-tube",
+         "member": "shaft",
+         "part": "member"
+       },
+       {
+         "id": "member-cylinder",
+         "of": "cyl-tube",
+         "member": "hydraulic",
+         "part": "member"
+       },
+       {
+         "id": "member-cyl-cap",
+         "of": "cyl-cap",
+         "member": "hydraulic",
+         "part": "member"
+       },
+       {
+         "id": "member-rod",
+         "of": "rod",
+         "member": "hydraulic",
+         "part": "member"
+       },
+       {
+         "id": "joint-guide-bushing",
+         "of": "guide-bushing",
+         "member": "shaft",
+         "part": "joint"
+       },
+       {
+         "id": "joint-shaft-flange",
+         "of": "shaft-flange",
+         "member": "shaft",
+         "part": "joint"
+       },
+       {
+         "id": "joint-crosshead",
+         "of": "crosshead",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "joint-piston",
+         "of": "piston",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "joint-cyl-flange",
+         "of": "cyl-flange",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "joint-bracket-upper",
+         "of": "bracket-upper",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "joint-bracket-lower",
+         "of": "bracket-lower",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "support-sleeve-fixed",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[1.18, 0.15], [1.18, 0.168], [1.25, 0.168], [1.25, 0.15], [1.18, 0.15]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "member": "sleeve",
+         "part": "support",
+         "anchor": "sleeve-fixed"
+       },
+       {
+         "id": "mass-sleeve",
+         "kind": "ellipsoid",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "radii": [0.03, 0.03, 0.03],
+         "transform": {
+           "translation": [0.65, 0.0, 0.0]
+         },
+         "member": "sleeve",
+         "part": "mass"
+       },
+       {
+         "id": "mass-shaft",
+         "kind": "ellipsoid",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "radii": [0.03, 0.03, 0.03],
+         "transform": {
+           "translation": [0.6, 0.0, 0.0]
+         },
+         "member": "shaft",
+         "part": "mass"
+       },
+       {
+         "id": "mass-hydraulic",
+         "kind": "ellipsoid",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.55,
+         "radii": [0.02, 0.02, 0.02],
+         "transform": {
+           "translation": [0.442, -0.2, 0.08]
+         },
+         "member": "hydraulic",
+         "part": "mass"
+       }
+     ],
+     "decisions": [
+       {
+         "en": "Body: the bollard as it is built. Fixed in the ground: the galvanised sleeve tube of 0.30 m with its 8 mm wall, the floor plate with three drain holes and three rubber buffers, eight anchor tabs for the concrete, the bronze-lined guide bushing under the cover, the cast-iron cover frame (collar around the sleeve head, plate of 0.40 m standing 15 mm proud with a splayed edge, four hexagon anchor bolts), the seal retainer ring and the wiper seal against the shaft. Rising: the shaft tube of 0.20 m with its 5 mm wall and the guide flange at its foot, the 0.5 mm reflective film, the head casting with the amber lens ring, twelve LED windows, the crown with its shadow gap and three screws, the crosshead with the rod nut, the 36 mm piston rod and the piston. Hydraulics: the single-acting cylinder of 70 mm standing on its bolted foot flange inside the shaft (end cap, tube, gland), the port, the hose through the grommet in the sleeve wall up to the union under the power unit, the sealed unit housing with its bolted lid, cable gland, cable and conduit, hung on two bracket plates welded to the sleeve.",
+         "de": "Körper: der Poller, wie er gebaut ist. Fest im Boden: das verzinkte Hülsenrohr von 0,30 m mit 8 mm Wand, die Bodenplatte mit drei Entwässerungslöchern und drei Gummipuffern, acht Ankerlaschen für den Beton, die Führungsbuchse unter der Abdeckung, der Gusseisen-Abdeckrahmen (Kragen um den Hülsenkopf, Platte von 0,40 m mit 15 mm Überstand und geneigter Kante, vier Sechskant-Ankerschrauben), der Dichtungshaltering und der Abstreifer am Schaft. Hebend: das Schaftrohr von 0,20 m mit 5 mm Wand und dem Führungsflansch am Fuß, die Reflexfolie von 0,5 mm, das Kopfgussteil mit dem bernsteinfarbenen Linsenring, zwölf LED-Fenstern, der Kalotte mit Schattenfuge und drei Schrauben, die Traverse mit der Stangenmutter, die Kolbenstange von 36 mm und der Kolben. Hydraulik: der einfachwirkende Zylinder von 70 mm auf seinem verschraubten Fußflansch im Schaft (Boden, Rohr, Stopfbuchse), der Anschluss, der Schlauch durch die Tülle in der Hülsenwand bis zur Verschraubung unter der Antriebseinheit, das dichte Gehäuse mit verschraubtem Deckel, Kabelverschraubung, Kabel und Schutzrohr, an zwei mit der Hülse verschweißten Konsolblechen."
+       },
+       {
+         "en": "Thermal: each region has one layer, so each is one surface. Shaft steel is the tube skin that stands in the air when raised and the crown; the reflective film and the lens ring with its LED windows are their own shells; the cover frame is the part of the plate above the ground (its underside continues into the casting); the buried sleeve is its outer skin, the floor plate and the anchor tabs; the hydraulic region is the unit housing with its lid, the hose and the cylinder inside the sleeve.",
+         "de": "Thermisch: jede Region hat eine Schicht und ist daher eine Fläche. Schaftstahl ist die Rohrhaut, die ausgefahren in der Luft steht, und die Kalotte; die Reflexfolie und der Linsenring mit den LED-Fenstern sind eigene Schalen; der Abdeckrahmen ist der Teil der Platte über dem Boden (die Unterseite setzt sich im Gussteil fort); die eingegrabene Hülse ist ihre Außenhaut, die Bodenplatte und die Ankerlaschen; die Hydraulikregion ist das Gehäuse der Einheit mit Deckel, der Schlauch und der Zylinder in der Hülse."
+       },
+       {
+         "en": "Structure: the load path. A nudge bends the shaft tube, which hands its moment to the sleeve tube through the guide bushing and the guide flange; the sleeve is clamped by the collar cast into the foundation (support). The weight of the shaft goes through the crosshead into the piston rod, the piston, the oil column of the cylinder tube and its foot flange to the sleeve floor. The power unit hangs on its two bracket plates. Three masses at the centres of mass of the rig.",
+         "de": "Tragwerk: der Lastpfad. Ein Anstoß biegt das Schaftrohr, das sein Moment über Führungsbuchse und Führungsflansch an das Hülsenrohr abgibt; die Hülse ist durch den ins Fundament eingegossenen Kragen eingespannt (Auflager). Das Schaftgewicht geht über die Traverse in die Kolbenstange, den Kolben, die Ölsäule des Zylinderrohrs und dessen Fußflansch auf den Hülsenboden. Die Antriebseinheit hängt an zwei Konsolblechen. Drei Massen in den Schwerpunkten des Rigs."
+       }
      ]
-    },
-    {
-     "id": "sleeve-floor",
-     "kind": "extrude",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       -0.15,
-       0.0
-      ],
-      [
-       -0.148717,
-       0.019579
-      ],
-      [
-       -0.144889,
-       0.038823
-      ],
-      [
-       -0.138582,
-       0.057403
-      ],
-      [
-       -0.129904,
-       0.075
-      ],
-      [
-       -0.119003,
-       0.091314
-      ],
-      [
-       -0.106066,
-       0.106066
-      ],
-      [
-       -0.091314,
-       0.119003
-      ],
-      [
-       -0.075,
-       0.129904
-      ],
-      [
-       -0.057403,
-       0.138582
-      ],
-      [
-       -0.038823,
-       0.144889
-      ],
-      [
-       -0.019579,
-       0.148717
-      ],
-      [
-       0.0,
-       0.15
-      ],
-      [
-       0.019579,
-       0.148717
-      ],
-      [
-       0.038823,
-       0.144889
-      ],
-      [
-       0.057403,
-       0.138582
-      ],
-      [
-       0.075,
-       0.129904
-      ],
-      [
-       0.091314,
-       0.119003
-      ],
-      [
-       0.106066,
-       0.106066
-      ],
-      [
-       0.119003,
-       0.091314
-      ],
-      [
-       0.129904,
-       0.075
-      ],
-      [
-       0.138582,
-       0.057403
-      ],
-      [
-       0.144889,
-       0.038823
-      ],
-      [
-       0.148717,
-       0.019579
-      ],
-      [
-       0.15,
-       0.0
-      ],
-      [
-       0.148717,
-       -0.019579
-      ],
-      [
-       0.144889,
-       -0.038823
-      ],
-      [
-       0.138582,
-       -0.057403
-      ],
-      [
-       0.129904,
-       -0.075
-      ],
-      [
-       0.119003,
-       -0.091314
-      ],
-      [
-       0.106066,
-       -0.106066
-      ],
-      [
-       0.091314,
-       -0.119003
-      ],
-      [
-       0.075,
-       -0.129904
-      ],
-      [
-       0.057403,
-       -0.138582
-      ],
-      [
-       0.038823,
-       -0.144889
-      ],
-      [
-       0.019579,
-       -0.148717
-      ],
-      [
-       0.0,
-       -0.15
-      ],
-      [
-       -0.019579,
-       -0.148717
-      ],
-      [
-       -0.038823,
-       -0.144889
-      ],
-      [
-       -0.057403,
-       -0.138582
-      ],
-      [
-       -0.075,
-       -0.129904
-      ],
-      [
-       -0.091314,
-       -0.119003
-      ],
-      [
-       -0.106066,
-       -0.106066
-      ],
-      [
-       -0.119003,
-       -0.091314
-      ],
-      [
-       -0.129904,
-       -0.075
-      ],
-      [
-       -0.138582,
-       -0.057403
-      ],
-      [
-       -0.144889,
-       -0.038823
-      ],
-      [
-       -0.148717,
-       -0.019579
-      ]
+   },
+   "100": {
+     "status": "authored",
+     "denominator": 100,
+     "body": [
+       {
+         "id": "sleeve-tube",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.015, 0.142], [0.015, 0.15], [1.24, 0.15], [1.24, 0.142], [0.015, 0.142]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "sleeve-floor",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0], [0.0, 0.15], [0.015, 0.15], [0.015, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "anchor-tab-upper",
+         "kind": "box",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "size": [0.08, 0.044, 0.015],
+         "transform": {
+           "translation": [0.95, -0.168, 0.0]
+         },
+         "repeat": {
+           "count": 4,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 1.570796,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "anchor-tab-lower",
+         "kind": "box",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "size": [0.08, 0.044, 0.015],
+         "transform": {
+           "translation": [0.15, -0.168, 0.0]
+         },
+         "repeat": {
+           "count": 4,
+           "rotationAxis": [1, 0, 0],
+           "rotationRad": 1.570796,
+           "origin": [0, 0, 0]
+         }
+       },
+       {
+         "id": "frame-collar",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[1.18, 0.15], [1.18, 0.168], [1.24, 0.168], [1.24, 0.15], [1.18, 0.15]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "frame-plate",
+         "kind": "extrude",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[-0.2, 0.18], [-0.198478, 0.187654], [-0.194142, 0.194142], [-0.187654, 0.198478], [-0.18, 0.2], [0.18, 0.2], [0.187654, 0.198478], [0.194142, 0.194142], [0.198478, 0.187654], [0.2, 0.18], [0.2, -0.18], [0.198478, -0.187654], [0.194142, -0.194142], [0.187654, -0.198478], [0.18, -0.2], [-0.18, -0.2], [-0.187654, -0.198478], [-0.194142, -0.194142], [-0.198478, -0.187654], [-0.2, -0.18]],
+         "plane": "yz",
+         "from": 1.24,
+         "to": 1.265,
+         "holes": [
+           [[-0.142, 0.0], [-0.140785, 0.018535], [-0.137161, 0.036752], [-0.131191, 0.054341], [-0.122976, 0.071], [-0.112656, 0.086444], [-0.100409, 0.100409], [-0.086444, 0.112656], [-0.071, 0.122976], [-0.054341, 0.131191], [-0.036752, 0.137161], [-0.018535, 0.140785], [0.0, 0.142], [0.018535, 0.140785], [0.036752, 0.137161], [0.054341, 0.131191], [0.071, 0.122976], [0.086444, 0.112656], [0.100409, 0.100409], [0.112656, 0.086444], [0.122976, 0.071], [0.131191, 0.054341], [0.137161, 0.036752], [0.140785, 0.018535], [0.142, 0.0], [0.140785, -0.018535], [0.137161, -0.036752], [0.131191, -0.054341], [0.122976, -0.071], [0.112656, -0.086444], [0.100409, -0.100409], [0.086444, -0.112656], [0.071, -0.122976], [0.054341, -0.131191], [0.036752, -0.137161], [0.018535, -0.140785], [0.0, -0.142], [-0.018535, -0.140785], [-0.036752, -0.137161], [-0.054341, -0.131191], [-0.071, -0.122976], [-0.086444, -0.112656], [-0.100409, -0.100409], [-0.112656, -0.086444], [-0.122976, -0.071], [-0.131191, -0.054341], [-0.137161, -0.036752], [-0.140785, -0.018535]]
+         ]
+       },
+       {
+         "id": "seal-ring",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "detail",
+         "tone": 0.2,
+         "profile": [[1.25, 0.1005], [1.25, 0.142], [1.265, 0.142], [1.265, 0.1005], [1.25, 0.1005]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "shaft-tube",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.015, 0.095], [0.015, 0.1], [1.02, 0.1], [1.02, 0.095], [0.015, 0.095]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "shaft-flange",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[0.0, 0.095], [0.0, 0.14], [0.015, 0.14], [0.015, 0.095], [0.0, 0.095]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "reflector",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "retro-film",
+         "role": "body",
+         "tone": 0.92,
+         "profile": [[0.91, 0.1], [0.91, 0.1005], [1.02, 0.1005], [1.02, 0.1], [0.91, 0.1]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "lens",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "pc-amber",
+         "role": "body",
+         "tone": 0.7,
+         "profile": [[1.02, 0.097], [1.02, 0.1], [1.08, 0.1], [1.08, 0.097], [1.02, 0.097]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "head",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.99, 0.0], [0.99, 0.095], [1.02, 0.095], [1.02, 0.097], [1.08, 0.097], [1.08, 0.1], [1.1, 0.1], [1.112197, 0.098164], [1.122578, 0.092813], [1.131201, 0.08418], [1.138125, 0.0725], [1.143408, 0.058008], [1.147109, 0.040938], [1.149287, 0.021523], [1.15, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "rod",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.85,
+         "profile": [[0.17, 0.0], [0.17, 0.018], [0.99, 0.018], [0.99, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "piston",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.3,
+         "profile": [[0.13, 0.0], [0.13, 0.03], [0.17, 0.03], [0.17, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "cyl-base",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.007, 0.0], [0.007, 0.045], [0.045, 0.045], [0.045, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "cyl-tube",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.7,
+         "profile": [[0.045, 0.03], [0.045, 0.035], [0.932, 0.035], [0.932, 0.03], [0.045, 0.03]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "cyl-gland",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.932, 0.018], [0.932, 0.04], [0.972, 0.04], [0.972, 0.018], [0.932, 0.018]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "hose",
+         "kind": "loft",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "detail",
+         "tone": 0.2,
+         "sections": [
+           {
+             "at": [0.029, -0.04, 0.0],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.029, -0.15, 0.0],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.029, -0.215, 0.03],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.052, -0.255, 0.08],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.112, -0.265, 0.106],
+             "rx": 0.008,
+             "ry": 0.008
+           },
+           {
+             "at": [0.292, -0.265, 0.106],
+             "rx": 0.008,
+             "ry": 0.008
+           }
+         ],
+         "capStart": true,
+         "capEnd": true,
+         "slender": true
+       },
+       {
+         "id": "unit",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.55,
+         "profile": [[-0.36, 0.188], [-0.356485, 0.196485], [-0.348, 0.2], [-0.182, 0.2], [-0.173515, 0.196485], [-0.17, 0.188], [-0.17, 0.024], [-0.173515, 0.015515], [-0.182, 0.012], [-0.348, 0.012], [-0.356485, 0.015515], [-0.36, 0.024]],
+         "plane": "yz",
+         "from": 0.292,
+         "to": 0.692
+       },
+       {
+         "id": "bracket-upper",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[-0.1443, 0.022], [-0.18, 0.022], [-0.18, 0.19], [-0.073, 0.1265], [-0.1014, 0.105], [-0.125, 0.0752], [-0.1372, 0.0499]],
+         "plane": "yz",
+         "from": 0.6345,
+         "to": 0.6495
+       },
+       {
+         "id": "bracket-lower",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[-0.1443, 0.022], [-0.18, 0.022], [-0.18, 0.19], [-0.073, 0.1265], [-0.1014, 0.105], [-0.125, 0.0752], [-0.1372, 0.0499]],
+         "plane": "yz",
+         "from": 0.3345,
+         "to": 0.3495
+       }
      ],
-     "plane": "yz",
-     "from": 0.0,
-     "to": 0.008,
-     "holes": [
-      [
-       [
-        -0.13,
-        0.0
-       ],
-       [
-        -0.12799,
-        0.0075
-       ],
-       [
-        -0.1225,
-        0.01299
-       ],
-       [
-        -0.115,
-        0.015
-       ],
-       [
-        -0.1075,
-        0.01299
-       ],
-       [
-        -0.10201,
-        0.0075
-       ],
-       [
-        -0.1,
-        0.0
-       ],
-       [
-        -0.10201,
-        -0.0075
-       ],
-       [
-        -0.1075,
-        -0.01299
-       ],
-       [
-        -0.115,
-        -0.015
-       ],
-       [
-        -0.1225,
-        -0.01299
-       ],
-       [
-        -0.12799,
-        -0.0075
-       ]
-      ],
-      [
-       [
-        0.0425,
-        0.099593
-       ],
-       [
-        0.04451,
-        0.107093
-       ],
-       [
-        0.05,
-        0.112583
-       ],
-       [
-        0.0575,
-        0.114593
-       ],
-       [
-        0.065,
-        0.112583
-       ],
-       [
-        0.07049,
-        0.107093
-       ],
-       [
-        0.0725,
-        0.099593
-       ],
-       [
-        0.07049,
-        0.092093
-       ],
-       [
-        0.065,
-        0.086603
-       ],
-       [
-        0.0575,
-        0.084593
-       ],
-       [
-        0.05,
-        0.086603
-       ],
-       [
-        0.04451,
-        0.092093
-       ]
-      ],
-      [
-       [
-        0.0425,
-        -0.099593
-       ],
-       [
-        0.04451,
-        -0.092093
-       ],
-       [
-        0.05,
-        -0.086603
-       ],
-       [
-        0.0575,
-        -0.084593
-       ],
-       [
-        0.065,
-        -0.086603
-       ],
-       [
-        0.07049,
-        -0.092093
-       ],
-       [
-        0.0725,
-        -0.099593
-       ],
-       [
-        0.07049,
-        -0.107093
-       ],
-       [
-        0.065,
-        -0.112583
-       ],
-       [
-        0.0575,
-        -0.114593
-       ],
-       [
-        0.05,
-        -0.112583
-       ],
-       [
-        0.04451,
-        -0.107093
-       ]
-      ]
+     "thermal": [
+       {
+         "id": "th-shaft-skin",
+         "kind": "loft",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "sections": [
+           {
+             "at": [0.5, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           },
+           {
+             "at": [0.91, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "shaft-steel"
+       },
+       {
+         "id": "th-head-skirt",
+         "kind": "loft",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "sections": [
+           {
+             "at": [1.08, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           },
+           {
+             "at": [1.1, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "shaft-steel"
+       },
+       {
+         "id": "th-head-crown",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.1, 0.0], [1.1, 0.1], [1.112197, 0.098164], [1.122578, 0.092813], [1.131201, 0.08418], [1.138125, 0.0725], [1.143408, 0.058008], [1.147109, 0.040938], [1.149287, 0.021523], [1.15, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "region": "shaft-steel"
+       },
+       {
+         "id": "th-reflector",
+         "of": "reflector",
+         "region": "reflector-band"
+       },
+       {
+         "id": "th-lens",
+         "of": "lens",
+         "region": "beacon-led"
+       },
+       {
+         "id": "th-frame-top",
+         "kind": "extrude",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[-0.2, 0.18], [-0.198478, 0.187654], [-0.194142, 0.194142], [-0.187654, 0.198478], [-0.18, 0.2], [0.18, 0.2], [0.187654, 0.198478], [0.194142, 0.194142], [0.198478, 0.187654], [0.2, 0.18], [0.2, -0.18], [0.198478, -0.187654], [0.194142, -0.194142], [0.187654, -0.198478], [0.18, -0.2], [-0.18, -0.2], [-0.187654, -0.198478], [-0.194142, -0.194142], [-0.198478, -0.187654], [-0.2, -0.18]],
+         "plane": "yz",
+         "from": 1.25,
+         "to": 1.265,
+         "holes": [
+           [[-0.142, 0.0], [-0.140785, 0.018535], [-0.137161, 0.036752], [-0.131191, 0.054341], [-0.122976, 0.071], [-0.112656, 0.086444], [-0.100409, 0.100409], [-0.086444, 0.112656], [-0.071, 0.122976], [-0.054341, 0.131191], [-0.036752, 0.137161], [-0.018535, 0.140785], [0.0, 0.142], [0.018535, 0.140785], [0.036752, 0.137161], [0.054341, 0.131191], [0.071, 0.122976], [0.086444, 0.112656], [0.100409, 0.100409], [0.112656, 0.086444], [0.122976, 0.071], [0.131191, 0.054341], [0.137161, 0.036752], [0.140785, 0.018535], [0.142, 0.0], [0.140785, -0.018535], [0.137161, -0.036752], [0.131191, -0.054341], [0.122976, -0.071], [0.112656, -0.086444], [0.100409, -0.100409], [0.086444, -0.112656], [0.071, -0.122976], [0.054341, -0.131191], [0.036752, -0.137161], [0.018535, -0.140785], [0.0, -0.142], [-0.018535, -0.140785], [-0.036752, -0.137161], [-0.054341, -0.131191], [-0.071, -0.122976], [-0.086444, -0.112656], [-0.100409, -0.100409], [-0.112656, -0.086444], [-0.122976, -0.071], [-0.131191, -0.054341], [-0.137161, -0.036752], [-0.140785, -0.018535]]
+         ],
+         "sectionFaces": ["-u"],
+         "region": "cover-frame"
+       },
+       {
+         "id": "th-sleeve-skin",
+         "kind": "loft",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "sections": [
+           {
+             "at": [0.015, 0.0, 0.0],
+             "rx": 0.15,
+             "ry": 0.15
+           },
+           {
+             "at": [1.18, 0.0, 0.0],
+             "rx": 0.15,
+             "ry": 0.15
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-sleeve-floor",
+         "of": "sleeve-floor",
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-unit",
+         "of": "unit",
+         "region": "hydraulic-unit"
+       },
+       {
+         "id": "th-hose",
+         "of": "hose",
+         "region": "hydraulic-unit"
+       },
+       {
+         "id": "th-cylinder",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.7,
+         "profile": [[0.007, 0.0], [0.007, 0.045], [0.045, 0.045], [0.045, 0.035], [0.932, 0.035], [0.932, 0.04], [0.964, 0.04], [0.972, 0.034], [0.972, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "region": "hydraulic-unit"
+       }
+     ],
+     "structure": [
+       {
+         "id": "member-sleeve",
+         "of": "sleeve-tube",
+         "member": "sleeve",
+         "part": "member"
+       },
+       {
+         "id": "member-shaft",
+         "of": "shaft-tube",
+         "member": "shaft",
+         "part": "member"
+       },
+       {
+         "id": "member-cylinder",
+         "of": "cyl-tube",
+         "member": "hydraulic",
+         "part": "member"
+       },
+       {
+         "id": "member-rod",
+         "of": "rod",
+         "member": "hydraulic",
+         "part": "member"
+       },
+       {
+         "id": "joint-shaft-flange",
+         "of": "shaft-flange",
+         "member": "shaft",
+         "part": "joint"
+       },
+       {
+         "id": "joint-guide",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[1.18, 0.102], [1.18, 0.142], [1.24, 0.142], [1.24, 0.102], [1.18, 0.102]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "member": "shaft",
+         "part": "joint"
+       },
+       {
+         "id": "joint-cyl-base",
+         "of": "cyl-base",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "joint-bracket-upper",
+         "of": "bracket-upper",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "joint-bracket-lower",
+         "of": "bracket-lower",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "support-sleeve-fixed",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[1.18, 0.15], [1.18, 0.168], [1.25, 0.168], [1.25, 0.15], [1.18, 0.15]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "member": "sleeve",
+         "part": "support",
+         "anchor": "sleeve-fixed"
+       },
+       {
+         "id": "mass-sleeve",
+         "kind": "ellipsoid",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "radii": [0.03, 0.03, 0.03],
+         "transform": {
+           "translation": [0.65, 0.0, 0.0]
+         },
+         "member": "sleeve",
+         "part": "mass"
+       },
+       {
+         "id": "mass-shaft",
+         "kind": "ellipsoid",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "radii": [0.03, 0.03, 0.03],
+         "transform": {
+           "translation": [0.6, 0.0, 0.0]
+         },
+         "member": "shaft",
+         "part": "mass"
+       },
+       {
+         "id": "mass-hydraulic",
+         "kind": "ellipsoid",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.55,
+         "radii": [0.03, 0.03, 0.03],
+         "transform": {
+           "translation": [0.442, -0.2, 0.08]
+         },
+         "member": "hydraulic",
+         "part": "mass"
+       }
+     ],
+     "decisions": [
+       {
+         "en": "Body: drawn anew for 15 mm features. The sleeve tube and a 15 mm floor, eight anchor tabs of 15 mm, the collar and one plate without the splayed edge, one seal ring for retainer and wiper; the shaft tube with a 15 mm flange, the film, the lens ring and one head casting (core and crown in one piece); rod and piston, the cylinder as foot, tube and gland, the hose, the unit as one rounded housing on two bracket plates. Bolts, buffers, drain holes, LED windows, screws, crosshead, glands, cable and conduit are below the scale.",
+         "de": "Körper: neu gezeichnet für Merkmale von 15 mm. Das Hülsenrohr und ein Boden von 15 mm, acht Ankerlaschen von 15 mm, der Kragen und eine Platte ohne geneigte Kante, ein Dichtungsring für Haltering und Abstreifer; das Schaftrohr mit einem Flansch von 15 mm, die Folie, der Linsenring und ein Kopfgussteil (Kern und Kalotte in einem Stück); Stange und Kolben, der Zylinder als Fuß, Rohr und Stopfbuchse, der Schlauch, die Einheit als ein gerundetes Gehäuse an zwei Konsolblechen. Schrauben, Puffer, Entwässerungslöcher, LED-Fenster, Traverse, Verschraubungen, Kabel und Schutzrohr liegen unter dem Maßstab."
+       },
+       {
+         "en": "Thermal: the shaft skin above the ground with the skirt and the crown of the head, the film, the lens ring, the plate above the ground, the sleeve skin with its floor, the unit housing, the hose and the cylinder.",
+         "de": "Thermisch: die Schafthaut über dem Boden mit Rand und Kalotte des Kopfes, die Folie, der Linsenring, die Platte über dem Boden, die Hülsenhaut mit Boden, das Gehäuse der Einheit, der Schlauch und der Zylinder."
+       },
+       {
+         "en": "Structure: sleeve tube, shaft tube, cylinder tube and rod as members; the guide ring in the sleeve head, the shaft flange, the cylinder foot and the two bracket plates as joints; the collar as the fixed support; three masses.",
+         "de": "Tragwerk: Hülsenrohr, Schaftrohr, Zylinderrohr und Stange als Stäbe; der Führungsring im Hülsenkopf, der Schaftflansch, der Zylinderfuß und die zwei Konsolbleche als Gelenke; der Kragen als Einspannung; drei Massen."
+       }
      ]
-    },
-    {
-     "id": "anchor-tab-upper",
-     "kind": "box",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "size": [
-      0.08,
-      0.044,
-      0.008
+   },
+   "200": {
+     "status": "authored",
+     "denominator": 200,
+     "body": [
+       {
+         "id": "sleeve-tube",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.03, 0.135], [0.03, 0.15], [1.22, 0.15], [1.22, 0.135], [0.03, 0.135]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "sleeve-floor",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0], [0.0, 0.15], [0.03, 0.15], [0.03, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "frame",
+         "kind": "extrude",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[-0.2, 0.18], [-0.198478, 0.187654], [-0.194142, 0.194142], [-0.187654, 0.198478], [-0.18, 0.2], [0.18, 0.2], [0.187654, 0.198478], [0.194142, 0.194142], [0.198478, 0.187654], [0.2, 0.18], [0.2, -0.18], [0.198478, -0.187654], [0.194142, -0.194142], [0.187654, -0.198478], [0.18, -0.2], [-0.18, -0.2], [-0.187654, -0.198478], [-0.194142, -0.194142], [-0.198478, -0.187654], [-0.2, -0.18]],
+         "plane": "yz",
+         "from": 1.22,
+         "to": 1.265,
+         "holes": [
+           [[-0.135, 0.0], [-0.133845, 0.017621], [-0.1304, 0.034941], [-0.124724, 0.051662], [-0.116913, 0.0675], [-0.107103, 0.082183], [-0.095459, 0.095459], [-0.082183, 0.107103], [-0.0675, 0.116913], [-0.051662, 0.124724], [-0.034941, 0.1304], [-0.017621, 0.133845], [0.0, 0.135], [0.017621, 0.133845], [0.034941, 0.1304], [0.051662, 0.124724], [0.0675, 0.116913], [0.082183, 0.107103], [0.095459, 0.095459], [0.107103, 0.082183], [0.116913, 0.0675], [0.124724, 0.051662], [0.1304, 0.034941], [0.133845, 0.017621], [0.135, 0.0], [0.133845, -0.017621], [0.1304, -0.034941], [0.124724, -0.051662], [0.116913, -0.0675], [0.107103, -0.082183], [0.095459, -0.095459], [0.082183, -0.107103], [0.0675, -0.116913], [0.051662, -0.124724], [0.034941, -0.1304], [0.017621, -0.133845], [0.0, -0.135], [-0.017621, -0.133845], [-0.034941, -0.1304], [-0.051662, -0.124724], [-0.0675, -0.116913], [-0.082183, -0.107103], [-0.095459, -0.095459], [-0.107103, -0.082183], [-0.116913, -0.0675], [-0.124724, -0.051662], [-0.1304, -0.034941], [-0.133845, -0.017621]]
+         ]
+       },
+       {
+         "id": "shaft-tube",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, 0.09], [0.0, 0.1], [0.91, 0.1], [0.91, 0.09], [0.0, 0.09]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "reflector",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "retro-film",
+         "role": "body",
+         "tone": 0.92,
+         "profile": [[0.91, 0.09], [0.91, 0.1], [1.02, 0.1], [1.02, 0.09], [0.91, 0.09]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "head",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.02, 0.0], [1.02, 0.1], [1.1, 0.1], [1.115856, 0.096759], [1.128519, 0.087407], [1.138125, 0.0725], [1.144815, 0.052593], [1.148727, 0.028241], [1.15, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "rod",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.85,
+         "profile": [[0.17, 0.0], [0.17, 0.018], [1.02, 0.018], [1.02, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "cylinder",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.7,
+         "profile": [[0.022, 0.0], [0.022, 0.035], [0.972, 0.035], [0.972, 0.018], [0.942, 0.018], [0.942, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "unit",
+         "kind": "box",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.55,
+         "size": [0.4, 0.19, 0.188],
+         "transform": {
+           "translation": [0.492, -0.265, 0.106]
+         }
+       },
+       {
+         "id": "bracket",
+         "kind": "extrude",
+         "bone": "hydraulic",
+         "material": "steel-sleeve",
+         "role": "detail",
+         "tone": 0.4,
+         "profile": [[-0.1443, 0.022], [-0.18, 0.022], [-0.18, 0.19], [-0.073, 0.1265], [-0.1014, 0.105], [-0.125, 0.0752], [-0.1372, 0.0499]],
+         "plane": "yz",
+         "from": 0.342,
+         "to": 0.642
+       }
      ],
-     "transform": {
-      "translation": [
-       0.95,
-       -0.168,
-       0.0
-      ]
-     },
-     "repeat": {
-      "count": 4,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 1.570796,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "anchor-tab-lower",
-     "kind": "box",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "size": [
-      0.08,
-      0.044,
-      0.008
+     "thermal": [
+       {
+         "id": "th-shaft-skin",
+         "kind": "loft",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "sections": [
+           {
+             "at": [0.5, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           },
+           {
+             "at": [0.91, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "shaft-steel"
+       },
+       {
+         "id": "th-head-crown",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.08, 0.0], [1.08, 0.1], [1.1, 0.1], [1.115856, 0.096759], [1.128519, 0.087407], [1.138125, 0.0725], [1.144815, 0.052593], [1.148727, 0.028241], [1.15, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "region": "shaft-steel"
+       },
+       {
+         "id": "th-reflector",
+         "kind": "loft",
+         "bone": "shaft",
+         "material": "retro-film",
+         "role": "body",
+         "tone": 0.92,
+         "sections": [
+           {
+             "at": [0.91, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           },
+           {
+             "at": [1.02, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "reflector-band"
+       },
+       {
+         "id": "th-beacon",
+         "kind": "loft",
+         "bone": "shaft",
+         "material": "pc-amber",
+         "role": "body",
+         "tone": 0.7,
+         "sections": [
+           {
+             "at": [1.02, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           },
+           {
+             "at": [1.08, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "beacon-led"
+       },
+       {
+         "id": "th-frame",
+         "of": "frame",
+         "region": "cover-frame",
+         "sectionFaces": ["-u"]
+       },
+       {
+         "id": "th-sleeve-skin",
+         "kind": "loft",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "sections": [
+           {
+             "at": [0.03, 0.0, 0.0],
+             "rx": 0.15,
+             "ry": 0.15
+           },
+           {
+             "at": [1.22, 0.0, 0.0],
+             "rx": 0.15,
+             "ry": 0.15
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-sleeve-floor",
+         "of": "sleeve-floor",
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-unit",
+         "of": "unit",
+         "region": "hydraulic-unit"
+       },
+       {
+         "id": "th-cylinder",
+         "of": "cylinder",
+         "region": "hydraulic-unit"
+       }
      ],
-     "transform": {
-      "translation": [
-       0.15,
-       -0.168,
-       0.0
-      ]
-     },
-     "repeat": {
-      "count": 4,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 1.570796,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "guide-bushing",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.6,
-     "profile": [
-      [
-       1.18,
-       0.102
-      ],
-      [
-       1.18,
-       0.142
-      ],
-      [
-       1.24,
-       0.142
-      ],
-      [
-       1.24,
-       0.102
-      ],
-      [
-       1.18,
-       0.102
-      ]
+     "structure": [
+       {
+         "id": "member-sleeve",
+         "of": "sleeve-tube",
+         "member": "sleeve",
+         "part": "member"
+       },
+       {
+         "id": "member-shaft",
+         "of": "shaft-tube",
+         "member": "shaft",
+         "part": "member"
+       },
+       {
+         "id": "member-shaft-band",
+         "of": "reflector",
+         "member": "shaft",
+         "part": "member"
+       },
+       {
+         "id": "member-cylinder",
+         "of": "cylinder",
+         "member": "hydraulic",
+         "part": "member"
+       },
+       {
+         "id": "member-rod",
+         "of": "rod",
+         "member": "hydraulic",
+         "part": "member"
+       },
+       {
+         "id": "joint-guide",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[1.16, 0.1], [1.16, 0.135], [1.22, 0.135], [1.22, 0.1], [1.16, 0.1]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "member": "shaft",
+         "part": "joint"
+       },
+       {
+         "id": "joint-bracket",
+         "of": "bracket",
+         "member": "hydraulic",
+         "part": "joint"
+       },
+       {
+         "id": "support-sleeve-fixed",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[1.22, 0.15], [1.22, 0.18], [1.25, 0.18], [1.25, 0.15], [1.22, 0.15]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "member": "sleeve",
+         "part": "support",
+         "anchor": "sleeve-fixed"
+       },
+       {
+         "id": "mass-sleeve",
+         "kind": "ellipsoid",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "radii": [0.03, 0.03, 0.03],
+         "transform": {
+           "translation": [0.65, 0.0, 0.0]
+         },
+         "member": "sleeve",
+         "part": "mass"
+       },
+       {
+         "id": "mass-shaft",
+         "kind": "ellipsoid",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "radii": [0.03, 0.03, 0.03],
+         "transform": {
+           "translation": [0.6, 0.0, 0.0]
+         },
+         "member": "shaft",
+         "part": "mass"
+       },
+       {
+         "id": "mass-hydraulic",
+         "kind": "ellipsoid",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.55,
+         "radii": [0.03, 0.03, 0.03],
+         "transform": {
+           "translation": [0.442, -0.2, 0.08]
+         },
+         "member": "hydraulic",
+         "part": "mass"
+       }
      ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
+     "decisions": [
+       {
+         "en": "Body: drawn anew for 30 mm features. The sleeve with a 15 mm wall and a 30 mm floor, collar and plate as one frame of 45 mm, the shaft tube with a 10 mm wall, the reflective band as a ring of the tube, the head with lens and crown as one piece, the rod, the cylinder as one piece, the unit as a plain block and its two bracket plates as one web. Tabs, seals, flange, piston and hose are below the scale.",
+         "de": "Körper: neu gezeichnet für Merkmale von 30 mm. Die Hülse mit 15 mm Wand und 30 mm Boden, Kragen und Platte als ein Rahmen von 45 mm, das Schaftrohr mit 10 mm Wand, das Reflexband als Ring des Rohrs, der Kopf mit Linse und Kalotte als ein Stück, die Stange, der Zylinder als ein Stück, die Einheit als schlichter Block und ihre zwei Konsolbleche als ein Steg. Laschen, Dichtungen, Flansch, Kolben und Schlauch liegen unter dem Maßstab."
+       },
+       {
+         "en": "Thermal: one skin per region (shaft above the ground and crown, band, beacon ring, frame, sleeve with floor) and the unit block with the cylinder; only the sum of the areas is compared at this scale.",
+         "de": "Thermisch: eine Haut je Region (Schaft über dem Boden und Kalotte, Band, Leuchtring, Rahmen, Hülse mit Boden) und der Block der Einheit mit dem Zylinder; in diesem Maßstab wird nur die Flächensumme verglichen."
+       },
+       {
+         "en": "Structure: sleeve tube, shaft tube, cylinder and rod as members, the guide ring and the bracket web as joints, the ring of the frame in the foundation as the fixed support, three masses.",
+         "de": "Tragwerk: Hülsenrohr, Schaftrohr, Zylinder und Stange als Stäbe, der Führungsring und der Konsolsteg als Gelenke, der Rahmenring im Fundament als Einspannung, drei Massen."
+       }
      ]
-    },
-    {
-     "id": "buffer",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "detail",
-     "tone": 0.15,
-     "profile": [
-      [
-       0.008,
-       0.0
-      ],
-      [
-       0.008,
-       0.02
-      ],
-      [
-       0.092,
-       0.02
-      ],
-      [
-       0.1,
-       0.014
-      ],
-      [
-       0.1,
-       0.0
-      ]
+   },
+   "500": {
+     "status": "authored",
+     "denominator": 500,
+     "body": [
+       {
+         "id": "sleeve",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.075, 0.13], [0.075, 0.15], [1.19, 0.15], [1.19, 0.13], [0.075, 0.13]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "sleeve-floor",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[0.0, 0.0], [0.0, 0.15], [0.075, 0.15], [0.075, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "frame",
+         "kind": "extrude",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[-0.2, 0.18], [-0.198478, 0.187654], [-0.194142, 0.194142], [-0.187654, 0.198478], [-0.18, 0.2], [0.18, 0.2], [0.187654, 0.198478], [0.194142, 0.194142], [0.198478, 0.187654], [0.2, 0.18], [0.2, -0.18], [0.198478, -0.187654], [0.194142, -0.194142], [0.187654, -0.198478], [0.18, -0.2], [-0.18, -0.2], [-0.187654, -0.198478], [-0.194142, -0.194142], [-0.198478, -0.187654], [-0.2, -0.18]],
+         "plane": "yz",
+         "from": 1.19,
+         "to": 1.265,
+         "holes": [
+           [[-0.13, 0.0], [-0.128888, 0.016968], [-0.12557, 0.033646], [-0.120104, 0.049749], [-0.112583, 0.065], [-0.103136, 0.079139], [-0.091924, 0.091924], [-0.079139, 0.103136], [-0.065, 0.112583], [-0.049749, 0.120104], [-0.033646, 0.12557], [-0.016968, 0.128888], [0.0, 0.13], [0.016968, 0.128888], [0.033646, 0.12557], [0.049749, 0.120104], [0.065, 0.112583], [0.079139, 0.103136], [0.091924, 0.091924], [0.103136, 0.079139], [0.112583, 0.065], [0.120104, 0.049749], [0.12557, 0.033646], [0.128888, 0.016968], [0.13, 0.0], [0.128888, -0.016968], [0.12557, -0.033646], [0.120104, -0.049749], [0.112583, -0.065], [0.103136, -0.079139], [0.091924, -0.091924], [0.079139, -0.103136], [0.065, -0.112583], [0.049749, -0.120104], [0.033646, -0.12557], [0.016968, -0.128888], [0.0, -0.13], [-0.016968, -0.128888], [-0.033646, -0.12557], [-0.049749, -0.120104], [-0.065, -0.112583], [-0.079139, -0.103136], [-0.091924, -0.091924], [-0.103136, -0.079139], [-0.112583, -0.065], [-0.120104, -0.049749], [-0.12557, -0.033646], [-0.128888, -0.016968]]
+         ]
+       },
+       {
+         "id": "shaft",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[0.0, 0.08], [0.0, 0.1], [1.02, 0.1], [1.02, 0.08], [0.0, 0.08]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "head",
+         "kind": "revolve",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "profile": [[1.02, 0.0], [1.02, 0.1], [1.1, 0.1], [1.122578, 0.092813], [1.138125, 0.0725], [1.147109, 0.040938], [1.15, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0]
+       },
+       {
+         "id": "unit",
+         "kind": "box",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.55,
+         "size": [0.4, 0.22, 0.188],
+         "transform": {
+           "translation": [0.492, -0.25, 0.106]
+         }
+       }
      ],
-     "axis": [
-      1,
-      0,
-      0
+     "thermal": [
+       {
+         "id": "th-shaft-skin",
+         "kind": "loft",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "sections": [
+           {
+             "at": [0.5, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           },
+           {
+             "at": [0.91, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "shaft-steel"
+       },
+       {
+         "id": "th-reflector",
+         "kind": "loft",
+         "bone": "shaft",
+         "material": "retro-film",
+         "role": "body",
+         "tone": 0.92,
+         "sections": [
+           {
+             "at": [0.91, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           },
+           {
+             "at": [1.02, 0.0, 0.0],
+             "rx": 0.1,
+             "ry": 0.1
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "reflector-band"
+       },
+       {
+         "id": "th-head",
+         "of": "head",
+         "region": "beacon-led"
+       },
+       {
+         "id": "th-frame",
+         "of": "frame",
+         "region": "cover-frame",
+         "sectionFaces": ["-u"]
+       },
+       {
+         "id": "th-sleeve-skin",
+         "kind": "loft",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "sections": [
+           {
+             "at": [0.0, 0.0, 0.0],
+             "rx": 0.15,
+             "ry": 0.15
+           },
+           {
+             "at": [1.19, 0.0, 0.0],
+             "rx": 0.15,
+             "ry": 0.15
+           }
+         ],
+         "capStart": false,
+         "capEnd": false,
+         "region": "sleeve-steel"
+       },
+       {
+         "id": "th-unit",
+         "of": "unit",
+         "region": "hydraulic-unit"
+       }
      ],
-     "origin": [
-      0,
-      0.117,
-      0.0
+     "structure": [
+       {
+         "id": "member-sleeve",
+         "of": "sleeve",
+         "member": "sleeve",
+         "part": "member"
+       },
+       {
+         "id": "member-shaft",
+         "of": "shaft",
+         "member": "shaft",
+         "part": "member"
+       },
+       {
+         "id": "member-cylinder",
+         "kind": "revolve",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.7,
+         "profile": [[0.067, 0.0], [0.067, 0.0375], [1.667, 0.0375], [1.667, 0.0]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "member": "hydraulic",
+         "part": "member"
+       },
+       {
+         "id": "joint-guide",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "profile": [[1.115, 0.1], [1.115, 0.13], [1.19, 0.13], [1.19, 0.1], [1.115, 0.1]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "member": "shaft",
+         "part": "joint"
+       },
+       {
+         "id": "support-sleeve-fixed",
+         "kind": "revolve",
+         "bone": "sleeve",
+         "material": "cast-iron-frame",
+         "role": "body",
+         "tone": 0.45,
+         "profile": [[1.175, 0.15], [1.175, 0.2], [1.25, 0.2], [1.25, 0.15], [1.175, 0.15]],
+         "axis": [1, 0, 0],
+         "origin": [0, 0.0, 0.0],
+         "member": "sleeve",
+         "part": "support",
+         "anchor": "sleeve-fixed"
+       },
+       {
+         "id": "mass-sleeve",
+         "kind": "ellipsoid",
+         "bone": "sleeve",
+         "material": "steel-sleeve",
+         "role": "body",
+         "tone": 0.4,
+         "radii": [0.04, 0.04, 0.04],
+         "transform": {
+           "translation": [0.65, 0.0, 0.0]
+         },
+         "member": "sleeve",
+         "part": "mass"
+       },
+       {
+         "id": "mass-shaft",
+         "kind": "ellipsoid",
+         "bone": "shaft",
+         "material": "steel-grey",
+         "role": "body",
+         "tone": 0.5,
+         "radii": [0.04, 0.04, 0.04],
+         "transform": {
+           "translation": [0.6, 0.0, 0.0]
+         },
+         "member": "shaft",
+         "part": "mass"
+       },
+       {
+         "id": "mass-hydraulic",
+         "kind": "ellipsoid",
+         "bone": "hydraulic",
+         "material": "steel-hyd",
+         "role": "body",
+         "tone": 0.55,
+         "radii": [0.04, 0.04, 0.04],
+         "transform": {
+           "translation": [0.442, -0.2, 0.08]
+         },
+         "member": "hydraulic",
+         "part": "mass"
+       }
      ],
-     "repeat": {
-      "count": 3,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 2.094395,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "frame-collar",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       1.18,
-       0.15
-      ],
-      [
-       1.18,
-       0.168
-      ],
-      [
-       1.24,
-       0.168
-      ],
-      [
-       1.24,
-       0.15
-      ],
-      [
-       1.18,
-       0.15
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
+     "decisions": [
+       {
+         "en": "Body: drawn anew for 75 mm features and already minimal. The sleeve with a 20 mm wall and a 75 mm floor, the frame as one slab of 75 mm, the shaft as one tube with a 20 mm wall carrying the band, the head as one domed cap, the unit as one block reaching the sleeve. Cylinder, rod, bracket, hose and every fixing are below the scale.",
+         "de": "Körper: neu gezeichnet für Merkmale von 75 mm und bereits minimal. Die Hülse mit 20 mm Wand und 75 mm Boden, der Rahmen als eine Platte von 75 mm, der Schaft als ein Rohr mit 20 mm Wand samt Band, der Kopf als eine gewölbte Kappe, die Einheit als ein Block bis an die Hülse. Zylinder, Stange, Konsole, Schlauch und alle Befestigungen liegen unter dem Maßstab."
+       },
+       {
+         "en": "Thermal: one skin per region (shaft above the ground, band, the cap for the beacon ring, the frame, sleeve) and the unit block; only the sum of the areas is compared.",
+         "de": "Thermisch: eine Haut je Region (Schaft über dem Boden, Band, die Kappe für den Leuchtring, der Rahmen, Hülse) und der Block der Einheit; nur die Flächensumme wird verglichen."
+       },
+       {
+         "en": "Structure: sleeve tube and shaft tube as members, the cylinder with its rod as one column inside them (kept here although the body omits it), the guide ring as joint, the ring of the frame as the fixed support, three masses.",
+         "de": "Tragwerk: Hülsenrohr und Schaftrohr als Stäbe, der Zylinder mit Stange als eine Säule darin (hier behalten, obwohl der Körper ihn weglässt), der Führungsring als Gelenk, der Rahmenring als Einspannung, drei Massen."
+       }
      ]
-    },
-    {
-     "id": "frame-plate",
-     "kind": "extrude",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       -0.2,
-       0.18
-      ],
-      [
-       -0.198478,
-       0.187654
-      ],
-      [
-       -0.194142,
-       0.194142
-      ],
-      [
-       -0.187654,
-       0.198478
-      ],
-      [
-       -0.18,
-       0.2
-      ],
-      [
-       0.18,
-       0.2
-      ],
-      [
-       0.187654,
-       0.198478
-      ],
-      [
-       0.194142,
-       0.194142
-      ],
-      [
-       0.198478,
-       0.187654
-      ],
-      [
-       0.2,
-       0.18
-      ],
-      [
-       0.2,
-       -0.18
-      ],
-      [
-       0.198478,
-       -0.187654
-      ],
-      [
-       0.194142,
-       -0.194142
-      ],
-      [
-       0.187654,
-       -0.198478
-      ],
-      [
-       0.18,
-       -0.2
-      ],
-      [
-       -0.18,
-       -0.2
-      ],
-      [
-       -0.187654,
-       -0.198478
-      ],
-      [
-       -0.194142,
-       -0.194142
-      ],
-      [
-       -0.198478,
-       -0.187654
-      ],
-      [
-       -0.2,
-       -0.18
-      ]
-     ],
-     "plane": "yz",
-     "from": 1.24,
-     "to": 1.25,
-     "holes": [
-      [
-       [
-        -0.142,
-        0.0
-       ],
-       [
-        -0.140785,
-        0.018535
-       ],
-       [
-        -0.137161,
-        0.036752
-       ],
-       [
-        -0.131191,
-        0.054341
-       ],
-       [
-        -0.122976,
-        0.071
-       ],
-       [
-        -0.112656,
-        0.086444
-       ],
-       [
-        -0.100409,
-        0.100409
-       ],
-       [
-        -0.086444,
-        0.112656
-       ],
-       [
-        -0.071,
-        0.122976
-       ],
-       [
-        -0.054341,
-        0.131191
-       ],
-       [
-        -0.036752,
-        0.137161
-       ],
-       [
-        -0.018535,
-        0.140785
-       ],
-       [
-        0.0,
-        0.142
-       ],
-       [
-        0.018535,
-        0.140785
-       ],
-       [
-        0.036752,
-        0.137161
-       ],
-       [
-        0.054341,
-        0.131191
-       ],
-       [
-        0.071,
-        0.122976
-       ],
-       [
-        0.086444,
-        0.112656
-       ],
-       [
-        0.100409,
-        0.100409
-       ],
-       [
-        0.112656,
-        0.086444
-       ],
-       [
-        0.122976,
-        0.071
-       ],
-       [
-        0.131191,
-        0.054341
-       ],
-       [
-        0.137161,
-        0.036752
-       ],
-       [
-        0.140785,
-        0.018535
-       ],
-       [
-        0.142,
-        0.0
-       ],
-       [
-        0.140785,
-        -0.018535
-       ],
-       [
-        0.137161,
-        -0.036752
-       ],
-       [
-        0.131191,
-        -0.054341
-       ],
-       [
-        0.122976,
-        -0.071
-       ],
-       [
-        0.112656,
-        -0.086444
-       ],
-       [
-        0.100409,
-        -0.100409
-       ],
-       [
-        0.086444,
-        -0.112656
-       ],
-       [
-        0.071,
-        -0.122976
-       ],
-       [
-        0.054341,
-        -0.131191
-       ],
-       [
-        0.036752,
-        -0.137161
-       ],
-       [
-        0.018535,
-        -0.140785
-       ],
-       [
-        0.0,
-        -0.142
-       ],
-       [
-        -0.018535,
-        -0.140785
-       ],
-       [
-        -0.036752,
-        -0.137161
-       ],
-       [
-        -0.054341,
-        -0.131191
-       ],
-       [
-        -0.071,
-        -0.122976
-       ],
-       [
-        -0.086444,
-        -0.112656
-       ],
-       [
-        -0.100409,
-        -0.100409
-       ],
-       [
-        -0.112656,
-        -0.086444
-       ],
-       [
-        -0.122976,
-        -0.071
-       ],
-       [
-        -0.131191,
-        -0.054341
-       ],
-       [
-        -0.137161,
-        -0.036752
-       ],
-       [
-        -0.140785,
-        -0.018535
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "frame-top",
-     "kind": "extrude",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       -0.2,
-       0.18
-      ],
-      [
-       -0.198478,
-       0.187654
-      ],
-      [
-       -0.194142,
-       0.194142
-      ],
-      [
-       -0.187654,
-       0.198478
-      ],
-      [
-       -0.18,
-       0.2
-      ],
-      [
-       0.18,
-       0.2
-      ],
-      [
-       0.187654,
-       0.198478
-      ],
-      [
-       0.194142,
-       0.194142
-      ],
-      [
-       0.198478,
-       0.187654
-      ],
-      [
-       0.2,
-       0.18
-      ],
-      [
-       0.2,
-       -0.18
-      ],
-      [
-       0.198478,
-       -0.187654
-      ],
-      [
-       0.194142,
-       -0.194142
-      ],
-      [
-       0.187654,
-       -0.198478
-      ],
-      [
-       0.18,
-       -0.2
-      ],
-      [
-       -0.18,
-       -0.2
-      ],
-      [
-       -0.187654,
-       -0.198478
-      ],
-      [
-       -0.194142,
-       -0.194142
-      ],
-      [
-       -0.198478,
-       -0.187654
-      ],
-      [
-       -0.2,
-       -0.18
-      ]
-     ],
-     "plane": "yz",
-     "from": 1.25,
-     "to": 1.265,
-     "holes": [
-      [
-       [
-        -0.142,
-        0.0
-       ],
-       [
-        -0.140785,
-        0.018535
-       ],
-       [
-        -0.137161,
-        0.036752
-       ],
-       [
-        -0.131191,
-        0.054341
-       ],
-       [
-        -0.122976,
-        0.071
-       ],
-       [
-        -0.112656,
-        0.086444
-       ],
-       [
-        -0.100409,
-        0.100409
-       ],
-       [
-        -0.086444,
-        0.112656
-       ],
-       [
-        -0.071,
-        0.122976
-       ],
-       [
-        -0.054341,
-        0.131191
-       ],
-       [
-        -0.036752,
-        0.137161
-       ],
-       [
-        -0.018535,
-        0.140785
-       ],
-       [
-        0.0,
-        0.142
-       ],
-       [
-        0.018535,
-        0.140785
-       ],
-       [
-        0.036752,
-        0.137161
-       ],
-       [
-        0.054341,
-        0.131191
-       ],
-       [
-        0.071,
-        0.122976
-       ],
-       [
-        0.086444,
-        0.112656
-       ],
-       [
-        0.100409,
-        0.100409
-       ],
-       [
-        0.112656,
-        0.086444
-       ],
-       [
-        0.122976,
-        0.071
-       ],
-       [
-        0.131191,
-        0.054341
-       ],
-       [
-        0.137161,
-        0.036752
-       ],
-       [
-        0.140785,
-        0.018535
-       ],
-       [
-        0.142,
-        0.0
-       ],
-       [
-        0.140785,
-        -0.018535
-       ],
-       [
-        0.137161,
-        -0.036752
-       ],
-       [
-        0.131191,
-        -0.054341
-       ],
-       [
-        0.122976,
-        -0.071
-       ],
-       [
-        0.112656,
-        -0.086444
-       ],
-       [
-        0.100409,
-        -0.100409
-       ],
-       [
-        0.086444,
-        -0.112656
-       ],
-       [
-        0.071,
-        -0.122976
-       ],
-       [
-        0.054341,
-        -0.131191
-       ],
-       [
-        0.036752,
-        -0.137161
-       ],
-       [
-        0.018535,
-        -0.140785
-       ],
-       [
-        0.0,
-        -0.142
-       ],
-       [
-        -0.018535,
-        -0.140785
-       ],
-       [
-        -0.036752,
-        -0.137161
-       ],
-       [
-        -0.054341,
-        -0.131191
-       ],
-       [
-        -0.071,
-        -0.122976
-       ],
-       [
-        -0.086444,
-        -0.112656
-       ],
-       [
-        -0.100409,
-        -0.100409
-       ],
-       [
-        -0.112656,
-        -0.086444
-       ],
-       [
-        -0.122976,
-        -0.071
-       ],
-       [
-        -0.131191,
-        -0.054341
-       ],
-       [
-        -0.137161,
-        -0.036752
-       ],
-       [
-        -0.140785,
-        -0.018535
-       ]
-      ]
-     ],
-     "taperTo": [
-      1,
-      0.97
-     ]
-    },
-    {
-     "id": "frame-bolt",
-     "kind": "extrude",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "detail",
-     "tone": 0.2,
-     "profile": [
-      [
-       -0.18097,
-       0.17
-      ],
-      [
-       -0.175485,
-       0.1795
-      ],
-      [
-       -0.164515,
-       0.1795
-      ],
-      [
-       -0.15903,
-       0.17
-      ],
-      [
-       -0.164515,
-       0.1605
-      ],
-      [
-       -0.175485,
-       0.1605
-      ]
-     ],
-     "plane": "yz",
-     "from": 1.265,
-     "to": 1.273,
-     "repeat": {
-      "count": 4,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 1.570796,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "seal-retainer",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.55,
-     "profile": [
-      [
-       1.255,
-       0.112
-      ],
-      [
-       1.255,
-       0.137
-      ],
-      [
-       1.265,
-       0.137
-      ],
-      [
-       1.265,
-       0.112
-      ],
-      [
-       1.255,
-       0.112
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "wiper-seal",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "detail",
-     "tone": 0.12,
-     "profile": [
-      [
-       1.242,
-       0.1005
-      ],
-      [
-       1.242,
-       0.112
-      ],
-      [
-       1.265,
-       0.112
-      ],
-      [
-       1.265,
-       0.1005
-      ],
-      [
-       1.242,
-       0.1005
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "shaft-tube",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.012,
-       0.095
-      ],
-      [
-       0.012,
-       0.1
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       1.02,
-       0.095
-      ],
-      [
-       0.012,
-       0.095
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "shaft-flange",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.095
-      ],
-      [
-       0.0,
-       0.14
-      ],
-      [
-       0.012,
-       0.14
-      ],
-      [
-       0.012,
-       0.095
-      ],
-      [
-       0.0,
-       0.095
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "reflector",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "retro-film",
-     "role": "body",
-     "tone": 0.92,
-     "profile": [
-      [
-       0.91,
-       0.1
-      ],
-      [
-       0.91,
-       0.1005
-      ],
-      [
-       1.02,
-       0.1005
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       0.91,
-       0.1
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "head-core",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.99,
-       0.0
-      ],
-      [
-       0.99,
-       0.095
-      ],
-      [
-       1.02,
-       0.095
-      ],
-      [
-       1.02,
-       0.085
-      ],
-      [
-       1.08,
-       0.085
-      ],
-      [
-       1.08,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "lens",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "pc-amber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       1.02,
-       0.097
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       1.08,
-       0.1
-      ],
-      [
-       1.08,
-       0.097
-      ],
-      [
-       1.02,
-       0.097
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "led",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "pc-amber",
-     "role": "detail",
-     "tone": 0.1,
-     "profile": [
-      [
-       0.088,
-       0.0
-      ],
-      [
-       0.088,
-       0.01
-      ],
-      [
-       0.1005,
-       0.01
-      ],
-      [
-       0.1005,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      -1.0,
-      0.0
-     ],
-     "origin": [
-      1.05,
-      0.0,
-      0.0
-     ],
-     "repeat": {
-      "count": 12,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 0.523599,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "head-crown",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       1.08,
-       0.0
-      ],
-      [
-       1.08,
-       0.1
-      ],
-      [
-       1.097,
-       0.1
-      ],
-      [
-       1.097,
-       0.0975
-      ],
-      [
-       1.1,
-       0.0975
-      ],
-      [
-       1.1,
-       0.1
-      ],
-      [
-       1.108336,
-       0.099178
-      ],
-      [
-       1.115856,
-       0.096759
-      ],
-      [
-       1.122578,
-       0.092813
-      ],
-      [
-       1.128519,
-       0.087407
-      ],
-      [
-       1.133695,
-       0.080613
-      ],
-      [
-       1.138125,
-       0.0725
-      ],
-      [
-       1.141826,
-       0.063137
-      ],
-      [
-       1.144815,
-       0.052593
-      ],
-      [
-       1.147109,
-       0.040938
-      ],
-      [
-       1.148727,
-       0.028241
-      ],
-      [
-       1.149685,
-       0.014572
-      ],
-      [
-       1.15,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "cap-screw",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "detail",
-     "tone": 0.2,
-     "profile": [
-      [
-       1.135,
-       0.0
-      ],
-      [
-       1.135,
-       0.008
-      ],
-      [
-       1.1475,
-       0.008
-      ],
-      [
-       1.1495,
-       0.004
-      ],
-      [
-       1.1495,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.05,
-      0.0
-     ],
-     "repeat": {
-      "count": 3,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 2.094395,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "crosshead",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.925,
-       0.0
-      ],
-      [
-       0.925,
-       0.03
-      ],
-      [
-       0.94,
-       0.03
-      ],
-      [
-       0.94,
-       0.095
-      ],
-      [
-       0.952,
-       0.095
-      ],
-      [
-       0.952,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "rod-nut",
-     "kind": "extrude",
-     "bone": "shaft",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       -0.017321,
-       0.0
-      ],
-      [
-       -0.00866,
-       0.015
-      ],
-      [
-       0.00866,
-       0.015
-      ],
-      [
-       0.017321,
-       0.0
-      ],
-      [
-       0.00866,
-       -0.015
-      ],
-      [
-       -0.00866,
-       -0.015
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.952,
-     "to": 0.97
-    },
-    {
-     "id": "rod",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.85,
-     "profile": [
-      [
-       0.17,
-       0.0
-      ],
-      [
-       0.17,
-       0.018
-      ],
-      [
-       0.925,
-       0.018
-      ],
-      [
-       0.925,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "piston",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       0.13,
-       0.0
-      ],
-      [
-       0.13,
-       0.03
-      ],
-      [
-       0.17,
-       0.03
-      ],
-      [
-       0.17,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "cyl-flange",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       -0.06,
-       0.05
-      ],
-      [
-       -0.059239,
-       0.053827
-      ],
-      [
-       -0.057071,
-       0.057071
-      ],
-      [
-       -0.053827,
-       0.059239
-      ],
-      [
-       -0.05,
-       0.06
-      ],
-      [
-       0.05,
-       0.06
-      ],
-      [
-       0.053827,
-       0.059239
-      ],
-      [
-       0.057071,
-       0.057071
-      ],
-      [
-       0.059239,
-       0.053827
-      ],
-      [
-       0.06,
-       0.05
-      ],
-      [
-       0.06,
-       -0.05
-      ],
-      [
-       0.059239,
-       -0.053827
-      ],
-      [
-       0.057071,
-       -0.057071
-      ],
-      [
-       0.053827,
-       -0.059239
-      ],
-      [
-       0.05,
-       -0.06
-      ],
-      [
-       -0.05,
-       -0.06
-      ],
-      [
-       -0.053827,
-       -0.059239
-      ],
-      [
-       -0.057071,
-       -0.057071
-      ],
-      [
-       -0.059239,
-       -0.053827
-      ],
-      [
-       -0.06,
-       -0.05
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.0,
-     "to": 0.012
-    },
-    {
-     "id": "cyl-flange-bolt",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.2,
-     "profile": [
-      [
-       -0.054238,
-       0.045
-      ],
-      [
-       -0.049619,
-       0.053
-      ],
-      [
-       -0.040381,
-       0.053
-      ],
-      [
-       -0.035762,
-       0.045
-      ],
-      [
-       -0.040381,
-       0.037
-      ],
-      [
-       -0.049619,
-       0.037
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.012,
-     "to": 0.02,
-     "repeat": {
-      "count": 4,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 1.570796,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "cyl-cap",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.012,
-       0.0
-      ],
-      [
-       0.012,
-       0.04
-      ],
-      [
-       0.045,
-       0.04
-      ],
-      [
-       0.045,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "cyl-tube",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       0.045,
-       0.03
-      ],
-      [
-       0.045,
-       0.035
-      ],
-      [
-       0.932,
-       0.035
-      ],
-      [
-       0.932,
-       0.03
-      ],
-      [
-       0.045,
-       0.03
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "cyl-gland",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.932,
-       0.018
-      ],
-      [
-       0.932,
-       0.04
-      ],
-      [
-       0.964,
-       0.04
-      ],
-      [
-       0.972,
-       0.034
-      ],
-      [
-       0.972,
-       0.018
-      ],
-      [
-       0.932,
-       0.018
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "hose-port",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       0.038,
-       0.0
-      ],
-      [
-       0.038,
-       0.014
-      ],
-      [
-       0.062,
-       0.014
-      ],
-      [
-       0.062,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      -1.0,
-      0.0
-     ],
-     "origin": [
-      0.029,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "hose",
-     "kind": "loft",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.2,
-     "sections": [
-      {
-       "at": [
-        0.029,
-        -0.04,
-        0.0
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.029,
-        -0.15,
-        0.0
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.029,
-        -0.215,
-        0.03
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.052,
-        -0.255,
-        0.08
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.112,
-        -0.265,
-        0.106
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.292,
-        -0.265,
-        0.106
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      }
-     ],
-     "capStart": true,
-     "capEnd": true,
-     "slender": true
-    },
-    {
-     "id": "hose-grommet",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.15,
-     "profile": [
-      [
-       0.136,
-       0.011
-      ],
-      [
-       0.136,
-       0.022
-      ],
-      [
-       0.158,
-       0.022
-      ],
-      [
-       0.158,
-       0.011
-      ],
-      [
-       0.136,
-       0.011
-      ]
-     ],
-     "axis": [
-      0,
-      -1.0,
-      0.0
-     ],
-     "origin": [
-      0.029,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "hose-union",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       0.27,
-       0.0
-      ],
-      [
-       0.27,
-       0.014
-      ],
-      [
-       0.292,
-       0.014
-      ],
-      [
-       0.292,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      -0.265,
-      0.106
-     ]
-    },
-    {
-     "id": "unit-body",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.55,
-     "profile": [
-      [
-       -0.35,
-       0.178
-      ],
-      [
-       -0.349087,
-       0.182592
-      ],
-      [
-       -0.346485,
-       0.186485
-      ],
-      [
-       -0.342592,
-       0.189087
-      ],
-      [
-       -0.338,
-       0.19
-      ],
-      [
-       -0.192,
-       0.19
-      ],
-      [
-       -0.187408,
-       0.189087
-      ],
-      [
-       -0.183515,
-       0.186485
-      ],
-      [
-       -0.180913,
-       0.182592
-      ],
-      [
-       -0.18,
-       0.178
-      ],
-      [
-       -0.18,
-       0.034
-      ],
-      [
-       -0.180913,
-       0.029408
-      ],
-      [
-       -0.183515,
-       0.025515
-      ],
-      [
-       -0.187408,
-       0.022913
-      ],
-      [
-       -0.192,
-       0.022
-      ],
-      [
-       -0.338,
-       0.022
-      ],
-      [
-       -0.342592,
-       0.022913
-      ],
-      [
-       -0.346485,
-       0.025515
-      ],
-      [
-       -0.349087,
-       0.029408
-      ],
-      [
-       -0.35,
-       0.034
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.292,
-     "to": 0.677
-    },
-    {
-     "id": "unit-lid",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       -0.36,
-       0.188
-      ],
-      [
-       -0.359087,
-       0.192592
-      ],
-      [
-       -0.356485,
-       0.196485
-      ],
-      [
-       -0.352592,
-       0.199087
-      ],
-      [
-       -0.348,
-       0.2
-      ],
-      [
-       -0.182,
-       0.2
-      ],
-      [
-       -0.177408,
-       0.199087
-      ],
-      [
-       -0.173515,
-       0.196485
-      ],
-      [
-       -0.170913,
-       0.192592
-      ],
-      [
-       -0.17,
-       0.188
-      ],
-      [
-       -0.17,
-       0.024
-      ],
-      [
-       -0.170913,
-       0.019408
-      ],
-      [
-       -0.173515,
-       0.015515
-      ],
-      [
-       -0.177408,
-       0.012913
-      ],
-      [
-       -0.182,
-       0.012
-      ],
-      [
-       -0.348,
-       0.012
-      ],
-      [
-       -0.352592,
-       0.012913
-      ],
-      [
-       -0.356485,
-       0.015515
-      ],
-      [
-       -0.359087,
-       0.019408
-      ],
-      [
-       -0.36,
-       0.024
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.677,
-     "to": 0.692
-    },
-    {
-     "id": "unit-lid-bolt",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.2,
-     "profile": [
-      [
-       -0.192506,
-       0.027
-      ],
-      [
-       -0.188753,
-       0.0335
-      ],
-      [
-       -0.181247,
-       0.0335
-      ],
-      [
-       -0.177494,
-       0.027
-      ],
-      [
-       -0.181247,
-       0.0205
-      ],
-      [
-       -0.188753,
-       0.0205
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.692,
-     "to": 0.7,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0,
-       -0.16,
-       0
-      ]
-     }
-    },
-    {
-     "id": "unit-lid-bolt-left",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.2,
-     "profile": [
-      [
-       -0.192506,
-       0.185
-      ],
-      [
-       -0.188753,
-       0.1915
-      ],
-      [
-       -0.181247,
-       0.1915
-      ],
-      [
-       -0.177494,
-       0.185
-      ],
-      [
-       -0.181247,
-       0.1785
-      ],
-      [
-       -0.188753,
-       0.1785
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.692,
-     "to": 0.7,
-     "repeat": {
-      "count": 2,
-      "translation": [
-       0,
-       -0.16,
-       0
-      ]
-     }
-    },
-    {
-     "id": "cable-gland",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.25,
-     "profile": [
-      [
-       0.692,
-       0.0
-      ],
-      [
-       0.692,
-       0.016
-      ],
-      [
-       0.707,
-       0.016
-      ],
-      [
-       0.707,
-       0.012
-      ],
-      [
-       0.722,
-       0.012
-      ],
-      [
-       0.722,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      -0.3,
-      0.106
-     ]
-    },
-    {
-     "id": "cable",
-     "kind": "loft",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.15,
-     "sections": [
-      {
-       "at": [
-        0.722,
-        -0.3,
-        0.106
-       ],
-       "rx": 0.006,
-       "ry": 0.006
-      },
-      {
-       "at": [
-        0.752,
-        -0.3,
-        0.106
-       ],
-       "rx": 0.006,
-       "ry": 0.006
-      },
-      {
-       "at": [
-        0.777,
-        -0.292,
-        0.106
-       ],
-       "rx": 0.006,
-       "ry": 0.006
-      },
-      {
-       "at": [
-        0.792,
-        -0.27,
-        0.106
-       ],
-       "rx": 0.006,
-       "ry": 0.006
-      },
-      {
-       "at": [
-        0.795,
-        -0.24,
-        0.106
-       ],
-       "rx": 0.006,
-       "ry": 0.006
-      }
-     ],
-     "capStart": true,
-     "capEnd": true
-    },
-    {
-     "id": "conduit",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.35,
-     "profile": [
-      [
-       0.136,
-       0.0
-      ],
-      [
-       0.136,
-       0.0125
-      ],
-      [
-       0.181,
-       0.0125
-      ],
-      [
-       0.181,
-       0.0
-      ]
-     ],
-     "axis": [
-      0,
-      -1.0,
-      0.0
-     ],
-     "origin": [
-      0.492,
-      0.0,
-      0.06
-     ]
-    },
-    {
-     "id": "bracket-upper",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       -0.1443,
-       0.022
-      ],
-      [
-       -0.18,
-       0.022
-      ],
-      [
-       -0.18,
-       0.19
-      ],
-      [
-       -0.073,
-       0.1265
-      ],
-      [
-       -0.1014,
-       0.105
-      ],
-      [
-       -0.125,
-       0.0752
-      ],
-      [
-       -0.1372,
-       0.0499
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.638,
-     "to": 0.646
-    },
-    {
-     "id": "bracket-lower",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       -0.1443,
-       0.022
-      ],
-      [
-       -0.18,
-       0.022
-      ],
-      [
-       -0.18,
-       0.19
-      ],
-      [
-       -0.073,
-       0.1265
-      ],
-      [
-       -0.1014,
-       0.105
-      ],
-      [
-       -0.125,
-       0.0752
-      ],
-      [
-       -0.1372,
-       0.0499
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.338,
-     "to": 0.346
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-shaft-skin",
-     "kind": "loft",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "sections": [
-      {
-       "at": [
-        0.5,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      },
-      {
-       "at": [
-        0.91,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "shaft-steel"
-    },
-    {
-     "id": "th-head-crown",
-     "of": "head-crown",
-     "region": "shaft-steel"
-    },
-    {
-     "id": "th-reflector",
-     "of": "reflector",
-     "region": "reflector-band"
-    },
-    {
-     "id": "th-lens",
-     "of": "lens",
-     "region": "beacon-led"
-    },
-    {
-     "id": "th-led",
-     "of": "led",
-     "region": "beacon-led"
-    },
-    {
-     "id": "th-frame-top",
-     "of": "frame-top",
-     "region": "cover-frame",
-     "sectionFaces": [
-      "-u"
-     ]
-    },
-    {
-     "id": "th-sleeve-skin",
-     "kind": "loft",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "sections": [
-      {
-       "at": [
-        0.008,
-        0.0,
-        0.0
-       ],
-       "rx": 0.15,
-       "ry": 0.15
-      },
-      {
-       "at": [
-        1.18,
-        0.0,
-        0.0
-       ],
-       "rx": 0.15,
-       "ry": 0.15
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-sleeve-floor",
-     "of": "sleeve-floor",
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-anchor-tab-upper",
-     "of": "anchor-tab-upper",
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-anchor-tab-lower",
-     "of": "anchor-tab-lower",
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-unit-body",
-     "of": "unit-body",
-     "region": "hydraulic-unit"
-    },
-    {
-     "id": "th-unit-lid",
-     "of": "unit-lid",
-     "region": "hydraulic-unit"
-    },
-    {
-     "id": "th-hose",
-     "of": "hose",
-     "region": "hydraulic-unit"
-    },
-    {
-     "id": "th-cylinder",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       0.012,
-       0.0
-      ],
-      [
-       0.012,
-       0.04
-      ],
-      [
-       0.045,
-       0.04
-      ],
-      [
-       0.045,
-       0.035
-      ],
-      [
-       0.932,
-       0.035
-      ],
-      [
-       0.932,
-       0.04
-      ],
-      [
-       0.964,
-       0.04
-      ],
-      [
-       0.972,
-       0.034
-      ],
-      [
-       0.972,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "region": "hydraulic-unit"
-    }
-   ],
-   "structure": [
-    {
-     "id": "member-sleeve",
-     "of": "sleeve-tube",
-     "member": "sleeve",
-     "part": "member"
-    },
-    {
-     "id": "member-shaft",
-     "of": "shaft-tube",
-     "member": "shaft",
-     "part": "member"
-    },
-    {
-     "id": "member-cylinder",
-     "of": "cyl-tube",
-     "member": "hydraulic",
-     "part": "member"
-    },
-    {
-     "id": "member-cyl-cap",
-     "of": "cyl-cap",
-     "member": "hydraulic",
-     "part": "member"
-    },
-    {
-     "id": "member-rod",
-     "of": "rod",
-     "member": "hydraulic",
-     "part": "member"
-    },
-    {
-     "id": "joint-guide-bushing",
-     "of": "guide-bushing",
-     "member": "shaft",
-     "part": "joint"
-    },
-    {
-     "id": "joint-shaft-flange",
-     "of": "shaft-flange",
-     "member": "shaft",
-     "part": "joint"
-    },
-    {
-     "id": "joint-crosshead",
-     "of": "crosshead",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "joint-piston",
-     "of": "piston",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "joint-cyl-flange",
-     "of": "cyl-flange",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "joint-bracket-upper",
-     "of": "bracket-upper",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "joint-bracket-lower",
-     "of": "bracket-lower",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "support-sleeve-fixed",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       1.18,
-       0.15
-      ],
-      [
-       1.18,
-       0.168
-      ],
-      [
-       1.25,
-       0.168
-      ],
-      [
-       1.25,
-       0.15
-      ],
-      [
-       1.18,
-       0.15
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "member": "sleeve",
-     "part": "support",
-     "anchor": "sleeve-fixed"
-    },
-    {
-     "id": "mass-sleeve",
-     "kind": "ellipsoid",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.65,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "sleeve",
-     "part": "mass"
-    },
-    {
-     "id": "mass-shaft",
-     "kind": "ellipsoid",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.6,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "shaft",
-     "part": "mass"
-    },
-    {
-     "id": "mass-hydraulic",
-     "kind": "ellipsoid",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.55,
-     "radii": [
-      0.02,
-      0.02,
-      0.02
-     ],
-     "transform": {
-      "translation": [
-       0.442,
-       -0.2,
-       0.08
-      ]
-     },
-     "member": "hydraulic",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body: the bollard as it is built. Fixed in the ground: the galvanised sleeve tube of 0.30 m with its 8 mm wall, the floor plate with three drain holes and three rubber buffers, eight anchor tabs for the concrete, the bronze-lined guide bushing under the cover, the cast-iron cover frame (collar around the sleeve head, plate of 0.40 m standing 15 mm proud with a splayed edge, four hexagon anchor bolts), the seal retainer ring and the wiper seal against the shaft. Rising: the shaft tube of 0.20 m with its 5 mm wall and the guide flange at its foot, the 0.5 mm reflective film, the head casting with the amber lens ring, twelve LED windows, the crown with its shadow gap and three screws, the crosshead with the rod nut, the 36 mm piston rod and the piston. Hydraulics: the single-acting cylinder of 70 mm standing on its bolted foot flange inside the shaft (end cap, tube, gland), the port, the hose through the grommet in the sleeve wall up to the union under the power unit, the sealed unit housing with its bolted lid, cable gland, cable and conduit, hung on two bracket plates welded to the sleeve.",
-     "de": "Körper: der Poller, wie er gebaut ist. Fest im Boden: das verzinkte Hülsenrohr von 0,30 m mit 8 mm Wand, die Bodenplatte mit drei Entwässerungslöchern und drei Gummipuffern, acht Ankerlaschen für den Beton, die Führungsbuchse unter der Abdeckung, der Gusseisen-Abdeckrahmen (Kragen um den Hülsenkopf, Platte von 0,40 m mit 15 mm Überstand und geneigter Kante, vier Sechskant-Ankerschrauben), der Dichtungshaltering und der Abstreifer am Schaft. Hebend: das Schaftrohr von 0,20 m mit 5 mm Wand und dem Führungsflansch am Fuß, die Reflexfolie von 0,5 mm, das Kopfgussteil mit dem bernsteinfarbenen Linsenring, zwölf LED-Fenstern, der Kalotte mit Schattenfuge und drei Schrauben, die Traverse mit der Stangenmutter, die Kolbenstange von 36 mm und der Kolben. Hydraulik: der einfachwirkende Zylinder von 70 mm auf seinem verschraubten Fußflansch im Schaft (Boden, Rohr, Stopfbuchse), der Anschluss, der Schlauch durch die Tülle in der Hülsenwand bis zur Verschraubung unter der Antriebseinheit, das dichte Gehäuse mit verschraubtem Deckel, Kabelverschraubung, Kabel und Schutzrohr, an zwei mit der Hülse verschweißten Konsolblechen."
-    },
-    {
-     "en": "Thermal: each region has one layer, so each is one surface. Shaft steel is the tube skin that stands in the air when raised and the crown; the reflective film and the lens ring with its LED windows are their own shells; the cover frame is the part of the plate above the ground (its underside continues into the casting); the buried sleeve is its outer skin, the floor plate and the anchor tabs; the hydraulic region is the unit housing with its lid, the hose and the cylinder inside the sleeve.",
-     "de": "Thermisch: jede Region hat eine Schicht und ist daher eine Fläche. Schaftstahl ist die Rohrhaut, die ausgefahren in der Luft steht, und die Kalotte; die Reflexfolie und der Linsenring mit den LED-Fenstern sind eigene Schalen; der Abdeckrahmen ist der Teil der Platte über dem Boden (die Unterseite setzt sich im Gussteil fort); die eingegrabene Hülse ist ihre Außenhaut, die Bodenplatte und die Ankerlaschen; die Hydraulikregion ist das Gehäuse der Einheit mit Deckel, der Schlauch und der Zylinder in der Hülse."
-    },
-    {
-     "en": "Structure: the load path. A nudge bends the shaft tube, which hands its moment to the sleeve tube through the guide bushing and the guide flange; the sleeve is clamped by the collar cast into the foundation (support). The weight of the shaft goes through the crosshead into the piston rod, the piston, the oil column of the cylinder tube and its foot flange to the sleeve floor. The power unit hangs on its two bracket plates. Three masses at the centres of mass of the rig.",
-     "de": "Tragwerk: der Lastpfad. Ein Anstoß biegt das Schaftrohr, das sein Moment über Führungsbuchse und Führungsflansch an das Hülsenrohr abgibt; die Hülse ist durch den ins Fundament eingegossenen Kragen eingespannt (Auflager). Das Schaftgewicht geht über die Traverse in die Kolbenstange, den Kolben, die Ölsäule des Zylinderrohrs und dessen Fußflansch auf den Hülsenboden. Die Antriebseinheit hängt an zwei Konsolblechen. Drei Massen in den Schwerpunkten des Rigs."
-    }
-   ]
-  },
-  "100": {
-   "status": "authored",
-   "denominator": 100,
-   "body": [
-    {
-     "id": "sleeve-tube",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.015,
-       0.142
-      ],
-      [
-       0.015,
-       0.15
-      ],
-      [
-       1.24,
-       0.15
-      ],
-      [
-       1.24,
-       0.142
-      ],
-      [
-       0.015,
-       0.142
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "sleeve-floor",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.15
-      ],
-      [
-       0.015,
-       0.15
-      ],
-      [
-       0.015,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "anchor-tab-upper",
-     "kind": "box",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "size": [
-      0.08,
-      0.044,
-      0.015
-     ],
-     "transform": {
-      "translation": [
-       0.95,
-       -0.168,
-       0.0
-      ]
-     },
-     "repeat": {
-      "count": 4,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 1.570796,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "anchor-tab-lower",
-     "kind": "box",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "size": [
-      0.08,
-      0.044,
-      0.015
-     ],
-     "transform": {
-      "translation": [
-       0.15,
-       -0.168,
-       0.0
-      ]
-     },
-     "repeat": {
-      "count": 4,
-      "rotationAxis": [
-       1,
-       0,
-       0
-      ],
-      "rotationRad": 1.570796,
-      "origin": [
-       0,
-       0,
-       0
-      ]
-     }
-    },
-    {
-     "id": "frame-collar",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       1.18,
-       0.15
-      ],
-      [
-       1.18,
-       0.168
-      ],
-      [
-       1.24,
-       0.168
-      ],
-      [
-       1.24,
-       0.15
-      ],
-      [
-       1.18,
-       0.15
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "frame-plate",
-     "kind": "extrude",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       -0.2,
-       0.18
-      ],
-      [
-       -0.198478,
-       0.187654
-      ],
-      [
-       -0.194142,
-       0.194142
-      ],
-      [
-       -0.187654,
-       0.198478
-      ],
-      [
-       -0.18,
-       0.2
-      ],
-      [
-       0.18,
-       0.2
-      ],
-      [
-       0.187654,
-       0.198478
-      ],
-      [
-       0.194142,
-       0.194142
-      ],
-      [
-       0.198478,
-       0.187654
-      ],
-      [
-       0.2,
-       0.18
-      ],
-      [
-       0.2,
-       -0.18
-      ],
-      [
-       0.198478,
-       -0.187654
-      ],
-      [
-       0.194142,
-       -0.194142
-      ],
-      [
-       0.187654,
-       -0.198478
-      ],
-      [
-       0.18,
-       -0.2
-      ],
-      [
-       -0.18,
-       -0.2
-      ],
-      [
-       -0.187654,
-       -0.198478
-      ],
-      [
-       -0.194142,
-       -0.194142
-      ],
-      [
-       -0.198478,
-       -0.187654
-      ],
-      [
-       -0.2,
-       -0.18
-      ]
-     ],
-     "plane": "yz",
-     "from": 1.24,
-     "to": 1.265,
-     "holes": [
-      [
-       [
-        -0.142,
-        0.0
-       ],
-       [
-        -0.140785,
-        0.018535
-       ],
-       [
-        -0.137161,
-        0.036752
-       ],
-       [
-        -0.131191,
-        0.054341
-       ],
-       [
-        -0.122976,
-        0.071
-       ],
-       [
-        -0.112656,
-        0.086444
-       ],
-       [
-        -0.100409,
-        0.100409
-       ],
-       [
-        -0.086444,
-        0.112656
-       ],
-       [
-        -0.071,
-        0.122976
-       ],
-       [
-        -0.054341,
-        0.131191
-       ],
-       [
-        -0.036752,
-        0.137161
-       ],
-       [
-        -0.018535,
-        0.140785
-       ],
-       [
-        0.0,
-        0.142
-       ],
-       [
-        0.018535,
-        0.140785
-       ],
-       [
-        0.036752,
-        0.137161
-       ],
-       [
-        0.054341,
-        0.131191
-       ],
-       [
-        0.071,
-        0.122976
-       ],
-       [
-        0.086444,
-        0.112656
-       ],
-       [
-        0.100409,
-        0.100409
-       ],
-       [
-        0.112656,
-        0.086444
-       ],
-       [
-        0.122976,
-        0.071
-       ],
-       [
-        0.131191,
-        0.054341
-       ],
-       [
-        0.137161,
-        0.036752
-       ],
-       [
-        0.140785,
-        0.018535
-       ],
-       [
-        0.142,
-        0.0
-       ],
-       [
-        0.140785,
-        -0.018535
-       ],
-       [
-        0.137161,
-        -0.036752
-       ],
-       [
-        0.131191,
-        -0.054341
-       ],
-       [
-        0.122976,
-        -0.071
-       ],
-       [
-        0.112656,
-        -0.086444
-       ],
-       [
-        0.100409,
-        -0.100409
-       ],
-       [
-        0.086444,
-        -0.112656
-       ],
-       [
-        0.071,
-        -0.122976
-       ],
-       [
-        0.054341,
-        -0.131191
-       ],
-       [
-        0.036752,
-        -0.137161
-       ],
-       [
-        0.018535,
-        -0.140785
-       ],
-       [
-        0.0,
-        -0.142
-       ],
-       [
-        -0.018535,
-        -0.140785
-       ],
-       [
-        -0.036752,
-        -0.137161
-       ],
-       [
-        -0.054341,
-        -0.131191
-       ],
-       [
-        -0.071,
-        -0.122976
-       ],
-       [
-        -0.086444,
-        -0.112656
-       ],
-       [
-        -0.100409,
-        -0.100409
-       ],
-       [
-        -0.112656,
-        -0.086444
-       ],
-       [
-        -0.122976,
-        -0.071
-       ],
-       [
-        -0.131191,
-        -0.054341
-       ],
-       [
-        -0.137161,
-        -0.036752
-       ],
-       [
-        -0.140785,
-        -0.018535
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "seal-ring",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "detail",
-     "tone": 0.2,
-     "profile": [
-      [
-       1.25,
-       0.1005
-      ],
-      [
-       1.25,
-       0.142
-      ],
-      [
-       1.265,
-       0.142
-      ],
-      [
-       1.265,
-       0.1005
-      ],
-      [
-       1.25,
-       0.1005
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "shaft-tube",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.015,
-       0.095
-      ],
-      [
-       0.015,
-       0.1
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       1.02,
-       0.095
-      ],
-      [
-       0.015,
-       0.095
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "shaft-flange",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.095
-      ],
-      [
-       0.0,
-       0.14
-      ],
-      [
-       0.015,
-       0.14
-      ],
-      [
-       0.015,
-       0.095
-      ],
-      [
-       0.0,
-       0.095
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "reflector",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "retro-film",
-     "role": "body",
-     "tone": 0.92,
-     "profile": [
-      [
-       0.91,
-       0.1
-      ],
-      [
-       0.91,
-       0.1005
-      ],
-      [
-       1.02,
-       0.1005
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       0.91,
-       0.1
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "lens",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "pc-amber",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       1.02,
-       0.097
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       1.08,
-       0.1
-      ],
-      [
-       1.08,
-       0.097
-      ],
-      [
-       1.02,
-       0.097
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "head",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.99,
-       0.0
-      ],
-      [
-       0.99,
-       0.095
-      ],
-      [
-       1.02,
-       0.095
-      ],
-      [
-       1.02,
-       0.097
-      ],
-      [
-       1.08,
-       0.097
-      ],
-      [
-       1.08,
-       0.1
-      ],
-      [
-       1.1,
-       0.1
-      ],
-      [
-       1.112197,
-       0.098164
-      ],
-      [
-       1.122578,
-       0.092813
-      ],
-      [
-       1.131201,
-       0.08418
-      ],
-      [
-       1.138125,
-       0.0725
-      ],
-      [
-       1.143408,
-       0.058008
-      ],
-      [
-       1.147109,
-       0.040938
-      ],
-      [
-       1.149287,
-       0.021523
-      ],
-      [
-       1.15,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "rod",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.85,
-     "profile": [
-      [
-       0.17,
-       0.0
-      ],
-      [
-       0.17,
-       0.018
-      ],
-      [
-       0.99,
-       0.018
-      ],
-      [
-       0.99,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "piston",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.3,
-     "profile": [
-      [
-       0.13,
-       0.0
-      ],
-      [
-       0.13,
-       0.03
-      ],
-      [
-       0.17,
-       0.03
-      ],
-      [
-       0.17,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "cyl-base",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.007,
-       0.0
-      ],
-      [
-       0.007,
-       0.045
-      ],
-      [
-       0.045,
-       0.045
-      ],
-      [
-       0.045,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "cyl-tube",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       0.045,
-       0.03
-      ],
-      [
-       0.045,
-       0.035
-      ],
-      [
-       0.932,
-       0.035
-      ],
-      [
-       0.932,
-       0.03
-      ],
-      [
-       0.045,
-       0.03
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "cyl-gland",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.932,
-       0.018
-      ],
-      [
-       0.932,
-       0.04
-      ],
-      [
-       0.972,
-       0.04
-      ],
-      [
-       0.972,
-       0.018
-      ],
-      [
-       0.932,
-       0.018
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "hose",
-     "kind": "loft",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "detail",
-     "tone": 0.2,
-     "sections": [
-      {
-       "at": [
-        0.029,
-        -0.04,
-        0.0
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.029,
-        -0.15,
-        0.0
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.029,
-        -0.215,
-        0.03
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.052,
-        -0.255,
-        0.08
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.112,
-        -0.265,
-        0.106
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      },
-      {
-       "at": [
-        0.292,
-        -0.265,
-        0.106
-       ],
-       "rx": 0.008,
-       "ry": 0.008
-      }
-     ],
-     "capStart": true,
-     "capEnd": true,
-     "slender": true
-    },
-    {
-     "id": "unit",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.55,
-     "profile": [
-      [
-       -0.36,
-       0.188
-      ],
-      [
-       -0.356485,
-       0.196485
-      ],
-      [
-       -0.348,
-       0.2
-      ],
-      [
-       -0.182,
-       0.2
-      ],
-      [
-       -0.173515,
-       0.196485
-      ],
-      [
-       -0.17,
-       0.188
-      ],
-      [
-       -0.17,
-       0.024
-      ],
-      [
-       -0.173515,
-       0.015515
-      ],
-      [
-       -0.182,
-       0.012
-      ],
-      [
-       -0.348,
-       0.012
-      ],
-      [
-       -0.356485,
-       0.015515
-      ],
-      [
-       -0.36,
-       0.024
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.292,
-     "to": 0.692
-    },
-    {
-     "id": "bracket-upper",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       -0.1443,
-       0.022
-      ],
-      [
-       -0.18,
-       0.022
-      ],
-      [
-       -0.18,
-       0.19
-      ],
-      [
-       -0.073,
-       0.1265
-      ],
-      [
-       -0.1014,
-       0.105
-      ],
-      [
-       -0.125,
-       0.0752
-      ],
-      [
-       -0.1372,
-       0.0499
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.6345,
-     "to": 0.6495
-    },
-    {
-     "id": "bracket-lower",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       -0.1443,
-       0.022
-      ],
-      [
-       -0.18,
-       0.022
-      ],
-      [
-       -0.18,
-       0.19
-      ],
-      [
-       -0.073,
-       0.1265
-      ],
-      [
-       -0.1014,
-       0.105
-      ],
-      [
-       -0.125,
-       0.0752
-      ],
-      [
-       -0.1372,
-       0.0499
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.3345,
-     "to": 0.3495
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-shaft-skin",
-     "kind": "loft",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "sections": [
-      {
-       "at": [
-        0.5,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      },
-      {
-       "at": [
-        0.91,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "shaft-steel"
-    },
-    {
-     "id": "th-head-skirt",
-     "kind": "loft",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "sections": [
-      {
-       "at": [
-        1.08,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      },
-      {
-       "at": [
-        1.1,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "shaft-steel"
-    },
-    {
-     "id": "th-head-crown",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       1.1,
-       0.0
-      ],
-      [
-       1.1,
-       0.1
-      ],
-      [
-       1.112197,
-       0.098164
-      ],
-      [
-       1.122578,
-       0.092813
-      ],
-      [
-       1.131201,
-       0.08418
-      ],
-      [
-       1.138125,
-       0.0725
-      ],
-      [
-       1.143408,
-       0.058008
-      ],
-      [
-       1.147109,
-       0.040938
-      ],
-      [
-       1.149287,
-       0.021523
-      ],
-      [
-       1.15,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "region": "shaft-steel"
-    },
-    {
-     "id": "th-reflector",
-     "of": "reflector",
-     "region": "reflector-band"
-    },
-    {
-     "id": "th-lens",
-     "of": "lens",
-     "region": "beacon-led"
-    },
-    {
-     "id": "th-frame-top",
-     "kind": "extrude",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       -0.2,
-       0.18
-      ],
-      [
-       -0.198478,
-       0.187654
-      ],
-      [
-       -0.194142,
-       0.194142
-      ],
-      [
-       -0.187654,
-       0.198478
-      ],
-      [
-       -0.18,
-       0.2
-      ],
-      [
-       0.18,
-       0.2
-      ],
-      [
-       0.187654,
-       0.198478
-      ],
-      [
-       0.194142,
-       0.194142
-      ],
-      [
-       0.198478,
-       0.187654
-      ],
-      [
-       0.2,
-       0.18
-      ],
-      [
-       0.2,
-       -0.18
-      ],
-      [
-       0.198478,
-       -0.187654
-      ],
-      [
-       0.194142,
-       -0.194142
-      ],
-      [
-       0.187654,
-       -0.198478
-      ],
-      [
-       0.18,
-       -0.2
-      ],
-      [
-       -0.18,
-       -0.2
-      ],
-      [
-       -0.187654,
-       -0.198478
-      ],
-      [
-       -0.194142,
-       -0.194142
-      ],
-      [
-       -0.198478,
-       -0.187654
-      ],
-      [
-       -0.2,
-       -0.18
-      ]
-     ],
-     "plane": "yz",
-     "from": 1.25,
-     "to": 1.265,
-     "holes": [
-      [
-       [
-        -0.142,
-        0.0
-       ],
-       [
-        -0.140785,
-        0.018535
-       ],
-       [
-        -0.137161,
-        0.036752
-       ],
-       [
-        -0.131191,
-        0.054341
-       ],
-       [
-        -0.122976,
-        0.071
-       ],
-       [
-        -0.112656,
-        0.086444
-       ],
-       [
-        -0.100409,
-        0.100409
-       ],
-       [
-        -0.086444,
-        0.112656
-       ],
-       [
-        -0.071,
-        0.122976
-       ],
-       [
-        -0.054341,
-        0.131191
-       ],
-       [
-        -0.036752,
-        0.137161
-       ],
-       [
-        -0.018535,
-        0.140785
-       ],
-       [
-        0.0,
-        0.142
-       ],
-       [
-        0.018535,
-        0.140785
-       ],
-       [
-        0.036752,
-        0.137161
-       ],
-       [
-        0.054341,
-        0.131191
-       ],
-       [
-        0.071,
-        0.122976
-       ],
-       [
-        0.086444,
-        0.112656
-       ],
-       [
-        0.100409,
-        0.100409
-       ],
-       [
-        0.112656,
-        0.086444
-       ],
-       [
-        0.122976,
-        0.071
-       ],
-       [
-        0.131191,
-        0.054341
-       ],
-       [
-        0.137161,
-        0.036752
-       ],
-       [
-        0.140785,
-        0.018535
-       ],
-       [
-        0.142,
-        0.0
-       ],
-       [
-        0.140785,
-        -0.018535
-       ],
-       [
-        0.137161,
-        -0.036752
-       ],
-       [
-        0.131191,
-        -0.054341
-       ],
-       [
-        0.122976,
-        -0.071
-       ],
-       [
-        0.112656,
-        -0.086444
-       ],
-       [
-        0.100409,
-        -0.100409
-       ],
-       [
-        0.086444,
-        -0.112656
-       ],
-       [
-        0.071,
-        -0.122976
-       ],
-       [
-        0.054341,
-        -0.131191
-       ],
-       [
-        0.036752,
-        -0.137161
-       ],
-       [
-        0.018535,
-        -0.140785
-       ],
-       [
-        0.0,
-        -0.142
-       ],
-       [
-        -0.018535,
-        -0.140785
-       ],
-       [
-        -0.036752,
-        -0.137161
-       ],
-       [
-        -0.054341,
-        -0.131191
-       ],
-       [
-        -0.071,
-        -0.122976
-       ],
-       [
-        -0.086444,
-        -0.112656
-       ],
-       [
-        -0.100409,
-        -0.100409
-       ],
-       [
-        -0.112656,
-        -0.086444
-       ],
-       [
-        -0.122976,
-        -0.071
-       ],
-       [
-        -0.131191,
-        -0.054341
-       ],
-       [
-        -0.137161,
-        -0.036752
-       ],
-       [
-        -0.140785,
-        -0.018535
-       ]
-      ]
-     ],
-     "sectionFaces": [
-      "-u"
-     ],
-     "region": "cover-frame"
-    },
-    {
-     "id": "th-sleeve-skin",
-     "kind": "loft",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "sections": [
-      {
-       "at": [
-        0.015,
-        0.0,
-        0.0
-       ],
-       "rx": 0.15,
-       "ry": 0.15
-      },
-      {
-       "at": [
-        1.18,
-        0.0,
-        0.0
-       ],
-       "rx": 0.15,
-       "ry": 0.15
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-sleeve-floor",
-     "of": "sleeve-floor",
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-unit",
-     "of": "unit",
-     "region": "hydraulic-unit"
-    },
-    {
-     "id": "th-hose",
-     "of": "hose",
-     "region": "hydraulic-unit"
-    },
-    {
-     "id": "th-cylinder",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       0.007,
-       0.0
-      ],
-      [
-       0.007,
-       0.045
-      ],
-      [
-       0.045,
-       0.045
-      ],
-      [
-       0.045,
-       0.035
-      ],
-      [
-       0.932,
-       0.035
-      ],
-      [
-       0.932,
-       0.04
-      ],
-      [
-       0.964,
-       0.04
-      ],
-      [
-       0.972,
-       0.034
-      ],
-      [
-       0.972,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "region": "hydraulic-unit"
-    }
-   ],
-   "structure": [
-    {
-     "id": "member-sleeve",
-     "of": "sleeve-tube",
-     "member": "sleeve",
-     "part": "member"
-    },
-    {
-     "id": "member-shaft",
-     "of": "shaft-tube",
-     "member": "shaft",
-     "part": "member"
-    },
-    {
-     "id": "member-cylinder",
-     "of": "cyl-tube",
-     "member": "hydraulic",
-     "part": "member"
-    },
-    {
-     "id": "member-rod",
-     "of": "rod",
-     "member": "hydraulic",
-     "part": "member"
-    },
-    {
-     "id": "joint-shaft-flange",
-     "of": "shaft-flange",
-     "member": "shaft",
-     "part": "joint"
-    },
-    {
-     "id": "joint-guide",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       1.18,
-       0.102
-      ],
-      [
-       1.18,
-       0.142
-      ],
-      [
-       1.24,
-       0.142
-      ],
-      [
-       1.24,
-       0.102
-      ],
-      [
-       1.18,
-       0.102
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "member": "shaft",
-     "part": "joint"
-    },
-    {
-     "id": "joint-cyl-base",
-     "of": "cyl-base",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "joint-bracket-upper",
-     "of": "bracket-upper",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "joint-bracket-lower",
-     "of": "bracket-lower",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "support-sleeve-fixed",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       1.18,
-       0.15
-      ],
-      [
-       1.18,
-       0.168
-      ],
-      [
-       1.25,
-       0.168
-      ],
-      [
-       1.25,
-       0.15
-      ],
-      [
-       1.18,
-       0.15
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "member": "sleeve",
-     "part": "support",
-     "anchor": "sleeve-fixed"
-    },
-    {
-     "id": "mass-sleeve",
-     "kind": "ellipsoid",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.65,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "sleeve",
-     "part": "mass"
-    },
-    {
-     "id": "mass-shaft",
-     "kind": "ellipsoid",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.6,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "shaft",
-     "part": "mass"
-    },
-    {
-     "id": "mass-hydraulic",
-     "kind": "ellipsoid",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.55,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.442,
-       -0.2,
-       0.08
-      ]
-     },
-     "member": "hydraulic",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body: drawn anew for 15 mm features. The sleeve tube and a 15 mm floor, eight anchor tabs of 15 mm, the collar and one plate without the splayed edge, one seal ring for retainer and wiper; the shaft tube with a 15 mm flange, the film, the lens ring and one head casting (core and crown in one piece); rod and piston, the cylinder as foot, tube and gland, the hose, the unit as one rounded housing on two bracket plates. Bolts, buffers, drain holes, LED windows, screws, crosshead, glands, cable and conduit are below the scale.",
-     "de": "Körper: neu gezeichnet für Merkmale von 15 mm. Das Hülsenrohr und ein Boden von 15 mm, acht Ankerlaschen von 15 mm, der Kragen und eine Platte ohne geneigte Kante, ein Dichtungsring für Haltering und Abstreifer; das Schaftrohr mit einem Flansch von 15 mm, die Folie, der Linsenring und ein Kopfgussteil (Kern und Kalotte in einem Stück); Stange und Kolben, der Zylinder als Fuß, Rohr und Stopfbuchse, der Schlauch, die Einheit als ein gerundetes Gehäuse an zwei Konsolblechen. Schrauben, Puffer, Entwässerungslöcher, LED-Fenster, Traverse, Verschraubungen, Kabel und Schutzrohr liegen unter dem Maßstab."
-    },
-    {
-     "en": "Thermal: the shaft skin above the ground with the skirt and the crown of the head, the film, the lens ring, the plate above the ground, the sleeve skin with its floor, the unit housing, the hose and the cylinder.",
-     "de": "Thermisch: die Schafthaut über dem Boden mit Rand und Kalotte des Kopfes, die Folie, der Linsenring, die Platte über dem Boden, die Hülsenhaut mit Boden, das Gehäuse der Einheit, der Schlauch und der Zylinder."
-    },
-    {
-     "en": "Structure: sleeve tube, shaft tube, cylinder tube and rod as members; the guide ring in the sleeve head, the shaft flange, the cylinder foot and the two bracket plates as joints; the collar as the fixed support; three masses.",
-     "de": "Tragwerk: Hülsenrohr, Schaftrohr, Zylinderrohr und Stange als Stäbe; der Führungsring im Hülsenkopf, der Schaftflansch, der Zylinderfuß und die zwei Konsolbleche als Gelenke; der Kragen als Einspannung; drei Massen."
-    }
-   ]
-  },
-  "200": {
-   "status": "authored",
-   "denominator": 200,
-   "body": [
-    {
-     "id": "sleeve-tube",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.03,
-       0.135
-      ],
-      [
-       0.03,
-       0.15
-      ],
-      [
-       1.22,
-       0.15
-      ],
-      [
-       1.22,
-       0.135
-      ],
-      [
-       0.03,
-       0.135
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "sleeve-floor",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.15
-      ],
-      [
-       0.03,
-       0.15
-      ],
-      [
-       0.03,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "frame",
-     "kind": "extrude",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       -0.2,
-       0.18
-      ],
-      [
-       -0.198478,
-       0.187654
-      ],
-      [
-       -0.194142,
-       0.194142
-      ],
-      [
-       -0.187654,
-       0.198478
-      ],
-      [
-       -0.18,
-       0.2
-      ],
-      [
-       0.18,
-       0.2
-      ],
-      [
-       0.187654,
-       0.198478
-      ],
-      [
-       0.194142,
-       0.194142
-      ],
-      [
-       0.198478,
-       0.187654
-      ],
-      [
-       0.2,
-       0.18
-      ],
-      [
-       0.2,
-       -0.18
-      ],
-      [
-       0.198478,
-       -0.187654
-      ],
-      [
-       0.194142,
-       -0.194142
-      ],
-      [
-       0.187654,
-       -0.198478
-      ],
-      [
-       0.18,
-       -0.2
-      ],
-      [
-       -0.18,
-       -0.2
-      ],
-      [
-       -0.187654,
-       -0.198478
-      ],
-      [
-       -0.194142,
-       -0.194142
-      ],
-      [
-       -0.198478,
-       -0.187654
-      ],
-      [
-       -0.2,
-       -0.18
-      ]
-     ],
-     "plane": "yz",
-     "from": 1.22,
-     "to": 1.265,
-     "holes": [
-      [
-       [
-        -0.135,
-        0.0
-       ],
-       [
-        -0.133845,
-        0.017621
-       ],
-       [
-        -0.1304,
-        0.034941
-       ],
-       [
-        -0.124724,
-        0.051662
-       ],
-       [
-        -0.116913,
-        0.0675
-       ],
-       [
-        -0.107103,
-        0.082183
-       ],
-       [
-        -0.095459,
-        0.095459
-       ],
-       [
-        -0.082183,
-        0.107103
-       ],
-       [
-        -0.0675,
-        0.116913
-       ],
-       [
-        -0.051662,
-        0.124724
-       ],
-       [
-        -0.034941,
-        0.1304
-       ],
-       [
-        -0.017621,
-        0.133845
-       ],
-       [
-        0.0,
-        0.135
-       ],
-       [
-        0.017621,
-        0.133845
-       ],
-       [
-        0.034941,
-        0.1304
-       ],
-       [
-        0.051662,
-        0.124724
-       ],
-       [
-        0.0675,
-        0.116913
-       ],
-       [
-        0.082183,
-        0.107103
-       ],
-       [
-        0.095459,
-        0.095459
-       ],
-       [
-        0.107103,
-        0.082183
-       ],
-       [
-        0.116913,
-        0.0675
-       ],
-       [
-        0.124724,
-        0.051662
-       ],
-       [
-        0.1304,
-        0.034941
-       ],
-       [
-        0.133845,
-        0.017621
-       ],
-       [
-        0.135,
-        0.0
-       ],
-       [
-        0.133845,
-        -0.017621
-       ],
-       [
-        0.1304,
-        -0.034941
-       ],
-       [
-        0.124724,
-        -0.051662
-       ],
-       [
-        0.116913,
-        -0.0675
-       ],
-       [
-        0.107103,
-        -0.082183
-       ],
-       [
-        0.095459,
-        -0.095459
-       ],
-       [
-        0.082183,
-        -0.107103
-       ],
-       [
-        0.0675,
-        -0.116913
-       ],
-       [
-        0.051662,
-        -0.124724
-       ],
-       [
-        0.034941,
-        -0.1304
-       ],
-       [
-        0.017621,
-        -0.133845
-       ],
-       [
-        0.0,
-        -0.135
-       ],
-       [
-        -0.017621,
-        -0.133845
-       ],
-       [
-        -0.034941,
-        -0.1304
-       ],
-       [
-        -0.051662,
-        -0.124724
-       ],
-       [
-        -0.0675,
-        -0.116913
-       ],
-       [
-        -0.082183,
-        -0.107103
-       ],
-       [
-        -0.095459,
-        -0.095459
-       ],
-       [
-        -0.107103,
-        -0.082183
-       ],
-       [
-        -0.116913,
-        -0.0675
-       ],
-       [
-        -0.124724,
-        -0.051662
-       ],
-       [
-        -0.1304,
-        -0.034941
-       ],
-       [
-        -0.133845,
-        -0.017621
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "shaft-tube",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.0,
-       0.09
-      ],
-      [
-       0.0,
-       0.1
-      ],
-      [
-       0.91,
-       0.1
-      ],
-      [
-       0.91,
-       0.09
-      ],
-      [
-       0.0,
-       0.09
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "reflector",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "retro-film",
-     "role": "body",
-     "tone": 0.92,
-     "profile": [
-      [
-       0.91,
-       0.09
-      ],
-      [
-       0.91,
-       0.1
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       1.02,
-       0.09
-      ],
-      [
-       0.91,
-       0.09
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "head",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       1.02,
-       0.0
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       1.1,
-       0.1
-      ],
-      [
-       1.115856,
-       0.096759
-      ],
-      [
-       1.128519,
-       0.087407
-      ],
-      [
-       1.138125,
-       0.0725
-      ],
-      [
-       1.144815,
-       0.052593
-      ],
-      [
-       1.148727,
-       0.028241
-      ],
-      [
-       1.15,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "rod",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.85,
-     "profile": [
-      [
-       0.17,
-       0.0
-      ],
-      [
-       0.17,
-       0.018
-      ],
-      [
-       1.02,
-       0.018
-      ],
-      [
-       1.02,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "cylinder",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       0.022,
-       0.0
-      ],
-      [
-       0.022,
-       0.035
-      ],
-      [
-       0.972,
-       0.035
-      ],
-      [
-       0.972,
-       0.018
-      ],
-      [
-       0.942,
-       0.018
-      ],
-      [
-       0.942,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "unit",
-     "kind": "box",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.4,
-      0.19,
-      0.188
-     ],
-     "transform": {
-      "translation": [
-       0.492,
-       -0.265,
-       0.106
-      ]
-     }
-    },
-    {
-     "id": "bracket",
-     "kind": "extrude",
-     "bone": "hydraulic",
-     "material": "steel-sleeve",
-     "role": "detail",
-     "tone": 0.4,
-     "profile": [
-      [
-       -0.1443,
-       0.022
-      ],
-      [
-       -0.18,
-       0.022
-      ],
-      [
-       -0.18,
-       0.19
-      ],
-      [
-       -0.073,
-       0.1265
-      ],
-      [
-       -0.1014,
-       0.105
-      ],
-      [
-       -0.125,
-       0.0752
-      ],
-      [
-       -0.1372,
-       0.0499
-      ]
-     ],
-     "plane": "yz",
-     "from": 0.342,
-     "to": 0.642
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-shaft-skin",
-     "kind": "loft",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "sections": [
-      {
-       "at": [
-        0.5,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      },
-      {
-       "at": [
-        0.91,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "shaft-steel"
-    },
-    {
-     "id": "th-head-crown",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       1.08,
-       0.0
-      ],
-      [
-       1.08,
-       0.1
-      ],
-      [
-       1.1,
-       0.1
-      ],
-      [
-       1.115856,
-       0.096759
-      ],
-      [
-       1.128519,
-       0.087407
-      ],
-      [
-       1.138125,
-       0.0725
-      ],
-      [
-       1.144815,
-       0.052593
-      ],
-      [
-       1.148727,
-       0.028241
-      ],
-      [
-       1.15,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "region": "shaft-steel"
-    },
-    {
-     "id": "th-reflector",
-     "kind": "loft",
-     "bone": "shaft",
-     "material": "retro-film",
-     "role": "body",
-     "tone": 0.92,
-     "sections": [
-      {
-       "at": [
-        0.91,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      },
-      {
-       "at": [
-        1.02,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "reflector-band"
-    },
-    {
-     "id": "th-beacon",
-     "kind": "loft",
-     "bone": "shaft",
-     "material": "pc-amber",
-     "role": "body",
-     "tone": 0.7,
-     "sections": [
-      {
-       "at": [
-        1.02,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      },
-      {
-       "at": [
-        1.08,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "beacon-led"
-    },
-    {
-     "id": "th-frame",
-     "of": "frame",
-     "region": "cover-frame",
-     "sectionFaces": [
-      "-u"
-     ]
-    },
-    {
-     "id": "th-sleeve-skin",
-     "kind": "loft",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "sections": [
-      {
-       "at": [
-        0.03,
-        0.0,
-        0.0
-       ],
-       "rx": 0.15,
-       "ry": 0.15
-      },
-      {
-       "at": [
-        1.22,
-        0.0,
-        0.0
-       ],
-       "rx": 0.15,
-       "ry": 0.15
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-sleeve-floor",
-     "of": "sleeve-floor",
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-unit",
-     "of": "unit",
-     "region": "hydraulic-unit"
-    },
-    {
-     "id": "th-cylinder",
-     "of": "cylinder",
-     "region": "hydraulic-unit"
-    }
-   ],
-   "structure": [
-    {
-     "id": "member-sleeve",
-     "of": "sleeve-tube",
-     "member": "sleeve",
-     "part": "member"
-    },
-    {
-     "id": "member-shaft",
-     "of": "shaft-tube",
-     "member": "shaft",
-     "part": "member"
-    },
-    {
-     "id": "member-shaft-band",
-     "of": "reflector",
-     "member": "shaft",
-     "part": "member"
-    },
-    {
-     "id": "member-cylinder",
-     "of": "cylinder",
-     "member": "hydraulic",
-     "part": "member"
-    },
-    {
-     "id": "member-rod",
-     "of": "rod",
-     "member": "hydraulic",
-     "part": "member"
-    },
-    {
-     "id": "joint-guide",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       1.16,
-       0.1
-      ],
-      [
-       1.16,
-       0.135
-      ],
-      [
-       1.22,
-       0.135
-      ],
-      [
-       1.22,
-       0.1
-      ],
-      [
-       1.16,
-       0.1
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "member": "shaft",
-     "part": "joint"
-    },
-    {
-     "id": "joint-bracket",
-     "of": "bracket",
-     "member": "hydraulic",
-     "part": "joint"
-    },
-    {
-     "id": "support-sleeve-fixed",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       1.22,
-       0.15
-      ],
-      [
-       1.22,
-       0.18
-      ],
-      [
-       1.25,
-       0.18
-      ],
-      [
-       1.25,
-       0.15
-      ],
-      [
-       1.22,
-       0.15
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "member": "sleeve",
-     "part": "support",
-     "anchor": "sleeve-fixed"
-    },
-    {
-     "id": "mass-sleeve",
-     "kind": "ellipsoid",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.65,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "sleeve",
-     "part": "mass"
-    },
-    {
-     "id": "mass-shaft",
-     "kind": "ellipsoid",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.6,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "shaft",
-     "part": "mass"
-    },
-    {
-     "id": "mass-hydraulic",
-     "kind": "ellipsoid",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.55,
-     "radii": [
-      0.03,
-      0.03,
-      0.03
-     ],
-     "transform": {
-      "translation": [
-       0.442,
-       -0.2,
-       0.08
-      ]
-     },
-     "member": "hydraulic",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body: drawn anew for 30 mm features. The sleeve with a 15 mm wall and a 30 mm floor, collar and plate as one frame of 45 mm, the shaft tube with a 10 mm wall, the reflective band as a ring of the tube, the head with lens and crown as one piece, the rod, the cylinder as one piece, the unit as a plain block and its two bracket plates as one web. Tabs, seals, flange, piston and hose are below the scale.",
-     "de": "Körper: neu gezeichnet für Merkmale von 30 mm. Die Hülse mit 15 mm Wand und 30 mm Boden, Kragen und Platte als ein Rahmen von 45 mm, das Schaftrohr mit 10 mm Wand, das Reflexband als Ring des Rohrs, der Kopf mit Linse und Kalotte als ein Stück, die Stange, der Zylinder als ein Stück, die Einheit als schlichter Block und ihre zwei Konsolbleche als ein Steg. Laschen, Dichtungen, Flansch, Kolben und Schlauch liegen unter dem Maßstab."
-    },
-    {
-     "en": "Thermal: one skin per region (shaft above the ground and crown, band, beacon ring, frame, sleeve with floor) and the unit block with the cylinder; only the sum of the areas is compared at this scale.",
-     "de": "Thermisch: eine Haut je Region (Schaft über dem Boden und Kalotte, Band, Leuchtring, Rahmen, Hülse mit Boden) und der Block der Einheit mit dem Zylinder; in diesem Maßstab wird nur die Flächensumme verglichen."
-    },
-    {
-     "en": "Structure: sleeve tube, shaft tube, cylinder and rod as members, the guide ring and the bracket web as joints, the ring of the frame in the foundation as the fixed support, three masses.",
-     "de": "Tragwerk: Hülsenrohr, Schaftrohr, Zylinder und Stange als Stäbe, der Führungsring und der Konsolsteg als Gelenke, der Rahmenring im Fundament als Einspannung, drei Massen."
-    }
-   ]
-  },
-  "500": {
-   "status": "authored",
-   "denominator": 500,
-   "body": [
-    {
-     "id": "sleeve",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.075,
-       0.13
-      ],
-      [
-       0.075,
-       0.15
-      ],
-      [
-       1.19,
-       0.15
-      ],
-      [
-       1.19,
-       0.13
-      ],
-      [
-       0.075,
-       0.13
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "sleeve-floor",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       0.0,
-       0.0
-      ],
-      [
-       0.0,
-       0.15
-      ],
-      [
-       0.075,
-       0.15
-      ],
-      [
-       0.075,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "frame",
-     "kind": "extrude",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       -0.2,
-       0.18
-      ],
-      [
-       -0.198478,
-       0.187654
-      ],
-      [
-       -0.194142,
-       0.194142
-      ],
-      [
-       -0.187654,
-       0.198478
-      ],
-      [
-       -0.18,
-       0.2
-      ],
-      [
-       0.18,
-       0.2
-      ],
-      [
-       0.187654,
-       0.198478
-      ],
-      [
-       0.194142,
-       0.194142
-      ],
-      [
-       0.198478,
-       0.187654
-      ],
-      [
-       0.2,
-       0.18
-      ],
-      [
-       0.2,
-       -0.18
-      ],
-      [
-       0.198478,
-       -0.187654
-      ],
-      [
-       0.194142,
-       -0.194142
-      ],
-      [
-       0.187654,
-       -0.198478
-      ],
-      [
-       0.18,
-       -0.2
-      ],
-      [
-       -0.18,
-       -0.2
-      ],
-      [
-       -0.187654,
-       -0.198478
-      ],
-      [
-       -0.194142,
-       -0.194142
-      ],
-      [
-       -0.198478,
-       -0.187654
-      ],
-      [
-       -0.2,
-       -0.18
-      ]
-     ],
-     "plane": "yz",
-     "from": 1.19,
-     "to": 1.265,
-     "holes": [
-      [
-       [
-        -0.13,
-        0.0
-       ],
-       [
-        -0.128888,
-        0.016968
-       ],
-       [
-        -0.12557,
-        0.033646
-       ],
-       [
-        -0.120104,
-        0.049749
-       ],
-       [
-        -0.112583,
-        0.065
-       ],
-       [
-        -0.103136,
-        0.079139
-       ],
-       [
-        -0.091924,
-        0.091924
-       ],
-       [
-        -0.079139,
-        0.103136
-       ],
-       [
-        -0.065,
-        0.112583
-       ],
-       [
-        -0.049749,
-        0.120104
-       ],
-       [
-        -0.033646,
-        0.12557
-       ],
-       [
-        -0.016968,
-        0.128888
-       ],
-       [
-        0.0,
-        0.13
-       ],
-       [
-        0.016968,
-        0.128888
-       ],
-       [
-        0.033646,
-        0.12557
-       ],
-       [
-        0.049749,
-        0.120104
-       ],
-       [
-        0.065,
-        0.112583
-       ],
-       [
-        0.079139,
-        0.103136
-       ],
-       [
-        0.091924,
-        0.091924
-       ],
-       [
-        0.103136,
-        0.079139
-       ],
-       [
-        0.112583,
-        0.065
-       ],
-       [
-        0.120104,
-        0.049749
-       ],
-       [
-        0.12557,
-        0.033646
-       ],
-       [
-        0.128888,
-        0.016968
-       ],
-       [
-        0.13,
-        0.0
-       ],
-       [
-        0.128888,
-        -0.016968
-       ],
-       [
-        0.12557,
-        -0.033646
-       ],
-       [
-        0.120104,
-        -0.049749
-       ],
-       [
-        0.112583,
-        -0.065
-       ],
-       [
-        0.103136,
-        -0.079139
-       ],
-       [
-        0.091924,
-        -0.091924
-       ],
-       [
-        0.079139,
-        -0.103136
-       ],
-       [
-        0.065,
-        -0.112583
-       ],
-       [
-        0.049749,
-        -0.120104
-       ],
-       [
-        0.033646,
-        -0.12557
-       ],
-       [
-        0.016968,
-        -0.128888
-       ],
-       [
-        0.0,
-        -0.13
-       ],
-       [
-        -0.016968,
-        -0.128888
-       ],
-       [
-        -0.033646,
-        -0.12557
-       ],
-       [
-        -0.049749,
-        -0.120104
-       ],
-       [
-        -0.065,
-        -0.112583
-       ],
-       [
-        -0.079139,
-        -0.103136
-       ],
-       [
-        -0.091924,
-        -0.091924
-       ],
-       [
-        -0.103136,
-        -0.079139
-       ],
-       [
-        -0.112583,
-        -0.065
-       ],
-       [
-        -0.120104,
-        -0.049749
-       ],
-       [
-        -0.12557,
-        -0.033646
-       ],
-       [
-        -0.128888,
-        -0.016968
-       ]
-      ]
-     ]
-    },
-    {
-     "id": "shaft",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       0.0,
-       0.08
-      ],
-      [
-       0.0,
-       0.1
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       1.02,
-       0.08
-      ],
-      [
-       0.0,
-       0.08
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "head",
-     "kind": "revolve",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "profile": [
-      [
-       1.02,
-       0.0
-      ],
-      [
-       1.02,
-       0.1
-      ],
-      [
-       1.1,
-       0.1
-      ],
-      [
-       1.135,
-       0.085
-      ],
-      [
-       1.15,
-       0.04
-      ],
-      [
-       1.15,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ]
-    },
-    {
-     "id": "unit",
-     "kind": "box",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.55,
-     "size": [
-      0.4,
-      0.22,
-      0.188
-     ],
-     "transform": {
-      "translation": [
-       0.492,
-       -0.25,
-       0.106
-      ]
-     }
-    }
-   ],
-   "thermal": [
-    {
-     "id": "th-shaft-skin",
-     "kind": "loft",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "sections": [
-      {
-       "at": [
-        0.5,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      },
-      {
-       "at": [
-        0.91,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "shaft-steel"
-    },
-    {
-     "id": "th-reflector",
-     "kind": "loft",
-     "bone": "shaft",
-     "material": "retro-film",
-     "role": "body",
-     "tone": 0.92,
-     "sections": [
-      {
-       "at": [
-        0.91,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      },
-      {
-       "at": [
-        1.02,
-        0.0,
-        0.0
-       ],
-       "rx": 0.1,
-       "ry": 0.1
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "reflector-band"
-    },
-    {
-     "id": "th-head",
-     "of": "head",
-     "region": "beacon-led"
-    },
-    {
-     "id": "th-frame",
-     "of": "frame",
-     "region": "cover-frame",
-     "sectionFaces": [
-      "-u"
-     ]
-    },
-    {
-     "id": "th-sleeve-skin",
-     "kind": "loft",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "sections": [
-      {
-       "at": [
-        0.0,
-        0.0,
-        0.0
-       ],
-       "rx": 0.15,
-       "ry": 0.15
-      },
-      {
-       "at": [
-        1.19,
-        0.0,
-        0.0
-       ],
-       "rx": 0.15,
-       "ry": 0.15
-      }
-     ],
-     "capStart": false,
-     "capEnd": false,
-     "region": "sleeve-steel"
-    },
-    {
-     "id": "th-unit",
-     "of": "unit",
-     "region": "hydraulic-unit"
-    }
-   ],
-   "structure": [
-    {
-     "id": "member-sleeve",
-     "of": "sleeve",
-     "member": "sleeve",
-     "part": "member"
-    },
-    {
-     "id": "member-shaft",
-     "of": "shaft",
-     "member": "shaft",
-     "part": "member"
-    },
-    {
-     "id": "member-cylinder",
-     "kind": "revolve",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.7,
-     "profile": [
-      [
-       0.067,
-       0.0
-      ],
-      [
-       0.067,
-       0.0375
-      ],
-      [
-       1.667,
-       0.0375
-      ],
-      [
-       1.667,
-       0.0
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "member": "hydraulic",
-     "part": "member"
-    },
-    {
-     "id": "joint-guide",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "profile": [
-      [
-       1.115,
-       0.1
-      ],
-      [
-       1.115,
-       0.13
-      ],
-      [
-       1.19,
-       0.13
-      ],
-      [
-       1.19,
-       0.1
-      ],
-      [
-       1.115,
-       0.1
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "member": "shaft",
-     "part": "joint"
-    },
-    {
-     "id": "support-sleeve-fixed",
-     "kind": "revolve",
-     "bone": "sleeve",
-     "material": "cast-iron-frame",
-     "role": "body",
-     "tone": 0.45,
-     "profile": [
-      [
-       1.175,
-       0.15
-      ],
-      [
-       1.175,
-       0.2
-      ],
-      [
-       1.25,
-       0.2
-      ],
-      [
-       1.25,
-       0.15
-      ],
-      [
-       1.175,
-       0.15
-      ]
-     ],
-     "axis": [
-      1,
-      0,
-      0
-     ],
-     "origin": [
-      0,
-      0.0,
-      0.0
-     ],
-     "member": "sleeve",
-     "part": "support",
-     "anchor": "sleeve-fixed"
-    },
-    {
-     "id": "mass-sleeve",
-     "kind": "ellipsoid",
-     "bone": "sleeve",
-     "material": "steel-sleeve",
-     "role": "body",
-     "tone": 0.4,
-     "radii": [
-      0.04,
-      0.04,
-      0.04
-     ],
-     "transform": {
-      "translation": [
-       0.65,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "sleeve",
-     "part": "mass"
-    },
-    {
-     "id": "mass-shaft",
-     "kind": "ellipsoid",
-     "bone": "shaft",
-     "material": "steel-grey",
-     "role": "body",
-     "tone": 0.5,
-     "radii": [
-      0.04,
-      0.04,
-      0.04
-     ],
-     "transform": {
-      "translation": [
-       0.6,
-       0.0,
-       0.0
-      ]
-     },
-     "member": "shaft",
-     "part": "mass"
-    },
-    {
-     "id": "mass-hydraulic",
-     "kind": "ellipsoid",
-     "bone": "hydraulic",
-     "material": "steel-hyd",
-     "role": "body",
-     "tone": 0.55,
-     "radii": [
-      0.04,
-      0.04,
-      0.04
-     ],
-     "transform": {
-      "translation": [
-       0.442,
-       -0.2,
-       0.08
-      ]
-     },
-     "member": "hydraulic",
-     "part": "mass"
-    }
-   ],
-   "decisions": [
-    {
-     "en": "Body: drawn anew for 75 mm features and already minimal. The sleeve with a 20 mm wall and a 75 mm floor, the frame as one slab of 75 mm, the shaft as one tube with a 20 mm wall carrying the band, the head as one faceted cap, the unit as one block reaching the sleeve. Cylinder, rod, bracket, hose and every fixing are below the scale.",
-     "de": "Körper: neu gezeichnet für Merkmale von 75 mm und bereits minimal. Die Hülse mit 20 mm Wand und 75 mm Boden, der Rahmen als eine Platte von 75 mm, der Schaft als ein Rohr mit 20 mm Wand samt Band, der Kopf als eine facettierte Kappe, die Einheit als ein Block bis an die Hülse. Zylinder, Stange, Konsole, Schlauch und alle Befestigungen liegen unter dem Maßstab."
-    },
-    {
-     "en": "Thermal: one skin per region (shaft above the ground, band, the cap for the beacon ring, the frame, sleeve) and the unit block; only the sum of the areas is compared.",
-     "de": "Thermisch: eine Haut je Region (Schaft über dem Boden, Band, die Kappe für den Leuchtring, der Rahmen, Hülse) und der Block der Einheit; nur die Flächensumme wird verglichen."
-    },
-    {
-     "en": "Structure: sleeve tube and shaft tube as members, the cylinder with its rod as one column inside them (kept here although the body omits it), the guide ring as joint, the ring of the frame as the fixed support, three masses.",
-     "de": "Tragwerk: Hülsenrohr und Schaftrohr als Stäbe, der Zylinder mit Stange als eine Säule darin (hier behalten, obwohl der Körper ihn weglässt), der Führungsring als Gelenk, der Rahmenring als Einspannung, drei Massen."
-    }
-   ]
-  }
+   }
  }
 }

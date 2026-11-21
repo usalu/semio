@@ -22,6 +22,7 @@ fn box_state_language_neutral_vectors() {
             id: ids[b["id"].as_str().unwrap()],
             parent: b["parent"].as_str().map(|id| ids[id]),
             interactive: b["interactive"].as_bool().unwrap(),
+            hover_within: b["hoverWithin"].as_bool().unwrap_or(false),
             disabled: b["disabled"].as_bool().unwrap(),
             marks: b["marks"].as_array().unwrap().iter().fold(BoxStateMarks::NONE, |marks, mark| marks.with(state_of(mark))),
         }).collect();
@@ -36,13 +37,13 @@ fn box_state_language_neutral_vectors() {
 
 #[test]
 fn box_state_oracle_matches_a_walk_of_the_path() {
-    let boxes: Vec<_> = (0..6).map(|id| BoxStateInput { id, parent: id.checked_sub(1), interactive: id % 2 == 1, disabled: id == 3, marks: BoxStateMarks::NONE }).collect();
+    let boxes: Vec<_> = (0usize..6).map(|id| BoxStateInput { id, parent: id.checked_sub(1), interactive: id % 2 == 1, hover_within: id == 0, disabled: id == 3, marks: BoxStateMarks::NONE }).collect();
     for pointer in 0..6 {
         let resolved = resolve_box_states(&boxes, Some(pointer), Some(pointer)).unwrap();
         let hovered = (0..=pointer).rev().find(|&id| boxes[id].interactive && !boxes[id].disabled);
         let focused = (0..=pointer).rev().find(|&id| boxes[id].interactive);
         for id in 0..6 {
-            assert_eq!(resolved[id], own_box_state(BoxStateMarks::NONE, hovered == Some(id), focused == Some(id)));
+            assert_eq!(resolved[id], own_box_state(BoxStateMarks::NONE, hovered == Some(id) || boxes[id].hover_within && id <= pointer, focused == Some(id)));
             assert!(resolved[id] == SharedBorderState::Normal || id <= pointer);
         }
     }
@@ -50,7 +51,7 @@ fn box_state_oracle_matches_a_walk_of_the_path() {
 
 #[test]
 fn box_state_rejects_invalid_trees() {
-    let at = |id, parent| BoxStateInput { id, parent, interactive: true, disabled: false, marks: BoxStateMarks::NONE };
+    let at = |id, parent| BoxStateInput { id, parent, interactive: true, hover_within: false, disabled: false, marks: BoxStateMarks::NONE };
     assert_eq!(resolve_box_states(&[at(1, None), at(1, None)], None, None), Err(BoxStateError::DuplicateId));
     assert_eq!(resolve_box_states(&[BoxStateInput { interactive: false, ..at(1, Some(9)) }], Some(1), None), Err(BoxStateError::UnknownBox));
     assert_eq!(resolve_box_states(&[at(1, None)], Some(7), None), Err(BoxStateError::UnknownBox));

@@ -3,19 +3,57 @@
 //! Holds the `🔖️SpaceRunner` region of the module; the root re-exports its items.
 
 use super::*;
+use super::media::media_from_document_with_type;
+use workflow::WorkflowOutputBinding;
 
 //#region 🔖️SpaceRunner
 /// 📊️ What actually happened in one `run()` call — which nodes were recomputed and which were left
-/// untouched because neither their document, inputs, nor config changed.
+/// untouched because their fingerprints matched and all selected output media were available.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RunReport {
     pub recomputed: Vec<String>,
     pub clean: Vec<String>,
 }
 
+fn selected_outputs<'a>(graph: &'a Workflow, bindings: &'a [WorkflowOutputBinding]) -> HashMap<&'a str, BTreeSet<&'a str>> {
+    let mut ports: HashMap<_, BTreeSet<_>> = graph.nodes.iter().map(|node| {
+        let required = node.outputs.iter().filter(|port| port.spec.required).map(|port| port.id.as_str()).collect();
+        (node.id.as_str(), required)
+    }).collect();
+    for edge in &graph.edges {
+        ports.entry(edge.source_node_id.as_str()).or_default().insert(edge.source_port_id.as_str());
+    }
+    for binding in bindings {
+        if let Some(selected) = ports.get_mut(binding.node_id.as_str()) {
+            selected.insert(binding.port_id.as_str());
+        }
+    }
+    ports
+}
+
+fn output_selection_changed(record: &RunNodeRecord, selected: &BTreeSet<&str>) -> bool {
+    record.output_fingerprints.len() != selected.len()
+        || record.output_fingerprints.iter().any(|entry| !selected.contains(entry.port_id.as_str()))
+}
+
+fn matches_node_inputs(record: &RunNodeRecord, document: &str, config: &str, inputs: &BTreeMap<String, String>, selected: &BTreeSet<&str>) -> bool {
+    record.document_fingerprint == document
+        && record.config_fingerprint == config
+        && record.input_fingerprints.len() == inputs.len()
+        && record.input_fingerprints.iter().all(|entry| inputs.get(&entry.port_id) == Some(&entry.fingerprint))
+        && !output_selection_changed(record, selected)
+}
+
+#[derive(Default)]
+struct PendingOutput {
+    consumers: usize,
+    value: Option<(Media, String)>,
+}
+
 /// 🩺️ Computes which nodes `SpaceRunner::run` would recompute, without instantiating a single host
-/// — the `--dry` plan. Reuses exactly the dirty check `run` applies, so the plan can never drift from
-/// what an actual run would do. `documents`/`configs` map a node's `artifact_ref`/`config_ref` string
+/// — the `--dry` plan. It compares fingerprints from the prior run. Execution can recompute extra
+/// nodes when selected media are missing or a recomputed upstream fingerprint changes.
+/// `documents`/`configs` map a node's `artifact_ref`/`config_ref` string
 /// to its current `(pack, spr)` artifact bytes — missing/absent means "never persisted".
 /// `prior_node_records` is the PRIOR SEALED `semio_framework_artifact_workflow_run::RunArtifact.node_records`, keyed by node id
 /// (empty for a first-ever run — every node then plans as recomputed).
@@ -25,11 +63,13 @@ pub async fn plan(
     configs: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
     parameter_values: &[RunParameterValue],
     parameter_bindings: &[WorkflowParameterBinding],
+    output_bindings: &[WorkflowOutputBinding],
     prior_node_records: &BTreeMap<String, RunNodeRecord>,
 ) -> Result<RunReport, RunError> {
     validate_edge_kinds(graph).await?;
     let order = topological_order(graph)?;
     let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+    let selected = selected_outputs(graph, output_bindings);
     let mut incoming: HashMap<&str, Vec<&WorkflowEdge>> = HashMap::new();
     for edge in &graph.edges {
         incoming.entry(edge.target_node_id.as_str()).or_default().push(edge);
@@ -45,28 +85,22 @@ pub async fn plan(
             let fingerprint = prior_node_records.get(&edge.source_node_id).and_then(|record| record.output_fingerprints.iter().find(|entry| entry.port_id == edge.source_port_id)).map(|entry| entry.fingerprint.clone()).unwrap_or_default();
             input_fingerprints.insert(edge.target_port_id.clone(), fingerprint);
         }
-        let dirty = match prior_node_records.get(node_id.as_str()) {
-            None => true,
-            Some(record) => {
-                let previous_inputs: BTreeMap<String, String> = record.input_fingerprints.iter().map(|entry| (entry.port_id.clone(), entry.fingerprint.clone())).collect();
-                record.document_fingerprint != document_fingerprint || previous_inputs != input_fingerprints || record.config_fingerprint != config_fingerprint
-            }
-        };
-        if dirty {
-            report.recomputed.push(node_id.clone());
-        } else {
+        if prior_node_records.get(node_id.as_str()).is_some_and(|record| matches_node_inputs(record, &document_fingerprint, &config_fingerprint, &input_fingerprints, &selected[node.id.as_str()])) {
             report.clean.push(node_id.clone());
+        } else {
+            report.recomputed.push(node_id.clone());
         }
     }
     Ok(report)
 }
 
-/// 🕸️ Computes one studio's workflow against an `AppChannelHost`. Node dirtiness is decided purely
-/// from the PRIOR SEALED run's `semio_framework_artifact_workflow_run::RunNodeRecord`: the document's own fingerprint (did the
+/// 🕸️ Computes one studio's workflow against an `AppChannelHost`. Node reuse requires available
+/// media for every selected output and matching fingerprints from the prior sealed
+/// `semio_framework_artifact_workflow_run::RunNodeRecord`: the document's own fingerprint (did the
 /// app's document change since last run — e.g. a UI edit), its resolved input fingerprints (did
 /// anything upstream change), and its config's fingerprint (folding in any bound `--param` overlay —
-/// see `node_parameter_overlay_bytes`). A clean node is never opened at all; its cached output
-/// fingerprints feed straight into its consumers. `run()` is READONLY over `documents`/`configs` — see
+/// see `node_parameter_overlay_bytes`). Cached outputs feed directly into consumers, and the runner
+/// holds connected outputs until their last consumer. `run()` is READONLY over `documents`/`configs` — see
 /// this crate's module doc — every byte it produces lands in the caller-supplied `RunSink` instead.
 // 🔀️ `B` is the pluggable `BlobStore` backend — dedyn-fw-os-misc, R11(a): `BlobStore` has 5 impls
 // spread across independently-owned modules/crates (`🏪️store::NoBlobStore`/`FolderEventLogStorage`,
@@ -155,7 +189,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
     /// establishes the instance, via `Event::InstanceOpen` on the reactor ABI, not a wire command),
     /// `LoadConfig` and the admission of the node's whole-document load in one batched exchange; the
     /// load then runs to its acknowledged terminal one poll per exchange ([`Self::drive_document_load`]);
-    /// then one `MediaIn` per resolved input, one `MediaOut`+`MediaFingerprint` pair per output port,
+    /// then one `MediaIn` per resolved input and media export for each selected output,
     /// `ReadDocument` and finally `ReadConfig` to persist whatever the imports mutated on either artifact
     /// (see this file's header doc: "importing media is emitting operations") in a second batched
     /// exchange. A structured (`Document` wire) input closes its own import batch
@@ -171,6 +205,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         document: &(Vec<u8>, Vec<u8>),
         config: &(Vec<u8>, Vec<u8>),
         input_media: &BTreeMap<String, Media>,
+        selected: &BTreeSet<&str>,
     ) -> Result<((Vec<u8>, Vec<u8>), (Vec<u8>, Vec<u8>), BTreeMap<String, (Media, String)>), RunError> {
         if self.cancel.is_cancelled().await {
             return Err(RunError::Cancelled);
@@ -212,23 +247,28 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
 
         let mut commands = Vec::new();
         let mut media_in_seqs = Vec::with_capacity(input_media.len());
-        for (port, media) in input_media {
+        for (port_id, media) in input_media {
+            let port = node.inputs.iter().find(|port| &port.id == port_id)
+                .ok_or_else(|| RunError::Host(format!("node `{}` has no input port `{port_id}`", node.id)))?;
             let (descriptor, data) = media_to_artifact(media, self.blob_store.as_ref()).await?;
             let this_seq = next_seq();
-            commands.push(AppCommand::MediaIn { seq: this_seq, port: port.clone(), descriptor, data });
+            commands.push(AppCommand::MediaIn { seq: this_seq, port: port.spec.id.clone(), descriptor, data });
             media_in_seqs.push(this_seq);
             if matches!(media.payload, MediaPayload::Structured { .. }) {
                 self.import_media_batch(&ctx, handle, node, std::mem::take(&mut commands), std::mem::take(&mut media_in_seqs), &mut next_seq).await?;
             }
         }
 
-        let mut output_seqs = Vec::with_capacity(node.outputs.len());
-        for port in &node.outputs {
+        let mut output_seqs = Vec::with_capacity(selected.len());
+        for port in node.outputs.iter().filter(|port| selected.contains(port.id.as_str())) {
             let media_out_seq = next_seq();
-            commands.push(AppCommand::MediaOut { seq: media_out_seq, port: port.id.clone(), request: Vec::new() });
-            let fingerprint_seq = next_seq();
-            commands.push(AppCommand::MediaFingerprint { seq: fingerprint_seq, port: port.id.clone() });
-            output_seqs.push((port.id.clone(), media_out_seq, fingerprint_seq));
+            commands.push(AppCommand::MediaOut { seq: media_out_seq, port: port.spec.id.clone(), request: Vec::new() });
+            let fingerprint_seq = (port.spec.id != "artifact:out").then(|| {
+                let seq = next_seq();
+                commands.push(AppCommand::MediaFingerprint { seq, port: port.spec.id.clone() });
+                seq
+            });
+            output_seqs.push((port, media_out_seq, fingerprint_seq));
         }
 
         let read_artifact_seq = next_seq();
@@ -246,16 +286,23 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         }
 
         let mut outputs = BTreeMap::new();
-        for (port_id, media_out_seq, fingerprint_seq) in &output_seqs {
-            let media = match reply_to(*media_out_seq)? {
-                AppFrame::Media { descriptor, data, .. } => media_from_document(descriptor, data.clone(), self.blob_store.as_ref()).await?,
+        for (port, media_out_seq, fingerprint_seq) in output_seqs {
+            let port_id = &port.id;
+            let media = match reply_to(media_out_seq)? {
+                AppFrame::Media { descriptor, data, .. } => {
+                    let document_type = (port.spec.id == "artifact:out").then_some(port.spec.media_type);
+                    media_from_document_with_type(descriptor, data.clone(), self.blob_store.as_ref(), document_type).await?
+                }
                 AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("failed to produce media on `{port_id}`"), fault, report))),
                 other => return Err(RunError::Host(format!("`{}` sent an unexpected frame for media-out `{port_id}`: {other:?}", node.app_id))),
             };
-            let fingerprint = match reply_to(*fingerprint_seq)? {
-                AppFrame::MediaFingerprint { fingerprint, .. } => decode_fingerprint_wire(fingerprint)?,
-                AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("failed to fingerprint `{port_id}`"), fault, report))),
-                other => return Err(RunError::Host(format!("`{}` sent an unexpected frame for media-fingerprint `{port_id}`: {other:?}", node.app_id))),
+            let fingerprint = match fingerprint_seq {
+                None => MediaFingerprint::of(&media).0,
+                Some(seq) => match reply_to(seq)? {
+                    AppFrame::MediaFingerprint { fingerprint, .. } => decode_fingerprint_wire(fingerprint)?,
+                    AppFrame::Error { fault, report, .. } => return Err(RunError::Host(dispatch_error_message(&node.app_id, &format!("failed to fingerprint `{port_id}`"), fault, report))),
+                    other => return Err(RunError::Host(format!("`{}` sent an unexpected frame for media-fingerprint `{port_id}`: {other:?}", node.app_id))),
+                },
             };
             outputs.insert(port_id.clone(), (media, fingerprint));
         }
@@ -342,6 +389,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         configs: &BTreeMap<String, (Vec<u8>, Vec<u8>)>,
         parameter_values: &[RunParameterValue],
         parameter_bindings: &[WorkflowParameterBinding],
+        output_bindings: &[WorkflowOutputBinding],
         prior_node_records: &BTreeMap<String, RunNodeRecord>,
         cache: &mut dyn MediaCache,
         sink: &mut RunSink,
@@ -349,14 +397,16 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         validate_edge_kinds(graph).await?;
         let order = topological_order(graph)?;
         let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+        let selected = selected_outputs(graph, output_bindings);
         let mut incoming: HashMap<&str, Vec<&WorkflowEdge>> = HashMap::new();
+        let mut pending_outputs: HashMap<&str, HashMap<&str, PendingOutput>> = HashMap::new();
         for edge in &graph.edges {
             incoming.entry(edge.target_node_id.as_str()).or_default().push(edge);
+            pending_outputs.entry(edge.source_node_id.as_str()).or_default().entry(edge.source_port_id.as_str()).or_default().consumers += 1;
         }
 
         let mut report = RunReport::default();
         let mut live: HashMap<String, u32> = HashMap::new();
-        let mut current_run_records: BTreeMap<String, RunNodeRecord> = BTreeMap::new();
 
         for node_id in &order {
             let node = *node_by_id.get(node_id.as_str()).ok_or_else(|| RunError::UnknownNode(node_id.clone()))?;
@@ -365,25 +415,32 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
             let (document_fingerprint, config_fingerprint) = node_fingerprints(node_id, &document.1, &config.1, parameter_bindings, parameter_values);
 
             let mut input_fingerprints: BTreeMap<String, String> = BTreeMap::new();
+            let mut inputs = Vec::new();
             for edge in incoming.get(node_id.as_str()).into_iter().flatten() {
-                let fingerprint = current_run_records.get(&edge.source_node_id).and_then(|record| record.output_fingerprints.iter().find(|entry| entry.port_id == edge.source_port_id)).map(|entry| entry.fingerprint.clone()).unwrap_or_default();
+                let (media, fingerprint) = pending_outputs.get_mut(edge.source_node_id.as_str()).and_then(|ports| ports.get_mut(edge.source_port_id.as_str())).and_then(|output| {
+                    output.consumers -= 1;
+                    if output.consumers == 0 { output.value.take() } else { output.value.clone() }
+                }).ok_or_else(|| RunError::Host(format!("upstream node `{}` produced no output on port `{}`", edge.source_node_id, edge.source_port_id)))?;
                 input_fingerprints.insert(edge.target_port_id.clone(), fingerprint);
+                inputs.push((edge, media));
             }
 
-            let previous = prior_node_records.get(node_id.as_str());
-            let dirty = match previous {
-                None => true,
-                Some(record) => {
-                    let previous_inputs: BTreeMap<String, String> = record.input_fingerprints.iter().map(|entry| (entry.port_id.clone(), entry.fingerprint.clone())).collect();
-                    record.document_fingerprint != document_fingerprint || previous_inputs != input_fingerprints || record.config_fingerprint != config_fingerprint
-                }
-            };
-
-            if !dirty {
+            let cached = prior_node_records.get(node_id.as_str())
+                .filter(|record| matches_node_inputs(record, &document_fingerprint, &config_fingerprint, &input_fingerprints, &selected[node.id.as_str()]))
+                .and_then(|record| {
+                    let outputs = record.output_fingerprints.iter().map(|entry| {
+                        cache.get(&MediaFingerprint(entry.fingerprint.clone())).map(|media| (entry, media))
+                    }).collect::<Option<Vec<_>>>()?;
+                    Some((record, outputs))
+                });
+            if let Some((record, outputs)) = cached {
                 report.clean.push(node_id.clone());
-                let previous_record = previous.expect("dirty=false implies a prior record exists").clone();
-                let node_record = RunNodeRecord { status: RunNodeStatus::CacheHit, ..previous_record };
-                current_run_records.insert(node_id.clone(), node_record.clone());
+                for (entry, media) in outputs {
+                    if let Some(output) = pending_outputs.get_mut(node.id.as_str()).and_then(|ports| ports.get_mut(entry.port_id.as_str())) {
+                        output.value = Some((media, entry.fingerprint.clone()));
+                    }
+                }
+                let node_record = RunNodeRecord { status: RunNodeStatus::CacheHit, ..record.clone() };
                 sink.record(RunMutation::FinishRunNode(FinishRunNode { node_record, index: None })).await?;
                 continue;
             }
@@ -391,26 +448,13 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
             sink.record(RunMutation::StartRunNode(StartRunNode { node_id: node_id.clone() })).await?;
 
             let mut input_media: BTreeMap<String, Media> = BTreeMap::new();
-            for edge in incoming.get(node_id.as_str()).into_iter().flatten() {
-                let fingerprint = MediaFingerprint(input_fingerprints.get(&edge.target_port_id).cloned().unwrap_or_default());
-                let media = match cache.get(&fingerprint) {
-                    Some(media) => media,
-                    None => {
-                        let source_node = *node_by_id.get(edge.source_node_id.as_str()).ok_or_else(|| RunError::UnknownNode(edge.source_node_id.clone()))?;
-                        let source_document = documents.get(&source_node.artifact_ref).cloned().unwrap_or_default();
-                        let source_config = configs.get(&source_node.config_ref).cloned().unwrap_or_default();
-                        let (_source_document, _source_config, source_outputs) = self.compute_node(&mut live, source_node, &source_document, &source_config, &BTreeMap::new()).await?;
-                        let (media, _fresh_fingerprint) = source_outputs.get(&edge.source_port_id).cloned().ok_or_else(|| RunError::Host(format!("upstream node `{}` produced no output on port `{}`", edge.source_node_id, edge.source_port_id)))?;
-                        cache.put(&fingerprint, &media);
-                        media
-                    }
-                };
+            for (edge, media) in inputs {
                 let converted = convert_media(&edge.contract, media)?;
                 input_media.insert(edge.target_port_id.clone(), converted);
             }
 
             let started_at = std::time::Instant::now();
-            let (mutated_document, mutated_config, outputs) = self.compute_node(&mut live, node, &document, &config, &input_media).await?;
+            let (mutated_document, mutated_config, outputs) = self.compute_node(&mut live, node, &document, &config, &input_media, &selected[node.id.as_str()]).await?;
             let duration_ms = started_at.elapsed().as_secs_f64() * 1000.0;
 
             sink.write_node_artifact(node_id, mutated_document.0, mutated_document.1);
@@ -418,10 +462,13 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
 
             let mut output_fingerprints = Vec::new();
             let mut run_outputs = Vec::new();
-            for (port_id, (media, fingerprint)) in &outputs {
+            for (port_id, (media, fingerprint)) in outputs {
                 output_fingerprints.push(PortFingerprint { port_id: port_id.clone(), fingerprint: fingerprint.clone() });
-                cache.put(&MediaFingerprint(fingerprint.clone()), media);
+                cache.put(&MediaFingerprint(fingerprint.clone()), &media);
                 run_outputs.push(RunOutputArtifact { port_id: port_id.clone(), artifact_id: format!("cache/media/{fingerprint}"), path: format!("cache/media/{fingerprint}.json") });
+                if let Some(output) = pending_outputs.get_mut(node.id.as_str()).and_then(|ports| ports.get_mut(port_id.as_str())) {
+                    output.value = Some((media, fingerprint));
+                }
             }
             let node_record = RunNodeRecord {
                 node_id: node_id.clone(),
@@ -433,7 +480,6 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
                 outputs: run_outputs,
                 duration_ms,
             };
-            current_run_records.insert(node_id.clone(), node_record.clone());
             sink.record(RunMutation::FinishRunNode(FinishRunNode { node_record, index: None })).await?;
         }
 

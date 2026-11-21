@@ -133,9 +133,10 @@ pub fn evaluate_case(entry_id: &str, case: &Case) -> Vec<CheckResult> {
         Ok(outcomes) => outcomes
             .into_iter()
             .map(|o| {
-                let basis = if o.basis.is_empty() { String::new() } else { format!(" Unverified NDP basis: {}.", o.basis.join(", ")) };
-                let basis_de = if o.basis.is_empty() { String::new() } else { format!(" Ungeprüfte NDP-Grundlage: {}.", o.basis.join(", ")) };
-                let b = o.basis.iter().copied().chain(read.iter().copied()).fold(base(&o.key, &format!("{} – {}", e.en, o.en), &format!("{} – {}", e.de, o.de)).explanation(copy(&format!("{}{basis}", o.steps), &format!("{}{basis_de}", o.steps_de))), |b, id| b.ndp(id));
+                let b = base(&o.key, &format!("{} – {}", e.en, o.en), &format!("{} – {}", e.de, o.de))
+                    .explanation(copy(&o.steps, &o.steps_de))
+                    .ndps(&o.basis)
+                    .ndps(&read);
                 match o.mode {
                     Mode::Info => b.minimum(Quantity::new(o.kind, o.value), Quantity::new(o.kind, info_floor(o.value))).build(),
                     Mode::Warn | Mode::Limit => {

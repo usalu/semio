@@ -1,6 +1,5 @@
 //! 🪚️ Process 3d play app — the workpiece window: the 3D world view of the processed stock, plus the
 //! process-timeline engagement (cursor stepper + command-line input).
-use crate::windows::workpiece;
 use semio_framework::kernel::Effect;
 
 use semio_s_artifact_process_process3d_config::Process3dConfig;
@@ -25,6 +24,9 @@ use semio_plugin::WindowKindDefinition;
 use semio_plugin::WindowMeasure;
 use semio_plugin::WindowOptions;
 use semio_plugin::WorldSunConfig;
+
+#[path = "👆️placement/🦀️.rs"]
+pub mod placement;
 
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_WINDOW_MAIN: &str = "process-workpiece";
@@ -78,7 +80,7 @@ fn process3d_selection_json(active_utility: &str, selected: &[String]) -> String
     let mut value: semio_framework::DslValue = json::from_json_str(&world3d_selection_json("rectangle", selected, None), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework::DslValue::Object(Vec::new()));
     if let semio_framework::DslValue::Object(entries) = &mut value {
         entries.retain(|(key, _)| key != "engagementSessionActive" && key != "faceDragActive");
-        entries.push(("engagementSessionActive".to_string(), semio_framework::DslValue::Bool(active_utility != "select")));
+        entries.push(("engagementSessionActive".to_string(), semio_framework::DslValue::Bool(placement::placement_kind(active_utility).is_some())));
         entries.push(("faceDragActive".to_string(), semio_framework::DslValue::Bool(active_utility == "select")));
     }
     json::to_json_string(&value)
@@ -197,6 +199,11 @@ fn preview_readout(snapshot: &Process3dSnapshot, resolved_up_to: Option<usize>) 
 
 //#region 🔖️Render
 pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String]) -> UiAssemblyResult<BuiltNode> {
+    render_with_placement(snapshot, config, active_utility, selected_ids, None)
+}
+
+/// 👆️ Renders the same workpiece with an optional local placement wireframe.
+pub fn render_with_placement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_utility: &str, selected_ids: &[String], position: Option<[f64; 3]>) -> UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = preview_payload_cached(snapshot, config.resolved_up_to);
     let selected = if selected_ids.contains(&snapshot.stock_id) && instances_json != "[]" { std::slice::from_ref(&snapshot.stock_id) } else { &[] };
     let mut scene = world3d_scene(
@@ -206,9 +213,10 @@ pub fn render(snapshot: &Process3dSnapshot, config: &Process3dConfig, active_uti
         process3d_selection_json(active_utility, selected),
         &config_sun(config),
     );
+    scene.engagement_preview_json = position.and_then(|position| placement::preview_json(snapshot, active_utility, position));
     scene.domain_id = Some(PROCESS3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(PROCESS3D_GRANULARITY_OBJECT.into());
-    scene_surface(PROCESS_3D_PLAY_WINDOW_MAIN, SurfaceKind::World3d, &scene)
+    scene_surface(PROCESS_3D_PLAY_WINDOW_MAIN, semio_plugin::app::SurfaceKind::World3d, &scene)
 }
 //#endregion 🔖️Render
 
@@ -226,7 +234,7 @@ pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active
         (None, false) => "Preview failed".into(),
     };
     WindowEngagement {
-        session_active: Some(active_utility != "select"),
+        session_active: Some(placement::placement_kind(active_utility).is_some()),
         options: None,
         input: Some(WindowEngagementInput {
             id: Some("process3d-engagement".into()),
@@ -261,9 +269,11 @@ pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active
 //#endregion 🧪️Tests
 
 //#region 🔖️Constants
-/// 🧰️ Host effect that programmatically switches the workpiece window's active utility. Shared by
-/// `🎮️commands/🎛️engagement` and `🎮️commands/🌍️world`.
-pub fn set_active_utility_effect(utility: &str) -> Effect {
-    Effect::SetActiveUtility { window_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
+/// 🧰️ Switches the utility of the exact Workpiece addressed by the host.
+pub fn set_active_utility_effect(view: Option<&semio_plugin::ViewModel>, utility: &str) -> Option<Effect> {
+    let view = view?;
+    let id = view.window_id.as_deref()?;
+    view.window_instances.iter().any(|window| window.id == id && window.window_kind_id == PROCESS_3D_PLAY_WINDOW_MAIN)
+        .then(|| Effect::SetActiveUtility { window_id: id.into(), utility_id: utility.into() })
 }
 //#endregion 🔖️Constants

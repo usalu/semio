@@ -8,7 +8,16 @@ const ROW_LIMIT:usize=isize::MAX as usize;
 /// 🧾️ Reference declarations keep their own value; native declarations expose one authenticated original shared source.
 pub enum RegisteredAppDefinition{Reference(AppDefinition),Original(OriginalAppDefinition)}
 impl RegisteredAppDefinition{
- pub fn declared(mut definition:AppDefinition,native:bool)->Self{if !native{return Self::Reference(definition)}for action in semio_framework::interaction_action_definitions(&definition){if !definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|w|w.actions.iter())).any(|row|row.id==action.id){definition.actions.push(action)}}Self::Original(OriginalAppDefinition::new(definition))}
+ pub fn declared(mut definition:AppDefinition,native:bool)->Self{
+  if !native{return Self::Reference(definition)}
+  let has_action=|definition:&AppDefinition,id:&str|definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window|window.actions.iter())).any(|row|row.id==id);
+  if !definition.interactions.is_empty()&&semio_framework::InteractionVerb::ALL.iter().any(|verb|!has_action(&definition,verb.action_id())){
+   for action in semio_framework::interaction_action_definitions(&definition){
+    if !has_action(&definition,&action.id){definition.actions.push(action)}
+   }
+  }
+  Self::Original(OriginalAppDefinition::new(definition))
+ }
  pub fn commit_producer(&mut self){if let Self::Original(owner)=self{owner.committed=true;}}
  pub fn reference_mut(&mut self)->Option<&mut AppDefinition>{match self{Self::Reference(value)=>Some(value),Self::Original(_)=>None}}
  pub fn original_source(&self)->Option<RegisteredDefinitionSource<'_>>{match self{Self::Original(owner)=>owner.source.as_ref().map(|original|RegisteredDefinitionSource{original,committed:owner.committed}),Self::Reference(_)=>None}}

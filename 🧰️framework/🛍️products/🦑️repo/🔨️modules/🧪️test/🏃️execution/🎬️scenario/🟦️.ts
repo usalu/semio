@@ -9,6 +9,9 @@ import { scriptInvocationEnvironment,requireIssuedResourceControlInvocationV1,wi
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution";
 import { rmSync, writeFileSync } from "node:fs";
+import { launchRepositoryCargoV1, readRepositoryCargoLaunchV1 } from "@semio-tech/repo-lib/cargo";
+import { readBuildMode } from "@semio-tech/process/build-mode";
+import { requireNativeStoragePathV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 export type PhaseOutcome = Readonly<{ results: TestResult[]; problems: string[] }>;
 
@@ -24,20 +27,44 @@ export async function executeOne(repoRoot: string, discovered: DiscoveredCase, l
   rmSync(plan.resultsPath, { force: true });
   const host = materializeHost(repoRoot, discovered, role, implementation, planPath, plan.resultsPath);
   if (host.problems.length > 0) return { results: [], problems: [...problems, ...host.problems] };
-  let command = host.command;
-  const capture=(command:string,args:readonly string[],budgetMs:number)=>withRequestedIssuedResourceControlV1(phaseControl,budgetMs,control=>withIssuedResourceOperationV1(control,()=>captureOwnedCommandResultV1(command,args,host.cwd,{control,env:scriptInvocationEnvironment(invocation,repositoryTestArtifactEnvironmentV1(repoRoot,host.env)),output:{maximumBytes:16777216,maximumLines:65536}})));
-  if (host.preparation !== undefined) {
-    const prepared = await capture(host.preparation.command,host.preparation.args,buildBudgetMs());
-    if ((prepared.status ?? 1) !== 0) {
-      problems.push(`${discovered.caseDir}: ${implementation} ${role} host preparation exited ${prepared.status}`);
-      if (prepared.stdout.trim() !== "") problems.push(prepared.stdout.trimEnd());
-      if (prepared.stderr.trim() !== "") problems.push(prepared.stderr.trimEnd());
-      return { results: [], problems };
-    }
-    command = host.preparation.executableFromStdout(prepared.stdout) ?? "";
-    if (command === "") return { results: [], problems: [...problems, `${discovered.caseDir}: ${implementation} ${role} host preparation emitted no executable`] };
+  const environment = repositoryTestArtifactEnvironmentV1(repoRoot, host.env);
+  const limits = { maximumBytes: 16777216, maximumLines: 65536 };
+  const capture = (command: string, parent: ResourceLeaseControl) =>
+    withRequestedIssuedResourceControlV1(parent, testLevelBudgetMs(level), control =>
+      withIssuedResourceOperationV1(control, () => captureOwnedCommandResultV1(command, host.args, host.cwd, {
+        control,
+        env: scriptInvocationEnvironment(invocation, environment),
+        output: limits,
+      })));
+  const preparation = host.preparation;
+  let probe;
+  if (preparation === undefined) {
+    probe = await capture(host.command, phaseControl);
+  } else {
+    const mode = readBuildMode(environment.SEMIO_BUILD_MODE);
+    const request = readRepositoryCargoLaunchV1(["--store=shared", `--configuration=${mode}`, "--", ...preparation.args], environment);
+    probe = await launchRepositoryCargoV1(invocation, phaseControl, repoRoot, request, host.cwd, environment, {
+      maximumMilliseconds: buildBudgetMs(),
+      output: "capture",
+      limits,
+      consume: async (prepared, context) => {
+        if (prepared.status !== 0 || prepared.signal !== null) {
+          problems.push(`${discovered.caseDir}: ${implementation} ${role} host preparation exited ${prepared.status ?? prepared.signal}`);
+          if (prepared.stdout.trim() !== "") problems.push(prepared.stdout.trimEnd());
+          if (prepared.stderr.trim() !== "") problems.push(prepared.stderr.trimEnd());
+          return null;
+        }
+        const executable = preparation.executableFromStdout(prepared.stdout);
+        if (executable === null) {
+          problems.push(`${discovered.caseDir}: ${implementation} ${role} host preparation emitted no executable`);
+          return null;
+        }
+        const command = requireNativeStoragePathV1(context.store.root, executable);
+        return capture(command, context.control);
+      },
+    });
+    if (probe === null) return { results: [], problems };
   }
-  const probe = await capture(command,host.args,testLevelBudgetMs(level));
   if (probe.stdout.trim() !== "") console.log(probe.stdout.trimEnd());
   const { results, problems: readProblems } = readResults(plan.resultsPath);
   if ((probe.status ?? 1) !== 0 && results.length === 0) {

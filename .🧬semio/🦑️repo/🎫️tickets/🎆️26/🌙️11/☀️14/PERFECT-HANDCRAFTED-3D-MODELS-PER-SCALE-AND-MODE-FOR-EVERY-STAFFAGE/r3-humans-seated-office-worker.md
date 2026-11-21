@@ -91,3 +91,60 @@ Final check: `volumes-check.ts --product` silhouette IoU elevation / front / pla
 - The left hand behind the head is a plate in 2D; in the side elevation of that pose it is a ragged outline.
 - Chair, desk and notebook dimensions are from my knowledge of the standards and typical products, not from a looked-up datasheet. Desk depth and width (780 × 600) were kept from the asset; a full EN 527-1 work desk would be wider.
 - Tests and fixtures that embed this asset were not regenerated or run.
+
+## Round 5 handcraft
+
+2026-11-21. Brief `r5-brief.md`. The round-3 scripts (`r3-seated-office-worker-*.ts`) still reproduced the catalog byte for byte at the start, so the model was reworked in them at the root (`-s50.ts`, `-coarse.ts`, `-lists.ts`); new round-5 tools shared with the seated reader: `r5-seated-measure.ts`, `r5-seated-look.sh`, `r5-seated-montage.ts`.
+
+### Reference table (modelled to) and model vs reference, 1:50, rest frames (`bun r5-seated-measure.ts office --rest`)
+
+| quantity | reference | model | deviation | source |
+|---|---|---|---|---|
+| sitting height (seat top to vertex) | 0.925 | 0.940 (round 4: 0.928) | +1.6 % | DIN 33402-2 m P50 0.907 at 1.75 m, scaled to 1.78 m |
+| head height chin to vertex (H/7.5) | 0.237 | 0.238 (round 4: 0.249, +4.9 %) | +0.4 % | brief; ISO 7250 m P50 |
+| head breadth over the hair | 0.160 | 0.159 (round 4: 0.171, +6.9 %) | -0.6 % | ISO 7250 m P50 0.155 + hair |
+| shoulder joint above the seat top | 0.615 | 0.615 | 0 % | 0.818 H - 0.52 H + hip 0.085 above the seat |
+| shoulder joint spacing | 0.352 | 0.352 | 0 % | biacromial 0.40 - 2 x 0.024 |
+| bideltoid breadth in the shirt | 0.480 | 0.472 (round 4: 0.491) | -1.7 % | DIN 33402 m P50 0.477 |
+| upper arm / forearm | 0.335 / 0.258 | 0.330 / 0.260 | -1.5 / +0.8 % | Winter 0.188 H / 0.145 H |
+| hand length, fingers straightened | 0.192 | 0.190 | -1.0 % | 0.108 H; knuckle 0.096 + phalanges 0.045 / 0.027 / 0.022 (curled on the keys in the model) |
+| hip breadth seated in trousers | 0.410 | 0.413 | +0.7 % | DIN 33402 m P50 0.375 + trousers |
+| thigh clearance | 0.160 | 0.161 (round 4: 0.169, +5.5 %) | +0.4 % | DIN 33402 m P50 0.155 + cloth |
+| knee height (floor to knee top) | 0.585 | 0.573 | -2.1 % | DIN 33402 m P50 0.555 barefoot + 23 mm sole + cloth |
+| knee joint height | 0.530 | 0.530 | 0 % | Winter 0.285 H + 23 mm sole |
+| buttock-knee length | 0.620 | 0.628 (round 4: 0.643, +3.7 %) | +1.4 % | DIN 33402 m P50 0.605 + cloth |
+| calf breadth in trousers | 0.120 | 0.122 | +1.7 % | ANSUR II m 0.11 + 2 x 5 mm cloth |
+| shoe length | 0.290 | 0.298 | +2.8 % | 0.152 H foot + 0.02; EU 43 |
+| ankle joint height in the shoe | 0.092 | 0.092 | 0 % | Winter 0.039 H + 23 mm sole |
+
+Every quantity within 3 % at 1:50. Chair, desk and notebook keep the round-3 table (EN 1335-1, EN 12529, EN 527-1; unchanged). The rig was audited against the table and needed no change.
+
+### Grades (my own look at every sheet; before = catalog state of round 4)
+
+| scale | body before | body after | structure before / after | thermal before / after |
+|---|---|---|---|---|
+| 1:50 | B (hair a mushroom helmet with a brim 1 cm proud of the temples; sleeve caps as balls on the shoulders with a seam; equal knee domes of thigh and shank z-fighting into jagged patches; equal elbow domes; chin 8 mm long, thighs 8 mm thick, knees 15 mm far forward) | A | A / A (mandible raised with the chin, coverage 7.5 mm) | A / A |
+| 1:100 | B (same hair, caps, knees) | A | A / A | A / A |
+| 1:200 | B (helmet hair, ball caps) | A- | A- / A- | A- / A- |
+| 1:500 | B- (helmet hair; flat discs on top of the upper arms standing out of the shirt; ragged seam between trouser seat and thigh roots) | A- | A- / A- | A- / A- |
+| poses 1:50 (typing, reading-screen, leaning-back) and clip `settle-back` at 4.2 s | A- | A | | |
+
+### Changes
+
+- Head: lower face shortened (chin -0.108 -> -0.100 on the head bone, same share at every scale), skull breadth 0.151 m; mandible of the structure raised with it.
+- Hair restated at every scale as short men's hair: 7 mm on the crown, 8 to 10 mm at the back, 3 to 6 mm at the temples, down to the nape behind the ears, hairline crossing the forehead about 6 cm above the brows at a clear angle; no brim.
+- Shoulders: the sleeve starts with five stated rows leaning in under the shirt shoulder (trapezius slope into the deltoid) instead of a quarter-sphere round the joint, at all scales; at 1:500 the shirt shoulder gets one more row so the arm top stays inside it.
+- Elbows: forearm elbow dome 7 mm smaller than the sleeve's (olecranon one surface) at 1:50, 1:100, 1:200.
+- Thighs: 4 mm thinner at the root (thigh clearance), knee 15 mm shorter (buttock-knee), knee formed by the thigh end with the shank top inside it, at every scale; at 1:500 the thigh root sits inside the trouser seat.
+- 2D of all four scales redrawn from the new bodies (`r3-seated-office-worker-draw2d.ts`, ruling E1); dimensions and manifest height 1.413 -> 1.409 m.
+
+Final: `r3-validate.ts humans/seated-office-worker --catalog-only` VALID (schema 0, validateAsset 0, print suitability at every scale and range end). `volumes-check.ts --product`: `FAIL: 3 measurement(s) over 2 rule line(s)`, only `volumes-thermal-coverage` on the body-model areas the author may not change (C18, filed in round 3): trousers +63 % (1:50) and +73 % (1:100), shoes +49 % (1:50). Silhouette, bounds, feature, monotonic, cross-scale, structure coverage, bones, copied green at every scale.
+
+Looked at (Read): body of the four scales (montage `🗑️generated/r5-seated/office/v2-body.png`, single front and three-quarter views after each change), structure and thermal cut of the four scales, the three poses and the clip frame, the product 2D of all four scales.
+
+### Remaining issues
+
+- The black jagged rings round the knees in the front views are the sheet renderer inking grazing surfaces (thigh tops within 8 degrees of the view) as depth steps; the geometry is closed and smooth (`tool-requests.md` 2026-11-21).
+- No cloth folds; the shirt is one smooth mass with placket, buttons and pocket. Chair star arms are solid tapered sections, the backrest flat in plan (round-3 note stands).
+- 1:500 keeps 75 mm logs for star arms and shoes (feature rule).
+- `trousers` and `shoes` stay red in `volumes-thermal-coverage` (body-model areas, C18; filed in round 3).

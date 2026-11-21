@@ -33,6 +33,33 @@ pub(super) struct Registry {
 }
 
 impl Registry {
+    pub(super) fn next_recovery(&self, app: u32) -> Option<usize> {
+        (0..SHELL_CAPACITY).map(|offset| (self.recovery_cursor + offset) % SHELL_CAPACITY)
+            .find(|&shell| self.recoveries[shell].publication.get().is_some_and(|(identity, _)| identity.app_instance_id == app))
+    }
+
+    pub(super) fn next_retirement(&self, app: u32) -> Option<usize> {
+        (0..SHELL_CAPACITY).map(|offset| (self.maintenance_cursor + offset) % SHELL_CAPACITY)
+            .find(|&shell| self.retiring[shell] && self.retiring_app[shell] == app)
+    }
+
+    pub(super) fn replaced_result(&self, app: u32) -> Option<usize> {
+        (0..ACTIVE_CAPACITY).find(|&slot| {
+            let Some(current) = self.current[slot].filter(|current| current.app_instance_id == app) else { return false; };
+            self.retained_results[slot].is_some_and(|retained| retained.app_instance_id == app)
+                && self.shells[current.shell as usize].try_borrow().is_ok_and(|owner| {
+                    owner.as_ref().is_some_and(|state| state.done && state.numerical_done && state.solver.as_ref().is_some_and(Fem3dSolverView::ready))
+                })
+        })
+    }
+
+    pub(super) fn retirable_request(&self, app: u32, slot: usize) -> bool {
+        let Some((owner, scope, _)) = self.requests.at(slot) else { return false; };
+        scope == app && self.requests.references(owner) == 0
+            && (self.pending[slot].is_some() || self.requested[slot].is_some() || self.request_specs[slot].is_some()
+                || self.retained_results[slot].is_some() || self.current[slot].is_some() || !self.shell_request.contains(&Some(owner)))
+    }
+
     pub(super) fn new() -> Self {
         Self {
             app_slots: Default::default(),

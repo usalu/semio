@@ -1,0 +1,15 @@
+{
+  "wire": [
+    137,
+    80,
+    78,
+    71
+  ],
+  "copyBudget": 3,
+  "expected": {
+    "copyBytes": 3,
+    "decodedCount": 137,
+    "retainWire": true,
+    "outputTransferred": true
+  }
+}

@@ -318,6 +318,11 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "slopes[].frictionAngle", kind: "change-seismic-slope-friction-angle", selectors: &[SelectorKey::Id("id")], value: "newFrictionAngle" },
         SetFieldRule { path: "slopes[].angle", kind: "change-seismic-slope-angle", selectors: &[SelectorKey::Id("id")], value: "newAngle" },
         SetFieldRule { path: "slopes[].height", kind: "change-seismic-slope-height", selectors: &[SelectorKey::Id("id")], value: "newHeight" },
+        SetFieldRule { path: "cases[].labelEn", kind: "change-case-label-en", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].labelDe", kind: "change-case-label-de", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].entryId", kind: "change-case-entry-id", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].numbers[].value", kind: "change-case-number", selectors: &[SelectorKey::Id("caseId"), SelectorKey::Id("key")], value: "value" },
+        SetFieldRule { path: "cases[].texts[].value", kind: "change-case-text", selectors: &[SelectorKey::Id("caseId"), SelectorKey::Id("key")], value: "value" },
     ],
     insert_item: &[
         InsertItemRule { path: "buildings", kind: "insert-building", selectors: &[], index: "index", item: "building" },
@@ -346,6 +351,7 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         InsertItemRule { path: "bridges[].variables", kind: "insert-bridge-variable", selectors: &[SelectorKey::Id("bridgeId")], index: "index", item: "variable" },
         InsertItemRule { path: "towers[].variables", kind: "insert-tower-variable", selectors: &[SelectorKey::Id("towerId")], index: "index", item: "variable" },
         InsertItemRule { path: "placements", kind: "insert-placement", selectors: &[], index: "index", item: "item" },
+        InsertItemRule { path: "cases", kind: "insert-case", selectors: &[], index: "index", item: "case" },
     ],
     remove_item: &[
     ],
@@ -353,6 +359,7 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
 
 /// 🆔️ Every collection of this family removed by row id, never by position.
 pub const ID_REMOVALS: &[IdRemoval] = &[
+        IdRemoval { path: "cases", kind: "remove-case", selectors: &[], id: "id" },
         IdRemoval { path: "assessments", kind: "remove-assessment", selectors: &[], id: "id" },
         IdRemoval { path: "bridges", kind: "remove-bridge", selectors: &[], id: "id" },
         IdRemoval { path: "buildings", kind: "remove-building", selectors: &[], id: "id" },

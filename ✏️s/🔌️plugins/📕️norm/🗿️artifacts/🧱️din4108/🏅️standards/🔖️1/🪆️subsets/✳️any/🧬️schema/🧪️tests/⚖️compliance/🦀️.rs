@@ -911,3 +911,18 @@ async fn failing_thin_u_prime_option0_clears_wall_north() {
     );
     assert_fail_has_clearing_remedy(&snap, id);
 }
+
+#[test]
+fn flat_thermal_bridge_rate_uses_the_worst_documented_category() {
+    for line in include_str!("thermal-bridge-flat-rates.tsv").lines().skip(1) {
+        let row: Vec<_> = line.split('\t').collect();
+        let bridges: Vec<_> = row[0].split(',').filter(|category| !category.is_empty()).map(|category| ThermalBridge {
+            id: category.to_owned(),
+            psi: 0.01,
+            length_m: 1.0,
+            bb2_type: category.to_owned(),
+        }).collect();
+        let expected = row[2].parse::<f64>().unwrap();
+        assert_eq!(bb2::delta_u_wb_limit(&bridges, row[1] == "true"), expected, "{line}");
+    }
+}

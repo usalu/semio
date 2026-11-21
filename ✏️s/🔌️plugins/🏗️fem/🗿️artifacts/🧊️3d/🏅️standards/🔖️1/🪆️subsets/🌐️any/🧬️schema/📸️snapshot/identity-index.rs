@@ -1,6 +1,6 @@
 //! 🗂️ Analytical identity indexes borrow ranked source keys and retain only original-funded row locators.
 use super::{Fem3dSnapshot, Fem3dSnapshotValue};
-use semio_framework_dsl_record::receiving::{NativeSnapshotDecodeOwner,NativeSnapshotFailure,NativeSnapshotDecodeEffectQuote,ReceivingWork,receiving_turn};
+use semio_framework_dsl_record::receiving::{NativeSnapshotDecodeOwner,NativeSnapshotEffectProgress,NativeSnapshotFailure,NativeSnapshotDecodeEffectQuote,ReceivingWork,receiving_turn};
 use semio_framework_value::RetainedWorkOutcome;
 use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind};
 use std::{cmp::Ordering, mem::size_of};
@@ -130,19 +130,60 @@ impl FemIdentityIndex {
     /// 🔍️ Returns the exact original rank using cancellable binary search over the validated namespace.
     pub fn lookup<S:FemIdentitySource>(&self,source:&S,kind:FemIdentityKind,id:&str,output:&mut Option<usize>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<(),NativeSnapshotFailure>{
         owner.scoped_stage(|owner|owner.receive_nested::<(),usize,NativeSnapshotFailure>(output,&mut |_slot,result,progress,unwind,original|receiving_turn(|meter|{
-            semio_s_fem_receiving::inspect(original,progress,unwind,meter,||{if self.source!=source.identity_source()||KINDS.map(|k|source.identity_count(k))!=self.counts{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"FEM identity lookup requires its unchanged original source"))}else{Ok(())}})?;
-            original.native().begin_stage(0)?;let rows=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||self.rows.as_deref().ok_or_else(invalid))?;let(mut lo,mut hi)=(0,rows.len());
-            while lo<hi{
-                let mid=lo+(hi-lo)/2;let(k,row,_)=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||Ok(rows[mid]))?;
-                let order=if k!=kind.index(){semio_s_fem_receiving::inspect(original,progress,unwind,meter,||Ok(k.cmp(&kind.index())))?}else{let key=semio_s_fem_receiving::inspect(original,progress,unwind,meter,||source.identity(kind,row).ok_or_else(invalid))?;semio_s_fem_receiving::compare_text(key,id,original,progress,unwind,meter)?};
-                match order{Ordering::Less=>lo=mid+1,Ordering::Greater=>hi=mid,Ordering::Equal=>{meter.take(original.receive_copy(result,row))?;return Ok(())}}
-            }
-            Err(ValueError::literal(ValueRefusalKind::InvalidValue,match kind{FemIdentityKind::Node=>"FEM member or support references an absent node",FemIdentityKind::Material=>"FEM member references an absent material",FemIdentityKind::Section=>"FEM member references an absent section",FemIdentityKind::Solid=>"FEM area load references an absent solid",_=>"FEM analytical reference points to an absent identity"}).into())
+            original.native().begin_stage(0)?;
+            let rank = self.probe_rank(source, kind, id, original, progress, unwind, meter)?;
+            meter.take(original.receive_copy(result, rank))
         })))
     }
 
+    /// 🔎️ Probes one identity using the current receiving frame's paid scratch.
+    pub(super) fn probe_rank<S: FemIdentitySource>(
+        &self,
+        source: &S,
+        kind: FemIdentityKind,
+        id: &str,
+        owner: &mut NativeSnapshotDecodeOwner<'_, '_>,
+        progress: &mut NativeSnapshotEffectProgress,
+        unwind: &mut Option<NativeSnapshotFailure>,
+        meter: &mut ReceivingWork,
+    ) -> Result<usize, NativeSnapshotFailure> {
+        use semio_s_fem_receiving::{compare_text, inspect};
+
+        inspect(owner, progress, unwind, meter, || {
+            if self.source == source.identity_source() && KINDS.map(|key| source.identity_count(key)) == self.counts {
+                Ok(())
+            } else {
+                Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "FEM identity lookup requires its unchanged original source"))
+            }
+        })?;
+        let rows = inspect(owner, progress, unwind, meter, || self.rows.as_deref().ok_or_else(invalid))?;
+        let (mut low, mut high) = (0, rows.len());
+        while low < high {
+            let mid = low + (high - low) / 2;
+            let (namespace, row, _) = inspect(owner, progress, unwind, meter, || Ok(rows[mid]))?;
+            let order = if namespace == kind.index() {
+                let key = inspect(owner, progress, unwind, meter, || source.identity(kind, row).ok_or_else(invalid))?;
+                compare_text(key, id, owner, progress, unwind, meter)?
+            } else {
+                inspect(owner, progress, unwind, meter, || Ok(namespace.cmp(&kind.index())))?
+            };
+            match order {
+                Ordering::Less => low = mid + 1,
+                Ordering::Greater => high = mid,
+                Ordering::Equal => return Ok(row),
+            }
+        }
+        Err(ValueError::literal(ValueRefusalKind::InvalidValue, match kind {
+            FemIdentityKind::Node => "FEM member or support references an absent node",
+            FemIdentityKind::Material => "FEM member references an absent material",
+            FemIdentityKind::Section => "FEM member references an absent section",
+            FemIdentityKind::Solid => "FEM area load references an absent solid",
+            _ => "FEM analytical reference points to an absent identity",
+        }).into())
+    }
 }
-fn compare<S:FemIdentitySource>(a:Row,b:Row,source:&S,owner:&mut NativeSnapshotDecodeOwner<'_,'_>,progress:&mut semio_framework_dsl_record::receiving::NativeSnapshotEffectProgress,unwind:&mut Option<NativeSnapshotFailure>,meter:&mut ReceivingWork)->Result<Ordering,NativeSnapshotFailure>{
+
+fn compare<S:FemIdentitySource>(a:Row,b:Row,source:&S,owner:&mut NativeSnapshotDecodeOwner<'_,'_>,progress:&mut NativeSnapshotEffectProgress,unwind:&mut Option<NativeSnapshotFailure>,meter:&mut ReceivingWork)->Result<Ordering,NativeSnapshotFailure>{
  let order=semio_s_fem_receiving::inspect(owner,progress,unwind,meter,||Ok(a.0.cmp(&b.0)))?;if !order.is_eq(){return Ok(order)}
  if a.0==LOAD{
   let(x,y)=semio_s_fem_receiving::inspect(owner,progress,unwind,meter,||Ok((source.identity(FemIdentityKind::LoadCase,a.1).ok_or_else(invalid)?,source.identity(FemIdentityKind::LoadCase,b.1).ok_or_else(invalid)?)))?;

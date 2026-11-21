@@ -6,7 +6,7 @@ import { fixture } from "../🧰️support/🟦️.ts";
 
 type P = [number, number];
 type Case = { name: string; outer: P[]; holes: P[][]; expected: { area: number; triangles: number; vertices: number } };
-const data = fixture<{ areaTolerance: number; cases: Case[] }>("🔺️polygon");
+const data = fixture<{ areaTolerance: number; cases: Case[]; perforatedPanel: { columns: number; rows: number; pitch: number; opening: number; border: number; expectedArea: number } }>("🔺️polygon");
 
 function audit(outer: P[], holes: P[][]) {
   const all = [...outer, ...holes.flat()];
@@ -121,6 +121,21 @@ describe("polygon predicates", () => {
     expect(ringFault(bicone, false, (p) => p[1] <= 1e-9)).toBe(false);
     expect(ringFault([[0, 0.1], [2, 0.5], [2, 0.2], [0, 0.6]], false, (p) => p[1] <= 1e-9)).toBe(true);
   });
+  it("validates a perforated cabinet panel and detects a single overlapping opening", () => {
+    const { columns, rows, pitch, opening, border, expectedArea } = data.perforatedPanel;
+    const width = (columns - 1) * pitch + opening + 2 * border;
+    const height = (rows - 1) * pitch + opening + 2 * border;
+    const rectangle = (x: number, y: number, w: number, h: number): P[] => [[x,y], [x,y+h], [x+w,y+h], [x+w,y]];
+    const outer = rectangle(0, 0, width, height).reverse();
+    const holes = Array.from({ length: columns * rows }, (_, index) => rectangle(border + index % columns * pitch, border + Math.floor(index / columns) * pitch, opening, opening));
+    expect(holesFault(outer, holes)).toBe(false);
+    const vectorRing = (ring: P[]) => ring.map(([x,y]) => new Vector2(x,y));
+    const oracleArea = ShapeUtils.area(vectorRing(outer)) + holes.reduce((area, hole) => area + ShapeUtils.area(vectorRing(hole)), 0);
+    expect(oracleArea).toBe(expectedArea);
+    const overlapping = rectangle(border + pitch - opening / 2, border, opening, opening);
+    expect(holesFault(outer, [...holes, overlapping])).toBe(true);
+  });
+  
   it("holesFault rejects crossing, touching, outside and nested holes", () => {
     const inner: P[] = [[0.25, 0.25], [0.25, 0.75], [0.75, 0.75], [0.75, 0.25]];
     expect(holesFault(square, [inner])).toBe(false);

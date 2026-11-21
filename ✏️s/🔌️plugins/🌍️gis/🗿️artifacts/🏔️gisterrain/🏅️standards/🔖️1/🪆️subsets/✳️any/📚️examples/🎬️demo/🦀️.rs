@@ -8,7 +8,10 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Demo", "Demo")
 }
 pub const ICON: &str = "file";
-pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 pub fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+    static PRIMARY_TEXT: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+        let document = crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document();
+        <crate::GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&document)
+    });
+    ExampleSource::new(ID, label(), PRIMARY_TEXT.as_str(), ICON)
 }

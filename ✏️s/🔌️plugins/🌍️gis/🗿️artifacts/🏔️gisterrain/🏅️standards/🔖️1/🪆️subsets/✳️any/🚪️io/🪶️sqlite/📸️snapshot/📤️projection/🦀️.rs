@@ -7,6 +7,14 @@ fn decimal(mut value: u64, buffer: &mut [u8; 20]) -> Result<&str, ValueError> { 
 pub fn project(snapshot: &GisTerrainSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
  let mut projection = Projection::new(<GisTerrainSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, control)?;
  projection.insert("gis_terrain_document", &[])?; insert_ieee754(&mut projection, "gis_terrain_parameters", &[Cell::Real(snapshot.exaggeration)], SCALAR)?;
+ if let Some(source) = &snapshot.elevation_source {
+  if !source.is_valid() { return Err(invalid("invalid GIS elevation source")); }
+  let bounds = source.bounds.map(|value| Cell::Integer(value.to_bits() as i64));
+  let source_id = projection.insert("gis_terrain_elevation_source", &bounds)?;
+  for (ordinal, height) in source.rows.iter().flatten().enumerate() {
+   projection.insert("gis_terrain_elevation_sample", &[Cell::Integer(source_id), Cell::Integer(ordinal as i64), Cell::Integer(i64::from(*height))])?;
+  }
+ }
  if let Some(child) = &snapshot.mesh { projection.insert("gis_terrain_mesh_child", &[Cell::Text(&child.child_id), Cell::Text(&child.target.artifact_id), Cell::Text(&child.target.dialect.artifact_kind), Cell::Text(&child.target.dialect.standard), Cell::Text(&child.target.dialect.subset)])?; }
  if let Some(map) = &snapshot.imported_map {
   map.validate().map_err(invalid)?; projection.insert("gis_terrain_imported_map", &[])?;

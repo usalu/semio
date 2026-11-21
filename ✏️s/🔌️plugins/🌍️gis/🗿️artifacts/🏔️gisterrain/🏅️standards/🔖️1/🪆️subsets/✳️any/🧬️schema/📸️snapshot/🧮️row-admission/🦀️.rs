@@ -5,6 +5,7 @@ use semio_framework_dsl_record::{FieldValue, RecordValue};
 use semio_framework_value::{DslValue, ValueError, ValueRefusalKind};
 fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 struct Rows { count: usize, maximum: usize }
+const ELEVATION_SIDE: usize = 33;
 impl Rows {
  fn add(&mut self, count: usize) -> Result<(), ValueError> { self.count = self.count.checked_add(count).filter(|count| *count <= self.maximum).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "terrain native complete owner row limit exceeded"))?; Ok(()) }
  fn tree(&mut self, value: &DslValue, depth: usize, checkpoint: &mut impl FnMut() -> Result<(), ValueError>) -> Result<(), ValueError> {
@@ -22,5 +23,38 @@ impl Rows {
   for property in properties { let FieldValue::Record(property) = property else { return Err(invalid("terrain native property requires record")); }; if property.fields.len() != 2 { return Err(invalid("terrain native property field census differs")); } let Some(FieldValue::Text(name)) = property.fields.get(&0) else { return Err(invalid("terrain native property name requires text")); }; let Some(FieldValue::Value(value)) = property.fields.get(&1) else { return Err(invalid("terrain native property requires intrinsic value")); }; self.property(name, value, checkpoint)?; } Ok(())
  }
 }
-pub fn snapshot(value: &GisTerrainSnapshot, maximum: usize, mut checkpoint: impl FnMut() -> Result<(), ValueError>) -> Result<usize, ValueError> { let mut rows = Rows { count: 0, maximum }; checkpoint()?; rows.add(2 + usize::from(value.mesh.is_some()))?; if let Some(map) = &value.imported_map { rows.map(map, &mut checkpoint)?; } Ok(rows.count) }
-pub fn native(value: &RecordValue, maximum: usize, mut checkpoint: impl FnMut() -> Result<(), ValueError>) -> Result<usize, ValueError> { let mut rows = Rows { count: 0, maximum }; checkpoint()?; let mesh = match value.fields.get(&2) { None | Some(FieldValue::Absent) => false, Some(FieldValue::Record(_)) => true, _ => return Err(invalid("terrain native optional mesh record differs")) }; rows.add(2 + usize::from(mesh))?; match value.fields.get(&1) { None | Some(FieldValue::Absent) => (), Some(FieldValue::Record(map)) => rows.native_map(map, &mut checkpoint)?, _ => return Err(invalid("terrain native optional map record differs")) } Ok(rows.count) }
+pub fn snapshot(value: &GisTerrainSnapshot, maximum: usize, mut checkpoint: impl FnMut() -> Result<(), ValueError>) -> Result<usize, ValueError> {
+ let mut rows = Rows { count: 0, maximum };
+ checkpoint()?;
+ rows.add(2 + usize::from(value.mesh.is_some()))?;
+ if let Some(map) = &value.imported_map { rows.map(map, &mut checkpoint)?; }
+ if let Some(source) = &value.elevation_source {
+  checkpoint()?;
+  if !source.is_valid() { return Err(invalid("invalid GIS elevation source")); }
+  rows.add(1 + ELEVATION_SIDE * ELEVATION_SIDE)?;
+ }
+ Ok(rows.count)
+}
+pub fn native(value: &RecordValue, maximum: usize, mut checkpoint: impl FnMut() -> Result<(), ValueError>) -> Result<usize, ValueError> {
+ let mut rows = Rows { count: 0, maximum };
+ checkpoint()?;
+ let mesh = match value.fields.get(&2) { None | Some(FieldValue::Absent) => false, Some(FieldValue::Record(_)) => true, _ => return Err(invalid("terrain native optional mesh record differs")) };
+ rows.add(2 + usize::from(mesh))?;
+ match value.fields.get(&1) { None | Some(FieldValue::Absent) => (), Some(FieldValue::Record(map)) => rows.native_map(map, &mut checkpoint)?, _ => return Err(invalid("terrain native optional map record differs")) }
+ match value.fields.get(&3) {
+  None | Some(FieldValue::Absent) => (),
+  Some(FieldValue::Record(source)) => {
+   rows.add(1)?;
+   let Some(FieldValue::List(samples)) = source.get(1) else { return Err(invalid("terrain native elevation samples require rows")); };
+   if samples.len() != ELEVATION_SIDE { return Err(invalid("terrain native elevation row count differs")); }
+   for sample_row in samples {
+    checkpoint()?;
+    let FieldValue::List(samples) = sample_row else { return Err(invalid("terrain native elevation row requires samples")); };
+    if samples.len() != ELEVATION_SIDE { return Err(invalid("terrain native elevation column count differs")); }
+    rows.add(samples.len())?;
+   }
+  }
+  _ => return Err(invalid("terrain native optional elevation source differs")),
+ }
+ Ok(rows.count)
+}

@@ -41,11 +41,14 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host_snapshot: &FlowHostSnapshot, generation: &GenerationPlayState, selected_id: Option<&str>, labels: &Generation3dLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
-    let spec = flow_host_snapshot_to_form_spec(host_snapshot, &PlaybookFlowFormProducer);
+pub fn render(host_snapshot: &FlowHostSnapshot, generation: &GenerationPlayState, selected_id: Option<&str>, view: &semio_plugin::ViewModel, labels: &Generation3dLabels) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let Some(current) = semio_s_artifact_procedural_3d_model::generation_by_id(generation, selected_id) else {
         return built_text_node(semio_ui_locale::Label::data(labels.generate_hint.as_str())).map_err(|_| semio_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
     };
-    semio_s_procedural_core_semantic_ui::generation_form(&spec, &current.values, GENERATION_3D_PLAY_APP_ID, "updateGenerationValues", &current.id, &semio_s_procedural_core_semantic_ui::GenerationFormLabels { no_inputs: labels.form_no_inputs.as_str(), field: labels.form_field.as_str(), no_image: labels.form_no_image.as_str() })
+    let spec = flow_host_snapshot_to_form_spec(host_snapshot, &PlaybookFlowFormProducer);
+    let window = view.window_id.as_deref().unwrap_or(GENERATION_3D_PLAY_WINDOW_GENERATE_FORM);
+    let page = semio_s_procedural_core_semantic_ui::GenerationFormPage::requested(view, GENERATION_3D_PLAY_BODY_GENERATE_FORM, window);
+    let resources = semio_plugin::WindowResourceRequests { window_id: window, body_key: GENERATION_3D_PLAY_BODY_GENERATE_FORM, requests: &view.tree_windows };
+    semio_s_procedural_core_semantic_ui::generation_form(&spec, &current.values, GENERATION_3D_PLAY_APP_ID, "updateGenerationValues", &current.id, &semio_s_procedural_core_semantic_ui::GenerationFormLabels { title: labels.window_generate_form.as_str(), no_inputs: labels.form_no_inputs.as_str(), field: labels.form_field.as_str(), no_image: labels.form_no_image.as_str() }, page, &resources)?.present(window, view.locale)
 }
 //#endregion 🔖️Render

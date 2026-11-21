@@ -120,7 +120,7 @@ impl SurfaceContexts {
     /// admitting the synthetic name again would remount the surface whose reconcile reservation refusal
     /// starved every real one (wave B54 §6.4). An app that genuinely authors a window instance called
     /// `window` still mounts it — the refusal is about a name no instance claims.
-    pub fn insert(&mut self, surface: String, body_key: String, view_state: ViewModel) -> Result<(), &'static str> {
+    pub fn insert(&mut self, surface: String, body_key: String, mut view_state: ViewModel) -> Result<(), &'static str> {
         assert!(self.cached_capture.is_none(),"original surface capture holds the registry mutation lease");
         if synthetic_window_surface(&surface, &view_state) {
             self.displaced.push(Displaced::View(view_state));
@@ -150,6 +150,10 @@ impl SurfaceContexts {
             self.displaced.extend([Displaced::View(projected),Displaced::View(view_state)]);
             return Err("surface context version exhausted");
         };
+        if matches!(&role, SurfaceRole::Window(_)) {
+            view_state.active_window_kind_id.clone_from(&projected.active_window_kind_id);
+            view_state.active_utility_id.clone_from(&projected.active_utility_id);
+        }
         self.prune_windows(&view_state);
         self.version=version;
         let previous=self.slots[index].replace(SurfaceBinding {surface,body_key,role,view_state: Some(projected),version});

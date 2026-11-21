@@ -31,7 +31,7 @@ fn fault_part(plan:&DocumentScenePlan,node:usize,kind:u8,part:usize)->Option<&st
 pub struct DocumentTraceJob{
  input:DocumentTraceInput,phase:&'static str,assets:usize,nodes:usize,resolved:usize,admitted_images:usize,pixels:usize,source_bytes:usize,segments:usize,work:u64,at:usize,pixel:usize,publish_at:usize,
  masks:Vec<(usize,u32,u32,TraceMask)>,source:usize,image:Option<RasterLease>,mask:Vec<u8>,tracer:Option<BitmapTraceJob<TraceMask>>,trace:Option<BitmapTraceProgress>,candidate:Vec<DrawingSegment>,
- output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,pub closing_tracer:Option<BitmapTraceRetirement<TraceMask>>,closing_mask:Option<TraceMask>,retired_tracers:Vec<BitmapTraceRetirement<TraceMask>>,retired_sources:Vec<String>,retired_masks:Vec<TraceMask>,
+ output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,closing_tracer:Option<BitmapTraceRetirement<TraceMask>>,closing_mask:Option<TraceMask>,retired_tracers:Vec<BitmapTraceRetirement<TraceMask>>,retired_sources:Vec<String>,retired_masks:Vec<TraceMask>,
  pending:RetirementDemand,last_turn_work:u64,last_turn_semantic_work:u64,step_child_work:Option<(u64,u64)>,step_control_work:u64,error_buffer:String,error_kind:u8,error_part:usize,
 }
 impl DocumentTraceJob{
@@ -114,6 +114,11 @@ impl DocumentTraceJob{
  }
  pub fn settlement_pending(&self)->bool{self.phase=="complete"||self.phase=="publishing"||self.phase=="nodes"&&self.at==self.input.plan.nodes.len()||self.phase=="tracing"&&self.tracer.as_ref().is_some_and(BitmapTraceJob::settlement_pending)}
  pub fn failure_pending(&self)->bool{self.phase=="diagnostic"||self.failure.is_some()}
+ /// 🪶️ Reports whether the trace cursor is retiring its child.
+ #[cfg(feature = "testkit")]
+ pub fn tracer_retirement_pending(&self) -> bool {
+  self.closing_tracer.is_some()
+ }
  pub fn next_work_demand(&self)->RetirementDemand{self.pending}
  pub fn last_turn_work(&self)->u64{self.last_turn_work}
  pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}

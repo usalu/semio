@@ -1,0 +1,51 @@
+# FEM 2D Mounted Guest Startup
+
+The FEM 3D ticket's local linked preview on 6096 serves a freshly built shared FEM component. Its bare core WASM file was 176,331,961 bytes with SHA-256 `DD9D9656E3E767B532E95B7356DC04E9E98896108082A1E21D2E29441E284D3F`. It hosts the FEM 3D Vite variant from port 6087. The FEM entry uses the build's `VITE_SEMIO_PLUGIN` selection, so the query string alone leaves 6096 on FEM 3D.
+
+`🧪️browser-guest-preview.mjs` served only this local guest's component files through 6096 and delivered the FEM 2D application and other assets through 6086. Chromium installed a fresh browser context on this preview, confirmed the FEM 2D shell, and observed `data-semio-os-error=fem2d` before either canvas mounted. The guest's first semantic failure occurred at epoch 909 with primary failure `Window owner must declare its original disposer birth`. The command dispatcher reported `setActiveExample` refused for `fem2d-model` and the original WIT failure carried no receipt or context detail. The newer component caught the same specific owner declaration error that the native command-settlement probe recorded independently.
+
+FEM 3D using the same binary reached epoch 7115 with a different failure, `runtime live cleanup faulted for instance 1 … [zero-progress] (elapsed 0us, ceiling 8000us)`. Its idle shell probe emits empty progress while the live cleanup monitor counts 256 consecutive empty or blocked turns as a fault. The elapsed field there measures the callback that broadcasts the status.
+
+For FEM 2D, an independent code path could fail after mounted admission. At an idle turn, its retirement scan found no action ready and returned empty completion while the mounted registry still held a live app. The runtime now uses the maintenance work queue's own completion witness. Idle maintenance can complete with a live registry lease, and full close still requires that lease to retire. The focused Rust regression consumes the language-independent fixture in the session test folder, verifies 257 maintenance opportunities preserve the same live registry lease, then closes the app and verifies completion.
+
+`🧪️mounted-maintenance-oracle.mjs` verifies the 257 idle completions and final close with the existing third-party XState runtime through the repository's Bun tool.
+
+After the canonical 6086 server restarted on November 21, a second fresh Chromium run against publication receipt `dbb136d0…` (November 20, 20:52 UTC) repeated the epoch 909 disposer failure with the same window and no mounted surfaces. That publication still serves component bytes linked before the owner declaration fix. The newer linked component is required for the next browser gate.
+
+## Later linked component
+
+The later linked guest from November 20, 21:31:28 UTC was verified before and after private staging. Its component SHA-256 was `8b95b5bbca513af9c7e14ab9c17c837c770b677df2b7aa4b947db668c3e66086`. The matching 176,333,685-byte core produced by local preview transpilation had SHA-256 `20f28eaaaf63b9a8e9cacfc62e0d19b9fee4c346525904b89e675ffee5875daa`. The preview forwards its generated Preview 2 import paths to the canonical local WASI shim routes.
+
+This guest admitted the real demo and mounted both FEM 2D canvases in Chromium, with `data-semio-os-ready=fem2d` and no WIT or page error. The incoming model and results scenes each contained 29 layers for demo nodes, beams, supports, and loads. The actual results painter executed 116 strokes and 740 line segments while neither `fillText` nor `drawImage` ran. The transferred results scene contained no analysis status or deformation, and the isolated job ledger recorded no job updates. The static convergence gate timed out after 120 seconds.
+
+The independent edit probe found the real Artifact row for `n1` by its text. The framework then reported its `Note Shell Command` had waited eight seconds for the guest and was blocking later input. The Inspection edit did not reach the X input with this linked guest.
+
+The raw host-effect capture received shell messages, one document load, and one typed operation terminal for this run. It observed no notification, isolated job spawn, or continuation callback. The direct surface-mount route in that guest could publish geometry without arming the pending app effect pass.
+
+The command adapter's ingress trace distinguishes the editor selection from the subsequent shell bookkeeping. The first two `noteShellCommand` calls each returned `command-pending` followed by `command-complete` with three shell effects. The actual `interactionSelect` then settled. The next `noteShellCommand` reached `command-pending` with actor status `more-work`, no effects, no UI patch, and no acknowledgement. The following note queued without a guest return in the probe window.
+
+## November 21 intermediate link
+
+The November 21 component linked at 10:54:32 UTC, with raw SHA-256 `15eea2dc6260b41712b78797d1f9fcb44f052ea6a61d5eda9bac1f69167d9bbe`. Its 171,398,501-byte preview core had SHA-256 `91ee7e877771c27565054c704a48a26eff96a77fdc73f964665ac0f633426aff`. The producer used the surface-render crate from before the final deferred-render wake revision.
+
+The full browser gate mounted both canvases and painted `Pending` in Results. The example toggle remained `Example`. The guest refused the first `setActiveExample` document transfer at WIT epoch 30895 with a live cleanup zero-progress fault. The maintenance diagnostic identified stage 14, Store replacement, and an empty retained-work receipt. The initial static convergence wait expired, leaving the edit, reaction, and eigenmode acceptance checks unexecuted.
+
+The job route trace showed the guest published an isolated FEM analysis job, start succeeded, the first step reported running, and a later step reported failed with an empty payload. The job closed before the ledger could publish a completed batch. One repeat remained at document load 118 of 118 instead of emitting the cleanup fault within the 120-second window.
+
+An isolated browser context suppressed only the shell's initial example reload callback and retained the same component, document source, and rendering hooks. It rendered the real initial Demo with 29 model and 30 results layers, including the `Pending` caption. No document replacement or stage-14 cleanup fault appeared. The isolated analysis still gave the same running-then-failed sequence. This isolates the unsolved numerical path from the failed secondary document transfer in this component revision.
+
+The same isolated context reproduced the Inspection stall without a Store replacement. The preceding top-right `shell.panelToggle` note settled with two shell messages and one reserved-job spawn before their host processing. It had no UI patches, additional turns, or acknowledgement. The subsequent `shell.panelTab` note addressed `fem2d-model` with `{anchor: "top-right", tabId: "framework.panel.inspection"}`. Its one-page ingress cursor alternated between index 0 and 1 and stayed pending with no effects, patches, receipts, or acknowledgement.
+
+The reserved-job instrumented repeat showed prior jobs 64, 128, and 192 each started, ran 132–133 steps, returned done through a `job-completed(ok)` transport event, and settled Idle. No typed-operation acknowledgement was emitted for those completions. On that repeat the next note stalled before its own spawn, at `shell.panelToggle` for top-right rather than the subsequent Inspection tab note. The per-request stall is intermittent in its placement and does not require the preceding reserved job to remain active.
+
+On November 21 the registered native `editor_boot` gate passed with the inspector round trip included. It dispatched the bundled demo selection, settled both window owners, verified that the saved artifact retained the demo geometry, dispatched `patchNode` with the inspector wire fields for node `n1`, and verified that the emitted document contained `x = 1.5` with a new revision. The test completed in 6.86 seconds after compilation.
+
+The November 21 native session suite passed 19/19. Its 257 idle maintenance polls and terminal retirement passed under the owned fixture, including the original document and result payloads.
+
+A physical receipt probe sampled 6,848 original poll returns with the same blocked command. At ingress index 0 the poll consumed 10 work units with no retained axes. At index 1 it typically consumed 21 work units, 12 retained items, and 732 copy bytes, with no allocation or release. Occasional index 1 turns consumed 22 work units and copied 744 bytes with 22 released bytes. The sampled host queue was empty and every captured return lacked UI patches and effects.
+
+On the same linked component, the browser deferred only Results visibility until the ordinary example transfer completed. Three Results requests were deferred, leaving only the Model surface and its 29 real layers. The example command settled its ingress and emitted document load. The archive still refused at stage 14 with zero copied items, copied bytes, retained capacity, or released bytes. Model alone admitted an isolated FEM analysis, which started and reported running before the numerical step failed. Initial Results visibility is therefore unnecessary to reproduce the archive fault in this revision.
+
+The next replay deferred both Model and Results visibility through the ordinary transfer. All six visibility requests were deferred and neither canvas mounted before the archive refused. The original effect sequence included document load, an isolated analysis spawn, then the typed operation terminal. The analysis started, reported running, and failed, so the reproduction isolates the fault from both window surfaces while leaving the numerical overlap visible.
+
+The final isolation also delayed the original isolated analysis driver before it could call startJob. The real guest still emitted the spawn intent, but there were zero job starts or steps and zero mounted canvases. The ordinary example transfer still refused at stage 14 with all retained axes zero. The archive fault does not require either surface projection or isolated numerical execution. The replay did not suppress the guest-side spawn intent.

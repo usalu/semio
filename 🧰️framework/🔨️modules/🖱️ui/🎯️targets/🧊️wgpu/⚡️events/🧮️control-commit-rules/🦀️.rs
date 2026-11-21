@@ -73,6 +73,8 @@ pub(super) fn descriptor_action_id(action: &ActionDescriptor) -> Option<ui_contr
 /// way rather than inventing a second gesture for it.
 pub fn editable_value(node: &UiNode) -> Option<String> {
     match node {
+        UiNode::Input(input) if input.input_kind == "text" && input.commit.as_deref() == Some(UI_DECIMAL_QUAD_COMMIT) =>
+            decimal_quad_text(&input.value),
         UiNode::Input(input) => Some(match input.display_factor.filter(|_| input.input_kind == "number").zip(input.value.trim().parse::<f64>().ok()) {
             Some((_, stored)) => number_field_text(input, stored),
             None => input.value.clone(),
@@ -86,7 +88,7 @@ pub fn editable_value(node: &UiNode) -> Option<String> {
 /// ⏎️ Whether an editable node commits only on Enter/blur (`Trigger::Commit`, `commit == "blur"`)
 /// rather than on every keystroke (`Trigger::Change`) — React's `InputView`'s own `commitOnBlur`.
 pub(super) fn commits_on_blur(node: &UiNode) -> bool {
-    matches!(node, UiNode::Input(input) if input.commit.as_deref() == Some("blur"))
+    matches!(node, UiNode::Input(input) if input_commits_on_blur(input.commit.as_deref()))
 }
 
 /// ✏️ The action an editable node's CURRENT buffer commits: `{value: <text>}`, numeric for a
@@ -99,7 +101,9 @@ pub(super) fn commits_on_blur(node: &UiNode) -> bool {
 pub(super) fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
     match &node.spec.0 {
         UiNode::Input(input) => {
-            let value = if input.input_kind == "number" { DslValue::float(constrain_number_field(typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).ok()?, input)) } else { DslValue::String(text.to_string()) };
+            let value = if input.input_kind == "number" { DslValue::float(constrain_number_field(typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).ok()?, input)) } else if input.input_kind == "text" && input.commit.as_deref() == Some(UI_DECIMAL_QUAD_COMMIT) {
+                DslValue::String(decimal_quad_text(text)?)
+            } else { DslValue::String(text.to_string()) };
             let trigger = if commits_on_blur(&node.spec.0) { Trigger::Commit } else { Trigger::Change };
             fired_action(&input.on_change, trigger, value)
         }
@@ -201,6 +205,8 @@ pub(super) fn number_field_text(input: &semio_ui_declaration::ui::UiInputNode, s
 pub fn edit_refusal(node: &Node) -> Option<String> {
     let text = node.state.edit.as_ref()?.text.as_str();
     match &node.spec.0 {
+        UiNode::Input(input) if input.input_kind == "text" && input.commit.as_deref() == Some(UI_DECIMAL_QUAD_COMMIT) =>
+            decimal_quad_text(text).is_none().then(String::new),
         UiNode::Input(input) if input.input_kind == "number" => typed_number(text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).err(),
         UiNode::NumberStepper(stepper) => typed_number(text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).err(),
         UiNode::Slider(slider) => typed_number(text, slider.display_factor, slider.precision, std::iter::once(slider_live_value(node, slider)).chain(slider.snaps.iter().copied()), Some(slider.min), Some(slider.max), slider.limits.as_ref()).err(),
@@ -452,3 +458,23 @@ pub(super) fn is_descendant(tree: &UiTree, id: NodeId, ancestor: NodeId) -> bool
 }
 //#endregion 🔖️Bubble
 // #endregion events
+
+/// 📏 A blur-committed text field carrying four finite decimal coordinates or an empty reset.
+const UI_DECIMAL_QUAD_COMMIT: &str = "blurDecimalQuad";
+
+/// 🫰 Reports whether an authored text input keeps a draft until Enter or blur.
+fn input_commits_on_blur(commit: Option<&str>) -> bool {
+    matches!(commit, Some("blur" | UI_DECIMAL_QUAD_COMMIT | "blurRetained" | "blurRetainedBody"))
+}
+
+/// 🧮 Returns a round-trippable decimal tuple. Signed zeros denote the same coordinate.
+fn decimal_quad_text(text: &str) -> Option<String> {
+    if text.trim().is_empty() { return Some(String::new()); }
+    let mut tokens = text.split_ascii_whitespace();
+    let mut values = [0.0; 4];
+    for value in &mut values {
+        let number = tokens.next()?.parse::<f64>().ok().filter(|number| number.is_finite())?;
+        *value = if number == 0.0 { 0.0 } else { number };
+    }
+    tokens.next().is_none().then(|| values.map(|value| value.to_string()).join(" "))
+}

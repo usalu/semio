@@ -85,6 +85,36 @@ for(const{id,index}of fixture.indexes)test("a lazily opened fact index equals th
  expect(lazy.rows.map(row=>row.path)).toEqual(full.rows.map(row=>row.path));
 });
 
+for(const{id,index,viewTableBytes}of fixture.indexes){
+ if(viewTableBytes===undefined)continue;
+ test("an opened index charges the full backing and its retained tables: "+id,()=>{
+  const encoded=encodeFactIndexV1(index as never,{maximumBytes:limit});
+  if(python){
+   const oracle=model("view-table-bytes",encoded.toString("hex"));
+   expect(oracle.exitCode).toBe(0);
+   expect(Number(oracle.stdout.toString())).toBe(viewTableBytes);
+  }
+  for(const offset of[0,7]){
+   const backing=new Uint8Array(encoded.length+offset*2),bytes=backing.subarray(offset,offset+encoded.length);
+   bytes.set(encoded);
+   const index=openFactIndexV1(bytes),expected=backing.byteLength+viewTableBytes;
+   expect(index.document.buffer.buffer).toBe(backing.buffer);
+   expect(index.document.buffer.byteLength).toBe(encoded.length);
+   expect(index.stats().bytes).toBe(expected);
+   expect(index.stats().caches.every(cache=>cache.bytes===0)).toBe(true);
+   if(index.rows.length)expect(index.rows[0]).toEqual(decodeFactIndexV1(bytes).rows[0]);
+   if(index.classes.length){
+    expect(index.classes[0]).toEqual(decodeFactIndexV1(bytes).classes[0]);
+    expect(index.stats().caches.some(cache=>cache.bytes>0)).toBe(true);
+   }
+   expect(index.stats().bytes).toBe(expected);
+   index.drop();
+   expect(index.stats().bytes).toBe(expected);
+   expect(index.stats().caches.every(cache=>cache.bytes===0)).toBe(true);
+  }
+ });
+}
+
 for(const{id,index}of fixture.indexes)test("row paths are answered by string id without reading the row: "+id,()=>{
  const bytes=encodeFactIndexV1(index as never,{maximumBytes:limit}),lazy=openFactIndexV1(bytes,{maximumBytes:limit}),full=decodeFactIndexV1(bytes,{maximumBytes:limit}),ids=new Map<string,number>();
  for(let row=0;row<full.rows.length;row++){

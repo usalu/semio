@@ -59,7 +59,7 @@ fn nakagin() -> SemioJackOwnedContent {
 
 /// 🧸️ The live node positions of the app's `content` member store (design §20.15: the parent holds no content).
 fn node_positions(app: &JackApp) -> BTreeMap<String, (f64, f64)> {
-    use store::{snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, ReferenceSpaceMember};
     let snapshot = app.snapshot().expect("Jack parent projection");
     let member = ::semio_framework_async::poll::resolve_ready(app.child_store("content", &snapshot.content.child_id)).expect("Jack content child");
     let bytes = ::semio_framework_async::poll::resolve_ready(member.document_pack_bytes()).expect("Jack content child pack");
@@ -205,21 +205,26 @@ fn run_state(app: &JackApp) -> Option<&'static str> {
 }
 
 fn pump_until(app: &mut JackApp, what: &str, done: impl Fn(&JackApp) -> bool,cx:&mut semio_framework_job::StepContext<'_>) {
+    use semio_plugin::artifact_app_laws::{close_fixture_result_page, fixture_renew_turn, take_fixture_result_page, OriginalFixtureCaller};
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    let policy = trinity_mounted_owner_policy();
+    let fresh_grant = cx.retained_grant();
     while std::time::Instant::now() < deadline {
         if done(app) {
             return;
         }
-        PluginApp::maintenance_step(app,cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().maintenance).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), fresh_grant).unwrap();
+        PluginApp::maintenance_step(app, cx, policy.maintenance).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(),cx)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
-        if let Some(page) = app.take_typed_operation_result_page(1) {
+        while let Some(mut page) = take_fixture_result_page(app, meta("local").instance_id, policy.preparation).unwrap() {
             assert_ne!(page.lane, semio_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
-            app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
+            let token = close_fixture_result_page(&mut page, policy.close);
+            assert!(app.acknowledge_typed_operation_result(token).expect("acknowledge result page"));
         }
         let _ = app.take_typed_operation_effect();
         let _ = app.take_typed_operation_event();
         let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("completion");
-        let _ = app.take_typed_operation_ui_scope();
+        let _ = app.take_typed_operation_ui_progress();
     }
     panic!("{what} never settled; state {:?}", run_state(app));
 }

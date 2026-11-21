@@ -97,12 +97,12 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// redispatches a self-armed `DispatchAction` under whichever pane is current), and a panel-tagged transport gesture
     /// names it the same way so a pause can rest where the running clock is. The runtime validates the id against the
     /// trusted roster and captures that exact window's mutation authority.
-    fn retained_window_transient_target(command: &Fem2dCommand) -> Option<(&str, &'static str)> {
-        match command {
+    fn retained_window_transient_target<'a>(command: &'a Fem2dCommand, _view: Option<&'a semio_plugin::ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        Ok(match command {
             Fem2dCommand::ResultAnimationTick(payload) if !payload.window_id.is_empty() => Some((payload.window_id.as_str(), results_window::transient::WINDOW_KIND_ID)),
             Fem2dCommand::SetResultAnimation(payload) => payload.window_id.as_deref().filter(|id| !id.is_empty()).map(|id| (id, results_window::transient::WINDOW_KIND_ID)),
             _ => None,
-        }
+        })
     }
 
 
@@ -193,11 +193,11 @@ impl ArtifactEditor for Fem2dPlayApp {
     }
 
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_plugin::MountedOwnerPhaseV1> {
-        (!semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::terminal_is_empty(instance_id)).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::maintenance_pending(instance_id).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::close_demands(instance_id)
+        semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::maintenance_demands(instance_id)
     }
 
     fn mounted_job_close_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
@@ -259,7 +259,9 @@ impl ArtifactEditor for Fem2dPlayApp {
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let snapshot = <Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
+                let effect = reset_document_effect(&snapshot);
+                <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(snapshot);
+                Ok(Emit { effects: vec![effect], ..Default::default() })
             }
             "geometry:in" => {
                 let MediaPayload::Structured { json, .. } = &media.payload else {

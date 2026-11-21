@@ -59,6 +59,8 @@ pub use component::{
     ToolRunTraceCursor,
     ToolRunTraceRecord,
     ToolRunTraceApply,
+    ToolRunTraceApplyCursor,
+    ToolRunTraceFundedStep,
     ToolRunTraceStore,
     ToolRunTick,
     ToolRunLimitError,

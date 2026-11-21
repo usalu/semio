@@ -73,7 +73,7 @@ impl KernelPoolState {
     /// patch. A rejection with no authority behind it (a surface the registry could not admit
     /// at all, so no turn ever reached a slot) has nothing to reject back and stays a local
     /// registry entry rather than a fabricated receipt.
-    pub(super) async fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, ProgramFault> {
+    pub(super) async fn exchange(&mut self, instance: u32, mut events: Vec<Event>, one_job_step: bool) -> Result<ExchangeOutcome, ProgramFault> {
         let Some(&actor) = self.instances.get(&instance) else {
             return Err((format!("kernel: instance {instance} is not registered")).into());
         };
@@ -83,7 +83,7 @@ impl KernelPoolState {
             }
         }
         let mut outcome = self.run_turn(actor, instance, events).await?;
-        self.settle_reserved_jobs(actor, instance, &mut outcome).await?;
+        self.settle_reserved_jobs(actor, instance, &mut outcome, one_job_step).await?;
         Ok(outcome)
     }
 
@@ -198,7 +198,7 @@ impl KernelPoolState {
                         return Err((fault.describe()).into());
                     }
                     self.command_document_closes.publish_batch(key, generation, &mut combined.surfaces);
-                    self.settle_reserved_jobs(actor, instance, &mut combined).await?;
+                    self.settle_reserved_jobs(actor, instance, &mut combined, false).await?;
                     return Ok(combined);
                 }
                 semio_framework::kernel::CommandBatchProgress::Faulted => {
@@ -278,7 +278,7 @@ impl KernelPoolState {
     /// - The shard then runs the guest's deferred `Event::JobCompleted` turn by itself; this host waits
     ///   for it and settles it like any turn, so the guest commits the job one unit per `MoreWork`
     ///   continuation and answers the verb (`Invocation { in_reply_to: 0 }`, `OperationCompleted`).
-    async fn settle_reserved_jobs(&mut self, actor: ActorId, instance: u32, outcome: &mut ExchangeOutcome) -> Result<(), ProgramFault> {
+    async fn settle_reserved_jobs(&mut self, actor: ActorId, instance: u32, outcome: &mut ExchangeOutcome, one_step: bool) -> Result<(), ProgramFault> {
         while self.reserved_jobs.iter().flatten().any(|job| job.actor == actor) {
             if self.turn_cancelled() {
                 return Err((self.retire_cancelled_turn(actor).await).into());
@@ -286,6 +286,7 @@ impl KernelPoolState {
             let first = self.run_reserved_job_once(actor, instance).await?;
             let later = self.settle_turn(actor, instance, first, std::time::Instant::now() + RUN_TURN_SETTLE_BUDGET).await?;
             outcome.absorb(later)?;
+            if one_step { return Ok(()); }
             if !self.reserved_jobs.iter().flatten().any(|job| job.actor == actor && job.step.is_none()) {
                 self.yield_slice(actor, instance).await;
             }

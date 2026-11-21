@@ -3,81 +3,11 @@
 use super::*;
 use semio_framework_3d_brep_representation::arena::Curve3Id;
 use semio_framework_3d_brep_representation::topology::{Edge, Vertex};
+pub use semio_framework_3d_brep_solid_topology::{HelixWireRecipe, PolygonWireRecipe};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 use solid_publication::{remove_topology_slot, store_demand, store_insert, topology_slot_depth};
 use std::mem::{size_of, take};
-
-/// 🌀️ Samples the helix of the original kernel wire constructor.
-#[derive(Clone, Copy)]
-pub struct HelixWireRecipe {
-    frame: Frame3,
-    axis: NativeVec3,
-    radius: f64,
-    pitch: f64,
-    turns: f64,
-    segments: usize,
-}
-
-impl HelixWireRecipe {
-    /// 📐️ Binds the dimensions, stock axis fallback and original chord density.
-    pub fn new(origin: EVec3, axis: EVec3, radius: f64, pitch: f64, turns: f64) -> Result<Self, ValueError> {
-        let invalid = || ValueError::literal(ValueRefusalKind::InvalidValue, "helix requires finite parameters and a representable sample count");
-        if !origin.into_iter().chain(axis).chain([radius, pitch, turns]).all(f64::is_finite) { return Err(invalid()); }
-        let axis = vec3(axis).normalized().unwrap_or(NativeVec3::Z);
-        let frame = Frame3::from_normal(pnt(origin), axis).ok_or_else(invalid)?;
-        let segments = ((turns.abs() * 32.0).ceil() as usize).max(8);
-        if segments.checked_add(1).is_none() { return Err(invalid()); }
-        Ok(Self { frame, axis, radius, pitch, turns, segments })
-    }
-
-    /// 🔢️ Counts the samples, including both ends of the original parameter interval.
-    pub fn sample_count(self) -> usize { self.segments + 1 }
-
-    /// 📍️ Computes one authored helix position in its local axis frame.
-    pub fn sample(self, index: usize) -> EVec3 {
-        let turn = index as f64 / self.segments as f64 * self.turns;
-        let angle = turn * std::f64::consts::TAU;
-        let frame = self.frame;
-        evec(frame.origin + frame.x * (self.radius * angle.cos()) + frame.y * (self.radius * angle.sin()) + self.axis * (self.pitch * turn))
-    }
-}
-
-/// 🔖️ Construction source for one funded polygonal profile.
-#[derive(Clone, Copy)]
-pub enum PolygonWireRecipe {
-    Rectangle { width: f64, height: f64 },
-    Regular { radius: f64, sides: usize },
-    Helix(HelixWireRecipe),
-    Polyline { vertices: usize, closed: bool },
-}
-
-impl PolygonWireRecipe {
-    fn counts(self) -> (usize, bool) {
-        match self {
-            Self::Rectangle { .. } => (4, true),
-            Self::Regular { sides, .. } => (sides, true),
-            Self::Helix(helix) => {
-                let closed = helix.sample(0) == helix.sample(helix.segments);
-                (helix.sample_count() - usize::from(closed), closed)
-            }
-            Self::Polyline { vertices, closed } => (vertices, closed),
-        }
-    }
-
-    fn vertex(self, index: usize) -> Option<EVec3> {
-        match self {
-            Self::Rectangle { width, height } => Some([[0., 0., 0.], [width, 0., 0.], [width, height, 0.], [0., height, 0.]][index]),
-            Self::Regular { radius, sides } => {
-                let angle = std::f64::consts::TAU * index as f64 / sides as f64;
-                let (sin, cos) = angle.sin_cos();
-                Some([radius * cos, radius * sin, 0.])
-            }
-            Self::Helix(helix) => Some(helix.sample(index)),
-            Self::Polyline { .. } => None,
-        }
-    }
-}
 
 /// 🛤️ One private owner for all original polygonal wires. The live index receives it once complete.
 pub struct PolygonWirePublication {
@@ -210,16 +140,7 @@ fn reserve<T>(target: &mut Vec<T>, count: usize, grant: Grant) -> Result<Progres
 impl BrepRegistry {
     /// 🎟️ Admits unallocated polygonal wire topology and reserves only stable labels.
     pub fn plan_polygon_wire(&mut self, recipe: PolygonWireRecipe) -> Result<PolygonWirePublication, ValueError> {
-        let positive = |value: f64| value.is_finite() && value > Tol::DEFAULT.value();
-        let (vertex_count, closed) = recipe.counts();
-        let valid = match recipe {
-            PolygonWireRecipe::Rectangle { width, height } => positive(width) && positive(height),
-            PolygonWireRecipe::Regular { radius, .. } => positive(radius),
-            PolygonWireRecipe::Helix(_) | PolygonWireRecipe::Polyline { .. } => true,
-        };
-        if !valid || vertex_count < (if closed { 3 } else { 2 }) || vertex_count > 65_536 {
-            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "polygonal wire has invalid dimensions or point count"));
-        }
+        let (vertex_count, closed, tolerance) = recipe.admit()?;
         let edge_count = vertex_count - usize::from(!closed);
         let first_label = self.body.labels.next();
         let next = first_label.checked_add((vertex_count + edge_count + 1) as u64)
@@ -230,7 +151,7 @@ impl BrepRegistry {
         Ok(PolygonWirePublication {
             owner: std::ptr::from_ref(&*self) as usize, recipe, wire: Wire { members: Vec::new(), vertices: Vec::new(), closed },
             curve: None, vertex_count, edge_count, first_label, label,
-            handle: analytic_publication::primitive_handle(b"Wire:", label.0), open: true, boundary_transferred: false, tolerance: Tol::DEFAULT,
+            handle: analytic_publication::primitive_handle(b"Wire:", label.0), open: true, boundary_transferred: false, tolerance,
         })
     }
 

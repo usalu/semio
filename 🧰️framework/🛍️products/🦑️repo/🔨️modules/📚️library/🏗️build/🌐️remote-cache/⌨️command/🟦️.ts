@@ -224,9 +224,9 @@ async function hostReclaimV1(environment:Readonly<Record<string,string|undefined
 }
 
 /** 🧪️ The blob presence port of a collection from outside: the blobs of action results live in the host store, so a result is dangling only when the host store lacks one of them. */
-async function hostHasV1(environment:Readonly<Record<string,string|undefined>>):Promise<(hashes:readonly string[])=>Promise<readonly boolean[]>>{
- const{createCasStoreV1,casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),host=createCasStoreV1({root:casRootV1(environment)});
- return hashes=>host.has(hashes);
+async function hostCollectionBlobsV1(environment:Readonly<Record<string,string|undefined>>):Promise<Pick<import("../🧹️collector/🟦️.ts").RemoteCacheCollectionRequestV1,"hasBlobs"|"readTree">>{
+ const{createCasStoreV1,casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),{readRemoteCacheTreeBytesV1}=await import("../🏷️retention/🟦️.ts"),host=createCasStoreV1({root:casRootV1(environment)});
+ return{hasBlobs:hashes=>host.has(hashes),readTree:async(_namespace,tree)=>{const leaf=await host.get(tree.hash);return leaf?.size===tree.size?readRemoteCacheTreeBytesV1(leaf.path,tree.size):undefined;}};
 }
 
 /** 🧹️ Collects the store directory like a running server would, from outside: removes unusable action results, entries idle for too long and the least recently used entries beyond the bound, under the collector lock; `--dry-run` only plans. Progress is published and cancelling stops at the next checkpoint. */
@@ -250,7 +250,7 @@ export async function collectRemoteCacheV1(args:readonly string[],context:Remote
  talk("gc.start",{directory,bytes:formatRemoteCacheBytesV1(maximumBytes),days:policy.maximumAgeDays,mode:dryRun?"@gc.mode.plan":"@gc.mode.apply"});
  let report;
  try{
-  report=await collectRemoteCacheDirectoryV1({root:join(directory,"v1"),maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",graceMilliseconds:(parsed.values["--grace-seconds"]===undefined?policy.graceSeconds:whole("--grace-seconds",parsed.values["--grace-seconds"],0,604800))*1000,reclaim:await hostReclaimV1(context.environment),hasBlobs:await hostHasV1(context.environment),signal:context.signal,onProgress:stage=>{void context.progress(`remote-cache:${stage}`);}});
+  report=await collectRemoteCacheDirectoryV1({root:join(directory,"v1"),maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",graceMilliseconds:(parsed.values["--grace-seconds"]===undefined?policy.graceSeconds:whole("--grace-seconds",parsed.values["--grace-seconds"],0,604800))*1000,reclaim:await hostReclaimV1(context.environment),...await hostCollectionBlobsV1(context.environment),signal:context.signal,onProgress:stage=>{void context.progress(`remote-cache:${stage}`);}});
  }catch(error){
   if(context.signal.aborted){talk("gc.cancelled");return {exitCode:130};}
   throw error;
@@ -267,7 +267,7 @@ export async function collectRemoteCacheV1(args:readonly string[],context:Remote
 export async function collectRemoteCacheForLedgerV1(workspace:string,dryRun:boolean,signal:AbortSignal):Promise<string>{
  const policy=readRemoteCachePolicyV1().server,root=join(where(workspace,policy.directory),"v1");
  if(!await stat(root).then(info=>info.isDirectory(),()=>false))return "absent";
- const outcome=await collectRemoteCacheDirectoryV1({root,maximumBytes:policy.maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",graceMilliseconds:policy.graceSeconds*1000,reclaim:await hostReclaimV1(process.env),hasBlobs:await hostHasV1(process.env),signal});
+ const outcome=await collectRemoteCacheDirectoryV1({root,maximumBytes:policy.maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",graceMilliseconds:policy.graceSeconds*1000,reclaim:await hostReclaimV1(process.env),...await hostCollectionBlobsV1(process.env),signal});
  if(outcome.locked)return `busy: ${outcome.lock}`;
  const report:RemoteCacheCollectionReportV1=outcome.value;
  return `${dryRun?"would remove":"removed"} ${report.removed.entries} of ${report.scanned.entries} entries (${formatRemoteCacheBytesV1(report.removed.bytes)})`;

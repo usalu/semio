@@ -387,6 +387,20 @@ fn database_sync_hello_retire_bytes(owner: &mut Vec<u8>) -> bool {
     true
 }
 
+/// 🧹️ Retires one bounded suffix or one empty backing page from the original causal payload.
+fn database_sync_hello_retire_payload(owner: &mut protocol::CausalPayload) -> bool {
+    let bytes = owner.retained_bytes_mut();
+    if !bytes.is_empty() {
+        for _ in 0..bytes.len().min(DATABASE_SYNC_HELLO_FRAME_UNIT_BYTES) { let _ = bytes.pop(); }
+        return true;
+    }
+    if bytes.allocated_bytes() == 0 { return false; }
+    let extent = bytes.next_release_allocation_bytes().expect("admitted paged causal backing extent");
+    let released = bytes.release_empty_page_leased(extent).expect("paid paged causal release");
+    assert!(released.progressed);
+    true
+}
+
 pub(super) struct DatabaseSyncHelloEnvelopeClose {
     pub(super) owner: Option<protocol::MutationEnvelope>,
 }
@@ -406,9 +420,9 @@ impl DatabaseSyncHelloEnvelopeClose {
             || database_sync_hello_retire_string(&mut owner.document_id.0)
             || database_sync_hello_retire_shared_text(&mut owner.actor.0)
             || database_sync_hello_retire_string(&mut owner.diff.schema.0)
-            || database_sync_hello_retire_bytes(&mut owner.diff.payload)
+            || database_sync_hello_retire_payload(&mut owner.diff.payload)
             || database_sync_hello_retire_string(&mut owner.inverse.schema.0)
-            || database_sync_hello_retire_bytes(&mut owner.inverse.payload)
+            || database_sync_hello_retire_payload(&mut owner.inverse.payload)
         {
             return true;
         }
@@ -550,7 +564,7 @@ pub(super) fn database_sync_hello_envelope_credit(envelope: &protocol::MutationE
     let mut items = 0usize;
     let mut bytes = 0usize;
     let dependencies = envelope.dependencies.capacity().checked_mul(size_of::<protocol::MutationId>()).ok_or(DbError::LimitExceeded(label))?;
-    let owners = [envelope.mutation_id.0.capacity(), envelope.document_id.0.capacity(), envelope.actor.0.original_allocation_bytes(), dependencies, envelope.diff.schema.0.capacity(), envelope.diff.payload.capacity(), envelope.inverse.schema.0.capacity(), envelope.inverse.payload.capacity()];
+    let owners = [envelope.mutation_id.0.capacity(), envelope.document_id.0.capacity(), envelope.actor.0.original_allocation_bytes(), dependencies, envelope.diff.schema.0.capacity(), envelope.diff.payload.retained_bytes().allocated_bytes(), envelope.inverse.schema.0.capacity(), envelope.inverse.payload.retained_bytes().allocated_bytes()];
     for capacity in owners.into_iter().chain(envelope.dependencies.iter().map(|dependency| dependency.0.capacity())) {
         if capacity != 0 {
             items = items.checked_add(1).ok_or(DbError::LimitExceeded(label))?;

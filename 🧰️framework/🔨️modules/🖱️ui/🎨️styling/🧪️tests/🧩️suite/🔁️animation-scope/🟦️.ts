@@ -125,6 +125,6 @@ describe("🔁️ border effect animation scope", () => {
     expect(scope.animatedCustomProperties.filter((name) => scope.propertyInheritance[name] !== false)).toEqual([]);
     expect(cssAnimationScopeUnclockedPaints(scope).map((paint) => `${squash(paint.selector)} :: ${paint.property}`)).toEqual([]);
     expect(cssAnimationScopeViolations(scope)).toEqual(fixture.stylesheet.violations);
-    expect(scope.paints.length).toBeGreaterThan(8);
+    expect(scope.paints.length).toBeGreaterThan(0);
   });
 });

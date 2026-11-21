@@ -8,7 +8,7 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_plugin_program::PluginProgram;
 use crate::life_instance_registry::{PluginRuntime, RuntimeCloseWorkerState};
 use crate::life_app_cell::RuntimeAppCell;
-use crate::life_cleanup_vocabulary::{RuntimeCloseStatus, runtime_cleanup_fault};
+use crate::life_cleanup_vocabulary::RuntimeCloseStatus;
 use crate::life_cleanup_pumps::{checked_runtime_close_generation, plugin_begin_instance_close};
 use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 
@@ -66,7 +66,7 @@ impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
         let Some(state) = self.admitted.as_ref() else { return Ok(false) };
         match RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)) {
             RuntimeCloseStatus::Fault(cause) => {
-                let fault = runtime_cleanup_fault("close", cause, self.instance_id, state.last_callback_elapsed_us.load(Ordering::SeqCst));
+                let fault = state.close_fault(cause);
                 #[cfg(test)]
                 eprintln!("[TRACE] exact native close fault={fault:?} origin={} phases={:?} detail={:?}", state.last_fault_origin.load(Ordering::SeqCst), state.callback_phase_us.iter().map(|phase| phase.load(Ordering::SeqCst)).collect::<Vec<_>>(), *state.last_fault.lock().unwrap());
                 return Err(fault);

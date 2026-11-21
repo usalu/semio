@@ -1,27 +1,10 @@
-/** 🧪️ Legacy-era conformance suite (packet `P5-conformance-tests`, brief §3.2) — drives the REAL
- * compiled `semio-os-mcp stdio` binary with the REAL installed `@modelcontextprotocol/sdk` (1.30.0,
- * `LATEST_PROTOCOL_VERSION = '2025-11-25'`) `Client` + `StdioClientTransport`. `📓️terra-P1a-report.md`
- * proves the server agrees with itself via its own Rust unit tests; this suite is the independent
- * proof that a real MCP client library — the same one every IDE extension in this repo embeds —
- * can actually hold a conversation with it.
- *
- * The package test gate builds and requires the binary before Vitest starts.
- *
- * ⚠️ `tools/call` on an unregistered tool: the shipped `run_stdio` boots `McpServer::with_defaults()`
- * — EMPTY tool/resource/prompt registries (`🦀️.rs` `run_stdio`, confirmed live below and in
- * `🧪️p5-server-probe.txt`). `InMemoryToolRegistry::call` therefore ALWAYS takes the "unknown tool" =
- * protocol-error branch (`🧭️protocol/🦀️.rs` `calling_an_unregistered_tool_is_a_protocol_error`)
- * — the OTHER half of the distinction brief §3.2 asks us to prove (`isError:true` for a REGISTERED
- * tool's own business failure) is only exercised by P1a's own Rust unit test
- * (`a_registered_tool_reporting_failure_is_a_successful_response_with_is_error_true`) today; it is
- * NOT independently observable through this black-box suite until a downstream packet (P2/P6)
- * registers at least one real tool. Flagged loudly here and in `📓️terra-P5-report.md`, per brief §2
- * — not weakened into a false positive. */
+/** 🧪️ Checks the published stdio binary's 2025-11-25 protocol with the MCP TypeScript SDK.
+ * The suite covers discovery, JSON-RPC errors, and structured failures from registered tools. */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { LATEST_PROTOCOL_VERSION, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { spawnRawMcp } from "../../🟦️.ts";
+import { spawnRawMcp, withMcpHostDriverPolicy } from "../../🟦️.ts";
 import { requireMcpBinary } from "../../📦️binary/🟦️.ts";
 import { isValidJsonSchema2020_12 } from "../../🧬️schema-validation/🟦️.ts";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
@@ -52,7 +35,7 @@ describe("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () =>
   let transport: StdioClientTransport;
 
   beforeAll(async () => {
-    transport = new StdioClientTransport({ command: bin, args: ["stdio"], stderr: "pipe" });
+    transport = new StdioClientTransport({ command: bin, args: withMcpHostDriverPolicy(["stdio", "--no-bridge"]), stderr: "inherit" });
     client = new Client({ name: "semio-os-mcp-conformance", version: "0.1.0" }, { capabilities: {} });
     await client.connect(transport);
   });

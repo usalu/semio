@@ -1,0 +1,11 @@
+{
+  "asset": "stepladder",
+  "scales": [200, 500],
+  "treadThicknessM": 0.025,
+  "platformRimM": 0.026,
+  "grabDiameterM": 0.028,
+  "grabCentreHeightM": 1.615,
+  "frontShoeWidthM": 0.038,
+  "rearShoeWidthM": 0.032,
+  "surfaceToleranceM": 0.00005
+}

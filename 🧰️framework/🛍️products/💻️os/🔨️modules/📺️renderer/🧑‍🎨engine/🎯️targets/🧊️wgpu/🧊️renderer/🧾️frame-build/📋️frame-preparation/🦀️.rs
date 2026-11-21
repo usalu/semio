@@ -59,12 +59,14 @@ use semio_framework_job_worker::{WorkerJobPoll};
         if self.refused_receipt.is_some() { return Err(refuse("original prepared worker receipt remains refused").into()); }
         if self.job_rejected.is_some() { return Err(refuse("original prepared render admission remains rejected").into()); }
         if self.job.is_some() && self.params.is_none() {
-            let Some(cancel)=cx.admit_original_cancel_alias()? else { return Ok(FramePreparationStep::Pending); };
-            self.params=Some(semio_framework_job_worker_authority::BatchJobParams { operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig { retained:self.retained,site:"os_renderer.prepare.worker",stage:semio_framework_job::InteractiveStage::BackgroundStep,fuel_per_step:1,step_budget_us:1000 },now_us:cx.clock_source() });
+            let mut cancel = None;
+            let admission = cx.admit_original_cancel_alias(&mut cancel);
+            self.params = cancel.map(|cancel| semio_framework_job_worker_authority::BatchJobParams { operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig { retained:self.retained,site:"os_renderer.prepare.worker",stage:semio_framework_job::InteractiveStage::BackgroundStep,fuel_per_step:1,step_budget_us:1000 },now_us:cx.clock_source() });
+            admission?;
             return Ok(FramePreparationStep::Pending);
         }
         if self.job.is_some() || !self.admission.terminal_is_empty() {
-            if let Some(session)=self.admission.advance(&mut self.job,&mut self.params,cx)? { self.session=Some(session); }
+            self.admission.advance(&mut self.job, &mut self.params, &mut self.session, cx)?;
             return Ok(FramePreparationStep::Pending);
         }
         let session=self.session.as_mut().ok_or_else(||refuse("original prepared render session is absent"))?;
@@ -146,11 +148,14 @@ use semio_framework_job_worker::{WorkerJobPoll};
             if !original.terminal_is_empty() {
                 let Some(witness)=witness else{return Ok(InteractiveJobCloseStep::Blocked)};
                 let turn=cx.with_original_effect(grant,|_,effect|original.return_alias_step(witness,effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0},|(turn,_)|turn);
-                return frame_receive_close(match turn.result {
-                    Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
-                    Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(InteractiveJobCloseStep::Blocked),
-                    Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error),
-                },cx);
+                let blocked = matches!(&turn.result, Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)));
+                let result = match turn.result {
+                    Ok(step) => Ok(step),
+                    Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),
+                    Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(error),
+                };
+                let step = semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result, work: turn.work })?;
+                return Ok(if blocked { InteractiveJobCloseStep::Blocked } else { InteractiveJobCloseStep::Pending { progress: step.progress() } });
             }
             if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             self.params_cancel_retirement=None;
@@ -174,11 +179,18 @@ use semio_framework_job_worker::{WorkerJobPoll};
             }
             if let Some(witness)=witness {
                 match session.has_original_cancel_alias_witness(witness) {
-                    Ok(true)=>return frame_receive_close(match cx.with_original_effect(grant,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn) {
-                        Ok(Some(step))=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),
-                        Ok(None)|Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>Ok(InteractiveJobCloseStep::Blocked),
-                        Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>Err(error),
-                    },cx),
+                    Ok(true) => {
+                        use semio_framework_job_worker::WorkerJobDemandError;
+                        let Some((turn, _)) = cx.with_original_effect(grant, |cx, effect| session.return_original_cancel_alias_step(cx.original_cancel_token(), effect))? else { return Ok(InteractiveJobCloseStep::Blocked); };
+                        let blocked = matches!(&turn.result, Ok(None) | Err(WorkerJobDemandError::Contention(_)));
+                        let result = match turn.result {
+                            Ok(Some(step)) => Ok(step),
+                            Ok(None) | Err(WorkerJobDemandError::Contention(_)) => Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),
+                            Err(WorkerJobDemandError::Refused(error)) => Err(error),
+                        };
+                        let step = semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result, work: turn.work })?;
+                        return Ok(if blocked { InteractiveJobCloseStep::Blocked } else { InteractiveJobCloseStep::Pending { progress: step.progress() } });
+                    }
                     Ok(false)=>{},
                     Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>return Ok(InteractiveJobCloseStep::Blocked),
                     Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),

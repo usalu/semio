@@ -15,6 +15,7 @@ import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅�
 import { ITERATE_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES } from "../🏷️component-receipt/🟦️.ts";
 import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_IO_CHUNK_BYTES } from "../🏗️component-build/🟦️.ts";
 import { freshPathIsWithin } from "../🧾️source-epoch/🟦️.ts";
+import { actorPreparationPolicyV1, readOptionalActorImageV1 } from "../../📦️model/🌱️actor-preparation/🟦️.ts";
 export type DescriptorEmissionRequestV1 = Readonly<{
   component: string;
   artifactRoot: string;
@@ -29,6 +30,7 @@ export type SemanticDescriptorEmissionV1 = Readonly<{
   jsonBytes: Uint8Array;
   packBytes: Uint8Array;
   semanticSha256: string;
+  actorImage?: Uint8Array;
 }>;
 
 export type DescriptorEmissionValidationControlV1 = Readonly<{
@@ -39,7 +41,7 @@ export type DescriptorEmissionValidationControlV1 = Readonly<{
   checkpoint?: (stage: string) => void;
 }>;
 
-export type DescriptorEmissionControlV1=DescriptorEmissionValidationControlV1&Readonly<{invocation:ScriptInvocation;emitter:DescriptorEmitterV1}>;
+export type DescriptorEmissionControlV1=DescriptorEmissionValidationControlV1&Readonly<{invocation:ScriptInvocation;emitter:DescriptorEmitterV1;prepareActor?: boolean}>;
 export class DescribeScript extends BundleScript {
  async run(segments:string[]):Promise<void>{const control=scriptCompilerAdmissionControlV1(this.invocation,"descriptor:command",0);await withDescriptorEmitterV1(this.repoRoot,this.invocation,control,emitter=>withDescriptorEmitterTaskV1(emitter,this.invocation,async tool=>{await captureOwnedCommandV1(tool.path,["describe",...segments],this.repoRoot,{control:tool.control,env:devToolingEnv()});}));}
 }
@@ -102,7 +104,18 @@ export async function validateDescriptorEmissionInputV1(repoRoot:string,request:
 export function emitSemanticDescriptorV1(repoRoot:string,request:DescriptorEmissionRequestV1,control:DescriptorEmissionControlV1):Promise<SemanticDescriptorEmissionV1>{
  requireIssuedResourceControlInvocationV1(control.compiler,control.invocation);return withDescriptorEmitterTaskV1(control.emitter,control.invocation,async tool=>{
   const {artifactRoot,component,startedAt,budgetMs}=await validateDescriptorEmissionInputV1(repoRoot,request,control),phase=requestedCompilerAdmissionControlV1(tool.control,compilerAdmissionBudgetV1(control.compiler)),staging=mkdtempSync(join(artifactRoot,".🛂️descriptor-staging-"));let primaryFailed=false,primaryFailure:unknown,result:SemanticDescriptorEmissionV1|undefined;
-  try{emissionGuard(control,startedAt,budgetMs,"describe");await captureOwnedCommandV1(tool.path,["describe",component.path,"--out",staging],repoRoot,{env:control.environment??devToolingEnv(),control:phase});emissionGuard(control,startedAt,budgetMs,"verify");const packBytes=await readArtifactBytesV1(join(staging,DESCRIPTOR_PACK_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,phase.signal),jsonBytes=await readArtifactBytesV1(join(staging,DESCRIPTOR_JSON_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,phase.signal),pair=verifySemanticDescriptorPairBytesV1(jsonBytes,packBytes);await tool.recheck();result={pluginId:pair.pluginId,packageId:pair.packageId,role:pair.role,version:pair.version,componentSha256:component.sha256,jsonBytes,packBytes,semanticSha256:pair.semanticSha256};}
+  try {
+    emissionGuard(control, startedAt, budgetMs, "describe");
+    const args = ["describe", component.path, "--out", staging, ...(control.prepareActor ? ["--prepare-actor"] : [])];
+    await captureOwnedCommandV1(tool.path, args, repoRoot, {env: control.environment ?? devToolingEnv(), control: phase});
+    emissionGuard(control, startedAt, budgetMs, "verify");
+    const packBytes = await readArtifactBytesV1(join(staging, DESCRIPTOR_PACK_FILENAME), CATALOG_DESCRIPTOR_MAX_BYTES, phase.signal);
+    const jsonBytes = await readArtifactBytesV1(join(staging, DESCRIPTOR_JSON_FILENAME), CATALOG_DESCRIPTOR_MAX_BYTES, phase.signal);
+    const pair = verifySemanticDescriptorPairBytesV1(jsonBytes, packBytes);
+    const actorImage = control.prepareActor ? await readOptionalActorImageV1(join(staging, actorPreparationPolicyV1.image), phase.signal) : undefined;
+    await tool.recheck();
+    result = {pluginId: pair.pluginId, packageId: pair.packageId, role: pair.role, version: pair.version, componentSha256: component.sha256, jsonBytes, packBytes, semanticSha256: pair.semanticSha256, ...(actorImage ? {actorImage} : {})};
+  }
   catch(error){primaryFailed=true;primaryFailure=error;}finally{try{rmSync(staging,{recursive:true,force:true});}catch(error){if(!primaryFailed){primaryFailed=true;primaryFailure=error;}}}if(primaryFailed)throw primaryFailure;return result!;
  });
 }

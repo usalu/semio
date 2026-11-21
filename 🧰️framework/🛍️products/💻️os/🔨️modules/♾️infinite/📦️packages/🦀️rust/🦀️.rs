@@ -131,7 +131,7 @@ pub mod directed_dag {
     pub use semio_os_infinite_board_dag_host::{dag_take_pending_open_instance_id, DagHost, DagHostRetirement};
     pub use semio_os_infinite_board_dag_host::label_overlay_rows_for_node_spec;
     pub use semio_os_infinite_board_dag_host::{begin_note_edit, derive_pointer_plan, note_backspace, note_delete_forward, note_insert_text, note_move_caret, set_computing_progress, set_dimmed, set_node_statuses};
-    pub use semio_os_infinite_board_dag_graph::{adopt_camera_or_fit, entity_screen_json, fit_camera_to_content, focus_selection_camera, hovered_node_id, refit_camera_if_content_left_view, selection_union_bounds_screen_json, set_hover_channel, set_selected_channels, slider_overlay_state_json};
+    pub use semio_os_infinite_board_dag_graph::{adopt_camera_or_fit, entity_screen_json, fit_camera_to_content, focus_selection_camera, hovered_node_id, refit_camera_if_content_left_view, selection_union_bounds_screen_json, set_hover_channel, set_hover_channel_direction, set_selected_channels, slider_overlay_state_json};
     #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     pub use semio_os_infinite_board_dag_host::DagSession;
     pub use graph::{EdgeId, Handle, HandleId, HandleRole, Node, NodeId};

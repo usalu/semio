@@ -1,4 +1,4 @@
-"""🎧 What makes the standing adult a phone user, stated by hand for the coarser scales (1:100, 1:200, 1:500): the ponytail hanging under gravity from the bowed head (world of the texting pose), the headphones round the neck (world of the rest pose, carried by the trunk), the two hands in the texting grip and the phone (grip frame, see `r3_standing_phone_user_kit.grip`), and the hand bones of the skeleton. The 1:50 parts are in `r3_standing_phone_user_body50`.
+"""🎧 What makes the standing adult a phone user, stated by hand for the coarser scales (1:100, 1:200, 1:500): the ponytail on its own bone (world of the rest pose), the headphones round the neck (world of the rest pose, carried by the trunk), the two hands in the texting grip and the phone (grip frame, see `r3_standing_phone_user_kit.grip`), and the hand bones of the skeleton. The 1:50 parts are in `r3_standing_phone_user_body50`.
 """
 import math
 
@@ -8,9 +8,9 @@ SKIN, HAIR, POLYMER, GLASS = "skin", "hair", "headphone-polymer", "phone-glass-m
 BONE = 0.85
 FLOOR = 0.0375
 TAILS = {
-    50: [(0.036, 1.640, 0.016, 0.016), (0.016, 1.640, 0.022, 0.019), (0.002, 1.626, 0.027, 0.022), (-0.006, 1.600, 0.029, 0.023), (-0.010, 1.568, 0.028, 0.022), (-0.012, 1.538, 0.024, 0.018), (-0.014, 1.514, 0.017, 0.012), (-0.015, 1.498, 0.008, 0.006)],
-    100: [(0.036, 1.640, 0.017, 0.017), (0.008, 1.634, 0.025, 0.021), (-0.006, 1.600, 0.029, 0.023), (-0.011, 1.555, 0.027, 0.021), (-0.014, 1.516, 0.019, 0.014), (-0.015, 1.500, 0.010, 0.008)],
-    200: [(0.036, 1.640, 0.018, 0.018), (0.004, 1.630, 0.027, 0.022), (-0.009, 1.580, 0.029, 0.023), (-0.014, 1.520, 0.021, 0.016), (-0.015, 1.503, 0.016, 0.015)],
+    50: [(-0.083, 1.613, 0.016, 0.016), (-0.093, 1.601, 0.022, 0.019), (-0.099, 1.576, 0.027, 0.022), (-0.102, 1.546, 0.029, 0.023), (-0.105, 1.518, 0.025, 0.019), (-0.110, 1.498, 0.018, 0.013), (-0.116, 1.486, 0.009, 0.007)],
+    100: [(-0.083, 1.613, 0.017, 0.017), (-0.096, 1.590, 0.026, 0.021), (-0.102, 1.546, 0.029, 0.023), (-0.107, 1.507, 0.021, 0.016), (-0.114, 1.489, 0.011, 0.009)],
+    200: [(-0.083, 1.613, 0.018, 0.018), (-0.098, 1.582, 0.028, 0.022), (-0.104, 1.530, 0.026, 0.020), (-0.112, 1.495, 0.016, 0.015)],
 }
 PALMS = {
     100: [(-0.016, 0.000, 0.000, 0.025, 0.0170, 2.2), (0.020, 0.002, 0.000, 0.033, 0.0158, 2.3), (0.062, 0.001, 0.001, 0.040, 0.0140, 2.4), (0.094, -0.001, 0.003, 0.039, 0.0110, 2.4)],
@@ -22,25 +22,24 @@ SLABS = {
 THUMBS = {"r": [(-0.052, -0.074, -0.006), (-0.006, -0.041, 0.0128), (0.012, -0.023, 0.0126)], "l": [(-0.054, -0.073, 0.008), (-0.010, -0.042, 0.0380), (0.010, -0.025, 0.0386)]}
 MASSES = {
     200: {"r": [(-0.014, 0.000, 0.000, 0.025, 0.0170, 2.3), (0.040, 0.004, 0.002, 0.040, 0.0165, 2.4), (0.110, 0.004, 0.004, 0.040, 0.0155, 2.4), (0.170, 0.005, 0.004, 0.024, 0.0150, 2.4)], "l": [(-0.014, 0.000, 0.000, 0.025, 0.0170, 2.3), (0.040, 0.004, 0.000, 0.040, 0.0165, 2.4), (0.110, 0.004, -0.001, 0.040, 0.0155, 2.4), (0.170, 0.005, -0.001, 0.024, 0.0150, 2.4)]},
-    500: {"r": [(-0.012, 0.000, 0.000, 0.027, 0.0200, 2.3), (0.070, 0.006, 0.000, 0.049, 0.0215, 2.6), (0.165, 0.004, 0.000, 0.024, 0.0160, 2.4)], "l": [(-0.012, 0.000, 0.000, 0.027, 0.0200, 2.3), (0.070, 0.006, 0.000, 0.049, 0.0215, 2.6), (0.165, 0.004, 0.000, 0.024, 0.0160, 2.4)]},
+    500: {"r": [(-0.012, 0.000, 0.000, 0.030, 0.0240, 2.3), (0.070, 0.006, 0.000, 0.050, 0.0260, 2.6), (0.165, 0.004, 0.000, 0.030, 0.0210, 2.4)], "l": [(-0.012, 0.000, 0.000, 0.030, 0.0240, 2.3), (0.070, 0.006, 0.000, 0.050, 0.0260, 2.6), (0.165, 0.004, 0.000, 0.030, 0.0210, 2.4)]},
 }
 BAND = [(0.078, 1.450, 0.096), (0.048, 1.476, 0.091), (0.010, 1.493, 0.087), (-0.030, 1.501, 0.080), (-0.060, 1.504, 0.056), (-0.077, 1.504, 0.026), (-0.081, 1.504, 0.0)]
 
 
 def tail(sid, rows, tone=0.75):
-    """🎀 The ponytail as a loft along a path in the median plane of the texting pose: rows are (x, y, half breadth, half thickness)."""
+    """🎀 The ponytail on its own bone as a loft along a path in the median plane of the rest pose (upright head): from the tie down the back of the head, its end resting on the hood; rows are (x, y, half breadth, half thickness). Every pose turns the bone so that it keeps falling under gravity."""
     sections = []
     for i, (x, y, rz, rt) in enumerate(rows):
         p, q = rows[max(i - 1, 0)], rows[min(i + 1, len(rows) - 1)]
         t = (q[0] - p[0], q[1] - p[1])
         n = math.hypot(*t)
         sections.append(((x, y, 0.0), (0.0, 0.0, 1.0), (-t[1] / n, t[0] / n, 0.0), rz, rt))
-    return frame_loft(sid, "head", HAIR, tone, sections)
+    return frame_loft(sid, "ponytail", HAIR, tone, sections)
 
 
 def ponytail(scale):
-    with posed():
-        return [tail("ponytail", TAILS[scale])] if scale in TAILS else []
+    return [tail("ponytail", TAILS[scale])] if scale in TAILS else []
 
 
 def cup_frame(sign):
@@ -118,7 +117,7 @@ def hand_bones(scale):
                 rows = [(0.004, 0.000, 0.000, 0.022, 0.0152, 2.4), (0.080, 0.003, MASSES[200][side][2][2], 0.034, 0.0152, 2.6), (0.162, 0.004, MASSES[200][side][3][2], 0.020, 0.0152, 2.6)]
                 out.append(st(frame_loft("hand-bones" + s, bone, SKIN, BONE, hand_rows(side, rows)), bone))
             else:
-                rows = [(0.000, 0.000, 0.000, 0.022, 0.0200, 2.4), (0.075, 0.004, 0.000, 0.036, 0.0215, 2.6), (0.158, 0.004, 0.000, 0.021, 0.0160, 2.6)]
+                rows = [(0.000, 0.000, 0.000, 0.025, 0.0246, 2.4), (0.075, 0.004, 0.000, 0.037, 0.0246, 2.6), (0.158, 0.004, 0.000, 0.025, 0.0246, 2.6)]
                 out.append(st(frame_loft("hand-bones" + s, bone, SKIN, BONE, hand_rows(side, rows)), bone))
     return out
 

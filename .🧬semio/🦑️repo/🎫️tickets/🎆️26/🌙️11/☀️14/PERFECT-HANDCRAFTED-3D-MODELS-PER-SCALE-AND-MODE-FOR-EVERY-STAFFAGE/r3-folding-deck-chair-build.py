@@ -30,15 +30,19 @@ def main():
     tool = insert_tool()
     scales = {key: build() for key, build in SCALES.items()}
     volumes = {key: scales[key].volume() for key in ("50", "100", "200", "500")}
-    with open(os.path.join(T, "volumes", "furniture", "folding-deck-chair.json"), "w", encoding="utf-8") as out:
-        json.dump({"volumes": volumes}, out, ensure_ascii=False, indent=1)
-        out.write("\n")
     text = open(ASSET, encoding="utf-8").read()
     document = json.loads(text)
     new = members(document["asset"], scales)
     candidate = json.loads(text)
     candidate["asset"].update(new)
     candidate["asset"]["volumes"] = volumes
+    from runpy import run_path
+    run_path(os.path.join(T,"digital-stock-joints.py"))["author"](candidate["asset"])
+    new["representations"] = candidate["asset"]["representations"]
+    with open(os.path.join(T, "volumes", "furniture", "folding-deck-chair.json"), "w", encoding="utf-8") as out:
+        json.dump({"volumes": volumes}, out, ensure_ascii=False, indent=1)
+        out.write("\n")
+
     folder = os.path.join(T, "🗑️generated", "r3-folding-deck-chair")
     os.makedirs(folder, exist_ok=True)
     candidate["$schema"] = os.path.relpath(os.path.join(CATALOG, "..", "🧬️schema", "🔣️.json"), folder).replace(os.sep, "/") + "#/$defs/AssetDocument"

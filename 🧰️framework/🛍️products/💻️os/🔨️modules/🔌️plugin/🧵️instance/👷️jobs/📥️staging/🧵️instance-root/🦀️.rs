@@ -67,7 +67,7 @@ impl OriginalRenderInteractionStamp<'_> {
         let hover = self.interaction_hover;
         let peers = self.peer_presence;
         let own_color = self.own_color;
-        let interaction = InteractionView { state, hover, peers, draft_references: empty_draft_references() };
+        let interaction = InteractionView::new(state, hover, peers, empty_draft_references());
         struct Frame<'a> {
             node: &'a TreeNode,
             next: usize,

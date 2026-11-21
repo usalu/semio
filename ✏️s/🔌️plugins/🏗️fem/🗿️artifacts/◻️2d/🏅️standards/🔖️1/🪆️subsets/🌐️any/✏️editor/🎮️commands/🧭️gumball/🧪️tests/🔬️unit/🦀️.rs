@@ -14,12 +14,11 @@ use semio_plugin::ArtifactView;
 use semio_plugin::ConfigView;
 use semio_plugin::HistoryView;
 use semio_plugin::NoConfig;
-use pack::snapshot::ArtifactDsl;
 
-type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring;
 
-fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("demo document parses")
+fn demo() -> Fem2dSnapshotRetiring {
+    Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("the bundled demo fixture parses"))
 }
 
 fn translate(dx: f64, phase: Option<&str>) -> Fem2dCommand {
@@ -27,7 +26,7 @@ fn translate(dx: f64, phase: Option<&str>) -> Fem2dCommand {
 }
 
 fn x_of(app: &Fem2dApp, id: &str) -> f64 {
-    app.snapshot().expect("snapshot").nodes.iter().find(|node| node.id == id).expect("node").x
+    app.snapshot_ref().nodes.iter().find(|node| node.id.as_str() == id).expect("node").x
 }
 
 fn english(row: &HistoryEntry) -> String {
@@ -40,7 +39,7 @@ fn english(row: &HistoryEntry) -> String {
 fn the_unmounted_route_commits_one_relative_leaf_and_refuses_a_stream() {
     let doc = demo();
     let history = HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
     let emit = handle(&TranslateSelection { ids: vec!["scope:1:4:node2:n1".into()], dx: 0.5, dy: -0.25, dz: 0.0, phase: None, reason: None }, &view, &cfg).expect("emit");
     let [Fem2dMutation::MoveSelection(leaf)] = emit.artifact_mutations.as_slice() else { panic!("one relative leaf: {:?}", emit.artifact_mutations) };

@@ -801,6 +801,57 @@
  ],
  "progressCases": [
   {
+   "id": "bindings-primary-tally",
+   "resource": "dependencies:sync-bindings:312/323:canonical:238:changed:74",
+   "expected": {
+    "phase": "dependencies:sync-bindings",
+    "done": 312,
+    "total": 323
+   }
+  },
+  {
+   "id": "bindings-unchanged-tally",
+   "resource": "dependencies:sync-bindings:313/323:canonical:239:changed:74",
+   "expected": {
+    "phase": "dependencies:sync-bindings",
+    "done": 313,
+    "total": 323
+   }
+  },
+  {
+   "id": "bindings-without-authored-counts",
+   "resource": "dependencies:sync-bindings:312",
+   "expected": null
+  },
+  {
+   "id": "bindings-tally-mismatch",
+   "resource": "dependencies:sync-bindings:312/323:canonical:239:changed:74",
+   "expected": null
+  },
+  {
+   "id": "bindings-tally-over-total",
+   "resource": "dependencies:sync-bindings:324/323:canonical:250:changed:74",
+   "expected": null
+  },
+  {
+   "id": "bindings-tally-unsafe-integer",
+   "resource": "dependencies:sync-bindings:9007199254740992/9007199254740992:canonical:9007199254740992:changed:0",
+   "expected": null
+  },
+  {
+   "id": "bindings-tally-trailing-line",
+   "resource": "dependencies:sync-bindings:312/323:canonical:238:changed:74\n",
+   "expected": null
+  },
+  {
+   "id": "provider-fence-count",
+   "resource": "javascript-source-provider:519",
+   "expected": {
+    "phase": "javascript-source-provider",
+    "done": 519
+   }
+  },
+  {
    "id": "graph-phase",
    "resource": "build:graph-phase:inference:120:566",
    "expected": {

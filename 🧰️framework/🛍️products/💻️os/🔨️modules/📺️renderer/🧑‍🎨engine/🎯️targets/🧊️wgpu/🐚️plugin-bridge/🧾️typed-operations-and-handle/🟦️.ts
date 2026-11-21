@@ -47,27 +47,30 @@ export const WGPU_TYPED_OPERATION_EFFECT_CAPACITY = 4_096;
  * submission owes, surface a fault page by name, and leave the remaining effects untouched for the
  * host's own routing. The page codec itself is `🖼️wire-turn/🟦️.ts`'s, shared with React. */
 export class WgpuTypedOperationDrive {
-  #acknowledgements: (TypedOperationAckEvent | NonNullable<WireTurnResult["unsent"]>[number])[] = [];
+  #acknowledgements: TypedOperationAckEvent[] = [];
+  #deferredEvents = 0;
   #pages = 0;
   #terminal = false;
   readonly #hostEffects = new WeakMap<WireTurnResult, readonly WireVariant[]>();
 
   constructor(private readonly instanceId: number) {}
 
-  /** 📬️ Scans every accepted turn once, keeping its non-page effects and queueing its unsent events, then its ACKs. */
+  /** 📬️ Scans one submitted turn and its native acknowledgement replies, retaining only the submitted turn's deferred count. */
   observe(turns: readonly WireTurnResult[]): void {
+    const submitted = turns[0];
+    if (submitted && !this.#hostEffects.has(submitted)) this.#deferredEvents = submitted.deferredEvents ?? 0;
     for (const turn of turns) {
       if (this.#hostEffects.has(turn)) continue;
       const scan = scanTypedOperationPages(turn.effects);
       this.#hostEffects.set(turn, scan.kept);
-      this.#acknowledgements.push(...(turn.unsent ?? []), ...scan.acknowledgements);
+      this.#acknowledgements.push(...scan.acknowledgements);
       this.#pages += scan.pages.length;
       this.#terminal ||= scan.terminal;
     }
   }
 
   /** 📬️ The acknowledgements the NEXT submitted turn owes, handed over exactly once. */
-  takeAcknowledgements(): readonly (TypedOperationAckEvent | NonNullable<WireTurnResult["unsent"]>[number])[] {
+  takeAcknowledgements(): readonly TypedOperationAckEvent[] {
     const owed = this.#acknowledgements;
     this.#acknowledgements = [];
     return owed;
@@ -81,13 +84,13 @@ export class WgpuTypedOperationDrive {
   /** 🔄️ Whether the actor still owes this call a turn: an unanswered page, or a guest that says it
    * has work left this activation. */
   owesASettle(last: WireTurnResult | undefined): boolean {
-    return this.#acknowledgements.length > 0 || wireTurnStatusTag(last?.status) === "more-work";
+    return this.#deferredEvents > 0 || this.#acknowledgements.length > 0 || wireTurnStatusTag(last?.status) === "more-work";
   }
 
   /** 🔄️ Whether the turns just accepted did anything at all — a settle loop that keeps submitting
    * against a silent actor is the drain's job, not a host call's. */
   progressed(turns: readonly WireTurnResult[]): boolean {
-    return this.#acknowledgements.length > 0 || turns.some((turn) => turn.uiPatches.length > 0 || turn.effects.length > 0);
+    return this.#deferredEvents > 0 || this.#acknowledgements.length > 0 || turns.some((turn) => turn.uiPatches.length > 0 || turn.effects.length > 0);
   }
 
   report(_phase: string): void {}

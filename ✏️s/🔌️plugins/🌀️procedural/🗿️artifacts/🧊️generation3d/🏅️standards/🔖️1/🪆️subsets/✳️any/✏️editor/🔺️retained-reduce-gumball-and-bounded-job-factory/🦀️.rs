@@ -49,22 +49,23 @@ fn generation3d_retained_reduce(
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
-    let selected = || interaction.selection.get("graph").map(|selection| selection.ids.clone()).unwrap_or_default();
+    let graph_selection = interaction.selection.get("graph");
+    let graph_granularity = graph_selection.map_or("", |selection| selection.granularity.as_str());
     let component_ids: &[String] = interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice());
-    let graph_ids: &[String] = interaction.selection.get("graph").map_or(&[], |selection| selection.ids.as_slice());
-    if let Some(ids) = generation3d_component_targets(command, context.and_then(|context| context.view_state.as_deref()), interaction.active_granularity.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map(String::as_str), component_ids, graph_ids).filter(|ids| !ids.is_empty()) {
+    let graph_ids: &[String] = graph_selection.map_or(&[], |selection| selection.ids.as_slice());
+    if let Some(ids) = generation3d_component_targets(command, context.and_then(|context| context.view_state.as_deref()), interaction.active_granularity.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map(String::as_str), component_ids).filter(|ids| !ids.is_empty()) {
         semio_s_artifact_procedural_3d_editor_selection::validate_cached_components(&snapshot.host_snapshot, session, ids, Some(&operation.canonical_base_revision), operation.retained).map_err(|error|Fault::from(error.to_string()))?;
     }
     match command {
         Generation3dCommand::EditMeshSelection(payload) => semio_s_artifact_procedural_3d_editor_commands::edit_mesh_selection::apply_selected("editMeshSelection", payload, &doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::KnifeMeshSelection(payload) => semio_s_artifact_procedural_3d_editor_commands::knife_mesh_selection::apply_selected(payload, &doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::DeleteSelection(_) if semio_s_artifact_procedural_3d_mode_edit::windows::preview::edits_components(context.and_then(|context| context.view_state.as_deref()), interaction.active_granularity.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map(String::as_str)) => semio_s_artifact_procedural_3d_editor_commands::edit_mesh_selection::delete_selected(&doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
-        Generation3dCommand::DeleteSelection(_payload) => Ok(delete_selection::apply_selected(&doc, &selected())),
-        Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(&doc, &selected())),
-        Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(&doc, &selected())),
-        Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(&doc, &selected())),
-        Generation3dCommand::SelectDownstreamNode(_payload) => Ok(select_downstream_node::apply_selected(&doc, &selected())),
-        Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(&doc, &generation3d_port_ids_by_node(&doc.snapshot.host_snapshot), &selected())),
+        Generation3dCommand::DeleteSelection(_payload) => Ok(delete_selection::apply_selected(&doc, graph_ids)),
+        Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(&doc, graph_granularity, graph_ids)),
+        Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(&doc, graph_granularity, graph_ids)),
+        Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(&doc, graph_granularity, graph_ids)),
+        Generation3dCommand::SelectDownstreamNode(_payload) => Ok(select_downstream_node::apply_selected(&doc, graph_granularity, graph_ids)),
+        Generation3dCommand::ActivateSelection(_payload) => Ok(activate_selection::apply_ports(&doc, &generation3d_port_ids_by_node(&doc.snapshot.host_snapshot), graph_granularity, graph_ids)),
         _ => command.dispatch(&doc, &cfg, session),
     }
 }
@@ -95,7 +96,7 @@ pub(super) fn generation3d_gumball_command(command: &Generation3dCommand) -> boo
     generation3d_gumball_gesture(command).is_some()
 }
 
-pub(super) fn generation3d_component_targets<'a>(command: &'a Generation3dCommand, view: Option<&semio_plugin::ViewModel>, granularity: Option<&str>, geometry: &'a [String], graph: &'a [String]) -> Option<&'a [String]> {
+pub(super) fn generation3d_component_targets<'a>(command: &'a Generation3dCommand, view: Option<&semio_plugin::ViewModel>, granularity: Option<&str>, geometry: &'a [String]) -> Option<&'a [String]> {
     let components = semio_s_artifact_procedural_3d_mode_edit::windows::preview::edits_components(view, granularity);
     if matches!(command, Generation3dCommand::EditMeshSelection(_) | Generation3dCommand::KnifeMeshSelection(_)) || components && matches!(command, Generation3dCommand::DeleteSelection(_)) { return Some(geometry); }
     let explicit = match command {
@@ -105,7 +106,7 @@ pub(super) fn generation3d_component_targets<'a>(command: &'a Generation3dComman
         _ => return None,
     };
     if components { return Some(geometry); }
-    let ids = if explicit.is_empty() { graph } else { explicit.as_slice() };
+    let ids = explicit.as_slice();
     ids.iter().any(|id| semio_s_artifact_procedural_3d_editor_selection::ComponentTarget::parse(id).is_some()).then_some(ids)
 }
 

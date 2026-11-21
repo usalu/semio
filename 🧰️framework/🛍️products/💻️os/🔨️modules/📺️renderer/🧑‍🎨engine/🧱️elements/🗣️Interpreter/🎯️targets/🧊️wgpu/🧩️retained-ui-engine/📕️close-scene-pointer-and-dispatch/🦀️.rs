@@ -22,17 +22,20 @@ pub fn request_ui_document_close(window_id: &str) -> bool {
 /// 🧵️ Advances one exact retained-window retirement unit for the frame work lane.
 pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     if cx.should_yield(){return Ok(false)}let mut failure=None;
-    let advanced=(||{
     if close_retiring_focus_clipboard_one() {
-        return true;
+        return Ok(true);
     }
-    if semio_renderer_wgpu_scene_state::close_retired_scene_surface_one() {
-        return true;
+    if semio_renderer_wgpu_scene_state::close_retired_scene_surface_one(cx)? {
+        return Ok(true);
     }
+    let advanced=(||{
     let Some(owner) = UI_DOCUMENT_CLOSE_QUEUE.with(|cell| cell.borrow().owners.front().cloned()) else { return false };
     let window_id = owner.window_id.as_ref();
     if UI_ENGINE.with(|cell|{let engine=cell.borrow();engine.layout_retirement_refusal(window_id).is_some()&&!engine.layout_retirement_failure_pending(window_id)}){return false;}
     if close_window_focus_clipboard_one(window_id, owner.generation) {
+        return true;
+    }
+    if semio_renderer_wgpu_scene_canvas2d::ui_image_loading::close_window_image_resource_step(window_id, owner.generation) {
         return true;
     }
     if SCENE_INTENTS.with(|cell| cell.borrow_mut().close_window_step(window_id, owner.generation)) {
@@ -76,8 +79,8 @@ pub fn close_ui_document_one(cx:&mut semio_framework_job::StepContext<'_>)->Resu
     });
     if let Some(retired) = retirement {
         let owner = ScenePointerTarget::from(retired);
-        if owner.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d{semio_framework_os_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&owner.host_id);}
-        semio_framework_os_renderer_wgpu_scene_state::retire_scene_identity(&owner);
+        if owner.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d{semio_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&owner.host_id);}
+        semio_renderer_wgpu_scene_state::retire_scene_identity(&owner);
     }
     if complete {
         UI_DOCUMENT_CLOSE_QUEUE.with(|cell| {
@@ -114,7 +117,7 @@ pub fn retained_selection_cancellation(target:&ScenePointerTarget,actor:&str,ins
         if authority.actor!=actor||authority.app_instance_id!=instance_id||authority.window_id!=target.window_id{return None;}
         let exact=|value:&str|value.len()==16&&value.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte));
         if !exact(&authority.operation_id)||!exact(&authority.generation){return None;}
-        Some(ActionDescriptor{controller_id:scene.controller_id.clone(),action:"cancelTypedOperation".into(),args:Some(semio_framework_value::DslValue::Object(vec![("operationId".into(),semio_framework_value::DslValue::String(authority.operation_id.clone())),("generation".into(),semio_framework_value::DslValue::String(authority.generation.clone()))]))})
+        Some(ActionDescriptor{controller_id:scene.controller_id.clone(),action:"cancelTypedOperation".into(),args:Some(semio_framework::DslValue::Object(vec![("operationId".into(),semio_framework::DslValue::String(authority.operation_id.clone())),("generation".into(),semio_framework::DslValue::String(authority.generation.clone()))]))})
     })
 }
 

@@ -32,7 +32,6 @@ semio-s-artifact-gis-gismap = { workspace = true }
 semio-s-artifact-gis-gisterrain = { workspace = true }
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-hub-stdio-catalog-definition = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
 semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }

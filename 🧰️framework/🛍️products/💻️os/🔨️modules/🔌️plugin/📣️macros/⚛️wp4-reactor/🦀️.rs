@@ -506,12 +506,28 @@ macro_rules! __semio_owned_core_exports {
 #[macro_export]
 macro_rules! plugin_exports {
     ($mounted_policy:expr, $bundle_fn:expr, $app:ty) => {
-        $crate::__semio_plugin_actor_exports!($mounted_policy, $bundle_fn, $app, $crate::describe::describe_plugin, || {});
+        $crate::__semio_plugin_actor_exports!($mounted_policy, $bundle_fn, $app, $crate::describe::describe_plugin, || {}, on_open);
+    };
+    ($mounted_policy:expr, $bundle_fn:expr, $app:ty, prepare) => {
+        $crate::__semio_plugin_actor_exports!($mounted_policy, $bundle_fn, $app, $crate::describe::describe_plugin, || {}, prepare);
+    };
+}
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __semio_actor_preparation_export {
+    (on_open, $runtime:ident, $ensure:ident) => {};
+    (prepare, $runtime:ident, $ensure:ident) => {
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_owned_prepare_actor_v1() -> i32 {
+            $ensure();
+            $runtime.with(|runtime| i32::from(runtime.plugin.borrow().is_some() && runtime.plugin_assembly_error.borrow().is_none()))
+        }
     };
 }
 #[macro_export]
 macro_rules! __semio_plugin_actor_exports {
-    ($mounted_policy:expr, $bundle_fn:expr, $app:ty, $describe:path, $refresh:expr) => {
+    ($mounted_policy:expr, $bundle_fn:expr, $app:ty, $describe:path, $refresh:expr, $role:ident) => {
         $crate::component_persistent_local! {
             static __SEMIO_PLUGIN_RUNTIME: $crate::plugin_runtime::PluginRuntime<$app> = $crate::plugin_runtime::PluginRuntime::new($mounted_policy).expect("explicit embedding mounted policy");
         }
@@ -528,6 +544,7 @@ macro_rules! __semio_plugin_actor_exports {
             __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::__async::poll::resolve_ready($describe(runtime)))
         }
         $crate::__semio_owned_core_exports!(__SEMIO_PLUGIN_RUNTIME, __semio_ensure_plugin_runtime, __semio_describe_component);
+        $crate::__semio_actor_preparation_export!($role, __SEMIO_PLUGIN_RUNTIME, __semio_ensure_plugin_runtime);
         $crate::__semio_actor_exports!(__SemioComponentGuest, __SEMIO_PLUGIN_RUNTIME, __semio_ensure_plugin_runtime, __semio_describe_component);
         fn __semio_install_plugin_bundle() {
             __SEMIO_PLUGIN_RUNTIME.with(|runtime| {
@@ -569,7 +586,8 @@ macro_rules! extension_exports {
                 if pending.is_some() && $crate::__async::poll::resolve_ready($crate::plugin_runtime::install_extension_bundle(&mut pending)).expect("retained extension admission") {
                     $crate::__async::poll::resolve_ready($crate::plugin_runtime::extension_activate()).expect("admitted extension activation");
                 }
-            })
+            }),
+            on_open
         );
     };
     ($mounted_policy:expr, $bundle_fn:expr) => {

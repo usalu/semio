@@ -7,7 +7,7 @@ import { stashOperationProgress, stashOperationPublication, WGPU_TYPED_OPERATION
 import { admitSpawnedJob, declareWgpuBootSubphase, forgetSpawnedJobs, leftoverFriendlyEffects, pendingTurnEffects, shellFrameAnswersACaller, stashLeftoverHostEffects, takeSpawnedJobs, WGPU_SPAWNED_JOB_ROUNDS, wgpuHostEffect, type WgpuSpawnedJobDrain } from "../../🎛️contributions-and-effects/🟦️.ts";
 import { getShardClient, serializeWgpuActorCall, submitTurn } from "../../🧵️shard-and-actor-calls/🟦️.ts";
 import { RETAINED_DOCUMENT_OPPORTUNITIES, type WgpuOwnedUiProjection, yieldWgpuUi } from "../../🍽️ui-intake-and-route/🟦️.ts";
-import { drainTypedOperationTurns, shellFrameBytes, type WireTurnResult, wireTurnStatusTag } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
+import { drainTypedOperationTurns, shellFrameBytes, type WireTurnResult } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { driveSpawnedJob, spawnedJobCompletedEvent, type SpawnedJobPort } from "../../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts";
 import { createShardCommandIngressPages } from "@semio-tech/framework-actor/shard-client/wire";
 import type { createInstanceBookkeeping } from "../🪪️descriptor-and-instance-state/🟦️.ts";
@@ -126,6 +126,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
     drainingInstances.add(instanceId);
     const drive = new WgpuTypedOperationDrive(instanceId);
     try {
+      const activation = requireUiRoute(instanceId).lifecycle.activation;
       const outcome = await drainTypedOperationTurns(
         WGPU_TYPED_OPERATION_DRAIN_BUDGET,
         live,
@@ -133,7 +134,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
           const actorId = requireActorId(instanceId);
           const route = requireUiRoute(instanceId);
           const execute = executeFor(actorId);
-          const turn = await submitTurn(actorId, drive.takeAcknowledgements());
+          const turn = await submitTurn(actorId, drive.takeAcknowledgements(), undefined, activation);
           const accepted = [turn, ...await route.accept(turn, execute)];
           drive.observe(accepted);
           const frames: Uint8Array[] = [];
@@ -150,7 +151,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
           frames.push(...jobDrain.frames);
           if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
           const latest = jobDrain.last ?? accepted.at(-1);
-          return { status: latest?.status, nextWake: latest?.nextWake ?? null };
+          return { status: drive.owesASettle(latest) ? "more-work" : latest?.status, nextWake: latest?.nextWake ?? null };
         }),
         yieldWgpuUi,
       );
@@ -167,6 +168,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
     try {
       requireActorId(instanceId);
       const route = requireUiRoute(instanceId);
+      const activation = route.lifecycle.activation;
       const execute = executeFor(actorId);
       const results: WireTurnResult[] = [];
       const drive = new WgpuTypedOperationDrive(instanceId);
@@ -188,14 +190,10 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
         });
         let terminal: string | undefined;
         for (let pageIndex = 0, offers = 0; pageIndex < pages.length;) {
-          let submitted: WireTurnResult;
-          do {
-            submitted = await submitTurn(actorId, drive.takeAcknowledgements(), pages[pageIndex]!);
-            terminal = submitted.commandIngress?.tag;
-            await accept(submitted);
-          } while ((submitted.unsent ?? []).length > 0);
-          // 🚦️ A refused page is not consumed: offer the same page again instead of skipping it into `plugin.command-page-order`.
-          if (terminal === "backpressure") {
+          const submitted = await submitTurn(actorId, drive.takeAcknowledgements(), pages[pageIndex]!, activation);
+          await accept(submitted);
+          terminal = submitted.commandIngress?.tag;
+          if ((submitted.deferredEvents ?? 0) > 0 || terminal === "backpressure") {
             if ((offers += 1) > 1_024) throw new Error(`plugin ${pluginId}: command ingress plugin.command-page-stalled`);
             await new Promise<void>((resolve) => setTimeout(resolve, 0));
             continue;
@@ -207,7 +205,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
           if (terminal === "fault") throw new Error(`plugin ${pluginId}: command ingress fault`);
           // 🚦️ backpressure is the guest asking for another turn (its slice ended or its single ingress owner is still assembling); the owner is retained, so keep draining within the ceiling instead of failing the command.
           await new Promise<void>((resolve) => setTimeout(resolve, 25));
-          const continued = await submitTurn(actorId, drive.takeAcknowledgements());
+          const continued = await submitTurn(actorId, drive.takeAcknowledgements(), undefined, activation);
           await accept(continued);
           terminal = continued.commandIngress?.tag;
         }
@@ -215,7 +213,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
       }
       for (let settle = 0; drive.owesASettle(results.at(-1)) && settle < WGPU_TYPED_OPERATION_SETTLE_LIMIT; settle += 1) {
         const before = results.length;
-        await accept(await submitTurn(actorId, drive.takeAcknowledgements()));
+        await accept(await submitTurn(actorId, drive.takeAcknowledgements(), undefined, activation));
         if (!drive.progressed(results.slice(before))) break;
         await yieldWgpuUi();
       }
@@ -231,7 +229,7 @@ export function createTurnDrivers({ requireUiRoute, executeFor, state, closingIn
       const leftoverFriendly = leftover.map((effect) => wgpuHostEffect(effect)).filter((effect): effect is Effect => effect !== null);
       drive.report("command");
       turnOutcomes.push({ instanceId, frames: outFrames });
-      if (wireTurnStatusTag((jobDrain.last ?? results.at(-1))?.status) === "more-work") void drainTypedOperations(instanceId);
+      if (drive.owesASettle(jobDrain.last ?? results.at(-1))) void drainTypedOperations(instanceId);
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     }

@@ -125,7 +125,7 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
     }
 
     /// 🎟️ The borrowed completion retains its original capacity and interaction-return reservation.
-    pub(crate) fn checkout_at(&mut self, index: usize) -> Option<(Completion<T>, CompletionCheckout)> {
+    pub fn checkout_at(&mut self, index: usize) -> Option<(Completion<T>, CompletionCheckout)> {
         let completion = self.ready.remove(index)?;
         self.checked_out += 1;
         self.returning += usize::from(completion.restores_interaction);
@@ -133,13 +133,13 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
         Some((completion, checkout))
     }
 
-    pub(crate) fn return_checkout(&mut self, index: usize, completion: Completion<T>, checkout: CompletionCheckout) {
+    pub fn return_checkout(&mut self, index: usize, completion: Completion<T>, checkout: CompletionCheckout) {
         self.finish_checkout(checkout);
         self.ready.insert(index.min(self.ready.len()), completion);
         assert!(self.len() <= CAPACITY, "returned original completion exceeded its retained capacity");
     }
 
-    pub(crate) fn finish_checkout(&mut self, checkout: CompletionCheckout) {
+    pub fn finish_checkout(&mut self, checkout: CompletionCheckout) {
         self.checked_out = self.checked_out.checked_sub(1).expect("original completion checkout");
         self.returning = self.returning.checked_sub(usize::from(checkout.returns_interaction)).expect("original interaction-return checkout");
     }
@@ -153,7 +153,7 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
     }
 }
 
-pub(crate) struct CompletionCheckout {
+pub struct CompletionCheckout {
     returns_interaction: bool,
 }
 

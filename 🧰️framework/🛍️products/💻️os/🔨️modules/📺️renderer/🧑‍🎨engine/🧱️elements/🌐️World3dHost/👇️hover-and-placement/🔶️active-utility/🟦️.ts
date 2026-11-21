@@ -1,16 +1,24 @@
 /** 🔶️ The active utility phase of useWorldHoverAndPlacement. */
-import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
 import { isContextMenuPointerTarget } from "@semio-tech/ui-react";
 import { createCoalescingActionDispatcher } from "../../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
-import { leftoverBrushRetainGuestHoverV1, leftoverWorldWindowOverlayV1, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dComponentInteractionTarget, world3dInstanceInteractionTarget, world3dMarkerInteractionTarget, world3dSuggestionsAltHeld, world3dSuggestionsGestureArmed, type World3dSuggestionsRightDownRoute, world3dSuggestionsRightDownRoutes } from "../../🔗️instance-selection/🟦️.ts";
+import { leftoverBrushRetainGuestHoverV1, leftoverWorldWindowOverlayV1, WORLD3D_DEFAULT_MARKER_GRANULARITY, world3dComponentInteractionTarget, world3dInstanceHoverTargetsJson, world3dInstanceInteractionTarget, world3dMarkerInteractionTarget, world3dSuggestionsAltHeld, world3dSuggestionsGestureArmed, type World3dSuggestionsRightDownRoute, world3dSuggestionsRightDownRoutes } from "../../🔗️instance-selection/🟦️.ts";
 import { world3dGumballSelectionArgsV1 } from "../../🧮️gumball-math/🟦️.ts";
 import { resolveWorldMergeMode } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { world3dHoverActionArgs, world3dSelectionTargetsActionArgs } from "../../🖱️interaction-domain-args/🟦️.ts";
 import type { WorldCore3 } from "../../🏗️brush-mesh-and-menus/🟦️.ts";
 
+type WorldHoverPublication = {
+  readonly action: "interactionHover" | "setHover" | "worldVortexHover";
+  readonly granularity: string;
+  readonly id: string | null;
+  readonly protectClear?: boolean;
+  readonly aliasesJson?: string;
+};
+
 /** 🔷 Builds activeUtility, altHeldRef, brushMode, cameraRef of useWorldHoverAndPlacement. */
 export function useActiveUtilityState({ core }: { readonly core: WorldCore3 }) {
-  const { activeUtility, altHeldRef, brushMode, cameraRef, connectDropConsumedRef, dispatch, dispatchSettled, gridFactor, hostRef, hoveredInstanceInteractionTargetRef, hoveredVortexFullIdRef, instances, instancesRef, interactionDomainId, interactionGranularity, meshesRef, persistentSelectionMode, selection, selectionMode, setConnectDragHoverPosition, setConnectDragSource, setVortexPointerArm, setVoxelHoverOrigin, suggestionMenuOpen, suggestionMenuOwnsThisWindow, volumeBrushMode, vortices, vorticesRef, windowInstanceId } = core;
+  const { activeUtility, altHeldRef, brushMode, cameraRef, connectDropConsumedRef, dispatch, dispatchSettled, geometryRevisionRef, gridFactor, hostRef, hoveredInstanceInteractionTargetRef, hoveredVortexFullIdRef, instances, instancesRef, interactionDomainId, interactionGranularity, meshesRef, persistentSelectionMode, selection, selectionMode, setConnectDragHoverPosition, setConnectDragSource, setVortexPointerArm, setVoxelHoverOrigin, suggestionMenuOpen, suggestionMenuOwnsThisWindow, volumeBrushMode, vortices, vorticesRef, windowInstanceId } = core;
   const handleWorldOrbitRightPointerDown = useCallback(
     (event: PointerEvent) => {
       const alt = world3dSuggestionsAltHeld(event.altKey, altHeldRef.current);
@@ -92,35 +100,47 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore3 }) {
     [dispatch, instances, interactionDomainId, interactionGranularity, persistentSelectionMode, selection.selectionMergeMode, selectionMode],
   );
 
-  const dispatchInstanceHover = useMemo(
-    () =>
-      createCoalescingActionDispatcher<string | null>((id) => {
-        if (interactionDomainId) {
-          if (id == null && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldWindowOverlayV1(windowInstanceId))) return undefined;
-          if (id == null) return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, null));
-          const target = world3dInstanceInteractionTarget(instancesRef.current, id, interactionGranularity);
-          return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, target.granularity, target.id));
-        }
-        if (id == null) return dispatchSettled("setHover", {});
-        return dispatchSettled("setHover", { objectId: id, mode: "mesh", id: 0 });
-      }),
-    [activeUtility, dispatchSettled, interactionDomainId, interactionGranularity, windowInstanceId],
-  );
+  const retainGuestHover = useCallback(() => Boolean(interactionDomainId) && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldWindowOverlayV1(windowInstanceId)), [activeUtility, interactionDomainId, windowInstanceId]);
+  const publishHover = useMemo(() => createCoalescingActionDispatcher<WorldHoverPublication>((mark) => {
+    if (mark.protectClear && mark.id === null && retainGuestHover()) return undefined;
+    if (mark.action === "interactionHover") {
+      return dispatchSettled(mark.action, world3dHoverActionArgs(interactionDomainId ?? "", mark.granularity, mark.id, mark.aliasesJson));
+    }
+    if (mark.action === "worldVortexHover") return dispatchSettled(mark.action, mark.id === null ? {} : { fullId: mark.id });
+    return dispatchSettled(mark.action, mark.id === null ? {} : { objectId: mark.id, mode: "mesh", id: 0 });
+  }, (left, right) => left.action === right.action && (left.aliasesJson && right.aliasesJson && left.id !== null && right.id !== null
+    ? left.aliasesJson === right.aliasesJson
+    : left.id === right.id && left.aliasesJson === right.aliasesJson
+      && (left.id === null ? left.protectClear === right.protectClear : left.granularity === right.granularity))), [dispatchSettled, interactionDomainId, retainGuestHover]);
 
-  const dispatchVortexHover = useMemo(
-    () =>
-      createCoalescingActionDispatcher<string | null>((fullId) => {
-        if (interactionDomainId) {
-          if (!fullId && leftoverBrushRetainGuestHoverV1(activeUtility, leftoverWorldWindowOverlayV1(windowInstanceId))) return undefined;
-          const target = fullId ? world3dMarkerInteractionTarget("vortex", fullId, vorticesRef.current.find((entry) => entry.fullId === fullId)) : null;
-          const args = world3dHoverActionArgs(interactionDomainId, target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, target?.id);
-          return dispatchSettled("interactionHover", args);
-        }
-        if (!fullId) return dispatchSettled("worldVortexHover", {});
-        return dispatchSettled("worldVortexHover", { fullId });
-      }),
-    [activeUtility, dispatchSettled, interactionDomainId, windowInstanceId],
-  );
+  const localPointerHover = useRef<WorldHoverPublication | null>(null);
+  useLayoutEffect(() => () => { localPointerHover.current = null; }, [interactionDomainId, windowInstanceId]);
+  useLayoutEffect(() => () => publishHover.clearPending(), [publishHover, windowInstanceId, interactionGranularity, geometryRevisionRef.current.revision]);
+
+  const offerHover = useCallback((mark: WorldHoverPublication) => {
+    localPointerHover.current = mark.id === null ? null : mark;
+    publishHover(mark);
+  }, [publishHover]);
+
+  const dispatchInstanceHover = useCallback((id: string | null) => {
+    if (!interactionDomainId) {
+      offerHover({ action: "setHover", granularity: "mesh", id });
+      return;
+    }
+    const records = instancesRef.current;
+    const target = id === null ? null : world3dInstanceInteractionTarget(records, id, interactionGranularity);
+    const aliasesJson = id === null ? undefined : world3dInstanceHoverTargetsJson(records.find((record) => record.id === id));
+    offerHover({ action: "interactionHover", granularity: target?.granularity ?? interactionGranularity, id: target?.id ?? null, protectClear: id === null, aliasesJson });
+  }, [instancesRef, interactionDomainId, interactionGranularity, offerHover]);
+
+  const dispatchVortexHover = useCallback((fullId: string | null) => {
+    if (!interactionDomainId) {
+      offerHover({ action: "worldVortexHover", granularity: WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, id: fullId });
+      return;
+    }
+    const target = fullId === null ? null : world3dMarkerInteractionTarget("vortex", fullId, vorticesRef.current.find((entry) => entry.fullId === fullId));
+    offerHover({ action: "interactionHover", granularity: target?.granularity ?? WORLD3D_DEFAULT_MARKER_GRANULARITY.vortex, id: target?.id ?? null, protectClear: fullId === null });
+  }, [interactionDomainId, offerHover, vorticesRef]);
 
   const localHoverReleaseListeners = useRef(new Set<() => void>());
   const subscribeLocalHoverRelease = useCallback((listener: () => void) => {
@@ -131,8 +151,11 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore3 }) {
   }, []);
   const releaseLocalHover = useCallback(() => {
     hoveredInstanceInteractionTargetRef.current = null;
+    const last = localPointerHover.current;
+    localPointerHover.current = null;
+    if (last) publishHover({ action: last.action, granularity: last.granularity, id: null, protectClear: last.action === "interactionHover" || undefined });
     for (const listener of localHoverReleaseListeners.current) listener();
-  }, []);
+  }, [hoveredInstanceInteractionTargetRef, publishHover]);
   const publishHoverPaint = useCallback((id: string | null) => {
     const root = hostRef.current;
     if (!root) return;
@@ -148,13 +171,9 @@ export function useActiveUtilityState({ core }: { readonly core: WorldCore3 }) {
     [dispatchInstanceHover, interactionGranularity],
   );
 
-  const dispatchComponentHover = useMemo(
-    () =>
-      createCoalescingActionDispatcher<{ objectId: string; mode: string; id: number }>((args) => {
-        const target = world3dComponentInteractionTarget(instancesRef.current, meshesRef.current, args.objectId, args.mode, args.id);
-        return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId ?? "", target?.granularity ?? args.mode, target?.id ?? null));
-      }),
-    [dispatchSettled, interactionDomainId],
-  );
+  const dispatchComponentHover = useCallback((args: { objectId: string; mode: string; id: number }) => {
+    const target = world3dComponentInteractionTarget(instancesRef.current, meshesRef.current, args.objectId, args.mode, args.id);
+    offerHover({ action: "interactionHover", granularity: target?.granularity ?? args.mode, id: target?.id ?? null });
+  }, [instancesRef, meshesRef, offerHover]);
   return { interactionDomainId, dispatchComponentHover, dispatchInstanceHover, dispatch, hoveredVortexFullIdRef, dispatchVortexHover, selection, persistentSelectionMode, vortices, setVortexPointerArm, setConnectDragSource, setConnectDragHoverPosition, connectDropConsumedRef, hostRef, cameraRef, gridFactor, volumeBrushMode, setVoxelHoverOrigin, instancesRef, meshesRef, handleInstancePointerDown, handleInstancePointerMove, handleSuggestionClose, handleWorldOrbitRightPointerDown, publishHoverPaint, releaseLocalHover, selectionArgs, subscribeLocalHoverRelease, suggestionsRightDownDispatchedAtRef };
 }

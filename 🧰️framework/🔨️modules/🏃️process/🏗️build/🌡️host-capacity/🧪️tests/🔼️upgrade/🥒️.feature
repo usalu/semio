@@ -21,6 +21,12 @@ Feature: A Run That Executes Nothing Answers Before It Takes A Capacity Grant
     When the wait is cancelled
     Then the request leaves the queue, the small grant stays and the run says so in English or German
 
+  Scenario: A Peer Publication Ends A Quiet Upgrade
+    Given a quiet grant queued to grow beside a full reservation
+    When an exact published graph becomes available to reuse
+    Then the upgrade request leaves the queue and the quiet reservation is preserved
+    And if the graph cannot be restored the invocation can ask to grow again
+
   Scenario: The Run After An Edit Asks For The Full Grant At The Door
     Given a run that executed work
     When the next run of the same class starts

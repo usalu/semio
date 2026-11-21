@@ -102,3 +102,42 @@ Every sheet below was rendered after the last change of the volumes and opened: 
 - The first paragraph of the reference table is from my knowledge, not from a manufacturer's sheet.
 
 State: DONE, with the points of section 7 stated as they are.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-cooking-pot-model.py` (round-3 volumes plus the round-5 changes and root fixes, `--apply`), shared `r5_o02_lib.py`, sheets `r5-o02-sheets.sh` / `r5-o02-montage.sh`, measures `r5-o02-measure.ts`. Renders under `🗑️generated/r5-cooking-pot/{before,after}/` (every scale body, thermal cut, structure, 2D; poses cold, heating, boiling; clip boil 0.4 s), all opened.
+
+### Reference and model against reference (1:50, default pose)
+
+| quantity | reference (section 1, 16 cm stew pot class) | model | deviation |
+|---|---|---|---|
+| wall outside diameter | 161.6 mm (160 + 2 x 0.8) | 161.6 mm | 0 % |
+| pouring rim diameter | 172 mm (`depthM`) | 172.0 mm | 0 % |
+| overall height | 100 mm | 100.0 mm | 0 % |
+| base on the hob | 150 to 157 mm, 5 mm thick | 157 mm, 5.0 mm | 0 % |
+| handle span | 250 mm (`widthM`) | 250.0 mm | 0 % |
+| grip loop width / rod | 50 mm / 6 mm | 50.0 / 6 mm | 0 % |
+| grip height | 86 mm | 77 to 89 mm (rod centre 86) | 0 % |
+| water fill | 1 L to 50 mm above the floor | 45.8 mm body + 8 mm surface layer, top 55 mm (boiling) | as round 3 |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- (bubbles stood on the cold and heating water) | A / A- / A- |
+| 1:100 | A- / A- / A- | unchanged A- |
+| 1:200 | A- / A- / A- | unchanged A-; 2D prints over its whole band |
+| 1:500 | B / A- / A- (handles as square 50 x 10 mm planks) | A- / A- / A- (loops with a round grip end) |
+
+Catalog before: INVALID (4 `range-end-feature` findings of the 1:200 band at 1:350: base, base-end, wall-far, water 0.18 to 0.19 mm). After: VALID, `checkVolumes` 0, `volumes-check --product` PASS.
+
+### Changes
+
+- Rig (root): new bone `bubbles` (child of `surface`, prismatic along the vessel axis, -12 to 0 mm). Pose `cold` sinks it 12 mm (the bubbles are inside the water, the surface is still), `heating` 3 mm (only the tops break through), `boiling` and the clips unchanged; `heat-to-boil` interpolates through the poses. The nine 1:50 bubbles (body solids and plan shapes) are bound to it.
+- 1:500 body: the two lugs keep 50 x 10 mm but end in a 25 mm half round, so in plan they read as the loop handles they stand for (`LUG_500`); decision text says so.
+- 1:200 2D: `base`, `base-end`, `wall-far`, `water` drawn with the 0.2 mm pen, so the band 1:150 to 1:350 prints to its end; the range is unchanged (bands 20-75-150-350 stay gapless).
+
+### Remaining
+
+- The 1:50 plan still draws the bubbles in every pose (a 2D shape cannot sink below the water surface in plan); the 3D shows them only when the water boils.
+- Everything else of section 7 stands (monocoque structure by reference, modelled steel 0.69 kg against the declared 0.54 kg without a cited source).

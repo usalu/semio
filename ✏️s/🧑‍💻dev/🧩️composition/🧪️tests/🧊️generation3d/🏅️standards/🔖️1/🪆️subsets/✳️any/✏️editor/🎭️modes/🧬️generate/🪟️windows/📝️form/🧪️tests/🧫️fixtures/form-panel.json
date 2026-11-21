@@ -1,0 +1,64 @@
+{
+  "surface": "generation3d-generate-form",
+  "panelKey": "generate.form",
+  "fieldsKey": "generate.form.fields",
+  "scroll": {
+    "kind": "scroll",
+    "axes": "vertical",
+    "padding": {
+      "all": "none"
+    },
+    "sizing": "fill"
+  },
+  "locales": [
+    {
+      "id": "en",
+      "label": "Form"
+    },
+    {
+      "id": "de",
+      "label": "Formular"
+    }
+  ],
+  "generation": "saved",
+  "viewport": {
+    "height": 128,
+    "width": 300
+  },
+  "fields": [
+    {
+      "id": "size",
+      "label": "Size",
+      "kind": "slider",
+      "min": 0,
+      "max": 10,
+      "value": 2,
+      "step": 1
+    },
+    {
+      "id": "caption",
+      "label": "CAPTION",
+      "kind": "text",
+      "schema": "text",
+      "value": ""
+    },
+    {
+      "id": "copies",
+      "label": "COPIES",
+      "kind": "number",
+      "schema": "number",
+      "value": 0
+    },
+    {
+      "id": "enabled",
+      "label": "ENABLED",
+      "kind": "boolean",
+      "schema": "boolean",
+      "value": false
+    }
+  ],
+  "finalEdit": {
+    "questionId": "caption",
+    "value": "Rotor"
+  }
+}

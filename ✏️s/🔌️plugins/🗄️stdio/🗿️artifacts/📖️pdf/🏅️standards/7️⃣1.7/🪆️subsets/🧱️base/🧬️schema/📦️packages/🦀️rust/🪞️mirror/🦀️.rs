@@ -15,7 +15,7 @@ pub mod standards {
                     pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::modules::content;
                     pub use semio_s_artifact_stdio_pdf_lift::standards::v1_7::subsets::base::modules::lift;
                     pub use semio_s_artifact_stdio_pdf_lower::standards::v1_7::subsets::base::modules::lower;
-                    pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::modules::writer;
+                    pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::modules::{filters, writer, xref};
                 }
                 #[path = "."]
                 pub mod schema {
@@ -138,9 +138,6 @@ pub mod editor {
                     #[path = "."]
                     pub mod main {
                         pub use semio_s_artifact_stdio_pdf_tests_2::editor::pdf17a::modes::edit::windows::main::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../🗄️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -162,9 +159,6 @@ pub mod editor {
                         #[path = "../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[cfg(test)]
-                        #[path = "../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -186,9 +180,6 @@ pub mod editor {
                         #[path = "../../../../../📐️e/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../📐️e/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -210,9 +201,6 @@ pub mod editor {
                         #[path = "../../../../../⚕️h/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../⚕️h/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -234,9 +222,6 @@ pub mod editor {
                         #[path = "../../../../../♿️ua/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../♿️ua/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -258,9 +243,6 @@ pub mod editor {
                         #[path = "../../../../../🧾️vt/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../🧾️vt/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -282,9 +264,6 @@ pub mod editor {
                         #[path = "../../../../../🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -305,9 +284,6 @@ pub mod viewer {
                     #[path = "."]
                     pub mod main {
                         pub use semio_s_artifact_stdio_pdf_inferences::viewer::pdf17a::modes::view::windows::main::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../🗄️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -325,9 +301,6 @@ pub mod viewer {
                     #[path = "."]
                     pub mod main {
                         pub use semio_s_artifact_stdio_pdf_inferences::viewer::pdf17::modes::view::windows::main::*;
-                        #[cfg(test)]
-                        #[path = "../../../../👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -345,9 +318,6 @@ pub mod viewer {
                     #[path = "."]
                     pub mod main {
                         pub use semio_s_artifact_stdio_pdf_inferences::viewer::pdf17e::modes::view::windows::main::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../📐️e/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -365,9 +335,6 @@ pub mod viewer {
                     #[path = "."]
                     pub mod main {
                         pub use semio_s_artifact_stdio_pdf_inferences::viewer::pdf17h::modes::view::windows::main::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../⚕️h/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -385,9 +352,6 @@ pub mod viewer {
                     #[path = "."]
                     pub mod main {
                         pub use semio_s_artifact_stdio_pdf_inferences::viewer::pdf17ua::modes::view::windows::main::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../♿️ua/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -405,9 +369,6 @@ pub mod viewer {
                     #[path = "."]
                     pub mod main {
                         pub use semio_s_artifact_stdio_pdf_inferences::viewer::pdf17vt::modes::view::windows::main::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../🧾️vt/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }
@@ -425,9 +386,6 @@ pub mod viewer {
                     #[path = "."]
                     pub mod main {
                         pub use semio_s_artifact_stdio_pdf_inferences::viewer::pdf17x::modes::view::windows::main::*;
-                        #[cfg(test)]
-                        #[path = "../../../../../🖨️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }

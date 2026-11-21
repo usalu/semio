@@ -139,6 +139,10 @@
      "en": "Each shape carries its thermal region in all three views.",
      "de": "Jede Form trägt ihre thermische Region in allen drei Ansichten."
     }
+   },
+   "validRange": {
+    "minDenominator": 350,
+    "maxDenominator": 700
    }
   }
  },

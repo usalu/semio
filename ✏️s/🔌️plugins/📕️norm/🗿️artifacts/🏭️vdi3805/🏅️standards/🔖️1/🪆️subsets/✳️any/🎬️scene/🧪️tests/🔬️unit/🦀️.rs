@@ -12,9 +12,9 @@ fn fixtures() -> Vec<(&'static str, Vdi3805Snapshot)> {
     vec![
         ("valve", model::conforming_valve_dataset()),
         ("valve-fail", model::nonconforming_valve_dataset()),
-        ("radiator", model::conforming_blatt_3_dataset()),
-        ("pump", model::conforming_blatt_5_dataset()),
-        ("generator", model::conforming_blatt_6_dataset()),
+        ("radiator", model::conforming_radiator_dataset()),
+        ("pump", model::conforming_pump_dataset()),
+        ("generator", model::conforming_heat_generator_dataset()),
         ("empty", Vdi3805Snapshot { catalog: model::ManufacturerCatalog { products: vec![], ..model::conforming_valve_dataset().catalog }, geometry: Default::default(), curves: Default::default(), ..model::conforming_valve_dataset() }),
     ]
 }
@@ -67,7 +67,7 @@ fn a_product_is_drawn_at_the_size_of_its_geometry() {
 
 #[test]
 fn a_radiator_without_geometry_is_drawn_from_its_extent() {
-    let document = model::conforming_blatt_3_dataset();
+    let document = model::conforming_radiator_dataset();
     let scene = scene_of(&document);
     let scene::Geometry::Solid(scene::SolidGeometry { shape: scene::SolidShape::Box { size, .. } }) = &entity(&scene, "RAD-600").geometry else { panic!("the radiator is no box") };
     assert_eq!((size.x, size.y, size.z), (0.6, 0.1, 0.6));
@@ -75,7 +75,7 @@ fn a_radiator_without_geometry_is_drawn_from_its_extent() {
 
 #[test]
 fn a_pump_is_drawn_as_a_cylinder() {
-    let document = model::conforming_blatt_5_dataset();
+    let document = model::conforming_pump_dataset();
     let id = document.catalog.products[0].id.clone();
     let scene = scene_of(&document);
     assert!(matches!(entity(&scene, &id).geometry, scene::Geometry::Solid(scene::SolidGeometry { shape: scene::SolidShape::Cylinder { .. } })));
@@ -100,7 +100,7 @@ fn diagrams_obey_the_laws() {
 
 #[test]
 fn the_radiator_curve_follows_the_en_442_closed_form() {
-    let document = model::conforming_blatt_3_dataset();
+    let document = model::conforming_radiator_dataset();
     let report = inferences::evaluate(&document);
     let all = diagrams(&document, &report, Some("RAD-600"));
     let output = all.iter().find(|d| d.id == "output:RAD-600").expect("output curve");
@@ -173,7 +173,7 @@ fn the_golden_scene_matches_the_committed_bytes() {
 
 #[test]
 fn the_independent_oracle_agrees() {
-    let document = model::conforming_blatt_3_dataset();
+    let document = model::conforming_radiator_dataset();
     let report = inferences::evaluate(&document);
     let all = diagrams(&document, &report, Some("RAD-600"));
     let output = all.iter().find(|d| d.id == "output:RAD-600").expect("output curve");
@@ -231,7 +231,7 @@ fn an_edit_changes_only_the_fingerprints_of_the_entities_it_touches() {
 
 #[test]
 fn a_radiator_without_geometry_has_extent_grips_on_its_attributes() {
-    let document = model::conforming_blatt_3_dataset();
+    let document = model::conforming_radiator_dataset();
     let all = handles(&document, &entities_of(&document));
     assert_eq!(all.len(), 3);
     let length = all.iter().find(|h| h.id == "RAD-600:width").expect("length grip");
@@ -241,8 +241,8 @@ fn a_radiator_without_geometry_has_extent_grips_on_its_attributes() {
 
 #[test]
 fn attribute_grips_rest_at_the_stored_values() {
-    let pump = model::conforming_blatt_5_dataset();
-    let generator = model::conforming_blatt_6_dataset();
+    let pump = model::conforming_pump_dataset();
+    let generator = model::conforming_heat_generator_dataset();
     let valve = model::conforming_valve_dataset();
     for (document, id, tag, stored) in [
         (&pump, pump.catalog.products[0].id.clone(), "head", match &pump.catalog.products[0].configuration.attributes { model::SheetAttributes::PumpHeating(a) => a.nominal_head_m, _ => panic!("pump") }),

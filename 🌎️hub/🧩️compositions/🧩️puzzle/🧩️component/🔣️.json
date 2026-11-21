@@ -361,7 +361,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -796,8 +830,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -819,8 +853,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -895,8 +929,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -918,8 +952,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -994,8 +1028,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -1017,8 +1051,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -1093,8 +1127,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -1116,8 +1150,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -1192,8 +1226,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -1215,8 +1249,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -1291,8 +1325,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -1917,7 +1951,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -2352,8 +2420,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2375,8 +2443,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2451,8 +2519,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2474,8 +2542,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2550,8 +2618,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2573,8 +2641,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2649,8 +2717,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2672,8 +2740,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2748,8 +2816,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2771,8 +2839,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -2847,8 +2915,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -3469,7 +3537,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -3904,8 +4006,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -3927,8 +4029,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4003,8 +4105,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4026,8 +4128,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4102,8 +4204,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4125,8 +4227,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4201,8 +4303,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4224,8 +4326,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4300,8 +4402,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4323,8 +4425,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -4399,8 +4501,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -5702,7 +5804,7 @@
                   "integer": false
                 },
                 "required": false,
-                "default": 0.0
+                "default": 0
               },
               {
                 "id": "dy",
@@ -5721,7 +5823,7 @@
                   "integer": false
                 },
                 "required": false,
-                "default": 0.0
+                "default": 0
               }
             ],
             "inPalette": true,
@@ -5796,7 +5898,7 @@
                   "integer": false
                 },
                 "required": true,
-                "default": 90.0
+                "default": 90
               }
             ],
             "inPalette": true,
@@ -6322,7 +6424,7 @@
                   "integer": false
                 },
                 "required": true,
-                "default": 12.0
+                "default": 12
               }
             ],
             "inPalette": false,
@@ -9183,8 +9285,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -9290,8 +9392,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -9408,8 +9510,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -9488,8 +9590,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -9567,8 +9669,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -9685,8 +9787,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -9765,8 +9867,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -9893,8 +9995,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -9972,8 +10074,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -10105,8 +10207,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -10183,8 +10285,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -11705,7 +11807,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 50.0,
+                "size": 50,
                 "children": [
                   {
                     "kind": "window",
@@ -11716,7 +11818,7 @@
               },
               {
                 "kind": "stack",
-                "size": 25.0,
+                "size": 25,
                 "children": [
                   {
                     "kind": "window",
@@ -11727,7 +11829,7 @@
               },
               {
                 "kind": "stack",
-                "size": 25.0,
+                "size": 25,
                 "children": [
                   {
                     "kind": "window",
@@ -13702,7 +13804,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -14137,8 +14273,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14160,8 +14296,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14236,8 +14372,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14259,8 +14395,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14335,8 +14471,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14358,8 +14494,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14434,8 +14570,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14457,8 +14593,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14533,8 +14669,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14556,8 +14692,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -14632,8 +14768,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -19250,8 +19386,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -19357,8 +19493,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -19475,8 +19611,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -19555,8 +19691,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -19634,8 +19770,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -19752,8 +19888,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -19832,8 +19968,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -19960,8 +20096,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -20039,8 +20175,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -20172,8 +20308,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -20250,8 +20386,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -24279,7 +24415,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -24714,8 +24884,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24737,8 +24907,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24813,8 +24983,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24836,8 +25006,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24912,8 +25082,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -24935,8 +25105,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -25011,8 +25181,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -25034,8 +25204,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -25110,8 +25280,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -25133,8 +25303,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -25209,8 +25379,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26096,7 +26266,41 @@
                     "schema": {
                       "kind": "string"
                     },
-                    "required": true
+                    "required": false
+                  },
+                  {
+                    "id": "targetId",
+                    "label": {
+                      "native": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      },
+                      "reuse": {
+                        "en": "Target",
+                        "de": "Ziel"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  },
+                  {
+                    "id": "granularityId",
+                    "label": {
+                      "native": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      },
+                      "reuse": {
+                        "en": "Granularity",
+                        "de": "Granularität"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
                   }
                 ],
                 "inPalette": false,
@@ -26531,8 +26735,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26554,8 +26758,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26630,8 +26834,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26653,8 +26857,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26729,8 +26933,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26752,8 +26956,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26828,8 +27032,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26851,8 +27055,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26927,8 +27131,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -26950,8 +27154,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -27026,8 +27230,8 @@
                     },
                     "schema": {
                       "kind": "number",
-                      "min": 0.0,
-                      "step": 1.0,
+                      "min": 0,
+                      "step": 1,
                       "integer": true
                     },
                     "presentation": {
@@ -32163,8 +32367,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -32270,8 +32474,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -32388,8 +32592,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -32468,8 +32672,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -32547,8 +32751,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -32665,8 +32869,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -32745,8 +32949,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -32873,8 +33077,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -32952,8 +33156,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -33085,8 +33289,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -33163,8 +33367,8 @@
                 },
                 "schema": {
                   "kind": "number",
-                  "min": 0.0,
-                  "step": 1.0,
+                  "min": 0,
+                  "step": 1,
                   "integer": true
                 },
                 "presentation": {
@@ -35180,7 +35384,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 40.0,
+                "size": 40,
                 "children": [
                   {
                     "kind": "window",
@@ -35191,7 +35395,7 @@
               },
               {
                 "kind": "stack",
-                "size": 60.0,
+                "size": 60,
                 "children": [
                   {
                     "kind": "window",
@@ -35606,17 +35810,81 @@
         "io": {
           "artifactSchema": "puzzle.5d",
           "artifactMediaType": {
-            "class": "data",
-            "form": "value"
+            "class": "kit",
+            "form": "design"
           },
-          "ports": [],
+          "ports": [
+            {
+              "id": "kit:in",
+              "label": {
+                "native": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                },
+                "reuse": {
+                  "en": "Kit Catalog",
+                  "de": "Kit-Katalog"
+                }
+              },
+              "direction": "in",
+              "mediaType": {
+                "class": "kit",
+                "form": "type"
+              },
+              "kindId": "kit.catalog",
+              "required": false,
+              "multiplicity": "many"
+            },
+            {
+              "id": "rewrite:in",
+              "label": {
+                "native": {
+                  "en": "Rewrite Rule",
+                  "de": "Umschreibregel"
+                },
+                "reuse": {
+                  "en": "Rewrite Rule",
+                  "de": "Umschreibregel"
+                }
+              },
+              "direction": "in",
+              "mediaType": {
+                "class": "computation",
+                "form": "value"
+              },
+              "kindId": "trinity.rewrite.invocation",
+              "required": false,
+              "multiplicity": "one"
+            },
+            {
+              "id": "design:out",
+              "label": {
+                "native": {
+                  "en": "5D Puzzle Design",
+                  "de": "5D-Puzzle-Entwurf"
+                },
+                "reuse": {
+                  "en": "5D Puzzle Design",
+                  "de": "5D-Puzzle-Entwurf"
+                }
+              },
+              "direction": "out",
+              "mediaType": {
+                "class": "kit",
+                "form": "design"
+              },
+              "kindId": "5d.puzzle",
+              "required": false,
+              "multiplicity": "many"
+            }
+          ],
           "exportFormats": [],
           "importFormats": [],
           "artifact": {
-            "id": "",
-            "name": "",
-            "dimension": "",
-            "componentKind": ""
+            "id": "5d.puzzle",
+            "name": "5D Puzzle",
+            "dimension": "5d",
+            "componentKind": "puzzle5d"
           }
         },
         "faultNotices": [
@@ -36636,7 +36904,7 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 40.0,
+                "size": 40,
                 "children": [
                   {
                     "kind": "window",
@@ -36647,7 +36915,7 @@
               },
               {
                 "kind": "stack",
-                "size": 60.0,
+                "size": 60,
                 "children": [
                   {
                     "kind": "window",

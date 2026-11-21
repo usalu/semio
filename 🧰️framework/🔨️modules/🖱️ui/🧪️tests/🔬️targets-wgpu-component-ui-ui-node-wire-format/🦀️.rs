@@ -95,7 +95,7 @@ mod ui_node_wire_format_tests {
                     interaction_domain: None,
                     drop_action: None,
                 }),
-                UiNode::Image(UiImageNode { menu: None, id: "img1".into(), src: "icon.png".into(), alt: Some(Label::data("alt text")), presence: UiPresence::default() }),
+                UiNode::Image(UiImageNode { source_page: None, menu: None, id: "img1".into(), src: "icon.png".into(), alt: Some(Label::data("alt text")), presence: UiPresence::default() }),
                 UiNode::ComponentScene(UiComponentSceneNode {
                     menu: None,
                     host_id: String::new(),
@@ -291,7 +291,7 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(UiNode::Section(UiSectionNode { menu: None, id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
         assert_presence_serializes(UiNode::Group(UiGroupNode { menu: None, id: "i".into(), label: Label::data("l"), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
         assert_presence_serializes(UiNode::Tree(UiTreeNode { presentation: Default::default(), menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
-        assert_presence_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
+        assert_presence_serializes(UiNode::Image(UiImageNode { source_page: None, menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
         assert_presence_serializes(
             UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), host_status: None, presence: UiPresence::default() }),
             "ExternalSlot",
@@ -517,7 +517,7 @@ mod ui_node_wire_format_tests {
         assert_menu_serializes(UiNode::Text(UiTextNode { menu: None, value: Label::data("x"), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
         assert_menu_serializes(UiNode::Button(UiButtonNode { menu: None, id: None, icon_id: IconName::CircleDot, label: Label::data("l"), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
         assert_menu_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator");
-        assert_menu_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
+        assert_menu_serializes(UiNode::Image(UiImageNode { source_page: None, menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
         assert_menu_serializes(UiNode::Tree(UiTreeNode { presentation: Default::default(), menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
         assert_menu_serializes(UiNode::Progress(UiProgressNode { menu: None, id: "i".into(), completed: 1.0, total: Some(2.0), value_text: Label::data("x"), presence: UiPresence::default() }), "Progress");
     }

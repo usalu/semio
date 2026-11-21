@@ -20,7 +20,7 @@ OUT = os.path.join(T, "🗑️generated", "r3-spiral-stair", "🔣️.json")
 SRC = os.path.join(T, "volumes", "components", "spiral-stair.json")
 GEOM = ("kind", "points", "closed", "x", "y", "w", "h", "cx", "cy", "rx", "ry")
 COL_TOP = K.TOP + K.CAP_T
-AREAS = {"treads": 7.95, "column-steel": 1.84}
+AREAS = {"treads": 7.95, "column-steel": 1.84, "balustrade-steel": 2.592}
 r5, text = K.r5, K.text
 
 

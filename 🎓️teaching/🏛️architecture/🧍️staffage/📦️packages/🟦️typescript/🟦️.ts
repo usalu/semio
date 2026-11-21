@@ -8,8 +8,8 @@ export type { QuantityParts, QuantityUnit } from "../../🔨️modules/📐️un
 export { solveRig } from "../../🔨️modules/🦴️rig/🟦️.ts";
 export { clipOf, cycleOf, frameAt, poseOf, sampleClip, samplePose, transition, wrapTime } from "../../🔨️modules/🎞️animation/🟦️.ts";
 export { SolidSweepError, evaluate, evaluateDrawing, flattenGeometry, flattenPath, rigBounds } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-export { validateAsset, validateManifest, validateRanges, validateSymbols, viewExtent } from "../../🔨️modules/🗂️catalog/🟦️.ts";
-export type { AssetContext, Issue } from "../../🔨️modules/🗂️catalog/🟦️.ts";
+export { uncoveredDenominators, validateAsset, validateManifest, validateRanges, validateSymbols, viewExtent } from "../../🔨️modules/🗂️catalog/🟦️.ts";
+export type { AssetContext, Issue, RangeGap } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 export { resolveThermalEnvironment } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 export { exportIssues, modelFormats, volumeIssues, volumeTrapIssues } from "../../🔨️modules/🗂️catalog/🧊️volume/🟦️.ts";
 export { VOLUME_LIMITS, VOLUME_RULES, authoredVolumes, checkVolumes, compareSolidLists, expandedCount, featureOf, measureVolumes, solidsOf } from "../../🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts";

@@ -214,6 +214,10 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for Box<dyn ArtifactCommandWork<A>> 
     fn tool_id(&self) -> &'static str { (**self).tool_id() }
     fn receive_original_command(&mut self,command:&mut A::Command,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{(**self).receive_original_command(command,cx)}
     fn receive_original_context(&mut self,context:&ArtifactOwnedContextHandle<A>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{(**self).receive_original_context(context,cx)}
+    fn receive_original_output_chunks(&mut self, chunks: &mut Option<semio_plugin_decl_media::ArtifactOutputChunks>, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> { (**self).receive_original_output_chunks(chunks, cx) }
+    fn original_wire_demands(&self, wire: &[u8], maximum_copy_bytes: usize) -> Result<Option<RetirementDemand>, ValueError> { (**self).original_wire_demands(wire, maximum_copy_bytes) }
+    fn receive_original_wire(&mut self, wire: &[u8], cx: &mut StepContext<'_>) -> Result<Option<A::Command>, semio_framework_job::OriginalTurnFailure> { (**self).receive_original_wire(wire, cx) }
+    fn retains_original_wire(&self) -> bool { (**self).retains_original_wire() }
     fn workspace_identity(&self) -> u64 { (**self).workspace_identity() }
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize> { (**self).extent(command, snapshot, interaction, context) }
     fn work_demands(&self, input: &ArtifactCommandInputs<'_, A>, maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> { (**self).work_demands(input, maximum_copy_bytes) }

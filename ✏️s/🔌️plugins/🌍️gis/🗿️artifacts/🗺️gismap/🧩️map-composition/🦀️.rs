@@ -3,14 +3,52 @@
 use crate::schema::feature::MapFeature;
 use crate::schema::snapshot::GisMapSnapshot;
 use semio_framework_value::DslValue;
+use semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer;
+use semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::mutations::SemioImageMutation;
 use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
 
 //#region 🔖️Composition
+store::space_members! {
+    native_producer: &semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
+    history_limits: semio_os_kernel::os_store::HistoryReadLimits {
+        file_bytes: 67_108_864,
+        frame_body_bytes: 1_048_576,
+        records: 8_192,
+        maximum_fields: 128,
+        maximum_text_bytes: 1_048_576,
+        maximum_binary_bytes: 1_048_576,
+        maximum_json_bytes: 1_048_576,
+        maximum_json_allocation_bytes: 8_388_608,
+        maximum_json_items: 65_536,
+        maximum_json_depth: 64,
+    },
+    maximum_history_allocation_bytes: 8_388_608,
+    pub enum GisMapMembers, GisMapMembersOpen {
+        Drawing("s.stdio.semio", "v1", "drawing", "stdio.semio") => (
+            SemioDrawingSnapshot, SemioDrawingMutation,
+            SemioMemberStoreProducer<SemioDrawingSnapshot, SemioDrawingMutation>,
+            SemioMemberStoreProducer::<SemioDrawingSnapshot, SemioDrawingMutation>::new()
+        ),
+        Image("s.stdio.semio", "v1", "image", "stdio.semio") => (
+            SemioImageSnapshot, SemioImageMutation,
+            SemioMemberStoreProducer<SemioImageSnapshot, SemioImageMutation>,
+            SemioMemberStoreProducer::<SemioImageSnapshot, SemioImageMutation>::new()
+        ),
+        Value("s.stdio.semio", "v1", "value", "stdio.semio") => (
+            SemioValueSnapshot, SemioValueMutation,
+            SemioMemberStoreProducer<SemioValueSnapshot, SemioValueMutation>,
+            SemioMemberStoreProducer::<SemioValueSnapshot, SemioValueMutation>::new()
+        ),
+    }
+}
+
 /// 🧩️ Composed `s.stdio.semio.drawing`/`stdio.semio.image`/`s.stdio.semio.value` child slots
 /// (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`, design map §4: "map C:drawing+image+value").
 /// `positions`/`routes`/`regions` stay gis's own domain-specific id-keyed feature lists (analogous to

@@ -41,4 +41,7 @@ pub fn handle(payload: &ApplyFilter, doc: &ArtifactView<'_, RasterSnapshot>, cfg
 }
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
 //#endregion 🧪️Tests

@@ -9,6 +9,10 @@ description = "Component crate of semio-s-artifact-puzzle-5d: document-records"
 [package.metadata.semio]
 role = "library"
 
+[package.metadata.semio.preparation]
+script = "../../../../../../../../📦️packages/🦀️rust/📜️script.ts"
+command = ["graph-generate"]
+
 [lints]
 workspace = true
 

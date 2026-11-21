@@ -1,0 +1,282 @@
+{
+  "source": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        4,
+        3,
+        5
+      ]
+    ],
+    "surface": [
+      {
+        "kind": "vertexNormal",
+        "index": 0,
+        "normal": [
+          0.6,
+          0,
+          0.8
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 1,
+        "normal": [
+          0,
+          0.6,
+          0.8
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 2,
+        "normal": [
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 3,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 4,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "vertexNormal",
+        "index": 5,
+        "normal": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 0,
+        "uv": [
+          0.125,
+          0.125
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 1,
+        "uv": [
+          0.875,
+          0.125
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 2,
+        "uv": [
+          0.125,
+          0.875
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 3,
+        "uv": [
+          0.75,
+          0.25
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 4,
+        "uv": [
+          0.25,
+          0.25
+        ]
+      },
+      {
+        "kind": "cornerUv",
+        "index": 5,
+        "uv": [
+          0.25,
+          0.75
+        ]
+      },
+      {
+        "kind": "smoothFace",
+        "index": 0
+      },
+      {
+        "kind": "seamEdge",
+        "index": 0
+      }
+    ],
+    "attributes": {
+      "hardNormal": {
+        "domain": "corner",
+        "semantic": "normal",
+        "interpolation": "nearest",
+        "values": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "indices": [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ]
+      },
+      "design": {
+        "domain": "face",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          "front",
+          "return"
+        ]
+      },
+      "pointCode": {
+        "domain": "vertex",
+        "semantic": "custom",
+        "interpolation": "nearest",
+        "values": [
+          10,
+          20,
+          30,
+          90,
+          80,
+          60
+        ]
+      }
+    }
+  },
+  "tolerance": 0.001,
+  "expected": {
+    "vertices": 4,
+    "faces": 2,
+    "seamHalfedges": 2,
+    "area": 4,
+    "cornerUvs": [
+      [
+        0.125,
+        0.125
+      ],
+      [
+        0.875,
+        0.125
+      ],
+      [
+        0.125,
+        0.875
+      ],
+      [
+        0.75,
+        0.25
+      ],
+      [
+        0.25,
+        0.25
+      ],
+      [
+        0.25,
+        0.75
+      ]
+    ],
+    "faceNormals": [
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "rawPointNormals": [
+      [
+        0.6,
+        0,
+        0.8
+      ],
+      [
+        0,
+        0.6,
+        0.8
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "pointCodes": [
+      10,
+      20,
+      30,
+      60
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 use crate::panels::catalogue::*;
 use semio_s_plugin_norm_app_surface::CatalogueCell;
-use semio_s_artifact_norm_din18599_checks::{evaluate_document, geg_anlage2_ht_prime_limits};
+use semio_s_artifact_norm_din18599_checks::{evaluate_document, geg_ht_prime_limit, GEG_SECTION_16_HT_PRIME_RATIO};
 use crate::unit_tests::context;
 use semio_plugin::{TreeWindows, ViewModel};
 use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
@@ -37,15 +37,15 @@ fn renders_reference_tables_with_examples() {
 #[test]
 fn reference_tables_cells_match_evaluate_sources() {
     let tables = reference_tables();
-    let ht = tables.iter().find(|t| t.id == "geg-anlage2-ht-prime").expect("H′T table");
-    let detached = ht.rows.iter().find(|r| r.id == "detached-an-le-350").expect("detached ≤350 row");
-    let CatalogueCell::Number { value: cell_limit, .. } = &detached.cells[1] else {
-        panic!("detached H′T cell must be Number");
+    let ht = tables.iter().find(|t| t.id == "geg-section16-ht-prime").expect("H′T table");
+    let residential = ht.rows.iter().find(|r| r.id == "residential-same-geometry").expect("same-geometry reference row");
+    let CatalogueCell::Number { value: cell_limit, .. } = &residential.cells[1] else {
+        panic!("residential H′T ratio must be numeric");
     };
-    assert_eq!(*cell_limit, geg_anlage2_ht_prime_limits::DETACHED_AN_LE_350);
+    assert_eq!(*cell_limit, GEG_SECTION_16_HT_PRIME_RATIO);
 
     let doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     let report = evaluate_document(&doc);
     let check = report.checks.iter().find(|c| c.id == "din18599.geg.ht-prime").expect("ht-prime check");
-    assert_eq!(check.limit.value, *cell_limit);
+    assert_eq!(Some(check.limit.value), geg_ht_prime_limit(&doc));
 }

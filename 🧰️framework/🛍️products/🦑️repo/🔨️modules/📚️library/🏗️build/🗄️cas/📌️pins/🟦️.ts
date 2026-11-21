@@ -39,13 +39,32 @@ export async function readCasPinsV1(root:string,nowMs:number):Promise<Map<string
  return pinned;
 }
 
-const holds=new Map<string,Set<string>>();
+type HeldCasPinsV1={digests:Set<string>;lastWrite:Promise<void>;queued:boolean;leaseMaxMs:number};
+const holds=new Map<string,HeldCasPinsV1>();
 
-/** 🪢️ Holds `digests` for `holder` while this process lives: the set only grows (the least recently named are dropped above `maximum`), is written at once and renewed before its lease ends, and a write that fails (a full disk) keeps the earlier pin, so a collection never takes what a live process still references. */
+function publishHeldCasPinsV1(root:string,holder:string,hold:HeldCasPinsV1,leaseMaxMs:number):Promise<void>{
+ hold.leaseMaxMs=leaseMaxMs;
+ if(hold.queued)return hold.lastWrite;
+ hold.queued=true;
+ hold.lastWrite=hold.lastWrite.then(()=>{
+  hold.queued=false;
+  const {digests,leaseMaxMs}=hold;
+  return pinCasV1(root,{leaseMaxMs},holder,[...digests],leaseMaxMs,Date.now()).catch(()=>undefined);
+ });
+ return hold.lastWrite;
+}
+
+/** 🪢️ Holds digests for the life of this process, dropping the least recently named above `maximum`. Updates and renewals coalesce behind the current write and publish the latest set in order. A failed write keeps the prior pin. */
 export async function holdCasPinsV1(root:string,policy:Pick<CasPolicyV1,"leaseMaxMs">,holder:string,digests:Iterable<string>,maximum:number=65536):Promise<void>{
- const key=root+"\0"+holder;let set=holds.get(key);
- if(!set){const created=new Set<string>(),renew=setInterval(()=>{void pinCasV1(root,policy,holder,[...created],policy.leaseMaxMs,Date.now()).catch(()=>undefined);},Math.max(1,Math.floor(policy.leaseMaxMs/3)));renew.unref?.();holds.set(key,set=created);}
+ const key=root+"\0"+holder;
+ let hold=holds.get(key);
+ if(!hold){
+  const created:HeldCasPinsV1={digests:new Set(),lastWrite:Promise.resolve(),queued:false,leaseMaxMs:policy.leaseMaxMs};
+  const renew=setInterval(()=>{void publishHeldCasPinsV1(root,holder,created,policy.leaseMaxMs);},Math.max(1,Math.floor(policy.leaseMaxMs/3)));
+  renew.unref?.();holds.set(key,hold=created);
+ }
+ const set=hold.digests;
  for(const digest of digests){set.delete(digest);set.add(digest);}
  while(set.size>maximum)set.delete(set.values().next().value!);
- await pinCasV1(root,policy,holder,[...set],policy.leaseMaxMs,Date.now()).catch(()=>undefined);
+ await publishHeldCasPinsV1(root,holder,hold,policy.leaseMaxMs);
 }

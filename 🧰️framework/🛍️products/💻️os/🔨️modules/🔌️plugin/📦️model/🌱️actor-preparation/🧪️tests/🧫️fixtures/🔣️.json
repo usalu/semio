@@ -1,0 +1,14 @@
+{
+  "componentSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source": "prepared actor model",
+  "cases": [
+    { "name": "exact model", "changes": {}, "accepted": true },
+    { "name": "another component", "changes": { "componentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }, "accepted": false },
+    { "name": "another image", "changes": { "imageSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, "accepted": false },
+    { "name": "larger image", "changes": { "imageBytes": 21 }, "accepted": false },
+    { "name": "zero-size image", "changes": { "imageBytes": 0 }, "accepted": false },
+    { "name": "oversized image", "changes": { "imageBytes": 536870913 }, "accepted": false },
+    { "name": "unrecognized field", "changes": { "externalPath": "image.wasm" }, "accepted": false },
+    { "name": "unknown version", "changes": { "version": 2 }, "accepted": false }
+  ]
+}

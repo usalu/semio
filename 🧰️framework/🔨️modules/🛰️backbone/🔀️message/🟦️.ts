@@ -5,6 +5,8 @@ import { decodeDocumentBackboneEnvelopeBatchExact, writeVarintU64 } from "../../
 import { PACK_TAG_LIST, PACK_TAG_STR, PACK_TAG_STR_INLINE, packBuildSymbols, packEncodeString, packPushBytes, packReadVarintBigInt } from "../../🎁️packs/🟦️.ts";
 import { BACKBONE_GENESIS_MAXIMUM_BYTES, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "../../🪢️wire-contracts/🟦️.ts";
 
+import { atomicBackbonePart } from "../../📡️replication/🚪️io/💾️binary/🔗️causal/🧮️backbone/🧩️atomic-group/🟦️.ts";
+
 //#region 🔖️Backbone
 //#region 🔀️BackboneMessage
 export type BinaryBackboneMessage =
@@ -136,12 +138,26 @@ export function parseDocumentBackboneMessage(message: Uint8Array): DocumentBackb
   return { message: message.slice(), envelopes };
 }
 
+export type DocumentBackboneTransportMessage =
+  | (DocumentBackboneMessage & Readonly<{ kind: "batch" }>)
+  | Readonly<{ kind: "atomic-part"; message: Uint8Array; part: Uint8Array }>;
+
+/** 🧵️ Checks the original outer envelope and selects atomic custody before ordinary batch decoding. */
+export function parseDocumentBackboneTransportMessage(message: Uint8Array): DocumentBackboneTransportMessage {
+  const parsed = decodeBackboneMessage(message);
+  if (parsed.kind !== "mutations") throw new Error("document backbone: mutations required");
+  if (atomicBackbonePart(parsed.envelopes) !== undefined) {
+    return { kind: "atomic-part", message: message.slice(), part: parsed.envelopes };
+  }
+  return { kind: "batch", message: message.slice(), envelopes: decodeDocumentBackboneEnvelopeBatchExact(parsed.envelopes) };
+}
+
 /** 🔙️ Admits one canonical hot message an actor hands its store: a mutation batch, exactly as
  * {@link parseDocumentBackboneMessage} admits it, or the retraction of history transitions the hub refused. */
 export function parseInboundDocumentBackboneMessage(message: Uint8Array): Uint8Array {
   if (!(message instanceof Uint8Array) || message.length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES) throw new Error("document backbone: hot byte limit");
   if (decodeBackboneMessage(message).kind === "retract") return message.slice();
-  return parseDocumentBackboneMessage(message).message;
+  return parseDocumentBackboneTransportMessage(message).message;
 }
 //#endregion 🔀️BackboneMessage
 //#endregion 🔖️Backbone

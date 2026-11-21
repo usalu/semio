@@ -33,10 +33,8 @@ pub use canvas_gestures_input_kit_and_chrome::{
 mod editor_ink_gumball_and_canvas_layer_wire;
 pub use editor_ink_gumball_and_canvas_layer_wire::{
     draw_ink_rect_outline, pivot_screen, request_cancel, text_editor_ui, total, CanvasFillJson,
-    CanvasGradientStopJson, CanvasLayer, GumballConfig, GumballGesture, GumballHandle,
+    CanvasClipPathJson, CanvasGradientStopJson, CanvasImageFieldJson, CanvasLayer, CanvasStrokeJson,
+    CanvasTextFieldJson, GumballConfig, GumballGesture, GumballHandle,
     GumballMotion, GumballSlot, GumballView, InkBoundsF, ModelToLayer, TextEditorRenameDraft,
-    TextEditorUiState, VfsAccessibilityFocusTarget, MOVE_EPSILON, TURN_EPSILON,
-};
-pub(crate) use editor_ink_gumball_and_canvas_layer_wire::{
-    CanvasImageFieldJson, CanvasStrokeJson, CanvasTextFieldJson,
+    TextEditorUiState, VfsAccessibilityFocusTarget, GUMBALL, MOVE_EPSILON, TURN_EPSILON,
 };

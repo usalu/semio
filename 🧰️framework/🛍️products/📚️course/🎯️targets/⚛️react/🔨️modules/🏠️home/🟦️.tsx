@@ -8,7 +8,7 @@ import { AssignmentCardView, AssignmentPage } from "../📝️assignments/🟦�
 import { ClipCardView, ClipPage } from "../🎬️clips/🟦️.tsx";
 import { AccessGate, clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
-import { LayeredOverview, SharedBorderRow, SharedBorderRowCell, UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX, stripGrid, useMediaQuery, type IconName, type LayeredCardState, type LayeredCell, type LayeredDirection, type LayeredMode, type LayeredPane } from "@semio-tech/ui-react/chrome";
+import { LayeredOverview, SharedBorderRow, SharedBorderRowCell, UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX, stripGrid, useMediaQuery, useSharedBorderFrameRef, type IconName, type LayeredCardState, type LayeredCell, type LayeredDirection, type LayeredMode, type LayeredPane } from "@semio-tech/ui-react/chrome";
 import { type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { failureProblem, thrownProblem } from "../🪪️identity/🟦️.tsx";
 import { LEADERBOARD_POLL_MS, LeaderboardCard, LeaderboardPage, usePolling } from "../🏆️leaderboard/🟦️.tsx";
@@ -16,7 +16,7 @@ import { BadgesCard, BadgesPage } from "../🏅️badges/🟦️.tsx";
 import { PreferencesCard, PreferencesPage, challengeOf, textScale, withChallenge, type CoursePreferences } from "../🎛️preferences/🟦️.tsx";
 import { LearnerCard, LearnerPage } from "../📇️profile/🟦️.tsx";
 import { QuizCardView, QuizPage, type Act } from "../📖️quiz-page/🟦️.tsx";
-import { BodyButton, CardAction, CardIcon, Glyph, PageFrame, ProblemNote, CourseCard, type Problem } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CardAction, CardIcon, CELL, FRAME, Glyph, PageFrame, ProblemNote, CourseCard, type Problem } from "../🪟️chrome/🟦️.tsx";
 import { containerKey, isHomeGrid, openedChild, pageLabel, pagesWithin, parentPage, previewCamera, type PreviewCamera } from "./🗺️pages/🟦️.ts";
 export { addressPages, containerKey, homePages, isHomeGrid, openedChild, pageLabel, pagesWithin, parentPage, previewCamera } from "./🗺️pages/🟦️.ts";
 export type { PreviewCamera } from "./🗺️pages/🟦️.ts";
@@ -37,9 +37,9 @@ export interface HomeLayout {
 }
 
 /** 🔎️ The layout the matched media queries of {@link homeLayoutQueries} give: the tablet grid between the breakpoints, the desktop grid
- * on either side of them, and swiping only below the mobile breakpoint. A short window keeps the card grid; the overlay scrolls. */
-export function homeLayout(matched: { readonly narrow: boolean; readonly medium: boolean; readonly short: { readonly [G in HomeGrid]: boolean } }): HomeLayout {
-  const grid: HomeGrid = matched.medium ? "tablet" : "desktop";
+ * on either side of them, and swiping in a phone-sized viewport or a short touch landscape viewport. */
+export function homeLayout(matched: { readonly narrow: boolean; readonly medium: boolean }): HomeLayout {
+  const grid: HomeGrid = matched.medium && !matched.narrow ? "tablet" : "desktop";
   return { grid, mode: matched.narrow ? "swipe" : "strip" };
 }
 
@@ -96,10 +96,15 @@ export function homeLayoutQueries(scale: number, pages: readonly string[]): { re
   const narrow = Math.floor(UI_MOBILE_MAX_WIDTH_PX * scale);
   const short = (grid: HomeGrid): string => `(max-height: ${Math.floor(homeGridMinHeight(grid, pages) * scale) - 1}px)`;
   return {
-    narrow: `(max-width: ${narrow}px)`,
+    narrow: homeSwipeQuery(scale),
     medium: `(min-width: ${narrow + 1}px) and (max-width: ${Math.floor(UI_TABLET_MAX_WIDTH_PX * scale)}px)`,
     short: { desktop: short("desktop"), tablet: short("tablet") },
   };
+}
+
+function homeSwipeQuery(scale: number): string {
+  const narrow = Math.floor(UI_MOBILE_MAX_WIDTH_PX * scale);
+  return `(max-width: ${narrow}px), (pointer: coarse) and (max-width: 960px) and (max-height: 480px)`;
 }
 
 interface HomeProps {
@@ -204,14 +209,20 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
   const queries = homeLayoutQueries(textScale(preferences.textSize), pages);
   const narrow = useMediaQuery(queries.narrow);
   const medium = useMediaQuery(queries.medium);
-  const short = { desktop: useMediaQuery(queries.short.desktop), tablet: useMediaQuery(queries.short.tablet) };
   const wanted = state.step.screen === "home" ? state.step.page : undefined;
   const selected = wanted !== undefined && clientAccess(state.course, wanted, props.at) ? wanted : undefined;
   const activeContainer = course === undefined || isHomeGrid(selected, course) ? selected : selected === undefined ? undefined : parentPage(selected, course);
   const activeGrid = enabled && activeContainer === container;
   const interactive = activeGrid && follow.following === undefined;
-  const measuredLayout = homeLayout({ narrow, medium, short });
+  const measuredLayout = homeLayout({ narrow, medium });
+  const [restingCard, setRestingCard] = useState<string>();
+  const onSwipe = follow.onSwipe;
+  const cardSettled = useCallback((page: string) => {
+    if (container === HOME_PAGES.clips) setRestingCard(page);
+    onSwipe?.(page);
+  }, [container, onSwipe]);
   const layout = activeGrid && follow.following !== undefined ? follow.presentation?.layout ?? measuredLayout : measuredLayout;
+  const shownCard = (follow.following === undefined ? restingCard : follow.presentation?.swipe) ?? pages[0];
   useEffect(() => {
     if (interactive) follow.onLayout?.(measuredLayout);
   }, [interactive, measuredLayout.grid, measuredLayout.mode, follow.onLayout]);
@@ -255,6 +266,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
       shortLabel: pageLabel(page, state, locale, text, true) ?? label,
       icon: ICONS[page],
       render: (pane) => {
+        if (layout.mode === "swipe" && !pane.opened && !pane.revealed) return null;
         const content = (): ReactNode => {
           if (isHomeGrid(page, course)) return <HomeOverview {...props} container={page} enabled={enabled && pane.opened} />;
           const view = { opened: enabled && pane.opened, revealed: pane.revealed };
@@ -291,7 +303,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
     const assignment = course.assignments?.find((candidate) => candidate.id === pane.id);
     if (assignment !== undefined) return <AssignmentCardView {...shown} onOpen={onOpen} assignment={assignment} locale={locale} text={text} />;
     const clip = course.clips?.find((candidate) => candidate.id === pane.id);
-    if (clip !== undefined) return <ClipCardView {...shown} onOpen={onOpen} clip={clip} locale={locale} text={text} />;
+    if (clip !== undefined) return <ClipCardView {...shown} onOpen={onOpen} clip={clip} locale={locale} text={text} showPoster={card.mode === "strip" || (activeGrid && shownCard === pane.id)} />;
     if (pane.id === HOME_PAGES.quizzes || pane.id === HOME_PAGES.assignments || pane.id === HOME_PAGES.clips || course.topics?.some((topic) => topic.id === pane.id)) return <CollectionCard {...props} page={pane.id} {...shown} onOpen={onOpen} />;
     switch (pane.id) {
       case HOME_PAGES.learner:
@@ -331,14 +343,15 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
         camera={camera}
         onCameraChange={interactive ? (point) => { previewPointer?.publish(point); follow.onCamera(point); } : undefined}
         swipeId={activeGrid && container === undefined && props.introductionPage !== undefined ? props.introductionPage : activeGrid && follow.following !== undefined ? follow.presentation?.swipe : undefined}
-        onSwipeIdChange={interactive ? follow.onSwipe : undefined}
+        onSwipeIdChange={interactive ? cardSettled : undefined}
         revealedId={activeGrid && follow.following !== undefined ? follow.presentation?.reveal ?? null : undefined}
         revealedBy={activeGrid && follow.following !== undefined ? follow.presentation?.revealedBy : undefined}
         pressed={activeGrid && follow.following !== undefined ? follow.presentation?.pressed ?? false : undefined}
         onPressedChange={interactive ? follow.onPressed : undefined}
         onRevealedIdChange={interactive ? (page, source) => follow.onRevealed(page ?? undefined, source ?? undefined) : undefined}
         onOpenedIdChange={(page) => (page === null || clientAccess(course, page, props.at)) && session.open(page === null ? container === undefined ? { screen: "home" } : { screen: "home", page: container } : { screen: "home", page })}
-        lifecycle={{ budget: pages.length, warmStartMs: 0, warmIntervalMs: 0 }}
+        lifecycle={layout.mode === "swipe" ? { budget: 1 } : { budget: pages.length, warmStartMs: 0, warmIntervalMs: 0 }}
+        reducedMotion="auto"
         labels={{
           grid: container === undefined ? text("course.home.cards") : pageLabel(container, state, locale, text) ?? container,
           waiting: (pane) => text("course.home.pageWaiting", { page: pane.label }),
@@ -350,6 +363,40 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
   );
 }
 
+/** 📍️ Opens a sibling or child directly when the overview shows one card at a time. */
+function HomePagePicker(props: HomeProps & { readonly at: number }): ReactElement | null {
+  const { state, session, text, locale, preferences, at } = props;
+  const { following } = usePresenceFollow();
+  const narrow = useMediaQuery(homeSwipeQuery(textScale(preferences.textSize)));
+  const frame = useSharedBorderFrameRef<HTMLFormElement>();
+  const course = state.course;
+  if (!narrow || following !== undefined || course === undefined || state.step.screen !== "home") return null;
+  const chosen = state.step.page;
+  const selected = chosen !== undefined && clientAccess(course, chosen, at) ? chosen : undefined;
+  const container = isHomeGrid(selected, course) ? selected : selected === undefined ? undefined : parentPage(selected, course);
+  const pages = pagesWithin(container, course);
+  return (
+    <form
+      ref={frame}
+      {...FRAME}
+      data-shared-border-edges="bottom"
+      className="course-page-picker"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const value = new FormData(event.currentTarget).get("page");
+        const page = typeof value === "string" && value !== "" ? value : container;
+        if (page !== selected && (page === undefined || clientAccess(course, page, at))) session.open(page === undefined ? { screen: "home" } : { screen: "home", page });
+      }}
+    >
+      <select {...CELL} key={selected ?? ""} name="page" aria-label={text("course.home.pagePicker")} defaultValue={selected === container ? "" : selected}>
+        <option value="">{container === undefined ? text("course.home.cards") : pageLabel(container, state, locale, text)}</option>
+        {pages.map((page) => <option key={page} value={page} disabled={!clientAccess(course, page, at)}>{pageLabel(page, state, locale, text)}</option>)}
+      </select>
+      <button {...CELL} type="submit">{text("course.home.openPage")}</button>
+    </form>
+  );
+}
+
 /** 🏠️ The home screen, with a layered grid at every level of the course's topic tree. */
 export function HomeScreen(props: HomeProps): ReactElement | null {
   const { session, state, text } = props;
@@ -358,13 +405,8 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
   if (previewPointer.current === null) previewPointer.current = createPreviewPointerBus();
   const [pending, setPending] = useState<AbortController | undefined>(undefined);
   const [problem, setProblem] = useState<Problem | undefined>(undefined);
-  const quizIds = state.course?.quizzes.map((quiz) => quiz.id).join(" ") ?? "";
   const refreshLeaderboard = useCallback(() => session.refreshLeaderboard(), [session, state.learner?.id]);
   usePolling(refreshLeaderboard, LEADERBOARD_POLL_MS, true, session.revived);
-  const { submissions } = state;
-  useEffect(() => {
-    for (const quiz of quizIds.split(" ").filter(Boolean)) void session.refreshCrowd(quiz);
-  }, [quizIds, submissions, session]);
   useEffect(() => () => pending?.abort(), [pending]);
   if (state.course === undefined) return null;
   const act: Act = (run) => {
@@ -393,6 +435,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
           <BodyButton cell onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
         </SharedBorderRow>
       )}
+      <HomePagePicker {...props} at={at} />
       <div data-course-scrollport="" className="relative min-h-0 flex-1">
         <PreviewPointerContext.Provider value={previewPointer.current}>
           <HomeOverview {...props} at={at} enabled busy={pending !== undefined} act={act} />

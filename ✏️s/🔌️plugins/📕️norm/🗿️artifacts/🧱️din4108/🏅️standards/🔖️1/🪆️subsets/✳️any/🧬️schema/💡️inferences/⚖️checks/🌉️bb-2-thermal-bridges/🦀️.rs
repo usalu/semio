@@ -12,14 +12,13 @@ pub const BB2_CATEGORY_A: &str = "categoryA";
 pub const BB2_CATEGORY_B: &str = "categoryB";
 pub const BB2_DETAILED: &str = "detailed";
 
-/// 📐️ DIN 4108 Beiblatt 2 §5 / GEG: Kategorie A → ΔU_WB = 0.05 W/(m²K).
+/// 📐️ Flat surcharge for a building whose connections meet at least category A.
 pub const DELTA_U_WB_CATEGORY_A: f64 = 0.05;
-/// 📐️ DIN 4108 Beiblatt 2 §5: Kategorie B / non-conforming catalogue → ΔU_WB = 0.10 W/(m²K).
-pub const DELTA_U_WB_CATEGORY_B: f64 = 0.10;
-/// 📐️ High-performance equivalent details (GEG reduced surcharge) → 0.03 W/(m²K) when all bridges are Kategorie A and details_conform.
-pub const DELTA_U_WB_CATEGORY_A_STRICT: f64 = 0.03;
 
-/// 🏷️ Parse bridge bb2Type into equivalence category.
+/// 🧊 Flat surcharge for a building whose connections all meet category B.
+pub const DELTA_U_WB_CATEGORY_B: f64 = 0.03;
+
+/// 🏷️ Declared thermal-bridge category in the project model.
 pub fn bb2_category(bb2_type: &str) -> &'static str {
     match bb2_type {
         "categoryA" | "A" | "W01" | "D01" | "conform" => BB2_CATEGORY_A,
@@ -28,22 +27,19 @@ pub fn bb2_category(bb2_type: &str) -> &'static str {
     }
 }
 
-/// 📐️ Admissible flat ΔU_WB from bridge categories + building conform flag (DIN 4108 Bbl.2 §5).
+/// 📐️ Flat surcharge supported by the documented equivalence, in W/(m²K).
+/// See DIN V 18599-2:2018-09 §6.2.5 and DIN 4108 Beiblatt 2:2019-06.
 pub fn delta_u_wb_limit(bridges: &[ThermalBridge], details_conform: bool) -> f64 {
-    if bridges.is_empty() {
-        return if details_conform { DELTA_U_WB_CATEGORY_A } else { DELTA_U_WB_CATEGORY_B };
+    if !details_conform || bridges.is_empty() {
+        return DELTA_U_WB_FLAT;
     }
-    let cats: Vec<&str> = bridges.iter().map(|b| bb2_category(&b.bb2_type)).collect();
-    if cats.iter().any(|c| *c == BB2_DETAILED) {
-        if cats.iter().all(|c| *c == BB2_DETAILED || *c == BB2_CATEGORY_A) && details_conform {
-            DELTA_U_WB_CATEGORY_A
-        } else {
-            DELTA_U_WB_CATEGORY_B
-        }
-    } else if cats.iter().all(|c| *c == BB2_CATEGORY_A) {
-        if details_conform { DELTA_U_WB_CATEGORY_A_STRICT } else { DELTA_U_WB_CATEGORY_A }
-    } else {
+    let mut categories = bridges.iter().map(|bridge| bb2_category(&bridge.bb2_type));
+    if categories.clone().any(|category| category == BB2_DETAILED) {
+        DELTA_U_WB_FLAT
+    } else if categories.all(|category| category == BB2_CATEGORY_B) {
         DELTA_U_WB_CATEGORY_B
+    } else {
+        DELTA_U_WB_CATEGORY_A
     }
 }
 
@@ -56,18 +52,18 @@ pub fn delta_u_wb(psi_l: f64, area_m2: f64) -> f64 {
     }
 }
 
-/// ✅️ Beiblatt 2 thermal-bridge equivalence.
+/// ✅️ Compare the detailed thermal-bridge contribution with the applicable flat-rate reference.
 pub fn check_equivalence(bridges: &[ThermalBridge], area_m2: f64, details_conform: bool) -> CheckResult {
     let subject = SubjectRef::new("", "thermalBridges", loc("Thermal bridges", "Wärmebrücken"));
-    if area_m2 <= 0.0 {
+    if area_m2 <= 0.0 || bridges.is_empty() {
         return CheckResult::assess(
             "din4108-bb2.delta-u",
             "DIN 4108 Bbl.2",
             ClauseId::new("DIN 4108 Bbl.2", "§5", "5.1"),
             subject,
-            loc("Thermal bridge surcharge ΔU_WB", "Wärmebrückenzuschlag ΔU_WB"),
+            loc("Calculated thermal-bridge surcharge against the flat rate", "Berechneter Wärmebrückenzuschlag im Vergleich zum Pauschalwert"),
         )
-        .not_applicable(loc("Envelope area is zero.", "Hüllfläche ist null."))
+        .not_applicable(loc("The comparison requires a positive envelope area and documented junctions.", "Der Vergleich erfordert eine positive Hüllfläche und dokumentierte Anschlüsse."))
         .annex(AnnexChoice::De)
         .build();
     }
@@ -79,7 +75,7 @@ pub fn check_equivalence(bridges: &[ThermalBridge], area_m2: f64, details_confor
         "DIN 4108 Bbl.2",
         ClauseId::new("DIN 4108 Bbl.2", "§5", "5.1"),
         subject,
-        loc("Thermal bridge surcharge ΔU_WB", "Wärmebrückenzuschlag ΔU_WB"),
+        loc("Calculated thermal-bridge surcharge against the flat rate", "Berechneter Wärmebrückenzuschlag im Vergleich zum Pauschalwert"),
     )
     .utilization(Quantity::u_value_w_m2k(actual), Quantity::u_value_w_m2k(limit))
     .annex(AnnexChoice::De)
@@ -107,7 +103,7 @@ pub fn check_equivalence(bridges: &[ThermalBridge], area_m2: f64, details_confor
                 .map(|(_, b)| b.psi * b.length_m)
                 .sum();
             let psi_req = if bridge.length_m > 0.0 {
-                ((psi_l_max - other) / bridge.length_m).max(0.0)
+                (psi_l_max - other) / bridge.length_m
             } else {
                 0.0
             };
@@ -120,19 +116,8 @@ pub fn check_equivalence(bridges: &[ThermalBridge], area_m2: f64, details_confor
                 Quantity::new(QuantityKind::HeatTransferCoefficient, bridge.psi),
                 Quantity::new(QuantityKind::HeatTransferCoefficient, psi_req),
                 loc(
-                    &format!("Reduce ψ of '{}' from {:.3} to ≤ {:.3} W/(m·K), or set bb2DetailsConform with redesigned details.", bridge.id, bridge.psi, psi_req),
-                    &format!("ψ von '{}' von {:.3} auf ≤ {:.3} W/(m·K) senken oder bb2DetailsConform mit geänderten Details setzen.", bridge.id, bridge.psi, psi_req),
-                ),
-            ));
-        }
-        if !details_conform {
-            builder = builder.remedy(Remedy::exactly(
-                SubjectRef::new("", "bb2DetailsConform", loc("Beiblatt 2 conformity", "Beiblatt-2-Konformität")),
-                Quantity::new(QuantityKind::Dimensionless, 0.0),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                loc(
-                    "Redesign thermal-bridge details to Beiblatt 2 conformity (allows ΔU_WB ≤ 0.05 W/(m²K)).",
-                    "Wärmebrückendetails nach Beiblatt 2 ausführen (dann ΔU_WB ≤ 0,05 W/(m²K)).",
+                    &format!("Reduce ψ of '{}' from {:.3} to ≤ {:.3} W/(m·K) using an assessed junction detail.", bridge.id, bridge.psi, psi_req),
+                    &format!("ψ von '{}' von {:.3} auf ≤ {:.3} W/(m·K) mit einem bewerteten Anschlussdetail senken.", bridge.id, bridge.psi, psi_req),
                 ),
             ));
         }
@@ -147,50 +132,25 @@ pub fn check_bridge_category(bridge: &ThermalBridge) -> CheckResult {
         bridge_field_path(&bridge.id, "bb2Type"),
         loc(&format!("Bridge {}", bridge.id), &format!("Wärmebrücke {}", bridge.id)),
     );
-    let cat = bb2_category(&bridge.bb2_type);
-    let detailed = cat == BB2_DETAILED;
-    let mut builder = CheckResult::assess(
+    let category = bb2_category(&bridge.bb2_type);
+    let builder = CheckResult::assess(
         format!("din4108-bb2.bridge.{}", bridge.id),
         "DIN 4108 Bbl.2",
         ClauseId::new("DIN 4108 Bbl.2", "§5", "5.1"),
-        subject.clone(),
-        loc("Thermal-bridge equivalence category", "Wärmebrücken-Äquivalenzkategorie"),
-    )
-    .utilization(
-        Quantity::new(QuantityKind::Dimensionless, if detailed { 1.1 } else { 1.0 }),
-        Quantity::new(QuantityKind::Dimensionless, 1.0),
-    )
-    .annex(AnnexChoice::De)
-    .explanation(loc(
-        &format!("Bridge '{}' bb2Type='{}' → category {cat} (ψ={:.3}).", bridge.id, bridge.bb2_type, bridge.psi),
-        &format!("Wärmebrücke '{}' bb2Type='{}' → Kategorie {cat} (ψ={:.3}).", bridge.id, bridge.bb2_type, bridge.psi),
-    ));
-    if detailed {
-        builder = builder.remedy(Remedy::one_of(
-            subject.clone(),
-            vec![BB2_CATEGORY_A.to_string(), BB2_CATEGORY_B.to_string()],
-            loc(
-                "Switch bb2Type to an equivalent Beiblatt 2 catalogue category (A or B), or keep detailed ψ with full documentation.",
-                "bb2Type auf eine äquivalente Beiblatt-2-Kategorie (A oder B) umstellen, oder detailliertes ψ mit vollständiger Dokumentation belassen.",
-            ),
-        ));
-        if bridge.psi > 0.15 {
-            builder = builder.remedy(Remedy::at_most(
-                SubjectRef::new(
-                    &bridge.id,
-                    bridge_field_path(&bridge.id, "psi"),
-                    loc(&format!("Bridge {}", bridge.id), &format!("Wärmebrücke {}", bridge.id)),
-                ),
-                Quantity::new(QuantityKind::HeatTransferCoefficient, bridge.psi),
-                Quantity::new(QuantityKind::HeatTransferCoefficient, 0.15),
-                loc(
-                    &format!("Reduce ψ of '{}' from {:.3} to ≤ 0.15 W/(m·K) for detailed proof.", bridge.id, bridge.psi),
-                    &format!("ψ von '{}' von {:.3} auf ≤ 0,15 W/(m·K) für den detaillierten Nachweis senken.", bridge.id, bridge.psi),
-                ),
-            ));
-        }
+        subject,
+        loc("Declared thermal-bridge category", "Angegebene Wärmebrückenkategorie"),
+    ).annex(AnnexChoice::De);
+    if category == BB2_DETAILED {
+        builder.not_applicable(loc(
+            "This junction requires its own calculation or evidence of equivalence to a published detail.",
+            "Dieser Anschluss erfordert eine eigene Berechnung oder einen Gleichwertigkeitsnachweis zu einem veröffentlichten Detail.",
+        )).build()
+    } else {
+        builder.status(semio_s_plugin_norm_compliance::CheckStatus::Info).explanation(loc(
+            &format!("Declared category {category} for junction '{}' with ψ = {:.3} W/(m·K).", bridge.id, bridge.psi),
+            &format!("Angegebene Kategorie {category} für Anschluss '{}' mit ψ = {:.3} W/(m·K).", bridge.id, bridge.psi),
+        )).build()
     }
-    builder.build()
 }
 // #endregion 🔖️BB2
 //#endregion 🔖️ComplianceHelpers

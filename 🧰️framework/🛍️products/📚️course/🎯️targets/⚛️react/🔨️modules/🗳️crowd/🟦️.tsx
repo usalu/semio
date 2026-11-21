@@ -336,7 +336,7 @@ export function AnswerFigure(props: AnswerFigureInput & { readonly name: string;
   return (
     <figure data-border-probe-art="" data-crowd-figure="answers" data-task={props.task.id} data-dimension={props.dimension} data-runs={figure.runs} data-thinkers={figure.thinkers} className="course-figure m-0 flex min-w-0 flex-col gap-single">
       <Caption title={`${props.title ?? text("course.crowd.title")}${figure.unit === undefined ? "" : ` (${figure.unit})`}`} facts={[text("course.crowd.runs", { count: figure.runs }), ...(figure.thinkers > 0 ? [text("course.crowd.thinking", { count: figure.thinkers })] : [])]} />
-      <Records fold={plotFold(tracks)}>
+      <Records cell={false} fold={plotFold(tracks)}>
         <table {...TABLE.table} className="course-plot" data-sparse={figure.kind === "matching" ? "" : undefined} aria-label={props.name} style={{ ["--course-plot-columns" as string]: String(tracks) }}>
           <thead {...TABLE.group}>
             <tr {...TABLE.row}>

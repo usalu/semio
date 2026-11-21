@@ -1,0 +1,11 @@
+{
+  "id": "domestic-cat",
+  "eyeWidthM": 0.016,
+  "eyeHeightM": 0.011,
+  "eyeDepthRadiusM": 0.0055,
+  "pupilWidthM": 0.0024,
+  "pupilHeightM": 0.0082,
+  "tailDirectionsMm": [[42,-23,-43],[48,0,-42],[63,0,3],[52,0.5,27],[38,7,32]],
+  "sittingOuterClearanceM": 0.035,
+  "earliestTipXBeyondForepawM": 0.006
+}

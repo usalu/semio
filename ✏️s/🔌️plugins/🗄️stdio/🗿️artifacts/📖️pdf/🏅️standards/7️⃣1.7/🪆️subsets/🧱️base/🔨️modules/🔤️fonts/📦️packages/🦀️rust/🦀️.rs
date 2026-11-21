@@ -18,7 +18,7 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod schema {
-                    pub use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot;
+                    pub use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::{snapshot, stream_roles};
                 }
                 #[path = "."]
                 pub mod io {

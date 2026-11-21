@@ -38,8 +38,9 @@ fn emphasis_field_omitted_at_default() {
 
 #[test]
 fn fully_styled_spec_roundtrips() {
-    let spec = StyleSpec { variant: Variant::Ghost, size: SizeToken::Xs, density: Density::Compact, tone: Tone::Success, emphasis: Emphasis::Subtle };
+    let spec = StyleSpec { variant: Variant::Ghost, size: SizeToken::Xs, density: Density::Compact, tone: Tone::Success, emphasis: Emphasis::Subtle, highlighted: true };
     let json = serde_json::to_string(&spec).expect("serialize");
+    assert!(json.contains(r#""highlighted":true"#));
     let back: StyleSpec = serde_json::from_str(&json).expect("deserialize");
     assert_eq!(spec, back);
 }

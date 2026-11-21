@@ -294,11 +294,19 @@ fn select_row<'a>(command: &str, field: &str, label: LabelText, value: &str, cho
     select_row_at(&format!("layout-play-inspector.{command}.{field}"), command, field, label, value, choices, frame_id, page_id)
 }
 
+
+fn choice_arguments(field: &str, value: Option<&str>, frame_id: Option<&str>, page_id: Option<&str>) -> UiAssemblyResult<semio_plugin::UiValue> {
+    let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(admit)?;
+    for (key, value) in [("field", Some(field)), ("frameId", frame_id), ("pageId", page_id), ("value", value)] {
+        if let Some(value) = value {
+            builder.push(key.into(), ui_value_text(value)?).map_err(|_| admit())?;
+        }
+    }
+    Ok(semio_plugin::UiValue::Map(builder.finish()))
+}
+
 fn select_row_at<'a>(location: &str, command: &str, field: &str, label: LabelText, value: &str, choices: impl IntoIterator<Item = (&'a str, &'a str)>, frame_id: Option<&str>, page_id: Option<&str>) -> UiAssemblyResult<BuiltNode> {
-    let mut args = vec![("field", ui_value_text(field)?)];
-    if let Some(id) = frame_id { args.push(("frameId", ui_value_text(id)?)); }
-    if let Some(id) = page_id { args.push(("pageId", ui_value_text(id)?)); }
-    let (action, args) = layout_action(command, Some(ui_value_map(args)?))?;
+    let (action, args) = layout_action(command, Some(choice_arguments(field, None, frame_id, page_id)?))?;
     let id = location;
     let mut input = ui::select(text(value)?).try_id(format!("{id}.input")).map_err(|_| admit())?.try_label(label.as_str()).map_err(|_| admit())?;
     for (value, label) in choices { input = input.try_item(text(value)?, ui::Label(text(label)?)).map_err(|_| admit())?; }
@@ -312,10 +320,8 @@ fn choice_row<'a>(windows: &semio_plugin::TreeWindows<'_>, command: &str, field:
     let item = ui::tree_item(ui::Label(text(label.as_str())?)).try_id(&id).map_err(|_| admit())?.description(text(selected)?);
     semio_plugin::tree_window_indexed_item(windows, item, &id, false, choices.clone().count(), |index| {
         let (value,title)=choices.clone().nth(index).ok_or_else(admit)?;
-        let mut args = vec![("field", ui_value_text(field)?), ("value", ui_value_text(value)?)];
-        if let Some(frame_id) = frame_id { args.push(("frameId", ui_value_text(frame_id)?)); }
-        if let Some(page_id) = page_id { args.push(("pageId", ui_value_text(page_id)?)); }
-        let mut row = semio_plugin::tree_item_with_action(format!("{id}.choice.{index}"), ui_label(title)?, None, layout_action(command, Some(ui_value_map(args)?))?)?;
+        let args = choice_arguments(field, Some(value), frame_id, page_id)?;
+        let mut row = semio_plugin::tree_item_with_action(format!("{id}.choice.{index}"), ui_label(title)?, None, layout_action(command, Some(args))?)?;
         if let semio_plugin::Component::TreeItem(props) = &mut row.component { props.selected = Some(value == current); }
         Ok(row)
     })

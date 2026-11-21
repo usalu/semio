@@ -104,10 +104,10 @@ def ends(d):
             b.append(ext(f'headlamp-{tag}', 'body', 'glass', 'glazing', 0.92, 'zx', zband(NOSE_D + 0.008, NOSE_D - 0.012, NOSE_N, za, zb, X1, m=6), 0.70, 0.88))
             b.append(box(f'tail-lamp-{tag}', 'body', 'glass', 'glazing', 0.6, [0.03, 0.52, 0.11], [0.036, 1.18, side * 1.03]))
     if d <= 200:
-        r = 0.017 if d == 100 else 0.02
+        r = 0.022 if d == 100 else 0.025
         b.append(box('mirror-r', 'body', 'paint', 'detail', TRIM, [0.07, 0.42, 0.2], [11.80, 2.05, MIRROR_R + 0.1], corner=0.03 if d == 100 else 0.0))
         b.append(cap('mirror-arm-r', 'body', 'paint', 'detail', TRIM, [11.47, 2.58, -1.245], [11.80, 2.27, MIRROR_R + 0.1], r))
-        b.append(box('mirror-l', 'body', 'paint', 'detail', TRIM, [0.07, 0.36, 0.18], [11.72, 2.0, MIRROR_L - 0.09], corner=0.03 if d == 100 else 0.0))
+        b.append(box('mirror-l', 'body', 'paint', 'detail', TRIM, [0.07, 0.36, 0.14], [11.72, 2.0, MIRROR_L - 0.07], corner=0.03 if d == 100 else 0.0))
         b.append(cap('mirror-arm-l', 'body', 'paint', 'detail', TRIM, [11.5, 2.02, 1.255], [11.72, 2.02, MIRROR_L - 0.09], r))
     else:
         b.append(box('mirror-r', 'body', 'paint', 'detail', TRIM, [0.08, 0.42, 0.26], [11.78, 2.05, MIRROR_R + 0.13]))
@@ -318,8 +318,17 @@ def structure(d, body):
                 s.append(m(f'leaf-{n}-stile-{e}-upper', bone, [x, 0.76, z], [x, 2.03, z + 1.27 * math.tan(PHI)], 0.05, 0.02))
             s.append(node(f'leaf-{n}-carriage', bone, [LEAF / 2, 2.03, z + 1.27 * math.tan(PHI)], [0.06, 0.03, 0.012], 'joint'))
         else:
-            s.append(sref(f'leaf-{n}-panel', f'leaf-{n}', bone, 'member'))
             psi = math.atan((HW - hw(2.39)) / 2.06)
+            f = 0.04 if d == 200 else 0.075
+            ct, st = math.cos(psi), math.sin(psi)
+
+            def at(x, y):
+                return [x, 1.02 + y * ct, z + y * st]
+            top, low = 1.03 - f / 2, -1.03 + f / 2
+            for e, x in (('a', f / 2 + 0.004), ('b', LEAF - f / 2 - 0.004)):
+                s.append(m(f'leaf-{n}-stile-{e}', bone, at(x, -1.03), at(x, 1.03), f, f))
+            for e, y in (('top', top), ('bottom', low)):
+                s.append(m(f'leaf-{n}-rail-{e}', bone, at(f + 0.004, y), at(LEAF - f - 0.004, y), f, f))
             r = 0.04 if d == 200 else 0.06
             s.append(node(f'leaf-{n}-carriage', bone, [LEAF / 2, 2.0, z + 0.98 * math.tan(psi)], [r * 1.5, r, r / 2 if d == 200 else 0.0375], 'joint'))
     s.append(sref('axle-f-beam', 'axle-beam-f', 'axle-f', 'member'))
@@ -362,12 +371,12 @@ DECISIONS = {
     200: [
         {"en": "Body at 1:200: 80 mm walls with one glazing band per window run (one on the driver's side, two between the doors) instead of single panes; the pillars are applied 90 mm strips and each run has one transom strip. Nose and tail are plain curved walls without bumpers and lamps, the windscreen one 40 mm pane, the header with its lip over the screen in five rings, the tail cap in four, the rear window flush in the tail. Each door leaf is one tilted panel with one pane. Wheels are a tyre and a dished disc, twins still separate; axles are their beams, the drive axle with the two motor housings and the stub spindles into the hubs; the roof units are four-section fairings; mirrors stay on thicker arms because they set the overall width.", "de": "Körper bei 1:200: 80 mm starke Wände mit einem Glasband je Fensterreihe (eines auf der Fahrerseite, zwei zwischen den Türen) statt einzelner Scheiben; die Pfosten sind aufgesetzte 90 mm breite Streifen, jede Reihe hat einen Kämpferstreifen. Bug und Heck sind glatte gebogene Wände ohne Stoßfänger und Leuchten, die Windschutzscheibe eine 40 mm starke Scheibe, der Frontdom mit seiner Lippe über der Scheibe in fünf Ringen, die Heckkappe in vier, die Heckscheibe bündig im Heck. Jeder Türflügel ist eine geneigte Tafel mit einer Scheibe. Räder sind Reifen und geschüsselte Scheibe, die Zwillinge noch getrennt; Achsen sind ihre Träger, die Antriebsachse mit den beiden Motorgehäusen und den Achsstummeln in die Naben; die Dachgeräte sind Verkleidungen aus vier Querschnitten; die Spiegel bleiben an dickeren Armen, weil sie die Gesamtbreite bestimmen."},
         {"en": "Thermal at 1:200: the body solids by region (walls with built-in cabin faces, pillar strips, roof, glazing bands, leaves, fairings, fan outlet, drive axle, tyres down to the rim flange, brake discs); only the total area is compared at this scale.", "de": "Thermik bei 1:200: die Körper des Aufbaus nach Regionen (Wände mit eingebauten Innenraumflächen, Pfostenstreifen, Dach, Glasbänder, Flügel, Verkleidungen, Lüfteraustritt, Antriebsachse, Reifen bis zum Felgenhorn, Bremsscheiben); bei diesem Maßstab wird nur die Gesamtfläche verglichen."},
-        {"en": "Structure at 1:200: five ring frames with longerons, sills, waist and cant rails in 70 x 60 mm tube; each leaf is its own panel on a carriage; axle beams and disc wheels with one spring and one hub joint each side; one mass per bone.", "de": "Tragwerk bei 1:200: fünf Ringspante mit Längsträgern, Schwellern, Gürtel- und Dachlängsholmen aus Rohr 70 x 60 mm; jeder Flügel ist seine eigene Tafel an einem Laufwagen; Achsträger und Scheibenräder mit je einem Feder- und einem Nabengelenk je Seite; je Knochen eine Masse."},
+        {"en": "Structure at 1:200: five ring frames with longerons, sills, waist and cant rails in 70 x 60 mm tube; each leaf is a frame of two stiles and two rails in 40 mm section on a carriage; axle beams and disc wheels with one spring and one hub joint each side; one mass per bone.", "de": "Tragwerk bei 1:200: fünf Ringspante mit Längsträgern, Schwellern, Gürtel- und Dachlängsholmen aus Rohr 70 x 60 mm; jeder Flügel ist ein Rahmen aus zwei Holmen und zwei Riegeln mit 40 mm Querschnitt an einem Laufwagen; Achsträger und Scheibenräder mit je einem Feder- und einem Nabengelenk je Seite; je Knochen eine Masse."},
     ],
     500: [
         {"en": "Body at 1:500: the long box with its real cross-section in 100 mm walls, cant radius in four straight pieces, both wheel arches, three glazing bands, the curved windscreen, the header with its lip over the screen in four rings, the tail cap in three, the rear window; four plain door panels of 75 mm, two roof units with their rounded section, four wheels as discs (the rear twins merged into one wide disc), two axle beams and the mirrors as ears on the body side, kept because they set the overall width.", "de": "Körper bei 1:500: der lange Kasten mit seinem wirklichen Querschnitt in 100 mm starken Wänden, der Kantenradius in vier geraden Stücken, beide Radausschnitte, drei Glasbänder, die gebogene Windschutzscheibe, der Frontdom mit seiner Lippe über der Scheibe in vier Ringen, die Heckkappe in drei, die Heckscheibe; vier glatte, 75 mm starke Türtafeln, zwei Dachgeräte mit ihrem gerundeten Querschnitt, vier Räder als Scheiben (die hinteren Zwillinge zu einer breiten Scheibe verschmolzen), zwei Achsträger und die Spiegel als Ohren an der Wand, beibehalten, weil sie die Gesamtbreite bestimmen."},
         {"en": "Thermal at 1:500: walls, roof, glazing bands, leaves, roof units with the fan outlet patch, the drive axle beam, the four wheel discs as tyres and four brake discs inside them; only the total area is compared.", "de": "Thermik bei 1:500: Wände, Dach, Glasbänder, Flügel, Dachgeräte mit der Austrittsfläche des Lüfters, der Antriebsachsträger, die vier Radscheiben als Reifen und vier Bremsscheiben darin; verglichen wird nur die Gesamtfläche."},
-        {"en": "Structure at 1:500: two longerons and two cant rails tied by three ring frames in 90 x 80 mm tube, the two axle beams, a rim cylinder in each wheel, one spring and one hub joint each side, one mass per bone; the model is minimal for this scale.", "de": "Tragwerk bei 1:500: zwei Längsträger und zwei Dachlängsholme, verbunden durch drei Ringspante aus Rohr 90 x 80 mm, die beiden Achsträger, ein Felgenzylinder in jedem Rad, je Seite ein Feder- und ein Nabengelenk, je Knochen eine Masse; das Modell ist für diesen Maßstab minimal."},
+        {"en": "Structure at 1:500: two longerons and two cant rails tied by three ring frames in 90 x 80 mm tube, each door leaf a frame of two stiles and two rails in 75 mm section on its carriage, the two axle beams, a rim cylinder in each wheel, one spring and one hub joint each side, one mass per bone; the model is minimal for this scale.", "de": "Tragwerk bei 1:500: zwei Längsträger und zwei Dachlängsholme, verbunden durch drei Ringspante aus Rohr 90 x 80 mm, jeder Türflügel ein Rahmen aus zwei Holmen und zwei Riegeln mit 75 mm Querschnitt an seinem Laufwagen, die beiden Achsträger, ein Felgenzylinder in jedem Rad, je Seite ein Feder- und ein Nabengelenk, je Knochen eine Masse; das Modell ist für diesen Maßstab minimal."},
     ],
 }
 

@@ -1,0 +1,12 @@
+# Parent 259 Closure Leaf Sample
+
+On 2026-11-21, bounded local reads found four missing source-closure leaves referenced by the retained generation 259 parent. The manifest bytes SHA-256 to a09127b692d0a7b02a627d07329d84db479232b01a05dc7446bc89894da27601. Each listed owner fragment’s compressed bytes SHA-256 to its named fragment digest, and decompression and JSON parsing confirmed the exact environment field. Each corresponding path under .cache/b/g/m/build-input-closures returned ENOENT on a separate recheck.
+
+| Owner | Fragment digest | Missing source closure digest | Field under node.namedInputs |
+| --- | --- | --- | --- |
+| @semio-tech/2d-compute | f6ca7359fae91788cff8dd63b3ab965f9e604a374b8bb1e6de7b0938362510e3 | cb54cd0634696298181655cf5ab40d701e940e3857150f152f08a7ab2994e2e8 | commandSources0[8].env and commandSources1[8].env |
+| @semio-tech/animate-plugin | 52920c17c8d86680e12c25799129c8cc5364cee7dd6e22683c503088e17f0c6b | f839dd5fcf08344d93f91277424907b08eeddaf4189a272fe8cb7c9b73012382 | production[10].env |
+| @semio-tech/assets | d0ca573960585ed8ce1ac915430034e69f902fe3d7a29fa4f20ac169b642f66a | be1a61381e08d4504493f6f0e8453c4afcaa0de727ef68ce39b376c9c1d5380c | commandSources3[8].env |
+| @semio-tech/bim-plugin | a6fcd559a666dc19a66cf78c353fd137b9e86207a599612c257074bc97a726b1 | fd3f34d24a5e102d70eb2b734119363c0a759a4fb6a50eab40409db745282cfd | commandSources2[49].env |
+
+Method: sequentially read the first 40 manifest owners in manifest order; check each compressed fragment digest, decompress with a 16 MiB output cap, extract SEMIO_SOURCE_CLOSURE_ and SEMIO_CARGO_LOCK_ tokens with 64 lowercase hexadecimal digits, deduplicate by typed digest, and inspect only those exact typed paths. Of 189 distinct source and 34 lock tokens, four source paths returned ENOENT; all other 219 exact files read within the 16 MiB cap and hashed to their named digests. No fragment errors were observed. The four missing tokens were then confirmed as exact JSON env values, with their fragment digests and missing paths independently rechecked. This is a sample, not a census; broad text extraction could include tokens outside semantically relevant env fields, though the four findings were structurally confirmed. Reads are not an atomic snapshot and no custody was acquired. Digest checks establish content identity relative to the retained manifest, not current graph authority, freshness, or which leaf triggered generation 260 invalidation. No restore, promotion, graph service or mutation was attempted.

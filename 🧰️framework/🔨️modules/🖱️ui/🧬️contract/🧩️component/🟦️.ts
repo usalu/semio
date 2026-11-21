@@ -1,4 +1,4 @@
-export { splitUiTextChunks, joinUiTextChunks } from "../🌱️values/🔤️text-chunks/🟦️.ts";
+export { splitUiTextChunks, joinUiTextChunks, retainedUiTextInput } from "../🌱️values/🔤️text-chunks/🟦️.ts";
 import type { InputKind, UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../🖼️presentation/🔢️number-format/🟦️.ts";
 
@@ -226,4 +226,22 @@ export function parseUiColorHex(text: string): [number, number, number, number] 
     rgba[index] = (width === 1 ? channel * 17 : channel) / 255;
   }
   return rgba;
+}
+
+/** 📏 A blur-committed text field carrying four finite decimal coordinates or an empty reset. */
+export const UI_DECIMAL_QUAD_COMMIT = "blurDecimalQuad";
+export const UI_RETAINED_TEXT_COMMIT = "blurRetained";
+export const UI_RETAINED_TEXT_BODY_COMMIT = "blurRetainedBody";
+
+export function uiInputCommitsOnBlur(commit: string | null | undefined): boolean {
+  return commit === "blur" || commit === UI_DECIMAL_QUAD_COMMIT || commit === UI_RETAINED_TEXT_COMMIT || commit === UI_RETAINED_TEXT_BODY_COMMIT;
+}
+
+/** 🧮 Returns a round-trippable decimal tuple. Signed zeros denote the same coordinate. */
+export function uiDecimalQuad(text: string): string | undefined {
+  if (/^\p{White_Space}*$/u.test(text)) return "";
+  const values = text.replace(/^[\t\n\f\r ]+|[\t\n\f\r ]+$/gu, "").split(/[\t\n\f\r ]+/u);
+  if (values.length !== 4 || values.some(value => !/^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/u.test(value))) return;
+  const numbers = values.map(Number);
+  if (numbers.every(Number.isFinite)) return numbers.join(" ");
 }

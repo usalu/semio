@@ -1,5 +1,7 @@
 import type { ExactWireMutationEnvelope } from "../../../../🔖️sync-protocol/🟦️.ts";
 
+import { ATOMIC_BACKBONE_MAXIMUM_BYTES } from "./🧩️atomic-group/🟦️.ts";
+
 const MUTATION_DAG_CAPACITY = 8_192;
 const MUTATION_DAG_IDENTIFIER_BYTES = 256;
 
@@ -46,9 +48,9 @@ function documentBackboneBatchLimit(name: keyof DocumentBackboneBatchLimits, val
   return value;
 }
 
-function normalizedDocumentBackboneBatchLimits(limits: DocumentBackboneBatchLimits): DocumentBackboneBatchLimits {
+function normalizedDocumentBackboneBatchLimits(limits: DocumentBackboneBatchLimits, ceiling: DocumentBackboneBatchLimits): DocumentBackboneBatchLimits {
   return {
-    maximumBytes: documentBackboneBatchLimit("maximumBytes", limits.maximumBytes, DOCUMENT_BACKBONE_BATCH_LIMITS.maximumBytes),
+    maximumBytes: documentBackboneBatchLimit("maximumBytes", limits.maximumBytes, ceiling.maximumBytes),
     maximumEnvelopes: documentBackboneBatchLimit("maximumEnvelopes", limits.maximumEnvelopes, MUTATION_DAG_CAPACITY),
     maximumDependenciesPerEnvelope: documentBackboneBatchLimit("maximumDependenciesPerEnvelope", limits.maximumDependenciesPerEnvelope, MUTATION_DAG_CAPACITY),
     maximumTotalDependencies: documentBackboneBatchLimit("maximumTotalDependencies", limits.maximumTotalDependencies, MUTATION_DAG_CAPACITY),
@@ -56,7 +58,7 @@ function normalizedDocumentBackboneBatchLimits(limits: DocumentBackboneBatchLimi
     maximumTotalTargetSegments: documentBackboneBatchLimit("maximumTotalTargetSegments", limits.maximumTotalTargetSegments, MUTATION_DAG_CAPACITY),
     maximumIdentifierBytes: documentBackboneBatchLimit("maximumIdentifierBytes", limits.maximumIdentifierBytes, MUTATION_DAG_IDENTIFIER_BYTES),
     maximumSchemaBytes: documentBackboneBatchLimit("maximumSchemaBytes", limits.maximumSchemaBytes, MUTATION_DAG_IDENTIFIER_BYTES),
-    maximumPayloadBytes: documentBackboneBatchLimit("maximumPayloadBytes", limits.maximumPayloadBytes, DOCUMENT_BACKBONE_BATCH_LIMITS.maximumPayloadBytes),
+    maximumPayloadBytes: documentBackboneBatchLimit("maximumPayloadBytes", limits.maximumPayloadBytes, ceiling.maximumPayloadBytes),
   };
 }
 
@@ -119,8 +121,9 @@ function readDocumentBackboneEnvelopeBatchAtExact(
   initialPosition: number,
   suppliedLimits: DocumentBackboneBatchLimits,
   terminal: boolean,
+  ceiling: DocumentBackboneBatchLimits = DOCUMENT_BACKBONE_BATCH_LIMITS,
 ): Readonly<{ envelopes: readonly ExactWireMutationEnvelope[]; position: number; bytes: Uint8Array }> {
-  const limits = normalizedDocumentBackboneBatchLimits(suppliedLimits);
+  const limits = normalizedDocumentBackboneBatchLimits(suppliedLimits, ceiling);
   if (!(bytes instanceof Uint8Array)) throw new DocumentBackboneBatchError("malformed", "byte-array");
   if (!Number.isSafeInteger(initialPosition) || initialPosition < 0 || initialPosition > bytes.length) throw new DocumentBackboneBatchError("malformed", "position");
   if (terminal && bytes.length - initialPosition > limits.maximumBytes) throw new DocumentBackboneBatchError("limit", "batch-bytes");
@@ -191,10 +194,11 @@ function readDocumentBackboneEnvelopeBatchAtExact(
     const target: string[] = [];
     for (let segmentIndex = 0; segmentIndex < targetCount; segmentIndex++) target.push(readText(limits.maximumIdentifierBytes, "identifier-bytes"));
     const diffSchema = readText(limits.maximumSchemaBytes, "schema-bytes");
-    const diffPayload = readBytes(limits.maximumPayloadBytes - totalPayloadBytes, "payload-bytes");
+    const rowBytes = Math.min(DOCUMENT_BACKBONE_BATCH_LIMITS.maximumPayloadBytes, limits.maximumPayloadBytes - totalPayloadBytes);
+    const diffPayload = readBytes(rowBytes, "payload-bytes");
     totalPayloadBytes += diffPayload.length;
     const inverseSchema = readText(limits.maximumSchemaBytes, "schema-bytes");
-    const inversePayload = readBytes(limits.maximumPayloadBytes - totalPayloadBytes, "payload-bytes");
+    const inversePayload = readBytes(rowBytes - diffPayload.length, "payload-bytes");
     totalPayloadBytes += inversePayload.length;
     const timestamp = { actor: readU64(), physical_ms: readU64(), logical: readU64() };
     const flags = readU64();
@@ -230,6 +234,14 @@ export function decodeDocumentBackboneEnvelopeBatchExact(
   suppliedLimits: DocumentBackboneBatchLimits = DOCUMENT_BACKBONE_BATCH_LIMITS,
 ): readonly ExactWireMutationEnvelope[] {
   return readDocumentBackboneEnvelopeBatchAtExact(bytes, 0, suppliedLimits, true).envelopes;
+}
+
+const ATOMIC_DOCUMENT_LIMITS = {...DOCUMENT_BACKBONE_BATCH_LIMITS,
+  maximumBytes: ATOMIC_BACKBONE_MAXIMUM_BYTES, maximumPayloadBytes: ATOMIC_BACKBONE_MAXIMUM_BYTES };
+
+/** 🔐️ Decodes the sealed atomic carrier's canonical causal rows within the unchanged per-row limit. */
+export function decodeAtomicDocumentBackboneBatch(bytes: Uint8Array): readonly ExactWireMutationEnvelope[] {
+  return readDocumentBackboneEnvelopeBatchAtExact(bytes, 0, ATOMIC_DOCUMENT_LIMITS, true, ATOMIC_DOCUMENT_LIMITS).envelopes;
 }
 
 /** 🧭 Reads a bounded exact causal batch embedded at `position[0]` and advances to its terminal byte. */

@@ -49,4 +49,4 @@ async fn explicit_nonzero_page_payload_is_preserved() {
     assert!(matches!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17HEditorCommand::SetPage { page: 3, item: 0, revision, text }) if revision == "0123456789abcdef" && text == "replacement"));
 }
 
-semio_plugin::history_edit_acceptance_law!("stdio/Pdf17HEditor", Pdf17HEditor, || semio_plugin::App { definition: create_pdf17_h_editor(), examples: Vec::new() }, "../..");
+semio_plugin::history_edit_acceptance_law!("stdio/Pdf17HEditor", Pdf17HEditor, || semio_plugin::App { definition: create_pdf17_h_editor(), examples: Vec::new() }, fixtures_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|root| root.join("🏅️standards").is_dir() && std::fs::read_to_string(root.join("📦️packages/🦀️rust/Cargo.toml")).is_ok_and(|manifest| manifest.contains("name = \"semio-s-artifact-stdio-pdf\""))).expect("PDF artifact workspace").join("🏅️standards/7️⃣1.7/🪆️subsets/🧱️base"));

@@ -84,8 +84,9 @@ const spread = text => parseInt(createHash("sha1").update(text).digest("hex").sl
 /** 🔱️ Splits owners into `lanes` lanes: stable (the same owners and costs always give the same lanes, whatever their order), every lane gets about the same recorded cost because the costliest owners are placed first on the lightest lane, ties broken by a hash of the record key. `owners` are `{ name, key, cost }`; the result holds the names only. */
 export function planWarmLanesV1(owners, lanes) {
   const count = Math.max(1, Math.floor(lanes)), out = Array.from({ length: count }, () => ({ names: [], load: 0 }));
-  const ordered = [...owners].sort((a, b) => (b.cost ?? 0) - (a.cost ?? 0) || spread(a.key) - spread(b.key) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-  for (const owner of ordered) { let at = 0; for (let index = 1; index < count; index++) if (out[index].load < out[at].load) at = index; out[at].names.push(owner.name); out[at].load += (owner.cost ?? 0) + 1; }
+  const ranked = owners.map(({ name, key, cost = 0 }) => ({ name, cost, spread: spread(key) }));
+  ranked.sort((a, b) => b.cost - a.cost || a.spread - b.spread || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  for (const owner of ranked) { let at = 0; for (let index = 1; index < count; index++) if (out[index].load < out[at].load) at = index; out[at].names.push(owner.name); out[at].load += owner.cost + 1; }
   return out.map(lane => lane.names.reverse());
 }
 
@@ -117,7 +118,7 @@ export const warmLineV1 = (language, fields) => WARM_TEXTS_V1[language === "de" 
 export async function runWarmLanesV1({ lanes, inspect, warm, index, signal, why, tell = () => {}, progressMilliseconds = WARM_POLICY_V1.progressMilliseconds, now = () => performance.now() }) {
   const total = lanes.reduce((sum, lane) => sum + lane.length, 0), counters = { total, done: 0, settled: 0, durable: 0, failed: 0, lanes: lanes.length, peak: 0 };
   let told = -Infinity;
-  const say = force => { if (why !== undefined) counters.why = why(); const at = now(); if (force || at - told >= progressMilliseconds) { told = at; tell({ ...counters }); } };
+  const say = force => { if (!force && counters.done === total) return; if (why !== undefined) counters.why = why(); const at = now(); if (force || at - told >= progressMilliseconds) { told = at; tell({ ...counters }); } };
   const beat = progressMilliseconds > 0 ? setInterval(() => say(true), progressMilliseconds) : undefined;
   beat?.unref?.();
   try { await Promise.all(lanes.map(async lane => {

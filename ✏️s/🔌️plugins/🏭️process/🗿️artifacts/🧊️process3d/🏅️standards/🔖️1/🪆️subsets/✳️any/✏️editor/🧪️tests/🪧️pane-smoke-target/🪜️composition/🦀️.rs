@@ -2,7 +2,7 @@
 
 use crate::context::{app, published_a_document_mutation, settled_action};
 use semio_framework::DslValue;
-use semio_framework_pack::snapshot::ArtifactPack;
+use pack::snapshot::ArtifactPack;
 use semio_s_artifact_process_process3d_model::snapshot::{Process3dSnapshot, ProcessMeasure, WorkingSolid};
 
 #[semio_framework_async_macros::async_test]
@@ -175,7 +175,7 @@ fn imported_cube_reopens_and_exports_using_the_same_geometry() {
     use semio_s_artifact_process_process3d_inferences::{processed_mesh, processed_volume};
     use semio_s_artifact_process_process3d_io::{export_process3d_model, import_process3d_model};
     use semio_s_artifact_process_process3d_model::snapshot::{genesis_process3d_child_pack, process_working_scene_from_snapshot, PROCESS3D_IMPORTED_BREP_PACK_BYTES};
-    use semio_framework_pack::snapshot::ArtifactDsl;
+    use pack::snapshot::ArtifactDsl;
 
     let model = include_bytes!("../../🧫️fixtures/📦️import-stock.obj");
     let url = format!("data:application/octet-stream;base64,{}", base64_codec::base64_standard_encode(model));

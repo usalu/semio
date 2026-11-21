@@ -74,3 +74,41 @@ Strokes that end at the outline stop 4.5 mm short (half the 1:50 detail pen) so 
 - Anchors appear only in `structure` (they are inside the wool and invisible in the body, and the thermal region is declared homogeneous: no point thermal bridges).
 - Brick tone is uniform; real bricks vary in colour.
 - The mass solid is inside the leaf and cannot be seen in opaque renders — that is where the real centre of mass is.
+
+
+## Round 5 handcraft
+
+No geometry change: the round 3 model already meets the bar; the only change is the sheet tool fix that made the cut thermal panels readable. Zoom tool `r5-c02-zoom.ts`; backup of the source: `🗑️generated/r5-etics-brick-wall-30/volumes-before.json` (identical to the source now).
+
+### Reference vs model (1:50, measured in the source solids)
+
+| item | reference | model | deviation |
+|---|---|---|---|
+| NF brick | 240 x 115 x 71 mm (DIN 105-1) | headers 240 deep, stretchers 115, 71 high | 0 % |
+| course | 1/12 m = 83.33 mm, bed 12.33 mm (DIN 4172) | 12 courses, repeat 83.33, bed 12.33 | 0 % |
+| head / longitudinal joint | 10 mm | 10 mm | 0 % |
+| 36.5 cm block bond | stretcher row 115 + joint 10 + header row 240, rows change side each course, quarter-brick offset 62.5 mm, header pitch 125, stretcher pitch 250 | as stated (header joints 0.03 + n x 0.125, stretcher joints 0.0925 / 0.2175 + n x 0.25) | 0 % |
+| build-up | 15 mm lime-cement plaster, 365 mm solid brick NF in block bond, 300 mm mineral wool, boards 800 x 625, 20 mm mineral render = 700 mm | same thicknesses | 0 % |
+| centre of mass from the room face | computed from layer masses | 0.22317 m (730 kg) | 0 % |
+| ETICS anchors | plate 60 mm, shank 8 mm, 50 mm into the brick, T scheme (about 6 per m2 on average; this 1 m window holds one board joint line: 2 T junctions + 2 board centres) | 4 anchors as stated | inside |
+
+### Grades (opened: body, structure and thermal `--cut` at 1:50, 1:100, 1:200, 1:500; 2D at every scale; 1:50 in winter-night (default); winter-sun and clip sunrise t 0.5 were rendered but could not be opened (image viewer hook timed out), they move no bone; the poses change the thermal state only)
+
+- Body: A / A / A / A (1:50 / 1:100 / 1:200 / 1:500): 1:50 the bond reads at both cut ends and the top course matches the 2D plan line for line; 1:100 the leaves as slabs; 1:200 masonry and ETICS; 1:500 one crisp slab as drawn. Before = after.
+- Thermal: A at every scale (the wool stays a shell of its own down to 1:500); before B as read on the sheets only because of the tool moiré, the model itself was right.
+- Structure: A at every scale: the leaf member, the bed under the leaf at the bearing anchor, the mass at the real centre of mass, the plate anchors of the ETICS as joints (1:50, 1:100).
+- Solid counts body 61 / 3 / 2 / 1, thermal 4 / 3 / 2 / 2, structure 7 / 7 / 3 / 3.
+
+### Changes
+
+- Thermal `--cut` sheets: the front, back and three-quarter panels showed a dense moiré (round 3 report: "tool cut artifact"). Cause found in the sheet tool: the cut shows the back face of one layer shell and the front face of the next in the same plane, and float noise decided pixel by pixel. Fixed at the root in `r3-lib.ts` (depth tie of 0.01 mm, later solid wins; `tool-requests.md` 2026-11-21); re-rendered, the panels now show clean layers.
+
+### Checks
+
+`volumes-check.ts components/etics-brick-wall-30 --product` PASS; `r3-validate.ts components/etics-brick-wall-30 --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); catalog `volumes` equal to the source (nothing to splice).
+
+### Remaining (with reason)
+
+- Board adhesive and the base/finish split of the render are not modelled: the declared build-up has no such layers; adding them would change `dimensions` and the thermal layers without a datum.
+- Mineral wool density 60 kg/m3 is at the low end of approved ETICS carrier boards (DIBt approvals list about 60 to 400 kg/m3); kept as declared.
+- The mass sphere lies at the real centre of mass inside the opaque leaf and is hidden in opaque renders; brick tone is uniform.

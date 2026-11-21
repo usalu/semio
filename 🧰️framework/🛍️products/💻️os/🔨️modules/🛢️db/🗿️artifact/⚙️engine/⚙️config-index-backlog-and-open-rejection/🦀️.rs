@@ -57,6 +57,7 @@ pub struct ArtifactEngine {
     pub wal: db_wal::ArtifactWal,
     pub state: DocumentState,
     pub(super) applied: HashMap<String, protocol::MutationEnvelope>,
+    pub(super) committed_atomic_edits: HashMap<String, Vec<protocol::MutationId>>,
     pub(super) applied_receipts: HashMap<String, CommandReceipt>,
     pub(super) applied_receipt_order: VecDeque<String>,
     pub(super) durable_group_receipts: HashMap<String, store::durable_group::DurableOwnedGroupJournalReceiptV1>,

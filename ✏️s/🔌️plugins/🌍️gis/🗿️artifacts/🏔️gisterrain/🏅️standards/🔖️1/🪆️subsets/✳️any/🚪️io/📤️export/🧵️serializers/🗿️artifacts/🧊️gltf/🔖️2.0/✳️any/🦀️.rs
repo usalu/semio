@@ -9,5 +9,11 @@ use {semio_s_artifact_stdio_semio_mesh_export::encode_mesh, semio_s_artifact_std
 pub fn register() {}
 
 pub fn serialize_bytes(snapshot: &GisTerrainSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    encode_mesh(&gis_terrain_mesh_from_snapshot(snapshot), SemioMeshFormat::Gltf).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("gisterrain→gltf: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
+    gis_terrain_mesh_from_snapshot(snapshot).map_err(str::to_owned)
+        .and_then(|mesh| encode_mesh(&mesh, SemioMeshFormat::Gltf).map_err(|error| error.to_string()))
+        .map_err(|error| semio_framework_diagnostic::TextError::new(
+            semio_framework_value::ValueRefusalKind::InvalidValue,
+            format!("gisterrain→gltf: {error}"),
+            semio_framework_diagnostic::TextSpan::at(1, 1),
+        ))
 }

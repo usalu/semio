@@ -120,3 +120,41 @@ Sources: [Schöck Isokorb XT type K](https://www.schoeck.com/en-gb/isokorb/xt-ty
 ## 7. Resume pass (2026-11-19 23:25)
 
 Started with the brief's resume procedure: `r3-validate.ts components/cantilever-balcony` `VALID` (schema 0, validateAsset 0); `volumes-check.ts --product` `PASS` (7.4 s); the catalog `volumes` are identical to `volumes/components/cantilever-balcony.json`; no broken or half-written state. Re-rendered and opened: `r3-sheet` body 1:50, 1:100, 1:200, 1:500; structure 1:50; thermal `--cut` 1:50 and 1:100; `r3-2d` 1:50. All read as described in section 5; no change needed. Two render-only effects seen: in the `--cut` three-quarter panel a dark triangle on the cut wall top and moire in the plan over the nested wall plates (coincident top faces of the nested shells, the renderer's depth fight, not geometry: front and side cut panels show the plates clean). In the 1:50 plan line drawing the base plate and the post read as one cross-shaped outline, which is the true outline of the two parts in plan.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-cantilever-balcony-volumes.py` (round-3 script plus the changes below). Renders (opened with Read) under `🗑️generated/r5-cantilever-balcony/before/` and `after/` (made by `r5-c01-sheets.sh`). I opened body, structure and the cut thermal sheets at 1:50, 1:100, 1:200 and 1:500, the 2D at 1:50 and 1:500, and the pose `point-load-tip`. The other poses and the clip only move loads; the solids do not move.
+
+### Reference and model against reference (1:50)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| slab at the wall / at the edge | 200 / 177.5 mm (1.5 % fall, DIN 18531-5) | 200 / 177.5 mm | 0 % |
+| projection | 1.50 m (rig) | 1.50 m | 0 % |
+| guard height | at least 1.10 m above 12 m fall height (MBO section 38) | 1.10 m | 0 % |
+| clear baluster gap | at most 120 mm (DIN 18065) | 95 mm | in range |
+| post | SHS 50 x 50 x 4, outer corner radius 8 mm (EN 10219-2) | 50 x 50 x 4, r 8 | 0 % |
+| handrail | CHS 60.3 x 2.9 (EN 10219-2) | 60.3 x 2.9 | 0 % |
+| thermal-break module | 120 mm insulation body, height 200 mm (Schöck Isokorb XT K) | 120 x 200 mm | 0 % |
+| anchor edge distance | about 65 mm | 65 mm | 0 % |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- (the cage is hidden inside the opaque slab member) | unchanged |
+| 1:100 | A- / A- / A- | unchanged |
+| 1:200 | B+ / B / A- (thermal: the wall concrete band in slab height had no solid) | B+ / A- / A- |
+| 1:500 | B+ / B / B+ (thermal: same band missing; structure: the rail that carries the barrier load was not a member) | B+ / A- / A- |
+
+### Changes
+
+- At 1:200 and 1:500 the thermal list now has `th-break-core`: the wall concrete in slab height, region `thermal-break`, with the same section faces as at 1:50. It contributes no area.
+- At 1:500 the structure now has `railing-handrail-member` (`of` the rail).
+- The decisions texts are updated in en and de.
+- Checks: `volumes-check --product` PASS (70.5 s). `r3-validate --volumes` VALID (checkVolumes 0). Spliced; `--catalog-only` VALID.
+
+### Remaining
+
+- At 1:200 and 1:500 the guard reads as a post, a rail and a panel or bar, and not as a baluster field. The 2D at these scales draws it the same way.
+- In the `--cut` thermal sheets the renderer draws a dark triangle on the wall top and moiré in the plan. These are artefacts of the cut cap and of coincident faces, not geometry.

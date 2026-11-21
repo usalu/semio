@@ -734,6 +734,103 @@
     "dim_x2": "loaded_length"
    }
   },
+  "E2.18": {
+   "form": "Wall",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "rail_aero_q",
+   "aux": {}
+  },
+  "E2.18.1": {
+   "form": "Plate",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "rail_aero_q",
+   "aux": {}
+  },
+  "E2.18.2": {
+   "form": "Plate",
+   "width": "",
+   "length": "",
+   "height": "rail_aero_height",
+   "load": "rail_aero_q",
+   "aux": {}
+  },
+  "E2.18.3": {
+   "form": "Wall",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "rail_aero_q",
+   "aux": {
+    "dim_x": "rail_aero_clearance_min",
+    "dim_x2": "rail_aero_clearance_max"
+   }
+  },
+  "E2.18.4": {
+   "form": "Block",
+   "width": "",
+   "length": "rail_aero_enclosed_length",
+   "height": "",
+   "load": "rail_aero_q",
+   "aux": {}
+  },
+  "E2.21": {
+   "form": "Gauge",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "rail_fatigue_stress",
+   "aux": {
+    "dim_x": "l_phi"
+   }
+  },
+  "E2.21.1": {
+   "form": "Gauge",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "rail_fatigue_speed",
+   "aux": {
+    "dim_x": "l_phi"
+   }
+  },
+  "E2.21.3": {
+   "form": "Symbol",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "",
+   "aux": {}
+  },
+  "E2.22": {
+   "form": "Symbol",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "",
+   "aux": {}
+  },
+  "E2.22.1": {
+   "form": "Gauge",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "rail_hslm_b_count",
+   "aux": {
+    "dim_x": "rail_hslm_b_span"
+   }
+  },
+  "E2.22.2": {
+   "form": "Symbol",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "",
+   "aux": {}
+  },
   "E3.01": {
    "form": "Gauge",
    "width": "",
@@ -774,6 +871,14 @@
    "length": "",
    "height": "",
    "load": "q_max",
+   "aux": {}
+  },
+  "E3.06": {
+   "form": "Symbol",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "",
    "aux": {}
   },
   "E3.07": {
@@ -835,12 +940,38 @@
     "dim_x": "a_over_u"
    }
   },
+  "E4.06": {
+   "form": "Cylinder",
+   "width": "dc",
+   "length": "",
+   "height": "",
+   "load": "",
+   "aux": {
+    "dim_x": "silo_wall_thickness"
+   }
+  },
   "E4.08": {
    "form": "Cylinder",
    "width": "",
    "length": "",
    "height": "z",
    "load": "gamma",
+   "aux": {}
+  },
+  "E4.09": {
+   "form": "Gauge",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "tank_wind_qe",
+   "aux": {}
+  },
+  "E4.09.1": {
+   "form": "Gauge",
+   "width": "",
+   "length": "",
+   "height": "",
+   "load": "tank_pressure_max",
    "aux": {}
   }
  }

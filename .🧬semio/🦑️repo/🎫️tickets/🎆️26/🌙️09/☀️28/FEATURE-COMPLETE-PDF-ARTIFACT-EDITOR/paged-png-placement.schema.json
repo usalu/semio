@@ -1,0 +1,30 @@
+{
+  "schema": "s.stdio.pdf.png-placement.v1",
+  "draft": true,
+  "framing": "semio canonical Pack with native identity chunks",
+  "facts": [
+    "width:u32le",
+    "height:u32le",
+    "components:1|3",
+    "alpha:0|1",
+    "group-sha256:32 octets"
+  ],
+  "identity": "SHA-256(domain ASCII ending LF || first ten facts octets || color rows || alpha rows when present)",
+  "identityDomain": "s.stdio.pdf.png-placement.v1\n",
+  "references": {
+    "dialect": "s.stdio.binary@raw/*",
+    "artifactId": "pdf:s.stdio.png-plane:sha256:<64 lowercase hex>:color|alpha"
+  },
+  "chunks": [
+    "facts",
+    "color, 32768 bytes each except last",
+    "optional alpha, 32768 bytes each except last",
+    "revision and typed placement rows"
+  ],
+  "rows": [
+    "revision:32 octets",
+    "image operations: one per role in alpha then color order",
+    "AppendPageContent or ReplaceContent"
+  ],
+  "declaration": "Both role references bind to the same digest. Their dimensions, channel counts and role order are canonical. All payloads remain private through terminal verification."
+}

@@ -60,10 +60,10 @@ impl RasterAssetMutationWork{
             },
             7=>return Ok(true),
             8=>{
-                let demand=RasterImagePayload::alias_demands();if cx.fuel_remaining()<2||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth<demand.depth||raster_short(cx.retained_grant(),demand){return Ok(false)}let owner=base.assets.get(key).and_then(|child|child.local_owner::<SemioImageSnapshot>()).ok_or("raster-store.asset-inverse-unmaterialized")?;cx.consume_fuel(1);let turn=RasterImagePayload::from_shared(owner,cx.retained_grant());cx.consume_fuel(turn.work);match turn.result{Ok((payload,receipt))=>{self.owned.as_mut().unwrap().inverse_payload=Some(payload);cx.consume_retained(receipt).map_err(|_|"raster-store.asset-inverse-root-receipt")?;},Err((error,owner))=>{self.owned.as_mut().unwrap().inverse_payload=Some(<RasterImagePayload as semio_framework_value_native_owned::owned::NativeReceiveMap<std::sync::Arc<SemioImageSnapshot>>>::from_native(owner));cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.asset-inverse-root-error-receipt")?;return Err("raster-store.asset-inverse-root")}}self.phase=3;
+                let demand=RasterImagePayload::alias_demands();if cx.fuel_remaining()<2||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth<demand.depth||raster_short(cx.retained_grant(),demand){return Ok(false)}let owner=base.assets.get(key).and_then(|child|child.local_owner::<SemioImageSnapshot>()).ok_or("raster-store.asset-inverse-unmaterialized")?;cx.consume_fuel(1);let turn=RasterImagePayload::from_shared(owner,cx.retained_grant());cx.consume_work(turn.work);match turn.result{Ok((payload,receipt))=>{self.owned.as_mut().unwrap().inverse_payload=Some(payload);cx.consume_retained(receipt).map_err(|_|"raster-store.asset-inverse-root-receipt")?;},Err((error,owner))=>{self.owned.as_mut().unwrap().inverse_payload=Some(<RasterImagePayload as semio_framework_value_native_owned::owned::NativeReceiveMap<std::sync::Arc<SemioImageSnapshot>>>::from_native(owner));cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.asset-inverse-root-error-receipt")?;return Err("raster-store.asset-inverse-root")}}self.phase=3;
             },
             9=>{
-                let RasterMutation::AddLayerAsset(value)=operation else{return Err("raster-store.asset-image-operation")};let copy=size_of::<(String,RasterAssetChild)>();if cx.fuel_remaining()<2||!Self::admit(cx,copy,0){return Ok(false)}let turn=value.asset.owner(cx.retained_grant());cx.consume_fuel(turn.work);match turn.result{Ok((owner,mut receipt))=>{let child=RasterAssetChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}).with_local_owner(owner);self.owned.as_mut().unwrap().pending=Some((String::new(),child));receipt.copied_bytes=receipt.copied_bytes.checked_add(copy).ok_or("raster-store.asset-child-copy-overflow")?;cx.consume_retained(receipt).map_err(|_|"raster-store.asset-child-root-receipt")?;},Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.asset-child-root-error-receipt")?;return Err("raster-store.asset-child-root")}}self.phase=10;
+                let RasterMutation::AddLayerAsset(value)=operation else{return Err("raster-store.asset-image-operation")};let copy=size_of::<(String,RasterAssetChild)>();if cx.fuel_remaining()<2||!Self::admit(cx,copy,0){return Ok(false)}let turn=value.asset.owner(cx.retained_grant());cx.consume_work(turn.work);match turn.result{Ok((owner,mut receipt))=>{let child=RasterAssetChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}).with_local_owner(owner);self.owned.as_mut().unwrap().pending=Some((String::new(),child));receipt.copied_bytes=receipt.copied_bytes.checked_add(copy).ok_or("raster-store.asset-child-copy-overflow")?;cx.consume_retained(receipt).map_err(|_|"raster-store.asset-child-root-receipt")?;},Err(error)=>{cx.consume_retained(error.retained_progress()).map_err(|_|"raster-store.asset-child-root-error-receipt")?;return Err("raster-store.asset-child-root")}}self.phase=10;
             },
             10=>{
                 let bytes=key.len()*2+6+RASTER_IMAGE_CHILD_ID_BYTES+b"s.stdio.semio".len()+b"v1".len()+b"image".len();if !Self::admit(cx,bytes+size_of::<RasterAssetChild>(),bytes){return Ok(false)}let(map_key,child)=self.owned.as_mut().unwrap().pending.as_mut().ok_or("raster-store.asset-child-root")?;*map_key=raster_exact_string_from_parts(&[key.as_bytes()])?;child.child_id=raster_image_child_id(self.digest.ok_or("raster-store.asset-digest")?);child.target=semio_framework_artifact_reference::ArtifactRef{artifact_id:raster_exact_string_from_parts(&[key.as_bytes(),b"-image"])?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:raster_exact_string_from_parts(&[b"s.stdio.semio"])?,standard:raster_exact_string_from_parts(&[b"v1"])?,subset:raster_exact_string_from_parts(&[b"image"])?}};let capacity=map_key.capacity()+child.child_id.capacity()+child.target.artifact_id.capacity()+child.target.dialect.artifact_kind.capacity()+child.target.dialect.standard.capacity()+child.target.dialect.subset.capacity();Self::receipt(cx,bytes+size_of::<RasterAssetChild>(),capacity)?;self.phase=5;
@@ -73,8 +73,15 @@ impl RasterAssetMutationWork{
     }
 
     pub(super) fn take_inverse(&mut self)->Option<Vec<RasterMutation>>{if self.phase!=7{return None;}Some(std::mem::take(&mut self.owned.as_mut()?.inverse))}
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        raster_owned_close_work(self.retirement.as_deref(), !self.terminal_is_empty(), body)
+    }
+
     pub(super) fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body);}if self.owned.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned);}Ok(Default::default())}
-    pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep>{self.closing=true;if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.owned,&mut self.retirement,grant)}}
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        self.closing = true;
+        raster_retire_owned(&mut self.owned, &mut self.retirement, effect)
+    }
     pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.owned.is_none()&&self.retirement.is_none()}
 }
 impl Drop for RasterAssetMutationWork{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"asset publication must hand off or retire every owner before Drop");}}
@@ -86,7 +93,19 @@ impl RasterRetainedMutationWork{
     pub(super) fn demands(&self,base:&RasterSnapshot,candidate:&RasterSnapshot,operation:&RasterMutation,address:Option<RasterLayerAddress>,body:usize)->Result<semio_framework_value::RetirementDemand,&'static str>{match self{Self::Pixel(work)=>work.demands(base,candidate,operation,address.ok_or("raster-store.pixel-address")?,body),Self::Asset(work)=>work.demands(candidate,operation,body)}}
     pub(super) fn take_inverse(&mut self)->Option<Vec<RasterMutation>>{match self{Self::Pixel(work)=>work.take_inverse(),Self::Asset(work)=>work.take_inverse()}}
     pub(super) fn output_ready(&self)->bool{match self{Self::Pixel(work)=>work.output_ready(),Self::Asset(work)=>work.phase==7}}
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        match self {
+            Self::Pixel(work) => work.close_work_demand(body),
+            Self::Asset(work) => work.close_work_demand(body),
+        }
+    }
+
     pub(super) fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{match self{Self::Pixel(work)=>work.close_demands(body),Self::Asset(work)=>work.close_demands(body)}}
-    pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep>{match self{Self::Pixel(work)=>work.close_step(grant),Self::Asset(work)=>work.close_step(grant)}}
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        match self {
+            Self::Pixel(work) => work.close_step(effect),
+            Self::Asset(work) => work.close_step(effect),
+        }
+    }
     pub(super) fn terminal_is_empty(&self)->bool{match self{Self::Pixel(work)=>work.terminal_is_empty(),Self::Asset(work)=>work.terminal_is_empty()}}
 }

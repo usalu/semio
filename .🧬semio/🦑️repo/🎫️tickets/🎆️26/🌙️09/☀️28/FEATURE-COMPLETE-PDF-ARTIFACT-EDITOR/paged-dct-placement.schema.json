@@ -1,0 +1,20 @@
+{
+  "schema": "s.stdio.pdf.dct-placement.v1",
+  "nativeOperation": {
+    "proposedTag": 61,
+    "field": {"id": 1, "name": "sealedPlacement", "type": "Bytes64"}
+  },
+  "container": "Pack",
+  "nativeChunks": "unchanged identity chunks from paged-dct-install-pack.schema.json",
+  "terminalChunk": {
+    "codec": "identity",
+    "maximumBytes": 8228,
+    "layout": [
+      {"name": "captureRevision", "type": "raw32"},
+      {"name": "setImageLength", "type": "u16le"},
+      {"name": "setImage", "type": "registeredPdfOperationFrame", "mutation": "setImage", "maximumBytes": 4096},
+      {"name": "paintLength", "type": "u16le"},
+      {"name": "paint", "type": "registeredPdfOperationFrame", "mutations": ["appendPageContent", "replaceContent"], "maximumBytes": 4096}
+    ]
+  }
+}

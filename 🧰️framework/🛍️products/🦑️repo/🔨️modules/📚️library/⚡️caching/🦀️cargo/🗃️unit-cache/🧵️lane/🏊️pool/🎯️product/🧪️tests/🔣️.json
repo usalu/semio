@@ -101,5 +101,80 @@
     {
       "toolchain": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
     }
+  ],
+  "testRunnerOptions": [
+    {
+      "command": "test",
+      "arguments": [
+        "-p",
+        "pdf",
+        "--lib",
+        "--no-fail-fast"
+      ],
+      "productArguments": [
+        "-p",
+        "pdf",
+        "--lib"
+      ]
+    },
+    {
+      "command": "test",
+      "arguments": [
+        "-p",
+        "pdf",
+        "--lib",
+        "--no-fail-fast",
+        "--",
+        "--no-fail-fast"
+      ],
+      "productArguments": [
+        "-p",
+        "pdf",
+        "--lib",
+        "--",
+        "--no-fail-fast"
+      ]
+    },
+    {
+      "command": "test",
+      "arguments": [
+        "-p",
+        "pdf",
+        "--no-fail-fast"
+      ],
+      "productArguments": [
+        "-p",
+        "pdf"
+      ]
+    },
+    {
+      "command": "test",
+      "arguments": [
+        "-p",
+        "another",
+        "--lib",
+        "--no-fail-fast"
+      ],
+      "productArguments": [
+        "-p",
+        "another",
+        "--lib"
+      ]
+    },
+    {
+      "command": "build",
+      "arguments": [
+        "-p",
+        "pdf",
+        "--lib",
+        "--no-fail-fast"
+      ],
+      "productArguments": [
+        "-p",
+        "pdf",
+        "--lib",
+        "--no-fail-fast"
+      ]
+    }
   ]
 }

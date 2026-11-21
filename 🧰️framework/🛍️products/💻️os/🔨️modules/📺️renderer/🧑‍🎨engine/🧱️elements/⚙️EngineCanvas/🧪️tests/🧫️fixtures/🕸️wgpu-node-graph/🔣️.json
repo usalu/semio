@@ -1,4 +1,43 @@
 {
+  "directional": {
+    "widget": {
+      "kind": "variable",
+      "id": "axis@raw",
+      "name": "vector",
+      "schema": "vector"
+    },
+    "node": {
+      "id": "axis@raw",
+      "x": 0,
+      "y": 0,
+      "width": 180,
+      "height": 100,
+      "inputs": [
+        {
+          "id": "!ivector",
+          "code": "vector"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "vector",
+          "code": "vector"
+        }
+      ]
+    },
+    "ports": [
+      {
+        "direction": "in",
+        "id": "!ivector",
+        "target": "axis@raw@!ivector"
+      },
+      {
+        "direction": "out",
+        "id": "vector",
+        "target": "axis@raw@vector"
+      }
+    ]
+  },
   "provenance": {
     "what": "The flow fixture the generation3d Flow window (`procedural-main`, SurfaceKind::NodeGraph, body `procedural.play.main`) publishes as `NodeGraphScene.snapshot_json` for the bundled `hexagonal-mushroom-column` example — 7 widgets, 6 synapses.",
     "source": "s/plugins/procedural/artifacts/generation3d/standards/1/subsets/any/examples/hexagonal-mushroom-column/assets/hexagonal-mushroom-column/dsl.semio",

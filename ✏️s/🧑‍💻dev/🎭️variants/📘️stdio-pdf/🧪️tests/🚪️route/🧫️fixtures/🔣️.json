@@ -1,0 +1,14 @@
+{
+  "variant": "stdio-pdf-1-7",
+  "plugin": "stdio-pdf",
+  "app": "s.stdio.pdf@1.7/*#editor",
+  "reactPort": 6260,
+  "wgpuPort": 6360,
+  "dependsOn": [
+    "stdio"
+  ],
+  "artifactRef": "s.stdio.pdf@1.7/*",
+  "manifest": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+  "contribution": "✏️s/🧑‍💻dev/🎭️variants/📘️stdio-pdf/🧬️schema/🔣️.json",
+  "input": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf"
+}

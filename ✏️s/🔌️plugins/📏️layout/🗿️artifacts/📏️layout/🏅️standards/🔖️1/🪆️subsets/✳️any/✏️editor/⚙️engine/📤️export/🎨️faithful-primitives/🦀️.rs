@@ -5,10 +5,11 @@ pub(super) mod affine;
 use affine::AffineEdge as Edge;
 use semio_framework_2d_engine::{PathSegment, Vec2};
 use semio_framework_2d_text_font::work::RetainedWorkLedger;
-use semio_framework_value::RetainedAllocationEffect;
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant, RetirementDemand};
+use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_pixels::image_decoding::{ImageDecodeInput, ImageDecodeJob};
+use semio_framework_pixels::RasterImage;
 
 const SEGMENT_LIMIT: usize = MAX_LAYOUT_EXPORT_DECODED_ITEMS * 8;
 const SAMPLE_OFFSETS: [f64; 4] = [0.125, 0.375, 0.625, 0.875];
@@ -40,6 +41,7 @@ pub(super) enum PaintShape { Path(PaintPath), Image { source: usize } }
 #[derive(Clone, Copy)]
 struct Curve { points: [Vec2; 4], degree: u8, depth: u8 }
 semio_framework_value::artifact_retire_leaf!(Curve);
+#[derive(Clone, Copy)]
 struct CurveStack{rows:[Curve;25],length:usize}
 semio_framework_value::artifact_retire_leaf!(CurveStack);
 impl CurveStack{
@@ -51,7 +53,7 @@ impl CurveStack{
 #[derive(semio_framework_value::RetireOwned)]
 struct BuildPath { path: PaintPath, curves: CurveStack }
 #[derive(semio_framework_value::RetireOwned)]
-struct PaintOwners { decoders: PagedList<ImageDecodeJob, { usize::MAX }>, shapes: PagedList<PaintShape, { usize::MAX }>, build: Option<BuildPath> }
+pub(super) struct PaintOwners { decoders: PagedList<ImageDecodeJob, { usize::MAX }>, shapes: PagedList<PaintShape, { usize::MAX }>, build: Option<BuildPath> }
 pub(super) struct FidelityState {
     owners: PaintOwners,
     item: usize,
@@ -72,11 +74,19 @@ pub(super) struct FidelityState {
     pub svg_byte: usize,
     sampling: affine::AffineCoverageCursor,
 }
-impl RetireOwned for FidelityState { fn retirement(self) -> Box<dyn RetirementCursor> { self.owners.retirement() } fn retirement_birth_bytes(&self) -> Option<usize> { self.owners.retirement_birth_bytes() } fn controlled_retirement_supported() -> bool { true } }
+impl RetireOwned for FidelityState {
+    type RetirementCursor = <PaintOwners as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor { self.owners.retirement_seed() }
+    fn retirement_birth_bytes(&self) -> Option<usize> { self.owners.retirement_birth_bytes() }
+    fn controlled_retirement_supported() -> bool { PaintOwners::controlled_retirement_supported() }
+}
 fn append<T>(list: &mut PagedList<T, { usize::MAX }>, value: T, work:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>) -> Result<bool, String> { if list.len() >= SEGMENT_LIMIT { return Err("layout-export-path-segment-limit".into()); } if !work.slot(list,effect).map_err(|error|error.to_string())? { return Ok(false); } work.push(list,value).map_err(|(error,_)|error.to_owned())?; Ok(true) }
 pub(super) fn rotate(p: Vec2, angle: f32, center: [f32; 2]) -> Vec2 { let (s, c) = f64::from(angle).sin_cos(); let dx = p[0] - f64::from(center[0]); let dy = p[1] - f64::from(center[1]); [f64::from(center[0]) + dx * c - dy * s, f64::from(center[1]) + dx * s + dy * c] }
 pub(super) fn mapped(segment: &PathSegment, map: impl Fn(Vec2) -> Vec2) -> Result<PathSegment, String> { Ok(match segment { PathSegment::Move { to } => PathSegment::Move { to: map(*to) }, PathSegment::Line { to } => PathSegment::Line { to: map(*to) }, PathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: map(*ctrl), to: map(*to) }, PathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: map(*ctrl1), ctrl2: map(*ctrl2), to: map(*to) }, PathSegment::Close => PathSegment::Close, _ => return Err("layout-export-path-arc-not-resolved".into()) }) }
 fn midpoint(a: Vec2, b: Vec2) -> Vec2 { [(a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5] }
+fn draw_color(color: Option<[f64; 4]>) -> Option<[f32; 4]> {
+    color.map(|channels| channels.map(|value| value as f32))
+}
 
 impl FidelityState {
     pub fn new() -> Self { Self { owners: PaintOwners { decoders: PagedList::new(), shapes: PagedList::new(), build: None }, item: 0, source_segment: 0, flatten: 0, current: [0.0; 2], first: [0.0; 2], phase: 0, segments: 0, edge_count: 0, image_bytes: 0, image_pixels: 0, image_count: 0, image_decoder: None, prepared: false, svg_phase: 0, svg_segment: 0, svg_byte: 0, sampling:Default::default() } }
@@ -98,22 +108,55 @@ impl FidelityState {
         }
         let proxy = image_proxy_fields(proxy.as_deref(),*link,snapshot)?;
         let mime = if proxy.starts_with("data:image/png;") { "image/png" } else if proxy.starts_with("data:image/jpeg;") { "image/jpeg" } else { return Err("layout-export-image-media-unsupported".into()); };
-        let index = match self.image_decoder { Some(index) => index, None => {
-            let grant=context.retained_grant();let mut work=RetainedWorkLedger::new(grant);let Some((reserved,performed))=context.with_original_effect(grant,|_,effect|work.slot(&mut self.owners.decoders,effect)).map_err(|error|error.to_string())?else{return Ok(false)};context.consume_work(performed);context.consume_retained(work.receipt()).map_err(|error|error.to_string())?;if !reserved.map_err(|error|error.to_string())? { return Ok(false); }
-            self.image_bytes = self.image_bytes.checked_add(proxy.len()).ok_or("layout-export-image-source-limit")?;
-            if self.image_bytes > MAX_LAYOUT_EXPORT_RAW_BYTES { return Err("layout-export-image-source-limit".into()); }
-            let decoder = ImageDecodeJob::new(ImageDecodeInput { mime, data: proxy, max_source_bytes: MAX_LAYOUT_EXPORT_RAW_BYTES, max_bytes: MAX_LAYOUT_EXPORT_OUTPUT_BYTES.min(64 << 20), max_pixels: MAX_LAYOUT_EXPORT_PIXELS as usize, max_chunks: 512 }).map_err(|error| error.to_string())?;
-            let index = self.owners.decoders.len(); let pushed=work.push(&mut self.owners.decoders,decoder);context.consume_retained(work.receipt()).map_err(|error|error.to_string())?;pushed.map_err(|(error,_)|error)?; self.image_decoder = Some(index); return Ok(false);
-        } };
-        let decoder = self.owners.decoders.get_mut(index).unwrap();
-        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, ..context.retained_grant() };
-        if decoder.progress().done {
-            if let Some((image, receipt)) = decoder.take_result(grant).map_err(|error| error.to_string())? {
-                context.consume_retained(receipt).map_err(|error| error.to_string())?;
-                *raster = Some(PdfRaster { width: image.width, height: image.height, resource: None, rgba: image.pixels });
-                return Ok(false);
+        let Some(index) = self.image_decoder else {
+            let bytes = self.image_bytes.checked_add(proxy.len()).ok_or("layout-export-image-source-limit")?;
+            if bytes > MAX_LAYOUT_EXPORT_RAW_BYTES { return Err("layout-export-image-source-limit".into()); }
+            let list = &mut self.owners.decoders;
+            let demand = RetainedWorkLedger::slot_demand(list)?;
+            if !context.admit_work_step(demand).map_err(|error| error.to_string())? { return Ok(false); }
+            let grant = context.retained_grant();
+            let mut work = RetainedWorkLedger::new(grant);
+            let Some((result, performed)) = context.with_original_effect(grant, |_, effect| -> Result<Option<usize>, String> {
+                if !work.slot(list, effect).map_err(|error| error.to_string())? { return Ok(None); }
+                if !effect.performed(1).map_err(|error| error.to_string())? { return Err("layout-export-image-work-limit".into()); }
+                let decoder = ImageDecodeJob::new(ImageDecodeInput { mime, data: proxy, max_source_bytes: MAX_LAYOUT_EXPORT_RAW_BYTES, max_bytes: MAX_LAYOUT_EXPORT_OUTPUT_BYTES.min(64 << 20), max_pixels: MAX_LAYOUT_EXPORT_PIXELS as usize, max_chunks: 512 }).map_err(|error| error.to_string())?;
+                let index = list.len();
+                work.push(list, decoder).map_err(|(error, _)| error)?;
+                Ok(Some(index))
+            }).map_err(|error| error.to_string())? else { return Ok(false); };
+            context.consume_work(performed);
+            context.consume_retained(work.receipt()).map_err(|error| error.to_string())?;
+            if let Some(index) = result? {
+                self.image_bytes = bytes;
+                self.image_decoder = Some(index);
             }
-        } else { if decoder.next_depth_demand().map_err(|error| error.to_string())? > grant.maximum_depth { return Err("layout-export-image-depth-grant".into()); } let (_, receipt) = decoder.advance(proxy, grant).map_err(|error| error.to_string())?; context.consume_retained(receipt).map_err(|error| error.to_string())?; }
+            return Ok(false);
+        };
+
+        let decoder = self.owners.decoders.get_mut(index).ok_or("layout-export-image-decoder-missing")?;
+        let complete = decoder.progress().done;
+        let demand = if complete {
+            RetirementDemand { copy_bytes: size_of::<RasterImage>() + size_of::<Option<PdfRaster>>(), depth: 1, ..Default::default() }
+        } else {
+            RetirementDemand {
+                copy_bytes: decoder.next_copy_byte_demand().map_err(|error| error.to_string())?,
+                capacity_bytes: decoder.next_capacity_byte_demand().map_err(|error| error.to_string())?,
+                depth: decoder.next_depth_demand().map_err(|error| error.to_string())?,
+                ..Default::default()
+            }
+        };
+        if !context.admit_work_step(demand).map_err(|error| error.to_string())? { return Ok(false); }
+        let grant = RetainedCloneGrant { maximum_items: 1, ..context.retained_grant() };
+        let Some((result, performed)) = context.with_original_effect(grant, |_, effect| {
+            if !complete { return decoder.advance(proxy, effect).map(|(_, receipt)| receipt).map_err(|error| error.to_string()); }
+            if !effect.performed(1).map_err(|error| error.to_string())? { return Err("layout-export-image-work-limit".into()); }
+            let (image, mut receipt) = decoder.take_result(effect.grant()).map_err(|error| error.to_string())?.ok_or("layout-export-image-handoff-refused")?;
+            *raster = Some(PdfRaster { width: image.width, height: image.height, resource: None, rgba: image.pixels });
+            receipt.copied_bytes += size_of::<Option<PdfRaster>>();
+            Ok(receipt)
+        }).map_err(|error| error.to_string())? else { return Ok(false); };
+        context.consume_work(performed);
+        context.consume_retained(result?).map_err(|error| error.to_string())?;
         Ok(false)
     }
     pub fn prepare_one(&mut self, items: &PlanItems, text: Option<&ExportTextState>, drawing:Option<&DrawingCompositionState>,work:&mut RetainedWorkLedger,effect:&mut RetainedAllocationEffect<'_>) -> Result<(), String> {
@@ -121,8 +164,8 @@ impl FidelityState {
         if self.phase == 0 {
             match item {
                 PdfItem::Image { raster, placeholder, affine:outer, .. } => { if *placeholder { self.owners.build = Some(BuildPath { path: PaintPath::new(Some([0.92, 0.88, 0.84, 1.0]), Some([0.75, 0.35, 0.2, 1.0]), 1.0).transformed(outer.unwrap_or(affine::IDENTITY))?, curves: CurveStack::new() }); } else { if raster.is_none() { return Err("layout-export-image-unavailable".into()); } if append(&mut self.owners.shapes, PaintShape::Image { source: self.item },work,effect)? { self.next_item(); } return Ok(()); } }
-                PdfItem::DrawingPath{index}=>{let info=drawing.ok_or("layout-export-drawing-source-missing")?.path(*index)?.info;self.owners.build=Some(BuildPath{path:PaintPath::new(info.paint.fill,info.paint.stroke,info.paint.stroke_width).transformed(info.affine)?,curves:CurveStack::new()});}
-                PdfItem::DrawingOutline{paint,affine,..}=>self.owners.build=Some(BuildPath{path:PaintPath::new(paint.fill,paint.stroke,paint.stroke_width).transformed(*affine)?,curves:CurveStack::new()}),
+                PdfItem::DrawingPath{index}=>{let info=drawing.ok_or("layout-export-drawing-source-missing")?.path(*index)?.info;self.owners.build=Some(BuildPath{path:PaintPath::new(draw_color(info.paint.fill),draw_color(info.paint.stroke),info.paint.stroke_width).transformed(info.affine)?,curves:CurveStack::new()});}
+                PdfItem::DrawingOutline{paint,affine,..}=>self.owners.build=Some(BuildPath{path:PaintPath::new(draw_color(paint.fill),draw_color(paint.stroke),paint.stroke_width).transformed(*affine)?,curves:CurveStack::new()}),
                 PdfItem::Outline { color, .. } => self.owners.build = Some(BuildPath { path: PaintPath::new(Some(*color), None, 0.0), curves: CurveStack::new() }),
                 PdfItem::Rect { fill, stroke, .. } => self.owners.build = Some(BuildPath { path: PaintPath::new(*fill, *stroke, 1.0), curves: CurveStack::new() }),
                 PdfItem::Stroke { fill, color, width, .. } => self.owners.build = Some(BuildPath { path: PaintPath::new(*fill, Some(*color), f64::from(*width)), curves: CurveStack::new() }),

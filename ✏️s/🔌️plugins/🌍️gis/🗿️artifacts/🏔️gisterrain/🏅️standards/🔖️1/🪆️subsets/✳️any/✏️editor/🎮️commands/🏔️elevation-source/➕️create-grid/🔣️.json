@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Create Elevation Grid",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["west", "south", "east", "north", "height"],
+  "properties": {
+    "west": { "type": "number", "minimum": -180, "exclusiveMaximum": 180 },
+    "south": { "type": "number", "minimum": -90, "exclusiveMaximum": 90 },
+    "east": { "type": "number", "exclusiveMinimum": -180, "maximum": 180 },
+    "north": { "type": "number", "exclusiveMinimum": -90, "maximum": 90 },
+    "height": { "type": "integer", "minimum": -32768, "maximum": 32767 }
+  }
+}

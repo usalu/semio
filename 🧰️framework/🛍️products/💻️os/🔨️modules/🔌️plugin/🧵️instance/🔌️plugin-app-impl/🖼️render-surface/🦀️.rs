@@ -62,7 +62,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         let interaction_hover = self.interaction.interaction_hover.clone();
         let interaction_peers = std::sync::Arc::clone(self.roster.peer_presence.as_ref().ok_or_else(||plugin_sdk_fault("peer presence root retired before render capture"))?);
         let draft_references = self.time_travel.draft_references();
-        let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
+        let interaction_hover_owners = self.interaction.interaction_hover_owners.clone();
+        let interaction = InteractionView::new(&interaction_state, &interaction_hover, interaction_peers.as_ref(), &draft_references).with_hover_owners(&interaction_hover_owners);
         let window_config = self.stores.window_config_store.capture(Some(view_state)).await?;
         let window_transient = self.stores.window_transient_store.capture(Some(view_state))?;
         if let Some(json) = snapshot_override_json {

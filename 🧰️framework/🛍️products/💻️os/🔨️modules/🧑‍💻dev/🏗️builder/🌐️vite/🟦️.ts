@@ -16,6 +16,7 @@ import { semioBlobVitePlugin } from "../../🔌️vite-plugins/🫧️blob-vite-
 import { semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🔖️source-freshness/🟦️.ts";
 import { semioAgentBridgeRendezvousVitePlugin } from "../../🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts";
 import { semioAgentCredentialInstallVitePlugin } from "../../🔌️vite-plugins/🔐️agent-credential-install/🟦️.ts";
+import { playgroundOptimizerEntryV1 } from "./📥️entry/🟦️.ts";
 
 export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly (Omit<PlaygroundEntry,"assets"> & { readonly assets: readonly AssetDeliveryDeclarationV1[] })[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string;readonly browserHost?:()=>Readonly<{moduleRoot:string;activationRoot:string;extensionsRoot:string}>|undefined };
 
@@ -73,8 +74,7 @@ const registryEngineOptimizeDepsExclude = [...new Set(playgrounds.filter((target
  * the other has already handed to a browser. */
 const playgroundCacheDir = viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) });
 
-/** 🚫️ Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
-const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents"];
+const optimizerToolsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents", "@testing-library/react", "@testing-library/user-event", "fast-check", "typescript"];
 
 /** 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
  * (the "s" studio hub can open any app, so it needs every app's dev-time asset routes available), else
@@ -206,9 +206,9 @@ return {
     ...(renderer === "wgpu" ? uiTailwindBuildPlugins() : [uiReactBuildPlugin(), semioPlaygroundReactRefreshCoherenceVitePlugin(), ...uiTailwindBuildPlugins()]),
   ],
   optimizeDeps: {
-    entries: [path.join(playDir, "🌐️.html")],
+    entries: [playgroundOptimizerEntryV1(playDir, options.browserEntry)],
     ...playgroundSceneHostOptimizeDeps({
-      exclude: [...nodeOnlyOptimizeDepsExclude, ...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOptimizeDepsExclude],
+      exclude: [...optimizerToolsExclude, ...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOptimizeDepsExclude],
     }),
   },
   define: {

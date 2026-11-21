@@ -3,7 +3,7 @@
 use super::{array_text_item, bounded_number, bounded_spelling, first_array, fixed_operator, named_operator, num, plain_text_byte, ContentToken, ContentTokenCursor, FontState, FontTable, NumericArray, PdfObject, PdfOp, PdfTextArrayItem, PdfTextString, SavedFont, TextShow};
 use crate::standards::v1_7::subsets::base::modules::lexer::{ContentTokenEvent, ContentTokenReceipt, CosGrant, CosReceipt, CosStatus, PdfCosCursor};
 use crate::standards::v1_7::subsets::base::modules::fonts::controlled_type1_text;
-use super::PdfBaseEncoding;
+use super::{PdfBaseEncoding, PdfFixedCodeWidth};
 use std::mem::{size_of, take};
 
 const OPERAND_LIMIT: usize = 64;
@@ -81,6 +81,7 @@ pub struct ContentProgramCursor {
     fonts: FontState,
     text: Option<PdfTextString>,
     encoding: Option<PdfBaseEncoding>,
+    code_width: Option<PdfFixedCodeWidth>,
     text_array: Vec<PdfTextArrayItem>,
     numbers: Vec<f64>,
     pending: Option<PdfOp>,
@@ -101,6 +102,7 @@ impl ContentProgramCursor {
             fonts: FontState::default(),
             text: None,
             encoding: None,
+            code_width: None,
             text_array: Vec::new(),
             numbers: Vec::new(),
             pending: None,
@@ -311,14 +313,13 @@ impl ContentProgramCursor {
         self.operator_span = (start, end);
         if let Some(op) = fixed_operator(word, &self.operands) { return self.finish(op, 0, 0, 0); }
         if let Some(show) = TextShow::new(word, &self.operands) {
-            self.encoding = self.selected_font().and_then(|name| fonts.controlled_type1(name));
-            if self.encoding.is_none() && self.fonts.codec(fonts).is_some() { return self.defer(start, end); }
+            if !self.select_text_encoding(fonts) { return self.defer(start, end); }
             return self.start_text(TextTarget::Show(show));
         }
         if word == "TJ" {
-            self.encoding = self.selected_font().and_then(|name| fonts.controlled_type1(name));
-            if self.encoding.is_none() && self.fonts.codec(fonts).is_some() { return self.defer(start, end); }
-            if self.encoding.is_some() && first_array(&self.operands).len() > CONTROLLED_TEXT_ITEMS { return self.defer(start, end); }
+            if !self.select_text_encoding(fonts) { return self.defer(start, end); }
+            if (self.encoding.is_some() || self.code_width.is_some())
+                && first_array(&self.operands).len() > CONTROLLED_TEXT_ITEMS { return self.defer(start, end); }
             self.phase = Phase::AllocateTextArray;
             return worked(0, 0);
         }
@@ -368,17 +369,34 @@ impl ContentProgramCursor {
         result(ContentProgramEvent::Deferred { start, end }, 1, 0, 0)
     }
 
+    fn select_text_encoding(&mut self, fonts: &dyn FontTable) -> bool {
+        self.encoding = self.selected_font().and_then(|name| fonts.controlled_type1(name));
+        self.code_width = self.selected_font().and_then(|name| fonts.controlled_code_width(name));
+        self.encoding.is_some() || self.code_width.is_some() || self.fonts.codec(fonts).is_none()
+    }
+
+    fn native_width(&self) -> usize { self.code_width.map_or(1, |width| width as usize) }
+
     fn start_text(&mut self, target: TextTarget) -> ContentProgramReceipt {
-        if self.encoding.is_some() && target.bytes(&self.operands).len() > CONTROLLED_TEXT_BYTES {
+        let length = target.bytes(&self.operands).len();
+        if (self.encoding.is_some() || self.code_width.is_some()) && length > CONTROLLED_TEXT_BYTES {
             let (start, end) = self.operator_span;
             return self.defer(start, end);
         }
-        self.phase = Phase::ScanText { target, index: 0, bytes: 0 };
+        self.phase = if self.code_width.is_some() {
+            if !length.is_multiple_of(self.native_width()) {
+                self.phase = Phase::Failed("PDF text ends inside its admitted fixed-width codespace");
+                return failure("PDF text ends inside its admitted fixed-width codespace");
+            }
+            Phase::AllocateText { target, utf8_bytes: None }
+        } else {
+            Phase::ScanText { target, index: 0, bytes: 0 }
+        };
         worked(0, 0)
     }
 
     fn allocate_text(&mut self, target: TextTarget, utf8_bytes: Option<usize>, grant: CosGrant) -> ContentProgramReceipt {
-        let len = target.bytes(&self.operands).len();
+        let len = target.bytes(&self.operands).len() / self.native_width();
         let Some(bytes) = utf8_bytes.or_else(|| len.checked_mul(size_of::<u32>())) else {
             self.phase = Phase::Failed("PDF content text capacity overflows");
             return failure("PDF content text capacity overflows");
@@ -391,15 +409,20 @@ impl ContentProgramCursor {
     }
 
     fn copy_text(&mut self, target: TextTarget, index: usize) -> ContentProgramReceipt {
-        if let Some(byte) = target.bytes(&self.operands).get(index).copied() {
+        let width = self.native_width();
+        let source = target.bytes(&self.operands);
+        if let Some(byte) = source.get(index).copied() {
             match self.text.as_mut().expect("allocated PDF semantic text") {
                 PdfTextString::Text { text } => match self.encoding {
                     Some(encoding) => text.push_str(controlled_type1_text(encoding, byte).expect("scanned Type1 text")),
                     None => text.push(char::from(byte)),
                 },
-                PdfTextString::Codes { codes } => codes.push(u32::from(byte)),
+                PdfTextString::Codes { codes } => {
+                    let code = if width == 2 { u32::from(u16::from_be_bytes([byte, source[index + 1]])) } else { u32::from(byte) };
+                    codes.push(code);
+                }
             }
-            self.phase = Phase::CopyText { target, index: index + 1 };
+            self.phase = Phase::CopyText { target, index: index + width };
             return worked(0, 0);
         }
         let text = self.text.take().expect("complete PDF semantic text");

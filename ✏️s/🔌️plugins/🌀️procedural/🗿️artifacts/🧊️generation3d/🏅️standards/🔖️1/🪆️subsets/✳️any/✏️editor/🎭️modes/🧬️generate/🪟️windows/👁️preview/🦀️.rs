@@ -2,7 +2,7 @@
 //! preview of the patched fixture's evaluated geometry.
 
 use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
-use semio_s_artifact_procedural_3d_mode_edit::windows::preview::show_mode_measure;
+use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_window_measures;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_camera_json;
@@ -12,16 +12,14 @@ use semio_s_artifact_procedural_3d_preview_eval::preview_status_json;
 use semio_s_artifact_procedural_3d_preview_eval::preview_window_status_json;
 use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks;
 use semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewPayload;
-use semio_s_artifact_procedural_3d_preview_eval::PreviewStatusDebug;
+use semio_s_artifact_procedural_3d_preview_eval::{PreviewEvaluation, PreviewEvaluationSource, PreviewStatusDebug};
 use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_DOMAIN;
 use semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
 use semio_s_artifact_procedural_3d_model::generation_by_id;
-use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 use semio_os_flow::FlowEvalSession;
 use semio_plugin::world3d_scene;
-use semio_plugin::world3d_sun_measures;
 use semio_plugin::BuiltNode;
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::SurfaceKind;
@@ -59,10 +57,9 @@ pub fn definition() -> WindowKindDefinition {
     }
 }
 
-/// 🎚️ Shares the same show-mode + sun measures as the edit-mode 3D preview window.
+/// 🔬️ Shares the Edit viewport's controls in the Generate viewport.
 pub fn window_measures(config: &Generation3dConfig, is_de: bool, procedural_action: impl Fn(&str, Option<semio_plugin::DslValue>) -> semio_plugin::ActionDescriptor + Copy) -> Vec<WindowMeasure> {
-    let sun = config.sun();
-    vec![show_mode_measure(&config.show_mode, is_de, procedural_action), world3d_sun_measures("generation3d", &sun, is_de, procedural_action)]
+    preview_window_measures(config, is_de, procedural_action)
 }
 //#endregion 🔖️Definition
 
@@ -78,7 +75,7 @@ pub fn window_measures(config: &Generation3dConfig, is_de: bool, procedural_acti
 /// `hosts=[]` and no window a status could ever appear on — measured on 6018 as 189 s of
 /// `[data-status-json]`-less generate mode (`🗑️generated/journey-3/results.json`, ticket
 /// 26/09/09/PROCEDURAL-3D-END-TO-END). A hint is a state of this window, not a different window.
-fn generate_preview_status_json(session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, _eval_json: &str, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
+fn generate_preview_status_json(session: &FlowEvalSession, run: Option<&semio_plugin::ToolRunView>, payload: &PreviewPayload, preview_status: Option<String>, hint: Option<&str>) -> Option<String> {
     preview_window_status_json(Some(session), run, preview_status, &PreviewStatusDebug { meshes_json: &payload.meshes_json, instances_json: &payload.instances_json }, hint)
 }
 
@@ -96,23 +93,23 @@ pub fn render(
     run: Option<&semio_plugin::ToolRunView>,
     windows: &semio_plugin::TreeWindows<'_>,
     is_de: bool,
+    hover_groups: &mut Option<semio_s_artifact_procedural_3d_preview_eval::PreviewHoverGroups>,
 ) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let selected_generation = generation_by_id(generation, selected_id);
-    let eval_json = selected_generation.and(preview_eval_text).unwrap_or_default();
+    let evaluation = PreviewEvaluation::from_source(selected_generation.and(preview_eval_text).unwrap_or_default(), PreviewEvaluationSource::Current);
     let marks = PreviewInteractionMarks { components: Default::default(), ..marks.clone() };
-    let (payload, preview_status) = match selected_generation {
+    let (mut payload, preview_status) = match selected_generation {
         Some(_) => {
-            let gen_fixture = generation_host_snapshot_for(host_snapshot, generation, selected_id);
-            let payload = preview_payload(eval_json, &gen_fixture, cfg, Some(session), &marks);
-            let preview_status = preview_status_json(eval_json, &gen_fixture);
-            gen_fixture.retire_cold();
+            let payload = preview_payload(&evaluation, host_snapshot, cfg, Some(session), &marks);
+            let preview_status = preview_status_json(&evaluation, host_snapshot);
             (payload, preview_status)
         }
         None => (PreviewPayload::default(), None),
     };
+    *hover_groups = Some(std::mem::take(&mut payload.hover_groups));
     let empty = payload.meshes_json == "[]" && payload.instances_json == "[]";
-    let status_json = generate_preview_status_json(session, run, eval_json, &payload, preview_status, empty.then(|| labels.preview_hint.as_str()));
-    let fit_json = semio_s_artifact_procedural_3d_preview_eval::preview_fit_json(host_snapshot, &payload.meshes_json);
+    let status_json = generate_preview_status_json(session, run, &payload, preview_status, empty.then(|| labels.preview_hint.as_str()));
+    let fit_json = semio_s_artifact_procedural_3d_preview_eval::preview_fit_json(host_snapshot, payload.bounds);
     let sun = cfg.sun();
     let selection_json = preview_selection_json(cfg, active_utility, &payload);
     let _ = GENERATION_3D_PLAY_APP_ID;
@@ -130,7 +127,9 @@ pub fn render(
         labels.preview_canvas_hint.as_str(),
         semio_ui_contract::Liveness::Polite,
     )?;
-    let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(eval_json);
-    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, GENERATION_3D_PLAY_APP_ID, "generation3d-generate-values", if is_de { "Werte" } else { "Values" }, &rows)
+    let rows = semio_s_artifact_procedural_3d_preview_eval::preview_value_rows(&evaluation);
+    let hover = semio_s_artifact_procedural_3d_preview_eval::PreviewChannelHover::new(host_snapshot, &marks.hovered, None);
+    let hovered_ports = hover.matching(rows.iter().map(|row| row.id.as_str()));
+    semio_s_procedural_core_semantic_ui::scene_with_channel_values(surface, windows, GENERATION_3D_PLAY_APP_ID, "generation3d-generate-values", &semio_s_procedural_core_semantic_ui::ChannelValueLabels::new(is_de, labels.graph_input_port.as_str(), labels.graph_output_port.as_str()), &rows, &hovered_ports)
 }
 //#endregion 🔖️Render

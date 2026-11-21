@@ -1,0 +1,21 @@
+{
+  "pane": "aussuchen",
+  "example": "demo",
+  "parent": {"type": "container", "role": "plain"},
+  "controls": [
+    {"key": "sourcing-filter-query", "type": "input", "labels": {"en": "Search", "de": "Suchen"}},
+    {"key": "sourcing-filter-typology", "type": "select", "labels": {"en": "Typology", "de": "Typologie"}},
+    {"key": "sourcing-filter-min-availability", "type": "input", "labels": {"en": "Minimum availability", "de": "Mindestverfügbarkeit"}}
+  ],
+  "femControls": [
+    {"row": "node.x", "type": "input", "labels": {"en": "X", "de": "X"}},
+    {"row": "solid.axis", "type": "select", "labels": {"en": "Axis", "de": "Achse"}},
+    {"row": "material.nu", "type": "slider", "labels": {"en": "Poisson Ratio", "de": "Querdehnzahl"}},
+    {"row": "load-case.self-weight", "type": "toggle", "labels": {"en": "Self Weight", "de": "Eigengewicht"}}
+  ],
+  "solidMesh": {
+    "positions": [0, 0, 0, 1, 0, 0, 0, 1, 0],
+    "indices": [0, 1, 2],
+    "rgb": [[0.78, 0.78, 0.8], [0.2, 0.4, 0.6], [0.76, 0.43, 0.11]]
+  }
+}

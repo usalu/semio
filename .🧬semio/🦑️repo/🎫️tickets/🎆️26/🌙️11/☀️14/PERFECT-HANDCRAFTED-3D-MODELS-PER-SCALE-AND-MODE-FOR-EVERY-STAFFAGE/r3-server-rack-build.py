@@ -24,12 +24,16 @@ def candidate():
     kit, body, lists, roots, draw = (module(name) for name in ("kit", "body", "lists", "roots", "draw"))
     document = json.load(open(CATALOG, encoding="utf-8"))
     asset = document["asset"]
+    asset["rig"]["bones"]=[b for b in asset["rig"]["bones"] if b["id"] in kit.ORIGIN]
+    next(b for b in asset["rig"]["bones"] if b["id"]=="door").update(parent="frame")
     asset["rig"] = kit.rig(asset["rig"])
     roots.apply(asset)
     for scale in ("50", "100", "200", "500"):
         solids = getattr(body, "body" + scale)()
         asset["volumes"][scale] = {"status": "authored", "denominator": int(scale), "body": solids, "thermal": lists.thermal(scale, solids), "structure": lists.structure(scale, solids), "decisions": lists.decisions(scale)}
     draw.apply(asset)
+    import runpy
+    runpy.run_path(os.path.join(HERE,"rack-doors.py"))["apply"](asset)
     return document
 
 

@@ -229,3 +229,35 @@ These are the r3-sheet six-view sheets, including `--cut`, the clip frame `bypas
 - **C31 workaround.** The product's `outerArea` has no flood, so the inner faces of the closed casing are marked `sectionFaces` on the thermal references. The four seal parts inside the airway are left out of `thermal`. Logged in `tool-requests.md` (2026-11-20, third C31 case).
 - **Core mass.** It is about 15.7 kg by plate count against 12 kg declared. `massKg` was not changed (no cited reference for this exact core).
 - **Area corrections.** `areaM2` corrections were applied within C16: frame 2.128 → 1.54 and ports 0.22 → 0.25. They are listed here for the area reviewers.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-plate-heat-exchanger-build.py` (runs the round 3 build, then the round 5 fixes); apply and splice with `r3-plate-heat-exchanger-apply.py` and `volumes-insert.py`.
+
+### Reference vs model (1:50)
+
+| quantity | reference | source | model | deviation |
+|---|---|---|---|---|
+| spigots | DN 200 circular, 1 mm | EN 1506, asset emitters 0.2 m | DN 200, 1 mm, 60 mm proud | 0 |
+| face velocity | 1.5-3 m/s | ASHRAE | 1.8 m/s | in band |
+| plate pitch / sheet | 2.5 mm / 0.3 mm aluminium | asset, EN 308 class | 2.5 / 0.3 mm (core prism) | 0 |
+| core | square plates on a corner (diamond), half-diagonal 0.225 m | Zehnder / Helios layouts (K), EN 13141-7 | 0.318 m plates, 0.485 m stack | 0 |
+| casing | 0.5 x 0.6 x 0.5 m, 18 kg | asset | 0.62 x 0.62 x 0.5 m with spigots and hinge | 0 to `dimensions` |
+
+### Grades before -> after (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / B+ (core mass ball hid the seat) | A- / A- / A- |
+| 1:100 | A- / A- / B+ | A- / A- / A- |
+| 1:200 | B+ / B+ / B (a 180 mm magenta ball in the core frame) | B+ / B+ / A- |
+| poses | full (default), off, partial and `bypass` t = 2 s (flap 60 degrees about its barrel, opening uncovered): closed, no collision | unchanged |
+
+Opened: r3-sheet body and thermal --cut at 1:50, the `bypass` t = 2 s frame, structure at 1:200 before and after. Rendered but not opened this round: 1:100 sheets, 1:50 structure, 1:200 body and thermal, poses off and partial (round 3 opened them).
+
+### Changes
+
+- `structure` masses: `mass-plates` and `mass-frame` radius 15 / 20 / 30 mm at 1:50 / 1:100 / 1:200 (were 60/40, 70/50, 90/60 mm).
+- `representations.200.validRange.maxDenominator` 350 -> 220 (base rails 0.188 mm at 1:240; flap and bypass opening also below 0.2 mm at 1:350).
+
+Check: `r3-validate.ts machinery/plate-heat-exchanger --volumes`: schema 0, validateAsset 0, checkVolumes 2: `volumes-thermal-coverage` of `damper` at 1:50 (0.213 m2) and 1:100 (0.224) against 0.37. With the C31 flood the flap's underside over the lid opening faces the closed casing; the honest outer area is about 0.21, a factor 1.74 beyond what an author may apply (C16). Entered in `area-review.md` (2026-11-21), not forced.

@@ -11,7 +11,7 @@ import agentRouteSchema from "../../🧱️elements/🏛️ShellHost/🌉️agen
 import { EXPORT_MEDIA_FILE_ACTION_ID, EXPORT_SNAPSHOT_FILE_ACTION_ID, type AppDefinition } from "@semio-tech/framework";
 import { declaredMediaFileExportV1, downloadDeclaredMediaFileV1, mediaFileDescriptorMatchesV1 } from "../../🎬️media/📤️file/🟦️.ts";
 import { encodePackValue } from "@semio-tech/framework/packs";
-import { collectMediaExportBytes, MEDIA_EXPORT_OPERATION_POLICY, type MediaExportBytes, type MediaTransportPort } from "../../🎬️media/🚚️lifecycle/🟦️.ts";
+import { collectMediaExportBytes, receiveMediaExportBytes, MEDIA_EXPORT_OPERATION_POLICY, type MediaExportBytes, type MediaTransportPort } from "../../🎬️media/🚚️lifecycle/🟦️.ts";
 import type { MediaExportHandle, MediaExportStatus } from "@semio-tech/framework-os";
 
 describe("checked media export lifecycle", () => {
@@ -55,7 +55,7 @@ describe("checked media export lifecycle", () => {
     const declaration = { ...declarations.defaults, portMediaType: { class: "threeD" as const, form: "mesh" as const } };
     const identity = { app_instance_id: fixture.instanceId, parent_document_id: fixture.documentId, base_revision: BigInt(fixture.revision) };
     const handle: MediaExportHandle = { ...identity, operation_id: 9n, generation: BigInt(fixture.generation) };
-    const abort = new AbortController(), sink: string[] = [], names: unknown[][] = [], written: Uint8Array[] = [];
+    const abort = new AbortController(), sink: string[] = [], transport: string[] = [], names: unknown[][] = [], written: Uint8Array[] = [];
     let reads = 0, pages = 0, current = true;
     const descriptor = row.id === "wrong-format" ? { ...declarations.descriptor, wire: { kind: "binary", format_kind: "png" } } : declarations.descriptor;
     const port = {
@@ -66,15 +66,20 @@ describe("checked media export lifecycle", () => {
       submitMediaExport: async () => handle,
       pollMediaExport: async (): Promise<MediaExportStatus> => ({ handle, state: "complete", applied_progress: 4n, checkpoint_available: false, mime_type: fixture.mediaType, total_bytes: 4n, detail: "", descriptor: [...encodePackValue(descriptor)] }),
       cancelMediaExport: async () => {},
-      takeMediaExportChunk: async () => ({ handle, data: Uint8Array.from(fixture.chunks[pages++] ?? []), terminal: pages > fixture.chunks.length }),
+      takeMediaExportChunk: async () => { transport.push("take"); return { handle, data: Uint8Array.from(fixture.chunks[pages++] ?? []), terminal: pages > fixture.chunks.length }; },
     };
     let delivered = false, failure: unknown;
     try {
-      delivered = await downloadDeclaredMediaFileV1({ instanceId: fixture.instanceId, declaration, port, signal: abort.signal, current: () => current, progress: () => {}, yieldTurn: async () => {}, sinkFactory: async (filename, mediaType) => {
-        names.push([filename, mediaType]); sink.push("open");
+      delivered = await downloadDeclaredMediaFileV1({ instanceId: fixture.instanceId, declaration, port, signal: abort.signal, current: () => current, progress: () => {}, yieldTurn: async () => {}, ...(row.id.startsWith("archive-") ? { beforeDelivery: async () => {
+        expect(pages).toBe(fixture.chunks.length + 1);
+        expect(sink).toEqual(["open", "write", "write"]);
+        if (row.id === "archive-cancelled-before-delivery") abort.abort();
+        else throw new Error("natural-file.saved-revision-changed");
+      } } : {}), sinkFactory: async (filename, mediaType) => {
+        names.push([filename, mediaType]); sink.push("open"); transport.push("open");
         return {
-          write: async chunk => { sink.push("write"); written.push(chunk.slice()); if (row.id === "cancelled-during-copy") abort.abort(); if (row.id === "owner-retired-during-copy") current = false; },
-          close: async () => { sink.push("close"); },
+          write: async chunk => { sink.push("write"); transport.push("write"); written.push(chunk.slice()); if (row.id === "cancelled-during-copy") abort.abort(); if (row.id === "owner-retired-during-copy") current = false; },
+          close: async () => { sink.push("close"); transport.push("close"); },
           abort: async () => { sink.push("abort"); },
         };
       } });
@@ -82,6 +87,7 @@ describe("checked media export lifecycle", () => {
     expect(delivered).toBe(row.delivered);
     expect(failure instanceof Error ? failure.message : null).toBe(row.error);
     expect(sink).toEqual(row.sink);
+    if (row.transport !== undefined) expect(transport).toEqual(row.transport);
     for (const name of names) expect(name).toEqual([declarations.defaults.filename, declarations.defaults.mediaType]);
     if (delivered) expect([...Buffer.concat(written)]).toEqual(fixture.chunks.flat());
   });
@@ -137,4 +143,33 @@ describe("checked media export lifecycle", () => {
     expect(calls).toEqual(row.calls);
     expect(outcome).toBe(row.outcome);
   });
+});
+
+type DrainBoundsRow = Readonly<{id:string;dataPages:number;pageBytes:number;terminal:boolean;expectedDelivery:boolean;expectedPages:number;expectedTakes:number;expectedCancel:number;expectedError:string|null}>;
+async function exerciseDrainBounds(row: DrainBoundsRow) {
+  const handle: MediaExportHandle = { app_instance_id: 4, parent_document_id: "saved", operation_id: 9n, generation: 6n, base_revision: 8n };
+  const reusable = new Uint8Array(row.pageBytes), empty = new Uint8Array();
+  let takes = 0, pages = 0, cancelled = 0, delivered = false, error = null;
+  try {
+    delivered = await receiveMediaExportBytes({
+      instanceId: handle.app_instance_id, parentDocumentId: handle.parent_document_id, revision: handle.base_revision,
+      outputPort: "artifact:native", mediaType: "application/pdf", cancelled: () => false, progress: () => {},
+      now: () => 0, yieldTurn: async () => {},
+      port: {
+        submitMediaExport: async () => handle,
+        pollMediaExport: async () => ({ handle, state: "complete", applied_progress: 1n, checkpoint_available: false, mime_type: "application/pdf", total_bytes: BigInt(row.dataPages * row.pageBytes), detail: "", descriptor: [1] }),
+        cancelMediaExport: async () => { cancelled++; },
+        takeMediaExportChunk: async () => {
+          const data = ++takes <= row.dataPages;
+          return { handle, data: data ? reusable : empty, terminal: !data && row.terminal };
+        },
+      },
+    }, { begin: () => {}, page: () => { pages++; } });
+  } catch (failure) {
+    error = failure instanceof Error ? failure.message : String(failure);
+  }
+  return { pages, takes, cancelled, delivered, error };
+}
+for (const row of declarations.drainBounds) it("verified media page limit " + row.id, async () => {
+  expect(await exerciseDrainBounds(row)).toEqual({ pages: row.expectedPages, takes: row.expectedTakes, cancelled: row.expectedCancel, delivered: row.expectedDelivery, error: row.expectedError });
 });

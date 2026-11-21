@@ -2,24 +2,18 @@ dialect protocol
 protocol stdio.xlsx.strict.mutations
 version 1
 schema stdio.xlsx
-start record
-framing record
-header fixed 2
-field format u8
-field tag varint
-record set-main-namespace tag=1
-field payload bytes
-record set-relationships-namespace tag=2
-field payload bytes
-record set-conformance-attribute tag=3
-field payload bytes
-record remove-conformance-attribute tag=4
-field payload bytes
-record insert-vml-part tag=5
-field payload bytes
-record remove-vml-part tag=6
-field payload bytes
-record set-worksheet-content-type tag=7
-field payload bytes
-record set-relationship-base tag=8
-field payload bytes
+start document
+framing magic 0x8953504B0D0A1A0A
+
+# Semio Pack document v1. Field 1 (`value`) holds the externally tagged
+# XlsxStrictMutation defined in the Strict mutation schema. The Pack format defines
+# the segments, checksums, and footer.
+header fixed 32
+field version_major u16
+field version_minor u16
+field required_flags u32
+field optional_flags u32
+field header_crc32c u32
+field reserved fixed 8
+segment pack_segments bytes
+footer fixed 84

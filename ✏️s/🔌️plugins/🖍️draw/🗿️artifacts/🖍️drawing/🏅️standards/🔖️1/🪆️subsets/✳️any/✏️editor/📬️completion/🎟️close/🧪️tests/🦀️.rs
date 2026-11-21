@@ -29,7 +29,7 @@ fn completion_final_header_close_reports_actual_work_separately_from_bytes(){
  let mut cursor=Cursor{original:ManuallyDrop::new(Some(Source::Emit(Default::default(),Default::default()))),phase:18,faulted:false};
  let denied=effect_turn(Default::default(),|effect|cursor.close_step(0,effect));assert!(matches!(&denied,RetirementStep::BudgetExhausted));assert!(cursor.original.is_some());
  let clear=effect_turn(grant(cursor.next_demand(0).unwrap()),|effect|cursor.close_step(0,effect));assert!(cursor.terminal_is_empty());
- let cached=cursor.close_step(RetainedCloneGrant::default());
+ let cached=effect_turn(Default::default(),|effect|cursor.close_step(0,effect));
  let actual=serde_json::json!({"role":"completion","turns":[{"case":"denied","work":denied.work(),"items":0,"copyBytes":0},{"case":"clear","work":clear.work(),"items":1,"copyBytes":0},{"case":"cached","work":cached.work(),"items":0,"copyBytes":0}]});assert_eq!(actual,expected);assert!(matches!(clear,RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:0,..},1)));
 }
 

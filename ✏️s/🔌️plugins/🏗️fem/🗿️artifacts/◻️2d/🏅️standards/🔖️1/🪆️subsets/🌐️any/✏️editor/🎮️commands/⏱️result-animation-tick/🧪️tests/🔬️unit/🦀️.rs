@@ -178,7 +178,8 @@ async fn transport_wire(app: &mut Fem2dApp, args: serde_json::Value) {
     use semio_plugin::PluginApp as _;
     let aborting = args.get("abort").is_some();
     let mut meta = semio_plugin::artifact_app_laws::meta("local");
-    meta.view_state = Some(results_view());
+    use semio_plugin::artifact_app_laws::{OriginalWorkFixture, receive_view_fixture};
+    meta.view_state = Some(receive_view_fixture(results_view(), OriginalWorkFixture::stock()));
     let args = semio_plugin::DslValue::from(&args);
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setResultAnimation", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::artifact_app_laws::fixture_mounted_policy().close).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
     if !aborting {

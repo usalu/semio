@@ -9,7 +9,7 @@ pub struct En1998Units;
 
 type Group = Rows<En1998Snapshot>;
 
-const ROW_COLLECTIONS: [&str; 18] = ["buildings", "bridges", "assessments", "silos", "tanks", "foundations", "retainingWalls", "towers", "soilLayers", "diaphragms", "accelerograms", "piers", "bearings", "placements", "tieBeams", "slopes", "isolationSystems", "pierBases"];
+const ROW_COLLECTIONS: [&str; 19] = ["buildings", "bridges", "assessments", "silos", "tanks", "foundations", "retainingWalls", "towers", "soilLayers", "diaphragms", "accelerograms", "piers", "bearings", "placements", "tieBeams", "slopes", "isolationSystems", "pierBases", "cases"];
 
 fn part(rows: Group, name: &'static str) -> Group {
     rows.part(name, move |d| check_full_seismic_scoped(d, Scope::Part(name), &mut |_| true).checks)
@@ -60,6 +60,7 @@ impl UnitSource for En1998Units {
         rows = group(rows, &d.slopes, "slopes", |e| e.id.as_str(), CostTier::T1, &["soilLayers"]);
         rows = part(rows, "towers-na");
         rows = group(rows, &d.towers, "towers", |e| e.id.as_str(), CostTier::T0, &[]);
+        rows = group(rows, &d.cases, "cases", |case| case.id.as_str(), CostTier::T0, &[]);
         rows.finish()
     }
 }

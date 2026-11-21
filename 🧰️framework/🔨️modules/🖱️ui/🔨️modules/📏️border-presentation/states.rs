@@ -1,4 +1,4 @@
-//! 🫧 State ownership of boxes: every box takes its state only from itself.
+//! 🫧 State ownership of controls and enclosing silhouettes.
 
 use super::SharedBorderState;
 
@@ -23,6 +23,7 @@ pub struct BoxStateInput<Id> {
     pub id: Id,
     pub parent: Option<Id>,
     pub interactive: bool,
+    pub hover_within: bool,
     pub disabled: bool,
     pub marks: BoxStateMarks,
 }
@@ -71,13 +72,25 @@ fn innermost<Id: Copy + Ord>(boxes: &[BoxStateInput<Id>], index: &[(Id, usize)],
     Err(BoxStateError::Cycle)
 }
 
-/// 🏆 Resolves every box's state in input order: hover to the innermost enabled interactive box above the pointer's box, focus to the innermost interactive box above the focus-visible box, every other marker to its own box only.
+/// 🏆 Resolves local keyboard and marked states, plus hover on the innermost enabled control and opted-in silhouettes in its pointer path.
 pub fn resolve_box_states<Id: Copy + Ord>(boxes: &[BoxStateInput<Id>], pointer: Option<Id>, focus_visible: Option<Id>) -> Result<Vec<SharedBorderState>, BoxStateError> {
     box_state_allocation_byte_demand::<Id>(boxes.len())?;
     let mut index: Vec<(Id, usize)> = boxes.iter().enumerate().map(|(slot, entry)| (entry.id, slot)).collect();
     index.sort_unstable();
     if index.windows(2).any(|pair| pair[0].0 == pair[1].0) { return Err(BoxStateError::DuplicateId); }
-    let hovered = innermost(boxes, &index, pointer, |entry| entry.interactive && !entry.disabled)?;
     let focused = innermost(boxes, &index, focus_visible, |entry| entry.interactive)?;
-    Ok(boxes.iter().enumerate().map(|(slot, entry)| own_box_state(entry.marks, hovered == Some(slot), focused == Some(slot))).collect())
+    let mut states: Vec<_> = boxes.iter().enumerate().map(|(slot, entry)| own_box_state(entry.marks, false, focused == Some(slot))).collect();
+    let mut cursor = pointer;
+    let mut has_control = false;
+    for _ in 0..=boxes.len() {
+        let Some(id) = cursor else { return Ok(states) };
+        let slot = index_of(&index, id).ok_or(BoxStateError::UnknownBox)?;
+        let entry = &boxes[slot];
+        if !entry.disabled {
+            if entry.hover_within || (!has_control && entry.interactive) { states[slot] = SharedBorderState::Hover; }
+            has_control |= entry.interactive;
+        }
+        cursor = entry.parent;
+    }
+    Err(BoxStateError::Cycle)
 }

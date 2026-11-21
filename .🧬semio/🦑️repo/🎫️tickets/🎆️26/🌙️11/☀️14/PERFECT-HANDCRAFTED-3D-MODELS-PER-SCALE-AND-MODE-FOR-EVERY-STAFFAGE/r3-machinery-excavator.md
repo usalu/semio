@@ -95,3 +95,64 @@ Final check line: `volumes-check.ts machinery/excavator --product` PASS (86.5 s)
 - Layer order of the 2D shapes is fixed for the unslewed machine; in the slewed frames of `dump-and-stow` parts of the upper structure are painted in the unslewed order.
 - The 1:100 list keeps most assemblies of 1:50 with simpler sections; it is re-stated, but it is the least independent of the four.
 - Leftovers of mine under `🗑️generated/r3-excavator/` (draft asset, diagnosis images, `catalog-before-r3.json` copy of the former asset) and `volumes/adhoc/excavator.json` (source of the draft).
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-excavator-stow.py` (scan of transport poses against the data sheet), `r5-excavator-shift.py` (moves the engine-house parts with the shorter tail), edits in `r3-excavator-form.py`, `-s50.py`, `-coarse.py`, `-s100.py`, `-s200.py`, `-build.py`, `-data.py`, `-manifest.py`; rebuilt with `python3 r3-excavator-build.py --final`, written with `r3-excavator-apply.py`, spliced with `volumes-insert.py`, manifest with `r3-excavator-manifest.py`. Copy of the catalog before round 5: `🗑️generated/r5-excavator/catalog-before-r5.json` (deleted with the generated folder at ticket close).
+
+### Reference (read this round)
+
+Caterpillar 320 technical specifications (Tier 4 Final / Stage V, long undercarriage, reach boom 5.7 m, stick R2.9B1, HD 1.19 m3 bucket), PDF text read 2026-11-21 (zeppelin.sk `cat_320_specs.pdf`, extracted with PDFKit to `🗑️generated/r5-excavator/cat320.txt`).
+
+| Quantity | Cat 320 | Model before r5 | Model after r5 | Deviation after |
+|---|---|---|---|---|
+| Machine height with boom, stick and bucket installed (transport) | 3 160 mm | 3 439 mm | 3 251 mm | +2.9 % |
+| Machine length with boom, stick and bucket (transport) | 9 530 mm | 9 654 mm | 9 627 mm | +1.0 % |
+| Tail swing radius | 2 830 mm | 2 950 mm | 2 830 mm | 0 % |
+| Top of cab | 2 960 mm | 2 980 mm | 2 980 mm | +0.7 % |
+| Counterweight clearance | 1 050 mm | 1 060 mm | 1 060 mm | +1.0 % |
+| Upperframe width without walkways | 2 780 mm | 2 740 mm | 2 740 mm | -1.4 % |
+| Track gauge | 2 380 mm | 2 380 mm | 2 380 mm | 0 % |
+| Track length to centre of rollers | 3 650 mm | 3 650 mm | 3 650 mm | 0 % |
+| Track rollers / carrier rollers per side | 8 / 2 | 8 / 2 | 8 / 2 | 0 |
+| Boom cylinder bore / stroke | 120 / 1 260 mm | 120 / 1 300 mm | unchanged | +3.2 % stroke (kept: closes the published working envelope) |
+| Stick cylinder bore / stroke | 140 / 1 504 mm | 140 / 1 500 mm | unchanged | -0.3 % |
+| Operating weight | 22 700 kg | 22 515 kg | 22 515 kg | -0.8 % |
+| Bucket tip radius (HD 1.19 m3) | 1 570 mm | 1 470 mm | 1 470 mm | -6.4 % (the 1.0 m3 GD bucket of the PC210 class; see open points) |
+
+Working envelope (unchanged, `r3-excavator-kin.py`): reach at ground 9.85 m, depth 6.68 m, cutting height 9.47 m, dump height 6.69 m.
+
+### Grades before (opened this round) and after
+
+| Scale | body before | body after | thermal | structure |
+|---|---|---|---|---|
+| 1:50 | B+ (transport pose 0.28 m too high, tail 0.12 m too long) | A- | A- | A- |
+| 1:100 | B+ | A- | A- | A- (pins inside the body again) |
+| 1:200 | B+ | B+ | A- | A- |
+| 1:500 | B | B+ | B+ | B+ |
+| poses `digging`, `raised-boom`, clip `dump-and-stow` t 2.4 s | A- (cylinders and links closed) | A- | | |
+
+### Changes
+
+- Root: tail swing radius 2.95 to 2.83 m (`form.TAIL`, new `form.REAR` = -2.26 m for the rear face of house, deck and frame), engine house, hood, grilles, louvres, stack, cross member and engine bone moved 0.12 m forward with the counterweight at every scale; anchor `stack-mouth` x -1.80 to -1.68.
+- Root: transport pose `stowed` re-solved: stick fully folded (-139 degrees), bucket fully curled (-140 degrees), boom lowered until the lowest of bucket and link pins rests 10 mm above the ground (new `linkage_low`; before, the H link was not counted). Boom 10.2 to 6.37 degrees. Every cylinder and link closed (0.1 mm). The tail of `dump-and-stow` follows the new stow.
+- Root: `dimensions` height 3.44 to 3.25 m, length 9.64 to 9.63 m; manifest entry 3.25 / 9.63.
+- 2D of all four scales regenerated from the same parts (E1), so the drawings follow the shorter house and the new stow.
+- Structure 1:100: stick-cylinder and link pins 70 mm instead of 100 mm (they stood 18.8 mm out of the body in the new stow); 1:200: stick pin span 0.52 to 0.42 m (45 mm out in plan).
+
+### What I saw (opened)
+
+1:50 body six views before and after, three-quarter alone, poses `digging` and `raised-boom`, clip `dump-and-stow` at 2.4 s (slewed 90 degrees, linkage closed); 1:50 structure and thermal cut; 1:100, 1:200, 1:500 body before; 1:100 structure front alone after; 1:200 and 1:500 structure, 1:100 and 1:500 thermal cut after; 1:200 three-quarter from above; 2D 1:50, 1:200, 1:500 after. After the change the transport pose reads like the data-sheet drawing: stick folded under the boom, bucket curled under with its links on the ground, boom close above the cab.
+
+### Open points
+
+- Transport height 3.25 m against 3.16 m (+2.9 %): the stick cylinder head pin E sits 0.92 m above the boom chord (`r3-excavator-kin.py`); a lower E changes the stick cylinder closure and the published working envelope and was not done this round.
+- Bucket: 1.0 m3 GD class bucket (tip radius 1.47 m) where the Cat sheet's standard is a 1.19 m3 HD bucket (1.57 m); the Komatsu PC210 1.0 m3 bucket is the reference for it.
+- The planar house top at 1:100 to 1:500 shows a shading gradient in the sheet renderer (smooth normals across the rounded edges of a large flat face); geometry is planar.
+- Cab is a correct but plain shell (no wipers, door handle, steps, grab rails); hoses at the joints are not modelled.
+
+### Check
+
+`r3-validate.ts machinery/excavator --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0). `volumes-check.ts machinery/excavator --product`: PASS (691.5 s on a machine at load 39). Silhouette IoU elevation / front: 1:50 0.998 / 0.996, 1:100 0.998 / 0.999, 1:200 0.999 / 1.000, 1:500 0.999 / 1.000. An intermediate run found two 1:100 structure pins (stick cylinder, link) 18.8 mm outside the body in the front view and a 1:200 stick pin 45 mm outside in plan after the new stow; their spans were shortened to the lug widths (0.19 / 0.41 m at 1:100, 0.42 m at 1:200).
+
+The hood and radiator grille edges now use 0.20 mm at 1:100 and 1:200. The 1:150 and 1:350 paper endpoints, whole document, and affected silhouette, feature and cross-scale checks passed.

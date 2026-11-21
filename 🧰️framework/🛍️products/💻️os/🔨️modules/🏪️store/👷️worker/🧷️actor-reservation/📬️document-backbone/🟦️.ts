@@ -1,10 +1,11 @@
+import { parseDocumentBackboneTransportMessage } from "../../../../../../../🔨️modules/🛰️backbone/🔀️message/🟦️.ts";
 import type { ReservationSession } from "../🗃️state/🟦️.ts";
 import type { ReservationHub } from "../🧩️hub/🟦️.ts";
 import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1 } from "@semio-tech/framework/backbone/binding";
 import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
-import { parseDocumentBackboneMessage, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, parseInboundDocumentBackboneMessage, decodeBackboneMessage } from "../../../../../🟦️";
+import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, parseInboundDocumentBackboneMessage, decodeBackboneMessage } from "../../../../../🟦️";
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS } from "@semio-tech/framework-replication";
-import { type DocumentBrowserActorChild, browserActorColdStatus, hubBinding, wipeBrowserActorValue } from "../../🧩️actor-wire-helpers/🟦️.ts";
+import { type DocumentBrowserActorChild, browserActorColdStatus, browserActorRecord, browserActorTurnResult, DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT, hubBinding, wipeBrowserActorValue } from "../../🧩️actor-wire-helpers/🟦️.ts";
 import { documentBrowserActorLease } from "../../🎭️actor-lifecycle/🟦️.ts";
 import { emitExecutionTargetStatus } from "../../📥️execution-target-read/🟦️.ts";
 import { handleLocalMsg } from "../../♻️artifact-lifecycle/🟦️.ts";
@@ -53,25 +54,23 @@ export class ReservationDocumentBackbone {
         },
         exchange: async command => {
           const exchange = async () => {
-            let result: BrowserActorChildValue | null = null;
-            try {
-              result = await this.hub.lanes.invokePoll(
-                child,
-                [{ tag: "message", val: { source: { tag: "shell", val: 0 }, payload: encodeDocumentBackboneControlV1(command) } }],
-                null,
-                () => {
-                  if (this.session.child !== child || this.session.lifetime === null) throw new Error("actor-document-control.stale-child");
-                  if (command.operation !== "retire") this.assertDocumentOwnerCurrent();
-                },
-                command.operation === "retire",
-              );
-              if (browserActorColdStatus(result).kind !== "idle" || this.hub.patches.captureUiPatch(result, this.session.lifetime!) !== null) throw new Error("actor-document-control.unexpected-turn-output");
-              const routed = await this.hub.effects.routeTurnEffects(result, "control");
-              if (routed.mutations !== 0) throw new Error("actor-document-control.data-before-receipt");
-              return routed.receipts;
-            } finally {
-              if (result !== null) wipeBrowserActorValue(result);
+            const events: BrowserActorChildValue[] = [{ tag: "message", val: { source: { tag: "shell", val: 0 }, payload: encodeDocumentBackboneControlV1(command) } }];
+            for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
+              const result = await this.hub.lanes.invokePoll(child, events, null, () => {
+                if (this.session.child !== child || this.session.lifetime === null) throw new Error("actor-document-control.stale-child");
+                if (command.operation !== "retire") this.assertDocumentOwnerCurrent();
+              }, command.operation === "retire");
+              try {
+                if (browserActorColdStatus(result).kind !== "idle" || this.hub.patches.captureUiPatch(result, this.session.lifetime!) !== null) throw new Error("actor-document-control.unexpected-turn-output");
+                const routed = await this.hub.effects.routeTurnEffects(result, "control");
+                if (routed.mutations !== 0) throw new Error("actor-document-control.data-before-receipt");
+                const more = browserActorRecord(browserActorTurnResult(result).status, "actor-document-control.invalid-status").tag === "more-work";
+                if (routed.receipts.length !== 0 || !more || command.operation !== "retire") return routed.receipts;
+              } finally {
+                wipeBrowserActorValue(result);
+              }
             }
+            throw new Error("actor-document-control.retirement-turn-limit");
           };
           return command.operation === "retire" ? this.hub.lanes.enqueueTurn(exchange, true) : exchange();
         },
@@ -141,7 +140,8 @@ export class ReservationDocumentBackbone {
   private admitInboundBackbone(bytes: Uint8Array): Uint8Array {
     const message = parseInboundDocumentBackboneMessage(bytes);
     if (decodeBackboneMessage(message).kind === "retract") return message;
-    if (parseDocumentBackboneMessage(message).envelopes.some(envelope => envelope.document_id !== this.session.artifact.config.documentId)) throw new Error("actor-document-port.scope");
+    const parsed = parseDocumentBackboneTransportMessage(message);
+    if (parsed.kind === "batch" && parsed.envelopes.some(envelope => envelope.document_id !== this.session.artifact.config.documentId)) throw new Error("actor-document-port.scope");
     return message;
   }
 

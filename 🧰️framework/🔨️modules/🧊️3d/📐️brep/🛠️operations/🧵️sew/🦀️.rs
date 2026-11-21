@@ -12,7 +12,7 @@ use std::collections::HashSet;
 
 use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
 use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use semio_framework_3d_brep_validation::validate_body;
+use semio_framework_3d_brep_validation::{issue_reaches, validate_body};
 use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
 use semio_framework_3d_brep_curve::bspline::KnotVector;
 use semio_framework_3d_brep_curve::Curve3;
@@ -20,7 +20,7 @@ use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
-use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::topology::{Body, EntityRef};
 use semio_framework_3d_brep_vector::Pnt3;
 #[cfg(test)]
 use semio_framework_3d_brep_vector::Vec3;
@@ -123,50 +123,46 @@ impl HealingReport {
     }
 }
 
-/// 🩹 Validates a clean solid (no-op success); dirty solids are rejected until full healing lands.
-/// `rec` records every vertex this merges as modified — repositioning `body.vertices` directly
-/// (not through euler) is a pre-existing exception the docstring on [`crate::euler`] calls
-/// out as the checked editors' exclusive right; `rec` at least keeps the entity's provenance honest.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 🩹 Snaps nearby vertices of the selected solid and commits only a validated repair.
 pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpRecorder) -> Result<HealingReport, KernelError> {
     solid_exists(body, solid)?;
-    let tol = if tolerance.is_finite() && tolerance > 0.0 { tolerance } else { 1e-6 };
-    let mut report = HealingReport::default();
-    let ids: Vec<_> = body.vertices.iter().map(|(id, _)| id).collect();
-    for i in 0..ids.len() {
-        let Some(pi) = body.vertices.get(ids[i]).map(|v| v.position) else { continue };
-        for &id in &ids[i + 1..] {
-            let Some(pj) = body.vertices.get(id).map(|v| v.position) else { continue };
-            if (pj - pi).norm() <= tol {
-                if let Some(v) = body.vertices.get_mut(id) {
-                    v.position = pi;
-                    rec.record_modified(v.label);
-                    report.vertices_merged += 1;
-                }
-            }
+    let tolerance = if tolerance.is_finite() && tolerance > 0.0 { tolerance } else { 1e-6 };
+    let reach = body.reachable_from(&[EntityRef::Solid(solid)]);
+    let mut points = reach.vertices.iter().map(|&id| {
+        let point = body.vertices.get(id).expect("reachable vertex is live").position;
+        (id, point, point)
+    }).collect::<Vec<_>>();
+    points.sort_unstable_by_key(|(id, _, _)| id.raw_index());
+    for i in 0..points.len() {
+        let (start, remaining) = points.split_at_mut(i + 1);
+        let position = start[i].2;
+        for (_, _, next) in remaining {
+            if (*next - position).norm() <= tolerance { *next = position; }
         }
     }
-    for (edge_id, _) in body.edges.iter().map(|(id, e)| (id, e.clone())).collect::<Vec<_>>() {
-        let coedges = body.edge_coedges(edge_id);
-        if coedges.is_empty() {
-            continue;
+    points.retain(|(_, before, after)| before != after);
+    if !points.is_empty() {
+        let other_solids = body.solids.iter().filter(|(id, _)| *id != solid)
+            .map(|(id, _)| EntityRef::Solid(id)).collect::<Vec<_>>();
+        let other = body.reachable_from(&other_solids);
+        if points.iter().any(|(id, _, _)| other.vertices.contains(id)) {
+            return Err(KernelError::Operation("healing would move a vertex owned by another solid".into()));
         }
-        if let Some((a, b)) = body.coedge_endpoints(coedges[0]) {
-            let pa = body.vertices.get(a).map(|v| v.position);
-            let pb = body.vertices.get(b).map(|v| v.position);
-            if let (Some(pa), Some(pb)) = (pa, pb) {
-                if (pa - pb).norm() <= tol {
-                    report.degenerate_edges_removed += 1;
-                }
-            }
+        for &(id, _, position) in &points {
+            body.vertices.get_mut(id).expect("selected repair vertex is live").position = position;
         }
     }
-    let issues = validate_body(body);
-    if !issues.is_empty() {
-        return Err(KernelError::Operation(format!("heal_solid left {} validation issue(s)", issues.len())));
+    let issues = validate_body(body).into_iter().filter(|issue| issue_reaches(&reach, &issue.entity)).count();
+    if issues != 0 {
+        for &(id, position, _) in &points {
+            body.vertices.get_mut(id).expect("rejected repair vertex is live").position = position;
+        }
+        return Err(KernelError::Operation(format!("heal_solid left {issues} validation issue(s)")));
     }
-    let _ = solid;
-    Ok(report)
+    for &(id, _, _) in &points {
+        rec.record_modified(body.vertices.get(id).expect("validated repair vertex is live").label);
+    }
+    Ok(HealingReport { vertices_merged: points.len(), ..HealingReport::default() })
 }
 
 /// 🩹 Resumable [`defeature`]: one unit per removed face (find its kept neighbours and sew them when

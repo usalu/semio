@@ -1,0 +1,166 @@
+{
+  "cases": [
+    {
+      "name": "coincident procedural input wins",
+      "defaultGranularity": "handle",
+      "instance": {
+        "id": "axis@!ivector#in-0",
+        "meshId": "axis",
+        "interactionId": "axis@!ivector",
+        "hoverTargets": [
+          {
+            "granularity": "handle",
+            "id": "axis@!ivector"
+          },
+          {
+            "granularity": "handle",
+            "id": "axis@vector"
+          }
+        ]
+      },
+      "expected": [
+        {
+          "granularity": "handle",
+          "id": "axis@!ivector"
+        },
+        {
+          "granularity": "handle",
+          "id": "axis@vector"
+        }
+      ]
+    },
+    {
+      "name": "coincident procedural output wins",
+      "defaultGranularity": "handle",
+      "instance": {
+        "id": "axis@vector#0",
+        "meshId": "axis",
+        "interactionId": "axis@vector",
+        "hoverTargets": [
+          {
+            "granularity": "handle",
+            "id": "axis@!ivector"
+          },
+          {
+            "granularity": "handle",
+            "id": "axis@vector"
+          }
+        ]
+      },
+      "expected": [
+        {
+          "granularity": "handle",
+          "id": "axis@!ivector"
+        },
+        {
+          "granularity": "handle",
+          "id": "axis@vector"
+        }
+      ]
+    },
+    {
+      "name": "independent instance reuses the mesh",
+      "defaultGranularity": "handle",
+      "instance": {
+        "id": "reference#0",
+        "meshId": "axis",
+        "position": [
+          4,
+          0,
+          0
+        ],
+        "interactionId": "reference@vector"
+      },
+      "expected": [
+        {
+          "granularity": "handle",
+          "id": "reference@vector"
+        }
+      ]
+    },
+    {
+      "name": "empty alias list preserves the primary target",
+      "defaultGranularity": "item",
+      "instance": {
+        "id": "object",
+        "interactionId": "object-id",
+        "interactionGranularityId": "cell",
+        "hoverTargets": []
+      },
+      "expected": [
+        {
+          "granularity": "cell",
+          "id": "object-id"
+        }
+      ]
+    },
+    {
+      "name": "escaped and heterogeneous aliases",
+      "defaultGranularity": "item",
+      "instance": {
+        "id": "object",
+        "hoverTargets": [
+          {
+            "granularity": "handle",
+            "id": "port@\"ä\\path"
+          },
+          {
+            "granularity": "handle",
+            "id": "port@\"ä\\path"
+          },
+          {
+            "granularity": "cell",
+            "id": "node@β"
+          },
+          {
+            "granularity": "handle",
+            "id": "node@β"
+          }
+        ]
+      },
+      "expected": [
+        {
+          "granularity": "handle",
+          "id": "port@\"ä\\path"
+        },
+        {
+          "granularity": "cell",
+          "id": "node@β"
+        },
+        {
+          "granularity": "handle",
+          "id": "node@β"
+        }
+      ]
+    },
+    {
+      "name": "malformed alias list preserves the primary target",
+      "defaultGranularity": "item",
+      "instance": {
+        "id": "object",
+        "hoverTargets": [
+          {
+            "granularity": "handle",
+            "id": "object"
+          },
+          {
+            "granularity": "cell",
+            "id": ""
+          }
+        ]
+      },
+      "expected": [
+        {
+          "granularity": "item",
+          "id": "object"
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "idBytes": 256,
+    "payloadBytes": 4096,
+    "oversizedUniqueTargets": 16,
+    "oversizedTargetText": "\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\""
+  }
+}

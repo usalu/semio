@@ -1,0 +1,5 @@
+# Spatial variable preview
+
+Point and vector variables now participate in the shared 3D preview census used by Edit, Generate and View. The viewport builds each marker from its evaluated coordinates and uses the exact output port published by Flow. A graph hover on that port highlights its marker. Numeric variables remain available in the Values tree. Export selection uses the existing document geometry source rules.
+
+The neutral fixture covers a point, a negative-axis vector and a number, using the actual Flow output names `Origin`, `Axis` and `Amount`. The direct pinned-Rust witness ran the original widget port projector, preview eligibility, channel enumeration and marker generation. An independent Three.js test checked 23 conditions, including the point bounds, origin and vector tip, all four fin endpoints and both channel addresses. The registered composition test also checks Edit and View instance ids, matching geometry and a graph-qualified hover. The linked composition package remains pending under the workspace disk gate.

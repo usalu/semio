@@ -12,6 +12,7 @@ import type { useActiveUtilityState } from "../🔶️active-utility/🟦️.ts"
 
 /** 🔹 Builds handlePointerUp, handleEmptyClick, clearCatalogueDrop, readCatalogueDragEncoded of useWorldPointerAndDrop. */
 export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, marqueeStartRef, endHandleDrag, endRelocateDrag, faceDragSession, setFaceDragSession, hostRef, cameraRef, dispatch, node, finalizeMarqueeSelection, marqueeDragActiveRef, paintMode, selection, activeUtility, toLocalPoint, instancesRef, meshesRef, handleInstancePointerDown, setVortexPointerArm, connectDropConsumedRef, handleConnectDragCancel, interactionDomainId, interactionGranularity, persistentSelectionMode, selectionMode, marqueeDown, wasMarqueeDragRef, contextMenu, dismissContextMenu, interaction, handleSuggestionClose, hoveredInstanceInteractionTargetRef, catalogueDragEncodedRef, catalogueDragDepthRef, gridSnapEnabled, gridFactor, pendingCelebrateCatalogueDropIdsRef, instances }: Pick<ReturnType<typeof useActiveUtilityState>, "gestureRecognizer" | "setMarqueePath" | "marqueeStartRef" | "endHandleDrag" | "endRelocateDrag" | "faceDragSession" | "setFaceDragSession" | "hostRef" | "cameraRef" | "dispatch" | "node" | "finalizeMarqueeSelection" | "marqueeDragActiveRef" | "paintMode" | "selection" | "activeUtility" | "toLocalPoint" | "instancesRef" | "meshesRef" | "handleInstancePointerDown" | "setVortexPointerArm" | "connectDropConsumedRef" | "handleConnectDragCancel" | "interactionDomainId" | "interactionGranularity" | "persistentSelectionMode" | "selectionMode" | "marqueeDown" | "wasMarqueeDragRef" | "contextMenu" | "dismissContextMenu" | "interaction" | "handleSuggestionClose" | "hoveredInstanceInteractionTargetRef" | "catalogueDragEncodedRef" | "catalogueDragDepthRef" | "gridSnapEnabled" | "gridFactor" | "pendingCelebrateCatalogueDropIdsRef" | "instances">) {
+  const wholePickEnabled = !selection.targets?.exclusive || selection.targets.mesh === true;
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       const verdict = gestureRecognizer.up(event.pointerId);
@@ -46,7 +47,7 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
         return;
       }
       finalizeMarqueeSelection();
-      if (!marqueeDragActiveRef.current && !paintMode && !selection.engagementSessionActive && !worldInstancePickBlocked(activeUtility)) {
+      if (wholePickEnabled && !marqueeDragActiveRef.current && !paintMode && !selection.engagementSessionActive && !worldInstancePickBlocked(activeUtility)) {
         const host = hostRef.current;
         const camera = cameraRef.current;
         if (host && camera) {
@@ -68,7 +69,7 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
         handleConnectDragCancel();
       }
     },
-    [gestureRecognizer, activeUtility, dispatch, endHandleDrag, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
+    [gestureRecognizer, activeUtility, dispatch, endHandleDrag, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint, wholePickEnabled],
   );
 
   useEffect(() => {
@@ -97,7 +98,7 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
         handleSuggestionClose();
       }
       const merge = resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode);
-      const hovered = hoveredInteractionTargetV1(hoveredInstanceInteractionTargetRef.current);
+      const hovered = wholePickEnabled ? hoveredInteractionTargetV1(hoveredInstanceInteractionTargetRef.current) : null;
       if (interactionDomainId && hovered) {
         dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, [hovered], merge));
         return;
@@ -112,7 +113,7 @@ export function useHandlePointerUpState({ gestureRecognizer, setMarqueePath, mar
       }
       dispatch("worldPick", { granularity: selectionMode, id: null, merge });
     },
-    [contextMenu, dismissContextMenu, dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
+    [contextMenu, dismissContextMenu, dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, interactionDomainId, interactionGranularity, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, wholePickEnabled],
   );
 
   const clearCatalogueDrop = useCallback(() => {

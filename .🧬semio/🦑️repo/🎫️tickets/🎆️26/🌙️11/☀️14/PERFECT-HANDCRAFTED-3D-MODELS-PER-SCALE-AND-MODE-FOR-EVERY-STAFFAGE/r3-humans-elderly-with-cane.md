@@ -96,3 +96,53 @@ Final check line: `FAIL: 3 measurement(s) over 2 rule line(s)`: `areaDeviation:c
 - 1:500 structure members are 75 mm sticks by rule, close to the size of the limbs they are in.
 - The hair region at 1:500 is the 44 mm nape hair solid, below the 75 mm feature but as thick as its drawing.
 - `provenance.notes` and `provenance.author` are unchanged and do not mention this round.
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: `r5-elderly-with-cane-foot.ts` (ankle root fix, gait advance), `r5-elderly-with-cane-run.sh` (build, 2D redraw, candidate, validation), `r5-elderly-with-cane-diff.ts` (proves the rigid 14 mm rise of every solid above the ankle), `r5-elderly-with-cane-manifest.py` (manifest height), `r5-elderly-with-cane-probe.ts`; the round-3 scripts were extended in place (`-s50.ts`, `-coarse.ts`, `-draw2d.ts`, `-roots.ts`, `-edit.py`, `-texts.json`).
+
+### Reference (man of 74, limb proportions of H = 1.65 m, DIN 33402 older men / Winter 2009 shares, shoes 20 mm under the ankle)
+
+| quantity | reference | model before | model after | after vs ref |
+|---|---|---|---|---|
+| ankle joint, shod | 0.039 H + 0.02 = 0.084 m | 0.070 (-17 %) | 0.084 | 0 % |
+| knee joint, shod | 0.285 H + 0.02 = 0.490 m | 0.465 (-5.1 %) | 0.479 | -2.2 % |
+| hip joint, shod | 0.530 H + 0.02 = 0.895 m | 0.870 (-2.8 %) | 0.884 | -1.2 % |
+| thigh / shank | 0.245 / 0.246 H = 0.404 / 0.406 m | 0.4046 / 0.395 | same | 0 / -2.7 % |
+| upper arm / forearm / hand | 0.186 / 0.146 / 0.108 H = 0.307 / 0.241 / 0.178 m | 0.307 / 0.242 / 0.177 | same | 0 / +0.4 / -0.6 % |
+| shoulder joint, stooped | 0.818 H + 0.02 - 0.03 kyphosis = 1.34 m | 1.338 | 1.352 | +0.9 % |
+| head chin to vertex | H / 7.5 = 0.22 m | 0.219 | 0.219 | -0.5 % |
+| shoulder joint spacing | biacromial 0.245 H - 2 x 0.017 = 0.37 m | 0.37 | 0.37 | 0 % |
+| kyphosis apex | T7, behind the shoulder line | hump at the collar (corner at 1.34 m) | apex at 1.22 m, cloth taut to the seat | anatomical |
+| elbow on the cane | 15 to 30 degrees | 29.6 | 29.5 | in range |
+| stature in stance with cap and shoes | 1.657 m measured on the 1:50 body | 1.63 declared | 1.657 declared | |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure | 2D |
+|---|---|---|---|---|
+| 1:50 | B+ -> A- | A- -> A- | A- -> A- | A- -> A- |
+| 1:100 | B+ -> A- | A- -> A- | A- -> A- | A- -> A- |
+| 1:200 | B -> B+ | B+ -> B+ | B+ -> B+ | B+ -> B+ |
+| 1:500 | B -> B+ | B+ -> B+ | B -> B | B+ -> B+ |
+
+### Changes
+
+- Root: ankle joint 70 -> 84 mm (foot bone 62.0 degrees, 0.1789 m; toe level; heel and ball anchors kept on the shoe), so every bone above the ankle rises 14 mm (proved bone-local identical by `r5-elderly-with-cane-diff.ts`; the world-height tables of trunk, pelvis, neck and skeleton were restated 14 mm higher); cane 0.734 -> 0.748 m so the crook stays at the wrist crease; arm of every pose and clip key re-solved (`r3-elderly-with-cane-roots.ts`); `cane-gait.advanceM` 0.949 -> 0.9619 (planted travel of the longer leg); `dimensions.heightM` 1.63 -> 1.657 in the asset and in the manifest row; 1:500 `validRange.maxDenominator` 1000 -> 800 (hands and cane fall below the 0.2 mm laser feature beyond 1:800, a pre-existing PRINT finding).
+- 1:50 body: the jacket rebuilt as a kyphotic back (apex at T7, cloth taut from the hump to the buttocks over the flattened lumbar curve, shoulder line about 22 degrees, slight waist under the chest) instead of a straight back ending in a corner at the collar; the trouser shank starts with the thigh-end section (no step at the knee) and its hem is 14 mm lower; the forearm sleeve starts with the upper-sleeve section (no step at the elbow).
+- 1:100 / 1:200 / 1:500: trouser hems carried down over the shoe collar (a white gap showed between hem and shoe at all three scales); the 1:200 fist on the crook thickened from a 32 mm disc to 52 mm; the 1:500 hanging hand a tapered mass with a rounded end instead of a 0.2 m slab, its hand bones 58 mm.
+- 2D: all 12 drawings redrawn from the new bodies by `r3-elderly-with-cane-draw2d.ts` (E1).
+
+### Seen (opened)
+
+1:50, 1:100, 1:200, 1:500 body sheets; 1:50 right side and three-quarter singles; 1:50 `contact-left` (closed at hip, knee, ankle, cane planted); 1:50 and 1:500 structure (before; the skeleton moved rigidly); 1:50 thermal cut; 2D 1:50. Not opened after the change: structure and thermal at 1:100 to 1:500 (only rigid shifts and the 1:500 hand bones changed), 2D 1:100 to 1:500 (validated, silhouette IoU 0.96 to 0.998).
+
+### Check
+
+`r3-validate.ts humans/elderly-with-cane --catalog-only`: VALID. `volumes-check.ts --product`: everything green except `volumes-thermal-coverage` 1:50 `cap` 0.42 and `shoes` 0.47, 1:100 `cap` 0.40 (C18 skin shares against garment surfaces; listed in `area-review.md`).
+
+### Remaining (not A, with reason)
+
+- Sleeves and trouser legs are smooth tubes without folds at 1:50; the shoulder reads padded and square in the front view (a tailored jacket, but stiff).
+- 1:200 and 1:500 are good massings but not refined beyond B+ (faceted jacket rows at 1:500, fist still flat at 1:200).
+- Areas `cap` and `shoes` wait for the area reviewers (C18 / C27).

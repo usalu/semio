@@ -21,7 +21,7 @@ pub mod engagement_submit {
         _payload: &EngagementSubmit,
         doc: &ArtifactView<'_, Process3dSnapshot>,
         cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
+        ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let fixture = doc.snapshot;
         let config = cfg.snapshot;
@@ -30,9 +30,10 @@ pub mod engagement_submit {
         let clear_input = Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value: String::new() });
         let replay = |next: Option<usize>| Emit::config(std::iter::once(clear_input.clone()).chain(process3d_cursor_moves(fixture, config, next)).collect());
         match command_word.split_whitespace().next() {
-            Some("cut") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("cut")], ..Default::default() }),
-            Some("drill") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("drill")], ..Default::default() }),
-            Some("attach") => Ok(Emit { config_mutations: vec![clear_input], effects: vec![set_active_utility_effect("attach")], ..Default::default() }),
+            Some(utility @ ("cut" | "drill" | "attach")) => {
+                let effects = set_active_utility_effect(ctx.view_state().ok(), utility).into_iter().collect();
+                Ok(Emit { config_mutations: vec![clear_input], effects, ..Default::default() })
+            }
             Some("back") => Ok(replay(Some(current.saturating_sub(1)))),
             Some("forward") => Ok(replay(Some(current + 1))),
             Some("all") => Ok(replay(None)),
@@ -75,9 +76,10 @@ pub mod engagement_abort {
         _payload: &EngagementAbort,
         _doc: &ArtifactView<'_, Process3dSnapshot>,
         _cfg: &ConfigView<'_, Process3dConfig>,
-        _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
+        ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        Ok(Emit { config_mutations: vec![Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value: String::new() })], effects: vec![set_active_utility_effect("select")], ..Default::default() })
+        let effects = set_active_utility_effect(ctx.view_state().ok(), "select").into_iter().collect();
+        Ok(Emit { config_mutations: vec![Process3dConfigMutation::SetEngagementInput(Process3dConfigSetEngagementInput{ value: String::new() })], effects, ..Default::default() })
     }
 }
 //#endregion 🔖️EngagementAbort

@@ -266,7 +266,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         if !self.dock.anchor_open(anchor) {
             return None;
         }
-        let panel = self.anchor_rect(anchor, self.as_session().body_rect(theme), theme);
+        let body = self.as_session().body_rect(theme);
+        let panel = self.anchor_rect(anchor, body, theme);
         let rows = self.dock.anchor_tab_rows(anchor);
         let row_y = flowed_anchor_tab_row_y(anchor.flow().block, panel, 0, rows.len(), theme.control_height);
         let row_rect = Rect::new(panel.x, row_y, panel.w, theme.control_height);

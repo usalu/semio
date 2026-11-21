@@ -1,0 +1,8 @@
+detail	category_mpa	angle_restricted
+ground-butt	112	0
+as-welded-butt	100	0
+full-penetration-cruciform	100	1
+non-load-bearing-fillet	100	1
+bracket-stiffener-end	100	1
+cover-plate-end	100	1
+load-bearing-fillet-cruciform	90	1

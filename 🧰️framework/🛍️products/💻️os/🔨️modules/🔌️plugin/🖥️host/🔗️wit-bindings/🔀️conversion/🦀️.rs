@@ -130,6 +130,15 @@ fn kernel_command_cursor_to_wit(cursor: &semio_framework::kernel::CommandPageCur
 }
 
 pub fn wit_command_ingress_to_kernel(status: wit_reactor::CommandIngressStatus) -> semio_framework::kernel::CommandIngressStatus {
+    if let Some(ack) = status.original_media_ack {
+        return semio_framework::kernel::CommandIngressStatus::OriginalMediaAck(semio_framework::kernel::OriginalMediaWireAck {
+            loan: semio_framework::kernel::OriginalMediaWireLoan {
+        operation_id: ack.loan.operation_id, generation: ack.loan.generation,
+        instance_id: ack.loan.instance_id, document_id: ack.loan.document_id, base_revision: ack.loan.base_revision,
+    }, owner: ack.owner, seq: ack.seq, kind: ack.kind, extent: ack.extent,
+            phase: match ack.phase { wit_reactor::OriginalMediaPhase::Begin => semio_framework::kernel::OriginalMediaWirePhase::Begin, wit_reactor::OriginalMediaPhase::Page => semio_framework::kernel::OriginalMediaWirePhase::Page, wit_reactor::OriginalMediaPhase::Complete => semio_framework::kernel::OriginalMediaWirePhase::Complete, wit_reactor::OriginalMediaPhase::Cancel => semio_framework::kernel::OriginalMediaWirePhase::Cancel }, result: match ack.result { wit_reactor::OriginalMediaResult::Retry => semio_framework::kernel::OriginalMediaWireResult::Retry, wit_reactor::OriginalMediaResult::Pending => semio_framework::kernel::OriginalMediaWireResult::Pending, wit_reactor::OriginalMediaResult::Accepted => semio_framework::kernel::OriginalMediaWireResult::Accepted, wit_reactor::OriginalMediaResult::Stale => semio_framework::kernel::OriginalMediaWireResult::Stale, wit_reactor::OriginalMediaResult::Refused => semio_framework::kernel::OriginalMediaWireResult::Refused }, page_index: ack.page_index,
+        });
+    }
     let cursor = wit_command_cursor_to_kernel(status.cursor);
     match status.kind {
         0 => semio_framework::kernel::CommandIngressStatus::Idle,
@@ -387,6 +396,17 @@ pub async fn kernel_event_to_wit(event: &mut Event, instance_id: u32) -> Result<
         Event::JobCompleted { job, result } => wit_events::Event::JobCompleted(wit_events::JobCompletedEvent { job: *job, outcome: kernel_request_outcome_to_wit(result).await }),
         Event::Message { source, payload } => wit_events::Event::Message(wit_events::MessageEvent { source: kernel_message_endpoint_to_wit(source).await, payload: payload.clone() }),
         Event::Timer { id } => wit_events::Event::Timer(wit_events::TimerEvent { id: *id }),
+        Event::OriginalMediaControl(event) => wit_events::Event::OriginalMediaControl(wit_events::OriginalMediaControlEvent {
+            loan: wit_events::OriginalMediaLoan {
+        operation_id: event.loan.operation_id.clone(), generation: event.loan.generation.clone(),
+        instance_id: event.loan.instance_id, document_id: event.loan.document_id.clone(), base_revision: event.loan.base_revision.clone(),
+    }, owner: event.owner, seq: event.seq, kind: event.kind, extent: event.extent,
+            control: match &event.control {
+                semio_framework::kernel::OriginalMediaWireControl::Begin { name, media_type } => wit_events::OriginalMediaControl::Begin(wit_events::OriginalMediaBegin { name: name.clone(), media_type: media_type.clone() }),
+                semio_framework::kernel::OriginalMediaWireControl::Complete => wit_events::OriginalMediaControl::Complete,
+                semio_framework::kernel::OriginalMediaWireControl::Cancel => wit_events::OriginalMediaControl::Cancel,
+            },
+        }),
         Event::Wake => wit_events::Event::Wake,
         Event::Request { req, from, capability, payload } => {
             wit_events::Event::Request(wit_events::RequestEvent { req: req.0, params: wit_events::RequestParams { origin: kernel_message_endpoint_to_wit(from).await, capability: capability.clone(), payload: payload.clone() } })

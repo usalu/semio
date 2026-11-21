@@ -8,13 +8,15 @@
 
 // #region 🔌️Adapters
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { defer, firstValueFrom, from, mergeMap, NEVER, of, retry, throwError, timeout } from "rxjs";
 import ts from "typescript";
 import { GestureRecognizer } from "@semio-tech/framework";
-import { mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, parseMapOverlayIndex, resolveMapInteractionSync } from "../../📐️map-parsing/🟦️.ts";
+import { mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, parseMapOverlayIndex, resolveMapInteractionSync, TILE_REFRESH_DEBOUNCE_MS } from "../../📐️map-parsing/🟦️.ts";
 import { createByteLru, createBoundedSet, createLeadingTrailingDebounce } from "../../🗃️tile-cache/🟦️.ts";
 import { MapRenderer } from "../../🖼️map-renderer/🟦️.ts";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import repaintFixture from "../🧫️fixtures/🔁️repaint/🔣️.json";
+import tileRefreshFixture from "../🧫️fixtures/📡️tile-refresh/🔣️.json";
 import lifecycleFixture from "@semio-tech/framework-os/modules/renderer/engine/testing/fixtures/tiled-map-gesture-lifecycle.json";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -368,3 +370,206 @@ describe("MapRenderer hasTile-guarded upload", () => {
   });
 });
 //#endregion 🔖️HasTileGuardedUpload
+
+//#region 🔖️TileRefresh
+describe("MapRenderer tile refresh", () => {
+  const { first, prefetch, latest, settleMs } = tileRefreshFixture;
+
+  async function createRenderer(mode: "image" | "vector" = "image", initialRows = [first]) {
+    let visible = initialRows;
+    let nearby = [prefetch];
+    let revision = 1;
+    const upload = vi.fn();
+    const session = {
+      attachCanvas: async () => undefined,
+      setRenderMode: () => undefined,
+      visibleTilesRevision: () => revision,
+      visibleVectorTilesRevision: () => revision,
+      visibleTilesJson: () => JSON.stringify(visible),
+      visibleVectorTilesJson: () => JSON.stringify(visible),
+      prefetchTilesJson: () => JSON.stringify(nearby),
+      prefetchVectorTilesJson: () => JSON.stringify(nearby),
+      hasTile: () => false,
+      hasVectorTile: () => false,
+      uploadTile: upload,
+      uploadVectorTile: upload,
+      free: vi.fn(),
+    };
+    const renderer = new MapRenderer("/osm/{z}/{x}/{y}.png", "/vt/{z}/{x}/{y}.pbf", session as unknown as MapWasmSession);
+    await renderer.attach({ width: 0, height: 0 } as HTMLCanvasElement, 256, 256, 1);
+    renderer.setRenderMode(mode);
+    return {
+      renderer, session, upload,
+      move() { visible = [latest]; nearby = []; revision++; },
+      clearPrefetch() { nearby = []; },
+    };
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it("fills each freed request slot while the first visible tile is stalled", async () => {
+    vi.useFakeTimers();
+    const { zoom: z, y, count, concurrency, completed } = tileRefreshFixture.pipeline;
+    const rows = Array.from({ length: count }, (_, x) => ({ z, x, y, key: `${z}/${x}/${y}` }));
+    const { renderer, upload, clearPrefetch } = await createRenderer("image", rows);
+    clearPrefetch();
+    const pending = rows.map(() => Promise.withResolvers<Response>());
+    const referenceStarted: string[] = [];
+    const reference = from(rows).pipe(mergeMap((row) => {
+      referenceStarted.push(row.key);
+      return pending[row.x].promise;
+    }, concurrency)).subscribe();
+    const started: string[] = [];
+    const fetchMock = vi.fn((url: string, _options?: RequestInit) => {
+      const row = rows.find(({ key }) => url.endsWith(`/${key}.png`))!;
+      started.push(row.key);
+      return pending[row.x].promise;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      void renderer.refreshTiles();
+      expect(started).toEqual(referenceStarted);
+      expect(started).toHaveLength(concurrency);
+      for (const [order, index] of completed.entries()) {
+        pending[index].resolve(new Response(bytes(4)));
+        await vi.advanceTimersByTimeAsync(0);
+        expect(started).toEqual(referenceStarted);
+        expect(started).toHaveLength(concurrency + order + 1);
+      }
+      expect(upload).toHaveBeenCalledTimes(completed.length);
+      renderer.dispose();
+      fetchMock.mock.calls.forEach(([, options], index) => {
+        expect(options?.signal?.aborted).toBe(!completed.includes(index));
+      });
+      expect(vi.getTimerCount()).toBe(0);
+      for (const request of pending) request.resolve(new Response(bytes(4)));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(upload).toHaveBeenCalledTimes(completed.length);
+      expect(started).toHaveLength(concurrency + completed.length);
+    } finally {
+      renderer.dispose();
+      reference.unsubscribe();
+      for (const request of pending) request.resolve(new Response(bytes(4)));
+    }
+  });
+
+  it.each(tileRefreshFixture.deadline.stages)("retries a stalled tile response at the %s deadline", async (stage) => {
+    vi.useFakeTimers();
+    const { renderer, upload, clearPrefetch } = await createRenderer();
+    clearPrefetch();
+    const fetchMock = vi.fn(async (_url: string, { signal }: { signal: AbortSignal }) => new Response(bytes(4)))
+      .mockImplementationOnce(async (_url, { signal }) => {
+        const stall = () => new Promise<never>((_, reject) => {
+          signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+        });
+        if (stage === "headers") return stall();
+        return Object.assign(new Response(bytes(4)), { arrayBuffer: stall });
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    const { timeoutMs, retryDelayMs } = tileRefreshFixture.deadline;
+    let referenceTimedOut = false;
+    const reference = NEVER.pipe(timeout(timeoutMs)).subscribe({ error: () => { referenceTimedOut = true; } });
+    try {
+      void renderer.refreshTiles();
+      await vi.advanceTimersByTimeAsync(timeoutMs - 1);
+      const firstRequestSignal = fetchMock.mock.calls[0][1].signal;
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(firstRequestSignal.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(referenceTimedOut).toBe(true);
+      expect(firstRequestSignal.aborted).toBe(referenceTimedOut);
+      await vi.advanceTimersByTimeAsync(retryDelayMs);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(upload).toHaveBeenCalledExactlyOnceWith(first.z, first.x, first.y, new Uint8Array(4));
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      reference.unsubscribe();
+      renderer.dispose();
+    }
+  });
+
+  it.each([["visible", first], ["prefetch", prefetch]] as const)("starts the new viewport while obsolete %s fetches are pending", async (_, stale) => {
+    vi.useFakeTimers();
+    const { renderer, move, upload } = await createRenderer();
+    const pending = Promise.withResolvers<Response>();
+    const fetchMock = vi.fn((url: string, _options?: RequestInit) =>
+      url.endsWith(`/${stale.key}.png`) ? pending.promise : Promise.resolve(new Response(bytes(4))),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      renderer.scheduleRefreshTiles();
+      await vi.advanceTimersByTimeAsync(0);
+      const staleFetch = fetchMock.mock.calls.find(([url]) => url.endsWith(`/${stale.key}.png`));
+      expect(staleFetch).toBeDefined();
+      move();
+      renderer.scheduleRefreshTiles();
+      await vi.advanceTimersByTimeAsync(TILE_REFRESH_DEBOUNCE_MS);
+      expect(staleFetch?.[1]?.signal?.aborted).toBe(true);
+      expect(upload).toHaveBeenCalledWith(latest.z, latest.x, latest.y, new Uint8Array(4));
+      pending.resolve(new Response(bytes(4)));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(upload).not.toHaveBeenCalledWith(stale.z, stale.x, stale.y, new Uint8Array(4));
+    } finally {
+      pending.resolve(new Response(bytes(4)));
+      renderer.dispose();
+    }
+  });
+
+  it.each(tileRefreshFixture.cases)("handles $name while the viewport stays idle", async ({ mode, statuses, upload: expectedUpload }) => {
+    vi.useFakeTimers();
+    const { renderer, upload, clearPrefetch } = await createRenderer(mode === "image" ? "image" : "vector");
+    clearPrefetch();
+    const statusAt = (attempt: number) => statuses[Math.min(attempt, statuses.length) - 1];
+    let referenceAttempts = 0;
+    const reference = defer(() => {
+      const status = statusAt(++referenceAttempts);
+      return status === 200 ? of(true) : throwError(() => status);
+    }).pipe(retry({
+      count: 2,
+      delay: (status) => status === 404 || status === 410 ? throwError(() => status) : of(null),
+    }));
+    expect(await firstValueFrom(reference).catch(() => false)).toBe(expectedUpload);
+    expect(referenceAttempts).toBe(statuses.length);
+    const fetchMock = vi.fn(async () => {
+      const status = statusAt(fetchMock.mock.calls.length);
+      if (status === null) throw new TypeError("network unavailable");
+      return new Response(status === 200 ? bytes(4) : null, { status });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      void renderer.refreshTiles();
+      await vi.advanceTimersByTimeAsync(settleMs);
+      expect(fetchMock).toHaveBeenCalledTimes(referenceAttempts);
+      if (expectedUpload) expect(upload).toHaveBeenCalledExactlyOnceWith(first.z, first.x, first.y, new Uint8Array(4));
+      else expect(upload).not.toHaveBeenCalled();
+      if (statuses.length === 1) {
+        await renderer.refreshTiles();
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+      }
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      renderer.dispose();
+    }
+  });
+
+  it("clears pending retries before freeing the session", async () => {
+    vi.useFakeTimers();
+    const { renderer, session, clearPrefetch, upload } = await createRenderer();
+    clearPrefetch();
+    const fetchMock = vi.fn(async () => new Response(null, { status: 503 }));
+    vi.stubGlobal("fetch", fetchMock);
+    void renderer.refreshTiles();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(vi.getTimerCount()).toBe(1);
+    renderer.dispose();
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(settleMs);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(session.free).toHaveBeenCalledOnce();
+    expect(upload).not.toHaveBeenCalled();
+  });
+});
+//#endregion 🔖️TileRefresh

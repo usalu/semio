@@ -35,16 +35,20 @@ async fn terrain_fixture_text_recovers_bundled_scenery_data() {
     let descriptor = fixture_descriptor(&GisTerrainSnapshot { exaggeration: 1.5, imported_map: None, ..Default::default() });
     assert_eq!(descriptor.project_origin.lon, 5.5818);
     assert_eq!(descriptor.project_origin.lat, 50.603);
-    assert_eq!(descriptor.positions.len(), 2);
-    assert_eq!(descriptor.positions[0].id, "p_institut_de_botanique_ulg_liege");
+    assert_eq!(descriptor.overlays.positions.len(), 2);
+    assert_eq!(descriptor.overlays.positions[0].id, "p_institut_de_botanique_ulg_liege");
+    assert_eq!(descriptor.overlays.routes[0].id, "r_sart_tilman");
+    assert_eq!(descriptor.overlays.regions[0].id, "g_sart_tilman");
 }
 
-/// 🔌️ `map:in`'s overlay layer renders as extra pins alongside the fixture's own two.
+/// 🔌️ `map:in` supplies an independent terrain view around the imported features.
 #[semio_framework_async_macros::async_test]
-async fn imported_map_features_render_as_extra_pins() {
+async fn imported_map_features_replace_demo_features_and_set_the_origin() {
     let document = GisTerrainSnapshot { exaggeration: 1.5, imported_map: Some(crate::schema::imported_map::ImportedMap::from_json(&serde_json::json!({ "positions": [{ "id": "imported-1", "lon": 5.58, "lat": 50.60 }] }).to_string()).unwrap()), ..Default::default() };
     let descriptor = fixture_descriptor(&document);
-    assert_eq!(descriptor.positions.len(), 3, "2 fixture pins + 1 imported pin");
-    assert!(descriptor.positions.iter().any(|position| position.id == "imported-1"));
+    assert_eq!(descriptor.overlays.positions.len(), 1);
+    assert_eq!(descriptor.overlays.positions[0].id, "imported-1");
+    assert_eq!(descriptor.project_origin.lon, 5.58);
+    assert_eq!(descriptor.project_origin.lat, 50.60);
 }
 //#endregion 🧪️FixtureText

@@ -31,8 +31,13 @@ pub struct TestJobDriver {
 impl TestJobDriver {
     /// 🏡️ Admits the declared operation once from the test's finite original source.
     pub fn new(operation: OperationId, generation: Generation) -> Self {
+        Self::with_work_stock(operation, generation, 100_000_000)
+    }
+
+    /// ⛽️ Funds the original Source with the fixture's declared Work stock.
+    pub fn with_work_stock(operation: OperationId, generation: Generation, work: u64) -> Self {
         Self {
-            caller: Some(OriginalJobFixtureCaller::admit(operation, generation, TEST_SOURCE, || Some(0), u64::MAX, 100_000_000)),
+            caller: Some(OriginalJobFixtureCaller::admit(operation, generation, TEST_SOURCE, || Some(0), u64::MAX, work)),
             origin: OriginalJobReturnOrigin::empty(),
         }
     }

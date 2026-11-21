@@ -82,3 +82,5 @@ Poses, clips, contact anchors and the wheel rolling rule (theta = -x / r) do not
 - The web sources of the new reference were not re-opened by me.
 
 Scripts: `r3-vintage-car-1929.py` (driver), `-kit.py`, `-s50.py`, `-coarse.py`, `-decisions.py`, `-2d.py`, `-root.py`, `-suit.ts`, `-go.sh` (one iteration: source, candidate, validate, root apply, splice, suitability). Output under `🗑️generated/r3-vintage-car-1929/`.
+
+The finished 1:100 band uses a 0.20 mm contour around the front hubcaps. At 1:150 both original contours measured 0.1967 mm. Both corrected contours passed at denominators 75, 100 and 150. The revised model also passed the complete four-scale measurement and its 6,038,780-byte GLB reopened in all twelve scenes.

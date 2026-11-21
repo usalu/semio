@@ -78,3 +78,54 @@ Opened: 1:50 body from the front, side, front and rear three-quarter; the `volum
 - The text of `representations[*].decisions` still quotes the old drawing sizes (for example "Cannons 0.034 m", "head is 4.6 mm long"); it was not rewritten.
 - The ham shows as a flap under the belly when a hind leg swings far back.
 - 1:500 legs are 82 mm thick against a real 30 mm cannon.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-sheep-50.ts` (1:50 hand tables, round 3 tables with head, ears, ham, shoulder, wool cuffs and cervical spine remodelled), `r5-sheep-coarse.ts` (1:100, 1:200, 1:500 hand tables), `r5-sheep-run.sh` (whole pipeline: four scales, 2D redraw by `r3-sheep-2d.ts` + `r3-sheep-2d.py` in two passes, validation), `r5-grid.ts` (contact sheets of many renders). Rollback inputs: `🗑️generated/r5-sheep/asset-before.json`, `volumes-before.json`.
+
+### Reference added for the head (70 kg wool ewe; the rest of section 1 stands)
+
+| size | reference | model 1:50 | deviation |
+|---|---|---|---|
+| head length, poll to lip | 0.24 to 0.26 m | 0.247 + lip 0.003 | in range |
+| head depth at the jaw angle (with wool cap) | 0.14 to 0.15 m | 0.151 | +0.7 % over the upper bound |
+| head width at the eyes | 0.11 to 0.125 m | 0.128 | +2.4 % over the upper bound |
+| muzzle, width x depth incl. lower lip | 0.055 to 0.065 x 0.07 to 0.08 m | 0.062 x 0.072 | in range |
+| ear, length x width, carried | 0.10 to 0.12 x 0.05 to 0.06 m, out and slightly down | 0.105 x 0.056, 18 degrees below the horizontal | in range |
+| body extents (default pose) | dimensions 1.27 x 0.823 x 0.44 m | 1.266 x 0.838 x 0.444 | height +1.8 % (poll wool cap; within the 2 % rule, `dimensions` not changed without a cited source) |
+
+Rig (section 3 of round 3) re-measured against section 1: every landmark within 3 % (hip 0.590, stifle 0.425, hock 0.262, fetlocks 0.085, shoulder 0.530, elbow 0.403, carpus 0.222; spine chain dorsal along the vertebral axis, lumbosacral 0.655, C7/T1 0.575, poll 0.774). No rig fix was needed this round.
+
+### Grades (my own look at the rendered sheets)
+
+| list | 1:50 before / after | 1:100 | 1:200 | 1:500 |
+|---|---|---|---|---|
+| body | C / A- | C+ / A- | C+ / B+ | C / B |
+| structure | B / A- | B / B+ | B- / B | C / B- |
+| thermal | B / B+ | B / B+ | B / B+ | B- / B |
+
+Before: a long pointed horse-like wedge head with a 32 mm muzzle tip, thin plank ears, angular ham and shoulder flaps poking out of the fleece at stifle and elbow, ragged wool cuffs at hock and knee; 1:500 ears as two barrels, the head a cone; the cervical spine a straight bar in the neck.
+
+### Changes
+
+- 1:50 body: skull and mandible tables rewritten (broad poll with wool cap, slight Roman nose, deep cheek, blunt 62 x 72 mm muzzle; mandible widened so cheek and jaw read as one mass); ears 15 % wider at the base, thicker and carried 18 degrees down; ham and shoulder lofts pulled inside the fleece (outer face 0.155 and 0.125 m from the midline against the fleece half width 0.171 and 0.127 m at stifle and elbow height), so the legs leave the fleece cleanly; gaskin and forearm end inside the cannon top (no cuff); topknot lowered into the forehead.
+- 1:50 structure: cervical spine redrawn in its curve (C7/T1 0.670/0.575, then 0.745/0.588, 0.800/0.628, 0.840/0.684, 0.874/0.740 to the atlas 0.907/0.774).
+- 1:100, 1:200: head tables blunter and deeper at the muzzle (same proportions as 1:50).
+- 1:500: ears as tapering leaf lofts at the 75 mm floor instead of cylinders; head with a muzzle row; leg upper masses end at the lower post radius. Triangle count kept below 1:200 (`volumes-monotonic`).
+- 2D of all four scales redrawn from the new solids (ruling E1), 218 shapes.
+
+### Checks
+
+`r3-validate.ts animals/sheep --catalog-only --volumes`: schema 0, validateAsset 0, checkVolumes 3. `volumes-check.ts --product`: 38 ok, 3 fail, all the same pre-existing `hooves` area line (1:50 0.0372 m² exposed against 0.016 declared, 1:100 0.0244, 1:200 total 0.066 against 0.038); row added to `area-review.md` (open; `area-decisions.md` holds the earlier reviewer view that 0.016 is right for a hoof ring without soles). Silhouette IoU elevation / front / plan: 0.996 / 0.993 / 0.995 (1:50), 0.993 / 0.991 / 0.994, 0.984 / 0.983 / 0.992, 0.975 / 0.953 / 0.973. Spliced with `volumes-insert.py`.
+
+### Opened
+
+Six-view body sheets of all four scales (before and after), 1:50 three-quarter close-ups after every iteration, structure and thermal (cut) six-view sheets of all four scales, the 2D of all four scales (`r3-2d.ts`), all 15 poses at 1:50 (three contact sheets), clip `graze-cycle` at t 1 s.
+
+### Remaining issues
+
+- `hooves` area dispute (above): not mine to change (C18, C27).
+- The fleece is still a smooth two-loft volume with one seam ring at the loin; no staple texture (a lobed fleece was tried in round 3 and read as barnacles).
+- Thermal: each region declares one layer, so there is no skin core under the fleece shell.
+- 1:500 lower legs and structure bars stand at the 75 mm feature floor (real cannon 30 mm); 1:200 ears are 33 mm thick leaves. Floors of the scale, not modelling choices.
+- 1:500 structure is one bar per bone with ball digits (minimal by design).

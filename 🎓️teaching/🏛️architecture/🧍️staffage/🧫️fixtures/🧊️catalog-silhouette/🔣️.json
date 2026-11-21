@@ -15,5 +15,16 @@
     { "id": "stroke-on-nothing", "cell": 0.001, "bodies": [[0, -0.015, 1, 0.015]], "drawn": [], "stroke": [[0.2, 0.5], [0.8, 0.5]], "pen": 0.009, "cap": 0.15, "width": 0.009, "shift": 0, "tolerance": 0.0001 },
     { "id": "stroke-beside-filled-shape", "cell": 0.001, "bodies": [[0, -0.2, 1, 0.2]], "drawn": [[0, -0.2, 1, 0.2]], "stroke": [[0.2, 0.05], [0.8, 0.05]], "pen": 0.009, "cap": 0.15, "width": 0.002, "shift": 0, "tolerance": 0.0011 },
     { "id": "stroke-on-wide-body", "cell": 0.001, "bodies": [[0, -0.3, 1, 0.3]], "drawn": [], "stroke": [[0.2, 0], [0.8, 0]], "pen": 0.009, "cap": 0.15, "width": 0.15, "shift": 0, "tolerance": 0.003 }
+  ],
+  "workingDimensions": [
+    {"asset": "🛋️furniture/folding-deck-chair", "solid": "strut-arm", "axis": 1, "metres": 0.032},
+    {"asset": "🛋️furniture/folding-deck-chair", "solid": "strut-arm", "axis": 2, "metres": 0.02},
+    {"asset": "🛋️furniture/folding-deck-chair", "solid": "strut-bar", "axis": 2, "metres": 0.58},
+    {"asset": "🪑️objects/patio-heater", "solid": "knob", "axis": 0, "metres": 0.027},
+    {"asset": "🪑️objects/patio-heater", "solid": "knob", "axis": 1, "metres": 0.047},
+    {"asset": "🪑️objects/waste-bin", "solid": "floor", "axis": 1, "metres": 0.0075},
+    {"asset": "🛋️furniture/height-adjustable-desk", "solid": "monitor-screen", "axis": 0, "metres": 0.598},
+    {"asset": "🛋️furniture/height-adjustable-desk", "solid": "monitor-screen", "axis": 2, "metres": 0.002},
+    {"asset": "🔌️appliances/vacuum-cleaner", "solid": "wand-tube", "axis": 1, "metres": 0.035}
   ]
 }

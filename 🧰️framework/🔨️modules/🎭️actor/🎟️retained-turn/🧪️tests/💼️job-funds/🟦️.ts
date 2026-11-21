@@ -78,15 +78,24 @@ function kernelSource() {
   return new OriginalOperationSource(admission, clock(10n));
 }
 
-test("a Kernel-issued job request spends the actor's source and reports one aggregate receipt", async () => {
+test("a short job slice preserves the Kernel-issued clock authority", () => {
+  const source = kernelSource();
+  const turn = source.issue();
+  const started = source.operationClockUs();
+  const funds = new OriginalJobFunds(source.operation, started, 1_000n, () => source.operationClockUs(), turn);
+  expect(funds.crossing().input.work.absoluteDeadlineUs).toBe(turn.deadlineUs);
+  expect(funds.crossing().deadlineUs).toBe(started + 1_000n);
+  expect(funds.outputCrossing().input.work.absoluteDeadlineUs).toBe(turn.deadlineUs);
+});
+
+test("a Kernel-issued job request spends the actor's source and reports each guest receipt", async () => {
   const source = kernelSource();
   const receipts: OriginalOperationReceipt[] = [];
   const { jobs } = guest([new Uint8Array([1, 2, 3])]);
   const value = await originalSourceJob(source, (receipt) => receipts.push(receipt), 1_000n, (funds) => funds.step(jobs, 5n));
   expect(value).toEqual({ status: "done", value: new Uint8Array([1, 2, 3]) });
-  expect(receipts).toHaveLength(1);
-  expect(receipts[0]!.spent.copiedBytes).toBe(3);
-  expect(receipts[0]!.workUnitsSpent).toBe(3);
+  expect(receipts.map((receipt) => receipt.input.epoch)).toEqual([1n, 2n, 3n]);
+  expect(receipts.map((receipt) => receipt.spent.copiedBytes)).toEqual([0, 3, 0]);
   expect(source.retainedRemaining.maximumCopyBytes).toBe(997);
   expect(source.fuelRemaining).toBe(997);
   expect(source.outstanding).toBe(false);
@@ -97,8 +106,39 @@ test("a failing Kernel-issued request still reports its spend and throws its own
   const receipts: OriginalOperationReceipt[] = [];
   const { jobs } = guest([new Uint8Array([1])]);
   await expect(originalSourceJob(source, (receipt) => receipts.push(receipt), 1_000n, async (funds) => { await funds.step(jobs, 5n); throw new Error("first"); })).rejects.toThrow("first");
-  expect(receipts).toHaveLength(1);
+  expect(receipts).toHaveLength(3);
   expect(source.outstanding).toBe(false);
+});
+
+test("pending start, output read and acknowledgement receive fresh original epochs", async () => {
+  const source = kernelSource();
+  const receipts: OriginalOperationReceipt[] = [];
+  const wires: Uint8Array[] = [];
+  const reactor = {
+    admitActorInput: async (wire: Uint8Array, budget: { input: unknown }) => {
+      wires.push(wire);
+      return reply(budget, zero, { ready: true, disposition: "retained" });
+    },
+  };
+  let starts = 0, reads = 0, acknowledgements = 0;
+  const jobs = {
+    startJob: async (_job: bigint, budget: { input: unknown }) => reply(budget, zero, { admitted: ++starts === 2 }),
+    stepJob: async (_job: bigint, budget: { input: unknown }) => reply(budget, zero, { outcome: some({ state:"done", byteLength:2n }) }),
+    readJobOutput: async (_job: bigint, budget: { input: unknown }) => ++reads === 1
+      ? reply(budget, { ...zero, copiedBytes:2n }, { chunk: some({ offset:0n, bytes:some(Uint8Array.of(3, 7)), outputClosed:false }) })
+      : reply(budget, { ...zero, releasedBytes:2n }, { chunk: some({ offset:2n, bytes:none, outputClosed:true }) }),
+    acknowledgeJobOutput: async (_job: bigint, budget: { input: unknown }) =>
+      reply(budget, { ...zero, releasedBytes: ++acknowledgements === 1 ? 1n : 0n }, { acknowledged: acknowledgements === 2 }),
+  };
+  const report = (receipt: OriginalOperationReceipt) => receipts.push(receipt);
+  await originalSourceJob(source, report, 1_000n, (funds) => funds.start({ reactor, jobs } as never, 9n, "kind", Uint8Array.of(21)));
+  const result = await originalSourceJob(source, report, 1_000n, (funds) => funds.step(jobs as never, 9n));
+  expect(result).toEqual({ status:"done", value:Uint8Array.of(3,7) });
+  expect(wires).toHaveLength(2);
+  expect(wires[0]!.length).toBeGreaterThan(wires[1]!.length);
+  expect(receipts.map((receipt) => receipt.input.epoch)).toEqual(Array.from({ length:9 }, (_, i) => BigInt(i+1)));
+  expect(source.retainedRemaining.maximumCopyBytes).toBe(998);
+  expect(source.retainedRemaining.maximumReleaseBytes).toBe(997);
 });
 
 test("a request larger than the source's remaining stock is refused and cannot spend beyond it", async () => {
@@ -110,11 +150,11 @@ test("a request larger than the source's remaining stock is refused and cannot s
 
 function childGuest(poll: () => Promise<unknown>, copiedBytes = 0n) {
   const calls: string[] = [];
-  const retained = (turn: { retained: { operation: bigint; generation: bigint; epoch: bigint; grant: unknown } }) => ({ input: { operation: turn.retained.operation, generation: turn.retained.generation, epoch: turn.retained.epoch, grant: turn.retained.grant }, spent: { ...zero, copiedBytes }, workUnitsSpent: 1n });
   const guest = {
     reactor: {
-      admitActorContext: async (input: { operation: bigint; generation: bigint; epoch: bigint; grant: unknown }) => (calls.push("admit"), { input: { operation: input.operation, generation: input.generation, epoch: input.epoch, grant: input.grant }, spent: { ...zero, copiedItems: 1n }, workUnitsSpent: 1n, ready: true, refusal: none }),
-      poll: async (_events: unknown[], budget: never) => (calls.push("poll"), (await poll(), { retainedReceipt: retained(budget) })),
+      admitActorContext: async (budget: { input: unknown }) => (calls.push("admit"), reply(budget, { ...zero, copiedItems: 1n }, { ready: true })),
+      admitActorInput: async (_wire: Uint8Array, budget: { input: unknown }) => reply(budget, zero, { ready: true, disposition:"retained" }),
+      poll: async (budget: { input: unknown }) => (calls.push("poll"), (await poll(), { retainedReceipt: reply(budget, { ...zero, copiedBytes }) })),
     },
     jobs: {},
   } as unknown as OriginalGuestExports;

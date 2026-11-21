@@ -15,3 +15,46 @@ Feature: The volume agrees with the authored silhouettes
     Given the authored shapes and the projected solids of a view
     When their exact IoU is computed
     Then it is at least 0.80 and the owned raster IoU is within 0.03 of it
+
+  Scenario: A gathered parasol carries its cloth and both heat-exchange faces through the sewn radial pleats
+    Given eight fabric gores with three pleats per gore
+    When the open and furled poses are measured at each digital scale
+    Then each gore and its two thermal skins have the bounds of their physical fold transforms
+    And the canopy spans more than 2.4 metres open and less than 0.65 metres furled
+
+  Scenario: A drawn extrusion names a missing joint
+    Given a canopy drawing bound to a joint absent from the rig
+    When the asset is validated
+    Then validation reports the invalid weight on its drawing
+
+  Scenario: An inextensible fan joins two moving rays
+    Given a four-facet fan with a 48 degree flat cut on a tilted crown
+    When the two rays meet or open by 1, 8, 16, 32 or 48 degrees
+    Then each 12 degree facet retains its area and meets the next facet at its hem
+    And the outer two seams follow their driving rays
+
+  Scenario: A folded sheet is drawn edge-on in a second view
+    Given a 600 by 340 millimetre panel of 2 millimetres thickness
+    When its elevation, front and plan are projected for the drawing
+    Then the smallest drawn width of its bone is 2 millimetres
+
+  Scenario: A long mesh review releases its oldest cached geometry
+    Given two distinct tessellations and more than 40 MiB of additional geometry
+    When one original mesh is read repeatedly during the review
+    Then the hot mesh is reused and the cold mesh is regenerated with identical positions and indices
+
+  Scenario: A cloth profile blends two joints with different inverse bind matrices
+    Given a fabric facet with a quarter of its weight on one rib and three quarters on the next
+    When the frame folds
+    Then the three-dimensional inspector and elevation drawing agree with the independently transformed vertices
+
+  Scenario: Retained physical sections of a goat horn
+    Given a measured horn loft at 1:50
+    When its 1:500 model retains the ends and an ordered selection of its cross sections
+    Then the digital feature keeps its real dimensions, including under a new solid name
+    And a narrower station, a displaced base or a changed material fails the physical correspondence check
+
+  Scenario: Scale preserves the working dimensions of household components
+    Given the catalog fixture of timber stock, turned dowel, valve knob, bin floor, cover glass and steel wand dimensions
+    When each body mesh is tessellated at every digital scale
+    Then its bounding interval along the specified local axis has the independently specified dimension

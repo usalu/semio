@@ -101,10 +101,59 @@ impl RasterStackPreparation {
 
 const STACK_STOCK:semio_framework_value::RetainedCloneGrant=semio_framework_value::RetainedCloneGrant {maximum_items:1<<22,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<25,maximum_release_bytes:1<<26,maximum_depth:256};
 
-/// ⏱️ Advances one stack job under a fresh finite ledger and refuses a turn that made no progress.
+/// ⏱️ Advances bounded stack work and yields before another physical allocation.
+fn advance_stack_turn(job:&mut RasterStackJob,budget:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)
+    -> semio_framework_value::RetainedWorkOutcome<(semio_framework_pixels::editing::PixelProgress,semio_framework_value::RetainedCloneProgress)>
+{
+    use semio_framework_pixels::editing::PixelEditError;
+    use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind,work::RetainedWorkLedger};
+    let remaining = match effect.remaining_work_units() {
+        Ok(remaining) => remaining,
+        Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 },
+    };
+    let budget = budget.min(usize::try_from(remaining).unwrap_or(usize::MAX));
+    let mut ledger = RetainedWorkLedger::new(effect.grant());
+    let mut work = 0;
+    let mut state = job.progress();
+    let mut failure = None;
+    for _ in 0..budget {
+        if state.done || ledger.blocked() || effect.actual().is_some() { break; }
+        let turn = job.advance(1,&mut ledger,effect.actual());
+        let performed = job.last_turn_work();
+        work += performed;
+        match turn {
+            Ok(next) => state = next,
+            Err(error) => {
+                failure = Some(match error {
+                    PixelEditError::Invalid(message) => message,
+                    PixelEditError::Incomplete => "Pixel operation is incomplete",
+                    PixelEditError::Cancelled => "Pixel operation cancelled",
+                });
+                break;
+            }
+        }
+        if performed == 0 { break; }
+    }
+    let progress = ledger.receipt();
+    let paid = if work == 0 { Ok(true) } else { effect.performed(work) };
+    let result = match paid {
+        Err(error) => Err(error.with_retained_progress(progress)),
+        Ok(false) if work != 0 => Err(ValueError::literal(ValueRefusalKind::WorkLimit,"composite exceeded original work").with_retained_progress(progress)),
+        _ => match failure {
+            Some(message) => Err(ValueError::literal(ValueRefusalKind::InvalidValue,message).with_retained_progress(progress)),
+            None => Ok((state,progress)),
+        },
+    };
+    RetainedWorkOutcome { result, work:u128::from(work) }
+}
+
+/// ⏱️ Drives one caller-bounded turn at the blocking export edge.
 pub fn advance_stack(job:&mut RasterStackJob,budget:usize)->Result<semio_framework_pixels::editing::PixelProgress,String> {
-    let progress=job.advance(budget,&mut semio_framework_value::work::RetainedWorkLedger::new(STACK_STOCK)).map_err(|error|error.to_string())?;
-    if !progress.done&&job.last_turn_work()==0 {return Err("Composite made no progress under its ledger".into());}
+    use semio_framework_pixels::{BlockingTurns,EffectTurns};
+    let mut turns = BlockingTurns::new(u64::try_from(budget).unwrap_or(u64::MAX));
+    let turn = turns.turn(STACK_STOCK,|effect| advance_stack_turn(job,budget,effect)).map_err(|error|error.to_string())?;
+    let (progress,_) = turn.result.map_err(|error|error.to_string())?;
+    if !progress.done && turn.work==0 { return Err("Composite made no progress under its ledger".into()); }
     Ok(progress)
 }
 
@@ -119,29 +168,25 @@ pub fn raster_composite_job(document:&RasterSnapshot)->Result<RasterStackJob,Str
 pub fn raster_composite_image(document:&RasterSnapshot)->Result<SemioImageSnapshot,String> {
     let mut job=raster_composite_job(document)?;
     while !advance_stack(&mut job,65536)?.done {}
-    let output=job.into_result().map_err(|e|e.to_string())?;
+    let output=job.into_result(&mut semio_framework_pixels::BlockingTurns::new(65536)).map_err(|e|e.to_string())?;
     if output.empty{return Err("no visible pixel layer: there is nothing to flatten into a raster composite".into());}
     let image=output.image;
     Ok(SemioImageSnapshot {schema:STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),width:image.width,height:image.height,colorspace:SemioColorspace::Rgba,bit_depth:8,frames:vec![SemioImageFrame {delay_ms:0,rgba8:image.pixels}],icc:None,metadata:Vec::new()})
 }
 
-/// 📥️ The inverse hub hop every real pixel IMPORT in this subset ends on: one decoded
-/// `s.stdio.semio/v1/image` becomes a one-`Pixel`-layer raster document whose single asset child is
-/// that same content (canonicalized to PNG bytes by the real png serializer, exactly as
-/// `raster_document_from_dwg_drawing`/`raster_image_layer_and_asset` already do).
-pub fn raster_document_from_semio_image(image: &SemioImageSnapshot, id_prefix: &str, title: &str) -> Result<RasterSnapshot, String> {
-    if image.width == 0 || image.height == 0 {
-        return Err(format!("{id_prefix}: decoded image is {}x{} — an empty raster cannot become a pixel layer", image.width, image.height));
+/// 📥️ Creates one editable pixel layer backed by the decoded source image.
+pub fn raster_document_from_semio_image(image: SemioImageSnapshot, id_prefix: &str, title: &str) -> Result<RasterSnapshot, String> {
+    let pixels = validate_extent(image.width, image.height).map_err(|error| format!("{id_prefix}: {error}"))?;
+    if image.frames.is_empty() || image.frames.iter().any(|frame| frame.rgba8.len() != pixels * 4) {
+        return Err(format!("{id_prefix}: decoded image frames must match the RGBA8 extent"));
     }
-    let data = png_bytes_from_semio_image(image)?;
     let asset_key = semio_s_artifact_raster_raster_model::create_raster_id(&format!("{id_prefix}-asset"));
     let mut layer = semio_s_artifact_raster_raster_model::create_pixel_layer(title, image.width, image.height);
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
     }
-    let asset = RasterImageAsset { mime: "image/png".into(), data };
-    let handle = crate::mint_raster_asset_child(&asset_key, &asset);
-    let mut assets = semio_s_artifact_raster_raster_model::RasterOwnedMap::new();
+    let handle = image_content_child_handle(&asset_key, &image).with_local_owner(Arc::new(image));
+    let mut assets = RasterOwnedMap::new();
     assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
     Ok(RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: semio_s_artifact_raster_raster_model::create_raster_id(id_prefix), title: Some(title.into()), layers: vec![layer], assets })
 }

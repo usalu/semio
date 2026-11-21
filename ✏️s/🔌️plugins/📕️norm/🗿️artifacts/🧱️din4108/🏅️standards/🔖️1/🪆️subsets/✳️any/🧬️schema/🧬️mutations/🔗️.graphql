@@ -1,3 +1,39 @@
 # 🧬️ Din4108 mutations aggregate.
 
-union Din4108Mutation = Din4108ChangeClimateZone | Din4108ChangeUsage | Din4108ChangeTIntC | Din4108ChangeRhInt | Din4108ChangeAirtightnessN50 | Din4108ChangeHasMechanicalVentilation | Din4108ChangeBb2DetailsConform | Din4108InsertZone | Din4108RemoveZone | Din4108ChangeZoneFloorArea | Din4108ChangeZoneHeaviness | Din4108ChangeZoneNightVentilation | Din4108InsertZoneWindow | Din4108RemoveZoneWindow | Din4108ChangeZoneWindowArea | Din4108ChangeZoneWindowGValue | Din4108ChangeZoneWindowShadingFc | Din4108InsertElement | Din4108RemoveElement | Din4108ChangeElementArea | Din4108ChangeElementAdjacent | Din4108ChangeElementKind | Din4108InsertLayer | Din4108RemoveLayer | Din4108ReorderLayers | Din4108ChangeLayerThickness | Din4108ChangeLayerLambda | Din4108ChangeLayerMu | Din4108ChangeLayerMaterialId | Din4108InsertThermalBridge | Din4108RemoveThermalBridge | Din4108ChangeThermalBridgePsi | Din4108ChangeThermalBridgeLength
+union Din4108Mutation = Din4108ChangeClimateZone | Din4108ChangeUsage | Din4108ChangeTIntC | Din4108ChangeRhInt | Din4108ChangeAirtightnessN50 | Din4108ChangeHasMechanicalVentilation | Din4108ChangeBb2DetailsConform | Din4108InsertZone | Din4108RemoveZone | Din4108ChangeZoneFloorArea | Din4108ChangeZoneHeaviness | Din4108ChangeZoneNightVentilation | Din4108InsertZoneWindow | Din4108RemoveZoneWindow | Din4108ChangeZoneWindowArea | Din4108ChangeZoneWindowGValue | Din4108ChangeZoneWindowShadingFc | Din4108InsertElement | Din4108RemoveElement | Din4108ChangeElementArea | Din4108ChangeElementAdjacent | Din4108ChangeElementKind | Din4108InsertLayer | Din4108RemoveLayer | Din4108ReorderLayers | Din4108ChangeLayerThickness | Din4108ChangeLayerLambda | Din4108ChangeLayerMu | Din4108ChangeLayerMaterialId | Din4108InsertThermalBridge | Din4108RemoveThermalBridge | Din4108ChangeThermalBridgePsi | Din4108ChangeThermalBridgeLength | Din4108InsertCase | Din4108RemoveCase | Din4108ChangeCaseNumber | Din4108ChangeCaseText | Din4108ChangeCaseLabelEn | Din4108ChangeCaseLabelDe | Din4108ChangeCaseEntryId
+
+type Din4108InsertCase {
+  index: Int!
+  case: CaseRow!
+}
+
+type Din4108RemoveCase {
+  id: String!
+}
+
+type Din4108ChangeCaseNumber {
+  caseId: String!
+  key: String!
+  value: Float
+}
+
+type Din4108ChangeCaseText {
+  caseId: String!
+  key: String!
+  value: String
+}
+
+type Din4108ChangeCaseLabelEn {
+  caseId: String!
+  newValue: String!
+}
+
+type Din4108ChangeCaseLabelDe {
+  caseId: String!
+  newValue: String!
+}
+
+type Din4108ChangeCaseEntryId {
+  caseId: String!
+  newValue: String!
+}

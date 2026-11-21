@@ -2,14 +2,25 @@ import {watch,type FSWatcher} from "node:fs";
 import {lstat} from "node:fs/promises";
 import {basename,dirname} from "node:path";
 import {observePhysicalFileV1} from "../../../../../📁️filesystem/🧾️observation/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../🔒️leases/🎛️control/🟦️.ts";
 import limits from "./🔣️.json" with {type:"json"};
+import diagnosticSchema from "./🧬️diagnostic.json" with {type:"json"};
 
 export type CargoAdmittedSourceV1=Readonly<{path:string;digest:string}>;
 export type CargoSourceDriftV1=Readonly<{path:string;expected:string;observed:string}>;
 
+/** 🧷️ Records only the admitted path and proved digest pair in the compiler owner's existing progress stream. */
+export async function publishCargoSourceDriftV1(control:Pick<ResourceLeaseControl,"publish">,mismatch:CargoSourceDriftV1):Promise<void>{
+  const record={version:1,path:mismatch.path,expected:mismatch.expected,observed:mismatch.observed};
+  if(record.expected===record.observed||validateJsonSchemaSubset(diagnosticSchema,record).length)return;
+  try{await control.publish({resource:"cargo:running-source-digest-mismatch:"+JSON.stringify(record),mode:"shared",elapsedMs:0});}catch{}
+}
+
 /** 🔭️ Uses file events and a rolling metadata scan as hints to compare stable bytes against the admitted plan during a retained compile.
+ * A callback returning false declines the mismatch and keeps the watcher active.
  * @see ./🔣️.json */
-export function watchCargoSourceDriftV1(inputs:Iterable<CargoAdmittedSourceV1>,admissionStartedMs:number,onDrift:(mismatch:CargoSourceDriftV1)=>void):()=>Promise<void>{
+export function watchCargoSourceDriftV1(inputs:Iterable<CargoAdmittedSourceV1>,admissionStartedMs:number,onDrift:(mismatch:CargoSourceDriftV1)=>boolean|void):()=>Promise<void>{
   const directories=new Map<string,Map<string,CargoAdmittedSourceV1>>();
   const paths=new Map<string,CargoAdmittedSourceV1>(),watchers=new Set<FSWatcher>(),queued=new Set<CargoAdmittedSourceV1>();
   let stopped=false,selected=0,timer:ReturnType<typeof setTimeout>|undefined,reading:Promise<void>|undefined;
@@ -68,10 +79,7 @@ export function watchCargoSourceDriftV1(inputs:Iterable<CargoAdmittedSourceV1>,a
       remainingMs:()=>end-performance.now(),
       onProgress:()=>{},
     }).catch(()=>undefined);
-    if(!stopped&&claim&&claim.sha256!==input.digest){
-      close();
-      onDrift({path:input.path,expected:input.digest,observed:claim.sha256});
-    }
+    if(!stopped&&claim&&claim.sha256!==input.digest&&onDrift({path:input.path,expected:input.digest,observed:claim.sha256})!==false)close();
   }
   function close():void{
     stopped=true;

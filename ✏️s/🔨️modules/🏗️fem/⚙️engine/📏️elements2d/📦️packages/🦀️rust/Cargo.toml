@@ -19,3 +19,7 @@ path = "../../🦀️.rs"
 semio-s-fem-algebra = { workspace = true }
 semio-s-fem-formulation = { workspace = true }
 semio-s-fem-model = { workspace = true }
+
+[[test]]
+name = "mounted-cells"
+path = "../../🧪️tests/🌀️mounted-cells/🦀️.rs"

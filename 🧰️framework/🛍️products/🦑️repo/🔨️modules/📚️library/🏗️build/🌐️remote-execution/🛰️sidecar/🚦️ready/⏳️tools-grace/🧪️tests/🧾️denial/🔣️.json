@@ -1,0 +1,112 @@
+{
+  "cases": [
+    {
+      "code": "not-eligible",
+      "eligible": false,
+      "now": 501,
+      "silent": 0,
+      "sample": "valid"
+    },
+    {
+      "code": "not-eligible",
+      "eligible": true,
+      "now": 500,
+      "silent": 0,
+      "sample": "valid"
+    },
+    {
+      "code": "budget-exhausted",
+      "eligible": true,
+      "now": 601,
+      "silent": 100,
+      "sample": "missing"
+    },
+    {
+      "code": "progress-quiet",
+      "eligible": true,
+      "now": 550,
+      "silent": 46,
+      "sample": "missing"
+    },
+    {
+      "code": "sample-missing",
+      "eligible": true,
+      "now": 501,
+      "silent": 45,
+      "sample": "missing"
+    },
+    {
+      "code": "sample-unqualified",
+      "eligible": true,
+      "now": 501,
+      "silent": 0,
+      "sample": "unqualified"
+    },
+    {
+      "code": "sample-unqualified",
+      "eligible": true,
+      "now": 501,
+      "silent": 0,
+      "sample": "future"
+    },
+    {
+      "code": "sample-stale",
+      "eligible": true,
+      "now": 507,
+      "silent": 0,
+      "sample": "valid"
+    },
+    {
+      "code": "series-unqualified",
+      "eligible": true,
+      "now": 501,
+      "silent": 0,
+      "sample": "reset"
+    },
+    {
+      "code": "series-needs-advances",
+      "eligible": true,
+      "now": 501,
+      "silent": 0,
+      "sample": "once"
+    },
+    {
+      "code": "series-needs-advances",
+      "eligible": true,
+      "now": 530,
+      "silent": 0,
+      "sample": "expired-progress"
+    },
+    {
+      "code": null,
+      "eligible": true,
+      "now": 501,
+      "silent": 45,
+      "sample": "valid"
+    },
+    {
+      "code": null,
+      "eligible": true,
+      "now": 506,
+      "silent": 0,
+      "sample": "valid"
+    },
+    {
+      "code": null,
+      "eligible": true,
+      "now": 600,
+      "silent": 0,
+      "sample": "at-budget"
+    }
+  ],
+  "schema": [
+    "not-eligible",
+    "budget-exhausted",
+    "progress-quiet",
+    "sample-missing",
+    "sample-unqualified",
+    "sample-stale",
+    "series-unqualified",
+    "series-needs-advances"
+  ]
+}

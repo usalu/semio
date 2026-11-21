@@ -12,6 +12,8 @@ use crate::compiled_components::shared_plugin_runtime;
 use crate::plugin_artifact_channel::shared_compiled_component;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
+#[cfg(not(target_arch = "wasm32"))]
+use semio_framework_value::{native_decoding::NativeCallFailure, native_encoding::NativeEncodingReceiverFrame, RetainedWorkOutcome, ValueError, ValueRefusalKind};
 
 //#region 🗂️GuestDocumentCodec
 
@@ -199,29 +201,123 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_export(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase> {
+#[derive(semio_framework_value::RetireOwned)]
+struct GuestSqliteCall<T: semio_framework_value::RetireOwned> {
+    receiver: Option<NativeEncodingReceiverFrame>,
+    result: NativeCallFailure<T, semio_framework::io_schema::IoError>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: semio_framework_value::RetireOwned> GuestSqliteCall<T> {
+    fn new() -> Self {
+        Self { receiver: None, result: NativeCallFailure { output: None, operation: None, context: None, receipt_refusal: None } }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+macro_rules! receive_guest_sqlite {
+    ($native:expr, $call:expr, $operation:expr) => {{
+        let native = $native;
+        let call = $call;
+        let run = native.with_encoding_receiver(&mut call.receiver, &mut call.result, |remaining, observer, allocation, _, _, output, fault| {
+            match ($operation)(remaining, observer, allocation) {
+                Ok(value) => *output = Some(value),
+                Err(error) => *fault = Some(error),
+            }
+        });
+        let settle = (|| -> Result<(), store::NativeSnapshotFailure> {
+            if let Some(receiver) = call.receiver.as_mut().filter(|receiver| !semio_framework_value::RetireOwned::retirement_ready(*receiver)) {
+                receiver.settle_pair()?;
+                let allocation = receiver.take_allocation_failure()?;
+                native.release_encoding_receiver(receiver)?;
+                if !allocation.is_empty() {
+                    return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "guest SQLite call has an unsettled allocation refusal").into());
+                }
+            }
+            Ok(())
+        })();
+        match (run, settle) {
+            (Ok(()), settle) => settle,
+            (Err(error), Ok(())) => Err(error.into()),
+            (Err(error), Err(settle)) => Err(settle.with_context_refusal(error)),
+        }
+    }};
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(semio_framework_value::RetireOwned)]
+struct GuestSqliteExportFrame {
+    guest: GuestSqliteCall<semio_plugin_guest_contract::sqlite_wire::SnapshotFileResult>,
+    database: Option<semio_framework::sqlite_snapshot::SqliteDatabase>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_export(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, output: &mut Option<semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase>>, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> RetainedWorkOutcome<(), store::NativeSnapshotFailure> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
     use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
     use semio_os_kernel::io::{self};
     use semio_plugin_guest_contract::{sqlite_wire, GuestCallCancellation};
-    control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
-    let route = guest_sqlite_route(schema, dialect)?;
-    let (encoding, bytes) = match payload { IoPayload::Binary(bytes) => (SnapshotEncoding::Binary, bytes.as_slice()), IoPayload::Text(text) => (SnapshotEncoding::Text, text.as_bytes()) };
-    let limits = control.limits();
-    let cancel = GuestCallCancellation::default();
-    let _reactor = hub_socket_reactor().map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string())))?.enter();
-    let mut progress_refusal = None;
-    let grant=native.grant();
-    let result=native.native().with_encoding_receiver(|remaining,observer,allocate|{
-        let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
-        semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled,&dialect.to_coordinate(),encoding.as_str(),bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
-    })?;
-    let file = match result { sqlite_wire::SnapshotFileResult::Done(file) => file, sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(rejection.into_io_error().map_err(IoError::from_value_error)?), sqlite_wire::SnapshotFileResult::Pending(_) => return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "guest SQLite export remains in guest custody pending its funded retirement"))) };
-    let mut database = sqlite_snapshot::import_sqlite_database_controlled(&file.bytes, control).map_err(IoError::from_value_error)?;
-    let (actual, actual_encoding) = io::io_mechanism::take_sqlite_snapshot_metadata_controlled(&mut database,control).map_err(IoError::from_value_error)?;
-    if actual != *dialect || actual_encoding != encoding { return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "guest SQLite export metadata disagrees with its exact requested snapshot"))); }
-    Ok(IoOutcome { value: database, diagnostics: sqlite_wire::decode_diagnostics(&file.diagnostics).map_err(IoError::from_value_error)? })
+    native.receive_nested::<GuestSqliteExportFrame, _, store::NativeSnapshotFailure>(output, &mut |slot, produced, _, _, native| store::native_snapshot_turn(|work| {
+        work.admit(native.native())?;
+        *slot = Some(GuestSqliteExportFrame { guest: GuestSqliteCall::new(), database: None });
+        let frame = slot.as_mut().unwrap();
+        *produced = Some((|| {
+            control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
+            let route = guest_sqlite_route(schema, dialect)?;
+            let (encoding, bytes) = match payload { IoPayload::Binary(bytes) => (SnapshotEncoding::Binary, bytes.as_slice()), IoPayload::Text(text) => (SnapshotEncoding::Text, text.as_bytes()) };
+            let limits = control.limits();
+            let cancel = GuestCallCancellation::default();
+            let _reactor = hub_socket_reactor().map_err(|error| IoError::from_value_error(ValueError::new(ValueRefusalKind::InvariantViolated, error.to_string())))?.enter();
+            let mut progress_refusal = None;
+            let grant = native.remaining_grant();
+            receive_guest_sqlite!(native.native(), &mut frame.guest, |remaining, observer, allocate| {
+                let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining, observer, allocate).map_err(IoError::from_value_error)?;
+                semio_framework_async::block_on(route.runtime.codec_sqlite_export(&route.compiled, &dialect.to_coordinate(), encoding.as_str(), bytes, limits, &headless_codec_budget(), |_, _| {
+                    if let Err(cause) = control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0) { if progress_refusal.is_none() { progress_refusal = Some(cause) } cancel.cancel(); }
+                }, &cancel, grant, &mut identity)).map_err(|error| progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(|| guest_sqlite_turn_error(error)))
+            }).map_err(|cause| IoError { cause, diagnostics: Vec::new() })?;
+            let wire = guest_sqlite_reply(&mut frame.guest)?;
+            let file = match wire {
+                sqlite_wire::SnapshotFileResult::Done(file) => file,
+                sqlite_wire::SnapshotFileResult::Rejected(rejection) => return Err(guest_sqlite_rejection(rejection)?),
+                sqlite_wire::SnapshotFileResult::Pending(_) => return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit, "guest SQLite export remains in guest custody pending its funded retirement"))),
+            };
+            frame.database = Some(sqlite_snapshot::import_sqlite_database_controlled(&file.bytes, control).map_err(IoError::from_value_error)?);
+            let (actual, actual_encoding) = io::io_mechanism::take_sqlite_snapshot_metadata_controlled(frame.database.as_mut().unwrap(), control).map_err(IoError::from_value_error)?;
+            if actual != *dialect || actual_encoding != encoding { return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue, "guest SQLite export metadata disagrees with its exact requested snapshot"))); }
+            let diagnostics = sqlite_wire::decode_diagnostics(&file.diagnostics).map_err(IoError::from_value_error)?;
+            Ok(IoOutcome { value: frame.database.take().unwrap(), diagnostics })
+        })());
+        Ok(())
+    }))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_reply<T: semio_framework_value::RetireOwned>(call: &mut GuestSqliteCall<T>) -> Result<&mut T, semio_framework::io_schema::IoError> {
+    use semio_framework::io_schema::IoError;
+    let mut failure = call.result.operation.take();
+    if let Some(context) = call.result.context.take() {
+        failure = Some(match failure {
+            Some(IoError { cause, diagnostics }) => IoError { cause: cause.with_context_refusal(context), diagnostics },
+            None => IoError::from_value_error(context),
+        });
+    }
+    if let Some(receipt) = call.result.receipt_refusal.take() {
+        failure = Some(match failure {
+            Some(IoError { cause, diagnostics }) => IoError { cause: cause.with_receipt_refusal(receipt), diagnostics },
+            None => IoError::from_value_error(receipt),
+        });
+    }
+    if let Some(error) = failure { return Err(error); }
+    call.result.output.as_mut().ok_or_else(|| IoError::from_value_error(ValueError::invariant("guest SQLite call produced no reply")))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_sqlite_rejection(rejection: &mut semio_plugin_guest_contract::sqlite_wire::SnapshotRejection) -> Result<semio_framework::io_schema::IoError, semio_framework::io_schema::IoError> {
+    use semio_framework::io_schema::IoError;
+    let diagnostics = semio_plugin_guest_contract::sqlite_wire::decode_diagnostics(&rejection.diagnostics).map_err(IoError::from_value_error)?;
+    Ok(IoError { cause: ValueError::new(rejection.kind, std::mem::take(&mut rejection.message)).into(), diagnostics })
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -230,7 +326,7 @@ struct GuestSqliteImportFrame {
     pub(crate) database: Option<semio_framework::sqlite_snapshot::SqliteDatabase>,
     pub bytes: Vec<u8>,
     pub(crate) coordinate: String,
-    pub(super) wire: Option<semio_plugin_guest_contract::sqlite_wire::SnapshotPayloadResult>,
+    guest: GuestSqliteCall<semio_plugin_guest_contract::sqlite_wire::SnapshotPayloadResult>,
     diagnostics: Vec<semio_framework::Diagnostic>,
 }
 
@@ -259,15 +355,18 @@ pub(crate) fn guest_sqlite_import_coordinate(dialect:&semio_framework_artifact_r
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, output: &mut Option<semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload>>, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> RetainedWorkOutcome<(), store::NativeSnapshotFailure> {
     use semio_framework::{io_schema::{IoError,IoOutcome,IoPayload},sqlite_snapshot::{self,SqliteSnapshotPhase}};
     use semio_plugin_guest_contract::{sqlite_wire,GuestCallCancellation};
     use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant};
-    if database.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"guest SQLite import original database is absent")))}
-    native.receive_nested::<GuestSqliteImportFrame,semio_framework::io_schema::IoResult<IoPayload>>(|slot,native|{
-        *slot=Some(GuestSqliteImportFrame{database:database.take(),bytes:Vec::new(),coordinate:String::new(),wire:None,diagnostics:Vec::new()});
+    if database.is_none(){return RetainedWorkOutcome { result: Err(ValueError::invariant("guest SQLite import original database is absent").into()), work: 0 }}
+    native.receive_nested::<GuestSqliteImportFrame, _, store::NativeSnapshotFailure>(output, &mut |slot, produced, marker, failure, native| store::native_snapshot_turn(|work| {
+        work.admit_encode(native.native())?;
+        *slot=Some(GuestSqliteImportFrame{database:None,bytes:Vec::new(),coordinate:String::new(),guest:GuestSqliteCall::new(),diagnostics:Vec::new()});
         let frame=slot.as_mut().unwrap();
-        Ok((||{
+        work.take(native.move_existing(database, &mut frame.database, marker, failure))?;
+        marker.reset_completed()?;
+        *produced=Some((||{
             control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0).map_err(IoError::from_value_error)?;
             let route=guest_sqlite_route(schema,dialect)?;
             let limits=control.limits();
@@ -278,15 +377,12 @@ pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifa
             let _reactor=hub_socket_reactor().map_err(|error|IoError::from_value_error(ValueError::new(ValueRefusalKind::InvariantViolated,error.to_string())))?.enter();
             let mut progress_refusal=None;
             let grant:RetainedCloneGrant=native.remaining_grant();
-            frame.wire=Some(native.native().with_encoding_receiver(|remaining,observer,allocate|{
+            receive_guest_sqlite!(native.native(), &mut frame.guest, |remaining,observer,allocate|{
                 let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new_forwarded(remaining,observer,allocate).map_err(IoError::from_value_error)?;
                 semio_framework_async::block_on(route.runtime.codec_sqlite_import(&route.compiled,&frame.coordinate,&frame.bytes,limits,&headless_codec_budget(),|_,_|{if let Err(cause)=control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0){if progress_refusal.is_none(){progress_refusal=Some(cause)}cancel.cancel();}},&cancel,grant,&mut identity)).map_err(|error|progress_refusal.take().map(IoError::from_value_error).unwrap_or_else(||guest_sqlite_turn_error(error)))
-            })?);
-            match frame.wire.as_mut().unwrap(){
-                sqlite_wire::SnapshotPayloadResult::Rejected(rejection)=>{
-                    frame.diagnostics=sqlite_wire::decode_diagnostics(&rejection.diagnostics).map_err(IoError::from_value_error)?;
-                    Err(IoError{cause:ValueError::new(rejection.kind,std::mem::take(&mut rejection.message)).into(),diagnostics:std::mem::take(&mut frame.diagnostics)})
-                },
+            }).map_err(|cause| IoError { cause, diagnostics: Vec::new() })?;
+            match guest_sqlite_reply(&mut frame.guest)? {
+                sqlite_wire::SnapshotPayloadResult::Rejected(rejection)=>Err(guest_sqlite_rejection(rejection)?),
                 sqlite_wire::SnapshotPayloadResult::Pending(_)=>Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"guest SQLite import retains its original component ticket"))),
                 sqlite_wire::SnapshotPayloadResult::Done(payload)=>{
                     if payload.encoding.as_str()!=encoding.as_str(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue,"guest SQLite import returned a different native encoding")))}
@@ -297,8 +393,9 @@ pub(crate) fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifa
                     Ok(IoOutcome{value,diagnostics:std::mem::take(&mut frame.diagnostics)})
                 },
             }
-        })())
-    }).map_err(IoError::from_value_error)?
+        })());
+        Ok(())
+    }))
 }
 
 /// 🗂️ Registers `artifact_schema`'s document codec from the component's OWN `codec` export, and [Design notes](README.md#source-notes-326).

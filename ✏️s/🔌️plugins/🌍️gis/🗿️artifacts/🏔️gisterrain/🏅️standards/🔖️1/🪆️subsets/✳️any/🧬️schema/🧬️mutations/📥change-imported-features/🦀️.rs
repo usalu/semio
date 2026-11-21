@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 //#region 🔹Payload
 /// 📥️ Sets `GisTerrainSnapshot::imported_map` to `new_imported_map`. Diff/
 /// inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]

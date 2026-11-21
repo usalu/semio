@@ -21,7 +21,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Builds the exact present artifact and app contributions.
 pub fn plugin() -> Result<Plugin<StdioMediaApps>, PluginAssemblyError> {
-    let mut builder = Plugin::<StdioMediaApps>::builder("stdio-media").label("Stdio Media").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-media").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
+    let mut builder = semio_plugin::PluginBuilder::<semio_plugin::NeedsLabel, StdioMediaApps>::new("stdio-media").label("Stdio Media").version(env!("CARGO_PKG_VERSION")).package_id("semio:stdio-media").schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS).depends_on("stdio", semio_framework::tree_pin!());
     builder = builder.host_artifact(semio_s_artifact_stdio_mp4::declaration(semio_s_artifact_stdio_mp4::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_avi::declaration(semio_s_artifact_stdio_avi::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_mp3::declaration(semio_s_artifact_stdio_mp3::definition()?).map_err(PluginAssemblyError::definition)?);

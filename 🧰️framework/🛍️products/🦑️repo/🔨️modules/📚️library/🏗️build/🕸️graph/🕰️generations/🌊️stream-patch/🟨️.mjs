@@ -34,7 +34,7 @@ export function emptyFactIndexViewV1(){return openFactIndexV1(encodeFactIndexV1(
 
 /** 🧶️ Merges the classes of an index into the coarsest exact partition over typed lists: rows that sit in the same classes share one group, groups with equal consumers merge (`classesOfChunksV1` over the classes as runs), and an owner without any row keeps one empty class. */
 function refineClassesV1(classes,ownerCount,rowCount){
- const merged=classesOfChunksV1(rowCount,{chunks:classes.map(cls=>cls.r),holders:classes.map(cls=>cls.o)},{typed:true}),covered=new Uint8Array(ownerCount);
+ const merged=classesOfChunksV1(rowCount,{chunks:classes.map(cls=>cls.r),holders:classes.map(cls=>cls.o)},{ownerCount}),covered=new Uint8Array(ownerCount);
  for(const cls of merged)for(const owner of cls.o)covered[owner]=1;
  for(const cls of classes)for(const owner of cls.o)if(!covered[owner]){covered[owner]=1;merged.push({r:[],o:[owner]});}
  return merged;

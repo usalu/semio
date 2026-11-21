@@ -361,7 +361,7 @@ pub fn apply_focused_text_editor_key(key: &semio_ui_wgpu_input::KeyAction, modif
 //#endregion ✍️TextEditorFocus
 
 //#region ✏️TableEditableTextFocus
-struct FocusedTableEditableText {
+pub struct FocusedTableEditableText {
     pub window_id: String,
     pub window_generation: u64,
     pub node: NodeId,
@@ -530,7 +530,7 @@ pub fn apply_focused_table_editable_text_key(key: &semio_ui_wgpu_input::KeyActio
 //#endregion ✏️TableEditableTextFocus
 
 //#region 📊️TableStepperFocus
-struct FocusedTableStepper {
+pub struct FocusedTableStepper {
     pub window_id: String,
     pub window_generation: u64,
     pub node: NodeId,

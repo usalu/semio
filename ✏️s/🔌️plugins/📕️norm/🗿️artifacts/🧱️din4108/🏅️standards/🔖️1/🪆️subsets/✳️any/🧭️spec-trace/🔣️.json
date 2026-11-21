@@ -1,0 +1,441 @@
+{
+ "code": "din4108",
+ "standard": "DIN 4108",
+ "spec": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/din4108-thermal-bridge-and-edition-scope-2026-11-21.md",
+ "specIds": [
+  "D-02",
+  "D-03",
+  "D-04",
+  "D-05",
+  "D-06",
+  "D-07",
+  "D-08",
+  "D-09",
+  "D-10",
+  "D-11",
+  "D-12",
+  "D-13",
+  "D-14",
+  "D-15",
+  "D-16",
+  "D-17",
+  "D-18",
+  "D-19",
+  "D-20",
+  "D-21",
+  "D-22",
+  "D-23",
+  "D-24",
+  "D-25",
+  "D-26",
+  "D-27",
+  "D-28",
+  "D-29"
+ ],
+ "items": [
+  {
+   "id": "D-02",
+   "clause": "DIN 4108-2:2013-02 Table 3",
+   "entity": "EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-2.table3.",
+     "din4108-2.mass."
+    ]
+   },
+   "description": {
+    "en": "The opaque-element report checks thermal resistance and areal mass for supported constructions.",
+    "de": "Für unterstützte opake Bauteile werden Wärmedurchlasswiderstand und flächenbezogene Masse geprüft."
+   }
+  },
+  {
+   "id": "D-03",
+   "clause": "DIN 4108-2:2013-02 §6.2",
+   "entity": "EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-2.frsi."
+    ]
+   },
+   "description": {
+    "en": "The reported minimum surface temperature factor uses the stored component and interior design conditions.",
+    "de": "Der ausgewiesene Mindesttemperaturfaktor verwendet das gespeicherte Bauteil und die Innenrandbedingungen."
+   }
+  },
+  {
+   "id": "D-04",
+   "clause": "DIN 4108-2:2013-02 §8.3",
+   "entity": "ThermalZone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-2.summer."
+    ]
+   },
+   "description": {
+    "en": "The supported solar-gain check uses the modeled zone geometry and windows.",
+    "de": "Der Sonneneintragskennwert für unterstützte Fälle verwendet die modellierte Zone und deren Fenster."
+   }
+  },
+  {
+   "id": "D-05",
+   "clause": "DIN 4108-2:2026-05",
+   "entity": "EnvelopeElement / ThermalZone",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The publication changes thermal requirements and verification methods. The 2026 tables and method branches need a clause-level comparison.",
+     "de": "Die neue Ausgabe ändert Anforderungen und Nachweisverfahren. Die Tabellen und Verfahrenszweige von 2026 müssen abschnittsweise abgeglichen werden."
+    }
+   },
+   "description": {
+    "en": "The publication changes thermal requirements and verification methods. The 2026 tables and method branches need a clause-level comparison.",
+    "de": "Die neue Ausgabe ändert Anforderungen und Nachweisverfahren. Die Tabellen und Verfahrenszweige von 2026 müssen abschnittsweise abgeglichen werden."
+   }
+  },
+  {
+   "id": "D-06",
+   "clause": "DIN 4108-3:2024-03 §5.2 and Annex A",
+   "entity": "EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-3.glaser.",
+     "din4108-3.drying."
+    ]
+   },
+   "description": {
+    "en": "The layer stack reaches the fixed-boundary moisture balance and the live drying comparison.",
+    "de": "Der Schichtaufbau fließt in die Feuchtebilanz mit festen Randbedingungen und den Vergleich der Austrocknung ein."
+   }
+  },
+  {
+   "id": "D-07",
+   "clause": "DIN 4108-3:2024-03 §5.3 and Annex A",
+   "entity": "EnvelopeElement",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "Additional eligible or exempt constructions and the material-specific acceptability clauses still require normative implementation.",
+     "de": "Weitere zulässige oder nachweisfreie Konstruktionen und die materialspezifischen Zulässigkeitsregeln sind noch umzusetzen."
+    }
+   },
+   "description": {
+    "en": "Additional eligible or exempt constructions and the material-specific acceptability clauses still require normative implementation.",
+    "de": "Weitere zulässige oder nachweisfreie Konstruktionen und die materialspezifischen Zulässigkeitsregeln sind noch umzusetzen."
+   }
+  },
+  {
+   "id": "D-08",
+   "clause": "DIN 4108-4:2020-11 Table 1",
+   "entity": "LayerDocument",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-4.lambda."
+    ]
+   },
+   "description": {
+    "en": "Layers with known material identifiers reach the current design thermal-conductivity lookup. The full 2020 material table remains open.",
+    "de": "Schichten mit bekannten Materialkennungen erreichen die vorhandene Bemessungswertabfrage. Die vollständige Materialtabelle von 2020 steht aus."
+   }
+  },
+  {
+   "id": "D-09",
+   "clause": "DIN 4108-7:2026-04",
+   "entity": "Din4108Snapshot",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The measured air-change result is available. The 2026 design, execution and documentation provisions need their own workflow.",
+     "de": "Das Messergebnis zum Luftwechsel liegt vor. Planung, Ausführung und Dokumentation nach der Ausgabe 2026 erfordern einen eigenen Ablauf."
+    }
+   },
+   "description": {
+    "en": "The measured air-change result is available. The 2026 design, execution and documentation provisions need their own workflow.",
+    "de": "Das Messergebnis zum Luftwechsel liegt vor. Planung, Ausführung und Dokumentation nach der Ausgabe 2026 erfordern einen eigenen Ablauf."
+   }
+  },
+  {
+   "id": "D-10",
+   "clause": "DIN/TS 4108-8:2022-09",
+   "entity": "ThermalZone",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The current surface temperature check is one input. The complete mould-risk method and its construction and occupancy branches still need implementation.",
+     "de": "Die aktuelle Oberflächentemperatur ist eine Eingangsgröße. Das vollständige Schimmelrisikoverfahren mit Konstruktions- und Nutzungsfällen steht aus."
+    }
+   },
+   "description": {
+    "en": "The current surface temperature check is one input. The complete mould-risk method and its construction and occupancy branches still need implementation.",
+    "de": "Die aktuelle Oberflächentemperatur ist eine Eingangsgröße. Das vollständige Schimmelrisikoverfahren mit Konstruktions- und Nutzungsfällen steht aus."
+   }
+  },
+  {
+   "id": "D-11",
+   "clause": "DIN 4108-10:2021-11",
+   "entity": "LayerDocument",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-10.app."
+    ]
+   },
+   "description": {
+    "en": "The application class check supports selected materials. The 2021 in-situ products and smouldering behavior provisions remain open.",
+    "de": "Die Anwendungsprüfung deckt ausgewählte Materialien ab. Ortsgefertigte Produkte und Glimmverhalten nach Ausgabe 2021 stehen noch aus."
+   }
+  },
+  {
+   "id": "D-12",
+   "clause": "DIN 4108-11:2026-08",
+   "entity": "EnvelopeElement",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The durability of adhesives and tapes used for airtight layers requires product-specific test evidence and assessment.",
+     "de": "Die Dauerhaftigkeit von Klebemassen und Klebebändern für luftdichte Schichten erfordert produktspezifische Prüf- und Bewertungsnachweise."
+    }
+   },
+   "description": {
+    "en": "The durability of adhesives and tapes used for airtight layers requires product-specific test evidence and assessment.",
+    "de": "Die Dauerhaftigkeit von Klebemassen und Klebebändern für luftdichte Schichten erfordert produktspezifische Prüf- und Bewertungsnachweise."
+   }
+  },
+  {
+   "id": "D-13",
+   "clause": "DIN 4108 Beiblatt 2:2019-06 §5 / DIN V 18599-2:2018-09 §6.2.5",
+   "entity": "ThermalBridge",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-bb2.delta-u",
+     "din4108-bb2.bridge."
+    ]
+   },
+   "description": {
+    "en": "The report compares the calculated surcharge to the flat-rate reference from documented category A or B equivalence.",
+    "de": "Der Bericht vergleicht den berechneten Zuschlag mit dem Pauschalansatz aus dokumentierter Gleichwertigkeit der Kategorie A oder B."
+   }
+  },
+  {
+   "id": "D-14",
+   "clause": "DIN 4108 Beiblatt 2 Berichtigung 1:2025-02",
+   "entity": "ThermalBridge",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "Corrected figure-specific reference values and geometries need to be checked against explicitly selected catalogue details.",
+     "de": "Berichtigte bildbezogene Referenzwerte und Geometrien müssen mit explizit gewählten Katalogdetails abgeglichen werden."
+    }
+   },
+   "description": {
+    "en": "Corrected figure-specific reference values and geometries need to be checked against explicitly selected catalogue details.",
+    "de": "Berichtigte bildbezogene Referenzwerte und Geometrien müssen mit explizit gewählten Katalogdetails abgeglichen werden."
+   }
+  },
+  {
+   "id": "D-15",
+   "clause": "DIN EN ISO 6946 §6",
+   "entity": "EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-6.u."
+    ]
+   },
+   "description": {
+    "en": "Layer assemblies reach the implemented U-value check, including the supported inhomogeneous cases.",
+    "de": "Schichtaufbauten erreichen die U-Wert-Prüfung einschließlich der unterstützten inhomogenen Fälle."
+   }
+  },
+  {
+   "id": "D-16",
+   "clause": "GModG §26(1)–(2)",
+   "entity": "Din4108Snapshot",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "G26-01"
+   },
+   "description": {
+    "en": "Whole-building test by conditioned air volume and two pressure directions.",
+    "de": "Gebäudeprüfung bezogen auf das konditionierte Luftvolumen und beide Druckrichtungen."
+   }
+  },
+  {
+   "id": "D-17",
+   "clause": "GModG §26(1), (3)",
+   "entity": "Din4108Snapshot",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "G26-02"
+   },
+   "description": {
+    "en": "Envelope-area alternative for conditioned air volume above 1,500 m³.",
+    "de": "Hüllflächenalternative bei konditioniertem Luftvolumen über 1.500 m³."
+   }
+  },
+  {
+   "id": "D-18",
+   "clause": "GModG §26(1)–(4)",
+   "entity": "Din4108Snapshot",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "G26-03"
+   },
+   "description": {
+    "en": "Separate non-residential zone test with documented eligibility and selected normalisation.",
+    "de": "Getrennte Zonenprüfung eines Nichtwohngebäudes mit bestätigter Zulässigkeit und gewählter Bezugsgröße."
+   }
+  },
+  {
+   "id": "D-19",
+   "clause": "GModG §26(1), (2), (5)",
+   "entity": "Din4108Snapshot",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "G26-04"
+   },
+   "description": {
+    "en": "Measured airflows for a documented Annex NB sample of identical exterior-access units.",
+    "de": "Gemessene Volumenströme für eine dokumentierte Stichprobe nach Anhang NB gleichartiger, von außen erschlossener Einheiten."
+   }
+  },
+  {
+   "id": "D-20",
+   "clause": "DIN 4108-3:2024-03 Annex A.2.2, A.2.5, A.2.6 and Annex B",
+   "entity": "EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din4108-3.glaser.",
+     "din4108-3.drying."
+    ]
+   },
+   "description": {
+    "en": "The winter profile uses the rounded boundary pressures and prescribed surface resistances. The summer balance uses fixed saturation and allows a remaining wet plane to dry toward both sides.",
+    "de": "Das Winterprofil verwendet gerundete Randdampfdrücke und die vorgegebenen Wärmeübergangswiderstände. Die Sommerbilanz verwendet feste Sättigungswerte und lässt eine verbleibende Tauebene beidseitig austrocknen."
+   }
+  },
+  {
+   "id": "D-21",
+   "clause": "DIN 4108-3:2024-03 §5.2.1",
+   "entity": "EnvelopeElement / CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINA-01"
+   },
+   "description": {
+    "en": "The persisted site assessment selects whether the Annex A period method applies and excludes sites above 700 m.",
+    "de": "Die gespeicherte Standortbeurteilung bestimmt die Anwendbarkeit des Periodenverfahrens und schließt Standorte über 700 m aus."
+   }
+  },
+  {
+   "id": "D-22",
+   "clause": "DIN 4108-3:2024-03 Table A.3",
+   "entity": "EnvelopeElement / CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINA-02"
+   },
+   "description": {
+    "en": "The roof case binds an authored element ID to the applicable summer exposure and drying pressure.",
+    "de": "Der Dachfall ordnet der Bauteil-ID die maßgebliche sommerliche Dachrandbedingung und den Verdunstungsdampfdruck zu."
+   }
+  },
+  {
+   "id": "D-23",
+   "clause": "DIN 4108-3:2024-03 §5.3.3.3",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINA-03"
+   },
+   "description": {
+    "en": "An assessed room-side insulation assembly for a floor slab reports the recommendation for a vapour control layer with sd of at least 20 m.",
+    "de": "Bei einem beurteilten Aufbau einer raumseitig gedämmten Bodenplatte wird die Empfehlung einer dampfbremsenden Schicht mit sd von mindestens 20 m ausgewiesen."
+   }
+  },
+  {
+   "id": "D-24",
+   "clause": "DIN 4108-3:2024-03 §5.3.5 Figure 17",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINA-04"
+   },
+   "description": {
+    "en": "An assessed attic ceiling checks outdoor ventilation openings, layer diffusion resistances and the fraction of thermal resistance on the room side of the airtight layer.",
+    "de": "Eine beurteilte oberste Geschossdecke wird auf Außenlüftungsöffnungen, Diffusionswiderstände der Schichten und den raumseitigen Wärmeleitwiderstandsanteil der Luftdichtheitsschicht geprüft."
+   }
+  },
+  {
+   "id": "D-25",
+   "clause": "DIN 4108-3:2024-03 §5.3.3.2",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINA-05"
+   },
+   "description": {
+    "en": "The perimeter-insulated slab assessment checks the share of layer resistance on the room side of DIN 18533 waterproofing.",
+    "de": "Die Beurteilung einer Bodenplatte mit Perimeterdämmung prüft den Anteil des Wärmedurchlasswiderstands raumseitig der Abdichtung nach DIN 18533."
+   }
+  },
+  {
+   "id": "D-26",
+   "clause": "DIN 4108-3:2024-03 §5.3.2.2",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINA-06"
+   },
+   "description": {
+    "en": "An external wall with internal insulation checks the thermal resistance bands and the associated diffusion resistance.",
+    "de": "Eine Außenwand mit Innendämmung wird auf die Bereiche des Wärmedurchlasswiderstands und den zugehörigen Diffusionswiderstand geprüft."
+   }
+  },
+  {
+   "id": "D-27",
+   "clause": "DIN 4108-3:2024-03 §5.3.4.2.1–2 and Table 3",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINA-07"
+   },
+   "description": {
+    "en": "Figure 4 and 5 roof construction cases check the three Table 3 diffusion bands and the room-side resistance fraction.",
+    "de": "Die Dachfälle nach Bild 4 und Bild 5 prüfen die drei Diffusionsbereiche aus Tabelle 3 und den raumseitigen Anteil des Wärmedurchlasswiderstands."
+   }
+  },
+  {
+   "id": "D-28",
+   "clause": "DIN 4108-3:2024-03 §5.2.2–§5.2.3",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINA-08"
+   },
+   "description": {
+    "en": "The element's recorded material evidence selects the condensate mass cap and checks durability and the separate timber and wood-product moisture increases.",
+    "de": "Die erfassten Baustoffnachweise des Bauteils bestimmen die Tauwassermassengrenze und prüfen Beständigkeit sowie die getrennten Feuchtezunahmen für Holz und Holzwerkstoffe."
+   }
+  },
+  {
+   "id": "D-29",
+   "clause": "DIN 4108-7:2026-04 §4 and Annex B",
+   "entity": "CaseRow",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DINL-01"
+   },
+   "description": {
+    "en": "The project records the route of the airtight layer, junction and penetration concepts, material locations and quality assurance references.",
+    "de": "Das Projekt erfasst den Verlauf der Luftdichtheitsebene, Anschluss- und Durchdringungskonzepte, die Baustoffzuordnung und Verweise zur Qualitätssicherung."
+   }
+  }
+ ]
+}

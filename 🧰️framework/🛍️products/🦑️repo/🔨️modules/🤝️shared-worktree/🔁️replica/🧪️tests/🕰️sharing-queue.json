@@ -21,5 +21,15 @@
       "due": 1500,
       "other": 0
     }
-  ]
+  ],
+  "settledClash": {
+    "path": "incoming/held.txt",
+    "first": "incoming held item",
+    "replacement": "different current winner bytes",
+    "cooling": [
+      1,
+      1,
+      1
+    ]
+  }
 }

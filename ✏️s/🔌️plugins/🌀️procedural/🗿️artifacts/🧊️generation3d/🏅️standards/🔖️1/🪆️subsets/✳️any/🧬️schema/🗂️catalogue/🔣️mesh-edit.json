@@ -22,8 +22,8 @@
         "de": "Kanten abschrägen"
       },
       "description": {
-        "en": "Rounds the selected edges of a closed convex mesh with several profile segments.",
-        "de": "Rundet die ausgewählten Kanten eines geschlossenen konvexen Netzes mit mehreren Profilsegmenten ab."
+        "en": "Rounds selected edges of a closed convex mesh or one isolated convex edge with enough clearance on a concave closed mesh.",
+        "de": "Rundet ausgewählte Kanten eines geschlossenen konvexen Netzes oder eine einzelne konvexe Kante mit genügend Freiraum in einem geschlossenen konkaven Netz ab."
       },
       "inputs": [
         {
@@ -119,6 +119,416 @@
           }
         ]
       },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.extrudeBoundary",
+      "category": "mesh.edit",
+      "emoji": "📏️",
+      "label": {
+        "en": "Extrude boundary edges",
+        "de": "Randkanten extrudieren"
+      },
+      "description": {
+        "en": "Extrudes one exposed open chain of boundary edges by a displacement vector.",
+        "de": "Extrudiert eine freiliegende offene Kette von Randkanten entlang eines Verschiebungsvektors."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh to edit.",
+            "de": "Das zu bearbeitende Polygonnetz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "edges",
+          "label": {
+            "en": "Edges",
+            "de": "Kanten"
+          },
+          "description": {
+            "en": "The boundary edges of one connected open chain.",
+            "de": "Die Randkanten einer zusammenhängenden offenen Kette."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "mesh",
+            "multiple": true
+          },
+          "minItems": 1,
+          "default": [
+            0
+          ]
+        },
+        {
+          "name": "offset",
+          "label": {
+            "en": "Offset",
+            "de": "Verschiebung"
+          },
+          "description": {
+            "en": "Displacement along X, Y and Z.",
+            "de": "Verschiebung entlang X, Y und Z."
+          },
+          "type": "vector",
+          "default": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The source mesh and the new wall strip.",
+            "de": "Das Ausgangsnetz und der neue Wandstreifen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "edge",
+            "port": "edges"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.bridge",
+      "category": "mesh.edit",
+      "emoji": "🌉️",
+      "label": {
+        "en": "Bridge boundary loops",
+        "de": "Randschleifen verbinden"
+      },
+      "description": {
+        "en": "Connects two disjoint boundary loops on one mesh using an edge from each loop to set their alignment.",
+        "de": "Verbindet zwei getrennte Randschleifen eines Netzes. Je eine Kante pro Schleife legt ihre Ausrichtung fest."
+      },
+      "inputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh containing both boundary loops.",
+            "de": "Das Polygonnetz mit beiden Randschleifen."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "firstEdge",
+          "label": {
+            "en": "First boundary edge",
+            "de": "Erste Randkante"
+          },
+          "description": {
+            "en": "Anchor edge on the first loop.",
+            "de": "Ankerkante der ersten Schleife."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "mesh",
+            "multiple": false
+          },
+          "maxItems": 1,
+          "default": []
+        },
+        {
+          "name": "secondEdge",
+          "label": {
+            "en": "Second boundary edge",
+            "de": "Zweite Randkante"
+          },
+          "description": {
+            "en": "Matching anchor edge on the second loop.",
+            "de": "Zugehörige Ankerkante der zweiten Schleife."
+          },
+          "type": "selection",
+          "selection": {
+            "component": "edge",
+            "source": "mesh",
+            "multiple": false
+          },
+          "maxItems": 1,
+          "default": []
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The mesh with faces connecting the two loops.",
+            "de": "Das Netz mit den Verbindungsflächen zwischen den beiden Schleifen."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "interaction": {
+        "pick": [
+          {
+            "component": "mesh",
+            "port": "mesh"
+          },
+          {
+            "component": "edge",
+            "port": "firstEdge"
+          },
+          {
+            "component": "edge",
+            "port": "secondEdge"
+          }
+        ]
+      },
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.intersect",
+      "category": "mesh.edit",
+      "emoji": "🔀️",
+      "label": {
+        "en": "Intersect meshes",
+        "de": "Netze schneiden"
+      },
+      "description": {
+        "en": "Keeps the shared volume of two closed convex meshes with compatible surface channels. Contact without shared volume yields an empty mesh.",
+        "de": "Behält das gemeinsame Volumen zweier geschlossener konvexer Netze mit kompatiblen Oberflächenkanälen. Eine Berührung ohne gemeinsames Volumen ergibt ein leeres Netz."
+      },
+      "inputs": [
+        {
+          "name": "first",
+          "label": {
+            "en": "First mesh",
+            "de": "Erstes Netz"
+          },
+          "description": {
+            "en": "The first closed convex mesh.",
+            "de": "Das erste geschlossene konvexe Netz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "second",
+          "label": {
+            "en": "Second mesh",
+            "de": "Zweites Netz"
+          },
+          "description": {
+            "en": "The second closed convex mesh.",
+            "de": "Das zweite geschlossene konvexe Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh enclosing the shared volume.",
+            "de": "Das Polygonnetz, das das gemeinsame Volumen umschließt."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.difference",
+      "category": "mesh.edit",
+      "emoji": "➖️",
+      "label": {
+        "en": "Subtract meshes",
+        "de": "Netze subtrahieren"
+      },
+      "description": {
+        "en": "Removes the volume of a closed convex tool from a closed convex mesh for a face cut, a corner cut, an opposing slab, a four-wall through tunnel, a blind pocket, or an enclosed cavity. A slab can leave separate shells, and full coverage yields an empty mesh.",
+        "de": "Entfernt das Volumen eines geschlossenen konvexen Werkzeugs aus einem geschlossenen konvexen Netz bei einem Flächen- oder Eckenschnitt, einer Platte, einem Durchgang mit vier Wänden, einer blinden Tasche oder einem geschlossenen Hohlraum. Eine Platte kann getrennte Schalen hinterlassen, und eine vollständige Überdeckung ergibt ein leeres Netz."
+      },
+      "inputs": [
+        {
+          "name": "first",
+          "label": {
+            "en": "Stock mesh",
+            "de": "Ausgangsnetz"
+          },
+          "description": {
+            "en": "The closed convex mesh to cut.",
+            "de": "Das geschlossene konvexe Netz, das geschnitten wird."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "second",
+          "label": {
+            "en": "Tool mesh",
+            "de": "Werkzeugnetz"
+          },
+          "description": {
+            "en": "A closed convex mesh defining the volume to remove.",
+            "de": "Ein geschlossenes konvexes Netz, das das zu entfernende Volumen festlegt."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The remaining part of the stock mesh.",
+            "de": "Der verbleibende Teil des Ausgangsnetzes."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.union",
+      "category": "mesh.edit",
+      "emoji": "🤝️",
+      "label": {
+        "en": "Unite meshes",
+        "de": "Netze vereinigen"
+      },
+      "description": {
+        "en": "Unites closed convex meshes when one contains the other, a supporting plane separates them, or the overlapping parts join along a complete opposing face.",
+        "de": "Vereinigt geschlossene konvexe Netze, wenn eines das andere enthält, eine Stützebene sie trennt oder die überlappenden Teile an einer vollständigen Gegenfläche zusammenpassen."
+      },
+      "inputs": [
+        {
+          "name": "first",
+          "label": {
+            "en": "First mesh",
+            "de": "Erstes Netz"
+          },
+          "description": {
+            "en": "The first closed convex mesh.",
+            "de": "Das erste geschlossene konvexe Netz."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "second",
+          "label": {
+            "en": "Second mesh",
+            "de": "Zweites Netz"
+          },
+          "description": {
+            "en": "The second closed convex mesh.",
+            "de": "Das zweite geschlossene konvexe Netz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The polygon mesh enclosing both inputs.",
+            "de": "Das Polygonnetz, das beide Eingaben umschließt."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
+      "preview": true
+    },
+    {
+      "id": "mesh.edit.combine",
+      "category": "mesh.edit",
+      "emoji": "🔗️",
+      "label": {
+        "en": "Combine meshes",
+        "de": "Netze zusammenführen"
+      },
+      "description": {
+        "en": "Places the faces of two meshes in one mesh and preserves their separate topology and compatible surface channels.",
+        "de": "Führt die Flächen zweier Netze in einem Netz zusammen und behält ihre getrennte Topologie und kompatiblen Oberflächenkanäle bei."
+      },
+      "inputs": [
+        {
+          "name": "first",
+          "label": {
+            "en": "First mesh",
+            "de": "Erstes Netz"
+          },
+          "description": {
+            "en": "The mesh whose vertices and faces come first.",
+            "de": "Das Netz, dessen Eckpunkte und Flächen zuerst übernommen werden."
+          },
+          "type": "mesh"
+        },
+        {
+          "name": "second",
+          "label": {
+            "en": "Second mesh",
+            "de": "Zweites Netz"
+          },
+          "description": {
+            "en": "The mesh added after the first one.",
+            "de": "Das Netz, das nach dem ersten übernommen wird."
+          },
+          "type": "mesh"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "label": {
+            "en": "Mesh",
+            "de": "Netz"
+          },
+          "description": {
+            "en": "The combined polygon mesh.",
+            "de": "Das zusammengeführte Polygonnetz."
+          },
+          "type": "mesh"
+        }
+      ],
+      "quality": "polygon-mesh",
       "preview": true
     },
     {

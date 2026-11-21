@@ -18,10 +18,10 @@ mod pane_smoke;
 #[path = "🪜️composition/🦀️.rs"]
 mod composition;
 
-/// 📥️ LAW: the host delivers extension contributions as the declared `setContributions` command; the UI dispatch door resolves it through the command registry, so the seeded app boots and a second delivery settles.
+/// 📥️ The host delivers both roster updates through the editor's addressed command registry.
 #[semio_framework_async_macros::async_test]
 async fn host_delivered_set_contributions_dispatches_through_the_command_registry() {
     let mut app = crate::context::app_with_registry();
-    crate::context::dispatch(&mut app, Process3dCommand::SetContributions(semio_s_artifact_process_process3d_commands::contribution::set_contributions::SetContributions { json: "[]".into() }));
+    crate::context::install_contributions(&mut app, "[]".into());
     app.snapshot().expect("the app keeps a readable snapshot after the delivery");
 }

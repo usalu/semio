@@ -10,3 +10,15 @@ Feature: Checks window shows every compliance check accessibly and in sync with 
   - Remedies: Given a failing check with an applicable remedy and a choice remedy When the window expands the row Then one chip per remedy or option is shown with its change, and actions are bound only for an editor
   - Locale-aware quantities: Given a length of 12.3 millimetres When rendered in German Then the decimal separator is a comma
   - Shared row component: Given the inspection panel When it renders a check Then it uses the same detail rows as the window
+
+  Scenario: A large failing report stays within the retained document on every page
+    Given 48 expanded checks with long explanations and remedy actions
+    When the host requests each consecutive slice of the Checks listing
+    Then every slice fits the retained UI document node budget
+    And the slices contain each check once in report order with its explanation and remedy
+
+  Scenario: A summary with many parts keeps controls and every part reachable
+    Given a report with 42 parts and declared Checks filtering controls
+    When the host requests the first and subsequent summary pages
+    Then the verdict and filter controls lead the summary
+    And the pages expose one summary row for each report part

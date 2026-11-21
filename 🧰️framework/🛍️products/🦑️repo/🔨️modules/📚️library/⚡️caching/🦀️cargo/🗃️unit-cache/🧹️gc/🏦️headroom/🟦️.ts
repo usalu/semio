@@ -60,15 +60,14 @@ export function headroomOutstandingV1(row:HeadroomRowV1,nowMs:number):number{
  return Math.floor(row.reservedBytes*Math.floor(left*10000/ramp)/10000);
 }
 
-/** 🚦️ Decides whether a command may start: the free space minus the floor, minus what running commands are still expected to write and minus the reservations of the waiting commands that arrived before it must cover its own reservation. A command that does not fit waits, except the only one left (nothing runs or every running row outlived its ramp by the stranded grace, nothing is ahead) once a cleanup has run: waiting can free nothing more, so it goes on and the out-of-space retry handles a real shortfall. Pure and deterministic. */
-export function decideHeadroomV1(input:HeadroomInputV1,rules:Pick<typeof policy,"floorBasisPoints"|"floorMinimumBytes"|"strandedGraceMilliseconds">=policy):HeadroomDecisionV1{
+/** 🚦️ Admits a fitting reservation after accounting for the floor, outstanding writes, and earlier waiters. A cleaned-up image may admit an underfunded request only when no live command runs and no waiter is ahead. */
+export function decideHeadroomV1(input:HeadroomInputV1,rules:Pick<typeof policy,"floorBasisPoints"|"floorMinimumBytes">=policy):HeadroomDecisionV1{
  const others=input.rows.filter(row=>row.id!==input.request.id),running=others.filter(row=>row.state==="running"),floorBytes=headroomFloorBytesV1(input.volumeBytes,rules);
  const heldBytes=running.reduce((sum,row)=>sum+headroomOutstandingV1(row,input.nowMs),0);
  const ahead=others.filter(row=>row.state==="waiting"&&(row.arrivedMs<input.request.arrivedMs||row.arrivedMs===input.request.arrivedMs&&row.id<input.request.id)),aheadBytes=ahead.reduce((sum,row)=>sum+row.reservedBytes,0);
  const room=input.freeBytes-floorBytes-heldBytes-aheadBytes,shortfallBytes=Math.max(0,input.request.reservedBytes-room),facts={floorBytes,heldBytes,aheadBytes,shortfallBytes,running:running.length};
  if(shortfallBytes===0)return Object.freeze({verdict:"admit",reason:"fits",...facts});
- const active=running.filter(row=>row.admittedMs===null||input.nowMs-row.admittedMs<=row.rampMilliseconds+rules.strandedGraceMilliseconds);
- if(active.length===0&&ahead.length===0&&input.reclaimed)return Object.freeze({verdict:"admit",reason:"alone",...facts});
+ if(running.length===0&&ahead.length===0&&input.reclaimed)return Object.freeze({verdict:"admit",reason:"alone",...facts});
  return Object.freeze({verdict:"wait",reason:aheadBytes>0&&input.freeBytes-floorBytes-heldBytes>=input.request.reservedBytes?"queue":"space",...facts});
 }
 
@@ -120,8 +119,8 @@ function readRows(directory:string,realMs:number):HeadroomRowV1[]{
 /** 🔭️ The live commands of the headroom ledger of a cache root: a record counts only while its process lives and keeps it fresh; abandoned records are removed. */
 export function readHeadroomLedgerV1(root:string,realMs:number=Date.now()):HeadroomRowV1[]{return readRows(join(root,layout.headroom),realMs);}
 
-/** 🎟️ An admitted command's hold on the image: `release` ends the reservation and records what the command wrote (`grown`, measured after it ended) under its classes. */
-export type HeadroomLeaseV1=Readonly<{id:string;reservedBytes:number;waitedMs:number;release(grown?:()=>number,temperature?:"warm"|"cold"):Promise<void>}>;
+/** 🎟️ An admitted command's hold on the image: `release` ends the reservation and records what the command wrote under its classes. `imageWriteUncontended` proves that no other measured writer was admitted in its observation interval. */
+export type HeadroomLeaseV1=Readonly<{id:string;reservedBytes:number;waitedMs:number;imageWriteUncontended():boolean;release(grown?:()=>number,temperature?:"warm"|"cold"):Promise<void>}>;
 type SleepV1=(milliseconds:number,signal?:AbortSignal)=>Promise<void>;
 /** 🩺️ How the stale free space of a mounted image is corrected: the free bytes of the APFS container behind the mount and of the host volume that holds the image file, both `undefined` when unknown (not an image, not macOS). */
 export type HeadroomAvailabilityPortsV1=Readonly<{container?:(mount:string)=>number|undefined;host?:(directory:string)=>number|undefined;now?:()=>number}>;
@@ -148,14 +147,21 @@ export function createEffectiveMeasureV1(base:typeof measureVolumeV1=measureVolu
 const effectiveMeasureV1=createEffectiveMeasureV1();
 
 /** 🔌️ What admission touches, replaceable by tests. `reclaim` frees the bytes it is given on demand and answers whether a collection ran. */
-export type HeadroomPortsV1=Readonly<{now?:()=>number;sleep?:SleepV1;measure?:typeof measureVolumeV1;reclaim?:(demandBytes:number)=>Promise<boolean>;pid?:number;id?:string}>;
+export type HeadroomPortsV1=Readonly<{now?:()=>number;sleep?:SleepV1;measure?:typeof measureVolumeV1;reclaim?:(demandBytes:number)=>Promise<boolean>;pid?:number;id?:string;claim?:typeof tryClaimWithBallastV1;writeRecord?:typeof writeAtomic}>;
 
-async function withClaim<T>(root:string,body:()=>T,sleep:SleepV1,attempts:number,signal?:AbortSignal):Promise<T|undefined>{
- for(let attempt=0;attempt<attempts;attempt++){
-  signal?.throwIfAborted();
-  const claim=tryClaimWithBallastV1(join(root,layout.locks),policy.claim);
+async function withClaim<T>(root:string,body:()=>T,options:Readonly<{sleep:SleepV1;attempts:number;signal?:AbortSignal;claim?:typeof tryClaimWithBallastV1;deferFull?:(error:unknown)=>void}>):Promise<T|undefined>{
+ const directory=join(root,layout.locks),path=join(directory,policy.claim+".lock");
+ for(let attempt=0;attempt<options.attempts;attempt++){
+  options.signal?.throwIfAborted();
+  let claim:ReturnType<typeof tryClaimWithBallastV1>;
+  try{claim=(options.claim??tryClaimWithBallastV1)(directory,policy.claim);}
+  catch(error){
+   const failure=error as NodeJS.ErrnoException;
+   if(!options.deferFull||failure?.code!=="ENOSPC"||failure.syscall!=="open"||failure.path!==path)throw error;
+   options.deferFull(error);return;
+  }
   if(claim)try{return body();}finally{claim.release();}
-  await sleep(policy.claimPollMilliseconds,signal);
+  await options.sleep(policy.claimPollMilliseconds,options.signal);
  }
  return undefined;
 }
@@ -169,35 +175,53 @@ export function headroomPriorV1(classes:readonly string[],temperature:"warm"|"co
 /** 🏦️ Admits one Cargo command to the compiler image. The command reserves what its classes (`classes` general to specific, `temperature` of the lane it runs in) wrote before; while the free space does not cover that on top of what the running commands are still expected to write and the floor, it waits in arrival order (the whole wait, claim polls and cleanups included, is a declared queue wait: the process watchdog never reaps a queued command and its deadline does not run while it waits), frees what it can on demand (idle lanes, incremental sessions and cold units, never anything a running command holds) and reports its wait; a cancellation withdraws it. Once admitted, the lease watches the image every `monitorMilliseconds` and frees on demand the moment the free space falls below the floor, and `release` ends the reservation and learns what the command wrote (under the temperature of the lane it actually ran in, when given). An image that cannot be measured admits at once (nothing to protect). */
 export async function admitImageHeadroomV1(options:Readonly<{root:string;capacityBytes:number;classes:readonly string[];temperature:"warm"|"cold";label:string;language:"en"|"de";report:(line:string)=>void;signal?:AbortSignal}&HeadroomPortsV1>):Promise<HeadroomLeaseV1>{
  const now=options.now??Date.now,sleep=options.sleep??sleepV1,measure=options.measure??effectiveMeasureV1,directory=join(options.root,layout.headroom),start=measure(options.root,options.capacityBytes);
- const unlimited:HeadroomLeaseV1=Object.freeze({id:"-",reservedBytes:0,waitedMs:0,release:async()=>{}});
+ const unlimited:HeadroomLeaseV1=Object.freeze({id:"-",reservedBytes:0,waitedMs:0,imageWriteUncontended:()=>false,release:async()=>{}});
  if(start.unmeasured)return unlimited;
  const names=options.classes.map(name=>className(name,options.temperature)),estimate=headroomEstimateV1(readHeadroomHistoryV1(directory),names,headroomPriorV1(options.classes,options.temperature),start.volumeBytes);
  const reclaim=options.reclaim??(async(demandBytes:number)=>!(await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{demandBytes,signal:options.signal,volume:measure})).running);
  const id=options.id??randomBytes(8).toString("hex"),file=join(directory,id+".json"),arrivedMs=now(),pid=options.pid??process.pid;
+ const admissionFile=join(directory,policy.latestAdmissionFile),admissionToken=randomBytes(12).toString("hex");let uncontendedAtAdmission=false;
+ const imageWriteUncontended=():boolean=>{try{return uncontendedAtAdmission&&readRows(directory,Date.now()).every(row=>row.id===id)&&readFileSync(admissionFile,"utf8")===admissionToken;}catch{return false;}};
  ensureBallastV1(options.root);
- const write=(state:"waiting"|"running",admittedMs:number|null)=>roomy(options.root,()=>writeAtomic(file,JSON.stringify({version:1,pid,label:options.label.slice(0,200),id,state,reservedBytes:estimate.reservedBytes,rampMilliseconds:estimate.rampMilliseconds,arrivedMs,admittedMs})));
- try{mkdirSync(directory,{recursive:true});write("waiting",null);}catch{return unlimited;}
- const beat=setInterval(()=>{try{const date=new Date();utimesSync(file,date,date);}catch{}},policy.heartbeatMilliseconds);beat.unref?.();
- let poll=policy.pollMilliseconds,reclaimed=false,lastReclaim=-Infinity,lastProgress=-Infinity,monitor:ReturnType<typeof setInterval>|undefined,admittedMs=0;
+ const write=(state:"waiting"|"running",admittedMs:number|null)=>roomy(options.root,()=>(options.writeRecord??writeAtomic)(file,JSON.stringify({version:1,pid,label:options.label.slice(0,200),id,state,reservedBytes:estimate.reservedBytes,rampMilliseconds:estimate.rampMilliseconds,arrivedMs,admittedMs})));
+ let beat:ReturnType<typeof setInterval>|undefined,deferredAttempts=0;
+ const deferFull=(error:unknown)=>{if(++deferredAttempts>=policy.claimAttempts)throw error;};
+ let poll=policy.pollMilliseconds,reclaimed=false,nextReclaim=-Infinity,lastProgress=-Infinity,monitor:ReturnType<typeof setInterval>|undefined,admittedMs=0;
  const endAdmissionWait=beginAdmissionWaitV1();let leaveWait=()=>{};
  try{
   for(;;){
    {const next=enterScriptProcessWaitV1();leaveWait();leaveWait=next;}
    options.signal?.throwIfAborted();
-   const decided=await withClaim(options.root,()=>{
-    const volume=measure(options.root,options.capacityBytes),at=now(),decision=decideHeadroomV1({freeBytes:volume.freeBytes,volumeBytes:volume.volumeBytes,nowMs:at,request:{id,reservedBytes:estimate.reservedBytes,arrivedMs},rows:readRows(directory,Date.now()),reclaimed});
-    if(decision.verdict==="admit"){admittedMs=at;write("running",at);}
+   if(beat===undefined){
+    try{
+     roomy(options.root,()=>mkdirSync(directory,{recursive:true}));write("waiting",null);
+     beat=setInterval(()=>{try{const date=new Date();utimesSync(file,date,date);}catch{}},policy.heartbeatMilliseconds);beat.unref?.();
+    }catch(error){if((error as NodeJS.ErrnoException)?.code!=="ENOSPC")return unlimited;deferFull(error);}
+   }
+   const decided=beat===undefined?undefined:await withClaim(options.root,()=>{
+    const volume=measure(options.root,options.capacityBytes),at=now(),rows=readRows(directory,Date.now()),decision=decideHeadroomV1({freeBytes:volume.freeBytes,volumeBytes:volume.volumeBytes,nowMs:at,request:{id,reservedBytes:estimate.reservedBytes,arrivedMs},rows,reclaimed});
+    if(decision.verdict==="admit"){admittedMs=at;write("running",at);roomy(options.root,()=>writeAtomic(admissionFile,admissionToken));uncontendedAtAdmission=rows.every(row=>row.id===id);}
     return{decision,volume,at};
-   },sleep,Infinity,options.signal);
-   const {decision,volume,at}=decided!,facts={need:gib(estimate.reservedBytes),free:gib(volume.freeBytes),held:gib(decision.heldBytes),running:decision.running,ahead:gib(decision.aheadBytes),floor:gib(decision.floorBytes),seconds:Math.round((at-arrivedMs)/1000)};
-   if(decision.verdict==="admit"){
+   },{sleep,attempts:Infinity,signal:options.signal,claim:options.claim,deferFull});
+   if(decided)deferredAttempts=0;
+   const volume=decided?.volume??measure(options.root,options.capacityBytes),at=decided?.at??now(),decision=decided?.decision;
+   const facts={need:gib(estimate.reservedBytes),free:gib(volume.freeBytes),held:gib(decision?.heldBytes??0),running:decision?.running??0,ahead:gib(decision?.aheadBytes??0),floor:gib(decision?.floorBytes??headroomFloorBytesV1(volume.volumeBytes)),seconds:Math.round((at-arrivedMs)/1000)};
+   if(decision?.verdict==="admit"){
     if(decision.reason==="alone")options.report(headroomTextV1("alone",facts,options.language));else if(lastProgress>-Infinity)options.report(headroomTextV1("admitted",facts,options.language));
     break;
    }
-   if(at-lastProgress>=policy.progressMilliseconds){lastProgress=at;options.report(headroomTextV1("waiting",facts,options.language));}
-   if(decision.reason==="space"&&at-lastReclaim>=policy.reclaimIntervalMilliseconds){
-    if(lastReclaim===-Infinity)options.report(headroomTextV1("reclaiming",{shortfall:gib(decision.shortfallBytes)},options.language));
-    lastReclaim=at;try{if(await reclaim(decision.shortfallBytes))reclaimed=true;}catch(error){if(options.signal?.aborted)throw error;}
+   if(at-lastProgress>=policy.progressMilliseconds){lastProgress=at;options.report(headroomTextV1(decision?"waiting":"metadataWaiting",facts,options.language));}
+   if((decision===undefined||decision.reason==="space")&&at>=nextReclaim){
+    const shortfall=decision?.shortfallBytes??Math.max(policy.minimumBytes,estimate.reservedBytes+headroomFloorBytesV1(volume.volumeBytes)-volume.freeBytes);
+    if(nextReclaim===-Infinity)options.report(headroomTextV1("reclaiming",{shortfall:gib(shortfall)},options.language));
+    let interval:number=policy.reclaimIntervalMilliseconds;
+    try{
+     if(await reclaim(shortfall)){
+      reclaimed=true;
+      if(measure(options.root,options.capacityBytes).freeBytes<=volume.freeBytes)interval=UNIT_CACHE_POLICY_V1.gc.watchPollMilliseconds;
+     }
+    }catch(error){if(options.signal?.aborted)throw error;}
+    nextReclaim=now()+interval;
     continue;
    }
    await sleep(poll,options.signal);poll=Math.min(policy.pollMaximumMilliseconds,Math.ceil(poll*policy.pollBackoffBasisPoints/10000));
@@ -212,12 +236,12 @@ export async function admitImageHeadroomV1(options:Readonly<{root:string;capacit
   }catch{}
  },policy.monitorMilliseconds);monitor.unref?.();
  let released=false;
- return Object.freeze({id,reservedBytes:estimate.reservedBytes,waitedMs:admittedMs-arrivedMs,async release(grown?:()=>number,temperature?:"warm"|"cold"){
+ return Object.freeze({id,reservedBytes:estimate.reservedBytes,waitedMs:admittedMs-arrivedMs,imageWriteUncontended,async release(grown?:()=>number,temperature?:"warm"|"cold"){
   if(released)return;released=true;clearInterval(beat);clearInterval(monitor);rmSync(file,{force:true});
   if(grown===undefined||options.signal?.aborted)return;
   try{
    const sample:HeadroomSampleV1={bytes:clamp(Math.floor(grown()),0,549755813888),wallMs:clamp(now()-admittedMs,0,86400000),atMs:now()};
-   await withClaim(options.root,()=>roomy(options.root,()=>writeAtomic(historyPath(directory),JSON.stringify(recordHeadroomSampleV1(readHeadroomHistoryV1(directory),temperature===undefined?names:options.classes.map(name=>className(name,temperature)),sample)))),sleep,policy.claimAttempts);
+   await withClaim(options.root,()=>roomy(options.root,()=>writeAtomic(historyPath(directory),JSON.stringify(recordHeadroomSampleV1(readHeadroomHistoryV1(directory),temperature===undefined?names:options.classes.map(name=>className(name,temperature)),sample)))),{sleep,attempts:policy.claimAttempts});
   }catch{}
  }});
 }

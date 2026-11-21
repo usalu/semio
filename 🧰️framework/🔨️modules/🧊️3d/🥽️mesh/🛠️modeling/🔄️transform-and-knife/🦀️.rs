@@ -58,16 +58,52 @@ impl Transform {
         let values=value.as_array().ok_or_else(||MeshKernelError::InvalidInput("invalid authored direction".into()))?;
         if values.len()!=if tangent {4}else {3} {return Err(MeshKernelError::InvalidInput("invalid authored direction dimensions".into()));}
         let coordinate=|axis:usize|values[axis].as_f64().filter(|value|value.is_finite()).ok_or_else(||MeshKernelError::InvalidInput("invalid authored direction coordinate".into()));let point=[coordinate(0)?,coordinate(1)?,coordinate(2)?];
-        let direction=[0,1,2].map(|axis|matrix[axis][0]*point[0]+matrix[axis][1]*point[1]+matrix[axis][2]*point[2]);let length=direction[0].hypot(direction[1]).hypot(direction[2]);let direction=direction.map(|value|value/length);
-        if direction.iter().any(|value|!value.is_finite() || !(*value as f32).is_finite()) {return Err(MeshKernelError::DegenerateOperation);}
+        let direction=Self::transform_direction(point,matrix)?;
         let mut output=direction.into_iter().map(semio_framework_value::DslValue::float).collect::<Vec<_>>();
         if tangent {let handedness=values[3].as_f64().filter(|value|*value==1.0 || *value== -1.0).ok_or_else(||MeshKernelError::InvalidInput("invalid authored tangent handedness".into()))?;output.push(semio_framework_value::DslValue::float(if reflected {-handedness}else {handedness}));}
         Ok(semio_framework_value::DslValue::Array(output))
     }
+    fn transform_direction(point:[f64;3],matrix:[[f64;3];3])->MeshResult<[f64;3]> {
+        let direction=[0,1,2].map(|axis|matrix[axis][0]*point[0]+matrix[axis][1]*point[1]+matrix[axis][2]*point[2]);
+        let length=direction[0].hypot(direction[1]).hypot(direction[2]);
+        if length==0.0||!length.is_finite() {return Err(MeshKernelError::DegenerateOperation);}
+        Ok(direction.map(|value|value/length))
+    }
+
+    fn point_normal(&self)->MeshResult<Option<[f32;3]>> {
+        if self.transform_attributes {
+            if let Some(normal)=self.mesh.vertices[self.vertex].normal {
+                let selected=self.selection.as_ref().is_none_or(|selection|selection.selected.contains(&self.vertex));
+                if !selected {return Ok(Some(normal));}
+                return Self::transform_direction(normal.map(f64::from),self.normal_matrix).map(|point|Some(point.map(|axis|axis as f32)));
+            }
+        }
+        let smooth=self.smooth[self.vertex];
+        Ok(if smooth.length()>0.0 {Some(smooth.normalize().0)}else{self.flat[self.vertex].map(|normal|normal.0)})
+    }
+
+    pub(super) fn surface_demand(&self)->Result<Option<semio_framework_value::RetirementDemand>,semio_framework_value::ValueError> {
+        let mut demand=semio_framework_value::RetirementDemand {depth:3,..Default::default()};
+        if self.phase==12 {
+            let corner=self.attribute_corner.ok_or_else(||semio_framework_value::ValueError::invariant("face direction lost its current corner"))?;
+            let vertex=self.mesh.halfedges[corner as usize].vertex as usize;
+            demand.depth=demand.depth.max(self.selection.as_ref().unwrap().selected.next_contains_depth_demand(&vertex)?.saturating_add(2));
+            return Ok(Some(demand));
+        }
+        if self.phase!=6 {return Ok(None);}
+        if let Some(vertex)=self.mesh.vertices.get(self.vertex) {
+            demand.copy_bytes=size_of::<Option<[f32;3]>>();
+            if self.transform_attributes&&vertex.normal.is_some() {
+                if let Some(selection)=&self.selection {demand.depth=demand.depth.max(selection.selected.next_contains_depth_demand(&self.vertex)?.saturating_add(2));}
+            }
+        }
+        Ok(Some(demand))
+    }
+
     fn directional_matrix(&self,tangent:bool)->([[f64;3];3],bool) {if !tangent {return (self.normal_matrix,false)}let matrix=match self.policy {PositionPolicy::Matrix(matrix)=>matrix.linear.rows,_=>self.component_matrix.unwrap_or_else(||self.matrix.map(|row|row.map(f64::from)))};(matrix,Mat3::from_rows(matrix).determinant()<0.0)}
-    pub(super) fn phase(&self)->&'static str {["transform-vertices","transform-winding","transform-initialize","transform-corners","transform-normal","transform-scatter","transform-vertex-normal","transform-attributes","transform-done","transform-selection","transform-attribute-release","transform-selection-release","transform-attribute-face"][self.phase as usize]}
+    pub(super) fn phase(&self)->&'static str {["transform-vertices","transform-winding","transform-initialize","transform-corners","transform-normal","transform-scatter","transform-vertex-normal","transform-attributes","transform-done","transform-selection","transform-attribute-release","transform-selection-release","transform-attribute-face","transform-attribute-start"][self.phase as usize]}
     pub(super) fn halfedge(&self,index:usize)->u32 {self.hes[if self.mesh.faces[self.face].flipped {self.hes.len()-1-index}else {index}]}
-    pub(super) fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
+    pub(super) fn advance(&mut self,receipt:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{
                 if self.vertex==self.mesh.vertex_count() {self.vertex=0;self.phase=if self.recompute {1}else {8};}else {
@@ -91,7 +127,16 @@ impl Transform {
             }
             4=>{let n=self.hes.len();let point=|i:usize|Vec3(self.mesh.vertices[self.mesh.halfedges[self.halfedge(i%n) as usize].vertex as usize].position);let (a,b)=(point(self.cursor),point(self.cursor+1));if self.cursor==0 {self.normal.set_origin(a);}self.normal.add(a,b);self.cursor+=1;if self.cursor==n {self.face_normal=self.normal.value();self.cursor=0;self.phase=5;}}
             5=>{let vertex=self.mesh.halfedges[self.halfedge(self.cursor) as usize].vertex as usize;if self.flat[vertex].is_none() {self.flat[vertex]=Some(self.face_normal);}if self.mesh.faces[self.face].smooth {self.smooth[vertex]=self.smooth[vertex].add(self.face_normal);}self.cursor+=1;if self.cursor==self.hes.len() {self.face+=1;self.hes.clear();self.normal=Normal::default();self.phase=3;}}
-            6=>{if self.vertex==self.mesh.vertex_count() {if !self.transform_attributes {self.phase=if self.selection.is_some() {11}else {8};return Ok(None)}self.attribute_names=self.mesh.attributes.iter().filter_map(|(name,attribute)|(attribute.semantic==MeshAttributeSemantic::Normal || name=="tangent" && attribute.semantic==MeshAttributeSemantic::Custom).then_some(name.clone())).collect();self.attribute=0;self.cursor=0;self.phase=7;}else {self.mesh.vertices[self.vertex].normal=if self.smooth[self.vertex].length()>0.0 {Some(self.smooth[self.vertex].normalize().0)}else {self.flat[self.vertex].map(|n|n.0)};self.vertex+=1;}}
+            6=>{
+                let demand=self.surface_demand().map_err(MeshKernelError::Retained)?.unwrap();
+                if self.vertex==self.mesh.vertex_count() {
+                    self.phase=if self.transform_attributes{13}else if self.selection.is_some(){11}else{8};
+                }else {
+                    self.mesh.vertices[self.vertex].normal=self.point_normal()?;
+                    self.vertex+=1;
+                }
+                *receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+            }
             7=>{
                 if self.attribute==self.attribute_names.len() {self.phase=if self.selection.is_some() {11}else {8};}
                 else {
@@ -112,7 +157,21 @@ impl Transform {
             10=>{if self.attribute_retired.pop().is_none() && self.attribute_samples.pop_first().is_none() {self.attribute+=1;self.phase=7;}}
             11=>{if self.selection.as_mut().unwrap().selected.pop_first().is_none() {self.phase=8;}}
 
-            12=>{let corner=self.attribute_corner.unwrap();let edge=&self.mesh.halfedges[corner as usize];let affected=self.selection.as_ref().unwrap().selected.contains(&(edge.vertex as usize));if self.attribute_affected.is_some_and(|previous|previous!=affected) {return Err(MeshKernelError::InvalidInput("face direction cannot represent a mixed component transform".into()));}self.attribute_affected=Some(affected);let next=edge.next;if next==self.mesh.faces[self.cursor].halfedge {self.attribute_corner=None;self.phase=7;}else {self.attribute_corner=Some(next);}}
+            12=>{
+                let corner=self.attribute_corner.unwrap();
+                let edge=&self.mesh.halfedges[corner as usize];
+                let affected=self.selection.as_ref().unwrap().selected.contains(&(edge.vertex as usize));
+                let mixed=self.attribute_affected.is_some_and(|previous|previous!=affected);
+                self.attribute_affected=Some(!mixed&&affected);
+                if mixed||edge.next==self.mesh.faces[self.cursor].halfedge {
+                    self.attribute_corner=None;self.phase=7;
+                }else {self.attribute_corner=Some(edge.next);}
+                *receipt=RetainedCloneProgress {copied_items:1,..Default::default()};
+            }
+            13=>{
+                self.attribute_names=self.mesh.attributes.iter().filter_map(|(name,attribute)|(attribute.semantic==MeshAttributeSemantic::Normal || name=="tangent" && attribute.semantic==MeshAttributeSemantic::Custom).then_some(name.clone())).collect();
+                self.attribute=0;self.cursor=0;self.phase=7;
+            },
             _=>unreachable!(),
         }
         Ok(None)
@@ -159,11 +218,11 @@ pub(super) struct Knife {
 
 impl Knife {
     fn tuple(p:[f32;3])->Vec3f64 {(p[0] as f64,p[1] as f64,p[2] as f64)}
-    pub(super) fn phase(&self)->&'static str {["snapshot","knife-scale","knife-distances","knife-projection","knife-triangulate","knife-pieces","knife-classify","knife-clip","knife-neighbors","knife-reconstruct","knife-source-vertices","knife-source-remap","knife-attributes"][self.phase as usize]}
+    pub(super) fn phase(&self)->&'static str {["snapshot","knife-scale","knife-distances","knife-projection","knife-triangulate","knife-pieces","knife-classify","knife-clip","knife-neighbors","knife-reconstruct","knife-source-vertices","knife-source-remap","knife-surface","knife-attributes"][self.phase as usize]}
     fn push_corner(&mut self,id:u32) {if self.corners.last()!=Some(&id) {self.corners.push(id);}}
     fn finish_piece(&mut self)->MeshResult<()> {if self.corners.first()==self.corners.last() {self.corners.pop();}if self.corners.len()<3 {return Err(MeshKernelError::InvalidInput("knife cut produces a degenerate piece".into()));}if self.snapshot.soup.faces.len().saturating_sub(1).saturating_add(self.split.len()).saturating_add(1)>100_000 {return Err(MeshKernelError::InvalidInput("knife cut exceeds mesh capacity".into()));}self.split.push(std::mem::take(&mut self.corners));Ok(())}
     pub(super) fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,tessellation_progress:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
-        if self.tessellation_retirement.is_some(){if close_tessellation_handoff(&mut self.tessellation_retirement,effect,tessellation_progress)?{self.phase=5;}return Ok(None);}
+        if self.tessellation_retirement.is_some(){if close_modeling_handoff(&mut self.tessellation_retirement,effect,tessellation_progress)?{self.phase=5;}return Ok(None);}
         match self.phase {
             0=>{if self.snapshot.complete() {self.normal=Self::tuple(self.snapshot.soup.normals[self.face].0);let direction=sub3((self.b[0],self.b[1],self.b[2]),(self.a[0],self.a[1],self.a[2]));let plane=cross3(direction,self.normal);let length=length3(plane);if length==0.0 || length<=length3(direction)*1e-7 {return Err(MeshKernelError::InvalidInput("knife direction must project onto a nondegenerate face".into()));}self.plane=(plane.0/length,plane.1/length,plane.2/length);self.origin=Self::tuple(self.snapshot.soup.positions[self.snapshot.soup.faces[self.face][0] as usize]);self.cursor=0;self.phase=10;}}
             1=>{let face=&self.snapshot.soup.faces[self.face];let point=Self::tuple(self.snapshot.soup.positions[face[self.cursor] as usize]);self.scale=self.scale.max(length3(sub3(point,self.origin)));self.cursor+=1;if self.cursor==face.len() {self.tolerance=self.scale*1e-7;self.cursor=0;self.phase=2;}}
@@ -204,8 +263,13 @@ impl Knife {
             }
             9=>{if let Some(mesh)=self.build.as_mut().unwrap().advance()? {self.attributes=Some(SourceAttributeRemap::new(mesh,None,Some(std::mem::take(&mut self.source_faces)),None,None));self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices=Some(Vec::new());self.cursor=0;self.phase=11;}},
             10=>{if self.cursor==self.snapshot.source.vertex_count() {self.cursor=0;self.phase=1;}else {self.vertex_sources.push(SourceVertex::Original(self.cursor as u32));self.cursor+=1;}},
-            11=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.cursor==origins.len() {self.phase=12;}else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.vertex_sources[origins[self.cursor] as usize].clone());self.cursor+=1;}},
-            12=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
+            11=>{let origins=self.build.as_ref().unwrap().origin_vertices();if self.cursor==origins.len() {self.attributes.as_mut().unwrap().retain_partitioned_surface();self.phase=12;}else {self.attributes.as_mut().unwrap().configuration_mut()?.generated_vertices.as_mut().unwrap().push(self.vertex_sources[origins[self.cursor] as usize].clone());self.cursor+=1;}},
+            12=>{
+                let attributes=self.attributes.as_mut().unwrap();
+                if attributes.retaining_refined_surface() {attributes.step_refined_surface(&self.snapshot.source,effect.grant(),tessellation_progress)?;}
+                else {self.phase=13;}
+            },
+            13=>return self.attributes.as_mut().unwrap().advance(&mut self.snapshot.source),
             _=>unreachable!(),
         }
         Ok(None)

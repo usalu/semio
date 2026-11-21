@@ -58,7 +58,7 @@ def bogie_masses(xb, bt, powered, scale):
     for sd, st in ((1, 'l'), (-1, 'r')):
         za = sorted((sd * 0.80, sd * 1.0))
         if scale == 500:
-            b.append(slab(f'bogie-frame-{bt}-{st}', END, 'steel-wheel', 'body', STEEL, xb - 1.12, xb + 1.12, 0.40, 0.62, za[0], za[1], corner=0.04))
+            b.append(slab(f'bogie-frame-{bt}-{st}', END, 'steel-wheel', 'body', STEEL, xb - 1.12, xb + 1.12, 0.10, 0.60, za[0], za[1], corner=0.04))
         else:
             b.append(slab(f'bogie-beam-{bt}-{st}', END, 'steel-wheel', 'body', STEEL, xb - 1.12, xb + 1.12, 0.48, 0.62, za[0], za[1], corner=0.03))
             if scale == 100:
@@ -90,13 +90,13 @@ def bogie_masses(xb, bt, powered, scale):
                 loop = [[0, 0.06], [0, R_FLANGE], [0.03, R_FLANGE], [0.03, 0.30], [0.105, 0.30], [0.105, 0.06]]
             else:
                 loop = [[0, 0.0], [0, 0.30], [0.12, 0.30], [0.12, 0.0]]
-            w.append(rev(f'wheel-{wb}-{st}', END, 'steel-wheel', 'body', 0.3, loop, [xb + dx, 0.3, sd * Z_BACK], (0, 0, sd)))
+            w.append(rev(f'wheel-{wb}-{st}', END, 'steel-wheel', 'body', 0.3, loop, [xb + dx, 0.3, sd * Z_BACK], (0, 0, sd), bore=scale < 500))
         if scale < 500:
             for sd, st in ((1, 'l'), (-1, 'r')):
                 w.append(cyl(f'stub-axle-{wb}-{st}', END, 'steel-wheel', 'body', STEEL, [xb + dx, 0.3, sd * 0.56], (0, 0, sd), 0.14, 0.06 if scale == 100 else 0.075))
         if scale == 100:
             for sd, st in ((1, 'l'), (-1, 'r')):
-                w.append(rev(f'brake-disc-{wb}-{st}', END, 'cast-iron', 'detail', 0.55, [[0.08, 0.09], [0.08, 0.2], [0.1, 0.2], [0.1, 0.09]], [xb + dx, 0.3, sd * Z_BACK], (0, 0, sd)))
+                w.append(rev(f'brake-disc-{wb}-{st}', END, 'cast-iron', 'detail', 0.55, [[0.08, 0.09], [0.08, 0.2], [0.1, 0.2], [0.1, 0.09]], [xb + dx, 0.3, sd * Z_BACK], (0, 0, sd), bore=True))
         b += [on(s, wb, (xb + dx, 0.3)) for s in w]
     return b
 
@@ -163,7 +163,7 @@ def pantograph(scale):
             za = sorted((sd * 0.38, sd * 0.46))
             b.append(slab(f'pan-frame-{st}', END, 'pan-alloy', 'body', 0.45, px - 0.32, px + 1.22, py - 0.07, py, za[0], za[1]))
         b.append(cyl('pan-shaft', END, 'pan-alloy', 'detail', 0.4, [px, py, -0.38], (0, 0, 1), 0.76, 0.035 if scale == 100 else 0.04))
-    r = {100: (0.042, 0.034, 0.02), 200: (0.04, 0.035, 0.02), 500: (0.035, 0.035, 0.02)}[scale]
+    r = {100: (0.042, 0.034, 0.02), 200: (0.04, 0.035, 0.02), 500: (0.035, 0.035, 0.03)}[scale]
     b.append(cap('pan-lower-arm', L, 'pan-alloy', 'body', 0.45, [0, 0, 0], [1.9, 0, 0], r[0], r[1], slender=True))
     if scale == 500:
         b.append(cap('pan-upper-arm', U, 'pan-alloy', 'body', 0.45, [0, 0, 0], [1.9, 0, 0], r[2], slender=True))
@@ -181,7 +181,7 @@ def pantograph(scale):
             for sd, st in ((1, 'l'), (-1, 'r')):
                 b.append(cap(f'pan-horn-{k + 1}-{st}', H, 'pan-alloy', 'detail', 0.5, [u, 0.006, sd * 0.54], [u, -0.115, sd * 0.83], 0.011))
     else:
-        b.append(box('pan-head-bar', H, 'carbon', 'body', 0.1, [0.4, 0.035, 1.1], [0, 0.01, 0], corner=0.008))
+        b.append(box('pan-head-bar', H, 'carbon', 'body', 0.1, [0.4, 0.045, 1.1], [0, 0.01, 0], corner=0.008))
         for sd, st in ((1, 'l'), (-1, 'r')):
             b.append(cap(f'pan-horn-{st}', H, 'pan-alloy', 'detail', 0.5, [0, 0.0, sd * 0.54], [0, -0.115, sd * 0.83], 0.016))
     return b
@@ -455,7 +455,7 @@ def thermal_coarse(scale, body):
             for k, dx in enumerate((-WB, WB)):
                 wb = f'ws-{bt}{k + 1}'
                 for sd, st in ((1, 'l'), (-1, 'r')):
-                    d = rev(f'th-brake-disc-{wb}-{st}', END, 'cast-iron', 'detail', 0.55, [[0.0, 0.09], [0.0, 0.2], [0.03, 0.2], [0.03, 0.09]] if scale == 200 else [[0.0, 0.0], [0.0, 0.2], [0.075, 0.2], [0.075, 0.0]], [xb + dx, 0.3, sd * (Z_BACK - (0.035 if scale == 200 else 0.08))], (0, 0, sd), region='brake-discs')
+                    d = rev(f'th-brake-disc-{wb}-{st}', END, 'cast-iron', 'detail', 0.55, [[0.0, 0.09], [0.0, 0.2], [0.03, 0.2], [0.03, 0.09]] if scale == 200 else [[0.0, 0.0], [0.0, 0.2], [0.075, 0.2], [0.075, 0.0]], [xb + dx, 0.3, sd * (Z_BACK - (0.035 if scale == 200 else 0.08))], (0, 0, sd), bore=scale == 200, region='brake-discs')
                     t.append(on(d, wb, (xb + dx, 0.3)))
     x0, x1, hz, h, _ = RESISTOR
     t.append(cyl('resistor-fan-outlet', END, 'resistor-steel', 'detail', 0.9, [5.5, ROOF + h, 0], (0, 1, 0), {100: 0.015, 200: 0.03, 500: 0.075}[scale], 0.35, region='brake-resistor', tags=['emitter', 'resistor-fan']))
@@ -560,8 +560,14 @@ def structure_coarse(scale, body):
         if bone == 'pan-head' and scale == 500:
             continue
         s.append(dict(cyl(f'hinge-{bone}', bone, 'pan-alloy', 'detail', 0.2, [0, 0, -half], (0, 0, 1), 2 * half, r), member=bone, part='joint'))
-    for name, _ in DOOR_NAMES:
-        s.append({"id": f'st-leaf-{name}', "of": f'leaf-{name}', "member": f'door-{name}', "part": 'member'})
+    for name, x0 in DOOR_NAMES:
+        f = 0.04 if scale < 500 else 0.075
+        za, zb = (-HW - 0.012, -HW + 0.028) if scale < 500 else (-HW - 0.012, -HW + 0.063)
+        zc, y0, y1 = (za + zb) / 2, DOOR_Y[0], DOOR_Y[1]
+        xa, xb = x0 + 0.01 + f / 2, x0 + LEAF - 0.01 - f / 2
+        for e, p0, p1 in (('stile-a', [xa, y0, zc], [xa, y1, zc]), ('stile-b', [xb, y0, zc], [xb, y1, zc]), ('rail-bottom', [xa + f / 2, y0 + f / 2, zc], [xb - f / 2, y0 + f / 2, zc]), ('rail-top', [xa + f / 2, y1 - f / 2, zc], [xb - f / 2, y1 - f / 2, zc])):
+            m = bar(f'st-leaf-{name}-{e}', END, 'steel-wheel', 'body', 0.4, p0, p1, f, f)
+            s.append(dict(on(lean(m) if scale == 100 else m, f'door-{name}', (x0, 0.3)), member=f'door-{name}', part='member'))
     s.append(dict(ell('mass-body-end', END, 'steel-wheel', 'detail', 0.6, [0.35, 0.25, 0.35], [5.0, 1.5, 0]), member=END, part='mass'))
     s.append(dict(ell('mass-body-mid', MID, 'steel-wheel', 'detail', 0.6, [0.3, 0.22, 0.3], [3.2, -1.2, 0]), member=MID, part='mass'))
     if scale < 500:
@@ -573,17 +579,17 @@ DECISIONS = {
     100: [
         {"en": "1:100 keeps the built shell at 15 mm: 51.5 mm walls with 40 mm of tumblehome, the window openings merged where the 1:100 drawing merges them (the second and third cab-module windows on the right, the first two middle-module windows on the left), flush 20 mm panes, roof with rolled cant rails, floor with the bogie wells and one podest profile per well; the cab keeps its superelliptic nose, raked windscreen, domed header, sill band, bumper, A-pillars, headlamps and destination sign; wipers, indicators, coupler hatch, seals and buttons are left out.", "de": "1:100 behält den gebauten Kasten bei 15 mm: 51,5 mm starke Wände mit 40 mm Einzug, Fensteröffnungen zusammengelegt, wo die 1:100-Zeichnung sie zusammenlegt (zweites und drittes Fenster des Endmoduls rechts, die ersten beiden Fenster des Mittelmoduls links), bündige 20-mm-Scheiben, Dach mit gerundeten Obergurten, Boden mit den Drehgestellnischen und je einem Podestprofil; der Fahrerstand behält superelliptische Nase, geneigte Frontscheibe, gewölbtes Stirndach, Brüstungsband, Stoßfänger, A-Säulen, Scheinwerfer und Zielanzeige; Wischer, Blinker, Kupplungsklappe, Dichtungen und Taster entfallen."},
         {"en": "Bogies at 1:100: side beams on two legs, one cross member, magnetic track brakes, wheels with flange, tread and recessed web, axles and brake discs, on the powered bogie a longitudinal motor and two gearboxes per side, on the trailing bogie a brake unit per side; the secondary springs stay on the beams, calipers, primary springs and brackets merge into them; wheels sit on stub axles as in a real independent-wheel low-floor bogie. The bellows keep nine folds; the pantograph keeps insulators, frame, arms with knee shaft and brace and a two-strip head with apex and horns.", "de": "Drehgestelle in 1:100: Langträger auf zwei Beinen, ein Querträger, Magnetschienenbremsen, Räder mit Spurkranz, Lauffläche und eingezogener Scheibe, Achsen und Bremsscheiben, am Triebdrehgestell je Seite ein Längsmotor und zwei Getriebe, am Laufdrehgestell je Seite ein Bremsgerät; die Sekundärfedern bleiben auf den Trägern, Zangen, Primärfedern und Konsolen gehen in ihnen auf; die Räder sitzen wie in einem echten Losradfahrwerk auf Achsstummeln. Der Balg behält neun Falten, der Stromabnehmer Isolatoren, Rahmen, Arme mit Kniewelle und Strebe und eine Wippe mit zwei Schleifleisten, Scheitelrahmen und Hörnern."},
-        {"en": "Thermal: one reference per part and region, the cabin faces of walls, floor, roof, doors and panes as section faces, the bellows as one folded skin, the two fan outlets as patches on the roof units; layers are merged into their plate (B2). Structure: stepped side sills, cant rails, door and end posts, four roof bows and four cross-bearers per module, end rings, the cab ring and posts, articulation links and pin, bogie frames with pivots, axles and wheels, pantograph frame, arms and hinges, door leaves, masses.", "de": "Thermik: eine Referenz je Teil und Bereich, die Innenraumseiten von Wänden, Boden, Dach, Türen und Scheiben als Schnittflächen, der Balg als eine gefaltete Haut, die beiden Lüfteraustritte als Flächen auf den Dachgeräten; Schichten gehen in ihrer Platte auf (B2). Tragwerk: gestufte Seitenschweller, Obergurte, Tür- und Endsäulen, vier Dachspriegel und vier Querträger je Modul, Endrahmen, Fahrerstandsring und -säulen, Gelenkverbindungen und -zapfen, Drehgestellrahmen mit Drehzapfen, Achsen und Räder, Stromabnehmerrahmen, -arme und -gelenke, Türflügel, Massen."},
+        {"en": "Thermal: one reference per part and region, the cabin faces of walls, floor, roof, doors and panes as section faces, the bellows as one folded skin, the two fan outlets as patches on the roof units; layers are merged into their plate (B2). Structure: stepped side sills, cant rails, door and end posts, four roof bows and four cross-bearers per module, end rings, the cab ring and posts, articulation links and pin, bogie frames with pivots, axles and wheels, pantograph frame, arms and hinges, each door leaf as a frame of two stiles and two rails in 40 mm section leaning with the tumblehome, masses.", "de": "Thermik: eine Referenz je Teil und Bereich, die Innenraumseiten von Wänden, Boden, Dach, Türen und Scheiben als Schnittflächen, der Balg als eine gefaltete Haut, die beiden Lüfteraustritte als Flächen auf den Dachgeräten; Schichten gehen in ihrer Platte auf (B2). Tragwerk: gestufte Seitenschweller, Obergurte, Tür- und Endsäulen, vier Dachspriegel und vier Querträger je Modul, Endrahmen, Fahrerstandsring und -säulen, Gelenkverbindungen und -zapfen, Drehgestellrahmen mit Drehzapfen, Achsen und Räder, Stromabnehmerrahmen, -arme und -gelenke, jeder Türflügel als Rahmen aus zwei Holmen und zwei Riegeln mit 40 mm Querschnitt, mit dem Einzug geneigt, Massen."},
     ],
     200: [
         {"en": "1:200 models each module as masses at 30 mm: a lower block from the skirt to the belt with the bogie openings, plumb walls up to the cant (the 40 mm tumblehome is under 1.5 features and dropped), a roof cap with the cant curve, end walls; windows as 8 mm proud panes (the left windows of the middle module merge into one band as drawn), the cab as nose block, raked windscreen and domed header with bumper and headlamps.", "de": "1:200 bildet jedes Modul bei 30 mm als Massen: ein Unterkasten von der Schürze bis zur Brüstung mit den Drehgestellöffnungen, lotrechte Wände bis zum Obergurt (der 40-mm-Einzug liegt unter 1,5 Merkmalen und entfällt), eine Dachkappe mit der Obergurtrundung, Stirnwände; Fenster als 8 mm vorstehende Scheiben (die linken Fenster des Mittelmoduls zu einem Band zusammengelegt), der Fahrerstand als Nasenblock, geneigte Frontscheibe und gewölbtes Stirndach mit Stoßfänger und Scheinwerfern."},
         {"en": "Bogies keep side beams, legs, cross member, track brakes, motors with gearboxes or brake units, wheels with flange and tread and the axles; the bellows have four folds; door leaves are solid panels with an applied pane; the pantograph keeps insulators, frame, arms and a one-piece head with horns; roof units are plain boxes.", "de": "Drehgestelle behalten Langträger, Beine, Querträger, Schienenbremsen, Motoren mit Getrieben oder Bremsgeräte, Räder mit Spurkranz und Lauffläche und die Achsen; der Balg hat vier Falten; Türflügel sind volle Tafeln mit aufgesetzter Scheibe; der Stromabnehmer behält Isolatoren, Rahmen, Arme und eine einteilige Wippe mit Hörnern; Dachgeräte sind einfache Kästen."},
-        {"en": "Thermal: references by region, the brake discs as 30 mm discs inside the wheels (they are thinner than the feature in the body), the outlet patches on the roof units. Structure: stepped sills, cant rails, posts at the doors and ends plus two window posts per side, three roof bows and four cross-bearers per module, end rings, cab ring and posts, articulation, bogie frames, axles, wheels, pantograph, door leaves, masses.", "de": "Thermik: Referenzen je Bereich, die Bremsscheiben als 30-mm-Scheiben in den Rädern (im Körper sind sie dünner als das Merkmal), die Austrittsflächen auf den Dachgeräten. Tragwerk: gestufte Schweller, Obergurte, Säulen an Türen und Enden und zwei Fenstersäulen je Seite, drei Dachspriegel und vier Querträger je Modul, Endrahmen, Fahrerstandsring und -säulen, Gelenk, Drehgestellrahmen, Achsen, Räder, Stromabnehmer, Türflügel, Massen."},
+        {"en": "Thermal: references by region, the brake discs as 30 mm discs inside the wheels (they are thinner than the feature in the body), the outlet patches on the roof units. Structure: stepped sills, cant rails, posts at the doors and ends plus two window posts per side, three roof bows and four cross-bearers per module, end rings, cab ring and posts, articulation, bogie frames, axles, wheels, pantograph, each door leaf as a frame of two stiles and two rails in 40 mm section, masses.", "de": "Thermik: Referenzen je Bereich, die Bremsscheiben als 30-mm-Scheiben in den Rädern (im Körper sind sie dünner als das Merkmal), die Austrittsflächen auf den Dachgeräten. Tragwerk: gestufte Schweller, Obergurte, Säulen an Türen und Enden und zwei Fenstersäulen je Seite, drei Dachspriegel und vier Querträger je Modul, Endrahmen, Fahrerstandsring und -säulen, Gelenk, Drehgestellrahmen, Achsen, Räder, Stromabnehmer, jeder Türflügel als Rahmen aus zwei Holmen und zwei Riegeln mit 40 mm Querschnitt, Massen."},
     ],
     500: [
         {"en": "1:500 keeps what reads at 75 mm: the two modules as lower block with the bogie openings, plumb walls and a roof cap with the cant curve, the cab nose with raked windscreen and domed header, the bellows as one rounded block, window bands split at the doors, four door panels, the two roof units and the pantograph with its base, two arms and the collector bar.", "de": "1:500 behält, was bei 75 mm lesbar ist: die beiden Module als Unterkasten mit den Drehgestellöffnungen, lotrechte Wände und eine Dachkappe mit Obergurtrundung, die Fahrerstandsnase mit geneigter Frontscheibe und gewölbtem Stirndach, den Balg als einen gerundeten Block, Fensterbänder an den Türen geteilt, vier Türtafeln, die beiden Dachgeräte und den Stromabnehmer mit Sockel, zwei Armen und Schleifleiste."},
-        {"en": "Each bogie becomes one frame block per side with the four 600 mm wheels as plain discs; motors, gearboxes, brakes and axles merge into the frame, the brake discs and motors are kept only in the thermal list as compact solids inside the bogie.", "de": "Jedes Drehgestell wird ein Rahmenblock je Seite mit den vier 600-mm-Rädern als einfache Scheiben; Motoren, Getriebe, Bremsen und Achsen gehen im Rahmen auf, Bremsscheiben und Motoren bleiben nur in der Thermikliste als kompakte Körper im Drehgestell."},
-        {"en": "Structure at 1:500: one stepped sill and one cant rail per side, door and end posts, two roof bows and one cross-bearer per module, end rings, cab ring and posts, articulation link and pin, bogie frame blocks with pivots, axles and wheels, pantograph base and arms, door panels and the masses.", "de": "Tragwerk in 1:500: ein gestufter Schweller und ein Obergurt je Seite, Tür- und Endsäulen, zwei Dachspriegel und ein Querträger je Modul, Endrahmen, Fahrerstandsring und -säulen, Gelenklenker und -zapfen, Drehgestellrahmenblöcke mit Drehzapfen, Achsen und Räder, Stromabnehmersockel und -arme, Türtafeln und die Massen."},
+        {"en": "Each bogie becomes one frame block per side, from the magnetic track brakes 0.10 m above the rail up to the wheel tops, with the four 600 mm wheels as plain discs; motors, gearboxes, brakes and axles merge into the frame, the brake discs and motors are kept only in the thermal list as compact solids inside the bogie.", "de": "Jedes Drehgestell wird ein Rahmenblock je Seite, von den Magnetschienenbremsen 0,10 m über der Schiene bis zu den Radoberkanten, mit den vier 600-mm-Rädern als einfache Scheiben; Motoren, Getriebe, Bremsen und Achsen gehen im Rahmen auf, Bremsscheiben und Motoren bleiben nur in der Thermikliste als kompakte Körper im Drehgestell."},
+        {"en": "Structure at 1:500: one stepped sill and one cant rail per side, door and end posts, two roof bows and one cross-bearer per module, end rings, cab ring and posts, articulation link and pin, bogie frame blocks with pivots, axles and wheels, pantograph base and arms, each door leaf as a frame of two stiles and two rails in 75 mm section, and the masses.", "de": "Tragwerk in 1:500: ein gestufter Schweller und ein Obergurt je Seite, Tür- und Endsäulen, zwei Dachspriegel und ein Querträger je Modul, Endrahmen, Fahrerstandsring und -säulen, Gelenklenker und -zapfen, Drehgestellrahmenblöcke mit Drehzapfen, Achsen und Räder, Stromabnehmersockel und -arme, jeder Türflügel als Rahmen aus zwei Holmen und zwei Riegeln mit 75 mm Querschnitt, und die Massen."},
     ],
 }
 

@@ -1,8 +1,10 @@
 import {join} from "node:path";
 import type {FleetManifestEntryV1} from "../../📒️journal/🟦️.ts";
 import {foldNameV1} from "../../🚧️boundary/🟦️.ts";
+import {indexRealmV1} from "../../🌿️git/🟦️.ts";
 import {bucketOfV1,bucketsHexV1,digestHexV1,emptyBucketsV1,foldBucketV1,foldTermV1,manifestTermV1} from "../../🩺️attest/🟦️.ts";
 import type {ReplicaQueueV1} from "../🟦️.ts";
+import {packDirectoryV1} from "../🧷️packgate/🟦️.ts";
 
 /** 🧾️ One entry of the replica state: the manifest entry and the times the tree was seen with it. */
 export type ReplicaStateEntryV1=FleetManifestEntryV1&Readonly<{mtimeMs:number;seenMs?:number}>;
@@ -42,6 +44,7 @@ export const hashText=(text:string):number=>{
 };
 
 export const encoder=new TextEncoder(),pageBytes=1<<20;
+const dotByte=".".charCodeAt(0);
 
 /** 📇️ The path table of one replica: every path ever seen gets one small integer id, and all tables of the replica store their columns by that id. The paths themselves live as UTF-8 in 1 MiB pages behind an open-addressing hash table of ids, so a path costs its bytes and a few table words, not a JavaScript string, and growing never copies the text. */
 export class ReplicaBookV1{
@@ -57,6 +60,12 @@ export class ReplicaBookV1{
  private folded:Uint32Array=new Uint32Array(1024);
  private slots:Int32Array=new Int32Array(2048);
  private scratch=new Uint8Array(1024);
+ private stage:number[]=[];
+ private packIndexes:number[]=[];
+ private recordSparseIds(id:number,path:string):void{
+  if(indexRealmV1(path))this.stage.push(id);
+  if(path.startsWith(packDirectoryV1)&&path.endsWith(".idx"))this.packIndexes.push(id);
+ }
  private encode(path:string):number{
   if(this.scratch.length<path.length*3)this.scratch=new Uint8Array(path.length*3);
   return encoder.encodeInto(path,this.scratch).written;
@@ -103,6 +112,7 @@ export class ReplicaBookV1{
   this.used+=length;this.count=id+1;
   this.slots[slot]=id+1;
   if(this.count*2>this.slots.length)this.rehash();
+  this.recordSparseIds(id,path);
   return id;
  }
  private rehash():void{
@@ -133,8 +143,20 @@ export class ReplicaBookV1{
   let size=2048;
   while(size<count*2+2)size*=2;
   this.slots=new Int32Array(size);
-  for(let id=0;id<count;id++){let slot=this.hashes[id]!&(size-1);while(this.slots[slot]!==0)slot=(slot+1)&(size-1);this.slots[slot]=id+1;}
+  this.stage=[];
+  this.packIndexes=[];
+  for(let id=0;id<count;id++){
+   let slot=this.hashes[id]!&(size-1);
+   while(this.slots[slot]!==0)slot=(slot+1)&(size-1);
+   this.slots[slot]=id+1;
+   const start=this.starts[id]!;
+   if(this.lengths[id]!>0&&this.pages[Math.floor(start/pageBytes)]?.[start%pageBytes]===dotByte)this.recordSparseIds(id,this.name(id));
+  }
  }
+ /** 🗂️ Enumerates IDs for the virtual stage base and entry registers in intern order. */
+ stageIds():IterableIterator<number>{return this.stage.values();}
+ /** 📦️ Enumerates the interned Git pack-index IDs in intern order. */
+ packIndexIds():IterableIterator<number>{return this.packIndexes.values();}
  name(id:number):string{
   const start=this.starts[id]!,from=start%pageBytes;
   return this.pages[Math.floor(start/pageBytes)]!.toString("utf8",from,from+this.lengths[id]!);
@@ -275,6 +297,7 @@ export class CompactTableV1{
   if(this.local)for(let id=0;id<this.flags.length;id++){const term=this.term(id);if(term!==undefined)foldBucketV1(this.buckets,bucketOfV1(this.book.name(id)),term);}
  }
  adoptRows(ids:Int32Array,columns:Readonly<{flags:Uint8Array;ms:Float64Array;counter:Uint32Array;origin:Uint16Array;bytes:Float64Array;sha:Uint8Array}>):void{
+  this.writes++;
   let top=0;
   for(const id of ids)top=Math.max(top,id+1);
   this.grow(top);
@@ -285,6 +308,7 @@ export class CompactTableV1{
   });
  }
  mirror(from:CompactTableV1,skip:ReplicaQueueV1):void{
+  this.writes++;
   const rows=from.flags.length;
   this.grow(rows);
   for(let id=0;id<this.flags.length;id++){

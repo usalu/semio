@@ -3,8 +3,35 @@ import assert from 'node:assert/strict';
 import Ajv from 'ajv';
 import {Database} from 'bun:sqlite';
 import {applyPatch,type Operation} from 'fast-json-patch';
+/** 🔚️ Independent SQLite balances the local alias and the canceled mutation Source at every admitted frontier. */
+export function verifyMutationSourceCancellation(): void {
+ const law = JSON.parse(readFileSync(new URL('../../🌱️derived/🧪️tests/🧫️fixtures/🔣️.json', import.meta.url), 'utf8'));
+ const schema = JSON.parse(readFileSync(new URL('../../🌱️derived/🧬️schema/🔣️.json', import.meta.url), 'utf8'));
+ const valid = new Ajv({strict: true}).compile(schema);
+ assert(valid(law), JSON.stringify(valid.errors));
+ const {fundedFrontiers, expected} = law.sourceCancellation;
+ const db = new Database(':memory:');
+ try {
+  const balances = db.query(`
+   WITH RECURSIVE frontiers(turn) AS (SELECT 0 UNION ALL SELECT turn + 1 FROM frontiers WHERE turn + 1 < ?1),
+   receipts(turn, owner, change) AS (
+    SELECT turn, 'issuer', 1 FROM frontiers UNION ALL
+    SELECT turn, 'source', 1 FROM frontiers UNION ALL
+    SELECT turn, 'source', -1 FROM frontiers WHERE ?2
+   )
+   SELECT SUM(change) AS issuerAliases, SUM(CASE WHEN owner = 'source' THEN change ELSE 0 END) = 0 AS terminal
+   FROM receipts GROUP BY turn ORDER BY turn
+  `);
+  const closed = balances.all(fundedFrontiers, 1) as {issuerAliases: number, terminal: number}[];
+  assert.equal(closed.length, fundedFrontiers);
+  for (const row of closed) assert.deepEqual({...row, terminal: Boolean(row.terminal)}, expected);
+  for (const row of balances.all(fundedFrontiers, 0)) assert.deepEqual(row, {issuerAliases: 2, terminal: 0});
+ } finally { db.close(); }
+}
+
 /** 🧪️ Independent JSONPatch calculation admits portable semantic preview laws. */
 export function verifyNativeSemanticPreparation():void{
+ verifyMutationSourceCancellation();
  const law=JSON.parse(readFileSync(new URL('../../🌱️derived/🧪️tests/🧫️fixtures/🔣️.json',import.meta.url),'utf8')) as {independentAxes:{copyBytes:number,capacityBytes:number,copyGrant:number,capacityGrant:number,ownershipCeiling:number,admitted:boolean},contracts:string[],cases:{name:string,base:{n:number},patch:Operation[],after:{n:number},mode:string,accepted:boolean}[]};
  const schema=JSON.parse(readFileSync(new URL('../../🌱️derived/🧬️schema/🔣️.json',import.meta.url),'utf8'));
  const valid=new Ajv({strict:true}).compile(schema);assert(valid(law),JSON.stringify(valid.errors));

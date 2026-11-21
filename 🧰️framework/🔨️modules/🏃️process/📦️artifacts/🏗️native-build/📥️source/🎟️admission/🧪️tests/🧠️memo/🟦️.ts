@@ -49,14 +49,53 @@ test("source reads preserve an exact cancellation reason and contextualize genui
 });
 
 import ts from "typescript";
+import planCorpus from "../../../../📋️plan/🧪️tests/🔣️.json" with {type:"json"};
+import {cargoArtifactPlanningDifferenceV1} from "../../../../📋️plan/🟦️.ts";
 import {readFileSync} from "node:fs";
 
-test("the actual artifact plan forwards one memo through initial admission and every guarded recheck",async()=>{
+test("the actual artifact plan forwards one memo and reports drift without changing the retry owner",async()=>{
  const text=readFileSync(new URL("../../../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("artifact.ts",text,ts.ScriptTarget.Latest,true),definition=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="withCargoArtifactPlanLedgeredV1")!;
  expect(definition).toBeDefined();
  const abort=new AbortController(),control={signal:abort.signal},memo={},calls:unknown[]=[],checks={storage:0,lease:0,recipe:0,facts:0},storage={allocation:{kind:"compiler-workspace"},backing:{root:"/owned"},async recheck(){checks.storage++;}},environment={CARGO_HOME:"/owned/cargo"},recipe={recipe:{manifest:"/owned/Cargo.toml",buildDirectory:"/owned/build"},async recheck(){checks.recipe++;}};
- const ports={requireNativeStorageReservationV1:()=>storage,requireIssuedResourceControlV1(){},CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1:1024,admitArtifactPolicy:(value:unknown)=>value,cargoArtifactArgumentsV1:(value:unknown)=>value,isAbsolute:()=>true,requestedCompilerAdmissionControlV1:()=>control,requireCargoCompilerPathEnvelopeV1(){},requireNativeStoragePathV1(_root:string,path:string){return path;},resolve:(...parts:string[])=>parts.join("/"),dirname:()=>"/owned",join:(...parts:string[])=>parts.join("/"),mkdirSync(){},cargoBuildOwnerAliveV1:()=>true,withCargoArtifactPlanInputsV1:async(input:any,_port:any,body:any)=>body({...input,requireProduction(){}}),retryOnConcurrentEditV1:async(_kind:string,body:any)=>body(),captureCargoCompilationGraphV1:async()=>({units:[]}),actualCargoCompilerPlanningPortV1:()=>({}),admitCargoSourceBoundariesV1:async(...args:unknown[])=>{calls.push(args[5]);},actualCargoSourceAdmissionPortV1:()=>({}),cargoArtifactTargetRecipeV1:async()=>recipe,captureCargoArtifactPlanFactsV1:async()=>{checks.facts++;return{platform:"linux"};},cargoArtifactPlanIdentityV1:()=>"same",checkResourceLeaseControl(){checks.lease++;},withIssuedResourceOperationV1:async(_control:any,body:any)=>body(),captureSourceSchema:{properties:{maximumPendingOperations:{const:32}}},phaseLedgerV1:()=>({begin:()=>()=>undefined,run:async(_phase:string,body:()=>Promise<unknown>)=>body()}),measureV1:async(_phase:string,body:()=>Promise<unknown>)=>body()};
+ let drift=false,features:readonly string[]|undefined;
+ const reports:string[]=[],edits:unknown[][]=[],refusal=Error("admitted plan drift"),sourceRefusal=Error("unrelated Source boundary exceeded");
+ const selected=graphCorpus.cases[0]!;
+ const planGraph=(features:readonly string[])=>
+   readCargoCompilationGraphV1({version:1,roots:selected.roots,units:selected.units.map((unit,index)=>index===0?{...unit,features}:unit)},graphCorpus.metadata,"/repo");
+ const ports={requireNativeStorageReservationV1:()=>storage,requireIssuedResourceControlV1(){},CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1:1024,admitArtifactPolicy:(value:unknown)=>value,cargoArtifactArgumentsV1:(value:unknown)=>value,isAbsolute:()=>true,requestedCompilerAdmissionControlV1:()=>control,requireCargoCompilerPathEnvelopeV1(){},requireNativeStoragePathV1(_root:string,path:string){return path;},resolve:(...parts:string[])=>parts.join("/"),dirname:()=>"/owned",join:(...parts:string[])=>parts.join("/"),mkdirSync(){},cargoBuildOwnerAliveV1:()=>true,withCargoArtifactPlanInputsV1:async(input:any,_port:any,body:any)=>body({...input,requireProduction(){}}),retryOnConcurrentEditV1:async(_kind:string,body:any)=>body(),captureCargoCompilationGraphV1:async()=>planGraph(features??[]),actualCargoCompilerPlanningPortV1:()=>({}),admitCargoSourceBoundariesV1:async(...args:unknown[])=>{calls.push(args[5]);if(features&&checks.facts===1)throw sourceRefusal;},actualCargoSourceAdmissionPortV1:()=>({}),cargoArtifactTargetRecipeV1:async()=>recipe,captureCargoArtifactPlanFactsV1:async()=>{checks.facts++;return{platform:"linux"};},cargoArtifactPlanIdentityV1:()=>(drift&&checks.facts===2?"changed":"same"),cargoArtifactPlanDifferenceV1:()=>({category:"source-file",path:"/owned/shared.rs"}),cargoArtifactPlanningDifferenceV1,concurrentEditV1:(...values:unknown[])=>{edits.push(values);return refusal;},process:{platform:process.platform,stderr:{write:(line:string)=>reports.push(line)}},requireCargoSelectedPathEnvelopeControlledV1(){},checkResourceLeaseControl(){checks.lease++;},withIssuedResourceOperationV1:async(_control:any,body:any)=>body(),captureSourceSchema:{properties:{maximumPendingOperations:{const:32}}},phaseLedgerV1:()=>({begin:()=>()=>undefined,run:async(_phase:string,body:()=>Promise<unknown>)=>body()}),measureV1:async(_phase:string,body:()=>Promise<unknown>)=>body()};
  const javascript=ts.transpileModule(definition.getText(tree).replace(/^export /u,""),{compilerOptions:{target:ts.ScriptTarget.ESNext,module:ts.ModuleKind.ESNext}}).outputText,run=new Function(...Object.keys(ports),javascript+";return withCargoArtifactPlanLedgeredV1;")(...Object.values(ports));
- await run("/owned/Cargo.toml",[],{budgetMs:0,cwd:"/owned",buildDirectory:"/owned/build",captureDirectory:"/owned/capture",mode:"prototype"},{storage,control,environment,consume:async()=>{},maximumObservationBytes:1024,sourceBoundary:policy,sourceMemo:memo,observationOutput:{directory:"/owned/observe"}},async(plan:any)=>{await plan.recheck();await plan.recheck();});
+ const capture=(body:(plan:any)=>Promise<void>)=>run("/owned/Cargo.toml",[],{budgetMs:0,cwd:"/owned",buildDirectory:"/owned/build",captureDirectory:"/owned/capture",mode:"prototype"},{storage,control,environment,consume:async()=>{},maximumObservationBytes:1024,sourceBoundary:policy,sourceMemo:memo,observationOutput:{directory:"/owned/observe"}},body);
+ await capture(async plan=>{await plan.recheck();await plan.recheck();});
  expect(calls).toEqual([memo,memo,memo]);expect(checks.storage).toBeGreaterThan(1);expect(checks.lease).toBeGreaterThan(1);expect(checks.recipe).toBe(2);expect(checks.facts).toBe(3);
+ expect(reports).toEqual([]);
+ drift=true;checks.facts=0;
+ await expect(capture(plan=>plan.recheck())).rejects.toBe(refusal);
+ expect(edits).toEqual([["input","/owned/Cargo.toml","Admitted Cargo artifact plan Source changed","build"]]);
+ expect(reports).toEqual(['[cargo-plan-drift] {"manifest":"/owned/Cargo.toml","category":"source-file","path":"/owned/shared.rs"}\n']);
+
+ drift=false;
+ const database=new Database(":memory:");
+ try {
+  const oracle=database.query<{outcome:string;reads:number},[string,string]>(
+   "select case when ?1 = ?2 then 'source-refusal' else 'graph-drift' end as outcome, (?1 = ?2) as reads",
+  );
+  for(const row of planCorpus.graphRecheck){
+   const expected=oracle.get(JSON.stringify(row.before),JSON.stringify(row.after))!;
+   expect(expected).toEqual({outcome:row.outcome,reads:row.recheckReads});
+   checks.facts=0;
+   const admitted=calls.length,reported=reports.length,classified=edits.length;
+   features=row.before;
+   await expect(capture(plan=>{features=row.after;return plan.recheck();})).rejects.toBe(
+    row.outcome==="graph-drift"?refusal:sourceRefusal,
+   );
+   expect(calls.length-admitted-1,row.id).toBe(row.recheckReads);
+   const graphChanged=Number(row.outcome==="graph-drift");
+   expect(reports.length-reported,row.id).toBe(graphChanged);
+   expect(edits.length-classified,row.id).toBe(graphChanged);
+   if(graphChanged){
+    expect(edits.at(-1)).toEqual(["input","/owned/Cargo.toml","Admitted Cargo artifact planning graph changed","build"]);
+    expect(JSON.parse(reports.at(-1)!.replace(/^\[cargo-plan-drift\] /u,"")).category).toBe("graph-units");
+   }
+  }
+ } finally {database.close();}
 });

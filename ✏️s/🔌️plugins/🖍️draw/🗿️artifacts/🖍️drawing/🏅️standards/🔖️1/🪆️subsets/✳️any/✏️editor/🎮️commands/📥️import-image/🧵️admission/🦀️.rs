@@ -16,6 +16,7 @@ pub type App=semio_plugin::EditorApp<DrawingPlayApp>;
 /// 🪙️ Whether the step wallet still funds one whole work turn quoted as `demand`.
 fn can_enter(grant:RetainedCloneGrant,demand:semio_framework_value::RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct Workspace {job:Option<DrawingImageAdmissionJob>,publication:Option<DrawingImagePublicationJob>}
 pub struct Work {workspace:Option<ControlledRetirement<Workspace>>,identity:Option<usize>,complete:bool,closing:bool}
 impl Work {pub fn new()->Self {Self {workspace:None,identity:None,complete:false,closing:false}}}
@@ -105,7 +106,7 @@ impl semio_framework::ToolJobFactory for DrawingImageCommandJobFactory {
     fn keys(&self)->&[semio_framework::ToolFactoryKey] {&self.keys}
     fn payload_schema_id(&self)->&str {DRAWING_BOUNDED_PAYLOAD_SCHEMA}
     fn classification(&self)->semio_framework::InteractiveJobClassification {semio_framework::InteractiveJobClassification::Migrated}
-    fn execution_contract(&self)->semio_framework::ToolExecutionContract {semio_framework::ToolExecutionContract::resumable(DRAWING_IMAGE_RAW_BYTES,4096,1,262144,7500,1,1).with_retained_work(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128})}
+    fn execution_contract(&self)->semio_framework::ToolExecutionContract {semio_framework::ToolExecutionContract::resumable(DRAWING_IMAGE_RAW_BYTES,4096,1,262144,7500,1,1)}
  semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes:DRAWING_IMAGE_RAW_BYTES,checkpoint_resume:false);
 }
 impl semio_plugin::ArtifactOwnedToolJobFactory for DrawingImageCommandJobFactory {

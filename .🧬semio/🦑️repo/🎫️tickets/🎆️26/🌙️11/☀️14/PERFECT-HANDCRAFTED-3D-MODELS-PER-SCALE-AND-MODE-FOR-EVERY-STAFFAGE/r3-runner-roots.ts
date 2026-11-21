@@ -23,7 +23,7 @@ if (import.meta.main) {
     const geometry = JSON.parse(readFileSync(join(OUT, "geometry.json"), "utf8"));
     for (const [scale, views] of Object.entries(geometry) as [string, Record<string, unknown>][]) for (const [view, shapes] of Object.entries(views)) asset.representations[scale].geometry[view] = shapes;
   }
-  asset.representations["500"].validRange.maxDenominator = 800;
+  asset.representations["500"].validRange.maxDenominator = 600;
   const source = join(import.meta.dir, "volumes", "humans", "runner-with-blade-prosthesis.json");
   if (process.argv.includes("--volumes")) asset.volumes = JSON.parse(readFileSync(source, "utf8")).volumes;
   mkdirSync(OUT, { recursive: true });

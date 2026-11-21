@@ -79,11 +79,10 @@ async fn catalogue_reflects_workshop_after_machine_removal() {
 /// ⚖️ The four-extension pack renders each active catalog id once.
 #[semio_framework_async_macros::async_test]
 async fn the_real_extension_pack_renders_each_catalog_section_once() {
-    use semio_s_artifact_process_process3d_commands::contribution::set_contributions;
     let mut app = context::app();
-    let pack = crate::context::demonstrator_contributions_pack();
-    let distilled = semio_s_artifact_process_process3d_kit::installable_contributions(&pack, semio_s_artifact_process_process3d_kit::PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
-    context::dispatch(&mut app, Process3dCommand::SetContributions(set_contributions::SetContributions { json: distilled }));
+    let pack = context::demonstrator_contributions_pack();
+    let receipt = context::install_contributions(&mut app, pack.clone());
+    assert!(receipt.lanes.contains(&semio_plugin::app::TypedOperationResultLane::Config));
     let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_WORKSHOP);
     let marker = "\"key\":\"process3d-play-workshop.catalog.";
     let mut rendered_ids: Vec<String> = Vec::new();

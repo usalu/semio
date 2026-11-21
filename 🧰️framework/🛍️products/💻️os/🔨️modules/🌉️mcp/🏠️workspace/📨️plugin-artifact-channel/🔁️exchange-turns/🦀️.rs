@@ -87,49 +87,39 @@ impl PluginArtifactChannel {
             self.pending_exchanges.insert_admitted(PendingExchange { instance, seq, response: PendingResponsePage::Empty, ingress_fault: None });
         }
         assert_eq!(self.pending_exchanges.get(instance).expect("pending exchange was admitted").seq, seq, "the retained exchange answers the command this turn drives");
-        let mut event = self
+        let event = self
             .pending_command_closes
             .with_driver_mut(u64::from(instance), seq, |driver| driver.next_page())
             .map_err(|fault| Self::not_wired("retained command driver", format!("{}: {}", fault.code.0, fault.message)))?
             .map_err(|fault| Self::not_wired("command page", format!("{}: {}", fault.code.0, fault.message)))?
             .map(|(cursor, bytes)| semio_framework::kernel::Event::CommandIngressPage { cursor, bytes })
             .unwrap_or(semio_framework::kernel::Event::Wake);
-        let runtime = Arc::clone(&self.runtime);
-        let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("exchange", format!("no open instance {instance}")))?;
         self.pending_command_closes.prepare_suspend(u64::from(instance), seq).map_err(|fault| Self::not_wired("suspending command owner", format!("{}: {}", fault.code.0, fault.message)))?;
-        let outcome = with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_mut(&mut event), headless_command_budget(), identity)));
-        let turn = match outcome {
-            Ok(turn) => {
-                self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
-                turn
-            }
-            Err(error) => {
-                self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
-                self.discard_instance(instance);
-                return Err(match error {
-                    semio_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_plugin_guest_contract::TurnFault::FuelExhausted => {
-                        Fault { code: "budget.exceeded".to_string(), message: format!("AppCommand exceeded one turn's ceiling ({error}); the instance was discarded") }
-                    }
-                    error => Self::not_wired("execute_turn", error),
-                });
-            }
-        };
-        let progress = self
-            .pending_command_closes
-            .with_driver_mut(u64::from(instance), seq, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
-            .map_err(|fault| Self::not_wired("retained command driver", format!("{}: {}", fault.code.0, fault.message)))?
-            .map_err(|fault| Self::not_wired("command acknowledgement", format!("{}: {} — the guest answered {:?} while this gateway drives instance {instance} seq {seq}", fault.code.0, fault.message, turn.command_ingress)))?;
+        let mut resumed = false;
         let mut published: Vec<String> = Vec::new();
-        let mut backbone_egress: Vec<Vec<u8>> = Vec::new();
-        for effect in &turn.effects {
-            published.push(effect_shape(instance, effect));
-            if let Some(payload) = document_backbone_payload(&self.actor_label, effect) {
-                backbone_egress.push(payload.to_vec());
+        let outcome = self.with_native_turn(instance, std::slice::from_ref(&event), |channel, turn| {
+            channel.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
+            resumed = true;
+            let progress = channel.pending_command_closes
+                .with_driver_mut(u64::from(instance), seq, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
+                .map_err(|fault| Self::not_wired("retained command driver", format!("{}: {}", fault.code.0, fault.message)))?
+                .map_err(|fault| Self::not_wired("command acknowledgement", format!("{}: {} — the guest answered {:?} while this gateway drives instance {instance} seq {seq}", fault.code.0, fault.message, turn.command_ingress)))?;
+            let pending = channel.pending_exchanges.get_mut(instance).expect("pending exchange was admitted");
+            for effect in &turn.effects {
+                published.push(effect_shape(instance, effect));
+                if let Some(payload) = document_backbone_payload(&channel.actor_label, effect) { channel.backbone_egress.push(payload.to_vec()); }
+                Self::admit_reply_frame(pending, instance, seq, effect);
             }
-            Self::admit_reply_frame(self.pending_exchanges.get_mut(instance).expect("pending exchange was admitted"), instance, seq, effect);
+            if matches!(progress, semio_framework::kernel::CommandBatchProgress::Faulted) && pending.ingress_fault.is_none() {
+                pending.ingress_fault = Some(ingress_fault_text(&turn.command_ingress));
+            }
+            Ok(progress)
+        });
+        if !resumed {
+            self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
         }
-        self.backbone_egress.append(&mut backbone_egress);
-        match progress {
+        if outcome.is_err() { self.discard_instance(instance); }
+        match outcome? {
             semio_framework::kernel::CommandBatchProgress::Complete => {
                 self.pending_command_closes.remove_terminal(u64::from(instance), seq).map_err(|fault| Self::not_wired("terminal command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 let mut pending = self.pending_exchanges.remove(instance).expect("terminal pending exchange");
@@ -137,11 +127,6 @@ impl PluginArtifactChannel {
                 pending.response.take(seq).map(CommandTurn::Settled)
             }
             semio_framework::kernel::CommandBatchProgress::Faulted => {
-                if let Some(pending) = self.pending_exchanges.get_mut(instance) {
-                    if pending.ingress_fault.is_none() {
-                        pending.ingress_fault = Some(ingress_fault_text(&turn.command_ingress));
-                    }
-                }
                 self.pending_command_closes.begin_close(u64::from(instance), seq).map_err(|fault| Self::not_wired("faulted command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 let (response_complete, _) = self.pending_exchanges.close_response_step(instance, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
                 if !response_complete {
@@ -179,28 +164,17 @@ impl PluginArtifactChannel {
         let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
         let mut foreign: Vec<u64> = Vec::new();
         while matches!(response, PendingResponsePage::Empty) {
-            let runtime = Arc::clone(&self.runtime);
-            let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("response", format!("no open instance {instance}")))?;
-            let turn = match with_headless_identity(|identity| semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_mut(&mut semio_framework::kernel::Event::Wake), headless_command_budget(), identity))) {
-                Ok(turn) => turn,
-                Err(error) => {
-                    self.discard_instance(instance);
-                    return Err(Self::not_wired("response", error));
+            let outcome = self.with_native_turn(instance, &[semio_framework::kernel::Event::Wake], |_, turn| {
+                for effect in &turn.effects {
+                    if let semio_framework::kernel::Effect::Respond { req, .. } = effect { foreign.push(req.0); }
+                    let Some(payload) = shell_app_frame_payload(instance, effect) else { continue; };
+                    let Some(prefix) = store::app_frame_reply_prefix(payload) else { continue; };
+                    if prefix.answers(seq) { response.admit_frame(payload); }
                 }
-            };
-            let idle = matches!(turn.status, semio_framework::kernel::TurnStatus::Idle) && turn.next_wake.is_none();
-            for effect in &turn.effects {
-                if let semio_framework::kernel::Effect::Respond { req, .. } = effect {
-                    foreign.push(req.0);
-                }
-                let Some(payload) = shell_app_frame_payload(instance, effect) else {
-                    continue;
-                };
-                let Some(prefix)=store::app_frame_reply_prefix(payload)else{continue};
-                if prefix.answers(seq) {
-                    response.admit_frame(payload);
-                }
-            }
+                Ok(matches!(turn.status, semio_framework::kernel::TurnStatus::Idle) && turn.next_wake.is_none())
+            });
+            if outcome.is_err() { self.discard_instance(instance); }
+            let idle = outcome?;
             if matches!(response, PendingResponsePage::Empty) && idle {
                 if !foreign.is_empty() {
                     return Err(Fault { code: "channel.not-wired".to_string(), message: format!("the guest acknowledged command seq {seq} and answered request(s) {foreign:?} instead") });

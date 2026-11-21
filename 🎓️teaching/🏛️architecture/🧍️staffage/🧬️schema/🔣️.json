@@ -249,6 +249,34 @@
       ]
     },
     "Joint": {
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "continuousTwist": {
+                "const": true
+              }
+            },
+            "required": [
+              "continuousTwist"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "const": "revolute"
+              },
+              "minDeg": false,
+              "maxDeg": false,
+              "twistMinDeg": false,
+              "twistMaxDeg": false,
+              "axisDeg": false,
+              "minM": false,
+              "maxM": false
+            }
+          }
+        }
+      ],
       "description": "A joint and its limits; revolute limits are angle offsets from rest, prismatic limits are offsets along axisDeg.",
       "type": "object",
       "additionalProperties": false,
@@ -264,6 +292,10 @@
         },
         "maxDeg": {
           "type": "number"
+        },
+        "continuousTwist": {
+          "description": "A shaft bearing whose sole degree of freedom is unlimited rotation about its local longitudinal axis, expressed by twistDeg. A looping clip may close an integer number of full axial turns away.",
+          "const": true
         },
         "twistMinDeg": {
           "type": "number",
@@ -408,6 +440,12 @@
         },
         "section": {
           "$ref": "#/$defs/Section"
+        },
+        "abductionDeg": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180,
+          "description": "Rest rotation about the parent normal, applied after the in-plane angle."
         }
       }
     },
@@ -438,6 +476,41 @@
             "$ref": "#/$defs/Bone"
           },
           "minItems": 1
+        },
+        "radialFolds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "left",
+              "right",
+              "facets",
+              "cutAngleDeg"
+            ],
+            "properties": {
+              "left": {
+                "$ref": "#/$defs/Slug"
+              },
+              "right": {
+                "$ref": "#/$defs/Slug"
+              },
+              "facets": {
+                "type": "array",
+                "minItems": 2,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/Slug"
+                }
+              },
+              "cutAngleDeg": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "exclusiveMaximum": 180
+              }
+            }
+          },
+          "description": "Ordered pairs of terminal facet frames share a crown. The total angle of the flat fabric fixes the width of each pleat."
         }
       }
     },
@@ -781,12 +854,32 @@
             "kind": {
               "const": "extruded"
             },
+            "weights": {
+              "description": "Blend of the solid over bones (skinning): at most four influences, each a bone and a non-negative weight, summing to 1 (validators `volume-weights-bone` and `volume-weights-sum`); absent: the solid is rigid to `bone`. The coordinates stay those of the frame of `bone`.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bone",
+                  "weight"
+                ],
+                "properties": {
+                  "bone": {
+                    "$ref": "#/$defs/Slug"
+                  },
+                  "weight": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              },
+              "minItems": 1,
+              "maxItems": 4
+            },
             "sweep": {
-              "description": "The bone-local axis the profile is swept along, required and never defaulted. w sweeps along the lateral axis (left is +): the profile lies in the bone's (u, v) plane, as every extruded solid has been authored. v sweeps along the bone normal: the profile lies in the bone's (u, w) plane and the thickness runs along v. z0, z1 and zTip are offsets along this axis from the bone origin at rest (they keep the name z of the default lateral sweep).",
-              "enum": [
-                "v",
-                "w"
-              ]
+              "description": "Required bone-local axis of extrusion. For u the profile coordinates are (v, w), for v they are (u, w), and for w they are (u, v). z0 and z1 span the named axis. A length on u or v is relative to the bone origin. Lateral w extents are measured in world z at rest.",
+              "enum": ["u", "v", "w"]
             },
             "z0": {
               "type": "number"
@@ -795,7 +888,7 @@
               "type": "number"
             },
             "zTip": {
-              "description": "Optional linear taper: the lateral span [z0, z1] (left is +) at the tip of the bone, in the same order as z0..z1 (zTip[0] < zTip[1]); the span at the bone origin is z0..z1 and the span between is interpolated linearly along the bone (u). Absent means a constant span. A tapered limb, blade or branch is one extruded solid.",
+              "description": "Optional linear taper: the lateral span [z0, z1] (left is +) at the tip of the bone, in the same order as z0..z1 (zTip[0] < zTip[1]); the span at the bone origin is z0..z1 and the span between is interpolated linearly along the first profile coordinate, normalized by bone length (u for v and w sweeps, v for a u sweep). Absent means a constant span. A tapered limb, blade or branch is one extruded solid.",
               "type": "array",
               "items": {
                 "type": "number"
@@ -1299,6 +1392,27 @@
         50
       ]
     },
+    "ScaleBands": {
+      "description": "The denominator band [from, to] each preset scale stands for; together they tile the promised drawing range 1:20…1:1000 without a hole. The validRanges of an asset's authored representations must cover the union of the bands of its authored presets without a hole (rule valid-range-gap): the boundary between two authored neighbours may move, the outer ends may not shrink.",
+      "const": {
+        "50": [
+          20,
+          75
+        ],
+        "100": [
+          75,
+          150
+        ],
+        "200": [
+          150,
+          350
+        ],
+        "500": [
+          350,
+          1000
+        ]
+      }
+    },
     "PenSet": {
       "description": "The pens of a representation per role in paper millimetres; null means the role is not drawn.",
       "type": "object",
@@ -1456,6 +1570,7 @@
           "$ref": "#/$defs/ScaleDenominator"
         },
         "validRange": {
+          "description": "The range of custom denominators this representation is validated for (it contains its own denominator and prints over its whole range). The ranges of all authored representations of an asset cover the ScaleBands of its authored presets without a hole.",
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -1861,9 +1976,8 @@
           "maximum": 180
         },
         "twistDeg": {
-          "type": "number",
-          "minimum": -720,
-          "maximum": 720
+          "description": "Axial rotation in degrees. The bone limits ordinary joints. A continuous shaft may turn freely.",
+          "type": "number"
         },
         "dx": {
           "type": "number"
@@ -2678,9 +2792,10 @@
           "exclusiveMinimum": 0
         },
         "areaBasis": {
-          "description": "Declares what `areaM2` is: `exchange` = an exchange area (leaf area, fur, feather or hair surface) that drives transpiration or the thermal coupling and is not the envelope of the modelled solids; such a region is exempt from the exposed-area comparison of `volumes-thermal-coverage` and only needs a solid. Required for regions of model `leaf` and of kind foliage, fur, feather and hair (validator `thermal-area-basis`); absent: `areaM2` is the exposed surface.",
+          "description": "The area represented by areaM2. By default it is the outer surface in the assembly. Total is the component's complete outer area before other components cover it, with the pose's exposedFraction controlling the area available for heat exchange. Exchange is the effective leaf, fur, feather or hair area. Total and default areas are measured against geometry. Leaf models and foliage, fur, feather and hair regions require exchange.",
           "enum": [
-            "exchange"
+            "exchange",
+            "total"
           ]
         },
         "characteristicLengthM": {
@@ -3278,6 +3393,11 @@
         "assumptions"
       ],
       "properties": {
+        "minimumAirPassageM": {
+          "description": "Width in metres of the smallest modeled opening that connects a heat-exchange surface to outside air.",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
         "environment": {
           "$ref": "#/$defs/Environment"
         },
@@ -4237,6 +4357,133 @@
               "type": "boolean"
             }
           }
+        },
+        {
+          "description": "A connected, closed, outward-oriented triangular shell. Vertices are unique bone- or node-local positions in metres. Triangles index them counterclockwise as viewed from outside.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "kind",
+            "bone",
+            "material",
+            "role",
+            "tone",
+            "vertices",
+            "triangles"
+          ],
+          "properties": {
+            "kind": {
+              "const": "polyhedron"
+            },
+            "id": {
+              "description": "Unique among the solids of its list at this scale (validator `volume-duplicate-id`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "description": "The bone whose rest frame carries the coordinates of this solid and which the solid follows rigidly unless `weights` blend it (validator `volume-bone`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "material": {
+              "description": "The id of an entry of the asset's `materials` that colours and, in the thermal view, binds the solid (validator `volume-material`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "description": "The line-hierarchy role of the solid in the line views: body for the main mass, detail for small parts, texture, glazing for transparent parts, ground for contact surfaces.",
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "tone": {
+              "description": "The grey tone 0 (black) to 1 (white) the solid takes in the solid views of the dark and light themes, like the tone of a shape.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "weights": {
+              "description": "Blend of the solid over bones (skinning): at most four influences, each a bone and a non-negative weight, summing to 1 (validators `volume-weights-bone` and `volume-weights-sum`); absent: the solid is rigid to `bone`. The coordinates stay those of the frame of `bone`.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bone",
+                  "weight"
+                ],
+                "properties": {
+                  "bone": {
+                    "$ref": "#/$defs/Slug"
+                  },
+                  "weight": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              },
+              "minItems": 1,
+              "maxItems": 4
+            },
+            "transform": {
+              "$ref": "#/$defs/VolumeTransform"
+            },
+            "repeat": {
+              "$ref": "#/$defs/VolumeRepeat"
+            },
+            "tags": {
+              "description": "Free labels of the solid; the label `glyph` is reserved for generated analysis glyphs.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true
+            },
+            "sectionFaces": {
+              "description": "Faces of this solid that are section cuts through a continuing construction (a wall, slab or beam sample) or the hidden back of a one-sided patch: every face whose outward normal lies within 45 degrees of one of these bone axes (`-u`, `+u`, `-v`, `+v`, `-w`, `+w` of the solid's bone frame) counts for no thermal area and is drawn as a cut face.",
+              "type": "array",
+              "items": {
+                "enum": [
+                  "-u",
+                  "+u",
+                  "-v",
+                  "+v",
+                  "-w",
+                  "+w"
+                ]
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "slender": {
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "envelope": {
+              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "type": "boolean"
+            },
+            "texture": {
+              "description": "Marks a texture part: sheet-like detail the 2D draws as `texture` or as open `detail` strokes inside a filled outline (slats, seams, grilles). A texture solid is excluded from the silhouette and cross-scale comparisons and from `volumes-feature`, and belongs only to scales whose 2D draws that texture.",
+              "type": "boolean"
+            },
+            "vertices": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "$ref": "#/$defs/Vector3"
+              }
+            },
+            "triangles": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -5080,6 +5327,142 @@
             "texture": {
               "description": "Marks a texture part: sheet-like detail the 2D draws as `texture` or as open `detail` strokes inside a filled outline (slats, seams, grilles). A texture solid is excluded from the silhouette and cross-scale comparisons and from `volumes-feature`, and belongs only to scales whose 2D draws that texture.",
               "type": "boolean"
+            }
+          }
+        },
+        {
+          "description": "A connected, closed, outward-oriented triangular shell. Vertices are unique bone- or node-local positions in metres. Triangles index them counterclockwise as viewed from outside.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "kind",
+            "bone",
+            "material",
+            "role",
+            "tone",
+            "region",
+            "vertices",
+            "triangles"
+          ],
+          "properties": {
+            "kind": {
+              "const": "polyhedron"
+            },
+            "id": {
+              "description": "Unique among the solids of its list at this scale (validator `volume-duplicate-id`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "description": "The bone whose rest frame carries the coordinates of this solid and which the solid follows rigidly unless `weights` blend it (validator `volume-bone`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "material": {
+              "description": "The id of an entry of the asset's `materials` that colours and, in the thermal view, binds the solid (validator `volume-material`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "description": "The line-hierarchy role of the solid in the line views: body for the main mass, detail for small parts, texture, glazing for transparent parts, ground for contact surfaces.",
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "tone": {
+              "description": "The grey tone 0 (black) to 1 (white) the solid takes in the solid views of the dark and light themes, like the tone of a shape.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "weights": {
+              "description": "Blend of the solid over bones (skinning): at most four influences, each a bone and a non-negative weight, summing to 1 (validators `volume-weights-bone` and `volume-weights-sum`); absent: the solid is rigid to `bone`. The coordinates stay those of the frame of `bone`.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bone",
+                  "weight"
+                ],
+                "properties": {
+                  "bone": {
+                    "$ref": "#/$defs/Slug"
+                  },
+                  "weight": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              },
+              "minItems": 1,
+              "maxItems": 4
+            },
+            "transform": {
+              "$ref": "#/$defs/VolumeTransform"
+            },
+            "repeat": {
+              "$ref": "#/$defs/VolumeRepeat"
+            },
+            "tags": {
+              "description": "Free labels of the solid; the label `glyph` is reserved for generated analysis glyphs.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true
+            },
+            "region": {
+              "description": "The id of the `thermal.regions` entry whose surface this solid models (validator `volume-region`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "layer": {
+              "description": "The id of a layer of that region this solid is the shell of, innermost layer first; absent for a solid that is the whole region or an emitter (validator `volume-layer`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "sectionFaces": {
+              "description": "Faces of this solid that are section cuts through a continuing construction (a wall, slab or beam sample) or the hidden back of a one-sided patch: every face whose outward normal lies within 45 degrees of one of these bone axes (`-u`, `+u`, `-v`, `+v`, `-w`, `+w` of the solid's bone frame) counts for no thermal area and is drawn as a cut face.",
+              "type": "array",
+              "items": {
+                "enum": [
+                  "-u",
+                  "+u",
+                  "-v",
+                  "+v",
+                  "-w",
+                  "+w"
+                ]
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "slender": {
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "envelope": {
+              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "type": "boolean"
+            },
+            "texture": {
+              "description": "Marks a texture part: sheet-like detail the 2D draws as `texture` or as open `detail` strokes inside a filled outline (slats, seams, grilles). A texture solid is excluded from the silhouette and cross-scale comparisons and from `volumes-feature`, and belongs only to scales whose 2D draws that texture.",
+              "type": "boolean"
+            },
+            "vertices": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "$ref": "#/$defs/Vector3"
+              }
+            },
+            "triangles": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
             }
           }
         },
@@ -6129,6 +6512,172 @@
             "texture": {
               "description": "Marks a texture part: sheet-like detail the 2D draws as `texture` or as open `detail` strokes inside a filled outline (slats, seams, grilles). A texture solid is excluded from the silhouette and cross-scale comparisons and from `volumes-feature`, and belongs only to scales whose 2D draws that texture.",
               "type": "boolean"
+            }
+          },
+          "if": {
+            "properties": {
+              "part": {
+                "const": "support"
+              }
+            },
+            "required": [
+              "part"
+            ]
+          },
+          "then": {
+            "required": [
+              "anchor"
+            ],
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/Slug"
+              }
+            }
+          }
+        },
+        {
+          "description": "A connected, closed, outward-oriented triangular shell. Vertices are unique bone- or node-local positions in metres. Triangles index them counterclockwise as viewed from outside.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "kind",
+            "bone",
+            "material",
+            "role",
+            "tone",
+            "member",
+            "part",
+            "vertices",
+            "triangles"
+          ],
+          "properties": {
+            "kind": {
+              "const": "polyhedron"
+            },
+            "id": {
+              "description": "Unique among the solids of its list at this scale (validator `volume-duplicate-id`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "description": "The bone whose rest frame carries the coordinates of this solid and which the solid follows rigidly unless `weights` blend it (validator `volume-bone`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "material": {
+              "description": "The id of an entry of the asset's `materials` that colours and, in the thermal view, binds the solid (validator `volume-material`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "description": "The line-hierarchy role of the solid in the line views: body for the main mass, detail for small parts, texture, glazing for transparent parts, ground for contact surfaces.",
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "tone": {
+              "description": "The grey tone 0 (black) to 1 (white) the solid takes in the solid views of the dark and light themes, like the tone of a shape.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "weights": {
+              "description": "Blend of the solid over bones (skinning): at most four influences, each a bone and a non-negative weight, summing to 1 (validators `volume-weights-bone` and `volume-weights-sum`); absent: the solid is rigid to `bone`. The coordinates stay those of the frame of `bone`.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bone",
+                  "weight"
+                ],
+                "properties": {
+                  "bone": {
+                    "$ref": "#/$defs/Slug"
+                  },
+                  "weight": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              },
+              "minItems": 1,
+              "maxItems": 4
+            },
+            "transform": {
+              "$ref": "#/$defs/VolumeTransform"
+            },
+            "repeat": {
+              "$ref": "#/$defs/VolumeRepeat"
+            },
+            "tags": {
+              "description": "Free labels of the solid; the label `glyph` is reserved for generated analysis glyphs.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "uniqueItems": true
+            },
+            "member": {
+              "description": "The id of the bone whose load-bearing member, joint, support or concentrated mass this solid is (validator `volume-member`).",
+              "$ref": "#/$defs/Slug"
+            },
+            "part": {
+              "description": "What the solid is: `member` (the load-bearing cross-section of the bone), `joint` (a rig joint), `support` (a support at an anchor of `structure.supports`) or `mass` (a compact solid at a concentrated centre of mass).",
+              "enum": [
+                "member",
+                "joint",
+                "support",
+                "mass"
+              ]
+            },
+            "sectionFaces": {
+              "description": "Faces of this solid that are section cuts through a continuing construction (a wall, slab or beam sample) or the hidden back of a one-sided patch: every face whose outward normal lies within 45 degrees of one of these bone axes (`-u`, `+u`, `-v`, `+v`, `-w`, `+w` of the solid's bone frame) counts for no thermal area and is drawn as a cut face.",
+              "type": "array",
+              "items": {
+                "enum": [
+                  "-u",
+                  "+u",
+                  "-v",
+                  "+v",
+                  "-w",
+                  "+w"
+                ]
+              },
+              "uniqueItems": true,
+              "minItems": 1
+            },
+            "slender": {
+              "description": "Declares a slender part (cord, wire, capillary, rod, hose, antenna): its length is at least 20 times its largest cross extent (validator `volumes-slender`). A slender solid is exempt from `volumes-feature` and from the cross-scale comparison; at each scale it is as thick as that scale's 2D draws it, and a coarser scale may keep it in `thermal` or `structure` without having it in `body`.",
+              "type": "boolean"
+            },
+            "anchor": {
+              "description": "For `part: \"support\"`: the id of the support anchor of `structure.supports` this solid is the support of; every support anchor has exactly one support solid per authored scale and the solid is checked against that anchor, not against another anchor of its bone (validators `volume-anchor`, `volumes-structure-coverage`). Absent for the other parts.",
+              "$ref": "#/$defs/Slug"
+            },
+            "envelope": {
+              "description": "Marks an envelope prism: at a coarser scale a lattice (truss, mast, framework) of the finer scale is replaced by its envelope, declared in `decisions`; cross-scale then compares this solid with the convex hull per bone of the finer solids of its bone instead of with the bars (validator `volume-envelope`: not at the finest authored scale).",
+              "type": "boolean"
+            },
+            "texture": {
+              "description": "Marks a texture part: sheet-like detail the 2D draws as `texture` or as open `detail` strokes inside a filled outline (slats, seams, grilles). A texture solid is excluded from the silhouette and cross-scale comparisons and from `volumes-feature`, and belongs only to scales whose 2D draws that texture.",
+              "type": "boolean"
+            },
+            "vertices": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "$ref": "#/$defs/Vector3"
+              }
+            },
+            "triangles": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
             }
           },
           "if": {

@@ -17,14 +17,22 @@ Feature: EN 1991 action catalogue worked examples
       | e11-01-g-de           | E11.01 | de    | material:steel;thickness=0.01 | g           | 785       | 1e-9      |
       | e11-04-alpha-a-en     | E11.04 | en    | category:C1;area=40;storeys=1 | alpha_a     | 0.75      | 1e-9      |
       | e11-04-alpha-n-en     | E11.04 | en    | category:B;area=20;storeys=5 | alpha_n     | 0.82      | 1e-9      |
+      | e11-04-area-b1-de | E11.04 | de | category:B1;area=80;storeys=5 | alpha_a | 0.625 | 1e-9 |
+      | e11-04-area-c1-de | E11.04 | de | category:C1;area=40;storeys=5 | alpha_a | 0.95 | 1e-9 |
+      | e11-04-area-e11-de | E11.04 | de | category:E1.1;area=200;storeys=5 | alpha_a | 0.75 | 1e-9 |
+      | e11-04-area-e12-de | E11.04 | de | category:E1.2;area=200;storeys=5 | alpha_a | 1 | 1e-9 |
+      | e11-04-storey-z-de | E11.04 | de | category:Z;area=400;storeys=3 | alpha_n | 0.90 | 1e-9 |
+      | e11-04-storey-e11-de | E11.04 | de | category:E1.1;area=40;storeys=5 | alpha_n | 1 | 1e-9 |
       | e11-02-delta-q-de     | E11.02 | de    | wall_gamma=14000;wall_thickness=0.115;wall_height=2.6;finish=400 | delta_q     | 1200      | 1e-9      |
       | e11-09-pressure-de    | E11.09 | de    | load=10000;a=0.2;b=0.2 | pressure    | 250000    | 1e-9      |
       | e12-01-theta-g-de     | E12.01 | de    | curve:standard;t_min=60 | theta_g     | 1218.49   | 1e-5      |
       | e12-01-theta-g-de-2   | E12.01 | de    | curve:hydrocarbon;t_min=30 | theta_g     | 1370.81   | 1e-5      |
       | e12-01-theta-g-de-3   | E12.01 | de    | curve:external;t_min=5 | theta_g     | 861.61    | 1e-5      |
-      | e12-02-theta-max-de   | E12.02 | de    | a_f=50;a_t=184.84;a_v=5;h_eq=2;b=1160;q_fd_mj=336 | theta_max   | 1095.32   | 1e-5      |
-      | e12-03-q-fd-de        | E12.03 | de    | area=250;q_fk_mj=420;delta_q2=1 | q_fd        | 504000000 | 1e-9      |
-      | e12-04-t-ed-de        | E12.04 | de    | q_fd_mj=504;height=3;alpha_v=0.1;k_b=0.07 | t_ed        | 3515.61   | 1e-5      |
+      | e12-02-theta-max-en   | E12.02 | en    | a_f=50;a_t=184.84;a_v=5;h_eq=2;b=1160;q_fd_mj=336 | theta_max   | 1095.32   | 1e-5      |
+      | e12-03-q-fd-en        | E12.03 | en    | area=250;q_fk_mj=420;delta_q2=1 | q_fd        | 504000000 | 1e-9      |
+      | e12-03-bb-office | E12.03 | de | bb_source:typical_use;occupancy:office;bb_use_chi=0.8;bb_construction_mj=20;bb_gamma=1.25 | q_fd | 609000000 | 1e-9 |
+      | e12-03-bb-survey | E12.03 | de | bb_source:survey;bb_survey_mj=20;bb_gamma=1.25 | q_fd | 50000000 | 1e-9 |
+      | e12-04-t-ed-en        | E12.04 | en    | q_fd_mj=504;height=3;alpha_v=0.1;k_b=0.07 | t_ed        | 3515.61   | 1e-5      |
       | e12-07-eta-fi-de      | E12.07 | de    | g_k=100;q_k=50;psi=0.5 | eta_fi      | 0.595238  | 1e-6      |
       | e13-02-s-k-de         | E13.02 | de    | zone:2;altitude=300 | s_k         | 890.194   | 1e-6      |
       | e13-02-s-k-de-2       | E13.02 | de    | zone:3;altitude=800 | s_k         | 4761.655  | 1e-6      |

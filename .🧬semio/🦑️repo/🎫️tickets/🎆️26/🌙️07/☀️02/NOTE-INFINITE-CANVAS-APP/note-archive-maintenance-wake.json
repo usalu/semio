@@ -1,0 +1,110 @@
+[
+  {
+    "state": "pending",
+    "phase": "DecodeParent",
+    "terminalTarget": false,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": true
+  },
+  {
+    "state": "running",
+    "phase": "HydrateParent",
+    "terminalTarget": false,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": true
+  },
+  {
+    "state": "running",
+    "phase": "AwaitingMembers",
+    "terminalTarget": false,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": true
+  },
+  {
+    "state": "running",
+    "phase": "AwaitReplacement",
+    "terminalTarget": false,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": true
+  },
+  {
+    "state": "running",
+    "phase": "MergeParent",
+    "terminalTarget": false,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": false
+  },
+  {
+    "state": "running",
+    "phase": "MergeParent",
+    "terminalTarget": true,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": true
+  },
+  {
+    "state": "ready",
+    "phase": "Terminal",
+    "terminalTarget": true,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": false
+  },
+  {
+    "state": "fault",
+    "phase": "Terminal",
+    "terminalTarget": true,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": false
+  },
+  {
+    "state": "cancelled",
+    "phase": "Terminal",
+    "terminalTarget": true,
+    "items": 16,
+    "fits": true,
+    "live": true,
+    "wake": false
+  },
+  {
+    "state": "running",
+    "phase": "HydrateParent",
+    "terminalTarget": false,
+    "items": 15,
+    "fits": true,
+    "live": true,
+    "wake": false
+  },
+  {
+    "state": "running",
+    "phase": "HydrateParent",
+    "terminalTarget": false,
+    "items": 16,
+    "fits": false,
+    "live": true,
+    "wake": false
+  },
+  {
+    "state": "running",
+    "phase": "HydrateParent",
+    "terminalTarget": false,
+    "items": 16,
+    "fits": true,
+    "live": false,
+    "wake": false
+  }
+]

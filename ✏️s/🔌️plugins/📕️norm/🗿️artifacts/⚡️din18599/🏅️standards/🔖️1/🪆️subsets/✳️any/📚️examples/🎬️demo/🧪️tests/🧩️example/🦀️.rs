@@ -5,7 +5,7 @@ async fn primary_asset_decodes_and_evaluates_claimed_verdict() {
     let text = crate::demo::PRIMARY_TEXT;
     let doc = <semio_s_artifact_norm_din18599_model::Din18599Snapshot as ArtifactDsl>::parse_dsl(text).expect("parse demo");
     let report = evaluate_document(&doc);
-    assert!(report.complies(), "fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
+    assert!(report.failing().next().is_none(), "fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
 }
 
 #[semio_framework_async_macros::async_test]

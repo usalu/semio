@@ -262,6 +262,8 @@ impl ArtifactEditor for FlowPlayApp {
             "updateGenerationValues" => Ok(FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
                 generation_id: str_arg(&["generationId", "generation_id"]),
                 question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
+                field_index: args.get("fieldIndex").filter(|value| !matches!(value, semio_framework_value::DslValue::Null))
+                    .map(|value| crate::playbook::generation_field_index(value).ok_or_else(|| Fault::from("Invalid generation field index"))).transpose()?,
                 value: args.get("value").cloned().unwrap_or(semio_framework_value::DslValue::Null),
             })),
             "flowEvalTick" => Ok(FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {

@@ -1,12 +1,12 @@
-use super::{G, unquoted_receiving_grant};
+use super::{G, unquoted_receiving_grant, unquoted_receiving_work};
 
 #[test]
-fn unquoted_decoder_leaves_lifetime_copy_stock_for_other_owners() {
+fn unquoted_decoder_leaves_lifetime_stock_for_other_owners() {
     let cases: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/receiving-copy.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let amount = |field: &str| usize::try_from(case[field].as_u64().unwrap()).unwrap();
         let whole = G {
-            maximum_items: 64,
+            maximum_items: amount("issuedItems"),
             maximum_copy_bytes: amount("issued"),
             maximum_capacity_bytes: 65_536,
             maximum_release_bytes: 65_536,
@@ -15,9 +15,27 @@ fn unquoted_decoder_leaves_lifetime_copy_stock_for_other_owners() {
         let reserved = unquoted_receiving_grant(whole);
         assert_eq!(reserved.maximum_copy_bytes, amount("reserved"));
         assert_eq!(whole.maximum_copy_bytes - reserved.maximum_copy_bytes, amount("available"));
-        assert_eq!(reserved.maximum_items, 32);
+        assert_eq!(reserved.maximum_items, amount("reservedItems"));
+        assert_eq!(whole.maximum_items - reserved.maximum_items, amount("availableItems"));
         assert_eq!(reserved.maximum_capacity_bytes, 32_768);
         assert_eq!(reserved.maximum_release_bytes, 32_768);
         assert_eq!(reserved.maximum_depth, 64);
+    }
+}
+
+#[test]
+fn unquoted_decoder_leaves_work_and_release_for_other_owners() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/receiving-work-release.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let amount = |field: &str| case[field].as_u64().unwrap();
+        let whole = G {
+            maximum_items: 0,
+            maximum_copy_bytes: 0,
+            maximum_capacity_bytes: 0,
+            maximum_release_bytes: usize::try_from(amount("issuedRelease")).unwrap(),
+            maximum_depth: 64,
+        };
+        assert_eq!(unquoted_receiving_work(amount("issuedWork")), amount("reservedWork"));
+        assert_eq!(unquoted_receiving_grant(whole).maximum_release_bytes as u64, amount("reservedRelease"));
     }
 }

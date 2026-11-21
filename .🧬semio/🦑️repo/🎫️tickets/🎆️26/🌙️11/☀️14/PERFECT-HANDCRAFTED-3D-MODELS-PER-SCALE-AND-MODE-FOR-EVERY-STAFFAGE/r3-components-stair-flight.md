@@ -162,3 +162,33 @@ Final check line: `PASS (12.5 s)`.
 - **Torsion not evaluated:** an HEA is torsionally soft for a centre stringer that gets one-sided loads. This is stated in the structure assumptions. A hollow section would be the better design, but HEA 160 is the declared section and I kept it.
 - **Tread-top area convention:** `tread-top` counts the walking surfaces only, as previously ruled in area-decisions. Under C25 the free undersides would be exposed area, so this convention is for the area reviewers to revisit.
 - **Plan convention:** the plan draws the hidden stringer under the treads to keep the region present in that view. It is fully covered, so it does not change what is seen.
+
+## Round 5 handcraft
+
+Agent C03, 2026-11-21. Opened: `r3-sheet` body, structure and cut thermal at 1:50, 1:100, 1:200 and 1:500, the poses `self-weight`, `crowd-live-load`, `point-load-tread` and clip `moving-point-load` t 2 at 1:50, `r3-2d` at every scale (`🗑️generated/r5-stair-flight/before`), and a 1:50 view from below (turn 215, tilt -20).
+
+### Reference and model (1:50)
+
+| quantity | model | reference | deviation |
+|---|---|---|---|
+| rise / going / lap | 181.25 / 280 / 30 mm | DIN 18065: r ≤ 190, g ≥ 260, lap ≥ 30 mm | within |
+| 2 r + g | 0.6425 m | 0.59 to 0.65 m (DIN 18065) | within |
+| pitch | 32.92° | ≤ 45° for building stairs | within |
+| HEA 160 h / b / t_f | 152 / 160 / 9 mm | EN 10365 | 0 % |
+| HEA 160 web | 7.5 mm | 6 mm | +25 %: 1:50 feature floor (hidden in every 2D view) |
+| tread | 310 x 1200 x 40 mm C24 | same | 0 % |
+| base / head plate | 300 x 260 x 15, 280 x 260 x 15 mm | same | 0 % |
+| flight mass | 347.3 kg | hand calculation 347.3 kg | 0 % |
+
+### Grades (body / thermal / structure)
+
+| scale | before = after |
+|---|---|
+| 1:50 | A- / A- / A- |
+| 1:100 | A- / A- / A- |
+| 1:200 | B+ / B+ / B+ |
+| 1:500 | B+ / B+ / B+ (folded 75 mm band with closed risers: the open risers cannot print at 1:500) |
+
+No remodelling: every quantity is within 3 % of DIN 18065 and EN 10365 except the web at the feature floor, the sections and bearings are the real construction, poses and clip frames stay closed. `r3-validate.ts components/stair-flight` VALID; `volumes-check.ts --product` PASS (2026-11-21).
+
+Still imperfect: no guard or handrail. MBO § 38 and DIN 18065 require a handrail and a guard on free sides; this component models the flight as the structural element, and the guard belongs to the separate balustrade component of the catalog (`components/glass-balustrade`) or to the stairwell wall. A guard modelled into this asset would change dimensions, thermal regions and the 2D of every scale; it is listed as an open point, not done in this round. The HEA root radii are not modelled; the 1:500 band closes the open risers.

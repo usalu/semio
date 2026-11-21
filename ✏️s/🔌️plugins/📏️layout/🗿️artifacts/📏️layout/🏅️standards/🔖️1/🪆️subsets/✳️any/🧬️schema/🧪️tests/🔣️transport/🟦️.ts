@@ -7,6 +7,14 @@ test('Layout native JSON retains the full document and diff with their real Draw
  expect(layoutArtifactNativeJson(layoutArtifactFromNativeJson(vectors.document))).toEqual(vectors.document);
  expect(layoutDiffNativeJson(layoutDiffFromNativeJson(vectors.diff))).toEqual(vectors.diff);
 });
+test('Layout native JSON preserves independent member identity and rejects inline Drawing payloads',()=>{
+ const {backgroundDrawing}=vectors.document;
+ if(!backgroundDrawing)throw Error('Drawing member fixture required');
+ expect(backgroundDrawing.handle.childId).not.toBe(backgroundDrawing.handle.target.artifactId);
+ const wrongDialect={...backgroundDrawing,handle:{...backgroundDrawing.handle,target:{...backgroundDrawing.handle.target,dialect:{...backgroundDrawing.handle.target.dialect,artifactKind:'s.stdio.semio'}}}};
+ expect(()=>layoutArtifactFromNativeJson({...vectors.document,backgroundDrawing:wrongDialect})).toThrow();
+ expect(()=>layoutArtifactFromNativeJson({...vectors.document,backgroundDrawing:{...backgroundDrawing,content:{}}})).toThrow();
+});
 test('Layout native JSON distinguishes absent and explicitly cleared Drawing setters',()=>{
  const {backgroundDrawing,...unchanged}=vectors.diff;
  const cleared={...unchanged,backgroundDrawing:null};

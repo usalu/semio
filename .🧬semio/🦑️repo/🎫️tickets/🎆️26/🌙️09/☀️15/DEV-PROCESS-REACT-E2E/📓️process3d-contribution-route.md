@@ -1,0 +1,23 @@
+# Process3d Host Contribution Route
+
+The first compiled editor run reported `interactive-job.unknown-key` when test setup used the unaddressed UI action endpoint for `setContributions`. The separate host gate test called the correct addressed endpoint but had not funded its original decoder. Its direct pending loop also supplied fresh metadata each turn.
+
+The shared test harness now uses the editor's declared app command with the original decoder, bounded turn renewal and paid input custody. It waits for typed publication before asserting the applied config or rendering the resulting catalog. The shipped and demonstrator pack tests require a Config result receipt. The pane smoke target uses the same route to clear the seeded roster.
+
+The addressed command branch validated its registered definition but the shared host producer later looked up the command's kind in the UI action map. The producer now accepts the kind resolved at ingress. Addressed app and active-mode commands use the receiving instance's matching registration on initial and resumed host turns. The independent UI route still resolves its own action definition.
+
+An isolated Bun assertion rejected the prior source and passed the updated dispatch and registration boundaries. The framework law mirrors the source assertions. The combined Cargo run directly exercises the mounted editor contribution route and pane smoke target. The scoped diff check passed.
+
+## Native WGPU startup
+
+React and browser WGPU both send the roster through an addressed app command and hand returned deferred effects back to the shell. The guest finishes through the Config publication receipt. The generated `smoke-process3d-native-prototype` and `run-process3d-native-prototype` targets select the native WGPU executable because the Process3d composition declares no custom native host. The native runtime publishes and loads the selected session's full plugin roster. The headless smoke boots the real shell and currently reports its app and attached windows.
+
+The native shell skipped the contributions command. Its runtime manifest exposed the selected modules but omitted the session's declared `consumes` topics, so the native bridge could not identify the contributions scoped to the consumer. The implementation is being wired through the closed native manifest and existing addressed command transport. The ticket supervisor now includes the canonical native smoke target. The smoke report and native contribution trace are needed to verify delivery to the mounted guest.
+
+The native smoke verifier and browser pack oracle share the language-neutral native contribution fixture. It requires a successful canonical smoke exit, the native host trace for the complete provider set and a boot report for the same app after that trace. Synthetic log checks passed for a complete roster and rejected a missing provider, a boot report that precedes delivery and a mismatched app. The canonical native launch result is still pending. [Smoke verifier](verify-native-smoke.mjs)
+
+The native runtime publisher, closed manifest schema, reader and addressed shell command are updated. The shared neutral fixture covers the four shipped descriptors, disabled contributors, unrelated topics and the hosted-app scope. The independent browser pack oracle and Ajv passed. At 16:18 UTC native smoke PID 24365 was reading its project graph. At 16:19 UTC focused native Rust PID 26307 entered source admission for `native_scope_delivers_only_admitted_workpiece_contributions`. The existing combined editor and both browser runs remain active.
+
+At 16:22 UTC the expanded editor run compiled `semio-plugin-instance-commands`, the crate containing the addressed host route correction. The focused native Rust test was admitting its source closure and the native smoke had a separate live graph worker. The shared smoke verifier and independent browser pack oracle now consume the same four-provider fixture. Both source checks passed, including refusals for a missing provider, mismatched app, zero instance ID and a boot report before delivery. Live smoke and browser delivery are still pending.
+
+The first focused native scope run exited 101 at 16:45 UTC. The compiler reported that `OrderedMap::return_scoped_alias` was missing in the admitted dependency while compiling the manifest view model. The current ordered value source already exposes that public method, and the two live sources changed together around 16:27 UTC, after the native test had begun admitting sources. No compatibility method was added. The focused command restarted from the current checkout at 16:46 UTC as PID 64437 and reached source admission. The expanded Process3d editor validation and the canonical native smoke stayed active.

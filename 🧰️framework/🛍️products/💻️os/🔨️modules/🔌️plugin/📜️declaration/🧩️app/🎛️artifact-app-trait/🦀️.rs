@@ -65,8 +65,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
         Vec::new()
     }
-    /// 🧹️ Advances one owner-local mounted background-job cleanup opportunity while the
-    /// application remains live.
+    /// 🧹️ Selects the next owner-local work phase. An idle mounted owner returns `None`
+    /// so the host can service the other live maintenance queues.
     fn mounted_job_maintenance_phase(_instance_id: u32) -> Option<MountedOwnerPhaseV1> { None }
 
     /// 📏️ Quotes the exact next [`Self::mounted_job_maintenance_step`] turn of the owner-local mounted jobs.
@@ -85,11 +85,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
-    /// 🚪️ Exact terminal witness paired with `mounted_job_close_step`. It is also what keeps an app
-    /// with owner-local cleanup still owing OUT of `maintenance_step`'s idle fast path: that path
-    /// leaves the round-robin stage cursor untouched, so an app answering `true` here while it still
-    /// held work never reached its own stage 15 again — the incremental teardown would simply never
-    /// run, which is when it is needed most (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42).
+    /// 🚪️ Returns true once [`Self::mounted_job_close_step`] has retired every mounted owner.
     fn mounted_jobs_terminal_is_empty(_instance_id: u32) -> bool {
         true
     }
@@ -121,8 +117,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 👆️ Selects a concrete attached window as the retained command's window-transient owner.
     /// The runtime validates the id and expected kind against the command's trusted ViewModel
     /// roster before it captures mutation authority for the current app and document.
-    fn retained_window_transient_target(_command: &Self::Command) -> Option<(&str, &'static str)> {
-        None
+    fn retained_window_transient_target<'a>(_command: &'a Self::Command, _view: Option<&'a ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        Ok(None)
     }
     /// 🐢️ What one framework-owned interaction verb (`InteractionVerb`) dirties in THIS app,
     /// for the domains it actually touched — the app half of `dispatch_interaction_action`'s
@@ -173,6 +169,18 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
     /// 🎞️ Builds an owned resumable producer for an explicitly registered media-output port.
     /// The completed `Media` crosses back to the host only after the job's fresh commit boundary.
+    fn build_original_picker_job(
+        _request: &mut Option<ArtifactReservedToolJobRequest<Self>>,
+        _body: &mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,
+        _construction: &mut semio_framework_job::OriginalConstructionAdmission,
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(
+            semio_framework_value::ValueRefusalKind::UnsupportedOwner,
+            "This editor has no registered Original picker format",
+        ).into())
+    }
+
     fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<Self>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_construction:&mut crate::media_contract::MediaConstruction,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media output lacks its concrete source-preserving producer").into())
     }

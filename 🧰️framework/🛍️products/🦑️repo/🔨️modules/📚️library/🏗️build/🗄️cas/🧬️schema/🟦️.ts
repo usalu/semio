@@ -11,6 +11,8 @@ export type CasPolicyV1=Readonly<{version:1;capBytes:number;highWatermark:number
 export const CAS_MESSAGES_V1=Object.freeze(schema.definitions.Messages.const);
 /** 🗄️ The default policy: a 32 GiB object cap, 90 % high and 75 % low watermark. */
 export const CAS_POLICY_V1:CasPolicyV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Policy.const)) as CasPolicyV1);
+/** 🧾️ The accounting area whose source inventories are retired by graph custody. */
+export const CAS_GRAPH_CLOSURE_AREA_V1=schema.definitions.GraphClosureArea.const;
 
 /** 🧮️ Fills a message template of the schema with values. */
 export function casTextV1(key:keyof typeof CAS_MESSAGES_V1,language:"en"|"de",values:Readonly<Record<string,string|number>>={}):string{

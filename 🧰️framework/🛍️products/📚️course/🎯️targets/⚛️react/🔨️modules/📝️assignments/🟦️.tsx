@@ -1,9 +1,10 @@
 /** 📝️ Assignments are the course's ungraded exercises: a card per assignment on the assignments page and, behind it, the
- * PDF in the learner's language shown in the page itself, with a download, a tab of its own and the way back.
+ * PDF in the learner's language, with a download, a tab of its own and the way back. A wide, fine-pointer screen also shows an inline preview.
  * @see ../🏠️home/🟦️.tsx — the overview that hosts the cards and pages
  * @see ../../../../🧬️schema/🔣️.json — `Assignment`, the contract of an exercise */
 import { useId, type ReactElement } from "react";
 import type { Assignment } from "@semio-tech/course";
+import { UI_MOBILE_MEDIA_QUERY, useMediaQuery } from "@semio-tech/ui-react/chrome";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { BodyButton, CELL, CardAction, CardIcon, CardLink, CardSection, CourseCard, GROUP, Glyph, PageFrame, RowLink } from "../🪟️chrome/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
@@ -40,9 +41,10 @@ export function AssignmentCardView(props: { readonly assignment: Assignment; rea
   );
 }
 
-/** 📄️ The page of an assignment: its PDF in the learner's language inside the page once the page is opened (an assignment page behind the glass loads nothing), after the controls a keyboard reaches first — back to the assignments, download and a tab of its own. */
+/** 📄️ The page of an assignment: the PDF's inline preview only when opened on a wide, fine-pointer screen, after the controls a keyboard reaches first — back to the assignments, download and a tab of its own. */
 export function AssignmentPage(props: { readonly assignment: Assignment; readonly session: CourseSession; readonly locale: CourseLocale; readonly text: CourseText; readonly opened: boolean }): ReactElement {
   const { assignment, session, locale, text, opened } = props;
+  const openSeparately = useMediaQuery(`${UI_MOBILE_MEDIA_QUERY}, (pointer: coarse)`);
   const id = useId();
   const title = localized(assignment.title, locale);
   const url = assignmentUrl(assignment, locale);
@@ -57,19 +59,23 @@ export function AssignmentPage(props: { readonly assignment: Assignment; readonl
             <CardIcon icon="arrow-left" />
             {text("course.assignments.back")}
           </BodyButton>
-          <RowLink primary href={url} download={assignment.documents[locale].file}>
+          <RowLink primary={!openSeparately} href={url} download={assignment.documents[locale].file}>
             <CardIcon icon="download" />
             {text("course.assignments.download")}
           </RowLink>
-          <RowLink href={url} external>
+          <RowLink primary={openSeparately} href={url} external>
             <CardIcon icon="external-link" />
             {text("course.assignments.newTab")}
           </RowLink>
         </div>
-        {opened ? <iframe key={url} {...CELL} src={`${url}#view=FitH`} title={text("course.assignments.viewerTitle", { title })} lang={locale} className={VIEWER} /> : <div aria-hidden="true" {...CELL} data-assignment-viewer="waiting" className={VIEWER} />}
-        <CardSection>
-          <p className="m-0 text-xs text-muted-foreground">{text("course.assignments.fallback")}</p>
-        </CardSection>
+        {openSeparately ? null : (
+          <>
+            {opened ? <iframe key={url} {...CELL} src={`${url}#view=FitH`} title={text("course.assignments.viewerTitle", { title })} lang={locale} className={VIEWER} /> : <div aria-hidden="true" {...CELL} data-assignment-viewer="waiting" className={VIEWER} />}
+            <CardSection>
+              <p className="m-0 text-xs text-muted-foreground">{text("course.assignments.fallback")}</p>
+            </CardSection>
+          </>
+        )}
       </CourseCard>
     </PageFrame>
   );

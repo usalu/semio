@@ -2,7 +2,7 @@ import {afterAll,expect,test} from "bun:test";
 import {spawn,spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,statSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join,resolve} from "node:path";
 import {setTimeout as sleep} from "node:timers/promises";
 import {enterScriptProcessWaitV1,liveChildPidsV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {attachHostCapacityProcessV1,bindHostCapacityWaitMarkerV1,hostCapacityDirectoryV1,hostTreeWaitsV1,processChildrenTableV1,processStartV1,readHostCapacityWaitMarkersV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,takeHostLockV1,withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from "../../🟦️.ts";
@@ -114,6 +114,47 @@ test("A grant from before a reboot is reclaimed even when its pid is alive again
  expect(existsSync(join(directory,"grants",`${id}.json`))).toBe(false);
 });
 
+test("Status excludes a stale grant and leaves its file for admission to reclaim",async()=>{
+ const directory=fresh(),id=newHostCapacityIdV1(),path=join(directory,"grants",`${id}.json`);
+ mkdirSync(join(directory,"grants"),{recursive:true});
+ writeFileSync(path,JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:13000,admittedAtMs:1,observedMegabytes:null,pid:process.pid,bootAtMs:1000}));
+ expect((await readHostCapacityStatusV1(options(directory))).grants).toEqual([]);
+ expect(existsSync(path)).toBe(true);
+ await withHostCapacityV1(options(directory),async()=>undefined);
+ expect(existsSync(path)).toBe(false);
+});
+
+test("A stale waiter cannot exhaust the queue before admission reclaims it",async()=>{
+ const directory=fresh(),stale=request(),path=join(directory,"queue",`${stale.id}.json`);
+ const dead=spawnSync(process.execPath,["--eval","0"]),small=readHostCapacityPolicyV1({...policy,wait:{...policy.wait,maximumWaiters:1}});
+ expect(dead.status).toBe(0);
+ mkdirSync(join(directory,"queue"),{recursive:true});
+ writeFileSync(path,JSON.stringify({request:stale,arrivedAtMs:Date.now(),pid:dead.pid}));
+ await expect(withHostCapacityV1(options(directory,{policy:small}),async()=>"admitted")).resolves.toBe("admitted");
+ expect(existsSync(path)).toBe(false);
+});
+
+test.skipIf(process.platform!=="win32")("Admission ignores a stale grant held open without Windows delete sharing",async()=>{
+ const directory=fresh(),id=newHostCapacityIdV1(),path=join(directory,"grants",`${id}.json`);
+ mkdirSync(join(directory,"grants"),{recursive:true});
+ writeFileSync(path,JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:13000,admittedAtMs:1,observedMegabytes:null,pid:process.pid,bootAtMs:1000}));
+ const powershell=String.raw`$file=[IO.File]::Open($env:SEMIO_CAPACITY_TEST_RECORD,'Open','Read','ReadWrite'); try { [Console]::WriteLine('held'); [Console]::Out.Flush(); [Console]::ReadLine() | Out-Null } finally { $file.Dispose() }`;
+ const reader=Bun.spawn(["powershell.exe","-NoProfile","-NonInteractive","-Command",powershell],{
+  env:{...process.env,SEMIO_CAPACITY_TEST_RECORD:path},stdin:"pipe",stdout:"pipe",stderr:"inherit",
+ });
+ try{
+  const ready=await reader.stdout.getReader().read();
+  expect(Buffer.from(ready.value??[]).toString()).toContain("held");
+  await withHostCapacityV1(options(directory),async()=>undefined);
+  expect(existsSync(path)).toBe(true);
+ }finally{
+  reader.stdin.end();
+  await reader.exited;
+ }
+ await withHostCapacityV1(options(directory),async()=>undefined);
+ expect(existsSync(path)).toBe(false);
+},20000);
+
 test("A child inside a grant inherits it without queueing even when the machine is full",async()=>{
  const directory=fresh();let seen:unknown;
  await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:13000})}),async outer=>{
@@ -215,11 +256,11 @@ test("A waiter that cannot fit yet does not hold back a smaller one behind it, u
 },30000);
 
 test("The directory is per user and shared by every checkout, with an explicit override",()=>{
- expect(hostCapacityDirectoryV1({},"darwin","/Users/x")).toBe("/Users/x/Library/Caches/semio/host-capacity");
- expect(hostCapacityDirectoryV1({XDG_CACHE_HOME:"/c"},"linux","/home/x")).toBe("/c/semio/host-capacity");
- expect(hostCapacityDirectoryV1({},"linux","/home/x")).toBe("/home/x/.cache/semio/host-capacity");
- expect(hostCapacityDirectoryV1({SEMIO_HOST_CAPACITY_DIRECTORY:"/tmp/g"},"darwin","/Users/x")).toBe("/tmp/g");
- expect(hostCapacityDirectoryV1({LOCALAPPDATA:"C:\\L"},"win32","C:\\Users\\x")).toContain("semio");
+ expect(hostCapacityDirectoryV1({},"darwin","/Users/x")).toBe(resolve("/Users/x/Library/Caches/semio/host-capacity"));
+ expect(hostCapacityDirectoryV1({XDG_CACHE_HOME:"/c"},"linux","/home/x")).toBe(resolve("/c/semio/host-capacity"));
+ expect(hostCapacityDirectoryV1({},"linux","/home/x")).toBe(resolve("/home/x/.cache/semio/host-capacity"));
+ expect(hostCapacityDirectoryV1({SEMIO_HOST_CAPACITY_DIRECTORY:"/tmp/g"},"darwin","/Users/x")).toBe(resolve("/tmp/g"));
+ expect(hostCapacityDirectoryV1({LOCALAPPDATA:"C:\\L"},"win32","C:\\Users\\x")).toBe(resolve("C:\\L","semio","host-capacity"));
 });
 
 test("Separate operating-system processes share one budget, a killed holder frees its reservation, and a killed holder or waiter leaves nothing behind",async()=>{

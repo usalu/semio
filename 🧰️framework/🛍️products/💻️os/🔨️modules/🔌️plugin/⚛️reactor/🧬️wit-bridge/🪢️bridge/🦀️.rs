@@ -108,6 +108,10 @@ fn wit_events_payload_bytes(events: &[semio_plugin_abi::wasip2::exports::semio::
         .map(|event| match event {
             wit::Event::InstanceOpen(open) => open.config.len() + open.quotas.len() + open.assets.iter().map(|(name, pack)| name.len() + pack.len()).sum::<usize>(),
             wit::Event::QuotaChanged(changed) => changed.quotas.len(),
+            wit::Event::OriginalMediaControl(event) => event.loan.operation_id.len() + event.loan.generation.len() +
+                event.loan.base_revision.len() + event.loan.document_id.len() + match &event.control {
+                    wit_events::OriginalMediaControl::Begin(begin) => begin.name.len() + begin.media_type.len(), _ => 0,
+                },
             wit::Event::UiIntent(intent) => intent.intent.len(),
             wit::Event::SurfaceVisible(visible) => visible.body_key.len() + visible.view_state.len(),
             wit::Event::StagedFormRequested(requested) => requested.surface.len() + requested.body_key.len() + requested.request.len(),
@@ -183,7 +187,20 @@ fn idle_command_cursor_to_wit() -> semio_plugin_abi::wasip2::exports::semio::fra
 /// 🔢️ Kernel command ingress → scalar WIT record, avoiding nested variant discriminants in async results.
 fn kernel_command_ingress_to_wit(status: semio_framework::kernel::CommandIngressStatus) -> semio_plugin_abi::wasip2::exports::semio::framework::reactor::CommandIngressStatus {
     use semio_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
+    if let semio_framework::kernel::CommandIngressStatus::OriginalMediaAck(ack) = &status {
+        return wit::CommandIngressStatus {
+            kind: 0, cursor: idle_command_cursor_to_wit(), fault: Vec::new(),
+            original_media_ack: Some(wit::OriginalMediaAck {
+                loan: wit_events::OriginalMediaLoan {
+        operation_id: ack.loan.operation_id.clone(), generation: ack.loan.generation.clone(),
+        instance_id: ack.loan.instance_id, document_id: ack.loan.document_id.clone(), base_revision: ack.loan.base_revision.clone(),
+    }, owner: ack.owner, seq: ack.seq, kind: ack.kind, extent: ack.extent,
+                phase: match ack.phase { semio_framework::kernel::OriginalMediaWirePhase::Begin => wit::OriginalMediaPhase::Begin, semio_framework::kernel::OriginalMediaWirePhase::Page => wit::OriginalMediaPhase::Page, semio_framework::kernel::OriginalMediaWirePhase::Complete => wit::OriginalMediaPhase::Complete, semio_framework::kernel::OriginalMediaWirePhase::Cancel => wit::OriginalMediaPhase::Cancel }, result: match ack.result { semio_framework::kernel::OriginalMediaWireResult::Retry => wit::OriginalMediaResult::Retry, semio_framework::kernel::OriginalMediaWireResult::Pending => wit::OriginalMediaResult::Pending, semio_framework::kernel::OriginalMediaWireResult::Accepted => wit::OriginalMediaResult::Accepted, semio_framework::kernel::OriginalMediaWireResult::Stale => wit::OriginalMediaResult::Stale, semio_framework::kernel::OriginalMediaWireResult::Refused => wit::OriginalMediaResult::Refused }, page_index: ack.page_index,
+            }),
+        };
+    }
     let (kind, cursor, fault) = match status {
+        semio_framework::kernel::CommandIngressStatus::OriginalMediaAck(_) => unreachable!(),
         semio_framework::kernel::CommandIngressStatus::Idle => (0, idle_command_cursor_to_wit(), Vec::new()),
         semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor) => (1, kernel_command_cursor_to_wit(&cursor), Vec::new()),
         semio_framework::kernel::CommandIngressStatus::Backpressure(cursor) => (2, kernel_command_cursor_to_wit(&cursor), Vec::new()),
@@ -191,7 +208,7 @@ fn kernel_command_ingress_to_wit(status: semio_framework::kernel::CommandIngress
         semio_framework::kernel::CommandIngressStatus::CommandComplete(cursor) => (4, kernel_command_cursor_to_wit(&cursor), Vec::new()),
         semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault } => (5, kernel_command_cursor_to_wit(&cursor), fault),
     };
-    wit::CommandIngressStatus { kind, cursor, fault }
+    wit::CommandIngressStatus { kind, cursor, fault, original_media_ack: None }
 }
 
 fn wit_cold_sha256(bytes: Vec<u8>, field: &'static str) -> Result<[u8; 32], semio_framework::Fault> {
@@ -337,6 +354,17 @@ fn wit_event_to_kernel(event: semio_plugin_abi::wasip2::exports::semio::framewor
         W::JobCompleted(payload) => Event::JobCompleted { job: payload.job, result: wit_completion_to_kernel(payload.outcome) },
         W::Message(payload) => Event::Message { source: wit_endpoint_to_kernel(payload.source), payload: payload.payload },
         W::Timer(payload) => Event::Timer { id: payload.id },
+        W::OriginalMediaControl(event) => Event::OriginalMediaControl(semio_framework::kernel::OriginalMediaControlEvent {
+            loan: semio_framework::kernel::OriginalMediaWireLoan {
+        operation_id: event.loan.operation_id, generation: event.loan.generation,
+        instance_id: event.loan.instance_id, document_id: event.loan.document_id, base_revision: event.loan.base_revision,
+    }, owner: event.owner, seq: event.seq, kind: event.kind, extent: event.extent,
+            control: match event.control {
+                wit_events::OriginalMediaControl::Begin(begin) => semio_framework::kernel::OriginalMediaWireControl::Begin { name: begin.name, media_type: begin.media_type },
+                wit_events::OriginalMediaControl::Complete => semio_framework::kernel::OriginalMediaWireControl::Complete,
+                wit_events::OriginalMediaControl::Cancel => semio_framework::kernel::OriginalMediaWireControl::Cancel,
+            },
+        }),
         W::Wake => Event::Wake,
         W::Request(payload) => Event::Request { req: semio_framework::kernel::RequestId(payload.req), from: wit_endpoint_to_kernel(payload.params.origin), capability: payload.params.capability, payload: payload.params.payload },
     }

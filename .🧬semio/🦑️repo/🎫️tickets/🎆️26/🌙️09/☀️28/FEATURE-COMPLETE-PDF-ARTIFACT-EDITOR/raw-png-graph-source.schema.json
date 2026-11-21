@@ -1,0 +1,15 @@
+{
+  "type": "SemioPngSourceV1",
+  "chunkBytes": 32768,
+  "maximumBytes": 524288,
+  "maximumPixels": 262144,
+  "dictionary": [
+    ["Type", "name", "SemioPngSourceV1"],
+    ["Digest", "binary", 32],
+    ["Extent", "integer", "original encoded PNG byte count"],
+    ["Ordinal", "integer", "zero-based fixed chunk ordinal"],
+    ["Octets", "text", "two lowercase hexadecimal characters per original octet"]
+  ],
+  "referenceKinds": ["s.stdio.png.rgb", "s.stdio.png.alpha"],
+  "referenceDigest": "sha256 of the original PNG bytes in ordinal order"
+}

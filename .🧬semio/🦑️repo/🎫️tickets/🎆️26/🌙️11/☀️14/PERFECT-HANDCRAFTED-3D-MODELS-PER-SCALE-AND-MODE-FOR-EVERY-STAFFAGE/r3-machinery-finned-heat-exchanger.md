@@ -115,3 +115,40 @@ Measured outer areas at 1:50: tubes 0.566 (0.56), headers 0.100 (0.1), casing 0.
 - **Headers in section A-A** are bound through the tube sheet shape, not drawn, because they are hidden.
 - **Fin exchange area** stays at the committed 2 m2 although the real fin surface is about 7.6 m2 (C19 forbids changing it from a model).
 - The P40 pattern is cited from memory of manufacturers' practice, not from a document in `provenance.references`.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-finned-heat-exchanger-build.py` (runs the round 3 build, then the 1:200 band); apply and splice with `r3-finned-heat-exchanger-apply.py` and `volumes-insert.py`.
+
+### Reference vs model (1:50)
+
+| quantity | reference | source | model | deviation |
+|---|---|---|---|---|
+| tube | 15.88 mm (5/8 in) copper | EN 12735-2 | 15.88 mm | 0 |
+| tube / row pitch | 40 / 34.64 mm staggered (P40) | coil manufacturers' practice (K) | 40 / 34.64 mm | 0 |
+| fin pitch / thickness | 2-4 mm / 0.1-0.25 mm | VDI 3803-1, EN 1216 | 3 mm / 0.2 mm | in band |
+| fin pack | 400 x 480 x 69.3 mm (12 tubes x 40, 2 rows x 34.64) | derived | 400 x 480 x 69.3 mm | 0 |
+| headers, stubs | 28 mm, R 1 thread 33.25 mm | EN 1057, EN 10226-1 | 28 mm, 34 mm sleeve | +2.3 % sleeve |
+| casing sheet | 1.25-2 mm galvanised | EN 10346 | 1.5 mm | in band |
+| dry mass | 7.9 kg by hand calculation | round 3 | 7.9 kg | 0 |
+
+### Grades before -> after (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / A- | A- / A- / A- |
+| 1:100 | A- / A- / A- | A- / A- / A- |
+| 1:200 | B+ / B+ / B+ | B+ / B+ / B+ |
+| poses | hot (default), cold, idle and `reverse` t = 30 s: no bone moves, identical form | unchanged |
+
+Opened: r3-sheet body, structure and thermal --cut at 1:50, body at 1:200. Rendered by `r5-m03-render.sh` but not opened this round: the 1:100 sheets, the 1:200 thermal and structure sheets, the cold and idle poses and the `reverse` t = 30 s frame (no bone moves, so their form equals the default pose).
+
+### Changes
+
+- `representations.200.validRange.maxDenominator` 350 -> 220: the 70 x 30 mm header block measured 0.150 mm at 1:350, 0.180 at 1:260 and 0.188 at 1:240 (visible 45 mm beside the end plate), 0.2 mm or more at 1:220.
+
+Check: `r3-validate.ts machinery/finned-heat-exchanger --volumes`: VALID (schema 0, validateAsset 0, checkVolumes 0).
+
+### Remaining
+
+- Round 3 open points stay: no tube holes in the tube sheets, fin pack a core with edge texture, structure fin plates at the feature floor.

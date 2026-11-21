@@ -7,8 +7,8 @@ const THERMAL: Text = {
   de: "Thermik: stem-bark sind Stock mit Wurzelanläufen, dunkle Stammfüße, weiße Stämme und Leittriebe per Verweis; branch-bark die sechs Äste an Knochen mit ihren Spitzen und die sieben stärksten Seitenäste (Basisdurchmesser ab 36 mm) per Verweis, während die dünneren Seitenäste als Zweige zur Krone gehören und keine Rindenregion tragen; leaf-crown jede Laubhülle und jeder Hängestrang per Verweis (Austauschfläche, nur Abdeckung). Der Transpirationsemitter ist eine flache Austrittslinse auf der Oberseite von Laubhüllen, nie eine Scheibe in der Luft.",
 };
 const STRUCTURE: Text = {
-  en: "Structure: the real load path of a clump birch: the stool as one block on its fixed support plate, each stem as wood under the bark along its own curved axis in two members and a leader, every branch as a tapering wood member that leaves its stem at the real joint, joints at the rig joints, wood masses at the centres of mass on the stem and branch axes and one foliage mass in the sleeve of each foliage bone. No foliage and no bark is part of it.",
-  de: "Tragwerk: der wirkliche Lastpfad einer mehrstämmigen Birke: der Stock als ein Block auf seiner eingespannten Auflagerplatte, jeder Stamm als Holz unter der Rinde entlang seiner eigenen gekrümmten Achse in zwei Stäben und einem Leittrieb, jeder Ast als sich verjüngender Holzstab, der seinen Stamm am wirklichen Gelenk verlässt, Gelenke an den Gelenken des Rigs, Holzmassen in den Schwerpunkten auf den Stamm- und Astachsen und eine Laubmasse in der Laubhülle jedes Laubknochens. Laub und Rinde gehören nicht dazu.",
+  en: "Structure: the real load path of a clump birch: the stool as one block on its fixed support plate, each stem as wood under the bark along its own curved axis in two members and a leader, every branch as a tapering wood member that leaves its stem at the real joint (at 1:100 and 1:200 the boned branches and the seven scaffold laterals, without the twig-thin ones), joints at the rig joints, wood masses at the centres of mass on the stem and branch axes and one foliage mass in the sleeve of each foliage bone. No foliage and no bark is part of it.",
+  de: "Tragwerk: der wirkliche Lastpfad einer mehrstämmigen Birke: der Stock als ein Block auf seiner eingespannten Auflagerplatte, jeder Stamm als Holz unter der Rinde entlang seiner eigenen gekrümmten Achse in zwei Stäben und einem Leittrieb, jeder Ast als sich verjüngender Holzstab, der seinen Stamm am wirklichen Gelenk verlässt (bei 1:100 und 1:200 die Äste an Knochen und die sieben Gerüstäste, ohne die zweigdünnen), Gelenke an den Gelenken des Rigs, Holzmassen in den Schwerpunkten auf den Stamm- und Astachsen und eine Laubmasse in der Laubhülle jedes Laubknochens. Laub und Rinde gehören nicht dazu.",
 };
 
 export const DECISIONS: Record<number, Text[]> = {
@@ -22,16 +22,16 @@ export const DECISIONS: Record<number, Text[]> = {
   ],
   100: [
     {
-      en: "Body at 1:100, authored anew: the same stool and roots on plainer sections, the stems on fewer stations, the same branches on four sections; every sleeve, side shoot and tress of 1:50 stays, because a tress is 3 mm wide on paper at this scale, each on fewer sections; whip ends, fissures and two thirds of the lenticel bands are left out, the branch scars and nine broader bands stay as bark texture.",
-      de: "Körper bei 1:100, neu modelliert: derselbe Stock mit Wurzelanläufen in schlichteren Querschnitten, die Stämme mit weniger Stützstellen, dieselben Äste mit vier Querschnitten; jede Laubhülle, jeder Seitentrieb und jeder Hängestrang von 1:50 bleibt, weil ein Strang bei diesem Maßstab auf dem Papier 3 mm breit ist, jeweils mit weniger Querschnitten; Rutenenden, Risse und zwei Drittel der Lentizellenbänder entfallen, die Astnarben und neun breitere Bänder bleiben als Rindentextur.",
+      en: "Body at 1:100, authored anew: the same stool and roots on plainer sections, the stems on fewer stations, the same branches on four sections; every sleeve, side shoot and tress of 1:50 stays, because a tress is 3 mm wide on paper at this scale: the sleeves on fewer sections, each tress as a plain tapering capsule from below its turn to its hanging end; whip ends, fissures and two thirds of the lenticel bands are left out, the branch scars and nine broader bands stay as bark texture.",
+      de: "Körper bei 1:100, neu modelliert: derselbe Stock mit Wurzelanläufen in schlichteren Querschnitten, die Stämme mit weniger Stützstellen, dieselben Äste mit vier Querschnitten; jede Laubhülle, jeder Seitentrieb und jeder Hängestrang von 1:50 bleibt, weil ein Strang bei diesem Maßstab auf dem Papier 3 mm breit ist: die Hüllen mit weniger Querschnitten, jeder Strang als schlichte, sich verjüngende Kapsel von unterhalb seiner Umbiegung bis zu seinem hängenden Ende; Rutenenden, Risse und zwei Drittel der Lentizellenbänder entfallen, die Astnarben und neun breitere Bänder bleiben als Rindentextur.",
     },
     THERMAL,
     STRUCTURE,
   ],
   200: [
     {
-      en: "Body at 1:200, authored anew: stool without roots, stems with dark bases, leaders and every branch as a slender tapering loft on three sections; every sleeve, side shoot and tress stays on four or five sections (a tress is 1.5 mm wide on paper); no bark texture.",
-      de: "Körper bei 1:200, neu modelliert: Stock ohne Wurzelanläufe, Stämme mit dunklen Füßen, Leittriebe und jeder Ast als schlanker, sich verjüngender Loft mit drei Querschnitten; jede Laubhülle, jeder Seitentrieb und jeder Hängestrang bleibt mit vier oder fünf Querschnitten (ein Strang ist auf dem Papier 1,5 mm breit); keine Rindentextur.",
+      en: "Body at 1:200, authored anew: stool without roots, stems with dark bases, leaders and every branch as a slender tapering loft on three sections; every sleeve and side shoot stays on five or six sections and every tress as a plain tapering capsule (1.5 mm wide on paper); no bark texture.",
+      de: "Körper bei 1:200, neu modelliert: Stock ohne Wurzelanläufe, Stämme mit dunklen Füßen, Leittriebe und jeder Ast als schlanker, sich verjüngender Loft mit drei Querschnitten; jede Laubhülle und jeder Seitentrieb bleibt mit fünf oder sechs Querschnitten und jeder Hängestrang als schlichte, sich verjüngende Kapsel (auf dem Papier 1,5 mm breit); keine Rindentextur.",
     },
     THERMAL,
     STRUCTURE,

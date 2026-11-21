@@ -28,6 +28,21 @@
         }
       ],
       "x-semio-state": "artifact"
+    },
+    "elevationSource": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/gis/gisterrain/elevation.json"
+            }
+          }
+        },
+        { "type": "null" }
+      ],
+      "x-semio-state": "artifact"
     }
   },
   "definitions": {

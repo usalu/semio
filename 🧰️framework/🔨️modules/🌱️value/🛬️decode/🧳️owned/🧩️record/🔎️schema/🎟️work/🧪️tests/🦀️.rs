@@ -77,7 +77,7 @@ fn starve_ack(bank:&mut Bank,native:&mut NativeDecodeControl<'_>,matcher:&mut Ma
  assert_eq!(format!("{:?}",matcher.selection()?),"KeyAcknowledgement","starved acknowledgement must stay retryable");trace.steps.push("starved acknowledgement retryable".into());
  Ok(())
 }
-fn turn(bank:&mut Bank,native:&mut NativeDecodeControl<'_>,matcher:&mut Matcher,input:RetainedCloneRef<'_,KeySource>,fuel:u64,trace:&mut Trace)->Result<(),ValueError>{
+fn turn(bank:&mut Bank,native:&mut NativeDecodeControl<'_>,matcher:&mut Matcher,input:RetainedCloneRef<'_,KeySource>,fuel:u64,metadata:&serde_json::Value,trace:&mut Trace)->Result<(),ValueError>{
  let demand=matcher.demands(input,4096,fuel)?;trace.steps.push(format!("{:?}",matcher.selection()?));if matcher.key_action_result_ready(){trace.steps.push("KeySettlement outcome resident".into());}
  match matcher.select_advance(input,4096,fuel)?{
   NativeAdvanceSelection::Local{work}=>{
@@ -87,10 +87,25 @@ fn turn(bank:&mut Bank,native:&mut NativeDecodeControl<'_>,matcher:&mut Matcher,
    if let Err(rest)=authority.into_producer(){std::mem::forget(rest)}if outcome.is_err(){std::mem::forget(frame)}outcome?;
   },
   NativeAdvanceSelection::Nested=>{
-   let quote=matcher.demands(input,4096,fuel)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth.max(1)};
-   let before=format!("{:?}",matcher.selection()?);let work_quote=matcher.nested_work_demand(input)?.min(fuel);let epoch=NativeDecodeControl::transitions();
+   let quote=matcher.demands(input,4096,fuel)?;
+   let before=format!("{:?}",matcher.selection()?);
+   let metadata_step=before.starts_with("KeyMetadata(");
+   let items=if metadata_step{metadata["items"].as_u64().unwrap() as usize}else{1};
+   let grant=RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth.max(1)};
+   let work_quote=matcher.nested_work_demand(input)?.min(fuel);
+   if metadata_step{
+    assert_eq!(work_quote,metadata["work"].as_u64().unwrap());
+    for (items,work) in [(items-1,work_quote),(items,work_quote-1)]{
+     let denied=bank.run_with_turn(native,|turn,native|Ok(matcher.advance_nested(input,native,turn.witness(),4096,work,RetainedCloneGrant{maximum_items:items,..grant})))?;
+     let RetainedWorkPoll::Complete(denied)=denied else{panic!("denied schema metadata opened a live action")};
+     assert_eq!(denied.work,0);
+     assert_eq!(denied.result.unwrap().progress(),RetainedCloneProgress::default());
+     assert_eq!(format!("{:?}",matcher.selection()?),before);
+    }
+   }
+   let epoch=NativeDecodeControl::transitions();
    let polled=bank.run_with_turn(native,|turn,native|Ok(matcher.advance_nested(input,native,turn.witness(),4096,work_quote,grant)))?;
-   if let RetainedWorkPoll::Complete(outcome)=polled{let work=outcome.work;outcome.result.map_err(|_|ValueError::invariant("matcher nested action refused"))?;if before=="KeyAcknowledgement"{assert_eq!(work,u128::from(work_quote),"acknowledgement quote must equal its actual work");if work_quote==0{assert_eq!(NativeDecodeControl::transitions(),epoch+1,"admitted zero-quote acknowledgement must record one transition");assert_ne!(format!("{:?}",matcher.selection()?),"KeyAcknowledgement","zero-quote acknowledgement must change selection");trace.steps.push("zero-quote acknowledgement transition".into());}else{assert_eq!(NativeDecodeControl::transitions(),epoch,"charged acknowledgement records no transition");}}trace.steps.push(format!("nested {before} work={work}"));}
+   if let RetainedWorkPoll::Complete(outcome)=polled{let work=outcome.work;outcome.result.map_err(|_|ValueError::invariant("matcher nested action refused"))?;if metadata_step{assert_eq!(work,u128::from(work_quote),"schema metadata Work quote must equal the three settled actions");}if before=="KeyAcknowledgement"{assert_eq!(work,u128::from(work_quote),"acknowledgement quote must equal its actual work");if work_quote==0{assert_eq!(NativeDecodeControl::transitions(),epoch+1,"admitted zero-quote acknowledgement must record one transition");assert_ne!(format!("{:?}",matcher.selection()?),"KeyAcknowledgement","zero-quote acknowledgement must change selection");trace.steps.push("zero-quote acknowledgement transition".into());}else{assert_eq!(NativeDecodeControl::transitions(),epoch,"charged acknowledgement records no transition");}}trace.steps.push(format!("nested {before} work={work}"));}
   },
  }
  Ok(())
@@ -113,7 +128,7 @@ fn actual_native_schema_matcher_driver_visits_flattened_original_names(){
   let mut failure=None;
   let mut count=0usize;
   let mut starved=!case["starvedAck"].as_bool().unwrap_or(false);
-  for _ in 0..maximum{if matcher.result().is_some()||cut==Some(count){break}if !starved&&format!("{:?}",matcher.selection().unwrap())=="KeyAcknowledgement"{starved=true;starve_ack(&mut bank,&mut native,&mut matcher,original,law["stock"]["fuel"].as_u64().unwrap(),&mut trace).unwrap_or_else(|error|panic!("starved acknowledgement {error:?}"));trace.steps.push("KeyAcknowledgement starved".into());}if let Err(error)=turn(&mut bank,&mut native,&mut matcher,original,law["stock"]["fuel"].as_u64().unwrap(),&mut trace){failure=Some(error);break}count+=1;}
+  for _ in 0..maximum{if matcher.result().is_some()||cut==Some(count){break}if !starved&&format!("{:?}",matcher.selection().unwrap())=="KeyAcknowledgement"{starved=true;starve_ack(&mut bank,&mut native,&mut matcher,original,law["stock"]["fuel"].as_u64().unwrap(),&mut trace).unwrap_or_else(|error|panic!("starved acknowledgement {error:?}"));trace.steps.push("KeyAcknowledgement starved".into());}if let Err(error)=turn(&mut bank,&mut native,&mut matcher,original,law["stock"]["fuel"].as_u64().unwrap(),&law["metadata"],&mut trace){failure=Some(error);break}count+=1;}
   if cut.is_some(){
    assert!(failure.is_none()&&(matcher.result().is_none()||cut==Some(count)),"{failure:?} {:?}",trace.steps.iter().rev().take(6).collect::<Vec<_>>());
   }else if refused{

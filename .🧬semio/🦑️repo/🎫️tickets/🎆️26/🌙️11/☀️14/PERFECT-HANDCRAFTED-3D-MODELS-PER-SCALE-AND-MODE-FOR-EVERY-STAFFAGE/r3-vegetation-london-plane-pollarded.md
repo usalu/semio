@@ -92,3 +92,5 @@ Opened: `🗑️generated/r3-sheet/vegetation/london-plane-pollarded.s{50,100,20
 - 1:100 low plumes: a calmer path (cluster offset 0.1 m) fails `volumes-cross-scale` front by 4 mm (0.1125 against 0.10875), so the offset stays at 0.22 m; cross-scale 1:100 plan sits exactly on its limit (0.10875).
 - 1:50 plan draws the five leader sections as bars over the foliage (inherited convention of the old `pl-shoot-*` strokes); in a true top view they are hidden.
 - Single leaves and the fruit balls are not modelled at any scale.
+
+The five-headed pollard has a 6.80 m measured crown. Its 171 leaf clusters retain their attachment points. Young shoots use their real tapered centrelines in elevation, and the structural cores sit inside the bark. The 1:50 elevation reached 0.9984 intersection over union and a 3.75 mm 95th-percentile boundary distance. The presentation GLB contains twelve scenes and occupies 4,583,016 bytes.

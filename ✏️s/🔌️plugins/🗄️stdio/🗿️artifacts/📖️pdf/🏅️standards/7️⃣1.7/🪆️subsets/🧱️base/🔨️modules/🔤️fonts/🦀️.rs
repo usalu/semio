@@ -5,8 +5,12 @@
 
 #[cfg(test)]
 use crate::standards::v1_7::subsets::base::io::text_string::{decode_text_string, encode_text_string};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCMap, PdfFont, PdfFontKind, PdfFontProgram, PdfSimpleEncoding, PdfToUnicode, PdfToUnicodeMapping};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCMap, PdfFont, PdfFontKind, PdfFontProgram, PdfOp, PdfSimpleEncoding, PdfTextArrayItem, PdfTextString, PdfToUnicode, PdfToUnicodeMapping};
 use std::borrow::Cow;
+#[path = "✒️cff/🦀️.rs"]
+mod cff;
+use cff::CffOutlineFont;
+
 use std::collections::{BTreeMap, HashMap};
 use std::sync::OnceLock;
 
@@ -16,6 +20,9 @@ pub use semio_s_artifact_stdio_pdf_glyph_list::standards::v1_7::subsets::base::m
 pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::modules::fonts::truetype;
 #[path = "🗺️cmap/🦀️.rs"]
 pub mod cmap;
+#[path = "🎚️controlled-opentype/🦀️.rs"]
+mod controlled_opentype;
+pub use controlled_opentype::{AdmittedEmbeddedFont, ControlledFontResources, PdfEmbeddedFontCursor};
 
 pub use metrics::StandardFontMetrics;
 pub use glyph_list::ADOBE_GLYPH_LIST;
@@ -257,6 +264,7 @@ pub struct FontCodec {
     cid_to_gid: BTreeMap<u32, u16>,
     cid_to_gid_identity: bool,
     program: Option<TrueTypeFont>,
+    raw_cff: Option<Vec<u8>>,
     code_to_gid: BTreeMap<u32, u16>,
     to_unicode: Option<PdfToUnicode>,
     pub type3_matrix: Option<[f64; 6]>,
@@ -270,16 +278,52 @@ fn program_data(program:&PdfFontProgram,resources:&dyn PdfArtifactResourcePort)-
 impl FontCodec {
     /// 🏗️ Builds the codec for `font`.
     pub fn new(font: &PdfFont,resources:&dyn PdfArtifactResourcePort) -> PResult<Self> {
-        let mut codec = Self { composite: false, cid_codec: None, code_to_text: BTreeMap::new(), text_to_code: HashMap::new(), simple_widths: BTreeMap::new(), default_width: 0.0, cid_widths: BTreeMap::new(), cid_to_gid: BTreeMap::new(), cid_to_gid_identity: true, program: None, code_to_gid: BTreeMap::new(), to_unicode: font.to_unicode.clone(), type3_matrix: None };
+        let mut codec = Self { composite: false, cid_codec: None, code_to_text: BTreeMap::new(), text_to_code: HashMap::new(), simple_widths: BTreeMap::new(), default_width: 0.0, cid_widths: BTreeMap::new(), cid_to_gid: BTreeMap::new(), cid_to_gid_identity: true, program: None, raw_cff: None, code_to_gid: BTreeMap::new(), to_unicode: font.to_unicode.clone(), type3_matrix: None };
         match &font.kind {
             PdfFontKind::Type1 { base_font, encoding, first_char, widths, descriptor, program } => {
                 let symbolic = descriptor.as_ref().is_some_and(|d| d.flags & 4 != 0 && d.flags & 32 == 0);
+                let raw = match program {
+                    Some(program @ PdfFontProgram::Cff { .. }) => Some(program_data(program, resources)?),
+                    _ => None,
+                };
+                let cff = raw.as_deref().and_then(CffOutlineFont::new);
                 let builtin: Vec<(u8, String)> = match program {
                     Some(program @ PdfFontProgram::Type1 { .. }) => type1_builtin_encoding(&program_data(program,resources)?).unwrap_or_default(),
+                    Some(PdfFontProgram::Cff { .. }) => cff.as_ref().and_then(CffOutlineFont::builtin_encoding).unwrap_or_default(),
                     _ => standard_font(base_font).filter(|f| f.symbolic).map(|f| f.builtin_encoding.iter().map(|(c, n)| (*c, n.to_string())).collect()).unwrap_or_default(),
                 };
-                let names = simple_names(encoding, &builtin, symbolic && !builtin.is_empty());
+                let names = simple_names(encoding, &builtin, raw.is_none() && symbolic && !builtin.is_empty());
+                if let Some(cff) = cff {
+                    let mut glyphs = BTreeMap::new();
+                    if cff.visit_glyph_names(|name, id| { glyphs.insert(name, id); }).is_some() {
+                        for (&code, name) in &names {
+                            if let Some(&glyph) = glyphs.get(name.as_str()) { codec.code_to_gid.insert(code, glyph); }
+                        }
+                        codec.raw_cff = raw;
+                    }
+                }
+
+                if !symbolic && encoding.differences.is_empty() {
+                    if let Some(program @ PdfFontProgram::OpenType { .. }) = program {
+                        let font = TrueTypeFont::parse(&program_data(program, resources)?).map_err(PdfEngineError::Malformed)?;
+                        if font.table("CFF ").is_some() {
+                            for (&code, name) in &names {
+                                if let Some(glyph) = truetype_simple_gid(&font, code, Some(name), false) {
+                                    codec.code_to_gid.insert(code, glyph);
+                                }
+                            }
+                            codec.program = Some(font);
+                        }
+                    }
+                }
                 codec.install_simple(&names, *first_char, widths, standard_font(base_font), descriptor.as_ref().and_then(|d| d.missing_width), symbolic || standard_font(base_font).is_some_and(|f| f.symbolic));
+                if widths.is_empty() {
+                    if let Some(font) = &codec.program {
+                        for (&code, &glyph) in &codec.code_to_gid {
+                            codec.simple_widths.insert(code, font.advance_1000(glyph));
+                        }
+                    }
+                }
             }
             PdfFontKind::TrueType { base_font, encoding, first_char, widths, descriptor, program } => {
                 let symbolic = descriptor.as_ref().is_some_and(|d| d.flags & 4 != 0 && d.flags & 32 == 0);
@@ -336,6 +380,23 @@ impl FontCodec {
                     Some(program @ (PdfFontProgram::TrueType { .. } | PdfFontProgram::OpenType { .. })) => Some(TrueTypeFont::parse(&program_data(program,resources)?).map_err(PdfEngineError::Malformed)?),
                     _ => None,
                 };
+                let raw = match &descendant.program {
+                    Some(program @ PdfFontProgram::CidCff { .. }) => Some(program_data(program, resources)?),
+                    _ => None,
+                };
+                if descendant.cid_to_gid.is_none() || raw.is_some() {
+                    let cff = raw.as_deref().or_else(|| codec.program.as_ref()?.table("CFF "));
+                    if let Some(cff) = cff.and_then(CffOutlineFont::new) {
+                        let mut map = BTreeMap::new();
+                        if cff.visit_cids(|cid, glyph| { map.insert(u32::from(cid), glyph); }).is_some() {
+                            if descendant.cid_to_gid.is_none() {
+                                codec.cid_to_gid_identity = false;
+                                codec.cid_to_gid = map;
+                            }
+                            codec.raw_cff = raw;
+                        }
+                    }
+                }
             }
         }
         if let Some(map)=&font.to_unicode{for mapping in &map.mappings{if let PdfToUnicodeMapping::Char{code,text}=mapping{codec.code_to_text.insert(*code,text.clone());}}}
@@ -394,7 +455,26 @@ impl FontCodec {
     /// 🎨 Borrows an embedded outline program for a horizontal PDF text run.
     pub fn outline_program(&self) -> Option<&TrueTypeFont> {
         if self.cid_codec.as_ref().is_some_and(|codec| codec.vertical) { return None; }
-        self.program.as_ref().filter(|font| font.table("glyf").is_some())
+        self.program.as_ref().filter(|font| font.table("glyf").is_some() || font.table("CFF ").is_some())
+    }
+
+    /// 📏️ Returns the font units per em of the horizontal outline source.
+    pub fn outline_units(&self) -> Option<u16> {
+        if self.cid_codec.as_ref().is_some_and(|codec| codec.vertical) { return None; }
+        if self.raw_cff.is_some() { return Some(1000); }
+        self.outline_program().map(|font| font.units_per_em)
+    }
+
+    /// ✒️ Interprets the glyph at its original ID in the embedded outline program.
+    pub fn glyph_outline(&self, glyph: u16) -> Option<Vec<truetype::TrueTypeOutlineSegment>> {
+        if self.cid_codec.as_ref().is_some_and(|codec| codec.vertical) { return None; }
+        if let Some(data) = &self.raw_cff { return CffOutlineFont::new(data)?.raw_outline(glyph); }
+        let font = self.outline_program()?;
+        if let Some(cff) = font.table("CFF ") {
+            CffOutlineFont::new(cff)?.outline(glyph)
+        } else {
+            font.glyph_outline(glyph)
+        }
     }
 
     pub fn is_composite(&self) -> bool {
@@ -423,17 +503,21 @@ impl FontCodec {
 
     fn decode_code(&self, code: u32, code_width: u32) -> DecodedGlyph {
         let cid = self.cid_for_code(code);
-        let glyph_id = if !self.composite {
+        let glyph_id = self.glyph_id(code, cid);
+        DecodedGlyph {
+            code, code_width, width: self.advance(code, cid), glyph_id, cid,
+            is_space_char: code == 32 && code_width == 1,
+            text: self.text_for_code(code).map(Cow::into_owned),
+        }
+    }
+
+    fn glyph_id(&self, code: u32, cid: u32) -> Option<u16> {
+        if !self.composite {
             self.code_to_gid.get(&code).copied()
         } else if self.cid_to_gid_identity {
             u16::try_from(cid).ok()
         } else {
             self.cid_to_gid.get(&cid).copied()
-        };
-        DecodedGlyph {
-            code, code_width, width: self.advance(code, cid), glyph_id, cid,
-            is_space_char: code == 32 && code_width == 1,
-            text: self.text_for_code(code).map(Cow::into_owned),
         }
     }
 
@@ -484,6 +568,44 @@ impl FontCodec {
             }
         }
         Some(out)
+    }
+
+    /// 🖋️ Checks that the encoded run has known glyphs when the font includes a program.
+    pub fn shows_text(&self, text: &str) -> bool {
+        let Some(bytes) = self.encode(text) else { return false; };
+        if self.program.is_none() && self.raw_cff.is_none() { return true; }
+        let mut codes = cmap::codes(self.cid_codec.as_ref(), &bytes);
+        codes.all(|(code, _)| {
+            self.glyph_id(code, self.cid_for_code(code)).is_some_and(|glyph|
+                glyph != 0 && self.program.as_ref().is_none_or(|font| glyph < font.num_glyphs))
+        })
+    }
+
+    /// 🔄️ Rebinds a text-show operator through Unicode while preserving its spacing operands.
+    pub fn rebind_show(&self, original: &PdfOp, former: Option<&Self>) -> Option<PdfOp> {
+        let resolve = |codes: &[u32]| {
+            let former = former?;
+            let mut text = String::new();
+            for &code in codes { text.push_str(&former.text_for_code(code)?); }
+            Some(text)
+        };
+        let mut operator = original.clone();
+        match &mut operator {
+            PdfOp::ShowText { text } | PdfOp::NextLineShowText { text }
+            | PdfOp::NextLineShowTextSpaced { text, .. } => {
+                if let PdfTextString::Codes { codes } = text { *text = PdfTextString::text(resolve(codes)?); }
+                let PdfTextString::Text { text } = text else { return None; };
+                self.shows_text(text).then_some(())?;
+            }
+            PdfOp::ShowTextArray { items } => {
+                for item in items {
+                    if let PdfTextArrayItem::Codes { codes } = item { *item = PdfTextArrayItem::Text { text: resolve(codes)? }; }
+                    if let PdfTextArrayItem::Text { text } = item { self.shows_text(text).then_some(())?; }
+                }
+            }
+            _ => return None,
+        }
+        Some(operator)
     }
 
     /// 📏 Width of a code in 1/1000 text space.

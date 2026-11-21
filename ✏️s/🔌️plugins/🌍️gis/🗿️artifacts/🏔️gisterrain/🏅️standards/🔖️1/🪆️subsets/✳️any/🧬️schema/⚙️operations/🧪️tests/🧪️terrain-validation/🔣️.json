@@ -1,0 +1,28 @@
+{
+  "diagnostics": [
+    {
+      "level": "error",
+      "code": "terrain.exaggeration.invalid",
+      "message": "Exaggeration must be finite.",
+      "target": [
+        "exaggeration"
+      ]
+    },
+    {
+      "level": "error",
+      "code": "terrain.imported-map.invalid",
+      "message": "imported feature requires intrinsic object",
+      "target": [
+        "importedMap"
+      ]
+    },
+    {
+      "level": "error",
+      "code": "terrain.elevation-source.invalid",
+      "message": "Elevation requires ordered WGS84 bounds and exactly 33 rows of 33 samples.",
+      "target": [
+        "elevationSource"
+      ]
+    }
+  ]
+}

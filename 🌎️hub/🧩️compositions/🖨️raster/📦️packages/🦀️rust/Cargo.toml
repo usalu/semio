@@ -28,7 +28,7 @@ semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-tiff = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { workspace = true }
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-os" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
@@ -41,9 +41,9 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-job = { workspace = true }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-value = { workspace = true }
 
 [dev-dependencies]
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 serde_json = { workspace = true }

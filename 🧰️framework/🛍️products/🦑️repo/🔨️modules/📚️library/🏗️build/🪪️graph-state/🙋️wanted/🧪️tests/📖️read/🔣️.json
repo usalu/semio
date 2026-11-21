@@ -1,0 +1,36 @@
+{
+  "requested": [
+    "owner-a",
+    "owner-b"
+  ],
+  "admittedMegabytes": 2048,
+  "rows": [
+    {
+      "name": "complete",
+      "served": [
+        "owner-a",
+        "owner-b"
+      ],
+      "left": [],
+      "remaining": 0
+    },
+    {
+      "name": "partial",
+      "served": [
+        "owner-a"
+      ],
+      "left": [],
+      "remaining": 1
+    },
+    {
+      "name": "left-local",
+      "served": [
+        "owner-a"
+      ],
+      "left": [
+        "owner-b"
+      ],
+      "remaining": 1
+    }
+  ]
+}

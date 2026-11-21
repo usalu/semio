@@ -66,3 +66,48 @@ Final check line: `$BUN volumes-check.ts objects/bicycle-stand --product` → `P
 - Fillet welds (~5 mm) and the 10 mm galvanising vent holes are below the 1:50 feature and not modelled (said in decisions).
 - 1:50 vs 1:100 bodies differ only in bend section resolution: the object is a true-size tube at both scales and nothing real lies between 7.5 and 15 mm except the welds; stated in the decisions.
 - The bends are bones on their chords; their member lines therefore cut 29 mm inside the inner tube face at mid bend (idealisation, the member solids follow the real arc).
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `T/r5-bicycle-stand-model.py` (imports the round-3 model, states the round-5 changes by hand; `build` → `🗑️generated/r5-bicycle-stand/🔣️.json`, `apply` writes catalog roots + volumes and the source), render/montage helpers `T/r5-objects-render.sh`, `T/r5-objects-montage.ts`.
+
+### Reference (modelled to)
+
+| quantity | reference | source |
+|---|---|---|
+| tube | CHS 48.3 × 3.2 mm | EN 10219-2 |
+| outer width × height above ground | 0.75 × 0.80 m (market 0.75–1.2 × 0.75–0.85 m) | Ziegler, Bohmeyer & Schuster, Schake data sheets |
+| centre-line bend radius | 180 mm (3.7 D, cold bending range 3–4 D) | pipe-bender practice |
+| cross rail | CHS 48.3 at 0.40 m, welded between the legs | asset / manufacturers |
+| embedment | 0.25–0.30 m in concrete (not drawn) | manufacturers |
+| mass above ground | 10.02 kg (3.64 kg/m incl. zinc × 2.752 m) | EN 10219-2, EN ISO 1461 |
+
+### Model vs reference (1:50, measured on the solids / rig)
+
+| quantity | model | reference | dev. |
+|---|---|---|---|
+| tube Ø | 48.3 mm | 48.3 | 0 % |
+| outer width (leg outer faces) | 0.7500 m | 0.75 | 0 % |
+| height (top of top rail) | 0.8000 m | 0.80 | 0 % |
+| bend centre-line radius | 0.180 m | 0.180 | 0 % |
+| cross rail axis height | 0.400 m | 0.40 | 0 % |
+| leg centre distance | 0.7017 m | 0.7017 | 0 % |
+| 1:500 band (elevation) | 75.2 mm, outer 0.75 × 0.80 exact | floor 75 mm | — |
+
+### Grades (sheets opened: body, structure, thermal --cut at 1:50/100/200/500, 2D at all four scales, poses empty-shade, empty-sun, bike-leaning, lock-pulled, clips bike-parked t 4.8 s, sun-and-shade t 5760 s)
+
+| scale | body before → after | thermal | structure | 2D |
+|---|---|---|---|---|
+| 1:50 | A → A | A → A | A → A | A → A |
+| 1:100 | A → A | A → A | A → A | A → A |
+| 1:200 | A → A | A → A | A → A | A → A |
+| 1:500 | A → A | B → A | A → A | A (INVALID print range end) → A |
+
+Defects seen and fixed:
+- 1:500 thermal hoop: the slender true-tube loft had a section only every 22.5° in the bends; the bends showed as four-sided polylines (sagitta 3.5 mm). Now a section every 18° (sagitta 2.2 mm); finer steps would give the 1:500 thermal more triangles than 1:200 (`volumes-monotonic`, measured 1152 > 1080 at 15°).
+- Catalog INVALID before: `PRINT range-end-feature` 1:500 at 1:1000 (leg-right, bend-right, top-rail, bend-left 0.192–0.194 mm < 0.2 mm). Cause: the 63 mm front/plan bars (capped at 63.3 mm by the lateral extent rule) with a 0.13 mm body pen. Fix: 1:500 body pen 0.13 → 0.14 mm (decision text updated en/de).
+- Poses and clip frames: fixed joints, geometry identical and closed in every pose (only loads change).
+
+Checks: `r3-validate.ts objects/bicycle-stand --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); `volumes-check.ts objects/bicycle-stand --product` PASS; spliced with `volumes-insert.py`.
+
+Remaining (with reason): the 1:500 thermal bends still show five chords at sheet zoom (0.004 mm on paper; the monotonic triangle budget of 1:200 forbids more); the tree solver's rail-hangs-from-one-leg idealisation (filed round 3, `tool-requests.md`).

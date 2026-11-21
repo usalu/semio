@@ -1,0 +1,9 @@
+# Native Failure Audit
+
+The native snapshot suite reports subset history tests searching the snapshot-value test crate’s manifest directory instead of the editor owner directory, yielding zero committed and derived editable cases. The owner must be resolved independently of the embedding test crate; validate against the real subset fixtures, without suppressing the census.
+
+The text-layer test decoded the edit-existing two-pages fixture, whose two content streams have length zero. Its assertion requires page-one text and therefore could never pass. The test now uses the existing move-page before PDF, which contains two pages and a text-show operation on each. It retains the localized labels and reading-order assertions. Verification requires the focused native test.
+
+The shared history acceptance macro resolves its root from the embedding CARGO_MANIFEST_DIR. PDF 1.4 base, a, and x each have complete language-neutral mutation, before, after and outcome cases under their respective subset roots. PDF 1.7 a, e, h, ua, x and vt have no independent fixture trees; their shared base has mutation wire witnesses for derived cases. A source-relative file!() candidate was reverted because remapped source paths and direct-versus-mirrored embedding have not been proved. An explicit stable owner-root mechanism is still needed; the census must stay enforced.
+
+The staged replacement adds an explicit fixture-root expression to the test acceptance macro. Nine PDF subset registrations find the ancestor containing the standards tree and PDF artifact package manifest, then join the authored owner path. A filesystem audit verified this marker from all 75 PDF Cargo manifest directories, and the four selected mutation trees contain 6, 2, 2 and 43 groups respectively. Native execution is still needed to verify case decoding and the acceptance census.

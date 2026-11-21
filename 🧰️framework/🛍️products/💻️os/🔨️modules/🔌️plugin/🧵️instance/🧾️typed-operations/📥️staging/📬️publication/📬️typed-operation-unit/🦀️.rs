@@ -20,6 +20,20 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Ok(());
         }
         if mounted.advance_pending_result_page(cx)?{return Ok(())}
+        if mounted.granted_retirement_ready()
+            && mounted.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)
+        {
+            cx.with_original_retirement(|cx| {
+                use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep, original_lifecycle_step};
+                let demand = mounted.granted_retirement_demands(retained.maximum_copy_bytes)?;
+                original_lifecycle_step(cx, retained, demand, |same, grant| {
+                    let step = mounted.granted_retirement_step(same, grant)?;
+                    Ok((PluginLifecycleStep::Progress(step.progress()), false))
+                })?;
+                Ok(())
+            })?;
+            return Ok(());
+        }
         if let Some((lane,receipt))=mounted.pending_artifact_publication.as_ref().and_then(|owner|owner.accepted_receipt().map(|receipt|(owner.lane().0,receipt))){
             if lane==TypedOperationResultLane::WindowConfig{if mounted.pending_window_config_receipt.is_none(){let d=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<store::os_store::presence::LaneItemReceipt>>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|_|{mounted.pending_window_config_receipt=Some(receipt);semio_framework_value::RetainedWorkOutcome{work:1,result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}})?;Ok(())})?;return Ok(())}return self.advance_mounted_window_config_refresh(mounted,retained,cx);}
             let revision=match mounted.pending_artifact_publication.as_ref(){Some(PendingArtifactStorePublication::Artifact(owner))=>{if owner.expected_generation!=receipt.generation_after{return Err(plugin_sdk_fault("accepted artifact receipt changed its retained generation").into())}Some(owner.expected_revision)},_=>None};
@@ -103,7 +117,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if emit.has_artifact_mutations()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained,cx)? {return Ok(());}
         if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
-            let capture=if matches!(pending,PendingArtifactStorePublication::Artifact(_)|PendingArtifactStorePublication::Config(_)|PendingArtifactStorePublication::Draft(_)){2*std::mem::size_of::<Option<semio_plugin_retained_command::typed_operation::OriginalPublicationFailure>>()}else{0};
+            let batch = matches!(pending, PendingArtifactStorePublication::Artifact(_) | PendingArtifactStorePublication::Config(_) | PendingArtifactStorePublication::Draft(_));
+            let capture=if batch{2*std::mem::size_of::<Option<semio_plugin_retained_command::typed_operation::OriginalPublicationFailure>>()}else{0};
             if retained.maximum_items==0||retained.maximum_depth==0||retained.maximum_copy_bytes<capture{return Ok(())}
             let body_grant=RetainedCloneGrant{maximum_copy_bytes:retained.maximum_copy_bytes-capture,..retained};let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(body_grant);
             let (pending_lane, _) = pending.lane();
@@ -117,6 +132,16 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 return Ok(());
             }
             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
+            if let PendingArtifactStorePublication::WindowConfig(publication) = pending {
+                if publication.store_batch_phase().is_none() {
+                    if let Some(ownership) = self.stores.window_config_store.admit_store_batch(publication.as_mut(), retained)? {
+                        mounted.note_paid_publication_progress(ownership);
+                        mounted.publication_ownership_progress = Some((retained, ownership));
+                    }
+                    return Ok(());
+                }
+            }
+            let window_config_batch = matches!(pending, PendingArtifactStorePublication::WindowConfig(_));
             let mut turn_ceiling = cx.original_turn_ceiling().0;
             turn_ceiling.maximum_copy_bytes = turn_ceiling.maximum_copy_bytes.saturating_sub(capture);
             let mut scope=None;let mut stepped=None;
@@ -136,11 +161,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let receipt=cx.consume_receiving_retained(retained,ownership);
             if scope.source_refusal.is_some()||scope.call.is_err(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original publication receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
             let advance=match result{Err(OriginalPublicationAdvanceFailure::Primary(primary))=>return Err(primary.with_receiving_receipt(receipt)),Err(OriginalPublicationAdvanceFailure::Domain(source))=>{assert!(mounted.publication_failure.original.is_none());mounted.publication_failure.original=Some(semio_plugin_retained_command::typed_operation::OriginalPublicationFailure::new(source,ownership,receipt.err()));return Ok(())},Ok(advance)=>{receipt?;advance}};
+            if batch || window_config_batch {
+                mounted.note_paid_publication_progress(ownership);
+            }
             return match advance {
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, _) => {
                     match pending_lane {
                         TypedOperationResultLane::Artifact => {
                             mounted.published_artifact = true;
+                            if let Some(owner) = self.media.original_picker.as_mut().filter(|owner|
+                                owner.mount_id == Some(mounted.operation.operation) && owner.source.matches(cx)) {
+                                owner.committed = Some(mounted.operation.operation);
+                            }
                             self.as_dispatch().record_typed_operation_lane(mounted);
                             mounted.artifact_generation = receipt.generation_after;
                             mounted.canonical_revision = self.stores.store.content_revision_now();
@@ -345,7 +377,20 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     }
                     let streams=emit.transaction_phase==TransactionPhase::Stream;
                     let outbound=self.stores.store.backbone_ref().is_some();
-                    if let Some((mut publication,ownership))=self.stores.store.admit_apply_batch_with_pages(mounted.operation.operation,mounted.artifact_generation,mounted.canonical_revision,&mut mounted.actor_capture,&mut emit.artifact_mutations,&mut emit.artifact_mutation_pages,HistoryLane::Document,self.stores.artifact_one_item_factory.as_ref(),&mut emit.transaction,Some(&mounted.verb),None,outbound,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
+                    let admitted = if self.media.original_picker.as_ref().is_some_and(|owner|
+                        owner.mount_id == Some(mounted.operation.operation) && owner.source.matches(cx)) {
+                        if !emit.artifact_mutations.is_empty() || emit.transaction.is_some() || streams {
+                            return Err(plugin_sdk_fault("Original picker requires one internally qualified paged edit").into());
+                        }
+                        self.stores.store.admit_original_media_batch_with_pages(
+                            mounted.operation.operation, mounted.artifact_generation, mounted.canonical_revision,
+                            &mut mounted.actor_capture, &mut emit.artifact_mutation_pages, self.stores.artifact_one_item_factory.as_ref(),
+                            self.tools.tool_controller_id(), Some(&mounted.verb), None, retained,
+                        )
+                    } else {
+                        self.stores.store.admit_apply_batch_with_pages(mounted.operation.operation,mounted.artifact_generation,mounted.canonical_revision,&mut mounted.actor_capture,&mut emit.artifact_mutations,&mut emit.artifact_mutation_pages,HistoryLane::Document,self.stores.artifact_one_item_factory.as_ref(),&mut emit.transaction,Some(&mounted.verb),None,outbound,retained)
+                    };
+                    if let Some((mut publication,ownership)) = admitted.map_err(|error|plugin_sdk_fault(error.to_string()))? {
                         publication.set_transaction_open(streams);
                         emit.transaction_phase=TransactionPhase::Commit;
                         mounted.publication_ownership_progress=Some((retained,ownership));

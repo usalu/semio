@@ -36,7 +36,7 @@ fn cases_edit(index: usize, case: &CaseRow) -> NormEdit {
 /// ➕️ The browser's add-case action: a new case of catalogue entry `entry_id` seeded with the example values of its declared inputs, inserted at `index` (clamped).
 pub fn insert_case_edit<C: CaseCatalogue>(rows: &[CaseRow], entry_id: &str, index: usize) -> Result<NormEdit, String> {
     let entry = design_case::entry::<C>(entry_id).ok_or_else(|| format!("unknown catalogue entry {entry_id}"))?;
-    let case = CaseRow::from(&design_case::seed::<C>(&entry, &next_case_id(rows, &format!("case-{}", entry.id))));
+    let case = CaseRow::from(&C::new_document_case(&entry, &next_case_id(rows, &format!("case-{}", entry.id))));
     Ok(cases_edit(index.min(rows.len()), &case))
 }
 

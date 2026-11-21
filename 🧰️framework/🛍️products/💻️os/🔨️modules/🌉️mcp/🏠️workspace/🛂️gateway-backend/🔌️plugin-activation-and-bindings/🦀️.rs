@@ -12,7 +12,7 @@ impl HeadlessWorkspace {
         let repo_root = self.repo_root.clone().ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, "repo root not found — cannot locate the plugin registry or compiled wasm"))?;
         let registry = load_plugin_registry(&repo_root)?;
         let entry = find_plugin_entry(&registry, plugin_id)?;
-        let descriptor = load_package_descriptor(&entry.owner_root)?;
+        let descriptor = semio_os_mcp_catalog::plugin_paths_and_descriptor::load_plugin_model_descriptor(&repo_root, entry)?;
         let editor_app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
         let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
         let runtime = shared_plugin_runtime()?;
@@ -90,10 +90,10 @@ impl HeadlessWorkspace {
 
     /// ⏳️ [`Self::create_plugin_artifact`] as a job — see [`Self::run_activation_job`].
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn create_plugin_artifact_cancellably(self: &Arc<Self>, artifact_id: &str, kind: &InstalledArtifactKind, scope: ActivationScope) -> Result<(usize, usize), GatewayError> {
+    pub fn create_plugin_artifact_cancellably(self: &Arc<Self>, artifact_id: &str, kind: &InstalledArtifactKind, initial: Option<serde_json::Value>, scope: ActivationScope) -> Result<(usize, usize), GatewayError> {
         let artifact_id = artifact_id.to_string();
         let kind = kind.clone();
-        self.run_activation_job(scope, move |workspace, scope| workspace.create_plugin_artifact(&artifact_id, &kind, scope))
+        self.run_activation_job(scope, move |workspace, scope| workspace.create_plugin_artifact(&artifact_id, &kind, initial.as_ref(), scope))
     }
 
     /// ⏳️ [`Self::bind_artifact_document`] as a job — see [`Self::run_activation_job`].
@@ -156,7 +156,7 @@ impl HeadlessWorkspace {
             WorkspaceOrigin::Hub { .. } => self.verified_hub_catalog_selections()?.selections.iter().map(|selection| selection.descriptor.clone()).collect(),
             WorkspaceOrigin::Folder { .. } => {
                 let repo_root = self.repo_root.clone().ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, "repo root not found — cannot locate the plugin registry"))?;
-                load_plugin_registry(&repo_root)?.into_iter().filter_map(|entry| load_package_descriptor(&entry.owner_root).ok()).collect()
+                load_plugin_registry(&repo_root)?.into_iter().filter_map(|entry| load_registry_plugin_descriptor(&repo_root, &entry).ok()).collect()
             }
         };
         let mut kinds: std::collections::BTreeMap<(String, String, String), InstalledArtifactKind> = std::collections::BTreeMap::new();

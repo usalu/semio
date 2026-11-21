@@ -54,6 +54,8 @@ pub struct ProgramBridgeEntry {
     /// what a hub-selected execution-target lease must name for this entry to carry its document.
     pub component_sha256: Option<String>,
     pub manifest: PluginManifest,
+    #[cfg(not(target_arch = "wasm32"))]
+    native_consumes: Vec<String>,
     backend: ProgramBridgeBackend,
     #[cfg(not(target_arch="wasm32"))]
     native_observed_mtime:Option<std::time::SystemTime>,
@@ -117,6 +119,7 @@ impl ProgramBridgeEntry {
             component_sha256,
             manifest,
             backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path },
+            native_consumes: Vec::new(),
             native_observed_mtime:None,
             #[cfg(test)]
             fixture_render: None,
@@ -127,6 +130,18 @@ impl ProgramBridgeEntry {
             #[cfg(test)]
             fixture_document: None,
         })
+    }
+
+    /// 🧾️ Returns the installed runtime registry's consumed topics for this native program.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn native_consumes(&self) -> &[String] {
+        &self.native_consumes
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(super) fn with_native_consumes(mut self, consumes: Vec<String>) -> Self {
+        self.native_consumes = consumes;
+        self
     }
 
     #[cfg(test)]
@@ -303,6 +318,61 @@ impl ProgramBridgeEntry {
             return Err("document identity reply authority mismatch".into());
         }
         Ok(identity)
+    }
+
+    /// 📋 Resolves the checked export from this program's own mounted app declaration.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn declared_native_media_save(&self, app_id: &str, action_id: &str) -> Option<NativeMediaDeclaration> {
+        let mut candidates = self.manifest.apps.iter().filter(|app| app.id == app_id);
+        let app = candidates.next()?;
+        if candidates.next().is_some() { return None; }
+        NativeMediaDeclaration::for_app(app, action_id)
+    }
+
+    /// 💾 Streams one source-checked binary export to the selected native destination.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn save_native_media(
+        &self, owner: &protocol::AppDocumentIdentity, declaration: &NativeMediaDeclaration, destination: &std::path::Path,
+        cancelled: impl Fn() -> bool, progress: impl FnMut(u64),
+    ) -> Result<NativeSaveOutcome, String> {
+        let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
+        native_save::save_media(client, owner, declaration, destination, cancelled, progress).await
+    }
+
+    /// 📥 Imports natural binary input through the mounted program's typed media door.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn import_native_file(
+        &self, instance: u32, declaration: &NativeMediaDeclaration, bytes: Vec<u8>,
+    ) -> Result<(), String> {
+        let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
+        native_save::import_media(client, instance, declaration, bytes).await
+    }
+
+    /// 📤 Delivers one selected source through the same active component and exact picker loan.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn deliver_original_media<'a, F: std::future::Future<Output = ()> + Send + 'a>(
+        &'a self, request: &'a super::NativeOriginalMediaRequest,
+        source: Result<Option<(impl std::io::Read + Send + 'a, String, &'static str, u64)>, String>,
+        observe: impl Fn(Vec<Effect>) -> F + Clone + Send + 'a,
+        current: impl Fn() -> bool + Send + Sync + 'a, progress: impl FnMut(u64, u64) + Send + 'a,
+    ) -> impl std::future::Future<Output = Result<bool, String>> + Send + 'a {
+        async move {
+            let ProgramBridgeBackend::Wasm { client, .. } = &self.backend;
+            let sequence = semio_renderer_wgpu_kernel_protocol::next_seq()?;
+            let instance = request.instance_id();
+            super::native_original_media::NativeOriginalMediaTransfer::run(
+                request, sequence, source, move |event| {
+                    let client = client.clone();
+                    let observe = observe.clone();
+                    async move {
+                        let outcome = client.exchange_original_media(instance, event).await.map_err(|error| error.to_string())?;
+                        wasm_program_exchange::observe_ephemeral(instance, &outcome.frames).await;
+                        observe(outcome.effects).await;
+                        Ok(outcome.command_ingress)
+                    }
+                }, current, progress,
+            ).await
+        }
     }
 
     pub async fn read_app_document_archive(&self, instance_id: u32) -> Result<protocol::DocumentArchivePack, ProgramFault> {

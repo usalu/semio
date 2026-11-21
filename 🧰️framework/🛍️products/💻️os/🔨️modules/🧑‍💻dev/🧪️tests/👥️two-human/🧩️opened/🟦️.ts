@@ -8,6 +8,7 @@ export interface OpenedUiV1 {
   click(selector: string): Promise<void>;
   press(selector: string, key: string): Promise<void>;
   chooseFiles(selector: string, paths: readonly string[]): Promise<void>;
+  cancelFilePicker?(selector: string): Promise<void>;
   download(selector: string): Promise<Readonly<{ name: string; mime: string | null; bytes: Uint8Array }>>;
 }
 

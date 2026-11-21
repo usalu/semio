@@ -9,6 +9,7 @@ impl DagHost {
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.graph.clear_hover_ports();
         if let Some((ox, oy)) = self.minimap.minimap_widget_drag {
             if let Some(layout) = minimap_widget_layout(&self.graph, &self.minimap, self.viewport.width, self.viewport.height) {
                 let (wx, wy) = minimap_widget_screen_to_world(&layout, sx, sy);
@@ -188,6 +189,15 @@ impl DagHost {
         for (hid, center, _radius) in &snap.handles {
             paint_snap_handle(scene, hid, center, Some(PortShape::Semicircle));
         }
+        let grouped_nodes: std::collections::BTreeSet<_> = if lod.shows_handles() || self.graph.is_preselect_active() {
+            Default::default()
+        } else {
+            self.graph.hover_port_owners().collect()
+        };
+        let node_chrome = |id| {
+            let (selected, highlighted, hovered) = self.graph.node_interaction_chrome(id);
+            (selected, highlighted, hovered || grouped_nodes.contains(&id))
+        };
         let paint_minimap_node = |scene: &mut canvas::Scene, idx: usize, snapshot_node: &DagNodeSpec| {
             let node = self.graph.node_spec_for_paint(idx, snapshot_node);
             let node = node.as_ref();
@@ -196,7 +206,7 @@ impl DagHost {
             let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
             let engine_nid = self.graph.engine_node_id_for_index(idx);
             let is_dimmed = engine_nid.is_some_and(|nid| self.paint.dimmed.contains(&nid));
-            let (is_selected, is_highlighted, is_hovered) = engine_nid.map_or((false, false, false), |nid| self.graph.node_interaction_chrome(nid));
+            let (is_selected, is_highlighted, is_hovered) = engine_nid.map_or((false, false, false), |nid| node_chrome(nid));
             if let Some(fill) = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_highlighted, is_hovered) {
                 scene.fill(FillRule::NonZero, aff, fill, None, &rect);
             }
@@ -205,7 +215,7 @@ impl DagHost {
             for (idx, snapshot_node) in self.graph.host_snapshot.nodes.iter().enumerate() {
                 let engine_nid = self.graph.engine_node_id_for_index(idx);
                 let chrome = engine_nid.is_some_and(|nid| {
-                    let (selected, highlighted, hovered) = self.graph.node_interaction_chrome(nid);
+                    let (selected, highlighted, hovered) = node_chrome(nid);
                     selected || highlighted || hovered
                 });
                 if !chrome {
@@ -215,7 +225,7 @@ impl DagHost {
             for (idx, snapshot_node) in self.graph.host_snapshot.nodes.iter().enumerate() {
                 let engine_nid = self.graph.engine_node_id_for_index(idx);
                 let chrome = engine_nid.is_some_and(|nid| {
-                    let (selected, highlighted, hovered) = self.graph.node_interaction_chrome(nid);
+                    let (selected, highlighted, hovered) = node_chrome(nid);
                     selected || highlighted || hovered
                 });
                 if chrome {
@@ -228,7 +238,7 @@ impl DagHost {
                 let node = node.as_ref();
                 let engine_nid = self.graph.engine_node_id_for_index(idx);
                 let is_dimmed = engine_nid.is_some_and(|nid| self.paint.dimmed.contains(&nid));
-                let (is_selected, is_highlighted, is_hovered) = engine_nid.map_or((false, false, false), |nid| self.graph.node_interaction_chrome(nid));
+                let (is_selected, is_highlighted, is_hovered) = engine_nid.map_or((false, false, false), |nid| node_chrome(nid));
                 let eval_status = engine_nid.and_then(|nid| self.paint.node_eval_status.get(&nid).copied()).unwrap_or(DagNodeEvalStatusKind::Ok);
                 paint_node_visual(&self.viewport, &self.graph, &self.paint, &self.notes, scene, &aff, &cam, &viewport, lod, lod_index, node, DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, eval_status, body_fill_alpha: 255, ghost_tint: false });
             }

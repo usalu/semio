@@ -29,6 +29,7 @@ semio-framework-replication-ids = { path = "../../../🆔️ids/📦️packages/
 semio-framework-replication-mutation = { path = "../../../🎮️mutation/📦️packages/🦀️rust" }
 semio-framework-replication-wire-core = { path = "../../../🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-hash.workspace = true
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

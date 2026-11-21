@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """🗒️ An INDEPENDENT second implementation of the `s.note.note` document and this subset's typed
-mutations (`insert-table-row`, `remove-table-row`, `insert-table-column`, `remove-table-column`), in Python, serving as this case's differential oracle. Relocated out of the
+mutations (`insert-table-row`, `remove-table-row`, `insert-table-column`, `remove-table-column`, `edit-table-cell`), in Python, serving as this case's differential oracle. Relocated out of the
 artifact-level `mutate-note-1` case in ticket
 `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`.
 
@@ -60,7 +60,7 @@ UNSTATED_REASON = (
     "finding again: publishing the child-addressing rule closes all of them, and no comparison profile moves."
 )
 
-KINDS = ("insert-table-row", "remove-table-row", "insert-table-column", "remove-table-column")
+KINDS = ("insert-table-row", "remove-table-row", "insert-table-column", "remove-table-column", "edit-table-cell")
 """🏷️ This subset's own kinds, in the catalog's declared order."""
 
 
@@ -221,12 +221,14 @@ def apply_mutation(document, kind, payload):
         block["points"] = copy.deepcopy(payload["newPoints"])
         block["x"], block["y"] = payload["newX"], payload["newY"]
         block["width"], block["height"] = payload["newWidth"], payload["newHeight"]
-    elif kind in ("insert-table-row", "remove-table-row", "insert-table-column", "remove-table-column"):
+    elif kind in ("insert-table-row", "remove-table-row", "insert-table-column", "remove-table-column", "edit-table-cell"):
         rows, at, _parent = located(document, payload["id"], kind, "mutate")
         table = rows[at]
         if table["kind"] != "table":
             raise AssertionError("mutate-%s: block %r is a %s, not a table" % (kind, payload["id"], table["kind"]))
-        if kind == "insert-table-row":
+        if kind == "edit-table-cell":
+            table["rows"][payload["row"]][payload["column"]]["content"] = payload["content"]
+        elif kind == "insert-table-row":
             table["rows"].append([{"content": ""} for _ in table["columns"]])
         elif kind == "remove-table-row":
             if not table["rows"]:
@@ -298,6 +300,10 @@ def inverse_mutation(document, kind, payload):
         rows, at, _parent = located(document, payload["id"], kind, "inverse")
         block = rows[at]
         return [(kind, {"id": payload["id"], "newPoints": copy.deepcopy(block["points"]), "newX": block["x"], "newY": block["y"], "newWidth": block["width"], "newHeight": block["height"]})]
+    if kind == "edit-table-cell":
+        rows, at, _parent = located(document, payload["id"], kind, "inverse")
+        content = rows[at]["rows"][payload["row"]][payload["column"]]["content"]
+        return [(kind, {**payload, "content": content})]
     if kind == "insert-table-row":
         return [("remove-table-row", {"id": payload["id"]})]
     if kind == "insert-table-column":

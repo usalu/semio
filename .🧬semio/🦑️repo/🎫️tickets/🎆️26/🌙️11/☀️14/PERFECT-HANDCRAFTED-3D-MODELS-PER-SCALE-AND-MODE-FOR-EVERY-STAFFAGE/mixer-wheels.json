@@ -1,0 +1,18 @@
+{
+  "tyres": 12,
+  "lugGroups": 8,
+  "nutsPerWheel": 10,
+  "boltCircleDiameterM": 0.335,
+  "spannerAcrossFlatsM": 0.032,
+  "flangeDiameterM": 0.046,
+  "nutHeightM": 0.030,
+  "frontTreadDepthM": 0.0105,
+  "rearTreadDepthM": 0.0135,
+  "crownRadiusM": 0.520,
+  "frontGrooveMouthM": 0.014,
+  "rearGrooveMouthM": 0.018,
+  "rubberAreaM2": 32.27,
+  "unseatedAreaM2": 26.71,
+  "meanRoadContactPa": 850000,
+  "grooveCentresM": [-0.066, 0.0, 0.066]
+}

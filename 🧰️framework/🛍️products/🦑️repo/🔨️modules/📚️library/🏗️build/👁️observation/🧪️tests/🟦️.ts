@@ -2,6 +2,7 @@ import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/�
 /** 👁️ Inference observation law over `./🧫️fixtures/🔣️.json`: a persisted inference result is reused exactly while every filesystem fact the
  * computation observed still holds, identical rewrites stay hits, any observed change is a miss, and a hit always equals a fresh recomputation.
  * Oracles: Ajv validates every persisted record against `../🧬️schema/🔣️.json`; fast-glob independently lists the probed directory. */
+import admissionPass from "./🧫️fixtures/🔁️admission-pass.json";
 import { expect, test, spyOn, beforeAll } from "bun:test";
 import * as rawFs from "node:fs";
 import { createHash } from "node:crypto";
@@ -265,7 +266,7 @@ test("semantic source analysis cache hits retain nested consumed probes",async()
 
 test("semantic source analysis refuses unknown producers and ambiguous revision declarations",async()=>{
  const root=workspace(),path=join(root,"source.ts"),id=fixture.semantic.provider.id+":identity",provider=registerSourceAnalysisV1({id,revision:fixture.semantic.provider.revision,analyze:semanticParser});writeFileSync(path,fixture.semantic.before);
- try{const captured=await captureObservedSourceInputsV1(()=>observedSourceAnalysisV1(provider,path)),rows=captured.observations.filter(row=>row.kind==="analysis");expect(await observationsHold(rows.map(row=>({...row,fact:{...row.fact,provider:id+":unknown"}})))).toBe(false);for(const vector of fixture.semantic.malformedFactPatches){const fact=(await import("fast-json-patch")).applyPatch(structuredClone(rows[0]!.fact),vector as any,true).newDocument,invalid=[{...rows[0],fact}],authority=JSON.parse(readFileSync(new URL("../../🧬️schema/📥️authority.json",import.meta.url),"utf8")),Envelope=(await import("ajv")).default;expect(new Envelope({strict:false}).compile(authority)({version:3,module:{implementation:"a".repeat(64),publication:"b".repeat(64)},membership:"a".repeat(64),graph:"b".repeat(64),observations:invalid})).toBe(true);expect(validate({digest:"a".repeat(64),resultSha256:"b".repeat(64),authorityObservations:[],observations:invalid})).toBe(false);expect(await observationsHold(invalid)).toBe(false);}expect(()=>registerSourceAnalysisV1({id,revision:fixture.semantic.provider.revision,analyze:()=>[]})).toThrow();registerSourceAnalysisV1({id,revision:fixture.semantic.provider.nextRevision,analyze:semanticParser});expect(await observationsHold(rows)).toBe(false);expect(()=>observedSourceAnalysisV1(provider,path)).toThrow();expect(validate({digest:"a".repeat(64),resultSha256:"b".repeat(64),authorityObservations:[],observations:rows.map(row=>({...row,fact:{...row.fact,revision:"invalid"}}))})).toBe(false);}finally{rmSync(root,{recursive:true,force:true});}
+ try{const captured=await captureObservedSourceInputsV1(()=>observedSourceAnalysisV1(provider,path)),rows=captured.observations.filter(row=>row.kind==="analysis");expect(await observationsHold(rows.map(row=>({...row,fact:{...row.fact,provider:id+":unknown"}})))).toBe(false);for(const vector of fixture.semantic.malformedFactPatches){const fact=(await import("fast-json-patch")).applyPatch(structuredClone(rows[0]!.fact),vector as any,true).newDocument,invalid=[{...rows[0],fact}],authority=JSON.parse(readFileSync(new URL("../../🧬️schema/📥️authority.json",import.meta.url),"utf8")),Envelope=(await import("ajv")).default;expect(new Envelope({strict:false}).compile(authority)({version:authority.properties.version.const,module:{implementation:"a".repeat(64),publication:"b".repeat(64)},membership:"a".repeat(64),graph:"b".repeat(64),observations:[...invalid,0]})).toBe(true);expect(validate({digest:"a".repeat(64),resultSha256:"b".repeat(64),authorityObservations:[],observations:invalid})).toBe(false);expect(await observationsHold(invalid)).toBe(false);}expect(()=>registerSourceAnalysisV1({id,revision:fixture.semantic.provider.revision,analyze:()=>[]})).toThrow();registerSourceAnalysisV1({id,revision:fixture.semantic.provider.nextRevision,analyze:semanticParser});expect(await observationsHold(rows)).toBe(false);expect(()=>observedSourceAnalysisV1(provider,path)).toThrow();expect(validate({digest:"a".repeat(64),resultSha256:"b".repeat(64),authorityObservations:[],observations:rows.map(row=>({...row,fact:{...row.fact,revision:"invalid"}}))})).toBe(false);}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
 test("semantic source analysis replays current parsers and fails closed on parser errors",async()=>{
@@ -328,9 +329,9 @@ test("semantic parser handles retain exact evaluated inference ownership",async(
 });
 
 test("semantic Source observation declaration roster matches actual runtime exports",async()=>{
- const row=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.declarationExports,source=ts.createSourceFile("observation.d.mts",readFileSync(new URL("../🟨️.d.mts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),declared:string[]=[];
- for(const statement of source.statements){if(!ts.canHaveModifiers(statement)||!ts.getModifiers(statement)?.some(modifier=>modifier.kind===ts.SyntaxKind.ExportKeyword))continue;if(ts.isFunctionDeclaration(statement)&&statement.name)declared.push(statement.name.text);if(ts.isVariableStatement(statement))for(const declaration of statement.declarationList.declarations)if(ts.isIdentifier(declaration.name))declared.push(declaration.name.text);}
- expect(declared.sort()).toEqual(row);expect(Object.keys(await import("../🟨️.mjs")).sort()).toEqual(row);
+ const row=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.declarationExports,source=ts.createSourceFile("observation.d.mts",readFileSync(new URL("../🟨️.d.mts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),declared=new Set<string>();
+ for(const statement of source.statements){if(!ts.canHaveModifiers(statement)||!ts.getModifiers(statement)?.some(modifier=>modifier.kind===ts.SyntaxKind.ExportKeyword))continue;if(ts.isFunctionDeclaration(statement)&&statement.name)declared.add(statement.name.text);if(ts.isVariableStatement(statement))for(const declaration of statement.declarationList.declarations)if(ts.isIdentifier(declaration.name))declared.add(declaration.name.text);}
+ expect([...declared].sort()).toEqual(row);expect(Object.keys(await import("../🟨️.mjs")).sort()).toEqual(row);
 });
 
 for(const row of JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.settlement.cases)test("semantic settlement retains original cancellation: "+row.id,async()=>{
@@ -338,4 +339,40 @@ for(const row of JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json
  try{const result=api.settleObservedComputationV1(async()=>{computations++;await Promise.resolve();if(row.phase==="compute"){controller.abort(Error(row.reason));return "completed";}api.observedFs.readFileSync(path);writeFileSync(path,input.after);api.observedFs.readFileSync(path);return "completed";},{signal:controller.signal,limit:1,onRound:async()=>{rounds++;await Promise.resolve();controller.abort(Error(row.reason));}});await expect(result).rejects.toThrow(row.reason);expect(computations).toBe(1);expect(rounds).toBe(row.phase==="round"?1:0);
  const oracle=Bun.spawnSync([registeredToolExecutableV1("node"),"--input-type=module","-e",'const c=new AbortController();try{await Promise.resolve();c.abort(Error(process.argv[1]));c.signal.throwIfAborted();console.log("completed")}catch(e){console.log(e.message)}',row.reason],{stdout:"pipe",stderr:"pipe"});expect(oracle.exitCode).toBe(0);expect(oracle.stdout.toString().trim()).toBe(row.reason);
  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+for(const relocated of [false,true])test("shared "+(relocated?"relocated ":"")+"admission rechecks each source once per pass and the seal checks again",async()=>{
+ const {observationsHoldWithinRoundV1,withObservationRoundV1,withObservedWorldV1}=await import("../🟨️.mjs"),{Database}=await import("bun:sqlite");
+ const rows=admissionPass.cases.map(({path})=>({kind:"exists",path,fact:true}));
+ const {noteFormerRootV1,forgetFormerRootsV1}=await import("../🏚️relocation/🟨️.mjs");
+ const former=admissionPass.relocation.former,live=admissionPass.relocation.live;
+ const physical=(path:string)=>relocated?live+path.slice(former.length):path;
+ const touched=new Map<string,number>(),present=new Set(rows.map(({path})=>physical(path)));
+ if(relocated)expect(noteFormerRootV1(former,live)).toBe(true);
+ try{await withObservedWorldV1({...rawFs,statSync(...args:Parameters<typeof rawFs.statSync>){
+  const path=String(args[0]);
+  touched.set(path,(touched.get(path)??0)+1);
+  if(!present.has(path))throw Object.assign(Error("fixture absent"),{code:"ENOENT"});
+  return {} as ReturnType<typeof rawFs.statSync>;
+ }},async()=>{
+  await withObservationRoundV1(async()=>{
+   expect(await Promise.all(admissionPass.batches.map(batch=>observationsHoldWithinRoundV1(batch.map(at=>rows[at]!),64)))).toEqual(admissionPass.initial);
+   expect(rows.map(({path})=>touched.get(physical(path)))).toEqual(admissionPass.sharedProbes);
+   const db=new Database(":memory:");
+   try{
+    const oracle=db.query("select distinct row.value idx from json_each(?1) owner join json_each(owner.value) row order by idx").all(JSON.stringify(admissionPass.batches)) as {idx:number}[];
+    expect(oracle.map(({idx})=>touched.get(physical(rows[idx]!.path)))).toEqual(admissionPass.sharedProbes);
+   }finally{db.close();}
+   present.delete(physical(rows[admissionPass.removed]!.path));
+   expect(await observationsHoldWithinRoundV1(rows,64)).toBe(true);
+   expect(await observationsHold(rows)).toBe(false);
+   if(relocated){
+    const conflict=admissionPass.relocation.conflict;
+    expect(noteFormerRootV1(former,conflict)).toBe(false);
+    expect(await observationsHoldWithinRoundV1(rows,64)).toBe(false);
+    expect(touched.get(rows[admissionPass.removed]!.path)).toBe(1);
+   }
+  });
+  expect(await withObservationRoundV1(()=>observationsHoldWithinRoundV1(rows,64))).toBe(false);
+ });}finally{if(relocated)forgetFormerRootsV1();}
 });

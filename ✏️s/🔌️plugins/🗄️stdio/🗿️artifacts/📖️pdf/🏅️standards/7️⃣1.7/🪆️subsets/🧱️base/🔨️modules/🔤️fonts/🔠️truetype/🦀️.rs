@@ -595,3 +595,7 @@ pub fn synthesize_truetype(units_per_em: u16, glyphs: &[(u32, u16, Vec<Vec<(i16,
 //#region 🧪️Tests
 
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

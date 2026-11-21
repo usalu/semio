@@ -208,12 +208,25 @@
     "git",
     "ignore",
     "links",
+    "mutableHash",
     "paths",
     "version"
    ],
    "properties": {
     "version": {
      "const": 1
+    },
+    "mutableHash": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["bytes", "chunkBytes", "checkBytes", "firstByte", "sha256"],
+     "properties": {
+      "bytes": {"type": "integer", "minimum": 1},
+      "chunkBytes": {"type": "integer", "minimum": 1},
+      "checkBytes": {"type": "integer", "minimum": 1},
+      "firstByte": {"type": "integer", "minimum": 0, "maximum": 255},
+      "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+     }
     },
     "ignore": {
      "type": "array",

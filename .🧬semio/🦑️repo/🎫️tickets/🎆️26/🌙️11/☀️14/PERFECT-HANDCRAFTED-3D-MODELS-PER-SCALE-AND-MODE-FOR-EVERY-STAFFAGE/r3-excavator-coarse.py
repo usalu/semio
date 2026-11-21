@@ -108,29 +108,29 @@ def house(S, chord, *, toolbox, cover, grille, rail, foot, merged_deck=False, re
     extra = {"regions": regions} if regions else {"region": "house"}
     if not merged_deck:
         S.ext("deck", UP, dp.pts(chord), "v", 0, F.DECK_TOP, material=PS, tone=0.5, region="house")
-        S.draw("deck", UP, L.rect(-2.38, 0, 1.44, F.DECK_TOP), "w", -H, H, tone=0.5, region="house", material=PS, views="ef")
+        S.draw("deck", UP, L.rect(-2.26, 0, 1.44, F.DECK_TOP), "w", -H, H, tone=0.5, region="house", material=PS, views="ef")
         S.draw("deck", UP, L.Path_of(dp.pts(chord)), "v", 0, F.DECK_TOP, tone=0.5, region="house", material=PS, views="p")
     S.ext("house", UP, hp.pts(chord), "v", low, F.HOOD, material=PS, tone=0.62, region="house")
-    S.draw("house", UP, L.rect(-2.38, low, 0.75, F.HOOD), "w", -H, F.SLOT[0], tone=0.62, material=PS, views="ef", **extra)
-    S.draw("house-rear", UP, L.rect(-2.38, low, -0.38, F.HOOD), "w", F.SLOT[0], H, tone=0.62, region="house", material=PS, views="f")
+    S.draw("house", UP, L.rect(-2.26, low, 0.75, F.HOOD), "w", -H, F.SLOT[0], tone=0.62, material=PS, views="ef", **extra)
+    S.draw("house-rear", UP, L.rect(-2.26, low, -0.38, F.HOOD), "w", F.SLOT[0], H, tone=0.62, region="house", material=PS, views="f")
     S.draw("house", UP, L.Path_of(hp.pts(chord)), "v", low, F.HOOD, tone=0.62, material=PS, views="p", **extra)
     if toolbox:
         S.box("toolbox", UP, (1.085, (low + 0.92) / 2, (F.SLOT[0] - H) / 2), (0.67, 0.92 - low, H + F.SLOT[0]), material=PS, tone=0.58, region="house")
         S.draw("toolbox", UP, L.rect(0.75, low, 1.42, 0.92), "w", -H, F.SLOT[0], tone=0.58, region="house", material=PS)
     if cover:
-        S.box("hood-cover", UP, (-1.79, F.HOOD + cover / 2, 0.05), (0.98, cover, 1.70), material=PS, role="detail", tone=0.5, region="house")
-        S.draw("hood-cover", UP, L.rect(-2.28, F.HOOD, -1.30, F.HOOD + cover), "w", -0.80, 0.90, role="detail", tone=0.45, material=PS, region="house")
+        S.box("hood-cover", UP, (-1.67, F.HOOD + cover / 2, 0.05), (0.98, cover, 1.70), material=PS, role="detail", tone=0.5, region="house")
+        S.draw("hood-cover", UP, L.rect(-2.16, F.HOOD, -1.18, F.HOOD + cover), "w", -0.80, 0.90, role="detail", tone=0.45, material=PS, region="house")
     faces = ["+u", "-u", "+v", "-v"]
     if grille:
-        S.box("vent-panel", UP, (-1.825, 0.775, -H - grille / 2), (0.75, 0.55, grille), material=EM, role="detail", tone=0.15, region="engine-compartment", thfaces=["+w"])
-        S.box("radiator-grille", UP, (-1.775, 0.785, H + grille / 2), (0.95, 0.67, grille), material=EM, role="detail", tone=0.15, region="engine-compartment", thfaces=["-w"])
-        S.draw("hood-grille", UP, L.rect(-2.20, 0.50, -1.45, 1.05), "w", -H - grille, -H, role="detail", tone=0.15, material=EM, region="engine-compartment")
-        S.draw("radiator-grille", UP, L.rect(-2.25, 0.45, -1.30, 1.12), "w", H, H + grille, role="detail", tone=0.15, material=EM, region="engine-compartment", views="fp")
+        S.box("vent-panel", UP, (-1.705, 0.775, -H - grille / 2), (0.75, 0.55, grille), material=EM, role="detail", tone=0.15, region="engine-compartment", thfaces=["+w"])
+        S.box("radiator-grille", UP, (-1.655, 0.785, H + grille / 2), (0.95, 0.67, grille), material=EM, role="detail", tone=0.15, region="engine-compartment", thfaces=["-w"])
+        S.draw("hood-grille", UP, L.rect(-2.08, 0.50, -1.33, 1.05), "w", -H - grille, -H, role="detail", tone=0.15, material=EM, region="engine-compartment")
+        S.draw("radiator-grille", UP, L.rect(-2.13, 0.45, -1.18, 1.12), "w", H, H + grille, role="detail", tone=0.15, material=EM, region="engine-compartment", views="fp")
     else:
         t = 2 * S.feature
-        S.box("vent-patch", UP, (-1.825, 0.775, -H + t / 2), (0.75, 0.55, t), material=EM, role="detail", tone=0.15, to="thermal", region="engine-compartment", thfaces=faces + ["+w"])
-        S.box("radiator-patch", UP, (-1.775, 0.785, H - t / 2), (0.95, 0.67, t), material=EM, role="detail", tone=0.15, to="thermal", region="engine-compartment", thfaces=faces + ["-w"])
-    sx, sz = -1.80, -1.02
+        S.box("vent-patch", UP, (-1.705, 0.775, -H + t / 2), (0.75, 0.55, t), material=EM, role="detail", tone=0.15, to="thermal", region="engine-compartment", thfaces=faces + ["+w"])
+        S.box("radiator-patch", UP, (-1.655, 0.785, H - t / 2), (0.95, 0.67, t), material=EM, role="detail", tone=0.15, to="thermal", region="engine-compartment", thfaces=faces + ["-w"])
+    sx, sz = -1.68, -1.02
     S.cyl("stack", UP, (sx, F.HOOD, sz), (sx, 1.74, sz), 0.06, material=EX, tone=0.25, region="exhaust-stack")
     if not regions:
         S.draw("stack", UP, L.rect(sx - 0.06, F.HOOD, sx + 0.06, 1.74), "w", sz - 0.06, sz + 0.06, role="detail", tone=0.25, material=EX, region="exhaust-stack", views="ef")

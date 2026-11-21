@@ -1,0 +1,9 @@
+{
+  "cells": 32,
+  "headerBytes": 144,
+  "cases": [
+    { "acknowledged": 0, "admitted": false, "chargedItems": 0, "chargedWork": 0 },
+    { "acknowledged": 1, "admitted": true, "chargedItems": 2, "chargedWork": 2 },
+    { "acknowledged": 32, "admitted": true, "chargedItems": 2, "chargedWork": 2 }
+  ]
+}

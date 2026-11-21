@@ -18,7 +18,9 @@
       "name": "setHoverChannel",
       "parameters": [
         "widgetId?: string | null",
-        "port?: string | null"
+        "port?: string | null",
+        "direction?: \"in\" | \"out\" | null",
+        "portsJson?: string | null"
       ]
     },
     {

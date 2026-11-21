@@ -63,11 +63,30 @@ impl DagGraphState {
         (self.is_node_selected(node_id), false, self.is_node_hovered(node_id))
     }
 
+    /// 🧷️ Replaces companion marks using exact authored channel sides.
+    pub fn set_hover_ports(&mut self, ports: &[DagChannelRef]) {
+        self.hover_ports = ports.iter()
+            .filter_map(|port| self.handle_id_for_channel(&port.widget_id, &port.port, Some(port.direction)))
+            .collect();
+        self.hover_ports.sort_unstable();
+        self.hover_ports.dedup();
+    }
+
+    /// 🧹️ Releases external marks when a local pointer or a new graph takes over.
+    pub fn clear_hover_ports(&mut self) {
+        self.hover_ports.clear();
+    }
+
+    /// 🧭️ Supplies owning nodes when the active zoom hides the physical ports.
+    pub fn hover_port_owners(&self) -> impl Iterator<Item = NodeId> + '_ {
+        self.hover_ports.iter().filter_map(|id| self.engine.handles.get(id).map(|handle| handle.node_id))
+    }
+
     pub fn handle_interaction_chrome(&self, handle_id: HandleId) -> (bool, bool, bool) {
         if self.is_preselect_active() {
             return (self.engine.preselect.handle_ids.contains(&handle_id), self.engine.preselect_removed.handle_ids.contains(&handle_id), false);
         }
-        (self.engine.selection.handle_ids.contains(&handle_id), false, self.engine.hover == Some(handle_id))
+        (self.engine.selection.handle_ids.contains(&handle_id), false, self.engine.hover == Some(handle_id) || self.hover_ports.binary_search(&handle_id).is_ok())
     }
 
     pub fn edge_interaction_chrome(&self, edge_id: EdgeId) -> (bool, bool, bool) {
@@ -207,7 +226,7 @@ impl DagGraphState {
             }
         }
         for handle_key in handles {
-            if let Some((node_id, port_id)) = handle_key.split_once('@') {
+            if let Some((node_id, port_id)) = handle_key.rsplit_once('@') {
                 if let Some(hid) = self.handle_id_for_port(node_id, port_id) {
                     self.engine.selection.handle_ids.insert(hid);
                 }

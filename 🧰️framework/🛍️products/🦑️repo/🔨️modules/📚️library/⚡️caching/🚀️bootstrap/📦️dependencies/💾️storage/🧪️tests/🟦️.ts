@@ -275,6 +275,43 @@ test("projected workspace edges are found in every directory of the generation, 
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 
+
+test("owned workspace edge progress adds exact descriptor scopes and suppresses retried entries",async()=>{
+ const storage=await import("../🟦️.ts"),descriptors=await import("@semio-tech/framework-filesystem/observation/descriptor"),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
+ if(!artifacts)throw Error("Original dependency path artifact root required");
+ const base=mkdtempSync(join(artifacts,"wp-")),workspace=join(base,"ws"),batch=installSchema.$defs.InstalledPathProtocol.const.progressWorkUnits;
+ const progress=storage.createJavascriptDependencyEdgeProgressV1(),independent=storage.createJavascriptDependencyEdgeProgressV1(),seen:{resource:string;mode:string;elapsedMs:number}[]=[],db=new Database(":memory:");
+ const control={publish:async(row:typeof seen[number])=>{seen.push(row);},yieldContinuation:async()=>{}};
+ const prepare=(scope:string,generation:string,files:number)=>{
+  const directory=join(base,"j",generation.slice(0,20));
+  mkdirSync(directory,{recursive:true});
+  for(let i=0;i<files;i++)writeFileSync(join(directory,"content-"+i),"");
+  return {scope,plan:{generation,directory,members:[],sources:[]}};
+ };
+ const a=prepare("a","a".repeat(64),2*batch),b=prepare("b","b".repeat(64),batch);
+ const run=(row:typeof a,accumulator:typeof progress)=>descriptors.withArtifactRelativeDirectoryV1(base,()=>{},directory=>storage.publishJavascriptDependencyExportsDescriptorV1(directory,workspace,base,row as never,control as never,()=>{},entries=>accumulator(row.scope,row.plan.generation,entries)));
+ try{
+  await run(a,progress);await run(b,progress);await run(a,progress);await run(b,independent);
+  const [first,second]=[batch-1,2*batch-1];
+  const steps=[["A","a",first],["A","a",second],["A","b",first],["A","a",first],["A","a",second],["B","b",first]];
+  const expected=db.query(`WITH samples AS (SELECT key AS n,json_extract(value,'$[0]') AS op,
+    json_extract(value,'$[1]') AS scope,json_extract(value,'$[2]') AS entries FROM json_each(?))
+   SELECT 'dependencies:workspace-edges:'||(
+    SELECT sum(entries) FROM (SELECT max(p.entries) AS entries FROM samples p WHERE p.op=s.op AND p.n<=s.n GROUP BY p.scope)
+   ) AS resource,'exclusive' AS mode,0 AS elapsedMs FROM samples s ORDER BY n`).all(JSON.stringify(steps));
+  expect(seen).toEqual(expected);
+  const concurrent=await Promise.all([Promise.resolve().then(()=>progress("b",b.plan.generation,second)),Promise.resolve().then(()=>progress("c","c".repeat(64),first))]);
+  expect(concurrent).toEqual([2*second,2*second+first]);
+  expect(progress("a","f".repeat(64),first)).toBe(2*second+2*first);
+  expect(progress("a",a.plan.generation,first)).toBe(2*second+2*first);
+  const {incrementalProtocolV1}=await import("../../🧾️incremental/🟦️.ts");
+  const capacity=installSchema.$defs.ProducerStageProtocol.const.maximumScopes*incrementalProtocolV1.retry.maximumAttempts,bounded=storage.createJavascriptDependencyEdgeProgressV1();
+  for(let index=0;index<capacity;index++)bounded("bound",index.toString(16).padStart(64,"0"),first);
+  expect(bounded("additional","f".repeat(64),first)).toBe(capacity*first);
+  expect(bounded("bound","0".repeat(64),second)).toBe((capacity-1)*first+second);
+ }finally{db.close();rmSync(base,{recursive:true,force:true});}
+});
+
 test("preservation parent stamps compare only stable physical identity",async()=>{
  const {sameJavascriptDependencyParentIdentityV1:same}=await import("../🟦️.ts"),stamp=(...fields:string[])=>JSON.stringify(fields);
  expect(same(stamp("1","2","3","75","2400","10","10"),stamp("1","2","3","76","2464","99","99"))).toBe(true);

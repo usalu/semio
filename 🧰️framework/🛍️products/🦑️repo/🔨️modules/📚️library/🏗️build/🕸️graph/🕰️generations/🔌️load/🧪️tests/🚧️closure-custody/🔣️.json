@@ -1,0 +1,22 @@
+[
+  {
+    "origin": "local",
+    "wait": "settle",
+    "settled": 1
+  },
+  {
+    "origin": "restored",
+    "wait": "settle",
+    "settled": 1
+  },
+  {
+    "origin": "restored",
+    "wait": "restore",
+    "settled": 0
+  },
+  {
+    "origin": "restored",
+    "wait": "refetch",
+    "settled": 1
+  }
+]

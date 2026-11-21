@@ -29,7 +29,18 @@ pub(super) fn edit_object(snapshot: &PdfSnapshot, action: &str, object_id: &str,
     let page = snapshot.pages.get(object.page).ok_or_else(|| fault("pdf page is gone"))?;
     let mut content = page.content.clone();
     match action {
-        "set-text" if object.kind == ObjectKind::Text => replace_shown_text(&mut content, &object, text)?,
+        "set-text" if object.kind == ObjectKind::Text => {
+            let mut fonts = FontMeasurements::new(snapshot);
+            let valid = fonts.codec(&object.font).map_or_else(|| text.bytes().all(|byte| (0x20..=0x7E).contains(&byte)), |font| font.shows_text(text));
+            if !valid { return Err(fault("the active PDF font cannot show the requested text")); }
+            replace_shown_text(&mut content, &object, text)?;
+        }
+        "set-font-size" if object.kind == ObjectKind::Text => {
+            if !height.is_finite() || height <= 0.0 || object.font.is_empty() { return Err(fault("a text run needs an active font and a positive finite size")); }
+            if height == object.font_size { return Ok(Vec::new()); }
+            let paint = content[object.end].clone();
+            restyle_text(&mut content, &object, paint, object.font.clone(), height)?;
+        }
         "delete" if object.kind == ObjectKind::Text => delete_text(&mut content, &object)?,
         "delete" => delete_paint(&mut content, &object),
         "move" => translate_object(&mut content, &object, x - object.x, y - object.y)?,
@@ -47,7 +58,7 @@ pub(super) fn insert_object(snapshot: &PdfSnapshot, action: &str, page_index: us
     let mut extra = Vec::new();
     match action {
         "insert-text" => {
-            let (font_id, font_mutation) = ensure_font(snapshot);
+            let (font_id, font_mutation) = ensure_font(snapshot, text)?;
             if let Some(mutation) = font_mutation {
                 extra.push(mutation);
             }
@@ -135,29 +146,29 @@ pub(super) fn set_font_of_text(snapshot: &PdfSnapshot, object_id: &str, base_fon
     if object.kind != ObjectKind::Text {
         return Err(fault(format!("pdf object '{object_id}' is not text")));
     }
-    let (font_id, font_mutation) = font_for_base(snapshot, base_font);
+    let font = font_for_base(snapshot, base_font)?;
+    if font.id == object.font { return Ok(Vec::new()); }
+    let mut fonts = FontMeasurements::new(snapshot);
+    let target = fonts.font_codec(&font).ok_or_else(|| fault("the selected PDF font is unavailable"))?;
     let page = snapshot.pages.get(object.page).ok_or_else(|| fault("pdf page is gone"))?;
     let mut content = page.content.clone();
-    let restore = text_cursor_after(&content, &object)?;
-    content.splice(object.end + 1..object.end + 1, restore);
-    if !object.font.is_empty() {
-        content.insert(object.end + 1, PdfOp::SetFont { name: object.font, size: object.font_size });
-    }
-    content.insert(object.end, PdfOp::SetFont { name: font_id, size: object.font_size });
+    let paint = target.rebind_show(&content[object.end], fonts.codec(&object.font))
+        .ok_or_else(|| fault("the selected PDF font cannot preserve the shown text"))?;
+    restyle_text(&mut content, &object, paint, font.id.clone(), object.font_size)?;
     let mut mutations = Vec::new();
-    if let Some(mutation) = font_mutation {
-        mutations.push(mutation);
+    if let std::borrow::Cow::Owned(font) = font {
+        mutations.push(PdfMutation::SetFont(SetFont { font, index: None }));
     }
     mutations.push(PdfMutation::SetPageContent(SetPageContent { index: object.page, content }));
     Ok(mutations)
 }
 
-fn font_for_base(snapshot: &PdfSnapshot, base_font: &str) -> (String, Option<PdfMutation>) {
-    if let Some(font) = snapshot.fonts.iter().find(|font| font.base_font() == base_font) {
-        return (font.id.clone(), None);
+fn font_for_base<'a>(snapshot: &'a PdfSnapshot, name: &str) -> Result<std::borrow::Cow<'a, PdfFont>, Fault> {
+    use semio_s_artifact_stdio_pdf_fonts::standards::v1_7::subsets::base::modules::fonts::standard_font;
+    if let Some(font) = snapshot.fonts.iter().find(|font| font.base_font() == name) {
+        return Ok(std::borrow::Cow::Borrowed(font));
     }
-    let occupied: std::collections::HashSet<_> = snapshot.fonts.iter().map(|font| font.id.as_str()).collect();
-    let id = (1..).map(|index| format!("F{index}")).find(|id| !occupied.contains(id.as_str())).expect("available PDF font id");
-    (id.clone(), Some(PdfMutation::SetFont(SetFont { font: PdfFont::standard(id, base_font), index: None })))
+    standard_font(name).filter(|font| font.name == name).ok_or_else(|| fault("the PDF font is not admitted"))?;
+    Ok(std::borrow::Cow::Owned(new_standard_font(snapshot, name)))
 }
 //#endregion 🖱️ObjectEdits

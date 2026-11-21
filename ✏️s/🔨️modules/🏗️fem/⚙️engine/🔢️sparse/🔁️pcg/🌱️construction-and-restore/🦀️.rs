@@ -39,6 +39,7 @@ pub struct PcgJobConstruction {
     pub(super) p: PcgVector,
     pub(super) ap: PcgVector,
     pub(super) complete: Option<PcgJob>,
+    publish_checkpoints: bool,
     fault: Option<&'static [u8]>,
     pub(super) closing: bool,
 }
@@ -59,6 +60,7 @@ impl PcgJobConstruction {
             p: PcgVector::default(),
             ap: PcgVector::default(),
             complete: None,
+            publish_checkpoints: true,
             fault: None,
             closing: false,
         }
@@ -75,6 +77,7 @@ impl PcgJobConstruction {
         Ok(construction)
     }
 
+    /// 🪴 Keeps the iterative state with its mounted owner and streams the solver result.
     pub fn new_with_mounted_rhs(operation: Operation, matrix: Csr, rhs: MountedScalarSlots) -> Result<Self, (Csr, MountedScalarSlots)> {
         if matrix.n != rhs.len() {
             return Err((matrix, rhs));
@@ -82,6 +85,7 @@ impl PcgJobConstruction {
         let mut construction = Self::new(operation, matrix);
         construction.b = PcgVector(rhs.into_paged());
         construction.stage = PcgConstructionStage::NormalizeB;
+        construction.publish_checkpoints = false;
         Ok(construction)
     }
 
@@ -207,7 +211,7 @@ impl PcgJobConstruction {
                             x: std::mem::take(&mut self.x),
                             tol_rel: 1.0e-8,
                             max_iter: n.max(512),
-                            batch_units: 1,
+                            batch_units: if self.publish_checkpoints { 1 } else { 256 },
                             stage: PcgStage::InitializeDiagonal,
                             diag: std::mem::take(&mut self.diag),
                             r: std::mem::take(&mut self.r),
@@ -236,6 +240,7 @@ impl PcgJobConstruction {
                         publication: None,
                         publication_fault: None,
                         terminal_published: false,
+                        publish_checkpoints: self.publish_checkpoints,
                         closing: false,
                         desk: NumericalOutcomeDesk::default(),
                     });

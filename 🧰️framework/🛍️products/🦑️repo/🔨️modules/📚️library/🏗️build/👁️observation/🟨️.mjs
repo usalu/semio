@@ -18,7 +18,7 @@ import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { setTimeout as settlementDelay } from "node:timers/promises";
 import { createHash } from "node:crypto";
-import { rebaseRowV1, rebaseRowsV1 } from "./🏚️relocation/🟨️.mjs";
+import { createRowRebaserV1, rebaseRowV1, rebaseRowsV1 } from "./🏚️relocation/🟨️.mjs";
 import { sha256HexV1, utf8TextV1 } from "../🧂️text-bytes/🟨️.mjs";
 import { hollowDirectoryV1, machineLocalRowV1, sourceTreeFilterV1 } from "./📂️source-names/🟨️.mjs";
 
@@ -403,30 +403,42 @@ function analyzeSourceV1(registered,path,bytes){
 function analysisRowsV1(ids){const rows=new Array(ids.length);for(let at=0;at<ids.length;at++){const row=rowTableV1.row(ids[at]);if(row===undefined)return undefined;rows[at]=row;}return rows;}
 
 /** 🪶️ Bounds reusable JSON parser results without retaining source buffers or parser trees. */
-function sourceAnalysisImageV1(registered,path,bytes,sha256){
+function sourceAnalysisImageV1(registered,path,bytes,sha256,copyBytes=false){
  const records=recordScopes.getStore()?.records,key=recordKey("source-analysis-v1",registered.provider.id,registered.provider.revision,path,sha256),previous=sourceAnalysisImages.get(key);let result;
  if(previous){sourceAnalysisImages.delete(key);sourceAnalysisBytes-=previous.bytes;const rows=analysisRowsV1(previous.ids);if(rows!==undefined&&current(rows))result={image:previous.image,nestedObservations:rows};}
  const hit=result?undefined:records?.get(key);
  if(hit!==undefined)try{const candidate=JSON.parse(utf8TextV1(hit));if(typeof candidate.image==="string"&&jsonImage(JSON.parse(candidate.image))===candidate.image&&Array.isArray(candidate.nestedObservations)&&current(candidate.nestedObservations))result=candidate;}catch{}
- if(!result)result=analyzeSourceV1(registered,path,bytes);
+ if(!result)result=analyzeSourceV1(registered,path,copyBytes?Buffer.from(bytes):bytes);
  const size=Buffer.byteLength(result.image)+4*result.nestedObservations.length+OBSERVATION_LIMITS_V1.sourceAnalysisOverheadBytes;
  if(size<=SOURCE_ANALYSIS_BYTES){while(sourceAnalysisBytes+size>SOURCE_ANALYSIS_BYTES){const oldest=sourceAnalysisImages.keys().next().value;sourceAnalysisBytes-=sourceAnalysisImages.get(oldest).bytes;sourceAnalysisImages.delete(oldest);}sourceAnalysisImages.set(key,{image:result.image,ids:Uint32Array.from(result.nestedObservations,row=>rowTableV1.id(row)),bytes:size});sourceAnalysisBytes+=size;records?.put(key,Buffer.from(JSON.stringify(result)));}
  return result;
 }
 
 /** 🏺️ Reuses semantic images only while every nested dependency remains current. */
-function observeSourceBytesV1(registered,path,bytes,source){
- const result=sourceAnalysisImageV1(registered,path,bytes,source.sha256);
+function observeSourceBytesV1(registered,path,bytes,source,copyBytes){
+ const result=sourceAnalysisImageV1(registered,path,bytes,source.sha256,copyBytes);
  retainObservationsV1(scopes.getStore(),result.nestedObservations);retainSourceFactsV1(result.nestedObservations);
  const fact={provider:registered.provider.id,revision:registered.provider.revision,source,resultSha256:sha256HexV1(result.image),nestedObservations:result.nestedObservations};record("analysis",path,fact);return JSON.parse(result.image);
 }
 
-/** 📖️ Observes one parser's semantics without asserting that unrelated source body bytes remain unchanged. */
-export function observedSourceAnalysisV1(provider,path){
- const registered=sourceAnalysisProviderV1(provider),key=absolute(path);let stamp,bytes;
+/** 📏️ Reads and fingerprints the source once before recording the consuming parser facts. */
+function observeReadSourceV1(path,analyze){
+ const key=absolute(path);let stamp,bytes;
  try{stamp=world.statSync(path);}catch(error){stamp=error;}
  try{bytes=world.readFileSync(path);}catch(error){record("file",key,{error:error.code??"EUNKNOWN"});throw error;}
- const source=sourceFactV1(stamp,bytes);try{return observeSourceBytesV1(registered,key,bytes,source);}catch(error){recordFileV1(key,source);throw error;}
+ const source=sourceFactV1(stamp,bytes);try{return analyze(key,bytes,source);}catch(error){recordFileV1(key,source);throw error;}
+}
+
+/** 📖️ Observes one parser's semantics without asserting that unrelated source body bytes remain unchanged. */
+export function observedSourceAnalysisV1(provider,path){
+ const registered=sourceAnalysisProviderV1(provider);
+ return observeReadSourceV1(path,(key,bytes,source)=>observeSourceBytesV1(registered,key,bytes,source));
+}
+
+/** 👥️ Records two independent parser facts against the same source image, isolating the second parser from any first-parser byte mutations. */
+export function observedSourceAnalysisPairV1(first,second,path){
+ const before=sourceAnalysisProviderV1(first),after=sourceAnalysisProviderV1(second);
+ return observeReadSourceV1(path,(key,bytes,source)=>[observeSourceBytesV1(before,key,bytes,source,true),observeSourceBytesV1(after,key,bytes,source)]);
 }
 
 /** 🗞️ Reads parser input asynchronously while preserving synchronous parser and nested probe semantics. */
@@ -1369,10 +1381,23 @@ export function observationsHold(observations, limit = OBSERVATION_LIMITS_V1.hol
   return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified));
 }
 
-async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified) {
+const asyncAdmissionChecksV1=new WeakMap();
+
+/** 🪧️ Reuses the verdict for an exact observation object across owner admissions in this settle pass. The seal always verifies outside the pass. */
+export function observationsHoldWithinRoundV1(observations,limit,signal,onStale,onVerified){
+ return withObservationRoundV1(()=>{
+  const round=inferenceValidationScopes.getStore();
+  let checks=asyncAdmissionChecksV1.get(round);
+  if(checks===undefined){checks={rows:createRowRebaserV1(),verdicts:new WeakMap()};asyncAdmissionChecksV1.set(round,checks);}
+  return observationsHoldInRoundV1(observations,limit,new Set(),new Set(),signal,onStale,onVerified,checks);
+ });
+}
+
+async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale,onVerified,sharedChecks) {
   signal?.throwIfAborted();
   if(!Number.isSafeInteger(limit)||limit<1)throw new RangeError("Positive observation worker limit required");
-  observations = rebaseRowsV1(observations);
+  observations = sharedChecks===undefined?rebaseRowsV1(observations):sharedChecks.rows(observations);
+  const verdicts=sharedChecks?.verdicts;
   await settleClosureRowsV1(observations);signal?.throwIfAborted();
   const conflict=firstObservationConflictV1(observations);
   if(conflict!==undefined){onStale?.(conflict.row);return false;}
@@ -1418,7 +1443,14 @@ async function observationsHoldInRoundV1(observations, limit, stableDirectories,
       }
       if(positions!==undefined)positions[index]=next;
       const row=observations[next++];
-      if(!await check(row)){stale=true;onStale?.(row);continue;}
+      let verdict=verdicts?.get(row);
+      if(verdict===undefined){
+        const pending=check(row);
+        verdicts?.set(row,pending);
+        verdict=await pending;
+        verdicts?.set(row,verdict);
+      }else if(typeof verdict!=="boolean")verdict=await verdict;
+      if(!verdict){stale=true;onStale?.(row);continue;}
       if(positions!==undefined&&!stale){
         signal?.throwIfAborted();positions[index]=Infinity;
         if(++successful%stride===0)publish();

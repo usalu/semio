@@ -42,8 +42,8 @@ use db_io_core::SnapshotStorage;
 #[path = "🪞️replica-sync-protocol/🦀️.rs"]
 mod replica_sync_protocol;
 pub use replica_sync_protocol::{
-    commands_server_frame, decide_bootstrap, decode_wal_command, encode_command_envelope, from_frontier_summary, frontier_delta, issue_resume_token, missing_commands,
-    replay_sync_state, state_frontier_summary, to_frontier_summary, wal_command_id, ArtifactSyncState, BootstrapPlan,
+    commands_server_frame, decide_bootstrap, decode_atomic_wal_descriptor, decode_wal_command, encode_command_envelope, from_frontier_summary, frontier_delta, issue_resume_token, missing_commands,
+    grouped_frontier_frames, replay_sync_state, state_frontier_summary, to_frontier_summary, wal_command_id, ArtifactSyncState, BootstrapPlan,
 };
 
 #[path = "🎟️hello-admission-and-backing/🦀️.rs"]

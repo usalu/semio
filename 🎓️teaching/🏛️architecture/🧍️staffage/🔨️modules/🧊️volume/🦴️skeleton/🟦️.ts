@@ -2,7 +2,7 @@
  *
  * One source of truth: no kinematics is repeated here. Every placement is derived from bone frames that `restFrames` or `evaluate` solved; this module only changes frame (see ../🧭️frame) and expresses the world frames relative to the parent. The mechanism mirrors the staffage joint: a revolute joint turns about the node's own
  * `+Z` axis (the staffage lateral axis) by the angle limits in radians; a bone that any pose or clip key spreads (`abductionDeg`) or twists (`twistDeg`), or whose joint limits a twist, is `spherical` about its own `+X` axis (the bone axis) with the twist limits and an unrestricted swing; a prismatic joint slides along the axis `axisDeg` in
- * the parent frame; a fixed joint is fixed; the rig root is `free` (the evaluated root placement moves it).
+ * the parent frame. A continuous shaft exports as a revolute joint about local +X. A fixed joint is fixed; the rig root is `free` (the evaluated root placement moves it).
  *
  * @see ../../🦴️rig/🟦️.ts — `restFrames`, `solveChain`
  * @see ../../🧮️evaluation/🟦️.ts — `evaluate`
@@ -26,7 +26,7 @@ export function outOfPlaneBones(asset: Asset): ReadonlySet<Slug> {
   };
   for (const pose of asset.poses) scan(pose.bones);
   for (const clip of asset.clips) for (const key of clip.keys) scan(key.bones);
-  for (const bone of asset.rig.bones) if (bone.joint.type === "revolute" && (bone.joint.twistMinDeg !== undefined || bone.joint.twistMaxDeg !== undefined)) out.add(bone.id);
+  for (const bone of asset.rig.bones) if (bone.joint.type === "revolute" && (bone.joint.continuousTwist || bone.joint.twistMinDeg !== undefined || bone.joint.twistMaxDeg !== undefined)) out.add(bone.id);
   return out;
 }
 
@@ -42,6 +42,7 @@ export function jointOf(bone: Bone, root: boolean, outOfPlane: boolean): ModelJo
       return { type: "prismatic", axis: [portable.cos(angle), portable.sin(angle), 0], ...(joint.minM === undefined ? {} : { min: joint.minM }), ...(joint.maxM === undefined ? {} : { max: joint.maxM }) };
     }
     case "revolute":
+      if (joint.continuousTwist) return { type: "revolute", axis: [1, 0, 0] };
       if (outOfPlane) return { type: "spherical", axis: [1, 0, 0], max: Math.PI, twistMin: (joint.twistMinDeg ?? -180) * RAD, twistMax: (joint.twistMaxDeg ?? 180) * RAD };
       return { type: "revolute", axis: [0, 0, 1], ...(joint.minDeg === undefined ? {} : { min: joint.minDeg * RAD }), ...(joint.maxDeg === undefined ? {} : { max: joint.maxDeg * RAD }) };
   }

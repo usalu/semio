@@ -592,6 +592,7 @@ export function useShellCoreState({
   const treeWindowHost = useMemo<TreeWindowHostV1>(
     () => ({
       openStatesFor: (bodyKey) => treeWindowSchedulerRef.current!.openStatesFor(bodyKey),
+      setFormPage: (bodyKey, windowId, page) => treeWindowSchedulerRef.current!.setFormPage(bodyKey, windowId, page),
       setOpen: (bodyKey, nodeKey, open) => {
         treeWindowSchedulerRef.current!.setOpen(bodyKey, nodeKey, open);
         setTreeWindowGeneration((generation) => generation + 1);

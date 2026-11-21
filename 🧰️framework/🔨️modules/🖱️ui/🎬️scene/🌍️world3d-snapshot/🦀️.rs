@@ -457,6 +457,13 @@ pub fn world3d_snapshot_recover_page(page: World3dSnapshotPage) -> Result<(), Wo
     Ok(())
 }
 
+/// 🛟 Reports detached snapshot owners that require a recovery turn.
+pub fn world3d_snapshot_recovery_pending() -> bool {
+    WORLD3D_SNAPSHOTS.lock().is_ok_and(|store| {
+        store.recovered_page_count != 0 || store.slots.iter().flatten().any(|slot| slot.orphaned)
+    })
+}
+
 pub fn world3d_snapshot_recovery_close_step(maximum_bytes: usize) -> Option<(usize, usize)> {
     let mut store = WORLD3D_SNAPSHOTS.lock().ok()?;
     if store.recovered_page_count != 0 {

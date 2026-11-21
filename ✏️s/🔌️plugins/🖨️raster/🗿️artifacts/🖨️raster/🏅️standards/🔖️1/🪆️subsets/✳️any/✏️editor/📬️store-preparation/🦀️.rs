@@ -5,6 +5,10 @@ use crate::modes::edit;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_framework_job::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{OriginalReceivingPrimary, OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit, ValueError, ValueRefusalKind};
+use semio_framework_value::retained_clone::retained_clone_grant_admits;
+use semio_framework_value::native_decoding::{NativeRetirementDecodeControl, construction::NativeRecoveryLoan};
+use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation;
 use store::snapshot_clone_preparation::{OriginalPublicationAssembly,OriginalPublicationInputs};
 #[path="🔁️replay/🦀️.rs"]mod replay;
 
@@ -63,7 +67,11 @@ impl RasterStorePreparation {
         }
         if let Some(demand)=self.assembly.close_demands(body)?{return raster_preparation_nested(demand);}
         if let Some(apply) = self.apply.as_ref() {
-            return raster_preparation_nested(apply.close_demands(body)?);
+            return if apply.terminal_is_empty() {
+                Ok(RasterRetirementDemand { copy_bytes: size_of::<Option<semio_s_artifact_raster_raster_host::RasterOneItemApply>>(), depth: 1, ..Default::default() })
+            } else {
+                raster_preparation_nested(apply.close_demands(body)?)
+            };
         }
         if self.mutation.is_some() {
             return raster_preparation_nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.mutation)?);
@@ -116,7 +124,18 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
     ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation>>, RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation, RasterMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
-        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
+        let copy_bytes = match self.begin_copy_byte_demand(&request.mutation, request.lane) {
+            Ok(bytes) => bytes,
+            Err(error) => return Err((error, request)),
+        };
+        if grant.maximum_copy_bytes < copy_bytes {
+            return Err((ValueError::literal(ValueRefusalKind::WorkLimit, "Raster preparation original header is unfunded"), request));
+        }
+        let mut progress = match demand.admit(grant.retained_grant()) {
+            Ok(progress) => progress,
+            Err(error) => return Err((error, request)),
+        };
+        progress.copied_bytes = copy_bytes;
         let item_count = semio_s_artifact_raster_raster_model::flatten_raster_layers(&request.base.get().layers).len().saturating_add(request.base.get().assets.len());
         if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
@@ -148,30 +167,41 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     }
 }
 
-impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for RasterStorePreparation {
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for RasterStorePreparation {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, OriginalReceivingPrimary> {
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         self.last_work=0;
         if !grant.permits_one() || self.cancelled || self.closing {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.assembling{return self.advance_publication(grant,receiving);}
-        let mut receipt = RetainedCloneProgress::default();
         if self.post.is_none() {
             let base = self.base.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its exact base root"))?;
             let authority = self.authority.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its Store authority"))?;
             let mutation = self.mutation.as_ref().ok_or_else(|| raster_preparation_fault("Raster preparation lost its mutation owner"))?;
             if self.apply.is_none(){let bytes=size_of::<semio_s_artifact_raster_raster_host::RasterOneItemApply>();if grant.maximum_copy_bytes<bytes||!receiving.prepare_work(1)?{return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);}*self.apply=Some(semio_s_artifact_raster_raster_host::RasterOneItemApply::new());self.last_work=1;let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};receiving.commit_work(1).map_err(|error|error.with_retained_progress(receipt))?;self.checkpoint.cursor=self.checkpoint.cursor.saturating_add(1);return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint,receipt));}
-            let mut budget=RASTER_ONE_ITEM_APPLY_FUEL;
-            while !receiving.prepare_work(budget)?{if budget==1{return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);}budget=(budget/2).max(1);}
-            let mut stop_error=None;
-            let turn=self.apply.as_mut().unwrap().advance_controlled(base.get(),mutation,authority.operation(),authority.generation(),budget,grant.retained_grant(),||match receiving.checkpoint(){Ok(())=>false,Err(error)=>{stop_error=Some(error);true}});
-            self.last_work=turn.work;
-            let spent=turn.result.as_ref().map(|(_,progress)|*progress).unwrap_or_else(|error|error.retained_progress());
-            receiving.commit_work(turn.work).map_err(|error|error.with_retained_progress(spent))?;
-            if let Some(error)=stop_error{return Err(error.with_retained_progress(spent));}
+            let mut budget = RASTER_ONE_ITEM_APPLY_FUEL;
+            let ((turn, stop_error), work) = loop {
+                let attempt = receiving.with_effect_reported(grant.retained_grant(), budget, |receiving, effect| {
+                    let mut stop_error = None;
+                    let turn = self.apply.as_mut().expect("Raster apply was admitted").advance_controlled(
+                        base.get(), mutation, authority.operation(), authority.generation(), effect,
+                        || match receiving.checkpoint() {
+                            Ok(()) => false,
+                            Err(error) => { stop_error = Some(error); true }
+                        },
+                    );
+                    (turn, stop_error)
+                })?;
+                if let Some(attempt) = attempt { break attempt; }
+                if budget == 1 { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+                budget /= 2;
+            };
+            self.last_work = u64::try_from(work).map_err(|_| raster_preparation_fault("Raster apply work exceeds Store receipt"))?;
+            let spent = turn.result.as_ref().map(|(_, progress)| *progress).unwrap_or_else(|error| error.retained_progress());
+            if let Some(error) = stop_error { return Err(error.with_retained_progress(spent).into()); }
             let (post, progress)=turn.result?;
-            receipt = progress;
+            let receipt = progress;
             if progress!=RetainedCloneProgress::default()||self.last_work>0{self.checkpoint.cursor=self.checkpoint.cursor.saturating_add(1);self.checkpoint.completed_bytes=self.checkpoint.completed_bytes.saturating_add(progress.copied_bytes as u64);}
             let Some(post) = post else {
                 return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, receipt));
@@ -199,87 +229,23 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Rast
         self.cancelled = true;
         if let Some(sealer)=self.assembly.sealer_mut(){sealer.cancel();}
     }
+    fn has_pending_receiving_recovery(&self) -> bool { false }
+    fn pending_receiving_demand(&self) -> Option<RasterRetirementDemand> { None }
+    fn pending_receiving_recovery(&mut self) -> Option<NativeRecoveryLoan<'_>> { None }
+    fn finish_receiving_recovery(&mut self, _: &mut NativeRetirementDecodeControl<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary> {
+        semio_framework_value::RetainedWorkOutcome { result: Err(raster_preparation_fault("Raster preparation has no pending native receiving callback").into()), work: 0 }
+    }
     fn begin_close(&mut self) {
         self.closing = true;
         if let Some(sealer)=self.assembly.sealer_mut(){sealer.begin_close();}
     }
 
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
-        self.last_work=0;
-        use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-        let empty = RetainedCloneProgress::default();
-        let grant = grant.retained_grant();
-        if !self.closing || grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
-        if self.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(empty));
-        }
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth {
-            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "preparation close exceeds original depth"));
-        }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() {
-            let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child);self.last_work=turn.work;return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
-        }
-        if !self.assembly.terminal_is_empty(){let turn=self.assembly.close_step(child);self.last_work=turn.work;return turn.result;}
-        if let Some(apply) = self.apply.as_mut() {
-            let turn=apply.close_step(child);self.last_work=turn.work;let step=turn.result?;
-            if apply.terminal_is_empty() {
-                drop(self.apply.take());
-            }
-            return Ok(RetainedCloneStep::Progress(step.progress()));
-        }
-        if self.mutation.is_some() {
-            let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child);self.last_work=turn.work;return turn.result;
-        }
-        if self.post.is_some() {
-            let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.post, &mut self.active, child);self.last_work=turn.work;return turn.result;
-        }
-        if self.inverse.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.inverse,&mut self.active,child);self.last_work=turn.work;return turn.result;}
-        if self.base.is_some() {
-            let turn=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.base, &mut self.active, child);self.last_work=turn.work;return turn.result;
-        }
-        if let Some(authority) = self.authority.take() {
-            return match authority.retire(child) {
-                Ok((owner, progress)) => {
-                    *self.active = Some(owner);
-                    semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original preparation authority close birth")?;
-                    if progress.retained_capacity_bytes != demand.capacity_bytes {
-                        return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation authority changed admitted birth"));
-                    }
-                    Ok(RetainedCloneStep::Progress(progress))
-                }
-                Err((error, original)) => {
-                    *self.authority = Some(original);
-                    Err(error)
-                }
-            };
-        }
-        if let Some(factory) = self.mutation_retirement.take() {
-            let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory;
-            self.factories[0] = Some(semio_framework_value::FactoryAuthority::new(factory));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
-        }
-        if let Some(factory) = self.snapshot_retirement.take() {
-            let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory;
-            self.factories[1] = Some(semio_framework_value::FactoryAuthority::new(factory));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
-        }
-        if let Some(slot) = self.factories.iter_mut().find(|slot| slot.is_some()) {
-            let factory = slot.as_mut().expect("original preparation factory alias");
-            let turn=factory.step(child);self.last_work=turn.work;let step=turn.result?;
-            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original preparation factory close")?;
-            if factory.terminal_is_empty() {
-                *slot = None;
-            }
-            return Ok(RetainedCloneStep::Progress(step.progress()));
-        }
-        Ok(RetainedCloneStep::Complete(empty))
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let before = effect.performed_work();
+        let result = self.close_ladder(effect);
+        let poll = RetirementPollExit::settle(effect, result);
+        self.last_work = u64::try_from(effect.performed_work().saturating_sub(before)).unwrap_or(u64::MAX);
+        poll
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -301,7 +267,91 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Rast
 }
 
 impl RasterStorePreparation {
-    fn advance_publication(&mut self,grant:store::os_store::one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep,semio_framework_value::ValueError>{
+    fn close_ladder(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, RetirementPollExit> {
+        let grant = effect.grant();
+        let body = grant.maximum_copy_bytes;
+        let empty = RetainedCloneProgress::default();
+        if self.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(empty));
+        }
+        if !self.closing || grant.maximum_items == 0 || effect.remaining_work_units()? == 0 {
+            return Ok(RetainedCloneStep::Progress(empty));
+        }
+        let demand = self.close_demands(body)?;
+        if grant.maximum_depth < demand.depth {
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "preparation close exceeds original depth").into());
+        }
+        if !retained_clone_grant_admits(grant, demand) {
+            return Ok(RetainedCloneStep::Progress(empty));
+        }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        if self.active.is_some() {
+            let step = RetirementPollExit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, body, &mut effect.nested(child)))?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        if !self.assembly.terminal_is_empty() {
+            return self.assembly.close_step(&mut effect.nested(child));
+        }
+        if let Some(apply) = self.apply.as_mut() {
+            if apply.terminal_is_empty() {
+                RetirementPollExit::pay(effect, 1)?;
+                drop(self.apply.take());
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+            }
+            let step = apply.close_step(&mut effect.nested(child)).result?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        if self.mutation.is_some() {
+            return Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, &mut effect.nested(child)).result?);
+        }
+        if self.post.is_some() {
+            return Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.post, &mut self.active, &mut effect.nested(child)).result?);
+        }
+        if self.inverse.is_some() {
+            return Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.inverse, &mut self.active, &mut effect.nested(child)).result?);
+        }
+        if self.base.is_some() {
+            return Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.base, &mut self.active, &mut effect.nested(child)).result?);
+        }
+        if self.authority.is_some() {
+            if effect.actual().is_some() {
+                return Err(raster_preparation_fault("Raster authority retirement allocation marker is occupied").into());
+            }
+            RetirementPollExit::pay(effect, 1)?;
+            return match self.authority.take().expect("quoted Raster authority").retire(child) {
+                Ok((owner, progress)) => {
+                    *effect.actual() = Some(progress.retained_capacity_bytes);
+                    *self.active = Some(owner);
+                    Ok(RetainedCloneStep::Progress(progress))
+                }
+                Err((error, original)) => {
+                    *self.authority = Some(original);
+                    Err(error.into())
+                }
+            };
+        }
+        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() {
+            RetirementPollExit::pay(effect, 1)?;
+            let (index, factory): (_, std::sync::Arc<dyn semio_framework_value::FactoryRetirement>) = match self.mutation_retirement.take() {
+                Some(factory) => (0, factory),
+                None => (1, self.snapshot_retirement.take().expect("quoted Raster snapshot factory")),
+            };
+            self.factories[index] = Some(semio_framework_value::FactoryAuthority::new(factory));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
+        }
+        if let Some(slot) = self.factories.iter_mut().find(|slot| slot.is_some()) {
+            let factory = slot.as_mut().expect("quoted Raster factory");
+            let step = RetirementPollExit::resume(factory.step(body, &mut effect.nested(child)))?;
+            let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original preparation factory close")?;
+            if factory.terminal_is_empty() {
+                *slot = None;
+            }
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
+        Ok(RetainedCloneStep::Complete(empty))
+    }
+
+    fn advance_publication(&mut self,grant:store::os_store::one_item::ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep,OriginalReceivingPrimary>{
         use store::os_store::one_item::ArtifactStoreOneItemPreparationStep as Step;
         if let Some(sealer)=self.assembly.sealer_mut(){
             let result=sealer.advance(grant,receiving);self.last_work=sealer.last_turn_work();
@@ -309,12 +359,15 @@ impl RasterStorePreparation {
             self.checkpoint=store::os_store::one_item::ArtifactStoreOneItemCheckpoint{cursor:self.seal_base.cursor.saturating_add(checkpoint.cursor),completed_bytes:self.seal_base.completed_bytes.saturating_add(checkpoint.completed_bytes),..checkpoint};
             return Ok(if done{Step::Prepared(self.checkpoint,receipt)}else{Step::Progress(self.checkpoint,receipt)});
         }
-        if !receiving.prepare_work(1)?{return Ok(Step::Blocked);}
-        let turn=self.assembly.advance(OriginalPublicationInputs{forward:&mut self.mutation,post:&mut self.post,inverse:&mut self.inverse,authority:&mut self.authority,mutations:&mut self.mutation_retirement,snapshots:&mut self.snapshot_retirement},grant.retained_grant());
-        self.last_work=turn.work;
-        let receipt=turn.result.as_ref().ok().and_then(|receipt|*receipt).unwrap_or_else(||turn.result.as_ref().err().map_or(Default::default(),|error|error.retained_progress()));
-        receiving.commit_work(turn.work).map_err(|error|error.with_retained_progress(receipt))?;
-        let Some(receipt)=turn.result?else{return Ok(Step::Blocked);};
+        let work = self.assembly.advance_work_demand(grant.maximum_copy_bytes)?;
+        let Some((result, actual)) = receiving.with_effect_reported(grant.retained_grant(), work, |_, effect| {
+            self.assembly.advance(OriginalPublicationInputs {
+                forward: &mut self.mutation, post: &mut self.post, inverse: &mut self.inverse,
+                authority: &mut self.authority, mutations: &mut self.mutation_retirement, snapshots: &mut self.snapshot_retirement,
+            }, effect)
+        })? else { return Ok(Step::Blocked); };
+        self.last_work = u64::try_from(actual).map_err(|_| raster_preparation_fault("Raster assembly work exceeds Store receipt"))?;
+        let Some(receipt) = result? else { return Ok(Step::Blocked); };
         self.checkpoint.cursor=self.checkpoint.cursor.saturating_add(1);self.checkpoint.completed_bytes=self.checkpoint.completed_bytes.saturating_add(receipt.copied_bytes as u64);
         if self.assembly.sealer().is_some(){self.seal_base=self.checkpoint;}
         Ok(Step::Progress(self.checkpoint,receipt))

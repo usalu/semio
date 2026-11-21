@@ -709,6 +709,28 @@ describe("root border compositor", () => {
     };
     const closed = (left: number, right: number, top = 1, bottom = 19) => [`M ${left} ${top} L ${left} ${bottom}`, `M ${right} ${top} L ${right} ${bottom}`, `M ${left} ${top} L ${right} ${top}`, `M ${left} ${bottom} L ${right} ${bottom}`].sort();
 
+    test("a passive table band keeps its own seam when a standalone control is hovered", () => {
+      const h = harness('<div class="semio-scope"><table><thead id="header" data-shared-border-frame data-shared-border-edges="bottom" data-shared-border-delegate="self"><tr><th><button id="sort">Sort</button></th></tr></thead></table></div>', { header: rect(0, 0, 100, 20), sort: rect(10, 2, 30, 16) });
+      try {
+        h.compositor.schedule();
+        h.hover("sort");
+        expect(h.painted("normal")).toEqual(["M 1 19 L 99 19"]);
+        expect(h.painted("hover")).toEqual([]);
+      } finally { h.done(); }
+    });
+
+    test("a borderless neighbour recolours an existing seam without moving its centerline", () => {
+      const h = harness('<div class="semio-scope"><div id="frame" data-shared-border-frame></div><button id="button" data-shared-border-frame data-shared-border-edges=""></button></div>', { frame: rect(0, 0, 50, 20), button: rect(50, 0, 50, 20) });
+      try {
+        h.compositor.schedule();
+        expect(h.painted("normal")).toContain("M 49 1 L 49 19");
+        h.hover("button");
+        const shared = h.painted("hover").filter(d => d?.match(/^M -?\d+ 1 L -?\d+ 19$/));
+        expect(shared).toEqual(["M -1 1 L -1 19", "M 49 1 L 49 19"]);
+        expect(h.painted("normal")).not.toContain("M 49 1 L 49 19");
+      } finally { h.done(); }
+    });
+
     test("a cell inside a frame that is itself a cell is painted by the nearest owner with an overlay and stays closed without touching its ancestors", () => {
       const h = harness('<div class="semio-scope"><div id="controls" data-shared-border-group data-shared-border-cells><div id="group" data-shared-border-frame><button id="a" data-shared-border-cell></button><button id="b" data-shared-border-cell></button></div></div></div>', { controls: rect(0, 0, 100, 20), group: rect(0, 0, 100, 20), a: rect(0, 0, 50, 20), b: rect(50, 0, 50, 20) });
       try {
@@ -750,20 +772,20 @@ describe("root border compositor", () => {
       } finally { h.done(); }
     });
 
-    test("a chip inside an interactive card closes itself on hover and never states the card's silhouette", () => {
-      const h = harness('<div class="semio-scope"><div id="card" role="button" data-overview-card><div id="stack"><div id="chip" data-window-silhouette-chip><button id="control"></button></div></div></div></div>', { card: rect(0, 0, 100, 100), stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), control: rect(0, 0, 40, 20) });
+    test("a chip hover emphasises its own edges and the full enclosing card silhouette", () => {
+      const h = harness('<div class="semio-scope"><section id="card" data-overview-card><div id="stack" data-shared-border-hover="silhouette"><div id="chip" data-window-silhouette-chip><button id="control"></button></div></div></section></div>', { card: rect(0, 0, 100, 100), stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), control: rect(0, 0, 40, 20) });
       const updates = new Map<string, readonly { d: string; state: string }[]>();
       try {
         h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => updates.set("w", value) });
         h.compositor.schedule();
+        const idle = updates.get("w")!.map(segment => segment.d);
+        h.hover("stack");
+        expect(updates.get("w")).toEqual(idle.map(d => ({ d, state: "hover" })));
         h.hover("control");
         const hovered = updates.get("w")!.filter(segment => segment.state === "hover");
         const numbers = hovered.flatMap(segment => segment.d.match(/-?\d+(?:\.\d+)?/g)!.map(Number));
-        expect(hovered.length).toBeGreaterThan(0);
-        expect(Math.max(...numbers)).toBeLessThanOrEqual(41);
-        expect(updates.get("w")!.filter(segment => segment.state === "normal").some(segment => /M 99 /.test(segment.d) || /L 99 /.test(segment.d))).toBe(true);
-        h.hover("stack");
-        expect(updates.get("w")!.some(segment => segment.state === "hover" && /99/.test(segment.d))).toBe(true);
+        expect(Math.max(...numbers)).toBe(99);
+        expect(updates.get("w")!.every(segment => segment.state === "hover")).toBe(true);
       } finally { h.done(); }
     });
 

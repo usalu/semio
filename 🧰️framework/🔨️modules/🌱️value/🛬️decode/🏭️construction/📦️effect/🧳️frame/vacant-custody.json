@@ -1,1 +1,1 @@
-{"fresh":true,"ownedRefusal":false,"cleared":true,"realAction":false}
+{"fresh":true,"ownedRefusal":false,"cleared":true,"realAction":false,"transfers":[{"receipt":null,"actualWork":7,"reportedWork":2,"unreportedWork":5,"success":true,"vacant":true},{"receipt":"original receipt refusal","actualWork":9,"reportedWork":3,"unreportedWork":6,"success":false,"vacant":true}]}

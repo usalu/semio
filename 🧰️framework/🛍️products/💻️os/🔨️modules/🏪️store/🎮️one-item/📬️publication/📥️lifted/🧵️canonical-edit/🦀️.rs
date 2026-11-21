@@ -324,7 +324,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         let work_demand=match self.native.as_ref(){Some(owner)if !owner.terminal_is_empty()&&!owner.ready()=>owner.next_work_demand()?,_=>1};
         let retained=grant.retained_grant();
-        let ran=receiving.with_allocated_effect(demand,work_demand,|_,effect|{
+        let ran=receiving.with_allocated_effect_reported(demand,work_demand,|_,effect|{
             let result=(||->Result<RetainedCloneProgress,ValueError>{
                 if let Some(owner)=self.native.as_mut(){
                     if owner.terminal_is_empty(){pay(effect,1)?;self.native=None;self.phase=5;return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()});}
@@ -348,7 +348,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
             })();
             let progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
             if progress.retained_capacity_bytes!=0&&effect.actual().is_none(){*effect.actual()=Some(progress.retained_capacity_bytes);}
-            (result,effect.performed_work())
+            result
         });
         let (result,work)=match ran{Ok(Some(ran))=>ran,Ok(None)=>return Ok(ArtifactStoreOneItemPreparationStep::Blocked),Err(error)=>{self.cancelled=true;self.ownership=error.retained_progress();return Err(error)}};
         self.last_work=u64::try_from(work).unwrap_or(u64::MAX);

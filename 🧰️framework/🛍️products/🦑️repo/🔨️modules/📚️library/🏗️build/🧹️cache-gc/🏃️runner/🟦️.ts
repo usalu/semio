@@ -70,14 +70,14 @@ export async function measureCacheTreeV1(path:string,ports:CacheRunnerPortsV1,li
  let bytes=0,files=0,entries=0,partial=false;const stack=[path];let recency=0,directories=first.mtimeMs;
  while(stack.length){
   await tick();const directory=stack.pop()!;let children;
-  try{children=await readdir(directory,{withFileTypes:true});}catch(error){if(["ENOENT","ENOTDIR","EACCES","EPERM"].includes((error as NodeJS.ErrnoException).code??""))continue;throw error;}
+  try{children=await readdir(directory,{withFileTypes:true});}catch(error){const code=(error as NodeJS.ErrnoException).code;if(code==="ENOENT"||code==="ENOTDIR")continue;if(code==="EACCES"||code==="EPERM"){partial=true;continue;}throw error;}
   if(directory.endsWith(".queue")&&queues.length<runtime.sqliteProbesPerUnit)queues.push(directory);
   for(const child of children){
    if(++entries>limit){partial=true;stack.length=0;break;}
    if(entries%runtime.checkEvery===0)await tick();
    const full=join(directory,child.name);
-   if(child.isDirectory()){stack.push(full);try{directories=Math.max(directories,(await lstat(full)).mtimeMs);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT"){directories=Math.max(directories,ports.now());recency=Math.max(recency,ports.now());}}continue;}
-   let info;try{info=await lstat(full);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")recency=Math.max(recency,ports.now());continue;}
+   if(child.isDirectory()){stack.push(full);try{directories=Math.max(directories,(await lstat(full)).mtimeMs);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT"){partial=true;directories=Math.max(directories,ports.now());recency=Math.max(recency,ports.now());}}continue;}
+   let info;try{info=await lstat(full);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT"){partial=true;recency=Math.max(recency,ports.now());}continue;}
    if(info.isSymbolicLink())continue;
    if(info.nlink>1){const exact=Number.isSafeInteger(info.ino)?info:await lstat(full,{bigint:true}).catch(()=>info),key=exact.dev+":"+exact.ino;if(seen.has(key))continue;seen.add(key);}
    bytes+=allocated(info);files++;recency=Math.max(recency,cacheRecencyMsV1(info,ports.now()));
@@ -134,9 +134,22 @@ export async function recordCacheSizesV1(workspace:string,ledger:CacheLedgerV1,u
 
 type Sized=Readonly<{present:boolean;usedBytes:number|null;entries:number;partial:boolean;source:CacheSourceV1;recordedAtMs:number|null}>;
 const MISSING:Sized={present:false,usedBytes:null,entries:0,partial:false,source:"unknown",recordedAtMs:null};
+const UNMEASURED_FLEET:Sized={...MISSING,present:true,partial:true};
+
+async function measureCollectionFleetV1(directory:string,id:string,record:CacheSizeRecordV1|undefined,ports:CacheRunnerPortsV1):Promise<Sized>{
+ let original;
+ try{original=await lstat(directory,{bigint:true});}catch(error){ports.signal.throwIfAborted();return(error as NodeJS.ErrnoException).code==="ENOENT"?MISSING:UNMEASURED_FLEET;}
+ if(!original.isDirectory())return UNMEASURED_FLEET;
+ if(record&&!record.partial)return{present:true,usedBytes:record.usedBytes,entries:0,partial:false,source:"recorded",recordedAtMs:record.atMs};
+ try{
+  const measure=await measureCacheTreeV1(directory,ports,runtime.statusEntriesPerTarget,id),current=await lstat(directory,{bigint:true});
+  if(!measure.present||!current.isDirectory()||current.dev!==original.dev||current.ino!==original.ino)return UNMEASURED_FLEET;
+  return{present:true,usedBytes:measure.bytes,entries:measure.entries,partial:measure.partial,source:"walked",recordedAtMs:null};
+ }catch{ports.signal.throwIfAborted();return UNMEASURED_FLEET;}
+}
 
 /** 📈️ Reads the ledger's status from the disk without taking a lease and, by default, without walking any tree: partitions come from the (virtual) statfs of their mounted image, every other size from the size ledger that collections and deep status write, existence from one lstat or readdir. `deep` walks everything with progress and cancellation, then records what it measured. */
-export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,ports:CacheRunnerPortsV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions,only?:ReadonlySet<string>,options:Readonly<{deep:boolean}>={deep:false}):Promise<CacheReportV1>{
+export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,ports:CacheRunnerPortsV1,partitions:CachePartitionBudgetsV1=budgetPolicy.partitions,only?:ReadonlySet<string>,options:Readonly<{deep:boolean;measureFleetForCollection?:boolean}>={deep:false}):Promise<CacheReportV1>{
  const deep=options.deep,sizes=deep?{version:1 as const,records:{}}:await loadCacheSizesV1(workspace,ledger),fresh:Record<string,CacheSizeRecordV1>={},rows:CachePartitionRowV1[]=[],areaRows:CacheAreaRowV1[]=[],states=new Map<string,Awaited<ReturnType<typeof partitionStateV1>>>(),used=new Map<string,Sized>(),partial=new Map<CacheRootIdV1,boolean>(),selected=(id:string)=>only===undefined||only.has(id),now=ports.now();
  const sized=async(key:string,paths:readonly string[],stage:string):Promise<Sized>=>{
   if(deep){
@@ -151,6 +164,7 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
   return record?{present:true,usedBytes:record.usedBytes,entries:0,partial:record.partial,source:"recorded",recordedAtMs:record.atMs}:{present:true,usedBytes:null,entries:0,partial:false,source:"unknown",recordedAtMs:null};
  };
  const matching=async(root:string,pattern:string):Promise<string[]>=>{const matcher=new RegExp(pattern,"u");try{return(await readdir(root)).filter(name=>matcher.test(name)).map(name=>join(root,name));}catch{return[];}};
+ const totals=new Map<CacheRootIdV1,number>(CACHE_ROOT_IDS_V1.map(root=>[root,0])),count=(root:CacheRootIdV1,size:Sized)=>{totals.set(root,totals.get(root)!+(size.usedBytes??0));partial.set(root,(partial.get(root)??false)||size.partial||size.usedBytes===null);};
  for(const area of ledger.areas.filter(area=>area.kind==="partition"||area.kind==="control"&&area.managed)){
   if(!selected(area.id))continue;
   await ports.progress("status:"+area.id);ports.signal.throwIfAborted();
@@ -159,7 +173,8 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
    const state=await partitionStateV1(directory,ports,deep);states.set(area.partition!,state);
    rows.push({id:area.id,kind:"partition",directory,state:state.state,usedBytes:state.usedBytes,budgetBytes,capacityBytes:state.capacityBytes,partial:state.partial,owner:area.managed!.owner,source:state.usedBytes===null?"unknown":state.walked?"walked":"statfs",recordedAtMs:null,envelopeBytes:await readImageEnvelopeV1(directory),declaredBytes:partitions[area.partition!]!.capacityBytes,recreate:area.recreate==="derived"});
   }else{
-   const size=await sized(area.id,[directory],area.id);
+   const size=area.managed!.owner==="fleet"&&options.measureFleetForCollection?await measureCollectionFleetV1(directory,area.id,sizes.records[area.id],ports):await sized(area.id,[directory],area.id);
+   if(area.managed!.owner==="fleet"&&size.present)count(area.root,size);
    rows.push({id:area.id,kind:"control",directory,state:size.present?"directory":"absent",usedBytes:size.usedBytes,budgetBytes,capacityBytes:null,partial:size.partial,owner:area.managed!.owner,source:size.source,recordedAtMs:size.recordedAtMs,envelopeBytes:null,declaredBytes:null,recreate:false});
   }
  }
@@ -182,7 +197,7 @@ export async function reportCacheLedgerV1(workspace:string,ledger:CacheLedgerV1,
   }
   areaRows.push(row);
  }
- const totals=new Map<CacheRootIdV1,number>(CACHE_ROOT_IDS_V1.map(root=>[root,0])),retired:CacheEntryRowV1[]=[],undeclared:CacheEntryRowV1[]=[],count=(root:CacheRootIdV1,size:Sized)=>{totals.set(root,totals.get(root)!+(size.usedBytes??0));partial.set(root,(partial.get(root)??false)||size.partial||size.usedBytes===null);};
+ const retired:CacheEntryRowV1[]=[],undeclared:CacheEntryRowV1[]=[];
  for(const area of ledger.areas.filter(area=>(area.kind==="tree"||area.kind==="control"&&area.collect)&&selected(area.id))){
   await ports.progress("status:"+area.id);ports.signal.throwIfAborted();
   const directory=cacheAreaDirectoryV1(workspace,ledger,area,partitions),budget=cacheAreaBudgetBytesV1(ledger,area,partitions),size=await sized(area.id,directory!==null?[directory]:await matching(cacheRootDirectoryV1(workspace,ledger,area.root),area.pattern!),area.id);
@@ -250,17 +265,21 @@ export function machineHostFreeBytesV1(workspace:string):number|null{return nati
 /** 💽️ The bytes the host really holds for the fixed image of a partition directory (blocks, not size), null without an image file: raw images keep blocks freed inside them, so this is what the machine budget must count. */
 export function hostAllocationV1(directory:string):number|null{try{return statSync(join(directory,"fixed.dmg")).blocks*512;}catch{return null;}}
 
-/** 🏬️ The machine budget uses read from a status report: the used bytes and fixed image allocation of every partition store, plus the loose caches (`evictableBytes` null means unknown, everything counts). */
-export function machineUsesV1(report:CacheReportV1,looseBytes:number,looseEvictableBytes:number|null):readonly MachineUseV1[]{
+const fleetControl=(row:CachePartitionRowV1):boolean=>row.kind==="control"&&row.owner==="fleet";
+function fleetStateBytesV1(report:CacheReportV1):number{return report.partitions.filter(fleetControl).reduce((bytes,row)=>bytes+(row.usedBytes??0),0);}
+
+/** 🏬️ Counts fixed images and loose usage, protecting recorded fleet state when status or a collection supplies loose bytes. */
+export function machineUsesV1(report:CacheReportV1,collection?:Readonly<{usedBytes:number;evictableBytes:number}>):readonly MachineUseV1[]{
  const uses:MachineUseV1[]=report.partitions.filter(row=>row.kind==="partition").map(row=>({id:row.id,usedBytes:row.usedBytes??0,envelopeBytes:row.envelopeBytes??row.capacityBytes,allocatedBytes:hostAllocationV1(row.directory),evictableBytes:null}));
- uses.push({id:"loose",usedBytes:looseBytes,envelopeBytes:null,evictableBytes:looseEvictableBytes});
+ const protectedBytes=fleetStateBytesV1(report),usedBytes=collection===undefined?report.roots.reduce((sum,root)=>sum+root.usedBytes,0):collection.usedBytes+protectedBytes,ordinaryBytes=Math.max(0,usedBytes-protectedBytes);
+ uses.push({id:"loose",usedBytes,envelopeBytes:null,evictableBytes:Math.min(ordinaryBytes,collection?.evictableBytes??ordinaryBytes)});
  return uses;
 }
 
 /** 📤️ One line of collector output, already localized. */
 export type CacheOutputV1=Readonly<{write(line:string):void;language:CacheLanguageV1}>;
 /** 🧮️ What a collection did or would do. */
-export type CacheCollectionV1=Readonly<{dryRun:boolean;plans:readonly CacheTargetPlanV1[];removed:readonly CacheRemovalV1[];kept:number;failed:readonly Readonly<{target:string;name:string;message:string}>[];freedBytes:number;delegated:readonly Readonly<{owner:string;text:string}>[];machine:MachinePlanV1|null}>;
+export type CacheCollectionV1=Readonly<{dryRun:boolean;plans:readonly CacheTargetPlanV1[];removed:readonly CacheRemovalV1[];kept:number;failed:readonly Readonly<{target:string;name:string;message:string}>[];freedBytes:number;delegated:readonly Readonly<{owner:string;text:string}>[];machine:MachinePlanV1|null;fleetStatePartial:boolean;sizeUpdates:Readonly<Record<string,CacheSizeRecordV1|null>>}>;
 
 type Resolved=Readonly<{target:CacheTargetV1;base:string;prefix:string[];unusedAgeMs:number|null;loose?:boolean;custody?:"quiet"|"sqlite"|"lease"|"pid";units?:RegExp;release?:()=>void}>;
 
@@ -321,26 +340,33 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    const base=cacheRootDirectoryV1(workspace,ledger,root),names=await undeclaredEntriesV1(workspace,ledger,root);
    if(names.length)resolved.push({target:{id:root+":undeclared",kind:"undeclared",budgetBytes:null,unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,quietMs:ledger.roots[root].undeclaredQuietMs,units:await observe(base,names,root+":undeclared","quiet",ports)},base,prefix:[],unusedAgeMs:ledger.roots[root].undeclaredUnusedAgeMs,loose:true});
   }
-  let machine:MachinePlanV1|null=null,targets=resolved.map(row=>row.target);
+  const updates:Record<string,CacheSizeRecordV1|null>={};
+  let machine:MachinePlanV1|null=null,fleetStatePartial=false,targets=resolved.map(row=>row.target);
   if(request.machine){
-   const first=planCacheCollectionV1(targets,now),retained=new Map(first.map(plan=>[plan.id,plan.retainedBytes])),members=resolved.filter(row=>row.loose&&row.target.kind==="area"),looseBytes=resolved.filter(row=>row.loose).reduce((sum,row)=>sum+(retained.get(row.target.id)??0),0);
-   const report=await reportCacheLedgerV1(workspace,ledger,ports,partitions,undefined,{deep:false});
-   machine=planMachineBudgetV1({totalBytes:request.machine.totalBytes,hostFreeBytes:machineHostFreeBytesV1(workspace),uses:machineUsesV1(report,looseBytes,Math.min(looseBytes,resolved.filter(row=>row.loose&&row.target.heldBy===undefined).reduce((sum,row)=>sum+row.target.units.filter(unit=>unit.held===undefined&&now-unit.recencyMs>=row.target.quietMs).reduce((inner,unit)=>inner+unit.bytes,0),0)))},request.machine.policy);
-   const quota=machine.stores.find(store=>store.id==="loose");
-   if(quota){
-    const split=splitMachineBudgetV1(quota.contentLimitBytes,members.map(row=>({id:row.target.id,weight:Math.max(1,row.target.budgetBytes??retained.get(row.target.id)??1),floor:0,demand:retained.get(row.target.id)??0})),false);
-    const tightened:CacheTargetV1[]=[];
-    for(const target of targets){
-     const share=split.get(target.id),row=resolved.find(candidate=>candidate.target===target);
-     if(share===undefined||row===undefined||share>=(target.budgetBytes??Infinity)){tightened.push(share===undefined?target:{...target,budgetBytes:Math.min(target.budgetBytes??Infinity,share)});continue;}
-     if(row.custody!=="quiet"){tightened.push({...target,budgetBytes:share});continue;}
-     if(!await(ports.atimeReliable??cacheAtimeReliableV1)(row.base)){tightened.push(target);notes.push(text("machine.gc.atime",{id:target.id}));continue;}
-     tightened.push({...target,budgetBytes:share,quietMs:Math.max(target.quietMs,runtime.quotaQuietMs)});
+   const report=await reportCacheLedgerV1(workspace,ledger,ports,partitions,undefined,{deep:false,measureFleetForCollection:true}),fleet=report.partitions.filter(fleetControl);
+   for(const row of fleet)updates[row.id]=row.usedBytes===null?null:{usedBytes:row.usedBytes,partial:row.partial,atMs:row.recordedAtMs??report.generatedAtMs};
+   fleetStatePartial=fleet.some(row=>row.state!=="absent"&&(row.usedBytes===null||row.partial));
+   if(fleetStatePartial)notes.push(text("machine.gc.fleetIncomplete"));
+   else{
+    const first=planCacheCollectionV1(targets,now),retained=new Map(first.map(plan=>[plan.id,plan.retainedBytes])),members=resolved.filter(row=>row.loose&&row.target.kind==="area"),looseBytes=resolved.filter(row=>row.loose).reduce((sum,row)=>sum+(retained.get(row.target.id)??0),0);
+    const evictableBytes=resolved.filter(row=>row.loose&&row.target.heldBy===undefined).reduce((sum,row)=>sum+row.target.units.filter(unit=>unit.held===undefined&&now-unit.recencyMs>=row.target.quietMs).reduce((inner,unit)=>inner+unit.bytes,0),0);
+    machine=planMachineBudgetV1({totalBytes:request.machine.totalBytes,hostFreeBytes:machineHostFreeBytesV1(workspace),uses:machineUsesV1(report,{usedBytes:looseBytes,evictableBytes})},request.machine.policy);
+    const quota=machine.stores.find(store=>store.id==="loose");
+    if(quota){
+     const split=splitMachineBudgetV1(Math.max(0,quota.contentLimitBytes-fleetStateBytesV1(report)),members.map(row=>({id:row.target.id,weight:Math.max(1,row.target.budgetBytes??retained.get(row.target.id)??1),floor:0,demand:retained.get(row.target.id)??0})),false);
+     const tightened:CacheTargetV1[]=[];
+     for(const target of targets){
+      const share=split.get(target.id),row=resolved.find(candidate=>candidate.target===target);
+      if(share===undefined||row===undefined||share>=(target.budgetBytes??Infinity)){tightened.push(share===undefined?target:{...target,budgetBytes:Math.min(target.budgetBytes??Infinity,share)});continue;}
+      if(row.custody!=="quiet"){tightened.push({...target,budgetBytes:share});continue;}
+      if(!await(ports.atimeReliable??cacheAtimeReliableV1)(row.base)){tightened.push(target);notes.push(text("machine.gc.atime",{id:target.id}));continue;}
+      tightened.push({...target,budgetBytes:share,quietMs:Math.max(target.quietMs,runtime.quotaQuietMs)});
+     }
+     targets=tightened;
+     notes.push(text("machine.gc.quota",{quota:formatCacheBytesV1(quota.contentLimitBytes),over:formatCacheBytesV1(quota.excessBytes)}));
     }
-    targets=tightened;
-    notes.push(text("machine.gc.quota",{quota:formatCacheBytesV1(quota.contentLimitBytes),over:formatCacheBytesV1(quota.excessBytes)}));
+    for(const line of formatMachinePlanV1(output.language,machine,request.machine.source))notes.push(line);
    }
-   for(const line of formatMachinePlanV1(output.language,machine,request.machine.source))notes.push(line);
   }
   for(const row of deferred){
    const answer=ports.delegate?await ports.delegate(row.owner,row.id,request.dryRun,output.language,{machine,selected:request.only!==undefined}):undefined;
@@ -371,14 +397,14 @@ export async function collectCacheV1(workspace:string,ledger:CacheLedgerV1,reque
    if(!request.dryRun&&row.target.kind==="retired"&&plan.removals.length===row.target.units.length&&!failed.some(item=>item.target===plan.id))await rmdir(row.base).catch(()=>{});
   }
   output.write(text(request.dryRun?"gc.summary.plan":"gc.summary.apply",{count:removed.length,bytes:formatCacheBytesV1(freed),kept}));
-  const updates:Record<string,CacheSizeRecordV1|null>={},at=ports.now(),record=(bytes:number)=>({usedBytes:Math.max(0,bytes),partial:false,atMs:at});
+  const at=ports.now(),record=(bytes:number)=>({usedBytes:Math.max(0,bytes),partial:false,atMs:at});
   for(const[index,plan]of plans.entries()){
    const row=resolved[index]!;if(row.target.heldBy!==undefined)continue;
    if(row.target.kind==="area")updates[row.target.id]=record(plan.totalBytes-(gone.get(plan.id)??0));
    else if(row.target.kind==="retired")updates["retired:"+row.target.id]=row.target.units.every(unit=>goneNames.has(plan.id+"/"+unit.name))?null:record(plan.totalBytes-(gone.get(plan.id)??0));
    else for(const unit of row.target.units)updates["undeclared:"+row.target.id.slice(0,row.target.id.indexOf(":"))+":"+unit.name]=goneNames.has(plan.id+"/"+unit.name)?null:record(unit.bytes);
   }
-  await recordCacheSizesV1(workspace,ledger,updates);
-  return Object.freeze({dryRun:request.dryRun,plans,removed,kept,failed,freedBytes:freed,delegated,machine});
+  if(!request.dryRun)await recordCacheSizesV1(workspace,ledger,updates);
+  return Object.freeze({dryRun:request.dryRun,plans,removed,kept,failed,freedBytes:freed,delegated,machine,fleetStatePartial,sizeUpdates:Object.freeze(updates)});
  }finally{for(const row of resolved)try{row.release?.();}catch{}}
 }

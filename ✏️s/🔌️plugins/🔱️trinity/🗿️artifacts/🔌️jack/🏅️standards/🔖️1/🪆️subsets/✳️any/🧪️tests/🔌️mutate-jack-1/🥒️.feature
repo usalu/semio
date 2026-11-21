@@ -2,10 +2,10 @@
 @oracle-jack-python-independent
 @comparison-ordered-json-v1
 @mutations-jack-1-any
-Feature: Compare the complete Jack parent query event and its literal child address in Rust and Python
+Feature: Compare Jack parent events and their child address in Rust and Python
 
   Both implementations read the authored closed parent carrier. The content reference remains opaque;
-  its child id, artifact id, kind, standard and subset are compared unchanged through each parent query event.
+  its child id, artifact id, kind, standard and subset are compared unchanged through each parent event.
   Registered rich graph storage, edits, UI and archive laws belong to the specific composition.
 
   @id-mutate
@@ -21,6 +21,7 @@ Feature: Compare the complete Jack parent query event and its literal child addr
     Examples:
       | id        | mutation                                                        |
       | set-query | {"mutation":"setQuery","value":"MATCH (a:Piece) RETURN a.name"} |
+      | set-root  | {"mutation":"setRoot","value":"core"}                         |
 
   @id-inverse
   @level-exhaustive
@@ -35,6 +36,7 @@ Feature: Compare the complete Jack parent query event and its literal child addr
     Examples:
       | id        | mutation                                                        |
       | set-query | {"mutation":"setQuery","value":"MATCH (a:Piece) RETURN a.name"} |
+      | set-root  | {"mutation":"setRoot","value":"core"}                         |
 
   @id-spec-vector
   @level-exhaustive
@@ -51,6 +53,7 @@ Feature: Compare the complete Jack parent query event and its literal child addr
     Examples:
       | id        | verdict | dir         | fixture              |
       | set-query | applied | 🔎️set-query | 🔎️replaces-the-query |
+      | set-root  | applied | 🎯️set-root  | 🧹️clears-the-root    |
 
   @id-identity-round-trip
   @level-long

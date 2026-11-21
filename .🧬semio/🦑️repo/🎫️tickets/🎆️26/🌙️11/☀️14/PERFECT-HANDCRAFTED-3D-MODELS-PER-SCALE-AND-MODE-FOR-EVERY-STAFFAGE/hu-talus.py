@@ -10,9 +10,9 @@ sp=run_path(str(ticket/'r3-kneeling-gardener-splice.py'))
 v=json.loads(old)['asset']['volumes']['500']
 for side,sign in [('l',1),('r',-1)]:
     s=next(p for p in v['structure'] if p['id']=='sk-foot-'+side)
-    for k in ('p0','p1','r0','r1'):s.pop(k)
-    positions=[[-.01584,-.04742,0],[-.001,-.022,0],[.001,-.002,0],[.024,-.008,0],[.078,.012,.002*sign],[.12968,.04103,0]]
-    s.update(kind='loft',sections=[dict(at=p,rx=.0044,ry=.0042) for p in positions],capStart=True,capEnd=True)
+    for k in ('p0','p1','r0','r1'):s.pop(k,None)
+    positions=[[-.01995,-.05027,0],[-.009,-.026,0],[.001,-.002,0],[.026,-.008,0],[.070,.006,.002*sign],[.10912,.02681,0]]
+    s.update(kind='loft',sections=[dict(at=p,rx=.0041,ry=.0039) for p in positions],capStart=True,capEnd=True)
     i=text.rindex('{\n            "id": "'+s['id']+'"')
     j=sp['member_end'](text,i)
     text=text[:i]+sp['dump'](s,5,'compact')+text[j:]

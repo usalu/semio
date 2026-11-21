@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "clientPacket": { "prefix": [0, 8], "fields": [["batchId", "little-endian u64"], ["part", "raw-spr-group v1 frame"]] },
+  "serverPacket": { "prefix": [0, 16], "fields": [["frontierLength", "little-endian u16"], ["frontier", "exact command-lane Ack zero with empty stages, present on ordinal zero only"], ["part", "raw-spr-group v1 frame"]] },
+  "walOutbox": { "prefix": [83, 65, 69, 1], "fields": [["rows", "little-endian u16"], ["editIdLength", "little-endian u16"], ["editId", "nonempty UTF-8, maximum 256 bytes"]] },
+  "checkpointReplay": { "prefix": [128, 0, 71, 2], "maximumBytes": 67108864, "maximumCommits": 16384, "record": [["kind", "0 ordinary or 1 original edit"], ["length", "little-endian u32"], ["body", "one ordinary envelope batch or one raw-spr-group v1 prepared edit"]] },
+  "admission": "one part sequence bound to the authenticated socket, document, actor and batch identity",
+  "persistence": "one Fsync WAL transaction containing the complete causal rows, one group outbox record, and one frontier"
+}

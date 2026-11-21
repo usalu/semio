@@ -12,29 +12,11 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🦀️native-transpile",
-        "command": "repo ./📜️script.ts build --host-platform={hostPlatform}",
+        "command": "repo ./📜️script.ts build",
         "forwardAllArgs": false
       },
-      "cache": true,
-      "outputs": [],
-      "metadata": {
-        "semio": {
-          "hostPlatformOutputsV1": {
-            "version": 1,
-            "outputs": {
-              "darwin": [
-                "{workspaceRoot}/.cache/b/p/m/browser/release/tools/native-transpile/darwin"
-              ],
-              "linux": [
-                "{workspaceRoot}/.cache/b/p/m/browser/release/tools/native-transpile/linux"
-              ],
-              "win32": [
-                "{workspaceRoot}/.cache/b/p/m/browser/release/tools/native-transpile/win32"
-              ]
-            }
-          }
-        }
-      }
+      "cache": false,
+      "outputs": []
     }
   },
   "namedInputs": {

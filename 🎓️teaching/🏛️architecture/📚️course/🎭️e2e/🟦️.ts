@@ -85,7 +85,7 @@ export function endToEndRunDirectory(root: string): string {
 
 /** 📏️ Names each browser wave briefly and reserves room for retained Playwright artifacts. */
 export function endToEndReportDirectory(work: string, stack: string, phase: string): string {
-  const stacks: Readonly<Record<string, string>> = { dev: "d", "dev-shared": "ds", "dev-exclusive": "dx", rehearsal: "r" };
+  const stacks: Readonly<Record<string, string>> = { dev: "d", "dev-shared": "s", "dev-exclusive": "x", rehearsal: "r" };
   const phases: Readonly<Record<string, string>> = { boot: "b", shared: "s", exclusive: "x" };
   if (!stacks[stack] || !phases[phase]) throw Error("Unknown end-to-end report stack or phase");
   const directory = join(work, stacks[stack]! + phases[phase]!);

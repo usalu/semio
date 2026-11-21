@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { BoxGeometry, ExtrudeGeometry, Line3, Plane, Shape, Vector2, Vector3 } from "three";
+import { BoxGeometry, ExtrudeGeometry, Line3, Plane, Quaternion, Shape, SphereGeometry, TorusGeometry, Vector2, Vector3 } from "three";
 import { agree, casesOf, fixtureDisagreements, loadFixture, measure } from "../../../⏱️phased-job/🧪️tests/🧰️support/🟦️.ts";
 
 const fixture = loadFixture(import.meta.url);
@@ -92,6 +92,76 @@ test("Three rotates the selected support around the neutral line before extrudin
     const result=extrudedSection(ring,row.size[row.axis]);
     expect(result.area).toBeCloseTo(row.area,5);
     expect(Math.abs(result.volume)).toBeCloseTo(row.volume,5);
+    expect(result.boundaryEdges).toBe(0);
+  }
+});
+
+test("Three verifies signed smooth offsets of displaced spheres and tilted ring tori", () => {
+  type XYZ = [number,number,number];
+  type Row = { kind:"sphere"|"torus"; origin:XYZ; axis:XYZ; angle:number; major:number; minor:number;
+    cases:{ distance:number; radius:number; area:number; volume:number }[]; refused:number[] };
+  const rows=(fixture as typeof fixture & { retainedSmoothSolidOffset:Row[] }).retainedSmoothSolidOffset;
+  for (const row of rows) {
+    const center=new Vector3(...row.origin);
+    const rotation=new Quaternion().setFromAxisAngle(new Vector3(...row.axis).normalize(),row.angle);
+    const axis=new Vector3(0,0,1).applyQuaternion(rotation);
+    for (const item of row.cases) {
+      const radius=row.minor+item.distance;
+      const geometry=row.kind==="sphere" ? new SphereGeometry(radius,192,96) : new TorusGeometry(row.major,radius,96,192);
+      geometry.applyQuaternion(rotation);
+      geometry.translate(...row.origin);
+      const positions=geometry.getAttribute("position");
+      for (let i=0;i<positions.count;i+=193) {
+        const local=new Vector3().fromBufferAttribute(positions,i).sub(center);
+        const axial=local.dot(axis);
+        const actual=row.kind==="sphere" ? local.length() : Math.hypot(axial,local.addScaledVector(axis,-axial).length()-row.major);
+        expect(actual).toBeCloseTo(item.radius,5);
+      }
+      const result=measure({deflection:fixture.tolerance,positions:Array.from(positions.array),indices:Array.from(geometry.getIndex()!.array)});
+      expect(Math.abs(result.area-item.area)).toBeLessThan(0.08);
+      expect(Math.abs(Math.abs(result.volume)-item.volume)).toBeLessThan(0.07);
+    }
+    for (const distance of row.refused) {
+      const radius=row.minor+distance;
+      expect(radius<=0||(row.kind==="torus"&&radius>=row.major)).toBe(true);
+    }
+  }
+});
+
+
+test("Three extrudes the exact quarter-circle fillet profiles on all principal axes", () => {
+  type XYZ=[number,number,number];
+  type Edge=[XYZ,XYZ];
+  type Row={ origin:XYZ; size:XYZ; axis:number; radius:number; area:number; volume:number };
+  const {retainedBoxEdgeFillet,retainedMultiBoxFillet}=fixture as typeof fixture & {
+    retainedBoxEdgeFillet:(Row & {edge:Edge})[];
+    retainedMultiBoxFillet:(Row & {edges:Edge[]})[];
+  };
+  const rows=[...retainedBoxEdgeFillet.map(row=>({...row,edges:[row.edge]})),...retainedMultiBoxFillet];
+  for (const row of rows) {
+    const [u,v]=[(row.axis+1)%3,(row.axis+2)%3];
+    const [x0,y0]=[row.origin[u],row.origin[v]];
+    const [x1,y1]=[x0+row.size[u],y0+row.size[v]];
+    const rect=[new Vector2(x0,y0),new Vector2(x1,y0),new Vector2(x1,y1),new Vector2(x0,y1)];
+    const picked=new Set(row.edges.map(([point])=>rect.findIndex(p=>p.x===point[u]&&p.y===point[v])));
+    const shape=new Shape();
+    for(const [corner,point] of rect.entries()){
+      const side=(delta:number)=>rect[(corner+delta)%4]!.clone().sub(point).normalize().multiplyScalar(row.radius);
+      const left=picked.has(corner)?point.clone().add(side(3)):point;
+      if(corner===0)shape.moveTo(left.x,left.y);
+      else shape.lineTo(left.x,left.y);
+      if(picked.has(corner)){
+        const center=left.clone().add(side(1));
+        const start=left.clone().sub(center).angle();
+        shape.absarc(center.x,center.y,row.radius,start,start+Math.PI/2,false);
+      }
+    }
+    shape.closePath();
+    const geometry=new ExtrudeGeometry(shape,{depth:row.size[row.axis],bevelEnabled:false,curveSegments:96});
+    const positions=geometry.getAttribute("position");
+    const result=measure({deflection:fixture.tolerance,positions:Array.from(positions.array),indices:Array.from({length:positions.count},(_,i)=>i)});
+    expect(Math.abs(Math.abs(result.volume)-row.volume)).toBeLessThan(0.005);
+    expect(Math.abs(result.area-row.area)).toBeLessThan(0.005);
     expect(result.boundaryEdges).toBe(0);
   }
 });

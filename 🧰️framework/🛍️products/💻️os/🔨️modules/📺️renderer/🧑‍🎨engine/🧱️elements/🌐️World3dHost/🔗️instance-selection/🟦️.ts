@@ -423,6 +423,8 @@ export function worldSurfaceSelectionDomV1(selection: WorldSelectionRecord, inte
     hoverTarget: hoveredId ? { domain: hoveredId.includes(":") ? "vortex" : "object", id: hoveredId } : null,
     hoveredVortexFullId: interaction.hoveredVortexFullId ?? null,
     hoveredKindId: selection.hoveredKindId ?? null,
+    ...(selection.hoveredIds && { hoveredIds: selection.hoveredIds }),
+    ...(selection.hoverSourceWindowId !== undefined && { hoverSourceWindowId: selection.hoverSourceWindowId }),
     gumballActive: Boolean(selection.gumballActive),
     gumballTarget: selection.gumballTarget ?? null,
     transformMode: selection.transformMode ?? null,
@@ -455,6 +457,8 @@ export function worldSurfaceGuestSelectionDomV1(selectionJson: string | undefine
     selectedIds: guest.ids ?? [],
     activeObjectId: guest.activeObjectId ?? null,
     hoveredId: guest.hoveredId ?? null,
+    ...(guest.hoveredIds && { hoveredIds: guest.hoveredIds }),
+    ...(guest.hoverSourceWindowId !== undefined && { hoverSourceWindowId: guest.hoverSourceWindowId }),
     gumballActive: Boolean(guest.gumballActive),
   };
 }
@@ -663,6 +667,43 @@ export function world3dInstanceInteractionTarget(instances: readonly WorldInstan
   return { granularity: record?.interactionGranularityId ?? defaultGranularity, id: record?.interactionId ?? id };
 }
 
+const WORLD_HOVER_TARGET_BYTE_LIMIT = 256;
+const WORLD_HOVER_PAYLOAD_BYTE_LIMIT = 4096;
+const WORLD_HOVER_TARGET_LIST_LIMIT = 1024;
+const WORLD_HOVER_ENCODER = new TextEncoder();
+const WORLD_HOVER_TARGETS_JSON = new WeakMap<WorldInstanceRecord, string | undefined>();
+
+function worldHoverTargetsJson(targets: WorldInstanceRecord["hoverTargets"]): string | undefined {
+  if (!Array.isArray(targets) || targets.length === 0 || targets.length > WORLD_HOVER_TARGET_LIST_LIMIT) return undefined;
+  const encoded = new Set<string>();
+  let bytes = 2;
+  for (const target of targets) {
+    const granularity = target?.granularity;
+    const id = target?.id;
+    if (!validWorldHoverIdentifier(granularity) || !validWorldHoverIdentifier(id)) return undefined;
+    const entry = JSON.stringify({ granularity, id });
+    if (encoded.has(entry)) continue;
+    bytes += WORLD_HOVER_ENCODER.encode(entry).length + Number(encoded.size > 0);
+    if (bytes > WORLD_HOVER_PAYLOAD_BYTE_LIMIT) return undefined;
+    encoded.add(entry);
+  }
+  return `[${[...encoded].join(",")}]`;
+}
+
+function validWorldHoverIdentifier(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= WORLD_HOVER_TARGET_BYTE_LIMIT
+    && WORLD_HOVER_ENCODER.encode(value).length <= WORLD_HOVER_TARGET_BYTE_LIMIT;
+}
+
+/** 🎯️ Encodes a retained instance's authored hover aliases within the interaction wire limits. */
+export function world3dInstanceHoverTargetsJson(instance: WorldInstanceRecord | undefined): string | undefined {
+  if (!instance?.hoverTargets) return undefined;
+  if (!WORLD_HOVER_TARGETS_JSON.has(instance)) {
+    WORLD_HOVER_TARGETS_JSON.set(instance, worldHoverTargetsJson(instance.hoverTargets));
+  }
+  return WORLD_HOVER_TARGETS_JSON.get(instance);
+}
+
 /** 🎯️ Every rendered instance id resolved onto its interaction target, deduplicated and order-preserving,
  * each under its OWN granularity — the marquee's shape of {@link interactionTargetsForInstances}. */
 export function world3dInstanceInteractionTargets(instances: readonly WorldInstanceRecord[], ids: readonly string[], defaultGranularity: string): readonly { readonly granularity: string; readonly id: string }[] {
@@ -697,6 +738,7 @@ export function world3dLinePick(
  * component address (the lowpoly "mesh" domain's `lowpoly-document.<objectId>.<granularity>.<id>` rows). */
 export function world3dComponentInteractionTarget(instances: readonly WorldInstanceRecord[], meshes: readonly WorldMeshRecord[], objectId: string, granularity: string, componentId: number): { readonly granularity: string; readonly id: string } | undefined {
   const record = instances.find((entry) => entry.id === objectId) ?? instances.find((entry) => entry.interactionId === objectId);
+  if (record?.componentPickable === false) return undefined;
   const id = `${record?.interactionId ?? objectId}.${granularity}.${componentId}`;
   const source = record?.componentSource;
   if (!source) return { granularity, id };

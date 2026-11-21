@@ -1,15 +1,24 @@
-import {afterAll,expect,test} from "bun:test";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {afterAll,expect,spyOn,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv";
+import {createHash} from "node:crypto";
+import {existsSync,mkdirSync,mkdtempSync,readdirSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {listOriginsV1,readEventsV1} from "../../📒️journal/🟦️.ts";
+import rescueCases from "./🧫️fixtures/🧷️pack-rescue.json" with {type:"json"};
+import membership from "./🧫️fixtures/🧷️pack-membership.json" with {type:"json"};
+import retirement from "./🧫️fixtures/🧷️pack-retirement.json" with {type:"json"};
+import rescueSchema from "../🧷️packgate/🧬️schema/🔣️.json" with {type:"json"};
+import {authorisePacksV1,packDirectoryV1,rescueLocalPacksV1} from "../🧷️packgate/🟦️.ts";
+import * as packNames from "../🥾️bootstrap/🧺️packs/🟦️.ts";
+import {formatHlcV1,listOriginsV1,readEventsV1} from "../../📒️journal/🟦️.ts";
 import {consolidateGitV1} from "../🧱️consolidate/🟦️.ts";
-import {closeReplicaV1,followOnceV1,joinV1,openReplicaV1,publishOnceV1,runV1,seedV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
+import {applyQueue,checkpointReplicaV1,closeReplicaV1,enqueueId,followOnceV1,joinV1,openReplicaV1,publishOnceV1,runV1,seedV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
 
 type Machine={name:string;options:ReplicaOptionsV1;events:ReplicaEventV1[];replica?:ReplicaV1};
 const scratch:string[]=[],fast={pollMilliseconds:10,scanSeconds:900,debounceMilliseconds:5,persistMilliseconds:0,gitCheckMilliseconds:50,rescueMilliseconds:50,rescueAgeMilliseconds:0,attestMilliseconds:50};
-const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`replica-gate-${label}-`));scratch.push(path);return path;};
+const temp=(label:string)=>{const path=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),`replica-gate-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
 const posixTest=process.platform==="win32"||Bun.spawnSync(["git","--version"]).exitCode!==0?test.skip:test;
 const environment={...process.env,GIT_AUTHOR_NAME:"t",GIT_AUTHOR_EMAIL:"t@example.test",GIT_COMMITTER_NAME:"t",GIT_COMMITTER_EMAIL:"t@example.test",GIT_CONFIG_GLOBAL:"/dev/null",GIT_CONFIG_NOSYSTEM:"1"};
@@ -105,3 +114,128 @@ posixTest("the consolidator publishes its pack with a keep marker, a worker repa
   cli(worker,["fsck","--full"]);cli(server,["fsck","--full"]);
  }finally{await shut(server);await shut(worker);}
 },180_000);
+
+test("pack rescue touches index tables only for eligible local objects",async()=>{
+ const database=new Database(":memory:");
+ try{
+  expect(new Ajv({strict:true}).validate(rescueSchema.definitions.RescueProbeFixture,rescueCases)).toBe(true);
+  for(const row of rescueCases.cases){
+   const worktree=temp(row.id),directory=join(worktree,".git","objects","pack");
+   mkdirSync(directory,{recursive:true});
+   const now=Date.now(),fleet=new Set<string>(),authorised:string[]=[];
+   for(const pack of row.rows){
+    if(pack.role==="fleet")fleet.add(packDirectoryV1+pack.stem+".pack");
+    if(pack.role==="authorised")authorised.push(pack.stem);
+    for(const extension of pack.files){
+     const file=join(directory,pack.stem+"."+extension),age=(now-pack.ageMilliseconds)/1000;
+     writeFileSync(file,"invalid fixture data");utimesSync(file,age,age);
+    }
+   }
+   await authorisePacksV1(worktree,{publish:authorised},now);
+   const expected=database.query(`with candidates as (
+    select json_extract(value,'$.stem') stem,json_extract(value,'$.role') role,json_array_length(value,'$.files') fileCount,json_extract(value,'$.ageMilliseconds') age from json_each(?1)
+   ), locals as (select stem from candidates where role='local' and fileCount=2 and age>=?2)
+   select stem,'read' action from candidates where exists(select 1 from locals) and fileCount=2 and (role in ('fleet','authorised') or stem in locals)
+   union all select stem,'retire' action from candidates where role='local' and fileCount=1 and age>=3600000`).all(JSON.stringify(row.rows),rescueCases.minimumAgeMilliseconds) as {stem:string;action:string}[];
+   const filesRead=spyOn(packNames,"readPackNamesV1");
+   try{
+    const controller=new AbortController(),cancelled=Error("fixture cancelled");
+    controller.abort(cancelled);
+    await expect(rescueLocalPacksV1(worktree,path=>fleet.has(path),{now,signal:controller.signal})).rejects.toBe(cancelled);
+    expect(filesRead.mock.calls).toEqual([]);
+    for(const pack of row.rows)for(const extension of pack.files)expect(existsSync(join(directory,pack.stem+"."+extension))).toBe(true);
+    const result=await rescueLocalPacksV1(worktree,path=>fleet.has(path),{now,minAgeMilliseconds:rescueCases.minimumAgeMilliseconds});
+    const read=expected.filter(value=>value.action==="read").map(value=>join(directory,value.stem+".idx")).sort();
+    expect(filesRead.mock.calls.map(([index])=>index).sort(),row.id).toEqual(read);
+    const retired=expected.filter(value=>value.action==="retire").map(value=>value.stem);
+    const examined=read.length===0?0:row.rows.filter(value=>value.role==="local"&&read.includes(join(directory,value.stem+".idx"))).length;
+    expect(result,row.id).toEqual({examined,objects:0,retired:retired.length,kept:examined});
+    for(const pack of row.rows)for(const extension of pack.files)expect(existsSync(join(directory,pack.stem+"."+extension)),pack.stem).toBe(!retired.includes(pack.stem));
+   }finally{filesRead.mockRestore();}
+  }
+ }finally{database.close();}
+});
+
+test("the replica pack gate requires a live fleet put or explicit publication authority",async()=>{
+ const store=temp("membership-store"),worker=machine("g1-m01",store),db=new Database(":memory:");
+ try{
+  await open(worker);
+  const replica=worker.replica!,workspace=worker.options.worktree,now=Date.now(),hlc=formatHlcV1({ms:now,counter:0},worker.name);
+  const put={hlc,operation:"put" as const,sha256:"a".repeat(64),bytes:1,executable:false},remove={hlc,operation:"delete" as const};
+  mkdirSync(at(worker,".git"),{recursive:true});
+  replica.manifest.set(packDirectoryV1+"pack-sentinel.pack",put);
+  await authorisePacksV1(workspace,{
+   publish:membership.cases.filter(row=>row.grant==="publish").map(row=>row.stem),
+   retire:membership.cases.filter(row=>row.grant==="retire").map(row=>row.stem),
+  },now);
+  const oracle=db.query("select ?1 <> 'put' and ?2 <> 'publish' as local");
+  const actual:Record<string,boolean|undefined>={},expected:Record<string,boolean>={};
+  for(const row of membership.cases){
+   const pack=packDirectoryV1+row.stem+".pack";
+   if(row.mode==="interned")replica.book.intern(pack);
+   if(row.mode==="put")replica.manifest.set(pack,put);
+   if(row.mode==="delete")replica.manifest.set(pack,remove);
+   expect(Boolean((oracle.get(row.mode,row.grant) as {local:number}).local),row.name).toBe(row.local);
+   expected[row.name]=row.local;
+   actual[row.name]=replica.ignore.local?.(packDirectoryV1+row.stem+"."+row.extension);
+  }
+  expect(actual).toEqual(expected);
+ }finally{db.close();await shut(worker);}
+});
+
+for(const scenario of retirement.cases)test(`the replica preserves an old pack until ${scenario.name} without enumerating the manifest`,async()=>{
+ const store=temp("retirement-store"),db=new Database(":memory:");
+ let now=1_800_000_000_000;
+ const created=now,worker=machine("g1-m01",store);
+ const who={...worker,options:{...worker.options,now:()=>now}};
+ const old=packDirectoryV1+"pack-old.pack",index=packDirectoryV1+"pack-new.idx",pack=packDirectoryV1+"pack-new.pack";
+ const hlc=(ms:number)=>formatHlcV1({ms,counter:0},who.name);
+ const put=(content:string,ms=created)=>({hlc:hlc(ms),operation:"put" as const,sha256:createHash("sha256").update(content).digest("hex"),bytes:Buffer.byteLength(content),executable:false});
+ const remove={hlc:hlc(created),operation:"delete" as const,mtimeMs:0};
+ const oracle=db.query("select ?1 = 'pending' or (?1 = 'missing' and ?2 < 600000) as retained");
+ try{
+  await open(who);
+  let replica=who.replica!;
+  write(who,old,"old");replica.files.set(old,put("old",created-1));
+  replica.manifest.set(old,remove);enqueueId(replica,replica.book.find(old)!);
+  write(who,index,"index");replica.files.set(index,put("index"));replica.manifest.set(index,put("index"));
+  const irrelevant=put("irrelevant");
+  for(let id=0;id<1024;id++){
+   const path=`worktree/${id}.idx`;
+   replica.files.set(path,irrelevant);replica.manifest.set(path,irrelevant);
+  }
+  for(const path of [".git/objects/pack-sibling/pack-similar.idx",packDirectoryV1+"pack-extra.idx.rev"]){
+   replica.files.set(path,irrelevant);replica.manifest.set(path,irrelevant);
+  }
+  const linked=packDirectoryV1+"pack-linked.idx",link={hlc:hlc(created),operation:"link" as const,target:"pack-new.idx"};
+  replica.manifest.set(linked,link);replica.files.set(linked,link);
+  replica.manifest.set(packDirectoryV1+"pack-deleted.idx",remove);replica.files.set(packDirectoryV1+"pack-deleted.idx",remove);
+  replica.book.intern(packDirectoryV1+"pack-interned.idx");
+  const sentinel=packDirectoryV1+"pack-sentinel.pack";
+  replica.files.set(sentinel,put("sentinel"));replica.manifest.set(sentinel,put("sentinel"));
+  if(scenario.checkpoint){
+   await checkpointReplicaV1(replica);
+   const generation=replica.generation;
+   await shut(who);await open(who);replica=who.replica!;
+   expect(replica.generation).toBe(generation);
+   expect(replica.manifest.has(index)).toBe(true);
+  }
+  expect(replica.ignore.local?.(old)).toBe(true);
+  const scans=spyOn(replica.manifest,"ids");
+  try{
+   for(const step of scenario.steps){
+    now=created+step.elapsed;
+    if(step.pack==="pending"){
+     replica.manifest.set(pack,put("new"));enqueueId(replica,replica.book.find(pack)!);
+    }else if(step.pack==="applied")write(who,pack,"new");
+    await applyQueue(replica,undefined);
+    expect(Boolean((oracle.get(step.pack,step.elapsed) as {retained:number}).retained)).toBe(step.retained);
+    expect(existsSync(at(who,old)),step.pack+` at ${step.elapsed}`).toBe(step.retained);
+    expect(replica.queue.hasId(replica.book.find(old)!)).toBe(step.retained);
+    if(step.pack==="pending")expect(replica.queue.hasId(replica.book.find(pack)!)).toBe(true);
+    if(step.pack==="applied")expect(replica.files.get(pack)?.operation).toBe("put");
+   }
+   expect(scans).not.toHaveBeenCalled();
+  }finally{scans.mockRestore();}
+ }finally{db.close();await shut(who);}
+});

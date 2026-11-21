@@ -14,11 +14,13 @@ export interface UiContainerFrameProps {
   readonly selected?: boolean;
   readonly hovered?: boolean;
   readonly onActivate?: MouseEventHandler<HTMLDivElement>;
+  readonly onPointerEnter?: () => void;
+  readonly onPointerLeave?: () => void;
   readonly row?: boolean;
 }
 
 /** 🪢️ A container whose children are bordered controls or fields is one shared-border row: no gap, no padding, one hairline between children. */
-export function UiContainerFrame({ record, id, children, controlId, selected, hovered, onActivate, row }: UiContainerFrameProps) {
+export function UiContainerFrame({ record, id, children, controlId, selected, hovered, onActivate, onPointerEnter, onPointerLeave, row }: UiContainerFrameProps) {
   const component = record.component as Extract<Component, { type: "container" }>;
   const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, id);
   const style = layoutSpecStyle(record.layout);
@@ -29,7 +31,7 @@ export function UiContainerFrame({ record, id, children, controlId, selected, ho
   if (component.role === "section" || component.role === "group") {
     const title = component.label ? wireLabel(component.label) : undefined;
     return (
-      <SharedBorderRow as="section" id={id} orientation="vertical" aria-labelledby={title ? `${id}.title` : undefined} data-shared-border-state={presenceState}>
+      <SharedBorderRow as="section" id={id} orientation="vertical" aria-labelledby={title ? `${id}.title` : undefined} data-shared-border-state={presenceState} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
         {title ? <SharedBorderRowCell><h2 className="text-base font-semibold" id={`${id}.title`}>{title}</h2></SharedBorderRowCell> : null}
         {describedBy}
         {children}

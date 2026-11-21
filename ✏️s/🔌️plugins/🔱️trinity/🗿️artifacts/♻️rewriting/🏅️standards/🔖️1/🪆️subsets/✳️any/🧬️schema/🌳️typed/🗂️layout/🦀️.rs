@@ -36,11 +36,7 @@ impl<const N:usize> From<[(String,LayoutPoint);N]> for RuleLayout{fn from(values
 impl FromIterator<(String,LayoutPoint)> for RuleLayout{fn from_iter<T:IntoIterator<Item=(String,LayoutPoint)>>(values:T)->Self{let mut result=Self::new();for(key,value)in values{if let Some(previous)=result.insert(key,value){<LayoutPoint as FromValue>::retire_decoded(previous)}}result}}
 impl IntoIterator for RuleLayout{type Item=(String,LayoutPoint);type IntoIter=std::vec::IntoIter<Self::Item>;fn into_iter(self)->Self::IntoIter{self.members.into_iter()}}
 impl<'a> IntoIterator for &'a RuleLayout{type Item=(&'a String,&'a LayoutPoint);type IntoIter=std::iter::Map<std::slice::Iter<'a,(String,LayoutPoint)>,fn(&'a(String,LayoutPoint))->Self::Item>;fn into_iter(self)->Self::IntoIter{self.members.iter().map(|(key,value)|(key,value))}}
-impl semio_framework_value::retirement::RetireOwned for RuleLayout{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.members)}
- fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.members)}
- fn controlled_retirement_supported()->bool{<Vec<(String,LayoutPoint)> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
-}
+semio_framework_value::artifact_retire_struct!(RuleLayout { members });
 impl FromValue for RuleLayout {
  fn from_value(value:DslValue)->Result<Self,ValueError>{let DslValue::Object(fields)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"rule layout object required"))};fields.into_iter().map(|(key,value)|LayoutPoint::from_value(value).map(|value|(key,value))).collect()}
  fn from_value_controlled(value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_depth(64,|control|control.scoped_stage(|control|{let fields=value.object_controlled(control)?;control.begin_stage(0)?;let mut output=DecodedValue::new(Self::from_admitted(control.allocate_vec(fields.len())?),<Self as FromValue>::retire_decoded);for(key,value)in fields{let key=control.copy_text(key)?;let value=LayoutPoint::from_value_controlled(value,control)?;output.get_mut().admitted_insert(key,value,control)?;}control.checkpoint()?;Ok(output.take())}))}

@@ -5,6 +5,7 @@
  "definitions": {
   "Oid": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
   "Hlc": {"type": "string", "pattern": "^[0-9]{13}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,39}$"},
+  "StageObservation": {"enum": ["index-changed", "index-missing", "locked-snapshot-failed", "write-tree-failed", "ref-changed", "observation-failed"]},
   "Mode": {"enum": ["100644", "100755", "120000"]},
   "StageRecord": {
    "type": "object",
@@ -55,6 +56,40 @@
     "baseHlc": {"$ref": "#/definitions/Hlc"},
     "registers": {"type": "array", "items": {"$ref": "#/definitions/Register"}},
     "expect": {"type": "array", "items": {"$ref": "#/definitions/TreeEntry"}}
+   }
+  },
+  "StageRetry": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["cold", "steps", "version"],
+   "properties": {
+    "version": {"const": 1},
+    "cold": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["base", "late", "next", "old", "working"],
+     "properties": {
+      "base": {"$ref": "#/definitions/File"},
+      "late": {"$ref": "#/definitions/File"},
+      "next": {"$ref": "#/definitions/File"},
+      "old": {"type": "string"},
+      "working": {"type": "string"}
+     }
+    },
+    "steps": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applied", "queued", "stage", "trigger"],
+      "properties": {
+       "trigger": {"enum": ["first-missing", "unchanged", "unrelated", "new-register", "replacement", "loose-object", "locked", "new-register-during-lock", "lock-released", "lock-retry-due"]},
+       "applied": {"type": "integer", "minimum": 0},
+       "queued": {"type": "integer", "minimum": 0},
+       "stage": {"type": "array", "items": {"type": "string"}}
+      }
+     }
+    }
    }
   },
   "Fixture": {

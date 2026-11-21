@@ -206,6 +206,14 @@ impl RasterSnapshotCloneAuthority {
         self.value.take()
     }
 
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        if let Some(child) = self.layer.as_ref() {
+            return if child.terminal_is_empty() { Ok(1) } else { child.close_work_demand(body) };
+        }
+        if !self.retirement.is_empty() { return self.retirement.close_work_demand(body); }
+        Ok(u64::from(!self.terminal_is_empty()))
+    }
+
     pub(super) fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(layer) = self.layer.as_ref() {
             if layer.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of::<RasterLayerCloneAuthority>(),depth:1,..Default::default()});}
@@ -220,17 +228,19 @@ impl RasterSnapshotCloneAuthority {
         Ok(Default::default())
     }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep> {
-        let mut work=0;let result=(||{
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let grant = effect.grant();
+        let boundary = effect.performed_work();
+        let result=(||{
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        if grant.maximum_items == 0 {
+        if grant.maximum_items == 0 || effect.remaining_work_units()? == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         if let Some(layer) = self.layer.as_mut() {
-            if layer.terminal_is_empty(){let release=size_of::<RasterLayerCloneAuthority>();if grant.maximum_depth<1||grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(empty));}drop(self.layer.take());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()}));}
+            if layer.terminal_is_empty(){let release=size_of::<RasterLayerCloneAuthority>();if grant.maximum_depth<1||grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(empty));}raster_close_unit(effect)?;drop(self.layer.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()}));}
             let demand = raster_nested(layer.close_demands(grant.maximum_copy_bytes)?)?;
             if grant.maximum_depth < demand.depth {
                 return Err(invariant("Raster snapshot clone layer exceeds admitted depth"));
@@ -238,7 +248,7 @@ impl RasterSnapshotCloneAuthority {
             if raster_short(grant, demand) {
                 return Ok(RetainedCloneStep::Progress(empty));
             }
-            let turn=layer.close_step(raster_child_grant(grant));work=turn.work;let step=turn.result?;
+            let step = layer.close_step(&mut effect.nested(raster_child_grant(grant))).result?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.retirement.is_empty() {
@@ -248,9 +258,10 @@ impl RasterSnapshotCloneAuthority {
                 self.retirement.put(RasterDisplaced::Snapshot(value));
             }
         }
-        let turn=self.retirement.close(grant);work=turn.work;let step=turn.result?;
+        let step = self.retirement.close(effect).result?;
         Ok(raster_finish(step, self.terminal_is_empty()))
-        })();semio_framework_value::RetainedWorkOutcome{result,work}
+        })();
+        RetainedWorkOutcome { result, work: effect.performed_work() - boundary }
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {
@@ -434,6 +445,11 @@ impl RasterDslValueCloneAuthority {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        if !self.retirement.is_empty() { return self.retirement.close_work_demand(body); }
+        Ok(u64::from(!self.terminal_is_empty()))
+    }
+
     pub(super) fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if !self.retirement.is_empty() {
             return self.retirement.demands(body);
@@ -444,12 +460,14 @@ impl RasterDslValueCloneAuthority {
         Ok(Default::default())
     }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep> {
-        let mut work=0;let result=(||{
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let grant = effect.grant();
+        let boundary = effect.performed_work();
+        let result=(||{
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
-        if grant.maximum_items == 0 {
+        if grant.maximum_items == 0 || effect.remaining_work_units()? == 0 {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         if self.retirement.is_empty() {
@@ -459,9 +477,10 @@ impl RasterDslValueCloneAuthority {
                 self.retirement.put(RasterDisplaced::Value(value));
             }
         }
-        let turn=self.retirement.close(grant);work=turn.work;let step=turn.result?;
+        let step = self.retirement.close(effect).result?;
         Ok(raster_finish(step, self.terminal_is_empty()))
-        })();semio_framework_value::RetainedWorkOutcome{result,work}
+        })();
+        RetainedWorkOutcome { result, work: effect.performed_work() - boundary }
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {
@@ -755,6 +774,14 @@ impl RasterLayerCloneAuthority {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        if let Some(child) = self.parameter_value.as_ref() {
+            return if child.terminal_is_empty() { Ok(1) } else { child.close_work_demand(body) };
+        }
+        if !self.retirement.is_empty() { return self.retirement.close_work_demand(body); }
+        Ok(u64::from(!self.terminal_is_empty()))
+    }
+
     pub(super) fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(authority) = self.parameter_value.as_ref() {
             if authority.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of::<RasterDslValueCloneAuthority>(),depth:1,..Default::default()});}
@@ -769,17 +796,19 @@ impl RasterLayerCloneAuthority {
         Ok(Default::default())
     }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep> {
-        let mut work=0;let result=(||{
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let grant = effect.grant();
+        let boundary = effect.performed_work();
+        let result=(||{
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        if grant.maximum_items == 0 {
+        if grant.maximum_items == 0 || effect.remaining_work_units()? == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         if let Some(authority) = self.parameter_value.as_mut() {
-            if authority.terminal_is_empty(){let release=size_of::<RasterDslValueCloneAuthority>();if grant.maximum_depth<1||grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(empty));}drop(self.parameter_value.take());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()}));}
+            if authority.terminal_is_empty(){let release=size_of::<RasterDslValueCloneAuthority>();if grant.maximum_depth<1||grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(empty));}raster_close_unit(effect)?;drop(self.parameter_value.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()}));}
             let demand = raster_nested(authority.close_demands(grant.maximum_copy_bytes)?)?;
             if grant.maximum_depth < demand.depth {
                 return Err(invariant("Raster layer clone parameter exceeds admitted depth"));
@@ -787,7 +816,7 @@ impl RasterLayerCloneAuthority {
             if raster_short(grant, demand) {
                 return Ok(RetainedCloneStep::Progress(empty));
             }
-            let turn=authority.close_step(raster_child_grant(grant));work=turn.work;let step=turn.result?;
+            let step = authority.close_step(&mut effect.nested(raster_child_grant(grant))).result?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.retirement.is_empty() {
@@ -797,9 +826,10 @@ impl RasterLayerCloneAuthority {
                 self.retirement.put(RasterDisplaced::Layer(value));
             }
         }
-        let turn=self.retirement.close(grant);work=turn.work;let step=turn.result?;
+        let step = self.retirement.close(effect).result?;
         Ok(raster_finish(step, self.terminal_is_empty()))
-        })();semio_framework_value::RetainedWorkOutcome{result,work}
+        })();
+        RetainedWorkOutcome { result, work: effect.performed_work() - boundary }
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {

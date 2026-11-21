@@ -13,7 +13,7 @@ import { type ActiveSession, type SpaceProgramEntry } from "../../../🐚️Shel
 import type { ViewModel } from "../../../🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import { applyFrameworkLayoutSeed } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { buildSpacePanelState, panelJsonFromState, parsePanelState, studioPanelFocusingSpawned, type SpacePanelState } from "../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
-import { captureProgramRetirementOwnersV1, sameProgramRetirementOwnersV1, type ProgramRetirementRequestV1, type ProgramRetirementLeaseV1 } from "../../🚪️program-retirement/🟦️.ts";
+import { captureProgramRetirementOwnersV1, sameProgramRetirementOwnersV1, type ProgramRetirementRequestV1, type ProgramRetirementLeaseV1, type ProgramRetirementWorkV1 } from "../../🚪️program-retirement/🟦️.ts";
 import { type PluginWasmHandle } from "../../../🔌️PluginRuntime/🟦️.tsx";
 import { seededActiveWindowId } from "../../🎚️shell-model/🟦️.tsx";
 import { encodeWindowActionInvocation } from "../../📨️window-invocation/🟦️.ts";
@@ -22,23 +22,32 @@ import { requiredHostPanelLeafId, withLocalizedWindowKindLabels } from "../../�
 import type { useDocumentServicesState } from "../🔶️document-services/🟦️.ts";
 import type { useUpdateSpacePanelState } from "../🔸️update-space-panel/🟦️.ts";
 
+type PreparedPrimarySessionV1 = Readonly<{
+  handle: PluginWasmHandle;
+  instanceId: number;
+  retirement: ProgramRetirementWorkV1;
+  current: () => boolean;
+  onPublished: () => void;
+}>;
+
 /** 🟡 Builds switchToPluginApp, syncSpawnedPluginDocument, ensureSpawnedPlugin of useSpawnedSession. */
-export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetirementRef, hostMode, hostApp, setSurfaceSwitchBusy, sessionSwitchGateRef, session, loadedPlugins, sessionWorkRef, sealedInstancesRef, loadedPluginsRef, sessionRef, openDocumentSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef, retireSessionInstance, dispatch, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, landingAppId, rememberOpenSpaceId, openInstanceIdRef, refreshUi, showTransientNoticeRef, documentServices, documentServiceInventoryRef, backboneWorkerRef }: Pick<ReturnType<typeof useDocumentServicesState>, "hostMode" | "hostApp" | "setSurfaceSwitchBusy" | "sessionSwitchGateRef" | "session" | "loadedPlugins" | "sessionWorkRef" | "sealedInstancesRef" | "loadedPluginsRef" | "sessionRef" | "openDocumentSessionsRef" | "openDocumentRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "dispatch" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "landingAppId" | "rememberOpenSpaceId" | "openInstanceIdRef" | "refreshUi" | "showTransientNoticeRef" | "documentServices" | "documentServiceInventoryRef" | "backboneWorkerRef"> & Pick<ReturnType<typeof useUpdateSpacePanelState>, "retireSessionInstance"> & { readonly pluginOpInFlightRef: { current: ReadonlySet<string> }; readonly admitProgramRetirementRef: { current: ProgramRetirementRequestV1 } }) {
-  const switchToPluginApp = useCallback(
-    async (pluginId: string, appId: string, viewState?: ViewModel, documentSource?: ActiveSession): Promise<ActiveSession | null> => {
+export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetirementRef, hostMode, hostApp, setSurfaceSwitchBusy, sessionSwitchGateRef, session, loadedPlugins, sessionWorkRef, sealedInstancesRef, loadedPluginsRef, sessionRef, openDocumentSessionsRef, openDocumentRef, closeDocumentRef, documentAttachmentLanesRef, retireSessionInstance, dispatch, appLabelsOverlay, uiTerminology, uiLocale, extraWindowInstancesRef, extraWindowCounterRef, landingAppId, rememberOpenSpaceId, openInstanceIdRef, refreshUi, reportRefreshFault, showTransientNoticeRef, documentServices, documentServiceInventoryRef, backboneWorkerRef }: Pick<ReturnType<typeof useDocumentServicesState>, "hostMode" | "hostApp" | "setSurfaceSwitchBusy" | "sessionSwitchGateRef" | "session" | "loadedPlugins" | "sessionWorkRef" | "sealedInstancesRef" | "loadedPluginsRef" | "sessionRef" | "openDocumentSessionsRef" | "openDocumentRef" | "closeDocumentRef" | "documentAttachmentLanesRef" | "dispatch" | "appLabelsOverlay" | "uiTerminology" | "uiLocale" | "extraWindowInstancesRef" | "extraWindowCounterRef" | "landingAppId" | "rememberOpenSpaceId" | "openInstanceIdRef" | "refreshUi" | "reportRefreshFault" | "showTransientNoticeRef" | "documentServices" | "documentServiceInventoryRef" | "backboneWorkerRef"> & Pick<ReturnType<typeof useUpdateSpacePanelState>, "retireSessionInstance"> & { readonly pluginOpInFlightRef: { current: ReadonlySet<string> }; readonly admitProgramRetirementRef: { current: ProgramRetirementRequestV1 } }) {
+  const switchAppSession = useCallback(
+    async (pluginId: string, appId: string, viewState?: ViewModel, documentSource?: ActiveSession, prepared?: PreparedPrimarySessionV1): Promise<ActiveSession | null> => {
       const defaultViewState = (app: AppDefinition): ViewModel => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], requiredHostPanelLeafId(hostApp))) } : {}) });
       setSurfaceSwitchBusy(true);
       let retirement: ProgramRetirementLeaseV1 | null = null;
       const predecessor = sessionRef.current;
       const predecessorHandle = loadedPluginsRef.current.find(entry => entry.handle.pluginId === predecessor?.pluginId)?.handle;
       try {
-        if (documentSource === undefined && predecessor !== null && (predecessor.pluginId !== pluginId || predecessor.app.id !== appId)) {
+        if (prepared && (hostMode || !prepared.current() || predecessor === null || (predecessorHandle === prepared.handle && predecessor.instanceId === prepared.instanceId))) return null;
+        if (documentSource === undefined && predecessor !== null && (prepared !== undefined || predecessor.pluginId !== pluginId || predecessor.app.id !== appId)) {
           const owners = captureProgramRetirementOwnersV1(loadedPluginsRef.current, predecessor);
           const current = (): boolean => {
             const host = sessionRef.current;
-            return host?.pluginId === predecessor.pluginId && host.app.id === predecessor.app.id && host.instanceId === predecessor.instanceId && sameProgramRetirementOwnersV1(owners, captureProgramRetirementOwnersV1(loadedPluginsRef.current, host));
+            return (prepared?.current() ?? true) && host?.pluginId === predecessor.pluginId && host.app.id === predecessor.app.id && host.instanceId === predecessor.instanceId && sameProgramRetirementOwnersV1(owners, captureProgramRetirementOwnersV1(loadedPluginsRef.current, host));
           };
-          retirement = await admitProgramRetirementRef.current(owners, current);
+          retirement = await admitProgramRetirementRef.current(owners, current, prepared?.retirement);
           if (retirement === null || !retirement.current()) return null;
         }
         const outcome = await sessionSwitchGateRef.current.run(
@@ -58,6 +67,10 @@ export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetir
               const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === targetPluginId)?.handle;
               if (pluginOpInFlightRef.current.has(targetPluginId)) throw new Error("program-retirement.program-busy");
               if (!handle) throw new Error(`switchToPluginApp: ${targetPluginId} is no longer loaded`);
+              if (prepared !== undefined) {
+                if (handle !== prepared.handle || !prepared.current()) throw new Error("archive-file.owner-retired");
+                return prepared.instanceId;
+              }
               if (documentSource === undefined) return handle.createApp(app.id);
               const current = () => sessionRef.current?.pluginId === documentSource.pluginId && sessionRef.current?.instanceId === documentSource.instanceId;
               if (targetPluginId !== documentSource.pluginId || !current() || !app.dialect) throw new Error("surface-document.predecessor-stale");
@@ -90,7 +103,10 @@ export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetir
             },
             retire: async retired => { if (retirement === null) return retireSessionInstance(retired as ActiveSession); if (!await retirement.retire()) throw new Error("program-retirement.owner-stale"); },
             defaultViewState,
-            publish: (next) => dispatch({ type: "SET_SESSION", value: { ...next,documentInitialized: documentSource !== undefined } }),
+            publish: (next) => {
+              dispatch({ type: "SET_SESSION", value: { ...next, documentInitialized: documentSource !== undefined || prepared !== undefined } });
+              prepared?.onPublished();
+            },
             seedLayout: (app) => {
               const seeded = applyFrameworkLayoutSeed(app.defaultLayout, withLocalizedWindowKindLabels(app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
               extraWindowInstancesRef.current = seeded.extraInstances;
@@ -103,23 +119,30 @@ export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetir
                 openInstanceIdRef.current = null;
               }
             },
-            refresh: refreshUi,
+            refresh: prepared === undefined ? refreshUi : (next) => refreshUi(next).catch(error => reportRefreshFault(next.pluginId, error)),
           },
-          { pluginId, appId, viewState },
+          { pluginId, appId, viewState, replaceCurrent: prepared !== undefined },
           (retired, retireError) => console.warn(`switchToPluginApp: predecessor ${retired.pluginId}/${retired.app.id} retirement failed`, retireError),
         );
         if (outcome.status === "draining" || outcome.status === "busy") {
           showTransientNoticeRef.current(surfaceSwitchBusyTextV1(uiLocale), "info");
           return null;
         }
-        return outcome.session === null || documentSource === undefined ? outcome.session : { ...outcome.session,documentInitialized: true };
+        return outcome.session === null || (documentSource === undefined && prepared === undefined) ? outcome.session : { ...outcome.session, documentInitialized: true };
       } finally {
         retirement?.release();
         setSurfaceSwitchBusy(false);
       }
     },
-    [loadedPlugins, refreshUi, retireSessionInstance, session, appLabelsOverlay, hostMode, hostApp, landingAppId, uiTerminology, uiLocale, rememberOpenSpaceId],
+    [loadedPlugins, refreshUi, reportRefreshFault, retireSessionInstance, session, appLabelsOverlay, hostMode, hostApp, landingAppId, uiTerminology, uiLocale, rememberOpenSpaceId],
   );
+
+  const switchToPluginApp: (pluginId: string, appId: string, viewState?: ViewModel, documentSource?: ActiveSession) => Promise<ActiveSession | null> = switchAppSession;
+
+  /** 📥️ Mounts an already initialized standalone archive through the session switch and retirement owner. */
+  const adoptPreparedPrimarySession = useCallback(async (appId: string, prepared: PreparedPrimarySessionV1): Promise<void> => {
+    await switchAppSession(prepared.handle.pluginId, appId, undefined, undefined, prepared);
+  }, [switchAppSession]);
 
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, artifactJson: string, viewState: ViewModel) => {
     try {
@@ -177,5 +200,5 @@ export function useSwitchPluginAppState({ pluginOpInFlightRef, admitProgramRetir
     documentServiceInventoryRef.current=services;
     backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "service-contributions", services }) });
   }, [loadedPlugins, documentServices]);
-  return { switchToPluginApp, ensureSpawnedPlugin };
+  return { switchToPluginApp, adoptPreparedPrimarySession, ensureSpawnedPlugin };
 }

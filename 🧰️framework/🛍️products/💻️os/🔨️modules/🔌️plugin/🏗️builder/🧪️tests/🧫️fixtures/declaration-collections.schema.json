@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actions", "windowActions", "expectedAppActions", "duplicateActions", "firstDuplicate", "terminologyIds", "breadcrumbs", "expectedTerminologies", "expectedBreadcrumbs", "commands", "expectedCommands"],
+  "properties": {
+    "actions": {"$ref": "#/definitions/ids"},
+    "windowActions": {"$ref": "#/definitions/ids"},
+    "expectedAppActions": {"$ref": "#/definitions/ids"},
+    "duplicateActions": {"$ref": "#/definitions/ids"},
+    "firstDuplicate": {"type": "string", "minLength": 1},
+    "terminologyIds": {"$ref": "#/definitions/ids"},
+    "breadcrumbs": {"$ref": "#/definitions/breadcrumbs"},
+    "expectedTerminologies": {"$ref": "#/definitions/ids"},
+    "expectedBreadcrumbs": {"$ref": "#/definitions/breadcrumbs"},
+    "commands": {"$ref": "#/definitions/ids"},
+    "expectedCommands": {"$ref": "#/definitions/ids"}
+  },
+  "definitions": {
+    "ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "breadcrumbs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "breadcrumb"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "breadcrumb": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

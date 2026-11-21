@@ -112,6 +112,27 @@ def glass_plan(i, notch_half=k.NOTCH_HALF):
     return poly([(x0, -0.5), (x0, 0.5), (x1, 0.5), (x1, notch_half), (n0, notch_half), (n0, -notch_half), (x1, -notch_half), (x1, -0.5)])
 
 
+
+def printed_glass(asset):
+    """🖊️ Widen the three seals on paper while keeping the four measured glass panes in the digital assembly."""
+    printed = [(round(lo + (.002 if i else 0), 6), round(hi - (.002 if i < 3 else 0), 6)) for i, (lo, hi) in enumerate(k.PANES)]
+    for view in ("elevation", "plan"):
+        shapes = {shape["id"]: shape for shape in asset["representations"]["50"]["geometry"][view]}
+        for i, (lo, hi) in enumerate(printed):
+            pane = shapes[f"glass-{i}"]
+            if pane["kind"] == "rect":
+                pane.update(x=lo, w=round(hi-lo, 6))
+            else:
+                edges = {k.PANES[i][0]: lo, k.PANES[i][1]: hi}
+                pane["points"] = [[edges.get(round(x,6), x), y] for x,y in pane["points"]]
+        for i in range(3):
+            shapes[f"joint-{i}"].update(x=printed[i][1], w=.024)
+    for shapes in asset["representations"]["200"]["geometry"].values():
+        for shape in shapes:
+            if shape["id"] == "glass-roof":
+                shape["penMm"] = .20
+
+
 def redraw50(rep):
     """✏️ 1:50: elevation, front and plan of the corrected construction."""
     g = rep["geometry"]
@@ -345,6 +366,7 @@ def candidate():
         a["materials"].append({"id": "epdm", "title": text("EPDM glazing bearing strip", "EPDM-Glasauflagerband"), "emissivity": 0.9, "solarAbsorptivity": 0.9, "densityKgM3": 1150, "conductivityWmK": 0.25, "specificHeatJKgK": 1000, "source": "literature", "reference": "en-iso-10456"})
     for rep, fn in ((a["representations"]["50"], redraw50), (a["representations"]["100"], redraw100), (a["representations"]["200"], redraw200), (a["representations"]["500"], redraw500)):
         fn(rep)
+    printed_glass(a)
     st = a["structure"]["assumptions"][0]
     st["en"] = st["en"].replace("144.04 deg", "144.25 deg")
     st["de"] = st["de"].replace("144,04 Grad", "144,25 Grad")

@@ -15,7 +15,7 @@ test("shared native advance retains its result for a separately funded original-
 
 test("shared result refusal and recovery preserve the original staged answer",()=>{expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{db.run("create table handoff(attempt text,changed integer)");for(const attempt of law.advanceReply.refusals)db.run("insert into handoff values(?,0)",attempt);expect(db.query("select count(*) attempts,sum(changed) mutations from handoff").get()).toEqual({attempts:3,mutations:0});expect(law.advanceReply.receiveCallsAfterRecovery).toBe(1)}finally{db.close()}});
 
-test("issued construction uses paid birth and clears the actual empty birth header",()=>{expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select ?+? work").get(law.work.issuedBirth,law.work.clearIssuedBirth)).toEqual({work:4});expect(law.kinds).toEqual(["sealed","issued"])}finally{db.close()}});
+test("issued construction uses paid birth and clears the actual empty birth header",()=>{expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select ?+? work").get(law.work.issuedBirth,law.work.clearIssuedBirth)).toEqual({work:4});expect(law.kinds).toEqual(["sealed","issued","arc"])}finally{db.close()}});
 
 test("shared owner refuses a different Work authority on the same Source",()=>{expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{db.run("create table ports(name text,accepted integer)");for(const [name,value]of Object.entries(law.workBinding))if(typeof value==="boolean")db.run("insert into ports values(?,?)",name,Number(value));expect(db.query("select count(*) ports,sum(accepted) admitted from ports").get()).toEqual({ports:4,admitted:0});expect(law.workBinding.deniedWork).toBe(0)}finally{db.close()}});
 
@@ -24,3 +24,13 @@ test("sparse success keeps the original identity until paid marker closure",()=>
 test("const vacant seed creates no authority, allocation or input",()=>{expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("select ?+?+? mutation").get(Number(law.vacantSeed.authority),law.vacantSeed.allocationBytes,Number(law.vacantSeed.input))).toEqual({mutation:0})}finally{db.close()}});
 
 test("captured owner close retains the Source through physical receipt",()=>{expect(semioSchemaAjvV1({strict:true}).validate(schema,law)).toBe(true);const db=new Database(":memory:");try{db.run("create table custody(same_source integer, after_post integer, replay integer)");db.run("insert into custody values(?,?,?)",Number(law.capturedClose.sameSource),Number(law.capturedClose.publicationAfterPhysicalPost),Number(law.capturedClose.replay));expect(db.query("select same_source=1 and after_post=1 and replay=0 valid from custody").get()).toEqual({valid:1})}finally{db.close()}});
+
+test("Arc receiving reserves the output, allocates its backing and publishes it under original work", () => {
+  expect(semioSchemaAjvV1({ strict: true }).validate(schema, law)).toBe(true);
+  const db = new Database(":memory:");
+  try {
+    expect(db.query("select ? + ? + ? as work").get(
+      law.work.arcOutputSlot, law.work.arcAllocation, law.work.arcPublication,
+    )).toEqual({ work: 5 });
+  } finally { db.close(); }
+});

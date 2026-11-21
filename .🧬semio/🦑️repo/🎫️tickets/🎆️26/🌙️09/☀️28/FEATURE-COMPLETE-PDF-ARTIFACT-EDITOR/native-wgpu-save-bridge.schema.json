@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Native WGPU declared media Save",
+  "type": "object",
+  "required": [
+    "actions",
+    "declaration",
+    "exchange",
+    "delivery"
+  ],
+  "properties": {
+    "actions": {
+      "const": [
+        "saveArtifactFile",
+        "exportMediaFile",
+        "exportSnapshotFile"
+      ]
+    },
+    "declaration": {
+      "const": [
+        "outputPort",
+        "filename",
+        "mediaType",
+        "formatKind"
+      ]
+    },
+    "exchange": {
+      "const": [
+        "ReadDocumentIdentity",
+        "SubmitMediaExport",
+        "PollMediaExport",
+        "TakeMediaExportChunk",
+        "CancelMediaExport",
+        "MediaOut"
+      ]
+    },
+    "delivery": {
+      "enum": [
+        "verified-empty-terminal",
+        "verified-reference-before-output",
+        "canceled",
+        "refused"
+      ]
+    }
+  },
+  "definitions": {
+    "controls": {
+      "enum": [
+        "duplicate-reply",
+        "foreign-sequence",
+        "foreign-handle",
+        "source-changed",
+        "missing-terminal",
+        "nonempty-terminal",
+        "short-total",
+        "wrong-descriptor",
+        "local-cancel-awaiting-descriptor",
+        "local-cancel-drains-ready",
+        "sink-failure-drains-ready",
+        "undeclared-reference",
+        "stale-before-reference",
+        "stale-before-reference-delivery",
+        "foreign-reference-descriptor",
+        "cancelled-reference"
+      ]
+    }
+  }
+}

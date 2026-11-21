@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["axes", "settlements", "retirements"],
+  "additionalProperties": false,
+  "properties": {
+    "axes": { "const": ["items", "copy", "capacity", "release", "work"] },
+    "settlements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "held", "observed", "forfeited", "reserve", "redeem", "release", "fresh", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "held": { "$ref": "#/definitions/stock" },
+          "observed": { "$ref": "#/definitions/stock" },
+          "forfeited": { "$ref": "#/definitions/stock" },
+          "reserve": { "$ref": "#/definitions/stock" },
+          "redeem": { "$ref": "#/definitions/stock" },
+          "release": { "$ref": "#/definitions/stock" },
+          "fresh": { "$ref": "#/definitions/stock" },
+          "expected": {
+            "anyOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "required": ["held", "observed", "total"],
+                "additionalProperties": false,
+                "properties": {
+                  "held": { "$ref": "#/definitions/stock" },
+                  "observed": { "$ref": "#/definitions/stock" },
+                  "total": { "$ref": "#/definitions/stock" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "retirements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "held", "forfeited", "journal", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "held": { "$ref": "#/definitions/stock" },
+          "forfeited": { "$ref": "#/definitions/stock" },
+          "journal": { "$ref": "#/definitions/stock" },
+          "expected": {
+            "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/stock" }]
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "stock": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+    }
+  }
+}

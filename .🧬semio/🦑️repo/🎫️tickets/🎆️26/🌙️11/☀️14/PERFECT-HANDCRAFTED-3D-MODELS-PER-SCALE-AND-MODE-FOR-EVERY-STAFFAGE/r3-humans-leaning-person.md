@@ -115,3 +115,63 @@ Final check line: `FAIL: 6 measurement(s) over 2 rule line(s) (12.9 s)`. Silhoue
 - `structure.supports` is empty in the asset, so no support solids; the wall is the member of `wall`, `wall-x` and `wall-frame` (a reference to the wall body solid) instead of invented contact pads.
 - The neck under the collar is left out of `head-skin`; the face ring includes the skin behind the ears up to the beanie edge.
 - Not run: the staffage test suites; fixtures that embed this asset (`structure-projection`, area fixtures) may need regenerating after the rig, dimension and 2D change.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-leaning-person-s50.ts`, `-coarse.ts`, `-build.ts` (copies of the round-3 scripts, edited section by section), `r5-leaning-person-run.sh`, `r5-leaning-person-texts.json`; root changes in `r3-leaning-person-roots.ts` (left arm spread) and `r3-leaning-person-dimensions.json`; shared helpers `r5-measure.ts`, `r5-extent.ts`, `r5-print-probe.ts`. Catalog backup before this round: `🗑️generated/r5-leaning-person/catalog-before-r5.json`; renders `🗑️generated/r5-leaning-person/{before,after}/`.
+
+### Reference table (modelled to)
+
+Slim man, 1.72 m barefoot, 66 kg, 21 mm sneaker soles; sources Winter 2009 tab. 4.1, de Leva 1996, ANSUR II (Gordon 2014), DIN 33402 shares as in the brief. Unchanged from round 3 (section 1 above): hip 0.52 H, knee 0.285 H, ankle 0.039 H, shoulder joint 0.818 H, elbow 0.63 H, wrist 0.485 H, head H/7.5 = 0.229 m, biacromial about 0.23 H with the joints 2 to 3 cm inside, hand 0.108 H, foot 0.15 H (sneaker 0.285 m), bideltoid 0.44 to 0.46 m nude, garment ease 15 to 25 mm per side; folded-down hood of a regular fleece hoodie 20 to 30 mm thick on the upper back; cupsole sneaker 24 to 26 mm at the heel, 20 to 22 mm at the ball, toe spring 8 to 10 mm.
+
+### Model against reference (1:50, `r5-measure.ts`, pose standing-away, barefoot heights)
+
+| quantity | reference | model | deviation |
+|---|---|---|---|
+| hip joint | 0.52 H = 0.894 | 0.896 (0.521 H) | +0.2 % |
+| knee | 0.285 H = 0.490 | 0.476 (0.277 H) | -2.9 % (shank kept, within 3 %) |
+| ankle | 0.039 H = 0.067 | 0.067 | 0 |
+| shoulder joint | 0.818 H = 1.407 | 1.414 (0.822 H) | +0.5 % |
+| elbow | 0.63 H = 1.084 | 1.098 (0.638 H) | +1.3 % |
+| wrist | 0.485 H = 0.834 | 0.852 (0.495 H) | +2.1 % (arm hangs 9 degrees forward) |
+| vertex | 1.72 | 1.718 | -0.1 % |
+| head chin to vertex | 0.229 | 0.229 | 0 |
+| upper arm / forearm / hand | 0.320 / 0.251 / 0.186 | 0.318 / 0.252 / 0.186 | -0.6 / +0.4 / 0 % |
+| thigh / shank | 0.4214 / 0.4231 (0.245 / 0.246 H) | 0.420 / 0.410 | -0.3 / -3.1 % (open point) |
+| shoulder joint spacing | 0.33 to 0.36 | 0.350 | in range |
+| hip joint spacing | 0.17 to 0.18 | 0.180 | in range |
+| hoodie chest breadth over the cloth | 0.30 nude + 2 x 0.02 to 0.04 = 0.34 to 0.38 | 0.386 (shoulder slice incl. drop) | +1.6 % against the upper bound |
+| upper sleeve depth / thigh depth (jeans) | 0.10 to 0.12 / 0.18 to 0.20 | 0.116 / 0.197 | in range |
+
+### Grades (before -> after; lists body / thermal / structure)
+
+- 1:50: B- / B+ / A- -> A- / A- / A-
+- 1:100: C+ / B / B+ -> A- / A- / A-
+- 1:200: B- / B / B+ -> B+ / A- / A-
+- 1:500: C / B / B -> B+ / B+ / B+
+- Poses at 1:50 (leaning-arms-folded, phone-call, pushing-off, standing-away) and clip push-off at 1.1 s: closed and natural before and after; the left arm now hangs clear of the hip.
+
+### What I saw before (round-4 catalog) and changed
+
+- Hood: the neckline roll stood off the back as a horizontal sausage reaching towards the wall, and the folded hood was a thin plate with a gap behind the back in side view (a hexagonal plate at 1:100). Now `hood50()`: the doubled hood opening is a cowl tube on the trapezius following the neckline (Catmull-Rom refined, 8.5 mm at the throat to 19 mm at the nape), and the hood itself a lateral loft of 21 (1:50) / 13 (1:100) sections lying on the back across its width, each section tilted to the local slope of the back, 10.5 to 12 mm thick, U-shaped at the bottom, lower and narrower at the sides. 1:200 keeps the hood merged into the back, 1:500 has none.
+- Shoulders: square pads (sleeve caps standing 2 cm above the trunk slope, slice exponents 2.7 to 2.8). Now 15 trunk slices with exponents 2.0 to 2.35 at the shoulder, the slope from the neckline to the acromion widened (hw 0.19 / 0.172 / 0.136 / 0.1 at h 0.53 / 0.552 / 0.572 / 0.586), sleeve heads start 2 cm above the joint and lie inside the trunk; same at 1:100, 1:200, 1:500.
+- Sneakers: flat extruded sole plates with a step between rear and toe part and the upper sitting on top with a waist. Now rounded cupsole lofts (26 mm heel, 22 mm ball, toe part thinning to 15 mm and lifting 9 mm = toe spring), upper and toe box seated 10 mm into the sole, smoother heel counter, rounded laces; 1:500 toe box overlap fixed (it showed as a nozzle and gave a print sliver).
+- Kangaroo pocket: jagged bottom corners. Now 17 sections over +-0.135 m, tilted to the belly, thinning at the sides.
+- Hem and seat: z-fighting patches where the jeans seat met the hoodie hem (all scales, a ragged patch at 1:500). Seat narrowed to lie inside the hem, hem rib widened; at 1:200 and 1:500 the thigh tops are now inside the hoodie (they were the ragged patch at the hip).
+- Elbow: the upper-sleeve end dome halved (no bulb), the forearm sleeve starts inside it (no band on the hanging arm).
+- Rig/pose: default pose left arm abduction 3 -> 7 degrees so the hanging forearm no longer passes 4 cm through the hoodie; wall fit re-run (root x of all poses follows the new back: 0.2375 -> 0.2162, folded root -0.1 -> -0.87 degrees, phone-call 0.2174 -> 0.2016, pushing-off 0.1396 -> 0.1406, standing-away 0.3297 -> 0.3366); `dimensions` widthM 0.54 -> 0.52 (wall face to toe tips, the roll no longer sticks out behind), depthM 0.50 -> 0.54 (left elbow spread). 2D of all scales and views redrawn from the bodies by `r3-leaning-person-draw2d.ts` (ruling E1).
+- Structure: scapular spines and clavicle ends pulled inside the narrower shoulder (they stood 12 mm outside the plan silhouette).
+- Print suitability (new PRINT check; the catalog was INVALID before this round): 1:500 mittens made thicker (generalised hands 54 mm, visible beside the hips at 1:1000), the 1:500 toe box overlap fixed. Both assets now VALID with print checks.
+- Decisions 1:50 and 1:100 rewritten (en, de) for hood, cowl, shoulders and soles.
+
+### Checks
+
+`r3-validate.ts humans/leaning-person --volumes`: schema 0, validateAsset 0, checkVolumes 4. `volumes-check.ts --product`: FAIL 4 measurements over 2 rule lines, only `volumes-thermal-coverage` areas at 1:50 / 1:100: `leg-clothing` 0.852 against 0.61 (+40 %), `shoes` 0.178 / 0.172 against 0.125 (+43 % / +38 %) — body-model regions (C18), already filed in `author-requests.md` (2026-11-20 r3 humans/leaning-person); `arm-clothing` now passes (+28 %). Every other rule green at every scale.
+
+### Remaining
+
+- Areas above (area reviewers, C18/C27).
+- Shank 3.1 % and knee 2.9 % short of Winter's shares (the de Leva shank of the asset was kept): moving the knee up 14 mm means re-cutting every thigh and shank station at four scales and re-solving five poses and two clips; not done in this round.
+- 1:500: the elbow seam of upper and forearm shows as a jagged intersection line; hands are generalised mittens thicker than real (print floor).
+- Face plain (no eyelids, nostrils); no cloth folds beyond hem, cuffs, cowl and jeans hem; ilia of the skeleton remain plates.
+- In the upright poses the cowl forms a 2 to 3 cm bulge at the nape (as a bunched hood does).

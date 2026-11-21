@@ -9,9 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use pack::snapshot::ArtifactDsl;
 
-/// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewriting` DSL — mirrors the
-/// `trinity-rewriting` app's own real default rule over a trimmed two-node/one-edge slice of the
-/// bundled `🔱️nakagin-capsule-tower.trinity` working-graph.
+/// 📄️ The bundled Nakagin `label-core` rewrite rule and its composed working-graph reference.
 pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.rewriting` DSL text into a `RewritingSnapshot`.
@@ -56,7 +54,7 @@ impl pack::snapshot::ArtifactDsl for RewritingSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse_exact(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {

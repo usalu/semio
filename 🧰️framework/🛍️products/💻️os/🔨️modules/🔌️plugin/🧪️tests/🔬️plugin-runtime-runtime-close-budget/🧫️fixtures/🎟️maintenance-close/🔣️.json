@@ -1,0 +1,10 @@
+{
+  "mountedClosePolicy": [64, 32768, 16777216, 1048576],
+  "callerGrant": [64, 65536, 16777216, 1048576],
+  "cases": [
+    { "receipt": [1, 32769, 0, 0], "complete": false, "empty": false, "callerAccepted": 1, "mountedAccepted": 0 },
+    { "receipt": [1, 65537, 0, 0], "complete": false, "empty": false, "callerAccepted": 0, "mountedAccepted": 0 },
+    { "receipt": [1, 32768, 0, 0], "complete": true, "empty": false, "callerAccepted": 0, "mountedAccepted": 0 },
+    { "receipt": [1, 32768, 0, 0], "complete": true, "empty": true, "callerAccepted": 1, "mountedAccepted": 1 }
+  ]
+}

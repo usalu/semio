@@ -38,7 +38,7 @@ export async function registerTests1(
   } = dependencies;
   const { CARGO_BINARY_SOURCES_SCHEMA_V1, CARGO_BUILD_OWNER_PID_ENV, cargoBinarySourcesFreshnessV1, cargoBuildOwnerAliveV1 } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts");
   const { cargoDepInfoSourcesV1 } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts");
-  const gate = JSON.parse(readFileSync(new URL("./🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
+  const gate = JSON.parse(readFileSync(new URL("../🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
     sourcesFile: string;
     depInfoCases: Array<{ name: string; text: string; sources: string[] }>;
     freshnessCases: Array<{ name: string; builtAtMs: number; modified: Record<string, number | null>; fresh: boolean; changed: string | null }>;
@@ -47,7 +47,7 @@ export async function registerTests1(
   const { describe, expect, it } = vitest;
 
   describe("resolveMcpBinaryPath", () => {
-    const fixture = JSON.parse(readFileSync(new URL("./🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
+    const fixture = JSON.parse(readFileSync(new URL("../🎚️config/🧱️binary-gate.json", source.url), "utf8")) as {
       pathCases: Array<{ name: string; platform: NodeJS.Platform; repoRoot: string; environment: NodeJS.ProcessEnv; expected: string }>;
     };
 

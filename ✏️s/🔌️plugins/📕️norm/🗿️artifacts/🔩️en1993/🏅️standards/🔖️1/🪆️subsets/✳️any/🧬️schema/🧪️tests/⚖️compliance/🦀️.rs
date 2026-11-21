@@ -56,10 +56,37 @@ fn critical_temperature_eq_4_22() {
 }
 
 #[test]
-fn fatigue_category_71_damage_tolerant() {
-    let dc = part_1_9::detail_category_pa(71);
-    approx(dc / 1e6, 71.0, 0.1);
-    assert_eq!(part_1_9::gamma_mf(part_1_9::AssessmentMethod::DamageTolerant), 1.0);
+fn fatigue_method_and_consequence_govern_document_checks() {
+    use semio_s_artifact_norm_en1993_model::{FatigueBand, FatigueConsequence, FatigueMethod};
+
+    for fixture in include_str!("fatigue-resistance-factors.tsv").lines().skip(1) {
+        let cells: Vec<_> = fixture.split('\t').collect();
+        let method = match cells[0] {
+            "damage-tolerant" => FatigueMethod::DamageTolerant,
+            "safe-life" => FatigueMethod::SafeLife,
+            value => panic!("unknown fixture method {value}"),
+        };
+        let consequence = match cells[1] {
+            "low" => FatigueConsequence::Low,
+            "high" => FatigueConsequence::High,
+            value => panic!("unknown fixture consequence {value}"),
+        };
+        for (annex, column) in [(AnnexChoice::En, 2), (AnnexChoice::De, 3)] {
+            let expected = cells[column].parse::<f64>().unwrap();
+            approx(part_1_9::gamma_mf(method, consequence, annex), expected, 0.0);
+            let mut document = En1993Snapshot::compliant_heb240_frame();
+            document.annex = annex;
+            let detail = &mut document.fatigue_details[0];
+            detail.method = method;
+            detail.consequence = consequence;
+            detail.category = 100;
+            detail.spectrum = vec![FatigueBand { id: "range".into(), delta_sigma: 100e6, cycles: 2e6 }];
+            let id = format!("en1993.1-9.fat.{}", detail.id);
+            let report = check_full_steel_structure(&document);
+            let damage = report.checks.iter().find(|check| check.id == id).unwrap();
+            approx(damage.utilization, expected.powi(3), 1e-12);
+        }
+    }
 }
 
 #[test]

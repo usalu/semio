@@ -1,0 +1,17 @@
+[
+  {
+    "name": "archive replacement records a command without a document edit",
+    "upserts": [{ "actionId": "setActiveExample", "applied": false, "revertible": false, "opCount": 0 }],
+    "expected": null
+  },
+  {
+    "name": "undo removes the selected example edit",
+    "upserts": [{ "actionId": "setActiveExample", "editId": "example-edit", "applied": false, "revertible": false, "opCount": 1 }],
+    "expected": "demo"
+  },
+  {
+    "name": "an applied edit can be nonrevertible for the local actor",
+    "upserts": [{ "actionId": "setActiveExample", "editId": "example-edit", "applied": true, "revertible": false, "opCount": 1 }],
+    "expected": "concrete-forest"
+  }
+]

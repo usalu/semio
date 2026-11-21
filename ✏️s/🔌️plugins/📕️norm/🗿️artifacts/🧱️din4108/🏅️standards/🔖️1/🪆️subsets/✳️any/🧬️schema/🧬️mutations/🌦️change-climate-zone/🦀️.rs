@@ -38,8 +38,31 @@ impl<Op> protocol::ColdMutationKind<Din4108Snapshot, Op> for ChangeClimateZone w
 }
 
 //#region 🪢️Mounts
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
-#[path = "↩️inverse/🦀️.rs"]
-pub mod inverse;
+pub mod diff {
+    //! 🔺️ `change-climate-zone` diff.
+
+    use crate::change_climate_zone::ChangeClimateZone;
+    use semio_s_artifact_norm_din4108_diff::Din4108Diff;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+
+    pub fn diff(payload: &ChangeClimateZone, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
+        if base.climate_zone == payload.new_climate_zone {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "climate_zone already has this value.");
+        }
+        protocol::MutationOutcome::new(Din4108Diff { climate_zone: Some(payload.new_climate_zone), ..Default::default() })
+    }
+}
+pub mod inverse {
+    //! ↩️ `change-climate-zone` inverse.
+
+    use crate::change_climate_zone::ChangeClimateZone;
+    use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
+
+    pub fn inverse<Op>(_payload: &ChangeClimateZone, base: &Din4108Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_climate_zone::ChangeClimateZone> {
+        Ok((|| {
+        vec![Op::from(ChangeClimateZone { new_climate_zone: base.climate_zone })]
+
+        })())
+    }
+}
 //#endregion 🪢️Mounts

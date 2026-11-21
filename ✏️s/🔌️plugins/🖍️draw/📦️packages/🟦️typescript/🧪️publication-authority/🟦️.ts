@@ -129,7 +129,20 @@ export async function proveDrawPublicationAuthority(packageRoot: string, subset:
       const appSources = [app.source, app.manifestSource].map(file => readModuleTreeSource(resolve(plugin, file)));
       sources.set(app.owner, appSources.join("\n"));
       const producer = await Bun.file(resolve(plugin, app.reservedProducerSource)).text();
-      requireSource(producer, "Draw clipboard producer", ["request.snapshot_read.duplicate_original(&mut workspace.unsealed", "workspace.sealing.begin(read)", "workspace.sealing.step(&mut workspace.source,grant)", "NativeEncodeControl::resume", "NativeDecodeControl::resume", "DrawingLayerCloneWorkAuthority", "fn close_demands", "fn terminal_is_empty"]);
+      requireSource(producer, "Draw clipboard producer", [
+        "request.snapshot_read.duplicate_original(&mut workspace.unsealed",
+        "workspace.sealing.begin(read)",
+        "workspace.sealing.next_demand()?",
+        "retained_clone_grant_admits(grant,demand)",
+        "cx.with_original_effect(grant, |_, effect|",
+        "workspace.sealing.step(&mut workspace.source, effect)",
+        "turn.map(|turn| semio_framework_job::receive_original_retained_work(cx, turn))",
+        "NativeEncodeControl::resume",
+        "NativeDecodeControl::resume",
+        "DrawingLayerCloneWorkAuthority",
+        "fn close_demands",
+        "fn terminal_is_empty",
+      ]);
     }
     if (!oracle(fixture, sources)) throw new Error("Draw publication-authority oracle rejected production");
     let hostile = 0;

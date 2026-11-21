@@ -3,7 +3,7 @@
 #[path = "🧷️assembly/🦀️.rs"]
 pub mod assembly;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::{Mutex, OnceLock};
 
 //#region 🔖️SchemaFormat
@@ -421,8 +421,8 @@ impl Scan<'_> {
 /// fixture-local fallback.
 #[derive(Clone)]
 pub struct SchemaExportRegistry {
-    facets: HashMap<&'static str, [FacetLeaves; 4]>,
-    named: HashMap<&'static str, &'static [SchemaExport]>,
+    facets: BTreeMap<&'static str, [FacetLeaves; 4]>,
+    named: BTreeMap<&'static str, &'static [SchemaExport]>,
 }
 
 impl Default for SchemaExportRegistry {
@@ -434,7 +434,7 @@ impl Default for SchemaExportRegistry {
 impl SchemaExportRegistry {
     /// ⬜️ Empty registry.
     pub fn new() -> Self {
-        Self { facets: HashMap::new(), named: HashMap::new() }
+        Self { facets: BTreeMap::new(), named: BTreeMap::new() }
     }
 
     /// 🎹️ Adds one scope's four fixed facet leaves, positionally keyed by
@@ -571,7 +571,7 @@ pub struct AppSchemaDescriptor {
 /// ⚙️ Runtime registry of [`ArtifactSchemaDescriptor`] values — same shape as [`SchemaCatalog`].
 #[derive(Clone)]
 pub struct ArtifactSchemaRegistry {
-    by_id: HashMap<&'static str, ArtifactSchemaDescriptor>,
+    by_id: BTreeMap<&'static str, ArtifactSchemaDescriptor>,
 }
 
 impl Default for ArtifactSchemaRegistry {
@@ -583,7 +583,7 @@ impl Default for ArtifactSchemaRegistry {
 impl ArtifactSchemaRegistry {
     /// 🆕️ Empty registry.
     pub fn new() -> Self {
-        Self { by_id: HashMap::new() }
+        Self { by_id: BTreeMap::new() }
     }
 
     /// ➕️ Insert or replace a descriptor by id.
@@ -617,7 +617,7 @@ impl ArtifactSchemaRegistry {
 /// 🧠️ Runtime registry of [`ArtifactInferenceDescriptor`] values.
 #[derive(Clone)]
 pub struct ArtifactInferenceRegistry {
-    by_id: HashMap<&'static str, ArtifactInferenceDescriptor>,
+    by_id: BTreeMap<&'static str, ArtifactInferenceDescriptor>,
 }
 
 impl Default for ArtifactInferenceRegistry {
@@ -629,7 +629,7 @@ impl Default for ArtifactInferenceRegistry {
 impl ArtifactInferenceRegistry {
     /// 🕳️ Empty registry.
     pub fn new() -> Self {
-        Self { by_id: HashMap::new() }
+        Self { by_id: BTreeMap::new() }
     }
 
     /// 🔄️ Insert or replace a descriptor by id.
@@ -663,7 +663,7 @@ impl ArtifactInferenceRegistry {
 /// 📱️ Runtime registry of [`AppSchemaDescriptor`] values — app twin of [`ArtifactSchemaRegistry`].
 #[derive(Clone)]
 pub struct AppSchemaRegistry {
-    by_id: HashMap<&'static str, AppSchemaDescriptor>,
+    by_id: BTreeMap<&'static str, AppSchemaDescriptor>,
 }
 
 impl Default for AppSchemaRegistry {
@@ -675,7 +675,7 @@ impl Default for AppSchemaRegistry {
 impl AppSchemaRegistry {
     /// 🧺️ Empty registry.
     pub fn new() -> Self {
-        Self { by_id: HashMap::new() }
+        Self { by_id: BTreeMap::new() }
     }
 
     /// 🔀️ Insert or replace a descriptor by owner id.
@@ -729,7 +729,7 @@ struct CatalogState {
     inferences: ArtifactInferenceRegistry,
     apps: AppSchemaRegistry,
     exports: SchemaExportRegistry,
-    facet_publications: HashMap<&'static str, FacetPublication>,
+    facet_publications: BTreeMap<&'static str, FacetPublication>,
     documents: Vec<&'static str>,
 }
 
@@ -742,8 +742,8 @@ fn catalog() -> &'static Mutex<CatalogState> {
 trait Descriptor: Copy + PartialEq {
     const FAMILY: &'static str;
     fn id(&self) -> &'static str;
-    fn entries(state: &CatalogState) -> &HashMap<&'static str, Self>;
-    fn entries_mut(state: &mut CatalogState) -> &mut HashMap<&'static str, Self>;
+    fn entries(state: &CatalogState) -> &BTreeMap<&'static str, Self>;
+    fn entries_mut(state: &mut CatalogState) -> &mut BTreeMap<&'static str, Self>;
     fn mirror(&self, _state: &CatalogState) -> Result<(), SchemaDescriptorRegistryError> { Ok(()) }
     fn publish_mirror(&self, _state: &mut CatalogState) {}
 }
@@ -751,8 +751,8 @@ trait Descriptor: Copy + PartialEq {
 impl Descriptor for ArtifactSchemaDescriptor {
     const FAMILY: &'static str = "artifact-schema";
     fn id(&self) -> &'static str { self.id }
-    fn entries(state: &CatalogState) -> &HashMap<&'static str, Self> { &state.artifacts.by_id }
-    fn entries_mut(state: &mut CatalogState) -> &mut HashMap<&'static str, Self> { &mut state.artifacts.by_id }
+    fn entries(state: &CatalogState) -> &BTreeMap<&'static str, Self> { &state.artifacts.by_id }
+    fn entries_mut(state: &mut CatalogState) -> &mut BTreeMap<&'static str, Self> { &mut state.artifacts.by_id }
     fn mirror(&self, state: &CatalogState) -> Result<(), SchemaDescriptorRegistryError> {
         if state.exports.facets.get(self.id).is_some_and(|existing| *existing != self.facet_leaves())
             && state.facet_publications.get(self.id) != Some(&FacetPublication::Descriptor) {
@@ -769,19 +769,19 @@ impl Descriptor for ArtifactSchemaDescriptor {
 impl Descriptor for ArtifactInferenceDescriptor {
     const FAMILY: &'static str = "artifact-inference";
     fn id(&self) -> &'static str { self.id }
-    fn entries(state: &CatalogState) -> &HashMap<&'static str, Self> { &state.inferences.by_id }
-    fn entries_mut(state: &mut CatalogState) -> &mut HashMap<&'static str, Self> { &mut state.inferences.by_id }
+    fn entries(state: &CatalogState) -> &BTreeMap<&'static str, Self> { &state.inferences.by_id }
+    fn entries_mut(state: &mut CatalogState) -> &mut BTreeMap<&'static str, Self> { &mut state.inferences.by_id }
 }
 
 impl Descriptor for AppSchemaDescriptor {
     const FAMILY: &'static str = "app-schema";
     fn id(&self) -> &'static str { self.id }
-    fn entries(state: &CatalogState) -> &HashMap<&'static str, Self> { &state.apps.by_id }
-    fn entries_mut(state: &mut CatalogState) -> &mut HashMap<&'static str, Self> { &mut state.apps.by_id }
+    fn entries(state: &CatalogState) -> &BTreeMap<&'static str, Self> { &state.apps.by_id }
+    fn entries_mut(state: &mut CatalogState) -> &mut BTreeMap<&'static str, Self> { &mut state.apps.by_id }
 }
 
 fn validate_descriptors<T: Descriptor>(state: &CatalogState, descriptors: &[T]) -> Result<(), SchemaDescriptorRegistryError> {
-    let mut proposed = HashMap::new();
+    let mut proposed = BTreeMap::new();
     for descriptor in descriptors {
         let existing = proposed.get(descriptor.id()).or_else(|| T::entries(state).get(descriptor.id()));
         if existing.is_some_and(|existing| existing != descriptor) {

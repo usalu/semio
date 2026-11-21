@@ -573,6 +573,8 @@ pub struct En1998Diff {
     pub pier_bases: En1998PierBaseDelta,
     #[state(artifact)]
     pub critical_regions: En1998CriticalRegionDelta,
+    #[state(artifact)]
+    pub cases: semio_s_plugin_norm_compliance::design_case::CaseRowDelta,
 }
 //#endregion 🔖️Diff
 
@@ -606,6 +608,7 @@ impl protocol::ColdMutationDiff<En1998Snapshot> for En1998Diff {
         self.isolation_systems.absorb(other.isolation_systems);
         self.pier_bases.absorb(other.pier_bases);
         self.critical_regions.absorb(other.critical_regions);
+        self.cases.absorb(other.cases);
     }
     fn apply(&self, unpublished: &mut En1998Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         let base = &*unpublished;
@@ -636,6 +639,7 @@ impl protocol::ColdMutationDiff<En1998Snapshot> for En1998Diff {
         next.isolation_systems = self.isolation_systems.commit_onto(&base.isolation_systems, capability).map_err(|error| error.under(["isolationSystems"]))?;
         next.pier_bases = self.pier_bases.commit_onto(&base.pier_bases, capability).map_err(|error| error.under(["pierBases"]))?;
         next.critical_regions = self.critical_regions.commit_onto(&base.critical_regions, capability).map_err(|error| error.under(["criticalRegions"]))?;
+        next.cases = self.cases.commit_onto(&base.cases, capability).map_err(|error| error.under(["cases"]))?;
         *unpublished = next;
         Ok(())
     }
@@ -664,6 +668,7 @@ impl DiffAlgebra<En1998Snapshot> for En1998Diff {
             && self.isolation_systems.is_empty()
             && self.pier_bases.is_empty()
             && self.critical_regions.is_empty()
+            && self.cases.is_empty()
     }
 }
 impl protocol::ColdDiffAlgebra<En1998Snapshot> for En1998Diff {
@@ -691,6 +696,7 @@ impl protocol::ColdDiffAlgebra<En1998Snapshot> for En1998Diff {
             isolation_systems: self.isolation_systems.inverse(&base.isolation_systems),
             pier_bases: self.pier_bases.inverse(&base.pier_bases),
             critical_regions: self.critical_regions.inverse(&base.critical_regions),
+            cases: self.cases.inverse(&base.cases),
         }
     }
 }

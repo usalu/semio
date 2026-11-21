@@ -13,7 +13,7 @@ import {
   useState
 } from "../../⚛️react-port/🟦️.ts";
 import { createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
-import { registerIntroductionSurfaceResolver, useLabel, type CanvasPickTarget } from "@semio-tech/ui-react";
+import { registerIntroductionSurfaceResolver, useLabel } from "@semio-tech/ui-react";
 import {
   windowElementId,
   type ActionDescriptor,
@@ -91,7 +91,6 @@ export function useFlowSurfaceState({
   const appCatalogue = useAppCatalogue();
   const appCatalogueRef = useRef(appCatalogue);
   appCatalogueRef.current = appCatalogue;
-  const pickTargetsRef = useRef<readonly CanvasPickTarget[]>([]);
   const sceneSignature = useMemo(() => JSON.stringify(scene), [scene]);
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
@@ -128,7 +127,7 @@ export function useFlowSurfaceState({
     setContextMenu, contextMenuTitleLabel, wireRefusal, setWireRefusal, wireRefusalText, selectionBounds,
     setSelectionBounds, marquee, setMarquee, labelStateJson, setLabelStateJson, sliderStateJson, setSliderStateJson,
     containerSize, setContainerSize, sessionReady, setSessionReady, overlayRequestRef, spotlight, setSpotlight,
-    spotlightSections, setSpotlightSections, appCatalogue, appCatalogueRef, pickTargetsRef, sceneSignature, sceneRef
+    spotlightSections, setSpotlightSections, appCatalogue, appCatalogueRef, sceneSignature, sceneRef
   };
 }
 //#endregion FlowGraphCanvasHost

@@ -23,10 +23,10 @@ pub(crate) use ink_document_model_and_edit_helpers::{
 #[path = "🔎️ink-interaction-document-and-block-scanning/🦀️.rs"]
 mod ink_interaction_document_and_block_scanning;
 pub use ink_interaction_document_and_block_scanning::{
-    collect_ink_document_block_spans, InkInteractionDocument, INK_EVENT_JSON_BYTE_CAPACITY,
+    collect_ink_document_block_spans, InkBlockPosition, InkInteractionDocument, INK_EVENT_JSON_BYTE_CAPACITY,
     INK_INTERACTION_DOCUMENT_BYTE_CAPACITY, INK_INTERACTION_ITEM_CAPACITY,
 };
-use ink_interaction_document_and_block_scanning::INK_SELECTION_ITEM_CAPACITY;
+use ink_interaction_document_and_block_scanning::{collect_ink_document_block_positions, INK_SELECTION_ITEM_CAPACITY};
 
 #[path = "📤️ink-event-pages-and-edit-routing/🦀️.rs"]
 mod ink_event_pages_and_edit_routing;

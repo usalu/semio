@@ -1,0 +1,23 @@
+{
+  "InsertCase": {
+    "index": 0,
+    "case": {
+      "id": "pressure-test",
+      "labelEn": "Volume-based pressure test",
+      "labelDe": "Volumenbezogene Differenzdruckmessung",
+      "entryId": "G26-01",
+      "numbers": [
+        {
+          "id": "test_volume",
+          "value": 300.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "test_protocol",
+          "value": "unconfirmed"
+        }
+      ]
+    }
+  }
+}

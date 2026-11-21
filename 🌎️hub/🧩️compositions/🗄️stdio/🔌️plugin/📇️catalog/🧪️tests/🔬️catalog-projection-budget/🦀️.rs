@@ -33,11 +33,13 @@ fn catalog_projection_budget_matches_serde_and_refuses_before_overdraw() {
 
 #[test]
 fn catalog_projection_preflight_matches_actual_serde_payload_bytes() {
-    let assemblies = artifact_assemblies().unwrap();
-    let receipts = native_codec_factory_receipts().unwrap();
-    let expected = preflight_native_catalog_projection(&assemblies, &receipts, &native_codec_factories()).unwrap();
-    let contribution = artifact_catalog_contribution(&assemblies).unwrap();
-    let payload = serde_json::to_value(&contribution).unwrap()["payload"].clone();
+    let schema = include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📜️artifact-definition.json");
+    let authored = catalog_definition_from_schema(schema).unwrap();
+    let definitions = [ProjectionDefinition { definition: &authored.definition, authored_executables: Some(&authored.executable_ids) }];
+    let expected = preflight_native_catalog_projection(&definitions, &[]).unwrap();
+    let topic = catalog_contribution(native_artifact_catalog(&definitions, Vec::new()).unwrap()).unwrap();
+    let json = semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&topic.payload));
+    let payload: serde_json::Value = serde_json::from_str(&json).unwrap();
     assert_eq!(serde_json::to_vec(&payload).unwrap().len(), expected.projection);
     assert!(expected.descriptors > 0);
 }

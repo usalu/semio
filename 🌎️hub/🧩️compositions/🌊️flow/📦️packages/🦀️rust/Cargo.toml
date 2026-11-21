@@ -12,6 +12,10 @@ workspace = true
 [package.metadata.semio]
 role = "hub"
 
+[package.metadata.semio.preparation]
+script = "📜️script.ts"
+command = ["graph-generate"]
+
 [lib]
 path = "🦀️.rs"
 

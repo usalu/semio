@@ -1,0 +1,19 @@
+{
+ "cases": [
+  {"head":[],"forwarded":["exhaustive","--owner","xlsx/base","--case","mutate-xlsx-ecma-376"],"stale":true},
+  {"head":[],"forwarded":["exhaustive","--owner-root","xlsx/base","--case","🔀️mutate-xlsx-ecma-376"],"stale":true},
+  {"head":["--lang=de"],"forwarded":["exhaustive","--owner-root","xlsx/base","--case","🔀️mutate-xlsx-ecma-376"],"stale":false},
+  {"head":[],"forwarded":["exhaustive","--case","🔀️mutate-xlsx-ecma-376","--owner-root","xlsx/base"],"stale":true},
+  {"head":[],"forwarded":["one","two"],"stale":true},
+  {"head":[],"forwarded":["one two"],"stale":true},
+  {"head":[],"forwarded":[],"stale":true},
+  {"head":["--verbose"],"forwarded":[],"stale":false}
+ ],
+ "cacheOptions":[
+  {"args":["--skip-cache"],"executes":true},
+  {"args":["--skip-cache=false"],"executes":false},
+  {"args":["--","--skip-cache"],"executes":false},
+  {"args":["--dry-run"],"executes":true},
+  {"args":["--","--dry-run"],"executes":false}
+ ]
+}

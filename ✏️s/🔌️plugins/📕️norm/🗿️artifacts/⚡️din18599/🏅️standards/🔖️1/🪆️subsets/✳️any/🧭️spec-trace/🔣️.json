@@ -1,0 +1,388 @@
+{
+ "code": "din18599",
+ "standard": "DIN V 18599",
+ "spec": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/NORM-ARTIFACTS-FEATURE-COMPLETE-COMPLIANCE-ASSESSMENTS/din18599-normative-scope-2026-11-21.md",
+ "specIds": [
+  "DE-01",
+  "DE-02",
+  "DE-03",
+  "DE-04",
+  "DE-05",
+  "DE-06",
+  "DE-07",
+  "DE-08",
+  "DE-09",
+  "DE-10",
+  "DE-11",
+  "DE-12",
+  "DE-13",
+  "DE-14",
+  "DE-15",
+  "DE-16",
+  "DE-17",
+  "DE-18",
+  "DE-19",
+  "DE-20",
+  "DE-21",
+  "DE-22",
+  "DE-23"
+ ],
+ "items": [
+  {
+   "id": "DE-01",
+   "clause": "DIN V 18599-1:2018-09 / DIN V 18599-10:2018-09",
+   "entity": "Building / Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.1.net-floor-area",
+     "din18599.1.heated-volume",
+     "din18599.1.climate-composition"
+    ]
+   },
+   "description": {
+    "en": "The report checks recorded reference areas, volume and selection of climate data.",
+    "de": "Der Bericht prüft erfasste Bezugsflächen, Volumen und die Auswahl der Klimadaten."
+   }
+  },
+  {
+   "id": "DE-02",
+   "clause": "DIN V 18599-2:2018-09",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.2.heating-demand",
+     "din18599.2.cooling-need."
+    ]
+   },
+   "description": {
+    "en": "The report evaluates modeled heating and cooling demand for the recorded zones.",
+    "de": "Der Bericht bewertet den modellierten Heiz- und Kühlbedarf der erfassten Zonen."
+   }
+  },
+  {
+   "id": "DE-03",
+   "clause": "DIN V 18599-3:2018-09",
+   "entity": "VentilationSystem",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "Air treatment requires verification of humidification, dehumidification and the applicable process branches.",
+     "de": "Die Luftaufbereitung erfordert den Abgleich von Be- und Entfeuchtung sowie der einschlägigen Prozesszweige."
+    }
+   },
+   "description": {
+    "en": "Air treatment requires verification of humidification, dehumidification and the applicable process branches.",
+    "de": "Die Luftaufbereitung erfordert den Abgleich von Be- und Entfeuchtung sowie der einschlägigen Prozesszweige."
+   }
+  },
+  {
+   "id": "DE-04",
+   "clause": "DIN V 18599-4:2018-09",
+   "entity": "Zone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.4.lighting-power."
+    ]
+   },
+   "description": {
+    "en": "The report uses the stored zone's lighting power and assigned use.",
+    "de": "Der Bericht verwendet die Beleuchtungsleistung und Nutzungszuordnung der gespeicherten Zone."
+   }
+  },
+  {
+   "id": "DE-05",
+   "clause": "DIN V 18599-5:2018-09",
+   "entity": "HeatingSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.5.heating-efficiency"
+    ]
+   },
+   "description": {
+    "en": "The assessment evaluates supplied heating efficiency inputs.",
+    "de": "Die Bewertung verwendet die angegebenen Wirkungsgrade der Heizung."
+   }
+  },
+  {
+   "id": "DE-06",
+   "clause": "DIN V 18599-6:2018-09",
+   "entity": "VentilationSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.6.heat-recovery"
+    ]
+   },
+   "description": {
+    "en": "The assessment evaluates the modeled heat-recovery input.",
+    "de": "Die Bewertung prüft die modellierte Angabe zur Wärmerückgewinnung."
+   }
+  },
+  {
+   "id": "DE-07",
+   "clause": "DIN V 18599-7:2018-09",
+   "entity": "CoolingSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.7.cooling"
+    ]
+   },
+   "description": {
+    "en": "The report reaches the implemented cooling system energy calculation.",
+    "de": "Der Bericht führt die implementierte Energieberechnung der Kühlanlage aus."
+   }
+  },
+  {
+   "id": "DE-08",
+   "clause": "DIN V 18599-8:2018-09",
+   "entity": "HotWaterSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.8.dhw"
+    ]
+   },
+   "description": {
+    "en": "The report evaluates modeled domestic hot water energy.",
+    "de": "Der Bericht bewertet den modellierten Energiebedarf für Trinkwarmwasser."
+   }
+  },
+  {
+   "id": "DE-09",
+   "clause": "DIN V 18599-9:2018-09",
+   "entity": "EnergySupply",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The complete generation and allocation methods require normative cases for on-site generation.",
+     "de": "Die vollständigen Erzeugungs- und Aufteilungsmethoden erfordern normative Fälle zur gebäudenahen Erzeugung."
+    }
+   },
+   "description": {
+    "en": "The complete generation and allocation methods require normative cases for on-site generation.",
+    "de": "Die vollständigen Erzeugungs- und Aufteilungsmethoden erfordern normative Fälle zur gebäudenahen Erzeugung."
+   }
+  },
+  {
+   "id": "DE-10",
+   "clause": "DIN V 18599-10:2018-09",
+   "entity": "Use profile / Reference climate",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The stored profiles and climate series need comparison to all applicable publication tables and usage variants.",
+     "de": "Die gespeicherten Profile und Klimareihen müssen mit allen einschlägigen Tabellen und Nutzungsvarianten abgeglichen werden."
+    }
+   },
+   "description": {
+    "en": "The stored profiles and climate series need comparison to all applicable publication tables and usage variants.",
+    "de": "Die gespeicherten Profile und Klimareihen müssen mit allen einschlägigen Tabellen und Nutzungsvarianten abgeglichen werden."
+   }
+  },
+  {
+   "id": "DE-11",
+   "clause": "DIN V 18599-11:2018-09",
+   "entity": "BuildingAutomation",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.11.automation"
+    ]
+   },
+   "description": {
+    "en": "The report assesses the modeled automation class.",
+    "de": "Der Bericht bewertet die modellierte Gebäudeautomationsklasse."
+   }
+  },
+  {
+   "id": "DE-12",
+   "clause": "DIN V 18599-12:2017-04",
+   "entity": "Building",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The residential scope is checked. The published building and system tables and their numerical method still require implementation and validation.",
+     "de": "Der Wohngebäude-Anwendungsbereich wird geprüft. Die veröffentlichten Gebäude- und Anlagentabellen und ihr Rechenverfahren sind noch umzusetzen und zu validieren."
+    }
+   },
+   "description": {
+    "en": "The residential scope is checked. The published building and system tables and their numerical method still require implementation and validation.",
+    "de": "Der Wohngebäude-Anwendungsbereich wird geprüft. Die veröffentlichten Gebäude- und Anlagentabellen und ihr Rechenverfahren sind noch umzusetzen und zu validieren."
+   }
+  },
+  {
+   "id": "DE-13",
+   "clause": "German Building Modernisation Act §§20–21",
+   "entity": "Building",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.geg.qp"
+    ]
+   },
+   "description": {
+    "en": "The report compares its modeled primary energy with the supplied reference.",
+    "de": "Der Bericht vergleicht den modellierten Primärenergiebedarf mit der vorgegebenen Referenz."
+   }
+  },
+  {
+   "id": "DE-14",
+   "clause": "DIN/TS 18599-1:2025-10 and DIN/TS 18599-2:2025-10",
+   "entity": "EnergyBalance",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The revised zone inputs, schedules, primary energy factors and envelope losses need edition-specific calculations.",
+     "de": "Die geänderten Zonenangaben, Nutzungszeiten, Primärenergiefaktoren und Hüllverluste erfordern ausgabespezifische Berechnungen."
+    }
+   },
+   "description": {
+    "en": "The revised zone inputs, schedules, primary energy factors and envelope losses need edition-specific calculations.",
+    "de": "Die geänderten Zonenangaben, Nutzungszeiten, Primärenergiefaktoren und Hüllverluste erfordern ausgabespezifische Berechnungen."
+   }
+  },
+  {
+   "id": "DE-15",
+   "clause": "DIN/TS 18599 Supplement 1:2026-06",
+   "entity": "EnergyBalance",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "The revised inputs, end-energy comparison values and system applicability need direct verification.",
+     "de": "Die überarbeiteten Eingaben, Endenergiekennwerte und Systemanwendungsbereiche müssen direkt geprüft werden."
+    }
+   },
+   "description": {
+    "en": "The revised inputs, end-energy comparison values and system applicability need direct verification.",
+    "de": "Die überarbeiteten Eingaben, Endenergiekennwerte und Systemanwendungsbereiche müssen direkt geprüft werden."
+   }
+  },
+  {
+   "id": "DE-16",
+   "clause": "DIN V 18599-10:2018-09 §5 Table 4",
+   "entity": "ThermalZone",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.10.residential-internal-gains"
+    ]
+   },
+   "description": {
+    "en": "The detailed residential monthly balance derives internal gains from dwelling count category, net floor area and calendar days for the building and reference model.",
+    "de": "Die detaillierte Monatsbilanz für Wohnzonen ermittelt interne Wärmegewinne nach Wohnungszahlklasse, Nettogrundfläche und Kalendertagen für Gebäude und Referenzmodell."
+   }
+  },
+  {
+   "id": "DE-17",
+   "clause": "GModG §§15–16 / Annex 1",
+   "entity": "EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.geg.ht-prime"
+    ]
+   },
+   "description": {
+    "en": "The residential envelope check derives the specific transmission heat loss limit using the reference U-values on the modeled heat-transferring surfaces of the same geometry.",
+    "de": "Der Nachweis der Wohngebäudehülle ermittelt den Grenzwert des spezifischen Transmissionswärmeverlusts mit Referenz-U-Werten für die modellierten wärmeübertragenden Flächen gleicher Geometrie."
+   }
+  },
+  {
+   "id": "DE-18",
+   "clause": "GModG §23 / DIN V 18599-9:2018-09 §7.2",
+   "entity": "EnergySupply",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.geg.renewable-electricity"
+    ]
+   },
+   "description": {
+    "en": "The live balance shows estimated electricity generation, eligible demand and the bounded credit in each month. Verified statutory generation and solar-thermal allocation require separate evidence.",
+    "de": "Die Livebilanz zeigt geschätzte Stromerzeugung, anrechenbaren Bedarf und die begrenzte monatliche Anrechnung. Der verifizierte gesetzliche Ertrag und die Zuordnung der Solarwärme erfordern eigene Nachweise."
+   }
+  },
+  {
+   "id": "DE-19",
+   "clause": "DIN V 18599-10:2018-09 Table E.6 and DIN Annex E interpretation of 2024-12-16",
+   "entity": "Climate / EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.1.climate-composition",
+     "din18599.2.heating-demand"
+    ]
+   },
+   "description": {
+    "en": "The Potsdam horizontal and outdoor-temperature series populate the climate child. Solar gains use the tabulated compass sectors, the mean on sector boundaries and linear interpolation between tabulated tilts.",
+    "de": "Die Reihen für horizontale Einstrahlung und Außentemperatur von Potsdam befüllen das Klimadokument. Solare Gewinne nutzen die tabellierten Himmelsrichtungen, Mittelwerte an Sektorgrenzen und lineare Interpolation zwischen Neigungen."
+   }
+  },
+  {
+   "id": "DE-20",
+   "clause": "DIN V 18599-10:2018-09 §5 Table 4",
+   "entity": "HotWaterSystem",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.10.residential-dhw"
+    ]
+   },
+   "description": {
+    "en": "The residential balance uses mean dwelling size and net floor area for useful domestic hot-water energy and apportions it by calendar days.",
+    "de": "Die Wohngebäudebilanz ermittelt die Trinkwarmwasser-Nutzenergie aus mittlerer Wohnungsgröße und Nettogrundfläche und verteilt sie nach Kalendertagen."
+   }
+  },
+  {
+   "id": "DE-21",
+   "clause": "GModG §22 and Annex 4",
+   "entity": "EnergyCarrier",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.geg.primary-energy-factor-basis"
+    ]
+   },
+   "description": {
+    "en": "All Annex 4 rows are shown. The balance applies fixed carrier factors and flags supply or plant-specific factors that require verification.",
+    "de": "Alle Zeilen der Anlage 4 werden angezeigt. Die Bilanz verwendet feste Energieträgerfaktoren und kennzeichnet versorgungs- oder anlagenspezifische Faktoren mit Nachweisbedarf."
+   }
+  },
+  {
+   "id": "DE-22",
+   "clause": "GModG §19 and Annex 3",
+   "entity": "ThermalZone / EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.geg.mean-u."
+    ]
+   },
+   "description": {
+    "en": "Non-residential envelope limits group exterior components by statutory class and heating setpoint. The mean applies area, adjacency and ground-perimeter rules.",
+    "de": "Für Nichtwohngebäude werden Außenbauteile nach gesetzlicher Klasse und Heizsolltemperatur gruppiert. Der Mittelwert berücksichtigt Flächen, angrenzende Bereiche und den Bodenplattenrand."
+   }
+  },
+  {
+   "id": "DE-23",
+   "clause": "GModG §18 and Annex 2 items 1.1–1.11 and 1.14",
+   "entity": "ThermalZone / EnvelopeElement",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "din18599.geg.qp",
+     "din18599.2.heating-demand"
+    ]
+   },
+   "description": {
+    "en": "The non-residential reference envelope uses the stored geometry, setpoint-specific transmittances, stated glazing characteristics and actual shading factor. Reference plant and solar-control glazing remain subject to verification.",
+    "de": "Die Nichtwohngebäude-Referenzhülle nutzt die erfasste Geometrie, Solltemperatur-abhängige U-Werte, Verglasungskennwerte und die tatsächliche Verschattung. Referenzanlagentechnik und Sonnenschutzverglasung bleiben nachzuweisen."
+   }
+  }
+ ]
+}

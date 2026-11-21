@@ -18,7 +18,7 @@ use super::*;
 /** 📝️ A `CanvasLayerRecord["text"]` mirror. */
 
 #[derive(Deserialize)]
-struct Canvas2dPacketText<'a> {
+pub(super) struct Canvas2dPacketText<'a> {
     #[serde(borrow)]
     pub(crate) content: &'a str,
     #[serde(default = "canvas2d_packet_text_size")]
@@ -61,7 +61,7 @@ pub fn canvas_layer_should_render(layer: &CanvasLayer) -> bool {
 
 fn decode_canvas_image_source(data_url: &str) -> Option<Vec<u8>> {
     let payload = data_url.strip_prefix("data:image/png;base64,").or_else(|| data_url.strip_prefix("data:image/jpeg;base64,")).unwrap_or(data_url);
-    base64::engine::general_purpose::STANDARD.decode(payload).ok()
+    semio_framework_io_base64::base64_standard_decode(payload).ok()
 }
 
 fn decode_canvas_image_bytes(bytes: &[u8]) -> Option<(Vec<u8>, u32, u32)> {

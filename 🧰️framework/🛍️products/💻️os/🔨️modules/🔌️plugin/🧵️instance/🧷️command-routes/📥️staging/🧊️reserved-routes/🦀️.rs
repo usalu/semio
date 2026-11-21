@@ -122,6 +122,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return Ok(());
         };
         if commit.sealed.is_some() {
+            if !commit.meta.terminal_is_empty() {
+                let closed = commit.meta.close_step(cx);
+                self.pending.reserved_commits.push_front(commit);
+                return closed;
+            }
             match commit.permit.lease.retire_step(&self.tools.tool_cancellations, cx) {
                 Ok(true) => {
                     if let Some(Some(outcome)) = commit.sealed.take() {
@@ -211,7 +216,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             FrameworkReservedCommitStage::Route { pins } => {
                 let action = commit.action.clone();
                 if HISTORY_ACTION_IDS.contains(&action.as_str()) {
-                    let outcome=self.commit_framework_history_route(&action,commit.args.as_ref(),&commit.meta,&commit.permit,!pins.is_empty(),identity).await;
+                    let outcome=self.commit_framework_history_route(&action,commit.args.as_ref(),commit.meta.get(),&commit.permit,!pins.is_empty(),identity).await;
                     let result=match outcome{Ok(FrameworkHistoryRouteOutcome::Complete(result))=>result,Ok(FrameworkHistoryRouteOutcome::Pins{changed})=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),resident:Default::default(),changed,closing:!changed};return Ok(None)},Err(error)=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),resident:Default::default(),changed:false,closing:true};return Err(error.into())}};
                     if action == "checkoutCheckpoint" && result.ui_scope != UiDirtyScope::None {
                         let pins = self.child_composition.checkout_cascade_pins(&mut *self.stores)?;
@@ -223,7 +228,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     }
                     Ok(Some(result))
                 } else if action == REVERT_TO_COMMAND_ACTION_ID {
-                    match self.begin_framework_revert_route(commit.args.as_ref(), &commit.meta, identity).await? {
+                    match self.begin_framework_revert_route(commit.args.as_ref(), commit.meta.get(), identity).await? {
                         Ok(result) => Ok(Some(result)),
                         Err(edit_id) => {
                             commit.stage = FrameworkReservedCommitStage::Revert { edit_id,command:None,result:None,resident:Default::default(),closing:false };
@@ -231,7 +236,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         }
                     }
                 } else {
-                    self.commit_framework_shared_host_route(&action, commit.args.as_ref(), &commit.meta, &commit.permit, identity).await.map(Some).map_err(Into::into)
+                    self.commit_framework_shared_host_route(&action, commit.args.as_ref(), commit.meta.get(), &commit.permit, identity).await.map(Some).map_err(Into::into)
                 }
             }
             FrameworkReservedCommitStage::CheckoutChildren { pins, next, result } => {
@@ -249,7 +254,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     Some(false)=>{
                         self.history.cache=None;
                         self.tools.record_command(&mut *self.history,REVERT_TO_COMMAND_ACTION_ID,ActionKind::History,None,None,Vec::new(),None);
-                        Ok(Some(ToolOperations::<A>::empty_result(REVERT_TO_COMMAND_ACTION_ID,&commit.meta,Vec::new(),vec![history_changed_event().await],UiDirtyScope::Full).await))
+                        Ok(Some(ToolOperations::<A>::empty_result(REVERT_TO_COMMAND_ACTION_ID,commit.meta.get(),Vec::new(),vec![history_changed_event().await],UiDirtyScope::Full).await))
                     }
                 }
             }
@@ -259,7 +264,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 if !outcome?{return Ok(None)}
                 self.history.cache=None;
                 if changed{self.tools.record_command(&mut *self.history,&commit.action,ActionKind::History,None,None,Vec::new(),None);}
-                Ok(Some(ToolOperations::<A>::empty_result(&commit.action,&commit.meta,Vec::new(),if changed{vec![history_changed_event().await]}else{Vec::new()},if changed{UiDirtyScope::Full}else{UiDirtyScope::None}).await))
+                Ok(Some(ToolOperations::<A>::empty_result(&commit.action,commit.meta.get(),Vec::new(),if changed{vec![history_changed_event().await]}else{Vec::new()},if changed{UiDirtyScope::Full}else{UiDirtyScope::None}).await))
             }
         }
     }

@@ -79,9 +79,29 @@ export type FrameworkGraphSession = WasmCanvasSession & {
 /** 🎯️ Decodes the native handle target grammar emitted by the shared DAG engine. */
 export function nodeGraphPickChannel(target: Pick<CanvasPickTarget, "domain" | "id"> | null): { readonly nodeId: string; readonly portId: string } | null {
   if (target?.domain !== "handle") return null;
-  const boundary = target.id.indexOf("@");
+  const boundary = target.id.lastIndexOf("@");
   if (boundary <= 0 || boundary === target.id.length - 1) return null;
   return { nodeId: target.id.slice(0, boundary), portId: target.id.slice(boundary + 1) };
+}
+
+/** 🧭️ Authored Flow channel selected by a side-specific native handle. */
+export type FlowGraphChannel = { readonly widgetId: string; readonly port: string; readonly direction: "in" | "out" };
+
+/** 🔗️ Resolves an authored Flow channel to its semantic scene port code. */
+export function projectedFlowPortCode(nodes: readonly NodeGraphNodeRecord[], channel: FlowGraphChannel): string {
+  const node = nodes.find(entry => entry.id === channel.widgetId);
+  const ports = channel.direction === "in" ? node?.inputs : node?.outputs;
+  const projected = ports?.find(port => (port.code ?? portHandleId(port)) === channel.port);
+  return projected ? portHandleId(projected) : channel.port;
+}
+
+/** 🪞️ Resolves a semantic scene port to the Flow renderer's typed authored channel. */
+export function authoredFlowChannel(nodes: readonly NodeGraphNodeRecord[], widgetId: string, portCode: string): FlowGraphChannel | undefined {
+  const node = nodes.find(entry => entry.id === widgetId);
+  const input = node?.inputs?.find(port => portHandleId(port) === portCode);
+  if (input) return { widgetId, port: input.code ?? portCode, direction: "in" };
+  const output = node?.outputs?.find(port => portHandleId(port) === portCode);
+  return output && { widgetId, port: output.code ?? portCode, direction: "out" };
 }
 
 /** 🎛️ Admits physical graph facts under the request's live cancellation and bounded publication policy. */

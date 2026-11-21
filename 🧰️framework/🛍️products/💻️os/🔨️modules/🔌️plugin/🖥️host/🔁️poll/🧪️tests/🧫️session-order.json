@@ -1,5 +1,15 @@
 {
   "version": 1,
+  "escrowExtents": [
+    { "bytes": 47, "rows": null },
+    { "bytes": 48, "rows": 0 },
+    { "bytes": 184, "rows": null },
+    { "bytes": 232, "rows": 1 },
+    { "bytes": 600, "rows": 3 },
+    { "bytes": 601, "rows": null },
+    { "bytes": 5936, "rows": 32 },
+    { "bytes": 6120, "rows": null }
+  ],
   "order": [
     "aggregateOrigins",
     "aggregatePurposes",

@@ -10,7 +10,7 @@ pub const INSPECTOR_BODY_KEY: &str = "pdf.object";
 
 pub const OBJECT_DOMAIN: &str = "objects";
 
-const PAGE_ACTIONS: [&str; 67] = [
+const PAGE_ACTIONS: [&str; 68] = [
     "set-text",
     "move",
     "resize",
@@ -29,6 +29,7 @@ const PAGE_ACTIONS: [&str; 67] = [
     "set-annotation",
     "set-image",
     "set-font",
+    "set-font-size",
     "set-outline",
     "set-page-rotation",
     "set-page-box",

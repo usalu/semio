@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "dependencies": [["descriptor", "used"]],
+  "cases": [
+    {"id": "stable", "mutation": "none", "package": null, "outcome": "spawn"},
+    {"id": "unrelated lock row changed while waiting", "mutation": "capacity", "package": "unrelated", "outcome": "spawn"},
+    {"id": "selected lock row changed while waiting", "mutation": "capacity", "package": "used", "outcome": "retry"},
+    {"id": "selected lock row changed by reconciliation", "mutation": "lock", "package": "used", "outcome": "retry"},
+    {"id": "cancelled after reconciliation", "mutation": "cancel", "package": null, "outcome": "cancel"}
+  ]
+}

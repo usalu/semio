@@ -12,7 +12,7 @@ export { withRepositoryCompilerLaneV1, withRepositoryCompilerStoreLaneV1, withRe
 export { repositoryCachePartitionRootDataV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 export { withRepositoryCacheStoreV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 export type { RepositoryCacheStoreV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-export { repositoryCachePartitionRootV1, repositoryLeaseDirectoryV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+export { repositoryCachePartitionDirectoryV1, repositoryCachePartitionRootV1, repositoryLeaseDirectoryV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 export { default as enforcementBudgetPolicy } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with { type: "json" };
 export { withRepositoryBuildGraphArtifactV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts";
 export { playPagesArtifactCohortV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/📚️cohorts/🟦️.ts";

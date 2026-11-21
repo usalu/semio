@@ -8,7 +8,8 @@ import {buildInvocationGraphSelectionV1} from "../../🕸️graph/🚪️admissi
 import type {BuildGraphV1} from "../../🕸️graph/📋️model/🟦️.ts";
 import residentSchema from "../../🏡️resident/🧬️schema/🔣️.json" with {type:"json"};
 import scopeSchema from "../../🧭️selection/🎯️scope/🧬️schema/🔣️.json" with {type:"json"};
-import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
+import {BUILD_TEXTS_V1,refuseBuildV1} from "../../📖️texts/🟦️.ts";
+import {textV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import {parseBuildInvocationV1,resolveBuildInvocationV1,buildInvocationRequestsHelpV1} from "../🟦️.ts";
 
 export {PLANNED_COMMANDS_V1}from"../../🌡️host-capacity/🎯️planned-commands/🟦️.ts";
@@ -125,7 +126,9 @@ export async function requestInvocationPlanV1(options:Readonly<{root:string;requ
  if(!reply.slice)throw Error("The host service answered without a graph slice\nDer Host-Dienst antwortete ohne Graph-Ausschnitt");
  const handoff={path:join(result.runtime.directory,"plans-"+result.runtime.tag,reply.slice.hash+".json"),hash:reply.slice.hash,size:reply.slice.size};
  const document=readSliceV1(handoff),plan=result.plan as PlanReplyV1["plan"];
- return Object.freeze({keys:Object.fromEntries(plan.tasks.filter(task=>typeof task.key==="string").map(task=>[task.id,task.key as string])),revision:reply.revision,...reply.manifest?{manifest:reply.manifest}:{},...reply.pin?{pin:reply.pin}:{},scoped:scopedPlanOfReplyV1(request,plan.tasks),stale:plan.tasks.filter(task=>task.stale).map(task=>task.id),cacheHits:reply.cacheHits,handoff,generationKey:createHash("sha256").update(document.generationPin??reply.manifest??reply.revision).digest("hex")});
+ const answer=Object.freeze({keys:Object.fromEntries(plan.tasks.filter(task=>typeof task.key==="string").map(task=>[task.id,task.key as string])),revision:reply.revision,...reply.manifest?{manifest:reply.manifest}:{},...reply.pin?{pin:reply.pin}:{},scoped:scopedPlanOfReplyV1(request,plan.tasks),stale:plan.tasks.filter(task=>task.stale).map(task=>task.id),cacheHits:reply.cacheHits,handoff,generationKey:createHash("sha256").update(document.generationPin??reply.manifest??reply.revision).digest("hex")});
+ write(textV1(BUILD_TEXTS_V1.catalog,"graph.plan-verified",language));
+ return answer;
 }
 
 /** 📦️ Reads and verifies the content-addressed slice document the service wrote. */

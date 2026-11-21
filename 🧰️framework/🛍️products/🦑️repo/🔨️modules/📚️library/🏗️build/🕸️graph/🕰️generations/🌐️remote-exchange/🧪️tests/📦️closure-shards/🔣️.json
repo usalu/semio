@@ -1,0 +1,13 @@
+{
+  "fragments": 5101,
+  "uniqueClosures": 20671,
+  "ownerLinks": 73950,
+  "actionBytesCeiling": 850000,
+  "shards": 21,
+  "cases": [
+    {"condition": "missing shard", "head": "incomplete"},
+    {"condition": "omitted shard", "head": "incomplete"},
+    {"condition": "missing leaf", "head": "incomplete"},
+    {"condition": "complete", "head": "restored"}
+  ]
+}

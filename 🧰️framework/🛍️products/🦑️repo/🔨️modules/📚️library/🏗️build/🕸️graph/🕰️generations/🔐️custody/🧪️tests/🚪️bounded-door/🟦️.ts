@@ -1,5 +1,6 @@
 /** 🚪️ Contract: a waiter at the door is told who holds it (pid, command, start, code, phase and owners done of total, time without progress) in its language and again at every notice; a holder that does not advance for the declared time, or runs other code than the library while someone waits, is asked to hand over at its next unit, and one that does not answer within the grace loses the door; progress (phase or owners done) decides, never elapsed time; a holder that finished owners gives them back so a read of exactly those owners is not kept waiting; a structural claim stays exclusive. */
 import {afterAll,expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
 import {existsSync,mkdtempSync,readdirSync,realpathSync,rmSync,writeFileSync,mkdirSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -106,4 +107,65 @@ test("sidecars of a dead claim are removed with it and the claim document stays 
  expect(()=>readCustodyClaimV1({version:1,token,ticket:1,owners:[],structural:false,state:"held",queuedMs:1,holder:{...holder(1),pid:0}})).toThrow();
  expect(readCustodyClaimV1({version:1,token,ticket:1,owners:[],structural:false,state:"held",queuedMs:1,holder:holder(1)}).holder).toEqual(holder(1));
  expect(existsSync(join(directory,token+".ask.json"))).toBe(false);
+});
+
+test("competing waiters keep the single ask and its original grace",async()=>{
+ const{custody,clock,root,directory}=world(),a=await custody.hold({structural:true,holder:holder(4711)}),controller=new AbortController();
+ writeFileSync(join(directory,a.token+".ask.json"),"{");
+ const fromPeer=()=>createSliceCustodyV1({root:join(root,"generations"),fs:createNodeFilePortV1(),lease:createFileClaimLeasePortV1(join(root,"leases")),now:()=>clock.t});
+ const selected=Promise.withResolvers<void>(),resume=Promise.withResolvers<void>(),asked=Promise.withResolvers<void>(),observed=Promise.withResolvers<void>();
+ const events:string[]=[],step=Math.max(1,Math.floor(CUSTODY_POLICY_V1.askGraceMilliseconds/4));
+ const older=fromPeer().hold({structural:true,signal:controller.signal,holder:holder(4712,other),async currentDigest(){
+  await a.fence(()=>{selected.resolve();});
+  await resume.promise;
+  return other;
+ },say:key=>{if(key==="askedStale")events.push("older");if(key==="blockedAll")observed.resolve();}}).catch(()=>undefined);
+ let newer:typeof older|undefined;
+ try{
+  await selected.promise;
+  clock.t+=step;const askedAt=clock.t;
+  newer=fromPeer().hold({structural:true,signal:controller.signal,holder:holder(4713,other),currentDigest:()=>other,say:key=>{if(key==="askedStale"){events.push("newer");asked.resolve();}}}).catch(()=>undefined);
+  await asked.promise;
+  const initial=await a.handover();
+  clock.t+=step;resume.resolve();
+  await observed.promise;
+  using oracle=new Database(":memory:");
+  const expected=oracle.query("SELECT count(*) AS reports, min(at) AS at FROM (SELECT ? AS at)").get(askedAt);
+  expect({reports:events.length,at:(await a.handover())?.ask?.atMs}).toEqual(expected);
+  expect(initial).toEqual(await a.handover());
+  expect(events).toEqual(["newer"]);
+ }finally{
+  resume.resolve();controller.abort();
+  await Promise.all([older,newer].map(async waiting=>{await (await waiting)?.release();}));
+  await a.release();
+ }
+});
+
+for(const mode of ["released during write","write refused"])test("a handover ask is silent when "+mode,async()=>{
+ const{custody,clock,root,directory}=world(),a=await custody.hold({structural:true,holder:holder(4711)}),controller=new AbortController();
+ const fs=createNodeFilePortV1(),writing=Promise.withResolvers<void>(),resume=Promise.withResolvers<void>(),observed=Promise.withResolvers<void>(),events:string[]=[];
+ const peer=createSliceCustodyV1({root:join(root,"generations"),lease:createFileClaimLeasePortV1(join(root,"leases")),now:()=>clock.t,fs:{...fs,async write(path,bytes,options){
+  if(path.endsWith(".ask.json")){
+   writing.resolve();await resume.promise;
+   if(mode==="write refused")throw Error("fixture write refused");
+  }
+  return fs.write(path,bytes,options);
+ }}});
+ const waiting=peer.hold({structural:true,signal:controller.signal,holder:holder(4712,other),currentDigest:()=>other,say:key=>{
+  if(key==="askedStale")events.push(key);
+  if(key==="blockedAll")observed.resolve();
+ }}).catch(()=>undefined);
+ try{
+  await writing.promise;
+  if(mode==="released during write")await a.release();
+  resume.resolve();
+  await observed.promise;
+  using oracle=new Database(":memory:");
+  const expected=oracle.query("SELECT 0 AS reports, 0 AS sidecars").get();
+  expect({reports:events.length,sidecars:readdirSync(directory).filter(name=>name===a.token+".ask.json").length}).toEqual(expected);
+ }finally{
+  resume.resolve();controller.abort();
+  await (await waiting)?.release();
+  await a.release();
+ }
 });

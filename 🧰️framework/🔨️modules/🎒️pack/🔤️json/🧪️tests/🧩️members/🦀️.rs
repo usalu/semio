@@ -55,3 +55,29 @@ let rebuilt = Value::Object(entries.into_iter().collect());
 assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&rebuilt)).unwrap(), serde_json::from_str::<serde_json::Value>(text).unwrap());
 }
 
+
+#[test]
+fn ordered_member_slot_swaps_preserve_allocations_and_lookup() {
+    crate::warm();
+    let fixture = fixture();
+    let row = &fixture["ownership"];
+    let text = row["text"].as_str().unwrap();
+    let Value::Object(mut object) = parse(text, JsonMemberPolicy::Replace).unwrap() else { panic!("object fixture"); };
+    let name_pointers: Vec<_> = object.iter().map(|(name, _)| (name.to_owned(), name.as_ptr())).collect();
+    let descendant = |object: &Object| object.get("z").unwrap().get("name").unwrap().as_str().unwrap().as_ptr();
+    let descendant_pointer = descendant(&object);
+    let content: serde_json::Value = serde_json::from_str(text).unwrap();
+    for step in row["swaps"].as_array().unwrap() {
+        let index = |position: usize| step["slots"][position].as_u64().unwrap() as usize;
+        assert_eq!(object.swap_members(index(0), index(1)), step["accepted"].as_bool().unwrap());
+        for (slot, key) in step["keys"].as_array().unwrap().iter().enumerate() {
+            let (name, value) = object.member_at(slot).unwrap();
+            assert_eq!(name, key.as_str().unwrap());
+            assert!(std::ptr::eq(value, object.get(name).unwrap()));
+            assert_eq!(name.as_ptr(), name_pointers.iter().find(|(key, _)| key == name).unwrap().1);
+        }
+        assert!(object.member_at(object.len()).is_none());
+        assert_eq!(descendant(&object), descendant_pointer);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&Value::Object(object.clone()))).unwrap(), content);
+    }
+}

@@ -9,16 +9,18 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
 const protocol=schema.definitions.Protocol.const,limits=schema.definitions.Limits.const;
 
-/** 🧭️ How an upgrade request ended for the process that asked: no grant to upgrade (the gate is off or the run holds none), the grant was already complete, or it grew into its full request. */
-export type HostUpgradeOutcomeV1="absent"|"held"|"upgraded";
+type SettledUpgradeV1="held"|"upgraded";
+/** 🧭️ Whether an upgrade found no grant, already held capacity, grew the grant or found reusable work while waiting. */
+export type HostUpgradeOutcomeV1="absent"|"reused"|SettledUpgradeV1;
 
-const asking=new Map<string,number>(),settled=new Map<string,HostUpgradeOutcomeV1>();
-const settle=(key:string,outcome:HostUpgradeOutcomeV1):HostUpgradeOutcomeV1=>{settled.set(key,outcome);if(settled.size>limits.settledOutcomeLimit)settled.delete(settled.keys().next().value!);return outcome;};
+const asking=new Map<string,number>(),settled=new Map<string,SettledUpgradeV1>();
+const settle=(key:string,outcome:SettledUpgradeV1):SettledUpgradeV1=>{settled.set(key,outcome);if(settled.size>limits.settledOutcomeLimit)settled.delete(settled.keys().next().value!);return outcome;};
 
 /** 🙋️ Says that work has to run now and returns when the run may start it: a process of the run (any child of the holder: the planner, the graph rebuild, the first action of a build tool) writes the request file beside its grant and waits until the holder has grown the quiet reservation into the full request in the fair queue, polling the grant row every `upgradePollMilliseconds` and counting as a wait for machine admission (so a deadline whose clock stops during admission waits is credited, exactly as at the door); a grant that is already complete only records that the run executed (once per process and run, so the thousands of actions of a build cost one read). Cancelling the wait (the control's signal or deadline) withdraws the request unless another asker of this process still waits, and rejects with the cancellation reason; a request file that vanished (another asker cancelled) is written again, so the holder never loses a live asker. */
-export async function requestHostCapacityUpgradeV1(environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,ports:Readonly<{now?:()=>number;pollMilliseconds?:number}>={}):Promise<HostUpgradeOutcomeV1>{
+export async function requestHostCapacityUpgradeV1(environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,ports:Readonly<{now?:()=>number;pollMilliseconds?:number;reuse?:()=>Promise<boolean>}>={}):Promise<HostUpgradeOutcomeV1>{
  const id=environment[protocol.grantEnvironment];
  if(!id||!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(id))return "absent";
+ checkResourceLeaseControl(control);
  const directory=hostCapacityDirectoryV1(environment),row=join(directory,"grants",`${id}.json`),request=hostUpgradePathV1(directory,id),key=request,now=ports.now??Date.now,poll=ports.pollMilliseconds??protocol.upgradePollMilliseconds;
  const known=settled.get(key);
  if(known!==undefined)return known;
@@ -27,21 +29,24 @@ export async function requestHostCapacityUpgradeV1(environment:Readonly<Record<s
  const first=read();
  if(!first)return "absent";
  if(first.quiet!==true){if(!existsSync(request))write();return settle(key,"held");}
- asking.set(key,(asking.get(key)??0)+1);
- const endAdmissionWait=beginAdmissionWaitV1();
+ const endAdmissionWait=beginAdmissionWaitV1();let requested=false;
  try{
   for(;;){
-   checkResourceLeaseControl(control);
+   let budget=checkResourceLeaseControl(control);
    const current=read();
    if(!current)return "absent";
    if(current.quiet!==true)return settle(key,"upgraded");
+   if(ports.reuse!==undefined){const reused=await ports.reuse();budget=checkResourceLeaseControl(control);if(reused)return "reused";}
+   if(!requested){asking.set(key,(asking.get(key)??0)+1);requested=true;}
    if(!existsSync(request))write();
-   try{await delay(poll,undefined,{signal:control.signal});}catch(error){throw control.signal.aborted?control.signal.reason:error;}
+   try{await delay(Math.max(1,Math.min(poll,budget??Infinity)),undefined,{signal:control.signal});}catch(error){throw control.signal.aborted?control.signal.reason:error;}
   }
  }finally{
   endAdmissionWait();
-  const left=(asking.get(key)??1)-1;
-  if(left>0)asking.set(key,left);else{asking.delete(key);if(read()?.quiet===true)try{unlinkSync(request);}catch{}}
+  if(requested){
+   const left=(asking.get(key)??1)-1;
+   if(left>0)asking.set(key,left);else{asking.delete(key);const current=read();if(!current||current.quiet===true)try{unlinkSync(request);}catch{}}
+  }
  }
 }
 
@@ -59,7 +64,7 @@ export function adoptUpgradedHostPlanV1(environment:Record<string,string|undefin
 /** 🔌️ What the holder of a grant hands to the upgrade: the ledger primitives of the gate plus the readers of its ledger, the queue file name and the host sample, by value so this module imports nothing of the gate's internals. */
 export type HostUpgradeLedgerV1=HostLedgerPrimitivesV1&Readonly<{readGrants:(directory:string,now:number,policy:HostCapacityPolicyV1)=>HostGrantV1[];readWaiters:(directory:string,now:number,policy:HostCapacityPolicyV1)=>HostWaiterV1[];queuePath:(directory:string,arrivedAtMs:number,id:string)=>string;sample:()=>Promise<HostSampleV1>}>;
 /** 🧳️ Everything the holder knows when it upgrades its grant. */
-export type HostUpgradeContextV1=Readonly<{ledger:HostUpgradeLedgerV1;directory:string;policy:HostCapacityPolicyV1;request:HostRequestV1;control:ResourceLeaseControl;state:()=>HostGrantV1;publish:(next:HostGrantV1)=>void;requested:()=>boolean;stopped:()=>boolean;now:()=>number;pid:number;language:"en"|"de";write:(line:string)=>void;session?:Readonly<{address:string;weight:number}>}>;
+export type HostUpgradeContextV1=Readonly<{ledger:HostUpgradeLedgerV1;directory:string;policy:HostCapacityPolicyV1;request:HostRequestV1;control:ResourceLeaseControl;state:()=>HostGrantV1;publish:(next:HostGrantV1)=>void;requested:()=>boolean;stopped:()=>boolean;now:()=>number;pid:number;language:"en"|"de";write:(line:string)=>void;session?:Readonly<{address:string;weight:number}>;rebuildAskedAtMs?:number}>;
 
 /** 🌿️ What the holder of a grant admitted with fewer jobs than it asked for hands to one grow attempt: the upgrade context without the asker, the full request it may grow into and the time hysteresis it carries between attempts. */
 export type HostGrowContextV1=Omit<HostUpgradeContextV1,"request"|"control"|"requested"|"stopped"|"session">&Readonly<{full:HostRequestV1;settled:()=>HostGrowthSettleV1|undefined;settle:(next:HostGrowthSettleV1|undefined)=>void}>;
@@ -83,9 +88,9 @@ export async function growHostGrantV1(context:HostGrowContextV1):Promise<number|
 }
 
 /** 🔼️ Grows a held quiet grant into its full request in the fair queue: the run waits as an upgrade request that keeps the queue position the run arrived with (so a forecast never costs it its turn and never gives it a better one than asking for the full grant at the door would have), the decision replaces the held reservation by the full one (only the difference has to fit, the freed small reservation counts) and the grant row is rewritten under the gate lock in one atomic replace, with a restarted ramp for the new reservation; so the reservation never drops to nothing and never counts twice. An upgrade is never refused for memory while every other live grant is a quiet grant that itself waits to grow (otherwise two such runs would wait for each other forever and, as a barrier head, hold the whole queue): the decision admits the first of them in queue order at the largest size that fits now (`upgradedPartly` says so in the language of the run). A growth whose memory fits but whose cores our other runs hold is admitted with the jobs those cores leave (at least one for an agent session with nothing else running), keeping the memory of the whole request (`upgradedReduced`), and the grower of the holder adds jobs once cores free up, instead of the run waiting for another run to end. Progress lines come in the language of the run and name what the growth stands behind (the runs of ours that hold the memory or cores it needs, or the requests served first); the wait ends when the asker cancelled (the request file vanished or the control fired), in which case the small grant is kept. A run that has waited `wait.bypassMilliseconds` for all its jobs stops insisting on them: its request is rewritten with `protocol.upgradeNarrowedMinimumJobs` and one spare job of memory (`protocol.growSpareJobs`, the margin a grow keeps for a footprint above its estimate), the decision admits the largest job count whose memory fits beside the busy peers (`upgradedReduced`) and the grower adds jobs once memory frees up, so no upgrade waits longer than that window for memory that carries even one job. */
-export async function upgradeHostGrantV1(context:HostUpgradeContextV1):Promise<"upgraded"|"withdrawn">{
- const {ledger,directory,policy,request,control,now,pid,language,write}=context,{takeLock,writeJson,remove}=ledger,started=now(),first=context.state(),arrivedAtMs=first.arrivedAtMs??first.admittedAtMs,waiterPath=ledger.queuePath(directory,arrivedAtMs,request.id);
- let record:HostWaiterV1=requireHostCapacityV1<HostWaiterV1>("Waiter",{request,arrivedAtMs,pid,upgrade:true,...context.session===undefined?{}:{session:context.session.address,weight:context.session.weight}});
+export async function upgradeHostGrantV1(context:HostUpgradeContextV1):Promise<"upgraded"|"withdrawn"|Readonly<{minimum:number;total:number;floor:number;capacity:number}>>{
+ const {ledger,directory,policy,request,control,now,pid,language,write}=context,{takeLock,writeJson,remove}=ledger,started=now(),first=context.state(),rebuild=context.rebuildAskedAtMs!==undefined,arrivedAtMs=context.rebuildAskedAtMs??first.arrivedAtMs??first.admittedAtMs,waiterPath=ledger.queuePath(directory,arrivedAtMs,request.id);
+ let record:HostWaiterV1=requireHostCapacityV1<HostWaiterV1>("Waiter",{request,arrivedAtMs,pid,upgrade:true,...rebuild?{rebuild:first.rebuildScope}:{},...context.session===undefined?{}:{session:context.session.address,weight:context.session.weight}});
  let asked=request,lastProgress=-Infinity,done=false;
  writeJson(waiterPath,record);
  try{
@@ -93,19 +98,21 @@ export async function upgradeHostGrantV1(context:HostUpgradeContextV1):Promise<"
    if(context.stopped())return "withdrawn";
    if(!context.requested()){write(formatHostCapacityV1(language,"upgradeWithdrawn",{operation:request.operation,seconds:Math.round((now()-started)/1000),reserved:context.state().reservedMegabytes}));return "withdrawn";}
    checkResourceLeaseControl(control);
-   if(asked===request&&request.minimumJobs>protocol.upgradeNarrowedMinimumJobs&&now()-started>=policy.wait.bypassMilliseconds){asked=requireHostCapacityV1<HostRequestV1>("Request",{...request,minimumJobs:protocol.upgradeNarrowedMinimumJobs,fixedMegabytes:request.fixedMegabytes+protocol.growSpareJobs*request.perJobMegabytes});record=requireHostCapacityV1<HostWaiterV1>("Waiter",{...record,request:asked});writeJson(waiterPath,record);}
+   if(!rebuild&&asked===request&&request.minimumJobs>protocol.upgradeNarrowedMinimumJobs&&now()-started>=policy.wait.bypassMilliseconds){asked=requireHostCapacityV1<HostRequestV1>("Request",{...request,minimumJobs:protocol.upgradeNarrowedMinimumJobs,fixedMegabytes:request.fixedMegabytes+protocol.growSpareJobs*request.perJobMegabytes});record=requireHostCapacityV1<HostWaiterV1>("Waiter",{...record,request:asked});writeJson(waiterPath,record);}
    const host=await context.ledger.sample();
    try{utimesSync(waiterPath,new Date(),new Date());}catch{}
    let progressAt:number|undefined;
    if(takeLock(directory,now(),policy,pid)){
     try{
      const at=now(),grants=ledger.readGrants(directory,at,policy),waiters=ledger.readWaiters(directory,at,policy);
-     if(!waiters.some(row=>row.request.id===request.id&&row.upgrade===true)){writeJson(waiterPath,record);waiters.push(record);}
+     if(rebuild&&!grants.some(grant=>grant.id===request.id&&grant.pid===pid&&grant.rebuildScope===first.rebuildScope))return "withdrawn";
+     if(!waiters.some(row=>row.request.id===request.id&&row.upgrade===true&&row.rebuild===record.rebuild)){writeJson(waiterPath,record);waiters.push(record);}
      const evaluation=evaluateHostCapacityV1(policy,host,grants,waiters,at),mine=evaluation.decisions.find(row=>row.id===request.id)!,state=context.state();
+     if(rebuild&&mine.reason==="never")return{minimum:request.fixedMegabytes,total:host.totalMegabytes,floor:evaluation.floorMegabytes,capacity:Math.floor(Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)*policy.memory.budgetBasisPoints/10000)};
      if(mine.verdict==="admit"){
-      if(!ledger.holdsLock(directory,pid))continue;
-      const{quiet:_,...rest}=state;
-      context.publish(requireHostCapacityV1<HostGrantV1>("Grant",{...rest,jobs:mine.jobs,cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,resumedAtMs:at,upgradedAtMs:at,...request.rampMilliseconds===undefined?{}:{rampMilliseconds:request.rampMilliseconds},...request.rampSlot===undefined?{}:{rampSlot:request.rampSlot}}));
+      if(!ledger.holdsLock(directory,pid)||context.stopped()||!context.requested())continue;
+      const{quiet:_,lentSinceMs,...rest}=state;
+      context.publish(requireHostCapacityV1<HostGrantV1>("Grant",{...rest,...rebuild?{rebuildBookedAtMs:at}:lentSinceMs===undefined?{}:{lentSinceMs},jobs:mine.jobs,cpu:rebuild?state.cpu:mine.jobs*request.cpuPerJob,reservedMegabytes:mine.reservedMegabytes,resumedAtMs:at,upgradedAtMs:at,...request.rampMilliseconds===undefined?{}:{rampMilliseconds:request.rampMilliseconds},...request.rampSlot===undefined?{}:{rampSlot:request.rampSlot}}));
       remove(waiterPath);done=true;
       const wanted=Math.min(asked.fixedMegabytes+asked.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes));
       write(mine.reason==="reduced"?formatHostCapacityV1(language,"upgradedReduced",{operation:request.operation,from:state.reservedMegabytes,to:mine.reservedMegabytes,jobs:mine.jobs,preferred:request.preferredJobs,seconds:Math.round((at-started)/1000),available:host.availableMegabytes,floor:evaluation.floorMegabytes}):mine.reservedMegabytes<wanted?formatHostCapacityV1(language,"upgradedPartly",{operation:request.operation,from:state.reservedMegabytes,to:mine.reservedMegabytes,wanted,seconds:Math.round((at-started)/1000),available:host.availableMegabytes,floor:evaluation.floorMegabytes,jobs:mine.jobs,preferred:request.preferredJobs}):formatHostCapacityV1(language,"upgraded",{operation:request.operation,from:state.reservedMegabytes,to:mine.reservedMegabytes,seconds:Math.round((at-started)/1000),jobs:mine.jobs,available:host.availableMegabytes,floor:evaluation.floorMegabytes}));

@@ -470,6 +470,35 @@
       "expected": "produce"
     }
   ],
+  "graphRecheck": [
+    {
+      "id": "changed dependency feature before unrelated Source refusal",
+      "before": [],
+      "after": ["CanvasWindingRule"],
+      "outcome": "graph-drift",
+      "recheckReads": 0
+    },
+    {
+      "id": "stable dependency graph preserves unrelated Source refusal",
+      "before": [],
+      "after": [],
+      "outcome": "source-refusal",
+      "recheckReads": 1
+    }
+  ],
+  "planDifferences": {
+    "baseline": { "path": "/w/source.rs", "character": "a", "bytes": 20 },
+    "cases": [
+      { "id": "same facts", "change": "none", "category": null },
+      { "id": "configuration before graph", "change": "configuration", "category": "plan-fact" },
+      { "id": "changed source bytes", "change": "source-file", "category": "source-file" },
+      { "id": "changed source path", "change": "source-roster", "category": "source-roster" },
+      { "id": "changed unit planning digest", "change": "unit-metadata", "category": "unit-metadata" },
+      { "id": "changed graph roots", "change": "graph-roots", "category": "graph-roots" },
+      { "id": "changed graph unit", "change": "graph-units", "category": "graph-units" },
+      { "id": "other graph facts changed", "change": "graph-other", "category": "graph-other" }
+    ]
+  },
   "sourceDigests": [
     {
       "id": "matching-source",

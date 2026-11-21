@@ -1,0 +1,36 @@
+{
+  "source":{
+    "vertices":[[0,0,0],[2,0,0],[4,0,0],[0,2,0],[2,2,0],[4,2,0],[6,0,0],[8,0,0],[6,2,0]],
+    "faces":[[0,1,4,3],[1,2,5,4],[6,7,8]],
+    "surface":[
+      {"kind":"vertexNormal","index":0,"normal":[0,0,1]},
+      {"kind":"vertexNormal","index":4,"normal":[0.6,0,0.8]},
+      {"kind":"vertexNormal","index":6,"normal":[0,0.6,0.8]},
+      {"kind":"cornerUv","index":4,"uv":[0.125,0.125]},
+      {"kind":"cornerUv","index":5,"uv":[0.625,0.125]},
+      {"kind":"cornerUv","index":6,"uv":[0.625,0.625]},
+      {"kind":"cornerUv","index":7,"uv":[0.125,0.625]},
+      {"kind":"cornerUv","index":8,"uv":[0.25,0.375]},
+      {"kind":"cornerUv","index":9,"uv":[0.75,0.375]},
+      {"kind":"cornerUv","index":10,"uv":[0.25,0.875]},
+      {"kind":"seamEdge","index":0},
+      {"kind":"seamEdge","index":1},
+      {"kind":"seamEdge","index":9},
+      {"kind":"smoothFace","index":1}
+    ],
+    "attributes":{
+      "panelName":{"domain":"face","semantic":"custom","interpolation":"nearest","values":["remove","keep","island"]}
+    }
+  },
+  "remove":[0],
+  "expected":{
+    "vertices":[[0,0,0],[2,0,0],[4,0,0],[0,2,0],[2,2,0],[4,2,0],[6,0,0],[8,0,0],[6,2,0]],
+    "faces":[[1,2,5,4],[6,7,8]],
+    "normals":[[0,[0,0,1]],[4,[0.6,0,0.8]],[6,[0,0.6,0.8]]],
+    "uv":[[0.125,0.125],[0.625,0.125],[0.625,0.625],[0.125,0.625],[0.25,0.375],[0.75,0.375],[0.25,0.875]],
+    "smooth":[0],
+    "seams":[3,5],
+    "panels":["keep","island"],
+    "area":6
+  }
+}

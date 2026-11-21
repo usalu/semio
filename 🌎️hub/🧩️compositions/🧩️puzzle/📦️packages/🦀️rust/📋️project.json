@@ -34,7 +34,19 @@
         "semio": {
           "wasmPackageSourceV1": {
             "version": 1,
-            "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+            "sourceOwner": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+            "compileOutputs": [
+              {
+                "specifier": "@semio-tech/puzzle-wasm",
+                "path": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js",
+                "declarations": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.d.ts"
+              },
+              {
+                "specifier": "@semio-tech/puzzle-wasm/semio_puzzle.js",
+                "path": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js",
+                "declarations": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.d.ts"
+              }
+            ]
           }
         }
       }

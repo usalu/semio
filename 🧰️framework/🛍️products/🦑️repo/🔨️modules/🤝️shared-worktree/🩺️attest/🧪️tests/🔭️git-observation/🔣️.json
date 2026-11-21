@@ -1,0 +1,1 @@
+{"observations":["exact","rejected","foreign","rejected","exact","moved","moved","exact","rejected"],"firstView":["pending","measured"],"stageWarnings":[{"treeKnown":true,"kind":"observe-index-changed"},{"treeKnown":false,"kind":"observe-index-changed"},{"treeKnown":true,"kind":"objects-missing"}],"firstGit":["pending","certified"]}

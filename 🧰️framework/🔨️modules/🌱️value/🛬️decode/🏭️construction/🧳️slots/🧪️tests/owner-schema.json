@@ -25,7 +25,8 @@
     "kinds": {
       "const": [
         "sealed",
-        "issued"
+        "issued",
+        "arc"
       ]
     },
     "events": {
@@ -53,6 +54,9 @@
         "clearSealedBirth": 1,
         "clearIssuedBirth": 1,
         "issuedBirth": 3,
+        "arcOutputSlot": 1,
+        "arcAllocation": 1,
+        "arcPublication": 3,
         "authorityReturn": 1,
         "producerClear": 1
       }

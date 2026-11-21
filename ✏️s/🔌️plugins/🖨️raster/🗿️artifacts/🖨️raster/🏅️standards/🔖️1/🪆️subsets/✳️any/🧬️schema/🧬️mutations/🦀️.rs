@@ -72,13 +72,16 @@ pub enum RasterMutation {
     WritePixelRegion(write_pixel_region::WritePixelRegion),
 }
 
-/// 🧯️ Cold disposal of a scratch mutation nobody will apply again — the store retires decoded
-/// arrivals, replay clones and rebased inverses through `Mutation::retire_cold`, and `CreateLayer`
-/// is the one leaf that owns a layer subtree (so, through an `Adjustment`, a fail-closed
-/// `RasterOwnedMap`). Every other leaf carries plain scalars and needs nothing.
+/// 🧯️ Closes scratch mutation owners at a synchronous store boundary.
 pub fn retire_raster_mutation(mutation: RasterMutation) {
-    if let RasterMutation::CreateLayer(value) = mutation {
-        semio_s_artifact_raster_raster_model::retire_raster_layer(*value.layer);
+    match mutation {
+        RasterMutation::CreateLayer(value) => semio_s_artifact_raster_raster_model::retire_raster_layer(*value.layer),
+        mutation @ (RasterMutation::AddLayerAsset(_) | RasterMutation::ApplyFilter(_) |
+            RasterMutation::FillRegion(_) | RasterMutation::FillSelection(_) | RasterMutation::PaintStroke(_)) => {
+            semio_s_artifact_raster_raster_model::retire_raster_value_cold(mutation)
+                .expect("retire original Raster mutation payload");
+        }
+        _=>{}
     }
 }
 

@@ -1,0 +1,35 @@
+# Round 5 Handcraft Brief (2026-11-20)
+
+The dev, after looking at the catalog: "The 3D staffage is modeled incredibly sloppy: limbs and objects completely wrong proportioned, missing detail, wrong skeleton. Every 3D model must be handcrafted. Every single staffage perfectly handcrafted for all scales and all representations (body, thermodynamic, structure)." Rounds 3 and 4 passed validators and still look wrong. Validators are the floor, not the bar. You are the modeller and the art director for the assets named in your prompt; you remodel them by hand until a professional architectural-visualisation modeller would sign them.
+
+Read first: `design.md` (normative, all amendments), `round3-brief.md` (rules, ruling E1), `r3-tools.md` (render, validate, 2D, project tools; read it to the end), your asset's report `r3-<category>-<slug>.md` and the rows about it in `r4-queue.md`. Orchestrator's own look at round 4 (examples of the defect level): horse 1:50 has the vertebral column along the mid-body axis instead of dorsally under the topline, a stiff plank tail, thin neck base, lumpy joint blobs; standing-adult 1:50 is a stick rig in a sack: hands blobby, plan view a lumpy ring, feet flat slabs.
+
+## The bar (per asset, every authored scale 1:50, 1:100, 1:200, 1:500; lists body, thermal, structure; every pose and clip)
+
+1. **Proportions from real reference numbers.** Write down before modelling, in your report, a table of the subject's real dimensions you model to (sources: anthropometry DIN 33402 / ISO 7250 / Neufert for people, by age and sex; veterinary/breed standards for animals (withers height, body length, head length, cannon length, ...); manufacturer data sheets or standards for things (EN 1176, DIN 18065, vehicle spec sheets, ...)). Then measure the model against that table (bone lengths, segment girths, joint heights, overall extents) and list model vs reference. Off by more than 3 % at 1:50 is a defect.
+   - Humans: head 1/7.5 of stature, shoulder (biacromial) ~0.23 × stature, hip breadth, elbow at waist, wrist at crotch, knee at ~0.285 × stature, hand ~0.108 × stature, foot ~0.15 × stature, sitting proportions, child proportions per age (head 1/5–1/6), pregnant anatomy, elderly posture.
+2. **Skeleton (rig) anatomically right.** Living subjects: spine dorsal with real curvature (cervical lordosis, thoracic kyphosis, lumbar lordosis), withers from thoracic spinous processes, scapula on the ribcage, pelvis tilted, joints exactly at the real joint centres (hip, knee, ankle, shoulder, elbow, wrist, fetlock, hock, carpus), digits where needed. Things: bones at the real pivots, axles, hinges. If the rig is wrong, fix the rig at the root (and every pose, clip, 2D shape bound to it) — not just the solids.
+3. **Form and detail.** Smooth anatomical masses with lofts along the bones (real cross-sections: oval thigh, flattened forearm, tapering calf with gastrocnemius bulge, deltoid cap, trapezius slope, neck into shoulders, ribcage vs belly, buttocks, shoes with sole/heel/toe spring, fingers grouped at 1:50, thumbs, ears, nose, chin, hair volume; animal muzzle, nostrils, eye sockets, mane, hoof walls, pads, feathers as layered masses). Things: every part a real object has at that scale (handles, hinges, seams, profiles, wheels with tyres/rims/hubs, screens with bezels, vents, feet, fixings). No blob, no sack, no plank, no lumpy joint balls, no visible gaps, no interpenetration that shows, no floating part.
+4. **Each scale its own abstraction**, drawn against that scale's own 2D (smallest feature 7.5/15/30/75 mm): 1:100 still clearly the same subject with readable limbs, head, hands and feet as masses; 1:200 a clean, well-proportioned simplified figure; 1:500 a crisp massing with the right silhouette and proportions, never a ragged patchwork or bar figure. Same proportions at every scale.
+5. **Thermal** follows the body surface of that scale (clothing layers, skin, hair, hidden organs/engines as real interior solids), regions tidy, no ragged patches. **Structure** is the real load path of that scale (D3): skeleton members along bones with real sections, joints, supports at real contacts, masses at real centres; never the body or a block.
+6. **Poses and clips stay closed and natural**: open every pose at 1:50 and at least one clip frame; no wedges, no torn joints, no limbs passing through bodies or objects.
+
+## Process
+
+- Per asset, render and OPEN (Read tool) all sheets: `r3-sheet.ts <asset> --scale N` for every scale, `--list structure` and `--list thermal --cut` at every scale, every pose at 1:50, `r3-2d.ts` at every scale. Grade A–D per scale and list honestly, and write down every defect you see.
+- Remodel at the root with your own scripts `r5-<slug>-*.ts|py` in the ticket folder (state every section by hand; reuse/extend the asset's `r3-*`/`r4-*` scripts). Prefer rebuilding a sloppy model from scratch over patching. Where 2D disagrees with the corrected proportions, fix the 2D at the root too (r3-project2d.ts helps), for every scale.
+- Re-render, LOOK again, iterate until every scale and list is A. Then `volumes-check.ts <asset> --product` and `r3-validate.ts <asset> --volumes` green, splice into the catalog (`volumes-insert.py`).
+- Areas: rules C16, C18, C19, C27, C29 stand; disputed values go to `area-review.md`, not forced.
+- Report: append `## Round 5 handcraft` to `r3-<category>-<slug>.md`: reference table, model-vs-reference measurements, grades before/after per scale and list, changes, remaining issues with reason. Append one line per asset to `r5-ledger.md` (`<asset> | before | after | open points`), re-read before writing.
+- Fundamental tool or product defects you hit: fix them at the root if they are in the ticket tools or staffage product and clearly unrelated to other agents' active work; else append to `tool-requests.md`. Never get stuck: if the shared work fleet / `repo` fleet mechanism fails, fall back to running the tools directly with `$BUN` as in `r3-tools.md`.
+
+## Rules
+
+Touch only your assets (and shared code only for real root fixes). Others edit the tree live: re-read a file right before editing it; last writer wins. Never run a git command that modifies anything. Never stop to ask; never stop halfway. Machine is shared (10 cores): one render/check at a time per agent. Tool output only under `🗑️generated/r5-<slug>/` or the tools' own folders. No comments inside definitions; docstrings start with a unique emoji. Never claim to have seen an image you did not open.
+
+Return only: one line per asset (`<asset>: before -> after, open points`).
+
+## Addendum (coordinator, 2026-11-21)
+
+- Never fix a print finding by narrowing a valid range so that a gap opens between scale bands (seen on mvhr-unit, laptop). The ranges of an asset's drawings must cover every denominator from the finest to the coarsest band without a hole; redraw the shape so it prints instead.
+- Coarse scales (1:200, 1:500) are not done at B+. They get the same care: true silhouettes, rounded masses where the object is round, no copies of the finer scale, no stick figures beyond what the feature floor forces.

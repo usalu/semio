@@ -8,9 +8,16 @@
         "domain": "semio.graph-generation.v1",
         "document": "^(?:m/[0-9a-f]{64}\\.json|o/[0-9a-f]{64}\\.json\\.br|x/[0-9a-f]{64}\\.facts\\.br|f/[0-9a-f]{64}\\.json\\.br)$",
         "snapshot": "^s/[0-9a-f]{16}\\.snapshot\\.br$",
-  "closure": "^c/[il]/[0-9a-f]{64}\\.json$",
-  "maximumClosures": 20000,
-  "maximumClosureReports": 64,
+        "closureEntry": "^[il]-[0-9a-f]{64}\\.json$",
+        "closureShard": "^c/[0-9]{4}$",
+        "closureShardEntries": 1024,
+        "maximumClosureShardBytes": 163840,
+        "maximumClosures": 32768,
+        "maximumClosureReferences": 65536,
+        "maximumClosureLinks": 262144,
+        "maximumClosureMemoBytes": 25165824,
+        "maximumClosureReports": 64,
+        "maximumActionResultBytes": 4194304,
         "maximumSnapshotBytes": 134217728,
         "maximumDocuments": 32768,
         "maximumDocumentBytes": 536870912,
@@ -18,6 +25,7 @@
         "concurrency": 8,
         "probeTimeoutSeconds": 5,
         "probeRetries": 1,
+        "failureRetryMilliseconds": 30000,
         "restoreMarginMilliseconds": 60000,
         "unmeasuredStale": 500,
         "staleOwnersPerMinute": 1,
@@ -26,6 +34,34 @@
         "servingTotalMegabytes": 24000,
         "rankCandidates": 3,
         "allScope": "all"
+      }
+    },
+    "ClosureMemo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "sha256", "entries"],
+      "properties": {
+        "version": { "const": 1 },
+        "sha256": { "type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[a-f0-9]{64}$" },
+        "entries": {
+          "type": "array",
+          "maxItems": 32768,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "additionalItems": false,
+            "items": [
+              { "type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[a-f0-9]{64}$" },
+              {
+                "type": "array",
+                "maxItems": 65536,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 71, "maxLength": 71, "pattern": "^[il]-[a-f0-9]{64}\\.json$" }
+              }
+            ]
+          }
+        }
       }
     },
     "HeadEvidence": {

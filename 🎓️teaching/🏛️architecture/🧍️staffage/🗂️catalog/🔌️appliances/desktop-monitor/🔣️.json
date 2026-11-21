@@ -254,36 +254,6 @@
         "geometry": {
           "elevation": [
             {
-              "id": "foot-front",
-              "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "rect",
-              "x": 0.174,
-              "y": 0.0,
-              "w": 0.022,
-              "h": 0.002,
-              "region": "stand",
-              "material": "rubber-foot"
-            },
-            {
-              "id": "foot-rear",
-              "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "rect",
-              "x": 0.014,
-              "y": 0.0,
-              "w": 0.022,
-              "h": 0.002,
-              "region": "stand",
-              "material": "rubber-foot"
-            },
-            {
               "id": "base-plate",
               "bone": "base",
               "role": "body",
@@ -294,7 +264,7 @@
               "points": [
                 [
                   0.208,
-                  0.002
+                  0.0
                 ],
                 [
                   0.21,
@@ -338,7 +308,7 @@
                 ],
                 [
                   0.002,
-                  0.002
+                  0.0
                 ]
               ],
               "closed": true,
@@ -528,36 +498,6 @@
           ],
           "front": [
             {
-              "id": "foot-left",
-              "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "rect",
-              "x": 0.084,
-              "y": 0.0,
-              "w": 0.022,
-              "h": 0.002,
-              "region": "stand",
-              "material": "rubber-foot"
-            },
-            {
-              "id": "foot-right",
-              "bone": "base",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.15,
-              "kind": "rect",
-              "x": -0.106,
-              "y": 0.0,
-              "w": 0.022,
-              "h": 0.002,
-              "region": "stand",
-              "material": "rubber-foot"
-            },
-            {
               "id": "base-plate",
               "bone": "base",
               "role": "body",
@@ -568,7 +508,7 @@
               "points": [
                 [
                   0.123,
-                  0.002
+                  0.0
                 ],
                 [
                   0.125,
@@ -612,7 +552,7 @@
                 ],
                 [
                   -0.123,
-                  0.002
+                  0.0
                 ]
               ],
               "closed": true,
@@ -1166,12 +1106,12 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "A 0.41 m side view, 8.2 mm tall on paper: the base plate with its bevelled top on two rubber pads, the upright riser with its flared foot, the tilt hinge at its head with the quick-release bracket, and the panel tilted back by 5 degrees, its 9.5 mm edge and the rear cover sloping back to the flat 36 mm deep hump. Front, 10.8 mm by 8.2 mm: the panel with its thin bezel, the dark glass of the active area and the power light in the 19 mm chin, the riser between the chin and the base plate, the plate on its two pads. Plan, 4.2 mm by 10.8 mm: the rounded base plate, the riser foot and the hinge behind the hump, the bracket, the rear cover narrowing backwards with its four vent slots, the top edge of the panel and the glass seen at a slant because the panel leans back.",
-            "de": "Eine Seitenansicht von 0,41 m, auf Papier 8,2 mm hoch: die Fußplatte mit abgeschrägter Oberkante auf zwei Gummifüßen, der aufrechte Hals mit verbreitertem Fuß, das Neigegelenk an seinem Kopf mit dem Schnellwechselhalter und das um 5 Grad nach hinten geneigte Panel, sein 9,5-mm-Rand und die Rückwand, die zum flachen, 36 mm tiefen Buckel abfällt. Vorderansicht, 10,8 mm auf 8,2 mm: das Panel mit schmalem Rahmen, dem dunklen Glas der aktiven Fläche und der Betriebsleuchte im 19-mm-Kinn, der Hals zwischen Kinn und Fußplatte, die Platte auf ihren zwei Füßen. Grundriss, 4,2 mm auf 10,8 mm: die gerundete Fußplatte, Halsfuß und Gelenk hinter dem Buckel, der Halter, die sich nach hinten verjüngende Rückwand mit ihren vier Lüftungsschlitzen, die Oberkante des Panels und das Glas in schräger Sicht, weil das Panel nach hinten geneigt ist."
+            "en": "A 0.41 m side view, 8.2 mm tall on paper: the base plate with its bevelled top on the desk, the upright riser with its flared foot, the tilt hinge at its head with the quick-release bracket, and the panel tilted back by 5 degrees, its 9.5 mm edge and the rear cover sloping back to the flat 36 mm deep hump. Front, 10.8 mm by 8.2 mm: the panel with its thin bezel, the dark glass of the active area and the power light in the 19 mm chin, the riser between the chin and the base plate, the plate on the desk. Plan, 4.2 mm by 10.8 mm: the rounded base plate, the riser foot and the hinge behind the hump, the bracket, the rear cover narrowing backwards with its four vent slots, the top edge of the panel and the glass seen at a slant because the panel leans back.",
+            "de": "Eine Seitenansicht von 0,41 m, auf Papier 8,2 mm hoch: die Fußplatte mit abgeschrägter Oberkante auf dem Tisch, der aufrechte Hals mit verbreitertem Fuß, das Neigegelenk an seinem Kopf mit dem Schnellwechselhalter und das um 5 Grad nach hinten geneigte Panel, sein 9,5-mm-Rand und die Rückwand, die zum flachen, 36 mm tiefen Buckel abfällt. Vorderansicht, 10,8 mm auf 8,2 mm: das Panel mit schmalem Rahmen, dem dunklen Glas der aktiven Fläche und der Betriebsleuchte im 19-mm-Kinn, der Hals zwischen Kinn und Fußplatte, die Platte auf dem Tisch. Grundriss, 4,2 mm auf 10,8 mm: die gerundete Fußplatte, Halsfuß und Gelenk hinter dem Buckel, der Halter, die sich nach hinten verjüngende Rückwand mit ihren vier Lüftungsschlitzen, die Oberkante des Panels und das Glas in schräger Sicht, weil das Panel nach hinten geneigt ist."
           },
           "retained": {
-            "en": "Overall height 0.411 m, base depth 0.21 m and width 0.25 m, the 5 degree tilt, panel 0.54 x 0.323 m with 6.5 mm bezel and 19 mm chin, the 9.5 mm edge, the rear cover sections, the riser 62 x 22 mm, the hinge, the bracket, the pads and the power light.",
-            "de": "Gesamthöhe 0,411 m, Fußtiefe 0,21 m und -breite 0,25 m, die Neigung von 5 Grad, Panel 0,54 x 0,323 m mit 6,5 mm Rahmen und 19 mm Kinn, der 9,5-mm-Rand, die Schnitte der Rückwand, der Hals 62 x 22 mm, das Gelenk, der Halter, die Füße und die Betriebsleuchte."
+            "en": "Overall height 0.411 m, base depth 0.21 m and width 0.25 m, the 5 degree tilt, panel 0.54 x 0.323 m with 6.5 mm bezel and 19 mm chin, the 9.5 mm edge, the rear cover sections, the riser 62 x 22 mm, the hinge, the bracket and the power light.",
+            "de": "Gesamthöhe 0,411 m, Fußtiefe 0,21 m und -breite 0,25 m, die Neigung von 5 Grad, Panel 0,54 x 0,323 m mit 6,5 mm Rahmen und 19 mm Kinn, der 9,5-mm-Rand, die Schnitte der Rückwand, der Hals 62 x 22 mm, das Gelenk, der Halter und die Betriebsleuchte."
           },
           "merged": {
             "en": "Bezel and LCD module are one frame shape; the rear cover is one shape from the panel edge to the back of the hump.",
@@ -1182,16 +1122,16 @@
             "de": "Anschlüsse unter dem Buckel, die Menütasten, das Netzkabel und die VESA-Schrauben, die verdeckt oder unter dem Maßstab liegen. Das vertiefte Glas ist in der Seitenansicht vom Rahmen verdeckt; Gelenk, Halter und Gehäuse liegen in der Vorderansicht hinter dem Panel."
           },
           "thinElements": {
-            "en": "The 2 mm rubber pads are drawn at their true height (0.04 mm on paper); the vent slots are four detail strokes in the plan; the power light is a 6 mm detail dot.",
-            "de": "Die 2 mm hohen Gummifüße sind in wahrer Höhe gezeichnet (0,04 mm auf Papier); die Lüftungsschlitze sind vier Detailstriche im Grundriss; die Betriebsleuchte ist ein 6-mm-Detailpunkt."
+            "en": "The four 2 mm rubber pads (0.04 mm on paper, 0.1 mm at 1:20) are below the 7.5 mm feature and merge into the base plate, which is drawn down to the desk; the vent slots are four detail strokes in the plan; the power light is a 6 mm detail dot.",
+            "de": "Die vier 2 mm hohen Gummifüße (0,04 mm auf Papier, 0,1 mm bei 1:20) liegen unter dem Merkmal von 7,5 mm und gehen in der Fußplatte auf, die bis auf den Tisch gezeichnet ist; die Lüftungsschlitze sind vier Detailstriche im Grundriss; die Betriebsleuchte ist ein 6-mm-Detailpunkt."
           },
           "hatching": {
             "en": "None.",
             "de": "Keine."
           },
           "styles": {
-            "en": "Base 0.5, riser 0.45, hinge 0.35, housing 0.55, bracket 0.42, bezel 0.3, glass 0.1, pads 0.15; body pen 0.18 mm, detail and glazing 0.13 mm.",
-            "de": "Fuß 0,5, Hals 0,45, Gelenk 0,35, Gehäuse 0,55, Halter 0,42, Rahmen 0,3, Glas 0,1, Füße 0,15; Körperstift 0,18 mm, Detail und Glas 0,13 mm."
+            "en": "Base 0.5, riser 0.45, hinge 0.35, housing 0.55, bracket 0.42, bezel 0.3, glass 0.1; body pen 0.18 mm, detail and glazing 0.13 mm.",
+            "de": "Fuß 0,5, Hals 0,45, Gelenk 0,35, Gehäuse 0,55, Halter 0,42, Rahmen 0,3, Glas 0,1; Körperstift 0,18 mm, Detail und Glas 0,13 mm."
           },
           "overlays": {
             "en": "Panel front, rear housing and stand are three regions: the thermal view shows the warm rear housing with the vent slots, the cooler front and the stand at room temperature.",
@@ -3192,7 +3132,7 @@
             "tone": 0.42,
             "sections": [
               {
-                "at": [0.105, 0.002, 0.0],
+                "at": [0.105, 0.0, 0.0],
                 "rx": 0.123,
                 "ry": 0.103,
                 "exponent": 6,
@@ -3236,40 +3176,6 @@
             ],
             "capStart": true,
             "capEnd": true
-          },
-          {
-            "id": "foot-front",
-            "kind": "box",
-            "bone": "base",
-            "material": "rubber-foot",
-            "role": "body",
-            "tone": 0.12,
-            "size": [0.022, 0.003, 0.022],
-            "cornerRadius": 0.001,
-            "transform": {
-              "translation": [0.185, 0.0015, -0.095]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0.0, 0.0, 0.19]
-            }
-          },
-          {
-            "id": "foot-rear",
-            "kind": "box",
-            "bone": "base",
-            "material": "rubber-foot",
-            "role": "body",
-            "tone": 0.12,
-            "size": [0.022, 0.003, 0.022],
-            "cornerRadius": 0.001,
-            "transform": {
-              "translation": [0.025, 0.0015, -0.095]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0.0, 0.0, 0.19]
-            }
           }
         ],
         "thermal": [
@@ -3457,18 +3363,6 @@
             "of": "base-plate",
             "region": "stand",
             "layer": "stand-body"
-          },
-          {
-            "id": "th-foot-front",
-            "of": "foot-front",
-            "region": "stand",
-            "layer": "stand-body"
-          },
-          {
-            "id": "th-foot-rear",
-            "of": "foot-rear",
-            "region": "stand",
-            "layer": "stand-body"
           }
         ],
         "structure": [
@@ -3479,10 +3373,10 @@
             "material": "stand-plastic",
             "role": "detail",
             "tone": 0.3,
-            "size": [0.17, 0.004, 0.22],
+            "size": [0.17, 0.0075, 0.22],
             "cornerRadius": 0.0015,
             "transform": {
-              "translation": [0.105, 0.006, 0.0]
+              "translation": [0.105, 0.00575, 0.0]
             },
             "member": "base",
             "part": "member"
@@ -3664,9 +3558,9 @@
             "material": "stand-plastic",
             "role": "detail",
             "tone": 0.15,
-            "radii": [0.02, 0.002, 0.02],
+            "radii": [0.02, 0.00375, 0.02],
             "transform": {
-              "translation": [0.105, 0.006, 0.0]
+              "translation": [0.105, 0.00575, 0.0]
             },
             "member": "base",
             "part": "mass"
@@ -3678,9 +3572,9 @@
             "material": "rubber-foot",
             "role": "detail",
             "tone": 0.3,
-            "size": [0.19, 0.003, 0.2],
+            "size": [0.19, 0.0075, 0.2],
             "transform": {
-              "translation": [0.105, 0.0015, 0.0]
+              "translation": [0.105, 0.00375, 0.0]
             },
             "member": "base",
             "part": "support",
@@ -3693,8 +3587,8 @@
             "de": "Eigenes 1:50-Modell eines 23,8-Zoll-Monitors mit festem Standfuß (Klasse Dell SE2422H). Panel: ein schwarzer Rahmen 0,54 x 0,323 m und 9,5 mm tief mit 6,5 mm Rand seitlich und oben und 19 mm Kinn, das Deckglas der aktiven Fläche 527 x 296,5 mm 0,7 mm tief in seiner Öffnung, die Betriebsleuchte als Linse im Kinn; die Rückwand ist ein Loft aus neun Schnitten vom vollen Panelrand über den schrägen oberen Rücken bis zur flachen Rückseite 0,35 x 0,17 m des Elektronikbuckels, 36 mm hinter dem Bildschirm; vier Lüftungsschlitze liegen quer auf dem oberen Hang; der Schnellwechselhalter sitzt auf dem VESA-Feld."
           },
           {
-            "en": "Stand: the riser is a rounded column 62 x 22 mm with a flared foot sunk into the plate and the 20 mm tilt-hinge barrel at its head inside the bracket; the base plate is a 0.25 x 0.21 m rounded plate with a bevelled top edge on four 22 mm rubber pads. Thermal: panel front, rear cover and stand by reference; the faces of the module against the rear cover are the sealed joint of one casing (sectionFaces); the rear plume leaves through a 0.30 m outlet patch on the vent slots. Structure: steel core of the plate, riser core, foot screw boss and hinge as joints, bracket, VESA standoff and the steel frame of the LCD module with its rail and stile as members, masses at the rig centres, one contact pad under the four feet.",
-            "de": "Standfuß: der Hals ist eine gerundete Säule 62 x 22 mm mit verbreitertem Fuß, in die Platte eingelassen, und der 20-mm-Neigegelenkwalze am Kopf im Halter; die Fußplatte ist eine gerundete Platte 0,25 x 0,21 m mit abgeschrägter Oberkante auf vier 22-mm-Gummifüßen. Thermik: Panelfront, Rückwand und Standfuß als Verweis; die Flächen des Moduls an der Rückwand sind die dichte Fuge eines Gehäuses (sectionFaces); die Warmluftfahne tritt durch ein 0,30 m breites Austrittsfeld auf den Lüftungsschlitzen aus. Tragwerk: Stahlkern der Platte, Halskern, Schraubdom am Fuß und Gelenk als Knoten, Halter, VESA-Distanz und Stahlrahmen des LCD-Moduls mit Riegel und Ständer als Stäbe, Massen an den Schwerpunkten des Rigs, ein Kontaktpolster unter den vier Füßen."
+            "en": "Stand: the riser is a rounded column 62 x 22 mm with a flared foot sunk into the plate and the 20 mm tilt-hinge barrel at its head inside the bracket; the base plate is a 0.25 x 0.21 m rounded plate with a bevelled top edge, drawn down to the desk: the four 2 mm rubber pads are below the 7.5 mm feature and merge into it. Thermal: panel front, rear cover and stand by reference; the faces of the module against the rear cover are the sealed joint of one casing (sectionFaces); the rear plume leaves through a 0.30 m outlet patch on the vent slots. Structure: steel core of the plate, riser core, foot screw boss and hinge as joints, bracket, VESA standoff and the steel frame of the LCD module with its rail and stile as members, masses at the rig centres, one contact pad under the plate.",
+            "de": "Standfuß: der Hals ist eine gerundete Säule 62 x 22 mm mit verbreitertem Fuß, in die Platte eingelassen, und der 20-mm-Neigegelenkwalze am Kopf im Halter; die Fußplatte ist eine gerundete Platte 0,25 x 0,21 m mit abgeschrägter Oberkante, bis auf den Tisch geführt: die vier 2 mm hohen Gummifüße liegen unter dem Merkmal von 7,5 mm und gehen in ihr auf. Thermik: Panelfront, Rückwand und Standfuß als Verweis; die Flächen des Moduls an der Rückwand sind die dichte Fuge eines Gehäuses (sectionFaces); die Warmluftfahne tritt durch ein 0,30 m breites Austrittsfeld auf den Lüftungsschlitzen aus. Tragwerk: Stahlkern der Platte, Halskern, Schraubdom am Fuß und Gelenk als Knoten, Halter, VESA-Distanz und Stahlrahmen des LCD-Moduls mit Riegel und Ständer als Stäbe, Massen an den Schwerpunkten des Rigs, ein Kontaktpolster unter der Platte."
           }
         ]
       },
@@ -4605,32 +4499,7 @@
             "plane": "yz",
             "from": -0.167,
             "to": 0.156,
-            "profile": [
-              [
-                -0.04,
-                -0.27
-              ],
-              [
-                -0.04,
-                0.27
-              ],
-              [
-                -0.026,
-                0.27
-              ],
-              [
-                -0.005,
-                0.184
-              ],
-              [
-                -0.005,
-                -0.184
-              ],
-              [
-                -0.026,
-                -0.27
-              ]
-            ]
+            "profile": [[-0.04, -0.27], [-0.04, 0.27], [-0.026, 0.27], [-0.005, 0.184], [-0.005, -0.184], [-0.026, -0.27]]
           },
           {
             "id": "neck",
@@ -4642,24 +4511,7 @@
             "plane": "xy",
             "from": -0.032,
             "to": 0.032,
-            "profile": [
-              [
-                -0.004,
-                -0.006
-              ],
-              [
-                0.247,
-                -0.006
-              ],
-              [
-                0.256,
-                0.011
-              ],
-              [
-                0.0,
-                0.03
-              ]
-            ]
+            "profile": [[-0.004, -0.006], [0.247, -0.006], [0.256, 0.011], [0.0, 0.03]]
           },
           {
             "id": "base-plate",
@@ -4671,32 +4523,7 @@
             "plane": "zx",
             "from": 0.0,
             "to": 0.012,
-            "profile": [
-              [
-                -0.124,
-                0.012
-              ],
-              [
-                -0.088,
-                0.0
-              ],
-              [
-                0.088,
-                0.0
-              ],
-              [
-                0.124,
-                0.012
-              ],
-              [
-                0.112,
-                0.21
-              ],
-              [
-                -0.112,
-                0.21
-              ]
-            ]
+            "profile": [[-0.125, 0.03], [-0.095, 0.0], [0.095, 0.0], [0.125, 0.03], [0.125, 0.18], [0.095, 0.21], [-0.095, 0.21], [-0.125, 0.18]]
           }
         ],
         "thermal": [
@@ -4708,137 +4535,26 @@
             "role": "body",
             "region": "panel-front",
             "layer": "front-stack",
-            "sectionFaces": [
-              "+v"
-            ],
+            "sectionFaces": ["+v"],
             "kind": "box",
-            "size": [
-              0.323,
-              0.002,
-              0.536
-            ],
-            "cornerRadius": 0,
+            "size": [0.323, 0.002, 0.536],
             "transform": {
-              "translation": [
-                -0.006,
-                -0.039,
-                0.0
-              ]
+              "translation": [-0.0055, -0.039, 0.0]
             }
           },
           {
-            "id": "th-casing-rim",
-            "kind": "loft",
-            "bone": "panel",
-            "material": "housing-plastic",
-            "role": "body",
-            "tone": 0.55,
-            "sections": [
-              {
-                "at": [
-                  -0.0085,
-                  -0.036,
-                  0.0
-                ],
-                "rx": 0.27,
-                "ry": 0.1615,
-                "exponent": 40,
-                "rotation": [
-                  0.5,
-                  0.5,
-                  0.5,
-                  -0.5
-                ]
-              },
-              {
-                "at": [
-                  -0.0085,
-                  -0.0275,
-                  0.0
-                ],
-                "rx": 0.27,
-                "ry": 0.1615,
-                "exponent": 40,
-                "rotation": [
-                  0.5,
-                  0.5,
-                  0.5,
-                  -0.5
-                ]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "sectionFaces": [
-              "-v"
-            ],
-            "region": "housing",
-            "layer": "housing-shell"
-          },
-          {
             "id": "th-housing",
-            "kind": "loft",
             "bone": "panel",
             "material": "housing-plastic",
-            "role": "body",
             "tone": 0.55,
-            "sections": [
-              {
-                "at": [
-                  -0.011,
-                  -0.0274,
-                  0.0
-                ],
-                "rx": 0.264,
-                "ry": 0.156,
-                "exponent": 8,
-                "rotation": [
-                  0.5,
-                  0.5,
-                  0.5,
-                  -0.5
-                ]
-              },
-              {
-                "at": [
-                  -0.023,
-                  -0.015,
-                  0.0
-                ],
-                "rx": 0.225,
-                "ry": 0.12,
-                "exponent": 8,
-                "rotation": [
-                  0.5,
-                  0.5,
-                  0.5,
-                  -0.5
-                ]
-              },
-              {
-                "at": [
-                  -0.027,
-                  -0.004,
-                  0.0
-                ],
-                "rx": 0.182,
-                "ry": 0.092,
-                "exponent": 8,
-                "rotation": [
-                  0.5,
-                  0.5,
-                  0.5,
-                  -0.5
-                ]
-              }
-            ],
-            "capStart": true,
-            "capEnd": true,
-            "sectionFaces": [
-              "-v"
-            ],
+            "role": "body",
             "region": "housing",
-            "layer": "housing-shell"
+            "layer": "housing-shell",
+            "kind": "extrude",
+            "plane": "yz",
+            "from": -0.167,
+            "to": 0.156,
+            "profile": [[-0.038, -0.27], [-0.038, 0.27], [-0.026, 0.27], [-0.005, 0.184], [-0.005, -0.184], [-0.026, -0.27]]
           },
           {
             "id": "th-rear-plume",
@@ -4847,29 +4563,13 @@
             "material": "housing-plastic",
             "role": "body",
             "tone": 0.55,
-            "size": [
-              0.04026,
-              0.0015,
-              0.3
-            ],
+            "size": [0.04, 0.0015, 0.3],
             "transform": {
-              "translation": [
-                0.10485,
-                -0.01607,
-                0.0
-              ],
-              "rotation": [
-                0.0,
-                0.0,
-                0.99044,
-                0.13791
-              ]
+              "translation": [0.105, -0.00425, 0.0]
             },
             "region": "housing",
             "layer": "housing-shell",
-            "tags": [
-              "rear-plume"
-            ]
+            "tags": ["rear-plume"]
           },
           {
             "id": "th-neck",
@@ -4898,7 +4598,7 @@
             "part": "member"
           },
           {
-            "id": "member-panel-rail",
+            "id": "member-panel-frame",
             "bone": "panel",
             "material": "stand-plastic",
             "tone": 0.3,
@@ -4906,41 +4606,24 @@
             "member": "panel",
             "part": "member",
             "kind": "box",
-            "size": [
-              0.021,
-              0.007,
-              0.482
-            ],
-            "cornerRadius": 0,
+            "size": [0.1, 0.01, 0.46],
             "transform": {
-              "translation": [
-                -0.02,
-                -0.018,
-                0.0
-              ]
+              "translation": [-0.01, -0.025, 0.0]
             }
           },
           {
-            "id": "member-panel-stile",
-            "kind": "box",
+            "id": "joint-tilt-hinge",
             "bone": "panel",
             "material": "stand-plastic",
-            "role": "detail",
             "tone": 0.3,
-            "size": [
-              0.2,
-              0.03,
-              0.03
-            ],
-            "transform": {
-              "translation": [
-                -0.02,
-                -0.019,
-                0.0
-              ]
-            },
+            "role": "detail",
             "member": "panel",
-            "part": "member"
+            "part": "joint",
+            "kind": "box",
+            "size": [0.02, 0.02, 0.064],
+            "transform": {
+              "translation": [0.0, 0.0, 0.0]
+            }
           },
           {
             "id": "mass-panel",
@@ -4949,17 +4632,9 @@
             "material": "stand-plastic",
             "role": "detail",
             "tone": 0.15,
-            "radii": [
-              0.04,
-              0.0165,
-              0.04
-            ],
+            "radii": [0.03, 0.01, 0.03],
             "transform": {
-              "translation": [
-                -0.01,
-                -0.022,
-                0.0
-              ]
+              "translation": [-0.01, -0.022, 0.0]
             },
             "member": "panel",
             "part": "mass"
@@ -4971,17 +4646,9 @@
             "material": "rubber-foot",
             "role": "detail",
             "tone": 0.3,
-            "size": [
-              0.19,
-              0.0124,
-              0.2
-            ],
+            "size": [0.2, 0.01, 0.24],
             "transform": {
-              "translation": [
-                0.105,
-                0.0062,
-                0.0
-              ]
+              "translation": [0.105, 0.005, 0.0]
             },
             "member": "base",
             "part": "support",
@@ -4990,8 +4657,16 @@
         ],
         "decisions": [
           {
-            "en": "The tapered rear case clears the pivot. The wide foot, rising column and panel remain separate moving assemblies.",
-            "de": "Das rückseitig verjüngte Gehäuse lässt das Gelenk frei. Breiter Fuß, Säule und Bildschirm bleiben getrennte Baugruppen."
+            "en": "Body: a digital model only, the drawing is unavailable at 1:500. The monitor keeps its three assemblies as three solids: the panel as one prism of the true head outline 540 x 323 mm whose section is the 14 mm edge thickening to the 35 mm electronics hump, the tapered riser 64 mm wide, and the 250 x 210 mm base plate with even chamfered corners. Bezel, glass, vents, VESA bracket and pads are below 75 mm and merged into these masses.",
+            "de": "Körper: nur ein digitales Modell, die Zeichnung ist bei 1:500 nicht verfügbar. Der Monitor behält seine drei Baugruppen als drei Körper: das Panel als ein Prisma mit dem wahren Umriss 540 x 323 mm, dessen Schnitt vom 14 mm dicken Rand zum 35 mm tiefen Elektronikbuckel wächst, die 64 mm breite, sich verjüngende Stütze und die 250 x 210 mm große Fußplatte mit gleichmäßig gefasten Ecken. Blende, Glas, Lüftungsschlitze, VESA-Halter und Füße liegen unter 75 mm und gehen in diesen Massen auf."
+          },
+          {
+            "en": "Thermal: the panel front as a 2 mm skin on the face of the prism, the housing as the rest of the prism behind it with the plume outlet flush on the back, riser and base plate by reference as the stand.",
+            "de": "Thermisch: die Panelfront als 2 mm dünne Haut auf der Stirn des Prismas, das Gehäuse als der Rest des Prismas dahinter mit dem Auslass der Wärmefahne bündig auf der Rückseite, Stütze und Fußplatte als Ständer per Verweis."
+          },
+          {
+            "en": "Structure: base plate and riser are the members themselves; the LCD module frame is one plate across the VESA field, the tilt hinge a joint at the head of the riser, the panel mass at its centre and the contact pad under the plate.",
+            "de": "Tragwerk: Fußplatte und Stütze sind selbst die Stäbe; der Rahmen des LCD-Moduls ist eine Platte über dem VESA-Feld, das Neigegelenk ein Gelenk am Kopf der Stütze, die Panelmasse in ihrem Schwerpunkt und das Kontaktfeld unter der Platte."
           }
         ]
       }

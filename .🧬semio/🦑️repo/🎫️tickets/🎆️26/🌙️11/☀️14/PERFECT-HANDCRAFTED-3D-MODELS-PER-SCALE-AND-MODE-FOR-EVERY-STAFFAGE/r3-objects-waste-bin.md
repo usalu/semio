@@ -83,3 +83,43 @@ Final check: `volumes-check.ts objects/waste-bin --product` PASS (41 rule lines 
 - 1:500 plinth is 75 mm (the print feature) for a real 25 mm pedestal; 1:500 lid mass is 38 mm thick to stay inside the lid plate.
 - Structure is the monocoque moulding itself (references to wall, rim, skirt, floor, lid), which is the real load path of a moulded bin; the members reuse the body solids by D3's exception, not a block.
 - Thermal areas rest on the area reviewers' convention (tub inner faces count, lid underside is a section face); under C31's flood rule the closed tub's inner faces would not count. Noted in `area-review.md`, nothing changed.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-waste-bin-rig.py` (rig root fix, 1:200 plan and lid, `--apply`), shared `r5_o02_lib.py`, `r5-o02-sheets.sh`, `r5-o02-montage.sh`, `r5-o02-measure.ts`. Renders under `🗑️generated/r5-waste-bin/{before,after}/` (every scale body, thermal cut, structure, 2D; poses closed-empty, lid-open, full-load; clip lid-open-close 0.8 s), all opened.
+
+### Model against reference (1:50, default pose, `r5-o02-measure.ts`)
+
+| quantity | reference (section 1, EN 840 moulded bin class) | model | deviation |
+|---|---|---|---|
+| height, lid closed | 0.93 to 1.10 m (asset 1.03) | 1.033 m | +0.3 % to `heightM` |
+| plan size | square 0.45 to 0.55 m (asset 0.53 x 0.50 incl. lugs) | 0.533 x 0.502 m | +0.6 % / +0.4 % |
+| tub wall draft | 2 to 3 degrees per side typical | 0.400 to 0.496 m over 0.927 m = 3.0 degrees | inside |
+| rim bead | 510 x 500 mm, 12 mm | 510 x 500 x 12 mm | 0 % |
+| floor | at the bottom of the tub on the foot skirt | 25 mm above ground, 396 mm square | 0 % |
+| hinge pin | 9 mm, 0.44 m | 9 mm, 0.440 m | 0 % |
+
+### Grades (body / thermal / structure)
+
+| scale | before | after |
+|---|---|---|
+| 1:50 | A- / A- / B (rig: `body` bone lay on the ground and ran 0.5 m ahead, its tip 0.25 m in the air in front of the bin; the forces view drew the shell member as a floor bar) | A- / A- / A- (bone up the tub axis to the pivot) |
+| 1:100 | A- / A- / B | A- / A- / A- |
+| 1:200 | A- / A- / B; 2D plan lid in six stepped strips leaving 0.01 mm white slivers at 1:150 | A- / A- / A- (plan lid one strip; lid one solid dome) |
+| 1:500 | A- / A- / B | A- / A- / A- |
+
+Catalog before: INVALID (5 `range-end-gap` at 1:150, thermal total at 1:200 and 1:500). After: schema 0, validateAsset 0; `checkVolumes` 2 = the thermal totals at 1:200 and 1:500 (2.57 / 2.62 against 4.715 m2), an area dispute listed in `area-review.md` (2026-11-21) and `tool-requests.md`, not forced.
+
+### Changes (root, `r5-waste-bin-rig.py`)
+
+- `rig.bones.body`: angle 0 -> 90, length 0.5 -> 0.98 (base to pivot), title en/de; mass centre (0, 0.5) -> (0.5, 0) in the new frame (same world point). Children `base-plate` (-0.2, 0.025, 0 deg) -> (0.025, 0.2, -90 deg) and `lid` (-0.255, 0.98, 0 deg) -> (0.98, 0.255, -90 deg): same world places; the lid still opens 0 to 110 degrees about the pin (pose lid-open and the clip checked).
+- `anchors` foot-*: (±0.175, 0) -> (0, ∓0.175) in the new frame (same world places); normals unchanged.
+- Every elevation shape bound to `body` at every scale and every `body`-bone solid of every scale and list restated in the new frame (frame turn as transform, `sectionFaces` remapped); world geometry identical (extents measured before and after).
+- 1:200: plan corner strips `lid-corner-a0..b2` removed, `lid-span` 0.52 m; 3D lid one solid dome over 0.5 m (the 4 mm shell and 16 mm end walls are below 30 mm); its thermal and structure references follow; decisions en/de rewritten.
+
+### Remaining
+
+- Thermal total at 1:200 and 1:500 fails (see above): the closed lid seals the tub at the coarse flood cells, the 14 mm notches that open it at 1:50/1:100 are below the coarse resolution. Left for the area reviewers; the author did not enlarge real openings.
+- Section 6 items stand (9 mm lid end plates at 1:50, straight bag hem in 3D, 75 mm plinth at 1:500, monocoque structure by reference).
+
+The current bin retains the 9 mm lid end walls, 14 mm hinge notches, rolled seat, cap, rear rail, open skirt, four 8.5 mm pads and 7.5 mm floor across the scale series. The air-space check now resolves the measured notch, including at 1:500, and distinguishes it from the same enclosure with the slit closed. The 1:200 and 1:500 exposure failures recorded above have been resolved. The four measured geometry checks and the independent twelve-scene GLB reload passed (1,305,728 bytes).

@@ -79,3 +79,58 @@ Final check lines: `volumes-check.ts furniture/bookshelf --product` PASS (silhou
 - The carcass frame of 1:200 / 1:500 (one extrusion with a hole) shows a soft shading gradient on its flat faces in `r3-sheet`; geometry is flat, it is the sheet's smoothing.
 - 1:50 structure: the cam joints lie inside the boards and are invisible without the ghost; the list is otherwise the boards themselves (D3 allows it for carcass furniture, but it looks like the body in blue).
 - References for BILLY and Häfele are from knowledge, not fetched.
+
+## Round 5 handcraft
+
+Scripts: `r5-bookshelf-build.py` (round 3 model loaded, the support pads restated; writes `🗑️generated/r5-bookshelf/🔣️.json` and `volumes/furniture/bookshelf.json`), `r5-furniture-f03-ship.sh`, `r5-furniture-f03-report.py`. Sheets opened for grading (Read tool, 1000 to 1400 px copies of the 2400 px sheets under `🗑️generated/r5-bookshelf/before|after/`): `r3-sheet` body, structure and thermal (`--cut`) at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50, one clip frame, and `r3-2d` at every scale (the 2D drawings were not changed in round 5, so the before set is the after set).
+
+### Reference (manufacturer data and standards)
+
+| Quantity | Reference | Source |
+| --- | --- | --- |
+| Open bookcase type | 800 x 280 x 2020 / 1060 mm, shelf 760 x 260 mm (IKEA BILLY) | IKEA BILLY data |
+| Board | 18 mm melamine chipboard P5, 650 kg/m3 | EN 312 |
+| Shelf supports | 5 mm pins in 32 mm rows, first row 37 mm behind the front edge | System 32 (asset reference) |
+| Cam fittings | 15 mm drum, 34 mm drilling distance | Häfele Minifix 15 |
+| Back | 3 mm hardboard in 4 x 8 mm grooves | carcass practice |
+
+### Model against reference (1:50)
+
+| Quantity | Model | Reference | Deviation |
+| --- | --- | --- | --- |
+| Overall | 0.80 x 0.30 x 1.80 m | asset dimensions (BILLY 0.80 x 0.28 x 2.02 as type) | width 0 %; depth and height are the asset's declared unit |
+| Board | 18 mm | 18 mm | 0 % |
+| Shelf | 0.762 x 0.280 x 0.018 m, 1 mm play | inner width 0.764 - 2 mm | 0 % |
+| Shelf pitch | 288 mm = 9 x 32 | multiple of 32 mm | 0 % |
+| Pins | 5 mm, rows 37 mm and 261 mm behind the front | System 32 | 0 % |
+
+### Grades (before -> after)
+
+| Scale | Body | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | A- -> A- | A- -> A- | A- -> A- |
+| 1:100 | A- -> A- | A- -> A- | A- -> A- |
+| 1:200 | A- -> A- | A- -> A- | B+ -> A- |
+| 1:500 | B+ -> B+ | B+ -> B+ | B -> B+ |
+
+Poses at 1:50 (loaded, shelf-adjusted, top-two-loaded-key) and clip re-pin-shelf t 2 s: A- (shelves sag closed about their pins, the re-pinned shelf moves with its pins).
+
+### Defects seen before, and what was changed
+
+- Supports: each floor-edge support was the 18 x 300 mm edge grown by 6 / 12 / 20 / 30 mm all round, so at 1:200 and 1:500 green tabs stood 20 to 30 mm outside the carcass in plan and elevation. The pads keep their width (18 mm plus twice the growth) but lie from the outer face of the side panel inward over exactly the 300 mm depth, under the carcass at every scale.
+
+### Checks
+
+`volumes-check.ts furniture/bookshelf --product`: PASS (20.2 s); silhouette IoU 1:50 1 / 1 / 1, 1:500 1 / 0.988 / 1; carcass outer area 3.36 m2 at 1:50 (declared 3.26). After the splice `r3-validate.ts <asset> --catalog-only --volumes`: VALID, schema 0, validateAsset 0, checkVolumes 0.
+
+### Remaining issues
+
+- 1:500 (and 1:200 less so): 75 / 30 mm boards are a heavy caricature of an 18 mm carcass, forced by the printable feature (0.15 mm on paper); the 75 mm cleats under the shelf ends read as brackets in the structure. B+.
+- 1:50 structure: the carcass boards are the members themselves (allowed by D3 for carcass furniture), so it looks like the body in blue.
+
+
+### Current digital model, 21 November
+
+All five shelves use 18 mm board on four 5 mm steel pins. Each pin embeds 8 mm into its side and extends 9 mm under the shelf. The rear hardboard stays 3 mm and the plinth is 18 mm at all four scales. Under the loaded pose, both halves of each shelf lower the midspan by 5.8 mm. The former 30 and 75 mm boards and oversized cleats have been replaced. The finer boards retain a milled leading edge, with fewer profile stations in the coarser models.
+
+The Three.js measurements cover pin diameter, engagement, bearing, pitch and loaded shelf deflection. The live asset passed JSON Schema, asset and full measured volume checks. All twelve body, thermal and structural GLB scenes reloaded at 1,274,184 bytes total.

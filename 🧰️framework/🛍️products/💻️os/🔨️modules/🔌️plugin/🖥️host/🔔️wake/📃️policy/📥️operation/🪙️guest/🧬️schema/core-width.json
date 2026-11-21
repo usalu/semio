@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "physical",
+    "infrastructure",
+    "invalidInfrastructure",
+    "cases"
+  ],
+  "properties": {
+    "physical": {
+      "$ref": "#/definitions/grant"
+    },
+    "infrastructure": {
+      "$ref": "#/definitions/grant"
+    },
+    "invalidInfrastructure": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/grant"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "requested",
+          "semantic",
+          "header"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "requested": {
+            "$ref": "#/definitions/grant"
+          },
+          "semantic": {
+            "$ref": "#/definitions/grant"
+          },
+          "header": {
+            "$ref": "#/definitions/grant"
+          }
+        }
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "grant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "description": "Items, copy bytes, capacity bytes, release bytes, and depth."
+    }
+  }
+}

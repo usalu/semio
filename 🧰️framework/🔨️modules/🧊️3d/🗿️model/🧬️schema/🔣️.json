@@ -295,6 +295,9 @@
         },
         {
           "$ref": "#/$defs/LoftSolid"
+        },
+        {
+          "$ref": "#/$defs/PolyhedronSolid"
         }
       ]
     },
@@ -1356,6 +1359,88 @@
         },
         "message": {
           "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "PolyhedronSolid": {
+      "description": "A connected, closed, outward-oriented triangular shell. Vertices are unique bone- or node-local positions in metres. Triangles index them counterclockwise as viewed from outside.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "node",
+        "material",
+        "vertices",
+        "triangles"
+      ],
+      "properties": {
+        "kind": {
+          "const": "polyhedron"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "uniqueItems": true
+        },
+        "transform": {
+          "$ref": "#/$defs/TransformPatch"
+        },
+        "repeat": {
+          "$ref": "#/$defs/Repeat"
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node",
+              "weight"
+            ],
+            "properties": {
+              "node": {
+                "$ref": "#/$defs/Slug"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "vertices": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "$ref": "#/$defs/Vec3"
+          }
+        },
+        "triangles": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
         }
       }
     }

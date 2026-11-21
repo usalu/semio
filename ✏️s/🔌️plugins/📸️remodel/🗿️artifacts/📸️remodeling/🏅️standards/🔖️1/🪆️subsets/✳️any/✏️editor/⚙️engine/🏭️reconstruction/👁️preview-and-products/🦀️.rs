@@ -15,7 +15,7 @@ pub struct ScenePreview {
 /// 🧱️ One bounded terminal sparse-output slice with explicit next cursors.
 #[derive(Clone, Debug, PartialEq)]
 pub struct TerminalSparseChunk {
-    pub camera_poses: Vec<remodeling_camera::CameraPose>,
+    pub camera_poses: Vec<(u64, remodeling_camera::CameraPose)>,
     pub packed_points: Vec<f32>,
     pub next_camera: usize,
     pub next_point: usize,
@@ -87,7 +87,10 @@ impl ReconstructionEngine {
         let camera_end = bounded_terminal_end(camera_start, reconstruction.cameras.len(), max_cameras);
         let point_start = point_cursor.min(reconstruction.points.len());
         let point_end = bounded_terminal_end(point_start, reconstruction.points.len(), max_points);
-        let camera_poses = reconstruction.cameras[camera_start..camera_end].iter().map(|&(_, pose)| pose).collect();
+        let camera_poses = reconstruction.cameras[camera_start..camera_end].iter().map(|&(frame, pose)| {
+            let source = &self.frames[frame];
+            (FrameCapture::entity(source.capture.stream, source.index), pose)
+        }).collect();
         let packed_points = reconstruction.points[point_start..point_end].iter().flat_map(|point| point.iter().map(|&coordinate| coordinate as f32)).collect();
         TerminalSparseChunk { camera_poses, packed_points, next_camera: camera_end, next_point: point_end, complete: camera_end == reconstruction.cameras.len() && point_end == reconstruction.points.len() }
     }
@@ -106,8 +109,8 @@ impl ReconstructionEngine {
             if camera_index >= reconstruction.cameras.len() || point_index >= reconstruction.points.len() {
                 continue;
             }
-            let (_, pose) = reconstruction.cameras[camera_index];
-            let residual = remodeling_camera::reprojection_residual(&reconstruction.intrinsics, &pose, reconstruction.points[point_index], pixel);
+            let (frame, pose) = reconstruction.cameras[camera_index];
+            let residual = remodeling_camera::reprojection_residual(&reconstruction.intrinsics[&frame], &pose, reconstruction.points[point_index], pixel);
             squared_error_sum += residual[0] * residual[0] + residual[1] * residual[1];
             observation_count += 1;
             point_indices.push(point_index);

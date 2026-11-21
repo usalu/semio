@@ -23,7 +23,7 @@ export function thermal(asset: Json, k: Kit, scale: number): Json[] {
   const duvet = (id: string): boolean => /^(duvet-|cloth-|fold-(thighs|shins|legs)|mound)/.test(id);
   for (const s of k.solids) {
     const region = k.region.get(s.id);
-    if (region === undefined || s.id === "head") continue;
+    if (region === undefined || s.id === "head" || /^(brow|cheek-[lr]|chin|ala-[lr]|lips-lower)$/.test(s.id)) continue;
     const layered = scale === 50 && (regions.get(region)!.layers as Json[]).length > 1;
     const layer = !layered ? undefined : duvet(s.id) ? "duvet" : region === "top" ? "pyjama-top" : "pyjama-shorts";
     out.push({ id: `th-${s.id}`, of: s.id, region, ...(layer === undefined ? {} : { layer }) });

@@ -3,7 +3,7 @@
 @comparison-numerical-v1
 Feature: DIN EN 16798-1 comfort and ventilation reproduce the third-party cross-checks
   The independent oracle `🔮️oracles/🌐️cross-checks/🐍️.py` (scipy brentq for PMV and its inversion, scipy solve_ivp for the CO2 balance, IAPWS-IF97 vapour pressure) writes the vectors in `🧫️fixtures/🔮️cross-checks/🔣️.json`; every implementation must reproduce the rows tagged @agree.
-  Rows tagged @known-divergence document a difference between the Rust source and the standard (fixture section `divergences`, currently only the informational Table B.2 and adaptive notes) and are not asserted.
+  Rows tagged @known-divergence document a difference between the Rust source and the standard (fixture section `divergences`, the informational Table B.2 reference comparisons) and are not asserted.
 
   @id-pmv-brent
   @level-quick

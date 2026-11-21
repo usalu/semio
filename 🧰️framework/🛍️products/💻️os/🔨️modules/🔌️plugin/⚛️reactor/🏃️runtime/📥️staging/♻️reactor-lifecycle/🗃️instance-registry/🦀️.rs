@@ -10,7 +10,7 @@ use semio_plugin_plugin_program::{Plugin, PluginProgram};
 use semio_plugin_reactor_app::PluginApp;
 use crate::life_app_cell::RuntimeAppCell;
 use crate::life_cleanup_pumps::{RuntimeCloseCleanupPump, checked_runtime_close_generation, plugin_begin_instance_close};
-use crate::life_cleanup_vocabulary::{RuntimeCloseStatus, runtime_cleanup_fault};
+use crate::life_cleanup_vocabulary::{RuntimeCleanupFault, RuntimeCloseStatus, runtime_cleanup_fault};
 use serde_json::Value;
 use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 #[doc(hidden)]
@@ -40,6 +40,17 @@ pub struct RuntimeCloseWorkerState<PA: PluginApp> {
     pub callback_phase_started_us: AtomicU64,
     #[cfg(any(test, feature = "cleanup-probes"))]
     pub callback_phase_us: [AtomicU64; 24],
+}
+impl<PA: PluginApp> RuntimeCloseWorkerState<PA> {
+    /// 🕰️ Reports the original observation that produced this close verdict.
+    pub fn close_fault(&self, cause: RuntimeCleanupFault) -> Fault {
+        let elapsed = if cause == RuntimeCleanupFault::ZeroProgress {
+            self.stall_credit_spent_us.load(Ordering::SeqCst)
+        } else {
+            self.last_callback_elapsed_us.load(Ordering::SeqCst)
+        };
+        runtime_cleanup_fault("close", cause, self.instance_id, elapsed)
+    }
 }
 #[doc(hidden)]
 pub struct RuntimeCloseEntry<PA: PluginApp> {
@@ -212,6 +223,7 @@ pub struct RuntimeDocumentBackboneBindingV1 {
     pub generation: u64,
     pub uri: Option<String>,
     pub channel: Option<store::os_store::backbone::ActorBackboneChannelOwner>,
+    pub atomic: store::os_store::backbone::atomic_transport::AtomicDocumentBackboneWork,
 }
 impl RuntimeDocumentBackboneBindingV1 {
     pub fn state(&self) -> semio_plugin_actor_host::document_backbone_binding::DocumentBackboneBindingStateV1 {
@@ -239,6 +251,7 @@ pub struct PluginRuntime<PA: PluginApp> {
     pub local_interaction_query_generation: semio_plugin_interaction::live::LocalInteractionQueryGeneration,
     pub instance_actors: RefCell<RuntimeInstanceRegistry<RuntimeActorAuthority>>,
     pub document_backbones: RefCell<RuntimeInstanceRegistry<RuntimeDocumentBackboneBindingV1>>,
+    pub document_backbone_turn_cursor: Cell<usize>,
 }
 impl<PA: PluginApp> PluginRuntime<PA> {
     /// 🔑️ Reads the one acknowledged live actor allocation authority shared by receiving and rendering.
@@ -266,6 +279,7 @@ impl<PA: PluginApp> PluginRuntime<PA> {
             local_interaction_query_generation: Default::default(),
             instance_actors: RefCell::new(RuntimeInstanceRegistry::new()),
             document_backbones: RefCell::new(RuntimeInstanceRegistry::new()),
+            document_backbone_turn_cursor: Cell::new(0),
         })
     }
 }

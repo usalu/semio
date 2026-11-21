@@ -1,11 +1,11 @@
-//! 📚️ Example conforming Blatt 53.
+//! 📚️ Published scope example for Blatt 53.
 
 use semio_plugin::ExampleSource;
 use semio_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "blatt-53";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Blatt 53 conforming", "Blatt 53 konform")
+    LocalizedLabel::native("Blatt 53 Control cabinet", "Blatt 53 Schaltschrank")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/blatt-53/🗣️.dsl.semio");

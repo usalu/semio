@@ -14,4 +14,6 @@ impl protocol::OpBinary for JackGraphWindowConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+protocol::original_ordinal_operation_receiving!(JackGraphWindowConfigMutation);
 }

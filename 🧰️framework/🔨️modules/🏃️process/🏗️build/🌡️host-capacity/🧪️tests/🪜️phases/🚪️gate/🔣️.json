@@ -1,0 +1,8 @@
+{
+  "lentReplacement": [
+    {"totalMegabytes": 11000, "availableMegabytes": 7000, "observedMegabytes": 4000, "requiredMegabytes": 7000, "current": true, "expected": "fits"},
+    {"totalMegabytes": 11000, "availableMegabytes": 7000, "observedMegabytes": 4000, "requiredMegabytes": 7000, "current": false, "expected": "stale"},
+    {"totalMegabytes": 11000, "availableMegabytes": 7000, "observedMegabytes": 4000, "requiredMegabytes": 10001, "current": true, "expected": "never"},
+    {"totalMegabytes": 11000, "availableMegabytes": 3900, "observedMegabytes": 4000, "requiredMegabytes": 7000, "current": true, "expected": "memory"}
+  ]
+}

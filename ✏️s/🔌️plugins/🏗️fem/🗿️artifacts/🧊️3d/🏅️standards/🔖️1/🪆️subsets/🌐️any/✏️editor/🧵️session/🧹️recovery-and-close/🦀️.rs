@@ -4,8 +4,8 @@ use super::*;
 
 //#region 💼️MountedSession
 pub(super) fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, PluginLifecycleFailure> {
-    let shell = registry.recovery_cursor;
-    registry.recovery_cursor = (registry.recovery_cursor + 1) % SHELL_CAPACITY;
+    let Some(shell) = registry.next_recovery(app_instance_id) else { return Ok(None); };
+    registry.recovery_cursor = (shell + 1) % SHELL_CAPACITY;
     let recovery = registry.recoveries[shell].clone();
     let Some((identity, publication)) = recovery.publication.get() else { return Ok(None); };
     if identity.app_instance_id != app_instance_id || recovery.reserved.get() != Some(identity) {
@@ -85,15 +85,14 @@ fn retire_one(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedClo
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let Some(slot) = registry.app_slots.lookup(app_instance_id).map(|slot| slot.index()) else { return Ok(session_pending(0, 0))};
-        for request_slot in 0..ACTIVE_CAPACITY {
-            let replacement_ready = registry.current[request_slot].filter(|current| current.app_instance_id == app_instance_id).is_some_and(|current| registry.shells[current.shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.done && state.numerical_done && state.solver.as_ref().is_some_and(Fem3dSolverView::ready))));
-            if replacement_ready && registry.retained_results[request_slot].is_some() { if !registry.retire_retained_results(app_instance_id, request_slot) { return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D result retirement capacity" }); } return Ok(session_pending(1, 0)); }
+        if let Some(request_slot) = registry.replaced_result(app_instance_id) {
+            if !registry.retire_retained_results(app_instance_id, request_slot) {
+                return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D result retirement capacity" });
+            }
+            return Ok(session_pending(1, 0));
         }
-        let shell = registry.maintenance_cursor;
-        registry.maintenance_cursor = (registry.maintenance_cursor + 1) % SHELL_CAPACITY;
-        if !registry.retiring[shell] || registry.retiring_app[shell] != app_instance_id {
-            return Ok(session_pending(0, 0));
-        }
+        let Some(shell) = registry.next_retirement(app_instance_id) else { return Ok(session_pending(0, 0)); };
+        registry.maintenance_cursor = (shell + 1) % SHELL_CAPACITY;
         let step = {
             let Ok(mut owner) = registry.shells[shell].try_borrow_mut() else { return Ok(PluginLifecycleStep::Blocked { reason: "FEM3D retiring child is borrowed" })};
             let Some(state) = owner.as_mut() else {
@@ -124,11 +123,37 @@ fn retire_one(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedClo
     })
 }
 
+/// 🧭 Reports work that can retire while the app retains its live request and result owners.
+pub fn maintenance_pending(app_instance_id: u32) -> bool {
+    let (pending, mounted) = MOUNTED.with(|registry| {
+        let registry = registry.borrow();
+        let pending = registry.next_recovery(app_instance_id).is_some()
+            || registry.next_retirement(app_instance_id).is_some()
+            || registry.replaced_result(app_instance_id).is_some()
+            || (0..ACTIVE_CAPACITY).any(|slot| registry.retirable_request(app_instance_id, slot))
+            || (0..registry.verified_sources.len()).any(|index| {
+                registry.requests.consumer_retiring(index) && registry.requests.consumer_at(index).is_some_and(|(scope, _)| scope == app_instance_id)
+            });
+        (pending, registry.app_slots.lookup(app_instance_id).is_some())
+    });
+    pending || (mounted && (recovered_fem3d_backing_pending() || world3d_snapshot_recovery_pending()))
+}
+
 pub fn maintenance_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
-    semio_plugin::app::original_lifecycle_step(cx, grant, close_demands(app_instance_id)?, |cx, grant| {
+    if !maintenance_pending(app_instance_id) { return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default())); }
+    semio_plugin::app::original_lifecycle_step(cx, grant, owner_demands(app_instance_id, true)?, |cx, grant| {
         let step = maintenance_step_turn(app_instance_id, cx, grant)?;
-        Ok((step, terminal_is_empty(app_instance_id)))
+        let idle = !maintenance_pending(app_instance_id);
+        let step = if idle && step.progress().is_some_and(|progress| progress == RetainedCloneProgress::default()) {
+            PluginLifecycleStep::Complete(RetainedCloneProgress::default())
+        } else { step };
+        Ok((step, idle))
     })
+}
+
+/// 📋 Quotes detached owners only while live maintenance is pending.
+pub fn maintenance_demands(app_instance_id: u32) -> Result<RetirementDemand, ValueError> {
+    if maintenance_pending(app_instance_id) { owner_demands(app_instance_id, true) } else { Ok(RetirementDemand::default()) }
 }
 
 /// 📏️ Quotes the next close or maintenance turn: one owner release bounded by the largest session owner.
@@ -162,8 +187,8 @@ fn retire_request_one(app: u32, grant: RetainedCloneGrant) -> Option<PluginLifec
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         for slot in 0..ACTIVE_CAPACITY {
-            let Some((owner, scope, _)) = registry.requests.at(slot) else { continue };
-            if scope != app || registry.requests.references(owner) != 0 { continue; }
+            if !registry.retirable_request(app, slot) { continue; }
+            let (owner, _, _) = registry.requests.at(slot).expect("retirable FEM3D request");
             if registry.pending[slot].take().is_some() { return Some(session_pending(1, 0)); }
             if registry.requested[slot].take().is_some() { return Some(session_pending(1, 0)); }
             if registry.request_specs[slot].take().is_some() { return Some(session_pending(1, 0)); }
@@ -205,17 +230,26 @@ fn maintenance_step_turn(app_instance_id: u32, cx: &mut StepContext<'_>, grant: 
 
 
 pub fn close_demands(app_instance_id: u32) -> Result<RetirementDemand, ValueError> {
+    owner_demands(app_instance_id, false)
+}
+
+fn owner_demands(app_instance_id: u32, maintenance: bool) -> Result<RetirementDemand, ValueError> {
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
         let mut demand = RetirementDemand { copy_bytes: SESSION_CLOSE_COPY_BYTES, release_bytes: SESSION_CLOSE_RELEASE_BYTES, depth: SESSION_CLOSE_DEPTH, ..Default::default() };
-        for shell in &registry.shells {
-            if let Ok(owner) = shell.try_borrow() {
+        for (index, shell) in registry.shells.iter().enumerate() {
+            let recovery = &registry.recoveries[index];
+            let recovering = recovery.publication.get().is_some_and(|(identity, kind)| {
+                identity.app_instance_id == app_instance_id && kind == MountedRecoveryPublication::Recover
+            });
+            let retiring = registry.retiring[index] && registry.retiring_app[index] == app_instance_id;
+            if let Some(owner) = shell.try_borrow().ok().filter(|_| !maintenance || recovering || retiring) {
                 if let Some(state) = owner.as_ref().filter(|state| state.identity.app_instance_id == app_instance_id) { state.child_close_demands(&mut demand)?; }
             }
-        }
-        for recovery in &registry.recoveries {
-            let owner = recovery.owner.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-            if let Some(state) = owner.as_ref().filter(|state| state.identity.app_instance_id == app_instance_id) { state.child_close_demands(&mut demand)?; }
+            if !maintenance || recovering {
+                let owner = recovery.owner.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                if let Some(state) = owner.as_ref().filter(|state| state.identity.app_instance_id == app_instance_id) { state.child_close_demands(&mut demand)?; }
+            }
         }
         Ok(demand)
     })

@@ -95,6 +95,8 @@ pub enum XlsxMutation {
     RemoveContentType(remove_content_type::RemoveContentType),
 }
 dsl::original_pack_value_operation_receiving!(XlsxMutation);
+#[path = "🎯️history-target/🦀️.rs"]
+mod history_target;
 
 /// 🧾️ Kebab-case spelling of every `XlsxMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `xlsx-ecma-376-base` (`../../🔣️oracle.json`) is measured against

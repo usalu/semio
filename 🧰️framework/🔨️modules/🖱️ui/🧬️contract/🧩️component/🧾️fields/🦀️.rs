@@ -28,7 +28,7 @@ macro_rules! ui_component_field_catalog {
         $visitor!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => window: Option<TreeWindow>, 8 => granularity: Option<UiText>, 9 => inline_toolbar: Option<UiNodeId>, 10 => row_actions: UiFixedList<RowAction>, 11 => detail: Option<UiNodeId>, 12 => target: Option<RowTarget>, 13 => selected: Option<bool> });
         $visitor!(TableProps { 0 => label: Label, 1 => columns: UiFixedList<Label>, 2 => actions_label: Option<Label>, 3 => window: Option<TreeWindow>, 4 => row_label: Option<Label>, 5 => column_label: Option<Label>, 6 => column_window: Option<TreeWindow> });
         $visitor!(TableRowProps { 0 => cells: UiFixedList<UiText>, 1 => row_actions: UiFixedList<RowAction>, 2 => target: Option<RowTarget> });
-        $visitor!(ImageProps { 0 => src: UiText, 1 => alt: Option<Label> });
+        $visitor!(ImageProps { 0 => src: UiText, 1 => alt: Option<Label>, 2 => source_body_bytes: Option<u32> });
         $visitor!(ExtensionProps { 0 => extension: UiText, 1 => props: UiValue });
     };
 }

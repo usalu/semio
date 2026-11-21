@@ -64,6 +64,7 @@ pub use semio_framework_job::StepContext;
 // spliced into this crate root, so every `crate::<module>` path is unchanged.
 include!("🪝️mounts/🌱️wp1-foundation/🦀️.rs");
 include!("🪝️mounts/📜️wp2-declaration/🦀️.rs");
+pub use semio_plugin_interaction::interaction_topology::INTERACTION_HOVER_GROUP_GRANULARITY;
 include!("🪝️mounts/👥️wp3-owners/🦀️.rs");
 include!("🪝️mounts/⚛️wp4-reactor/🦀️.rs");
 include!("🪝️mounts/⏯️wp5-features/🦀️.rs");
@@ -79,7 +80,7 @@ pub use semio_plugin_abi::__semio_export_component_guest;
 //#region 🪟️WindowFacet
 pub(crate) use semio_plugin_window_transient::window_transient;
 #[doc(hidden)]
-pub use semio_plugin_window_transient::window_transient_transfer;
+pub use semio_plugin_window_transient::{WindowResourceRequests, image_with_source, input_value_body_key, paged_text_carrier_nodes, window_transient_transfer};
 //#endregion 🪟️WindowFacet
 //#region 📜️DeclarationFacet
 //#endregion 📜️DeclarationFacet
@@ -101,6 +102,11 @@ pub mod app {
     //! 🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.
     pub use semio_plugin_operation::{typed_operation_unit_census, TypedOperationUnitCensus};
     pub use semio_plugin_time_travel as time_travel;
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    #[doc(hidden)]
+    pub mod history_edit_acceptance {
+        pub use semio_plugin_testing_acceptance::{__EditorApp, acceptance_changes, assert_latest_history_preview, assert_mounted_history_overwrite, block_on_acceptance};
+    }
     pub use semio_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
     pub use semio_plugin_decl_surface::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};
     pub use semio_plugin_decl_views::{NoConfigGenesisOwner,NoDraftGenesisOwner};
@@ -209,6 +215,7 @@ pub mod app {
 pub mod plugin_app_close_prelude {
     pub use crate::app::*;
     pub use crate::app::{tree_item, PeerMark};
+    pub use semio_plugin_reactor_app::OriginalMediaImport;
     pub use semio_framework::kernel::ActionId;
     pub use semio_framework::kernel::*;
     pub use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation};
@@ -217,6 +224,7 @@ pub mod plugin_app_close_prelude {
     pub use semio_os_kernel as store;
     pub use semio_plugin_decl_app;
     pub use semio_plugin_decl_media;
+    pub use semio_plugin_decl_media::original_media::{RawMediaPicker, runtime::RawLiveDocument};
     pub use semio_plugin_decl_views;
     pub use semio_plugin_document_media;
     pub use semio_plugin_ownership;
@@ -810,5 +818,9 @@ mod subset_macro_tests;
 
 #[path="🎞️media/📤️snapshot/🦀️.rs"]
 pub mod native_snapshot_export;
+
+#[path="🎞️media/📤️structured/🦀️.rs"]
+pub mod structured_media_export;
+pub use semio_plugin_decl_media::original_media;
 
 pub use semio_framework_tool_run_presentation::ToolRunView as OriginalToolRunView;

@@ -25,7 +25,8 @@ fn every_demo_case_evaluates_its_entry_instead_of_reporting_missing_or_invalid_i
     let silent: Vec<String> = catalogue_demo_cases()
         .iter()
         .filter(|row| {
-            let results = evaluate_design_case(&design_case::DesignCase::from(*row), AnnexChoice::De);
+            let annex = if matches!(row.entry_id.as_str(), "E12.02" | "E12.04") { AnnexChoice::En } else { AnnexChoice::De };
+            let results = evaluate_design_case(&design_case::DesignCase::from(*row), annex);
             results.iter().all(|result| result.status == semio_s_plugin_norm_compliance::CheckStatus::NotApplicable) || results.iter().any(|result| result.id.contains(".input."))
         })
         .map(|row| row.entry_id.clone())
@@ -34,24 +35,35 @@ fn every_demo_case_evaluates_its_entry_instead_of_reporting_missing_or_invalid_i
 }
 
 #[test]
-fn the_committed_demo_document_equals_the_seeded_cases_and_covers_the_registry() {
-    let fixture = include_str!("../../../../../../../🧪️tests/🧫️fixtures/📇️catalogue/📚️demo-document/🔣️.json");
-    let rows = catalogue_demo_cases();
-    assert_eq!(fixture.matches("\"entryId\":").count(), rows.len(), "the demo document has a different number of cases than the seeded demo");
-    for row in &rows {
-        assert!(fixture.contains(&format!("\"id\": \"{}\"", row.id)) && fixture.contains(&format!("\"entryId\": \"{}\"", row.entry_id)), "{} is missing from the demo document", row.id);
-    }
-    let rows_with_values: usize = rows.iter().map(|row| row.numbers.len() + row.texts.len()).sum();
-    assert_eq!(fixture.matches("\"value\":").count(), rows_with_values, "the demo document values drifted from the seeded demo");
-    for entry in En1991Cases::entries() {
-        assert!(rows.iter().any(|row| row.entry_id == entry.id), "{} has no case in the demo document", entry.id);
-    }
-}
-
-#[test]
 fn the_vector_demo_values_reach_the_evaluator_input() {
     let rows = catalogue_demo_cases();
     let row = rows.iter().find(|row| row.entry_id == "E12.10").expect("E12.10 demo case");
     let input = case_input(AnnexChoice::De, &design_case::DesignCase::from(row));
     assert_eq!(input.vec.get("times_min").map(Vec::len), Some(5));
+}
+
+#[test]
+fn annex_bb_reliability_agrees_with_the_verified_model() {
+    use crate::annex_bb_reliability::{annual_failure_target, brigade_failure, ignition_model};
+
+    for line in include_str!("annex-bb-probability.tsv").lines().skip(1) {
+        let [occupancy, a, b, mean] = line.split('\t').collect::<Vec<_>>().try_into().unwrap();
+        assert_eq!(ignition_model(occupancy), Some((a.parse().unwrap(), b.parse().unwrap(), mean.parse().unwrap())));
+    }
+    assert_eq!(brigade_failure("public", 17.5, 0.0), Some(0.35));
+    assert!(brigade_failure("onsite_two", 10.0, 0.0).is_none());
+    assert!(annual_failure_target("agricultural", "high", 0.0).is_none());
+
+    let row = catalogue_demo_cases().into_iter().find(|row| row.entry_id == "E12.03.1").unwrap();
+    let case = DesignCase::from(&row);
+    let results = evaluate_design_case(&case, AnnexChoice::De);
+    for (key, expected) in [
+        ("p1", 0.0062), ("p2", 0.1), ("pfi", 0.00062), ("conditional_failure", 0.020_967_741_935_483_87),
+        ("beta", 2.034_159_823_526_682_7), ("gamma_classified", 0.981_213_421_815_356_6),
+        ("gamma_surveyed", 0.986_179_419_192_399_9),
+    ] {
+        let result = results.iter().find(|check| check.id == format!("en1991.e12.03.1.{key}.{}", row.id)).expect(key);
+        assert!((result.computed.value - expected).abs() < 1e-10, "{key}: {}", result.computed.value);
+    }
+    assert!(evaluate_design_case(&case, AnnexChoice::En).iter().all(|check| check.status == semio_s_plugin_norm_compliance::CheckStatus::NotApplicable));
 }

@@ -112,12 +112,12 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// current), and a panel-tagged transport gesture names it the same way so a pause can rest
     /// where the running clock is. The runtime validates the id against the trusted roster and
     /// captures that exact window's mutation authority.
-    fn retained_window_transient_target(command: &Fem3dCommand) -> Option<(&str, &'static str)> {
-        match command {
+    fn retained_window_transient_target<'a>(command: &'a Fem3dCommand, _view: Option<&'a semio_plugin::ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        Ok(match command {
             Fem3dCommand::ResultAnimationTick(payload) if !payload.window_id.is_empty() => Some((payload.window_id.as_str(), window_results::transient::WINDOW_KIND_ID)),
             Fem3dCommand::SetResultAnimation(payload) => payload.window_id.as_deref().filter(|id| !id.is_empty()).map(|id| (id, window_results::transient::WINDOW_KIND_ID)),
             _ => None,
-        }
+        })
     }
 
 
@@ -203,11 +203,11 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn mounted_job_maintenance_phase(instance_id: u32) -> Option<semio_plugin::MountedOwnerPhaseV1> {
-        (!semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::terminal_is_empty(instance_id)).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_pending(instance_id).then_some(semio_plugin::MountedOwnerPhaseV1::Maintenance)
     }
 
     fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_demands(instance_id)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_demands(instance_id)
     }
 
     fn mounted_job_close_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {

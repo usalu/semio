@@ -203,6 +203,8 @@ pub struct StyleSpec {
     pub tone: Tone,
     #[value(default, skip_serializing_if = "is_default")]
     pub emphasis: Emphasis,
+    #[value(default, skip_serializing_if = "is_default")]
+    pub highlighted: bool,
 }
 }
 semio_framework_value::native_json_codec!{
@@ -487,6 +489,8 @@ pub struct ImageProps {
     pub src: semio_ui_contract::UiText,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub alt: Option<Label>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub source_body_bytes: Option<u32>,
 }
 }
 semio_framework_value::native_json_codec!{

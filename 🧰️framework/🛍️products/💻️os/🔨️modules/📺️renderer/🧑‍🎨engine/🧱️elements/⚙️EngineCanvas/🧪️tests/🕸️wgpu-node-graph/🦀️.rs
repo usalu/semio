@@ -202,7 +202,7 @@ fn node_graph_domain_qualifies_every_target_kind_and_absence_suppresses_interact
     assert_eq!(node_graph_domain_targets_json(&domain, "node", &["add".into()]).expect("node targets"), r#"[{"granularity":"node","id":"flow-play-document.widget.add"}]"#);
     assert_eq!(node_graph_domain_targets_json(&domain, "edge", &["wire-1".into()]).expect("edge targets"), r#"[{"granularity":"edge","id":"flow-play-document.synapse.wire-1"}]"#);
     assert_eq!(node_graph_domain_targets_json(&domain, "handle", &["add@result".into()]).expect("handle targets"), r#"[{"granularity":"handle","id":"flow-play-document.handle.add@result"}]"#);
-    let snapshot = GraphInteractionSnapshot { node_ids: vec!["add".into()], hovered_id: Some("add".into()), hovered_handle: None, hovered_edge: None, viewport: Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } };
+    let snapshot = GraphInteractionSnapshot { node_ids: vec!["add".into()], edge_ids: Vec::new(), handle_ids: Vec::new(), hovered_id: Some("add".into()), hovered_handle: None, hovered_edge: None, viewport: Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } };
     let fixture: Value = serde_json::from_str(&NODE_GRAPH_SCENE_FIXTURE).unwrap();
     let edge_id = fixture["edgeHover"]["id"].as_str().unwrap();
     let edge = graph_projection_snapshot(Vec::new(), None, None, Some(edge_id.into()), [0.0, 0.0, 1.0]).expect("wire hit");
@@ -240,7 +240,7 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     let hover = actions.iter().find(|action| action.action == "interactionHover").expect("pointer-down publishes interactionHover");
     assert_eq!(
         action_fields(hover),
-        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"flow-play-document.widget.extrude"}]"#.to_owned()),],
+        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"flow-play-document.widget.extrude"}]"#.to_owned()), ("windowId".to_owned(), "law-window".to_owned())],
         "byte-identical to React's nodeGraphHoverActionArgs(\"extrude\") - a node-body pick carries no channel, so the target stays node-granular"
     );
 
@@ -249,9 +249,22 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     let channel_hover = moved.iter().find(|action| action.action == "interactionHover").expect("pointer-move publishes interactionHover");
     assert_eq!(
         action_fields(channel_hover),
-        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"handle","id":"flow-play-document.handle.extrude@wire"}]"#.to_owned()),],
+        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"handle","id":"flow-play-document.handle.extrude@wire"}]"#.to_owned()), ("windowId".to_owned(), "law-window".to_owned())],
         "byte-identical to React's nodeGraphHoverActionArgs(\"extrude\", \"wire\") - a port pick qualifies the target by channel"
     );
+
+    let mut input = InputState::<ActionDescriptor>::default();
+    let leave = semio_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_leave_into;
+    assert!(leave(surface_id, &scene.controller_id, &mut input).unwrap());
+    let clear = input.take_action_step().unwrap().unwrap().into_descriptor().unwrap();
+    assert_eq!(clear.action, "interactionHover");
+    let args = clear.args.unwrap();
+    assert_eq!(args["windowId"].as_str(), Some("law-window"));
+    assert_eq!(args["targets"].as_str(), Some("[]"));
+    assert!(!leave(surface_id, &scene.controller_id, &mut input).unwrap());
+    assert!(input.take_action_step().unwrap().is_none());
+    let reentered = node_graph_pointer_move(surface_id, &scene.controller_id, bounds, px, py, false, false, false);
+    assert!(reentered.iter().any(|action| action.action == "interactionHover"));
     drop_engine_surface(surface_id);
 }
 
@@ -407,4 +420,116 @@ fn graph_viewport_exit_preserves_newer_local_hover() {
         assert_eq!(live.as_deref(), step["live"].as_str(), "scene update {index}");
     }
     semio_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(surface_id);
+}
+
+#[test]
+fn graph_scene_uses_the_interaction_window_for_hover_arbitration() {
+    let _serialized = engine_surface_law_guard();
+    let cases: Value = serde_json::from_str(include_str!("../../../🕸️NodeGraph/🧪️tests/🧫️fixtures/🔣️hover.json")).unwrap();
+    let case = cases.as_array().unwrap().iter().find(|row| row["id"] == "a newer graph ray ignores its own delayed echo").unwrap();
+    let surface_id = "hover-origin-host";
+    let window_id = case["window"].as_str().unwrap();
+    drop_engine_surface(surface_id);
+    let mut scene = flow_window_scene(surface_id);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 966.0, h: 836.0 };
+    assert!(sync_node_graph_scene(&scene, window_id, bounds, Theme::default().panel));
+    let mut input = InputState::default();
+    for (index, step) in case["steps"].as_array().unwrap().iter().enumerate() {
+        if let Some(node) = step["localNode"].as_str() {
+            let (x, y) = node_center_screen(surface_id, node, bounds);
+            node_graph_pointer_move_into(surface_id, &scene.controller_id, bounds, x, y, false, false, false, &mut input).unwrap();
+        }
+        if let Some(hover) = step.get("scene") {
+            scene.node_graph.as_mut().unwrap().hover = serde_json::from_value(hover.clone()).unwrap();
+            assert!(sync_node_graph_scene(&scene, window_id, bounds, Theme::default().panel));
+        }
+        let live = ENGINE_SURFACES.with(|cell| {
+            let registry = cell.borrow();
+            let Some(NodeGraphEngine::Flow(host)) = registry.get(surface_id).unwrap().node_graph.as_ref() else { panic!("fixture uses Flow") };
+            semio_os_infinite_board_dag_graph::hovered_node_id(&host.dag.viewport, &host.dag.graph)
+        });
+        assert_eq!(live.as_deref(), step["live"].as_str(), "scene update {index}");
+    }
+    drop_engine_surface(surface_id);
+}
+
+#[test]
+fn flow_canvas_restores_and_publishes_same_named_directional_channels() {
+    use flow::infinite::board::schema::dag_input::DagChannelDirection;
+    use semio_ui_scene_node_graph::NodeGraphHover;
+    let _serialized = engine_surface_law_guard();
+    let fixture: Value = serde_json::from_str(&NODE_GRAPH_SCENE_FIXTURE).unwrap();
+    let directional = &fixture["directional"];
+    let widget = directional["widget"]["id"].as_str().unwrap();
+    let channel = directional["widget"]["name"].as_str().unwrap();
+    let bounds = Rect { x: 0.0, y: 0.0, w: 966.0, h: 836.0 };
+
+    for lod in ["detail", "normal"] {
+        let surface_id = format!("flow-directional-{lod}");
+        let mut scene = flow_window_scene(&surface_id);
+        let graph = scene.node_graph.as_mut().unwrap();
+        let mut snapshot: Value = serde_json::from_str(graph.host_snapshot_json.as_deref().unwrap()).unwrap();
+        snapshot["widgets"].as_array_mut().unwrap().push(directional["widget"].clone());
+        snapshot["layout"][widget] = json!({ "x": 80, "y": 280 });
+        graph.host_snapshot_json = Some(snapshot.to_string());
+        graph.nodes = vec![serde_json::from_value(directional["node"].clone()).unwrap()];
+        graph.selection_granularity = Some("handle".into());
+        graph.lod_json = Some(json!({ "automatic": false, "forcedLabel": lod }).to_string());
+
+        let ports = directional["ports"].as_array().unwrap();
+        let input = ports.iter().find(|port| port["direction"] == "in").unwrap();
+        graph.hover = Some(NodeGraphHover {
+            node_id: Some(widget.into()),
+            port_id: Some(input["id"].as_str().unwrap().into()),
+            edge_id: None,
+            port_ids: ports.iter().map(|port| port["target"].as_str().unwrap().to_owned()).collect(),
+            hover_source_window_id: Some(None),
+        });
+        assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
+        let painted_ports = || ENGINE_SURFACES.with(|cell| {
+            let map = cell.borrow();
+            let entry = map.get(&surface_id).unwrap();
+            let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_ref() else { panic!("real Flow engine") };
+            [DagChannelDirection::In, DagChannelDirection::Out].map(|direction| {
+                let handle = host.dag.graph.handle_id_for_channel(widget, channel, Some(direction)).unwrap();
+                host.dag.graph.handle_interaction_chrome(handle).2
+            })
+        });
+        assert_eq!(painted_ports(), [true, true], "both grouped channels are painted at {lod}");
+        scene.node_graph.as_mut().unwrap().hover.as_mut().unwrap().port_ids.clear();
+        assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
+        assert_eq!(painted_ports(), [true, false], "same primary and cleared companions at {lod}");
+
+        for port in directional["ports"].as_array().unwrap() {
+            let direction: DagChannelDirection = serde_json::from_value(port["direction"].clone()).unwrap();
+            let semantic = port["id"].as_str().unwrap();
+            let target = port["target"].as_str().unwrap();
+            let graph = scene.node_graph.as_mut().unwrap();
+            graph.selection = vec![target.into()];
+            graph.hover = Some(NodeGraphHover { node_id: Some(widget.into()), port_id: Some(semantic.into()), edge_id: None, port_ids: Vec::new(), hover_source_window_id: Some(None) });
+            assert!(sync_node_graph_scene(&scene, "law-window", bounds, Theme::default().panel));
+            let (x, y) = ENGINE_SURFACES.with(|cell| {
+                let map = cell.borrow();
+                let entry = map.get(&surface_id).unwrap();
+                let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_ref() else { panic!("real Flow engine") };
+                let hover = host.dag.graph.hovered_channel().expect("scene restores native typed hover");
+                assert_eq!((hover.widget_id.as_str(), hover.port.as_str(), hover.direction), (widget, channel, direction));
+                let selected = host.selected_channels();
+                assert_eq!(selected.as_slice(), &[hover]);
+                let id = host.dag.graph.handle_id_for_channel(widget, channel, Some(direction)).unwrap();
+                let position = host.dag.graph.engine.render_snapshot().handles.iter().find(|(handle, _, _)| *handle == id).unwrap().1;
+                let camera = &host.dag.graph.host_snapshot.camera;
+                let x = bounds.x + bounds.w * 0.5 + ((position.x - camera.x) * camera.zoom) as f32;
+                let y = bounds.y + bounds.h * 0.5 + ((position.y - camera.y) * camera.zoom) as f32;
+                (x, y)
+            });
+            let actions = node_graph_pointer_move(&surface_id, &scene.controller_id, bounds, x, y, false, false, false);
+            let expected = json!([{ "granularity": "handle", "id": format!("flow-play-document.handle.{target}") }]).to_string();
+            for action in ["interactionSelect", "interactionHover"] {
+                let payload = actions.iter().find(|item| item.action == action).expect(action);
+                assert!(action_fields(payload).contains(&("targets".into(), expected.clone())));
+            }
+        }
+        semio_renderer_wgpu_ui_engine_tests::surface_fixtures::close_retained_surface_fixture(&surface_id);
+    }
 }

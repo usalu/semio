@@ -198,6 +198,7 @@ export const COURSE_BUNDLE_EN = {
       allBadges: phrase("All badges"),
       openPage: phrase("Open"),
       cards: phrase("Overview pages"),
+      pagePicker: phrase("Open a course page"),
       pageWaiting: phrase("{{page}} is loading"),
       pageFailed: phrase("{{page}} could not be shown."),
       neighbourUp: phrase("Go up to {{page}}"),

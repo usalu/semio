@@ -68,3 +68,357 @@ e_pipe||n|MPa|210000|r1000:1e6|Modulus of elasticity of the pipe E|Elastizitäts
 i_wall||n|mm3|83.3|r0.01:1e6|Wall second moment of area per unit length|Wandflächenmoment 2. Grades je Längeneinheit|high|
 e_soil||n|MPa|5|r0.1:1000|Soil modulus E′|Bodenmodul E′|high|
 ovalisation_limit||n|1|0.03|r0.001:0.2|Permissible ovalisation Δd/d|Zulässige Ovalisierung Δd/d|medium|
+@choice hot_spot_detail|ground-butt|1. Full penetration butt weld ground flush|1. Voll durchgeschweißte, blecheben geschliffene Stumpfnaht
+@choice hot_spot_detail|as-welded-butt|2. Full penetration butt weld as welded|2. Voll durchgeschweißte Stumpfnaht ohne blechebenen Schliff
+@choice hot_spot_detail|full-penetration-cruciform|3. Cruciform joint with full penetration K-butt welds|3. Kreuzstoß mit voll durchgeschweißten K-Nähten
+@choice hot_spot_detail|non-load-bearing-fillet|4. Non-load-bearing fillet weld|4. Unbelastete Kehlnaht
+@choice hot_spot_detail|bracket-stiffener-end|5. Bracket or longitudinal stiffener end|5. Ende eines Anschlussblechs oder einer Längssteife
+@choice hot_spot_detail|cover-plate-end|6. Cover plate end or similar joint|6. Gurtlamellenende oder ähnlicher Anschluss
+@choice hot_spot_detail|load-bearing-fillet-cruciform|7. Cruciform joint with load-bearing fillet welds|7. Kreuzstoß mit belasteten Kehlnähten
+@choice hot_spot_crack|toe|Crack at the weld toe|Riss am Nahtübergang
+@choice hot_spot_crack|root|Crack at the weld root|Riss an der Nahtwurzel
+@choice hot_spot_basis|confirmed|Fabrication conditions checked and misalignment included in the stress|Fertigungsanforderungen geprüft und Exzentrizitäten in der Spannung berücksichtigt
+@choice hot_spot_basis|unconfirmed|Fabrication or structural stress basis unconfirmed|Fertigung oder Strukturspannungsgrundlage unbestätigt
+hot_spot_detail|C93-16|c||non-load-bearing-fillet||Weld detail from Table B.1|Schweißdetail aus Tabelle B.1|high|
+hot_spot_crack|C93-16|c||toe||Expected crack initiation|Erwarteter Ort der Rissbildung|high|
+hot_spot_basis|C93-16|c||confirmed||Table B.1 fabrication and stress documentation|Nachweise zu Fertigung und Spannung nach Tabelle B.1|high|Butt welds require run-on and run-off pieces removed, plate edges ground parallel to stress and welding from both sides. Row 1 also requires welds ground flush in the load direction and NDT.
+hot_spot_angle|C93-16|n|deg|45|r0:180|Weld toe angle for details 3 to 7|Nahtanstiegswinkel für Details 3 bis 7|high|
+hot_spot_range|C93-16|n|MPa|62|r0:2000|Unfactored damage-equivalent structural stress range at 2 million cycles|Unbemessene schadensäquivalente Strukturspannungsschwingbreite bei 2 Millionen Lastspielen|high|
+hot_spot_frequent|C93-16|n|MPa|120|r0:3000|Structural stress range under frequent loads|Strukturspannungsschwingbreite unter häufigen Einwirkungen|high|
+@choice lattice_section|chs|Circular hollow section|Kreisförmiges Hohlprofil
+@choice lattice_section|rhs|Rectangular hollow section|Rechteckiges Hohlprofil
+@choice lattice_joint|gap-k|Gap K joint|K-Knoten mit Spalt
+@choice lattice_joint|gap-n-kt|Gap N or KT joint|N- oder KT-Knoten mit Spalt
+@choice lattice_joint|overlap-k|Overlap K joint|K-Knoten mit Überlappung
+@choice lattice_joint|overlap-n-kt|Overlap N or KT joint|N- oder KT-Knoten mit Überlappung
+@choice lattice_member|chord|Chord|Gurt
+@choice lattice_member|vertical|Vertical|Pfosten
+@choice lattice_member|diagonal|Diagonal|Diagonale
+@choice lattice_basis|confirmed|In-plane pinned model, external member loads and Table 8.7 detail checked|Ebenes gelenkiges Modell, äußere Stablasten und Detail nach Tabelle 8.7 geprüft
+@choice lattice_basis|unconfirmed|Model or detail unconfirmed|Modell oder Detail unbestätigt
+lattice_section|C93-17|c||chs||Cross-section type|Querschnittsform|high|
+lattice_joint|C93-17|c||gap-k||Joint type|Knotenausbildung|high|
+lattice_member|C93-17|c||diagonal||Member evaluated|Untersuchter Stab|high|
+lattice_basis|C93-17|c||confirmed||Modelling and detail scope|Modell- und Detailgrundlage|high|In-plane loading, pinned joints, member loads applied between joints included, and geometry and detail category checked against Table 8.7.
+lattice_beta|C93-17|n|1|0.5|r0:1|Joint width parameter β|Knotenbreitenparameter β|high|
+lattice_gamma|C93-17|n|1|15|r0:100|Chord slenderness parameter γ|Gurtschlankheitsparameter γ|high|
+lattice_tau|C93-17|n|1|0.6|r0:2|Wall thickness ratio τ|Wanddickenverhältnis τ|high|
+lattice_angle|C93-17|n|deg|45|r0:180|Brace angle θ|Strebenwinkel θ|high|
+lattice_range|C93-17|n|MPa|40|r0:2000|Unfactored damage-equivalent stress range from the pinned model|Unbemessene schadensäquivalente Spannungsschwingbreite aus dem gelenkigen Modell|high|
+
+# Welded lattice-girder nodes, EN 1993-1-9 Table 8.7
+@choice node_section|chs|Circular hollow section|Kreishohlprofil
+@choice node_section|rhs|Rectangular hollow section|Rechteckhohlprofil
+@choice node_joint|gap-k|K joint with gap|K-Knoten mit Spalt
+@choice node_joint|gap-n|N joint with gap|N-Knoten mit Spalt
+@choice node_joint|overlap-k|Overlap K joint|K-Knoten mit Überlappung
+@choice node_joint|overlap-n|Overlap N joint|N-Knoten mit Überlappung
+@choice node_member|chord|Chord|Gurt
+@choice node_member|diagonal|Diagonal brace|Diagonale
+@choice node_member|vertical|Vertical brace|Pfosten
+@choice node_stress_basis|complete|Nominal stress including secondary moments|Nennspannung mit Sekundärmomenten
+@choice node_stress_basis|pinned|In-plane pinned model with external member loads|Ebenes Gelenkmodell mit äußeren Stablasten
+@choice node_stress_basis|unconfirmed|Stress basis unconfirmed|Spannungsgrundlage unbestätigt
+@choice node_geometry|confirmed|Detail and weld construction confirmed|Detail und Nahtausführung bestätigt
+@choice node_geometry|unconfirmed|Detail or weld unconfirmed|Detail oder Naht unbestätigt
+node_section|C93-25|c||rhs||Section type|Querschnittsform|high|
+node_joint|C93-25|c||gap-k||Joint geometry|Knotenausbildung|high|
+node_member|C93-25|c||diagonal||Member assessed in this case|In diesem Fall untersuchter Stab|high|Create separate cases for the chord and each brace.
+node_stress_basis|C93-25|c||complete||Calculation basis for fatigue stress|Berechnungsgrundlage der Ermüdungsspannung|high|
+node_geometry|C93-25|c||confirmed||Confirmation of the detail and weld execution|Bestätigung des Details und der Schweißnahtausführung|high|
+node_t0|C93-25|n|mm|6|r0:30|Chord wall t₀|Gurtwand t₀|high|
+node_ti|C93-25|n|mm|4|r0:30|Brace wall tᵢ|Strebenwand tᵢ|high|
+node_chord_width|C93-25|n|mm|96|r0:400|Chord width b₀ or diameter d₀|Gurtbreite b₀ oder Durchmesser d₀|high|
+node_chord_height|C93-25|n|mm|96|r0:400|Rectangular chord depth h₀|Rechteckige Gurthöhe h₀|high|
+node_brace_width|C93-25|n|mm|54|r0:400|Brace width bᵢ or diameter dᵢ|Strebenbreite bᵢ oder Durchmesser dᵢ|high|
+node_angle|C93-25|n|deg|45|r0:90|Diagonal angle θ|Diagonalenwinkel θ|high|Enter the diagonal angle for an N joint.
+node_eip|C93-25|n|mm|0|r-500:500|Signed in-plane eccentricity|Vorzeichenbehaftete Ausmittigkeit in der Fachwerkebene|high|
+node_eop|C93-25|n|mm|0|r-500:500|Out-of-plane eccentricity|Ausmittigkeit aus der Fachwerkebene|high|
+node_gap|C93-25|n|mm|30|r0:500|Gap g|Spalt g|high|
+node_overlap|C93-25|n|1|0.5|r0:1|Overlap ratio q/p|Überlappungsverhältnis q/p|high|
+node_beta|C93-25|n|1|0.55|r0:1|Pinned model parameter β|Geometrieparameter β für das Gelenkmodell|high|Use the joint parameter from the calculated EN 1993-1-8 geometry.
+node_gamma|C93-25|n|1|8|r0:100|Pinned model parameter γ|Gurtparameter γ für das Gelenkmodell|high|
+node_equiv_range|C93-25|n|MPa|30|r0:2000|Damage-equivalent direct stress range at two million cycles|Schadensäquivalente Normalspannungsschwingbreite bei zwei Millionen Lastwechseln|high|Use the Table 8.7 curve exponent m = 5.
+node_frequent_range|C93-25|n|MPa|80|r0:2000|Direct stress range for the frequent load combination|Normalspannungsschwingbreite der häufigen Lastkombination|high|
+
+# Runway and orthotropic deck fatigue, EN 1993-1-9 Tables 8.8–8.10
+@choice runway_detail|rolled|Rolled I-section top flange|Obergurt eines Walzprofils
+@choice runway_detail|full-tee|Full penetration flange-to-web weld|Durchgeschweißte Gurt-Steg-Naht
+@choice runway_detail|partial-tee|Partial penetration flange-to-web weld|Teilweise durchgeschweißte Gurt-Steg-Naht
+@choice runway_detail|fillet|Fillet flange-to-web weld|Gurt-Steg-Kehlnaht
+@choice runway_detail|t-full|Tee flange with full penetration weld|T-Obergurt mit voll durchgeschweißter Naht
+@choice runway_detail|t-partial|Tee flange with partial penetration weld|T-Obergurt mit teilweise durchgeschweißter Naht
+@choice runway_detail|t-fillet|Tee flange with fillet weld|T-Obergurt mit Kehlnaht
+@choice runway_location|web|Web|Steg
+@choice runway_location|throat|Weld throat|Nahtquerschnitt
+@choice runway_basis|confirmed|Detail and wheel-load stress basis confirmed|Detail und Radlastspannung bestätigt
+@choice runway_basis|unconfirmed|Detail or stress basis unconfirmed|Detail oder Spannungsgrundlage unbestätigt
+@choice deck_open_end_basis|confirmed|Open stringer end detail and stress basis confirmed|Enddetail und Spannungsgrundlage der offenen Rippe bestätigt
+@choice deck_open_end_basis|unconfirmed|Detail or stress basis unconfirmed|Detail oder Spannungsgrundlage unbestätigt
+@choice deck_open_cross_basis|confirmed|Continuous open stringer and cross-girder stress confirmed|Offene durchlaufende Längsrippe und Querträgerspannung bestätigt
+@choice deck_open_cross_basis|unconfirmed|Detail or stress basis unconfirmed|Detail oder Spannungsgrundlage unbestätigt
+@choice closed_connection_detail|cutout|Continuous stringer with additional cutout|Durchlaufende Längsrippe mit zusätzlichem Ausschnitt
+@choice closed_connection_detail|continuous|Continuous stringer without additional cutout|Durchlaufende Längsrippe ohne zusätzlichen Ausschnitt
+@choice closed_connection_detail|separate|Separate longitudinal stringer|Getrennte Längsrippe
+@choice closed_connection_detail|backed|Single-sided butt weld with backing|Einseitige Stumpfnaht mit Badsicherung
+@choice closed_geometry|confirmed|Geometry, fabrication and stress requirements confirmed|Geometrie, Ausführung und Spannungsanforderungen bestätigt
+@choice closed_geometry|backed-confirmed|Requirements and tack welds within weld thickness confirmed|Anforderungen und Heftnähte innerhalb der Nahtdicke bestätigt
+@choice closed_geometry|unconfirmed|Requirements unconfirmed|Anforderungen unbestätigt
+@choice closed_cutout_method|vierendeel|Vierendeel analysis|Vierendeel-Berechnung
+@choice closed_cutout_method|bridge-method|EN 1993-2 stress method|Spannungsberechnung nach EN 1993-2
+@choice closed_splice_group|ground|Ground Table 8.3 splice group|Verschliffener Stoß nach Tabelle 8.3
+@choice closed_splice_group|flat|Table 8.3 splice group welded flat|Waagerecht geschweißter Stoß nach Tabelle 8.3
+@choice closed_splice_group|as-welded|Table 8.3 as-welded splice group|Stoß im Schweißzustand nach Tabelle 8.3
+@choice closed_weld_type|recessed|Recessed weld|Eingelassene Schweißnaht
+@choice closed_weld_type|fillet|Fillet weld|Kehlnaht
+runway_detail|C93-18|c||rolled||Junction detail|Anschlussdetail|high|
+runway_location|C93-18|c||web||Stress location|Spannungsstelle|high|
+runway_basis|C93-18|c||confirmed||Detail and stress basis|Detail und Spannungsgrundlage|high|
+runway_range|C93-18|n|MPa|80|r0:2000|Wheel-load equivalent stress range|Schadensäquivalente Radlastspannungsschwingbreite|high|
+runway_frequent|C93-18|n|MPa|100|r0:2000|Frequent wheel-load stress range|Häufige Radlastspannungsschwingbreite|high|
+deck_open_end_basis|C93-19|c||confirmed||End detail and stress basis|Enddetail und Spannungsgrundlage|high|
+deck_open_thickness|C93-19|n|mm|12|r0:500|Plate thickness|Blechdicke|high|
+deck_open_range|C93-19|n|MPa|50|r0:2000|Equivalent direct stress range|Schadensäquivalente Normalspannungsschwingbreite|high|
+deck_open_frequent_direct||n|MPa|100|r0:2000|Frequent direct stress range|Häufige Normalspannungsschwingbreite|high|
+deck_open_cross_basis|C93-20|c||confirmed||Cross-girder detail and stress basis|Querträgerdetail und Spannungsgrundlage|high|
+deck_cross_direct|C93-20|n|MPa|25|r0:2000|Cross-girder direct stress range|Normalspannungsschwingbreite im Querträger|high|
+deck_cross_shear|C93-20|n|MPa|10|r0:2000|Cross-girder shear stress range|Schubspannungsschwingbreite im Querträger|high|
+deck_cross_equivalence|C93-20|n|1|1|r0:10|Damage equivalence and impact factor|Schadensäquivalenz- und Stoßbeiwert|high|
+deck_cross_frequent_shear|C93-20|n|MPa|60|r0:2000|Frequent shear stress range|Häufige Schubspannungsschwingbreite|high|
+deck_between_utilization|C93-20|n|1|0.5|r0:10|Independent EN 1993-2 utilisation between stringers|Ausnutzung zwischen Längsrippen nach EN 1993-2|high|
+closed_connection_detail|C93-21|c||cutout||Stringer detail|Rippendetail|high|
+closed_geometry||c||confirmed||Geometry and fabrication confirmation|Bestätigung von Geometrie und Ausführung|high|
+closed_web_thickness|C93-21|n|mm|12|r0:500|Cross-girder web thickness|Stegdicke des Querträgers|high|
+closed_range||n|MPa|50|r0:2000|Equivalent direct stress range|Schadensäquivalente Normalspannungsschwingbreite|high|
+closed_frequent||n|MPa|100|r0:2000|Frequent direct stress range|Häufige Normalspannungsschwingbreite|high|
+closed_cutout_method|C93-22|c||vierendeel||Stress calculation method at cutout|Spannungsberechnung am Ausschnitt|high|
+closed_splice_group|C93-23|c||ground||Splice execution group|Ausführungsgruppe des Spleißstoßes|high|
+closed_splice_thickness|C93-23|n|mm|25|r0:500|Splice plate thickness|Blechdicke am Stoß|high|
+closed_weld_type|C93-24|c||recessed||Rib-to-deck weld type|Nahttyp am Rippen-Deckblech-Anschluss|high|
+closed_weld_rib_thickness|C93-24|n|mm|6|r0:100|Rib wall thickness|Rippenwanddicke|high|
+closed_weld_throat|C93-24|n|mm|6|r0:100|Weld throat thickness|Nahtdicke|high|
+closed_weld_gap|C93-24|n|mm|1|r0:30|Root gap|Wurzelspalt|high|
+closed_weld_root_face|C93-24|n|mm|1|r0:30|Root face|Wurzelsteg|high|
+closed_weld_moment|C93-24|n|N|250|r0:100000|Equivalent bending moment range per unit weld length|Schadensäquivalente Biegemomentschwingbreite je Nahtlänge|high|
+closed_weld_frequent_moment|C93-24|n|N|400|r0:100000|Frequent bending moment range per unit weld length|Häufige Biegemomentschwingbreite je Nahtlänge|high|
+# Hollow section connections, Table 8.6
+@choice hollow_detail|flattened|Butt weld of flattened circular tube end|Stumpfnaht am zusammengedrückten Rundrohrende
+@choice hollow_detail|slotted|Slotted tube welded to a plate with a hole at the slot end|Geschlitztes Rohr am Blech mit Loch am Schlitzende
+@choice hollow_detail|chs-butt|Circular hollow-section full penetration butt weld|Durchgeschweißte Stumpfnaht am Rundhohlprofil
+@choice hollow_detail|rhs-butt|Rectangular hollow-section full penetration butt weld|Durchgeschweißte Stumpfnaht am Rechteckhohlprofil
+@choice hollow_detail|non-load-bearing|Non-load-carrying welded hollow-section attachment|Nicht tragender angeschweißter Hohlprofil-Anschluss
+@choice hollow_detail|chs-butt-endplate|Circular hollow section with full penetration weld to endplate|Rundhohlprofil mit durchgeschweißter Kopfplattennaht
+@choice hollow_detail|rhs-butt-endplate|Rectangular hollow section with full penetration weld to endplate|Rechteckhohlprofil mit durchgeschweißter Kopfplattennaht
+@choice hollow_detail|chs-fillet-endplate|Circular hollow section with load-carrying fillet weld to endplate|Rundhohlprofil mit tragender Kopfplattenkehlnaht
+@choice hollow_detail|rhs-fillet-endplate|Rectangular hollow section with load-carrying fillet weld to endplate|Rechteckhohlprofil mit tragender Kopfplattenkehlnaht
+@choice hollow_execution|confirmed|Detail geometry, weld execution, inspection and stresses confirmed|Detailgeometrie, Schweißausführung, Prüfung und Spannungen bestätigt
+@choice hollow_execution|unconfirmed|Detail conditions unconfirmed|Detailbedingungen unbestätigt
+hollow_detail|C93-26|c||flattened||Hollow section construction detail|Konstruktionsdetail des Hohlprofils|high|
+hollow_execution|C93-26|c||confirmed||Fabrication, inspection and stress basis|Ausführung, Prüfung und Spannungsgrundlage|high|For details 3 and 4, confirm flat-position welding, smooth transitions and EN 1090 tolerances. For details 6 and 7, confirm weld inspection and EN 1090 tolerances.
+hollow_wall|C93-26|n|mm|8|r0:40|Wall thickness t|Wanddicke t|high|
+hollow_diameter|C93-26|n|mm|150|r0:500|Tube diameter for detail 1|Rohrdurchmesser für Kerbfall 1|high|
+hollow_slot_angle|C93-26|n|deg|45|r0:180|Slot detail angle α|Schlitzwinkel α|high|
+hollow_weld_dimension|C93-26|n|mm|8|r0:100|Weld dimension for the reinforcement ratio|Nahtabmessung für das Überhöhungsverhältnis|high|
+hollow_reinforcement|C93-26|n|mm|0.5|r0:20|Weld reinforcement height|Schweißnahtüberhöhung|high|
+hollow_attachment_width|C93-26|n|mm|95|r0:500|Attachment width along the stress|Anschlussbreite parallel zur Spannungsrichtung|high|
+hollow_range|C93-26|n|MPa|40|r0:2000|Equivalent direct stress range at the designated section|Schadensäquivalente Normalspannungsschwingbreite am maßgebenden Querschnitt|high|
+hollow_frequent|C93-26|n|MPa|100|r0:2000|Frequent direct stress range|Häufige Normalspannungsschwingbreite|high|
+hollow_weld_shear|C93-26|n|MPa|35|r0:2000|Damage-equivalent weld throat shear range for detail 2|Schadensäquivalente Schubspannungsschwingbreite im Nahtquerschnitt für Kerbfall 2|high|
+hollow_weld_frequent_shear|C93-26|n|MPa|70|r0:2000|Frequent weld throat shear range for detail 2|Häufige Schubspannungsschwingbreite im Nahtquerschnitt für Kerbfall 2|high|
+# Load-carrying welds, Table 8.5
+@choice weld85_detail|toe|1 · Cruciform or T-joint toe, specified nominal stress|1 · Kreuz- oder T-Stoß am Nahtübergang mit vorgegebener Nennspannung
+@choice weld85_detail|modified-toe|2 · Toe of flexible attachment, modified nominal stress|2 · Nahtübergang am verformbaren Anschlussblech mit korrigierter Nennspannung
+@choice weld85_detail|root|3 · Partial-penetration or fillet weld, root and plate toe|3 · Teilweise durchgeschweißte Naht oder Kehlnaht mit Wurzel und Blechübergang
+@choice weld85_detail|lap-main|4 · Lap joint, main plate and weld|4 · Laschenstoß mit Hauptblech und Naht
+@choice weld85_detail|lap-cover|5 · Lap joint, overlap plates and weld|5 · Laschenstoß mit überlappenden Laschen und Naht
+@choice weld85_detail|cover-end|6 · End of welded cover plate|6 · Ende einer aufgeschweißten Gurtlamelle
+@choice weld85_detail|cover-reinforced|7 · Cover plate with reinforced transverse end weld|7 · Gurtlamelle mit verstärkter Stirnnaht
+@choice weld85_detail|continuous-shear|8 · Continuous load-carrying fillet weld in shear|8 · Durchgehende tragende Kehlnaht unter Schub
+@choice weld85_detail|lap-shear|9 · Lap fillet weld in shear over the complete weld length|9 · Laschenkehlnaht unter Schub über die gesamte Nahtlänge
+@choice weld85_detail|stud|10 · Headed stud in shear, EN 1994-2|10 · Kopfbolzendübel unter Schub nach EN 1994-2
+@choice weld85_detail|ring-butt|11 · Ring flange with partially penetrated butt weld|11 · Ringflansch mit teilweise durchgeschweißter Stumpfnaht
+@choice weld85_detail|ring-fillet|12 · Ring flange with fillet weld|12 · Ringflansch mit Kehlnaht
+@choice weld85_basis|confirmed|Detail conditions and specified stress sections confirmed|Detailbedingungen und maßgebende Spannungsquerschnitte bestätigt
+@choice weld85_basis|unconfirmed|Detail conditions unconfirmed|Detailbedingungen unbestätigt
+weld85_detail|C93-27|c||toe||Table 8.5 construction detail|Konstruktionsdetail nach Tabelle 8.5|high|
+weld85_basis|C93-27|c||confirmed||Fabrication, inspection and stress evidence|Nachweise zu Ausführung, Prüfung und Spannungen|high|Confirm each row's execution, inspection and designated stress area. This includes the applicable EN 1090 tolerances and cover-plate or ring-flange weld finishing requirements.
+weld85_length|C93-27|n|mm|65|r0:50000|Dimension ℓ in the detail sketch, or cover length for detail 6|Abmessung ℓ in der Detailskizze oder Lamellenlänge für Kerbfall 6|high|
+weld85_plate|C93-27|n|mm|20|r0:1000|Loaded plate thickness t|Dicke t des belasteten Blechs|high|
+weld85_cover|C93-27|n|mm|16|r0:1000|Cover-plate thickness tc|Gurtlamellendicke tc|high|
+weld85_intermediate|C93-27|n|mm|20|r0:1000|Intermediate plate thickness|Dicke des Zwischenblechs|high|
+weld85_misalignment|C93-27|n|mm|1|r0:1000|Load-carrying plate misalignment|Achsversatz der belasteten Bleche|high|
+weld85_end_distance|C93-27|n|mm|12|r0:50000|Weld end distance from plate end|Abstand zwischen Nahtende und Blechende|high|
+weld85_reinforcing_length|C93-27|n|mm|100|r0:50000|Reinforcing end-weld length|Länge der Verstärkungsnaht|high|
+weld85_slope|C93-27|n|1|0.2|r0:1|Cover-plate end slope rise to run|Neigung am Lamellenende als Höhen- zu Längenverhältnis|high|
+weld85_penetration|C93-27|n|1|0.8|r0:1|Ring-flange butt-weld penetration fraction|Durchschweißungsgrad der Ringflanschstumpfnaht|high|
+weld85_range|C93-27|n|MPa|40|r0:2000|Equivalent direct stress range at the designated plate or tube section|Schadensäquivalente Normalspannungsschwingbreite im maßgebenden Blech- oder Rohrquerschnitt|high|
+weld85_frequent|C93-27|n|MPa|100|r0:2000|Frequent direct stress range at that section|Häufige Normalspannungsschwingbreite im gleichen Querschnitt|high|
+weld85_root|C93-27|n|MPa|22|r0:2000|Equivalent transverse weld throat stress range per Clause 5|Schadensäquivalente Querspannungsschwingbreite im Nahtquerschnitt nach Abschnitt 5|high|
+weld85_root_frequent|C93-27|n|MPa|65|r0:2000|Frequent transverse weld throat stress range|Häufige Querspannungsschwingbreite im Nahtquerschnitt|high|
+weld85_shear|C93-27|n|MPa|35|r0:2000|Equivalent longitudinal weld throat shear range|Schadensäquivalente Längsschubspannungsschwingbreite im Nahtquerschnitt|high|
+weld85_shear_frequent|C93-27|n|MPa|70|r0:2000|Frequent longitudinal weld throat shear range|Häufige Längsschubspannungsschwingbreite im Nahtquerschnitt|high|
+# Weld attachments and stiffeners, Table 8.4
+@choice weld84_detail|longitudinal|1 · Longitudinal attachment|1 · Längsrippe
+@choice weld84_detail|sloped|2 · Longitudinal attachment with sloped transition|2 · Längsrippe mit geneigtem Übergang
+@choice weld84_detail|gusset-reinforced|3 · Longitudinal gusset with reinforced radius transition|3 · Längsanschlussblech mit verstärkter Ausrundung
+@choice weld84_detail|gusset-edge|4 · Smoothly finished edge or flange gusset|4 · Nachbehandeltes Knotenblech am Blech- oder Flanschrand
+@choice weld84_detail|gusset-as-welded|5 · As-welded edge gusset without a radius|5 · Knotenblech ohne Nachbehandlung und ohne Ausrundung
+@choice weld84_detail|transverse|6 · Transverse stiffener on a plate|6 · Quersteife auf einem Blech
+@choice weld84_detail|beam-stiffener|7 · Vertical stiffener in a beam or plate girder|7 · Vertikalsteife im Walz- oder Blechträger
+@choice weld84_detail|web-stiffener|7 · Stiffener ending in the web, principal stress|7 · Im Steg endende Steife mit Hauptspannungen
+@choice weld84_detail|box-diaphragm|8 · Box girder diaphragm or ring stiffener within scope|8 · Kastenquerschott oder Ringsteife im Anwendungsbereich
+@choice weld84_detail|stud-base|9 · Base material under a welded shear stud|9 · Grundwerkstoff unter einem geschweißten Kopfbolzendübel
+@choice weld84_basis|confirmed|Detail, weld finishing and stress basis confirmed|Detail, Nahtnachbehandlung und Spannungsgrundlage bestätigt
+@choice weld84_basis|unconfirmed|Detail conditions unconfirmed|Detailbedingungen unbestätigt
+weld84_detail|C93-28|c||longitudinal||Table 8.4 construction detail|Konstruktionsdetail nach Tabelle 8.4|high|
+weld84_basis|C93-28|c||confirmed||Weld finishing and stress evidence|Nachweise zu Nahtnachbehandlung und Spannungen|high|Details 3 and 4 require a smooth ground transition after shaping the radius. Details 6 and 7 require ground weld ends with undercuts removed. Detail 7 ending in the web uses principal stress. Detail 8 excludes hollow sections.
+weld84_length|C93-28|n|mm|65|r0:50000|Attachment dimension L or ℓ shown for the selected detail|Anschlussabmessung L oder ℓ gemäß ausgewähltem Detail|high|
+weld84_thickness|C93-28|n|mm|8|r0:1000|Longitudinal attachment thickness|Dicke der Längsrippe|high|
+weld84_height|C93-28|n|mm|25|r0:50000|Longitudinal attachment height|Höhe der Längsrippe|high|
+weld84_angle|C93-28|n|deg|35|r0:180|Transition angle α of detail 2|Übergangswinkel α des Kerbfalls 2|high|
+weld84_radius|C93-28|n|mm|160|r0:50000|Finished transition radius r|Nachbehandelter Übergangsradius r|high|
+weld84_reinforced_length|C93-28|n|mm|200|r0:50000|Length of the full-penetration reinforcement at the gusset end|Länge der durchgeschweißten Verstärkungsnaht am Anschlussblechende|high|
+weld84_range|C93-28|n|MPa|40|r0:2000|Equivalent stress range at the designated section|Schadensäquivalente Spannungsschwingbreite im maßgebenden Querschnitt|high|
+weld84_frequent|C93-28|n|MPa|100|r0:2000|Frequent stress range at the designated section|Häufige Spannungsschwingbreite im maßgebenden Querschnitt|high|
+# Transverse butt welds, Table 8.3
+@choice weld83_detail|ground-plate|1 · Ground transverse plate or flat splice|1 · Geschliffener Querstoß in einem Blech oder Flachstahl
+@choice weld83_detail|ground-built-up|2 · Ground flange or web splice welded before assembly|2 · Vor dem Zusammenbau geschweißter Flansch- oder Stegstoß
+@choice weld83_detail|ground-rolled|3 · Ground full-section rolled profile without cope holes|3 · Geschliffener Vollstoß im Walzprofil ohne Freischnitt
+@choice weld83_detail|ground-tapered|4 · Ground taper in plate width or thickness|4 · Geschliffener Querstoß mit Breiten- oder Dickenübergang
+@choice weld83_detail|profile-plate|5 · Flat-position plate splice with limited weld convexity|5 · Querstoß in Wannenlage mit begrenzter Nahtüberhöhung
+@choice weld83_detail|profile-rolled|6 · Rolled profile without cope holes and limited convexity|6 · Walzprofil ohne Freischnitt mit begrenzter Nahtüberhöhung
+@choice weld83_detail|profile-tapered|7 · Flat-position tapered splice with limited convexity|7 · Abgeschrägter Querstoß in Wannenlage mit begrenzter Nahtüberhöhung
+@choice weld83_detail|ground-cope|8 · Ground rolled profile with cope holes|8 · Geschliffener Vollstoß im Walzprofil mit Freischnitten
+@choice weld83_detail|as-welded-built-up|9 · As-welded built-up girder splice without cope holes|9 · Nicht nachbehandelter Blechträgerstoß ohne Freischnitt
+@choice weld83_detail|as-welded-cope|10 · As-welded rolled profile with cope holes|10 · Nicht nachbehandelter Walzprofilstoß mit Freischnitten
+@choice weld83_detail|as-welded-plate|11 · As-welded transverse plate or section splice|11 · Nicht nachbehandelter Querstoß in Blechen oder Profilen
+@choice weld83_detail|unbacked-rolled|12 · Two-sided rolled section splice without cope holes|12 · Beidseitiger Walzprofilstoß ohne Freischnitt
+@choice weld83_detail|single-sided|13 · One-sided butt weld, no backing|13 · Einseitige Stumpfnaht ohne Schweißbadsicherung
+@choice weld83_detail|single-sided-inspected|13 · One-sided butt weld with root NDT|13 · Einseitige Stumpfnaht mit zerstörungsfreier Wurzelprüfung
+@choice weld83_detail|backed|14 · Butt weld with fitted backing strip|14 · Querstoß mit passgenauer Schweißbadsicherung
+@choice weld83_detail|backed-tapered|15 · Tapered butt weld with fitted backing strip|15 · Abgeschrägter Querstoß mit passgenauer Schweißbadsicherung
+@choice weld83_detail|backed-lower-class|16 · Backed splice with uncertain fit or short end clearance|16 · Querstoß mit verbleibender Schweißbadsicherung bei unsicherer Passung oder geringem Endabstand
+@choice weld83_detail|unequal-section|17 · Aligned plates of unequal thickness|17 · Zentrierter Querstoß zwischen unterschiedlich dicken Blechen
+@choice weld83_detail|intersecting|18 · Intersecting flanges without a radius transition|18 · Sich kreuzende Gurte ohne Ausrundung
+@choice weld83_detail|intersecting-rounded|19 · Intersecting flanges with a smooth radius transition|19 · Sich kreuzende Gurte mit nachbehandelter Ausrundung
+@choice weld83_basis|confirmed|Detail-specific fabrication and inspection confirmed|Detailspezifische Ausführung und Prüfung bestätigt
+@choice weld83_basis|unconfirmed|Detail conditions unconfirmed|Detailbedingungen unbestätigt
+@choice weld83_fit|good|Good backing fit documented|Gute Passung der Schweißbadsicherung nachgewiesen
+@choice weld83_fit|uncertain|Good fit cannot be assured|Gute Passung kann nicht sichergestellt werden
+@choice weld83_cross_reference|unresolved|Cross-reference unresolved|Verweis ungeklärt
+@choice weld83_cross_reference|table84|Approved Table 8.4 detail 4 reference|Bestätigter Verweis auf Tabelle 8.4 Kerbfall 4
+@choice weld83_cross_reference|table85|Approved Table 8.5 detail 4 reference|Bestätigter Verweis auf Tabelle 8.5 Kerbfall 4
+@choice weld83_flange|as-welded|As-welded perpendicular continuous flange|Nicht nachbehandelter durchlaufender Flansch quer zur Lastrichtung
+@choice weld83_flange|rounded|Rounded and finished perpendicular continuous flange|Ausgerundeter und nachbehandelter durchlaufender Flansch quer zur Lastrichtung
+weld83_detail|C93-29|c||ground-plate||Table 8.3 construction detail|Konstruktionsdetail nach Tabelle 8.3|high|
+weld83_basis|C93-29|c||confirmed||Fabrication, inspection and geometry evidence|Ausführungs-, Prüf- und Geometrienachweise|high|Confirm all conditions of the selected row, including grinding direction, run-on and run-off pieces, two-sided welding, flat position, matching sections or inspection where specified.
+weld83_fit|C93-29|c||good||Backing-strip fit for details 14 to 16|Passgenauigkeit der Schweißbadsicherung für Kerbfälle 14 bis 16|high|
+weld83_cross_reference|C93-29|c||unresolved||Approved classification reference for detail 19|Bestätigter Einstufungsverweis für Kerbfall 19|high|The English and German publications cite different references for the category in the weld direction.
+weld83_flange|C93-29|c||as-welded||Continuous flange detail perpendicular to the weld direction|Detail des durchlaufenden Flansches quer zur Nahtrichtung|high|
+weld83_thickness|C93-29|n|mm|25|r0:1000|Assessed plate thickness t or thinner plate t1|Dicke t des geprüften Blechs oder dünneres Blech t1|high|
+weld83_thicker|C93-29|n|mm|35|r0:1000|Thicker plate t2 for detail 17|Dickeres Blech t2 für Kerbfall 17|high|
+weld83_offset|C93-29|n|mm|0|r0:1000|Residual offset e for detail 17|Verbleibende Exzentrizität e für Kerbfall 17|high|
+weld83_slope|C93-29|n|1|0.2|r0:1|Taper slope as rise divided by run|Neigung als Verhältnis von Höhen- zu Längenänderung|high|
+weld83_weld_width|C93-29|n|mm|15|r0:1000|Weld face width b|Schweißnahtbreite b|high|
+weld83_reinforcement|C93-29|n|mm|1.2|r0:1000|Height of weld convexity|Höhe der Nahtüberhöhung|high|
+weld83_end_distance|C93-29|n|mm|12|r0:50000|Backing weld end clearance|Abstand des Schweißnahtendes zum beanspruchten Blechrand|high|
+weld83_length|C93-29|n|mm|220|r0:50000|Dimension ℓ at the intersecting flange|Abmessung ℓ am sich kreuzenden Gurt|high|
+weld83_radius|C93-29|n|mm|85|r0:50000|Radius r at the finished intersecting flange|Radius r am nachbehandelten sich kreuzenden Gurt|high|
+weld83_range|C93-29|n|MPa|50|r0:2000|Equivalent direct stress range at the weld detail|Schadensäquivalente Normalspannungsschwingbreite am Nahtdetail|high|
+weld83_frequent|C93-29|n|MPa|100|r0:2000|Frequent direct stress range at the weld detail|Häufige Normalspannungsschwingbreite am Nahtdetail|high|
+weld83_perpendicular_range|C93-29|n|MPa|30|r0:2000|Equivalent perpendicular stress range in the continuous flange|Schadensäquivalente Querspannungsschwingbreite im durchlaufenden Flansch|high|
+weld83_perpendicular_frequent|C93-29|n|MPa|80|r0:2000|Frequent perpendicular stress range in the continuous flange|Häufige Querspannungsschwingbreite im durchlaufenden Flansch|high|
+# Welded built-up sections, Table 8.2
+@choice weld82_detail|automatic-butt|1 · Two-sided mechanized butt weld|1 · Beidseitig durchgeschweißte mechanisierte Stumpfnaht
+@choice weld82_detail|automatic-fillet|2 · Mechanized fillet weld|2 · Mechanisierte Kehlnaht
+@choice weld82_detail|two-sided-stops|3 · Mechanized two-sided weld with start or stop positions|3 · Beidseitige mechanisierte Naht mit Ansatzstellen
+@choice weld82_detail|single-backed|4 · Mechanized one-sided butt weld with continuous backing|4 · Einseitig durchgeschweißte mechanisierte Naht mit durchgehender Schweißbadsicherung
+@choice weld82_detail|manual|5 · Manual fillet or butt weld|5 · Handgeschweißte Kehl- oder Stumpfnaht
+@choice weld82_detail|single-sided|6 · One-sided butt weld such as a box girder seam|6 · Einseitig durchgeschweißte Naht etwa am Hohlkasten
+@choice weld82_detail|repair|7 · Repaired weld from details 1 to 6|7 · Ausgebesserte Schweißnaht der Kerbfälle 1 bis 6
+@choice weld82_detail|intermittent|8 · Intermittent longitudinal fillet weld|8 · Unterbrochene Längskehlnaht
+@choice weld82_detail|cope-hole|9 · Longitudinal seam with a cope hole|9 · Längsnaht mit Freischnitt
+@choice weld82_detail|longitudinal-butt|10 · Butt seam loaded longitudinally|10 · Längsbeanspruchte Stumpfnaht
+@choice weld82_detail|hollow-seam|11 · Mechanized longitudinal hollow-section seam|11 · Mechanisierte Längsnaht im Hohlprofil
+@choice weld82_basis|confirmed|Detail fabrication, inspection and stress basis confirmed|Detailausführung, Prüfung und Spannungsgrundlage bestätigt
+@choice weld82_basis|unconfirmed|Detail conditions unconfirmed|Detailbedingungen unbestätigt
+@choice weld82_stop|none|Continuous without start or stop positions|Durchgehend ohne Ansatzstellen
+@choice weld82_stop|ordinary|Start or stop positions present|Ansatzstellen vorhanden
+@choice weld82_stop|qualified-repair|Only specialist repair starts and stops with verified execution|Nur dokumentierte Ansatzstellen einer geprüften Fachreparatur
+@choice weld82_repair|repaired|Repaired weld with base category 100|Ausgebesserte Naht mit Grundkerbfall 100
+@choice weld82_repair|restored-125|Specialist ground and verified, original category 125|Fachgerecht ausgeschliffen und geprüft, ursprünglicher Kerbfall 125
+@choice weld82_repair|restored-112|Specialist ground and verified, original category 112|Fachgerecht ausgeschliffen und geprüft, ursprünglicher Kerbfall 112
+@choice weld82_repair|restored-100|Specialist ground and verified, original category 100|Fachgerecht ausgeschliffen und geprüft, ursprünglicher Kerbfall 100
+@choice weld82_finish|ground-ndt|Both sides ground flush in load direction, 100% NDT|Beidseitig in Lastrichtung blecheben geschliffen, 100 % ZfP
+@choice weld82_finish|unground|Unground|Ungeschliffen
+@choice weld82_cope_basis|din|Published DIN classification|Veröffentlichte DIN-Einstufung
+@choice weld82_cope_basis|english|English EN classification confirmed for the project|Englische EN-Einstufung für das Projekt bestätigt
+@choice weld82_ends|none|No cover-plate ends in this detail|Keine Gurtlamellenenden in diesem Detail
+@choice weld82_ends|assessed|Cover-plate ends checked separately under Table 8.5|Gurtlamellenenden getrennt nach Tabelle 8.5 nachgewiesen
+@choice weld82_ends|pending|Cover-plate end check outstanding|Nachweis der Gurtlamellenenden offen
+weld82_detail|C93-30|c||automatic-butt||Table 8.2 construction detail|Konstruktionsdetail nach Tabelle 8.2|high|
+weld82_basis|C93-30|c||confirmed||Fabrication, inspection and stress evidence|Ausführungs-, Prüf- und Spannungsnachweise|high|Confirm the applicable automated or manual process, required flange-to-web fit and root penetration, and direct flange stress for details 8 and 9.
+weld82_stop|C93-30|c||none||Weld start and stop positions|Ansatzstellen der Schweißnaht|high|
+weld82_repair|C93-30|c||repaired||Weld repair and original category|Nahtreparatur und ursprünglicher Kerbfall|high|
+weld82_finish|C93-30|c||unground||Finish and inspection of longitudinal butt seam|Nachbehandlung und Prüfung der Längsstumpfnaht|high|
+weld82_cope_basis|C93-30|c||din||Approved 60 mm cope-hole boundary rule|Bestätigte Regel für einen Freischnitt von 60 mm|high|
+weld82_ends|C93-30|c||none||Separate cover-plate-end assessment|Getrennter Nachweis der Gurtlamellenenden|high|
+weld82_gap|C93-30|n|mm|45|r0:50000|Gap g between intermittent weld segments|Lücke g zwischen unterbrochenen Nahtabschnitten|high|
+weld82_web_height|C93-30|n|mm|60|r0:50000|Web height h in the intermittent weld detail|Steghöhe h im Detail der unterbrochenen Längsnaht|high|
+weld82_cope_height|C93-30|n|mm|40|r0:50000|Cope-hole height|Freischnitthöhe|high|
+weld82_attachment_length|C93-30|n|mm|75|r0:50000|Attachment length L for a cope hole above 60 mm|Anschlusslänge L für einen Freischnitt über 60 mm|high|
+weld82_attachment_thickness|C93-30|n|mm|8|r0:1000|Attachment thickness for a cope hole above 60 mm|Anschlussdicke für einen Freischnitt über 60 mm|high|
+weld82_attachment_height|C93-30|n|mm|30|r0:50000|Attachment height for a cope hole above 60 mm|Anschlusshöhe für einen Freischnitt über 60 mm|high|
+weld82_wall|C93-30|n|mm|12.5|r0:1000|Hollow-section thickness t at the seam|Hohlprofilwanddicke t an der Naht|high|
+weld82_ends_utilization|C93-30|n|1|0.65|r0:100000|Governing utilization from the separate cover-plate end check|Maßgebende Ausnutzung aus dem getrennten Gurtlamellennachweis|high|
+weld82_range|C93-30|n|MPa|55|r0:2000|Equivalent longitudinal stress range|Schadensäquivalente Längsspannungsschwingbreite|high|
+weld82_frequent|C93-30|n|MPa|100|r0:2000|Frequent longitudinal stress range|Häufige Längsspannungsschwingbreite|high|
+# Plain members and mechanically fastened joints, Table 8.1
+@choice detail81_detail|rolled-plate|1 · Plate or flat with rolled edges|1 · Blech oder Flachstahl mit gewalzten Kanten
+@choice detail81_detail|rolled-profile|2 · Rolled profile with rolled edges|2 · Walzprofil mit gewalzten Kanten
+@choice detail81_detail|seamless|3 · Seamless circular or rectangular hollow section|3 · Nahtloses rundes oder rechteckiges Hohlprofil
+@choice detail81_detail|cut-machined|4 · Machine-cut plate with machined edges|4 · Maschinell brenngeschnittenes Blech mit bearbeiteten Kanten
+@choice detail81_detail|cut-dressed|5 · Cut plate with qualified surface finish|5 · Brenngeschnittenes Blech mit nachgewiesener Schnittqualität
+@choice detail81_detail|rolled-shear|6 · Shear stress in a rolled section|6 · Schubspannung im Walzprofil
+@choice detail81_detail|seamless-shear|7 · Shear stress in a seamless hollow section|7 · Schubspannung im nahtlosen Hohlprofil
+@choice detail81_detail|double-preloaded|8 · Symmetric double-covered preloaded joint|8 · Symmetrische zweischnittige vorgespannte Verbindung
+@choice detail81_detail|double-fitted|9 · Double-covered fitted or non-preloaded injection joint|9 · Zweischnittige Passschrauben- oder nicht vorgespannte Injektionsverbindung
+@choice detail81_detail|single-preloaded|10 · One-sided preloaded high-strength or injection joint|10 · Einschnittige vorgespannte hochfeste oder Injektionsverbindung
+@choice detail81_detail|holes|11 · Member with holes under bending and axial force|11 · Bauteil mit Löchern unter Biegung und Normalkraft
+@choice detail81_detail|single-fitted|12 · One-sided fitted or non-preloaded injection joint|12 · Einschnittige Passschrauben- oder nicht vorgespannte Injektionsverbindung
+@choice detail81_detail|clearance-no-preload|13 · Clearance holes and non-preloaded bolts without load reversal|13 · Lochspiel und nicht vorgespannte Schrauben ohne Lastumkehr
+@choice detail81_detail|bolt-tension|14 · Bolt or threaded rod under tension|14 · Schraube oder Gewindestange unter Zug
+@choice detail81_detail|bolt-shear|15 · Bolt shank in single or double shear|15 · Schraubenschaft in ein- oder zweischnittiger Scherung
+@choice detail81_basis|confirmed|Detail-specific material, fabrication and stress section confirmed|Detailspezifischer Werkstoff, Ausführung und Spannungsquerschnitt bestätigt
+@choice detail81_basis|unconfirmed|Detail conditions unconfirmed|Detailbedingungen unbestätigt
+@choice detail81_steel|ordinary|Non-weathering steel|Nicht wetterfester Stahl
+@choice detail81_steel|weathering|Weathering steel|Wetterfester Stahl
+@choice detail81_reversal|none|No load reversal|Keine Lastumkehr
+@choice detail81_reversal|present|Load reversal present or unverified|Lastumkehr vorhanden oder ungeklärt
+@choice detail81_threads|outside|Threads outside the shear plane|Gewinde außerhalb der Scherfläche
+@choice detail81_threads|inside|Threads intersect the shear plane|Gewinde schneidet die Scherfläche
+@choice detail81_bolt_type|fitted|Fitted bolt|Passschraube
+@choice detail81_bolt_type|normal|Normal bolt|Normale Schraube
+@choice detail81_bolt_grade|5.6|5.6|5.6
+@choice detail81_bolt_grade|8.8|8.8|8.8
+@choice detail81_bolt_grade|10.9|10.9|10.9
+@choice detail81_bolt_grade|other|Other property class|Andere Festigkeitsklasse
+detail81_detail|C93-31|c||rolled-plate||Table 8.1 construction detail|Konstruktionsdetail nach Tabelle 8.1|high|
+detail81_basis|C93-31|c||confirmed||Material, fabrication and stress evidence|Werkstoff-, Ausführungs- und Spannungsnachweise|high|Confirm edge finishing and local concentration allowances, bolt detailing, stress section and any prying and bending effects for the selected detail.
+detail81_steel|C93-31|c||ordinary||Steel family for details 1 to 5|Stahlart für Kerbfälle 1 bis 5|high|
+detail81_reversal|C93-31|c||none||Load reversal|Lastumkehr|high|
+detail81_threads|C93-31|c||outside||Thread position for the shear bolt|Gewindelage zur Scherfläche|high|
+detail81_bolt_type|C93-31|c||normal||Bolt type for detail 15|Schraubentyp für Kerbfall 15|high|
+detail81_bolt_grade|C93-31|c||8.8||Normal bolt property class|Festigkeitsklasse der normalen Schraube|high|
+detail81_diameter|C93-31|n|mm|20|r0:1000|Reference diameter d for bolt or hole detailing|Bezugsdurchmesser d für Schrauben- oder Lochausbildung|high|
+detail81_end_parallel|C93-31|n|mm|35|r0:50000|Edge distance e1 parallel to the load|Randabstand e1 in Kraftrichtung|high|
+detail81_edge_transverse|C93-31|n|mm|35|r0:50000|Edge distance e2 transverse to the load|Randabstand e2 quer zur Kraftrichtung|high|
+detail81_pitch_parallel|C93-31|n|mm|60|r0:50000|Pitch p1 parallel to the load, zero without a neighbor|Lochabstand p1 in Kraftrichtung, null ohne benachbartes Loch|high|
+detail81_pitch_transverse|C93-31|n|mm|60|r0:50000|Pitch p2 transverse to the load, zero without a neighbor|Lochabstand p2 quer zur Kraftrichtung, null ohne benachbartes Loch|high|
+detail81_first_moment|C93-31|n|mm3|250000|r0:1000000000000|First moment S at the assessed depth|Statisches Moment S in der geprüften Tiefe|high|
+detail81_inertia|C93-31|n|mm4|120000000|r0:1000000000000000|Second moment of area I about the bending axis|Flächenträgheitsmoment I um die Biegeachse|high|
+detail81_thickness|C93-31|n|mm|8|r0:1000|Section thickness t at the assessed depth|Querschnittsdicke t in der geprüften Tiefe|high|
+detail81_shear_force|C93-31|n|N|180000|r0:1000000000|Equivalent shear force range|Schadensäquivalente Querkraftschwingbreite|high|
+detail81_frequent_force|C93-31|n|N|400000|r0:1000000000|Frequent shear force range|Häufige Querkraftschwingbreite|high|
+detail81_range|C93-31|n|MPa|45|r0:2000|Equivalent stress range on the prescribed section|Schadensäquivalente Spannungsschwingbreite im maßgebenden Querschnitt|high|
+detail81_frequent|C93-31|n|MPa|105|r0:2000|Frequent stress range on the prescribed section|Häufige Spannungsschwingbreite im maßgebenden Querschnitt|high|

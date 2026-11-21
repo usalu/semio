@@ -76,3 +76,5 @@ Solid counts body / thermal / structure: 1:50 204 / 215 / 51, 1:100 93 / 102 / 4
 - Single needles, cones and bud scales are not modelled (below the smallest feature at every scale, declared).
 - Four side-branch tips at 1:100 end 2–7 cm under the underside of their cloud (visible only from below at that scale).
 - The crown is still somewhat denser than a very old, wind-thinned pine; the plate count and the declared needle areas (90 + 60 m² exchange area) were kept.
+
+The curved terminal axes are retained through the needle pads, including the apex at 1:500. The sunlit and shaded masses are drawn in their own articulated frames. All seven affected drawing comparisons passed. At 1:500 the load-bearing leader, heat surfaces, scale agreement, mesh counts and physical dimensions passed. The independently read twelve-scene GLB occupies 4,097,644 bytes.

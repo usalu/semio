@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
-import {createReadStream} from "node:fs";
-import {lstat,opendir,readlink,stat} from "node:fs/promises";
+import {createReadStream,type Stats} from "node:fs";
+import {lstat,open,opendir,readlink,stat} from "node:fs/promises";
 import {join,sep} from "node:path";
 import foldTable from "./🔤️fold/🔣️.json" with {type:"json"};
 
@@ -336,8 +336,50 @@ export async function scanSharedV1(worktree:string,ignore:FleetIgnoreV1,signal?:
  return {entries,refused};
 }
 
-/** 🔐️ Streams a file through sha256; `stable` is false when its size or modification time changed, or the bytes read differ from the size, between the stat before and the stat after hashing. */
-export async function hashFileV1(file:string):Promise<Readonly<{sha256:string;bytes:number;stable:boolean}>>{
+type FileHash=Readonly<{sha256:string;bytes:number;stable:boolean}>;
+type CheckedFileHash=Readonly<{sha256:string;bytes:number;stable:true}>|Readonly<{stable:false}>;
+type HashChecks=Readonly<{signal?:AbortSignal;progress?:(done:number,total:number)=>void}>;
+const hashChunkBytes=1<<20,hashIdentityBytes=8*hashChunkBytes;
+
+async function checkedHashFile(file:string,{signal,progress}:HashChecks):Promise<CheckedFileHash>{
+ signal?.throwIfAborted();
+ const before=await lstat(file);
+ signal?.throwIfAborted();
+ if(!before.isFile())return {stable:false};
+ const input=await open(file,"r"),same=(found:Stats|undefined):boolean=>found!==undefined&&found.isFile()&&found.dev===before.dev&&found.ino===before.ino&&found.size===before.size&&found.mtimeMs===before.mtimeMs&&found.ctimeMs===before.ctimeMs;
+ const unchanged=async():Promise<boolean>=>{
+  const named=await lstat(file).catch(error=>{if(error.code!=="ENOENT"&&error.code!=="ENOTDIR")throw error;return undefined;});
+  const matched=same(named)&&same(await input.stat());
+  signal?.throwIfAborted();
+  return matched;
+ };
+ try{
+  if(!await unchanged())return {stable:false};
+  const hash=createHash("sha256"),buffer=Buffer.allocUnsafe(hashChunkBytes);
+  let bytes=0,nextCheck=hashIdentityBytes;
+  while(bytes<before.size){
+   signal?.throwIfAborted();
+   const {bytesRead}=await input.read(buffer,0,Math.min(buffer.length,before.size-bytes,nextCheck-bytes),null);
+   signal?.throwIfAborted();
+   if(bytesRead===0)return {stable:false};
+   hash.update(buffer.subarray(0,bytesRead));bytes+=bytesRead;
+   progress?.(bytes,before.size);
+   await new Promise<void>(done=>setImmediate(done));
+   signal?.throwIfAborted();
+   if(bytes>=nextCheck&&bytes<before.size){
+    if(!await unchanged())return {stable:false};
+    nextCheck+=hashIdentityBytes;
+   }
+  }
+  return await unchanged()?{sha256:hash.digest("hex"),bytes,stable:true}:{stable:false};
+ }finally{await input.close();}
+}
+
+/** 🔐️ Streams a file through SHA-256. The default returns the digest and final stability check. Checked reads yield between chunks and return only `stable:false` when the opened file or its path changes. */
+export function hashFileV1(file:string):Promise<FileHash>;
+export function hashFileV1(file:string,checks:HashChecks):Promise<CheckedFileHash>;
+export async function hashFileV1(file:string,checks?:HashChecks):Promise<FileHash|CheckedFileHash>{
+ if(checks!==undefined)return checkedHashFile(file,checks);
  const before=await stat(file),hash=createHash("sha256");
  let bytes=0;
  for await(const chunk of createReadStream(file)){hash.update(chunk);bytes+=chunk.length;}

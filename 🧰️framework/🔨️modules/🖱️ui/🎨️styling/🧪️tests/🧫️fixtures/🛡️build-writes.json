@@ -3,6 +3,12 @@
   "markup": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>",
   "html": "<!doctype html><title>fixture</title>",
   "cname": "example.invalid",
+  "tiles": {
+    "privateStage": "tiles/0/0/.tile-Ab1234/body",
+    "retainedFile": "tiles/0/0/.tile-Ab1235",
+    "retainedDirectory": "tiles/0/0/.tile-not-a-stage/readme",
+    "retainedOutsideCoordinates": "tiles/.tile-Ab1234/readme"
+  },
   "hooks": ["mesh", "favicon", "markers", "html", "assets", "tile", "static"],
   "modes": [{ "write": false, "emits": false }, { "write": true, "emits": true }, { "write": null, "emits": true }]
 }

@@ -216,11 +216,55 @@ pub fn retain_completed_history_plan(slot:&mut Option<semio_framework_value::ret
     slot.as_mut().unwrap().original_mut().unwrap()
 }
 
+/// 🧹️ Keeps the replay in its paid frame through terminal in-place destruction.
+pub struct HistoryReadReplaySlot<T> {
+    original: std::mem::MaybeUninit<T>,
+    initialized: bool,
+}
+
+impl<T> Default for HistoryReadReplaySlot<T> {
+    fn default() -> Self {
+        Self { original: std::mem::MaybeUninit::uninit(), initialized: false }
+    }
+}
+
+impl<T> HistoryReadReplaySlot<T> {
+    pub fn is_some(&self) -> bool { self.initialized }
+
+    fn is_none(&self) -> bool { !self.initialized }
+
+    pub fn as_ref(&self) -> Option<&T> {
+        if self.initialized { Some(unsafe { self.original.assume_init_ref() }) } else { None }
+    }
+
+    fn as_mut(&mut self) -> Option<&mut T> {
+        if self.initialized { Some(unsafe { self.original.assume_init_mut() }) } else { None }
+    }
+
+    pub fn install_original(&mut self, value: T) {
+        assert!(!self.initialized, "history retirement already holds its original replay");
+        self.original.write(value);
+        self.initialized = true;
+    }
+
+    fn destroy_terminal(&mut self) {
+        assert!(self.initialized, "terminal history replay is absent");
+        self.initialized = false;
+        unsafe { self.original.assume_init_drop() };
+    }
+}
+
+impl<T> Drop for HistoryReadReplaySlot<T> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || !self.initialized, "history replay retains original ownership");
+    }
+}
+
 pub struct ArtifactHistoryReadRetirement<P, Mu: Mutation<P>> {
     pub derived: std::mem::ManuallyDrop<Option<ArtifactDerivedSnapshot<P>>>,
     pub derived_alias: std::mem::ManuallyDrop<Option<Arc<P>>>,
     pub preview: std::mem::ManuallyDrop<Option<ArtifactDerivedHistoryPreview<P, Mu>>>,
-    pub replay: std::mem::ManuallyDrop<Option<ArtifactDerivedReplay<P, Mu>>>,
+    pub replay: HistoryReadReplaySlot<ArtifactDerivedReplay<P, Mu>>,
     pub finished: std::mem::ManuallyDrop<Option<EditReplayResult<P, Mu>>>,
     pub loaded_replay: std::mem::ManuallyDrop<Option<EditReplay<P, Mu>>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
@@ -238,7 +282,7 @@ impl<P, Mu> ArtifactHistoryReadRetirement<P, Mu>
 where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
     fn derived_snapshot_demands(&self)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
         if self.registry_retirement.is_some(){return Some(snapshot_registry_alias_demands(&self.registry_retirement))}
-        if self.derived_alias.is_some(){return Some(Ok(semio_framework_value::RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:2,..Default::default()}))}
+        if self.derived_alias.is_some(){return Some(Ok(semio_framework_value::RetirementDemand{depth:2,..ReturnedSnapshotReadRetirement::<P>::original_admission_demands(&self.derived_alias)}))}
         self.derived.is_some().then_some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}))
     }
     fn close_derived_snapshot(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneStep>,semio_framework_value::RetirementPollExit>{
@@ -276,10 +320,10 @@ where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
         if preview.checkpoint.is_some(){return Some(Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ArtifactCheckpointSelection>>(),depth:1,..Default::default()}))}
                 if let Some(owner)=preview.derived_operation.as_ref(){return Some(if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>>(),depth:1,..Default::default()})}else if owner.is_closing(){owner.next_demand(body)}else{Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})});}
         if let Some(owner)=preview.operation_close.as_ref(){return Some(semio_framework_value::factory_ticket_demands(owner,body));}
-        if preview.displaced_operation.is_some(){return Some(Ok(RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()}));}
+        if preview.displaced_operation.is_some(){return Some(Ok(ReturnedSnapshotReadRetirement::<P>::original_admission_demands(&preview.displaced_operation)));}
         if let Some(id)=preview.operation_identity.as_ref(){return Some(Ok(RetirementDemand{copy_bytes:size_of::<MutationId>(),release_bytes:id.0.capacity(),depth:1,..Default::default()}));}
         if !preview.drafts.terminal_is_empty(){return Some(Ok(RetirementDemand{copy_bytes:size_of::<protocol::HistoryInputDrafts>(),depth:1,..Default::default()}))}
-if preview.state.is_some() {return Some(Ok(RetirementDemand {capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:2,..Default::default()}));}
+if preview.state.is_some() {return Some(Ok(RetirementDemand {depth:2,..ReturnedSnapshotReadRetirement::<P>::original_admission_demands(&preview.state)}));}
         Some(Ok(RetirementDemand{copy_bytes:size_of::<Option<ArtifactDerivedHistoryPreview<P,Mu>>>()+size_of::<SnapshotReadRegistryHandle>(),depth:1,..Default::default()}))
     }
     fn close_preview(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:Option<&mut HistoryCloseControl<'_,'_>>)->Result<Option<RetainedCloneStep>,semio_framework_value::RetirementPollExit> {
@@ -324,7 +368,7 @@ if !preview.drafts.terminal_is_empty() {let drafts=std::mem::take(&mut preview.d
     }
     fn raw_replay_demands(&self,body:usize)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
         if self.finished.is_none()&&self.loaded_replay.is_none(){if let Some(replay)=self.replay.as_ref(){if !replay.replacement_wire.terminal_is_empty()||!replay.target.terminal_is_empty()||!replay.replacement.terminal_is_empty()||replay.failed_operation.is_some()||replay.history_source.is_some()||replay.history_input.occupied()||replay.history_issuer.is_some()||replay.history_issuer_close.is_some(){return Some(Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"replay retains Store-owned history or replacement authority")))}}}
-        let demand=if let Some(owner)=self.finished.as_ref(){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<EditReplayResult<P,Mu>>>(),depth:1,..Default::default()}));}if !owner.retirement_started(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}));}owner.retirement_demands(body)}else if let Some(owner)=self.loaded_replay.as_ref().or_else(||self.replay.as_ref().and_then(|owner|owner.replay.as_ref())){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<EditReplay<P,Mu>>>(),depth:1,..Default::default()}));}if !owner.retirement_started(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}));}owner.retirement_demands(body)}else{return self.replay.is_some().then_some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<ArtifactDerivedReplay<P,Mu>>>()+size_of::<SnapshotReadRegistryHandle>(),depth:1,..Default::default()}));};
+        let demand=if let Some(owner)=self.finished.as_ref(){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<EditReplayResult<P,Mu>>>(),depth:1,..Default::default()}));}if !owner.retirement_started(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}));}owner.retirement_demands(body)}else if let Some(owner)=self.loaded_replay.as_ref().or_else(||self.replay.as_ref().and_then(|owner|owner.replay.as_ref())){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<EditReplay<P,Mu>>>(),depth:1,..Default::default()}));}if !owner.retirement_started(){return Some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}));}owner.retirement_demands(body)}else{return self.replay.is_some().then_some(Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<bool>()+size_of::<SnapshotReadRegistryHandle>(),depth:1,..Default::default()}));};
         Some(demand.and_then(|mut demand|{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history raw replay retirement depth overflow"))?;Ok(demand)}))
     }
     fn close_raw_replay(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,mut control:Option<&mut HistoryCloseControl<'_,'_>>)->Result<Option<RetainedCloneStep>,semio_framework_value::RetirementPollExit> {
@@ -338,7 +382,7 @@ if !preview.drafts.terminal_is_empty() {let drafts=std::mem::take(&mut preview.d
         if let Some(owner)=self.loaded_replay.as_mut(){if owner.terminal_is_empty(){drop(self.loaded_replay.take());return Ok(Some(moved));}if !owner.retirement_started(){owner.begin_retirement();return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})))}let mut nested=effect.nested(child);let poll=match control.as_deref_mut(){Some(HistoryCloseControl::Controlled(control))=>owner.close_original_step_controlled(&mut nested,*control),Some(HistoryCloseControl::Original(original))=>ErasedSnapshotRetirement::close_original_step(owner,*original,nested.grant().maximum_copy_bytes,&mut nested),None=>owner.close_original_step(&mut nested)};let step=semio_framework_value::RetirementPollExit::resume(poll)?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original loaded replay").map(Some).map_err(Into::into);}
         let derived=self.replay.as_mut().expect("observed original derived replay");
         if let Some(owner)=derived.replay.as_mut(){if owner.terminal_is_empty(){drop(derived.replay.take());return Ok(Some(moved));}if !owner.retirement_started(){owner.begin_retirement();return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})))}let mut nested=effect.nested(child);let poll=match control.as_deref_mut(){Some(HistoryCloseControl::Controlled(control))=>owner.close_original_step_controlled(&mut nested,*control),Some(HistoryCloseControl::Original(original))=>ErasedSnapshotRetirement::close_original_step(owner,*original,nested.grant().maximum_copy_bytes,&mut nested),None=>owner.close_original_step(&mut nested)};let step=semio_framework_value::RetirementPollExit::resume(poll)?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original derived replay").map(Some).map_err(Into::into);}
-        semio_framework_value::RetirementPollExit::pay(effect,2)?;*self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(derived.registry.clone()));drop(self.replay.take());Ok(Some(moved))
+        semio_framework_value::RetirementPollExit::pay(effect,2)?;*self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(derived.registry.clone()));self.replay.destroy_terminal();Ok(Some(moved))
     }
 }
 
@@ -371,7 +415,26 @@ where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
         if self.raw_replay_demands(0).is_some(){if let Some(owner)=self.finished.as_ref(){return !owner.terminal_is_empty()&&owner.retirement_started()&&owner.requires_original_control()}if let Some(owner)=self.loaded_replay.as_ref(){return !owner.terminal_is_empty()&&owner.retirement_started()&&owner.requires_original_control()}return self.replay.as_ref().and_then(|owner|owner.replay.as_ref()).is_some_and(|owner|!owner.terminal_is_empty()&&owner.retirement_started()&&owner.requires_original_control())}
         self.factory_retirement.iter().flatten().next().is_some_and(|owner|owner.requires_original_control())
     }
-        fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,body);}self.derived_snapshot_demands().or_else(||self.plan_demands(body)).or_else(||self.preview_demands(body)).or_else(||self.raw_replay_demands(body)).or_else(||self.factory_demands(body)).unwrap_or_else(||if self.terminal_is_empty(){Ok(Default::default())}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history read residual authority is not admitted"))})}
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if let Some(active) = self.active.as_ref() {
+            let mut demand = artifact_retirement_box_demands(active, body)?;
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(
+                semio_framework_value::ValueRefusalKind::DepthLimit,
+                "history boxed child retirement depth overflow",
+            ))?;
+            return Ok(demand);
+        }
+        self.derived_snapshot_demands()
+            .or_else(|| self.plan_demands(body))
+            .or_else(|| self.preview_demands(body))
+            .or_else(|| self.raw_replay_demands(body))
+            .or_else(|| self.factory_demands(body))
+            .unwrap_or_else(|| if self.terminal_is_empty() {
+                Ok(Default::default())
+            } else {
+                Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual authority is not admitted"))
+            })
+    }
 
 fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let result=self.close_inner(effect,None);semio_framework_value::RetirementPollExit::settle(effect,result)}
 fn close_step_controlled(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementPoll{if !self.requires_original_control(){return semio_framework_value::RetirementPollExit::settle(effect,Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history read selected turn does not own an original child loan").into()))}let mut control=HistoryCloseControl::Controlled(control);let result=self.close_inner(effect,Some(&mut control));semio_framework_value::RetirementPollExit::settle(effect,result)}
@@ -381,7 +444,7 @@ fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRe
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,0).map(|demand|demand.copy_bytes);} self.derived_snapshot_demands().or_else(||self.plan_demands(0)).or_else(||self.preview_demands(0)).or_else(||self.raw_replay_demands(0)).or_else(||self.factory_demands(0)).map_or_else(|| if self.terminal_is_empty() { Ok(0) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual copy authority is not admitted")) }, |demand| demand.map(|demand| demand.copy_bytes)) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,body).map(|demand|demand.capacity_bytes);} self.derived_snapshot_demands().or_else(||self.plan_demands(body)).or_else(||self.preview_demands(body)).or_else(||self.raw_replay_demands(body)).or_else(||self.factory_demands(body)).map_or_else(|| if self.terminal_is_empty() { Ok(0) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual constructor authority is not admitted")) }, |demand| demand.map(|demand| demand.capacity_bytes)) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,0).map(|demand|demand.release_bytes);} self.derived_snapshot_demands().or_else(||self.plan_demands(0)).or_else(||self.preview_demands(0)).or_else(||self.raw_replay_demands(0)).or_else(||self.factory_demands(0)).map_or_else(|| if self.terminal_is_empty() { Ok(0) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual release authority is not admitted")) }, |demand| demand.map(|demand| demand.release_bytes)) }
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,0).map(|demand|demand.depth);} self.derived_snapshot_demands().or_else(||self.plan_demands(0)).or_else(||self.preview_demands(0)).or_else(||self.raw_replay_demands(0)).or_else(||self.factory_demands(0)).map_or_else(|| if self.terminal_is_empty() { Ok(0) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual depth authority is not admitted")) }, |demand| demand.map(|demand| demand.depth)) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { if self.active.is_some(){return self.next_demand(0).map(|demand|demand.depth);} self.derived_snapshot_demands().or_else(||self.plan_demands(0)).or_else(||self.preview_demands(0)).or_else(||self.raw_replay_demands(0)).or_else(||self.factory_demands(0)).map_or_else(|| if self.terminal_is_empty() { Ok(0) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual depth authority is not admitted")) }, |demand| demand.map(|demand| demand.depth)) }
 }
 
 impl<P, Mu: Mutation<P>> Drop for ArtifactHistoryReadRetirement<P, Mu> {
@@ -392,7 +455,14 @@ impl<P:Send+Sync+'static,Mu:Mutation<P>+Send+'static> ArtifactHistoryReadRetirem
     fn close_inner(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,mut control:Option<&mut HistoryCloseControl<'_,'_>>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
         let grant=effect.grant();
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if self.active.is_some(){let mut child=grant;child.maximum_depth=child.maximum_depth.checked_sub(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history boxed child requires enclosing depth"))?;let mut nested=effect.nested(child);let poll=match control.as_deref_mut(){Some(HistoryCloseControl::Controlled(control))=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,nested.grant().maximum_copy_bytes,&mut nested,*control),Some(HistoryCloseControl::Original(original))=>semio_framework_value::close_factory_ticket_original(&mut self.active,*original,nested.grant().maximum_copy_bytes,&mut nested),None=>artifact_retirement_box_close_step(&mut self.active,nested.grant().maximum_copy_bytes,&mut nested)};return semio_framework_value::RetirementPollExit::resume(poll)}
+        if self.active.is_some(){let mut child=grant;child.maximum_depth=child.maximum_depth.checked_sub(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history boxed child requires enclosing depth"))?;let mut nested=effect.nested(child);let poll=match control.as_deref_mut(){Some(HistoryCloseControl::Controlled(control))=>semio_framework_value::close_factory_ticket_controlled(&mut self.active,nested.grant().maximum_copy_bytes,&mut nested,*control),Some(HistoryCloseControl::Original(original))=>semio_framework_value::close_factory_ticket_original(&mut self.active,*original,nested.grant().maximum_copy_bytes,&mut nested),None=>artifact_retirement_box_close_step(&mut self.active,nested.grant().maximum_copy_bytes,&mut nested)};return semio_framework_value::RetirementPollExit::resume(poll).map(|step| {
+                if self.terminal_is_empty() {
+                    RetainedCloneStep::Complete(step.progress())
+                } else {
+                    RetainedCloneStep::Progress(step.progress())
+                }
+            });
+        }
         let moved = |step: RetainedCloneStep| match step {
             RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress),
             RetainedCloneStep::Progress(progress) => RetainedCloneStep::Progress(progress),

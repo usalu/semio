@@ -115,6 +115,8 @@ where
         }
         let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
         let local_actor_id = actor;
+        let snapshot_read_leases = SnapshotReadLeaseRegistryOwner::new();
+        assert!(snapshot_read_leases.publish_authority(0, content_revision), "a fresh Store must publish its exact genesis read authority");
         let (dag, edit_sequence, clock, rejected_seed_identities) = Self::seed_runtime_state(envelope, fresh_replica_clock().actor)?;
         C::publish_native_snapshot().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
         let mut displaced_retirements = ArtifactStoreDisplacedRetirements::new();
@@ -142,7 +144,7 @@ where
                 snapshot_retirement_factory: std::mem::ManuallyDrop::new(None),
                 initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(None),
                 mutation_retirement_factory: std::mem::ManuallyDrop::new(None),
-                snapshot_read_leases: std::mem::ManuallyDrop::new(SnapshotReadLeaseRegistryOwner::new()),
+                snapshot_read_leases: std::mem::ManuallyDrop::new(snapshot_read_leases),
                 displaced_retirements: std::mem::ManuallyDrop::new(displaced_retirements),
                 owned_disposer: std::mem::ManuallyDrop::new(None),
                 owned_disposer_terminal: false,

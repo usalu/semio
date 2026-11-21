@@ -1,0 +1,5 @@
+[
+  {"name":"free space recovers during the idle interval","releaseMs":10000,"gainBytes":0,"starts":[0]},
+  {"name":"still short after idle interval","releaseMs":38000,"gainBytes":0,"starts":[0,33000]},
+  {"name":"productive scan retries after its normal interval","releaseMs":9000,"gainBytes":65536,"starts":[0,5000]}
+]

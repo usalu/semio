@@ -5,10 +5,7 @@
       "engines": [
         "@semio-tech/puzzle-plugin:wasm"
       ],
-      "forbiddenProjects": [
-        "@semio-tech/framework-editor-rs",
-        "@semio-tech/framework-surface-rs"
-      ]
+      "forbiddenProjects": []
     },
     {
       "variant": "puzzle5d",
@@ -26,7 +23,9 @@
     },
     {
       "variant": "s",
-      "engines": [],
+      "engines": [
+        "@semio-tech/puzzle-plugin:wasm"
+      ],
       "forbiddenProjects": []
     },
     {
@@ -44,6 +43,18 @@
         "@semio-tech/puzzle-plugin:wasm"
       ],
       "forbiddenProjects": []
+    },
+    {
+      "variant": "layout",
+      "engines": [],
+      "forbiddenProjects": [
+        "@semio-tech/puzzle-plugin",
+        "semio-framework-os-flow-browser-package"
+      ],
+      "wgpu": {
+        "port": 6179,
+        "composition": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+      }
     }
   ],
   "profiles": [
@@ -54,9 +65,16 @@
     "react",
     "wgpu"
   ],
-  "sharedEngines": [
-    "semio-framework-os-flow-browser-package:wasm"
-  ],
+  "rendererEngines": {
+    "react": [
+      "@semio-tech/framework-editor-rs:wasm",
+      "@semio-tech/framework-os-node-graph-rs:wasm",
+      "@semio-tech/framework-surface-rs:wasm"
+    ],
+    "wgpu": [
+      "@semio-tech/framework-renderer-wgpu:wasm"
+    ]
+  },
   "fontTool": {
     "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
     "project": "semio-framework-canvas-font-assets",

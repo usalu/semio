@@ -1,6 +1,6 @@
 //! 🔌️ The Rust subject compares the complete neutral parent query event and literal child address.
 use semio_repo_test_host::Adapter;
-const KINDS:&[&str]=&["set-query"];
+const KINDS:&[&str]=&["set-query","set-root"];
 #[cfg(feature="sut")]
 mod subject{
  use semio_repo_test_host::{Context,Json,Outcome,parse_json};
@@ -8,14 +8,14 @@ mod subject{
  use semio_s_artifact_trinity_jack::standards::v1::subsets::any::io::text::{mutations::{apply_trinity_graph_mutation_reporting,decode_trinity_graph_mutation_json,inverse_trinity_graph_mutation_steps},snapshot::{decode_jack_snapshot_json,encode_jack_snapshot_json}};
  fn fixture(ctx:&Context,needle:&str)->Result<String,String>{let uri=ctx.scenario.steps.iter().flat_map(|(_,text)|text.split_whitespace()).find(|token|(token.starts_with("asset://")||token.starts_with("shared://"))&&token.contains(needle)).ok_or_else(||format!("declared parent fixture {needle} is absent"))?;String::from_utf8(ctx.input_bytes(uri)?).map_err(|error|error.to_string())}
  fn snapshot(text:&str)->Result<JackSnapshot,String>{decode_jack_snapshot_json(text).map_err(|error|error.into_message())}
- fn mutation(text:&str)->Result<TrinityGraphMutation,String>{decode_trinity_graph_mutation_json(text).map_err(|error|error.into_message())}
+ fn mutation(text:&str)->Result<TrinityGraphMutation,String>{decode_trinity_graph_mutation_json(text)}
  fn projection(snapshot:&JackSnapshot)->Result<Json,String>{parse_json(&encode_jack_snapshot_json(snapshot).map_err(|error|error.into_message())?)}
  fn output(value:Json)->Outcome{Outcome::with_raw(value.to_string().into_bytes(),value)}
  fn source(ctx:&Context)->Result<JackSnapshot,String>{snapshot(&fixture(ctx,"asset://")?)}
  fn apply(source:&JackSnapshot,mutation:&TrinityGraphMutation)->Result<JackSnapshot,String>{let mut result=source.clone();let diagnostics=apply_trinity_graph_mutation_reporting(&mut result,mutation);if diagnostics.iter().any(|(code,_)|code!="mutation.no-op"){return Err(format!("original parent query event refused: {diagnostics:?}"))}if result.content!=source.content{return Err("parent query event changed its literal child address".into())}Ok(result)}
- pub fn mutate(_kind:&'static str)->impl Fn(&Context)->Result<Outcome,String>{move|ctx|{let source=source(ctx)?;let mutation=mutation(ctx.doc_string()?)?;let changed=apply(&source,&mutation)?;if changed.query==source.query{return Err("authored parent event was an unexpected no-op".into())}Ok(output(projection(&changed)?))}}
+ pub fn mutate(_kind:&'static str)->impl Fn(&Context)->Result<Outcome,String>{move|ctx|{let source=source(ctx)?;let mutation=mutation(ctx.doc_string()?)?;let changed=apply(&source,&mutation)?;if changed==source{return Err("authored parent event was an unexpected no-op".into())}Ok(output(projection(&changed)?))}}
  pub fn inverse(_kind:&'static str)->impl Fn(&Context)->Result<Outcome,String>{move|ctx|{let source=source(ctx)?;let mutation=mutation(ctx.doc_string()?)?;let mut changed=apply(&source,&mutation)?;let mutated=projection(&changed)?;for inverse in inverse_trinity_graph_mutation_steps(&mutation,&source).map_err(|error|error.into_message())?.into_iter().rev(){changed=apply(&changed,&inverse)?;}if changed!=source{return Err("original parent inverse did not restore every source field".into())}Ok(output(Json::Object(vec![("mutated".into(),mutated),("restored".into(),projection(&changed)?)])))}}
- pub fn spec_vector(_kind:&'static str)->impl Fn(&Context)->Result<Outcome,String>{move|ctx|{let source=snapshot(&fixture(ctx,"⬅️before")?)?;let expected=snapshot(&fixture(ctx,"➡️after")?)?;let mutation=mutation(&fixture(ctx,"🦠️mutation")?)?;let changed=apply(&source,&mutation)?;let verdict=ctx.doc_json()?.str("verdict");if verdict!="applied"||changed.query==source.query||changed!=expected{return Err("complete parent does not match its authored applied vector".into())}Ok(output(projection(&changed)?))}}
+ pub fn spec_vector(_kind:&'static str)->impl Fn(&Context)->Result<Outcome,String>{move|ctx|{let source=snapshot(&fixture(ctx,"⬅️before")?)?;let expected=snapshot(&fixture(ctx,"➡️after")?)?;let mutation=mutation(&fixture(ctx,"🦠️mutation")?)?;let changed=apply(&source,&mutation)?;let verdict=ctx.doc_json()?.str("verdict");if verdict!="applied"||changed==source||changed!=expected{return Err("complete parent does not match its authored applied vector".into())}Ok(output(projection(&changed)?))}}
  pub fn round_trip(ctx:&Context)->Result<Outcome,String>{let source=source(ctx)?;let printed=encode_jack_snapshot_json(&source).map_err(|error|error.into_message())?;let restored=snapshot(&printed)?;if restored!=source{return Err("declared parent carrier lost original metadata or child address".into())}Ok(output(projection(&restored)?))}
 }
 /// 🧭️ Every expanded parent scenario registers only the native subject; Python remains an independent oracle.

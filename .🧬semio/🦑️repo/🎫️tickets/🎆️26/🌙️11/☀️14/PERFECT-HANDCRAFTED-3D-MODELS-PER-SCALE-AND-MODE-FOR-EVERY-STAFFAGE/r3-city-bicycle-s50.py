@@ -34,7 +34,7 @@ def wheel(S, bone, c, hub, flanges, shell, brake, axle_half, nut_half):
     S.struct_of(f"rim-{tag}", bone)
     outer, inner = pt.ring(c, 0.3175, 0.297)
     S.swept(f"rim-{tag}", bone, outer, -0.0125, 0.0125, "body", 0.78, "rims-spokes", ALLOY, pen=0.13, holes=[inner], tol=0.0003, views=SIDE)
-    S.put(S.rev(f"hub-{tag}", bone, hub, c, [0, 0, 1], CHROME, STEEL), "hub-brakes")
+    S.put(S.annulus(f"hub-{tag}", bone, hub, c, [0, 0, 1], CHROME, STEEL), "hub-brakes")
     S.struct_of(f"hub-{tag}", bone)
     lo, hi = hub[0][0], hub[-1][0]
     S.disc(f"hub-{tag}", bone, c, shell[2], shell[0], shell[1], "detail", STEEL, "hub-brakes", CHROME, pen=0.13)
@@ -333,6 +333,27 @@ def stand(S):
         S.plank(f"stand-foot-{name}", "stand", at(kit.STAND_LENGTH - 0.041, 0), at(kit.STAND_LENGTH, 0), 0.022, side * 0.09, "detail", DARK, reg, RUBBER, pen=0.13)
 
 
+def cables(S):
+    """🧶 The two brake cables in their 5 mm housings, body only (no load, no own thermal region), drawn as texture strokes in the side view: the front one on the steer bone from the right lever down the front of the head tube and the left blade to the roller brake of the front hub, the rear one from the left lever in a short loop to the head tube (steer bone) and on the frame along the down tube, under the bottom bracket and along the left chainstay to the roller brake of the rear hub."""
+    ends = {}
+    for side, name in ((1, "l"), (-1, "r")):
+        g0 = pt.grip_start(side)
+        d = kit.unit(kit.sub(pt.mirror(pt.BAR_END, side), g0))
+        ends[name] = kit.add(kit.add(g0, d, -0.03), [0.006, -0.004, 0.0])
+    dd = pt.DOWN_DIR
+    n = [-dd[1], dd[0], 0.0]
+    below = lambda p, t, z: [p[0] + n[0] * t, p[1] + n[1] * t, z]
+    runs = (
+        ("cable-front", "steer", [ends["r"], [0.335, 0.985, -0.085], sp(0.06, 0.035, -0.01), sp(0.2, 0.035, 0.0), sp(0.27, 0.04, 0.03), sp(0.4, 0.026, 0.05), sp(0.53, 0.03, 0.05), sp(0.575, 0.03, 0.036)], [0.05, 0.05, 0.04, 0.03, 0.04, 0.04]),
+        ("cable-rear-loop", "steer", [ends["l"], [0.335, 0.985, 0.085], sp(0.03, 0.035, 0.012)], [0.05]),
+        ("cable-rear", "frame", [sp(0.03, 0.035, 0.012), sp(0.15, 0.026, 0.028), below(kit.add(pt.DOWN_HEAD, dd, 0.06), 0.022, 0.016), below(kit.add(pt.DOWN_HEAD, dd, 0.45), 0.022, 0.016), [B[0] + 0.01, B[1] - 0.03, 0.026], [B[0] - 0.05, B[1] + 0.022, 0.034], [R[0] + 0.1, R[1] + 0.024, 0.058], [R[0] + 0.06, R[1] + 0.066, 0.046]], [0.05, 0.05, 0.05, 0.04, 0.04, 0.04]),
+    )
+    for i, bone, corners, radii in runs:
+        path = kit.bent(corners, radii, 3)
+        S.put(S.tube(i, bone, [(q, 0.0025, 0.0025) for q in path], PLASTIC, DARK, role="texture", slender=True, texture=True))
+        for k in range(len(corners) - 1):
+            S.sliver(f"{i}-{k + 1}", bone, corners[k], corners[k + 1], "texture", DARK, "hub-brakes", PLASTIC, 0.13)
+
 def build():
     S = kit.Scale(50, PENS)
     wheel(S, "wheel-r", R, pt.REAR_HUB, ((0.029, 0.0345, 0.0), (-0.029, 0.0345, 10.0)), (-0.034, 0.036, 0.074), (0.036, 0.056, 0.09), 0.074, 0.072)
@@ -345,14 +366,15 @@ def build():
     fork(S)
     cockpit(S)
     lamps(S)
+    cables(S)
     stand(S)
     return S
 
 
 DECISIONS = [
     {
-        "en": "1:50 is the complete Dutch city bicycle, every assembly stated by hand: frame of round steel tubes on their real centre lines (seat tube with lug and post, straight down tube, loop tube that runs parallel above it and bends back into the seat tube, 220 mm head tube with headset cups, bottom bracket shell, tapered chain and seat stays to forged dropouts, two bridges, the stand bracket), tube carrier with spine, cross bars, four legs to the axle and two struts to the seat lug, sprung saddle on rails, wheels with 37 mm tyres in box rims, 36 crossed spokes each, a three-speed hub and a dynamo hub with their roller brakes, axles and nuts, sheet mudguards with wire stays, the closed chain case, cranks with bosses and block pedals, fork with crown, curved blades and ends, quill stem, swept-back handlebar with grips, brake levers and bell, head lamp on its bracket, tail lamp on the rear mudguard and the folded two-leg centre stand.",
-        "de": "1:50 ist das vollständige Holland-Stadtrad, jede Baugruppe von Hand angegeben: Rahmen aus runden Stahlrohren auf ihren wirklichen Mittellinien (Sattelrohr mit Muffe und Stütze, gerades Unterrohr, Bügelrohr, das parallel darüber läuft und zum Sattelrohr zurückbiegt, 220 mm langes Steuerrohr mit Steuersatzschalen, Tretlagergehäuse, konische Ketten- und Sitzstreben zu geschmiedeten Ausfallenden, zwei Stege, die Ständerkonsole), Rohrgepäckträger mit Mittelstab, Querstäben, vier Beinen zur Achse und zwei Streben zur Sattelmuffe, gefederter Sattel auf Gestell, Räder mit 37-mm-Reifen in Kastenfelgen, je 36 gekreuzte Speichen, Dreigangnabe und Nabendynamo mit ihren Rollenbremsen, Achsen und Muttern, Blechschutzbleche mit Drahtstreben, geschlossener Kettenkasten, Kurbeln mit Naben und Blockpedalen, Gabel mit Krone, gebogenen Scheiden und Gabelenden, Schaftvorbau, zurückgeschwungener Lenker mit Griffen, Bremshebeln und Klingel, Scheinwerfer an seinem Halter, Rücklicht auf dem hinteren Schutzblech und der hochgeklappte Zweibeinständer.",
+        "en": "1:50 is the complete Dutch city bicycle, every assembly stated by hand: frame of round steel tubes on their real centre lines (seat tube with lug and post, straight down tube, loop tube that runs parallel above it and bends back into the seat tube, 220 mm head tube with headset cups, bottom bracket shell, tapered chain and seat stays to forged dropouts, two bridges, the stand bracket), tube carrier with spine, cross bars, four legs to the axle and two struts to the seat lug, sprung saddle on rails, wheels with 37 mm tyres in box rims, 36 crossed spokes each, a three-speed hub and a dynamo hub with their roller brakes, axles and nuts, sheet mudguards with wire stays, the closed chain case, cranks with bosses and block pedals, fork with crown, curved blades and ends, quill stem, swept-back handlebar with grips, brake levers and bell, head lamp on its bracket, tail lamp on the rear mudguard, the two brake cables in their housings from the levers to the roller brakes and the folded two-leg centre stand.",
+        "de": "1:50 ist das vollständige Holland-Stadtrad, jede Baugruppe von Hand angegeben: Rahmen aus runden Stahlrohren auf ihren wirklichen Mittellinien (Sattelrohr mit Muffe und Stütze, gerades Unterrohr, Bügelrohr, das parallel darüber läuft und zum Sattelrohr zurückbiegt, 220 mm langes Steuerrohr mit Steuersatzschalen, Tretlagergehäuse, konische Ketten- und Sitzstreben zu geschmiedeten Ausfallenden, zwei Stege, die Ständerkonsole), Rohrgepäckträger mit Mittelstab, Querstäben, vier Beinen zur Achse und zwei Streben zur Sattelmuffe, gefederter Sattel auf Gestell, Räder mit 37-mm-Reifen in Kastenfelgen, je 36 gekreuzte Speichen, Dreigangnabe und Nabendynamo mit ihren Rollenbremsen, Achsen und Muttern, Blechschutzbleche mit Drahtstreben, geschlossener Kettenkasten, Kurbeln mit Naben und Blockpedalen, Gabel mit Krone, gebogenen Scheiden und Gabelenden, Schaftvorbau, zurückgeschwungener Lenker mit Griffen, Bremshebeln und Klingel, Scheinwerfer an seinem Halter, Rücklicht auf dem hinteren Schutzblech, die beiden Bremszüge in ihren Hüllen von den Hebeln zu den Rollenbremsen und der hochgeklappte Zweibeinständer.",
     },
     {
         "en": "Thermal: every region lies on the body surface itself; the four regions with a steel wall under a paint film (frame tubes, steer assembly, mudguards, drivetrain) carry the wall as a second solid drawn in by the 0.06 mm film, the mudguard wall as its own 0.6 mm sheet. Tyres, rims and spokes, saddle, hubs with brake units and lamps have one layer and reference their body solids. There are no hidden regions and no emitters.",

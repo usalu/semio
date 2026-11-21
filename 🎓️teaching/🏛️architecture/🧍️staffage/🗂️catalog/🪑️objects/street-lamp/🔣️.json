@@ -362,7 +362,7 @@
               ],
               "material": "aluminium-anodised",
               "kind": "poly",
-              "points": [[0.505, -0.002], [0.505, -0.03], [0.43, -0.05], [0.08, -0.05], [0.0, -0.032], [0.0, 0.034], [0.08, 0.049], [0.43, 0.036]],
+              "points": [[0.505, 0.002], [0.505, -0.032], [0.475, -0.046], [0.08, -0.05], [0.0, -0.032], [0.0, 0.034], [0.08, 0.049], [0.4, 0.04]],
               "closed": true
             }
           ],
@@ -409,7 +409,7 @@
               ],
               "material": "aluminium-anodised",
               "kind": "poly",
-              "points": [[0.132, 5.793], [0.09985, 5.83936], [0.0, 5.849], [-0.09985, 5.83936], [-0.132, 5.793], [-0.106292, 5.758374], [-0.0, 5.75], [0.106292, 5.758374]],
+              "points": [[0.132, 5.795], [0.09985, 5.83936], [0.0, 5.849], [-0.09985, 5.83936], [-0.132, 5.795], [-0.106292, 5.758764], [-0.0, 5.75], [0.106292, 5.758764]],
               "closed": true
             }
           ],
@@ -476,7 +476,7 @@
               ],
               "material": "aluminium-anodised",
               "kind": "poly",
-              "points": [[1.225, -0.064], [1.225, 0.064], [1.15, 0.132], [0.8, 0.124], [0.72, 0.054], [0.72, -0.054], [0.8, -0.124], [1.15, -0.132]],
+              "points": [[1.225, -0.054], [1.225, 0.054], [1.195, 0.108], [1.12, 0.132], [0.8, 0.124], [0.72, 0.054], [0.72, -0.054], [0.8, -0.124], [1.12, -0.132], [1.195, -0.108]],
               "closed": true
             }
           ]
@@ -5161,16 +5161,23 @@
                 "rotation": [0.707107, 0.0, 0.707107, 0.0]
               },
               {
-                "at": [0.43, -0.007, 0.0],
+                "at": [0.4, -0.005, 0.0],
                 "rx": 0.132,
-                "ry": 0.043,
+                "ry": 0.045,
                 "exponent": 3.2,
                 "rotation": [0.707107, 0.0, 0.707107, 0.0]
               },
               {
-                "at": [0.505, -0.016, 0.0],
-                "rx": 0.064,
-                "ry": 0.014,
+                "at": [0.475, -0.012, 0.0],
+                "rx": 0.108,
+                "ry": 0.034,
+                "exponent": 3.2,
+                "rotation": [0.707107, 0.0, 0.707107, 0.0]
+              },
+              {
+                "at": [0.505, -0.015, 0.0],
+                "rx": 0.054,
+                "ry": 0.017,
                 "exponent": 3.2,
                 "rotation": [0.707107, 0.0, 0.707107, 0.0]
               }
@@ -5223,24 +5230,24 @@
             "role": "detail",
             "tone": 0.9,
             "profile": [
-              [0.030969, -0.11],
-              [0.039751, -0.0825],
-              [0.042857, -0.055],
-              [0.043802, -0.0275],
-              [0.043914, 0.0],
-              [0.043802, 0.0275],
-              [0.042857, 0.055],
-              [0.039751, 0.0825],
-              [0.030969, 0.11],
-              [0.037969, 0.11],
-              [0.046751, 0.0825],
-              [0.049857, 0.055],
-              [0.050802, 0.0275],
-              [0.050914, 0.0],
-              [0.050802, -0.0275],
-              [0.049857, -0.055],
-              [0.046751, -0.0825],
-              [0.037969, -0.11]
+              [0.031939, -0.11],
+              [0.040727, -0.0825],
+              [0.043845, -0.055],
+              [0.044793, -0.0275],
+              [0.044906, 0.0],
+              [0.044793, 0.0275],
+              [0.043845, 0.055],
+              [0.040727, 0.0825],
+              [0.031939, 0.11],
+              [0.038939, 0.11],
+              [0.047727, 0.0825],
+              [0.050845, 0.055],
+              [0.051793, 0.0275],
+              [0.051906, 0.0],
+              [0.051793, -0.0275],
+              [0.050845, -0.055],
+              [0.047727, -0.0825],
+              [0.038939, -0.11]
             ],
             "plane": "yz",
             "from": 0.19,
@@ -5411,8 +5418,8 @@
         ],
         "decisions": [
           {
-            "en": "Body at 1:500 (feature 75 mm): the plinth block, the column one straight cone 170 to 80 mm, the bracket a 80 mm bar (the 60 mm tube widened to the feature, the strut and the clamp below what the scale shows), the luminaire one loft on four stations 0.51 x 0.26 x 0.10 m so that it still reads as a flat side-entry head and not as a box.",
-            "de": "Körper 1:500 (Merkmal 75 mm): der Sockelblock, der Mast ein gerader Kegel 170 auf 80 mm, der Ausleger ein Stab von 80 mm (das Rohr 60 mm auf das Merkmal verbreitert, Strebe und Klemme unter dem, was der Maßstab zeigt), die Leuchte ein Loft auf vier Stationen 0,51 x 0,28 x 0,08 m, damit sie noch als flacher Kopf mit seitlicher Einführung und nicht als Kiste liest."
+            "en": "Body at 1:500 (feature 75 mm): the plinth block, the column one straight cone 170 to 80 mm, the bracket a 80 mm bar (the 60 mm tube widened to the feature, the strut and the clamp below what the scale shows), the luminaire one loft on five stations 0.51 x 0.26 x 0.10 m with a rounded nose, so that it still reads as a flat side-entry head and not as a box or a chisel.",
+            "de": "Körper 1:500 (Merkmal 75 mm): der Sockelblock, der Mast ein gerader Kegel 170 auf 80 mm, der Ausleger ein Stab von 80 mm (das Rohr 60 mm auf das Merkmal verbreitert, Strebe und Klemme unter dem, was der Maßstab zeigt), die Leuchte ein Loft auf fünf Stationen 0,51 x 0,26 x 0,10 m mit gerundeter Nase, damit sie noch als flacher Kopf mit seitlicher Einführung und nicht als Kiste oder Meissel liest."
           },
           {
             "en": "Thermal at 1:500: the four body solids carry their regions; the lens is a thin plate under the head (texture, inner face as section face) so that the region keeps its solid; only the total is compared (C15, C21).",

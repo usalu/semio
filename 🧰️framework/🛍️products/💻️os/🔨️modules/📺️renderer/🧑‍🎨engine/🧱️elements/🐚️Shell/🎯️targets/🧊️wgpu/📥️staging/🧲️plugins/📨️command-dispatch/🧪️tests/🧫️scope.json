@@ -1,0 +1,16 @@
+{
+  "receiver": "process",
+  "app": "s.process.process3d@1/*#editor",
+  "cases": [
+    {
+      "name": "process3d authored roster",
+      "consumes": ["process.machines"],
+      "providers": [
+        ["🧱️concrete", "process-extension-concrete"],
+        ["🔩️metal", "process-extension-metal"],
+        ["🤖️robotic", "process-extension-robotic"],
+        ["🪵️wood", "process-extension-wood"]
+      ]
+    }
+  ]
+}

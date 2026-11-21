@@ -8,6 +8,7 @@
   "artifactPattern": "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/**/*.{ts,tsx,json,semio,png,absent,rs}",
   "runtimeEntries": [
     "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts",
+    "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🧪️tests/🌐️browser/🧪️tests/🟦️.ts",
     "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts",
     "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts",
     "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🧪️tests/🧩️example/🟦️.ts",

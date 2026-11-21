@@ -103,25 +103,36 @@ impl Brep {
         self.native.live_certified_volume(handle)
     }
 
+    /// 🌗️ Reads the exact area and centroid of a live spherical solid.
+    pub fn live_curved_solid_properties(&self, handle: &str) -> Option<(f64, Pnt3)> {
+        self.native.live_curved_solid_properties(handle)
+    }
+
     /// 🔎️ Exposes the exact bore certificate only while the original native solid is live.
     pub fn live_bore_preview(&self, handle: &str) -> Option<(SolidId, BorePreviewSource)> {
         self.native.live_bore_preview(handle)
     }
 
-    /// ✂️ Captures a live certified box and plane parameters without cloning its topology.
-    pub fn plan_box_section(&self, source: &str, origin: EVec3, normal: EVec3) -> Result<BoxSectionDraft, ValueError> {
-        let primitive = self.native.live_solid_primitive(source).filter(|shape| matches!(shape, SolidPrimitive::Box { .. }))
-            .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original Section requires a certified box"))?;
-        BoxSectionDraft::new(primitive, origin, normal)
-            .map_err(|reason| ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, reason))
+    /// ✂️ Stages one supported exact section of a certified live solid.
+    pub fn plan_section(&mut self, source:&str, origin:EVec3, normal:EVec3)->Result<SectionPlan,ValueError>{
+        self.native.plan_section(source,origin,normal)
+    }
+
+    /// 📐️ Quotes backing for the original geometry handles before atomic publication.
+    pub fn geometry_batch_demand(&self, count: usize) -> Result<RetirementDemand, ValueError> { self.native.live.vacant_batch_demand(count) }
+
+    pub fn reserve_geometry_batch(&mut self, count: usize, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<Progress>, ValueError> {
+        self.native.live.reserve_vacant_batch(count, effect)
+    }
+
+    pub fn publish_polygon_section(&mut self, section: &mut PolygonSectionSet, keys: &mut [String; SECTION_FACE_LIMIT], grant: Grant) -> Result<Progress, ValueError> {
+        self.native.publish_polygon_section(section, keys, grant)
     }
 
     /// 🔪️ Stages the exact boundary of rectangular stock less both certified tool intervals.
     pub fn plan_compound_box_cut(&mut self, stock: [[f64; 3]; 2], tools: &[[[f64; 3]; 2]]) -> Result<SolidPublication, ValueError> { self.native.plan_orthogonal_solid(semio_framework_3d_brep_boolean::certified_boundaries::OrthogonalBoundary::cut_tools(stock, tools)?) }
 
-    pub fn plan_box_split(&mut self, source: &str, origin: EVec3, normal: EVec3) -> Result<[SolidPublication; 2], ValueError> { self.native.plan_box_split(source, origin, normal) }
-    pub fn solid_pair_demand(&self) -> Result<RetirementDemand, ValueError> { self.native.live.vacant_pair_demand() }
-    pub fn reserve_solid_pair(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<Option<Progress>, ValueError> { self.native.live.reserve_vacant_pair(effect) }
+    pub fn plan_plane_split(&mut self, source: &str, origin: EVec3, normal: EVec3) -> Result<[SolidPublication; 2], ValueError> { self.native.plan_plane_split(source, origin, normal) }
     pub fn publish_solid_pair(&mut self, pair: &mut [SolidPublication; 2], keys: &mut [String; 2], grant: Grant) -> Result<Progress, ValueError> { self.native.publish_solid_pair(pair, keys, grant) }
 
     /// 🎟️ Quotes original native reads for an analytic bounding box.
@@ -140,23 +151,18 @@ impl Brep {
     }
 
     /// 🪚️ Stages one exact original box finish through the solid owner.
-    pub fn plan_box_finish(&mut self, shape: &str, member: &str, finish: BoxFinish) -> Result<SolidPublication, ValueError> {
+    pub fn plan_box_finish(&mut self, shape: &str, member: &[&str], finish: BoxFinish) -> Result<SolidPublication, ValueError> {
         self.native.plan_box_finish(shape, member, finish)
     }
 
     /// 📏️ Quotes the exact source paths of a selected box member.
-    pub fn box_finish_depth(&self, shape: &str, member: &str) -> Result<usize, ValueError> {
+    pub fn box_finish_depth(&self, shape: &str, member: &[&str]) -> Result<usize, ValueError> {
         self.native.box_finish_depth(shape, member)
     }
 
     /// 📌️ Classifies one point against a live certified solid.
     pub fn original_solid_classification(&self, handle: &str, point: EVec3) -> Result<PointClassification, ValueError> {
         self.native.original_solid_classification(handle, point)
-    }
-
-    /// 📏️ Computes exact closed-set separation of two live certified boxes.
-    pub fn original_box_distance(&self, a: &str, b: &str) -> Result<f64, ValueError> {
-        self.native.original_box_distance(a, b)
     }
 
     /// 🥞️ Quotes the paired original Loft profile paths.
@@ -195,27 +201,27 @@ impl Brep {
         self.native.finish_point_hull(draft)
     }
 
-    /// 🐚️ Captures the certified box for a retained shell operation.
-    pub fn plan_box_shell(&self, handle: &str, thickness: f64) -> Result<BoxShellDraft, ValueError> {
-        self.native.plan_box_shell(handle, thickness)
+    /// 🐚️ Captures the certified stock for a retained shell operation.
+    pub fn plan_shell(&self, handle: &str, thickness: f64) -> Result<ShellDraft, ValueError> {
+        self.native.plan_shell(handle, thickness)
     }
 
     /// 🎟️ Quotes the original arena paths for one selected shell opening.
-    pub fn box_shell_face_depth(&self, draft: &BoxShellDraft, handle: &str) -> Result<usize, ValueError> {
-        self.native.box_shell_face_depth(draft, handle)
+    pub fn shell_face_depth(&self, draft: &ShellDraft, handle: &str) -> Result<usize, ValueError> {
+        self.native.shell_face_depth(draft, handle)
     }
 
     /// 🪟️ Adds one original source face to the shell opening mask.
-    pub fn add_box_shell_face(&self, draft: &mut BoxShellDraft, handle: &str) -> Result<(), ValueError> {
-        self.native.add_box_shell_face(draft, handle)
+    pub fn add_shell_face(&self, draft: &mut ShellDraft, handle: &str) -> Result<(), ValueError> {
+        self.native.add_shell_face(draft, handle)
     }
 
     /// 🪚️ Stages the exact solid boundary from the completed shell selection.
-    pub fn finish_box_shell(&mut self, draft: &BoxShellDraft, handle: &str) -> Result<SolidPublication, ValueError> {
-        self.native.finish_box_shell(draft, handle)
+    pub fn finish_shell(&mut self, draft: &ShellDraft, handle: &str) -> Result<SolidPublication, ValueError> {
+        self.native.finish_shell(draft, handle)
     }
 
-    /// ↔️ Plans a signed sharp offset of a certified box.
+    /// ↔️ Plans a signed offset of a certified solid.
     pub fn plan_certified_solid_offset(&mut self, handle: &str, distance: f64) -> Result<SolidPublication, ValueError> {
         self.native.plan_certified_solid_offset(handle, distance)
     }
@@ -227,8 +233,16 @@ impl Brep {
 
     /// 🔲️ Plans an original result without copying source topology or publishing any live row.
     pub fn plan_certified_boolean(&mut self, a: &str, b: &str, first: &BooleanOperand, operation: BooleanOp)
-        -> Result<SolidPublication, ValueError> {
-        self.native.plan_certified_boolean(a, b, first, operation)
+        -> Result<CertifiedBooleanResult<SolidPatternPublication>, ValueError> {
+        match self.native.plan_certified_boolean(a,b,first,operation)? {
+            CertifiedBooleanResult::Solid(shape)=>Ok(CertifiedBooleanResult::Solid(shape)),
+            CertifiedBooleanResult::Group(pieces)=>{
+                let root=|key| match self.native.original_query_entity(key)? {Entity::Solid(id,_)=>Ok(*id),_=>Err(ValueError::invariant("Boolean source disappeared"))};
+                let [first,second]=[root(a)?,root(b)?];
+                let topology=semio_framework_3d_brep_native_registry::UnpublishedSolidPattern::disconnected(pieces);
+                self.bind_solid_group(first,None,Some(second),topology).map(CertifiedBooleanResult::Group)
+            }
+        }
     }
 
     /// 🎟️ Begins read-only acquisition without entering cold topology cloning.
@@ -460,10 +474,21 @@ impl Brep {
         self.native.step_prism_draft(source, draft, effect)
     }
 
-    /// 📏️ Admits a finite analytic primitive and an independent range of stable topology labels.
-    pub fn plan_solid_primitive(&mut self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> {
-        self.native.plan_solid_primitive(primitive)
+    /// 🔁 Admits one certified orthogonal cell selection.
+    pub fn plan_orthogonal_cells(&mut self, axes: [[f64;4];3], cells: u32) -> Result<SolidPublication, ValueError> {
+        self.native.plan_orthogonal_solid(semio_framework_3d_brep_boolean::certified_boundaries::OrthogonalBoundary::from_closed_cells(axes, cells)?)
     }
+    /// 📥️ Stages an exact boundary certified by a retained exchange cursor.
+    pub fn plan_exchange_boundary(&mut self, boundary: SolidExchangeBoundary) -> Result<SolidPublication, ValueError> {
+        self.native.plan_exchange_boundary(boundary)
+    }
+
+    /// 〰️ Plans exact NURBS storage for the live cuboid source.
+    pub fn plan_nurbs_cuboid(&mut self, source: &str) -> Result<SolidPublication, ValueError> { self.native.plan_nurbs_cuboid(source) }
+    /// 📏️ Admits a finite analytic primitive and an independent range of stable topology labels.
+    pub fn plan_solid_primitive(&mut self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> { self.native.plan_solid_primitive(primitive) }
+    /// 📥️ Opens the funded spline publication for certified exchange geometry.
+    pub fn plan_nurbs_cuboid_primitive(&mut self, primitive: SolidPrimitive) -> Result<SolidPublication, ValueError> { self.native.plan_nurbs_cuboid_primitive(primitive) }
 
     /// 🧭️ Plans an exact affine image when the result still fits a certified primitive recipe.
     pub fn plan_certified_solid_transform(&mut self, source: &str, transform: AnalyticTransform) -> Result<Option<SolidPublication>,ValueError> {
@@ -478,6 +503,11 @@ impl Brep {
     /// 🔍️ Quotes the original source trim paths needed by retained planar sweep operators.
     pub fn planar_face_boundary_depth(&self, handle: &str) -> Result<usize, ValueError> {
         self.native.planar_face_boundary_depth(handle)
+    }
+
+    /// 🌀️ Plans an exact closed helical sweep with a circular spine and section.
+    pub fn plan_closed_helical_sweep(&mut self, handle:&str, origin:EVec3, direction:EVec3, parameters:[f64;3]) -> Result<SolidPublication,ValueError> {
+        self.native.plan_closed_helical_sweep(handle,origin,direction,parameters)
     }
 
     /// 🔄️ Plans a full revolution of an original circular profile around its in-plane axis.

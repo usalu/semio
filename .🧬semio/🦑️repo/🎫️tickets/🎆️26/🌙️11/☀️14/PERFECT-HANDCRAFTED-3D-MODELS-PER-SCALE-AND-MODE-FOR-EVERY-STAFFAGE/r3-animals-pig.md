@@ -180,3 +180,59 @@ Hand changes to the 2D:
 - **1:500 legs.** They are 92 mm thick against a real 50 to 90 mm: the scale's printable floor.
 - **Clips.** Only one frame of the walk clip was rendered.
 - **Reference.** The Condotta table values were not readable (403 / captcha); the reference relies on the summary and textbook values.
+
+## Round 5 handcraft (2026-11-20)
+
+Scripts: `r5-pig-rig.py` (rig root fix), `r5-pig-50.ts`, `r5-pig-coarse.ts` (remodels of the r3 tables), `r5-pig-run.sh` (whole pipeline: 4 scales, E1 redraw of the 2D through `r3-pig-2d.ts`, candidate validation, write). Backup of the asset before this round: `🗑️generated/r5-pig/asset-r4.json`.
+
+### Reference (100 kg Large White x Landrace finisher) and model
+
+The table of section 1 still stands. New rows this round:
+
+| landmark | reference | model before | model after |
+|---|---|---|---|
+| hip joint, lateral | half the acetabular width, 0.08 to 0.09 m (pelvis 0.16 to 0.18 m between the acetabula) | 0 (on the midline) | 0.085 |
+| dorsal border of scapula / shoulder joint, lateral | 0.04 to 0.06 / 0.09 to 0.10 m (chest 0.30 to 0.33 m wide) | 0 / 0 | 0.05 / 0.095 |
+| ear base, lateral | 0.045 to 0.055 m (poll 0.10 m wide) | 0 | 0.05 |
+| back height, length, width | 0.64 to 0.71 / 1.20 to 1.30 / 0.30 to 0.35 m | 0.684 / 1.27 / 0.331 | unchanged |
+| upper edge of the shoulder | under the top line (the pig shows no plated shoulder) | 8 to 12 mm above the barrel near the withers | inside the barrel, flush at the point of the shoulder |
+
+All other bone lengths, joint heights and angles are unchanged from round 3 (within 3 % of the reference table, measured there).
+
+### Grades (opened sheets)
+
+| scale | body before / after | thermal before / after | structure before / after |
+|---|---|---|---|
+| 1:50 | B (rig of the legs on the midline, shoulder plates proud of the top line, cuffs at every leg joint, faceted ear outline) / A- | A- / A- | A- / A- (joints now at the lateral joint centres) |
+| 1:100 | B- (ears as flat hexagonal planks, stepped leg segments) / A- | not opened / not opened | not opened / not opened |
+| 1:200 | not opened / not opened (same leg rounding applied) | not opened | not opened |
+| 1:500 | C+ (legs as two misaligned stacked cylinders, ears as 83 mm blocks standing off the head) / B+ | C (hooves as sideways drums like wheels, ear and snout patches ragged in the head) / B+ | not opened |
+
+### Changes
+
+- Root: `rig.bones` got lateral offsets `z` (thigh-h ±0.085, scapula-f ±0.05, humerus-f a further ±0.045, ear ±0.05); before, every leg and ear bone ran on the midline and the solids sat 0.095 m beside their bones. Solids are stated in world metres, so every scale was rebuilt on the new frames; poses and clips are angle-based and kept; 2D was redrawn (E1, 217 shapes, residual 0.000 mm); candidate VALID before writing.
+- 1:50: shoulder table lowered and moved 12 to 15 mm inwards so that it lies flush on the shoulder blade; every leg segment (gaskin, forearm, cannons, pasterns, shoulder) ends in a stated dome (`rounded`) that ends inside its neighbour, so no flat cap or cuff shows at a bent joint; gaskin top reduced (no knee ball under the ham); cannon tops matched to the forearm and gaskin ends; ear tables densified three times so the lop ear has a smooth leaf outline.
+- 1:100 / 1:200: same rounded leg ends; ears densified.
+- 1:500: ears merged into a broad head (a separate ear is a 75 mm slab); each upper leg mass runs 35 mm past the knee or hock into a flush lower post; thermal ears are two ellipsoid lenses on the sides of the head, the snout a clean cap on the head tip, the hooves bands round the foot of each post.
+- `decisions` of the 1:50, 1:100 and 1:500 volumes updated (en, de).
+
+### Checks
+
+- `r3-validate.ts animals/pig --volumes`: schema 0, validateAsset 0 (print suitability clean), checkVolumes 6: all `volumes-thermal-coverage` area shares (skin-head, hooves, skin-legs at 1:50 and 1:100; skin-legs is now 0.26 to 0.27 against 0.20, the honest leg skin). Listed with hand sums in `area-review.md` ("r5 animals/pig"); C18 and C27 forbid the author to change them.
+- `volumes-check.ts animals/pig --product`: 39 rule lines ok, the same 6 measurements on the thermal-coverage line.
+
+### What I saw
+
+- 1:50 body six views and a head-on three-quarter (turn 60, tilt 15): the rig now runs inside every leg in the front and three-quarter views; shoulder no longer proud; legs end smoothly at carpus, hock and fetlock (a slight carpal bulge stays, as in a real pig); far ear a smooth curved leaf.
+- 1:50 structure six views: spine dorsal under the top line with spinous processes and the withers, 14 sloping ribs with sternum and costal arch, pelvis, scapulae, long bones, digits; joints at the joints.
+- 1:50 `lying-wallowing`: closed, legs folded under the barrel.
+- 1:100 body six views: clean pig, curved lop ears, continuous legs.
+- 1:500 body six views and thermal three-quarter (three iterations): broad head with the ears merged, flush legs; ear lenses and hoof bands clean.
+
+### Still imperfect
+
+- The chest and loin lofts meet in one visible seam ring at the thoracolumbar joint (two bones, two solids; solids are rigid per bone).
+- The near lop ear still shows a few corners in its outline at 1:50 (the leaf has flat end caps).
+- The lying pose puts one hind claw tip a few millimetres into the ground plane (the wallow).
+- 1:200 body, the thermal cut sheets of 1:50 to 1:200, the structure of 1:100 to 1:500, the walk clip and the 2D drawings after the redraw were rendered or regenerated but not opened in this round.
+- Area shares above wait for the area reviewers.

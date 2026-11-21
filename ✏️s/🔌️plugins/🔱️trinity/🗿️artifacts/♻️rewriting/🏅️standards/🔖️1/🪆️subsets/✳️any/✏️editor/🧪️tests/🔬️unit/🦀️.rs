@@ -183,10 +183,15 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
 /// 🔚 Self-closing: the store's `Drop` demands the terminal-empty witness, so the guard retires the
 /// app through the framework's exact close loop (skipped while unwinding).
 async fn new_app() -> RewritingTestApp {
-    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = new_empty_app().await;
+    load_rule_fixture(&mut app.0, app.1.cx()).await;
+    app
+}
+
+async fn new_empty_app() -> RewritingTestApp {
+    let scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_rewriting_manifest_for_tests, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(REWRITING_TEST_INSTANCE).await;
-    load_rule_fixture(&mut app, scope.cx()).await;
     RewritingTestApp(app, scope)
 }
 
@@ -208,16 +213,9 @@ async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPl
         owner: protocol::DocumentArchiveOwnerRef { parent: protocol::DocumentArchiveArtifactRef { artifact_id: owner.parent.artifact_id, artifact_kind: owner.parent.dialect.artifact_kind, standard: owner.parent.dialect.standard, subset: owner.parent.dialect.subset }, slot: owner.slot, child_id: owner.child_id },
         envelope_pack,
     });
-    PluginApp::begin_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION, archive).expect("admit composed test input");
-    loop {
-        let status = PluginApp::poll_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION, &mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("poll test input");
-        match status.state {
-            protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running => {},
-            protocol::DocumentArchiveLoadState::Ready => break,
-            _ => panic!("test input load failed: {status:?}"),
-        }
-    }
-    PluginApp::acknowledge_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION).expect("acknowledge test input");
+    let operation = artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION;
+    artifact_app_laws::admit_document_archive_load(app, operation, archive, cx).expect("admit composed test input");
+    artifact_app_laws::settle_document_archive_load(app, operation, &mut artifact_app_laws::fixture_identity(), cx).await.expect("load composed test input");
 }
 
 const REWRITING_TEST_INSTANCE: u32 = 1;
@@ -270,7 +268,7 @@ async fn select_graph(app: &mut RewritingTestApp, ids: &[&str]) {
     let targets: Vec<semio_framework_pack_json::Value> = ids.iter().map(|id| semio_framework_pack_json::json!({ "granularity": "node", "id": id })).collect();
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": "graph", "targets": semio_framework_pack_json::to_json_string(&targets) }));
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(args.clone()), &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
-    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect reserved-job commit");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("interactionSelect reserved-job commit");
     settle(app).await;
 }
 
@@ -487,6 +485,95 @@ async fn export_media_graph_out_reflects_rule_applied_fixture() {
     assert_eq!(fixture.nodes().expect("valid retained Jack child").len(), expected.nodes().expect("valid retained Jack child").len());
 }
 
+#[test]
+fn rule_output_carries_authored_rule_and_bindings() {
+    use semio_s_artifact_trinity_rewriting_inferences::rule_media::{REWRITE_MEDIA_SCHEMA, REWRITE_MEDIA_TYPE, decode_invocation_value};
+
+    let snapshot = fixture_rule_state();
+    let io = rewriting_io();
+    let port = io.ports.iter().find(|port| port.id == "rule:out").expect("rewrite output declared");
+    assert_eq!(port.kind_id.as_deref(), Some(REWRITE_MEDIA_SCHEMA));
+    assert_eq!(port.media_type, REWRITE_MEDIA_TYPE);
+
+    let history = semio_plugin::HistoryView::empty();
+    let view = semio_plugin::ArtifactView::new(&snapshot, &history);
+    let media = <TrinityRewritingPlayApp as semio_plugin::ArtifactEditor>::export_media(&port.id, &view).expect("export authored rule");
+    let MediaPayload::Intrinsic { schema, value } = media.payload else { panic!("expected an intrinsic invocation") };
+    assert_eq!(schema, REWRITE_MEDIA_SCHEMA);
+    assert_eq!(media.media_type, REWRITE_MEDIA_TYPE);
+    let invocation = decode_invocation_value(&value).unwrap();
+    assert_eq!(invocation.rule.lhs, snapshot.lhs);
+    assert_eq!(invocation.rule.rhs, snapshot.rhs);
+    assert_eq!(invocation.bindings, snapshot.parameter_bindings);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mounted_rule_output_uses_the_intrinsic_media_lane() {
+    use semio_s_artifact_trinity_rewriting_inferences::rule_media::{REWRITE_MEDIA_SCHEMA, REWRITE_MEDIA_TYPE, decode_invocation_value};
+
+    let mut app = new_app().await;
+    let expected = app.snapshot().expect("authored rule snapshot");
+    let media = semio_framework_test_original_snapshot_owners::with_encoding(|owner| {
+        semio_framework_async::poll::resolve_ready(artifact_app_laws::produce_fixture_media(
+            &mut app.0, "rule:out", owner, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close,
+        ))
+    }).expect("export the mounted rule");
+    assert_eq!(media.descriptor.media_type, Some(REWRITE_MEDIA_TYPE));
+    assert_eq!(media.descriptor.port_id.as_deref(), Some("rule:out"));
+    assert!(matches!(media.descriptor.wire, semio_plugin::app::MediaWireFormat::Intrinsic { schema } if schema == REWRITE_MEDIA_SCHEMA));
+    let value = store::pack_rt::decode_wire_value(&media.data).expect("intrinsic wire value");
+    let invocation = decode_invocation_value(&value).expect("rewrite invocation");
+    assert_eq!(invocation.rule.lhs, expected.lhs);
+    assert_eq!(invocation.rule.rhs, expected.rhs);
+    assert_eq!(invocation.bindings, expected.parameter_bindings);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn edited_rule_archive_replays_typed_history() {
+    let mut app = new_app().await;
+    let lhs = r#"{"pattern":{"leftVar":"p","leftKind":"Piece"}}"#;
+    artifact_app_laws::dispatch_original_fixture_command(
+        &mut app.0,
+        &TrinityRewritingCommand::SetLhsJson { value: lhs.into() },
+        &meta("local"),
+        semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT,
+        &mut artifact_app_laws::fixture_identity(),
+        app.1.cx(),
+    ).await.expect("edit the match pattern");
+    settle(&mut app).await;
+    let edited = app.snapshot().expect("edited rule");
+    assert_ne!(edited.lhs, fixture_rule_state().lhs);
+    let archive = app.0.document_archive().await.expect("archive the edited rule");
+    assert_eq!(archive.members.len(), 1);
+
+    let mut reopened = new_empty_app().await;
+    let operation = artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION + 2;
+    artifact_app_laws::admit_document_archive_load(&mut reopened.0, operation, archive, reopened.1.cx()).expect("admit the edited rule archive");
+    artifact_app_laws::settle_document_archive_load(&mut reopened.0, operation, &mut artifact_app_laws::fixture_identity(), reopened.1.cx()).await.expect("replay the rule edit");
+    assert_eq!(reopened.snapshot().expect("replayed rule").lhs, edited.lhs);
+    assert_eq!(live_working(&reopened).await, live_working(&app).await);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn authored_rule_documents_reload_with_their_derivable_children() {
+    for (example, populated) in [("blank", false), ("demo", true)] {
+        let expected = crate::editor::rewriting::commands::set_active_example::set_active_example_document(example).expect("declared example");
+        let semio_plugin::Effect::LoadDocument { pack, spr } = reset_document_effect(&expected) else { panic!("expected a document load") };
+        let mut app = new_empty_app().await;
+        let files = store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() };
+        let archive = PluginApp::document_load_archive(&app.0, &files).expect("stamp example");
+        assert!(archive.members.is_empty());
+        let operation = artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION + 1;
+        artifact_app_laws::admit_document_archive_load(&mut app.0, operation, archive, app.1.cx()).expect("admit example");
+        artifact_app_laws::settle_document_archive_load(&mut app.0, operation, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load example with its working member");
+        let snapshot = app.snapshot().expect("reloaded rule");
+        assert_eq!(snapshot.lhs, expected.lhs);
+        assert_eq!(snapshot.rhs, expected.rhs);
+        assert_eq!(snapshot.parameter_bindings, expected.parameter_bindings);
+        assert_eq!(!live_working(&app).await.nodes.is_empty(), populated);
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
     let io = rewriting_io();
@@ -517,7 +604,7 @@ async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_his
 /// 🧸️ The live `workingGraph` member — the working graph's single truth (design §20.15), never the parent's genesis owner.
 async fn live_working(app: &RewritingTestApp) -> semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot {
     use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-    use store::{snapshot::ArtifactPack, SpaceMember};
+    use store::{snapshot::ArtifactPack, ReferenceSpaceMember};
     let snapshot = app.snapshot().expect("rewriting parent projection");
     let bytes = app.child_store(crate::standards::v1::subsets::any::content::WORKING_CHILD_SLOT, &snapshot.working_graph.content.child_id).await.expect("working child").document_pack_bytes().await.expect("working child pack");
     SemioGraphSnapshot::decode_pack(&bytes).expect("working child snapshot")
@@ -878,7 +965,10 @@ mod full_child_frame_laws;
 #[test]
 fn fresh_runtime_rule_matches_the_empty_document_and_independent_json_oracle() {
     let state = crate::editor::rewriting::document::default_rule_state();
-    assert_eq!(state, RewritingSnapshot::default());
+    assert_eq!(state.lhs, Default::default());
+    assert_eq!(state.rhs, Default::default());
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::rewriting_child_restore_projection(&state).expect("empty working member admits");
+    assert_eq!(projection.len(), 1);
     let child = semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_content_for_handle(&state.working_graph.content).expect("empty child");
     assert!(child.snapshot().nodes.is_empty());
     assert!(child.snapshot().edges.is_empty());

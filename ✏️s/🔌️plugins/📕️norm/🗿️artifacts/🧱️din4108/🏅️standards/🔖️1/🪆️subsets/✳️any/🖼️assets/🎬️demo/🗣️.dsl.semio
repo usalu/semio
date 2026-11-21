@@ -46,3 +46,6 @@ thermal-bridges [id:TEXT psi:NUM length-m:QTY bb2-type:TEXT] {
   tb-window-reveal 0.05 24m categoryA
   tb-eaves 0.1 20m categoryA
 }
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+  pressure-building "Whole building pressure test" "Dichtheitsprüfung des Gesamtgebäudes" G26-01 [ {id=test_volume value=300} {id=test_pressurisation value=430} {id=test_depressurisation value=440} ] [ {id=test_protocol value=confirmed} {id=test_ventilation value=mechanical} ]
+}

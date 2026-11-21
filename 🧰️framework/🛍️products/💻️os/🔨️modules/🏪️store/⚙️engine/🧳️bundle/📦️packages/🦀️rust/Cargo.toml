@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-engine-core = { path = "../../../🧱️store-components/📦️packages/🦀️rust" }

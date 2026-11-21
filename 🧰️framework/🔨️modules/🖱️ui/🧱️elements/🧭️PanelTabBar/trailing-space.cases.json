@@ -1,0 +1,6 @@
+[
+  { "name": "a few unused pixels trail the last tab", "room": 5, "overflow": false, "fill": true },
+  { "name": "a full chip can fit after the last tab", "room": 40, "overflow": false, "fill": false },
+  { "name": "the tab is already against the edge", "room": 0, "overflow": false, "fill": false },
+  { "name": "the row is scrollable", "room": 5, "overflow": true, "fill": false }
+]

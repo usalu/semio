@@ -28,3 +28,8 @@ Feature: Print suitability is measured on the inked paper geometry
     Given a 0.1 mm wide filled rectangle, a 0.05 mm pen and a 0.2 mm hatch spacing
     When they are measured
     Then feature, stroke and hatch violations are reported
+
+  Scenario: Each drawing is measured at its shared print boundary
+    Given adjacent drawings with an 18 mm flange at 1:100 and a 9 mm web at 1:200
+    When each drawing is printed at 1:150 with a 0.05 mm pen
+    Then the flange measures 0.17 mm and the web measures 0.11 mm on paper

@@ -210,7 +210,146 @@ pub enum PdfMutation {
     RemoveCatalogEntry(RemoveCatalogEntry),
     ReplacePage(ReplacePage),
 }
-dsl::original_pack_value_operation_receiving!(PdfMutation);
+mod history_target {
+//! 🎯 Exact borrowed Store conflict paths for the PDF mutation vocabulary.
+
+use super::PdfMutation;
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use std::io::{Cursor, Write};
+use store::ArtifactOperationTargets;
+
+#[derive(Clone, Copy)]
+enum Segment<'a> { Text(&'a str), Index(usize), Reference(u32, u16) }
+
+impl Segment<'_> {
+    fn visit<T>(self, read: impl FnOnce(&[u8]) -> Result<T, ValueError>) -> Result<T, ValueError> {
+        let mut scratch = [0; 32];
+        let mut output = Cursor::new(&mut scratch[..]);
+        match self {
+            Self::Text(text) => return read(text.as_bytes()),
+            Self::Index(index) => write!(output, "{index}"),
+            Self::Reference(object, generation) => write!(output, "{object} {generation}"),
+        }.map_err(|_| ValueError::invariant("PDF conflict path exceeds its fixed scratch"))?;
+        let end = output.position() as usize;
+        read(&scratch[..end])
+    }
+}
+
+fn absent() -> ValueError {
+    ValueError::literal(ValueRefusalKind::InvalidValue, "PDF conflict path segment is absent")
+}
+
+impl ArtifactOperationTargets for PdfMutation {
+    fn len(&self) -> usize {
+        self.conflict_segments().into_iter().flatten().count()
+    }
+
+    fn segment_len(&self, index: usize) -> Result<usize, ValueError> {
+        self.conflict_segment(index)?.visit(|segment| Ok(segment.len()))
+    }
+
+    fn read_segment(&self, index: usize, offset: usize, output: &mut [u8]) -> Result<usize, ValueError> {
+        self.conflict_segment(index)?.visit(|segment| {
+            let rest = segment.get(offset..).ok_or_else(absent)?;
+            let copied = rest.len().min(output.len());
+            output[..copied].copy_from_slice(&rest[..copied]);
+            Ok(copied)
+        })
+    }
+}
+
+impl PdfMutation {
+    /// 🎞️ Lends the canonical target directly from the persisted operation.
+    pub fn original_conflict_target(&self) -> Option<&dyn ArtifactOperationTargets> {
+        self.conflict_segments()[0].map(|_| self as &dyn ArtifactOperationTargets)
+    }
+
+    /// 🏠 Admits the document's semantic replay, retirement and conflict target issuers together.
+    pub fn document_store_owners(
+        grant: semio_framework_value::RetainedCloneGrant,
+    ) -> Result<
+        (store::os_store::document_store_owners::DocumentStoreOwners<super::PdfSnapshot, Self>, semio_framework_value::RetainedCloneProgress),
+        store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<super::PdfSnapshot, Self>,
+    > {
+        semio_plugin::cold_replay_document_store_owners::<super::PdfSnapshot, Self>(grant).map(|(mut owners, progress)| {
+            owners.operation_wire = owners.operation_wire.with_original_target(Self::original_conflict_target);
+            (owners, progress)
+        })
+    }
+
+    fn conflict_segment(&self, index: usize) -> Result<Segment<'_>, ValueError> {
+        self.conflict_segments().get(index).copied().flatten().ok_or_else(absent)
+    }
+
+    fn conflict_segments(&self) -> [Option<Segment<'_>>; 2] {
+        use Segment::*;
+        match self {
+            Self::InsertPage(operation) => [Some(Index(operation.index)), None],
+            Self::RemovePage(operation) => [Some(Index(operation.index)), None],
+            Self::SetPageMediaBox(operation) => [Some(Index(operation.index)), None],
+            Self::SetPageCropBox(operation) => [Some(Index(operation.index)), None],
+            Self::AppendPageContent(operation) => [Some(Index(operation.index)), None],
+            Self::SetInfo(_) => [Some(Text("Info")), None],
+            Self::InsertObject(operation) => [Some(Reference(operation.id.num, operation.id.gen)), None],
+            Self::RemoveObject(operation) => [Some(Reference(operation.id.num, operation.id.gen)), None],
+            Self::SetObjectValue(operation) => [Some(Reference(operation.id.num, operation.id.gen)), None],
+            Self::SetDictEntry(operation) => [Some(Reference(operation.id.num, operation.id.gen)), Some(Text(&operation.key))],
+            Self::RemoveDictEntry(operation) => [Some(Reference(operation.id.num, operation.id.gen)), Some(Text(&operation.key))],
+            Self::SetTrailerEntry(operation) => [Some(Text(&operation.key)), None],
+            Self::RemoveTrailerEntry(operation) => [Some(Text(&operation.key)), None],
+            Self::MovePage(operation) => [Some(Index(operation.from)), Some(Index(operation.to))],
+            Self::SetPageContent(operation) => [Some(Index(operation.index)), None],
+            Self::SetPageRotation(operation) => [Some(Index(operation.index)), None],
+            Self::SetPageBox(operation) => [Some(Index(operation.index)), None],
+            Self::SetPageUserUnit(operation) => [Some(Index(operation.index)), None],
+            Self::InsertContent(operation) => [Some(Index(operation.index)), Some(Index(operation.at))],
+            Self::RemoveContent(operation) => [Some(Index(operation.index)), Some(Index(operation.at))],
+            Self::ReplaceContent(operation) => [Some(Index(operation.index)), Some(Index(operation.at))],
+            Self::InsertAnnotation(operation) => [Some(Index(operation.index)), Some(Index(operation.at))],
+            Self::RemoveAnnotation(operation) => [Some(Index(operation.index)), Some(Index(operation.at))],
+            Self::SetAnnotation(operation) => [Some(Index(operation.index)), Some(Index(operation.at))],
+            Self::SetFont(operation) => [Some(Text(&operation.font.id)), None],
+            Self::RemoveFont(operation) => [Some(Text(&operation.id)), None],
+            Self::SetImage(operation) => [Some(Text(&operation.image.id)), None],
+            Self::RemoveImage(operation) => [Some(Text(&operation.id)), None],
+            Self::SetForm(operation) => [Some(Text(&operation.form.id)), None],
+            Self::RemoveForm(operation) => [Some(Text(&operation.id)), None],
+            Self::SetExtGState(operation) => [Some(Text(&operation.state.id)), None],
+            Self::RemoveExtGState(operation) => [Some(Text(&operation.id)), None],
+            Self::SetShading(operation) => [Some(Text(&operation.shading.id)), None],
+            Self::RemoveShading(operation) => [Some(Text(&operation.id)), None],
+            Self::SetPattern(operation) => [Some(Text(&operation.pattern.id)), None],
+            Self::RemovePattern(operation) => [Some(Text(&operation.id)), None],
+            Self::SetColorSpace(operation) => [Some(Text(&operation.color_space.name)), None],
+            Self::RemoveColorSpace(operation) => [Some(Text(&operation.name)), None],
+            Self::SetProperties(operation) => [Some(Text(&operation.properties.name)), None],
+            Self::RemoveProperties(operation) => [Some(Text(&operation.name)), None],
+            Self::SetEmbeddedFile(operation) => [Some(Text(&operation.file.id)), None],
+            Self::RemoveEmbeddedFile(operation) => [Some(Text(&operation.id)), None],
+            Self::SetOutlines(_) => [None, None],
+            Self::SetNamedDestination(operation) => [Some(Text(&operation.destination.name)), None],
+            Self::RemoveNamedDestination(operation) => [Some(Text(&operation.name)), None],
+            Self::SetPageLabels(_) => [None, None],
+            Self::SetOutputIntents(_) => [None, None],
+            Self::SetAcroForm(_) => [None, None],
+            Self::SetOptionalContent(_) => [None, None],
+            Self::SetPageLayout(_) => [None, None],
+            Self::SetPageMode(_) => [None, None],
+            Self::SetViewerPreferences(_) => [None, None],
+            Self::SetOpenAction(_) => [None, None],
+            Self::SetLanguage(_) => [None, None],
+            Self::SetMarkInfo(_) => [None, None],
+            Self::SetMetadata(_) => [None, None],
+            Self::SetDocumentId(_) => [None, None],
+            Self::SetEncryption(_) => [None, None],
+            Self::SetCatalogEntry(operation) => [Some(Text(&operation.key)), None],
+            Self::RemoveCatalogEntry(operation) => [Some(Text(&operation.key)), None],
+            Self::ReplacePage(operation) => [Some(Index(operation.index)), None],
+        }
+    }
+}
+}
+
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Edit

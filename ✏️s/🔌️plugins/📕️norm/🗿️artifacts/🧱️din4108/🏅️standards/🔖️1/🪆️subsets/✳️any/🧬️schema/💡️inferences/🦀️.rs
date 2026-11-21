@@ -166,6 +166,7 @@ fn push_referential_integrity(report: &mut CheckReport, document: &Din4108Snapsh
     push_duplicate_ids(report, "zones", &zone_ids, &|id| format!("zones[id={id}].id"));
     push_duplicate_ids(report, "elements", &document.elements.iter().map(|e| e.id.clone()).collect::<Vec<_>>(), &|id| format!("elements[id={id}].id"));
     push_duplicate_ids(report, "thermalBridges", &document.thermal_bridges.iter().map(|b| b.id.clone()).collect::<Vec<_>>(), &|id| format!("thermalBridges[id={id}].id"));
+    push_duplicate_ids(report, "cases", &document.cases.iter().map(|case| case.id.clone()).collect::<Vec<_>>(), &|id| format!("cases[id={id}].id"));
 
     for zone in &document.zones {
         push_duplicate_ids(
@@ -241,7 +242,7 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     evaluate_scoped(document, Scope::All)
 }
 
-/// 🎯️ The evaluation restricted to `scope`: the part `integrity`, one zone, element or bridge row, or one of the verdict parts `zones-none`, `elements-none`, `airtightness`, `equivalence`.
+/// 🎯️ The evaluation restricted to `scope`: the part `integrity`, one zone, element, bridge or pressure-test row, or one of the verdict parts `zones-none`, `elements-none`, `airtightness`, `equivalence`.
 pub fn evaluate_scoped(document: &Din4108Snapshot, scope: Scope<'_>) -> CheckReport {
     let mut report = CheckReport::default();
     if scope.part("integrity") {
@@ -293,8 +294,10 @@ pub fn evaluate_scoped(document: &Din4108Snapshot, scope: Scope<'_>) -> CheckRep
         report.push(part_2::check_minimum_r(element, &document.usage, document.t_int_c));
         report.push(part_2::check_surface_mass(element));
         report.push(part_2::check_f_rsi(element, document.t_int_c, document.rh_int));
-        report.push(part_3::check_glaser(element));
-        report.push(part_3::check_drying_reserve(element));
+        let basis = part_3::catalogue::period_basis(document.cases.iter().map(semio_s_plugin_norm_compliance::design_case::DesignCase::from), &element.id);
+        for check in part_3::check_period_balance(element, &document.usage, basis) {
+            report.push(check);
+        }
         report.push(part_6::check_u_value(element, &document.usage, document.t_int_c));
         report.push(part_6::check_u_prime(element, &document.thermal_bridges, opaque_area, &document.usage, document.t_int_c));
         for li in 0..element.layers.len() {
@@ -347,6 +350,14 @@ pub fn evaluate_scoped(document: &Din4108Snapshot, scope: Scope<'_>) -> CheckRep
     for (_, bridge) in document.thermal_bridges.iter().enumerate().filter(|(i, _)| scope.admits("thermalBridges", *i)) {
         report.push(bb_2::check_bridge_category(bridge));
     }
+    for (_, row) in document.cases.iter().enumerate().filter(|(index, _)| scope.admits("cases", *index)) {
+        use semio_s_plugin_norm_compliance::design_case::{DesignCase, evaluate_case};
+        use semio_s_artifact_norm_din4108_checks::design_cases::Din4108Cases;
+        for check in evaluate_case::<Din4108Cases>(&DesignCase::from(row), semio_s_plugin_norm_compliance::AnnexChoice::De) {
+            report.push(check);
+        }
+    }
+
     if scope.part("equivalence") {
         report.push(bb_2::check_equivalence(&document.thermal_bridges, opaque_area, document.bb2_details_conform));
     }

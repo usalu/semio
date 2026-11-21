@@ -127,9 +127,53 @@ impl RasterPixelResultWork {
 
     pub(super) fn take(&mut self)->Option<RasterPixelPreparedImage>{if self.closing||self.phase!=Phase::Done{return None;}Some(std::mem::take(&mut self.owned.as_mut()?.prepared))}
 
-    pub(super) fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(compute)=self.compute.as_ref(){return compute.close_demands(body);}if let Some(copy)=self.copy.as_ref(){return copy.close_demands(body);}if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body);}if self.owned.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned);}Ok(Default::default())}
+    pub(super) fn close_work_demand(&self, body: usize) -> Result<u64, ValueError> {
+        if let Some(child) = self.compute.as_ref() {
+            return if child.terminal_is_empty() { Ok(1) } else { child.close_work_demand(body) };
+        }
+        if let Some(child) = self.copy.as_ref() {
+            return if child.terminal_is_empty() { Ok(1) } else { child.close_work_demand(body) };
+        }
+        raster_owned_close_work(self.retirement.as_deref(), !self.terminal_is_empty(), body)
+    }
 
-    pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneStep>{self.closing=true;if grant.maximum_items==0||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}if let Some(compute)=self.compute.as_mut(){if compute.terminal_is_empty(){self.compute.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}return compute.close_step(grant);}if let Some(copy)=self.copy.as_mut(){if copy.terminal_is_empty(){self.copy.take();return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}return copy.close_step(grant);}if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.owned,&mut self.retirement,grant)}}
+    pub(super) fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{if let Some(compute)=self.compute.as_ref(){if compute.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()});}return compute.close_demands(body);}if let Some(copy)=self.copy.as_ref(){if copy.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()});}return copy.close_demands(body);}if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body);}if self.owned.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned);}Ok(Default::default())}
+
+    pub(super) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        self.closing = true;
+        let grant = effect.grant();
+        match effect.remaining_work_units() {
+            Ok(0) => return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 },
+            Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 },
+            Ok(_) => {}
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 };
+        }
+        if let Some(compute) = self.compute.as_mut() {
+            if !compute.terminal_is_empty() {
+                return compute.close_step(effect);
+            }
+            let boundary = effect.performed_work();
+            let result = raster_close_unit(effect).map(|()| {
+                self.compute.take();
+                RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+            });
+            return RetainedWorkOutcome { result, work: effect.performed_work() - boundary };
+        }
+        if let Some(copy) = self.copy.as_mut() {
+            if !copy.terminal_is_empty() {
+                return copy.close_step(effect);
+            }
+            let boundary = effect.performed_work();
+            let result = raster_close_unit(effect).map(|()| {
+                self.copy.take();
+                RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })
+            });
+            return RetainedWorkOutcome { result, work: effect.performed_work() - boundary };
+        }
+        raster_retire_owned(&mut self.owned, &mut self.retirement, effect)
+    }
 
     pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.compute.is_none()&&self.copy.is_none()&&self.owned.is_none()&&self.retirement.is_none()}
 }

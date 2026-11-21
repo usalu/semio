@@ -8,25 +8,48 @@ pub mod geg_anlage4_primary_energy_factors {
     pub const NATURAL_GAS: f64 = 1.1;
     pub const HEATING_OIL: f64 = 1.1;
     pub const ELECTRICITY_GRID: f64 = 1.8;
-    pub const DISTRICT_HEATING: f64 = 0.7;
     pub const BIOMASS: f64 = 0.2;
+
+    /// ⚖️ One Annex 4 row and its non-renewable primary-energy factor where fixed.
+    pub struct Factor {
+        pub carrier: &'static str,
+        pub en: &'static str,
+        pub de: &'static str,
+        pub factor: Option<f64>,
+    }
+
+    const fn fixed(carrier: &'static str, en: &'static str, de: &'static str, factor: f64) -> Factor {
+        Factor { carrier, en, de, factor: Some(factor) }
+    }
+
+    pub const ROWS: &[Factor; 16] = &[
+        fixed("heating_oil", "Heating oil", "Heizöl", HEATING_OIL),
+        fixed("natural_gas", "Natural gas", "Erdgas", NATURAL_GAS),
+        fixed("lpg", "Liquid petroleum gas", "Flüssiggas", 1.1),
+        fixed("hard_coal", "Hard coal", "Steinkohle", 1.1),
+        fixed("lignite", "Lignite", "Braunkohle", 1.2),
+        fixed("biogas", "Biogas", "Biogas", 1.1),
+        fixed("bio_oil", "Bio-oil", "Bioöl", 1.1),
+        fixed("biomass", "Wood", "Holz", BIOMASS),
+        fixed("electricity", "Grid electricity", "Netzstrom", ELECTRICITY_GRID),
+        fixed("local_renewable_electricity", "Building-associated PV or wind electricity", "Gebäudenaher Photovoltaik- oder Windstrom", 0.0),
+        fixed("cogeneration_displacement_mix", "CHP displacement electricity mix", "Verdrängungsstrommix für KWK", 2.8),
+        fixed("environmental_heat", "Geothermal, solar thermal or ambient heat", "Erdwärme, Geothermie, Solarthermie oder Umgebungswärme", 0.0),
+        fixed("environmental_cooling", "Ground or ambient cooling", "Erdkälte oder Umgebungskälte", 0.0),
+        fixed("waste_heat", "Waste heat", "Abwärme", 0.0),
+        Factor { carrier: "cogeneration_heat", en: "Building-integrated or nearby CHP heat", de: "Gebäudeintegrierte oder gebäudenahe KWK-Wärme", factor: None },
+        fixed("municipal_waste", "Municipal waste", "Siedlungsabfälle", 0.0),
+    ];
 }
 
-/// 🧱 GEG Anlage 2 — Höchstwerte der Wärmedurchgangskoeffizienten U_ref [W/(m²·K)] (Wohngebäude, Neubau).
-pub mod geg_anlage2_reference_u {
-    pub const WALL: f64 = 0.28;
+/// 🧱 GEG Annex 1 items 1.1–1.4 and 1.7, reference thermal transmittances [W/(m²·K)] for the represented residential components.
+pub mod geg_anlage1_reference_u {
+    pub const WALL_AND_FLOOR_TO_OUTDOORS: f64 = 0.28;
+    pub const WALL_AND_FLOOR_TO_GROUND_OR_UNHEATED: f64 = 0.35;
     pub const ROOF: f64 = 0.20;
-    pub const FLOOR: f64 = 0.35;
     pub const WINDOW: f64 = 1.3;
-    pub const DOOR: f64 = 1.8;
-}
-
-/// 🧱 GEG Anlage 3 — mittlere U-Werte Nichtwohngebäude [W/(m²·K)].
-pub mod geg_anlage3_mean_u {
-    pub const WALL: f64 = 0.28;
-    pub const ROOF: f64 = 0.20;
-    pub const FLOOR: f64 = 0.35;
-    pub const WINDOW: f64 = 1.5;
+    pub const ROOF_GLAZING: f64 = 1.4;
+    pub const ROOF_DOME: f64 = 2.7;
     pub const DOOR: f64 = 1.8;
 }
 
@@ -77,12 +100,6 @@ pub mod din_v_18599_8_dhw_loss_fractions {
     pub const DISTRIBUTION_FLOOR_KWH_A: f64 = 30.0;
 }
 
-/// 📊 DIN V 18599-12:2018 Tabelle 5 — spezifische Primärenergiekennwerte q_p,tab [kWh/(m²·a)] (Tabellenverfahren, vor f_BAC).
-pub mod din_v_18599_12_tabelle5_qp_specific {
-    pub const RESIDENTIAL: f64 = 66.0;
-    pub const OFFICE: f64 = 100.0;
-    pub const SCHOOL: f64 = 85.0;
-}
 
 /// ⚙️ DIN V 18599-5 — Mindest-Gesamtaufwandzahl / Erzeugernutzungsgrad-Produkt η_sys,min [-].
 pub const DIN_V_18599_5_ETA_SYS_MIN: f64 = 0.85;
@@ -96,15 +113,8 @@ pub mod din_v_18599_7_g_remedy {
     pub const FLOOR: f64 = 0.3;
 }
 
-/// 📐 GEG Anlage 2 — Höchstwerte H′T [W/(m²·K)] nach Gebäudegröße und Anbauart.
-pub mod geg_anlage2_ht_prime_limits {
-    pub const DETACHED_AN_LE_350: f64 = 0.40;
-    pub const DETACHED_AN_GT_350: f64 = 0.50;
-    pub const SEMI_OR_END_AN_LE_350: f64 = 0.45;
-    pub const SEMI_OR_END_AN_GT_350: f64 = 0.50;
-    pub const MID_TERRACE: f64 = 0.50;
-    pub const AN_THRESHOLD_M2: f64 = 350.0;
-}
+/// 📐 GEG § 16, maximum ratio of the actual specific transmission loss to the same-geometry reference.
+pub const GEG_SECTION_16_HT_PRIME_RATIO: f64 = 1.0;
 
 /// 🎛️ DIN V 18599-11 — Korrekturfaktoren f_BAC auf den Endenergiebedarf nach Automationsklasse.
 pub mod din_v_18599_11_automation_factor {

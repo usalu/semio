@@ -1,0 +1,397 @@
+{
+  "cases": [
+    {
+      "name": "scalar sibling becomes geometry",
+      "previous": [
+        17,
+        {
+          "$schema": "geometry",
+          "handle": "solid-old-right",
+          "kind": "solid"
+        }
+      ],
+      "current": [
+        {
+          "$schema": "geometry",
+          "handle": "solid-new-left",
+          "kind": "solid"
+        },
+        {
+          "$schema": "geometry",
+          "handle": "solid-new-right",
+          "kind": "solid"
+        }
+      ],
+      "expected": {
+        "solid-new-left": null,
+        "solid-new-right": "solid-old-right"
+      }
+    },
+    {
+      "name": "earlier geometry becomes scalar",
+      "previous": [
+        {
+          "$schema": "geometry",
+          "handle": "solid-old-left",
+          "kind": "solid"
+        },
+        {
+          "$schema": "geometry",
+          "handle": "solid-old-right",
+          "kind": "solid"
+        }
+      ],
+      "current": [
+        false,
+        {
+          "$schema": "geometry",
+          "handle": "solid-new-right",
+          "kind": "solid"
+        }
+      ],
+      "expected": {
+        "solid-new-right": "solid-old-right"
+      }
+    },
+    {
+      "name": "earlier field appears in a nested record",
+      "previous": {
+        "port": {
+          "z": {
+            "$schema": "geometry",
+            "handle": "solid-old-z",
+            "kind": "solid"
+          }
+        }
+      },
+      "current": {
+        "port": {
+          "a": {
+            "$schema": "geometry",
+            "handle": "solid-new-a",
+            "kind": "solid"
+          },
+          "z": {
+            "$schema": "geometry",
+            "handle": "solid-new-z",
+            "kind": "solid"
+          }
+        }
+      },
+      "expected": {
+        "solid-new-a": null,
+        "solid-new-z": "solid-old-z"
+      }
+    },
+    {
+      "name": "list entry keys survive changing geometry count",
+      "previous": {
+        "2": false,
+        "10": {
+          "$schema": "geometry",
+          "handle": "solid-old-ten",
+          "kind": "solid"
+        },
+        "$schema": "list"
+      },
+      "current": {
+        "2": {
+          "$schema": "geometry",
+          "handle": "solid-new-two",
+          "kind": "solid"
+        },
+        "10": {
+          "$schema": "geometry",
+          "handle": "solid-new-ten",
+          "kind": "solid"
+        },
+        "$schema": "list"
+      },
+      "expected": {
+        "solid-new-two": null,
+        "solid-new-ten": "solid-old-ten"
+      }
+    },
+    {
+      "name": "record field cannot impersonate list index",
+      "previous": {
+        "0": {
+          "$schema": "geometry",
+          "handle": "solid-old-field",
+          "kind": "solid"
+        }
+      },
+      "current": [
+        {
+          "$schema": "geometry",
+          "handle": "solid-new-index",
+          "kind": "solid"
+        }
+      ],
+      "expected": {
+        "solid-new-index": null
+      }
+    },
+    {
+      "name": "nested keyed list and array share logical indices",
+      "previous": {
+        "0": 7,
+        "1": {
+          "nested": {
+            "$schema": "geometry",
+            "handle": "solid-old-slot",
+            "kind": "solid"
+          }
+        },
+        "$schema": "list"
+      },
+      "current": [
+        false,
+        {
+          "nested": {
+            "$schema": "geometry",
+            "handle": "solid-new-slot",
+            "kind": "solid"
+          }
+        }
+      ],
+      "expected": {
+        "solid-new-slot": "solid-old-slot"
+      }
+    },
+    {
+      "name": "inline mesh cannot borrow an adjacent native handle",
+      "previous": {
+        "keep": {
+          "$schema": "geometry",
+          "handle": "solid-shared",
+          "kind": "solid"
+        },
+        "item": {
+          "$schema": "mesh",
+          "handle": "solid-shared"
+        }
+      },
+      "current": {
+        "item": {
+          "$schema": "geometry",
+          "handle": "solid-new-mesh-slot",
+          "kind": "solid"
+        }
+      },
+      "expected": {
+        "solid-new-mesh-slot": null
+      }
+    },
+    {
+      "name": "native leaf cannot expose its nested metadata as a source",
+      "previous": {
+        "keep": {
+          "$schema": "geometry",
+          "handle": "solid-meta",
+          "kind": "solid"
+        },
+        "node": {
+          "$schema": "geometry",
+          "handle": "solid-root",
+          "kind": "solid",
+          "body": {
+            "$schema": "geometry",
+            "handle": "solid-meta",
+            "kind": "solid"
+          }
+        }
+      },
+      "current": {
+        "node": {
+          "body": {
+            "$schema": "geometry",
+            "handle": "solid-new-body",
+            "kind": "solid"
+          }
+        }
+      },
+      "expected": {
+        "solid-new-body": null
+      }
+    },
+    {
+      "name": "input and output names do not share source history",
+      "previousSide": "in",
+      "currentSide": "out",
+      "previous": {
+        "$schema": "geometry",
+        "handle": "solid-old-input",
+        "kind": "solid"
+      },
+      "current": {
+        "$schema": "geometry",
+        "handle": "solid-new-output",
+        "kind": "solid"
+      },
+      "expected": {
+        "solid-new-output": null
+      }
+    },
+    {
+      "name": "old input keeps its residency when an output shares the channel name",
+      "previousSide": "in",
+      "currentSide": "in",
+      "previous": {
+        "leaf": {
+          "$schema": "geometry",
+          "handle": "solid-old-input",
+          "kind": "solid"
+        }
+      },
+      "previousPeer": {
+        "leaf": {
+          "$schema": "geometry",
+          "handle": "solid-conflicting-output",
+          "kind": "solid"
+        }
+      },
+      "current": {
+        "leaf": {
+          "$schema": "geometry",
+          "handle": "solid-new-input",
+          "kind": "solid"
+        }
+      },
+      "expected": {
+        "solid-new-input": "solid-old-input"
+      }
+    },
+    {
+      "name": "coordinate and handle metadata can contain a typed geometry child",
+      "previous": {
+        "record": {
+          "x": 1,
+          "y": 2,
+          "z": 3,
+          "handle": "solid-metadata",
+          "body": {
+            "$schema": "geometry",
+            "handle": "solid-old-body",
+            "kind": "solid"
+          }
+        }
+      },
+      "current": {
+        "record": {
+          "$schema": "dictionary",
+          "x": 4,
+          "y": 5,
+          "z": 6,
+          "handle": "solid-current-metadata",
+          "body": {
+            "$schema": "geometry",
+            "handle": "solid-new-body",
+            "kind": "solid"
+          }
+        }
+      },
+      "expected": {
+        "solid-new-body": "solid-old-body"
+      }
+    },
+    {
+      "name": "untyped and unrelated-schema handles cannot supply previous geometry",
+      "previous": [
+        {
+          "handle": "solid-metadata"
+        },
+        {
+          "$schema": "dictionary",
+          "handle": "solid-record"
+        },
+        {
+          "$schema": "geometry",
+          "handle": "solid-previous",
+          "kind": "solid"
+        }
+      ],
+      "current": [
+        {
+          "$schema": "geometry",
+          "handle": "solid-new",
+          "kind": "solid"
+        },
+        {
+          "$schema": "geometry",
+          "handle": "solid-new-two",
+          "kind": "solid"
+        },
+        {
+          "$schema": "label",
+          "handle": "solid-label"
+        }
+      ],
+      "expected": {
+        "solid-new": null,
+        "solid-new-two": null
+      }
+    },
+    {
+      "name": "typed point and plane block retained traversal into their fields",
+      "previous": {
+        "a": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3,
+          "body": {
+            "$schema": "geometry",
+            "handle": "solid-old-point-body",
+            "kind": "solid"
+          }
+        },
+        "b": {
+          "$schema": "plane",
+          "origin": {
+            "$schema": "point",
+            "x": 1,
+            "y": 2,
+            "z": 3
+          },
+          "normal": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 0,
+            "z": 1
+          },
+          "body": {
+            "$schema": "geometry",
+            "handle": "solid-old-plane-body",
+            "kind": "solid"
+          }
+        }
+      },
+      "current": {
+        "a": {
+          "body": {
+            "$schema": "geometry",
+            "handle": "solid-new-point-body",
+            "kind": "solid"
+          }
+        },
+        "b": {
+          "body": {
+            "$schema": "geometry",
+            "handle": "solid-new-plane-body",
+            "kind": "solid"
+          }
+        }
+      },
+      "expected": {
+        "solid-new-point-body": null,
+        "solid-new-plane-body": null
+      }
+    }
+  ],
+  "inlineMesh": {
+    "$schema": "mesh",
+    "preview": "current-preview-body",
+    "data": "current-authored-body"
+  }
+}

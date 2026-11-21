@@ -50,11 +50,12 @@ export function draw(asset: Json, F: Record<string, Frame>, models: Model[]): st
       const arcPoints = (l: Lobe): P2[] => {
         const c = project(view, l.c);
         const mid = view === "plan" ? (Math.atan2(c.y, c.x) * 180) / Math.PI : 90;
-        return lobeOutline(view, l, 10, mid - 58, mid + 58).map((p) => ({ x: c.x + (p.x - c.x) * 0.72, y: c.y + (p.y - c.y) * 0.72 }));
+        const half = view === "plan" ? 40 : 58;
+        return lobeOutline(view, l, 10, mid - half, mid + half).map((p) => ({ x: c.x + (p.x - c.x) * 0.72, y: c.y + (p.y - c.y) * 0.72 }));
       };
       const rims = crownLobes.filter((l) => l.main).map((l) => ({ l, ring: lobeOutline(view, l, 36), near: nearness(view, l.c) }));
       const visible = crownLobes
-        .filter((l) => l.main && [2, 5, 8].filter((i) => !rims.some((o) => o.l !== l && o.near > nearness(view, l.c) && inside(arcPoints(l)[i]!, o.ring))).length >= 2)
+        .filter((l) => l.main && (view === "elevation" ? [2, 5, 8] : [5]).filter((i) => !rims.some((o) => o.l !== l && o.near > nearness(view, l.c) && inside(arcPoints(l)[i]!, o.ring))).length >= (view === "elevation" ? 2 : 1))
         .sort((a, b) => nearness(view, b.c) - nearness(view, a.c));
       const used: Record<string, number> = {};
       const nth = (key: string): number => (used[key] = (used[key] ?? 0) + 1) - 1;

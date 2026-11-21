@@ -1,7 +1,7 @@
 //! ➰ Curve/curve intersection (analytic + Bézier clipping).
 //!
-//! Analytic fast paths cover [`Curve3::Line`]/[`Curve3::Circle`] pairs, now also flagging exact
-//! single-point tangency instead of silently deduplicating it away. Every other combination falls
+//! Analytic fast paths cover lines, circles and ellipses.
+//! Other combinations fall
 //! through to a NURBS representation clipped with control-hull subdivision (the same convergence
 //! guarantee a fat-line band gives, without the extra band-distance bookkeeping) and refined by
 //! Newton, with tangential contact reported via `tangent`/`multiplicity` on the hit itself.
@@ -15,6 +15,11 @@ use semio_framework_3d_brep_curve::{Curve3, NurbsCurve3};
 use semio_framework_3d_brep_representation::error::IntersectError;
 use semio_framework_3d_brep_vector::matrix::Frame3;
 use semio_framework_3d_brep_vector::{Pnt3, Vec3};
+
+#[path = "🎟️original/🦀️.rs"]
+mod original;
+pub use original::intersect_original_curve_curve;
+pub(super) use original::conic_parameter;
 
 // #region 🔖️Api
 
@@ -31,30 +36,17 @@ pub struct CurveCurveHit {
     pub multiplicity: u32,
 }
 
-/// ➰ Intersect two 3D curves within `tol`. Analytic for line/line and line/circle; general NURBS
-/// otherwise via Bézier control-hull clipping plus Newton refinement.
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+/// ➰ Intersects two 3D curves. Supported original line and conic pairs use fixed analytic equations.
 pub fn intersect_curve_curve(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
-    if !(tol.is_finite() && tol > 0.0) {
-        return Err(IntersectError::Degenerate("tolerance must be positive and finite".into()));
+    if let Some(hits) = intersect_original_curve_curve((a, None), (b, None), tol)? {
+        return Ok(hits.into_iter().flatten().collect());
     }
-    match (a, b) {
-        (Curve3::Line { origin: o1, dir: d1 }, Curve3::Line { origin: o2, dir: d2 }) => intersect_line_line(*o1, *d1, *o2, *d2, tol),
-        (Curve3::Line { origin, dir }, Curve3::Circle { frame, radius }) => intersect_line_circle(*origin, *dir, frame, *radius, tol, false),
-        (Curve3::Circle { frame, radius }, Curve3::Line { origin, dir }) => intersect_line_circle(*origin, *dir, frame, *radius, tol, true),
-        (Curve3::Circle { frame: f1, radius: r1 }, Curve3::Circle { frame: f2, radius: r2 }) => intersect_circle_circle(f1, *r1, f2, *r2, tol),
-        _ => intersect_general(a, b, tol),
-    }
+    intersect_general(a, b, tol)
 }
 
 // #endregion 🔖️Api
 
 // #region 🔖️Analytic
-
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn intersect_line_line(o1: Pnt3, d1: Vec3, o2: Pnt3, d2: Vec3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
-    Ok(intersect_line_line_unique(o1, d1, o2, d2, tol)?.into_iter().collect())
-}
 
 /// 📍️ Intersects two supporting lines without allocating a result list.
 pub fn intersect_line_line_unique(o1: Pnt3, d1: Vec3, o2: Pnt3, d2: Vec3, tol: f64) -> Result<Option<CurveCurveHit>, LineIntersectionRefusal> {
@@ -88,131 +80,12 @@ pub fn intersect_line_line_unique(o1: Pnt3, d1: Vec3, o2: Pnt3, d2: Vec3, tol: f
     Ok(Some(CurveCurveHit { point, t_a, t_b, tangent: false, multiplicity: 1 }))
 }
 
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn intersect_line_circle(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
-    if radius <= tol || dir.norm() <= tol {
-        return Err(IntersectError::Degenerate("degenerate line or circle".into()));
-    }
-    let o = frame.to_local(origin);
-    let d = frame.to_local_vector(dir);
-    if d.z.abs() <= tol {
-        if o.z.abs() > tol {
-            return Ok(vec![]);
-        }
-        return intersect_line2_circle((o.x, o.y), (d.x, d.y), radius, (origin, dir), frame, tol, swap);
-    }
-    let t_plane = -o.z / d.z;
-    let x = o.x + d.x * t_plane;
-    let y = o.y + d.y * t_plane;
-    let rho = (x * x + y * y).sqrt();
-    if (rho - radius).abs() <= tol {
-        let point = origin + dir * t_plane;
-        let t_circle = y.atan2(x).rem_euclid(std::f64::consts::TAU);
-        return Ok(vec![pack_hit(point, t_plane, t_circle, swap, false)]);
-    }
-    if rho > radius + tol {
-        return Ok(vec![]);
-    }
-    intersect_line2_circle((o.x, o.y), (d.x, d.y), radius, (origin, dir), frame, tol, swap)
-}
-
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn intersect_line2_circle((ox, oy): (f64, f64), (dx, dy): (f64, f64), radius: f64, (origin, dir): (Pnt3, Vec3), frame: &Frame3, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
-    let a = dx * dx + dy * dy;
-    if a <= tol * tol {
-        return Err(IntersectError::Degenerate("line direction parallel to circle normal with zero in-plane speed".into()));
-    }
-    let b = 2.0 * (ox * dx + oy * dy);
-    let c = ox * ox + oy * oy - radius * radius;
-    let disc = b * b - 4.0 * a * c;
-    if disc < -(tol * tol) * a * a {
-        return Ok(vec![]);
-    }
-    if disc.abs() <= (tol * tol) * a * a * 4.0 {
-        let t = -b / (2.0 * a);
-        let x = ox + dx * t;
-        let y = oy + dy * t;
-        let point = origin + dir * t;
-        if frame.to_local(point).z.abs() > tol * 10.0 {
-            return Ok(vec![]);
-        }
-        let t_circle = y.atan2(x).rem_euclid(std::f64::consts::TAU);
-        return Ok(vec![pack_hit(point, t, t_circle, swap, true)]);
-    }
-    let sqrt_disc = disc.max(0.0).sqrt();
-    let mut hits = Vec::with_capacity(2);
-    for sign in [-1.0, 1.0] {
-        let t = (-b + sign * sqrt_disc) / (2.0 * a);
-        let x = ox + dx * t;
-        let y = oy + dy * t;
-        let point = origin + dir * t;
-        if frame.to_local(point).z.abs() > tol * 10.0 {
-            continue;
-        }
-        let t_circle = y.atan2(x).rem_euclid(std::f64::consts::TAU);
-        let hit = pack_hit(point, t, t_circle, swap, false);
-        if hits.iter().all(|h: &CurveCurveHit| h.point.distance(hit.point) > tol) {
-            hits.push(hit);
-        }
-    }
-    Ok(hits)
-}
-
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn pack_hit(point: Pnt3, t_line: f64, t_circle: f64, swap: bool, tangent: bool) -> CurveCurveHit {
     if swap {
         CurveCurveHit { point, t_a: t_circle, t_b: t_line, tangent, multiplicity: 1 }
     } else {
         CurveCurveHit { point, t_a: t_line, t_b: t_circle, tangent, multiplicity: 1 }
     }
-}
-
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn intersect_circle_circle(f1: &Frame3, r1: f64, f2: &Frame3, r2: f64, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
-    if r1 <= tol || r2 <= tol {
-        return Err(IntersectError::Degenerate("non-positive circle radius".into()));
-    }
-    if f1.z.cross(f2.z).norm() > tol {
-        return intersect_general(&Curve3::Circle { frame: *f1, radius: r1 }, &Curve3::Circle { frame: *f2, radius: r2 }, tol);
-    }
-    let c1 = f1.origin;
-    let c2 = f2.origin;
-    let d_vec = c2 - c1;
-    let d = d_vec.norm();
-    if d <= tol && (r1 - r2).abs() <= tol {
-        return Err(IntersectError::Tangent);
-    }
-    if d > r1 + r2 + tol || d < (r1 - r2).abs() - tol {
-        return Ok(vec![]);
-    }
-    let den = d.max(tol);
-    let a = (r1 * r1 - r2 * r2 + d * d) / (2.0 * den);
-    let h_sq = r1 * r1 - a * a;
-    if h_sq < -(tol * tol) {
-        return Ok(vec![]);
-    }
-    let n = f1.z.normalized().unwrap_or(Vec3::Z);
-    let radial = (d_vec - n * d_vec.dot(n)).normalized().unwrap_or(f1.x);
-    let perp = n.cross(radial);
-    let mid = c1 + d_vec * (a / den);
-    let angle_at = |point: Pnt3, frame: &Frame3| {
-        let local = frame.to_local(point);
-        local.y.atan2(local.x).rem_euclid(std::f64::consts::TAU)
-    };
-    if h_sq.max(0.0).sqrt() <= tol {
-        let point = mid;
-        return Ok(vec![CurveCurveHit { point, t_a: angle_at(point, f1), t_b: angle_at(point, f2), tangent: true, multiplicity: 1 }]);
-    }
-    let h = h_sq.sqrt();
-    let mut hits = Vec::new();
-    for sign in [-1.0, 1.0] {
-        let point = mid + perp * (h * sign);
-        let hit = CurveCurveHit { point, t_a: angle_at(point, f1), t_b: angle_at(point, f2), tangent: false, multiplicity: 1 };
-        if hits.iter().all(|existing: &CurveCurveHit| existing.point.distance(hit.point) > tol) {
-            hits.push(hit);
-        }
-    }
-    Ok(hits)
 }
 
 // #endregion 🔖️Analytic

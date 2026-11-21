@@ -21,3 +21,9 @@ Feature: Looping clips can spin
     Given an asset without structure supports and a clip with a gap between contact spans
     When the asset is validated
     Then an unsupported-instant issue is reported unless a ballistic phase covers the gap
+
+  Scenario: A shaft turns continuously about its longitudinal axis
+    Given a revolute shaft declared to have continuous twist and a clip that ends two complete turns ahead
+    Then its evaluated rotation is continuous across both loop boundaries
+    And a radially mounted point follows its shaft without axial displacement
+    And a partial closing turn or an ordinary bounded joint fails the closing-key check

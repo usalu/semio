@@ -1,0 +1,11 @@
+# Certified Sphere and Finite Cylinder Booleans
+
+The retained Boolean dispatcher now projects the sphere center into the finite cylinder's local frame. Nearest and farthest cylinder distances classify external separation, tangency, and a cylinder contained in the sphere. The axial overlap also determines the largest spherical cross-section that the cylinder wall must cover. When the cylinder covers that disk, the intersection is the original sphere, a spherical cap with one planar disk, or a spherical band with two planar disks. A sphere-first Cut can subtract a fully covered polar region and keep the complementary cap. Either operand order works for containment and Intersect.
+
+The result reuses the funded spherical boundary publisher, exact area and volume, and center of mass. A finite cylinder can therefore be narrower than the sphere when its cap planes isolate an off-equator region with full radial coverage. Cylinder-wall intersections, internal voids from a mixed pair, and interior slab cuts that make disconnected pieces require separate boundary recipes.
+
+Four new neutral rows exercise a translated offset cylinder, operand reversal with a narrower tool, a cap at the cylinder's upper plane, and a sphere Cut that keeps a complementary cap. Manifold-3D independently matched the expected volume, area, and bounds in all rows. The full Boolean oracle passed three tests with 75 assertions.
+
+The disk-light Rust witness first reproduced the refusal on the new cases, then passed all 18 tests. It validates original dispatch, exact mass measures, native trim correspondence and reciprocal incidence, an antiparallel horizontal cylinder, an oblique cylinder, containment and tangency, and the unsupported side and disconnected cases. It also uses the current spherical cavity boundary interface for its previous shell checks. The registered Flow fixture now includes these same four rows and checks one-item cancellation, exact component labels, preview disks, area, volume, and centroid. The linked run was left to the shared Cargo lane.
+
+Nightly Rust parsing and scoped whitespace checks passed. The native registry source closure contains 3,998 active lines across 24 files. The solid transaction source closure contains 3,387 active lines across 26 files.

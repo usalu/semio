@@ -8,7 +8,7 @@ import { renderBrowserBoot } from "./🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🚀️ Materializes the browser boot bundle after the build tool prepares its generated data inputs. */
-class GenerateBrowserBootScript extends BundleScript {
+export class GenerateBrowserBootScript extends BundleScript {
   protected readonly entry: "browser-boot" | "renderer-boot" = "browser-boot";
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Browser boot generation accepts no arguments");
@@ -21,7 +21,7 @@ class GenerateBrowserBootScript extends BundleScript {
 }
 
 /** 🪆️ Materializes the public embedded browser library through its exclusive producer. */
-class GenerateRendererBootScript extends GenerateBrowserBootScript {
+export class GenerateRendererBootScript extends GenerateBrowserBootScript {
   protected readonly entry = "renderer-boot" as const;
 }
 

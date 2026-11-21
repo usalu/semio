@@ -40,14 +40,13 @@ impl pack::snapshot::ArtifactDsl for GisTerrainSnapshot{
  const EXTENSION:&'static str="gisterrain";
  fn envelope_id()->&'static str{"gis.gisterrain"}
  fn print_dsl(&self)->String{let body=semio_framework_dsl_record::print(&Terrain::from_snapshot(self).__dsl_to_record(),&Terrain::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("terrain envelope");store::semio_format::wrap_text(&envelope,&body)}
- fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|e|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "terrain native text identity differs", semio_framework_diagnostic::TextSpan::at(1, 1)))}let record=semio_framework_dsl_record::parse_exact(body,&Terrain::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;let snapshot=Terrain::__dsl_from_record(&record)?.into_snapshot();if let Some(map)=&snapshot.imported_map{map.validate().map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, semio_framework_diagnostic::TextSpan::at(1, 1)))?;}Ok(snapshot)}
+ fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|e|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "terrain native text identity differs", semio_framework_diagnostic::TextSpan::at(1, 1)))}let record=semio_framework_dsl_record::parse_exact(body,&Terrain::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;let snapshot=Terrain::__dsl_from_record(&record)?.into_snapshot().map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;if let Some(map)=&snapshot.imported_map{map.validate().map_err(|message| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, semio_framework_diagnostic::TextSpan::at(1, 1)))?;}Ok(snapshot)}
 }
 }
 
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::schema::terrain_descriptor::GIS_3D_TERRAIN_TILE_URL_TEMPLATE;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use ::semio_framework_schema::ArtifactSchema;
@@ -170,12 +169,11 @@ pub use snapshot_wire_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
 use super::*;
-use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::schema::terrain_descriptor::GIS_3D_TERRAIN_TILE_URL_TEMPLATE;
 use crate::standards::v1::subsets::any::schema::imported_map;
 use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_TERRAIN_EXAMPLE_TEXT;
-use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
+use crate::GisTerrainSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_surface::terrain::tiles;
+use semio_framework_surface::terrain::projection;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use imported_map::{ImportedMap,ImportedProperty};
@@ -184,45 +182,83 @@ use imported_map::{ImportedMap,ImportedProperty};
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
 /// `GisTerrainSnapshot`, no app-state dependency — an artifact must never depend on an app.
 pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
-    let exaggeration = 1.0;
-    let imported_map = None;
-    let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(exaggeration, imported_map.as_ref())));
-    GisTerrainSnapshot { exaggeration, imported_map, mesh }
+    GisTerrainSnapshot { exaggeration: 1.0, ..GisTerrainSnapshot::default() }
 }
 
-/// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain
-/// exaggeration=...` header (see `crate::GisTerrainSnapshot`'s
-/// derive-generated `.gisterrain` DSL).
+/// 🗺️ Creates the example document from the shared Liège elevation and overlay assets.
 pub fn default_terrain_document() -> GisTerrainSnapshot {
-    <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
+    let mut document = <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT)
+        .expect("bundled terrain document settings");
+    let grid = crate::schema::imported_map::bundled_terrain_grid();
+    document.elevation_source = Some(crate::schema::snapshot::ElevationSource { bounds: grid.bounds, rows: grid.rows.clone() });
+    document.imported_map = Some(super::bundled_terrain_scenery().clone());
+    document
+}
+
+/// 🏗️ Builds the terrain source and feature payload shared by the editor and viewer.
+pub fn build_terrain_scene_json(document: &GisTerrainSnapshot, descriptor: &TerrainDescriptorJson) -> Option<String> {
+    let grid = crate::schema::imported_map::gis_terrain_elevation_grid(document).ok()?;
+    let bundled = crate::schema::imported_map::is_bundled_terrain_grid(&grid);
+    Some(crate::schema::terrain_descriptor::scene::terrain_scene_json(descriptor, &grid, bundled))
 }
 
 #[derive(ToValue)]
 #[value(rename_all = "camelCase")]
-pub struct TerrainSceneStyleJson<'a> {
-    tile_url_template: &'a str,
-    project_origin_lon: f64,
-    project_origin_lat: f64,
-    exaggeration: f64,
-    color_ramp: &'a str,
-    min_zoom: u32,
-    max_zoom: u32,
+struct TerrainCameraJson {
+    position: [f64; 3],
+    target: [f64; 3],
+    up: [f64; 3],
+    fov: f64,
+    terrain_frame: [f64; 3],
 }
 
-/// 🏗️ Builds the `World3dScene.terrain_json` payload for a descriptor — the one place gis needs to
-/// reach into `semio_framework_surface::terrain` beyond the wasm session itself (for the generic engine's
-/// tile zoom bounds).
-pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
-    let style = TerrainSceneStyleJson {
-        tile_url_template: GIS_3D_TERRAIN_TILE_URL_TEMPLATE,
-        project_origin_lon: descriptor.project_origin.lon,
-        project_origin_lat: descriptor.project_origin.lat,
-        exaggeration: descriptor.exaggeration,
-        color_ramp: "hypsometric",
-        min_zoom: tiles::TERRAIN_TILE_MIN_ZOOM,
-        max_zoom: tiles::TERRAIN_TILE_MAX_ZOOM,
+/// 📐️ Identifies the geographic center and horizontal radius of a terrain camera's frame.
+pub fn terrain_camera_frame(descriptor: &TerrainDescriptorJson) -> [f64; 3] {
+    let origin = &descriptor.project_origin;
+    let radius = descriptor.overlays.coordinates().map(|[lon, lat]| {
+        let (x, y) = projection::lonlat_to_local_meters(lon, lat, origin.lon, origin.lat);
+        x.hypot(y)
+    }).fold(0.0, f64::max);
+    [origin.lon, origin.lat, radius]
+}
+
+/// 🎥️ Builds a world camera around the source's geographic extent.
+pub fn build_terrain_camera_json(descriptor: &TerrainDescriptorJson) -> String {
+    let terrain_frame = terrain_camera_frame(descriptor);
+    let elevation = descriptor.overlays.positions.iter().filter_map(|position| position.elevation)
+        .fold(200.0, f64::max) * descriptor.exaggeration;
+    terrain_camera_json(terrain_frame, (terrain_frame[2] * 2.5).max(1_000.0), elevation)
+}
+
+/// 📍️ Identifies the live artifact frame by its source extent when one is authored.
+pub fn artifact_terrain_camera_frame(document: &GisTerrainSnapshot, descriptor: &TerrainDescriptorJson) -> [f64; 3] {
+    let Some(source) = document.elevation_source.as_ref().filter(|source| source.is_valid()) else {
+        return terrain_camera_frame(descriptor);
     };
-    semio_framework_pack_json::to_json_string(&style)
+    let [west, south, _, _] = source.bounds;
+    let origin = &descriptor.project_origin;
+    let (x, y) = projection::lonlat_to_local_meters(west, south, origin.lon, origin.lat);
+    [origin.lon, origin.lat, x.hypot(y)]
+}
+
+/// 🛰️ Frames an authored grid at its real extent and approximate center elevation.
+pub fn build_artifact_terrain_camera_json(document: &GisTerrainSnapshot, descriptor: &TerrainDescriptorJson) -> String {
+    let Some(source) = document.elevation_source.as_ref().filter(|source| source.is_valid()) else {
+        return build_terrain_camera_json(descriptor);
+    };
+    let frame = artifact_terrain_camera_frame(document, descriptor);
+    let center_elevation = f64::from(source.rows[16][16]) * descriptor.exaggeration;
+    terrain_camera_json(frame, (frame[2] * 2.5).max(10.0), center_elevation)
+}
+
+fn terrain_camera_json(terrain_frame: [f64; 3], distance: f64, elevation: f64) -> String {
+    semio_framework_pack_json::to_json_string(&TerrainCameraJson {
+        position: [distance * 0.65, -distance * 0.65, elevation + distance],
+        target: [0.0, 0.0, elevation],
+        up: [0.0, 0.0, 1.0],
+        fov: 45.0,
+        terrain_frame,
+    })
 }
 }
 pub use snapshot_wire2_codec::*;
@@ -238,31 +274,42 @@ impl ImportedMap {
 }
 }
 
-/// 🚪️ Admits bundled scenery before the semantic descriptor projection.
-pub fn fixture_descriptor(document:&GisTerrainSnapshot)->crate::schema::terrain_descriptor::TerrainDescriptorJson {
- let map=crate::schema::imported_map::ImportedMap::from_json(include_str!("../../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map");
- parse_descriptor(document,&map)
+use crate::schema::imported_map::ImportedMap;
+use crate::schema::terrain_descriptor::{TerrainDescriptorJson, TerrainOverlays, TerrainProjectOrigin, overlays::map_point};
+
+fn bundled_terrain_scenery() -> &'static ImportedMap {
+    static SCENERY: std::sync::LazyLock<ImportedMap> = std::sync::LazyLock::new(|| {
+        ImportedMap::from_json(include_str!("../../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map")
+    });
+    &SCENERY
 }
 
-use crate::schema::terrain_descriptor::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
-/// 📌️ Pin projection requires an identifier; durable map admission remains independent.
-fn map_positions(map:&crate::schema::imported_map::ImportedMap)->Vec<TerrainPositionData>{
-    map.positions.iter().filter_map(|entry|Some(TerrainPositionData{id:entry.get("id")?.as_str()?.to_string(),lon:entry.get("lon")?.as_f64()?,lat:entry.get("lat")?.as_f64()?,label:entry.get("label").and_then(|value|value.as_str()).map(str::to_string),icon:entry.get("icon").and_then(|value|value.as_str()).map(str::to_string)})).collect()
-}
-/// 🔌️ The optional imported map contributes an independent pin overlay.
-fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData> {
-    let Some(map) = &document.imported_map else { return Vec::new(); };
-    map_positions(map)
+/// 🚪️ Projects the live document using the bundled terrain preview as its initial scenery.
+pub fn fixture_descriptor(document: &GisTerrainSnapshot) -> TerrainDescriptorJson {
+    parse_descriptor(document, bundled_terrain_scenery())
 }
 
-/// 🈵️ The full rendering descriptor (project origin + fixture pins + `map:in` overlay pins +
-/// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
-/// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
-/// `crate::schema::default_terrain_document`.
-pub fn parse_descriptor(document:&GisTerrainSnapshot,map:&crate::schema::imported_map::ImportedMap)->TerrainDescriptorJson {
-    let origin=map.properties.iter().find(|member|member.name=="projectOrigin").map(|member|&member.value);
-    let project_origin=TerrainProjectOrigin{lon:origin.and_then(|value|value.get("lon")).and_then(|value|value.as_f64()).unwrap_or(0.0),lat:origin.and_then(|value|value.get("lat")).and_then(|value|value.as_f64()).unwrap_or(0.0)};
-    let mut descriptor=TerrainDescriptorJson{schema:crate::GIS_3D_TERRAIN_SCHEMA.into(),project_origin,positions:map_positions(map),exaggeration:document.exaggeration};
-    descriptor.positions.extend(imported_positions(document));
-    descriptor
+fn tiled_map_overlays(map: &ImportedMap) -> TerrainOverlays {
+    TerrainOverlays::from_tiled_map_features(&map.positions, &map.routes, &map.regions)
+}
+
+/// 🗺️ Supplies the imported map and its own terrain extent when there is renderable geometry.
+pub fn parse_descriptor(document: &GisTerrainSnapshot, scenery: &ImportedMap) -> TerrainDescriptorJson {
+    if let Some(source) = document.elevation_source.as_ref().filter(|source| source.is_valid()) {
+        let project_origin = crate::schema::imported_map::terrain_grid_origin(source.bounds);
+        let overlays = document.imported_map.as_ref().map(|map| TerrainOverlays::from_map_features(&map.positions, &map.routes, &map.regions)).unwrap_or_default();
+        return TerrainDescriptorJson { schema: crate::GIS_3D_TERRAIN_SCHEMA.into(), project_origin, overlays, exaggeration: document.exaggeration };
+    }
+    let scenery_overlays = tiled_map_overlays(scenery);
+    let scenery_origin = scenery.properties.iter().find(|member| member.name == "projectOrigin")
+        .and_then(|member| map_point(&member.value))
+        .map(|[lon, lat]| TerrainProjectOrigin { lon, lat })
+        .or_else(|| scenery_overlays.center())
+        .unwrap_or(TerrainProjectOrigin { lon: 0.0, lat: 0.0 });
+    let (overlays, project_origin) = document.imported_map.as_ref().map_or((scenery_overlays, scenery_origin.clone()), |map| {
+        let overlays = tiled_map_overlays(map);
+        let origin = overlays.center().unwrap_or(scenery_origin);
+        (overlays, origin)
+    });
+    TerrainDescriptorJson { schema: crate::GIS_3D_TERRAIN_SCHEMA.into(), project_origin, overlays, exaggeration: document.exaggeration }
 }

@@ -1,4 +1,13 @@
 {
+ "skinSeams": {
+  "positions": [0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0],
+  "indices": [0, 1, 2, 3, 4, 5],
+  "jointDisplacements": [0, 2],
+  "cases": [
+   {"name":"independently moving sheets", "joints":[[0,1,0,0],[1,0,0,0]], "weights":[[1,0,0,0],[1,0,0,0]], "segments":6},
+   {"name":"equivalent reordered influences", "joints":[[0,1,0,0],[1,0,0,0]], "weights":[[0.75,0.25,0,0],[0.25,0.75,0,0]], "segments":4}
+  ]
+ },
  "quality": {
   "chordM": 0.0005,
   "minSegments": 24,

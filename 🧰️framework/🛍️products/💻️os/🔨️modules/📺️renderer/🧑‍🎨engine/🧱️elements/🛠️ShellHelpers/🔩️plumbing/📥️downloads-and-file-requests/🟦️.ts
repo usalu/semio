@@ -22,10 +22,15 @@ export function downloadMediaExport(filename: string, mimeType: string, data: st
   downloadMediaExportBytes(filename, mimeType, mediaExportBytes(data, encoding));
 }
 
-/** 📥️ Host delivery of already-assembled bytes — the blob-and-anchor half of {@link downloadMediaExport}, reached by the segmented lane once its chunks are drained. */
+/** 📥️ Delivers one native byte array as an anchor download. */
 export function downloadMediaExportBytes(filename: string, mimeType: string, bytes: Uint8Array): void {
   if (typeof document === "undefined") return;
-  const blob = new Blob([bytes.slice()], { type: mimeType });
+  downloadMediaExportBlob(filename, new Blob([bytes.slice()], { type: mimeType }));
+}
+
+/** 🧾️ Keeps the anchored Blob alive through a complete browser download handoff. */
+function downloadMediaExportBlob(filename: string, blob: Blob): void {
+  if (typeof document === "undefined") return;
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -39,8 +44,8 @@ export function downloadMediaExportBytes(filename: string, mimeType: string, byt
   }, DOWNLOAD_MEDIA_EXPORT_REVOKE_MS);
 }
 
-/** 🌊 The sink factory every shell drain uses: assembled chunks delivered as one file through {@link downloadMediaExportBytes}. */
-export const shellSegmentedDownloadSinkFactory: SegmentedDownloadSinkFactory = segmentedDownloadSinkFactory(downloadMediaExportBytes);
+/** 🌊 The default shell sink delivers the verified Blob of its ordered pages. */
+export const shellSegmentedDownloadSinkFactory: SegmentedDownloadSinkFactory = segmentedDownloadSinkFactory(downloadMediaExportBlob);
 
 export function downloadDataUrl(filename: string, dataUrl: string): void {
   if (typeof document === "undefined") return;

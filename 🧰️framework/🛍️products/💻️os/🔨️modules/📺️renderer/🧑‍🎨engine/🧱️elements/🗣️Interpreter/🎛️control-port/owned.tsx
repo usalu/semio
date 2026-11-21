@@ -5,9 +5,8 @@ import { OwnedStagedControls, type StagedOwnedSnapshot, type StagedOwnedSubscrip
 import type { UiControlContext, UiControlPort } from "./🟦️.ts";
 import { OrdinaryControlView } from "./🟦️.tsx";
 import type { UiNodeRecord } from "../../../../../../../../🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts";
-import { fieldAssociation } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/📝️Field/🔗️association/🟦️.ts";
 import { stagedBodyNode } from "./body.ts";
-import { controlLabelTarget } from "./label-target.ts";
+import { fieldControlAssociation } from "./label-target.ts";
 import { controlDomId } from "../🪪️stable-dom-ids/🟦️.ts";
 import { UiContainerFrame } from "./container.tsx";
 import { TextView } from "../🔤️display-views/🟦️.tsx";
@@ -48,9 +47,7 @@ function OwnedFieldControl({ owner, id, view, field, disabled, localDocumentOwne
   const port = read.controls;
   const controls: UiControlPort = disabled ? { identity: port.identity, surface: port.surface, read: port.read, subscribe: port.subscribe, value: port.value, disabled: () => true, dispatch: () => {} } : port;
   const context: UiControlContext = { controls, localDocumentOwner, domScope };
-  const target = controlLabelTarget(context, record);
-  const association = fieldAssociation(domScope, target, Boolean(field.component.description), Boolean(field.component.error));
-  const fieldContext: UiControlContext = { controls, localDocumentOwner, domScope, field: { label: association.label, describedBy: association.describedBy, error: association.error, required: field.component.required ?? undefined, invalid: Boolean(field.component.error) } };
+  const { target, association, context: fieldContext } = fieldControlAssociation(context, field.component, domScope!, record);
   return <UiContainerFrame record={field} id={domScope!} controlId={target}>{record.component.type === "text" ? <div id={controlDomId(context, record)} role="group" aria-labelledby={association.label} aria-describedby={association.describedBy}><TextView record={record} /></div> : <OrdinaryControlView record={record} context={fieldContext} />}</UiContainerFrame>;
 }
 

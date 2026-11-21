@@ -30,7 +30,7 @@ pub(super) fn import(bytes: &[u8], name: &str, control: &mut InterchangeControl<
 pub(super) fn export(doc: &LayoutSnapshot, control: &mut InterchangeControl<'_>) -> Result<InterchangeResult<Vec<u8>>, String> {
     let mut pdf = PdfSnapshot::default();
     let content = doc.stories.iter().map(|story| story.content.as_str()).collect::<Vec<_>>().join("\n");
-    let font = io::export::embedded_true_type_font(&mut pdf, "F1", include_bytes!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf"), "MapLabelSans", Some(&content))?;
+    let font = io::export::embedded_map_label_font(&mut pdf, "F1", Some(&content))?;
     let mut diagnostics = Vec::new();
     for (index, source) in doc.pages.iter().enumerate() {
         checkpoint(control, index, doc.pages.len())?;

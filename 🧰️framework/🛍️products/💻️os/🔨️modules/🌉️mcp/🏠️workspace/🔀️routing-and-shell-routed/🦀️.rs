@@ -23,7 +23,7 @@ use crate::hub_relay::{HUB_RELAY_ACK_WAIT_MS, HubInbound, HubInboundDelivery, ca
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_catalog::catalog::CapabilityOwner;
 #[cfg(not(target_arch = "wasm32"))]
-use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, load_package_descriptor, load_plugin_registry, resolve_plugin_wasm_path};
+use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, load_plugin_model_descriptor, load_plugin_registry, resolve_plugin_wasm_path};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_foundation::errors::GatewayErrorCode;
 #[cfg(not(target_arch = "wasm32"))]
@@ -166,7 +166,7 @@ pub fn open_plugin_artifact_channel_scoped(source: Option<&PluginComponentSource
         PluginComponentSource::Repo(repo_root) => {
             let registry = load_plugin_registry(repo_root)?;
             let entry = find_plugin_entry(&registry, plugin_id)?.clone();
-            let descriptor = load_package_descriptor(&entry.owner_root)?;
+            let descriptor = load_plugin_model_descriptor(repo_root, &entry)?;
             let wasm_path = resolve_plugin_wasm_path(repo_root, &entry)?;
             (scoped_compiled_component(runtime.as_ref(), plugin_id, ComponentBytes::File(&wasm_path), scope)?, descriptor)
         }
@@ -559,7 +559,14 @@ impl ArtifactChannel for RoutingArtifactChannel {
             return Err(Fault { code: "plugin.unavailable".to_string(), message: "target artifact has no owned canonical document binding; refusing to run against a genesis guest".to_string() });
         }
         let artifact = candidates.first().map(|(id, _)| (*id).clone());
-        let resolved = ActionTarget { instance_id: None, plugin_id: Some(route.plugin_id.clone()), app_id: route.app_id.clone(), artifact_ref: artifact.clone() };
+        let resolved = ActionTarget {
+            instance_id: None,
+            plugin_id: Some(route.plugin_id.clone()),
+            app_id: route.app_id.clone(),
+            artifact_ref: artifact.clone(),
+            window_id: target.window_id.clone(),
+            mode_id: target.mode_id.clone(),
+        };
         let selected = (route, artifact);
         let mut targets = self.selected.lock().expect("target routing lock poisoned");
         if targets.get(&instance).is_some_and(|existing| existing != &selected) {

@@ -227,3 +227,41 @@ I opened every image below with the Read tool:
 - **1:100 and 1:200 stand-ins.** The bottom damper exists only as a thermal stand-in, thickened to the feature (15.5 and 30.5 mm); the 1:200 pan is raised against the bowl and its handles are closed blocks. These follow the print gap rule of each band.
 - **Structure shells.** The bowl and lid shells are referenced as members (D3 allows it because they are the real load-bearing shells), so the structure view is dominated by two blue shells.
 - **Not modelled:** the One-Touch blades inside the bowl and the lid hook.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `T/r5-charcoal-grill-build.py` (loads the round-3 builder and the per-scale scripts, states the round-5 change by hand, writes the volumes source with `--source`); renders with `T/r5-objects-render.sh`, montages with `T/r5-objects-montage.ts` under `🗑️generated/r5-charcoal-grill/`.
+
+### Reference (modelled to): the table of section 1 stands (Weber Original Kettle 57 cm: H 100.3 cm, bowl Ø 57.2 cm, grate Ø 54.6 cm, depth 63.5 cm, 14.5–15.6 kg, three legs ≈ 0.50 m, wheels 6 in = 152 mm, aluminium lid vent ≈ 80 mm).
+
+### Model vs reference (1:50, measured on the sheets and solids)
+
+| quantity | model | reference | dev. |
+|---|---|---|---|
+| height, lid closed | 1.000 m | 1.003 m | −0.3 % |
+| bowl rim Ø (over the bead) | 0.585 m | 0.572 m bowl + bead | +2.3 % (bead) |
+| cooking grate Ø | 0.546 m | 0.546 m | 0 % |
+| depth incl. lid handle | 0.640 m | 0.635 m | +0.8 % |
+| wheel Ø | 0.152 m | 0.152 m | 0 % |
+| leg length | 0.52 m | ≈ 0.50 m (19.5 in) | +4 % (leg into socket, visible length 0.50) |
+| rim height (sheet, front view) | 0.74 m | ≈ 0.73–0.74 m (class) | ≈ 0 % |
+| mass | 14.5 kg + 1.5 kg charcoal | 14.5–15.6 kg | 0 % |
+
+### Grades (sheets opened: body, structure, thermal --cut at 1:50/100/200/500, 2D at all four scales, poses cold-closed, grilling-closed, lit-lid-open, embers-vents-low, clips light-and-close t 720 s, lid-lift-cycle t 8 s, 1:500 right side alone)
+
+| scale | body | thermal | structure | 2D |
+|---|---|---|---|---|
+| 1:50 | A → A | A → A | A → A | A → A |
+| 1:100 | A → A | A → A | A → A | A → A |
+| 1:200 | A− → A− | A → A | A → A | A → A |
+| 1:500 | A− (INVALID) → A− | A → A | A → A | A → A |
+
+Defects seen and fixed:
+- Catalog INVALID before: `volumes-slender` 1:500 `leg-left`, `leg-right` 19.7 × (< 20): the wheel legs stopped at the axle centre (0.076 m). They now run to their real lower end 14 mm below the axle (0.062 m, as at 1:50), 20.2 ×.
+- Poses and clip frames: lid opens on the rear hinge without passing through the bowl, vent fin and damper lever turn 70° in `embers-vents-low`, everything closed.
+
+Checks: `r3-validate.ts objects/charcoal-grill --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); `volumes-check.ts objects/charcoal-grill --product` PASS (599.7 s); spliced with `volumes-insert.py`.
+
+Remaining (A−, with reason): at 1:200 and 1:500 the 30 mm ash pan and its 65 mm hanging gap are one mass hugging the bowl (a drum under the bowl). The gap cannot be drawn: with the body pen it prints below the 0.15 mm gap of the band at its range end 1:350 / 1:1000, and the 3D must agree with the drawing. Lid and bowl silhouettes at 1:500 show the coarse tessellation of the renderer at that scale (profile chords 0.7 mm, not a model facet).
+
+Across the four scales, the ash pan lies 385–418 mm above ground and the bulk coal bed lies at 578–618 mm. Ash passes through three floor openings. The three hood flues coincide with the damper skirt and dial. All 144 shutter rays had the expected open or blocked path. The current GLB passed all twelve scenes in 4,131,984 bytes. All 984 print checks and all four volume checks passed.

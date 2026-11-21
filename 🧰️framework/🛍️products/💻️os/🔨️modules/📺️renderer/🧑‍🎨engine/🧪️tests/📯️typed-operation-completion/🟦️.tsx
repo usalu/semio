@@ -229,6 +229,13 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
     for (const row of fixture.lanes) {
       expect(commandIngressLaneForActionV1(row.actionId), row.actionId).toBe(row.lane);
     }
+    const { inspectEncodedAppCommand } = await import("../../🧱️elements/🔌️PluginRuntime/📥️invocation-frames/🟦️.ts");
+    const { encodeAppCommand } = await import("@semio-tech/framework/app-channel");
+    for (const row of fixture.addressed) {
+      const command = encodePackValue({ address: row.address, arguments: {} });
+      const event = encodeAppCommand({ Command: { seq: 9, command: Array.from(command), view_state: [] } });
+      expect(inspectEncodedAppCommand([event])).toEqual({ seq: 9, actionId: row.id, lane: row.lane });
+    }
     for (const row of fixture.stamps) {
       expect(commandIngressNeedsReplyStampV1(row.replySequences, row.seq), row.id).toBe(row.stamp);
     }

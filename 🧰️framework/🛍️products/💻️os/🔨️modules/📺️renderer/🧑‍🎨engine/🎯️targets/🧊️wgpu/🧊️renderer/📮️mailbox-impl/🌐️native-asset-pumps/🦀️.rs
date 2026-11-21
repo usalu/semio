@@ -124,7 +124,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             }
             5 => RendererAssetDecodeTurnKind::Pending,
             6 => {
-                if matches!(job.retire_payload_step(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
+                if matches!(job.retire_payload_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
                     let next = if job.cancelled.load(Ordering::Acquire) { 3 } else { 2 };
                     let _ = job.phase.compare_exchange(6, next, Ordering::AcqRel, Ordering::Acquire);
                 }
@@ -149,11 +149,32 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             handoff.reject = None;
         }
         if let Some(payload) = handoff.payload.as_mut() {
-            let _ = payload.close_step(semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 2 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 });
-            if payload.terminal_is_empty() {
-                handoff.payload = None;
+            let grant = RetainedCloneGrant {
+                maximum_items: 1,
+                maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES,
+                maximum_capacity_bytes: 0,
+                maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES,
+                maximum_depth: 3,
+            };
+            let mut wallet = semio_framework_value::AuthoringWallet::new(grant, 1);
+            let retired = wallet.run(grant, 1, |effect| payload.close_step(effect)).and_then(|turn| {
+                let Some(turn) = turn else { return Ok(false) };
+                let progress = turn.output.result?.progress();
+                wallet.post(progress)?;
+                Ok(progress.copied_items != 0)
+            });
+            match retired {
+                Ok(_) if payload.terminal_is_empty() => {
+                    handoff.payload = None;
+                    return Some(true);
+                }
+                Ok(progressed) => return Some(progressed),
+                Err(_) => {
+                    drop(slot);
+                    self.record_frame_fault("native asset handoff payload retirement failed");
+                    return Some(false);
+                }
             }
-            return Some(true);
         }
         if let Some(retryable) = handoff.reject {
             let fetch = handoff.fetch.as_mut().expect("native handoff owns its rejected request");
@@ -197,7 +218,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job_payload::RetainedJobPayload>, seal: bool, reject: Option<bool>) {
+    pub fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job::RetainedJobPayload>, seal: bool, reject: Option<bool>) {
         let mut slot = self.0.native_asset_handoff.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         assert!(slot.is_none(), "one native asset fetch is admitted at a time");
         *slot = Some(NativeAssetHandoff { fetch: Some(fetch), payload, seal, reject });

@@ -1,6 +1,6 @@
 //! 🔤️ Glyph advances from the PDF's declared font resources.
 
-use super::PdfSnapshot;
+use super::{PdfFont, PdfSnapshot};
 use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
 use semio_s_artifact_stdio_pdf_fonts::standards::v1_7::subsets::base::modules::fonts::FontCodec;
 use std::collections::HashMap;
@@ -18,10 +18,14 @@ impl<'a> FontMeasurements<'a> {
 
     pub(super) fn codec(&mut self, name: &str) -> Option<&FontCodec> {
         if !self.codecs.contains_key(name) {
-            let codec = self.snapshot.font(name).and_then(|font| FontCodec::new(font, &self.resources).ok());
+            let codec = self.snapshot.font(name).and_then(|font| self.font_codec(font));
             self.codecs.insert(name.to_owned(), codec);
         }
         self.codecs.get(name)?.as_ref()
+    }
+
+    pub(super) fn font_codec(&self, font: &PdfFont) -> Option<FontCodec> {
+        FontCodec::new(font, &self.resources).ok()
     }
 
     pub(super) fn encoded_codes(&mut self, name: &str, text: &str) -> Option<Vec<u32>> {

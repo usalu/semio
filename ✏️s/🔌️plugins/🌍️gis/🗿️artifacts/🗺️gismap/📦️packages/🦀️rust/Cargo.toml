@@ -28,7 +28,6 @@ semio-s-artifact-gis-gismap-windows = { path = "../../🏅️standards/🔖️1/
 semio-s-artifact-gis-gismap-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-gismap = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-gis2d = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
-semio-s-artifact-gis-gismap-terminology-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-demo-asset = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
@@ -58,7 +57,6 @@ semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-export = { workspace = true }

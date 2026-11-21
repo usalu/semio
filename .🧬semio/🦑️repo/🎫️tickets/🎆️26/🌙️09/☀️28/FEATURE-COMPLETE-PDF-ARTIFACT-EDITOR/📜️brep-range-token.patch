@@ -1,0 +1,11 @@
+--- a/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️mesh-io/🖼️primitive-preview/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️mesh-io/🖼️primitive-preview/🦀️.rs
+@@ -377,7 +377,7 @@
+             match face {
+                 0|1 if bore.source().is_open(face==1)=>return Some(bore.cap_triangle(face==1,self.slot)),
+                 BorePreviewSource::BORE_WALL_FACE=>return Some(bore.wall_triangle(self.slot)),
+-                7..=>return Some(bore.floor_triangle(bore.source().cap_face(true)==face,self.slot)),
++                7.. => return Some(bore.floor_triangle(bore.source().cap_face(true)==face,self.slot)),
+                 _=>{}
+             }
+         }

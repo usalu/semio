@@ -821,10 +821,13 @@ impl PdfFilePreparationCursor {
         }
     }
 
-    /// 📦️ Reports the next allocation when it reserves empty retained object slots.
-    pub fn reserving_empty_objects(&self) -> bool {
+    /// 🧵️ Quotes the next unit when it reserves empty retained slots or a fresh Flate history.
+    pub fn reserving_empty_backing(&self) -> bool {
         matches!(self.phase, PreparePhase::Bytes) && self.bytes.as_ref().is_some_and(|file|
-            matches!(file.phase, BytePhase::Project) && file.projection.as_ref().is_some_and(|graph| matches!(graph.phase, Phase::Reserve)))
+            matches!(file.phase, BytePhase::Project) && file.projection.as_ref().is_some_and(|graph|
+                matches!(graph.phase, Phase::Reserve) || matches!(graph.phase, Phase::Normal)
+                    && graph.retiring.is_none() && graph.length.is_none() && graph.length_reference.is_none() && graph.compressed_length.is_none()
+                    && graph.normal.as_ref().is_some_and(|stream| stream.next_reserves_history())))
     }
 
     fn take_bytes(&mut self, grant: CosGrant) -> PdfByteGraphReceipt {

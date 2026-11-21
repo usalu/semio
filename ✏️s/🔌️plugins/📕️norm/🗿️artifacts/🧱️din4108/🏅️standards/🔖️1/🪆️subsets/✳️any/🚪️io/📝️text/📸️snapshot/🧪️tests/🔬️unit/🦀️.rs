@@ -7,16 +7,27 @@ async fn document_dsl_round_trips() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn bundled_example_fixture_parses_and_round_trips() {
-    let text = crate::text::snapshot::encode_din4108_dsl(&Din4108Snapshot::default());
-    let document = parse_dsl(&text).expect("parse encoded default");
-    store::os_store::test_support::assert_dsl_round_trip(&document);
+async fn bundled_examples_preserve_pressure_tests_in_both_carriers() {
+    for text in [
+        include_str!("../../../../../🖼️assets/🎬️demo/🗣️.dsl.semio"),
+        include_str!("../../../../../🖼️assets/🎬️failing-thin-insulation/🗣️.dsl.semio"),
+    ] {
+        let document = parse_dsl(text).expect("parse bundled example");
+        assert_eq!(document.cases.len(), 1);
+        store::os_store::test_support::assert_dsl_round_trip(&document);
+        let packed = crate::binary::snapshot::encode_din4108_pack(&document);
+        assert_eq!(crate::binary::snapshot::decode_din4108_pack(&packed).expect("decode packed example"), document);
+    }
+}
+
+#[test]
+#[ignore = "refresh checked-in binary examples from the canonical text examples"]
+fn regenerate_bundled_binary_examples() {
     let root = fixture_path!("../../../🖼️assets");
-    let _ = std::fs::create_dir_all(root.join("🎬️demo"));
-    let _ = std::fs::create_dir_all(root.join("🎬️failing-thin-insulation"));
-    let _ = std::fs::write(root.join("🎬️demo/🗣️.dsl.semio"), &text);
-    let _ = std::fs::write(root.join("🎬️demo/🎒️.pack.semio"), crate::binary::snapshot::encode_din4108_pack(&Din4108Snapshot::default()));
-    let fail = Din4108Snapshot::failing_thin_insulation();
-    let _ = std::fs::write(root.join("🎬️failing-thin-insulation/🗣️.dsl.semio"), crate::text::snapshot::encode_din4108_dsl(&fail));
-    let _ = std::fs::write(root.join("🎬️failing-thin-insulation/🎒️.pack.semio"), crate::binary::snapshot::encode_din4108_pack(&fail));
+    for example in ["🎬️demo", "🎬️failing-thin-insulation"] {
+        let path = root.join(example);
+        let text = std::fs::read_to_string(path.join("🗣️.dsl.semio")).expect("read bundled example");
+        let document = parse_dsl(&text).expect("parse bundled example");
+        std::fs::write(path.join("🎒️.pack.semio"), crate::binary::snapshot::encode_din4108_pack(&document)).expect("write packed example");
+    }
 }

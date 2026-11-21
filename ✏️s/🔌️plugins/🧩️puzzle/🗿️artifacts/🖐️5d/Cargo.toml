@@ -222,6 +222,9 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+[workspace.dependencies.semio-s-artifact-stdio-semio-base]
+path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-semio-drawing]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust"
 

@@ -2,7 +2,7 @@ import type { OpenedArtifactV1, OpenedCheckV1, OpenedUiV1 } from "../../../../..
 import scenarios from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import pickerCases from "../../../🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🧪️tests/🧫️picker/🔣️.json" with { type: "json" };
 import windowCases from "../🧫️fixtures/🪟️windows.json" with { type: "json" };
-import { archiveBytesEqualV1, archiveWitnessV1, coldArchiveStatusV1, snapshotWitnessV1, snapshotUndoRedoObservedV1, corruptImportObservedV1, abortObservedV1, finalizationObservedV1, mediaImportObservedV1, remodelBoundEditorV1, remodelInputsV1, undoRedoObservedV1 } from "../📋️report/🟦️.ts";
+import { archiveBytesEqualV1, archiveWitnessV1, coldArchiveStatusV1, snapshotWitnessV1, snapshotUndoRedoObservedV1, corruptImportObservedV1, abortObservedV1, finalizationObservedV1, mediaImportObservedV1, meshDownloadWitnessV1, qcDownloadWitnessV1, remodelBoundEditorV1, remodelInputsV1, undoRedoObservedV1 } from "../📋️report/🟦️.ts";
 
 const editor = "s.remodel.remodeling@1/*#editor";
 const surfaceSelector = '[data-surface-app-id][data-surface-window-id]';
@@ -131,15 +131,24 @@ export async function inspectRemodelOpenedV1(context: OpenedArtifactV1, repoRoot
   try {
   const identify = async (ui: OpenedUiV1) => {
     const surfaces = (await ui.observe(surfaceSelector, attributes, false)).filter(item => item.visible && item.attributes["data-surface-app-id"] === editor && item.attributes["data-surface-role"] === "editor");
-    const populated = await ui.observe('[data-surface-app-id="s.remodel.remodeling@1/*#editor"] [data-ui-node-key]:not([aria-busy="true"]):not([data-unknown-component])', []);
-    return { surfaces, populated: populated.some(item => item.visible && item.text.trim().length > 0) };
+    return Promise.all(surfaces.map(async item => {
+      const value = (key: typeof attributes[number]) => item.attributes[key] ?? null;
+      const app = value("data-surface-app-id"), role = value("data-surface-role"), instance = value("data-surface-session-instance-id"), window = value("data-surface-window-id"), kind = value("data-surface-window-kind-id"), space = value("data-surface-space-id"), document = value("data-surface-document-id");
+      const scope = (instance && window && space === context.spaceId && document === context.documentId)
+        ? attributes.map(key => '[' + key + '="' + escape(value(key) ?? "") + '"]').join("") : null;
+      const content = scope === null ? [] : await ui.observe(scope + ' [data-ui-node-key]:not([aria-busy="true"]):not([data-unknown-component])', []);
+      const renderedText = content.some(node => node.visible && node.text.trim().length > 0);
+      const canvasSelector = scope === null ? null : scope + " canvas:visible";
+      const canvas = !renderedText && canvasSelector !== null && (await ui.observe(canvasSelector, [], false)).length === 1 ? await ui.canvas(canvasSelector) : null;
+      return { app, role, instance, window, kind, space, document, visible: item.visible, populated: renderedText || !!(canvas && canvas.visiblePixels > 0 && canvas.colors > 1), renderedText, canvas };
+    }));
   };
   context.signal.throwIfAborted();
   const [a, b] = await Promise.all([identify(context.a), identify(context.b)]);
-  const matches = (side: typeof a) => side.surfaces.every(item => item.attributes["data-surface-space-id"] === context.spaceId && item.attributes["data-surface-document-id"] === context.documentId) && remodelBoundEditorV1(side.surfaces.map(item => ({ app: item.attributes["data-surface-app-id"] ?? null, role: item.attributes["data-surface-role"] ?? null, instance: item.attributes["data-surface-session-instance-id"] ?? null, window: item.attributes["data-surface-window-id"] ?? null, kind: item.attributes["data-surface-window-kind-id"] ?? null, space: item.attributes["data-surface-space-id"] ?? null, document: item.attributes["data-surface-document-id"] ?? null, visible: item.visible, populated: true })));
+  const matches = (side: typeof a) => side.every(item => item.space === context.spaceId && item.document === context.documentId) && remodelBoundEditorV1(side);
   row("identity").evidence.push(JSON.stringify({ spaceId: context.spaceId, documentId: context.documentId, a, b }));
   if (!matches(a) || !matches(b)) { row("identity").status = "failed"; return rows; }
-  row("identity").evidence.push("Matching body scopes observed; content and artifact bytes remain unverified.");
+  row("identity").status = "passed";
   stage = "locales-and-modes";
   const modes = row(stage), settings = '[id="os.openSettings"]', language = '[id="framework.settings.language"][role="combobox"]';
   let localeModesPassed = true;
@@ -179,8 +188,8 @@ export async function inspectRemodelOpenedV1(context: OpenedArtifactV1, repoRoot
   }
   if (localeModesPassed) modes.status = "passed";
   stage = "examples";
-  const examples = row(stage);
-  for (const id of ["demo", "demo-session", "synthetic-orbit"]) {
+  const examples = row(stage), observedExamples = new Set<string>();
+  for (const { id, expected } of pickerCases.examples) {
     context.signal.throwIfAborted();
     const picker = '[id="playground.navbar.fixture"][role="combobox"]';
     if (!(await context.a.observe(picker, [])).some(item => item.visible)) { examples.status = "unsupported"; break; }
@@ -189,49 +198,40 @@ export async function inspectRemodelOpenedV1(context: OpenedArtifactV1, repoRoot
     const observed = await context.a.observe(option, []);
     if (!observed.some(item => item.visible)) { examples.status = "unsupported"; break; }
     await context.a.click(option);
-    const expected = pickerCases.examples.find(item => item.id === id)!;
     const media = '[data-slot="panel-tab-button"][id="remodeling.media"]', calibration = '[data-slot="panel-tab-button"][id="remodeling.calibration"]';
     let mediaSummary: Awaited<ReturnType<OpenedUiV1["observe"]>> = [], streamRows: Awaited<ReturnType<OpenedUiV1["observe"]>> = [], cameraRows: Awaited<ReturnType<OpenedUiV1["observe"]>> = [];
+    const streamPrefix = "remodeling-media.stream.", cameraPrefix = "remodeling-calibration.camera.";
+    const matchesIds = (rows: typeof streamRows, prefix: string, ids: readonly string[]) => {
+      const keys = rows.filter(item => item.visible).map(item => item.attributes["data-ui-node-key"]);
+      return keys.length === ids.length && ids.every(key => keys.includes(prefix + key));
+    };
+    const mediaMatches = () => {
+      const counts = mediaSummary.find(item => item.visible)?.text.match(/:\s*(\d+)\s*-\s*[^:]+:\s*(\d+)/u);
+      return counts !== undefined && counts !== null && Number(counts[1]) === expected.streamIds.length && Number(counts[2]) === expected.frames && matchesIds(streamRows, streamPrefix, expected.streamIds);
+    };
     if ((await context.a.observe(media, [], false)).some(item => item.visible)) {
       await context.a.click(media);
       const deadline = Date.now() + 30_000;
       do {
         context.signal.throwIfAborted();
         mediaSummary = await context.a.observe('[data-ui-node-key="remodeling-media.summary"]', []);
-        streamRows = await context.a.observe('[data-ui-node-key^="remodeling-media.stream."]', ["data-ui-node-key"]);
-        const counts = mediaSummary.find(item => item.visible)?.text.match(/:\s*(\d+)\s*-\s*[^:]+:\s*(\d+)/u);
-        if (counts && Number(counts[1]) === expected.expected.streamIds.length && Number(counts[2]) === expected.expected.frames && expected.expected.streamIds.every(stream => streamRows.some(item => item.attributes["data-ui-node-key"] === "remodeling-media.stream." + stream))) break;
+        streamRows = await context.a.observe('[data-ui-node-key^="' + streamPrefix + '"]', ["data-ui-node-key"]);
+        if (mediaMatches()) break;
         await new Promise(resolve => setTimeout(resolve, 500));
       } while (Date.now() < deadline);
     }
-    if ((await context.a.observe(calibration, [], false)).some(item => item.visible)) {
+    const calibrationVisible = (await context.a.observe(calibration, [], false)).some(item => item.visible);
+    if (calibrationVisible) {
       await context.a.click(calibration);
-      cameraRows = await context.a.observe('[data-ui-node-key^="remodeling-calibration.camera."]', ["data-ui-node-key"]);
+      cameraRows = await context.a.observe('[data-ui-node-key^="' + cameraPrefix + '"]', ["data-ui-node-key"]);
     }
-    examples.evidence.push(JSON.stringify({ selected: id, option: observed, picker: await context.a.observe(picker, []), expected: expected.expected, mediaSummary, streamRows, cameraRows }));
+    const matched = mediaMatches() && calibrationVisible && matchesIds(cameraRows, cameraPrefix, expected.cameraIds);
+    if (matched) observedExamples.add(id);
+    examples.evidence.push(JSON.stringify({ selected: id, option: observed, expected, mediaSummary, streamRows, cameraRows, matched }));
   }
+  if (observedExamples.size === pickerCases.examples.length) examples.status = "passed";
   const activeWindow = '[data-slot="window"][data-active="true"]:has([data-surface-app-id="' + escape(editor) + '"][data-surface-space-id="' + escape(context.spaceId) + '"][data-surface-document-id="' + escape(context.documentId) + '"])';
-  stage = "identity";
-  if (row("identity").status !== "passed") {
-    const capture = '[id="playground.navbar.modes.capture"]';
-    if ((await context.a.observe(capture, [], false)).some(item => item.visible)) {
-      await context.a.press(capture, "Enter");
-      const canvas = '[data-surface-app-id="' + escape(editor) + '"][data-surface-space-id="' + escape(context.spaceId) + '"][data-surface-document-id="' + escape(context.documentId) + '"][data-surface-window-kind-id="remodeling-frames"] canvas';
-      const deadline = Date.now() + 30_000;
-      let pixels: Awaited<ReturnType<OpenedUiV1["canvas"]>> = null;
-      while (Date.now() < deadline) {
-        context.signal.throwIfAborted();
-        const found = await context.a.observe(canvas, [], false);
-        if (found.length === 1 && found[0]!.visible) {
-          pixels = await context.a.canvas(canvas);
-          if (pixels !== null && pixels.visiblePixels > 0 && pixels.colors > 1) break;
-        }
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      row("identity").evidence.push(JSON.stringify({ frameCanvas: pixels }));
-      if (pixels !== null && pixels.visiblePixels > 0 && pixels.colors > 1) row("identity").evidence.push("A scoped canvas contains varied visible pixels; their artifact content is not yet verified.");
-    }
-  }
+  stage = "import-images";
   const unfold = async (ui: OpenedUiV1) => {
     const toggles = await ui.observe(activeWindow + ' [data-folded="true"] [id$=".engagement.toggle"]', ["id"], false);
     for (const toggle of toggles) if (toggle.visible && toggle.attributes.id) await ui.click(activeWindow + ' [id="' + escape(toggle.attributes.id) + '"]');
@@ -270,7 +270,8 @@ export async function inspectRemodelOpenedV1(context: OpenedArtifactV1, repoRoot
     const inputs = remodelInputsV1(repoRoot, assets);
     const name = inputs[0]?.split(/[\\/]/u).at(-1) ?? "";
     const invalidImport = context.locale === "de" ? `„${name}“ kann nicht importiert werden: nicht unterstützte oder beschädigte Bild- oder Videodaten.` : `Cannot import ${name}: unsupported or corrupt image or video data.`;
-    const archiveBefore = id === "import-corrupt" ? await archive(context.a) : null;
+    const checkArchive = id === "import-corrupt" || id === "import-jpeg";
+    const archiveBefore = checkArchive ? await archive(context.a) : null;
     const alertsBefore = id === "import-corrupt" ? await context.a.observe('[role="alert"],[data-semio-transient-notice]', []) : [];
     try {
       try { await context.a.chooseFiles(action, inputs); }
@@ -300,11 +301,16 @@ export async function inspectRemodelOpenedV1(context: OpenedArtifactV1, repoRoot
         await new Promise(resolve => setTimeout(resolve, 500));
         peer = await summary(context.b);
       }
-      const archiveAfter = id === "import-corrupt" ? await archive(context.a) : null;
+      const archiveAfter = checkArchive ? await archive(context.a) : null;
       const corruptUnchanged = archiveBefore !== null && archiveAfter !== null && archiveBytesEqualV1(archiveBefore.raw, archiveAfter.raw);
       target.evidence.push(JSON.stringify({ before, after, peer, beforeStreams, afterStreams, selection: assets, newAlert, corruptUnchanged, archiveBefore: archiveBefore?.sha256 ?? null, archiveAfter: archiveAfter?.sha256 ?? null }));
       if (id === "import-corrupt" && corruptImportObservedV1(newAlert, corruptUnchanged, counts(before), counts(after), counts(peer))) target.status = "passed";
-      target.evidence.push(JSON.stringify({ sharedCountsAndStream: id !== "import-jpeg" && frames > 0 && mediaImportObservedV1(counts(before), counts(after), counts(peer), frames, beforeStreams.map(item => item.attributes["data-ui-node-key"] ?? ""), afterStreams.map(item => ({ id: item.attributes["data-ui-node-key"] ?? "", text: item.text }))) }));
+      if (frames > 0) {
+        const sharedCountsAndStream = mediaImportObservedV1(counts(before), counts(after), counts(peer), frames, beforeStreams.filter(item => item.visible).map(item => item.attributes["data-ui-node-key"] ?? ""), afterStreams.filter(item => item.visible).map(item => ({ id: item.attributes["data-ui-node-key"] ?? "", text: item.text })));
+        const durableMemberAdded = archiveBefore !== null && archiveAfter !== null && archiveAfter.members > archiveBefore.members;
+        target.evidence.push(JSON.stringify({ sharedCountsAndStream, durableMemberAdded, membersBefore: archiveBefore?.members ?? null, membersAfter: archiveAfter?.members ?? null }));
+        if (sharedCountsAndStream && (id !== "import-jpeg" || durableMemberAdded)) target.status = "passed";
+      }
     } catch (error) {
       context.signal.throwIfAborted();
       target.status = "failed";
@@ -316,6 +322,29 @@ export async function inspectRemodelOpenedV1(context: OpenedArtifactV1, repoRoot
   await choose("import-corrupt", "importFrames", "import-corrupt");
   await choose("import-append", "importFrames", "import-images");
   await choose("import-video", "importVideo", "import-video");
+  stage = "import-cancel";
+  const cancellation = row(stage), cancelInput = activeWindow + ' [data-slot="window-action-pane"] [id="action.importFrames"]';
+  if (context.a.cancelFilePicker && (await context.a.observe(cancelInput, [], false)).some(item => item.visible)) {
+    try {
+      const [beforeA, beforeB] = await Promise.all([archive(context.a), archive(context.b)]);
+      try {
+        await context.a.cancelFilePicker(cancelInput);
+      } catch (error) {
+        context.signal.throwIfAborted();
+        const execute = activeWindow + ' [data-slot="window-action-pane"] [id$=".action.importFrames.execute"]';
+        if (!(await context.a.observe(execute, [], false)).some(item => item.visible)) throw error;
+        await context.a.cancelFilePicker(execute);
+      }
+      const [afterA, afterB] = await Promise.all([archive(context.a), archive(context.b)]);
+      const unchanged = beforeA !== null && beforeB !== null && afterA !== null && afterB !== null && archiveBytesEqualV1(beforeA.raw, beforeB.raw) && archiveBytesEqualV1(beforeA.raw, afterA.raw) && archiveBytesEqualV1(beforeB.raw, afterB.raw);
+      cancellation.evidence.push(JSON.stringify({ pickerCancelled: true, unchanged, before: [beforeA?.sha256 ?? null, beforeB?.sha256 ?? null], after: [afterA?.sha256 ?? null, afterB?.sha256 ?? null] }));
+      if (unchanged) cancellation.status = "passed";
+    } catch (error) {
+      context.signal.throwIfAborted();
+      cancellation.status = "failed";
+      cancellation.evidence.push(String(error).slice(0, 500));
+    }
+  }
   stage = "run-controls-and-abort";
   const run = row(stage);
   const tool = '[data-slot="panel-tab-button"][id="tool.reconstruction"]';
@@ -421,7 +450,32 @@ export async function inspectRemodelOpenedV1(context: OpenedArtifactV1, repoRoot
         const snapshotFinal = await snapshot(context.a);
         final.evidence.push(JSON.stringify({ finalized, result: finalResult, afterFinalize, peerFinal }));
         const displayedFinalization = finalizationObservedV1(beforeProducts, beforeFinalize, peerBeforeFinalize, afterFinalize, peerFinal, finalized.some(item => /finalized|übernommen/iu.test(item.text) && runIdentity(item.text) === completedId));
-        final.evidence.push(JSON.stringify({ displayedFinalization }));
+        const snapshotChanged = snapshotBefore !== null && snapshotFinal !== null && !archiveBytesEqualV1(snapshotBefore.raw, snapshotFinal.raw);
+        final.evidence.push(JSON.stringify({ displayedFinalization, snapshotChanged, before: snapshotBefore?.sha256 ?? null, after: snapshotFinal?.sha256 ?? null }));
+        if (displayedFinalization && snapshotChanged) final.status = "passed";
+        stage = "mesh-and-qc-export";
+        const exports = row(stage), actionPane = activeWindow + ' [data-slot="window-action-pane"]';
+        const meshAction = actionPane + ' [id="action.exportMediaFile"]', qcAction = actionPane + ' [id="action.exportQcReport"]';
+        try {
+          await unfold(context.a);
+          const meshVisible = (await context.a.observe(meshAction, [], false)).some(item => item.visible);
+          const qcVisible = (await context.a.observe(qcAction, [], false)).some(item => item.visible);
+          if (meshVisible && qcVisible) {
+            const mesh = await context.a.download(meshAction), qc = await context.a.download(qcAction);
+            const geometry = meshDownloadWitnessV1(mesh.name, mesh.bytes, mesh.mime), report = qcDownloadWitnessV1(qc.name, qc.bytes, qc.mime);
+            const rendered = afterFinalize?.[0]?.match(/(\d+)\s+(?:vertices|eckpunkte),\s*(\d+)\s+(?:triangles|dreiecke)/iu);
+            const matchesFinalizedMesh = final.status === "passed" && Number(rendered?.[1]) === geometry.vertices && Number(rendered?.[2]) === geometry.triangles;
+            exports.evidence.push(JSON.stringify({ geometry, report, matchesFinalizedMesh }));
+            exports.status = matchesFinalizedMesh ? "passed" : "failed";
+          } else {
+            exports.status = "unsupported";
+            exports.evidence.push(JSON.stringify({ meshVisible, qcVisible }));
+          }
+        } catch (error) {
+          context.signal.throwIfAborted();
+          exports.status = "failed";
+          exports.evidence.push(String(error).slice(0, 500));
+        }
         stage = "undo-redo";
         const history = row(stage), undo = activeWindow + ' [data-slot="window-action-pane"] [id="action.undo"]';
         if ((await context.a.observe(undo, [])).some(item => item.visible)) {
@@ -441,18 +495,6 @@ export async function inspectRemodelOpenedV1(context: OpenedArtifactV1, repoRoot
             if (displayedProductsRestored && snapshotsRestored) history.status = "passed";
           } else history.status = "unsupported";
         } else history.status = "unsupported";
-        stage = "mesh-and-qc-export";
-        const exports = row(stage), qcAction = activeWindow + ' [data-slot="window-action-pane"] [id="action.exportQcReport"]';
-        if ((await context.a.observe(qcAction, [])).some(item => item.visible)) {
-          try {
-            const file = await context.a.download(qcAction);
-            const decoded = new TextDecoder("utf-8", { fatal: true }).decode(file.bytes), qc: unknown = JSON.parse(decoded);
-            exports.evidence.push(JSON.stringify({ name: file.name, mime: file.mime, bytes: file.bytes.length, jsonObject: qc !== null && typeof qc === "object" && !Array.isArray(qc), expectedName: file.name === "remodeling-qc-report.json", expectedMime: file.mime === "application/json" }));
-          } catch (error) {
-            context.signal.throwIfAborted();
-            exports.evidence.push("QC download unavailable: " + String(error).slice(0, 500));
-          }
-        } else exports.evidence.push("QC action not observed");
       }
     }
   }

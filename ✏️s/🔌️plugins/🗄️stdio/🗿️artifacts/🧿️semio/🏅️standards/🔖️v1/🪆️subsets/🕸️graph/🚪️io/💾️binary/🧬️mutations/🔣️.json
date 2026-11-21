@@ -10,10 +10,12 @@
     },
     "tag": {
       "type": "integer",
-      "description": "variant ordinal, 0-10"
+      "description": "Declared record tag encoded as a canonical unsigned varint.",
+      "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19]
     },
     "payload": {
       "type": "string",
+      "description": "Typed Pack wire value of the selected variant.",
       "contentEncoding": "hex"
     }
   }

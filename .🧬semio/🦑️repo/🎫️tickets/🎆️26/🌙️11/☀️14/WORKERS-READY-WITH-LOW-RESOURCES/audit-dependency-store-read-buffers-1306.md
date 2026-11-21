@@ -1,0 +1,9 @@
+# Immutable dependency input read buffers
+
+The m01 worker reported live immutable Store replay progress before advancing to dependency collection. It supplies a real instance of this bootstrap path. Capture and replay each allocated one 65,536-byte scratch buffer inside every input's descriptor callback. Reads are sequential because the directory and file visitors await each callback before moving to the next input.
+
+Capture and verification now keep one buffer per active traversal. The native descriptor checks, hash state per input, exact byte and terminal probes, work accounting and progress fences still run on every input. Independent traversals hold their own buffers.
+
+The neutral fixture observed two distinct buffers per traversal for its two-file short-read case before the change and one afterward. It also exercises zero-byte files and 874-file rosters for both a 3,328,255-byte working set and an all-empty set. With 874 files, the old path requests 57,278,464 scratch bytes across a traversal and the new path requests 65,536. These are allocation totals derived from the code and identity regression. They are not a peak process footprint measurement. Independently computed SQLite work counts remain exact. The native ancestry tests verify same-volume directory custody and refusal of hash and named identity drift after successful capture.
+
+The corrected targeted run passed 18 tests and 210 assertions. The first broad direct launcher omitted the fixture artifact root. A second run established that a separate endpoint suite requires the process envelope of its configured parent and that the default five-second deadline was too short for one ancestry fixture on the loaded host. The final targeted run supplied the existing ticket artifact root and a 30-second test deadline. The separate endpoint suite is outside the 18-test result.

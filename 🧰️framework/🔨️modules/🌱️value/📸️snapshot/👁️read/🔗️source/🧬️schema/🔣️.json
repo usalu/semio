@@ -1,9 +1,12 @@
 {
  "$schema":"http://json-schema.org/draft-07/schema#","title":"Original Snapshot Source Laws","type":"object","additionalProperties":false,
- "required":["contract","cases","refusedCurrencies","maximumTurns"],
+ "required":["contract","cases","refusedCurrencies","maximumTurns","captureWork","retirement"],
  "properties":{
   "contract":{"const":"semio.original.snapshot-source/v1"},"maximumTurns":{"type":"integer","minimum":1},
   "refusedCurrencies":{"const":["items","copy","capacity","release","depth"]},
+  "captureWork":{"type":"object"},
+  "retirement":{"type":"object","additionalProperties":false,"required":["shared","last"],"properties":{"shared":{"$ref":"#/definitions/retirement"},"last":{"$ref":"#/definitions/retirement"}}},
   "cases":{"type":"array","minItems":4,"items":{"type":"object","additionalProperties":false,"required":["id","bytes","expected","registryHeld","projectionHeld"],"properties":{"id":{"type":"string"},"bytes":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},"expected":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}},"registryHeld":{"type":"boolean"},"projectionHeld":{"type":"boolean"}}}}
- }
+ },
+ "definitions":{"retirement":{"type":"object","additionalProperties":false,"required":["arcRootAdmission","extraDepth","returnedReadSurvives","complete"],"properties":{"arcRootAdmission":{"type":"boolean"},"extraDepth":{"type":"integer","minimum":0},"returnedReadSurvives":{"type":"boolean"},"complete":{"type":"boolean"}}}}
 }

@@ -1,0 +1,6 @@
+{
+  "files": {"index.html": "64656d6f", "space asset.wasm": "0061736d", "🌐️.js": "62726f77736572"},
+  "expectedCount": 3,
+  "expectedBytes": 15,
+  "mutatedIndex": "65646974"
+}

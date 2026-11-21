@@ -27,6 +27,11 @@ fn every_registered_example_builds_its_document() {
         let parsed = parse_dsl(text).unwrap_or_else(|error| panic!("{} example DSL parses: {error}", source.id()));
         let built: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&source.document_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{} document decodes: {error:?}", source.id()));
         assert!(built == parsed, "{} document equals its authored DSL", source.id());
+        if let Some(handle) = &built.kind_catalogs {
+            use crate::standards::v1::subsets::any::schema::kind_catalogs::{kind_catalogs_child_handle, kind_catalogs_of};
+            let catalogs = kind_catalogs_of(&built.kind_catalogs, &built.kind_catalogs_extra).expect("authored catalog");
+            assert_eq!(*handle, kind_catalogs_child_handle(&catalogs), "{} catalog handle matches its authored kit types", source.id());
+        }
         semio_os_kernel::os_store::test_support::assert_dsl_round_trip(&built);
         semio_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&built);
     }

@@ -1,0 +1,42 @@
+{
+  "clockSweep": 160,
+  "candidate": 31,
+  "states": [
+    {
+      "phase": "empty",
+      "candidate": false,
+      "child": false,
+      "ready": false
+    },
+    {
+      "phase": "empty",
+      "candidate": true,
+      "child": false,
+      "ready": false
+    },
+    {
+      "phase": "empty",
+      "candidate": true,
+      "child": true,
+      "ready": true
+    },
+    {
+      "phase": "effectFinished",
+      "candidate": true,
+      "child": false,
+      "ready": false
+    },
+    {
+      "phase": "receiptStarted",
+      "candidate": true,
+      "child": false,
+      "ready": false
+    },
+    {
+      "phase": "settled",
+      "candidate": true,
+      "child": true,
+      "ready": false
+    }
+  ]
+}

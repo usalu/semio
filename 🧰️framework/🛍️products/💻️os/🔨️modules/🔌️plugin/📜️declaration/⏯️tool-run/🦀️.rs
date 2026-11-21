@@ -41,13 +41,9 @@ pub type ToolRunJob = Box<dyn semio_framework_job::InteractiveJob + Send>;
 
 /// 🔑️ The trace key allocator every job of one run shares: keys handed out lie above every key the run's
 /// ticks have upserted and every key allocated before.
-#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
+#[derive(Debug, Default, semio_framework_value::RetireOwned)]
 pub struct ToolRunTraceKeys {
-    next: SharedOriginalStorage<std::sync::atomic::AtomicU64>,
-}
-
-impl Default for ToolRunTraceKeys {
-    fn default() -> Self { Self { next: SharedOriginalStorage::from_cold(std::sync::atomic::AtomicU64::new(0)) } }
+    next: std::sync::atomic::AtomicU64,
 }
 
 impl ToolRunTraceKeys {

@@ -15,5 +15,5 @@ pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let rendered = semio_os::rasterize_svg_to_png_base64(svg, 0, 0)?;
     let raw = semio_framework_io_base64::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
     let image = crate::semio_image_from_png_bytes(&raw)?;
-    crate::raster_document_from_semio_image(&image, "svg-import", "Imported svg")
+    crate::raster_document_from_semio_image(image, "svg-import", "Imported svg")
 }

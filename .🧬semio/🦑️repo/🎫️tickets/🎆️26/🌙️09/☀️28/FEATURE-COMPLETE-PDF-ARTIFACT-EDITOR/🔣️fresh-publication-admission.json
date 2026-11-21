@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "releaseDirectoryGateAfterMilliseconds": 5500,
+  "beforeDeadlineMilliseconds": 20000,
+  "collisionMaximumMilliseconds": 1500,
+  "expected": {
+    "file": "component.wasm",
+    "owner": "component-test",
+    "text": "native compiler output witness\n"
+  }
+}

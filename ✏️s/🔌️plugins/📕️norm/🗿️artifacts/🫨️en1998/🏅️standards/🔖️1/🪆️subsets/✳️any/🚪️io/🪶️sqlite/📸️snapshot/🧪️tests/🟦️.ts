@@ -2,6 +2,7 @@ import{expect,test}from"bun:test";
 import{semioSchemaAjvV1}from"@semio-tech/framework/schema/oracles/validator";
 import{ownIeee754Fixture,countIeee754FixtureScalars}from"@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 import fixture from"./🧫️fixtures/🔣️.json";
+import designCases from "./🧫️fixtures/📋️design-cases.json";
 import coverage from"./🧫️fixtures/📐️coverage.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
@@ -62,11 +63,28 @@ test("EN1998 diff records retain the neutral empty delta and authored record rol
  }
 });
 
-test("EN1998 complete scalar coverage follows the canonical schema",()=>{expect(countIeee754FixtureScalars(fixture,schema)).toBe(coverage.scalarWords);expect(coverage.scalarTables.length+1).toBe(coverage.tableCount)});
+test("EN1998 complete scalar coverage follows the canonical schema",()=>{expect(countIeee754FixtureScalars(fixture,schema)).toBe(coverage.scalarWords);expect(coverage.scalarTables.length+coverage.nonScalarTables.length).toBe(coverage.tableCount)});
 test("EN1998 closed annex and member choices are enforced at both SQLite boundaries",async()=>{
  const validate=semioSchemaAjvV1({strict:true}).compile(schema);
  for(const annex of coverage.invalidAnnex){expect(validate({...fixture,annex})).toBe(false);await expect(en1998SnapshotToSqliteDatabase({...ownedFixture(),annex} as never)).rejects.toThrow()}
  for(const role of coverage.invalidMemberKind){const input=ownedFixture(),wire=structuredClone(fixture);Object.assign(input.buildings[0]!.members[0]!,{role});Object.assign(wire.buildings[0]!.members[0]!,{role});expect(validate(wire)).toBe(false);await expect(en1998SnapshotToSqliteDatabase(input)).rejects.toThrow()}
  const bytes=await exportSqliteDatabase(await en1998SnapshotToSqliteDatabase(ownedFixture()));
  for(const[table,column,values]of[["document","annex",coverage.invalidAnnex],["member","role",coverage.invalidMemberKind]]as const)for(const value of values){const db=Database.deserialize(bytes);try{db.run("PRAGMA ignore_check_constraints=ON");db.run("UPDATE en1998_"+table+" SET "+column+"=?",[value]);await expect(en1998SnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(db.serialize())))).rejects.toThrow()}finally{db.close()}}
+});
+
+test("EN1998 project design cases round-trip through the canonical archive", async () => {
+ const authored = {...fixture,cases:designCases};
+ const check = semioSchemaAjvV1({strict:true}).compile(schema);
+ expect(check(authored),JSON.stringify(check.errors)).toBe(true);
+ const expected = ownIeee754Fixture(authored,schema) as En1998SqliteSnapshot;
+ const bytes = await exportSqliteDatabase(await en1998SnapshotToSqliteDatabase(expected));
+ expect(await en1998SnapshotFromSqliteDatabase(await importSqliteDatabase(bytes))).toEqual(expected);
+ const db = Database.deserialize(bytes);
+ try {
+  expect(db.query("SELECT entry_id FROM en1998_case ORDER BY ordinal").all()).toEqual([
+   {entry_id:"C98-11"},{entry_id:"C98-12"},
+  ]);
+  expect(db.query("SELECT count(*) AS count FROM en1998_case_number").get()).toEqual({count:14});
+  expect(db.query("SELECT count(*) AS count FROM en1998_case_text").get()).toEqual({count:2});
+ } finally { db.close(); }
 });

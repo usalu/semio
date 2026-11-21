@@ -55,6 +55,7 @@ semio_ui_locale::app_labels! {
         duplicate_layer: native_en "Duplicate Layer", native_de "Ebene duplizieren", reuse_en "Duplicate Layer", reuse_de "Ebene duplizieren";
         delete_layer: native_en "Delete Layer", native_de "Ebene löschen", reuse_en "Delete Layer", reuse_de "Ebene löschen";
         merge_down: native_en "Merge Down", native_de "Nach unten vereinen", reuse_en "Merge Down", reuse_de "Nach unten vereinen";
+        import_png: native_en "Import PNG", native_de "PNG importieren", reuse_en "Import PNG", reuse_de "PNG importieren";
         export_png: native_en "Export PNG", native_de "PNG exportieren", reuse_en "Export PNG", reuse_de "PNG exportieren";
         flatten_image: native_en "Flatten Image", native_de "Bild reduzieren", reuse_en "Flatten Image", reuse_de "Bild reduzieren";
         flattened_image: native_en "Flattened Image", native_de "Reduziertes Bild", reuse_en "Flattened Image", reuse_de "Reduziertes Bild";

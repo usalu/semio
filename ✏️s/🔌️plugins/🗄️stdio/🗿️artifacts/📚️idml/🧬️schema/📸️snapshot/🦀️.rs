@@ -1,4 +1,5 @@
 //! 📸️ Native IDML persisted snapshot with strict package admission.
+use semio_framework_schema_composition::{ArtifactCompositionFields, ChildRefVisitor};
 use semio_framework_value::{DslValue, FromValue, ValueError, ValueRefusalKind, NativeDecodeControl};
 use crate::schema::{IdmlPart, PackageWire};
 
@@ -8,6 +9,12 @@ use crate::schema::{IdmlPart, PackageWire};
 pub struct IdmlSnapshot {
     pub dom_version: String,
     pub parts: Vec<IdmlPart>,
+}
+
+impl ArtifactCompositionFields for IdmlSnapshot {
+    fn visit_child_refs<'a, V: ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
+        Ok(())
+    }
 }
 
 impl IdmlSnapshot {

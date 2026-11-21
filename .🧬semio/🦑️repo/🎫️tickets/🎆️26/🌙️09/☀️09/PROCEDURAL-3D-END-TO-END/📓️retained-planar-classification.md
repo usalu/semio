@@ -1,0 +1,5 @@
+# Retained Planar Solid Classify
+
+The original Classify route now handles closed, bounded native solids with planar convex face rings and straight authored trims. It verifies reciprocal edges, uses world distance to planes and segments for the contact tolerance, and computes signed material membership from the outward and inward shell orientations. The query quotes the original arena paths for its bounded read. Curved trims, face holes, larger rosters and uncertified incidence keep the typed refusal.
+
+Focused Rust passes the real classifier over the generated native BRep rings for the skew cut and enclosed cavity, including a deliberately broken coedge. The fixture probes solid material, voids, exact boundaries, and Euclidean contact near a corner. Manifold ray crossings and Three.js closest-triangle distances independently verified all 11 classification probes. The preserved original Boolean suite and renderer preview checks remain on their separate targets. Full linked Flow execution is open. [Sewn recess](📓️retained-skew-box-recess.md)

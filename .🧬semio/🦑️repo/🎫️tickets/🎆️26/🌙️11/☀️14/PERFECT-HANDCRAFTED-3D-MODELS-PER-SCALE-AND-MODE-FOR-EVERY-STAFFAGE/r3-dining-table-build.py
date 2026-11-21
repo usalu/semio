@@ -30,6 +30,8 @@ def candidate():
         solids = getattr(body, "body" + scale)()
         asset["volumes"][scale] = {"status": "authored", "denominator": int(scale), "body": solids, "thermal": lists.thermal(scale, solids), "structure": lists.structure(scale, solids), "decisions": lists.decisions(scale)}
     draw.apply(asset)
+    from runpy import run_path
+    run_path(os.path.join(HERE, "digital-leaf.py"))["author"](asset)
     return document
 
 

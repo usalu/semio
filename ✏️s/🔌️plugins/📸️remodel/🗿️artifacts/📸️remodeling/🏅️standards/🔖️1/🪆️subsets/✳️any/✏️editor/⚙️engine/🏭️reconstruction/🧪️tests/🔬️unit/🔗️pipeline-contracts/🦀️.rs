@@ -240,7 +240,7 @@ mod long {
 #[test]
 fn maximum_image_and_malformed_admission_steps_stay_below_hard_ceiling_in_each_build_profile() {
     fn accepted_frame(index: u32, width: usize, height: usize, bytes: usize) -> AcceptedFrame {
-        AcceptedFrame { index, image: remodeling_image::ImageRgba8 { width: width as u32, height: height as u32, data: vec![0; bytes] }, timestamp_ms: index as f64, stream_id: 0, sharpness: 1.0 }
+        AcceptedFrame { index, image: remodeling_image::ImageRgba8 { width: width as u32, height: height as u32, data: vec![0; bytes] }, timestamp_ms: index as f64, capture: FrameCapture::default(), sharpness: 1.0 }
     }
 
     let mut maximum = ReconstructionEngine::new(&EngineParams::default());
@@ -277,7 +277,7 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
             let value = ((index * 131) ^ (index / width * 197)) as u8;
             pixels[index * 4..index * 4 + 4].copy_from_slice(&[value, 255 - value, value.rotate_left(3), 255]);
         }
-        engine.frames.push(AcceptedFrame { index: 0, image: remodeling_image::ImageRgba8 { width: width as u32, height: height as u32, data: pixels }, timestamp_ms: 0.0, stream_id: 0, sharpness: 1.0 });
+        engine.frames.push(AcceptedFrame { index: 0, image: remodeling_image::ImageRgba8 { width: width as u32, height: height as u32, data: pixels }, timestamp_ms: 0.0, capture: FrameCapture::default(), sharpness: 1.0 });
         while engine.cursor == 0 {
             let phase = engine.feature_preparation.as_ref().map(|preparation| format!("{:?} {}", preparation.phase, preparation.detection.as_ref().map_or(String::new(), |detection| detection.phase_label())));
             let started = std::time::Instant::now();

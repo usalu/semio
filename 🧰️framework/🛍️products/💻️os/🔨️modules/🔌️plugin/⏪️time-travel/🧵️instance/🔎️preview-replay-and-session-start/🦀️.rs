@@ -13,13 +13,22 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🖼️ The editing preview on the store the session edits: the state before `target` with the accepted upstream
     /// drafts, then `replacement` folded exactly as the store's replay folds it; the draft's own messages stay on the
     /// editor.
-    pub(super) async fn show_time_travel_preview(&mut self, target: &MutationId, replacement: &protocol::InputReplacement) -> Result<(), Fault> {
+    pub(super) async fn show_time_travel_preview(&mut self, target: MutationId, replacement: protocol::InputReplacement) -> Result<(), Fault> {
         let drafts = self.time_travel.accepted_drafts();
         let deadline_us = self.shared().time_travel_turn_deadline();
-        let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::Preview { target: target.clone(), replacement: replacement.clone(), drafts, deadline_us, clock: self.time_travel.turn_clock },None).await? else {
-            return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.preview-mismatch"), "a history-edit preview answered another command"));
-        };
-        self.adopt_time_travel_preview_step(step,None).await
+        let command = TimeTravelStoreCommand::Preview { target, replacement, drafts, deadline_us, clock: self.time_travel.turn_clock };
+        match self.time_travel_run(command, None).await? {
+            TimeTravelStoreOutput::Previewed(step) => {
+                self.time_travel.preview_due = false;
+                self.adopt_time_travel_preview_step(step, None).await
+            }
+            TimeTravelStoreOutput::PreviewDeferred => {
+                self.time_travel.preview_due = true;
+                self.note_time_travel_changed(false, false);
+                Ok(())
+            }
+            _ => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.preview-mismatch"), "a history-edit preview answered another command")),
+        }
     }
 
     pub(super)  async fn adopt_time_travel_preview_step(&mut self, step: TimeTravelPreviewStep,grant:Option<RetainedCloneGrant>) -> Result<(), Fault> {

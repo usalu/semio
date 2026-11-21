@@ -84,6 +84,23 @@ fn section_text_chunks(payload: &str) -> UiAssemblyResult<Vec<BuiltNode>> {
     Ok(chunks)
 }
 
+/// 🪪️ Names one complete publication of a semantic input value.
+pub fn input_value_body_key(value: &str) -> String {
+    format!("framework.input.value.{}.{}", value.len(), semio_ui_scene::scene_lane_hash(value))
+}
+
+/// 📏️ Upper bound on the record count of an owned carrier, including its root.
+pub fn paged_text_carrier_nodes(payload: &str) -> usize {
+    let width = (UI_TEXT_MAX_BYTES - 3) * (1 + UI_FIXED_LIST_ITEMS);
+    let mut pages = payload.len().div_ceil(width).max(1);
+    let mut nodes = 1 + pages;
+    while pages > UI_BUILT_CHILDREN_MAX {
+        pages = pages.div_ceil(UI_BUILT_CHILDREN_MAX);
+        nodes += pages;
+    }
+    nodes
+}
+
 /// 🧩️ Builds ONE paged text carrier: a root container keyed by `root_key`, over a balanced
 /// `UI_BUILT_CHILDREN_MAX`-ary tree of packed text leaves whose depth-first concatenation is
 /// `payload`.
@@ -118,6 +135,73 @@ pub fn paged_text_carrier(root_key: &str, payload: &str) -> UiAssemblyResult<Bui
         generation += 1;
     }
     column().try_id(root_key).map_err(|_| ui_assembly_error("section-root-id"))?.try_children(level).map_err(|_| ui_assembly_error("section-root"))?.try_build().map_err(|_| ui_assembly_error("section-root-build"))
+}
+
+/// 🖼️ Builds an accessible image with an inline or retained source URI.
+pub fn image_with_source(id: &str, source: &str, alt: Label) -> UiAssemblyResult<BuiltNode> {
+    if let Some(src) = UiText::try_from_str(source) {
+        return image(src).alt(alt).try_id(id).map_err(|_| ui_assembly_error("image.id"))?
+            .try_build().map_err(|_| ui_assembly_error("image.build"));
+    }
+    let key = format!("framework.ui.image.source.{}", semio_ui_scene::scene_lane_hash(source));
+    image_with_retained_source(id, &key, source, alt)
+}
+
+fn image_with_retained_source(id: &str, key: &str, source: &str, alt: Label) -> UiAssemblyResult<BuiltNode> {
+    let src = UiText::try_from_str(key).ok_or_else(|| ui_assembly_error("image.source-key"))?;
+    let bytes = u32::try_from(source.len()).map_err(|_| ui_assembly_error("image.source-size"))?;
+    let carrier = paged_text_carrier(key, source)?;
+    image(src).alt(alt).try_id(id).map_err(|_| ui_assembly_error("image.id"))?
+        .try_source_body(bytes, carrier).map_err(|_| ui_assembly_error("image.source-body"))?
+        .try_build().map_err(|_| ui_assembly_error("image.build"))
+}
+
+/// 🪟️ Addresses resource requests to the rendered body without changing the visible form page.
+pub struct WindowResourceRequests<'a> {
+    pub window_id: &'a str,
+    pub body_key: &'a str,
+    pub requests: &'a [semio_framework::TreeWindowRequest],
+}
+
+impl WindowResourceRequests<'_> {
+    fn paged(source: &str, inline_carrier_nodes: usize) -> bool {
+        source.starts_with("data:image/") && source.len() <= window_resource::WINDOW_RESOURCE_MAX_BYTES
+            && paged_text_carrier_nodes(source) > inline_carrier_nodes
+    }
+
+    /// 📏️ Bounds the retained nodes owned by this image's pending page.
+    pub fn image_body_nodes(source: &str) -> usize {
+        Self::image_body_nodes_up_to(source, TREE_WINDOW_BODY_NODE_BUDGET - 3)
+    }
+
+    /// 📐️ Prices the retained carrier with the caller's stable inline-node allowance.
+    pub fn image_body_nodes_up_to(source: &str, inline_carrier_nodes: usize) -> usize {
+        if UiText::try_from_str(source).is_some() { return 0; }
+        if !Self::paged(source, inline_carrier_nodes) { return paged_text_carrier_nodes(source); }
+        Self::image_page_nodes()
+    }
+
+    /// 📄️ Maximum carrier records belonging to one exact resource page.
+    pub fn image_page_nodes() -> usize {
+        let leaf_width = (UI_TEXT_MAX_BYTES - 3) * (1 + UI_FIXED_LIST_ITEMS);
+        1 + (window_resource::WINDOW_RESOURCE_PAGE_BYTES + 3).div_ceil(leaf_width)
+    }
+
+    /// 🖼️ Publishes an exact revision-bound image page for the requested window.
+    pub fn image(&self, id: &str, source: &str, alt: Label) -> UiAssemblyResult<BuiltNode> {
+        self.image_up_to(id, source, alt, TREE_WINDOW_BODY_NODE_BUDGET - 3)
+    }
+
+    /// 🎞️ Chooses the inline carrier or a resource page using a stable caller allowance.
+    pub fn image_up_to(&self, id: &str, source: &str, alt: Label, inline_carrier_nodes: usize) -> UiAssemblyResult<BuiltNode> {
+        if !Self::paged(source, inline_carrier_nodes) { return image_with_source(id, source, alt); }
+        let resource = window_resource::WindowResource::new(self.window_id, id, source).ok_or_else(|| ui_assembly_error("image.source-size"))?;
+        let key = resource.request_key();
+        let index = self.requests.iter().find(|request| request.body_key == self.body_key && request.node_key == key && request.open.is_none() && request.rows == 1)
+            .map_or(1, |request| request.offset.clamp(1, resource.pages()));
+        let page = window_resource::WindowResourcePage { resource, index };
+        image_with_retained_source(id, &page.key(), page.text(source).ok_or_else(|| ui_assembly_error("image.source-page"))?, alt)
+    }
 }
 
 /// 🧩️ Builds one reserved refresh section's retained surface tree — [`paged_text_carrier`] rooted

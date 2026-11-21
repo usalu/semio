@@ -3,7 +3,7 @@ import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{profilePhaseV1}from"../../../⏱️profile/🟨️.mjs";
 import{canonicalJsonV1}from"../🧮️fact-codec/🟨️.mjs";
-import{P,fail,isObject,requireCount,requireHex,requireKeys,requireText,sha256}from"../🧱️guards/🟨️.mjs";
+import{P,aborted,fail,isObject,requireCount,requireHex,requireKeys,requireText,sha256}from"../🧱️guards/🟨️.mjs";
 import{createRowLogV1}from"../🗃️row-log/🟨️.mjs";
 import{readGenerationManifestV1}from"../📖️documents/🟨️.mjs";
 
@@ -19,9 +19,10 @@ export const buildJournalKeyV1=input=>createHash("sha256").update(canonicalJsonV
  */
 export function readBuildJournalV1(bytes){
  const value=JSON.parse(Buffer.from(bytes).toString("utf8"));
- requireKeys(value,["version","key","state","parent","generation","identity","implementation","steps"],["names","done","owners","dropped","returned","derived","rows","manifest","env"],"build journal");
+ requireKeys(value,["version","key","state","parent","generation","identity","implementation","steps"],["repair","names","done","owners","dropped","returned","derived","rows","manifest","env"],"build journal");
  if(value.version!==BUILD_JOURNAL_V1.version)throw fail("Build journal version 1 required");
  requireHex(value.key,"key");if(value.parent!==null)requireHex(value.parent,"parent");requireCount(value.generation,"generation");
+ if(value.repair!==undefined){requireKeys(value.repair,["parent","receipt"],[],"journal repair");requireHex(value.repair.parent,"repair parent");requireHex(value.repair.receipt,"repair receipt");}
  for(const key of["identity","implementation"])requireHex(value[key],key);
  if(!["waves","sealed"].includes(value.state))throw fail("Closed build journal state required");
  if(!Array.isArray(value.steps)||value.steps.length>16)throw fail("Bounded step marker list required");
@@ -69,7 +70,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
  const load=async key=>{const bytes=await fs.read(path(key));if(!bytes)return undefined;try{const header=readBuildJournalV1(bytes);return header.key===key?header:undefined;}catch{await fs.remove(path(key));return undefined;}};
  const clear=async key=>{for(const name of await fs.names(directory))if(name.startsWith(key))await fs.remove(join(directory,name));};
  const rowsOf=async list=>{if(Array.isArray(list))return list;const rows=[];for await(const batch of list.batches())rows.push(...batch);return rows;};
- const header=({key,current,identity,implementation,steps})=>({version:BUILD_JOURNAL_V1.version,key,parent:current?.pointer.manifest??null,generation:(current?.pointer.generation??-1)+1,identity,implementation,steps});
+ const header=({key,current,repair,identity,implementation,steps})=>({version:BUILD_JOURNAL_V1.version,key,parent:current?.pointer.manifest??null,generation:(current?.pointer.generation??-1)+1,...repair?{repair}:{},identity,implementation,steps});
  const save=header=>fs.write(path(header.key),Buffer.from(canonicalJsonV1(header)));
  const filesHold=async manifest=>{
   const[fragments,indexes,frontiers]=(await Promise.all([fs.names(join(root,P.fragments)),fs.names(join(root,P.indexes)),fs.names(join(root,P.frontiers))])).map(list=>new Set(list));
@@ -78,28 +79,31 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
  return Object.freeze({
   clear,
   sealed:input=>save({...header(input),state:"sealed",manifest:input.manifest,derived:input.derived}),
-  async wave({key,current,identity,implementation,carry,steps,upserts,append,owners,env}){
+  async wave({key,current,repair,identity,implementation,carry,steps,upserts,append,owners,env}){
    const entries=[];
    for(const[name,list]of upserts)if(name!==P.envOwner)entries.push({name,mode:"u",rows:await rowsOf(list)});
    for(const[name,list]of append)entries.push({name,mode:"a",rows:await rowsOf(list)});
    const bytes=encodeJournalRowsV1(entries),file=key+"."+carry.waves+".rows";
    await fs.write(join(directory,file),bytes);carry.files.push({file,sha256:sha256(bytes),bytes:bytes.length});
-   await save({...header({key,current,identity,implementation,steps}),state:"waves",names:carry.names,done:carry.done,owners,dropped:[...carry.dropped],returned:[...carry.returned],derived:[...carry.derived],rows:carry.files,env});
+   await save({...header({key,current,repair,identity,implementation,steps}),state:"waves",names:carry.names,done:carry.done,owners,dropped:[...carry.dropped],returned:[...carry.returned],derived:[...carry.derived],rows:carry.files,env});
   },
-  async resume({key,current,identity,implementation,found,signal,claim}){
+  async resume({key,current,repair,identity,implementation,found,signal,claim,qualify,verify}){
    const saved=await load(key),generation=(current?.pointer.generation??-1)+1;
    if(!saved)return undefined;
-   if(saved.parent!==(current?.pointer.manifest??null)||saved.generation!==generation||saved.identity!==identity||saved.state==="sealed"&&saved.implementation!==implementation){await clear(key);return undefined;}
+   if(saved.parent!==(current?.pointer.manifest??null)||saved.generation!==generation||saved.identity!==identity||(repair||saved.state==="sealed")&&saved.implementation!==implementation||saved.repair?.receipt!==repair?.receipt||saved.repair?.parent!==repair?.parent){await clear(key);return undefined;}
    if(saved.state==="sealed"){
     const bytes=await fs.read(manifestPath(saved.manifest));
     let manifest;try{manifest=bytes&&sha256(bytes)===saved.manifest?readGenerationManifestV1(bytes):undefined;}catch{manifest=undefined;}
-    if(!manifest||!await filesHold(manifest)){await clear(key);return undefined;}
-    const outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest:saved.manifest,expectedGeneration:generation-1,signal,claim}));
-    if(!outcome.published){await clear(key);return undefined;}
+    if(!manifest||manifest.generation!==generation||manifest.parent!==saved.parent||manifest.identity!==identity||manifest.implementation!==implementation||!await filesHold(manifest)){await clear(key);return undefined;}
+    if(verify&&!await verify(manifest)){await clear(key);return undefined;}
+    try{await qualify?.(manifest,signal);}catch(error){aborted(signal);await clear(key);throw error;}
+    const outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest:saved.manifest,expectedGeneration:generation-1,...repair?{expectedManifest:null,expectedRepairParent:repair.parent}:{},signal,claim}));
+    if(!outcome.published){await clear(key);return repair?{superseded:true}:undefined;}
     await profilePhaseV1("graph.build.indexed",()=>settler.markIndexed({held:found.refresh,dropped:[...(saved.derived??[])]}).catch(()=>undefined));
     await clear(key);say?.("resumed",{generation,owners:Object.keys(manifest.owners).length});await stepped?.("sealing");
     return{result:{current:{pointer:outcome.pointer,manifest},built:true,published:true,plan:found,computed:0,resumed:true}};
    }
+   if(repair){await clear(key);return undefined;}
    const present=new Set(await fs.names(join(root,P.fragments)));
    if(Object.values(saved.owners).some(owner=>!present.has(owner.fragment+".json.br"))){await clear(key);return undefined;}
    const log=createRowLogV1({path:join(tmpdir(),"semio-row-logs","resume-"+key.slice(0,16)+"-"+process.pid+".rows")}),upserts=new Map(),append=new Map();

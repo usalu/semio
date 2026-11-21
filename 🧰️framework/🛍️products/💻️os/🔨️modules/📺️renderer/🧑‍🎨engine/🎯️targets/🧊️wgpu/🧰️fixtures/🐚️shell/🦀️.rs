@@ -135,7 +135,7 @@ pub fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefi
         named_layouts: vec![],
         default_layout: None,
         terminologies: vec!["de".into()],
-        terminology_breadcrumbs: HashMap::new(),
+        terminology_breadcrumbs: Default::default(),
         introduction: None,
         tutorials: Vec::new(),
         dialogs: Vec::new(),
@@ -280,9 +280,9 @@ pub fn retained_world_sequence_probe(scenario: &str) {
     let input = paint_tree_pointer_documents(&mut shell, &paint_rows);
     let mut rows = Vec::new();
     for (window, surface, bounds) in row_sources {
-        let host_id = shell.surfaces.world3d_states.iter().find_map(|(host_id, state)| (state.surface_id == surface).then(|| host_id.clone())).expect("painted world admits one exact runtime host");
+        let host_id = shell.surfaces.world3d_states.iter().find_map(|(host_id, state)| (state.session.surface_id == surface).then(|| host_id.clone())).expect("painted world admits one exact runtime host");
         let state = shell.surfaces.world3d_states.get_mut(&host_id).expect("painted world retains its exact runtime interaction owner");
-        assert_eq!(state.surface_id, surface, "runtime host preserves the document wire surface");
+        assert_eq!(state.session.surface_id, surface, "runtime host preserves the document wire surface");
         let before = infinite_world::world::enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_leave(-1.0, -1.0)).unwrap();
         rows.push((window, surface, host_id, bounds, before));
     }
@@ -513,7 +513,7 @@ pub fn boot_app(app_id: &str) -> AppDefinition {
         named_layouts: vec![],
         default_layout: None,
         terminologies: vec![],
-        terminology_breadcrumbs: HashMap::new(),
+        terminology_breadcrumbs: Default::default(),
         introduction: None,
         tutorials: Vec::new(),
         dialogs: Vec::new(),
@@ -583,7 +583,7 @@ pub fn tour_app(introduction: Option<semio_framework::onboarding::IntroductionDe
         named_layouts: vec![],
         default_layout: None,
         terminologies: vec!["de".into()],
-        terminology_breadcrumbs: HashMap::new(),
+        terminology_breadcrumbs: Default::default(),
         introduction,
         tutorials: Vec::new(),
         dialogs: Vec::new(),

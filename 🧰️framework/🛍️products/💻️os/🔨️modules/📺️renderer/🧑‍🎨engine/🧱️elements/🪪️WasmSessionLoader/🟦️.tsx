@@ -198,6 +198,7 @@ export async function createRasterSession(): Promise<RasterWasmSession> {
 //#region MapSession
 export type MapWasmSession = {
   attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
+  attachCanvas2d(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): void;
   setSize(width: number, height: number, dpr: number): void;
   renderFrame(): void;
   setCamera(x: number, y: number, zoom: number): void;
@@ -232,7 +233,7 @@ export type MapWasmSession = {
   featureScreenJson(kind: string, id: string): string;
   currentLodJson(): string;
   setMapThemeJson(json: string): void;
-  gpuReady(): boolean;
+  rendererReady(): boolean;
   free(): void;
 };
 
@@ -243,12 +244,17 @@ export async function createMapSession(): Promise<MapWasmSession> {
 
 //#region TerrainSession
 export type TerrainWasmSession = {
+  free(): void;
   set_project_origin(lon: number, lat: number): void;
   set_exaggeration(exaggeration: number): void;
+  set_elevation_grid_json(json: string): boolean;
+  pickElevationGridJson(rayJson: string): string;
   visible_terrain_tiles_json(cameraJson: string): string;
   upload_elevation_tile(z: number, x: number, y: number, bytes: Uint8Array): boolean;
   evict_terrain_tile(z: number, x: number, y: number): void;
   terrain_tile_mesh_json(z: number, x: number, y: number): string;
+  terrain_overlay_tile_json(z: number, x: number, y: number, overlaysJson: string): string;
+  terrain_origin_elevation(z: number, x: number, y: number): number | undefined;
 };
 
 export async function createTerrainSession(): Promise<TerrainWasmSession> {

@@ -1085,6 +1085,27 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-tie-beam-width/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/insert-case/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/remove-case/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-case-number/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-case-text/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-case-label-en/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-case-label-de/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm-eurocode/en1998/mutation/change-case-entry-id/schema.json"
     }
   ]
 }

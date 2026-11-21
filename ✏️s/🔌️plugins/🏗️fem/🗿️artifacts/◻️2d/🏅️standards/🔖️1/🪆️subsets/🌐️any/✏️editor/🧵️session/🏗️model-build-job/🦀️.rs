@@ -51,6 +51,8 @@ pub(super) enum MountedStage {
     Pcg,
     RecoverReactions,
     SyncPcgVisual,
+    PrepareBuckling,
+    Eigen,
     CommitReady,
     PublishFinalVisual,
     Complete,
@@ -344,7 +346,10 @@ impl MountedModelBuild {
                 if let Some(element) = self.model.element(self.lookup_cursor) {
                     if element.id() == id { return Err(b"fem2d.model-generated-element-id-collision".to_vec()); }
                     self.lookup_cursor += 1;
-                } else { self.stage = ModelBuildStage::RegionElementNodeOwner; }
+                } else {
+                    self.lookup_cursor = 0;
+                    self.stage = ModelBuildStage::RegionElementNodeOwner;
+                }
             }
             ModelBuildStage::RegionElementNodeOwner => {
                 bounded_derived_string(self.pending_region_element_id.as_ref().ok_or_else(|| b"fem2d.model-region-element-id-owner-missing".to_vec())?)?;

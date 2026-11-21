@@ -1,0 +1,5 @@
+# Direct channel hover addresses
+
+Values, Outline and Inspector rows now carry the original graph target and granularity as separate action arguments. A 250-byte valid fixture target exceeded the UI text budget once wrapped in escaped JSON. The raw target fits the bounded semantic field. The pointer-leave override supplies an explicit empty batch, which takes precedence over the retained target. World rays and grouped Flow hover keep using their explicit batch form.
+
+The fixture covers exact quoted Unicode, a clear over retained authored arguments, a two-address renderer batch, and three invalid argument forms. The Rust witness builds the real retained UI argument map, runs the native action merge, and calls the production parser. SQLite independently checked seven cases and eight assertions. The production React Interpreter dispatched the exact direct target and the merged clear in its focused two-test run. The registered native router law now checks both forms through the real descriptor. Linked WGPU and canonical app verification remain open. [Action path audit](📓️hover-action-audit.md)

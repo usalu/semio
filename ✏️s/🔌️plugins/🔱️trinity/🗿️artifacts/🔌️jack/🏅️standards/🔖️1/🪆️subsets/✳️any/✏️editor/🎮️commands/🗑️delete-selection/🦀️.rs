@@ -1,6 +1,6 @@
 //! 🗺️ Trinity Jack app command — `delete-selection`.
 
-use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{TrinityGraphMutation, clear_deleted_root};
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_plugin::{Emit, Fault, NoConfigMutation};
 use semio_s_artifact_trinity_jack_graph_query::JackGraphQuery;
@@ -17,5 +17,9 @@ pub fn delete_selection<C:crate::standards::v1::subsets::any::schema::compositio
     let mut effects:Vec<_>=(0..content.edge_count()).filter_map(|index|content.edge(index)).filter(|edge|doomed.iter().any(|id|id==edge.source||id==edge.target)).map(|edge|crate::standards::v1::subsets::any::schema::graph::GraphEffect::DeleteEdge(edge.id.to_string())).collect();
     effects.extend(doomed.into_iter().map(crate::standards::v1::subsets::any::schema::graph::GraphEffect::DeleteNode));
     let preparations=content.prepare_effects(&effects).map_err(|error|Fault::from(error.into_message()))?;
-    Ok(Emit{child_preparations:preparations.into(),..Default::default()})
+    Ok(Emit {
+        artifact_mutations: clear_deleted_root(snapshot, &effects).into_iter().collect(),
+        child_preparations: preparations.into(),
+        ..Default::default()
+    })
 }

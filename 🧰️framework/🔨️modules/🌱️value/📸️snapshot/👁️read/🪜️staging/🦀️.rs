@@ -142,6 +142,7 @@ impl<T:RetireOwned+Sync> RetirementCursor for StagingCursor<T>{
     fn recover_close_into<'r>(&mut self,_body:usize,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,_:semio_framework_value::retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value::OriginalRetirementFailure>,semio_framework_value::ValueError>{Err(semio_framework_value::ValueError::invariant("synchronous close has no unrecorded callback"))}
  fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{if self.staging.is_staged(){return self.staging.next_work_demand()}Ok(if self.source.is_some()||self.base.is_some(){retirement_cursor_birth_work()}else{0})}
  fn terminal_is_empty(&self)->bool{self.staging.terminal_is_empty()&&self.base.is_none()&&self.source.is_none()}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|demand|demand.capacity_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.next_demand(0).ok().map(|demand|demand.release_bytes)}

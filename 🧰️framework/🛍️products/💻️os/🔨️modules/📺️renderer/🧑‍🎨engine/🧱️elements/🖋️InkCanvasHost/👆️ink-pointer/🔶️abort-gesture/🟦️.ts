@@ -1,10 +1,14 @@
 /** 🔶️ The abort gesture phase of useInkPointer. */
 import * as React from "../../../⚛️react-port/🟦️.ts";
 import { useCallback } from "../../../⚛️react-port/🟦️.ts";
-import { type InkResizeHandle } from "../../🧾️ink-model/🟦️.ts";
+import { type InkItem, type InkResizeHandle } from "../../🧾️ink-model/🟦️.ts";
 import { eraseInkStrokeEventsAtPoint, eraseInkStrokePointEventsNearPoint, findInkItem, inkItemsAtPoint, inkMaybeSnapWorldPoint, screenToWorld } from "../../📐️ink-geometry/🟦️.ts";
 import { createInkItemByKind } from "../../🌳️ink-document-ops/🟦️.ts";
 import type { InkCore2 } from "../../🎬️ink-gestures/🟦️.ts";
+
+function isInkEditorTarget(target: EventTarget): boolean {
+  return target instanceof Element && target.closest("[data-ink-editor-overlay]") !== null;
+}
 
 /** 🔷 Builds abortGesture, atomicGesture, beginGesture, commitGesture of useInkPointer. */
 export function useAbortGestureState({ core }: { readonly core: InkCore2 }) {
@@ -28,12 +32,22 @@ export function useAbortGestureState({ core }: { readonly core: InkCore2 }) {
     [doc, selectedIds, selectedSet],
   );
 
+  const pickAndBeginMove = useCallback(
+    (event: React.PointerEvent, block: InkItem) => {
+      if (event.shiftKey || selectedIds.length < 2 || !selectedSet.has(block.id)) {
+        publishInteractionSelection([block], event.shiftKey ? "additive" : "replace", "pick");
+      }
+      beginMove(event, block.id);
+    },
+    [beginMove, publishInteractionSelection, selectedIds.length, selectedSet],
+  );
+
   /** 🤏️ Every contact reaches the shared recognizer in the CAPTURE phase — before a block's own
    * `pointerdown` can stop it — so a second finger landing on a block still starts the pinch. The pinch
    * cancels whatever the first finger began (its live stroke/move preview is dropped, never committed). */
   const handlePointerDownCapture = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!rootRef.current || !doc) return;
+      if (!rootRef.current || !doc || isInkEditorTarget(event.target)) return;
       const rect = rootRef.current.getBoundingClientRect();
       const verdict = gestureRecognizer.down({ pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top });
       if (verdict.kind === "single") return;
@@ -50,7 +64,7 @@ export function useAbortGestureState({ core }: { readonly core: InkCore2 }) {
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
-      if (!rootRef.current || !doc || isNavigator || !interactive) return;
+      if (!rootRef.current || !doc || isNavigator || !interactive || isInkEditorTarget(event.target)) return;
       rootRef.current.focus();
       const camera = doc.camera;
       const rect = rootRef.current.getBoundingClientRect();
@@ -91,34 +105,32 @@ export function useAbortGestureState({ core }: { readonly core: InkCore2 }) {
         if (utility === "selectDirect" && !top) publishInteractionSelection([], "replace", "pick");
         return;
       }
-      if (utility === "selectDirect") {
-        publishInteractionSelection([top], event.shiftKey ? "additive" : "replace", "pick");
-        beginMove(event, top.id);
-      }
+      if (utility === "selectDirect") pickAndBeginMove(event, top);
     },
-    [atomicGesture, beginGesture, beginMove, doc, interactive, isNavigator, publishInteractionSelection, utility],
+    [atomicGesture, beginGesture, doc, interactive, isNavigator, pickAndBeginMove, publishInteractionSelection, utility],
   );
 
   const handleBlockPointerDown = useCallback(
     (event: React.PointerEvent, blockId: string) => {
+      if (!rootRef.current || !doc || !interactive || isNavigator) return;
+      if ((utility !== "selectDirect" && utility !== "selectMarquee") || event.button === 1 || (utility === "selectDirect" && event.altKey)) return;
       event.stopPropagation();
-      if (!rootRef.current || !doc || !interactive) return;
+      rootRef.current.focus();
       const block = findInkItem(doc, blockId);
-      if (!block || block.locked) return;
-      publishInteractionSelection([block], event.shiftKey ? "additive" : "replace", "pick");
-      if (utility === "selectDirect" || utility === "selectMarquee") beginMove(event, blockId);
+      if (block && !block.locked) pickAndBeginMove(event, block);
     },
-    [beginMove, doc, interactive, publishInteractionSelection, utility],
+    [doc, interactive, isNavigator, pickAndBeginMove, utility],
   );
 
   const handleResizePointerDown = useCallback(
     (handle: InkResizeHandle, event: React.PointerEvent) => {
       event.stopPropagation();
-      if (!rootRef.current || !selectionBounds) return;
+      if (!rootRef.current || !doc || !selectionBounds) return;
       const rect = rootRef.current.getBoundingClientRect();
-      setDragState({ kind: "resize", handle, fromBounds: selectionBounds, startX: event.clientX - rect.left, startY: event.clientY - rect.top, selectedIds: [...selectedIds] });
+      const origins = selectedIds.map((id) => findInkItem(doc, id)).filter((block) => block !== null);
+      setDragState({ kind: "resize", handle, fromBounds: selectionBounds, startX: event.clientX - rect.left, startY: event.clientY - rect.top, origins });
     },
-    [selectedIds, selectionBounds],
+    [doc, selectedIds, selectionBounds],
   );
   return { rootRef, doc, presencePointerRef, publishInkPresenceView, gestureRecognizer, pinchCameraRef, setDraftDoc, dragState, interactive, publishInteractionHover, dispatch, liveGesture, setMarqueePoints, setDragState, commitGesture, takePendingLive, gestureActiveRef, marqueePoints, publishInteractionSelection, abortGesture, isNavigator, setTableEdit, setTextEdit, atomicGesture, handleBlockPointerDown, handlePointerDown, handlePointerDownCapture, handleResizePointerDown };
 }

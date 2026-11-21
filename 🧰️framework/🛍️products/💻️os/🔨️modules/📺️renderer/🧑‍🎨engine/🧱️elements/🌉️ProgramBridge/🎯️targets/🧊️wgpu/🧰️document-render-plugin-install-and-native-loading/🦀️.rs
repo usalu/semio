@@ -274,7 +274,7 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
     let mut entries = Vec::new();
     for module in runtime?.modules {
         let descriptor = read_descriptor_manifest(&modules_root.join(module.descriptor_path), &module.plugin_id).await?;
-        entries.push(ProgramBridgeEntry::from_wasm(module.plugin_id, Some(descriptor.package_id), Some(module.wasm_sha256), modules_root.join(module.wasm_path), descriptor.manifest)?);
+        entries.push(ProgramBridgeEntry::from_wasm(module.plugin_id, Some(descriptor.package_id), Some(module.wasm_sha256), modules_root.join(module.wasm_path), descriptor.manifest)?.with_native_consumes(module.consumes));
     }
     Ok(entries)
 }

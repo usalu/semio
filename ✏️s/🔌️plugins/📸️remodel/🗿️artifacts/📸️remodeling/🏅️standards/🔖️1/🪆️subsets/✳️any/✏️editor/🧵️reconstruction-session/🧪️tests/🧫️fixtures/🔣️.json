@@ -104,6 +104,7 @@
       ],
       "appendContentOps": 6,
       "commitReconstructionOps": 1,
+      "registeredFrameRatio": 1,
       "lastStep": {
         "args": [
           7
@@ -165,6 +166,7 @@
       ],
       "appendContentOps": 6,
       "commitReconstructionOps": 1,
+      "registeredFrameRatio": 1,
       "lastStep": {
         "args": [
           7
@@ -183,6 +185,14 @@
     "document": "orbit-short",
     "checkpointIndex": 5,
     "firstResumedStep": "resuming"
+  },
+  "revalidation": {
+    "document": "orbit-short",
+    "withdrawn": {
+      "documentIdentity": false,
+      "groundControlPresence": true,
+      "ingestStride": true
+    }
   },
   "interactive": {
     "ceilingUs": 8000,

@@ -1,0 +1,5 @@
+# Typed Mesh Difference
+
+Generation3d registers `mesh.edit.difference` and Flow publishes `brep.mesh.difference`. The typed adapter captures both authored polygon sources and uses the retained native Difference producer. It publishes one stock result for one cutting support plane, including oblique planes, unchanged stock for separated or touching tools, or a canonical empty mesh when the tool covers all stock. Multiple cutting support planes return a typed fault. The operator has English and German catalogue labels.
+
+The neutral fixture covers axis-aligned and oblique cuts, containment, contact and multiple-plane refusal. The actual mesh owner and StepContext compact witness passed both cases, running the typed results across work fuel 1, 7 and 1024 and cancelling both capture and production. The independent catalogue and geometry suites passed 58 tests and 371 assertions, including strict parity with the Flow mesh manifest. See [the authored kernel report](📓️mesh-convex-difference.md) for the independent cap and source-attribute proof. The linked Generation3d and Flow runtime runs are still pending.

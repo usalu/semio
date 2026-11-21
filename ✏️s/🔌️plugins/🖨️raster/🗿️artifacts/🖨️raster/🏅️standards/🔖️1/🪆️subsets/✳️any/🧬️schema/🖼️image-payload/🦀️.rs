@@ -1,9 +1,9 @@
 //! 🖼️ Real image event content shares one immutable decoded root through granted aliases.
 use super::SemioImageSnapshot;
 use std::{mem::{ManuallyDrop,size_of},sync::Arc};
-use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,ToValue,FromValue};
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::{SharedControlledRetirement,admit_shared_allocation,shared_allocation_bytes}};
-use semio_framework_value::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneBinding,RetainedCloneClose,RetainedCloneRef,retained_clone_grant_admits};
+use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedAllocationEffect,OriginalRetirementFailure,ValueError,ValueRefusalKind,ToValue,FromValue};
+use semio_framework_value::retirement::{RetireOwned,arc_custody::{ArcLease,ArcLeaseRetirement,admit_shared_allocation,shared_allocation_value_demand}};
+use semio_framework_value::retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedAlias,RetainedAliasCursor,RetainedClone,retained_clone_grant_admits};
 
 /// 🪆️ Immutable decoded bytes remain actual event content while preparation shares their root.
 pub struct RasterImagePayload {owner:ManuallyDrop<Option<Arc<SemioImageSnapshot>>>}
@@ -13,9 +13,51 @@ fn moved(bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:
 
 impl RasterImagePayload {
     fn retain(owner:Arc<SemioImageSnapshot>)->Self{Self{owner:ManuallyDrop::new(Some(owner))}}
-    pub fn owned_birth_demands()->RetirementDemand{RetirementDemand{capacity_bytes:shared_allocation_bytes::<SemioImageSnapshot>(),depth:1,..Default::default()}}
+    pub fn owned_birth_demands() -> RetirementDemand {
+        shared_allocation_value_demand::<SemioImageSnapshot>().expect("fixed Raster image header extent")
+    }
+    /// ⛽️ Quotes both the shared allocation and the original value transfer.
+    pub const fn owned_birth_work() -> u64 { 2 }
     pub fn alias_demands()->RetirementDemand{RetirementDemand{depth:1,..Default::default()}}
-    pub fn from_owned(image:SemioImageSnapshot,grant:RetainedCloneGrant)->RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,SemioImageSnapshot)>{let turn=admit_shared_allocation(image,grant);RetainedWorkOutcome{result:turn.result.map(|(owner,p)|(Self::retain(owner),p)),work:turn.work}}
+    pub fn from_owned(image:SemioImageSnapshot,grant:RetainedCloneGrant)->RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,SemioImageSnapshot)> {
+        let demand = Self::owned_birth_demands();
+        let mut actual = None;
+        let turn = admit_shared_allocation(image, grant, &mut actual);
+        RetainedWorkOutcome {
+            result: turn.result.map(|(owner, progress)| {
+                let receipt = RetainedCloneProgress { copied_bytes: demand.copy_bytes, ..progress };
+                (Self::retain(owner), receipt)
+            }),
+            work: turn.work,
+        }
+    }
+
+    /// 🎟️ Moves a decoded image through the caller’s original allocation marker and Work.
+    pub fn from_owned_in(
+        image: &mut Option<SemioImageSnapshot>,
+        effect: &mut RetainedAllocationEffect<'_>,
+    ) -> Result<Option<(Self,RetainedCloneProgress)>,ValueError> {
+        let demand = Self::owned_birth_demands();
+        let grant = effect.grant();
+        if !retained_clone_grant_admits(grant,demand) || effect.remaining_work_units()? < Self::owned_birth_work() {
+            return Ok(None);
+        }
+        if effect.actual().is_some() || image.is_none() {
+            return Err(ValueError::invariant("image birth requires its original image and vacant allocation marker"));
+        }
+        if !effect.performed(1)? { return Ok(None); }
+        let turn = admit_shared_allocation(image.take().expect("validated original image"),grant,effect.actual());
+        match turn.result {
+            Ok((owner,progress)) => {
+                assert!(effect.performed(1).expect("preflight admitted original image transfer"));
+                Ok(Some((Self::retain(owner),RetainedCloneProgress { copied_bytes:demand.copy_bytes,..progress })))
+            }
+            Err((error,original)) => {
+                *image=Some(original);
+                Err(error)
+            }
+        }
+    }
     pub fn from_shared(owner:Arc<SemioImageSnapshot>,grant:RetainedCloneGrant)->RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,Arc<SemioImageSnapshot>)>{if !retained_clone_grant_admits(grant,Self::alias_demands()){return RetainedWorkOutcome{result:Err((invalid("image payload alias is not funded"),owner)),work:0}}RetainedWorkOutcome{result:Ok((Self::retain(owner),moved(0))),work:1}}
     pub fn image(&self)->&SemioImageSnapshot{self.owner.as_deref().expect("image payload has transferred")}
     pub fn owner(&self,grant:RetainedCloneGrant)->RetainedWorkOutcome<(Arc<SemioImageSnapshot>,RetainedCloneProgress)>{if !retained_clone_grant_admits(grant,Self::alias_demands()){return RetainedWorkOutcome{result:Err(invalid("image owner alias is not funded")),work:0}}let Some(owner)=self.owner.as_ref()else{return RetainedWorkOutcome{result:Err(invalid("image payload has transferred")),work:0}};RetainedWorkOutcome{result:Ok((Arc::clone(owner),moved(0))),work:1}}
@@ -28,8 +70,11 @@ impl PartialEq for RasterImagePayload {fn eq(&self,other:&Self)->bool{self.image
 impl Drop for RasterImagePayload {fn drop(&mut self){assert!(std::thread::panicking()||self.owner.is_none(),"image payload requires granted lease retirement");}}
 
 impl RetireOwned for RasterImagePayload {
-    fn retirement(mut self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.owner.take().expect("image payload retains its original owner")))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<SemioImageSnapshot>>())}
+    type RetirementCursor = ArcLeaseRetirement<SemioImageSnapshot>;
+    fn retirement_seed(mut self) -> Self::RetirementCursor {
+        ArcLeaseRetirement::lease(self.owner.take().expect("image payload retains its original owner"))
+    }
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
     fn controlled_retirement_supported()->bool{true}
 }
 impl ToValue for RasterImagePayload {
@@ -40,11 +85,17 @@ impl FromValue for RasterImagePayload {
     fn from_value(_value:semio_framework_value::DslValue)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"image payload requires original native receiving"))}
 }
 impl semio_framework_value_native_owned::owned::NativeReceiveMap<Arc<SemioImageSnapshot>> for RasterImagePayload {fn from_native(owner:Arc<SemioImageSnapshot>)->Self{Self::retain(owner)}}
-impl<I:Sync+'static+?Sized>semio_framework_value_native_owned::owned::NativeReceive<I> for RasterImagePayload where Arc<SemioImageSnapshot>:semio_framework_value_native_owned::owned::NativeReceive<I>{
-    type Receiver=semio_framework_value_native_owned::owned::NativeMappedReceiver<I,Arc<SemioImageSnapshot>,Self>;
-    fn receiver()->Self::Receiver{Self::Receiver::new()}
+impl semio_framework_value_native_owned::owned::NativeReceiveMap<ArcLease<SemioImageSnapshot>> for RasterImagePayload {
+    fn from_native(mut source: ArcLease<SemioImageSnapshot>) -> Self {
+        Self::retain(source.0.take().expect("native image receiving produced a live Arc"))
+    }
 }
-impl semio_framework_value_native_owned::owned::NativeRecordFields for RasterImagePayload {
+impl<I:semio_framework_value_native_owned::owned::tree::NativeValueSource+?Sized> semio_framework_value_native_owned::owned::NativeReceive<I> for RasterImagePayload where ArcLease<SemioImageSnapshot>:semio_framework_value_native_owned::owned::NativeReceive<I>{
+    type Receiver=semio_framework_value_native_owned::owned::NativeMappedReceiver<I,ArcLease<SemioImageSnapshot>,Self>;
+    fn receiver()->Self::Receiver{Self::Receiver::new()}
+    fn record_subset_receiver()->Option<Self::Receiver>{Self::Receiver::original_record_subset()}
+}
+unsafe impl semio_framework_value_native_owned::owned::NativeRecordFields for RasterImagePayload {
     fn native_schema_count()->usize{<SemioImageSnapshot as semio_framework_value_native_owned::owned::NativeRecordFields>::native_schema_count()}
     fn native_schema_field(index:usize)->Option<semio_framework_value_native_owned::owned::NativeRecordSchema>{<SemioImageSnapshot as semio_framework_value_native_owned::owned::NativeRecordFields>::native_schema_field(index)}
 }
@@ -54,43 +105,46 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for RasterImagePayload
     fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_key(self.image(),ordinal)}
 }
 
-/// 🧵️ A genuine source binding and one image alias are independently closeable.
-pub struct RasterImagePayloadClone {source:Option<RetainedCloneBinding>,output:ManuallyDrop<Option<RasterImagePayload>>,close:RetainedCloneClose,closing:bool,spent:bool}
-impl RetainedClone for RasterImagePayload {type Cursor=RasterImagePayloadClone;fn retained_clone_cursor()->Self::Cursor{RasterImagePayloadClone{source:None,output:ManuallyDrop::new(None),close:Default::default(),closing:false,spent:false}}}
-impl RetainedCloneCursor<RasterImagePayload> for RasterImagePayloadClone {
-    fn advance_demands(&self,source:RetainedCloneRef<'_,RasterImagePayload>,_body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.spent{return Err(invalid("image clone is closing or spent"));}if let Some(d)=source.binding_demand(&self.source)?{return Ok(d);}Ok(RasterImagePayload::alias_demands())}
-    fn advance(&mut self,source:RetainedCloneRef<'_,RasterImagePayload>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=(||{let demand=self.advance_demands(source,body)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}let turn=source.bind(&mut self.source,grant);work+=turn.work;if let Some(p)=turn.result?{return Ok(RetainedCloneStep::Progress(p));}if self.output.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}let turn=source.get().owner(grant);work+=turn.work;let(owner,p)=turn.result?;*self.output=Some(RasterImagePayload::retain(owner));Ok(RetainedCloneStep::Complete(p))})();RetainedWorkOutcome{result,work}}
-    fn output_ready(&self)->bool{!self.closing&&!self.spent&&self.output.is_some()}
-    fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:size_of::<RasterImagePayload>(),depth:1,..Default::default()})}
-    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RasterImagePayload,RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let d=RetirementDemand{copy_bytes:size_of::<RasterImagePayload>(),depth:1,..Default::default()};if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(None),work:0}}self.spent=true;RetainedWorkOutcome{result:Ok(self.output.take().map(|output|(output,moved(d.copy_bytes)))),work:1}}
-    fn begin_close(&mut self)->bool{if self.closing{return false;}self.closing=true;true}
-    fn close_started(&self)->bool{self.closing}
-    fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close.next_owner_demands::<RasterImagePayload>(self.output.is_some(),&self.source,body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid("image clone requires closing intent")),work:0}}let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e),work:0}};if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if !self.close.is_empty(){return self.close.step_granted(grant);}if self.output.is_some(){let turn=self.close.begin_granted(&mut self.output,grant);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}RetainedCloneBinding::close_one(&mut self.source,grant)}
-    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(32768)?.copy_bytes)}
-    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
-    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(32768)?.release_bytes)}
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(32768)?.depth)}
-    fn terminal_is_empty(&self)->bool{self.closing&&self.source.is_none()&&self.output.is_none()&&self.close.is_empty()}
+impl RetainedAlias for RasterImagePayload {
+    fn alias_demand(&self) -> RetirementDemand {
+        RetirementDemand { copy_bytes: size_of::<Option<Self>>(), depth: 1, ..Default::default() }
+    }
+
+    fn alias_work_demand(&self) -> u64 { 1 }
+
+    fn admit_alias_into<'r>(
+        &self,
+        output: &mut Option<Self>,
+        effect: &mut RetainedAllocationEffect<'_>,
+        reply: OriginalEffectReply<'r, RetainedCloneStep, OriginalRetirementFailure>,
+    ) -> Result<OriginalEffectReplyComplete<'r, RetainedCloneStep, OriginalRetirementFailure>, ValueError> {
+        if output.is_some() || self.owner.is_none() {
+            return Err(invalid("image alias requires a live source and vacant output"));
+        }
+        let demand = self.alias_demand();
+        if !retained_clone_grant_admits(effect.grant(), demand) || effect.remaining_work_units()? < self.alias_work_demand() {
+            return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))));
+        }
+        if !effect.performed(self.alias_work_demand())? {
+            return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit, "image alias exceeded its original work").into())));
+        }
+        *output = Some(self.clone());
+        Ok(reply.complete(Ok(RetainedCloneStep::Complete(moved(demand.copy_bytes)))))
+    }
+
+    fn recover_alias_into<'r>(
+        &self,
+        _output: &mut Option<Self>,
+        _effect: &mut RetainedAllocationEffect<'_>,
+        reply: OriginalEffectReply<'r, RetainedCloneStep, OriginalRetirementFailure>,
+    ) -> Result<OriginalEffectReplyComplete<'r, RetainedCloneStep, OriginalRetirementFailure>, ValueError> {
+        Ok(reply.pending())
+    }
 }
-impl Drop for RasterImagePayloadClone {fn drop(&mut self){assert!(std::thread::panicking()||self.source.is_none()&&self.output.is_none()&&self.close.is_empty(),"image clone retains original ownership");}}
-struct CloneRetirement {cursor:ManuallyDrop<RasterImagePayloadClone>}
-impl RetirementCursor for CloneRetirement {
-    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.cursor.close_demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.cursor.close_step(grant);match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
-    fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
-    fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.cursor.next_close_copy_byte_demand()}
-    fn next_birth_bytes(&self,body:usize)->Option<usize>{self.cursor.next_close_capacity_byte_demand(body).ok()}
-    fn next_close_byte_demand(&self)->Option<usize>{self.cursor.next_close_release_byte_demand().ok()}
-    fn next_depth_demand(&self)->Result<usize,ValueError>{self.cursor.next_close_depth_demand()}
-    fn allows_admitted_narrow_work(&self)->bool{true}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
-}
-impl Drop for CloneRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"image clone retirement retains ownership");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.cursor);}}}}
-impl RetireOwned for RasterImagePayloadClone {
-    fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(CloneRetirement{cursor:ManuallyDrop::new(self)})}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<CloneRetirement>())}
-    fn controlled_retirement_supported()->bool{true}
+
+impl RetainedClone for RasterImagePayload {
+    type Cursor = RetainedAliasCursor<Self>;
+    fn retained_clone_cursor() -> Self::Cursor { Self::Cursor::default() }
 }
 
 #[cfg(test)]

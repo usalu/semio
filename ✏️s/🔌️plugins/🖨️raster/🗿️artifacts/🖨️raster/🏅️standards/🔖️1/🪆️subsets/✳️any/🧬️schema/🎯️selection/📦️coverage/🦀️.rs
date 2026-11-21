@@ -20,8 +20,27 @@ impl RasterSpanPage{
 }
 impl Default for RasterSpanPage{fn default()->Self{Self::new()}}
 
-#[derive(Clone,Default,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
+#[derive(Default,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
 pub struct RasterSelectionSpans{pages:PersistentList<RasterSpanPage>,len:usize,maximum_end:u64}
+impl Clone for RasterSelectionSpans {
+    fn clone(&self) -> Self {
+        use semio_framework_pixels::{BlockingTurns, EffectTurns};
+        use semio_framework_value::RetainedCloneGrant;
+        let demand = PersistentList::<RasterSpanPage>::projection_demand();
+        let work = self.pages.retained_alias_work_demand().expect("Raster coverage alias work");
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: demand.copy_bytes,
+            maximum_depth: demand.depth,
+            ..Default::default()
+        };
+        let Some(pages) = BlockingTurns::new(work).turn(grant, |effect| self.pages.retained_alias(effect))
+            .and_then(|alias| alias).expect("Raster coverage root alias") else {
+            unreachable!("the Raster coverage root quote is fully funded");
+        };
+        Self { pages, len: self.len, maximum_end: self.maximum_end }
+    }
+}
 impl RasterSelectionSpans{
     pub fn page_count(rows:usize)->usize{rows.div_ceil(RASTER_SELECTION_PAGE_ROWS)}
     fn from_pages(pages:PersistentList<RasterSpanPage>,len:usize,maximum_end:u64)->Result<Self,(ValueError,PersistentList<RasterSpanPage>)>{if pages.len()!=Self::page_count(len){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"selection coverage root differs from its authored row count"),pages));}Ok(Self{pages,len,maximum_end})}

@@ -1,0 +1,9 @@
+{
+  "source": "a1",
+  "receiver": "b1",
+  "baseline": { "path": "before.txt", "text": "healthy inbound before the outbound fault" },
+  "outbound": { "path": "local.txt", "text": "outbound work" },
+  "inbound": { "path": "after.txt", "text": "inbound work after the outbound fault" },
+  "blockedJournal": "blocks only the receiver's outbound journal",
+  "minimumFailures": 3
+}

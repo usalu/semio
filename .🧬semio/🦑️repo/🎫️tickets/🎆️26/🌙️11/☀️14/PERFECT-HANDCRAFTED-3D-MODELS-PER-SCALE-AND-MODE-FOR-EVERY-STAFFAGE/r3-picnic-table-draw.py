@@ -161,10 +161,10 @@ DECISIONS = {
         "overlays": T("One region per shape.", "Eine Region je Form."),
     },
     "200": {
-        "silhouette": T("Picnic table 7.6 x 3.8 mm: top slab, the A-frame with cleat, stretcher and legs, the brace, one board per bench with its bracket block. Long side: slab, the two A-frames, the braces, the bench board between them. Plan: slab, legs and stretchers, two bench boards.",
-                        "Picknicktisch 7,6 x 3,8 mm: Tischscheibe, der A-Bock mit Riegel, Zange und Beinen, die Strebe, je ein Brett pro Bank mit seinem Konsolblock. Längsseite: Scheibe, die zwei A-Böcke, die Streben, das Bankbrett dazwischen. Grundriss: Scheibe, Beine und Zangen, zwei Bankbretter."),
+        "silhouette": T("Picnic table 7.6 x 3.8 mm: top slab, the A-frame with cleat, stretcher and legs, the brace, one board per bench with its bracket block. Long side: slab, the two A-frames, the braces meeting the centre cleat, the bench board between them. Plan: slab, legs and stretchers, two bench boards.",
+                        "Picknicktisch 7,6 x 3,8 mm: Tischscheibe, der A-Bock mit Riegel, Zange und Beinen, die Strebe, je ein Brett pro Bank mit seinem Konsolblock. Längsseite: Scheibe, die zwei A-Böcke, die Streben am Mittelriegel, das Bankbrett dazwischen. Grundriss: Scheibe, Beine und Zangen, zwei Bankbretter."),
         "retained": T("Leg rake, the two layers of the frames, braces, the bench hanging between the frames.", "Beinneigung, die zwei Lagen der Böcke, Streben, die zwischen den Böcken hängende Bank."),
-        "merged": T("Planks into one slab and one board per bench; centre cleat into the slab; bracket into a 30 mm block.", "Bohlen zu einer Scheibe und einem Brett je Bank; Mittelriegel in die Scheibe; Konsole zu einem 30-mm-Block."),
+        "merged": T("Planks into one slab and one board per bench; bracket into a 30 mm block.", "Bohlen zu einer Scheibe und einem Brett je Bank; Konsole zu einem 30-mm-Block."),
         "omitted": T("Gaps, bevels, batten, bolts.", "Fugen, Fasen, Leiste, Schrauben."),
         "thinElements": T("Slab and boards 40 mm (0.2 mm), drawn true.", "Scheibe und Bretter 40 mm (0,2 mm), wahr gezeichnet."),
         "hatching": T("None.", "Keine."),
@@ -185,10 +185,14 @@ DECISIONS = {
 }
 
 
+RANGES = {"50": (30, 75), "100": (75, 150), "200": (150, 350), "500": (350, 1000)}
+
+
 def apply(asset):
-    """🖊 Replaces the geometry, hatches and decisions of every scale's representation."""
+    """🖊 Replaces the geometry, hatches, decisions and valid range of every scale's representation (1:50 starts at 1:30: finer, the 10 mm plank gaps open to an unprintable sliver under the 0.5 mm body pen)."""
     for scale in ("50", "100", "200", "500"):
         rep = asset["representations"][scale]
+        rep["validRange"] = {"minDenominator": RANGES[scale][0], "maxDenominator": RANGES[scale][1]}
         rep["geometry"] = {"elevation": shapes(scale, "e"), "front": shapes(scale, "f"), "plan": shapes(scale, "p")}
         rep["decisions"] = DECISIONS[scale]
         if scale == "50":

@@ -153,7 +153,6 @@ fn percent_decode_basic(input: &str) -> Vec<u8> {
  * UTF-8 body) — `decode_canvas_image` only handles `image/png`/`image/jpeg`, so inline SVG data URLs
  * previously fell straight through to the `alt`-text fallback. */
 fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
-    use base64::Engine;
     #[cfg(test)]
     INLINE_SVG_PARSE_CALLS.with(|calls| calls.set(calls.get() + 1));
     let rest = src.strip_prefix("data:image/svg+xml")?;
@@ -161,7 +160,7 @@ fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     let params = &rest[..comma];
     let payload = &rest[comma + 1..];
     if params.contains("base64") {
-        base64::engine::general_purpose::STANDARD.decode(payload).ok()
+        semio_framework_io_base64::base64_standard_decode(payload).ok()
     } else {
         Some(percent_decode_basic(payload))
     }
@@ -243,7 +242,12 @@ pub fn current_ui_image_key(id: &str, src: &str) -> Option<String> {
     } else {
         queue_ui_image_url_fetch(id, src);
     }
-    if !UI_IMAGE_LAST_URL.with(|cell| cell.borrow().get(id).is_some_and(|current| current == src)) {
+    decoded_ui_image_key(id, src)
+}
+
+/// 🧷️ Returns the raster key admitted for this exact source.
+pub(crate) fn decoded_ui_image_key(id: &str, src: &str) -> Option<String> {
+    if src.is_empty() || !UI_IMAGE_LAST_URL.with(|cell| cell.borrow().get(id).is_some_and(|current| current == src)) {
         return None;
     }
     UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned())
@@ -295,7 +299,7 @@ pub fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) -> Rect
 }
 //#endregion UiImageLoading
 
-const RETAINED_UI_IMAGE_SOURCE_BYTES: usize = 4 * 1024 * 1024;
+const RETAINED_UI_IMAGE_SOURCE_BYTES: usize = semio_ui_contract::window_resource::WINDOW_RESOURCE_MAX_BYTES;
 
 pub fn render_ui_image_step(image: &semio_ui_declaration::ui::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_ui_wgpu_hosting::scene_slots::ScenePaintCursor) -> semio_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     match cursor.phase() {
@@ -343,7 +347,7 @@ pub fn render_ui_image_step(image: &semio_ui_declaration::ui::UiImageNode, bound
             semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         3 => {
-            let key = UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(&image.id).filter(|key| key.len() <= 256).cloned());
+            let key = decoded_ui_image_key(&image.id, image.src.trim()).filter(|key| key.len() <= 256);
             let Some(key) = key else { return cursor.finish() };
             if ctx.draw.try_reserve_retained_items(1).is_err() {
                 return semio_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
@@ -364,3 +368,7 @@ pub fn render_ui_image_step(image: &semio_ui_declaration::ui::UiImageNode, bound
 }
 
 pub use semio_renderer_wgpu_contracts::framework_widget_context;
+
+#[path = "🚚️window-source/🦀️.rs"]
+mod window_resource;
+pub use window_resource::{close_hidden_window_image_resource, close_window_image_resource_step, render_window_image_resource, replace_window_image_resource};

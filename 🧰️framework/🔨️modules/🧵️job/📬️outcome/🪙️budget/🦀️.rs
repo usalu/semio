@@ -233,7 +233,8 @@ impl<I:OriginalReturnOrigin> OriginalReturnBudget<I>{
   self.origin_pending=Some(input);self.origin_action=Some(OriginalReturnBirthLock{action:witness.action(),work:witness.work(),work_action:effect.work_identity().action_identity()});RetainedWorkOutcome{result:Ok(Some(P{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
  }
  /// 👁️ Observes only the committed original Source.
- pub fn origin(&self)->Option<I>{if self.origin_commit.is_some(){self.origin_prior}else{self.origin}}
+ pub fn origin(&self)->Option<I>{self.visible_origin().copied()}
+ fn visible_origin(&self)->Option<&I>{if self.origin_commit.is_some(){self.origin_prior.as_ref()}else{self.origin.as_ref()}}
  /// 👁️ Borrows the committed table, never its pending birth owner.
  pub fn table(&self)->Option<&OriginalReturnEscrowTable>{if self.table_commit.is_some(){None}else{self.table.as_deref()}}
  pub fn table_mut(&mut self)->Option<&mut OriginalReturnEscrowTable>{if self.table_commit.is_some(){None}else{self.table.as_deref_mut()}}
@@ -244,7 +245,7 @@ impl<I:OriginalReturnOrigin> OriginalReturnBudget<I>{
  pub fn publisher_mut(&mut self)->Option<&mut OriginalEscrowPublisher>{if self.publisher_commit.is_some(){None}else{self.publisher.as_deref_mut()}}
  /// 👁️ Borrows the publisher only with its exact accepted publication proof.
  pub fn publisher_with_post(&self,proof:&semio_framework_value_native_outcome::OriginalConstructionAcceptedProof<'_>)->Option<&OriginalEscrowPublisher>{self.publisher_commit.as_ref().filter(|lock|birth_post_accepted(lock,proof)).and_then(|_|self.publisher.as_deref())}
- pub fn is_bound(&self)->bool{self.origin().is_some()}
+ pub fn is_bound(&self)->bool{self.visible_origin().is_some()}
  #[cfg(test)]
  fn bind(&mut self,input:I)->Result<bool,ValueError>{
   if input.recipient()!=self as*const Self as usize{return Err(refused("original return lifetime input requires its same preborn receiving budget"))}
@@ -260,12 +261,12 @@ impl<I:OriginalReturnOrigin> OriginalReturnBudget<I>{
   if !self.renewable(){return Err(refused("original return source with live claims cannot renew its turn"))}
   self.spent=origin.spent();self.work=origin.work();Ok(())
  }
- pub fn snapshot(&self)->OriginalReturnBudgetSnapshot{let live=if self.origin_commit.is_some()&&self.origin_prior.is_none(){self.origin}else{self.origin()};let(origin,fuel)=live.map_or((RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},0),|origin|(origin.granted(),origin.fuel()));OriginalReturnBudgetSnapshot{granted:origin,fuel,spent:self.spent,work:self.work,held_items:usize::from(self.held_items),held_copy_bytes:self.held_copy_bytes,held_release_bytes:self.held_release_bytes,held_capacity_bytes:self.held_capacity_bytes,held_fuel:u64::from(self.held_fuel),claims:usize::from(self.claims),serial:self.serial}}
+ pub fn snapshot(&self)->OriginalReturnBudgetSnapshot{let live=if self.origin_commit.is_some()&&self.origin_prior.is_none(){self.origin.as_ref()}else{self.visible_origin()};let(origin,fuel)=live.map_or((RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},0),|origin|(origin.granted(),origin.fuel()));OriginalReturnBudgetSnapshot{granted:origin,fuel,spent:self.spent,work:self.work,held_items:usize::from(self.held_items),held_copy_bytes:self.held_copy_bytes,held_release_bytes:self.held_release_bytes,held_capacity_bytes:self.held_capacity_bytes,held_fuel:u64::from(self.held_fuel),claims:usize::from(self.claims),serial:self.serial}}
  pub fn refusal(&self)->Option<ValueError>{self.failure.as_ref().map(|(kind,message)|ValueError::literal(kind.clone(),message))}
  /// 🔬️ Temporary: the return stock a claim is checked against (net and before holds), the holds and the live claim count.
  pub fn debug_summary(&self)->String{format!("remaining {:?} raw {:?} held_items {} held_copy {} held_fuel {} claims {} serial {} core_wire {} renewable {}",self.remaining().map(|(grant,fuel)|(grant.maximum_items,grant.maximum_copy_bytes,fuel)),self.raw_remaining().map(|(grant,fuel)|(grant.maximum_items,grant.maximum_copy_bytes,fuel)),self.held_items,self.held_copy_bytes,self.held_fuel,self.claims,self.serial,matches!(self.delivery,OriginalReturnDelivery::CoreWireSnapshot),self.renewable())}
- pub fn raw_remaining(&self)->Result<(RetainedCloneGrant,u64),ValueError>{if let Some(error)=self.refusal(){return Err(error)}self.origin.ok_or_else(||refused(E::STOCK_ABSENT))?;self.snapshot().raw_remaining()}
- pub fn remaining(&self)->Result<(RetainedCloneGrant,u64),ValueError>{if let Some(error)=self.refusal(){return Err(error)}self.origin.ok_or_else(||refused(E::STOCK_ABSENT))?;self.snapshot().remaining()}
+ pub fn raw_remaining(&self)->Result<(RetainedCloneGrant,u64),ValueError>{if let Some(error)=self.refusal(){return Err(error)}self.origin.as_ref().ok_or_else(||refused(E::STOCK_ABSENT))?;self.snapshot().raw_remaining()}
+ pub fn remaining(&self)->Result<(RetainedCloneGrant,u64),ValueError>{if let Some(error)=self.refusal(){return Err(error)}self.origin.as_ref().ok_or_else(||refused(E::STOCK_ABSENT))?;self.snapshot().remaining()}
  pub fn record_retained(&mut self,progress:P)->Result<(),ValueError>{if self.origin.is_none(){return Ok(())}let mut state=self.snapshot();let issue=state.advance_retained(progress);self.spent=state.spent;if let Some(issue)=issue{self.failure=Some(issue.failure());return Err(self.refusal().unwrap().with_retained_progress(progress))}Ok(())}
  pub fn record_work(&mut self,work:u64){let _=self.record_work_exact(u128::from(work));}
  pub fn record_work_exact(&mut self,work:u128)->Result<(),ValueError>{if self.origin.is_none(){return Ok(())}let mut state=self.snapshot();let issue=state.advance_work_exact(work);self.work=state.work;if let Some(issue)=issue{let(kind,message)=issue.failure();if self.failure.is_none(){self.failure=Some((kind.clone(),message))}return Err(ValueError::literal(kind,message))}Ok(())}

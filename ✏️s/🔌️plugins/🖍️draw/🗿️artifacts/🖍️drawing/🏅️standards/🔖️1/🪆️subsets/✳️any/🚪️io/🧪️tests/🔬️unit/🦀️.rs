@@ -48,7 +48,7 @@ async fn declared_export_rows_run_only_through_owned_factories() {
         let entry = io().entries.iter().find(|entry| entry.into.artifact_kind == kind).unwrap_or_else(|| panic!("the {kind} serializer row is declared"));
         assert!(entry.owned_serializer.is_some(), "{kind} declares its owned factory");
         let doc = default_drawing_document("hop", None);
-        let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as semio_framework_pack::snapshot::ArtifactPack>::encode_pack(&doc)));
+        let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&doc)));
         assert!(result.is_err(), "the borrowed {kind} hop refuses");
     }
 }

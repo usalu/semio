@@ -92,20 +92,21 @@ describe("📥️ load failures", () => {
 
   it("tells the learner in the shown language that a switched-to language could not be loaded, keeps the choice unpersisted, and retries or dismisses on request", async () => {
     const { testing, client, unhandled, reloads, chosen } = await clientWithout(GERMAN);
-    const { container } = client;
-    const english = await testing.waitFor(() => testing.within(container).getByRole("button", { name: "Deutsch" }));
-    testing.fireEvent.click(english);
+    const scope = testing.within(client.container);
+    testing.fireEvent.click(await scope.findByRole("button", { name: "Deutsch" }));
     const sentence = "Deutsch could not be loaded – the course stays in English.";
-    const notice = () => testing.within(container).queryByRole("alert");
-    await testing.waitFor(() => expect(notice()?.textContent).toContain(sentence));
-    expect(notice()?.closest("[lang]")?.getAttribute("lang")).toBe("en");
+    const findNotice = () => scope.findByRole("alert", undefined, { timeout: 5_000 });
+    const notice = await findNotice();
+    expect(notice.textContent).toContain(sentence);
+    expect(notice.closest("[lang]")?.getAttribute("lang")).toBe("en");
     expect(document.documentElement.getAttribute("lang")).toBe("en");
     expect(chosen()).toBeUndefined();
-    testing.fireEvent.click(testing.within(notice() as HTMLElement).getByRole("button", { name: "Try again now" }));
-    expect(notice()).toBeNull();
-    await testing.waitFor(() => expect(notice()?.textContent).toContain(sentence));
-    testing.fireEvent.click(testing.within(notice() as HTMLElement).getByRole("button", { name: "Dismiss" }));
-    expect(notice()).toBeNull();
+    testing.fireEvent.click(testing.within(notice).getByRole("button", { name: "Try again now" }));
+    expect(scope.queryByRole("alert")).toBeNull();
+    const retriedNotice = await findNotice();
+    expect(retriedNotice.textContent).toContain(sentence);
+    testing.fireEvent.click(testing.within(retriedNotice).getByRole("button", { name: "Dismiss" }));
+    expect(scope.queryByRole("alert")).toBeNull();
     expect(chosen()).toBeUndefined();
     expect(reloads()).toBe(0);
     expect(unhandled()).toEqual([]);

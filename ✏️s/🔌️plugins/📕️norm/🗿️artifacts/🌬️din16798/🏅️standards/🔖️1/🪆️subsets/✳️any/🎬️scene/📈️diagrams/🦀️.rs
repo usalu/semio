@@ -1,8 +1,8 @@
-//! 📈️ Diagrams: the adaptive comfort diagram (operative against running-mean outdoor temperature with the category bands I–IV, EN 16798-1 Annex B.2), the operative temperature bands per category (Table B.2), the ventilation rate bars (persons and building components, Tables B.6/B.7), the CO₂ and relative-humidity category checks of every room and the ventilation-system capacity of the building. Every diagram has a table twin; markers bind to checks and to document leaves.
+//! 📈️ Diagrams: the adaptive comfort diagram (operative against running-mean outdoor temperature with the category bands I–IV, EN 16798-1 Annex B.2), the seasonal baseline heating and cooling design temperatures (Tables B.2 and NA.3), the selected ventilation design method, the CO₂ and relative-humidity category checks of every room and the ventilation-system capacity of the building. Every diagram has a table twin; markers bind to checks and to document leaves.
 
 use super::checks::{self, part_1, ComfortCategory};
 use super::model::{Din16798Snapshot, ZoneDocument};
-use super::norm::{CheckReport, CheckStatus};
+use super::norm::{AnnexChoice, CheckReport, CheckStatus, OccupancyType};
 use super::scene::projection_kit::diagram_parts::{self, column, stroke};
 use super::scene::*;
 
@@ -13,7 +13,6 @@ mod ventilation;
 #[path = "🫧️air-quality/🦀️.rs"]
 mod air_quality;
 
-pub use comfort::{adaptive_limits, operative_bands, RUNNING_MEAN_RANGE_C};
 pub use ventilation::ventilation_components;
 
 pub(super) const CATEGORIES: [ComfortCategory; 4] = [ComfortCategory::I, ComfortCategory::II, ComfortCategory::III, ComfortCategory::IV];
@@ -107,10 +106,10 @@ pub fn diagrams(document: &Din16798Snapshot, report: &CheckReport, focus: Option
     let mut out: Vec<Diagram2d> = Vec::new();
     for zone in document.zones.iter().filter(|z| focus.is_none_or(|f| f == z.id)) {
         out.push(comfort::adaptive(document, report, zone));
-        out.push(comfort::operative(report, zone));
+        out.push(comfort::operative(document, report, zone));
         out.push(ventilation::rates(document, report, zone));
         out.push(air_quality::co2(document, report, zone));
-        out.push(air_quality::humidity(report, zone));
+        out.push(air_quality::humidity(document, report, zone));
     }
     out.extend(ventilation::capacity(document, report));
     super::scene::projection::with_basis(out, &super::scene::projection::Basis::new(super::norm::NormFamilyId::DinEn16798, document.annex))

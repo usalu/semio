@@ -25,7 +25,7 @@ type Vectors = {
   profile: { x: number; y: number; w: number; h: number };
   span: { z0: number; z1: number };
   basis: { u: number[]; v: number[]; w: number[] };
-  cases: { name: string; sweep: "v" | "w"; front: Extent; plan: Extent }[];
+  cases: { name: string; sweep: "u" | "v" | "w"; front: Extent; plan: Extent }[];
   refused: { name: string; solid: Record<string, unknown> }[];
 };
 
@@ -36,7 +36,7 @@ const authored = sample.representations[key] as AuthoredRepresentation;
 
 const slat = (solid: Record<string, unknown>): Shape => ({ id: "slat", kind: "rect", bone: vectors.bone, role: "body", z: 1, filled: true, tone: 0.5, ...vectors.profile, solid }) as unknown as Shape;
 const withSlat = (solid: Record<string, unknown>): Asset => ({ ...sample, representations: { ...sample.representations, [key]: { ...authored, geometry: { ...authored.geometry, front: [slat(solid)], plan: [slat(solid)] } } } as Asset["representations"] });
-const sweptAsset = (sweep: "v" | "w"): Asset => withSlat({ kind: "extruded", sweep, ...vectors.span });
+const sweptAsset = (sweep: "u" | "v" | "w"): Asset => withSlat({ kind: "extruded", sweep, ...vectors.span });
 
 function measured(asset: Asset): Record<"front" | "plan", Extent> {
   const state = evaluate(asset, { kind: "pose", pose: vectors.pose }, { kind: "scale", scale: { denominator: vectors.scale } });
@@ -50,12 +50,12 @@ function measured(asset: Asset): Record<"front" | "plan", Extent> {
   return { front: extent("front"), plan: extent("plan") };
 }
 
-function glMatrixExtent(sweep: "v" | "w"): Record<"front" | "plan", Extent> {
+function glMatrixExtent(sweep: "u" | "v" | "w"): Record<"front" | "plan", Extent> {
   const { u, v, w } = vectors.basis;
   const frame = mat4.fromValues(u[0]!, u[1]!, u[2]!, 0, v[0]!, v[1]!, v[2]!, 0, w[0]!, w[1]!, w[2]!, 0, 0, 0, 0, 1);
   const { x, y, w: width, h: height } = vectors.profile;
   const corners = [[x, y], [x + width, y], [x + width, y + height], [x, y + height]] as const;
-  const world = (a: number, b: number, c: number) => vec3.transformMat4(vec3.create(), sweep === "w" ? [a, b, c] : [a, c, b], frame);
+  const world = (a: number, b: number, c: number) => vec3.transformMat4(vec3.create(), sweep === "u" ? [c, a, b] : sweep === "w" ? [a, b, c] : [a, c, b], frame);
   const points = [vectors.span.z0, vectors.span.z1].flatMap((c) => corners.map(([a, b]) => world(a, b, c)));
   const box = (xOf: (p: vec3) => number, yOf: (p: vec3) => number): Extent => ({ minX: Math.min(...points.map(xOf)), maxX: Math.max(...points.map(xOf)), minY: Math.min(...points.map(yOf)), maxY: Math.max(...points.map(yOf)) });
   return { front: box((p) => p[2]!, (p) => p[1]!), plan: box((p) => p[0]!, (p) => p[2]!) };
@@ -127,7 +127,7 @@ describe("🧊️ a missing or unknown sweep is refused by name", () => {
     });
   }
 
-  it("accepts a sweep of w and of v in the validator", () => {
-    for (const sweep of ["w", "v"] as const) expect(validateAsset(sweptAsset(sweep)).filter((issue) => issue.code === "solid-sweep")).toEqual([]);
+  it("accepts all three orthogonal sweeps in the validator", () => {
+    for (const sweep of ["u", "w", "v"] as const) expect(validateAsset(sweptAsset(sweep)).filter((issue) => issue.code === "solid-sweep")).toEqual([]);
   });
 });

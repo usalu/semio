@@ -1,6 +1,8 @@
 //! 🥞️ Exact original lofts between two correspondingly translated planar sections.
 
 use super::*;
+use semio_framework_3d_brep_construction::conical_frustum::ConicalFrustum;
+use semio_framework_3d_brep_solid_transaction::SolidBoundary;
 use semio_framework_3d_brep_representation::arena::{CoedgeId, LoopId};
 use semio_framework_value::{RetainedAllocationEffect, RetainedCloneProgress as Progress, RetirementDemand};
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
@@ -44,7 +46,7 @@ pub struct LoftDraft {
 
 /// 🧱️ The exact solid or the live line correspondence check selected for a two-profile loft.
 pub enum LoftPlan {
-    Cylinder(SolidPublication),
+    Solid(SolidPublication),
     Lines(LoftDraft),
 }
 
@@ -65,7 +67,7 @@ impl BrepRegistry {
         Ok(self.planar_face_boundary_depth(handles[0])?.max(self.planar_face_boundary_depth(handles[1])?))
     }
 
-    /// 🥞️ Stages a congruent coaxial cylinder or starts line correspondence acquisition.
+    /// 🥞️ Stages a coaxial cylinder or frustum, or starts line correspondence acquisition.
     pub fn plan_exact_loft(&mut self, handles: [&str; 2]) -> Result<LoftPlan, ValueError> {
         let profiles = [self.loft_profile(handles[0])?, self.loft_profile(handles[1])?];
         let [a, b] = profiles;
@@ -75,11 +77,18 @@ impl BrepRegistry {
         if !height.is_finite() || height.abs() <= Tol::DEFAULT.value() { return Err(invalid()); }
         match [self.conic_face_boundary(a.id), self.conic_face_boundary(b.id)] {
             [Some((Curve3::Circle { radius: first, .. }, _, _)), Some((Curve3::Circle { radius: last, .. }, _, _))]
-                if first == last && a.frame.x == b.frame.x && a.frame.y == b.frame.y && a.frame.z == b.frame.z
+                if a.frame.x == b.frame.x && a.frame.y == b.frame.y && a.frame.z == b.frame.z
                     && displacement.cross(a.frame.z).norm() <= Tol::DEFAULT.value() =>
             {
-                self.plan_circular_extrusion(handles[0], [displacement.x, displacement.y, displacement.z])?
-                    .map(LoftPlan::Cylinder).ok_or_else(unsupported)
+                if first==last {
+                    return self.plan_circular_extrusion(handles[0],[displacement.x,displacement.y,displacement.z])?
+                        .map(LoftPlan::Solid).ok_or_else(unsupported);
+                }
+                let (mut frame,small,large,travel)=if first<last{(a.frame,*first,*last,height)}
+                    else{(b.frame,*last,*first,-height)};
+                if travel<0. {frame.y=-frame.y;frame.z=-frame.z;}
+                let frustum=ConicalFrustum::new(frame,[small,large],travel.abs()).ok_or_else(invalid)?;
+                self.plan_solid_boundary(SolidBoundary::Frustum(frustum)).map(LoftPlan::Solid)
             }
             [None, None] => Ok(LoftPlan::Lines(LoftDraft {
                 owner: std::ptr::from_ref(&*self) as usize, revision: self.shape_mutation_revision,

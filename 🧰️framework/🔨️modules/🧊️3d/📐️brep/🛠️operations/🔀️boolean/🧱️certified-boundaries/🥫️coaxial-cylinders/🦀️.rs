@@ -3,9 +3,19 @@
 use super::{empty_result, unsupported, ValueError};
 use crate::BooleanOp;
 use semio_framework_3d_brep_construction::primitives::SolidPrimitive;
+use semio_framework_3d_brep_representation::contract::AnnularRevolution;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_vector::{matrix::Frame3, Vec3};
 
-pub fn coaxial_cylinders(a: SolidPrimitive, b: SolidPrimitive, operation: BooleanOp) -> Result<SolidPrimitive, ValueError> {
+struct CoaxialPair {
+    frame: Frame3,
+    stock_radius: f64,
+    stock_height: f64,
+    tool_radius: f64,
+    tool_span: [f64; 2],
+}
+
+fn coaxial_pair(a: SolidPrimitive, b: SolidPrimitive) -> Result<CoaxialPair, ValueError> {
     let (SolidPrimitive::Cylinder { frame: f, radius: r, height: h }, SolidPrimitive::Cylinder { frame: g, radius: s, height: k }) = (a, b) else {
         return Err(unsupported());
     };
@@ -15,6 +25,28 @@ pub fn coaxial_cylinders(a: SolidPrimitive, b: SolidPrimitive, operation: Boolea
     if !position.is_finite() || delta - f.z * position != Vec3::ZERO { return Err(unsupported()); }
     let (lo, hi) = if axis > 0.0 { (position, position + k) } else { (position - k, position) };
     if !lo.is_finite() || !hi.is_finite() { return Err(unsupported()); }
+    Ok(CoaxialPair { frame: f, stock_radius: r, stock_height: h, tool_radius: s, tool_span: [lo, hi] })
+}
+
+/// 🕳️ Certifies a single smaller tool on the stock axis.
+pub fn coaxial_cylinder_bore(a: SolidPrimitive, b: SolidPrimitive) -> Result<AnnularRevolution, ValueError> {
+    let pair = coaxial_pair(a,b)?;
+    AnnularRevolution::from_axial_cut(
+        pair.frame,pair.tool_radius,pair.stock_radius,pair.stock_height,pair.tool_span,Tol::DEFAULT.value(),
+    ).ok_or_else(unsupported)
+}
+
+/// 🔗️ Certifies connected stepped unions between coaxial cylinders of unequal radii.
+pub fn coaxial_cylinder_step(a: SolidPrimitive,b: SolidPrimitive)->Result<AnnularRevolution,ValueError>{
+    let mut pair=coaxial_pair(a,b)?;
+    if pair.stock_radius<pair.tool_radius{pair=coaxial_pair(b,a)?;}
+    AnnularRevolution::from_axial_union(
+        pair.frame,pair.tool_radius,pair.stock_radius,pair.stock_height,pair.tool_span,Tol::DEFAULT.value(),
+    ).ok_or_else(unsupported)
+}
+
+pub fn coaxial_cylinders(a: SolidPrimitive, b: SolidPrimitive, operation: BooleanOp) -> Result<SolidPrimitive, ValueError> {
+    let CoaxialPair { frame: f, stock_radius: r, stock_height: h, tool_radius: s, tool_span: [lo, hi] } = coaxial_pair(a,b)?;
     let overlap_lo = lo.max(0.0);
     let overlap_hi = hi.min(h);
     let cylinder = |start, end, radius| SolidPrimitive::Cylinder {

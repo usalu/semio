@@ -17,6 +17,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 fn print_en1998_mutation(mutation: &En1998Mutation) -> String {
     match mutation {
+        En1998Mutation::InsertCase(payload) => format!("insert-case {}", semio_framework_pack_json::to_json_string(payload)),
+        En1998Mutation::RemoveCase(payload) => format!("remove-case {}", semio_framework_pack_json::to_json_string(payload)),
+        En1998Mutation::ChangeCaseNumber(payload) => format!("change-case-number {}", semio_framework_pack_json::to_json_string(payload)),
+        En1998Mutation::ChangeCaseText(payload) => format!("change-case-text {}", semio_framework_pack_json::to_json_string(payload)),
+        En1998Mutation::ChangeCaseLabelEn(payload) => format!("change-case-label-en {}", semio_framework_pack_json::to_json_string(payload)),
+        En1998Mutation::ChangeCaseLabelDe(payload) => format!("change-case-label-de {}", semio_framework_pack_json::to_json_string(payload)),
+        En1998Mutation::ChangeCaseEntryId(payload) => format!("change-case-entry-id {}", semio_framework_pack_json::to_json_string(payload)),
         En1998Mutation::ChangeAnnex(p) => text_buildings::print_change_annex(p),
         En1998Mutation::InsertBuilding(p) => text_buildings::print_insert_building(p),
         En1998Mutation::RemoveBuilding(p) => text_buildings::print_remove_building(p),
@@ -383,6 +390,16 @@ fn print_en1998_mutation(mutation: &En1998Mutation) -> String {
 
 fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+    match keyword {
+        "insert-case" => return semio_framework_pack_json::from_json_str(rest, semio_framework_pack_json::JsonMemberPolicy::Reject).map(En1998Mutation::InsertCase).map_err(|error| error.to_string()),
+        "remove-case" => return semio_framework_pack_json::from_json_str(rest, semio_framework_pack_json::JsonMemberPolicy::Reject).map(En1998Mutation::RemoveCase).map_err(|error| error.to_string()),
+        "change-case-number" => return semio_framework_pack_json::from_json_str(rest, semio_framework_pack_json::JsonMemberPolicy::Reject).map(En1998Mutation::ChangeCaseNumber).map_err(|error| error.to_string()),
+        "change-case-text" => return semio_framework_pack_json::from_json_str(rest, semio_framework_pack_json::JsonMemberPolicy::Reject).map(En1998Mutation::ChangeCaseText).map_err(|error| error.to_string()),
+        "change-case-label-en" => return semio_framework_pack_json::from_json_str(rest, semio_framework_pack_json::JsonMemberPolicy::Reject).map(En1998Mutation::ChangeCaseLabelEn).map_err(|error| error.to_string()),
+        "change-case-label-de" => return semio_framework_pack_json::from_json_str(rest, semio_framework_pack_json::JsonMemberPolicy::Reject).map(En1998Mutation::ChangeCaseLabelDe).map_err(|error| error.to_string()),
+        "change-case-entry-id" => return semio_framework_pack_json::from_json_str(rest, semio_framework_pack_json::JsonMemberPolicy::Reject).map(En1998Mutation::ChangeCaseEntryId).map_err(|error| error.to_string()),
+        _ => {}
+    }
     let args = parse_args(rest)?;
     match keyword {
         "change-annex" => text_buildings::parse_change_annex(&args).map(En1998Mutation::ChangeAnnex),

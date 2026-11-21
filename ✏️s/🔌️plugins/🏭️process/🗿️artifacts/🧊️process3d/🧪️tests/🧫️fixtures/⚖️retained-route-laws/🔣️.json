@@ -1,13 +1,13 @@
 {
   "schema": "semio.process3d.retained-route-laws.v1",
   "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-  "routeCount": 31,
+  "routeCount": 32,
   "modules": [
     "🧵️retained-commands/🦀️.rs",
     "📬️store-preparation/🦀️.rs",
     "🪟️editor-impl/🦀️.rs"
   ],
-  "migratedCount": 31,
+  "migratedCount": 32,
   "modelImport": {
     "source": "🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧱️brep-converters/🦀️.rs",
     "rawFileBytes": 24576,
@@ -33,7 +33,6 @@
         "config"
       ],
       "routes": [
-        "engagementAbort",
         "setCamera",
         "setCursor",
         "stepCursor",
@@ -59,8 +58,12 @@
     {
       "status": "migrated",
       "execution": "file-import",
-      "lanes": ["host-only"],
-      "routes": ["importModelFile"]
+      "lanes": [
+        "host-only"
+      ],
+      "routes": [
+        "importModelFile"
+      ]
     },
     {
       "status": "migrated",
@@ -89,7 +92,6 @@
         "addStep",
         "removeStep",
         "removeSelectedStep",
-        "worldPointerDown",
         "worldFaceDragEnd"
       ]
     },
@@ -106,6 +108,39 @@
         "setSunElevation",
         "setSunIntensity",
         "setContributions"
+      ]
+    },
+    {
+      "status": "migrated",
+      "execution": "bounded",
+      "lanes": [
+        "artifact",
+        "config",
+        "window-transient"
+      ],
+      "routes": [
+        "worldPointerDown"
+      ]
+    },
+    {
+      "status": "migrated",
+      "execution": "bounded",
+      "lanes": [
+        "config",
+        "window-transient"
+      ],
+      "routes": [
+        "engagementAbort"
+      ]
+    },
+    {
+      "status": "migrated",
+      "execution": "bounded",
+      "lanes": [
+        "window-transient"
+      ],
+      "routes": [
+        "worldPointerMove"
       ]
     }
   ],

@@ -1,11 +1,12 @@
 const table=new Map(),lives=new Set(),blocked=new Set();
+let revision=0;
 const FOLLOW="(?=[/\"\\\\\\s,\\]\\}:]|$)",PRECEDE="(?<![\\p{L}\\p{N}._@+\\-/])";
 const escape=text=>text.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&");
 const absolute=text=>typeof text==="string"&&text.length>1&&(text.startsWith("/")||/^[A-Za-z]:[\\/]/u.test(text));
 const nested=(left,right)=>/[\\/]/u.test(left.charAt(right.length))&&left.startsWith(right)||/[\\/]/u.test(right.charAt(left.length))&&right.startsWith(left);
 const escaped=text=>JSON.stringify(text).slice(1,-1);
 const patternOf=text=>new RegExp(PRECEDE+escape(text)+FOLLOW,"gu");
-const block=former=>{table.delete(former);blocked.add(former);};
+const block=former=>{if(table.delete(former))revision++;blocked.add(former);};
 
 /** 🏚️ Teaches this process that facts recorded under `former` are about the tree now at `live`: a workspace that moved (or a generation made on a machine whose checkout lives elsewhere) keeps every recorded fact checkable by content. The mapping is refused, and any earlier one for the same root dropped for good, whenever the text cannot tell the trees apart: a root that is itself the live root of a workspace this process serves, a root taught with two different live roots, a root that contains or sits inside another former or live root, and a chain (a former root that is another one's live root). A refused root only leaves its rows to be checked as stale, never wrongly fresh.
  * @see ../🟨️.mjs `observationsHold` */
@@ -18,7 +19,7 @@ export function noteFormerRootV1(former,liveRoot){
  for(const known of lives)if(known!==liveRoot&&nested(former,known)){block(former);return false;}
  const known=table.get(former);
  if(known!==undefined){if(known.live===liveRoot)return false;block(former);return false;}
- table.set(former,{live:liveRoot,pattern:patternOf(former),jsonPattern:escaped(former)===former?undefined:patternOf(escaped(former)),jsonLive:escaped(liveRoot),jsonFormer:escaped(former)});return true;
+ table.set(former,{live:liveRoot,pattern:patternOf(former),jsonPattern:escaped(former)===former?undefined:patternOf(escaped(former)),jsonLive:escaped(liveRoot),jsonFormer:escaped(former)});revision++;return true;
 }
 
 /** 🏡️ Registers the live root of a workspace this process serves: no mapping may ever rewrite rows that sit under it, so a mapping from that root is dropped and refused. */
@@ -29,7 +30,7 @@ export function noteLiveRootV1(root){
 }
 
 /** 🧹️ Forgets every taught root (a law starts from none). */
-export const forgetFormerRootsV1=()=>{table.clear();lives.clear();blocked.clear();};
+export const forgetFormerRootsV1=()=>{if(table.size)revision++;table.clear();lives.clear();blocked.clear();};
 
 /** 🗺️ The roots taught so far as `[former, live]` pairs. */
 export const formerRootsV1=()=>[...table].map(([former,{live}])=>[former,live]);
@@ -61,10 +62,23 @@ export function rebaseRowV1(row){
 }
 
 /** 📚️ The rows as they read in the live tree, the same array when none changed. */
-export function rebaseRowsV1(rows){
+export function rebaseRowsV1(rows,rebase=rebaseRowV1){
  if(table.size===0)return rows;
- let out;for(let at=0;at<rows.length;at++){const next=rebaseRowV1(rows[at]);if(next!==rows[at]){out??=Array.from(rows);out[at]=next;}}
+ let out;for(let at=0;at<rows.length;at++){const next=rebase(rows[at]);if(next!==rows[at]){out??=Array.from(rows);out[at]=next;}}
  return out??rows;
+}
+
+/** 🧩️ Keeps relocated row identity stable for one validation round under the current root mapping. */
+export function createRowRebaserV1(){
+ let at=revision,images=new WeakMap();
+ const rebase=row=>{
+  const known=images.get(row);if(known!==undefined)return known;
+  const image=rebaseRowV1(row);if(image!==row)images.set(row,image);return image;
+ };
+ return rows=>{
+  if(at!==revision){at=revision;images=new WeakMap();}
+  return rebaseRowsV1(rows,rebase);
+ };
 }
 
 const FIRST=/^\["((?:[^"\\]|\\.)*)"/u,WALK=/"workspaceRoot":"((?:[^"\\]|\\.)*)"/u;

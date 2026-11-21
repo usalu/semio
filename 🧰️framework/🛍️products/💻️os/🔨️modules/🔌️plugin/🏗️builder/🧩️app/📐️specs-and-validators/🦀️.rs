@@ -67,7 +67,7 @@ impl PanelTabSpec {
 }
 
 /// 🌳️ Asserts every tab in the tree has a non-empty, unique id and sets exactly one of `body_key`/`children`.
-pub(super) fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut HashSet<String>) {
+pub(super) fn validate_panel_tab_spec(app_id: &str, tab: &PanelTabSpec, seen_ids: &mut BTreeSet<String>) {
     let id = tab.kind.id_str();
     assert!(!id.trim().is_empty(), "app {} panel tab id must be non-empty", app_id);
     assert!(seen_ids.insert(id.to_string()), "app {} duplicate panel tab id {}", app_id, id);
@@ -133,7 +133,7 @@ pub(super) fn panel_tab_definition_to_spec(def: PanelTabDefinition) -> PanelTabS
 /// a non-empty, unique id and that any `Select` control declares at least one option — shared by
 /// per-action arg validation and dialog arg validation so both stay in lockstep.
 pub(super) fn validate_arg_defs(app_id: &str, owner: &str, args: &[ActionArgDef]) {
-    let mut arg_ids = HashSet::new();
+    let mut arg_ids = BTreeSet::new();
     for arg in args {
         assert!(arg_ids.insert(arg.id.clone()), "app {} {} declares duplicate arg id {}", app_id, owner, arg.id);
         if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
@@ -148,7 +148,7 @@ pub(super) fn validate_arg_defs(app_id: &str, owner: &str, args: &[ActionArgDef]
 /// kind ids are camelCased at the stamp site, never compared raw). Anything else grammar-valid is an
 /// escape hatch — an app may legitimately reference a plugin- or framework-owned element it doesn't
 /// declare.
-pub(super) fn validate_referenced_element_id(app_id: &str, owner: &str, role: &str, id: &str, declared_utility_ids: &HashSet<String>, panel_tab_ids: &HashSet<String>, window_kind_ids: &HashSet<String>) {
+pub(super) fn validate_referenced_element_id(app_id: &str, owner: &str, role: &str, id: &str, declared_utility_ids: &BTreeSet<String>, panel_tab_ids: &BTreeSet<String>, window_kind_ids: &BTreeSet<String>) {
     assert!(is_element_id(id), "app {} {} {} element id {} does not match the UI element id grammar", app_id, owner, role, id);
     if declared_utility_ids.contains(id) || id == UI_NAVBAR_ELEMENT_ID || id == UI_FOOTER_ELEMENT_ID {
         return;

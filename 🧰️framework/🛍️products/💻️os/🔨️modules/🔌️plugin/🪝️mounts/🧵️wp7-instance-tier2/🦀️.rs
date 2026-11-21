@@ -31,6 +31,28 @@ pub(crate) extern crate semio_plugin_builder as builder;
 pub(crate) mod app_testing {
     pub use semio_plugin_testing_laws::*;
 }
+#[cfg(any(test, feature = "artifact-app-testing"))]
+/// 🪟️ Drives a persisted window envelope through its registered mounted owner on the fixture's original turns.
+pub async fn restore_fixture_window_config<P: crate::PluginApp>(
+    app: &mut P,
+    pack: semio_plugin_window_config::WindowConfigPack,
+    cx: &mut semio_framework_job::StepContext<'_>,
+) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    use semio_plugin_testing_laws::artifact_app_laws::{fixture_renew_turn, OriginalFixtureCaller};
+    use semio_plugin_window_config::WindowConfigPackSource;
+    let envelope_pack = match pack.source {
+        WindowConfigPackSource::Pair(files) => semio_os_kernel::os_store::serialization::encode_document_pack_bytes(&files.pack, &files.spr).await,
+        WindowConfigPackSource::Framed(bytes) => bytes,
+    };
+    let mut entry = semio_os_kernel::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack };
+    let mut load = Default::default();
+    let grant = cx.retained_grant();
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        fixture_renew_turn(cx, OriginalFixtureCaller::turn_fuel(), grant)?;
+        if app.advance_window_config_load(&mut load, &mut entry, cx)? { return Ok(()); }
+    }
+    Err(semio_framework_value::ValueError::invariant("the window config restore exceeded its fixture turn bound").into())
+}
 //#endregion ⚖️AppLaws
 
 

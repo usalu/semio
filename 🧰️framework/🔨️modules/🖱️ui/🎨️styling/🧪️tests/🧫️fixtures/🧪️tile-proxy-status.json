@@ -1,0 +1,15 @@
+{
+  "tile": "3/1/2.png",
+  "setCookie": "upstream-session=fixture",
+  "rateLimit": "0",
+  "retryAfter": "60",
+  "tileBody": "fixture tile bytes",
+  "statuses": [404, 410, 408, 425, 429, 502, 503, 504, 200],
+  "concurrent": {
+    "chunks": ["first tile bytes", " and the remaining bytes"],
+    "cases": [
+      { "name": "a sibling stays connected", "cancelSibling": false, "upstreamRequests": 1 },
+      { "name": "every consumer disconnects", "cancelSibling": true, "upstreamRequests": 2 }
+    ]
+  }
+}

@@ -21,7 +21,10 @@ use std::sync::OnceLock;
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, Fault};
+use semio_os_mcp_port::channel_port::{ActivationPhase, ActivationScope, Fault, map_fault};
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🌱️restore/🦀️.rs"]
+mod actor_restore;
 
 /// 🧠️ The process shares one firstparty interpreter for dynamically supplied component bytes.
 #[cfg(not(target_arch = "wasm32"))]
@@ -76,6 +79,84 @@ fn compiled_components() -> &'static Mutex<HashMap<[u8; 32], CompiledParent>> {
     COMPILED.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Default)]
+struct ComponentPreparationGate {
+    active: Mutex<bool>,
+    changed: std::sync::Condvar,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct ComponentPreparationClaim<'a>(&'a ComponentPreparationGate);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for ComponentPreparationClaim<'_> {
+    fn drop(&mut self) {
+        *self.0.active.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = false;
+        self.0.changed.notify_all();
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl ComponentPreparationGate {
+    fn for_component(hash: [u8; 32]) -> Arc<Self> {
+        static GATES: OnceLock<Mutex<HashMap<[u8; 32], std::sync::Weak<ComponentPreparationGate>>>> = OnceLock::new();
+        let mut gates = GATES.get_or_init(Default::default).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        gates.retain(|_, gate| gate.strong_count() != 0);
+        if let Some(gate) = gates.get(&hash).and_then(std::sync::Weak::upgrade) {
+            return gate;
+        }
+        let gate = Arc::new(Self::default());
+        gates.insert(hash, Arc::downgrade(&gate));
+        gate
+    }
+
+    fn acquire(&self, scope: &ActivationScope) -> Result<ComponentPreparationClaim<'_>, GatewayError> {
+        let mut active = self.active.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        loop {
+            scope.checkpoint().map_err(activation_fault)?;
+            if !*active {
+                *active = true;
+                return Ok(ComponentPreparationClaim(self));
+            }
+            active = self.changed.wait_timeout(active, std::time::Duration::from_millis(50)).unwrap_or_else(std::sync::PoisonError::into_inner).0;
+        }
+    }
+}
+
+/// 🌱️ Shares the owned descriptor stage's finite fuel and elapsed-time envelope for cold authored bundle construction.
+#[cfg(not(target_arch = "wasm32"))]
+fn prepare_compiled_actor(compiled: &mut semio_plugin_host::CompiledHandle, plugin_id: &str, scope: &ActivationScope) -> Result<(), GatewayError> {
+    const FUEL: u64 = 32_000_000_000;
+    const PROGRESS_INTERVAL: u64 = 1 << 24;
+    const WALL: std::time::Duration = std::time::Duration::from_secs(1_800);
+    let began = std::time::Instant::now();
+    let mut next_report = 0;
+    let mut spent = 0;
+    let prepared = compiled.prepare_owned_actor(FUEL, |fuel| {
+        spent = fuel;
+        if began.elapsed() >= WALL || scope.cancel().is_cancelled_now() {
+            return false;
+        }
+        if fuel >= next_report {
+            next_report = fuel + PROGRESS_INTERVAL;
+            return scope.advance(ActivationPhase::CompilingComponent, fuel as f64 / FUEL as f64).is_ok();
+        }
+        true
+    });
+    scope.checkpoint().map_err(activation_fault)?;
+    if began.elapsed() >= WALL {
+        return Err(GatewayError::new(GatewayErrorCode::BudgetExceeded, format!("preparing `{plugin_id}` reached its wall budget")).retryable());
+    }
+    if prepared.is_err() && spent == FUEL {
+        return Err(GatewayError::new(GatewayErrorCode::BudgetExceeded, format!("preparing `{plugin_id}` reached its instruction budget")).retryable());
+    }
+    if prepared.map_err(|error| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("preparing `{plugin_id}`: {error}")))? {
+        scope.advance(ActivationPhase::CompilingComponent, 1.0).map_err(activation_fault)?;
+    }
+    Ok(())
+}
+
 /// 🪪️ What a staged component file IS without reading it: its path, length and modification time.
 /// A rebuild rewrites the file, so it changes the identity and is read and hashed again.
 #[cfg(not(target_arch = "wasm32"))]
@@ -95,29 +176,25 @@ fn component_file_hashes() -> &'static Mutex<HashMap<ComponentFileIdentity, [u8;
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ComponentFileIdentity {
-    /// 🗂️ Where this identity's content hash is persisted: one 32-byte file under the compiled-code
-    /// cache root, named by the digest of the identity itself.
-    fn persisted_path(&self) -> PathBuf {
-        let key = format!("semio.component-file-identity/v1\0{}\0{}\0{}", self.path.display(), self.length, self.modified_ns);
-        semio_framework_async::block_on(semio_plugin_host::default_compiled_cache_root()).join("component-identities").join(framework_hash::hash_bytes(key.as_bytes()))
+    fn read(path: &Path) -> std::io::Result<Self> {
+        let metadata = std::fs::metadata(path)?;
+        Ok(Self {
+            path: path.to_path_buf(),
+            length: metadata.len(),
+            modified_ns: metadata.modified()?.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos(),
+        })
     }
 
     fn known_hash(&self) -> Option<[u8; 32]> {
-        if let Some(hash) = component_file_hashes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(self).copied() {
-            return Some(hash);
-        }
-        let hash: [u8; 32] = std::fs::read(self.persisted_path()).ok()?.try_into().ok()?;
-        component_file_hashes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(self.clone(), hash);
-        Some(hash)
+        component_file_hashes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(self).copied()
     }
 
-    fn remember(&self, hash: [u8; 32]) {
-        component_file_hashes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(self.clone(), hash);
-        let path = self.persisted_path();
-        if let Some(parent) = path.parent() {
-            let _ = std::fs::create_dir_all(parent);
+    fn remember(self, hash: [u8; 32]) {
+        if Self::read(&self.path).ok().as_ref() == Some(&self) {
+            let mut hashes = component_file_hashes().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            hashes.retain(|identity, _| identity.path != self.path);
+            hashes.insert(self, hash);
         }
-        let _ = std::fs::write(path, hash);
     }
 }
 
@@ -135,10 +212,7 @@ const COMPONENT_HASH_CHUNK_BYTES: usize = 4 << 20;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn activation_fault(fault: Fault) -> GatewayError {
-    if fault.code == ACTIVATION_CANCELLED_FAULT_CODE {
-        return GatewayError::new(GatewayErrorCode::Cancelled, fault.message);
-    }
-    GatewayError::new(GatewayErrorCode::Internal, fault.message)
+    map_fault(&fault)
 }
 
 /// 🔏️ `bytes`' own 32-byte content digest, one chunk per progress report and cancel check. [Design notes](README.md#source-notes-161).
@@ -163,39 +237,36 @@ fn read_component(path: &Path, scope: &ActivationScope) -> Result<Vec<u8>, Gatew
 /// 🧩️ The process's compiled handle for one component, reporting each phase it actually runs to [Design notes](README.md#source-notes-186).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, component: ComponentBytes<'_>, scope: &ActivationScope) -> Result<semio_plugin_host::CompiledHandle, GatewayError> {
-    let (package_hash, mut bytes) = match component {
+    scope.checkpoint().map_err(activation_fault)?;
+    let shared = plugin_runtime_origin().get().is_some_and(|origin| std::ptr::eq(runtime, origin.runtime.as_ref()));
+    let (identity, bytes) = match component {
         ComponentBytes::File(path) => {
-            let metadata = std::fs::metadata(path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", path.display())))?;
-            let identity = ComponentFileIdentity {
-                path: path.to_path_buf(),
-                length: metadata.len(),
-                modified_ns: metadata.modified().ok().and_then(|modified| modified.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |since| since.as_nanos()),
-            };
-            match identity.known_hash() {
-                Some(package_hash) => (package_hash, None),
-                None => {
-                    let bytes = read_component(path, scope)?;
-                    let package_hash = scoped_component_hash(&bytes, scope)?;
-                    identity.remember(package_hash);
-                    (package_hash, Some(std::borrow::Cow::Owned(bytes)))
+            let identity = shared.then(|| ComponentFileIdentity::read(path).ok()).flatten();
+            if let Some(hash) = identity.as_ref().and_then(ComponentFileIdentity::known_hash) {
+                if let Some(compiled) = cached_component(hash, scope)? {
+                    return Ok(compiled);
                 }
             }
+            (identity, std::borrow::Cow::Owned(read_component(path, scope)?))
         }
-        ComponentBytes::Held(bytes) => (scoped_component_hash(bytes, scope)?, Some(std::borrow::Cow::Borrowed(bytes))),
+        ComponentBytes::Held(bytes) => (None, std::borrow::Cow::Borrowed(bytes)),
     };
-    if let Some(compiled) = compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&package_hash) {
-        return Ok(compiled.compiled.clone());
+    let package_hash = scoped_component_hash(&bytes, scope)?;
+    let gate = shared.then(|| ComponentPreparationGate::for_component(package_hash));
+    let _claim = gate.as_ref().map(|gate| gate.acquire(scope)).transpose()?;
+    if shared {
+        if let Some(compiled) = cached_component(package_hash, scope)? {
+            if let Some(identity) = identity {
+                identity.remember(package_hash);
+            }
+            return Ok(compiled);
+        }
     }
     scope.enter(ActivationPhase::LoadingCompiledCode).map_err(activation_fault)?;
     let package = semio_plugin_host::PackageRef { package: semio_plugin_host::PackageId(plugin_id.to_string()), hash: semio_plugin_host::PackageHash(package_hash) };
-    let compiled = match semio_framework_async::block_on(runtime.load_compiled(&package)) {
+    let mut compiled = match semio_framework_async::block_on(runtime.load_compiled(&package)) {
         Some(compiled) => compiled,
         None => {
-            let bytes = match (bytes.take(), component) {
-                (Some(bytes), _) => bytes,
-                (None, ComponentBytes::File(path)) => std::borrow::Cow::Owned(read_component(path, scope)?),
-                (None, ComponentBytes::Held(bytes)) => std::borrow::Cow::Borrowed(bytes),
-            };
             scope.enter(ActivationPhase::CompilingComponent).map_err(activation_fault)?;
             match semio_framework_async::block_on(runtime.isolated_compile_target(&package)) {
                 Some(target) => {
@@ -206,8 +277,33 @@ pub fn scoped_compiled_component(runtime: &GuestRuntimes, plugin_id: &str, compo
             }
         }
     };
-    let mut cache=compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    Ok(cache.entry(package_hash).or_insert(CompiledParent{compiled,homes:0}).compiled.clone())
+    let preparation = match component {
+        ComponentBytes::File(path) if shared => semio_os_mcp_catalog::plugin_paths_and_descriptor::retained_actor_preparation(path, plugin_id)?,
+        _ => None,
+    };
+    match preparation {
+        Some(preparation) => actor_restore::restore_compiled_actor(&mut compiled, &bytes, &preparation, scope)?,
+        None => prepare_compiled_actor(&mut compiled, plugin_id, scope)?,
+    }
+    if !shared {
+        return Ok(compiled);
+    }
+    let compiled = {
+        let mut cache = compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        scope.checkpoint().map_err(activation_fault)?;
+        cache.entry(package_hash).or_insert(CompiledParent { compiled, homes: 0 }).compiled.clone()
+    };
+    if let Some(identity) = identity {
+        identity.remember(package_hash);
+    }
+    Ok(compiled)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn cached_component(hash: [u8; 32], scope: &ActivationScope) -> Result<Option<semio_plugin_host::CompiledHandle>, GatewayError> {
+    let cache = compiled_components().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    scope.checkpoint().map_err(activation_fault)?;
+    Ok(cache.get(&hash).map(|parent| parent.compiled.clone()))
 }
 
 //#region 🧊️CompileFlight
@@ -416,3 +512,7 @@ impl CompileFlight {
 }
 
 //#endregion 🧊️CompileFlight
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "🧪️tests/publication.rs"]
+mod publication_tests;

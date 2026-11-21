@@ -109,6 +109,23 @@
       "victims": {"x": "host", "y": "host"}
     },
     {
+      "name": "pressure leaves graph-owned source inventories and takes the available host objects and memo",
+      "policy": {"capBytes": 200, "highWatermark": 0.9, "lowWatermark": 0.75},
+      "externalBytes": 0, "nowMs": 10000,
+      "partitionNeedBytes": 300,
+      "areas": [
+        {"id": "store", "capBytes": null, "maxAgeMs": null},
+        {"id": "build-input-closures", "capBytes": null, "maxAgeMs": null},
+        {"id": "graph-memo", "capBytes": null, "maxAgeMs": 5000}
+      ],
+      "entries": [
+        {"area": "store", "id": "object", "access": 2, "size": 100, "protected": false},
+        {"area": "build-input-closures", "id": "inventory", "access": 1, "size": 200, "protected": true},
+        {"area": "graph-memo", "id": "memo", "access": 3, "size": 100, "protected": false}
+      ],
+      "victims": {"object": "host", "memo": "age"}
+    },
+    {
       "name": "a partition need beyond the unpinned objects takes all of them and keeps the pinned one",
       "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
       "partitionNeedBytes": 500,

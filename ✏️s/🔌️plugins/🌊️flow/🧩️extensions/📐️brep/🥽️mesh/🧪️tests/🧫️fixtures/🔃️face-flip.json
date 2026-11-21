@@ -1,0 +1,28 @@
+{
+  "source":{
+    "vertices":[[0,0,0],[2,0,0],[0,2,0],[2,2,0]],
+    "faces":[[0,1,2],[1,3,2]],
+    "surface":[
+      {"kind":"vertexNormal","index":0,"normal":[0.6,0,0.8]},
+      {"kind":"vertexNormal","index":1,"normal":[0,0,1]},
+      {"kind":"vertexNormal","index":2,"normal":[0,0,1]},
+      {"kind":"vertexNormal","index":3,"normal":[0,0,1]},
+      {"kind":"cornerUv","index":0,"uv":[0.125,0.125]},
+      {"kind":"cornerUv","index":1,"uv":[0.625,0.125]},
+      {"kind":"cornerUv","index":2,"uv":[0.125,0.625]},
+      {"kind":"cornerUv","index":3,"uv":[0.375,0.375]},
+      {"kind":"cornerUv","index":4,"uv":[0.875,0.375]},
+      {"kind":"cornerUv","index":5,"uv":[0.375,0.875]},
+      {"kind":"smoothFace","index":0},
+      {"kind":"seamEdge","index":1}
+    ]
+  },
+  "selection":[0],
+  "expected":{
+    "normalAtExclusiveVertex":[-0.6,0,-0.8],
+    "normalAtSharedVertex":[0,0,1],
+    "effectiveNormals":[[0,0,-1],[0,0,1]],
+    "twins":[[1,5],[5,1]],
+    "flipped":[true,false]
+  }
+}

@@ -81,12 +81,13 @@ impl ReconstructionRunCheckpoint {
     }
 }
 
-/// #️⃣️ The digest of everything a reconstruction reads: frame references and the content ids of their
-/// assets, reconstruction parameters and calibration. GCPs, results and view state are not inputs.
+/// #️⃣️ Digests the frame inputs, reconstruction settings and the ground-control presence used by the QC report.
 pub fn reconstruction_inputs(snapshot: &RemodelingSnapshot) -> RemodelingContentDigest {
     let mut digest = RemodelingContentDigest::default();
     for stream in &snapshot.streams {
         digest.record(stream.id.as_bytes());
+        digest.record(stream.camera_id.as_deref().unwrap_or_default().as_bytes());
+        digest.record(&stream.sync_offset_ms.to_le_bytes());
         for frame in &stream.frames {
             digest.record(&u64::from(frame.index).to_le_bytes());
             digest.record(&frame.timestamp_ms.to_le_bytes());
@@ -95,6 +96,7 @@ pub fn reconstruction_inputs(snapshot: &RemodelingSnapshot) -> RemodelingContent
     }
     digest.record(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.params)).as_bytes());
     digest.record(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.calibration)).as_bytes());
+    digest.record(&[u8::from(!snapshot.gcps.is_empty())]);
     digest
 }
 //#endregion 🔖️Checkpoint

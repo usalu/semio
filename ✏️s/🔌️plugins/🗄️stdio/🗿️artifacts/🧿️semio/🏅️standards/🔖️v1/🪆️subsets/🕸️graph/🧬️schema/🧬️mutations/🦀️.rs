@@ -51,7 +51,7 @@ use crate::schema::mutations::set_node_property;
 /// (`add-node-port`/`remove-node-port`/`add-node-property`/`remove-node-property`), then edge
 /// lifecycle (`create-edge`/`delete-edge`).
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "stdio.semio.graph", reference = SemioGraphSnapshot, reference_diff = SemioGraphDiff)]
 pub enum SemioGraphMutation {
@@ -74,7 +74,6 @@ pub enum SemioGraphMutation {
     AddEdgeProperty(add_edge_property::AddEdgeProperty),
     RemoveEdgeProperty(remove_edge_property::RemoveEdgeProperty),
 }
-dsl::original_pack_value_operation_receiving!(SemioGraphMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioGraphMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-graph` mutation catalog (`../../🔣️oracle.json`) declares and

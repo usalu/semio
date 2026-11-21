@@ -337,7 +337,8 @@
               "w": 0.035,
               "h": 0.035,
               "region": "frame",
-              "material": "polyamide"
+              "material": "polyamide",
+              "penMm": 0.2
             },
             {
               "id": "frame-corner-br",
@@ -352,7 +353,8 @@
               "w": 0.035,
               "h": 0.035,
               "region": "frame",
-              "material": "polyamide"
+              "material": "polyamide",
+              "penMm": 0.2
             },
             {
               "id": "frame-corner-tr",
@@ -367,7 +369,8 @@
               "w": 0.035,
               "h": 0.035,
               "region": "frame",
-              "material": "polyamide"
+              "material": "polyamide",
+              "penMm": 0.2
             },
             {
               "id": "frame-corner-tl",
@@ -382,7 +385,8 @@
               "w": 0.035,
               "h": 0.035,
               "region": "frame",
-              "material": "polyamide"
+              "material": "polyamide",
+              "penMm": 0.2
             },
             {
               "id": "top-rail",
@@ -651,7 +655,8 @@
               "w": 0.015,
               "h": 0.008,
               "region": "leaf",
-              "material": "aluminium-frame"
+              "material": "aluminium-frame",
+              "penMm": 0.2
             },
             {
               "id": "hanger-b",
@@ -666,7 +671,8 @@
               "w": 0.015,
               "h": 0.008,
               "region": "leaf",
-              "material": "aluminium-frame"
+              "material": "aluminium-frame",
+              "penMm": 0.2
             }
           ],
           "front": [
@@ -739,7 +745,8 @@
               "w": 0.008,
               "h": 0.095,
               "region": "frame",
-              "material": "aluminium-frame"
+              "material": "aluminium-frame",
+              "penMm": 0.2
             },
             {
               "id": "end-buffer",
@@ -754,7 +761,8 @@
               "w": 0.008,
               "h": 0.03,
               "region": "frame",
-              "material": "polyamide"
+              "material": "polyamide",
+              "penMm": 0.2
             },
             {
               "id": "end-leaf-frame",
@@ -797,7 +805,8 @@
               "w": 0.015,
               "h": 0.008,
               "region": "leaf",
-              "material": "aluminium-frame"
+              "material": "aluminium-frame",
+              "penMm": 0.2
             }
           ],
           "plan": [
@@ -1325,10 +1334,7 @@
               "y": 0.06,
               "w": 4.0,
               "h": 1.162,
-              "regions": [
-                "frame",
-                "board-face"
-              ],
+              "regions": ["frame", "board-face"],
               "material": "enamel-board"
             },
             {
@@ -1403,11 +1409,9 @@
               "y": 0.06,
               "w": 0.032,
               "h": 1.162,
-              "regions": [
-                "frame",
-                "board-face"
-              ],
-              "material": "enamel-board"
+              "regions": ["frame", "board-face"],
+              "material": "enamel-board",
+              "penMm": 0.2
             },
             {
               "id": "end-rail",
@@ -1437,7 +1441,8 @@
               "w": 0.024,
               "h": 1.162,
               "region": "leaf",
-              "material": "enamel-board"
+              "material": "enamel-board",
+              "penMm": 0.2
             }
           ],
           "plan": [
@@ -1454,7 +1459,8 @@
               "w": 4.0,
               "h": 0.0275,
               "region": "tray",
-              "material": "aluminium-frame"
+              "material": "aluminium-frame",
+              "penMm": 0.2
             },
             {
               "id": "top-frame",
@@ -1537,10 +1543,7 @@
               "y": 0.06,
               "w": 4.0,
               "h": 1.2,
-              "regions": [
-                "frame",
-                "board-face"
-              ],
+              "regions": ["frame", "board-face"],
               "material": "enamel-board"
             },
             {
@@ -1602,11 +1605,9 @@
               "y": 0.06,
               "w": 0.04,
               "h": 1.2,
-              "regions": [
-                "frame",
-                "board-face"
-              ],
-              "material": "enamel-board"
+              "regions": ["frame", "board-face"],
+              "material": "enamel-board",
+              "penMm": 0.2
             },
             {
               "id": "end-leaf",
@@ -1621,7 +1622,8 @@
               "w": 0.04,
               "h": 1.162,
               "region": "leaf",
-              "material": "enamel-board"
+              "material": "enamel-board",
+              "penMm": 0.2
             }
           ],
           "plan": [
@@ -1638,7 +1640,8 @@
               "w": 4.0,
               "h": 0.08,
               "region": "tray",
-              "material": "aluminium-frame"
+              "material": "aluminium-frame",
+              "penMm": 0.2
             },
             {
               "id": "top-frame",
@@ -1652,10 +1655,7 @@
               "y": 0.0,
               "w": 4.0,
               "h": 0.04,
-              "regions": [
-                "frame",
-                "board-face"
-              ],
+              "regions": ["frame", "board-face"],
               "material": "enamel-board"
             },
             {
@@ -3746,8 +3746,8 @@
               [0.01, -0.008]
             ],
             "plane": "xy",
-            "from": -0.012,
-            "to": 0.008,
+            "from": -0.0155,
+            "to": 0.0045,
             "holes": [
               [[0.035, 0.027], [1.965, 0.027], [1.965, 1.119], [0.035, 1.119]]
             ]
@@ -3761,7 +3761,7 @@
             "tone": 0.24,
             "size": [1.93, 1.092, 0.0166],
             "transform": {
-              "translation": [1.0, 0.573, -0.002]
+              "translation": [1.0, 0.573, -0.0055]
             }
           },
           {
@@ -3847,7 +3847,7 @@
             "tone": 0.3,
             "size": [1.93, 1.092, 0.0006],
             "transform": {
-              "translation": [1.0, 0.573, -0.01]
+              "translation": [1.0, 0.573, -0.0135]
             },
             "region": "leaf",
             "layer": "enamel",
@@ -4034,7 +4034,7 @@
             "tone": 0.85,
             "size": [2.0, 0.035, 0.02],
             "transform": {
-              "translation": [1.0, 0.0095, -0.002]
+              "translation": [1.0, 0.0095, -0.0055]
             },
             "member": "leaf",
             "part": "member"
@@ -4048,7 +4048,7 @@
             "tone": 0.85,
             "size": [2.0, 0.035, 0.02],
             "transform": {
-              "translation": [1.0, 1.1365, -0.002]
+              "translation": [1.0, 1.1365, -0.0055]
             },
             "member": "leaf",
             "part": "member"
@@ -4062,7 +4062,7 @@
             "tone": 0.85,
             "size": [0.035, 1.092, 0.02],
             "transform": {
-              "translation": [0.0175, 0.573, -0.002]
+              "translation": [0.0175, 0.573, -0.0055]
             },
             "member": "leaf",
             "part": "member"
@@ -4076,7 +4076,7 @@
             "tone": 0.85,
             "size": [0.035, 1.092, 0.02],
             "transform": {
-              "translation": [1.9825, 0.573, -0.002]
+              "translation": [1.9825, 0.573, -0.0055]
             },
             "member": "leaf",
             "part": "member"
@@ -4090,7 +4090,7 @@
             "tone": 0.4,
             "size": [0.05, 0.044, 0.015],
             "transform": {
-              "translation": [0.3, 1.168, -0.002]
+              "translation": [0.3, 1.168, -0.0055]
             },
             "member": "leaf",
             "part": "joint",
@@ -4110,13 +4110,16 @@
             "axis": [0, 0, 1],
             "origin": [1.0, 0.573, -0.0103],
             "member": "leaf",
-            "part": "mass"
+            "part": "mass",
+            "transform": {
+              "translation": [0.0, 0.0, -0.0035]
+            }
           }
         ],
         "decisions": [
           {
-            "en": "Body: each framed panel is one frame plate of the 35 mm bars with the 10 mm corner radius and its panel openings (profile chambers, pockets and corner pieces merged), the panels fill the openings 16.6 mm thick. The header track is a hood over the leaf whose solid back reaches the wall plane (treads, slot, end caps and the two hanging cleats merged). The leaf reaches from the tray to the header: its running gaps of 8 mm are below the 15 mm feature and closed, the trolleys hidden in the hood are left out. The tray keeps its 2 mm floor, lip, trough and the box as a solid; only the sponge lies in it.",
-            "de": "Körper: jede gerahmte Platte ist eine Rahmenscheibe aus den 35-mm-Stäben mit dem Eckradius 10 mm und ihren Plattenöffnungen (Profilkammern, Taschen und Eckstücke zusammengefasst), die Platten füllen die Öffnungen 16,6 mm dick. Die Laufschiene ist eine Haube über dem Flügel, deren voller Rücken bis zur Wandebene reicht (Laufflächen, Schlitz, Endkappen und die beiden Hängeleisten zusammengefasst). Der Flügel reicht von der Ablage bis zur Laufschiene: seine Laufspalte von 8 mm liegen unter dem Kleinstmaß von 15 mm und sind geschlossen, die in der Haube verdeckten Laufwagen entfallen. Die Ablage behält ihren 2-mm-Boden, Lippe, Mulde und den Kasten als Vollkörper; nur der Schwamm liegt darin."
+            "en": "Body: each framed panel is one frame plate of the 35 mm bars with the 10 mm corner radius and its panel openings (profile chambers, pockets and corner pieces merged), the panels fill the openings 16.6 mm thick. The header track is a hood over the leaf whose solid back reaches the wall plane (treads, slot, end caps and the two hanging cleats merged). The leaf reaches from the tray to the header: its running gaps of 8 mm at top and bottom are below the 15 mm feature and closed, the 4 mm gap between leaf and board is drawn at 7.5 mm, the narrowest gap this scale resolves, so that the room air reaches the board behind the leaf as it does in reality; the trolleys hidden in the hood are left out. The tray keeps its 2 mm floor, lip, trough and the box as a solid; only the sponge lies in it.",
+            "de": "Körper: jede gerahmte Platte ist eine Rahmenscheibe aus den 35-mm-Stäben mit dem Eckradius 10 mm und ihren Plattenöffnungen (Profilkammern, Taschen und Eckstücke zusammengefasst), die Platten füllen die Öffnungen 16,6 mm dick. Die Laufschiene ist eine Haube über dem Flügel, deren voller Rücken bis zur Wandebene reicht (Laufflächen, Schlitz, Endkappen und die beiden Hängeleisten zusammengefasst). Der Flügel reicht von der Ablage bis zur Laufschiene: seine Laufspalte von 8 mm liegen unter dem Kleinstmaß von 15 mm und sind geschlossen, die in der Haube verdeckten Laufwagen entfallen. Die Ablage behält ihren 2-mm-Boden, Lippe, Mulde und den Kasten als Vollkörper; nur der Schwamm liegt darin. Der 4-mm-Spalt zwischen Schiebetafel und fester Tafel ist mit 7,5 mm gezeichnet, dem engsten Spalt, den dieser Maßstab auflöst, damit die Raumluft wie in Wirklichkeit die Tafel hinter der Schiebetafel erreicht."
           },
           {
             "en": "Omitted below 15 mm: chalk, ruler, bow handles, glides, buffers, lock nuts, wheels. Thermal: each panel is its 0.6 mm enamel sheet, the surface that exchanges (the core is merged into the plate, as the check counts every solid of a region at this scale); frame plate, header as its closed envelope, leaf frame, tray and sponge. Structure: the bars of both frames as plain 35 x 20 members with the mullion, the header track, the hanging rail as pin block and the buffer line as roller at the back, panels as masses, two hanger joints in the hood, the tray with three fixings.",

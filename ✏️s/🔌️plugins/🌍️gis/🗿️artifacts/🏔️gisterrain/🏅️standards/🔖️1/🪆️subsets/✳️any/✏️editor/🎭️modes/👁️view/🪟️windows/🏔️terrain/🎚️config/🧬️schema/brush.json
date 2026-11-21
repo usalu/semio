@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/gis/gisterrain/window/config/brush.json",
+  "title": "Terrain Brush Settings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["radius", "elevationStep", "smoothStrength"],
+  "properties": {
+    "radius": {"type": "integer", "minimum": 0, "maximum": 32},
+    "elevationStep": {"type": "integer", "minimum": 1, "maximum": 32767},
+    "smoothStrength": {"type": "integer", "minimum": 0, "maximum": 100}
+  }
+}

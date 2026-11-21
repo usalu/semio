@@ -140,192 +140,768 @@
        0.0
       ],
       [
-       0.020126,
-       0.00265
+       0.020404,
+       0.000668
+      ],
+      [
+       0.019966,
+       0.001309
+      ],
+      [
+       0.019811,
+       0.001951
+      ],
+      [
+       0.019968,
+       0.002629
+      ],
+      [
+       0.020361,
+       0.003362
+      ],
+      [
+       0.020596,
+       0.004097
+      ],
+      [
+       0.020451,
+       0.004769
       ],
       [
        0.020284,
        0.005435
       ],
       [
-       0.018755,
-       0.007768
+       0.019536,
+       0.005926
+      ],
+      [
+       0.018947,
+       0.006432
+      ],
+      [
+       0.018631,
+       0.007012
+      ],
+      [
+       0.018607,
+       0.007707
+      ],
+      [
+       0.018797,
+       0.008517
+      ],
+      [
+       0.018834,
+       0.009288
+      ],
+      [
+       0.01852,
+       0.009899
       ],
       [
        0.018187,
        0.0105
       ],
       [
-       0.016105,
-       0.012358
+       0.017336,
+       0.01078
+      ],
+      [
+       0.016637,
+       0.011116
+      ],
+      [
+       0.016181,
+       0.011595
+      ],
+      [
+       0.015978,
+       0.01226
+      ],
+      [
+       0.015952,
+       0.013092
+      ],
+      [
+       0.015789,
+       0.013846
+      ],
+      [
+       0.015327,
+       0.014355
       ],
       [
        0.014849,
        0.014849
       ],
       [
-       0.012358,
-       0.016105
+       0.013955,
+       0.0149
+      ],
+      [
+       0.013193,
+       0.015044
+      ],
+      [
+       0.012629,
+       0.015388
+      ],
+      [
+       0.01226,
+       0.015978
+      ],
+      [
+       0.01202,
+       0.016774
+      ],
+      [
+       0.011667,
+       0.017461
+      ],
+      [
+       0.011089,
+       0.017833
       ],
       [
        0.0105,
        0.018187
       ],
       [
-       0.007768,
-       0.018755
+       0.009623,
+       0.018004
+      ],
+      [
+       0.00885,
+       0.017945
+      ],
+      [
+       0.008216,
+       0.018132
+      ],
+      [
+       0.007707,
+       0.018607
+      ],
+      [
+       0.007269,
+       0.019314
+      ],
+      [
+       0.00675,
+       0.019886
+      ],
+      [
+       0.006096,
+       0.020096
       ],
       [
        0.005435,
        0.020284
       ],
       [
-       0.00265,
-       0.020126
+       0.004636,
+       0.019881
+      ],
+      [
+       0.003904,
+       0.019624
+      ],
+      [
+       0.003243,
+       0.019641
+      ],
+      [
+       0.002629,
+       0.019968
+      ],
+      [
+       0.002023,
+       0.020537
+      ],
+      [
+       0.001373,
+       0.020955
+      ],
+      [
+       0.000687,
+       0.020989
       ],
       [
        0.0,
        0.021
       ],
       [
-       -0.00265,
-       0.020126
+       -0.000668,
+       0.020404
+      ],
+      [
+       -0.001309,
+       0.019966
+      ],
+      [
+       -0.001951,
+       0.019811
+      ],
+      [
+       -0.002629,
+       0.019968
+      ],
+      [
+       -0.003362,
+       0.020361
+      ],
+      [
+       -0.004097,
+       0.020596
+      ],
+      [
+       -0.004769,
+       0.020451
       ],
       [
        -0.005435,
        0.020284
       ],
       [
-       -0.007768,
-       0.018755
+       -0.005926,
+       0.019536
+      ],
+      [
+       -0.006432,
+       0.018947
+      ],
+      [
+       -0.007012,
+       0.018631
+      ],
+      [
+       -0.007707,
+       0.018607
+      ],
+      [
+       -0.008517,
+       0.018797
+      ],
+      [
+       -0.009288,
+       0.018834
+      ],
+      [
+       -0.009899,
+       0.01852
       ],
       [
        -0.0105,
        0.018187
       ],
       [
-       -0.012358,
-       0.016105
+       -0.01078,
+       0.017336
+      ],
+      [
+       -0.011116,
+       0.016637
+      ],
+      [
+       -0.011595,
+       0.016181
+      ],
+      [
+       -0.01226,
+       0.015978
+      ],
+      [
+       -0.013092,
+       0.015952
+      ],
+      [
+       -0.013846,
+       0.015789
+      ],
+      [
+       -0.014355,
+       0.015327
       ],
       [
        -0.014849,
        0.014849
       ],
       [
-       -0.016105,
-       0.012358
+       -0.0149,
+       0.013955
+      ],
+      [
+       -0.015044,
+       0.013193
+      ],
+      [
+       -0.015388,
+       0.012629
+      ],
+      [
+       -0.015978,
+       0.01226
+      ],
+      [
+       -0.016774,
+       0.01202
+      ],
+      [
+       -0.017461,
+       0.011667
+      ],
+      [
+       -0.017833,
+       0.011089
       ],
       [
        -0.018187,
        0.0105
       ],
       [
-       -0.018755,
-       0.007768
+       -0.018004,
+       0.009623
+      ],
+      [
+       -0.017945,
+       0.00885
+      ],
+      [
+       -0.018132,
+       0.008216
+      ],
+      [
+       -0.018607,
+       0.007707
+      ],
+      [
+       -0.019314,
+       0.007269
+      ],
+      [
+       -0.019886,
+       0.00675
+      ],
+      [
+       -0.020096,
+       0.006096
       ],
       [
        -0.020284,
        0.005435
       ],
       [
-       -0.020126,
-       0.00265
+       -0.019881,
+       0.004636
+      ],
+      [
+       -0.019624,
+       0.003904
+      ],
+      [
+       -0.019641,
+       0.003243
+      ],
+      [
+       -0.019968,
+       0.002629
+      ],
+      [
+       -0.020537,
+       0.002023
+      ],
+      [
+       -0.020955,
+       0.001373
+      ],
+      [
+       -0.020989,
+       0.000687
       ],
       [
        -0.021,
        0.0
       ],
       [
-       -0.020126,
-       -0.00265
+       -0.020404,
+       -0.000668
+      ],
+      [
+       -0.019966,
+       -0.001309
+      ],
+      [
+       -0.019811,
+       -0.001951
+      ],
+      [
+       -0.019968,
+       -0.002629
+      ],
+      [
+       -0.020361,
+       -0.003362
+      ],
+      [
+       -0.020596,
+       -0.004097
+      ],
+      [
+       -0.020451,
+       -0.004769
       ],
       [
        -0.020284,
        -0.005435
       ],
       [
-       -0.018755,
-       -0.007768
+       -0.019536,
+       -0.005926
+      ],
+      [
+       -0.018947,
+       -0.006432
+      ],
+      [
+       -0.018631,
+       -0.007012
+      ],
+      [
+       -0.018607,
+       -0.007707
+      ],
+      [
+       -0.018797,
+       -0.008517
+      ],
+      [
+       -0.018834,
+       -0.009288
+      ],
+      [
+       -0.01852,
+       -0.009899
       ],
       [
        -0.018187,
        -0.0105
       ],
       [
-       -0.016105,
-       -0.012358
+       -0.017336,
+       -0.01078
+      ],
+      [
+       -0.016637,
+       -0.011116
+      ],
+      [
+       -0.016181,
+       -0.011595
+      ],
+      [
+       -0.015978,
+       -0.01226
+      ],
+      [
+       -0.015952,
+       -0.013092
+      ],
+      [
+       -0.015789,
+       -0.013846
+      ],
+      [
+       -0.015327,
+       -0.014355
       ],
       [
        -0.014849,
        -0.014849
       ],
       [
-       -0.012358,
-       -0.016105
+       -0.013955,
+       -0.0149
+      ],
+      [
+       -0.013193,
+       -0.015044
+      ],
+      [
+       -0.012629,
+       -0.015388
+      ],
+      [
+       -0.01226,
+       -0.015978
+      ],
+      [
+       -0.01202,
+       -0.016774
+      ],
+      [
+       -0.011667,
+       -0.017461
+      ],
+      [
+       -0.011089,
+       -0.017833
       ],
       [
        -0.0105,
        -0.018187
       ],
       [
-       -0.007768,
-       -0.018755
+       -0.009623,
+       -0.018004
+      ],
+      [
+       -0.00885,
+       -0.017945
+      ],
+      [
+       -0.008216,
+       -0.018132
+      ],
+      [
+       -0.007707,
+       -0.018607
+      ],
+      [
+       -0.007269,
+       -0.019314
+      ],
+      [
+       -0.00675,
+       -0.019886
+      ],
+      [
+       -0.006096,
+       -0.020096
       ],
       [
        -0.005435,
        -0.020284
       ],
       [
-       -0.00265,
-       -0.020126
+       -0.004636,
+       -0.019881
+      ],
+      [
+       -0.003904,
+       -0.019624
+      ],
+      [
+       -0.003243,
+       -0.019641
+      ],
+      [
+       -0.002629,
+       -0.019968
+      ],
+      [
+       -0.002023,
+       -0.020537
+      ],
+      [
+       -0.001373,
+       -0.020955
+      ],
+      [
+       -0.000687,
+       -0.020989
       ],
       [
        -0.0,
        -0.021
       ],
       [
-       0.00265,
-       -0.020126
+       0.000668,
+       -0.020404
+      ],
+      [
+       0.001309,
+       -0.019966
+      ],
+      [
+       0.001951,
+       -0.019811
+      ],
+      [
+       0.002629,
+       -0.019968
+      ],
+      [
+       0.003362,
+       -0.020361
+      ],
+      [
+       0.004097,
+       -0.020596
+      ],
+      [
+       0.004769,
+       -0.020451
       ],
       [
        0.005435,
        -0.020284
       ],
       [
-       0.007768,
-       -0.018755
+       0.005926,
+       -0.019536
+      ],
+      [
+       0.006432,
+       -0.018947
+      ],
+      [
+       0.007012,
+       -0.018631
+      ],
+      [
+       0.007707,
+       -0.018607
+      ],
+      [
+       0.008517,
+       -0.018797
+      ],
+      [
+       0.009288,
+       -0.018834
+      ],
+      [
+       0.009899,
+       -0.01852
       ],
       [
        0.0105,
        -0.018187
       ],
       [
-       0.012358,
-       -0.016105
+       0.01078,
+       -0.017336
+      ],
+      [
+       0.011116,
+       -0.016637
+      ],
+      [
+       0.011595,
+       -0.016181
+      ],
+      [
+       0.01226,
+       -0.015978
+      ],
+      [
+       0.013092,
+       -0.015952
+      ],
+      [
+       0.013846,
+       -0.015789
+      ],
+      [
+       0.014355,
+       -0.015327
       ],
       [
        0.014849,
        -0.014849
       ],
       [
-       0.016105,
-       -0.012358
+       0.0149,
+       -0.013955
+      ],
+      [
+       0.015044,
+       -0.013193
+      ],
+      [
+       0.015388,
+       -0.012629
+      ],
+      [
+       0.015978,
+       -0.01226
+      ],
+      [
+       0.016774,
+       -0.01202
+      ],
+      [
+       0.017461,
+       -0.011667
+      ],
+      [
+       0.017833,
+       -0.011089
       ],
       [
        0.018187,
        -0.0105
       ],
       [
-       0.018755,
-       -0.007768
+       0.018004,
+       -0.009623
+      ],
+      [
+       0.017945,
+       -0.00885
+      ],
+      [
+       0.018132,
+       -0.008216
+      ],
+      [
+       0.018607,
+       -0.007707
+      ],
+      [
+       0.019314,
+       -0.007269
+      ],
+      [
+       0.019886,
+       -0.00675
+      ],
+      [
+       0.020096,
+       -0.006096
       ],
       [
        0.020284,
        -0.005435
       ],
       [
-       0.020126,
-       -0.00265
+       0.019881,
+       -0.004636
+      ],
+      [
+       0.019624,
+       -0.003904
+      ],
+      [
+       0.019641,
+       -0.003243
+      ],
+      [
+       0.019968,
+       -0.002629
+      ],
+      [
+       0.020537,
+       -0.002023
+      ],
+      [
+       0.020955,
+       -0.001373
+      ],
+      [
+       0.020989,
+       -0.000687
       ]
      ],
      "plane": "xy",
@@ -1993,8 +2569,8 @@
    ],
    "decisions": [
     {
-     "en": "Body: the housing is one loft of rounded-square sections from the face to the wall: a 2 mm edge radius at the face, the 90 mm cover skirt, a 1.5 mm shadow gap and the 87 mm base plate that lies on the wall. The 36 by 21 mm display lens is let into the face and stands 0.3 mm proud, the 7 mm lamp is a low dome. The knob is a 42 mm grip ring with 24 finger flutes, 8.5 mm high, a slightly conical cap that raises the face to 11.5 mm and the index, a tongue 14.5 mm long that narrows from 11 mm at the hub to a rounded 4 mm tip and stands 0.5 mm proud of the cap, into which it is moulded. Round parts are stated as 48-sided outlines so that they stay round at any zoom.",
-     "de": "Körper: Das Gehäuse ist ein Loft aus gerundeten Quadratschnitten von der Front zur Wand: 2 mm Kantenradius an der Front, die 90 mm breite Haube, 1,5 mm Schattenfuge und die 87 mm breite Grundplatte, die an der Wand liegt. Die Anzeigescheibe von 36 mal 21 mm ist in die Front eingelassen und steht 0,3 mm vor, die 7-mm-Lampe ist eine flache Kuppel. Der Knopf besteht aus einem 42 mm breiten Griffring mit 24 Griffmulden von 8,5 mm Höhe, einer leicht konischen Kappe, die die Stirnfläche auf 11,5 mm hebt, und dem Zeiger, einer 14,5 mm langen Zunge, die sich von 11 mm an der Nabe auf eine gerundete Spitze von 4 mm verjüngt und 0,5 mm über die Kappe vorsteht, in die sie eingespritzt ist. Runde Teile sind als 48-eckige Umrisse angegeben, damit sie bei jeder Vergrößerung rund bleiben."
+     "en": "Body: the housing is one loft of rounded-square sections from the face to the wall: a 2 mm edge radius at the face, the 90 mm cover skirt, a 1.5 mm shadow gap and the 87 mm base plate that lies on the wall. The 36 by 21 mm display lens is let into the face and stands 0.3 mm proud, the 7 mm lamp is a low dome. The knob is a 42 mm grip ring with 24 round finger scoops, 1.1 mm deep, between flat lands, 8.5 mm high, a slightly conical cap that raises the face to 11.5 mm and the index, a tongue 14.5 mm long that narrows from 11 mm at the hub to a rounded 4 mm tip and stands 0.5 mm proud of the cap, into which it is moulded. Round parts are stated as 48-sided outlines so that they stay round at any zoom.",
+     "de": "Körper: Das Gehäuse ist ein Loft aus gerundeten Quadratschnitten von der Front zur Wand: 2 mm Kantenradius an der Front, die 90 mm breite Haube, 1,5 mm Schattenfuge und die 87 mm breite Grundplatte, die an der Wand liegt. Die Anzeigescheibe von 36 mal 21 mm ist in die Front eingelassen und steht 0,3 mm vor, die 7-mm-Lampe ist eine flache Kuppel. Der Knopf besteht aus einem 42 mm breiten Griffring mit 24 runden, 1,1 mm tiefen Griffmulden zwischen flachen Stegen, von 8,5 mm Höhe, einer leicht konischen Kappe, die die Stirnfläche auf 11,5 mm hebt, und dem Zeiger, einer 14,5 mm langen Zunge, die sich von 11 mm an der Nabe auf eine gerundete Spitze von 4 mm verjüngt und 0,5 mm über die Kappe vorsteht, in die sie eingespritzt ist. Runde Teile sind als 48-eckige Umrisse angegeben, damit sie bei jeder Vergrößerung rund bleiben."
     },
     {
      "en": "Thermal: the casing is the real hollow ABS shell with its 2 mm wall (face plate with the window opening, skirt ring, base plate against the wall), so a cut shows the air space of the electronics; the base plate's wall face is a mounting face and counts for no area. The display is the 1 mm lens in its rebate, the lamp reuses its dome, the dial reuses the three knob solids of the body (grip ring, cap and index) as one closed moulding, since hub and spindle fill its inside; the ring's face on the housing is a mounting face. No region is hidden: the electronics heat the casing region, as the thermal data declares.",
@@ -2896,6 +3472,129 @@
      "to": 0.0015,
      "member": "dial",
      "part": "member"
+    },
+    {
+     "id": "joint-dial",
+     "kind": "extrude",
+     "bone": "housing",
+     "material": "abs-plastic",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0235,
+       0.0
+      ],
+      [
+       0.022929,
+       0.00287
+      ],
+      [
+       0.021303,
+       0.005303
+      ],
+      [
+       0.01887,
+       0.006929
+      ],
+      [
+       0.016,
+       0.0075
+      ],
+      [
+       0.01313,
+       0.006929
+      ],
+      [
+       0.010697,
+       0.005303
+      ],
+      [
+       0.009071,
+       0.00287
+      ],
+      [
+       0.0085,
+       0.0
+      ],
+      [
+       0.009071,
+       -0.00287
+      ],
+      [
+       0.010697,
+       -0.005303
+      ],
+      [
+       0.01313,
+       -0.006929
+      ],
+      [
+       0.016,
+       -0.0075
+      ],
+      [
+       0.01887,
+       -0.006929
+      ],
+      [
+       0.021303,
+       -0.005303
+      ],
+      [
+       0.022929,
+       -0.00287
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0015,
+     "to": 0.0135,
+     "member": "dial",
+     "part": "joint"
+    },
+    {
+     "id": "mass-housing",
+     "kind": "box",
+     "bone": "housing",
+     "material": "abs-plastic",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.015,
+      0.03,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0,
+       0.006
+      ]
+     },
+     "member": "housing",
+     "part": "mass"
+    },
+    {
+     "id": "mass-dial",
+     "kind": "ellipsoid",
+     "bone": "dial",
+     "material": "abs-plastic",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.0075,
+      0.0075,
+      0.0075
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.006
+      ]
+     },
+     "member": "dial",
+     "part": "mass"
     }
    ],
    "decisions": [
@@ -2908,8 +3607,8 @@
      "de": "Thermik: Alle vier Regionen behalten einen Körper. Das Gehäuse bleibt eine hohle 2-mm-Schale (Frontplatte, Haubenring, Grundplatte an der Wand) mit einfachen Schnitten, ein Schnitt zeigt also weiter den Luftraum; die Anzeige ist ihre 1 mm dicke Scheibe, die Lampe ihre 7-mm-Kuppel in wahrer Größe (unter dem Mindestmaß gezeichnet, sie markiert nur den Ort der Lampe), und der Drehknopf ist der massive Knopf des Körpers mit zusammengefasster Schicht und der Fläche am Gehäuse als Montagefläche."
     },
     {
-     "en": "Structure: nothing in this 15 mm deep device is thinner than the feature, so the load path is drawn at the feature size: the base plate as a 15 mm bar from screw to screw, both screws as 15 mm round bosses on the screw axis, flush with the wall (pin and slot can no longer be told apart), and the spindle merged with the knob hub into one 15 mm shaft that ends on the bar. Potentiometer, circuit board and the dial's mass are merged into these members.",
-     "de": "Tragwerk: Nichts in diesem 15 mm tiefen Gerät ist dünner als das Mindestmaß, der Lastpfad ist deshalb in Mindestmaßgröße gezeichnet: die Grundplatte als 15-mm-Stab von Schraube zu Schraube, beide Schrauben als runde 15-mm-Dome auf der Schraubenachse, bündig mit der Wand (Stift und Langloch sind nicht mehr zu unterscheiden), und die Achse mit der Knopfnabe zu einer 15-mm-Welle zusammengefasst, die am Stab endet. Potentiometer, Leiterplatte und die Masse des Knopfs gehen in diesen Gliedern auf."
+     "en": "Structure: nothing in this 15 mm deep device is thinner than the feature, so the load path is drawn at the feature size: the base plate as a 15 mm bar from screw to screw, both screws as 15 mm round bosses on the screw axis, flush with the wall (pin and slot can no longer be told apart), the spindle merged with the knob hub into one 15 mm shaft, the potentiometer as a 15 mm joint disc where the shaft enters the housing, the circuit board as a 15 by 30 mm mass block at the centre of the housing, where its mass lies at 1:50 and the knob's mass as a 15 mm ball at its centre inside the knob.",
+     "de": "Tragwerk: Nichts in diesem 15 mm tiefen Gerät ist dünner als das Mindestmaß, der Lastpfad ist deshalb in Mindestmaßgröße gezeichnet: die Grundplatte als 15-mm-Stab von Schraube zu Schraube, beide Schrauben als runde 15-mm-Dome auf der Schraubenachse, bündig mit der Wand (Stift und Langloch sind nicht mehr zu unterscheiden), die Achse mit der Knopfnabe zu einer 15-mm-Welle zusammengefasst, das Potentiometer als 15-mm-Gelenkscheibe, wo die Welle ins Gehäuse tritt, die Leiterplatte als Massenblock von 15 mal 30 mm in der Gehäusemitte, wo seine Masse bei 1:50 liegt und die Masse des Knopfs als 15-mm-Kugel in seiner Mitte."
     }
    ]
   },

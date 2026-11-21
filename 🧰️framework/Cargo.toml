@@ -516,6 +516,7 @@ members = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📜️registration/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚠️failure/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🎟️root/📃️policy/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🔢️numeric-semantics/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📑️command-page/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️/📦️packages/🦀️rust",
 ]
@@ -1157,6 +1158,7 @@ exclude = [
 [workspace.metadata.semio.repository]
 schema-version = 1
 member-manifests = [
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🔢️numeric-semantics/📦️packages/🦀️rust/Cargo.toml",
     "📦️packages/🦀️rust/Cargo.toml",
     "🔨️modules/**/📦️packages/🦀️rust/Cargo.toml",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📜️registration/📦️packages/🦀️rust/Cargo.toml",

@@ -41,7 +41,7 @@ impl<T:NativeReceive<DslValue>+Sync> OriginalJsonOutputReceiving<T>{
  pub fn admit(input:&[u8],limits:JsonReadLimits,control:&NativeDecodeControl<'_>,g:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{let d=Self::constructor_demand();if !retained_clone_grant_admits(g,d){return Err(invalid())}let(_,parser)=JsonSourceCursor::<_,DslValue>::new(input,JsonMemberPolicy::Reject,limits)?.into_grammar();Ok((Self{ledger:control.ledger_identity(),recipient:control.retirement_recipient_identity(),pointer:input.as_ptr()as usize,length:input.len(),read_position:0,parser:ManuallyDrop::new(Some(parser)),parsed:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),source:ManuallyDrop::new(None),receiver:ManuallyDrop::new(None),output:ManuallyDrop::new(None),syntax:ManuallyDrop::new(None),failure:ManuallyDrop::new(None),action:Default::default(),local_authority:ManuallyDrop::new(Some(OriginalEffectAuthority::new(NativeLocalProducer::new()))),retirement:Default::default(),phase:Phase::Parse,closing:false,faulted:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
  fn validate(&self,input:&[u8],control:&NativeDecodeControl<'_>)->Result<(),ValueError>{if self.ledger!=control.ledger_identity()||self.recipient!=control.retirement_recipient_identity()||self.pointer!=input.as_ptr()as usize||self.length!=input.len(){return Err(invalid())}Ok(())}
  fn metadata(&self)->usize{size_of::<Phase>()+size_of::<bool>()+match self.phase{Phase::Parse=>size_of::<usize>()+size_of::<Option<DslValue>>()+size_of::<Option<JsonError>>(),Phase::Bind=>size_of::<Option<RetainedCloneSourceAdmission<DslValue,DslValue>>>()+size_of::<Option<DslValue>>(),Phase::Source=>size_of::<Option<RetainedCloneSource<DslValue>>>(),Phase::Receiver=>size_of::<Option<NativeReceivingOriginal<DslValue,T>>>(),Phase::Take=>size_of::<Option<T>>(),_=>0}}
- pub fn demands(&self,input:&[u8],body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing{return self.close_demands(body)}if self.faulted{return Err(invalid())}if self.pointer!=input.as_ptr()as usize||self.length!=input.len(){return Err(invalid())}let body=body.saturating_sub(self.metadata());add(match self.phase{Phase::Parse=>self.parser.as_ref().ok_or_else(invalid)?.normal_step_demands(input).map_err(|error|ValueError::literal(error.kind(),"original JSON output grammar demand refused"))?,Phase::Bind|Phase::Receiver|Phase::Ready=>fixed(0),Phase::Source=>{let admission=self.admission.as_ref().ok_or_else(invalid)?;if admission.phase()=="projectionStart"{admission.owned_projection_demand()?}else if admission.phase()=="ready"{fixed(size_of::<Option<RetainedCloneSource<DslValue>>>())}else{admission.next_demand()?}},Phase::Receive=>self.receiver.as_ref().ok_or_else(invalid)?.demands(body,maximum_work_units)?,Phase::Take=>self.receiver.as_ref().ok_or_else(invalid)?.take_demand()?,Phase::CloseReceiver=>{let receiver=self.receiver.as_ref().ok_or_else(invalid)?;if receiver.terminal_is_empty(){fixed(size_of::<Option<NativeReceivingOriginal<DslValue,T>>>())}else if receiver.is_closing(){receiver.close_demands(body)?}else{receiver.begin_close_demand()?}},Phase::CloseParser=>if !self.retirement.is_empty(){self.retirement.next_owner_demands::<JsonGrammarCursor<DslValue>>(false,&None,body)?}else if self.parser.is_some(){self.retirement.next_owner_demands::<JsonGrammarCursor<DslValue>>(true,&None,body)?}else{fixed(0)}},self.metadata())}
+ pub fn demands(&self,input:&[u8],body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing{return self.close_demands(body)}if self.faulted{return Err(invalid())}if self.pointer!=input.as_ptr()as usize||self.length!=input.len(){return Err(invalid())}if self.phase==Phase::Parse{if let Some(demand)=self.action.demand{return Ok(demand)}}let body=body.saturating_sub(self.metadata());add(match self.phase{Phase::Parse=>self.parser.as_ref().ok_or_else(invalid)?.normal_step_demands(input).map_err(|error|ValueError::literal(error.kind(),"original JSON output grammar demand refused"))?,Phase::Bind|Phase::Receiver|Phase::Ready=>fixed(0),Phase::Source=>{let admission=self.admission.as_ref().ok_or_else(invalid)?;if admission.phase()=="projectionStart"{admission.owned_projection_demand()?}else if admission.phase()=="ready"{fixed(size_of::<Option<RetainedCloneSource<DslValue>>>())}else{admission.next_demand()?}},Phase::Receive=>self.receiver.as_ref().ok_or_else(invalid)?.demands(body,maximum_work_units)?,Phase::Take=>self.receiver.as_ref().ok_or_else(invalid)?.take_demand()?,Phase::CloseReceiver=>{let receiver=self.receiver.as_ref().ok_or_else(invalid)?;if receiver.terminal_is_empty(){fixed(size_of::<Option<NativeReceivingOriginal<DslValue,T>>>())}else if receiver.is_closing(){receiver.close_demands(body)?}else{receiver.begin_close_demand()?}},Phase::CloseParser=>if !self.retirement.is_empty(){self.retirement.next_owner_demands::<JsonGrammarCursor<DslValue>>(false,&None,body)?}else if self.parser.is_some(){self.retirement.next_owner_demands::<JsonGrammarCursor<DslValue>>(true,&None,body)?}else{fixed(0)}},self.metadata())}
  fn local(action:&mut NativeReceivingChild<ValueError>,authority:&mut Option<NativeLocalAuthority<ValueError>>,control:&mut NativeDecodeControl<'_>,d:RetirementDemand,g:RetainedCloneGrant,q:u64,maximum_work_units:u64,tag:u8,mut op:impl FnMut(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<RetainedCloneStep,ValueError>)->Result<RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>,ValueError>{
   action.tag=tag;let authority=authority.as_mut().ok_or_else(invalid)?;
   Ok(action.poll(control,d,g,q,maximum_work_units,authority,|control,effect,authority,action|authority.drive(&mut NativeLocalOperation::Poll(&mut |effect|op(control,effect)),effect,action)))
@@ -52,7 +52,8 @@ impl<T:NativeReceive<DslValue>+Sync> OriginalJsonOutputReceiving<T>{
   let(mut total,mut work,mut first)=(RetainedCloneProgress::default(),0u128,true);
   loop{
    let rem=remaining(g,total);let left=maximum_work_units.saturating_sub(u64::try_from(work).unwrap_or(u64::MAX));
-   if !first&&(left==0||rem.maximum_items==0||control.checkpoint().is_err()){return done(Ok(progress_step(total)),work)}
+   if !first&&(left==0||rem.maximum_items==0||self.phase==Phase::Receive||control.checkpoint().is_err()){return done(Ok(progress_step(total)),work)}
+   let receiving=self.phase==Phase::Receive;
    let poll=match self.advance_turn(input,control,witness,body,maximum_work_units,g,rem,left){Ok(poll)=>poll,Err(error)=>return done(Err(refusal(error,total)),work)};
    match poll{
     Pending{work:pending}=>return if first{Pending{work:pending}}else if pending==0{done(Ok(progress_step(total)),work)}else{done(Err(refusal(invalid(),total)),work+pending)},
@@ -64,7 +65,7 @@ impl<T:NativeReceive<DslValue>+Sync> OriginalJsonOutputReceiving<T>{
        let progress=step.progress();let idle=turn.work==0&&progress==RetainedCloneProgress::default();
        total=match sum(total,progress){Ok(total)=>total,Err(error)=>return done(Err(refusal(error,total)),work)};
        if matches!(step,RetainedCloneStep::Complete(_)){return done(Ok(RetainedCloneStep::Complete(total)),work)}
-       if idle{return done(Ok(progress_step(total)),work)}
+       if idle||receiving{return done(Ok(progress_step(total)),work)}
       }
      }
     }
@@ -80,28 +81,43 @@ impl<T:NativeReceive<DslValue>+Sync> OriginalJsonOutputReceiving<T>{
  }
  /// 🔎️ Borrows the terminal receiving failure that the stored ticket names.
  pub fn failure(&self)->Option<&NativeReceivingFailure>{self.failure.as_ref()}
+ /// 🔤️ Quotes a bounded UTF-8 prefix under the single physical validation frontier.
+ fn parse_work_quote(&self,bytes:usize,items:usize,work:u64)->Result<u64,ValueError>{
+  let validation=self.parser.as_ref().ok_or_else(invalid)?.validation_work_units(bytes);
+  Ok((validation.clamp(1,256).min(items)as u64).min(work))
+ }
  fn advance_turn(&mut self,input:&[u8],control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant,rem:RetainedCloneGrant,left:u64)->Result<RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>,ValueError>{
   use RetainedWorkPoll::{Complete,Pending};
-  let g=RetainedCloneGrant{maximum_items:g.maximum_items.min(1),..g};let gate=RetainedCloneGrant{maximum_items:rem.maximum_items.min(1),..rem};
   self.validate(input,control)?;
   if self.ready(){return Ok(done(Ok(RetainedCloneStep::Complete(Default::default())),0))}
   let in_flight=self.action.demand.is_some();
   let idle=||if in_flight{Pending{work:0}}else{done(Ok(progress_step(Default::default())),0)};
+  if left==0{return Ok(idle())}
   let metadata=self.metadata();let inner=body.saturating_sub(metadata);
-  let d=self.demands(input,body,maximum_work_units)?;if left==0||!retained_clone_grant_admits(gate,d){return Ok(idle())}
-  let q=if in_flight{self.action.work.unwrap_or(1)}else{match self.phase{Phase::Source=>match self.admission.as_ref(){Some(admission) if admission.phase()=="projectionStart"=>1,Some(admission) if admission.phase()!="ready"=>admission.advance_work_demand()?,_=>1},Phase::CloseReceiver=>match self.receiver.as_ref(){Some(receiver) if !receiver.terminal_is_empty()=>if receiver.is_closing(){receiver.close_work_demand(inner)?}else{receiver.begin_close_work_demand()?},_=>1},Phase::CloseParser if !self.retirement.is_empty()=>self.retirement.next_owner_work::<DslValue>(false,&None,inner)?,Phase::CloseParser if self.parser.is_some()=>self.retirement.next_owner_work::<JsonGrammarCursor<DslValue>>(true,&None,inner)?,_=>1}};if !in_flight&&q>left{return Ok(idle())}
+  let items=if self.phase==Phase::Receive{
+   self.receiver.as_ref().ok_or_else(invalid)?.minimum_advance_items(inner,maximum_work_units)?
+  }else{1};
+  if rem.maximum_items<items{return Ok(idle())}
+  let d=self.demands(input,body,maximum_work_units)?;if !retained_clone_grant_admits(rem,d){return Ok(idle())}
+  let q=if in_flight{self.action.work.unwrap_or(1)}else{match self.phase{Phase::Parse=>self.parse_work_quote(input.len(),rem.maximum_items,left)?,Phase::Source=>match self.admission.as_ref(){Some(admission) if admission.phase()=="projectionStart"=>1,Some(admission) if admission.phase()!="ready"=>admission.advance_work_demand()?,_=>1},Phase::CloseReceiver=>match self.receiver.as_ref(){Some(receiver) if !receiver.terminal_is_empty()=>if receiver.is_closing(){receiver.close_work_demand(inner)?}else{receiver.begin_close_work_demand()?},_=>1},Phase::CloseParser if !self.retirement.is_empty()=>self.retirement.next_owner_work::<DslValue>(false,&None,inner)?,Phase::CloseParser if self.parser.is_some()=>self.retirement.next_owner_work::<JsonGrammarCursor<DslValue>>(true,&None,inner)?,_=>1}};if (!in_flight||self.phase==Phase::Parse)&&q>left{return Ok(idle())}
+  if self.phase==Phase::Parse&&q>rem.maximum_items as u64{return Ok(idle())}
   if !in_flight{control.checkpoint()?}
+  let local_grant=RetainedCloneGrant{maximum_items:g.maximum_items.min(1),..g};
+  let g=match self.phase{Phase::Receive=>g,Phase::Parse=>self.action.grant.unwrap_or(RetainedCloneGrant{maximum_items:q as usize,..rem}),_=>local_grant};
   let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(metadata),..g};
   let poll=match self.phase{
    Phase::Parse=>{
-    let parser=&mut self.parser;let parsed=&mut self.parsed;let syntax=&mut self.syntax;let faulted=&mut self.faulted;let phase=&mut self.phase;let read=&mut self.read_position;
-    Self::local(&mut self.action,&mut self.local_authority,control,d,g,1,maximum_work_units,1,|control,effect|{
+    let parser=&mut self.parser;let parsed=&mut self.parsed;let syntax=&mut self.syntax;let read=&mut self.read_position;
+    let poll=Self::local(&mut self.action,&mut self.local_authority,control,d,g,q,maximum_work_units,1,|control,effect|{
      let Some(parse)=parser.as_mut()else{return done(Err(invalid()),0)};
-     let result=parse.step_source(input,1,control,&mut effect.nested(child),false);
+     let units=match effect.remaining_work_units(){Ok(units)=>units.min(q)as usize,Err(error)=>return done(Err(error),0)};
+     let result=control.scoped_maximum(control.maximum_bytes(),|control|parse.step_source(input,units,control,&mut effect.nested(child),false));
      let work=u128::from(parse.last_turn_work());*read=parse.position();let p=parse.normal_step_progress();
-     match result{Ok(Some(value))=>{**parsed=Some(value);*phase=Phase::Bind},Ok(None)=>{},Err(error)=>{let kind=error.kind();**syntax=Some(error);if work!=0{*faulted=true}return done(Err(ValueError::literal(kind,"original JSON output grammar refused").with_retained_progress(p)),work)}}
+     match result{Ok(Some(value))=>**parsed=Some(value),Ok(None)=>{},Err(error)=>{let kind=error.kind();**syntax=Some(error);return done(Err(ValueError::literal(kind,"original JSON output grammar refused").with_retained_progress(p)),work)}}
      done(Ok(progress_step(p)),work)
-    })?
+    })?;
+    if matches!(&poll,Complete(turn) if turn.result.is_ok())&&self.parsed.is_some(){self.phase=Phase::Bind}
+    poll
    },
    Phase::Bind=>{let value=self.parsed.take().ok_or_else(invalid)?;*self.admission=Some(RetainedCloneSource::<DslValue>::admission_owned(value,()));self.phase=Phase::Source;done(Ok(progress_step(Default::default())),1)},
    Phase::Source=>{
@@ -115,7 +131,7 @@ impl<T:NativeReceive<DslValue>+Sync> OriginalJsonOutputReceiving<T>{
    Phase::Receive=>{
     let receiver=self.receiver.as_mut().ok_or_else(invalid)?;
     let poll=receiver.advance(control,witness,inner,maximum_work_units,child).map(|step|progress_step(step.progress()));
-    if receiver.output_ready(){self.phase=Phase::Take}
+    if receiver.output_ready()&&!receiver.advance_pending()&&matches!(&poll,Complete(turn) if turn.result.is_ok()){self.phase=Phase::Take}
     poll
    },
    Phase::Take=>{

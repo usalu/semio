@@ -1,10 +1,12 @@
 //! 🔏️ Drawing proof catalogs: the gesture, path, image, export and bounded command proof records.
 
+use super::{DrawingBoundedCommandJobFactory, DrawingExportCommandJobFactory, DrawingGestureOperationJobFactory, DrawingImageCommandJobFactory, DrawingPathCommandJobFactory, DrawingPlayApp};
+
 //#region 🧾️ProofCatalogs
 /// 🧾️ One `bounded_first_step_tool_proofs!` invocation per owned factory — the macro emits the whole
 /// `bounded_first_step_tool_proofs()` body for a single factory, so an app with two factories declares
 /// two catalogs and concatenates them in its `ArtifactEditor` item (process3d/flow precedent).
-pub(super) struct DrawingGestureProofs;
+struct DrawingGestureProofs;
 
 impl DrawingGestureProofs {
     semio_plugin::bounded_first_step_tool_proofs! {
@@ -19,7 +21,7 @@ impl DrawingGestureProofs {
     }
 }
 
-pub(super) struct DrawingPathProofs;
+struct DrawingPathProofs;
 
 impl DrawingPathProofs {
     semio_plugin::bounded_first_step_tool_proofs! {
@@ -34,7 +36,7 @@ impl DrawingPathProofs {
     }
 }
 
-pub(super) struct DrawingImageProofs;
+struct DrawingImageProofs;
 
 impl DrawingImageProofs {
     semio_plugin::bounded_first_step_tool_proofs! {
@@ -49,7 +51,7 @@ impl DrawingImageProofs {
     }
 }
 
-pub(super) struct DrawingExportProofs;
+struct DrawingExportProofs;
 
 impl DrawingExportProofs {
     semio_plugin::bounded_first_step_tool_proofs! {
@@ -59,12 +61,12 @@ impl DrawingExportProofs {
         artifact_schema: "drawing.document",
         factory: "DrawingExportCommandJobFactory",
         factory_type: DrawingExportCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::resumable(4_096, 4_096, 1, 67_108_864, 7_500, 1, 1),
+        contract: super::export_job::EXECUTION_CONTRACT,
         tools: ["exportDocument"]
     }
 }
 
-pub(super) struct DrawingBoundedProofs;
+struct DrawingBoundedProofs;
 
 impl DrawingBoundedProofs {
     semio_plugin::bounded_first_step_tool_proofs! {
@@ -83,5 +85,14 @@ impl DrawingBoundedProofs {
     "nudgeSelectionLeft", "nudgeSelectionLeftFast", "nudgeSelectionRight", "nudgeSelectionRightFast", "nudgeSelectionUp", "nudgeSelectionUpFast", "nudgeSelectionDown", "nudgeSelectionDownFast",
         ]
     }
+}
+pub(super) fn drawing_bounded_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+    DrawingGestureProofs::bounded_first_step_tool_proofs()
+        .into_iter()
+        .chain(DrawingBoundedProofs::bounded_first_step_tool_proofs())
+        .chain(DrawingPathProofs::bounded_first_step_tool_proofs())
+        .chain(DrawingImageProofs::bounded_first_step_tool_proofs())
+        .chain(DrawingExportProofs::bounded_first_step_tool_proofs())
+        .collect()
 }
 //#endregion 🧾️ProofCatalogs

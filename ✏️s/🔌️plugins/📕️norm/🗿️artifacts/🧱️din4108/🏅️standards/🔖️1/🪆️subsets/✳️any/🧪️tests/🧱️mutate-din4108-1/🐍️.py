@@ -26,6 +26,13 @@ build_adapter = _vocabulary.build_adapter
 # region 🔖️Vocabulary
 #: 🏷️ Every kind of `Din4108Mutation`, in the committed catalog's (declaration) order.
 KINDS = [
+    "insert-case",
+    "remove-case",
+    "change-case-number",
+    "change-case-text",
+    "change-case-label-en",
+    "change-case-label-de",
+    "change-case-entry-id",
     "change-climate-zone",
     "change-usage",
     "change-t-int-c",
@@ -74,6 +81,13 @@ KINDS = [
 #: 🧫️ The committed specification vector each kind is measured on, as (leaf directory, scenario directory), and each
 #: further refusal, no-op or clamp vector, keyed by its `<kind>-<slug>` row as (kind, leaf directory, scenario directory).
 VECTORS = {
+    "insert-case": ("➕️insert-case", "✅apply"),
+    "remove-case": ("➖️remove-case", "✅apply"),
+    "change-case-number": ("🔢️change-case-number", "✅apply"),
+    "change-case-text": ("🔤️change-case-text", "✅apply"),
+    "change-case-label-en": ("🏷️change-case-label-en", "✅apply"),
+    "change-case-label-de": ("🏷️change-case-label-de", "✅apply"),
+    "change-case-entry-id": ("📇️change-case-entry-id", "✅apply"),
     "change-climate-zone": ("🌦️change-climate-zone", "✅apply"),
     "change-usage": ("🗂️change-usage", "✅apply"),
     "change-t-int-c": ("🌡️change-t-int-c", "✅apply"),

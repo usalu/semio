@@ -82,6 +82,7 @@
       "publishIntervalMilliseconds",
       "maximumPhaseCharacters",
       "families",
+      "bindingTally",
       "counter",
       "ignoredPrefixes"
      ],
@@ -117,6 +118,15 @@
           "maxLength": 256
          }
         }
+       }
+      },
+      "bindingTally": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": ["prefix", "pattern"],
+       "properties": {
+        "prefix": {"type": "string", "minLength": 1, "maxLength": 128},
+        "pattern": {"type": "string", "minLength": 1, "maxLength": 256}
        }
       },
       "counter": {
@@ -363,6 +373,10 @@
        "pattern": "^build:graph-phase:([a-z]+):([0-9]+):([0-9]+)"
       }
      ],
+     "bindingTally": {
+      "prefix": "dependencies:sync-bindings:",
+      "pattern": "^(dependencies:sync-bindings):([1-9][0-9]{0,15})/([1-9][0-9]{0,15}):canonical:(0|[1-9][0-9]{0,15}):changed:(0|[1-9][0-9]{0,15})$"
+     },
      "counter": "^(.{1,80}?):([0-9]+)$",
      "ignoredPrefixes": [
       "lease-queue:",

@@ -1,0 +1,113 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/🟦️.ts
+@@ -4,5 +4,5 @@
+ import owns from "../../../../../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json" with {type:"json"};
+ import {parseLeaseProgressV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts";
+-import {recordToolsProgress,toolsGraceActive,type ToolsSample,type ToolsCheckpoint} from "../🟦️.ts";
++import {currentToolsCheckpoint,recordToolsProgress,toolsGraceActive,type ToolsSample,type ToolsCheckpoint} from "../🟦️.ts";
+ import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
+ const A="native-artifact-input-read", B="dependencies:selected-postorder";
+@@ -68,2 +68,32 @@
+ });
+ 
++
++test("a current unreset provider accepts only the immediately observed qualified Native read",()=>{
++ const db=new Database(":memory:"),B="javascript-source-provider",C="dependencies:sync-bindings";
++ const seal=(state:ToolsCheckpoint,now:number)=>toolsGraceActive(state,{stage:"tools",started:100,now,soft:100,quiet:45,sampleLimit:15});
++ const seed=recordToolsProgress(null,row(100,460),461),step=recordToolsProgress(seed,row(101,470),471),qualified=recordToolsProgress(step,row(102,490),491);
++ const switchTo=(state:ToolsCheckpoint,now=501)=>recordToolsProgress(state,row(20,now,B,now),now);
++ try{
++  const changed=switchTo(qualified);
++  expect(seal(changed,501)).toBe(true);
++  expect(currentToolsCheckpoint(changed,100,501)).toBe(true);
++  expect(currentToolsCheckpoint({...changed,counters:[...changed.counters].reverse()},100,501)).toBe(false);
++  expect(seal(switchTo(step),501)).toBe(false);
++  expect(seal(recordToolsProgress(qualified,row(3,501,C,501),501),501)).toBe(false);
++  expect(seal(switchTo(recordToolsProgress(qualified,row(3,500,C,500),500)),501)).toBe(false);
++  expect(seal(switchTo(recordToolsProgress(qualified,row(1,500,A,500),500)),501)).toBe(false);
++  expect(seal(recordToolsProgress(changed,row(19,502,B,502),502),502)).toBe(false);
++  expect(seal(recordToolsProgress(qualified,row(20,501,B,501,{...proof,sourceSince:116}),501),501)).toBe(false);
++  expect(seal(recordToolsProgress(qualified,row(20,501,B,501,{...proof,pid:6}),501),501)).toBe(false);
++  expect(seal(recordToolsProgress(changed,undefined,502),502)).toBe(false);
++  expect(seal(recordToolsProgress(recordToolsProgress(changed,undefined,502),row(21,503,B,501),503),503)).toBe(false);
++  expect(seal(changed,517)).toBe(false);
++  for(const now of [501,516,517,600,601]){
++   const repeated=recordToolsProgress(changed,row(20,now,B,501),now);
++   const allowed=db.query("SELECT ? - 471 <= 45 AND ? <= 600 AS allowed").get(now,now) as {allowed:number};
++   expect(seal(repeated,now)).toBe(Boolean(allowed.allowed));
++  }
++  const afterAbsolute={...changed,sampleAt:601,registryAt:601,counters:changed.counters.map((c,i)=>i===0?{...c,previousAt:598,advancedAt:599}:c)};
++  expect(seal(afterAbsolute,601)).toBe(false);
++ }finally{db.close();}
++});
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/📈️standing/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/📈️standing/🟦️.ts
+@@ -1,4 +1,4 @@
+ import {test,expect} from "bun:test";
+-import {sampleToolsProgress} from "../../🟦️.ts";
++import {recordToolsProgress,sampleToolsProgress,toolsGraceActive} from "../../🟦️.ts";
+ import {join} from "node:path";
+ import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,renameSync,unlinkSync,symlinkSync} from "node:fs";
+@@ -66,5 +66,32 @@
+   expect(sample()).toMatchObject({phase:provider,done:519,proof:bindingNext!.proof});
+ 
+-  gate.release();await wait(()=>read()?.holds.length===1);expect(sample()).toBeUndefined();
++  const phaseNative="native-artifact-input-read";
++  const report=async(resource:string,done:number)=>{
++   await phase.publish({resource:resource+":"+done,mode:resource===provider?"shared":"exclusive",elapsedMs:0});
++   await wait(()=>read()?.standing.phase===resource&&read()?.standing.done===done);
++   const observed=sample();
++   if(observed===undefined||observed.phase!==resource||observed.done!==done)throw Error("Expected live dual-exclusive progress sample");
++   return {observed,now:Date.now()};
++  };
++  const initialNative=await report(phaseNative,11436);
++  let progress=recordToolsProgress(null,initialNative.observed,initialNative.now);
++  await Bun.sleep(5100);
++  const advanceNative=await report(phaseNative,11438);
++  progress=recordToolsProgress(progress,advanceNative.observed,advanceNative.now);
++  await Bun.sleep(5100);
++  const finalNative=await report(phaseNative,11440);
++  progress=recordToolsProgress(progress,finalNative.observed,finalNative.now);
++  const thenProvider=await report(provider,519);
++  const limit={stage:"tools",started:leaseProcessStartedAtMsV1,now:thenProvider.now,soft:Math.floor((thenProvider.now-leaseProcessStartedAtMsV1)/4.3),quiet:20000,sampleLimit:10250};
++  expect(initialNative.observed.proof).toEqual(thenProvider.observed.proof);
++  expect(finalNative.observed.proof).toEqual(thenProvider.observed.proof);
++  expect(toolsGraceActive(progress,limit)).toBe(true);
++  const switched=recordToolsProgress(progress,thenProvider.observed,thenProvider.now);
++  expect(switched.counters.find(row=>row.phase===phaseNative)).toEqual(progress.counters.find(row=>row.phase===phaseNative));
++  expect(toolsGraceActive(switched,limit)).toBe(true);
++  expect(toolsGraceActive(recordToolsProgress(switched,sample({owner:"foreign-stage"}),thenProvider.now),limit)).toBe(false);
++  gate.release();await wait(()=>read()?.holds.length===1);
++  expect(sample()).toBeUndefined();
++  expect(toolsGraceActive(recordToolsProgress(switched,sample(),thenProvider.now),limit)).toBe(false);
+  }finally{try{gate.release();}catch{}parent.release();}
+  await wait(()=>read()===undefined);
+@@ -73,3 +100,3 @@
+   if(previousOwner===undefined)delete process.env.SEMIO_LEASE_OWNER;else process.env.SEMIO_LEASE_OWNER=previousOwner;
+  }
+-}),20000);
++}),28500);
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🟦️.ts
+@@ -82,7 +82,11 @@
+  const elapsed=input.now-input.started;
+  if(elapsed<=input.soft*policy.baseMultiplier||elapsed>input.soft*(policy.baseMultiplier+policy.extraIntervals))return false;
+- const counter=state.counters.find(row=>row.phase===state.current);
+- return counter!==undefined&&!counter.reset&&counter.previousAt>=input.started&&counter.previousAt<counter.advancedAt&&
+-  counter.advancedAt<=input.now&&input.now-counter.previousAt<=input.quiet;
++ const counter=state.counters.at(-1);
++ if(counter?.phase!==state.current||counter.reset)return false;
++ const advanced=(row:ToolsCounter)=>!row.reset&&row.previousAt>=input.started&&row.previousAt<row.advancedAt&&
++  row.advancedAt<=input.now&&input.now-row.previousAt<=input.quiet;
++ if(advanced(counter))return true;
++ const previous=state.counters.at(-2);
++ return counter.phase==="javascript-source-provider"&&previous?.phase==="native-artifact-input-read"&&advanced(previous);
+ }
+ 
+@@ -98,5 +102,5 @@
+   (state.proof===null?(state.current!==null||state.counters.length!==0||state.registryAt!==0):
+    state.proof.birth<started||state.proof.parentSince<started||state.proof.sourceSince<started||state.proof.birth>state.registryAt)||
+-  new Set(state.counters.map(row=>row.phase)).size!==state.counters.length||state.current!==null&&!state.counters.some(row=>row.phase===state.current))return false;
++  new Set(state.counters.map(row=>row.phase)).size!==state.counters.length||state.current!==null&&state.counters.at(-1)?.phase!==state.current)return false;
+  return state.counters.every(row=>row.series>=started&&row.series<=state.registryAt&&row.advancedAt<=state.sampleAt&&row.previousAt<=row.advancedAt&&
+   (row.previousAt===0||row.previousAt>=started&&row.previousAt<row.advancedAt)&&(row.advancedAt===0||row.advancedAt>=row.series));

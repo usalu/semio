@@ -128,7 +128,7 @@ function state(status: "open" | "submitted", crowds: CourseState["crowds"] = {},
 }
 
 function stubSession() {
-  return { open: vi.fn(), answer: vi.fn(), askCrowd: vi.fn(), unaskCrowd: vi.fn(), startRun: vi.fn(async () => undefined), resumeRun: vi.fn(async () => undefined), loadRun: vi.fn(async () => undefined), submitRun: vi.fn(async () => undefined) } as unknown as CourseSession & {
+  return { open: vi.fn(), answer: vi.fn(), askCrowd: vi.fn(), unaskCrowd: vi.fn(), startRun: vi.fn(async () => undefined), resumeRun: vi.fn(async () => undefined), loadRun: vi.fn(async () => undefined), submitRun: vi.fn(async () => undefined), refreshCrowd: vi.fn(async () => undefined) } as unknown as CourseSession & {
     readonly askCrowd: ReturnType<typeof vi.fn>;
     readonly unaskCrowd: ReturnType<typeof vi.fn>;
   };
@@ -487,6 +487,7 @@ describe("🖼️ a figure on the page", () => {
   it("draws a sorting place by place in the learner's own order and ends every row with the average place", () => {
     render(figure(vectors.figures.find((candidate) => candidate.id === "sorting-in-the-learners-own-order-with-places-and-thinkers")!));
     const table = screen.getByRole("table");
+    expect(table.closest(".course-records")?.hasAttribute("data-shared-border-cell")).toBe(false);
     expect(
       within(table)
         .getAllByRole("columnheader")

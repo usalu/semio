@@ -214,6 +214,7 @@
   },
   {
    "id": "three-phase-short-reads",
+   "expectedReadBuffersPerTraversal": 1,
    "guards": 128,
    "shortWrite": 65536,
    "shortRead": 2,
@@ -221,6 +222,7 @@
   },
   {
    "id": "empty-files-charge-terminal-probes",
+   "expectedReadBuffersPerTraversal": 1,
    "guards": 128,
    "shortWrite": 65536,
    "empty": true,
@@ -247,6 +249,7 @@
   },
   {
    "id": "representative-observed-stage-shape",
+   "expectedReadBuffersPerTraversal": 1,
    "guards": 128,
    "shortWrite": 65536,
    "shape": {
@@ -260,6 +263,7 @@
   },
   {
    "id": "directory-only-progress-cadence",
+   "expectedReadBuffersPerTraversal": 1,
    "guards": 128,
    "shortWrite": 65536,
    "shape": {
@@ -324,6 +328,9 @@
    },
    "refused": {
     "type": "boolean"
+   },
+   "expectedReadBuffersPerTraversal": {
+    "const": 1
    },
    "requireProgress": {
     "type": "boolean"

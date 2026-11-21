@@ -99,15 +99,15 @@
      "profile": [
       [
        0.07,
-       -0.07
+       -0.089
       ],
       [
        0.63,
-       -0.07
+       -0.089
       ],
       [
        0.66,
-       -0.04
+       -0.059
       ],
       [
        0.66,
@@ -119,7 +119,7 @@
       ],
       [
        0.04,
-       -0.04
+       -0.059
       ]
      ],
      "plane": "xy",
@@ -3639,8 +3639,8 @@
    ],
    "decisions": [
     {
-     "en": "Body, authored for 7.5 mm: five 132 x 40 mm top planks with 5 mm eased edges and 10 mm drainage gaps on two end cleats and a centre cleat; two A-frames, each of two 95 x 45 mm legs raked 60 degrees (level cuts at ground and top, eased toe) and, lapped on their outer faces, a 95 x 45 mm cleat with bevelled ends and a 95 x 45 mm stretcher; two 70 x 45 mm braces from the stretchers up to the centre cleat; the domed heads and nuts of the M10 carriage bolts in every lap and nut and washer of the M12 pivot bolts. Each bench: two 145 x 40 mm eased planks 1.50 m long with a centre batten, hanging between the frames on two folded 8 mm gusset brackets (web beside the plank ends, flange under the planks) that turn on the pivot bolts; an 8 mm bearing plate on each inner leg face with the open stow hole; pivot bolt heads and spring plungers on the gussets.",
-     "de": "Körper, für 7,5 mm gebaut: fünf Tischbohlen 132 x 40 mm mit 5 mm gebrochenen Kanten und 10-mm-Wasserfugen auf zwei Endriegeln und einem Mittelriegel; zwei A-Böcke, je aus zwei um 60 Grad geneigten Beinen 95 x 45 mm (waagerechte Schnitte am Boden und oben, gebrochene Zehe) und, außen aufgeblattet, einem Riegel 95 x 45 mm mit gefasten Enden und einer Zange 95 x 45 mm; zwei Streben 70 x 45 mm von den Zangen hinauf zum Mittelriegel; Rundköpfe und Muttern der M10-Schlossschrauben in jeder Überblattung sowie Mutter und Scheibe der M12-Drehbolzen. Jede Bank: zwei gefaste Bohlen 145 x 40 mm, 1,50 m lang, mit Mittelleiste, zwischen den Böcken an zwei gekanteten 8-mm-Knotenblechkonsolen (Steg neben den Bohlenenden, Flansch unter den Bohlen), die um die Drehbolzen schwenken; eine 8-mm-Lagerplatte auf jeder Beininnenseite mit dem offenen Rastloch der Parkstellung; Drehbolzenköpfe und Federrastbolzen auf den Knotenblechen."
+     "en": "Body, authored for 7.5 mm: five 132 x 40 mm top planks with 5 mm eased edges and 10 mm drainage gaps on two end cleats and an 89 x 45 mm centre cleat; two A-frames, each of two 95 x 45 mm legs raked 60 degrees (level cuts at ground and top, eased toe) and, lapped on their outer faces, a 95 x 45 mm cleat with bevelled ends and a 95 x 45 mm stretcher; two 70 x 45 mm braces from the stretchers up to the centre cleat; the domed heads and nuts of the M10 carriage bolts in every lap and nut and washer of the M12 pivot bolts. Each bench: two 145 x 40 mm eased planks 1.50 m long with a centre batten, hanging between the frames on two folded 8 mm gusset brackets (web beside the plank ends, flange under the planks) that turn on the pivot bolts; an 8 mm bearing plate on each inner leg face with the open stow hole; pivot bolt heads and spring plungers on the gussets.",
+     "de": "Körper, für 7,5 mm gebaut: fünf Tischbohlen 132 x 40 mm mit 5 mm gebrochenen Kanten und 10-mm-Wasserfugen auf zwei Endriegeln und einem Mittelriegel 89 x 45 mm; zwei A-Böcke, je aus zwei um 60 Grad geneigten Beinen 95 x 45 mm (waagerechte Schnitte am Boden und oben, gebrochene Zehe) und, außen aufgeblattet, einem Riegel 95 x 45 mm mit gefasten Enden und einer Zange 95 x 45 mm; zwei Streben 70 x 45 mm von den Zangen hinauf zum Mittelriegel; Rundköpfe und Muttern der M10-Schlossschrauben in jeder Überblattung sowie Mutter und Scheibe der M12-Drehbolzen. Jede Bank: zwei gefaste Bohlen 145 x 40 mm, 1,50 m lang, mit Mittelleiste, zwischen den Böcken an zwei gekanteten 8-mm-Knotenblechkonsolen (Steg neben den Bohlenenden, Flansch unter den Bohlen), die um die Drehbolzen schwenken; eine 8-mm-Lagerplatte auf jeder Beininnenseite mit dem offenen Rastloch der Parkstellung; Drehbolzenköpfe und Federrastbolzen auf den Knotenblechen."
     },
     {
      "en": "Thermal: every region is the surface of its body solids with its one layer (40 mm planks, 45 mm frame timber, 8 mm steel); no hidden regions, no emitters. Structure: planks, cleats, legs, stretchers, braces, bench planks, battens and gusset brackets are the members themselves; joints are the pivot bolts through gusset, bearing plate, leg and stretcher, the bearing plates, the lap bolts and one screw per plank and cleat; a pad under each of the four feet; masses of top and benches at their centres, the frame's mass in each stretcher.",
@@ -3699,11 +3699,11 @@
      "profile": [
       [
        0.04,
-       -0.07
+       -0.089
       ],
       [
        0.66,
-       -0.07
+       -0.089
       ],
       [
        0.66,
@@ -5310,6 +5310,35 @@
      "to": 0.9
     },
     {
+     "id": "top-cleat",
+     "kind": "extrude",
+     "bone": "top",
+     "material": "pine-timber",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.04,
+       -0.089
+      ],
+      [
+       0.66,
+       -0.089
+      ],
+      [
+       0.66,
+       0.0
+      ],
+      [
+       0.04,
+       0.0
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0225,
+     "to": 0.0225
+    },
+    {
      "id": "leg-r",
      "kind": "extrude",
      "bone": "frame",
@@ -5797,6 +5826,11 @@
      "region": "table-top"
     },
     {
+     "id": "th-top-cleat",
+     "of": "top-cleat",
+     "region": "a-frame"
+    },
+    {
      "id": "th-leg-r",
      "of": "leg-r",
      "region": "a-frame"
@@ -5881,6 +5915,12 @@
     {
      "id": "m-top-slab",
      "of": "top-slab",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "m-top-cleat",
+     "of": "top-cleat",
      "member": "top",
      "part": "member"
     },
@@ -6403,8 +6443,8 @@
    ],
    "decisions": [
     {
-     "en": "Body, authored for 30 mm: the top as one 40 mm slab (gaps and centre cleat merged), each bench as one 300 x 40 mm board, legs, square cleats, stretchers and braces member by member at 45 mm, each bracket as a 30 mm block that fills the gap between board end and leg.",
-     "de": "Körper, für 30 mm gebaut: die Platte als eine 40-mm-Scheibe (Fugen und Mittelriegel aufgegangen), jede Bank als ein Brett 300 x 40 mm, Beine, kantige Riegel, Zangen und Streben Stab für Stab mit 45 mm, jede Konsole als 30-mm-Block, der die Lücke zwischen Brettende und Bein füllt."
+     "en": "Body, authored for 30 mm: the top as one 40 mm slab (gaps merged) on the 89 x 45 mm centre cleat that takes up both braces, each bench as one 300 x 40 mm board, legs, square cleats, stretchers and braces member by member at 45 mm, each bracket as a 30 mm block that fills the gap between board end and leg.",
+     "de": "Körper, für 30 mm gebaut: die Platte als eine 40-mm-Scheibe (Fugen aufgegangen) auf dem Mittelriegel 89 x 45 mm, der beide Streben aufnimmt, jede Bank als ein Brett 300 x 40 mm, Beine, kantige Riegel, Zangen und Streben Stab für Stab mit 45 mm, jede Konsole als 30-mm-Block, der die Lücke zwischen Brettende und Bein füllt."
     },
     {
      "en": "Thermal: one surface per region on the merged solids. Structure: slab on cleats, cleats and stretchers on legs, braces, boards on bracket blocks; pivot bolts 30 mm, the seat of the slab on each cleat as a joint block, 30 mm foot pads.",

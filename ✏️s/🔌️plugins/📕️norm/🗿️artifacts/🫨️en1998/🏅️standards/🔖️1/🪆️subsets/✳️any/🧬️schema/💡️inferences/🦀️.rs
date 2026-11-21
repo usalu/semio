@@ -104,5 +104,4 @@ pub mod outline;
 semio_s_plugin_norm_compliance::live_report!(pub mod live(En1998Snapshot) = En1998Units);
 //#endregion 🛰️LiveEvaluation
 
-#[path = "📇️catalogue/🦀️.rs"]
-pub mod case_catalogue;
+pub use semio_s_artifact_norm_en1998_schema::case_catalogue;

@@ -33,7 +33,6 @@ pub struct MeshTessellationJob {
     pub(super) maximum_preview_bytes: usize,
     pub(super) selected_faces: Option<HistoryFoldSet<u32>>,
     pub(super) corner_ids:Vec<u32>,
-    attribute_name:Option<String>,
     pub(super) attribute_indices:Vec<u32>,
     pub(super) attribute_cursor:usize,
     pub(super) metadata_done:bool,
@@ -49,7 +48,6 @@ pub struct MeshTessellationJob {
     pub(super) attribute_slot:usize,
     pub(super) attribute_stage:u8,
     pub(super) attribute_pending:Option<(String,MeshAttribute)>,
-    pub(super) attribute_original_indices:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Option<Vec<u32>>>>,
     pub(super) attribute_receipt:tessellation_attribute_projection::MeshAttributeReceipt,
     pub(super) face_receipt:tessellation_face_preparation::MeshFaceReceipt,
     pub(super) triangle_pending:Option<tessellation_normal_work::TriangleFrame>,
@@ -63,7 +61,7 @@ pub enum MeshTessellationStep { Working(MeshModelingProgress), Done(MeshTransfer
 
 impl MeshTessellationJob {
     pub fn new(mesh: HalfedgeMesh) -> Self {
-        Self { mesh, output: Some(MeshTransfer { colors:Vec::new(),attributes:Default::default(),materials:Default::default(),textures:Default::default(),positions: Vec::new(), normals: Vec::new(), indices: Vec::new(), edge_positions: Vec::new(), face_ids: Vec::new(), vertex_ids: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), edge_uvs: Vec::new(), edge_is_seam: Vec::new() }), face: 0, phase: 0, cursor: 0, start: 0, next_he: 0, hes: Vec::new(), points: Vec::new(), normal_sum: [0.0; 3], normal: Vec3::ZERO, basis: ((0.0,0.0,0.0),(0.0,0.0,0.0)), projected: Vec::new(), scale: 0.0, area: 0.0, links: Vec::new(), head: 0, remaining: 0, ear: 0, probe: 0, candidates: 0, base: 0, edge_seen: HistoryFoldSet::new(), done: 0, cancelled: false, maximum_preview_bytes: usize::MAX, selected_faces: None,corner_ids:Vec::new(),attribute_name:None,attribute_indices:Vec::new(),attribute_cursor:0,metadata_done:false,buffer_reservation:0,buffer_receipt:Default::default(),metadata_cursor:0,semantic_slots:[None;3],metadata_receipt:Default::default(),corner_receipt:Default::default(),edge_pending:None,edge_receipt:Default::default(),triangle_receipt:Default::default(),attribute_slot:0,attribute_stage:0,attribute_pending:None,attribute_original_indices:None,attribute_receipt:Default::default(),face_receipt:Default::default(),triangle_pending:None,normal_metadata_phase:0,normal_output_bytes:0,normal_receipt:Default::default() }
+        Self { mesh, output: Some(MeshTransfer { colors:Vec::new(),attributes:Default::default(),materials:Default::default(),textures:Default::default(),positions: Vec::new(), normals: Vec::new(), indices: Vec::new(), edge_positions: Vec::new(), face_ids: Vec::new(), vertex_ids: Vec::new(), edge_ids: Vec::new(), uvs: Vec::new(), edge_uvs: Vec::new(), edge_is_seam: Vec::new() }), face: 0, phase: 0, cursor: 0, start: 0, next_he: 0, hes: Vec::new(), points: Vec::new(), normal_sum: [0.0; 3], normal: Vec3::ZERO, basis: ((0.0,0.0,0.0),(0.0,0.0,0.0)), projected: Vec::new(), scale: 0.0, area: 0.0, links: Vec::new(), head: 0, remaining: 0, ear: 0, probe: 0, candidates: 0, base: 0, edge_seen: HistoryFoldSet::new(), done: 0, cancelled: false, maximum_preview_bytes: usize::MAX, selected_faces: None,corner_ids:Vec::new(),attribute_indices:Vec::new(),attribute_cursor:0,metadata_done:false,buffer_reservation:0,buffer_receipt:Default::default(),metadata_cursor:0,semantic_slots:[None;3],metadata_receipt:Default::default(),corner_receipt:Default::default(),edge_pending:None,edge_receipt:Default::default(),triangle_receipt:Default::default(),attribute_slot:0,attribute_stage:0,attribute_pending:None,attribute_receipt:Default::default(),face_receipt:Default::default(),triangle_pending:None,normal_metadata_phase:0,normal_output_bytes:0,normal_receipt:Default::default() }
     }
     pub fn with_preview_capacity(mesh: HalfedgeMesh, maximum_preview_bytes: usize) -> Self { let mut job = Self::new(mesh); job.maximum_preview_bytes = maximum_preview_bytes; job }
     pub fn selected(mesh: HalfedgeMesh, faces: HistoryFoldSet<u32>) -> Self { let mut job = Self::new(mesh); job.selected_faces = Some(faces); job }
@@ -83,22 +81,6 @@ impl MeshTessellationJob {
     pub fn progress(&self) -> MeshModelingProgress { MeshModelingProgress { units_done: self.done, units_total: self.done.saturating_add(self.mesh.face_count().saturating_sub(self.face)), phase: if self.face==self.mesh.face_count() {"tessellate-attributes"} else {"tessellate"} } }
     pub fn cancel(&mut self) { self.cancelled = true; }
     pub(super) fn halfedge(&self, local: usize) -> u32 { self.hes[if self.mesh.faces[self.face].flipped { self.hes.len() - 1 - local } else { local }] }
-    fn corner_uv(&self,id:u32)->[f64;2] {
-        let edge=&self.mesh.halfedges[id as usize];
-        self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv).and_then(|attribute|attribute.value_at(match attribute.domain {MeshAttributeDomain::Corner=>id as usize,MeshAttributeDomain::Face=>self.face,MeshAttributeDomain::Vertex=>edge.vertex as usize,MeshAttributeDomain::Edge=>id as usize})).and_then(semio_framework_value::DslValue::as_array).map_or(edge.uv.map(f64::from),|value|[0,1].map(|axis|value[axis].as_f64().unwrap()))
-    }
-    pub(super) fn corner(&mut self, local: usize) {
-        let data=self.corner_data(local,[self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Normal),self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Uv),self.mesh.attributes.values().find(|attribute|attribute.semantic==MeshAttributeSemantic::Color)]);
-        self.append_corner_data(data);
-    }
-    pub(super) fn triangle(&mut self, triangle: [usize; 3]) {
-        let indices = if self.mesh.faces[self.face].smooth { triangle.map(|local| self.base + local as u32) } else {
-            let base = self.output.as_ref().unwrap().positions.len() as u32 / 3;
-            for local in triangle { self.corner(local); }
-            [base, base + 1, base + 2]
-        };
-        self.append_triangle_indices(indices);
-    }
     pub(super) fn advance(&mut self) -> MeshResult<()> {
         let n = self.hes.len();
         match self.phase {
@@ -144,37 +126,8 @@ impl MeshTessellationJob {
                 self.cursor += 1;
                 if self.cursor == n { self.phase = 7; self.cursor = 0; self.base = self.output.as_ref().unwrap().positions.len() as u32 / 3; }
             }
-            7 => {
-                if self.mesh.faces[self.face].smooth { self.corner(self.cursor); self.cursor += 1; }
-                if !self.mesh.faces[self.face].smooth || self.cursor == n { self.phase = if n == 3 || self.normal.length() < 1e-8 || self.scale == 0.0 || self.area.abs() < 1e-14 { 10 } else { 8 }; self.ear = self.head; self.cursor = self.links[self.head].1; }
-            }
-            8..=10 => {if let Some((finish,locals))=self.choose_triangle(){self.triangle(locals);self.finish_triangle(finish,locals);}}
-            11 => {
-                let he_id = self.hes[self.cursor]; let he = &self.mesh.halfedges[he_id as usize]; let next = &self.mesh.halfedges[he.next as usize];
-                let key = (he.vertex.min(next.vertex),he.vertex.max(next.vertex));
-                if self.edge_seen.insert(key) {
-                    let (a,b)=(self.corner_uv(he_id),self.corner_uv(he.next));
-                    let seam=self.mesh.uv_seams.contains(&he_id) || he.twin.is_some_and(|twin|self.mesh.uv_seams.contains(&twin) || a!=self.corner_uv(self.mesh.halfedges[twin as usize].next) || b!=self.corner_uv(twin));
-                    let out = self.output.as_mut().unwrap(); out.edge_positions.extend_from_slice(&self.mesh.vertices[he.vertex as usize].position); out.edge_positions.extend_from_slice(&self.mesh.vertices[next.vertex as usize].position); out.edge_ids.push(he_id); out.edge_uvs.extend_from_slice(&a.map(|value|value as f32)); out.edge_uvs.extend_from_slice(&b.map(|value|value as f32)); out.edge_is_seam.push(u8::from(seam));
-                }
-                self.cursor += 1;
-                if self.cursor == n {
-                    self.face += 1; self.phase = 0; self.hes.clear(); self.points.clear(); self.projected.clear(); self.links.clear(); self.normal_sum = [0.0;3]; self.scale = 0.0; self.area = 0.0; self.head = 0; self.candidates = 0;
-                }
-            }
             _ => unreachable!(),
         }
-        Ok(())
-    }
-    fn advance_attributes(&mut self)->MeshResult<()> {
-        if self.selected_faces.is_some() {self.metadata_done=true;return Ok(());}
-        let next=if let Some(name)=&self.attribute_name {self.mesh.attributes.range((std::ops::Bound::Included(name.clone()),std::ops::Bound::Unbounded)).next()}else {self.mesh.attributes.first_key_value()};
-        let Some((name,attribute))=next else {let out=self.output.as_mut().unwrap();out.materials=std::mem::take(&mut self.mesh.materials);out.textures=std::mem::take(&mut self.mesh.textures);self.metadata_done=true;return Ok(());};
-        if self.attribute_name.is_none() {self.attribute_name=Some(name.clone());}
-        let out=self.output.as_ref().unwrap();
-        let (domain,ids)=match attribute.domain {MeshAttributeDomain::Vertex=>(MeshAttributeDomain::Vertex,&out.vertex_ids),MeshAttributeDomain::Corner=>(MeshAttributeDomain::Vertex,&self.corner_ids),MeshAttributeDomain::Face=>(MeshAttributeDomain::Face,&out.face_ids),MeshAttributeDomain::Edge=>(MeshAttributeDomain::Edge,&out.edge_ids)};
-        if self.attribute_cursor<ids.len() {let id=ids[self.attribute_cursor] as usize;let sample=attribute.indices.as_ref().map_or(id as u32,|indices|indices[id]);self.attribute_indices.push(sample);self.attribute_cursor+=1;}
-        else {let name=self.attribute_name.take().unwrap();let mut attribute=self.mesh.attributes.remove(&name).unwrap();attribute.domain=domain;attribute.indices=Some(std::mem::take(&mut self.attribute_indices));self.output.as_mut().unwrap().attributes.insert(name,attribute);self.attribute_cursor=0;}
         Ok(())
     }
     pub(super) fn reject_ear(&mut self) {
@@ -191,50 +144,20 @@ impl HalfedgeMesh {
     pub fn boundary_corner(&self, edge: EdgeId) -> MeshResult<(VertexId, EdgeId)> { let edge = self.halfedges.get(edge.0 as usize).ok_or(MeshKernelError::InvalidHandle)?; Ok((VertexId(edge.vertex), EdgeId(edge.next))) }
     /// 🥽️ The indexed polygon source of this mesh with authored channels re-keyed to canonical corner and edge identities; reconstructing it with `polygon_source_job` yields an equal mesh.
     pub fn polygon_source(&self) -> MeshResult<semio_framework_mesh_engine::PolygonMeshSource> {
-        let mut corner_ids = Vec::new();
-        let mut edge_ids = Vec::new();
-        for face in 0..self.face_count() {
-            let (start, flipped) = self.face_boundary(FaceId(face as u32))?;
-            let mut halfedges = Vec::new();
-            let mut next = start;
-            loop {
-                halfedges.push(next.0);
-                next = self.boundary_corner(next)?.1;
-                if next == start {
-                    break;
-                }
-            }
-            let count = halfedges.len();
-            for cursor in 0..count {
-                let index = if flipped { count - 1 - cursor } else { cursor };
-                corner_ids.push(halfedges[index]);
-                edge_ids.push(halfedges[if flipped { (index + count - 1) % count } else { index }]);
-            }
+        use semio_framework_value::{AuthoringWallet,RetainedCloneGrant};
+        let mut capture=MeshPolygonSourceCapture::new();
+        let mut wallet=AuthoringWallet::new(RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,
+            maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},u128::MAX);
+        loop {
+            let next=capture.demand(self,256).map_err(MeshKernelError::Retained)?;
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:next.copy_bytes,maximum_capacity_bytes:next.capacity_bytes,
+                maximum_release_bytes:next.release_bytes,maximum_depth:next.depth};
+            let turn=wallet.run(grant,32,|effect|capture.step(self,effect)).map_err(MeshKernelError::Retained)?
+                .ok_or(MeshKernelError::DegenerateOperation)?;
+            let (step,receipt)=turn.output.map_err(MeshKernelError::Retained)?;
+            wallet.post(receipt).map_err(MeshKernelError::Retained)?;
+            if let MeshPolygonSourceStep::Done(source)=step{return Ok(source);}
         }
-        let mut attributes = self.attributes.clone();
-        for attribute in attributes.slot_values_mut() {
-            let ids = match attribute.domain {
-                MeshAttributeDomain::Corner => Some(&corner_ids),
-                MeshAttributeDomain::Edge => Some(&edge_ids),
-                _ => None,
-            };
-            if let Some(ids) = ids {
-                if attribute.indices.is_some() || ids.iter().enumerate().any(|(index, id)| index != *id as usize) {
-                    attribute.indices = Some(ids.iter().map(|id| attribute.indices.as_ref().map_or(*id, |indices| indices[*id as usize])).collect());
-                }
-            }
-        }
-        use semio_framework_mesh_engine::PolygonSurfaceKind::*;
-        let mut surface = Vec::new();
-        for (kind, ids, count) in [(VertexNormal, None, self.vertex_count()), (SmoothFace, None, self.face_count()),
-            (CornerUv, Some(corner_ids.as_slice()), self.halfedge_count()), (SeamEdge, Some(edge_ids.as_slice()), self.halfedge_count())] {
-            for index in 0..count {
-                if let Some(sample) = self.polygon_surface_sample(kind, index as u32, ids.map_or(index as u32, |ids| ids[index])) {
-                    surface.push(sample);
-                }
-            }
-        }
-        Ok(semio_framework_mesh_engine::PolygonMeshSource { vertices: self.positions(), faces: self.polygons(), surface, attributes, materials: self.materials.clone(), textures: self.textures.clone() })
     }
 
     /// 🧴️ Reads one optional native surface sample through a canonical topology identity.
@@ -281,91 +204,82 @@ impl HalfedgeMesh {
     }
 }
 
-/// 📜️ Incremental OBJ writer: vertices, texture coordinates and faces are written in units of 256 elements so a host can stay inside an interactive step ceiling.
+/// 📜️ Incremental OBJ writer for polygon geometry and authored corner channels.
 pub struct MeshObjExport {
     pub(super) out: String,
     pub(super) phase: u8,
     pub(super) cursor: usize,
-    has_uv: bool,
+    channels: MeshObjChannels,
     units: usize,
 }
 
 impl Default for MeshObjExport {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl MeshObjExport {
     pub fn new() -> Self {
-        Self { out: String::from("# kernel_3d_mesh OBJ export\n"), phase: 0, cursor: 0, has_uv: false, units: 0 }
+        Self { out: String::from("# kernel_3d_mesh OBJ export\n"), phase: 0, cursor: 0, channels: Default::default(), units: 0 }
     }
 
-    /// 📊 Completed units and the units the mesh needs in total (an upper bound until the texture scan finished).
+    /// 📊 Completed units and an upper bound for this mesh.
     pub fn progress(&self, mesh: &HalfedgeMesh) -> (usize, usize) {
-        let total = (mesh.vertices.len() + 2 * mesh.halfedges.len() + mesh.faces.len()).div_ceil(256) + 4;
-        (self.units, total.max(self.units))
+        let total=mesh.attributes().len()+mesh.halfedges.len().max(mesh.vertices.len())+(mesh.vertices.len()+2*mesh.halfedges.len()+mesh.faces.len()).div_ceil(256)+7;
+        (self.units,total.max(self.units))
     }
 
-    /// ⏱️ Writes at most `budget` units of 256 elements; the finished text once everything is written.
+    /// ⏱️ Writes at most `budget` units, returning the finished text when all records are written.
     pub fn step(&mut self, mesh: &HalfedgeMesh, budget: usize) -> MeshResult<Option<String>> {
+        use std::fmt::Write;
         for _ in 0..budget.max(1) {
             self.units += 1;
             match self.phase {
                 0 => {
-                    let end = (self.cursor + 256).min(mesh.vertices.len());
+                    let end=(self.cursor+256).min(mesh.vertices.len());
                     for vertex in &mesh.vertices[self.cursor..end] {
-                        self.out.push_str(&format!("v {} {} {}\n", vertex.position[0], vertex.position[1], vertex.position[2]));
+                        let [x,y,z]=vertex.position;
+                        self.channels.scan_vertex_normal(vertex.normal);
+                        writeln!(self.out,"v {x} {y} {z}").expect("writing OBJ to a string");
                     }
-                    self.cursor = end;
-                    if self.cursor == mesh.vertices.len() {
-                        self.phase = 1;
-                        self.cursor = 0;
-                    }
+                    self.cursor=end;
+                    if self.cursor==mesh.vertices.len() {self.phase=1;self.cursor=0;}
                 }
-                1 => {
-                    let end = (self.cursor + 256).min(mesh.halfedges.len());
-                    self.has_uv = mesh.halfedges[self.cursor..end].iter().any(|halfedge| halfedge.uv[0] != 0.0 || halfedge.uv[1] != 0.0);
-                    if self.has_uv || end == mesh.halfedges.len() {
-                        self.phase = if self.has_uv { 2 } else { 3 };
-                        self.cursor = 0;
-                    } else {
-                        self.cursor = end;
-                    }
-                }
+                1 => {if self.channels.scan_attributes(mesh) {self.phase=2;}}
                 2 => {
-                    let end = (self.cursor + 256).min(mesh.halfedges.len());
-                    for halfedge in &mesh.halfedges[self.cursor..end] {
-                        self.out.push_str(&format!("vt {} {}\n", halfedge.uv[0], halfedge.uv[1]));
-                    }
-                    self.cursor = end;
-                    if self.cursor == mesh.halfedges.len() {
-                        self.phase = 3;
-                        self.cursor = 0;
+                    let end=(self.cursor+256).min(mesh.halfedges.len());
+                    for corner in self.cursor..end {self.channels.scan_corner(mesh,EdgeId(corner as u32))?;}
+                    self.cursor=end;
+                    if self.cursor==mesh.halfedges.len() {
+                        self.phase=if self.channels.has_uv(){3}else{4};
+                        self.cursor=0;
                     }
                 }
+                3 => {
+                    let end=(self.cursor+256).min(mesh.halfedges.len());
+                    for corner in self.cursor..end {
+                        let [u,v]=self.channels.texture(mesh,EdgeId(corner as u32))?;
+                        writeln!(self.out,"vt {u} {v}").expect("writing OBJ to a string");
+                    }
+                    self.cursor=end;
+                    if self.cursor==mesh.halfedges.len() {self.phase=4;self.cursor=0;}
+                }
+                4 if self.cursor<self.channels.normal_count(mesh) => {
+                    let [x,y,z]=self.channels.normal(mesh,self.cursor)?;
+                    writeln!(self.out,"vn {x} {y} {z}").expect("writing OBJ to a string");
+                    self.cursor+=1;
+                }
+                4 => {self.phase=5;self.cursor=0;}
                 _ => {
-                    let end = (self.cursor + 256).min(mesh.faces.len());
+                    let end=(self.cursor+256).min(mesh.faces.len());
                     for face in self.cursor..end {
-                        let mut halfedges = mesh.face_halfedge_ids(FaceId(face as u32))?;
-                        if mesh.faces[face].flipped {
-                            halfedges.reverse();
-                        }
+                        let mut halfedges=mesh.face_halfedge_ids(FaceId(face as u32))?;
+                        if mesh.faces[face].flipped {halfedges.reverse();}
                         self.out.push('f');
-                        for id in halfedges {
-                            let vertex = mesh.halfedges[id as usize].vertex;
-                            if self.has_uv {
-                                self.out.push_str(&format!(" {}/{}", vertex + 1, id as usize + 1));
-                            } else {
-                                self.out.push_str(&format!(" {}", vertex + 1));
-                            }
-                        }
+                        for id in halfedges {self.channels.write_corner(mesh,&mut self.out,mesh.halfedges[id as usize].vertex,id)?;}
                         self.out.push('\n');
                     }
-                    self.cursor = end;
-                    if self.cursor == mesh.faces.len() {
-                        return Ok(Some(std::mem::take(&mut self.out)));
-                    }
+                    self.cursor=end;
+                    if self.cursor==mesh.faces.len() {return Ok(Some(std::mem::take(&mut self.out)));}
                 }
             }
         }
@@ -375,7 +289,7 @@ impl MeshObjExport {
 //#endregion Export
 
 impl semio_framework_value::retirement::RetireOwned for MeshTessellationJob {
-    type RetirementCursor=semio_framework_value::retirement_fields_type!(HalfedgeMesh,Option<MeshTransfer>,Vec<u32>,Vec<Vec3>,Vec<(f64, f64)>,Vec<(usize, usize)>,HistoryFoldSet<(u32, u32)>,Option<HistoryFoldSet<u32>>,Vec<u32>,Option<String>,Vec<u32>,Option<(String,MeshAttribute)>,Option<semio_framework_value::retirement::controlled::ControlledRetirement<Option<Vec<u32>>>>);
-    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.mesh,self.output,self.hes,self.points,self.projected,self.links,self.edge_seen,self.selected_faces,self.corner_ids,self.attribute_name,self.attribute_indices,self.attribute_pending,self.attribute_original_indices)}
+    type RetirementCursor=semio_framework_value::retirement_fields_type!(HalfedgeMesh,Option<MeshTransfer>,Vec<u32>,Vec<Vec3>,Vec<(f64, f64)>,Vec<(usize, usize)>,HistoryFoldSet<(u32, u32)>,Option<HistoryFoldSet<u32>>,Vec<u32>,Vec<u32>,Option<(String,MeshAttribute)>);
+    fn retirement_seed(self)->Self::RetirementCursor {semio_framework_value::retirement_fields_seed!(self.mesh,self.output,self.hes,self.points,self.projected,self.links,self.edge_seen,self.selected_faces,self.corner_ids,self.attribute_indices,self.attribute_pending)}
     fn controlled_retirement_supported()->bool {true}
 }

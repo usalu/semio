@@ -1,0 +1,21 @@
+[
+  { "passes": [], "requests": [] },
+  {
+    "passes": [
+      { "manifest": "hub/Cargo.toml", "profile": "prototype", "target": "wasm32-wasip2", "packages": [{ "name": "gis" }, { "name": "catalog" }] }
+    ],
+    "requests": [
+      ["build", "--manifest-path", "hub/Cargo.toml", "--profile", "prototype", "--target", "wasm32-wasip2", "-p", "gis", "-p", "catalog"]
+    ]
+  },
+  {
+    "passes": [
+      { "manifest": "hub/Cargo.toml", "profile": "release", "target": "wasm32-wasip2", "packages": [{ "name": "gis" }] },
+      { "manifest": "widgets/Cargo.toml", "profile": "release", "target": "wasm32-wasip2", "packages": [{ "name": "drawing" }] }
+    ],
+    "requests": [
+      ["build", "--manifest-path", "hub/Cargo.toml", "--profile", "release", "--target", "wasm32-wasip2", "-p", "gis"],
+      ["build", "--manifest-path", "widgets/Cargo.toml", "--profile", "release", "--target", "wasm32-wasip2", "-p", "drawing"]
+    ]
+  }
+]

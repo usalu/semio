@@ -102,3 +102,56 @@ Seen: `r3-sheet` body at 1:50, 1:100, 1:200, 1:500 (six views each); 1:50 from b
 - 1:200 plan reports a 45 mm p95 from the 5 mm gap between mattress and rail falling under the raster cell, not from a form difference.
 - `r3-sheet --list thermal` paints the mattress grey at 1:100 and coarser (its legend only knows the 1:50 layers); the data are right.
 - The repo test suites were not run; only the two checks of the brief.
+
+## Round 5 handcraft
+
+Scripts: `r5-single-bed-build.py` (round 3 kit, body and lists loaded, the mattress functions replaced by hand-stated round 5 forms; writes `🗑️generated/r5-single-bed/🔣️.json` and `volumes/furniture/single-bed.json`), `r5-furniture-f03-ship.sh` (build, print band, splice, validate), `r5-furniture-f03-report.py` (this section). Sheets opened for grading (Read tool, 1000 to 1400 px copies of the 2400 px sheets under `🗑️generated/r5-single-bed/before|after/`): `r3-sheet` body, structure and thermal (`--cut`) at 1:50, 1:100, 1:200 and 1:500, every pose at 1:50, one clip frame, and `r3-2d` at every scale (the 2D drawings were not changed in round 5, so the before set is the after set).
+
+### Reference (manufacturer data and standards)
+
+| Quantity | Reference | Source |
+| --- | --- | --- |
+| Mattress | 900 x 2000 mm nominal; inner bed size 10 to 20 mm larger | EN 1334:1996 |
+| Bed for 90 x 200 | 2090 x 980 mm overall, headboard 920 mm (IKEA TARVA); post beds 0.85 to 1.05 m at the head | IKEA TARVA 302.612.70 data sheet; manufacturer ranges |
+| Slatted base 90 x 200, head adjustable | 28 slats 35 to 38 x 8 mm in rubber caps, frame 45 mm, about 80 mm over the camber | retail data sheets (r3 section 1) |
+| Cold-foam mattress | 180 to 220 mm, top about 0.45 to 0.50 m above the floor | ISO 3386-1 asset reference, product practice |
+| Lifting head section | hinge in the frame rails, 0 to 65 degrees | product practice |
+
+### Model against reference (1:50)
+
+| Quantity | Model | Reference | Deviation |
+| --- | --- | --- | --- |
+| Mattress | 0.900 x 2.000 x 0.200 m (head part 0.894 wide) | 0.90 x 2.00 x 0.18-0.22 | 0 % (head part -0.7 % width) |
+| Clear inner size | 0.910 x 2.000 m | 0.910-0.920 x 2.010-2.020 | width 0 %, length -0.5 % |
+| Overall | 2.120 x 1.010 x 0.950 m | 2.090 x 0.980 x 0.920 (TARVA) | +1.4 %, +3.1 % (60 mm posts stand 20 mm proud of the rails), +3.3 % (inside the 0.85-1.05 m post-bed range; asset dimension kept) |
+| Mattress top | 0.485 m | 0.45-0.50 m | in range |
+| Slats | 28 x 38 x 8 mm, crown 0.285 m, frame 45 mm | 28 x 35-38 x 8 mm, 45 mm | 0 % |
+| Hinge | bolt at x 0.78 m, y 0.23 m, 0 to 65 degrees | in the frame rails, 0-65 degrees | as reference |
+
+### Grades (before -> after)
+
+| Scale | Body | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | B+ -> A- | A- -> A- | A- -> A- |
+| 1:100 | A- -> A- | A- -> A- | A- -> A- |
+| 1:200 | A- -> A- | A- -> A- | A- -> A- |
+| 1:500 | B+ -> A- | B+ -> B+ | B+ -> B+ |
+
+Poses at 1:50: head-raised, reading-in-bed, half-raised-key and clip sit-up-to-read t 4.5 s B -> A-; asleep B+ -> A-; flat A- -> A-.
+
+### Defects seen before, and what was changed
+
+- Raised head section (head-raised, reading-in-bed, half-raised-key, clip): the head mattress part turned about the bolt into the middle part with coincident side faces, so its end showed as a crossing "X" of seams on the side and the piping crossed the fold. Now the head part is 3 mm narrower each side (half width 0.447 m; its piping at 0.444 m) and the end that turns in lies inside the middle part: the fold reads as the head part rising out of the middle part, no crossing seams.
+- Loaded poses (asleep, reading-in-bed): the three rigid parts sink by different amounts (8 to 18 mm) and showed sharp ledges. Every joint end now closes into a quilted crease (1:50: half width -4 mm and half height -6 mm at the joint face, back to full section over 12 mm; 1:100: -6 / -8 mm over 15 mm), so a step is a rounded shoulder of a zoned mattress. Piping stops at the creases.
+- 1:500: the three mattress blocks were two-station lofts with 20 to 30 mm soft edges (below the 75 mm feature) that shaded as long facets in the side views. They are crisp boxes now (the head block 3 mm narrower): one clean mattress mass on the tray.
+- Root, print: the catalog asset was refused by the print check (`PRINT range-end-feature`, the 30 mm side rail of the 1:200 plan is 0.191 mm at 1:350). The 1:200 band now ends at 1:330 and the 1:500 band starts there (`representations.200/500.validRange`).
+
+### Checks
+
+`volumes-check.ts furniture/single-bed --product`: PASS (170.7 s); silhouette IoU elevation / front / plan 1:50 0.9996 / 1.000 / 0.998, 1:100 0.999 / 1.000 / 1.000, 1:200 1.000 / 1.000 / 0.997, 1:500 1.000 / 1.000 / 1.000; mattress outer area 4.61 m2 at 1:50 (declared 4.5). A first 1:500 variant with eight-station lofts failed `volumes-monotonic` (+404 triangles against 1:200) and was replaced by the boxes. After the splice `r3-validate.ts furniture/single-bed --catalog-only --volumes`: VALID, schema 0, validateAsset 0, checkVolumes 0.
+
+### Remaining issues
+
+- The mattress is still three rigid parts on three bones; per-solid `weights` blend a whole solid, so a true bend of one mattress needs per-vertex skinning (not in the schema). The creases are honest for a zoned mattress but have no counterpart in a one-piece cover.
+- 1:500 thermal: the tray box makes the frame region larger than declared (only the total counts there); `r3-sheet --list thermal` paints the mattress grey at 1:100 and coarser (legend knows only the 1:50 layers): a sheet artefact, the data are right.
+- 1:500 structure: slat plates and bearing strips at the 75 mm floor read as planks (B+).

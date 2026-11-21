@@ -141,7 +141,7 @@ pub struct ChromeDialogRequest {
 
 /// 🏷️ The dialog chrome's own copy, resolved once per opening from exhaustive `LocalizedLabel`s.
 #[derive(Clone, Debug)]
-struct ChromeDialogLabels {
+pub struct ChromeDialogLabels {
     pub on: String,
     off: String,
     pub choose: String,
@@ -154,7 +154,7 @@ struct ChromeDialogLabels {
 
 /// ✍️ One staged field: its arg id, resolved label, control and the draft text a text/number field edits.
 #[derive(Clone, Debug)]
-struct ChromeDialogField {
+pub struct ChromeDialogField {
     pub id: String,
     pub label: String,
     pub required: bool,
@@ -180,7 +180,7 @@ pub enum ChromeDialogFieldKind {
 
 /// 🔀️ One decision button with its resolved label and consequence text.
 #[derive(Clone, Debug)]
-struct ChromeDialogChoice {
+pub struct ChromeDialogChoice {
     pub choice: semio_framework::DialogChoice,
     pub label: String,
     pub description: Option<String>,

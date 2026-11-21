@@ -15,7 +15,19 @@ export function testGisTerrainWindowConfigContract(): void {
     cases: Array<{windowId: string; cameraJson: string; expected: Record<string, unknown>}>;
   };
   const schema = JSON.parse(readFileSync(`${here}/../../🧬️schema/🔣️.json`, "utf8"));
-  const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
+  const brushSchema = JSON.parse(readFileSync(`${here}/../../🧬️schema/brush.json`, "utf8"));
+  const ajv = new Ajv({ strict: false, allErrors: true }).addSchema(brushSchema);
+  const validate = ajv.compile(schema);
+  const brushMutation = JSON.parse(readFileSync(`${here}/../../🧬️schema/🧬️mutations/🖌️brush/🧬️schema/🔣️.json`, "utf8"));
+  const validateBrush = ajv.compile(brushMutation);
+  assert.equal(validateBrush({ operation: "setTerrainBrush" }), true);
+  assert.equal(validateBrush({ operation: "setCamera", brush: null }), false);
+  for (const [rows, expected] of [[fixture.accepted, true], [fixture.rejected, false]] as const) {
+    for (const value of rows) {
+      if (!value || typeof value !== "object" || !("brush" in value)) continue;
+      assert.equal(validateBrush({ operation: "setTerrainBrush", brush: value.brush }), expected, JSON.stringify(validateBrush.errors));
+    }
+  }
   const productionAccepts = (value: unknown): boolean => {
     try { parseGisTerrainWindowConfig(value); return true; } catch { return false; }
   };
@@ -36,6 +48,7 @@ export function testGisTerrainWindowConfigContract(): void {
     assert.deepEqual(states, row.expected);
   }
   assert.equal(schema.properties.cameraJson["x-semio-owner"], "window");
+  assert.equal(schema.properties.brush["x-semio-owner"], "window");
   assert.equal(fixture.windowKindId, "gis3d-main");
   console.log(`gis-terrain-window-config accepted=${fixture.accepted.length} rejected=${fixture.rejected.length} windows=${Object.keys(states).length} owner=${fixture.windowKindId}`);
 }

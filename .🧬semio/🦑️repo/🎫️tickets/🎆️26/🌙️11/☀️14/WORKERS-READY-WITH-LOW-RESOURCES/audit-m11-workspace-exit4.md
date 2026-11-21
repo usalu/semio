@@ -1,0 +1,7 @@
+# m11 Workspace Exit 4
+
+The mirrored `ready-timings.json` records the workspace run starting at 1795208027650 and ending at 1795208320705 with exit 4, `stage-failed`, and an exit receipt. Its `ready-log-workspace-failed.txt` ends with the explicit `consent-waiting` diagnostic: macOS Documents access for `/Users/ueli/.local/share/semio/launcher/bin/repo` was waiting, and `/Users/ueli/Documents/semio` could not be read. Earlier capacity waits preceded admission; the final typed refusal identifies the exit boundary, not a capacity timeout.
+
+Current source `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.mjs` lines 129–137 defines denied/waiting probes and the exit-4 consent refusal; `🏡️resident/🚪️client/🛰️plan/🟨️.mjs` lines 80–88 maps a service access-denied exit row to that refusal. The diagnostic text is `🏗️build/📖️texts/🔣️.json` line 646. The reported recovery for that refusal is for the logged-in user on m11 to allow the named repo identity’s Documents access in the dialog or Files & Folders settings, then retry.
+
+This is evidence of the specific completed run, not proof that the prompt is still pending. At 22:23:19 UTC the automatically started successor was running workspace and reporting graph slice progress (47 of 596); at 22:24:37 its publication remained running. No current consent status, eventual verdict or fresh failure is established. No remote action or source edit was performed.

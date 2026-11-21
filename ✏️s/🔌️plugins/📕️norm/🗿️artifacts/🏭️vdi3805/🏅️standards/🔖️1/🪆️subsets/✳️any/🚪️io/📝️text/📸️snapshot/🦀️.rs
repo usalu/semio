@@ -110,7 +110,7 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
                 products.push(CatalogueProduct {
                     id: article_number.clone(),
                     identity,
-                    title: bilingual("Produkt", "Product"),
+                    title: if sheet_no == 22 { bilingual(&article_number, &article_number) } else { bilingual("Produkt", "Product") },
                     sheet: SheetId(sheet_no),
                     records: vec![record],
                     configuration: Configuration {
@@ -124,7 +124,7 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
                     extensions: ExtensionBag::default(),
                 });
             }
-            "110" => {
+            "110" if products.last().is_some_and(|product| product.sheet.0 != 22) => {
                 if let Some(product) = products.last_mut() {
                     if let Some(cfg_id) = fields.get(1) {
                         product.configuration.id = cfg_id.clone();
@@ -156,6 +156,9 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
     }
     for product in &mut products {
         product.configuration.attributes = attributes_from_records(product.sheet, &product.records);
+        if product.sheet.0 == 22 {
+            continue;
+        }
         if let Some(de) = product.records.iter().find(|r| r.family.0 == "700").and_then(|r| r.fields.get(2)) {
             let en = product.records.iter().find(|r| r.family.0 == "700").and_then(|r| r.fields.get(4)).cloned().unwrap_or_else(|| de.clone());
             product.title = bilingual(de.clone(), en);

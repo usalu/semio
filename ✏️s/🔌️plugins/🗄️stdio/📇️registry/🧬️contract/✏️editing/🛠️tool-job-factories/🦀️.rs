@@ -86,8 +86,7 @@ pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request
 }
 
 pub fn bounded_native_edit_bounded_first_step_proofs<E: BoundedNativeEditingEditor>(owner_file: &'static str, controller_id: &'static str, artifact_schema: &'static str) -> Vec<ArtifactBoundedFirstStepProof> {
-    let factory_type = std::any::type_name::<BoundedNativeEditToolJobFactory<E>>();
-    let factory = factory_type.rsplit("::").next().unwrap_or(factory_type);
+    let factory = stringify!(BoundedNativeEditToolJobFactory);
     E::NATIVE_TOOL_IDS
         .iter()
         .map(|tool_id| ArtifactBoundedFirstStepProof::new::<EditorApp<E>>(owner_file, controller_id, factory, tool_id, artifact_schema, E::native_edit_execution_contract()).with_factory_type::<EditorApp<E>, BoundedNativeEditToolJobFactory<E>>())
@@ -290,8 +289,7 @@ pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: &mut Opti
 }
 
 pub fn snapshot_edit_bounded_first_step_proofs<E: SnapshotEditingEditor>(owner_file: &'static str, controller_id: &'static str, artifact_schema: &'static str) -> Vec<ArtifactBoundedFirstStepProof> {
-    let factory_type = std::any::type_name::<SnapshotEditToolJobFactory<E>>();
-    let factory = factory_type.rsplit("::").next().unwrap_or(factory_type);
+    let factory = stringify!(SnapshotEditToolJobFactory);
     SNAPSHOT_EDIT_ACTION_IDS
         .iter()
         .map(|tool| ArtifactBoundedFirstStepProof::new::<EditorApp<E>>(owner_file, controller_id, factory, tool, artifact_schema, snapshot_edit_execution_contract()).with_factory_type::<EditorApp<E>, SnapshotEditToolJobFactory<E>>())

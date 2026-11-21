@@ -1,0 +1,45 @@
+[
+  [
+    "shared",
+    true,
+    false,
+    false,
+    false,
+    [
+      "a",
+      "b"
+    ]
+  ],
+  [
+    "global",
+    true,
+    true,
+    false,
+    false,
+    []
+  ],
+  [
+    "other namespace",
+    false,
+    false,
+    false,
+    false,
+    []
+  ],
+  [
+    "corrupt",
+    true,
+    false,
+    true,
+    false,
+    []
+  ],
+  [
+    "superseded",
+    true,
+    false,
+    false,
+    true,
+    []
+  ]
+]

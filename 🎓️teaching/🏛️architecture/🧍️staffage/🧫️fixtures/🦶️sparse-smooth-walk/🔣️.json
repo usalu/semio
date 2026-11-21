@@ -4508,7 +4508,7 @@
         "denominator": 500,
         "validRange": {
           "minDenominator": 350,
-          "maxDenominator": 900
+          "maxDenominator": 1000
         },
         "pens": {
           "body": 0.13,

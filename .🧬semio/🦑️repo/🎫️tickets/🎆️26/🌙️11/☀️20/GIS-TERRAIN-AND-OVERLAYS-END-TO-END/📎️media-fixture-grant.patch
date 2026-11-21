@@ -1,0 +1,333 @@
+*** Begin Patch
+*** Update File: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs
+@@
+ 
+ /// 🎬️ Renews the original receiving turn until the foreground media submission yields its handle.
+-pub async fn submit_fixture_media_export<P:PluginApp>(app:&mut P,port:&str,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportHandle,semio_framework_job::OriginalTurnFailure>{
+-    let fuel=OriginalFixtureCaller::turn_fuel();
+-    fixture_renew_turn(cx,fuel,close_loan)?;
++pub async fn submit_fixture_media_export<P:PluginApp>(app:&mut P,port:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_decl_media::ArtifactMediaExportHandle,semio_framework_job::OriginalTurnFailure>{
++    let (grant,fuel)=(cx.original_turn_ceiling().0,OriginalFixtureCaller::turn_fuel());
++    fixture_renew_turn(cx,fuel,grant)?;
+     ensure_fixture_cancellation_issuer(app,cx)?;
+     let mut receiver=None;
+     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+-        fixture_renew_turn(cx,fuel,close_loan)?;
++        fixture_renew_turn(cx,fuel,grant)?;
+         if app.submit_media_export(port,&mut receiver,cx).await?{break}
+     }
+@@
+ 
+ /// 📡️ Advances one submitted media export to its next poll answer through the real original receiving port.
+-pub async fn poll_fixture_media_export<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportPoll,semio_framework_job::OriginalTurnFailure>{
+-    let fuel=OriginalFixtureCaller::turn_fuel();
++pub async fn poll_fixture_media_export<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_decl_media::ArtifactMediaExportPoll,semio_framework_job::OriginalTurnFailure>{
++    let (grant,fuel)=(cx.original_turn_ceiling().0,OriginalFixtureCaller::turn_fuel());
+     let mut receiver=None;
+     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+-        fixture_renew_turn(cx,fuel,close_loan)?;
++        fixture_renew_turn(cx,fuel,grant)?;
+         if app.poll_media_export(handle.original_loan(),&mut receiver,cx).await?{break}
+     }
+@@
+ 
+ /// 📦️ Publishes one completed media export result as the segmented download the host would hand out.
+-pub async fn retain_fixture_media_export_result<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,result:semio_plugin_decl_media::ArtifactMediaExportResult,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_plugin_decl_media::ArtifactMediaExportPublishedStatus,semio_framework_job::OriginalTurnFailure>{
+-    let fuel=OriginalFixtureCaller::turn_fuel();
++pub async fn retain_fixture_media_export_result<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,result:semio_plugin_decl_media::ArtifactMediaExportResult,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_plugin_decl_media::ArtifactMediaExportPublishedStatus,semio_framework_job::OriginalTurnFailure>{
++    let (grant,fuel)=(cx.original_turn_ceiling().0,OriginalFixtureCaller::turn_fuel());
+     let mut source=Some(semio_plugin_decl_media::ArtifactMediaExportPoll::Complete(result));let mut status=None;
+     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+-        fixture_renew_turn(cx,fuel,close_loan)?;
++        fixture_renew_turn(cx,fuel,grant)?;
+         if app.retain_media_export_result(handle.original_loan(),&mut source,&mut status,cx).await?{break}
+     }
+@@
+ 
+ /// ⬇️ Takes the next segmented download chunk of one retained media export; `None` is the end of the download.
+-pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
+-    let fuel=OriginalFixtureCaller::turn_fuel();
++pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&semio_plugin_decl_media::ArtifactMediaExportHandle,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
++    let (grant,fuel)=(cx.original_turn_ceiling().0,OriginalFixtureCaller::turn_fuel());
+     let mut receiver=None;
+     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+-        fixture_renew_turn(cx,fuel,close_loan)?;
++        fixture_renew_turn(cx,fuel,grant)?;
+         if app.take_media_export_chunk(handle.original_loan(),&mut receiver,terminal,cx).await?{return Ok(receiver)}
+     }
+*** Update File: ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@
+         for turn in 0..OriginalFixtureCaller::maximum_turns() {
+             if cut == Some(turn) { app.0.cancel_media_export(&handle).await.expect("cancel original media export"); cancelled = true; }
+-            let poll = match poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), close).await {
++            let poll = match poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await {
+                 Ok(poll) => poll,
+                 Err(failure) if empty => {
+@@
+                     assert_eq!(result.schema, fixture["schema"].as_str().unwrap());
+                     assert_eq!(result.mime_type, fixture["mimeType"].as_str().unwrap());
+-                    let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx(), close).await.expect("publish segmented media");
++                    let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx()).await.expect("publish segmented media");
+                     let mut bytes = Vec::new();
+                     let mut done = false;
+-                    while !done { if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx(), close).await.expect("media chunk") { bytes.extend_from_slice(&chunk); } }
++                    while !done { if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx()).await.expect("media chunk") { bytes.extend_from_slice(&chunk); } }
+                     assert_eq!(bytes.len() as u64, status.total_bytes);
+                     let glb = gltf::Gltf::from_slice(&bytes).expect("independent GLB decoder");
+*** Update File: ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/📸️snapshot-export/🦀️.rs
+@@
+             for turn in 0..OriginalFixtureCaller::maximum_turns() {
+                 if cut == Some(turn) { app.0.cancel_media_export(&handle).await.expect("cancel original snapshot export"); cancelled = true; }
+-                match poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), poll_grant).await.expect("snapshot export poll") {
++                match poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.expect("snapshot export poll") {
+                     ArtifactMediaExportPoll::Running { applied_progress, .. } => { assert!(applied_progress >= progress); progress = applied_progress; }
+                     ArtifactMediaExportPoll::Cancelled => { assert!(cancelled); terminal = true; break; }
+@@
+                         assert_eq!(result.schema, fixture["schema"].as_str().unwrap());
+                         assert_eq!(result.mime_type, fixture["mimeType"].as_str().unwrap());
+-                        let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx(), close).await.expect("retain snapshot output");
++                        let status = retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx()).await.expect("retain snapshot output");
+                         let mut bytes = Vec::new();
+                         let mut done = false;
+                         for _ in 0..=(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES / ArtifactOutputChunks::CHUNK_BYTES) {
+-                            if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx(), close).await.expect("snapshot output chunk") { bytes.extend_from_slice(&chunk); }
++                            if let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut done, app.1.cx()).await.expect("snapshot output chunk") { bytes.extend_from_slice(&chunk); }
+                             if done { break; }
+                         }
+*** Update File: ✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export/🧪️tests/🦀️.rs
+@@
+     context::dispatch(&mut app,semio_s_artifact_raster_raster_editor::RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer {kind:"pixel".into()})).await;
+     let before=app.snapshot().unwrap();
+-    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("registered retained export");let mut running=0;let mut progress=0;let mut result=None;
+-    for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap(){ArtifactMediaExportPoll::Running {applied_progress,..}=>{assert!(applied_progress>=progress);progress=applied_progress;running+=1;},ArtifactMediaExportPoll::Complete(media)=>{result=Some(media);break;},other=>panic!("export did not complete: {other:?}")}}
++    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx()).await.expect("registered retained export");let mut running=0;let mut progress=0;let mut result=None;
++    for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.unwrap(){ArtifactMediaExportPoll::Running {applied_progress,..}=>{assert!(applied_progress>=progress);progress=applied_progress;running+=1;},ArtifactMediaExportPoll::Complete(media)=>{result=Some(media);break;},other=>panic!("export did not complete: {other:?}")}}
+     assert!(running>1);assert!(progress>0);let media=result.expect("complete export");assert_eq!(media.schema,"2d.image");let mut output=Vec::new();while let Some(chunk)=media.chunks.take_chunk().unwrap(){assert!(chunk.len()<=ArtifactOutputChunks::CHUNK_BYTES);output.extend(chunk);}
+     let bytes=base64_codec::base64_standard_decode(std::str::from_utf8(&output).unwrap()).unwrap();let image=semio_framework_pixels::decode_png(&bytes).unwrap();assert_eq!((image.width,image.height),(512,512));assert!(image.pixels.iter().all(|value|*value==0));
+-    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();app.cancel_media_export(&handle).await.unwrap();
+-    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.is_err(),"cancelled media handles transfer to the close lane immediately");
++    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx()).await.unwrap();app.cancel_media_export(&handle).await.unwrap();
++    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.is_err(),"cancelled media handles transfer to the close lane immediately");
+     let after=app.snapshot().unwrap();assert_eq!(before,after);retire_raster_snapshot(before);retire_raster_snapshot(after);
+     context::history(&mut app,"undo").await;let undone=app.snapshot().unwrap();assert!(undone.layers.is_empty());retire_raster_snapshot(undone);
+@@
+     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
+     let document=app.snapshot().unwrap();let id=semio_s_artifact_raster_raster_model::layer_node_id(&document.layers[0]).to_owned();retire_raster_snapshot(document);
+-    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
++    let handle=semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app.0, "image:out", app.1.cx()).await.unwrap();
+     context::dispatch(&mut app,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id,field:"name".into(),value:"Changed during export".into()})).await;
+-    let mut refused=false;for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap(){ArtifactMediaExportPoll::Running {..}=>{},ArtifactMediaExportPoll::Failed(detail)=>{assert!(detail.contains("stale revision or generation"),"{detail}");refused=true;break;},other=>panic!("superseded export escaped: {other:?}")}}
++    let mut refused=false;for _ in 0..100000 {semio_framework_async::yield_once().await;match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.unwrap(){ArtifactMediaExportPoll::Running {..}=>{},ArtifactMediaExportPoll::Failed(detail)=>{assert!(detail.contains("stale revision or generation"),"{detail}");refused=true;break;},other=>panic!("superseded export escaped: {other:?}")}}
+     assert!(refused);let document=app.snapshot().unwrap();assert_eq!(semio_s_artifact_raster_raster_model::layer_name(&document.layers[0]),"Changed during export");retire_raster_snapshot(document);
+ }
+*** Update File: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@
+     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+     let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+-    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered MP4 playback producer");
++    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx()).await.expect("registered MP4 playback producer");
+     app.cancel_media_export(&handle).await.expect("cancel live MP4 producer");
+-    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.is_err(), "cancelled handle transfers to bounded close");
++    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.is_err(), "cancelled handle transfers to bounded close");
+     let mut last = None;
+     for _ in 0..10_000 {
+@@
+     };
+     semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("host loads the real MP4 document");
+-    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered MP4 playback producer");
++    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx()).await.expect("registered MP4 playback producer");
+     let mut completed = None;
+     for _ in 0..100_000 {
+-        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("MP4 playback poll") {
++        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.expect("MP4 playback poll") {
+             ArtifactMediaExportPoll::Running { .. } => semio_framework_async::yield_once().await,
+             ArtifactMediaExportPoll::Complete(result) => {
+@@
+     assert_eq!(result.schema, crate::standards::isobmff::subsets::any::io::playback::MEDIA_SCHEMA);
+     assert_eq!(result.media_type, crate::standards::isobmff::subsets::any::io::playback::MEDIA_TYPE);
+-    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("retain exact MP4 output authority");
++    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx()).await.expect("retain exact MP4 output authority");
+     let mut exported = Vec::new();
+     let mut download_terminal = false;
+-    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("take MP4 playback page") {
++    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx()).await.expect("take MP4 playback page") {
+         assert!(chunk.len() <= semio_plugin::app::ArtifactOutputChunks::CHUNK_BYTES);
+         exported.extend_from_slice(&chunk);
+*** Update File: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@
+     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+     let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<AviEditor>, _>(async { semio_plugin::App { definition: create_avi_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+-    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered AVI playback producer");
++    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx()).await.expect("registered AVI playback producer");
+     app.cancel_media_export(&handle).await.expect("cancel live AVI producer");
+-    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.is_err(), "cancelled handle transfers to bounded close");
++    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.is_err(), "cancelled handle transfers to bounded close");
+     for _ in 0..10_000 {
+         if app.close_terminal_is_empty() {
+@@
+     };
+     semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("host loads the real AVI document");
+-    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered AVI playback producer");
++    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID, scope.cx()).await.expect("registered AVI playback producer");
+     let mut completed = None;
+     for _ in 0..10_000 {
+-        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("AVI playback poll") {
++        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.expect("AVI playback poll") {
+             ArtifactMediaExportPoll::Running { .. } => semio_framework_async::yield_once().await,
+             ArtifactMediaExportPoll::Complete(result) => {
+@@
+     assert_eq!(result.schema, crate::standards::v1_0::subsets::any::io::playback::MEDIA_SCHEMA);
+     assert_eq!(result.media_type, crate::standards::v1_0::subsets::any::io::playback::MEDIA_TYPE);
+-    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("retain exact AVI output authority");
++    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx()).await.expect("retain exact AVI output authority");
+     let mut exported = Vec::new();
+     let mut download_terminal = false;
+-    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("take AVI playback page") {
++    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx()).await.expect("take AVI playback page") {
+         assert!(chunk.len() <= semio_plugin::app::ArtifactOutputChunks::CHUNK_BYTES);
+         exported.extend_from_slice(&chunk);
+*** Update File: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@
+     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+     let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+-    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, crate::standards::mpeg1_layer3::subsets::any::io::playback::PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered MP3 playback producer");
++    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, crate::standards::mpeg1_layer3::subsets::any::io::playback::PORT_ID, scope.cx()).await.expect("registered MP3 playback producer");
+     app.cancel_media_export(&handle).await.expect("cancel live MP3 producer");
+-    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.is_err(), "cancelled handle transfers to bounded close");
++    assert!(semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.is_err(), "cancelled handle transfers to bounded close");
+     for _ in 0..10_000 {
+         if app.close_terminal_is_empty() {
+@@
+     };
+     semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("host loads the real MP3 document");
+-    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, crate::standards::mpeg1_layer3::subsets::any::io::playback::PORT_ID, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("registered MP3 playback producer");
++    let handle = semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut app, crate::standards::mpeg1_layer3::subsets::any::io::playback::PORT_ID, scope.cx()).await.expect("registered MP3 playback producer");
+     let mut completed = None;
+     for _ in 0..10_000 {
+-        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("MP3 playback poll") {
++        match semio_plugin::artifact_app_laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.expect("MP3 playback poll") {
+             ArtifactMediaExportPoll::Running { .. } => semio_framework_async::yield_once().await,
+             ArtifactMediaExportPoll::Complete(result) => {
+@@
+     assert_eq!(result.schema, crate::standards::mpeg1_layer3::subsets::any::io::playback::MEDIA_SCHEMA);
+     assert_eq!(result.media_type, crate::standards::mpeg1_layer3::subsets::any::io::playback::MEDIA_TYPE);
+-    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("retain exact MP3 output authority");
++    semio_plugin::artifact_app_laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx()).await.expect("retain exact MP3 output authority");
+     let mut exported = Vec::new();
+     let mut download_terminal = false;
+-    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await.expect("take MP3 playback page") {
++    while let Some(chunk) = semio_plugin::artifact_app_laws::take_fixture_media_export_chunk(&mut app, &handle, &mut download_terminal, scope.cx()).await.expect("take MP3 playback page") {
+         assert!(chunk.len() <= semio_plugin::app::ArtifactOutputChunks::CHUNK_BYTES);
+         exported.extend_from_slice(&chunk);
+*** Update File: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@
+     let mut completed = None;
+     for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+-        match laws::poll_fixture_media_export(&mut app, &handle, scope.cx(), policy.close).await.expect("registered PDF Save poll") {
++        match laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.expect("registered PDF Save poll") {
+             semio_plugin::ArtifactMediaExportPoll::Running { .. } => {},
+             semio_plugin::ArtifactMediaExportPoll::Complete(result) => { completed = Some(result); break },
+@@
+     assert_eq!(result.schema, codec.format_kind);
+     assert_eq!(result.mime_type, codec.media_type);
+-    let status = laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx(), policy.close).await.expect("PDF Save publishes download status");
++    let status = laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx()).await.expect("PDF Save publishes download status");
+     assert_eq!(status.port, semio_plugin::NATURAL_FILE_PORT);
+     let mut bytes = Vec::new();
+@@
+     type Output = semio_plugin::ArtifactOutputChunks;
+     for _ in 0..=(Output::MAXIMUM_TOTAL_BYTES / Output::CHUNK_BYTES) {
+-        if let Some(chunk) = laws::take_fixture_media_export_chunk(&mut app, &handle, &mut terminal, scope.cx(), policy.close).await.expect("PDF Save download page") {
++        if let Some(chunk) = laws::take_fixture_media_export_chunk(&mut app, &handle, &mut terminal, scope.cx()).await.expect("PDF Save download page") {
+             assert!(!chunk.is_empty() && chunk.len() <= Output::CHUNK_BYTES);
+             bytes.extend_from_slice(&chunk);
+*** Update File: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs
+@@
+     let expected = semio_framework_pack_json::to_json_string(&value);
+     let loan = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close;
+-    let handle = submit_fixture_media_export(&mut app.0, "map:out", app.1.cx(), loan).await.unwrap();
++    let handle = submit_fixture_media_export(&mut app.0, "map:out", app.1.cx()).await.unwrap();
+     let mut result = None;
+     let mut yields = 0;
+     for _ in 0..10_000 {
+-        match poll_fixture_media_export(&mut app.0, &handle, app.1.cx(), loan).await.unwrap() {
++        match poll_fixture_media_export(&mut app.0, &handle, app.1.cx()).await.unwrap() {
+             ArtifactMediaExportPoll::Running { .. } => yields += 1,
+             ArtifactMediaExportPoll::Complete(media) => { result = Some(media); break; }
+@@
+     let result = result.expect("mounted Map export must complete");
+     assert_eq!(result.schema, schema);
+-    retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx(), loan).await.unwrap();
++    retain_fixture_media_export_result(&mut app.0, &handle, result, app.1.cx()).await.unwrap();
+     let mut output = Vec::new();
+     let mut terminal = false;
+-    while let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut terminal, app.1.cx(), loan).await.unwrap() {
++    while let Some(chunk) = take_fixture_media_export_chunk(&mut app.0, &handle, &mut terminal, app.1.cx()).await.unwrap() {
+         output.extend(chunk);
+     }
+*** Update File: ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧩️mounted/🦀️.rs
+@@
+ async fn submit_terrain_media(app: &mut context::Gis3dApp, port: &str) -> semio_plugin::ArtifactMediaExportHandle {
+     app.renew_turn();
+-    let grant = app.1.cx().original_turn_ceiling().0;
+-    semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut *app.0, port, app.1.cx(), grant).await.unwrap_or_else(|failure| {
++    semio_plugin::artifact_app_laws::submit_fixture_media_export(&mut *app.0, port, app.1.cx()).await.unwrap_or_else(|failure| {
+         let progress = app.0.media.media_export_preparation.as_deref().map(|preparation| (
+             std::mem::size_of_val(preparation),
+@@
+     let mut app = app().await;
+     let initial = app.snapshot().unwrap();
+-    let grant = app.1.cx().original_turn_ceiling().0;
+     for (port, expected_schema) in [("elevation:out", "gis.elevation-grid"), ("scene:out", "mesh.document")] {
+         let handle = submit_terrain_media(&mut app, port).await;
+         let mut result = None;
+         for _ in 0..10_000 {
+-            match poll_fixture_media_export(&mut *app.0, &handle, app.1.cx(), grant).await.unwrap() {
++            match poll_fixture_media_export(&mut *app.0, &handle, app.1.cx()).await.unwrap() {
+                 ArtifactMediaExportPoll::Running { .. } => (),
+                 ArtifactMediaExportPoll::Complete(media) => { result = Some(media); break; }
+@@
+         let media = result.expect("terrain media export completed");
+         assert_eq!(media.schema, expected_schema);
+-        retain_fixture_media_export_result(&mut *app.0, &handle, media, app.1.cx(), grant).await.unwrap();
++        retain_fixture_media_export_result(&mut *app.0, &handle, media, app.1.cx()).await.unwrap();
+         let mut output = Vec::new();
+         let mut terminal = false;
+-        while let Some(chunk) = take_fixture_media_export_chunk(&mut *app.0, &handle, &mut terminal, app.1.cx(), grant).await.unwrap() {
++        while let Some(chunk) = take_fixture_media_export_chunk(&mut *app.0, &handle, &mut terminal, app.1.cx()).await.unwrap() {
+             output.extend(chunk);
+         }
+@@
+     let mut app = app().await;
+     let original = app.snapshot().unwrap();
+-    let grant = app.1.cx().original_turn_ceiling().0;
+     let handle = submit_terrain_media(&mut app, "scene:out").await;
+     for _ in 0..24 {
+-        assert!(matches!(poll_fixture_media_export(&mut *app.0, &handle, app.1.cx(), grant).await.unwrap(), ArtifactMediaExportPoll::Running { .. }));
++        assert!(matches!(poll_fixture_media_export(&mut *app.0, &handle, app.1.cx()).await.unwrap(), ArtifactMediaExportPoll::Running { .. }));
+     }
+     app.0.cancel_media_export(&handle).await.unwrap();
+*** Update File: ✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🧪️cases.rs
+@@
+         let before=app.snapshot().expect("original projection");
+         let close=fixture_close_grant(semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+-        let handle=submit_fixture_media_export(&mut app.0,fixture["port"].as_str().unwrap(),app.1.cx(),close).await.expect("real media request admission");
++        let handle=submit_fixture_media_export(&mut app.0,fixture["port"].as_str().unwrap(),app.1.cx()).await.expect("real media request admission");
+         let cancelled=row["cancel"].as_bool().unwrap();
+         if cancelled{app.0.cancel_media_export(&handle).await.expect("cancel actual media handle")}
+         let mut terminal=false;
+         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
+-            match poll_fixture_media_export(&mut app.0,&handle,app.1.cx(),close).await.expect("actual media poll"){
++            match poll_fixture_media_export(&mut app.0,&handle,app.1.cx()).await.expect("actual media poll"){
+                 ArtifactMediaExportPoll::Running{..}=>{},
+                 ArtifactMediaExportPoll::Cancelled=>{assert!(cancelled);println!("[media-handoff] {}",serde_json::json!({"name":row["name"],"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));terminal=true;break},
+@@
+     assert_eq!(child_id,child_law["childId"].as_str().unwrap());app.register_child(child_law["slot"].as_str().unwrap().to_string(),child_id.clone(),dialect,LayoutDrawingMembers::Drawing(Box::new(child)),&mut identity).await.unwrap_or_else(|_|panic!("real parent reference admits its actual child"));
+     let before=app.snapshot().unwrap();let close=fixture_close_grant(policy);
+-    let handle=submit_fixture_media_export(&mut app,"layout:out",caller.cx(),close).await.unwrap();let mut complete=false;let mut cancellation_bytes=None;
+-    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){match poll_fixture_media_export(&mut app,&handle,caller.cx(),close).await.unwrap(){semio_plugin::ArtifactMediaExportPoll::Running{..}=>{if cancel_after_output&&cancellation_bytes.is_none(){let bytes=app.media.media_exports.get(handle.operation_id.0).map_or(0,|active|active.output_credit.bytes());if bytes>=child_law["cancelAfterOutputBytes"].as_u64().unwrap()as usize{cancellation_bytes=Some(bytes);app.cancel_media_export(&handle).await.unwrap()}}},semio_plugin::ArtifactMediaExportPoll::Cancelled=>{assert!(cancel_after_output);let bytes=cancellation_bytes.expect("cancel only after actual child export output was credited");println!("[media-child-cancel] {}",serde_json::json!({"childId":child_id,"creditedBytes":bytes,"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},semio_plugin::ArtifactMediaExportPoll::Complete(result)=>{assert!(!cancel_after_output,"cancellation cut must occur after actual child source use and before completion");let media=result.into_batch_media().unwrap();let MediaPayload::Structured{json,..}=media.payload else{panic!("actual projection JSON")};let value:serde_json::Value=serde_json::from_str(&json).unwrap();assert_eq!(value["source"]["documentId"],handle.parent_document_id);assert!(value["svg"].as_str().unwrap().contains(child_law["expectedSvgCommand"].as_str().unwrap()),"genuine child quadratic marker must survive composition");println!("[media-child] {}",serde_json::json!({"childId":child_id,"documentId":handle.parent_document_id,"projection":value,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},other=>panic!("actual Drawing media unexpectedly terminated: {other:?}")}}
++    let handle=submit_fixture_media_export(&mut app,"layout:out",caller.cx()).await.unwrap();let mut complete=false;let mut cancellation_bytes=None;
++    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){match poll_fixture_media_export(&mut app,&handle,caller.cx()).await.unwrap(){semio_plugin::ArtifactMediaExportPoll::Running{..}=>{if cancel_after_output&&cancellation_bytes.is_none(){let bytes=app.media.media_exports.get(handle.operation_id.0).map_or(0,|active|active.output_credit.bytes());if bytes>=child_law["cancelAfterOutputBytes"].as_u64().unwrap()as usize{cancellation_bytes=Some(bytes);app.cancel_media_export(&handle).await.unwrap()}}},semio_plugin::ArtifactMediaExportPoll::Cancelled=>{assert!(cancel_after_output);let bytes=cancellation_bytes.expect("cancel only after actual child export output was credited");println!("[media-child-cancel] {}",serde_json::json!({"childId":child_id,"creditedBytes":bytes,"cancelled":true,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},semio_plugin::ArtifactMediaExportPoll::Complete(result)=>{assert!(!cancel_after_output,"cancellation cut must occur after actual child source use and before completion");let media=result.into_batch_media().unwrap();let MediaPayload::Structured{json,..}=media.payload else{panic!("actual projection JSON")};let value:serde_json::Value=serde_json::from_str(&json).unwrap();assert_eq!(value["source"]["documentId"],handle.parent_document_id);assert!(value["svg"].as_str().unwrap().contains(child_law["expectedSvgCommand"].as_str().unwrap()),"genuine child quadratic marker must survive composition");println!("[media-child] {}",serde_json::json!({"childId":child_id,"documentId":handle.parent_document_id,"projection":value,"unchanged":app.snapshot().unwrap()==before}));complete=true;break},other=>panic!("actual Drawing media unexpectedly terminated: {other:?}")}}
+     assert!(complete);assert_eq!(app.snapshot().unwrap(),before);
+     close_registered_fixture_app(&mut app,policy,caller.cx()).unwrap();caller.retire();
+*** End Patch

@@ -46,3 +46,63 @@ fn original_worker_session_quantum_one_keeps_paid_output_custody_and_denied_rece
  assert_eq!(admission.phase(),"output");assert!(output.is_none());let before=caller.cumulative_receipt();for denied in[RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_depth:0,..g}]{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(denied,|cx|admission.advance(&mut job,&mut params,&mut output,cx)));assert!(!result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!heap.overflowed);assert_eq!(caller.cumulative_receipt(),before);assert_eq!(admission.phase(),"output");assert!(output.is_none());}
  caller.turn(g,|cx|{let work=cx.original_work_units_spent();let result=admission.advance(&mut job,&mut params,&mut output,cx);assert_eq!(cx.original_work_units_spent()-work,u128::from(law["expected"]["handoffWork"].as_u64().unwrap()));result}).unwrap();assert!(admission.terminal_is_empty()&&output.is_some());assert_eq!(caller.receipt().copied_bytes,law["expected"]["ownershipCopyBytes"].as_u64().unwrap()as usize);cleanup(&mut admission,&mut output,&mut caller,&law);caller.retire(g);
 }
+
+#[test]
+fn original_unpublished_worker_session_returns_its_cancel_alias_to_live_root() {
+    let law = law();
+    let grant = stock(&law);
+    let _slots = super::super::worker_session_slots_shared();
+    let operation = OperationId(990_180);
+    let generation = Generation(1);
+    let maximum_turns = law["maximumTurns"].as_u64().unwrap();
+    let mut caller = OriginalJobFixtureCaller::admit(operation, generation, grant, clock, 8000, law["maximumCpu"].as_u64().unwrap());
+    let mut job = Some(Probe { value: Some(Box::new(97)) });
+    let mut params = Some(BatchJobParams {
+        operation, generation, cancel: caller.admit_alias(grant), now_us: clock,
+        config: BatchDriveConfig { retained: grant, site: "worker-unpublished-cancel-law", stage: InteractiveStage::InteractiveStep, fuel_per_step: law["quantum"].as_u64().unwrap(), step_budget_us: 8000 },
+    });
+    let mut admission = WorkerJobSessionAdmission::<Probe, BatchJobSession<Probe>>::new();
+    let mut output = None;
+    for _ in 0..maximum_turns {
+        if admission.phase() == "output" { break; }
+        assert!(!caller.turn(grant, |cx| admission.advance(&mut job, &mut params, &mut output, cx)).unwrap());
+    }
+    assert_eq!(admission.phase(), "output");
+    assert!(job.is_none() && params.is_none() && output.is_none());
+    caller.cancel().cancel_now();
+
+    for _ in 0..maximum_turns {
+        if admission.born.as_ref().is_some_and(|session| session.has_original_cancel_alias_witness(caller.cancel()).is_ok_and(|witnessed| witnessed)) { break; }
+        caller.turn(grant, |cx| admission.close_step(cx)).unwrap();
+    }
+    assert!(admission.born.as_ref().unwrap().has_original_cancel_alias_witness(caller.cancel()).unwrap());
+    let denied = RetainedCloneGrant { maximum_items: 0, ..grant };
+    let before = caller.cumulative_receipt();
+    let (denied_step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(denied, |cx| {
+        let work = cx.original_work_units_spent();
+        let step = admission.close_step(cx)?;
+        assert_eq!(cx.original_work_units_spent() - work, u128::from(law["expected"]["deniedWork"].as_u64().unwrap()));
+        Ok(step)
+    }).unwrap());
+    assert_eq!(denied_step.progress(), RetainedCloneProgress::default());
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    assert_eq!(caller.cumulative_receipt(), before);
+    assert!(output.is_none());
+    assert!(admission.born.as_ref().unwrap().has_original_cancel_alias_witness(caller.cancel()).unwrap());
+
+    let alias_only = RetainedCloneGrant { maximum_release_bytes: 0, ..grant };
+    let (returned_step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn(alias_only, |cx| {
+        let work = cx.original_work_units_spent();
+        let step = admission.close_step(cx)?;
+        assert_eq!(cx.original_work_units_spent() - work, u128::from(law["expected"]["handoffWork"].as_u64().unwrap()));
+        Ok(step)
+    }).unwrap());
+    assert_eq!(returned_step.progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    assert!(caller.cancel().is_cancelled_now());
+    assert!(!admission.born.as_ref().unwrap().has_original_cancel_alias_witness(caller.cancel()).unwrap());
+    assert!(output.is_none());
+
+    cleanup(&mut admission, &mut output, &mut caller, &law);
+    caller.retire(grant);
+}

@@ -118,6 +118,6 @@ pub(super) fn rewriting_build_document_tool_job(request: &mut Option<semio_plugi
     if rewriting_document_extent(&original.command, &original.snapshot, &original.interaction_state) != Some(1) {
         return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the rewriting command exceeds the capacity of one bounded edit").into());
     }
-    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityRewritingPlayApp::command_id, REWRITING_DOCUMENT_RAW_BYTES, 1, false, |request| Box::new(BoundedArtifactCommandWork::new(tool_id, rewriting_document_reduce, rewriting_document_extent)))
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, TrinityRewritingPlayApp::command_id, REWRITING_DOCUMENT_RAW_BYTES, 1, false, |_| BoundedArtifactCommandWork::new(tool_id, rewriting_document_reduce, rewriting_document_extent))
 }
 //#endregion 🧵️RetainedDocumentCommands

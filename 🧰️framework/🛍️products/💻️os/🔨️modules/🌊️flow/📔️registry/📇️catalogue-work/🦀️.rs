@@ -37,9 +37,9 @@ fn info_of(fields:&Option<CatalogueFields>,slot:usize)->Result<RetainedCloneRef<
 fn key_of(fields:&Option<CatalogueFields>,slot:usize)->Result<RetainedCloneRef<'_,String>,ValueError>{Ok(info_of(fields,slot)?.project(usize::MAX,|info|&info.id))}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 /// 🧾️ Derives one catalogue slot by slot; every phase quotes its actual cost, is charged through the caller's turn effect and keeps its state when the turn denies or leaves a producer pending.
-pub struct FlowOperatorCatalogueWork{fields:ManuallyDrop<Option<CatalogueFields>>,info_clone:Option<InfoCursor>,key_clone:Option<KeyCursor>,retirement:Option<ControlledRetirement<CatalogueFields>>,hold_reply:ReplyStash<Failure>,clone_reply:ReplyStash<Failure>,take_reply:ReplyStash<ValueError>,generation:u64,identity:neural_engine::RegistryIdentity,slot:usize,phase:u8,closing:bool,progress:RetainedCloneProgress}
+pub struct FlowOperatorCatalogueWork{fields:ManuallyDrop<Option<CatalogueFields>>,info_clone:Option<InfoCursor>,key_clone:Option<KeyCursor>,retirement:Option<ControlledRetirement<CatalogueFields>>,hold_reply:ReplyStash<Failure>,clone_reply:ReplyStash<Failure>,take_reply:ReplyStash<ValueError>,close_reply:ReplyStash<Failure>,close_start:bool,generation:u64,identity:neural_engine::RegistryIdentity,slot:usize,phase:u8,closing:bool,progress:RetainedCloneProgress}
 impl FlowOperatorCatalogueWork{
- pub fn new(registry:SharedRegistry,generation:u64)->Self{let identity=registry.owner_identity();Self{fields:ManuallyDrop::new(Some(CatalogueFields{hold:Some(SourceHold::new(registry)),infos:Some(Infos::new()),info:None,key:None,insert:None,registry:None,storage:None,output:None})),info_clone:None,key_clone:None,retirement:None,hold_reply:Default::default(),clone_reply:Default::default(),take_reply:Default::default(),generation,identity,slot:0,phase:0,closing:false,progress:Default::default()}}
+ pub fn new(registry:SharedRegistry,generation:u64)->Self{let identity=registry.owner_identity();Self{fields:ManuallyDrop::new(Some(CatalogueFields{hold:Some(SourceHold::new(registry)),infos:Some(Infos::new()),info:None,key:None,insert:None,registry:None,storage:None,output:None})),info_clone:None,key_clone:None,retirement:None,hold_reply:Default::default(),clone_reply:Default::default(),take_reply:Default::default(),close_reply:Default::default(),close_start:false,generation,identity,slot:0,phase:0,closing:false,progress:Default::default()}}
  pub fn registry_identity(&self)->neural_engine::RegistryIdentity{self.identity}
  pub fn generation(&self)->u64{self.generation}
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
@@ -66,7 +66,7 @@ impl FlowOperatorCatalogueWork{
    10=>Self::insert_demands(fields,copy),
    11=>{let insert=fields.insert.as_ref().unwrap();let infos=fields.infos.as_ref().unwrap();let mut demand=insert.next_demands(infos,copy,Self::compare_quote)?;demand.copy_bytes=insert.commit_copy_byte_demand(infos)?;Ok(demand)},
    12=>Ok(fixed(size_of::<SharedRegistry>())),
-   13=>SharedOwner::<Infos>::value_admission_demand(),
+   13=>SharedOwner::<Infos>::source_admission_demand(),
    _=>Ok(fixed(size_of::<usize>()))
   }
  }
@@ -96,9 +96,29 @@ impl FlowOperatorCatalogueWork{
    _=>return Err(invalid("original catalogue output was transferred").into()),
   }Ok(None)
  }
+ fn cursor_close_poll<T:RetainedClone>(cursor:&mut impl RetainedCloneCursor<T>,stash:&mut ReplyStash<Failure>,start:&mut bool,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+  if !stash.pending(){*start=!cursor.close_started()}
+  let before=effect.performed_boundary();
+  let result=stash.run(|reply,recover|match (*start,recover){
+   (true,false)=>cursor.begin_close_into(effect,reply),
+   (true,true)=>cursor.recover_begin_close_into(effect,reply),
+   (false,false)=>cursor.close_into(body,effect,reply),
+   (false,true)=>cursor.recover_close_into(body,effect,reply),
+  }.map(drop));
+  let work=effect.performed_since(before).expect("catalogue cursor closes under the same Work");
+  match result{
+   Ok(None)=>RetainedWorkPoll::Pending{work},
+   Ok(Some(result))=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work}),
+   Err(error)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work}),
+  }
+ }
  fn close_cursor(&mut self,info:bool,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<bool,Failure>{
-  macro_rules! close{($cursor:expr)=>{{let cursor=$cursor.as_mut().unwrap();if !cursor.close_started(){let turn=cursor.begin_close_paid(effect);self.progress=turn.result?;return Ok(true)}match cursor.close_step(body,effect){RetainedWorkPoll::Pending{..}=>Ok(false),RetainedWorkPoll::Complete(turn)=>{self.progress=turn.result?.progress();Ok(true)}}}}}
-  if info{close!(self.info_clone)}else{close!(self.key_clone)}
+  let poll=if info{
+   Self::cursor_close_poll(self.info_clone.as_mut().unwrap(),&mut self.close_reply,&mut self.close_start,body,effect)
+  }else{
+   Self::cursor_close_poll(self.key_clone.as_mut().unwrap(),&mut self.close_reply,&mut self.close_start,body,effect)
+  };
+  match poll{RetainedWorkPoll::Pending{..}=>Ok(false),RetainedWorkPoll::Complete(turn)=>{self.progress=turn.result?.progress();Ok(true)}}
  }
  pub fn restore_output(&mut self,output:FlowOperatorCatalogue){assert_eq!(self.phase,16);self.fields.as_mut().unwrap().output=Some(output);self.phase=15}
  pub fn begin_close(&mut self){self.closing=true}
@@ -112,7 +132,11 @@ impl FlowOperatorCatalogueWork{
  pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   if !self.closing{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid("original catalogue close was not begun").into()),work:0})}
   if self.terminal_is_empty(){return done(RetainedCloneStep::Complete(Default::default()))}
-  macro_rules! cursor{($cursor:expr)=>{if let Some(cursor)=$cursor.as_mut(){if !cursor.close_started(){let turn=cursor.begin_close_paid(effect);return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress).map_err(Failure::from),work:turn.work})}let poll=cursor.close_step(body,effect);if cursor.terminal_is_empty(){$cursor=None}return poll}}}
+  macro_rules! cursor{($cursor:expr)=>{if let Some(cursor)=$cursor.as_mut(){
+   let poll=Self::cursor_close_poll(cursor,&mut self.close_reply,&mut self.close_start,body,effect);
+   if matches!(&poll,RetainedWorkPoll::Complete(turn) if turn.result.is_ok())&&cursor.terminal_is_empty(){$cursor=None}
+   return poll
+  }}}
   cursor!(self.info_clone);cursor!(self.key_clone);
   if let Some(owner)=self.retirement.as_mut(){let poll=owner.step(body,effect);if owner.terminal_is_empty(){self.retirement=None}return poll}
   self.retirement=Some(ControlledRetirement::new(self.fields.take().unwrap()).unwrap_or_else(|_|unreachable!("catalogue fields declare controlled retirement")));done(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))

@@ -5,7 +5,7 @@ use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
-fn count(root:&R)->Result<usize,ValueError>{let mut rows=2;for id in 2..=21{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for(id,nested)in[(2,4),(2,5),(2,6),(3,7),(9,7)]{for owner in n::list(n::field(root,id)?)?{rows=n::add(rows,n::list(n::field(n::record(owner)?,nested)?)?.len())?}}for owner in n::list(n::field(root,2)?)?{for storey in n::list(n::field(n::record(owner)?,5)?)?{rows=n::add(rows,n::list(n::field(n::record(storey)?,4)?)?.len())?}} Ok(rows)}
+fn count(root:&R)->Result<usize,ValueError>{let mut rows=2;for id in 2..=22{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for(id,nested)in[(2,4),(2,5),(2,6),(3,7),(9,7),(22,4),(22,5)]{for owner in n::list(n::field(root,id)?)?{rows=n::add(rows,n::list(n::field(n::record(owner)?,nested)?)?.len())?}}for owner in n::list(n::field(root,2)?)?{for storey in n::list(n::field(n::record(owner)?,5)?)?{rows=n::add(rows,n::list(n::field(n::record(storey)?,4)?)?.len())?}} Ok(rows)}
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key_float("en1998_document",1,&n::cells(root,[Enumeration(0,&["En","De"])])?,&[])?;
  {let c=n::cells(n::record(n::field(root,1)?)?,[Real(0),Real(1),Enumeration(2,&["A-R","B-R","C-R","B-T","C-T","C-S"]),Enumeration(3,&["a","b","c","d","e"]),Enumeration(4,&["type1","type2"]),Enumeration(5,&["i","ii","iii","iv"]),Real(6),Real(7),Real(8),Real(9),Real(10),Boolean(11),Real(12),Real(13),Real(14)])?;out.insert_key_float("en1998_site",1,&[Cell::Integer(1),c[0],c[1],c[2],c[3],c[4],c[5],c[6],c[7],c[8],c[9],c[10],c[11],c[12],c[13],c[14]],SITE)?;}
@@ -29,7 +29,17 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,v)in n::list(n::field(root,13)?)?.iter().enumerate(){n::entity(out,"en1998_pier",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Real(5),Real(6),Real(7),Real(8),Real(9),Real(10),Real(11),Real(12),Real(13),Enumeration(14,&["declared","computed"])])?,PIER)?;}
  for(index,v)in n::list(n::field(root,14)?)?.iter().enumerate(){n::entity(out,"en1998_bearing",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Text(2),Enumeration(3,&["fixed","elastomeric","sliding","isolator"]),Real(4),Real(5),Real(6),Real(7),Real(8)])?,BEARING)?;}
  for(index,v)in n::list(n::field(root,15)?)?.iter().enumerate(){n::entity(out,"en1998_joint",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Text(2),Text(3),Text(4),Real(5),Real(6),Real(7),Real(8)])?,JOINT)?;}
+ for (index, row) in n::list(n::field(root, 22)?)?.iter().enumerate() {
+     let row = n::record(row)?;
+     let parent = n::entity(out, "en1998_case", 1, index, &n::cells(row, [Text(0), Text(1), Text(2), Text(3)])?, &[])?;
+     for (index, number) in n::list(n::field(row, 4)?)?.iter().enumerate() {
+         n::entity(out, "en1998_case_number", parent, index, &n::cells(n::record(number)?, [Text(0), Real(1)])?, CASE_NUMBER)?;
+     }
+     for (index, text) in n::list(n::field(row, 5)?)?.iter().enumerate() {
+         n::entity(out, "en1998_case_text", parent, index, &n::cells(n::record(text)?, [Text(0), Text(1)])?, &[])?;
+     }
+ }
  Ok(())
 }
 /// 🛂️ Complete authored seismic tables and copied semantic controls.
-pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1998Snapshot::SQLITE_SCHEMA,28,95,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1998Snapshot::SQLITE_SCHEMA,31,95,count(root)?,write)}

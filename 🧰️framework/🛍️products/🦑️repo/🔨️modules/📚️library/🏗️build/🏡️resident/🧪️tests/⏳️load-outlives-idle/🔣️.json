@@ -1,0 +1,5 @@
+{
+  "idleMilliseconds": 1000,
+  "elapsedMilliseconds": 5000,
+  "targets": ["app:test", "tool:test"]
+}

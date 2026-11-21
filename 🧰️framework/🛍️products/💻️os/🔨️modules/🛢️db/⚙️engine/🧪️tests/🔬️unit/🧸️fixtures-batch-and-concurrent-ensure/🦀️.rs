@@ -151,7 +151,7 @@ async fn a_declared_maximal_batch_commits_through_the_database_and_an_over_decla
     let count = envelopes.len() as u64;
     let receipt = db_actor::block_on(handle.submit(db_artifact_contract::CommandBatch::new(envelopes).await.unwrap(), db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
     assert_eq!(receipt.frontier.head_seq, count, "the whole declared batch commits");
-    let refused = db_actor::block_on(handle.submit(db_artifact_contract::CommandBatch { envelopes: over }, db_artifact_contract::SubmitOptions::default())).and_then(std::convert::identity);
+    let refused = db_actor::block_on(handle.submit(db_artifact_contract::CommandBatch::unadmitted_envelopes_for_law(over), db_artifact_contract::SubmitOptions::default())).and_then(std::convert::identity);
     assert!(matches!(refused, Err(DbError::LimitExceeded(_))), "a batch beyond the declaration is a permanent refusal: {refused:?}");
     assert_eq!(handle.frontier().await.unwrap().head_seq, count, "the refused batch applied nothing");
 }

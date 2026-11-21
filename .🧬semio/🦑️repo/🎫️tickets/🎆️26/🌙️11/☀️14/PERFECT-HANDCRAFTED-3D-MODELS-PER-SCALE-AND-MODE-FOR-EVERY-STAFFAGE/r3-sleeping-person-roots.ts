@@ -1,7 +1,8 @@
 /** 🛏️ Root fixes of `humans/sleeping-person` (round 3), stated as final values and solved again on every run (idempotent): the rig of a 1.70 m woman lying supine on a soft mattress (C7, atlanto-occipital joint and vertex at their anthropometric distances, hip joints 0.174 m apart, shoulder joints 0.316 m apart, thigh, shank and foot lengths of the stature, joints at their heights above the mattress), a 40 x 80 cm pillow across the bed and a 135 x 200 cm duvet whose foot end is folded back over the shins, the supine pose solved in three dimensions with the product's own chain (left arm alongside the body under the duvet, right arm on the duvet with the hand on the belly, feet falling outward), the side poses lifted so the rolled trunk rests on the mattress, the anchors on the new surfaces, the passive region of the duvet beyond the body and the texts that named the old construction.
  * Usage: `bun r3-sleeping-person-roots.ts [--print]` (as module: `rooted()` gives the catalog document with these fixes).
  * @see ./r3-sleeping-person-ref.ts */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { solveChain } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🦴️rig/🟦️.ts";
 import { ANCHORS, BED, WOMAN, type V3 } from "./r3-sleeping-person-ref.ts";
@@ -151,6 +152,82 @@ function supine(rig: Json, report: string[]): Offsets {
   return o;
 }
 
+/** 🛌️ The two poses on the left side, stated as joint angles of trunk and legs and as world targets of the arms: the pelvis rolled by 82 to 84 degrees with the hip joints stacked and lifted so the lower hip presses 1 cm into the mattress, the trunk bent sideways by 6 degrees so the lower shoulder lies on the mattress, the head level on the pillow, the thighs drawn forward on the mattress with the upper knee on the lower one, the upper arm along the flank with the hand on the hip over the duvet, the lower arm forward on the mattress with the hand on the pillow in front of the face. */
+const LATERAL: Record<"side" | "curled", { base: Offsets; r: readonly [V3, V3, V3]; l: readonly [V3, V3, V3]; description: Json }> = {
+  side: {
+    base: {
+      "hip-lift": { dy: 0.074 },
+      pelvis: { angleDeg: 0, twistDeg: 82 },
+      torso: { angleDeg: 0, twistDeg: 4, abductionDeg: -6 },
+      neck: { angleDeg: 4, abductionDeg: 10 },
+      head: { angleDeg: -6, abductionDeg: 4 },
+      "thigh-l": { angleDeg: 35, abductionDeg: 6 },
+      "shank-l": { angleDeg: -50, abductionDeg: -4 },
+      "foot-l": { angleDeg: 16 },
+      "toe-l": { angleDeg: 0 },
+      "thigh-r": { angleDeg: 35, abductionDeg: 15 },
+      "shank-r": { angleDeg: -50, abductionDeg: -4 },
+      "foot-r": { angleDeg: 16 },
+      "toe-r": { angleDeg: 0 },
+      "arm-r": { angleDeg: 5.29, abductionDeg: -10.71, twistDeg: -45.09 },
+      "forearm-r": { angleDeg: 8.57, twistDeg: 128.9 },
+      "hand-r": { angleDeg: -11.92, abductionDeg: 8.71 },
+      "arm-l": { angleDeg: 77.88, abductionDeg: 3.78, twistDeg: 15.83 },
+      "forearm-l": { angleDeg: 93.87, twistDeg: 90.44 },
+      "hand-l": { angleDeg: -22.51, abductionDeg: 27.45 },
+    },
+    r: [[0.885, 0.852, 0], [1.125, 0.862, 0.05], [1.29, 0.8, 0.11]],
+    l: [[0.6, 0.505, 0.3], [0.37, 0.6, 0.33], [0.205, 0.6, 0.27]],
+    description: {
+      en: "On the left side: hips and shoulders stacked, the lower shoulder and hip pressed into the mattress, the head level on the pillow, the thighs drawn forward by 35 degrees with the upper knee and ankle on the lower ones and the feet out of the duvet's foot end; the upper arm lies along the flank with the hand on the hip over the duvet, the lower arm forward on the mattress with the hand on the pillow in front of the face.",
+      de: "Auf der linken Seite: Hüften und Schultern übereinander, untere Schulter und Hüfte in die Matratze gedrückt, der Kopf waagrecht auf dem Kissen, die Oberschenkel um 35 Grad nach vorn gezogen mit dem oberen Knie und Knöchel auf den unteren, die Füße schauen aus dem Fußende der Decke; der obere Arm liegt entlang der Flanke mit der Hand auf der Hüfte über der Decke, der untere Arm nach vorn auf der Matratze mit der Hand auf dem Kissen vor dem Gesicht.",
+    },
+  },
+  curled: {
+    base: {
+      "hip-lift": { dy: 0.074 },
+      pelvis: { angleDeg: 0, twistDeg: 84 },
+      torso: { angleDeg: -10, twistDeg: 3, abductionDeg: -6 },
+      neck: { angleDeg: 2, abductionDeg: 10 },
+      head: { angleDeg: -4, abductionDeg: 4 },
+      "thigh-l": { angleDeg: 70, abductionDeg: 6 },
+      "shank-l": { angleDeg: -105, abductionDeg: 1.5 },
+      "foot-l": { angleDeg: 12 },
+      "toe-l": { angleDeg: 0 },
+      "thigh-r": { angleDeg: 70, abductionDeg: 15 },
+      "shank-r": { angleDeg: -105, abductionDeg: 9.5 },
+      "foot-r": { angleDeg: 12 },
+      "toe-r": { angleDeg: 0 },
+      "arm-r": { angleDeg: 7.41, abductionDeg: -9, twistDeg: 178.18 },
+      "forearm-r": { angleDeg: -7.15, twistDeg: -98.17 },
+      "hand-r": { angleDeg: -16.86, abductionDeg: 18.72 },
+      "arm-l": { angleDeg: 87.3, abductionDeg: 5.69, twistDeg: 17.13 },
+      "forearm-l": { angleDeg: 106.31, twistDeg: 93.82 },
+      "hand-l": { angleDeg: -24.99, abductionDeg: 12.77 },
+    },
+    r: [[0.88, 0.855, 0.03], [1.125, 0.862, 0.05], [1.29, 0.8, 0.11]],
+    l: [[0.6, 0.505, 0.39], [0.38, 0.6, 0.35], [0.215, 0.6, 0.3]],
+    description: {
+      en: "Curled up on the left side: the trunk bent forward by 10 degrees, the thighs drawn up by 70 degrees and the knees bent by 105 degrees with the upper leg on the lower one under the duvet; the upper arm lies along the flank with the hand on the hip over the duvet, the lower arm forward on the mattress with the hand on the pillow in front of the face.",
+      de: "Eingerollt auf der linken Seite: der Rumpf um 10 Grad nach vorn gebeugt, die Oberschenkel um 70 Grad angezogen und die Knie um 105 Grad gebeugt, das obere Bein auf dem unteren unter der Decke; der obere Arm liegt entlang der Flanke mit der Hand auf der Hüfte über der Decke, der untere Arm nach vorn auf der Matratze mit der Hand auf dem Kissen vor dem Gesicht.",
+    },
+  },
+};
+
+/** 🛌️ A pose on the left side as stated; the arm angles were solved once to the world targets (elbow, wrist, fingertip; palms down) with `solve` and are stated as their result, the report gives what is left to the targets. */
+function lateral(rig: Json, id: "side" | "curled", report: string[]): Offsets {
+  const o: Offsets = JSON.parse(JSON.stringify(LATERAL[id].base));
+  const f = framesOf(rig, o);
+  for (const side of ["r", "l"] as const) {
+    const [elbow, wrist, tip] = LATERAL[id][side];
+    const got = [f[`forearm-${side}`]!.o, f[`hand-${side}`]!.o, at(f[`hand-${side}`]!, [WOMAN.hand, 0, 0])];
+    const error = Math.max(...[elbow, wrist, tip].map((t, i) => Math.hypot(...sub(got[i]!, t))));
+    report.push(`${id} arm ${side}: ${(error * 1000).toFixed(1)} mm from its targets`);
+  }
+  for (const b of ["head", "shank-l", "shank-r", "foot-l", "foot-r"]) report.push(`${id} ${b}: joint ${f[b]!.o.map((x) => x.toFixed(3)).join(", ")}`);
+  return o;
+}
+
 /* ---------------------------------------------------------------- document */
 
 /** 📄️ The catalog document with every root fix of this round applied. */
@@ -166,7 +243,9 @@ export function rooted(report: string[] = []): Json {
     if (TITLES[bone.id] !== undefined) bone.title = TITLES[bone.id];
   }
   const rig = asset.rig;
-  const pose = supine(rig, report);
+  const solved = join(import.meta.dir, "r3-sleeping-person-supine.json");
+  const pose: Offsets = existsSync(solved) ? JSON.parse(readFileSync(solved, "utf8")) : supine(rig, report);
+  if (!existsSync(solved)) writeFileSync(solved, JSON.stringify(pose, null, 1));
   const poses = asset.poses as Json[];
   const supinePose = poses.find((p) => p.id === "supine")!;
   supinePose.bones = { pelvis: { angleDeg: 0 }, torso: { angleDeg: 0 }, neck: { angleDeg: 0 }, head: { angleDeg: 0 }, ...pose };
@@ -174,14 +253,10 @@ export function rooted(report: string[] = []): Json {
     en: "Flat on the back, the head on the pillow with the neck slightly flexed, the legs stretched and turned out under the duvet with the feet out of its folded foot end; the left arm lies alongside the body under the duvet, the right arm on the duvet with the hand on the belly.",
     de: "Flach auf dem Rücken, der Kopf auf dem Kissen und der Hals leicht gebeugt, die Beine gestreckt und nach außen gedreht unter der Decke, die Füße schauen aus dem zurückgeschlagenen Fußende; der linke Arm liegt neben dem Körper unter der Decke, der rechte Arm auf der Decke mit der Hand auf dem Bauch.",
   };
-  for (const [id, thigh, foot, lift] of [["side", 33, 16, 0.05], ["curled", 59, 12, 0.065]] as const) {
+  for (const id of ["side", "curled"] as const) {
     const p = poses.find((q) => q.id === id)!;
-    p.bones["hip-lift"] = { dy: lift };
-    for (const side of ["l", "r"]) {
-      p.bones[`thigh-${side}`].angleDeg = thigh;
-      p.bones[`foot-${side}`].angleDeg = foot;
-      p.bones[`arm-${side}`] = { ...p.bones[`arm-${side}`], abductionDeg: side === "l" ? 6 : -6 };
-    }
+    p.bones = lateral(rig, id, report);
+    p.description = LATERAL[id].description;
   }
   const frames = framesOf(rig, supinePose.bones);
   for (const a of asset.anchors as Json[]) {

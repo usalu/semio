@@ -1,0 +1,14 @@
+{
+  "selectedSize": [
+    2,
+    2,
+    2
+  ],
+  "otherSize": [
+    2.0001,
+    2,
+    2
+  ],
+  "healingTolerance": 0.001,
+  "collapseTolerance": 2.1
+}

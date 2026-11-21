@@ -6,6 +6,10 @@ import {join} from "node:path";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
+import {Database} from "bun:sqlite";
+import argumentFixture from "./📨️task-arguments.json";
+import planPhases from "./🪜️verified-plan.json";
+import {readyStagePhaseV1} from "../../../🌐️remote-execution/🛰️sidecar/🚦️ready/🌲️process-tree/🟦️.ts";
 import scopeSchema from "../../../🧭️selection/🎯️scope/🧬️schema/🔣️.json" with {type:"json"};
 import {createHostServiceV1} from "../../../🏡️resident/🏛️service/🌐️host/🟨️.mjs";
 import {createGraphPlannerPortV1} from "../../../🏡️resident/🔌️ports/🧭️plan/🟨️.mjs";
@@ -13,7 +17,9 @@ import {HostUnavailableErrorV1,PlanRefusedErrorV1,connectHostV1,requestPlanV1} f
 import {hostEndpointsV1} from "../../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {HOST_POLICY_V1} from "../../../🏡️resident/📨️protocol/🎚️policy/🟨️.mjs";
 import {appendFileSync} from "node:fs";
-import {recordPlanSuccessV1} from "../../🏃️run/🟦️.ts";
+import {createHash} from "node:crypto";
+import {SCHEDULED_JOB_V1} from "../../../🗓️scheduler/🎟️ticket/🟦️.ts";
+import {recordPlanSuccessV1,runRepoInvocationV1} from "../../🏃️run/🟦️.ts";
 import {createCasStoreV1} from "../../../🗄️cas/🗃️store/🟦️.ts";
 import {createTaskRecorderV1} from "../../../🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs";
 import {workspaceIdV1} from "../../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
@@ -83,6 +89,11 @@ test("a real client gets its plan and verified graph slice from a real service, 
   const document=readSliceV1(plan.handoff);expect(document.generationPin).toBe("generation-1");
   const other=await requestInvocationPlanV1({root,request:{arguments:["run","app:build"],tool:"nx",targets:["app:build"]},environment,agent:"agent-2",write:()=>undefined,ports:{requestPlanV1:options=>requestPlanV1({...options,implementation})}});
   expect(other.generationKey).toBe(plan.generationKey);expect(other.handoff.hash).toBe(plan.handoff.hash);
+  for(const forwarded of [["one","two"],["one\u0001two"]]){
+   const args=["run","app:build","--",...forwarded];
+   await requestInvocationPlanV1({root,request:{arguments:args,tool:"nx",targets:["app:build"]},environment,agent:"agent-2",write:()=>undefined,ports:{requestPlanV1:options=>requestPlanV1({...options,implementation})}});
+   expect(loads.at(-1)).toEqual(args);
+  }
   writeFileSync(plan.handoff.path,readFileSync(plan.handoff.path,"utf8").replace("core","c0re"));
   expect(()=>readSliceV1(plan.handoff)).toThrow("does not match its digest");
  }finally{await service.stop("test");}
@@ -112,6 +123,7 @@ test("a successful run records the keys of its plan, a dry run, a failed command
  expect([...await ask()]).toEqual([]);
  expect(await recordPlanSuccessV1({root:workspace,args:["run","a:build"],keys,cas})).toBe(2);
  expect([...await ask()].sort()).toEqual(["a:build","b:build"]);
+ expect(await recordPlanSuccessV1({root:workspace,args:["run","a:build","--","--dry-run"],keys,cas})).toBe(2);
 });
 
 test("a refused or unreachable plan ends the command as a localized refusal with a failing exit status, in both languages",async()=>{
@@ -220,4 +232,56 @@ test("the second start ignores the exit rows of the services it retired: the den
  const ignored:(readonly number[]|undefined)[]=[];let asked=0;
  await requestInvocationPlanV1({root,request:{arguments:["run","app:build"],tool:"nx",targets:["app:build"]},environment:{SEMIO_BUILD_TOOL:"nx"},agent:"agent-1",write:()=>undefined,ports:{probeConsentV1:async()=>({state:"ok",folder:"Documents"}),writeAccessReceiptV1:()=>undefined,invalidateLauncherMarkerV1:()=>undefined,rememberLaunchdRefusalV1:()=>undefined,retireHostServiceV1:async()=>({pid:7,retired:true}),lastAccessDenialV1:()=>({route:"direct",pid:5}),spawnHostServiceV1:()=>undefined,requestPlanV1:async(options:{ignorePids?:readonly number[]})=>{ignored.push(options.ignorePids);if(asked++===0)throw denied;throw new HostUnavailableErrorV1("down");}}}).then(()=>undefined,()=>undefined);
  expect(ignored).toEqual([undefined,[5,7]]);
+});
+
+test("a recorded task is fresh only for the same ordered forwarded arguments",async()=>{
+ const graph=graphOf(["app"]),task="app:build",records=new Map<string,string|null>(),derived={key:()=>task,getMany:async()=>[{value:{key:"a".repeat(64)}}]};
+ const planner=createGraphPlannerPortV1({loadGraph:async()=>graph,taskState:async()=>({graph:derived,recorder:{upToDate:async(_workspace,keys)=>new Set([...keys].filter(([id,key])=>records.get(id)===key).map(([id])=>id))}})});
+ const index=await planner.load({root,workspace:"arguments"}),db=new Database(":memory:");
+ try{
+  db.exec("create table recorded (arguments text not null)");
+  for(const {head,forwarded,stale} of argumentFixture.cases){
+   const args=["run",task,...head,...forwarded.length?["--",...forwarded]:[]],answer=await planner.plan({index,targets:[task],workspace:"arguments",root,agent:"test",arguments:args});
+   const step=answer.tasks[0]!,json=JSON.stringify(forwarded),oracle=db.query("select not exists(select 1 from recorded where arguments=json(?1)) as stale").get(json) as {stale:number};
+   expect(Boolean(oracle.stale)).toBe(stale);
+   expect(step.stale,args.join(" ")).toBe(stale);
+   expect(step.key).toMatch(/^[a-f0-9]{64}$/u);
+   records.set(task,step.key!);
+   db.exec("delete from recorded");
+   db.query("insert into recorded values (json(?1))").run(json);
+  }
+ }finally{db.close();}
+});
+
+test("only repo cache options override the outer task fast path",async()=>{
+ const tag="cache-options",directory=join(base,"plans-"+tag),graph=graphOf(["app"]),document=JSON.stringify({graph}),hash=createHash("sha256").update(document).digest("hex"),skip=Error("executor reached");
+ mkdirSync(directory,{recursive:true});writeFileSync(join(directory,hash+".json"),document);
+ const tasks=[{id:"app:build",dependsOn:[],stale:false,key:"b".repeat(64)}];
+ const ports={probeConsentV1:async()=>({state:"unprotected",folder:""}),requestPlanV1:async()=>({reply:{revision:"a".repeat(64),slice:{hash,size:Buffer.byteLength(document)},cacheHits:1},runtime:{directory:base,tag},plan:{tasks}})};
+ for(const {args,executes} of argumentFixture.cacheOptions){
+  const outcome=await runRepoInvocationV1({root,args:["run","app:build","--lang=en",...args],environment:{SEMIO_BUILD_TOOL:"nx",[SCHEDULED_JOB_V1]:"test"},ports,write:()=>undefined,execute:async()=>{throw skip;}}).then(()=>null,(error:unknown)=>error);
+  expect(outcome,args.join(" ")).toBe(executes?skip:null);
+ }
+});
+
+test("a verified client plan ends the supervised graph read before execution admission",async()=>{
+ const runtimeDirectory=join(runBase,"verified");mkdirSync(runtimeDirectory,{recursive:true});
+ const environment={...process.env,XDG_RUNTIME_DIR:runtimeDirectory,TMPDIR:runtimeDirectory,LOCALAPPDATA:runtimeDirectory,SEMIO_BUILD_TOOL:"nx"} as Record<string,string>,implementation="f".repeat(64),runtime=hostEndpointsV1(implementation,environment);
+ const planner=createGraphPlannerPortV1({loadSlice:async()=>({graph:graphOf(["app"]),generationPin:"generation-1"})});
+ const service=createHostServiceV1({runtime,implementation,ports:{planner}}),db=new Database(":memory:");
+ await service.start();
+ try{
+  for(const row of planPhases){
+   const progress:string[]=[],request={arguments:["run","app:build","--lang="+row.language],tool:"nx",targets:["app:build"]};
+   const plan=requestInvocationPlanV1({root,request,environment,agent:"phase-test",write:line=>progress.push(line),ports:{requestPlanV1:async options=>{
+    const answer=await requestPlanV1({...options,implementation});
+    if(!row.valid)return{...answer,reply:{...answer.reply,slice:{...answer.reply.slice,size:answer.reply.slice.size+1}}};
+    return answer;
+   }}});
+   const expected=db.query("select case ?1 when 1 then 'executing' else 'reading' end as phase").get(row.valid?1:0) as {phase:"executing"|"reading"};
+   expect(expected.phase).toBe(row.phase);
+   if(row.valid)await expect(plan).resolves.toHaveProperty("handoff");else await expect(plan).rejects.toThrow("does not match its digest");
+   expect(readyStagePhaseV1(progress,"reading")).toBe(expected.phase);
+  }
+ }finally{db.close();await service.stop("test");}
 });

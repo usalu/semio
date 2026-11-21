@@ -417,7 +417,7 @@ fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infin
                 if entry.board_pointer_claim.is_some() || entry.board_pointer_controller_id.is_some() {
                     return Err(semio_ui_action::BoundedActionFault::ItemCredits);
                 }
-                let Some(host) = entry.board_host.as_mut() else {
+                let Some(host) = entry.board_host.as_deref_mut() else {
                     return Err(semio_ui_action::BoundedActionFault::Structure);
                 };
                 begin_pointer_commit(&mut host.scene, &mut host.commit, plan).map_err(|_| semio_ui_action::BoundedActionFault::ItemCredits)?;
@@ -446,7 +446,7 @@ fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infin
         if entry.board_pointer_claim.is_some() || entry.board_pointer_controller_id.is_some() {
             return Err(semio_ui_action::BoundedActionFault::ItemCredits);
         }
-        let Some(host) = entry.board_host.as_mut() else {
+        let Some(host) = entry.board_host.as_deref_mut() else {
             return Err(semio_ui_action::BoundedActionFault::Structure);
         };
         begin_pointer_commit(&mut host.scene, &mut host.commit, plan).map_err(|_| semio_ui_action::BoundedActionFault::ItemCredits)?;
@@ -683,7 +683,7 @@ pub fn board2d_hover_into(surface_id: &str, controller_id: &str, input: &mut sem
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
         let domain_id = entry.board_sync_cache.domain_id.clone()?;
-        let hovered = entry.board_host.as_ref()?.hovered_id.clone();
+        let hovered = entry.board_host.as_ref()?.focus.hovered_id.clone();
         if entry.board_hover_published.as_ref() == Some(&hovered) {
             return None;
         }

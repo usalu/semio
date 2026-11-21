@@ -1,41 +1,95 @@
 import { test, expect } from "bun:test";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-test("native publication and launch read the completed variant catalog", async () => {
-  const workspace=process.env.SEMIO_WORKSPACE_ROOT??process.cwd(),require=createRequire(import.meta.url),ts=require("typescript");
-  const {mkdirSync,mkdtempSync,writeFileSync}=await import("node:fs"),{dirname,resolve,isAbsolute,relative}=await import("node:path");
-  const {repoTestArtifactEnvironment}=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts")).href);
-  const root=mkdtempSync(join(repoTestArtifactEnvironment(workspace,"native-entrypoint-catalog").SEMIO_TEST_ARTIFACT_DIR!,"native-session-catalog-"));
-  const put=(path:string,value:unknown)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),typeof value==="string"?value:JSON.stringify(value));};
-  const corpus=JSON.parse(readFileSync(join(import.meta.dir,"../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/📇️catalog/🔣️.json"),"utf8"));
-  const registryPath="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",native=join(workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint");
-  const {readGeneratedCatalogProjection}=await import(pathToFileURL(join(workspace,registryPath,"📖️catalog-view/🟦️.ts")).href);
-  const scoped=`${registryPath}/dist/sessions/${corpus.variant}`;
-  put(`${registryPath}/🤖️generated/🔌️plugins.json`,[]);put(`${registryPath}/🤖️generated/🎠️playgrounds.json`,[]);
-  put(`${scoped}/🔌️plugins.json`,[corpus.entry]);put(`${scoped}/🎠️playgrounds.json`,[corpus.playground]);
-  put(`${scoped}/🎮️playground-session/🟦️.ts`,`export const PLAYGROUND_SESSION=${JSON.stringify({variant:corpus.variant,plugins:[{pluginId:corpus.entry.pluginId}]})};`);
-  put("runtime/🔣️runtime.json",{version:1,variant:corpus.variant,profile:"prototype"});put("runtime/.semio-artifact.json",{});
-  const declarations=(file:string,names:string[])=>{const source=ts.createSourceFile(file,readFileSync(file,"utf8"),ts.ScriptTarget.Latest,true);return names.map(name=>source.statements.find((node:any)=>node.name?.text===name||node.declarationList?.declarations.some((row:any)=>row.name?.text===name)).getText(source)).join("\n");};
-  let published:any,launched:any,built:any,nativeInvocation:any;
-  const {nativeLaunchEnvironmentV1,readNativeLaunchDeclarationV1}=await import(pathToFileURL(join(native,"🎟️launch/🟦️.ts")).href);
-  const nativeLaunchDeclaration=JSON.parse(readFileSync(join(native,"🎟️launch/🔣️.json"),"utf8"));
-  const {withScriptProcessEnvelope,createScriptProcessEnvelope}=await import(pathToFileURL(join(workspace,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")).href);
-  const originalController=new AbortController();
-  const trusted=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts")).href);
-  const dependencies:any={nativeLaunchEnvironmentV1,readNativeLaunchDeclarationV1,nativeLaunchDeclaration,scriptCompilerAdmissionControlV1:()=>({signal:originalController.signal}),runtimeCatalogBuildInventoryV1:()=>({moduleDirectories:[{pluginId:corpus.entry.pluginId,directoryName:corpus.entry.directoryName}]}),BundleScript:class{repoRoot=root;invocation={control:{signal:originalController.signal}};},buildComponentClosureV1:async(...args:any[])=>{built=args;},TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE:trusted.TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE,TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE:trusted.TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE,TRUSTED_PLUGIN_MODULE_RECEIPT_FILE:trusted.TRUSTED_PLUGIN_MODULE_RECEIPT_FILE,join,resolve,relative,isAbsolute,pathToFileURL,readFileSync,readGeneratedCatalogProjection,AbortController,process,console,registryPath,ownerPath:"owner",COMPONENT_MODULE_DIRECTORIES:[{pluginId:corpus.entry.pluginId,directoryName:corpus.entry.directoryName}],moduleDirectoryName:()=>corpus.entry.directoryName,pluginModulesRootIn:(repo:string)=>join(repo,"modules"),COMPONENT_PROFILE_POLICIES:{"wasm-release":{directory:"dist/components",maximumBytes:268435456,shipped:true}},SHIPPED_COMPONENT_PROFILE:"wasm-release",nativeRuntimeDirectory:(path:string)=>path==="."?path:join(root,"runtime"),publishNativeRuntime:async(...args:any[])=>{published=args;},existsSync:()=>true,playgroundNativeHostArtifactV1:()=>process.execPath,nativeRendererBinary:()=>{throw Error("Unexpected fallback binary");},runNativeSession:async(...args:any[])=>{launched=args;},createAssetHttpServerV1:()=>{throw Error("No assets requested");},PLAYGROUND_ASSET_PROVIDERS_V1:[],readNativeCallerAuthorityV1:()=>({original:{buildMode:"prototype"},repositoryRoot:root}),withRepositoryExecutablePinV1:(pin:any,execute:any)=>execute(pin.source,pin.phaseControl),createRequestedIssuedResourceControlV1:(control:any)=>control,repositoryCargoNetworkV1:()=>"network",withPlaygroundSessionV1:async(_workspace:string,_invocation:unknown,variant:string,body:any)=>{const read=(name:string)=>JSON.parse(readFileSync(join(root,scoped,name),"utf8")) as any[];const entries=read("🔌️plugins.json"),playgrounds=read("🎠️playgrounds.json");return body({variant,plugins:entries.map((entry:any)=>({pluginId:entry.pluginId}))},{entries,playgrounds},{signal:originalController.signal});},withNativeRuntimeV1:async(_workspace:string,_invocation:unknown,variant:string,control:unknown,body:any)=>body(join(root,"runtime"),{version:1,variant,profile:"prototype"},control)};
-  const load=(file:string,names:string[],result:string)=>new Function(...Object.keys(dependencies),ts.transpileModule(declarations(file,names).replaceAll("import.meta.dir",JSON.stringify(native)),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText+`;return ${result};`)(...Object.values(dependencies));
-  const Publish=load(join(native,"📦️modules/📜️script.ts"),["PublishScript"],"PublishScript"),Run=load(join(native,"📜️script.ts"),["BOOT_AXIS_FLAGS","selection","RunScript"],"RunScript");
-  await new Publish().run([corpus.variant,"prototype"]);
-  const expected=require("lodash/find")([corpus.entry],{pluginId:corpus.entry.pluginId});
-  expect(published[3]).toEqual([{pluginId:expected.pluginId,cratePath:expected.cratePath}]);
-  expect(built[0]).toBe(root);expect([...built[1]]).toEqual([expected.pluginId]);expect(built[2].control.signal.aborted).toBe(false);
-  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"fixture:native-catalog",maximumElapsedMilliseconds:5000},{},Date.now()),async(invocation:any)=>{nativeInvocation=invocation;await new Run().run([corpus.variant,"prototype",...corpus.nativeArgs]);expect(launched[4]).toBe(invocation.control.signal);});
-  expect(JSON.parse(launched[2].SEMIO_NATIVE_LAUNCH_ADMISSION).scriptOwner).toBe("fixture:native-catalog");
-  expect(launched[1]).toEqual(["--plugin",corpus.variant,"--example","🎬️demo","--app",corpus.playground.app,"--brand",corpus.playground.brand,"--smoke"]);
-  expect(launched[2].SEMIO_PLUGIN_MODULES).toBe(join(root,"runtime"));
-  expect(launched[2].SEMIO_RUNTIME_ASSETS).toBe(root);
-  originalController.abort();expect(built[2].control.signal.aborted).toBe(true);
-});
 
+test("native publication and launch select the admitted variant and executable", async () => {
+  const workspace = process.env.SEMIO_WORKSPACE_ROOT ?? process.cwd();
+  const require = createRequire(import.meta.url), ts = require("typescript");
+  const {repoTestArtifactEnvironment} = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts")).href);
+  const artifactDirectory = process.env.SEMIO_TEST_ARTIFACT_DIR ?? repoTestArtifactEnvironment(workspace, "native-entrypoint-catalog").SEMIO_TEST_ARTIFACT_DIR!;
+  const root = mkdtempSync(join(artifactDirectory, "native-session-catalog-"));
+  const put = (path: string, value: unknown) => {
+    mkdirSync(dirname(join(root,path)), {recursive:true});
+    writeFileSync(join(root,path), JSON.stringify(value));
+  };
+  const corpus = JSON.parse(readFileSync(join(import.meta.dir, "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/📇️catalog/🔣️.json"), "utf8"));
+  const registry = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry";
+  const scoped = registry + "/dist/sessions/" + corpus.variant;
+  const native = resolve(import.meta.dir, "../..");
+  const {readGeneratedCatalogProjection} = await import(pathToFileURL(join(workspace, registry, "📖️catalog-view/🟦️.ts")).href);
+  const launch = await import(pathToFileURL(join(native, "🎟️launch/🟦️.ts")).href);
+  const nativeLaunchDeclaration = JSON.parse(readFileSync(join(native,"🎟️launch/🔣️.json"), "utf8"));
+  const {withScriptProcessEnvelope, createScriptProcessEnvelope} = await import(pathToFileURL(join(workspace, "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")).href);
+  put(registry + "/🤖️generated/🔌️plugins.json", []);
+  put(registry + "/🤖️generated/🎠️playgrounds.json", []);
+  put(scoped + "/🔌️plugins.json", [corpus.entry]);
+  put(scoped + "/🎠️playgrounds.json", [corpus.playground]);
+
+  const signal = new AbortController().signal;
+  const publicationControl = {signal};
+  const rendererControl = {signal};
+  const scopedProjection = () => readGeneratedCatalogProjection(join(root,scoped));
+  let published: unknown[] = [], launched: unknown[] = [], renderer: unknown[] = [];
+  let configuredHost: string | undefined;
+  const dependencies = {
+    ...launch, nativeLaunchDeclaration, join, resolve, readFileSync, process, console,
+    BundleScript: class { repoRoot = root; invocation = undefined; },
+    existsSync: () => true,
+    nativeRuntimeDirectory: () => join(root, "runtime"),
+    readNativeCallerAuthorityV1: () => ({original:{buildMode:corpus.renderer.mode}, repositoryRoot:root}),
+    createRequestedIssuedResourceControlV1: (control: unknown) => control,
+    withPlaygroundSessionV1: async (_workspace: string, _invocation: unknown, variant: string, body: Function) => {
+      const projection = scopedProjection();
+      const plugins = projection.entries.map((row: {pluginId:string}) => ({pluginId:row.pluginId}));
+      return body({variant,plugins},projection,publicationControl);
+    },
+    publishNativeRuntime: async (...args: unknown[]) => { published = args; },
+    withNativeRuntimeV1: async (_workspace: string, _invocation: unknown, _variant: string, control: unknown, body: Function) =>
+      body(join(root,"runtime"), {}, control),
+    playgroundNativeHostArtifactV1: () => configuredHost,
+    withNativeRendererBinaryV1: async (packageRoot: string, mode: string, cwd: string, invocation: unknown, control: unknown, body: Function) => {
+      renderer = [packageRoot, mode, cwd, invocation, control];
+      await body(join(root, corpus.renderer.binary[process.platform === "win32" ? "windows" : "posix"]), rendererControl);
+    },
+    runNativeSession: async (...args: unknown[]) => { launched = args; },
+  };
+  const load = (file: string, names: string[], entry: string) => {
+    const source = ts.createSourceFile(file, readFileSync(file,"utf8"), ts.ScriptTarget.Latest,true);
+    const declarations = names.map(name => {
+      const statement = source.statements.find((node: any) => node.name?.text === name ||
+        node.declarationList?.declarations.some((row: any) => row.name?.text === name));
+      if (!statement) throw Error("Missing native runner declaration " + name);
+      return statement.getText(source).replace(/^export /u,"");
+    }).join("\n");
+    const {outputText} = ts.transpileModule(declarations, {compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}});
+    return new Function(...Object.keys(dependencies),outputText + "\nreturn " + entry)(...Object.values(dependencies));
+  };
+  const Publish = load(join(native,"📦️modules/📜️script.ts"), ["PublishScript"],"PublishScript");
+  const run = load(join(native,"🟦️.ts"), ["BOOT_AXIS_FLAGS","selection","runRunScript"],"runRunScript");
+  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"fixture:native-catalog",maximumElapsedMilliseconds:5000},{},Date.now()), async invocation => {
+    const publish = new Publish();
+    publish.invocation = invocation;
+    await publish.run([corpus.variant, corpus.renderer.mode]);
+    const expected = require("lodash/find")([corpus.entry], {pluginId:corpus.entry.pluginId});
+    expect(published).toEqual([root, invocation, corpus.variant, [{pluginId:expected.pluginId,cratePath:expected.cratePath}], publicationControl]);
+
+    const args = [corpus.variant, corpus.renderer.mode, ...corpus.nativeArgs];
+    await run({root:native,repoRoot:root,invocation}, args);
+    expect(renderer).toEqual([resolve(native,"../📦️packages/🦀️rust"), corpus.renderer.mode, root, invocation, publicationControl]);
+    expect(launched[0]).toBe(join(root,corpus.renderer.binary[process.platform === "win32" ? "windows" : "posix"]));
+    expect(launched[5]).toBe(rendererControl);
+    const environment = launched[2] as Record<string,string>;
+    expect(JSON.parse(environment.SEMIO_NATIVE_LAUNCH_ADMISSION).scriptOwner).toBe("fixture:native-catalog");
+    expect(environment.SEMIO_PLUGIN_MODULES).toBe(join(root,"runtime"));
+    expect(launched[1]).toEqual(["--plugin",corpus.variant,"--example","🎬️demo","--app",corpus.playground.app,"--brand",corpus.playground.brand,"--smoke"]);
+
+    configuredHost = join(root,corpus.renderer.configured);
+    renderer = [];
+    await run({root:native,repoRoot:root,invocation}, args);
+    expect(renderer).toEqual([]);
+    expect(launched[0]).toBe(configuredHost);
+    expect(launched[5]).toBe(publicationControl);
+  });
+});

@@ -4,9 +4,8 @@
 // prebuilt `framework/surface/terrain/rs` `TerrainSession` WASM engine.
 // Summary: `🗺️WorldTerrainLayer` renders bare r3f primitives (`<group>`/`<mesh>`) — normally mounted inside
 // `World3dHost`'s own `<WorldCanvas>` — so this story wraps it in a standalone `@react-three/fiber` `<Canvas>`.
-// The DEM tile URL template is intentionally storybook-relative/missing: `TerrainTileRenderer` catches fetch
-// failures into a `tileMiss` set (never throws), so the layer renders an empty (but real, wasm-backed) mesh
-// group rather than depending on a live tile server. `parameters.wasm: ["terrain"]` gates first paint on
+// The story uses a local DEM URL that the browser tests can answer with controlled tiles or misses.
+// `parameters.wasm: ["terrain"]` gates first paint on
 // `WASM_LOADERS.terrain` (see `.storybook/preview.tsx`) resolving.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header

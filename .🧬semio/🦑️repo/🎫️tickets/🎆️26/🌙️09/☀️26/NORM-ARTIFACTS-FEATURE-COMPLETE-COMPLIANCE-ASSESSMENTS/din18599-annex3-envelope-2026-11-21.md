@@ -1,0 +1,7 @@
+# GModG non-residential envelope transmittance
+
+The app checks mean U separately for each Annex 3 exterior component class and heating setpoint. Its area-weighted calculation applies the 0.5 U-value factor on ground-facing components and components facing unheated rooms other than attics. For ground slabs, it counts the entered portion within 5 m of the exterior edge. The schema, editor and SQLite archive distinguish all four Annex 3 classes, the two portions of a ground slab, and unheated attic adjacency. A standalone ground-floor area yields an unverified result until the relevant perimeter portion is recorded. [GModG §19](https://www.gesetze-im-internet.de/geg/__19.html) · [Annex 3](https://www.gesetze-im-internet.de/geg/anlage_3.html)
+
+The catalogue displays both heating-temperature bands for all four classes. The element diagram uses the same group limit and reports the group basis. The energy model uses the full slab area and lets only modelled glazed components contribute direct transmitted solar gains. Opaque absorbed solar gains and the complete non-residential reference plant need their separate calculations. [GModG Annex 2](https://www.gesetze-im-internet.de/geg/anlage_2.html)
+
+All 14 cases matched independent SQLite. A separate run checked all four production input groups and the unclassified ground slab. The SQLite TypeScript suite passed 40 tests with 1,230 assertions, including every new classification and the unsigned dwelling count. Native scene and current Play verification remain pending.

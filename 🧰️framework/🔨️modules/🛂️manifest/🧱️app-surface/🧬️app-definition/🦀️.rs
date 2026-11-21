@@ -102,7 +102,7 @@ pub struct AppDefinition {
     /// [Designing with Existing Stock | Entwerfen mit Bestand, Aggregator]; ids absent here keep the canonical breadcrumb under that terminology.
     #[serde(default)]
     #[value(default)]
-    pub terminology_breadcrumbs: std::collections::HashMap<String, Vec<LocalizedLabel>>,
+    pub terminology_breadcrumbs: std::collections::BTreeMap<String, Vec<LocalizedLabel>>,
     /// 🎓️ This app's first-run walkthrough, if it declares one — see `IntroductionDefinition`.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]

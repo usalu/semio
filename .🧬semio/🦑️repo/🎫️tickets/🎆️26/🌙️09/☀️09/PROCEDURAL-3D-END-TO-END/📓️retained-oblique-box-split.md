@@ -1,0 +1,12 @@
+# Retained Oblique Box Split
+
+The registered Split operator now accepts a transverse oblique plane on an original certified box, including a box with an authored rotated, translated frame. A bounded convex construction evaluates the eight stock corners and computes each crossed stock edge once. It clips the six authored stock face rings, forms each cap from the opposite circulation of the cut edges, and verifies one connected closed shell, Euler incidence and opposite edge uses. Both halves carry the same cap positions and opposite outward plane support. Reversing the input normal swaps the positive and negative results.
+
+The two solids use the existing funded pair transaction. Topology remains private until both complete publications can enter the live index together. The native clipped-box certificate supplies exact axis bounds and signed Euclidean distance for Classify. Preview and measurements use the original planar contours and line pcurves. Tangent, external, zero-normal and nonrepresentable cuts refuse before topology publication. Axis-aligned stock split still uses its analytic box recipe. Cylinder and cone splits share the extracted, independently verified axial partition.
+
+## Verification
+
+- The neutral corpus covers a centered hexagonal cap, a plane passing through stock edges, a small tetrahedral half and an oblique cut in a rotated and translated authored frame. Manifold independently checked both normal orderings, area, volume, genus, bounds, total volume and zero-volume contact and external planes in 172 assertions.
+- The compact Rust suite passed 21 tests. The new cases exercised both retained ordered boundary recipes, exact cap vertex identity, opposing support frames, incidence, pcurve correspondence, finite exact exterior distance to a projected edge, Classify witnesses, area, volume and closed material bounds. The separate axial compact verification passed all four Box, Cylinder and Cone cases.
+- The registered `original-brep-sections` case checks exact cap normal, preview bounds, funded cancellation after both roots exist privately, atomic completion across both normal orderings, Classify and exact Measure. Linked execution remains pending under shared build capacity.
+- Canonical source closures measured 3,940 active lines for Engine, 4,000 for Native Registry, 3,737 for Solid Transaction and 3,736 for Representation during this slice. The registered integration closure measured 123,336 active bytes. Rust AST parsing, scoped whitespace and path-length checks passed.

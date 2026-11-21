@@ -2,6 +2,9 @@
 
 use super::*;
 
+#[path="map-receiving.rs"]
+mod map_receiving;
+
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterImageAsset {
@@ -95,6 +98,14 @@ impl RasterAdjustmentNumber {
 }
 
 semio_framework_value::artifact_retire_leaf!(RasterAdjustmentNumber);
+semio_framework_dsl_record::dsl_owned_scalar_receiving!(copy RasterAdjustmentNumber, |field| {
+    use semio_framework_dsl_record::FieldValue;
+    let FieldValue::Value(semio_framework_value::DslValue::Number(number))=field else {
+        return Err(semio_framework_dsl_record::receiving::owned::invalid());
+    };
+    <RasterAdjustmentNumber as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::Number(*number))
+});
+
 
 /// 🛡️ A received generic value becomes a tone number only when it is a number; integer and decimal identity are kept.
 impl semio_framework_value_native_owned_try_map::NativeReceiveTryMap<semio_framework_value::DslValue> for RasterAdjustmentNumber {
@@ -234,22 +245,53 @@ impl semio_framework_dsl_record::BorrowedDslField for RasterAdjustmentNumber{con
 
 pub const RASTER_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
-/// 🧹️ Closes one cold-owned Raster value to terminal-empty through grants sized exactly by the retirement's own quotes.
+/// 🧹️ Closes a cold Raster value through one selected original effect per retirement turn.
 pub fn retire_raster_value_cold<T: semio_framework_value::retirement::RetireOwned>(value: T) -> Result<(), semio_framework_value::ValueError> {
-    let birth = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), maximum_depth: 2, ..Default::default() };
-    let (owner, _) = semio_framework_value::retirement::admit_owned_retirement(value, birth).result.map_err(|(error, _)| error)?;
-    close_raster_owner_cold(owner)
+    use semio_framework_pixels::{BlockingTurns,EffectTurns};
+    use semio_framework_value::retirement::controlled::ControlledRetirement;
+    let mut owner = ControlledRetirement::retain(value);
+    let body = RASTER_OWNED_FIELD_BYTES;
+    while !owner.terminal_is_empty() {
+        let grant = cold_retirement_grant(owner.selected_demand(body)?);
+        let mut turns = BlockingTurns::new(owner.next_computational_work(body)?);
+        let poll = turns.turn(grant, |effect| owner.step(body,effect))?;
+        require_cold_retirement_progress(poll,owner.terminal_is_empty())?;
+    }
+    Ok(())
 }
 
-/// 🚪️ Drives one admitted retirement frame to terminal-empty through grants sized exactly by its own quotes.
-pub fn close_raster_owner_cold(mut owner: Box<dyn store::ErasedSnapshotRetirement>) -> Result<(), semio_framework_value::ValueError> {
-    let mut turns = 0usize;
-    while !owner.terminal_is_empty() {
-        let demand = owner.next_demand(RASTER_OWNED_FIELD_BYTES)?;
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RASTER_OWNED_FIELD_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        owner.close_step(grant).result?;
-        turns += 1;
-        if turns >= 1 << 24 { return Err(semio_framework_value::ValueError::invariant("Raster cold retirement made no progress")); }
+/// 🚪️ Closes a previously admitted Raster owner and releases its terminal header.
+pub fn close_raster_owner_cold(owner: Box<dyn store::ErasedSnapshotRetirement>) -> Result<(), semio_framework_value::ValueError> {
+    use semio_framework_pixels::{BlockingTurns,EffectTurns};
+    use semio_framework_value::{close_factory_ticket,factory_ticket_demands};
+    let mut slot = Some(owner);
+    let body = RASTER_OWNED_FIELD_BYTES;
+    while let Some(owner) = slot.as_ref() {
+        let grant = cold_retirement_grant(factory_ticket_demands(owner,body)?);
+        let work = if owner.terminal_is_empty() { 1 } else { owner.next_computational_work(body)? };
+        let mut turns = BlockingTurns::new(work);
+        let poll = turns.turn(grant, |effect| close_factory_ticket(&mut slot,body,effect))?;
+        require_cold_retirement_progress(poll,slot.is_none())?;
     }
+    Ok(())
+}
+
+fn cold_retirement_grant(demand: semio_framework_value::RetirementDemand) -> RetainedCloneGrant {
+    RetainedCloneGrant {
+        maximum_items: 1,
+        maximum_copy_bytes: demand.copy_bytes,
+        maximum_capacity_bytes: demand.capacity_bytes,
+        maximum_release_bytes: demand.release_bytes,
+        maximum_depth: demand.depth,
+    }
+}
+
+fn require_cold_retirement_progress(poll: semio_framework_value::OriginalRetirementPoll, complete: bool) -> Result<(),semio_framework_value::ValueError> {
+    use semio_framework_value::{RetainedWorkPoll,ValueError};
+    let work = match poll {
+        RetainedWorkPoll::Complete(turn) => { turn.result.map_err(|error|error.into_value_error())?; turn.work }
+        RetainedWorkPoll::Pending { work } => work,
+    };
+    if work == 0 && !complete { return Err(ValueError::invariant("Raster cold retirement made no progress")); }
     Ok(())
 }

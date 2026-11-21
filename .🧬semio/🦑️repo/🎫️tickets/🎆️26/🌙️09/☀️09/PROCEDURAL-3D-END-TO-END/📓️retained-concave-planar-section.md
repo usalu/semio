@@ -1,0 +1,7 @@
+# Retained Section of a Concave Planar Shell
+
+A Section through the sewn skew Box recess uses the reciprocal line edges of the original planar shell. Each crossed edge contributes one shared point. Face-local intersection events are paired in line order, then sewn into one degree-two boundary circuit. The boundary is oriented to the authored plane normal before the existing native planar face publisher reserves and builds its trim.
+
+The horizontal plane at z = 1.3 cuts one concave face of area 11.646130903422709. The compact Rust verification kept that area and a reflex corner for either plane normal, using the same original face and edge planes as the production query. The original convex cursor and its existing retained topology publication remain in use for convex shells. The native proof passed 34 tests. The registered Manifold oracle passed 15 tests and 137 assertions. Its separate triangular tessellation produces the same concave section and area. The source-boundary and scoped diff checks passed.
+
+The registered Flow test invokes the original Section operation, checks its single face and measures it with the original Area operator for both normals. Linked execution remains pending. A section above the nested skew cavity also passed, with area 28.819091389177892 and the requested orientation in both directions. The query reads the original inward shell and requires it to lie wholly to one side. A section through that cavity still requires a multi-ring publisher. Sections through a concave shell vertex remain outside this construction.

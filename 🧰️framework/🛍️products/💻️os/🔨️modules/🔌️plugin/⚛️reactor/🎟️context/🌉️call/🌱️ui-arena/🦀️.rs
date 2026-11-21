@@ -6,10 +6,19 @@ pub(super) struct OriginalGuestUiArena{opening:ManuallyDrop<Option<UiArenaOpenin
 impl OriginalGuestUiArena{
  pub(super) fn empty()->Self{Self{opening:ManuallyDrop::new(None),backing:ManuallyDrop::new(None),registration:ManuallyDrop::new(None),closing:false}}
  pub(super) fn ready(&self)->bool{!self.closing&&self.registration.as_ref().is_some_and(UiArenaRegistration::registered)}
+ pub(super) fn admit_funded(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  while !cx.should_yield()&&!cx.is_cancelled(){
+   if self.ready(){return Ok(true)}
+   let before=(cx.retained_progress(),cx.fuel_remaining());
+   self.advance(cx)?;
+   if before==(cx.retained_progress(),cx.fuel_remaining()){return Ok(false)}
+  }
+  Ok(false)
+ }
  fn metadata(cx:&mut StepContext<'_>,copy:usize,retiring:bool)->Result<bool,OriginalTurnFailure>{let g=cx.retained_grant();if (if retiring{cx.retirement_should_yield()}else{cx.should_yield()||cx.is_cancelled()})||g.maximum_items==0||g.maximum_copy_bytes<copy||g.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
  pub(super) fn advance(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.closing{return Err(refusal("closing guest UI arena cannot restart admission").into())}if self.ready(){return Ok(true)}
-  if let Some(opening)=self.opening.as_mut(){if opening.ready(){let g=cx.retained_grant();let slot=size_of::<Option<UiArenaBacking>>();let d=UiArenaOpening::take_demand();if cx.should_yield()||cx.is_cancelled()||g.maximum_items<2||g.maximum_copy_bytes<d.copy_bytes+slot||g.maximum_depth==0||cx.fuel_remaining()<2{return Ok(false)}let turn=opening.take(g);let mut work=turn.work;let result=match turn.result{Ok(Some((backing,progress)))=>{*self.backing=Some(backing);work+=1;Ok(RetainedCloneStep::Progress(progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:slot,..Default::default()})?))},Ok(None)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(error)=>Err(error)};semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work})?;return Ok(false)}if self.backing.is_some()&&opening.terminal_is_empty(){if Self::metadata(cx,size_of::<Option<UiArenaOpening>>(),false)?{self.opening.take();}return Ok(false)}let turn=opening.advance(cx.retained_grant());semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(false)}
+  if let Some(opening)=self.opening.as_mut(){if opening.ready(){let g=cx.retained_grant();let slot=size_of::<Option<UiArenaBacking>>();let d=UiArenaOpening::take_demand();if cx.should_yield()||cx.is_cancelled()||g.maximum_items<2||g.maximum_copy_bytes<d.copy_bytes+slot||g.maximum_depth==0||cx.fuel_remaining()<2{return Ok(false)}let turn=opening.take(g);let mut work=turn.work;let result=match turn.result{Ok(Some((backing,progress)))=>{*self.backing=Some(backing);work+=1;Ok(RetainedCloneStep::Progress(progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:slot,..Default::default()})?))},Ok(None)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(error)=>Err(error)};semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work})?;return Ok(false)}if self.backing.is_some()&&opening.terminal_is_empty(){if Self::metadata(cx,size_of::<Option<UiArenaOpening>>(),false)?{self.opening.take();}return Ok(false)}let turn=opening.advance_funded(cx.retained_grant(),cx.fuel_remaining());semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(false)}
   if self.backing.is_some(){let turn=UiArenaRegistration::admit(ui_value_arena_registry(),&mut*self.backing,&mut*self.registration,cx.retained_grant());semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(self.ready())}
   if Self::metadata(cx,size_of::<Option<UiArenaOpening>>(),false)?{*self.opening=Some(UiArenaOpening::new());}Ok(false)
  }

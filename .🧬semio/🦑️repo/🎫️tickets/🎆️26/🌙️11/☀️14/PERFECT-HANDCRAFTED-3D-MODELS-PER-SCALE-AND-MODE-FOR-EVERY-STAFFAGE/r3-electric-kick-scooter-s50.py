@@ -106,9 +106,9 @@ def rear(S):
 def fork(S):
     S.put(S.cyl("hinge-base", "fork", sp(0.0), sp(0.0273), 0.027, ALU, 0.5), RG["steer"])
     S.swept("hinge-base", "fork", pt.quad(sp(0.0), sp(0.0273), 0.027), -0.027, 0.027, "body", 0.3, RG["steer"], ALU, tol=0)
-    S.put(S.cyl("hinge-pin", "fork", [P[0], P[1], -0.027], [P[0], P[1], 0.027], 0.01, STEEL, 0.3, role="detail"), RG["steer"])
+    S.put(S.cyl("hinge-pin", "fork", [P[0], P[1], -0.033], [P[0], P[1], 0.033], 0.011, STEEL, 0.3, role="detail"), RG["steer"])
     S.structure.append({"id": "hinge-pin", "of": "hinge-pin", "member": "stem", "part": "joint"})
-    S.disc("hinge-pin", "fork", P, 0.02, -0.027, 0.027, "detail", 0.15, RG["steer"], STEEL)
+    S.disc("hinge-pin", "fork", P, 0.022, -0.033, 0.033, "detail", 0.15, RG["steer"], STEEL)
     S.body.append(S.pipe("steerer", "fork", sp(0.02), sp(0.134), 0.0145, 0.003, STEEL, 0.4))
     S.therm(S.cyl("steerer", "fork", sp(0.02), sp(0.134), 0.0145, STEEL, 0.4), RG["steer"], own=True)
     S.struct_of("steerer", "fork")

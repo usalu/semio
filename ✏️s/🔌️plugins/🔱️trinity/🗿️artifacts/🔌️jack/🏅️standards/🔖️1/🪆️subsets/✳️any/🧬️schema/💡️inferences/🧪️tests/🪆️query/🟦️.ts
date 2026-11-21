@@ -7,7 +7,8 @@ import {MultiDirectedGraph} from "graphology";
 import fixtureJson from "../../../../🧪️tests/🧫️fixtures/💡️inferences/🪆️query/🔣️.json";
 import * as api from "./../../../../../../../../🟦️.ts";
 interface GraphCase {name:string;nodes:string[];edges:(api.JackGraphEndpoint&api.JackFlatPositionUv)[];topology:api.JackTopology;positions:Record<string,api.JackFlatPositionUv>}
-const fixture=fixtureJson as unknown as {identity:api.ArtifactChild;cases:GraphCase[]};
+type FlatPositionRefusal = Pick<GraphCase,"name"|"nodes"|"edges"> & {rootNodeId?:string};
+const fixture=fixtureJson as unknown as {identity:api.ArtifactChild;cases:GraphCase[];flatPositionRefusals:FlatPositionRefusal[]};
 const topology=api.inferJackTopology;
 const flat=api.inferJackFlatPosition;
 const parent:api.JackArtifact={schema:"s.trinity.jack/v1",name:"query",manifest:{nodeKinds:[],edgeKinds:[],portKinds:[]},camera:{x:{bits:0n},y:{bits:0n},zoom:{bits:0x3ff0000000000000n}},content:fixture.identity,query:"",rootNodeId:undefined};
@@ -32,6 +33,18 @@ test("Jack query refuses duplicated identities, lost endpoints and foreign root"
  const example=fixture.cases[1]!;for(const current of[{...example,nodes:[...example.nodes,example.nodes[0]!]},{...example,edges:[...example.edges,example.edges[0]!]},{...example,edges:[{...example.edges[0]!,source:"absent"}]},{...example,edges:[{...example.edges[0]!,target:"absent"}]}])expect(()=>topology(parent,new Map([[fixture.identity.childId,query(current)]]))).toThrow();
  expect(()=>flat({...parent,rootNodeId:"absent"},new Map([[fixture.identity.childId,query(example)]]))).toThrow();
  const children=new Map([[fixture.identity.childId,query(example)]]);expect(flat({...parent,rootNodeId:"b"},children).positions.b).toEqual({u:0,v:0});
+});
+for (const example of fixture.flatPositionRefusals) test(`Jack flat position refuses ${example.name}`,()=>{
+ const graph=new MultiDirectedGraph();
+ for(const node of example.nodes) graph.addNode(node);
+ const children=new Map([[fixture.identity.childId,query(example)]]);
+ expect(()=>flat({...parent,rootNodeId:example.rootNodeId},children)).toThrow();
+ if (example.rootNodeId!==undefined) {
+  expect(graph.hasNode(example.rootNodeId)).toBe(false);
+ } else {
+  const {positions}=oracle(example);
+  expect(Object.values(positions).some(({u,v})=>!Number.isFinite(u)||!Number.isFinite(v))).toBe(true);
+ }
 });
 
 test("Jack schema declares the consumed retained query contract",async()=>{

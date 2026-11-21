@@ -21,7 +21,7 @@ impl UiArenaBacking{
  pub fn pointer(&self)->Result<usize,ValueError>{self.arena.as_ref().map(|arena|arena.as_ref()as*const UiValueArena as usize).ok_or_else(invalid)}
 }
 impl Drop for UiArenaBacking{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"UI arena backing requires paid physical closure")}}
-/// 🪴️ Each call allocates one backing, initializes one fixed row, or transfers only already funded metadata.
+/// 🪴️ An opening allocates one backing, initializes funded rows, or transfers already paid metadata.
 pub struct UiArenaOpening{backing:UiArenaBacking,pages:ManuallyDrop<Vec<UiPageSlot>>,collections:ManuallyDrop<Vec<UiCollectionSlot>>,free_pages:ManuallyDrop<Vec<usize>>,free_collections:ManuallyDrop<Vec<usize>>,phase:u8,faulted:bool,closing:bool}
 impl UiArenaOpening{
  pub fn new()->Self{Self{backing:UiArenaBacking::empty(),pages:ManuallyDrop::new(Vec::new()),collections:ManuallyDrop::new(Vec::new()),free_pages:ManuallyDrop::new(Vec::new()),free_collections:ManuallyDrop::new(Vec::new()),phase:0,faulted:false,closing:false}}
@@ -31,12 +31,44 @@ impl UiArenaOpening{
  pub fn ready(&self)->bool{self.phase==10&&!self.faulted&&!self.closing}
  pub fn phase_demand(phase:u8,end:bool)->Result<RetirementDemand,ValueError>{Ok(match phase{0=>RetirementDemand{capacity_bytes:size_of::<UiValueArena>(),..fixed(size_of::<UiValueArena>()+size_of::<Option<Box<UiValueArena>>>()+size_of::<u8>())},1=>allocation::<UiPageSlot>(UI_VALUE_AGGREGATE_ITEMS)?,2 if !end=>fixed(size_of::<UiPageSlot>()+size_of::<usize>()),3=>allocation::<UiCollectionSlot>(UI_VALUE_ADMISSION_SLOTS)?,4 if !end=>fixed(size_of::<UiCollectionSlot>()+size_of::<usize>()),5=>allocation::<usize>(UI_VALUE_AGGREGATE_ITEMS)?,6|8 if !end=>fixed(2*size_of::<usize>()),7=>allocation::<usize>(UI_VALUE_ADMISSION_SLOTS)?,2|4|6|8=>fixed(size_of::<u8>()),9=>fixed(4*size_of::<Vec<usize>>()+size_of::<Box<[UiPageSlot]>>()+size_of::<Box<[UiCollectionSlot]>>()+2*size_of::<Box<[usize]>>()+2*size_of::<usize>()+size_of::<u8>()),10=>fixed(size_of::<UiArenaBacking>()+size_of::<u8>()),_=>return Err(invalid())})}
  pub fn demands(&self)->Result<RetirementDemand,ValueError>{if self.faulted||self.closing{return Err(invalid())}let end=match self.phase{2=>self.pages.len()==self.pages.capacity(),4=>self.collections.len()==self.collections.capacity(),6=>self.free_pages.len()==self.free_pages.capacity(),8=>self.free_collections.len()==self.free_collections.capacity(),_=>false};Self::phase_demand(self.phase,end)}
- pub fn advance(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=(||{if self.ready(){return Ok(RetainedCloneStep::Complete(Default::default()))}let mut d=self.demands()?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}work=1;
+ pub fn advance(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.advance_funded(g,1)}
+ /// 🧮️ Initializes at most 32 preallocated rows against the exact incoming work and physical grant.
+ pub fn advance_funded(&mut self,g:RetainedCloneGrant,available_work:u64)->RetainedWorkOutcome{let mut work=0;let result=(||{
+  if self.ready(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  let mut d=self.demands()?;
+  if available_work==0||!retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  let remaining=match self.phase{2=>self.pages.capacity()-self.pages.len(),4=>self.collections.capacity()-self.collections.len(),6=>self.free_pages.capacity()-self.free_pages.len(),8=>self.free_collections.capacity()-self.free_collections.len(),_=>0};
+  let count=if remaining==0{1}else{
+   remaining.min(available_work.min(32) as usize).min(g.maximum_items).min(g.maximum_copy_bytes/d.copy_bytes)
+  };
+  d.copy_bytes*=count;
+  work=count as u128;
   macro_rules! reserve{($field:ident,$count:expr,$type:ty,$next:expr)=>{{let before=(self.$field.as_ptr(),self.$field.capacity());let attempted=self.$field.try_reserve_exact($count);d.capacity_bytes=self.$field.capacity()*size_of::<$type>();if attempted.is_err()||!retained_clone_grant_admits(g,d){d.copy_bytes=usize::from(before!=(self.$field.as_ptr(),self.$field.capacity()))*2*size_of::<usize>()+size_of::<bool>();self.faulted=true;return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"UI arena physical backing admission refused").with_retained_progress(receipt(d)))}self.phase=$next;}}}
   match self.phase{
-   0=>{*self.backing.arena=Some(Box::new(empty_arena()));self.phase=1;},1=>reserve!(pages,UI_VALUE_AGGREGATE_ITEMS,UiPageSlot,2),2=>if self.pages.len()<self.pages.capacity(){self.pages.push(UiPageSlot::default())}else{self.phase=3},3=>reserve!(collections,UI_VALUE_ADMISSION_SLOTS,UiCollectionSlot,4),4=>if self.collections.len()<self.collections.capacity(){self.collections.push(UiCollectionSlot::default())}else{self.phase=5},5=>reserve!(free_pages,UI_VALUE_AGGREGATE_ITEMS,usize,6),6=>if self.free_pages.len()<self.free_pages.capacity(){let index=self.free_pages.len();self.free_pages.push(UI_VALUE_AGGREGATE_ITEMS.saturating_sub(index+1))}else{self.phase=7},7=>reserve!(free_collections,UI_VALUE_ADMISSION_SLOTS,usize,8),8=>if self.free_collections.len()<self.free_collections.capacity(){let index=self.free_collections.len();self.free_collections.push(UI_VALUE_ADMISSION_SLOTS.saturating_sub(index+1))}else{self.phase=9},
+   0=>{*self.backing.arena=Some(Box::new(empty_arena()));self.phase=1;},
+   1=>reserve!(pages,UI_VALUE_AGGREGATE_ITEMS,UiPageSlot,2),
+   2=>if remaining==0{self.phase=3}else{
+    let length=self.pages.len()+count;
+    self.pages.resize_with(length,UiPageSlot::default);
+   },
+   3=>reserve!(collections,UI_VALUE_ADMISSION_SLOTS,UiCollectionSlot,4),
+   4=>if remaining==0{self.phase=5}else{
+    let length=self.collections.len()+count;
+    self.collections.resize_with(length,UiCollectionSlot::default);
+   },
+   5=>reserve!(free_pages,UI_VALUE_AGGREGATE_ITEMS,usize,6),
+   6=>if remaining==0{self.phase=7}else{
+    let first=self.free_pages.len();
+    self.free_pages.extend((first..first+count).map(|index|UI_VALUE_AGGREGATE_ITEMS.saturating_sub(index+1)));
+   },
+   7=>reserve!(free_collections,UI_VALUE_ADMISSION_SLOTS,usize,8),
+   8=>if remaining==0{self.phase=9}else{
+    let first=self.free_collections.len();
+    self.free_collections.extend((first..first+count).map(|index|UI_VALUE_ADMISSION_SLOTS.saturating_sub(index+1)));
+   },
    9=>{let arena=self.backing.arena.as_mut().ok_or_else(invalid)?;arena.pages=std::mem::take(&mut*self.pages).into_boxed_slice();arena.collections=std::mem::take(&mut*self.collections).into_boxed_slice();arena.free_pages=std::mem::take(&mut*self.free_pages).into_boxed_slice();arena.free_collections=std::mem::take(&mut*self.free_collections).into_boxed_slice();arena.free_page_count=UI_VALUE_AGGREGATE_ITEMS;arena.free_collection_count=UI_VALUE_ADMISSION_SLOTS;self.phase=10;},_=>return Err(invalid())}
-  Ok(if self.ready(){RetainedCloneStep::Complete(receipt(d))}else{RetainedCloneStep::Progress(receipt(d))})})();RetainedWorkOutcome{result,work}}
+  let actual=RetainedCloneProgress{copied_items:count,..receipt(d)};
+  Ok(if self.ready(){RetainedCloneStep::Complete(actual)}else{RetainedCloneStep::Progress(actual)})})();RetainedWorkOutcome{result,work}}
  pub fn take_demand()->RetirementDemand{Self::phase_demand(10,false).expect("typed arena take phase")}
  pub fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(UiArenaBacking,RetainedCloneProgress)>>{let d=Self::take_demand();if !self.ready()||!retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(None),work:0}}self.phase=11;RetainedWorkOutcome{result:Ok(Some((std::mem::replace(&mut self.backing,UiArenaBacking::empty()),receipt(d)))),work:1}}
  pub fn close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.terminal_is_empty()&&!self.closing{return Ok(fixed(size_of::<bool>()))}if self.pages.capacity()!=0{return Ok(release_vec_demand(&self.pages))}if self.collections.capacity()!=0{return Ok(release_vec_demand(&self.collections))}if self.free_pages.capacity()!=0{return Ok(release_vec_demand(&self.free_pages))}if self.free_collections.capacity()!=0{return Ok(release_vec_demand(&self.free_collections))}self.backing.close_demands()}

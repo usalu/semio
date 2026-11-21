@@ -120,6 +120,8 @@ pub enum NoteTableEdit {
     InsertColumn { index: usize, name: String, cells: Vec<NoteTableCell> },
     #[value(rename = "removeColumn", rename_all = "camelCase")]
     RemoveColumn { index: usize, name: String, cells: Vec<NoteTableCell> },
+    #[value(rename = "setCell", rename_all = "camelCase")]
+    SetCell { row: usize, column: usize, before: String, after: String },
 }
 
 /// 🗂️ Keyed asset delta: at most one row per key (a replace is one `replace` row), rows kept in key order.
@@ -193,6 +195,15 @@ fn write_table(columns: &mut Vec<String>, rows: &mut Vec<Vec<NoteTableCell>>, ed
     let at = |row: usize| ["table".to_string(), row.to_string()];
     for (row, edit) in edits.iter().enumerate() {
         match edit {
+            NoteTableEdit::SetCell { row: cell_row, column, before, after } => {
+                let Some(cell) = rows.get_mut(*cell_row).and_then(|line| line.get_mut(*column)) else {
+                    return Err(MutationApplyError::new("mutation.apply.invalid-base", "edited table cell does not exist").at(at(row)));
+                };
+                if columns.get(*column).is_none() || &cell.content != before {
+                    return Err(MutationApplyError::new("mutation.apply.order-mismatch", "table cell differs from its recorded previous content").at(at(row)));
+                }
+                cell.content.clone_from(after);
+            }
             NoteTableEdit::InsertRow { index, cells } => {
                 if *index > rows.len() || cells.len() != columns.len() {
                     return Err(MutationApplyError::new("mutation.apply.invalid-add-index", "table row insertion is out of range or does not span the columns").at(at(row)));
@@ -234,6 +245,7 @@ fn undo_table(edits: &[NoteTableEdit]) -> Vec<NoteTableEdit> {
         .iter()
         .rev()
         .map(|edit| match edit {
+            NoteTableEdit::SetCell { row, column, before, after } => NoteTableEdit::SetCell { row: *row, column: *column, before: after.clone(), after: before.clone() },
             NoteTableEdit::InsertRow { index, cells } => NoteTableEdit::RemoveRow { index: *index, cells: cells.clone() },
             NoteTableEdit::RemoveRow { index, cells } => NoteTableEdit::InsertRow { index: *index, cells: cells.clone() },
             NoteTableEdit::InsertColumn { index, name, cells } => NoteTableEdit::RemoveColumn { index: *index, name: name.clone(), cells: cells.clone() },

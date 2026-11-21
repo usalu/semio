@@ -1,11 +1,14 @@
+import{Database}from"bun:sqlite";
+import handoff from"./🔣️.json"with{type:"json"};
 import Ajv from"ajv";
 import{afterAll,expect,test}from"bun:test";
-import{chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{appendFileSync,chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{readReadRecordV1}from"../../../../../🪪️graph-state/🙋️wanted/🟦️.ts";
 import{wantedServerPolicyV1}from"../../../../../🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts";
 import schema from"../../../../../🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json"with{type:"json"};
+import{queuedGraphRebuildDecisionV1}from"../../../🕸️graph/🔭️read/⏳️wait/📜️script.ts";
 import{adoptGraphReadV1,GRAPH_READ_FILES_V1,inferGraphReadV1,liveGraphReadV1,rotateGraphReadLogV1}from"../../../🕸️graph/🔭️read/🟦️.ts";
 
 /** 🔭️ Contract: a graph read is never thrown away for a code change. It runs under a detached runner with a record, a log and a watch file; the process that started it, the build agent or a launcher that restarts for new code may die at any moment, the next process attaches to the same read, tells nothing twice and never starts a second read for the generation; a runner nobody watches stops its read after the orphan time; a read that ended while nobody watched is answered from its record; a read that crashed is not attached to, the next one starts anew. */
@@ -60,7 +63,7 @@ test("a runner nobody watches stops its read after the orphan time and records t
  await until("the read runs",()=>count(repo.starts)===1&&existsSync(join(directory,GRAPH_READ_FILES_V1.record)));
  controller.abort();await first;
  const record=recordOf(directory)!;
- await until("the runner stopped the read of the absent server",()=>recordOf(directory)?.status!==null&&recordOf(directory)?.status!==undefined,30000);
+ await until("the orphan runner wrote the terminal status and exited",()=>recordOf(directory)?.status!=null&&!alive(record.runner),30000);
  expect(alive(record.read!),"the read is gone").toBe(false);expect(alive(record.runner),"the runner ended").toBe(false);
  const found=liveGraphReadV1(directory,policy);expect(found?.status,"the result is still wanted").not.toBeNull();
  const adopted=adoptGraphReadV1(input(repo,directory));
@@ -127,4 +130,193 @@ test("R57 law: a new read never truncates the log of the previous one: the log i
  const left=require("node:fs").readdirSync(directory).filter((name:string)=>/^read\.\d+\.log$/u.test(name));
  expect(left.length).toBe(wantedServerPolicyV1.readLogsKept);expect(left).toContain(moved.split("/").at(-1)!);expect(left).not.toContain("read.1001.log");
  expect(rotateGraphReadLogV1(directory,wantedServerPolicyV1.readLogsKept)).toBeUndefined();
+});
+
+const progressFixture=(label:string)=>{
+ const directory=temp(label),startedMs=Date.now(),child=Bun.spawn([process.execPath,"-e","setTimeout(()=>{},60_000)"],{stdin:"ignore",stdout:"ignore",stderr:"ignore",windowsHide:true});
+ const log=join(directory,GRAPH_READ_FILES_V1.log),path=join(directory,GRAPH_READ_FILES_V1.record);
+ writeFileSync(log,"");
+ writeFileSync(path,JSON.stringify({version:1,reason:"request",runner:child.pid,read:child.pid,startedMs,beatMs:startedMs,log,status:null,endedMs:null}));
+ return{directory,startedMs,child,log,repo:{dir:directory,path:process.execPath}};
+};
+
+test("normal detach carries quiet time and byte ownership across a partial UTF-8 row",async()=>{
+ const row=handoff.resume,{directory,startedMs:base,child,log,repo}=progressFixture("resume-dir"),old=new AbortController(),next=new AbortController();
+ let at=base;const now=()=>at;
+ const graphPolicy={...policy,stallDumpMilliseconds:row.stallDumpAt},quiet:number[]=[];
+ const first=inferGraphReadV1(input(repo,directory,{signal:old.signal,now,policy:graphPolicy}));
+ let adopted:ReturnType<typeof adoptGraphReadV1>;
+ try{
+  at=base+row.progressAt;appendFileSync(log,"graph: generation "+row.generation+" published\n");
+  await sleep(graphPolicy.readPollMilliseconds*3);
+  at=base+row.before;
+  const nextRow=Buffer.from("Graph: Generation "+row.nextGeneration+" veröffentlicht\n"),boundary=nextRow.indexOf(0xc3)+1;
+  appendFileSync(log,nextRow.subarray(0,boundary));
+  await sleep(graphPolicy.readPollMilliseconds*3);
+  expect(existsSync(join(directory,GRAPH_READ_FILES_V1.checkpoint))).toBe(false);
+  old.abort();
+  expect(await first).toMatchObject({detail:"detached",generation:row.generation});
+  const saved=JSON.parse(readFileSync(join(directory,GRAPH_READ_FILES_V1.checkpoint),"utf8"));
+  const valid=new Ajv({strict:false}).compile({$ref:"#/definitions/ReadWatchCheckpoint",definitions:schema.definitions});
+  expect(valid(saved)).toBe(true);
+  expect(saved).toMatchObject({runner:child.pid,read:child.pid,startedMs:base,offset:Buffer.byteLength("graph: generation "+row.generation+" published\n"),observation:{progressAt:base+row.progressAt,generation:row.generation}});
+  expect(valid({...saved,observation:{...saved.observation,extra:true}})).toBe(false);
+  at=base+row.adoptedAt;
+  adopted=adoptGraphReadV1(input(repo,directory,{signal:next.signal,now,policy:graphPolicy,diagnose:async({silentMilliseconds}: {silentMilliseconds:number})=>{quiet.push(silentMilliseconds);return [];}}));
+  expect(adopted).toBeDefined();
+  const sql=new Database(":memory:");
+  try{expect(sql.query("select ?1 - ?2 as quiet").get(row.adoptedAt,row.progressAt)).toEqual({quiet:row.silent});}
+  finally{sql.close();}
+  expect(quiet).toEqual([row.silent]);
+  appendFileSync(log,nextRow.subarray(boundary));
+  await sleep(graphPolicy.readPollMilliseconds*3);
+  next.abort();
+  expect(await adopted!.done).toMatchObject({detail:"detached",generation:row.nextGeneration});
+ }finally{
+  old.abort();next.abort();await first.catch(()=>undefined);await adopted?.done;
+  child.kill();await child.exited;
+ }
+},60000);
+
+test("measurement resolved after detach cannot stop the detached runner",async()=>{
+ const row=handoff.lateMeasure,{directory,startedMs:base,child,repo}=progressFixture("measure-handoff-dir"),controller=new AbortController();
+ let at=base,began=false,answer!:(sample:{footprintMegabytes:number;grantMegabytes:number;pressure:string})=>void;
+ const measure=new Promise<{footprintMegabytes:number;grantMegabytes:number;pressure:string}>(resolve=>{answer=resolve;});
+ const first=inferGraphReadV1(input(repo,directory,{signal:controller.signal,now:()=>at,policy:{...policy,memoryOverrunMilliseconds:row.after},measure:()=>{began=true;return measure;}}));
+ try{
+  at=base+row.after*2;
+  await until("measurement began",()=>began);
+  controller.abort();expect(await first).toMatchObject({detail:"detached"});
+  answer({footprintMegabytes:row.maxMegabytes,grantMegabytes:row.grantMegabytes,pressure:"critical"});
+  await sleep(policy.readPollMilliseconds*3);
+  expect(existsSync(join(directory,GRAPH_READ_FILES_V1.stop))).toBe(false);
+  expect(child.exitCode).toBeNull();
+ }finally{
+  controller.abort();await first.catch(()=>undefined);child.kill();await child.exited;
+ }
+},60000);
+
+test("an exact runner rejects a foreign or mismatched-log checkpoint and keeps its fresh monitoring window",async()=>{
+ const row=handoff.resume,{directory,startedMs:base,child,log,repo}=progressFixture("foreign-handoff-dir");
+ const old=new AbortController(),file=join(directory,GRAPH_READ_FILES_V1.checkpoint);
+ const graphPolicy={...policy,stallDumpMilliseconds:row.stallDumpAt,inferStallMilliseconds:row.stallDumpAt};
+ let at=base+row.progressAt;
+ appendFileSync(log,"graph: generation "+row.generation+" published\n");
+ const first=inferGraphReadV1(input(repo,directory,{signal:old.signal,now:()=>at,policy:graphPolicy}));
+ try{
+  old.abort();await first;
+  const saved=JSON.parse(readFileSync(file,"utf8"));
+  for(const replacement of [{...saved,startedMs:base+1},{...saved,prefix:"0".repeat(64)},{...saved,offset:saved.offset+1}]){
+   writeFileSync(file,JSON.stringify(replacement));
+   at=base+row.adoptedAt;const next=new AbortController();
+   const adopted=adoptGraphReadV1(input(repo,directory,{signal:next.signal,now:()=>at,policy:graphPolicy}));
+   next.abort();
+   expect(await adopted?.done).toMatchObject({detail:"detached",generation:row.generation});
+   expect(existsSync(join(directory,GRAPH_READ_FILES_V1.stop))).toBe(false);
+   expect(child.exitCode).toBeNull();
+  }
+ }finally{
+  old.abort();await first.catch(()=>undefined);child.kill();await child.exited;
+ }
+},60000);
+
+test("an authentic capacity wait pauses quiet across handoff while its release resumes the read clock",async()=>{
+ const repo=fake("funded-queue",`echo start >> "$(dirname "$0")/starts"
+while [ ! -f "$(dirname "$0")/finish" ]; do sleep 0.05; done
+exit 0`),directory=temp("funded-queue"),controller=new AbortController();
+ const timeline=handoff.capacityWait;let start=0,time:number|undefined,samples=0,waiting=true;
+ const capacityWait=async()=>{samples++;return {id:"fixture-grant",scope:"fixture-scope",arrivedAtMs:start+timeline.arrival,reservedMegabytes:waiting?4096:14336,...waiting?{}:{bookedAtMs:start+timeline.booking}};};
+ const options=input(repo,directory,{now:()=>time??Date.now(),signal:controller.signal,capacityWait,policy:{...policy,inferStallMilliseconds:1000,inferMaximumMilliseconds:10000,stallDumpMilliseconds:120,readBeatMilliseconds:500}});
+ try{
+  const run=inferGraphReadV1(options);
+  await until("the read started",()=>count(repo.starts)===1&&existsSync(join(directory,GRAPH_READ_FILES_V1.record)));
+  start=recordOf(directory)!.startedMs;time=start+timeline.firstProof;
+  await until("the watchdog sampled the capacity queue or stopped",()=>samples>0||existsSync(join(directory,GRAPH_READ_FILES_V1.stop)));
+  expect(samples).toBeGreaterThan(0);
+  await sleep(policy.readPollMilliseconds);
+  expect(existsSync(join(directory,GRAPH_READ_FILES_V1.stop))).toBe(false);
+  const record=recordOf(directory)!;controller.abort();expect(await run).toMatchObject({detail:"detached"});
+  const saved=JSON.parse(readFileSync(join(directory,GRAPH_READ_FILES_V1.checkpoint),"utf8")),pause=saved.capacityPause,db=new Database(":memory:");
+  try{expect(db.query("select max(?1-max(?2,?3),0) as credit").get(pause.throughMs,pause.progressAtMs,start+timeline.arrival)).toEqual({credit:pause.creditedMs});}finally{db.close();}
+  const adopted=adoptGraphReadV1({...options,signal:undefined})!;
+  await until("the next observer samples the same wait",()=>samples>=2,3000);
+  time=start+timeline.lastWait;
+  await sleep(100);
+  waiting=false;
+  time=start+timeline.bookedProof;
+  await sleep(100);
+  time=start+timeline.afterBooking;await sleep(100);
+  expect(alive(record.read!)).toBe(true);
+  expect(existsSync(join(directory,GRAPH_READ_FILES_V1.stop))).toBe(false);
+  writeFileSync(join(repo.dir,"finish"),"");
+  expect(await adopted.done).toMatchObject({ok:true,status:0});
+ }finally{
+  controller.abort();writeFileSync(join(repo.dir,"finish"),"");
+ }
+},10000);
+
+for(const row of [{name:"lost",verdict:"stalled"},{name:"absolute",verdict:"too-long"},{name:"memory",verdict:"memory-overrun"}] as const)test("the graph watchdog stops a "+row.name+" read despite prior capacity evidence",async()=>{
+ const {directory,startedMs:base,child,repo}=progressFixture("wait-hard-"+row.name),controller=new AbortController();
+ let at=base,samples=0;
+ const run=inferGraphReadV1(input(repo,directory,{signal:controller.signal,now:()=>at,
+  policy:{...policy,inferStallMilliseconds:600,inferMaximumMilliseconds:row.name==="absolute"?1500:5000,stallDumpMilliseconds:50,readBeatMilliseconds:500,memoryOverrunMilliseconds:1000},
+  capacityWait:async()=>{samples++;return row.name==="lost"&&samples>1?undefined:{id:"fixture-grant",scope:"fixture-scope",arrivedAtMs:base+10,reservedMegabytes:4096};},
+  measure:async()=>row.name==="memory"?{footprintMegabytes:4096*wantedServerPolicyV1.memoryOverrunFactor+1,grantMegabytes:undefined,pressure:"critical"}:undefined
+ }));
+ const stopPath=join(directory,GRAPH_READ_FILES_V1.stop);
+ try{
+  at=base+500;
+  await until("verified capacity elapsed",()=>samples>0);
+  await sleep(80);
+  expect(existsSync(stopPath)).toBe(false);
+  at=base+1600;
+  await until("the hard policy stopped the read",()=>existsSync(stopPath));
+  expect(JSON.parse(readFileSync(stopPath,"utf8")).verdict).toBe(row.verdict);
+  expect(await run).toMatchObject({ok:false});
+ }finally{controller.abort();child.kill();await child.exited;await run;}
+},10000);
+
+test("a capacity wait survives reattachment when the wall clock advances between watchdog observations",async()=>{
+ const {directory,startedMs:base,child,repo}=progressFixture("capacity-clock"),first=new AbortController(),second=new AbortController();
+ const row=handoff.capacityClockRace;
+ let time=base,split=false,samples=0;
+ const now=()=>split?time++:time;
+ const capacityWait=async()=>{samples++;return {id:"fixture-grant",scope:"fixture-scope",arrivedAtMs:base+row.arrival,reservedMegabytes:4096};};
+ const options=input(repo,directory,{now,signal:first.signal,capacityWait,policy:{...policy,inferStallMilliseconds:row.stall,stallDumpMilliseconds:row.cadence,readBeatMilliseconds:500}});
+ const run=inferGraphReadV1(options),stop=join(directory,GRAPH_READ_FILES_V1.stop);
+ let adopted:ReturnType<typeof adoptGraphReadV1>;
+ try{
+  time=base+row.sampled;
+  await until("the initial capacity proof",()=>samples===1);
+  await sleep(30);
+  first.abort();await run;
+  adopted=adoptGraphReadV1({...options,signal:second.signal});
+  expect(adopted).toBeDefined();
+  await until("the replacement observer verified the same exact wait",()=>samples===2);
+  await sleep(30);
+  const sql=new Database(":memory:");
+  try{
+   const expected=sql.query("select ?1 >= ?2 as rawStall, ?1-(?3-?4) >= ?2 as creditedStall").get(row.secondTick,row.stall,row.sampled,row.arrival);
+   expect(expected).toEqual({rawStall:1,creditedStall:0});
+  }finally{sql.close();}
+  time=base+row.secondTick;split=true;
+  await sleep(100);
+  expect(existsSync(stop)).toBe(false);
+  expect(alive(child.pid)).toBe(true);
+  second.abort();expect(await adopted!.done).toMatchObject({detail:"detached"});
+ }finally{first.abort();second.abort();child.kill();await child.exited;await run;await adopted?.done;}
+},10000);
+
+test("only an exact recoverable host-capacity wait pauses a graph rebuild watchdog",()=>{
+ const db=new Database(":memory:");
+ try{
+  const truth=db.query("select case when ?1=?2 and ?3='wait' and ?4 not in ('never','starved') then 1 else 0 end as paused");
+  for(const row of handoff.capacityDecisions){
+   const {label,id,verdict,reason,paused}=row;
+   expect(truth.get("exact",id,verdict,reason),label).toEqual({paused:Number(paused)});
+   const decisions=[{id,verdict,reason,jobs:verdict==="admit"?1:0,reservedMegabytes:verdict==="admit"?14336:0}] as Parameters<typeof queuedGraphRebuildDecisionV1>[1];
+   expect(queuedGraphRebuildDecisionV1("exact",decisions),label).toBe(paused);
+  }
+  expect(queuedGraphRebuildDecisionV1("exact",[])).toBe(false);
+ }finally{db.close();}
 });

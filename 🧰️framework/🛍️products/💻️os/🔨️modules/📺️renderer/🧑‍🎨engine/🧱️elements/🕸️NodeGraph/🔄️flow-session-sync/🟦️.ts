@@ -8,7 +8,7 @@ import { type NodeGraphScene, type AppCatalogue } from "@semio-tech/framework";
 import { parseSceneJsonField } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
 import { type FlowTask, type FlowWasmSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
 import type { NodeGraphHoverMark } from "../🫱️interaction-publication/🟦️.ts";
-import { DEFAULT_NODE_GRAPH_VIEWPORT } from "../🧰️graph-core/🟦️.ts";
+import { authoredFlowChannel, DEFAULT_NODE_GRAPH_VIEWPORT, nodeGraphPickChannel } from "../🧰️graph-core/🟦️.ts";
 import {
   DAG_CONTENT_REFIT_MAX_COVERAGE,
   type DagCameraState,
@@ -41,6 +41,7 @@ export function observeFlowTask<T>(session: FlowWasmSession, feature: string, ta
   let delivered = false;
   void task.result
     .then((value) => {
+      if (activeFlowTasks.get(session)?.get(feature) !== task) return;
       delivered = true;
       consume?.(value);
     })
@@ -287,13 +288,26 @@ export function syncFlowCanvasTheme(session: FlowWasmSession): void {
   observeFlowTask(session, "setCanvasThemeJson", session.setCanvasThemeJson(serializeCanvasThemeJson()));
 }
 
-export function setFlowSessionHover(session: FlowWasmSession, mark: NodeGraphHoverMark): void {
+export function setFlowSessionHover(session: FlowWasmSession, mark: NodeGraphHoverMark, onApplied?: () => void, portsJson?: string): void {
   const task = mark.edgeId
     ? session.setHover({ edgeId: mark.edgeId })
-    : mark.hoveredId && mark.portId
-      ? session.setHoverChannel(mark.hoveredId, mark.portId)
+    : mark.hoveredId && mark.portId !== undefined
+      ? portsJson
+        ? session.setHoverChannel({ widgetId: mark.hoveredId, port: mark.portId, direction: mark.portDirection, portsJson })
+        : session.setHoverChannel(mark.hoveredId, mark.portId, mark.portDirection)
       : session.setHover(mark.hoveredId ?? null);
-  observeFlowTask(session, "setHover", task);
+  observeFlowTask(session, "setHover", task, onApplied);
+}
+
+/** 🔗️ Resolves the primary and companion marks to typed authored Flow channels. */
+export function applyFlowSceneHover(session: FlowWasmSession, scene: NodeGraphScene, mark: NodeGraphHoverMark): void {
+  const primary = mark.hoveredId !== undefined && mark.portId !== undefined && authoredFlowChannel(scene.nodes, mark.hoveredId, mark.portId);
+  const ports = mark.portIds?.flatMap(id => {
+    const address = nodeGraphPickChannel({ domain: "handle", id });
+    const channel = address && authoredFlowChannel(scene.nodes, address.nodeId, address.portId);
+    return channel ? [channel] : [];
+  });
+  setFlowSessionHover(session, primary ? { ...mark, portId: primary.port, portDirection: primary.direction } : mark, undefined, ports?.length ? JSON.stringify(ports) : undefined);
 }
 
 function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
@@ -323,7 +337,23 @@ export function syncFlowSessionAppCatalogue(session: FlowWasmSession, catalogue:
 export function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue, skipFixture = false): void {
   if (scene.operators?.length) syncFlowOperatorInfos(session, catalogue, scene);
   if (!skipFixture && scene.hostSnapshotJson) sendFlowPayloadOnce(session, "synchronizeSnapshotJson", scene.hostSnapshotJson, (json) => session.synchronizeSnapshotJson(json));
-  if (scene.selection) observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify({nodes:scene.selection,edges:[],handles:[]})));
+  if (!skipFixture && (scene.selection || scene.selectionGranularity)) {
+    const ids = scene.selection ?? [];
+    const granularity = scene.selectionGranularity ?? "node";
+    observeFlowTask(session, "setSelection", session.setSelection(JSON.stringify({
+      nodes: granularity === "node" ? ids : [],
+      edges: granularity === "edge" ? ids : [],
+      handles: [],
+    })));
+    if (granularity === "handle") {
+      const channels = ids.flatMap(id => {
+        const port = nodeGraphPickChannel({ domain: "handle", id });
+        const channel = port && authoredFlowChannel(scene.nodes, port.nodeId, port.portId);
+        return channel ? [channel] : [];
+      });
+      observeFlowTask(session, "setSelectedChannels", session.setSelectedChannels(JSON.stringify(channels)));
+    }
+  }
   if (scene.previewOffJson) observeFlowTask(session, "setPreviewOff", session.setPreviewOff(scene.previewOffJson));
   if (scene.lodJson) {
     try {

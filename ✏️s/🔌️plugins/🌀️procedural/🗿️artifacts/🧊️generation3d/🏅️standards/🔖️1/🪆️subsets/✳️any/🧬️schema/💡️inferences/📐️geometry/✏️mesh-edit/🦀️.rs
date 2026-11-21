@@ -3,9 +3,9 @@
 //! Selections are mesh element ids validated against the input mesh; edge ids are half-edge handles.
 #![allow(clippy::result_large_err)]
 
-use semio_framework_3d::mesh::{MeshModelingOps};
+use semio_framework_3d::mesh::MeshModelingOps;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
-use semio_s_artifact_procedural_3d_mesh_support::count;
+use semio_s_artifact_procedural_3d_mesh_support::{combine, count, difference, intersect, union, vector3};
 use semio_s_artifact_procedural_3d_mesh_support::modeling;
 use semio_s_artifact_procedural_3d_mesh_support::owned_mesh;
 use semio_s_artifact_procedural_3d_mesh_support::picked_one;
@@ -17,7 +17,7 @@ use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
-use semio_framework_3d::mesh::{FaceId, WeldMode};
+use semio_framework_3d::mesh::{EdgeId, FaceId, WeldMode};
 
 #[path = "🎯️element-picks/🦀️.rs"]
 mod element_picks;
@@ -28,6 +28,23 @@ fn bevel(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         let mesh = owned_mesh(&inputs, "mesh")?;
         let selected = edges(&inputs, &mesh, "edges")?;
         mesh.bevel_job_owned(&selected, scalar(&inputs, "amount")?, count(&inputs, "segments")?).kernel()
+    })
+}
+
+fn extrude_boundary(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
+    modeling(kind, move || {
+        let mesh = owned_mesh(&inputs, "mesh")?;
+        let selected = edges(&inputs, &mesh, "edges")?;
+        mesh.extrude_boundary_job_owned(&selected, vector3(&inputs, "offset")?).kernel()
+    })
+}
+
+fn bridge(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
+    modeling(kind, move || {
+        let mesh = owned_mesh(&inputs, "mesh")?;
+        let first = picked_one(&inputs, "firstEdge", &mesh, Element::Edge)?;
+        let second = picked_one(&inputs, "secondEdge", &mesh, Element::Edge)?;
+        mesh.bridge_boundary_loops_job_owned([EdgeId(first), EdgeId(second)]).kernel()
     })
 }
 
@@ -135,6 +152,12 @@ pub const CATEGORY: (&str, &str) = ("mesh-edit", include_str!("../../../🗂️c
 /// 🗃️ The `mesh.edit` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "mesh.edit.bevel", start: bevel },
+    ComputeEntry { id: "mesh.edit.bridge", start: bridge },
+    ComputeEntry { id: "mesh.edit.extrudeBoundary", start: extrude_boundary },
+    ComputeEntry { id: "mesh.edit.combine", start: combine },
+    ComputeEntry { id: "mesh.edit.intersect", start: intersect },
+    ComputeEntry { id: "mesh.edit.difference", start: difference },
+    ComputeEntry { id: "mesh.edit.union", start: union },
     ComputeEntry { id: "mesh.edit.dissolveEdges", start: dissolve_edges },
     ComputeEntry { id: "mesh.edit.dissolveVertices", start: dissolve_vertices },
     ComputeEntry { id: "mesh.edit.mergeVertices", start: merge_vertices },

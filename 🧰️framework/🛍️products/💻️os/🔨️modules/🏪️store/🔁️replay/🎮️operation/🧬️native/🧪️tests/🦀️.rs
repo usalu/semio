@@ -149,6 +149,43 @@ fn original_mutation_source_chains_actions_under_a_wide_grant(){
  for _ in 0..10000{if source.terminal_is_empty(){break}let g=grant(source.close_demand(4096).unwrap());caller.native(g,|control|{let step=probe_effect(control,g,|_,effect|source.close_step(effect)).unwrap().expect("a funded close effect opens").unwrap();(step,step.progress(),0)});}
  assert!(source.terminal_is_empty());caller.finish();
 }
+/// 🧷️ Every partial mutation-source birth closes through the same resident Source while preserving its independent grants.
+#[test]
+fn original_mutation_source_cancellation_restores_each_funded_frontier() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🌱️derived/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let mut bank = bank();
+    let cancellation = &law["sourceCancellation"];
+    let frontiers = cancellation["fundedFrontiers"].as_u64().unwrap() as usize;
+    let expected = &cancellation["expected"];
+    assert_eq!(frontiers, MUTATION_SOURCE_STEPS);
+    for case in law["cases"].as_array().unwrap() {
+        let value = case["after"]["n"].as_u64().unwrap();
+        for cut in 0..frontiers {
+            let issuer: Arc<dyn ArtifactOwnedValueRetirementFactory<u64>> = Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<u64>::default());
+            let mut original = Some(value);
+            let (mut source, _) = ArtifactMutationSource::admit(&mut original, &issuer, grant(ArtifactMutationSource::<u64>::constructor_demand())).unwrap().unwrap();
+            assert!(original.is_none());
+            for _ in 0..cut {
+                let grant = grant(source.demands(4096).unwrap());
+                assert!(fx(&mut bank, grant, |effect| source.advance(effect)).unwrap().progress().fits(grant));
+            }
+            assert!(!source.ready());
+            source.begin_close();
+            for _ in 0..10_000 {
+                if source.terminal_is_empty() { break; }
+                let grant = grant(source.close_demand(4096).unwrap());
+                let ((step, heap), _) = with_effect(&mut bank, grant, 1 << 20, |effect| observe(|| source.close_step(effect).unwrap()));
+                let progress = step.progress();
+                assert!(progress.fits(grant));
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
+            }
+            assert_eq!(source.terminal_is_empty(), expected["terminal"].as_bool().unwrap(), "cancellation frontier {cut}");
+            assert_eq!(Arc::strong_count(&issuer), expected["issuerAliases"].as_u64().unwrap() as usize);
+        }
+    }
+    finish(bank);
+}
+
 #[derive(semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection)]
 struct BoxedSnapshot{value:u64}
 

@@ -121,9 +121,9 @@ fn e13_09(c: &Case) -> R {
 }
 
 fn e13_10(c: &Case) -> R {
-    let (v, n) = (c.pos("v")?, c.pos("n_years")?);
-    if n <= 1.0 { return Err("input n_years must exceed 1".into()); }
-    let f = part_1_3::return_period_factor(v, 1.0 / n);
+    let (v, n) = (c.n("v")?, c.n("n_years")?);
+    let f = part_1_3::return_period_factor(v, 1.0 / n)
+        .ok_or("Annex D requires a snow return period of at least five years and a nonnegative coefficient of variation")?;
     Ok(vec![Outcome::info("factor", "Ratio s_n/s_k", "Verhältnis s_n/s_k", QuantityKind::Dimensionless, f).steps(format!("V = {v}, n = {n} a: s_n/s_k = {f:.5}."))])
 }
 

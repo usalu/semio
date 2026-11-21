@@ -48,6 +48,11 @@
       "wgpu": 3200
     }
   },
+  "renderer": {
+    "mode": "prototype",
+    "binary": {"posix": "semio-wgpu-native", "windows": "semio-wgpu-native.exe"},
+    "configured": "configured-native-host"
+  },
   "nativeProcessStatus": {
     "continuous": false,
     "childFailureExit": 23

@@ -5,10 +5,8 @@
  * Escape or a cancelled pointer abandons the drag. Every interaction also has a keyboard path in its task component;
  * dragging is the additional pointer path, so the ghost and highlights are hidden from assistive technology.
 
- * A finger on a grip must not pan the page at the same time. The task sits in a scroller (`overflow: auto`), and a
- * browser pans that scroller from the touch unless the grip refuses panning and the touch's move is cancelled. The
- * cancellation is a listener of its own, not the pointer move: on `window` a touch move is passive unless told
- * otherwise, and a passive listener cannot cancel it.
+ * A finger on a grip controls the drag. Holding it at the top or bottom of the scroller brings distant drop zones
+ * within reach while keeping the ghost at the finger.
  * @see https://w3c.github.io/pointerevents/#determining-supported-direct-manipulation-behavior
  * @see https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#passive
  */
@@ -16,15 +14,38 @@
 /** 📏️ Pointer travel in CSS pixels before a press becomes a drag. */
 export const DRAG_THRESHOLD_PX = 4;
 
-/** 🎯️ The drop zone under a viewport point, if any. */
-export function dropZoneAt(x: number, y: number): string | undefined {
+const SCROLL_EDGE_PX = 72;
+const SCROLL_SPEED_PX_PER_MS = 0.9;
+
+function dropElementAt(x: number, y: number): HTMLElement | null {
   const element = typeof document.elementFromPoint === "function" ? document.elementFromPoint(x, y) : null;
-  return element?.closest<HTMLElement>("[data-course-drop]")?.dataset.courseDrop;
+  return element?.closest<HTMLElement>("[data-course-drop]") ?? null;
 }
 
-function zoneElement(zone: string | undefined, root: ParentNode): HTMLElement | undefined {
-  if (zone === undefined) return undefined;
-  return [...root.querySelectorAll<HTMLElement>("[data-course-drop]")].find((element) => element.dataset.courseDrop === zone);
+/** 🎯️ The drop zone under a viewport point, if any. */
+export function dropZoneAt(x: number, y: number): string | undefined {
+  return dropElementAt(x, y)?.dataset.courseDrop;
+}
+
+function dragScrollports(source: HTMLElement, host: HTMLElement): HTMLElement[] {
+  const ports: HTMLElement[] = [];
+  for (let element = source.parentElement; element !== null && element !== host; element = element.parentElement) {
+    if (/^(auto|scroll)$/u.test(window.getComputedStyle(element).overflowY)) ports.push(element);
+  }
+  return [...ports, host];
+}
+
+function edgeScrollSpeed(host: HTMLElement, y: number): number {
+  const remaining = host.scrollHeight - host.clientHeight;
+  if (remaining <= 0) return 0;
+  const bounds = host.getBoundingClientRect();
+  const top = Math.max(0, bounds.top);
+  const bottom = Math.min(window.innerHeight, bounds.bottom);
+  const edge = Math.min(SCROLL_EDGE_PX, (bottom - top) / 4);
+  if (edge <= 0) return 0;
+  if (y < top + edge && host.scrollTop > 0) return -SCROLL_SPEED_PX_PER_MS * Math.min(1, (top + edge - y) / edge);
+  if (y > bottom - edge && host.scrollTop < remaining) return SCROLL_SPEED_PX_PER_MS * Math.min(1, (y - bottom + edge) / edge);
+  return 0;
 }
 
 /** 👻️ An inert copy of `source` that looks like it, in an empty copy of the list it lies in: the list is the room its
@@ -37,12 +58,15 @@ function ghostOf(source: HTMLElement): HTMLElement {
   const copy = source.cloneNode(true) as HTMLElement;
   const shown = source.querySelectorAll("select");
   copy.querySelectorAll("select").forEach((select, index) => (select.value = shown[index]!.value));
+  copy.removeAttribute("id");
+  for (const element of copy.querySelectorAll("[id]")) element.removeAttribute("id");
   copy.style.width = `${source.getBoundingClientRect().width}px`;
   const room = source.parentElement;
   const ghost = room === null ? document.createElement("div") : (room.cloneNode(false) as HTMLElement);
   for (const own of ["id", "tabindex", "aria-label", "aria-labelledby"]) ghost.removeAttribute(own);
   ghost.classList.add("course-drag-ghost");
   ghost.setAttribute("aria-hidden", "true");
+  ghost.setAttribute("inert", "");
   if (room !== null) ghost.style.width = `${room.getBoundingClientRect().width}px`;
   ghost.append(copy);
   return ghost;
@@ -75,10 +99,10 @@ function releasePointer(target: Element, id: number | undefined): void {
 }
 
 /** 🖱️ Starts a pointer drag of the element around `event.currentTarget` (its nearest `[data-course-drag]` ancestor);
- * `onDrop` receives the zone the pointer is released over. A touch that starts here cannot scroll the page: the grip
- * refuses panning, and every touch move until the drag ends is cancelled. Returns the function that abandons the drag
+ * `onDrop` receives the zone the pointer is released over. The grip refuses native panning during its touch drag.
+ * Returns the function that abandons the drag
  * — its listeners, ghost and highlight go, `onDrop` is never called — for whoever must end it before the pointer does. */
-export function startPointerDrag(event: { readonly button: number; readonly clientX: number; readonly clientY: number; readonly pointerId?: number; readonly currentTarget: Element; preventDefault(): void }, onDrop: (zone: string) => void): () => void {
+export function startPointerDrag(event: { readonly button: number; readonly clientX: number; readonly clientY: number; readonly pointerId?: number; readonly pointerType?: string; readonly currentTarget: Element; preventDefault(): void }, onDrop: (zone: string) => void): () => void {
   if (event.button !== 0) return () => undefined;
   event.preventDefault();
   const source = event.currentTarget.closest<HTMLElement>("[data-course-drag]") ?? (event.currentTarget as HTMLElement);
@@ -87,43 +111,87 @@ export function startPointerDrag(event: { readonly button: number; readonly clie
   const host = source.closest<HTMLElement>(".course-app") ?? document.body;
   const origin = { x: event.clientX, y: event.clientY };
   const bounds = source.getBoundingClientRect();
+  const edgeScroll = event.pointerType === "touch" || event.pointerType === "pen";
+  const scrollports = edgeScroll ? dragScrollports(source, host) : [];
+  let point = origin;
   let ghost: HTMLElement | undefined;
-  let highlighted: HTMLElement | undefined;
-  const highlight = (zone: string | undefined): void => {
-    const element = zoneElement(zone, host);
+  let highlighted: HTMLElement | null = null;
+  let frame: number | undefined;
+  let previousFrame: number | undefined;
+  let finished = false;
+  const owns = (pointer: PointerEvent): boolean => event.pointerId === undefined || event.pointerId === pointer.pointerId;
+  const target = (x: number, y: number): HTMLElement | null => {
+    const element = dropElementAt(x, y);
+    return host.contains(element) ? element : null;
+  };
+  const highlight = (element: HTMLElement | null): void => {
     if (element === highlighted) return;
     highlighted?.classList.remove("course-drop-active");
     element?.classList.add("course-drop-active");
     highlighted = element;
   };
+  const edgeTarget = () => {
+    for (const port of scrollports) {
+      const speed = edgeScrollSpeed(port, point.y);
+      if (speed !== 0) return { port, speed };
+    }
+    return undefined;
+  };
+  const scroll = (at: number): void => {
+    frame = undefined;
+    const active = edgeTarget();
+    if (active === undefined) {
+      previousFrame = undefined;
+      return;
+    }
+    const elapsed = previousFrame === undefined ? 16 : Math.min(at - previousFrame, 32);
+    previousFrame = at;
+    const { port, speed } = active;
+    const before = port.scrollTop;
+    port.scrollTo({ top: before + speed * elapsed, behavior: "instant" });
+    highlight(target(point.x, point.y));
+    if (port.scrollTop !== before) frame = window.requestAnimationFrame(scroll);
+    else previousFrame = undefined;
+  };
   const move = (moved: PointerEvent): void => {
+    if (!owns(moved)) return;
     if (ghost === undefined) {
       if (Math.hypot(moved.clientX - origin.x, moved.clientY - origin.y) < DRAG_THRESHOLD_PX) return;
       ghost = ghostOf(source);
       host.append(ghost);
       source.classList.add("course-dragging");
     }
-    ghost.style.transform = `translate(${bounds.left + moved.clientX - origin.x}px, ${bounds.top + moved.clientY - origin.y}px)`;
-    highlight(dropZoneAt(moved.clientX, moved.clientY));
+    point = { x: moved.clientX, y: moved.clientY };
+    ghost.style.transform = `translate(${bounds.left + point.x - origin.x}px, ${bounds.top + point.y - origin.y}px)`;
+    highlight(target(point.x, point.y));
+    if (frame === undefined && edgeTarget() !== undefined) frame = window.requestAnimationFrame(scroll);
   };
   const blockScroll = (touch: Event): void => {
     if (touch.cancelable) touch.preventDefault();
   };
   const finish = (): void => {
+    if (finished) return;
+    finished = true;
     window.removeEventListener("pointermove", move);
     window.removeEventListener("pointerup", release);
-    window.removeEventListener("pointercancel", finish);
+    window.removeEventListener("pointercancel", cancel);
+    window.removeEventListener("blur", finish);
+    grip.removeEventListener("lostpointercapture", cancel);
     window.removeEventListener("keydown", escape);
-    window.removeEventListener("touchmove", blockScroll, true);
+    grip.removeEventListener("touchmove", blockScroll);
+    if (frame !== undefined) window.cancelAnimationFrame(frame);
     releasePointer(grip, event.pointerId);
-    highlight(undefined);
+    highlight(null);
     ghost?.remove();
     source.classList.remove("course-dragging");
   };
+  const cancel = (pointer: Event): void => {
+    if (owns(pointer as PointerEvent)) finish();
+  };
   const release = (released: PointerEvent): void => {
-    const dragged = ghost !== undefined;
+    if (!owns(released)) return;
+    const zone = ghost === undefined ? undefined : target(released.clientX, released.clientY)?.dataset.courseDrop;
     finish();
-    const zone = dragged ? dropZoneAt(released.clientX, released.clientY) : undefined;
     if (zone !== undefined) onDrop(zone);
   };
   const escape = (key: KeyboardEvent): void => {
@@ -131,8 +199,10 @@ export function startPointerDrag(event: { readonly button: number; readonly clie
   };
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", release);
-  window.addEventListener("pointercancel", finish);
+  window.addEventListener("pointercancel", cancel);
+  window.addEventListener("blur", finish);
+  grip.addEventListener("lostpointercapture", cancel);
   window.addEventListener("keydown", escape);
-  window.addEventListener("touchmove", blockScroll, { passive: false, capture: true });
+  if (event.pointerType === "touch") grip.addEventListener("touchmove", blockScroll, { passive: false });
   return finish;
 }

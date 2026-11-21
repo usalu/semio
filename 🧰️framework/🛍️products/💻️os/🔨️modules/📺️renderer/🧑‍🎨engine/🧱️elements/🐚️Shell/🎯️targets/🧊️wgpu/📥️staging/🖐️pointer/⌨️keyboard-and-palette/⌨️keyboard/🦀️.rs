@@ -308,10 +308,14 @@ impl<'ctx> PointerCtx<'ctx> {
     /// the three doors to the verb cannot diverge. Before this wave the wgpu shell had NO undo chord
     /// at all: undo was reachable only by opening the palette and typing "undo".
     pub async fn handle_keyboard_async(&mut self, action: semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
-        if action == semio_ui_wgpu_input::KeyAction::Escape && self.surfaces.world3d_states.values().any(|state| state.authority.handle_drag_armed()) {
-            for state in self.surfaces.world3d_states.values_mut().filter(|state| state.authority.handle_drag_armed()) {
+        let can_abort_world_gesture = |state: &infinite_world::world::World3dState| {
+            state.authority.handle_drag_armed()
+                || state.terrain.terrain_brush().is_some() && state.authority.terrain_stroke_armed()
+        };
+        if action == semio_ui_wgpu_input::KeyAction::Escape && self.surfaces.world3d_states.values().any(can_abort_world_gesture) {
+            for state in self.surfaces.world3d_states.values_mut().filter(|state| can_abort_world_gesture(state)) {
                 if infinite_world::world::enqueue_world3d_events(&mut state.authority, [infinite_world::world::WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::Blur)]).is_err() {
-                    return Err("world3d handle drag cancel refused: the intent queue is full".into());
+                    return Err("world3d gesture cancel refused: the intent queue is full".into());
                 }
             }
             return Ok(());
@@ -367,12 +371,12 @@ impl<'ctx> PointerCtx<'ctx> {
             self.input.dismiss_dismissable_layers();
             if self.input.overlay_state==OverlayState::None&&self.sync.sync_card_kind.is_none()&&self.dock.dock_drag.is_none(){
                 if let Some((surface,node))=self.as_session().retained_keyboard_focus(){
-                    if let Some(target)=semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target(&surface,node){
-                        if target.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d&&semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&target)&&semio_framework_os_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&target.host_id){
+                    if let Some(target)=semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target(&surface,node){
+                        if target.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d&&semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&target)&&semio_renderer_wgpu_engine_board::paint2d::cancel_paint2d_pixel_selection(&target.host_id){
                             self.settle.owe_settle();return Ok(());
                         }
                         if target.kind==semio_ui_declaration::ui::SurfaceKind::Paint2d{
-                            let cancellation=self.docs.session.as_ref().and_then(|session|semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_selection_cancellation(&target,&self.directory.current_shell_actor(session.instance_id),session.instance_id));
+                            let cancellation=self.docs.session.as_ref().and_then(|session|semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_selection_cancellation(&target,&self.directory.current_shell_actor(session.instance_id),session.instance_id));
                             if let Some(cancellation)=cancellation{self.as_actions().dispatch_action(cancellation).await?;self.settle.owe_settle();return Ok(());}
                         }
                     }
@@ -435,7 +439,7 @@ impl<'ctx> PointerCtx<'ctx> {
                         return Ok(());
                     }
                     semio_framework::ShellKeyOutcome::Verb { action, args } => {
-                        let args = semio_framework::optional_json_to_dsl(serde_json::to_value(&args).ok());
+                        let args = serde_json::to_value(&args).ok().map(semio_framework::DslValue::from);
                         self.as_actions().dispatch_action(ActionDescriptor { controller_id, action, args }).await?;
                         self.apply_pending_row_control_focus(input).await?;
                         self.settle.owe_settle();
@@ -548,7 +552,7 @@ impl<'ctx> PointerCtx<'ctx> {
                 self.settle.owe_settle();
             }
             semio_framework::ShellKeyOutcome::Verb { action, args } => {
-                let args = semio_framework::optional_json_to_dsl(serde_json::to_value(&args).ok());
+                let args = serde_json::to_value(&args).ok().map(semio_framework::DslValue::from);
                 self.as_actions().dispatch_action(ActionDescriptor { controller_id, action, args }).await?;
                 self.settle.owe_settle();
             }
@@ -613,7 +617,7 @@ impl<'ctx> PointerCtx<'ctx> {
     }
 
     /// ⌨️ `F2` on a focused tree row asks for the `focusRowControl` verb of that row; `None` while the key is not a bare `F2` or the keyboard is not on a row (a cell inside a row owns its own `F2`).
-    pub fn row_control_focus_request(&self, action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<String> {
+    pub fn row_control_focus_request(&mut self, action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<String> {
         if !matches!(action, semio_ui_wgpu_input::KeyAction::Function(2)) || modifiers.ctrl || modifiers.alt || modifiers.shift || modifiers.meta {
             return None;
         }

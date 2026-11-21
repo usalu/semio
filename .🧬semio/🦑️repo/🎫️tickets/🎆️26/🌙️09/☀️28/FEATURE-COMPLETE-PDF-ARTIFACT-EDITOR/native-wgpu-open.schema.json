@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Native WGPU natural file open",
+  "type": "object",
+  "required": [
+    "action",
+    "admission",
+    "handoff",
+    "controls"
+  ],
+  "properties": {
+    "action": {
+      "const": "openArtifactFile"
+    },
+    "admission": {
+      "const": [
+        "active-window-owner",
+        "declared-save-open-binary-codec",
+        "selected-native-file",
+        "finite-file-extent"
+      ]
+    },
+    "handoff": {
+      "const": [
+        "fresh-instance",
+        "MediaIn",
+        "ReadDocumentIdentity",
+        "exact-archive-readback",
+        "attach-folder-actor",
+        "publish-editor"
+      ]
+    },
+    "controls": {
+      "const": [
+        "cancel-mid-read",
+        "oversized-file",
+        "foreign-frame",
+        "changed-owner",
+        "archive-readback-mismatch"
+      ]
+    }
+  }
+}

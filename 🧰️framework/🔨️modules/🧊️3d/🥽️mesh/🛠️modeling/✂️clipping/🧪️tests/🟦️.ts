@@ -5,7 +5,7 @@ import{readModuleTreeSource}from"@semio-tech/framework-compiler-ts/syntax/module
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{Line3,Plane,Vector3,BufferGeometry,Float32BufferAttribute}from"three";
+import{Line3,Plane,Vector2,Vector3,BufferGeometry,Float32BufferAttribute}from"three";
 import{mergeVertices}from"three/examples/jsm/utils/BufferGeometryUtils.js";
 import intentSchema from"../../🔁️reconstruction/🧬️schema/🎛️intents.json";
 import intentRows from"../../🔁️reconstruction/🧪️tests/🎛️intents.json";
@@ -23,6 +23,155 @@ import{parse}from"smol-toml";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 import{meshClipEdgeV1}from"../🟦️.ts";
+import loadManifold from "manifold-3d";
+import disconnectedDifference from "../../../🧪️tests/🧫️fixtures/🛠️modeling/🧩️disconnected-difference.json";
+import placedUnion from "../../../🧪️tests/🧫️fixtures/🛠️modeling/🧩️placed-union.json";
+import nestedPrismaticDifference from "../../../🧪️tests/🧫️fixtures/🛠️modeling/🕳️nested-prismatic-difference.json";
+
+function manifoldMesh(wasm: Awaited<ReturnType<typeof loadManifold>>, points: number[][], faces: number[][], reflected: boolean) {
+  const triangles = faces.flatMap(source => {
+   const ring = reflected ? [...source].reverse() : source;
+   const [anchor] = ring;
+   return ring.slice(1, -1).flatMap((point, index) => [anchor, point, ring[index + 2]]);
+  });
+  const mesh = new wasm.Mesh({numProp: 3, vertProperties: new Float32Array(points.flat()), triVerts: new Uint32Array(triangles)});
+  return wasm.Manifold.ofMesh(mesh);
+}
+test("Manifold independently measures disconnected convex Mesh Difference", async () => {
+ const wasm = await loadManifold();
+ wasm.setup();
+ for (const row of disconnectedDifference.cases) {
+  const stock = manifoldMesh(wasm, row.left, disconnectedDifference.faces, row.leftReflected);
+  const tool = manifoldMesh(wasm, row.right, disconnectedDifference.faces, false);
+  const result = stock.subtract(tool);
+  const components = result.decompose().sort((a, b) => a.volume() - b.volume());
+  expect(components).toHaveLength(row.components.length);
+  for (const [index, component] of components.entries()) {
+   const expected = row.components[index];
+   expect(component.volume()).toBeCloseTo(expected.volume, 5);
+   expect(component.surfaceArea()).toBeCloseTo(expected.area, 5);
+   expect(2 - 2 * component.genus()).toBe(expected.euler);
+  }
+  for (const shape of [...components, result, tool, stock]) shape.delete();
+ }
+});
+test("Manifold independently measures a contained concave Mesh cutter", async () => {
+ const wasm = await loadManifold();
+ wasm.setup();
+ const profile = new wasm.CrossSection([nestedPrismaticDifference.footprint], "Positive");
+ const [floor, ceiling] = nestedPrismaticDifference.height;
+ const extrusion = profile.extrude(ceiling - floor);
+ const tool = extrusion.translate([0, 0, floor]);
+ const stock = manifoldMesh(wasm, nestedPrismaticDifference.stock.positions, nestedPrismaticDifference.stock.faces, false);
+ const result = stock.subtract(tool);
+ expect(result.status()).toBe("NoError");
+ expect(tool.volume()).toBeCloseTo(nestedPrismaticDifference.intersection.volume, 8);
+ for (const [a, b] of [[stock, tool], [tool, stock]]) {
+  const intersection = a.intersect(b), union = a.add(b);
+  for (const [shape, expected] of [[intersection, nestedPrismaticDifference.intersection], [union, nestedPrismaticDifference.union]] as const) {
+   expect(shape.volume()).toBeCloseTo(expected.volume, 8);
+   expect(shape.surfaceArea()).toBeCloseTo(expected.area, 8);
+   shape.delete();
+  }
+ }
+ expect(result.volume()).toBeCloseTo(nestedPrismaticDifference.volume, 8);
+ expect(result.surfaceArea()).toBeCloseTo(nestedPrismaticDifference.area, 8);
+ expect(result.rayCast([1.5, 1.5, -1], [1.5, 1.5, 5])).toHaveLength(4);
+ expect(result.rayCast([2.5, 2.5, -1], [2.5, 2.5, 5])).toHaveLength(2);
+ const {angles,origin,target} = nestedPrismaticDifference.placed;
+ const centered = tool.translate(origin.map(value=>-value) as [number,number,number]);
+ const rotated = centered.rotate(angles as [number,number,number]);
+ const placed = rotated.translate(target as [number,number,number]);
+ const carved = stock.subtract(placed);
+ const clippedLaw = nestedPrismaticDifference.clipped;
+ const [min,max] = clippedLaw.bounds;
+ const blank = wasm.Manifold.cube([max[0]-min[0],max[1]-min[1],max[2]-min[2]]);
+ const enclosure = blank.translate(min as [number,number,number]);
+ for (const [a,b] of [[enclosure,tool],[tool,enclosure]]) {
+  const clipped = a.intersect(b);
+  expect(clipped.volume()).toBeCloseTo(clippedLaw.volume, 8);
+  expect(clipped.surfaceArea()).toBeCloseTo(clippedLaw.area, 8);
+  expect(clipped.boundingBox().min[2]).toBe(clippedLaw.capHeight);
+  clipped.delete();
+ }
+ enclosure.delete();
+ blank.delete();
+ const lateral = nestedPrismaticDifference.lateral;
+ for (const lateral of [nestedPrismaticDifference.lateral, nestedPrismaticDifference.longitudinalSlab, nestedPrismaticDifference.mixedSlab, nestedPrismaticDifference.mixedOpenSlab, nestedPrismaticDifference.independentWalls, nestedPrismaticDifference.fourArmWalls, nestedPrismaticDifference.cornerSlab]) {
+  const [lateralLow,lateralHigh] = lateral.bounds;
+  const lateralSeed = wasm.Manifold.cube([lateralHigh[0]-lateralLow[0], lateralHigh[1]-lateralLow[1], lateralHigh[2]-lateralLow[2]]);
+  const placedTool = lateralSeed.translate(lateralLow as [number, number, number]);
+  const diagonal = "frame" in lateral;
+  const diagonalScale = diagonal ? placedTool.scale([Math.SQRT1_2, Math.SQRT1_2, 1]) : undefined;
+  const lateralTool = diagonalScale?.rotate([0, 0, -45]) ?? placedTool;
+  const section = "footprint" in lateral ? new wasm.CrossSection([lateral.footprint], "Positive") : undefined;
+  const cross = section?.extrude(ceiling - floor);
+  const source = cross?.translate([0, 0, floor]) ?? tool;
+  const cases = [source.intersect(lateralTool), lateralTool.intersect(source)].map(result => ({ result, expected: lateral.intersection }));
+  if ("difference" in lateral) cases.push({result: source.subtract(lateralTool), expected: lateral.difference});
+  for (const {result,expected} of cases) {
+   expect(result.status()).toBe("NoError");
+   const pieces = result.decompose();
+   expect(pieces).toHaveLength(expected.components);
+   for (const piece of pieces) {
+    expect(piece.genus()).toBe("genus" in expected ? expected.genus : 0);
+    piece.delete();
+   }
+   expect(result.volume()).toBeCloseTo(expected.volume,8);
+   expect(result.surfaceArea()).toBeCloseTo(expected.area,8);
+   result.delete();
+  }
+  if (cross) source.delete();
+  cross?.delete();
+  section?.delete();
+  lateralTool.delete();
+  if (diagonalScale) {
+   diagonalScale.delete();
+   placedTool.delete();
+  }
+  lateralSeed.delete();
+ }
+ const splitLaw = nestedPrismaticDifference.split;
+ for (const {endpoints:[a,b],parameter,uv} of [...splitLaw.edgeSamples,...nestedPrismaticDifference.lateral.edgeSamples,...nestedPrismaticDifference.longitudinalSlab.edgeSamples,...nestedPrismaticDifference.cornerSlab.edgeSamples]) {
+  expect(new Vector2(a[0],a[1]).lerp(new Vector2(b[0],b[1]),parameter).toArray()).toEqual(uv);
+ }
+ const [lo,hi] = splitLaw.bounds;
+ const rawSlab = wasm.Manifold.cube([hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]]);
+ const slab = rawSlab.translate(lo as [number,number,number]);
+ const split = tool.subtract(slab);
+ const pieces = split.decompose();
+ expect(pieces).toHaveLength(2);
+ for (const [index,piece] of pieces.entries()) {
+  expect(piece.volume()).toBeCloseTo(splitLaw.components[index].volume, 8);
+  expect(piece.surfaceArea()).toBeCloseTo(splitLaw.components[index].area, 8);
+  expect(2-2*piece.genus()).toBe(splitLaw.components[index].euler);
+ }
+ for (const shape of [...pieces, split, slab, rawSlab]) shape.delete();
+
+ expect(carved.status()).toBe("NoError");
+ expect(carved.volume()).toBeCloseTo(nestedPrismaticDifference.volume, 8);
+ expect(carved.surfaceArea()).toBeCloseTo(nestedPrismaticDifference.area, 8);
+ for (const shape of [carved, placed, rotated, centered, result, stock, tool, extrusion, profile]) shape.delete();
+});
+test("Manifold independently measures positive-overlap placed Mesh Union", async () => {
+ const wasm = await loadManifold();
+ wasm.setup();
+ for (const row of placedUnion.cases) {
+  const stock = manifoldMesh(wasm, row.left, placedUnion.faces, false);
+  const tool = manifoldMesh(wasm, row.right, placedUnion.faces, false);
+  for (const [a, b] of [[stock, tool], [tool, stock]]) {
+   const result = a.add(b);
+   const components = result.decompose();
+   expect(components).toHaveLength(1);
+   expect(result.genus()).toBe(0);
+   expect(result.volume()).toBeCloseTo(row.volume, 5);
+   expect(result.surfaceArea()).toBeCloseTo(row.area, 5);
+   for (const shape of [...components, result]) shape.delete();
+  }
+  tool.delete();
+  stock.delete();
+ }
+});
 test("retained clipping edge vectors agree with schema Three and SQLite",()=>{
  const validate=new Ajv({strict:true}).compile(schema),db=new Database(":memory:");
  const tuple=(value:readonly number[]):readonly[number,number,number]=>{const[a,b,c]=value;if(value.length!==3||a===undefined||b===undefined||c===undefined)throw Error("Three coordinates required");return[a,b,c];};
@@ -68,7 +217,7 @@ test("actual extracted Rust Source parses and each new compilation root stays fi
  const model=readFileSync(resolve(mesh,"🛠️modeling/🦀️.rs"),"utf8"),algorithm=readFileSync(resolve(mesh,"🛠️modeling/✂️clipping/🦀️.rs"),"utf8");
  expect(model).not.toContain("RetireOwned for Clip");expect(model).not.toContain("RetireOwned for Soup");expect(model).not.toContain("artifact_retire_leaf!(SourceVertex,Ranked)");
  expect(algorithm).toContain("if !self.completed||self.transferred&bit!=0");expect(algorithm).toContain("self.transferred|=bit");expect(algorithm).toContain("self.completed=true");
- expect(retiredFields(algorithm)).toEqual(["intersections","cap","cap_ids","clipped","corners","sorted","vertex_sources","source_faces","corner_faces","face_weights","cap_owners","cap_weights"].map(field=>"self."+field));
+ expect(retiredFields(algorithm)).toEqual(["intersections","cap","cap_ids","clipped","corners","sorted","vertex_sources","source_faces","corner_faces","face_weights","cap_owners","cap_weights","retired_faces"].map(field=>"self."+field));
  }finally{parser.delete();}
 });
 
@@ -203,11 +352,37 @@ test("every actual higher 3D test compilation target has a bounded canonical Sou
 
 test("integration targets preserve every original law and private observation never exposes an effect",async()=>{
  const root=resolve(import.meta.dir,"../../../../../../.."),base=resolve(root,"🧰️framework/🔨️modules/🧊️3d"),mesh=resolve(base,"🥽️mesh"),read=(path:string)=>readFileSync(path,"utf8"),records:unknown=JSON.parse(read(resolve(mesh,"🧪️tests/📦️targets/📋️preserved.json")));
- if(!Array.isArray(records))throw Error("Preserved law table required");const moved=read(resolve(mesh,"🛠️modeling/🔁️reconstruction/🧪️tests/🦀️.rs"));let actualAssertions=0,expectedAssertions=0;const allSources:string[]=[];
- for(const row of records){if(!row||typeof row!=="object"||typeof row.path!=="string"||!Array.isArray(row.tests)||typeof row.assertions!=="number")throw Error("Preserved law record required");const text=read(resolve(root,row.path));allSources.push(text);actualAssertions+=(text.match(/\bassert(?:_eq|_ne)?!/g)??[]).length;expectedAssertions+=row.assertions;for(const name of row.tests){if(typeof name!=="string")throw Error("Declared law name required");const matches=[text,moved].flatMap(source=>Array.from(source.matchAll(/\bfn\s+(\w+)\s*\(/g))).filter(match=>match[1]===name);expect(matches.length).toBe(1);}}
- await Parser.init({wasmBinary:readFileSync(Bun.resolveSync("web-tree-sitter/tree-sitter.wasm",root))});const parser=new Parser();try{parser.setLanguage(await Parser.Language.load(Bun.resolveSync("tree-sitter-wasms/out/tree-sitter-rust.wasm",root)));const tree=parser.parse(moved);try{const fn=tree.rootNode.descendantsOfType("function_item").find(node=>node.childForFieldName("name")?.text==="original_modeling_snapshot_frontier_preserves_same_source_and_actual_receipts");if(!fn)throw Error("Defining snapshot owner law required");actualAssertions+=(fn.text.match(/\bassert(?:_eq|_ne)?!/g)??[]).length;}finally{tree.delete();}
- expect(actualAssertions).toBe(expectedAssertions);
- for(const text of allSources){const tree=parser.parse(text);try{expect(tree.rootNode.hasError()).toBe(false);}finally{tree.delete();}}
+ if(!Array.isArray(records))throw Error("Preserved law table required");
+ const moved=read(resolve(mesh,"🛠️modeling/🔁️reconstruction/🧪️tests/🦀️.rs"));
+ const allSources:string[]=[];
+ await Parser.init({wasmBinary:readFileSync(Bun.resolveSync("web-tree-sitter/tree-sitter.wasm",root))});
+ const parser=new Parser();
+ try{
+ parser.setLanguage(await Parser.Language.load(Bun.resolveSync("tree-sitter-wasms/out/tree-sitter-rust.wasm",root)));
+ const lawFunctions=(source:string)=>{
+  const tree=parser.parse(source);
+  try{
+   expect(tree.rootNode.hasError()).toBe(false);
+   return tree.rootNode.descendantsOfType("function_item").map(fn=>({
+    name:fn.childForFieldName("name")?.text,
+    assertions:(fn.text.match(/\bassert(?:_eq|_ne)?!/g)??[]).length,
+   }));
+  }finally{tree.delete();}
+ };
+ const shared=lawFunctions(moved);
+ for(const row of records){
+  if(!row||typeof row!=="object"||typeof row.path!=="string"||!Array.isArray(row.tests)||typeof row.minimumAssertions!=="number")throw Error("Preserved law record required");
+  const source=read(resolve(root,row.path));
+  allSources.push(source);
+  const functions=[...lawFunctions(source),...shared];
+  const counts=row.tests.map((name:unknown)=>{
+   if(typeof name!=="string")throw Error("Declared law name required");
+   const matches=functions.filter(fn=>fn.name===name);
+   expect(matches.length).toBe(1);
+   return matches[0].assertions;
+  });
+  expect(counts.reduce((sum,count)=>sum+count,0)).toBeGreaterThanOrEqual(row.minimumAssertions);
+ }
  const inspection=read(resolve(mesh,"🛠️modeling/🔬️inspection/🦀️.rs"));expect(inspection.includes("&mut ")).toBe(false);expect(inspection.includes("pub use super::*")).toBe(false);const observationTree=parser.parse(inspection);try{expect(observationTree.rootNode.hasError()).toBe(false);const methods=observationTree.rootNode.descendantsOfType("function_item").map(node=>node.childForFieldName("name")?.text);expect(methods.sort()).toEqual(["inspection","inspection_cancelled","snapshot"]);}finally{observationTree.delete();}
  const parent=read(resolve(mesh,"🛠️modeling/🦀️.rs")),facade=read(resolve(mesh,"🦀️.rs"));expect(parent).toContain('#[cfg(feature="mesh-test-observation")]');expect(facade).toContain('#[cfg(feature="mesh-test-observation")]');expect(parent.includes("pub enum Work")).toBe(false);expect(parent.includes("pub work:")).toBe(false);
  const parentManifest=parse(read(resolve(base,"📦️packages/🦀️rust/Cargo.toml"))),collisionManifest=parse(read(resolve(base,"🧿️collision/📦️packages/🦀️rust/Cargo.toml"))),rigidManifest=parse(read(resolve(base,"🌀️rigid/📦️packages/🦀️rust/Cargo.toml")));

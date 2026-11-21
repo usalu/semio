@@ -1,0 +1,9 @@
+# Eccentric Contained Sphere Cut
+
+Original `brep.bool.cut` now subtracts a certified sphere placed strictly inside another sphere with a distinct center. The existing two-shell spherical owner retains both authored frames and radii. The solid transaction uses them for its separate spherical supports and the funded preview samples the same locations with inward orientation on the cavity. Stable component labels, exact material volume, one-item publication and retirement remain in the shared owner. Both operands remain available. The recipe also exposes the exact sum of boundary areas and computes the centroid using the void moment about the outer center.
+
+The proof requires a positive remaining collar beyond kernel tolerance. Internally tangent and unresolved near-tangent cuts return a refusal. Swapping a strictly contained pair makes Cut empty. The same strict-containment classification selects the enclosing sphere for Fuse and the smaller sphere for Intersect. The partial-overlap, concentric and disjoint source paths retain their established results.
+
+The neutral Boolean fixture pins an offset cavity and the reversed operands, including the exact centroid of the material in the successful case. Independent Manifold-3D passed all three tests. The compact Rust suites passed 11 Boolean and 10 topology and preview tests. They verify the authored supports, exact area and centroid, tangent and near-tangent refusal, signed preview geometry and a separately oriented inner seam. The linked original Booleans test covers both eccentric cases, cancellation after both unpublished shells exist, signed preview at both centers, exact volume and stable labels. The native run remains deferred at the shared disk gate.
+
+Scoped AST and diff checks passed. Measured source closure was 3,984 Engine lines, 3,992 registry lines, 2,648 solid-transaction lines, 2,369 representation lines and 64,989 active bytes for original Booleans.

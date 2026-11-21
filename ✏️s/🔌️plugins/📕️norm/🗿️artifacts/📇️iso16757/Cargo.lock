@@ -1802,6 +1802,7 @@ dependencies = [
 name = "semio-framework-replication-causal"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-replication-codec",
  "semio-framework-replication-edit",
  "semio-framework-replication-error",
@@ -3975,6 +3976,7 @@ name = "semio-os-store-engine-bundle"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
+ "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -5270,7 +5272,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-replication-command-ingress",
  "semio-framework-value",
+ "semio-framework-value-persistent",
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
  "serde_json",
@@ -7443,11 +7447,14 @@ name = "semio-s-artifact-norm-iso16757-checks-common"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
+ "semio-framework-hash",
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-artifact-norm-iso16757-model",
+ "semio-s-artifact-stdio-contract-part21",
  "semio-s-plugin-norm-compliance",
+ "serde_json",
 ]
 
 [[package]]
@@ -7566,6 +7573,7 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-os-kernel",
  "semio-plugin",
+ "semio-s-artifact-norm-iso16757-checks-common",
  "semio-s-artifact-norm-iso16757-diff",
  "semio-s-artifact-norm-iso16757-io-text",
  "semio-s-artifact-norm-iso16757-model",
@@ -7839,6 +7847,16 @@ dependencies = [
  "semio-framework-value",
  "semio-os-kernel",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-contract-part21"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]

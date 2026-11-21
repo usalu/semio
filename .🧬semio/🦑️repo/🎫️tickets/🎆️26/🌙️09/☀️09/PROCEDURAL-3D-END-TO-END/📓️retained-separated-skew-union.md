@@ -1,0 +1,3 @@
+# Retained Separated Skew Box Union
+
+A separation certificate over face and edge-cross axes allows Union to publish two independently placed rectangular solids in a native compound. The member recipe retains each box frame and original size. The fixture separates on an edge-cross axis even though the authored face-normal projections overlap. Compact Rust verifies both operand orders and refuses to use this representation for overlapping stock. Manifold verifies two disconnected members and their exact volumes and areas. The registered retained Flow law covers partial publication cancellation, compound explosion, individual Measure results and preview. Its linked execution is pending.

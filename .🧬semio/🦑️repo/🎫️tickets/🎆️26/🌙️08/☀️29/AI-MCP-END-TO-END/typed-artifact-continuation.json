@@ -1,0 +1,20 @@
+{
+  "request": {
+    "name": "artifact_create",
+    "arguments": {
+      "artifactId": "typed-channel-lifetime",
+      "kind": "s.norm-energy.din18599"
+    }
+  },
+  "followUp": "tools/list",
+  "expected": {
+    "artifactCreateReturnsToolResult": true,
+    "artifactCreateSucceeds": true,
+    "persistedArtifactIsReadable": true,
+    "sameSessionListsArtifactCreate": true,
+    "retirementSlotRefused": false,
+    "obsoletePollAbiRefused": false,
+    "startupGrantRefused": false,
+    "stderrReportsPanic": false
+  }
+}

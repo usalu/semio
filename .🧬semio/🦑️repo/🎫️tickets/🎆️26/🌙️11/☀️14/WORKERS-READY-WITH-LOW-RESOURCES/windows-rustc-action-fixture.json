@@ -1,0 +1,14 @@
+{
+  "platform": "windows",
+  "target": "x86_64-pc-windows-msvc",
+  "root": "C:\\work\\fixture",
+  "available": ["C:\\tools\\rust\\bin\\rustc.exe"],
+  "source": "src/lib.rs",
+  "arguments": ["--crate-name", "fixture", "--crate-type", "lib", "--emit", "dep-info,metadata", "--out-dir", ".semio-offload/o"],
+  "expected": {
+    "launcher": "/bin/sh",
+    "windowsLauncher": "c:\\bin\\sh",
+    "launcherAvailable": false,
+    "outputs": [".semio-offload/o", ".semio-offload/root"]
+  }
+}

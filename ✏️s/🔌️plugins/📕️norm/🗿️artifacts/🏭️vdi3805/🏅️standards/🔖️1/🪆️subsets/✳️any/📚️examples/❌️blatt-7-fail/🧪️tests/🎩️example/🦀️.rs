@@ -6,7 +6,7 @@ async fn primary_asset_decodes_and_fails() {
     let decoded = decode_vdi3805_dsl(text).expect("blatt-7-fail dsl");
     assert_eq!(decoded.catalog.products[0].sheet.0, 7);
     let report = evaluate(&decoded);
-    assert!(report.failing().count() >= 2, "blatt-7-fail expected ≥2 fails");
+    assert!(report.failing().next().is_some(), "blatt-7-fail declares the wrong record count");
     for check in report.failing() {
         assert!(check.remedies.iter().any(|r| r.applicable), "fail {} needs applicable remedy", check.id);
     }

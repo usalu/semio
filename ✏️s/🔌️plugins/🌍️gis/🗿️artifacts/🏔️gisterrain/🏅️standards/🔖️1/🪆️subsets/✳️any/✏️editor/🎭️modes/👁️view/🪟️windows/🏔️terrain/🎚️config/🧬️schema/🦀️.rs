@@ -12,4 +12,17 @@ use serde::{Deserialize, Serialize};
 pub struct GisTerrainWindowConfig {
     #[state(config)]
     pub camera_json: String,
+    #[state(config)]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub brush: Option<TerrainBrushSettings>,
+}
+
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[cfg_attr(test, derive(Serialize, Deserialize), serde(rename_all = "camelCase", deny_unknown_fields))]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TerrainBrushSettings {
+    pub radius: u32,
+    pub elevation_step: u32,
+    pub smooth_strength: u32,
 }

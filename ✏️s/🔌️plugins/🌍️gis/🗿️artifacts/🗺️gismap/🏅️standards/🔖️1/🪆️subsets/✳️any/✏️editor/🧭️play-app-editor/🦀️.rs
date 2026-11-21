@@ -1,7 +1,11 @@
 //! 🧭️ Editor impl of the GIS 2D play app: the context menu, the dispatch-only artifact editor surface and the window actions. See [`super`].
 
 use super::*;
+use crate::standards::v1::subsets::any::map_composition::GisMapMembers;
 use semio_framework_2d_compute::EngineHandles;
+#[path = "../📤️map-export/🦀️.rs"]
+mod map_export;
+use map_export::{MapMedia, StructuredMediaExport, StructuredMediaExportFactory};
 
 //#region 🔖️Gis2dPlayApp
 /// 🕹️ `interactionSelect` args for a single-feature pick against the `"features"` domain's
@@ -62,7 +66,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         vec![crate::examples::demo::source()]
     }
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
-    type Members = semio_s_artifact_stdio_semio::SemioMembers;
+    type Members = GisMapMembers;
     type Snapshot = GisMapSnapshot;
     type Mutation = GisMapMutation;
     type Config = NoConfig;
@@ -98,7 +102,12 @@ impl ArtifactEditor for Gis2dPlayApp {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller_id = registry.controller_id().to_string();
-        registry.register(Gis2dRetainedCommandJobFactory::new(&controller_id))
+        registry.register(Gis2dRetainedCommandJobFactory::new(&controller_id))?;
+        registry.register(StructuredMediaExportFactory::<MapMedia>::new(&controller_id))
+    }
+
+    fn build_media_export_job(request: &mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>, output: &mut Option<Box<dyn semio_plugin::ArtifactReservedJob + Send>>, construction: &mut semio_plugin::MediaConstruction, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        StructuredMediaExport::<MapMedia>::admit(request, output, construction, cx)
     }
 
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {

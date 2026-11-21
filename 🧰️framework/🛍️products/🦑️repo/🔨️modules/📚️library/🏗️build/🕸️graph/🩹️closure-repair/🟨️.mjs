@@ -5,9 +5,9 @@ import{tmpdir}from"node:os";
 import{brotliDecompressSync}from"node:zlib";
 import{join}from"node:path";
 
-const KEY=/^[a-f0-9]{64}$/u,BATCH=64,TOKEN=/SEMIO_(SOURCE_CLOSURE|CARGO_LOCK)_([a-f0-9]{64})/gu;
+const KEY=/^[a-f0-9]{64}$/u,BATCH=64,TOKEN=/(?<![A-Za-z0-9_])SEMIO_(SOURCE_CLOSURE|CARGO_LOCK)_([a-f0-9]{64})(?![A-Za-z0-9_])/gu;
 export const CLOSURE_NAMESPACES_V1=Object.freeze({SOURCE_CLOSURE:"build-input-closures",CARGO_LOCK:"build-lock-closures"});
-export const CLOSURE_POLICY_V1=Object.freeze({maximumLeaves:20000,maximumLeafBytes:16777216,concurrency:8,fragments:"f"});
+export const CLOSURE_POLICY_V1=Object.freeze({maximumLeafBytes:16777216,concurrency:8,fragments:"f"});
 
 const recordsOf=async(root)=>{
  const folders=[join(root,"derived-nodes","n")],base=join(root,"inference","selections");
@@ -39,10 +39,11 @@ export async function purgeClosureReferencesV1({root,key,dryRun=false,cancelled=
 }
 
 /** 🧭️ The closure leaves a text names: `SEMIO_SOURCE_CLOSURE_<sha256>` and `SEMIO_CARGO_LOCK_<sha256>` tokens, as namespace and key, each once. */
-export function closureReferencesOfTextV1(text){
- const found=new Map();
- for(const match of text.matchAll(TOKEN))found.set(match[2],CLOSURE_NAMESPACES_V1[match[1]]);
- return found;
+export function closureReferencesOfTextV1(text){return new Map(closureReferencePairsOfTextV1(text));}
+
+/** 🪢 Iterates exact tokens without collapsing equal digests in different closure namespaces. */
+export function* closureReferencePairsOfTextV1(text){
+ for(const match of text.matchAll(TOKEN))yield[match[2],CLOSURE_NAMESPACES_V1[match[1]]];
 }
 
 /** 🚫️ The one failure of an absent closure leaf: it is not an ENOENT (the code is `closure-missing`), it carries the key, the namespace and the projects that name it, and the load answers it by obtaining the leaf or re-deriving those projects. */

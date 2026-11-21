@@ -14,7 +14,7 @@ use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted trinity graph document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack")]
@@ -290,26 +290,34 @@ pub fn jack_child_restore_projection(snapshot: &JackSnapshot) -> Result<semio_fr
 //#endregion 🧬️ChildRestoreProjection
 
 //#region ♻️Retirement
+use semio_framework_value::retirement::{arc_custody::ArcLease, RetireOwned};
+
+/// 🧳️ Retains the composed graph owner alongside the parent snapshot's own fields.
+#[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
+#[doc(hidden)]
+pub struct JackSnapshotSources {
+    schema: String,
+    name: String,
+    manifest_id: Option<String>,
+    manifest: Manifest,
+    camera: Camera,
+    content: JackContentChild,
+    owner: Option<ArcLease<JackContentOwner>>,
+    root_node_id: Option<String>,
+    query: String,
+}
+
 /// 🔗️ Retires the metadata fields, the child handle and the shared local content owner as separate deferred fields.
-impl semio_framework_value::retirement::RetireOwned for JackSnapshot {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+impl RetireOwned for JackSnapshot {
+    type RetirementCursor = <JackSnapshotSources as RetireOwned>::RetirementCursor;
+
+    fn retirement_seed(self) -> Self::RetirementCursor {
         let Self { schema, name, manifest_id, manifest, camera, mut content, root_node_id, query } = self;
-        let owner = content.take_local_owner::<JackContentOwner>().ok().flatten();
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(schema), semio_framework_value::retirement::deferred(name), semio_framework_value::retirement::deferred(manifest_id), semio_framework_value::retirement::deferred(manifest), semio_framework_value::retirement::deferred(camera), semio_framework_value::retirement::deferred(content), semio_framework_value::retirement::deferred(owner), semio_framework_value::retirement::deferred(root_node_id), semio_framework_value::retirement::deferred(query)])
+        let owner = content.take_local_owner::<JackContentOwner>().ok().flatten().map(ArcLease::new);
+        JackSnapshotSources { schema, name, manifest_id, manifest, camera, content, owner, root_node_id, query }.retirement_seed()
     }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::sequence_birth_bytes(&[
-            semio_framework_value::retirement::deferred_birth_bytes_for(&self.schema),
-            semio_framework_value::retirement::deferred_birth_bytes_for(&self.name),
-            semio_framework_value::retirement::deferred_birth_bytes_for(&self.manifest_id),
-            semio_framework_value::retirement::deferred_birth_bytes_for(&self.manifest),
-            semio_framework_value::retirement::deferred_birth_bytes_for(&self.camera),
-            semio_framework_value::retirement::deferred_birth_bytes_for(&self.content),
-            semio_framework_value::retirement::deferred_birth_bytes::<Option<std::sync::Arc<JackContentOwner>>>(),
-            semio_framework_value::retirement::deferred_birth_bytes_for(&self.root_node_id),
-            semio_framework_value::retirement::deferred_birth_bytes_for(&self.query),
-        ])
-    }
+
     fn controlled_retirement_supported() -> bool {
         true
     }

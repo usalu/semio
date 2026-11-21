@@ -36,7 +36,7 @@ fn scene(surface_id: &str) -> UiNode {
 }
 
 fn image(id: &str) -> UiNode {
-    UiNode::Image(UiImageNode { id: id.into(), src: "https://example.test/x.png".into(), alt: None, presence: UiPresence::default(), menu: None })
+    UiNode::Image(UiImageNode { source_page: None, id: id.into(), src: "https://example.test/x.png".into(), alt: None, presence: UiPresence::default(), menu: None })
 }
 
 fn stack(children: Vec<UiNode>) -> UiNode {

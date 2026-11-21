@@ -1,0 +1,238 @@
+[
+  {
+    "id": "leave-replaces-queued-component",
+    "steps": [
+      [
+        "face",
+        0
+      ],
+      [
+        "face",
+        1
+      ],
+      [
+        "leave"
+      ],
+      [
+        "settle"
+      ],
+      [
+        "settle"
+      ]
+    ],
+    "events": [
+      [
+        "components",
+        "face",
+        "shape@mesh#0.face.0"
+      ],
+      [
+        "components",
+        null,
+        null
+      ]
+    ]
+  },
+  {
+    "id": "latest-instance-replaces-queued-face",
+    "steps": [
+      [
+        "instance"
+      ],
+      [
+        "face",
+        1
+      ],
+      [
+        "other"
+      ],
+      [
+        "settle"
+      ],
+      [
+        "settle"
+      ]
+    ],
+    "events": [
+      [
+        "components",
+        "object",
+        "shape@mesh#0"
+      ],
+      [
+        "components",
+        "object",
+        "other@mesh#0"
+      ]
+    ]
+  },
+  {
+    "id": "geometry-change-discards-old-pending-hit",
+    "steps": [
+      [
+        "face",
+        0
+      ],
+      [
+        "face",
+        1
+      ],
+      [
+        "newGeometry"
+      ],
+      [
+        "settle"
+      ]
+    ],
+    "events": [
+      [
+        "components",
+        "face",
+        "shape@mesh#0.face.0"
+      ]
+    ]
+  },
+  {
+    "id": "a-hit-in-the-new-scene-can-be-offered-again",
+    "steps": [
+      [
+        "face",
+        0
+      ],
+      [
+        "settle"
+      ],
+      [
+        "newGeometry"
+      ],
+      [
+        "face",
+        0
+      ],
+      [
+        "settle"
+      ]
+    ],
+    "events": [
+      [
+        "components",
+        "face",
+        "shape@mesh#0.face.0"
+      ],
+      [
+        "components",
+        "face",
+        "shape@mesh#0.face.0"
+      ]
+    ]
+  },
+  {
+    "id": "unmount-discards-old-pending-hit",
+    "steps": [
+      [
+        "face",
+        0
+      ],
+      [
+        "face",
+        1
+      ],
+      [
+        "unmount"
+      ],
+      [
+        "settle"
+      ]
+    ],
+    "events": [
+      [
+        "components",
+        "face",
+        "shape@mesh#0.face.0"
+      ]
+    ]
+  },
+  {
+    "id": "domain-replacement-retains-only-a-new-scope-hit",
+    "steps": [
+      [
+        "face",
+        0
+      ],
+      [
+        "face",
+        1
+      ],
+      [
+        "newDomain"
+      ],
+      [
+        "instance"
+      ],
+      [
+        "settle"
+      ],
+      [
+        "settle"
+      ]
+    ],
+    "events": [
+      [
+        "components",
+        "face",
+        "shape@mesh#0.face.0"
+      ],
+      [
+        "graph",
+        "object",
+        "shape@mesh#0"
+      ]
+    ]
+  },
+  {
+    "id": "entering-and-leaving-without-a-hit-publishes-nothing",
+    "steps": [
+      [
+        "leave"
+      ]
+    ],
+    "events": []
+  },
+  {
+    "id": "leave-clears-the-local-owner-after-geometry-replacement",
+    "steps": [
+      [
+        "face",
+        0
+      ],
+      [
+        "face",
+        1
+      ],
+      [
+        "newGeometry"
+      ],
+      [
+        "leave"
+      ],
+      [
+        "settle"
+      ],
+      [
+        "settle"
+      ]
+    ],
+    "events": [
+      [
+        "components",
+        "face",
+        "shape@mesh#0.face.0"
+      ],
+      [
+        "components",
+        null,
+        null
+      ]
+    ]
+  }
+]

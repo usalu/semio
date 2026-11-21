@@ -1,0 +1,6 @@
+{
+  "toolSwitchPublications": [
+    { "action": "setActiveTool", "schema": "framework.reserved.setActiveTool.v1", "lanes": ["HostOnly"] },
+    { "action": "setActiveUtility", "schema": "framework.reserved.setActiveUtility.v1", "lanes": ["HostOnly"] }
+  ]
+}

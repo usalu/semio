@@ -1,8 +1,15 @@
+import {Database} from "bun:sqlite";
+import reclaimCases from "./🧫️fixtures/🕰️reclaim.json";
+import writerCases from "./🧫️fixtures/🧾️writer-observation.json";
+import fullVolumeCases from "./🧫️fixtures/💽️full-volume.json";
+import {tryClaimWithBallastV1} from "../../🛟️ballast/🟦️.ts";
+import {commandWriteBytesV1} from "../../../../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {pathToFileURL} from "node:url";
 import fixture from "./🧫️fixtures/🔣️.json";
 import componentSchema from "../🧬️schema/🔣️.json";
 import {UNIT_CACHE_POLICY_V1} from "../../../🔏️key/🟦️.ts";
@@ -14,7 +21,7 @@ import {HEADROOM_POLICY_V1 as policy,admitImageHeadroomV1,createEffectiveMeasure
 const GIB=1024**3,volume=48*GIB,layout=UNIT_CACHE_POLICY_V1.layout;
 const ajv=new Ajv({strict:true});ajv.addSchema(componentSchema,"headroom.json");
 const python=(rows:readonly unknown[]):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"../🧬️schema/🔣️.json")],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
-const scratch=():string=>mkdtempSync(join(realpathSync(tmpdir()),"headroom-"));
+const scratch=():string=>mkdtempSync(join(realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"h-"));
 const noSleep=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new Promise((done,fail)=>{if(signal?.aborted){fail(signal.reason);return;}setTimeout(done,Math.min(milliseconds,4));});
 
 test("the fixture is closed and every vector equals the independent Python oracle",()=>{
@@ -68,6 +75,28 @@ test("a command is admitted at once when the image has room, holds a record whil
   const warm=await admitImageHeadroomV1({...base,temperature:"warm"});expect(warm.reservedBytes).toBe(policy.prior.warm.bytes);await warm.release();
   const history=readHeadroomHistoryV1(join(root,layout.headroom));expect(Object.keys(history.classes).sort()).toEqual(base.classes.map(name=>name+"#cold").sort());expect(history.classes["cargo/check#cold"]!.map(row=>row.bytes)).toEqual([2*GIB,2*GIB]);
  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("whole-image growth uses occupied bytes only under uninterrupted admission",async()=>{
+ using sql=new Database(":memory:");
+ const oracle=sql.query("select max(?1, case when ?2 then 0 else coalesce(?4-?3,0) end, 0) bytes, ?5-?6 hostDelta");
+ for(const row of writerCases.cases){
+  const root=scratch();
+  const options={root,capacityBytes:volume,temperature:"warm" as const,classes:["component/test"],label:"test",language:"en" as const,report:()=>{},measure:()=>({volumeBytes:volume,freeBytes:40*GIB}),sleep:noSleep};
+  try{
+   const lease=await admitImageHeadroomV1({...options,id:"outer"});
+   if(row.nested){
+    const nested=await admitImageHeadroomV1({...options,id:"inner"});await nested.release();
+   }
+   const stillAlone=readHeadroomLedgerV1(root).every(record=>record.id===lease.id);
+   expect(lease.imageWriteUncontended()).toBe(!row.nested);
+   await lease.release(()=>commandWriteBytesV1(row.lane*GIB,row.before===null?null:row.before*GIB,row.after*GIB,lease.imageWriteUncontended()));
+   expect(stillAlone).toBe(true);
+   const actual=readHeadroomHistoryV1(join(root,layout.headroom)).classes["component/test#warm"]?.[0]?.bytes;
+   expect(oracle.get(row.lane,+row.nested,row.before,row.after,row.hostBefore,row.hostAfter)).toEqual({bytes:row.expected,hostDelta:6});
+   expect(actual,row.name).toBe(row.expected*GIB);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ }
 });
 
 test("a component build reserves its own larger prior, bounded by the share of the image, while a cargo command keeps the general one",async()=>{
@@ -178,11 +207,79 @@ test("a demand frees the oldest idle lanes beyond the water marks and never a li
  expect(planGcV1({...input,demandBytes:10**6},relaxed).removeLanes).not.toContain("live");
 });
 
-test("a running row that outlived its ramp by the stranded grace no longer blocks the alone admission, and agrees with the independent model",()=>{
- const row=(admittedMs:number)=>({id:"stuck",state:"running" as const,reservedBytes:4*GIB,rampMilliseconds:60_000,arrivedMs:0,admittedMs}),at=10_000_000,grace=policy.strandedGraceMilliseconds,
- input=(admittedMs:number)=>({freeBytes:GIB,volumeBytes:volume,nowMs:at,request:{id:"r",reservedBytes:4*GIB,arrivedMs:at},rows:[row(admittedMs)],reclaimed:true}),inputs=[input(at-60_000-grace),input(at-60_000-grace-1)],expected=python(inputs.map(value=>({kind:"decision",input:value})));
- inputs.forEach((value,index)=>expect(decideHeadroomV1(value) as unknown).toEqual(expected[index]));
- expect([decideHeadroomV1(inputs[0]!).verdict,decideHeadroomV1(inputs[1]!).verdict]).toEqual(["wait","admit"]);
+test("a live independent writer remains a blocker past its ramp while file bytes keep growing",async()=>{
+ const root=scratch(),volumeBytes=96*GIB,clock=1_000_000,stop=join(root,"stop"),writes=join(root,"writes");
+ const entry=pathToFileURL(join(import.meta.dir,"../🟦️.ts")).href;
+ const worker=Bun.spawn([process.execPath,"-e",`
+   import {appendFileSync,existsSync} from "node:fs";
+   import {admitImageHeadroomV1} from ${JSON.stringify(entry)};
+   const {root,stop,writes,volume,clock}=${JSON.stringify({root,stop,writes,volume:volumeBytes,clock})};
+   const now=()=>clock;
+   const writer=await admitImageHeadroomV1({root,capacityBytes:volume,classes:["component"],temperature:"cold",label:"writer",language:"en",id:"writer",report:()=>{},now,measure:()=>({volumeBytes:volume,freeBytes:volume})});
+   try{
+     const until=Date.now()+8000;
+     while(!existsSync(stop)&&Date.now()<until){appendFileSync(writes,"w");await Bun.sleep(4);}
+   }finally{await writer.release();}
+ `],{stderr:"pipe"});
+ const stopWaiting=new AbortController();
+ let attempt:Promise<Awaited<ReturnType<typeof admitImageHeadroomV1>>>|undefined;
+ try{
+  const until=Date.now()+3000;
+  while(!existsSync(writes)&&worker.exitCode===null&&Date.now()<until)await Bun.sleep(4);
+  expect(existsSync(writes),await (worker.exitCode===null?Promise.resolve(""):new Response(worker.stderr).text())).toBe(true);
+  const before=statSync(writes).size,reports:string[]=[],writerRecord=join(root,layout.headroom,"writer.json");
+  const beforeHeartbeat=statSync(writerRecord).mtimeMs;
+  let admitted=false;
+  attempt=admitImageHeadroomV1({
+   root,capacityBytes:volumeBytes,classes:["component"],temperature:"cold",label:"request",language:"en",id:"request",
+   now:()=>clock+10_000_000,measure:()=>({volumeBytes,freeBytes:Math.floor(6.2*GIB)}),sleep:noSleep,reclaim:async()=>true,
+   signal:stopWaiting.signal,report:line=>reports.push(line),
+  }).then(lease=>{admitted=true;return lease;});
+  void attempt.catch(()=>undefined);
+  const heartbeatDeadline=Date.now()+policy.heartbeatMilliseconds+1000;
+  while(statSync(writerRecord).mtimeMs<=beforeHeartbeat&&Date.now()<heartbeatDeadline)await Bun.sleep(10);
+  expect(statSync(writes).size).toBeGreaterThan(before);
+  expect(statSync(writerRecord).mtimeMs).toBeGreaterThan(beforeHeartbeat);
+  expect(readHeadroomLedgerV1(root).map(row=>[row.id,row.state]).sort()).toEqual([["request","waiting"],["writer","running"]]);
+  expect(admitted).toBe(false);
+  writeFileSync(stop,"");
+  expect(await worker.exited).toBe(0);
+  const lease=await attempt;
+  expect(reports.at(-1)).toBe(headroomTextV1("alone",{free:"6.2",need:(lease.reservedBytes/GIB).toFixed(1)}, "en"));
+  await lease.release();
+ }finally{
+  stopWaiting.abort();
+  writeFileSync(stop,"");
+  if(attempt)await attempt.then(lease=>lease.release(),()=>undefined);
+  await worker.exited;
+  rmSync(root,{recursive:true,force:true});
+ }
+ },12000);
+
+test("an idle parent holding a live reservation blocks an underfunded nested request until release",async()=>{
+ const root=scratch(),controller=new AbortController();
+ let clock=1_000_000,free=volume;
+ const base={
+  root,capacityBytes:volume,classes:["cargo/check"],temperature:"cold" as const,language:"en" as const,
+  report:()=>{},now:()=>clock,measure:()=>({volumeBytes:volume,freeBytes:free}),sleep:noSleep,reclaim:async()=>true,
+ };
+ const parent=await admitImageHeadroomV1({...base,id:"parent",label:"parent"});
+ clock+=10_000_000;
+ free=GIB;
+ const child=admitImageHeadroomV1({...base,id:"child",label:"child",signal:controller.signal});
+ void child.catch(()=>undefined);
+ try{
+  await Bun.sleep(30);
+  expect(readHeadroomLedgerV1(root).map(row=>[row.id,row.state]).sort()).toEqual([["child","waiting"],["parent","running"]]);
+  await parent.release();
+  await (await child).release();
+  expect(readHeadroomLedgerV1(root)).toEqual([]);
+ }finally{
+  controller.abort();
+  await parent.release();
+  await child.then(lease=>lease.release(),()=>undefined);
+  rmSync(root,{recursive:true,force:true});
+ }
 });
 
 test("a release learns under the temperature of the lane the command actually ran in",async()=>{
@@ -221,5 +318,75 @@ test("the gate sees the space an image can really take: a stale volume figure is
   const honest=createEffectiveMeasureV1(()=>({volumeBytes:96*GIB,freeBytes:30*GIB}),{now:()=>0,container:()=>30.1*GIB,host:()=>50*GIB});expect(honest(inside,96*GIB).freeBytes).toBe(30*GIB);
   const loose=createEffectiveMeasureV1(()=>({volumeBytes:96*GIB,freeBytes:5*GIB}),{now:()=>0,container:()=>{throw Error("no image");},host:()=>1});expect(()=>loose(root,96*GIB)).not.toThrow();expect(loose(root,96*GIB).freeBytes).toBe(5*GIB);
   const blind=createEffectiveMeasureV1(()=>({volumeBytes:96*GIB,freeBytes:96*GIB,unmeasured:true}),{container:()=>1});expect(blind(inside,96*GIB).unmeasured).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("waiting headroom polls for admission while pacing full collections from their completion", async () => {
+ const sql = new Database(":memory:");
+ try {
+  for (const row of reclaimCases) {
+   const root = scratch(), starts: number[] = [];
+   let elapsed = 0, freed = 0;
+   const low = headroomFloorBytesV1(volume) + policy.prior.cold.bytes;
+   const base = {root, capacityBytes:volume, classes:["cargo/check"], temperature:"cold" as const, language:"en" as const, report:()=>{}, now:()=>1_000_000 + elapsed};
+   const holder = await admitImageHeadroomV1({...base, label:"holder", measure:()=>({volumeBytes:volume,freeBytes:volume})});
+   try {
+    const waiter = await admitImageHeadroomV1({...base, label:"waiter",
+     measure:()=>({volumeBytes:volume, freeBytes:elapsed >= row.releaseMs ? volume : low + freed}),
+     sleep:async()=>{elapsed += 1000;},
+     reclaim:async()=>{starts.push(elapsed); elapsed += 3000; freed += row.gainBytes; return true;}
+    });
+    try {
+     const oracle = sql.query<{start:number},[number,number]>(`WITH RECURSIVE scans(start) AS (
+      VALUES(0) UNION ALL SELECT start+3000+?1 FROM scans WHERE start+3000+?1 < ?2
+     ) SELECT start FROM scans`).all(row.gainBytes ? policy.reclaimIntervalMilliseconds : UNIT_CACHE_POLICY_V1.gc.watchPollMilliseconds, row.releaseMs);
+     expect(oracle.map(entry=>entry.start), row.name).toEqual(row.starts);
+     expect(starts, row.name).toEqual(row.starts);
+     expect(elapsed, row.name).toBe(row.releaseMs);
+    } finally {await waiter.release();}
+   } finally {await holder.release(); rmSync(root,{recursive:true,force:true});}
+  }
+ } finally {sql.close();}
+});
+
+test("full-volume admission retries registration and the exact claim opening before it runs",async()=>{
+ for(const row of fullVolumeCases){
+  const root=scratch(),arrivedMs=1000;let at=arrivedMs,free=0,faulted=false,reclaims=0;
+  try{
+   const lock=join(root,layout.locks,policy.claim+".lock"),records:string[]=[],custody:boolean[]=[],reports:string[]=[];
+   const fault=(path:string,syscall:string)=>Object.assign(new Error("full image"),{code:"ENOSPC",syscall,path});
+   const result=await admitImageHeadroomV1({root,id:"waiter",capacityBytes:volume,classes:["cargo/check"],temperature:"warm",label:"volume",language:"en",report:line=>reports.push(line),
+    now:()=>at,measure:()=>({volumeBytes:volume,freeBytes:free}),sleep:async ms=>{at+=ms;},
+    reclaim:async()=>{reclaims++;at+=20;free=20*GIB;return true;},
+    claim:(directory:string,name:string)=>{if(row.failure==="claim"&&!faulted){faulted=true;throw fault(lock,"open");}return tryClaimWithBallastV1(directory,name);},
+    writeRecord:(path:string,text:string)=>{const state=JSON.parse(text);if(row.failure==="registration"&&state.state==="waiting"&&!faulted){faulted=true;throw fault(path,"open");}if(state.state==="running")custody.push(python([{kind:"exclusiveFileClaim",input:lock}])[0]===true);records.push(state.state);expect(state.arrivedMs).toBe(arrivedMs);writeFileSync(path,text);}
+   });
+   expect({id:result.id,records,custody,reclaims,reported:reports.some(line=>line.includes("compiler image"))}).toEqual(row.expected);
+   await result.release();expect(readHeadroomLedgerV1(root)).toEqual([]);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ }
+});
+
+test("full-volume admission propagates callback failures and bounds repeated claim deferrals",async()=>{
+ const root=scratch(),lock=join(root,layout.locks,policy.claim+".lock");let calls=0,at=0;
+ const fault=(path:string,syscall:string)=>Object.assign(new Error("full image"),{code:"ENOSPC",syscall,path});
+ const options={root,id:"waiter",capacityBytes:volume,classes:["cargo/check"],temperature:"warm" as const,label:"volume",language:"en" as const,report:()=>{},
+  now:()=>at,measure:()=>({volumeBytes:volume,freeBytes:20*GIB}),sleep:async(ms:number)=>{at+=ms;},reclaim:async()=>false};
+ try{
+  const full=fault(lock,"open");
+  await expect(admitImageHeadroomV1({...options,claim:()=>{calls++;throw full;}})).rejects.toBe(full);
+  expect(calls).toBe(policy.claimAttempts);expect(readHeadroomLedgerV1(root)).toEqual([]);
+  calls=0;const registration=fault(join(root,layout.headroom,"waiter.json"),"open");
+  await expect(admitImageHeadroomV1({...options,writeRecord:()=>{calls++;throw registration;}})).rejects.toBe(registration);
+  expect(calls).toBeGreaterThanOrEqual(policy.claimAttempts);expect(calls).toBeLessThanOrEqual(policy.claimAttempts+1);
+  expect(readHeadroomLedgerV1(root)).toEqual([]);
+  const foreign=fault(lock+"-other","open");
+  await expect(admitImageHeadroomV1({...options,claim:()=>{throw foreign;}})).rejects.toBe(foreign);
+  const callback=fault(lock,"open");
+  await expect(admitImageHeadroomV1({...options,writeRecord:(path:string,text:string)=>{if(JSON.parse(text).state==="running")throw callback;writeFileSync(path,text);}})).rejects.toBe(callback);
+  expect(readHeadroomLedgerV1(root)).toEqual([]);
+  const controller=new AbortController(),cancelled=new Error("cancelled");
+  await expect(admitImageHeadroomV1({...options,signal:controller.signal,claim:()=>{throw full;},sleep:async()=>{controller.abort(cancelled);}})).rejects.toBe(cancelled);
+  expect(readHeadroomLedgerV1(root)).toEqual([]);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

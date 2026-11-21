@@ -141,3 +141,33 @@ export function snapshotUndoRedoObservedV1(before: Uint8Array, final: Uint8Array
 export function corruptImportObservedV1(alert: string, sameArchive: boolean, before: readonly number[], after: readonly number[], peer: readonly number[]): boolean {
   return /png|image|bild/iu.test(alert) && /truncated|invalid|corrupt|ungültig|beschädigt/iu.test(alert) && sameArchive && before.length === 2 && JSON.stringify(before) === JSON.stringify(after) && JSON.stringify(after) === JSON.stringify(peer);
 }
+
+/** 🧊 Checks the browser's GLB against the embedded position and triangle accessors. */
+export function meshDownloadWitnessV1(name: string, bytes: Uint8Array, mime: string | null) {
+  const data = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (name !== "remodeling-mesh.glb" || mime !== "model/gltf-binary" || data.length < 28 || data.toString("ascii", 0, 4) !== "glTF" || data.readUInt32LE(4) !== 2 || data.readUInt32LE(8) !== data.length) throw Error("Invalid mesh download");
+  const jsonSize = data.readUInt32LE(12), binHeader = 20 + jsonSize;
+  if (data.readUInt32LE(16) !== 0x4e4f534a || jsonSize % 4 !== 0 || binHeader + 8 >= data.length || data.readUInt32LE(binHeader + 4) !== 0x004e4942 || binHeader + 8 + data.readUInt32LE(binHeader) !== data.length) throw Error("Invalid GLB chunks");
+  const document = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(data.subarray(20, binHeader)));
+  const bufferSize = document.buffers?.[0]?.byteLength;
+  if (document.asset?.version !== "2.0" || document.buffers?.length !== 1 || document.buffers[0].uri !== undefined || !Number.isSafeInteger(bufferSize) || bufferSize <= 0 || bufferSize > data.readUInt32LE(binHeader) || data.readUInt32LE(binHeader) - bufferSize > 3) throw Error("Invalid GLB buffer");
+  const primitives = document.meshes?.flatMap((mesh: { primitives: unknown[] }) => mesh.primitives);
+  if (!Array.isArray(primitives) || primitives.length !== 1) throw Error("Expected one reconstructed mesh primitive");
+  const primitive = primitives[0], position = document.accessors?.[primitive.attributes?.POSITION], indices = document.accessors?.[primitive.indices];
+  const fits = (accessor: { bufferView?: number; byteOffset?: number; count?: number }, elementBytes: number) => {
+    const view = document.bufferViews?.[accessor.bufferView ?? -1];
+    const offset = view?.byteOffset ?? 0, start = accessor.byteOffset ?? 0, stride = view?.byteStride ?? elementBytes;
+    return view?.buffer === 0 && [offset, start, view.byteLength, stride, accessor.count].every(Number.isSafeInteger) && offset >= 0 && start >= 0 && stride >= elementBytes && offset + view.byteLength <= bufferSize && start + ((accessor.count ?? 0) - 1) * stride + elementBytes <= view.byteLength;
+  };
+  const indexBytes = ({ 5121: 1, 5123: 2, 5125: 4 } as Record<number, number>)[indices?.componentType];
+  if ((primitive.mode ?? 4) !== 4 || position?.type !== "VEC3" || position.componentType !== 5126 || position.count < 3 || !fits(position, 12) || indices?.type !== "SCALAR" || !indexBytes || indices.count < 3 || indices.count % 3 !== 0 || !fits(indices, indexBytes)) throw Error("Invalid reconstructed mesh accessors");
+  return { sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length, vertices: Number(position.count), triangles: indices.count / 3 };
+}
+
+/** 🧾 Requires the downloaded QC JSON to contain the reconstruction's report fields. */
+export function qcDownloadWitnessV1(name: string, bytes: Uint8Array, mime: string | null) {
+  if (name !== "remodeling-qc-report.json" || mime !== "application/json") throw Error("Invalid QC download");
+  const data = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  if (data === null || typeof data !== "object" || Array.isArray(data) || Object.keys(data).length !== 7 || ![data.reprojectionRmsPx, data.meanTrackLength, data.registeredFrameRatio, data.denseCoverageRatio].every(Number.isFinite) || ![data.registeredFrameRatio, data.denseCoverageRatio].every(value => value >= 0 && value <= 1) || (data.gcpCheckpointRmse !== null && !Number.isFinite(data.gcpCheckpointRmse)) || (data.watertight !== null && (typeof data.watertight !== "object" || Array.isArray(data.watertight))) || !Array.isArray(data.warnings) || !data.warnings.every((value: unknown) => typeof value === "string")) throw Error("Invalid reconstructed QC report");
+  return { sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length };
+}

@@ -141,7 +141,7 @@ const d2 = (a: V3, b: V3): number => dotv(sub(a, b), sub(a, b));
 
 type PoseSpec = { root: number; x: number; torso: number; head: number; legs: [number, number, number]; arms: Json };
 const SPECS: Record<string, PoseSpec> = {
-  "leaning-shoulder-wall": { root: 11, x: 0.2, torso: 0, head: -32, legs: [0.085, 8, 0.05], arms: { "upper-arm-l": { angleDeg: -9, abductionDeg: 3, twistDeg: 0 }, "forearm-l": { angleDeg: 16 }, "hand-l": { angleDeg: 6 } } },
+  "leaning-shoulder-wall": { root: 11, x: 0.2, torso: 0, head: -32, legs: [0.085, 8, 0.05], arms: { "upper-arm-l": { angleDeg: -9, abductionDeg: 7, twistDeg: 0 }, "forearm-l": { angleDeg: 16 }, "hand-l": { angleDeg: 6 } } },
   "leaning-arms-folded": { root: 4, x: 0.16, torso: 0, head: -6, legs: [0.15, 7, 0.12], arms: {} },
   "phone-call": { root: 9, x: 0.19, torso: 0, head: -14, legs: [0.0, 14, 0.09], arms: {} },
   "pushing-off": { root: -2, x: 0.16, torso: -4, head: 5, legs: [-0.01, 12, -0.03], arms: { "upper-arm-l": { angleDeg: 10, abductionDeg: 6, twistDeg: 0 }, "forearm-l": { angleDeg: 18 }, "hand-l": { angleDeg: 4 }, "upper-arm-r": { angleDeg: 12, abductionDeg: -6, twistDeg: 0 }, "forearm-r": { angleDeg: 20 }, "hand-r": { angleDeg: 4 } } },

@@ -370,6 +370,11 @@ use semio_framework_value::ToValue;
 
     fn cased(kind: &str, pascal: bool) -> String {
         let mut out = String::with_capacity(kind.len());
+        write_case(kind, pascal, &mut out);
+        out
+    }
+
+    pub(super) fn write_case(kind: &str, pascal: bool, out: &mut String) {
         let mut upper = pascal;
         for ch in kind.chars() {
             if ch == '-' {
@@ -381,10 +386,9 @@ use semio_framework_value::ToValue;
                 out.push(ch);
             }
         }
-        out
     }
 
-    pub(super) fn key_payload(kind: &str, payload: DslValue) -> DslValue {
+    fn key_payload(kind: &str, payload: DslValue) -> DslValue {
         DslValue::Object(vec![(cased(kind, true), payload)])
     }
 

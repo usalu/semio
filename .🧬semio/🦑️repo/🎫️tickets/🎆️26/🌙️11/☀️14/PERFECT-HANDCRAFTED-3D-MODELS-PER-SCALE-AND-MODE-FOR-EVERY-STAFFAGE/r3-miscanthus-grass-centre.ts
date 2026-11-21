@@ -1,12 +1,12 @@
-/** 🧵 Round 3, vegetation/miscanthus-grass: compares the product's centre line of slender solids of the volumes source with their own section centres (bone-local). Usage: bun r3-miscanthus-grass-centre.ts <scale> <solid id>... */
+/** 🧵 Round 3, vegetation/miscanthus-grass: compares the product's centre line of slender solids of the volumes source with their own section centres (bone-local). Usage: bun r3-miscanthus-grass-centre.ts <scale> <list> <solid id>... */
 import { readFileSync } from "node:fs";
 import { copyMesh } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
 import { centreLineOf, clusterPoints } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🧵️centreline/🟦️.ts";
 import { qualityOf } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧊️volume/⏱️job/🟦️.ts";
-const [scale, ...ids] = process.argv.slice(2);
+const [scale, list, ...ids] = process.argv.slice(2);
 const asset = JSON.parse(readFileSync("🗑️generated/r3-miscanthus-grass/🔣️.json", "utf8")).asset;
 for (const id of ids) {
-  const solid = asset.volumes[scale!].body.find((s: { id: string }) => s.id === id);
+  const solid = asset.volumes[scale!][list!].find((s: { id: string }) => s.id === id);
   const mesh = copyMesh(solid, qualityOf(asset));
   const line = centreLineOf(mesh.positions, mesh.positions, mesh.indices);
   const at = solid.sections.map((s: { at: number[] }) => s.at);

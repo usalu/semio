@@ -98,3 +98,54 @@ Opened with the Read tool: `r3-sheet` of body at every scale, structure at 1:50,
 - 1:200 and 1:500: the merged backrest mass carries the plastic material, so its front shows the plastic tone in the tone views; the fabric pad exists there only as the thermal surface. Splitting a 30-45 mm mass into two layers is below the feature size of these scales.
 - `r3-sheet --list thermal` at 1:100 and coarser paints the fabric region grey because its legend only knows the two 1:50 layers; the data are right (region `chair-fabric`, no layer).
 - The plan drawing at 1:50 keeps the short fold stroke on the cushion from the previous drawing (role `texture`); it is the only free-hand mark and reads a little arbitrary.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts: `r5-office-swivel-chair-body.py` (the round-3 body with the round-5 corrections stated by hand), `r5-office-swivel-chair-build.py` (round-3 builder fed with the round-5 body), `r5-office-swivel-chair-run.sh`, `r5-diffvol.py` (solid-level diff of a volumes source against the catalog). The catalog 2D was kept: the round-3 pipeline regenerates every 2D shape from outlines, and the catalog carries later hand adjustments (armrest pad span 0.24562 at 1:500 for the print rule); a regenerated candidate failed `PRINT range-end-feature` on the 1:500 armrest pads, the spliced catalog with its own 2D is VALID.
+
+### Reference (EN 1335-1:2020, EN 12529, EN 16955, task-chair product data)
+
+| Quantity | Reference | Model 1:50 | Deviation |
+| --- | --- | --- | --- |
+| Seat height, lowest (cushion top) | 400-510 mm range (EN 1335-1 type A); products 420-460 mm low (IKEA Markus 460) | 445 mm | inside product range; 11 % above the EN 400 mm low end (stated, not changed) |
+| Seat stroke | >= 100 mm | 100 mm (445-545) | 0 % |
+| Seat depth | 400-470 mm | 460 mm | 0 % |
+| Seat width | >= 400, products 460-500 mm | 480 mm | 0 % |
+| Backrest width / height | >= 360 / 450-550 mm | 440 / 500 mm | 0 % |
+| Lumbar apex above seat | 170-220 mm | 200 mm | 0 % |
+| Backrest rake | 10-12 degrees | 12 degrees | 0 % |
+| Armrest above seat | 200-250 mm | 215 mm | 0 % |
+| Clear width between armrests | 460-510 mm | 490 mm | 0 % |
+| Armrest pad | >= 200 x 40, products 250 x 85 x 25 mm | 250 x 85 x 25 mm | 0 % |
+| Base | five arms, projection <= 415 mm | stems on R 300 mm, overall 0.66 m | 0 % |
+| Castor | 50 mm twin wheel, 11 mm stem | 50 mm, 2 x 13 mm, 11 mm stem | 0 % |
+| Gas spring | standpipe 50, piston 28 mm | 50 / 28 mm | 0 % |
+| Overall height | 0.95-1.05 m | 1.00 m (box 1.0029) | +0.3 % |
+| Carrier cover (back of the backrest) | moulded PA cap, 80-100 mm wide, about 180 mm high | 100 x 200 x 29 mm, domed, rounded ends | - |
+
+Rig: hub at the arm axis, castor joints at the wheel axles, seat joint at the taper of the gas spring, backrest joint at the mechanism hinge (unchanged from round 3, checked against the solids).
+
+### Grades (opened with the Read tool)
+
+| Scale | Body before -> after | Thermal | Structure |
+| --- | --- | --- | --- |
+| 1:50 | B+ (box bracket on the back of the shell) -> A- | A- (cut opened) | A- |
+| 1:100 | A- (box bracket) -> A- | A- | A- |
+| 1:200 | B+ (backrest front in plastic tone) -> B+ | B+ | B+ |
+| 1:500 | B+ (faceted seat outline from tessellation, plastic-tone backrest) -> B+ | B+ | B+ |
+
+Opened: body sheets of all four scales, 1:50 structure and thermal cut, poses `reclined` at 1:50, two three-quarter views from behind before and after. Not opened this round: thermal/structure sheets of 1:100 to 1:500, poses `swivel-quarter`, `swivel-quarter-opposite-key`, `seat-high`, the `height-adjust` clip frame and the 2D sheets (rendered under `🗑️generated/r5-office-swivel-chair/before/`).
+
+### Changes
+
+- `backrest-bracket` at 1:50 and 1:100: box 26 x 180 x 100 mm -> moulded carrier cover, a loft of seven (1:50) / four (1:100) domed superelliptic sections up the strut (half width 30-50 mm, half depth 6-14.5 mm), rounded top and bottom ends, overlapping the shell back by 4 mm. Thermal and structure follow by reference; the 2D bracket rectangle stays the true outline within the silhouette limits.
+
+### Checks
+
+`r3-validate.ts furniture/office-swivel-chair --volumes` VALID (schema 0, validateAsset 0, checkVolumes 0); `volumes-check.ts --product` PASS; spliced with `volumes-insert.py`.
+
+### Remaining
+
+- Lowest seat 445 mm against the EN 1335-1 type A low end of 400 mm (inside product data); lowering it moves every seat-tree part and the 2D.
+- Shell side bands meet the central shell surface in two visible creases on the back; the top edge is 5 mm higher at the sides (surface of revolution).
+- 1:200/1:500 backrest is one plastic-tone mass (the fabric pad exists only in thermal); seat outline faceted by the product tessellation at 1:500.

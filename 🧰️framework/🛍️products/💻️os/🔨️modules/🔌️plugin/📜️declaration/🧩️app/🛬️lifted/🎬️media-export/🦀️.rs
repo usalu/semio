@@ -93,8 +93,11 @@ impl MediaConstruction{
  }
  /// 🏗️ Births one candidate into its empty slot; `true` once settled, a refusal keeps its complete causes in the frame.
  pub fn built<O>(&mut self,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+  if output.is_some()&&!self.admission.settling()&&self.admission.pending_recovery().is_none()&&!self.admission.is_failed(){
+   return self.admission.close_step(cx)
+  }
   match self.admit(cx,output,demand,construct)?{
-   semio_framework_job::OriginalConstructionStatus::Ready=>self.admission.reset_step(cx),
+   semio_framework_job::OriginalConstructionStatus::Ready=>self.admission.close_step(cx),
    semio_framework_job::OriginalConstructionStatus::Pending=>Ok(false),
    semio_framework_job::OriginalConstructionStatus::Failed=>{self.admission.take_failure_into_step(&mut self.failure,cx)?;Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media export construction failed; its complete causes are retained").into())}
   }

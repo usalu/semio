@@ -558,6 +558,21 @@ async fn a_verified_annex_value_supports_a_verdict_while_the_other_annex_stays_o
     assert_eq!(verdict(AnnexChoice::De).status, CheckStatus::UnverifiedBasis);
 }
 
+#[test]
+fn an_unset_annex_value_cannot_support_a_compliant_verdict() {
+    let id = "ndp.en1992.d-04.class-fck.xc2-xc3";
+    let entry = ndp(id).expect("EN 1992 durability threshold");
+    assert_eq!(entry.value(AnnexChoice::De), NdpValue::Unset);
+    assert!(ndp_is_verified_for(id, AnnexChoice::En));
+    assert!(!ndp_is_verified_for(id, AnnexChoice::De));
+    let result = CheckResult::assess("ndp", "Part", ClauseId::new("Z", "1", "1"), subject(), title())
+        .utilization(dimensionless(0.5), dimensionless(1.0))
+        .annex(AnnexChoice::De)
+        .ndp(id)
+        .build();
+    assert_eq!(result.status, CheckStatus::UnverifiedBasis);
+}
+
 /// 🧪️ The shared action factors read the EN 1990 registry rows: K_FI scales γ_G,sup and γ_Q of persistent situations only, γ_G,inf and ξ stay, exceptional situations and serviceability carry 1.0, ψ follow the category and bridges split γ_Q by traffic family.
 #[test]
 fn action_factors_follow_the_registry_class_situation_and_domain() {

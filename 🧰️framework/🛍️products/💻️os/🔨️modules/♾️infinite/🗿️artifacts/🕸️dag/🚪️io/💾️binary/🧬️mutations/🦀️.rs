@@ -9,3 +9,5 @@ impl crate::os_spr::OpBinary for DagMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+dsl::original_ordinal_operation_receiving!(DagMutation);

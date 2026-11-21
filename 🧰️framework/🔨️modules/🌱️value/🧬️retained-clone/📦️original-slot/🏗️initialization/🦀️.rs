@@ -54,6 +54,35 @@ pub unsafe fn initialize_absent_array_at<T: 'static, const N: usize>(target: *mu
     Ok(end == extent)
 }
 
+/// 📋️ Defines typed final-address placement for a sequence of independently funded empty fields.
+#[macro_export]
+macro_rules! original_empty_fields {
+    ($extent:ident, $demand:ident, $initialize:ident; $($field:ident = $value:expr),+ $(,)?) => {
+        pub const $extent: usize = [$(stringify!($field)),+].len();
+
+        pub fn $demand(field: usize) -> Result<$crate::RetirementDemand, $crate::ValueError> {
+            fn field_size<S, T>(_: fn(&S) -> &T) -> usize { ::core::mem::size_of::<T>() }
+            let fields = [$(2 * field_size::<Self, _>(|owner| &owner.$field)),+];
+            let copy_bytes = *fields.get(field).ok_or_else(|| $crate::ValueError::invariant("original empty field cursor exceeds its inventory"))?;
+            Ok($crate::RetirementDemand { copy_bytes, depth: 1, ..Default::default() })
+        }
+
+        /// 🌱️ Places one complete typed empty field in its final address.
+        /// # Safety
+        /// The selected field must be uninitialized in exclusive, correctly aligned storage for Self.
+        pub unsafe fn $initialize(target: *mut Self, field: usize, offset: usize, count: usize) -> Result<bool, $crate::ValueError> {
+            if offset != 0 || count != Self::$demand(field)?.copy_bytes {
+                return Err($crate::ValueError::invariant("original empty field requires its exact copy extent"));
+            }
+            let fields: [fn(*mut Self); { [$(stringify!($field)),+].len() }] =
+                [$(|owner| unsafe { ::core::ptr::addr_of_mut!((*owner).$field).write($value); }),+];
+            fields[field](target);
+            Ok(true)
+        }
+    }
+}
+pub use crate::original_empty_fields;
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

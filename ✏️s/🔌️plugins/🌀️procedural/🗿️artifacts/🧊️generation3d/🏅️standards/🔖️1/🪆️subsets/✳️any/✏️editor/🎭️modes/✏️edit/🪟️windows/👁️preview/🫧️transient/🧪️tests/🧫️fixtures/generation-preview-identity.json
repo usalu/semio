@@ -1,0 +1,107 @@
+{
+  "cases": [
+    {
+      "name": "edit retains its last convergence",
+      "mode": "edit",
+      "selected": null,
+      "stored": {
+        "previewEvalText": "edit"
+      },
+      "live": "edit-live",
+      "painted": "edit",
+      "visible": "edit",
+      "publication": "edit"
+    },
+    {
+      "name": "switch to B immediately hides A",
+      "mode": "generate",
+      "selected": "B",
+      "stored": {
+        "previewEvalText": "A",
+        "generationId": "A"
+      },
+      "live": "{}",
+      "painted": "A",
+      "visible": null,
+      "publication": "{}"
+    },
+    {
+      "name": "partial B comes from the current walk",
+      "mode": "generate",
+      "selected": "B",
+      "stored": {
+        "previewEvalText": "{}",
+        "generationId": "B"
+      },
+      "live": "B-partial",
+      "painted": "A",
+      "visible": "{}",
+      "publication": "B-partial"
+    },
+    {
+      "name": "matching B is visible",
+      "mode": "generate",
+      "selected": "B",
+      "stored": {
+        "previewEvalText": "B",
+        "generationId": "B"
+      },
+      "live": "B",
+      "painted": "B",
+      "visible": "B",
+      "publication": "B"
+    },
+    {
+      "name": "identical evaluation bytes acquire the new generation",
+      "mode": "generate",
+      "selected": "C",
+      "stored": {
+        "previewEvalText": "identical",
+        "generationId": "B"
+      },
+      "live": "identical",
+      "painted": "identical",
+      "visible": null,
+      "publication": "identical"
+    },
+    {
+      "name": "switching back refuses the B result",
+      "mode": "generate",
+      "selected": "A",
+      "stored": {
+        "previewEvalText": "B",
+        "generationId": "B"
+      },
+      "live": "A-live",
+      "painted": "B",
+      "visible": null,
+      "publication": "A-live"
+    },
+    {
+      "name": "removal clears the lane",
+      "mode": "generate",
+      "selected": null,
+      "stored": {
+        "previewEvalText": "B",
+        "generationId": "B"
+      },
+      "live": "B",
+      "painted": "B",
+      "visible": null,
+      "publication": null
+    },
+    {
+      "name": "unbound evaluation has no generation authority",
+      "mode": "generate",
+      "selected": "B",
+      "stored": {
+        "previewEvalText": "unbound",
+        "generationId": null
+      },
+      "live": "B",
+      "painted": "unbound",
+      "visible": null,
+      "publication": "B"
+    }
+  ]
+}

@@ -42,6 +42,10 @@ pub struct MediaExportPreparation<A:ArtifactApp>{
 }
 
 impl<A:ArtifactApp> MediaExportPreparation<A>{
+ pub(crate) fn carrier_release_demand()->RetirementDemand{
+  RetirementDemand{copy_bytes:size_of::<Option<Box<Self>>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}
+ }
+
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   use semio_framework_job::InteractiveJob;
   let one=RetirementDemand{depth:1,..Default::default()};

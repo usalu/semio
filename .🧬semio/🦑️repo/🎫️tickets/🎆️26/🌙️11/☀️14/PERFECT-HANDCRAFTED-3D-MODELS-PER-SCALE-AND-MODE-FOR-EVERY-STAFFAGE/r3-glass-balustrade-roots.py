@@ -114,7 +114,7 @@ def drawing50():
         shape("handrail", "body", 4, True, STEEL, disc(k.RAIL_U, 0, k.RAIL_R), "handrail-steel", "steel", "steel"),
     ]
     front = [
-        shape("base-plate-front", "body", 2, True, STEEL, rect(-1, 0, 1, top), "clamp-steel", "steel", pen=0.13),
+        shape("base-plate-front", "body", 2, True, STEEL, rect(-1, 0, 1, top), "clamp-steel", "steel", pen=0.20),
         shape("cheek-front", "body", 2, True, STEEL, rect(-1, top, 1, k.SHOE_TOP), "clamp-steel", "steel"),
         shape("weld-front", "detail", 2.5, True, 0.25, rect(-1, top, 1, top + k.WELD), "clamp-steel", "steel", pen=0.13),
     ]
@@ -132,9 +132,9 @@ def drawing50():
     ]
     plan = [
         shape("base-plate-plan", "body", 2, True, STEEL, rect(-k.PLATE_HALF, -1, k.PLATE_HALF, 1), "clamp-steel", "steel"),
-        shape("weld-plan", "detail", 2.2, True, 0.25, rect(k.CLAMP_HALF, -1, k.CLAMP_HALF + k.WELD, 1), "clamp-steel", "steel", pen=0.13),
-        shape("cheek-fixed-plan", "body", 2.5, True, 0.3, rect(k.SLOT_HALF, -1, k.CLAMP_HALF, 1), "clamp-steel", "steel", pen=0.13),
-        shape("cheek-clamp-plan", "body", 2.5, True, 0.3, rect(-k.CLAMP_HALF, -1, -k.SLOT_HALF, 1), "clamp-steel", "steel", pen=0.13),
+        shape("weld-plan", "detail", 2.2, True, 0.25, rect(k.CLAMP_HALF, -1, k.CLAMP_HALF + k.WELD, 1), "clamp-steel", "steel", pen=0.20),
+        shape("cheek-fixed-plan", "body", 2.5, True, 0.3, rect(k.SLOT_HALF, -1, k.CLAMP_HALF, 1), "clamp-steel", "steel", pen=0.20),
+        shape("cheek-clamp-plan", "body", 2.5, True, 0.3, rect(-k.CLAMP_HALF, -1, -k.SLOT_HALF, 1), "clamp-steel", "steel", pen=0.20),
         shape("pad-fixed-plan", "body", 2.6, True, RUBBER, rect(k.GLASS_HALF, -k.GLASS_HALF_LENGTH, k.SLOT_HALF, k.GLASS_HALF_LENGTH), "clamp-steel", "elastomer", pen=0.1),
         shape("pad-clamp-plan", "body", 2.6, True, RUBBER, rect(-k.SLOT_HALF, -k.GLASS_HALF_LENGTH, -k.GLASS_HALF, k.GLASS_HALF_LENGTH), "clamp-steel", "elastomer", pen=0.1),
         shape("glass-plan", "glazing", 3, True, 0.92, rect(-k.GLASS_HALF, -k.GLASS_HALF_LENGTH, k.GLASS_HALF, k.GLASS_HALF_LENGTH), "panel-glass", "glass", pen=0.1),

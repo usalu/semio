@@ -448,7 +448,7 @@ impl<P,M> RetainedPersistedDocumentHydration<P,M>
 where P: ArtifactPack + semio_os_store_text_io::ArtifactStoreSnapshot + semio_os_spr::StoreState,
 M: protocol::OpBinaryReceiving + Clone + semio_os_spr::ColdMutation<P> + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static {
     pub(super) fn loaded_replay_retirement(&self, owners: &DocumentStoreOwners<P, M>) -> semio_os_store_read::ArtifactHistoryReadRetirement<P, M> {
-        semio_os_store_read::ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None), preview: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), plan_retirement: ManuallyDrop::new(None), draft_retirement: ManuallyDrop::new(None), registry_retirement: ManuallyDrop::new(None), snapshots: ManuallyDrop::new(Some(owners.initial_snapshot_retirement.clone())), mutations: ManuallyDrop::new(Some(owners.mutation_retirement.clone())), factory_retirement:std::array::from_fn(|_|None) }
+        semio_os_store_read::ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None), preview: ManuallyDrop::new(None), replay: Default::default(), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), plan_retirement: ManuallyDrop::new(None), draft_retirement: ManuallyDrop::new(None), registry_retirement: ManuallyDrop::new(None), snapshots: ManuallyDrop::new(Some(owners.initial_snapshot_retirement.clone())), mutations: ManuallyDrop::new(Some(owners.mutation_retirement.clone())), factory_retirement:std::array::from_fn(|_|None) }
     }
 
 }

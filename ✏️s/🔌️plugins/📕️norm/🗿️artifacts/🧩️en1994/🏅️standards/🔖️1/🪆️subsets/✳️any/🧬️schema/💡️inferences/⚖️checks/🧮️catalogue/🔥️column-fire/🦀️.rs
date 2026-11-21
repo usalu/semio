@@ -1,4 +1,4 @@
-//! 🔥️ Composite column fire (C-32, C-46): the simple calculation model of EN 1994-1-2 (Annex H, partially encased sections) on a temperature field from a two-dimensional heat-conduction analysis, and the tabulated-data structure whose cells stay unverified until a human transcribes them.
+//! 🔥️ Composite column fire (C-32, C-46): the simple calculation model of EN 1994-1-2 (Annex H, partially encased sections) on a temperature field from a two-dimensional heat-conduction analysis, and the tabulated methods of EN 1994-1-2:2005 §4.2.3.
 
 use super::encased::{EncasedI, Encasement};
 use super::{iso834_c, ky_theta, steel_specific_heat};
@@ -335,6 +335,10 @@ pub struct TableCell {
 impl TableCell {
     /// 📚️ A cell that has not been transcribed.
     pub const MISSING: Self = Self { value: None, verified: false };
+
+    const fn verified(value: f64) -> Self {
+        Self { value: Some(value), verified: true }
+    }
 }
 
 /// 📚️ One row of the tabulated minimum dimensions of a composite column for a fire resistance class and a load level η_fi.
@@ -347,8 +351,95 @@ pub struct ColumnRow {
     pub min_reinforcement_ratio: TableCell,
 }
 
-/// 📚️ The tabulated column data of EN 1994-1-2 (C-46); empty until a human transcribes the cells with `verified: false` and registers them (`en1994.1-2.tables`).
-pub const COLUMN_TABLE: &[ColumnRow] = &[];
+const fn column_row(rating_min: u32, load_level: f64, dimension_mm: f64, axis_mm: Option<f64>, reinforcement_percent: Option<f64>) -> ColumnRow {
+    let min_axis_distance_m = match axis_mm {
+        Some(mm) => TableCell::verified(mm / 1000.0),
+        None => TableCell::MISSING,
+    };
+    let min_reinforcement_ratio = match reinforcement_percent {
+        Some(percent) => TableCell::verified(percent / 100.0),
+        None => TableCell::MISSING,
+    };
+    ColumnRow { rating_min, load_level, min_width_m: TableCell::verified(dimension_mm / 1000.0), min_axis_distance_m, min_reinforcement_ratio }
+}
+
+/// 📚️ Partially encased columns, verified against EN 1994-1-2:2005 and DIN EN 1994-1-2:2010-12 Table 4.6.
+pub const COLUMN_TABLE: &[ColumnRow] = &[
+    column_row(30, 0.28, 160.0, None, None),
+    column_row(60, 0.28, 200.0, Some(50.0), Some(4.0)),
+    column_row(90, 0.28, 300.0, Some(50.0), Some(3.0)),
+    column_row(120, 0.28, 400.0, Some(70.0), Some(4.0)),
+    column_row(30, 0.47, 160.0, None, None),
+    column_row(60, 0.47, 300.0, Some(50.0), Some(4.0)),
+    column_row(90, 0.47, 400.0, Some(70.0), Some(4.0)),
+    column_row(30, 0.66, 160.0, Some(40.0), Some(1.0)),
+    column_row(60, 0.66, 400.0, Some(70.0), Some(4.0)),
+];
+
+/// 📗 Concrete-filled hollow sections, verified against EN 1994-1-2:2005 and DIN EN 1994-1-2:2010-12 Table 4.7.
+pub const FILLED_COLUMN_TABLE: &[ColumnRow] = &[
+    column_row(30, 0.28, 160.0, Some(0.0), Some(0.0)),
+    column_row(60, 0.28, 200.0, Some(30.0), Some(1.5)),
+    column_row(90, 0.28, 220.0, Some(40.0), Some(3.0)),
+    column_row(120, 0.28, 260.0, Some(50.0), Some(6.0)),
+    column_row(180, 0.28, 400.0, Some(60.0), Some(6.0)),
+    column_row(30, 0.47, 260.0, Some(0.0), Some(0.0)),
+    column_row(60, 0.47, 260.0, Some(30.0), Some(3.0)),
+    column_row(90, 0.47, 400.0, Some(40.0), Some(6.0)),
+    column_row(120, 0.47, 450.0, Some(50.0), Some(6.0)),
+    column_row(180, 0.47, 500.0, Some(60.0), Some(6.0)),
+    column_row(30, 0.66, 260.0, Some(25.0), Some(3.0)),
+    column_row(60, 0.66, 450.0, Some(30.0), Some(6.0)),
+    column_row(90, 0.66, 550.0, Some(40.0), Some(6.0)),
+];
+
+/// 🧯 Minimum concrete cover for EN 1994-1-2 Tables 4.3 and 4.5.
+/// R30 requires concrete between the flanges without additional cover.
+pub fn insulating_cover_m(rating_min: u32) -> Option<f64> {
+    match rating_min {
+        30 => Some(0.0),
+        60 => Some(0.025),
+        90 => Some(0.030),
+        120 => Some(0.040),
+        180 => Some(0.050),
+        _ => None,
+    }
+}
+
+/// 📘 One complete solution from Table 4.4, for both section dimensions and their associated cover and axis distance.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct EncasedColumnRow {
+    pub rating_min: u32,
+    pub alternative: u32,
+    pub min_dimension_m: f64,
+    pub min_cover_m: f64,
+    pub min_axis_m: f64,
+}
+
+const fn encased_row(rating_min: u32, alternative: u32, size_mm: f64, cover_mm: f64, axis_mm: f64) -> EncasedColumnRow {
+    EncasedColumnRow { rating_min, alternative, min_dimension_m: size_mm / 1000.0, min_cover_m: cover_mm / 1000.0, min_axis_m: axis_mm / 1000.0 }
+}
+
+/// 📙 Fully encased composite columns, verified against EN 1994-1-2:2005 and DIN EN 1994-1-2:2010-12 Table 4.4.
+pub const ENCASED_COLUMN_TABLE: &[EncasedColumnRow] = &[
+    encased_row(30, 1, 150.0, 40.0, 20.0),
+    encased_row(60, 1, 180.0, 50.0, 30.0),
+    encased_row(90, 1, 220.0, 50.0, 30.0),
+    encased_row(120, 1, 300.0, 75.0, 40.0),
+    encased_row(180, 1, 350.0, 75.0, 50.0),
+    encased_row(240, 1, 400.0, 75.0, 50.0),
+    encased_row(60, 2, 200.0, 40.0, 20.0),
+    encased_row(90, 2, 250.0, 40.0, 20.0),
+    encased_row(120, 2, 350.0, 50.0, 30.0),
+    encased_row(180, 2, 400.0, 60.0, 40.0),
+];
+
+/// 🔍 Select the complete Table 4.4 alternative with the lowest utilization.
+pub fn check_fully_encased(rating_min: u32, size_m: f64, cover_m: f64, axis_m: f64) -> Option<(EncasedColumnRow, f64)> {
+    ENCASED_COLUMN_TABLE.iter().copied().filter(|row| row.rating_min == rating_min)
+        .map(|row| (row, (row.min_dimension_m / size_m).max(row.min_cover_m / cover_m).max(row.min_axis_m / axis_m)))
+        .min_by(|(left, a), (right, b)| a.total_cmp(b).then(left.alternative.cmp(&right.alternative)))
+}
 
 /// 📚️ Outcome of the tabulated-data check of one column.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -359,7 +450,7 @@ pub enum Tabulated {
 
 /// 📚️ Tabulated check against the first row of `rows` for `rating_min` whose load level is not below `eta_fi`; a missing cell means no data, never a guessed value.
 pub fn check_tabulated(rows: &[ColumnRow], rating_min: u32, eta_fi: f64, width_m: f64, axis_distance_m: f64, ratio: f64) -> Tabulated {
-    let Some(row) = rows.iter().filter(|r| r.rating_min == rating_min && r.load_level + 1e-9 >= eta_fi).min_by(|a, b| a.load_level.total_cmp(&b.load_level)) else { return Tabulated::NoData };
+    let Some(row) = rows.iter().filter(|r| r.rating_min == rating_min && r.load_level >= eta_fi).min_by(|a, b| a.load_level.total_cmp(&b.load_level)) else { return Tabulated::NoData };
     let (Some(w), Some(a), Some(r)) = (row.min_width_m.value, row.min_axis_distance_m.value, row.min_reinforcement_ratio.value) else { return Tabulated::NoData };
     let utilization = (w / width_m.max(1e-9)).max(a / axis_distance_m.max(1e-9)).max(r / ratio.max(1e-9));
     Tabulated::Evaluated { utilization, verified: row.min_width_m.verified && row.min_axis_distance_m.verified && row.min_reinforcement_ratio.verified }

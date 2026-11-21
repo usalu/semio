@@ -21,6 +21,14 @@ impl GuestRuntimes{
  pub fn original_scalar_export(&self,instance:&GuestInstance,cx:&StepContext<'_>)->Result<Option<OwnedSemioExport>,OriginalTurnFailure>{let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(unsupported())};runtime.original_call_export(state,cx)}
  /// 🏷️ Borrows only an actual frozen ActorInput unit identity.
  pub fn original_unit_export(&self,instance:&GuestInstance,cx:&StepContext<'_>)->Result<Option<OwnedSemioExport>,OriginalTurnFailure>{let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(unsupported())};runtime.owned_original_unit_export(state,cx)}
+ pub fn original_scalar_must_abort(&self,instance:&GuestInstance,cx:&StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(unsupported())};
+  runtime.original_scalar_must_abort(state,cx)
+ }
+ pub fn original_unit_must_abort(&self,instance:&GuestInstance,cx:&StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(unsupported())};
+  runtime.original_unit_must_abort(state,cx)
+ }
  pub fn original_scalar_requires_execution(&self,instance:&GuestInstance)->Result<bool,OriginalTurnFailure>{let(Self::Owned(_),GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(unsupported())};Ok(state.original_call_requires_execution())}
  pub fn original_scalar_is_pending(&self,instance:&GuestInstance)->Result<bool,OriginalTurnFailure>{let(Self::Owned(_),GuestInstanceState::Owned(state))=(self,&instance.state)else{return Err(unsupported())};Ok(state.original_call_is_pending())}
  pub fn close_original_scalar_step(&self,instance:&mut GuestInstance,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let(Self::Owned(runtime),GuestInstanceState::Owned(state))=(self,&mut instance.state)else{return Err(unsupported())};runtime.close_original_call_step(state,cx)}

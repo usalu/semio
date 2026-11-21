@@ -4,7 +4,7 @@ use semio_framework_value_native_decoding::{NativeDecodeControl,NativeSharedAdmi
 use semio_framework_value_control_contract::*;
 use semio_framework_value_retirement::{OriginalRetirementCloseLoan,OriginalRetirementFailure};
 use semio_framework_value_retained_clone::retained_clone::RetainedCloneClose;
-use semio_framework_value_retirement::retirement::RetireOwned;
+use semio_framework_value_retirement::retirement::{RetireOwned, arc_custody::ArcLease};
 use semio_framework_value_shared_issuance::SealedShared;
 use semio_framework_value_allocation_return::original::SharedOriginalStorage;
 use std::{marker::PhantomData,mem::ManuallyDrop};
@@ -148,6 +148,7 @@ macro_rules! mode{
  }}
 mode!(SealedShared<T>,Sealed,TakeSealed);
 mode!(SharedOriginalStorage<T>,Issued,TakeIssued);
+mode!(ArcLease<T>,Arc,TakeArc);
 impl<T:RetireOwned+Sync,R:RetireOwned+Sync> Drop for NativeSharedSlots<T,R>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"shared slots require original funded closure")}}
 
 

@@ -7,7 +7,6 @@ use semio_framework::InteractionDefinition;
 use semio_framework::InteractionVerb;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
@@ -61,9 +60,7 @@ use semio_plugin_interaction::ui_assembly_error;
 use semio_plugin_window_transient::ui_label;
 use semio_plugin_window_transient::ui_text;
 #[cfg(test)]
-use crate::image_kit::IMAGE_WINDOW_PAGED_NODE_KEY;
 #[cfg(test)]
-use crate::image_kit::IMAGE_WINDOW_PIXELS_LANE_KEY;
 #[cfg(test)]
 use crate::image_kit::ImageView;
 #[cfg(test)]
@@ -499,10 +496,10 @@ impl ActionFactory {
 pub struct AppActionRegistry {
     native:Option<original_registry::NativeRegistry>,
     #[doc(hidden)]
-    pub actions: HashMap<String, ActionDefinition>,
-    window_actions: HashMap<String, HashMap<String, ActionDefinition>>,
-    app_commands: HashMap<String, CommandDefinition>,
-    mode_commands: HashMap<String, HashMap<String, CommandDefinition>>,
+    pub actions: BTreeMap<String, ActionDefinition>,
+    window_actions: BTreeMap<String, BTreeMap<String, ActionDefinition>>,
+    app_commands: BTreeMap<String, CommandDefinition>,
+    mode_commands: BTreeMap<String, (usize, BTreeMap<String, CommandDefinition>)>,
     /// 📇️ The app's `controller_id` — addresses `ActionDescriptor.controller_id` for the
     /// framework-built history panel. Empty for the registry-less test path.
     #[doc(hidden)]
@@ -512,12 +509,12 @@ pub struct AppActionRegistry {
     /// for the registry-less test path, exactly like `actions`/`commands` — an app constructed via
     /// `VcsArtifactApp::new` therefore has no interaction domains to intercept, matching the fact
     /// that `AppBuilder::interaction(...)` calls never reach a registry built that way either.
-    interactions: HashMap<String, InteractionDefinition>,
+    interactions: BTreeMap<String, InteractionDefinition>,
     /// ⏯️ Every tool and utility that declares a `ToolRunDefinition`, with its label, keyed by id —
     /// the manifest is the run's source of record (tool run contract §2.4).
-    tool_runs: HashMap<String, (LocalizedLabel, semio_framework_tool_run::ToolRunDefinition)>,
+    tool_runs: BTreeMap<String, (LocalizedLabel, semio_framework_tool_run::ToolRunDefinition)>,
     /// 🪟️ Every declared window kind's body key — how a run's declared `windows` resolve to the bodies a tick dirties.
-    window_body_keys: HashMap<String, String>,
+    window_body_keys: BTreeMap<String, String>,
     /// 🕹️ Every declared window body key indexed by the interaction domain that window kind
     /// declares (`semio_framework::interaction_window_bodies_by_domain`) — the schema-first input
     /// of `interaction_declared_refresh_scope`, read once here instead of per dispatched hover.
@@ -568,14 +565,21 @@ impl AppActionRegistry {
     ///    bounded tool proof keyed on them would fail closed with an EMPTY `migrated` set
     ///    (`interactive-job.catalog-authority`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.3).
     ///
-    /// A window roster wins over the injected twin for the same id: it is the authored declaration.
+    /// 💬️ Authored window declarations override generated interactions and earlier windows for the same id.
     pub fn from_definition(definition: &AppDefinition) -> Self {
         let app_commands = definition.commands.iter().map(|command| (command.id.clone(), command.clone())).collect();
-        let mode_commands = definition.modes.iter().map(|mode| (mode.id.clone(), mode.commands.iter().map(|command| (command.id.clone(), command.clone())).collect())).collect();
-        let window_actions: HashMap<String, HashMap<String, ActionDefinition>> =
-            definition.window_kinds.iter().map(|window| (window.id.clone(), semio_framework::window_kind_actions(definition, window).into_iter().map(|action| (action.id.clone(), action.clone())).collect())).collect();
-        let mut actions: HashMap<String, ActionDefinition> = semio_framework::interaction_action_definitions(definition).into_iter().map(|action| (action.id.clone(), action)).collect();
-        actions.extend(window_actions.values().flat_map(|window| window.iter().map(|(id, action)| (id.clone(), action.clone()))));
+        let mode_commands = definition.modes.iter().enumerate().map(|(ordinal, mode)| {
+            let commands = mode.commands.iter().map(|command| (command.id.clone(), command.clone())).collect();
+            (mode.id.clone(), (ordinal, commands))
+        }).collect();
+        let mut actions: BTreeMap<String, ActionDefinition> = semio_framework::interaction_action_definitions(definition).into_iter().map(|action| (action.id.clone(), action)).collect();
+        let window_actions = definition.window_kinds.iter().map(|window| {
+            let declared = semio_framework::window_kind_actions(definition, window).into_iter().map(|action| {
+                actions.insert(action.id.clone(), action.clone());
+                (action.id.clone(), action.clone())
+            }).collect();
+            (window.id.clone(), declared)
+        }).collect();
         let tool_runs = definition
             .tools
             .iter()
@@ -639,9 +643,8 @@ impl AppActionRegistry {
     }
 
     fn detach_one_row(&mut self) -> Vec<String> {
-        fn first<V>(map: &mut HashMap<String, V>) -> Option<String> {
-            let key = map.keys().next().cloned()?;
-            map.remove_entry(&key).map(|(key, _)| key)
+        fn first<V>(map: &mut BTreeMap<String, V>) -> Option<String> {
+            map.pop_first().map(|(key, _)| key)
         }
         if let Some(key) = first(&mut self.actions) {
             return vec![key];
@@ -652,7 +655,7 @@ impl AppActionRegistry {
         if let Some(owner) = first(&mut self.window_actions) {
             return vec![owner];
         }
-        if let Some(row) = self.mode_commands.values_mut().find_map(first) {
+        if let Some(row) = self.mode_commands.values_mut().find_map(|(_, commands)| first(commands)) {
             return vec![row];
         }
         if let Some(owner) = first(&mut self.mode_commands) {
@@ -667,8 +670,8 @@ impl AppActionRegistry {
         if let Some(key) = first(&mut self.interactions) {
             return vec![key];
         }
-        if let Some(key) = self.window_body_keys.keys().next().cloned() {
-            return self.window_body_keys.remove_entry(&key).map_or_else(Vec::new, |(key, body)| vec![key, body]);
+        if let Some((key, body)) = self.window_body_keys.pop_first() {
+            return vec![key, body];
         }
         if let Some((domain, bodies)) = self.interaction_window_bodies.pop_first() {
             return std::iter::once(domain).chain(bodies).collect();
@@ -748,7 +751,10 @@ impl AppActionRegistry {
     #[doc(hidden)]
     pub fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
         if let Some(native)=self.native.as_ref(){return native.command(id)}
-        self.app_commands.get(id).or_else(|| self.mode_commands.values().find_map(|commands| commands.get(id)))
+        self.app_commands.get(id).or_else(|| {
+            self.mode_commands.values().filter_map(|(ordinal, commands)| commands.get(id).map(|command| (ordinal, command)))
+                .min_by_key(|(ordinal, _)| *ordinal).map(|(_, command)| command)
+        })
     }
 
     #[doc(hidden)]
@@ -760,7 +766,7 @@ impl AppActionRegistry {
     #[doc(hidden)]
     pub async fn mode_command(&self, mode_id: &str, id: &str) -> Option<&CommandDefinition> {
         if let Some(native)=self.native.as_ref(){return native.definition().modes.iter().find(|m|m.id==mode_id)?.commands.iter().find(|c|c.id==id)}
-        self.mode_commands.get(mode_id)?.get(id)
+        self.mode_commands.get(mode_id)?.1.get(id)
     }
 
     /// 🫙️ Whether this registry declares NOTHING — the registry-less path `AppActionRegistry::default()`
@@ -777,7 +783,7 @@ impl AppActionRegistry {
         if let Some(native)=self.native.as_ref(){let d=native.definition();ids.extend(d.actions.iter().chain(d.window_kinds.iter().flat_map(|w|w.actions.iter())).filter(|r|r.semantics.execution.interactive_job==semio_framework::InteractiveJobClassification::Migrated).map(|r|r.id.clone()));ids.extend(d.commands.iter().chain(d.modes.iter().flat_map(|m|m.commands.iter())).filter(|r|r.semantics.execution.interactive_job==semio_framework::InteractiveJobClassification::Migrated).map(|r|r.id.clone()));return ids}
         ids.extend(self.actions.iter().filter(|(_, definition)| definition.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated).map(|(id, _)| id.clone()));
         ids.extend(self.app_commands.iter().filter(|(_, definition)| definition.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated).map(|(id, _)| id.clone()));
-        for commands in self.mode_commands.values() {
+        for (_, commands) in self.mode_commands.values() {
             ids.extend(commands.iter().filter(|(_, definition)| definition.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated).map(|(id, _)| id.clone()));
         }
         ids

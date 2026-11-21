@@ -1,0 +1,20 @@
+{
+  "tolerance": 1e-8,
+  "output": "wire",
+  "cases": [
+    {"id": "perpendicular ellipse pair has two shared points", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [0, 0, 0], "normal": [0, 1, 0], "axis": [0, 0, -1], "radii": [9, 5]}, "points": [[-5, 0, 0], [5, 0, 0]]},
+    {"id": "circle and ellipse keep circle ordering", "a": {"center": [0, 0, 0], "normal": [0, 1, 0], "axis": [0, 0, -1], "radius": 5}, "b": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "points": [[-5, 0, 0], [5, 0, 0]]},
+    {"id": "ellipse and circle keep ellipse ordering", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [0, 0, 0], "normal": [0, 1, 0], "axis": [0, 0, -1], "radius": 5}, "points": [[-5, 0, 0], [5, 0, 0]]},
+    {"id": "both ellipses tangent to the same line", "a": {"center": [0, 8, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [0, 0, 9], "normal": [0, 1, 0], "axis": [0, 0, -1], "radii": [9, 5]}, "points": [[0, 0, 0]], "tangent": true},
+    {"id": "one ellipse tangent to the plane line still crosses", "a": {"center": [5, 8, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [0, 0, 0], "normal": [0, 1, 0], "axis": [0, 0, -1], "radii": [9, 5]}, "points": [[5, 0, 0]]},
+    {"id": "only one shared candidate in mixed secants", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [2, 0, 0], "normal": [0, 1, 0], "axis": [0, 0, -1], "radius": 3}, "points": [[5, 0, 0]]},
+    {"id": "two different elliptical chords share no endpoint", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [0, 0, 0], "normal": [0, 1, 0], "axis": [0, 0, -1], "radii": [9, 4]}, "points": []},
+    {"id": "both angle limits meet over the seam", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5], "range": [5.5, 7]}, "b": {"center": [0, 0, 0], "normal": [1, 0, 0], "axis": [0, 0, 1], "radii": [10, 8], "range": [4, 5]}, "points": [[0, 8, 0]]},
+    {"id": "separate edge ranges remove the shared endpoints", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5], "range": [4, 5]}, "b": {"center": [0, 0, 0], "normal": [0, 1, 0], "axis": [0, 0, -1], "radii": [9, 5], "range": [1, 2]}, "points": []},
+    {"id": "translated tilted pair", "a": {"center": [3, 4, 2], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [3, 4, 2], "normal": [0, 0.6, 0.8], "axis": [0, 0.8, -0.6], "radii": [9, 5]}, "points": [[-2, 4, 2], [8, 4, 2]]},
+    {"id": "intersection line is oblique to both ellipse axes", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [0, 0, 0], "normal": [0.7071067811865476, 0.7071067811865476, 0], "axis": [0, 0, -1], "radius": 5.996253511966891}, "points": [[-4.239991520025439, 4.239991520025439, 0], [4.239991520025439, -4.239991520025439, 0]]},
+    {"id": "parallel separated ellipse supports miss", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [0, 0, 1], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "points": []},
+    {"id": "near-tangent elliptical chords keep both roots", "a": {"center": [0, 7.9999999992, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [8, 5]}, "b": {"center": [0, 0, 8.9999999991], "normal": [0, 1, 0], "axis": [0, 0, -1], "radii": [9, 5]}, "points": [[-7.071067811688699e-05, 0, 0], [7.071067811688699e-05, 0, 0]]},
+    {"id": "eccentric ellipse agrees with a small circle", "a": {"center": [0, 0, 0], "normal": [0, 0, 1], "axis": [0, 1, 0], "radii": [200, 1]}, "b": {"center": [0, 0, 0], "normal": [0, 1, 0], "axis": [0, 0, -1], "radius": 1}, "points": [[-1, 0, 0], [1, 0, 0]]}
+  ]
+}

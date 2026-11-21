@@ -1,5 +1,17 @@
 {
   "version": 1,
+  "pressureCases": [
+    {"name":"pressured idle image under routine ratio","pressure":true,"allocated":66,"used":35,"free":14,"effect":true},
+    {"name":"routine image under routine ratio","pressure":false,"allocated":66,"used":35,"free":14,"effect":false},
+    {"name":"routine image over routine ratio","pressure":false,"allocated":66,"used":20,"free":14,"effect":true},
+    {"name":"busy image","pressure":true,"allocated":66,"used":35,"free":14,"busy":true,"effect":false},
+    {"name":"pressure clears before ownership","pressure":true,"allocated":66,"used":35,"free":27,"effect":false},
+    {"name":"slack shrinks below safe margin","pressure":true,"allocated":66,"used":60,"free":14,"effect":false},
+    {"name":"backing device changed","pressure":true,"allocated":66,"used":35,"free":14,"wrongDevice":true,"effect":false},
+    {"name":"image is detached before execution","pressure":true,"allocated":66,"used":35,"free":14,"detached":true,"effect":false},
+    {"name":"retirement starts before ownership","pressure":true,"allocated":66,"used":35,"free":14,"retiring":true,"effect":false},
+    {"name":"cancelled while taking ownership","pressure":true,"allocated":66,"used":35,"free":14,"cancel":true,"effect":false}
+  ],
   "cases": [
     {
       "id": "settled-zero",
@@ -119,5 +131,43 @@
       "kind": "unconfirmed",
       "retire": false
     }
-  ]
+  ],
+  "apfsOccupancy": {
+    "volumeGiB": 96,
+    "hostFreeGiB": 19,
+    "allocatedGiB": 51,
+    "pressureTargetGiB": 24,
+    "cases": [
+      {
+        "reportedMount": "/cache/r/m",
+        "filesystem": "apfs",
+        "usedGiB": 17,
+        "expected": true
+      },
+      {
+        "reportedMount": "/cache/other/m",
+        "filesystem": "apfs",
+        "usedGiB": 17,
+        "expected": false
+      },
+      {
+        "reportedMount": "/cache/r/m",
+        "filesystem": "hfs",
+        "usedGiB": 17,
+        "expected": false
+      },
+      {
+        "reportedMount": "/cache/r/m",
+        "filesystem": "apfs",
+        "usedGiB": 105,
+        "expected": false
+      },
+      {
+        "reportedMount": null,
+        "filesystem": "apfs",
+        "usedGiB": 17,
+        "expected": false
+      }
+    ]
+  }
 }

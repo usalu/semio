@@ -1,0 +1,7 @@
+# Typed relay viewport preview
+
+Flow variables declare a channel name and schema, then relay a typed dictionary. A variable carrying retained geometry now gets independent input and output instance addresses in the shared Generation3d viewport census. The renderer groups those coincident addresses on one retained mesh, and hover on either handle reaches the matching viewport instance. Scalar values continue to pass through the relay and have no world instances.
+
+The neutral channel-direction fixture uses a Geometry variable with a retained solid and a Numeric variable with a scalar. The compact Rust witness compiled the shared preview filter, traversal, and actual Edit and View payload functions against Pack JSON. Before the fix, tessellation demand omitted both relay addresses and the paired payload omitted both instances. After the fix all five native cases passed, including relay hover in both directions and component-mode references. The independent SQLite oracle passed seven cases and 25 assertions. Generate delegates viewport projection to the Edit payload function. The registered full preview-eval test uses the same fixture and remains pending a linked run.
+
+An initial edit temporarily corrupted three fixture/test files. I restored the two Rust sources from pre-edit snapshots and verified byte-for-byte recovery of the JSON fixture by reproducing the failed edit in memory before applying the relay change.

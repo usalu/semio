@@ -230,3 +230,25 @@ async fn set_active_example_resolves_the_registered_catalogue() {
     assert!(set_active_example::handle(&set_active_example::SetActiveExample { example_id: "semio".into() }, &view, &cfg, &mut session).is_err(), "an unregistered id faults instead of silently doing nothing");
 }
 //#endregion 🔖️CommandSurface
+
+#[test]
+fn export_proof_joins_the_retained_factory_contract() {
+    use semio_framework::ToolJobFactory;
+    use semio_s_artifact_draw_drawing_editor::export_job::DrawingExportCommandJobFactory;
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../🎮️commands/📤️export-document/🧪️tests/🧫️fixtures/🧾️registration/🔣️.json")).unwrap();
+    let factory = DrawingExportCommandJobFactory::new(expected["controller"].as_str().unwrap());
+    let [key] = factory.keys() else { panic!("The export factory registers one Draw command"); };
+    let contract = factory.execution_contract();
+    let proofs = DrawingPlayApp::bounded_first_step_tool_proofs();
+    let proof = proofs.iter().find(|row| row.tool_id == key.tool_id.as_str()).expect("Draw declares a retained export proof");
+    assert_eq!(proof.contract, contract);
+    assert_eq!(proof.controller_id, key.controller_id.as_str());
+    assert_eq!(proof.factory_type_id, Some(std::any::TypeId::of::<DrawingExportCommandJobFactory>()));
+    assert_eq!(serde_json::json!({
+        "tool": key.tool_id,
+        "controller": proof.controller_id,
+        "artifactSchema": proof.artifact_schema,
+        "maximumInputBytes": contract.max_raw_wire_bytes,
+        "maximumDownloadBytes": contract.max_output_bytes,
+    }), expected);
+}

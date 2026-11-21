@@ -23,6 +23,7 @@ fn renders_reference_tables_with_examples() {
     let node = render(Vec::new(), semio_ui_locale::Locale::En, "norm.catalogue", &windows).expect("catalogue");
     let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::built_to_component_tree(node)).expect("project");
     assert!(json.contains("norm-catalogue.examples") || json.contains("Examples") || json.contains("Beispiele") || json.contains("catalogue"), "{json}");
+    assert!(json.contains("GModG") && json.contains("Airtightness by envelope area"), "missing pressure-test verification: {json}");
     let tables = reference_tables();
     assert!(!tables.is_empty(), "din4108 must publish reference tables");
     for table in &tables {

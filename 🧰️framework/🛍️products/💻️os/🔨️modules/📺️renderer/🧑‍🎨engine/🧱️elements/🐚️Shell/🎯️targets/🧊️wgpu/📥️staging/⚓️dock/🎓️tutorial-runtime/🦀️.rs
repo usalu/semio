@@ -28,13 +28,13 @@ pub fn tutorial_resolve_gesture_point(chrome: &ChromeState, surfaces: &SurfaceSt
             Some((rect.x + rect.w * (*x as f32), rect.y + rect.h * (*y as f32)))
         }
         P::Scene { id, position } => {
-            let rect = dock.window_content_rects.get(id).copied().or_else(|| surfaces.world3d_state_for_window(id).map(|world| world.bounds))?;
+            let rect = dock.window_content_rects.get(id).copied().or_else(|| surfaces.world3d_state_for_window(id).map(|world| world.session.bounds))?;
             let world = surfaces.world3d_state_for_window(id)?;
             let local = infinite_world::world::world3d_tutorial_scene_point(&world.session, &world.camera, *position)?;
             Some((rect.x + local[0], rect.y + local[1]))
         }
         P::Canvas { id, x, y } => {
-            let rect = dock.window_content_rects.get(id).copied().or_else(|| surfaces.world3d_state_for_window(id).map(|world| world.bounds))?;
+            let rect = dock.window_content_rects.get(id).copied().or_else(|| surfaces.world3d_state_for_window(id).map(|world| world.session.bounds))?;
             let local = surfaces
                 .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_scene_point(&world.session, &world.camera, [*x, *y, 0.0]).map(|point| (point[0], point[1])))
@@ -42,7 +42,7 @@ pub fn tutorial_resolve_gesture_point(chrome: &ChromeState, surfaces: &SurfaceSt
             Some((rect.x + local.0, rect.y + local.1))
         }
         P::Entity { id, domain, entity, .. } => {
-            let rect = dock.window_content_rects.get(id).copied().or_else(|| surfaces.world3d_state_for_window(id).map(|world| world.bounds))?;
+            let rect = dock.window_content_rects.get(id).copied().or_else(|| surfaces.world3d_state_for_window(id).map(|world| world.session.bounds))?;
             let local = surfaces
                 .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_entity_geometry(&world.session, &world.camera, &world.scene, domain, entity).map(|geometry| (geometry.point[0], geometry.point[1])))
@@ -50,7 +50,7 @@ pub fn tutorial_resolve_gesture_point(chrome: &ChromeState, surfaces: &SurfaceSt
             Some((rect.x + local.0, rect.y + local.1))
         }
         P::Curve { id, domain, entity, t } => {
-            let rect = dock.window_content_rects.get(id).copied().or_else(|| surfaces.world3d_state_for_window(id).map(|world| world.bounds))?;
+            let rect = dock.window_content_rects.get(id).copied().or_else(|| surfaces.world3d_state_for_window(id).map(|world| world.session.bounds))?;
             let local = surfaces
                 .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_entity_geometry(&world.session, &world.camera, &world.scene, domain, entity))

@@ -75,3 +75,5 @@ All four scales, all three views redrawn from the 3D parts in the calm pose: ste
 5. In the 2D the frond plates show a thin transverse line at each segment joint (one plate per segment).
 6. Fronds have no member between the two blade bones beyond the rachis core; leaflet drag is lumped in the upper-blade load.
 7. Not opened: 1:100 and 1:500 thermal sheets, 1:500 2D (rendered and checked by the validator only).
+
+The coarse frond drawing now uses the measured bent stations of all 32 articulated blade segments. Each strip retains its own thickness, lateral tilt and depth in front, plan and elevation. Five print checks from 1:260 to 1:1000, the full document check, all three silhouette comparisons and twelve exported scenes passed. The GLB occupies 7,482,600 bytes.

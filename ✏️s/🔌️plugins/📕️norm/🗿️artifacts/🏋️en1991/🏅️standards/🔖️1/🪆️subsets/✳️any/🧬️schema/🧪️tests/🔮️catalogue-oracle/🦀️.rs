@@ -1,9 +1,9 @@
-use crate::catalogue::*;
-use crate::*;
+use semio_s_artifact_norm_en1991_checks::catalogue::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use std::collections::BTreeMap;
 
 const FEATURE: &str = include_str!("../../../🧪️tests/🏋️en1991-catalogue/🥒️.feature");
-const ORACLE: &str = "../../../../../🔮️oracles/⚖️compliance/🐍️.py";
+const ORACLE: &str = "🔮️oracles/⚖️compliance/🐍️.py";
 
 struct Row { entry: String, annex: AnnexChoice, inputs: String, key: String, value: f64, tolerance: f64 }
 
@@ -66,7 +66,7 @@ async fn python_oracle_agrees_with_the_catalogue() {
         ("E16.01", de_case("x5").with_n("duration_days", 2.0)),
         ("E14.12", Case::new("x6", AnnexChoice::En).with_n("h", 80.0).with_n("b", 25.0).with_n("terrain", 2.0).with_n("v_b", 27.0).with_n("delta", 0.08)),
         ("E4.03", Case::new("x7", AnnexChoice::En).with_n("gamma", 7000.0).with_n("phi", 35.0).with_n("dc", 8.0).with_n("z", 15.0)),
-        ("E12.02", de_case("x8").with_n("a_f", 50.0).with_n("a_t", 184.84).with_n("a_v", 20.0).with_n("h_eq", 2.0).with_n("b", 1160.0).with_n("q_fd_mj", 80.0)),
+        ("E12.02", Case::new("x8", AnnexChoice::En).with_n("a_f", 50.0).with_n("a_t", 184.84).with_n("a_v", 20.0).with_n("h_eq", 2.0).with_n("b", 1160.0).with_n("q_fd_mj", 80.0)),
         ("E14.05", Case::new("x9", AnnexChoice::En).with_n("z", 45.0).with_n("terrain", 4.0).with_n("v_b", 30.0).with_n("rho", 1.2)),
     ];
     for (entry, case) in extra { cases.push((entry.to_string(), case)); }
@@ -98,4 +98,4 @@ async fn python_oracle_agrees_with_the_catalogue() {
 fn de_case(id: &str) -> Case { Case::new(id, AnnexChoice::De) }
 
 #[allow(non_snake_case)]
-fn ORACLE_PATH() -> std::path::PathBuf { std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(ORACLE) }
+fn ORACLE_PATH() -> std::path::PathBuf { std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().map(|path| path.join(ORACLE)).find(|path| path.is_file()).expect("EN 1991 Python oracle") }

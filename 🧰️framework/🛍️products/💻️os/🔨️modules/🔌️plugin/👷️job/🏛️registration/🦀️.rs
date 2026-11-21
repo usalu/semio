@@ -45,8 +45,25 @@ impl DeclaredToolCatalogAlias{
  pub fn birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<Self>()+size_of::<SharedOriginalStorage<DeclaredToolCatalog>>(),depth:1,..Default::default()}}
  pub fn admit(source:DeclaredToolCatalogSource<'_>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{if !source.committed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"mounted tool metadata requires its committed declaration producer"))}let d=Self::birth_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}Ok(Some((Self{original:ManuallyDrop::new(Some(source.original.alias())),retirement:None},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
  pub fn catalog(&self)->Option<&DeclaredToolCatalog>{self.original.as_ref().map(|original|original.get())}
- pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body)}Ok(if self.original.is_some(){RetirementDemand{copy_bytes:size_of::<Option<SharedOriginalStorage<DeclaredToolCatalog>>>(),capacity_bytes:semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<DeclaredToolCatalog>(),depth:1,..Default::default()}}else{Default::default()})}
- pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{if self.retirement.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,effect.grant().maximum_copy_bytes,effect))}let grant=effect.grant();let d=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if self.original.is_some(){let(original,retirement)=(&mut self.original,&mut self.retirement);let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_plugin_job_receiving::original_steps::replied::<OriginalRetirementFailure>(effect,|effect,reply|semio_framework_value::retirement::arc_custody::admit_shared_retirement_into(original,retirement,effect,reply).map(drop)))?;return Ok(match step{RetainedCloneStep::Progress(mut p)=>{p.copied_bytes=d.copy_bytes;RetainedCloneStep::Progress(p)},other=>other})}Ok(RetainedCloneStep::Complete(Default::default()))}
+ pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if let Some(owner)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body)}
+  Ok(if self.original.is_some(){semio_framework_value::retirement::arc_custody::shared_retirement_birth_demand::<DeclaredToolCatalog>()}else{Default::default()})
+ }
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  match self.retirement.as_ref(){
+   Some(owner) if !owner.terminal_is_empty()=>owner.next_computational_work(body),
+   Some(_)=>Ok(1),
+   None=>Ok(u64::from(self.original.is_some())),
+  }
+ }
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  if self.retirement.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,effect.grant().maximum_copy_bytes,effect))}
+  let grant=effect.grant();let d=self.close_demands(grant.maximum_copy_bytes)?;
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  let(original,retirement)=(&mut self.original,&mut self.retirement);
+  let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_plugin_job_receiving::original_steps::replied::<OriginalRetirementFailure>(effect,|effect,reply|semio_framework_value::retirement::arc_custody::admit_shared_retirement_into(original,retirement,effect,reply).map(drop)))?;
+  Ok(if retirement.is_some(){RetainedCloneStep::Progress(step.progress())}else{step})
+ }
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.retirement.is_none()}
 }
 impl Drop for DeclaredToolCatalogAlias{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"mounted tool metadata lease must return through its original close")}}
@@ -88,7 +105,7 @@ impl DeclaredToolCatalogAliasRetirement{
 impl RetirementCursor for DeclaredToolCatalogAliasRetirement{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.alias.close_demands(body)}
  semio_framework_value::native_retirement_reply!();
- fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.alias.close_work_demand(body)}
  fn terminal_is_empty(&self)->bool{self.alias.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.alias.close_demands(usize::MAX)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.alias.close_demands(body).ok().map(|d|d.capacity_bytes)}

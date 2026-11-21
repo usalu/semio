@@ -671,10 +671,7 @@
               "y": 0.0,
               "w": 0.8,
               "h": 1.8,
-              "regions": [
-                "carcass",
-                "back-panel"
-              ],
+              "regions": ["carcass", "back-panel"],
               "material": "melamine-chipboard"
             },
             {
@@ -685,122 +682,323 @@
               "filled": true,
               "tone": 0.4,
               "kind": "rect",
-              "x": 0.075,
-              "y": 0.0,
-              "w": 0.65,
-              "h": 0.075,
-              "region": "plinth",
-              "material": "melamine-chipboard"
+              "x": 0.018,
+              "y": 0,
+              "w": 0.764,
+              "h": 0.06,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "plinth"
             },
             {
-              "id": "shelf-1",
+              "id": "shelf-1-l",
+              "bone": "shelf-1-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-1-l",
               "bone": "shelf-1",
               "role": "body",
-              "z": 5,
-              "filled": false,
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.057,
-                  0.0375
-                ],
-                [
-                  0.707,
-                  0.0375
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
-              "id": "shelf-2",
+              "id": "shelf-1-r",
+              "bone": "shelf-1-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-1-r",
+              "bone": "shelf-1",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-2-l",
+              "bone": "shelf-2-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-2-l",
               "bone": "shelf-2",
               "role": "body",
-              "z": 5,
-              "filled": false,
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.057,
-                  0.0375
-                ],
-                [
-                  0.707,
-                  0.0375
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
-              "id": "shelf-3",
+              "id": "shelf-2-r",
+              "bone": "shelf-2-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-2-r",
+              "bone": "shelf-2",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-3-l",
+              "bone": "shelf-3-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-3-l",
               "bone": "shelf-3",
               "role": "body",
-              "z": 5,
-              "filled": false,
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.057,
-                  0.0375
-                ],
-                [
-                  0.707,
-                  0.0375
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
-              "id": "shelf-4",
+              "id": "shelf-3-r",
+              "bone": "shelf-3-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-3-r",
+              "bone": "shelf-3",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-4-l",
+              "bone": "shelf-4-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-4-l",
               "bone": "shelf-4",
               "role": "body",
-              "z": 5,
-              "filled": false,
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.057,
-                  0.0375
-                ],
-                [
-                  0.707,
-                  0.0375
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
-              "id": "shelf-5",
-              "bone": "shelf-5",
+              "id": "shelf-4-r",
+              "bone": "shelf-4-r",
               "role": "body",
               "z": 5,
-              "filled": false,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-4-r",
+              "bone": "shelf-4",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.057,
-                  0.0375
-                ],
-                [
-                  0.707,
-                  0.0375
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-5-l",
+              "bone": "shelf-5-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-5-l",
+              "bone": "shelf-5",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-5-r",
+              "bone": "shelf-5-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-5-r",
+              "bone": "shelf-5",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             }
           ],
           "front": [
@@ -816,10 +1014,7 @@
               "y": 0.0,
               "w": 0.3,
               "h": 1.8,
-              "regions": [
-                "carcass",
-                "back-panel"
-              ],
+              "regions": ["carcass", "back-panel"],
               "material": "melamine-chipboard"
             },
             {
@@ -838,114 +1033,100 @@
               "material": "melamine-chipboard"
             },
             {
+              "id": "back",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.1375,
+              "y": 0.078,
+              "w": 0.003,
+              "h": 1.704,
+              "material": "hardboard-back",
+              "penMm": 0.2,
+              "region": "back-panel"
+            },
+            {
               "id": "shelf-1",
-              "bone": "shelf-1",
+              "bone": "shelf-1-l",
               "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  0.3895
-                ],
-                [
-                  0.075,
-                  0.3895
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 0.352,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
             },
             {
               "id": "shelf-2",
-              "bone": "shelf-2",
+              "bone": "shelf-2-l",
               "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  0.6775
-                ],
-                [
-                  0.075,
-                  0.6775
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 0.64,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
             },
             {
               "id": "shelf-3",
-              "bone": "shelf-3",
+              "bone": "shelf-3-l",
               "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  0.9655
-                ],
-                [
-                  0.075,
-                  0.9655
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 0.928,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
             },
             {
               "id": "shelf-4",
-              "bone": "shelf-4",
+              "bone": "shelf-4-l",
               "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  1.2535
-                ],
-                [
-                  0.075,
-                  1.2535
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 1.216,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
             },
             {
               "id": "shelf-5",
-              "bone": "shelf-5",
+              "bone": "shelf-5-l",
               "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  1.5415
-                ],
-                [
-                  0.075,
-                  1.5415
-                ]
-              ],
-              "closed": false,
-              "region": "shelves",
-              "penMm": 0.13
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 1.504,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
             }
           ],
           "plan": [
@@ -961,10 +1142,7 @@
               "y": -0.15,
               "w": 0.8,
               "h": 0.3,
-              "regions": [
-                "carcass",
-                "back-panel"
-              ],
+              "regions": ["carcass", "back-panel"],
               "material": "melamine-chipboard"
             }
           ]
@@ -996,8 +1174,8 @@
             "de": "Bodenträger, Plattenstärke, Kanten."
           },
           "thinElements": {
-            "en": "The 0.018 m shelves (0.036 mm) are 0.13 mm strokes (0.065 m real) and the kick board is drawn 0.075 m high so that both stay readable.",
-            "de": "Die 0,018 m starken Böden (0,036 mm) sind 0,13-mm-Striche (0,065 m real), und die Sockelblende ist 0,075 m hoch gezeichnet, damit beide lesbar bleiben."
+            "en": "The 3 mm hardboard back fits behind five 280 mm deep shelves. The carcass, plinth and shelves retain their 18 mm board stock. Each shelf bears on four 5 mm pins, with two bending halves spanning between the supports.",
+            "de": "Hinter fünf 280 mm tiefen Fachböden sitzt eine 3-mm-Hartfaserrückwand. Korpus, Sockelblende und Fachböden behalten ihre Plattenstärke von 18 mm. Jeder Fachboden liegt auf vier 5-mm-Stiften. Seine zwei biegsamen Hälften spannen zwischen den Auflagern."
           },
           "hatching": {
             "en": "None.",
@@ -1042,10 +1220,7 @@
               "y": 0.0,
               "w": 0.8,
               "h": 1.8,
-              "regions": [
-                "carcass",
-                "back-panel"
-              ],
+              "regions": ["carcass", "back-panel"],
               "material": "melamine-chipboard"
             },
             {
@@ -1056,117 +1231,323 @@
               "filled": true,
               "tone": 0.4,
               "kind": "rect",
-              "x": 0.03,
-              "y": 0.0,
-              "w": 0.74,
+              "x": 0.018,
+              "y": 0,
+              "w": 0.764,
               "h": 0.06,
-              "region": "plinth",
-              "material": "melamine-chipboard"
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "plinth"
             },
             {
-              "id": "shelf-1",
+              "id": "shelf-1-l",
+              "bone": "shelf-1-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-1-l",
               "bone": "shelf-1",
-              "role": "detail",
-              "z": 5,
-              "filled": false,
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.012,
-                  0.015
-                ],
-                [
-                  0.752,
-                  0.015
-                ]
-              ],
-              "closed": false,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-1-r",
+              "bone": "shelf-1-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             },
             {
-              "id": "shelf-2",
+              "id": "pin-1-r",
+              "bone": "shelf-1",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-2-l",
+              "bone": "shelf-2-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-2-l",
               "bone": "shelf-2",
-              "role": "detail",
-              "z": 5,
-              "filled": false,
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.012,
-                  0.015
-                ],
-                [
-                  0.752,
-                  0.015
-                ]
-              ],
-              "closed": false,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-2-r",
+              "bone": "shelf-2-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             },
             {
-              "id": "shelf-3",
+              "id": "pin-2-r",
+              "bone": "shelf-2",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-3-l",
+              "bone": "shelf-3-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-3-l",
               "bone": "shelf-3",
-              "role": "detail",
-              "z": 5,
-              "filled": false,
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.012,
-                  0.015
-                ],
-                [
-                  0.752,
-                  0.015
-                ]
-              ],
-              "closed": false,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-3-r",
+              "bone": "shelf-3-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             },
             {
-              "id": "shelf-4",
+              "id": "pin-3-r",
+              "bone": "shelf-3",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-4-l",
+              "bone": "shelf-4-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-4-l",
               "bone": "shelf-4",
-              "role": "detail",
-              "z": 5,
-              "filled": false,
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.012,
-                  0.015
-                ],
-                [
-                  0.752,
-                  0.015
-                ]
-              ],
-              "closed": false,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-4-r",
+              "bone": "shelf-4-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             },
             {
-              "id": "shelf-5",
-              "bone": "shelf-5",
-              "role": "detail",
-              "z": 5,
-              "filled": false,
+              "id": "pin-4-r",
+              "bone": "shelf-4",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
               "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.012,
-                  0.015
-                ],
-                [
-                  0.752,
-                  0.015
-                ]
-              ],
-              "closed": false,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-5-l",
+              "bone": "shelf-5-l",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
+            },
+            {
+              "id": "pin-5-l",
+              "bone": "shelf-5",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
+            },
+            {
+              "id": "shelf-5-r",
+              "bone": "shelf-5-r",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-5-r",
+              "bone": "shelf-5",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             }
           ],
           "front": [
@@ -1182,10 +1563,7 @@
               "y": 0.0,
               "w": 0.3,
               "h": 1.8,
-              "regions": [
-                "carcass",
-                "back-panel"
-              ],
+              "regions": ["carcass", "back-panel"],
               "material": "melamine-chipboard"
             },
             {
@@ -1204,108 +1582,99 @@
               "material": "melamine-chipboard"
             },
             {
+              "id": "back",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.1375,
+              "y": 0.078,
+              "w": 0.003,
+              "h": 1.704,
+              "material": "hardboard-back",
+              "penMm": 0.2,
+              "region": "back-panel"
+            },
+            {
               "id": "shelf-1",
-              "bone": "shelf-1",
-              "role": "detail",
+              "bone": "shelf-1-l",
+              "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  0.367
-                ],
-                [
-                  0.12,
-                  0.367
-                ]
-              ],
-              "closed": false,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 0.352,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             },
             {
               "id": "shelf-2",
-              "bone": "shelf-2",
-              "role": "detail",
+              "bone": "shelf-2-l",
+              "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  0.655
-                ],
-                [
-                  0.12,
-                  0.655
-                ]
-              ],
-              "closed": false,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 0.64,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             },
             {
               "id": "shelf-3",
-              "bone": "shelf-3",
-              "role": "detail",
+              "bone": "shelf-3-l",
+              "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  0.943
-                ],
-                [
-                  0.12,
-                  0.943
-                ]
-              ],
-              "closed": false,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 0.928,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             },
             {
               "id": "shelf-4",
-              "bone": "shelf-4",
-              "role": "detail",
+              "bone": "shelf-4-l",
+              "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  1.231
-                ],
-                [
-                  0.12,
-                  1.231
-                ]
-              ],
-              "closed": false,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 1.216,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             },
             {
               "id": "shelf-5",
-              "bone": "shelf-5",
-              "role": "detail",
+              "bone": "shelf-5-l",
+              "role": "body",
               "z": 5,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  -0.145,
-                  1.519
-                ],
-                [
-                  0.12,
-                  1.519
-                ]
-              ],
-              "closed": false,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.145,
+              "y": 1.504,
+              "w": 0.28,
+              "h": 0.018,
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
               "region": "shelves"
             }
           ],
@@ -1322,10 +1691,7 @@
               "y": -0.15,
               "w": 0.8,
               "h": 0.3,
-              "regions": [
-                "carcass",
-                "back-panel"
-              ],
+              "regions": ["carcass", "back-panel"],
               "material": "melamine-chipboard"
             }
           ]
@@ -1357,8 +1723,8 @@
             "de": "Plattenstärke, Bodenträger, Beschläge."
           },
           "thinElements": {
-            "en": "Boards (0.09 mm) are 0.13 mm detail lines.",
-            "de": "Böden (0,09 mm) sind 0,13-mm-Detaillinien."
+            "en": "The 3 mm hardboard back fits behind five 280 mm deep shelves. The carcass, plinth and shelves retain their 18 mm board stock. Each shelf bears on four 5 mm pins, with two bending halves spanning between the supports.",
+            "de": "Hinter fünf 280 mm tiefen Fachböden sitzt eine 3-mm-Hartfaserrückwand. Korpus, Sockelblende und Fachböden behalten ihre Plattenstärke von 18 mm. Jeder Fachboden liegt auf vier 5-mm-Stiften. Seine zwei biegsamen Hälften spannen zwischen den Auflagern."
           },
           "hatching": {
             "en": "None.",
@@ -1474,16 +1840,17 @@
               "id": "plinth",
               "bone": "frame",
               "role": "body",
-              "z": 2,
+              "z": 4,
               "filled": true,
               "tone": 0.4,
               "kind": "rect",
               "x": 0.018,
-              "y": 0.0,
+              "y": 0,
               "w": 0.764,
               "h": 0.06,
-              "region": "plinth",
-              "material": "melamine-chipboard"
+              "material": "melamine-chipboard",
+              "penMm": 0.2,
+              "region": "plinth"
             },
             {
               "id": "shelf-1-l",
@@ -1493,13 +1860,28 @@
               "filled": true,
               "tone": 0.7,
               "kind": "rect",
-              "x": 0.0,
-              "y": 0.0,
-              "w": 0.382,
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-1-l",
+              "bone": "shelf-1",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-1-r",
@@ -1508,29 +1890,29 @@
               "z": 5,
               "filled": true,
               "tone": 0.7,
-              "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.0,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
-              "closed": true,
-              "region": "shelves",
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-1-r",
+              "bone": "shelf-1",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-2-l",
@@ -1540,13 +1922,28 @@
               "filled": true,
               "tone": 0.7,
               "kind": "rect",
-              "x": 0.0,
-              "y": 0.0,
-              "w": 0.382,
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-2-l",
+              "bone": "shelf-2",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-2-r",
@@ -1555,29 +1952,29 @@
               "z": 5,
               "filled": true,
               "tone": 0.7,
-              "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.0,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
-              "closed": true,
-              "region": "shelves",
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-2-r",
+              "bone": "shelf-2",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-3-l",
@@ -1587,13 +1984,28 @@
               "filled": true,
               "tone": 0.7,
               "kind": "rect",
-              "x": 0.0,
-              "y": 0.0,
-              "w": 0.382,
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-3-l",
+              "bone": "shelf-3",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-3-r",
@@ -1602,29 +2014,29 @@
               "z": 5,
               "filled": true,
               "tone": 0.7,
-              "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.0,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
-              "closed": true,
-              "region": "shelves",
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-3-r",
+              "bone": "shelf-3",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-4-l",
@@ -1634,13 +2046,28 @@
               "filled": true,
               "tone": 0.7,
               "kind": "rect",
-              "x": 0.0,
-              "y": 0.0,
-              "w": 0.382,
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-4-l",
+              "bone": "shelf-4",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-4-r",
@@ -1649,29 +2076,29 @@
               "z": 5,
               "filled": true,
               "tone": 0.7,
-              "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.0,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
-              "closed": true,
-              "region": "shelves",
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-4-r",
+              "bone": "shelf-4",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-5-l",
@@ -1681,13 +2108,28 @@
               "filled": true,
               "tone": 0.7,
               "kind": "rect",
-              "x": 0.0,
-              "y": 0.0,
-              "w": 0.382,
+              "x": 0.001,
+              "y": 0,
+              "w": 0.381,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-5-l",
+              "bone": "shelf-5",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             },
             {
               "id": "shelf-5-r",
@@ -1696,29 +2138,29 @@
               "z": 5,
               "filled": true,
               "tone": 0.7,
-              "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.0,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
-              "closed": true,
-              "region": "shelves",
+              "kind": "rect",
+              "x": 0.001,
+              "y": -0.018,
+              "w": 0.381,
+              "h": 0.018,
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
+            },
+            {
+              "id": "pin-5-r",
+              "bone": "shelf-5",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 0.755,
+              "y": -0.005,
+              "w": 0.009,
+              "h": 0.005,
+              "material": "zinc-plated-steel",
+              "penMm": 0.2
             }
           ],
           "front": [
@@ -1737,21 +2179,6 @@
               "region": "carcass",
               "material": "melamine-chipboard",
               "penMm": 0.25
-            },
-            {
-              "id": "back",
-              "bone": "frame",
-              "role": "body",
-              "z": 2,
-              "filled": true,
-              "tone": 0.9,
-              "kind": "rect",
-              "x": 0.1375,
-              "y": 0.07,
-              "w": 0.003,
-              "h": 1.72,
-              "region": "back-panel",
-              "material": "hardboard-back"
             },
             {
               "id": "top",
@@ -1801,6 +2228,22 @@
               "material": "melamine-chipboard"
             },
             {
+              "id": "back",
+              "bone": "frame",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "rect",
+              "x": 0.1375,
+              "y": 0.078,
+              "w": 0.003,
+              "h": 1.704,
+              "material": "hardboard-back",
+              "penMm": 0.2,
+              "region": "back-panel"
+            },
+            {
               "id": "shelf-1",
               "bone": "shelf-1-l",
               "role": "body",
@@ -1812,9 +2255,9 @@
               "y": 0.352,
               "w": 0.28,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
             },
             {
               "id": "shelf-2",
@@ -1828,9 +2271,9 @@
               "y": 0.64,
               "w": 0.28,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
             },
             {
               "id": "shelf-3",
@@ -1844,9 +2287,9 @@
               "y": 0.928,
               "w": 0.28,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
             },
             {
               "id": "shelf-4",
@@ -1860,9 +2303,9 @@
               "y": 1.216,
               "w": 0.28,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
             },
             {
               "id": "shelf-5",
@@ -1876,9 +2319,9 @@
               "y": 1.504,
               "w": 0.28,
               "h": 0.018,
-              "region": "shelves",
               "material": "melamine-chipboard",
-              "penMm": 0.25
+              "penMm": 0.2,
+              "region": "shelves"
             }
           ],
           "plan": [
@@ -1959,8 +2402,8 @@
             "de": "Bodenträger, Exzenterverbinder, Lochreihen."
           },
           "thinElements": {
-            "en": "Boards of 0.018 m (0.18 mm) and the 3 mm back (0.03 mm) are drawn at true size and read through their 0.25 mm outline.",
-            "de": "Platten von 0,018 m (0,18 mm) und die 3-mm-Rückwand (0,03 mm) sind in wahrer Größe gezeichnet und wirken durch ihre 0,25-mm-Kontur."
+            "en": "The 3 mm hardboard back fits behind five 280 mm deep shelves. The carcass, plinth and shelves retain their 18 mm board stock. Each shelf bears on four 5 mm pins, with two bending halves spanning between the supports.",
+            "de": "Hinter fünf 280 mm tiefen Fachböden sitzt eine 3-mm-Hartfaserrückwand. Korpus, Sockelblende und Fachböden behalten ihre Plattenstärke von 18 mm. Jeder Fachboden liegt auf vier 5-mm-Stiften. Seine zwei biegsamen Hälften spannen zwischen den Auflagern."
           },
           "hatching": {
             "en": "None.",
@@ -2111,24 +2554,7 @@
               "filled": true,
               "tone": 0.7,
               "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.001,
-                  0.0
-                ],
-                [
-                  0.001,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
+              "points": [[0.382, 0.0], [0.001, 0.0], [0.001, -0.018], [0.382, -0.018]],
               "closed": true,
               "region": "shelves",
               "material": "melamine-chipboard",
@@ -2147,7 +2573,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-1-r",
@@ -2162,7 +2588,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "shelf-2-l",
@@ -2188,24 +2614,7 @@
               "filled": true,
               "tone": 0.7,
               "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.001,
-                  0.0
-                ],
-                [
-                  0.001,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
+              "points": [[0.382, 0.0], [0.001, 0.0], [0.001, -0.018], [0.382, -0.018]],
               "closed": true,
               "region": "shelves",
               "material": "melamine-chipboard",
@@ -2224,7 +2633,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-2-r",
@@ -2239,7 +2648,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "shelf-3-l",
@@ -2265,24 +2674,7 @@
               "filled": true,
               "tone": 0.7,
               "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.001,
-                  0.0
-                ],
-                [
-                  0.001,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
+              "points": [[0.382, 0.0], [0.001, 0.0], [0.001, -0.018], [0.382, -0.018]],
               "closed": true,
               "region": "shelves",
               "material": "melamine-chipboard",
@@ -2301,7 +2693,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-3-r",
@@ -2316,7 +2708,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "shelf-4-l",
@@ -2342,24 +2734,7 @@
               "filled": true,
               "tone": 0.7,
               "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.001,
-                  0.0
-                ],
-                [
-                  0.001,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
+              "points": [[0.382, 0.0], [0.001, 0.0], [0.001, -0.018], [0.382, -0.018]],
               "closed": true,
               "region": "shelves",
               "material": "melamine-chipboard",
@@ -2378,7 +2753,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-4-r",
@@ -2393,7 +2768,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "shelf-5-l",
@@ -2419,24 +2794,7 @@
               "filled": true,
               "tone": 0.7,
               "kind": "poly",
-              "points": [
-                [
-                  0.382,
-                  0.0
-                ],
-                [
-                  0.001,
-                  0.0
-                ],
-                [
-                  0.001,
-                  -0.018
-                ],
-                [
-                  0.382,
-                  -0.018
-                ]
-              ],
+              "points": [[0.382, 0.0], [0.001, 0.0], [0.001, -0.018], [0.382, -0.018]],
               "closed": true,
               "region": "shelves",
               "material": "melamine-chipboard",
@@ -2455,7 +2813,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-5-r",
@@ -2470,7 +2828,7 @@
               "w": 0.009,
               "h": 0.005,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             }
           ],
           "front": [
@@ -2581,7 +2939,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-1-back",
@@ -2596,7 +2954,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "shelf-2",
@@ -2627,7 +2985,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-2-back",
@@ -2642,7 +3000,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "shelf-3",
@@ -2673,7 +3031,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-3-back",
@@ -2688,7 +3046,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "shelf-4",
@@ -2719,7 +3077,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-4-back",
@@ -2734,7 +3092,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "shelf-5",
@@ -2765,7 +3123,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             },
             {
               "id": "pin-5-back",
@@ -2780,7 +3138,7 @@
               "rx": 0.0025,
               "ry": 0.0025,
               "material": "zinc-plated-steel",
-              "penMm": 0.13
+              "penMm": 0.2
             }
           ],
           "plan": [
@@ -5043,27 +5401,27 @@
           },
           {
             "id": "shelf-1-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-1-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [7.61e-05, -0.1443827], [0.0002929, -0.1447071], [0.0006173, -0.1449239], [0.001, -0.145], [0.017, -0.145], [0.0173827, -0.1449239], [0.0177071, -0.1447071], [0.0179239, -0.1443827], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-1-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-1-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-7.61e-05, -0.1443827], [-0.0002929, -0.1447071], [-0.0006173, -0.1449239], [-0.001, -0.145], [-0.017, -0.145], [-0.0173827, -0.1449239], [-0.0177071, -0.1447071], [-0.0179239, -0.1443827], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "pin-1-l",
@@ -5097,27 +5455,27 @@
           },
           {
             "id": "shelf-2-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-2-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [7.61e-05, -0.1443827], [0.0002929, -0.1447071], [0.0006173, -0.1449239], [0.001, -0.145], [0.017, -0.145], [0.0173827, -0.1449239], [0.0177071, -0.1447071], [0.0179239, -0.1443827], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-2-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-2-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-7.61e-05, -0.1443827], [-0.0002929, -0.1447071], [-0.0006173, -0.1449239], [-0.001, -0.145], [-0.017, -0.145], [-0.0173827, -0.1449239], [-0.0177071, -0.1447071], [-0.0179239, -0.1443827], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "pin-2-l",
@@ -5151,27 +5509,27 @@
           },
           {
             "id": "shelf-3-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-3-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [7.61e-05, -0.1443827], [0.0002929, -0.1447071], [0.0006173, -0.1449239], [0.001, -0.145], [0.017, -0.145], [0.0173827, -0.1449239], [0.0177071, -0.1447071], [0.0179239, -0.1443827], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-3-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-3-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-7.61e-05, -0.1443827], [-0.0002929, -0.1447071], [-0.0006173, -0.1449239], [-0.001, -0.145], [-0.017, -0.145], [-0.0173827, -0.1449239], [-0.0177071, -0.1447071], [-0.0179239, -0.1443827], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "pin-3-l",
@@ -5205,27 +5563,27 @@
           },
           {
             "id": "shelf-4-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-4-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [7.61e-05, -0.1443827], [0.0002929, -0.1447071], [0.0006173, -0.1449239], [0.001, -0.145], [0.017, -0.145], [0.0173827, -0.1449239], [0.0177071, -0.1447071], [0.0179239, -0.1443827], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-4-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-4-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-7.61e-05, -0.1443827], [-0.0002929, -0.1447071], [-0.0006173, -0.1449239], [-0.001, -0.145], [-0.017, -0.145], [-0.0173827, -0.1449239], [-0.0177071, -0.1447071], [-0.0179239, -0.1443827], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "pin-4-l",
@@ -5259,27 +5617,27 @@
           },
           {
             "id": "shelf-5-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-5-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [7.61e-05, -0.1443827], [0.0002929, -0.1447071], [0.0006173, -0.1449239], [0.001, -0.145], [0.017, -0.145], [0.0173827, -0.1449239], [0.0177071, -0.1447071], [0.0179239, -0.1443827], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-5-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-5-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.381, 0.018, 0.28],
-            "transform": {
-              "translation": [0.1915, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-7.61e-05, -0.1443827], [-0.0002929, -0.1447071], [-0.0006173, -0.1449239], [-0.001, -0.145], [-0.017, -0.145], [-0.0173827, -0.1449239], [-0.0177071, -0.1447071], [-0.0179239, -0.1443827], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "pin-5-l",
@@ -5710,9 +6068,9 @@
             "material": "melamine-chipboard",
             "role": "ground",
             "tone": 0.2,
-            "size": [0.03, 0.006, 0.312],
+            "size": [0.03, 0.006, 0.3],
             "transform": {
-              "translation": [0.009, 0.003, 0.0]
+              "translation": [0.015, 0.003, 0.0]
             },
             "member": "frame",
             "part": "support",
@@ -5725,9 +6083,9 @@
             "material": "melamine-chipboard",
             "role": "ground",
             "tone": 0.2,
-            "size": [0.03, 0.006, 0.312],
+            "size": [0.03, 0.006, 0.3],
             "transform": {
-              "translation": [0.791, 0.003, 0.0]
+              "translation": [0.785, 0.003, 0.0]
             },
             "member": "frame",
             "part": "support",
@@ -5837,122 +6195,272 @@
           },
           {
             "id": "shelf-1-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-1-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [0.0002929, -0.1447071], [0.001, -0.145], [0.017, -0.145], [0.0177071, -0.1447071], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-1-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-1-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-0.0002929, -0.1447071], [-0.001, -0.145], [-0.017, -0.145], [-0.0177071, -0.1447071], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-2-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-2-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [0.0002929, -0.1447071], [0.001, -0.145], [0.017, -0.145], [0.0177071, -0.1447071], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-2-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-2-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-0.0002929, -0.1447071], [-0.001, -0.145], [-0.017, -0.145], [-0.0177071, -0.1447071], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-3-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-3-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [0.0002929, -0.1447071], [0.001, -0.145], [0.017, -0.145], [0.0177071, -0.1447071], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-3-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-3-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-0.0002929, -0.1447071], [-0.001, -0.145], [-0.017, -0.145], [-0.0177071, -0.1447071], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-4-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-4-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [0.0002929, -0.1447071], [0.001, -0.145], [0.017, -0.145], [0.0177071, -0.1447071], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-4-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-4-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, -0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-0.0002929, -0.1447071], [-0.001, -0.145], [-0.017, -0.145], [-0.0177071, -0.1447071], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-5-l",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-5-l",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, 0.009, -0.005]
-            }
+            "plane": "yz",
+            "profile": [[0.0, -0.144], [0.0002929, -0.1447071], [0.001, -0.145], [0.017, -0.145], [0.0177071, -0.1447071], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
           },
           {
             "id": "shelf-5-r",
-            "kind": "box",
+            "kind": "extrude",
             "bone": "shelf-5-r",
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "size": [0.382, 0.018, 0.28],
-            "transform": {
-              "translation": [0.191, -0.009, -0.005]
+            "plane": "yz",
+            "profile": [[-0.0, -0.144], [-0.0002929, -0.1447071], [-0.001, -0.145], [-0.017, -0.145], [-0.0177071, -0.1447071], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "pin-1-l",
+            "kind": "revolve",
+            "bone": "shelf-1",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-1-r",
+            "kind": "revolve",
+            "bone": "shelf-1",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [-1, 0, 0],
+            "origin": [0.764, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-2-l",
+            "kind": "revolve",
+            "bone": "shelf-2",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-2-r",
+            "kind": "revolve",
+            "bone": "shelf-2",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [-1, 0, 0],
+            "origin": [0.764, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-3-l",
+            "kind": "revolve",
+            "bone": "shelf-3",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-3-r",
+            "kind": "revolve",
+            "bone": "shelf-3",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [-1, 0, 0],
+            "origin": [0.764, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-4-l",
+            "kind": "revolve",
+            "bone": "shelf-4",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-4-r",
+            "kind": "revolve",
+            "bone": "shelf-4",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [-1, 0, 0],
+            "origin": [0.764, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-5-l",
+            "kind": "revolve",
+            "bone": "shelf-5",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            }
+          },
+          {
+            "id": "pin-5-r",
+            "kind": "revolve",
+            "bone": "shelf-5",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.008, 0], [-0.008, 0.0025], [0.009, 0.0025], [0.009, 0]],
+            "axis": [-1, 0, 0],
+            "origin": [0.764, -0.0025, -0.113],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
             }
           }
         ],
@@ -6076,246 +6584,6 @@
             "part": "member"
           },
           {
-            "id": "m-shelf-1-l",
-            "of": "shelf-1-l",
-            "member": "shelf-1-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-1-r",
-            "of": "shelf-1-r",
-            "member": "shelf-1-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-2-l",
-            "of": "shelf-2-l",
-            "member": "shelf-2-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-2-r",
-            "of": "shelf-2-r",
-            "member": "shelf-2-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-3-l",
-            "of": "shelf-3-l",
-            "member": "shelf-3-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-3-r",
-            "of": "shelf-3-r",
-            "member": "shelf-3-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-4-l",
-            "of": "shelf-4-l",
-            "member": "shelf-4-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-4-r",
-            "of": "shelf-4-r",
-            "member": "shelf-4-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-5-l",
-            "of": "shelf-5-l",
-            "member": "shelf-5-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-5-r",
-            "of": "shelf-5-r",
-            "member": "shelf-5-r",
-            "part": "member"
-          },
-          {
-            "id": "bearing-1-l",
-            "kind": "box",
-            "bone": "shelf-1",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.0075, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-1",
-            "part": "member"
-          },
-          {
-            "id": "bearing-1-r",
-            "kind": "box",
-            "bone": "shelf-1",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.7565, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-1",
-            "part": "member"
-          },
-          {
-            "id": "bearing-2-l",
-            "kind": "box",
-            "bone": "shelf-2",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.0075, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-2",
-            "part": "member"
-          },
-          {
-            "id": "bearing-2-r",
-            "kind": "box",
-            "bone": "shelf-2",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.7565, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-2",
-            "part": "member"
-          },
-          {
-            "id": "bearing-3-l",
-            "kind": "box",
-            "bone": "shelf-3",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.0075, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-3",
-            "part": "member"
-          },
-          {
-            "id": "bearing-3-r",
-            "kind": "box",
-            "bone": "shelf-3",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.7565, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-3",
-            "part": "member"
-          },
-          {
-            "id": "bearing-4-l",
-            "kind": "box",
-            "bone": "shelf-4",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.0075, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-4",
-            "part": "member"
-          },
-          {
-            "id": "bearing-4-r",
-            "kind": "box",
-            "bone": "shelf-4",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.7565, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-4",
-            "part": "member"
-          },
-          {
-            "id": "bearing-5-l",
-            "kind": "box",
-            "bone": "shelf-5",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.0075, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-5",
-            "part": "member"
-          },
-          {
-            "id": "bearing-5-r",
-            "kind": "box",
-            "bone": "shelf-5",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.015, 0.015, 0.015],
-            "transform": {
-              "translation": [0.7565, -0.0075, -0.113]
-            },
-            "repeat": {
-              "count": 2,
-              "translation": [0, 0, 0.224]
-            },
-            "member": "shelf-5",
-            "part": "member"
-          },
-          {
             "id": "corner-top-l",
             "kind": "box",
             "bone": "frame",
@@ -6394,9 +6662,9 @@
             "material": "melamine-chipboard",
             "role": "ground",
             "tone": 0.2,
-            "size": [0.042, 0.012, 0.324],
+            "size": [0.018, 0.004, 0.3],
             "transform": {
-              "translation": [0.009, 0.006, 0.0]
+              "translation": [0.009, 0.002, 0]
             },
             "member": "frame",
             "part": "support",
@@ -6409,9 +6677,9 @@
             "material": "melamine-chipboard",
             "role": "ground",
             "tone": 0.2,
-            "size": [0.042, 0.012, 0.324],
+            "size": [0.018, 0.004, 0.3],
             "transform": {
-              "translation": [0.791, 0.006, 0.0]
+              "translation": [0.791, 0.002, 0]
             },
             "member": "frame",
             "part": "support",
@@ -6430,12 +6698,132 @@
             },
             "member": "frame",
             "part": "mass"
+          },
+          {
+            "id": "m-shelf-1-l",
+            "of": "shelf-1-l",
+            "member": "shelf-1-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-1-r",
+            "of": "shelf-1-r",
+            "member": "shelf-1-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-2-l",
+            "of": "shelf-2-l",
+            "member": "shelf-2-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-2-r",
+            "of": "shelf-2-r",
+            "member": "shelf-2-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-3-l",
+            "of": "shelf-3-l",
+            "member": "shelf-3-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-3-r",
+            "of": "shelf-3-r",
+            "member": "shelf-3-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-4-l",
+            "of": "shelf-4-l",
+            "member": "shelf-4-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-4-r",
+            "of": "shelf-4-r",
+            "member": "shelf-4-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-5-l",
+            "of": "shelf-5-l",
+            "member": "shelf-5-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-5-r",
+            "of": "shelf-5-r",
+            "member": "shelf-5-r",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-1-l",
+            "of": "pin-1-l",
+            "member": "shelf-1",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-1-r",
+            "of": "pin-1-r",
+            "member": "shelf-1",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-2-l",
+            "of": "pin-2-l",
+            "member": "shelf-2",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-2-r",
+            "of": "pin-2-r",
+            "member": "shelf-2",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-3-l",
+            "of": "pin-3-l",
+            "member": "shelf-3",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-3-r",
+            "of": "pin-3-r",
+            "member": "shelf-3",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-4-l",
+            "of": "pin-4-l",
+            "member": "shelf-4",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-4-r",
+            "of": "pin-4-r",
+            "member": "shelf-4",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-5-l",
+            "of": "pin-5-l",
+            "member": "shelf-5",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-5-r",
+            "of": "pin-5-r",
+            "member": "shelf-5",
+            "part": "member"
           }
         ],
         "decisions": [
           {
-            "en": "Body 1:100 is drawn anew as plain boards: sides, top, bottom, kick board and the ten shelf halves as boxes without grooves or play, the back as a 3 mm sheet between the sides; pins and cam caps (5 and 15 mm) are below the 15 mm feature and are left out.",
-            "de": "Der Körper 1:100 ist neu als schlichte Platten gezeichnet: Seiten, Deckel, Boden, Sockelblende und die zehn Fachbodenhälften als Quader ohne Nuten und Luft, die Rückwand als 3-mm-Platte zwischen den Seiten; Bodenträger und Exzenterkappen (5 und 15 mm) liegen unter dem Mindestmaß von 15 mm und fehlen."
+            "en": "The 3 mm hardboard back fits behind five 280 mm deep shelves. The carcass, plinth and shelves retain their 18 mm board stock. Each shelf bears on four 5 mm pins, with two bending halves spanning between the supports.",
+            "de": "Hinter fünf 280 mm tiefen Fachböden sitzt eine 3-mm-Hartfaserrückwand. Korpus, Sockelblende und Fachböden behalten ihre Plattenstärke von 18 mm. Jeder Fachboden liegt auf vier 5-mm-Stiften. Seine zwei biegsamen Hälften spannen zwischen den Auflagern."
           },
           {
             "en": "Thermal 1:100 references the boards of each region. Structure 1:100: the boards are the frame and the beams, a 15 mm block under each board end at both hole rows stands for the pins, a 30 mm block at each fitting for the cam joints, with the floor strips and the carcass mass.",
@@ -6454,12 +6842,12 @@
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "profile": [[0.0, 0.0], [0.03, 0.0], [0.03, 0.06], [0.77, 0.06], [0.77, 0.0], [0.8, 0.0], [0.8, 1.8], [0.0, 1.8]],
+            "profile": [[0.0, 0.0], [0.018, 0.0], [0.018, 0.06], [0.782, 0.06], [0.782, 0.0], [0.8, 0.0], [0.8, 1.8], [0.0, 1.8]],
             "plane": "xy",
             "from": -0.15,
             "to": 0.15,
             "holes": [
-              [[0.03, 0.09], [0.77, 0.09], [0.77, 1.77], [0.03, 1.77]]
+              [[0.018, 0.078], [0.782, 0.078], [0.782, 1.782], [0.018, 1.782]]
             ]
           },
           {
@@ -6469,9 +6857,9 @@
             "material": "hardboard-back",
             "role": "body",
             "tone": 0.9,
-            "size": [0.74, 1.68, 0.03],
+            "size": [0.764, 1.704, 0.003],
             "transform": {
-              "translation": [0.4, 0.93, 0.135]
+              "translation": [0.4, 0.93, 0.139]
             }
           },
           {
@@ -6481,70 +6869,290 @@
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.4,
-            "size": [0.74, 0.06, 0.03],
+            "size": [0.764, 0.06, 0.018],
             "transform": {
-              "translation": [0.4, 0.03, -0.105]
+              "translation": [0.4, 0.03, -0.111]
             }
           },
           {
-            "id": "shelf-1",
-            "kind": "box",
+            "id": "shelf-1-l",
+            "kind": "extrude",
+            "bone": "shelf-1-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [0.001, -0.145], [0.017, -0.145], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-1-r",
+            "kind": "extrude",
+            "bone": "shelf-1-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [-0.001, -0.145], [-0.017, -0.145], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-2-l",
+            "kind": "extrude",
+            "bone": "shelf-2-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [0.001, -0.145], [0.017, -0.145], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-2-r",
+            "kind": "extrude",
+            "bone": "shelf-2-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [-0.001, -0.145], [-0.017, -0.145], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-3-l",
+            "kind": "extrude",
+            "bone": "shelf-3-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [0.001, -0.145], [0.017, -0.145], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-3-r",
+            "kind": "extrude",
+            "bone": "shelf-3-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [-0.001, -0.145], [-0.017, -0.145], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-4-l",
+            "kind": "extrude",
+            "bone": "shelf-4-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [0.001, -0.145], [0.017, -0.145], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-4-r",
+            "kind": "extrude",
+            "bone": "shelf-4-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [-0.001, -0.145], [-0.017, -0.145], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-5-l",
+            "kind": "extrude",
+            "bone": "shelf-5-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [0.001, -0.145], [0.017, -0.145], [0.018, -0.144], [0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "shelf-5-r",
+            "kind": "extrude",
+            "bone": "shelf-5-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "plane": "yz",
+            "profile": [[0, -0.144], [-0.001, -0.145], [-0.017, -0.145], [-0.018, -0.144], [-0.018, 0.135], [0, 0.135]],
+            "from": 0.001,
+            "to": 0.382
+          },
+          {
+            "id": "pin-1-l",
+            "kind": "extrude",
             "bone": "shelf-1",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.74, 0.03, 0.265],
-            "transform": {
-              "translation": [0.382, 0.015, -0.0125]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
           },
           {
-            "id": "shelf-2",
-            "kind": "box",
+            "id": "pin-1-r",
+            "kind": "extrude",
+            "bone": "shelf-1",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
+          },
+          {
+            "id": "pin-2-l",
+            "kind": "extrude",
             "bone": "shelf-2",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.74, 0.03, 0.265],
-            "transform": {
-              "translation": [0.382, 0.015, -0.0125]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
           },
           {
-            "id": "shelf-3",
-            "kind": "box",
+            "id": "pin-2-r",
+            "kind": "extrude",
+            "bone": "shelf-2",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
+          },
+          {
+            "id": "pin-3-l",
+            "kind": "extrude",
             "bone": "shelf-3",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.74, 0.03, 0.265],
-            "transform": {
-              "translation": [0.382, 0.015, -0.0125]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
           },
           {
-            "id": "shelf-4",
-            "kind": "box",
+            "id": "pin-3-r",
+            "kind": "extrude",
+            "bone": "shelf-3",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
+          },
+          {
+            "id": "pin-4-l",
+            "kind": "extrude",
             "bone": "shelf-4",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.74, 0.03, 0.265],
-            "transform": {
-              "translation": [0.382, 0.015, -0.0125]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
           },
           {
-            "id": "shelf-5",
-            "kind": "box",
+            "id": "pin-4-r",
+            "kind": "extrude",
+            "bone": "shelf-4",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
+          },
+          {
+            "id": "pin-5-l",
+            "kind": "extrude",
             "bone": "shelf-5",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.74, 0.03, 0.265],
-            "transform": {
-              "translation": [0.382, 0.015, -0.0125]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
+          },
+          {
+            "id": "pin-5-r",
+            "kind": "extrude",
+            "bone": "shelf-5",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0007322, -0.1112322], [-0.0025, -0.1105], [-0.0042678, -0.1112322], [-0.005, -0.113], [-0.0042678, -0.1147678], [-0.0025, -0.1155], [-0.0007322, -0.1147678]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
           }
         ],
         "thermal": [
@@ -6564,28 +7172,53 @@
             "region": "plinth"
           },
           {
-            "id": "th-shelf-1",
-            "of": "shelf-1",
+            "id": "th-shelf-1-l",
+            "of": "shelf-1-l",
             "region": "shelves"
           },
           {
-            "id": "th-shelf-2",
-            "of": "shelf-2",
+            "id": "th-shelf-1-r",
+            "of": "shelf-1-r",
             "region": "shelves"
           },
           {
-            "id": "th-shelf-3",
-            "of": "shelf-3",
+            "id": "th-shelf-2-l",
+            "of": "shelf-2-l",
             "region": "shelves"
           },
           {
-            "id": "th-shelf-4",
-            "of": "shelf-4",
+            "id": "th-shelf-2-r",
+            "of": "shelf-2-r",
             "region": "shelves"
           },
           {
-            "id": "th-shelf-5",
-            "of": "shelf-5",
+            "id": "th-shelf-3-l",
+            "of": "shelf-3-l",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-3-r",
+            "of": "shelf-3-r",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-4-l",
+            "of": "shelf-4-l",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-4-r",
+            "of": "shelf-4-r",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-5-l",
+            "of": "shelf-5-l",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-5-r",
+            "of": "shelf-5-r",
             "region": "shelves"
           }
         ],
@@ -6609,295 +7242,15 @@
             "part": "member"
           },
           {
-            "id": "m-shelf-1-l",
-            "kind": "box",
-            "bone": "shelf-1-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, 0.015, -0.0125]
-            },
-            "member": "shelf-1-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-1-r",
-            "kind": "box",
-            "bone": "shelf-1-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, -0.015, -0.0125]
-            },
-            "member": "shelf-1-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-2-l",
-            "kind": "box",
-            "bone": "shelf-2-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, 0.015, -0.0125]
-            },
-            "member": "shelf-2-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-2-r",
-            "kind": "box",
-            "bone": "shelf-2-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, -0.015, -0.0125]
-            },
-            "member": "shelf-2-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-3-l",
-            "kind": "box",
-            "bone": "shelf-3-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, 0.015, -0.0125]
-            },
-            "member": "shelf-3-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-3-r",
-            "kind": "box",
-            "bone": "shelf-3-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, -0.015, -0.0125]
-            },
-            "member": "shelf-3-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-4-l",
-            "kind": "box",
-            "bone": "shelf-4-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, 0.015, -0.0125]
-            },
-            "member": "shelf-4-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-4-r",
-            "kind": "box",
-            "bone": "shelf-4-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, -0.015, -0.0125]
-            },
-            "member": "shelf-4-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-5-l",
-            "kind": "box",
-            "bone": "shelf-5-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, 0.015, -0.0125]
-            },
-            "member": "shelf-5-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-5-r",
-            "kind": "box",
-            "bone": "shelf-5-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.37, 0.03, 0.265],
-            "transform": {
-              "translation": [0.197, -0.015, -0.0125]
-            },
-            "member": "shelf-5-r",
-            "part": "member"
-          },
-          {
-            "id": "bearing-1-l",
-            "kind": "box",
-            "bone": "shelf-1",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.027, -0.015, -0.0125]
-            },
-            "member": "shelf-1",
-            "part": "member"
-          },
-          {
-            "id": "bearing-1-r",
-            "kind": "box",
-            "bone": "shelf-1",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.737, -0.015, -0.0125]
-            },
-            "member": "shelf-1",
-            "part": "member"
-          },
-          {
-            "id": "bearing-2-l",
-            "kind": "box",
-            "bone": "shelf-2",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.027, -0.015, -0.0125]
-            },
-            "member": "shelf-2",
-            "part": "member"
-          },
-          {
-            "id": "bearing-2-r",
-            "kind": "box",
-            "bone": "shelf-2",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.737, -0.015, -0.0125]
-            },
-            "member": "shelf-2",
-            "part": "member"
-          },
-          {
-            "id": "bearing-3-l",
-            "kind": "box",
-            "bone": "shelf-3",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.027, -0.015, -0.0125]
-            },
-            "member": "shelf-3",
-            "part": "member"
-          },
-          {
-            "id": "bearing-3-r",
-            "kind": "box",
-            "bone": "shelf-3",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.737, -0.015, -0.0125]
-            },
-            "member": "shelf-3",
-            "part": "member"
-          },
-          {
-            "id": "bearing-4-l",
-            "kind": "box",
-            "bone": "shelf-4",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.027, -0.015, -0.0125]
-            },
-            "member": "shelf-4",
-            "part": "member"
-          },
-          {
-            "id": "bearing-4-r",
-            "kind": "box",
-            "bone": "shelf-4",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.737, -0.015, -0.0125]
-            },
-            "member": "shelf-4",
-            "part": "member"
-          },
-          {
-            "id": "bearing-5-l",
-            "kind": "box",
-            "bone": "shelf-5",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.027, -0.015, -0.0125]
-            },
-            "member": "shelf-5",
-            "part": "member"
-          },
-          {
-            "id": "bearing-5-r",
-            "kind": "box",
-            "bone": "shelf-5",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.03, 0.03, 0.265],
-            "transform": {
-              "translation": [0.737, -0.015, -0.0125]
-            },
-            "member": "shelf-5",
-            "part": "member"
-          },
-          {
             "id": "support-foot-left",
             "kind": "box",
             "bone": "frame",
             "material": "melamine-chipboard",
             "role": "ground",
             "tone": 0.2,
-            "size": [0.058, 0.02, 0.34],
+            "size": [0.018, 0.004, 0.3],
             "transform": {
-              "translation": [0.009, 0.01, 0.0]
+              "translation": [0.009, 0.002, 0]
             },
             "member": "frame",
             "part": "support",
@@ -6910,9 +7263,9 @@
             "material": "melamine-chipboard",
             "role": "ground",
             "tone": 0.2,
-            "size": [0.058, 0.02, 0.34],
+            "size": [0.018, 0.004, 0.3],
             "transform": {
-              "translation": [0.791, 0.01, 0.0]
+              "translation": [0.791, 0.002, 0]
             },
             "member": "frame",
             "part": "support",
@@ -6931,12 +7284,132 @@
             },
             "member": "frame",
             "part": "mass"
+          },
+          {
+            "id": "m-shelf-1-l",
+            "of": "shelf-1-l",
+            "member": "shelf-1-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-1-r",
+            "of": "shelf-1-r",
+            "member": "shelf-1-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-2-l",
+            "of": "shelf-2-l",
+            "member": "shelf-2-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-2-r",
+            "of": "shelf-2-r",
+            "member": "shelf-2-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-3-l",
+            "of": "shelf-3-l",
+            "member": "shelf-3-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-3-r",
+            "of": "shelf-3-r",
+            "member": "shelf-3-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-4-l",
+            "of": "shelf-4-l",
+            "member": "shelf-4-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-4-r",
+            "of": "shelf-4-r",
+            "member": "shelf-4-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-5-l",
+            "of": "shelf-5-l",
+            "member": "shelf-5-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-5-r",
+            "of": "shelf-5-r",
+            "member": "shelf-5-r",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-1-l",
+            "of": "pin-1-l",
+            "member": "shelf-1",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-1-r",
+            "of": "pin-1-r",
+            "member": "shelf-1",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-2-l",
+            "of": "pin-2-l",
+            "member": "shelf-2",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-2-r",
+            "of": "pin-2-r",
+            "member": "shelf-2",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-3-l",
+            "of": "pin-3-l",
+            "member": "shelf-3",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-3-r",
+            "of": "pin-3-r",
+            "member": "shelf-3",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-4-l",
+            "of": "pin-4-l",
+            "member": "shelf-4",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-4-r",
+            "of": "pin-4-r",
+            "member": "shelf-4",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-5-l",
+            "of": "pin-5-l",
+            "member": "shelf-5",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-5-r",
+            "of": "pin-5-r",
+            "member": "shelf-5",
+            "part": "member"
           }
         ],
         "decisions": [
           {
-            "en": "Body 1:200 is a new abstraction: sides, top and bottom are one carcass frame of 30 mm boards (the smallest feature) with the opening for the kick board between its feet, the back is a 30 mm slab inside it, and every shelf is one 30 mm board on its carrier bone, because the 6 mm sag is 0.03 mm on paper.",
-            "de": "Der Körper 1:200 ist eine neue Abstraktion: Seiten, Deckel und Boden sind ein Korpusrahmen aus 30-mm-Platten (das Mindestmaß) mit der Öffnung für die Sockelblende zwischen seinen Füßen, die Rückwand ist eine 30-mm-Scheibe darin, und jeder Fachboden ist eine 30-mm-Platte auf seinem Trägerknochen, weil die 6 mm Durchbiegung auf dem Papier 0,03 mm sind."
+            "en": "The 3 mm hardboard back fits behind five 280 mm deep shelves. The carcass, plinth and shelves retain their 18 mm board stock. Each shelf bears on four 5 mm pins, with two bending halves spanning between the supports.",
+            "de": "Hinter fünf 280 mm tiefen Fachböden sitzt eine 3-mm-Hartfaserrückwand. Korpus, Sockelblende und Fachböden behalten ihre Plattenstärke von 18 mm. Jeder Fachboden liegt auf vier 5-mm-Stiften. Seine zwei biegsamen Hälften spannen zwischen den Auflagern."
           },
           {
             "en": "Thermal 1:200 references the frame, the back, the kick board and the five boards. Structure 1:200: the frame, the back and the kick board, two beam halves per shelf on their own bones, one cleat under each board end for the pin rows, the floor strips and the carcass mass.",
@@ -6955,12 +7428,12 @@
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.7,
-            "profile": [[0.0, 0.0], [0.075, 0.0], [0.075, 0.075], [0.725, 0.075], [0.725, 0.0], [0.8, 0.0], [0.8, 1.8], [0.0, 1.8]],
+            "profile": [[0.0, 0.0], [0.018, 0.0], [0.018, 0.06], [0.782, 0.06], [0.782, 0.0], [0.8, 0.0], [0.8, 1.8], [0.0, 1.8]],
             "plane": "xy",
             "from": -0.15,
             "to": 0.15,
             "holes": [
-              [[0.075, 0.15], [0.725, 0.15], [0.725, 1.725], [0.075, 1.725]]
+              [[0.018, 0.078], [0.782, 0.078], [0.782, 1.782], [0.018, 1.782]]
             ]
           },
           {
@@ -6970,9 +7443,9 @@
             "material": "hardboard-back",
             "role": "body",
             "tone": 0.9,
-            "size": [0.65, 1.575, 0.075],
+            "size": [0.764, 1.704, 0.003],
             "transform": {
-              "translation": [0.4, 0.9375, 0.1125]
+              "translation": [0.4, 0.93, 0.139]
             }
           },
           {
@@ -6982,70 +7455,290 @@
             "material": "melamine-chipboard",
             "role": "body",
             "tone": 0.4,
-            "size": [0.65, 0.075, 0.075],
+            "size": [0.764, 0.06, 0.018],
             "transform": {
-              "translation": [0.4, 0.0375, -0.0825]
+              "translation": [0.4, 0.03, -0.111]
             }
           },
           {
-            "id": "shelf-1",
+            "id": "shelf-1-l",
             "kind": "box",
+            "bone": "shelf-1-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, 0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-1-r",
+            "kind": "box",
+            "bone": "shelf-1-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, -0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-2-l",
+            "kind": "box",
+            "bone": "shelf-2-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, 0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-2-r",
+            "kind": "box",
+            "bone": "shelf-2-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, -0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-3-l",
+            "kind": "box",
+            "bone": "shelf-3-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, 0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-3-r",
+            "kind": "box",
+            "bone": "shelf-3-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, -0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-4-l",
+            "kind": "box",
+            "bone": "shelf-4-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, 0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-4-r",
+            "kind": "box",
+            "bone": "shelf-4-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, -0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-5-l",
+            "kind": "box",
+            "bone": "shelf-5-l",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, 0.009, -0.005]
+            }
+          },
+          {
+            "id": "shelf-5-r",
+            "kind": "box",
+            "bone": "shelf-5-r",
+            "material": "melamine-chipboard",
+            "role": "body",
+            "tone": 0.7,
+            "size": [0.381, 0.018, 0.28],
+            "transform": {
+              "translation": [0.1915, -0.009, -0.005]
+            }
+          },
+          {
+            "id": "pin-1-l",
+            "kind": "extrude",
             "bone": "shelf-1",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.65, 0.075, 0.22],
-            "transform": {
-              "translation": [0.382, 0.0375, -0.035]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
           },
           {
-            "id": "shelf-2",
-            "kind": "box",
+            "id": "pin-1-r",
+            "kind": "extrude",
+            "bone": "shelf-1",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
+          },
+          {
+            "id": "pin-2-l",
+            "kind": "extrude",
             "bone": "shelf-2",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.65, 0.075, 0.22],
-            "transform": {
-              "translation": [0.382, 0.0375, -0.035]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
           },
           {
-            "id": "shelf-3",
-            "kind": "box",
+            "id": "pin-2-r",
+            "kind": "extrude",
+            "bone": "shelf-2",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
+          },
+          {
+            "id": "pin-3-l",
+            "kind": "extrude",
             "bone": "shelf-3",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.65, 0.075, 0.22],
-            "transform": {
-              "translation": [0.382, 0.0375, -0.035]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
           },
           {
-            "id": "shelf-4",
-            "kind": "box",
+            "id": "pin-3-r",
+            "kind": "extrude",
+            "bone": "shelf-3",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
+          },
+          {
+            "id": "pin-4-l",
+            "kind": "extrude",
             "bone": "shelf-4",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.65, 0.075, 0.22],
-            "transform": {
-              "translation": [0.382, 0.0375, -0.035]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
           },
           {
-            "id": "shelf-5",
-            "kind": "box",
+            "id": "pin-4-r",
+            "kind": "extrude",
+            "bone": "shelf-4",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
+          },
+          {
+            "id": "pin-5-l",
+            "kind": "extrude",
             "bone": "shelf-5",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.65, 0.075, 0.22],
-            "transform": {
-              "translation": [0.382, 0.0375, -0.035]
-            }
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": -0.008,
+            "to": 0.009
+          },
+          {
+            "id": "pin-5-r",
+            "kind": "extrude",
+            "bone": "shelf-5",
+            "material": "zinc-plated-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.0, -0.113], [-0.0025, -0.1105], [-0.005, -0.113], [-0.0025, -0.1155]],
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.224]
+            },
+            "plane": "yz",
+            "from": 0.755,
+            "to": 0.772
           }
         ],
         "thermal": [
@@ -7065,28 +7758,53 @@
             "region": "plinth"
           },
           {
-            "id": "th-shelf-1",
-            "of": "shelf-1",
+            "id": "th-shelf-1-l",
+            "of": "shelf-1-l",
             "region": "shelves"
           },
           {
-            "id": "th-shelf-2",
-            "of": "shelf-2",
+            "id": "th-shelf-1-r",
+            "of": "shelf-1-r",
             "region": "shelves"
           },
           {
-            "id": "th-shelf-3",
-            "of": "shelf-3",
+            "id": "th-shelf-2-l",
+            "of": "shelf-2-l",
             "region": "shelves"
           },
           {
-            "id": "th-shelf-4",
-            "of": "shelf-4",
+            "id": "th-shelf-2-r",
+            "of": "shelf-2-r",
             "region": "shelves"
           },
           {
-            "id": "th-shelf-5",
-            "of": "shelf-5",
+            "id": "th-shelf-3-l",
+            "of": "shelf-3-l",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-3-r",
+            "of": "shelf-3-r",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-4-l",
+            "of": "shelf-4-l",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-4-r",
+            "of": "shelf-4-r",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-5-l",
+            "of": "shelf-5-l",
+            "region": "shelves"
+          },
+          {
+            "id": "th-shelf-5-r",
+            "of": "shelf-5-r",
             "region": "shelves"
           }
         ],
@@ -7110,295 +7828,15 @@
             "part": "member"
           },
           {
-            "id": "m-shelf-1-l",
-            "kind": "box",
-            "bone": "shelf-1-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, 0.0375, -0.035]
-            },
-            "member": "shelf-1-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-1-r",
-            "kind": "box",
-            "bone": "shelf-1-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, -0.0375, -0.035]
-            },
-            "member": "shelf-1-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-2-l",
-            "kind": "box",
-            "bone": "shelf-2-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, 0.0375, -0.035]
-            },
-            "member": "shelf-2-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-2-r",
-            "kind": "box",
-            "bone": "shelf-2-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, -0.0375, -0.035]
-            },
-            "member": "shelf-2-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-3-l",
-            "kind": "box",
-            "bone": "shelf-3-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, 0.0375, -0.035]
-            },
-            "member": "shelf-3-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-3-r",
-            "kind": "box",
-            "bone": "shelf-3-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, -0.0375, -0.035]
-            },
-            "member": "shelf-3-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-4-l",
-            "kind": "box",
-            "bone": "shelf-4-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, 0.0375, -0.035]
-            },
-            "member": "shelf-4-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-4-r",
-            "kind": "box",
-            "bone": "shelf-4-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, -0.0375, -0.035]
-            },
-            "member": "shelf-4-r",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-5-l",
-            "kind": "box",
-            "bone": "shelf-5-l",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, 0.0375, -0.035]
-            },
-            "member": "shelf-5-l",
-            "part": "member"
-          },
-          {
-            "id": "m-shelf-5-r",
-            "kind": "box",
-            "bone": "shelf-5-r",
-            "material": "melamine-chipboard",
-            "role": "body",
-            "tone": 0.7,
-            "size": [0.325, 0.075, 0.22],
-            "transform": {
-              "translation": [0.2195, -0.0375, -0.035]
-            },
-            "member": "shelf-5-r",
-            "part": "member"
-          },
-          {
-            "id": "bearing-1-l",
-            "kind": "box",
-            "bone": "shelf-1",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.0945, -0.0375, -0.035]
-            },
-            "member": "shelf-1",
-            "part": "member"
-          },
-          {
-            "id": "bearing-1-r",
-            "kind": "box",
-            "bone": "shelf-1",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.6695, -0.0375, -0.035]
-            },
-            "member": "shelf-1",
-            "part": "member"
-          },
-          {
-            "id": "bearing-2-l",
-            "kind": "box",
-            "bone": "shelf-2",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.0945, -0.0375, -0.035]
-            },
-            "member": "shelf-2",
-            "part": "member"
-          },
-          {
-            "id": "bearing-2-r",
-            "kind": "box",
-            "bone": "shelf-2",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.6695, -0.0375, -0.035]
-            },
-            "member": "shelf-2",
-            "part": "member"
-          },
-          {
-            "id": "bearing-3-l",
-            "kind": "box",
-            "bone": "shelf-3",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.0945, -0.0375, -0.035]
-            },
-            "member": "shelf-3",
-            "part": "member"
-          },
-          {
-            "id": "bearing-3-r",
-            "kind": "box",
-            "bone": "shelf-3",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.6695, -0.0375, -0.035]
-            },
-            "member": "shelf-3",
-            "part": "member"
-          },
-          {
-            "id": "bearing-4-l",
-            "kind": "box",
-            "bone": "shelf-4",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.0945, -0.0375, -0.035]
-            },
-            "member": "shelf-4",
-            "part": "member"
-          },
-          {
-            "id": "bearing-4-r",
-            "kind": "box",
-            "bone": "shelf-4",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.6695, -0.0375, -0.035]
-            },
-            "member": "shelf-4",
-            "part": "member"
-          },
-          {
-            "id": "bearing-5-l",
-            "kind": "box",
-            "bone": "shelf-5",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.0945, -0.0375, -0.035]
-            },
-            "member": "shelf-5",
-            "part": "member"
-          },
-          {
-            "id": "bearing-5-r",
-            "kind": "box",
-            "bone": "shelf-5",
-            "material": "zinc-plated-steel",
-            "role": "detail",
-            "tone": 0.25,
-            "size": [0.075, 0.075, 0.22],
-            "transform": {
-              "translation": [0.6695, -0.0375, -0.035]
-            },
-            "member": "shelf-5",
-            "part": "member"
-          },
-          {
             "id": "support-foot-left",
             "kind": "box",
             "bone": "frame",
             "material": "melamine-chipboard",
             "role": "ground",
             "tone": 0.2,
-            "size": [0.078, 0.04, 0.36],
+            "size": [0.018, 0.004, 0.3],
             "transform": {
-              "translation": [0.009, 0.02, 0.0]
+              "translation": [0.009, 0.002, 0]
             },
             "member": "frame",
             "part": "support",
@@ -7411,9 +7849,9 @@
             "material": "melamine-chipboard",
             "role": "ground",
             "tone": 0.2,
-            "size": [0.078, 0.04, 0.36],
+            "size": [0.018, 0.004, 0.3],
             "transform": {
-              "translation": [0.791, 0.02, 0.0]
+              "translation": [0.791, 0.002, 0]
             },
             "member": "frame",
             "part": "support",
@@ -7432,12 +7870,132 @@
             },
             "member": "frame",
             "part": "mass"
+          },
+          {
+            "id": "m-shelf-1-l",
+            "of": "shelf-1-l",
+            "member": "shelf-1-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-1-r",
+            "of": "shelf-1-r",
+            "member": "shelf-1-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-2-l",
+            "of": "shelf-2-l",
+            "member": "shelf-2-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-2-r",
+            "of": "shelf-2-r",
+            "member": "shelf-2-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-3-l",
+            "of": "shelf-3-l",
+            "member": "shelf-3-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-3-r",
+            "of": "shelf-3-r",
+            "member": "shelf-3-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-4-l",
+            "of": "shelf-4-l",
+            "member": "shelf-4-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-4-r",
+            "of": "shelf-4-r",
+            "member": "shelf-4-r",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-5-l",
+            "of": "shelf-5-l",
+            "member": "shelf-5-l",
+            "part": "member"
+          },
+          {
+            "id": "m-shelf-5-r",
+            "of": "shelf-5-r",
+            "member": "shelf-5-r",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-1-l",
+            "of": "pin-1-l",
+            "member": "shelf-1",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-1-r",
+            "of": "pin-1-r",
+            "member": "shelf-1",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-2-l",
+            "of": "pin-2-l",
+            "member": "shelf-2",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-2-r",
+            "of": "pin-2-r",
+            "member": "shelf-2",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-3-l",
+            "of": "pin-3-l",
+            "member": "shelf-3",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-3-r",
+            "of": "pin-3-r",
+            "member": "shelf-3",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-4-l",
+            "of": "pin-4-l",
+            "member": "shelf-4",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-4-r",
+            "of": "pin-4-r",
+            "member": "shelf-4",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-5-l",
+            "of": "pin-5-l",
+            "member": "shelf-5",
+            "part": "member"
+          },
+          {
+            "id": "m-pin-5-r",
+            "of": "pin-5-r",
+            "member": "shelf-5",
+            "part": "member"
           }
         ],
         "decisions": [
           {
-            "en": "Minimal: the body 1:500 is the carcass frame and the back with 75 mm boards (the smallest feature, 0.15 mm on paper), the kick board in the opening between the feet and five 75 mm shelf boards, so that the sign still reads as an open shelf unit with five shelves; the boards are therefore heavier than the real 18 mm.",
-            "de": "Minimal: der Körper 1:500 ist der Korpusrahmen und die Rückwand mit 75-mm-Platten (das Mindestmaß, 0,15 mm auf dem Papier), die Sockelblende in der Öffnung zwischen den Füßen und fünf 75-mm-Fachböden, damit das Zeichen noch als offenes Regal mit fünf Böden lesbar ist; die Platten sind deshalb stärker als die echten 18 mm."
+            "en": "The 3 mm hardboard back fits behind five 280 mm deep shelves. The carcass, plinth and shelves retain their 18 mm board stock. Each shelf bears on four 5 mm pins, with two bending halves spanning between the supports.",
+            "de": "Hinter fünf 280 mm tiefen Fachböden sitzt eine 3-mm-Hartfaserrückwand. Korpus, Sockelblende und Fachböden behalten ihre Plattenstärke von 18 mm. Jeder Fachboden liegt auf vier 5-mm-Stiften. Seine zwei biegsamen Hälften spannen zwischen den Auflagern."
           },
           {
             "en": "Thermal 1:500 references the frame, the back, the kick board and the five boards. Structure 1:500: the frame with the back and the kick board, two beam halves per shelf on one cleat under each board end, the floor strips and the carcass mass.",

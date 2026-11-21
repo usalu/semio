@@ -1,0 +1,602 @@
+{
+  "jogger": {
+    "atlas": [
+      0.095,
+      0.016,
+      0
+    ],
+    "neckKg": 0.82,
+    "neckCom": [
+      0.043,
+      0.023
+    ],
+    "condyleSpacingM": 0.028,
+    "spine": "sk-cervical",
+    "region": "head-skin",
+    "poses": {
+      "initial-contact-l": [
+        6,
+        0,
+        0
+      ],
+      "loading-l": [
+        6,
+        0,
+        0
+      ],
+      "midstance-l": [
+        6,
+        0,
+        0
+      ],
+      "propulsion-l": [
+        6,
+        0,
+        0
+      ],
+      "toe-off-l": [
+        6,
+        0,
+        0
+      ],
+      "flight-l": [
+        6,
+        0,
+        0
+      ],
+      "initial-contact-r": [
+        6,
+        0,
+        0
+      ],
+      "loading-r": [
+        6,
+        0,
+        0
+      ],
+      "midstance-r": [
+        6,
+        0,
+        0
+      ],
+      "propulsion-r": [
+        6,
+        0,
+        0
+      ],
+      "toe-off-r": [
+        6,
+        0,
+        0
+      ],
+      "flight-r": [
+        6,
+        0,
+        0
+      ],
+      "stretch-stand": [
+        -1,
+        0,
+        0
+      ],
+      "stretch-quad-r": [
+        -2,
+        0,
+        0
+      ],
+      "stretch-hamstring": [
+        20,
+        0,
+        0
+      ]
+    }
+  },
+  "kneeling-gardener": {
+    "atlas": [
+      0.09,
+      0.018,
+      0
+    ],
+    "neckKg": 0.7,
+    "neckCom": [
+      0.041,
+      0.025
+    ],
+    "condyleSpacingM": 0.025,
+    "spine": "sk-cervical",
+    "region": "face",
+    "poses": {
+      "kneeling-weeding": [
+        10,
+        0,
+        0
+      ],
+      "kneeling-upright": [
+        6,
+        0,
+        0
+      ],
+      "reaching-trug": [
+        8,
+        0,
+        0
+      ],
+      "dig-up": [
+        10,
+        0,
+        0
+      ],
+      "dig-in": [
+        10,
+        0,
+        0
+      ],
+      "dig-pull": [
+        10,
+        0,
+        0
+      ]
+    }
+  },
+  "leaning-person": {
+    "atlas": [
+      0.11,
+      0.01,
+      0
+    ],
+    "neckKg": 0.76,
+    "neckCom": [
+      0.049,
+      0.02
+    ],
+    "condyleSpacingM": 0.027,
+    "spine": "cervical-spine",
+    "region": "head-skin",
+    "poses": {
+      "leaning-shoulder-wall": [
+        -21,
+        0,
+        0
+      ],
+      "leaning-arms-folded": [
+        -4,
+        0,
+        0
+      ],
+      "phone-call": [
+        -9,
+        0,
+        0
+      ],
+      "pushing-off": [
+        3,
+        0,
+        0
+      ],
+      "standing-away": [
+        0,
+        0,
+        0
+      ]
+    },
+    "exposedNeckBandM": [
+      0.024,
+      0.048
+    ],
+    "faceAndNeckAreaM2": 0.092
+  },
+  "parent-carrying-toddler": {
+    "atlas": [
+      0.09732,
+      -0.01972,
+      0
+    ],
+    "neckKg": 0.73,
+    "neckCom": [
+      0.046,
+      -0.007
+    ],
+    "condyleSpacingM": 0.026,
+    "spine": "cervical-spine",
+    "region": "head-skin",
+    "poses": {
+      "standing-carry": [
+        -2,
+        0,
+        0
+      ],
+      "heel-strike-l": [
+        -2,
+        0,
+        0
+      ],
+      "walk-1": [
+        -2,
+        0,
+        0
+      ],
+      "midstance-l": [
+        -2,
+        0,
+        0
+      ],
+      "walk-3": [
+        -2,
+        0,
+        0
+      ],
+      "walk-4": [
+        -2,
+        0,
+        0
+      ],
+      "walk-5": [
+        -2,
+        0,
+        0
+      ],
+      "walk-6": [
+        -2,
+        0,
+        0
+      ],
+      "walk-7": [
+        -2,
+        0,
+        0
+      ],
+      "hoisting": [
+        -3,
+        0,
+        0
+      ]
+    },
+    "exposedNeckBandM": [
+      0.025,
+      0.052
+    ],
+    "faceAndNeckAreaM2": 0.098
+  },
+  "parent-with-stroller": {
+    "atlas": [
+      0.106,
+      0.018,
+      0
+    ],
+    "neckKg": 0.78,
+    "neckCom": [
+      0.048,
+      0.026
+    ],
+    "condyleSpacingM": 0.027,
+    "spine": "cervical-spine",
+    "region": "head-skin",
+    "poses": {
+      "pushing-stroller": [
+        5,
+        0,
+        0
+      ],
+      "pausing-with-stroller": [
+        -3,
+        0,
+        0
+      ],
+      "checking-child": [
+        25,
+        0,
+        0
+      ],
+      "kerb-tilt": [
+        5,
+        0,
+        0
+      ],
+      "push-heel-strike-l": [
+        5,
+        0,
+        0
+      ],
+      "push-toe-off-r": [
+        5,
+        0,
+        0
+      ],
+      "push-midstance-l": [
+        5,
+        0,
+        0
+      ],
+      "push-heel-off-l": [
+        5,
+        0,
+        0
+      ],
+      "push-late-swing-r": [
+        5,
+        0,
+        0
+      ],
+      "push-heel-strike-r": [
+        5,
+        0,
+        0
+      ],
+      "push-toe-off-l": [
+        5,
+        0,
+        0
+      ],
+      "push-midstance-r": [
+        5,
+        0,
+        0
+      ],
+      "push-heel-off-r": [
+        5,
+        0,
+        0
+      ],
+      "push-late-swing-l": [
+        5,
+        0,
+        0
+      ]
+    },
+    "exposedNeckBandM": [
+      0.033,
+      0.05
+    ]
+  },
+  "person-with-umbrella": {
+    "atlas": [
+      0.1061,
+      0.014,
+      0
+    ],
+    "neckKg": 0.81,
+    "neckCom": [
+      0.049,
+      0.023
+    ],
+    "condyleSpacingM": 0.026,
+    "spine": "cervical-spine",
+    "region": "head-skin",
+    "poses": {
+      "umbrella-up-still": [
+        0,
+        0,
+        0
+      ],
+      "umbrella-tilted-to-wind": [
+        3,
+        0,
+        0
+      ],
+      "umbrella-furled": [
+        0,
+        0,
+        0
+      ],
+      "gust-light": [
+        2,
+        0,
+        0
+      ],
+      "gust-heavy": [
+        4,
+        0,
+        0
+      ]
+    }
+  },
+  "seated-guitarist": {
+    "atlas": [
+      0.1,
+      0.002,
+      0
+    ],
+    "neckKg": 0.85,
+    "neckCom": [
+      0.047,
+      0.017
+    ],
+    "condyleSpacingM": 0.029,
+    "spine": "cervical-spine",
+    "region": "face",
+    "poses": {
+      "strumming": [
+        -9,
+        0,
+        8
+      ],
+      "fretting-high": [
+        -13,
+        0,
+        12
+      ],
+      "resting": [
+        -1,
+        0,
+        0
+      ],
+      "tuning": [
+        -12,
+        0,
+        16
+      ],
+      "strum-up": [
+        -9,
+        0,
+        8
+      ]
+    },
+    "exposedNeckBandM": [
+      0.015,
+      0.05
+    ]
+  },
+  "skateboarder": {
+    "atlas": [
+      0.09762,
+      -0.01991,
+      0
+    ],
+    "neckKg": 0.77,
+    "neckCom": [
+      0.045,
+      -0.018
+    ],
+    "condyleSpacingM": 0.027,
+    "spine": "cervical",
+    "region": "face",
+    "poses": {
+      "cruising": [
+        8,
+        13,
+        33
+      ],
+      "pushing": [
+        14,
+        3,
+        5
+      ],
+      "crouch": [
+        24,
+        18,
+        31
+      ],
+      "ollie-air": [
+        16,
+        19,
+        31
+      ],
+      "push-plant": [
+        10,
+        3,
+        7
+      ],
+      "push-lift": [
+        16,
+        3,
+        5
+      ],
+      "push-swing": [
+        10,
+        3,
+        7
+      ],
+      "push-reach": [
+        5,
+        6,
+        12
+      ],
+      "pop": [
+        11,
+        10,
+        31
+      ],
+      "landing": [
+        24,
+        16,
+        30
+      ]
+    }
+  },
+  "worker-carrying-box": {
+    "atlas": [
+      0.11494,
+      -0.00325,
+      0
+    ],
+    "neckKg": 0.96,
+    "neckCom": [
+      0.055,
+      0.002
+    ],
+    "condyleSpacingM": 0.03,
+    "spine": "cervical-spine",
+    "region": "head-skin",
+    "poses": {
+      "squat-grip": [
+        26,
+        0,
+        0
+      ],
+      "lift-mid": [
+        19,
+        0,
+        0
+      ],
+      "carrying-box-low": [
+        -4,
+        0,
+        0
+      ],
+      "carrying-box-chest": [
+        -7,
+        0,
+        0
+      ],
+      "setting-down": [
+        16,
+        0,
+        0
+      ],
+      "walk-heel-strike-l": [
+        -4,
+        0,
+        0
+      ],
+      "walk-toe-off-r": [
+        -4,
+        0,
+        0
+      ],
+      "walk-midstance-l": [
+        -4,
+        0,
+        0
+      ],
+      "walk-heel-off-l": [
+        -4,
+        0,
+        0
+      ],
+      "walk-late-swing-r": [
+        -4,
+        0,
+        0
+      ],
+      "walk-heel-strike-r": [
+        -4,
+        0,
+        0
+      ],
+      "walk-toe-off-l": [
+        -4,
+        0,
+        0
+      ],
+      "walk-midstance-r": [
+        -4,
+        0,
+        0
+      ],
+      "walk-heel-off-r": [
+        -4,
+        0,
+        0
+      ],
+      "walk-late-swing-l": [
+        -4,
+        0,
+        0
+      ]
+    },
+    "exposedNeckBandM": [
+      0.018,
+      0.052
+    ]
+  }
+}

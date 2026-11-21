@@ -13,6 +13,8 @@ use semio_framework_replication_codec::PackLimits;
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value_control_contract::AuthoringWallet;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_receiving_original::StagedProjection;
+use semio_framework_value::{RetainedCloneSource, RetainedWorkPoll};
 use serde_json::Value;
 
 static FIELDS: [BorrowedFieldSpec; 1] = [BorrowedFieldSpec::new(0, "text", BorrowedShape::Text)];
@@ -40,7 +42,59 @@ fn main() {
     let record = read_document(&child[prefix..], SemioTableSnapshot::RECORD, PackLimits::default().max_total_alloc);
     let received = SemioTableSnapshot::__dsl_from_record(&record).unwrap();
     assert_eq!(received, expected);
+    assert_eq!(project_record(record), expected);
     println!("[DEBUG] wasm32 verified captured DIN V 18599 climate child Pack with {} rows", expected.rows.len());
+}
+
+fn project_record(record: RecordValue) -> SemioTableSnapshot {
+    let grant = RetainedCloneGrant {
+        maximum_items: 1, maximum_copy_bytes: 32 * 1024, maximum_capacity_bytes: 32 * 1024,
+        maximum_release_bytes: 32 * 1024, maximum_depth: 64,
+    };
+    let mut wallet = AuthoringWallet::new(RetainedCloneGrant {
+        maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24,
+        maximum_release_bytes: 1 << 24, maximum_depth: 64,
+    }, 1 << 24);
+    let mut admission = RetainedCloneSource::admission_owned(record, ());
+    let mut projection = StagedProjection::default();
+    let mut source = None;
+    let mut staging_turns = 0;
+    let mut pending_publication = false;
+    for _ in 0..1000 {
+        if admission.terminal_is_empty() { break; }
+        if let Some((_, work)) = projection.quote(&admission).unwrap() {
+            let poll = wallet.run_invoked(grant, work, |effect| projection.advance(&mut admission, effect))
+                .unwrap().unwrap().output;
+            if let RetainedWorkPoll::Complete(turn) = poll { wallet.post(turn.result.unwrap()).unwrap(); }
+            staging_turns += 1;
+        } else if admission.phase() == "ready" {
+            let work = admission.take_output_work_demand();
+            let turn = wallet.run_invoked(grant, work, |effect| admission.take_output(&mut source, effect))
+                .unwrap().unwrap().output;
+            wallet.post(turn.result.unwrap().progress()).unwrap();
+            pending_publication |= source.as_ref().is_some_and(RetainedCloneSource::publication_pending);
+        } else {
+            let work = admission.advance_work_demand().unwrap();
+            let turn = wallet.run_invoked(grant, work, |effect| admission.advance(effect))
+                .unwrap().unwrap().output;
+            wallet.post(turn.result.unwrap().progress()).unwrap();
+        }
+    }
+    assert!(admission.terminal_is_empty() && projection.terminal_is_empty());
+    assert!(staging_turns > 1 && pending_publication);
+    let mut source = source.unwrap();
+    assert!(!source.publication_pending());
+    let result = SemioTableSnapshot::__dsl_from_record(source.borrow().get()).unwrap();
+    for _ in 0..100_000 {
+        if source.terminal_is_empty() { break; }
+        let work = source.next_close_work_demand(grant.maximum_copy_bytes).unwrap();
+        let turn = wallet.run_invoked(grant, work, |effect| source.close_step(grant.maximum_copy_bytes, effect))
+            .unwrap().unwrap().output;
+        if let RetainedWorkPoll::Complete(outcome) = turn { wallet.post(outcome.result.unwrap().progress()).unwrap(); }
+    }
+    assert!(source.terminal_is_empty());
+    println!("[DEBUG] Captured climate record projection used {staging_turns} stages and moved through both publication turns");
+    result
 }
 
 fn read_document(bytes: &[u8], spec: BorrowedRecordSpec, ceiling: u64) -> RecordValue {

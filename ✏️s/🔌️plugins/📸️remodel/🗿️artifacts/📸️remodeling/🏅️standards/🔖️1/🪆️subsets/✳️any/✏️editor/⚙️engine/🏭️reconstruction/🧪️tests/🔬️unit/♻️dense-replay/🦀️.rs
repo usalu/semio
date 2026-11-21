@@ -45,22 +45,28 @@ pub(super) mod dense_dump {
 
     pub(in super::super) fn encode(reconstruction: &remodeling_sfm::Reconstruction, dense: &[usize], maps: &[remodeling_dense::DepthMap]) -> Vec<u8> {
         let mut w = Writer(Vec::new());
-        let i = reconstruction.intrinsics;
-        for value in [i.fx, i.fy, i.cx, i.cy, i.skew] {
-            w.f64(value);
-        }
-        match i.distortion {
-            remodeling_camera::Distortion::BrownConrady { k1, k2, k3, p1, p2 } => {
-                w.u64(1);
-                for value in [k1, k2, k3, p1, p2] {
-                    w.f64(value);
-                }
-            }
-            _ => w.u64(0),
-        }
         w.u64(reconstruction.cameras.len());
         for (frame, pose) in &reconstruction.cameras {
             w.u64(*frame);
+            let i = reconstruction.intrinsics[frame];
+            for value in [i.fx, i.fy, i.cx, i.cy, i.skew] {
+                w.f64(value);
+            }
+            match i.distortion {
+                remodeling_camera::Distortion::None => w.u64(0),
+                remodeling_camera::Distortion::BrownConrady { k1, k2, k3, p1, p2 } => {
+                    w.u64(1);
+                    for value in [k1, k2, k3, p1, p2] {
+                        w.f64(value);
+                    }
+                }
+                remodeling_camera::Distortion::FisheyeEquidistant { k1, k2, k3, k4 } => {
+                    w.u64(2);
+                    for value in [k1, k2, k3, k4] {
+                        w.f64(value);
+                    }
+                }
+            }
             for column in pose.0.r.0.cols {
                 for value in column {
                     w.f64(value);
@@ -97,17 +103,18 @@ pub(super) mod dense_dump {
 
     pub(super) fn decode(bytes: &[u8]) -> (remodeling_sfm::Reconstruction, Vec<usize>, Vec<remodeling_dense::DepthMap>) {
         let mut r = Reader(bytes, 0);
-        let (fx, fy, cx, cy, skew) = (r.f64(), r.f64(), r.f64(), r.f64(), r.f64());
-        let distortion = if r.u64() == 1 {
-            let (k1, k2, k3, p1, p2) = (r.f64(), r.f64(), r.f64(), r.f64(), r.f64());
-            remodeling_camera::Distortion::BrownConrady { k1, k2, k3, p1, p2 }
-        } else {
-            remodeling_camera::Distortion::None
-        };
-        let intrinsics = remodeling_camera::Intrinsics { fx, fy, cx, cy, skew, distortion };
+        let mut intrinsics = std::collections::BTreeMap::new();
         let cameras = (0..r.u64())
             .map(|_| {
                 let frame = r.u64();
+                let (fx, fy, cx, cy, skew) = (r.f64(), r.f64(), r.f64(), r.f64(), r.f64());
+                let distortion = match r.u64() {
+                    0 => remodeling_camera::Distortion::None,
+                    1 => remodeling_camera::Distortion::BrownConrady { k1: r.f64(), k2: r.f64(), k3: r.f64(), p1: r.f64(), p2: r.f64() },
+                    2 => remodeling_camera::Distortion::FisheyeEquidistant { k1: r.f64(), k2: r.f64(), k3: r.f64(), k4: r.f64() },
+                    _ => panic!("unknown lens model in dense dump"),
+                };
+                intrinsics.insert(frame, remodeling_camera::Intrinsics { fx, fy, cx, cy, skew, distortion });
                 let cols: [[f64; 3]; 3] = std::array::from_fn(|_| std::array::from_fn(|_| r.f64()));
                 let t = [r.f64(), r.f64(), r.f64()];
                 (frame, remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3 { r: semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3(semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d { cols }), t }))
@@ -177,7 +184,7 @@ fn diagnose_dense_replay() {
     let targets: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(frame, _)| truth_centres[*frame]).collect();
     let sim = semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::umeyama(&recovered, &targets, true).expect("Sim(3) over camera centres");
     let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
-    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params);
     let mut extrema_min = [f64::INFINITY; 3];
     let mut extrema_max = [f64::NEG_INFINITY; 3];
     for point in &reconstruction.points {
@@ -186,7 +193,10 @@ fn diagnose_dense_replay() {
             extrema_max[axis] = extrema_max[axis].max(point[axis]);
         }
     }
-    let views: Vec<(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)> = dense_indices.iter().map(|camera| (reconstruction.cameras[*camera].1, reconstruction.intrinsics)).collect();
+    let views: Vec<(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)> = dense_indices.iter().map(|camera| {
+        let (frame, pose) = reconstruction.cameras[*camera];
+        (pose, reconstruction.intrinsics[&frame])
+    }).collect();
     let fusion_config = std::env::var("DENSE_FUSION").ok().map_or_else(remodeling_dense::FusionConfig::default, |text| {
         let (tolerance, views) = text.split_once(',').expect("tolerance,views");
         remodeling_dense::FusionConfig { max_relative_depth_diff: tolerance.parse().expect("tolerance"), max_normal_angle_deg: 30.0, min_consistent_views: views.parse().expect("views") }

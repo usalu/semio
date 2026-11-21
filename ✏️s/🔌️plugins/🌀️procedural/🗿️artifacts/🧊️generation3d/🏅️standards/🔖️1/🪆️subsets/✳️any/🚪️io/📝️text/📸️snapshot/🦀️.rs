@@ -114,14 +114,6 @@ pub(crate) fn generation_values_to_pack_object(values: &semio_framework_artifact
     values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect()
 }
 
-/// 🔌️ The widget id behind a preview instance id. Instance ids are channel-qualified
-/// (`{widgetId}@{channel}#{index}`) so both suffixes have to come off; a bare widget id, a port id
-/// and an instance id therefore all resolve to the same widget.
-pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
-    let base = instance_id.split('#').next().unwrap_or(instance_id);
-    base.split('@').next().unwrap_or(base)
-}
-
 pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
     let snapshot_json = semio_framework_pack_json::to_json_string(host_snapshot);
     let patched = apply_generation_values_to_host_snapshot_json(&snapshot_json, &generation_values_to_pack_object(values));

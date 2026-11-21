@@ -1,0 +1,9 @@
+{
+  "width": 400,
+  "height": 28,
+  "toggleWidth": 32,
+  "bands": [
+    { "slot": "navbar", "edge": "bottom", "top": 0 },
+    { "slot": "footer", "edge": "top", "top": 72 }
+  ]
+}

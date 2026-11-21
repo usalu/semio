@@ -1,0 +1,17 @@
+# Component Model Lease Order
+
+The live component driver already opens the descriptor emitter in a lease task whose parent was captured before the compiler writer. It takes the descriptor product reader before its local compiler stage writer. The linked component file uses a separate pre-capacity task and `withFreshArtifactPublicationWritersV1` to acquire both destination locks before its compiler stage writer. The older emitter and linked-file rank reports in the concurrent lease snapshot therefore describe earlier paths. The active fallback had not reached stage execution when this inspection began.
+
+The model publication path still took the compiler writer before the products cache, private scratch, and public destination. Its public stage obtains `artifact-capture:` and `artifact:` at rank 6. The compiler writer is rank 7. Default policy observes descending acquisitions. Enforced policy refuses the model path immediately.
+
+The driver now captures one product lease parent before acquiring the component compiler lane. Its descriptor and model work enter independent tasks underneath that parent. Model preparation still validates the live publisher, Rust observation, component digest, descriptor pair and receipt inside compiler custody. Its product task holds the same bounded scratch, briefly acquires a stage writer to copy and recheck the exact linked source into that scratch, and releases the stage writer before publishing the product. The original compiler task retains ownership until model publication and cleanup settle.
+
+The focused lease regression opens the real shared writer, proves direct nested model publication is refused under the enforced policy, and runs product scratch, short compiler read, capture and destination in corrected order. SQLite independently projects descending rank steps from the scenario. The inherited-writer case failed before the fix and the sibling product task passed after it. The existing native fallback run was retained and no redundant Cargo build was started for this change.
+
+## Browser Publication
+
+The browser stage used the generic compiler-writer wrapper while opening the published Preview2 vendor reader and the module destination. Under enforcement, a shared vendor reader still requests rank 6 while compiler custody holds rank 7. The old ordering is refused by the physical lease test.
+
+The browser stage now enters the pre-writer product task before holding the Preview2 vendor reader and creating the funded product scratch. Private assembly and the JSPI probe temporarily take their own compiler stage writer. The driver checks the work, transpiled and optimized paths against the retained compiler backing before granting that write. The existing stage graph waits for optimization and model publication before the browser stage, and for browser completion before discard. The JSPI subprocess is joined before the temporary stage writer is released. The product reader and scratch remain live through recheck and final module publication, which uses the scratch control after releasing the compiler writer.
+
+The browser test first confirms the legacy reader refusal, then compares actual vendor, compiler and module acquisitions against an independent SQLite rank query. The production routing assertion failed before the fix. Both focused physical lease tests passed together after the fix. The already-running fallback and isolated Wasmtime guest were retained.

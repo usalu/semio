@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"annex":"De","systemType":"central_mech","yearsSinceInspection":0,"status":"Info","computedYears":0,"guidanceClause":"NA.1"},
+    {"annex":"De","systemType":"central_mech","yearsSinceInspection":4,"status":"Info","computedYears":4,"guidanceClause":"NA.1"},
+    {"annex":"De","systemType":"decentral_mech","yearsSinceInspection":6,"status":"Info","computedYears":6,"guidanceClause":"NA.1"},
+    {"annex":"En","systemType":"natural","yearsSinceInspection":9,"status":"Info","computedYears":9,"guidanceClause":"§1"}
+  ]
+}

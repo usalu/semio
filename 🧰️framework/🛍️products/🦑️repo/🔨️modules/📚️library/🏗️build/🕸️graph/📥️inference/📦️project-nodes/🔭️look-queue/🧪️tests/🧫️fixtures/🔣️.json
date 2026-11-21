@@ -1,0 +1,18 @@
+{
+  "owner": "singleton",
+  "cancelReason": "take pass released",
+  "verdict": "holds",
+  "outcomes": ["cancelled", "consumed", "consumed"],
+  "expectedJobs": [1, 1, 2],
+  "cutoff": {
+    "modes": ["deadline", "normal finish"],
+    "stopAt": 1,
+    "jobs": [
+      { "owner": "already-running", "requested": false, "at": 0 },
+      { "owner": "unasked", "requested": false, "at": 1 },
+      { "owner": "next-demand", "requested": true, "at": 2 },
+      { "owner": "unasked", "requested": true, "at": 3 }
+    ],
+    "expectedOrder": ["already-running", "next-demand", "unasked"]
+  }
+}

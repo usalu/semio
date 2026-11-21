@@ -124,8 +124,10 @@ fn push(rows: &mut UiFixedList<BuiltNode>, node: UiAssemblyResult<BuiltNode>) ->
 
 //#region 🔖️Layout
 /// 🧾️ One labelled tree row whose inline control the interpreter mounts in `TreeDataItem.control`.
-fn control_row(row_id: &str, label: &str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
-    let row = ui_id(ui::tree_item(ui_label(label)?), row_id)?;
+fn control_row(row_id: &str, label: &str, mut control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
+    let label = ui_label(label)?;
+    control.accessibility.label = Some(label.clone());
+    let row = ui_id(ui::tree_item(label), row_id)?;
     ui_build(row.try_child(control).map_err(|_| ui_error("ui.node.child"))?)
 }
 

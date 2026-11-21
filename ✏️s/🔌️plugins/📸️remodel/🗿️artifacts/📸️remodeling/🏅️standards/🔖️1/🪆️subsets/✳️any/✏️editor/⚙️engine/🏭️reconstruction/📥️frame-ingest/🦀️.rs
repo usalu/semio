@@ -38,15 +38,27 @@ pub enum FrameAcceptance {
     RejectedBlur,
 }
 
-/// 🖼️ One accepted input frame: pixels, true media timestamp, originating stream/camera id (single
-/// stream, id `0`, until [`FrameSource`] grows multi-stream support), and the sharpness score that let
-/// it through the blur gate.
+/// 📷️ The originating stream and optional calibration on the accepted image's pixel grid.
+#[derive(Clone, Copy, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
+pub struct FrameCapture {
+    pub stream: u32,
+    pub intrinsics: Option<remodeling_camera::Intrinsics>,
+}
+
+impl FrameCapture {
+    /// 🆔 Combines the stream ordinal with the frame's index within that stream.
+    pub fn entity(stream: u32, index: u32) -> u64 {
+        (u64::from(stream) << 32) | u64::from(index)
+    }
+}
+
+/// 🖼️ One accepted input frame with its capture, timestamp and measured sharpness.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct AcceptedFrame {
     pub index: u32,
     pub image: remodeling_image::ImageRgba8,
     pub timestamp_ms: f64,
-    pub stream_id: u32,
+    pub capture: FrameCapture,
     pub sharpness: f32,
 }
 
@@ -137,7 +149,6 @@ fn describe_probe(probe: &semio_s_artifact_remodel_remodeling_video::editor::rem
 #[derive(semio_framework_value::RetireOwned)]
 pub struct FrameSource {
     pub(super) ingest: IngestParams,
-    stream_id: u32,
     offered: u32,
     pub frames: Vec<AcceptedFrame>,
     rolling_scores: Vec<f32>,
@@ -146,7 +157,7 @@ pub struct FrameSource {
 impl FrameSource {
     /// 🆕️ An empty frame source under the given ingestion policy.
     pub fn new(ingest: IngestParams) -> Self {
-        Self { ingest, stream_id: 0, offered: 0, frames: Vec::new(), rolling_scores: Vec::new() }
+        Self { ingest, offered: 0, frames: Vec::new(), rolling_scores: Vec::new() }
     }
 
     /// 🔍️ Every frame accepted so far, in ingestion order.
@@ -193,10 +204,10 @@ impl FrameSource {
     #[cfg(test)]
     fn accept(&mut self, index: u32, image: remodeling_image::ImageRgba8, timestamp_ms: f64, apply_stride: bool) -> FrameAcceptance {
         let score = sharpness_score(&image);
-        self.accept_with_sharpness(index, image, timestamp_ms, apply_stride, score)
+        self.accept_with_sharpness(index, image, timestamp_ms, FrameCapture::default(), apply_stride, score)
     }
 
-    pub(super) fn accept_with_sharpness(&mut self, index: u32, image: remodeling_image::ImageRgba8, timestamp_ms: f64, apply_stride: bool, score: f32) -> FrameAcceptance {
+    pub(super) fn accept_with_sharpness(&mut self, index: u32, image: remodeling_image::ImageRgba8, timestamp_ms: f64, capture: FrameCapture, apply_stride: bool, score: f32) -> FrameAcceptance {
         let offered = self.offered;
         self.offered += 1;
         if apply_stride {
@@ -211,7 +222,7 @@ impl FrameSource {
         if !blur_gate_admits(&mut self.rolling_scores, self.ingest.rolling_window, score, self.ingest.min_sharpness) {
             return FrameAcceptance::RejectedBlur;
         }
-        self.frames.push(AcceptedFrame { index, image, timestamp_ms, stream_id: self.stream_id, sharpness: score });
+        self.frames.push(AcceptedFrame { index, image, timestamp_ms, capture, sharpness: score });
         FrameAcceptance::Accepted
     }
 }

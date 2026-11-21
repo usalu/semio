@@ -60,6 +60,9 @@
     }
   },
   "definitions": {
+    "DifferencePolicy": {
+      "const": { "maximumComparisons": 16384, "maximumLabelUnits": 256 }
+    },
     "AcquisitionObservation": {
       "type": "object",
       "additionalProperties": false,

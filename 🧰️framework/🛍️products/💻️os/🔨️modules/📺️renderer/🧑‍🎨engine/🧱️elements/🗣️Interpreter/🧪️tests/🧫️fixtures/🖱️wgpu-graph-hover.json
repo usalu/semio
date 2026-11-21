@@ -1,0 +1,16 @@
+{
+  "surfaces": [
+    {
+      "name": "world-to-graph",
+      "hover": { "nodeId": "shell", "portId": "solid", "portIds": ["shell@solid"], "hoverSourceWindowId": "procedural-preview" }
+    },
+    {
+      "name": "graph-to-world",
+      "hover": { "nodeId": "shell", "portId": "solid", "hoverSourceWindowId": "procedural-main" }
+    },
+    {
+      "name": "cleared",
+      "hover": null
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "en": {
+    "steps": [
+      {
+        "id": "guide",
+        "title": "Guide",
+        "blocks": [
+          {
+            "id": "orientation",
+            "label": "Orientation",
+            "kind": "image",
+            "description": "Top view of the workpiece",
+            "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWOwTp/2HwAEUQI4k5Me1QAAAvZ0RVh0Q29tbWVudAByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSByZXRhaW5lZCBpbWFnZSBzb3VyY2UgZml4dHVyZSBDnKd7AAAAAElFTkSuQmCC"
+          },
+          {
+            "id": "missing",
+            "label": "Missing example",
+            "kind": "image"
+          }
+        ]
+      }
+    ],
+    "fallback": "(no image)",
+    "alt": "Top view of the workpiece",
+    "schema": "playbook",
+    "id": "image-fixture",
+    "version": "1",
+    "sourceBytes": 1142
+  },
+  "de": {
+    "steps": [
+      {
+        "id": "guide",
+        "title": "Anleitung",
+        "blocks": [
+          {
+            "id": "ausrichtung",
+            "label": "Ausrichtung",
+            "kind": "image",
+            "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWOwTp/2HwAEUQI4k5Me1QAAAABJRU5ErkJggg=="
+          },
+          {
+            "id": "missing",
+            "label": "Fehlendes Beispiel",
+            "kind": "image",
+            "src": "  "
+          }
+        ]
+      }
+    ],
+    "fallback": "(kein Bild)",
+    "alt": "Ausrichtung",
+    "schema": "playbook",
+    "id": "image-fixture",
+    "version": "1",
+    "sourceBytes": 118
+  }
+}

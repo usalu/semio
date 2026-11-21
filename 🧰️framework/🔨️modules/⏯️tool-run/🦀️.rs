@@ -14,7 +14,7 @@ use pack::record::{decode_record_body_exact, encode_record_body, DecodeOptions, 
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 use std::sync::OnceLock;
 use semio_ui_locale::Locale;
 use semio_ui_locale::LocalizedLabel;

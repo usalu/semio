@@ -1,6 +1,12 @@
 //! 💾️ Mesh GLB, glTF and binary STL representation owners.
 use crate::*;
 use semio_framework_pack_json as json;
+use std::borrow::Cow;
+
+#[path="📥️glb-document/🦀️.rs"]
+pub mod glb_document;
+#[path="🌳️glb-scene/🦀️.rs"]
+mod glb_scene;
 
 #[path="🧊️stream/🦀️.rs"]
 pub mod stream;
@@ -74,54 +80,32 @@ pub(crate) fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32;
 /// (`✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🦀️.rs`),
 /// re-expressed against `pack::json` instead of `serde_json` since this is the framework, not
 /// that artifact's own mutation-schema codec.
-fn gltf_split_container(bytes: &[u8]) -> Result<(Vec<u8>, Option<Vec<u8>>), String> {
+fn gltf_split_container(bytes: &[u8]) -> Result<(&[u8], Option<&[u8]>), String> {
     if bytes.first() == Some(&b'{') {
-        return Ok((bytes.to_vec(), None));
+        return Ok((bytes, None));
     }
-    if bytes.len() < 12 || &bytes[0..4] != b"glTF" {
-        return Err("glb: bad magic, expected 'glTF' or '{'".into());
-    }
-    let version = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
-    if version != 2 {
-        return Err(format!("glb: unsupported version {version}, only 2 is supported"));
-    }
-    let total_len = u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
-    let mut pos = 12usize;
-    let mut json_chunk: Option<Vec<u8>> = None;
-    let mut bin_chunk: Option<Vec<u8>> = None;
-    while pos + 8 <= bytes.len() && pos < total_len {
-        let chunk_len = u32::from_le_bytes(bytes[pos..pos + 4].try_into().unwrap()) as usize;
-        let chunk_type = &bytes[pos + 4..pos + 8];
-        let data_start = pos + 8;
-        let data_end = data_start.checked_add(chunk_len).ok_or("glb: invalid chunk extent")?;
-        if data_end > bytes.len() {
-            return Err("glb: chunk length exceeds buffer".into());
-        }
-        if chunk_type == b"JSON" && json_chunk.is_none() {
-            json_chunk = Some(bytes[data_start..data_end].to_vec());
-        } else if chunk_type == b"BIN\0" && bin_chunk.is_none() {
-            bin_chunk = Some(bytes[data_start..data_end].to_vec());
-        }
-        pos = data_end;
-    }
-    Ok((json_chunk.ok_or_else(|| "glb: missing JSON chunk".to_string())?, bin_chunk))
+    let mut chunks = glb_document::GlbChunks::default();
+    while !chunks.step(bytes)? {}
+    Ok((chunks.json(bytes)?, chunks.bin(bytes)))
 }
+
+const GLTF_DATA_SCHEME: &str = "data:";
+const GLTF_BASE64_MARKER: &str = ";base64,";
 
 /// 🔓️ Decodes a `data:...;base64,...` uri through the framework's own base64 codec — external
 /// (file-path) buffer uris are left unresolved (empty bytes), same contract as the stdio gltf
 /// artifact's `resolve_document_buffers`: this engine has no filesystem/network access.
 fn gltf_decode_data_uri(uri: &str) -> Result<Vec<u8>, String> {
-    if !uri.starts_with("data:") {
+    if !uri.starts_with(GLTF_DATA_SCHEME) {
         return Err("gltf: unsupported external buffer uri (no filesystem access)".into());
     }
-    let marker = ";base64,";
-    let idx = uri.find(marker).ok_or_else(|| "gltf: unsupported non-base64 data uri".to_string())?;
-    semio_framework_io_base64::base64_standard_decode(&uri[idx + marker.len()..]).map_err(|error| error.to_string())
+    let idx = uri.find(GLTF_BASE64_MARKER).ok_or_else(|| "gltf: unsupported non-base64 data uri".to_string())?;
+    semio_framework_io_base64::base64_standard_decode(&uri[idx + GLTF_BASE64_MARKER.len()..]).map_err(|error| error.to_string())
 }
 
 /// 📦️ Resolves `document.buffers[i]` to raw bytes, index-aligned with the JSON array. Only
 /// `buffers[0]` may omit `uri` and be sourced from the `.glb` BIN chunk, per spec.
-fn gltf_resolve_buffers(document: &json::Value, embedded_bin: Option<&[u8]>) -> Vec<Vec<u8>> {
+fn gltf_resolve_buffers<'a>(document: &json::Value, embedded_bin: Option<&'a [u8]>) -> Vec<Cow<'a, [u8]>> {
     document
         .get("buffers")
         .and_then(json::Value::as_array)
@@ -129,9 +113,9 @@ fn gltf_resolve_buffers(document: &json::Value, embedded_bin: Option<&[u8]>) -> 
         .iter()
         .enumerate()
         .map(|(i, buffer)| match buffer.get("uri").and_then(json::Value::as_str) {
-            Some(uri) => gltf_decode_data_uri(uri).unwrap_or_default(),
-            None if i == 0 => embedded_bin.map(<[u8]>::to_vec).unwrap_or_default(),
-            None => Vec::new(),
+            Some(uri) => Cow::Owned(gltf_decode_data_uri(uri).unwrap_or_default()),
+            None if i == 0 => Cow::Borrowed(embedded_bin.unwrap_or_default()),
+            None => Cow::Borrowed(&[] as &[u8]),
         })
         .collect()
 }
@@ -204,7 +188,7 @@ fn gltf_normalize_components(component_type: u64, components: &mut [f64]) -> Res
     Ok(())
 }
 
-fn gltf_read_bufferview_elements(document: &json::Value, buffers: &[Vec<u8>], bv_idx: usize, extra_offset: usize, component_type: u64, accessor_type: &str, count: usize) -> Result<Vec<f64>, String> {
+fn gltf_read_bufferview_elements(document: &json::Value, buffers: &[Cow<'_, [u8]>], bv_idx: usize, extra_offset: usize, component_type: u64, accessor_type: &str, count: usize) -> Result<Vec<f64>, String> {
     let bv = document.get("bufferViews").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(bv_idx).ok_or_else(|| format!("gltf: bufferView index {bv_idx} out of range"))?;
     let buffer_index = bv.get("buffer").and_then(json::Value::as_u64).unwrap_or(0) as usize;
     let byte_offset = bv.get("byteOffset").and_then(json::Value::as_u64).unwrap_or(0) as usize;
@@ -218,7 +202,7 @@ fn gltf_read_bufferview_elements(document: &json::Value, buffers: &[Vec<u8>], bv
 
 /// 🧩️ Decodes `document.accessors[accessor_index]` against `buffers` — dense `bufferView` read,
 /// then `accessor.sparse` substitution (base is zero-filled when there's no `bufferView`).
-fn gltf_decode_accessor(document: &json::Value, buffers: &[Vec<u8>], accessor_index: usize, maximum: usize) -> Result<Vec<f64>, String> {
+fn gltf_decode_accessor(document: &json::Value, buffers: &[Cow<'_, [u8]>], accessor_index: usize, maximum: usize) -> Result<Vec<f64>, String> {
     let accessor = document.get("accessors").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(accessor_index).ok_or_else(|| format!("gltf: accessor index {accessor_index} out of range"))?;
     let component_type = accessor.get("componentType").and_then(json::Value::as_u64).ok_or_else(|| "gltf: accessor missing componentType".to_string())?;
     let accessor_type = accessor.get("type").and_then(json::Value::as_str).ok_or_else(|| "gltf: accessor missing type".to_string())?;
@@ -260,16 +244,14 @@ fn gltf_decode_accessor(document: &json::Value, buffers: &[Vec<u8>], accessor_in
     Ok(components)
 }
 
-fn gltf_node_vec3(node: &json::Value, key: &str, default: [f32; 3]) -> [f32; 3] {
-    node.get(key)
-        .and_then(json::Value::as_array)
+fn gltf_node_vec3(value: Option<&json::Value>, default: [f32; 3]) -> [f32; 3] {
+    value.and_then(json::Value::as_array)
         .filter(|values| values.len() == 3)
         .map_or(default, |values| [values[0].as_f64().unwrap_or(default[0] as f64) as f32, values[1].as_f64().unwrap_or(default[1] as f64) as f32, values[2].as_f64().unwrap_or(default[2] as f64) as f32])
 }
 
-fn gltf_node_quat(node: &json::Value) -> [f32; 4] {
-    node.get("rotation")
-        .and_then(json::Value::as_array)
+fn gltf_node_quat(value: Option<&json::Value>) -> [f32; 4] {
+    value.and_then(json::Value::as_array)
         .filter(|values| values.len() == 4)
         .map_or([0.0, 0.0, 0.0, 1.0], |values| [values[0].as_f64().unwrap_or(0.0) as f32, values[1].as_f64().unwrap_or(0.0) as f32, values[2].as_f64().unwrap_or(0.0) as f32, values[3].as_f64().unwrap_or(1.0) as f32])
 }
@@ -293,11 +275,15 @@ fn gltf_trs_matrix(t: [f32; 3], r: [f32; 4], s: [f32; 3]) -> GlbMatrix {
 /// 🌐️ A node's own local matrix: explicit `matrix` (already column-major, 16 floats) takes
 /// precedence over `translation`/`rotation`/`scale` per spec.
 fn gltf_node_local_matrix(node: &json::Value) -> GlbMatrix {
-    if let Some(m) = node.get("matrix").and_then(json::Value::as_array).filter(|values| values.len() == 16) {
-        let f: Vec<f32> = m.iter().map(|value| value.as_f64().unwrap_or(0.0) as f32).collect();
+    gltf_node_matrix(|key| node.get(key))
+}
+
+fn gltf_node_matrix<'a>(field: impl Fn(&str) -> Option<&'a json::Value>) -> GlbMatrix {
+    if let Some(m) = field("matrix").and_then(json::Value::as_array).filter(|values| values.len() == 16) {
+        let f: [f32; 16] = std::array::from_fn(|i| m[i].as_f64().unwrap_or(0.0) as f32);
         return [[f[0], f[1], f[2], f[3]], [f[4], f[5], f[6], f[7]], [f[8], f[9], f[10], f[11]], [f[12], f[13], f[14], f[15]]];
     }
-    gltf_trs_matrix(gltf_node_vec3(node, "translation", [0.0, 0.0, 0.0]), gltf_node_quat(node), gltf_node_vec3(node, "scale", [1.0, 1.0, 1.0]))
+    gltf_trs_matrix(gltf_node_vec3(field("translation"), [0.0, 0.0, 0.0]), gltf_node_quat(field("rotation")), gltf_node_vec3(field("scale"), [1.0, 1.0, 1.0]))
 }
 
 fn gltf_triangle_indices(mode: u64, source: Vec<u32>) -> Vec<u32> {
@@ -309,7 +295,23 @@ fn gltf_triangle_indices(mode: u64, source: Vec<u32>) -> Vec<u32> {
     }
 }
 
-fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive: &json::Value, buffers: &[Vec<u8>], matrix: GlbMatrix, maximum_triangles: usize) -> Result<(), String> {
+fn gltf_texcoords(document: &json::Value, buffers: &[Cow<'_, [u8]>], accessor_index: usize, vertices: usize) -> Result<Vec<f32>, String> {
+    let accessor = document.get("accessors").and_then(json::Value::as_array).and_then(|rows| rows.get(accessor_index)).ok_or("glb TEXCOORD_0 accessor is missing")?;
+    let normalized = accessor.get("normalized").and_then(json::Value::as_bool).unwrap_or(false);
+    if accessor.get("type").and_then(json::Value::as_str) != Some("VEC2")
+        || !matches!((accessor.get("componentType").and_then(json::Value::as_u64), normalized), (Some(5126), false) | (Some(5121 | 5123), true))
+        || accessor.get("count").and_then(json::Value::as_u64) != Some(vertices as u64)
+    {
+        return Err("glb TEXCOORD_0 layout differs from POSITION".into());
+    }
+    let uvs: Vec<_> = gltf_decode_accessor(document, buffers, accessor_index, vertices)?.into_iter().map(|value| value as f32).collect();
+    if uvs.iter().any(|value| !value.is_finite()) {
+        return Err("glb TEXCOORD_0 contains non-finite values".into());
+    }
+    Ok(uvs)
+}
+
+fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive: &json::Value, buffers: &[Cow<'_, [u8]>], matrix: GlbMatrix, maximum_triangles: usize) -> Result<(), String> {
     let mode = primitive.get("mode").and_then(json::Value::as_u64).unwrap_or(4);
     if !matches!(mode, 4..=6) {
         return Ok(());
@@ -341,6 +343,14 @@ fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive:
         return Err("glb NORMAL and POSITION accessor counts differ".into());
     }
     let vertex_offset = mesh.vertex_count() as u32;
+    if let Some(value) = attributes.get("TEXCOORD_0") {
+        let accessor = value.as_u64().and_then(|value| usize::try_from(value).ok()).ok_or("glb invalid TEXCOORD_0 index")?;
+        let uvs = gltf_texcoords(document, buffers, accessor, positions.len())?;
+        mesh.uvs.resize(vertex_offset as usize * 2, 0.0);
+        mesh.uvs.extend(uvs);
+    } else if !mesh.uvs.is_empty() {
+        mesh.uvs.resize((vertex_offset as usize + positions.len()) * 2, 0.0);
+    }
     for position in positions {
         mesh.positions.extend(glb_transform_point(matrix, position));
     }
@@ -351,7 +361,7 @@ fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive:
     Ok(())
 }
 
-fn gltf_append_mesh(mesh: &mut MeshData, document: &json::Value, mesh_index: usize, buffers: &[Vec<u8>], matrix: GlbMatrix, maximum_triangles: usize) -> Result<(), String> {
+fn gltf_append_mesh(mesh: &mut MeshData, document: &json::Value, mesh_index: usize, buffers: &[Cow<'_, [u8]>], matrix: GlbMatrix, maximum_triangles: usize) -> Result<(), String> {
     let source = document.get("meshes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(mesh_index).ok_or_else(|| format!("gltf: mesh index {mesh_index} out of range"))?;
     for primitive in source.get("primitives").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice) {
         gltf_append_primitive(mesh, document, primitive, buffers, matrix, maximum_triangles)?;
@@ -376,7 +386,7 @@ impl GltfSceneBudget {
     }
 }
 
-fn gltf_append_node(mesh: &mut MeshData, document: &json::Value, node_index: usize, parent: GlbMatrix, buffers: &[Vec<u8>], budget: &mut GltfSceneBudget) -> Result<(), String> {
+fn gltf_append_node(mesh: &mut MeshData, document: &json::Value, node_index: usize, parent: GlbMatrix, buffers: &[Cow<'_, [u8]>], budget: &mut GltfSceneBudget) -> Result<(), String> {
     budget.enter(node_index)?;
     let node = document.get("nodes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(node_index).ok_or_else(|| format!("gltf: node index {node_index} out of range"))?;
     let matrix = glb_matrix_mul(parent, gltf_node_local_matrix(node));
@@ -402,9 +412,13 @@ pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
 /// 🚧️ Applies a triangle and scene limit before decoding active GLB accessors.
 pub fn mesh_from_glb_limited(bytes: &[u8], maximum_triangles: usize) -> Result<MeshData, String> {
     let (json_bytes, bin) = gltf_split_container(bytes)?;
-    let text = std::str::from_utf8(&json_bytes).map_err(|error| format!("gltf json is not valid utf-8: {error}"))?;
-    let document = json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("gltf json parse error: {error}"))?;
-    let buffers = gltf_resolve_buffers(&document, bin.as_deref());
+    let text = std::str::from_utf8(json_bytes).map_err(|error| format!("gltf json is not valid utf-8: {error}"))?;
+    let document = json::parse(text, json::JsonMemberPolicy::Reject).map_err(|error| format!("gltf json parse error: {error}"))?;
+    gltf_mesh_from_scene(&document, bin, maximum_triangles)
+}
+
+fn gltf_mesh_from_scene(document: &json::Value, bin: Option<&[u8]>, maximum_triangles: usize) -> Result<MeshData, String> {
+    let buffers = gltf_resolve_buffers(document, bin);
     let mut mesh = MeshData::default();
 
     let scene_index = document.get("scene").and_then(json::Value::as_u64).map(|value| value as usize);
@@ -415,13 +429,13 @@ pub fn mesh_from_glb_limited(bytes: &[u8], maximum_triangles: usize) -> Result<M
         let mut budget = GltfSceneBudget { maximum_triangles, visits: 0, path: Vec::new() };
         for node in scene.get("nodes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice) {
             if let Some(node_index) = node.as_u64() {
-                gltf_append_node(&mut mesh, &document, node_index as usize, glb_identity(), &buffers, &mut budget)?;
+                gltf_append_node(&mut mesh, document, node_index as usize, glb_identity(), &buffers, &mut budget)?;
             }
         }
     } else {
         let mesh_count = document.get("meshes").and_then(json::Value::as_array).map_or(0, Vec::len);
         for mesh_index in 0..mesh_count {
-            gltf_append_mesh(&mut mesh, &document, mesh_index, &buffers, glb_identity(), maximum_triangles)?;
+            gltf_append_mesh(&mut mesh, document, mesh_index, &buffers, glb_identity(), maximum_triangles)?;
         }
     }
 

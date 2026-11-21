@@ -12,7 +12,7 @@ use store::{os_store::document_materialize::create_document_envelope, os_store::
 use crate::standards::v1::subsets::any::io::binary::mutations::new_trinity_graph_store;
 use crate::standards::v1::subsets::any::schema::content::JackWorkingScene;
 use crate::standards::v1::subsets::any::schema::operations::*;
-use crate::standards::v1::subsets::any::schema::mutations::{register_trinity_graph_mutation_descriptors,set_query,SetQuery};
+use crate::standards::v1::subsets::any::schema::mutations::{register_trinity_graph_mutation_descriptors, set_query, set_root, SetQuery};
 
 use crate::standards::v1::subsets::any::schema::graph::{Camera, Edge, Node, Port};
 use crate::standards::v1::subsets::any::schema::manifest::Manifest;
@@ -89,6 +89,9 @@ async fn effect_create_edge_rejects_invalid_port_keys_and_missing_endpoints() {
     let edge = |source: String, target: String| GraphEffect::CreateEdge(Edge { id: "e2".into(), kind: "Connection".into(), source, target, properties: PropertyBag::new() });
     assert!(matches!(check(edge("noAt".into(), crate::standards::v1::subsets::any::schema::graph::port_key("child", "in-a"))), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::InvalidSourcePortKey(_))));
     assert!(matches!(check(edge(crate::standards::v1::subsets::any::schema::graph::port_key("root", "out-a"), "noAt".into())), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::InvalidTargetPortKey(_))));
+    assert!(matches!(check(edge("root@missing".into(), "child@in-a".into())), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::InvalidSourcePortKey(_))));
+    assert!(matches!(check(edge("root@out-a".into(), "child@missing".into())), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::InvalidTargetPortKey(_))));
+    assert!(check(edge("root".into(), "child".into())).is_ok());
     assert!(matches!(check(edge(crate::standards::v1::subsets::any::schema::graph::port_key("ghost", "out"), crate::standards::v1::subsets::any::schema::graph::port_key("child", "in-a"))), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::SourceNodeNotFound(_))));
     assert!(matches!(check(edge(crate::standards::v1::subsets::any::schema::graph::port_key("root", "out-a"), crate::standards::v1::subsets::any::schema::graph::port_key("ghost", "in"))), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::TargetNodeNotFound(_))));
 }
@@ -124,7 +127,15 @@ async fn apply_graph_effects_applies_a_valid_sequence_and_refuses_an_invalid_one
     let mut graph = mini_graph();
     apply_graph_effects(&mut graph, &[GraphEffect::RenameNode { id: "root".into(), name: "renamed".into() }, GraphEffect::MoveNode { id: "root".into(), x: 50.0, y: 60.0 }]).expect("rename and move apply");
     assert_eq!(graph.node("root").map(|node| (node.name.as_str(), node.x, node.y)), Some(("renamed", 50.0, 60.0)));
-    assert!(matches!(apply_graph_effects(&mut graph, &[GraphEffect::DeleteNode("ghost".into())]), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeNotFound(_))));
+    let before = graph.clone();
+    let effects = [
+        GraphEffect::RenameNode { id: "root".into(), name: "temporary".into() },
+        GraphEffect::DeleteNode("root".into()),
+        GraphEffect::CreateNode(mini_node("root", 3.0, 4.0, vec![])),
+        GraphEffect::DeleteNode("ghost".into()),
+    ];
+    assert!(matches!(apply_graph_effects(&mut graph, &effects), Err(crate::standards::v1::subsets::any::schema::errors::TrinityRamError::NodeNotFound(_))));
+    assert_eq!(graph, before);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -137,7 +148,7 @@ async fn set_query_validation_bounds_the_query() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_graph_store() {
-    test_identity!(identity);
+    let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
     let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())], &mut identity).await.expect("apply");
     ::store::os_store::test_support::assert_document_text_round_trip(&store).await;
@@ -146,7 +157,7 @@ async fn document_text_round_trip_graph_store() {
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_trinity_graph_mutations_noop_on_empty() {
-    test_identity!(identity);
+    let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
     let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     let generation_before = store.generation();
     dispatch_trinity_graph_mutations(&mut store, vec![], &mut identity).await.expect("empty ops ok");
@@ -155,7 +166,7 @@ async fn dispatch_trinity_graph_mutations_noop_on_empty() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_query_undo_restores_the_prior_query() {
-    test_identity!(identity);
+    let mut identity = semio_plugin::artifact_app_laws::fixture_identity();
     let mut store = new_trinity_graph_store(create_trinity_graph_envelope("test", mini_fixture()), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store");
     let before = store.snapshot().unwrap().query.clone();
     dispatch_trinity_graph_mutations(&mut store, vec![set_query("MATCH (a:Piece) RETURN a".into())], &mut identity).await.expect("set query");
@@ -170,7 +181,29 @@ async fn dispatch_registers_semantic_descriptors() {
     for kind in <TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(<TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds().len(), 1);
+    assert_eq!(<TrinityGraphMutation as protocol::SemanticMutation<JackSnapshot>>::kinds().len(), 2);
+}
+
+#[test]
+fn clear_root_fixture_round_trips_through_parent_mutation_codecs_and_inverse() {
+    use crate::standards::v1::subsets::any::io::text::mutations::decode_trinity_graph_mutation_json;
+    use protocol::{OpBinary, OpText};
+
+    let before = JackSnapshot::from_json(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-root/🧹️clears-the-root/📸️snapshot/⬅️before/🔣️.json")).expect("authored root");
+    let after = JackSnapshot::from_json(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-root/🧹️clears-the-root/📸️snapshot/➡️after/🔣️.json")).expect("cleared root");
+    let clear = decode_trinity_graph_mutation_json(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎯️set-root/🧹️clears-the-root/🦠️mutation/🔣️.json")).expect("root mutation JSON");
+    assert_eq!(clear, set_root(None));
+    let inverse = inverse_trinity_graph_mutation(&before, &clear).expect("root edit is invertible");
+    assert_eq!(inverse, [set_root(before.root_node_id.clone())]);
+    for mutation in std::iter::once(&clear).chain(&inverse) {
+        assert_eq!(TrinityGraphMutation::decode_op(&mutation.encode_op().expect("root mutation binary")).expect("decode root operation"), *mutation);
+        assert_eq!(TrinityGraphMutation::parse_op(&mutation.print_op()).expect("root mutation text"), *mutation);
+    }
+    let mut changed = before.clone();
+    apply_trinity_graph_mutation(&mut changed, &clear).expect("clear root");
+    assert_eq!(changed, after);
+    apply_trinity_graph_mutation(&mut changed, &inverse[0]).expect("restore root");
+    assert_eq!(changed, before);
 }
 
 //#region 🧪️OutcomeLaws

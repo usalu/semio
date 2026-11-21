@@ -148,6 +148,8 @@
     }
   ],
   "elasticProductsCapacity": [
+    {"id":"products-cold-host","minimumBytes":6442450944,"hostFreeBytes":16106127360,"capacityBytes":7516192768,"usesPolicyMinimum":true},
+    {"id":"products-working-set-host","minimumBytes":6442450944,"hostFreeBytes":42949672960,"capacityBytes":21474836480,"usesPolicyMinimum":true},
     {
       "id": "host-ample",
       "minimumBytes": 25769803776,

@@ -1,6 +1,7 @@
 //! 📑️ Jack snapshot clone: the retained snapshot clone authority and its step machine.
 
 use super::*;
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll};
 
 //#region 🔖️RetainedStoreInitialization
 #[derive(semio_framework_value::RetireOwned)]
@@ -296,29 +297,20 @@ impl JackSnapshotCloneAuthority {
         Ok(Default::default())
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(empty));
-        }
-        if grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
-        if !admit_demand(grant, demand, "jack snapshot clone close exceeds admitted depth")? {
-            return Ok(RetainedCloneStep::Progress(empty));
-        }
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        use store::os_store::snapshot_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step};
         if self.retirement.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return artifact_retirement_box_close_step(&mut self.retirement, effect.grant().maximum_copy_bytes, effect);
         }
-        if self.active.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.active, &mut self.retirement, grant);
-        }
-        if self.value.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant);
-        }
-        self.terminal = true;
-        Ok(RetainedCloneStep::Complete(empty))
+        let turn = if self.active.is_some() {
+            artifact_retirement_admit_owned(&mut self.active, &mut self.retirement, effect)
+        } else if self.value.is_some() {
+            artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect)
+        } else {
+            self.terminal = true;
+            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }
+        };
+        RetainedWorkPoll::Complete(turn).map_err(Into::into)
     }
 
     pub fn terminal_is_empty(&self) -> bool {

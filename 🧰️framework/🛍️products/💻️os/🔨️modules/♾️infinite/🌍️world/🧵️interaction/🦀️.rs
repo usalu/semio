@@ -8,7 +8,7 @@ use semio_os_infinite_world_model::{quarantine_world_owner, World3dBuildContext,
 #[cfg(any(test, feature = "testkit"))]
 use semio_os_infinite_world_model::world_test_mesh_query;
 use semio_os_infinite_world_components::{GumballHandle, pick_targets_instance, TerrainTileMeshPayload, world3d_offers_transform_gumball, World3dRelocateSession, world_component_preview_target, world_mesh_component_id, WorldCameraState, WorldCameraSync, WorldGumballState, WorldPlaceholderKind, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep, WorldPlaceholderOwner, WorldSceneState, WorldSelectionState};
-use semio_os_infinite_world_cursors::{selection_method_wire_str, CLICK_DRAG_THRESHOLD_PX, instance_interaction_granularity_id, instance_interaction_id, live_world3d_mesh_version, PICK_EDGE_SCREEN_PX, PICK_VERTEX_SCREEN_PX, pointer_in_pick_rect, render_pick_viewport, resolved_domain_id, WORLD_INTERACTION_DOMAIN_ID, WORLD_ITEM_GRANULARITY_ID, WORLD_ITEM_PATH_DELIMITER, world_merge_mode, world_pick_rect, world_write_interaction_target, WorldBrushCommitJob, WorldComponentMarqueePublishJob, WorldComponentPickCursor, WorldComponentPickPurpose, WorldGumballCommitJob, WorldGumballGesture, WorldGumballPickCursor, WorldInteractionAuthorityStep, WorldInteractionText, WorldMarqueeGesture, WorldMarqueePickCursor, WorldMarqueePublishJob, WorldObjectPickCursor, WorldObjectPickPurpose, WorldRayPickCursor, WorldRayPickPurpose};
+use semio_os_infinite_world_cursors::{selection_method_wire_str, CLICK_DRAG_THRESHOLD_PX, instance_interaction_granularity_id, instance_interaction_id, live_world3d_mesh_version, PICK_EDGE_SCREEN_PX, PICK_VERTEX_SCREEN_PX, pointer_in_pick_rect, render_pick_viewport, resolved_domain_id, WORLD_INTERACTION_DOMAIN_ID, WORLD_ITEM_GRANULARITY_ID, WORLD_ITEM_PATH_DELIMITER, world_merge_mode, world_pick_rect, world_hover_action_string_bytes, world_write_interaction_target, WorldBrushCommitJob, WorldComponentMarqueePublishJob, WorldComponentPickCursor, WorldComponentPickPurpose, WorldGumballCommitJob, WorldGumballGesture, WorldGumballPickCursor, WorldInteractionAuthorityStep, WorldInteractionText, WorldMarqueeGesture, WorldMarqueePickCursor, WorldMarqueePublishJob, WorldObjectPickCursor, WorldObjectPickPurpose, WorldRayPickCursor, WorldRayPickPurpose};
 use semio_os_infinite_world_scene::{begin_world_terrain_pending, decode_reference_image_bytes, DecodedReferenceImage, environment_scene_material, mesh_id_from_url, parse_color, publish_world3d_inline_asset, publish_world3d_mesh_lease, reserve_terrain_tile_fetch, retire_world_mesh, step_world3d_terrain_retirement, terrain_family_visible, terrain_tile_mesh_key, TerrainTileDraw, TerrainVisibleTileRow, world3d_reference_url_is_current, WorldAssetsState, WorldTerrainMeshProgress, WorldTerrainMeshPublicationStep, WorldTerrainMeshStep, WorldTerrainState};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_os_infinite_world_scene::WORLD_REFERENCE_TEXTURE_BYTES;
@@ -18,6 +18,7 @@ use semio_os_infinite_world_bridge::{apply_gumball_preview, pointer_drag_distanc
 use semio_ui_declaration::layout::ActionDescriptor;
 use ui_scene::math::{axis_rotate_angle, Camera3d, gumball_eye, gumball_project_ray_onto_axis, Instance3d, interpolate_mesh_uv, LineVertex3d, marquee_is_crossing_from_path, Mat4, Mesh3dField, Mesh3dLease, ray_aabb_slab, ray_plane_point, SceneDraw3d, Vec3};
 use semio_ui_wgpu_input::{HitKind, HitTarget, PointerModifiers};
+use semio_os_infinite_world_cursors::{plan_world3d_engagement_pointer, publish_world3d_engagement_pointer, world3d_ground_plane_pick};
 use semio_ui_theme::geometry::Rect;
 use semio_ui_theme::Rgba;
 use semio_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
@@ -321,12 +322,13 @@ pub fn world3d_pointer_move_folds(selection_state: &WorldSelectionState) -> bool
 }
 
 pub fn enqueue_world3d_event(selection_state: &mut WorldSelectionState, authority_state: &mut WorldAuthorityState, mut intent: WorldInteractionIntent) -> Result<u64, WorldInteractionIntent> {
-    let folds = world3d_pointer_move_folds(selection_state);
+    let engagement_hover = !intent.down && selection_state.engagement_session_active;
+    let folds = engagement_hover || world3d_pointer_move_folds(selection_state);
     let Some(authority) = authority_state.interaction_authority.as_mut() else {
         return Err(intent);
     };
     if folds && !authority.faulted && !authority.closing && authority.blocked.is_none() {
-        if let Some(generation) = authority.queue.coalesce_tail_pointer_move(&intent) {
+        if let Some(generation) = authority.queue.coalesce_tail_pointer_move(&intent, engagement_hover && authority.active.is_none()) {
             return Ok(generation);
         }
     }
@@ -377,6 +379,7 @@ pub fn world3d_interaction_front_generation(camera_state: &WorldCameraState, aut
 pub fn begin_world3d_interaction_close(authority_state: &mut WorldAuthorityState) {
     if let Some(authority) = authority_state.interaction_authority.as_mut() {
         authority.closing = true;
+        authority.engagement_press = false;
         authority.queue.begin_close();
     }
 }
@@ -424,6 +427,10 @@ pub fn close_world3d_interaction_step(authority_state: &mut WorldAuthorityState,
         context.consume_fuel(1);
         return false;
     }
+    if authority.terrain_press.take().is_some() {
+        context.consume_fuel(1);
+        return false;
+    }
     if let Some(marquee) = authority.marquee.as_mut() {
         if marquee.close_step() {
             authority.marquee = None;
@@ -450,6 +457,7 @@ pub fn world3d_interaction_terminal_is_empty(authority_state: &WorldAuthoritySta
             && authority.active.is_none()
             && authority.right_press.is_none()
             && !authority.right_dragged
+            && authority.terrain_press.is_none()
             && authority.marquee.is_none()
             && authority.gumball.is_none()
             && authority.blocked.is_none()

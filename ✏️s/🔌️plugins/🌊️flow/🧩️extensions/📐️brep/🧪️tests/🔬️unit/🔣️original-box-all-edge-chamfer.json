@@ -1,0 +1,223 @@
+{
+  "operator": "brep.solid.chamfer",
+  "faceCount": 26,
+  "edgeCount": 48,
+  "vertexCount": 24,
+  "cases": [
+    {
+      "name": "a uniform cube keeps all eight planar corner caps",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        2,
+        2,
+        2
+      ],
+      "distance": 0.25,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          2,
+          2
+        ]
+      ],
+      "volume": 7.333333333333333,
+      "area": 20.29697373257115,
+      "refused": [
+        0,
+        -0.25,
+        1.0,
+        2
+      ]
+    },
+    {
+      "name": "a translated rectangular box keeps the authored support planes",
+      "origin": [
+        2,
+        -3,
+        1
+      ],
+      "size": [
+        4,
+        2,
+        3
+      ],
+      "distance": 0.5,
+      "bounds": [
+        [
+          2,
+          -3,
+          1
+        ],
+        [
+          6,
+          -1,
+          4
+        ]
+      ],
+      "volume": 20.166666666666668,
+      "area": 40.70261355604602,
+      "refused": [
+        0,
+        -0.5,
+        1.0,
+        2
+      ]
+    },
+    {
+      "name": "a near-limit bevel keeps each inset side nondegenerate",
+      "origin": [
+        -1,
+        1,
+        -2
+      ],
+      "size": [
+        3,
+        4,
+        2
+      ],
+      "distance": 0.875,
+      "bounds": [
+        [
+          -1,
+          1,
+          -2
+        ],
+        [
+          2,
+          5,
+          0
+        ]
+      ],
+      "volume": 13.791666666666666,
+      "area": 31.240958604326558,
+      "refused": [
+        0,
+        -0.875,
+        1.0,
+        2
+      ]
+    }
+  ],
+  "orientedCases": [
+    {
+      "name": "tilted rectangular stock",
+      "origin": [
+        2,
+        -3,
+        1
+      ],
+      "size": [
+        4,
+        2,
+        3
+      ],
+      "distance": 0.5,
+      "bounds": [
+        [
+          2.3,
+          -3.0,
+          -1.1
+        ],
+        [
+          6.7,
+          -1.0,
+          3.1000000000000005
+        ]
+      ],
+      "volume": 20.166666666666668,
+      "area": 40.70261355604602,
+      "refused": [
+        0,
+        -0.5,
+        1.0,
+        2
+      ],
+      "rotateY": 0.6435011087932844,
+      "rotateX": 0,
+      "mirror": false
+    },
+    {
+      "name": "compound rotation and reflection",
+      "origin": [
+        -4,
+        2,
+        3
+      ],
+      "size": [
+        2,
+        2,
+        2
+      ],
+      "distance": 0.25,
+      "bounds": [
+        [
+          -6.65,
+          1.5479807100437974,
+          2.111460145104904
+        ],
+        [
+          -4.15,
+          4.172027808382286,
+          4.984701657067434
+        ]
+      ],
+      "volume": 7.333333333333333,
+      "area": 20.29697373257115,
+      "refused": [
+        0,
+        -0.25,
+        1.0,
+        2
+      ],
+      "rotateY": 0.6435011087932844,
+      "rotateX": 0.37,
+      "mirror": true
+    },
+    {
+      "name": "rotated near-limit bevel",
+      "origin": [
+        1,
+        4,
+        -2
+      ],
+      "size": [
+        3,
+        4,
+        2
+      ],
+      "distance": 0.875,
+      "bounds": [
+        [
+          1.525,
+          3.7192980830423283,
+          -4.638303143757419
+        ],
+        [
+          4.075,
+          7.674044498164095,
+          -1.4889547453033614
+        ]
+      ],
+      "volume": 13.791666666666666,
+      "area": 31.240958604326558,
+      "refused": [
+        0,
+        -0.875,
+        1.0,
+        2
+      ],
+      "rotateY": 0.6435011087932844,
+      "rotateX": -0.51,
+      "mirror": false
+    }
+  ]
+}

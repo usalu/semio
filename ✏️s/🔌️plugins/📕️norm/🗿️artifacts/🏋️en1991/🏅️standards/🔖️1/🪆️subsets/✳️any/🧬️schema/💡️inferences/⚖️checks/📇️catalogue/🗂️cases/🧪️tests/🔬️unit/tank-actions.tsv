@@ -1,0 +1,12 @@
+entry	situation	first	second	third	result
+E4.09	open_tank	900	700	0.7	1050
+E4.09	open_basin	900	700	0.7	1050
+E4.09	small_vents	1000	800	-0.9	-580
+E4.09	small_vents	0	0	0.7	0
+E4.09	open_tank	800	-1	0.9	-
+E4.09	sealed	900	700	0.7	-
+E4.09.1	operation	-1000	10000	-	11000
+E4.09.1	test	-300	15000	-	15300
+E4.09.1	operation	-1000	-500	-	500
+E4.09.1	operation	500	500	-	0
+E4.09.1	test	10000	-1000	-	-

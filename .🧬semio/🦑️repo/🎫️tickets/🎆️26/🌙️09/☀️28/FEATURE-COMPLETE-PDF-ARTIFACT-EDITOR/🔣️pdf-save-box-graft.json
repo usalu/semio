@@ -1,0 +1,36 @@
+{
+  "page": 1,
+  "mediaBox": [
+    -8,
+    -4,
+    256,
+    272
+  ],
+  "cropBox": [
+    1,
+    5,
+    243,
+    264
+  ],
+  "trimBox": [
+    12,
+    12,
+    230,
+    253
+  ],
+  "bleedBox": [
+    6,
+    8,
+    239,
+    260
+  ],
+  "artBox": [
+    20,
+    21,
+    220,
+    245
+  ],
+  "userUnit": 2,
+  "rotate": 90,
+  "preserveText": "Beta anchor"
+}

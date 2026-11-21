@@ -3,6 +3,14 @@
 use super::*;
 use semio_framework_2d_compute::EngineHandles;
 use crate::editor::jack::commands;
+use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress}};
+use store::os_store::{ArtifactOperationWire, ColdMutationApplyFactory, document_store_owners::{
+    DocumentStoreOwners, DocumentStoreOwnersAdmissionError, bounded_artifact_store_owners_shared_semantic_source_demands,
+    bounded_artifact_store_owners_with_shared_semantic_preparation,
+}};
+
+type JackDocumentPreparation = ColdMutationApplyFactory<JackSnapshot, TrinityGraphMutation>;
+const JACK_DOCUMENT_PREPARATION_CHILDREN: RetainedCloneBirthDemand = RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 };
 
 //#region 🔖️TrinityJackPlayApp
 /// 🔱️ Trinity Jack play app — a jack-query editor over a live {@link JackSnapshot} projection.
@@ -66,10 +74,28 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         crate::editor::jack::window_config::register(registry)
     }
 
-    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
-        match command {
-            TrinityJackCommand::RunQuery { results_window_id, .. } | TrinityJackCommand::LoadExampleQuery { results_window_id, .. } => Some((results_window_id, TRINITY_JACK_PLAY_WINDOW_RESULTS)),
-            _ => None,
+    fn retained_window_transient_target<'a>(command: &'a Self::Command, view: Option<&'a semio_plugin::ViewModel>) -> Result<Option<(&'a str, &'static str)>, Fault> {
+        let requested = match command {
+            TrinityJackCommand::RunQuery { results_window_id, .. } | TrinityJackCommand::LoadExampleQuery { results_window_id, .. } => results_window_id,
+            _ => return Ok(None),
+        };
+        let kind = TRINITY_JACK_PLAY_WINDOW_RESULTS;
+        if !requested.is_empty() {
+            return Ok(Some((requested, kind)));
+        }
+        let view = view.ok_or_else(|| Fault::from("Jack query execution requires an attached results window"))?;
+        let results = || view.window_instances.iter().filter(|window| window.window_kind_id == kind);
+        let addressed = view.window_id.as_ref().and_then(|id| results().find(|window| window.id == *id));
+        let focused = view.focused_window_id.as_ref().and_then(|id| results().find(|window| window.id == *id));
+        if let Some(window) = addressed.or(focused) {
+            return Ok(Some((&window.id, kind)));
+        }
+        let mut attached = results();
+        let refusal = |label: LocalizedLabel| Fault::from(label.resolve(view.terminology, view.locale).to_string());
+        match (attached.next(), attached.next()) {
+            (Some(window), None) => Ok(Some((&window.id, kind))),
+            (None, _) => Err(refusal(LocalizedLabel::native("Open a results window to run the Jack query.", "Öffnen Sie ein Ergebnisfenster, um die Jack-Abfrage auszuführen."))),
+            _ => Err(refusal(LocalizedLabel::native("Focus a results window or enter its ID to run the Jack query.", "Wählen Sie ein Ergebnisfenster aus oder geben Sie seine ID ein, um die Jack-Abfrage auszuführen."))),
         }
     }
 
@@ -77,7 +103,7 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         const OWNER_FILE: &str = "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs";
         const CONTROLLER: &str = "s.trinity.jack@1/*#editor";
         let config_contract = ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500);
-        let query_contract = ToolExecutionContract::resumable(16_384, 64, 1, 1_048_576, 7_500, 1, 1);
+        let query_contract = commands::query::job::JACK_QUERY_EXECUTION_CONTRACT;
         let mut proofs = Vec::new();
         for tool in JACK_RETAINED_WINDOW_CONFIG_TOOL_IDS {
             proofs.push(
@@ -151,6 +177,28 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn document_store_owners_source_demands() -> Result<RetirementDemand, ValueError> {
+        bounded_artifact_store_owners_shared_semantic_source_demands::<Self::Snapshot, Self::Mutation, JackDocumentPreparation>(JACK_DOCUMENT_PREPARATION_CHILDREN, 0)
+    }
+
+    fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(bounded_artifact_store_owners_with_shared_semantic_preparation(grant, JACK_DOCUMENT_PREPARATION_CHILDREN, 0, JackDocumentPreparation::default).map(|(mut owners, progress)| {
+            owners.operation_wire = ArtifactOperationWire::semantic::<Self::Snapshot>().with_batch_digest().with_original_binary_receiving();
+            (owners, progress)
+        }))
+    }
+
+    fn owned_mutation_batch_birth_bytes() -> Option<usize> {
+        Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<Self::Mutation>())
+    }
+
+    fn admit_owned_mutation_batch(
+        values: &mut Option<Vec<Self::Mutation>>,
+        grant: RetainedCloneGrant,
+    ) -> Result<Option<(store::MemberStoreOwnedBatch, RetainedCloneProgress)>, ValueError> {
+        store::MemberStoreOwnedBatch::admit(values, grant)
     }
 
     /// ⏯️ Builds the reorganize tool's layout run over the run's base (`ToolRunDefinition.runJob`); resumed from the

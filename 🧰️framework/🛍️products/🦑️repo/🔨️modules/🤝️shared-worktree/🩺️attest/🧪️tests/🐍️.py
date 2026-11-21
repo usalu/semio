@@ -254,6 +254,10 @@ for case in FIXTURE["verdicts"]:
 
 for case in FIXTURE["agreements"]:
     check(judge(case)==case["expected"],"agreement: "+case["name"])
+for case in FIXTURE["gitComparisons"]:
+    found=compare({"git":case["left"]},{"git":case["right"]},case["left"]["wallMs"],{})
+    items=[{key:item[key] for key in ("field","same")} for item in found["items"]]
+    check(("git" in found["known"])==case["known"] and items==case["compared"],"Git evidence: "+case["name"])
 for case in FIXTURE["bucketing"]["paths"]:
     check(bucket_of(case["path"])==case["bucket"],"bucket: "+case["path"])
 for case in FIXTURE["bucketing"]["gitPaths"]:
@@ -268,6 +272,6 @@ for case in FIXTURE["views"]:
     check(all(got[key]==case[key] for key in ("staged","modified","deleted","untracked","lines","digest")),"view: "+case["name"])
 
 for message in failures: print("MISMATCH",message)
-total=len(FIXTURE["digests"])+len(FIXTURE["code"])+len(FIXTURE["verdicts"])+len(FIXTURE["views"])+len(FIXTURE["agreements"])+len(FIXTURE["bucketing"]["paths"])+len(FIXTURE["bucketing"]["gitPaths"])+len(FIXTURE["bucketing"]["manifests"])+len(FIXTURE["bucketing"]["views"])
+total=len(FIXTURE["digests"])+len(FIXTURE["code"])+len(FIXTURE["verdicts"])+len(FIXTURE["views"])+len(FIXTURE["agreements"])+len(FIXTURE["gitComparisons"])+len(FIXTURE["bucketing"]["paths"])+len(FIXTURE["bucketing"]["gitPaths"])+len(FIXTURE["bucketing"]["manifests"])+len(FIXTURE["bucketing"]["views"])
 print("%d vectors, %d mismatches"%(total,len(failures)))
 sys.exit(1 if failures else 0)

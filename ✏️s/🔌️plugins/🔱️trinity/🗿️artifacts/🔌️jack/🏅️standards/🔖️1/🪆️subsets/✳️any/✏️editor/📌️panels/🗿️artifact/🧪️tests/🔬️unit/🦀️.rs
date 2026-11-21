@@ -27,6 +27,7 @@ fn oversized_snapshot(nodes: usize, edges: usize) -> JackSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(snapshot: &JackSnapshot, requests: Vec<TreeWindowRequest>) -> String {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
     let content = crate::standards::v1::subsets::any::schema::content::jack_content_for_handle(&snapshot.content).expect("retained content child");
     let node = render(content.read(), &semio_plugin::NoConfig::default(), &TrinityJackLabels::NATIVE_EN, &TreeWindows::for_body(&view, TRINITY_JACK_PLAY_BODY_ARTIFACT)).expect("render the jack document tree");

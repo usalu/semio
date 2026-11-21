@@ -79,15 +79,66 @@ use cursor_steps::{
 
 // #region 🔖️FormsBridge
 pub mod forms_bridge {
-    use super::{FlowHostSnapshot, Widget};
+    use super::Widget;
+    use crate::forms::FlowVariableAnswerSchema;
+    use semio_framework_artifact_flow_flow::{neural::{channel_output, Atom, Dictionary, Value}, FlowSnapshotSource};
+    use semio_framework_value::DslValue;
+    use std::collections::{HashMap, HashSet};
+
+    fn variable_input_targets(source: &dyn FlowSnapshotSource) -> HashSet<&str> {
+        source.synapses().iter().map(|wire| wire.to.as_str()).collect()
+    }
+
+    /// 🌱️ Adds selected form answers as typed dictionary outputs on unwired variable relays.
+    pub fn add_generation_variable_seeds<'a>(
+        source: &dyn FlowSnapshotSource,
+        answers: impl Fn(&str) -> Option<&'a DslValue>,
+        seeds: &mut HashMap<String, Dictionary>,
+    ) {
+        let targets = variable_input_targets(source);
+        for widget in source.widgets() {
+            let Widget::Variable { id, name, schema } = widget else { continue; };
+            if targets.contains(id.as_str()) || seeds.contains_key(id) {
+                continue;
+            }
+            let Some(kind) = FlowVariableAnswerSchema::from_schema_id(schema) else { continue; };
+            let fallback;
+            let answer = match answers(id).filter(|value| kind.accepts(value)) {
+                Some(value) => value,
+                None => {
+                    fallback = kind.default_answer();
+                    &fallback
+                }
+            };
+            let mut dictionary = Dictionary::with_schema(schema);
+            match kind {
+                FlowVariableAnswerSchema::Text => {
+                    dictionary = dictionary.insert("value", Value::Atom(Atom::String(answer.as_str().unwrap().to_owned())));
+                }
+                FlowVariableAnswerSchema::Number => {
+                    dictionary = dictionary.insert("value", Value::Atom(Atom::Decimal(answer.as_f64().unwrap())));
+                }
+                FlowVariableAnswerSchema::Boolean => {
+                    dictionary = dictionary.insert("value", Value::Atom(Atom::Boolean(answer.as_bool().unwrap())));
+                }
+                FlowVariableAnswerSchema::Point | FlowVariableAnswerSchema::Vector => {
+                    for (axis, value) in FlowVariableAnswerSchema::AXES.into_iter().zip(answer.as_array().unwrap()) {
+                        dictionary = dictionary.insert(axis, Value::Atom(Atom::Decimal(value.as_f64().unwrap())));
+                    }
+                }
+            }
+            seeds.insert(id.clone(), channel_output(name, dictionary));
+        }
+    }
 
     /// 🫴️ Hands each original widget's fields directly to the selected actual producer.
     pub fn flow_host_snapshot_to_form_spec<P:crate::forms::FlowFormProducer>(host_snapshot:&dyn semio_framework_artifact_flow_flow::FlowSnapshotSource,producer:&P)->P::Form {
+     let targets = variable_input_targets(host_snapshot);
      let fields=host_snapshot.widgets().iter().filter_map(|widget|match widget {
       Widget::InputSlider {id,label,value,min,max,step}=>Some(producer.slider(id,label,*value,*min,*max,*step)),
       Widget::InputNote {id,text}=>Some(producer.note(id,text)),
       Widget::InputImage {id,src}=>Some(producer.image(id,src)),
-      Widget::Variable {id,name,schema}=>Some(producer.variable(id,name,schema)),
+      Widget::Variable {id,name,schema} if !targets.contains(id.as_str())=>producer.variable(id,name,schema),
       _=>None,
      }).collect();
      producer.finish(fields)
@@ -98,7 +149,6 @@ pub mod forms_bridge {
         InputSlider,
         InputNote,
         InputImage,
-        Variable,
     }
 
     impl WidgetPatchKind {
@@ -107,7 +157,6 @@ pub mod forms_bridge {
                 "inputSlider" => Some(Self::InputSlider),
                 "inputNote" => Some(Self::InputNote),
                 "inputImage" => Some(Self::InputImage),
-                "variable" => Some(Self::Variable),
                 _ => None,
             }
         }
@@ -146,11 +195,6 @@ pub mod forms_bridge {
                 Some(WidgetPatchKind::InputImage) => {
                     if let Some(src) = value.as_str() {
                         object.insert("src", semio_framework_pack_json::Value::String(src.to_string()));
-                    }
-                }
-                Some(WidgetPatchKind::Variable) => {
-                    if let Some(text) = value.as_str() {
-                        object.insert("name", semio_framework_pack_json::Value::String(text.to_string()));
                     }
                 }
                 None => {}

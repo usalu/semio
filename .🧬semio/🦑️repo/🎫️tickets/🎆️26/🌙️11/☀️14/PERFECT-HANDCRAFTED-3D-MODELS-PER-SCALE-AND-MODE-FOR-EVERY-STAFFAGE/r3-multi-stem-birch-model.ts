@@ -56,7 +56,7 @@ function volumeOf(m: Tree): Json {
     if (anchor) anchorsOut[anchor] = { bone: l.bone, local: toLocal(f, add(p, mul(n, 0.04))) };
   });
   const structure: Json[] = [];
-  const members: Part[] = [...m.cores, ...m.wood.filter((t) => t.group !== "root" && t.group !== "base" && !m.cores.some((c) => c.id === t.id)), ...m.hidden];
+  const members: Part[] = [...m.cores, ...m.wood.filter((t) => t.group !== "root" && t.group !== "base" && (m.scale === 50 || t.group !== "twig") && !m.cores.some((c) => c.id === t.id)), ...m.hidden];
   for (const t of members) {
     const sections = t.group === "stool" ? t.sections.map((q) => ({ ...q, rx: q.rx - 0.02, ry: q.ry - 0.02 })) : t.sections.map((q) => ({ ...q, rx: q.rx - bark(q.rx), ry: q.ry - bark(q.ry) }));
     const thin = 2 * Math.max(...sections.map((q) => q.rx)) < feature;

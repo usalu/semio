@@ -123,11 +123,19 @@ fn ordered(from: [f64; 2], to: [f64; 2]) -> ([f64; 2], [f64; 2]) {
     if from[0] + from[1] <= to[0] + to[1] { (from, to) } else { (to, from) }
 }
 
+/// 📍️ Whether the point lies inside the same stepped polygon used for painting the card.
+pub fn card_outline_contains(outline: &[CardStackSegment], x: f64, y: f64) -> bool {
+    outline.iter().filter(|(from, to)| (from[1] > y) != (to[1] > y) && from[0] > x).count() % 2 == 1
+}
+
 /// 🖌️ Records every outline segment as a shared border: a line lies inside the stack's bounds (its top and left lines on the first pixel row and column, every other on the one before its coordinate), so coincident lines of neighbouring cards resolve to ONE painted line.
-pub fn paint_card_stack(draw: &mut DrawList, outlines: &[Vec<CardStackSegment>], stroke: f32, color: Rgba, state: SharedBorderState) {
+pub fn paint_card_stack(draw: &mut DrawList, outlines: &[Vec<CardStackSegment>], stroke: f32, border: impl Fn(usize) -> (Rgba, SharedBorderState)) {
     let all = || outlines.iter().flatten().flat_map(|(from, to)| [from, to]);
     let (top, left) = (all().map(|point| point[1]).fold(f64::INFINITY, f64::min), all().map(|point| point[0]).fold(f64::INFINITY, f64::min));
-    for (from, to) in outlines.iter().flatten() {
+    for (from, to, color, state) in outlines.iter().enumerate().flat_map(|(index, outline)| {
+        let (color, state) = border(index);
+        outline.iter().map(move |(from, to)| (from, to, color, state))
+    }) {
         let (from, to) = ordered(*from, *to);
         let (x, y) = (from[0] as f32, from[1] as f32);
         if (from[1] - to[1]).abs() <= EPSILON {

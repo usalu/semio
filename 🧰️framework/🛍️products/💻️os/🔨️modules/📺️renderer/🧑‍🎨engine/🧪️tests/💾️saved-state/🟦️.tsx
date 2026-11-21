@@ -16,6 +16,10 @@ describe("close guard dialog", () => {
       render(<DocumentCloseDialog name="plan.json" locale={locale} failure={{ code: "folder-write-failed" }} onKeep={() => { kept += 1; }} onDiscard={() => { discarded += 1; }} />);
       const dialog = screen.getByRole("alertdialog");
       expect(dialog.getAttribute("aria-modal")).toBe("true");
+      expect(dialog.getAttribute("data-shared-border-edges")).toBe("top right bottom left");
+      const actions = dialog.querySelector(':scope > [data-shared-border-cells]');
+      expect(actions?.getAttribute("data-shared-border-edges")).toBe("top");
+      expect(actions?.querySelectorAll(":scope > button[data-shared-border-cell]")).toHaveLength(2);
       expect(dialog.textContent).toContain("plan.json");
       expect(document.activeElement?.textContent).toBe(closeGuardTextV1("keep", locale));
       fireEvent.keyDown(dialog, { key: "Escape" });

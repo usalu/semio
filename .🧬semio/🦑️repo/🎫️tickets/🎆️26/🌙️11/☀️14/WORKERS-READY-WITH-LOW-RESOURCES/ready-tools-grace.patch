@@ -1,0 +1,375 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧬️schema/🔣️.json
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🧬️schema/🔣️.json
+@@ -133,5 +133,6 @@
+         "cpu": {"type": "array", "maxItems": 512, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/definitions/WatchdogInteger"}}},
+         "windows": {"$ref": "#/definitions/WindowsWatchdogSample"},
+-        "lastActivity": {"$ref": "#/definitions/OwnedActivity"}
++        "lastActivity": {"$ref": "#/definitions/OwnedActivity"},
++        "toolsGrace": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/ToolsGraceCheckpoint"}]}
+       }
+     },
+@@ -140,4 +141,10 @@
+     "StepOverdueEvidence": {"description":"The owned overdue decision: step elapsed, declared bound and computed limit in seconds, and time since other progress in milliseconds.","type":"object","additionalProperties":false,"required":["seconds","bound","limit","quietMs"],"properties":{"seconds":{"$ref":"#/definitions/WatchdogInteger"},"bound":{"$ref":"#/definitions/WatchdogInteger"},"limit":{"$ref":"#/definitions/WatchdogInteger"},"quietMs":{"$ref":"#/definitions/WatchdogInteger"}}},
+     "TimingWatchdog": {"type":"object","additionalProperties":false,"minProperties":1,"properties":{"lastActivity":{"$ref":"#/definitions/OwnedActivity"},"deadline":{"$ref":"#/definitions/DeadlineStop"},"stepOverdue":{"$ref":"#/definitions/StepOverdueEvidence"}}},
++    "ToolsGracePolicy": {"const":{"stage":"tools","baseMultiplier":4,"extraIntervals":1,"maxRegistryNames":2048,"maxRegistryBytes":65536,"maxRegistryAgeMs":300000,"phases":["native-artifact-input-verification","native-artifact-input-stage","native-artifact-input-read","javascript-selected-payload","dependencies:selected-postorder","dependencies:workspace-edges"]}},
++    "ToolsGraceCounter": {"type":"object","additionalProperties":false,"required":["phase","series","done","previousAt","advancedAt","reset"],"properties":{"phase":{"enum":["native-artifact-input-verification","native-artifact-input-stage","native-artifact-input-read","javascript-selected-payload","dependencies:selected-postorder","dependencies:workspace-edges"]},"series":{"$ref":"#/definitions/ToolsGraceNatural"},"done":{"$ref":"#/definitions/ToolsGraceNatural"},"reset":{"type":"boolean"},"previousAt":{"$ref":"#/definitions/ToolsGraceClock"},"advancedAt":{"$ref":"#/definitions/ToolsGraceClock"}}},
++    "ToolsGraceNatural": {"type":"integer","minimum":1,"maximum":9007199254740991},
++    "ToolsGraceProof": {"type":"object","additionalProperties":false,"required":["pid","birth","parentSince","sourceSince"],"properties":{"pid":{"$ref":"#/definitions/ToolsGraceNatural"},"birth":{"$ref":"#/definitions/ToolsGraceNatural"},"parentSince":{"$ref":"#/definitions/ToolsGraceNatural"},"sourceSince":{"$ref":"#/definitions/ToolsGraceNatural"}}},
++    "ToolsGraceClock": {"type":"integer","minimum":0,"maximum":9007199254740991},
++    "ToolsGraceCheckpoint": {"type":"object","additionalProperties":false,"required":["proof","counters","current","sampleAt","registryAt"],"properties":{"proof":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/ToolsGraceProof"}]},"counters":{"type":"array","maxItems":6,"items":{"$ref":"#/definitions/ToolsGraceCounter"}},"current":{"enum":[null,"native-artifact-input-verification","native-artifact-input-stage","native-artifact-input-read","javascript-selected-payload","dependencies:selected-postorder","dependencies:workspace-edges"]},"sampleAt":{"$ref":"#/definitions/ToolsGraceNatural"},"registryAt":{"$ref":"#/definitions/ToolsGraceClock"}}},
+     "WindowsWatchdogSample": {
+       "type": "object",
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🟦️.ts
+@@ -0,0 +1,103 @@
++import budget from "../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
++import {nativeImageRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
++import {leaseRegistryFolderV1} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
++import {machinePathV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
++import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
++import {closeSync,constants,fstatSync,lstatSync,openSync,opendirSync,readSync} from "node:fs";
++import {dirname,isAbsolute,join,resolve} from "node:path";
++import schema from "../🧬️schema/🔣️.json" with {type:"json"};
++const policy=schema.definitions.ToolsGracePolicy.const;
++export type ToolsProof=Readonly<{pid:number;birth:number;parentSince:number;sourceSince:number}>;
++export type ToolsSample=Readonly<{proof:ToolsProof;phase:string;series:number;done:number;updatedAt:number}>;
++export type ToolsCounter=Readonly<{phase:string;series:number;done:number;previousAt:number;advancedAt:number;reset:boolean}>;
++export type ToolsCheckpoint=Readonly<{proof:ToolsProof|null;counters:readonly ToolsCounter[];current:string|null;sampleAt:number;registryAt:number}>;
++type OwnedProcess=Readonly<{pid:number;startMs:number}>;
++const natural=(value:unknown):value is number=>typeof value==="number"&&Number.isSafeInteger(value)&&value>0;
++const same=(a:ToolsProof,b:ToolsProof)=>a.pid===b.pid&&a.birth===b.birth&&a.parentSince===b.parentSince&&a.sourceSince===b.sourceSince;
++const stamp=(row:ReturnType<typeof facts>)=>[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");
++const facts=(path:string)=>lstatSync(path,{bigint:true});
++function readEntry(path:string,device:bigint):unknown{
++ const named=facts(path);
++ if(named.dev!==device||!named.isFile()||named.isSymbolicLink()||named.nlink!==1n||named.size<1n||named.size>BigInt(policy.maxRegistryBytes))return;
++ const file=openSync(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)|(constants.O_NONBLOCK??0));
++ try{
++  const before=fstatSync(file,{bigint:true});
++  if(!before.isFile()||stamp(before)!==stamp(named))return;
++  const bytes=Buffer.alloc(Number(named.size)+1);let count=0;
++  while(count<bytes.length){const n=readSync(file,bytes,count,bytes.length-count,count);if(n===0)break;count+=n;}
++  if(count!==Number(named.size)||stamp(fstatSync(file,{bigint:true}))!==stamp(named)||stamp(facts(path))!==stamp(named))return;
++  return JSON.parse(bytes.subarray(0,count).toString("utf8"));
++ }finally{closeSync(file);}
++}
++function sampleOf(value:unknown,pid:number,birth:number,input:{directory:string;owner:string;parent:string;source:string;started:number;now:number}):ToolsSample|undefined{
++ if(!value||typeof value!=="object")return;
++ const row=value as Partial<{version:number;pid:number;startedAtMs:number;updatedAtMs:number;directory:string;owner:string;holds:readonly {resource?:string;mode?:string;sinceMs?:number}[];standing:{version?:number;phase?:string;done?:number;phaseStartedAtMs?:number}}>;
++ if(row.version!==1||row.pid!==pid||row.startedAtMs!==birth||row.directory!==input.directory||row.owner!==input.owner||!natural(row.updatedAtMs)||
++   row.updatedAtMs<Math.max(input.started,birth,input.now-policy.maxRegistryAgeMs)||row.updatedAtMs>input.now||!Array.isArray(row.holds)||row.holds.length>64)return;
++ const parent=row.holds.filter(hold=>hold?.resource===input.parent),source=row.holds.filter(hold=>hold?.resource===input.source);
++ if(parent.length!==1||source.length!==1||parent[0]?.mode!=="exclusive"||source[0]?.mode!=="exclusive")return;
++ const parentSince=parent[0].sinceMs,sourceSince=source[0].sinceMs,proof=row.standing;
++ if(!natural(parentSince)||!natural(sourceSince)||parentSince<input.started||sourceSince<input.started||proof?.version!==1||
++  typeof proof.phase!=="string"||!policy.phases.includes(proof.phase)||!natural(proof.done)||!natural(proof.phaseStartedAtMs)||
++  proof.phaseStartedAtMs<Math.max(parentSince,sourceSince)||proof.phaseStartedAtMs>row.updatedAtMs)return;
++ return {proof:{pid,birth,parentSince,sourceSince},phase:proof.phase,series:proof.phaseStartedAtMs,done:proof.done,updatedAt:row.updatedAtMs};
++}
++export function sampleToolsProgress(input:{folder:string;directory:string;owner:string;parent:string;source:string;started:number;now:number;tolerance:number;members:readonly OwnedProcess[]}):ToolsSample|undefined{
++ try{
++  const folder=facts(input.folder),registry=facts(dirname(input.folder));
++  if(process.platform!=="win32"&&((folder.mode|registry.mode)&0o022n)!==0n)return;
++  if(!folder.isDirectory()||folder.isSymbolicLink()||!registry.isDirectory()||registry.isSymbolicLink())return;
++  const members=new Map(input.members.filter(row=>natural(row.pid)&&natural(row.startMs)&&row.startMs+input.tolerance>=input.started).map(row=>[row.pid,row.startMs]));
++  if(members.size!==input.members.length)return;
++  const entries=opendirSync(input.folder);let total=0,selected:ToolsSample|undefined;
++  try{
++   for(let entry;(entry=entries.readSync())!==null;){
++    if(++total>policy.maxRegistryNames)return;
++    const match=/^([1-9][0-9]{0,15})-([1-9][0-9]{0,15})\.json$/u.exec(entry.name);
++    if(!match)continue;
++    const pid=Number(match[1]),birth=Number(match[2]),kernelBirth=members.get(pid);
++    if(kernelBirth===undefined||!natural(birth)||Math.abs(kernelBirth-birth)>input.tolerance)continue;
++    const row=sampleOf(readEntry(join(input.folder,entry.name),folder.dev),pid,birth,input);
++    if(row){if(selected)return;selected=row;}
++   }
++  }finally{entries.closeSync();}
++  const after=facts(input.folder),parent=facts(dirname(input.folder));
++  if(after.dev!==folder.dev||after.ino!==folder.ino||after.mode!==folder.mode||parent.dev!==registry.dev||parent.ino!==registry.ino||parent.mode!==registry.mode)return;
++  return selected;
++ }catch{return;}
++}
++export function recordToolsProgress(previous:ToolsCheckpoint|null,value:ToolsSample|undefined,now:number):ToolsCheckpoint{
++ const interrupted=()=>({proof:previous?.proof??null,counters:previous?.counters.map(row=>({...row,previousAt:0,advancedAt:0}))??[],current:null,sampleAt:now,registryAt:previous?.registryAt??0});
++ if(value===undefined)return interrupted();
++ const retained=previous?.proof!==null&&previous?.proof!==undefined&&same(previous.proof,value.proof)?previous:undefined;
++ if(retained&&value.updatedAt<retained.registryAt)return interrupted();
++ const counters=retained?.counters??[],old=counters.find(row=>row.phase===value.phase);
++ const counter:ToolsCounter=old===undefined?{phase:value.phase,series:value.series,done:value.done,previousAt:0,advancedAt:0,reset:false}:
++  old.reset||value.series!==old.series||value.done<old.done?{...old,reset:true}:
++  value.done>old.done&&value.updatedAt>retained!.registryAt?{...old,done:value.done,previousAt:old.advancedAt,advancedAt:now}:old;
++ return {proof:value.proof,counters:[...counters.filter(row=>row.phase!==value.phase),counter],current:value.phase,sampleAt:now,registryAt:value.updatedAt};
++}
++export function toolsGraceActive(state:ToolsCheckpoint|null,input:{stage:string;started:number;now:number;soft:number;quiet:number;sampleLimit:number}):boolean{
++ if(input.stage!==policy.stage||state?.proof==null||state.current===null||state.sampleAt>input.now||input.now-state.sampleAt>input.sampleLimit)return false;
++ const elapsed=input.now-input.started;
++ if(elapsed<=input.soft*policy.baseMultiplier||elapsed>input.soft*(policy.baseMultiplier+policy.extraIntervals))return false;
++ const counter=state.counters.find(row=>row.phase===state.current);
++ return counter!==undefined&&!counter.reset&&counter.previousAt>=input.started&&counter.previousAt<counter.advancedAt&&
++  counter.advancedAt<=input.now&&input.now-counter.previousAt<=input.quiet;
++}
++
++export function toolsProgressPaths(root:string,registry:string){
++ if(resolve(root)!==root||!isAbsolute(registry))return;
++ const parent=machinePathV1(root,budget.partitions.dependencies.directory),directory=join(nativeImageRootV1(machinePathV1(root,budget.partitions.leases.directory)),"data");
++ return {folder:leaseRegistryFolderV1(registry,directory),directory,parent:"native-fixed-image:"+parent,source:"javascript-dependency-bindings:"+root};
++}
++export function currentToolsCheckpoint(value:unknown,started:number,now:number):value is ToolsCheckpoint{
++ if(validateJsonSchemaSubset(schema.definitions.ToolsGraceCheckpoint,value,schema).length)return false;
++ const state=value as ToolsCheckpoint;
++ if(state.sampleAt<started||state.sampleAt>now||state.registryAt>state.sampleAt||state.registryAt!==0&&state.registryAt<started||
++  (state.proof===null?(state.current!==null||state.counters.length!==0||state.registryAt!==0):
++   state.proof.birth<started||state.proof.parentSince<started||state.proof.sourceSince<started||state.proof.birth>state.registryAt)||
++  new Set(state.counters.map(row=>row.phase)).size!==state.counters.length||state.current!==null&&!state.counters.some(row=>row.phase===state.current))return false;
++ return state.counters.every(row=>row.series>=started&&row.series<=state.registryAt&&row.advancedAt<=state.sampleAt&&row.previousAt<=row.advancedAt&&
++  (row.previousAt===0||row.previousAt>=started&&row.previousAt<row.advancedAt)&&(row.advancedAt===0||row.advancedAt>=row.series));
++}
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🟦️.ts
+@@ -1,2 +1,3 @@
++import{toolsProgressPaths,recordToolsProgress,sampleToolsProgress,toolsGraceActive,currentToolsCheckpoint,type ToolsCheckpoint}from"./⏳️tools-grace/🟦️.ts";
+ import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
+ import{readFreeSpaceV1,type FreeSpaceOptionsV1,type FreeSpaceUnknownReasonV1}from"../../../../../../../../🔨️modules/🏃️process/🆓️free-space/🟦️.ts";
+@@ -556,4 +557,5 @@
+ /** 🧾️ The record of the stage in flight, `<worktree>/.cache/f/ready/running.json`: which stage, which process group, when it started, where its exit file and log are. */
+ type ReadyWatchdogV1=Readonly<{
++ toolsGrace?:ToolsCheckpoint|null;
+  version:1;owner:string;peakMegabytes:number;progressAt:number;stallAt:number;armedAt:number;progressKey:string|null;phase:ReadyPhaseV1;phaseAt:number;offset:number;
+  seen:readonly string[];step:ReadyStepWatchCheckpointV1;holderSince:number|null;holderEvidence:string|null;
+@@ -598,4 +600,5 @@
+  if(times.some(at=>at!==null&&(at<inflight.startedMs||at>now))||row.armedAt<inflight.startedMs||row.armedAt>now+2*P.samplerMilliseconds+P.pollMilliseconds||
+   row.seen.length>policy.stallSeenMaximum||row.step.seen.length>policy.stallSeenMaximum)return undefined;
++ if(row.toolsGrace!==undefined&&row.toolsGrace!==null&&!currentToolsCheckpoint(row.toolsGrace,inflight.startedMs,now)){const {toolsGrace:_invalid,...retained}=row;return retained;}
+  return row;
+ }
+@@ -824,5 +827,5 @@
+     const held=readInflightV1(inflightFile);
+     if(held===undefined||!sameReadyFlightV1(held,inflight))return;
+-    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore},...lastActivity===undefined?{}:{lastActivity}};
++    const watchdog:ReadyWatchdogV1={version:1,owner:watchdogOwnerV1(inflight),peakMegabytes:peak,progressAt,stallAt,armedAt,progressKey,phase,phaseAt,offset:phaseOffset,seen:tracker.snapshot(),step:stepWatch.snapshot(),holderSince:holder.snapshot(),holderEvidence,semantics:semanticsAtStart,cpu:cpuBefore.size<=P.watchdogCpuMaximum?[...cpuBefore]:[],...windowsBefore===undefined?{}:{windows:windowsBefore},...lastActivity===undefined?{}:{lastActivity},...toolsPaths===undefined?{}:{toolsGrace}};
+     const text=JSON.stringify({...held,watchdog});
+     if(Buffer.byteLength(text)>P.watchdogRecordBytes)return;
+@@ -835,4 +838,15 @@
+   const holderLines=treePolicy.holderWaitPatterns.map(pattern=>new RegExp(pattern,"u")),left=new Map<number,ReadyKnownV1>(earlier.survivors.map(row=>[row.pid,row])),reaped:ReadyReapedV1[]=[...earlier.reaped];
+   const rootOf=():ReadyKnownV1=>({pid:inflight.pid,startMs:inflight.startedMs});
++   const toolsEligible=stage.name==="tools"&&stage.kind==="repo"&&JSON.stringify(stage.arguments)==='["tools","setup","all"]'&&
++    readyPhysicalLaunchV1(inflight)!==undefined&&treePolicy.hardCapMultiplier===4&&!Object.hasOwn(treePolicy.stageHardCapMultipliers,"tools");
++   const toolsPaths=toolsEligible?toolsProgressPaths(input.root,input.orphans?.registryRoot??readyRegistryRootV1(input.environment,process.platform,home)):undefined;
++   let toolsGrace=prior?.toolsGrace??null;
++   const observeToolsGrace=(table:readonly ReadyProcessV1[]):void=>{
++    const now=Date.now();
++    if(toolsPaths===undefined||now-inflight.startedMs<4*stageTimeout-treePolicy.stallMilliseconds)return;
++    const value=readyIdentityV1(rootOf(),table)==="same"?sampleToolsProgress({...toolsPaths,owner,started:inflight.startedMs,now,
++     tolerance:contain.edgeToleranceMilliseconds,members:known.filter(row=>row.pid!==inflight.pid)}):undefined;
++    toolsGrace=recordToolsProgress(toolsGrace,value,now);dirty=true;
++   };
+   let overdueStep:Readonly<ReadyStepV1&{limit:number;quiet:number}>|undefined,aliveAt=Date.now(),tableMilliseconds=0,confirming=false,killReason:ReadyStageStopV1=stop??"stall",inspecting=false,inspectedAt=0,silentHolder:Readonly<{pid:number;command:string;seconds:number}>|undefined;const yielded=new Set<number>();
+   const recorder=(reason:ReadyKillReasonV1)=>readyKillRecorderV1({directory,stage:inflight.stage,owner:ownerOf(inflight.stage,inflight.startedMs),reason,seconds:Math.round(treePolicy.stallStopMilliseconds/1000),say,policy:contain});
+@@ -926,5 +940,5 @@
+      if(kill("overdue",readyValidStepEvidenceV1(stepOverdue)?{stepOverdue}:{})){overdueStep={...watched.step,limit,quiet:Math.round(watched.quietMs/1000)};stalled=true;}
+     }if(!killed&&watching&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))&&owns()){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder",inflight.stage).then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}if(!killed&&(waiting>=treePolicy.holderWaitRestartMilliseconds||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const holder=readyHolderRestartV1(waiting,true,treePolicy),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy,sha);if(file!==null&&(holder||readyStaleStopV1(phase,Date.now()-phaseAt,treePolicy))){codeFile=file;codeStale=!holder;stalled=true;kill("restart");}}}
+-   if(Date.now()>=nextSample&&!sampling&&!killed){sampling=true;const tableBegan=Date.now();void readyReadTableV1(undefined,undefined,undefined,undefined,windows?input.signal:undefined).then(table=>{sampling=false;tableMilliseconds=Date.now()-tableBegan;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);if(table.length===0||killed||!watching||finishing||!owns())return;const root=rootOf();if(readyIdentityV1(root,table)==="reused"&&!existsSync(inflight.exitFile)&&!confirming&&!finishing){confirming=true;const first=table.find(row=>row.pid===root.pid)!;void readyReadTableV1().then(second=>{confirming=false;if(!watching||finishing||killed||existsSync(inflight.exitFile)||second.length===0||readyIdentityV1(root,second)!=="reused")return;const again=second.find(row=>row.pid===root.pid)!,why=changedLineV1(root.pid,root.startMs,again.startMs,first.startMs,P.toleranceMilliseconds,tableMilliseconds);complete({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)},true);});return;}known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})]);sampledAt=Date.now();readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);
++   if(Date.now()>=nextSample&&!sampling&&!killed){sampling=true;const tableBegan=Date.now();void readyReadTableV1(undefined,undefined,undefined,undefined,windows?input.signal:undefined).then(table=>{sampling=false;tableMilliseconds=Date.now()-tableBegan;nextSample=Date.now()+readySampleDelayV1(Date.now()-inflight.startedMs,contain);if(table.length===0||killed||!watching||finishing||!owns())return;const root=rootOf();if(readyIdentityV1(root,table)==="reused"&&!existsSync(inflight.exitFile)&&!confirming&&!finishing){confirming=true;const first=table.find(row=>row.pid===root.pid)!;void readyReadTableV1().then(second=>{confirming=false;if(!watching||finishing||killed||existsSync(inflight.exitFile)||second.length===0||readyIdentityV1(root,second)!=="reused")return;const again=second.find(row=>row.pid===root.pid)!,why=changedLineV1(root.pid,root.startMs,again.startMs,first.startMs,P.toleranceMilliseconds,tableMilliseconds);complete({exit:null,signal:null,timedOut,spawnFailed:false,cancelled,stalled,detached:false,startedMs:inflight.startedMs,peakMegabytes:peak>0?peak:null,...ending(null,why)},true);});return;}known=readyTreeMembersV1(table,root,[...known,...readyHeirsV1({table,previous:[root,...known],sinceMs:sampledAt})]);sampledAt=Date.now();observeToolsGrace(table);readyWriteTreeV1(directory,inflight.stage,root,known,sampledAt);
+      if(windows&&!existsSync(cancelFile)){
+       const sample=readyWindowsTreeSampleV1({table,root:root.pid,members:known,previous:windowsBefore,maximum:P.watchdogCpuMaximum,minimumCpuMilliseconds:treePolicy.livenessCpuMilliseconds});
+@@ -943,5 +957,7 @@
+    checkpoint(peakChanged);
+    if(!killed&&Date.now()>=armedAt&&readyStalledV1(Date.now()-stallAt,treePolicy)){stalled=true;kill("stall");}
+-   {const elapsed=Date.now()-inflight.startedMs;if(elapsed>stageTimeout){const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:Date.now()-progressAt,policy:treePolicy});if(verdict==="timeout"||verdict==="stalled"&&Date.now()>=armedAt){timedOut=true;kill("timeout",{deadline:verdict==="timeout"?"hard-cap":"soft-cap-idle"});}}}
++   {const elapsed=Date.now()-inflight.startedMs;if(elapsed>stageTimeout){const verdict=readyDeadlineV1({stage:stage.name,elapsedMs:elapsed,softMs:stageTimeout,sinceProgressMs:Date.now()-progressAt,policy:treePolicy});const now=Date.now(),extend=verdict==="timeout"&&toolsPaths!==undefined&&now-progressAt<=treePolicy.stallMilliseconds&&
++      toolsGraceActive(toolsGrace,{stage:stage.name,started:inflight.startedMs,now,soft:stageTimeout,quiet:treePolicy.stallMilliseconds,sampleLimit:2*contain.slowSampleMilliseconds+P.pollMilliseconds});
++     if(verdict==="timeout"&&!extend||verdict==="stalled"&&now>=armedAt){timedOut=true;kill("timeout",{deadline:verdict==="timeout"?"hard-cap":"soft-cap-idle"});}}}
+    if(watching&&existsSync(cancelFile)&&owns()){cancelled=true;kill("cancel");if(killed)rmSync(cancelFile,{force:true});}
+   },P.pollMilliseconds);
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/🟦️.ts
+@@ -0,0 +1,42 @@
++import {expect,test} from "bun:test";
++import {Database} from "bun:sqlite";
++import Ajv from "ajv";
++import {recordToolsProgress,toolsGraceActive,type ToolsSample,type ToolsCheckpoint} from "../🟦️.ts";
++import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
++const A="native-artifact-input-read", B="dependencies:selected-postorder";
++const proof={pid:5,birth:100,parentSince:110,sourceSince:115};
++const row=(done:number,updatedAt:number,phase=A,series=120,p=proof):ToolsSample=>({proof:p,phase,series,done,updatedAt});
++test("fixed one-window Ready continuation requires two advancing samples of the same owned series",()=>{
++ const db=new Database(":memory:"),valid=new Ajv({strict:true}).compile(schema.definitions.ToolsGraceNatural);
++ const at=(state:ToolsCheckpoint|null,now:number,stage="tools",sampleLimit=15)=>toolsGraceActive(state,{stage,started:100,now,soft:100,quiet:45,sampleLimit});
++ let current=recordToolsProgress(null,row(100,460),461);
++ try{
++ expect(at(current,461)).toBe(false);
++ current=recordToolsProgress(current,row(101,470),471);
++ expect(at(current,471)).toBe(false);
++ current=recordToolsProgress(current,row(102,490),491);
++ expect(at(current,491)).toBe(false);
++ expect(at(current,501)).toBe(true);
++ expect(at(current,506)).toBe(true);
++ expect(at(current,507)).toBe(false);
++ expect(at(current,501,"workspace")).toBe(false);
++ const adopted=JSON.parse(JSON.stringify(current));
++ expect(at(adopted,501)).toBe(true);
++ expect(at(recordToolsProgress(current,undefined,500),501)).toBe(false);
++ const interrupted=recordToolsProgress(current,undefined,495);
++ expect(at(recordToolsProgress(interrupted,row(102,500),500),501)).toBe(false);
++ expect(at(recordToolsProgress(interrupted,row(103,500),500),501)).toBe(false);
++ expect(at(recordToolsProgress(current,row(199,480),500),501)).toBe(false);
++ expect(at(recordToolsProgress(current,row(199,500,B),500),501)).toBe(false);
++ expect(at(recordToolsProgress(current,row(99,500),500),501)).toBe(false);
++ expect(at(recordToolsProgress(current,row(152,500,A,500),500),501)).toBe(false);
++ expect(at(recordToolsProgress(current,row(152,500,A,120,{...proof,birth:101}),500),501)).toBe(false);
++ expect(at(recordToolsProgress(current,row(102,501),501),517)).toBe(false);
++ for(const now of [500,501,600,601]){
++  expect(valid(now)).toBe(true);
++  const updated={...current,sampleAt:now,registryAt:now,counters:[{...current.counters[0]!,previousAt:now-10,advancedAt:now-5}]};
++  const oracle=db.query("SELECT ? > 500 AND ? <= 600 AS eligible").get(now,now) as {eligible:number};
++  expect(at(updated,now)).toBe(Boolean(oracle.eligible));
++ }
++ }finally{db.close();}
++});
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/📈️standing/🟦️.ts
+@@ -0,0 +1,59 @@
++import {test,expect} from "bun:test";
++import {sampleToolsProgress} from "../../🟦️.ts";
++import {join} from "node:path";
++import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,renameSync,unlinkSync,symlinkSync} from "node:fs";
++import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
++import {createIssuedResourceControlV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
++import {acquireResourceLease} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
++import {readLeaseRegistryEntriesV1,leaseProcessStartedAtMsV1,leaseRegistryFolderV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🧭️order/🗂️registry/🟦️.ts";
++declareBuildTestEnvelopeV1({owner:"test:ready-owned-tools-standing",maximumElapsedMilliseconds:30000,capabilities:{artifacts:true}});
++test("issued tools progress publishes through the existing held census",()=>withBuildTestInvocationV1(async original=>{
++ const previousRegistry=process.env.SEMIO_LEASE_REGISTRY_DIRECTORY,previousOwner=process.env.SEMIO_LEASE_OWNER;
++ try{
++ const base=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"r-")),registry=join(base,"r"),directory=join(base,"l"),root=join(base,"s");
++ mkdirSync(root);
++ process.env.SEMIO_LEASE_REGISTRY_DIRECTORY=registry;
++ process.env.SEMIO_LEASE_OWNER="ready:abcdefgh12:tools:"+Date.now();
++ const phase=createIssuedResourceControlV1(original,"repository:command",0),native="native-fixed-image:"+join(root,"d"),bindings="javascript-dependency-bindings:"+root;
++ const acquire=(resource:string)=>acquireResourceLease({control:phase,signal:phase.signal,directory,resource,mode:"exclusive",timeoutMs:0,maximumDatabaseBytes:16384});
++ const folder=leaseRegistryFolderV1(registry,directory),sample=(patch:Partial<Parameters<typeof sampleToolsProgress>[0]>={})=>sampleToolsProgress({folder,directory,owner:process.env.SEMIO_LEASE_OWNER!,parent:native,source:bindings,started:leaseProcessStartedAtMsV1,now:Date.now(),tolerance:2000,members:[{pid:process.pid,startMs:leaseProcessStartedAtMsV1}],...patch});
++ const read=()=>readLeaseRegistryEntriesV1(registry,directory,Date.now(),false).find(row=>row.pid===process.pid);
++ const wait=async(check:()=>boolean)=>{
++  for(let i=0;i<80;i++){if(check())return;await Bun.sleep(20);}
++  throw Error("Expected live registry progress missing");
++ };
++ const parent=await acquire(native),gate=await acquire(bindings);
++ try{
++  await phase.publish({resource:"native-artifact-input-read:501",mode:"exclusive",elapsedMs:0});
++  await wait(()=>read()?.standing.done===501);
++  const row=read()!,first=sample();expect(first?.done).toBe(501);
++  expect(row.owner).toBe(process.env.SEMIO_LEASE_OWNER);expect(row.startedAtMs).toBe(leaseProcessStartedAtMsV1);
++  expect(row.holds.map(x=>[x.resource,x.mode]).sort()).toEqual([[bindings,"exclusive"],[native,"exclusive"]]);
++  expect(row.standing.phase).toBe("native-artifact-input-read");
++  await Bun.sleep(5100);
++  await phase.publish({resource:"native-artifact-input-read:565",mode:"exclusive",elapsedMs:0});
++  await wait(()=>read()?.standing.done===565);
++  expect(read()!.standing.phaseStartedAtMs).toBe(row.standing.phaseStartedAtMs);
++  expect(sample()?.done).toBe(565);
++  expect(sample({owner:"unrelated-owner"})).toBeUndefined();
++  expect(sample({directory:join(base,"unrelated")})).toBeUndefined();
++  expect(sample({members:[{pid:process.pid,startMs:leaseProcessStartedAtMsV1+5000}]})).toBeUndefined();
++  expect(sample({now:Date.now()+310000})).toBeUndefined();
++  const file=join(folder,process.pid+"-"+leaseProcessStartedAtMsV1+".json"),bytes=readFileSync(file),data=JSON.parse(bytes.toString());
++  const duplicate=join(folder,process.pid+"-"+(leaseProcessStartedAtMsV1+1)+".json");
++  writeFileSync(duplicate,JSON.stringify({...data,startedAtMs:leaseProcessStartedAtMsV1+1}));try{expect(sample()).toBeUndefined();}finally{unlinkSync(duplicate);}
++  if(process.platform!=="win32"){
++   const kept=file+".keep";
++   renameSync(file,kept);symlinkSync(kept,file);
++   try{expect(sample()).toBeUndefined();}finally{unlinkSync(file);renameSync(kept,file);}
++  }
++  expect(sample()?.done).toBe(565);
++
++  gate.release();await wait(()=>read()?.holds.length===1);expect(sample()).toBeUndefined();
++ }finally{try{gate.release();}catch{}parent.release();}
++ await wait(()=>read()===undefined);
++ }finally{
++  if(previousRegistry===undefined)delete process.env.SEMIO_LEASE_REGISTRY_DIRECTORY;else process.env.SEMIO_LEASE_REGISTRY_DIRECTORY=previousRegistry;
++  if(previousOwner===undefined)delete process.env.SEMIO_LEASE_OWNER;else process.env.SEMIO_LEASE_OWNER=previousOwner;
++ }
++}),20000);
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/🔄️handoff/🟦️.ts
+@@ -0,0 +1,54 @@
++import {test,expect} from "bun:test";
++import {createHash} from "node:crypto";
++import {spawn} from "node:child_process";
++import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,existsSync,rmSync,chmodSync,openSync,closeSync} from "node:fs";
++import {join,dirname,resolve} from "node:path";
++const readyPath=resolve(import.meta.dir,"../../../🟦️.ts");
++const {READY_POLICY_V1:P,runReadyStageV1,readyPlatformV1}=await import(readyPath);
++const {READY_TREE_POLICY_V1:T}=await import(resolve(dirname(readyPath),"🌲️process-tree","🟦️.ts"));
++const {READY_CONTAINMENT_POLICY_V1:C,readyOwnerTokenV1}=await import(resolve(dirname(readyPath),"🌲️process-tree","🧹️containment","🟦️.ts"));
++const producer=join(import.meta.dir,"./🎞️fixture/🟦️.ts");
++const wait=async(check:()=>boolean)=>{for(let i=0;i<350;i++){if(check())return;await Bun.sleep(20);}throw Error("Private stage child did not advance");};
++const wrapper=`
++ const {spawn}=require("node:child_process"),fs=require("node:fs");
++ const [source,end]=process.argv.slice(1);
++ const producer=spawn(process.execPath,["test",source],{stdio:"inherit"});
++ process.on("SIGTERM",()=>{producer.kill();fs.writeFileSync(end,JSON.stringify({exit:143,signal:null,spawnFailed:false,endedMs:Date.now()}));process.exit(143);});
++ setInterval(()=>{},100);
++`;
++test.skipIf(process.platform==="win32")("physical adopted tools uses one absolute grace under exact descendant EX standing",async()=>{
++ const scratch=process.env.SEMIO_TEST_ARTIFACT_DIR!,root=mkdtempSync(join(scratch,"cp-")),directory=join(root,...P.directory),registry=join(root,"r"),file=join(directory,P.inflightName),log=join(directory,"tools.log"),exitFile=join(directory,"tools.exit");
++ mkdirSync(directory,{recursive:true});mkdirSync(registry,{mode:0o700});
++ const startedMs=Date.now(),owner=readyOwnerTokenV1(root,"tools",startedMs),out=openSync(log,"w");
++ const env={...process.env,SEMIO_TEST_ARTIFACT_DIR:root,SEMIO_READY_TEST_PRODUCER:"1",SEMIO_LEASE_OWNER:owner,SEMIO_LEASE_REGISTRY_DIRECTORY:registry},stop=new AbortController();
++ let manager:ReturnType<typeof spawn>;
++ try{manager=spawn(process.execPath,["-e",wrapper,producer,exitFile],{cwd:root,env,stdio:["ignore",out,out],detached:true});}finally{closeSync(out);}
++ const childDone=new Promise<void>(done=>manager.once("exit",()=>done())),ttl=setTimeout(()=>stop.abort(),29000);
++ try{
++  const pid=manager.pid!;
++  const launch={version:1,platform:readyPlatformV1(),digest:"f".repeat(64),recipe:"d".repeat(64),prerequisites:[]};
++  const identity=createHash("sha256").update(JSON.stringify(["tools",pid,startedMs])).digest("hex");
++  const watchdog={version:1,owner:identity,peakMegabytes:1,progressAt:startedMs,stallAt:startedMs,armedAt:startedMs,progressKey:null,phase:null,phaseAt:startedMs,offset:0,seen:[],step:{identity:null,movedAt:startedMs,seen:[]},holderSince:null,holderEvidence:null,semantics:{},cpu:[[pid,0]]};
++  writeFileSync(file,JSON.stringify({stage:"tools",pid,startedMs,exitFile,log,launch,watchdog}));
++  await wait(()=>existsSync(join(root,"producer-ready")));
++  const soft=3600,stage={name:"tools",kind:"repo" as const,arguments:["tools","setup","all"],timeoutMilliseconds:soft,inputs:[],bootstrapInput:false};
++  const tree={...T,stallMilliseconds:30000,stallStopMilliseconds:30000,semanticsSources:[]};
++  const containment={...C,fastSampleMilliseconds:250,slowSampleMilliseconds:250,fastWindowMilliseconds:30000};
++  const watch=(signal:AbortSignal)=>runReadyStageV1({root,environment:env,stage,tree,containment,speed:1,signal,jobs:1,onLine:()=>undefined});
++  const first=new AbortController(),handoff=setTimeout(()=>first.abort(),Math.max(0,startedMs+4*soft+320-Date.now()));
++  try{
++   const detached=await watch(first.signal);
++   expect(detached).toMatchObject({detached:true,startedMs});
++  }finally{clearTimeout(handoff);}
++  const persisted=JSON.parse(readFileSync(file,"utf8")),witness=persisted.watchdog.toolsGrace,counter=witness.counters.find((row:{phase:string})=>row.phase===witness.current);
++  expect(persisted.pid).toBe(pid);
++  expect(witness.proof.pid).toBe(Number(readFileSync(join(root,"producer-ready"),"utf8")));
++  expect(counter.previousAt).toBeGreaterThan(startedMs);
++  expect(counter.advancedAt).toBeGreaterThan(counter.previousAt);
++  const result=await watch(stop.signal);
++  if(!result.timedOut||result.physicalEnd?.endedMs===undefined)throw Error("Expected owned physical timeout: "+JSON.stringify(result)+" log: "+readFileSync(log,"utf8").slice(-1800));
++  expect(result.physicalEnd.endedMs-startedMs).toBeGreaterThanOrEqual(5*soft);
++  expect(result.physicalEnd.endedMs-startedMs).toBeLessThan(5*soft+2500);
++  expect(result.watchdog?.deadline).toBe("hard-cap");
++ }finally{clearTimeout(ttl);stop.abort();if(manager.exitCode===null)try{process.kill(-manager.pid!,"SIGKILL");}catch{}await childDone;rmSync(root,{recursive:true,force:true});}
++},35000);
+--- /dev/null
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/⏳️tools-grace/🧪️tests/🔄️handoff/🎞️fixture/🟦️.ts
+@@ -0,0 +1,24 @@
++import {test} from "bun:test";
++import {toolsProgressPaths} from "../../../🟦️.ts";
++import {join} from "node:path";
++import {writeFileSync} from "node:fs";
++import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
++import {createIssuedResourceControlV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
++import {acquireResourceLease} from "../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
++
++declareBuildTestEnvelopeV1({owner:"test:ready-tools-standing-child",maximumElapsedMilliseconds:60000,capabilities:{artifacts:true}});
++test.skipIf(!process.env.SEMIO_READY_TEST_PRODUCER)("private tools producer",()=>withBuildTestInvocationV1(async original=>{
++ const root=process.env.SEMIO_TEST_ARTIFACT_DIR!, registry=process.env.SEMIO_LEASE_REGISTRY_DIRECTORY!;
++ const paths=toolsProgressPaths(root,registry)!;
++ const phase=createIssuedResourceControlV1(original,"repository:command",0);
++ const acquire=(resource:string)=>acquireResourceLease({control:phase,signal:phase.signal,directory:paths.directory,resource,mode:"exclusive",timeoutMs:0,maximumDatabaseBytes:16384});
++ const parent=await acquire(paths.parent),gate=await acquire(paths.source);
++ const delay=Number(process.env.PRODUCER_DELAY??"5100");
++ try{
++  for(let n=1;n<10;n++){
++   await phase.publish({resource:"native-artifact-input-read:"+(n*64),mode:"exclusive",elapsedMs:0});
++   if(n===1)writeFileSync(join(root,"producer-ready"),String(process.pid));
++   await Bun.sleep(delay);
++  }
++ }finally{gate.release();parent.release();}
++}),55000);

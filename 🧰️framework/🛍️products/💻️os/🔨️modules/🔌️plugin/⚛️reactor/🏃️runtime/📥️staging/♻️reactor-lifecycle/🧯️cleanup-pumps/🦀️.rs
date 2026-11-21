@@ -207,9 +207,13 @@ impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJo
         self.closing = true;
     }
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Step;
         self.closing = true;
         if !self.publication.terminal_is_empty() {
-            return self.publication.close_step(cx);
+            return Ok(match self.publication.close_step(cx)? {
+                Step::Complete { progress } if !self.terminal_is_empty() => Step::Pending { progress },
+                step => step,
+            });
         }
         if self.cell.is_some(){return Ok(match cx.return_original_native_weak(&mut self.cell)?{Some(progress)=>semio_framework_job::InteractiveJobCloseStep::Complete{progress},None=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()}})}
         Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
@@ -338,8 +342,12 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
                 }
             };
             runtime_close_phase(&state, 10);
-            let grant=state.mounted_policy.close;
-            let progress=match cx.with_original_native_weak_parent(cell,|cx|maintenance.close_step(cx)){Ok(step)=>match step.admit(grant,maintenance.terminal_is_empty()){Ok(step)=>step,Err(error)=>return CleanupTurn::OriginalFailure(semio_framework_job::OriginalTurnFailure::from(error))},Err(failure)=>return CleanupTurn::OriginalFailure(failure)};
+            let grant = cx.retained_grant();
+            let close = cx.with_original_native_weak_parent(cell, |cx| maintenance.close_step(cx));
+            let progress = match close.and_then(|step| step.admit(grant, maintenance.terminal_is_empty()).map_err(Into::into)) {
+                Ok(step) => step,
+                Err(failure) => return CleanupTurn::OriginalFailure(failure),
+            };
             runtime_close_phase(&state, 11);
             match progress {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress }|semio_framework_job::InteractiveJobCloseStep::Complete { progress } => {
@@ -417,13 +425,17 @@ impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJ
         self.closing = true;
     }
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Step;
         self.closing = true;
         if let Some(original)=self.state.as_ref(){
             let step=cx.with_original_native_weak_source(original,|state,cx|runtime_close_owned_app_source(state,cx))?;
             if !matches!(step,semio_framework_job::InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){return Ok(match step{semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>semio_framework_job::InteractiveJobCloseStep::Pending{progress},step=>step})}
         }
         if !self.publication.terminal_is_empty() {
-            return self.publication.close_step(cx);
+            return Ok(match self.publication.close_step(cx)? {
+                Step::Complete { progress } if !self.terminal_is_empty() => Step::Pending { progress },
+                step => step,
+            });
         }
         if self.state.is_some(){return Ok(match cx.return_original_native_weak(&mut self.state)?{Some(progress)=>semio_framework_job::InteractiveJobCloseStep::Complete{progress},None=>semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()}})}
         Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
@@ -522,6 +534,9 @@ pub fn plugin_begin_instance_close<PA: PluginApp + 'static>(runtime: &PluginRunt
     }
     if !quarantine.can_insert(instance_id) {
         return Err(plugin_internal_fault(format!("runtime close quarantine is saturated or collided: {instance_id}")));
+    }
+    if document_backbones.get(instance_id).is_some_and(|binding| !binding.atomic.terminal()) {
+        return Err(plugin_internal_fault("document backbone original receive must retire before native instance removal"));
     }
     let generation = checked_runtime_close_generation(runtime.close_generation.get())?;
     #[cfg(test)]

@@ -66,3 +66,44 @@ The controlled document lifter now accepts a qualifying indirect text note and a
 
 - [Controlled annotations](📋️controlled-annotations.md)
 - [Mounted browser verification](📋️mounted-pdf-e2e.md)
+
+The initial current-source browser generation warmed more than 740 units. Its admitted PDF lift source digest differed from the live annotation source, so the browser build released its stale compiler lease and rejoined the queue. The older native eight-package request can now take that lease when the host has sufficient capacity. Build caches were kept.
+
+The staged physical reservation fix admitted the exact 33,038-byte Type1 specimen under one-unit mounted grants. It classified all 48 empty 32 KiB windows, used 186,848 work turns, and retained 188,261 bytes in the graph. All 48 decoded content streams matched MuPDF. The staged 38,096-byte image specimen likewise passed physical Graph preparation, typed image roles, full sample comparison and cancellation immediately after the history reservation. The parked source awaits the current package and browser baselines.
+
+The staged CFF reader and SFNT outline interface passed the full FontTools contour and CID comparison. MuPDF also opened the 4,177-byte embedded-font PDF, recovered its text and baseline positions, and rasterized all four glyphs. [CFF outline receipts](📋️cff-outlines.md)
+
+## Current Integration and Staged Work
+
+The governed native source admission passed all 720 units after the annotation fixture regression moved from the full testkit closure into the existing snapshot-value tests. The native and WASI captures compiled the revised original-slot and declaration modules. The WASI compiler emitted the PDF xref, lift, fonts and page editor. Complete component receipts and mounted Open, edit, Save and reopen are still pending.
+
+The real browser route needed an authored Specific development contribution. The product-owned Vite and browser entry are available. The production catalog generator and natural-file router passed with the isolated metadata line. Activation requires the actual Stdio and PDF components and there is no compatible prebuilt Stdio receipt in the normal cache. The Cargo metadata binding remains staged during compilation.
+
+- [Mounted PDF runtime gate](📋️mounted-pdf-e2e.md)
+- [Registered PDF and native gate](📋️native-editor-gate.md)
+- [Mixed large-file text and image import](📋️mixed-resources.md)
+- [Atomic page boundary draft fix](📐️page-boundary-draft-fix.md)
+- [Raw CFF and OpenType glyph outlines](📋️cff-outlines.md)
+- [Selected font and text mutation checks](📋️font-reassignment.md)
+
+## Integrated Source Status
+
+The baseline native replay passed 31 graph-projection tests. Its page editor binary passed 45 of 50, including Type 3, TrueType and annotation painting. Three fixture arena failures and one integer versus decimal assertion were corrected in the shared page tests. The fifth failure exposed the cold DCT stream custody defect. The live fix passed all seven focused Rust checks and PyMuPDF reproduced the coded-image fixture and pixel data. The refreshed governed Canvas check remains pending. [Cold image evidence](cold-dct-import.md)
+
+Two registered tests independently passed their draft and rectangle edit undo and redo histories. A clean natural-file fixture exposed a missing runtime birth and initial cache step in its test setup. The registered Open and snapshot decoder fixtures were corrected for the next native pass. [Native gate evidence](📋️native-editor-gate.md)
+
+The first full WASI capture compiled the PDF renderer and codec owners. Its independent BREP consumer and provider used different live source epochs and neither final component linked. The production browser target restarted after the coordinated PDF release. Actual mounted Open, edit, Save and reopen still need a successful browser run. [Mounted gate evidence](📋️mounted-pdf-e2e.md)
+
+## Additional Acceptance Coverage
+
+The live mixed-resource source check passed all 16 cases. Its 38,459-byte specimen has four pages with independent image and Helvetica text references. The production graph source probe independently matched all 48 Flate content streams with MuPDF and proved exact release of the standard history allocation on cancellation. These checks exercise the real source cursors beneath the application route. [Mixed resource receipts](📋️mixed-resources.md)
+
+The registered native PNG law now checks the ordinary picker effect, captured revision, retained completion, straight RGB and soft mask, preservation of another page, rejection of a replayed stale revision, and one Undo and Redo. The law and its neutral fixture are live in test-only source. It has yet to run in the queued governed native gate. [Native gate evidence](📋️native-editor-gate.md)
+
+The large JPEG import and renderer test are staged for the next coordinated source capture. The focused Rust path imported, cancelled, lowered and reopened the genuine 44,486-byte PDF. An independent MuPDF render confirmed exact encoded streams and page pixels. The new image and stream owners reach 57 Stdio component units and 44 PDF component units, so both publications must refresh after release. [Controlled JPEG evidence](controlled-dct-import.md) [Browser closure findings](browser-closure-audit.md)
+
+The active WASI capture has compiled outputs from the four current PDF history schemas. Each emitted unit-cache dependency digest matched the live label input. This establishes compiled source custody for the five English and German labels. Mounted details and native history assertions are still pending.
+
+The integrated-source lexer, stream filter, cross-reference, content and font harness passed 124 tests against the current repository-built native dependency lane. It exercised the current CFF module and xref stream normalization. The dedicated live mixed-resource and coded-image probes cover the separate controlled XObject owner.
+
+Build recovery now supports one held-lane retry for a warm unsplit pass with multiple components. It also verifies independently linked component inputs when a different component fails. Repository driver laws proved that a stale source on an unlinked branch can be omitted and that a stale or missing shared dependency still refuses the linked proof. Both changes are live for fresh build processes. [Retry law](📋️component-retry.md) [Partial provenance law](📋️partial-cargo-provenance.md)

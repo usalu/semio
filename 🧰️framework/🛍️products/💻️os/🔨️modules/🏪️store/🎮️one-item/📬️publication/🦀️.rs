@@ -456,6 +456,8 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     fn outcome_messages(&self) -> &[semio_os_spr::MutationMessage] { &[] }
 
     fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary>;
+    /// 🧮️ Quotes the physical item allowance for the next domain preparation turn.
+    fn minimum_advance_items(&self, _body: usize) -> Result<usize, ValueError> { Ok(1) }
     /// 📏️ The whole turn ceiling classifies permanent misfits without increasing the spendable grant.
     fn advance_with_turn_ceiling(&mut self, body: usize, grant: ArtifactStoreOneItemGrant, _turn_ceiling: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.advance(body, grant, receiving)

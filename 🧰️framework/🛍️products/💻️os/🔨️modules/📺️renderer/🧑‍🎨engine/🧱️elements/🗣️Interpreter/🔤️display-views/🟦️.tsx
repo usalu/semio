@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { useEffect, useRef, useState, type ReactNode } from "../../⚛️react-port/🟦️.ts";
+import { useContext, useEffect, useRef, useState, type ReactNode } from "../../⚛️react-port/🟦️.ts";
 import {
   Button,
   cn,
@@ -13,6 +13,11 @@ import {
   type ElementSkeletonKind
 } from "@semio-tech/ui-react";
 import { type Component, type UiNodeRecord } from "@semio-tech/framework";
+import { type UiDocumentStore, useUiDocumentRevision } from "../../📃️UiDocumentStore/🟦️.tsx";
+import { parseWindowResourcePage, windowResourceMatchesOwner, WindowResourceReader, type WindowResourcePage } from "@semio-tech/ui-contract/window-resource";
+import { LocalDocumentWindowContext } from "../🧭️local-document-owner/🟦️.ts";
+import { useTreeWindowContext } from "../🪟️tree-windows/🟦️.ts";
+import { retainedTextBody } from "../🚚️surface-scene-lanes/🟦️.ts";
 import { uiAccessibilityValueV1, uiProgressFractionV1 } from "@semio-tech/ui-contract/presentation/accessibility";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
@@ -97,9 +102,87 @@ export function KeyValueListView({ record }: { readonly record: UiNodeRecord }) 
   );
 }
 
-export function ImageView({ record }: { readonly record: UiNodeRecord }) {
-  const component = record.component as Extract<Component, { type: "image" }>;
-  return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
+type ImageRecord = UiNodeRecord & { readonly component: Extract<Component, { type: "image" }> };
+
+function renderImage(record: ImageRecord, source?: string) {
+  return <img id={`node-${record.id}`} src={source || undefined} alt={record.component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} data-ui-node-key={record.key} />;
+}
+
+function RetainedImageView({ record, store, bytes }: { readonly record: ImageRecord; readonly store: UiDocumentStore; readonly bytes: number }) {
+  const revision = useUiDocumentRevision(store);
+  const key = record.component.src;
+  const [resolved, setResolved] = useState<{ readonly key: string; readonly bytes: number; readonly text: string }>();
+  const current = resolved?.key === key && resolved.bytes === bytes ? resolved.text : undefined;
+  useEffect(() => {
+    if (current !== undefined) return;
+    const text = retainedTextBody(store.getNodeSnapshot, record, key, bytes);
+    if (text !== undefined) setResolved({ key, bytes, text });
+  }, [store, record, key, bytes, revision, current]);
+  return renderImage(record, current);
+}
+
+function WindowResourceImageView({ record, store, page, bytes }: { readonly record: ImageRecord; readonly store: UiDocumentStore; readonly page: WindowResourcePage; readonly bytes: number }) {
+  const revision = useUiDocumentRevision(store);
+  const window = useTreeWindowContext();
+  const windowId = useContext(LocalDocumentWindowContext);
+  const owned = windowId !== null && windowResourceMatchesOwner(page.resource, windowId, record.key);
+  const request = useRef(owned ? window?.setFormPage : undefined);
+  request.current = owned ? window?.setFormPage : undefined;
+  const [reader] = useState(() => new WindowResourceReader(page.resource));
+  const [state, setState] = useState<{ bytes: number; url?: string; failed?: boolean }>({ bytes: 0 });
+  const source = useRef<{ cancel: AbortController; url?: string } | undefined>(undefined);
+  const key = page.resource.key;
+  useEffect(() => () => {
+    request.current?.(key, 0);
+    source.current?.cancel.abort();
+    if (source.current?.url) URL.revokeObjectURL(source.current.url);
+  }, [key]);
+  useEffect(() => {
+    if (!owned || !request.current) return;
+    if (page.index !== reader.next) {
+      if (reader.next === 1) request.current(key, 1);
+      return;
+    }
+    const text = retainedTextBody(store.getNodeSnapshot, record, record.component.src, bytes);
+    if (text === undefined) return;
+    if (!reader.accept(page, text)) {
+      setState({ bytes: reader.completedBytes, failed: true });
+      request.current?.(key, 0);
+      return;
+    }
+    setState({ bytes: reader.completedBytes });
+    if (reader.next !== undefined) {
+      request.current?.(key, reader.next);
+      return;
+    }
+    request.current?.(key, 0);
+    const value = reader.take();
+    if (!value?.startsWith("data:image/")) {
+      setState({ bytes: reader.completedBytes, failed: true });
+      return;
+    }
+    const owner = { cancel: new AbortController(), url: undefined as string | undefined };
+    source.current = owner;
+    void fetch(value, { signal: owner.cancel.signal }).then(response => response.blob()).then(blob => {
+      if (owner.cancel.signal.aborted) return;
+      owner.url = URL.createObjectURL(blob);
+      setState({ bytes: reader.completedBytes, url: owner.url });
+    }).catch(() => {
+      if (!owner.cancel.signal.aborted) setState({ bytes: reader.completedBytes, failed: true });
+    });
+  }, [key, owned, page, bytes, reader, record, revision, store, window]);
+  return <div aria-busy={!state.url && !state.failed || undefined}>
+    {renderImage(record, state.url)}
+    {!state.url && !state.failed && <progress value={state.bytes} max={page.resource.bytes} aria-label={record.component.alt ?? ""} />}
+  </div>;
+}
+
+export function ImageView({ record, store }: { readonly record: UiNodeRecord; readonly store: UiDocumentStore }) {
+  const image = record as ImageRecord;
+  const size = image.component.sourceBodyBytes;
+  if (size === undefined) return renderImage(image, image.component.src);
+  const page = parseWindowResourcePage(image.component.src);
+  return page ? <WindowResourceImageView key={page.resource.key} record={image} store={store} page={page} bytes={size} /> : <RetainedImageView record={image} store={store} bytes={size} />;
 }
 
 /** 📶️ `Component::Progress` → a real `role="progressbar"`. Determinate bars carry

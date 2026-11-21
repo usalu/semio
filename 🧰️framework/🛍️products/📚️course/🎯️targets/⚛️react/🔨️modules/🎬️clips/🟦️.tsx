@@ -26,8 +26,9 @@ export function clipUrl(clip: Clip, locale: CourseLocale): string | undefined {
   return clip.urls?.[locale];
 }
 
-function Poster(props: { readonly clip: Clip }): ReactElement {
-  const url = useContext(ClipPostersContext)[props.clip.poster.file];
+function Poster(props: { readonly clip: Clip; readonly enabled?: boolean }): ReactElement {
+  const posters = useContext(ClipPostersContext);
+  const url = props.enabled === false ? undefined : posters[props.clip.poster.file];
   return (
     <div data-clip-poster="" {...CELL} className="relative flex aspect-video w-full items-center justify-center overflow-hidden bg-background">
       {url === undefined ? <Glyph emoji={props.clip.emoji} className="text-2xl" /> : <img src={url} alt="" width={640} height={360} loading="lazy" decoding="async" className="size-full object-cover" />}
@@ -50,7 +51,7 @@ function Watch(props: { readonly clip: Clip; readonly locale: CourseLocale; read
 }
 
 /** 🃏️ The card of a clip on the clips page: its poster, description and either the link to the hosted clip or that it is coming soon; its heading opens the clip's page (`#<clip>`). */
-export function ClipCardView(props: { readonly clip: Clip; readonly locale: CourseLocale; readonly text: CourseText; readonly revealed?: boolean; readonly onOpen?: () => void }): ReactElement {
+export function ClipCardView(props: { readonly clip: Clip; readonly locale: CourseLocale; readonly text: CourseText; readonly revealed?: boolean; readonly onOpen?: () => void; readonly showPoster?: boolean }): ReactElement {
   const { clip, locale, text, revealed, onOpen } = props;
   const id = useId();
   return (
@@ -66,7 +67,7 @@ export function ClipCardView(props: { readonly clip: Clip; readonly locale: Cour
       title={localized(clip.title, locale)}
       footerRight={<Watch clip={clip} locale={locale} text={text} />}
     >
-      <Poster clip={clip} />
+      <Poster clip={clip} enabled={props.showPoster} />
       <CardSection>
         <p className="m-0 text-xs leading-normal text-foreground">{localized(clip.description, locale)}</p>
       </CardSection>

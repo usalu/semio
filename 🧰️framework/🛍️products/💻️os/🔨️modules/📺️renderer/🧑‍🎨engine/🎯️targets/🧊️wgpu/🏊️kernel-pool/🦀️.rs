@@ -13,9 +13,9 @@ use semio_renderer_wgpu_host_base::{actor_budget_from_turn_budget, log_debug, re
 #[cfg(any(test, feature = "testkit"))]
 use semio_renderer_wgpu_kernel_protocol::CANCELLED_KERNEL_TURNS;
 use semio_renderer_wgpu_kernel_protocol::{
-    decode_actor_turn_result, extension_index, find_wasm_artifact, install_job_progress_acknowledge, job_progress_presentation_bridge, kernel_request_interleavable, mounted_product_replay_profile, mounted_product_replay_recovery_registry,
-    mounted_product_replay_refusal_registry, mounted_product_replay_worker_slot, native_shard_count, next_seq, parallel_runtime, read_native_component, reserve_seq, run_turn_continuation_turns, run_turn_quiescent_continuations,
-    CreateAppRequestOwner, ExchangeOutcome, ExchangeSurfaceDocument, JobProgressPresentationToken, KernelCloseHandle, KernelCloseStatus, KernelCloseSubmission, KernelCloseSubmissionRegistry, KernelOutcome, KernelRequest, KernelRequestQueue,
+    decode_actor_turn_result, extensions_of, find_wasm_artifact, install_job_progress_acknowledge, job_progress_presentation_bridge, kernel_request_interleavable, mounted_product_replay_profile, mounted_product_replay_recovery_registry,
+    mounted_product_replay_refusal_registry, mounted_product_replay_worker_slot, native_shard_count, next_seq, open_create_app_source, parallel_runtime, read_native_component, reserve_seq, run_turn_continuation_turns, run_turn_quiescent_continuations,
+    CreateAppBorrowed, CreateAppRequestOwner, ExchangeOutcome, ExchangeSurfaceDocument, JobProgressPresentationToken, KernelCloseHandle, KernelCloseStatus, KernelCloseSubmission, KernelCloseSubmissionRegistry, KernelOutcome, KernelRequest, KernelRequestQueue,
     MountedProductReplayAdmissionPermit, MountedProductReplayAuthority, MountedProductReplayCheckpoint, MountedProductReplayClaim, MountedProductReplayExpected, MountedProductReplayRequest, QueuedKernelEvent, RefusedProductReplay,
     RejectedKernelEvents, ResponseSlot, TypedOperationResultPage, COMPILED_COMPONENT_CAPACITY, JOB_PROGRESS_PRESENTATION_CAPACITY, JOB_REPLAY_STEP_GRANT, KERNEL_CLOSE_READY, KERNEL_CLOSE_UNADMITTED, KERNEL_REQUEST_QUEUE_CAPACITY, PRODUCT_REPLAY_PROFILE_COUNT,
     RUN_TURN_OUTCOME_TIMEOUT, RUN_TURN_SETTLE_BUDGET, TURN_BUDGET, TURN_REQUESTS_BETWEEN_SLICES,
@@ -25,7 +25,7 @@ use semio_renderer_wgpu_kernel_retained::{
     RetainedSurfaceRegistry,
 };
 use semio_plugin_host::shard::ShardOutcome;
-use semio_plugin_host::{GuestRuntimes, PackageRef};
+use semio_plugin_host::{GuestRuntime, GuestRuntimes, PackageRef};
 use semio_plugin_interpreter_runtime::OwnedRuntime;
 use std::collections::HashMap;
 use std::future::Future;

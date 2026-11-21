@@ -1,0 +1,7 @@
+# Note retained command retirement audit
+
+Attempt 27 (driver `wHnUW2G`) reached the Note component and found the command close path using the former grant-only controlled-retirement step. The current `ControlledRetirement::step` accepts a body size and the original allocation effect and returns a retirement poll.
+
+The Note close path now selects the active remnant's demand and passes the original context's effect through `close_original_effect_step`. That host helper settles both pending and complete retirement polls and preserves the physical and CPU receipts. The command keeps the remnant until its inner cursor reaches terminal-empty. The terminal remnant slot is cleared in its own metered turn. The inline transfer into the remnant also has its own metadata quote and receipt, covering the source movement and the destination frame. Unsupported retirement is detected before moving the command fields.
+
+This change affects only [the Note retained command close path](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs:326). The separate borrowed view-state change in the same source was verified after both edits landed. The repository's existing original-effect retirement tests exercise charged work, denied grants and heap receipts for the same host helper. The live source check passed. No additional Cargo job was started.

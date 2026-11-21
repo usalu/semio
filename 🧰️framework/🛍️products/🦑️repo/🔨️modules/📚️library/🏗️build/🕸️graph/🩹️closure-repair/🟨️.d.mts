@@ -1,11 +1,12 @@
 /** 🩹️ Removes the records that name a vanished build input closure leaf. */
 export function purgeClosureReferencesV1(options: { root: string; key: string; dryRun?: boolean; cancelled?: () => boolean }): Promise<number>;
 export const CLOSURE_NAMESPACES_V1: Readonly<Record<"SOURCE_CLOSURE" | "CARGO_LOCK", "build-input-closures" | "build-lock-closures">>;
-export const CLOSURE_POLICY_V1: Readonly<{ maximumLeaves: number; maximumLeafBytes: number; concurrency: number; fragments: string }>;
+export const CLOSURE_POLICY_V1: Readonly<{ maximumLeafBytes: number; concurrency: number; fragments: string }>;
 export type ClosureNamespaceV1 = "build-input-closures" | "build-lock-closures";
 export type ClosureObtainV1 = (namespace: ClosureNamespaceV1, key: string) => Promise<"present" | "refetched" | "missing">;
 /** 🧭️ The closure leaves a text names, key to namespace. */
 export function closureReferencesOfTextV1(text: string): Map<string, ClosureNamespaceV1>;
+export function closureReferencePairsOfTextV1(text: string): IterableIterator<[string, ClosureNamespaceV1]>;
 /** 🚫️ The typed failure of an absent closure leaf (code `closure-missing`, never ENOENT). */
 export function closureMissingErrorV1(input: { namespace: string; key: string; projects?: readonly string[]; cause?: unknown }): Error & { code: "closure-missing"; missingClosure: string; missingNamespace: string; missingProjects: readonly string[] };
 /** 🗄️ Whether the leaf is on this machine. */

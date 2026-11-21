@@ -1,4 +1,72 @@
 {
+ "workspaceInvalidation": {
+ "platforms": [
+  "linux",
+  "macos",
+  "windows"
+ ],
+ "cases": [
+  {
+   "name": "restart",
+   "path": null,
+   "changed": []
+  },
+  {
+   "name": "unrelated",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/next@15.5.22.patch",
+   "changed": []
+  },
+  {
+   "name": "native dependency lock",
+   "path": "bun.lock",
+   "changed": [
+    "dependencies"
+   ]
+  },
+  {
+   "name": "selected lock",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/bun.lock",
+   "changed": [
+    "workspace"
+   ]
+  },
+  {
+   "name": "Nx patch",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch",
+   "changed": [
+    "workspace"
+   ]
+  },
+  {
+   "name": "selected authorizer output receipt",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts",
+   "changed": [
+    "workspace"
+   ]
+  },
+  {
+   "name": "selected compiler policy",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🔣️policy.json",
+   "changed": [
+    "workspace"
+   ]
+  },
+  {
+   "name": "selected command authority",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+   "changed": [
+    "workspace"
+   ]
+  },
+  {
+   "name": "selected authorizer runtime",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts",
+   "changed": [
+    "workspace"
+   ]
+  }
+ ]
+},
  "digests": [
   {
    "name": "linux, every input present",

@@ -1,9 +1,11 @@
 syntax = "proto3";
 import "🗺️imported-map/🛰️.proto";
+import "🗺️imported-map/🏔️elevation/🛰️.proto";
 package semio.s.gis.gisterrain;
 import "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message GisTerrainDiff {
  
   optional double exaggeration = 2;
   optional ImportedMapChange imported_map = 3;
+  optional ElevationSourceChange elevation_source = 4;
 }

@@ -55,7 +55,7 @@ class CatalogPublicationTestScript extends BundleScript {
   async run(args:string[]):Promise<void>{
     if(args.length)throw new Error("catalog-publication-test accepts no arguments");
     const {runOwnedCommand}=await import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-    await runOwnedCommand(process.execPath,["test",resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🌐️browser-host/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/🟦️.ts"),resolve(this.root,"🔁️rebuild/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🏗️preparation/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🌐️playground-site-dist/🟦️.ts")],this.repoRoot,"catalog-publication",120000,{signal:this.invocation.control.signal});
+    await runOwnedCommand(process.execPath,["test",resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🌐️browser-host/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/🟦️.ts"),resolve(this.root,"🔁️rebuild/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🖍️draw-route/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🏗️preparation/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🌐️playground-site-dist/🟦️.ts")],this.repoRoot,"catalog-publication",120000,{signal:this.invocation.control.signal});
   }
 }
 /** 📦️ Verifies the specific catalog’s declared public package after its owning producer. */
@@ -75,7 +75,17 @@ class McpClientEndToEndScript extends BundleScript {
     const { runMcpClientEndToEnd } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🟦️.ts");
     const { withMcpClientWorkspaceV1 } = await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/📡️stdio/🎫️session/📦️published/🟦️.ts");
     const { SPECIFIC_MCP_CLIENT_E2E_PINS_V1 } = await import("./🤝️mcp-client-e2e/🟦️.ts");
-    const phase=createIssuedResourceControlV1(this.invocation,"mcp:client-e2e",120000);
+    const { buildComponentClosureV1 } = await import("@semio-tech/framework-plugin/build/driver-stages");
+    const { repositoryCargoNetworkV1 } = await import("@semio-tech/repo-lib/cargo");
+    const { scriptCompilerAdmissionControlV1 } = await import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts");
+    const { pluginId, inferencePluginId } = SPECIFIC_MCP_CLIENT_E2E_PINS_V1;
+    await buildComponentClosureV1(this.repoRoot, new Set([pluginId, inferencePluginId]), {
+      invocation: this.invocation,
+      control: scriptCompilerAdmissionControlV1(this.invocation, "mcp:client-e2e-models", 0),
+      network: repositoryCargoNetworkV1(this.invocation, this.repoRoot),
+      facet: "model",
+    });
+    const phase=createIssuedResourceControlV1(this.invocation,"mcp:client-e2e",360_000);
     const run=async(folder:string,control:import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts").ResourceLeaseControl)=>{
       console.log(`[mcp-client-e2e] workspace folder ${folder}`);
       const steps=await runMcpClientEndToEnd(this.repoRoot,folder,SPECIFIC_MCP_CLIENT_E2E_PINS_V1,this.invocation,control);

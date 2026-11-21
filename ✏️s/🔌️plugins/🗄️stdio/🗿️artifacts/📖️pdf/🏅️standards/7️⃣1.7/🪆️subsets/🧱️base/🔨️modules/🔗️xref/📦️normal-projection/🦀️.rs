@@ -74,6 +74,11 @@ impl NormalProjectionCursor {
         Ok(())
     }
 
+    /// 🛂️ Quotes an empty history allocation before decoding normal stream data.
+    pub fn next_reserves_history(&self) -> bool {
+        matches!(self.phase, Phase::Shape(Shape::Decode)) && self.decoder.as_ref().is_some_and(PdfDecodedStreamCursor::next_reserves_history)
+    }
+
     /// ▶️ Drives one object, one stream and its dictionary under the original stable source and grants.
     pub fn advance(&mut self, source: &[u8], grant: CosGrant, cancelled: bool) -> NormalProjectionReceipt {
         use NormalProjectionEvent as Event;

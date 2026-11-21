@@ -111,6 +111,7 @@ semio_ui_locale::app_labels! {
         focus_results_hint: native_en "Focus the Results window for live playback readouts", native_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen", reuse_en "Focus the Results window for live playback readouts", reuse_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen";
         mode_shape: native_en "Mode", native_de "Eigenform", reuse_en "Mode", reuse_de "Eigenform";
         buckling_mode: native_en "Buckling mode", native_de "Knickform", reuse_en "Buckling mode", reuse_de "Knickform";
+        mode_unavailable: native_en "No positive mode at this index", native_de "Keine positive Eigenform für diesen Index", reuse_en "No positive mode at this index", reuse_de "Keine positive Eigenform für diesen Index";
         no_load_case: native_en "No load case defined", native_de "Kein Lastfall definiert", reuse_en "No load case defined", reuse_de "Kein Lastfall definiert";
         result_missing: native_en "Result not found", native_de "Ergebnis nicht gefunden", reuse_en "Result not found", reuse_de "Ergebnis nicht gefunden";
         analysis_error: native_en "Analysis error", native_de "Analysefehler", reuse_en "Analysis error", reuse_de "Analysefehler";

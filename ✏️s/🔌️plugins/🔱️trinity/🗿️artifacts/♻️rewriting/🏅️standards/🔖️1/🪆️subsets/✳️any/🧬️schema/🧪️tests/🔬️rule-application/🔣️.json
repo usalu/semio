@@ -1,0 +1,30 @@
+{
+  "rule": {
+    "name": "add-neighbour",
+    "lhs": {
+      "pattern": { "leftVar": "a", "leftKind": "Piece" },
+      "whereClause": "a.name = 'b'"
+    },
+    "rhs": {
+      "create": [
+        {
+          "leftVar": "a",
+          "leftKind": "Piece",
+          "edgeVar": "newEdge",
+          "edgeKind": "Connection",
+          "rightVar": "neighbour",
+          "rightKind": "Piece"
+        }
+      ],
+      "delete": [],
+      "set": [{ "var": "neighbour", "prop": "name", "value": "$label" }],
+      "merge": [],
+      "parameters": [{ "name": "label", "kind": "string", "default": "Neighbour" }]
+    }
+  },
+  "bindings": { "label": "Window \"north\" \\ 🪟" },
+  "expectedName": "Window \"north\" \\ 🪟",
+  "expectedKind": "Piece",
+  "expectedSourceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+  "expectedEdgeKind": "Connection"
+}

@@ -1,4 +1,5 @@
 {
+  "rustHostCargoFeatures": ["trim-paths"],
   "schemaVersion": 1,
   "scope": "lane/scenario",
   "children": [

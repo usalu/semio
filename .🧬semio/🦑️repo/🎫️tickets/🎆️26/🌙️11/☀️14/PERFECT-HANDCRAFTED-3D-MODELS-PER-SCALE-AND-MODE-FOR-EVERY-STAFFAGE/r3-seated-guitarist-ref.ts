@@ -22,8 +22,8 @@ export const GUITAR = {
 /** 🎼️ The distance of fret `n` from the tail along the strings (equal temperament). */
 export const fretA = (n: number): number => GUITAR.nut - GUITAR.scale * (1 - 2 ** (-n / 12));
 
-/** 🪵️ Half the width of the guitar body at `a` (outline of a dreadnought, stated at eleven stations). */
-export const BOUT: readonly (readonly [a: number, half: number])[] = [[0, 0.085], [0.012, 0.13], [0.04, 0.17], [0.085, 0.1925], [0.14, 0.1985], [0.2, 0.185], [0.25, 0.156], [0.29, 0.1365], [0.33, 0.132], [0.38, 0.14], [0.43, 0.146], [0.468, 0.142], [0.494, 0.12], [0.508, 0.075]];
+/** 🪵️ Half the width of the guitar body at `a` (outline of a dreadnought traced from the Martin D-28 template: lower bout 397 mm at a = 0.14, waist 273 mm at a = 0.31, upper bout 292 mm at a = 0.43, the tail and the shoulders rounded into the end blocks; stated at 31 stations so the bouts read as curves). */
+export const BOUT: readonly (readonly [a: number, half: number])[] = [[0, 0.04], [0.003, 0.085], [0.008, 0.115], [0.016, 0.14], [0.028, 0.16], [0.045, 0.176], [0.065, 0.187], [0.09, 0.1945], [0.115, 0.198], [0.14, 0.1985], [0.165, 0.196], [0.19, 0.189], [0.215, 0.177], [0.24, 0.162], [0.262, 0.1495], [0.29, 0.1385], [0.31, 0.1365], [0.33, 0.137], [0.355, 0.1395], [0.38, 0.1425], [0.405, 0.145], [0.43, 0.146], [0.452, 0.1445], [0.47, 0.1395], [0.485, 0.129], [0.494, 0.117], [0.5, 0.104], [0.504, 0.09], [0.508, 0.06]];
 export function halfWidth(a: number): number {
   for (let i = 1; i < BOUT.length; i++) if (a <= BOUT[i]![0]) {
     const [a0, h0] = BOUT[i - 1]!;

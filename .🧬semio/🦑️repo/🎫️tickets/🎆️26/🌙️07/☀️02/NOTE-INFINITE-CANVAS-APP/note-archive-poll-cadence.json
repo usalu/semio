@@ -1,0 +1,9 @@
+{
+  "intervalMilliseconds": 32,
+  "samples": [
+    { "elapsed": 0, "settled": false },
+    { "elapsed": 31, "settled": false },
+    { "elapsed": 32, "settled": true },
+    { "elapsed": 33, "settled": true }
+  ]
+}

@@ -1,6 +1,8 @@
 /** 🚪️ Contract: of the machines that need the graph of the whole workspace one reads and every other fetches what it sealed; a complete head is fetched at once, an incomplete head is never taken by a waiting machine, a vanished holder is replaced, and every fleet fault ends in a local read.
  * @see ../🟦️.ts */
 import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import capacityCases from "./🔣️.json" with {type:"json"};
 import {createHash} from "node:crypto";
 import {WHOLE_GATE_POLICY_V1,WHOLE_GATE_TEXTS_V1,wholeGateKeyV1,wholeGateTextV1,wholeReadGateV1,type WholeGateInputV1} from "../🟦️.ts";
 import {makeFleet} from "../../../📥️load/🤝️selected-exchange/🧪️tests/🌍️world/🟦️.ts";
@@ -107,4 +109,32 @@ test("a machine with less memory than a whole read wants lets the larger machine
  expect((await small).outcome).toBe("waited");expect(said[0]).toContain("less memory");expect(fleet.log.filter(row=>row.startsWith("small claim"))).toEqual([]);
  const alone=makeFleet(),started=Date.now(),outcome=await gate(alone,"small",async()=>none,{capable:false,smallMachineDelayMilliseconds:150});
  expect(outcome.outcome).toBe("read");expect(Date.now()-started).toBeGreaterThanOrEqual(140);await outcome.release();
+});
+
+test("a funded loser gives its reservation back before waiting on an existing claim",async()=>{
+ const row=capacityCases.contestedClaim,fleet=makeFleet(),winner=await gate(fleet,row.first,async()=>none),client=fleet.client(row.next),db=new Database(":memory:"),events:string[]=[];
+ let awaiting!:()=>void,bookings=0,held=0;
+ const entered=new Promise<void>(done=>awaiting=done),count=[];
+ const follow=wholeReadGateV1({client:{...client,await:(...args:Parameters<typeof client.await>)=>{
+  events.push("await");count.push(held);awaiting();return client.await(...args);
+ }},owner:row.next,language:"en",identity,platform,look:async()=>none,...quick,fund:async()=>{
+  events.push("book");bookings++;held++;return{release:()=>{events.push("release");held--;}};
+ }});
+ try{
+  await entered;
+  expect(count).toEqual([0]);
+  expect(bookings).toBe(1);
+  await winner.release();
+  const next=await follow;
+  expect(next.outcome).toBe("taken-over");
+  expect(next.funded).toBe(true);
+  expect(bookings).toBe(2);
+  expect(held).toBe(1);
+  await next.release();
+  expect(held).toBe(0);
+  const result=db.query(`WITH balance AS (
+   SELECT value AS event,sum(CASE value WHEN 'book' THEN 1 WHEN 'release' THEN -1 ELSE 0 END) OVER(ORDER BY key) AS reserved FROM json_each(?)
+  ) SELECT max(reserved) AS maximumReservations,sum(event='await' AND reserved<>0) AS waitingWithReservation,(SELECT reserved FROM balance LIMIT 1 OFFSET (SELECT count(*) FROM balance)-1) AS finalReservations FROM balance`).get(JSON.stringify(events));
+  expect(result).toEqual({maximumReservations:row.maximumReservations,waitingWithReservation:row.waitingWithReservation,finalReservations:row.finalReservations});
+ }finally{try{await winner.release();await(await follow).release();}finally{db.close();}}
 });

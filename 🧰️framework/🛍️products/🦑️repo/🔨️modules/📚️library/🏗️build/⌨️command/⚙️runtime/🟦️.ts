@@ -46,6 +46,8 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       const {readRepositoryCargoLaunchV1,launchRepositoryCargoV1}=await import("../../../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
       process.exitCode=await launchRepositoryCargoV1(invocation,createIssuedResourceControlV1(invocation,"cargo:build-entry",0),root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
     }
+    const sealedProject=command==="show"&&resolved.args[1]==="project"&&selected.graphPolicy==="current"&&process.env.SEMIO_BUILD_REUSE_GRAPH!=="true"?resolved.args[2]:undefined;
+    if(sealedProject&&(await import("../../🕸️graph/📍️pin/🟦️.ts")).boundGenerationPinV1()===undefined){await runBuildGraphQueryV1(root,resolved.args,invocation,phaseControl,"current",sealedProject);return;}
     await ensureTaskDependenciesV1(root,phaseControl,{capabilities,selected,resolved,original,ancestor,invocation,previous});
     if(command==="remote-execution"){
       const {runRemoteExecutionCommandV1}=await import("../../🌐️remote-execution/⌨️command/🟦️.ts");
@@ -81,29 +83,31 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       return;
     }
     await maintainTaskStoresV1(root,invocation,phaseControl);
-    if(["graph","show"].includes(command)){
-      await markBuildCapacityPhaseV1("plan");
-      const {loadBuildGraphV1}=await import("../../🕸️graph/🟦️.ts"),{buildInvocationGraphSelectionV1}=await import("../../🕸️graph/🚪️admission/🟦️.ts"),selection=buildInvocationGraphSelectionV1(resolved.args),whole=selection.kind==="all";
-      if(selection.kind==="owners"){const{readBuildOwnerRegistryV1}=await import("../../🕸️graph/🚪️admission/🟦️.ts"),{selectLiteralBuildProjectsV1}=await import("../../🧭️selection/📥️options/🟦️.ts"),producer=await import("../../🕸️graph/📥️inference/🟨️.mjs");if(!selectLiteralBuildProjectsV1(readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))).owners,selection.projects,selection.exclude).length)throw new Error(`Unknown build project: ${resolved.args[2]}`);}
-      const graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection,reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true",graph:{policy:selected.graphPolicy??(whole?"current":"fresh"),...(whole&&command==="show"&&resolved.args[1]==="project"&&resolved.args[2]?{closure:[resolved.args[2]]}:{}),...(command==="show"&&(resolved.args[1]==="projects"||resolved.args[1]==="targets")?{lean:true}:{})}});
-      const {buildOptionV1}=await import("../../🧭️selection/🟦️.ts");
-      let result:unknown=graph;
-      const describeWithheld=async()=>{const{describeUnavailableProjectV1}=await import("../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts"),{CATALOG_LANGUAGES_V1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts"),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language;return(row:Parameters<typeof describeUnavailableProjectV1>[0])=>describeUnavailableProjectV1(row,language);};
-      if(graph.unavailable?.length){const describe=await describeWithheld();for(const row of graph.unavailable)console.error(describe(row));}
-      if(command==="show"){
-        const subject=resolved.args[1];
-        if(subject==="project"){const name=resolved.args[2];if(!name)throw new Error("Build project name required");result=graph.projects[name];const withheld=graph.unavailable?.find(row=>row.project===name);if(!result)throw new Error(withheld?(await describeWithheld())(withheld):`Unknown build project: ${name}`);}
-        else if(subject==="projects")result=Object.keys(graph.projects).sort();
-        else if(subject==="targets")result=[...new Set(Object.values(graph.projects).flatMap(project=>Object.keys(project.targets)))].sort();
-        else throw new Error("Expected repo show projects|project <name>|targets");
-      }
-      const output=buildOptionV1(resolved.args,"file");
-      if(output){const {withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,result,invocation,async artifact=>{writeResultLineV1(artifact.path);});}
-      else if(Array.isArray(result)&&!resolved.args.includes("--json"))writeResultLineV1(result.join("\n"));else{const {writeJsonStreamV1}=await import("../../🕸️graph/🕰️generations/🌊️json-stream/🟨️.mjs");await writeJsonStreamV1(result,text=>new Promise<void>((resolve,reject)=>{machineOutputV1.write(text,error=>error?reject(error):resolve());}),{signal:invocation.control.signal});machineOutputV1.write("\n");}
-      return;
-    }
+    if(command==="graph"||command==="show"){await runBuildGraphQueryV1(root,resolved.args,invocation,phaseControl,selected.graphPolicy);return;}
     await runTaskGraphV1(root,args,parent,phaseControl,{capabilities,selected,resolved,original,ancestor,invocation,previous});
 
     });});}
+/** 🔎️ Answers graph queries with the selected policy and projects the requested machine output. */
+async function runBuildGraphQueryV1(root:string,args:readonly string[],invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl,policy?:"fresh"|"current",sealedProject?:string):Promise<void>{
+  const command=args[0];
+  await markBuildCapacityPhaseV1("plan");
+  const {loadBuildGraphV1}=await import("../../🕸️graph/🟦️.ts"),{buildInvocationGraphSelectionV1}=await import("../../🕸️graph/🚪️admission/🟦️.ts"),selection=sealedProject?{kind:"all" as const}:buildInvocationGraphSelectionV1(args),whole=selection.kind==="all";
+  if(selection.kind==="owners"){const{readBuildOwnerRegistryV1}=await import("../../🕸️graph/🚪️admission/🟦️.ts"),{selectLiteralBuildProjectsV1}=await import("../../🧭️selection/📥️options/🟦️.ts"),producer=await import("../../🕸️graph/📥️inference/🟨️.mjs");if(!selectLiteralBuildProjectsV1(readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))).owners,selection.projects,selection.exclude).length)throw new Error(`Unknown build project: ${args[2]}`);}
+  const graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection,reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true",graph:{policy:policy??(whole?"current":"fresh"),...(sealedProject?{closure:[sealedProject],sealedOnly:true}:whole&&command==="show"&&args[1]==="project"&&args[2]?{closure:[args[2]]}:{}),...(command==="show"&&(args[1]==="projects"||args[1]==="targets")?{lean:true}:{})}});
+  const {buildOptionV1}=await import("../../🧭️selection/🟦️.ts");
+  let result:unknown=graph;
+  const describeWithheld=async()=>{const{describeUnavailableProjectV1}=await import("../../🕸️graph/🕰️generations/🔌️load/🟨️.mjs"),{resolveLanguageV1}=await import("../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts"),{CATALOG_LANGUAGES_V1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts"),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],process.env).language;return(row:Parameters<typeof describeUnavailableProjectV1>[0])=>describeUnavailableProjectV1(row,language);};
+  if(graph.unavailable?.length){const describe=await describeWithheld();for(const row of graph.unavailable)console.error(describe(row));}
+  if(command==="show"){
+    const subject=args[1];
+    if(subject==="project"){const name=args[2];if(!name)throw new Error("Build project name required");result=graph.projects[name];const withheld=graph.unavailable?.find(row=>row.project===name);if(!result)throw new Error(withheld?(await describeWithheld())(withheld):`Unknown build project: ${name}`);}
+    else if(subject==="projects")result=Object.keys(graph.projects).sort();
+    else if(subject==="targets")result=[...new Set(Object.values(graph.projects).flatMap(project=>Object.keys(project.targets)))].sort();
+    else throw new Error("Expected repo show projects|project <name>|targets");
+  }
+  const output=buildOptionV1(args,"file");
+  if(output){const {withRepositoryBuildReportV1}=await import("../../📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(root,output,result,invocation,async artifact=>{writeResultLineV1(artifact.path);});}
+  else if(Array.isArray(result)&&!args.includes("--json"))writeResultLineV1(result.join("\n"));else{const {writeJsonStreamV1}=await import("../../🕸️graph/🕰️generations/🌊️json-stream/🟨️.mjs");await writeJsonStreamV1(result,text=>new Promise<void>((resolve,reject)=>{machineOutputV1.write(text,error=>error?reject(error):resolve());}),{signal:invocation.control.signal});machineOutputV1.write("\n");}
+}
 /** ⚙️ Executes the existing graph and tool command body inside its captured runtime kernel. */
 export async function runCapturedBuildSourceV1(args:readonly string[],proof:CapturedBuildCommandProofV1):Promise<void>{if(answerKernelCheckV1(args,proof))return;await runCapturedRepositoryKernelV1(args,proof,import.meta.semioCapturedImplementationIdentity,import.meta.semioCapturedLoaderIdentity,runAdmittedBuildInvocationV1);}

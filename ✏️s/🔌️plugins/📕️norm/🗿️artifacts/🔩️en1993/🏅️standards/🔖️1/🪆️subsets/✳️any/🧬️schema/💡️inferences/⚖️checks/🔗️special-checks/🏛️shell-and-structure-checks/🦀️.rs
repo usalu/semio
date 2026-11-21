@@ -182,8 +182,7 @@ pub(super) fn check_shell_and_member_properties(document: &En1993Snapshot, annex
 /// 🌉 Checks the bridge, tower, pile and crane runway rules.
 pub(super) fn check_bridge_tower_pile_and_crane(document: &En1993Snapshot, annex: AnnexChoice, params: AnnexParams, scope: Scope<'_>, report: &mut CheckReport) {
     for bf in document.bridge_fatigue.iter().filter(|e| scope.admits("bridgeFatigue", &e.id)) {
-        let method = part_1_9::parse_method(bf.method.as_str());
-        let gmf = part_1_9::gamma_mf(method);
+        let gmf = part_2::fatigue_factor(bf, annex);
         let delta_e2 = part_2::damage_equivalent_stress(bf.lambda, bf.phi2, bf.delta_sigma_p);
         let limit = part_1_9::detail_category_pa(bf.category) / gmf;
         let mut b = CheckResult::assess(
@@ -194,7 +193,7 @@ pub(super) fn check_bridge_tower_pile_and_crane(document: &En1993Snapshot, annex
             loc("Bridge damage-equivalent fatigue", "Schädigungsäquivalente Ermüdung Brücke"),
         )
         .annex(annex)
-        .ndp(AnnexParams::GAMMA_MF)
+        .ndp(part_2::fatigue_factor_id(bf, annex))
         .utilization(stress_pa(delta_e2), stress_pa(limit))
         .explanation(loc(
             &format!("Δσ_E2={:.1} MPa (λ={:.2}, φ2={:.2}), limit={:.1} MPa.", delta_e2 / 1e6, bf.lambda, bf.phi2, limit / 1e6),
@@ -254,7 +253,7 @@ pub(super) fn check_bridge_tower_pile_and_crane(document: &En1993Snapshot, annex
                 }
             }
         }
-        super::special_parts_checks::check_bridge(annex, params, bf, report);
+        super::special_parts_checks::check_bridge(annex, bf, report);
     }
 
     for tower in document.tower_legs.iter().filter(|e| scope.admits("towerLegs", &e.id)) {

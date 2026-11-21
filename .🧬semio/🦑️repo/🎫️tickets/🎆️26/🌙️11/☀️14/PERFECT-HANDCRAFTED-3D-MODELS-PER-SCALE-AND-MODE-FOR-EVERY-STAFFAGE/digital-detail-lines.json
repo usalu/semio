@@ -1,0 +1,93 @@
+{
+  "sleeping-person": {
+    "50": {
+      "lips": 0.16,
+      "eyelid-r": 0.16,
+      "eyelid-l": 0.16
+    }
+  },
+  "city-bus": {
+    "200": {
+      "e-axle-casting": 0.16
+    }
+  },
+  "excavator": {
+    "100": {
+      "hood-grille": 0.2,
+      "radiator-grille": 0.2
+    },
+    "200": {
+      "hood-grille": 0.2,
+      "radiator-grille": 0.2
+    }
+  },
+  "concrete-mixer-truck": {
+    "200": {
+      "air-intake": 0.16,
+      "fuel-tank": 0.16
+    }
+  },
+  "person-cooking": {
+    "100": {
+      "pot-handle-r": 0.2,
+      "pot-handle-l": 0.2
+    }
+  },
+  "child-on-kick-scooter": {
+    "200": {
+      "fork-l": 0.2,
+      "fork-r": 0.2,
+      "knee-r": 0.2,
+      "knee-l": 0.2,
+      "toe-l": 0.2,
+      "toe-r": 0.2
+    }
+  },
+  "person-with-white-cane": {
+    "200": {
+      "cane-grip": 0.2,
+      "cane-band": 0.2
+    }
+  },
+  "playground-swing": {
+    "500": {
+      "chain-left": 0.2,
+      "chain-right": 0.2
+    }
+  },
+  "wheel-loader": {
+    "100": {
+      "mirror-r": 0.2,
+      "mirror-l": 0.2
+    }
+  },
+  "scissor-lift": {
+    "200": {
+      "deck-ext": 0.2
+    }
+  },
+  "person-with-rollator": {
+    "200": {
+      "shoe-toe-l": 0.2,
+      "shoe-toe-r": 0.2,
+      "thigh-l": 0.2,
+      "thigh-r": 0.2
+    },
+    "500": {
+      "tyre-rear-l": 0.2,
+      "tyre-rear-r": 0.2
+    }
+  },
+  "wheelchair-user": {
+    "200": {
+      "castor-fork-l": 0.2,
+      "castor-fork-r": 0.2
+    }
+  },
+  "vintage-car-1929": {
+    "100": {
+      "hub-fl": 0.2,
+      "hub-fr": 0.2
+    }
+  }
+}

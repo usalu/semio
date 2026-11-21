@@ -17,11 +17,15 @@ use semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh a
 #[ignore = "diagnostic stage trace: minutes of dense stereo, run explicitly"]
 fn debug_probe_synthetic_orbit() {
     let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
-    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params);
+    let capture = FrameCapture {
+        stream: 0,
+        intrinsics: crate::editor::remodeling::engine::stream_intrinsics(&scene.calibration, scene.streams[0].camera_id.as_deref()),
+    };
     let mut engine = ReconstructionEngine::new(&params);
     for (index, (_, bytes)) in semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames().enumerate() {
         let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image("image/png", bytes).expect("decodes");
-        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
+        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0, capture);
     }
     let mut last = engine.stage();
     let mut units = 0usize;
@@ -103,15 +107,17 @@ fn diagnose_synthetic_orbit_geometry() {
         })
         .collect();
     let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
-    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params);
+    let capture = FrameCapture {
+        stream: 0,
+        intrinsics: crate::editor::remodeling::engine::stream_intrinsics(&scene.calibration, scene.streams[0].camera_id.as_deref()),
+    };
     let mut engine = ReconstructionEngine::new(&params);
-    let mut intrinsics = None;
     for (index, (_, bytes)) in semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames().enumerate() {
         let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image("image/png", bytes).expect("decodes");
-        intrinsics.get_or_insert_with(|| default_intrinsics(image.width, image.height, params.assumed_focal_ratio, params.distortion));
-        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
+        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0, capture);
     }
-    let intrinsics = intrinsics.expect("one frame");
+    let intrinsics = capture.intrinsics.expect("orbit calibration");
     engine.observe();
     while engine.stage() != EngineStage::EstimatingPoses {
         if let EngineStatus::Failed(message) = engine.advance(1) {
@@ -363,12 +369,16 @@ fn diagnose_synthetic_orbit_dense_against_truth() {
     };
 
     let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
-    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params);
+    let capture = FrameCapture {
+        stream: 0,
+        intrinsics: crate::editor::remodeling::engine::stream_intrinsics(&scene.calibration, scene.streams[0].camera_id.as_deref()),
+    };
     eprintln!("[DENSE] params dense={:?} voxel={} trunc={} dense_source_views={} max_dense_cameras={}", params.dense, params.tsdf_voxel_size, params.tsdf_truncation, params.dense_source_views, params.max_dense_cameras);
     let mut engine = ReconstructionEngine::new(&params);
     for (index, (_, bytes)) in semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames().enumerate() {
         let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image("image/png", bytes).expect("decodes");
-        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
+        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0, capture);
     }
     let mut captured: Option<(remodeling_sfm::Reconstruction, Vec<usize>, Vec<remodeling_dense::DepthMap>)> = None;
     let mut cloud: Vec<[f64; 3]> = Vec::new();
@@ -421,9 +431,9 @@ fn diagnose_synthetic_orbit_dense_against_truth() {
     eprintln!("[DENSE] {} cameras, sim scale {:.4}, centre error {}", recovered.len(), sim.s, quantiles(centre_errors));
     eprintln!("[DENSE] sparse surface distance {}", quantiles(reconstruction.points.iter().map(|p| surface(sim.act(*p))).collect()));
 
-    let intrinsics = reconstruction.intrinsics;
     for (slot, (camera, map)) in dense_indices.iter().zip(&depth_maps).enumerate() {
         let (frame, pose) = reconstruction.cameras[*camera];
+        let intrinsics = reconstruction.intrinsics[&frame];
         let truth_pose = truth_world_to_camera[frame];
         let truth_centre = truth_pose.inverse().t;
         let camera_to_world = truth_pose.r.inverse();
@@ -461,7 +471,10 @@ fn diagnose_synthetic_orbit_dense_against_truth() {
             quantiles(background_errors)
         );
     }
-    let views: Vec<(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)> = dense_indices.iter().map(|camera| (reconstruction.cameras[*camera].1, intrinsics)).collect();
+    let views: Vec<(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)> = dense_indices.iter().map(|camera| {
+        let (frame, pose) = reconstruction.cameras[*camera];
+        (pose, reconstruction.intrinsics[&frame])
+    }).collect();
     for (tolerance, minimum) in [(0.01f32, 2usize), (0.02, 2), (0.03, 2), (0.02, 3), (0.03, 3), (0.05, 3)] {
         let fused = remodeling_dense::fuse_depth_maps(&views, &depth_maps, &remodeling_dense::FusionConfig { max_relative_depth_diff: tolerance, max_normal_angle_deg: 30.0, min_consistent_views: minimum });
         let distances: Vec<f64> = fused.positions.iter().map(|p| surface(sim.act(*p))).collect();

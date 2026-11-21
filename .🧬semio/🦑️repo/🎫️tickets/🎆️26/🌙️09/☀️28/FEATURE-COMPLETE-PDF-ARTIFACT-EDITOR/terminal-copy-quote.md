@@ -1,0 +1,15 @@
+# Terminal PDF Publication Copy Quote
+
+The staged terminal step quotes 964 bytes on WASI. A focused rustc probe compiled the staged `copy_body` and the original grant comparison against the repository's emitted WASI metadata. The compiler measured 848 bytes for the actual `PdfSnapshot` and 116 bytes for `PreparedPdfFile`. The latter uses exact source declarations for the prepared-file, header, and graph wrappers and the emitted `XrefIndex` and model types. The quote leaves 31,804 bytes under the normal 32 KiB copy grant.
+
+With positive item and depth grants, the compiler reduced the guard to `grant > 963`. The probe checked that 963 bytes blocks the terminal turn and that 964 and 32,768 bytes admit it. In the staged source, `TransferLift` has already taken and cleared the semantic cursor by `Publish`, so there is no remaining lift reservation to raise this threshold. `Publish` reports one work unit without allocation. The actual `record` call charges the quote before `publish_snapshot` takes both owners and moves the graph's object and trailer buffers into the snapshot.
+
+The grant result measures the actual staged WASI comparison in a source projection. It leaves the final host-issued receiving grant and settlement unverified. No native app or WASI component was built or mounted for this probe. Live Rust sources were untouched.
+
+Reproduce through the repository `python` tool using `📜️pdf-terminal-copy-probe.py <PDF 1.7 base path>`. The probe uses the existing WASI prototype cache and stores its generated compiler inputs, LLVM IR and receipt under `🗑️generated/terminal-copy`.
+The subsequent product release applied the reviewed terminal quote. The existing generated WASI LLVM IR records the 848-byte snapshot, 116-byte prepared file, 964-byte sum, and the comparison `icmp ugt i32 %grant, 963`. The real decoder tests the grant before calling `next` or `publish_snapshot`, so the short grant cannot transfer either owner. The source comparison precedes retained accounting and ownership movement.
+
+`📜️pdf-terminal-owner-law.patch` stages a runtime verification in the existing snapshot-value test owner. It drives the real controlled decoder under its original caller with a one-work-unit authored contract. After measuring the ordinary terminal turn, the second run makes two consecutive calls with one byte less than the terminal quote. Both must yield with unchanged original work and retained progress. The exact reserve then publishes the identical typed snapshot, raw graph and trailer and charges one item and the full quote. The law closes both decoder boxes and both output snapshots through their original callers. Its WASI assertion fixes the quote at 964. Native test builds measure the same actual component headers under their own layout. The staged test was excluded from the ongoing compiler and browser captures.
+
+The exact source overlay is 31 compiler source files, 3,387 active native test lines and 205,319 bytes. The code is test-only and absent from the production WASI closure. The staged law has not yet run through a native or WASI test harness.
+

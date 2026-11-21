@@ -19,10 +19,9 @@ use super::*;
 /// phase, zero progress, nothing to abort — rather than the empty status that was the whole defect.
 
 /// 📈️ The per-widget half: the evaluation's own `error`, or the `widgetErrors` map of every widget
-/// whose evaluation carries one. Surface-neutral — it reads the evaluation text and the fixture the
-/// surface is looking at, nothing else.
-pub fn preview_status_json(eval_json: &str, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Option<String> {
-    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+/// whose evaluation carries one.
+pub fn preview_status_json(evaluation: &PreviewEvaluation<'_>, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Option<String> {
+    let eval = &evaluation.document;
     if eval.get("error").and_then(semio_framework_pack_json::Value::as_str).is_some() {
         let mut error_object = semio_framework_pack_json::Object::new();
         error_object.insert("error", eval.get("error").cloned().unwrap_or(semio_framework_pack_json::Value::Null));
@@ -251,55 +250,24 @@ pub fn preview_window_status_json(session: Option<&FlowEvalSession>, run: Option
 }
 //#endregion 📈️Status
 
-/// 🧾️ Bounded display of a channel value, including structured and empty values.
-fn channel_value_text(value: &semio_framework_pack_json::Value, depth: usize) -> String {
+/// 🔢️ Input and output values keyed by their directional graph port targets.
+pub fn preview_value_rows<'doc>(evaluation: &'doc PreviewEvaluation<'_>) -> Vec<semio_s_procedural_core_semantic_ui::ChannelValueRow<'doc>> {
     use semio_framework_pack_json::Value;
-    const ITEMS: usize = 4;
-    fn quoted(text: &str) -> String {
-        let mut chars = text.chars();
-        let mut sample: String = chars.by_ref().take(80).collect();
-        if chars.next().is_some() { sample.push('…'); }
-        semio_framework_pack_json::to_string(&Value::String(sample))
-    }
-    match value {
-        Value::String(text) => quoted(text),
-        Value::Array(items) => {
-            let mut parts = Vec::new();
-            if depth > 0 {
-                parts.extend(items.iter().take(ITEMS).map(|v| channel_value_text(v, depth - 1)));
-            }
-            if items.len() > parts.len() { parts.push("…".into()); }
-            format!("[{}]", parts.join(", "))
-        }
-        Value::Object(items) => {
-            let mut parts = Vec::new();
-            if depth > 0 {
-                parts.extend(items.iter().take(ITEMS).map(|(key, v)| format!("{}: {}", quoted(key), channel_value_text(v, depth - 1))));
-            }
-            if items.len() > parts.len() { parts.push("…".into()); }
-            format!("{{{}}}", parts.join(", "))
-        }
-        _ => semio_framework_pack_json::to_string(value),
-    }
-}
-
-/// 🔢️ Input and output values keyed by their shared graph port target.
-pub fn preview_value_rows(eval_json: &str) -> Vec<(String, String, String)> {
-    use semio_framework_pack_json::Value;
-    let Ok(eval) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return Vec::new() };
-    let Some(widgets) = eval.as_object() else { return Vec::new() };
-    let mut rows = std::collections::BTreeMap::<String, Vec<String>>::new();
+    use semio_s_procedural_core_semantic_ui::ChannelValueRow;
+    let Some(widgets) = evaluation.document.as_object() else { return Vec::new() };
+    let mut rows = BTreeMap::new();
     for (widget, entry) in widgets.iter() {
-        for side in ["in", "out"] {
+        for (side, output) in [("in", false), ("out", true)] {
             let Some(channels) = entry.get(side).and_then(Value::as_object) else { continue };
             for (channel, value) in channels.iter() {
-                rows.entry(format!("{widget}@{channel}")).or_default().push(format!("{} {}", if side == "in" { "←" } else { "→" }, channel_value_text(value, 2)));
+                rows.insert((widget, channel, output), value);
             }
         }
     }
-    rows.into_iter().map(|(id, values)| {
-        let target = semio_framework_pack_json::object([("granularity".into(), Value::String("handle".into())), ("id".into(), Value::String(id.clone()))]);
-        let targets = semio_framework_pack_json::to_string(&Value::Array(vec![target]));
-        (id, values.join(" · "), targets)
+    rows.into_iter().map(|((widget, channel, output), value)| ChannelValueRow {
+        id: semio_s_artifact_procedural_3d_model::graph_port_id(widget, channel, !output),
+        label: format!("{widget}@{channel}"),
+        input: !output,
+        value,
     }).collect()
 }

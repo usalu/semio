@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Raw PNG picker decoder handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageBytes",
+    "maximumBytes",
+    "maximumPixels",
+    "maximumChunks",
+    "controls"
+  ],
+  "properties": {
+    "pageBytes": {
+      "const": 4096
+    },
+    "maximumBytes": {
+      "const": 24546
+    },
+    "maximumPixels": {
+      "const": 4096
+    },
+    "maximumChunks": {
+      "const": 1024
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rgba",
+        "palette",
+        "interlacedRgba",
+        "splitFraming",
+        "alteredChecksum",
+        "differentCaller",
+        "differentRevision",
+        "cancelled",
+        "insufficientFunding"
+      ],
+      "properties": {
+        "rgba": {
+          "const": "samples"
+        },
+        "palette": {
+          "const": "samples"
+        },
+        "interlacedRgba": {
+          "const": "samples"
+        },
+        "splitFraming": {
+          "const": "samples"
+        },
+        "alteredChecksum": {
+          "const": "refused"
+        },
+        "differentCaller": {
+          "const": "refused"
+        },
+        "differentRevision": {
+          "const": "revoked"
+        },
+        "cancelled": {
+          "const": "revoked"
+        },
+        "insufficientFunding": {
+          "const": "pending"
+        }
+      }
+    }
+  }
+}

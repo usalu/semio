@@ -1,0 +1,18 @@
+{
+  "initialCamera": { "x": 12, "y": 8, "zoom": 2 },
+  "liveCamera": { "x": 40, "y": 25, "zoom": 4 },
+  "viewport": { "width": 480, "height": 320 },
+  "pointer": { "x": 24, "y": 48 },
+  "gpuAttachLimitMs": 4000,
+  "fallbackCases": [
+    { "stage": "attach", "renderer": "canvas2d", "camera": { "x": 12, "y": 8, "zoom": 2 } },
+    { "stage": "frame", "renderer": "canvas2d", "camera": { "x": 40, "y": 25, "zoom": 4 } },
+    { "stage": "timeout", "renderer": "canvas2d", "camera": { "x": 12, "y": 8, "zoom": 2 } }
+  ],
+  "cases": [
+    { "stage": "loader", "locale": "en", "unavailable": "Canvas unavailable", "retry": "Retry" },
+    { "stage": "attach", "locale": "de", "unavailable": "Leinwand nicht verfügbar", "retry": "Erneut versuchen" },
+    { "stage": "frame", "locale": "en", "unavailable": "Canvas unavailable", "retry": "Retry" },
+    { "stage": "timeout", "locale": "en", "unavailable": "Canvas unavailable", "retry": "Retry" }
+  ]
+}

@@ -1,0 +1,254 @@
+{
+  "operator": "brep.solid.chamferEdges",
+  "stock": {
+    "size": [
+      4,
+      5,
+      6
+    ],
+    "origin": [
+      1,
+      -3,
+      2
+    ],
+    "rotateY": 0.6435011087932844
+  },
+  "distance": 0.75,
+  "cases": [
+    {
+      "name": "local width",
+      "axis": 0,
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            0
+          ]
+        ]
+      ],
+      "mirror": false,
+      "area": 145.6801406871193,
+      "volume": 118.875
+    },
+    {
+      "name": "local depth",
+      "axis": 1,
+      "edges": [
+        [
+          [
+            4,
+            0,
+            0
+          ],
+          [
+            4,
+            5,
+            0
+          ]
+        ]
+      ],
+      "mirror": false,
+      "area": 145.24080085889912,
+      "volume": 118.59375
+    },
+    {
+      "name": "local height",
+      "axis": 2,
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ]
+      ],
+      "mirror": false,
+      "area": 144.80146103067892,
+      "volume": 118.3125
+    },
+    {
+      "name": "reflected width",
+      "axis": 0,
+      "edges": [
+        [
+          [
+            4,
+            5,
+            0
+          ],
+          [
+            0,
+            5,
+            0
+          ]
+        ]
+      ],
+      "mirror": true,
+      "area": 145.6801406871193,
+      "volume": 118.875
+    },
+    {
+      "name": "reflected depth",
+      "axis": 1,
+      "edges": [
+        [
+          [
+            0,
+            5,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      ],
+      "mirror": true,
+      "area": 145.24080085889912,
+      "volume": 118.59375
+    },
+    {
+      "name": "reflected height",
+      "axis": 2,
+      "edges": [
+        [
+          [
+            4,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            6
+          ]
+        ]
+      ],
+      "mirror": true,
+      "area": 144.80146103067892,
+      "volume": 118.3125
+    },
+    {
+      "name": "fully tilted and reflected corner",
+      "axis": 2,
+      "edges": [
+        [
+          [
+            4,
+            5,
+            0
+          ],
+          [
+            4,
+            5,
+            6
+          ]
+        ]
+      ],
+      "mirror": true,
+      "area": 144.80146103067892,
+      "volume": 118.3125,
+      "rotateX": 0.37
+    }
+  ],
+  "refused": [
+    {
+      "name": "foreign edge",
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            0
+          ]
+        ]
+      ],
+      "foreign": true,
+      "distance": 0.75
+    },
+    {
+      "name": "two selected edges",
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            4,
+            0,
+            0
+          ]
+        ],
+        [
+          [
+            4,
+            0,
+            0
+          ],
+          [
+            4,
+            5,
+            0
+          ]
+        ]
+      ],
+      "distance": 0.75
+    },
+    {
+      "name": "zero distance",
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ]
+      ],
+      "distance": 0
+    },
+    {
+      "name": "collapsed adjacent face",
+      "edges": [
+        [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            6
+          ]
+        ]
+      ],
+      "distance": 4
+    }
+  ]
+}

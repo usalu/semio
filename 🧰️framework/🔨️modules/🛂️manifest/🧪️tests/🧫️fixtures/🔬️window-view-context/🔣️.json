@@ -8,6 +8,10 @@
       "right": "measure",
       "third": null
     },
+    "toolRunTraceCursorByWindowId": {
+      "left": { "generation": 2, "page": 3, "run": 4 },
+      "right": { "generation": 3, "page": 4, "run": 5 }
+    },
     "locale": "de",
     "terminology": "native",
     "windowId": "left",
@@ -34,11 +38,13 @@
   "cases": [
     {
       "windowId": "left",
-      "activeUtilityId": "pan"
+      "activeUtilityId": "pan",
+      "traceRun": 4
     },
     {
       "windowId": "right",
-      "activeUtilityId": "measure"
+      "activeUtilityId": "measure",
+      "traceRun": 5
     },
     {
       "windowId": "third",

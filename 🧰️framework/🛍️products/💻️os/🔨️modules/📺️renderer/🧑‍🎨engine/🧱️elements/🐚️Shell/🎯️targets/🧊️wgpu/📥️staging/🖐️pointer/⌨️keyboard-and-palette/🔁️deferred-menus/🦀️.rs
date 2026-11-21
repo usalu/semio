@@ -305,7 +305,7 @@ impl<'ctx> PointerCtx<'ctx> {
                             .collect();
                     }
                     Err(error) => {
-                        self.chrome.error = Some(error);
+                        self.chrome.error = Some(error.to_string());
                     }
                 }
             }

@@ -45,9 +45,25 @@ impl semio_framework_value::FromValue for DagSnapshot {
         Ok(result.take())
     }
     fn retire_decoded(self) {
-        let factory = semio_framework_value::OwnedValueRetirementFactory::<DagContentChild>::default();
-        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&factory, &self.content), maximum_depth: 2, ..Default::default() };
-        let (mut cursor, _) = store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, self.content, grant).unwrap_or_else(|(error, _)| panic!("DAG child retirement admission refused: {error}"));
+        use semio_framework_value::{
+            ArtifactOwnedValueRetirementFactory, AuthoringWallet, OwnedValueRetirementFactory,
+            RetainedCloneGrant, factory_retire_owned,
+        };
+        let factory = OwnedValueRetirementFactory::<DagContentChild>::default();
+        let demand = factory.retire_owned_demands(&self.content).expect("DAG child retirement demand");
+        let work = factory.retire_owned_work_demand(&self.content).expect("DAG child retirement work");
+        let grant = RetainedCloneGrant {
+            maximum_items: 1,
+            maximum_copy_bytes: demand.copy_bytes,
+            maximum_capacity_bytes: demand.capacity_bytes,
+            maximum_release_bytes: demand.release_bytes,
+            maximum_depth: demand.depth,
+        };
+        let mut content = Some(self.content);
+        let (admission, _) = AuthoringWallet::new(grant, u128::from(work))
+            .run_settled(grant, work, |effect| factory_retire_owned(&factory, &mut content, effect))
+            .expect("DAG child retirement effect").expect("DAG child retirement admission");
+        let (mut cursor, _) = admission.result.expect("DAG child publishes its retirement owner");
         store::test_support::drive_retirement(cursor.as_mut()).expect("DAG child closes with its exact owner");
         assert!(cursor.terminal_is_empty());
     }

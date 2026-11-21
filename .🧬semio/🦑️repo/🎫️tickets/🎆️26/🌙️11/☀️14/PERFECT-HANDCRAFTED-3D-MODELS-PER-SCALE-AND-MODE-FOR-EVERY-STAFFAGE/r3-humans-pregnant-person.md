@@ -102,3 +102,58 @@ Final check: `volumes-check.ts --product` silhouette IoU elevation / front / pla
 - Hand and sole contact numbers, boot dimensions and pregnancy body measures are from my knowledge, not a web lookup.
 - Tool finding (`tool-requests.md`): `extruded` sweep `w` takes z0/z1 as rest-world lateral positions; the hand prisms here are written that way.
 - Not run: the staffage test suites; fixtures that embed this asset may need regenerating after the rig, dimension and 2D change.
+
+## Round 5 handcraft (2026-11-21)
+
+The round-3 scripts no longer rebuild the current source (a later pass densified thighs, shanks and forearms and changed the facial skeleton), so round 5 patches the source in place with its own idempotent scripts, run in this order: `r5-pregnant-person-spine.py` (1:50 vertebrae), `-drape.py` (knit tent from bust to abdomen, 1:50 to 1:200), `-smooth.py` (Catmull-Rom limbs and abdomen at 1:100 and 1:200), `-texts.py` (decisions), then `r5-person-with-rollator-arms.ts humans/pregnant-person --z 0.16 --anchor palm-l` (shoulders and arm re-solve; the same tool as for the rollator figure) and `r5-pregnant-person-candidate.py [--write]` (rig, poses, clips, 2D sweater outlines from `r3-project2d.ts`, hand prism spans, width). `r5-pregnant-person-same.ts` shows the drift of the round-3 scripts. Output `🗑️generated/r5-pregnant-person/` (`before/`, `after/`, `check.txt`, `measure.txt`, `arms.txt`, `source-before.json`, `catalog-before.json`).
+
+### Reference (woman 1.66 m barefoot, week 36, 25 mm heels; table of round 3 stands) and model
+
+| quantity | reference | model before | model after |
+|---|---|---|---|
+| hip joint (shod) | 0.52 H + 22 mm = 0.885 | 0.890 | 0.890 |
+| knee (shod) | 0.285 H + 22 mm = 0.495 | 0.483 (-2.4 %) | 0.483 |
+| shoulder joint (shod) | 0.818 H + 22 mm = 1.380 | 1.381 | 1.381 |
+| thigh / shank | 0.245 H = 0.407 / 0.246 H = 0.408 | 0.407 / 0.397 (-2.7 %) | same |
+| upper arm / forearm | 0.186 H = 0.309 / 0.146 H = 0.242 | 0.310 / 0.244 | same |
+| biacromial breadth | DIN 33402-2 women about 0.355 (ANSUR II 0.367 at 1.63 m); joints about 35 mm inside the acromion tips: 0.32 | joints 0.304 apart (acromial about 0.34, -4.5 %) | joints 0.320 apart (0.355) |
+| hip joint spacing | 0.16 to 0.18 | 0.170 | 0.170 |
+| thigh girth below the gluteal fold / calf / neck | 0.51 to 0.58 / 0.35 / 0.33 | 0.511 / 0.350 / 0.335 | same |
+| head height / breadth with hair | 0.216 / 0.15 + hair | 0.219 / 0.175 | same |
+| abdomen: depth over the knit, apex height | 0.375, 1.02 m | 0.380 at 1.02 | same; the bust-to-abdomen profile now a straight tent |
+| dimensions.widthM (forward length, hand-on-back) | measured | 0.525 | 0.531 (drawings 0.520 to 0.541, bodies 0.511 to 0.524) |
+
+### Grades (before -> after)
+
+| scale | body | thermal | structure |
+|---|---|---|---|
+| 1:50 | B+ -> A- | B+ -> A- | B+ -> A- |
+| 1:100 | B -> A- | B -> B+ | B -> B |
+| 1:200 | B -> B+ | B -> B | B -> B |
+| 1:500 | B+ -> B+ | B -> B | B -> B |
+
+Defects seen before (`before/` sheets, opened: 1:50 body, structure, thermal cut, 1:100 and 1:500 body): the abdomen knit was a dome stuck on the sweater with a hard crease and a ledge under the bust in every view; legs at 1:100 faceted straight tubes; thoracolumbar spine one loft at 1:50; shoulders 4.5 % narrow; facial skeleton a flat plate (kept, see below).
+
+### Changes
+
+- Root: `rig.bones.arm-l/-r.z` 0.152 -> 0.160; all four poses and every arm key of `waddle-walk` re-solved (arm angle, abduction, twist; forearm angle and twist; hand angle) so both palms keep their place and orientation (worst over all poses and both clips at 20 Hz: 1.66 mm; a first run started keys from 0 instead of their pose and moved a palm 218 mm, found by `r5-person-with-rollator-arms-check.ts` and fixed before anything was written). Hand prisms of all four scales shifted 8 mm outwards with the joints (`solid.z0/z1`, rest-pose lateral). `dimensions.widthM` 0.525 -> 0.531 (manifest row follows).
+- Body: `belly-drape` (1:50 six, 1:100 ten, 1:200 three slices): the knit carried forward from the bust apex in a straight line onto the upper abdomen, flanks just inside the sweater, ending inside the abdomen knit; thermal `{ of }` in region `sweater`, layer `knit` (buried by its own region, so only its exposed front counts). 1:100 and 1:200 thighs, shanks, sleeves, forearms (and at 1:100 the abdomen, drape and seat) densified by Catmull-Rom through the stated stations.
+- Structure 1:50: the single spine loft and its eight spinous processes replaced by 17 vertebral bodies L5 to T1 on the lordosis and kyphosis curve with 17 spinous processes (lumbar short and level, thoracic long and steep). 164 -> 189 solids.
+- 2D: the `sweater` outline of elevation, front and plan at 1:50, 1:100, 1:200 re-projected with the drape (`r3-project2d.ts`, round trip IoU 0.984 to 0.997); arms follow their bones (revolved and extruded shapes).
+- Decisions 1:50, 1:100, 1:200 extended (en, de).
+
+### Checks
+
+`r3-validate.ts humans/pregnant-person`: VALID (schema 0, validateAsset 0, print 0). `volumes-check.ts --product`: every rule green at every scale except `volumes-thermal-coverage` `leggings` (1:50 +43 %, 1:100 +44 %) and `ankle-boots` (1:50 +68 %): the C18 body shares filed in round 3, unchanged. Sweater +24 % at 1:50 (C18 band 30 %), `belly-sweater` +4 %.
+
+### Seen (opened)
+
+1:50 body sheet (before, after the first drape, after the widened drape), 1:50 structure right side at full size, 1:50 thermal cut (before), 1:100 body (after smoothing), the 2D 1:50 candidate (both rows), `cradling-belly` 1:50 and the `waddle-walk` frame at 0.45 s after the shoulder move: the bust now runs into the abdomen without a ledge, hands keep their places on the abdomen and the back, legs closed at every joint. Rendered and not opened this round: the `after/` 1:100 to 1:500 structure and thermal sheets, 1:200 and 1:500 body, `stretching-back`, `waddle-contact`, the 2D of 1:100 to 1:500.
+
+### Still open
+
+- leggings and ankle-boots areas (C18, area reviewer).
+- A seam line remains visible where the drape leaves the sweater (reads as an empire under-bust seam) and the abdomen dome keeps a soft outline on its flanks.
+- Forward length disagrees by up to 2 cm between the drawings (0.520 to 0.541) and the bodies (0.511 to 0.524) at the right elbow; `widthM` is set to the value all agree with.
+- Right hand on the back still uses a forearm twist of -170 degrees (anatomical pronation about 90; round-3 finding).
+- Facial skeleton at 1:50 is still a flat plate-like loft under the cranium ball; knee seam of the two leg lofts still visible in the back view; hair reads as a firm bob.

@@ -21,6 +21,9 @@ use crate::ui_assembly_error;
 
 
 
+/// 📎️ Targets a current window publication that expands to authored hover targets.
+pub const INTERACTION_HOVER_GROUP_GRANULARITY: &str = "framework.hover-group";
+
 /// 🕹️ Reads the required `domainId` text arg every interaction verb except `clearSelection`/
 /// `selectAll` carries (see `interaction_action_definitions`'s arg declarations).
 #[doc(hidden)]
@@ -28,14 +31,40 @@ pub async fn interaction_domain_id_arg(args: Option<&DslValue>, action: &str) ->
     args.and_then(|value| value.get("domainId")).and_then(DslValue::as_str).map(str::to_string).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg domainId")))
 }
 
-/// 🕹️ Decodes the required `targets` arg — a JSON-encoded `Vec<InteractionTarget>`, matching the
-/// `ActionArgDef::text` declaration `interaction_action_definitions` gives both `interactionSelect`
-/// and `interactionHover` (a renderer JSON-serializes its gathered pick/marquee/hover batch into
-/// this one string arg, the same convention other JSON-blob action args in this codebase already use).
+/// 🕹️ Decodes the JSON target batch published by renderer picks, marquee and hover.
 #[doc(hidden)]
 pub async fn parse_interaction_targets(args: Option<&DslValue>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
     let raw = args.and_then(|value| value.get("targets")).and_then(DslValue::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg targets")))?;
     serde_json::from_str(raw).map_err(|error| plugin_sdk_fault(format!("{action}: malformed targets ({error})")))
+}
+
+/// 🪶️ Reads an authored hover target or the renderer's explicit hover batch.
+#[doc(hidden)]
+pub async fn parse_interaction_hover_targets(args: Option<&DslValue>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
+    if args.and_then(|value| value.get("targets")).is_some() {
+        return parse_interaction_targets(args, action).await;
+    }
+    let text = |field| args.and_then(|value| value.get(field)).and_then(DslValue::as_str).filter(|value| !value.is_empty());
+    match (text("targetId"), text("granularityId")) {
+        (Some(id), Some(granularity)) => Ok(vec![protocol::InteractionTarget { id: id.to_owned(), granularity: granularity.to_owned() }]),
+        _ => Err(plugin_sdk_fault(format!("{action} requires targets or both targetId and granularityId"))),
+    }
+}
+
+/// 🧭️ Expands a renderer's single window-owned hover reference before topology validation.
+#[doc(hidden)]
+pub fn resolve_interaction_hover_group(
+    targets: Vec<protocol::InteractionTarget>,
+    read: impl FnOnce(&str) -> Result<Option<(&'static str, Vec<String>)>, Fault>,
+) -> Result<Option<Vec<protocol::InteractionTarget>>, Fault> {
+    if let [reference] = targets.as_slice() {
+        if reference.granularity == INTERACTION_HOVER_GROUP_GRANULARITY {
+            return Ok(read(&reference.id)?.map(|(granularity, ids)| {
+                ids.into_iter().map(|id| protocol::InteractionTarget { id, granularity: granularity.to_owned() }).collect()
+            }));
+        }
+    }
+    Ok((!targets.iter().any(|target| target.granularity == INTERACTION_HOVER_GROUP_GRANULARITY)).then_some(targets))
 }
 
 /// 🕹️ Decodes `interactionSelect`'s `merge` select-arg — defaults to `Replace` (a plain pick) when

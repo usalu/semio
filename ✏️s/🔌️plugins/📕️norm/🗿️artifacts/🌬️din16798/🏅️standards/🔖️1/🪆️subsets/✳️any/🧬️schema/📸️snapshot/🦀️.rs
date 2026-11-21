@@ -92,7 +92,7 @@ impl Din16798Snapshot {
         v.fan_q_v_m3_s = 400.0 / 3600.0;
         z.vent_system_id = v.id.clone();
         Self {
-            annex: AnnexChoice::De,
+            annex: AnnexChoice::En,
             theta_rm_c: 12.0,
             outdoor_co2_ppm: 400.0,
             zones: vec![z],

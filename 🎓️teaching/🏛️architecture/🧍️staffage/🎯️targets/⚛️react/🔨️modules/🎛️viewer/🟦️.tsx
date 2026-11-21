@@ -11,6 +11,7 @@ import { FORCE_QUANTITIES, SCALE_PRESETS, THERMAL_QUANTITIES, VIEWS, formatNumbe
 import type { Asset, AuthoredRepresentation, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ItemValue, StructuralResult, ThermalField, View, PlanarViewpoint, Viewpoint } from "@teaching/staffage";
 import type { ViewpointKey } from "../🔭️viewpoints/🟦️.ts";
 import { StaffageClock } from "../⏱️clock/🟦️.ts";
+import { useBreakpoint } from "../🥞️levels/🟦️.tsx";
 import { useArchive } from "../🧭️context/🟦️.tsx";
 import { Bar, Button, ButtonGroup, CheckField, Cell, Column, Group, Note, Notice, NumberField, Segmented, SelectField, SliderField, Tag, cn } from "../🪟️chrome/🟦️.tsx";
 import { FigureBoundary, useDarkSurface } from "../🖼️previews/🟦️.tsx";
@@ -52,6 +53,7 @@ function clipOf(asset: Asset, selection: Selection | null) {
 export function Viewer(props: ViewerProps): ReactElement {
   const { asset, viewer, onChange } = props;
   const { t, language, reducedMotion } = useArchive();
+  const phone = useBreakpoint() === "mobile";
   const dark = useDarkSurface();
   const [scene, setScene] = useState<DrawingScene | null>(null);
   const [inspected, setInspected] = useState<Inspected | null>(null);
@@ -64,7 +66,7 @@ export function Viewer(props: ViewerProps): ReactElement {
     if (initial.current !== null) {
       clock.seek(initial.current);
       clock.pause();
-    } else if (!reducedMotion) clock.play();
+    } else if (!reducedMotion && !phone) clock.play();
     return () => clock.dispose();
   }, [clock]);
   useEffect(() => {
@@ -177,12 +179,12 @@ export function Viewer(props: ViewerProps): ReactElement {
           </Cell>
           {model ? null : (
             <>
-              <ButtonGroup>
+              <ButtonGroup below={phone ? "never" : "mobile"}>
                 <Button grouped icon="minus" aria-label={t("viewer.zoomOut")} title={t("viewer.zoomOut")} onClick={() => patch({ zoom: Math.max(0.05, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) / 1.25).toFixed(3))) })} />
                 <output data-shared-border-cell="" className="inline-flex min-w-16 items-center justify-center font-mono" aria-label={t("viewer.zoom")}>{zoomText}</output>
                 <Button grouped icon="plus" aria-label={t("viewer.zoomIn")} title={t("viewer.zoomIn")} onClick={() => patch({ zoom: Math.min(64, Number(((viewer.zoom === "fit" ? fitZoom.current : viewer.zoom) * 1.25).toFixed(3))) })} />
               </ButtonGroup>
-              <ButtonGroup>
+              <ButtonGroup below={phone ? "never" : "mobile"}>
                 <Button grouped aria-pressed={viewer.zoom === "fit"} onClick={() => patch({ zoom: "fit", pan: { xMm: 0, yMm: 0 } })} icon="maximize-2">{t("viewer.fit")}</Button>
                 <Button grouped aria-pressed={printSize} onClick={() => patch({ zoom: printSize ? "fit" : 1 })} icon="scaling" title={t("viewer.printSizeHelp")}>{t("viewer.printSize")}</Button>
                 <Button grouped icon="crosshair" aria-label={t("viewer.centre")} title={t("viewer.centre")} onClick={() => patch({ pan: { xMm: 0, yMm: 0 } })} />

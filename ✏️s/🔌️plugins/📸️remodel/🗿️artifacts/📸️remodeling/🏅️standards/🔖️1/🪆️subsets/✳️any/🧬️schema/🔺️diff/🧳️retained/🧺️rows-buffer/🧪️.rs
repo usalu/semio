@@ -1,9 +1,6 @@
 use super::*;
-use semio_framework_value::retirement::controlled::ControlledRetirement;
-
-fn grant(d: RetirementDemand) -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: d.copy_bytes, maximum_capacity_bytes: d.capacity_bytes, maximum_release_bytes: d.release_bytes, maximum_depth: d.depth }
-}
+use super::super::retained_test_support::{grant, retire};
+use semio_framework_value_clone_source_testing::drive::drive;
 
 fn observe<T>(action: impl FnOnce() -> T) -> (T, usize, usize) {
     semio_framework_trace_memory_testing::observe_backing(action)
@@ -22,28 +19,25 @@ fn run(case: &serde_json::Value, cut: Option<usize>) -> usize {
         for denied in [
             Some(RetainedCloneGrant::default()),
             Some(RetainedCloneGrant { maximum_items: 0, ..selected }),
-            (demand.copy_bytes > 0).then_some(RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..selected }),
-            (demand.capacity_bytes > 0).then_some(RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..selected }),
-            (demand.release_bytes > 0).then_some(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..selected }),
+            (demand.copy_bytes > 0).then(|| RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..selected }),
+            (demand.capacity_bytes > 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..selected }),
+            (demand.release_bytes > 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..selected }),
             Some(RetainedCloneGrant { maximum_depth: 0, ..selected }),
         ]
         .into_iter()
         .flatten()
         {
-            let (turn, born, released) = observe(|| buffer.advance(4096, 64, denied));
-            assert_eq!((born, released), (0, 0));
+            let turn = drive(denied, work, |effect| buffer.advance(4096, 64, effect));
             assert_eq!(turn.work, 0);
             assert_eq!(turn.result.unwrap().progress(), Default::default());
         }
-        let (turn, born, released) = observe(|| buffer.advance(4096, 0, selected));
-        assert_eq!((born, released), (0, 0));
+        let turn = drive(selected, work, |effect| buffer.advance(4096, 0, effect));
         assert_eq!(turn.work, 0);
         assert_eq!(turn.result.unwrap().progress(), Default::default());
-        let (turn, born, released) = observe(|| buffer.advance(4096, 64, selected));
-        assert!(turn.work <= work);
+        let turn = drive(selected, work, |effect| buffer.advance(4096, 64, effect));
+        assert!(turn.work <= u128::from(work));
         let progress = turn.result.unwrap().progress();
         assert!(progress.fits(selected));
-        assert_eq!((born, released), (progress.retained_capacity_bytes, progress.released_bytes));
         turns += 1;
         assert!(turns < 4096);
     }
@@ -55,12 +49,7 @@ fn run(case: &serde_json::Value, cut: Option<usize>) -> usize {
         assert!(progress.fits(selected));
         assert_eq!(output, expected);
         assert!(output.capacity() >= required);
-        let mut retirement = ControlledRetirement::new(output).unwrap();
-        while !retirement.terminal_is_empty() {
-            let selected = grant(retirement.next_demand(4096).unwrap());
-            let step = retirement.step(selected).unwrap();
-            assert!(step.progress().fits(selected));
-        }
+        retire(output);
     }
     buffer.begin_close();
     for _ in 0..4096 {
@@ -69,15 +58,13 @@ fn run(case: &serde_json::Value, cut: Option<usize>) -> usize {
         }
         let selected = grant(buffer.close_demand(4096).unwrap());
         let work = buffer.close_work_demand(4096).unwrap();
-        let (denied, born, released) = observe(|| buffer.close_step(RetainedCloneGrant::default()));
-        assert_eq!((born, released), (0, 0));
+        let denied = drive(RetainedCloneGrant::default(), work, |effect| buffer.close_step(4096, effect));
         assert_eq!(denied.work, 0);
         assert_eq!(denied.result.unwrap().progress(), Default::default());
-        let (turn, born, released) = observe(|| buffer.close_step(selected));
-        assert!(turn.work <= work);
+        let turn = drive(selected, work, |effect| buffer.close_step(4096, effect));
+        assert!(turn.work <= u128::from(work));
         let progress = turn.result.unwrap().progress();
         assert!(progress.fits(selected));
-        assert_eq!((born, released), (progress.retained_capacity_bytes, progress.released_bytes));
     }
     panic!("owned row buffer closure did not settle");
 }
@@ -107,11 +94,7 @@ fn owned_rows_buffer_overflow_returns_its_original_input() {
     };
     assert_eq!(input.as_ptr(), pointer);
     assert_eq!(input, ["original🧱"]);
-    let mut owner = ControlledRetirement::new(input).unwrap();
-    while !owner.terminal_is_empty() {
-        let selected = grant(owner.next_demand(4096).unwrap());
-        assert!(owner.step(selected).unwrap().progress().fits(selected));
-    }
+    retire(input);
 }
 
 /// 📏️ An unaddressable byte layout refuses before moving or allocating the exact original row vector.
@@ -125,8 +108,7 @@ fn owned_rows_buffer_unaddressable_layout_preserves_original_input() {
     assert_eq!(error.kind, ValueRefusalKind::OwnershipLimit);
     assert_eq!(input.as_ptr(), pointer);
     assert_eq!(input, [7]);
-    let mut owner = ControlledRetirement::new(input).unwrap();
-    while !owner.terminal_is_empty() { let selected = grant(owner.next_demand(4096).unwrap()); assert!(owner.step(selected).unwrap().progress().fits(selected)); }
+    retire(input);
 }
 
 /// 🪵️ Already sufficient original capacity transfers its header without reallocating or copying row values.
@@ -139,8 +121,7 @@ fn owned_rows_buffer_preserves_sufficient_original_backing() {
     let mut owner = OwnedRowsBuffer::new(input, 4).unwrap_or_else(|_| panic!("sufficient original capacity"));
     let selected = grant(owner.demand(64, 1).unwrap());
     assert_eq!(selected.maximum_capacity_bytes, 0);
-    let (turn, born, released) = observe(|| owner.advance(64, 1, selected));
-    assert_eq!((born, released), (0, 0));
+    let turn = drive(selected, 1, |effect| owner.advance(64, 1, effect));
     assert_eq!(turn.work, 1);
     assert!(matches!(turn.result.unwrap(), RetainedCloneStep::Complete(_)));
     let selected = grant(owner.take_demand().unwrap());
@@ -149,9 +130,5 @@ fn owned_rows_buffer_preserves_sufficient_original_backing() {
     assert_eq!(output, ["a", "b"]);
     owner.begin_close();
     assert!(owner.terminal_is_empty());
-    let mut output = ControlledRetirement::new(output).unwrap();
-    while !output.terminal_is_empty() {
-        let selected = grant(output.next_demand(4096).unwrap());
-        assert!(output.step(selected).unwrap().progress().fits(selected));
-    }
+    retire(output);
 }

@@ -79,7 +79,7 @@ def shaft_line(s, detail):
         s.b(revolve(f"drum-{sd}", SB, ST, 0.5, [0, 0, sg], [0, 0, sg * K.DRUM_Z0], K.drum_profile(detail)))
     if detail:
         s.b(revolve("shaft", SB, ST, 0.2, [0, 0, 1], [0, 0, -1.25], [[0, 0], [0, K.SHAFT_R], [2.5, K.SHAFT_R], [2.5, 0]], role="detail"))
-        wire = [[K.WIRE_R * math.cos(2 * math.pi * k / 12), K.COIL_R + K.WIRE_R * math.sin(2 * math.pi * k / 12)] for k in range(12)]
+        wire = [[(K.WIRE_R - 0.0001) * math.cos(2 * math.pi * k / 12), K.COIL_R + K.WIRE_R * math.sin(2 * math.pi * k / 12)] for k in range(12)]
         wire.append(wire[0])
         s.b(revolve("coil", SB, ST, 0.4, [0, 0, 1], [0, 0, -K.COIL_HALF + K.COIL_PITCH / 2], wire, role="detail", repeat={"count": K.COIL_TURNS, "translation": [0, 0, K.COIL_PITCH]}))
         fixed = [[0, 0.0135], [0, 0.0295], [0.018, 0.0295], [0.018, 0.045], [0.03, 0.045], [0.03, 0.0135], [0, 0.0135]]

@@ -13,7 +13,8 @@
     "bb2DetailsConform",
     "zones",
     "elements",
-    "thermalBridges"
+    "thermalBridges",
+    "cases"
   ],
   "properties": {
     "climateZone": {
@@ -227,6 +228,85 @@
           }
         }
       }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CaseRow"
+      }
+    }
+  },
+  "$defs": {
+    "CaseNumber": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "required": [
+        "id",
+        "value"
+      ]
+    },
+    "CaseText": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "value"
+      ]
+    },
+    "CaseRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string"
+        },
+        "labelDe": {
+          "type": "string"
+        },
+        "entryId": {
+          "type": "string"
+        },
+        "numbers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaseNumber"
+          }
+        },
+        "texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaseText"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "entryId",
+        "numbers",
+        "texts"
+      ]
     }
   }
 }

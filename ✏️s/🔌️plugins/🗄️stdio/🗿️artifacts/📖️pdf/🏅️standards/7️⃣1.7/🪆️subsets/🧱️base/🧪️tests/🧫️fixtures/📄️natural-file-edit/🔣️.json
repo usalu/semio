@@ -57,5 +57,23 @@
       "title": null,
       "author": "Ada"
     }
+  },
+  "fontSize": {
+    "before": 20,
+    "after": 16,
+    "sameLine": "Same",
+    "sameLineCode": "53616D65",
+    "followingLine": "Tail"
+  },
+  "fontReassignment": {
+    "schema": "semio.stdio.pdf.font-reassignment.v1",
+    "sourceCode": 233,
+    "sourceAlternateCode": 70,
+    "targetCode": 142,
+    "sourceFont": "Helvetica",
+    "targetFont": "Times-Roman",
+    "firstLine": "éé",
+    "secondLine": "Tail",
+    "kerning": -50
   }
 }

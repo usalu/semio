@@ -11,5 +11,5 @@ pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let gif87a_snapshot = semio_s_artifact_stdio_gif::standards::v87a::subsets::any::io::decode_gif(bytes)?;
     let image = semio_image_from_format(&gif87a::to_89a(&gif87a_snapshot), GIF89A_DIALECT)?;
-    raster_document_from_semio_image(&image, "gif-import", "Imported gif")
+    raster_document_from_semio_image(image, "gif-import", "Imported gif")
 }

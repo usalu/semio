@@ -1,6 +1,6 @@
 /** 🧲️ InkCanvasHost state shapes: the drag, text edit and table edit state types and the host constants. */
 import { type SelectionMarqueePoint } from "@semio-tech/ui-react";
-import type { InkBounds, InkCamera, InkResizeHandle } from "../🧾️ink-model/🟦️.ts";
+import type { InkBounds, InkCamera, InkItem, InkResizeHandle } from "../🧾️ink-model/🟦️.ts";
 
 //#region 🔖️InkCanvasHost
 //#region DragState
@@ -10,7 +10,7 @@ export type InkDragState =
   | { readonly kind: "marquee"; readonly start: SelectionMarqueePoint }
   | { readonly kind: "stroke"; readonly blockId: string }
   | { readonly kind: "eraser"; readonly mode: "eraserStroke" | "eraserPoint" }
-  | { readonly kind: "resize"; readonly handle: InkResizeHandle; readonly fromBounds: InkBounds; readonly startX: number; readonly startY: number; readonly selectedIds: readonly string[] };
+  | { readonly kind: "resize"; readonly handle: InkResizeHandle; readonly fromBounds: InkBounds; readonly startX: number; readonly startY: number; readonly origins: readonly InkItem[] };
 
 export type InkTextEditState = { readonly blockId: string; readonly created?: boolean };
 export type InkTableEditState = { readonly blockId: string; readonly row: number; readonly col: number };

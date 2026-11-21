@@ -22,6 +22,13 @@ const environment = () => ({
 });
 const args = process.argv.slice(2);
 const tasks = {
+  "publish-descriptor-emitter": [[join(os, "🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts"), "build", "--host-platform=" + process.platform]],
+  "publish-browser-support": [[join(os, "🔌️plugin/📦️packages/🟦️typescript/📜️script.ts"), "support"]],
+  "publish-browser-boots": [
+    [join(os, "📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/📜️script.ts"), "generate-browser-boot"],
+    [join(os, "📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⚙️browser-build/📜️script.ts"), "generate-renderer-boot"],
+  ],
+  "check-frame-worker-closure": [[join(os, "📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts"), "check-browser-worker"]],
   "publish-frame-worker": [[join(os, "📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts"), "generate-frame-worker"]],
   "publish-format-claims": [[join(dev, "📜️script.ts"), "stdio-format-claims"]],
   "check-descriptors": [[join(os, "🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"), "channel-version", "check-descriptors"]],
@@ -42,7 +49,7 @@ class LayoutStageScript extends Script {
       signal: this.invocation.control.signal,
     };
     for (const command of tasks[args[0] as keyof typeof tasks]) {
-      const deadline = args[0] === "serve-layout-wgpu" ? 3_600_000 : 300_000;
+      const deadline = args[0] === "publish-descriptor-emitter" || args[0] === "serve-layout-wgpu" ? 0 : 300_000;
       await runOwnedCommand("repo", [...command], workspace, "stage:layout:" + command[1], deadline, options);
     }
   }

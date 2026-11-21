@@ -1,0 +1,12 @@
+{
+  "version": "OMI1",
+  "operationId": "000000000000f112",
+  "generation": "0000000000000007",
+  "instanceId": 42,
+  "documentId": "pdf/document-0009",
+  "baseRevision": "1313131313131313131313131313131313131313131313131313131313131313",
+  "kind": 240,
+  "maximumFileBytes": 24546,
+  "placementWords": [1, 12, 7, 0, 0, 0, 0, 0],
+  "headerBytes": 127
+}

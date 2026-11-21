@@ -20,7 +20,8 @@
           "enum": [
             "file",
             "directory",
-            "presence"
+            "presence",
+            "discovery"
           ]
         },
         "sha256": {
@@ -33,8 +34,35 @@
               "type": "null"
             }
           ]
+        },
+        "suffix": {
+          "type": "string",
+          "pattern": "^[^\\u0000-\\u001f/\\\\]{1,80}$"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "discovery"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "suffix"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "suffix"
+              ]
+            }
+          }
+        }
+      ]
     },
     "CargoPreparationObservationV1": {
       "type": "object",
@@ -304,7 +332,18 @@
     "CargoPreparationDiagnosticProtocolV1": {
       "const": {
         "marker": "[cargo-preparation-program]",
+        "sourceEditMarker": "[cargo-preparation-source-edit]",
         "maximumCharacters": 2048
+      }
+    },
+    "CargoPreparationSourceEditV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "reason", "path"],
+      "properties": {
+        "version": {"const": 1},
+        "reason": {"enum": ["bytes", "vanished"]},
+        "path": {"type": "string", "minLength": 1, "maxLength": 256}
       }
     }
   },

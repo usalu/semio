@@ -37,7 +37,8 @@ impl RendererSequenceAuthority {
     }
 }
 
-struct RendererSequenceReservation {
+/// 🔢️ Holds a renderer generation until it is committed or released on drop.
+pub struct RendererSequenceReservation {
     generation: u64,
     active: bool,
 }
@@ -403,7 +404,7 @@ struct PluginDescriptorJson {
 /// verbatim as unscoped [`CapabilityGrant`]s (`scope: None` — this host has no capability broker
 /// populating scopes for ANY actor kind yet, extension or plugin).
 #[derive(Clone)]
-struct ExtensionRecord {
+pub struct ExtensionRecord {
     pub extension_id: String,
     pub package: PackageId,
     pub capability_requests: Vec<CapabilityGrant>,
@@ -429,17 +430,13 @@ impl ExtensionIndex {
         }
         Self { by_parent }
     }
-
-    pub fn extensions_of(&self, plugin_id: &str) -> &[ExtensionRecord] {
-        self.by_parent.get(plugin_id).map(Vec::as_slice).unwrap_or(&[])
-    }
 }
 
 /// 🧩️ Parsed once, lazily — the registry JSON is fixed at compile time (`include_str!`), so
 /// there is nothing to invalidate or re-read across the process's lifetime.
-pub fn extension_index() -> &'static ExtensionIndex {
+pub fn extensions_of(plugin_id: &str) -> &'static [ExtensionRecord] {
     static INDEX: OnceLock<ExtensionIndex> = OnceLock::new();
-    INDEX.get_or_init(ExtensionIndex::load)
+    INDEX.get_or_init(ExtensionIndex::load).by_parent.get(plugin_id).map(Vec::as_slice).unwrap_or(&[])
 }
 
 /// 🧩️ Mirrors `program_bridge::load_wasm_plugins`'s own "first `.wasm` file directly inside the
@@ -453,12 +450,17 @@ pub async fn find_wasm_artifact(dir:&std::path::Path)->Result<Option<semio_os_se
 mod create_app_source;
 pub use create_app_source::{CreateAppBorrowed,CreateAppRequestOwner,CreateAppSourceFailure,CreateAppSourceFailureKind,open_create_app_source};
 
+#[path = "📥️original-media.rs"]
+mod queued_original_media;
+use queued_original_media::QueuedOriginalMedia;
+
 #[derive(Clone, Copy)]
 pub enum QueuedKernelEventKind {
     SurfaceVisible,
     StagedFormRequested,
     MessageShell,
     MessageBackbone,
+    OriginalMedia,
 }
 
 pub struct QueuedKernelEvent {
@@ -470,6 +472,7 @@ pub struct QueuedKernelEvent {
     pub staged_request: Option<Vec<u8>>,
     pub message_endpoint: Option<String>,
     pub message_payload: Option<Vec<u8>>,
+    original_media: Option<QueuedOriginalMedia>,
 }
 
 impl QueuedKernelEvent {
@@ -480,16 +483,16 @@ impl QueuedKernelEvent {
         }
         match events.pop_front().expect("one queued event is present") {
             Event::SurfaceVisible { surface, body_key, view_state } => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::SurfaceVisible), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state), staged_instance: None, staged_request: None, message_endpoint: None, message_payload: None })
+                Ok(Self { kind: Some(QueuedKernelEventKind::SurfaceVisible), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state), staged_instance: None, staged_request: None, message_endpoint: None, message_payload: None, original_media: None })
             }
             Event::StagedFormRequested { instance, surface, body_key, request } => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::StagedFormRequested), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: None, staged_instance: Some(instance), staged_request: Some(request), message_endpoint: None, message_payload: None })
+                Ok(Self { kind: Some(QueuedKernelEventKind::StagedFormRequested), surface: Some(surface), surface_body_key: Some(body_key), surface_view_state: None, staged_instance: Some(instance), staged_request: Some(request), message_endpoint: None, message_payload: None, original_media: None })
             }
             Event::Message { source: MessageEndpoint::Shell { instance }, payload } if !payload.is_empty() && payload.len() <= semio_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(instance.0), message_payload: Some(payload) })
+                Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(instance.0), message_payload: Some(payload), original_media: None })
             }
             Event::Message { source: MessageEndpoint::Backbone { uri }, payload } if !payload.is_empty() && payload.len() <= store_sync::os_store::backbone::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES => {
-                Ok(Self { kind: Some(QueuedKernelEventKind::MessageBackbone), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(uri), message_payload: Some(payload) })
+                Ok(Self { kind: Some(QueuedKernelEventKind::MessageBackbone), surface: None, surface_body_key: None, surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: Some(uri), message_payload: Some(payload), original_media: None })
             }
             rejected => {
                 events.push_front(rejected);
@@ -498,8 +501,26 @@ impl QueuedKernelEvent {
         }
     }
 
+    /// 🎛️ Keeps the actor's original-media continuation on the host's bounded poll lane.
+    pub fn is_original_media(&self) -> bool { self.original_media.is_some() }
+
+    pub fn try_from_original_media(instance: u32, event: Event) -> Result<Self, RejectedKernelEvents> {
+        let same_instance = match &event {
+            Event::OriginalMediaControl(control) => control.loan.instance_id == instance,
+            Event::CommandIngressPage { cursor, .. } => cursor.instance == instance,
+            Event::Wake => instance != 0,
+            _ => false,
+        };
+        let original_media = if same_instance { QueuedOriginalMedia::admit(event) } else { Err(event) }
+            .map_err(|event| RejectedKernelEvents { events: [event].into() })?;
+        Ok(Self { kind: Some(QueuedKernelEventKind::OriginalMedia), surface: None, surface_body_key: None,
+            surface_view_state: None, staged_instance: None, staged_request: None, message_endpoint: None,
+            message_payload: None, original_media: Some(original_media) })
+    }
+
     pub fn into_event(mut self) -> Event {
         match self.kind.take().expect("queued event kind is present") {
+            QueuedKernelEventKind::OriginalMedia => self.original_media.take().expect("queued Original media is present").into_event(),
             QueuedKernelEventKind::SurfaceVisible => Event::SurfaceVisible {
                 surface: self.surface.take().expect("queued surface-visible surface is present"),
                 body_key: self.surface_body_key.take().expect("queued surface-visible body key is present"),
@@ -522,6 +543,13 @@ impl QueuedKernelEvent {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if let Some(original_media) = self.original_media.as_ref() {
+            let (_, bytes) = original_media.credits();
+            if bytes > maximum_bytes { return (false, 0, 0); }
+            drop(self.original_media.take());
+            self.kind = None;
+            return (true, 1, bytes);
+        }
         if let Some(length) = self.surface.as_ref().map(String::len) {
             if length > maximum_bytes {
                 return (false, 0, 0);
@@ -566,6 +594,11 @@ impl QueuedKernelEvent {
         drop(self.message_payload.take().expect("queued message payload is present"));
         self.kind = None;
         (true, 1, length)
+    }
+
+    fn credits(&self) -> (usize, usize) {
+        if let Some(original_media) = self.original_media.as_ref() { return original_media.credits(); }
+        (0, self.remaining_bytes())
     }
 
     fn remaining_bytes(&self) -> usize {
@@ -664,7 +697,7 @@ impl KernelRequest {
             Self::ExchangeCommands { driver, .. } => (driver.remaining_pages(), driver.remaining_bytes()),
             Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
             Self::CreateApp { .. } => (0, 0),
-            Self::Exchange { event, .. } => (0, event.remaining_bytes()),
+            Self::Exchange { event, .. } => event.credits(),
             Self::AdvanceRetained { .. }
             | Self::MountProductReplay { .. }
             | Self::RetireProductReplay { .. }

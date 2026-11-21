@@ -57,7 +57,7 @@
       {
         "kind": "variable",
         "id": "v",
-        "name": "new",
+        "name": "old",
         "schema": "dictionary"
       }
     ]
@@ -233,7 +233,7 @@
       {
         "kind": "variable",
         "id": "v",
-        "name": "",
+        "name": "old",
         "schema": "string"
       }
     ]

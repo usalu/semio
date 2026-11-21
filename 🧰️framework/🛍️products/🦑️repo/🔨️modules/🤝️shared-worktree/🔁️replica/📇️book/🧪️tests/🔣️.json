@@ -1,0 +1,53 @@
+{
+  "rows": [
+    {
+      "path": "ordinary.txt",
+      "manifest": "put",
+      "held": "put",
+      "queue": "pending"
+    },
+    {
+      "path": ".cache/f/index/first.txt",
+      "manifest": "link",
+      "held": "link",
+      "queue": "pending"
+    },
+    {
+      "path": ".cache/f/index-base",
+      "manifest": "link",
+      "held": "link",
+      "queue": "pending"
+    },
+    {
+      "path": ".cache/f/indexed/ordinary",
+      "manifest": "put",
+      "held": null,
+      "queue": "pending"
+    },
+    {
+      "path": ".cache/f/index/tombstone",
+      "manifest": "delete",
+      "held": null,
+      "queue": "parked"
+    },
+    {
+      "path": ".cache/f/index/retained",
+      "manifest": null,
+      "held": "delete",
+      "queue": "none"
+    },
+    {
+      "path": ".cache/f/index-base-shadow",
+      "manifest": "put",
+      "held": "put",
+      "queue": "pending"
+    },
+    {
+      "path": ".cache/f/index/not-live",
+      "manifest": null,
+      "held": null,
+      "queue": "none"
+    }
+  ],
+  "ordinaryRows": 512
+}

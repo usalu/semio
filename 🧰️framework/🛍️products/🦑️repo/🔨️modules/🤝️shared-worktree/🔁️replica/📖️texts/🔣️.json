@@ -199,20 +199,41 @@
       "de": "  {origin} {platform} {age} {lag} {basis} {sync} {code} {view} {latency} {verdict}"
     },
     "fleet.ready.header": {
-      "en": "Readiness of the workers (each worker writes it itself): origin state ready stage attempts exit peak (MB) age digest reason",
-      "de": "Bereitschaft der Worker (jeder Worker schreibt sie selbst): Ursprung Zustand bereit Stufe Versuche Exit Spitze (MB) Alter Digest Grund"
+      "en": "Readiness of the workers (self-reported): origin state ready stage attempts exit peak (MB) age digest refusal reason latest output",
+      "de": "Bereitschaft der Worker (Selbstauskunft): Ursprung Zustand bereit Stufe Versuche Exit Spitze (MB) Alter Digest Ablehnung Grund letzte Ausgabe"
     },
     "fleet.ready.row": {
-      "en": "  {origin} {state} {ready} {stage} {attempts} {exit} {peak} {age} {digest} {reason}",
-      "de": "  {origin} {state} {ready} {stage} {attempts} {exit} {peak} {age} {digest} {reason}"
+      "en": "  {origin} {state} {ready} {stage} {attempts} {exit} {peak} {age} {digest} {refusal} {reason} {progress}",
+      "de": "  {origin} {state} {ready} {stage} {attempts} {exit} {peak} {age} {digest} {refusal} {reason} {progress}"
     },
     "fleet.ready.summary": {
-      "en": "Ready: {ready} of {workers} workers, {silent} without a readiness status.",
-      "de": "Bereit: {ready} von {workers} Workern, {silent} ohne Bereitschaftsstatus."
+      "en": "Ready now: {ready} of {workers} workers, {stale} stale, {future} with a future timestamp, {missing} without a valid status.",
+      "de": "Jetzt bereit: {ready} von {workers} Workern, {stale} veraltet, {future} mit künftigem Zeitstempel, {missing} ohne gültigen Status."
     },
-    "fleet.ready.yes": {"en": "yes", "de": "ja"},
-    "fleet.ready.no": {"en": "no", "de": "nein"},
-    "fleet.ready.none": {"en": "no-status", "de": "kein-Status"},
+    "fleet.ready.yes": {
+      "en": "yes",
+      "de": "ja"
+    },
+    "fleet.ready.no": {
+      "en": "no",
+      "de": "nein"
+    },
+    "fleet.ready.absent": {
+      "en": "  {origin} no-status",
+      "de": "  {origin} kein-Status"
+    },
+    "fleet.ready.last": {
+      "en": "{freshness}; last reported {state}",
+      "de": "{freshness}; zuletzt gemeldet {state}"
+    },
+    "fleet.ready.stale": {
+      "en": "stale",
+      "de": "veraltet"
+    },
+    "fleet.ready.future": {
+      "en": "future timestamp",
+      "de": "künftiger Zeitstempel"
+    },
     "fleet.on": {
       "en": "on",
       "de": "an"
@@ -288,6 +309,10 @@
     "fleet.warning.stage": {
       "en": "  warning: {origin} does not have the stage of the archivist yet ({detail}): it waits or is blocked for that reason and keeps its own stage meanwhile, so its index tree differs until it is resolved",
       "de": "  Warnung: {origin} hat die Stage des Archivars noch nicht ({detail}): sie wartet oder ist aus diesem Grund blockiert und behält solange ihre eigene Stage, deshalb weicht ihr Index-Baum ab, bis es gelöst ist"
+    },
+    "fleet.warning.stage-observation": {
+      "en": "  warning: the current Git stage of {origin} could not be verified ({detail})",
+      "de": "  Warnung: Die aktuelle Git-Stage von {origin} konnte nicht bestätigt werden ({detail})"
     },
     "fleet.warning.never-attested": {
       "en": "  warning: {origin} is registered in the store ({detail}) but has never attested: start the replica on that machine (run the provisioning script there, then `status`), or take it out of the fleet with `retire {origin}`",

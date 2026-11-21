@@ -97,7 +97,7 @@ test("restore refuses a foreign registry or platform and finds nothing under an 
  void exchange;
 });
 
-test("the exchange is off without an endpoint, read-only without write access and stays down after the first failure",async()=>{
+test("the exchange is off without an endpoint, read-only without write access and defers probes immediately after a failure",async()=>{
  const base={workspace:"/srv/semio",identity:async()=>sha("registry"),platform};
  expect(remoteGenerationExchangeV1({...base,environment:{}})).toBeUndefined();
  const server=await serve(),source=scratch(),target=scratch();await seed(source,ringFiles(6));
@@ -106,7 +106,7 @@ test("the exchange is off without an endpoint, read-only without write access an
  expect(readOnly.upload).toBe(false);
  expect((await readOnly.restore({root:join(target,".gen"),fs:files})).status).toBe("restored");
  const dead=remoteGenerationExchangeV1({...base,environment:{SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_RETRIES:"0"}})!,first=await dead.restore({root:scratch(),fs:files}),again=await dead.restore({root:scratch(),fs:files});
- expect(first.status).toBe("failed");expect(again.reason).toContain("earlier in this process");
+ expect(first.status).toBe("failed");expect(again).toEqual({status:"failed",reason:"the remote cache retry is deferred"});
 });
 
 test("a store asks whether a peer is ahead with one short request and the answer is false once it took the state; with the answer true the load skips its own verification pass and restores first",async()=>{

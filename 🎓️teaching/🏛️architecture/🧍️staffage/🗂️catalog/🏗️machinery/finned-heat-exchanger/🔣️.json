@@ -3452,7 +3452,8 @@
               "w": 0.03,
               "h": 0.496,
               "region": "headers",
-              "material": "copper"
+              "material": "copper",
+              "penMm": 0.2
             },
             {
               "id": "coil-block",
@@ -3577,7 +3578,8 @@
               "w": 0.07,
               "h": 0.03,
               "region": "headers",
-              "material": "copper"
+              "material": "copper",
+              "penMm": 0.2
             },
             {
               "id": "casing-top",

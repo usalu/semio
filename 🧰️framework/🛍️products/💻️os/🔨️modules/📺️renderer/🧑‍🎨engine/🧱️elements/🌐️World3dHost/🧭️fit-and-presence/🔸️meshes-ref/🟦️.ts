@@ -1,5 +1,5 @@
 /** 🔸️ The meshes ref phase of useWorldFitAndPresence. */
-import { useCallback, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "../../../⚛️react-port/🟦️.ts";
 import { marqueeCoverageFromGesture, useLabel, type SelectionMarqueeCoverage, type SelectionMarqueePoint } from "@semio-tech/ui-react";
 import { GestureRecognizer } from "@semio-tech/framework";
 import { DEFAULT_LOD_GRID_FACTOR, type WorldCameraState } from "@semio-tech/framework/infinite/world/r3f";
@@ -12,6 +12,7 @@ import { gumballConfigForTransformMode, WORLD_GUMBALL_IDLE, type WorldGumballGes
 import { MARQUEE_DRAG_THRESHOLD_PX, paneSuffixFromSurfaceId, resolveWorldMergeMode } from "../../🎯️marquee-and-bridges/🟦️.tsx";
 import { type World3dRelocateSession } from "../../🗂️catalogue-drop/🟦️.tsx";
 import { world3dHoverActionArgs, world3dSelectionActionArgs } from "../../🖱️interaction-domain-args/🟦️.ts";
+import { World3dCameraSyncContext } from "../../🪟️window-view-store/🟦️.tsx";
 import type { useAttractionsState } from "../🔶️attractions/🟦️.ts";
 
 /** 🔹 Builds meshesRef, marqueeStartRef, gestureRecognizer, vorticesRef of useWorldFitAndPresence. */
@@ -35,8 +36,6 @@ export function useMeshesRefState({ instancesRef, instances, meshes, vortices, r
     readonly mergedInstanceIds: readonly string[] | null;
   } | null>(null);
   const connectDropConsumedRef = useRef(false);
-  const engagementPointerMoveInFlightRef = useRef(false);
-  const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
   /** 🚚️ Open Relocate-utility drag, or `null`. A ref, not state: mid-drag the only thing that changes is
    * the shared ghost origin, so the gesture never re-renders this host by itself (same discipline as the
    * gumball's local preview). */
@@ -118,9 +117,11 @@ export function useMeshesRefState({ instancesRef, instances, meshes, vortices, r
     [retainViewport, sceneCamera],
   );
 
+  const cameraSync = useContext(World3dCameraSyncContext);
   const cameraDispatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dispatchWorldCameraDebounced = useCallback(
     (state: WorldCameraState) => {
+      if (!cameraSync) return;
       if (cameraDispatchTimeoutRef.current) clearTimeout(cameraDispatchTimeoutRef.current);
       cameraDispatchTimeoutRef.current = setTimeout(() => {
         cameraDispatchTimeoutRef.current = null;
@@ -129,13 +130,13 @@ export function useMeshesRefState({ instancesRef, instances, meshes, vortices, r
         dispatch("setCamera", worldCameraSetCameraDispatchArgs(windowInstanceId ?? node.surfaceId, state));
       }, CAMERA_SYNC_DEBOUNCE_MS);
     },
-    [dispatch, node.surfaceId, retainViewport, windowInstanceId],
+    [cameraSync, dispatch, node.surfaceId, retainViewport, windowInstanceId],
   );
   useEffect(
     () => () => {
       if (cameraDispatchTimeoutRef.current) clearTimeout(cameraDispatchTimeoutRef.current);
     },
-    [],
+    [cameraSync],
   );
 
   const referenceSelectedIds = useMemo(() => {
@@ -196,5 +197,5 @@ export function useMeshesRefState({ instancesRef, instances, meshes, vortices, r
       }),
     [dispatchSettled, interactionDomainId],
   );
-  return { dispatch, selectionMode, adoptViewportCamera, connectDropConsumedRef, dispatchSettled, dispatchWorldCameraDebounced, engagementPointerMoveInFlightRef, engagementPointerMoveLastPointRef, gestureRecognizer, gridFactor, gridSnapEnabled, gumballDragChainRef, gumballGestureRef, gumballLiveDispatch, handleReferenceHover, handleReferenceSelect, marqueeCommitHold, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueeMergeMode, marqueeStart, marqueeStartRef, meshesRef, method, referenceHoveredId, referenceSelectedIds, relocateSessionRef, setMarqueeCommitHold, setSuggestionFocus, suggestionFocus, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOpen, suggestionMenuOwnsThisWindow, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, targetVolumeSelectedIds, volumeGumballConfig, vorticesRef, wasMarqueeDragRef };
+  return { dispatch, selectionMode, adoptViewportCamera, connectDropConsumedRef, dispatchSettled, dispatchWorldCameraDebounced, gestureRecognizer, gridFactor, gridSnapEnabled, gumballDragChainRef, gumballGestureRef, gumballLiveDispatch, handleReferenceHover, handleReferenceSelect, marqueeCommitHold, marqueeCoverage, marqueeDown, marqueeDragActive, marqueeEnd, marqueeMergeMode, marqueeStart, marqueeStartRef, meshesRef, method, referenceHoveredId, referenceSelectedIds, relocateSessionRef, setMarqueeCommitHold, setSuggestionFocus, suggestionFocus, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOpen, suggestionMenuOwnsThisWindow, suggestionMenuTitleLabel, suggestionPopupOwnsThisWindow, targetVolumeSelectedIds, volumeGumballConfig, vorticesRef, wasMarqueeDragRef };
 }

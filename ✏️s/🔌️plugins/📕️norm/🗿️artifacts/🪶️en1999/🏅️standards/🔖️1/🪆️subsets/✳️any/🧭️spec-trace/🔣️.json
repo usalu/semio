@@ -677,18 +677,18 @@
   },
   {
    "id": "A-81",
-   "clause": "2.3.5.? thermal expansion α = 23e-6; creep of aluminium negligible except at ele",
+   "clause": "EN 1999-1-2:2007 3.3.1.1 and 4.3.3(4)",
    "entity": "",
    "realisation": {
-    "kind": "not-modelled",
-    "reason": {
-     "en": "the spec excludes it: the thermal expansion coefficient is a constant of 23e-6 and the creep of aluminium is negligible below 100 degrees Celsius",
-     "de": "die Spezifikation schließt es aus: der Wärmeausdehnungskoeffizient ist eine Konstante von 23e-6 und das Kriechen von Aluminium ist unterhalb von 100 Grad Celsius vernachlässigbar"
-    }
+    "kind": "check",
+    "checks": [
+     "en1999.1-2.fire.thermal-elongation.",
+     "en1999.1-2.fire.transient-creep."
+    ]
    },
    "description": {
-    "en": "Thermal expansion and creep of aluminium (2.3.5) are excluded by the spec and not modelled",
-    "de": "Wärmedehnung und Kriechen von Aluminium (2.3.5) sind durch die Spezifikation ausgeschlossen und nicht modelliert"
+    "en": "The fire report gives free thermal elongation from the published equation and flags when advanced analysis needs explicit transient creep. It does not calculate constrained thermal actions or creep deformation.",
+    "de": "Der Brandnachweis zeigt die freie Wärmedehnung nach der veröffentlichten Gleichung und weist auf die erforderliche Berücksichtigung des instationären Kriechens bei erweiterten Verfahren hin. Zwangseinwirkungen und Kriechverformungen werden nicht berechnet."
    }
   }
  ]

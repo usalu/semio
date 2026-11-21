@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mesh Bridge Boundary Anchors",
+  "description": "Two distinct directed boundary halfedge indices. The selected halfedges fix opposite winding alignment between two boundary loops.",
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "uniqueItems": true,
+  "items": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 4294967295
+  }
+}

@@ -51,3 +51,21 @@ Each click was verified with one browser inspecting variants serially. No Tool R
 A longer Grid 3D differential ran Solve on the default Building Blocks example without an earlier shell note. The command failed at its approximately 300-second deadline with `plugin.command-ingress-stalled`. For action `solve`, sequence 39, the runtime recorded 47,185 continuations and reported only CommandPending. The Preview canvas had the same SHA-256 before and after the attempt, and no Tool Run appeared. See `[DEBUG] abe27718-grid3d-default-solve.log`.
 
 Sparse Grid 3D Wasm samples followed the same refresh owner during a separate direct Solve. It advanced from slot 0 in displaced-view retirement at five seconds to slot 1 in retirement at eleven seconds, then to slot 2 in view cloning around 25 seconds and slot 2 in clone retirement around 50 seconds. At each sample, the stack showed both command ingress and manifest advancement. None of those steps held the cached-capture lease. The browser later reloaded and its old worker detached, so the late wire histogram was unavailable. See `[DEBUG] abe27718-grid3d-solve-wire-late.log`.
+
+## Browser results after batching surface refresh
+
+Native component run `wkvezGg` staged component SHA-256 `13777a1fc8c0147ec1ef97967d638fd733da0baeef0bdb8046fb0280450ef9c2` and core length 301,833,930 bytes. The build reported exit 75 because source changed after the component was published. The staged component includes the surface refresh batching. All five native activations completed against activation artifact SHA-256 `9ba1040b657c439858e1505cb57fccbdd9c70ca10422ba2eca5993b1f6cad9ea` and all five fallback listeners returned HTTP 200.
+
+| Variant | Browser observation on the rebuilt component |
+|---|---|
+| Bitmap | Flowers 24 entered document load, progressed to 112 of 113, then cleared its banner. The controlled picker still showed Rooms 16. The rendered Input canvas changed, but the selected fixture was unverified. |
+| Grid 2D | Terrain entered document load and reached late progress. The picker still showed Pipes at the deadline. |
+| WFC 2D | The alternate example entered document load. A picker remount invalidated the original locator before the harness could verify its selection. The harness now reads the label from one DOM snapshot. |
+| Grid 3D | A startup attempt hit strict lifecycle turn authority in epoch 17. The retry mounted Building Blocks and dispatched 3D Pipes. The controlled picker did not update by the deadline. |
+| WFC 3D | Wall And Roof Facade Strip received `original-turn.input-refused` with `ownership-limit`, `disposition=returned`, 804 wire bytes and a grant of six copy bytes. |
+
+None of these guarded runs verified a changed picker and a finalized Solve with a changed Preview. See `[DEBUG] batched-surface-browser-*.log` and `[DEBUG] batched-surface-bitmap-example-witness.log`.
+
+A follow-up Bitmap WIT capture after the DocumentLoad banner cleared observed 331 CommandComplete returns with two effects each and no CommandPending or document fault in the captured window. A separate input-page capture began after those requests quiesced, so their command identities were unverified. See `[DEBUG] batched-surface-bitmap-example-live-stages.log` and `[DEBUG] batched-surface-bitmap-example-requests.log`.
+
+A fresh Bitmap run on the default Rooms 16 example clicked **Output → Actions → Solve** and reached scheduled `toolRunStart`. The WFC worker trapped at `SharedOriginalStorage<T>::drop` with `shared original alias must retire or transfer`. A Chromium debugger breakpoint at the Wasm trap captured the complete call stack. The drop of the enclosing aggregate released two Arc references and then the original alias. The immediate caller initialized an empty optional result before dropping the aggregate, consistent with the default `build_retargetable_tool_run_job` dropping the staged `ToolRunJobRequest` and its `ToolRunTraceKeys` alias. See `[DEBUG] batched-surface-bitmap-solve-deep-stack.log` and `[DEBUG] bitmap-tool-run-deep-wasm-literals.log`.

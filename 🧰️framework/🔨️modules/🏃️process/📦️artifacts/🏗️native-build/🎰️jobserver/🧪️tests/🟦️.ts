@@ -5,12 +5,21 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
-import { admitJobserverConfigV1, createJobserverV1, defaultJobserverStyleV1, jobserverAuthFromEnvironmentV1, jobserverMakeflagsV1, type JobserverStyleV1 } from "../🟦️.ts";
+import { registeredToolExecutableV1 } from "../../../../🧰️tools/🏃️run/🟦️.ts";
+import { admitJobserverConfigV1, createJobserverV1, defaultJobserverStyleV1, jobserverAuthFromEnvironmentV1, jobserverMakeflagsV1, withoutJobserverEnvironmentV1, type JobserverStyleV1 } from "../🟦️.ts";
 import { schedulerBinaries } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 mkdirSync(artifacts, { recursive: true });
 const pool = (tokens: number) => createJobserverV1({ version: 1, tokens, style: defaultJobserverStyleV1() }, mkdtempSync(join(artifacts, "j-")));
+
+/** 🐍️ Borrows a native transport token through an independent process. */
+function borrowToken(environment: Readonly<Record<string, string>>, mode: "abandon" | "return"): string {
+  const python = registeredToolExecutableV1("python"), oracle = join(import.meta.dir, "🧫️fixtures", "🐍️.py");
+  const result = spawnSync(python, [oracle, mode], { env: { ...process.env, ...environment }, encoding: "utf8", timeout: 3000 });
+  expect(result.status, result.stderr).toBe(0);
+  return result.stdout.trim();
+}
 
 /** 🐃️ A GNU make whose fifo jobserver style is the protocol oracle (4.4 or newer), `null` when none is installed. */
 function gnuMake(): string | null {
@@ -30,7 +39,10 @@ test("the pool configuration is schema-first and agrees with Ajv", () => {
 
 test("MAKEFLAGS and --jobserver-auth follow the vectors and Cargo's precedence", () => {
   for (const row of fixture.makeflags) expect(jobserverMakeflagsV1(row.tokens, row.endpoint, row.style as JobserverStyleV1)).toBe(row.makeflags);
-  for (const row of fixture.auth) expect(jobserverAuthFromEnvironmentV1(row.environment)).toBe(row.auth);
+  for (const row of fixture.auth) {
+    expect(jobserverAuthFromEnvironmentV1(row.environment)).toBe(row.auth);
+    expect(withoutJobserverEnvironmentV1({ ...row.environment, KEEP: "value" })).toEqual({ KEEP: "value" });
+  }
   expect(defaultJobserverStyleV1("win32")).toBe("semaphore");
   expect(defaultJobserverStyleV1("darwin")).toBe("fifo");
 });
@@ -38,7 +50,9 @@ test("MAKEFLAGS and --jobserver-auth follow the vectors and Cargo's precedence",
 test("the pool grants exactly its tokens first come first served, and a cancelled waiter leaves no token behind", async () => {
   const jobserver = await pool(fixture.pool.tokens);
   try {
-    expect(jobserverAuthFromEnvironmentV1(jobserver.environment())).toBe(`${process.platform === "win32" ? "" : "fifo:"}${jobserver.endpoint}`);
+    await jobserver.withClient(async environment => {
+      expect(jobserverAuthFromEnvironmentV1(environment)).toBe(`${process.platform === "win32" ? "" : "fifo:"}${jobserver.endpoint}`);
+    });
     const held = await Promise.all(Array.from({ length: fixture.pool.tokens }, () => jobserver.acquire()));
     expect(held.filter((slot) => slot.implicit)).toHaveLength(1);
     expect(jobserver.held()).toBe(fixture.pool.tokens);
@@ -78,11 +92,61 @@ test("tryAcquire takes a free slot without waiting, never jumps a waiter and ans
   } finally { jobs.close(); }
 });
 
+test("a retired client cannot strand an exclusive waiter or replace an active client's channel", async () => {
+  const row = fixture.retirement, jobs = await pool(row.tokens);
+  try {
+    const held = await Promise.all(Array.from({ length: row.driverSlots }, () => jobs.acquire()));
+    const endpoint = jobs.endpoint;
+    const exclusive = await jobs.withClient(async (active) => {
+      await jobs.withClient(async (abandoning) => {
+        expect(borrowToken(abandoning, "abandon")).toBe(row.abandonedBorrow);
+      });
+      expect(jobs.endpoint).toBe(endpoint);
+      expect(borrowToken(active, "return")).toBe(row.whileClientActive);
+      const waiting = jobs.acquireAll(AbortSignal.timeout(1000));
+      expect(jobs.waiting()).toBe(1);
+      return { waiting };
+    });
+    expect(jobs.endpoint).not.toBe(endpoint);
+    const replacement = jobs.endpoint;
+    for (const slot of held) slot.release();
+    const restored = await exclusive.waiting;
+    expect(restored).toHaveLength(row.tokens);
+    expect(jobs.tryAcquire()).toBeNull();
+    for (const slot of restored) slot.release();
+    const healthySlot = await jobs.acquire();
+    await jobs.withClient(async (healthy) => expect(borrowToken(healthy, "return")).toBe(row.afterRetirement));
+    expect(jobs.endpoint).toBe(replacement);
+    healthySlot.release();
+    expect(jobs.held()).toBe(0);
+  } finally { jobs.close(); }
+});
+
+test("a whole-pool probe returns partial slots while an external token is unavailable", async () => {
+  const row = fixture.retirement, jobs = await pool(row.tokens);
+  try {
+    const { exclusive } = await jobs.withClient(async environment => {
+      expect(borrowToken(environment, "abandon")).toBe(row.abandonedBorrow);
+      const exclusive = jobs.acquireAll(AbortSignal.timeout(3000));
+      void exclusive.catch(() => {});
+      expect(jobs.held()).toBe(0);
+      expect(jobs.waiting()).toBe(1);
+      expect(borrowToken(environment, "return")).toBe(row.afterPartialProbe);
+      expect(jobs.held()).toBe(0);
+      return { exclusive };
+    });
+    const slots = await exclusive;
+    expect(slots).toHaveLength(row.tokens);
+    expect(jobs.tryAcquire()).toBeNull();
+    for (const slot of slots) slot.release();
+  } finally { jobs.close(); }
+});
+
 test("the jobserver crate, the client Cargo and rustc embed, never holds more slots than the pool and returns every token", async () => {
   const oracle = (await schedulerBinaries()).get("jobserver-oracle")!, jobserver = await pool(fixture.oracle.tokens);
   try {
     const slot = await jobserver.acquire();
-    const result = spawnSync(oracle, [fixture.oracle.workers, fixture.oracle.holdMs, fixture.oracle.rounds].map(String), { env: { ...process.env, ...jobserver.environment() }, encoding: "utf8" });
+    const result = await jobserver.withClient(async environment => spawnSync(oracle, [fixture.oracle.workers, fixture.oracle.holdMs, fixture.oracle.rounds].map(String), { env: { ...process.env, ...environment }, encoding: "utf8" }));
     slot.release();
     expect(result.status, result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toEqual({ maxConcurrent: fixture.oracle.maxConcurrent, acquired: (fixture.oracle.workers - 1) * fixture.oracle.rounds });
@@ -91,31 +155,45 @@ test("the jobserver crate, the client Cargo and rustc embed, never holds more sl
   } finally { jobserver.close(); }
 }, 600_000);
 
-test("whole-pool reservations wait atomically, serialize successors, and return partially reserved tokens on cancellation", async () => {
+test("whole-pool reservations leave native tokens available, serialize successors, and cancel cleanly", async () => {
   const row = fixture.exclusive, jobs = await pool(row.tokens);
   try {
     const running = await jobs.acquire(), controller = new AbortController();
     const cancelled = jobs.acquireAll(controller.signal);
-    expect(jobs.held()).toBe(row.tokens);
+    const successor = jobs.acquire();
+    void cancelled.catch(() => {});
+    void successor.catch(() => {});
+    await jobs.withClient(async environment => expect(borrowToken(environment, "return")).toBe(row.externalBorrow));
+    expect(jobs.held()).toBe(row.waitingHeld);
+    expect(jobs.waiting()).toBe(2);
     expect(jobs.tryAcquire()).toBeNull();
     controller.abort(Error("exclusive cancelled"));
     await expect(cancelled).rejects.toThrow("exclusive cancelled");
-    expect(jobs.held()).toBe(1);
-    const exclusive = jobs.acquireAll(), successor = jobs.acquire();
+    (await successor).release();
+    expect(jobs.held()).toBe(row.waitingHeld);
+    const exclusive = jobs.acquireAll(), following = jobs.acquire();
+    expect(jobs.held()).toBe(row.waitingHeld);
     running.release();
     const reserved = await exclusive;
     expect(reserved).toHaveLength(row.tokens);
     expect(jobs.held()).toBe(row.tokens);
     expect(jobs.waiting()).toBe(1);
     for (const slot of reserved) slot.release();
-    (await successor).release();
+    (await following).release();
     expect(jobs.held()).toBe(0);
+  } finally { jobs.close(); }
+});
+
+test("an external jobserver client can use the entire pool after a whole-pool reservation", async () => {
+  const row = fixture.exclusive, jobs = await pool(row.tokens);
+  try {
+    for (const slot of await jobs.acquireAll()) slot.release();
     const oracle = (await schedulerBinaries()).get("jobserver-oracle")!, slot = await jobs.acquire();
-    const result = spawnSync(oracle, [row.workers, row.holdMs, row.rounds].map(String), { env: { ...process.env, ...jobs.environment() }, encoding: "utf8" });
+    const result = await jobs.withClient(async environment => spawnSync(oracle, [row.workers, row.holdMs, row.rounds].map(String), { env: { ...process.env, ...environment }, encoding: "utf8" }));
     slot.release();
     expect(result.status, result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toEqual({ maxConcurrent: row.maxConcurrent, acquired: (row.workers - 1) * row.rounds });
-    console.log(`[jobserver] exclusive ${row.tokens} workers; cancelled tokens restored; third-party client peak=${row.maxConcurrent}`);
+    console.log(`[jobserver] exclusive ${row.tokens} workers; third-party client peak=${row.maxConcurrent}`);
   } finally { jobs.close(); }
 }, 600_000);
 
@@ -129,7 +207,9 @@ test.skipIf(make === null)(`GNU make ≥ ${fixture.gnuMake.minimumVersion.join("
   const jobserver = await pool(fixture.gnuMake.tokens);
   try {
     const slot = await jobserver.acquire();
-    expect(spawnSync(make!, ["-s", "all"], { cwd: directory, env: { ...process.env, MAKEFLAGS: jobserver.makeflags }, encoding: "utf8" }).status).toBe(0);
+    await jobserver.withClient(async environment => {
+      expect(spawnSync(make!, ["-s", "all"], { cwd: directory, env: { ...process.env, MAKEFLAGS: environment.MAKEFLAGS }, encoding: "utf8" }).status).toBe(0);
+    });
     slot.release();
     let running = 0, peak = 0;
     for (const line of readFileSync(log, "utf8").trim().split("\n").map((row) => row.split(" ")).sort((left, right) => Number(left[0]) - Number(right[0]) || (left[1] === "end" ? -1 : 1))) { running += line[1] === "start" ? 1 : -1; peak = Math.max(peak, running); }

@@ -1,0 +1,80 @@
+{
+  "image": {
+    "schema": "image",
+    "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4AWP4z8DA8J+BkYHh////DAAe9gT92Gs1IgAAAABJRU5ErkJggg==",
+    "width": 2,
+    "height": 2
+  },
+  "pixels": [
+    255,
+    0,
+    0,
+    255,
+    0,
+    255,
+    0,
+    255,
+    0,
+    0,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255
+  ],
+  "cases": [
+    {
+      "name": "output image dictionary",
+      "value": {
+        "schema": "image",
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4AWP4z8DA8J+BkYHh////DAAe9gT92Gs1IgAAAABJRU5ErkJggg==",
+        "width": 2,
+        "height": 2
+      },
+      "image": true
+    },
+    {
+      "name": "matching authored URI carried as plain text",
+      "value": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4AWP4z8DA8J+BkYHh////DAAe9gT92Gs1IgAAAABJRU5ErkJggg==",
+      "image": false
+    },
+    {
+      "name": "untyped metadata",
+      "value": {
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4AWP4z8DA8J+BkYHh////DAAe9gT92Gs1IgAAAABJRU5ErkJggg=="
+      },
+      "image": false
+    },
+    {
+      "name": "another declared schema",
+      "value": {
+        "schema": "text",
+        "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4AWP4z8DA8J+BkYHh////DAAe9gT92Gs1IgAAAABJRU5ErkJggg=="
+      },
+      "image": false
+    },
+    {
+      "name": "resource document without a payload",
+      "value": {
+        "schema": "image",
+        "dataUrl": "data:image/png;base64,"
+      },
+      "image": false
+    }
+  ],
+  "channels": {
+    "output": {
+      "id": "source@image",
+      "direction": "Output",
+      "alt": "Image preview · source@image",
+      "input": false
+    },
+    "input": {
+      "id": "sink@!iimage",
+      "direction": "Input",
+      "alt": "Image preview · sink@image",
+      "input": true
+    }
+  }
+}

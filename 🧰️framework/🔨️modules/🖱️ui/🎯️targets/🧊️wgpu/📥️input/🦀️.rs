@@ -23,6 +23,7 @@ pub struct OriginalClipboardIntent { pub source: ClipboardIntentSource, pub reci
 struct RetainedInputAction {
     source: RetainedInputActionSource,
     action: RetainedStringAction,
+    receipt: Option<semio_ui_action::ActionQueueReceipt>,
     cancel:RetainedInputActionHandle,
 }
 
@@ -546,16 +547,21 @@ impl<E: Clone> InputState<E> {
         }
         let source = RetainedInputActionSource::Root(self.text_buffer.root().clone());
         let action = RetainedStringAction::new(descriptor, argument, source.len())?;
-        self.retained_action = Some(RetainedInputAction { source, action,cancel:RetainedInputActionHandle(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))) });
+        self.retained_action = Some(RetainedInputAction { source, action, receipt: None, cancel:RetainedInputActionHandle(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))) });
         Ok(())
     }
 
     pub fn begin_retained_string_action_owned(&mut self, descriptor: ActionDescriptor, argument: String, source: String) -> Result<(), BoundedActionFault> {
+        self.begin_retained_string_action_owned_with_receipt(descriptor, argument, source, None)
+    }
+
+    /// 🧾️ Stages one complete string and preserves its locally addressed input receipt.
+    pub fn begin_retained_string_action_owned_with_receipt(&mut self, descriptor: ActionDescriptor, argument: String, source: String, receipt: Option<semio_ui_action::ActionQueueReceipt>) -> Result<(), BoundedActionFault> {
         if self.retained_action.is_some() {
             return Err(BoundedActionFault::ItemCredits);
         }
         let action = RetainedStringAction::new(descriptor, argument, source.len())?;
-        self.retained_action = Some(RetainedInputAction { source: RetainedInputActionSource::Owned(source), action,cancel:RetainedInputActionHandle(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))) });
+        self.retained_action = Some(RetainedInputAction { source: RetainedInputActionSource::Owned(source), action, receipt, cancel:RetainedInputActionHandle(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))) });
         Ok(())
     }
 
@@ -567,7 +573,7 @@ impl<E: Clone> InputState<E> {
         if retained.action.push_page(&page)? == RetainedStringActionStep::Complete {
             let retained = self.retained_action.take().ok_or(BoundedActionFault::Structure)?;
             if retained.cancel.cancelled(){return Ok(None);}
-            return retained.action.finish(None).map(Some);
+            return retained.action.finish(retained.receipt).map(Some);
         }
         Ok(None)
     }
@@ -736,7 +742,8 @@ impl<E: Clone> InputState<E> {
             }
             return Ok(false);
         }
-        if self.retained_action.take().is_some() {
+        if let Some(action) = self.retained_action.take() {
+            if let Some(receipt) = action.receipt { on_receipt(receipt); }
             return Ok(false);
         }
         if !self.pending_actions.close_claim_step() {

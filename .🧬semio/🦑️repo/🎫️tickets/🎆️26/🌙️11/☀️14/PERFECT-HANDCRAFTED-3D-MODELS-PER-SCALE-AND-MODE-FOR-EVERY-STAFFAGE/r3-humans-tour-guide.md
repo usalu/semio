@@ -86,3 +86,55 @@ The trunk twists and the right arm spreads in poses and clips, so every shape of
 - The sleeve head is a chamfered end, not a set-in shoulder seam; in `holding-flag` front the right shoulder looks square.
 - Faces at 1:50 are schematic (no eyelids, brows); trousers have no folds apart from the hem break.
 - Grades as I see them: body 1:50 A-, 1:100 A-, 1:200 B+ (not opened this session after the knee change), 1:500 B+; structure A- / B+; thermal A- (three red areas); 2D B+ because of the plan workaround.
+
+## Round 5 handcraft (2026-11-21)
+
+Scripts changed: `r3-tour-guide-s50.ts` (`SHANK_T`), `r3-tour-guide-coarse.ts` (`SHANK_S` at 1:100 / 1:200 / 1:500, left fist band), `r3-tour-guide-texts.json` (1:500 `validRange`). Rebuilt with the `r3-tour-guide-ship.sh` steps. Renders: `🗑️generated/r5-tour-guide/before|after/`.
+
+### Reference (adult of 1.75 m, 15 mm sole) and model against it
+
+| quantity | reference | model (barefoot) | deviation |
+|---|---|---|---|
+| hip joint | 0.52 to 0.53 H = 0.910 to 0.928 m (Winter 2009) | 0.908 m = 0.519 H | -0.2 % |
+| knee | 0.285 H = 0.499 m | 0.497 m | -0.4 % |
+| ankle | 0.039 H = 0.068 m | 0.066 m | -2.9 % |
+| shoulder joint | 0.818 H = 1.4315 m | 1.4295 m | -0.1 % |
+| elbow / wrist | 0.630 / 0.485 H = 1.1025 / 0.849 m | 1.104 / 0.8485 m | +0.1 % / -0.1 % |
+| head | H / 7.5 = 0.233 m | 0.233 m | 0 % |
+| hand / foot | 0.108 / 0.15 H = 0.189 / 0.263 m | 0.189 / 0.265 m (shoe 0.30) | 0 % / +0.8 % |
+| biacromial (male) | 0.23 to 0.245 H = 0.40 to 0.43 m | 0.40 m over the jacket shoulders, joints 0.35 m apart | in band |
+| flag pole / flag / pointer | 24 mm x 1.33 m, 0.46 x 0.30 m, 0.55 m | as stated | 0 % |
+
+### Grades (as seen)
+
+| scale | body before / after | thermal | structure |
+|---|---|---|---|
+| 1:50 | A- (step ring at the knee) / A- (knee closed) | A- | A- (skeleton, spine dorsal with curves, ribs, pelvis, long bones) |
+| 1:100 | A- / A- | A- | A- |
+| 1:200 | B+ / B+ | B+ | B+ |
+| 1:500 | B (faceted legs, flag a 75 mm slab forced by the feature) / B | B+ | B (stick skeleton) |
+
+### Changes
+
+- Knee at every scale: the shank top is a millimetre fuller than the thigh end (1:50 0.0636 x 0.0676 against 0.063 x 0.067), so the thigh closes inside the shank and the step ring at the knee is gone.
+- Print suitability (catalog was INVALID under the new `PRINT` rule): the left fist's finger band at 1:100 and 1:200 is 10 % thicker (its visible width beside the pole was 0.199 mm at 1:150); the 1:500 range ends at 1:700 (the 36 mm pole strip prints under 0.2 mm beyond).
+
+### Checks
+
+`r3-validate.ts humans/tour-guide --catalog-only`: `VALID ... schema 0, validateAsset 0`. `volumes-check.ts --product`: all rules `ok` except `volumes-thermal-coverage` at 1:50 / 1:100 on `head-skin`, `arm-skin`, `shoes` (C18 values, unchanged since round 3, filed in `author-requests.md`).
+
+### Seen (opened)
+
+1:50 body sheet before, three-quarter close-up before and after, `waving` pose, clip `turn-and-wave` at 2.8 s after, 1:500 body and 1:50 structure. Rendered, not opened: 1:100 and 1:200 sheets after, thermal sheets, the other poses after, 2D.
+
+### Remaining
+
+- Rig: trunk and head bones run along the mid axis and the head bone starts at the base of the neck (no separate neck bone, no lumbosacral offset); the joints of the limbs are right. A neck bone would need all seven poses, two clips and the 2D of four scales re-posed; not done this round.
+- Faces schematic, trousers without folds, flag at 1:500 a 75 mm slab (feature rule), plan of trunk and head a workaround (round 3 note).
+- Three thermal areas red (C18, area reviewer).
+
+## Articulated cervical column and skull
+
+The cervical column and skull now rotate about independent pivots. The atlas is 112.29 mm along the former head-and-neck frame and 16 mm behind its axis, at the end of the authored cervical spine. Two occipital condyles carry the skull. In the turn-to-group pose, the cervical segment contributes 9° of twist and the head supplies a further 16°. The collar follows the neck, and the cap, jaw and breath outlets follow the head. The articulated model preserves the 5.413 kg combined mass and its neutral centre of mass.
+
+The [movement fixture](digital-guide-neck.json) covers seven poses, four digital scales, and an isolated 15° nod. All four model scales passed the thirteen geometry rules. Including the cap brim in plan brought the 1:50 soft-edge error down to 1.875 mm. The 5,247,696-byte presentation GLB passed independent readback of all twelve scenes.

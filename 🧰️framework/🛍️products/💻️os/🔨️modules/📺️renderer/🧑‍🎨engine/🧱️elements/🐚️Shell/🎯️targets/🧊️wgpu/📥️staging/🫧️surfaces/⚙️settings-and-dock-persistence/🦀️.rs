@@ -19,7 +19,7 @@ impl SurfaceState {
             }
             let owed = enqueue_world3d_events(&mut state.authority, [WorldInteractionIntent::cancel(infinite_world::world::WorldCancelReason::CaptureLost)]).is_ok();
             if owed {
-                state.bounds = Rect::new(0.0, 0.0, 0.0, 0.0);
+                state.session.bounds = Rect::new(0.0, 0.0, 0.0, 0.0);
                 self.world3d_close_cancels.insert(host_id.to_owned(), 0);
             }
             return !owed;

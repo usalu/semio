@@ -10,7 +10,7 @@ use pack::snapshot::ArtifactPack;
 use semio_plugin_job::{ChildEmissionPreviewJob, agent_lane_uncarried_fault, drive_agent_lane_preview};
 use semio_plugin_instance_history::history_components::CommandHistory;
 use semio_plugin_decl_emission::Emit;
-use semio_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReservedCommitProgress, FrameworkReservedCommitStage, PendingFrameworkReserved};
+use semio_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReservedCommitProgress, FrameworkReservedCommitStage, PendingFrameworkReserved, ReservedCommitMetadata};
 use std::future::Future;
 use semio_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_framework::kernel::InvocationResult;
@@ -46,12 +46,12 @@ impl<A: ArtifactApp> PendingReserved<A> {
     /// 🏁️ Queues a refused or superseded pending route behind the commits: its lease retires through the paid cursor, never by drop.
     pub fn retire_pending_reserved(&mut self, pending: PendingFrameworkReserved) {
         let PendingFrameworkReserved { action, args, meta, permit } = pending;
-        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta, permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
+        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta: ReservedCommitMetadata::new(meta), permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
     }
 
     /// 🏁️ Queues a producer permit that ended without a commit so its lease retires through the paid cursor.
     pub fn retire_reserved_permit(&mut self, permit: semio_plugin_job::reserved_jobs::FrameworkReservedCommitPermit) {
-        self.reserved_commits.push_back(FrameworkReservedCommit { action: String::new(), args: None, meta: semio_plugin_decl_emission::ActionMeta::default(), permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
+        self.reserved_commits.push_back(FrameworkReservedCommit { action: String::new(), args: None, meta: ReservedCommitMetadata::new(semio_plugin_decl_emission::ActionMeta::default()), permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
     }
 
     /// 🕰️ Hands one finished framework-reserved spawn-job to the app's commit queue. Nothing here
@@ -71,7 +71,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
             return Err(fault);
         }
         let PendingFrameworkReserved { action, args, meta, permit } = pending;
-        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta, permit, log_generation_before: history.log_generation, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: None });
+        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta: ReservedCommitMetadata::new(meta), permit, log_generation_before: history.log_generation, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: None });
         Ok(true)
     }
 

@@ -5664,19 +5664,11 @@
             "material": "steel-shell",
             "role": "body",
             "tone": 0.35,
-            "kind": "box",
-            "size": [
-              0.22,
-              0.0295,
-              0.22
-            ],
-            "transform": {
-              "translation": [
-                0,
-                0.01475,
-                0
-              ]
-            }
+            "kind": "extrude",
+            "profile": [[0.085, 0.115], [-0.085, 0.115], [-0.115, 0.085], [-0.115, -0.085], [-0.085, -0.115], [0.085, -0.115], [0.115, -0.085], [0.115, 0.085]],
+            "plane": "zx",
+            "from": 0,
+            "to": 0.0295
           },
           {
             "id": "shell",
@@ -5685,34 +5677,9 @@
             "material": "steel-shell",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.0295,
-                0
-              ],
-              [
-                0.0295,
-                0.1205
-              ],
-              [
-                0.3175,
-                0.1205
-              ],
-              [
-                0.3175,
-                0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ]
+            "profile": [[0.0295, 0], [0.0295, 0.1205], [0.3175, 0.1205], [0.3175, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
           },
           {
             "id": "top-cap",
@@ -5721,38 +5688,9 @@
             "material": "steel-shell",
             "role": "body",
             "tone": 0.6,
-            "profile": [
-              [
-                0,
-                0
-              ],
-              [
-                0,
-                0.1245
-              ],
-              [
-                0.02,
-                0.1245
-              ],
-              [
-                0.05182,
-                0.10407
-              ],
-              [
-                0.07451,
-                0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ]
+            "profile": [[0.0, 0.0], [0.0, 0.1245], [0.018, 0.1245], [0.032, 0.1205], [0.044, 0.1115], [0.055, 0.096], [0.064, 0.072], [0.071, 0.04], [0.0745, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
           },
           {
             "id": "discharge-stub",
@@ -5761,34 +5699,9 @@
             "material": "copper",
             "role": "body",
             "tone": 0.75,
-            "profile": [
-              [
-                0.06,
-                0
-              ],
-              [
-                0.06,
-                0.015
-              ],
-              [
-                0.1125,
-                0.015
-              ],
-              [
-                0.1125,
-                0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ]
+            "profile": [[0.06, 0], [0.06, 0.015], [0.1125, 0.015], [0.1125, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
           },
           {
             "id": "suction-stub",
@@ -5797,34 +5710,9 @@
             "material": "copper",
             "role": "body",
             "tone": 0.75,
-            "profile": [
-              [
-                0.11,
-                0
-              ],
-              [
-                0.11,
-                0.015
-              ],
-              [
-                0.185,
-                0.015
-              ],
-              [
-                0.185,
-                0
-              ]
-            ],
-            "axis": [
-              -1,
-              0,
-              0
-            ],
-            "origin": [
-              0,
-              0.18,
-              0
-            ]
+            "profile": [[0.11, 0], [0.11, 0.015], [0.185, 0.015], [0.185, 0]],
+            "axis": [-1, 0, 0],
+            "origin": [0, 0.18, 0]
           },
           {
             "id": "terminal",
@@ -5833,17 +5721,9 @@
             "material": "pa-plastic",
             "role": "body",
             "tone": 0.25,
-            "size": [
-              0.048,
-              0.078,
-              0.072
-            ],
+            "size": [0.048, 0.078, 0.072],
             "transform": {
-              "translation": [
-                0.024,
-                0.039,
-                0
-              ]
+              "translation": [0.024, 0.039, 0]
             }
           }
         ],
@@ -5857,17 +5737,13 @@
             "id": "th-shell",
             "of": "shell",
             "region": "shell",
-            "sectionFaces": [
-              "+v"
-            ]
+            "sectionFaces": ["+v"]
           },
           {
             "id": "th-top-cap",
             "of": "top-cap",
             "region": "dome",
-            "sectionFaces": [
-              "-v"
-            ]
+            "sectionFaces": ["-v"]
           },
           {
             "id": "th-discharge-stub",
@@ -5883,46 +5759,7 @@
             "id": "th-terminal",
             "of": "terminal",
             "region": "terminal",
-            "sectionFaces": [
-              "-u"
-            ]
-          },
-          {
-            "id": "th-window",
-            "region": "shell",
-            "kind": "revolve",
-            "bone": "shell",
-            "material": "steel-shell",
-            "role": "body",
-            "tone": 0.35,
-            "profile": [
-              [
-                0.1,
-                0
-              ],
-              [
-                0.1,
-                0.053
-              ],
-              [
-                0.1455,
-                0.053
-              ],
-              [
-                0.1455,
-                0
-              ]
-            ],
-            "axis": [
-              0,
-              0,
-              -1
-            ],
-            "origin": [
-              0,
-              0.26,
-              0
-            ]
+            "sectionFaces": ["-u"]
           },
           {
             "id": "th-scroll-window",
@@ -5931,34 +5768,9 @@
             "material": "cast-aluminium",
             "role": "body",
             "tone": 0.8,
-            "profile": [
-              [
-                0.1165,
-                0
-              ],
-              [
-                0.1165,
-                0.045
-              ],
-              [
-                0.1465,
-                0.045
-              ],
-              [
-                0.1465,
-                0
-              ]
-            ],
-            "axis": [
-              0,
-              0,
-              -1
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ],
+            "profile": [[0.06, 0.0], [0.06, 0.045], [0.115, 0.045], [0.115, 0.0]],
+            "axis": [0, 0, -1],
+            "origin": [0, 0, 0],
             "region": "scroll"
           },
           {
@@ -5968,50 +5780,11 @@
             "material": "steel-shell",
             "role": "detail",
             "tone": 0.9,
-            "profile": [
-              [
-                0.08294,
-                0.017
-              ],
-              [
-                0.07608,
-                0.0605
-              ],
-              [
-                0.06086,
-                0.104
-              ],
-              [
-                0.05136,
-                0.104
-              ],
-              [
-                0.06658,
-                0.0605
-              ],
-              [
-                0.07344,
-                0.017
-              ],
-              [
-                0.08294,
-                0.017
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ],
+            "profile": [[0.08294, 0.017], [0.07608, 0.0605], [0.06086, 0.104], [0.05136, 0.104], [0.06658, 0.0605], [0.07344, 0.017], [0.08294, 0.017]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
             "region": "dome",
-            "tags": [
-              "dome-plume"
-            ]
+            "tags": ["dome-plume"]
           }
         ],
         "structure": [
@@ -6022,38 +5795,9 @@
             "material": "steel-shell",
             "role": "body",
             "tone": 0.5,
-            "profile": [
-              [
-                0.0295,
-                0.117
-              ],
-              [
-                0.0295,
-                0.1205
-              ],
-              [
-                0.3375,
-                0.1205
-              ],
-              [
-                0.3375,
-                0.117
-              ],
-              [
-                0.0295,
-                0.117
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ],
+            "profile": [[0.0295, 0.117], [0.0295, 0.1205], [0.3375, 0.1205], [0.3375, 0.117], [0.0295, 0.117]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
             "member": "shell",
             "part": "member"
           },
@@ -6064,62 +5808,12 @@
             "material": "steel-shell",
             "role": "body",
             "tone": 0.35,
-            "profile": [
-              [
-                0.098,
-                0.11
-              ],
-              [
-                -0.098,
-                0.11
-              ],
-              [
-                -0.11,
-                0.098
-              ],
-              [
-                -0.11,
-                -0.098
-              ],
-              [
-                -0.098,
-                -0.11
-              ],
-              [
-                0.098,
-                -0.11
-              ],
-              [
-                0.11,
-                -0.098
-              ],
-              [
-                0.11,
-                0.098
-              ]
-            ],
+            "profile": [[0.098, 0.11], [-0.098, 0.11], [-0.11, 0.098], [-0.11, -0.098], [-0.098, -0.11], [0.098, -0.11], [0.11, -0.098], [0.11, 0.098]],
             "plane": "zx",
             "from": 0,
             "to": 0.0595,
             "holes": [
-              [
-                [
-                  0.0,
-                  0.07
-                ],
-                [
-                  0.07,
-                  4.286263797015737e-18
-                ],
-                [
-                  8.572527594031473e-18,
-                  -0.07
-                ],
-                [
-                  -0.07,
-                  -1.285879139104721e-17
-                ]
-              ]
+              [[0.0, 0.07], [0.07, 4.286263797015737e-18], [8.572527594031473e-18, -0.07], [-0.07, -1.285879139104721e-17]]
             ],
             "member": "shell",
             "part": "member"
@@ -6131,34 +5825,9 @@
             "material": "steel-shell",
             "role": "body",
             "tone": 0.45,
-            "profile": [
-              [
-                0.236,
-                0
-              ],
-              [
-                0.236,
-                0.117
-              ],
-              [
-                0.266,
-                0.117
-              ],
-              [
-                0.266,
-                0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ],
+            "profile": [[0.236, 0], [0.236, 0.117], [0.266, 0.117], [0.266, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
             "member": "shell",
             "part": "member"
           },
@@ -6170,61 +5839,20 @@
             "role": "body",
             "tone": 0.6,
             "profile": [
-              [
-                0.02,
-                0.1245
-              ],
-              [
-                0.03891,
-                0.11895
-              ],
-              [
-                0.05182,
-                0.10407
-              ],
-              [
-                0.06878,
-                0.05326
-              ],
-              [
-                0.07451,
-                0
-              ],
-              [
-                0.07101,
-                0
-              ],
-              [
-                0.06528,
-                0.04976
-              ],
-              [
-                0.04832,
-                0.10057
-              ],
-              [
-                0.03541,
-                0.11545
-              ],
-              [
-                0.0165,
-                0.121
-              ],
-              [
-                0.02,
-                0.1245
-              ]
+              [0.02, 0.1245],
+              [0.03891, 0.11895],
+              [0.05182, 0.10407],
+              [0.06878, 0.05326],
+              [0.07451, 0],
+              [0.07101, 0],
+              [0.06528, 0.04976],
+              [0.04832, 0.10057],
+              [0.03541, 0.11545],
+              [0.0165, 0.121],
+              [0.02, 0.1245]
             ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
             "member": "dome",
             "part": "member"
           },
@@ -6235,17 +5863,9 @@
             "material": "steel-shell",
             "role": "body",
             "tone": 0.35,
-            "size": [
-              0.03,
-              0.06,
-              0.056
-            ],
+            "size": [0.03, 0.06, 0.056],
             "transform": {
-              "translation": [
-                0.0135,
-                0.039,
-                0
-              ]
+              "translation": [0.0135, 0.039, 0]
             },
             "member": "terminal",
             "part": "member"
@@ -6257,34 +5877,9 @@
             "material": "cast-aluminium",
             "role": "body",
             "tone": 0.75,
-            "profile": [
-              [
-                0.09,
-                0
-              ],
-              [
-                0.09,
-                0.04
-              ],
-              [
-                0.12,
-                0.04
-              ],
-              [
-                0.12,
-                0
-              ]
-            ],
-            "axis": [
-              0,
-              0,
-              -1
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ],
+            "profile": [[0.09, 0], [0.09, 0.04], [0.12, 0.04], [0.12, 0]],
+            "axis": [0, 0, -1],
+            "origin": [0, 0, 0],
             "member": "rotor",
             "part": "member"
           },
@@ -6295,34 +5890,9 @@
             "material": "steel-shell",
             "role": "body",
             "tone": 0.6,
-            "profile": [
-              [
-                0.11,
-                0
-              ],
-              [
-                0.11,
-                0.1
-              ],
-              [
-                0.23,
-                0.1
-              ],
-              [
-                0.23,
-                0
-              ]
-            ],
-            "axis": [
-              0,
-              1,
-              0
-            ],
-            "origin": [
-              0,
-              0,
-              0
-            ],
+            "profile": [[0.11, 0], [0.11, 0.1], [0.23, 0.1], [0.23, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
             "member": "shell",
             "part": "mass"
           },
@@ -6333,17 +5903,9 @@
             "material": "epdm-rubber",
             "role": "body",
             "tone": 0.2,
-            "size": [
-              0.22,
-              0.0295,
-              0.22
-            ],
+            "size": [0.22, 0.0295, 0.22],
             "transform": {
-              "translation": [
-                0,
-                0.01475,
-                0
-              ]
+              "translation": [0, 0.01475, 0]
             },
             "member": "shell",
             "part": "support",
@@ -6352,8 +5914,16 @@
         ],
         "decisions": [
           {
-            "en": "The hermetic vessel has a cylindrical barrel and a two-slope crown. Separate suction and discharge tubes retain their directions. A square mounting footprint replaces the four small lugs.",
-            "de": "Die hermetische Kapsel besteht aus Zylindermantel und zweifach geneigtem Deckel. Saug- und Druckstutzen behalten ihre Austrittsrichtungen. Eine quadratische Standfläche fasst die vier kleinen Füße zusammen."
+            "en": "Body, 1:500 (model only, 75 mm feature; the drawing is unavailable at this scale): the hermetic shell of 241 mm on a 30 mm base plate whose deep chamfers stand for the four ears and grommets on the 190.5 mm bolt square, the torispherical top cap as one smooth crown of 75 mm rise, the 1/2 in discharge and 7/8 in suction tubes in their directions (kept at true size, as the stubs are what makes the compressor) and the terminal cover; the window and the scroll behind it are below the feature and left out of the body.",
+            "de": "Körper, 1:500 (nur Modell, 75-mm-Merkmal; die Zeichnung ist bei diesem Maßstab nicht verfügbar): der hermetische Mantel von 241 mm auf einer 30-mm-Grundplatte, deren tiefe Fasen für die vier Ohren mit Tüllen auf dem 190,5-mm-Lochquadrat stehen, die torisphärische Kappe als eine glatte Wölbung von 75 mm Stich, Druckrohr 1/2 Zoll und Saugrohr 7/8 Zoll in ihren Richtungen (in echter Größe, weil die Stutzen den Verdichter ausmachen) und die Klemmenabdeckung; Fenster und Spirale dahinter liegen unter dem Merkmal und fehlen im Körper."
+          },
+          {
+            "en": "Thermal: references per region and the plume patch on the crown; the scroll region is a 90 mm disc at the height of the scroll set inside the shell, where the 1:50 window shows it.",
+            "de": "Thermik: Verweise je Region und das Fahnenfeld auf der Wölbung; die Region Spirale ist eine 90-mm-Scheibe auf der Höhe des Spiralsatzes im Mantel, wo das Fenster bei 1:50 sie zeigt."
+          },
+          {
+            "en": "Structure: the pressure vessel up to the lap, the foot frame, the main bearing frame, the cap shell, the terminal fence, the orbiting scroll, the motor mass and one contact pad over the grommet square.",
+            "de": "Tragwerk: der Druckbehälter bis zur Überlappung, der Fußrahmen, das Hauptlagerschild, die Kappenschale, der Klemmenzaun, die orbitierende Spirale, die Motormasse und ein Kontaktpolster über das Tüllenquadrat."
           }
         ]
       }

@@ -11,9 +11,9 @@ const repoRoot = findWorkspaceRoot();
 const registry = JSON.parse(readFileSync(join(import.meta.dirname, "../../🤖️generated/🔌️plugins.json"), "utf8")) as readonly DeployedRegistryEntryV1[];
 const catalog = registryModuleDirectories(registry);
 
-/** 🔌️ The one identity a plugin root passes to `Plugin::<…>::builder(…)`, as a quoted literal or a
- * `SCREAMING_SNAKE` const. Doc-comment decoys (`builder(…)`, `builder(...)`) can never match. */
-const BUILDER_IDENTITY = /::builder\(\s*(?:"([a-z0-9-]+)"|([A-Z][A-Z0-9_]*))\s*\)/u;
+/** 🔌️ The one identity a plugin root passes to `PluginBuilder::<…>::new(…)`, as a quoted literal or a
+ * `SCREAMING_SNAKE` const. Doc-comment decoys (`new(…)`, `new(...)`) can never match. */
+const BUILDER_IDENTITY = /\bPluginBuilder(?:::\s*<[^()\n]*>)?::new\(\s*(?:"([a-z0-9-]+)"|([A-Z][A-Z0-9_]*))\s*\)/u;
 /** 🧩️ The extension analogue — `ExtensionBundle::new(<identity>, <label>, <version>)`. */
 const BUNDLE_IDENTITY = /ExtensionBundle::new\(\s*(?:"([a-z0-9-]+)"|([A-Z][A-Z0-9_]*))\s*,/u;
 const PACKAGE_ID_CALL = /\.package_id\(\s*"([^"]+)"/u;
@@ -110,7 +110,7 @@ describe("plugin identity is the same in every authority", () => {
   });
 
   it("reads the real identity rather than a doc-comment decoy, and reports drift instead of passing vacuously", () => {
-    const decoyed = { path: "synthetic", text: '/// `Plugin::<X>::builder(…)` — see the doc\npub fn plugin() { Plugin::<X>::builder("energy").package_id("semio:energy") }' };
+    const decoyed = { path: "synthetic", text: '/// `PluginBuilder::<_, X>::new(…)` — see the doc\npub fn plugin() { PluginBuilder::<_, X>::new("energy").package_id("semio:energy") }' };
     expect(declaredIdentity(decoyed, "plugin")).toBe("energy");
     const viaConst = { path: "synthetic", text: 'const EXTENSION_ID: &str = "imperative-extension-core";\nExtensionBundle::new(EXTENSION_ID, "Imperative Core", V)' };
     expect(declaredIdentity(viaConst, "extension")).toBe("imperative-extension-core");

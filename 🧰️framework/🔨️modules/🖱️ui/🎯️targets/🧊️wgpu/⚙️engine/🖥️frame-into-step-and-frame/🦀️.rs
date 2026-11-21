@@ -178,6 +178,7 @@ impl Ui {
                     self.driver_drag,
                     window.router.flow().block.is_reversed(),
                     window.router.flow().inline,
+                    window.router.hover_pointer().map(|(x, y)| (x + offset_x, y + offset_y)),
                     &mut frame.candidate,
                     &mut frame.node_paint,
                 );

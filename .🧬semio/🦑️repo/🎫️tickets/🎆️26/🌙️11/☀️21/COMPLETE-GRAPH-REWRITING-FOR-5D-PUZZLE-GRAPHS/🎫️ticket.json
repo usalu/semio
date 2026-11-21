@@ -1,0 +1,832 @@
+{
+  "title": "Complete Graph Rewriting for 5D Puzzle Graphs",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "Complete the Trinity graph rewriting plugin for 5D Puzzle graphs end to end, with typed graph exchange, rule execution and conformance tests.",
+  "summary": "Completed Trinity graph rewriting for Puzzle 5D with typed rule exchange, atomic edits, Undo, archive replay, and published workflow ports. Verified the mounted endpoints and archive cases, native runner and encoding suites, independent schema and graph fixtures, and both locked WASI component checks.",
+  "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS/RUNNING-OS/RUNNING-S/RUNNING-PLUGINS/RUNNING-TRINITY/RUNNING-REWRITING",
+  "sessions": [
+    "ad0dbc50-3fe9-42de-a26d-bc75aee8663b"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-21 00:42:28",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "prompt": "Complete the Trinity graph rewriting plugin for 5D Puzzle graphs end to end, with typed graph exchange, rule execution and conformance tests.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-21 07:53:54",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5db034ffe534a1581684b9d978004efabee6594c",
+      "summary": "Completed Trinity graph rewriting for Puzzle 5D with typed rule exchange, atomic edits, Undo, archive replay, and published workflow ports. Verified the mounted endpoints and archive cases, native runner and encoding suites, independent schema and graph fixtures, and both locked WASI component checks.",
+      "files": [
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🔨️modules/🎞️rule-media/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🔨️modules/🎞️rule-media/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🔨️modules/🎞️rule-media/🧪️tests/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🔨️modules/▶️rule-application/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🔨️modules/🔺️model/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️play-app/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-document-commands/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🚪️io/💾️binary/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧬️schema/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧬️schema/🧬️mutations/🔍️set-lod-mode/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️typed/📜️rule/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️typed/🗂️layout/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-working-graph/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👉️edit-rhs/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️remove-parameter-binding/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule-nodes/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout-points/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️rule-application/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️rule-application/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️rule-application/🐍️.py"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🛂️manifest/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🔺️graph-model/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔤️lexer/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗣️language-service/🌳️spanned-parser/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗣️language-service/🔍️query-parser/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🪜️execution/▶️query-execution/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔨️modules/♻️rewriting/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔨️modules/♻️rewriting/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🔨️modules/♻️rewriting/🔣️fixture.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/✍️artifact-editor/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📥️snapshot-import/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/📚️example-and-brush-mesh/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/☑️option-groups-and-edits/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🔌️in-port-and-lane-verbs/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🔌️in-port-and-lane-verbs/🧫️fixtures/♻️rewrite.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🗂️manifest-and-window-actions/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🏃️space-runner/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🏗️bootstrap/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🎞️media/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🧭️topology-and-edges/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🚧️run-errors/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🧪️tests/🔬️unit/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🛂️manifest/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/🔀️plugin-exchange/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🧾️typed-operations/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎬️actions-a/🖱️computing-hover-and-preview/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🖥️host/🔀️workflow/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏷️type/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🔄️mapping/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧊️field-receiving/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧊️field-receiving/🔣️.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/CORE.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/implementation.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/media-lifecycle.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/puzzle-graph.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/workflow-cache.md"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📥️staging/📜️history-view/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📥️staging/🎟️producers/🦀️.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/dsl-field-receiving.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/mounted-rewrite-fixture.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/📓️native-trinity-rewrite-regressions.md"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📥️emission/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪆️child-frame/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧪️tests/🔬️window-config-ownership/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/trinity-mounted-test-fixtures.md"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🎟️request/🏭️reserved/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🪆️content/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📄️document/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧰️support/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🪆️child/🏢️initial/🪆️content/🔣️.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🪆️working-graph/🔣️.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/trinity-document-birth.md"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎞️play-snapshot/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️kind-catalogs/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️kind-catalogs/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🌉️bridge/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️testkit/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🔌️in-port-and-lane-verbs/🧫️fixtures/🧰️catalog-archive.json"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🗣️.dsl.semio"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🔏️.digest"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧪️every-example/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/📓️archive-fixture-settlement.md"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️wire-format-guard/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-part-anchor/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-grips/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-part2d-text/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-part-grip/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-part/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-part2d-icon/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-fastener-kind/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-part-kind/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-puzzle5d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-part2d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-part3d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-part3d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-part-grip/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-part2d-locked/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-part3d-label/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️change-description/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-part2d-hidden/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-part3d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-part2d-geometry/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-fastener-geometry/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-part3d-mesh/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-grips/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️document-records/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎞️media/🛫️intrinsic/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🪜️maintenance-ladder/🦀️.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/intrinsic-media-work-settlement.md"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🎟️effect/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🧬️native/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/♻️retirement/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🎟️action/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🎟️effect/🧪️tests/source.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🎟️effect/🧪️tests/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🧪️tests/🎟️eff/🦀️.rs"
+        },
+        {
+          "path": "🌎️hub/🧩️compositions/🧩️puzzle/🧩️component/🛂️.descriptor.semio"
+        },
+        {
+          "path": "🌎️hub/🧩️compositions/🧩️puzzle/🧩️component/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🧠️wasmtime-node-host/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🚀️app-assembly/🦀️.rs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️21/COMPLETE-GRAPH-REWRITING-FOR-5D-PUZZLE-GRAPHS/describe-puzzle.ts"
+        },
+        {
+          "path": "🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/💡️services/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/📐️cad/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🌊️flow/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🧑‍💻dev/🧩️composition/Cargo.lock"
+        },
+        {
+          "path": "✏️s/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.lock"
+        },
+        {
+          "path": "🧰️framework/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.lock"
+        },
+        {
+          "path": "🌎️hub/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🏭️bridge/Cargo.lock"
+        },
+        {
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/Cargo.lock"
+        }
+      ]
+    }
+  ]
+}

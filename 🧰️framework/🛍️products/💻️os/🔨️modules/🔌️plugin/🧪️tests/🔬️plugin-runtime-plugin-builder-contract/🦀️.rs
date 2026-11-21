@@ -34,7 +34,7 @@ use semio_ui_locale::Terminology;
 use semio_plugin_decl_emission::{ActionMeta, AsyncTask, ChildEmit, Emit, TaskCtx, TaskResolution};
 use semio_plugin_app_builder::App;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::{OriginalMediaImport, PluginApp};
 use semio_plugin_window_kits::AppActionRegistry;
 use semio_plugin_decl_media::ArtifactOutputChunks;
 use semio_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionHoverState, InteractionView, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};

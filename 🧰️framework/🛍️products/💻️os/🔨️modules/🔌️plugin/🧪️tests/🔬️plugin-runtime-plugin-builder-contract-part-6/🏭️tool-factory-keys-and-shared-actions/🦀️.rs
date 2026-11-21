@@ -121,19 +121,26 @@ pub fn instance_source() -> String {
                 key.1
             })
             .collect();
+        let law: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("tool switch publication law");
+        let tool_switches = law["toolSwitchPublications"].as_array().expect("tool switch rows");
+        for route in tool_switches {
+            let action = route["action"].as_str().expect("tool switch action");
+            let registration = app.tools.framework_registration(action).unwrap_or_else(|| panic!("missing native publication owner for {action}"));
+            assert_eq!(registration.key, semio_framework::ToolFactoryKey::new(&controller_id, action));
+            assert_eq!(registration.schema_id, route["schema"].as_str().expect("tool switch schema"));
+            let lanes: Vec<_> = registration.publication_lanes.iter().map(|lane| format!("{lane:?}")).collect();
+            assert_eq!(serde_json::json!(lanes), route["lanes"]);
+        }
         let framework_registered_without_declaration: std::collections::BTreeSet<String> =
-            ["clearSelection", "configuration-binary", "import-media", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"].into_iter().map(String::from).collect();
-        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", "setActiveUtility", semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::HOST_EVENT_ACTION_ID]
+            ["clearSelection", "configuration-binary", "import-media", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"]
+            .into_iter().chain(tool_switches.iter().map(|row| row["action"].as_str().unwrap()).filter(|action| !declared.contains(*action))).map(String::from).collect();
+        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["cancelTypedOperation", semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID, semio_framework::HOST_EVENT_ACTION_ID]
             .into_iter()
             .chain(semio_framework::history_edit::HISTORY_EDIT_ACTION_IDS)
             .map(String::from)
             .collect();
         assert_eq!(registered.difference(&declared).cloned().collect::<std::collections::BTreeSet<_>>(), framework_registered_without_declaration, "an activated factory without a manifest declaration must be one of the framework's own reserved surface verbs");
         assert_eq!(declared.difference(&registered).cloned().collect::<std::collections::BTreeSet<_>>(), framework_directly_routed_migrated, "a migrated declaration with no activated factory is a dead action unless the framework routes it directly");
-        assert!(
-            instance_source().contains("} else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {"),
-            "the only reason `setActiveUtility` may carry no factory is its direct `dispatch_emit` arm in `handle_action_invocation`"
-        );
         assert!(
             instance_source().split_whitespace().collect::<String>().contains("ifaction==CANCEL_TYPED_OPERATION_ACTION_ID{returnself.dispatch_operation_cancellation(args,meta).await;}"),
             "the only reason `cancelTypedOperation` may carry no factory is its direct `dispatch_operation_cancellation` arm at the head of `dispatch_action`"

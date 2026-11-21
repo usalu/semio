@@ -401,7 +401,7 @@ function core(asset: Asset, clip: Clip, timeS: number, cycle = 0): Core {
     for (const bone of asset.rig.bones) {
       const id = bone.id;
       const o = offsets[id]!;
-      turned[id] = { angleDeg: o.angleDeg + cycle * turn((d) => d.offsets[id]!.angleDeg), abductionDeg: o.abductionDeg, twistDeg: o.twistDeg, dx: o.dx + cycle * turn((d) => d.offsets[id]!.dx), dy: o.dy + cycle * turn((d) => d.offsets[id]!.dy) };
+      turned[id] = { angleDeg: o.angleDeg + cycle * turn((d) => d.offsets[id]!.angleDeg), abductionDeg: o.abductionDeg, twistDeg: o.twistDeg + (bone.joint.continuousTwist ? cycle * turn((d) => d.offsets[id]!.twistDeg) : 0), dx: o.dx + cycle * turn((d) => d.offsets[id]!.dx), dy: o.dy + cycle * turn((d) => d.offsets[id]!.dy) };
     }
     offsets = turned;
     root = { x: root.x + cycle * turn((d) => d.root.x), y: root.y + cycle * turn((d) => d.root.y), angleDeg: root.angleDeg + cycle * turn((d) => d.root.angleDeg) };

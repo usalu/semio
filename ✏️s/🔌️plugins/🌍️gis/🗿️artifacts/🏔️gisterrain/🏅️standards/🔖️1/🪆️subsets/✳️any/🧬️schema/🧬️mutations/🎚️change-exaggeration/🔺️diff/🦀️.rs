@@ -8,6 +8,9 @@ use crate::GisTerrainSnapshot;
 /// construction, never apply-then-capture, never a snapshot clone. Warning `no-op` when
 /// `new_exaggeration` already equals `base.exaggeration`.
 pub fn diff(payload: &ChangeExaggeration, base: &GisTerrainSnapshot) -> protocol::MutationOutcome<GisTerrainDiff> {
+    if !payload.new_exaggeration.is_finite() {
+        return protocol::MutationOutcome::error("terrain.exaggeration.invalid", "Exaggeration must be finite.", ["exaggeration"]);
+    }
     if base.exaggeration == payload.new_exaggeration {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Exaggeration is already {}.", payload.new_exaggeration));
     }

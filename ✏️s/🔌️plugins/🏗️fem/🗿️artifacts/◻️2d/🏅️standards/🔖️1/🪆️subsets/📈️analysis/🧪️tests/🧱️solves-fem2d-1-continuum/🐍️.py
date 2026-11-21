@@ -81,9 +81,10 @@ def reference(document):
                 return thickness * np.einsum("ij...,ki...,kj...->...", stress, grad(u), grad(v))
 
             kg = geometric.assemble(basis).toarray()
-            diagonal = max(float(np.max(np.abs(np.diag(kg)[free]))), 1e-12)
-            b = -kg[np.ix_(free, free)] + np.eye(len(free)) * diagonal * 1e-6
-            answer["factors"] = eigvalsh(k[np.ix_(free, free)], b)[:document["analysis"]["bucklingCount"]].tolist()
+            free_dofs = np.ix_(free, free)
+            reciprocal = eigvalsh(-kg[free_dofs], k[free_dofs])
+            positive = reciprocal[reciprocal > 0.0][::-1][:document["analysis"]["bucklingCount"]]
+            answer["factors"] = np.reciprocal(positive).tolist()
         answers[case["id"]] = answer
     frequencies = np.sqrt(eigh(k[np.ix_(free, free)], m[np.ix_(free, free)])[0]) / (2.0 * np.pi)
     return {"cases": answers, "frequenciesHz": [] if region["holes"] else frequencies[:document["analysis"]["modalCount"]].tolist()}

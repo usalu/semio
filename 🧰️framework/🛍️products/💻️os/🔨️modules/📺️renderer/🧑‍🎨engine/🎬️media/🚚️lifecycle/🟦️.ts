@@ -78,7 +78,15 @@ async function cancelRunning(operation: MediaExportOperation, handle: MediaExpor
   await operation.port.cancelMediaExport(operation.instanceId, handle);
 }
 
-async function collectExport(operation: MediaExportOperation, generation?: bigint): Promise<MediaExportBytes | null> {
+export type MediaExportReceiverV1 = Readonly<{
+  begin: (descriptor: readonly number[]) => Promise<void> | void;
+  page: (chunk: Uint8Array, completed: number, total: number) => Promise<void> | void;
+}>;
+
+/** 🧭️ The authenticated producer declined before offering a descriptor or a byte page. */
+export class MediaExportReferenceRequired extends Error {}
+
+async function receiveExport(operation: MediaExportOperation, receiver: MediaExportReceiverV1, generation?: bigint): Promise<MediaExportStatus | null> {
   const yieldTurn = operation.yieldTurn ?? nextTurn;
   const now = operation.now ?? (() => globalThis.performance.now());
   const started = now();
@@ -121,30 +129,47 @@ async function collectExport(operation: MediaExportOperation, generation?: bigin
     throw error;
   }
   if (status.state === "cancelled") return null;
-  if (status.state === "failed") throw new Error(status.detail || "media-export.failed");
+  if (status.state === "failed") {
+    if (status.detail === "media-export.reference-required" && status.total_bytes === 0n && status.descriptor.length === 0) throw new MediaExportReferenceRequired(status.detail);
+    throw new Error(status.detail || "media-export.failed");
+  }
 
   let refusal: Error | null = null;
   if (status.mime_type !== operation.mediaType) refusal = new Error("media-export.media-type");
   if (status.descriptor.length === 0 || status.descriptor.length > MEDIA_EXPORT_OPERATION_POLICY.maximumDescriptorBytes) refusal ??= new Error("media-export.descriptor-capacity");
   if (status.total_bytes < 0n || status.total_bytes > BigInt(SEGMENTED_DOWNLOAD_CONTRACT.maximumTotalBytes)) refusal ??= new Error("media-export.capacity");
-  const chunks: Uint8Array[] = [];
+  const total = Number(status.total_bytes);
+  let deliveryRefusal: { reason: unknown } | undefined;
   let bytes = 0n;
   let drained = false;
   try {
-    for (let page = 1; page <= SEGMENTED_DOWNLOAD_CONTRACT.maximumOutstandingChunks; page += 1) {
+    if (!operation.cancelled() && refusal === null) {
+      try { await receiver.begin(status.descriptor); }
+      catch (reason) { deliveryRefusal = { reason }; }
+    }
+    const maximumPages = SEGMENTED_DOWNLOAD_CONTRACT.maximumOutstandingChunks;
+    for (let page = 1; page <= maximumPages + 1; page += 1) {
       checkpoint();
       const chunk = await operation.port.takeMediaExportChunk(operation.instanceId, handle);
       checkpoint();
       if (!sameHandle(chunk.handle, handle)) refusal ??= new Error("media-export.chunk-owner");
+      if (page > maximumPages && (!chunk.terminal || chunk.data.byteLength !== 0)) refusal ??= new Error("media-export.pages");
       bytes += BigInt(chunk.data.byteLength);
       if (chunk.data.byteLength > SEGMENTED_DOWNLOAD_CONTRACT.chunkBytes || bytes > BigInt(SEGMENTED_DOWNLOAD_CONTRACT.maximumTotalBytes)) refusal ??= new Error("media-export.capacity");
-      if (!operation.cancelled() && refusal === null && chunk.data.byteLength > 0) chunks.push(chunk.data);
       if (chunk.terminal) {
         drained = true;
         if (bytes !== status.total_bytes) refusal ??= new Error("media-export.length");
+      }
+      if (bytes > status.total_bytes) refusal ??= new Error("media-export.length");
+      if (!operation.cancelled() && refusal === null && deliveryRefusal === undefined && chunk.data.byteLength > 0) {
+        try { await receiver.page(chunk.data, Number(bytes), total); }
+        catch (reason) { deliveryRefusal = { reason }; }
+      }
+      if (chunk.terminal) {
         if (operation.cancelled()) return null;
         if (refusal) throw refusal;
-        return { chunks, mediaType: status.mime_type, descriptor: status.descriptor };
+        if (deliveryRefusal !== undefined) throw deliveryRefusal.reason;
+        return status;
       }
       if (chunk.data.byteLength === 0) refusal ??= new Error("media-export.empty-page");
       await yieldTurn();
@@ -154,6 +179,17 @@ async function collectExport(operation: MediaExportOperation, generation?: bigin
     if (!drained) await cancelRunning(operation, handle).catch(() => {});
     throw error;
   }
+}
+
+async function collectExport(operation: MediaExportOperation, generation?: bigint): Promise<MediaExportBytes | null> {
+  const chunks: Uint8Array[] = [];
+  const status = await receiveExport(operation, { begin: () => {}, page: chunk => { chunks.push(chunk); } }, generation);
+  return status === null ? null : { chunks, mediaType: status.mime_type, descriptor: status.descriptor };
+}
+
+/** 🚚️ Delivers one authenticated page per awaited turn and drains to terminal after a refusal. */
+export async function receiveMediaExportBytes(operation: MediaExportOperation, receiver: MediaExportReceiverV1): Promise<boolean> {
+  return await receiveExport(operation, receiver) !== null;
 }
 
 /** 📤️ Collects a declared output under one saved document revision and the producer's exact returned handle. */

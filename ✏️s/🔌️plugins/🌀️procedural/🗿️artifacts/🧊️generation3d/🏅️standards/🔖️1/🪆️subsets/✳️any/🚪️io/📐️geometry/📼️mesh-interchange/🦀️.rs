@@ -1,10 +1,10 @@
 //! 📼️ `mesh.interchange` computes: OBJ, JSON, binary STL and binary GLB export (the binary formats as base64 text) and OBJ, STL and GLB import, all through the mesh engine codecs and typed `HalfedgeMesh` values.
 //!
-//! Writers and readers advance in bounded slices; the format codecs of the mesh engine (STL and GLB encode and decode, JSON encode) run as one unit each.
+//! JSON and OBJ writers advance in bounded slices, as do the binary format's text codecs.
 
 use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
-use semio_s_artifact_procedural_3d_mesh_support::capacity_fault;
+use semio_s_artifact_procedural_3d_mesh_support::{cancelled_fault,capacity_fault,polygon_capture_slice};
 use semio_s_artifact_procedural_3d_mesh_support::export_fault;
 use semio_s_artifact_procedural_3d_mesh_support::from_source;
 use semio_s_artifact_procedural_3d_mesh_support::import_fault;
@@ -26,11 +26,11 @@ use semio_s_artifact_procedural_3d_geometry_value::outputs;
 use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
 use semio_s_artifact_procedural_3d_geometry_value::Outputs;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
-use semio_framework_3d::mesh::{HalfedgeMesh, MeshModelingJob, MeshModelingStep, MeshObjExport, MeshTessellationJob, MeshTessellationStep};
+use semio_framework_3d::mesh::{HalfedgeMesh, MeshKernelError, MeshModelingJob, MeshModelingStep, MeshObjExport, MeshPolygonSourceCapture, MeshPolygonSourceStep, MeshTessellationJob, MeshTessellationStep};
 use semio_framework_io_base64::{base64_standard_decode, base64_standard_encode};
 use semio_framework_mesh_engine::{MeshData};
 use semio_framework_mesh_engine::io::binary::{mesh_from_glb, mesh_from_stl, mesh_to_glb, mesh_to_stl};
-use semio_framework_mesh_engine::io::text::{ObjSourceCursor};
+use semio_framework_mesh_engine::io::text::{ObjSourceCursor,PolygonJsonExport};
 use std::sync::Arc;
 
 const FACE_LIMIT: usize = 100_000;
@@ -66,29 +66,61 @@ fn export_obj(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     run(kind, move || Ok(Box::new(ExportObj { mesh: inputs.mesh("mesh")?.clone(), export: MeshObjExport::new() }) as Box<dyn Machine>))
 }
 
-struct ExportJson {
-    mesh: Arc<HalfedgeMesh>,
-    source: Option<semio_framework_mesh_engine::PolygonMeshSource>,
+enum ExportJson {
+    Capture {mesh:Arc<HalfedgeMesh>,cursor:Box<MeshPolygonSourceCapture>},
+    Encode(Box<PolygonJsonExport>),
 }
 
 impl Machine for ExportJson {
-    fn advance(&mut self, _cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
-        match self.source.take() {
-            None => {
-                self.source = Some(self.mesh.polygon_source().kernel()?);
-                Ok(Flow::Working(0.5))
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
+        if cx.is_cancelled(){return Err(cancelled_fault());}
+        match self {
+            Self::Capture{mesh,cursor}=>{
+                cx.set_stage("mesh-json-capture");
+                match polygon_capture_slice(cursor,mesh,cx).kernel()? {
+                    MeshPolygonSourceStep::Working=>{
+                        let (done,total)=cursor.progress(mesh);
+                        Ok(Flow::Working(0.4*done as f32/total.max(1) as f32))
+                    },
+                    MeshPolygonSourceStep::Done(source)=>{
+                        *self=Self::Encode(Box::new(PolygonJsonExport::new(source)));
+                        Ok(Flow::Working(0.4))
+                    },
+                    MeshPolygonSourceStep::Cancelled=>Err(cancelled_fault()),
+                }
+            },
+            Self::Encode(writer)=>{
+                cx.set_stage("mesh-json-encode");
+                for _ in 0..fuel_budget(cx).min(BATCH){
+                    if cx.should_yield(){break;}
+                    let grant=cx.retained_grant();
+                    let demand=writer.demand(grant.maximum_copy_bytes).map_err(MeshKernelError::Retained).kernel()?;
+                    if !cx.admit_work_step(demand).map_err(MeshKernelError::Retained).kernel()?{break;}
+                    let Some((result,work))=cx.with_original_effect(grant,|_,effect|writer.step(effect))
+                        .map_err(MeshKernelError::Retained).kernel()? else {break;};
+                    cx.consume_work(work);
+                    let receipt=result.as_ref().map_or_else(|error|error.retained_progress(),|(_,receipt)|*receipt);
+                    if receipt!=Default::default(){cx.consume_retained(receipt).map_err(MeshKernelError::Retained).kernel()?;}
+                    if let Some(text)=result.map_err(MeshKernelError::Retained).kernel()?.0 {
+                        if cx.is_cancelled(){return Err(cancelled_fault());}
+                        return Ok(Flow::Done(text_output("text",text)));
+                    }
+                    if work==0{break;}
+                }
+                Ok(Flow::Working(0.4+0.6*writer.progress()))
             }
-            Some(source) => Ok(Flow::Done(text_output("text", semio_framework_mesh_engine::io::text::encode_polygon_mesh_source(&source)))),
         }
     }
 
     fn cancel(&mut self) {
-        self.source = None;
+        match self {Self::Capture{cursor,..}=>cursor.cancel(),Self::Encode(writer)=>writer.cancel()}
     }
 }
 
 fn export_json(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    run(kind, move || Ok(Box::new(ExportJson { mesh: inputs.mesh("mesh")?.clone(), source: None }) as Box<dyn Machine>))
+    run(kind, move || Ok(Box::new(ExportJson::Capture {
+        mesh:inputs.mesh("mesh")?.clone(),cursor:Box::new(MeshPolygonSourceCapture::new()),
+    }) as Box<dyn Machine>))
 }
 
 #[derive(Clone, Copy)]
@@ -166,7 +198,20 @@ fn import_obj(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     from_source(kind, move || {
         let text = inputs.text("data")?.to_string();
         let mut cursor = ObjSourceCursor::new();
-        Ok(Box::new(move |fuel: usize, _: &mut StepContext<'_>| cursor.step(&text, fuel.saturating_mul(BATCH * 16)).map_err(|error| import_fault(error).at("data"))) as Parse)
+        Ok(Box::new(move |fuel: usize, cx: &mut StepContext<'_>| {
+            for _ in 0..fuel {
+                if cx.should_yield() {break;}
+                if !cx.admit_work_step(cursor.normal_step_demand(&text)).map_err(|error|import_fault(error).at("data"))? {break;}
+                let grant=cx.retained_grant();
+                let Some((source,work))=cx.with_original_effect(grant,|_,effect|cursor.step_original(&text,effect))
+                    .map_err(|error|import_fault(error).at("data"))? else {break;};
+                cx.consume_work(work);
+                cx.consume_retained(cursor.take_normal_progress()).map_err(|error|import_fault(error).at("data"))?;
+                if let Some(source)=source.map_err(|error|import_fault(error).at("data"))? {return Ok(Some(source));}
+                if work==0 {break;}
+            }
+            Ok(None)
+        }) as Parse)
     })
 }
 

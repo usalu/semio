@@ -38,6 +38,7 @@ fn dsl_err(err: String) -> DbError {
 /// envelope's `mutation_id`, since `MutationEnvelope` has no separate batch-level id of its own.
 pub struct CommandBatch {
     pub envelopes: Vec<protocol::MutationEnvelope>,
+    atomic_edit: Option<protocol::atomic_hub::AtomicWalEdit>,
 }
 
 impl CommandBatch {
@@ -49,7 +50,28 @@ impl CommandBatch {
         if envelopes.iter().any(|envelope| envelope.document_id != document_id) {
             return Err(DbError::InvalidArgument("every envelope in a command batch must target the same document".to_string()));
         }
-        Ok(CommandBatch { envelopes })
+        if envelopes.iter().any(|row| row.transaction.as_ref().is_some_and(|tx| protocol::atomic_group::is_atomic_backbone_tool(&tx.tool))) {
+            return Err(DbError::InvalidArgument("original media rows require authenticated atomic admission".into()));
+        }
+        Ok(CommandBatch { envelopes, atomic_edit: None })
+    }
+
+    /// 🔐️ Preserves the authored Store identity when the authenticated Hub maps the document key.
+    pub fn from_verified_atomic(group: protocol::VerifiedAtomicEdit, internal_document: &protocol::ArtifactId) -> Result<Self, DbError> {
+        let (edit_id, mut envelopes) = group.into_parts();
+        let atomic_edit = protocol::atomic_hub::AtomicWalEdit { edit_id, rows: envelopes.len() };
+        if !atomic_edit.admits(&envelopes) {
+            return Err(DbError::InvalidArgument("sealed original media grouping changed".into()));
+        }
+        for row in &mut envelopes { row.document_id = internal_document.clone(); }
+        Ok(Self { envelopes, atomic_edit: Some(atomic_edit) })
+    }
+
+    pub fn atomic_edit(&self) -> Option<&protocol::atomic_hub::AtomicWalEdit> { self.atomic_edit.as_ref() }
+
+    #[doc(hidden)]
+    pub fn unadmitted_envelopes_for_law(envelopes: Vec<protocol::MutationEnvelope>) -> Self {
+        Self { envelopes, atomic_edit: None }
     }
 }
 

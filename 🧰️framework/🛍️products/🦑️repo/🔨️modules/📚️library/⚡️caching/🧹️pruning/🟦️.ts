@@ -12,7 +12,7 @@ const milliseconds=(ns:bigint):number=>Number(ns/1000000000n)*1000+Number(ns%100
 const firstSource=(left:CacheRecencySourceV1|undefined,right:CacheRecencySourceV1|undefined):CacheRecencySourceV1|undefined=>!left?right:!right?left:left.path<right.path||left.path===right.path&&left.field<right.field?left:right;
 const measuredSource=(root:string,path:string,stat:MeasuredStat,recencyMs:number):CacheRecencySourceV1|undefined=>{if(!stat.facts)return;const name=relative(root,path).split(sep).join("/");if(name.length>256||Buffer.byteLength(name)>recencyPolicy.maximumSourcePathBytes)return;return{path:name,...stat.facts,field:stat.atimeMs===recencyMs?"atimeNs":"mtimeNs"};};
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {acquireResourceLease,checkResourceLeaseControl,ResourceLeaseTimeoutErrorV1,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {acquireCargoStoreMaintenanceLeaseV1,acquireCargoProfileMaintenanceLeaseV1,acquireCargoStoreLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 
 export type CacheUnitKind = "cargo-build" | "cargo-incremental" | "cargo-incremental-session" | "cargo-target-file" | "directory";
@@ -46,9 +46,16 @@ export interface PrunePlan {
   readonly areas: readonly AreaPlan[];
 }
 
+type CargoCacheMaintenanceOptionsV1=Readonly<{buildDirectory:string;relatedDirectories?:readonly string[];leaseDirectory:string;control:ResourceLeaseControl;wait:boolean;deferPruneContention?:boolean}>;
 /** 🛡️ Rescans and prunes a shared compiler store only after all admitted profiles release it. */
-export async function withCargoCacheMaintenanceV1<T>(options:Readonly<{buildDirectory:string;relatedDirectories?:readonly string[];leaseDirectory:string;control:ResourceLeaseControl;wait:boolean}>,run:()=>Promise<T>):Promise<T>{
-  checkResourceLeaseControl(options.control);if(typeof options.wait!=="boolean")throw Error("Explicit Cargo maintenance wait policy required");const signal=options.control.signal,prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal,control:options.control,...(!options.wait?{timeoutMs:0}:{})});
+export function withCargoCacheMaintenanceV1<T>(options:CargoCacheMaintenanceOptionsV1&{deferPruneContention?:false},run:()=>Promise<T>):Promise<T>;
+export function withCargoCacheMaintenanceV1<T>(options:CargoCacheMaintenanceOptionsV1,run:()=>Promise<T>):Promise<T|undefined>;
+export async function withCargoCacheMaintenanceV1<T>(options:CargoCacheMaintenanceOptionsV1,run:()=>Promise<T>):Promise<T|undefined>{
+  checkResourceLeaseControl(options.control);if(typeof options.wait!=="boolean")throw Error("Explicit Cargo maintenance wait policy required");
+  const signal=options.control.signal;
+  let prune:Awaited<ReturnType<typeof acquireResourceLease>>;
+  try{prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal,control:options.control,...(!options.wait?{timeoutMs:0}:{})});}
+  catch(error){if(!options.wait&&options.deferPruneContention&&error instanceof ResourceLeaseTimeoutErrorV1&&error.resource==="cache-prune"){checkResourceLeaseControl(options.control);return;}throw error;}
   const stores:Awaited<ReturnType<typeof acquireCargoStoreLeaseV1>>[]=[];
   try{for(const buildDirectory of [...new Set([options.buildDirectory,...(options.relatedDirectories??[])].map(path=>cargoBuildLeaseIdentityV1(path,[]).buildDirectory))].sort())stores.push(await(options.wait?acquireCargoStoreLeaseV1({directory:options.leaseDirectory,buildDirectory,mode:"exclusive",signal,control:options.control}):acquireCargoStoreMaintenanceLeaseV1({directory:options.leaseDirectory,buildDirectory,signal,control:options.control})));checkResourceLeaseControl(options.control);const result=await run();checkResourceLeaseControl(options.control);return result;}
   finally{for(const store of stores.reverse())store.release();prune.release();}

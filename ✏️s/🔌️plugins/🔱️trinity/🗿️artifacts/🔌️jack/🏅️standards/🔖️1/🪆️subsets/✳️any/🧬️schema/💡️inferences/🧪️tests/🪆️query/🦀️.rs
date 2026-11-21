@@ -84,6 +84,14 @@ fn graph_query_refuses_duplicate_ids_endpoints_and_unretained_root() {
 }
 
 #[test]
+fn flat_position_rejects_invalid_roots_and_numeric_overflow() {
+    for case in fixture()["flatPositionRefusals"].as_array().unwrap() {
+        let owner = graph(case);
+        assert!(infer_jack_flat_position(owner.identity(), case["rootNodeId"].as_str(), &owner).is_err(), "{}", case["name"]);
+    }
+}
+
+#[test]
 fn rich_read_preserves_literal_components_and_presented_geometry() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/👁️rich-read/🔣️.json")).unwrap();
     for value in fixture["nodes"].as_array().unwrap(){

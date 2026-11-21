@@ -43,6 +43,6 @@ pub fn infer_jack_topology(selected:ChildRefFields<'_>,graph:&dyn JackGraphQuery
   }
   newly_zero.sort_unstable_by(|left,right|crate::identity_order(left,right));queue.extend(newly_zero);
  }
- depth.retain(|id,_|topo_order.contains(id));
+ depth.retain(|id,_|indegree[id]==0);
  Ok(JackTopology{cycle_free:topo_order.len()==count,topo_order,depth,node_count})
 }

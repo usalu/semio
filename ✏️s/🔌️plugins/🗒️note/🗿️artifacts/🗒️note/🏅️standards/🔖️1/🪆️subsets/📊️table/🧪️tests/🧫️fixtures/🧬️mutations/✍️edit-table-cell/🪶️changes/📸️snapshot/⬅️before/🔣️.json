@@ -1,0 +1,49 @@
+{
+  "schema": "note.document",
+  "id": "note-cell-fixture",
+  "title": "Cell Editing",
+  "blocks": [
+    {
+      "kind": "table",
+      "id": "table-1",
+      "name": "Samples",
+      "x": 0.0,
+      "y": 0.0,
+      "width": 240.0,
+      "height": 100.0,
+      "rotation": 0.0,
+      "visible": true,
+      "locked": false,
+      "columns": [
+        "A",
+        "B"
+      ],
+      "rows": [
+        [
+          {
+            "content": "keep"
+          },
+          {
+            "content": "before"
+          }
+        ],
+        [
+          {
+            "content": "also keep"
+          },
+          {
+            "content": ""
+          }
+        ]
+      ]
+    }
+  ],
+  "gridVisible": true,
+  "gridSpacing": 32.0,
+  "gridSubdivisions": 4.0,
+  "gridOpacity": 0.35,
+  "snapEnabled": false,
+  "snapGridSpacing": 8.0,
+  "pencilWidth": 3.0,
+  "eraserRadius": 12.0
+}

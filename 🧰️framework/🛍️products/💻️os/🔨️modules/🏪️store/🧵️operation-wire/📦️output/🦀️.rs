@@ -3,6 +3,8 @@ use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedS
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value_persistent::{list::PagedList, list::PagedListError, list::{PagedListReservationOutcome,PagedListReservationFailure,PagedListReleaseOutcome,PagedListReleaseFailure}};
 use std::mem::ManuallyDrop;
+
+const OUTPUT_RETIRE_BYTES: usize = 2048;
 #[path="📋️operations/🦀️.rs"]
 mod operations;
 pub use operations::{ArtifactPreparedOperations,ArtifactPreparedOperationsOwner};
@@ -38,7 +40,7 @@ impl ArtifactPreparedOperationOutput {
     /// 📏️ Quotes the next original page birth or bounded octet copy before construction.
     pub fn append_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let depth=self.bytes.next_reserve_depth_demand().map_err(refusal)?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"operation append depth overflow"))?;
-        if !self.bytes.has_reserved_slot(){return Ok(RetirementDemand{capacity_bytes:self.bytes.next_exact_capacity_allocation_bytes(self.maximum_payload_bytes).map_err(refusal)?.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"operation output exhausted"))?,depth,..Default::default()})}
+        if !self.bytes.has_reserved_slot(){return Ok(RetirementDemand{copy_bytes:self.bytes.next_capacity_copy_byte_demand(self.maximum_payload_bytes).map_err(refusal)?,capacity_bytes:self.bytes.next_exact_capacity_allocation_bytes(self.maximum_payload_bytes).map_err(refusal)?.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"operation output exhausted"))?,depth,..Default::default()})}
         Ok(RetirementDemand{copy_bytes:body.min(64).min(self.bytes.capacity()-self.bytes.len()),depth,..Default::default()})
     }
 
@@ -67,7 +69,7 @@ impl ArtifactPreparedOperationOutput {
                 Err(PagedListReservationFailure::Work(error))=>return Err(error),
                 Err(PagedListReservationFailure::Allocation{error,..})=>return Err(refusal(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()})),
             };
-            let progress=RetainedCloneProgress{copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..Default::default()};
+            let progress=RetainedCloneProgress{copied_items:usize::from(step.progressed),copied_bytes:step.placed_bytes,retained_capacity_bytes:step.allocated_bytes,..Default::default()};
             if self.bytes.allocated_bytes()>self.maximum_capacity_bytes||!progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation output retained actual backing beyond supplied authority").with_retained_progress(progress));}
             return Ok(progress);
         }
@@ -139,7 +141,7 @@ impl ArtifactPreparedOperationOutput {
     }
 
     fn paged_demands(&self)->Result<RetirementDemand,ValueError>{
-        let(copy_bytes,release_bytes,depth)=if !self.bytes.is_empty(){(1,0,self.bytes.next_pop_depth_demand().map_err(refusal)?)}else{(0,self.bytes.next_release_allocation_bytes().map_err(refusal)?,self.bytes.next_release_depth_demand().map_err(refusal)?)};
+        let(copy_bytes,release_bytes,depth)=if !self.bytes.is_empty(){{ let span=self.bytes.plain_tail_discard_demand(usize::MAX,OUTPUT_RETIRE_BYTES).map_err(refusal)?.physical; (span.copy_bytes,0,span.depth) }}else{(self.bytes.next_release_copy_byte_demand().map_err(refusal)?,self.bytes.next_release_allocation_bytes().map_err(refusal)?,self.bytes.next_release_depth_demand().map_err(refusal)?)};
         Ok(RetirementDemand{copy_bytes,release_bytes,depth:depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"operation output retirement depth overflow"))?,..Default::default()})
     }
 
@@ -149,8 +151,11 @@ impl ArtifactPreparedOperationOutput {
         let demand=self.paged_demands()?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
-        if !self.bytes.is_empty(){self.bytes.pop();progress.copied_bytes=1;}
-        else{match self.bytes.release_empty_page(effect).result{Ok(PagedListReleaseOutcome::Ready(step))=>progress.released_bytes=step.released_allocation_bytes,Ok(PagedListReleaseOutcome::Denied)=>return Ok(RetainedCloneStep::Progress(Default::default())),Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(refusal(error).with_retained_progress(progress))}}
+        if !self.bytes.is_empty(){
+            let child=RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes,..grant};
+            progress=self.bytes.discard_plain_tail(&mut effect.nested(child)).result?;
+        }
+        else{match self.bytes.release_empty_page(effect).result{Ok(PagedListReleaseOutcome::Ready(step))=>{progress.copied_bytes=step.placed_bytes;progress.released_bytes=step.released_allocation_bytes;},Ok(PagedListReleaseOutcome::Denied)=>return Ok(RetainedCloneStep::Progress(Default::default())),Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(refusal(error).with_retained_progress(progress))}}
         Ok(if self.bytes.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
     }
 

@@ -62,7 +62,7 @@ export function sceneWithoutEchoedTextV1(scene: TextEditorScene): Record<string,
 export function textEditorScenePacket(scene: TextEditorScene, external: boolean): Uint8Array {
   const source = external ? scene : sceneWithoutEchoedTextV1(scene);
   const field = <T,>(raw: unknown): T | undefined => {
-    if (raw === undefined) return undefined;
+    if (raw === undefined || raw === null) return undefined;
     if (typeof raw !== "string") throw new TypeError("Editor scene transport field must be encoded text");
     return parseSceneJsonField<T>(raw);
   };

@@ -1,9 +1,8 @@
 //! 🗃️ Incrementally indexes original bounded Remodel mesh leaves for borrowed GLB reads.
-use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{remodeling_durable_chunk, RemodelingDurableArtifact, RemodelingMeshChild, RemodelingOrderedDurableArtifactStore};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{remodeling_durable_chunk, RemodelingDurableArtifact, RemodelingDurableArtifactStore, RemodelingMeshChild};
 use semio_framework_mesh_engine::io::binary::stream::GlbSource;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_value_ordered::{LookupCursor, RetirementStep};
-use std::mem::size_of;
+use std::{cmp::Ordering, mem::size_of};
 
 const MAX_SCALARS: usize = 512 * 3;
 const MAX_BYTES: usize = 87_552 + 30;
@@ -23,28 +22,72 @@ pub(super) fn constant_mesh(id: &str) -> (bool, bool, u64) {
     (empty, boxed, work)
 }
 
-/// 🔎️ Original ordered lookup retains the snapshot root and borrows its exact child-id bytes.
-pub struct OriginalMeshLookup { cursor: LookupCursor<RemodelingDurableArtifact> }
+/// 🔎️ One ordered-map comparison at a time over the retained snapshot's original child identifier.
+pub struct OriginalMeshLookup {
+    store: usize,
+    handle: usize,
+    low: usize,
+    high: usize,
+    offset: usize,
+    found: Option<usize>,
+}
 impl OriginalMeshLookup {
-    pub fn birth_demand(store: &RemodelingOrderedDurableArtifactStore) -> RetirementDemand { store.lookup_borrowed_constructor_demands() }
-    pub fn admit(store: &RemodelingOrderedDurableArtifactStore, handle: &RemodelingMeshChild, grant: RetainedCloneGrant, fuel: u64) -> RetainedWorkOutcome<(Self, RetainedCloneProgress)> {
-        if fuel == 0 { return RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::WorkLimit, "mesh lookup requires an original work grant")), work: 0 }; }
-        let turn = store.admit_lookup_borrowed_original(&handle.child_id, grant);
-        RetainedWorkOutcome { result: turn.result.map(|(cursor, progress)| (Self { cursor }, progress)), work: turn.work }
+    pub fn new(store: &RemodelingDurableArtifactStore, handle: &RemodelingMeshChild) -> Self {
+        Self { store: std::ptr::from_ref(store).addr(), handle: std::ptr::from_ref(handle).addr(), low: 0, high: store.len(), offset: 0, found: None }
     }
-    pub fn next_demand(&self, handle: &RemodelingMeshChild) -> Result<RetirementDemand, ValueError> { self.cursor.next_borrowed_original_demands(&handle.child_id) }
-    pub fn advance(&mut self, handle: &RemodelingMeshChild, grant: RetainedCloneGrant, fuel: u64) -> RetainedWorkOutcome {
-        if fuel == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
-        self.cursor.advance_borrowed_original(&handle.child_id, grant)
+
+    fn validate_source(&self, store: &RemodelingDurableArtifactStore, handle: &RemodelingMeshChild) -> Result<(), ValueError> {
+        if self.store == std::ptr::from_ref(store).addr() && self.handle == std::ptr::from_ref(handle).addr() {
+            Ok(())
+        } else {
+            Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "mesh lookup source changed"))
+        }
     }
-    pub fn is_complete(&self) -> bool { self.cursor.is_complete() }
-    pub fn result(&self) -> Option<&RemodelingDurableArtifact> { self.cursor.result() }
-    pub fn begin_close(&mut self) { self.cursor.begin_close(); }
-    pub fn next_close_copy_demand(&self) -> usize { self.cursor.next_close_copy_byte_demand() }
-    pub fn next_close_release_demand(&self) -> Result<usize, ValueError> { self.cursor.next_close_byte_demand() }
-    pub fn next_close_depth_demand(&self) -> usize { self.cursor.next_close_depth_demand() }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> (RetirementStep<RemodelingDurableArtifact>, u64) { let step = self.cursor.close_step(grant); (step, self.cursor.last_close_work()) }
-    pub fn terminal_is_empty(&self) -> bool { self.cursor.terminal_is_empty() }
+
+    pub fn advance(&mut self, store: &RemodelingDurableArtifactStore, handle: &RemodelingMeshChild, grant: RetainedCloneGrant, fuel: u64) -> RetainedWorkOutcome {
+        let mut work = 0;
+        let result = (|| {
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < Self::DEMAND.copy_bytes || grant.maximum_depth < Self::DEMAND.depth || fuel < 1 {
+                return Ok(RetainedCloneStep::Progress(Default::default()));
+            }
+            work = 1;
+            self.validate_source(store, handle)?;
+            if self.is_complete() {
+                return Ok(RetainedCloneStep::Complete(Default::default()));
+            }
+            let index = self.low + (self.high - self.low) / 2;
+            let (candidate, _) = store.get_index(index).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "mesh lookup could not read its ordered index"))?;
+            let query = handle.child_id.as_bytes();
+            let candidate = candidate.as_bytes();
+            let order = match (query.get(self.offset), candidate.get(self.offset)) {
+                (Some(query), Some(candidate)) if query == candidate => {
+                    self.offset += 1;
+                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), ..Default::default() }));
+                }
+                (Some(query), Some(candidate)) => query.cmp(candidate),
+                _ => query.len().cmp(&candidate.len()),
+            };
+            self.offset = 0;
+            match order {
+                Ordering::Less => self.high = index,
+                Ordering::Greater => self.low = index + 1,
+                Ordering::Equal => self.found = Some(index),
+            }
+            let bytes = if order == Ordering::Equal { size_of::<Option<usize>>() } else { size_of::<usize>() };
+            let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: bytes + size_of::<usize>(), ..Default::default() };
+            Ok(if self.is_complete() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+        })();
+        RetainedWorkOutcome { result, work }
+    }
+
+    pub const DEMAND: RetirementDemand = RetirementDemand { copy_bytes: size_of::<Option<usize>>() + size_of::<usize>(), depth: 1, capacity_bytes: 0, release_bytes: 0 };
+
+    pub fn is_complete(&self) -> bool { self.low == self.high || self.found.is_some() }
+
+    pub fn result<'a>(&self, store: &'a RemodelingDurableArtifactStore, handle: &RemodelingMeshChild) -> Result<Option<&'a RemodelingDurableArtifact>, ValueError> {
+        self.validate_source(store, handle)?;
+        Ok(self.found.and_then(|index| store.get_index(index)).map(|(_, value)| value))
+    }
 }
 
 /// ⚠️ A refusal and the original work already performed by the turn.
@@ -95,7 +138,7 @@ pub struct IndexCloseTurn { pub complete: bool, pub copied_bytes: usize, pub rel
 
 /// 🧭️ Stores only scalar locations; the original snapshot remains the sole owner of mesh bytes.
 pub struct MeshIndex {
-    positions: Vec<u32>, normals: Vec<u32>, indices: Vec<u32>,
+    positions: Vec<u32>, normals: Vec<u32>, indices: Vec<u32>, uvs: Vec<u32>,
     counts: [usize; 12], leaf: usize, offset: usize, total: usize, previous: Option<u8>,
     utf8_remaining: u8, utf8_min: u8, utf8_max: u8, box_mesh: bool, empty_mesh: bool, ready: bool,
     handle_identity: Option<usize>, artifact_identity: Option<usize>, closing: bool,
@@ -103,18 +146,18 @@ pub struct MeshIndex {
 
 impl MeshIndex {
     /// 🌱️ Constructs empty location storage without reading mesh content.
-    pub fn new() -> Self { Self { positions: Vec::new(), normals: Vec::new(), indices: Vec::new(), counts: [0; 12], leaf: 0, offset: 0, total: 0, previous: None, utf8_remaining: 0, utf8_min: 0x80, utf8_max: 0xbf, box_mesh: false, empty_mesh: false, ready: false, handle_identity: None, artifact_identity: None, closing: false } }
+    pub fn new() -> Self { Self { positions: Vec::new(), normals: Vec::new(), indices: Vec::new(), uvs: Vec::new(), counts: [0; 12], leaf: 0, offset: 0, total: 0, previous: None, utf8_remaining: 0, utf8_min: 0x80, utf8_max: 0xbf, box_mesh: false, empty_mesh: false, ready: false, handle_identity: None, artifact_identity: None, closing: false } }
 
     pub fn begin_close(&mut self) { self.closing = true; }
     pub fn is_ready(&self) -> bool { self.ready && !self.closing }
-    pub fn terminal_is_empty(&self) -> bool { self.positions.capacity() == 0 && self.normals.capacity() == 0 && self.indices.capacity() == 0 }
-    pub fn next_release_demand(&self) -> usize { [&self.positions, &self.normals, &self.indices].into_iter().find(|values| values.capacity() != 0).map_or(0, |values| values.capacity() * size_of::<u32>()) }
+    pub fn terminal_is_empty(&self) -> bool { self.next_release_demand() == 0 }
+    pub fn next_release_demand(&self) -> usize { [&self.positions, &self.normals, &self.indices, &self.uvs].into_iter().find(|values| values.capacity() != 0).map_or(0, |values| values.capacity() * size_of::<u32>()) }
     pub fn close_step(&mut self, items: usize, copy_bytes: usize, release_bytes: usize, depth: usize, fuel: u64) -> Result<IndexCloseTurn, SourceFailure> {
         if !self.closing { return Err(SourceFailure { reason: "mesh index is not closing", work: 0 }); }
         let release = self.next_release_demand();
         if release == 0 { return Ok(IndexCloseTurn { complete: true, copied_bytes: 0, released_bytes: 0, work: 0 }); }
         if items == 0 || copy_bytes < size_of::<Vec<u32>>() || release_bytes < release || depth == 0 || fuel == 0 { return Ok(IndexCloseTurn { complete: false, copied_bytes: 0, released_bytes: 0, work: 0 }); }
-        let values = if self.positions.capacity() != 0 { &mut self.positions } else if self.normals.capacity() != 0 { &mut self.normals } else { &mut self.indices };
+        let values = [&mut self.positions, &mut self.normals, &mut self.indices, &mut self.uvs].into_iter().find(|values| values.capacity() != 0).expect("quoted nonempty mesh index");
         *values = Vec::new();
         Ok(IndexCloseTurn { complete: self.terminal_is_empty(), copied_bytes: size_of::<Vec<u32>>(), released_bytes: release, work: 1 })
     }
@@ -122,7 +165,7 @@ impl MeshIndex {
     /// 📏️ Quotes the next original scalar-index allocation before touching its source.
     pub fn next_capacity_demand(&self) -> usize {
         if self.offset == 0 { return 0; }
-        let values = match self.previous { Some(0) => &self.positions, Some(1) => &self.normals, Some(3) => &self.indices, _ => return 0 };
+        let values = match self.previous { Some(0) => &self.positions, Some(1) => &self.normals, Some(3) => &self.indices, Some(4) => &self.uvs, _ => return 0 };
         if values.capacity() == 0 { MAX_SCALARS * size_of::<u32>() } else { 0 }
     }
 
@@ -175,13 +218,13 @@ impl MeshIndex {
             if self.artifact_identity.is_none() { self.artifact_identity = Some(artifact_identity); }
             self.total = total; self.previous = Some(tag); self.offset = 1;
             let mut copied = binding + 2 * size_of::<usize>() + size_of::<Option<u8>>();
-            if !matches!(tag, 0 | 1 | 3 | 11) { self.counts[tag as usize] = count; self.leaf += 1; self.offset = 0; copied += 3 * size_of::<usize>(); }
+            if !matches!(tag, 0 | 1 | 3 | 4 | 11) { self.counts[tag as usize] = count; self.leaf += 1; self.offset = 0; copied += 3 * size_of::<usize>(); }
             return Ok(IndexTurn { complete: false, copied_bytes: copied, retained_capacity_bytes: 0, work });
         }
         let tag = chunk[0];
         if self.offset == chunk.len() { if tag == 11 && self.utf8_remaining != 0 { return Err(SourceFailure { reason: "incomplete mesh texture UTF-8", work }); } self.leaf += 1; self.offset = 0; return Ok(IndexTurn { complete: false, copied_bytes: binding + 2 * size_of::<usize>(), retained_capacity_bytes: 0, work }); }
         if tag == 11 { let copied = self.utf8(chunk[self.offset]).map_err(|reason| SourceFailure { reason, work })?; self.offset += 1; self.counts[11] += 1; return Ok(IndexTurn { complete: false, copied_bytes: binding + 2 * size_of::<usize>() + copied, retained_capacity_bytes: 0, work }); }
-        let values = match tag { 0 => &mut self.positions, 1 => &mut self.normals, 3 => &mut self.indices, _ => return Err(SourceFailure { reason: "invalid indexed mesh field", work }) };
+        let values = match tag { 0 => &mut self.positions, 1 => &mut self.normals, 3 => &mut self.indices, 4 => &mut self.uvs, _ => return Err(SourceFailure { reason: "invalid indexed mesh field", work }) };
         if values.capacity() == 0 {
             let layout = std::alloc::Layout::array::<u32>(MAX_SCALARS).map_err(|_| SourceFailure { reason: "mesh index allocation overflow", work })?;
             let pointer = std::ptr::NonNull::new(unsafe { std::alloc::alloc(layout) }.cast::<u32>()).ok_or(SourceFailure { reason: "mesh index allocation refused", work })?;
@@ -233,6 +276,16 @@ impl GlbSource for MeshSource<'_> {
     fn vertices(&self) -> usize { if self.index.box_mesh { 36 } else { self.index.counts[0] / 3 } }
     fn indices(&self) -> usize { if self.index.box_mesh { 36 } else { self.index.counts[3] } }
     fn has_normals(&self) -> bool { !self.index.box_mesh && self.index.counts[1] == self.index.counts[0] }
+    fn has_uvs(&self) -> bool { self.index.counts[4] != 0 }
+    fn uv(&self, vertex: usize) -> (Option<[f32; 2]>, u64) {
+        let mut work = 1;
+        let value = (|| {
+            let locations = self.index.uvs.get(vertex.checked_mul(2)?..)?.first_chunk::<2>()?;
+            let original = self.artifact(&mut work)?;
+            Some([f32::from_bits(Self::scalar(original, locations[0], &mut work)?), f32::from_bits(Self::scalar(original, locations[1], &mut work)?)])
+        })();
+        (value, work)
+    }
     fn position(&self, vertex: usize) -> (Option<[f32; 3]>, u64) { if self.index.box_mesh { return (Self::box_position(vertex), 1); } let mut work = 0; let value = self.vector(&self.index.positions[..self.index.counts[0]], vertex, &mut work); (value, work) }
     fn normal(&self, vertex: usize) -> (Option<[f32; 3]>, u64) { let mut work = 0; let value = self.vector(&self.index.normals[..self.index.counts[1]], vertex, &mut work); (value, work) }
     fn index(&self, index: usize) -> (Option<u32>, u64) { if self.index.box_mesh { return ((index < 36).then_some(index as u32), 1); } let mut work = 1; let value = self.index.indices[..self.index.counts[3]].get(index).and_then(|location| self.artifact(&mut work).and_then(|artifact| Self::scalar(artifact, *location, &mut work))); (value, work) }

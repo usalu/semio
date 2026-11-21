@@ -7,7 +7,7 @@ use semio_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCa
 /// impl for raw Rust tuples (only named `DslRecord`/`DslScalar` types can bind), so `rule_layout`'s
 /// value type is this named record instead, with `From`/`Into` conversions at this crate's own
 /// remaining `(f64, f64)` call sites (tests only — no production logic reads `rule_layout` today).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutPoint {

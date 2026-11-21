@@ -111,6 +111,15 @@ impl<V> OrderedMap<V> {
     pub fn is_empty(&self) -> bool { self.root.is_none() }
     /// 🪪️ Borrows the original immutable node identity without issuing another ownership alias.
     pub fn original_root_identity(&self)->Option<usize>{self.root.as_ref().map(|root|root.identity())}
+
+    /// 🔙️ Returns an exact scoped alias while its borrowed original still owns the root.
+    pub fn return_scoped_alias(&mut self, original: &Self) {
+        let Some(alias) = self.root.as_mut() else { return };
+        let parent = original.root.as_ref().expect("scoped alias requires its live root");
+        assert!(alias.same_original(parent), "scoped alias requires its exact live root");
+        assert!(alias.elect_cold().is_none(), "scoped alias cannot own the final root");
+        drop(self.root.take());
+    }
     pub fn iter(&self) -> Iter<'_, V> { Iter { root: &self.root, front: 0, back: self.len() } }
     pub fn keys(&self) -> impl DoubleEndedIterator<Item = &String> + ExactSizeIterator { self.iter().map(|(key, _)| key) }
     pub fn values(&self) -> impl DoubleEndedIterator<Item = &V> + ExactSizeIterator { self.iter().map(|(_, value)| value) }

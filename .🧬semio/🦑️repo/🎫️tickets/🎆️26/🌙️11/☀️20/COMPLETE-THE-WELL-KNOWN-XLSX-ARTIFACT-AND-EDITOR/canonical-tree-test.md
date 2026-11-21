@@ -6,4 +6,4 @@ The affected file is `🧰️framework/🔨️modules/🎒️pack/🔤️json/�
 
 The first native rerun compiled the test crate, then exposed an owned-source publication requirement. The test follows the existing identity-projection law through the funded `projectionStart` turn and both `ready` publication turns.
 
-The next native run passed the tagged XLSX payload regression and reached the persistent cursor's sealed retirement. The test now lends the same EffectBank source identity through the existing original producer helpers for cursor advancement, source closure, and text closure. The persistent regression still needs a rerun. The patched file passes the repository whitespace check.
+The next native run passed the tagged XLSX payload regression and reached the persistent cursor's sealed retirement. The test now lends the same EffectBank source identity through the existing original producer helpers for cursor advancement, source closure, and text closure. The final focused native replay passed both the persistent-tree and tagged XLSX payload tests. The patched file passes the repository whitespace check.

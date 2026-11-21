@@ -673,6 +673,8 @@ pub fn panel_ui_node_tag(node: &UiNode) -> &'static str {
         UiNode::Field(_) => "field",
         UiNode::Section(_) => "section",
         UiNode::Group(_) => "group",
+        UiNode::CardStack(_) => "cardStack",
+        UiNode::OverviewCard(_) => "overviewCard",
         UiNode::Tree(_) => "tree",
         UiNode::Image(_) => "image",
         UiNode::ComponentScene(_) => "componentScene",

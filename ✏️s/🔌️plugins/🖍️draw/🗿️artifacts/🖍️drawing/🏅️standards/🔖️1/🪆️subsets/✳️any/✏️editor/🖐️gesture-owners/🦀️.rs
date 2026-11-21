@@ -1,4 +1,4 @@
-//! 🖐️ Drawing gesture owners: the gesture tool ids and limits and the fixed operation owners of the gesture and instance operations.
+//! 🖐️ Drawing gesture budgets and per-instance registry.
 
 use super::*;
 
@@ -14,12 +14,7 @@ fn drawing_gesture_release_grant() -> semio_framework_value::retained_clone::Ret
     semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(DRAWING_GESTURE_RETAINED_BYTES, 32)
 }
 
-/// 🛣️ One publication lane row per gesture route, read off each route's real `Emit` construction, not
-/// off its `ActionKind`: every gesture that reaches a commit does so through the canvas tool's one
-/// `Emit::commit_transaction` (`drawing_tool_emit`, artifact lane), and the two routes that
-/// additionally write the exact Canvas `WindowTransient` snapshot — `canvasPointerDown` through
-/// `advance_trace_pointer`, `canvasEscape` through its own trace cancellation — carry the config lane
-/// as well. Under-declaring a lane that is actually emitted faults at publication time.
+/// 🛣️ Gesture publication lanes follow the artifact commit and Canvas transient.
 pub(super) const DRAWING_GESTURE_PUBLICATION_CONTRACTS: &[semio_plugin::ArtifactToolPublicationContract] = &[
     semio_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact, semio_plugin::ArtifactToolPublicationLane::WindowTransient] },
     semio_plugin::ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -32,12 +27,7 @@ pub(super) const DRAWING_GESTURE_PUBLICATION_CONTRACTS: &[semio_plugin::Artifact
 pub struct DrawingGestureOperationOwner {
     pub session: Option<DrawingSession>,
     pub(super) closing: bool,
-    /// 🧾️ The declared `DRAWING_GESTURE_RETAINED_BYTES` budget still to be handed back to the
-    /// registry. The session itself is dropped on the first granted close step; its budget is
-    /// released one grant-sized page per step, because every framework close/maintenance pump grants
-    /// at most `ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES` (4 KiB) — demanding the whole 32 KiB in one step
-    /// meant no gesture owner ever closed outside a hand-rolled test (ticket
-    /// 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17).
+    /// 🧾️ The first close gives up the session. Later turns return one budget page.
     unreleased_bytes: usize,
 }
 
@@ -87,11 +77,7 @@ pub struct DrawingInstanceOperationOwner {
     pub operations: semio_framework_job_registry::FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS>,
     pub active: Option<(semio_framework_job_registry::FixedOperationKey, SceneIdentity)>,
     pub(super) closing: bool,
-    /// 🚪️ Every slot has been marked closing. `FixedOperationRegistry::begin_close_step` and
-    /// `close_step` share one cursor and each advance it by one, so a close that calls both per step
-    /// only ever begins the close of every OTHER slot — an owner on the wrong parity was never marked
-    /// and its close spun `Pending { 0, 0 }` until the app's Drop witness fired (ticket
-    /// 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-17). The first close step now sweeps all slots once.
+    /// 🚪️ Sweep the slots before advancing the shared retirement cursor.
     close_begun: bool,
 }
 
@@ -101,14 +87,24 @@ impl DrawingInstanceOperationOwner {
     }
 
     pub(super) fn dispatch(&mut self, payload: &DrawingGestureOperationPayload, context:&mut semio_framework_job::StepContext<'_>) -> Result<Option<(Emit<DrawingMutation, NoConfigMutation, NoDraftMutation>, DrawingCanvasWindowTransient)>, Fault> {
-        let key = semio_framework_job_registry::FixedOperationKey::new(semio_framework_job::OperationId(payload.operation_context.operation_id), semio_framework_job::Generation(payload.operation_context.generation));
+        let original = payload.original.as_ref().ok_or_else(|| Fault::from("drawing.gesture-payload-missing"))?;
+        let key = semio_framework_job_registry::FixedOperationKey::new(original.operation.operation, original.operation.generation);
         let source_identity = payload.source_identity;
-        let command = &payload.command;
-        let snapshot = payload.snapshot.as_ref();
-        let config = payload.config.as_ref();
-        let active_utility_id = payload.active_utility_id.as_str();
-        let history = payload.history.as_ref();
-        let operation = payload.operation_context.clone();
+        let command = original.command.as_ref();
+        let snapshot = original.snapshot.as_ref();
+        let config = original.config.as_ref();
+        let view = original.context.view_state.as_deref().expect("admitted original Drawing Canvas view");
+        let active_utility_id = drawing_active_utility(view);
+        let history = original.history.as_ref();
+        let operation = semio_plugin::AppOperationContext {
+            app_instance_id: original.app_instance_id,
+            parent_document_id: original.parent_document_id.clone(),
+            operation_id: original.operation.operation.0,
+            generation: original.operation.generation.0,
+            canonical_base_revision: original.canonical_base_revision,
+            retained: original.retained,
+            authoring_seed: original.authoring_seed.clone(),
+        };
         if self.closing {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.closing"), "the Drawing gesture operation owner is closing"));
         }
@@ -141,9 +137,9 @@ impl DrawingInstanceOperationOwner {
         let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the Drawing gesture session is already closing"))?;
         session.identity_cancel=Some(context.cancel_token());
         session.source_identity=Some(source_identity);
-        session.window_config = payload.window_config.clone();
-        session.window_transient = payload.window_transient.clone();
-        session.base = Some(canvas_pointer_down::DrawingToolBase { document: payload.snapshot.clone(), operation: Some(operation.clone()) });
+        session.window_config = canvas_window::config::from_snapshot(original.context.window_config.as_ref());
+        session.window_transient = canvas_window::transient::from_snapshot(original.context.window_transient.as_ref());
+        session.base = Some(canvas_pointer_down::DrawingToolBase { document: original.snapshot.clone(), operation: Some(operation.clone()) });
         if session.tool.context().points_overflowed {
             self.operations.cancel(live_key);
             self.active = None;
@@ -179,8 +175,8 @@ impl DrawingInstanceOperationOwner {
                 query.traversal_complete = true;
                 return Ok(None);
             }
-            let ids=payload.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
-            let point_ids=payload.interaction_state.selection.get(DRAWING_POINT_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
+            let ids=original.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
+            let point_ids=original.interaction_state.selection.get(DRAWING_POINT_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]);
             match session.prepare_grab(snapshot,ids,point_ids) {
                 Ok(false)=>return Ok(None),
                 Err(fault)=>{ self.operations.cancel(live_key); self.active=None; return Err(fault); },
@@ -224,7 +220,7 @@ impl DrawingInstanceOperationOwner {
                 query.point_pick_mode=if pointer.shift {semio_s_artifact_draw_drawing_editor_interaction::points::PointPickMode::Toggle} else if pointer.ctrl || pointer.meta {semio_s_artifact_draw_drawing_editor_interaction::points::PointPickMode::Add} else {semio_s_artifact_draw_drawing_editor_interaction::points::PointPickMode::Replace};
                 query.constrained=pointer.shift;
                 query.centered=pointer.alt;
-                query.cursor.retain_selection_bounds(payload.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]))?;
+                query.cursor.retain_selection_bounds(original.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]))?;
                 query.drag_start = Some(world);
                 session.point_query = Some(query);
                 return Ok(None);
@@ -245,7 +241,7 @@ impl DrawingInstanceOperationOwner {
                 return Ok(None);
             }
         }
-        let document_owner = payload.snapshot.clone();
+        let document_owner = original.snapshot.clone();
         let retained_emit = match command {
             DrawingCommand::CanvasPointerMove(pointer) if session.tool.matches("pressing") || session.tool.matches("dragging") => {
                 let [x,y] = pointer.last_sample();
@@ -325,7 +321,11 @@ impl semio_plugin::ArtifactInstanceOperationOwner for DrawingInstanceOperationOw
     }
 
     fn retirement_demands(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(if self.operations.is_empty() { Default::default() } else { semio_framework_value::RetirementDemand { release_bytes: DRAWING_GESTURE_RAW_BYTES, depth: 4, ..Default::default() } })
+        use semio_framework_value::RetirementDemand;
+        if !self.closing {
+            return Ok(RetirementDemand { copy_bytes: size_of::<bool>(), depth: 1, ..Default::default() });
+        }
+        Ok(if self.operations.is_empty() { Default::default() } else { RetirementDemand { release_bytes: DRAWING_GESTURE_RAW_BYTES, depth: 4, ..Default::default() } })
     }
 
     fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
@@ -341,7 +341,21 @@ impl semio_plugin::ArtifactInstanceOperationOwner for DrawingInstanceOperationOw
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
-        self.closing = true;
+        if !self.closing {
+            let grant = semio_plugin::app::original_lifecycle_grant(cx, grant);
+            let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
+            if cx.retirement_should_yield() || !semio_plugin::app::plugin_grant_funds(demand, grant) {
+                return Ok(semio_plugin::PluginLifecycleStep::AwaitingInput { reason: "Drawing instance close requires its original close flag grant" });
+            }
+            let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
+            cx.consume_retained(progress)?;
+            cx.consume_fuel(1);
+            self.closing = true;
+            return Ok(if self.operations.is_empty() { semio_plugin::PluginLifecycleStep::Complete(progress) } else { semio_plugin::PluginLifecycleStep::Progress(progress) });
+        }
+        if self.operations.is_empty() {
+            return Ok(semio_plugin::PluginLifecycleStep::Complete(Default::default()));
+        }
         if !self.close_begun {
             for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
                 self.operations.begin_close_step();

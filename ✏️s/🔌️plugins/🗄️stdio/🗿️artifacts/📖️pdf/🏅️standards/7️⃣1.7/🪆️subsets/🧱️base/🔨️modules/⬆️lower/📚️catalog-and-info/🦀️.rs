@@ -255,8 +255,10 @@ impl Lowering<'_> {
 
 /// ℹ️ The document information dictionary (ISO 32000-1 §14.3.3) `info` spells.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lower_info(info: &PdfInfo) -> Vec<PdfDictEntry> {
-    let text = |value: &Option<String>| value.as_ref().map(|v| PdfObject::Str(encode_text_string(v)));
+pub fn lower_info(info: &PdfInfo) -> Vec<PdfDictEntry> { lower_info_with(info, encode_text_string) }
+
+pub fn lower_info_with(info: &PdfInfo, encode_text: impl Fn(&str) -> Vec<u8>) -> Vec<PdfDictEntry> {
+    let text = |value: &Option<String>| value.as_ref().map(|v| PdfObject::Str(encode_text(v)));
     let mut dict = Vec::new();
     push_opt(&mut dict, "Title", text(&info.title));
     push_opt(&mut dict, "Author", text(&info.author));

@@ -34,7 +34,7 @@ macro_rules! original_tagged_operation_receiving{
 }
 #[path="📦️pack-value/🦀️.rs"]
 mod pack_value;
-pub use pack_value::{OriginalPackValueReceiving,PackValueRetirement,decoded_value_retained_bytes,pack_value_conversion_quote};
+pub use pack_value::{OriginalPackValueReceiving,OriginalTaggedPackValueReceiving,PackValueRetirement,decoded_value_retained_bytes,pack_value_conversion_quote};
 pub struct OriginalOperationReceiving<M:DslOwnedReceivingVariants+BorrowedDslVariants>{
  source:(usize,usize),range:(usize,usize),position:usize,phase:u8,tag:u64,shift:u8,tags:Option<&'static[u64]>,ordinal:usize,
  record:Option<RetainedRecordReceiving>,generic:OwnedSlot<FieldValue>,binding:Option<M::Cursor>,output:OwnedSlot<M>,closing:u8,closed:bool,failed:bool,
@@ -71,6 +71,12 @@ fn perform(effect:&mut RetainedAllocationEffect<'_>,units:u128)->Result<(),Value
 fn unpoll<E>(poll:RetainedWorkPoll<RetainedCloneProgress,E>)->RetainedWorkOutcome<RetainedCloneProgress,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(Default::default()),work}}}
 fn stepped(poll:RetainedWorkPoll<RetainedCloneProgress,OriginalRetirementFailure>)->OriginalRetirementPoll{match poll{RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work})}}
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving<M>{
+ fn binding_selection(&self,body:usize)->Result<Option<OwnedAdvanceSelection>,ValueError>{
+  if self.phase!=5||self.failed||self.closing!=0{return Ok(None)}
+  let binding=self.binding.as_ref().ok_or_else(||ValueError::invariant("operation binding absent"))?;
+  if binding.is_ready(){return Ok(None)}
+  binding.select_advance(&self.generic.value,body,u64::MAX).map(Some)
+ }
  fn step_inner(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
   let result=self.step_action(source,native,body,effect);if result.is_err(){self.failed=true}RetainedWorkOutcome{result,work:effect.performed_work()}
  }
@@ -113,11 +119,29 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
   if let Some(record)=&self.record{if !record.terminal_is_empty(){return record.close_demands(body).map(|mut demand|{demand.depth+=1;demand})}return Ok(RetirementDemand{depth:1,..Default::default()})}
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
+ fn close_work(&self, body: usize) -> Result<u64, ValueError> {
+  if self.closed { return Ok(0); }
+  if self.closing == 0 { return Ok(1); }
+  if !self.output.terminal_is_empty() { return self.output.close_work_demand(body); }
+  if let Some(binding) = &self.binding {
+   return if binding.terminal_is_empty() { Ok(1) } else { binding.close_work_demand(body) };
+  }
+  if !self.generic.terminal_is_empty() { return self.generic.close_work_demand(body); }
+  if let Some(record) = &self.record {
+   return if record.terminal_is_empty() { Ok(1) } else { record.close_work_demand(body) };
+  }
+  Ok(1)
+ }
  fn close(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let grant=effect.grant();let child=grant_child(grant);
   let settle=|effect:&RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,ValueError>|RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(OriginalRetirementFailure::from),work:effect.performed_work()});
   if self.closed{return settle(effect,Ok(RetainedCloneStep::Complete(Default::default())))}
   let demand=match self.close_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return settle(effect,Err(e))};if !funded(grant,demand){return settle(effect,Ok(RetainedCloneStep::Progress(Default::default())))}
+  match self.close_work(grant.maximum_copy_bytes).and_then(|work| effect.remaining_work_units().map(|remaining| remaining >= work)) {
+   Ok(true) => {}
+   Ok(false) => return settle(effect, Ok(RetainedCloneStep::Progress(Default::default()))),
+   Err(error) => return settle(effect, Err(error)),
+  }
   if self.closing==0{if let Err(e)=perform(effect,1){return settle(effect,Err(e))}self.closing=1;return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
   if !self.output.terminal_is_empty(){return stepped(self.output.close_step(&mut effect.nested(child)))}
   if let Some(binding)=&mut self.binding{if !binding.terminal_is_empty(){return stepped(binding.close_step(&mut effect.nested(child)))}if let Err(e)=perform(effect,1){return settle(effect,Err(e))}std::mem::forget(self.binding.take());return settle(effect,Ok(RetainedCloneStep::Progress(receipt(demand))))}
@@ -129,12 +153,42 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OriginalOperationReceiving
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants+OpBinaryReceiving<DomainFailure=ValueError>> protocol::OpBinaryReceivingCursor<M> for OriginalOperationReceiving<M>{
  fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{self.demands_inner(source,body)}
  fn step_work_demand(&self,_source:&[u8],body:usize)->Result<u64,ValueError>{
-  if self.phase==5 {
-   if let Some(binding)=self.binding.as_ref().filter(|binding|!binding.is_ready()){
-    if let OwnedAdvanceSelection::Local{work}=binding.select_advance(&self.generic.value,body,u64::MAX)?{return Ok(work.max(1))}
-   }
+  match self.binding_selection(body)?{
+   Some(OwnedAdvanceSelection::Local{work})=>Ok(work.max(1)),
+   _=>Ok(Self::STEP_WORK),
   }
-  Ok(Self::STEP_WORK)
+ }
+ fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{
+  let selection=match self.binding_selection(body){
+   Ok(selection)=>selection,
+   Err(error)=>return RetainedWorkOutcome{result:Err(error.into()),work:0},
+  };
+  let work=match selection{
+   // The typed native child issues and settles its own Work action on this control.
+   Some(OwnedAdvanceSelection::Nested)=>{
+    let begun=(||{
+     let demand=self.demands_inner(source,body)?;
+     if !funded(grant,demand){return Ok(None)}
+     let witness=native.source_witness()?;
+     let binding=self.binding.as_mut().ok_or_else(||ValueError::invariant("nested operation binding absent"))?;
+     Ok::<_,ValueError>(Some(unpoll(binding.advance_nested(&mut self.generic.value,native,witness,body,Self::STEP_WORK,grant_child(grant)))))
+    })();
+    let turn=match begun{
+     Ok(Some(turn))=>turn,
+     Ok(None)=>RetainedWorkOutcome{result:Ok(Default::default()),work:0},
+     Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0},
+    };
+    self.failed=turn.result.is_err();
+    return turn;
+   },
+   Some(OwnedAdvanceSelection::Local{work})=>work.max(1),
+   None=>Self::STEP_WORK,
+  };
+  match native.with_effect(grant,work,|native,effect|self.step_in(source,native,body,effect)){
+   Ok(Some(turn))=>turn,
+   Ok(None)=>RetainedWorkOutcome{result:Ok(Default::default()),work:0},
+   Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0},
+  }
  }
  fn step_in(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress,OriginalReceivingPrimary>{self.step_inner(source,native,body,effect)}
  fn domain_failure(&self)->Option<&ValueError>{None}
@@ -144,6 +198,7 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants+OpBinaryReceiving<DomainFai
  fn is_ready(&self)->bool{self.phase==6&&self.closing==0&&self.output.value.is_some()}
  fn take_into(&mut self,recipient:&mut Option<M>,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress>{let demand=metadata::<M>();if self.failed||self.phase!=6||self.closing!=0||recipient.is_some()||self.output.value.is_none()||!funded(grant,demand){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}*recipient=self.output.value.take();RetainedWorkOutcome{result:Ok(receipt(demand)),work:1}}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_work(body)}
  fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close(effect)}
  fn terminal_is_empty(&self)->bool{self.closed&&self.output.terminal_is_empty()&&self.binding.is_none()&&self.generic.terminal_is_empty()&&self.record.is_none()}
 }
@@ -160,7 +215,7 @@ impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> OperationRetirement<M>{
 }
 impl<M:DslOwnedReceivingVariants+BorrowedDslVariants> RetirementCursor for OperationRetirement<M>{
  semio_framework_value::native_retirement_reply!();
- fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.0.close_work(body)}
  fn terminal_is_empty(&self)->bool{self.0.closed}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.depth)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.copy_bytes)}
@@ -185,15 +240,15 @@ impl OriginalWorkRecipient for TurnWorkDriver{
  fn settle_partial<'r,'t,'s>(&mut self,_:&mut TurnWork,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.complete(Ok(()))}
  fn recover_partial<'r,'t,'s>(&mut self,_:&mut TurnWork,check:OriginalWorkPartialCheck<'r>)->OriginalWorkPartialCheckComplete<'r> where 's:'t{check.pending()}
 }
-struct TurnPhysical(RetainedCloneGrant,OriginalSourceTurnIdentity);
+struct TurnPhysical(RetainedCloneGrant,OriginalSourceTurnIdentity,RetainedCloneProgress);
 struct TurnPhysicalDriver;
 impl OriginalConstructionRecipient for TurnPhysicalDriver{
  type Context<'t,'s>=TurnPhysical where 's:'t;
  fn validate_context<'t,'s>(&self,_:&TurnPhysical)->Result<(),ValueError> where 's:'t{Ok(())}
  fn source_turn<'t,'s>(&self,c:&TurnPhysical)->Option<OriginalSourceTurnIdentity> where 's:'t{Some(c.1)}
  fn grant<'r,'t,'s>(&mut self,c:&mut TurnPhysical,quote:OriginalConstructionGrant<'r>)->OriginalConstructionGrantComplete<'r> where 's:'t{quote.complete(Ok(c.0))}
- fn accept<'r,'t,'s>(&mut self,c:&mut TurnPhysical,receipt:OriginalConstructionAccept<'r>)->OriginalConstructionAcceptComplete<'r> where 's:'t{let(grant,progress)=(receipt.grant(),receipt.progress());let result=if !progress.fits(grant)||!progress.fits(c.0){Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"receiving progress exceeds its physical grant"))}else{debit(&mut c.0,progress);Ok(())};receipt.complete(result)}
- fn submitted<'t,'s>(&self,_:&TurnPhysical)->RetainedCloneProgress where 's:'t{RetainedCloneProgress::default()}
+ fn accept<'r,'t,'s>(&mut self,c:&mut TurnPhysical,receipt:OriginalConstructionAccept<'r>)->OriginalConstructionAcceptComplete<'r> where 's:'t{let(grant,progress)=(receipt.grant(),receipt.progress());let result=if !progress.fits(grant)||!progress.fits(c.0){Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"receiving progress exceeds its physical grant"))}else{c.2.checked_add(progress).map(|total|{debit(&mut c.0,progress);c.2=total})};receipt.complete(result)}
+ fn submitted<'t,'s>(&self,c:&TurnPhysical)->RetainedCloneProgress where 's:'t{c.2}
 }
 fn debit(left:&mut RetainedCloneGrant,progress:RetainedCloneProgress){left.maximum_items=left.maximum_items.saturating_sub(progress.copied_items);left.maximum_copy_bytes=left.maximum_copy_bytes.saturating_sub(progress.copied_bytes);left.maximum_capacity_bytes=left.maximum_capacity_bytes.saturating_sub(progress.retained_capacity_bytes);left.maximum_release_bytes=left.maximum_release_bytes.saturating_sub(progress.released_bytes)}
 fn quantum_of(stock:&ReceivingStock)->RetainedCloneGrant{let (s,q)=(stock.stock,stock.quantum);RetainedCloneGrant{maximum_items:if stock.fuel==0{0}else{s.maximum_items.min(q.maximum_items)},maximum_copy_bytes:s.maximum_copy_bytes.min(q.maximum_copy_bytes),maximum_capacity_bytes:s.maximum_capacity_bytes.min(q.maximum_capacity_bytes),maximum_release_bytes:s.maximum_release_bytes.min(q.maximum_release_bytes),maximum_depth:s.maximum_depth.min(q.maximum_depth)}}
@@ -201,6 +256,7 @@ fn spend(stock:&mut ReceivingStock,progress:RetainedCloneProgress,work:u128){deb
 fn stalled(text:&'static str)->OriginalReceivingPrimary{ValueError::literal(ValueRefusalKind::WorkLimit,text).into()}
 /// 🧪️ Drives one stored operation through its own original receiving cursor, paying every turn and the paid close from the explicit stock. A close that the stock cannot pay refuses with `WorkLimit` and abandons the unpaid cursor without running its terminal-empty drop assertions.
 pub fn receive_to_completion<M:OpBinaryReceiving>(source:&[u8],range:(usize,usize),mut stock:ReceivingStock)->Result<M,OriginalReceivingPrimary>{
+ let body=stock.quantum.maximum_copy_bytes;
  let issuer=semio_framework_value_native_owned::OriginalSourceTurnIssuer::new();
  let dispatch=issuer.issue().map_err(|_|ValueError::invariant("original receiving fixture could not issue its Source"))?;
  let mut work_issuer=OriginalWorkAuthority::new(TurnWorkDriver);
@@ -210,16 +266,17 @@ pub fn receive_to_completion<M:OpBinaryReceiving>(source:&[u8],range:(usize,usiz
  while !cursor.is_ready()&&failure.is_none(){
   if stock.fuel==0{failure=Some(stalled("original receiving exhausted its work"));break}
   let grant=quantum_of(&stock);
-  let requested=match cursor.step_work_demand(source,stock.quantum.maximum_copy_bytes){Ok(work)=>work,Err(error)=>{failure=Some(error.into());break}};
+  let requested=match cursor.step_work_demand(source,body){Ok(work)=>work,Err(error)=>{failure=Some(error.into());break}};
   let (_,turn_work)=match semio_framework_value::invocation_extent(grant,requested){Ok(extent)=>extent,Err(error)=>{failure=Some(error.into());break}};
-  let mut work=TurnWork(turn_work.min(stock.fuel),dispatch.identity());let mut physical=TurnPhysical(grant,dispatch.identity());
+  let mut work=TurnWork(turn_work.min(stock.fuel),dispatch.identity());let mut physical=TurnPhysical(grant,dispatch.identity(),Default::default());
   let prior_work=native.actual_work();
+  let prior_transitions=NativeDecodeControl::transitions();
   let turn=native.with_source_witness(Some(dispatch.witness()),|native|work_issuer.with_loan(&mut work,|work|native.with_work_recipient(work,|native|{
-   physical_issuer.with_loan(&mut physical,|physical|native.with_construction_recipient(physical,|native|Ok::<_,ValueError>(cursor.step(source,native,stock.quantum.maximum_copy_bytes,grant))))?
+   physical_issuer.with_loan(&mut physical,|physical|native.with_construction_recipient(physical,|native|Ok::<_,ValueError>(cursor.step(source,native,body,grant))))?
   }))).and_then(|turn|turn);
   let turn=match turn{Ok(turn)=>turn,Err(error)=>{failure=Some(error.into());break}};
   let actual_work=native.actual_work().saturating_sub(prior_work);
-  match turn.result{Ok(progress)=>{let idle=turn.work==0&&progress==RetainedCloneProgress::default();spend(&mut stock,progress,actual_work);if idle{failure=Some(stalled("original receiving made no progress"))}},Err(error)=>{spend(&mut stock,error.retained_progress(),actual_work);failure=Some(error)}}
+  match turn.result{Ok(progress)=>{let idle=turn.work==0&&progress==RetainedCloneProgress::default()&&prior_transitions==NativeDecodeControl::transitions();spend(&mut stock,progress,actual_work);if idle{failure=Some(stalled("original receiving made no progress"))}},Err(error)=>{spend(&mut stock,error.retained_progress(),actual_work);failure=Some(error)}}
  }
  let mut output=None;
  if failure.is_none(){let turn=cursor.take_into(&mut output,quantum_of(&stock));match turn.result{Ok(progress)=>spend(&mut stock,progress,turn.work),Err(error)=>failure=Some(error.into())}}

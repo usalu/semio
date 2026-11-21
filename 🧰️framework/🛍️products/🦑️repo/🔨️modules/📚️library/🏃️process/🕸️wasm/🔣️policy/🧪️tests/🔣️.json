@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "component": "🌎️hub/🧩️compositions/🧩️puzzle/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+  "package": "semio-hub-puzzle-component",
+  "workspace": "🌎️hub/Cargo.toml",
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "command": [
+    "graph-generate"
+  ],
+  "sequence": [
+    "wasmCompilerSelectionArgumentsV1",
+    "prepareCargoWorkspaceInvocation",
+    "withRepositoryCompilerStoreLaneV1",
+    "buildWasmWebV1"
+  ],
+  "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts",
+  "groups": [
+    {
+      "artifact": "◻️2d",
+      "project": "@semio-tech/puzzle-2d-rs",
+      "consumers": [
+        {
+          "package": "semio-s-artifact-puzzle-2d-graph-manifest",
+          "directory": "🛂️manifest/📦️packages/🦀️rust"
+        },
+        {
+          "package": "semio-s-artifact-puzzle-2d-records",
+          "directory": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️records/📦️packages/🦀️rust"
+        }
+      ]
+    },
+    {
+      "artifact": "🧊️3d",
+      "project": "@semio-tech/puzzle-3d-rs",
+      "consumers": [
+        {
+          "package": "semio-s-artifact-puzzle-3d",
+          "directory": "📦️packages/🦀️rust"
+        }
+      ]
+    },
+    {
+      "artifact": "🖐️5d",
+      "project": "@semio-tech/puzzle-5d-rs",
+      "consumers": [
+        {
+          "package": "semio-s-artifact-puzzle-5d-document-records",
+          "directory": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️document-records/📦️packages/🦀️rust"
+        },
+        {
+          "package": "semio-s-artifact-puzzle-5d-kind-catalogs",
+          "directory": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️kind-catalogs/📦️packages/🦀️rust"
+        }
+      ]
+    }
+  ],
+  "preparationStorage": {
+    "directory": "fixture/preparation",
+    "leaseDirectory": "fixture/leases",
+    "program": "fixture/📜️script.ts"
+  },
+  "cold": {
+    "artifact": "◻️2d",
+    "consumer": "🛂️manifest/📦️packages/🦀️rust/🦀️.rs",
+    "cfg": [
+      "target_arch=\"wasm32\"",
+      "target_os=\"unknown\""
+    ],
+    "error": "process.source.unresolved-module",
+    "module": "registry",
+    "outputs": [
+      "📇️registry/🦀️.rs",
+      "🏢️nakagin/🦀️.rs",
+      "◻️puzzle2d-default/🦀️.rs"
+    ]
+  }
+}

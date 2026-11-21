@@ -16,7 +16,7 @@
       },
       "target": {
         "granularity": "handle",
-        "id": "section@wire"
+        "id": "h:section@wire"
       }
     },
     {
@@ -30,28 +30,181 @@
       },
       "target": {
         "granularity": "handle",
-        "id": "section@area"
+        "id": "h:section@area"
+      }
+    },
+    {
+      "kind": "output",
+      "key": "inspector.selected.output.escaped",
+      "widget": "section",
+      "port": "!iwire",
+      "value": {
+        "$schema": "geometry",
+        "handle": "curve-section"
+      },
+      "target": {
+        "granularity": "handle",
+        "id": "h:section@!o!iwire"
+      }
+    },
+    {
+      "kind": "output",
+      "key": "inspector.selected.output.default",
+      "widget": "section",
+      "port": "",
+      "value": {
+        "$schema": "geometry",
+        "handle": "curve-section"
+      },
+      "target": {
+        "granularity": "handle",
+        "id": "h:section@!o"
       }
     },
     {
       "kind": "connected",
       "key": "inspector.selected.input.geometry",
-      "widget": "section",
-      "port": "wire",
+      "widget": "volume",
+      "port": "geometry",
       "target": {
         "granularity": "handle",
-        "id": "section@wire"
-      }
+        "id": "h:volume@!igeometry"
+      },
+      "sourceWidget": "section",
+      "sourcePort": "wire"
     },
     {
       "kind": "connected",
       "key": "inspector.selected.input.bundle",
-      "widget": "section",
-      "port": "",
+      "widget": "volume",
+      "port": "bundle",
       "target": {
-        "granularity": "node",
-        "id": "section"
-      }
+        "granularity": "handle",
+        "id": "h:volume@!ibundle"
+      },
+      "sourceWidget": "section",
+      "sourcePort": ""
+    },
+    {
+      "kind": "numeric",
+      "key": "inspector.selected.input.radius",
+      "widget": "sphere",
+      "port": "radius",
+      "value": 2.5,
+      "target": {"granularity": "handle", "id": "h:sphere@!iradius"}
+    },
+    {
+      "kind": "boolean",
+      "key": "inspector.selected.input.closed",
+      "widget": "profile",
+      "port": "closed",
+      "value": true,
+      "target": {"granularity": "handle", "id": "h:profile@!iclosed"}
+    },
+    {
+      "kind": "text",
+      "key": "inspector.selected.input.name",
+      "widget": "caption",
+      "port": "name",
+      "value": "Ring",
+      "incoming": true,
+      "target": {"granularity": "handle", "id": "h:caption@!iname"}
+    },
+    {
+      "kind": "text",
+      "key": "inspector.selected.note",
+      "widget": "note",
+      "port": "text",
+      "value": "Room",
+      "incoming": false,
+      "target": {"granularity": "handle", "id": "h:note@text"}
+    },
+    {
+      "kind": "literal",
+      "key": "inspector.selected.input.center",
+      "widget": "sphere",
+      "port": "center",
+      "label": "Center",
+      "value": {
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "target": {
+        "granularity": "handle",
+        "id": "h:sphere@!icenter"
+      },
+      "components": [
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    {
+      "kind": "literal",
+      "key": "inspector.selected.input.axis",
+      "widget": "move",
+      "port": "axis",
+      "label": "Axis",
+      "index": 2,
+      "value": {
+        "x": 0,
+        "y": -1,
+        "z": 0
+      },
+      "target": {
+        "granularity": "handle",
+        "id": "h:move@!iaxis"
+      },
+      "components": [
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    {
+      "kind": "literal",
+      "key": "inspector.selected.input.plane.origin",
+      "widget": "split",
+      "port": "plane",
+      "label": "Plane Origin",
+      "part": "origin",
+      "value": {
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "target": {
+        "granularity": "handle",
+        "id": "h:split@!iplane"
+      },
+      "components": [
+        "origin.x",
+        "origin.y",
+        "origin.z"
+      ]
+    },
+    {
+      "kind": "literal",
+      "key": "inspector.selected.input.plane.normal",
+      "widget": "split",
+      "port": "plane",
+      "label": "Plane Normal",
+      "part": "normal",
+      "value": {
+        "x": 0,
+        "y": 0,
+        "z": 1
+      },
+      "target": {
+        "granularity": "handle",
+        "id": "h:split@!iplane"
+      },
+      "components": [
+        "normal.x",
+        "normal.y",
+        "normal.z"
+      ]
     }
   ]
 }

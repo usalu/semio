@@ -19,3 +19,8 @@ Feature: The sweep of an extruded solid is required and never defaulted
     Given an extruded solid without sweep, or with the axis "u"
     When it is evaluated, resolved to views, validated or checked against the schema
     Then evaluate and the resolver throw SolidSweepError naming the asset, the shape and the viewpoint, the validator reports solid-sweep and ajv rejects the document
+
+  Scenario: A transverse channel profile is swept along the bone
+    Given a transverse profile in the local v-w plane
+    When the part is swept along u and viewed from front and top
+    Then both silhouettes agree with the declared dimensions and gl-matrix frame transformations

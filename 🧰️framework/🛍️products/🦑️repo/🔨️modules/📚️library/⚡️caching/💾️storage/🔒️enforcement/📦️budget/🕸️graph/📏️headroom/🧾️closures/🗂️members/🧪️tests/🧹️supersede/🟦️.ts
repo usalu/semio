@@ -47,8 +47,10 @@ test("a cancelled scan touches nothing",async()=>{
 });
 
 test("the build removes superseded blocks after, never inside, its builder custody, and the collector removes them first",()=>{
- const host=graphSourceV1(),custody=host.indexOf("()=>withGenerationCustodyV1("),plan=host.indexOf('await markBuildCapacityPhaseV1("plan");',custody),build=host.indexOf("if(image!==undefined)await sweepSupersededBlocksV1("),sweep=host.indexOf("minimumBlocks:GRAPH_LIMITS_V1.sweepMinimumBlocks,blocksPerHeader:GRAPH_LIMITS_V1.sweepBlocksPerHeader");
- expect(custody).toBeGreaterThan(0);expect(plan).toBeGreaterThan(custody);expect(build).toBeGreaterThan(plan);expect(sweep).toBeGreaterThan(0);expect(host).toContain("catch(error){if(invocation.control.signal.aborted)throw error;process.stderr.write(\"graph: sweep");
+ const host=graphSourceV1(),custody=host.indexOf("()=>withGenerationCustodyV1("),plan=host.indexOf('await markBuildCapacityPhaseV1("plan");',custody),build=host.indexOf("await sweepSupersededBlocksV1(",custody),sweep=host.indexOf("minimumBlocks:GRAPH_LIMITS_V1.sweepMinimumBlocks,blocksPerHeader:GRAPH_LIMITS_V1.sweepBlocksPerHeader");
+ expect(custody).toBeGreaterThan(0);expect(plan).toBeGreaterThan(custody);expect(build).toBeGreaterThan(plan);expect(sweep).toBeGreaterThan(build);
+ expect(host.slice(plan,build)).toMatch(/if\s*\([^)]*\brebuilding\b[^)]*\bimage\s*!==\s*undefined\s*\)\s*$/u);
+ expect(host).toContain("catch(error){if(invocation.control.signal.aborted)throw error;process.stderr.write(\"graph: sweep");
  const reclaim=readFileSync(fileURLToPath(new URL("../../../../../../../../../../🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts",import.meta.url)),"utf8");
  expect(reclaim.indexOf("ports.supersede")).toBeGreaterThan(0);expect(reclaim.indexOf("ports.supersede")).toBeLessThan(reclaim.indexOf("ports.index(image)"));
 });
@@ -106,6 +108,20 @@ test("an inventory a writer starts naming while the sweep takes the group leases
  const{root,record}=closureImage();let named=false;
  const report=await scan.supersedeBuildGraphClosuresV1(root,{lease:async()=>{if(!named){named=true;record("c".repeat(24),["source:"+hex("c")]);}return{release(){}};},read:closureRead()},control(),{graceMilliseconds:3600000});
  expect(report.removed).toBe(1);expect(closureNames(root)).toContain("build-input-closures/"+hex("c")+".json");expect(closureNames(root)).not.toContain("build-lock-closures/"+hex("f")+".json");
+});
+
+test("first generation publication changes the closure census cut",async()=>{
+ const{root}=closureImage(),leases:string[]=[];
+ const before=closureNames(root),directory=join(root,"generations","o"),fragment=join(directory,hex("9")+".json.br");
+ const report=await scan.supersedeBuildGraphClosuresV1(root,{lease:async kind=>{
+  leases.push(kind);
+  if(kind==="canonical"){mkdirSync(directory,{recursive:true});writeFileSync(fragment,JSON.stringify({refs:["source:"+hex("c")]}));}
+  return{release(){}};
+ },read:closureRead()},control());
+ expect(report).toMatchObject({candidates:2,unvouched:1,removed:0});expect(closureNames(root)).toEqual(before);
+ expect(leases).toContain("canonical");
+ const next=await scan.supersedeBuildGraphClosuresV1(root,{lease:async()=>({release(){}}),read:closureRead()},control());
+ expect(next).toMatchObject({candidates:1,removed:1});expect(closureNames(root)).toContain("build-input-closures/"+hex("c")+".json");
 });
 
 test("a leaf whose observation blocks are gone names nothing, any other refusal keeps every inventory",async()=>{

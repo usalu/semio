@@ -1,5 +1,10 @@
 {
   "text": "original 漢 🌱️",
+  "allocationPolicies": [
+    { "maximumBytes": "65536", "limit32": "65536", "limit64": "65536" },
+    { "maximumBytes": "4294967296", "limit32": "2147483647", "limit64": "4294967296" },
+    { "maximumBytes": "18446744073709551615", "limit32": "2147483647", "limit64": "9223372036854775807" }
+  ],
   "items": [
     "α",
     "β retained",

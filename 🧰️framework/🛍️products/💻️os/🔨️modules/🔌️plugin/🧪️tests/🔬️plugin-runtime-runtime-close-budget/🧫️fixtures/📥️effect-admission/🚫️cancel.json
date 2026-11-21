@@ -1,0 +1,5 @@
+[
+  { "job": 1, "occupant": null, "cancelled": false },
+  { "job": 1, "occupant": 1, "cancelled": true },
+  { "job": 1, "occupant": 2, "cancelled": false }
+]

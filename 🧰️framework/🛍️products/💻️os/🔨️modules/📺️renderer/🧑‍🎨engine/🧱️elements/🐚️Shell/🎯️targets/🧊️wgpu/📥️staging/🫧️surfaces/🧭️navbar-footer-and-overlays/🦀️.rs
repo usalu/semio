@@ -9,7 +9,7 @@ impl SurfaceState {
     /// ⏳️🖼️ Each live World3d surface with the compute-status document it published — the one input
     /// both the status pill and the cancel control read.
     pub fn world3d_status_rows(&self) -> Vec<(&str, Rect, Option<&str>)> {
-        self.world3d_states.iter().map(|(surface_id, world)| (surface_id.as_str(), world.bounds, self.world3d_status.get(surface_id).map(String::as_str))).collect()
+        self.world3d_states.iter().map(|(surface_id, world)| (surface_id.as_str(), world.session.bounds, self.world3d_status.get(surface_id).map(String::as_str))).collect()
     }
 }
 

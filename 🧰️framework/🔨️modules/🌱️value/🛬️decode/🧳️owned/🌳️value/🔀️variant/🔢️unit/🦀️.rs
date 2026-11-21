@@ -18,6 +18,12 @@ impl<I:NativeValueSource+?Sized,T:NativeUnitVariants>NativeUnitEnumReceiver<I,T>
 impl<I:NativeValueSource+?Sized,T:NativeUnitVariants>NativeReceiver<I,T>for NativeUnitEnumReceiver<I,T>{
  fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing||self.output.is_some(){return Err(invalid())}self.selector.validate_input(input)?;if self.selector.result().is_some(){Ok(fixed(0))}else{self.selector.demands(input,body,maximum_work_units)}}
  fn select_advance(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<NativeAdvanceSelection,ValueError>{if self.closing||self.output.is_some(){return Err(invalid())}self.selector.validate_input(input)?;if self.selector.result().is_some(){Ok(NativeAdvanceSelection::Local{work:1})}else{self.selector.select_advance(input,body,maximum_work_units)}}
+ fn advance_work_demand(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<u64,ValueError>{
+  match self.select_advance(input,body,u64::MAX)?{
+   NativeAdvanceSelection::Local{work}=>Ok(work),
+   NativeAdvanceSelection::Nested=>self.selector.advance_work_demand(input,body),
+  }
+ }
  fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:semio_framework_value_control_contract::OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->crate::RetainedWorkPoll<RetainedCloneStep,crate::native_decoding::NativeReceivingFailure>{if self.closing||self.output.is_some()||self.selector.result().is_some(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}self.selector.advance_nested(input,control,witness,body,maximum_work_units,g)}
  fn advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{
   let d=self.demands(input,body,effect.maximum_work_units())?;if !retained_clone_grant_admits(effect.grant(),d){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}

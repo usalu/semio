@@ -269,16 +269,34 @@ impl RetainedRecordBodyCursor {
                     allocated_bytes: error.allocated_bytes,
                     fault: error.fault.into_pack_refusal("retained-record-body-symbol-allocation"),
                 }),
-            RetainedRecordBodyAllocationOwner::Value => self
-                .value
-                .as_mut()
-                .ok_or_else(|| RetainedRecordBodyAllocationError {
-                    allocated_bytes: 0,
-                    fault: PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value owner missing" },
-                })?
-                .reserve_allocation(maximum_bytes.min(remaining))
-                .map(|step| RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
-                .map_err(|error| RetainedRecordBodyAllocationError { allocated_bytes: error.allocated_bytes, fault: error.fault }),
+            RetainedRecordBodyAllocationOwner::Value => {
+                let budget = maximum_bytes.min(remaining).min(effect.grant().maximum_capacity_bytes);
+                let no_allocation = |fault| RetainedRecordBodyAllocationError { allocated_bytes: 0, fault };
+                let cursor = self.value.as_mut().ok_or_else(|| no_allocation(PackRefusal::RetainedMalformed {
+                    kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value owner missing",
+                }))?;
+                if budget < requested || effect.remaining_work_units().map_err(|error| no_allocation(PackRefusal::from(error)))? == 0 {
+                    return Ok(RetainedRecordBodyAllocationStep::default());
+                }
+                if effect.actual().is_some() {
+                    return Err(no_allocation(PackRefusal::RetainedMalformed {
+                        kind: ValueRefusalKind::InvariantViolated, what: "retained-record-body", offset: self.offset, detail: "value stack allocation marker is already occupied",
+                    }));
+                }
+                if !effect.performed(1).map_err(|error| no_allocation(PackRefusal::from(error)))? {
+                    return Err(no_allocation(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "retained record-body value stack work" }));
+                }
+                match cursor.reserve_allocation(budget) {
+                    Ok(step) => {
+                        *effect.actual() = Some(step.allocated_bytes);
+                        Ok(RetainedRecordBodyAllocationStep { progressed: step.progressed, allocated_bytes: step.allocated_bytes })
+                    }
+                    Err(error) => {
+                        *effect.actual() = Some(error.allocated_bytes);
+                        Err(RetainedRecordBodyAllocationError { allocated_bytes: error.allocated_bytes, fault: error.fault })
+                    }
+                }
+            }
         };
         match step {
             Ok(step) if self.allocated_bytes() <= self.maximum_allocation_bytes => Ok(step),

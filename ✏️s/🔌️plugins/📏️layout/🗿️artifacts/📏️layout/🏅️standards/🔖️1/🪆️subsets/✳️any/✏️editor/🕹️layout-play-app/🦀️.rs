@@ -170,7 +170,7 @@ impl ArtifactEditor for LayoutPlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
-        LayoutRetainedProofs::bounded_first_step_tool_proofs().into_iter().chain(LayoutExportProofs::bounded_first_step_tool_proofs()).collect()
+        layout_bounded_first_step_tool_proofs()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -182,13 +182,26 @@ impl ArtifactEditor for LayoutPlayApp {
 
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
-        if !LAYOUT_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
-            return layout_build_export_tool_job(request, output, cx);
-        }
-        if original.command.command_id() != original.tool_id {
+        let tool_id = original.command.command_id();
+        if tool_id != original.tool_id {
             return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "layout retained command does not match its exact registered tool").into());
         }
-        let tool_id = original.command.command_id();
+        if !LAYOUT_RETAINED_TOOL_IDS.contains(&tool_id) {
+            let kind = match tool_id {
+                "exportPng" => LayoutExportKind::Png,
+                "exportSvg" => LayoutExportKind::Svg,
+                "exportPdf" => LayoutExportKind::Pdf,
+                "exportPackage" => LayoutExportKind::Package,
+                "exportStep" => LayoutExportKind::Step,
+                "exportIdml" => LayoutExportKind::Idml,
+                _ => return Ok(false),
+            };
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(
+                request, output, cx, LayoutCommand::command_id,
+                MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DECODED_ITEMS,
+                false, |inputs| export_tool_job::LayoutOriginalExportWork::new(kind, inputs.operation),
+            );
+        }
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, LayoutCommand::command_id, LAYOUT_RETAINED_RAW_BYTES, LAYOUT_RETAINED_WORK_ITEMS, false, |request| LayoutWindowWork::new(tool_id))
     }
 

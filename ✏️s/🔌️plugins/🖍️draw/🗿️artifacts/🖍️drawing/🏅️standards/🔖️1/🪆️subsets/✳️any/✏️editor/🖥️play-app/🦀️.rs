@@ -137,7 +137,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
-        DrawingGestureProofs::bounded_first_step_tool_proofs().into_iter().chain(DrawingBoundedProofs::bounded_first_step_tool_proofs()).chain(DrawingPathProofs::bounded_first_step_tool_proofs()).chain(DrawingImageProofs::bounded_first_step_tool_proofs()).chain(DrawingExportProofs::bounded_first_step_tool_proofs()).collect()
+        drawing_bounded_proofs()
     }
 
     fn mounted_job_prepare_snapshot_read(operation: semio_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, _windows: &semio_plugin::WindowConfigOwnerRegistry, _view: Option<&semio_plugin::ViewModel>, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_plugin::MountedSnapshotReadPreparation {

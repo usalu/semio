@@ -109,7 +109,10 @@ export type PluginDocumentBindingV1 = ActorDocumentSourceV1 & Readonly<{
 }>;
 
 //#region 🔖️Merge
+import type { OriginalMediaExchange } from "../🚚️handle-turn-drive/original-media-wire.ts";
+
 export type PluginWasmHandle = {
+  readonly openOriginalMediaIngress?: (instanceId: number, issued: unknown) => OriginalMediaExchange;
   readonly pluginId: string;
   readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
@@ -154,8 +157,8 @@ export type PluginWasmHandle = {
    * agent (`📓️lb1-live-bridge-action-routing.md` §11.1, `📓️wr3-headless-routes-view-state-export.md`
    * §4.4). `null` when the reply carries no `AppFrame::Media` frame. */
   readonly exportAppMedia?: (instanceId: number, port: string) => Promise<{ readonly port: string; readonly descriptor: Uint8Array; readonly data: Uint8Array } | null>;
-  /** 📂️ Delivers one declared natural media artifact and waits for its mutation commit. */
-  readonly importAppMedia?: (instanceId: number, port: string, descriptor: unknown, data: Uint8Array) => Promise<void>;
+  /** 📂️ Delivers declared media and waits for its mutation commit. An aborted fresh owner must be retired by the caller. */
+  readonly importAppMedia?: (instanceId: number, port: string, descriptor: unknown, data: Uint8Array, signal?: AbortSignal) => Promise<void>;
   /** 🎬️ Starts one document-revision-owned media export without collecting its output. */
   readonly submitMediaExport: (instanceId: number, port: string, parentDocumentId: string, revision: bigint) => Promise<MediaExportHandle>;
   /** ⏱️ Advances one bounded media export turn and returns exact progress. */

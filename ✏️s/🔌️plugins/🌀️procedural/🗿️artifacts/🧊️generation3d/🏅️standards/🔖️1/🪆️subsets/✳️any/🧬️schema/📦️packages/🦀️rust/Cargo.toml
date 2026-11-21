@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-s-artifact-procedural-3d-graph-ports = { path = "../../🔌️graph-ports/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }

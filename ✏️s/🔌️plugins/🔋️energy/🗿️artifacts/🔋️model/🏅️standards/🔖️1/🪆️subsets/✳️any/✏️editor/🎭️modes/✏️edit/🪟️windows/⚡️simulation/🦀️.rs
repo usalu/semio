@@ -231,10 +231,12 @@ fn weather_controls(weather:Option<&store::ArtifactLink>,locale:Locale)->semio_p
     let refusal=||PluginAssemblyError::new("energy.weather.control","Weather artifact controls exceed their native UI extent");
     let uri=weather.map(|link|link.target.to_uri()).unwrap_or_default();
     let value=UiText::try_from_str(&uri).ok_or_else(refusal)?;
+    let address_label=say(locale,"EPW artifact address","EPW-Artefaktadresse");
     let (action,_)=energy_model_action(SELECT_WEATHER_FILE_ACTION_ID,None)?;
     let input=semio_ui_contract::input(InputKind::Text).value(value).commit(UiText::try_from_str("blur").unwrap())
-        .try_id("energy-weather-address-input").map_err(|_|refusal())?.try_on(Trigger::Commit,action).map_err(|_|refusal())?.try_build().map_err(|_|refusal())?;
-    let select=semio_ui_contract::tree_item(ui_label(say(locale,"EPW artifact address","EPW-Artefaktadresse"))?)
+        .try_id("energy-weather-address-input").map_err(|_|refusal())?.try_label(address_label).map_err(|_|refusal())?
+        .try_on(Trigger::Commit,action).map_err(|_|refusal())?.try_build().map_err(|_|refusal())?;
+    let select=semio_ui_contract::tree_item(ui_label(address_label)?)
         .try_id("energy-weather-address").map_err(|_|refusal())?.try_child(input).map_err(|_|refusal())?.try_build().map_err(|_|refusal())?;
     let mut clear=semio_plugin::tree_item_with_action("energy-weather-clear",ui_label(say(locale,"Clear weather artifact","Wetterartefakt lösen"))?,None,energy_model_action(CLEAR_WEATHER_FILE_ACTION_ID,None)?)?;
     clear.disabled=weather.is_none();

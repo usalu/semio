@@ -1,0 +1,33 @@
+{
+  "edition": "EN 1993-1-9:2005+AC:2009",
+  "clause": "Table 8.8 and §8(1)–(2)",
+  "columns": ["case", "choices", "inputs", "results"],
+  "resultColumns": ["demandMpa", "capacityMpa", "status"],
+  "cases": [
+    ["C93-21",{"closed_connection_detail":"cutout","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":12},[[62.5,64,"pass"],[100,532.5,"pass"]]],
+    ["C93-21",{"closed_connection_detail":"cutout","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":12.001},[[62.5,56.8,"fail"],[100,532.5,"pass"]]],
+    ["C93-21",{"closed_connection_detail":"continuous","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":12},[[62.5,64,"pass"],[100,532.5,"pass"]]],
+    ["C93-21",{"closed_connection_detail":"continuous","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":13},[[62.5,56.8,"fail"],[100,532.5,"pass"]]],
+    ["C93-21",{"closed_connection_detail":"separate","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":11},[[62.5,28.8,"fail"],[100,532.5,"pass"]]],
+    ["C93-21",{"closed_connection_detail":"backed","closed_geometry":"backed-confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":26},[[62.5,56.8,"fail"],[100,532.5,"pass"]]],
+    ["C93-21",{"closed_connection_detail":"cutout","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":0},[]],
+    ["C93-21",{"closed_connection_detail":"continuous","closed_geometry":"unconfirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":12},[]],
+    ["C93-22",{"closed_cutout_method":"vierendeel","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50},[[62.5,56.8,"fail"],[100,532.5,"pass"]]],
+    ["C93-22",{"closed_cutout_method":"bridge-method","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50},[[62.5,89.6,"pass"],[100,532.5,"pass"]]],
+    ["C93-22",{"closed_cutout_method":"bridge-method","closed_geometry":"unconfirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50},[]],
+    ["C93-21",{"closed_connection_detail":"backed","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_web_thickness":12},[]],
+    ["C93-23",{"closed_splice_group":"ground","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_splice_thickness":25},[[62.5,89.6,"pass"],[100,532.5,"pass"]]],
+    ["C93-23",{"closed_splice_group":"flat","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_splice_thickness":50},[[62.5,62.67964055732093,"pass"],[100,532.5,"pass"]]],
+    ["C93-23",{"closed_splice_group":"as-welded","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_splice_thickness":12},[[62.5,64,"pass"],[100,532.5,"pass"]]],
+    ["C93-23",{"closed_splice_group":"as-welded","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_frequent":100,"closed_range":50,"closed_splice_thickness":0},[]],
+    ["C93-24",{"closed_weld_type":"recessed","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":8,"closed_weld_gap":2,"closed_weld_root_face":2,"closed_weld_moment":400,"closed_weld_frequent_moment":1000},[[46.875,56.8,"pass"],[93.75,532.5,"pass"]]],
+    ["C93-24",{"closed_weld_type":"recessed","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":7.999,"closed_weld_gap":0.5,"closed_weld_root_face":2,"closed_weld_moment":400,"closed_weld_frequent_moment":1000},[[46.8867209476319,40,"fail"],[93.7734418952638,532.5,"pass"]]],
+    ["C93-24",{"closed_weld_type":"recessed","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":9,"closed_weld_gap":0.5,"closed_weld_root_face":2.001,"closed_weld_moment":400,"closed_weld_frequent_moment":1000},[[37.03703703703704,40,"pass"],[74.07407407407408,532.5,"pass"]]],
+    ["C93-24",{"closed_weld_type":"fillet","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":6,"closed_weld_gap":0.5,"closed_weld_root_face":0,"closed_weld_moment":400,"closed_weld_frequent_moment":1000},[[83.33333333333334,40,"fail"],[166.66666666666669,532.5,"pass"]]],
+    ["C93-24",{"closed_weld_type":"fillet","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":6,"closed_weld_gap":0.501,"closed_weld_root_face":0,"closed_weld_moment":400,"closed_weld_frequent_moment":1000},[]],
+    ["C93-24",{"closed_weld_type":"recessed","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":8,"closed_weld_gap":2.001,"closed_weld_root_face":2,"closed_weld_moment":400,"closed_weld_frequent_moment":1000},[]],
+    ["C93-24",{"closed_weld_type":"recessed","closed_geometry":"unconfirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":8,"closed_weld_gap":0.4,"closed_weld_root_face":0,"closed_weld_moment":400,"closed_weld_frequent_moment":1000},[]],
+    ["C93-24",{"closed_weld_type":"fillet","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":0,"closed_weld_gap":0,"closed_weld_root_face":0,"closed_weld_moment":400,"closed_weld_frequent_moment":1000},[]],
+    ["C93-24",{"closed_weld_type":"recessed","closed_geometry":"confirmed"},{"fy":355,"gamma_ff":1.25,"gamma_mf":1.25,"closed_weld_rib_thickness":8,"closed_weld_throat":9,"closed_weld_gap":2,"closed_weld_root_face":2,"closed_weld_moment":400,"closed_weld_frequent_moment":6000},[[46.875,56.8,"pass"],[562.5,532.5,"fail"]]]
+  ]
+}

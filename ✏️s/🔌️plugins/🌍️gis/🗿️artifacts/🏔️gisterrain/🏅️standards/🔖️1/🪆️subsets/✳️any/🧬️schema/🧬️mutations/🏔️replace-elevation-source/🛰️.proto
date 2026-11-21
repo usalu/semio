@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s.gis.gisterrain.mutation;
+
+import "🗺️imported-map/🏔️elevation/🛰️.proto";
+
+message ReplaceElevationSource {
+  optional semio.s.gis.gisterrain.ElevationSource new_elevation_source = 1;
+}

@@ -100,116 +100,228 @@
   ],
   "adaptive": [
     {
+      "theta_rm": 9.99,
+      "category": 1,
+      "centre": 22.096700000000002,
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 9.99,
+      "category": 2,
+      "centre": 22.096700000000002,
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 9.99,
+      "category": 3,
+      "centre": 22.096700000000002,
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 9.99,
+      "category": 4,
+      "centre": 22.096700000000002,
+      "lower": null,
+      "upper": null
+    },
+    {
       "theta_rm": 10.0,
       "category": 1,
-      "lower": 20.1,
       "centre": 22.1,
-      "upper": 24.1
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 10.0,
       "category": 2,
-      "lower": 19.1,
       "centre": 22.1,
-      "upper": 25.1
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 10.0,
       "category": 3,
-      "lower": 18.1,
       "centre": 22.1,
-      "upper": 26.1
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 10.0,
       "category": 4,
-      "lower": 17.1,
       "centre": 22.1,
-      "upper": 27.1
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 10.01,
+      "category": 1,
+      "centre": 22.1033,
+      "lower": 19.1033,
+      "upper": 24.1033
+    },
+    {
+      "theta_rm": 10.01,
+      "category": 2,
+      "centre": 22.1033,
+      "lower": 18.1033,
+      "upper": 25.1033
+    },
+    {
+      "theta_rm": 10.01,
+      "category": 3,
+      "centre": 22.1033,
+      "lower": 17.1033,
+      "upper": 26.1033
+    },
+    {
+      "theta_rm": 10.01,
+      "category": 4,
+      "centre": 22.1033,
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 15.0,
       "category": 1,
-      "lower": 21.75,
       "centre": 23.75,
+      "lower": 20.75,
       "upper": 25.75
     },
     {
       "theta_rm": 15.0,
       "category": 2,
-      "lower": 20.75,
       "centre": 23.75,
+      "lower": 19.75,
       "upper": 26.75
     },
     {
       "theta_rm": 15.0,
       "category": 3,
-      "lower": 19.75,
       "centre": 23.75,
+      "lower": 18.75,
       "upper": 27.75
     },
     {
       "theta_rm": 15.0,
       "category": 4,
-      "lower": 18.75,
       "centre": 23.75,
-      "upper": 28.75
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 22.5,
       "category": 1,
-      "lower": 24.225,
       "centre": 26.225,
+      "lower": 23.225,
       "upper": 28.225
     },
     {
       "theta_rm": 22.5,
       "category": 2,
-      "lower": 23.225,
       "centre": 26.225,
+      "lower": 22.225,
       "upper": 29.225
     },
     {
       "theta_rm": 22.5,
       "category": 3,
-      "lower": 22.225,
       "centre": 26.225,
+      "lower": 21.225,
       "upper": 30.225
     },
     {
       "theta_rm": 22.5,
       "category": 4,
-      "lower": 21.225,
       "centre": 26.225,
-      "upper": 31.225
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 29.99,
+      "category": 1,
+      "centre": 28.6967,
+      "lower": 25.6967,
+      "upper": 30.6967
+    },
+    {
+      "theta_rm": 29.99,
+      "category": 2,
+      "centre": 28.6967,
+      "lower": 24.6967,
+      "upper": 31.6967
+    },
+    {
+      "theta_rm": 29.99,
+      "category": 3,
+      "centre": 28.6967,
+      "lower": 23.6967,
+      "upper": 32.6967
+    },
+    {
+      "theta_rm": 29.99,
+      "category": 4,
+      "centre": 28.6967,
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 30.0,
       "category": 1,
-      "lower": 26.700000000000003,
       "centre": 28.700000000000003,
-      "upper": 30.700000000000003
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 30.0,
       "category": 2,
-      "lower": 25.700000000000003,
       "centre": 28.700000000000003,
-      "upper": 31.700000000000003
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 30.0,
       "category": 3,
-      "lower": 24.700000000000003,
       "centre": 28.700000000000003,
-      "upper": 32.7
+      "lower": null,
+      "upper": null
     },
     {
       "theta_rm": 30.0,
       "category": 4,
-      "lower": 23.700000000000003,
       "centre": 28.700000000000003,
-      "upper": 33.7
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 30.01,
+      "category": 1,
+      "centre": 28.703300000000002,
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 30.01,
+      "category": 2,
+      "centre": 28.703300000000002,
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 30.01,
+      "category": 3,
+      "centre": 28.703300000000002,
+      "lower": null,
+      "upper": null
+    },
+    {
+      "theta_rm": 30.01,
+      "category": 4,
+      "centre": 28.703300000000002,
+      "lower": null,
+      "upper": null
     }
   ],
   "ventilation": [
@@ -316,84 +428,84 @@
       "usage": "office",
       "category": 1,
       "outdoor": 400.0,
-      "limit_above": 500.0
+      "limit_above": 350.0
     },
     {
       "annex": "de",
       "usage": "office",
       "category": 2,
       "outdoor": 400.0,
-      "limit_above": 500.0
+      "limit_above": 550.0
     },
     {
       "annex": "de",
       "usage": "office",
       "category": 3,
       "outdoor": 400.0,
-      "limit_above": 500.0
+      "limit_above": 900.0
     },
     {
       "annex": "de",
       "usage": "office",
       "category": 4,
       "outdoor": 400.0,
-      "limit_above": 500.0
+      "limit_above": 1350.0
     },
     {
       "annex": "de",
       "usage": "residential",
       "category": 1,
+      "outdoor": 400.0,
+      "limit_above": 350.0
+    },
+    {
+      "annex": "de",
+      "usage": "residential",
+      "category": 2,
       "outdoor": 400.0,
       "limit_above": 550.0
     },
     {
       "annex": "de",
       "usage": "residential",
-      "category": 2,
-      "outdoor": 400.0,
-      "limit_above": 800.0
-    },
-    {
-      "annex": "de",
-      "usage": "residential",
       "category": 3,
       "outdoor": 400.0,
-      "limit_above": 800.0
+      "limit_above": 900.0
     },
     {
       "annex": "de",
       "usage": "residential",
       "category": 4,
       "outdoor": 400.0,
-      "limit_above": 800.0
+      "limit_above": 1350.0
     },
     {
       "annex": "de",
       "usage": "classroom",
       "category": 1,
       "outdoor": 400.0,
-      "limit_above": 400.0
+      "limit_above": 350.0
     },
     {
       "annex": "de",
       "usage": "classroom",
       "category": 2,
       "outdoor": 400.0,
-      "limit_above": 400.0
+      "limit_above": 550.0
     },
     {
       "annex": "de",
       "usage": "classroom",
       "category": 3,
       "outdoor": 400.0,
-      "limit_above": 400.0
+      "limit_above": 900.0
     },
     {
       "annex": "de",
       "usage": "classroom",
       "category": 4,
       "outdoor": 400.0,
-      "limit_above": 400.0
+      "limit_above": 1350.0
     },
     {
       "annex": "en",

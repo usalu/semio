@@ -1,9 +1,8 @@
 use super::*;
 #[path = "../../../🧪️tests/🧰️persisted/🦀️.rs"]
 mod persisted;
-use persisted::{drain, with};
+use persisted::with;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
@@ -51,7 +50,11 @@ fn fem2d_mesh_preview_returns_region_triangles() {
 fn fem2d_nodal_von_mises_returns_one_value_per_mesh_node() {
     let mut doc = rectangle_region_doc();
     doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), region_id: "r1".into(), pressure: 5000.0 }], self_weight: false }];
-    let averaged = with(&doc, |d| fem2d_nodal_von_mises(d, "pressure")).expect("nodal von mises solves");
+    let source = semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "pressure").unwrap();
+    let averaged = with(&doc, |doc| {
+        let results = crate::fem2d_engine::fem2d_solve_all(doc).expect("pressure case solves");
+        fem2d_nodal_von_mises(doc, &results[&source])
+    }).expect("nodal von mises resolves");
     let meshes = with(&doc, |d| fem2d_mesh_preview(d)).expect("mesh preview succeeds");
     for node_id in &meshes[0].node_ids {
         let v = *averaged.get(node_id).unwrap_or_else(|| panic!("missing averaged value for node {node_id}"));

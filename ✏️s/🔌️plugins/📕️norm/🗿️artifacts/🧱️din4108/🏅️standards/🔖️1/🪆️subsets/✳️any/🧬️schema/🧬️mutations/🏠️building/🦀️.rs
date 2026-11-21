@@ -23,4 +23,18 @@ pub mod change_rh_int;
 pub mod change_t_int_c;
 #[path = "../🗂️change-usage/🦀️.rs"]
 pub mod change_usage;
+#[path = "../➕️insert-case/🦀️.rs"]
+pub mod insert_case;
+#[path = "../➖️remove-case/🦀️.rs"]
+pub mod remove_case;
+#[path = "../🔢️change-case-number/🦀️.rs"]
+pub mod change_case_number;
+#[path = "../🔤️change-case-text/🦀️.rs"]
+pub mod change_case_text;
+#[path = "../🏷️change-case-label-en/🦀️.rs"]
+pub mod change_case_label_en;
+#[path = "../🏷️change-case-label-de/🦀️.rs"]
+pub mod change_case_label_de;
+#[path = "../📇️change-case-entry-id/🦀️.rs"]
+pub mod change_case_entry_id;
 //#endregion 🪢️Mounts

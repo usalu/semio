@@ -134,7 +134,7 @@ pub(super) fn check_fatigue(document: &En1993Snapshot, annex: AnnexChoice, scope
 }
 
 fn fatigue_limit(annex: AnnexChoice, fat: &FatigueDetail, report: &mut CheckReport) {
-    let gmf = part_1_9::gamma_mf(part_1_9::parse_method(fat.method.as_str()));
+    let gmf = part_1_9::gamma_mf(fat.method, fat.consequence, annex);
     let delta_c = part_1_9::detail_category_pa(fat.category);
     let (delta_d, delta_l) = (clauses::fatigue_fire::delta_sigma_d(delta_c), clauses::fatigue_fire::delta_sigma_l(delta_c));
     let peak = fat.spectrum.iter().map(|b| b.delta_sigma).fold(0.0, f64::max);
@@ -148,7 +148,7 @@ fn fatigue_limit(annex: AnnexChoice, fat: &FatigueDetail, report: &mut CheckRepo
         loc("Fatigue limit Δσ_D and cut-off Δσ_L of the S-N curve", "Dauerfestigkeit Δσ_D und Schwellenwert Δσ_L der Wöhlerlinie"),
     )
     .annex(annex)
-    .ndps(&["ndp.en1993.v-502.1", AnnexParams::GAMMA_MF]);
+    .ndps(&[part_1_9::gamma_mf_id(fat.method, fat.consequence)]);
     let (count, cycles_en) = (fat.spectrum.len(), "cycles");
     if count == 1 {
         let mut b = builder.utilization(stress_pa(peak * gmf), stress_pa(delta_d)).explanation(loc(

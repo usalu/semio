@@ -26,7 +26,7 @@ async fn drawing_viewer_camera_ownership_and_restore() {
             let bytes = protocol::OpBinary::encode_op(&command).map_err(|error| format!("{error:?}"))?;
             let decoded = <DrawingViewCommand as protocol::OpBinary>::decode_op(&bytes).map_err(|error| format!("{error:?}"))?;
             if decoded != command { return Err("viewer camera command binary roundtrip changed payload".into()); }
-            let meta = ActionMeta { instance_id: 91,view_state: Some(context),..artifact_app_laws::meta("drawing-viewer-camera") };
+            let meta = ActionMeta { instance_id: 91,view_state: Some(context.into()),..artifact_app_laws::meta("drawing-viewer-camera") };
             semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             if receipt.lanes != vec![semio_plugin::app::TypedOperationResultLane::WindowConfig,semio_plugin::app::TypedOperationResultLane::Ui,semio_plugin::app::TypedOperationResultLane::Terminal] { return Err(format!("viewer camera published unexpected lanes: {:?}",receipt.lanes)); }
@@ -34,7 +34,7 @@ async fn drawing_viewer_camera_ownership_and_restore() {
         let after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
         if before.pack != after.pack || before.spr != after.spr { return Err("viewer navigation changed artifact bytes".into()); }
         let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-        for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
+        for pack in packs { semio_plugin::restore_fixture_window_config(&mut *reopened, pack, scope.cx()).await.map_err(|error| format!("{error:?}"))?; }
         for (id,value) in fixture["expected"].as_object().ok_or("camera fixture expectations missing")? {
             let context = view.for_window_instance(id).ok_or("expected camera window unknown")?;
             let expected: DrawingViewerCanvasWindowConfig = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;

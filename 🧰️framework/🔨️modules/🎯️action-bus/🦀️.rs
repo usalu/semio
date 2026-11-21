@@ -10,8 +10,7 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use std::any::Any;
 use std::any::TypeId;
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
@@ -28,7 +27,7 @@ use semio_framework_manifest_app_surface::AppDefinition;
 pub mod admission;
 pub use admission::{ResidentConstruction,ToolJobAdmissionDemand,OriginalToolSourceBinding,OriginalToolJobIdentity,admit_original_tool_job,admit_original_tool_job_measured,admit_original_tool_job_controlled,admit_original_tool_construction,admit_original_tool_construction_settled,OriginalToolConstructionScope,admit_original_tool_construction_scoped};
 //#region 🧬️Contract
-#[derive(Clone, Debug, PartialEq, Eq, Hash,semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, semio_framework_value::RetireOwned)]
 pub struct ToolFactoryKey {
     pub controller_id: String,
     pub tool_id: String,
@@ -538,10 +537,10 @@ impl<F:ToolJobFactory> ErasedToolJobFactory for ToolJobFactoryAdapter<F>{
 }
 
 struct ActionBusInner {
-    factory_by_key: HashMap<ToolFactoryKey, usize>,
-    factory_identity_by_key: HashMap<ToolFactoryKey, (TypeId, &'static str, String)>,
-    contract_by_key: HashMap<ToolFactoryKey, ToolExecutionContract>,
-    aliases: HashMap<ToolFactoryKey, ToolFactoryKey>,
+    factory_by_key: BTreeMap<ToolFactoryKey, usize>,
+    factory_identity_by_key: BTreeMap<ToolFactoryKey, (TypeId, &'static str, String)>,
+    contract_by_key: BTreeMap<ToolFactoryKey, ToolExecutionContract>,
+    aliases: BTreeMap<ToolFactoryKey, ToolFactoryKey>,
     factories: Vec<Box<dyn ErasedToolJobFactory>>,
     dispatch_count: u64,
     original_entries: Vec<OriginalWireRegistration>,
@@ -566,7 +565,7 @@ impl Default for ActionBus {
 
 impl ActionBus {
     pub fn new() -> Self {
-        Self { inner: Arc::new(Mutex::new(ActionBusInner { factory_by_key: HashMap::new(), factory_identity_by_key: HashMap::new(), contract_by_key: HashMap::new(), aliases: HashMap::new(), factories: Vec::new(), dispatch_count: 0, original_entries:Vec::new() })) }
+        Self { inner: Arc::new(Mutex::new(ActionBusInner { factory_by_key: BTreeMap::new(), factory_identity_by_key: BTreeMap::new(), contract_by_key: BTreeMap::new(), aliases: BTreeMap::new(), factories: Vec::new(), dispatch_count: 0, original_entries:Vec::new() })) }
     }
 
     /// 🌐️ Process-wide production registry shared by Platform and activated app controllers.
@@ -589,7 +588,7 @@ impl ActionBus {
             return Err(ToolRegistrationError::InvalidExecutionContract { key: keys[0].clone(), detail });
         }
         let mut inner = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut factory_keys = HashSet::with_capacity(keys.len());
+        let mut factory_keys = BTreeSet::new();
         for key in keys {
             if !factory_keys.insert(key) || inner.factory_by_key.contains_key(key) {
                 return Err(ToolRegistrationError::DuplicateKey { key: key.clone() });
@@ -621,7 +620,7 @@ impl ActionBus {
             return Err(ToolRegistrationError::InvalidExecutionContract { key: keys[0].clone(), detail });
         }
         let identity = (TypeId::of::<F>(), std::any::type_name::<F>(), factory.payload_schema_id());
-        let mut unique = HashSet::with_capacity(keys.len());
+        let mut unique = BTreeSet::new();
         if let Some(key) = keys.iter().find(|key| !unique.insert(*key)) {
             return Err(ToolRegistrationError::DuplicateKey { key: key.clone() });
         }

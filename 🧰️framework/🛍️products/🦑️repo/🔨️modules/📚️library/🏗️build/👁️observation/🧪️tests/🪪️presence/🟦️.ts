@@ -72,14 +72,31 @@ registerBuildTestLawV1("fleet owner seed reports actual graph publication", "sdk
 });
 
 /** 📨️ Launches only the literal compiler-captured static child through the same genuine Original. */
-async function childOutcome(original:Parameters<typeof createIssuedResourceControlV1>[0],control:ResourceLeaseControl,mode:string,kind:string,fault:string){const path=fileURLToPath(new URL("./👷️child/📜️script.ts",import.meta.url)),result=await captureOwnedCommandResultV1(process.execPath,[path,mode,kind,fault],workspace,{control,env:scriptInvocationEnvironment(original,process.env),output:{maximumBytes:32768,maximumLines:256}}),value=JSON.parse(result.stdout.trim().split("\n").at(-1)??"");expect(result.signal,result.stderr).toBeNull();expect(value.version).toBe(1);expect(value.mode).toBe(mode);expect(value.kind).toBe(kind);expect(value.fault).toBe(fault);return{result,value};}
+async function childOutcome(original:Parameters<typeof createIssuedResourceControlV1>[0],control:ResourceLeaseControl,mode:string,kind:string,fault:string){const path=fileURLToPath(new URL("./👷️child/📜️script.ts",import.meta.url)),result=await captureOwnedCommandResultV1(process.execPath,[path,mode,kind,fault],workspace,{control,env:scriptInvocationEnvironment(original,process.env),output:{maximumBytes:32768,maximumLines:256}}),line=result.stdout.trim().split("\n").at(-1);expect(result.signal,result.stderr).toBeNull();if(!line)throw Error("Fixture child produced no result (exit "+result.status+")\n"+result.stderr.trim());const value=JSON.parse(line);expect(value.version).toBe(1);expect(value.mode).toBe(mode);expect(value.kind).toBe(kind);expect(value.fault).toBe(fault);return{result,value};}
 
 registerBuildTestLawV1("inference reuse classifies only an exact leaf ENOENT as a missing inventory","sdk-runtime",async()=>{
  const db=new Database(":memory:");try{for(const row of corpus.errorCases){expect(new Ajv({strict:true}).validate(schema.definitions.ErrorClassificationCase,row)).toBe(true);expect(inferenceInventoryLeafMissingV1(row.code)).toBe(row.missing);expect(db.query<{missing:number},[string]>("select ?1='ENOENT' missing").get(row.code)?.missing===1).toBe(row.missing);}}finally{db.close();}
 });
 
 for(const kind of["source","lock"]as const)for(const row of corpus.cases.filter(row=>row.outcome==="refuse"))registerBuildTestLawV1("inference reuse refuses a "+row.fault+" "+kind+" inventory under managed custody","sdk-runtime",async original=>{
- const phase=createIssuedResourceControlV1(original,"inference:refusals",180000),db=new Database(":memory:");try{const{result,value}=await childOutcome(original,phase,"refusal",kind,row.fault),expected=row.fault!=="permission"||value.permissionDenied;expect(result.status,result.stderr).toBe(expected?1:0);expect(value.warm).toBe(true);expect(value.calls).toBe(1);expect(value.failed).toBe(expected);expect(value.predicateFailed).toBe(expected);if(expected)expect(value.samePredicate).toBe(true);if(row.fault==="cold-close")expect(value.samePhysicalPrimary).toBe(true);const oracle=value.oracle,sql=db.query<{outcome:string},[number,number,number,number,number]>("select case when ?1=0 or ?2=0 or ?3=0 or ?4=0 or ?5=0 then 'refuse' else 'reuse' end outcome").get(Number(oracle.readable),Number(oracle.content),Number(oracle.contract),Number(oracle.safe),Number(oracle.stable));expect(sql?.outcome).toBe(expected?"refuse":"reuse");if(["ancestor-replaced","leaf-disappears","absence-reappears","prior-leaf-disappears","cold-fifo","cold-close"].includes(row.fault))expect(value.mutated).toBe(true);}finally{db.close();}
+ const phase=createIssuedResourceControlV1(original,"inference:refusals",180000),db=new Database(":memory:");try{const{result,value}=await childOutcome(original,phase,"refusal",kind,row.fault),expected=row.fault!=="permission"||value.permissionDenied;const diagnostic=result.stdout+result.stderr;expect(result.status,diagnostic).toBe(expected?1:0);expect(value.warm,diagnostic).toBe(true);expect(value.calls,diagnostic).toBe(1);expect(value.failed,diagnostic).toBe(expected);expect(value.predicateFailed,diagnostic).toBe(expected);if(expected)expect(value.samePredicate,diagnostic).toBe(true);if(row.fault==="cold-close")expect(value.samePhysicalPrimary).toBe(true);const oracle=value.oracle,sql=db.query<{outcome:string},[number,number,number,number,number]>("select case when ?1=0 or ?2=0 or ?3=0 or ?4=0 or ?5=0 then 'refuse' else 'reuse' end outcome").get(Number(oracle.readable),Number(oracle.content),Number(oracle.contract),Number(oracle.safe),Number(oracle.stable));expect(sql?.outcome).toBe(expected?"refuse":"reuse");if(["ancestor-absent","ancestor-replaced","leaf-disappears","absence-reappears","prior-leaf-disappears","cold-fifo","cold-close"].includes(row.fault))expect(value.mutated).toBe(true);}finally{db.close();}
+});
+
+registerBuildTestLawV1("inference reuse settles a replaced namespace under managed custody","sdk-runtime",async original=>{
+ const phase=createIssuedResourceControlV1(original,"inference:settled-ancestry",180000);
+ const {result,value}=await childOutcome(original,phase,"refusal","source",corpus.cases.find(row=>row.id==="settled-ancestry-replacement")!.fault);
+ const diagnostic=result.stdout+result.stderr;
+ expect(result.status,diagnostic).toBe(0);
+ expect(value.mutated,diagnostic).toBe(true);
+ expect(value.warm,diagnostic).toBe(true);
+ expect(value.calls,diagnostic).toBe(1);
+ expect(value.predicateFailed,diagnostic).toBe(false);
+ expect(value.failed,diagnostic).toBe(false);
+ const db=new Database(":memory:");
+ try{
+  const {readable,content,contract,safe}=value.oracle;
+  expect(db.query<{reuse:number},[number,number,number,number]>("select ?1 and ?2 and ?3 and ?4 reuse").get(+readable,+content,+contract,+safe)?.reuse).toBe(1);
+ }finally{db.close();}
 });
 
 registerBuildTestLawV1("fixed graph fixtures isolate managed scopes and drain accepted children preserving falsey primaries","sdk-runtime",async original=>{

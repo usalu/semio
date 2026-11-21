@@ -420,9 +420,16 @@ fn insert_cell_wire_witness_matches_committed_document_and_calamine() {
     let mut snapshot: XlsxSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let after: XlsxSnapshot = semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mutation: XlsxMutation = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let XlsxMutation::InsertCell(leaf) = &mutation else { panic!("insertion witness") };
+    use protocol::OpBinary;
+    let encoded = mutation.encode_op().unwrap();
+    let decoded = XlsxMutation::decode_op(&encoded).unwrap();
+    assert_eq!(decoded, mutation);
+    let mut corrupt = encoded;
+    corrupt[20] ^= 1;
+    assert!(XlsxMutation::decode_op(&corrupt).is_err());
+    let XlsxMutation::InsertCell(leaf) = &decoded else { panic!("insertion witness") };
     assert_eq!(leaf.address, xlsx_cell_vacancy_address(&snapshot, "Sheet1", 2, 1).unwrap());
-    assert!(apply_xlsx_mutation(&mut snapshot, &mutation).messages().is_empty());
+    assert!(apply_xlsx_mutation(&mut snapshot, &decoded).messages().is_empty());
     assert_eq!(snapshot, after);
     let bytes = encode_xlsx(&snapshot).unwrap();
     let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).unwrap();
@@ -433,7 +440,7 @@ fn insert_cell_wire_witness_matches_committed_document_and_calamine() {
 #[test]
 fn insertion_history_inputs_preserve_identity_and_reject_forged_namespace() {
     use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, XlsxMutation};
-    use semio_framework_value::ToValue;
+    use semio_framework_value::DslValue;
     const BEFORE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/📸️snapshot/⬅️before/🔣️.json");
     const MUTATION: &str = include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/➕️insert-cell/🧾️wire-witness/🦠️mutation/🔣️.json");
     const ADDRESS_SCHEMA: &str = include_str!("../../🧬️mutations/🧭️cell-vacancy-address/🔣️.json");
@@ -444,10 +451,25 @@ fn insertion_history_inputs_preserve_identity_and_reject_forged_namespace() {
         semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(ADDRESS_SCHEMA, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())
     });
     let inputs = semio_framework::mutation_input_defs(schema, &resolver).unwrap();
-    let changes = semio_plugin::app::history_edit_acceptance::acceptance_changes(&inputs, &mutation.to_value());
+    let payload = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::payload_value(&mutation);
+    let changes = semio_plugin::app::history_edit_acceptance::acceptance_changes(&inputs, &payload);
     assert!(changes.iter().any(|(path, _)| path == "/address/row"));
     assert!(changes.iter().any(|(path, _)| path == "/address/column"));
     assert!(changes.iter().all(|(path, _)| !path.starts_with("/address/worksheet")));
+    let candidate = changes.iter().find(|(path, value)| path == "/address/row" && value.as_u64() == Some(3)).unwrap();
+    let mut draft = payload;
+    let DslValue::Object(ref mut fields) = draft else { panic!("insertion payload object") };
+    let (_, DslValue::Object(address)) = fields.iter_mut().find(|(key, _)| key == "address").unwrap() else { panic!("insertion address object") };
+    address.iter_mut().find(|(key, _)| key == "row").unwrap().1 = candidate.1.clone();
+    let rebuilt = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::with_payload_value(&mutation, draft).unwrap();
+    let XlsxMutation::InsertCell(original) = &mutation else { panic!("insertion witness") };
+    let XlsxMutation::InsertCell(edited) = &rebuilt else { panic!("rebuilt insertion witness") };
+    assert_eq!(edited.address.worksheet, original.address.worksheet);
+    let mut folded = snapshot.clone();
+    assert!(apply_xlsx_mutation(&mut folded, &rebuilt).messages().is_empty());
+    let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(encode_xlsx(&folded).unwrap())).unwrap();
+    use calamine::Reader;
+    assert_eq!(reference.worksheet_range("Sheet1").unwrap().get_value((2, 1)), Some(&calamine::Data::Float(42.0)));
     let unchanged = snapshot.clone();
     let XlsxMutation::InsertCell(leaf) = &mut mutation else { panic!("insertion witness") };
     leaf.address.worksheet.namespace_uri = "http://purl.oclc.org/ooxml/spreadsheetml/main".into();

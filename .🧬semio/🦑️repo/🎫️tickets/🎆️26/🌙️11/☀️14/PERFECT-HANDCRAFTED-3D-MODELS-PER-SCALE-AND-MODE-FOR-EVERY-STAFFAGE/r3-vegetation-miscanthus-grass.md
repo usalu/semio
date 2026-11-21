@@ -71,3 +71,5 @@ SEEN
 ## 8. Still imperfect
 
 IMPERFECT
+
+The median-scale plant uses 136 individually curved blade meshes on their original tillers. Eleven twisting blades retain the finer stations needed to keep their folded faces disjoint. Each of 30 side tillers carries its longest arching outside blade into the coarse canopy. The paper strokes follow the posed midribs. The two former floating structural members now follow their stems and terminal blades. Both affected scales passed all six measured bounds, feature, simplification, cross-scale, thermal and structural rules. All six affected silhouettes and twelve nominal/endpoint paper samples passed. Independent readback measured 4,795,516 bytes for twelve scenes.

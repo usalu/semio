@@ -70,6 +70,8 @@ export function solidOf(solid: ListSolid, material: Slug, node: Slug = solid.bon
       return { ...common, kind: "revolve", profile: solid.profile, axis: solid.axis, origin: solid.origin, ...(solid.sweepRad === undefined ? {} : { sweepRad: solid.sweepRad }), ...(solid.lateralScale === undefined ? {} : { lateralScale: solid.lateralScale }) };
     case "extrude":
       return { ...common, kind: "extrude", profile: solid.profile, ...(solid.holes === undefined ? {} : { holes: solid.holes }), plane: solid.plane, from: solid.from, to: solid.to, ...(solid.taperTo === undefined ? {} : { taperTo: solid.taperTo }) };
+    case "polyhedron":
+      return { ...common, kind: "polyhedron", vertices: solid.vertices, triangles: solid.triangles };
     case "loft":
       return { ...common, kind: "loft", sections: solid.sections, capStart: solid.capStart, capEnd: solid.capEnd };
   }

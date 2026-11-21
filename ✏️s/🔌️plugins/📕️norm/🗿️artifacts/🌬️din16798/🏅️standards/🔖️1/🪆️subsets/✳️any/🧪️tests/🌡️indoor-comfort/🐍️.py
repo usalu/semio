@@ -6,11 +6,11 @@ import sys
 
 VECTORS = pathlib.Path(__file__).resolve().parent.parent / "🧫️fixtures" / "🌡️comfort-vectors" / "🔣️.json"
 
-HALF_BAND = {1: 2.0, 2: 3.0, 3: 4.0, 4: 5.0}
+ADAPTIVE_OFFSETS = {1: (-3, 2), 2: (-4, 3), 3: (-5, 4)}
 PER_PERSON = {1: 10.0, 2: 7.0, 3: 4.0, 4: 2.5}
 AREA_RATE = {"very_low": (0.5, 0.35, 0.2, 0.15), "low": (1.0, 0.7, 0.4, 0.3), "non_low": (2.0, 1.4, 0.8, 0.6)}
 CO2_ABOVE = {1: 550.0, 2: 800.0, 3: 1350.0, 4: 1350.0}
-ABSOLUTE = {"de": {"residential": 1200.0, "classroom": 800.0, "other": 900.0}, "en": {"residential": 1500.0, "classroom": 1000.0, "other": 1000.0}}
+CO2_ABOVE_DE = {1: 350.0, 2: 550.0, 3: 900.0, 4: 1350.0}
 
 
 def pmv_fixed_point(ta, vel, rh, met, clo):
@@ -70,7 +70,16 @@ def vectors():
         if abs(a - b) > 5e-3:
             raise SystemExit(f"the two PMV solutions differ at {(ta, rh, vel, met, clo)}: {a} vs {b}")
         pmv_rows.append({"t_op": ta, "rh": rh, "v": vel, "met": met, "clo": clo, "pmv": a, "ppd": ppd(a)})
-    adaptive = [{"theta_rm": t, "category": c, "lower": 0.33 * t + 18.8 - HALF_BAND[c], "centre": 0.33 * t + 18.8, "upper": 0.33 * t + 18.8 + HALF_BAND[c]} for t in (10.0, 15.0, 22.5, 30.0) for c in (1, 2, 3, 4)]
+    adaptive = []
+    for outdoor in (9.99, 10.0, 10.01, 15.0, 22.5, 29.99, 30.0, 30.01):
+        for category in (1, 2, 3, 4):
+            centre = 18.8 + 0.33 * outdoor
+            offsets = ADAPTIVE_OFFSETS.get(category) if 10 < outdoor < 30 else None
+            adaptive.append({
+                "theta_rm": outdoor, "category": category, "centre": centre,
+                "lower": centre + offsets[0] if offsets else None,
+                "upper": centre + offsets[1] if offsets else None,
+            })
     ventilation = []
     for occupants, area, pollution in [(20, 200.0, "low"), (3, 80.0, "very_low"), (45, 120.0, "non_low")]:
         for c in (1, 2, 3, 4):
@@ -79,9 +88,7 @@ def vectors():
     for annex in ("de", "en"):
         for usage in ("office", "residential", "classroom"):
             for c in (1, 2, 3, 4):
-                above = CO2_ABOVE[c]
-                if annex == "de":
-                    above = min(ABSOLUTE["de"][usage if usage != "office" else "other"] - 400.0, above)
+                above = (CO2_ABOVE_DE if annex == "de" else CO2_ABOVE)[c]
                 co2.append({"annex": annex, "usage": usage, "category": c, "outdoor": 400.0, "limit_above": above})
     table_d1 = [{"t_op": 22.0, "rh": 60, "v": 0.1, "met": 1.2, "clo": 0.5, "pmv": -0.75}, {"t_op": 27.0, "rh": 60, "v": 0.1, "met": 1.2, "clo": 0.5, "pmv": 0.77}, {"t_op": 19.0, "rh": 40, "v": 0.1, "met": 1.2, "clo": 1.0, "pmv": -0.60}, {"t_op": 23.5, "rh": 60, "v": 0.1, "met": 1.2, "clo": 0.5, "pmv": -0.30}]
     for row in table_d1:

@@ -123,7 +123,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let mut queue: VecDeque<TimeTravelEffect> = effects.into();
         while let Some(effect) = queue.pop_front() {
             match effect {
-                TimeTravelEffect::ShowPreview { target, replacement } => self.show_time_travel_preview(&target, &replacement).await?,
+                TimeTravelEffect::ShowPreview { target, replacement } => self.show_time_travel_preview(target, replacement).await?,
                 TimeTravelEffect::StartReplay { drafts, from } => queue.extend(self.start_time_travel_replay(drafts, &from).await?),
                 TimeTravelEffect::CancelReplay => {
                     self.time_travel_run(TimeTravelStoreCommand::CancelReplay,None).await?;

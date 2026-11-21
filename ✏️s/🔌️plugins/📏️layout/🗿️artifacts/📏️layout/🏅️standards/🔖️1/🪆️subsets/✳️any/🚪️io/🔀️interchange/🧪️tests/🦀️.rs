@@ -1,15 +1,101 @@
+//! 🧪️ Language-neutral interchange laws with independent file readers and writers.
+use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
+use semio_os_kernel as store;
+use semio_s_artifact_draw_drawing_model::{
+    DrawingAttributes, DrawingImageAsset, DrawingImageBody, DrawingLayerBase, DrawingLayerNode,
+    DrawingTextBody, DrawingTransform, default_drawing_transform, font_family::DrawingFontFamily,
+};
+use semio_s_artifact_layout_layout_io::{
+    interchange::{
+        InterchangeExportAdvance, InterchangeExportSession, LayoutImportSourcePlan,
+        PendingDrawingSource, PDF_LAYOUT_TEXT_TAG, export_document, import_document, lift_vector_scene,
+    },
+    layout_snapshot_to_scene,
+};
+use semio_s_artifact_layout_layout_model::{
+    Frame, Layer, LayoutBounds, LayoutRect, Page, PageColumns, PageMargins, Spread, TextStory,
+    LAYOUT_DOCUMENT_SCHEMA,
+    snapshot::{LayoutSnapshot, empty_layout_snapshot},
+};
+
+#[path = "../🪆️drawing/🧪️tests/🦀️.rs"]
+mod drawing_lift;
+#[path = "../🧭️source-plan/🧪️tests/🦀️.rs"]
+mod source_plan;
+#[path = "../../📤️export/📐️vector-scene/🧪️tests/🦀️.rs"]
+mod vector_scene;
+#[path = "../../📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🧪️tests/🔬️unit/🦀️.rs"]
+mod json_export;
+
 fn draft(plan:&LayoutImportSourcePlan)->&LayoutSnapshot{match plan{LayoutImportSourcePlan::Document{document,..}=>document,LayoutImportSourcePlan::External{..}=>panic!("mapped document source plan required")}}
 fn pending(plan:&LayoutImportSourcePlan)->&[PendingDrawingSource]{match plan{LayoutImportSourcePlan::Document{drawing_sources,..}=>drawing_sources,LayoutImportSourcePlan::External{..}=>panic!("mapped drawing source plan required")}}
-//! 🧪️ Language-neutral interchange laws with independent file readers and writers.
-use super::*;
 #[path = "🔮️oracle/🦀️.rs"] mod oracle;
-fn fixtures() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️fixtures/🔣️.json")).unwrap() }
+fn fixtures() -> serde_json::Value { serde_json::from_str(fixture_text!("../../🔀️interchange/🧪️fixtures/🔣️.json")).unwrap() }
+fn document(name: &str) -> LayoutSnapshot {
+    let mut doc = empty_layout_snapshot();
+    doc.schema = LAYOUT_DOCUMENT_SCHEMA.into();
+    doc.name = name.into();
+    doc.grid.baseline_grid = 12.0;
+    doc
+}
+
+fn page(id: String, width: f64, height: f64) -> Page {
+    let layer_id = format!("layer-{id}");
+    Page {
+        id: id.clone(),
+        name: id,
+        spread_id: "spread-1".into(),
+        parent_page_id: None,
+        width,
+        height,
+        margins: PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+        columns: PageColumns { count: 1, gutter: 0.0 },
+        guides: Vec::new(),
+        layer_ids: vec![layer_id.clone()],
+        layers: vec![Layer {
+            id: layer_id,
+            name: "Content".into(),
+            visible: true,
+            locked: false,
+            object_ids: Vec::new(),
+        }],
+        frames: Vec::new(),
+        overrides: Vec::new(),
+        background_drawing: None,
+    }
+}
+
+fn finish_document(doc: &mut LayoutSnapshot) {
+    doc.spreads = vec![Spread {
+        id: "spread-1".into(),
+        name: "Spread 1".into(),
+        page_ids: doc.pages.iter().map(|page| page.id.clone()).collect(),
+    }];
+}
+
 fn seed(case: &serde_json::Value) -> LayoutSnapshot {
     let source = &case["page"];
     let mut doc = document("Interchange Fixture");
     let mut page = page("page-1".into(), source["width"].as_f64().unwrap(), source["height"].as_f64().unwrap());
-    text_frame(&mut doc, &mut page, source["text"].as_str().unwrap_or("").into());
-    doc.pages.push(page); finish_document(&mut doc); doc
+    if let Some(content) = source["text"].as_str().filter(|text| !text.is_empty()) {
+        doc.stories.push(TextStory { id: "story-page-1".into(), content: content.into(), style_runs: Vec::new() });
+        page.layers[0].object_ids.push("text-page-1".into());
+        page.frames.push(Frame::Text {
+            id: "text-page-1".into(),
+            layer_id: page.layer_ids[0].clone(),
+            bounds: LayoutBounds { x: 0.0, y: 0.0, width: page.width, height: page.height, rotation: 0.0 },
+            story_id: "story-page-1".into(),
+            thread_next: None,
+            columns: 1,
+            inset: LayoutRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 },
+            wrap_mode: "none".into(),
+            locked: None,
+            visible: None,
+        });
+    }
+    doc.pages.push(page);
+    finish_document(&mut doc);
+    doc
 }
 #[test]
 fn pdf_page_text_matches_the_independent_pdf_reader() {
@@ -26,7 +112,6 @@ fn pdf_page_text_matches_the_independent_pdf_reader() {
 }
 #[test]
 fn step_sheet_survives_the_independent_part21_reader_and_writer() {
-    semio_s_artifact_layout_drawing_composition::bind().unwrap();
     use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::{oracle_round_trip,project_step_ap214_any};
     let cases=fixtures();let case=&cases["cases"][1];let doc=seed(case);
     let output=export_document("step",&doc,&mut |_|true).unwrap();
@@ -80,7 +165,7 @@ fn cancellation_precedes_decoding_and_encoding() {
 fn w3c_accepted_rectangle_fixture_survives_canonical_svg_and_independent_xml() {
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_svg_xml,write_svg_xml};
     use semio_s_artifact_stdio_xml_test_oracle::standards::v1_0::subsets::base::{oracle_round_trip,project_xml_1_0};
-    let fixture=include_str!("../🧪️fixtures/w3c-rect.svg");
+    let fixture=fixture_text!("../../🔀️interchange/🧪️fixtures/w3c-rect.svg");
     let document=parse_svg_xml(fixture).unwrap();
     let written=write_svg_xml(&document).unwrap();
     let independent=oracle_round_trip(written.as_bytes()).unwrap();
@@ -98,7 +183,7 @@ fn printable_scene_preserves_content_and_center_rotation() {
     doc.pages[0].frames.push(Frame::Rect{id:"shape".into(),layer_id:layer.clone(),bounds,fill:Some([0.25,0.5,0.75,0.5]),stroke:None,locked:None,visible:None});
     doc.links.push(ImageLink{id:"image".into(),path:"image.png".into(),hash:String::new(),width:1,height:1,dpi:72,color_profile:None,state:None,proxy_data_url:Some("data:image/png;base64,AQID".into()),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});
     doc.pages[0].frames.push(Frame::Image{id:"image-frame".into(),layer_id:layer,bounds:LayoutBounds{x:0.0,y:0.0,width:10.0,height:10.0,rotation:0.0},link_id:"image".into(),locked:None,visible:None});
-    let scene=crate::layout_snapshot_to_scene(&doc).unwrap();
+    let scene=layout_snapshot_to_scene(&doc).unwrap();
     assert_eq!(scene.texts(),vec![expected["expected"]["text"].as_str().unwrap()]);
     let VectorNode::Group{children,..}=&scene.layers[0].root else{panic!("page group")};
     let VectorNode::Group{transform,children:rect,..}=&children[1]else{panic!("frame group")};
@@ -160,11 +245,11 @@ fn cancelled_interchange_session_retires_partial_archive_without_publication() {
 
 #[test]
 fn official_verapdf_witnesses_match_the_pdfjs_page_and_unicode_oracle() {
-    let oracle:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📖️pdf/pdfjs-oracle.json")).unwrap();
+    let oracle:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📖️pdf/pdfjs-oracle.json")).unwrap();
     let inputs:[(&str,&[u8]);3]=[
-        ("implementation-limit.pdf",include_bytes!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📖️pdf/implementation-limit.pdf")),
-        ("file-trailer.pdf",include_bytes!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📖️pdf/file-trailer.pdf")),
-        ("text-state-negative.pdf",include_bytes!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📖️pdf/text-state-negative.pdf")),
+        ("implementation-limit.pdf",fixture_bytes!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📖️pdf/implementation-limit.pdf")),
+        ("file-trailer.pdf",fixture_bytes!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📖️pdf/file-trailer.pdf")),
+        ("text-state-negative.pdf",fixture_bytes!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📖️pdf/text-state-negative.pdf")),
     ];
     for (name,bytes) in inputs {
         let expected=oracle["fixtures"].as_array().unwrap().iter().find(|fixture|fixture["file"]==name).unwrap();
@@ -186,11 +271,10 @@ fn official_verapdf_witnesses_match_the_pdfjs_page_and_unicode_oracle() {
 fn official_nist_ap203_curved_geometry_becomes_a_scaled_orthographic_trace() {
     use semio_s_artifact_stdio_contract::part21::parse_part21;
     use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::oracle_round_trip;
-    let bytes=include_bytes!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📐️step/nist-ftc11-ap203.stp");
+    let bytes=fixture_bytes!("../../../🧪️tests/🧫️fixtures/🏅️conformance/📐️step/nist-ftc11-ap203.stp");
     let rewritten=oracle_round_trip(bytes).unwrap();
     let graph=parse_part21(std::str::from_utf8(&rewritten).unwrap()).unwrap();
     assert!(graph.header.file_schema.iter().filter_map(|value|value.as_list()).flatten().any(|value|value.as_str()==Some("CONFIG_CONTROL_DESIGN")));
-    semio_s_artifact_layout_drawing_composition::bind().unwrap();
     let imported=import_document("step",&rewritten,"NIST AP203",&mut |_|true).unwrap();
     let page=&draft(&imported.value).pages[0];
     assert!((page.width-63.0*72.0/25.4).abs()<1e-8);
@@ -254,7 +338,7 @@ fn idml_page_overrides_keep_the_master_and_preserve_sparse_changes_in_both_expor
     use semio_s_artifact_layout_layout_model::{ParentPage,PageOverride};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip,encode_zip};
     use semio_s_artifact_stdio_xml_test_oracle::standards::v1_0::subsets::base::oracle_round_trip;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../📦️idml/📎️overrides/🧪️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🔀️interchange/📦️idml/📎️overrides/🧪️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case.get("override").is_some()&&case.get("error").is_none()){let mut doc=seed(&fixtures()["cases"][2]);let object=case["override"]["objectId"].as_str().unwrap();let layer=Layer{id:"master-content".into(),name:"Parent content".into(),visible:true,locked:false,object_ids:vec![object.into()]};let bounds=LayoutBounds{x:5.0,y:8.0,width:50.0,height:30.0,rotation:0.0};
         let frame=match case["kind"].as_str().unwrap(){"text"=>Frame::Text{id:object.into(),layer_id:layer.id.clone(),bounds,story_id:doc.stories[0].id.clone(),thread_next:None,columns:1,inset:LayoutRect{x:0.0,y:0.0,width:0.0,height:0.0},wrap_mode:"none".into(),visible:None,locked:None},"image"=>{use semio_s_artifact_stdio_png::{PngSnapshot,standards::v1_2::subsets::any::io::encode_png};let mut png=PngSnapshot::default();png.image.width=1;png.image.height=1;png.image.samples=vec![255,0,0,128];let bytes=encode_png(&png).unwrap();doc.links.push(semio_s_artifact_layout_layout_model::ImageLink{id:"override-image".into(),path:"placed.png".into(),hash:String::new(),width:1,height:1,dpi:72,color_profile:None,state:Some("ok".into()),proxy_data_url:Some(format!("data:image/png;base64,{}",store::pack_rt::pack_value_to_base64(&bytes))),artifact_kind:"s.stdio.png".into(),artifact_ref:String::new()});Frame::Image{id:object.into(),layer_id:layer.id.clone(),bounds,link_id:"override-image".into(),visible:None,locked:None}},_=>Frame::Rect{id:object.into(),layer_id:layer.id.clone(),bounds,fill:Some([0.2,0.3,0.4,0.5]),stroke:None,visible:None,locked:None}};
         doc.parent_pages.push(ParentPage{id:"master".into(),name:"Parent".into(),width:200.0,height:300.0,layer_ids:vec![layer.id.clone()],layers:vec![layer],frames:vec![frame]});doc.pages[0].parent_page_id=Some("master".into());let change:PageOverride=semio_framework_pack_json::from_json_str(&case["override"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();doc.pages[0].overrides=vec![change.clone()];let mut second=page("unaffected".into(),200.0,300.0);second.parent_page_id=Some("master".into());second.spread_id=doc.spreads[0].id.clone();doc.spreads[0].page_ids.push(second.id.clone());doc.pages.push(second);
@@ -269,7 +353,7 @@ fn idml_external_override_lists_and_unrepresentable_copy_edits_are_handled_expli
     use semio_s_artifact_layout_layout_model::{ParentPage,PageOverride};
     use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip,encode_zip};
     use semio_s_artifact_stdio_xml_test_oracle::standards::v1_0::subsets::base::oracle_round_trip;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../📦️idml/📎️overrides/🧪️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🔀️interchange/📦️idml/📎️overrides/🧪️fixtures/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case.get("inputXml").is_some()||case.get("rewrite").is_some()){let mut doc=seed(&fixtures()["cases"][2]);doc.parent_pages.push(ParentPage{id:"master".into(),name:"Parent".into(),width:200.0,height:300.0,layer_ids:vec!["master-layer".into()],layers:vec![Layer{id:"master-layer".into(),name:"Master".into(),visible:true,locked:false,object_ids:vec!["master-rect".into()]}],frames:vec![Frame::Rect{id:"master-rect".into(),layer_id:"master-layer".into(),bounds:LayoutBounds{x:5.0,y:8.0,width:50.0,height:30.0,rotation:0.0},fill:Some([0.2,0.3,0.4,0.5]),stroke:None,locked:None,visible:None}]});doc.pages[0].parent_page_id=Some("master".into());if case.get("rewrite").is_some(){doc.pages[0].overrides.push(PageOverride{object_id:"master-rect".into(),bounds:None,visible:Some(false),locked:None});}
         let output=export_document("idml",&doc,&mut |_|true).unwrap();let mut archive=decode_zip(&output.value).unwrap();let spread=archive.entries.iter_mut().find(|entry|entry.name=="Spreads/Spread_0.xml").unwrap();let mut text=std::str::from_utf8(&spread.data).unwrap().to_string();if let Some(input)=case["inputXml"].as_str(){if let Some(list)=input.split("OverrideList=\"").nth(1).and_then(|value|value.split('"').next()){text=text.replacen("OverrideList=\"\"",&format!("OverrideList=\"{list}\""),1);}if let Some(matrix)=input.split("MasterPageTransform=\"").nth(1).and_then(|value|value.split('"').next()){text=text.replacen("MasterPageTransform=\"1 0 0 1 0 0\"",&format!("MasterPageTransform=\"{matrix}\""),1);}if case["spreadShowMasterItems"]==false{text=text.replacen("<Spread ","<Spread ShowMasterItems=\"false\" ",1);}}else{text=text.replacen("FillColor=\"Color/master-rect-fill\"","FillColor=\"Color/Black\"",1);}spread.data=oracle_round_trip(text.as_bytes()).unwrap();let imported=import_document("idml",&encode_zip(&archive).unwrap(),"External override",&mut |_|true);if let Some(error)=case["error"].as_str(){assert_eq!(imported.unwrap_err(),error);}else{let imported=imported.unwrap();let expected:Vec<PageOverride>=semio_framework_pack_json::from_json_str(&case["expected"]["overrides"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(draft(&imported.value).pages[0].overrides,expected);assert_eq!(draft(&imported.value).pages[0].frames.len(),1);}
     }
@@ -294,24 +378,186 @@ fn step_export_contains_rotated_frame_geometry_parent_overrides_unicode_and_asse
 #[test]
 fn pdf_authored_marked_text_restores_positioned_styles_through_canonical_pdf(){
  use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::{io,schema::snapshot::{PdfOp,PdfObject,PdfPropertyList,PdfDictEntry,PdfTextString,PdfExtGState}};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../📕️pdf/🏷️text/🧪️fixtures/🔣️.json")).unwrap();let case=&fixture["styled"];let all=fixtures();let input=all["cases"].as_array().unwrap().iter().find(|case|case["id"]=="pdf-idml-utf8-ranges").unwrap();let source=export_document("pdf",&seed(input),&mut |_|true).unwrap();let mut pdf=io::import::decode_pdf(&source.value).unwrap();let mut family=vec![0xfe,0xff];for unit in case["fontFamily"].as_str().unwrap().encode_utf16(){family.extend_from_slice(&unit.to_be_bytes());}let font=pdf.fonts.first().unwrap().id.clone();pdf.ext_g_states.push(PdfExtGState{id:"semantic-alpha".into(),fill_alpha:Some(case["fill"][3].as_f64().unwrap()),..Default::default()});pdf.pages[0].content=vec![PdfOp::BeginMarkedContentWithProperties{tag:fixture["tag"].as_str().unwrap().into(),properties:PdfPropertyList::Inline{entries:vec![PdfDictEntry::new("SemioFontFamily",PdfObject::Str(family)),PdfDictEntry::new("SemioFontWeight",PdfObject::Int(case["fontWeight"].as_i64().unwrap())),PdfDictEntry::new("SemioItalic",PdfObject::Bool(true))]}},PdfOp::SetExtGState{name:"semantic-alpha".into()},PdfOp::SetFillRgb{r:0.2,g:0.3,b:0.4},PdfOp::BeginText,PdfOp::SetFont{name:font,size:case["fontSize"].as_f64().unwrap()},PdfOp::SetTextRenderingMode{mode:3},PdfOp::SetTextMatrix{matrix:[1.0,0.0,0.0,1.0,20.0,70.0]},PdfOp::ShowText{text:PdfTextString::text(case["text"].as_str().unwrap())},PdfOp::EndText,PdfOp::EndMarkedContent];let bytes=io::export::encode_pdf(&pdf).unwrap();assert_eq!(oracle::pdf_text(&bytes).unwrap().trim(),case["text"].as_str().unwrap());let imported=import_document("pdf",&bytes,"Semantic text",&mut |_|true).unwrap();assert_eq!(draft(&imported.value).stories[0].content,case["text"].as_str().unwrap());let frame=draft(&imported.value).pages[0].frames.iter().find(|frame|matches!(frame,Frame::Text{..})).unwrap();assert!((frame.bounds().x-case["expected"]["x"].as_f64().unwrap()).abs()<1e-8);assert!((frame.bounds().y-case["expected"]["y"].as_f64().unwrap()).abs()<1e-8);assert_eq!(draft(&imported.value).paragraph_styles[0].font_family,case["fontFamily"].as_str().unwrap());assert_eq!(draft(&imported.value).paragraph_styles[0].font_weight,700);assert_eq!(draft(&imported.value).paragraph_styles[0].font_size,18.0);assert_eq!(draft(&imported.value).character_styles[0].italic,Some(true));assert_eq!(draft(&imported.value).character_styles[0].color,Some([0.2,0.3,0.4,0.5]));
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🔀️interchange/📕️pdf/🏷️text/🧪️fixtures/🔣️.json")).unwrap();let case=&fixture["styled"];let all=fixtures();let input=all["cases"].as_array().unwrap().iter().find(|case|case["id"]=="pdf-idml-utf8-ranges").unwrap();let source=export_document("pdf",&seed(input),&mut |_|true).unwrap();let mut pdf=io::import::decode_pdf(&source.value).unwrap();let mut family=vec![0xfe,0xff];for unit in case["fontFamily"].as_str().unwrap().encode_utf16(){family.extend_from_slice(&unit.to_be_bytes());}let font=pdf.fonts.first().unwrap().id.clone();pdf.ext_g_states.push(PdfExtGState{id:"semantic-alpha".into(),fill_alpha:Some(case["fill"][3].as_f64().unwrap()),..Default::default()});pdf.pages[0].content=vec![PdfOp::BeginMarkedContentWithProperties{tag:fixture["tag"].as_str().unwrap().into(),properties:PdfPropertyList::Inline{entries:vec![PdfDictEntry::new("SemioFontFamily",PdfObject::Str(family)),PdfDictEntry::new("SemioFontWeight",PdfObject::Int(case["fontWeight"].as_i64().unwrap())),PdfDictEntry::new("SemioItalic",PdfObject::Bool(true))]}},PdfOp::SetExtGState{name:"semantic-alpha".into()},PdfOp::SetFillRgb{r:0.2,g:0.3,b:0.4},PdfOp::BeginText,PdfOp::SetFont{name:font,size:case["fontSize"].as_f64().unwrap()},PdfOp::SetTextRenderingMode{mode:3},PdfOp::SetTextMatrix{matrix:[1.0,0.0,0.0,1.0,20.0,70.0]},PdfOp::ShowText{text:PdfTextString::text(case["text"].as_str().unwrap())},PdfOp::EndText,PdfOp::EndMarkedContent];let bytes=io::export::encode_pdf(&pdf).unwrap();assert_eq!(oracle::pdf_text(&bytes).unwrap().trim(),case["text"].as_str().unwrap());let imported=import_document("pdf",&bytes,"Semantic text",&mut |_|true).unwrap();assert_eq!(draft(&imported.value).stories[0].content,case["text"].as_str().unwrap());let frame=draft(&imported.value).pages[0].frames.iter().find(|frame|matches!(frame,Frame::Text{..})).unwrap();assert!((frame.bounds().x-case["expected"]["x"].as_f64().unwrap()).abs()<1e-8);assert!((frame.bounds().y-case["expected"]["y"].as_f64().unwrap()).abs()<1e-8);assert_eq!(draft(&imported.value).paragraph_styles[0].font_family,case["fontFamily"].as_str().unwrap());assert_eq!(draft(&imported.value).paragraph_styles[0].font_weight,700);assert_eq!(draft(&imported.value).paragraph_styles[0].font_size,18.0);assert_eq!(draft(&imported.value).character_styles[0].italic,Some(true));assert_eq!(draft(&imported.value).character_styles[0].color,Some([0.2,0.3,0.4,0.5]));
 }
 
-#[test]
-fn step_background_uses_borrowed_scene_events_and_real_geometry(){
- semio_s_artifact_layout_drawing_composition::bind().unwrap();let fixture:serde_json::Value=serde_json::from_str(include_str!("../📐️step/🖍️background/🧪️fixtures/🔣️.json")).unwrap();let scene:semio_framework_io_ports::VectorScene=semio_framework_pack_json::from_json_str(&fixture["scene"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let content=crate::drawing_codec().unwrap().lift(&scene).unwrap();let mut doc=document("Background");doc.pages.push(page("page-1".into(),200.0,300.0));finish_document(&mut doc);doc.background_drawing=Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("portable-background",&content));let direct=export_document("step",&doc,&mut |_|true).unwrap();let mut session=InterchangeExportSession::new("step").unwrap();let mut bytes=Vec::new();let mut turns=0;loop{turns+=1;assert!(turns<20000);match session.advance(&doc).unwrap(){InterchangeExportAdvance::Chunk(chunk)=>{assert!(chunk.len()<=4096);bytes.extend(chunk)},InterchangeExportAdvance::Progress{..}=>{},InterchangeExportAdvance::Done=>break,}}assert_eq!(bytes,direct.value);while !session.terminal_is_empty(){assert!(session.close_one(session.next_release_bytes()));}let rewritten=semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::oracle_round_trip(&bytes).unwrap();let graph=semio_s_artifact_stdio_contract::part21::parse_part21(std::str::from_utf8(&rewritten).unwrap()).unwrap();assert!(graph.by_type("POLYLINE").count()>=2);let projected=semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::projection::project_edges(&graph).unwrap();let expected=fixture["expected"]["rectanglePointsMm"].as_array().unwrap();{let actual=&projected.curves[0].points;for(point,expected)in actual.iter().zip(expected){for(axis,value)in point.iter().enumerate(){assert!((value*25.4/72.0-expected[axis].as_f64().unwrap()).abs()<1e-9);}}}let drawing=semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::draughting::read_draughting(&graph).unwrap();assert!(drawing.texts.iter().any(|text|text.literal.contains(fixture["expected"]["text"].as_str().unwrap())));assert!(drawing.texts.iter().any(|text|text.literal.contains("image/png")));assert!(drawing.paints.iter().any(|paint|paint.fill==Some([0.25,0.5,0.75])));
+fn step_drawing_member(id:&str)->semio_s_artifact_layout_layout_model::LayoutDrawingMember{
+ use semio_framework_value::{DslValue,FromValue};
+ semio_s_artifact_layout_layout_model::LayoutDrawingMember::from_value(DslValue::from(serde_json::json!({
+  "handle":{"childId":id,"target":{"artifactId":id,"dialect":{"artifactKind":"s.draw.drawing","standard":"1","subset":"*"}}}
+ }))).unwrap()
+}
+fn step_background_fixture()->serde_json::Value{
+ serde_json::from_str(fixture_text!("../../🔀️interchange/📐️step/🖍️background/🧪️fixtures/🔣️.json")).unwrap()
+}
+fn step_background_scene(fixture:&serde_json::Value)->semio_framework_io_ports::VectorScene{
+ semio_framework_pack_json::from_json_str(&fixture["scene"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+}
+fn step_native_layer(id: &str, name: &str, transform: DrawingTransform) -> DrawingLayerBase {
+    DrawingLayerBase {
+        id: id.into(), name: name.into(), visible: true, locked: false, opacity: 1.0,
+        blend_mode: "normal".into(), transform, attributes: DrawingAttributes::default(),
+    }
 }
 
+fn step_native_text(content: &str) -> DrawingLayerNode {
+    DrawingLayerNode::Text(DrawingTextBody {
+        base: step_native_layer("background-caption", "Caption", default_drawing_transform()),
+        x: 5.0, y: 25.0, content: content.into(), size: 12.0, font_family: DrawingFontFamily::ShareTechMono,
+    })
+}
+fn close_step_fixture(session:&mut InterchangeExportSession){
+ for _ in 0..20_000{
+  if session.terminal_is_empty(){return;}
+  assert!(session.close_one(session.next_release_bytes()));
+ }
+ panic!("STEP fixture retained its original frontier");
+}
+fn step_background_advance(
+ session:&mut InterchangeExportSession,doc:&LayoutSnapshot,drawing:&dyn semio_framework_io_ports::VectorGraphSourceV1,
+)->Result<InterchangeExportAdvance,String>{
+ let graph=session.required_step_drawing(doc).map(|_|drawing);
+ session.advance_with_original_step_drawing(doc,graph)
+}
 #[test]
-fn step_large_borrowed_background_resumes_and_cancels_without_whole_scene_lowering(){semio_s_artifact_layout_drawing_composition::bind().unwrap();let fixture:serde_json::Value=serde_json::from_str(include_str!("../📐️step/🖍️background/🧪️fixtures/🔣️.json")).unwrap();let life=&fixture["lifecycle"];let mut scene:semio_framework_io_ports::VectorScene=semio_framework_pack_json::from_json_str(&fixture["scene"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let style="a".repeat(life["longStyleBytes"].as_u64().unwrap()as usize);scene.styles[0].name=style.clone();scene.styles[0].fill=None;let mut segments=vec![semio_framework_io_ports::VectorSegment::MoveTo{to:semio_framework_io_ports::VectorPoint2{x:0.0,y:10.0}}];for index in 1..=life["strokeSegments"].as_u64().unwrap(){segments.push(semio_framework_io_ports::VectorSegment::LineTo{to:semio_framework_io_ports::VectorPoint2{x:index as f64*0.01,y:10.0}});}scene.layers[0].root=semio_framework_io_ports::VectorNode::Group{transform:semio_framework_io_ports::VectorTransform::identity(),children:vec![semio_framework_io_ports::VectorNode::Path{segments,style:Some(style.clone())},semio_framework_io_ports::VectorNode::Text{value:"Grüße".repeat(life["textRepeat"].as_u64().unwrap()as usize),at:semio_framework_io_ports::VectorPoint2{x:5.0,y:20.0},style:Some(style)}]};let content=crate::drawing_codec().unwrap().lift(&scene).unwrap();let mut doc=document("Long background");doc.pages.push(page("page-1".into(),200.0,300.0));finish_document(&mut doc);doc.background_drawing=Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("long-background",&content));for cut in life["cancellationTurns"].as_array().unwrap(){let mut session=InterchangeExportSession::new("step").unwrap();for _ in 0..cut.as_u64().unwrap(){assert!(!matches!(session.advance(&doc).unwrap(),InterchangeExportAdvance::Done));}let mut turns=0;while !session.terminal_is_empty(){turns+=1;assert!(turns<20000);let demand=session.next_release_bytes();assert!(session.close_one(demand));}assert!(session.terminal_is_empty());}let mut session=InterchangeExportSession::new("step").unwrap();let mut output=Vec::new();let mut turns=0;loop{turns+=1;assert!(turns<100000);match session.advance(&doc).unwrap(){InterchangeExportAdvance::Chunk(bytes)=>{assert!(bytes.len()<=4096);output.extend(bytes)},InterchangeExportAdvance::Progress{..}=>{},InterchangeExportAdvance::Done=>break}}assert!(turns>4097);while !session.terminal_is_empty(){assert!(session.close_one(session.next_release_bytes()));}let graph=semio_s_artifact_stdio_contract::part21::parse_part21(std::str::from_utf8(&output).unwrap()).unwrap();assert!(graph.by_type("POLYLINE").count()>=64);assert!(graph.by_type("TEXT_LITERAL_WITH_EXTENT").count()>16);}
-
+fn step_background_borrows_typed_originals_and_emits_real_geometry(){
+ use semio_framework_io_ports::VectorNode;
+ let fixture=step_background_fixture();
+ let mut scene=step_background_scene(&fixture);
+ let VectorNode::Group{children,..}=&mut scene.layers[0].root else{panic!("background fixture root");};
+ children.retain(|child|matches!(child,VectorNode::Path{..}));
+ let mut drawing=lift_vector_scene(scene,"portable-background".into(),&mut |_|true).unwrap();
+ let Some(DrawingLayerNode::Group(layer)) = drawing.layers.get_mut(0) else { panic!("lifted background layer"); };
+ let Some(DrawingLayerNode::Group(background)) = layer.children.get_mut(0) else { panic!("lifted background root"); };
+ background.children.push(step_native_text(fixture["expected"]["text"].as_str().unwrap()));
+ background.children.push(DrawingLayerNode::Image(DrawingImageBody {
+  base: step_native_layer("background-picture", "Picture", DrawingTransform { x: 30.0, y: 40.0, ..default_drawing_transform() }),
+  image_key: "picture-source".into(), width: 10.0, height: 8.0,
+ }));
+ drawing.assets.insert("picture-source", DrawingImageAsset { width: 1, height: 1, samples: vec![[137, 80, 78, 255]].into() });
+ let mut doc=document("Background");
+ doc.pages.push(page("page-1".into(),200.0,300.0));
+ finish_document(&mut doc);
+ doc.background_drawing=Some(step_drawing_member("portable-background"));
+ doc.pages[0].background_drawing=Some(step_drawing_member("page-background"));
+ assert_eq!(export_document("step",&doc,&mut |_|true).unwrap_err(),"layout.step.original-drawing-read-required");
+ let mut session=InterchangeExportSession::new("step").unwrap();
+ let mut bytes=Vec::new();
+ let mut requests=Vec::new();
+ for _ in 0..20_000{
+  if let Some(source)=session.required_step_drawing(&doc){
+   if requests.last()!=Some(&source){requests.push(source);}
+  }
+  match step_background_advance(&mut session,&doc,&drawing).unwrap(){
+   InterchangeExportAdvance::Chunk(chunk)=>{assert!(chunk.len()<=4096);bytes.extend(chunk);}
+   InterchangeExportAdvance::Progress{..}=>{}
+   InterchangeExportAdvance::Done=>break,
+  }
+ }
+ use semio_s_artifact_layout_layout_model::DrawingSourceAddress;
+ assert_eq!(requests,[DrawingSourceAddress::Document,DrawingSourceAddress::Page(0)]);
+ close_step_fixture(&mut session);
+ let rewritten=semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::oracle_round_trip(&bytes).unwrap();
+ let graph=semio_s_artifact_stdio_contract::part21::parse_part21(std::str::from_utf8(&rewritten).unwrap()).unwrap();
+ assert!(graph.by_type("POLYLINE").count()>=4);
+ let projected=semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::projection::project_edges(&graph).unwrap();
+ let expected=fixture["expected"]["rectanglePointsMm"].as_array().unwrap();
+ for(point,expected)in projected.curves[0].points.iter().zip(expected){
+  for(axis,value)in point.iter().enumerate(){assert!((value*25.4/72.0-expected[axis].as_f64().unwrap()).abs()<1e-9);}
+ }
+ let output=semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::draughting::read_draughting(&graph).unwrap();
+ assert_eq!(output.texts.iter().filter(|row|row.literal.contains(fixture["expected"]["text"].as_str().unwrap())).count(),2);
+ assert_eq!(output.texts.iter().filter(|row|row.literal==fixture["expected"]["imageReference"].as_str().unwrap()).count(),2);
+ assert!(output.paints.iter().any(|paint|paint.fill==Some([0.25,0.5,0.75])));
+}
 #[test]
-fn unsupported_filled_background_geometry_refuses_before_publication_and_remains_closeable(){semio_s_artifact_layout_drawing_composition::bind().unwrap();let fixture:serde_json::Value=serde_json::from_str(include_str!("../📐️step/🖍️background/🧪️fixtures/🔣️.json")).unwrap();for case in fixture["refusals"].as_array().unwrap(){let mut scene:semio_framework_io_ports::VectorScene=semio_framework_pack_json::from_json_str(&fixture["scene"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut segments=vec![semio_framework_io_ports::VectorSegment::MoveTo{to:semio_framework_io_ports::VectorPoint2{x:10.0,y:0.0}}];if case["kind"]=="compound"{segments.push(semio_framework_io_ports::VectorSegment::LineTo{to:semio_framework_io_ports::VectorPoint2{x:10.0,y:10.0}});segments.push(semio_framework_io_ports::VectorSegment::MoveTo{to:semio_framework_io_ports::VectorPoint2{x:20.0,y:20.0}});}else{let count=case["count"].as_u64().unwrap();for index in 1..=count{let angle=std::f64::consts::TAU*index as f64/count as f64;segments.push(semio_framework_io_ports::VectorSegment::LineTo{to:semio_framework_io_ports::VectorPoint2{x:angle.cos()*10.0,y:angle.sin()*10.0}});}}scene.layers[0].root=semio_framework_io_ports::VectorNode::Path{segments,style:Some("accent".into())};let content=crate::drawing_codec().unwrap().lift(&scene).unwrap();let mut doc=document("Refused background");doc.pages.push(page("page-1".into(),200.0,300.0));finish_document(&mut doc);doc.background_drawing=Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("refused-background",&content));let mut session=InterchangeExportSession::new("step").unwrap();let mut turns=0;let error=loop{turns+=1;assert!(turns<10000);match session.advance(&doc){Err(error)=>break error,Ok(InterchangeExportAdvance::Done)=>panic!("unsupported fill published"),_=>{}}};assert_eq!(error,case["error"].as_str().unwrap());while !session.terminal_is_empty(){assert!(session.close_one(session.next_release_bytes()));}}}
+fn step_large_borrowed_background_resumes_and_cancels_without_whole_scene_lowering(){
+ use semio_framework_io_ports::{VectorNode,VectorPoint2,VectorSegment};
+ let fixture=step_background_fixture();
+ let life=&fixture["lifecycle"];
+ let mut scene=step_background_scene(&fixture);
+ scene.styles[0].fill=None;
+ let mut segments=vec![VectorSegment::MoveTo{to:VectorPoint2{x:0.0,y:10.0}}];
+ for index in 1..=life["strokeSegments"].as_u64().unwrap(){
+  segments.push(VectorSegment::LineTo{to:VectorPoint2{x:index as f64*0.01,y:10.0}});
+ }
+ scene.layers[0].root=VectorNode::Path{segments,style:Some("accent".into())};
+ let mut drawing=lift_vector_scene(scene,"long-background".into(),&mut |_|true).unwrap();
+ let text="Grüße".repeat(life["textRepeat"].as_u64().unwrap() as usize);
+ let Some(DrawingLayerNode::Group(layer)) = drawing.layers.get_mut(0) else { panic!("lifted long background layer"); };
+ layer.children.push(step_native_text(&text));
+ let mut doc=document("Long background");
+ doc.pages.push(page("page-1".into(),200.0,300.0));
+ finish_document(&mut doc);
+ doc.background_drawing=Some(step_drawing_member("long-background"));
+ for cut in life["cancellationTurns"].as_array().unwrap(){
+  let mut session=InterchangeExportSession::new("step").unwrap();
+  for _ in 0..cut.as_u64().unwrap(){
+   assert!(!matches!(step_background_advance(&mut session,&doc,&drawing).unwrap(),InterchangeExportAdvance::Done));
+  }
+  close_step_fixture(&mut session);
+ }
+ let mut session=InterchangeExportSession::new("step").unwrap();
+ let mut output=Vec::new();
+ let mut turns=0;
+ loop{
+  turns+=1;
+  assert!(turns<100_000);
+  match step_background_advance(&mut session,&doc,&drawing).unwrap(){
+   InterchangeExportAdvance::Chunk(bytes)=>{assert!(bytes.len()<=4096);output.extend(bytes);}
+   InterchangeExportAdvance::Progress{..}=>{}
+   InterchangeExportAdvance::Done=>break,
+  }
+ }
+ assert!(turns>4097);
+ close_step_fixture(&mut session);
+ let graph=semio_s_artifact_stdio_contract::part21::parse_part21(std::str::from_utf8(&output).unwrap()).unwrap();
+ assert!(graph.by_type("POLYLINE").count()>=64);
+ assert!(graph.by_type("TEXT_LITERAL_WITH_EXTENT").count()>16);
+}
+#[test]
+fn unsupported_filled_background_geometry_refuses_and_remains_closeable(){
+ use semio_framework_io_ports::{VectorNode,VectorPoint2,VectorSegment};
+ let fixture=step_background_fixture();
+ for case in fixture["refusals"].as_array().unwrap(){
+  let mut scene=step_background_scene(&fixture);
+  let mut segments=vec![VectorSegment::MoveTo{to:VectorPoint2{x:10.0,y:0.0}}];
+  if case["kind"]=="compound"{
+   segments.push(VectorSegment::LineTo{to:VectorPoint2{x:10.0,y:10.0}});
+   segments.push(VectorSegment::MoveTo{to:VectorPoint2{x:20.0,y:20.0}});
+  }else{
+   let count=case["count"].as_u64().unwrap();
+   for index in 1..=count{
+    let angle=std::f64::consts::TAU*index as f64/count as f64;
+    segments.push(VectorSegment::LineTo{to:VectorPoint2{x:angle.cos()*10.0,y:angle.sin()*10.0}});
+   }
+  }
+  scene.layers[0].root=VectorNode::Path{segments,style:Some("accent".into())};
+  let drawing=lift_vector_scene(scene,"refused-background".into(),&mut |_|true).unwrap();
+  let mut doc=document("Refused background");
+  doc.pages.push(page("page-1".into(),200.0,300.0));
+  finish_document(&mut doc);
+  doc.background_drawing=Some(step_drawing_member("refused-background"));
+  let mut session=InterchangeExportSession::new("step").unwrap();
+  let mut turns=0;
+  let error=loop{
+   turns+=1;
+   assert!(turns<10_000);
+   match step_background_advance(&mut session,&doc,&drawing){
+    Err(error)=>break error,
+    Ok(InterchangeExportAdvance::Done)=>panic!("unsupported fill published"),
+    _=>{}
+   }
+  };
+  assert_eq!(error,case["error"].as_str().unwrap());
+  close_step_fixture(&mut session);
+ }
+}
 
 #[test]
 fn pdf_marked_cluster_owns_all_outlines_only_after_editable_promotion(){
  use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::{io,schema::snapshot::{PdfOp,PdfTextString}};
- semio_s_artifact_layout_drawing_composition::bind().unwrap();let all=fixtures();let input=all["cases"].as_array().unwrap().iter().find(|case|case["id"]=="pdf-idml-utf8-ranges").unwrap();let source=export_document("pdf",&seed(input),&mut |_|true).unwrap();let mut pdf=io::import::decode_pdf(&source.value).unwrap();let font=pdf.fonts[0].id.clone();
+ let all=fixtures();let input=all["cases"].as_array().unwrap().iter().find(|case|case["id"]=="pdf-idml-utf8-ranges").unwrap();let source=export_document("pdf",&seed(input),&mut |_|true).unwrap();let mut pdf=io::import::decode_pdf(&source.value).unwrap();let font=pdf.fonts[0].id.clone();
  for unsupported in [false,true]{pdf.pages[0].content=vec![PdfOp::BeginMarkedContent{tag:PDF_LAYOUT_TEXT_TAG.into()},PdfOp::BeginText,PdfOp::SetFont{name:font.clone(),size:18.0},PdfOp::SetTextRenderingMode{mode:3},PdfOp::SetHorizontalScale{scale:60.0},PdfOp::SetTextMatrix{matrix:if unsupported{[1.0,0.0,0.5,1.0,20.0,70.0]}else{[1.0,0.0,0.0,1.0,20.0,70.0]}},PdfOp::ShowText{text:PdfTextString::text("Grüße")},PdfOp::EndText,PdfOp::Rectangle{x:20.0,y:70.0,width:5.0,height:8.0},PdfOp::Fill,PdfOp::MoveTo{x:30.0,y:70.0},PdfOp::CurveTo{x1:35.0,y1:75.0,x2:40.0,y2:65.0,x3:45.0,y3:70.0},PdfOp::ClosePath,PdfOp::Fill,PdfOp::EndMarkedContent];let bytes=io::export::encode_pdf(&pdf).unwrap();assert_eq!(oracle::pdf_text(&bytes).unwrap().trim(),"Grüße");let imported=import_document("pdf",&bytes,"Cluster",&mut |_|true).unwrap();if unsupported{assert!(draft(&imported.value).stories.is_empty());assert!(draft(&imported.value).pages[0].background_drawing.is_none());assert_eq!(pending(&imported.value).len(),1);}else{assert_eq!(draft(&imported.value).stories.len(),1);assert_eq!(draft(&imported.value).stories[0].content,"Grüße");assert!(draft(&imported.value).pages[0].background_drawing.is_none());assert_eq!(draft(&imported.value).pages[0].frames.len(),1);}}
  pdf.pages[0].content=vec![PdfOp::MoveTo{x:1.0,y:2.0},PdfOp::CurveToInitial{x2:3.0,y2:4.0,x3:5.0,y3:6.0},PdfOp::CurveToFinal{x1:7.0,y1:8.0,x3:9.0,y3:10.0},PdfOp::ClosePath,PdfOp::Fill];let bytes=io::export::encode_pdf(&pdf).unwrap();let imported=import_document("pdf",&bytes,"Cubic",&mut |_|true).unwrap();let background=&pending(&imported.value)[0].scene;let semio_framework_io_ports::VectorNode::Group{children,..}=&background.layers[0].root else{panic!("drawing group")};let semio_framework_io_ports::VectorNode::Path{segments,..}=&children[0] else{panic!("drawing path")};assert_eq!(segments.len(),4);assert!(matches!(segments[1],semio_framework_io_ports::VectorSegment::CubicTo{..}));
 }

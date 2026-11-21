@@ -171,6 +171,14 @@ fn decode_reference(text: &str) -> Result<Fem2dSnapshot, String> {
     Fem2dSnapshot::from_reference(value).map_err(semio_framework_value::ValueError::into_message)
 }
 
+/// ♻️ Runs a report before returning the decoded snapshot through its funded owner.
+fn with_reference<R>(text: &str, run: impl FnOnce(&Fem2dSnapshot) -> Result<R, String>) -> Result<R, String> {
+    let doc = decode_reference(text)?;
+    let result = run(&doc);
+    <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(doc);
+    result
+}
+
 /// 🗂️ The three projection axes of an analysis report, computed from the document so that two
 /// implementations order the same values the same way: every node a `bar`/`beam` element references
 /// in document order, every restrained-and-active `(node, dof)` pair in that same order, and the
@@ -278,7 +286,7 @@ pub(crate) fn fem2d_dof_name_of(dof: semio_s_fem_model::Dof) -> &'static str {
 ///
 /// @see ../../../📈️analysis/🧪️tests/🧮️solves-fem2d-1-benchmarks/🥒️.feature
 pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc = decode_reference(snapshot_json)?;
+    with_reference(snapshot_json, |doc| {
     let (nodes, pairs, members) = fem2d_frame_axes(&doc);
     let axes = |value: semio_framework_value::DslValue| {
         semio_framework_value::DslValue::Object(vec![
@@ -292,8 +300,9 @@ pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String>
         Err(error) => Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
         Ok(results) => {
             let mut cases = Vec::new();
-            for id in doc.load_cases.iter().map(|case| case.id.clone()).chain(doc.combinations.iter().map(|combination| combination.id.clone())) {
-                let Some(result) = results.get(&id) else {
+            for (kind, id) in doc.load_cases.iter().map(|case| ("loadCase", case.id.clone())).chain(doc.combinations.iter().map(|combination| ("combination", combination.id.clone()))) {
+                let key = semio_s_artifact_fem_2d_engine::fem2d_engine::encode_result_source_parts(kind, &id).map_err(|error| error.to_string())?;
+                let Some(result) = results.get(&key) else {
                     return Err(format!("fem2d_solve_all returned no result for {id:?}"));
                 };
                 let mut entry = vec![("id".to_string(), semio_framework_value::DslValue::String(id.clone()))];
@@ -305,17 +314,19 @@ pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String>
             Ok(semio_framework_pack_json::to_json_string(&axes(semio_framework_value::DslValue::Array(cases))))
         }
     }
+    })
 }
 
 /// 🧱️ Continuum responses in authored-node order with stress extrema and resolved eigen answers.
 pub fn fem2d_continuum_report_json(snapshot_json: &str, include_eigen: bool) -> Result<String, String> {
     use semio_framework_value::DslValue as Value;
-    let doc = decode_reference(snapshot_json)?;
+    with_reference(snapshot_json, |doc| {
     let results = semio_s_artifact_fem_2d_engine::fem2d_engine::fem2d_solve_all(&doc).map_err(|error| error.to_string())?;
     let array = |values: &[f64]| Value::Array(values.iter().map(|value| Value::float(*value)).collect());
     let mut cases = Vec::new();
     for case in &doc.load_cases {
-        let result = results.get(&case.id).ok_or_else(|| format!("missing solved case {}", case.id))?;
+        let key = semio_s_artifact_fem_2d_engine::fem2d_engine::encode_result_source_parts("loadCase", &case.id).map_err(|error| error.to_string())?;
+        let result = results.get(&key).ok_or_else(|| format!("missing solved case {}", case.id))?;
         let mut displacements = Vec::new();
         let mut reactions = Vec::new();
         for node in doc.nodes.iter() {
@@ -357,6 +368,7 @@ pub fn fem2d_continuum_report_json(snapshot_json: &str, include_eigen: bool) -> 
         Vec::new()
     };
     Ok(semio_framework_pack_json::to_json_string(&Value::Object(vec![("cases".to_string(), Value::Object(cases)), ("frequenciesHz".to_string(), array(&frequencies))])))
+    })
 }
 
 /// 🧬️ Applies one typed mutation to `base_json` through the SAME production diff/apply path
@@ -376,19 +388,20 @@ pub fn fem2d_mutated_analysis_report_json(base_json: &str, mutation_json: &str) 
 /// 🎵️ One JSON report of the modal analysis of `snapshot_json` — the natural frequencies in hertz,
 /// as many as the document's own `analysis.modalCount` asks for.
 pub fn fem2d_modal_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc = decode_reference(snapshot_json)?;
+    with_reference(snapshot_json, |doc| {
     match semio_s_artifact_fem_2d_engine::fem2d_engine::modal_buckling::fem2d_modal(&doc) {
         Err(error) => Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
         Ok(result) => {
             Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("frequenciesHz".to_string(), semio_framework_value::DslValue::Array(result.frequencies_hz.iter().take(doc.analysis.modal_count as usize).map(|value| semio_framework_value::DslValue::float(*value)).collect()))])))
         }
     }
+    })
 }
 
 /// 🏛️ One JSON report of the linear-buckling analysis of `snapshot_json` — the lowest load factor of
 /// every load case the document declares, keyed by case id.
 pub fn fem2d_buckling_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc = decode_reference(snapshot_json)?;
+    with_reference(snapshot_json, |doc| {
     let mut factors = Vec::new();
     for case in &doc.load_cases {
         match semio_s_artifact_fem_2d_engine::fem2d_engine::modal_buckling::fem2d_buckling(&doc, &case.id) {
@@ -400,6 +413,7 @@ pub fn fem2d_buckling_report_json(snapshot_json: &str) -> Result<String, String>
         }
     }
     Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("factors".to_string(), semio_framework_value::DslValue::Object(factors))])))
+    })
 }
 }
 pub use mutations_codec::*;

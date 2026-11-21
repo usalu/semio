@@ -7,6 +7,8 @@ use semio_framework_value::{RetirementDemand,ValueError};
 pub struct OriginalPluginAppSource<'a>{pub definition:&'a AppDefinition,pub definition_source:semio_plugin_window_kits::RegisteredDefinitionSource<'a>,pub registration:&'a dyn OriginalPluginAppRegistration,pub actor:&'a str,pub instance_id:u32,pub policy:MountedOwnerPolicyV1}
 /// 🧳️ A concrete registered producer owns partial Stores and services until genuine handoff or original closure.
 pub trait OriginalPluginAppConstruction<PA>:Send{
+ /// 🧭️ Reports the next private assembly phase, field and byte offset while the opening owns unfinished placement.
+ fn assembly_position(&self)->Option<(u8,usize,usize)>;
  fn advance(&mut self,source:OriginalPluginAppSource<'_>,cx:&mut StepContext<'_>,output:&mut Option<PA>)->Result<bool,OriginalTurnFailure>;
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>;
  fn terminal_is_empty(&self)->bool;

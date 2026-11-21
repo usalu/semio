@@ -1,0 +1,11 @@
+# Cold buckling diagnostics
+
+The horizontal simply supported beam under transverse uniform load has zero axial force in its first-order reference solution. The Euler–Bernoulli geometric stiffness is proportional to that axial force, so the result has zero finite positive buckling factors. A compressive nodal load along the beam exercises the two movable rotation modes physically. For the six-metre test beam the compact elastic and geometric pencils give analytical factors 584.92 and 2924.60, which the independent ticket NumPy oracle reproduces.
+
+The 4×2 m continuum area-pressure fixture previously panicked on a generic subspace transition refusal. The retained eigensolver validates that each right-hand matrix entry has a corresponding transpose entry within a relative floating-point tolerance. Computing both sides of the geometric cell independently can breach that tolerance under cancellation. The neutral roundoff fixture yields a transpose gap of 2.1316e−14 against the eigensolver's 1.6602e−14 tolerance. NumPy agrees with the symmetric cell value.
+
+Cold buckling now inserts each element's symmetric geometric-stiffness value and its transpose together. This keeps stable sparse summation order, eliminates cancellation asymmetry without loosening the eigensolver's input validation, and skips both sides when the symmetric contribution is zero. The original continuum pressure regression and both compressed-beam tests passed in the native rerun.
+
+The independent scikit-fem/SciPy reference had added a diagonal regularizer to the geometric matrix. For the triangle self-weight case, it changed the factor by 1.04 parts per million. The oracle now solves the reciprocal symmetric pencil using elastic stiffness as the positive-definite matrix. That removes the diagonal perturbation and retains positive reciprocal eigenvalues only. The unregularized oracle produced triangle factors 3000 and 3669.724770642201, and mixed factors 3030.914413060051 and 3707.5405664343125. The native triangle self-weight result was 3669.7247706422017. Regeneration changed only the four factors and their two normalization scales, and the independent comparison confirmed existing static and modal responses within their prior tolerance.
+
+The updated native FEM 2D engine suite passed 24 of 24 tests. The independent continuum oracle passed all four portable scenarios.

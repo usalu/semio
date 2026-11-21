@@ -215,7 +215,7 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::AddGeneration(add_generation::AddGeneration {}),
         Generation3dCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "generation-1".into() }),
         Generation3dCommand::RenameGeneration(rename_generation::RenameGeneration { id: "generation-1".into(), name: "Renamed".into() }),
-        Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), value: semio_framework_value::DslValue::float(5.0) }),
+        Generation3dCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("generation-1".into()), question_id: "q1".into(), field_index: Some(1), value: semio_framework_value::DslValue::float(5.0) }),
         Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } }),
         Generation3dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "coarse".into() }),
         Generation3dCommand::SetShowMode(set_show_mode::SetShowMode { value: "wireframe".into() }),

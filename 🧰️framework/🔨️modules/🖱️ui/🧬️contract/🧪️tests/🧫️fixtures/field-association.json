@@ -1,0 +1,22 @@
+{
+  "surface": "generation-form",
+  "field": "origin.x.axis",
+  "control": "origin.x.input",
+  "replacement": "origin.x.edit",
+  "labelRows": [
+    {
+      "locale": "en",
+      "label": "X coordinate",
+      "description": "Millimetres",
+      "error": "Outside the allowed range",
+      "explicit": "Horizontal coordinate"
+    },
+    {
+      "locale": "de",
+      "label": "X-Koordinate",
+      "description": "Millimeter",
+      "error": "Außerhalb des zulässigen Bereichs",
+      "explicit": "Horizontale Koordinate"
+    }
+  ]
+}

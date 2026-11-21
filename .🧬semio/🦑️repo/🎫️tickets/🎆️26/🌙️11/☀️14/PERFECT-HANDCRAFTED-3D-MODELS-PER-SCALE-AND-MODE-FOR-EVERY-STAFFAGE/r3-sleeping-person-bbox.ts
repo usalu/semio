@@ -6,7 +6,8 @@ const [file, scale, re] = process.argv.slice(2);
 const li = process.argv.indexOf("--list");
 const list = li < 0 ? "body" : process.argv[li + 1]!;
 const asset = JSON.parse(readFileSync(file!, "utf8")).asset;
-const frames = rigAt(asset, Number(scale), { kind: "pose", pose: asset.presentation.defaultPose }).frames;
+const pi = process.argv.indexOf("--pose");
+const frames = rigAt(asset, Number(scale), { kind: "pose", pose: pi < 0 ? asset.presentation.defaultPose : process.argv[pi + 1]! }).frames;
 const solids = (asset.volumes[scale!][list] as any[]).filter((s) => s.of === undefined && new RegExp(re ?? ".").test(s.id));
 for (const m of meshesIn(asset, frames, solids)) {
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];

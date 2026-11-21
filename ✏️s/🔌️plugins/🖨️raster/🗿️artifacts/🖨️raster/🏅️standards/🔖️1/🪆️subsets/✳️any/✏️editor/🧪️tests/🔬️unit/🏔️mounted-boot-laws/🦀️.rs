@@ -84,9 +84,7 @@ fn packed_scene_text(json: &str) -> String {
     text
 }
 
-/// 🚀️ The react shell's boot sequence: the store boots on the empty shell and the shell replays
-/// `setActiveExample demo`, which must plant the Semio-logo carrier (two root layers) through the
-/// retained route without any owned-map clone or un-retired drop (react boots of 2026-09-16).
+/// 🚀️ Shell boot loads the demo once through the retained example route.
 #[semio_framework_async_macros::async_test]
 async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     let mut app = mounted::mounted_app();
@@ -104,19 +102,7 @@ async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     assert!(assets_json.contains("semio-emblem") && assets_json.contains("image/png"), "the booted document's asset pool must resolve to real pixels, not pixel-less handles: {assets_json}");
 }
 
-/// ⚖️ LAW — the play pane's ACTUAL boot, read off the PUBLISHED surface rather than off
-/// `raster_scene`. The law above reads the scene as the app builds it, i.e. BEFORE `scene_surface`
-/// splits it into the fixed-capacity `SurfaceProps.doc` spine plus one `paged_text_carrier` child per
-/// declared lane. Everything that can go wrong between those two points — the guest's UI arena
-/// refusing the carrier, a lane dropped from the manifest, a carrier that reassembles to something
-/// other than what the manifest promised — was therefore invisible to this suite while the pane on
-/// :6033 rendered an empty composite with ZERO console errors: `Paint2dHost` never called `atob`,
-/// meaning `parsePaint2dAssets` got `{}` and uploaded no texture
-/// (`.🧬semio/🦑️repo/⚡️cache/play-fleet/raster/browser9/page.png`, 2026-09-22).
-///
-/// The two assertions are deliberately split so a failure says WHICH half broke:
-/// the spine's own `SceneLaneRef` manifest is what the GUEST measured before paging, and the
-/// reassembled `assets_json` is what a host gets back out of the carrier.
+/// ⚖️ The mounted Composite surface publishes the demo pixels through its assets lane.
 #[semio_framework_async_macros::async_test]
 async fn mounted_boot_publishes_the_emblem_pixels_on_the_composite_assets_lane() {
     use semio_plugin::Paint2dScene;
@@ -142,15 +128,7 @@ async fn mounted_boot_publishes_the_emblem_pixels_on_the_composite_assets_lane()
     assert!(width >= 256 && height >= 256, "the published emblem is large enough to see: {width}x{height}");
 }
 
-/// ↩️ The five-clause bar's undo/redo half on the LIVE document shape: boot the demo carrier, paint
-/// a layer, then walk `undo → redo → undo`. Every step displaces a projection that owns the demo's
-/// asset pool, so each one must reach its owner instead of `RasterOwnedMap`'s fail-closed `Drop`
-/// (slice B3e fixed the undo half; the redo press still aborted the guest at `🦀️.rs:301` on the
-/// live bar, measured 2026-09-20 by B3f).
-/// 📸️ Reads the live layer count and hands the materialized projection straight back to the
-/// artifact's own retirement seam — `PluginApp::snapshot` CLONES, and a clone of a demo-shaped
-/// document owns a populated asset pool, so a test that lets it fall off the end of a statement
-/// trips the same fail-closed `Drop` the law below is about.
+/// ↩️ Undo and redo preserve the live demo layer forest and its retained image owners.
 fn observed_layer_count(app: &mounted::MountedRasterApp) -> usize {
     let snapshot = app.snapshot().expect("snapshot");
     let count = snapshot.layers.len();
@@ -348,34 +326,16 @@ fn structural_commands_refuse_protected_sources_and_destination_parents() {
     drop(doc);semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }
 
-/// 📥️ LAW (Import Document hang, ticket 26/09/23 S20 14c): the demo document's op log — ONE edit whose ops plant the
-/// 25 KB `semio-emblem` asset and the carrier layers — comes back through the host document-archive door. Live,
-/// Import Document of that archive answered `1/1 running` forever while an empty raster imported in 1.2 s
-/// (`.tmp-ticket/wp-s20/generated/probe-raster-2.txt`). The bounded archive load pins where a stall lives: the framework-default store
-/// initializer replaying the edit, then the whole archive load.
+/// 📥️ A demo archive with real image bytes loads through the bounded document archive route.
 #[semio_framework_async_macros::async_test]
 async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     let mut app = mounted::mounted_app();
     mounted::dispatch(&mut app, RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_raster_raster_examples::art_raster_demo::ID.into() })).await;
     let archive = PluginApp::document_archive(&mut app.0).await.expect("the demo document reads as one archive");
-    PluginApp::begin_document_archive_load(&mut app.0, 91, archive).expect("archive admission");
-    let started = std::time::Instant::now();
-    let mut status = None;
-    let mut polls = 0usize;
-    let mut last = (0u64, 0u64);
-    while started.elapsed() < std::time::Duration::from_secs(240) {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
-        polls += 1;
-        last = (polled.completed, polled.total);
-        if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
-            status = Some(polled);
-            break;
-        }
-        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
-    }
-    let status = status.unwrap_or_else(|| panic!("the demo archive load reached no terminal in {polls} polls (last progress {}/{})", last.0, last.1));
-    assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut app.0, 91).expect("archive acknowledgement");
+    use semio_plugin::artifact_app_laws::{admit_document_archive_load, fixture_identity, settle_document_archive_load};
+    admit_document_archive_load(&mut app.0, 91, archive, app.1.cx()).expect("original archive admission");
+    settle_document_archive_load(&mut app.0, 91, &mut fixture_identity(), app.1.cx()).await
+        .expect("original archive reaches a ready and acknowledged terminal");
     let snapshot = app.snapshot().expect("loaded snapshot");
     assert!(semio_s_artifact_raster_raster_io::raster_asset(&snapshot.assets, "semio-emblem").is_some(), "the emblem survives the archive door");
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);

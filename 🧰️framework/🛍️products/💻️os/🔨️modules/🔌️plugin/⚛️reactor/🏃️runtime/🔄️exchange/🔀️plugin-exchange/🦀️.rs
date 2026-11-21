@@ -195,18 +195,58 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut original_media_poll_ready=false;
         let mut original_media_failure:Option<semio_framework_job::OriginalTurnFailure>=None;
         let mut original_media_domain=None;
+        let mut advance_media_operation = false;
         let media_pending=match owner.original_command(){
-            Some(protocol::AppCommand::MediaIn{..})=>{
-                if owner.original_media_finished(){match owner.settle_original_media_import(cx){Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure);true}}}else{match owner.prepare_media_descriptor(cx){
-                    Ok(false)=>true,
-                    Err(failure)=>{original_media_failure=Some(failure);true},
-                    Ok(true)=>{
-                        let accepted=if let Some((port,schema,media_type))=owner.structured_media_binding(){match with_instances_original_mut(runtime,|list|{let instance=find_instance(list,instance_id)?;Ok(instance.app.accepts_original_structured_media(port,schema,media_type))}).await{Ok(value)=>value,Err(failure)=>{original_media_failure=Some(failure.into());false}}}else if let Some((port,format))=owner.natural_file_binding(){match with_instances_original_mut(runtime,|list|{let instance=find_instance(list,instance_id)?;Ok(instance.app.original_natural_file_media_type(port,format))}).await{Ok(Some(media_type))=>{owner.bind_natural_file_media_type(media_type);true}Ok(None)=>false,Err(failure)=>{original_media_failure=Some(failure.into());false}}}else{false};
-                        if original_media_failure.is_some(){true}else if owner.media_is_intrinsic()||owner.media_original_started()||accepted{match owner.prepare_media_payload(accepted,cx){Ok(false)=>true,Err(failure)=>{original_media_failure=Some(failure);true},Ok(true)=>match owner.prepare_media_metadata(runtime,instance_id,cx){Ok(false)=>true,Err(failure)=>{original_media_failure=Some(failure);true},Ok(true)=>{match owner.media_import_parts(){Err(failure)=>{original_media_failure=Some(failure);true},Ok((port,media,meta,completed))=>{let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;::semio_framework_async::poll::resolve_ready(instance.app.advance_original_media_import(port,media,meta,completed,cx)).map_err(Into::into)}).await;match result{Ok(_)=>true,Err(failure)=>{original_media_failure=Some(failure.into());true}}}}}}}}else{let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;::semio_framework_async::poll::resolve_ready(instance.app.prepare_media_import(cx)).map_err(Into::into)}).await;
-                            match result{Ok(false)=>true,Err(failure)=>{original_media_failure=Some(failure.into());true},Ok(true)=>match owner.take_media_in(cx,&mut state.media_input){Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure);true}}}
-                        }
+            Some(protocol::AppCommand::MediaIn { .. }) => {
+                let receiving = async {
+                    if owner.original_media_finished() {
+                        return owner.settle_original_media_import(cx).map(|ready| !ready);
                     }
-                }}
+                    if !owner.prepare_media_descriptor(cx)? {
+                        return Ok(true);
+                    }
+                    let accepted = if let Some((port, schema, media_type)) = owner.structured_media_binding() {
+                        with_instances_original_mut(runtime, |list| {
+                            let instance = find_instance(list, instance_id)?;
+                            Ok(instance.app.accepts_original_structured_media(port, schema, media_type))
+                        }).await?
+                    } else if let Some((port, format)) = owner.natural_file_binding() {
+                        let media_type = with_instances_original_mut(runtime, |list| {
+                            let instance = find_instance(list, instance_id)?;
+                            Ok(instance.app.original_natural_file_media_type(port, format))
+                        }).await?;
+                        if let Some(media_type) = media_type {
+                            owner.bind_natural_file_media_type(media_type);
+                        }
+                        media_type.is_some()
+                    } else {
+                        false
+                    };
+                    if !owner.media_is_intrinsic() && !owner.media_original_started() && !accepted {
+                        let ready = with_instances_original_mut(runtime, |list| {
+                            let mut instance = find_instance(list, instance_id)?;
+                            ::semio_framework_async::poll::resolve_ready(instance.app.prepare_media_import(cx)).map_err(Into::into)
+                        }).await?;
+                        return if ready { owner.take_media_in(cx, &mut state.media_input).map(|ready| !ready) } else { Ok(true) };
+                    }
+                    if !owner.prepare_media_payload(accepted, cx)? || !owner.prepare_media_metadata(runtime, instance_id, cx)? {
+                        return Ok(true);
+                    }
+                    let (port, media, meta, progress) = owner.media_import_parts()?;
+                    let complete = with_instances_original_mut(runtime, |list| {
+                        let mut instance = find_instance(list, instance_id)?;
+                        ::semio_framework_async::poll::resolve_ready(instance.app.advance_original_media_import(port, media, meta, progress, cx)).map_err(Into::into)
+                    }).await?;
+                    advance_media_operation = owner.original_media_mounted() && !complete;
+                    Ok(true)
+                }.await;
+                match receiving {
+                    Ok(pending) => pending,
+                    Err(failure) => {
+                        original_media_failure = Some(failure);
+                        true
+                    }
+                }
             },
             Some(protocol::AppCommand::SubmitMediaExport{..})=>{
                 let(port,parent,revision,checkpoint,receiver)=owner.media_submission_parts()?;
@@ -256,7 +296,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             },
             _=>false,
         };
-        if media_pending{if original_media_failure.is_some()||original_media_domain.is_some(){retain_decoded_exchange_failure(command,original_media_failure,(cx.operation(),cx.generation()),original_media_domain)}return Ok(PluginExchangeOutput::default())}
+        if media_pending {
+            if original_media_failure.is_some() || original_media_domain.is_some() {
+                retain_decoded_exchange_failure(command, original_media_failure, (cx.operation(), cx.generation()), original_media_domain);
+            } else if advance_media_operation {
+                return with_instances_original_mut(runtime, |list| {
+                    let mut instance = find_instance(list, instance_id)?;
+                    semio_plugin_runtime_ops::ops_typed_operations::advance_original_media_operation_output(&mut instance.app, instance_id, identity, cx)
+                }).await;
+            }
+            return Ok(PluginExchangeOutput::default());
+        }
         let original_media_applied=owner.original_media_finished();let mut original_media_descriptor=None;
         let command=if let Some((command,descriptor))=state.media_input.as_mut(){original_media_descriptor=Some(descriptor);command}else{if !owner.capture_dispatch_step(&mut state.dispatch,cx)?{return Ok(PluginExchangeOutput::default())}state.dispatch.as_mut().expect("actual Source receiver owns its dispatched command")};
         match command {

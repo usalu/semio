@@ -81,6 +81,9 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         pump.outcome_pending=false;
         let Some(job) = session.checked_out_job_mut() else { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CheckedOutJob)) };
         pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
+        if matches!(pump.pending_status, RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress)) {
+            eprintln!("[DEBUG] FEM cleanup semantic failure instance={} stage={} progress={:?}", cell.id, semio_plugin_reactor_app::app_runtime_helpers::LAST_MAINTENANCE_STAGE.load(Ordering::Relaxed), job.progress);
+        }
         #[cfg(test)]
         if matches!(job.progress, Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { .. })) {
             cell.maintenance_probe_input_waits.fetch_add(1, Ordering::SeqCst);
@@ -407,7 +410,13 @@ pub fn plugin_step_close_cleanup<PA: PluginApp + 'static>(runtime:&PluginRuntime
     let state=&entry.state;runtime.close_cleanup_cursor.set((index+1)%PLUGIN_RUNTIME_INSTANCE_SLOTS);
     match RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)){
         RuntimeCloseStatus::Complete=>{drop(quarantine);let removed=runtime.close_quarantine.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime close quarantine is busy"))?.take(instance_id);drop(removed);Ok(true)}
-        RuntimeCloseStatus::Fault(cause)=>{let elapsed_us=if cause==RuntimeCleanupFault::ZeroProgress{state.stall_credit_spent_us.load(Ordering::SeqCst)}else{state.last_callback_elapsed_us.load(Ordering::SeqCst)};drop(quarantine);let removed=runtime.close_quarantine.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime close quarantine is busy"))?.take(instance_id);drop(removed);Err(runtime_cleanup_fault("close",cause,instance_id,elapsed_us).into())}
+        RuntimeCloseStatus::Fault(cause)=>{
+            let fault=state.close_fault(cause);
+            drop(quarantine);
+            let removed=runtime.close_quarantine.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime close quarantine is busy"))?.take(instance_id);
+            drop(removed);
+            Err(fault.into())
+        }
         _=>{if cx.retirement_should_yield(){return Ok(false)}run_runtime_close_turn(state,cx)?;Ok(true)}
     }
     })

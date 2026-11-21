@@ -107,18 +107,14 @@ impl Operator for SewFaces {
 
 geo_operation!(HealSolid, "solid", |k, i| k.heal_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "tolerance")?));
 
-geo_operation!(ConvertToNurbs, "geometryOut", |k, i| k.convert_to_nurbs(&read_geometry(i, "geometry")?));
+geo_operation!(ConvertToNurbs, "geometryOut", |k, i| k.convert_to_nurbs(&read_geometry(i, "geometry")?), ConvertToNurbs);
 // #endregion 🔖️Utilities
 
 // #region 🔖️IO
 pub(super) struct ExportStep(pub(super) SessionCapture);
 
 impl Operator for ExportStep {
-    fn step_plan(&self,input:Dictionary,grant:semio_framework_value::RetainedCloneGrant)->Result<(neural_engine::OperatorPlanAdmission,semio_framework_value::RetainedCloneProgress),(EvalError,Dictionary)>{neural_engine::OperatorPlanAdmission::immediate(input,grant)}
-    fn next_plan_copy_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_capacity_byte_demand(&self,_input:&Dictionary,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_release_byte_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn next_plan_depth_demand(&self,_input:&Dictionary)->Result<usize,semio_framework_value::ValueError>{Ok(1)}
+    retained_geometry_job!(ExportStep);
             retire_geometry_capture!(0);
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         self.0.with_kernel_read(|kernel| {

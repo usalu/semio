@@ -7,6 +7,7 @@
         for argument in args.iter().filter(|argument| argument.required && argument.default.is_none()) {
             let candidates = match &argument.schema {
                 ArgSchema::String { options, .. } if options.len() == 1 => vec![DslValue::String(options[0].value.clone())],
+                ArgSchema::Object { fields } => vec![declared_bridge_arguments(fields)?],
                 _ => declared_argument_alternatives(argument).map(|(first, second)| vec![first, second]).unwrap_or_default(),
             };
             let schema = argument.json_schema(semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::En);

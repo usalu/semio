@@ -107,3 +107,44 @@ Measured at the end (product check):
 - **Generalisation.** Eight slats and seven slots stand for about twice as many real ones (7.5 mm feature). The supply cord is not modelled (it would leave the declared envelope); only its grommet is.
 - **Line views.** At 1:50 the 4 mm cassette rim and 6 mm intake panel are thinner than the pen and print as black strips; the plan handle shows in the solid views only.
 - **Not run.** The catalog-wide test projects (`repo run ...:test`) were not run by me; only the asset validation and the volume check above.
+
+## Round 5 handcraft (2026-11-21)
+
+Script: `r5-electric-fan-heater-scales.py` (all four scales from the round-3 definitions plus the overrides it states).
+
+### Reference and model vs reference, 1:50
+
+| Quantity | Reference (Einhell EH 2000, B+D BXFSH2000E, Steba VTH 2) | Model | Deviation |
+|---|---|---|---|
+| Envelope | 0.20-0.27 x 0.20-0.27 x 0.31-0.32 m, 1.5 kg | 0.196 x 0.24 x 0.31 m, 1.5 kg | in class |
+| Edge radius | 15-25 mm | 22 mm | ok |
+| Outlet louvres | recessed in the grille frame, sloping down and out | 8 x 1.5 mm slats at 45 deg, front edge 0.8 mm behind the rim face | ok |
+| Handle opening | >= 90 mm x 25 mm (DIN 33402 hand breadth) | 100 x 26 mm | ok |
+| Knob | 40-45 mm, 10-15 mm proud | 44 mm, 12 mm | ok |
+
+### Grades (body / thermal / structure)
+
+| Scale | Before | After |
+|---|---|---|
+| 1:50 | B+ (slat tips stood 4 mm out of the cassette as a comb in side view) / A- / A- | A- / A / A- |
+| 1:100 | B (three-step faceted 22 mm radii, slat bars sticking 5.5 mm out of the plate as spikes) / B+ / A- | A- / A- / A- |
+| 1:200 | C+ (faceted block, wedge shading) / B+ / B+ | A- / B+ / B+ |
+| 1:500 | C (round-1 octagon with 45 mm chamfers, diagonal shading) / C / C | A- / B+ / A- |
+
+Opened: body 1:50, 1:100, 1:200, 1:500 before and after; thermal cut and structure 1:50, 1:500 after, 1:100 structure; poses `off`, `heating-low`; 2D 1:50. 1:100/1:200 thermal and 1:200 structure were rendered after the change but not opened (unchanged solids except the 1:200 block radius).
+
+### Changes
+
+- 1:50: louvres seated inside the cassette (SLAT_IN 0.083, SLAT_OUT 0.0932), warm-air outlet patch flush in the cassette face; decision text corrected.
+- 1:100: shell, cover and caps with five-step 22 mm radii; slat bars flush on the outlet plate.
+- 1:200: block radius in four steps.
+- 1:500 anew: block with two-step radii, flush outlet panel, handle bar block, feet plinth; thermal split at the cover seam with intake (proud, no coplanar faces), dial and feet patches; structure U-shell monocoque, cover band, handle, spindle, motor mass, two rails.
+
+### Checks
+
+`volumes-check.ts --product` PASS; `r3-validate.ts --volumes` VALID; spliced.
+
+### Remaining
+
+- 1:500 thermal cut shows the coplanar seam faces of shell and cover as stripes (inside, renderer).
+- 1:100 end caps are chamfered (taper 0.9) where the real frames are rounded; within the 15 mm feature.

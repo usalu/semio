@@ -104,6 +104,8 @@ pub use acceptance_fixtures_cases_and_change_buckets::{
 #[path = "🎛️acceptance-policy-pump-and-drive/🦀️.rs"]
 mod acceptance_policy_pump_and_drive;
 #[cfg(any(test, feature = "artifact-app-testing"))]
+pub use acceptance_policy_pump_and_drive::{assert_latest_history_preview, assert_mounted_history_overwrite};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use acceptance_policy_pump_and_drive::{
     acceptance_close, acceptance_context, acceptance_drive, acceptance_head, acceptance_meta, acceptance_policy,
     acceptance_pump, acceptance_seeded, acceptance_verb,
@@ -168,11 +170,17 @@ use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_
 /// manifest directory (the artifact tree: `"../.."`).
 #[macro_export]
 macro_rules! history_edit_acceptance_law {
+    ($plugin:literal, $editor:ty, $manifest:expr, fixtures_root = $fixtures:expr) => {
+        $crate::history_edit_acceptance_law!(@impl $plugin, $editor, $manifest, $fixtures);
+    };
     ($plugin:literal, $editor:ty, $manifest:expr, $fixtures:literal) => {
+        $crate::history_edit_acceptance_law!(@impl $plugin, $editor, $manifest, ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures));
+    };
+    (@impl $plugin:literal, $editor:ty, $manifest:expr, $fixtures:expr) => {
         /// ⏮️ LAW (design §16.3): a representative editable leaf of this editor is edited in history end to end.
         #[test]
         fn history_edits_end_to_end() {
-            let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
+            let fixtures = $fixtures;
             let examples = <$editor as $crate::__ArtifactEditor>::examples();
             let summary = $crate::block_on_acceptance($crate::assert_history_edits_end_to_end::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>(
                 $plugin, $manifest, &fixtures, &examples,
@@ -183,7 +191,7 @@ macro_rules! history_edit_acceptance_law {
         /// ⛓️ LAW (design §16.3): every document leaf payload schema of this editor resolves through the runtime resolver.
         #[test]
         fn history_edit_inputs_resolve() {
-            let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
+            let fixtures = $fixtures;
             let (leaves, withdraw_only) =
                 $crate::block_on_acceptance($crate::assert_input_schemas_resolve::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>($plugin, $manifest, &fixtures));
             ::std::println!("[history-edit-inputs] {}: {leaves} leaf payload schema(s) resolve, {withdraw_only} withdraw-only leaf(s) not judged", $plugin);
@@ -192,7 +200,7 @@ macro_rules! history_edit_acceptance_law {
         /// ⚔️ LAW (design §23.2): a conflict a history edit of this editor causes downstream is classified, named and resolved end to end.
         #[test]
         fn conflict_history_edits_end_to_end() {
-            let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
+            let fixtures = $fixtures;
             let examples = <$editor as $crate::__ArtifactEditor>::examples();
             let summary = $crate::block_on_acceptance($crate::assert_history_conflicts_resolve::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>(
                 $plugin, $manifest, &fixtures, &examples,

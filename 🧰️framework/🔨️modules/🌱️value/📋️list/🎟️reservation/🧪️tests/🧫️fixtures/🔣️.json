@@ -26,6 +26,11 @@
     1000,
     4096
   ],
+  "metadataReuse": {
+    "backingSlots": 1,
+    "allocatedBytes": 0,
+    "releasedBytes": 0
+  },
   "allocationPolicy": {
     "elementBytes": 8,
     "requestedSlots": 4,

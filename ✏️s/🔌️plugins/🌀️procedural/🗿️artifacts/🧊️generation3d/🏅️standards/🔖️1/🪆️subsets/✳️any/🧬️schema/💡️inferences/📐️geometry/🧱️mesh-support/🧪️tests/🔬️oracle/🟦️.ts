@@ -278,7 +278,7 @@ const toleranceOf = (fixtureCase: Case & { fixtureTolerance: number }) => fixtur
 
 test("the fixtures state each mesh kind with at least one success case and every fault with a code", () => {
   const catalogue = all.map((fixtureCase) => fixtureCase.kind);
-  expect(new Set(catalogue).size).toBe(52);
+  expect(new Set(catalogue).size).toBe(58);
   for (const fixtureCase of all) expect(Boolean(fixtureCase.fault) !== Boolean(fixtureCase.outputs), fixtureCase.name).toBe(true);
   for (const fixtureCase of all.filter((c) => c.fault)) expect(fixtureCase.fault!.code.startsWith("generation3d.geometry."), fixtureCase.name).toBe(true);
 });
@@ -393,6 +393,58 @@ test("edit expectations follow from independent constructions: CSG, Euler's form
     const base = fixtures.get("✏️mesh-edit")!.cases[0]!.inputs.mesh as Mesh;
     const faces = base.faces.filter((_, index) => !c.inputs.faces.includes(index));
     return differences(measureOf(base.positions, faces), stated(c), 1e-6, ["faces", "boundaryEdges", "area", "closed"]);
+  });
+  only("mesh.edit.extrudeBoundary", (c) => {
+    const base = c.inputs.mesh as Mesh;
+    const expected = stated(c);
+    const delta = new Vector3().fromArray(c.inputs.offset);
+    const chain = [...new Set([...c.inputs.edges].sort((a,b)=>a-b).flatMap(edge=>[base.faces[0][edge],base.faces[0][(edge+1)%base.faces[0].length]]))];
+    const positions = [...base.positions, ...chain.map(vertex=>new Vector3().fromArray(base.positions[vertex]).add(delta).toArray())];
+    const geometry = measureOf(positions, expected.polygons);
+    return differences(geometry, expected, c.fixtureTolerance, ["vertices", "faces", "edges", "boundaryEdges", "closed", "oriented", "euler", "area"]);
+  });
+  only("mesh.edit.bridge", (c) => {
+    const expected = stated(c);
+    const mesh = c.inputs.mesh as Mesh;
+    const geometry = measureOf(mesh.positions, expected.polygons);
+    const solid = manifoldMeasures(mesh.positions, expected.polygons);
+    return [
+      ...differences(geometry, expected, c.fixtureTolerance, solidKeys),
+      ...differences(solid, expected, c.fixtureTolerance, ["area", "volume"]),
+    ];
+  });
+  for (const operation of ["mesh.edit.intersect", "mesh.edit.difference", "mesh.edit.union"]) only(operation, (c) => {
+    const first = c.inputs.first as Mesh;
+    const second = c.inputs.second as Mesh;
+    const solid = ({ positions, faces }: Mesh) => new Manifold(new ManifoldMesh({
+      numProp: 3,
+      vertProperties: new Float32Array(positions.flat()),
+      triVerts: new Uint32Array(fanTriangles(faces).flat()),
+    }));
+    const a = solid(first);
+    const b = solid(second);
+    const clipped = operation === "mesh.edit.intersect" ? Manifold.intersection([a, b])
+      : operation === "mesh.edit.difference" ? a.subtract(b)
+      : Manifold.union([a, b]);
+    const expected = stated(c);
+    const bounds = clipped.boundingBox();
+    const output = { volume: clipped.volume(), area: clipped.surfaceArea(), bbox: [bounds.min, bounds.max] } as Measures;
+    const failures = differences(output, expected, c.fixtureTolerance, ["area", "volume", "bbox"]);
+    if (clipped.isEmpty() !== (expected.faces === 0)) failures.push("unexpected empty solid");
+    clipped.delete();
+    a.delete();
+    b.delete();
+    return failures;
+  });
+  only("mesh.edit.combine", (c) => {
+    const first = c.inputs.first as Mesh;
+    const second = c.inputs.second as Mesh;
+    const positions = [...first.positions, ...second.positions];
+    const polygons = [...first.faces, ...second.faces.map(face => face.map(id => id + first.positions.length))];
+    const expected = stated(c);
+    const failures = differences(measureOf(positions, polygons), expected, c.fixtureTolerance, solidKeys);
+    if (JSON.stringify(canonical(positions, polygons)) !== JSON.stringify(canonical(expected.positions, expected.polygons))) failures.push("combined polygons differ");
+    return failures;
   });
   only("mesh.edit.triangulate", (c) => differences(measureOf(cube.positions, fanTriangles(cube.faces)), stated(c), 1e-6, solidKeys));
   only("mesh.edit.dissolveEdges", (c) => {

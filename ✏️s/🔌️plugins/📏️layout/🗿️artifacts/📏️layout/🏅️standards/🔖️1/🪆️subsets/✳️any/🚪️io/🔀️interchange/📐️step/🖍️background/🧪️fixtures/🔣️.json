@@ -125,7 +125,7 @@
   "expected": {
     "minimumPolylines": 2,
     "text": "Grüße background",
-    "imageReference": "image/png",
+    "imageReference": "picture-source",
     "outputChunkLimit": 4096,
     "paint": [
       0.25,
@@ -168,7 +168,6 @@
   },
   "lifecycle": {
     "strokeSegments": 4097,
-    "longStyleBytes": 4097,
     "textRepeat": 4097,
     "cancellationTurns": [
       0,

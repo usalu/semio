@@ -1,4 +1,4 @@
-"""🤳 Body of the standing phone user at 1:50, every cross-section stated by hand. Trunk, legs, sleeves and head are stated in the world of the rest pose (x ahead, y up, z left; ground 0, ankle 0.086, knee 0.490, hip joint 0.903, shoulder 1.3975, C7 1.465, head joint 1.561, vertex 1.710); the ponytail hangs under gravity in the texting pose and is stated in the world of that pose; hands and phone are stated in the grip frame of the phone (a along the phone, b across it towards the figure's left, n out of the screen; see `r3_standing_phone_user_kit.grip`).
+"""🤳 Body of the standing phone user at 1:50, every cross-section stated by hand. Trunk, legs, sleeves and head are stated in the world of the rest pose (x ahead, y up, z left; ground 0, ankle 0.086, knee 0.490, hip joint 0.903, shoulder 1.3975, C7 1.465, head joint 1.561, vertex 1.710); the ponytail hangs from its tie on its own bone (rest world); the hair tie is stated in the world of the texting pose; hands and phone are stated in the grip frame of the phone (a along the phone, b across it towards the figure's left, n out of the screen; see `r3_standing_phone_user_kit.grip`).
 
 Anthropometry (slim woman, stature 1.69 m, 59 kg): head 0.222 high, 0.190 long, 0.148 broad; biacromial 0.375, bideltoid 0.435 nude; chest 0.285 x 0.215; waist 0.250 x 0.175; hips 0.340 x 0.225; thigh girth 0.56 / 0.50 / 0.38; knee 0.105 x 0.115; calf girth 0.355; ankle 0.058 x 0.075; upper arm girth 0.265; forearm 0.245; wrist 0.055 x 0.038; hand 0.181 x 0.079 x 0.027, index 0.072, middle 0.079, ring 0.073, little 0.058, thumb 0.060 past its knuckle; foot 0.250, sneaker 0.275 x 0.100 on a 0.020 sole. Phone 0.147 x 0.0715 x 0.0078, corner radius 0.010. Over-ear headphones: cups 0.086 across and 0.046 deep with the cushion, band 0.024 wide, 0.36 long.
 """
@@ -91,8 +91,8 @@ def head():
         out.append(ellipsoid("ear-" + side, "head", SKIN, 0.3, (HX - 0.016, d(0.134), 0.0685), (0.015, 0.029, 0.010), role="detail", mirror=mirror, tilt=-12))
         out.append(ellipsoid("eye-" + side, "head", SKIN, 0.9, (0.098, d(0.114), 0.031), (0.005, 0.0055, 0.0125), role="detail", mirror=mirror))
         out.append(ellipsoid("brow-" + side, "head", SKIN, 0.2, (0.101, d(0.098), 0.032), (0.006, 0.005, 0.021), role="detail", mirror=mirror))
+    out.append(parts.tail("ponytail", parts.TAILS[50]))
     with posed():
-        out.append(parts.tail("ponytail", parts.TAILS[50]))
         out.append(ellipsoid_axes("pony-tie", "head", HAIR, 0.2, (0.024, 1.642, 0), (-0.95, 0.30, 0), (0, 0, 1), (0.007, 0.019, 0.019), role="detail"))
     return out
 
@@ -298,12 +298,13 @@ def leg(side, mirror):
         (0.448, 0.003, HIP - 0.002, 0.013, 0.014),
     ]
     shank = [
-        (0.538, 0.003, HIP - 0.002, 0.016, 0.018),
-        (0.531, 0.003, HIP - 0.002, 0.032, 0.036),
-        (0.513, 0.003, HIP - 0.002, 0.044, 0.049),
-        (0.4898, 0.003, HIP - 0.002, 0.049, 0.054),
-        (0.455, 0.000, HIP - 0.002, 0.0505, 0.0555),
-        (0.400, -0.006, HIP - 0.001, 0.0525, 0.058),
+        (0.540, 0.004, HIP - 0.002, 0.020, 0.022),
+        (0.532, 0.004, HIP - 0.002, 0.040, 0.044),
+        (0.515, 0.004, HIP - 0.002, 0.052, 0.057),
+        (0.4898, 0.004, HIP - 0.002, 0.0556, 0.0606),
+        (0.462, 0.002, HIP - 0.002, 0.0545, 0.0595),
+        (0.430, -0.003, HIP - 0.001, 0.0525, 0.0580),
+        (0.400, -0.006, HIP - 0.001, 0.0530, 0.0590),
         (0.358, -0.010, HIP, 0.055, 0.062),
         (0.300, -0.009, HIP, 0.051, 0.056),
         (0.240, -0.006, HIP, 0.047, 0.051),
@@ -362,7 +363,7 @@ def leg(side, mirror):
     ]
     out = [
         loft("thigh" + s, "thigh" + s, DENIM, 0.62, thigh, "y", sub=2, mirror=mirror),
-        ellipsoid("kneecap" + s, "thigh" + s, DENIM, 0.62, (0.050, 0.500, HIP - 0.002), (0.017, 0.036, 0.031), mirror=mirror),
+        ellipsoid("kneecap" + s, "thigh" + s, DENIM, 0.62, (0.052, 0.498, HIP - 0.002), (0.014, 0.028, 0.026), mirror=mirror),
         loft("shank" + s, "shank" + s, DENIM, 0.62, shank, "y", sub=2, mirror=mirror),
         loft("sock" + s, "shank" + s, SOCK, 0.8, ankle, "y", mirror=mirror),
         loft("sole" + s, "foot" + s, CANVAS, 0.88, sole, "x", sub=1, mirror=mirror),

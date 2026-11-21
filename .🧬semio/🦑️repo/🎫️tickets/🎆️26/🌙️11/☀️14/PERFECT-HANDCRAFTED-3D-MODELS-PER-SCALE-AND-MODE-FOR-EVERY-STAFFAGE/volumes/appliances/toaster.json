@@ -4487,101 +4487,101 @@
       [
        [
         -0.021,
-        -0.068
+        -0.069
        ],
        [
-        -0.01676,
-        -0.06624
+        -0.01605,
+        -0.06695
        ],
        [
-        -0.015,
+        -0.014,
         -0.062
        ],
        [
-        -0.015,
+        -0.014,
         0.062
        ],
        [
-        -0.01676,
-        0.06624
+        -0.01605,
+        0.06695
        ],
        [
         -0.021,
-        0.068
+        0.069
        ],
        [
         -0.039,
-        0.068
+        0.069
        ],
        [
-        -0.04324,
-        0.06624
+        -0.04395,
+        0.06695
        ],
        [
-        -0.045,
+        -0.046,
         0.062
        ],
        [
-        -0.045,
+        -0.046,
         -0.062
        ],
        [
-        -0.04324,
-        -0.06624
+        -0.04395,
+        -0.06695
        ],
        [
         -0.039,
-        -0.068
+        -0.069
        ]
       ],
       [
        [
         0.039,
-        -0.068
+        -0.069
        ],
        [
-        0.04324,
-        -0.06624
+        0.04395,
+        -0.06695
        ],
        [
-        0.045,
+        0.046,
         -0.062
        ],
        [
-        0.045,
+        0.046,
         0.062
        ],
        [
-        0.04324,
-        0.06624
+        0.04395,
+        0.06695
        ],
        [
         0.039,
-        0.068
+        0.069
        ],
        [
         0.021,
-        0.068
+        0.069
        ],
        [
-        0.01676,
-        0.06624
+        0.01605,
+        0.06695
        ],
        [
-        0.015,
+        0.014,
         0.062
        ],
        [
-        0.015,
+        0.014,
         -0.062
        ],
        [
-        0.01676,
-        -0.06624
+        0.01605,
+        -0.06695
        ],
        [
         0.021,
-        -0.068
+        -0.069
        ]
       ]
      ]
@@ -4846,22 +4846,22 @@
      ]
     },
     {
-     "id": "th-slot-air",
+     "id": "th-slot-air-front",
      "kind": "box",
      "bone": "base",
      "material": "mica-steel",
      "role": "detail",
      "tone": 0.4,
      "size": [
-      0.136,
+      0.016,
       0.001,
-      0.09
+      0.03
      ],
      "transform": {
       "translation": [
-       0.0,
-       0.189,
-       0.0
+       -0.06,
+       0.1876,
+       -0.03
       ]
      },
      "tags": [
@@ -4875,6 +4875,55 @@
       "+w",
       "-w"
      ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.12,
+       0,
+       0
+      ]
+     },
+     "region": "top-plate",
+     "layer": "plate"
+    },
+    {
+     "id": "th-slot-air-rear",
+     "kind": "box",
+     "bone": "base",
+     "material": "mica-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.016,
+      0.001,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.06,
+       0.1876,
+       0.03
+      ]
+     },
+     "tags": [
+      "slot-air"
+     ],
+     "sectionFaces": [
+      "+u",
+      "-u",
+      "+v",
+      "-v",
+      "+w",
+      "-w"
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.12,
+       0,
+       0
+      ]
+     },
      "region": "top-plate",
      "layer": "plate"
     }
@@ -5123,12 +5172,12 @@
    ],
    "decisions": [
     {
-     "en": "Body: plinth, feet and wrap merge into one housing skin of six sections from the worktop to the top, closed below; the cap is a 30 mm deck with both slots, and the slices are 30 mm thick so that they fill their slots; the lever is a 30 mm block on the long face, dial and button are below the scale.",
-     "de": "Körper: Sockel, Füße und Mantel gehen in einer Gehäusehaut aus sechs Schnitten von der Arbeitsplatte bis oben auf, unten geschlossen; die Haube ist ein Deck von 30 mm mit beiden Schlitzen, und die Scheiben sind 30 mm dick, sodass sie ihre Schlitze füllen; der Hebel ist ein Block von 30 mm an der Längsseite, Drehknopf und Taste liegen unter dem Maßstab."
+     "en": "Body: plinth, feet and wrap merge into one housing skin of six sections from the worktop to the top, closed below; the cap is a 30 mm deck with both slots, 32 mm wide so that the slices run free in them, and the slices are 30 mm thick so that they fill their slots; the lever is a 30 mm block on the long face, dial and button are below the scale.",
+     "de": "Körper: Sockel, Füße und Mantel gehen in einer Gehäusehaut aus sechs Schnitten von der Arbeitsplatte bis oben auf, unten geschlossen; die Haube ist ein Deck von 30 mm mit beiden Schlitzen, 32 mm breit, sodass die Scheiben frei darin laufen, und die Scheiben sind 30 mm dick, sodass sie ihre Schlitze füllen; der Hebel ist ein Block von 30 mm an der Längsseite, Drehknopf und Taste liegen unter dem Maßstab."
     },
     {
-     "en": "Thermal: housing, deck, slices and lever block by reference; the dial is a 3 mm skin of its real face on the long side, the feet two 8 mm runners in the housing bottom, and the slot air one outlet patch above the deck.",
-     "de": "Thermik: Gehäuse, Deck, Scheiben und Hebelblock als Verweise; der Drehknopf ist eine 3-mm-Haut seiner wirklichen Fläche an der Längsseite, die Füße zwei 8-mm-Kufen im Gehäuseboden, und die Schlitzluft eine Auslassfläche über dem Deck."
+     "en": "Thermal: housing, deck, slices and lever block by reference; the dial is a 3 mm skin of its real face on the long side, the feet two 8 mm runners in the housing bottom, and the slot air four outlet patches in the open slot ends beside the slices, flush with the deck.",
+     "de": "Thermik: Gehäuse, Deck, Scheiben und Hebelblock als Verweise; der Drehknopf ist eine 3-mm-Haut seiner wirklichen Fläche an der Längsseite, die Füße zwei 8-mm-Kufen im Gehäuseboden, und die Schlitzluft vier Auslassflächen in den offenen Schlitzenden neben den Scheiben, bündig mit dem Deck."
     },
     {
      "en": "Structure: a 30 mm base frame on two 30 mm support runners, the chamber tube with 6 mm walls, the carriage as one angle with its upright, and lever arm and dial spindle as 30 mm bars, the spindle round so that it turns in place; the mass of the appliance at its centre.",
@@ -5183,11 +5232,27 @@
       {
        "at": [
         0.0,
-        0.176,
+        0.168,
         0.0
        ],
-       "rx": 0.0736,
-       "ry": 0.14025,
+       "rx": 0.07591,
+       "ry": 0.14571,
+       "exponent": 9,
+       "rotation": [
+        -0.5,
+        -0.5,
+        -0.5,
+        0.5
+       ]
+      },
+      {
+       "at": [
+        0.0,
+        0.181,
+        0.0
+       ],
+       "rx": 0.07009,
+       "ry": 0.13482,
        "exponent": 9,
        "rotation": [
         -0.5,
@@ -5427,14 +5492,14 @@
      "role": "detail",
      "tone": 0.4,
      "size": [
-      0.104,
+      0.012,
       0.001,
       0.09
      ],
      "transform": {
       "translation": [
-       0.0,
-       0.1895,
+       -0.058,
+       0.1876,
        0.0
       ]
      },
@@ -5449,6 +5514,14 @@
       "+w",
       "-w"
      ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.116,
+       0,
+       0
+      ]
+     },
      "region": "top-plate",
      "layer": "plate"
     }
@@ -5658,12 +5731,12 @@
    ],
    "decisions": [
     {
-     "en": "Body: a digital model without a printable drawing: the housing is one closed mass of four sections with the shoulders rolling into the top, and both slices are one bread dome that stands in it and still rides the carriage.",
-     "de": "Körper: ein digitales Modell ohne druckbare Zeichnung: das Gehäuse ist eine geschlossene Masse aus vier Schnitten, deren Schultern in die Oberseite auslaufen, und beide Scheiben sind eine Brotkuppe, die darin steht und weiter mit dem Schlitten fährt."
+     "en": "Body: a digital model without a printable drawing: the housing is one closed mass of five sections with the shoulders rounding into the top, and both slices are one bread dome that stands in it and still rides the carriage.",
+     "de": "Körper: ein digitales Modell ohne druckbare Zeichnung: das Gehäuse ist eine geschlossene Masse aus fünf Schnitten, deren Schultern sich in die Oberseite runden, und beide Scheiben sind eine Brotkuppe, die darin steht und weiter mit dem Schlitten fährt."
     },
     {
-     "en": "Thermal: the housing and the dome by reference, the top plate as a 1 mm skin on the flat top, the controls as one 3 mm skin at the lever, the feet as two 8 mm runners and the slot air as one patch around the dome.",
-     "de": "Thermik: Gehäuse und Kuppe als Verweise, die Deckplatte als 1-mm-Haut auf der flachen Oberseite, die Bedienung als eine 3-mm-Haut am Hebel, die Füße als zwei 8-mm-Kufen und die Schlitzluft als eine Fläche um die Kuppe."
+     "en": "Thermal: the housing and the dome by reference, the top plate as a 1 mm skin on the flat top, the controls as one 3 mm skin at the lever, the feet as two 8 mm runners and the slot air as two outlet patches at the ends of the dome, flush with the top.",
+     "de": "Thermik: Gehäuse und Kuppe als Verweise, die Deckplatte als 1-mm-Haut auf der flachen Oberseite, die Bedienung als eine 3-mm-Haut am Hebel, die Füße als zwei 8-mm-Kufen und die Schlitzluft als zwei Auslassflächen an den Enden der Kuppe, bündig mit der Oberseite."
     },
     {
      "en": "Structure: the chamber tube stands directly on the two support runners, the carriage is one plate, the lever arm one upright bar from the carriage to the knob and the dial spindle a stub; the mass of the appliance at its centre.",

@@ -176,6 +176,14 @@ impl ArtifactEditor for NotePlayApp {
         crate::editor::note::window::register_transient(registry)
     }
 
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        semio_s_artifact_note_note_mutations::host::owned::note_store_owners_source_demands()
+    }
+
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<semio_s_artifact_note_note_mutations::host::owned::NoteStoreOwnersAdmission> {
+        Some(semio_s_artifact_note_note_mutations::host::owned::admit_note_store_owners(grant))
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(crate::editor::note::retained::artifact_preparation_factory())
     }
@@ -248,7 +256,7 @@ impl ArtifactEditor for NotePlayApp {
         let mut ctx = NoteDispatchCtx {
             selected_block_ids,
             id_owner: crate::schema::NoteIdOwner::for_document_child(doc.snapshot, command.command_id()),
-            view_state: view_state.cloned(),
+            view_state,
             window_transient: Default::default(),
             window_transient_owner: None,
         };

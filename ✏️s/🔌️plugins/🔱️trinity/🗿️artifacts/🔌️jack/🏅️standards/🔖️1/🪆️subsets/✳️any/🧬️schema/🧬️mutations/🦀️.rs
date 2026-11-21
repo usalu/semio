@@ -1,4 +1,4 @@
-//! ⚡️ `trinity.graph` semantic mutation aggregate — the parent lane edits the document's own query only.
+//! ⚡️ `trinity.graph` semantic mutation aggregate for the document's query and graph root.
 //!
 //! The scene lives in the composed `content` child (the explicitly selected graph capability); every scene edit is a child-lane leaf of
 //! that shared vocabulary (design §20.15), so no parent leaf reads the child.
@@ -8,6 +8,10 @@ use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 
 pub use super::set_query::{set_query, SetQuery};
 
+#[path = "🎯️set-root/🦀️.rs"]
+mod set_root;
+pub use set_root::{clear_deleted_root, set_root, SetRoot};
+
 //#region 🔖️Aggregate
 /// 🧮️ Parent-lane trinity graph mutation vocabulary.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
@@ -16,6 +20,7 @@ pub use super::set_query::{set_query, SetQuery};
 #[mutations(snapshot = JackSnapshot, diff = JackDiff, schema = "s.trinity.jack", reference = JackSnapshot, reference_diff = JackDiff)]
 pub enum TrinityGraphMutation {
     SetQuery(SetQuery),
+    SetRoot(SetRoot),
 }
 //#endregion 🔖️Aggregate
 

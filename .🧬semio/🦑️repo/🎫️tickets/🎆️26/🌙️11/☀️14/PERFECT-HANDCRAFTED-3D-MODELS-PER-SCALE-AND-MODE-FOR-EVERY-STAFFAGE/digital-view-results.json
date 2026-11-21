@@ -1,0 +1,11 @@
+{
+  "id": "multi-stem-birch",
+  "scale": 100,
+  "view": "elevation",
+  "rule": "volumes-silhouette",
+  "path": "volumes.100.body",
+  "metric": "p95M:elevation",
+  "beforeM": 0.03375,
+  "afterM": 0.0075,
+  "limitM": 0.03
+}

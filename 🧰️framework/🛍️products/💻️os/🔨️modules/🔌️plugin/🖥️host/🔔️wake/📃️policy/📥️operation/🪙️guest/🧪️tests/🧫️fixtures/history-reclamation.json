@@ -1,0 +1,12 @@
+[
+  {"name":"full book retains settled row still present","prior":8,"acknowledged":8,"highWater":32,"incoming":32,"status":2,"matches":true,"reserved":false,"expected":"existing"},
+  {"name":"one slot cannot satisfy two rows","prior":8,"acknowledged":8,"highWater":32,"incoming":33,"status":2,"matches":false,"reserved":true,"expected":"unavailable"},
+  {"name":"unacknowledged settlement stays occupied","prior":8,"acknowledged":0,"highWater":32,"incoming":33,"status":2,"matches":false,"reserved":false,"expected":"unavailable"},
+  {"name":"earlier acknowledgment does not retire this publication","prior":8,"acknowledged":7,"highWater":32,"incoming":33,"status":2,"matches":false,"reserved":false,"expected":"unavailable"},
+  {"name":"live row stays occupied after handback","prior":8,"acknowledged":8,"highWater":32,"incoming":33,"status":1,"matches":false,"reserved":false,"expected":"unavailable"},
+  {"name":"settled slot can be reused after handback","prior":8,"acknowledged":8,"highWater":32,"incoming":33,"status":2,"matches":false,"reserved":false,"expected":"available"},
+  {"name":"omitted serial cannot return in freed slot","prior":8,"acknowledged":8,"highWater":32,"incoming":12,"status":0,"matches":false,"reserved":false,"expected":"unavailable"},
+  {"name":"omitted serial cannot replace a later settlement","prior":8,"acknowledged":8,"highWater":32,"incoming":12,"status":2,"matches":false,"reserved":false,"expected":"unavailable"},
+  {"name":"same serial already staged is duplicate","prior":8,"acknowledged":8,"highWater":32,"incoming":32,"status":2,"matches":true,"reserved":true,"expected":"duplicate"},
+  {"name":"fresh serial can use empty slot before first handback","prior":0,"acknowledged":0,"highWater":0,"incoming":1,"status":0,"matches":false,"reserved":false,"expected":"available"}
+]

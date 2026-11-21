@@ -1,0 +1,9 @@
+# Certified Box and Vertical Cylinder Booleans
+
+The retained Boolean classifier now recognizes strict radial containment between an axis-aligned box and a vertical cylinder in either operand order. Intersect keeps the smaller exact cross-section over the overlapping height. Fuse keeps the exact containing solid when its height also contains the smaller solid. Cut can remove one whole end of the narrower stock and return the same analytic profile with a shorter height. A disjoint Cut keeps the stock recipe, and an axial cap-only contact has an empty solid intersection. Descending cylinder orientation is preserved when clipping its axial interval.
+
+These cases reuse the original analytic solid publisher, one-item transaction and labeled primitive preview. A cylinder that bores straight through a box still uses the existing native bore recipe. Partial radial overlap, unsupported side or blind bore geometry, and a cut that would separate stock into multiple bodies remain refused by this single-solid path.
+
+The neutral Boolean corpus adds seven cases covering both strict radial orders, exact containment, both stock profiles, disjointness and cap contact. The independent Manifold-3D suite passed all three tests. The compact Rust source suite passed all 12 checks and exercised the real mixed classifier, exact shape and bounds, reversed cylinder axis, separating slab refusal and preservation of through-bore dispatch. The linked original Booleans fixture invokes registered Box, Cylinder, Translate and Boolean operators, tests cancellation after unpublished edges exist, and checks exact area and volume, profile and labeled preview bounds. The disk gate deferred the linked run.
+
+Scoped Rust parsing and diff checks passed. Measured source closure was 3,984 Engine lines, 3,992 native registry lines, 2,712 solid-transaction lines, and 74,108 active bytes for original Booleans.

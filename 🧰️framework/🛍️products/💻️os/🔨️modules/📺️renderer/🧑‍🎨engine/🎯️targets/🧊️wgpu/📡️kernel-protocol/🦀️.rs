@@ -8,7 +8,7 @@ use semio_framework::kernel::{Effect, Event, JobPlacement, MessageEndpoint, Turn
 use semio_framework_actor::{ActorId, CapabilityGrant, JobOperation, JobProgressIdentity, JobProgressKind, JobReplayRecordHeader, JobReplayRequest, JobReplayRoute, JobTurn, Lane, PackageId, JOB_PROGRESS_ACTIVE_CAPACITY};
 use semio_framework_job::RetainedCloneGrant;
 use semio_renderer_wgpu_contracts::ProgramFault;
-use semio_renderer_wgpu_host_base::{plugin_catalog, run_renderer_io};
+use semio_renderer_wgpu_host_base::plugin_catalog;
 use std::collections::HashMap;
 use std::future::Future;
 use std::path::PathBuf;

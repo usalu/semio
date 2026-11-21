@@ -1070,6 +1070,9 @@ pub mod encased;
 pub mod strain_curve;
 #[path = "🔥️column-fire/🦀️.rs"]
 pub mod column_fire;
+
+#[path = "🔥️beam-fire-tables/🦀️.rs"]
+pub mod beam_fire_tables;
 #[path = "🔥️beam-fire/🦀️.rs"]
 pub mod beam_fire;
 #[path = "🔁️fatigue/🦀️.rs"]

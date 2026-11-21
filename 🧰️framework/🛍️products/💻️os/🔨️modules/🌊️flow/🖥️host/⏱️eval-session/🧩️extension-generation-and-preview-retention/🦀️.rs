@@ -30,7 +30,7 @@ impl FlowEvalSession {
         let mut original=Some(SessionCollectionOwner::Reset(SessionResetSources::take(&mut self.state,true)));
         let turn=self.state.retirement.admit(&mut original,effect);
         match turn.result{
-            Ok(Some(progress))=>{self.state.flow_extension_generation=generation;self.state.preview_cancelled=false;self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.state.pending_host.is_some();Ok(Some((true,progress)))},
+            Ok(Some(progress))=>{self.state.flow_extension_generation=generation;self.state.preview_cancelled=false;self.state.tick_scheduled=false;self.state.published_preview_mesh_digest=0;self.state.pending_host_cancelled=self.tick_host().is_some();Ok(Some((true,progress)))},
             result=>{let Some(SessionCollectionOwner::Reset(original))=original else{unreachable!("original registry invalidation returned a different source family")};original.restore(&mut self.state);result.map(|_|None)},
         }
     }
@@ -98,6 +98,9 @@ impl FlowEvalSession {
 
     /// 🪟️ Borrows resident canonical handles without allocating a copied roster.
     pub fn preview_mesh_handles(&self)->impl Iterator<Item=&str>{self.preview_mesh_by_handle.keys().map(String::as_str)}
+    /// 🧷️ Distinguishes preview mesh publications from different evaluation sessions.
+    pub fn preview_mesh_cache_identity(&self) -> u64 { self.preview_cache_identity }
+
     /// 🪪️ Native scene construction borrows the exact indexed row only under its original cache epoch.
     pub fn preview_mesh_epoch(&self)->u64{self.preview_mesh_by_handle.mutation_epoch()}
     pub fn preview_mesh_slot_count(&self)->usize{self.preview_mesh_by_handle.slot_count()}

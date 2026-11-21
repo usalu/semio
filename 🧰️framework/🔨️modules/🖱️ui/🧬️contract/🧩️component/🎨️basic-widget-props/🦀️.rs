@@ -104,6 +104,7 @@ pub struct InputProps {
     #[serde(default, skip_serializing_if = "is_default_input_kind")]
     #[value(default, skip_serializing_if = "is_default_input_kind")]
     pub kind: InputKind,
+    /// 📝️ Inline input text or, for the retained-body commit policy, the named text-carrier child.
     pub value: crate::UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
